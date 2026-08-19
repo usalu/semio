@@ -9,7 +9,7 @@ use semio_framework_plugin::{ExecutionMode, Plugin};
 /// `"computation.flow"` artifact (`crate::artifacts::flow::artifact_kind().id`) is opened, this plugin's
 /// own actor runs `Isolated` (its 9 `🧩️extensions/` run `Linked` instead — see each extension's own
 /// `bundle()`), and it asks the broker for document write access to persist edits.
-pub fn plugin() -> Result<Plugin, semio_framework_plugin::PluginAssemblyError> {
+pub async fn plugin() -> Result<Plugin, semio_framework_plugin::PluginAssemblyError> {
     Plugin::builder("flow")
         .label("Flow")
         .version("0.1.0")
@@ -32,13 +32,13 @@ mod surface_tests {
 
     /// 👁️ A viewer instance never mutates the document store, even when dispatched.
     #[test]
-    fn flow_viewer_never_mutates() {
+    async fn flow_viewer_never_mutates() {
         semio_framework_plugin::testkit::assert_viewer_never_mutates::<FlowViewer>();
     }
 
     /// 🤝️ Editor and viewer surfaces agree on the artifact dialect they address.
     #[test]
-    fn flow_editor_and_viewer_share_dialect() {
+    async fn flow_editor_and_viewer_share_dialect() {
         semio_framework_plugin::testkit::assert_editor_and_viewer_share_dialect::<FlowPlayApp, FlowViewer>();
     }
 }

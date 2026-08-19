@@ -12,7 +12,7 @@ pub struct RenameAppInstance {
     pub label: Option<String>,
 }
 
-fn rename_with_selection(payload: &RenameAppInstance, doc: &ArtifactView<'_, WorkflowSnapshot>, config: &SpaceConfig, selected: &[String]) -> Emit<WorkflowMutation, SpaceConfigMutation> {
+async fn rename_with_selection(payload: &RenameAppInstance, doc: &ArtifactView<'_, WorkflowSnapshot>, config: &SpaceConfig, selected: &[String]) -> Emit<WorkflowMutation, SpaceConfigMutation> {
     match crate::engine::space::primary_selected_node_id(selected, config) {
         Some(node_id) => {
             let next_label = payload.label.clone().or_else(|| doc.snapshot.graph.nodes.iter().find(|row| row.id == node_id).map(|node| format!("{} (renamed)", node.label)));
@@ -30,10 +30,10 @@ fn rename_with_selection(payload: &RenameAppInstance, doc: &ArtifactView<'_, Wor
 /// only through that macro-generated path (`SpaceApp::handle` always routes this command through
 /// `apply` below instead); the fallback still honors `config.active_node_id` — only the "fall back to
 /// the live selection" step degrades to empty.
-pub fn handle(payload: &RenameAppInstance, doc: &ArtifactView<'_, WorkflowSnapshot>, cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
+pub async fn handle(payload: &RenameAppInstance, doc: &ArtifactView<'_, WorkflowSnapshot>, cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
     Ok(rename_with_selection(payload, doc, cfg.snapshot, &[]))
 }
 
-pub fn apply(payload: &RenameAppInstance, doc: &ArtifactView<'_, WorkflowSnapshot>, cfg: &ConfigView<'_, SpaceConfig>, interaction: &InteractionView<'_>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
+pub async fn apply(payload: &RenameAppInstance, doc: &ArtifactView<'_, WorkflowSnapshot>, cfg: &ConfigView<'_, SpaceConfig>, interaction: &InteractionView<'_>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
     Ok(rename_with_selection(payload, doc, cfg.snapshot, &interaction.selection("graph").ids))
 }

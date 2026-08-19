@@ -7,11 +7,11 @@ pub const RASTER_DOCUMENT_SCHEMA: &str = "raster.document";
 //#endregion 🔖️Constants
 
 //#region 🔖️Types
-pub fn default_one() -> f64 {
+pub async fn default_one() -> f64 {
     1.0
 }
 
-pub fn default_true() -> bool {
+pub async fn default_true() -> bool {
     true
 }
 
@@ -38,16 +38,16 @@ pub struct RasterCamera {
 }
 
 impl Default for RasterCamera {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self { x: 0.0, y: 0.0, zoom: 1.0 }
     }
 }
 
-pub fn one_f32() -> f32 {
+pub async fn one_f32() -> f32 {
     1.0
 }
 
-pub fn default_blend() -> String {
+pub async fn default_blend() -> String {
     "normal".into()
 }
 
@@ -68,7 +68,7 @@ pub struct RasterTransform {
 }
 
 impl Default for RasterTransform {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self { x: 0.0, y: 0.0, scale_x: 1.0, scale_y: 1.0, rotation: 0.0 }
     }
 }
@@ -154,11 +154,11 @@ mod asset_data_base64 {
     use base64::Engine;
     use serde::{Deserialize, Deserializer, Serializer};
 
-    pub fn serialize<S: Serializer>(bytes: &Vec<u8>, serializer: S) -> Result<S::Ok, S::Error> {
+    pub async fn serialize<S: Serializer>(bytes: &Vec<u8>, serializer: S) -> Result<S::Ok, S::Error> {
         serializer.serialize_str(&base64::engine::general_purpose::STANDARD.encode(bytes))
     }
 
-    pub fn deserialize<'de, D: Deserializer<'de>>(deserializer: D) -> Result<Vec<u8>, D::Error> {
+    pub async fn deserialize<'de, D: Deserializer<'de>>(deserializer: D) -> Result<Vec<u8>, D::Error> {
         let encoded = String::deserialize(deserializer)?;
         base64::engine::general_purpose::STANDARD.decode(encoded.as_bytes()).map_err(serde::de::Error::custom)
     }
@@ -194,7 +194,7 @@ use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::image::schem
 
 pub type RasterAssetChild = store::ArtifactChild<SemioImageSnapshot>;
 
-fn mint_asset_child_handle(asset_id: &str, content_hash: u64) -> RasterAssetChild {
+async fn mint_asset_child_handle(asset_id: &str, content_hash: u64) -> RasterAssetChild {
     let child_id = format!("raster-asset-{content_hash:016x}");
     let dialect = store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "image".into() };
     let target = store::os_io::ArtifactRef { artifact_id: format!("{asset_id}-image"), dialect };
@@ -205,7 +205,7 @@ fn mint_asset_child_handle(asset_id: &str, content_hash: u64) -> RasterAssetChil
 /// fallback shape used only when the bytes can't be decoded into real `SemioImageSnapshot` content
 /// (see `mint_and_stash_asset`), and by pure-codec tests that need SOME stable handle without
 /// exercising the real png bridge. Prefer `mint_and_stash_asset` at every real call site.
-pub fn image_asset_child_handle(asset_id: &str, asset: &RasterImageAsset) -> RasterAssetChild {
+pub async fn image_asset_child_handle(asset_id: &str, asset: &RasterImageAsset) -> RasterAssetChild {
     use std::hash::{Hash, Hasher};
     let mut hasher = std::collections::hash_map::DefaultHasher::new();
     asset.mime.hash(&mut hasher);
@@ -222,7 +222,7 @@ pub fn image_asset_child_handle(asset_id: &str, asset: &RasterImageAsset) -> Ras
 /// for what is honestly the same image; hashing the canonical DECODED content instead makes
 /// `decode → cache → re-encode → decode` idempotent at the handle level, which `add-layer-asset`'s
 /// inverse (`🧬️mutations/🖇️add-layer-asset/↩️inverse`) depends on to restore the exact prior handle.
-fn image_content_child_handle(asset_id: &str, image: &SemioImageSnapshot) -> RasterAssetChild {
+async fn image_content_child_handle(asset_id: &str, image: &SemioImageSnapshot) -> RasterAssetChild {
     use std::hash::{Hash, Hasher};
     let mut hasher = std::collections::hash_map::DefaultHasher::new();
     <SemioImageSnapshot as store::ArtifactPack>::encode_pack(image).hash(&mut hasher);
@@ -247,13 +247,13 @@ thread_local! {
     static RASTER_SCRATCH: std::cell::RefCell<std::collections::HashMap<String, SemioImageSnapshot>> = std::cell::RefCell::new(std::collections::HashMap::new());
 }
 
-pub fn stash_raster_asset(child_id: &str, image: SemioImageSnapshot) {
+pub async fn stash_raster_asset(child_id: &str, image: SemioImageSnapshot) {
     RASTER_SCRATCH.with(|cache| {
         cache.borrow_mut().insert(child_id.to_string(), image);
     });
 }
 
-pub fn cached_raster_asset(child_id: &str) -> Option<SemioImageSnapshot> {
+pub async fn cached_raster_asset(child_id: &str) -> Option<SemioImageSnapshot> {
     RASTER_SCRATCH.with(|cache| cache.borrow().get(child_id).cloned())
 }
 
@@ -266,7 +266,7 @@ pub fn cached_raster_asset(child_id: &str) -> Option<SemioImageSnapshot> {
 /// "no content" is the fail-soft outcome (a clean, documented `raster_asset` cache-miss), never a
 /// fabricated placeholder. Every call site that used to do `assets.insert(id, RasterImageAsset{..})`
 /// now calls this instead, and gets back only the handle.
-pub fn mint_and_stash_asset(asset_id: &str, asset: &RasterImageAsset) -> RasterAssetChild {
+pub async fn mint_and_stash_asset(asset_id: &str, asset: &RasterImageAsset) -> RasterAssetChild {
     match crate::artifacts::raster::io::semio_image_snapshot_from_raster_asset(asset) {
         Ok(image) => {
             let handle = image_content_child_handle(asset_id, &image);
@@ -282,7 +282,7 @@ pub fn mint_and_stash_asset(asset_id: &str, asset: &RasterImageAsset) -> RasterA
 /// persisted handle map, then through the working-scene cache, then back through the real
 /// `SemioImageSnapshot` → `RasterImageAsset` converter. `None` on either a missing handle OR a cold
 /// cache — fails soft, documented above, never panics.
-pub fn raster_asset(assets: &BTreeMap<String, RasterAssetChild>, asset_id: &str) -> Option<RasterImageAsset> {
+pub async fn raster_asset(assets: &BTreeMap<String, RasterAssetChild>, asset_id: &str) -> Option<RasterImageAsset> {
     let handle = assets.get(asset_id)?;
     let image = cached_raster_asset(&handle.child_id)?;
     crate::artifacts::raster::io::raster_asset_from_semio_image_snapshot(&image).ok()
@@ -328,7 +328,7 @@ pub const RASTER_DIALECT: semio_framework_plugin::app::Dialect = semio_framework
 //#region 🔖️ArtifactKind
 /// 🏷️ The `2d.raster` artifact kind — lifted out of `create_raster_app`'s `.artifact_kind(…)` call so
 /// both the app manifest and (in the future) any other consumer can share one definition.
-pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
+pub async fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
     semio_framework_plugin::ArtifactKindSpec {
         id: "2d.raster".into(),
         name: "2D Raster".into(),
@@ -360,7 +360,7 @@ pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
 /// `io_registry::entries()` call below is now re-qualified onto `subsets::any::io::io_registry`
 /// (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES): the whole `⚙️engine` file this
 /// function moved out of has since been dissolved into `🧬️schema/`/`🚪️io/`/the app, per rule 5.
-pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
+pub async fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
     use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
 
     let rows: &[(&str, &str, &str, &[(&str, &str)], Option<(&str, &str)>)] = &[
@@ -401,7 +401,7 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
     Ok(definition)
 }
 
-pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
+pub async fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
     semio_framework_plugin::ArtifactDeclaration::builder(definition()?)
         .schema(crate::artifacts::raster::schema::raster_artifact_schema_descriptor())
         .inferences([crate::artifacts::raster::schema::inferences::raster_artifact_inference_descriptor()])
@@ -414,7 +414,7 @@ pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semi
 /// 📌️ Handcrafted facet grammars (text) and protocols (binary) for in-process execution — built once
 /// and leaked to a `&'static` slice since `dsl::passthrough_hooks` isn't `const fn`, mirroring
 /// 🗒️note's own `pilot_languages()` convention.
-fn pilot_languages() -> &'static [dsl::LanguageSpec] {
+async fn pilot_languages() -> &'static [dsl::LanguageSpec] {
     static LANGUAGES: std::sync::OnceLock<Vec<dsl::LanguageSpec>> = std::sync::OnceLock::new();
     LANGUAGES
         .get_or_init(|| {
@@ -481,7 +481,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn artifact_kind_keeps_the_media_schema_matching_the_store_schema() {
+    async fn artifact_kind_keeps_the_media_schema_matching_the_store_schema() {
         assert_eq!(artifact_kind().schema, RASTER_DOCUMENT_SCHEMA);
     }
 }

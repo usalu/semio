@@ -35,7 +35,7 @@ pub struct LayoutDiff {
     pub removed: Vec<String>,
     pub set: Vec<(String, WidgetLayout)>}
 
-pub(crate) fn apply_widgets_diff(widgets: &mut Vec<Widget>, diff: &WidgetsDiff) {
+pub(crate) async fn apply_widgets_diff(widgets: &mut Vec<Widget>, diff: &WidgetsDiff) {
     for id in &diff.removed {
         widgets.retain(|widget| widget_id(widget) != id);
     }
@@ -48,7 +48,7 @@ pub(crate) fn apply_widgets_diff(widgets: &mut Vec<Widget>, diff: &WidgetsDiff) 
     }
 }
 
-pub(crate) fn apply_synapses_diff(synapses: &mut Vec<SynapseSpec>, diff: &SynapsesDiff) {
+pub(crate) async fn apply_synapses_diff(synapses: &mut Vec<SynapseSpec>, diff: &SynapsesDiff) {
     for id in &diff.removed {
         synapses.retain(|synapse| synapse.id != *id);
     }
@@ -61,7 +61,7 @@ pub(crate) fn apply_synapses_diff(synapses: &mut Vec<SynapseSpec>, diff: &Synaps
     }
 }
 
-fn apply_layout_diff(layout: &mut std::collections::BTreeMap<String, WidgetLayout>, diff: &LayoutDiff) {
+async fn apply_layout_diff(layout: &mut std::collections::BTreeMap<String, WidgetLayout>, diff: &LayoutDiff) {
     for id in &diff.removed {
         layout.remove(id);
     }
@@ -71,7 +71,7 @@ fn apply_layout_diff(layout: &mut std::collections::BTreeMap<String, WidgetLayou
 }
 
 /// 🧩 Applies sparse fixture-collection helpers onto a cloned fixture.
-pub fn apply_fixture_helpers(
+pub async fn apply_fixture_helpers(
     fixture: &FlowFixture,
     widgets: &WidgetsDiff,
     synapses: &SynapsesDiff,
@@ -93,7 +93,7 @@ pub fn apply_fixture_helpers(
 }
 
 /// 🧩 Applies generation mutations onto a cloned play state.
-pub fn apply_generation_helpers(state: &GenerationPlayState, ops: &[GenerationMutation]) -> GenerationPlayState {
+pub async fn apply_generation_helpers(state: &GenerationPlayState, ops: &[GenerationMutation]) -> GenerationPlayState {
     let mut next = state.clone();
     for operation in ops {
         apply_generation_mutation(&mut next, operation);
@@ -105,7 +105,7 @@ pub fn apply_generation_helpers(state: &GenerationPlayState, ops: &[GenerationMu
 //#region 🔖️Apply
 impl Procedural2dDiff {
     /// 🧬️ Applies every sparse entry (all state classes) onto a full artifact.
-    pub fn apply_to_artifact(&self, artifact: &Procedural2dArtifact) -> protocol::MutationApplyResult<Procedural2dArtifact> {
+    pub async fn apply_to_artifact(&self, artifact: &Procedural2dArtifact) -> protocol::MutationApplyResult<Procedural2dArtifact> {
         Ok({
             if let Some(replacement) = &self.artifact {
                 return Ok((**replacement).clone());
@@ -141,7 +141,7 @@ impl Procedural2dDiff {
 }
 
 impl MutationDiff<Procedural2dSnapshot> for Procedural2dDiff {
-    fn apply(&self, snapshot: &Procedural2dSnapshot) -> protocol::MutationApplyResult<Procedural2dSnapshot> {
+    async fn apply(&self, snapshot: &Procedural2dSnapshot) -> protocol::MutationApplyResult<Procedural2dSnapshot> {
         Ok({
             if let Some(replacement) = &self.artifact {
                 return Ok(replacement.to_snapshot());
@@ -156,7 +156,7 @@ impl MutationDiff<Procedural2dSnapshot> for Procedural2dDiff {
             next
         })
     }
-    fn absorb(&mut self, other: Self) {
+    async fn absorb(&mut self, other: Self) {
         if other.artifact.is_some() {
             *self = other;
             return;
@@ -182,7 +182,7 @@ impl MutationDiff<Procedural2dSnapshot> for Procedural2dDiff {
 
 //#region 🔖️Constructors
 /// 🏗️ Whole-fixture field delta after applying sparse collection helpers.
-pub fn diff_fixture_from_helpers(
+pub async fn diff_fixture_from_helpers(
     base: &Procedural2dSnapshot,
     widgets: WidgetsDiff,
     synapses: SynapsesDiff,
@@ -202,7 +202,7 @@ pub fn diff_fixture_from_helpers(
 }
 
 /// 🏗️ Generation field delta after applying ordered generation mutations.
-pub fn diff_generation_from_ops(base: &Procedural2dSnapshot, ops: Vec<GenerationMutation>) -> Procedural2dDiff {
+pub async fn diff_generation_from_ops(base: &Procedural2dSnapshot, ops: Vec<GenerationMutation>) -> Procedural2dDiff {
     let generation = apply_generation_helpers(&base.generation, &ops);
     Procedural2dDiff { generation: Some(generation), ..Procedural2dDiff::default() }
 }
@@ -215,7 +215,7 @@ mod tests {
     use crate::artifacts::procedural2d::schema::empty_procedural2d_snapshot;
 
     #[test]
-    fn diff_absorb_prefers_incoming_fixture_and_scalars() {
+    async fn diff_absorb_prefers_incoming_fixture_and_scalars() {
         let base = empty_procedural2d_snapshot();
         let mut first = diff_fixture_from_helpers(
             &base,
@@ -237,7 +237,7 @@ mod tests {
     }
 
     #[test]
-    fn diff_apply_updates_fixture_widgets() {
+    async fn diff_apply_updates_fixture_widgets() {
         let snapshot = empty_procedural2d_snapshot();
         let existing_id = widget_id(&snapshot.fixture.widgets[1]).to_string();
         let diff = diff_fixture_from_helpers(

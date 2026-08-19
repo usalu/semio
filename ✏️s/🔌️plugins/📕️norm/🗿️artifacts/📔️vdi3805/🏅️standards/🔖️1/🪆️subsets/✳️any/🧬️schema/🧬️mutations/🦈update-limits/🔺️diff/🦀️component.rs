@@ -4,7 +4,7 @@ use super::mutation::UpdateLimits;
 use crate::artifacts::vdi3805::{Vdi3805Diff, Vdi3805Snapshot};
 
 //#region 🔖️Diff
-pub fn diff(payload: &UpdateLimits, base: &Vdi3805Snapshot) -> protocol::MutationOutcome<Vdi3805Diff> {
+pub async fn diff(payload: &UpdateLimits, base: &Vdi3805Snapshot) -> protocol::MutationOutcome<Vdi3805Diff> {
     if base.limits == payload.new_limits {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", "Limits already has this value.");
     }

@@ -22,16 +22,16 @@ pub struct CreateStructureClassicModel {
 impl MutationKind<CadSnapshot, CadMutation> for CreateStructureClassicModel {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "create", entity: "structure-classic-model", kind: "create-structure-classic-model", record: "CreatedStructureClassicModel" };
 
-    fn diff(&self, base: &CadSnapshot) -> protocol::MutationOutcome<crate::artifacts::cad::diff::CadDiff> {
+    async fn diff(&self, base: &CadSnapshot) -> protocol::MutationOutcome<crate::artifacts::cad::diff::CadDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &CadSnapshot) -> Vec<CadMutation> {
+    async fn inverse(&self, base: &CadSnapshot) -> Vec<CadMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         format!("Create structure-classic-model child {}", self.child_id)
     }
-    fn target(&self) -> Vec<String> {
+    async fn target(&self) -> Vec<String> {
         vec!["structure_classic_model".to_string()]
     }
 }

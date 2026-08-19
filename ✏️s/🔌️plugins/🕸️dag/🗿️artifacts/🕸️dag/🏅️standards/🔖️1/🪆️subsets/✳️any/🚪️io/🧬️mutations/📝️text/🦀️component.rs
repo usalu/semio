@@ -93,7 +93,7 @@ enum DagMutationDsl {
 //#region 🔖️HandcraftedOpCodecs
 /// ⚡️ P6 handcrafted OpText/OpBinary (derive no longer emits these traits).
 impl OpText for DagMutationDsl {
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
+    async fn parse_op(line: &str) -> Result<Self, store::TextError> {
         let variants = <Self as dsl::DslVariants>::variants();
         for (keyword, spec_fn) in &variants {
             let probe = format!("{} ", keyword);
@@ -104,7 +104,7 @@ impl OpText for DagMutationDsl {
         }
         Err(dsl::__rt::field_error(format!("unknown mutation line '{line}'")))
     }
-    fn print_op(&self) -> String {
+    async fn print_op(&self) -> String {
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
         let variants = <Self as dsl::DslVariants>::variants();
         let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
@@ -113,20 +113,20 @@ impl OpText for DagMutationDsl {
 }
 
 impl protocol::OpBinary for DagMutationDsl {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         dsl::variants_binary::encode_op(self)
     }
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         dsl::variants_binary::decode_op(bytes)
     }
 }
 //#endregion 🔖️HandcraftedOpCodecs
 
-fn json_of<T: serde::Serialize>(value: &T) -> String {
+async fn json_of<T: serde::Serialize>(value: &T) -> String {
     serde_json::to_string(value).expect("dag mutation dsl field must serialize")
 }
 
-fn dag_mutation_to_dsl(mutation: &DagMutation) -> DagMutationDsl {
+async fn dag_mutation_to_dsl(mutation: &DagMutation) -> DagMutationDsl {
     match mutation {
         DagMutation::CreateNode(payload) => DagMutationDsl::CreateNode { node_json: json_of(&payload.node) },
         DagMutation::DeleteNode(payload) => DagMutationDsl::DeleteNode { id: payload.id.clone() },
@@ -147,7 +147,7 @@ fn dag_mutation_to_dsl(mutation: &DagMutation) -> DagMutationDsl {
     }
 }
 
-fn dag_mutation_from_dsl(mutation: DagMutationDsl) -> DagMutation {
+async fn dag_mutation_from_dsl(mutation: DagMutationDsl) -> DagMutation {
     match mutation {
         DagMutationDsl::CreateNode { node_json } => create_node(serde_json::from_str::<DagNodeSpec>(&node_json).expect("dag mutation dsl `node_json` must decode")),
         DagMutationDsl::DeleteNode { id } => delete_node(id),
@@ -171,11 +171,11 @@ fn dag_mutation_from_dsl(mutation: DagMutationDsl) -> DagMutation {
 }
 
 impl OpText for DagMutation {
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
+    async fn parse_op(line: &str) -> Result<Self, store::TextError> {
         Ok(dag_mutation_from_dsl(<DagMutationDsl as OpText>::parse_op(line)?))
     }
 
-    fn print_op(&self) -> String {
+    async fn print_op(&self) -> String {
         <DagMutationDsl as OpText>::print_op(&dag_mutation_to_dsl(self))
     }
 }
@@ -183,11 +183,11 @@ impl OpText for DagMutation {
 /// ⚡️ Binary mirror of the `OpText` bridge above — `DagMutationDsl` already derives `OpBinary` via
 /// `#[derive(dsl::DslEnum)]`, so this is a pure to/from-dsl forward.
 impl protocol::OpBinary for DagMutation {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         dag_mutation_to_dsl(self).encode_op()
     }
 
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         Ok(dag_mutation_from_dsl(DagMutationDsl::decode_op(bytes)?))
     }
 }
@@ -198,35 +198,35 @@ impl protocol::OpBinary for DagMutation {
 mod tests {
     use super::*;
 
-    fn sample_node(id: &str) -> DagNodeSpec {
+    async fn sample_node(id: &str) -> DagNodeSpec {
         crate::artifacts::dag::schema::default_node_for_kind("note", id, 0.0, 0.0)
     }
 
     #[test]
-    fn op_text_round_trips_create_node() {
+    async fn op_text_round_trips_create_node() {
         store::os_store::test_support::assert_op_line_round_trip(&create_node(sample_node("node-1")));
     }
 
     #[test]
-    fn op_text_round_trips_move_node() {
+    async fn op_text_round_trips_move_node() {
         store::os_store::test_support::assert_op_line_round_trip(&move_node("node-1".into(), 5.0, 6.0));
     }
 
     #[test]
-    fn op_text_round_trips_change_node_operator_kind_none() {
+    async fn op_text_round_trips_change_node_operator_kind_none() {
         store::os_store::test_support::assert_op_line_round_trip(&change_node_operator_kind("node-1".into(), None));
     }
 
     /// ⚖️ Every variant, not just the hand-picked ones above — full-coverage `OpText` round trip
     /// over the closed vocabulary, one sample value per field.
     #[test]
-    fn every_variant_op_text_round_trips() {
+    async fn every_variant_op_text_round_trips() {
         for mutation in every_mutation() {
             store::os_store::test_support::assert_op_line_round_trip(&mutation);
         }
     }
 
-    fn every_mutation() -> Vec<DagMutation> {
+    async fn every_mutation() -> Vec<DagMutation> {
         vec![
             create_node(sample_node("node-1")),
             delete_node("node-1".into()),

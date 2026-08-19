@@ -15,37 +15,37 @@ use serde_json::Value;
 use std::collections::HashMap;
 
 //#region 🔖️Parameters
-pub fn parameter_entity_id(parameter: &WorkflowParameter) -> &str {
+pub async fn parameter_entity_id(parameter: &WorkflowParameter) -> &str {
     match parameter {
         WorkflowParameter::Numeric { id, .. } | WorkflowParameter::Categorical { id, .. } | WorkflowParameter::Toggle { id, .. } | WorkflowParameter::Text { id, .. } => id,
     }
 }
 
-pub fn parameter_name(parameter: &WorkflowParameter) -> &str {
+pub async fn parameter_name(parameter: &WorkflowParameter) -> &str {
     match parameter {
         WorkflowParameter::Numeric { name, .. } | WorkflowParameter::Categorical { name, .. } | WorkflowParameter::Toggle { name, .. } | WorkflowParameter::Text { name, .. } => name,
     }
 }
 
 pub trait OsParameterId {
-    fn id(&self) -> &str;
+    async fn id(&self) -> &str;
 }
 
 impl OsParameterId for WorkflowParameter {
-    fn id(&self) -> &str {
+    async fn id(&self) -> &str {
         parameter_entity_id(self)
     }
 }
 
 /// @emoji ➕️ Builds an `AddParameter` operation with a fresh default parameter of the requested type.
-pub fn add_parameter_operation(parameter_type: &WorkflowParameterType, name: &str) -> WorkflowMutation {
+pub async fn add_parameter_operation(parameter_type: &WorkflowParameterType, name: &str) -> WorkflowMutation {
     WorkflowMutation::AddParameter { parameter: create_default_workflow_parameter(parameter_type, name, None) }
 }
 
 /// @emoji 🩹️ Builds a `PatchParameter` operation by folding `patch` (a `{field: value}` object) into the
 /// current parameter — the store-free operation-builder used in place of os-core's
 /// `OsWorkflowStore::patch_parameter`.
-pub fn patch_parameter_operation(projection: &WorkflowSnapshot, parameter_id: &str, patch: &Value) -> Option<WorkflowMutation> {
+pub async fn patch_parameter_operation(projection: &WorkflowSnapshot, parameter_id: &str, patch: &Value) -> Option<WorkflowMutation> {
     let current = projection.parameters.iter().find(|parameter| parameter_entity_id(parameter) == parameter_id)?;
     Some(WorkflowMutation::PatchParameter { parameter_id: parameter_id.into(), parameter: patch_workflow_parameter(current, patch) })
 }
@@ -57,7 +57,7 @@ pub fn patch_parameter_operation(projection: &WorkflowSnapshot, parameter_id: &s
 /// the caller to focus. The store-free operation-builder the plugin uses in place of os-core's
 /// `OsWorkflowStore::add_workflow_node`. A node IS the app instance now, there is no separate
 /// `OsAppInstance` to mint alongside it.
-pub fn add_workflow_node_operation(plugin_id: &str, app_id: &str, label: Option<&str>, x: f64, y: f64) -> Option<(WorkflowMutation, String)> {
+pub async fn add_workflow_node_operation(plugin_id: &str, app_id: &str, label: Option<&str>, x: f64, y: f64) -> Option<(WorkflowMutation, String)> {
     let app = resolve_os_app_definition(plugin_id, app_id)?;
     let node_id = create_os_id("node");
     let position = WorkflowPosition { x, y, width: 0.0, height: 0.0 };
@@ -76,7 +76,7 @@ pub fn add_workflow_node_operation(plugin_id: &str, app_id: &str, label: Option<
 /// neither can push a `WorkflowMutation::ConnectPorts` for an incompatible or unresolved pair of ports.
 /// Operates directly on `WorkflowNode`/`WorkflowMediaPort` — a node's ports are typed `MediaPortSpec`s
 /// now, no more string `artifact_kind` join through a separate `OsMediaPort`.
-pub fn negotiate_media_connect(projection: &WorkflowSnapshot, source_node_id: &str, source_port_id: &str, target_node_id: &str, target_port_id: &str) -> Result<MediaContract, String> {
+pub async fn negotiate_media_connect(projection: &WorkflowSnapshot, source_node_id: &str, source_port_id: &str, target_node_id: &str, target_port_id: &str) -> Result<MediaContract, String> {
     let source_port =
         projection.graph.nodes.iter().find(|node| node.id == source_node_id).and_then(|node| node.outputs.iter().find(|port| port.id == source_port_id)).ok_or_else(|| format!("unknown source port {source_node_id}:{source_port_id}"))?;
     let target_port =
@@ -91,9 +91,9 @@ pub fn negotiate_media_connect(projection: &WorkflowSnapshot, source_node_id: &s
 // wave. `flatten_media_vfs_rows` is kept as a minimal compiling stub (always empty) so this crate's
 // callers still compile; `media_port_label` still has a real body since it doesn't depend on the
 // deleted types.
-pub fn flatten_media_vfs_rows(_parent_id: &str, _graph: &semio_framework_os::Workflow, _bindings: &[WorkflowParameterBinding], _parameters: &[WorkflowParameter], _rows: &mut Vec<Value>) {}
+pub async fn flatten_media_vfs_rows(_parent_id: &str, _graph: &semio_framework_os::Workflow, _bindings: &[WorkflowParameterBinding], _parameters: &[WorkflowParameter], _rows: &mut Vec<Value>) {}
 
-pub fn media_port_label(port_id: &str, parameter_by_id: &HashMap<String, &WorkflowParameter>) -> String {
+pub async fn media_port_label(port_id: &str, parameter_by_id: &HashMap<String, &WorkflowParameter>) -> String {
     workflow_parameter_id_from_port_id(port_id).and_then(|id| parameter_by_id.get(&id).map(|row| parameter_name(row).to_string())).or_else(|| media_port_spec_id(port_id)).unwrap_or_else(|| port_id.to_string())
 }
 //#endregion 🔖️MediaVfs
@@ -102,7 +102,7 @@ pub fn media_port_label(port_id: &str, parameter_by_id: &HashMap<String, &Workfl
 /// @emoji 🕸️ Projects the workflow onto the generic port-directed-DAG fixture the Compiled DAG window
 /// renders — every `WorkflowNode` becomes one `DagNodeKind::AppInstance` directly (node IS instance
 /// now; no separate join through `OsAppInstance`).
-pub fn workflow_to_dag_fixture(projection: &WorkflowSnapshot) -> DagFixture {
+pub async fn workflow_to_dag_fixture(projection: &WorkflowSnapshot) -> DagFixture {
     let parameter_by_id: HashMap<_, _> = projection.parameters.iter().map(|row| (parameter_entity_id(row).to_string(), row)).collect();
     let nodes = projection
         .graph
@@ -158,7 +158,7 @@ pub fn workflow_to_dag_fixture(projection: &WorkflowSnapshot) -> DagFixture {
     DagFixture { schema: "dag.fixture".into(), camera: DagCamera { x: 0.0, y: 0.0, zoom: 1.0 }, nodes, edges }
 }
 
-pub fn compiled_dag_wire_literal(projection: &WorkflowSnapshot) -> String {
+pub async fn compiled_dag_wire_literal(projection: &WorkflowSnapshot) -> String {
     let fixture = workflow_to_dag_fixture(projection);
     dag_fixture_to_wire_literal(&fixture)
 }
@@ -171,7 +171,7 @@ pub fn compiled_dag_wire_literal(projection: &WorkflowSnapshot) -> String {
 // `WorkflowParameter`/`WorkflowParameterBinding`/`WorkflowParameterType`. These two parameter
 // vocabularies are a known, intentionally-deferred duplication — this bridge converts between them at
 // the few call sites that still need the os-core registry-facing shape.
-pub fn workflow_parameter_type_to_os(kind: &WorkflowParameterType) -> semio_framework_os::OsParameterType {
+pub async fn workflow_parameter_type_to_os(kind: &WorkflowParameterType) -> semio_framework_os::OsParameterType {
     match kind {
         WorkflowParameterType::Numeric => semio_framework_os::OsParameterType::Numeric,
         WorkflowParameterType::Categorical => semio_framework_os::OsParameterType::Categorical,
@@ -180,7 +180,7 @@ pub fn workflow_parameter_type_to_os(kind: &WorkflowParameterType) -> semio_fram
     }
 }
 
-pub fn workflow_parameter_to_os(parameter: &WorkflowParameter) -> semio_framework_os::OsParameter {
+pub async fn workflow_parameter_to_os(parameter: &WorkflowParameter) -> semio_framework_os::OsParameter {
     match parameter {
         WorkflowParameter::Numeric { id, name, value, min, max, step } => semio_framework_os::OsParameter::Numeric { id: id.clone(), name: name.clone(), value: *value, min: *min, max: *max, step: *step },
         WorkflowParameter::Categorical { id, name, value, options } => semio_framework_os::OsParameter::Categorical { id: id.clone(), name: name.clone(), value: value.clone(), options: options.clone() },
@@ -189,21 +189,21 @@ pub fn workflow_parameter_to_os(parameter: &WorkflowParameter) -> semio_framewor
     }
 }
 
-pub fn workflow_parameters_to_os(parameters: &[WorkflowParameter]) -> Vec<semio_framework_os::OsParameter> {
+pub async fn workflow_parameters_to_os(parameters: &[WorkflowParameter]) -> Vec<semio_framework_os::OsParameter> {
     parameters.iter().map(workflow_parameter_to_os).collect()
 }
 
-pub fn workflow_parameter_binding_to_os(binding: &WorkflowParameterBinding) -> semio_framework_os::OsParameterFieldBinding {
+pub async fn workflow_parameter_binding_to_os(binding: &WorkflowParameterBinding) -> semio_framework_os::OsParameterFieldBinding {
     semio_framework_os::OsParameterFieldBinding { parameter_id: binding.parameter_id.clone(), node_id: binding.node_id.clone(), field_path: binding.field_path.clone() }
 }
 
-pub fn workflow_parameter_bindings_to_os(bindings: &[WorkflowParameterBinding]) -> Vec<semio_framework_os::OsParameterFieldBinding> {
+pub async fn workflow_parameter_bindings_to_os(bindings: &[WorkflowParameterBinding]) -> Vec<semio_framework_os::OsParameterFieldBinding> {
     bindings.iter().map(workflow_parameter_binding_to_os).collect()
 }
 
 /// 🌉️ Whether `parameter`'s type is compatible with a registered app parameter-field's declared
 /// `OsParameterType` — the inspector panel's single call site for this bridge.
-pub fn os_parameter_types_compatible_shim(parameter: &WorkflowParameter, target: &semio_framework_os::OsParameterType) -> bool {
+pub async fn os_parameter_types_compatible_shim(parameter: &WorkflowParameter, target: &semio_framework_os::OsParameterType) -> bool {
     let kind = match parameter {
         WorkflowParameter::Numeric { .. } => WorkflowParameterType::Numeric,
         WorkflowParameter::Categorical { .. } => WorkflowParameterType::Categorical,
@@ -236,7 +236,7 @@ struct AppRegistrationWireEntry {
 /// module doc) rather than in the `🧭️navigation` command file, so the command handler stays
 /// dispatch-only and the one production `register_app_io` call for this app sits beside its other
 /// OS-registry bridge functions.
-pub fn apply_app_registrations(json: &str) {
+pub async fn apply_app_registrations(json: &str) {
     let Ok(entries) = serde_json::from_str::<Vec<AppRegistrationWireEntry>>(json) else { return };
     for entry in entries {
         register_app_io(&entry.plugin_id, &entry.app);
@@ -252,7 +252,7 @@ mod tests {
     use serde_json::json;
 
     #[test]
-    fn patch_parameter_op_updates_numeric_value() {
+    async fn patch_parameter_op_updates_numeric_value() {
         let projection = demo_space_projection();
         let operation = patch_parameter_operation(&projection, "param-brush-size", &json!({ "value": 48.0 })).expect("operation");
         match operation {
@@ -265,7 +265,7 @@ mod tests {
     }
 
     #[test]
-    fn compiled_dag_wire_literal_mentions_app_instances() {
+    async fn compiled_dag_wire_literal_mentions_app_instances() {
         let wire = compiled_dag_wire_literal(&demo_space_projection());
         assert!(wire.contains("appInstance") || wire.contains("draw"));
     }

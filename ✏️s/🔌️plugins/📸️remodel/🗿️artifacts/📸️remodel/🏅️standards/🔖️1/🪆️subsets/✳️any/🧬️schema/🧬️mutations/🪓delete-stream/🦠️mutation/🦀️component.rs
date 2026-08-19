@@ -14,23 +14,23 @@ pub struct DeleteStream {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn delete_stream(id: String) -> RemodelMutation {
+pub async fn delete_stream(id: String) -> RemodelMutation {
     RemodelMutation::DeleteStream(DeleteStream { id })
 }
 
 impl protocol::MutationKind<RemodelSnapshot, RemodelMutation> for DeleteStream {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "delete", entity: "stream", kind: "delete-stream", record: "DeletedStream" };
 
-    fn diff(&self, base: &RemodelSnapshot) -> protocol::MutationOutcome<RemodelDiff> {
+    async fn diff(&self, base: &RemodelSnapshot) -> protocol::MutationOutcome<RemodelDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &RemodelSnapshot) -> Vec<RemodelMutation> {
+    async fn inverse(&self, base: &RemodelSnapshot) -> Vec<RemodelMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         format!("Delete stream \"{}\"", self.id)
     }
-    fn target(&self) -> Vec<String> {
+    async fn target(&self) -> Vec<String> {
         vec![self.id.clone()]
     }
 }

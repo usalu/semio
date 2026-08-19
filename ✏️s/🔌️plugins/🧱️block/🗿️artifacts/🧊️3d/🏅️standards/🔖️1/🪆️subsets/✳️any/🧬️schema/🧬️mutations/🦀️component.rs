@@ -109,14 +109,14 @@ pub use super::resize_vortex::mutation::{resize_vortex, ResizeVortex};
 pub use super::scale_camera3d::mutation::{scale_camera3d, ScaleCamera3d};
 
 /// ▶️ Applies `mutation` via its diff, mutating `projection` in place.
-pub fn apply_block3d_mutation(projection: &mut Block3dSnapshot, mutation: &Block3dMutation) -> protocol::MutationApplyResult<()> {
+pub async fn apply_block3d_mutation(projection: &mut Block3dSnapshot, mutation: &Block3dMutation) -> protocol::MutationApplyResult<()> {
     let (next, _) = vcs::apply_mutation(projection, mutation)?;
 
     *projection = next;
     Ok(())
 }
 
-pub fn inverse_block3d_mutation(projection: &Block3dSnapshot, mutation: &Block3dMutation) -> Vec<Block3dMutation> {
+pub async fn inverse_block3d_mutation(projection: &Block3dSnapshot, mutation: &Block3dMutation) -> Vec<Block3dMutation> {
     mutation.inverse(projection)
 }
 
@@ -131,7 +131,7 @@ mod tests {
     use protocol::SemanticMutation;
     use protocol::MutationDiff;
 
-    fn round_trip(base: &Block3dSnapshot, mutation: &Block3dMutation) -> Block3dSnapshot {
+    async fn round_trip(base: &Block3dSnapshot, mutation: &Block3dMutation) -> Block3dSnapshot {
         let forward = mutation.diff(base).diff().apply(base).expect("valid mutation diff");
         let mut restored = forward.clone();
         let mut backward = mutation.inverse(base);
@@ -143,7 +143,7 @@ mod tests {
         forward
     }
 
-    fn seeded_snapshot() -> Block3dSnapshot {
+    async fn seeded_snapshot() -> Block3dSnapshot {
         let mut base = empty_block3d_snapshot();
         base.representations.push(BlockRepresentation { id: "r0".into(), name: "r0".into(), mesh_url: None, tags: vec!["lod0".into()], lod: None, description: String::new(), attributes: vec![BlockAttribute { key: "finish".into(), value: "matte".into(), definition: None }] });
         crate::artifacts::block3d::set_vortex_kinds(&mut base, vec![Block3dVortexKind { id: "vk0".into(), name: "vk0".into(), label: "VK0".into(), color: "#888".into(), default_cable_kind: "cable.link".into() }]);
@@ -156,14 +156,14 @@ mod tests {
 
     //#region 🔖️Behavior
     #[test]
-    fn rename_and_change_object_kind_round_trip() {
+    async fn rename_and_change_object_kind_round_trip() {
         let base = empty_block3d_snapshot();
         let renamed = round_trip(&base, &rename_object_kind("Renamed".into()));
         assert_eq!(renamed.object_kind.name, "Renamed");
     }
 
     #[test]
-    fn create_rename_tag_attribute_delete_representation_round_trip() {
+    async fn create_rename_tag_attribute_delete_representation_round_trip() {
         let base = empty_block3d_snapshot();
         let representation = BlockRepresentation { id: "r0".into(), name: "r0".into(), mesh_url: None, tags: Vec::new(), lod: None, description: String::new(), attributes: Vec::new() };
         let created = round_trip(&base, &create_representation(representation));
@@ -183,7 +183,7 @@ mod tests {
     }
 
     #[test]
-    fn create_rename_delete_vortex_kind_round_trip() {
+    async fn create_rename_delete_vortex_kind_round_trip() {
         let base = empty_block3d_snapshot();
         let vortex_kind = Block3dVortexKind { id: "vk0".into(), name: "vk0".into(), label: "VK0".into(), color: "#888".into(), default_cable_kind: "cable.link".into() };
         let created = round_trip(&base, &create_vortex_kind(vortex_kind));
@@ -195,7 +195,7 @@ mod tests {
     }
 
     #[test]
-    fn create_move_resize_delete_vortex_round_trip() {
+    async fn create_move_resize_delete_vortex_round_trip() {
         let base = seeded_snapshot();
         let vortex = Block3dVortexTemplate { id: "v1".into(), vortex_kind: "vk0".into(), position: [0.0, 0.0, 0.0], direction: [0.0, 1.0, 0.0], radius: 0.2, label: None };
         let created = round_trip(&base, &create_vortex(vortex));
@@ -209,7 +209,7 @@ mod tests {
     }
 
     #[test]
-    fn add_remove_compatibility_rule_round_trip() {
+    async fn add_remove_compatibility_rule_round_trip() {
         let base = empty_block3d_snapshot();
         let rule = BlockCompatibilityRule { id: "c0".into(), source: "a".into(), target: "b".into(), bidirectional: true };
         let added = round_trip(&base, &add_compatibility_rule(rule));
@@ -219,7 +219,7 @@ mod tests {
     }
 
     #[test]
-    fn add_remove_attribute_round_trip() {
+    async fn add_remove_attribute_round_trip() {
         let base = empty_block3d_snapshot();
         let attribute = BlockAttribute { key: "material".into(), value: "concrete".into(), definition: None };
         let added = round_trip(&base, &add_attribute(attribute));
@@ -229,7 +229,7 @@ mod tests {
     }
 
     #[test]
-    fn add_remove_author_round_trip() {
+    async fn add_remove_author_round_trip() {
         let base = empty_block3d_snapshot();
         let author = BlockAuthor { id: "a0".into(), name: "Ada".into(), email: None };
         let added = round_trip(&base, &add_author(author));
@@ -239,7 +239,7 @@ mod tests {
     }
 
     #[test]
-    fn move_and_scale_camera3d_round_trip() {
+    async fn move_and_scale_camera3d_round_trip() {
         let base = empty_block3d_snapshot();
         let moved = round_trip(&base, &move_camera3d([1.0, 2.0, 3.0], [0.0, 0.0, 0.0]));
         assert_eq!(moved.camera3d.position, [1.0, 2.0, 3.0]);
@@ -248,7 +248,7 @@ mod tests {
     }
 
     #[test]
-    fn change_meta_description_round_trips() {
+    async fn change_meta_description_round_trips() {
         let base = empty_block3d_snapshot();
         let after = round_trip(&base, &change_meta_description("session notes".into()));
         assert_eq!(after.meta.description, "session notes");
@@ -257,7 +257,7 @@ mod tests {
 
     //#region 🔖️MutationLaws
     #[test]
-    fn every_mutation_kind_satisfies_the_inverse_law() {
+    async fn every_mutation_kind_satisfies_the_inverse_law() {
         let base = seeded_snapshot();
 
         assert_mutation_inverse_law(&base, &rename_object_kind("x".into()));
@@ -300,7 +300,7 @@ mod tests {
     }
 
     #[test]
-    fn change_object_kind_label_diff_absorb_law() {
+    async fn change_object_kind_label_diff_absorb_law() {
         let base = empty_block3d_snapshot();
         let d1 = change_object_kind_label("first".into()).diff(&base).into_parts().0;
         let mid = d1.apply(&base).expect("valid mutation diff");
@@ -309,7 +309,7 @@ mod tests {
     }
 
     #[test]
-    fn move_vortex_diff_absorb_law() {
+    async fn move_vortex_diff_absorb_law() {
         let base = seeded_snapshot();
         let d1 = move_vortex("v0".into(), [0.5, 0.0, 0.0], [1.0, 0.0, 0.0]).diff(&base).into_parts().0;
         let mid = d1.apply(&base).expect("valid mutation diff");
@@ -318,7 +318,7 @@ mod tests {
     }
 
     #[test]
-    fn dispatch_registers_semantic_descriptors_with_approved_verbs() {
+    async fn dispatch_registers_semantic_descriptors_with_approved_verbs() {
         register_block3d_mutation_descriptors();
         for kind in Block3dMutation::kinds() {
             assert!(protocol::is_approved_verb(kind.verb), "verb '{}' must be in APPROVED_VERBS", kind.verb);
@@ -333,7 +333,7 @@ mod tests {
     use protocol::testkit::{assert_fatal_never_applies, assert_missing_target_is_error};
 
     #[test]
-    fn missing_target_is_error_per_verb_family() {
+    async fn missing_target_is_error_per_verb_family() {
         let base = empty_block3d_snapshot();
         assert_missing_target_is_error(&base, &delete_vortex_kind("missing".into())); // delete
         assert_missing_target_is_error(&base, &remove_author("missing".into())); // remove
@@ -342,7 +342,7 @@ mod tests {
     }
 
     #[test]
-    fn create_duplicate_id_is_fatal_and_never_applies() {
+    async fn create_duplicate_id_is_fatal_and_never_applies() {
         let mut base = empty_block3d_snapshot();
         let vortex_kind = Block3dVortexKind { id: "vk0".into(), name: "vk0".into(), label: "VK0".into(), color: "#888".into(), default_cable_kind: "cable.power".into() };
         crate::artifacts::block3d::set_vortex_kinds(&mut base, vec![vortex_kind.clone()]);

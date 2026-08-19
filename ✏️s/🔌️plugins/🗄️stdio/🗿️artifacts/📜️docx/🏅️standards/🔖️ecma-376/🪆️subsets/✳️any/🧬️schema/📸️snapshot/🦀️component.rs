@@ -50,7 +50,7 @@ pub struct DocxParagraph {
 }
 
 impl DocxParagraph {
-    pub fn text(text: impl Into<String>) -> Self {
+    pub async fn text(text: impl Into<String>) -> Self {
         Self { runs: vec![DocxRun { text: text.into(), ..Default::default() }], style: None, extra_paragraph_properties: Vec::new() }
     }
 }
@@ -99,7 +99,7 @@ pub enum DocxBlock {
 }
 
 impl DocxBlock {
-    pub fn paragraph(text: impl Into<String>) -> Self {
+    pub async fn paragraph(text: impl Into<String>) -> Self {
         Self::Paragraph(DocxParagraph::text(text))
     }
 }
@@ -145,14 +145,14 @@ pub struct DocxSnapshot {
 }
 
 impl Default for DocxSnapshot {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self { schema: STDIO_DOCX_DOCUMENT_SCHEMA.into(), opc: OpcPackage::default(), document: DocxDocument::default() }
     }
 }
 
 impl DocxSnapshot {
     /// 🏗️ Builds a snapshot from an already-decoded OPC package plus its interpreted document.
-    pub fn from_parts(opc: OpcPackage, document: DocxDocument) -> Self {
+    pub async fn from_parts(opc: OpcPackage, document: DocxDocument) -> Self {
         Self { schema: STDIO_DOCX_DOCUMENT_SCHEMA.into(), opc, document }
     }
 }
@@ -161,10 +161,10 @@ impl DocxSnapshot {
 //#region 🔖️HandcraftedArtifactCodecs
 impl store::ArtifactDsl for DocxSnapshot {
     const EXTENSION: &'static str = "docx";
-    fn envelope_id() -> &'static str {
+    async fn envelope_id() -> &'static str {
         "stdio.docx"
     }
-    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+    async fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
         let body = match store::semio_format::split_text_preamble(text) {
             Ok((_, rest)) => rest,
             Err(_) => text,
@@ -179,7 +179,7 @@ impl store::ArtifactDsl for DocxSnapshot {
         }
         crate::artifacts::docx::engine::decode_docx(&bytes).map_err(|e| store::TextError::new(e.to_string(), dsl::TextSpan::at(1, 1)))
     }
-    fn print_dsl(&self) -> String {
+    async fn print_dsl(&self) -> String {
         let bytes = crate::artifacts::docx::engine::encode_docx(self).unwrap_or_default();
         let body: String = bytes.iter().map(|b| format!("{b:02x}")).collect();
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
@@ -188,13 +188,13 @@ impl store::ArtifactDsl for DocxSnapshot {
 }
 
 impl store::ArtifactPack for DocxSnapshot {
-    fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
+    async fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
         let raw = crate::artifacts::docx::engine::encode_docx(self).map_err(|e| store::PackError::Schema(e.to_string()))?;
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &raw))
     }
-    fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
+    async fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
         if envelope.envelope_id() != <Self as store::ArtifactDsl>::envelope_id() {
             return Err(store::PackError::Schema("pack envelope mismatch".into()));

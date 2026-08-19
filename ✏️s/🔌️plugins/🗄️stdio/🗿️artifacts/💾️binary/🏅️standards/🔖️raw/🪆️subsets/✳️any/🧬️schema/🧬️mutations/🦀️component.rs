@@ -42,7 +42,7 @@ pub enum BinaryMutation {
 
 //#region 🔖️Apply
 /// ▶️ Applies `mutation` to `snapshot`. Diff is the single semantics source.
-pub fn apply_binary_mutation(snapshot: &mut BinarySnapshot, mutation: &BinaryMutation) -> protocol::MutationOutcome<BinaryDiff> {
+pub async fn apply_binary_mutation(snapshot: &mut BinarySnapshot, mutation: &BinaryMutation) -> protocol::MutationOutcome<BinaryDiff> {
     let outcome = <BinaryMutation as Mutation<BinarySnapshot>>::diff(mutation, &*snapshot);
     match protocol::MutationDiff::apply(outcome.diff(), snapshot) {
         Ok(next) => {
@@ -58,7 +58,7 @@ pub fn apply_binary_mutation(snapshot: &mut BinarySnapshot, mutation: &BinaryMut
 impl Mutation<BinarySnapshot> for BinaryMutation {
     type Diff = BinaryDiff;
 
-    fn diff(&self, base: &BinarySnapshot) -> protocol::MutationOutcome<Self::Diff> {
+    async fn diff(&self, base: &BinarySnapshot) -> protocol::MutationOutcome<Self::Diff> {
         protocol::MutationOutcome::new(match self {
             BinaryMutation::NoMutation => BinaryDiff::default(),
             BinaryMutation::SetSnapshot { snapshot } => diff_set_snapshot(base, snapshot),
@@ -74,7 +74,7 @@ impl Mutation<BinarySnapshot> for BinaryMutation {
         })
     }
 
-    fn inverse(&self, base: &BinarySnapshot) -> Vec<Self> {
+    async fn inverse(&self, base: &BinarySnapshot) -> Vec<Self> {
         match self {
             BinaryMutation::NoMutation => vec![BinaryMutation::NoMutation],
             BinaryMutation::SetSnapshot { .. } => vec![BinaryMutation::SetSnapshot { snapshot: base.clone() }],
@@ -106,7 +106,7 @@ impl Mutation<BinarySnapshot> for BinaryMutation {
 /// enum's `OpText` impl uses (see `SpaceMutation`, `FlowMutationDsl` for the framework-side
 /// precedent this copies verbatim).
 impl OpText for BinaryMutation {
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
+    async fn parse_op(line: &str) -> Result<Self, store::TextError> {
         let variants = <Self as dsl::DslVariants>::variants();
         for (keyword, spec_fn) in &variants {
             let probe = format!("{} ", keyword);
@@ -117,7 +117,7 @@ impl OpText for BinaryMutation {
         }
         Err(dsl::__rt::field_error(format!("unknown operation line '{line}'")))
     }
-    fn print_op(&self) -> String {
+    async fn print_op(&self) -> String {
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
         let variants = <Self as dsl::DslVariants>::variants();
         let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
@@ -129,10 +129,10 @@ impl OpText for BinaryMutation {
 /// `format u8 (=1) | variant ordinal varint | record body` layout shared by every `DslVariants`
 /// type. Zero per-artifact logic.
 impl OpBinary for BinaryMutation {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         dsl::variants_binary::encode_op(self)
     }
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         dsl::variants_binary::decode_op(bytes)
     }
 }
@@ -143,7 +143,7 @@ impl OpBinary for BinaryMutation {
 /// below AND the new `ops_grammar_conformance_law`/`protocol_walk_law` conformance tests in
 /// `⚙️engine/🦀️component.rs`, per CLAUDE.md (no duplicated literal case lists).
 #[cfg(test)]
-pub(crate) fn demo_mutation_cases() -> Vec<BinaryMutation> {
+pub(crate) async fn demo_mutation_cases() -> Vec<BinaryMutation> {
     vec![
         BinaryMutation::NoMutation,
         BinaryMutation::SetSnapshot { snapshot: BinarySnapshot { bytes: vec![9, 9], ..Default::default() } },
@@ -160,12 +160,12 @@ mod tests {
     use protocol::os_spr::command::DiffAlgebra;
     use protocol::MutationDiff;
 
-    pub(crate) fn base() -> BinarySnapshot {
+    pub(crate) async fn base() -> BinarySnapshot {
         BinarySnapshot { bytes: vec![1, 2, 3, 4, 5], ..Default::default() }
     }
 
     #[test]
-    fn mutation_diff_law() {
+    async fn mutation_diff_law() {
         let b = base();
         for m in demo_mutation_cases() {
             let mut via_apply = b.clone();
@@ -177,7 +177,7 @@ mod tests {
     }
 
     #[test]
-    fn inverse_law() {
+    async fn inverse_law() {
         let b = base();
         for m in demo_mutation_cases() {
             let mut mutated = b.clone();
@@ -196,7 +196,7 @@ mod tests {
     }
 
     #[test]
-    fn absorb_law_cartesian() {
+    async fn absorb_law_cartesian() {
         let b = base();
         let variants = demo_mutation_cases();
         for m1 in &variants {
@@ -215,7 +215,7 @@ mod tests {
     /// 🧪️ F6-PILOT: `OpText`/`OpBinary` round-trip laws (handcrafted impls over the
     /// `dsl::DslOps`-derived `DslVariants`).
     #[test]
-    fn op_text_binary_roundtrip_law() {
+    async fn op_text_binary_roundtrip_law() {
         for m in demo_mutation_cases() {
             let printed = m.print_op();
             assert!(!printed.contains('\n'), "print_op must be one line, got {printed:?}");

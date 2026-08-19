@@ -5,7 +5,7 @@ use crate::artifacts::en1995::mutations::change_m_crit_knm::mutation::ChangeMCri
 use crate::artifacts::en1995::En1995Snapshot;
 
 //#region 🔖️Diff
-pub fn diff(payload: &ChangeMCritKnm, base: &En1995Snapshot) -> protocol::MutationOutcome<En1995Diff> {
+pub async fn diff(payload: &ChangeMCritKnm, base: &En1995Snapshot) -> protocol::MutationOutcome<En1995Diff> {
     if !payload.new_m_crit_knm.is_finite() {
         return protocol::MutationOutcome::fatal("mutation.invariant", "M crit knm must be a finite number.", Vec::<String>::new());
     }

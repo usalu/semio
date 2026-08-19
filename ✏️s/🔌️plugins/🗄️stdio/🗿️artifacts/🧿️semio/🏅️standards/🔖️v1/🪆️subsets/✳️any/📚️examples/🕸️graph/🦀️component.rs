@@ -8,16 +8,16 @@
 use semio_framework_plugin::{ExampleSource, LocalizedLabel};
 
 pub const ID: &str = "graph";
-pub fn label() -> LocalizedLabel { LocalizedLabel::native("Graph", "Graph") }
+pub async fn label() -> LocalizedLabel { LocalizedLabel::native("Graph", "Graph") }
 pub const ICON: &str = "file";
 pub const PRIMARY_TEXT: &str = include_str!("🖼️assets/🗣️example.dsl.semio");
-pub fn source() -> ExampleSource { ExampleSource::new(ID, label(), PRIMARY_TEXT, ICON) }
+pub async fn source() -> ExampleSource { ExampleSource::new(ID, label(), PRIMARY_TEXT, ICON) }
 
 #[cfg(test)]
 mod tests {
     use super::*;
     #[test]
-    fn graph_source_nonempty() {
+    async fn graph_source_nonempty() {
         assert!(!PRIMARY_TEXT.is_empty());
         let _ = source();
     }

@@ -12,12 +12,12 @@ use crate::artifacts::playbook::PlaybookSnapshot;
 pub const FACADE_GENERATOR_EXAMPLE_TEXT: &str = include_str!("../../../📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio");
 
 /// 📖️ Parses `.playbook` DSL text into a `PlaybookSnapshot`.
-pub fn parse_dsl(text: &str) -> Result<PlaybookSnapshot, store::TextError> {
+pub async fn parse_dsl(text: &str) -> Result<PlaybookSnapshot, store::TextError> {
     <PlaybookSnapshot as store::ArtifactDsl>::parse_dsl(text)
 }
 
 /// 🖨️ Prints a `PlaybookSnapshot` back to `.playbook` DSL text.
-pub fn print_dsl(document: &PlaybookSnapshot) -> String {
+pub async fn print_dsl(document: &PlaybookSnapshot) -> String {
     store::ArtifactDsl::print_dsl(document)
 }
 
@@ -28,20 +28,20 @@ mod tests {
     use crate::artifacts::playbook::empty_playbook_snapshot;
 
     #[test]
-    fn dsl_round_trips_the_empty_snapshot() {
+    async fn dsl_round_trips_the_empty_snapshot() {
         let document = empty_playbook_snapshot();
         let text = print_dsl(&document);
         assert_eq!(parse_dsl(&text).expect("parse"), document);
     }
 
     #[test]
-    fn facade_generator_example_dsl_round_trips() {
+    async fn facade_generator_example_dsl_round_trips() {
         let document = parse_dsl(FACADE_GENERATOR_EXAMPLE_TEXT).expect("parse example");
         store::os_store::test_support::assert_dsl_round_trip(&document);
     }
 
     #[test]
-    fn facade_generator_example_matches_the_handcrafted_spec() {
+    async fn facade_generator_example_matches_the_handcrafted_spec() {
         let document = parse_dsl(FACADE_GENERATOR_EXAMPLE_TEXT).expect("parse example");
         assert!(!document.steps().is_empty());
         assert_eq!(print_dsl(&document).trim_end(), FACADE_GENERATOR_EXAMPLE_TEXT.trim_end());

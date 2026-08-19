@@ -27,7 +27,7 @@ pub struct RewriteBounds {
 }
 
 /// 📐️ Computes `bounds` directly from `rule_layout` — an empty layout yields `RewriteBounds::default()`.
-pub fn compute_bounds(snapshot: &RewriteSnapshot) -> RewriteBounds {
+pub async fn compute_bounds(snapshot: &RewriteSnapshot) -> RewriteBounds {
     let node_count = snapshot.rule_layout.len() as u32;
     if snapshot.rule_layout.is_empty() {
         return RewriteBounds::default();
@@ -51,12 +51,12 @@ mod tests {
     use std::collections::BTreeMap;
 
     #[test]
-    fn empty_rule_layout_yields_default_bounds() {
+    async fn empty_rule_layout_yields_default_bounds() {
         assert_eq!(compute_bounds(&RewriteSnapshot::default()), RewriteBounds::default());
     }
 
     #[test]
-    fn bounds_matches_rule_layout_extents() {
+    async fn bounds_matches_rule_layout_extents() {
         let mut rule_layout = BTreeMap::new();
         rule_layout.insert("a".to_string(), LayoutPoint { x: 0.0, y: 0.0 });
         rule_layout.insert("b".to_string(), LayoutPoint { x: -140.0, y: 80.0 });

@@ -10,7 +10,7 @@ pub const GIS2D_PLAY_BODY_DOCUMENT: &str = "gis2d.play.document";
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
-pub fn definition() -> PanelTabDefinition {
+pub async fn definition() -> PanelTabDefinition {
     PanelTabDefinition {
         kind: PanelTabKind::App(FRAMEWORK_PANEL_TAB_ARTIFACT_ID.into()),
         label: LocalizedLabel::native(FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL, "Dokument"),
@@ -27,7 +27,7 @@ pub fn definition() -> PanelTabDefinition {
 /// `.interaction_domain("features")` below has the framework's renderer translate clicks into
 /// injected `interactionSelect` and stamp presence from `InteractionState`, replacing the deleted
 /// `.selected()`/`.selection_change()` calls.
-pub fn render(_cfg: &Gis2dConfig, labels: &Gis2dPlayLabels) -> UiNode {
+pub async fn render(_cfg: &Gis2dConfig, labels: &Gis2dPlayLabels) -> UiNode {
     let builder = PanelTreeBuilder::new("gis2d-play-document");
     let layer_items: Vec<UiTreeItemNode> = GIS_MAP_LAYER_IDS
         .iter()
@@ -47,13 +47,13 @@ mod tests {
     use crate::editor::gis2d::testkit::{app, render as render_body};
 
     #[test]
-    fn document_lists_map_layers() {
+    async fn document_lists_map_layers() {
         let mut app = app();
         assert!(render_body(&mut app, GIS2D_PLAY_BODY_DOCUMENT).contains("gis2d-play-document.layer.raster"));
     }
 
     #[test]
-    fn the_definition_binds_the_framework_document_tab_to_this_body() {
+    async fn the_definition_binds_the_framework_document_tab_to_this_body() {
         let definition = definition();
         assert!(matches!(definition.kind, PanelTabKind::App(ref id) if id == FRAMEWORK_PANEL_TAB_ARTIFACT_ID));
         assert_eq!(definition.body_key.as_deref(), Some(GIS2D_PLAY_BODY_DOCUMENT));

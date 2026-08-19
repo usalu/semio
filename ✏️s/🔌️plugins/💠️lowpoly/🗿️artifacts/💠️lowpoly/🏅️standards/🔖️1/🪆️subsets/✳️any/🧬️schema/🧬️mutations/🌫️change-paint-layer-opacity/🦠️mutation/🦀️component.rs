@@ -15,16 +15,16 @@ pub struct ChangePaintLayerOpacity {
 impl protocol::MutationKind<LowpolySnapshot, LowpolyMutation> for ChangePaintLayerOpacity {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "paint-layer", kind: "change-paint-layer-opacity", record: "ChangedPaintLayerOpacity" };
 
-    fn diff(&self, base: &LowpolySnapshot) -> protocol::MutationOutcome<<LowpolyMutation as protocol::Mutation<LowpolySnapshot>>::Diff> {
+    async fn diff(&self, base: &LowpolySnapshot) -> protocol::MutationOutcome<<LowpolyMutation as protocol::Mutation<LowpolySnapshot>>::Diff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &LowpolySnapshot) -> Vec<LowpolyMutation> {
+    async fn inverse(&self, base: &LowpolySnapshot) -> Vec<LowpolyMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         format!("Set paint layer opacity to {}", self.new_opacity)
     }
-    fn target(&self) -> Vec<String> {
+    async fn target(&self) -> Vec<String> {
         vec![self.object_id.clone()]
     }
 }

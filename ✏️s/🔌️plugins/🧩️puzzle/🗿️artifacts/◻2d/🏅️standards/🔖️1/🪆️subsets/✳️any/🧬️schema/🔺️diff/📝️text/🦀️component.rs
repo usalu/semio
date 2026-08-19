@@ -17,7 +17,7 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 //#region 🔖️Apply
 impl Puzzle2dDiff {
     /// 🧬️ Applies every sparse entry (all state classes) onto a full artifact.
-    pub fn apply_to_artifact(&self, artifact: &Puzzle2dArtifact) -> protocol::MutationApplyResult<Puzzle2dArtifact> {
+    pub async fn apply_to_artifact(&self, artifact: &Puzzle2dArtifact) -> protocol::MutationApplyResult<Puzzle2dArtifact> {
         Ok({
             if let Some(replacement) = &self.artifact {
                 return Ok((**replacement).clone());
@@ -69,7 +69,7 @@ impl Puzzle2dDiff {
     }
 }
 
-fn apply_identified_delta<T: Clone>(
+async fn apply_identified_delta<T: Clone>(
     items: &[T],
     removed: &[String],
     added: &[T],
@@ -139,19 +139,19 @@ fn apply_identified_delta<T: Clone>(
 }
 
 /// 🧩 Applies an identified-collection delta to nodes.
-pub fn apply_nodes_delta(nodes: &[Puzzle2dNode], delta: &Puzzle2dNodesDelta) -> protocol::MutationApplyResult<Vec<Puzzle2dNode>> {
+pub async fn apply_nodes_delta(nodes: &[Puzzle2dNode], delta: &Puzzle2dNodesDelta) -> protocol::MutationApplyResult<Vec<Puzzle2dNode>> {
     let patched: Vec<_> = delta.patched.iter().map(|entry| (entry.id.clone(), entry.patch.replacement.clone())).collect();
     apply_identified_delta(nodes, &delta.removed, &delta.added, &patched, &delta.reordered, |n| &n.id)
 }
 
 /// 🧩 Applies an identified-collection delta to edges.
-pub fn apply_edges_delta(edges: &[Puzzle2dEdge], delta: &Puzzle2dEdgesDelta) -> protocol::MutationApplyResult<Vec<Puzzle2dEdge>> {
+pub async fn apply_edges_delta(edges: &[Puzzle2dEdge], delta: &Puzzle2dEdgesDelta) -> protocol::MutationApplyResult<Vec<Puzzle2dEdge>> {
     let patched: Vec<_> = delta.patched.iter().map(|entry| (entry.id.clone(), entry.patch.replacement.clone())).collect();
     apply_identified_delta(edges, &delta.removed, &delta.added, &patched, &delta.reordered, |e| &e.id)
 }
 
 impl MutationDiff<Puzzle2dSnapshot> for Puzzle2dDiff {
-    fn apply(&self, snapshot: &Puzzle2dSnapshot) -> protocol::MutationApplyResult<Puzzle2dSnapshot> {
+    async fn apply(&self, snapshot: &Puzzle2dSnapshot) -> protocol::MutationApplyResult<Puzzle2dSnapshot> {
         Ok({
             if let Some(replacement) = &self.artifact {
                 return Ok(replacement.to_snapshot());
@@ -165,7 +165,7 @@ impl MutationDiff<Puzzle2dSnapshot> for Puzzle2dDiff {
             next
         })
     }
-    fn absorb(&mut self, other: Self) {
+    async fn absorb(&mut self, other: Self) {
         if other.artifact.is_some() {
             *self = other;
             return;

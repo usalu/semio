@@ -1,11 +1,11 @@
 #[test]
-fn primary_asset_is_nonempty() {
+async fn primary_asset_is_nonempty() {
     let text = include_str!("../🖼️assets/🗣️example.dsl.semio");
     assert!(text.len() > 8);
 }
 
 #[test]
-fn inference_determinism_law() {
+async fn inference_determinism_law() {
     use crate::artifacts::vdi3805::schema::inferences::Vdi3805Inference;
     use crate::artifacts::vdi3805::Vdi3805Snapshot;
     use protocol::Inference;
@@ -14,7 +14,7 @@ fn inference_determinism_law() {
 }
 
 #[test]
-fn inference_default_law() {
+async fn inference_default_law() {
     use crate::artifacts::vdi3805::schema::inferences::Vdi3805Inference;
     use crate::artifacts::vdi3805::Vdi3805Snapshot;
     use protocol::Inference;

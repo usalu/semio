@@ -41,7 +41,7 @@ pub struct PdfDiff {
 }
 
 impl MutationDiff<PdfSnapshot> for PdfDiff {
-    fn apply(&self, base: &PdfSnapshot) -> MutationApplyResult<PdfSnapshot> {
+    async fn apply(&self, base: &PdfSnapshot) -> MutationApplyResult<PdfSnapshot> {
         let mut next = base.clone();
         if let Some(v) = self.width {
             next.page.width = v;
@@ -57,7 +57,7 @@ impl MutationDiff<PdfSnapshot> for PdfDiff {
 
     /// ➕️ Structural, total, base-free, sequential-coalesce (`## Absorb` contract) -- flat
     /// scalars only (no collections), so absorb is plain per-field LWW.
-    fn absorb(&mut self, other: Self) {
+    async fn absorb(&mut self, other: Self) {
         if other.width.is_some() {
             self.width = other.width;
         }
@@ -72,23 +72,23 @@ impl MutationDiff<PdfSnapshot> for PdfDiff {
 
 impl DiffAlgebra<PdfSnapshot> for PdfDiff {
     /// 🔁️ Diff-level undo, derived generically from `between` (correct by construction).
-    fn inverse(&self, base: &PdfSnapshot) -> Self {
+    async fn inverse(&self, base: &PdfSnapshot) -> Self {
         let mid = self.apply(base).unwrap();
         Self::between(&mid, base)
     }
 
-    fn between(base: &PdfSnapshot, other: &PdfSnapshot) -> Self {
+    async fn between(base: &PdfSnapshot, other: &PdfSnapshot) -> Self {
         PdfDiff { width: (base.page.width != other.page.width).then_some(other.page.width), height: (base.page.height != other.page.height).then_some(other.page.height), text: (base.page.text != other.page.text).then(|| other.page.text.clone()) }
     }
 
-    fn is_empty(&self) -> bool {
+    async fn is_empty(&self) -> bool {
         self.width.is_none() && self.height.is_none() && self.text.is_none()
     }
 }
 
 /// 🧩 `SetSnapshot`'s diff is the sparse field-by-field `between(base, next)` -- no full-replace
 /// slot exists on `PdfDiff` to short-circuit into.
-pub fn diff_set_snapshot(base: &PdfSnapshot, next: &PdfSnapshot) -> PdfDiff {
+pub async fn diff_set_snapshot(base: &PdfSnapshot, next: &PdfSnapshot) -> PdfDiff {
     PdfDiff::between(base, next)
 }
 //#endregion 🔖️Diff
@@ -100,13 +100,13 @@ mod tests {
     use crate::artifacts::pdf::standards::v1_4::subsets::any::schema::snapshot::PageDoc;
     use crate::artifacts::pdf::STDIO_PDF_DOCUMENT_SCHEMA;
 
-    fn snap(width: f64, height: f64, text: &str) -> PdfSnapshot {
+    async fn snap(width: f64, height: f64, text: &str) -> PdfSnapshot {
         PdfSnapshot { schema: STDIO_PDF_DOCUMENT_SCHEMA.into(), page: PageDoc { width, height, text: text.into() } }
     }
 
     //#region between_roundtrip_law
     #[test]
-    fn between_roundtrip_law() {
+    async fn between_roundtrip_law() {
         let a = snap(612.0, 792.0, "hello");
         let b = snap(300.0, 400.0, "world");
         assert_eq!(PdfDiff::between(&a, &b).apply(&a).unwrap(), b);
@@ -117,7 +117,7 @@ mod tests {
 
     //#region inverse_law
     #[test]
-    fn inverse_law_diff_level() {
+    async fn inverse_law_diff_level() {
         let a = snap(612.0, 792.0, "hello");
         let b = snap(300.0, 400.0, "world");
         let d = PdfDiff::between(&a, &b);
@@ -129,7 +129,7 @@ mod tests {
 
     //#region absorb_law
     #[test]
-    fn absorb_law_sequential_composition() {
+    async fn absorb_law_sequential_composition() {
         let s0 = snap(612.0, 792.0, "a");
         let s1 = snap(300.0, 792.0, "a"); // width changed
         let s2 = snap(300.0, 400.0, "b"); // height + text changed
@@ -143,7 +143,7 @@ mod tests {
     }
 
     #[test]
-    fn absorb_law_associativity() {
+    async fn absorb_law_associativity() {
         let s0 = snap(1.0, 1.0, "a");
         let s1 = snap(2.0, 1.0, "a");
         let s2 = snap(2.0, 2.0, "b");
@@ -165,15 +165,15 @@ mod tests {
     //#endregion absorb_law
 
     //#region field_sweep
-    fn sweep_a() -> PdfSnapshot {
+    async fn sweep_a() -> PdfSnapshot {
         snap(612.0, 792.0, "base text")
     }
-    fn sweep_b() -> PdfSnapshot {
+    async fn sweep_b() -> PdfSnapshot {
         snap(300.5, 400.25, "changed text")
     }
 
     #[test]
-    fn field_sweep_between_roundtrips_both_directions() {
+    async fn field_sweep_between_roundtrips_both_directions() {
         let (a, b) = (sweep_a(), sweep_b());
         assert_eq!(PdfDiff::between(&a, &b).apply(&a).unwrap(), b);
         assert_eq!(PdfDiff::between(&b, &a).apply(&b).unwrap(), a);
@@ -181,7 +181,7 @@ mod tests {
     }
 
     #[test]
-    fn field_sweep_every_field_present_in_diff() {
+    async fn field_sweep_every_field_present_in_diff() {
         let (a, b) = (sweep_a(), sweep_b());
         let d = PdfDiff::between(&a, &b);
         assert!(d.width.is_some(), "width must be present");
@@ -199,7 +199,7 @@ mod tests {
     /// fully-empty diff, both text (`print_diff`/`parse_diff`) and binary
     /// (`encode_diff`/`decode_diff`) sides.
     #[test]
-    fn diff_codec_text_binary_roundtrip_law() {
+    async fn diff_codec_text_binary_roundtrip_law() {
         use protocol::DiffCodec;
         let (a, b) = (sweep_a(), sweep_b());
         let cases = vec![PdfDiff::between(&a, &b), PdfDiff::between(&a, &a)];

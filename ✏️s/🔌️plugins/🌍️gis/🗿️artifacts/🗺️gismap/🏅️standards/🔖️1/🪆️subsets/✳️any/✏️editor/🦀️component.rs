@@ -50,7 +50,7 @@ pub const GIS_MAP_LAYER_IDS: &[(&str, &str, &str)] = &[
 
 /// 🎯️ An `ActionDescriptor` addressed at this app — the single factory every taxonomy node's chrome
 /// (`📌️panels/*`, `🎚️options/*`) builds its `on_change`/item actions with.
-pub fn gis2d_action(action: &str, args: Option<Value>) -> ActionDescriptor {
+pub async fn gis2d_action(action: &str, args: Option<Value>) -> ActionDescriptor {
     semio_framework_plugin::ActionFactory::new(GIS2D_PLAY_APP_ID).action(action, args)
 }
 
@@ -59,7 +59,7 @@ pub fn gis2d_action(action: &str, args: Option<Value>) -> ActionDescriptor {
 /// panel (`action: None` — the tree is `interaction_domain`-bound now, so the framework's renderer
 /// translates clicks into injected `interactionSelect`) and the catalogue panel (`action: Some(..)` —
 /// a real, non-selection click that toggles layer visibility).
-pub fn gis2d_layer_tree_item(id: String, label: impl Into<Label>, description: Option<String>, icon_id: &str, action: Option<ActionDescriptor>) -> UiTreeItemNode {
+pub async fn gis2d_layer_tree_item(id: String, label: impl Into<Label>, description: Option<String>, icon_id: &str, action: Option<ActionDescriptor>) -> UiTreeItemNode {
     let base = match action {
         Some(action) => tree_item_with_action(id, label, description, action),
         None => UiTreeItemNode { description, menu: None, ..tree_item(id, label) },
@@ -77,7 +77,7 @@ pub fn gis2d_layer_tree_item(id: String, label: impl Into<Label>, description: O
 /// Wave 2 port recipe): `features:in` (any TwoD×Vector producer feeds new/patched
 /// positions/routes/regions) and `map:out` (this document's own feature layers, the `2d.map`
 /// interchange kind gis3d's `map:in` consumes).
-pub fn gis2d_io() -> AppIo {
+pub async fn gis2d_io() -> AppIo {
     AppIo {
         document_schema: GIS_MAP_SCHEMA.into(),
         document_media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Vector },
@@ -95,7 +95,7 @@ pub fn gis2d_io() -> AppIo {
 /// 🔌️ `features:in` — accepts any TwoD×Vector producer (draw's `vector:out`, another gis2d's
 /// `map:out`, …); no `kind_id` pin since it's a generic vector-features sink, not one specific kind.
 /// `Many`/optional: several producers may fan into one map, and a map with no upstream edge is valid.
-pub fn gis2d_features_in_port() -> semio_framework_plugin::MediaPortSpec {
+pub async fn gis2d_features_in_port() -> semio_framework_plugin::MediaPortSpec {
     semio_framework_plugin::MediaPortSpec {
         id: "features:in".into(),
         label: "Features".into(),
@@ -110,7 +110,7 @@ pub fn gis2d_features_in_port() -> semio_framework_plugin::MediaPortSpec {
 /// 🔌️ `map:out` — this document's positions/routes/regions as the `2d.map` interchange kind (gis3d's
 /// `map:in` consumes it). `Many`/optional: several downstream consumers may fan out from one map, and a
 /// map with no downstream edge is valid.
-pub fn gis2d_map_out_port() -> semio_framework_plugin::MediaPortSpec {
+pub async fn gis2d_map_out_port() -> semio_framework_plugin::MediaPortSpec {
     semio_framework_plugin::MediaPortSpec {
         id: "map:out".into(),
         label: "Map".into(),
@@ -125,7 +125,7 @@ pub fn gis2d_map_out_port() -> semio_framework_plugin::MediaPortSpec {
 /// 🎞️ `map:out`'s `Media` value — this document's positions/routes/regions as a `2d.map` structured
 /// payload; reuses the exact descriptor JSON shape the ◻2d window's renderer/`MapHost` already consume,
 /// so there is exactly one "gis map as JSON" shape in the whole app.
-pub fn gis2d_map_media(document: &GisMapSnapshot) -> Media {
+pub async fn gis2d_map_media(document: &GisMapSnapshot) -> Media {
     Media {
         media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Vector },
         payload: MediaPayload::Structured { schema: "2d.map".into(), json: crate::artifacts::gismap::schema::gis_map_descriptor_json(document) },
@@ -176,7 +176,7 @@ pub struct Gis2dPlayApp;
 /// 🕹️ `interactionSelect` args for a single-feature pick against the `"features"` domain's
 /// `"feature"` granularity — the generic replacement for the deleted bespoke `setFeatureSelection`
 /// action (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM).
-fn select_feature_action_args(feature_id: &str) -> Value {
+async fn select_feature_action_args(feature_id: &str) -> Value {
     let targets = json!([{ "granularity": "feature", "id": feature_id }]).to_string();
     json!({ "domainId": "features", "targets": targets, "merge": "replace", "method": "pick" })
 }
@@ -191,7 +191,7 @@ fn select_feature_action_args(feature_id: &str) -> Value {
 /// `cut_operations` — see `w3c-summary.md`'s own flagged gap on `open_context_menu`'s `selection`
 /// field), so the "already selected" branch can never fire and `clearSelection` always renders
 /// disabled until a future wave wires interaction state through here too.
-fn gis2d_context_menu_items(registry: &semio_framework_plugin::AppActionRegistry, surface: Option<&semio_framework_plugin::ContextMenuSurfaceTarget>, selected_ids: &[String]) -> Vec<semio_framework_plugin::ContextMenuItemSpec> {
+async fn gis2d_context_menu_items(registry: &semio_framework_plugin::AppActionRegistry, surface: Option<&semio_framework_plugin::ContextMenuSurfaceTarget>, selected_ids: &[String]) -> Vec<semio_framework_plugin::ContextMenuItemSpec> {
     let hits = surface.map_or(&[][..], |s| s.hits.as_slice());
     let feature = hits.iter().find(|h| h.domain == "feature" || h.domain == "position" || h.domain == "route");
     if let Some(feature) = feature {
@@ -226,17 +226,17 @@ impl ArtifactEditor for Gis2dPlayApp {
     const DIALECT: Dialect = crate::artifacts::gismap::GISMAP_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = GIS_MAP_SCHEMA;
 
-    fn app_schema() -> Option<::schema::AppSchemaDescriptor> {
+    async fn app_schema() -> Option<::schema::AppSchemaDescriptor> {
         Some(crate::editor::gis2d::config::schema::app_schema_descriptor())
     }
 
-    fn initial_snapshot() -> GisMapSnapshot {
+    async fn initial_snapshot() -> GisMapSnapshot {
         crate::artifacts::gismap::schema::default_document()
     }
 
     /// 🔌️ `features:in`/`map:out` (WORKFLOWS-END-TO-END-TYPED-PORTS Wave 2 port recipe) plus the
     /// implicit document ports.
-    fn io() -> Option<AppIo> {
+    async fn io() -> Option<AppIo> {
         Some(gis2d_io())
     }
 
@@ -265,7 +265,7 @@ impl ArtifactEditor for Gis2dPlayApp {
     /// add/patch/remove operations against every collection (a generic vector-features sink — not
     /// pinned to `2d.map`, so a `draw`/another `gis2d`'s producer both work) plus the inherited
     /// `document:in` default (replicated inline for the same reason as `export_media`).
-    fn import_media(port: &str, media: &Media, doc: &ArtifactView<'_, GisMapSnapshot>) -> Result<Emit<GisMapMutation, Gis2dConfigMutation, Self::DraftMutation>, MediaError> {
+    async fn import_media(port: &str, media: &Media, doc: &ArtifactView<'_, GisMapSnapshot>) -> Result<Emit<GisMapMutation, Gis2dConfigMutation, Self::DraftMutation>, MediaError> {
         match port {
             "features:in" => {
                 let MediaPayload::Structured { json, .. } = &media.payload else {
@@ -293,14 +293,14 @@ impl ArtifactEditor for Gis2dPlayApp {
         }
     }
 
-    fn command_id(command: &Gis2dCommand) -> &'static str {
+    async fn command_id(command: &Gis2dCommand) -> &'static str {
         command.command_id()
     }
 
     /// 🎯️ Maps host action id + JSON args onto `Gis2dCommand` — React/wgpu still speak the
     /// stringly `{action,args}` wire; this is the typed-command bridge until those call sites send
     /// `OpBinary` bytes directly.
-    fn command_from_action(action: &str, args: Option<&Value>) -> Result<Self::Command, Fault> {
+    async fn command_from_action(action: &str, args: Option<&Value>) -> Result<Self::Command, Fault> {
         let args = args.cloned().unwrap_or(Value::Null);
         let str_arg = |keys: &[&str]| -> Option<String> { keys.iter().find_map(|key| args.get(key).and_then(|value| value.as_str()).map(str::to_string)) };
         let string_list = |key: &str| -> Vec<String> { args.get(key).and_then(|value| value.as_array()).map(|rows| rows.iter().filter_map(|row| row.as_str().map(str::to_string)).collect()).unwrap_or_default() };
@@ -351,17 +351,17 @@ impl ArtifactEditor for Gis2dPlayApp {
         }
     }
 
-    fn handle(command: &Gis2dCommand, doc: &ArtifactView<'_, GisMapSnapshot>, cfg: &ConfigView<'_, Gis2dConfig>, _interaction: &InteractionView<'_>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<GisMapMutation, Gis2dConfigMutation, Self::DraftMutation>, Fault> {
+    async fn handle(command: &Gis2dCommand, doc: &ArtifactView<'_, GisMapSnapshot>, cfg: &ConfigView<'_, Gis2dConfig>, _interaction: &InteractionView<'_>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<GisMapMutation, Gis2dConfigMutation, Self::DraftMutation>, Fault> {
         command.dispatch(doc, cfg)
     }
 
     /// 🧮️ Empty — gis2d's `Config` is session view state (camera/render/layer visibility/…), not a
     /// user-facing settings record; `ConfigSpec::empty()` (the trait default) is correct as-is.
-    fn config_spec() -> semio_framework_plugin::ConfigSpec {
+    async fn config_spec() -> semio_framework_plugin::ConfigSpec {
         semio_framework_plugin::ConfigSpec::empty()
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, GisMapSnapshot>, cfg: &ConfigView<'_, Gis2dConfig>) -> UiNode {
+    async fn render(body_key: &str, doc: &ArtifactView<'_, GisMapSnapshot>, cfg: &ConfigView<'_, Gis2dConfig>) -> UiNode {
         let config = cfg.snapshot;
         let labels = gis2d_labels(config);
         match body_key {
@@ -373,12 +373,12 @@ impl ArtifactEditor for Gis2dPlayApp {
         }
     }
 
-    fn window_measures(_doc: &ArtifactView<'_, GisMapSnapshot>, cfg: &ConfigView<'_, Gis2dConfig>) -> HashMap<String, Vec<WindowMeasure>> {
+    async fn window_measures(_doc: &ArtifactView<'_, GisMapSnapshot>, cfg: &ConfigView<'_, Gis2dConfig>) -> HashMap<String, Vec<WindowMeasure>> {
         let config = cfg.snapshot;
         HashMap::from([(map::GIS2D_PLAY_WINDOW_MAIN.into(), map::window_measures(config, gis2d_labels(config)))])
     }
 
-    fn context_menu(
+    async fn context_menu(
         request: &semio_framework_plugin::ContextMenuRequest,
         _doc: &ArtifactView<'_, GisMapSnapshot>,
         _cfg: &ConfigView<'_, Gis2dConfig>,
@@ -390,7 +390,7 @@ impl ArtifactEditor for Gis2dPlayApp {
 //#endregion 🔖️Gis2dPlayApp
 
 //#region 🔖️Manifest
-pub fn create_gis2d_app() -> semio_framework_plugin::AppDefinition {
+pub async fn create_gis2d_app() -> semio_framework_plugin::AppDefinition {
     Editor::builder(crate::artifacts::gismap::GISMAP_DIALECT).document(["semio", "gis", "2d"])
             .artifact_kind(artifact_kind())
             // 🔌️ Typed workflow ports (WORKFLOWS-END-TO-END-TYPED-PORTS Wave 2 port recipe) — same
@@ -496,31 +496,31 @@ pub(crate) mod testkit {
 
     pub type Gis2dApp = VcsArtifactApp<EditorApp<Gis2dPlayApp>>;
 
-    pub fn app() -> Gis2dApp {
+    pub async fn app() -> Gis2dApp {
         new_app::<EditorApp<Gis2dPlayApp>>()
     }
 
     /// ✏️ Adapts `create_gis2d_app`'s `AppDefinition` (contract §2.4) into the `App { definition,
     /// examples }` shape `testkit::assert_declared_actions_bridge_to_commands` still expects —
     /// framework testkit gap, not modifiable here.
-    pub fn gis2d_app_manifest_for_testkit() -> semio_framework_plugin::App {
+    pub async fn gis2d_app_manifest_for_testkit() -> semio_framework_plugin::App {
         semio_framework_plugin::App { definition: create_gis2d_app(), examples: Vec::new() }
     }
 
     /// 🧬️ A wrapper carrying the real registry so kind discipline (View/Shell-emits-operations rejection) runs.
-    pub fn app_with_registry() -> Gis2dApp {
+    pub async fn app_with_registry() -> Gis2dApp {
         new_app_with_registry::<EditorApp<Gis2dPlayApp>>(gis2d_app_manifest_for_testkit)
     }
 
-    pub fn dispatch(app: &mut Gis2dApp, command: Gis2dCommand) -> InvocationResult {
+    pub async fn dispatch(app: &mut Gis2dApp, command: Gis2dCommand) -> InvocationResult {
         app.dispatch_typed(command, &meta("local")).expect("dispatch")
     }
 
-    pub fn render(app: &mut Gis2dApp, body_key: &str) -> String {
+    pub async fn render(app: &mut Gis2dApp, body_key: &str) -> String {
         serde_json::to_string(&app.render(body_key, None, &ViewModel::default()).expect("render")).expect("render json")
     }
 
-    pub fn main_window_measures(app: &mut Gis2dApp) -> Vec<WindowMeasure> {
+    pub async fn main_window_measures(app: &mut Gis2dApp) -> Vec<WindowMeasure> {
         app.window_measures().get(map::GIS2D_PLAY_WINDOW_MAIN).cloned().unwrap_or_default()
     }
 }
@@ -537,7 +537,7 @@ mod tests {
     /// 🎯️ One value per `app_commands!` row, in row order — the wire-law loop below and the id
     /// uniqueness check both run off this list, so a new row that forgets to appear here fails the
     /// coverage assertion.
-    fn every_command() -> Vec<Gis2dCommand> {
+    async fn every_command() -> Vec<Gis2dCommand> {
         vec![
             Gis2dCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: "reuse-map".into() }),
             Gis2dCommand::PatchPositions(patch_positions::PatchPositions { positions_json: r#"[{"id":"p1","lon":1.0,"lat":2.0}]"#.into() }),
@@ -576,7 +576,7 @@ mod tests {
     ];
 
     #[test]
-    fn command_ids_are_unique_and_cover_every_row() {
+    async fn command_ids_are_unique_and_cover_every_row() {
         let commands = every_command();
         let ids: Vec<&str> = commands.iter().map(Gis2dCommand::command_id).collect();
         let mut sorted = ids.clone();
@@ -587,7 +587,7 @@ mod tests {
     }
 
     #[test]
-    fn every_command_round_trips_text_and_binary_under_its_declared_wire_keyword() {
+    async fn every_command_round_trips_text_and_binary_under_its_declared_wire_keyword() {
         assert_eq!(every_command().len(), WIRE_KEYWORDS.len());
         for (command, keyword) in every_command().iter().zip(WIRE_KEYWORDS) {
             store::os_store::test_support::assert_op_text_binary_equivalence(command);
@@ -600,7 +600,7 @@ mod tests {
     /// `Vec`-carrying optional-field case left after the interaction-mechanism migration deleted every
     /// other optional-field row (`setSelection`/`setFeatureSelection`/`clearSelection`/`selectAll`).
     #[test]
-    fn patch_routes_empty_route_ids_round_trips_text_and_binary() {
+    async fn patch_routes_empty_route_ids_round_trips_text_and_binary() {
         store::os_store::test_support::assert_op_text_binary_equivalence(&Gis2dCommand::PatchRoutes(patch_routes::PatchRoutes { route_ids: Vec::new(), field: "label".into(), value: String::new() }));
     }
 
@@ -608,7 +608,7 @@ mod tests {
     /// `command_id`. Uses the framework's own harness, which stages each action's declared args and
     /// knows the framework-injected ids to skip (`undo`/`copy`/`recordTutorial`/…).
     #[test]
-    fn command_from_action_covers_every_declared_action_and_rejects_unknown_ones() {
+    async fn command_from_action_covers_every_declared_action_and_rejects_unknown_ones() {
         semio_framework_plugin::testkit::assert_declared_actions_bridge_to_commands::<EditorApp<Gis2dPlayApp>>(gis2d_app_manifest_for_testkit);
         assert!(Gis2dPlayApp::command_from_action("noSuchAction", None).is_err());
     }
@@ -616,7 +616,7 @@ mod tests {
 
     //#region 🔖️Manifest
     #[test]
-    fn the_manifest_stitches_every_taxonomy_node() {
+    async fn the_manifest_stitches_every_taxonomy_node() {
         let definition = create_gis2d_app().definition;
         assert_eq!(definition.modes.len(), 1);
         assert_eq!(definition.window_kinds.len(), 1);
@@ -629,7 +629,7 @@ mod tests {
     }
 
     #[test]
-    fn an_unknown_body_key_falls_back_to_a_text_node() {
+    async fn an_unknown_body_key_falls_back_to_a_text_node() {
         let mut app = app();
         assert!(render(&mut app, "gis2d.play.nope").contains("Unknown body"));
     }
@@ -637,7 +637,7 @@ mod tests {
 
     //#region 🔖️Media
     #[test]
-    fn export_media_map_out_produces_a_2d_map_structured_payload() {
+    async fn export_media_map_out_produces_a_2d_map_structured_payload() {
         let app = app();
         let document = app.snapshot().expect("projection");
         let history = semio_framework_plugin::HistoryView::empty();
@@ -649,7 +649,7 @@ mod tests {
     }
 
     #[test]
-    fn import_media_features_in_adds_new_positions_as_operations() {
+    async fn import_media_features_in_adds_new_positions_as_operations() {
         let app = app();
         let document = app.snapshot().expect("projection");
         let history = semio_framework_plugin::HistoryView::empty();
@@ -661,7 +661,7 @@ mod tests {
     }
 
     #[test]
-    fn media_ports_declare_features_in_and_map_out() {
+    async fn media_ports_declare_features_in_and_map_out() {
         let app = Gis2dPlayApp;
         let ports = Gis2dPlayApp::media_ports();
         assert!(ports.iter().any(|port| port.id == "features:in"));
@@ -671,7 +671,7 @@ mod tests {
     /// 🧭️ Relocated from the artifact's `⚙️engine` tests (ticket
     /// 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES) alongside `gis2d_io`/`gis2d_map_media`.
     #[test]
-    fn gis2d_io_declares_the_features_in_and_map_out_ports() {
+    async fn gis2d_io_declares_the_features_in_and_map_out_ports() {
         let io = gis2d_io();
         assert_eq!(io.document_schema, GIS_MAP_SCHEMA);
         assert_eq!(io.artifact.id, "2d.map");
@@ -683,7 +683,7 @@ mod tests {
     }
 
     #[test]
-    fn gis2d_map_media_exports_the_document_descriptor() {
+    async fn gis2d_map_media_exports_the_document_descriptor() {
         let document = crate::artifacts::gismap::schema::default_document();
         let media = gis2d_map_media(&document);
         let semio_framework_plugin::MediaPayload::Structured { schema, json } = media.payload else {
@@ -699,7 +699,7 @@ mod tests {
     /// within the row budget and keeps the known destructive `clearSelection` last, matching the
     /// canonical migration pattern.
     #[test]
-    fn context_menu_stays_within_budget_and_keeps_clear_selection_destructive_last() {
+    async fn context_menu_stays_within_budget_and_keeps_clear_selection_destructive_last() {
         let mut app = app_with_registry();
         let request = ContextMenuRequest { menu: semio_framework_plugin::UiMenuRef { id: "gis2dMap".into(), args: None }, surface: None, window_instance_id: None, point: None };
         let menu = app.context_menu(&request);

@@ -15,21 +15,21 @@ use crate::artifacts::shooting::schema::diff::*;
 
 //#region 🔖️Apply
 /// 🧩 Applies an identified-collection delta to an asset list.
-pub fn apply_assets_delta(items: &[ShootingAsset], delta: &ShootingAssetsDelta) -> protocol::MutationApplyResult<Vec<ShootingAsset>> {
+pub async fn apply_assets_delta(items: &[ShootingAsset], delta: &ShootingAssetsDelta) -> protocol::MutationApplyResult<Vec<ShootingAsset>> {
     apply_identified_delta(items, &delta.removed, &delta.added, &delta.patched, delta.reordered.as_ref(), |entry: &ShootingAssetPatchEntry| {
         (&entry.id, &entry.patch)
     })
 }
 
 /// 🧩 Applies an identified-collection delta to a shot list.
-pub fn apply_shots_delta(items: &[ShootingShot], delta: &ShootingShotsDelta) -> protocol::MutationApplyResult<Vec<ShootingShot>> {
+pub async fn apply_shots_delta(items: &[ShootingShot], delta: &ShootingShotsDelta) -> protocol::MutationApplyResult<Vec<ShootingShot>> {
     apply_identified_delta(items, &delta.removed, &delta.added, &delta.patched, delta.reordered.as_ref(), |entry: &ShootingShotPatchEntry| {
         (&entry.id, &entry.patch)
     })
 }
 
 /// 🧩 Applies an identified-collection delta to a saved-camera list.
-pub fn apply_saved_cameras_delta(
+pub async fn apply_saved_cameras_delta(
     items: &[ShootingSavedCamera],
     delta: &ShootingSavedCamerasDelta,
 ) -> protocol::MutationApplyResult<Vec<ShootingSavedCamera>> {
@@ -43,7 +43,7 @@ pub fn apply_saved_cameras_delta(
     )
 }
 
-fn apply_identified_delta<T, P, E, F>(
+async fn apply_identified_delta<T, P, E, F>(
     items: &[T],
     removed: &[String],
     added: &[T],
@@ -111,7 +111,7 @@ where
     Ok(next)
 }
 
-fn absorb_assets_delta(target: &mut Option<ShootingAssetsDelta>, incoming: Option<ShootingAssetsDelta>) {
+async fn absorb_assets_delta(target: &mut Option<ShootingAssetsDelta>, incoming: Option<ShootingAssetsDelta>) {
     if let Some(src) = incoming {
         match target {
             Some(dst) => {
@@ -127,7 +127,7 @@ fn absorb_assets_delta(target: &mut Option<ShootingAssetsDelta>, incoming: Optio
     }
 }
 
-fn absorb_shots_delta(target: &mut Option<ShootingShotsDelta>, incoming: Option<ShootingShotsDelta>) {
+async fn absorb_shots_delta(target: &mut Option<ShootingShotsDelta>, incoming: Option<ShootingShotsDelta>) {
     if let Some(src) = incoming {
         match target {
             Some(dst) => {
@@ -143,7 +143,7 @@ fn absorb_shots_delta(target: &mut Option<ShootingShotsDelta>, incoming: Option<
     }
 }
 
-fn absorb_saved_cameras_delta(
+async fn absorb_saved_cameras_delta(
     target: &mut Option<ShootingSavedCamerasDelta>,
     incoming: Option<ShootingSavedCamerasDelta>,
 ) {
@@ -164,7 +164,7 @@ fn absorb_saved_cameras_delta(
 
 impl ShootingDiff {
     /// 🧬️ Applies every sparse entry (all state classes) onto a full artifact.
-    pub fn apply_to_artifact(&self, artifact: &ShootingArtifact) -> protocol::MutationApplyResult<ShootingArtifact> {
+    pub async fn apply_to_artifact(&self, artifact: &ShootingArtifact) -> protocol::MutationApplyResult<ShootingArtifact> {
         Ok({
             if let Some(replacement) = &self.artifact {
                 return Ok((**replacement).clone());
@@ -230,7 +230,7 @@ impl ShootingDiff {
 }
 
 impl MutationDiff<ShootingSnapshot> for ShootingDiff {
-    fn apply(&self, snapshot: &ShootingSnapshot) -> protocol::MutationApplyResult<ShootingSnapshot> {
+    async fn apply(&self, snapshot: &ShootingSnapshot) -> protocol::MutationApplyResult<ShootingSnapshot> {
         Ok({
             if let Some(replacement) = &self.artifact {
                 return Ok(replacement.to_snapshot());
@@ -263,7 +263,7 @@ impl MutationDiff<ShootingSnapshot> for ShootingDiff {
             next
         })
     }
-    fn absorb(&mut self, other: Self) {
+    async fn absorb(&mut self, other: Self) {
         if other.artifact.is_some() {
             *self = other;
             return;
@@ -313,7 +313,7 @@ mod tests {
 
     /// ⚖️ LAW: an empty diff is a no-operation on the snapshot.
     #[test]
-    fn empty_diff_is_a_no_operation() {
+    async fn empty_diff_is_a_no_operation() {
         let base = crate::artifacts::shooting::empty_shooting_snapshot();
         let diff = ShootingDiff::default();
         assert_eq!(diff.apply(&base).expect("valid mutation diff"), base);

@@ -4,7 +4,7 @@ use super::mutation::MovePoint;
 use crate::artifacts::mathematical::{mathematical_children_from_state, mathematical_geometry, mathematical_graph, MathematicalDiff, MathematicalSnapshot};
 
 //#region 🔖️Diff
-pub fn diff(payload: &MovePoint, base: &MathematicalSnapshot) -> protocol::MutationOutcome<MathematicalDiff> {
+pub async fn diff(payload: &MovePoint, base: &MathematicalSnapshot) -> protocol::MutationOutcome<MathematicalDiff> {
     let mut geometry = mathematical_geometry(base);
     let Some(existing) = geometry.points.get(payload.index) else {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Point at index {} does not exist.", payload.index), [payload.index.to_string()]);

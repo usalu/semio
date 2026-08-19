@@ -57,17 +57,17 @@ pub struct EventSink {
 }
 
 impl EventSink {
-    pub fn new(level: DiagLevel) -> Self {
+    pub async fn new(level: DiagLevel) -> Self {
         Self { level, events: Vec::new() }
     }
 
     #[inline]
-    pub fn level(&self) -> DiagLevel {
+    pub async fn level(&self) -> DiagLevel {
         self.level
     }
 
     #[inline]
-    pub fn emit(&mut self, event: Event) {
+    pub async fn emit(&mut self, event: Event) {
         if self.level != DiagLevel::Off {
             self.events.push(event);
         }
@@ -76,13 +76,13 @@ impl EventSink {
     /// 📊️ Only records `event` at `DiagLevel::Decisions` or above — for the fine-grained events a
     /// `Summary`-level caller doesn't want paying allocation cost for.
     #[inline]
-    pub fn emit_detailed(&mut self, event: Event) {
+    pub async fn emit_detailed(&mut self, event: Event) {
         if self.level >= DiagLevel::Decisions {
             self.events.push(event);
         }
     }
 
-    pub fn into_events(self) -> Vec<Event> {
+    pub async fn into_events(self) -> Vec<Event> {
         self.events
     }
 }
@@ -101,7 +101,7 @@ pub struct TraceReplay {
 }
 
 impl TraceReplay {
-    pub fn from_report(report: &RunReport) -> Self {
+    pub async fn from_report(report: &RunReport) -> Self {
         let decisions = report
             .events
             .iter()
@@ -115,7 +115,7 @@ impl TraceReplay {
 
     /// 📊️ The golden-replay determinism check: same model, same seed, same decisions in the same
     /// order.
-    pub fn matches(&self, other: &TraceReplay) -> bool {
+    pub async fn matches(&self, other: &TraceReplay) -> bool {
         self.model_fingerprint == other.model_fingerprint && self.seed == other.seed && self.decisions == other.decisions
     }
 }
@@ -141,14 +141,14 @@ mod tests {
     use super::*;
 
     #[test]
-    fn off_sink_records_nothing() {
+    async fn off_sink_records_nothing() {
         let mut sink = EventSink::new(DiagLevel::Off);
         sink.emit(Event::Solved);
         assert!(sink.into_events().is_empty());
     }
 
     #[test]
-    fn summary_sink_records_events() {
+    async fn summary_sink_records_events() {
         let mut sink = EventSink::new(DiagLevel::Summary);
         sink.emit(Event::Solved);
         sink.emit(Event::Contradiction { node: NodeId(3) });
@@ -158,21 +158,21 @@ mod tests {
     }
 
     #[test]
-    fn metrics_default_to_zero() {
+    async fn metrics_default_to_zero() {
         let m = Metrics::default();
         assert_eq!(m.observations, 0);
         assert_eq!(m.backtracks, 0);
     }
 
     #[test]
-    fn diag_levels_are_ordered() {
+    async fn diag_levels_are_ordered() {
         assert!(DiagLevel::Off < DiagLevel::Summary);
         assert!(DiagLevel::Summary < DiagLevel::Decisions);
         assert!(DiagLevel::Decisions < DiagLevel::Full);
     }
 
     #[test]
-    fn emit_detailed_is_suppressed_below_decisions_level() {
+    async fn emit_detailed_is_suppressed_below_decisions_level() {
         let mut summary_sink = EventSink::new(DiagLevel::Summary);
         summary_sink.emit_detailed(Event::Observed { node: NodeId(0), chosen: PatternId(0) });
         assert!(summary_sink.into_events().is_empty());
@@ -183,7 +183,7 @@ mod tests {
     }
 
     #[test]
-    fn trace_replay_extracts_only_observed_events_in_order() {
+    async fn trace_replay_extracts_only_observed_events_in_order() {
         let report = RunReport {
             metrics: Metrics::default(),
             model_fingerprint: 42,
@@ -197,7 +197,7 @@ mod tests {
     }
 
     #[test]
-    fn trace_replay_matches_identical_sequences_and_rejects_divergent_ones() {
+    async fn trace_replay_matches_identical_sequences_and_rejects_divergent_ones() {
         let a = TraceReplay { model_fingerprint: 1, seed: 2, decisions: vec![(NodeId(0), PatternId(0))] };
         let b = TraceReplay { model_fingerprint: 1, seed: 2, decisions: vec![(NodeId(0), PatternId(0))] };
         assert!(a.matches(&b));

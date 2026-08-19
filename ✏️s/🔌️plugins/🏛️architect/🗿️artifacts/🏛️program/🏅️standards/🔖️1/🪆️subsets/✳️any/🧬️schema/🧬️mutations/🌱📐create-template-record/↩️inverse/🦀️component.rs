@@ -6,6 +6,6 @@ use crate::artifacts::program::ProgramMutation;
 use crate::artifacts::program::ProgramSnapshot;
 
 /// ↩️ Undo a create by deleting the row it added.
-pub fn inverse(payload: &super::mutation::CreateTemplateRecord, _base: &ProgramSnapshot) -> Vec<ProgramMutation> {
+pub async fn inverse(payload: &super::mutation::CreateTemplateRecord, _base: &ProgramSnapshot) -> Vec<ProgramMutation> {
     vec![ProgramMutation::DeleteTemplateRecord(super::super::delete_template_record::mutation::DeleteTemplateRecord { id: payload.template_record.header.id.clone() })]
 }

@@ -16,7 +16,7 @@ pub struct RemoveStep {
 // questions out of a config-owned selection list here — the framework's own
 // `revalidate_interaction_state_after_document_change` prunes the "fields" domain's selection against
 // `interaction_topology` after every document dispatch, so deleted ids are pruned automatically.
-pub fn handle(payload: &RemoveStep, _doc: &ArtifactView<'_, FormsSnapshot>, _cfg: &ConfigView<'_, FormsConfig>) -> Result<Emit<FormMutation, FormsConfigMutation>, Fault> {
+pub async fn handle(payload: &RemoveStep, _doc: &ArtifactView<'_, FormsSnapshot>, _cfg: &ConfigView<'_, FormsConfig>) -> Result<Emit<FormMutation, FormsConfigMutation>, Fault> {
     if payload.step_id.is_empty() {
         return Ok(Emit::default());
     }

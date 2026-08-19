@@ -3,6 +3,6 @@ use crate::artifacts::pdf::standards::v1_4::subsets::any::schema::snapshot::PdfS
 use protocol::Mutation;
 
 /// ↩️ Inverse of set-snapshot.
-pub fn inverse(base: &PdfSnapshot, mutation: &PdfMutation) -> Vec<PdfMutation> {
+pub async fn inverse(base: &PdfSnapshot, mutation: &PdfMutation) -> Vec<PdfMutation> {
     <PdfMutation as Mutation<PdfSnapshot>>::inverse(mutation, base)
 }

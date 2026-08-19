@@ -6,7 +6,7 @@ use crate::artifacts::vdi3805::mutations::delete_curve;
 use crate::artifacts::vdi3805::{Vdi3805Mutation, Vdi3805Snapshot};
 
 //#region 🔖️Inverse
-pub fn inverse(payload: &CreateCurve, base: &Vdi3805Snapshot) -> Vec<Vdi3805Mutation> {
+pub async fn inverse(payload: &CreateCurve, base: &Vdi3805Snapshot) -> Vec<Vdi3805Mutation> {
     if base.curves.contains_key(&payload.curve.id) {
         return Vec::new();
     }

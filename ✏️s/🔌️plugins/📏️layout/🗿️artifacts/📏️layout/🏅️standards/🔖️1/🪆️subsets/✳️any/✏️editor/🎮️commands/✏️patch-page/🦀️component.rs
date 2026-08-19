@@ -27,7 +27,7 @@ use serde::{Deserialize, Serialize};
 /// `value`; unknown fields/mistyped (non-numeric where a number is expected) values yield `None`.
 /// `marginTop`/`marginRight`/`marginBottom`/`marginLeft`/`columnsCount`/`columnsGutter` read the
 /// page's OTHER current value(s) so `update-page-margins`/`update-page-columns` stay atomic.
-fn page_field_mutation(page: &Page, field: &str, value: &str) -> Option<LayoutMutation> {
+async fn page_field_mutation(page: &Page, field: &str, value: &str) -> Option<LayoutMutation> {
     let id = page.id.clone();
     match field {
         "name" => Some(LayoutMutation::RenamePage(RenamePage { id, new_name: value.into() })),
@@ -64,7 +64,7 @@ pub struct PatchPage {
     pub value: String,
 }
 
-pub fn handle(payload: &PatchPage, doc: &ArtifactView<'_, LayoutSnapshot>, cfg: &ConfigView<'_, LayoutConfig>) -> Result<Emit<LayoutMutation, LayoutConfigMutation>, Fault> {
+pub async fn handle(payload: &PatchPage, doc: &ArtifactView<'_, LayoutSnapshot>, cfg: &ConfigView<'_, LayoutConfig>) -> Result<Emit<LayoutMutation, LayoutConfigMutation>, Fault> {
     let page_id = payload.page_id.clone().unwrap_or_else(|| cfg.snapshot.active_page_id.clone());
     match doc.snapshot.pages.iter().find(|page| page.id == page_id).and_then(|page| page_field_mutation(page, &payload.field, &payload.value)) {
         Some(mutation) => Ok(Emit::mutations(vec![mutation])),

@@ -16,7 +16,7 @@ pub struct PresentIntoPptx;
 impl Serializer<PresentSnapshot> for PresentIntoPptx {
     const INTO: Dialect = PPTX_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Lossy;
-    fn serialize(from: &PresentSnapshot) -> IoResult<IoPayload> {
+    async fn serialize(from: &PresentSnapshot) -> IoResult<IoPayload> {
         let value = serde_json::to_value(from).map_err(|error| IoError { message: format!("PresentIntoPptx: {error}"), diagnostics: Vec::new() })?;
         let wire: PptxSnapshot = serde_json::from_value(value).map_err(|error| IoError { message: format!("PresentIntoPptx: {error}"), diagnostics: Vec::new() })?;
         Ok(IoOutcome::clean(IoPayload::Binary(<PptxSnapshot as store::ArtifactPack>::encode_pack(&wire))))

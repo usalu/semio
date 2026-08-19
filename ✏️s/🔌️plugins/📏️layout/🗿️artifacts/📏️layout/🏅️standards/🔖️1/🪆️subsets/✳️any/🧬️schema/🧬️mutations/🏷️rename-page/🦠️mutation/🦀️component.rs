@@ -14,16 +14,16 @@ pub struct RenamePage {
 
 impl MutationKind<LayoutSnapshot, LayoutMutation> for RenamePage {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "rename", entity: "page", kind: "rename-page", record: "RenamedPage" };
-    fn diff(&self, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
+    async fn diff(&self, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
         super::diff::diff_rename_page(self, base)
     }
-    fn inverse(&self, base: &LayoutSnapshot) -> Vec<LayoutMutation> {
+    async fn inverse(&self, base: &LayoutSnapshot) -> Vec<LayoutMutation> {
         super::inverse::inverse_rename_page(self, base)
     }
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         format!("Rename page to \"{}\"", self.new_name)
     }
-    fn target(&self) -> Vec<String> {
+    async fn target(&self) -> Vec<String> {
         vec![self.id.clone()]
     }
 }

@@ -18,21 +18,21 @@ use crate::artifacts::forms::FormsSnapshot;
 use store::PackError;
 
 //#region 🔖️BinaryPrimitives
-fn write_bytes_lp(out: &mut Vec<u8>, bytes: &[u8]) {
+async fn write_bytes_lp(out: &mut Vec<u8>, bytes: &[u8]) {
     store::pack_rt::write_varint_u64(out, bytes.len() as u64);
     out.extend_from_slice(bytes);
 }
-fn read_bytes_lp(reader: &mut store::ByteReader<'_>) -> Result<Vec<u8>, String> {
+async fn read_bytes_lp(reader: &mut store::ByteReader<'_>) -> Result<Vec<u8>, String> {
     let len = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
     Ok(reader.read_bytes(len).map_err(|e| e.to_string())?.to_vec())
 }
-fn write_str_lp(out: &mut Vec<u8>, s: &str) {
+async fn write_str_lp(out: &mut Vec<u8>, s: &str) {
     write_bytes_lp(out, s.as_bytes());
 }
-fn read_str_lp(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
+async fn read_str_lp(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
     String::from_utf8(read_bytes_lp(reader)?).map_err(|e| e.to_string())
 }
-fn write_opt_str_lp(out: &mut Vec<u8>, s: &Option<String>) {
+async fn write_opt_str_lp(out: &mut Vec<u8>, s: &Option<String>) {
     match s {
         Some(v) => {
             out.push(1);
@@ -41,30 +41,30 @@ fn write_opt_str_lp(out: &mut Vec<u8>, s: &Option<String>) {
         None => out.push(0),
     }
 }
-fn read_opt_str_lp(reader: &mut store::ByteReader<'_>) -> Result<Option<String>, String> {
+async fn read_opt_str_lp(reader: &mut store::ByteReader<'_>) -> Result<Option<String>, String> {
     match reader.read_u8().map_err(|e| e.to_string())? {
         0 => Ok(None),
         1 => Ok(Some(read_str_lp(reader)?)),
         other => Err(format!("bad option tag {other}")),
     }
 }
-fn write_ref(out: &mut Vec<u8>, r: &store::os_io::ArtifactRef) {
+async fn write_ref(out: &mut Vec<u8>, r: &store::os_io::ArtifactRef) {
     write_str_lp(out, &r.to_uri());
 }
-fn read_ref(reader: &mut store::ByteReader<'_>) -> Result<store::os_io::ArtifactRef, String> {
+async fn read_ref(reader: &mut store::ByteReader<'_>) -> Result<store::os_io::ArtifactRef, String> {
     store::os_io::ArtifactRef::parse_uri(&read_str_lp(reader)?)
 }
-fn write_child<S>(out: &mut Vec<u8>, c: &store::ArtifactChild<S>) {
+async fn write_child<S>(out: &mut Vec<u8>, c: &store::ArtifactChild<S>) {
     write_str_lp(out, &c.child_id);
     write_ref(out, &c.target);
 }
-fn read_child<S>(reader: &mut store::ByteReader<'_>) -> Result<store::ArtifactChild<S>, String> {
+async fn read_child<S>(reader: &mut store::ByteReader<'_>) -> Result<store::ArtifactChild<S>, String> {
     let child_id = read_str_lp(reader)?;
     let target = read_ref(reader)?;
     Ok(store::ArtifactChild::new(child_id, target))
 }
 
-fn encode_forms_snapshot_binary(s: &FormsSnapshot) -> Vec<u8> {
+async fn encode_forms_snapshot_binary(s: &FormsSnapshot) -> Vec<u8> {
     const PACK_BINARY_FORMAT: u8 = 1;
     let mut out = vec![PACK_BINARY_FORMAT];
     write_str_lp(&mut out, &s.schema);
@@ -75,7 +75,7 @@ fn encode_forms_snapshot_binary(s: &FormsSnapshot) -> Vec<u8> {
     write_child(&mut out, &s.results);
     out
 }
-fn decode_forms_snapshot_binary(bytes: &[u8]) -> Result<FormsSnapshot, String> {
+async fn decode_forms_snapshot_binary(bytes: &[u8]) -> Result<FormsSnapshot, String> {
     const PACK_BINARY_FORMAT: u8 = 1;
     let mut reader = store::ByteReader::new(bytes);
     let format = reader.read_u8().map_err(|e| e.to_string())?;
@@ -95,13 +95,13 @@ fn decode_forms_snapshot_binary(bytes: &[u8]) -> Result<FormsSnapshot, String> {
 
 //#region 🔖️HandcraftedArtifactPack
 impl store::ArtifactPack for FormsSnapshot {
-    fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
+    async fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
         let raw = encode_forms_snapshot_binary(self);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &raw))
     }
-    fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, PackError> {
+    async fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, PackError> {
         let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| PackError::Schema(e.to_string()))?;
         if envelope.envelope_id() != <Self as store::ArtifactDsl>::envelope_id() {
             return Err(PackError::Schema(format!(
@@ -117,12 +117,12 @@ impl store::ArtifactPack for FormsSnapshot {
 //#endregion 🔖️HandcraftedArtifactPack
 
 /// 📦️ Encodes a `FormsSnapshot` to its binary pack form.
-pub fn encode(document: &FormsSnapshot) -> Vec<u8> {
+pub async fn encode(document: &FormsSnapshot) -> Vec<u8> {
     store::ArtifactPack::encode_pack(document)
 }
 
 /// 📖️ Decodes a `FormsSnapshot` from its binary pack form.
-pub fn decode(bytes: &[u8]) -> Result<FormsSnapshot, PackError> {
+pub async fn decode(bytes: &[u8]) -> Result<FormsSnapshot, PackError> {
     <FormsSnapshot as store::ArtifactPack>::decode_pack(bytes)
 }
 
@@ -134,7 +134,7 @@ mod tests {
     use crate::artifacts::forms::{forms_children_from_steps, FormStep, FORMS_DOCUMENT_SCHEMA};
 
     #[test]
-    fn snapshot_pack_round_trips_with_composed_children() {
+    async fn snapshot_pack_round_trips_with_composed_children() {
         let steps = vec![FormStep { id: "s1".into(), title: "Step".into(), description: None, blocks: Vec::new() }];
         let (structure, results) = forms_children_from_steps(&steps);
         let snapshot = FormsSnapshot { schema: FORMS_DOCUMENT_SCHEMA.into(), id: "forms".into(), version: "1".into(), title: None, structure, results };
@@ -144,7 +144,7 @@ mod tests {
     }
 
     #[test]
-    fn building_component_fixture_pack_agrees_with_dsl() {
+    async fn building_component_fixture_pack_agrees_with_dsl() {
         let spec = dsl::parse_playbook_example_dsl(dsl::BUILDING_COMPONENT_EXAMPLE_TEXT).expect("📋️building-component.forms parses");
         store::os_store::test_support::assert_dsl_pack_equivalence(&spec);
         let bytes = encode(&spec);
@@ -152,7 +152,7 @@ mod tests {
     }
 
     #[test]
-    fn default_fixture_pack_agrees_with_dsl() {
+    async fn default_fixture_pack_agrees_with_dsl() {
         let spec = dsl::parse_playbook_example_dsl(dsl::DEFAULT_EXAMPLE_TEXT).expect("📋️default.forms parses");
         store::os_store::test_support::assert_dsl_pack_equivalence(&spec);
         let bytes = encode(&spec);
@@ -160,7 +160,7 @@ mod tests {
     }
 
     #[test]
-    fn onboarding_fixture_pack_agrees_with_dsl() {
+    async fn onboarding_fixture_pack_agrees_with_dsl() {
         let spec = dsl::parse_playbook_example_dsl(dsl::ONBOARDING_EXAMPLE_TEXT).expect("📋️onboarding.forms parses");
         store::os_store::test_support::assert_dsl_pack_equivalence(&spec);
         let bytes = encode(&spec);
@@ -173,7 +173,7 @@ mod tests {
     /// existing dsl/pack round-trip laws (same pattern as `mathematical`'s own
     /// `command_envelope_round_trip_holds_for_an_applied_operation`).
     #[test]
-    fn command_envelope_round_trip_holds_for_an_applied_operation() {
+    async fn command_envelope_round_trip_holds_for_an_applied_operation() {
         use crate::artifacts::forms::{op::FormMutation, FormStep, FORMS_DOCUMENT_SCHEMA};
         use protocol::{ArtifactId, Edit, SchemaId};
         use store::{create_document_envelope, ArtifactCommand, ArtifactStore};

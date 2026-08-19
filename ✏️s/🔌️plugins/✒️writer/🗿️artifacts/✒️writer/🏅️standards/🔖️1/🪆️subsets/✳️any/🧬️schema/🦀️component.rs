@@ -48,23 +48,23 @@ pub struct WriterArtifact {
 
 //#region 🔖️Conversions
 impl Default for WriterArtifact {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self::from_snapshot(WriterSnapshot::default())
     }
 }
 
 impl WriterArtifact {
     /// 📸️ Persisted subset.
-    pub fn to_snapshot(&self) -> WriterSnapshot {
+    pub async fn to_snapshot(&self) -> WriterSnapshot {
         WriterSnapshot { schema: self.schema.clone(), id: self.id.clone(), language_id: self.language_id.clone(), uri: self.uri.clone(), document: self.document.clone() }
     }
 
     /// 🧬️ Builds a full artifact from a snapshot with UI defaults.
-    pub fn from_snapshot(snapshot: WriterSnapshot) -> Self {
+    pub async fn from_snapshot(snapshot: WriterSnapshot) -> Self {
         Self { schema: snapshot.schema, id: snapshot.id, language_id: snapshot.language_id, uri: snapshot.uri, document: snapshot.document, ..Self::default_ui() }
     }
 
-    fn default_ui() -> Self {
+    async fn default_ui() -> Self {
         Self {
             schema: WRITER_DOCUMENT_SCHEMA.into(),
             id: String::new(),
@@ -85,7 +85,7 @@ impl WriterArtifact {
     }
 
     /// 🔄 Writes persistent fields from a snapshot.
-    pub fn set_snapshot(&mut self, snapshot: WriterSnapshot) {
+    pub async fn set_snapshot(&mut self, snapshot: WriterSnapshot) {
         self.schema = snapshot.schema;
         self.id = snapshot.id;
         self.language_id = snapshot.language_id;
@@ -97,7 +97,7 @@ impl WriterArtifact {
 
 //#region 🔖️Descriptor
 /// 🧬️ Descriptor for `s.writer.writer` — twenty handcrafted schema leaves.
-pub fn writer_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
+pub async fn writer_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
     schema::ArtifactSchemaDescriptor {
         id: "s.writer.writer",
         artifact: schema::FacetLeaves {
@@ -135,7 +135,7 @@ pub fn writer_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
 //#region 🔖️DocumentHelpers
 /// 🌱️ The canonical empty `WriterSnapshot` — every artifact-tree helper here that needs a fallback or a
 /// baseline document builds off this one value.
-pub fn empty_writer_snapshot() -> WriterSnapshot {
+pub async fn empty_writer_snapshot() -> WriterSnapshot {
     WriterSnapshot { schema: WRITER_DOCUMENT_SCHEMA.into(), id: "empty".into(), language_id: "plaintext".into(), uri: "writer://empty".into(), document: document_child_handle_and_cache("empty", "", "plaintext") }
 }
 //#endregion 🔖️DocumentHelpers
@@ -150,7 +150,7 @@ pub struct GrammarToken {
     pub end: usize,
 }
 
-fn byte_span_to_text_span(text: &str, start: usize, end: usize) -> dsl::TextSpan {
+async fn byte_span_to_text_span(text: &str, start: usize, end: usize) -> dsl::TextSpan {
     let safe_end = end.min(text.len());
     let safe_start = start.min(safe_end);
     let prefix = &text[..safe_start];
@@ -160,7 +160,7 @@ fn byte_span_to_text_span(text: &str, start: usize, end: usize) -> dsl::TextSpan
     dsl::TextSpan::with_length(line, column, length.max(1))
 }
 
-fn token_class_from_name(name: &str) -> dsl::TokenClass {
+async fn token_class_from_name(name: &str) -> dsl::TokenClass {
     match name {
         "keyword" => dsl::TokenClass::Keyword,
         "string" => dsl::TokenClass::String,
@@ -179,19 +179,19 @@ impl dsl::DslIdiom for JackWriterIdiom {
     const LANG: &'static str = "jack";
     type Ast = String;
 
-    fn parse(text: &str) -> Result<Self::Ast, dsl::TextError> {
+    async fn parse(text: &str) -> Result<Self::Ast, dsl::TextError> {
         trinity::core::format(text).map_err(|e| dsl::TextError::new(e.to_string(), dsl::TextSpan::at(1, 1)))
     }
 
-    fn print(ast: &Self::Ast) -> String {
+    async fn print(ast: &Self::Ast) -> String {
         ast.clone()
     }
 
-    fn classify(text: &str) -> Vec<(dsl::TokenClass, dsl::TextSpan)> {
+    async fn classify(text: &str) -> Vec<(dsl::TokenClass, dsl::TextSpan)> {
         trinity::core::semantic_tokens(text).into_iter().map(|t| (token_class_from_name(&t.class), byte_span_to_text_span(text, t.start, t.end))).collect()
     }
 
-    fn complete(text: &str, offset: usize) -> Vec<dsl::CompletionItem> {
+    async fn complete(text: &str, offset: usize) -> Vec<dsl::CompletionItem> {
         let graph = trinity::core::example_graph();
         trinity::core::complete(&graph, text, offset).into_iter().map(|item| dsl::CompletionItem { label: item.label, detail: item.detail }).collect()
     }
@@ -204,16 +204,16 @@ impl dsl::DslIdiom for WireWriterIdiom {
     const LANG: &'static str = "wire";
     type Ast = String;
 
-    fn parse(text: &str) -> Result<Self::Ast, dsl::TextError> {
+    async fn parse(text: &str) -> Result<Self::Ast, dsl::TextError> {
         dsl::parse_wire_text(text.trim())?;
         Ok(text.to_string())
     }
 
-    fn print(ast: &Self::Ast) -> String {
+    async fn print(ast: &Self::Ast) -> String {
         ast.clone()
     }
 
-    fn classify(text: &str) -> Vec<(dsl::TokenClass, dsl::TextSpan)> {
+    async fn classify(text: &str) -> Vec<(dsl::TokenClass, dsl::TextSpan)> {
         let limits = dsl::Limits::default();
         let Ok(tokens) = dsl::lex(text, &limits, false) else {
             return Vec::new();
@@ -238,7 +238,7 @@ impl dsl::DslIdiom for WireWriterIdiom {
 }
 
 /// @emoji 🎨️ Classifies `text` through the language registry (`idiom` / `LanguageSpec` hooks).
-pub fn tokenize_language(text: &str, language_id: &str) -> Vec<GrammarToken> {
+pub async fn tokenize_language(text: &str, language_id: &str) -> Vec<GrammarToken> {
     if language_id == "jack" {
         return trinity::core::semantic_tokens(text).into_iter().map(|t| GrammarToken { class: t.class, start: t.start, end: t.end }).collect();
     }
@@ -271,7 +271,7 @@ pub fn tokenize_language(text: &str, language_id: &str) -> Vec<GrammarToken> {
     Vec::new()
 }
 
-pub fn language_completions_json(text: &str, language_id: &str, cursor: usize) -> Option<String> {
+pub async fn language_completions_json(text: &str, language_id: &str, cursor: usize) -> Option<String> {
     if let Some(spec) = dsl::language(language_id) {
         let session = dsl::lsp::LanguageSession::open(spec, text.to_string());
         let items: Vec<Value> = session.completions_at(cursor).into_iter().map(|item| json!({ "label": item.label, "detail": item.detail })).collect();
@@ -284,19 +284,19 @@ pub fn language_completions_json(text: &str, language_id: &str, cursor: usize) -
     None
 }
 
-pub fn jack_completions_json(text: &str, cursor: usize) -> Option<String> {
+pub async fn jack_completions_json(text: &str, cursor: usize) -> Option<String> {
     let items: Vec<Value> = <JackWriterIdiom as dsl::DslIdiom>::complete(text, cursor).into_iter().map(|item| json!({ "label": item.label, "detail": item.detail })).collect();
     serde_json::to_string(&items).ok()
 }
 
 /// 🎼️ `wire` counterpart of [`jack_completions_json`] — see [`WireWriterIdiom`]'s doc comment.
-pub fn wire_completions_json(text: &str, cursor: usize) -> Option<String> {
+pub async fn wire_completions_json(text: &str, cursor: usize) -> Option<String> {
     let items: Vec<Value> = <WireWriterIdiom as dsl::DslIdiom>::complete(text, cursor).into_iter().map(|item| json!({ "label": item.label, "detail": item.detail })).collect();
     serde_json::to_string(&items).ok()
 }
 
 /// 🪞️ Canonical jack format when possible, else a whitespace-only normalization for other languages.
-pub fn format_writer_text(text: &str, language_id: &str) -> String {
+pub async fn format_writer_text(text: &str, language_id: &str) -> String {
     if language_id == "jack" {
         if let Ok(formatted) = trinity::core::format(text) {
             return formatted;
@@ -323,7 +323,7 @@ pub struct JackAstNode {
     pub children: Vec<JackAstNode>,
 }
 
-pub fn jack_ast_tree_icon(kind: &str) -> Option<&'static str> {
+pub async fn jack_ast_tree_icon(kind: &str) -> Option<&'static str> {
     match kind {
         "query" => Some("file-code"),
         "match" | "create" | "merge" => Some("git-branch"),
@@ -342,17 +342,17 @@ pub fn jack_ast_tree_icon(kind: &str) -> Option<&'static str> {
 
 /// 🌉️ Adapts trinity::core's shared [`trinity::core::SpannedNode`] tree into writer's own [`JackAstNode`]
 /// (adds the stable tree-item `id` the outline panel needs; `kind`/`label`/spans pass through unchanged).
-fn jack_ast_from_spanned(node: &trinity::core::SpannedNode) -> JackAstNode {
+async fn jack_ast_from_spanned(node: &trinity::core::SpannedNode) -> JackAstNode {
     JackAstNode { id: format!("jack-ast-{}-{}-{}", node.kind, node.start, node.end), kind: node.kind.clone(), label: node.label.clone(), start: node.start, end: node.end, children: node.children.iter().map(jack_ast_from_spanned).collect() }
 }
 
 /// 🌳️ Parse jack source into a span-tracked AST for hierarchy panels, via the shared `trinity::core` parser.
-pub fn parse_jack_ast(text: &str) -> JackAstNode {
+pub async fn parse_jack_ast(text: &str) -> JackAstNode {
     jack_ast_from_spanned(&trinity::core::parse_spanned(text))
 }
 
 /// 🎯️ Deepest AST node containing a byte offset.
-pub fn find_deepest_jack_ast_node_at(root: &JackAstNode, offset: usize) -> Option<&JackAstNode> {
+pub async fn find_deepest_jack_ast_node_at(root: &JackAstNode, offset: usize) -> Option<&JackAstNode> {
     if offset < root.start || offset >= root.end {
         return None;
     }
@@ -365,7 +365,7 @@ pub fn find_deepest_jack_ast_node_at(root: &JackAstNode, offset: usize) -> Optio
 }
 
 /// 🔎️ Find an AST node by stable id.
-pub fn jack_ast_node_by_id<'a>(root: &'a JackAstNode, id: &str) -> Option<&'a JackAstNode> {
+pub async fn jack_ast_node_by_id<'a>(root: &'a JackAstNode, id: &str) -> Option<&'a JackAstNode> {
     if root.id == id {
         return Some(root);
     }
@@ -373,8 +373,8 @@ pub fn jack_ast_node_by_id<'a>(root: &'a JackAstNode, id: &str) -> Option<&'a Ja
 }
 
 /// 🖱️ Smallest AST node that fully contains a selection range.
-pub fn jack_ast_node_for_selection(root: &JackAstNode, start: usize, end: usize) -> Option<&JackAstNode> {
-    fn visit<'a>(node: &'a JackAstNode, start: usize, end: usize, best: &mut Option<&'a JackAstNode>) {
+pub async fn jack_ast_node_for_selection(root: &JackAstNode, start: usize, end: usize) -> Option<&JackAstNode> {
+    async fn visit<'a>(node: &'a JackAstNode, start: usize, end: usize, best: &mut Option<&'a JackAstNode>) {
         if node.start <= start && node.end >= end {
             let is_better = match best {
                 Some(current) => (node.end - node.start) < (current.end - current.start),
@@ -408,7 +408,7 @@ pub struct SelectableSpan {
 }
 
 /// 🎯️ Builds atomic and composite jack spans for token-wise selection (premigration `selectableSpansForJack`).
-pub fn selectable_spans_for_jack(text: &str, tokens: &[GrammarToken]) -> Vec<SelectableSpan> {
+pub async fn selectable_spans_for_jack(text: &str, tokens: &[GrammarToken]) -> Vec<SelectableSpan> {
     let mut spans: Vec<SelectableSpan> = tokens.iter().map(|token| SelectableSpan { start: token.start, end: token.end, kind: "atomic".into(), head_end: None, tail_start: None }).collect();
     for i in 0..tokens.len() {
         if i + 2 >= tokens.len() {
@@ -444,7 +444,7 @@ pub struct JackEditorPlaceholder {
     pub label: String,
 }
 
-fn jack_placeholder_visible(caret: usize, offset: usize) -> bool {
+async fn jack_placeholder_visible(caret: usize, offset: usize) -> bool {
     let caret = caret as i64;
     let offset = offset as i64;
     caret >= offset - 32 && caret <= offset + 48
@@ -452,20 +452,20 @@ fn jack_placeholder_visible(caret: usize, offset: usize) -> bool {
 
 /// 🔤️ Fine-grained, never-fails jack tokens for editor heuristics — routed through `trinity::core`'s shared
 /// forgiving lexer instead of a hand-rolled writer copy.
-fn jack_tokens(text: &str) -> Vec<SpannedToken> {
+async fn jack_tokens(text: &str) -> Vec<SpannedToken> {
     lex_spanned(text, true).unwrap_or_default()
 }
 
-fn jack_token_expects_expr(token: &Token) -> bool {
+async fn jack_token_expects_expr(token: &Token) -> bool {
     matches!(token, Token::And | Token::Or)
 }
 
-fn jack_token_expects_pattern(token: &Token) -> bool {
+async fn jack_token_expects_pattern(token: &Token) -> bool {
     matches!(token, Token::KwMatch | Token::KwCreate | Token::KwMerge)
 }
 
 /// 👻️ Required jack token placeholders near the caret (premigration `jackEditorPlaceholders`).
-pub fn jack_editor_placeholders(text: &str, caret: usize) -> Vec<JackEditorPlaceholder> {
+pub async fn jack_editor_placeholders(text: &str, caret: usize) -> Vec<JackEditorPlaceholder> {
     use Token;
     let tokens = jack_tokens(text);
     let mut out = Vec::new();
@@ -575,7 +575,7 @@ pub fn jack_editor_placeholders(text: &str, caret: usize) -> Vec<JackEditorPlace
 
 const JACK_NEWLINE_AFTER_KEYWORDS: &[Token] = &[Token::KwMatch, Token::KwWhere, Token::KwReturn, Token::KwCreate, Token::KwDelete, Token::KwSet, Token::KwMerge, Token::And, Token::Or];
 
-fn jack_lex_token_at_offset(tokens: &[SpannedToken], offset: usize) -> Option<&SpannedToken> {
+async fn jack_lex_token_at_offset(tokens: &[SpannedToken], offset: usize) -> Option<&SpannedToken> {
     for token in tokens {
         if token.token == Token::Eof {
             break;
@@ -588,7 +588,7 @@ fn jack_lex_token_at_offset(tokens: &[SpannedToken], offset: usize) -> Option<&S
 }
 
 /// ↩️ Whether a jack query may break onto a new line at a byte offset (premigration `jackNewlineAllowedAt`).
-pub fn jack_newline_allowed_at(text: &str, offset: usize) -> bool {
+pub async fn jack_newline_allowed_at(text: &str, offset: usize) -> bool {
     use Token;
     let clamped = offset.min(text.len());
     if !text.is_char_boundary(clamped) {
@@ -655,12 +655,12 @@ pub fn jack_newline_allowed_at(text: &str, offset: usize) -> bool {
 }
 
 /// ↩️ All byte offsets at which Enter may insert a newline, for `newlineGatesJson`.
-pub fn jack_newline_gate_offsets(text: &str) -> Vec<usize> {
+pub async fn jack_newline_gate_offsets(text: &str) -> Vec<usize> {
     (0..=text.len()).filter(|&offset| text.is_char_boundary(offset) && jack_newline_allowed_at(text, offset)).collect()
 }
 
 /// 🔗️ Bound jack variable names from pattern bindings (premigration `jackBoundVariableNames`).
-pub fn jack_bound_variable_names(text: &str) -> std::collections::HashSet<String> {
+pub async fn jack_bound_variable_names(text: &str) -> std::collections::HashSet<String> {
     use Token;
     let tokens = jack_tokens(text);
     let mut vars = std::collections::HashSet::new();
@@ -680,7 +680,7 @@ pub fn jack_bound_variable_names(text: &str) -> std::collections::HashSet<String
     vars
 }
 
-fn is_jack_variable_use_token(tokens: &[SpannedToken], index: usize, bound: &std::collections::HashSet<String>) -> bool {
+async fn is_jack_variable_use_token(tokens: &[SpannedToken], index: usize, bound: &std::collections::HashSet<String>) -> bool {
     use Token;
     let Some(token) = tokens.get(index) else { return false };
     let Token::Ident(text) = &token.token else { return false };
@@ -695,7 +695,7 @@ fn is_jack_variable_use_token(tokens: &[SpannedToken], index: usize, bound: &std
 }
 
 /// 🔁️ All bound-variable occurrences for a jack variable name (premigration `jackVariableOccurrences`).
-pub fn jack_variable_occurrences(text: &str, var_name: &str) -> Vec<(usize, usize)> {
+pub async fn jack_variable_occurrences(text: &str, var_name: &str) -> Vec<(usize, usize)> {
     use Token;
     let tokens = jack_tokens(text);
     let bound = jack_bound_variable_names(text);
@@ -728,7 +728,7 @@ pub struct JackSymbolAtCursor {
 }
 
 /// 🎯️ Resolve the jack symbol at a byte offset for semantic editor actions (premigration `jackSymbolAtOffset`).
-pub fn jack_symbol_at_offset(text: &str, offset: usize) -> Option<JackSymbolAtCursor> {
+pub async fn jack_symbol_at_offset(text: &str, offset: usize) -> Option<JackSymbolAtCursor> {
     use Token;
     let tokens = jack_tokens(text);
     let clamped = offset.min(text.len());
@@ -753,7 +753,7 @@ pub fn jack_symbol_at_offset(text: &str, offset: usize) -> Option<JackSymbolAtCu
 }
 
 /// ✏️ Apply a semantic jack rename across all occurrence spans (premigration `applyJackRename`).
-pub fn apply_jack_rename(text: &str, occurrences: &[(usize, usize)], new_name: &str) -> String {
+pub async fn apply_jack_rename(text: &str, occurrences: &[(usize, usize)], new_name: &str) -> String {
     let mut sorted: Vec<(usize, usize)> = occurrences.to_vec();
     sorted.sort_by_key(|a| std::cmp::Reverse(a.0));
     let mut out = text.to_string();
@@ -774,7 +774,7 @@ mod tests {
     const CANONICAL_QUERY: &str = "MATCH (a:Piece)-[r:Connection]->(b:Piece)\nWHERE a.name = 'core'\nRETURN a.name, b.name";
 
     #[test]
-    fn parses_full_jack_ast_shape() {
+    async fn parses_full_jack_ast_shape() {
         let root = parse_jack_ast(CANONICAL_QUERY);
         assert_eq!(root.kind, "query");
         assert_eq!(root.children.len(), 3);
@@ -788,7 +788,7 @@ mod tests {
     }
 
     #[test]
-    fn selection_maps_to_smallest_containing_ast_node() {
+    async fn selection_maps_to_smallest_containing_ast_node() {
         let root = parse_jack_ast(CANONICAL_QUERY);
         let a_offset = CANONICAL_QUERY.find("a:Piece").unwrap();
         let node = jack_ast_node_for_selection(&root, a_offset, a_offset + 1).expect("node");
@@ -796,7 +796,7 @@ mod tests {
     }
 
     #[test]
-    fn selectable_spans_include_var_label_and_property_access() {
+    async fn selectable_spans_include_var_label_and_property_access() {
         let text = "MATCH (a1:Piece) RETURN a1.name";
         let tokens = tokenize_language(text, "jack");
         let spans = selectable_spans_for_jack(text, &tokens);
@@ -805,48 +805,48 @@ mod tests {
     }
 
     #[test]
-    fn symbol_occurrences_find_bound_variable_uses() {
+    async fn symbol_occurrences_find_bound_variable_uses() {
         let symbol = jack_symbol_at_offset(CANONICAL_QUERY, CANONICAL_QUERY.find("a.name").unwrap()).expect("symbol");
         assert_eq!(symbol.kind, JackSymbolKind::Variable);
         assert_eq!(symbol.occurrences.len(), 3);
     }
 
     #[test]
-    fn symbol_at_label_position_is_node_kind_not_variable() {
+    async fn symbol_at_label_position_is_node_kind_not_variable() {
         let symbol = jack_symbol_at_offset(CANONICAL_QUERY, CANONICAL_QUERY.find("Piece").unwrap() + 1).expect("symbol");
         assert_eq!(symbol.kind, JackSymbolKind::NodeKind);
     }
 
     #[test]
-    fn placeholders_suggest_expr_after_and() {
+    async fn placeholders_suggest_expr_after_and() {
         let text = "MATCH (a:Piece) WHERE a.name = 'x' AND ";
         let placeholders = jack_editor_placeholders(text, text.len());
         assert!(placeholders.iter().any(|p| p.label == "expr"));
     }
 
     #[test]
-    fn placeholders_suggest_label_after_colon() {
+    async fn placeholders_suggest_label_after_colon() {
         let text = "MATCH (a:";
         let placeholders = jack_editor_placeholders(text, text.len());
         assert!(placeholders.iter().any(|p| p.label == "Label"));
     }
 
     #[test]
-    fn newline_gates_allow_after_match_close_paren() {
+    async fn newline_gates_allow_after_match_close_paren() {
         let text = "MATCH (a:Piece)";
         let gates = jack_newline_gate_offsets(text);
         assert!(gates.contains(&text.len()));
     }
 
     #[test]
-    fn newline_gates_disallow_inside_token() {
+    async fn newline_gates_disallow_inside_token() {
         let text = "MATCH (a:Piece)";
         let inside = text.find("Piece").unwrap() + 2;
         assert!(!jack_newline_allowed_at(text, inside));
     }
 
     #[test]
-    fn newline_gates_disallow_before_dot() {
+    async fn newline_gates_disallow_before_dot() {
         let text = "RETURN a.name";
         let before_dot = text.find('.').unwrap();
         assert!(!jack_newline_allowed_at(text, before_dot));

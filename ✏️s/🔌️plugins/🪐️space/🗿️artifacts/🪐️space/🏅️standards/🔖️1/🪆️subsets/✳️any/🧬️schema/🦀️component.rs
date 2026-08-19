@@ -8,7 +8,7 @@
 /// 🧬️ Descriptor for `s.space.space` — reuses the snapshot/diff/mutations Rust source as the "artifact"
 /// facet's own Rust leaf too (no separate combined struct to source it from); the non-Rust leaves are
 /// intentionally minimal placeholders (see the module doc above).
-pub fn sspace_index_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
+pub async fn sspace_index_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
     const PLACEHOLDER_TS: &str = "// s.space.space: no separate non-Rust schema leaf authored this wave.\n";
     const PLACEHOLDER_GRAPHQL: &str = "# s.space.space: no separate non-Rust schema leaf authored this wave.\n";
     const PLACEHOLDER_JSON: &str = "{}";
@@ -25,7 +25,7 @@ pub fn sspace_index_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
 
 //#region 🔖️DocumentHelpers
 /// 🔎 Returns whether `s.space.space` is present in the process-local schema registry.
-pub fn artifact_schema_registered() -> bool {
+pub async fn artifact_schema_registered() -> bool {
     ::schema::artifact_schema_descriptor_registered("s.space.space")
 }
 //#endregion 🔖️DocumentHelpers
@@ -36,7 +36,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn descriptor_carries_the_space_index_schema_id() {
+    async fn descriptor_carries_the_space_index_schema_id() {
         assert_eq!(sspace_index_schema_descriptor().id, "s.space.space");
     }
 }

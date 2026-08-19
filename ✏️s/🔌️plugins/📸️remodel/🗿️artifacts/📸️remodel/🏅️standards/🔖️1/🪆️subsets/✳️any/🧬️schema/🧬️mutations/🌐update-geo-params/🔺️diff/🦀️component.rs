@@ -5,7 +5,7 @@ use crate::artifacts::remodel::diff::RemodelDiff;
 use crate::artifacts::remodel::RemodelSnapshot;
 
 //#region 🔖️Diff
-pub fn diff(payload: &super::mutation::UpdateGeoParams, base: &RemodelSnapshot) -> protocol::MutationOutcome<RemodelDiff> {
+pub async fn diff(payload: &super::mutation::UpdateGeoParams, base: &RemodelSnapshot) -> protocol::MutationOutcome<RemodelDiff> {
     let params = &payload.params;
     let distances_ok = [params.gsd_m, params.dsm_cell_m, params.dtm_filter_radius_m].iter().all(|value| value.is_finite() && *value > 0.0);
     let lat_ok = params.origin_lat.map_or(true, |lat| lat.is_finite() && (-90.0..=90.0).contains(&lat));

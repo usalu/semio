@@ -8,7 +8,7 @@ use crate::artifacts::process3d::mutations::replace_step_measure::mutation::Repl
 use crate::artifacts::process3d::Process3dSnapshot;
 
 //#region 🔖️Inverse
-pub fn inverse(_payload: &ReplaceStepMeasure, _base: &Process3dSnapshot) -> Vec<Process3dMutation> {
+pub async fn inverse(_payload: &ReplaceStepMeasure, _base: &Process3dSnapshot) -> Vec<Process3dMutation> {
     Vec::new()
 }
 //#endregion 🔖️Inverse

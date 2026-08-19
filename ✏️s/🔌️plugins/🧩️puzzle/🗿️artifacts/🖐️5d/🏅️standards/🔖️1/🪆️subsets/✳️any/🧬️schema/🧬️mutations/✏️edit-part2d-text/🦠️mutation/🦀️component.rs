@@ -17,22 +17,22 @@ pub struct EditPart2dText {
 impl protocol::MutationKind<Puzzle5dSnapshot, Puzzle5dMutation> for EditPart2dText {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "edit", entity: "part", kind: "edit-part2d-text", record: "EditedPart2dText" };
 
-    fn diff(&self, base: &Puzzle5dSnapshot) -> protocol::MutationOutcome<Puzzle5dDiff> {
+    async fn diff(&self, base: &Puzzle5dSnapshot) -> protocol::MutationOutcome<Puzzle5dDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &Puzzle5dSnapshot) -> Vec<Puzzle5dMutation> {
+    async fn inverse(&self, base: &Puzzle5dSnapshot) -> Vec<Puzzle5dMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         format!("Edit part \"{}\" 2d text", self.id)
     }
-    fn target(&self) -> Vec<String> {
+    async fn target(&self) -> Vec<String> {
         vec![self.id.clone()]
     }
 }
 //#endregion 🔖️Mutation
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn edit_part_2d_text(id: String, new_text: Option<String>) -> Puzzle5dMutation {
+pub async fn edit_part_2d_text(id: String, new_text: Option<String>) -> Puzzle5dMutation {
     Puzzle5dMutation::EditPart2dText(EditPart2dText { id, new_text })
 }

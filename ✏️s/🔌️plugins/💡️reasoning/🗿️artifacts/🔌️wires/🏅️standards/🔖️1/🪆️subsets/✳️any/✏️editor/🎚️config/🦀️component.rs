@@ -33,10 +33,10 @@ pub struct WiresConfig {
 /// 📜️ Handcrafted ArtifactDsl (P6): uses this type's `__dsl_*` helpers + parse/print, not derive emission.
 impl store::ArtifactDsl for WiresConfig {
     const EXTENSION: &'static str = Self::__DSL_EXTENSION;
-    fn envelope_id() -> &'static str {
+    async fn envelope_id() -> &'static str {
         Self::__DSL_ENVELOPE_ID
     }
-    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+    async fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
         let body = match store::semio_format::split_text_preamble(text) {
             Ok((_, rest)) => rest,
             Err(_) => text,
@@ -48,7 +48,7 @@ impl store::ArtifactDsl for WiresConfig {
         )?;
         Self::__dsl_from_record(&record)
     }
-    fn print_dsl(&self) -> String {
+    async fn print_dsl(&self) -> String {
         let body = dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), dsl::JoinMode::Document);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
             <Self as store::ArtifactDsl>::envelope_id(),
@@ -62,7 +62,7 @@ impl store::ArtifactDsl for WiresConfig {
 
 /// 📦️ Handcrafted ArtifactPack (P6): envelope-wrapped pack body via `__dsl_*` record lowering.
 impl store::ArtifactPack for WiresConfig {
-    fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
+    async fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let inner = store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
             <Self as store::ArtifactDsl>::envelope_id(),
@@ -72,7 +72,7 @@ impl store::ArtifactPack for WiresConfig {
         .map_err(|e| store::PackError::Schema(e.to_string()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &inner))
     }
-    fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
+    async fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
         if envelope.envelope_id() != <Self as store::ArtifactDsl>::envelope_id() {
             return Err(store::PackError::Schema(format!(
@@ -84,7 +84,7 @@ impl store::ArtifactPack for WiresConfig {
         let (record, _report) = store::pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
         Self::__dsl_from_record(&record).map_err(store::text_error_to_pack_error)
     }
-    fn record_spec() -> Option<dsl::RecordSpec> {
+    async fn record_spec() -> Option<dsl::RecordSpec> {
         Some(Self::__dsl_spec())
     }
 }
@@ -93,7 +93,7 @@ impl store::ArtifactPack for WiresConfig {
 
 
 impl Default for WiresConfig {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self { drag_node_id: None, drag_last_x: 0.0, drag_last_y: 0.0, locale: "en-US".into() }
     }
 }
@@ -119,7 +119,7 @@ pub enum WiresConfigMutation {
 
 //#region 🔖️OpCodec
 impl protocol::OpText for WiresConfigMutation {
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
+    async fn parse_op(line: &str) -> Result<Self, store::TextError> {
         let variants = <Self as dsl::DslVariants>::variants();
         for (keyword, spec_fn) in &variants {
             let probe = format!("{} ", keyword);
@@ -134,7 +134,7 @@ impl protocol::OpText for WiresConfigMutation {
         }
         Err(dsl::__rt::field_error(format!("unknown mutation line '{line}'")))
     }
-    fn print_op(&self) -> String {
+    async fn print_op(&self) -> String {
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
         let variants = <Self as dsl::DslVariants>::variants();
         let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
@@ -144,7 +144,7 @@ impl protocol::OpText for WiresConfigMutation {
 
 /// 🎯️ Handcrafted OpBinary (P6).
 impl protocol::OpBinary for WiresConfigMutation {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         const OP_BINARY_FORMAT: u8 = 1;
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
         let variants = <Self as dsl::DslVariants>::variants();
@@ -161,7 +161,7 @@ impl protocol::OpBinary for WiresConfigMutation {
         out.extend_from_slice(&body);
         Ok(out)
     }
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         const OP_BINARY_FORMAT: u8 = 1;
         let mut reader = store::pack_rt::ByteReader::new(bytes);
         let format = reader.read_u8()?;
@@ -192,7 +192,7 @@ impl protocol::OpBinary for WiresConfigMutation {
 impl Mutation<WiresConfig> for WiresConfigMutation {
     type Diff = WiresConfig;
 
-    fn diff(&self, base: &WiresConfig) -> protocol::MutationOutcome<WiresConfig> {
+    async fn diff(&self, base: &WiresConfig) -> protocol::MutationOutcome<WiresConfig> {
         let mut next = base.clone();
         match self {
             WiresConfigMutation::SetDrag { node_id, last_x, last_y } => {
@@ -205,7 +205,7 @@ impl Mutation<WiresConfig> for WiresConfigMutation {
         protocol::MutationOutcome::new(next)
     }
 
-    fn inverse(&self, base: &WiresConfig) -> Vec<Self> {
+    async fn inverse(&self, base: &WiresConfig) -> Vec<Self> {
         match self {
             WiresConfigMutation::SetDrag { .. } => vec![WiresConfigMutation::SetDrag { node_id: base.drag_node_id.clone(), last_x: base.drag_last_x, last_y: base.drag_last_y }],
             WiresConfigMutation::SetLocale { .. } => vec![WiresConfigMutation::SetLocale { value: base.locale.clone() }],
@@ -223,7 +223,7 @@ mod tests {
     /// 🕹️ Selection lives in the framework-owned "graph" interaction domain now (ticket
     /// 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM) — `WiresConfig` only carries drag/locale.
     #[test]
-    fn wires_config_default_matches_no_drag_and_en_locale() {
+    async fn wires_config_default_matches_no_drag_and_en_locale() {
         let config = WiresConfig::default();
         assert!(config.drag_node_id.is_none());
         assert_eq!(config.locale, "en-US");
@@ -231,7 +231,7 @@ mod tests {
 
     /// 🔁️ B1 dsl/pack round-trip law for `WiresConfig` — a non-default fixture exercising every field.
     #[test]
-    fn wires_config_dsl_pack_round_trip() {
+    async fn wires_config_dsl_pack_round_trip() {
         let config = WiresConfig { drag_node_id: Some("node-1".into()), drag_last_x: 12.5, drag_last_y: -7.25, locale: "de-DE".into() };
         store::os_store::test_support::assert_dsl_pack_equivalence(&config);
     }
@@ -239,20 +239,20 @@ mod tests {
 
     //#region 🔖️ConfigOperationTests
     #[test]
-    fn config_drag_op_text_round_trip() {
+    async fn config_drag_op_text_round_trip() {
         store::os_store::test_support::assert_op_line_round_trip(&WiresConfigMutation::SetDrag { node_id: Some("node-1".into()), last_x: 12.5, last_y: -7.25 });
         store::os_store::test_support::assert_op_line_round_trip(&WiresConfigMutation::SetDrag { node_id: None, last_x: 0.0, last_y: 0.0 });
     }
 
     #[test]
-    fn config_locale_op_text_round_trip() {
+    async fn config_locale_op_text_round_trip() {
         store::os_store::test_support::assert_op_line_round_trip(&WiresConfigMutation::SetLocale { value: "de-DE".into() });
     }
 
     /// ⏪️ `backwards()` returns the SAME variant re-addressed at the pre-op field value — a targeted,
     /// in-kind inverse, not a whole-config replace.
     #[test]
-    fn config_backwards_restores_the_same_field_from_base() {
+    async fn config_backwards_restores_the_same_field_from_base() {
         let base = WiresConfig { drag_node_id: Some("node-1".into()), drag_last_x: 1.0, drag_last_y: 2.0, ..Default::default() };
         let forward = WiresConfigMutation::SetDrag { node_id: Some("node-2".into()), last_x: 5.0, last_y: 6.0 };
         let inverse = forward.inverse(&base);

@@ -16,11 +16,11 @@ use std::collections::HashMap;
 // BFS on every `dep_input`/`compute` call, so a full `infer_field` pass here is O(n²) rather than
 // O(n) — acceptable at pilot/example scale. A later wave can thread the assignment through once per
 // `infer_field` call (e.g. by widening `InferredField::plan`'s contract) instead of re-deriving it.
-pub(crate) fn assignment_for(snapshot: &Puzzle3dSnapshot) -> HashMap<String, FlattenParent> {
+pub(crate) async fn assignment_for(snapshot: &Puzzle3dSnapshot) -> HashMap<String, FlattenParent> {
     flatten_objects_with_assignment(&snapshot.objects, &snapshot.attractions, None).2
 }
 
-fn push_numbers(bytes: &mut Vec<u8>, values: impl IntoIterator<Item = f64>) {
+async fn push_numbers(bytes: &mut Vec<u8>, values: impl IntoIterator<Item = f64>) {
     for value in values {
         bytes.extend(semio_framework_hash::format_number_for_hash(value).as_bytes());
         bytes.push(0x1f);
@@ -38,11 +38,11 @@ impl store::InferredField<Puzzle3dSnapshot> for Puzzle3dFlatPlane {
     const FIELD_ID: &'static str = "s.puzzle.puzzle3d.inference.flatPosition.plane";
     const SCHEMA_VERSION: u32 = 1;
 
-    fn reads() -> &'static [&'static str] {
+    async fn reads() -> &'static [&'static str] {
         &["objects", "attractions"]
     }
 
-    fn plan(snapshot: &Puzzle3dSnapshot) -> Vec<store::InferenceStep<Self::Key>> {
+    async fn plan(snapshot: &Puzzle3dSnapshot) -> Vec<store::InferenceStep<Self::Key>> {
         let (_, order, assignment) = flatten_objects_with_assignment(&snapshot.objects, &snapshot.attractions, None);
         order
             .into_iter()
@@ -56,7 +56,7 @@ impl store::InferredField<Puzzle3dSnapshot> for Puzzle3dFlatPlane {
             .collect()
     }
 
-    fn dep_input(snapshot: &Puzzle3dSnapshot, key: &Self::Key, _parents: &[Self::Key]) -> Vec<u8> {
+    async fn dep_input(snapshot: &Puzzle3dSnapshot, key: &Self::Key, _parents: &[Self::Key]) -> Vec<u8> {
         let assignment = assignment_for(snapshot);
         let mut bytes = Vec::new();
         match assignment.get(key) {
@@ -90,7 +90,7 @@ impl store::InferredField<Puzzle3dSnapshot> for Puzzle3dFlatPlane {
         bytes
     }
 
-    fn compute(snapshot: &Puzzle3dSnapshot, key: &Self::Key, parents: &[Self::Value]) -> Self::Value {
+    async fn compute(snapshot: &Puzzle3dSnapshot, key: &Self::Key, parents: &[Self::Value]) -> Self::Value {
         let assignment = assignment_for(snapshot);
         match assignment.get(key) {
             Some(FlattenParent::Child { parent_id, attraction_index, parent_vortex_id, child_vortex_id }) => {
@@ -130,15 +130,15 @@ impl store::InferredField<Puzzle3dSnapshot> for Puzzle3dFlatCenter {
     const FIELD_ID: &'static str = "s.puzzle.puzzle3d.inference.flatPosition.center";
     const SCHEMA_VERSION: u32 = 1;
 
-    fn reads() -> &'static [&'static str] {
+    async fn reads() -> &'static [&'static str] {
         &["objects", "attractions"]
     }
 
-    fn plan(snapshot: &Puzzle3dSnapshot) -> Vec<store::InferenceStep<Self::Key>> {
+    async fn plan(snapshot: &Puzzle3dSnapshot) -> Vec<store::InferenceStep<Self::Key>> {
         Puzzle3dFlatPlane::plan(snapshot)
     }
 
-    fn dep_input(snapshot: &Puzzle3dSnapshot, key: &Self::Key, _parents: &[Self::Key]) -> Vec<u8> {
+    async fn dep_input(snapshot: &Puzzle3dSnapshot, key: &Self::Key, _parents: &[Self::Key]) -> Vec<u8> {
         let assignment = assignment_for(snapshot);
         let mut bytes = Vec::new();
         match assignment.get(key) {
@@ -156,7 +156,7 @@ impl store::InferredField<Puzzle3dSnapshot> for Puzzle3dFlatCenter {
         bytes
     }
 
-    fn compute(snapshot: &Puzzle3dSnapshot, key: &Self::Key, parents: &[Self::Value]) -> Self::Value {
+    async fn compute(snapshot: &Puzzle3dSnapshot, key: &Self::Key, parents: &[Self::Value]) -> Self::Value {
         let assignment = assignment_for(snapshot);
         match assignment.get(key) {
             Some(FlattenParent::Child { parent_id, attraction_index, parent_vortex_id, .. }) => {
@@ -185,15 +185,15 @@ mod tests {
     use store::{InferenceCache, InferenceCacheConfig, InferredField};
 
     //#region 🧸️Fixtures
-    fn vortex(id: &str, position: [f64; 3], direction: [f64; 3]) -> Puzzle3dVortex {
+    async fn vortex(id: &str, position: [f64; 3], direction: [f64; 3]) -> Puzzle3dVortex {
         Puzzle3dVortex { id: id.into(), vortex_kind: None, label: None, position, direction: Some(direction), radius: None, hidden: false, locked: false }
     }
 
-    fn object(id: &str, origin: [f64; 3], anchor: Puzzle3dObjectAnchor, vortices: Vec<Puzzle3dVortex>) -> Puzzle3dObject {
+    async fn object(id: &str, origin: [f64; 3], anchor: Puzzle3dObjectAnchor, vortices: Vec<Puzzle3dVortex>) -> Puzzle3dObject {
         Puzzle3dObject { id: id.into(), label: None, object_kind: None, anchor, origin, orientation: Some([0.0, 0.0, 0.0, 1.0]), scale: None, mesh_url: None, vortices, hidden: false, locked: false }
     }
 
-    pub(crate) fn chain_snapshot() -> Puzzle3dSnapshot {
+    pub(crate) async fn chain_snapshot() -> Puzzle3dSnapshot {
         // root -A- mid -B- leaf: a 3-object chain so an ancestor change propagates to a grandchild.
         let root = object("root", [0.0, 0.0, 0.0], Puzzle3dObjectAnchor::Fixed, vec![vortex("top", [0.0, 0.0, 1.0], [0.0, 0.0, 1.0])]);
         let mut mid = object("mid", [0.0, 0.0, 0.0], Puzzle3dObjectAnchor::Derived, vec![vortex("bottom", [0.0, 0.0, -1.0], [0.0, 0.0, -1.0]), vortex("top", [0.0, 0.0, 1.0], [0.0, 0.0, 1.0])]);
@@ -207,7 +207,7 @@ mod tests {
 
     //#region 🧪️IncrementalityLaw
     #[test]
-    fn changing_a_leaf_own_vortex_does_not_recompute_ancestors() {
+    async fn changing_a_leaf_own_vortex_does_not_recompute_ancestors() {
         let mut cache = InferenceCache::new(InferenceCacheConfig { enabled: true, record_stats: true, ..Default::default() });
         let base = chain_snapshot();
         let _ = store::infer_field::<Puzzle3dSnapshot, Puzzle3dFlatPlane>(&base, Some(&mut cache));
@@ -223,7 +223,7 @@ mod tests {
     }
 
     #[test]
-    fn changing_the_root_position_recomputes_the_whole_chain() {
+    async fn changing_the_root_position_recomputes_the_whole_chain() {
         let mut cache = InferenceCache::new(InferenceCacheConfig { enabled: true, record_stats: true, ..Default::default() });
         let base = chain_snapshot();
         let _ = store::infer_field::<Puzzle3dSnapshot, Puzzle3dFlatPlane>(&base, Some(&mut cache));
@@ -238,7 +238,7 @@ mod tests {
     }
 
     #[test]
-    fn changing_an_attraction_center_param_never_touches_the_plane_chain() {
+    async fn changing_an_attraction_center_param_never_touches_the_plane_chain() {
         let mut plane_cache = InferenceCache::new(InferenceCacheConfig { enabled: true, record_stats: true, ..Default::default() });
         let base = chain_snapshot();
         let _ = store::infer_field::<Puzzle3dSnapshot, Puzzle3dFlatPlane>(&base, Some(&mut plane_cache));
@@ -261,7 +261,7 @@ mod tests {
 
     //#region 🧪️CacheTransparencyLaw
     #[test]
-    fn disabled_cache_matches_pure_recompute() {
+    async fn disabled_cache_matches_pure_recompute() {
         let snapshot = chain_snapshot();
         let mut disabled = InferenceCache::new(InferenceCacheConfig { enabled: false, ..Default::default() });
         let pure_planes = store::infer_field::<Puzzle3dSnapshot, Puzzle3dFlatPlane>(&snapshot, None);

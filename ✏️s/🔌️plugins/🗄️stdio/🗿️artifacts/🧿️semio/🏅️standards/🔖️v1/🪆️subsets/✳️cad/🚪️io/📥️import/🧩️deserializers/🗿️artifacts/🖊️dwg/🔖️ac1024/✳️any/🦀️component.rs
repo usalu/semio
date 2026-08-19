@@ -41,13 +41,13 @@ impl ArtifactDeserializer for SemioCadFromDwg {
 mod tests {
     use super::*;
 
-    fn sample_dwg() -> DwgSnapshot {
+    async fn sample_dwg() -> DwgSnapshot {
         let bytes = crate::artifacts::dwg::dwg_to_bytes(&crate::artifacts::dwg::DwgDrawing::default()).expect("encode sample");
         crate::artifacts::dwg::standards::v_ac1024::subsets::any::schema::snapshot::decode_dwg(&bytes).expect("decode sample")
     }
 
     #[test]
-    fn produces_empty_but_valid_cad_snapshot() {
+    async fn produces_empty_but_valid_cad_snapshot() {
         let cad = semio_framework_plugin::resolve_ready(SemioCadFromDwg::deserialize(&sample_dwg())).expect("deserialize");
         assert!(cad.layers.is_empty());
         assert!(cad.blocks.is_empty());
@@ -56,7 +56,7 @@ mod tests {
     }
 
     #[test]
-    fn rejects_missing_version() {
+    async fn rejects_missing_version() {
         let bad = DwgSnapshot { version: String::new(), ..DwgSnapshot::default() };
         assert!(semio_framework_plugin::resolve_ready(SemioCadFromDwg::deserialize(&bad)).is_err());
     }

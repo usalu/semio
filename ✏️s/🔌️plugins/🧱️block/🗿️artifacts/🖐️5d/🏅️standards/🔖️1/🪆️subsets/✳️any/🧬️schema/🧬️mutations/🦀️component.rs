@@ -118,14 +118,14 @@ pub use super::update_part_2d::mutation::{update_part_2d, UpdatePart2d};
 pub use super::update_part_3d::mutation::{update_part_3d, UpdatePart3d};
 
 /// ▶️ Applies `mutation` via its diff, mutating `projection` in place.
-pub fn apply_block5d_mutation(projection: &mut Block5dSnapshot, mutation: &Block5dMutation) -> protocol::MutationApplyResult<()> {
+pub async fn apply_block5d_mutation(projection: &mut Block5dSnapshot, mutation: &Block5dMutation) -> protocol::MutationApplyResult<()> {
     let (next, _) = vcs::apply_mutation(projection, mutation)?;
 
     *projection = next;
     Ok(())
 }
 
-pub fn inverse_block5d_mutation(projection: &Block5dSnapshot, mutation: &Block5dMutation) -> Vec<Block5dMutation> {
+pub async fn inverse_block5d_mutation(projection: &Block5dSnapshot, mutation: &Block5dMutation) -> Vec<Block5dMutation> {
     mutation.inverse(projection)
 }
 
@@ -140,7 +140,7 @@ mod tests {
     use protocol::SemanticMutation;
     use protocol::MutationDiff;
 
-    fn round_trip(base: &Block5dSnapshot, mutation: &Block5dMutation) -> Block5dSnapshot {
+    async fn round_trip(base: &Block5dSnapshot, mutation: &Block5dMutation) -> Block5dSnapshot {
         let forward = mutation.diff(base).diff().apply(base).expect("valid mutation diff");
         let mut restored = forward.clone();
         let mut backward = mutation.inverse(base);
@@ -152,7 +152,7 @@ mod tests {
         forward
     }
 
-    fn seeded_snapshot() -> Block5dSnapshot {
+    async fn seeded_snapshot() -> Block5dSnapshot {
         let mut base = empty_block5d_snapshot();
         base.representations.push(BlockRepresentation { id: "r0".into(), name: "r0".into(), mesh_url: None, tags: vec!["lod0".into()], lod: None, description: String::new(), attributes: vec![BlockAttribute { key: "finish".into(), value: "matte".into(), definition: None }] });
         base.grip_kinds.push(Block5dGripKind { id: "gk0".into(), name: "gk0".into(), label: "GK0".into(), color: "#888".into(), default_rope_kind: "rope.link".into() });
@@ -165,14 +165,14 @@ mod tests {
 
     //#region 🔖️Behavior
     #[test]
-    fn rename_and_change_part_kind_round_trip() {
+    async fn rename_and_change_part_kind_round_trip() {
         let base = empty_block5d_snapshot();
         let renamed = round_trip(&base, &rename_part_kind("Renamed".into()));
         assert_eq!(renamed.part_kind.name, "Renamed");
     }
 
     #[test]
-    fn update_part_2d_and_part_3d_round_trip() {
+    async fn update_part_2d_and_part_3d_round_trip() {
         let base = empty_block5d_snapshot();
         let after2d = round_trip(&base, &update_part_2d(Some("circle".into()), Some(0.4), None, None, Some("#fff".into()), None));
         assert_eq!(after2d.part_2d.shape.as_deref(), Some("circle"));
@@ -181,7 +181,7 @@ mod tests {
     }
 
     #[test]
-    fn create_rename_tag_attribute_delete_representation_round_trip() {
+    async fn create_rename_tag_attribute_delete_representation_round_trip() {
         let base = empty_block5d_snapshot();
         let representation = BlockRepresentation { id: "r0".into(), name: "r0".into(), mesh_url: None, tags: Vec::new(), lod: None, description: String::new(), attributes: Vec::new() };
         let created = round_trip(&base, &create_representation(representation));
@@ -195,7 +195,7 @@ mod tests {
     }
 
     #[test]
-    fn create_rename_delete_grip_kind_round_trip() {
+    async fn create_rename_delete_grip_kind_round_trip() {
         let base = empty_block5d_snapshot();
         let grip_kind = Block5dGripKind { id: "gk0".into(), name: "gk0".into(), label: "GK0".into(), color: "#888".into(), default_rope_kind: "rope.link".into() };
         let created = round_trip(&base, &create_grip_kind(grip_kind));
@@ -207,7 +207,7 @@ mod tests {
     }
 
     #[test]
-    fn create_move_resize_delete_grip_round_trip() {
+    async fn create_move_resize_delete_grip_round_trip() {
         let base = seeded_snapshot();
         let grip = Block5dGripTemplate { id: "g1".into(), grip_kind: "gk0".into(), angle: 0.0, radius_2d: 0.2, position: [0.0, 0.0, 0.0], direction: [0.0, 1.0, 0.0], radius_3d: 0.2 };
         let created = round_trip(&base, &create_grip(grip));
@@ -223,7 +223,7 @@ mod tests {
     }
 
     #[test]
-    fn add_remove_compatibility_rule_round_trip() {
+    async fn add_remove_compatibility_rule_round_trip() {
         let base = empty_block5d_snapshot();
         let rule = BlockCompatibilityRule { id: "c0".into(), source: "a".into(), target: "b".into(), bidirectional: true };
         let added = round_trip(&base, &add_compatibility_rule(rule));
@@ -233,7 +233,7 @@ mod tests {
     }
 
     #[test]
-    fn add_remove_attribute_round_trip() {
+    async fn add_remove_attribute_round_trip() {
         let base = empty_block5d_snapshot();
         let attribute = BlockAttribute { key: "material".into(), value: "concrete".into(), definition: None };
         let added = round_trip(&base, &add_attribute(attribute));
@@ -243,7 +243,7 @@ mod tests {
     }
 
     #[test]
-    fn add_remove_author_round_trip() {
+    async fn add_remove_author_round_trip() {
         let base = empty_block5d_snapshot();
         let author = BlockAuthor { id: "a0".into(), name: "Ada".into(), email: None };
         let added = round_trip(&base, &add_author(author));
@@ -253,7 +253,7 @@ mod tests {
     }
 
     #[test]
-    fn move_and_scale_both_cameras_round_trip() {
+    async fn move_and_scale_both_cameras_round_trip() {
         let base = empty_block5d_snapshot();
         let moved2d = round_trip(&base, &move_camera2d(10.0, -4.0));
         assert_eq!((moved2d.camera2d.x, moved2d.camera2d.y), (10.0, -4.0));
@@ -266,7 +266,7 @@ mod tests {
     }
 
     #[test]
-    fn change_meta_description_round_trips() {
+    async fn change_meta_description_round_trips() {
         let base = empty_block5d_snapshot();
         let after = round_trip(&base, &change_meta_description("session notes".into()));
         assert_eq!(after.meta.description, "session notes");
@@ -275,7 +275,7 @@ mod tests {
 
     //#region 🔖️MutationLaws
     #[test]
-    fn every_mutation_kind_satisfies_the_inverse_law() {
+    async fn every_mutation_kind_satisfies_the_inverse_law() {
         let base = seeded_snapshot();
 
         assert_mutation_inverse_law(&base, &rename_part_kind("x".into()));
@@ -322,7 +322,7 @@ mod tests {
     }
 
     #[test]
-    fn change_part_kind_label_diff_absorb_law() {
+    async fn change_part_kind_label_diff_absorb_law() {
         let base = empty_block5d_snapshot();
         let d1 = change_part_kind_label("first".into()).diff(&base).into_parts().0;
         let mid = d1.apply(&base).expect("valid mutation diff");
@@ -331,7 +331,7 @@ mod tests {
     }
 
     #[test]
-    fn move_grip_2d_diff_absorb_law() {
+    async fn move_grip_2d_diff_absorb_law() {
         let base = seeded_snapshot();
         let d1 = move_grip_2d("g0".into(), 0.5, 0.3).diff(&base).into_parts().0;
         let mid = d1.apply(&base).expect("valid mutation diff");
@@ -340,7 +340,7 @@ mod tests {
     }
 
     #[test]
-    fn dispatch_registers_semantic_descriptors_with_approved_verbs() {
+    async fn dispatch_registers_semantic_descriptors_with_approved_verbs() {
         register_block5d_mutation_descriptors();
         for kind in Block5dMutation::kinds() {
             assert!(protocol::is_approved_verb(kind.verb), "verb '{}' must be in APPROVED_VERBS", kind.verb);
@@ -355,7 +355,7 @@ mod tests {
     use protocol::testkit::{assert_fatal_never_applies, assert_missing_target_is_error};
 
     #[test]
-    fn missing_target_is_error_per_verb_family() {
+    async fn missing_target_is_error_per_verb_family() {
         let base = empty_block5d_snapshot();
         assert_missing_target_is_error(&base, &delete_grip_kind("missing".into())); // delete
         assert_missing_target_is_error(&base, &remove_author("missing".into())); // remove
@@ -364,7 +364,7 @@ mod tests {
     }
 
     #[test]
-    fn create_duplicate_id_is_fatal_and_never_applies() {
+    async fn create_duplicate_id_is_fatal_and_never_applies() {
         let mut base = empty_block5d_snapshot();
         let grip_kind = Block5dGripKind { id: "gk0".into(), name: "gk0".into(), label: "GK0".into(), color: "#888".into(), default_rope_kind: "rope.standard".into() };
         base.grip_kinds.push(grip_kind.clone());

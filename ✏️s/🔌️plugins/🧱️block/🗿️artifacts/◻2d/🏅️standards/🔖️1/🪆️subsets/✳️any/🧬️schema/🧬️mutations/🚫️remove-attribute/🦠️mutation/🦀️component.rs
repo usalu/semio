@@ -14,23 +14,23 @@ pub struct RemoveAttribute {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn remove_attribute(key: String) -> Block2dMutation {
+pub async fn remove_attribute(key: String) -> Block2dMutation {
     Block2dMutation::RemoveAttribute(RemoveAttribute { key })
 }
 
 impl protocol::MutationKind<Block2dSnapshot, Block2dMutation> for RemoveAttribute {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "attribute", kind: "remove-attribute", record: "RemovedAttribute" };
 
-    fn diff(&self, base: &Block2dSnapshot) -> protocol::MutationOutcome<Block2dDiff> {
+    async fn diff(&self, base: &Block2dSnapshot) -> protocol::MutationOutcome<Block2dDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &Block2dSnapshot) -> Vec<Block2dMutation> {
+    async fn inverse(&self, base: &Block2dSnapshot) -> Vec<Block2dMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         format!("Remove attribute \"{}\"", self.key)
     }
-    fn target(&self) -> Vec<String> {
+    async fn target(&self) -> Vec<String> {
         vec![self.key.clone()]
     }
 }

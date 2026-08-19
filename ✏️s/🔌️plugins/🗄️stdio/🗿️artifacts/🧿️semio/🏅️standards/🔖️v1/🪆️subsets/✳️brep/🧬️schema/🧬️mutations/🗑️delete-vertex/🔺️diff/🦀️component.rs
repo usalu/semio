@@ -12,7 +12,7 @@ use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::SemioBr
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::SemioBrepSnapshot;
 
 //#region 🔖️Diff
-pub fn diff(payload: &DeleteVertex, base: &SemioBrepSnapshot) -> protocol::MutationOutcome<SemioBrepDiff> {
+pub async fn diff(payload: &DeleteVertex, base: &SemioBrepSnapshot) -> protocol::MutationOutcome<SemioBrepDiff> {
     if !base.vertices.iter().any(|v| v.id == payload.id) {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Vertex \"{}\" does not exist.", payload.id), [payload.id.clone()]);
     }

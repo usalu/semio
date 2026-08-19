@@ -4,7 +4,7 @@ use super::mutation::CreateShot;
 use crate::artifacts::shooting::ShootingSnapshot;
 use crate::artifacts::shooting::diff::{ShootingShotsDelta, ShootingDiff};
 
-pub fn diff(payload: &CreateShot, base: &ShootingSnapshot) -> protocol::MutationOutcome<ShootingDiff> {
+pub async fn diff(payload: &CreateShot, base: &ShootingSnapshot) -> protocol::MutationOutcome<ShootingDiff> {
     if base.shots.iter().any(|shot| shot.id == payload.shot.id) {
         return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("A shot with id \"{}\" already exists.", payload.shot.id), [payload.shot.id.clone()]);
     }

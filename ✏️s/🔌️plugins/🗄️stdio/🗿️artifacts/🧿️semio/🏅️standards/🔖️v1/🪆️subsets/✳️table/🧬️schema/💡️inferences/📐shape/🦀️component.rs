@@ -24,7 +24,7 @@ pub struct SemioTableShape {
 }
 
 /// 📐️ Computes [`SemioTableShape`] — pure, total, O(columns).
-pub fn compute_semio_table_shape(snapshot: &SemioTableSnapshot) -> SemioTableShape {
+pub async fn compute_semio_table_shape(snapshot: &SemioTableSnapshot) -> SemioTableShape {
     let mut shape = SemioTableShape { column_count: snapshot.columns.len() as u32, row_count: snapshot.rows.len() as u32, ..Default::default() };
     for column in &snapshot.columns {
         match column.kind {
@@ -47,7 +47,7 @@ mod tests {
     use crate::artifacts::semio::standards::v1::subsets::table::schema::snapshot::{SemioTableColumn, SemioTableRow, STDIO_SEMIOTABLE_DOCUMENT_SCHEMA};
     use crate::artifacts::semio::standards::v1::subsets::value::schema::snapshot::SemioValue;
 
-    fn populated() -> SemioTableSnapshot {
+    async fn populated() -> SemioTableSnapshot {
         SemioTableSnapshot {
             schema: STDIO_SEMIOTABLE_DOCUMENT_SCHEMA.into(),
             columns: vec![
@@ -63,7 +63,7 @@ mod tests {
     }
 
     #[test]
-    fn censuses_declared_column_kinds_and_dimensions() {
+    async fn censuses_declared_column_kinds_and_dimensions() {
         let shape = compute_semio_table_shape(&populated());
         assert_eq!(shape.column_count, 3);
         assert_eq!(shape.row_count, 2);
@@ -76,13 +76,13 @@ mod tests {
     }
 
     #[test]
-    fn inference_determinism_law() {
+    async fn inference_determinism_law() {
         let snapshot = populated();
         assert_eq!(compute_semio_table_shape(&snapshot), compute_semio_table_shape(&snapshot));
     }
 
     #[test]
-    fn inference_default_law() {
+    async fn inference_default_law() {
         assert_eq!(compute_semio_table_shape(&SemioTableSnapshot::default()), SemioTableShape::default());
     }
 }

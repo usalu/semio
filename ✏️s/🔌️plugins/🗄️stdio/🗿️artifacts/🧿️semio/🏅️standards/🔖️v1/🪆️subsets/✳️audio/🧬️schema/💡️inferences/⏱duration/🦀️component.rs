@@ -21,7 +21,7 @@ pub struct SemioAudioDuration {
 /// (not the sum, which would overcount a multi-channel file); `duration_seconds` is
 /// `sample_count / sample_rate`, `0.0` when `sample_rate` is `0` (an honest degenerate case, not
 /// a division panic — `sample_rate: u32` cannot be negative).
-pub fn compute_semio_audio_duration(snapshot: &SemioAudioSnapshot) -> SemioAudioDuration {
+pub async fn compute_semio_audio_duration(snapshot: &SemioAudioSnapshot) -> SemioAudioDuration {
     let sample_count = snapshot.channels.iter().map(|channel| channel.samples.len() as u64).max().unwrap_or(0);
     let duration_seconds = if snapshot.sample_rate > 0 { sample_count as f64 / snapshot.sample_rate as f64 } else { 0.0 };
     SemioAudioDuration { duration_seconds, sample_count, channel_count: snapshot.channels.len() as u32 }
@@ -34,31 +34,31 @@ mod tests {
     use super::*;
     use crate::artifacts::semio::standards::v1::subsets::audio::schema::snapshot::{SemioAudioChannel, STDIO_SEMIOAUDIO_DOCUMENT_SCHEMA};
 
-    fn snapshot(sample_rate: u32, channel_lengths: &[usize]) -> SemioAudioSnapshot {
+    async fn snapshot(sample_rate: u32, channel_lengths: &[usize]) -> SemioAudioSnapshot {
         SemioAudioSnapshot { schema: STDIO_SEMIOAUDIO_DOCUMENT_SCHEMA.into(), sample_rate, format: Default::default(), channels: channel_lengths.iter().map(|&len| SemioAudioChannel { samples: vec![0.0; len] }).collect(), tags: Vec::new() }
     }
 
     #[test]
-    fn duration_uses_the_longest_channel_and_sample_rate() {
+    async fn duration_uses_the_longest_channel_and_sample_rate() {
         let duration = compute_semio_audio_duration(&snapshot(4, &[8, 12]));
         assert_eq!(duration, SemioAudioDuration { duration_seconds: 3.0, sample_count: 12, channel_count: 2 });
     }
 
     #[test]
-    fn zero_sample_rate_yields_zero_duration_not_a_panic() {
+    async fn zero_sample_rate_yields_zero_duration_not_a_panic() {
         let duration = compute_semio_audio_duration(&snapshot(0, &[8]));
         assert_eq!(duration.duration_seconds, 0.0);
         assert_eq!(duration.sample_count, 8);
     }
 
     #[test]
-    fn inference_determinism_law() {
+    async fn inference_determinism_law() {
         let snapshot = snapshot(44100, &[44100, 22050]);
         assert_eq!(compute_semio_audio_duration(&snapshot), compute_semio_audio_duration(&snapshot));
     }
 
     #[test]
-    fn inference_default_law() {
+    async fn inference_default_law() {
         assert_eq!(compute_semio_audio_duration(&SemioAudioSnapshot::default()), SemioAudioDuration::default());
     }
 }

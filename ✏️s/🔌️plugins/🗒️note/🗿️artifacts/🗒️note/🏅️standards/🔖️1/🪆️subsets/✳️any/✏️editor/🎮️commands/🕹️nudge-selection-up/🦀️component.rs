@@ -15,7 +15,7 @@ const NUDGE_STEP_FAST: f64 = 10.0;
 
 /// 🧬️ Offsets every unlocked selected block by `(dx, dy)` — one `drag-blocks` mutation for the
 /// whole gesture (real multi-select drag), never a whole-`blocks` vec swap.
-fn nudge(document: &NoteSnapshot, selected_ids: &[String], dx: f64, dy: f64) -> Emit<NoteMutation, NoteConfigMutation> {
+async fn nudge(document: &NoteSnapshot, selected_ids: &[String], dx: f64, dy: f64) -> Emit<NoteMutation, NoteConfigMutation> {
     if selected_ids.is_empty() {
         return Emit::default();
     }
@@ -49,7 +49,7 @@ fn nudge(document: &NoteSnapshot, selected_ids: &[String], dx: f64, dy: f64) -> 
 #[dsl(keyword = "nudge-selection-up")]
 pub struct NudgeSelectionUp {}
 
-pub fn handle(_payload: &NudgeSelectionUp, doc: &ArtifactView<'_, NoteSnapshot>, _cfg: &ConfigView<'_, NoteConfig>, ctx: &mut crate::editor::note::NoteDispatchCtx) -> Result<Emit<NoteMutation, NoteConfigMutation>, Fault> {
+pub async fn handle(_payload: &NudgeSelectionUp, doc: &ArtifactView<'_, NoteSnapshot>, _cfg: &ConfigView<'_, NoteConfig>, ctx: &mut crate::editor::note::NoteDispatchCtx) -> Result<Emit<NoteMutation, NoteConfigMutation>, Fault> {
     Ok(nudge(doc.snapshot, &ctx.selected_block_ids, 0.0, -NUDGE_STEP))
 }
 
@@ -66,7 +66,7 @@ mod tests {
     /// injected `interactionSelect` verb against the "blocks" domain instead, requiring
     /// `note_app_with_registry()` (see that helper's own doc comment).
     #[test]
-    fn nudge_direction_actions_move_selection_without_args() {
+    async fn nudge_direction_actions_move_selection_without_args() {
         for (command, expected_dx, expected_dy) in [
             (NoteCommand::NudgeSelectionUp(NudgeSelectionUp {}), 0.0, -1.0),
             (NoteCommand::NudgeSelectionDown(crate::editor::note::commands::nudge_selection_down::NudgeSelectionDown {}), 0.0, 1.0),
@@ -86,7 +86,7 @@ mod tests {
     }
 
     #[test]
-    fn nudge_fast_actions_use_ten_pixel_step() {
+    async fn nudge_fast_actions_use_ten_pixel_step() {
         let mut app = note_app_with_registry();
         dispatch(&mut app, NoteCommand::AddBlock(crate::editor::note::commands::add_block::AddBlock { kind: "text".into(), x: 0.0, y: 0.0 }));
         let new_id = block_id(&app.snapshot().expect("snapshot").blocks[0]).to_string();

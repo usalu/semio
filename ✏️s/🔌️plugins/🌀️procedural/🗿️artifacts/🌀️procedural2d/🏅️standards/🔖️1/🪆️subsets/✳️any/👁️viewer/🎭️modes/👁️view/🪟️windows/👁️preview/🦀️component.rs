@@ -20,7 +20,7 @@ const PROCEDURAL2D_VIEW_CONTROLLER_ID: &str = "procedural2d-view";
 
 //#region 🔖️Definition
 /// 🧱️ Stitched into the viewer manifest by `crate::viewer::procedural2d::create_procedural2d_viewer`.
-pub fn definition() -> WindowKindDefinition {
+pub async fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
         id: WINDOW_KIND_ID.into(),
         label: LocalizedLabel::native("Preview", "Vorschau"),
@@ -45,7 +45,7 @@ pub fn definition() -> WindowKindDefinition {
 /// per-session camera — `Config = NoConfig`), one schematic box per widget at its stored layout
 /// position — no evaluated drawing-handle overlay (that needs a live `flow::FlowEvalSession`, an
 /// editor-dispatch-time concept a stateless viewer render never has access to).
-pub fn render(document: &Procedural2dSnapshot) -> UiNode {
+pub async fn render(document: &Procedural2dSnapshot) -> UiNode {
     let fixture = &document.fixture;
     let layers: Vec<serde_json::Value> = fixture
         .widgets
@@ -74,14 +74,14 @@ mod tests {
     use super::*;
 
     #[test]
-    fn definition_declares_the_canvas_2d_surface_and_body_key() {
+    async fn definition_declares_the_canvas_2d_surface_and_body_key() {
         let def = definition();
         assert_eq!(def.body_key, BODY_KEY);
         assert!(matches!(def.surface_kind, SurfaceKind::Canvas2d));
     }
 
     #[test]
-    fn render_produces_a_scene_node_for_the_default_document() {
+    async fn render_produces_a_scene_node_for_the_default_document() {
         let document = crate::artifacts::procedural2d::schema::default_snapshot();
         let json = serde_json::to_string(&render(&document)).expect("render json");
         assert!(json.contains("canvas-2d"));

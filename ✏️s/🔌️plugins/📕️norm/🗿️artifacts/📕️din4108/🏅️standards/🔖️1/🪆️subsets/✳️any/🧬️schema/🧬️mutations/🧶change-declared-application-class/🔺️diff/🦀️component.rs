@@ -4,7 +4,7 @@ use super::mutation::ChangeDeclaredApplicationClass;
 use crate::artifacts::din4108::{Din4108Diff, Din4108Snapshot};
 
 //#region 🔖️Diff
-pub fn diff(payload: &ChangeDeclaredApplicationClass, base: &Din4108Snapshot) -> protocol::MutationOutcome<Din4108Diff> {
+pub async fn diff(payload: &ChangeDeclaredApplicationClass, base: &Din4108Snapshot) -> protocol::MutationOutcome<Din4108Diff> {
     if base.declared_application_class == payload.new_declared_application_class {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", "Declared application class already has this value.");
     }

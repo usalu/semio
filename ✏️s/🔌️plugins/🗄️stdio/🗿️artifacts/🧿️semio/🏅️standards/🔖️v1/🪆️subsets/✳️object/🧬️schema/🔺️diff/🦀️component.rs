@@ -35,13 +35,13 @@ pub struct SemioObjectDiff {
 }
 
 impl SemioObjectDiff {
-    pub fn is_empty_diff(&self) -> bool {
+    pub async fn is_empty_diff(&self) -> bool {
         self.transform.is_none() && self.brep.is_none() && self.mesh.is_none() && self.properties.is_none()
     }
 }
 
 impl MutationDiff<SemioObjectSnapshot> for SemioObjectDiff {
-    fn apply(&self, base: &SemioObjectSnapshot) -> protocol::MutationApplyResult<SemioObjectSnapshot> {
+    async fn apply(&self, base: &SemioObjectSnapshot) -> protocol::MutationApplyResult<SemioObjectSnapshot> {
         let mut next = base.clone();
         if let Some(t) = &self.transform {
             next.transform = t.clone();
@@ -58,7 +58,7 @@ impl MutationDiff<SemioObjectSnapshot> for SemioObjectDiff {
         Ok(next)
     }
 
-    fn absorb(&mut self, other: Self) {
+    async fn absorb(&mut self, other: Self) {
         if other.transform.is_some() {
             self.transform = other.transform;
         }
@@ -76,7 +76,7 @@ impl MutationDiff<SemioObjectSnapshot> for SemioObjectDiff {
 
 /// 🧮️ `object`'s own `DiffAlgebra` — required by the `✳️any` envelope's own dispatch.
 impl protocol::command::DiffAlgebra<SemioObjectSnapshot> for SemioObjectDiff {
-    fn between(base: &SemioObjectSnapshot, other: &SemioObjectSnapshot) -> Self {
+    async fn between(base: &SemioObjectSnapshot, other: &SemioObjectSnapshot) -> Self {
         SemioObjectDiff {
             transform: (base.transform != other.transform).then(|| other.transform.clone()),
             brep: (base.brep != other.brep).then(|| other.brep.clone()),
@@ -84,7 +84,7 @@ impl protocol::command::DiffAlgebra<SemioObjectSnapshot> for SemioObjectDiff {
             properties: (base.properties != other.properties).then(|| other.properties.clone()),
         }
     }
-    fn inverse(&self, base: &SemioObjectSnapshot) -> Self {
+    async fn inverse(&self, base: &SemioObjectSnapshot) -> Self {
         SemioObjectDiff {
             transform: self.transform.as_ref().map(|_| base.transform.clone()),
             brep: self.brep.as_ref().map(|_| base.brep.clone()),
@@ -92,7 +92,7 @@ impl protocol::command::DiffAlgebra<SemioObjectSnapshot> for SemioObjectDiff {
             properties: self.properties.as_ref().map(|_| base.properties.clone()),
         }
     }
-    fn is_empty(&self) -> bool {
+    async fn is_empty(&self) -> bool {
         self.is_empty_diff()
     }
 }
@@ -103,7 +103,7 @@ use crate::artifacts::semio::standards::v1::subsets::object::schema::snapshot::{
 
 /// 🧾️ `<hex-flag><line>` per field, `\n`-joined, empty string = no-op diff — real, not decorative.
 /// `t=`/`b=`/`m=`/`p=` prefixes; a field absent from the diff simply has no line.
-fn print_object_diff(d: &SemioObjectDiff) -> String {
+async fn print_object_diff(d: &SemioObjectDiff) -> String {
     let mut lines = Vec::new();
     if let Some(t) = &d.transform {
         lines.push(format!("t={}", enc_transform(t)));
@@ -119,7 +119,7 @@ fn print_object_diff(d: &SemioObjectDiff) -> String {
     }
     lines.join(";")
 }
-fn parse_object_diff(line: &str) -> Result<SemioObjectDiff, String> {
+async fn parse_object_diff(line: &str) -> Result<SemioObjectDiff, String> {
     let mut d = SemioObjectDiff::default();
     if line.is_empty() {
         return Ok(d);
@@ -138,16 +138,16 @@ fn parse_object_diff(line: &str) -> Result<SemioObjectDiff, String> {
 }
 
 impl protocol::DiffCodec for SemioObjectDiff {
-    fn print_diff(&self) -> String {
+    async fn print_diff(&self) -> String {
         print_object_diff(self)
     }
-    fn parse_diff(line: &str) -> Result<Self, store::TextError> {
+    async fn parse_diff(line: &str) -> Result<Self, store::TextError> {
         parse_object_diff(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
 
     /// ⚡️ Real binary diff frame: `format u8` + `presence u8` (bit0=transform, bit1=brep,
     /// bit2=mesh, bit3=properties), then each present field's own real encoding in bit order.
-    fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    async fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         use crate::artifacts::semio::standards::v1::subsets::object::schema::snapshot::{write_child_opt, write_transform};
         const DIFF_BINARY_FORMAT: u8 = 1;
         let mut presence: u8 = 0;
@@ -178,7 +178,7 @@ impl protocol::DiffCodec for SemioObjectDiff {
         }
         Ok(out)
     }
-    fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    async fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         use crate::artifacts::semio::standards::v1::subsets::object::schema::snapshot::{read_child_opt, read_transform};
         const DIFF_BINARY_FORMAT: u8 = 1;
         if bytes.len() < 2 {
@@ -203,7 +203,7 @@ impl protocol::DiffCodec for SemioObjectDiff {
 /// 🌱 Representative `SemioObjectDiff` cases — single source of truth for
 /// `diff_grammar_conformance_law`/`protocol_walk_law` in `🚪️io/🦀️component.rs`.
 #[cfg(test)]
-pub(crate) fn demo_diff_cases() -> Vec<SemioObjectDiff> {
+pub(crate) async fn demo_diff_cases() -> Vec<SemioObjectDiff> {
     use crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioPoint3;
     vec![
         SemioObjectDiff::default(),
@@ -228,7 +228,7 @@ mod tests {
     use protocol::DiffCodec;
 
     #[test]
-    fn apply_replaces_touched_fields_only() {
+    async fn apply_replaces_touched_fields_only() {
         let base = demo_object_snapshot();
         let diff = SemioObjectDiff { brep: Some(None), ..Default::default() };
         let next = diff.apply(&base).expect("apply must succeed for a well-formed fixture");
@@ -237,7 +237,7 @@ mod tests {
     }
 
     #[test]
-    fn absorb_last_write_wins_per_field() {
+    async fn absorb_last_write_wins_per_field() {
         let mut d1 = SemioObjectDiff { brep: Some(None), ..Default::default() };
         let d2 = SemioObjectDiff { mesh: Some(None), ..Default::default() };
         d1.absorb(d2.clone());
@@ -246,7 +246,7 @@ mod tests {
     }
 
     #[test]
-    fn diff_codec_text_binary_roundtrip_law() {
+    async fn diff_codec_text_binary_roundtrip_law() {
         for d in demo_diff_cases() {
             let printed = d.print_diff();
             assert!(!printed.contains('\n'), "print_diff must be one line, got {printed:?}");

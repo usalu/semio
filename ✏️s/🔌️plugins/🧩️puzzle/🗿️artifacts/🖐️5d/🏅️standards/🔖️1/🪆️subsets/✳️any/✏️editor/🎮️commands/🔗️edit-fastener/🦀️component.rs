@@ -3,10 +3,10 @@
 use crate::editor::puzzle5d::{puzzle5d_resolve_number_edit, Puzzle5dActionCtx, Puzzle5dFastener};
 use serde_json::Value;
 
-fn arg_str<'a>(args: Option<&'a Value>, key: &str) -> Option<&'a str> {
+async fn arg_str<'a>(args: Option<&'a Value>, key: &str) -> Option<&'a str> {
     args.and_then(|value| value.get(key)).and_then(Value::as_str).filter(|text| !text.is_empty())
 }
-fn apply_fastener_number(field: &str, fastener: &mut Puzzle5dFastener, value: Option<&Value>, delta: Option<&Value>) -> bool {
+async fn apply_fastener_number(field: &str, fastener: &mut Puzzle5dFastener, value: Option<&Value>, delta: Option<&Value>) -> bool {
     let slot = match field {
         "gap" => Some(&mut fastener.gap),
         "shift" => Some(&mut fastener.shift),
@@ -28,7 +28,7 @@ fn apply_fastener_number(field: &str, fastener: &mut Puzzle5dFastener, value: Op
         false
     }
 }
-fn apply_fastener_batch(fastener: &mut Puzzle5dFastener, args: Option<&Value>) {
+async fn apply_fastener_batch(fastener: &mut Puzzle5dFastener, args: Option<&Value>) {
     if let Some(kind) = arg_str(args, "fastenerKind").or_else(|| arg_str(args, "edgeKind")) {
         fastener.fastener_kind = if kind.is_empty() { None } else { Some(kind.to_string()) };
     }
@@ -42,7 +42,7 @@ fn apply_fastener_batch(fastener: &mut Puzzle5dFastener, args: Option<&Value>) {
 /// 🎛 Batch-edits any subset of the eight connection parameters (and optional `fastenerKind`) on one
 /// fastener. Also accepts the inspector's single-field shape (`field` + `value`/`delta`) so `x`/`y`
 /// patches work even when `patchFastener` has not been extended yet.
-pub fn edit_fastener(ctx: &mut Puzzle5dActionCtx<'_>, args: Option<&Value>) {
+pub async fn edit_fastener(ctx: &mut Puzzle5dActionCtx<'_>, args: Option<&Value>) {
     let Some(id) = arg_str(args, "id").or_else(|| arg_str(args, "fastenerId")).map(str::to_string) else {
         return;
     };

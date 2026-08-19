@@ -21,7 +21,7 @@ pub const ZOOM_SCALE: f64 = 0.68;
 /// puzzle2d freezes the first `window_measures()` frame into `options.measures` so the shell has LOD
 /// and brush chrome before the first `refreshUi` tick; every later frame comes from
 /// `ArtifactApp::window_measures`.
-pub fn definition(envelope: &Puzzle2dScene, host: &BoardHost, labels: &Puzzle2dLabels) -> WindowKindDefinition {
+pub async fn definition(envelope: &Puzzle2dScene, host: &BoardHost, labels: &Puzzle2dLabels) -> WindowKindDefinition {
     WindowKindDefinition {
         id: WINDOW_KIND_ID.into(),
         label: puzzle2d_localized(|l| l.window_overview),
@@ -41,18 +41,18 @@ pub fn definition(envelope: &Puzzle2dScene, host: &BoardHost, labels: &Puzzle2dL
 }
 
 /// 🎚️ The live chrome measures for this window, collected from the mode's `🎚️options/*` components.
-pub fn window_measures(envelope: &Puzzle2dScene, labels: &Puzzle2dLabels) -> Vec<WindowMeasure> {
+pub async fn window_measures(envelope: &Puzzle2dScene, labels: &Puzzle2dLabels) -> Vec<WindowMeasure> {
     let mode = envelope.runtime.lod_mode_by_pane.get(WINDOW_KIND_ID).map_or(PUZZLE2D_LOD_MODE_AUTOMATIC, String::as_str);
     vec![options::lod::measure(WINDOW_KIND_ID, mode, labels), options::brush::measure(envelope, labels)]
 }
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(document_json: &str, envelope: &Puzzle2dScene) -> UiNode {
+pub async fn render(document_json: &str, envelope: &Puzzle2dScene) -> UiNode {
     edit::render_canvas(document_json, envelope, WINDOW_KIND_ID)
 }
 
-pub fn engagement(envelope: &Puzzle2dScene, host: &BoardHost, labels: &Puzzle2dLabels) -> WindowEngagement {
+pub async fn engagement(envelope: &Puzzle2dScene, host: &BoardHost, labels: &Puzzle2dLabels) -> WindowEngagement {
     edit::puzzle2d_engagement(envelope, host, WINDOW_KIND_ID, labels)
 }
 //#endregion 🔖️Render
@@ -64,7 +64,7 @@ mod tests {
     use crate::editor::puzzle2d::testkit::*;
 
     #[test]
-    fn renders_puzzle2d_board_scene() {
+    async fn renders_puzzle2d_board_scene() {
         let mut app = app();
         assert!(render_body(&mut app, BODY_KEY).contains("board-2d"));
     }

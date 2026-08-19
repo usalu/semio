@@ -5,7 +5,7 @@ use crate::artifacts::layout::schema::diff::{LayoutLinkPatchEntry, LayoutLinksDe
 use crate::artifacts::layout::{ImageLinkPatch, LayoutDiff, LayoutSnapshot};
 
 //#region 🔗ChangeLinkPath
-pub fn diff_change_link_path(payload: &ChangeLinkPath, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
+pub async fn diff_change_link_path(payload: &ChangeLinkPath, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
     let Some(link) = base.links.iter().find(|link| link.id == payload.id) else {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Link \"{}\" does not exist.", payload.id), [payload.id.clone()]);
     };

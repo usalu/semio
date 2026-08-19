@@ -6,7 +6,7 @@ use crate::artifacts::process3d::mutations::Process3dMutation;
 use crate::artifacts::process3d::Process3dSnapshot;
 
 //#region 🔖️Inverse
-pub fn inverse(_payload: &ReplaceStockSolid, base: &Process3dSnapshot) -> Vec<Process3dMutation> {
+pub async fn inverse(_payload: &ReplaceStockSolid, base: &Process3dSnapshot) -> Vec<Process3dMutation> {
     vec![Process3dMutation::ReplaceStockSolid(ReplaceStockSolid { new_solid: base.stock_solid.clone() })]
 }
 //#endregion 🔖️Inverse

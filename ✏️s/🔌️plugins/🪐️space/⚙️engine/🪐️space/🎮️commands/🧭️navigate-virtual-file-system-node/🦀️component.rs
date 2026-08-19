@@ -12,6 +12,6 @@ pub struct NavigateVirtualFileSystemNode {
     pub space_id: String,
 }
 
-pub fn handle(payload: &NavigateVirtualFileSystemNode, _doc: &ArtifactView<'_, WorkflowSnapshot>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
+pub async fn handle(payload: &NavigateVirtualFileSystemNode, _doc: &ArtifactView<'_, WorkflowSnapshot>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
     Ok(Emit::effect(Effect::Navigate { uri: format!("/spaces/{}", payload.space_id) }))
 }

@@ -6,7 +6,7 @@ use crate::artifacts::semio::standards::v1::subsets::kit::schema::mutations::Sem
 use crate::artifacts::semio::standards::v1::subsets::kit::schema::snapshot::SemioKitSnapshot;
 
 //#region 🔖️Inverse
-pub fn inverse(payload: &RenameType, base: &SemioKitSnapshot) -> Vec<SemioKitMutation> {
+pub async fn inverse(payload: &RenameType, base: &SemioKitSnapshot) -> Vec<SemioKitMutation> {
     match base.types.iter().find(|t| t.id == payload.id) {
         Some(existing) => vec![SemioKitMutation::RenameType(RenameType { id: payload.id.clone(), new_name: existing.name.clone() })],
         None => Vec::new(),

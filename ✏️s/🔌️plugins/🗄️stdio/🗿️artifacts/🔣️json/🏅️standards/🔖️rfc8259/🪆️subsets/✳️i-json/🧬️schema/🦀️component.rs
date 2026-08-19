@@ -27,34 +27,34 @@ pub mod derived_construction {
         type Mutation = JsonMutation;
         type Diff = JsonDiff;
 
-        fn empty() -> Self {
+        async fn empty() -> Self {
             Self(JsonAnyBuilder::empty())
         }
 
-        fn from_snapshot(snapshot: Self::Snapshot) -> Self {
+        async fn from_snapshot(snapshot: Self::Snapshot) -> Self {
             Self(JsonAnyBuilder::from_snapshot(snapshot))
         }
 
-        fn from_text(text: &str) -> Result<Self, store::TextError> {
+        async fn from_text(text: &str) -> Result<Self, store::TextError> {
             Ok(Self(JsonAnyBuilder::from_text(text)?))
         }
 
-        fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
+        async fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
             Ok(Self(JsonAnyBuilder::from_binary(bytes)?))
         }
 
-        fn mutate(self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
+        async fn mutate(self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let (inner, diff) = self.0.mutate(mutation);
             (Self(inner), diff)
         }
 
-        fn absorb(self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
+        async fn absorb(self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
             Ok(Self(self.0.absorb(diff)?))
         }
 
         /// 🛡️ The real construction gate: however `self.0`'s inner snapshot got here, a hard RFC 7493
         /// violation fails `build()` -- soft/advisory diagnostics pass through as `Ok`.
-        fn build(self) -> Result<Self::Snapshot, Vec<Diagnostic>> {
+        async fn build(self) -> Result<Self::Snapshot, Vec<Diagnostic>> {
             let snapshot = self.0.build()?;
             let hard: Vec<Diagnostic> = check_i_json_conformance(&snapshot).into_iter().filter(|d| matches!(d.severity, Severity::Error | Severity::Fatal)).collect();
             if hard.is_empty() {
@@ -71,19 +71,19 @@ pub mod derived_construction {
         use super::*;
 
         #[test]
-        fn conforming_snapshot_builds_clean() {
+        async fn conforming_snapshot_builds_clean() {
             let snapshot = JsonIJsonBuilderConstruction::from_text("{\"a\":1}").expect("parses").build().expect("conforming construction must build");
             assert!(matches!(snapshot.value, crate::artifacts::json::standards::v_rfc8259::subsets::any::schema::snapshot::JsonValue::Object { .. }));
         }
 
         #[test]
-        fn duplicate_member_name_fails_build() {
+        async fn duplicate_member_name_fails_build() {
             let err = JsonIJsonBuilderConstruction::from_text("{\"a\":1,\"a\":2}").expect("parses").build().expect_err("a duplicate member name must fail build()");
             assert!(err.iter().any(|d| d.code.0 == "stdio.json.i-json.duplicate-member-name"));
         }
 
         #[test]
-        fn unsafe_integer_injected_via_raw_mutate_still_fails_build() {
+        async fn unsafe_integer_injected_via_raw_mutate_still_fails_build() {
             use crate::artifacts::json::standards::v_rfc8259::subsets::any::schema::snapshot::{JsonMember, JsonValue};
             let violating = JsonSnapshot { value: JsonValue::Object { members: vec![JsonMember { key: "n".into(), value: JsonValue::Number { lexeme: "9007199254740993".into() } }] }, ..JsonSnapshot::default() };
             let (mutated, _diff) = JsonIJsonBuilderConstruction::from_snapshot(JsonSnapshot::default()).mutate(JsonMutation::SetSnapshot { snapshot: violating });
@@ -115,17 +115,17 @@ pub mod derived_analysis {
     /// ± the largest integer magnitude exactly representable as an IEEE-754 double (2^53 - 1).
     const MAX_SAFE_INTEGER_MAGNITUDE: i128 = 9_007_199_254_740_991;
 
-    fn hard(code: &'static str, message: String) -> Diagnostic {
+    async fn hard(code: &'static str, message: String) -> Diagnostic {
         Diagnostic { code: FaultCode::new(code), severity: Severity::Error, span: TextSpan::at(1, 1), message, expected: None, scope: FaultScope::default() }
     }
 
-    fn soft(code: &'static str, message: String) -> Diagnostic {
+    async fn soft(code: &'static str, message: String) -> Diagnostic {
         Diagnostic { code: FaultCode::new(code), severity: Severity::Warning, span: TextSpan::at(1, 1), message, expected: None, scope: FaultScope::default() }
     }
 
     /// 🔁️ Recursive scan: every object's member names, checked for duplicates independently at each
     /// nesting level (a duplicate at a nested object doesn't affect its ancestors' own uniqueness).
-    fn scan_duplicate_members(value: &JsonValue, out: &mut Vec<Diagnostic>) {
+    async fn scan_duplicate_members(value: &JsonValue, out: &mut Vec<Diagnostic>) {
         match value {
             JsonValue::Object { members } => {
                 let mut seen: std::collections::HashSet<&str> = std::collections::HashSet::new();
@@ -147,14 +147,14 @@ pub mod derived_analysis {
 
     /// 🔢️ Is this number lexeme an integer (no fractional part, no exponent)? Per RFC8259's grammar,
     /// `.`/`e`/`E` only ever appear in the fraction/exponent parts.
-    fn is_integer_lexeme(lexeme: &str) -> bool {
+    async fn is_integer_lexeme(lexeme: &str) -> bool {
         !lexeme.contains('.') && !lexeme.contains('e') && !lexeme.contains('E')
     }
 
     /// 🔁️ Recursive scan: every integer number's magnitude against RFC 7493 §2.2's ±(2^53-1) safe
     /// bound, using the ORIGINAL LEXEME (never a lossy `f64` parse) so arbitrary-precision integers
     /// are checked exactly.
-    fn scan_unsafe_integers(value: &JsonValue, out: &mut Vec<Diagnostic>) {
+    async fn scan_unsafe_integers(value: &JsonValue, out: &mut Vec<Diagnostic>) {
         match value {
             JsonValue::Number { lexeme } if is_integer_lexeme(lexeme) => match lexeme.parse::<i128>() {
                 Ok(n) if n.unsigned_abs() > MAX_SAFE_INTEGER_MAGNITUDE as u128 => {
@@ -184,13 +184,13 @@ pub mod derived_analysis {
     /// 🚫️ A Unicode noncharacter per the Unicode Standard: the last two code points of every plane
     /// (`cp & 0xFFFE == 0xFFFE` covers U+FFFE/U+FFFF, U+1FFFE/U+1FFFF, ..., U+10FFFE/U+10FFFF) plus
     /// the reserved BMP range U+FDD0-U+FDEF.
-    fn is_unicode_noncharacter(c: char) -> bool {
+    async fn is_unicode_noncharacter(c: char) -> bool {
         let cp = c as u32;
         (cp & 0xFFFE) == 0xFFFE || (0xFDD0..=0xFDEF).contains(&cp)
     }
 
     /// 🔁️ Recursive scan: every string value for embedded Unicode noncharacters.
-    fn scan_noncharacter_strings(value: &JsonValue, out: &mut Vec<Diagnostic>) {
+    async fn scan_noncharacter_strings(value: &JsonValue, out: &mut Vec<Diagnostic>) {
         match value {
             JsonValue::String { value: s } => {
                 if s.chars().any(is_unicode_noncharacter) {
@@ -215,7 +215,7 @@ pub mod derived_analysis {
     /// single source of truth: `JsonIJsonComposer::compose` hard-gates on this (pre-serialization,
     /// authoritative), `JsonIJsonBuilder::build` hard-gates on this too, and the registered
     /// `SubsetValidator` re-runs it post-hoc against the wire payload for the D5 validate-on-build hook.
-    pub fn check_i_json_conformance(snapshot: &JsonSnapshot) -> Vec<Diagnostic> {
+    pub async fn check_i_json_conformance(snapshot: &JsonSnapshot) -> Vec<Diagnostic> {
         let mut out = Vec::new();
         if !matches!(snapshot.value, JsonValue::Object { .. } | JsonValue::Array { .. }) {
             out.push(soft(CODE_TOP_LEVEL_SCALAR, "top-level value is neither an object nor an array -- RFC 7493 §2.1 recommends against a bare top-level scalar for interop".into()));
@@ -236,11 +236,11 @@ pub mod derived_analysis {
         type Parts = JsonParts;
         const DIALECT: Dialect = DIALECT;
 
-        fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
+        async fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
             JsonAnyAnalyzer::sniff(source)
         }
 
-        fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
+        async fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
             let inner = JsonAnyAnalyzer::analyze(sources);
             let mut diagnostics = inner.diagnostics.clone();
             let mut confidence = inner.confidence;
@@ -261,30 +261,30 @@ pub mod derived_analysis {
         use super::*;
         use crate::artifacts::json::standards::v_rfc8259::subsets::any::schema::snapshot::JsonMember;
 
-        fn obj(pairs: Vec<(&str, JsonValue)>) -> JsonValue {
+        async fn obj(pairs: Vec<(&str, JsonValue)>) -> JsonValue {
             JsonValue::Object { members: pairs.into_iter().map(|(k, v)| JsonMember { key: k.into(), value: v }).collect() }
         }
 
-        fn snapshot(value: JsonValue) -> JsonSnapshot {
+        async fn snapshot(value: JsonValue) -> JsonSnapshot {
             JsonSnapshot { value, ..JsonSnapshot::default() }
         }
 
         #[test]
-        fn conforming_object_reports_nothing() {
+        async fn conforming_object_reports_nothing() {
             let value = obj(vec![("a", JsonValue::Number { lexeme: "1".into() }), ("b", JsonValue::String { value: "hi".into() })]);
             let diagnostics = check_i_json_conformance(&snapshot(value));
             assert!(diagnostics.is_empty(), "got {diagnostics:?}");
         }
 
         #[test]
-        fn duplicate_member_name_is_hard() {
+        async fn duplicate_member_name_is_hard() {
             let value = JsonValue::Object { members: vec![JsonMember { key: "a".into(), value: JsonValue::Number { lexeme: "1".into() } }, JsonMember { key: "a".into(), value: JsonValue::Number { lexeme: "2".into() } }] };
             let diagnostics = check_i_json_conformance(&snapshot(value));
             assert!(diagnostics.iter().any(|d| d.code.0 == CODE_DUPLICATE_MEMBER && d.severity == Severity::Error), "got {diagnostics:?}");
         }
 
         #[test]
-        fn nested_duplicate_member_name_is_detected_recursively() {
+        async fn nested_duplicate_member_name_is_detected_recursively() {
             let inner = JsonValue::Object { members: vec![JsonMember { key: "x".into(), value: JsonValue::Null }, JsonMember { key: "x".into(), value: JsonValue::Null }] };
             let value = obj(vec![("outer", inner)]);
             let diagnostics = check_i_json_conformance(&snapshot(value));
@@ -292,68 +292,68 @@ pub mod derived_analysis {
         }
 
         #[test]
-        fn integer_within_safe_bound_is_clean() {
+        async fn integer_within_safe_bound_is_clean() {
             let value = obj(vec![("n", JsonValue::Number { lexeme: "9007199254740991".into() })]);
             let diagnostics = check_i_json_conformance(&snapshot(value));
             assert!(diagnostics.iter().all(|d| d.code.0 != CODE_UNSAFE_INTEGER), "got {diagnostics:?}");
         }
 
         #[test]
-        fn integer_beyond_safe_bound_is_hard() {
+        async fn integer_beyond_safe_bound_is_hard() {
             let value = obj(vec![("n", JsonValue::Number { lexeme: "9007199254740993".into() })]);
             let diagnostics = check_i_json_conformance(&snapshot(value));
             assert!(diagnostics.iter().any(|d| d.code.0 == CODE_UNSAFE_INTEGER && d.severity == Severity::Error), "got {diagnostics:?}");
         }
 
         #[test]
-        fn negative_integer_beyond_safe_bound_is_hard() {
+        async fn negative_integer_beyond_safe_bound_is_hard() {
             let value = obj(vec![("n", JsonValue::Number { lexeme: "-9007199254740993".into() })]);
             let diagnostics = check_i_json_conformance(&snapshot(value));
             assert!(diagnostics.iter().any(|d| d.code.0 == CODE_UNSAFE_INTEGER && d.severity == Severity::Error), "got {diagnostics:?}");
         }
 
         #[test]
-        fn astronomically_large_integer_is_hard() {
+        async fn astronomically_large_integer_is_hard() {
             let value = obj(vec![("n", JsonValue::Number { lexeme: "100000000000000000000000000000".into() })]);
             let diagnostics = check_i_json_conformance(&snapshot(value));
             assert!(diagnostics.iter().any(|d| d.code.0 == CODE_UNSAFE_INTEGER && d.severity == Severity::Error), "got {diagnostics:?}");
         }
 
         #[test]
-        fn fractional_number_is_never_flagged_as_unsafe_integer() {
+        async fn fractional_number_is_never_flagged_as_unsafe_integer() {
             let value = obj(vec![("n", JsonValue::Number { lexeme: "9007199254740993.5".into() })]);
             let diagnostics = check_i_json_conformance(&snapshot(value));
             assert!(diagnostics.iter().all(|d| d.code.0 != CODE_UNSAFE_INTEGER), "got {diagnostics:?}");
         }
 
         #[test]
-        fn top_level_scalar_is_soft() {
+        async fn top_level_scalar_is_soft() {
             let diagnostics = check_i_json_conformance(&snapshot(JsonValue::String { value: "hi".into() }));
             assert!(diagnostics.iter().any(|d| d.code.0 == CODE_TOP_LEVEL_SCALAR && d.severity == Severity::Warning), "got {diagnostics:?}");
         }
 
         #[test]
-        fn top_level_array_is_clean_on_that_check() {
+        async fn top_level_array_is_clean_on_that_check() {
             let diagnostics = check_i_json_conformance(&snapshot(JsonValue::Array { items: vec![] }));
             assert!(diagnostics.iter().all(|d| d.code.0 != CODE_TOP_LEVEL_SCALAR), "got {diagnostics:?}");
         }
 
         #[test]
-        fn noncharacter_in_string_is_soft() {
+        async fn noncharacter_in_string_is_soft() {
             let value = obj(vec![("s", JsonValue::String { value: "abc\u{FFFE}def".into() })]);
             let diagnostics = check_i_json_conformance(&snapshot(value));
             assert!(diagnostics.iter().any(|d| d.code.0 == CODE_STRING_NONCHARACTER && d.severity == Severity::Warning), "got {diagnostics:?}");
         }
 
         #[test]
-        fn reserved_bmp_noncharacter_range_is_detected() {
+        async fn reserved_bmp_noncharacter_range_is_detected() {
             let value = obj(vec![("s", JsonValue::String { value: "\u{FDD5}".into() })]);
             let diagnostics = check_i_json_conformance(&snapshot(value));
             assert!(diagnostics.iter().any(|d| d.code.0 == CODE_STRING_NONCHARACTER), "got {diagnostics:?}");
         }
 
         #[test]
-        fn ordinary_string_has_no_noncharacter_diagnostic() {
+        async fn ordinary_string_has_no_noncharacter_diagnostic() {
             let value = obj(vec![("s", JsonValue::String { value: "hello world".into() })]);
             let diagnostics = check_i_json_conformance(&snapshot(value));
             assert!(diagnostics.iter().all(|d| d.code.0 != CODE_STRING_NONCHARACTER), "got {diagnostics:?}");

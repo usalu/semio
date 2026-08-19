@@ -8,7 +8,7 @@ use crate::artifacts::semio::standards::v1::subsets::drawing::schema::diff::Semi
 use crate::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::SemioDrawingSnapshot;
 
 //#region 🔖️Diff
-pub fn diff(payload: &DeleteLayer, base: &SemioDrawingSnapshot) -> protocol::MutationOutcome<SemioDrawingDiff> {
+pub async fn diff(payload: &DeleteLayer, base: &SemioDrawingSnapshot) -> protocol::MutationOutcome<SemioDrawingDiff> {
     match base.layers.iter().position(|l| l.id == payload.id) {
         Some(index) => protocol::MutationOutcome::new(SemioDrawingDiff { canvas: None, styles: None, layers: Some(IndexedTripleDiff { removed: vec![index], modified: Vec::new(), added: Vec::new() }) }),
         None => protocol::MutationOutcome::error("mutation.target-missing", format!("Layer \"{}\" does not exist.", payload.id), [payload.id.clone()]),

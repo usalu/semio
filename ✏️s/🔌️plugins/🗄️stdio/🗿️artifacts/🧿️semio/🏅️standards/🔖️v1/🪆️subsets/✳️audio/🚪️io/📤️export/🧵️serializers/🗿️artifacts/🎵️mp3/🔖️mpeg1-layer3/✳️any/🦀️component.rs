@@ -51,7 +51,7 @@ mod tests {
     use crate::artifacts::semio::standards::v1::subsets::audio::schema::snapshot::{SemioAudioChannel, SemioAudioFormat, SemioAudioTag};
 
     #[test]
-    fn real_samples_honestly_error_rather_than_fabricate_compressed_frames() {
+    async fn real_samples_honestly_error_rather_than_fabricate_compressed_frames() {
         let snap = SemioAudioSnapshot {
             sample_rate: 44_100,
             format: SemioAudioFormat::Float32,
@@ -64,14 +64,14 @@ mod tests {
     }
 
     #[test]
-    fn empty_sample_content_round_trips_to_an_empty_container_without_erroring() {
+    async fn empty_sample_content_round_trips_to_an_empty_container_without_erroring() {
         let snap = SemioAudioSnapshot { sample_rate: 44_100, channels: vec![SemioAudioChannel { samples: vec![] }], ..SemioAudioSnapshot::default() };
         let mp3 = semio_framework_plugin::resolve_ready(SemioAudioToMp3::serialize(&snap)).expect("no real content -- nothing to fabricate");
         assert!(mp3.frames.is_empty());
     }
 
     #[test]
-    fn default_empty_snapshot_serializes_cleanly() {
+    async fn default_empty_snapshot_serializes_cleanly() {
         let snap = SemioAudioSnapshot::default();
         assert!(semio_framework_plugin::resolve_ready(SemioAudioToMp3::serialize(&snap)).is_ok());
     }

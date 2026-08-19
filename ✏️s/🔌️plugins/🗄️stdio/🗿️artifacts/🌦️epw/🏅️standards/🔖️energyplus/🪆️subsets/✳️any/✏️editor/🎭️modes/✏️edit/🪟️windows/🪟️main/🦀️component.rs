@@ -57,7 +57,7 @@ pub const EPW_TABLE_COLUMNS: [&str; 35] = [
 
 //#region 🔖️Definition
 /// 🧱️ Stitched into the editor manifest by `crate::editor::epw::create_epw_editor`.
-pub fn definition() -> WindowKindDefinition {
+pub async fn definition() -> WindowKindDefinition {
     WindowKindDefinition { label: LocalizedLabel::native("Weather Records", "Wetterdatensätze"), icon_id: "table-2".into(), ..TableWindowKit::editable_window_kind() }
 }
 //#endregion 🔖️Definition
@@ -65,7 +65,7 @@ pub fn definition() -> WindowKindDefinition {
 //#region 🔖️Render
 /// ✏️ Real `EpwSnapshot -> UiNode`: one row per hourly record, all 35 spec columns — every column is
 /// a real `set-cell` edit target (`EpwEditorCommand::SetCell`, keyed by row index + column name).
-pub fn render(document: &EpwSnapshot) -> UiNode {
+pub async fn render(document: &EpwSnapshot) -> UiNode {
     let columns = EPW_TABLE_COLUMNS.iter().map(|column| column.to_string()).collect();
     let rows = document.records.iter().map(|record| record.fields().iter().map(|field| field.to_string()).collect()).collect();
     TableWindowKit::render(&TableView { columns, rows })
@@ -78,14 +78,14 @@ mod tests {
     use super::*;
 
     #[test]
-    fn definition_declares_a_table_window() {
+    async fn definition_declares_a_table_window() {
         let def = definition();
         assert_eq!(def.id, WINDOW_KIND_ID);
         assert_eq!(def.body_key, BODY_KEY);
     }
 
     #[test]
-    fn render_lists_one_row_per_record_with_35_columns() {
+    async fn render_lists_one_row_per_record_with_35_columns() {
         let mut document = EpwSnapshot::default();
         document.records.push(Default::default());
         let UiNode::ComponentScene(node) = render(&document) else { panic!("expected ComponentScene") };

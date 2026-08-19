@@ -29,11 +29,11 @@ semio_framework_plugin::app_labels! {
 }
 
 /// 🗣️ B1: `cfg.locale`-driven counterpart to the deleted `ViewModel`-driven resolver.
-fn block3d_is_de_locale(cfg: &Block3dConfig) -> bool {
+async fn block3d_is_de_locale(cfg: &Block3dConfig) -> bool {
     cfg.locale.starts_with("de")
 }
 
-fn block3d_locale(cfg: &Block3dConfig) -> Locale {
+async fn block3d_locale(cfg: &Block3dConfig) -> Locale {
     if block3d_is_de_locale(cfg) {
         Locale::De
     } else {
@@ -43,7 +43,7 @@ fn block3d_locale(cfg: &Block3dConfig) -> Locale {
 
 /// 🗣️ Resolves the active `Block3dLabels` cell from the config-carried locale. `Block3dConfig` carries
 /// no terminology field, so terminology is always `Native`.
-pub fn block3d_labels(cfg: &Block3dConfig) -> &'static Block3dLabels {
+pub async fn block3d_labels(cfg: &Block3dConfig) -> &'static Block3dLabels {
     Block3dLabels::labels(block3d_locale(cfg), Terminology::Native)
 }
 //#endregion 🔖️Labels
@@ -54,7 +54,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn labels_resolve_native_english_and_german_from_the_config_locale() {
+    async fn labels_resolve_native_english_and_german_from_the_config_locale() {
         assert_eq!(block3d_labels(&Block3dConfig::default()).summary.as_str(), "Object kind");
         assert_eq!(block3d_labels(&Block3dConfig { locale: "de-DE".into(), ..Block3dConfig::default() }).summary.as_str(), "Objektart");
     }

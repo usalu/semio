@@ -12,6 +12,6 @@ pub struct SetLocale {
     pub value: String,
 }
 
-pub fn handle(payload: &SetLocale, _doc: &ArtifactView<'_, RemodelSnapshot>, _cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelMutation, RemodelConfigMutation>, Fault> {
+pub async fn handle(payload: &SetLocale, _doc: &ArtifactView<'_, RemodelSnapshot>, _cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelMutation, RemodelConfigMutation>, Fault> {
     Ok(Emit::config(vec![RemodelConfigMutation::SetLocale { value: payload.value.clone() }]))
 }

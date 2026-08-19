@@ -16,7 +16,7 @@ const RASTER_PLAY_SURFACE_COMPOSITE: &str = "raster.play.composite";
 /// 🧱️ Stitched into the app manifest by `crate::editor::raster::create_raster_app`. `options.measures`
 /// stays empty here on purpose: raster's measures are config-derived and rebuilt per frame by
 /// [`window_measures`], not frozen into the manifest.
-pub fn definition() -> WindowKindDefinition {
+pub async fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
         id: RASTER_PLAY_WINDOW_COMPOSITE.into(),
         label: LocalizedLabel::native("Composite", "Komposit"),
@@ -36,13 +36,13 @@ pub fn definition() -> WindowKindDefinition {
 }
 
 /// 🎚️ The live chrome measures for this window, collected from its `🎚️options/*` components.
-pub fn window_measures(config: &RasterConfig) -> Vec<WindowMeasure> {
+pub async fn window_measures(config: &RasterConfig) -> Vec<WindowMeasure> {
     vec![options::brush::measure(config), options::eraser::measure(config)]
 }
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(document: &RasterDocument, config: &RasterConfig) -> UiNode {
+pub async fn render(document: &RasterDocument, config: &RasterConfig) -> UiNode {
     build_paint_2d_scene(RASTER_PLAY_SURFACE_COMPOSITE, crate::editor::raster::RASTER_PLAY_CONTROLLER_ID, raster_scene(document, config, config.active_utility_id.as_str(), "composite"))
 }
 //#endregion 🔖️Render
@@ -53,7 +53,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn definition_declares_the_paint2d_surface_and_body_key() {
+    async fn definition_declares_the_paint2d_surface_and_body_key() {
         let definition = definition();
         assert_eq!(definition.body_key, RASTER_PLAY_BODY_COMPOSITE);
         assert!(matches!(definition.surface_kind, SurfaceKind::Paint2d));
@@ -61,7 +61,7 @@ mod tests {
     }
 
     #[test]
-    fn window_measures_surface_brush_and_eraser_groups() {
+    async fn window_measures_surface_brush_and_eraser_groups() {
         let config = RasterConfig::default();
         let measures = window_measures(&config);
         assert_eq!(measures.len(), 2);

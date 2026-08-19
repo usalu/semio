@@ -18,7 +18,7 @@ pub struct SetClient {
 //#endregion 🔖️Payload
 
 //#region 🔖️Handle
-pub fn handle(payload: &SetClient, _doc: &ArtifactView<'_, SHomeSnapshot>, _cfg: &ConfigView<'_, HomeConfig>) -> Result<Emit<SHomeMutation, HomeConfigMutation>, Fault> {
+pub async fn handle(payload: &SetClient, _doc: &ArtifactView<'_, SHomeSnapshot>, _cfg: &ConfigView<'_, HomeConfig>) -> Result<Emit<SHomeMutation, HomeConfigMutation>, Fault> {
     Ok(Emit { config_mutations: vec![HomeConfigMutation::SetClient { client_id: payload.client_id.clone(), client_name: payload.client_name.clone() }], ..Default::default() })
 }
 //#endregion 🔖️Handle
@@ -29,7 +29,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn set_client_emits_exactly_one_config_mutation() {
+    async fn set_client_emits_exactly_one_config_mutation() {
         let history = semio_framework_plugin::HistoryView::empty();
         let doc_snapshot = SHomeSnapshot::default();
         let doc = ArtifactView::new(&doc_snapshot, &history);

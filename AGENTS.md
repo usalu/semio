@@ -33,12 +33,15 @@ You MUST follow the following rules unless explicitly asked to do otherwise:
     - You MUST support short connection-shortages and not freeze the app.
       - You SHOULD NOT accept long offline periods.
     - You SHOULD distinguish between persisted local-only, persisted shared, ephemeral local-only, ephemeral shared.
+- You MUST implement everything to be interaction-friendly.
+  - You MUST support progress and cancellation for all expensive operations.
 - You MUST develop multi-app.
   - You MUST use domain-neutral framework.
   - You MUST use domain-specific extensions.
 - You MUST develop multi-device.
   - You MUST prioritize desktop, then mobile, then tablet.
 - You MUST take decisions for maximum control.
+- You MUST implement everything async.
 - You MUST take decisions for maximum performance.
 - All devs are using `launch.json` and never use the cli.
   - You MUST register all executable commands there by following the existing order, grouping and naming.

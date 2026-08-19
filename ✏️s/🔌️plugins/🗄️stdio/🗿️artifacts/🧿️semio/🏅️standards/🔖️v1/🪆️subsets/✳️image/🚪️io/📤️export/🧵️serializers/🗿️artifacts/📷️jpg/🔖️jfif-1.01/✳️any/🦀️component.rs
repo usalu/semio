@@ -45,7 +45,7 @@ mod tests {
     use super::*;
     use crate::artifacts::semio::standards::v1::subsets::image::schema::snapshot::{SemioColorspace, SemioImageFrame, SemioImageMetadataEntry};
 
-    fn sample_semio() -> SemioImageSnapshot {
+    async fn sample_semio() -> SemioImageSnapshot {
         SemioImageSnapshot {
             width: 2,
             height: 1,
@@ -59,7 +59,7 @@ mod tests {
     }
 
     #[test]
-    fn real_byte_round_trip_through_jpg_codec() {
+    async fn real_byte_round_trip_through_jpg_codec() {
         let semio = sample_semio();
         let jpg = semio_framework_plugin::resolve_ready(SemioImageToJpg::serialize(&semio)).expect("serialize");
         assert_eq!(jpg.width, 2);

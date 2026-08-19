@@ -67,7 +67,7 @@ pub enum SemioDiff {
 }
 
 impl MutationDiff<SemioSnapshot> for SemioDiff {
-    fn apply(&self, base: &SemioSnapshot) -> protocol::MutationApplyResult<SemioSnapshot> {
+    async fn apply(&self, base: &SemioSnapshot) -> protocol::MutationApplyResult<SemioSnapshot> {
         use SemioSubsetSnapshot as S;
         let subset = match (self, &base.subset) {
             (SemioDiff::NoChange, s) => s.clone(),
@@ -98,7 +98,7 @@ impl MutationDiff<SemioSnapshot> for SemioDiff {
         Ok(SemioSnapshot { schema: base.schema.clone(), subset })
     }
 
-    fn absorb(&mut self, other: Self) {
+    async fn absorb(&mut self, other: Self) {
         use SemioDiff::*;
         let combined = match (std::mem::take(self), other) {
             (Rejected(error), _) | (_, Rejected(error)) => Rejected(error),
@@ -194,7 +194,7 @@ impl MutationDiff<SemioSnapshot> for SemioDiff {
 }
 
 impl DiffAlgebra<SemioSnapshot> for SemioDiff {
-    fn between(base: &SemioSnapshot, other: &SemioSnapshot) -> Self {
+    async fn between(base: &SemioSnapshot, other: &SemioSnapshot) -> Self {
         use SemioSubsetSnapshot as S;
         match (&base.subset, &other.subset) {
             (S::Brep(b), S::Brep(o)) => SemioDiff::Brep(<SemioBrepDiff as DiffAlgebra<SemioBrepSnapshot>>::between(b, o)),
@@ -228,7 +228,7 @@ impl DiffAlgebra<SemioSnapshot> for SemioDiff {
         }
     }
 
-    fn inverse(&self, base: &SemioSnapshot) -> Self {
+    async fn inverse(&self, base: &SemioSnapshot) -> Self {
         use SemioSubsetSnapshot as S;
         match (self, &base.subset) {
             (SemioDiff::NoChange, _) => SemioDiff::NoChange,
@@ -256,7 +256,7 @@ impl DiffAlgebra<SemioSnapshot> for SemioDiff {
         }
     }
 
-    fn is_empty(&self) -> bool {
+    async fn is_empty(&self) -> bool {
         match self {
             SemioDiff::NoChange => true,
             SemioDiff::Rejected(_) => false,
@@ -284,7 +284,7 @@ impl DiffAlgebra<SemioSnapshot> for SemioDiff {
 }
 
 /// 🧩 Set-snapshot diff helper — used by the `📸️set-snapshot/🔺️diff` leaf.
-pub fn diff_set_snapshot(base: &SemioSnapshot, snapshot: &SemioSnapshot) -> SemioDiff {
+pub async fn diff_set_snapshot(base: &SemioSnapshot, snapshot: &SemioSnapshot) -> SemioDiff {
     <SemioDiff as DiffAlgebra<SemioSnapshot>>::between(base, snapshot)
 }
 //#endregion 🔖️Diff
@@ -297,12 +297,12 @@ pub fn diff_set_snapshot(base: &SemioSnapshot, snapshot: &SemioSnapshot) -> Semi
 /// — real delegation to THIS envelope's own now-real `ArtifactDsl` (📸️snapshot/🦀️component.rs,
 /// itself a real delegating codec over the same 13 subsets), hex-flattened to keep `print_diff`'s
 /// mandatory one-physical-line contract despite `print_dsl`'s own embedded newlines.
-fn enc_replace_snapshot(snapshot: &SemioSnapshot) -> String {
+async fn enc_replace_snapshot(snapshot: &SemioSnapshot) -> String {
     let text = <SemioSnapshot as store::ArtifactDsl>::print_dsl(snapshot);
     text.as_bytes().iter().map(|b| format!("{b:02x}")).collect()
 }
 
-fn dec_replace_snapshot(hex: &str) -> Result<SemioSnapshot, String> {
+async fn dec_replace_snapshot(hex: &str) -> Result<SemioSnapshot, String> {
     if hex.len() % 2 != 0 {
         return Err("replace: odd hex length".to_string());
     }
@@ -317,7 +317,7 @@ fn dec_replace_snapshot(hex: &str) -> Result<SemioSnapshot, String> {
     <SemioSnapshot as store::ArtifactDsl>::parse_dsl(&text).map_err(|e| format!("replace: dsl decode: {e}"))
 }
 
-fn enc_rejection(error: &MutationApplyError) -> String {
+async fn enc_rejection(error: &MutationApplyError) -> String {
     std::iter::once(error.code.as_str())
         .chain(std::iter::once(error.message.as_str()))
         .chain(error.target.iter().map(String::as_str))
@@ -326,7 +326,7 @@ fn enc_rejection(error: &MutationApplyError) -> String {
         .join(",")
 }
 
-fn dec_rejection(payload: &str) -> Result<MutationApplyError, String> {
+async fn dec_rejection(payload: &str) -> Result<MutationApplyError, String> {
     let fields = payload
         .split(',')
         .map(|hex| {
@@ -346,7 +346,7 @@ fn dec_rejection(payload: &str) -> Result<MutationApplyError, String> {
 /// 🏷️ Binary tag ordinal for [`SemioDiff`] — `0` = `NoChange`, `1..=18` = the 18 wrapped subset
 /// kinds (same enum declaration order as [`crate::artifacts::semio::standards::v1::subsets::any::schema::snapshot::subset_ordinal`],
 /// offset by one to make room for `NoChange`), `19` = `Replace`.
-fn diff_tag(d: &SemioDiff) -> u8 {
+async fn diff_tag(d: &SemioDiff) -> u8 {
     match d {
         SemioDiff::NoChange => 0,
         SemioDiff::Rejected(_) => 20,
@@ -372,7 +372,7 @@ fn diff_tag(d: &SemioDiff) -> u8 {
     }
 }
 
-fn print_semio_diff(d: &SemioDiff) -> String {
+async fn print_semio_diff(d: &SemioDiff) -> String {
     match d {
         SemioDiff::NoChange => "noChange".to_string(),
         SemioDiff::Rejected(error) => format!("rejected:{}", enc_rejection(error)),
@@ -398,7 +398,7 @@ fn print_semio_diff(d: &SemioDiff) -> String {
     }
 }
 
-fn parse_semio_diff(line: &str) -> Result<SemioDiff, String> {
+async fn parse_semio_diff(line: &str) -> Result<SemioDiff, String> {
     if line == "noChange" {
         return Ok(SemioDiff::NoChange);
     }
@@ -429,10 +429,10 @@ fn parse_semio_diff(line: &str) -> Result<SemioDiff, String> {
 }
 
 impl DiffCodec for SemioDiff {
-    fn print_diff(&self) -> String {
+    async fn print_diff(&self) -> String {
         print_semio_diff(self)
     }
-    fn parse_diff(line: &str) -> Result<Self, store::TextError> {
+    async fn parse_diff(line: &str) -> Result<Self, store::TextError> {
         parse_semio_diff(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
 
@@ -442,7 +442,7 @@ impl DiffCodec for SemioDiff {
     /// `DiffCodec::encode_diff()` bytes (genuine reuse, never re-derived here); for `Replace`, the
     /// wrapped snapshot's own real `ArtifactPack::encode_pack()` bytes (📸️snapshot's real binary
     /// delegation, applied one level deeper); `NoChange` carries no payload at all.
-    fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    async fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         const DIFF_BINARY_FORMAT: u8 = 1;
         let mut out = vec![DIFF_BINARY_FORMAT, diff_tag(self)];
         let payload: Vec<u8> = match self {
@@ -472,7 +472,7 @@ impl DiffCodec for SemioDiff {
         Ok(out)
     }
 
-    fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    async fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         const DIFF_BINARY_FORMAT: u8 = 1;
         if bytes.len() < 2 {
             return Err(protocol::ProtocolError::Malformed { what: "diff header", offset: 0, detail: "truncated".to_string() });
@@ -523,7 +523,7 @@ impl DiffCodec for SemioDiff {
 /// both this file's own round-trip test and `🎹️composer/🦀️component.rs`'s `diff_grammar_
 /// conformance_law`/`protocol_walk_law`.
 #[cfg(test)]
-pub(crate) fn demo_diff_cases() -> Vec<SemioDiff> {
+pub(crate) async fn demo_diff_cases() -> Vec<SemioDiff> {
     let subsets: Vec<SemioSubsetSnapshot> = vec![
         SemioSubsetSnapshot::Brep(Default::default()),
         SemioSubsetSnapshot::Mesh(Default::default()),
@@ -562,11 +562,11 @@ mod tests {
     use crate::artifacts::semio::standards::v1::subsets::audio::schema::snapshot::{SemioAudioFormat, SemioAudioSnapshot};
     use crate::artifacts::semio::standards::v1::subsets::flow::schema::snapshot::{FlowNode, SemioFlowSnapshot};
 
-    fn audio_snapshot(sample_rate: u32) -> SemioSnapshot {
+    async fn audio_snapshot(sample_rate: u32) -> SemioSnapshot {
         SemioSnapshot { subset: SemioSubsetSnapshot::Audio(SemioAudioSnapshot { sample_rate, format: SemioAudioFormat::Pcm16, ..Default::default() }), ..Default::default() }
     }
 
-    fn flow_snapshot(node_ids: &[&str]) -> SemioSnapshot {
+    async fn flow_snapshot(node_ids: &[&str]) -> SemioSnapshot {
         SemioSnapshot {
             subset: SemioSubsetSnapshot::Flow(SemioFlowSnapshot {
                 nodes: node_ids.iter().map(|id| FlowNode { id: (*id).into(), kind: "task".into(), label: (*id).into(), params: vec![], position: SemioPoint2 { x: 0.0, y: 0.0 } }).collect(),
@@ -580,7 +580,7 @@ mod tests {
     /// `sample_rate`, a genuinely mutable field — not the `schema` identity field every subset's
     /// own diff module explicitly excludes from diffing).
     #[test]
-    fn between_roundtrip_law_same_kind_real_field_change() {
+    async fn between_roundtrip_law_same_kind_real_field_change() {
         let a = audio_snapshot(44_100);
         let b = audio_snapshot(48_000);
         let d = <SemioDiff as DiffAlgebra<SemioSnapshot>>::between(&a, &b);
@@ -594,7 +594,7 @@ mod tests {
     /// collection) — sweeps a DIFFERENT subset and a DIFFERENT field shape (collection insert,
     /// not a scalar) than the audio case above.
     #[test]
-    fn between_roundtrip_law_flow_node_insert() {
+    async fn between_roundtrip_law_flow_node_insert() {
         let a = flow_snapshot(&["n1"]);
         let b = flow_snapshot(&["n1", "n2"]);
         let d = <SemioDiff as DiffAlgebra<SemioSnapshot>>::between(&a, &b);
@@ -607,7 +607,7 @@ mod tests {
     /// 🧪️ between_roundtrip_law, cross-kind change: no sparse representation exists, must fall
     /// back to `Replace` — and still satisfy the law.
     #[test]
-    fn between_roundtrip_law_cross_kind_replaces() {
+    async fn between_roundtrip_law_cross_kind_replaces() {
         let a = audio_snapshot(44_100);
         let b = flow_snapshot(&["n1"]);
         let d = <SemioDiff as DiffAlgebra<SemioSnapshot>>::between(&a, &b);
@@ -617,7 +617,7 @@ mod tests {
 
     /// 🧪️ inverse_law across all 3 shapes: same-kind nested, cross-kind Replace, and NoChange.
     #[test]
-    fn inverse_law_covers_nested_replace_and_no_change() {
+    async fn inverse_law_covers_nested_replace_and_no_change() {
         for (a, b) in [(audio_snapshot(44_100), audio_snapshot(96_000)), (audio_snapshot(44_100), flow_snapshot(&["n1", "n2"])), (audio_snapshot(44_100), audio_snapshot(44_100))] {
             let d = <SemioDiff as DiffAlgebra<SemioSnapshot>>::between(&a, &b);
             let applied = d.apply(&a).expect("valid diff");
@@ -629,7 +629,7 @@ mod tests {
     /// 🧪️ absorb_law: same-kind sequential coalesce delegates to the nested subset's own
     /// (already-proven) `absorb`.
     #[test]
-    fn absorb_law_same_kind_delegates_to_nested() {
+    async fn absorb_law_same_kind_delegates_to_nested() {
         let a = audio_snapshot(44_100);
         let mid = audio_snapshot(48_000);
         let after = audio_snapshot(96_000);
@@ -643,7 +643,7 @@ mod tests {
 
     /// 🧪️ absorb_law: a later `Replace` always wins outright, whatever preceded it.
     #[test]
-    fn absorb_law_later_replace_wins() {
+    async fn absorb_law_later_replace_wins() {
         let a = audio_snapshot(44_100);
         let mid = audio_snapshot(48_000);
         let after = flow_snapshot(&["n1"]);
@@ -657,7 +657,7 @@ mod tests {
     /// 🧪️ absorb_law: an earlier `Replace` absorbing a later same-kind diff folds it into the
     /// replacement snapshot rather than dropping it.
     #[test]
-    fn absorb_law_replace_then_nested_folds_in() {
+    async fn absorb_law_replace_then_nested_folds_in() {
         let a = flow_snapshot(&["n1"]);
         let replaced = audio_snapshot(44_100);
         let after = audio_snapshot(48_000);
@@ -670,7 +670,7 @@ mod tests {
     /// 🧪️ diff_codec_text_binary_roundtrip_law across `NoChange`, a same-kind nested diff (one
     /// per subset kind, proving the dispatch table's all 13 tags), and `Replace`.
     #[test]
-    fn diff_codec_text_binary_roundtrip_law() {
+    async fn diff_codec_text_binary_roundtrip_law() {
         let a = audio_snapshot(44_100);
         let b = audio_snapshot(48_000);
         let nested = <SemioDiff as DiffAlgebra<SemioSnapshot>>::between(&a, &b);
@@ -692,7 +692,7 @@ mod tests {
     /// parse match is wired correctly for every subset, without re-deriving each subset's own deep
     /// field grammar here).
     #[test]
-    fn all_eighteen_subset_tags_round_trip_empty_nested_diff() {
+    async fn all_eighteen_subset_tags_round_trip_empty_nested_diff() {
         let subsets: Vec<SemioSubsetSnapshot> = vec![
             SemioSubsetSnapshot::Brep(Default::default()),
             SemioSubsetSnapshot::Mesh(Default::default()),
@@ -724,7 +724,7 @@ mod tests {
     }
 
     #[test]
-    fn malformed_cross_kind_diff_is_rejected_and_absorb_preserves_rejection() {
+    async fn malformed_cross_kind_diff_is_rejected_and_absorb_preserves_rejection() {
         let base = audio_snapshot(44_100);
         let error = SemioDiff::Flow(Default::default()).apply(&base).unwrap_err();
         assert_eq!(error.code, "mutation.apply.kind-mismatch");

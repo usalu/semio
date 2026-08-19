@@ -11,12 +11,12 @@ pub const FLOW_VIEW_MODE_VIEW: &str = "view";
 
 //#region 🔖️Definition
 /// 🧱️ Stitched into the viewer manifest by `crate::viewer::flow::create_flow_viewer`.
-pub fn definition() -> ModeDefinition {
+pub async fn definition() -> ModeDefinition {
     ModeDefinition { id: FLOW_VIEW_MODE_VIEW.into(), label: LocalizedLabel::native("View", "Ansicht"), icon_id: "eye".into(), tools: Vec::new(), layout_id: None, commands: Vec::new() }
 }
 
 /// 🪟️ Single full-pane Main window — the read-only viewer has no quadrant layout to allocate.
-pub fn layout() -> WindowLayout {
+pub async fn layout() -> WindowLayout {
     WindowLayout {
         root: WindowLayoutRoot::Stack(WindowLayoutStackNode {
             kind: "stack".into(),
@@ -34,7 +34,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn the_layout_lists_the_single_view_window() {
+    async fn the_layout_lists_the_single_view_window() {
         let json = serde_json::to_string(&layout()).expect("layout json");
         assert!(json.contains(main::WINDOW_KIND_ID), "layout must reference the main window kind: {json}");
     }

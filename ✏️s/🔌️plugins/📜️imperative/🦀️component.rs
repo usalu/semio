@@ -16,7 +16,7 @@ use semio_framework_plugin::{ExecutionMode, Plugin};
 /// opened, this plugin's own actor runs `Isolated` (its 5 `🧩️extensions/` run `Linked` instead —
 /// see each extension's own `bundle()`), and it asks the broker for document write access to
 /// persist edits.
-pub fn plugin() -> Result<Plugin, semio_framework_plugin::PluginAssemblyError> {
+pub async fn plugin() -> Result<Plugin, semio_framework_plugin::PluginAssemblyError> {
     Plugin::builder("imperative")
         .label("Imperative")
         .version("0.1.0")
@@ -39,12 +39,12 @@ mod surface_tests {
     use semio_framework_plugin::testkit::{assert_editor_and_viewer_share_dialect, assert_viewer_never_mutates};
 
     #[test]
-    fn imperative_viewer_never_mutates() {
+    async fn imperative_viewer_never_mutates() {
         assert_viewer_never_mutates::<crate::viewer::imperative::ImperativeViewer>();
     }
 
     #[test]
-    fn imperative_editor_and_viewer_share_dialect() {
+    async fn imperative_editor_and_viewer_share_dialect() {
         assert_editor_and_viewer_share_dialect::<crate::editor::imperative::ImperativePlayApp, crate::viewer::imperative::ImperativeViewer>();
     }
 }

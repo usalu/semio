@@ -15,11 +15,11 @@ pub mod derived_composition {
         type Snapshot = JpgSnapshot;
         const WRITES: Dialect = DIALECT;
 
-        fn reads() -> &'static [Dialect] {
+        async fn reads() -> &'static [Dialect] {
             &[DIALECT, DEP_BINARY]
         }
 
-        fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+        async fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
             // 🌱 Every listed read dialect's payload is raw text/bytes that this artifact's own
             // analyzer already round-trips through `store::Document{Dsl,Pack}` -- including bytes
             // claiming a dependency's dialect, since (for a single-standard DAG-adjacent dependency
@@ -70,7 +70,7 @@ pub enum JpgError {
 }
 
 impl std::fmt::Display for JpgError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    async fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             JpgError::Unsupported(what) => write!(f, "jpg: unsupported: {what}"),
             JpgError::Malformed(what) => write!(f, "jpg: malformed: {what}"),
@@ -91,7 +91,7 @@ const ZIGZAG_TO_NATURAL: [usize; 64] = [
 //#region Idct
 /// 📐 Separable 1D IDCT-8 (ITU T.81 A.3.3), applied row-then-column for the
 /// 2D block transform — O(N^2) per axis instead of the O(N^4) direct sum.
-fn idct_1d(input: &[f64; 8]) -> [f64; 8] {
+async fn idct_1d(input: &[f64; 8]) -> [f64; 8] {
     let mut out = [0f64; 8];
     for x in 0..8 {
         let mut sum = 0f64;
@@ -105,7 +105,7 @@ fn idct_1d(input: &[f64; 8]) -> [f64; 8] {
 }
 
 /// 📐 Separable 1D forward DCT-8 — mirror of `idct_1d`, used by the encoder.
-fn fdct_1d(input: &[f64; 8]) -> [f64; 8] {
+async fn fdct_1d(input: &[f64; 8]) -> [f64; 8] {
     let mut out = [0f64; 8];
     for u in 0..8 {
         let cu = if u == 0 { std::f64::consts::FRAC_1_SQRT_2 } else { 1.0 };
@@ -118,7 +118,7 @@ fn fdct_1d(input: &[f64; 8]) -> [f64; 8] {
     out
 }
 
-fn idct_8x8(block: &[f64; 64]) -> [f64; 64] {
+async fn idct_8x8(block: &[f64; 64]) -> [f64; 64] {
     let mut tmp = [0f64; 64];
     for r in 0..8 {
         let mut row = [0f64; 8];
@@ -139,7 +139,7 @@ fn idct_8x8(block: &[f64; 64]) -> [f64; 64] {
     out
 }
 
-fn fdct_8x8(block: &[f64; 64]) -> [f64; 64] {
+async fn fdct_8x8(block: &[f64; 64]) -> [f64; 64] {
     let mut tmp = [0f64; 64];
     for c in 0..8 {
         let mut col = [0f64; 8];
@@ -175,7 +175,7 @@ struct HuffTable {
 /// order, incrementing within a length and left-shifting on length change —
 /// same "canonical" spirit as deflate's Huffman but JPEG's table layout
 /// (flat bits[16] counts + values[]) is its own format, not reused from deflate.
-fn build_huffman(bits: &[u8; 16], values: &[u8]) -> Result<HuffTable, JpgError> {
+async fn build_huffman(bits: &[u8; 16], values: &[u8]) -> Result<HuffTable, JpgError> {
     let mut sizes: Vec<u8> = Vec::new();
     for (l, &count) in bits.iter().enumerate() {
         for _ in 0..count {
@@ -218,10 +218,10 @@ struct BitWriter {
     nbits: u32,
 }
 impl BitWriter {
-    fn new() -> Self {
+    async fn new() -> Self {
         Self { bytes: Vec::new(), acc: 0, nbits: 0 }
     }
-    fn put_bits(&mut self, value: u16, len: u8) {
+    async fn put_bits(&mut self, value: u16, len: u8) {
         if len == 0 {
             return;
         }
@@ -236,7 +236,7 @@ impl BitWriter {
             }
         }
     }
-    fn flush(&mut self) {
+    async fn flush(&mut self) {
         if self.nbits > 0 {
             let pad = 8 - self.nbits;
             let byte = ((self.acc << pad) & 0xFF) as u8;
@@ -261,10 +261,10 @@ struct BitReader<'a> {
     nbits: u32,
 }
 impl<'a> BitReader<'a> {
-    fn new(data: &'a [u8], pos: usize) -> Self {
+    async fn new(data: &'a [u8], pos: usize) -> Self {
         Self { data, pos, acc: 0, nbits: 0 }
     }
-    fn next_byte(&mut self) -> Option<u8> {
+    async fn next_byte(&mut self) -> Option<u8> {
         if self.pos >= self.data.len() {
             return None;
         }
@@ -280,7 +280,7 @@ impl<'a> BitReader<'a> {
         self.pos += 1;
         Some(b)
     }
-    fn read_bit(&mut self) -> Result<u8, JpgError> {
+    async fn read_bit(&mut self) -> Result<u8, JpgError> {
         if self.nbits == 0 {
             match self.next_byte() {
                 Some(b) => {
@@ -293,14 +293,14 @@ impl<'a> BitReader<'a> {
         self.nbits -= 1;
         Ok(((self.acc >> self.nbits) & 1) as u8)
     }
-    fn read_bits(&mut self, n: u8) -> Result<u16, JpgError> {
+    async fn read_bits(&mut self, n: u8) -> Result<u16, JpgError> {
         let mut v = 0u16;
         for _ in 0..n {
             v = (v << 1) | self.read_bit()? as u16;
         }
         Ok(v)
     }
-    fn decode_symbol(&mut self, table: &HuffTable) -> Result<u8, JpgError> {
+    async fn decode_symbol(&mut self, table: &HuffTable) -> Result<u8, JpgError> {
         let mut code: u16 = 0;
         for len in 1..=table.max_len {
             code = (code << 1) | self.read_bit()? as u16;
@@ -312,7 +312,7 @@ impl<'a> BitReader<'a> {
     }
     /// 🔁 Byte-align and consume one `RSTn` marker at a restart boundary;
     /// also resets the DC predictors (caller's responsibility) per T.81 F.2.2.5.
-    fn skip_restart_marker(&mut self) -> Result<(), JpgError> {
+    async fn skip_restart_marker(&mut self) -> Result<(), JpgError> {
         self.nbits = 0;
         self.acc = 0;
         if self.pos + 1 < self.data.len() && self.data[self.pos] == 0xFF && (0xD0..=0xD7).contains(&self.data[self.pos + 1]) {
@@ -326,7 +326,7 @@ impl<'a> BitReader<'a> {
 
 /// ➕ Sign-extends a JPEG-encoded magnitude/sign pair (T.81 F.12): values
 /// below `2^(size-1)` are negative, encoded as `value - (2^size - 1)`.
-fn extend_sign(value: u16, size: u8) -> i32 {
+async fn extend_sign(value: u16, size: u8) -> i32 {
     if size == 0 {
         return 0;
     }
@@ -339,7 +339,7 @@ fn extend_sign(value: u16, size: u8) -> i32 {
     }
 }
 
-fn size_of(mut v: i32) -> u8 {
+async fn size_of(mut v: i32) -> u8 {
     if v < 0 {
         v = -v;
     }
@@ -357,7 +357,7 @@ fn size_of(mut v: i32) -> u8 {
 /// difference from the running per-component predictor, AC via run-length +
 /// size Huffman symbols with ZRL (0xF0) for 16-zero runs and EOB (0x00) once
 /// the remainder is all zero.
-fn encode_block(bw: &mut BitWriter, coeffs: &[i32; 64], dc_pred: &mut i32, dc_table: &HuffTable, ac_table: &HuffTable) -> Result<(), JpgError> {
+async fn encode_block(bw: &mut BitWriter, coeffs: &[i32; 64], dc_pred: &mut i32, dc_table: &HuffTable, ac_table: &HuffTable) -> Result<(), JpgError> {
     let diff = coeffs[0] - *dc_pred;
     *dc_pred = coeffs[0];
     let sz = size_of(diff);
@@ -394,7 +394,7 @@ fn encode_block(bw: &mut BitWriter, coeffs: &[i32; 64], dc_pred: &mut i32, dc_ta
 }
 
 /// 🧱 Decodes one 8x8 block into zigzag-order quantized coefficients.
-fn decode_block(br: &mut BitReader<'_>, dc_pred: &mut i32, dc_table: &HuffTable, ac_table: &HuffTable) -> Result<[i32; 64], JpgError> {
+async fn decode_block(br: &mut BitReader<'_>, dc_pred: &mut i32, dc_table: &HuffTable, ac_table: &HuffTable) -> Result<[i32; 64], JpgError> {
     let mut out = [0i32; 64];
     let sz = br.decode_symbol(dc_table)?;
     let bits = if sz > 0 { br.read_bits(sz)? } else { 0 };
@@ -437,7 +437,7 @@ const STD_CHROMA_Q: [i32; 64] = [
 ];
 
 /// 📈 IJG-standard quality→scale mapping applied to the Annex K base tables.
-fn scale_quality(base: &[i32; 64], quality: i32) -> [i32; 64] {
+async fn scale_quality(base: &[i32; 64], quality: i32) -> [i32; 64] {
     let quality = quality.clamp(1, 100);
     let scale = if quality < 50 { 5000 / quality } else { 200 - quality * 2 };
     let mut out = [0i32; 64];
@@ -450,7 +450,7 @@ fn scale_quality(base: &[i32; 64], quality: i32) -> [i32; 64] {
 /// 🔀 Reindexes a natural-order table into zigzag order — DQT stores entries
 /// in the same scan order the entropy coder emits, so `table[z]` lines up
 /// directly with a zigzag-order coefficient at position `z`.
-fn quant_zigzag(natural: &[i32; 64]) -> [i32; 64] {
+async fn quant_zigzag(natural: &[i32; 64]) -> [i32; 64] {
     let mut out = [0i32; 64];
     for z in 0..64 {
         out[z] = natural[ZIGZAG_TO_NATURAL[z]];
@@ -466,15 +466,15 @@ fn quant_zigzag(natural: &[i32; 64]) -> [i32; 64] {
 /// doesn't depend on matching the spec's tables byte-for-byte, only on
 /// internal consistency between what's written and what's parsed.
 const DC_LUMA_BITS: [u8; 16] = [0, 1, 5, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0];
-fn dc_luma_values() -> Vec<u8> {
+async fn dc_luma_values() -> Vec<u8> {
     (0..=11).collect()
 }
 const DC_CHROMA_BITS: [u8; 16] = [0, 3, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0];
-fn dc_chroma_values() -> Vec<u8> {
+async fn dc_chroma_values() -> Vec<u8> {
     (0..=11).collect()
 }
 const AC_LUMA_BITS: [u8; 16] = [0, 2, 1, 3, 3, 2, 4, 3, 5, 5, 4, 4, 0, 0, 1, 0x7d];
-fn ac_luma_values() -> Vec<u8> {
+async fn ac_luma_values() -> Vec<u8> {
     vec![
         0x01, 0x02, 0x03, 0x00, 0x04, 0x11, 0x05, 0x12, 0x21, 0x31, 0x41, 0x06, 0x13, 0x51, 0x61, 0x07, 0x22, 0x71, 0x14, 0x32, 0x81, 0x91, 0xa1, 0x08, 0x23, 0x42, 0xb1, 0xc1, 0x15, 0x52, 0xd1, 0xf0, 0x24, 0x33, 0x62, 0x72, 0x82, 0x09, 0x0a, 0x16,
         0x17, 0x18, 0x19, 0x1a, 0x25, 0x26, 0x27, 0x28, 0x29, 0x2a, 0x34, 0x35, 0x36, 0x37, 0x38, 0x39, 0x3a, 0x43, 0x44, 0x45, 0x46, 0x47, 0x48, 0x49, 0x4a, 0x53, 0x54, 0x55, 0x56, 0x57, 0x58, 0x59, 0x5a, 0x63, 0x64, 0x65, 0x66, 0x67, 0x68, 0x69,
@@ -484,7 +484,7 @@ fn ac_luma_values() -> Vec<u8> {
     ]
 }
 const AC_CHROMA_BITS: [u8; 16] = [0, 2, 1, 2, 4, 4, 3, 4, 7, 5, 4, 4, 0, 1, 2, 0x77];
-fn ac_chroma_values() -> Vec<u8> {
+async fn ac_chroma_values() -> Vec<u8> {
     vec![
         0x00, 0x01, 0x02, 0x03, 0x11, 0x04, 0x05, 0x21, 0x31, 0x06, 0x12, 0x41, 0x51, 0x07, 0x61, 0x71, 0x13, 0x22, 0x32, 0x81, 0x08, 0x14, 0x42, 0x91, 0xa1, 0xb1, 0xc1, 0x09, 0x23, 0x33, 0x52, 0xf0, 0x15, 0x62, 0x72, 0xd1, 0x0a, 0x16, 0x24, 0x34,
         0xe1, 0x25, 0xf1, 0x17, 0x18, 0x19, 0x1a, 0x26, 0x27, 0x28, 0x29, 0x2a, 0x35, 0x36, 0x37, 0x38, 0x39, 0x3a, 0x43, 0x44, 0x45, 0x46, 0x47, 0x48, 0x49, 0x4a, 0x53, 0x54, 0x55, 0x56, 0x57, 0x58, 0x59, 0x5a, 0x63, 0x64, 0x65, 0x66, 0x67, 0x68,
@@ -497,7 +497,7 @@ fn ac_chroma_values() -> Vec<u8> {
 
 //#region ColorConvert
 /// 🎨 ITU-R BT.601 RGB→YCbCr.
-fn rgb_to_ycbcr(r: u8, g: u8, b: u8) -> (f64, f64, f64) {
+async fn rgb_to_ycbcr(r: u8, g: u8, b: u8) -> (f64, f64, f64) {
     let (r, g, b) = (r as f64, g as f64, b as f64);
     let y = 0.299 * r + 0.587 * g + 0.114 * b;
     let cb = -0.168736 * r - 0.331264 * g + 0.5 * b + 128.0;
@@ -505,7 +505,7 @@ fn rgb_to_ycbcr(r: u8, g: u8, b: u8) -> (f64, f64, f64) {
     (y, cb, cr)
 }
 /// 🎨 ITU-R BT.601 YCbCr→RGB, clamped to `0..=255`.
-fn ycbcr_to_rgb(y: f64, cb: f64, cr: f64) -> (u8, u8, u8) {
+async fn ycbcr_to_rgb(y: f64, cb: f64, cr: f64) -> (u8, u8, u8) {
     let (cb, cr) = (cb - 128.0, cr - 128.0);
     let r = y + 1.402 * cr;
     let g = y - 0.344136 * cb - 0.714136 * cr;
@@ -517,7 +517,7 @@ fn ycbcr_to_rgb(y: f64, cb: f64, cr: f64) -> (u8, u8, u8) {
 //#region Encode
 /// 🧩 Downsamples a full-res plane by box-averaging `fx`×`fy` pixel blocks —
 /// used to build the (subsampled) chroma planes at 4:2:0/4:2:2 from 4:4:4 source.
-fn box_downsample(src: &[f64], sw: usize, sh: usize, fx: usize, fy: usize) -> (Vec<f64>, usize, usize) {
+async fn box_downsample(src: &[f64], sw: usize, sh: usize, fx: usize, fy: usize) -> (Vec<f64>, usize, usize) {
     let dw = sw / fx;
     let dh = sh / fy;
     let mut out = vec![0f64; dw * dh];
@@ -537,7 +537,7 @@ fn box_downsample(src: &[f64], sw: usize, sh: usize, fx: usize, fy: usize) -> (V
 
 /// 🏷️ Builds a real `APP0`/`JFIF\0` segment (ITU-T T.871 §) from `snap.jfif_*`, including an
 /// embedded thumbnail when present.
-fn encode_jfif_app0(snap: &JpgSnapshot) -> Vec<u8> {
+async fn encode_jfif_app0(snap: &JpgSnapshot) -> Vec<u8> {
     let thumb = snap.jfif_thumbnail.as_ref();
     let (tw, th, tdata): (u8, u8, &[u8]) = match thumb {
         Some(t) => (t.width, t.height, &t.rgb_data),
@@ -570,7 +570,7 @@ fn encode_jfif_app0(snap: &JpgSnapshot) -> Vec<u8> {
 /// RETENTION of a decoded file's actual tables, not necessarily what a subsequent re-encode
 /// emits) — `restart_interval` is retained but this encoder never emits `DRI`/restart markers
 /// (documented deviation, `## deviations`).
-pub fn encode_jpg(snap: &JpgSnapshot) -> Result<Vec<u8>, JpgError> {
+pub async fn encode_jpg(snap: &JpgSnapshot) -> Result<Vec<u8>, JpgError> {
     if snap.width == 0 || snap.height == 0 {
         return Err(JpgError::Malformed("empty image".into()));
     }
@@ -726,7 +726,7 @@ pub fn encode_jpg(snap: &JpgSnapshot) -> Result<Vec<u8>, JpgError> {
     Ok(out)
 }
 
-fn write_dht(out: &mut Vec<u8>, class: u8, id: u8, bits: &[u8; 16], values: &[u8]) {
+async fn write_dht(out: &mut Vec<u8>, class: u8, id: u8, bits: &[u8; 16], values: &[u8]) {
     out.push(0xFF);
     out.push(0xC4);
     let len = 2 + 1 + 16 + values.len();
@@ -744,7 +744,7 @@ fn write_dht(out: &mut Vec<u8>, class: u8, id: u8, bits: &[u8; 16], values: &[u8
 /// x/y density + thumbnail dims + optional embedded RGB thumbnail). `None` if the identifier
 /// doesn't match — a non-JFIF APP0 (e.g. a bare Exif/other APP0) is retained verbatim in
 /// `other_segments` instead by the caller.
-fn parse_jfif_app0(seg: &[u8]) -> Option<(JfifVersion, JfifDensityUnits, u16, u16, Option<JfifThumbnail>)> {
+async fn parse_jfif_app0(seg: &[u8]) -> Option<(JfifVersion, JfifDensityUnits, u16, u16, Option<JfifThumbnail>)> {
     if seg.len() < 14 || &seg[0..5] != b"JFIF\0" {
         return None;
     }
@@ -763,7 +763,7 @@ type JfifVersion = (u8, u8);
 /// 📥 Decodes baseline sequential JPEG (SOF0 only) into an RGBA raster.
 /// Any other SOFn marker (progressive/extended/lossless/arithmetic) is a
 /// typed `JpgError::Unsupported` naming the exact variant — never decoded.
-pub fn decode_jpg(data: &[u8]) -> Result<JpgSnapshot, JpgError> {
+pub async fn decode_jpg(data: &[u8]) -> Result<JpgSnapshot, JpgError> {
     if data.len() < 4 || data[0] != 0xFF || data[1] != 0xD8 {
         return Err(JpgError::Malformed("missing SOI".into()));
     }
@@ -990,12 +990,12 @@ pub fn decode_jpg(data: &[u8]) -> Result<JpgSnapshot, JpgError> {
     }
 }
 
-fn read_u16(data: &[u8], at: usize) -> Result<usize, JpgError> {
+async fn read_u16(data: &[u8], at: usize) -> Result<usize, JpgError> {
     let hi = *data.get(at).ok_or_else(|| JpgError::Malformed("marker length truncated".into()))?;
     let lo = *data.get(at + 1).ok_or_else(|| JpgError::Malformed("marker length truncated".into()))?;
     Ok(((hi as usize) << 8) | lo as usize)
 }
-fn slice_at(data: &[u8], at: usize, len: usize) -> Result<&[u8], JpgError> {
+async fn slice_at(data: &[u8], at: usize, len: usize) -> Result<&[u8], JpgError> {
     data.get(at..at + len).ok_or_else(|| JpgError::Malformed("segment out of bounds".into()))
 }
 
@@ -1003,7 +1003,7 @@ fn slice_at(data: &[u8], at: usize, len: usize) -> Result<&[u8], JpgError> {
 /// chroma upsampling for subsampled components; grayscale skips color
 /// conversion entirely) into RGBA.
 #[allow(clippy::too_many_arguments)]
-fn decode_scan(data: &[u8], start: usize, frame: &JpgFrameHeader, scan_tabs: &[(u8, u8)], quant: &HashMap<u8, [i32; 64]>, dc_tables: &HashMap<u8, HuffTable>, ac_tables: &HashMap<u8, HuffTable>, restart_interval: u16) -> Result<Vec<u8>, JpgError> {
+async fn decode_scan(data: &[u8], start: usize, frame: &JpgFrameHeader, scan_tabs: &[(u8, u8)], quant: &HashMap<u8, [i32; 64]>, dc_tables: &HashMap<u8, HuffTable>, ac_tables: &HashMap<u8, HuffTable>, restart_interval: u16) -> Result<Vec<u8>, JpgError> {
     let hmax = frame.components.iter().map(|c| c.h_sampling).max().unwrap_or(1).max(1) as usize;
     let vmax = frame.components.iter().map(|c| c.v_sampling).max().unwrap_or(1).max(1) as usize;
     let mcu_w = 8 * hmax;
@@ -1105,7 +1105,7 @@ mod tests {
     use super::*;
     use crate::artifacts::jpg::schema::demo_jpg_snapshot;
 
-    fn gradient_image(w: u32, h: u32) -> Vec<u8> {
+    async fn gradient_image(w: u32, h: u32) -> Vec<u8> {
         let mut out = vec![0u8; (w * h * 4) as usize];
         for y in 0..h {
             for x in 0..w {
@@ -1119,7 +1119,7 @@ mod tests {
         out
     }
 
-    fn checkerboard_image(w: u32, h: u32) -> Vec<u8> {
+    async fn checkerboard_image(w: u32, h: u32) -> Vec<u8> {
         let mut out = vec![0u8; (w * h * 4) as usize];
         for y in 0..h {
             for x in 0..w {
@@ -1135,7 +1135,7 @@ mod tests {
         out
     }
 
-    fn mae(a: &[u8], b: &[u8]) -> f64 {
+    async fn mae(a: &[u8], b: &[u8]) -> f64 {
         assert_eq!(a.len(), b.len());
         let mut sum = 0f64;
         let mut n = 0usize;
@@ -1149,7 +1149,7 @@ mod tests {
     }
 
     #[test]
-    fn idct_fdct_is_identity() {
+    async fn idct_fdct_is_identity() {
         let mut block = [0f64; 64];
         for (i, v) in block.iter_mut().enumerate() {
             *v = ((i * 37 % 255) as f64) - 128.0;
@@ -1161,7 +1161,7 @@ mod tests {
     }
 
     #[test]
-    fn huffman_round_trips_all_dc_luma_symbols() {
+    async fn huffman_round_trips_all_dc_luma_symbols() {
         let table = build_huffman(&DC_LUMA_BITS, &dc_luma_values()).unwrap();
         let mut bw = BitWriter::new();
         for v in 0u8..=11 {
@@ -1176,7 +1176,7 @@ mod tests {
     }
 
     #[test]
-    fn single_block_round_trips_through_huffman() {
+    async fn single_block_round_trips_through_huffman() {
         let dc_table = build_huffman(&DC_LUMA_BITS, &dc_luma_values()).unwrap();
         let ac_table = build_huffman(&AC_LUMA_BITS, &ac_luma_values()).unwrap();
         let mut zz = [0i32; 64];
@@ -1199,7 +1199,7 @@ mod tests {
     /// every block; asserts mean-absolute-pixel-error stays well under a
     /// visually-lossless budget of 10/255.
     #[test]
-    fn gradient_round_trip_under_mae_threshold() {
+    async fn gradient_round_trip_under_mae_threshold() {
         let (w, h) = (48u32, 40u32);
         let img = gradient_image(w, h);
         let snap = JpgSnapshot { schema: STDIO_JPG_DOCUMENT_SCHEMA.into(), width: w, height: h, pixels: img.clone(), ..JpgSnapshot::default() };
@@ -1217,7 +1217,7 @@ mod tests {
     /// 🖼️ Checkerboard: high-frequency content, harder for quantization to
     /// preserve than a gradient — same bar (MAE < 10/255).
     #[test]
-    fn checkerboard_round_trip_under_mae_threshold() {
+    async fn checkerboard_round_trip_under_mae_threshold() {
         let (w, h) = (32u32, 32u32);
         let img = checkerboard_image(w, h);
         let snap = JpgSnapshot { schema: STDIO_JPG_DOCUMENT_SCHEMA.into(), width: w, height: h, pixels: img.clone(), ..JpgSnapshot::default() };
@@ -1229,7 +1229,7 @@ mod tests {
     }
 
     #[test]
-    fn solid_color_still_round_trips() {
+    async fn solid_color_still_round_trips() {
         let (w, h) = (16u32, 16u32);
         let mut img = vec![0u8; (w * h * 4) as usize];
         for px in img.chunks_mut(4) {
@@ -1248,7 +1248,7 @@ mod tests {
     /// 🚫 Progressive (SOF2) must be a typed `Unsupported` error, never
     /// silently decoded — hand-crafted minimal SOF2 segment.
     #[test]
-    fn progressive_sof2_is_explicit_unsupported() {
+    async fn progressive_sof2_is_explicit_unsupported() {
         let mut bytes = vec![0xFFu8, 0xD8];
         bytes.extend_from_slice(&[0xFF, 0xC2, 0x00, 0x0B, 0x08, 0x00, 0x08, 0x00, 0x08, 0x01, 0x01, 0x11, 0x00]);
         bytes.extend_from_slice(&[0xFF, 0xD9]);
@@ -1257,7 +1257,7 @@ mod tests {
     }
 
     #[test]
-    fn non_jpeg_input_is_malformed_not_panic() {
+    async fn non_jpeg_input_is_malformed_not_panic() {
         let result = decode_jpg(&[0x00, 0x01, 0x02, 0x03]);
         assert!(matches!(result, Err(JpgError::Malformed(_))));
     }
@@ -1281,7 +1281,7 @@ mod tests {
         /// `recognize`/`walk_protocol` laws below (a parse failure here fails fast with a clearer
         /// message).
         #[test]
-        fn committed_facet_files_parse() {
+        async fn committed_facet_files_parse() {
             for (label, text) in [("snapshot grammar", snapshot::text::COMPONENT_GRAMMAR_SEMIO), ("mutations grammar", mutations::text::COMPONENT_GRAMMAR_SEMIO), ("diff grammar", diff::text::COMPONENT_GRAMMAR_SEMIO)] {
                 let grammar = dsl::parse_grammar(text).unwrap_or_else(|e| panic!("{label}: parse_grammar failed: {e:?}"));
                 assert_eq!(grammar.dialect, dsl::SemioDialect::Grammar, "{label}: expected grammar dialect");
@@ -1297,7 +1297,7 @@ mod tests {
         /// output for the demo snapshot — same preamble-stripped body reconstruction
         /// `m5_handcrafted_grammar_conformance`'s own `dsl_body_from_fixture` uses.
         #[test]
-        fn grammar_conformance_law() {
+        async fn grammar_conformance_law() {
             let grammar = dsl::parse_grammar(snapshot::text::COMPONENT_GRAMMAR_SEMIO).expect("parse snapshot grammar");
             let recognizer = dsl::Recognizer::compile(&grammar);
             let text = store::ArtifactDsl::print_dsl(&demo_jpg_snapshot());
@@ -1309,7 +1309,7 @@ mod tests {
         /// ✅️ `ops_grammar_conformance_law`: the mutations grammar recognizes real `print_op`
         /// output for every `JpgMutation` variant (`mutations::demo_mutation_cases()`).
         #[test]
-        fn ops_grammar_conformance_law() {
+        async fn ops_grammar_conformance_law() {
             let grammar = dsl::parse_grammar(mutations::text::COMPONENT_GRAMMAR_SEMIO).expect("parse mutations grammar");
             let recognizer = dsl::Recognizer::compile(&grammar);
             for mutation in mutations::demo_mutation_cases() {
@@ -1322,7 +1322,7 @@ mod tests {
         /// for every representative `JpgDiff` (`diff::demo_diff_cases()`), incl. the empty diff and
         /// every tri-state/`JpgFrameChange`/collection-triple shape.
         #[test]
-        fn diff_grammar_conformance_law() {
+        async fn diff_grammar_conformance_law() {
             let grammar = dsl::parse_grammar(diff::text::COMPONENT_GRAMMAR_SEMIO).expect("parse diff grammar");
             let recognizer = dsl::Recognizer::compile(&grammar);
             for d in diff::demo_diff_cases() {
@@ -1336,7 +1336,7 @@ mod tests {
         /// `m5_handcrafted_protocol_conformance` itself feeds `walk_protocol`), every demo
         /// mutation's `encode_op`, and every demo diff's `encode_diff`.
         #[test]
-        fn protocol_walk_law() {
+        async fn protocol_walk_law() {
             let pack_spec = dsl::parse_protocol(snapshot::binary::COMPONENT_PROTOCOL_SEMIO).expect("parse snapshot protocol");
             let packed = store::ArtifactPack::encode_pack(&demo_jpg_snapshot());
             let (_, inner) = store::semio_format::unwrap_binary(&packed).expect("unwrap semio envelope");
@@ -1380,7 +1380,7 @@ mod tests {
         /// dimension bytes on wire (SOF0 width/height) matching, rather than asserting the
         /// impossible byte-exact struct equality.
         #[test]
-        fn fixture_honesty_law() {
+        async fn fixture_honesty_law() {
             const FIXTURE_DSL: &str = include_str!("../📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio");
             const FIXTURE_PACK: &[u8] = include_bytes!("../📚️examples/🎬️demo/🖼️assets/🎒️example.pack.semio");
 
@@ -1411,7 +1411,7 @@ pub mod io_registry {
 
     static ENTRIES: OnceLock<Vec<ComposerEntry>> = OnceLock::new();
 
-    pub fn entries() -> &'static [ComposerEntry] {
+    pub async fn entries() -> &'static [ComposerEntry] {
         ENTRIES.get_or_init(|| vec![composer_entry_of::<JpgRawAnyComposer>(), composer_entry_of::<JpgBaselineComposer>()]).as_slice()
     }
 }

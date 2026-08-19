@@ -4,7 +4,7 @@ use crate::artifacts::remodel::diff::{RemodelDiff, RemodelMediaStreamList};
 use crate::artifacts::remodel::RemodelSnapshot;
 
 //#region 🔖️Diff
-pub fn diff(payload: &super::mutation::ChangeStreamSync, base: &RemodelSnapshot) -> protocol::MutationOutcome<RemodelDiff> {
+pub async fn diff(payload: &super::mutation::ChangeStreamSync, base: &RemodelSnapshot) -> protocol::MutationOutcome<RemodelDiff> {
     let Some(existing) = base.streams.iter().find(|stream| stream.id == payload.id) else {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Stream \"{}\" does not exist.", payload.id), [payload.id.clone()]);
     };

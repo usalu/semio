@@ -5,10 +5,10 @@
 //! plugin's txt target folder. Left as an honest stub producing this artifact's own real
 //! snapshot type, pending a real txt import/export implementation.
 use crate::artifacts::block5d::Block5dSnapshot;
-pub fn register() {}
-pub fn deserialize(_from: &semio_s_plugin_stdio::artifacts::txt::TxtSnapshot) -> Result<Block5dSnapshot, String> {
+pub async fn register() {}
+pub async fn deserialize(_from: &semio_s_plugin_stdio::artifacts::txt::TxtSnapshot) -> Result<Block5dSnapshot, String> {
     Err("txt import not yet implemented".into())
 }
-pub fn deserialize_bytes(_bytes: &[u8]) -> Result<Block5dSnapshot, String> {
+pub async fn deserialize_bytes(_bytes: &[u8]) -> Result<Block5dSnapshot, String> {
     Err("txt import not yet implemented".into())
 }

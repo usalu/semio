@@ -17,7 +17,7 @@ pub mod node_graph_edit {
         pub operations_json: String,
     }
 
-    pub fn handle(payload: &NodeGraphEdit, doc: &ArtifactView<'_, ProgramSnapshot>, _cfg: &ConfigView<'_, ArchitectConfig>) -> Result<Emit<ProgramMutation, ArchitectConfigMutation>, Fault> {
+    pub async fn handle(payload: &NodeGraphEdit, doc: &ArtifactView<'_, ProgramSnapshot>, _cfg: &ConfigView<'_, ArchitectConfig>) -> Result<Emit<ProgramMutation, ArchitectConfigMutation>, Fault> {
         let program = doc.snapshot;
         let edit_operations: Vec<Value> = serde_json::from_str(&payload.operations_json).unwrap_or_default();
         let mut emitted = Vec::new();
@@ -68,7 +68,7 @@ pub mod node_graph_viewport {
         pub viewport_json: String,
     }
 
-    pub fn handle(payload: &NodeGraphViewport, _doc: &ArtifactView<'_, ProgramSnapshot>, cfg: &ConfigView<'_, ArchitectConfig>) -> Result<Emit<ProgramMutation, ArchitectConfigMutation>, Fault> {
+    pub async fn handle(payload: &NodeGraphViewport, _doc: &ArtifactView<'_, ProgramSnapshot>, cfg: &ConfigView<'_, ArchitectConfig>) -> Result<Emit<ProgramMutation, ArchitectConfigMutation>, Fault> {
         let Ok(camera) = serde_json::from_str::<GraphCamera>(&payload.viewport_json) else {
             return Ok(Emit::default());
         };

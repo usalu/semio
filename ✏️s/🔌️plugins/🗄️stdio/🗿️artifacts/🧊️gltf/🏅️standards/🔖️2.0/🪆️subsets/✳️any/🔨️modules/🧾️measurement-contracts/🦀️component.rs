@@ -72,10 +72,10 @@ pub struct GltfVec3 {
 }
 
 impl GltfVec3 {
-    pub(crate) fn new(v: [f64; 3]) -> Self {
+    pub(crate) async fn new(v: [f64; 3]) -> Self {
         Self { x: v[0], y: v[1], z: v[2] }
     }
-    pub(crate) fn array(self) -> [f64; 3] {
+    pub(crate) async fn array(self) -> [f64; 3] {
         [self.x, self.y, self.z]
     }
 }
@@ -241,8 +241,8 @@ pub struct GltfEntityAddress {
 pub(crate) trait GltfInferenceStage<Context> {
     type Output;
 
-    fn infer(context: &Context) -> Self::Output;
-    fn unavailable(diagnostic_ids: &[String]) -> Self::Output;
+    async fn infer(context: &Context) -> Self::Output;
+    async fn unavailable(diagnostic_ids: &[String]) -> Self::Output;
 }
 //#endregion 🧩️InferenceStage
 //#endregion 🧾️MeasurementContracts

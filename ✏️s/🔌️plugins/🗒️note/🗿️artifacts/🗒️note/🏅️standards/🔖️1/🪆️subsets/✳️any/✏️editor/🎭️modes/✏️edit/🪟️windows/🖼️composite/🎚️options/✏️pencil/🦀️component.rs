@@ -6,7 +6,7 @@ use crate::artifacts::note::NoteSnapshot;
 use semio_framework_plugin::WindowMeasure;
 
 //#region 🔖️Measure
-pub fn measure(document: &NoteSnapshot, labels: &NotePlayLabels) -> WindowMeasure {
+pub async fn measure(document: &NoteSnapshot, labels: &NotePlayLabels) -> WindowMeasure {
     WindowMeasure::Group {
         id: "note-utility-options-pencil".into(),
         label: labels.measure_pencil_width.into(),

@@ -24,19 +24,19 @@ pub struct En1997Inference {
 }
 
 impl protocol::Inference<En1997Snapshot> for En1997Inference {
-    fn infer(snapshot: &En1997Snapshot) -> Self {
+    async fn infer(snapshot: &En1997Snapshot) -> Self {
         Self { outline: En1997Outline::compute(snapshot) }
     }
 }
 
 impl protocol::InferenceSpec<En1997Snapshot> for En1997Inference {
-    fn inference_schema_id() -> &'static str {
+    async fn inference_schema_id() -> &'static str {
         "s.norm.en1997.inference"
     }
-    fn schema_version() -> u32 {
+    async fn schema_version() -> u32 {
         1
     }
-    fn fields() -> &'static [protocol::InferenceFieldSpec] {
+    async fn fields() -> &'static [protocol::InferenceFieldSpec] {
         &[protocol::InferenceFieldSpec { id: "s.norm.en1997.inference.outline", reads: &[] }]
     }
 }
@@ -52,7 +52,7 @@ impl ArtifactInferrer for crate::artifacts::en1997::standards::v1::subsets::any:
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.norm.en1997.inference`'s facet leaves into the OS-wide inference catalog — call once at
 /// plugin init, alongside `en1997_artifact_schema_descriptor`'s registration.
-pub fn en1997_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
+pub async fn en1997_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
     schema::ArtifactInferenceDescriptor {
         id: "s.norm.en1997.inference",
         inference: schema::FacetLeaves {
@@ -73,13 +73,13 @@ mod tests {
     use protocol::Inference;
 
     #[test]
-    fn inference_determinism_law() {
+    async fn inference_determinism_law() {
         let snapshot = En1997Snapshot::default();
         assert_eq!(En1997Inference::infer(&snapshot), En1997Inference::infer(&snapshot));
     }
 
     #[test]
-    fn inference_default_law() {
+    async fn inference_default_law() {
         assert_eq!(En1997Inference::infer(&En1997Snapshot::default()), En1997Inference::default());
     }
 }
@@ -95,7 +95,7 @@ use crate::document::{AnnexChoice, CheckReport};
 
 /// 📋️ Full EN 1997 check across bearing, sliding, settlement, pile axial (part 1), and ground investigation adequacy (part 2).
 #[allow(clippy::too_many_arguments, reason = "one argument per parameter the published clause formula itself names; bundling them into a struct would break the 1:1 reading against the standard")]
-pub fn check_full_geotechnical(
+pub async fn check_full_geotechnical(
     v_ed_kn: f64,
     h_ed_kn: f64,
     footing_area_m2: f64,
@@ -130,7 +130,7 @@ pub fn check_full_geotechnical(
     report
 }
 
-fn parse_design_approach(value: &str) -> DesignApproach {
+async fn parse_design_approach(value: &str) -> DesignApproach {
     match value.to_ascii_lowercase().as_str() {
         "da1geo" => DesignApproach::Da1Geo,
         "da2" => DesignApproach::Da2,
@@ -141,7 +141,7 @@ fn parse_design_approach(value: &str) -> DesignApproach {
 
 /// 🧮️ Headless per-document evaluation — the `NormFamily::evaluate` body for `En1997Family` (defined
 /// in the sibling `op` crate, which depends on this `engine` crate to call it).
-pub fn evaluate(document: &En1997Snapshot) -> CheckReport {
+pub async fn evaluate(document: &En1997Snapshot) -> CheckReport {
     check_full_geotechnical(
         document.v_ed_kn,
         document.h_ed_kn,
@@ -176,7 +176,7 @@ mod compliance_report_tests {
     use super::*;
 
     #[test]
-    fn full_geotechnical_worked_example() {
+    async fn full_geotechnical_worked_example() {
         let report = check_full_geotechnical(500.0, 80.0, 2.0, 30.0, 0.0, 18.0, 2.0, 1.5, 30_000.0, 0.3, DesignApproach::Da1Str, AnnexChoice::De, 25.0, 800.0, 0.7, 0.6, 80.0, 12.0, 2500.0, 0.28, 1, 8.0);
         assert_eq!(report.checks.len(), 5);
         assert!(report.checks[3].utilization < 1.0);
@@ -184,7 +184,7 @@ mod compliance_report_tests {
     }
 
     #[test]
-    fn evaluate_runs_all_parts() {
+    async fn evaluate_runs_all_parts() {
         let report = evaluate(&En1997Snapshot::default());
         assert_eq!(report.checks.len(), 5);
     }

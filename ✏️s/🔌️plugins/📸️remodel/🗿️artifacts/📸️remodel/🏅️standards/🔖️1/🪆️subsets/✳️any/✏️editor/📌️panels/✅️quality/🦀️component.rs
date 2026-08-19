@@ -11,13 +11,13 @@ pub const REMODEL_PLAY_BODY_QC: &str = "remodel.play.qc";
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
-pub fn definition() -> PanelTabDefinition {
+pub async fn definition() -> PanelTabDefinition {
     PanelTabDefinition { kind: PanelTabKind::App(REMODEL_PANEL_QC_ID.into()), label: LocalizedLabel::native("Quality", "Qualität"), group: PanelGroup::Settings, body_key: Some(REMODEL_PLAY_BODY_QC.into()), children: Vec::new() }
 }
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(scene: &RemodelSnapshot, labels: &RemodelLabels) -> UiNode {
+pub async fn render(scene: &RemodelSnapshot, labels: &RemodelLabels) -> UiNode {
     let Some(qc) = &scene.results.qc else {
         return ui_stack_vertical(vec![ui_text(labels.qc_none)]);
     };
@@ -54,7 +54,7 @@ mod tests {
     use crate::editor::remodel::testkit::{app, render as render_body};
 
     #[test]
-    fn a_document_without_a_report_renders_the_empty_state() {
+    async fn a_document_without_a_report_renders_the_empty_state() {
         let mut app = app();
         assert!(render_body(&mut app, REMODEL_PLAY_BODY_QC).contains("No quality report yet"));
     }

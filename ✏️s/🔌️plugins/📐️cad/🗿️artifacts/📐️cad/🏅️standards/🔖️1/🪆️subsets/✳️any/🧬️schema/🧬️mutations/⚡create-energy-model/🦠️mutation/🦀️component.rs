@@ -22,16 +22,16 @@ pub struct CreateEnergyModel {
 impl MutationKind<CadSnapshot, CadMutation> for CreateEnergyModel {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "create", entity: "energy-model", kind: "create-energy-model", record: "CreatedEnergyModel" };
 
-    fn diff(&self, base: &CadSnapshot) -> protocol::MutationOutcome<crate::artifacts::cad::diff::CadDiff> {
+    async fn diff(&self, base: &CadSnapshot) -> protocol::MutationOutcome<crate::artifacts::cad::diff::CadDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &CadSnapshot) -> Vec<CadMutation> {
+    async fn inverse(&self, base: &CadSnapshot) -> Vec<CadMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         format!("Create energy-model child {}", self.child_id)
     }
-    fn target(&self) -> Vec<String> {
+    async fn target(&self) -> Vec<String> {
         vec!["energy_model".to_string()]
     }
 }

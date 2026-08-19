@@ -60,18 +60,18 @@ pub enum AviMutation {
     },
 }
 
-fn stream_diff_for(stream_index: usize, inner: AviStreamDiff) -> AviDiff {
+async fn stream_diff_for(stream_index: usize, inner: AviStreamDiff) -> AviDiff {
     AviDiff { main_header: None, streams: Some(IndexedDiff { removed: vec![], modified: vec![IndexedModified { index: stream_index, diff: inner }], added: vec![] }), idx1_present: None, unknown_chunks: None }
 }
 
-fn chunk_diff_for(stream_index: usize, chunks: IndexedDiff<AviChunk, AviChunkDiff>) -> AviDiff {
+async fn chunk_diff_for(stream_index: usize, chunks: IndexedDiff<AviChunk, AviChunkDiff>) -> AviDiff {
     stream_diff_for(stream_index, AviStreamDiff { chunks: Some(chunks), ..AviStreamDiff::default() })
 }
 
 impl Mutation<AviSnapshot> for AviMutation {
     type Diff = AviDiff;
 
-    fn diff(&self, base: &AviSnapshot) -> protocol::MutationOutcome<Self::Diff> {
+    async fn diff(&self, base: &AviSnapshot) -> protocol::MutationOutcome<Self::Diff> {
         protocol::MutationOutcome::new(match self {
             AviMutation::NoMutation => AviDiff::default(),
             AviMutation::SetSnapshot { snapshot } => <AviDiff as protocol::command::DiffAlgebra<AviSnapshot>>::between(base, snapshot),
@@ -91,7 +91,7 @@ impl Mutation<AviSnapshot> for AviMutation {
         })
     }
 
-    fn inverse(&self, base: &AviSnapshot) -> Vec<Self> {
+    async fn inverse(&self, base: &AviSnapshot) -> Vec<Self> {
         match self {
             AviMutation::NoMutation => vec![AviMutation::NoMutation],
             AviMutation::SetSnapshot { .. } => vec![AviMutation::SetSnapshot { snapshot: base.clone() }],
@@ -129,7 +129,7 @@ impl Mutation<AviSnapshot> for AviMutation {
 }
 
 /// ▶️ Applies a mutation to `snapshot` in place, returning the diff.
-pub fn apply_avi_mutation(snapshot: &mut AviSnapshot, mutation: &AviMutation) -> protocol::MutationOutcome<AviDiff> {
+pub async fn apply_avi_mutation(snapshot: &mut AviSnapshot, mutation: &AviMutation) -> protocol::MutationOutcome<AviDiff> {
     let outcome = <AviMutation as Mutation<AviSnapshot>>::diff(mutation, snapshot);
     match protocol::MutationDiff::apply(outcome.diff(), snapshot) {
         Ok(next) => {
@@ -145,19 +145,19 @@ pub fn apply_avi_mutation(snapshot: &mut AviSnapshot, mutation: &AviMutation) ->
 /// 🎙️ Handcrafted `OpText`/`OpBinary` — plain `serde_json` round-trip (see mp4's identical
 /// module-doc rationale: f6-final-summary.md §4.4, no generic collection-diff `DslField` bridge).
 impl OpText for AviMutation {
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
+    async fn parse_op(line: &str) -> Result<Self, store::TextError> {
         serde_json::from_str(line).map_err(|e| store::TextError::new(e.to_string(), dsl::TextSpan::at(1, 1)))
     }
-    fn print_op(&self) -> String {
+    async fn print_op(&self) -> String {
         serde_json::to_string(self).unwrap_or_default()
     }
 }
 
 impl OpBinary for AviMutation {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         serde_json::to_vec(self).map_err(|e| protocol::ProtocolError::Io(e.to_string()))
     }
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         serde_json::from_slice(bytes).map_err(|e| protocol::ProtocolError::Io(e.to_string()))
     }
 }
@@ -171,7 +171,7 @@ mod tests {
     
     use protocol::MutationDiff;
 
-    fn base_snapshot() -> AviSnapshot {
+    async fn base_snapshot() -> AviSnapshot {
         AviSnapshot {
             schema: STDIO_AVI_DOCUMENT_SCHEMA.into(),
             main_header: AviMainHeader {
@@ -217,7 +217,7 @@ mod tests {
 
     /// 🧪️ mutation_diff_law + inverse_law, exercised across every real variant.
     #[test]
-    fn mutation_diff_law_and_inverse_law_hold_for_every_variant() {
+    async fn mutation_diff_law_and_inverse_law_hold_for_every_variant() {
         let base = base_snapshot();
         let variants = vec![
             AviMutation::SetMainHeader { main_header: AviMainHeader { width: 32, ..base.main_header.clone() } },
@@ -247,7 +247,7 @@ mod tests {
     }
 
     #[test]
-    fn remove_stream_then_insert_stream_round_trips() {
+    async fn remove_stream_then_insert_stream_round_trips() {
         let mut base = base_snapshot();
         base.streams.push(AviStream { strh: base.streams[0].strh.clone(), strf: base.streams[0].strf.clone(), chunks: vec![] });
         let m = AviMutation::RemoveStream { index: 0 };
@@ -261,7 +261,7 @@ mod tests {
     }
 
     #[test]
-    fn set_snapshot_still_works_as_a_full_replace() {
+    async fn set_snapshot_still_works_as_a_full_replace() {
         let base = base_snapshot();
         let mut next = base.clone();
         next.main_header.width = 999;
@@ -276,7 +276,7 @@ mod tests {
 
     /// 🧪️ op_text_binary_roundtrip_law
     #[test]
-    fn op_text_binary_roundtrip_law() {
+    async fn op_text_binary_roundtrip_law() {
         let base = base_snapshot();
         for m in [
             AviMutation::NoMutation,

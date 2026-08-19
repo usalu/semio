@@ -10,12 +10,12 @@ use crate::artifacts::en1997::En1997Snapshot;
 use store::PackError;
 
 /// 📦️ Encodes a `En1997Snapshot` to its binary pack form.
-pub fn encode(document: &En1997Snapshot) -> Vec<u8> {
+pub async fn encode(document: &En1997Snapshot) -> Vec<u8> {
     store::ArtifactPack::encode_pack(document)
 }
 
 /// 📖️ Decodes a `En1997Snapshot` from its binary pack form.
-pub fn decode(bytes: &[u8]) -> Result<En1997Snapshot, PackError> {
+pub async fn decode(bytes: &[u8]) -> Result<En1997Snapshot, PackError> {
     <En1997Snapshot as store::ArtifactPack>::decode_pack(bytes)
 }
 
@@ -25,7 +25,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn pack_round_trips_and_agrees_with_dsl() {
+    async fn pack_round_trips_and_agrees_with_dsl() {
         let document = En1997Snapshot::default();
         store::os_store::test_support::assert_dsl_pack_equivalence(&document);
         let bytes = encode(&document);

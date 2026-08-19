@@ -14,6 +14,6 @@ pub struct ToggleWindowRepresentation {
     pub visible: bool,
 }
 
-pub fn handle(payload: &ToggleWindowRepresentation, _doc: &ArtifactView<'_, Block3dSnapshot>, _cfg: &ConfigView<'_, Block3dConfig>) -> Result<Emit<Block3dMutation, Block3dConfigMutation>, Fault> {
+pub async fn handle(payload: &ToggleWindowRepresentation, _doc: &ArtifactView<'_, Block3dSnapshot>, _cfg: &ConfigView<'_, Block3dConfig>) -> Result<Emit<Block3dMutation, Block3dConfigMutation>, Fault> {
     Ok(Emit::config(vec![Block3dConfigMutation::ToggleWindowRepresentation { window_id: payload.window_id.clone(), representation_id: payload.representation_id.clone(), visible: payload.visible }]))
 }

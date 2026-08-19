@@ -16,23 +16,23 @@ pub struct CreateVortexKind {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn create_vortex_kind(vortex_kind: Block3dVortexKind) -> Block3dMutation {
+pub async fn create_vortex_kind(vortex_kind: Block3dVortexKind) -> Block3dMutation {
     Block3dMutation::CreateVortexKind(CreateVortexKind { vortex_kind })
 }
 
 impl protocol::MutationKind<Block3dSnapshot, Block3dMutation> for CreateVortexKind {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "create", entity: "vortex-kind", kind: "create-vortex-kind", record: "CreatedVortexKind" };
 
-    fn diff(&self, base: &Block3dSnapshot) -> protocol::MutationOutcome<Block3dDiff> {
+    async fn diff(&self, base: &Block3dSnapshot) -> protocol::MutationOutcome<Block3dDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &Block3dSnapshot) -> Vec<Block3dMutation> {
+    async fn inverse(&self, base: &Block3dSnapshot) -> Vec<Block3dMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         format!("Create vortex kind \"{}\"", self.vortex_kind.id)
     }
-    fn target(&self) -> Vec<String> {
+    async fn target(&self) -> Vec<String> {
         vec![self.vortex_kind.id.clone()]
     }
 }

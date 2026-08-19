@@ -78,7 +78,7 @@ crate::impl_norm_artifact_record!(En1994Snapshot, extension = "en1994", envelope
 //#endregion 🔖️HandcraftedArtifactCodecs
 
 impl Default for En1994Snapshot {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self {
             annex: AnnexChoice::De,
             m_ed_knm: 200.0,

@@ -22,12 +22,12 @@ use crate::artifacts::layout::schema::mutations::text::LayoutMutation;
 use protocol::OpBinary;
 
 /// 📦️ Encodes a `LayoutMutation` to its binary state-patch form.
-pub fn encode_op(operation: &LayoutMutation) -> Result<Vec<u8>, protocol::ProtocolError> {
+pub async fn encode_op(operation: &LayoutMutation) -> Result<Vec<u8>, protocol::ProtocolError> {
     operation.encode_op()
 }
 
 /// 📖️ Decodes a `LayoutMutation` from its binary state-patch form.
-pub fn decode_op(bytes: &[u8]) -> Result<LayoutMutation, protocol::ProtocolError> {
+pub async fn decode_op(bytes: &[u8]) -> Result<LayoutMutation, protocol::ProtocolError> {
     LayoutMutation::decode_op(bytes)
 }
 
@@ -39,7 +39,7 @@ mod tests {
     use crate::artifacts::layout::mutations::rename_layout;
 
     #[test]
-    fn op_binary_round_trips_and_agrees_with_text() {
+    async fn op_binary_round_trips_and_agrees_with_text() {
         let operation = LayoutMutation::RenameLayout(rename_layout::mutation::RenameLayout { new_name: "Renamed".into() });
         store::os_store::test_support::assert_op_text_binary_equivalence(&operation);
         let bytes = encode_op(&operation).expect("encode");
@@ -47,7 +47,7 @@ mod tests {
     }
 
     #[test]
-    fn document_binary_round_trips_a_store_with_applied_operations() {
+    async fn document_binary_round_trips_a_store_with_applied_operations() {
         use crate::artifacts::layout::LAYOUT_DOCUMENT_SCHEMA;
 
         let initial = crate::artifacts::layout::schema::default_document();

@@ -17,23 +17,23 @@ pub struct DuplicateBlocks {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn duplicate_blocks(source_ids: Vec<String>, blocks: Vec<crate::artifacts::note::NoteBlockNode>) -> NoteMutation {
+pub async fn duplicate_blocks(source_ids: Vec<String>, blocks: Vec<crate::artifacts::note::NoteBlockNode>) -> NoteMutation {
     NoteMutation::DuplicateBlocks(DuplicateBlocks { source_ids, blocks })
 }
 
 impl MutationKind<NoteSnapshot, NoteMutation> for DuplicateBlocks {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "duplicate", entity: "blocks", kind: "duplicate-blocks", record: "DuplicatedBlocks" };
 
-    fn diff(&self, base: &NoteSnapshot) -> protocol::MutationOutcome<NoteDiff> {
+    async fn diff(&self, base: &NoteSnapshot) -> protocol::MutationOutcome<NoteDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &NoteSnapshot) -> Vec<NoteMutation> {
+    async fn inverse(&self, base: &NoteSnapshot) -> Vec<NoteMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         format!("Duplicate {} blocks", self.source_ids.len())
     }
-    fn target(&self) -> Vec<String> {
+    async fn target(&self) -> Vec<String> {
         self.source_ids.clone()
     }
 }

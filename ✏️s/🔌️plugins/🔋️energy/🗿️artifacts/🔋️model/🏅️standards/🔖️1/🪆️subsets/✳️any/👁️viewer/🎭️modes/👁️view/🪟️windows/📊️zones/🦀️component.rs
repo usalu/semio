@@ -13,7 +13,7 @@ pub const BODY_KEY: &str = TableWindowKit::KIND_ID;
 
 //#region 🔖️Definition
 /// 🧱️ Stitched into the viewer manifest by `crate::viewer::model::create_energy_model_viewer`.
-pub fn definition() -> WindowKindDefinition {
+pub async fn definition() -> WindowKindDefinition {
     WindowKindDefinition { label: LocalizedLabel::native("Zones", "Zonen"), icon_id: "table-2".into(), ..TableWindowKit::window_kind() }
 }
 //#endregion 🔖️Definition
@@ -22,7 +22,7 @@ pub fn definition() -> WindowKindDefinition {
 /// 👁️ Pure `EnergyModelSnapshot -> UiNode` read: one row per `crate::model::Zone`, columns `id`/
 /// `name`/`volumeM3`/`multiplier`/`conditioned`/`partOfTotalFloorArea` — no run-output row, no
 /// command-driven cell edits (a viewer declares none).
-pub fn render(document: &EnergyModelSnapshot) -> UiNode {
+pub async fn render(document: &EnergyModelSnapshot) -> UiNode {
     let model = crate::artifacts::model::energy_model(document);
     let columns = vec!["id".to_string(), "name".to_string(), "volumeM3".to_string(), "multiplier".to_string(), "conditioned".to_string(), "partOfTotalFloorArea".to_string()];
     let rows = model
@@ -40,14 +40,14 @@ mod tests {
     use super::*;
 
     #[test]
-    fn definition_declares_a_table_window() {
+    async fn definition_declares_a_table_window() {
         let def = definition();
         assert_eq!(def.id, WINDOW_KIND_ID);
         assert_eq!(def.body_key, BODY_KEY);
     }
 
     #[test]
-    fn render_lists_one_row_per_zone() {
+    async fn render_lists_one_row_per_zone() {
         let document = EnergyModelSnapshot::default();
         let expected = crate::artifacts::model::energy_model(&document).zones.len();
         let UiNode::ComponentScene(node) = render(&document) else { panic!("expected ComponentScene") };

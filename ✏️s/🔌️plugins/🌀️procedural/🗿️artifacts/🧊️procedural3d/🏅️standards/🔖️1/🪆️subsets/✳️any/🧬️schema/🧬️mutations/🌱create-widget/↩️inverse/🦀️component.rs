@@ -7,6 +7,6 @@ use crate::artifacts::procedural3d::mutations::Procedural3dMutation;
 use crate::artifacts::procedural3d::{widget_id, Procedural3dSnapshot};
 
 /// ↩️ Undoing a create is deleting the same widget back out, by its own id.
-pub fn inverse(payload: &CreateWidget, _base: &Procedural3dSnapshot) -> Vec<Procedural3dMutation> {
+pub async fn inverse(payload: &CreateWidget, _base: &Procedural3dSnapshot) -> Vec<Procedural3dMutation> {
     vec![Procedural3dMutation::DeleteWidget(DeleteWidget { id: widget_id(&payload.widget).to_string() })]
 }

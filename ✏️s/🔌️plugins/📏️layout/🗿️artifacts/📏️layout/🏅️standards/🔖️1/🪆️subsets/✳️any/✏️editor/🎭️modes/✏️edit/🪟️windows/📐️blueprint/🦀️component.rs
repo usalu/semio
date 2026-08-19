@@ -16,7 +16,7 @@ pub const LAYOUT_PLAY_SURFACE_BLUEPRINT: &str = "layout.play.blueprint";
 //#region 🔖️Definition
 /// 🧱️ Stitched into the app manifest by `crate::editor::layout::create_layout_app`. `options.measures`
 /// stays empty: layout declares no config-derived chrome measures for this window.
-pub fn definition() -> WindowKindDefinition {
+pub async fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
         id: LAYOUT_PLAY_WINDOW_BLUEPRINT.into(),
         label: LocalizedLabel::native("Blueprint", "Entwurf"),
@@ -37,7 +37,7 @@ pub fn definition() -> WindowKindDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(engine: &mut crate::editor::layout::engine::scene::LayoutEngine, doc: &LayoutSnapshot, config: &LayoutConfig) -> UiNode {
+pub async fn render(engine: &mut crate::editor::layout::engine::scene::LayoutEngine, doc: &LayoutSnapshot, config: &LayoutConfig) -> UiNode {
     let camera = &config.camera;
     build_canvas_2d_scene(LAYOUT_PLAY_SURFACE_BLUEPRINT, LAYOUT_PLAY_APP_ID, Canvas2dScene { camera_x: camera.x, camera_y: camera.y, zoom: camera.zoom, layers_json: canvas_layers(engine, doc, config, true) })
 }
@@ -50,13 +50,13 @@ mod tests {
     use crate::editor::layout::testkit::{layout_app, render as render_body};
 
     #[test]
-    fn renders_blueprint_canvas_scene() {
+    async fn renders_blueprint_canvas_scene() {
         let mut app = layout_app();
         assert!(render_body(&mut app, LAYOUT_PLAY_BODY_BLUEPRINT).contains("canvas-2d"));
     }
 
     #[test]
-    fn blueprint_scene_has_page_background_and_guides() {
+    async fn blueprint_scene_has_page_background_and_guides() {
         // 🧷️ `layers_json` is a `String` field (`Canvas2dScene.layers_json`), so the render's own JSON
         // encoding escapes its embedded quotes — assert on the unquoted substrings that survive either
         // way rather than on an exact `"key":"value"` shape.
@@ -72,14 +72,14 @@ mod tests {
     }
 
     #[test]
-    fn inherited_frame_gets_dashed_stroke_in_blueprint() {
+    async fn inherited_frame_gets_dashed_stroke_in_blueprint() {
         let mut app = layout_app();
         let json = render_body(&mut app, LAYOUT_PLAY_BODY_BLUEPRINT);
         assert!(json.contains("dash") && json.contains("4.0") && json.contains("3.0"));
     }
 
     #[test]
-    fn definition_declares_the_canvas_2d_surface_and_body_key() {
+    async fn definition_declares_the_canvas_2d_surface_and_body_key() {
         let definition = definition();
         assert_eq!(definition.body_key, LAYOUT_PLAY_BODY_BLUEPRINT);
         assert!(matches!(definition.surface_kind, SurfaceKind::Canvas2d));

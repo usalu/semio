@@ -5,7 +5,7 @@ use crate::artifacts::layout::schema::diff::LayoutLinksDelta;
 use crate::artifacts::layout::{LayoutDiff, LayoutSnapshot};
 
 //#region 🗑️DeleteLink
-pub fn diff_delete_link(payload: &DeleteLink, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
+pub async fn diff_delete_link(payload: &DeleteLink, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
     if !base.links.iter().any(|link| link.id == payload.id) {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Link \"{}\" does not exist.", payload.id), [payload.id.clone()]);
     }

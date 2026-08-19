@@ -9,7 +9,7 @@ use serde_json::{json, Value};
 /// 🐢️ Classifies a batch of board events into the narrowest `UiDirtyScope` that covers all of them —
 /// `applyBoardEvents` fires on every select/drag/zoom, so getting this right is most of the
 /// perf-round-3 win. Unrecognized/empty event batches fall back to `Full` (safe default).
-fn puzzle2d_board_events_scope(events: &[Value]) -> UiDirtyScope {
+async fn puzzle2d_board_events_scope(events: &[Value]) -> UiDirtyScope {
     if events.is_empty() {
         return UiDirtyScope::None;
     }
@@ -65,7 +65,7 @@ fn puzzle2d_board_events_scope(events: &[Value]) -> UiDirtyScope {
     }
     UiDirtyScope::Partial { window_bodies: if window_bodies { panes } else { Vec::new() }, panel_bodies, utilities: false, tools: false, engagements, measures, labels: false }
 }
-pub fn apply_board_events_from_json(events_json: &str, envelope: &mut Puzzle2dScene) {
+pub async fn apply_board_events_from_json(events_json: &str, envelope: &mut Puzzle2dScene) {
     let Ok(events) = serde_json::from_str::<Vec<Value>>(events_json) else {
         return;
     };
@@ -150,7 +150,7 @@ pub fn apply_board_events_from_json(events_json: &str, envelope: &mut Puzzle2dSc
 /// `2d-overview`, …), which are a different id space used to key utilities/engagements/measures.
 pub const PUZZLE2D_WINDOW_BODY_KEYS: [&str; 3] = [overview::BODY_KEY, detail::BODY_KEY, selection::BODY_KEY];
 
-pub fn apply_board_events(ctx: &mut Puzzle2dActionCtx<'_>, args: Option<&Value>) {
+pub async fn apply_board_events(ctx: &mut Puzzle2dActionCtx<'_>, args: Option<&Value>) {
     let Some(events_json) = args.and_then(|value| value.get("eventsJson")).and_then(|value| value.as_str()) else {
         return;
     };

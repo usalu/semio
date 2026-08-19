@@ -12,16 +12,16 @@ pub struct DeleteBrep {}
 impl protocol::MutationKind<SemioObjectSnapshot, SemioObjectMutation> for DeleteBrep {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "delete", entity: "brep", kind: "delete-brep", record: "DeletedBrep" };
 
-    fn diff(&self, base: &SemioObjectSnapshot) -> protocol::MutationOutcome<<SemioObjectMutation as protocol::Mutation<SemioObjectSnapshot>>::Diff> {
+    async fn diff(&self, base: &SemioObjectSnapshot) -> protocol::MutationOutcome<<SemioObjectMutation as protocol::Mutation<SemioObjectSnapshot>>::Diff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &SemioObjectSnapshot) -> Vec<SemioObjectMutation> {
+    async fn inverse(&self, base: &SemioObjectSnapshot) -> Vec<SemioObjectMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         "Delete brep child".to_string()
     }
-    fn target(&self) -> Vec<String> {
+    async fn target(&self) -> Vec<String> {
         vec!["brep".to_string()]
     }
 }

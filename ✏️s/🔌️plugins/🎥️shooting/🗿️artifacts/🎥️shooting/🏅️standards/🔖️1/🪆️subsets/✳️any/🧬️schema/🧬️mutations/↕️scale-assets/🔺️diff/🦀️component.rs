@@ -7,7 +7,7 @@ use crate::artifacts::shooting::ShootingSnapshot;
 use crate::artifacts::shooting::diff::{ShootingAssetPatchEntry, ShootingAssetsDelta, ShootingDiff};
 use crate::artifacts::shooting::{shooting_asset_scale, ShootingAssetPatch};
 
-pub fn diff(payload: &ScaleAssets, base: &ShootingSnapshot) -> protocol::MutationOutcome<ShootingDiff> {
+pub async fn diff(payload: &ScaleAssets, base: &ShootingSnapshot) -> protocol::MutationOutcome<ShootingDiff> {
     if [payload.sx, payload.sy, payload.sz].iter().any(|value| !value.is_finite() || *value <= 0.0) {
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("Scale factors must be finite and positive, got ({}, {}, {}).", payload.sx, payload.sy, payload.sz), payload.asset_ids.clone());
     }

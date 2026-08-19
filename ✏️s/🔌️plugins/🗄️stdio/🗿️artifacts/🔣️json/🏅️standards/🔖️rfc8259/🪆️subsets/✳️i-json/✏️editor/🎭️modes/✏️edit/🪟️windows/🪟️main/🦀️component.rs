@@ -16,7 +16,7 @@ pub const BODY_KEY: &str = TreeWindowKit::KIND_ID;
 
 //#region 🔖️Definition
 /// 🧱️ Stitched into the editor manifest by `crate::editor::json_i_json::create_json_i_json_editor`.
-pub fn definition() -> WindowKindDefinition {
+pub async fn definition() -> WindowKindDefinition {
     WindowKindDefinition { label: LocalizedLabel::native("Tree", "Baum"), icon_id: "list-tree".into(), ..TreeWindowKit::editable_window_kind() }
 }
 //#endregion 🔖️Definition
@@ -25,11 +25,11 @@ pub fn definition() -> WindowKindDefinition {
 /// 🧭️ `k=<key>` for an object member, `i=<index>` for an array element, joined by `/` — the
 /// window's own node-id encoding of a `JsonPath`, independent of (and simpler than) the artifact's
 /// own `JsonPathSegment` wire shape. Root is the empty string.
-pub fn encode_path_id(segments: &[String]) -> String {
+pub async fn encode_path_id(segments: &[String]) -> String {
     segments.join("/")
 }
 
-fn scalar_label(value: &JsonValue) -> Option<String> {
+async fn scalar_label(value: &JsonValue) -> Option<String> {
     match value {
         JsonValue::Null => Some("null".to_string()),
         JsonValue::Bool { value } => Some(value.to_string()),
@@ -44,11 +44,11 @@ fn scalar_label(value: &JsonValue) -> Option<String> {
 /// ✏️ Real `JsonSnapshot -> UiNode`: a labeled tree mirroring the document's own shape exactly —
 /// object members keep source order, array elements keep position, scalars show their literal
 /// value inline.
-pub fn render(document: &JsonSnapshot) -> UiNode {
+pub async fn render(document: &JsonSnapshot) -> UiNode {
     TreeWindowKit::render(&TreeView { roots: vec![node_view(Vec::new(), None, &document.value)] })
 }
 
-fn node_view(path: Vec<String>, key_label: Option<&str>, value: &JsonValue) -> TreeNodeView {
+async fn node_view(path: Vec<String>, key_label: Option<&str>, value: &JsonValue) -> TreeNodeView {
     let id = encode_path_id(&path);
     let prefix = key_label.map(|key| format!("{key}: ")).unwrap_or_default();
     match value {
@@ -86,14 +86,14 @@ mod tests {
     use super::*;
 
     #[test]
-    fn definition_declares_a_tree_window() {
+    async fn definition_declares_a_tree_window() {
         let def = definition();
         assert_eq!(def.id, WINDOW_KIND_ID);
         assert_eq!(def.body_key, BODY_KEY);
     }
 
     #[test]
-    fn render_walks_object_and_array_members() {
+    async fn render_walks_object_and_array_members() {
         let document = JsonSnapshot { schema: "stdio.json".into(), value: JsonValue::Object { members: vec![JsonMember { key: "a".into(), value: JsonValue::Array { items: vec![JsonValue::Bool { value: true }] } }] } };
         let UiNode::Tree(node) = render(&document) else { panic!("expected Tree") };
         let root = &node.sections[0].items[0];

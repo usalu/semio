@@ -16,7 +16,7 @@ pub const CAD_PLAY_BODY_DOCUMENT: &str = "cad.play.document";
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
-pub fn definition() -> PanelTabDefinition {
+pub async fn definition() -> PanelTabDefinition {
     PanelTabDefinition {
         kind: PanelTabKind::App(FRAMEWORK_PANEL_TAB_ARTIFACT_ID.into()),
         label: LocalizedLabel::native(FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL, "Dokument"),
@@ -28,7 +28,7 @@ pub fn definition() -> PanelTabDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub(crate) fn object_tree_item(id_suffix: &str, object: &CadObject, labels: &CadLabels) -> UiTreeItemNode {
+pub(crate) async fn object_tree_item(id_suffix: &str, object: &CadObject, labels: &CadLabels) -> UiTreeItemNode {
     let primitive_items: Vec<UiTreeItemNode> = object
         .primitives
         .iter()
@@ -77,7 +77,7 @@ pub(crate) fn object_tree_item(id_suffix: &str, object: &CadObject, labels: &Cad
     item
 }
 
-pub fn reference_tree_item(model_definition_id: &str, reference: &CadReference, labels: &CadLabels) -> UiTreeItemNode {
+pub async fn reference_tree_item(model_definition_id: &str, reference: &CadReference, labels: &CadLabels) -> UiTreeItemNode {
     let mut item = cad_tree_item(
         format!("cad-reference:{model_definition_id}:{}", reference.id),
         Label::data(reference.id.clone()),
@@ -123,7 +123,7 @@ pub fn reference_tree_item(model_definition_id: &str, reference: &CadReference, 
 }
 
 /// 🗂️ The `document.references_by_model_definition_id` lookup repeated once per pane in `build_document_tree`.
-pub fn references_for<'a>(document: &'a CadSnapshot, model_definition_id: &str) -> &'a [CadReference] {
+pub async fn references_for<'a>(document: &'a CadSnapshot, model_definition_id: &str) -> &'a [CadReference] {
     document.references_by_model_definition_id.get(model_definition_id).map_or(&[][..], |rows| rows.as_slice())
 }
 
@@ -133,14 +133,14 @@ pub fn references_for<'a>(document: &'a CadSnapshot, model_definition_id: &str) 
 /// `edit::instance_is_component_hovered`'s doc comment). This tree stays un-bound to
 /// `interaction_domain` for that reason (its item ids, `"cad-object:…"`/`"cad-reference:…"`/
 /// `"cad-node:…"`, are UI-namespaced composites, not the domain's raw ids anyway).
-pub fn document_tree_selected_ids(_document: &CadSnapshot, runtime: &CadPlayRuntime) -> Option<Vec<String>> {
+pub async fn document_tree_selected_ids(_document: &CadSnapshot, runtime: &CadPlayRuntime) -> Option<Vec<String>> {
     if let (Some(model_definition_id), Some(reference_id)) = (runtime.selected_reference_model_definition_id.as_deref(), runtime.selected_reference_id.as_deref()) {
         return Some(vec![format!("cad-reference:{model_definition_id}:{reference_id}")]);
     }
     None
 }
 
-pub fn document_tree_highlighted_ids(document: &CadSnapshot, runtime: &CadPlayRuntime) -> Option<Vec<String>> {
+pub async fn document_tree_highlighted_ids(document: &CadSnapshot, runtime: &CadPlayRuntime) -> Option<Vec<String>> {
     let hovered = runtime.hovered_reference_id.as_deref()?;
     for pane in CadPaneId::all() {
         let model_definition_id = pane.model_definition_id();
@@ -152,16 +152,16 @@ pub fn document_tree_highlighted_ids(document: &CadSnapshot, runtime: &CadPlayRu
 }
 
 /// 🌳️ One pane's object section: namespaced by `id_suffix`, always expanded.
-pub(crate) fn document_pane_section(label: impl Into<Label>, id_suffix: &str, objects: &[CadObject], labels: &CadLabels) -> (String, Option<Label>, bool, Vec<UiTreeItemNode>) {
+pub(crate) async fn document_pane_section(label: impl Into<Label>, id_suffix: &str, objects: &[CadObject], labels: &CadLabels) -> (String, Option<Label>, bool, Vec<UiTreeItemNode>) {
     (format!("cad-play-document.{id_suffix}"), Some(label.into()), true, objects.iter().map(|object| object_tree_item(id_suffix, object, labels)).collect())
 }
 
 /// 🌳️ One pane's references section: collapsed by default, "(none)"-placeholder when empty.
-pub fn artifact_references_section(document: &CadSnapshot, model_definition_id: &str, labels: &CadLabels) -> (String, Option<Label>, bool, Vec<UiTreeItemNode>) {
+pub async fn artifact_references_section(document: &CadSnapshot, model_definition_id: &str, labels: &CadLabels) -> (String, Option<Label>, bool, Vec<UiTreeItemNode>) {
     (format!("cad-play-document.references.{model_definition_id}"), Some(labels.references.into()), false, references_for(document, model_definition_id).iter().map(|reference| reference_tree_item(model_definition_id, reference, labels)).collect())
 }
 
-pub fn build_document_tree(envelope: &CadPlayView, labels: &CadLabels) -> UiNode {
+pub async fn build_document_tree(envelope: &CadPlayView, labels: &CadLabels) -> UiNode {
     let node_items: Vec<UiTreeItemNode> =
         envelope.document.nodes.iter().map(|node| cad_tree_item(format!("cad-node:{}", node.id), Label::data(node.label.clone()), Some("git-branch"), cad_action("setNodeSelection", Some(json!({ "nodeIds": [node.id] }))))).collect();
 
@@ -213,7 +213,7 @@ mod tests {
     use semio_framework_plugin::{ArtifactView, PluginApp, UiNode, ViewModel};
 
     #[test]
-    fn document_lists_nodes() {
+    async fn document_lists_nodes() {
         // ⚠️ Ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` wave 3: pane object sections
         // render empty at this boundary now (documented gap, see `build_document_tree`'s own doc
         // comment) — `object_tree_item_shows_name_with_kind_as_secondary_label`/
@@ -226,7 +226,7 @@ mod tests {
     }
 
     #[test]
-    fn object_tree_item_shows_name_with_kind_as_secondary_label() {
+    async fn object_tree_item_shows_name_with_kind_as_secondary_label() {
         let mut object = make_object_for_typology("building.building.beam", 0, CadPaneId::Shape);
         object.label = "U2".into();
         let labels = cad_labels(&CadConfig::default());
@@ -241,7 +241,7 @@ mod tests {
     }
 
     #[test]
-    fn object_tree_item_includes_primitive_children() {
+    async fn object_tree_item_includes_primitive_children() {
         let mut object = make_object_for_typology("spatial.shape.primitive.box", 0, CadPaneId::Shape);
         object.primitives = vec![CadPrimitiveSlot { slot: "solid".into(), primitive_id: "solid-1".into(), kind: "solid".into() }];
         let labels = cad_labels(&CadConfig::default());
@@ -251,7 +251,7 @@ mod tests {
     }
 
     #[test]
-    fn document_tree_selected_and_highlighted_ids_are_none_without_a_reference_selection() {
+    async fn document_tree_selected_and_highlighted_ids_are_none_without_a_reference_selection() {
         // 🕹️ FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM (26/08/14): mesh object selection/hover is
         // framework-owned now, unreachable at this render boundary — only reference-overlay
         // selection/hover still resolves here (see `document_tree_selected_ids`'s doc comment).
@@ -262,7 +262,7 @@ mod tests {
     }
 
     #[test]
-    fn document_tree_selected_ids_resolves_reference_selection() {
+    async fn document_tree_selected_ids_resolves_reference_selection() {
         let scene = forest_play_scene();
         let runtime = CadPlayRuntime { selected_reference_model_definition_id: Some(CAD_MODEL_DEFINITION_SHAPE.into()), selected_reference_id: Some("ref-concrete-forest".into()), ..CadPlayRuntime::default() };
         let selected = document_tree_selected_ids(&scene, &runtime).expect("selected");
@@ -270,7 +270,7 @@ mod tests {
     }
 
     #[test]
-    fn cad_labels_translate_document_tree_panes_in_german() {
+    async fn cad_labels_translate_document_tree_panes_in_german() {
         let app = CadPlayApp::default();
         let scene = default_document();
         let history = empty_history();

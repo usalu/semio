@@ -7,7 +7,7 @@ use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Shell
-fn add_vector_field(spec: &FormsSnapshot, question_id: &str, key: &str) -> Option<FormMutation> {
+async fn add_vector_field(spec: &FormsSnapshot, question_id: &str, key: &str) -> Option<FormMutation> {
     let location = crate::artifacts::forms::schema::locate_question(spec, question_id)?;
     if location.question.fields.iter().flatten().any(|entry| entry.key == key) {
         return None;
@@ -30,7 +30,7 @@ pub struct AddVectorField {
     pub field_key: String,
 }
 
-pub fn handle(payload: &AddVectorField, doc: &ArtifactView<'_, FormsSnapshot>, _cfg: &ConfigView<'_, FormsConfig>) -> Result<Emit<FormMutation, FormsConfigMutation>, Fault> {
+pub async fn handle(payload: &AddVectorField, doc: &ArtifactView<'_, FormsSnapshot>, _cfg: &ConfigView<'_, FormsConfig>) -> Result<Emit<FormMutation, FormsConfigMutation>, Fault> {
     match add_vector_field(doc.snapshot, &payload.question_id, &payload.field_key) {
         Some(operation) => Ok(Emit::mutations(vec![operation])),
         None => Ok(Emit::default()),

@@ -39,7 +39,7 @@ pub enum ZipMutation {
 //#endregion 🔖️Model
 
 //#region 🔖️Algebra
-pub fn apply_zip_mutation(snapshot: &mut ZipSnapshot, mutation: &ZipMutation) -> protocol::MutationOutcome<ZipDiff> {
+pub async fn apply_zip_mutation(snapshot: &mut ZipSnapshot, mutation: &ZipMutation) -> protocol::MutationOutcome<ZipDiff> {
     let outcome = mutation.diff(snapshot);
     match protocol::MutationDiff::apply(outcome.diff(), snapshot) {
         Ok(next) => {
@@ -53,7 +53,7 @@ pub fn apply_zip_mutation(snapshot: &mut ZipSnapshot, mutation: &ZipMutation) ->
 impl Mutation<ZipSnapshot> for ZipMutation {
     type Diff = ZipDiff;
 
-    fn diff(&self, base: &ZipSnapshot) -> protocol::MutationOutcome<Self::Diff> {
+    async fn diff(&self, base: &ZipSnapshot) -> protocol::MutationOutcome<Self::Diff> {
         protocol::MutationOutcome::new(match self {
             Self::NoMutation => ZipDiff::default(),
             Self::SetSnapshot { snapshot } => diff::diff_set_snapshot(base, snapshot),
@@ -65,7 +65,7 @@ impl Mutation<ZipSnapshot> for ZipMutation {
         })
     }
 
-    fn inverse(&self, base: &ZipSnapshot) -> Vec<Self> {
+    async fn inverse(&self, base: &ZipSnapshot) -> Vec<Self> {
         match self {
             Self::NoMutation => vec![Self::NoMutation],
             Self::SetSnapshot { .. } => vec![Self::SetSnapshot { snapshot: base.clone() }],
@@ -81,7 +81,7 @@ impl Mutation<ZipSnapshot> for ZipMutation {
 
 //#region 🔖️Codecs
 impl protocol::OpText for ZipMutation {
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
+    async fn parse_op(line: &str) -> Result<Self, store::TextError> {
         let variants = <Self as dsl::DslVariants>::variants();
         for (keyword, spec) in &variants {
             if line == keyword || line.starts_with(&format!("{keyword} ")) {
@@ -92,7 +92,7 @@ impl protocol::OpText for ZipMutation {
         Err(dsl::__rt::field_error(format!("unknown ZIP operation '{line}'")))
     }
 
-    fn print_op(&self) -> String {
+    async fn print_op(&self) -> String {
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
         let variants = <Self as dsl::DslVariants>::variants();
         let spec = variants.iter().find(|(name, _)| name == &keyword).map(|(_, spec)| *spec).expect("ZIP operation spec");
@@ -101,28 +101,28 @@ impl protocol::OpText for ZipMutation {
 }
 
 impl protocol::OpBinary for ZipMutation {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         dsl::variants_binary::encode_op(self)
     }
 
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         dsl::variants_binary::decode_op(bytes)
     }
 }
 //#endregion 🔖️Codecs
 
 #[cfg(test)]
-pub(crate) fn entry(name: &str, data: &[u8]) -> ZipEntry {
+pub(crate) async fn entry(name: &str, data: &[u8]) -> ZipEntry {
     ZipEntry { name: name.into(), data: data.to_vec() }
 }
 
 #[cfg(test)]
-pub(crate) fn base_snapshot() -> ZipSnapshot {
+pub(crate) async fn base_snapshot() -> ZipSnapshot {
     ZipSnapshot { schema: "stdio.zip".into(), entries: vec![entry("a.txt", b"aaa"), entry("b.txt", b"bbb")], comment: "archive".into() }
 }
 
 #[cfg(test)]
-pub(crate) fn demo_mutation_cases() -> Vec<ZipMutation> {
+pub(crate) async fn demo_mutation_cases() -> Vec<ZipMutation> {
     vec![
         ZipMutation::NoMutation,
         ZipMutation::SetSnapshot { snapshot: base_snapshot() },
@@ -140,7 +140,7 @@ mod tests {
     use protocol::{MutationDiff as _, OpBinary as _, OpText as _};
 
     #[test]
-    fn logical_mutations_diff_and_codecs_round_trip() {
+    async fn logical_mutations_diff_and_codecs_round_trip() {
         let base = base_snapshot();
         for mutation in demo_mutation_cases() {
             let text = mutation.print_op();

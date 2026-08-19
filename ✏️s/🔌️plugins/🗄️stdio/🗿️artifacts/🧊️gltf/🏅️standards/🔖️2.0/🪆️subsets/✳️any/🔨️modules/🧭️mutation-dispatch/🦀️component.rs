@@ -23,7 +23,7 @@ pub enum GltfMutationPhase {
 }
 
 impl GltfMutationPhase {
-    pub(crate) fn binary_tag(self) -> u8 {
+    pub(crate) async fn binary_tag(self) -> u8 {
         match self {
             Self::Mutation => 1,
             Self::Diff => 2,
@@ -31,7 +31,7 @@ impl GltfMutationPhase {
         }
     }
 
-    pub(crate) fn from_binary_tag(tag: u8) -> Result<Self, GltfMutationRegistryError> {
+    pub(crate) async fn from_binary_tag(tag: u8) -> Result<Self, GltfMutationRegistryError> {
         match tag {
             1 => Ok(Self::Mutation),
             2 => Ok(Self::Diff),
@@ -74,13 +74,13 @@ pub enum GltfMutationRegistryError {
 }
 
 impl From<GltfMutationLeafError> for GltfMutationRegistryError {
-    fn from(error: GltfMutationLeafError) -> Self {
+    async fn from(error: GltfMutationLeafError) -> Self {
         Self::Leaf(error)
     }
 }
 
 impl std::fmt::Display for GltfMutationRegistryError {
-    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    async fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::DuplicateCommand(id) => write!(formatter, "duplicate GLTF mutation command {id}"),
             Self::UnknownCommand(id) => write!(formatter, "unknown GLTF mutation command {id}"),
@@ -100,7 +100,7 @@ pub struct GltfMutationRegistry {
 }
 
 impl GltfMutationRegistry {
-    pub fn from_descriptors(descriptors: impl IntoIterator<Item = GltfMutationLeafDescriptor>) -> Result<Self, GltfMutationRegistryError> {
+    pub async fn from_descriptors(descriptors: impl IntoIterator<Item = GltfMutationLeafDescriptor>) -> Result<Self, GltfMutationRegistryError> {
         let mut registered = BTreeMap::new();
         for descriptor in descriptors {
             if descriptor.command_id.is_empty() || descriptor.command_id.len() > GLTF_MUTATION_MAX_COMMAND_ID_BYTES || descriptor.version == 0 {
@@ -113,7 +113,7 @@ impl GltfMutationRegistry {
         Ok(Self { descriptors: registered })
     }
 
-    pub fn descriptor(&self, command_id: &str, version: u32) -> Result<&GltfMutationLeafDescriptor, GltfMutationRegistryError> {
+    pub async fn descriptor(&self, command_id: &str, version: u32) -> Result<&GltfMutationLeafDescriptor, GltfMutationRegistryError> {
         let descriptor = self.descriptors.get(command_id).ok_or_else(|| GltfMutationRegistryError::UnknownCommand(command_id.into()))?;
         if descriptor.version != version {
             return Err(GltfMutationRegistryError::StaleVersion { command_id: command_id.into(), expected: descriptor.version, actual: version });
@@ -121,7 +121,7 @@ impl GltfMutationRegistry {
         Ok(descriptor)
     }
 
-    pub fn validate_envelope(&self, envelope: &GltfMutationEnvelope) -> Result<(), GltfMutationRegistryError> {
+    pub async fn validate_envelope(&self, envelope: &GltfMutationEnvelope) -> Result<(), GltfMutationRegistryError> {
         if envelope.command_id.is_empty() || envelope.command_id.len() > GLTF_MUTATION_MAX_COMMAND_ID_BYTES {
             return Err(GltfMutationRegistryError::BudgetExceeded("command id"));
         }
@@ -132,7 +132,7 @@ impl GltfMutationRegistry {
         Ok(())
     }
 
-    fn validate_plan(&self, plan: &GltfMutationLeafPlan) -> Result<(), GltfMutationRegistryError> {
+    async fn validate_plan(&self, plan: &GltfMutationLeafPlan) -> Result<(), GltfMutationRegistryError> {
         if plan.diff_payload.len() > GLTF_MUTATION_MAX_PAYLOAD_BYTES || plan.inverse_payload.len() > GLTF_MUTATION_MAX_PAYLOAD_BYTES {
             return Err(GltfMutationRegistryError::BudgetExceeded("planned payload"));
         }
@@ -142,7 +142,7 @@ impl GltfMutationRegistry {
         Ok(())
     }
 
-    fn plan(&self, envelope: &GltfMutationEnvelope, base: &GltfSnapshot) -> Result<GltfMutationLeafPlan, GltfMutationRegistryError> {
+    async fn plan(&self, envelope: &GltfMutationEnvelope, base: &GltfSnapshot) -> Result<GltfMutationLeafPlan, GltfMutationRegistryError> {
         self.validate_envelope(envelope)?;
         let descriptor = self.descriptor(&envelope.command_id, envelope.version)?;
         let plan = match envelope.phase {
@@ -154,7 +154,7 @@ impl GltfMutationRegistry {
         Ok(plan)
     }
 
-    fn apply(&self, envelope: &GltfDiffEnvelope, base: &GltfSnapshot) -> Result<GltfSnapshot, GltfMutationRegistryError> {
+    async fn apply(&self, envelope: &GltfDiffEnvelope, base: &GltfSnapshot) -> Result<GltfSnapshot, GltfMutationRegistryError> {
         let input = GltfMutationEnvelope { command_id: envelope.command_id.clone(), version: envelope.version, phase: envelope.phase, payload: envelope.payload.clone() };
         self.validate_envelope(&input)?;
         if envelope.touched_paths.len() > GLTF_MUTATION_MAX_TOUCHED_PATHS || envelope.touched_paths.iter().any(|path| path.len() > GLTF_MUTATION_MAX_TOUCHED_PATH_BYTES) {
@@ -172,12 +172,12 @@ impl GltfMutationRegistry {
         Ok(application.snapshot)
     }
 
-    pub fn command_ids(&self) -> impl Iterator<Item = &'static str> + '_ {
+    pub async fn command_ids(&self) -> impl Iterator<Item = &'static str> + '_ {
         self.descriptors.keys().copied()
     }
 }
 
-fn gltf_mutation_registry() -> Result<&'static GltfMutationRegistry, GltfMutationRegistryError> {
+async fn gltf_mutation_registry() -> Result<&'static GltfMutationRegistry, GltfMutationRegistryError> {
     static REGISTRY: OnceLock<Result<GltfMutationRegistry, GltfMutationRegistryError>> = OnceLock::new();
     match REGISTRY.get_or_init(|| GltfMutationRegistry::from_descriptors(gltf_mutation_leaf_descriptors().iter().copied())) {
         Ok(registry) => Ok(registry),
@@ -185,7 +185,7 @@ fn gltf_mutation_registry() -> Result<&'static GltfMutationRegistry, GltfMutatio
     }
 }
 
-pub fn registered_gltf_mutation_command_ids() -> Result<Vec<&'static str>, GltfMutationRegistryError> {
+pub async fn registered_gltf_mutation_command_ids() -> Result<Vec<&'static str>, GltfMutationRegistryError> {
     Ok(gltf_mutation_registry()?.command_ids().collect())
 }
 //#endregion 🔖️Registry
@@ -196,17 +196,17 @@ pub fn registered_gltf_mutation_command_ids() -> Result<Vec<&'static str>, GltfM
 pub struct GltfMutation(GltfMutationEnvelope);
 
 impl GltfMutation {
-    pub fn new(command_id: impl Into<String>, version: u32, payload: Vec<u8>) -> Result<Self, GltfMutationRegistryError> {
+    pub async fn new(command_id: impl Into<String>, version: u32, payload: Vec<u8>) -> Result<Self, GltfMutationRegistryError> {
         let envelope = GltfMutationEnvelope { command_id: command_id.into(), version, phase: GltfMutationPhase::Mutation, payload };
         gltf_mutation_registry()?.validate_envelope(&envelope)?;
         Ok(Self(envelope))
     }
 
-    pub fn envelope(&self) -> &GltfMutationEnvelope {
+    pub async fn envelope(&self) -> &GltfMutationEnvelope {
         &self.0
     }
 
-    pub(crate) fn from_transport(envelope: GltfMutationEnvelope) -> Result<Self, GltfMutationRegistryError> {
+    pub(crate) async fn from_transport(envelope: GltfMutationEnvelope) -> Result<Self, GltfMutationRegistryError> {
         if envelope.phase == GltfMutationPhase::Diff {
             return Err(GltfMutationRegistryError::InvalidPhase { command_id: envelope.command_id, phase: envelope.phase });
         }
@@ -215,7 +215,7 @@ impl GltfMutation {
     }
 }
 
-pub(crate) fn validate_gltf_mutation_envelope(envelope: &GltfMutationEnvelope) -> Result<(), GltfMutationRegistryError> {
+pub(crate) async fn validate_gltf_mutation_envelope(envelope: &GltfMutationEnvelope) -> Result<(), GltfMutationRegistryError> {
     gltf_mutation_registry()?.validate_envelope(envelope)
 }
 
@@ -228,7 +228,7 @@ pub struct GltfMutationDiff {
 
 impl GltfMutationDiff {
     /// 🧭️ Applies only descriptors that validate the entire typed diff envelope.
-    pub fn try_apply(&self, base: &GltfSnapshot) -> Result<GltfSnapshot, GltfMutationRegistryError> {
+    pub async fn try_apply(&self, base: &GltfSnapshot) -> Result<GltfSnapshot, GltfMutationRegistryError> {
         if self.envelopes.len() > GLTF_MUTATION_MAX_DIFF_ENVELOPES {
             return Err(GltfMutationRegistryError::BudgetExceeded("diff envelopes"));
         }
@@ -238,14 +238,14 @@ impl GltfMutationDiff {
 }
 
 impl MutationDiff<GltfSnapshot> for GltfMutationDiff {
-    fn apply(&self, base: &GltfSnapshot) -> protocol::MutationApplyResult<GltfSnapshot> {
+    async fn apply(&self, base: &GltfSnapshot) -> protocol::MutationApplyResult<GltfSnapshot> {
         self.try_apply(base).map_err(|error| {
             let target = self.envelopes.first().map(|envelope| envelope.command_id.clone()).into_iter();
             MutationApplyError::new("gltf.mutation.apply-rejected", error.to_string()).at(target)
         })
     }
 
-    fn absorb(&mut self, other: Self) {
+    async fn absorb(&mut self, other: Self) {
         self.envelopes.extend(other.envelopes);
     }
 }
@@ -253,7 +253,7 @@ impl MutationDiff<GltfSnapshot> for GltfMutationDiff {
 impl Mutation<GltfSnapshot> for GltfMutation {
     type Diff = GltfMutationDiff;
 
-    fn diff(&self, base: &GltfSnapshot) -> MutationOutcome<Self::Diff> {
+    async fn diff(&self, base: &GltfSnapshot) -> MutationOutcome<Self::Diff> {
         match gltf_mutation_registry().and_then(|registry| registry.plan(&self.0, base)) {
             Ok(plan) => {
                 let phase = if self.0.phase == GltfMutationPhase::Mutation { GltfMutationPhase::Diff } else { GltfMutationPhase::Inverse };
@@ -263,7 +263,7 @@ impl Mutation<GltfSnapshot> for GltfMutation {
         }
     }
 
-    fn inverse(&self, base: &GltfSnapshot) -> Vec<Self> {
+    async fn inverse(&self, base: &GltfSnapshot) -> Vec<Self> {
         if self.0.phase != GltfMutationPhase::Mutation {
             return Vec::new();
         }
@@ -284,18 +284,18 @@ mod tests {
     use crate::artifacts::gltf::schema::mutations::change_material_alpha_mode::{mutation, DESCRIPTOR};
     use crate::artifacts::gltf::schema::snapshot::GltfAlphaMode;
 
-    fn base() -> GltfSnapshot {
+    async fn base() -> GltfSnapshot {
         let mut snapshot = GltfSnapshot::default();
         snapshot.document.materials.push(Default::default());
         snapshot
     }
 
-    fn payload() -> Vec<u8> {
+    async fn payload() -> Vec<u8> {
         serde_json::to_vec(&mutation::GltfChangeMaterialAlphaModePayload { material: 0, alpha_mode: GltfAlphaMode::Mask }).expect("canonical alpha-mode payload")
     }
 
     #[test]
-    fn registry_rejects_duplicate_unknown_and_stale_descriptors() {
+    async fn registry_rejects_duplicate_unknown_and_stale_descriptors() {
         assert!(matches!(GltfMutationRegistry::from_descriptors([DESCRIPTOR, DESCRIPTOR]), Err(GltfMutationRegistryError::DuplicateCommand(_))));
         let registry = GltfMutationRegistry::from_descriptors([DESCRIPTOR]).expect("one descriptor");
         assert!(matches!(registry.descriptor("s.stdio.gltf.mutation.unknown.v1", 1), Err(GltfMutationRegistryError::UnknownCommand(_))));
@@ -303,7 +303,7 @@ mod tests {
     }
 
     #[test]
-    fn descriptor_plan_apply_and_inverse_validate_stale_base_and_paths() {
+    async fn descriptor_plan_apply_and_inverse_validate_stale_base_and_paths() {
         let registry = GltfMutationRegistry::from_descriptors([DESCRIPTOR]).expect("one descriptor");
         let before = base();
         let plan = registry.plan(&GltfMutationEnvelope { command_id: DESCRIPTOR.command_id.into(), version: DESCRIPTOR.version, phase: GltfMutationPhase::Mutation, payload: payload() }, &before).expect("forward plan");
@@ -325,7 +325,7 @@ mod tests {
     }
 
     #[test]
-    fn mutation_outcome_and_inverse_round_trip() {
+    async fn mutation_outcome_and_inverse_round_trip() {
         let before = base();
         let forward = GltfMutation::new(DESCRIPTOR.command_id, DESCRIPTOR.version, payload()).expect("registered mutation");
         let outcome = forward.diff(&before);

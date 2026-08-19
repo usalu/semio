@@ -17,16 +17,16 @@ pub struct BindRepresentation {
 impl protocol::MutationKind<SemioKitSnapshot, SemioKitMutation> for BindRepresentation {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "bind", entity: "representation", kind: "bind-representation", record: "BoundRepresentation" };
 
-    fn diff(&self, base: &SemioKitSnapshot) -> protocol::MutationOutcome<<SemioKitMutation as protocol::Mutation<SemioKitSnapshot>>::Diff> {
+    async fn diff(&self, base: &SemioKitSnapshot) -> protocol::MutationOutcome<<SemioKitMutation as protocol::Mutation<SemioKitSnapshot>>::Diff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &SemioKitSnapshot) -> Vec<SemioKitMutation> {
+    async fn inverse(&self, base: &SemioKitSnapshot) -> Vec<SemioKitMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         format!("Bind representation for {}", self.role)
     }
-    fn target(&self) -> Vec<String> {
+    async fn target(&self) -> Vec<String> {
         vec![self.role.clone()]
     }
 }

@@ -19,16 +19,16 @@ pub struct ReplaceFlowRequirement {
 }
 impl MutationKind<ProgramSnapshot, ProgramMutation> for ReplaceFlowRequirement {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "replace", entity: "flow-requirement", kind: "replace-flow-requirement", record: "ReplacedFlowRequirement" };
-    fn diff(&self, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
+    async fn diff(&self, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {
+    async fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         format!("Replace flow requirement \"{}\"", self.flow_requirement.header.name)
     }
-    fn target(&self) -> Vec<String> {
+    async fn target(&self) -> Vec<String> {
         vec![self.flow_requirement.header.id.0.clone()]
     }
 }

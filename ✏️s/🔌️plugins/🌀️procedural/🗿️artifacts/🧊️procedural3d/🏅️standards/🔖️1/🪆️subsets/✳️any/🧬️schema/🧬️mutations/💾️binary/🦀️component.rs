@@ -75,7 +75,7 @@ enum Procedural3dOperationDsl {
 //#region 🔖️HandcraftedOpCodecs
 /// ⚡️ P6 handcrafted OpText/OpBinary (derive no longer emits these traits).
 impl protocol::OpText for Procedural3dOperationDsl {
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
+    async fn parse_op(line: &str) -> Result<Self, store::TextError> {
         let variants = <Self as dsl::DslVariants>::variants();
         for (keyword, spec_fn) in &variants {
             let probe = format!("{} ", keyword);
@@ -90,7 +90,7 @@ impl protocol::OpText for Procedural3dOperationDsl {
         }
         Err(dsl::__rt::field_error(format!("unknown operation '{line}'")))
     }
-    fn print_op(&self) -> String {
+    async fn print_op(&self) -> String {
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
         let variants = <Self as dsl::DslVariants>::variants();
         let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
@@ -99,10 +99,10 @@ impl protocol::OpText for Procedural3dOperationDsl {
 }
 
 impl OpBinary for Procedural3dOperationDsl {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         dsl::variants_binary::encode_op(self)
     }
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         dsl::variants_binary::decode_op(bytes)
     }
 }
@@ -111,7 +111,7 @@ impl OpBinary for Procedural3dOperationDsl {
 
 
 
-fn procedural3d_operation_to_dsl(operation: &Procedural3dMutation) -> Procedural3dOperationDsl {
+async fn procedural3d_operation_to_dsl(operation: &Procedural3dMutation) -> Procedural3dOperationDsl {
     match operation {
         Procedural3dMutation::CreateWidget(CreateWidget { index, widget }) => Procedural3dOperationDsl::CreateWidget { index: *index, widget: Box::new(widget_to_dsl(widget)) },
         Procedural3dMutation::UpdateWidget(UpdateWidget { widget }) => Procedural3dOperationDsl::UpdateWidget { widget: Box::new(widget_to_dsl(widget)) },
@@ -132,7 +132,7 @@ fn procedural3d_operation_to_dsl(operation: &Procedural3dMutation) -> Procedural
     }
 }
 
-fn procedural3d_operation_from_dsl(operation: Procedural3dOperationDsl) -> Result<Procedural3dMutation, store::TextError> {
+async fn procedural3d_operation_from_dsl(operation: Procedural3dOperationDsl) -> Result<Procedural3dMutation, store::TextError> {
     Ok(match operation {
         Procedural3dOperationDsl::CreateWidget { index, widget } => Procedural3dMutation::CreateWidget(CreateWidget { index, widget: widget_from_dsl(*widget)? }),
         Procedural3dOperationDsl::UpdateWidget { widget } => Procedural3dMutation::UpdateWidget(UpdateWidget { widget: widget_from_dsl(*widget)? }),
@@ -153,23 +153,23 @@ fn procedural3d_operation_from_dsl(operation: Procedural3dOperationDsl) -> Resul
 /// ⚡️ `Procedural3dMutation`'s compact single-line op encoding — derive-engine grammar via
 /// `Procedural3dOperationDsl`; `parse_op`/`print_op` convert at the boundary.
 impl protocol::OpText for Procedural3dMutation {
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
+    async fn parse_op(line: &str) -> Result<Self, store::TextError> {
         let parsed = <Procedural3dOperationDsl as protocol::OpText>::parse_op(line)?;
         procedural3d_operation_from_dsl(parsed)
     }
 
-    fn print_op(&self) -> String {
+    async fn print_op(&self) -> String {
         <Procedural3dOperationDsl as protocol::OpText>::print_op(&procedural3d_operation_to_dsl(self))
     }
 }
 
 /// ⚡️ Binary mirror of the `OpText` bridge above.
 impl OpBinary for Procedural3dMutation {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         procedural3d_operation_to_dsl(self).encode_op()
     }
 
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         let parsed = Procedural3dOperationDsl::decode_op(bytes)?;
         procedural3d_operation_from_dsl(parsed).map_err(|error| protocol::ProtocolError::Malformed {
             what: "procedural3d mutation",
@@ -180,12 +180,12 @@ impl OpBinary for Procedural3dMutation {
 //#endregion 🔖️OpTextMirror
 
 /// 📦️ Encodes a `Procedural3dMutation` to its binary state-patch form.
-pub fn encode_op(operation: &Procedural3dMutation) -> Result<Vec<u8>, protocol::ProtocolError> {
+pub async fn encode_op(operation: &Procedural3dMutation) -> Result<Vec<u8>, protocol::ProtocolError> {
     operation.encode_op()
 }
 
 /// 📖️ Decodes a `Procedural3dMutation` from its binary state-patch form.
-pub fn decode_op(bytes: &[u8]) -> Result<Procedural3dMutation, protocol::ProtocolError> {
+pub async fn decode_op(bytes: &[u8]) -> Result<Procedural3dMutation, protocol::ProtocolError> {
     Procedural3dMutation::decode_op(bytes)
 }
 
@@ -199,59 +199,59 @@ mod tests {
     use store::{create_document_envelope, ArtifactCommand};
 
     #[test]
-    fn op_text_round_trip_create_widget() {
+    async fn op_text_round_trip_create_widget() {
         test_support::assert_op_line_round_trip(&Procedural3dMutation::CreateWidget(CreateWidget { index: 2, widget: Widget::InputNote { id: "note-9".into(), text: "hello \"world\"".into() } }));
     }
 
     #[test]
-    fn op_text_round_trip_delete_widget() {
+    async fn op_text_round_trip_delete_widget() {
         test_support::assert_op_line_round_trip(&Procedural3dMutation::DeleteWidget(DeleteWidget { id: "note-9".into() }));
     }
 
     #[test]
-    fn op_text_round_trip_connect_synapse() {
+    async fn op_text_round_trip_connect_synapse() {
         test_support::assert_op_line_round_trip(&Procedural3dMutation::ConnectSynapse(ConnectSynapse { index: 1, synapse: SynapseSpec { id: "e1".into(), from: "height".into(), to: "extrude".into(), from_port: "number".into(), to_port: String::new() } }));
     }
 
     #[test]
-    fn op_text_round_trip_disconnect_synapse() {
+    async fn op_text_round_trip_disconnect_synapse() {
         test_support::assert_op_line_round_trip(&Procedural3dMutation::DisconnectSynapse(DisconnectSynapse { id: "e1".into() }));
     }
 
     #[test]
-    fn op_text_round_trip_move_widget() {
+    async fn op_text_round_trip_move_widget() {
         test_support::assert_op_line_round_trip(&Procedural3dMutation::MoveWidget(MoveWidget { id: "extrude".into(), layout: WidgetLayout { x: 12.5, y: -8.25 } }));
     }
 
     #[test]
-    fn op_text_round_trip_delete_widget_position() {
+    async fn op_text_round_trip_delete_widget_position() {
         test_support::assert_op_line_round_trip(&Procedural3dMutation::DeleteWidgetPosition(DeleteWidgetPosition { id: "extrude".into() }));
     }
 
     #[test]
-    fn op_text_round_trip_update_camera() {
+    async fn op_text_round_trip_update_camera() {
         test_support::assert_op_line_round_trip(&Procedural3dMutation::UpdateCamera(UpdateCamera { camera: CameraJson { x: 1.5, y: -2.5, zoom: 1.2 } }));
     }
 
     #[test]
-    fn op_text_round_trip_change_schema() {
+    async fn op_text_round_trip_change_schema() {
         test_support::assert_op_line_round_trip(&Procedural3dMutation::ChangeSchema(ChangeSchema { new_schema: "flow.fixture".into() }));
     }
 
     #[test]
-    fn op_text_round_trip_create_generation() {
+    async fn op_text_round_trip_create_generation() {
         let generation = flow::playbook::FormGeneration { id: "generation-1".into(), name: "Generation 1".into(), values: serde_json::Map::new() };
         test_support::assert_op_line_round_trip(&Procedural3dMutation::CreateGeneration(CreateGeneration { generation }));
     }
 
     #[test]
-    fn op_text_parse_rejects_unknown_operation() {
+    async fn op_text_parse_rejects_unknown_operation() {
         let error = <Procedural3dMutation as protocol::OpText>::parse_op("bogus-op id=\"w-1\"").expect_err("unknown operation must fail to parse");
         assert!(error.to_string().contains("unknown operation"), "unexpected error: {error}");
     }
 
     #[test]
-    fn document_text_round_trip_with_operation_applied() {
+    async fn document_text_round_trip_with_operation_applied() {
         let mut store = store::ArtifactStore::<Procedural3dSnapshot, Procedural3dMutation>::new(create_document_envelope(PROCEDURAL_3D_SCHEMA, "procedural3d", Procedural3dSnapshot::default(), None)).expect("valid artifact store fixture");
         store.dispatch(ArtifactCommand::Apply { mutations: vec![Procedural3dMutation::CreateWidget(CreateWidget { index: 3, widget: Widget::InputNote { id: "note-9".into(), text: String::new() } })], description: None }).expect("apply");
         test_support::assert_document_text_round_trip(&store);

@@ -14,7 +14,7 @@ const WIRES_PLAY_SURFACE_ID: &str = "reasoning.wires.composite";
 
 //#region 🔖️Definition
 /// 🧱️ Stitched into the app manifest by `crate::editor::wires::create_wires_app`.
-pub fn definition() -> WindowKindDefinition {
+pub async fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
         id: WIRES_PLAY_WINDOW_CANVAS.into(),
         label: LocalizedLabel::native("Canvas", "Leinwand"),
@@ -40,7 +40,7 @@ pub fn definition() -> WindowKindDefinition {
 //#region 🔖️Render
 /// 🔗️ Turns `wires_fixture.relationships` into board-edge-shaped scene layers, synthesizing a
 /// degenerate edge for any relationship whose board edge is missing.
-fn relationship_edge_layers(wires: &DslValue, board: &DslValue) -> Vec<Value> {
+async fn relationship_edge_layers(wires: &DslValue, board: &DslValue) -> Vec<Value> {
     let mut layers = Vec::new();
     for relationship in wires_relationships(wires) {
         let edge_id = relationship.get("edgeId").and_then(|value| value.as_str()).unwrap_or("");
@@ -63,7 +63,7 @@ fn relationship_edge_layers(wires: &DslValue, board: &DslValue) -> Vec<Value> {
     layers
 }
 
-pub fn render(board: &DslValue, wires: &DslValue) -> UiNode {
+pub async fn render(board: &DslValue, wires: &DslValue) -> UiNode {
     let (camera_x, camera_y, zoom) = fixture_camera(board);
     let mut layers: Vec<Value> = fixture_nodes(board).iter().map(dsl_to_json).collect();
     layers.extend(fixture_edges(board).iter().map(dsl_to_json));
@@ -79,13 +79,13 @@ mod tests {
     use crate::editor::wires::testkit::{new_app, render as render_body};
 
     #[test]
-    fn renders_canvas_scene() {
+    async fn renders_canvas_scene() {
         let mut app = new_app();
         assert!(render_body(&mut app, WIRES_PLAY_BODY_COMPOSITE).contains("canvas-2d"));
     }
 
     #[test]
-    fn definition_declares_the_canvas_2d_surface_and_body_key() {
+    async fn definition_declares_the_canvas_2d_surface_and_body_key() {
         let definition = definition();
         assert_eq!(definition.body_key, WIRES_PLAY_BODY_COMPOSITE);
         assert!(matches!(definition.surface_kind, SurfaceKind::Canvas2d));

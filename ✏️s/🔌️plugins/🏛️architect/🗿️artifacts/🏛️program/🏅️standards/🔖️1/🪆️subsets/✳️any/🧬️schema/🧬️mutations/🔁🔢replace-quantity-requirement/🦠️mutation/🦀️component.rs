@@ -19,16 +19,16 @@ pub struct ReplaceQuantityRequirement {
 }
 impl MutationKind<ProgramSnapshot, ProgramMutation> for ReplaceQuantityRequirement {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "replace", entity: "quantity-requirement", kind: "replace-quantity-requirement", record: "ReplacedQuantityRequirement" };
-    fn diff(&self, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
+    async fn diff(&self, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {
+    async fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         format!("Replace quantity requirement \"{}\"", self.quantity_requirement.header.name)
     }
-    fn target(&self) -> Vec<String> {
+    async fn target(&self) -> Vec<String> {
         vec![self.quantity_requirement.header.id.0.clone()]
     }
 }

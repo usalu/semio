@@ -48,12 +48,12 @@ pub use preview::FLOW_PLAY_BODY_GENERATE_PREVIEW;
 
 /// 🎯️ An `ActionDescriptor` addressed at this app — the single factory every taxonomy node's chrome
 /// (`🎚️options/*`, `📌️panels/*`) builds its `on_change`/item actions with.
-pub fn flow_action(action: &str, args: Option<Value>) -> ActionDescriptor {
+pub async fn flow_action(action: &str, args: Option<Value>) -> ActionDescriptor {
     semio_framework_plugin::ActionFactory::new(FLOW_PLAY_APP_ID).action(action, args)
 }
 
 /// 🙈️ An action that exists for dispatch but never appears in the command palette.
-fn flow_internal_action(id: &str, label: LocalizedLabel, kind: ActionKind) -> ActionDefinition {
+async fn flow_internal_action(id: &str, label: LocalizedLabel, kind: ActionKind) -> ActionDefinition {
     ActionDefinition { in_palette: false, ..ActionDefinition::new_catalog(id, label, kind) }
 }
 //#endregion 🔖️Constants
@@ -70,12 +70,12 @@ const FLOW_GRAPH_NODE_TARGET_PREFIX: &str = "flow-play-document.widget.";
 const FLOW_GRAPH_EDGE_TARGET_PREFIX: &str = "flow-play-document.synapse.";
 
 /// 🕹️ The "graph" domain's row id for a widget (node granularity).
-pub fn flow_graph_node_target_id(widget_id: &str) -> String {
+pub async fn flow_graph_node_target_id(widget_id: &str) -> String {
     format!("{FLOW_GRAPH_NODE_TARGET_PREFIX}{widget_id}")
 }
 
 /// 🕹️ The "graph" domain's row id for a synapse (edge granularity).
-pub fn flow_graph_edge_target_id(synapse_id: &str) -> String {
+pub async fn flow_graph_edge_target_id(synapse_id: &str) -> String {
     format!("{FLOW_GRAPH_EDGE_TARGET_PREFIX}{synapse_id}")
 }
 
@@ -84,7 +84,7 @@ pub fn flow_graph_edge_target_id(synapse_id: &str) -> String {
 /// `block_id_from_tree_row_id`. "handle" targets have no persisted document data to resolve against —
 /// no live UI populates them yet (the shared `NodeGraph` canvas renderer that would is framework layer,
 /// unmigrated this wave) — so they never appear in either returned list.
-pub fn flow_graph_selection_domains(selected: &[String]) -> (Vec<String>, Vec<String>) {
+pub async fn flow_graph_selection_domains(selected: &[String]) -> (Vec<String>, Vec<String>) {
     let nodes = selected.iter().filter_map(|id| id.strip_prefix(FLOW_GRAPH_NODE_TARGET_PREFIX).map(str::to_string)).collect();
     let edges = selected.iter().filter_map(|id| id.strip_prefix(FLOW_GRAPH_EDGE_TARGET_PREFIX).map(str::to_string)).collect();
     (nodes, edges)
@@ -153,7 +153,7 @@ semio_framework_plugin::app_commands! {
 
 //#region 🔖️ContextMenu
 /// 🖱️ On-demand flow node-graph context menu from surface hit-test and selection snapshot.
-fn flow_context_menu_items(registry: &AppActionRegistry, fixture: &FlowSnapshot, config: &FlowConfig, labels: &FlowPlayLabels, is_de: bool, surface: Option<&semio_framework_plugin::ContextMenuSurfaceTarget>) -> Vec<ContextMenuItemSpec> {
+async fn flow_context_menu_items(registry: &AppActionRegistry, fixture: &FlowSnapshot, config: &FlowConfig, labels: &FlowPlayLabels, is_de: bool, surface: Option<&semio_framework_plugin::ContextMenuSurfaceTarget>) -> Vec<ContextMenuItemSpec> {
     use semio_framework_plugin::{selection_count_phrase, Menu};
 
     let hits = surface.map_or(&[][..], |target| target.hits.as_slice());
@@ -264,18 +264,18 @@ impl ArtifactEditor for FlowPlayApp {
     const DIALECT: Dialect = crate::artifacts::flow::FLOW_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = FLOW_DOCUMENT_SCHEMA;
 
-    fn app_schema() -> Option<::schema::AppSchemaDescriptor> {
+    async fn app_schema() -> Option<::schema::AppSchemaDescriptor> {
         Some(crate::editor::flow::config::schema::app_schema_descriptor())
     }
 
-    fn initial_snapshot() -> FlowSnapshot {
+    async fn initial_snapshot() -> FlowSnapshot {
         FlowSnapshot::default()
     }
 
     /// 🏷️ The manifest action id each command was declared under — supplied wholesale by
     /// `app_commands!`'s generated `command_id()`. `setLocale`/`flowEvalTick`/`flowEvalResolve` have no
     /// manifest declaration (host-pushed/internally-chained, not user-facing actions).
-    fn command_id(command: &FlowCommand) -> &'static str {
+    async fn command_id(command: &FlowCommand) -> &'static str {
         command.command_id()
     }
 
@@ -283,7 +283,7 @@ impl ArtifactEditor for FlowPlayApp {
     /// `nodeGraphEdit`/`spotlightCommit` read the "graph" interaction domain directly (bypassing the
     /// `app_commands!`-generated `dispatch`, whose per-row `$module::handle(payload, doc, cfg, session)`
     /// signature is framework-fixed and has no `interaction` slot) — mirrors `space`'s equivalent routing.
-    fn handle(
+    async fn handle(
         command: &FlowCommand,
         doc: &ArtifactView<'_, FlowSnapshot>,
         cfg: &ConfigView<'_, FlowConfig>,
@@ -309,7 +309,7 @@ impl ArtifactEditor for FlowPlayApp {
     /// `validate_state` drops stale ids of a domain it has membership info for, and `Flat` domains are
     /// skipped entirely (see the design doc's `HierarchyProvider::Flat` note). "handle" targets have no
     /// persisted document data to register — see `flow_graph_selection_domains`'s doc comment.
-    fn interaction_topology(doc: &ArtifactView<'_, FlowSnapshot>, _cfg: &ConfigView<'_, FlowConfig>) -> InteractionTopology {
+    async fn interaction_topology(doc: &ArtifactView<'_, FlowSnapshot>, _cfg: &ConfigView<'_, FlowConfig>) -> InteractionTopology {
         let live = doc.snapshot.to_fixture();
         let mut ordered: Vec<TopologyNode> = live.widgets.iter().map(|widget| TopologyNode { id: flow_graph_node_target_id(crate::artifacts::flow::schema::widget_id(widget)), granularity: "node".into(), parent: None }).collect();
         ordered.extend(live.synapses.iter().map(|synapse| TopologyNode { id: flow_graph_edge_target_id(&synapse.id), granularity: "edge".into(), parent: None }));
@@ -321,11 +321,11 @@ impl ArtifactEditor for FlowPlayApp {
     /// 🧵️ Arms a `flowEvalTick` chain whenever the main fixture has pending (uncomputed) nodes — covers
     /// every mutation path (edits, undo/redo, example load, remote operations) in one place. Pure:
     /// recomputes the probe fresh from the fixture and the driver's persisted baseline each call.
-    fn pending_effects(doc: &ArtifactView<'_, FlowSnapshot>, cfg: &ConfigView<'_, FlowConfig>) -> Vec<Effect> {
+    async fn pending_effects(doc: &ArtifactView<'_, FlowSnapshot>, cfg: &ConfigView<'_, FlowConfig>) -> Vec<Effect> {
         with_process_flow_eval_session(|session| evaluate::evaluate_result(doc.snapshot, cfg.snapshot, session).effects)
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, FlowSnapshot>, cfg: &ConfigView<'_, FlowConfig>) -> UiNode {
+    async fn render(body_key: &str, doc: &ArtifactView<'_, FlowSnapshot>, cfg: &ConfigView<'_, FlowConfig>) -> UiNode {
         let fixture = doc.snapshot;
         let config = cfg.snapshot;
         let labels = flow_play_labels(config);
@@ -342,12 +342,12 @@ impl ArtifactEditor for FlowPlayApp {
         })
     }
 
-    fn window_measures(_doc: &ArtifactView<'_, FlowSnapshot>, cfg: &ConfigView<'_, FlowConfig>) -> HashMap<String, Vec<WindowMeasure>> {
+    async fn window_measures(_doc: &ArtifactView<'_, FlowSnapshot>, cfg: &ConfigView<'_, FlowConfig>) -> HashMap<String, Vec<WindowMeasure>> {
         let config = cfg.snapshot;
         HashMap::from([(main::FLOW_PLAY_WINDOW_MAIN.to_string(), main::window_measures(config, flow_play_labels(config)))])
     }
 
-    fn context_menu(request: &ContextMenuRequest, doc: &ArtifactView<'_, FlowSnapshot>, cfg: &ConfigView<'_, FlowConfig>, registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
+    async fn context_menu(request: &ContextMenuRequest, doc: &ArtifactView<'_, FlowSnapshot>, cfg: &ConfigView<'_, FlowConfig>, registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
         let config = cfg.snapshot;
         let is_de = config.locale.starts_with("de");
         flow_context_menu_items(registry, doc.snapshot, config, flow_play_labels(config), is_de, request.surface.as_ref())
@@ -356,7 +356,7 @@ impl ArtifactEditor for FlowPlayApp {
 //#endregion 🔖️FlowPlayApp
 
 //#region 🔖️Host
-pub fn seed_host_catalogue(host: &mut FlowHost, extra_sections_json: &str) {
+pub async fn seed_host_catalogue(host: &mut FlowHost, extra_sections_json: &str) {
     let mut sections = flow::flow_catalogue_sections();
     if let Ok(extra) = serde_json::from_str::<Vec<flow::CatalogueSection>>(extra_sections_json) {
         sections.extend(extra);
@@ -365,7 +365,7 @@ pub fn seed_host_catalogue(host: &mut FlowHost, extra_sections_json: &str) {
 }
 
 /// 🎚️ Pushes the view-state canvas options (LOD mode, proximity distance, grid) onto a freshly built host.
-pub fn apply_canvas_options(host: &mut FlowHost, config: &FlowConfig) {
+pub async fn apply_canvas_options(host: &mut FlowHost, config: &FlowConfig) {
     if config.lod_mode != FLOW_LOD_MODE_AUTOMATIC && DagDrawLod::from_id(&config.lod_mode).is_some() {
         host.dag.set_automatic_lod(false);
         host.dag.set_forced_draw_lod_label(&config.lod_mode);
@@ -380,7 +380,7 @@ pub fn apply_canvas_options(host: &mut FlowHost, config: &FlowConfig) {
 
 /// 🏗️ Rebuilds the stateful `FlowHost` from the document projection + view config + eval session — the
 /// single entry point every command handler and every window renderer goes through.
-pub fn host_from_snapshot(fixture: &FlowSnapshot, config: &FlowConfig, session: &FlowEvalSession) -> FlowHost {
+pub async fn host_from_snapshot(fixture: &FlowSnapshot, config: &FlowConfig, session: &FlowEvalSession) -> FlowHost {
     let mut host = flow_host_with_session(&fixture.to_fixture(), session);
     seed_host_catalogue(&mut host, &config.catalogue_sections_json);
     apply_canvas_options(&mut host, config);
@@ -389,7 +389,7 @@ pub fn host_from_snapshot(fixture: &FlowSnapshot, config: &FlowConfig, session: 
 
 /// ✏️ Runs a stateful `FlowHost` mutation and diffs the result back into granular `FlowMutation`s —
 /// returns an empty vec when `mutate` reports "nothing changed".
-pub fn host_operations(snapshot: &FlowSnapshot, config: &FlowConfig, session: &FlowEvalSession, mutate: impl FnOnce(&mut FlowHost) -> bool) -> Vec<FlowMutation> {
+pub async fn host_operations(snapshot: &FlowSnapshot, config: &FlowConfig, session: &FlowEvalSession, mutate: impl FnOnce(&mut FlowHost) -> bool) -> Vec<FlowMutation> {
     let mut host = host_from_snapshot(snapshot, config, session);
     if !mutate(&mut host) {
         return Vec::new();
@@ -399,11 +399,11 @@ pub fn host_operations(snapshot: &FlowSnapshot, config: &FlowConfig, session: &F
 //#endregion 🔖️Host
 
 //#region 🔖️Selection
-pub fn sync_host_selection(host: &mut FlowHost, selected: &[String]) {
+pub async fn sync_host_selection(host: &mut FlowHost, selected: &[String]) {
     sync_host_selection_domains(host, selected, &[], &[]);
 }
 
-pub fn sync_host_selection_domains(host: &mut FlowHost, nodes: &[String], edges: &[String], handles: &[String]) {
+pub async fn sync_host_selection_domains(host: &mut FlowHost, nodes: &[String], edges: &[String], handles: &[String]) {
     if nodes.is_empty() && edges.is_empty() && handles.is_empty() {
         let _ = host.dag.cancel_area_select();
         return;
@@ -415,7 +415,7 @@ pub fn sync_host_selection_domains(host: &mut FlowHost, nodes: &[String], edges:
 /// 🔍️ The camera that frames the given node selection (the "graph" domain's live selection, read by
 /// the caller via `InteractionView` — ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM), or
 /// `None` when nothing is selected.
-pub fn focus_selection_camera(fixture: &FlowSnapshot, config: &FlowConfig, session: &FlowEvalSession, selected_node_ids: &[String]) -> Option<CameraJson> {
+pub async fn focus_selection_camera(fixture: &FlowSnapshot, config: &FlowConfig, session: &FlowEvalSession, selected_node_ids: &[String]) -> Option<CameraJson> {
     if selected_node_ids.is_empty() {
         return None;
     }
@@ -430,7 +430,7 @@ pub fn focus_selection_camera(fixture: &FlowSnapshot, config: &FlowConfig, sessi
 /// 🧱️ The manifest stitch: one call per taxonomy node, each sourced from that node's own `definition()`.
 /// Only the leaf action/keybinding declarations (which have no dedicated `_def` passthrough) are written
 /// out inline.
-pub fn create_flow_app() -> AppDefinition {
+pub async fn create_flow_app() -> AppDefinition {
     Editor::builder(crate::artifacts::flow::FLOW_DIALECT)
         .command(CommandDefinition { in_palette: false, ..CommandDefinition::new_catalog("setContributions", LocalizedLabel::native("Set Contributions", "Beiträge festlegen"), "host", ActionKind::View).with_args([ActionArgDef::text("json", LocalizedLabel::native("Contributions", "Beiträge"))]) })
         .command(CommandDefinition { in_palette: false, ..CommandDefinition::new_catalog("flowEvalTick", LocalizedLabel::native("Evaluate Flow Tick", "Flow-Auswertungsschritt"), "runtime", ActionKind::View) })
@@ -555,7 +555,7 @@ pub(crate) mod testkit {
     /// 🧪️ Testkit gap wrapper (`📓️w2-p5-flow-notes.md`): `new_app_with_registry` still takes
     /// `fn() -> App`, but `create_flow_app` now returns `AppDefinition` (contract §2.4) — mirrors the
     /// cad pilot's identical wrapper.
-    fn flow_manifest_for_testkit() -> App {
+    async fn flow_manifest_for_testkit() -> App {
         App { definition: create_flow_app(), examples: Vec::new() }
     }
 
@@ -567,7 +567,7 @@ pub(crate) mod testkit {
     /// exhaustively tests its own manifest/operator content in its own `#[cfg(test)] mod tests` (e.g.
     /// `flow-extension-math`'s `manifest_lists_math_operators_and_schemas`); this fixture only covers
     /// what flow-core's own tests assert on (`catalogue_lists_module_operators`).
-    fn install_first_party_light_flow_extensions_for_tests() {
+    async fn install_first_party_light_flow_extensions_for_tests() {
         use std::sync::Once;
         static ONCE: Once = Once::new();
         ONCE.call_once(|| {
@@ -591,30 +591,30 @@ pub(crate) mod testkit {
     }
 
     /// 🧪️ A bare app instance — no `AppActionRegistry`, so undeclared internal commands dispatch freely.
-    pub fn flow_app() -> FlowApp {
+    pub async fn flow_app() -> FlowApp {
         install_first_party_light_flow_extensions_for_tests();
         new_app::<EditorApp<FlowPlayApp>>()
     }
 
     /// 🧪️ An app wired to the real manifest registry — enforces View/Shell kind discipline.
-    pub fn flow_app_with_registry() -> FlowApp {
+    pub async fn flow_app_with_registry() -> FlowApp {
         install_first_party_light_flow_extensions_for_tests();
         new_app_with_registry::<EditorApp<FlowPlayApp>>(flow_manifest_for_testkit)
     }
 
-    pub fn dispatch(app: &mut FlowApp, command: FlowCommand) -> InvocationResult {
+    pub async fn dispatch(app: &mut FlowApp, command: FlowCommand) -> InvocationResult {
         app.dispatch_typed(command, &meta("local")).expect("dispatch")
     }
 
-    pub fn dispatch_with_registry(app: &mut FlowApp, command: FlowCommand) -> InvocationResult {
+    pub async fn dispatch_with_registry(app: &mut FlowApp, command: FlowCommand) -> InvocationResult {
         app.dispatch_typed(command, &meta("local")).expect("dispatch")
     }
 
-    pub fn render(app: &mut FlowApp, body_key: &str) -> String {
+    pub async fn render(app: &mut FlowApp, body_key: &str) -> String {
         serde_json::to_string(&app.render(body_key, None, &ViewModel::default()).expect("render")).expect("render json")
     }
 
-    pub fn main_window_measures(app: &mut FlowApp) -> Vec<WindowMeasure> {
+    pub async fn main_window_measures(app: &mut FlowApp) -> Vec<WindowMeasure> {
         app.window_measures().get(main::FLOW_PLAY_WINDOW_MAIN).cloned().expect("main window measures")
     }
 
@@ -624,7 +624,7 @@ pub(crate) mod testkit {
     /// select against). `node_ids`/`edge_ids` are raw widget/synapse ids, converted to the row-id-
     /// prefixed `InteractionTarget` ids the document panel tree/`interaction_topology` both use (see
     /// `flow_graph_node_target_id`/`flow_graph_edge_target_id`).
-    pub fn select_graph(app: &mut FlowApp, node_ids: &[&str], edge_ids: &[&str]) {
+    pub async fn select_graph(app: &mut FlowApp, node_ids: &[&str], edge_ids: &[&str]) {
         let mut targets: Vec<serde_json::Value> = node_ids.iter().map(|id| serde_json::json!({ "granularity": "node", "id": flow_graph_node_target_id(id) })).collect();
         targets.extend(edge_ids.iter().map(|id| serde_json::json!({ "granularity": "edge", "id": flow_graph_edge_target_id(id) })));
         let targets_json = serde_json::to_string(&targets).expect("targets json");
@@ -641,7 +641,7 @@ mod tests {
     use semio_framework_plugin::testkit::{assert_undo_redo_round_trip, meta};
     use semio_framework_plugin::PluginApp;
 
-    fn context_menu_items(app: &mut FlowApp, surface: Option<semio_framework_plugin::ContextMenuSurfaceTarget>) -> Value {
+    async fn context_menu_items(app: &mut FlowApp, surface: Option<semio_framework_plugin::ContextMenuSurfaceTarget>) -> Value {
         let request = ContextMenuRequest { menu: semio_framework_plugin::UiMenuRef { id: "nodeGraph".into(), args: None }, surface, window_instance_id: None, point: None };
         serde_json::to_value(app.context_menu(&request)).unwrap_or(Value::Null)
     }
@@ -650,7 +650,7 @@ mod tests {
     /// 🏷️ Every declared manifest action id must be reachable as exactly one command row, and every row's
     /// wire keyword must be distinct — the cross-cutting invariant `app_commands!` is there to hold.
     #[test]
-    fn command_ids_are_unique_and_match_the_declared_manifest_actions() {
+    async fn command_ids_are_unique_and_match_the_declared_manifest_actions() {
         let commands = every_command();
         let ids: Vec<&str> = commands.iter().map(|command| command.command_id()).collect();
         let mut sorted = ids.clone();
@@ -662,7 +662,7 @@ mod tests {
 
     /// ⚖️ LAW: text and binary are two projections of the same command, for every single row.
     #[test]
-    fn every_command_round_trips_through_text_and_binary() {
+    async fn every_command_round_trips_through_text_and_binary() {
         for command in every_command() {
             store::os_store::test_support::assert_op_text_binary_equivalence(&command);
         }
@@ -673,7 +673,7 @@ mod tests {
     /// undeclared host-pushed command). This is what a missing `#[dsl(keyword = ..)]` on a payload struct
     /// silently breaks (the record prints with no keyword at all and no longer parses).
     #[test]
-    fn every_printed_op_line_starts_with_the_rows_wire_keyword() {
+    async fn every_printed_op_line_starts_with_the_rows_wire_keyword() {
         for command in every_command() {
             let id = command.command_id();
             let expected = if id == "setLocale" { "locale".to_string() } else { id.chars().flat_map(|c| if c.is_ascii_uppercase() { vec!['-', c.to_ascii_lowercase()] } else { vec![c] }).collect() };
@@ -686,7 +686,7 @@ mod tests {
     /// bytes captured from the pre-merge `flow_protocol` crate. A regression here is a real format break,
     /// not a test-fixture mismatch.
     #[test]
-    fn optional_field_rows_keep_their_pre_migration_bytes() {
+    async fn optional_field_rows_keep_their_pre_migration_bytes() {
         let cases: [(FlowCommand, &str, &str); 3] = [
             (FlowCommand::AddWidget(add_widget::AddWidget { kind: "neuron".into(), neuron_kind: Some("math.add".into()), x: None, y: None }), "add-widget kind=neuron neuron-kind=math.add", "010002086d6174682e616464066e6575726f6e02000601010600"),
             // 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: `SetGridVisible`'s binary
@@ -707,7 +707,7 @@ mod tests {
     }
 
     /// 🧾️ One representative value per row, in declaration (= binary ordinal) order.
-    pub(super) fn every_command() -> Vec<FlowCommand> {
+    pub(super) async fn every_command() -> Vec<FlowCommand> {
         use flow::CameraJson;
         vec![
             FlowCommand::AddWidget(add_widget::AddWidget { kind: "inputSlider".into(), neuron_kind: None, x: Some(10.0), y: None }),
@@ -756,7 +756,7 @@ mod tests {
 
     //#region 🔖️ManifestSanity
     #[test]
-    fn the_manifest_stitches_every_taxonomy_node() {
+    async fn the_manifest_stitches_every_taxonomy_node() {
         let json = serde_json::to_string(&create_flow_app()).expect("app definition json");
         for id in [main::FLOW_PLAY_WINDOW_MAIN, compiled::FLOW_PLAY_WINDOW_COMPILED, generations::FLOW_PLAY_WINDOW_GENERATIONS, form::FLOW_PLAY_WINDOW_GENERATE_FORM, preview::FLOW_PLAY_WINDOW_GENERATE_PREVIEW] {
             assert!(json.contains(id), "window kind {id} missing from the manifest: {json}");
@@ -776,7 +776,7 @@ mod tests {
     /// kind, non-transitive (see the `.interaction(...)` doc comment for why), with node/edge/handle
     /// granularities and all five merges.
     #[test]
-    fn graph_interaction_domain_is_declared_topology_and_scoped_to_the_main_window() {
+    async fn graph_interaction_domain_is_declared_topology_and_scoped_to_the_main_window() {
         let definition = create_flow_app();
         let graph = definition.interactions.iter().find(|interaction| interaction.id == FLOW_INTERACTION_GRAPH).expect("graph interaction domain declared");
         assert!(matches!(graph.hierarchy, HierarchyProvider::Topology));
@@ -792,7 +792,7 @@ mod tests {
     /// the same row-id-prefixed targets the document panel tree renders (see
     /// `document_panel::render`'s doc comment).
     #[test]
-    fn interaction_topology_registers_every_widget_and_synapse_as_a_root() {
+    async fn interaction_topology_registers_every_widget_and_synapse_as_a_root() {
         let document = FlowSnapshot::default();
         let config = FlowConfig::default();
         let history = semio_framework_plugin::HistoryView::empty();
@@ -810,7 +810,7 @@ mod tests {
 
     //#region 🔖️CrossCutting
     #[test]
-    fn undo_restores_fixture_after_add_widget() {
+    async fn undo_restores_fixture_after_add_widget() {
         let mut app = flow_app();
         let before = app.snapshot().expect("snapshot").to_fixture().widgets.len();
         assert_undo_redo_round_trip(
@@ -823,7 +823,7 @@ mod tests {
     }
 
     #[test]
-    fn generate_mode_renders_three_surfaces() {
+    async fn generate_mode_renders_three_surfaces() {
         let mut app = flow_app();
         use crate::editor::flow::testkit::render;
         assert!(render(&mut app, FLOW_PLAY_BODY_GENERATIONS).contains("addGeneration"));
@@ -832,14 +832,14 @@ mod tests {
     }
 
     #[test]
-    fn an_unknown_body_key_renders_a_diagnostic_instead_of_panicking() {
+    async fn an_unknown_body_key_renders_a_diagnostic_instead_of_panicking() {
         use crate::editor::flow::testkit::render;
         let mut app = flow_app();
         assert!(render(&mut app, "flow.play.nope").contains("Unknown body"));
     }
 
     #[test]
-    fn host_from_snapshot_deletes_edge_selected_by_synapse_domain() {
+    async fn host_from_snapshot_deletes_edge_selected_by_synapse_domain() {
         let config = FlowConfig::default();
         let fixture = FlowSnapshot::default();
         let session = FlowEvalSession::new();
@@ -851,7 +851,7 @@ mod tests {
     }
 
     #[test]
-    fn two_instances_converge_on_disjoint_edits() {
+    async fn two_instances_converge_on_disjoint_edits() {
         use crate::artifacts::flow::schema::widget_id;
         use semio_framework_plugin::testkit::paired_apps;
         let (mut instance_a, mut instance_b) = paired_apps::<EditorApp<FlowPlayApp>>("mem://flow-convergence");
@@ -873,7 +873,7 @@ mod tests {
 
     //#region 🔖️ContextMenu
     #[test]
-    fn context_menu_includes_select_all_when_empty() {
+    async fn context_menu_includes_select_all_when_empty() {
         let mut app = flow_app_with_registry();
         let menu = context_menu_items(&mut app, Some(semio_framework_plugin::ContextMenuSurfaceTarget { surface_id: "main".into(), kind: "nodeGraph".into(), hits: vec![], selection: vec![], text: None }));
         let menu_json = menu.to_string();
@@ -888,7 +888,7 @@ mod tests {
     /// `InteractionState` now and `ArtifactApp::context_menu` is not threaded an `InteractionView` this
     /// wave (see `flow_context_menu_items`'s doc comment) — the request's own `surface.selection` groups
     /// are the only way to feed a selection into the menu, mirroring what the real click caller carries.
-    fn node_selection_surface(node_ids: &[&str]) -> semio_framework_plugin::ContextMenuSurfaceTarget {
+    async fn node_selection_surface(node_ids: &[&str]) -> semio_framework_plugin::ContextMenuSurfaceTarget {
         semio_framework_plugin::ContextMenuSurfaceTarget {
             surface_id: "main".into(),
             kind: "nodeGraph".into(),
@@ -899,7 +899,7 @@ mod tests {
     }
 
     #[test]
-    fn context_menu_includes_hide_preview_for_selection_and_set_preview_off_mutates_scene() {
+    async fn context_menu_includes_hide_preview_for_selection_and_set_preview_off_mutates_scene() {
         let mut app = flow_app_with_registry();
         let menu = context_menu_items(&mut app, Some(node_selection_surface(&["slider"]))).to_string();
         assert!(menu.contains("setPreviewOff"), "menu should expose preview toggle: {menu}");
@@ -916,7 +916,7 @@ mod tests {
     /// own `surface.selection` groups carry the clicked target instead, mirroring what the real caller
     /// (right-clicking a node) supplies alongside the `contextMenuAt` dispatch.
     #[test]
-    fn context_menu_at_selects_target_and_enables_preview() {
+    async fn context_menu_at_selects_target_and_enables_preview() {
         let mut app = flow_app_with_registry();
         let before = context_menu_items(&mut app, None).to_string();
         assert!(!before.contains(r#""id":"delete-selection""#), "preview starts without delete: {before}");
@@ -927,7 +927,7 @@ mod tests {
     }
 
     #[test]
-    fn context_menu_annotates_mixed_selection_counts_and_omits_delete_without_selection() {
+    async fn context_menu_annotates_mixed_selection_counts_and_omits_delete_without_selection() {
         let mut app = flow_app_with_registry();
         let empty = context_menu_items(&mut app, Some(semio_framework_plugin::ContextMenuSurfaceTarget { surface_id: "main".into(), kind: "nodeGraph".into(), hits: vec![], selection: vec![], text: None })).to_string();
         assert!(!empty.contains(r#""id":"delete-selection""#), "empty must omit delete: {empty}");
@@ -952,7 +952,7 @@ mod tests {
     }
 
     #[test]
-    fn context_menu_for_edge_hit_uses_surface_edge_selection() {
+    async fn context_menu_for_edge_hit_uses_surface_edge_selection() {
         let mut app = flow_app_with_registry();
         let menu = context_menu_items(
             &mut app,
@@ -970,7 +970,7 @@ mod tests {
     }
 
     #[test]
-    fn context_menu_grouped_disclosure_stays_within_budget_and_keeps_destructive_last() {
+    async fn context_menu_grouped_disclosure_stays_within_budget_and_keeps_destructive_last() {
         let mut app = flow_app_with_registry();
         let request = ContextMenuRequest {
             menu: semio_framework_plugin::UiMenuRef { id: "nodeGraph".into(), args: None },

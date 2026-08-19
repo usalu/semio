@@ -9,16 +9,16 @@ impl GltfInferenceLeaf for GltfBoundingBoxDimensionsInference {
     const DESCRIPTOR: GltfInferenceLeafDescriptor =
         GltfInferenceLeafDescriptor { id: "s.stdio.gltf.inference.bounding-box-dimensions.v1", algorithm_version: 1, cache_key: "s.stdio.gltf.inference.bounding-box-dimensions.v1:geometry-v2", reads: GLTF_GEOMETRY_READS };
 }
-pub fn descriptor() -> GltfInferenceLeafDescriptor {
+pub async fn descriptor() -> GltfInferenceLeafDescriptor {
     GltfBoundingBoxDimensionsInference::DESCRIPTOR
 }
-pub(crate) fn infer(context: &GltfGeometryContext<'_>) -> GltfMeasure<GltfVec3> {
+pub(crate) async fn infer(context: &GltfGeometryContext<'_>) -> GltfMeasure<GltfVec3> {
     exact(GltfVec3::new(context.dimensions), GltfUnit::Metre, context.sample_count, Some(context.topology))
 }
-pub fn unavailable_measure(ids: &[String]) -> GltfMeasure<GltfVec3> {
+pub async fn unavailable_measure(ids: &[String]) -> GltfMeasure<GltfVec3> {
     unavailable(GltfUnit::Metre, GltfAvailability::Unavailable, ids.to_vec(), 0, None)
 }
 
-pub fn encode_result(indicators: &GltfEntityIndicators) -> Result<serde_json::Value, serde_json::Error> {
+pub async fn encode_result(indicators: &GltfEntityIndicators) -> Result<serde_json::Value, serde_json::Error> {
     serde_json::to_value(&indicators.size.bounding_box_dimensions)
 }

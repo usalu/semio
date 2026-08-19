@@ -26,7 +26,7 @@ const REMODEL_MAX_RECONSTRUCTION_TICKS: u32 = 200_000;
 /// stream's already-persisted frames into it, then loops `advance()` in-process until `Done`/`Failed`
 /// and returns exactly one `Emit` carrying only the FINAL state — one call, one `Emit`, one undo step;
 /// no coalesce key needed. Shared by all three rows in this group.
-pub fn run_whole_pipeline(doc: &ArtifactView<'_, RemodelSnapshot>) -> Result<Emit<RemodelMutation, RemodelConfigMutation>, Fault> {
+pub async fn run_whole_pipeline(doc: &ArtifactView<'_, RemodelSnapshot>) -> Result<Emit<RemodelMutation, RemodelConfigMutation>, Fault> {
     let scene = doc.snapshot;
     let engine_params = build_engine_params(&scene.params);
     let mut engine = remodel_engine::ReconstructionEngine::new(&engine_params);
@@ -149,7 +149,7 @@ pub fn run_whole_pipeline(doc: &ArtifactView<'_, RemodelSnapshot>) -> Result<Emi
 #[dsl(keyword = "run-reconstruction")]
 pub struct RunReconstruction {}
 
-pub fn handle(_payload: &RunReconstruction, doc: &ArtifactView<'_, RemodelSnapshot>, _cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelMutation, RemodelConfigMutation>, Fault> {
+pub async fn handle(_payload: &RunReconstruction, doc: &ArtifactView<'_, RemodelSnapshot>, _cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelMutation, RemodelConfigMutation>, Fault> {
     run_whole_pipeline(doc)
 }
 
@@ -167,7 +167,7 @@ mod tests {
     /// imported checker frames and runs the WHOLE pipeline to a terminal `Done`/`Failed` stage inside
     /// the ONE dispatch (no `advanceReconstruction` re-dispatch loop).
     #[test]
-    fn run_reconstruction_runs_synchronously_to_a_terminal_stage() {
+    async fn run_reconstruction_runs_synchronously_to_a_terminal_stage() {
         let mut app = app();
         testkit_import_checker_stream(&mut app, 2);
         let run = dispatch(&mut app, RemodelCommand::RunReconstruction(super::RunReconstruction {}));
@@ -185,7 +185,7 @@ mod tests {
     /// 🔁️ `retryStage` starts a fresh run (a new job id) even after a prior run already reached a
     /// terminal stage.
     #[test]
-    fn retry_stage_starts_a_fresh_run_with_a_new_job_id() {
+    async fn retry_stage_starts_a_fresh_run_with_a_new_job_id() {
         let mut app = app();
         testkit_import_checker_stream(&mut app, 2);
         dispatch(&mut app, RemodelCommand::RunReconstruction(super::RunReconstruction {}));
@@ -201,7 +201,7 @@ mod tests {
     /// `Done`/`Failed` must fully revert the job (and any published results) back to the pristine
     /// pre-run document.
     #[test]
-    fn full_run_collapses_into_a_single_undo_step() {
+    async fn full_run_collapses_into_a_single_undo_step() {
         let mut app = app();
         testkit_import_checker_stream(&mut app, 2);
         let before_job = app.snapshot().expect("projection").job;

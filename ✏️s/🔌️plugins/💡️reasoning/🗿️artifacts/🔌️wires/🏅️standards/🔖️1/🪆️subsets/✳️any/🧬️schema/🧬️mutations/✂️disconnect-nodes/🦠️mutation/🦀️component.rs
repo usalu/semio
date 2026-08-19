@@ -15,23 +15,23 @@ pub struct DisconnectNodes {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn disconnect_nodes(edge_id: String) -> WiresMutation {
+pub async fn disconnect_nodes(edge_id: String) -> WiresMutation {
     WiresMutation::DisconnectNodes(DisconnectNodes { edge_id })
 }
 
 impl protocol::MutationKind<WiresSnapshot, WiresMutation> for DisconnectNodes {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "disconnect", entity: "relationship", kind: "disconnect-nodes", record: "DisconnectedNodes" };
 
-    fn diff(&self, base: &WiresSnapshot) -> protocol::MutationOutcome<WiresDiff> {
+    async fn diff(&self, base: &WiresSnapshot) -> protocol::MutationOutcome<WiresDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &WiresSnapshot) -> Vec<WiresMutation> {
+    async fn inverse(&self, base: &WiresSnapshot) -> Vec<WiresMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         format!("Disconnect edge \"{}\"", self.edge_id)
     }
-    fn target(&self) -> Vec<String> {
+    async fn target(&self) -> Vec<String> {
         vec![self.edge_id.clone()]
     }
 }

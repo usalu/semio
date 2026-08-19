@@ -9,7 +9,7 @@ use serde::{Deserialize, Serialize};
 #[dsl(keyword = "increment-counter")]
 pub struct IncrementCounter {}
 
-pub fn handle(_payload: &IncrementCounter, doc: &ArtifactView<'_, VcsSnapshot>, _cfg: &ConfigView<'_, VcsDemoConfig>) -> Result<Emit<VcsDemoMutation, VcsDemoConfigMutation>, Fault> {
+pub async fn handle(_payload: &IncrementCounter, doc: &ArtifactView<'_, VcsSnapshot>, _cfg: &ConfigView<'_, VcsDemoConfig>) -> Result<Emit<VcsDemoMutation, VcsDemoConfigMutation>, Fault> {
     Ok(Emit::mutations(vec![crate::artifacts::vcs::mutations::change_counter(doc.snapshot.counter + 1)]))
 }
 
@@ -21,7 +21,7 @@ mod tests {
     use crate::editor::vcs::VcsCommand;
 
     #[test]
-    fn increment_counter_action_updates_projection() {
+    async fn increment_counter_action_updates_projection() {
         let mut instance = app();
         let before = instance.snapshot().expect("materialize snapshot").counter;
         let result = dispatch(&mut instance, VcsCommand::IncrementCounter(IncrementCounter {}));

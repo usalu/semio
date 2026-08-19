@@ -67,7 +67,7 @@ pub enum MdMutation {
 /// ▶️ Applies `mutation` to `snapshot`: `let d = mutation.diff(&*snapshot); *snapshot =
 /// d.apply(snapshot); d` -- the diff is the single semantics source, never a separate imperative
 /// apply path.
-pub fn apply_md_mutation(snapshot: &mut MdSnapshot, mutation: &MdMutation) -> protocol::MutationOutcome<MdDiff> {
+pub async fn apply_md_mutation(snapshot: &mut MdSnapshot, mutation: &MdMutation) -> protocol::MutationOutcome<MdDiff> {
     let outcome = Mutation::diff(mutation, snapshot);
     match protocol::MutationDiff::apply(outcome.diff(), snapshot) {
         Ok(next) => {
@@ -83,7 +83,7 @@ pub fn apply_md_mutation(snapshot: &mut MdSnapshot, mutation: &MdMutation) -> pr
 impl Mutation<MdSnapshot> for MdMutation {
     type Diff = MdDiff;
 
-    fn diff(&self, base: &MdSnapshot) -> protocol::MutationOutcome<Self::Diff> {
+    async fn diff(&self, base: &MdSnapshot) -> protocol::MutationOutcome<Self::Diff> {
         protocol::MutationOutcome::new(match self {
             MdMutation::NoMutation => MdDiff::default(),
             MdMutation::SetSnapshot { snapshot } => diff_set_snapshot(base, snapshot),
@@ -98,7 +98,7 @@ impl Mutation<MdSnapshot> for MdMutation {
         })
     }
 
-    fn inverse(&self, base: &MdSnapshot) -> Vec<Self> {
+    async fn inverse(&self, base: &MdSnapshot) -> Vec<Self> {
         match self {
             MdMutation::NoMutation => vec![MdMutation::NoMutation],
             MdMutation::SetSnapshot { .. } => vec![MdMutation::SetSnapshot { snapshot: base.clone() }],
@@ -136,13 +136,13 @@ impl Mutation<MdSnapshot> for MdMutation {
 /// convention uses), one match arm per variant (no `DslVariants` scaffolding available since
 /// nothing here derives it). `MdPathStep` gets tag range Y-Z (see `MdDiff`'s region doc comment for
 /// the full tag-vocabulary table).
-fn enc_path_step(step: &MdPathStep) -> String {
+async fn enc_path_step(step: &MdPathStep) -> String {
     match step {
         MdPathStep::BlockQuote { index } => format!("Y[{index}]"),
         MdPathStep::ListItem { index, item } => format!("Z[{index},{item}]"),
     }
 }
-fn dec_path_step(s: &str) -> Result<MdPathStep, String> {
+async fn dec_path_step(s: &str) -> Result<MdPathStep, String> {
     let (tag, rest) = s.split_at(1);
     let inner = strip_brackets(rest)?;
     match tag {
@@ -155,22 +155,22 @@ fn dec_path_step(s: &str) -> Result<MdPathStep, String> {
         other => Err(format!("path step: unknown tag {other:?}")),
     }
 }
-fn enc_path(path: &[MdPathStep]) -> String {
+async fn enc_path(path: &[MdPathStep]) -> String {
     format!("[{}]", path.iter().map(enc_path_step).collect::<Vec<_>>().join(","))
 }
-fn dec_path(s: &str) -> Result<Vec<MdPathStep>, String> {
+async fn dec_path(s: &str) -> Result<Vec<MdPathStep>, String> {
     split_top_level(strip_brackets(s)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_path_step).collect()
 }
-fn enc_md_snapshot(s: &MdSnapshot) -> String {
+async fn enc_md_snapshot(s: &MdSnapshot) -> String {
     format!("[{},{}]", enc_str(&s.schema), enc_block_list(&s.blocks))
 }
-fn dec_md_snapshot(s: &str) -> Result<MdSnapshot, String> {
+async fn dec_md_snapshot(s: &str) -> Result<MdSnapshot, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [schema, blocks] = parts.as_slice() else { return Err(format!("md snapshot: expected 2 fields, got {}", parts.len())) };
     Ok(MdSnapshot { schema: dec_str(schema)?, blocks: dec_block_list(blocks)? })
 }
 
-fn print_md_mutation(m: &MdMutation) -> String {
+async fn print_md_mutation(m: &MdMutation) -> String {
     match m {
         MdMutation::NoMutation => "no-mutation".to_string(),
         MdMutation::SetSnapshot { snapshot } => format!("set-snapshot snapshot={}", enc_md_snapshot(snapshot)),
@@ -180,7 +180,7 @@ fn print_md_mutation(m: &MdMutation) -> String {
         MdMutation::SetInlines { path, index, inlines } => format!("set-inlines path={} index={index} inlines={}", enc_path(path), enc_inline_list(inlines)),
     }
 }
-fn parse_md_mutation(line: &str) -> Result<MdMutation, String> {
+async fn parse_md_mutation(line: &str) -> Result<MdMutation, String> {
     if line == "no-mutation" {
         return Ok(MdMutation::NoMutation);
     }
@@ -199,10 +199,10 @@ fn parse_md_mutation(line: &str) -> Result<MdMutation, String> {
 }
 
 impl OpText for MdMutation {
-    fn print_op(&self) -> String {
+    async fn print_op(&self) -> String {
         print_md_mutation(self)
     }
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
+    async fn parse_op(line: &str) -> Result<Self, store::TextError> {
         parse_md_mutation(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
 }
@@ -213,17 +213,17 @@ impl OpText for MdMutation {
 /// `write_option_bin` primitives (`../../🔺️diff/🦀️component.rs`, imported above) for the SHARED
 /// `MdBlock`/`MdInline` shape (same intra-artifact-reuse split the TEXT codec above already uses),
 /// only `MdSnapshot`/`MdPathStep`'s own binary shape is genuinely new here.
-fn enc_snapshot_bin(s: &MdSnapshot, out: &mut Vec<u8>) {
+async fn enc_snapshot_bin(s: &MdSnapshot, out: &mut Vec<u8>) {
     write_str_bin(out, &s.schema);
     enc_block_list_bin(&s.blocks, out);
 }
-fn dec_snapshot_bin(reader: &mut store::ByteReader<'_>) -> Result<MdSnapshot, String> {
+async fn dec_snapshot_bin(reader: &mut store::ByteReader<'_>) -> Result<MdSnapshot, String> {
     let schema = read_str_bin(reader)?;
     let blocks = dec_block_list_bin(reader)?;
     Ok(MdSnapshot { schema, blocks })
 }
 
-fn enc_path_step_bin(step: &MdPathStep, out: &mut Vec<u8>) {
+async fn enc_path_step_bin(step: &MdPathStep, out: &mut Vec<u8>) {
     match step {
         MdPathStep::BlockQuote { index } => {
             out.push(0);
@@ -236,7 +236,7 @@ fn enc_path_step_bin(step: &MdPathStep, out: &mut Vec<u8>) {
         }
     }
 }
-fn dec_path_step_bin(reader: &mut store::ByteReader<'_>) -> Result<MdPathStep, String> {
+async fn dec_path_step_bin(reader: &mut store::ByteReader<'_>) -> Result<MdPathStep, String> {
     let tag = reader.read_u8().map_err(|e| e.to_string())?;
     match tag {
         0 => Ok(MdPathStep::BlockQuote { index: reader.read_varint_u64().map_err(|e| e.to_string())? as usize }),
@@ -248,13 +248,13 @@ fn dec_path_step_bin(reader: &mut store::ByteReader<'_>) -> Result<MdPathStep, S
         other => Err(format!("path step binary: unknown tag {other}")),
     }
 }
-fn enc_path_bin(path: &[MdPathStep], out: &mut Vec<u8>) {
+async fn enc_path_bin(path: &[MdPathStep], out: &mut Vec<u8>) {
     store::pack_rt::write_varint_u64(out, path.len() as u64);
     for step in path {
         enc_path_step_bin(step, out);
     }
 }
-fn dec_path_bin(reader: &mut store::ByteReader<'_>) -> Result<Vec<MdPathStep>, String> {
+async fn dec_path_bin(reader: &mut store::ByteReader<'_>) -> Result<Vec<MdPathStep>, String> {
     let count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     (0..count).map(|_| dec_path_step_bin(reader)).collect()
 }
@@ -265,7 +265,7 @@ fn dec_path_bin(reader: &mut store::ByteReader<'_>) -> Result<Vec<MdPathStep>, S
 /// upgraded from F6's `print_op().into_bytes()` text-as-binary shortcut. `tag` is the `MdMutation`
 /// variant ordinal, same 0-5 order `print_md_mutation`'s own keyword match uses.
 impl protocol::OpBinary for MdMutation {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         let tag: u8 = match self {
             MdMutation::NoMutation => 0,
             MdMutation::SetSnapshot { .. } => 1,
@@ -301,7 +301,7 @@ impl protocol::OpBinary for MdMutation {
         Ok(out)
     }
 
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         let mut reader = store::ByteReader::new(bytes);
         let malformed = |what: &'static str, offset: usize, detail: String| protocol::ProtocolError::Malformed { what, offset: offset as u64, detail };
         let _format = reader.read_u8().map_err(|e| malformed("op format", 0, e.to_string()))?;
@@ -350,7 +350,7 @@ impl protocol::OpBinary for MdMutation {
 /// below AND by `⚙️engine/🦀️component.rs`'s `ops_grammar_conformance_law`/`protocol_walk_law`
 /// conformance tests, so a new variant only needs adding here once.
 #[cfg(test)]
-pub(crate) fn demo_mutation_cases() -> Vec<MdMutation> {
+pub(crate) async fn demo_mutation_cases() -> Vec<MdMutation> {
     let base = MdSnapshot { schema: crate::artifacts::md::STDIO_MD_DOCUMENT_SCHEMA.into(), blocks: vec![MdBlock::Paragraph { inlines: vec![MdInline::Text { text: "hi".into() }] }] };
     let list_block = MdBlock::List { ordered: true, start: Some(2), tight: false, items: vec![vec![MdBlock::Paragraph { inlines: vec![MdInline::Text { text: "one".into() }] }], vec![MdBlock::BlockQuote { blocks: vec![MdBlock::ThematicBreak] }]] };
     vec![
@@ -386,7 +386,7 @@ mod op_codec_tests {
     /// 🧪️ F6/P2-FG1: `OpText`/`OpBinary` round-trip laws for the hand-rolled `MdMutation` grammar —
     /// see `demo_mutation_cases()`'s own doc comment for exactly what each case exercises.
     #[test]
-    fn op_text_binary_roundtrip_law() {
+    async fn op_text_binary_roundtrip_law() {
         for mutation in demo_mutation_cases() {
             let printed = mutation.print_op();
             assert!(!printed.contains('\n'), "print_op must be one line, got {printed:?}");

@@ -41,7 +41,7 @@ pub enum Pdf14AEditorCommand {
 /// 🎯️ Handcrafted (P6: `#[derive(dsl::DslOps)]` emits `DslVariants` only -- `OpText`/`OpBinary` are
 /// handcrafted per artifact, same shape as the energy exemplar's own `EnergyModelEditorCommand`).
 impl protocol::OpText for Pdf14AEditorCommand {
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
+    async fn parse_op(line: &str) -> Result<Self, store::TextError> {
         let variants = <Self as dsl::DslVariants>::variants();
         for (keyword, spec_fn) in &variants {
             let probe = format!("{} ", keyword);
@@ -52,7 +52,7 @@ impl protocol::OpText for Pdf14AEditorCommand {
         }
         Err(dsl::__rt::field_error(format!("unknown operation line '{line}'")))
     }
-    fn print_op(&self) -> String {
+    async fn print_op(&self) -> String {
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
         let variants = <Self as dsl::DslVariants>::variants();
         let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
@@ -61,7 +61,7 @@ impl protocol::OpText for Pdf14AEditorCommand {
 }
 
 impl protocol::OpBinary for Pdf14AEditorCommand {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         const OP_BINARY_FORMAT: u8 = 1;
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
         let variants = <Self as dsl::DslVariants>::variants();
@@ -74,7 +74,7 @@ impl protocol::OpBinary for Pdf14AEditorCommand {
         out.extend_from_slice(&body);
         Ok(out)
     }
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         const OP_BINARY_FORMAT: u8 = 1;
         let mut reader = store::pack_rt::ByteReader::new(bytes);
         let format = reader.read_u8()?;
@@ -113,7 +113,7 @@ impl ArtifactEditor for Pdf14AEditor {
     const DIALECT: Dialect = PDF14A_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = STDIO_PDF_DOCUMENT_SCHEMA;
 
-    fn initial_snapshot() -> PdfSnapshot {
+    async fn initial_snapshot() -> PdfSnapshot {
         PdfSnapshot::default()
     }
 
@@ -121,7 +121,7 @@ impl ArtifactEditor for Pdf14AEditor {
     /// exposes (see `main`'s own doc comment for why this appends rather than replaces). An
     /// out-of-range `index` is a documented no-op (`Emit::default()`), never a panic, matching
     /// `apply_pdf_mutation`'s own out-of-range-is-noop contract.
-    fn handle(
+    async fn handle(
         command: &Self::Command,
         doc: &ArtifactView<'_, Self::Snapshot>,
         _cfg: &ConfigView<'_, Self::Config>,
@@ -139,7 +139,7 @@ impl ArtifactEditor for Pdf14AEditor {
         }
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> UiNode {
+    async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> UiNode {
         match body_key {
             main::BODY_KEY => main::render(doc.snapshot),
             _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))),
@@ -149,7 +149,7 @@ impl ArtifactEditor for Pdf14AEditor {
 //#endregion 🔖️Editor
 
 //#region 🔖️Manifest
-pub fn create_pdf14_a_editor() -> semio_framework_plugin::AppDefinition {
+pub async fn create_pdf14_a_editor() -> semio_framework_plugin::AppDefinition {
     Editor::builder(PDF14A_DIALECT)
         .document(["stdio", "pdf", "1.4", "a"])
         .icon_id("file-text")
@@ -167,19 +167,19 @@ mod tests {
     use super::*;
 
     #[test]
-    fn create_pdf14_a_editor_builds_a_definition_for_the_editor_role() {
+    async fn create_pdf14_a_editor_builds_a_definition_for_the_editor_role() {
         let def = create_pdf14_a_editor();
         assert_eq!(def.role, semio_framework_plugin::AppRole::Editor);
         assert_eq!(def.dialect, PDF14A_DIALECT.into());
     }
 
     #[test]
-    fn editor_dialect_matches_the_artifact_coordinate() {
+    async fn editor_dialect_matches_the_artifact_coordinate() {
         assert_eq!(<Pdf14AEditor as ArtifactEditor>::DIALECT, PDF14A_DIALECT);
     }
 
     #[test]
-    fn editor_declares_the_main_window() {
+    async fn editor_declares_the_main_window() {
         let def = create_pdf14_a_editor();
         assert!(def.window_kinds.iter().any(|w| w.id == main::WINDOW_KIND_ID));
     }

@@ -7,7 +7,7 @@ use crate::editor::puzzle3d::puzzle3d_vortices_from_kind_template;
 use crate::editor::puzzle3d::resolve_puzzle3d_attractions;
 use crate::editor::puzzle3d::Puzzle3dObject;
 
-pub fn add_object_kind(ctx: &mut Puzzle3dActionCtx<'_>, args: Option<&Value>) {
+pub async fn add_object_kind(ctx: &mut Puzzle3dActionCtx<'_>, args: Option<&Value>) {
     let object_kind = args.and_then(|value| value.get("objectKind")).and_then(|value| value.as_str()).unwrap_or("Object");
     let id = next_object_id();
     let catalog_entry = ctx.scene.fixture.meta.kind_catalogs.as_ref().and_then(|catalogs| catalogs.get("objects")?.as_array()?.iter().find(|entry| entry.get("id").and_then(|v| v.as_str()) == Some(object_kind)).cloned());

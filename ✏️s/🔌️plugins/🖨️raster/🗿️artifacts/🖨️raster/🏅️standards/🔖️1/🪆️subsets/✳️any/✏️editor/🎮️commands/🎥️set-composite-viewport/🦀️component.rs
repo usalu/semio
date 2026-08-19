@@ -13,6 +13,6 @@ pub struct SetCompositeViewport {
     pub height: f64,
 }
 
-pub fn handle(payload: &SetCompositeViewport, _doc: &ArtifactView<'_, RasterSnapshot>, _cfg: &ConfigView<'_, RasterConfig>) -> Result<Emit<RasterMutation, RasterConfigMutation>, Fault> {
+pub async fn handle(payload: &SetCompositeViewport, _doc: &ArtifactView<'_, RasterSnapshot>, _cfg: &ConfigView<'_, RasterConfig>) -> Result<Emit<RasterMutation, RasterConfigMutation>, Fault> {
     Ok(Emit::config(vec![RasterConfigMutation::SetCompositeViewport { viewport: Some(RasterConfigViewportSize { width: payload.width, height: payload.height }) }]))
 }

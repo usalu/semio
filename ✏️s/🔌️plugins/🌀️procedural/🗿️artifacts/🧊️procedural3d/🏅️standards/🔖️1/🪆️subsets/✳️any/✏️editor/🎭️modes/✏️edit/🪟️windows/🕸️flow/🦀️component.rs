@@ -14,7 +14,7 @@ const PROCEDURAL_3D_PLAY_SURFACE_MAIN: &str = "procedural.play";
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
-pub fn definition() -> WindowKindDefinition {
+pub async fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
         id: PROCEDURAL_3D_PLAY_WINDOW_MAIN.into(),
         label: LocalizedLabel::native("Flow", "Workflow"),
@@ -33,7 +33,7 @@ pub fn definition() -> WindowKindDefinition {
 }
 
 /// 🎚️ The LOD chrome measure for this window — collected fresh per frame, never frozen into the manifest.
-pub fn window_measures(lod_mode: &str, on_change: impl Fn(&str, Option<serde_json::Value>) -> semio_framework_plugin::ActionDescriptor) -> Vec<WindowMeasure> {
+pub async fn window_measures(lod_mode: &str, on_change: impl Fn(&str, Option<serde_json::Value>) -> semio_framework_plugin::ActionDescriptor) -> Vec<WindowMeasure> {
     let current = if lod_mode.is_empty() { "medium" } else { lod_mode };
     vec![WindowMeasure::Select {
         id: "procedural3d-measure-lod".into(),
@@ -49,7 +49,7 @@ pub fn window_measures(lod_mode: &str, on_change: impl Fn(&str, Option<serde_jso
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(document: &Procedural3dSnapshot, config: &Procedural3dConfig, session: &FlowEvalSession) -> UiNode {
+pub async fn render(document: &Procedural3dSnapshot, config: &Procedural3dConfig, session: &FlowEvalSession) -> UiNode {
     let fixture = &document.fixture;
     let host = host_from_fixture(fixture);
     let (nodes, edges) = fixture_to_workflow(&host.dag.fixture);
@@ -87,14 +87,14 @@ mod tests {
     use crate::editor::procedural3d::testkit::{app, render as render_body};
 
     #[test]
-    fn renders_node_graph_scene() {
+    async fn renders_node_graph_scene() {
         let _serial = crate::editor::procedural3d::test_support::lock();
         let mut app = app();
         assert!(render_body(&mut app, PROCEDURAL_3D_PLAY_BODY_MAIN).contains("node-graph"));
     }
 
     #[test]
-    fn main_graph_scene_exports_flow_backed_node_graph_fields() {
+    async fn main_graph_scene_exports_flow_backed_node_graph_fields() {
         let _serial = crate::editor::procedural3d::test_support::lock();
         let mut app = app();
         let json = render_body(&mut app, PROCEDURAL_3D_PLAY_BODY_MAIN);

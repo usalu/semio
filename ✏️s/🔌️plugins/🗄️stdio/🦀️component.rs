@@ -11,7 +11,7 @@ use semio_framework_plugin::{ExecutionMode, Plugin, PluginAssemblyError};
 /// `Isolated` (no publisher trust assumed beyond the sandbox default, same as every other
 /// migrated plugin so far); and it asks the broker for document write access, because every one
 /// of its ~90 registered editors persists mutations back to whichever of these formats is open.
-pub fn plugin() -> Result<Plugin, PluginAssemblyError> {
+pub async fn plugin() -> Result<Plugin, PluginAssemblyError> {
     let mut builder = Plugin::builder("stdio").label("Stdio").version("0.1.0");
     for assembly in crate::registry::artifact_assemblies()? {
         builder = match assembly {

@@ -12,7 +12,7 @@ pub const SPACE_INDEX_BODY_MEMBERS: &str = "s.space.members";
 pub const SPACE_INDEX_PANEL_MEMBERS: &str = "s-space-members";
 
 //#region 🔖️Definition
-pub fn definition() -> PanelTabDefinition {
+pub async fn definition() -> PanelTabDefinition {
     PanelTabDefinition {
         kind: PanelTabKind::App(SPACE_INDEX_PANEL_MEMBERS.into()),
         label: LocalizedLabel::native("Members", "Mitglieder"),
@@ -24,11 +24,11 @@ pub fn definition() -> PanelTabDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-fn action_button(id: &str, label: impl Into<Label>, icon: &str, action: &str, args: serde_json::Value) -> UiTreeItemNode {
+async fn action_button(id: &str, label: impl Into<Label>, icon: &str, action: &str, args: serde_json::Value) -> UiTreeItemNode {
     UiTreeItemNode { icon_id: Some(icon.into()), menu: None, ..tree_item_with_action(id, label, None, space_index_action(action, Some(args))) }
 }
 
-fn member_row(config: &SpaceIndexConfig, member: &crate::editor::space_index::config::SpaceIndexMember) -> UiTreeItemNode {
+async fn member_row(config: &SpaceIndexConfig, member: &crate::editor::space_index::config::SpaceIndexMember) -> UiTreeItemNode {
     let row_id = format!("member:{}", member.user_id);
     let label = if member.display_name.is_empty() { member.email.clone() } else { format!("{} ({})", member.display_name, member.email) };
     let _ = config;
@@ -49,7 +49,7 @@ fn member_row(config: &SpaceIndexConfig, member: &crate::editor::space_index::co
 /// precedent) — a real facet, not a one-line fix, deferred rather than half-built at this effort
 /// level. Every tree-content string below is English-only until that lands; every STATIC manifest
 /// string (panel tab, dialogs, action labels) is already en+de.
-pub fn render(config: &SpaceIndexConfig) -> UiNode {
+pub async fn render(config: &SpaceIndexConfig) -> UiNode {
     let visibility_action = if config.visibility == "public" { action_button("s-space-visibility", Label::data("Make Private"), "lock", "setVisibility", json!({ "visibility": "private" })) } else { action_button("s-space-visibility", Label::data("Make Public"), "globe", "setVisibility", json!({ "visibility": "public" })) };
     let action_items = vec![
         action_button("s-space-invite", Label::data("Invite Member"), "user-plus", "requestInviteMember", json!({})),
@@ -74,7 +74,7 @@ mod tests {
     use crate::editor::space_index::config::SpaceIndexMember;
 
     #[test]
-    fn empty_config_renders_the_empty_state() {
+    async fn empty_config_renders_the_empty_state() {
         let node = render(&SpaceIndexConfig::default());
         let json = serde_json::to_string(&node).unwrap();
         assert!(json.contains("s-space-members-empty"));
@@ -83,7 +83,7 @@ mod tests {
     }
 
     #[test]
-    fn members_render_with_a_remove_action_each() {
+    async fn members_render_with_a_remove_action_each() {
         let config = SpaceIndexConfig { members: vec![SpaceIndexMember { user_id: "u-1".into(), email: "a@example.com".into(), display_name: "Alice".into(), role: "author".into() }], ..Default::default() };
         let node = render(&config);
         let json = serde_json::to_string(&node).unwrap();
@@ -93,7 +93,7 @@ mod tests {
     }
 
     #[test]
-    fn public_visibility_offers_make_private() {
+    async fn public_visibility_offers_make_private() {
         let config = SpaceIndexConfig { visibility: "public".into(), ..Default::default() };
         let node = render(&config);
         let json = serde_json::to_string(&node).unwrap();

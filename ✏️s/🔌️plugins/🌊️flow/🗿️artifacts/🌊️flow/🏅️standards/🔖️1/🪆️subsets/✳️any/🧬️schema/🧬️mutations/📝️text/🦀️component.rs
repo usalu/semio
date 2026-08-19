@@ -14,7 +14,7 @@ mod tests {
     use protocol::{Identified, Mutation, MutationDiff};
 
     #[test]
-    fn move_widgets_inverse_restores_base() {
+    async fn move_widgets_inverse_restores_base() {
         let base = FlowSnapshot::default();
         let mutation = FlowMutation::MoveWidgets(crate::artifacts::flow::schema::mutations::move_widgets::mutation::MoveWidgets {
             entries: vec![flow::FlowLayoutEntry { id: "slider".into(), layout: Some(flow::WidgetLayout { x: 10.0, y: 20.0 }) }],
@@ -28,7 +28,7 @@ mod tests {
     }
 
     #[test]
-    fn create_widget_then_delete_widget_round_trips_to_base() {
+    async fn create_widget_then_delete_widget_round_trips_to_base() {
         let base = FlowSnapshot::default();
         let widget = flow::Widget::InputNote { id: "note-1".into(), text: "hello".into() };
         let create = FlowMutation::CreateWidget(crate::artifacts::flow::schema::mutations::create_widget::mutation::CreateWidget { index: base.to_fixture().widgets.len(), widget });
@@ -44,7 +44,7 @@ mod tests {
     }
 
     #[test]
-    fn connect_widgets_then_disconnect_widgets_round_trips_to_base() {
+    async fn connect_widgets_then_disconnect_widgets_round_trips_to_base() {
         let base = FlowSnapshot::default();
         let connect = FlowMutation::ConnectWidgets(crate::artifacts::flow::schema::mutations::connect_widgets::mutation::ConnectWidgets {
             index: base.to_fixture().synapses.len(),
@@ -69,7 +69,7 @@ mod tests {
     /// applying it must land the same widget/synapse pair a hand-written create+connect would, and
     /// its `inverse` (folded from the SAME plan) must undo both in one shot.
     #[test]
-    fn duplicate_widget_composite_round_trips_to_base() {
+    async fn duplicate_widget_composite_round_trips_to_base() {
         let base = FlowSnapshot::default();
         let widget = flow::Widget::InputNote { id: "note-1".into(), text: "hello".into() };
         let create = FlowMutation::CreateWidget(crate::artifacts::flow::schema::mutations::create_widget::mutation::CreateWidget { index: base.to_fixture().widgets.len(), widget });

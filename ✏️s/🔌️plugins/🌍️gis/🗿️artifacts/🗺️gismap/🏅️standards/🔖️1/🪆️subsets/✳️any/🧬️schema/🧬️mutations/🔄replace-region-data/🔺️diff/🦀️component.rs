@@ -8,7 +8,7 @@ use crate::artifacts::gismap::{GisMapSnapshot, MapFeaturePatch};
 /// real handcrafted construction, never apply-then-capture, never a snapshot clone. Error
 /// `target-missing` when `id` doesn't name a region; Warning `no-op` when `new_data` already
 /// equals the region's current data.
-pub fn diff(payload: &ReplaceRegionData, base: &GisMapSnapshot) -> protocol::MutationOutcome<GisMapDiff> {
+pub async fn diff(payload: &ReplaceRegionData, base: &GisMapSnapshot) -> protocol::MutationOutcome<GisMapDiff> {
     let Some(existing) = base.regions.iter().find(|feature| feature.id == payload.id) else {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Region \"{}\" does not exist.", payload.id), [payload.id.clone()]);
     };

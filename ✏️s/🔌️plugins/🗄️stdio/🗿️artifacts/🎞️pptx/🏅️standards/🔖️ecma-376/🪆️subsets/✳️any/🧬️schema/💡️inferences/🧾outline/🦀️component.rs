@@ -18,7 +18,7 @@ pub struct PptxOutline {
     pub word_count: u32,
 }
 
-fn shape_word_count(shape: &PptxShape) -> u32 {
+async fn shape_word_count(shape: &PptxShape) -> u32 {
     let text_frame = match shape {
         PptxShape::TextBox { text_frame, .. } | PptxShape::Placeholder { text_frame, .. } => text_frame,
         PptxShape::Picture { .. } | PptxShape::Other { .. } => return 0,
@@ -27,7 +27,7 @@ fn shape_word_count(shape: &PptxShape) -> u32 {
 }
 
 impl PptxOutline {
-    pub fn compute(snapshot: &PptxSnapshot) -> Self {
+    pub async fn compute(snapshot: &PptxSnapshot) -> Self {
         let slide_count = snapshot.presentation.slides.len() as u32;
         let mut shape_count = 0u32;
         let mut word_count = 0u32;
@@ -47,7 +47,7 @@ mod tests {
     use crate::artifacts::pptx::schema::snapshot::{PptxParagraph, PptxSlide};
 
     #[test]
-    fn counts_slides_shapes_and_words() {
+    async fn counts_slides_shapes_and_words() {
         let snapshot = PptxSnapshot {
             schema: "stdio.pptx".into(),
             opc: Default::default(),
@@ -63,7 +63,7 @@ mod tests {
     }
 
     #[test]
-    fn outline_is_deterministic() {
+    async fn outline_is_deterministic() {
         let snapshot = PptxSnapshot::default();
         assert_eq!(PptxOutline::compute(&snapshot), PptxOutline::compute(&snapshot));
     }

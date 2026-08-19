@@ -16,7 +16,7 @@ pub struct ChangeCuratedItemCount {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn change_curated_item_count(object_id: String, new_count: u32) -> SourcingMutation {
+pub async fn change_curated_item_count(object_id: String, new_count: u32) -> SourcingMutation {
     SourcingMutation::ChangeCuratedItemCount(ChangeCuratedItemCount { object_id, new_count })
 }
 
@@ -24,16 +24,16 @@ impl protocol::MutationKind<CurateSnapshot, SourcingMutation> for ChangeCuratedI
     const SEMANTICS: protocol::SemanticDescriptor =
         protocol::SemanticDescriptor { verb: "change", entity: "curated-item", kind: "change-curated-item-count", record: "ChangedCuratedItemCount" };
 
-    fn diff(&self, base: &CurateSnapshot) -> protocol::MutationOutcome<CurateDiff> {
+    async fn diff(&self, base: &CurateSnapshot) -> protocol::MutationOutcome<CurateDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &CurateSnapshot) -> Vec<SourcingMutation> {
+    async fn inverse(&self, base: &CurateSnapshot) -> Vec<SourcingMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         format!("Set curated count of \"{}\" to {}", self.object_id, self.new_count)
     }
-    fn target(&self) -> Vec<String> {
+    async fn target(&self) -> Vec<String> {
         vec![self.object_id.clone()]
     }
 }

@@ -14,16 +14,16 @@ pub struct CreateTexture {
 impl protocol::MutationKind<SemioMeshSnapshot, SemioMeshMutation> for CreateTexture {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "create", entity: "texture", kind: "create-texture", record: "CreatedTexture" };
 
-    fn diff(&self, base: &SemioMeshSnapshot) -> protocol::MutationOutcome<<SemioMeshMutation as protocol::Mutation<SemioMeshSnapshot>>::Diff> {
+    async fn diff(&self, base: &SemioMeshSnapshot) -> protocol::MutationOutcome<<SemioMeshMutation as protocol::Mutation<SemioMeshSnapshot>>::Diff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &SemioMeshSnapshot) -> Vec<SemioMeshMutation> {
+    async fn inverse(&self, base: &SemioMeshSnapshot) -> Vec<SemioMeshMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         format!("Create texture \"{}\"", self.texture.id)
     }
-    fn target(&self) -> Vec<String> {
+    async fn target(&self) -> Vec<String> {
         vec![self.texture.id.clone()]
     }
 }

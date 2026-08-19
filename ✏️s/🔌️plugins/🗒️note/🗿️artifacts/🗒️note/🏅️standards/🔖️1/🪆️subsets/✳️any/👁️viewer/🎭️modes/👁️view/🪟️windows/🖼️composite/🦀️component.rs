@@ -18,7 +18,7 @@ const NOTE_VIEW_CONTROLLER_ID: &str = "note-view";
 
 //#region 🔖️Definition
 /// 🧱️ Stitched into the viewer manifest by `crate::viewer::note::create_note_viewer`.
-pub fn definition() -> WindowKindDefinition {
+pub async fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
         id: WINDOW_KIND_ID.into(),
         label: LocalizedLabel::native("Canvas", "Zeichenfläche"),
@@ -44,7 +44,7 @@ pub fn definition() -> WindowKindDefinition {
 /// any live pan/zoom the editor's own `NoteConfig.camera` carries; the same intentional
 /// simplification the cad pilot's viewer documented for its own camera/environment defaults), no
 /// active drawing utility (nothing is drawable), `InkCanvasScene.interactive: false`.
-pub fn render(document: &NoteSnapshot) -> UiNode {
+pub async fn render(document: &NoteSnapshot) -> UiNode {
     let camera = crate::artifacts::note::NoteCamera::default();
     let mut document_value = serde_json::to_value(document).unwrap_or_else(|_| serde_json::json!({}));
     if let Some(map) = document_value.as_object_mut() {
@@ -61,14 +61,14 @@ mod tests {
     use super::*;
 
     #[test]
-    fn definition_declares_an_ink_canvas_window() {
+    async fn definition_declares_an_ink_canvas_window() {
         let def = definition();
         assert_eq!(def.id, WINDOW_KIND_ID);
         assert_eq!(def.surface_kind, SurfaceKind::InkCanvas);
     }
 
     #[test]
-    fn render_produces_a_read_only_ink_canvas_scene_for_the_empty_document() {
+    async fn render_produces_a_read_only_ink_canvas_scene_for_the_empty_document() {
         let document = crate::artifacts::note::schema::empty_note_snapshot();
         let node = render(&document);
         let json = serde_json::to_string(&node).unwrap();

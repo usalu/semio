@@ -25,7 +25,7 @@ pub struct PlyBounds {
 
 /// 🔣️ Converts whichever numeric [`PlyValue`] variant appears to `f64`; `List` cells (e.g. a
 /// face's vertex-index list) have no scalar meaning and are honestly `None`.
-fn ply_value_as_f64(value: &PlyValue) -> Option<f64> {
+async fn ply_value_as_f64(value: &PlyValue) -> Option<f64> {
     match value {
         PlyValue::Char(v) => Some(*v as f64),
         PlyValue::UChar(v) => Some(*v as f64),
@@ -39,7 +39,7 @@ fn ply_value_as_f64(value: &PlyValue) -> Option<f64> {
     }
 }
 
-fn expand(min: &mut [f64; 3], max: &mut [f64; 3], seen: &mut bool, p: [f64; 3]) {
+async fn expand(min: &mut [f64; 3], max: &mut [f64; 3], seen: &mut bool, p: [f64; 3]) {
     if !*seen {
         *min = p;
         *max = p;
@@ -52,13 +52,13 @@ fn expand(min: &mut [f64; 3], max: &mut [f64; 3], seen: &mut bool, p: [f64; 3]) 
     }
 }
 
-fn property_index(properties: &[PlyProperty], name: &str) -> Option<usize> {
+async fn property_index(properties: &[PlyProperty], name: &str) -> Option<usize> {
     properties.iter().position(|p| p.name() == name)
 }
 
 /// 📦️ Computes [`PlyBounds`] over the `"vertex"` element's own `x`/`y`/`z` property columns, plus
 /// the `"face"` element's own row count — see module doc comment for the by-name lookup rule.
-pub fn compute_ply_bounds(snapshot: &PlySnapshot) -> PlyBounds {
+pub async fn compute_ply_bounds(snapshot: &PlySnapshot) -> PlyBounds {
     let mut min = [0.0f64; 3];
     let mut max = [0.0f64; 3];
     let mut seen = false;
@@ -95,7 +95,7 @@ mod tests {
     use crate::artifacts::ply::schema::snapshot::{PlyElement, PlyFormat, PlyRow};
     use crate::artifacts::ply::STDIO_PLY_DOCUMENT_SCHEMA;
 
-    fn vertex_element(rows: Vec<[f64; 3]>) -> PlyElement {
+    async fn vertex_element(rows: Vec<[f64; 3]>) -> PlyElement {
         PlyElement {
             name: "vertex".into(),
             count: rows.len(),
@@ -108,7 +108,7 @@ mod tests {
         }
     }
 
-    fn face_element(face_count: usize) -> PlyElement {
+    async fn face_element(face_count: usize) -> PlyElement {
         PlyElement {
             name: "face".into(),
             count: face_count,
@@ -118,7 +118,7 @@ mod tests {
     }
 
     #[test]
-    fn bounds_matches_hand_built_element_extent() {
+    async fn bounds_matches_hand_built_element_extent() {
         let snapshot = PlySnapshot { schema: STDIO_PLY_DOCUMENT_SCHEMA.into(), format: PlyFormat::Ascii, comments: Vec::new(), elements: vec![vertex_element(vec![[-1.0, 0.0, 2.0], [3.0, 5.0, -2.0], [0.0, 1.0, 1.0]]), face_element(2)] };
         let bounds = compute_ply_bounds(&snapshot);
         assert_eq!(bounds.min, [-1.0, 0.0, -2.0]);
@@ -128,13 +128,13 @@ mod tests {
     }
 
     #[test]
-    fn inference_determinism_law() {
+    async fn inference_determinism_law() {
         let snapshot = PlySnapshot { schema: STDIO_PLY_DOCUMENT_SCHEMA.into(), format: PlyFormat::Ascii, comments: Vec::new(), elements: vec![vertex_element(vec![[1.0, 1.0, 1.0]])] };
         assert_eq!(compute_ply_bounds(&snapshot), compute_ply_bounds(&snapshot));
     }
 
     #[test]
-    fn inference_default_law() {
+    async fn inference_default_law() {
         assert_eq!(compute_ply_bounds(&PlySnapshot::default()), PlyBounds::default());
     }
 }

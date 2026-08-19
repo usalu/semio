@@ -6,7 +6,7 @@ use crate::artifacts::semio::standards::v1::subsets::graph::schema::diff::{Semio
 use crate::artifacts::semio::standards::v1::subsets::graph::schema::snapshot::{SemioGraphNode, SemioGraphSnapshot};
 
 //#region 🔖️Diff
-pub fn diff(payload: &CreateNode, base: &SemioGraphSnapshot) -> protocol::MutationOutcome<SemioGraphDiff> {
+pub async fn diff(payload: &CreateNode, base: &SemioGraphSnapshot) -> protocol::MutationOutcome<SemioGraphDiff> {
     if base.nodes.iter().any(|n| n.id == payload.id) {
         return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("A node with id \"{}\" already exists.", payload.id.value), [payload.id.value.clone()]);
     }

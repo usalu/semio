@@ -14,23 +14,23 @@ pub struct DisconnectHandles {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn disconnect_handles(id: String) -> Puzzle2dMutation {
+pub async fn disconnect_handles(id: String) -> Puzzle2dMutation {
     Puzzle2dMutation::DisconnectHandles(DisconnectHandles { id })
 }
 
 impl protocol::MutationKind<Puzzle2dSnapshot, Puzzle2dMutation> for DisconnectHandles {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "disconnect", entity: "handles", kind: "disconnect-handles", record: "DisconnectedHandles" };
 
-    fn diff(&self, base: &Puzzle2dSnapshot) -> protocol::MutationOutcome<Puzzle2dDiff> {
+    async fn diff(&self, base: &Puzzle2dSnapshot) -> protocol::MutationOutcome<Puzzle2dDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &Puzzle2dSnapshot) -> Vec<Puzzle2dMutation> {
+    async fn inverse(&self, base: &Puzzle2dSnapshot) -> Vec<Puzzle2dMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         format!("Disconnect \"{}\"", self.id)
     }
-    fn target(&self) -> Vec<String> {
+    async fn target(&self) -> Vec<String> {
         vec![self.id.clone()]
     }
 }

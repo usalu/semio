@@ -14,16 +14,16 @@ pub struct ChangeVariableActionValue {
 impl protocol::MutationKind<En1990Snapshot, En1990Mutation> for ChangeVariableActionValue {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "variable-action", kind: "change-variable-action-value", record: "ChangedVariableActionValue" };
 
-    fn diff(&self, base: &En1990Snapshot) -> protocol::MutationOutcome<<En1990Mutation as protocol::Mutation<En1990Snapshot>>::Diff> {
+    async fn diff(&self, base: &En1990Snapshot) -> protocol::MutationOutcome<<En1990Mutation as protocol::Mutation<En1990Snapshot>>::Diff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &En1990Snapshot) -> Vec<En1990Mutation> {
+    async fn inverse(&self, base: &En1990Snapshot) -> Vec<En1990Mutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         format!("Change variable action #{} value to {}", self.index, self.new_value)
     }
-    fn target(&self) -> Vec<String> {
+    async fn target(&self) -> Vec<String> {
         vec![self.index.to_string()]
     }
 }

@@ -15,7 +15,7 @@ pub struct JsonIntoSequence;
 impl Deserializer<SequenceSnapshot> for JsonIntoSequence {
     const FROM: Dialect = JSON_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Exact;
-    fn deserialize(payload: &IoPayload) -> IoResult<SequenceSnapshot> {
+    async fn deserialize(payload: &IoPayload) -> IoResult<SequenceSnapshot> {
         let IoPayload::Binary(bytes) = payload else {
             return Err(IoError { message: "JsonIntoSequence: expected a binary json payload".to_string(), diagnostics: Vec::new() });
         };

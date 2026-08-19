@@ -16,7 +16,7 @@ pub struct PlaygroundArtifact {
 
 //#region 🔖️Conversions
 impl Default for PlaygroundArtifact {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self {
             schema: crate::artifacts::playground::PLAYGROUND_DOCUMENT_SCHEMA.into(),
         }
@@ -25,21 +25,21 @@ impl Default for PlaygroundArtifact {
 
 impl PlaygroundArtifact {
     /// 📸️ Persisted subset.
-    pub fn to_snapshot(&self) -> crate::artifacts::playground::standards::v1::subsets::any::schema::snapshot::PlaygroundSnapshot {
+    pub async fn to_snapshot(&self) -> crate::artifacts::playground::standards::v1::subsets::any::schema::snapshot::PlaygroundSnapshot {
         crate::artifacts::playground::standards::v1::subsets::any::schema::snapshot::PlaygroundSnapshot {
             schema: self.schema.clone(),
         }
     }
 
     /// 🧬️ Builds a full artifact from a snapshot.
-    pub fn from_snapshot(snapshot: crate::artifacts::playground::standards::v1::subsets::any::schema::snapshot::PlaygroundSnapshot) -> Self {
+    pub async fn from_snapshot(snapshot: crate::artifacts::playground::standards::v1::subsets::any::schema::snapshot::PlaygroundSnapshot) -> Self {
         Self {
             schema: snapshot.schema,
         }
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
-    pub fn set_snapshot(&mut self, snapshot: crate::artifacts::playground::standards::v1::subsets::any::schema::snapshot::PlaygroundSnapshot) {
+    pub async fn set_snapshot(&mut self, snapshot: crate::artifacts::playground::standards::v1::subsets::any::schema::snapshot::PlaygroundSnapshot) {
         self.schema = snapshot.schema;
     }
 }
@@ -49,14 +49,14 @@ impl PlaygroundArtifact {
 /// 🏗️ Empty default playground snapshot (relocated from the deleted `⚙️engine`, ticket
 /// 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES: pure document helper, no `&mut self`,
 /// no app type — belongs beside the snapshot it builds).
-pub fn empty_playground_snapshot() -> crate::artifacts::playground::standards::v1::subsets::any::schema::snapshot::PlaygroundSnapshot {
+pub async fn empty_playground_snapshot() -> crate::artifacts::playground::standards::v1::subsets::any::schema::snapshot::PlaygroundSnapshot {
     crate::artifacts::playground::standards::v1::subsets::any::schema::snapshot::PlaygroundSnapshot::default()
 }
 //#endregion 🔖️DocumentHelpers
 
 //#region 🔖️Descriptor
 /// 🧬️ Descriptor for `s.demonstrator.playground` — twenty handcrafted schema leaves.
-pub fn playground_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
+pub async fn playground_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
     schema::ArtifactSchemaDescriptor {
         id: "s.demonstrator.playground",
         artifact: schema::FacetLeaves {
@@ -107,15 +107,15 @@ pub mod derived_construction {
         type Snapshot = PlaygroundSnapshot;
         type Mutation = PlaygroundMutation;
         type Diff = PlaygroundDiff;
-        fn empty() -> Self { Self { snapshot: PlaygroundSnapshot::default(), diagnostics: Vec::new() } }
-        fn from_snapshot(snapshot: Self::Snapshot) -> Self { Self { snapshot, diagnostics: Vec::new() } }
-        fn from_text(text: &str) -> Result<Self, store::TextError> {
+        async fn empty() -> Self { Self { snapshot: PlaygroundSnapshot::default(), diagnostics: Vec::new() } }
+        async fn from_snapshot(snapshot: Self::Snapshot) -> Self { Self { snapshot, diagnostics: Vec::new() } }
+        async fn from_text(text: &str) -> Result<Self, store::TextError> {
             Ok(Self::from_snapshot(<PlaygroundSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
-        fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
+        async fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
             Ok(Self::from_snapshot(<PlaygroundSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
         }
-        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
+        async fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let outcome = <PlaygroundMutation as protocol::Mutation<PlaygroundSnapshot>>::diff(&mutation, &self.snapshot);
             match protocol::MutationDiff::apply(outcome.diff(), &self.snapshot) {
                 Ok(snapshot) => self.snapshot = snapshot,
@@ -127,7 +127,7 @@ pub mod derived_construction {
             }
             (self, outcome)
         }
-        fn absorb(
+        async fn absorb(
             mut self,
             diff: Self::Diff,
         ) -> protocol::MutationApplyResult<Self> {
@@ -135,7 +135,7 @@ pub mod derived_construction {
             self.snapshot = snapshot;
             Ok(self)
         }
-        fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
+        async fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
             if self.diagnostics.is_empty() { Ok(self.snapshot) } else { Err(self.diagnostics) }
         }
     }
@@ -158,11 +158,11 @@ pub mod derived_analysis {
         type Parts = PlaygroundParts;
         const DIALECT: Dialect = Dialect { artifact_kind: "s.playground", standard: StandardId("1"), subset: SubsetId("*") };
 
-        fn sniff(_source: &AnalyzeSource<'_>) -> IoConfidence {
+        async fn sniff(_source: &AnalyzeSource<'_>) -> IoConfidence {
             IoConfidence::Medium
         }
 
-        fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
+        async fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
             let mut parts = PlaygroundParts::default();
             let mut diagnostics = Vec::new();
             let mut confidence = IoConfidence::High;
@@ -196,7 +196,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn empty_snapshot_matches_schema() {
+    async fn empty_snapshot_matches_schema() {
         let snapshot = empty_playground_snapshot();
         assert_eq!(snapshot.schema, crate::artifacts::playground::PLAYGROUND_DOCUMENT_SCHEMA);
     }

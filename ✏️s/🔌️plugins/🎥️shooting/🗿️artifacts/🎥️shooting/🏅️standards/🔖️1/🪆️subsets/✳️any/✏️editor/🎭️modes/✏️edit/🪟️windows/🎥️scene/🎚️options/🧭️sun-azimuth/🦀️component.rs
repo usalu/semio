@@ -6,7 +6,7 @@ use crate::artifacts::shooting::ShootingSnapshot;
 use semio_framework_plugin::WindowMeasure;
 
 //#region 🔖️Measure
-pub fn measure(snapshot: &ShootingSnapshot, labels: &ShootingLabels) -> WindowMeasure {
+pub async fn measure(snapshot: &ShootingSnapshot, labels: &ShootingLabels) -> WindowMeasure {
     WindowMeasure::Slider {
         id: "shooting.measure.sun-azimuth".into(),
         label: Some(labels.measure_sun_azimuth.into()),
@@ -32,7 +32,7 @@ mod tests {
     use crate::editor::shooting::terminology::shooting_play_labels;
 
     #[test]
-    fn sun_azimuth_measure_spans_a_full_turn() {
+    async fn sun_azimuth_measure_spans_a_full_turn() {
         let snapshot = crate::artifacts::shooting::schema::default_snapshot();
         let labels = shooting_play_labels(&ShootingConfig::default());
         match measure(&snapshot, labels) {

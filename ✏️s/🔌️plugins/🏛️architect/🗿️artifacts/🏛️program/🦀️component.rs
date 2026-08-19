@@ -40,7 +40,7 @@ pub type ProgramBenchmarksChild = store::ArtifactChild<semio_s_plugin_stdio::art
 /// truth on decode); `id`/`name` are a redundant native-column projection for table-shaped tooling
 /// that only understands the neutral subset — the same split `🕸️dag`'s node/edge converter uses for
 /// its own richer-than-native domain type.
-pub fn benchmark_table_from_records(records: &[BenchmarkRecord]) -> semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::table::schema::snapshot::SemioTableSnapshot {
+pub async fn benchmark_table_from_records(records: &[BenchmarkRecord]) -> semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::table::schema::snapshot::SemioTableSnapshot {
     use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::table::schema::snapshot::{SemioTableCellKind, SemioTableColumn, SemioTableRow, SemioTableSnapshot, STDIO_SEMIOTABLE_DOCUMENT_SCHEMA};
     use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::value::schema::snapshot::SemioValue;
     SemioTableSnapshot {
@@ -57,7 +57,7 @@ pub fn benchmark_table_from_records(records: &[BenchmarkRecord]) -> semio_s_plug
 /// never a stub. A row whose `json` cell is missing or fails to parse is honestly SKIPPED (not
 /// fabricated from `id`/`name` alone, since `BenchmarkRecord` has no `Default` and a partial
 /// reconstruction would silently invent data) — documented here rather than hidden.
-pub fn benchmark_records_from_table(table: &semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::table::schema::snapshot::SemioTableSnapshot) -> Vec<BenchmarkRecord> {
+pub async fn benchmark_records_from_table(table: &semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::table::schema::snapshot::SemioTableSnapshot) -> Vec<BenchmarkRecord> {
     use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::value::schema::snapshot::SemioValue;
     table
         .rows
@@ -88,7 +88,7 @@ thread_local! {
     static PROGRAM_BENCHMARKS_SCRATCH: std::cell::RefCell<std::collections::HashMap<String, Vec<BenchmarkRecord>>> = std::cell::RefCell::new(std::collections::HashMap::new());
 }
 
-fn program_benchmarks_scene_id(records: &[BenchmarkRecord]) -> String {
+async fn program_benchmarks_scene_id(records: &[BenchmarkRecord]) -> String {
     use std::hash::{Hash, Hasher};
     let content_json = serde_json::to_string(records).unwrap_or_default();
     let mut hasher = std::collections::hash_map::DefaultHasher::new();
@@ -96,7 +96,7 @@ fn program_benchmarks_scene_id(records: &[BenchmarkRecord]) -> String {
     format!("architect-benchmarks-{:016x}", hasher.finish())
 }
 
-fn program_benchmarks_target() -> store::os_io::ArtifactRef {
+async fn program_benchmarks_target() -> store::os_io::ArtifactRef {
     store::os_io::ArtifactRef { artifact_id: "architect-program-benchmarks".into(), dialect: store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "table".into() } }
 }
 
@@ -104,7 +104,7 @@ fn program_benchmarks_target() -> store::os_io::ArtifactRef {
 /// one call — the standard way every mutation-diff/fixture builder in this artifact creates
 /// `benchmarks` field values; never construct this handle without also caching, or
 /// `program_benchmarks` will read back empty.
-pub fn benchmarks_child_from_records(records: &[BenchmarkRecord]) -> ProgramBenchmarksChild {
+pub async fn benchmarks_child_from_records(records: &[BenchmarkRecord]) -> ProgramBenchmarksChild {
     let scene_id = program_benchmarks_scene_id(records);
     PROGRAM_BENCHMARKS_SCRATCH.with(|cache| {
         cache.borrow_mut().insert(scene_id.clone(), records.to_vec());
@@ -115,7 +115,7 @@ pub fn benchmarks_child_from_records(records: &[BenchmarkRecord]) -> ProgramBenc
 /// 🔎 The live `benchmarks` rows behind a snapshot's composed child — the single read call site
 /// every mutation-diff/panel/report call path in this artifact now uses instead of a direct
 /// `.benchmarks` field. Empty (never a panic) on a cache miss, per this region's own doc comment.
-pub fn program_benchmarks(snapshot: &ProgramSnapshot) -> Vec<BenchmarkRecord> {
+pub async fn program_benchmarks(snapshot: &ProgramSnapshot) -> Vec<BenchmarkRecord> {
     PROGRAM_BENCHMARKS_SCRATCH.with(|cache| cache.borrow().get(&snapshot.benchmarks.child_id).cloned()).unwrap_or_default()
 }
 //#endregion 🔖️WorkingScene
@@ -131,7 +131,7 @@ pub type ProgramKnowledgeChild = store::ArtifactChild<semio_s_plugin_stdio::arti
 //#endregion 🔖️ChildTypes
 
 //#region 🔖️Converters
-pub fn knowledge_table_from_records(records: &[KnowledgeRecord]) -> semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::table::schema::snapshot::SemioTableSnapshot {
+pub async fn knowledge_table_from_records(records: &[KnowledgeRecord]) -> semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::table::schema::snapshot::SemioTableSnapshot {
     use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::table::schema::snapshot::{SemioTableCellKind, SemioTableColumn, SemioTableRow, SemioTableSnapshot, STDIO_SEMIOTABLE_DOCUMENT_SCHEMA};
     use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::value::schema::snapshot::SemioValue;
     SemioTableSnapshot {
@@ -144,7 +144,7 @@ pub fn knowledge_table_from_records(records: &[KnowledgeRecord]) -> semio_s_plug
     }
 }
 
-pub fn knowledge_records_from_table(table: &semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::table::schema::snapshot::SemioTableSnapshot) -> Vec<KnowledgeRecord> {
+pub async fn knowledge_records_from_table(table: &semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::table::schema::snapshot::SemioTableSnapshot) -> Vec<KnowledgeRecord> {
     use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::value::schema::snapshot::SemioValue;
     table
         .rows
@@ -162,7 +162,7 @@ thread_local! {
     static PROGRAM_KNOWLEDGE_SCRATCH: std::cell::RefCell<std::collections::HashMap<String, Vec<KnowledgeRecord>>> = std::cell::RefCell::new(std::collections::HashMap::new());
 }
 
-fn program_knowledge_scene_id(records: &[KnowledgeRecord]) -> String {
+async fn program_knowledge_scene_id(records: &[KnowledgeRecord]) -> String {
     use std::hash::{Hash, Hasher};
     let content_json = serde_json::to_string(records).unwrap_or_default();
     let mut hasher = std::collections::hash_map::DefaultHasher::new();
@@ -170,11 +170,11 @@ fn program_knowledge_scene_id(records: &[KnowledgeRecord]) -> String {
     format!("architect-knowledge-{:016x}", hasher.finish())
 }
 
-fn program_knowledge_target() -> store::os_io::ArtifactRef {
+async fn program_knowledge_target() -> store::os_io::ArtifactRef {
     store::os_io::ArtifactRef { artifact_id: "architect-program-knowledge".into(), dialect: store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "table".into() } }
 }
 
-pub fn knowledge_child_from_records(records: &[KnowledgeRecord]) -> ProgramKnowledgeChild {
+pub async fn knowledge_child_from_records(records: &[KnowledgeRecord]) -> ProgramKnowledgeChild {
     let scene_id = program_knowledge_scene_id(records);
     PROGRAM_KNOWLEDGE_SCRATCH.with(|cache| {
         cache.borrow_mut().insert(scene_id.clone(), records.to_vec());
@@ -182,7 +182,7 @@ pub fn knowledge_child_from_records(records: &[KnowledgeRecord]) -> ProgramKnowl
     store::ArtifactChild::new(scene_id, program_knowledge_target())
 }
 
-pub fn program_knowledge(snapshot: &ProgramSnapshot) -> Vec<KnowledgeRecord> {
+pub async fn program_knowledge(snapshot: &ProgramSnapshot) -> Vec<KnowledgeRecord> {
     PROGRAM_KNOWLEDGE_SCRATCH.with(|cache| cache.borrow().get(&snapshot.knowledge.child_id).cloned()).unwrap_or_default()
 }
 //#endregion 🔖️WorkingScene
@@ -214,7 +214,7 @@ pub const ARCHITECT_DIALECT: semio_framework_plugin::app::Dialect =
 
 //#region 🔖️ArtifactKind
 /// 🗂️ This artifact's `ArtifactKindSpec` — Data × Value per owner-table (`data.🏛️program`).
-pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
+pub async fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
     semio_framework_plugin::ArtifactKindSpec {
         id: "data.🏛️program".into(),
         name: "Architect Program".into(),
@@ -232,7 +232,7 @@ pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
 }
 //#endregion 🔖️ArtifactKind
 
-pub fn empty_plugin() -> ProgramSnapshot {
+pub async fn empty_plugin() -> ProgramSnapshot {
     let project_id = EntityId::new_serial("project", "project");
     let governance_id = EntityId::new_serial("governance", "governance");
     ProgramSnapshot {
@@ -382,7 +382,7 @@ pub fn empty_plugin() -> ProgramSnapshot {
 }
 
 /// @emoji 🧪️ Sample program for tests with elements, stakeholders, and one adjacency.
-pub fn sample_plugin() -> ProgramSnapshot {
+pub async fn sample_plugin() -> ProgramSnapshot {
     let mut program = empty_plugin();
     program.meta.title = "Sample Clinic".into();
     program.meta.industry_sector = "healthcare".into();
@@ -511,14 +511,14 @@ mod tests {
     use super::*;
 
     #[test]
-    fn empty_plugin_has_schema() {
+    async fn empty_plugin_has_schema() {
         let program = empty_plugin();
         assert_eq!(program.schema, ARCHITECT_PROGRAM_SCHEMA);
         assert_eq!(program.meta.schema, ARCHITECT_PROGRAM_SCHEMA);
     }
 
     #[test]
-    fn sample_plugin_round_trips_json() {
+    async fn sample_plugin_round_trips_json() {
         let program = sample_plugin();
         let json = serde_json::to_string(&program).expect("serialize");
         let decoded: ProgramSnapshot = serde_json::from_str(&json).expect("deserialize");
@@ -528,25 +528,25 @@ mod tests {
 
     // #region 🔖️DslArtifact
     #[test]
-    fn empty_plugin_dsl_round_trips() {
+    async fn empty_plugin_dsl_round_trips() {
         semio_framework_os_kernel::os_store::test_support::assert_dsl_round_trip(&empty_plugin());
         semio_framework_os_kernel::os_store::test_support::assert_dsl_pack_equivalence(&empty_plugin());
     }
 
     #[test]
-    fn sample_plugin_dsl_round_trips() {
+    async fn sample_plugin_dsl_round_trips() {
         semio_framework_os_kernel::os_store::test_support::assert_dsl_round_trip(&sample_plugin());
     }
 
     #[test]
     // 🪲️ Blocked on a confirmed upstream `pack` crate bug, NOT an architect defect: table
     // rows (`#[dsl(table)] Vec<Stakeholder>` etc.) decode via `pack::value`'s self-describing
-    fn sample_plugin_dsl_pack_equivalence() {
+    async fn sample_plugin_dsl_pack_equivalence() {
         semio_framework_os_kernel::os_store::test_support::assert_dsl_pack_equivalence(&sample_plugin());
     }
 
     #[test]
-    fn sample_plugin_dsl_text_is_parseable_and_reflects_registers() {
+    async fn sample_plugin_dsl_text_is_parseable_and_reflects_registers() {
         let printed = sample_plugin().print_dsl();
         assert!(printed.contains("Sample Clinic"), "printed dsl text must contain program title: {printed}");
         assert!(printed.contains("REC"), "printed dsl text must contain the reception element code: {printed}");
@@ -559,7 +559,7 @@ mod tests {
     /// process-wide counter shared with every other test in this binary, so the serial ids a
     /// fresh call mints depend on test execution order and never match the fixture's baked-in ids.
     #[test]
-    fn architect_example_text_parses_to_sample_plugin_and_round_trips() {
+    async fn architect_example_text_parses_to_sample_plugin_and_round_trips() {
         let parsed = ProgramSnapshot::parse_dsl(crate::artifacts::program::dsl::ARCHITECT_EXAMPLE_TEXT).expect("parse bundled .architect example");
         let expected = sample_plugin();
         assert_eq!(parsed.meta.title, expected.meta.title);
@@ -579,7 +579,7 @@ mod tests {
     // #endregion 🔖️DslArtifact
 }
 //#region 🔖️Declaration
-pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
+pub async fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
     use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
     ArtifactDefinition::new(ArtifactIdentity::parse("s.program")?)
         .capability(
@@ -627,7 +627,7 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
         .capability(ArtifactCapability::new(ArtifactIdentity::parse("s.program.localization.de")?, ArtifactCapabilityKind::localization()).descriptor(b"Architekt")?.localization(ArtifactLocalization::new(ArtifactLocale::parse("de")?, "Architekt")?)?)
 }
 
-pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
+pub async fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
     semio_framework_plugin::ArtifactDeclaration::builder(definition()?)
         .schema(crate::artifacts::program::schema::program_artifact_schema_descriptor())
         .inferences([crate::artifacts::program::standards::v1::subsets::any::schema::inferences::program_artifact_inference_descriptor()])

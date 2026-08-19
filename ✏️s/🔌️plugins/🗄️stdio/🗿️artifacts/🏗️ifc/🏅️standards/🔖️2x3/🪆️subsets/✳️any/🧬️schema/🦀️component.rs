@@ -27,21 +27,21 @@ pub struct Ifc2x3Artifact {
 
 //#region 🔖️Conversions
 impl Default for Ifc2x3Artifact {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self::from_snapshot(Ifc2x3Snapshot::default())
     }
 }
 
 impl Ifc2x3Artifact {
-    pub fn to_snapshot(&self) -> Ifc2x3Snapshot {
+    pub async fn to_snapshot(&self) -> Ifc2x3Snapshot {
         Ifc2x3Snapshot { schema: self.schema.clone(), document: self.document.clone(), edm_preamble: self.edm_preamble.clone() }
     }
 
-    pub fn from_snapshot(snapshot: Ifc2x3Snapshot) -> Self {
+    pub async fn from_snapshot(snapshot: Ifc2x3Snapshot) -> Self {
         Self { schema: snapshot.schema, document: snapshot.document, edm_preamble: snapshot.edm_preamble }
     }
 
-    pub fn set_snapshot(&mut self, snapshot: Ifc2x3Snapshot) {
+    pub async fn set_snapshot(&mut self, snapshot: Ifc2x3Snapshot) {
         self.schema = snapshot.schema;
         self.document = snapshot.document;
         self.edm_preamble = snapshot.edm_preamble;
@@ -50,7 +50,7 @@ impl Ifc2x3Artifact {
 //#endregion 🔖️Conversions
 
 //#region 🔖️Descriptor
-pub fn ifc2x3_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
+pub async fn ifc2x3_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
     schema::ArtifactSchemaDescriptor {
         id: "s.stdio.ifc.2x3",
         artifact: schema::FacetLeaves {
@@ -102,27 +102,27 @@ pub mod derived_construction {
         type Snapshot = Ifc2x3Snapshot;
         type Mutation = Ifc2x3Mutation;
         type Diff = Ifc2x3Diff;
-        fn empty() -> Self {
+        async fn empty() -> Self {
             Self { snapshot: Ifc2x3Snapshot::default(), diagnostics: Vec::new() }
         }
-        fn from_snapshot(snapshot: Self::Snapshot) -> Self {
+        async fn from_snapshot(snapshot: Self::Snapshot) -> Self {
             Self { snapshot, diagnostics: Vec::new() }
         }
-        fn from_text(text: &str) -> Result<Self, store::TextError> {
+        async fn from_text(text: &str) -> Result<Self, store::TextError> {
             Ok(Self::from_snapshot(<Ifc2x3Snapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
-        fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
+        async fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
             Ok(Self::from_snapshot(<Ifc2x3Snapshot as store::ArtifactPack>::decode_pack(bytes)?))
         }
-        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
+        async fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let diff = apply_ifc2x3_mutation(&mut self.snapshot, &mutation);
             (self, diff)
         }
-        fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
+        async fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
             self.snapshot = <Ifc2x3Diff as protocol::MutationDiff<Ifc2x3Snapshot>>::apply(&diff, &self.snapshot)?;
             Ok(self)
         }
-        fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
+        async fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
             if self.diagnostics.is_empty() {
                 Ok(self.snapshot)
             } else {
@@ -152,7 +152,7 @@ pub mod derived_analysis {
     /// 🔍️ Real, honest confidence probe: `High` when the text/bytes look like a Part-21 envelope AND
     /// declare `IFC2X3` in `FILE_SCHEMA`; `Medium` for a Part-21 envelope of an unknown schema (could
     /// still decode -- IFC2X3 is layered on the same generic tokenizer); `Low` otherwise.
-    fn sniff_text(body: &str) -> IoConfidence {
+    async fn sniff_text(body: &str) -> IoConfidence {
         let trimmed = body.trim_start();
         if trimmed.starts_with("ISO-10303-21") {
             if trimmed.contains("IFC2X3") {
@@ -173,7 +173,7 @@ pub mod derived_analysis {
         type Parts = Ifc2x3Parts;
         const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.ifc", standard: StandardId("2x3"), subset: SubsetId("*") };
 
-        fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
+        async fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
             match source {
                 AnalyzeSource::Text(text) => {
                     let body = match store::semio_format::split_text_preamble(text) {
@@ -189,7 +189,7 @@ pub mod derived_analysis {
             }
         }
 
-        fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
+        async fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
             let mut parts = Ifc2x3Parts::default();
             let mut diagnostics = Vec::new();
             let mut confidence = IoConfidence::High;
@@ -226,19 +226,19 @@ pub mod derived_analysis {
         use super::*;
 
         #[test]
-        fn sniff_high_confidence_for_ifc2x3_envelope() {
+        async fn sniff_high_confidence_for_ifc2x3_envelope() {
             let text = "ISO-10303-21;\nHEADER;\nFILE_SCHEMA(('IFC2X3'));\nENDSEC;\nDATA;\nENDSEC;\nEND-ISO-10303-21;\n";
             assert_eq!(Ifc2x3AnalyzerAnalysis::sniff(&AnalyzeSource::Text(text)), IoConfidence::High);
         }
 
         #[test]
-        fn sniff_medium_confidence_for_other_part21_schema() {
+        async fn sniff_medium_confidence_for_other_part21_schema() {
             let text = "ISO-10303-21;\nHEADER;\nFILE_SCHEMA(('IFC4'));\nENDSEC;\nDATA;\nENDSEC;\nEND-ISO-10303-21;\n";
             assert_eq!(Ifc2x3AnalyzerAnalysis::sniff(&AnalyzeSource::Text(text)), IoConfidence::Medium);
         }
 
         #[test]
-        fn sniff_low_confidence_for_non_part21_input() {
+        async fn sniff_low_confidence_for_non_part21_input() {
             assert_eq!(Ifc2x3AnalyzerAnalysis::sniff(&AnalyzeSource::Text("not a step file at all")), IoConfidence::Low);
             assert_eq!(Ifc2x3AnalyzerAnalysis::sniff(&AnalyzeSource::Binary(&[0xFF, 0xD8, 0xFF])), IoConfidence::Low);
         }
@@ -266,7 +266,7 @@ semio_framework_plugin::derive_artifact_facets!(
 /// (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES) — reached as
 /// `crate::artifacts::ifc::standards::v2x3::engine::empty_ifc2x3_snapshot` through the `engine`
 /// barrel shim.
-pub fn empty_ifc2x3_snapshot() -> Ifc2x3Snapshot {
+pub async fn empty_ifc2x3_snapshot() -> Ifc2x3Snapshot {
     Ifc2x3Snapshot::default()
 }
 
@@ -277,7 +277,7 @@ pub fn empty_ifc2x3_snapshot() -> Ifc2x3Snapshot {
 /// schema gate accepts it. Fodder for `mutations::demo_mutation_cases()`/`diff::demo_diff_cases()`
 /// and this standard's own `conformance_laws` tests (a non-empty snapshot, unlike the prior
 /// `empty_ifc2x3_snapshot()` stub, so every recognizer/walk law actually exercises real content).
-pub fn demo_ifc2x3_snapshot() -> Ifc2x3Snapshot {
+pub async fn demo_ifc2x3_snapshot() -> Ifc2x3Snapshot {
     use crate::artifacts::step::engine::part21::{Part21Document, Part21Header, Part21Instance, Part21Value};
     let document = Part21Document {
         header: Part21Header {
@@ -319,7 +319,7 @@ pub fn demo_ifc2x3_snapshot() -> Ifc2x3Snapshot {
 /// `engine::register()`, extended by this ticket to also union `v2x3::composer::entries()` —
 /// calling it a second time here would be a redundant registration, same reasoning gif's
 /// `89a::engine::register` doc comment gives).
-pub fn register() {
+pub async fn register() {
     ::schema::register_artifact_schema_descriptor(ifc2x3_artifact_schema_descriptor());
     register_artifact_inferences();
     register_pilot_languages();
@@ -337,7 +337,7 @@ pub fn register() {
 /// 💡️ Registers `s.stdio.ifc.2x3.inference`'s facet leaves into the OS-wide inference catalog —
 /// sibling to the schema descriptor registration above (separate registry, ticket
 /// 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING).
-pub fn register_artifact_inferences() {
+pub async fn register_artifact_inferences() {
     ::schema::register_artifact_inference_descriptor(crate::artifacts::ifc::standards::v2x3::subsets::any::schema::inferences::ifc2x3_artifact_inference_descriptor());
 }
 
@@ -349,7 +349,7 @@ pub fn register_artifact_inferences() {
 /// conformance-tested file — its binary form is exercised directly by `protocol_walk_law` below,
 /// just not wired through a 6th `LanguageRole`), same precedent `4`'s own
 /// `register_pilot_languages` established.
-pub fn register_pilot_languages() {
+pub async fn register_pilot_languages() {
     use crate::artifacts::ifc::standards::v2x3::subsets::any::schema::{diff, mutations, snapshot};
     dsl::register_language(dsl::LanguageSpec {
         id: "stdio.ifc.2x3",

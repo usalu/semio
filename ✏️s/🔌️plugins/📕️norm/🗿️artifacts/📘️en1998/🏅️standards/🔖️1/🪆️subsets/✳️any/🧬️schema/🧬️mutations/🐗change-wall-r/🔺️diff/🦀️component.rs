@@ -5,7 +5,7 @@ use crate::artifacts::en1998::mutations::change_wall_r::mutation::ChangeWallR;
 use crate::artifacts::en1998::En1998Snapshot;
 
 //#region 🔖️Diff
-pub fn diff(payload: &ChangeWallR, base: &En1998Snapshot) -> protocol::MutationOutcome<En1998Diff> {
+pub async fn diff(payload: &ChangeWallR, base: &En1998Snapshot) -> protocol::MutationOutcome<En1998Diff> {
     if !payload.new_wall_r.is_finite() {
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("Wall behaviour factor r must be a finite number, got {}.", payload.new_wall_r), Vec::<String>::new());
     }

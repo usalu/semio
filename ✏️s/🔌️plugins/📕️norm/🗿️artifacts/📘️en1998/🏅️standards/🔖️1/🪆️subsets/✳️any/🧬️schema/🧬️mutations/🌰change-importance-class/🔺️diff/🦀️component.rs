@@ -5,7 +5,7 @@ use crate::artifacts::en1998::mutations::change_importance_class::mutation::Chan
 use crate::artifacts::en1998::En1998Snapshot;
 
 //#region 🔖️Diff
-pub fn diff(payload: &ChangeImportanceClass, base: &En1998Snapshot) -> protocol::MutationOutcome<En1998Diff> {
+pub async fn diff(payload: &ChangeImportanceClass, base: &En1998Snapshot) -> protocol::MutationOutcome<En1998Diff> {
     if base.importance_class == payload.new_importance_class {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Importance class is already \"{}\".", payload.new_importance_class));
     }

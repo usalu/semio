@@ -17,19 +17,19 @@ use remodel_feature::{match_brute, Descriptor256, Keypoint, Match};
 use remodel_image::ImageGray;
 
 // #region 🔖️Mat3Helpers
-fn dot3(a: [f64; 3], b: [f64; 3]) -> f64 {
+async fn dot3(a: [f64; 3], b: [f64; 3]) -> f64 {
     a[0] * b[0] + a[1] * b[1] + a[2] * b[2]
 }
 
-fn scale3(v: [f64; 3], s: f64) -> [f64; 3] {
+async fn scale3(v: [f64; 3], s: f64) -> [f64; 3] {
     [v[0] * s, v[1] * s, v[2] * s]
 }
 
-fn add3(a: [f64; 3], b: [f64; 3]) -> [f64; 3] {
+async fn add3(a: [f64; 3], b: [f64; 3]) -> [f64; 3] {
     [a[0] + b[0], a[1] + b[1], a[2] + b[2]]
 }
 
-fn cross3(a: [f64; 3], b: [f64; 3]) -> [f64; 3] {
+async fn cross3(a: [f64; 3], b: [f64; 3]) -> [f64; 3] {
     [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]]
 }
 
@@ -43,7 +43,7 @@ fn cross3(a: [f64; 3], b: [f64; 3]) -> [f64; 3] {
 /// null space, always square) and taking [`jacobi_eigen_symmetric`]'s smallest-eigenvalue eigenvector
 /// sidesteps the gap and works uniformly for both minimal (`rows < cols`) and over-determined
 /// (`rows >= cols`) inputs.
-fn nullspace_via_gram(a: &MatD, k: usize) -> Option<Vec<VecD>> {
+async fn nullspace_via_gram(a: &MatD, k: usize) -> Option<Vec<VecD>> {
     let n = a.cols;
     let mut g = MatD::zeros(n, n);
     for i in 0..n {
@@ -60,36 +60,36 @@ fn nullspace_via_gram(a: &MatD, k: usize) -> Option<Vec<VecD>> {
     Some((0..k).map(|col| VecD::from_vec((0..vecs.rows).map(|r| vecs.get(r, col)).collect())).collect())
 }
 
-fn nullvector_via_gram(a: &MatD) -> Option<VecD> {
+async fn nullvector_via_gram(a: &MatD) -> Option<VecD> {
     nullspace_via_gram(a, 1)?.into_iter().next()
 }
 
-fn mat3_vec(m: &[[f64; 3]; 3], v: [f64; 3]) -> [f64; 3] {
+async fn mat3_vec(m: &[[f64; 3]; 3], v: [f64; 3]) -> [f64; 3] {
     std::array::from_fn(|r| m[r][0] * v[0] + m[r][1] * v[1] + m[r][2] * v[2])
 }
 
 /// ⚔️ Skew-symmetric cross-product matrix `[v]_x`, so `[v]_x . w == v x w`.
-fn skew3(v: [f64; 3]) -> [[f64; 3]; 3] {
+async fn skew3(v: [f64; 3]) -> [[f64; 3]; 3] {
     [[0.0, -v[2], v[1]], [v[2], 0.0, -v[0]], [-v[1], v[0], 0.0]]
 }
 
-fn mat3_mul(a: &[[f64; 3]; 3], b: &[[f64; 3]; 3]) -> [[f64; 3]; 3] {
+async fn mat3_mul(a: &[[f64; 3]; 3], b: &[[f64; 3]; 3]) -> [[f64; 3]; 3] {
     std::array::from_fn(|r| std::array::from_fn(|c| (0..3).map(|k| a[r][k] * b[k][c]).sum()))
 }
 
-fn mat3_transpose(m: &[[f64; 3]; 3]) -> [[f64; 3]; 3] {
+async fn mat3_transpose(m: &[[f64; 3]; 3]) -> [[f64; 3]; 3] {
     std::array::from_fn(|r| std::array::from_fn(|c| m[c][r]))
 }
 
-fn mat3_det(m: &[[f64; 3]; 3]) -> f64 {
+async fn mat3_det(m: &[[f64; 3]; 3]) -> f64 {
     m[0][0] * (m[1][1] * m[2][2] - m[1][2] * m[2][1]) - m[0][1] * (m[1][0] * m[2][2] - m[1][2] * m[2][0]) + m[0][2] * (m[1][0] * m[2][1] - m[1][1] * m[2][0])
 }
 
-fn mat3_from_matd(m: &MatD) -> [[f64; 3]; 3] {
+async fn mat3_from_matd(m: &MatD) -> [[f64; 3]; 3] {
     std::array::from_fn(|r| std::array::from_fn(|c| m.get(r, c)))
 }
 
-fn matd_from_mat3(m: &[[f64; 3]; 3]) -> MatD {
+async fn matd_from_mat3(m: &[[f64; 3]; 3]) -> MatD {
     let mut out = MatD::zeros(3, 3);
     for (r, row) in m.iter().enumerate() {
         for (c, &v) in row.iter().enumerate() {
@@ -100,28 +100,28 @@ fn matd_from_mat3(m: &[[f64; 3]; 3]) -> MatD {
 }
 
 /// 🧭️ Row-major `[[f64;3];3]` rotation array from a column-major [`Mat3d`] (as stored inside [`So3`]).
-fn mat3d_to_array(m: &Mat3d) -> [[f64; 3]; 3] {
+async fn mat3d_to_array(m: &Mat3d) -> [[f64; 3]; 3] {
     std::array::from_fn(|r| std::array::from_fn(|c| m.cols[c][r]))
 }
 
 /// 🧭️ Column-major [`Mat3d`] from a row-major `[[f64;3];3]` rotation array, the inverse of [`mat3d_to_array`].
-fn array_to_mat3d(m: &[[f64; 3]; 3]) -> Mat3d {
+async fn array_to_mat3d(m: &[[f64; 3]; 3]) -> Mat3d {
     Mat3d::from_axes([m[0][0], m[1][0], m[2][0]], [m[0][1], m[1][1], m[2][1]], [m[0][2], m[1][2], m[2][2]])
 }
 
 /// 🎯️ World-space optical center of a camera pose: `-Rᵀt`, the point mapping to the camera-space origin.
-fn camera_center(pose: &CameraPose) -> [f64; 3] {
+async fn camera_center(pose: &CameraPose) -> [f64; 3] {
     let r_inv = pose.0.r.inverse();
     scale3(r_inv.act(pose.0.t), -1.0)
 }
 // #endregion 🔖️Mat3Helpers
 
 // #region 🔖️Fixtures
-fn norm3(a: [f64; 3]) -> f64 {
+async fn norm3(a: [f64; 3]) -> f64 {
     dot3(a, a).sqrt()
 }
 
-fn normalize3(a: [f64; 3]) -> [f64; 3] {
+async fn normalize3(a: [f64; 3]) -> [f64; 3] {
     let n = norm3(a);
     if n < 1e-300 {
         a
@@ -130,13 +130,13 @@ fn normalize3(a: [f64; 3]) -> [f64; 3] {
     }
 }
 
-fn sub3(a: [f64; 3], b: [f64; 3]) -> [f64; 3] {
+async fn sub3(a: [f64; 3], b: [f64; 3]) -> [f64; 3] {
     [a[0] - b[0], a[1] - b[1], a[2] - b[2]]
 }
 
 /// 🎥️ Builds a world-to-camera [`Se3`] whose optical axis looks from `eye` toward `target`, with `up`
 /// as the approximate world-up direction (Gram-Schmidt'd against the look direction).
-fn look_at_pose(eye: [f64; 3], target: [f64; 3], up: [f64; 3]) -> Se3 {
+async fn look_at_pose(eye: [f64; 3], target: [f64; 3], up: [f64; 3]) -> Se3 {
     let forward = normalize3(sub3(target, eye));
     let right = normalize3(cross3(up, forward));
     let true_up = cross3(forward, right);
@@ -175,7 +175,7 @@ pub struct Observation {
 /// scattered through a cube (`planar = false`) or confined to the `y = 0` ground plane (`planar =
 /// true` — the exact degeneracy [`EssentialFivePoint`] is meant to survive and the 8-point/fundamental
 /// solver struggles with).
-pub fn synthetic_scene(seed: u64, camera_count: usize, point_count: usize, planar: bool) -> SyntheticScene {
+pub async fn synthetic_scene(seed: u64, camera_count: usize, point_count: usize, planar: bool) -> SyntheticScene {
     let mut rng = Rng::from_seed(seed);
     let (width, height) = (640u32, 480u32);
     let intrinsics = Intrinsics { fx: 700.0, fy: 700.0, cx: f64::from(width) / 2.0, cy: f64::from(height) / 2.0, skew: 0.0, distortion: Distortion::None };
@@ -206,7 +206,7 @@ pub fn synthetic_scene(seed: u64, camera_count: usize, point_count: usize, plana
 /// the camera and inside the image bounds; adds i.i.d. Gaussian pixel noise (`pixel_noise_std`) and
 /// replaces `outlier_fraction` of the surviving observations with a uniform-random pixel (for exercising
 /// RANSAC/bundle-adjustment robustness).
-pub fn project_observations(scene: &SyntheticScene, pixel_noise_std: f64, outlier_fraction: f64, seed: u64) -> Vec<Observation> {
+pub async fn project_observations(scene: &SyntheticScene, pixel_noise_std: f64, outlier_fraction: f64, seed: u64) -> Vec<Observation> {
     let mut rng = Rng::from_seed(seed);
     let mut out = Vec::new();
     for (camera_index, (intr, pose)) in scene.cameras.iter().enumerate() {
@@ -234,7 +234,7 @@ pub fn project_observations(scene: &SyntheticScene, pixel_noise_std: f64, outlie
 /// Vec<remodel_image::ImageGray>`") — please keep this function if you're reconciling concurrent edits
 /// to this region rather than re-removing it as out of scope; it has been dropped and re-added twice
 /// already during development.
-pub fn render_textured_scene(scene: &SyntheticScene) -> Vec<ImageGray> {
+pub async fn render_textured_scene(scene: &SyntheticScene) -> Vec<ImageGray> {
     let patch_radius: i32 = 3;
     let mut images = Vec::with_capacity(scene.cameras.len());
     for (intr, pose) in &scene.cameras {
@@ -281,7 +281,7 @@ pub enum SfmError {
 }
 
 impl std::fmt::Display for SfmError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    async fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::TooFewFrames => write!(f, "fewer than the minimum required number of frames"),
             Self::DegenerateGeometry => write!(f, "two-view geometry is degenerate"),
@@ -315,7 +315,7 @@ pub struct TwoViewResult {
 /// 🧮️ Hartley normalization: translates `pts` to a zero centroid and scales so the mean distance from
 /// the origin is `sqrt(2)`, returning the normalized points and the `3x3` similarity transform.
 /// <https://en.wikipedia.org/wiki/Eight-point_algorithm#Normalized_eight-point_algorithm>
-fn normalize_pts(pts: &[[f64; 2]]) -> (Vec<[f64; 2]>, [[f64; 3]; 3]) {
+async fn normalize_pts(pts: &[[f64; 2]]) -> (Vec<[f64; 2]>, [[f64; 3]; 3]) {
     let n = pts.len() as f64;
     let mean = pts.iter().fold([0.0, 0.0], |acc, p| [acc[0] + p[0], acc[1] + p[1]]);
     let mean = [mean[0] / n, mean[1] / n];
@@ -326,7 +326,7 @@ fn normalize_pts(pts: &[[f64; 2]]) -> (Vec<[f64; 2]>, [[f64; 3]; 3]) {
     (normalized, t)
 }
 
-fn invert_similarity(t: &[[f64; 3]; 3]) -> [[f64; 3]; 3] {
+async fn invert_similarity(t: &[[f64; 3]; 3]) -> [[f64; 3]; 3] {
     let s = t[0][0];
     let mx = -t[0][2] / s;
     let my = -t[1][2] / s;
@@ -334,7 +334,7 @@ fn invert_similarity(t: &[[f64; 3]; 3]) -> [[f64; 3]; 3] {
 }
 
 /// 🌀️ Projects a `3x3` matrix to the nearest (Frobenius) rank-2 matrix by zeroing its smallest singular value.
-fn enforce_rank2(m: &[[f64; 3]; 3]) -> Option<[[f64; 3]; 3]> {
+async fn enforce_rank2(m: &[[f64; 3]; 3]) -> Option<[[f64; 3]; 3]> {
     let (u, mut sigma, v) = svd(&matd_from_mat3(m)).ok()?;
     if sigma.len() < 3 {
         return None;
@@ -351,7 +351,7 @@ fn enforce_rank2(m: &[[f64; 3]; 3]) -> Option<[[f64; 3]; 3]> {
 /// solves the homogeneous `Af = 0` system via [`svd_nullvector`], projects to rank 2, then denormalizes
 /// `F = Tbᵀ F̃ Ta`.
 /// <https://en.wikipedia.org/wiki/Eight-point_algorithm>
-fn fit_fundamental_dlt(corr: &[([f64; 2], [f64; 2])]) -> Option<[[f64; 3]; 3]> {
+async fn fit_fundamental_dlt(corr: &[([f64; 2], [f64; 2])]) -> Option<[[f64; 3]; 3]> {
     if corr.len() < 8 {
         return None;
     }
@@ -382,7 +382,7 @@ fn fit_fundamental_dlt(corr: &[([f64; 2], [f64; 2])]) -> Option<[[f64; 3]; 3]> {
 /// square root of [`sampson_distance`]'s squared error, sign-preserved so it doubles as a proper
 /// nonlinear-least-squares residual (e.g. [`EssentialRefineProblem`]).
 /// <https://en.wikipedia.org/wiki/Epipolar_geometry>
-fn signed_sampson_residual(f: &[[f64; 3]; 3], a: [f64; 2], b: [f64; 2]) -> f64 {
+async fn signed_sampson_residual(f: &[[f64; 3]; 3], a: [f64; 2], b: [f64; 2]) -> f64 {
     let x = [a[0], a[1], 1.0];
     let xp = [b[0], b[1], 1.0];
     let fx = mat3_vec(f, x);
@@ -397,7 +397,7 @@ fn signed_sampson_residual(f: &[[f64; 3]; 3], a: [f64; 2], b: [f64; 2]) -> f64 {
 
 /// 📏️ Sampson first-order approximation to the geometric epipolar reprojection error (see
 /// [`signed_sampson_residual`]), as a nonnegative distance for RANSAC scoring/thresholding.
-fn sampson_distance(f: &[[f64; 3]; 3], a: [f64; 2], b: [f64; 2]) -> f64 {
+async fn sampson_distance(f: &[[f64; 3]; 3], a: [f64; 2], b: [f64; 2]) -> f64 {
     signed_sampson_residual(f, a, b).abs()
 }
 
@@ -409,11 +409,11 @@ impl MinimalSolver for FundamentalSolver {
     type Model = [[f64; 3]; 3];
     const SAMPLE_SIZE: usize = 8;
 
-    fn solve(&self, sample: &[Self::Datum]) -> Vec<Self::Model> {
+    async fn solve(&self, sample: &[Self::Datum]) -> Vec<Self::Model> {
         fit_fundamental_dlt(sample).into_iter().collect()
     }
 
-    fn residual(&self, model: &Self::Model, datum: &Self::Datum) -> f64 {
+    async fn residual(&self, model: &Self::Model, datum: &Self::Datum) -> f64 {
         sampson_distance(model, datum.0, datum.1)
     }
 }
@@ -422,7 +422,7 @@ impl MinimalSolver for FundamentalSolver {
 /// ([`crate::optimize::lo_ransac`]): the local optimization step refits [`fit_fundamental_dlt`]
 /// over the current inlier set (which accepts any `n >= 8`, not just the minimal 8), which is a fast,
 /// closed-form stand-in for a full Sampson-error LM polish.
-pub fn estimate_fundamental(matches: &[([f64; 2], [f64; 2])]) -> Option<TwoViewResult> {
+pub async fn estimate_fundamental(matches: &[([f64; 2], [f64; 2])]) -> Option<TwoViewResult> {
     let cfg = RansacConfig { threshold: 1.5, confidence: 0.999, max_iters: 2000, seed: 0, scoring: RansacScoring::Msac };
     let local_opt = |subset: &[([f64; 2], [f64; 2])], _model: &[[f64; 3]; 3]| fit_fundamental_dlt(subset);
     let result = lo_ransac(&FundamentalSolver, matches, &cfg, local_opt)?;
@@ -431,7 +431,7 @@ pub fn estimate_fundamental(matches: &[([f64; 2], [f64; 2])]) -> Option<TwoViewR
 
 /// 📐️ Normalized 4-point DLT homography (Hartley-normalizes both point sets, nullspace of the `2n x 9`
 /// design matrix via [`svd_nullvector`], denormalized `H = Tb⁻¹ H̃ Ta`).
-fn fit_homography_dlt(corr: &[([f64; 2], [f64; 2])]) -> Option<[[f64; 3]; 3]> {
+async fn fit_homography_dlt(corr: &[([f64; 2], [f64; 2])]) -> Option<[[f64; 3]; 3]> {
     if corr.len() < 4 {
         return None;
     }
@@ -460,7 +460,7 @@ fn fit_homography_dlt(corr: &[([f64; 2], [f64; 2])]) -> Option<[[f64; 3]; 3]> {
     Some(mat3_mul(&mat3_mul(&tb_inv, &h_tilde), &ta))
 }
 
-fn homography_residual(h: &[[f64; 3]; 3], a: [f64; 2], b: [f64; 2]) -> f64 {
+async fn homography_residual(h: &[[f64; 3]; 3], a: [f64; 2], b: [f64; 2]) -> f64 {
     let p = mat3_vec(h, [a[0], a[1], 1.0]);
     if p[2].abs() < 1e-12 {
         return f64::MAX;
@@ -477,18 +477,18 @@ impl MinimalSolver for HomographySolver {
     type Model = [[f64; 3]; 3];
     const SAMPLE_SIZE: usize = 4;
 
-    fn solve(&self, sample: &[Self::Datum]) -> Vec<Self::Model> {
+    async fn solve(&self, sample: &[Self::Datum]) -> Vec<Self::Model> {
         fit_homography_dlt(sample).into_iter().collect()
     }
 
-    fn residual(&self, model: &Self::Model, datum: &Self::Datum) -> f64 {
+    async fn residual(&self, model: &Self::Model, datum: &Self::Datum) -> f64 {
         homography_residual(model, datum.0, datum.1)
     }
 }
 
 /// 📐️ Normalized 4-point DLT homography estimation robustified by locally-optimized RANSAC, refitting
 /// [`fit_homography_dlt`] over the current inlier set on every improvement.
-pub fn estimate_homography(matches: &[([f64; 2], [f64; 2])]) -> Option<TwoViewResult> {
+pub async fn estimate_homography(matches: &[([f64; 2], [f64; 2])]) -> Option<TwoViewResult> {
     let cfg = RansacConfig { threshold: 1.5, confidence: 0.999, max_iters: 2000, seed: 0, scoring: RansacScoring::Msac };
     let local_opt = |subset: &[([f64; 2], [f64; 2])], _model: &[[f64; 3]; 3]| fit_homography_dlt(subset);
     let result = lo_ransac(&HomographySolver, matches, &cfg, local_opt)?;
@@ -501,7 +501,7 @@ pub fn estimate_homography(matches: &[([f64; 2], [f64; 2])]) -> Option<TwoViewRe
 /// [`estimate_fundamental`] directly in normalized-ray space, where the "fundamental matrix" of the
 /// normalized correspondences *is* the essential matrix. Callers whose points are already undistorted
 /// may equivalently pass `Distortion::None` intrinsics with the identity linear map.
-pub fn estimate_essential(matches: &[([f64; 2], [f64; 2])], k_a: &Intrinsics, k_b: &Intrinsics) -> Option<TwoViewResult> {
+pub async fn estimate_essential(matches: &[([f64; 2], [f64; 2])], k_a: &Intrinsics, k_b: &Intrinsics) -> Option<TwoViewResult> {
     let normalized: Vec<([f64; 2], [f64; 2])> = matches
         .iter()
         .map(|&(pa, pb)| {
@@ -518,7 +518,7 @@ pub fn estimate_essential(matches: &[([f64; 2], [f64; 2])], k_a: &Intrinsics, k_
 
 /// 📐️ Two-view linear triangulation (see [`triangulate_dlt`]) specialized to normalized-ray coordinates
 /// and a relative pose `p_b = R p_a + t`, used only for [`decompose_essential`]'s cheirality vote.
-fn triangulate_normalized_pair(r: &[[f64; 3]; 3], t: [f64; 3], xa: [f64; 2], xb: [f64; 2]) -> Option<[f64; 3]> {
+async fn triangulate_normalized_pair(r: &[[f64; 3]; 3], t: [f64; 3], xa: [f64; 2], xb: [f64; 2]) -> Option<[f64; 3]> {
     let p_a = [[1.0, 0.0, 0.0, 0.0], [0.0, 1.0, 0.0, 0.0], [0.0, 0.0, 1.0, 0.0]];
     let p_b = [[r[0][0], r[0][1], r[0][2], t[0]], [r[1][0], r[1][1], r[1][2], t[1]], [r[2][0], r[2][1], r[2][2], t[2]]];
     let mut design = MatD::zeros(4, 4);
@@ -541,7 +541,7 @@ fn triangulate_normalized_pair(r: &[[f64; 3]; 3], t: [f64; 3], xa: [f64; 2], xb:
 /// trick, sign-corrected to `det(R) = +1`) paired with `±U`'s third column; the candidate whose
 /// triangulated points are in front of both cameras most often wins.
 /// <https://en.wikipedia.org/wiki/Essential_matrix#Determining_R_and_t_from_E>
-pub fn decompose_essential(e: &[[f64; 3]; 3], inlier_matches: &[([f64; 2], [f64; 2])]) -> Option<Se3> {
+pub async fn decompose_essential(e: &[[f64; 3]; 3], inlier_matches: &[([f64; 2], [f64; 2])]) -> Option<Se3> {
     let (u, _sigma, v) = svd(&matd_from_mat3(e)).ok()?;
     let u3 = mat3_from_matd(&u);
     let v3 = mat3_from_matd(&v);
@@ -581,7 +581,7 @@ pub fn decompose_essential(e: &[[f64; 3]; 3], inlier_matches: &[([f64; 2], [f64;
 /// 🧭️ Orthonormal basis `(u, v)` spanning the tangent plane of the unit sphere at `t`, used to give the
 /// scale-free translation *direction* of a two-view relative pose a 2-DOF local chart for
 /// [`refine_essential_lm`] (mirrors how [`PoseRefineProblem`] gives `Se3` a 6-DOF chart via `se3` exp/log).
-fn sphere_tangent_basis(t: [f64; 3]) -> ([f64; 3], [f64; 3]) {
+async fn sphere_tangent_basis(t: [f64; 3]) -> ([f64; 3], [f64; 3]) {
     let seed = if t[0].abs() < 0.9 { [1.0, 0.0, 0.0] } else { [0.0, 1.0, 0.0] };
     let u = vec3d_normalize(cross3(t, seed));
     let v = cross3(t, u);
@@ -590,7 +590,7 @@ fn sphere_tangent_basis(t: [f64; 3]) -> ([f64; 3], [f64; 3]) {
 
 /// 🧭️ Exponential-map retraction of a 2-vector `phi` from the tangent plane at `t0` (spanned by `u, v`,
 /// see [`sphere_tangent_basis`]) back onto the unit sphere.
-fn sphere_retract(t0: [f64; 3], u: [f64; 3], v: [f64; 3], phi: [f64; 2]) -> [f64; 3] {
+async fn sphere_retract(t0: [f64; 3], u: [f64; 3], v: [f64; 3], phi: [f64; 2]) -> [f64; 3] {
     let theta = (phi[0] * phi[0] + phi[1] * phi[1]).sqrt();
     if theta < 1e-12 {
         return t0;
@@ -611,7 +611,7 @@ struct EssentialRefineProblem<'a> {
 }
 
 impl EssentialRefineProblem<'_> {
-    fn essential_at(&self, x: &VecD) -> [[f64; 3]; 3] {
+    async fn essential_at(&self, x: &VecD) -> [[f64; 3]; 3] {
         let omega: [f64; 3] = std::array::from_fn(|k| x.get(k));
         let r = mat3d_to_array(&So3::exp(omega).0);
         let phi = [x.get(3), x.get(4)];
@@ -621,26 +621,26 @@ impl EssentialRefineProblem<'_> {
 }
 
 impl LeastSquaresProblem for EssentialRefineProblem<'_> {
-    fn residual_count(&self) -> usize {
+    async fn residual_count(&self) -> usize {
         self.corr.len()
     }
 
-    fn parameter_count(&self) -> usize {
+    async fn parameter_count(&self) -> usize {
         5
     }
 
-    fn residuals(&self, x: &VecD, out: &mut VecD) {
+    async fn residuals(&self, x: &VecD, out: &mut VecD) {
         let e = self.essential_at(x);
         for (row, &(a, b)) in self.corr.iter().enumerate() {
             out.set(row, signed_sampson_residual(&e, a, b));
         }
     }
 
-    fn jacobian(&self, x: &VecD, out: &mut MatD) {
+    async fn jacobian(&self, x: &VecD, out: &mut MatD) {
         numeric_jacobian(self, x, 1e-6, out);
     }
 
-    fn plus(&self, x: &VecD, dx: &VecD) -> VecD {
+    async fn plus(&self, x: &VecD, dx: &VecD) -> VecD {
         let cur_r: [f64; 3] = std::array::from_fn(|k| x.get(k));
         let d_r: [f64; 3] = std::array::from_fn(|k| dx.get(k));
         let new_r = So3::exp(d_r).semio_compose_rs(&So3::exp(cur_r)).log();
@@ -654,7 +654,7 @@ impl LeastSquaresProblem for EssentialRefineProblem<'_> {
 /// unconstrained 8-DOF linear fit, degenerate on planar/low-parallax scenes — see
 /// [`estimate_essential_five_point`]), this never leaves the essential matrix's constrained manifold, so
 /// it remains well-behaved exactly where the minimal 5-point solve most needs a noise-robust polish.
-fn refine_essential_lm(initial: &Se3, corr: &[([f64; 2], [f64; 2])]) -> Se3 {
+async fn refine_essential_lm(initial: &Se3, corr: &[([f64; 2], [f64; 2])]) -> Se3 {
     let t0 = vec3d_normalize(initial.t);
     let (tangent_u, tangent_v) = sphere_tangent_basis(t0);
     let problem = EssentialRefineProblem { corr, t0, tangent_u, tangent_v };
@@ -673,14 +673,14 @@ fn refine_essential_lm(initial: &Se3, corr: &[([f64; 2], [f64; 2])]) -> Se3 {
 /// count (7 for F, 8 for H). `truncated_residual_sum` reuses the MSAC-truncated cost already returned as
 /// [`TwoViewResult::score`]. `lambda1 = 1.0` and `lambda2 = 2.0` are fixed constants rather than the full
 /// noise-variance-derived weights from Torr's original formulation — a documented simplification.
-fn simplified_gric(score: f64, n_inliers: usize, d: usize, k: usize) -> f64 {
+async fn simplified_gric(score: f64, n_inliers: usize, d: usize, k: usize) -> f64 {
     score + (d * n_inliers) as f64 + 2.0 * k as f64
 }
 
 /// 📐️ Picks between [`estimate_fundamental`] and [`estimate_homography`] via [`simplified_gric`], so
 /// planar or low-parallax scenes (where a homography fully explains the data) don't get forced through a
 /// degenerate epipolar fit.
-pub fn select_two_view_model(matches: &[([f64; 2], [f64; 2])]) -> Option<TwoViewResult> {
+pub async fn select_two_view_model(matches: &[([f64; 2], [f64; 2])]) -> Option<TwoViewResult> {
     match (estimate_fundamental(matches), estimate_homography(matches)) {
         (Some(f), Some(h)) => {
             let gric_f = simplified_gric(f.score, f.inliers.len(), 3, 7);
@@ -703,7 +703,7 @@ pub fn select_two_view_model(matches: &[([f64; 2], [f64; 2])]) -> Option<TwoView
 const MONO3: [(u8, u8, u8); 20] =
     [(3, 0, 0), (0, 3, 0), (0, 0, 3), (2, 1, 0), (2, 0, 1), (1, 2, 0), (0, 2, 1), (1, 0, 2), (0, 1, 2), (1, 1, 1), (0, 0, 0), (1, 0, 0), (0, 1, 0), (0, 0, 1), (2, 0, 0), (0, 2, 0), (0, 0, 2), (1, 1, 0), (1, 0, 1), (0, 1, 1)];
 
-fn mono3_index(i: u8, j: u8, k: u8) -> Option<usize> {
+async fn mono3_index(i: u8, j: u8, k: u8) -> Option<usize> {
     MONO3.iter().position(|&m| m == (i, j, k))
 }
 
@@ -719,11 +719,11 @@ struct Poly3 {
 }
 
 impl Poly3 {
-    fn zero() -> Self {
+    async fn zero() -> Self {
         Self { c: [0.0; 20] }
     }
 
-    fn linear(x_coef: f64, y_coef: f64, z_coef: f64, const_coef: f64) -> Self {
+    async fn linear(x_coef: f64, y_coef: f64, z_coef: f64, const_coef: f64) -> Self {
         let mut p = Self::zero();
         p.c[10] = const_coef;
         p.c[11] = x_coef;
@@ -732,7 +732,7 @@ impl Poly3 {
         p
     }
 
-    fn add(&self, other: &Self) -> Self {
+    async fn add(&self, other: &Self) -> Self {
         let mut out = *self;
         for i in 0..20 {
             out.c[i] += other.c[i];
@@ -740,7 +740,7 @@ impl Poly3 {
         out
     }
 
-    fn sub(&self, other: &Self) -> Self {
+    async fn sub(&self, other: &Self) -> Self {
         let mut out = *self;
         for i in 0..20 {
             out.c[i] -= other.c[i];
@@ -748,7 +748,7 @@ impl Poly3 {
         out
     }
 
-    fn scale(&self, s: f64) -> Self {
+    async fn scale(&self, s: f64) -> Self {
         let mut out = *self;
         for v in &mut out.c {
             *v *= s;
@@ -756,7 +756,7 @@ impl Poly3 {
         out
     }
 
-    fn mul(&self, other: &Self) -> Self {
+    async fn mul(&self, other: &Self) -> Self {
         let mut out = Self::zero();
         for (ia, &ca) in self.c.iter().enumerate() {
             if ca == 0.0 {
@@ -783,7 +783,7 @@ impl Poly3 {
 /// whose 4-dimensional null space (via [`nullspace_via_gram`], since 5 rows/9 cols is exactly the wide,
 /// full-row-rank shape [`svd_nullvector`] cannot reach directly) parameterizes every essential matrix
 /// consistent with the 5 correspondences as `E(x, y, z) = x X + y Y + z Z + W`.
-fn essential_five_point_null_basis(corr: &[([f64; 2], [f64; 2]); 5]) -> Option<[[[f64; 3]; 3]; 4]> {
+async fn essential_five_point_null_basis(corr: &[([f64; 2], [f64; 2]); 5]) -> Option<[[[f64; 3]; 3]; 4]> {
     let mut design = MatD::zeros(5, 9);
     for (row, ((xa, ya), (xb, yb))) in corr.iter().map(|&(a, b)| ((a[0], a[1]), (b[0], b[1]))).enumerate() {
         design.set(row, 0, xb * xa);
@@ -805,7 +805,7 @@ fn essential_five_point_null_basis(corr: &[([f64; 2], [f64; 2]); 5]) -> Option<[
 /// on the first `k` columns; returns `None` if that leading `k x k` block is singular (a degenerate 5-point
 /// sample). On success the first `k` columns are the `k x k` identity and the rest hold the eliminated
 /// system, i.e. `[I | B]`.
-fn gauss_jordan_leading(mut m: MatD, k: usize) -> Option<MatD> {
+async fn gauss_jordan_leading(mut m: MatD, k: usize) -> Option<MatD> {
     for pivot in 0..k {
         let mut best_row = pivot;
         let mut best_val = m.get(pivot, pivot).abs();
@@ -862,7 +862,7 @@ fn gauss_jordan_leading(mut m: MatD, k: usize) -> Option<MatD> {
 /// (Stickelberger's theorem) and whose eigenvectors (recovered as nullvectors of `action_matrix - z*I`,
 /// since the matrix is small and square) recover `x, y` from the eigenvector's monomial ratios.
 /// <https://www.cs.unc.edu/~marc/tutorial/node51.html>
-pub fn essential_five_point_candidates(corr: &[([f64; 2], [f64; 2]); 5]) -> Vec<[[f64; 3]; 3]> {
+pub async fn essential_five_point_candidates(corr: &[([f64; 2], [f64; 2]); 5]) -> Vec<[[f64; 3]; 3]> {
     let Some([x_mat, y_mat, z_mat, w_mat]) = essential_five_point_null_basis(corr) else {
         return Vec::new();
     };
@@ -971,12 +971,12 @@ impl MinimalSolver for EssentialFivePointSolver {
     type Model = [[f64; 3]; 3];
     const SAMPLE_SIZE: usize = 5;
 
-    fn solve(&self, sample: &[Self::Datum]) -> Vec<Self::Model> {
+    async fn solve(&self, sample: &[Self::Datum]) -> Vec<Self::Model> {
         let corr: [([f64; 2], [f64; 2]); 5] = std::array::from_fn(|i| sample[i]);
         essential_five_point_candidates(&corr)
     }
 
-    fn residual(&self, model: &Self::Model, datum: &Self::Datum) -> f64 {
+    async fn residual(&self, model: &Self::Model, datum: &Self::Datum) -> f64 {
         sampson_distance(model, datum.0, datum.1)
     }
 }
@@ -990,7 +990,7 @@ impl MinimalSolver for EssentialFivePointSolver {
 /// scenes, since neither the minimal solve nor the polish ever linearizes away the `det(E) = 0` / trace
 /// constraints that make the essential matrix's 5-DOF manifold degenerate for coplanar points under an
 /// unconstrained 8-point fit.
-pub fn estimate_essential_five_point(matches: &[([f64; 2], [f64; 2])], k_a: &Intrinsics, k_b: &Intrinsics, threshold: f64, seed: u64) -> Option<TwoViewResult> {
+pub async fn estimate_essential_five_point(matches: &[([f64; 2], [f64; 2])], k_a: &Intrinsics, k_b: &Intrinsics, threshold: f64, seed: u64) -> Option<TwoViewResult> {
     let normalized: Vec<([f64; 2], [f64; 2])> = matches
         .iter()
         .map(|&(pa, pb)| {
@@ -1026,7 +1026,7 @@ pub fn estimate_essential_five_point(matches: &[([f64; 2], [f64; 2])], k_a: &Int
 /// 📐️ `n`-view (`n >= 2`) linear DLT triangulation: unprojects each pixel observation to a normalized
 /// ray via [`Intrinsics::unproject_ray`], stacks the `2n x 4` homogeneous system from each view's
 /// `[R|t]` projection matrix, and solves for the nullspace via [`svd_nullvector`].
-pub fn triangulate_dlt(poses: &[(CameraPose, Intrinsics)], obs_px: &[[f64; 2]]) -> Option<[f64; 3]> {
+pub async fn triangulate_dlt(poses: &[(CameraPose, Intrinsics)], obs_px: &[[f64; 2]]) -> Option<[f64; 3]> {
     if poses.len() < 2 || poses.len() != obs_px.len() {
         return None;
     }
@@ -1059,15 +1059,15 @@ struct PointRefineProblem<'a> {
 }
 
 impl LeastSquaresProblem for PointRefineProblem<'_> {
-    fn residual_count(&self) -> usize {
+    async fn residual_count(&self) -> usize {
         self.obs_px.len() * 2
     }
 
-    fn parameter_count(&self) -> usize {
+    async fn parameter_count(&self) -> usize {
         3
     }
 
-    fn residuals(&self, x: &VecD, out: &mut VecD) {
+    async fn residuals(&self, x: &VecD, out: &mut VecD) {
         let point = [x.get(0), x.get(1), x.get(2)];
         for (row, (item, &obs)) in self.poses.iter().zip(self.obs_px.iter()).enumerate() {
             let (pose, intr) = item;
@@ -1077,13 +1077,13 @@ impl LeastSquaresProblem for PointRefineProblem<'_> {
         }
     }
 
-    fn jacobian(&self, x: &VecD, out: &mut MatD) {
+    async fn jacobian(&self, x: &VecD, out: &mut MatD) {
         numeric_jacobian(self, x, 1e-6, out);
     }
 }
 
 /// 📐️ Refines a triangulated point's XYZ via Levenberg-Marquardt on its reprojection error, poses and intrinsics held fixed.
-pub fn refine_point_lm(poses: &[(CameraPose, Intrinsics)], obs_px: &[[f64; 2]], initial: [f64; 3]) -> [f64; 3] {
+pub async fn refine_point_lm(poses: &[(CameraPose, Intrinsics)], obs_px: &[[f64; 2]], initial: [f64; 3]) -> [f64; 3] {
     let problem = PointRefineProblem { poses, obs_px };
     let mut x0 = VecD::zeros(3);
     x0.set(0, initial[0]);
@@ -1095,7 +1095,7 @@ pub fn refine_point_lm(poses: &[(CameraPose, Intrinsics)], obs_px: &[[f64; 2]], 
 }
 
 /// 📐️ Angle in radians between the two viewing rays from `pose_a` and `pose_b`'s optical centers to `point`.
-pub fn triangulation_angle(pose_a: &CameraPose, pose_b: &CameraPose, point: [f64; 3]) -> f64 {
+pub async fn triangulation_angle(pose_a: &CameraPose, pose_b: &CameraPose, point: [f64; 3]) -> f64 {
     let ca = camera_center(pose_a);
     let cb = camera_center(pose_b);
     let da = vec3d_normalize(vec3d_sub(point, ca));
@@ -1107,7 +1107,7 @@ pub fn triangulation_angle(pose_a: &CameraPose, pose_b: &CameraPose, point: [f64
 /// pairwise viewing-ray angle is at least `min_angle_rad`, every view's reprojection error is at most
 /// `max_reproj_err_px`, and every view sees the point in front of its camera (folded into the
 /// reprojection check via [`reproject`]'s own cheirality test).
-pub fn triangulate_and_validate(poses: &[(CameraPose, Intrinsics)], obs_px: &[[f64; 2]], min_angle_rad: f64, max_reproj_err_px: f64) -> Option<[f64; 3]> {
+pub async fn triangulate_and_validate(poses: &[(CameraPose, Intrinsics)], obs_px: &[[f64; 2]], min_angle_rad: f64, max_reproj_err_px: f64) -> Option<[f64; 3]> {
     let initial = triangulate_dlt(poses, obs_px)?;
     let refined = refine_point_lm(poses, obs_px, initial);
     let mut max_angle = 0.0_f64;
@@ -1136,7 +1136,7 @@ pub fn triangulate_and_validate(poses: &[(CameraPose, Intrinsics)], obs_px: &[[f
 /// via [`poly_roots_companion`]'s companion-matrix eigenvalue solver — reused here instead of a
 /// hand-derived closed-form (e.g. Ferrari's method for the quartic below) since a general, already-tested
 /// polynomial solver is far less likely to hide a sign/derivation bug than a bespoke one.
-fn real_roots_of(coeffs: &[f64]) -> Vec<f64> {
+async fn real_roots_of(coeffs: &[f64]) -> Vec<f64> {
     poly_roots_companion(coeffs).map(|roots| roots.into_iter().filter(|&(_, im)| im.abs() < 1e-6).map(|(re, _)| re).collect()).unwrap_or_default()
 }
 
@@ -1151,7 +1151,7 @@ fn real_roots_of(coeffs: &[f64]) -> Vec<f64> {
 /// their now-known camera-frame positions `s_i * f_i`. Returns up to 4 poses (after deduplicating
 /// near-identical candidates), or none for degenerate (collinear/coincident) input points.
 /// <https://en.wikipedia.org/wiki/Perspective-n-Point#P3P>
-pub fn p3p_grunert(cam_rays: &[[f64; 3]; 3], world_pts: &[[f64; 3]; 3]) -> Vec<Se3> {
+pub async fn p3p_grunert(cam_rays: &[[f64; 3]; 3], world_pts: &[[f64; 3]; 3]) -> Vec<Se3> {
     let f: [[f64; 3]; 3] = std::array::from_fn(|i| vec3d_normalize(cam_rays[i]));
     let cos_alpha = dot3(f[1], f[2]);
     let cos_beta = dot3(f[0], f[2]);
@@ -1234,13 +1234,13 @@ impl MinimalSolver for P3pSolver {
     type Model = Se3;
     const SAMPLE_SIZE: usize = 3;
 
-    fn solve(&self, sample: &[Self::Datum]) -> Vec<Self::Model> {
+    async fn solve(&self, sample: &[Self::Datum]) -> Vec<Self::Model> {
         let world: [[f64; 3]; 3] = std::array::from_fn(|i| sample[i].0);
         let rays: [[f64; 3]; 3] = std::array::from_fn(|i| self.intr.unproject_ray(sample[i].1));
         p3p_grunert(&rays, &world)
     }
 
-    fn residual(&self, model: &Self::Model, datum: &Self::Datum) -> f64 {
+    async fn residual(&self, model: &Self::Model, datum: &Self::Datum) -> f64 {
         let pose = CameraPose(*model);
         match reproject(&self.intr, &pose, datum.0) {
             Some(pred) => ((pred[0] - datum.1[0]).powi(2) + (pred[1] - datum.1[1]).powi(2)).sqrt(),
@@ -1251,7 +1251,7 @@ impl MinimalSolver for P3pSolver {
 
 /// 🎯️ Outlier-robust perspective-n-point: RANSAC over [`P3pSolver`]'s minimal 3-point samples, with
 /// [`refine_pose_lm`] as the locally-optimized-RANSAC polish on each new best model's inlier set.
-pub fn pnp_ransac(intr: &Intrinsics, world_pts: &[[f64; 3]], obs_px: &[[f64; 2]], cfg: &RansacConfig) -> Option<(CameraPose, Vec<usize>)> {
+pub async fn pnp_ransac(intr: &Intrinsics, world_pts: &[[f64; 3]], obs_px: &[[f64; 2]], cfg: &RansacConfig) -> Option<(CameraPose, Vec<usize>)> {
     if world_pts.len() != obs_px.len() || world_pts.len() < 3 {
         return None;
     }
@@ -1271,7 +1271,7 @@ pub fn pnp_ransac(intr: &Intrinsics, world_pts: &[[f64; 3]], obs_px: &[[f64; 2]]
 
 /// 📐️ EPnP control points: the centroid plus three points offset along the PCA axes of `world_pts`,
 /// scaled by `sqrt(eigenvalue)` so the resulting tetrahedron spans the point cloud's spread.
-fn epnp_control_points(world_pts: &[[f64; 3]]) -> Option<[[f64; 3]; 4]> {
+async fn epnp_control_points(world_pts: &[[f64; 3]]) -> Option<[[f64; 3]; 4]> {
     let n = world_pts.len() as f64;
     let c0 = scale3(world_pts.iter().fold([0.0; 3], |acc, p| add3(acc, *p)), 1.0 / n);
     let mut cov = MatD::zeros(3, 3);
@@ -1298,7 +1298,7 @@ fn epnp_control_points(world_pts: &[[f64; 3]]) -> Option<[[f64; 3]; 4]> {
 }
 
 /// 📐️ Barycentric weights `[a0..a3]` (summing to 1) expressing `p` as a combination of the 4 control points.
-fn epnp_barycentric(ctrl: &[[f64; 3]; 4], p: [f64; 3]) -> Option<[f64; 4]> {
+async fn epnp_barycentric(ctrl: &[[f64; 3]; 4], p: [f64; 3]) -> Option<[f64; 4]> {
     let mut basis = MatD::zeros(3, 3);
     for c in 0..3 {
         let col = vec3d_sub(ctrl[c + 1], ctrl[0]);
@@ -1321,7 +1321,7 @@ fn epnp_barycentric(ctrl: &[[f64; 3]; 4], p: [f64; 3]) -> Option<[f64; 4]> {
 /// combinations of the smallest `N = 1..4` eigenvectors for better noise robustness at the cost of a
 /// polynomial solve per `N`; this crate's `N = 1` variant is the closed-form baseline, meant to be
 /// followed by [`refine_pose_lm`] for a final nonlinear polish.
-pub fn epnp(intr: &Intrinsics, world_pts: &[[f64; 3]], obs_px: &[[f64; 2]]) -> Option<Se3> {
+pub async fn epnp(intr: &Intrinsics, world_pts: &[[f64; 3]], obs_px: &[[f64; 2]]) -> Option<Se3> {
     if world_pts.len() < 6 || world_pts.len() != obs_px.len() {
         return None;
     }
@@ -1396,15 +1396,15 @@ struct PoseRefineProblem<'a> {
 }
 
 impl LeastSquaresProblem for PoseRefineProblem<'_> {
-    fn residual_count(&self) -> usize {
+    async fn residual_count(&self) -> usize {
         self.obs_px.len() * 2
     }
 
-    fn parameter_count(&self) -> usize {
+    async fn parameter_count(&self) -> usize {
         6
     }
 
-    fn residuals(&self, x: &VecD, out: &mut VecD) {
+    async fn residuals(&self, x: &VecD, out: &mut VecD) {
         let xi: [f64; 6] = std::array::from_fn(|k| x.get(k));
         let pose = CameraPose(Se3::exp(xi));
         for (row, (&p, &obs)) in self.world_pts.iter().zip(self.obs_px.iter()).enumerate() {
@@ -1414,11 +1414,11 @@ impl LeastSquaresProblem for PoseRefineProblem<'_> {
         }
     }
 
-    fn jacobian(&self, x: &VecD, out: &mut MatD) {
+    async fn jacobian(&self, x: &VecD, out: &mut MatD) {
         numeric_jacobian(self, x, 1e-6, out);
     }
 
-    fn plus(&self, x: &VecD, dx: &VecD) -> VecD {
+    async fn plus(&self, x: &VecD, dx: &VecD) -> VecD {
         let cur: [f64; 6] = std::array::from_fn(|k| x.get(k));
         let ddelta: [f64; 6] = std::array::from_fn(|k| dx.get(k));
         VecD::from_vec(Se3::exp(ddelta).semio_compose_rs(&Se3::exp(cur)).log().to_vec())
@@ -1426,7 +1426,7 @@ impl LeastSquaresProblem for PoseRefineProblem<'_> {
 }
 
 /// 📐️ Refines a camera pose via Levenberg-Marquardt on its reprojection error over fixed world points.
-pub fn refine_pose_lm(intr: &Intrinsics, world_pts: &[[f64; 3]], obs_px: &[[f64; 2]], initial: Se3) -> Se3 {
+pub async fn refine_pose_lm(intr: &Intrinsics, world_pts: &[[f64; 3]], obs_px: &[[f64; 2]], initial: Se3) -> Se3 {
     let problem = PoseRefineProblem { intr, world_pts, obs_px };
     let x0 = VecD::from_vec(initial.log().to_vec());
     let cfg = LmConfig { max_iters: 50, ..LmConfig::default() };
@@ -1443,11 +1443,11 @@ struct UnionFind {
 }
 
 impl UnionFind {
-    fn new(n: usize) -> Self {
+    async fn new(n: usize) -> Self {
         Self { parent: (0..n).collect() }
     }
 
-    fn find(&mut self, mut x: usize) -> usize {
+    async fn find(&mut self, mut x: usize) -> usize {
         while self.parent[x] != x {
             self.parent[x] = self.parent[self.parent[x]];
             x = self.parent[x];
@@ -1455,7 +1455,7 @@ impl UnionFind {
         x
     }
 
-    fn union(&mut self, a: usize, b: usize) {
+    async fn union(&mut self, a: usize, b: usize) {
         let (ra, rb) = (self.find(a), self.find(b));
         if ra != rb {
             self.parent[ra] = rb;
@@ -1477,7 +1477,7 @@ pub struct FeatureTracks {
 /// via a bad transitive match) is dropped entirely rather than repaired, since picking a "correct"
 /// sub-chain from a corrupted component isn't well-defined without additional geometric evidence; a
 /// clean re-match/retriangulation later naturally recovers the good sub-tracks.
-pub fn build_tracks(num_frames: usize, pairwise_matches: &[(usize, usize, Vec<Match>)]) -> FeatureTracks {
+pub async fn build_tracks(num_frames: usize, pairwise_matches: &[(usize, usize, Vec<Match>)]) -> FeatureTracks {
     let _ = num_frames;
     let mut node_of: std::collections::HashMap<(usize, u32), usize> = std::collections::HashMap::new();
     let mut obs_of: Vec<(usize, u32)> = Vec::new();
@@ -1522,7 +1522,7 @@ pub fn build_tracks(num_frames: usize, pairwise_matches: &[(usize, usize, Vec<Ma
 // #region 🔖️Global
 /// 🕸️ Adjacency list from relative-rotation edges: `(i,j,Rij)` with `Rj = Rij ∘ Ri` contributes `i -> (j,
 /// Rij)` and the inverse edge `j -> (i, Rij⁻¹)`.
-fn rotation_adjacency(n: usize, edges: &[(usize, usize, So3)]) -> Vec<Vec<(usize, So3)>> {
+async fn rotation_adjacency(n: usize, edges: &[(usize, usize, So3)]) -> Vec<Vec<(usize, So3)>> {
     let mut adj = vec![Vec::new(); n];
     for &(i, j, rij) in edges {
         if i < n && j < n {
@@ -1542,7 +1542,7 @@ fn rotation_adjacency(n: usize, edges: &[(usize, usize, So3)]) -> Vec<Vec<(usize
 /// small-to-moderate noise and graph sizes this crate targets, but is not the eigendecomposition-exact
 /// global optimum. Node 0 is always returned as [`So3::identity`] (the gauge anchor); nodes unreachable
 /// from it also default to identity.
-pub fn rotation_averaging(relative_rotations: &[(usize, usize, So3)]) -> Vec<So3> {
+pub async fn rotation_averaging(relative_rotations: &[(usize, usize, So3)]) -> Vec<So3> {
     let n = relative_rotations.iter().map(|&(i, j, _)| i.max(j)).max().map_or(0, |m| m + 1);
     if n == 0 {
         return Vec::new();
@@ -1590,7 +1590,7 @@ pub fn rotation_averaging(relative_rotations: &[(usize, usize, So3)]) -> Vec<So3
 /// returned centers are correct only up to a single unknown global scale — the scale of the unit-norm
 /// nullspace solution itself, not any physical unit. Callers needing metric scale should rescale via
 /// [`align_to_priors`] or another absolute reference.
-pub fn translation_averaging(relative_directions: &[(usize, usize, [f64; 3])], rotations: &[So3]) -> Vec<[f64; 3]> {
+pub async fn translation_averaging(relative_directions: &[(usize, usize, [f64; 3])], rotations: &[So3]) -> Vec<[f64; 3]> {
     let n = rotations.len();
     if n == 0 {
         return Vec::new();
@@ -1650,13 +1650,13 @@ pub struct KeyframeIndex {
 
 impl KeyframeIndex {
     /// 🆕️ Empty index.
-    pub fn new() -> Self {
+    pub async fn new() -> Self {
         Self::default()
     }
 
     /// ➕️ Buckets `frame`'s descriptors into all 4 LSH tables (duplicate insertions of the same frame into
     /// the same bucket are harmless — `candidates` just counts them as extra votes).
-    pub fn insert(&mut self, frame: usize, descriptors: &[Descriptor256]) {
+    pub async fn insert(&mut self, frame: usize, descriptors: &[Descriptor256]) {
         for desc in descriptors {
             for (t, table) in self.tables.iter_mut().enumerate() {
                 table.entry((desc.0[t] & 0xFFFF) as u16).or_default().push(frame);
@@ -1667,7 +1667,7 @@ impl KeyframeIndex {
     /// 🔍️ Frames voted for by at least `min_shared_buckets` total `(query descriptor, table)` bucket hits
     /// — i.e. the sum, over every query descriptor and every one of the 4 tables, of how many times that
     /// frame appears in the matching bucket. Ascending by frame index.
-    pub fn candidates(&self, descriptors: &[Descriptor256], min_shared_buckets: usize) -> Vec<usize> {
+    pub async fn candidates(&self, descriptors: &[Descriptor256], min_shared_buckets: usize) -> Vec<usize> {
         let mut votes: std::collections::HashMap<usize, usize> = std::collections::HashMap::new();
         for desc in descriptors {
             for (t, table) in self.tables.iter().enumerate() {
@@ -1696,7 +1696,7 @@ pub struct LoopCandidate {
 /// against each candidate's descriptors ([`remodel_feature::match_brute`], ratio `0.8`, mutual
 /// cross-check), geometrically verifies via [`select_two_view_model`], and keeps candidates clearing a
 /// minimum inlier count — descending by inlier count.
-pub fn detect_loops(index: &KeyframeIndex, current_frame: usize, current_descriptors: &[Descriptor256], current_keypoints: &[Keypoint], all_keypoints: &[Vec<Keypoint>], all_descriptors: &[Vec<Descriptor256>]) -> Vec<LoopCandidate> {
+pub async fn detect_loops(index: &KeyframeIndex, current_frame: usize, current_descriptors: &[Descriptor256], current_keypoints: &[Keypoint], all_keypoints: &[Vec<Keypoint>], all_descriptors: &[Vec<Descriptor256>]) -> Vec<LoopCandidate> {
     const MIN_SHARED_BUCKETS: usize = 3;
     const MIN_LOOP_INLIERS: usize = 12;
     let mut out = Vec::new();
@@ -1741,7 +1741,7 @@ struct PoseGraphProblem<'a> {
 }
 
 impl PoseGraphProblem<'_> {
-    fn pose_at(&self, x: &VecD, node: usize) -> Se3 {
+    async fn pose_at(&self, x: &VecD, node: usize) -> Se3 {
         if node == 0 {
             self.fixed_pose0
         } else {
@@ -1752,15 +1752,15 @@ impl PoseGraphProblem<'_> {
 }
 
 impl LeastSquaresProblem for PoseGraphProblem<'_> {
-    fn residual_count(&self) -> usize {
+    async fn residual_count(&self) -> usize {
         self.edges.len() * 6
     }
 
-    fn parameter_count(&self) -> usize {
+    async fn parameter_count(&self) -> usize {
         6 * self.num_nodes.saturating_sub(1)
     }
 
-    fn residuals(&self, x: &VecD, out: &mut VecD) {
+    async fn residuals(&self, x: &VecD, out: &mut VecD) {
         for (row, &(i, j, zij)) in self.edges.iter().enumerate() {
             let pi = self.pose_at(x, i);
             let pj = self.pose_at(x, j);
@@ -1773,11 +1773,11 @@ impl LeastSquaresProblem for PoseGraphProblem<'_> {
         }
     }
 
-    fn jacobian(&self, x: &VecD, out: &mut MatD) {
+    async fn jacobian(&self, x: &VecD, out: &mut MatD) {
         numeric_jacobian(self, x, 1e-6, out);
     }
 
-    fn plus(&self, x: &VecD, dx: &VecD) -> VecD {
+    async fn plus(&self, x: &VecD, dx: &VecD) -> VecD {
         let mut out = VecD::zeros(x.len());
         for node in 1..self.num_nodes {
             let base = 6 * (node - 1);
@@ -1794,7 +1794,7 @@ impl LeastSquaresProblem for PoseGraphProblem<'_> {
 
 /// 🔁️ Sim3-edge pose-graph optimization (see [`PoseGraphProblem`] for the documented `se(3)`
 /// simplification): refines `poses` via Levenberg-Marquardt to best satisfy `edges`, anchoring `poses[0]`.
-pub fn pose_graph_optimize(poses: &[Se3], edges: &[(usize, usize, Sim3)]) -> Vec<Se3> {
+pub async fn pose_graph_optimize(poses: &[Se3], edges: &[(usize, usize, Sim3)]) -> Vec<Se3> {
     let n = poses.len();
     if n == 0 {
         return Vec::new();
@@ -1836,7 +1836,7 @@ pub enum PosePrior {
 /// `(frame, enu)` pairs are matched against `recon.cameras` by frame index, and the resulting similarity
 /// maps the reconstruction's (arbitrary monocular-SfM gauge/scale) frame into the GPS/ENU frame. `None`
 /// if fewer than 3 frames match or the matched centers are degenerate (collinear/coincident).
-pub fn align_to_priors(recon: &Reconstruction, gps_priors: &[(usize, [f64; 3])]) -> Option<Sim3> {
+pub async fn align_to_priors(recon: &Reconstruction, gps_priors: &[(usize, [f64; 3])]) -> Option<Sim3> {
     let mut src = Vec::new();
     let mut dst = Vec::new();
     for &(frame_idx, gps) in gps_priors {
@@ -1853,7 +1853,7 @@ pub fn align_to_priors(recon: &Reconstruction, gps_priors: &[(usize, [f64; 3])])
 /// ([`crate::optimize::ResidualTerm`] with `a_index: None`) term inside a
 /// [`crate::optimize::BipartiteResiduals`] problem. Returns `(residual, jacobian_wrt_point)`;
 /// `sigma <= 0` is treated as `1.0` (an un-weighted prior) rather than dividing by zero.
-pub fn apply_gcp_prior_residual(point: [f64; 3], known_world: [f64; 3], sigma: f64) -> (VecD, MatD) {
+pub async fn apply_gcp_prior_residual(point: [f64; 3], known_world: [f64; 3], sigma: f64) -> (VecD, MatD) {
     let inv_sigma = if sigma > 1e-12 { 1.0 / sigma } else { 1.0 };
     let r = VecD::from_vec((0..3).map(|k| (point[k] - known_world[k]) * inv_sigma).collect());
     let mut jb = MatD::zeros(3, 3);
@@ -1879,7 +1879,7 @@ pub struct SfmConfig {
 }
 
 impl Default for SfmConfig {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self {
             ransac_threshold_px: 2.0,
             min_track_length: 3,
@@ -1919,27 +1919,27 @@ pub struct SfmBundleProblem {
 }
 
 impl BipartiteResiduals for SfmBundleProblem {
-    fn num_a_blocks(&self) -> usize {
+    async fn num_a_blocks(&self) -> usize {
         self.num_cameras
     }
 
-    fn num_b_blocks(&self) -> usize {
+    async fn num_b_blocks(&self) -> usize {
         self.num_points
     }
 
-    fn a_block_dim(&self) -> usize {
+    async fn a_block_dim(&self) -> usize {
         6
     }
 
-    fn b_block_dim(&self) -> usize {
+    async fn b_block_dim(&self) -> usize {
         3
     }
 
-    fn residual_terms(&self) -> &[ResidualTerm] {
+    async fn residual_terms(&self) -> &[ResidualTerm] {
         &self.terms
     }
 
-    fn evaluate(&self, a_params: &[VecD], b_params: &[VecD], term: &ResidualTerm) -> (VecD, MatD, MatD) {
+    async fn evaluate(&self, a_params: &[VecD], b_params: &[VecD], term: &ResidualTerm) -> (VecD, MatD, MatD) {
         let ai = term.a_index.expect("sfm bundle terms always touch a camera");
         let bi = term.b_index.expect("sfm bundle terms always touch a point");
         let obs = self.observations[&(ai, bi)];
@@ -1987,7 +1987,7 @@ impl BipartiteResiduals for SfmBundleProblem {
 /// while the constrained 5-DOF five-point manifold stays well-conditioned. Both solvers run over the same
 /// correspondences with the same normalized-ray MSAC threshold, so their [`TwoViewResult::score`]s are
 /// directly comparable; five-point wins ties.
-fn estimate_init_pair_essential(matches: &[([f64; 2], [f64; 2])], k: &Intrinsics, seed: u64) -> Option<TwoViewResult> {
+async fn estimate_init_pair_essential(matches: &[([f64; 2], [f64; 2])], k: &Intrinsics, seed: u64) -> Option<TwoViewResult> {
     const FIVE_POINT_THRESHOLD: f64 = 0.005;
     let five_point = estimate_essential_five_point(matches, k, k, FIVE_POINT_THRESHOLD, seed);
     let eight_point = estimate_essential(matches, k, k);
@@ -2013,37 +2013,37 @@ pub struct IncrementalSfm {
 
 impl IncrementalSfm {
     /// 🆕️ Starts an empty incremental reconstruction over a shared calibration, precomputed feature tracks and per-frame keypoints.
-    pub fn new(intrinsics: Intrinsics, tracks: FeatureTracks, keypoints_per_frame: Vec<Vec<Keypoint>>, cfg: SfmConfig) -> Self {
+    pub async fn new(intrinsics: Intrinsics, tracks: FeatureTracks, keypoints_per_frame: Vec<Vec<Keypoint>>, cfg: SfmConfig) -> Self {
         Self { intrinsics, tracks, keypoints_per_frame, pairwise_matches: Vec::new(), cfg, cameras: Vec::new(), points: std::collections::HashMap::new() }
     }
 
     /// 🕸️ Attaches the pairwise match table used for two-view registration fallbacks (track union-find alone
     /// drops conflicted chains that JPEG matching often creates, starving essential-matrix correspondence).
-    pub fn set_pairwise_matches(&mut self, pairwise_matches: Vec<(usize, usize, Vec<Match>)>) {
+    pub async fn set_pairwise_matches(&mut self, pairwise_matches: Vec<(usize, usize, Vec<Match>)>) {
         self.pairwise_matches = pairwise_matches;
     }
 
-    fn is_registered(&self, frame: usize) -> bool {
+    async fn is_registered(&self, frame: usize) -> bool {
         self.cameras.iter().any(|&(f, _)| f == frame)
     }
 
-    fn pose_of(&self, frame: usize) -> Option<CameraPose> {
+    async fn pose_of(&self, frame: usize) -> Option<CameraPose> {
         self.cameras.iter().find(|&&(f, _)| f == frame).map(|&(_, p)| p)
     }
 
-    fn obs_px(&self, frame: usize, kp: u32) -> [f64; 2] {
+    async fn obs_px(&self, frame: usize, kp: u32) -> [f64; 2] {
         let k = self.keypoints_per_frame[frame][kp as usize];
         [f64::from(k.x), f64::from(k.y)]
     }
 
-    fn track_obs_in(&self, track: &[(usize, u32)], frame: usize) -> Option<[f64; 2]> {
+    async fn track_obs_in(&self, track: &[(usize, u32)], frame: usize) -> Option<[f64; 2]> {
         track.iter().find(|&&(f, _)| f == frame).map(|&(f, kp)| self.obs_px(f, kp))
     }
 
     /// 🎯️ Number of already-triangulated tracks also observed in `frame` — the 2D-3D
     /// correspondence count [`register_next`](Self::register_next) would feed to PnP.
     /// 🕸️ Direct pairwise match count between `frame` and any currently registered camera.
-    pub fn pairwise_match_count(&self, frame: usize) -> usize {
+    pub async fn pairwise_match_count(&self, frame: usize) -> usize {
         let registered: std::collections::HashSet<usize> = self.cameras.iter().map(|&(f, _)| f).collect();
         let mut best = 0usize;
         for &(a, b, ref matches) in &self.pairwise_matches {
@@ -2057,7 +2057,7 @@ impl IncrementalSfm {
         best
     }
 
-        pub fn pnp_correspondence_count(&self, frame: usize) -> usize {
+        pub async fn pnp_correspondence_count(&self, frame: usize) -> usize {
         self.tracks
             .tracks
             .iter()
@@ -2067,14 +2067,14 @@ impl IncrementalSfm {
     }
 
     /// 🌱️ Whether `frame` already has a registered camera pose in this reconstruction.
-    pub fn has_camera(&self, frame: usize) -> bool {
+    pub async fn has_camera(&self, frame: usize) -> bool {
         self.is_registered(frame)
     }
 
     /// 🌱️ Seeds the reconstruction from an initial pair: estimates the essential matrix + relative pose via
     /// [`estimate_init_pair_essential`] (frame_a at identity, frame_b at the recovered relative pose), then
     /// triangulates every track shared between the two frames.
-    pub fn init_pair(&mut self, frame_a: usize, frame_b: usize, matches: &[Match]) -> Result<(), SfmError> {
+    pub async fn init_pair(&mut self, frame_a: usize, frame_b: usize, matches: &[Match]) -> Result<(), SfmError> {
         if matches.len() < 8 {
             return Err(SfmError::InsufficientMatches);
         }
@@ -2109,7 +2109,7 @@ impl IncrementalSfm {
     /// two-view essential-matrix pose against the best-connected registered reference only when enough
     /// shared triangulated points exist to recover a consistent metric scale and the refined pose
     /// reprojects those points within `3 * ransac_threshold_px`.
-    pub fn register_next(&mut self, frame: usize) -> Result<(), SfmError> {
+    pub async fn register_next(&mut self, frame: usize) -> Result<(), SfmError> {
         if self.is_registered(frame) {
             return Ok(());
         }
@@ -2135,7 +2135,7 @@ impl IncrementalSfm {
     /// registered frame sharing the most track observations. Metric scale prefers the median ratio of known
     /// triangulated-point distances to unit-baseline triangulations; when JPEG/matching leaves no shared
     /// 3D point, falls back to the most recent registered inter-camera baseline length.
-    fn register_next_two_view(&mut self, frame: usize) -> Result<(), SfmError> {
+    async fn register_next_two_view(&mut self, frame: usize) -> Result<(), SfmError> {
         let registered: Vec<usize> = self.cameras.iter().map(|&(f, _)| f).collect();
         let mut best: Option<(usize, Vec<([f64; 2], [f64; 2])>)> = None;
         for &ref_f in &registered {
@@ -2268,7 +2268,7 @@ impl IncrementalSfm {
     /// 🎯️ Re-estimates every registered camera via PnP against the current triangulated cloud (frames with
     /// fewer than [`P3pSolver::SAMPLE_SIZE`] correspondences are left unchanged). Cleans up poses that were
     /// seeded by the two-view baseline-prior fallback before bundle adjustment / dense stereo.
-    pub fn refine_registered_poses_pnp(&mut self) {
+    pub async fn refine_registered_poses_pnp(&mut self) {
         let frames: Vec<usize> = self.cameras.iter().map(|&(f, _)| f).collect();
         for frame in frames {
             let mut world_pts = Vec::new();
@@ -2291,7 +2291,7 @@ impl IncrementalSfm {
         }
     }
 
-    pub fn triangulate_new(&mut self, frame: usize) {
+    pub async fn triangulate_new(&mut self, frame: usize) {
         let registered: std::collections::HashSet<usize> = self.cameras.iter().map(|&(f, _)| f).collect();
         for (track_id, track) in self.tracks.tracks.iter().enumerate() {
             if self.points.contains_key(&track_id) || track.len() < self.cfg.min_track_length {
@@ -2319,7 +2319,7 @@ impl IncrementalSfm {
         }
     }
 
-    fn build_bundle_problem(&self, camera_frames: &[usize]) -> (SfmBundleProblem, Vec<VecD>, Vec<VecD>, Vec<usize>) {
+    async fn build_bundle_problem(&self, camera_frames: &[usize]) -> (SfmBundleProblem, Vec<VecD>, Vec<VecD>, Vec<usize>) {
         let a_index_of: std::collections::HashMap<usize, usize> = camera_frames.iter().enumerate().map(|(i, &f)| (f, i)).collect();
         let mut point_track_ids: Vec<usize> = Vec::new();
         let mut b_index_of: std::collections::HashMap<usize, usize> = std::collections::HashMap::new();
@@ -2348,7 +2348,7 @@ impl IncrementalSfm {
         (problem, a0, b0, point_track_ids)
     }
 
-    fn run_bundle_adjustment(&mut self, camera_frames: &[usize]) {
+    async fn run_bundle_adjustment(&mut self, camera_frames: &[usize]) {
         if camera_frames.is_empty() {
             return;
         }
@@ -2370,7 +2370,7 @@ impl IncrementalSfm {
     }
 
     /// 🎯️ Bundle-adjusts the most-recently-registered `window` cameras (by frame insertion order) and every point they see.
-    pub fn local_ba(&mut self, window: usize) {
+    pub async fn local_ba(&mut self, window: usize) {
         let frames: Vec<usize> = self.cameras.iter().map(|&(f, _)| f).collect();
         let start = frames.len().saturating_sub(window);
         let window_frames = frames[start..].to_vec();
@@ -2378,7 +2378,7 @@ impl IncrementalSfm {
     }
 
     /// 🌐️ Bundle-adjusts every registered camera and every triangulated point.
-    pub fn global_ba(&mut self) {
+    pub async fn global_ba(&mut self) {
         let frames: Vec<usize> = self.cameras.iter().map(|&(f, _)| f).collect();
         self.run_bundle_adjustment(&frames);
     }
@@ -2386,7 +2386,7 @@ impl IncrementalSfm {
     /// 🧹️ Drops points whose worst-view reprojection error exceeds `3 * ransac_threshold_px` or whose
     /// best pairwise triangulation angle is below [`SfmConfig::min_triangulation_angle_rad`], then drops
     /// any camera left seeing fewer than [`SfmConfig::min_visible_points_to_keep_camera`] surviving points.
-    pub fn prune_outliers(&mut self) {
+    pub async fn prune_outliers(&mut self) {
         let reproj_threshold = self.cfg.ransac_threshold_px * 3.0;
         let mut to_remove = Vec::new();
         for (&tid, &point) in &self.points {
@@ -2431,7 +2431,7 @@ impl IncrementalSfm {
 
     /// 🔁️ Re-runs [`triangulate_new`](Self::triangulate_new) over every registered frame, picking up
     /// tracks that a bundle-adjustment pass's refined poses may now connect.
-    pub fn retriangulate(&mut self) {
+    pub async fn retriangulate(&mut self) {
         let frames: Vec<usize> = self.cameras.iter().map(|&(f, _)| f).collect();
         for frame in frames {
             self.triangulate_new(frame);
@@ -2439,7 +2439,7 @@ impl IncrementalSfm {
     }
 
     /// 📦️ A snapshot of the current registered cameras and triangulated points.
-    pub fn reconstruction(&self) -> Reconstruction {
+    pub async fn reconstruction(&self) -> Reconstruction {
         let mut cameras = self.cameras.clone();
         cameras.sort_by_key(|&(f, _)| f);
         let mut point_track_ids: Vec<usize> = self.points.keys().copied().collect();
@@ -2454,7 +2454,7 @@ impl IncrementalSfm {
     /// A frame that fails to register (e.g. too few 2D-3D correspondences yet) is skipped rather than
     /// aborting the whole run — a documented best-effort policy, since one poorly-connected frame
     /// shouldn't sink an otherwise-good reconstruction.
-    pub fn run_all(&mut self, frame_order: &[usize], pairwise_matches: &[(usize, usize, Vec<Match>)]) -> Result<Reconstruction, SfmError> {
+    pub async fn run_all(&mut self, frame_order: &[usize], pairwise_matches: &[(usize, usize, Vec<Match>)]) -> Result<Reconstruction, SfmError> {
         if frame_order.len() < 2 {
             return Err(SfmError::TooFewFrames);
         }
@@ -2502,7 +2502,7 @@ mod tests {
 
     // #region 🔖️TwoViewTests
     #[test]
-    fn estimate_fundamental_recovers_planted_outliers_and_satisfies_epipolar_constraint() {
+    async fn estimate_fundamental_recovers_planted_outliers_and_satisfies_epipolar_constraint() {
         let scene = synthetic_scene(20260719, 2, 60, false);
         let scene_obs = project_observations(&scene, 0.3, 0.0, 20260719);
         let mut by_point: CorrByPoint = HashMap::new();
@@ -2537,7 +2537,7 @@ mod tests {
     }
 
     #[test]
-    fn estimate_homography_recovers_planted_outliers_on_planar_scene() {
+    async fn estimate_homography_recovers_planted_outliers_on_planar_scene() {
         let intr = Intrinsics { fx: 800.0, fy: 800.0, cx: 320.0, cy: 240.0, skew: 0.0, distortion: Distortion::None };
         let pose_a = CameraPose(Se3::identity());
         let pose_b = CameraPose(Se3 { r: So3::exp([0.05, 0.15, -0.05]), t: [0.8, 0.05, 0.1] });
@@ -2567,7 +2567,7 @@ mod tests {
     }
 
     #[test]
-    fn decompose_essential_recovers_relative_pose_within_tolerance() {
+    async fn decompose_essential_recovers_relative_pose_within_tolerance() {
         let scene = synthetic_scene(778, 2, 80, false);
         let scene_obs = project_observations(&scene, 0.5, 0.0, 778);
         let mut by_point: CorrByPoint = HashMap::new();
@@ -2605,7 +2605,7 @@ mod tests {
     }
 
     #[test]
-    fn select_two_view_model_prefers_homography_on_planar_scene() {
+    async fn select_two_view_model_prefers_homography_on_planar_scene() {
         let intr = Intrinsics { fx: 800.0, fy: 800.0, cx: 320.0, cy: 240.0, skew: 0.0, distortion: Distortion::None };
         let pose_a = CameraPose(Se3::identity());
         let pose_b = CameraPose(Se3 { r: So3::exp([0.02, 0.1, -0.02]), t: [0.6, 0.02, 0.05] });
@@ -2623,7 +2623,7 @@ mod tests {
 
     // #region 🔖️TriangulateTests
     #[test]
-    fn triangulate_dlt_and_refine_point_lm_recover_points_within_reprojection_tolerance() {
+    async fn triangulate_dlt_and_refine_point_lm_recover_points_within_reprojection_tolerance() {
         let scene = synthetic_scene(555, 5, 30, false);
         let scene_obs = project_observations(&scene, 0.5, 0.0, 555);
         let mut by_point: Vec<Vec<(usize, [f64; 2])>> = vec![Vec::new(); scene.points_world.len()];
@@ -2659,7 +2659,7 @@ mod tests {
     }
 
     #[test]
-    fn triangulate_and_validate_rejects_low_angle_and_accepts_well_conditioned_points() {
+    async fn triangulate_and_validate_rejects_low_angle_and_accepts_well_conditioned_points() {
         let intr = Intrinsics { fx: 800.0, fy: 800.0, cx: 320.0, cy: 240.0, skew: 0.0, distortion: Distortion::None };
         let pose_a = CameraPose(Se3::identity());
         let pose_wide = CameraPose(Se3 { r: So3::identity(), t: [2.0, 0.0, 0.0] });
@@ -2679,7 +2679,7 @@ mod tests {
 
     // #region 🔖️PnpTests
     #[test]
-    fn p3p_grunert_returns_ground_truth_among_solutions() {
+    async fn p3p_grunert_returns_ground_truth_among_solutions() {
         let world_pts: [[f64; 3]; 3] = [[0.3, 0.1, 4.0], [-0.4, 0.2, 4.5], [0.1, -0.5, 3.8]];
         let true_pose = Se3 { r: So3::exp([0.1, -0.2, 0.05]), t: [0.3, -0.1, 0.2] };
         let rays: [[f64; 3]; 3] = std::array::from_fn(|i| vec3d_normalize(true_pose.act(world_pts[i])));
@@ -2695,7 +2695,7 @@ mod tests {
     }
 
     #[test]
-    fn epnp_and_refine_pose_lm_recover_pose_within_tolerance_at_one_pixel_noise() {
+    async fn epnp_and_refine_pose_lm_recover_pose_within_tolerance_at_one_pixel_noise() {
         let intr = Intrinsics { fx: 800.0, fy: 800.0, cx: 320.0, cy: 240.0, skew: 0.0, distortion: Distortion::None };
         let true_pose = Se3 { r: So3::exp([0.15, -0.1, 0.2]), t: [0.4, -0.2, 0.1] };
         let mut rng = Rng::from_seed(3131);
@@ -2732,7 +2732,7 @@ mod tests {
     }
 
     #[test]
-    fn pnp_ransac_recovers_pose_despite_planted_outliers() {
+    async fn pnp_ransac_recovers_pose_despite_planted_outliers() {
         let intr = Intrinsics { fx: 800.0, fy: 800.0, cx: 320.0, cy: 240.0, skew: 0.0, distortion: Distortion::None };
         let true_pose = Se3 { r: So3::exp([0.1, 0.05, -0.15]), t: [0.2, 0.1, -0.1] };
         let mut rng = Rng::from_seed(909_090);
@@ -2762,7 +2762,7 @@ mod tests {
 
     // #region 🔖️IncrementalTests
     #[test]
-    fn run_all_reconstructs_synthetic_multi_camera_scene() {
+    async fn run_all_reconstructs_synthetic_multi_camera_scene() {
         let n_cams = 6;
         let scene = synthetic_scene(2026, n_cams, 50, false);
         let scene_obs = project_observations(&scene, 0.3, 0.0, 2026);
@@ -2849,7 +2849,7 @@ mod tests {
     /// five-point solver end to end (not just at the primitive level) and comes out with a usable pose and
     /// a fully triangulated seed point cloud.
     #[test]
-    fn init_pair_recovers_pose_and_triangulates_on_low_parallax_pair() {
+    async fn init_pair_recovers_pose_and_triangulates_on_low_parallax_pair() {
         let intr = Intrinsics { fx: 800.0, fy: 800.0, cx: 320.0, cy: 240.0, skew: 0.0, distortion: Distortion::None };
         let pose_a = CameraPose(Se3::identity());
         let pose_b = CameraPose(Se3 { r: So3::exp([0.02, 0.15, -0.02]), t: [0.6, 0.02, 0.05] });
@@ -2886,7 +2886,7 @@ mod tests {
 
     // #region 🔖️GlobalTests
     #[test]
-    fn rotation_and_translation_averaging_recover_pose_graph_from_noisy_relative_measurements() {
+    async fn rotation_and_translation_averaging_recover_pose_graph_from_noisy_relative_measurements() {
         let n = 7;
         let mut rng = Rng::from_seed(24_681_357);
         let true_rotations: Vec<So3> = (0..n).map(|i| if i == 0 { So3::identity() } else { So3::exp([0.3 * rng.next_f64() - 0.15, 0.3 * rng.next_f64() - 0.15, 0.3 * rng.next_f64() - 0.15]) }).collect();
@@ -2933,7 +2933,7 @@ mod tests {
 
     // #region 🔖️LoopClosureTests
     #[test]
-    fn keyframe_index_and_detect_loops_find_a_planted_revisit() {
+    async fn keyframe_index_and_detect_loops_find_a_planted_revisit() {
         let mut rng = Rng::from_seed(112_233);
         let n_frames = 5;
         let n_shared = 20;
@@ -2978,7 +2978,7 @@ mod tests {
     }
 
     #[test]
-    fn pose_graph_optimize_reduces_drift_at_loop_closure_edge() {
+    async fn pose_graph_optimize_reduces_drift_at_loop_closure_edge() {
         let n = 5;
         let mut rng = Rng::from_seed(998_877);
         let mut true_poses = vec![Se3::identity()];
@@ -3014,7 +3014,7 @@ mod tests {
 
     // #region 🔖️PriorsTests
     #[test]
-    fn align_to_priors_recovers_planted_similarity() {
+    async fn align_to_priors_recovers_planted_similarity() {
         let mut rng = Rng::from_seed(135_791);
         let intr = Intrinsics { fx: 800.0, fy: 800.0, cx: 320.0, cy: 240.0, skew: 0.0, distortion: Distortion::None };
         let mut cameras = Vec::new();
@@ -3036,7 +3036,7 @@ mod tests {
     }
 
     #[test]
-    fn apply_gcp_prior_residual_matches_scaled_difference() {
+    async fn apply_gcp_prior_residual_matches_scaled_difference() {
         let point = [1.0, 2.0, 3.0];
         let known = [1.1, 1.9, 3.2];
         let (r, jb) = apply_gcp_prior_residual(point, known, 0.5);
@@ -3052,21 +3052,21 @@ mod tests {
     // #region 🔖️TwoViewFivePointTests
     use std::collections::HashMap;
 
-    fn relative_pose(a: &CameraPose, b: &CameraPose) -> Se3 {
+    async fn relative_pose(a: &CameraPose, b: &CameraPose) -> Se3 {
         b.0.semio_compose_rs(&a.0.inverse())
     }
 
-    fn rotation_error_deg(a: &So3, b: &So3) -> f64 {
+    async fn rotation_error_deg(a: &So3, b: &So3) -> f64 {
         norm3(a.semio_compose_rs(&b.inverse()).log()).to_degrees()
     }
 
-    fn frob_norm(m: &[[f64; 3]; 3]) -> f64 {
+    async fn frob_norm(m: &[[f64; 3]; 3]) -> f64 {
         m.iter().flatten().map(|v| v * v).sum::<f64>().sqrt()
     }
 
     /// 📸️ Fixtures self-test: [`project_observations`] at zero noise must match direct [`reproject`] exactly.
     #[test]
-    fn fixtures_are_internally_consistent() {
+    async fn fixtures_are_internally_consistent() {
         let scene = synthetic_scene(1, 4, 30, false);
         let obs = project_observations(&scene, 0.0, 0.0, 2);
         assert!(!obs.is_empty(), "a 4-camera/30-point non-planar scene should yield in-bounds observations");
@@ -3084,7 +3084,7 @@ mod tests {
     /// 0.02`, i.e. roughly a bit over 1°, generous enough to absorb RANSAC sampling variance while still
     /// being a tight geometric bound) at 0.5px Gaussian pixel noise plus 30% gross outliers.
     #[test]
-    fn eight_point_ransac_recovers_relative_pose_with_noise_and_outliers() {
+    async fn eight_point_ransac_recovers_relative_pose_with_noise_and_outliers() {
         let scene = synthetic_scene(10, 8, 260, false);
         let obs = project_observations(&scene, 0.5, 0.3, 11);
         let mut by_point: CorrByPoint = HashMap::new();
@@ -3128,7 +3128,7 @@ mod tests {
     /// (Frobenius-normalized, up to the usual sign ambiguity) among the returned candidates. This isolates
     /// the Nistér polynomial-elimination algebra itself from RANSAC/scoring concerns.
     #[test]
-    fn five_point_candidates_include_the_true_essential_matrix() {
+    async fn five_point_candidates_include_the_true_essential_matrix() {
         let scene = synthetic_scene(77, 2, 5, false);
         let obs = project_observations(&scene, 0.0, 0.0, 78);
         let mut by_point: CorrByPoint = HashMap::new();
@@ -3179,7 +3179,7 @@ mod tests {
     /// 0.5°, and that plain 8-point on the identical data does measurably worse (or fails outright) — the
     /// "5-point wins on planar/low-parallax" contract.
     #[test]
-    fn five_point_recovers_pose_on_planar_scene_where_eight_point_struggles() {
+    async fn five_point_recovers_pose_on_planar_scene_where_eight_point_struggles() {
         // A controlled, moderate-baseline planar/near-planar configuration (mirroring
         // `select_two_view_model_prefers_homography_on_planar_scene`'s relative pose and depth range,
         // rather than the wide-baseline multi-camera orbit fixture, which produced large enough relative
@@ -3248,7 +3248,7 @@ mod tests {
     /// used to call 8-point unconditionally, silently keeping the worse model on video-like low-parallax
     /// pairs even though the better one was one function call away.
     #[test]
-    fn estimate_init_pair_essential_prefers_five_point_on_planar_scene() {
+    async fn estimate_init_pair_essential_prefers_five_point_on_planar_scene() {
         let intr = Intrinsics { fx: 800.0, fy: 800.0, cx: 320.0, cy: 240.0, skew: 0.0, distortion: Distortion::None };
         let pose_a = CameraPose(Se3::identity());
         let pose_b = CameraPose(Se3 { r: So3::exp([0.02, 0.15, -0.02]), t: [0.6, 0.02, 0.05] });
@@ -3283,7 +3283,7 @@ mod tests {
     /// input is noiseless) among the returned candidate roots for a synthetic non-degenerate 3-point
     /// configuration.
     #[test]
-    fn p3p_true_pose_is_among_the_candidate_roots() {
+    async fn p3p_true_pose_is_among_the_candidate_roots() {
         let scene = synthetic_scene(30, 1, 3, false);
         let (intr, pose) = &scene.cameras[0];
         let world_pts: [[f64; 3]; 3] = std::array::from_fn(|i| scene.points_world[i]);
@@ -3301,7 +3301,7 @@ mod tests {
     /// 📐️ `n`-view DLT triangulation + LM polish: recovers known 3D points within a tolerance scaled to
     /// the injected 0.5px pixel noise.
     #[test]
-    fn triangulation_recovers_points_within_noise_scaled_tolerance() {
+    async fn triangulation_recovers_points_within_noise_scaled_tolerance() {
         let scene = synthetic_scene(40, 5, 80, false);
         let noise_std = 0.5;
         let obs = project_observations(&scene, noise_std, 0.0, 41);
@@ -3336,7 +3336,7 @@ mod tests {
     /// cameras/points, converges to near the noise floor — post-BA per-coordinate reprojection RMSE below
     /// `1.05x` the injected pixel-noise std, not merely "better than the perturbed start".
     #[test]
-    fn bundle_adjustment_converges_near_noise_floor() {
+    async fn bundle_adjustment_converges_near_noise_floor() {
         let scene = synthetic_scene(50, 4, 45, false);
         let noise_std = 0.4;
         let obs = project_observations(&scene, noise_std, 0.0, 51);
@@ -3405,7 +3405,7 @@ mod tests {
         /// loop-closing edge (frame 39 back to frame 0, as if geometrically re-verified on revisit) must
         /// bring every camera's recovered position back to within 1% of the orbit radius.
         #[test]
-        fn loop_closure_corrects_accumulated_drift() {
+        async fn loop_closure_corrects_accumulated_drift() {
             const N: usize = 40;
             let scene = synthetic_scene(900, N, 5, false);
             let orbit_radius = 6.0;

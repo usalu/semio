@@ -26,11 +26,11 @@ pub struct GltfClearanceIndicators {
 pub struct GltfClearanceInference;
 
 impl GltfClearanceInference {
-    pub(crate) fn infer_pair(pair: &GltfPairGeometry, policy: &GltfAnalysisPolicy) -> (GltfMeasure<f64>, GltfMeasure<GltfStatistics>, GltfMeasure<f64>, GltfMeasure<f64>) {
+    pub(crate) async fn infer_pair(pair: &GltfPairGeometry, policy: &GltfAnalysisPolicy) -> (GltfMeasure<f64>, GltfMeasure<GltfStatistics>, GltfMeasure<f64>, GltfMeasure<f64>) {
         (minimum_distance_to_neighbors::infer_pair(pair), clearance_distribution::infer_pair(pair, policy), interference_volume::infer_pair(pair), overlap_volume::infer_pair(pair))
     }
 
-    pub(crate) fn infer_assembly(indicators: &mut GltfClearanceIndicators, distances: &[f64], overlap_volume: f64, overlap_complete: bool, pair_count: usize, policy: &GltfAnalysisPolicy, sample_count: usize, topology: Topology) {
+    pub(crate) async fn infer_assembly(indicators: &mut GltfClearanceIndicators, distances: &[f64], overlap_volume: f64, overlap_complete: bool, pair_count: usize, policy: &GltfAnalysisPolicy, sample_count: usize, topology: Topology) {
         if let Some(measure) = minimum_distance_to_neighbors::from_assembly(distances, sample_count, topology) {
             indicators.minimum_distance_to_neighbors = measure;
         }
@@ -49,7 +49,7 @@ impl GltfClearanceInference {
 impl GltfInferenceStage<GltfGeometryContext<'_>> for GltfClearanceInference {
     type Output = GltfClearanceIndicators;
 
-    fn infer(context: &GltfGeometryContext<'_>) -> Self::Output {
+    async fn infer(context: &GltfGeometryContext<'_>) -> Self::Output {
         Self::Output {
             minimum_distance_to_neighbors: minimum_distance_to_neighbors::infer(context),
             clearance_distribution: clearance_distribution::infer(context),
@@ -58,7 +58,7 @@ impl GltfInferenceStage<GltfGeometryContext<'_>> for GltfClearanceInference {
         }
     }
 
-    fn unavailable(diagnostic_ids: &[String]) -> Self::Output {
+    async fn unavailable(diagnostic_ids: &[String]) -> Self::Output {
         Self::Output {
             minimum_distance_to_neighbors: minimum_distance_to_neighbors::unavailable_measure(diagnostic_ids),
             clearance_distribution: clearance_distribution::unavailable_measure(diagnostic_ids),

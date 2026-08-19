@@ -24,19 +24,19 @@ pub struct En1994Inference {
 }
 
 impl protocol::Inference<En1994Snapshot> for En1994Inference {
-    fn infer(snapshot: &En1994Snapshot) -> Self {
+    async fn infer(snapshot: &En1994Snapshot) -> Self {
         Self { outline: En1994Outline::compute(snapshot) }
     }
 }
 
 impl protocol::InferenceSpec<En1994Snapshot> for En1994Inference {
-    fn inference_schema_id() -> &'static str {
+    async fn inference_schema_id() -> &'static str {
         "s.norm.en1994.inference"
     }
-    fn schema_version() -> u32 {
+    async fn schema_version() -> u32 {
         1
     }
-    fn fields() -> &'static [protocol::InferenceFieldSpec] {
+    async fn fields() -> &'static [protocol::InferenceFieldSpec] {
         &[protocol::InferenceFieldSpec { id: "s.norm.en1994.inference.outline", reads: &[] }]
     }
 }
@@ -52,7 +52,7 @@ impl ArtifactInferrer for crate::artifacts::en1994::standards::v1::subsets::any:
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.norm.en1994.inference`'s facet leaves into the OS-wide inference catalog — call once at
 /// plugin init, alongside `en1994_artifact_schema_descriptor`'s registration.
-pub fn en1994_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
+pub async fn en1994_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
     schema::ArtifactInferenceDescriptor {
         id: "s.norm.en1994.inference",
         inference: schema::FacetLeaves {
@@ -73,13 +73,13 @@ mod tests {
     use protocol::Inference;
 
     #[test]
-    fn inference_determinism_law() {
+    async fn inference_determinism_law() {
         let snapshot = En1994Snapshot::default();
         assert_eq!(En1994Inference::infer(&snapshot), En1994Inference::infer(&snapshot));
     }
 
     #[test]
-    fn inference_default_law() {
+    async fn inference_default_law() {
         assert_eq!(En1994Inference::infer(&En1994Snapshot::default()), En1994Inference::default());
     }
 }
@@ -93,7 +93,7 @@ use crate::artifacts::en1994::standards::v1::subsets::any::schema::{check_compos
 /// is a pure helper living in the parent `🧬️schema`.
 use crate::document::{AnnexChoice, CheckReport, CheckResult, ClauseId, Quantity};
 
-fn parse_fire_rating(value: &str) -> part_1_2::FireRating {
+async fn parse_fire_rating(value: &str) -> part_1_2::FireRating {
     match value.to_ascii_lowercase().as_str() {
         "r30" => part_1_2::FireRating::R30,
         "r90" => part_1_2::FireRating::R90,
@@ -104,7 +104,7 @@ fn parse_fire_rating(value: &str) -> part_1_2::FireRating {
 
 /// 📋️ Full EN 1994 check across composite bending/shear, stud resistance, shear connection degree, fire, and bridge fatigue parts.
 #[allow(clippy::too_many_arguments)]
-pub fn check_full_composite(
+pub async fn check_full_composite(
     m_ed_knm: f64,
     v_ed_kn: f64,
     m_pla: f64,
@@ -139,7 +139,7 @@ pub fn check_full_composite(
 }
 
 /// 📋️ `En1994Snapshot -> CheckReport` conformance law — the artifact's compliance evaluation.
-pub fn evaluate(document: &En1994Snapshot) -> CheckReport {
+pub async fn evaluate(document: &En1994Snapshot) -> CheckReport {
     check_full_composite(
         document.m_ed_knm,
         document.v_ed_kn,
@@ -173,7 +173,7 @@ mod compliance_report_tests {
     use super::*;
 
     #[test]
-    fn full_composite_worked_example() {
+    async fn full_composite_worked_example() {
         let report = check_full_composite(180.0, 110.0, 80.0, 250.0, 0.75, 150.0, 20.0, "r60", "trapezoidal", 55.0, "stud_welded", AnnexChoice::De, 19.0, 95.0, 30.0, 450.0, 33_000.0, 40.0, 8.0, 355.0, 2_000_000.0, 40.0);
         assert_eq!(report.checks.len(), 7);
         let m_rd = part_1_1::plastic_moment_partial_knm(80.0, 250.0, 0.75);
@@ -186,7 +186,7 @@ mod compliance_report_tests {
     }
 
     #[test]
-    fn evaluate_runs_all_parts() {
+    async fn evaluate_runs_all_parts() {
         let report = evaluate(&En1994Snapshot::default());
         assert_eq!(report.checks.len(), 7);
     }

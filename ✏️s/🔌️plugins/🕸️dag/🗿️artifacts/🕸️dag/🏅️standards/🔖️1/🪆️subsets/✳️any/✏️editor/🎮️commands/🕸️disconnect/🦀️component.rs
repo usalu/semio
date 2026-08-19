@@ -13,7 +13,7 @@ pub struct Disconnect {
     pub edge_id: String,
 }
 
-pub fn handle(payload: &Disconnect, doc: &ArtifactView<'_, DagSnapshot>, _cfg: &ConfigView<'_, DagConfig>) -> Result<Emit<DagMutation, DagConfigMutation>, Fault> {
+pub async fn handle(payload: &Disconnect, doc: &ArtifactView<'_, DagSnapshot>, _cfg: &ConfigView<'_, DagConfig>) -> Result<Emit<DagMutation, DagConfigMutation>, Fault> {
     let document = doc.snapshot;
     if document.edges().iter().any(|edge| edge.id == payload.edge_id) {
         Ok(Emit::mutations(vec![disconnect_nodes(payload.edge_id.clone())]))

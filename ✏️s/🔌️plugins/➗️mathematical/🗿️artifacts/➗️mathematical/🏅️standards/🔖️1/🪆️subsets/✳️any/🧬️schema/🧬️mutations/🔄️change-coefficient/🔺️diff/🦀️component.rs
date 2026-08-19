@@ -7,7 +7,7 @@ use crate::artifacts::mathematical::standards::v1::subsets::any::schema::snapsho
 use crate::artifacts::mathematical::{MathematicalDiff, MathematicalSnapshot};
 
 //#region 🔖️Diff
-pub fn diff(payload: &ChangeCoefficient, base: &MathematicalSnapshot) -> protocol::MutationOutcome<MathematicalDiff> {
+pub async fn diff(payload: &ChangeCoefficient, base: &MathematicalSnapshot) -> protocol::MutationOutcome<MathematicalDiff> {
     let mut equation = base.equation.clone();
     let Some(node) = equation.find(payload.label) else {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Equation node {} does not exist.", payload.label.0), [payload.label.0.to_string()]);

@@ -10,7 +10,7 @@ use serde::{Deserialize, Serialize};
 #[dsl(keyword = "export-fixture")]
 pub struct ExportFixture {}
 
-pub fn handle(_payload: &ExportFixture, doc: &ArtifactView<'_, FormsSnapshot>, _cfg: &ConfigView<'_, FormsConfig>) -> Result<Emit<FormMutation, FormsConfigMutation>, Fault> {
+pub async fn handle(_payload: &ExportFixture, doc: &ArtifactView<'_, FormsSnapshot>, _cfg: &ConfigView<'_, FormsConfig>) -> Result<Emit<FormMutation, FormsConfigMutation>, Fault> {
     let spec = doc.snapshot;
     let data = forms_dsl::print_dsl(spec);
     Ok(Emit::effect(Effect::DownloadMediaExport { filename: format!("{}.forms.dsl", spec.id), mime_type: "text/plain".into(), data, encoding: None }))
@@ -25,7 +25,7 @@ mod tests {
     use ExportFixture;
 
     #[test]
-    fn export_fixture_downloads_the_forms_dsl_text() {
+    async fn export_fixture_downloads_the_forms_dsl_text() {
         let mut app = forms_app();
         let result = dispatch(&mut app, FormsCommand::ExportFixture(ExportFixture {}));
         assert!(!result.requested_effects.is_empty(), "exportFixture must emit a host effect");

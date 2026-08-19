@@ -12,13 +12,13 @@ pub struct ChangeDeltaTauStudMpa {
 impl protocol::MutationKind<En1994Snapshot, En1994Mutation> for ChangeDeltaTauStudMpa {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "delta-tau-stud-mpa", kind: "change-delta-tau-stud-mpa", record: "ChangedDeltaTauStudMpa" };
 
-    fn diff(&self, base: &En1994Snapshot) -> protocol::MutationOutcome<<En1994Mutation as protocol::Mutation<En1994Snapshot>>::Diff> {
+    async fn diff(&self, base: &En1994Snapshot) -> protocol::MutationOutcome<<En1994Mutation as protocol::Mutation<En1994Snapshot>>::Diff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &En1994Snapshot) -> Vec<En1994Mutation> {
+    async fn inverse(&self, base: &En1994Snapshot) -> Vec<En1994Mutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         format!("Change stud fatigue stress range Δτ to {}", self.new_delta_tau_stud_mpa)
     }
 }

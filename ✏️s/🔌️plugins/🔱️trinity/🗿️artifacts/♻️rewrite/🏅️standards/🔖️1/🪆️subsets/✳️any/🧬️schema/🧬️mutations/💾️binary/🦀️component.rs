@@ -15,11 +15,11 @@ use crate::artifacts::rewrite::schema::mutations::text::RewriteRuleMutation;
 use protocol::OpBinary;
 
 /// 📦️ Encodes a `RewriteRuleMutation` to its binary command form.
-pub fn encode_op(operation: &RewriteRuleMutation) -> Result<Vec<u8>, protocol::ProtocolError> {
+pub async fn encode_op(operation: &RewriteRuleMutation) -> Result<Vec<u8>, protocol::ProtocolError> {
     operation.encode_op()
 }
 
 /// 📖️ Decodes a `RewriteRuleMutation` from its binary command form.
-pub fn decode_op(bytes: &[u8]) -> Result<RewriteRuleMutation, protocol::ProtocolError> {
+pub async fn decode_op(bytes: &[u8]) -> Result<RewriteRuleMutation, protocol::ProtocolError> {
     RewriteRuleMutation::decode_op(bytes)
 }

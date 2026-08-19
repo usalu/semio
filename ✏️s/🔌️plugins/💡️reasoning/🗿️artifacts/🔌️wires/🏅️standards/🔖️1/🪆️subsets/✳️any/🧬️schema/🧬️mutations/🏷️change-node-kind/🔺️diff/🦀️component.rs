@@ -6,7 +6,7 @@ use crate::artifacts::wires::WiresSnapshot;
 use dsl::DslValue;
 
 //#region 🔖️Diff
-pub fn diff(payload: &super::mutation::ChangeNodeKind, base: &WiresSnapshot) -> protocol::MutationOutcome<WiresDiff> {
+pub async fn diff(payload: &super::mutation::ChangeNodeKind, base: &WiresSnapshot) -> protocol::MutationOutcome<WiresDiff> {
     let Some(node) = find_board_node(base, &payload.node_id) else {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Node \"{}\" does not exist.", payload.node_id), [payload.node_id.clone()]);
     };

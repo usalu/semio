@@ -53,7 +53,7 @@ pub struct NogoodConfig {
 }
 
 impl Default for NogoodConfig {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self { enabled: false, max_len: 32, max_count: 4096 }
     }
 }
@@ -80,21 +80,21 @@ pub(crate) struct NogoodIndex {
 }
 
 impl NogoodIndex {
-    pub fn new(config: NogoodConfig) -> Self {
+    pub async fn new(config: NogoodConfig) -> Self {
         Self { config, nogoods: Vec::new(), watchers: HashMap::new() }
     }
 
     #[inline]
-    pub fn is_enabled(&self) -> bool {
+    pub async fn is_enabled(&self) -> bool {
         self.config.enabled
     }
 
     #[cfg(test)]
-    pub fn len(&self) -> usize {
+    pub async fn len(&self) -> usize {
         self.nogoods.len()
     }
 
-    fn evict_lowest_activity(&mut self) {
+    async fn evict_lowest_activity(&mut self) {
         let Some((idx, _)) = self.nogoods.iter().enumerate().min_by(|(_, a), (_, b)| a.activity.partial_cmp(&b.activity).expect("activity is never NaN")) else { return };
         let removed = self.nogoods.swap_remove(idx);
         for lit in &removed.literals {
@@ -120,7 +120,7 @@ impl NogoodIndex {
     /// 🧠️ Records the given decision prefix as a nogood (skipped if disabled, empty, or over
     /// `max_len`). Does not watch it yet — [`NogoodIndex::rewatch_for_new_attempt`] does that once
     /// per attempt, against that attempt's actual domain state.
-    pub fn record(&mut self, mut literals: Vec<(NodeId, PatternId)>) {
+    pub async fn record(&mut self, mut literals: Vec<(NodeId, PatternId)>) {
         if !self.config.enabled || literals.is_empty() || literals.len() > self.config.max_len {
             return;
         }
@@ -137,7 +137,7 @@ impl NogoodIndex {
     /// decision). Returns the first node this drives to an empty domain (directly, or via the
     /// AC-3 cascade a forced exclusion triggers), if any — the caller treats that exactly like an
     /// `initialize()`-time constraint wipeout.
-    pub fn rewatch_for_new_attempt<T: Topology>(&mut self, model: &CompiledModel, topo: &T, domains: &mut DomainStore, queue: &mut PropQueue, trail: &mut Trail, metrics: &mut crate::wfc_engine::diag::Metrics) -> Option<NodeId> {
+    pub async fn rewatch_for_new_attempt<T: Topology>(&mut self, model: &CompiledModel, topo: &T, domains: &mut DomainStore, queue: &mut PropQueue, trail: &mut Trail, metrics: &mut crate::wfc_engine::diag::Metrics) -> Option<NodeId> {
         if !self.config.enabled {
             return None;
         }
@@ -187,7 +187,7 @@ impl NogoodIndex {
     /// instead, unit-propagate its partner watch, or (if both watches — and every other literal —
     /// are simultaneously false) report the conflict this combination was learned from.
     #[allow(clippy::too_many_arguments)]
-    pub fn on_decision<T: Topology>(&mut self, model: &CompiledModel, topo: &T, node: NodeId, pattern: PatternId, domains: &mut DomainStore, queue: &mut PropQueue, trail: &mut Trail, metrics: &mut crate::wfc_engine::diag::Metrics) -> Option<NodeId> {
+    pub async fn on_decision<T: Topology>(&mut self, model: &CompiledModel, topo: &T, node: NodeId, pattern: PatternId, domains: &mut DomainStore, queue: &mut PropQueue, trail: &mut Trail, metrics: &mut crate::wfc_engine::diag::Metrics) -> Option<NodeId> {
         if !self.config.enabled {
             return None;
         }
@@ -266,7 +266,7 @@ impl NogoodIndex {
 /// satisfied via it) and "still open" (undecided, pattern still present) — 2WL only ever needs to
 /// distinguish false from not-false, never those two sub-cases, when choosing what to watch.
 #[inline]
-fn is_false(domains: &DomainStore, (node, pattern): (NodeId, PatternId)) -> bool {
+async fn is_false(domains: &DomainStore, (node, pattern): (NodeId, PatternId)) -> bool {
     domains.get(node).singleton() == Some(pattern)
 }
 
@@ -275,7 +275,7 @@ fn is_false(domains: &DomainStore, (node, pattern): (NodeId, PatternId)) -> bool
 /// what any other propagation-causing mutation in this crate does, so a nogood-forced exclusion
 /// can never leave the domain store arc-inconsistent. Returns the first node this drives empty.
 #[allow(clippy::too_many_arguments)]
-fn force_exclude_and_propagate<T: Topology>(
+async fn force_exclude_and_propagate<T: Topology>(
     model: &CompiledModel,
     topo: &T,
     domains: &mut DomainStore,
@@ -309,15 +309,15 @@ mod tests {
     /// 🧪️ A trivial arc-less topology sized to `node_count` — every test here only needs the
     /// AC-3 re-propagation hook to be a safe no-op (no neighbors to cascade to), not to exercise
     /// AC-3 itself (that's `🦀️prop_ac3.rs`'s own job).
-    fn no_arcs_topology(node_count: usize) -> crate::wfc_engine::topology::GraphTopology {
+    async fn no_arcs_topology(node_count: usize) -> crate::wfc_engine::topology::GraphTopology {
         GraphTopologyBuilder::new(node_count).build().unwrap()
     }
 
-    fn w3() -> WeightTable {
+    async fn w3() -> WeightTable {
         WeightTable::new(&[1.0, 1.0, 1.0]).unwrap()
     }
 
-    fn model3() -> CompiledModel {
+    async fn model3() -> CompiledModel {
         let mut b = ModelBuilder::new();
         b.add_pattern(1.0);
         b.add_pattern(1.0);
@@ -327,14 +327,14 @@ mod tests {
     }
 
     #[test]
-    fn disabled_store_records_and_watches_nothing() {
+    async fn disabled_store_records_and_watches_nothing() {
         let mut store = NogoodIndex::new(NogoodConfig { enabled: false, ..Default::default() });
         store.record(vec![(NodeId(0), PatternId(0)), (NodeId(1), PatternId(1))]);
         assert_eq!(store.len(), 0);
     }
 
     #[test]
-    fn record_skips_empty_and_over_length_clauses() {
+    async fn record_skips_empty_and_over_length_clauses() {
         let mut store = NogoodIndex::new(NogoodConfig { enabled: true, max_len: 2, max_count: 10 });
         store.record(vec![]);
         assert_eq!(store.len(), 0);
@@ -345,7 +345,7 @@ mod tests {
     }
 
     #[test]
-    fn eviction_keeps_store_at_max_count() {
+    async fn eviction_keeps_store_at_max_count() {
         let mut store = NogoodIndex::new(NogoodConfig { enabled: true, max_len: 8, max_count: 2 });
         store.record(vec![(NodeId(0), PatternId(0))]);
         store.record(vec![(NodeId(1), PatternId(0))]);
@@ -354,7 +354,7 @@ mod tests {
     }
 
     #[test]
-    fn rewatch_unit_propagates_a_length_one_nogood_at_attempt_start() {
+    async fn rewatch_unit_propagates_a_length_one_nogood_at_attempt_start() {
         // A length-1 nogood means "node=pattern alone is impossible" — rewatch should exclude it
         // immediately, before any decision.
         let model = model3();
@@ -374,7 +374,7 @@ mod tests {
     }
 
     #[test]
-    fn rewatch_reports_conflict_when_length_one_nogood_wipes_a_singleton_domain() {
+    async fn rewatch_reports_conflict_when_length_one_nogood_wipes_a_singleton_domain() {
         let mut b = ModelBuilder::new();
         b.add_pattern(1.0);
         b.add_relation("r");
@@ -393,7 +393,7 @@ mod tests {
     }
 
     #[test]
-    fn rewatch_leaves_a_fully_excluded_nogood_inert() {
+    async fn rewatch_leaves_a_fully_excluded_nogood_inert() {
         // Every literal already impossible before any decision (e.g. `fixed` pinned node 0 away
         // from pattern 0 independent of this nogood): nothing to watch, nothing to propagate.
         let model = model3();
@@ -413,7 +413,7 @@ mod tests {
     }
 
     #[test]
-    fn on_decision_unit_propagates_the_partner_literal() {
+    async fn on_decision_unit_propagates_the_partner_literal() {
         let model = model3();
         let topo = no_arcs_topology(2);
         let w = w3();
@@ -434,7 +434,7 @@ mod tests {
     }
 
     #[test]
-    fn on_decision_detects_conflict_when_the_other_watch_was_already_resolved_true() {
+    async fn on_decision_detects_conflict_when_the_other_watch_was_already_resolved_true() {
         // Models the realistic conflict path: node1 reaches singleton=pattern1 via ordinary
         // propagation the store never reacts to (per its documented scope — only explicit
         // decisions trigger `on_decision`), leaving its watch stale-but-unprocessed. When node0 is
@@ -461,7 +461,7 @@ mod tests {
     }
 
     #[test]
-    fn on_decision_finds_a_third_literal_as_replacement_watch_instead_of_propagating() {
+    async fn on_decision_finds_a_third_literal_as_replacement_watch_instead_of_propagating() {
         // A 3-literal nogood: deciding node0=pattern0 (one watch) must find node2's still-open
         // literal as a replacement watch rather than prematurely forcing node1's exclusion.
         let model = model3();
@@ -482,7 +482,7 @@ mod tests {
     }
 
     #[test]
-    fn on_decision_ignores_a_watch_whose_partner_is_already_stale() {
+    async fn on_decision_ignores_a_watch_whose_partner_is_already_stale() {
         // The partner literal was excluded by something outside this store's notice (simulated by
         // directly removing it); on_decision must re-check liveness live and do nothing, not act
         // on a stale cached assumption.
@@ -504,7 +504,7 @@ mod tests {
     }
 
     #[test]
-    fn on_decision_forced_exclusion_cascades_through_ac3_to_a_third_node() {
+    async fn on_decision_forced_exclusion_cascades_through_ac3_to_a_third_node() {
         // node0 --r--> node1 --r--> node2, where `r` only allows equal patterns (so excluding a
         // pattern at node1 must cascade to node2 too). The nogood forbids node0=0 AND node1=1
         // simultaneously; deciding node0=0 forces node1 away from pattern1 — and that exclusion

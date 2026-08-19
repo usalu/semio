@@ -23,19 +23,19 @@ pub struct SemioPresentationArtifact {
 }
 
 impl Default for SemioPresentationArtifact {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self::from_snapshot(SemioPresentationSnapshot::default())
     }
 }
 
 impl SemioPresentationArtifact {
-    pub fn to_snapshot(&self) -> SemioPresentationSnapshot {
+    pub async fn to_snapshot(&self) -> SemioPresentationSnapshot {
         SemioPresentationSnapshot { schema: self.schema.clone(), masters: self.masters.clone(), layouts: self.layouts.clone(), slides: self.slides.clone() }
     }
-    pub fn from_snapshot(snapshot: SemioPresentationSnapshot) -> Self {
+    pub async fn from_snapshot(snapshot: SemioPresentationSnapshot) -> Self {
         Self { schema: snapshot.schema, masters: snapshot.masters, layouts: snapshot.layouts, slides: snapshot.slides }
     }
-    pub fn set_snapshot(&mut self, snapshot: SemioPresentationSnapshot) {
+    pub async fn set_snapshot(&mut self, snapshot: SemioPresentationSnapshot) {
         self.schema = snapshot.schema;
         self.masters = snapshot.masters;
         self.layouts = snapshot.layouts;
@@ -43,7 +43,7 @@ impl SemioPresentationArtifact {
     }
 }
 
-pub fn semio_presentation_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
+pub async fn semio_presentation_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
     schema::ArtifactSchemaDescriptor {
         id: "s.stdio.semio.presentation",
         artifact: schema::FacetLeaves {
@@ -92,27 +92,27 @@ pub mod derived_construction {
         type Snapshot = SemioPresentationSnapshot;
         type Mutation = SemioPresentationMutation;
         type Diff = SemioPresentationDiff;
-        fn empty() -> Self {
+        async fn empty() -> Self {
             Self { snapshot: SemioPresentationSnapshot::default() }
         }
-        fn from_snapshot(snapshot: Self::Snapshot) -> Self {
+        async fn from_snapshot(snapshot: Self::Snapshot) -> Self {
             Self { snapshot }
         }
-        fn from_text(text: &str) -> Result<Self, store::TextError> {
+        async fn from_text(text: &str) -> Result<Self, store::TextError> {
             Ok(Self::from_snapshot(<SemioPresentationSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
-        fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
+        async fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
             Ok(Self::from_snapshot(<SemioPresentationSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
         }
-        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
+        async fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let diff = apply_semio_presentation_mutation(&mut self.snapshot, &mutation);
             (self, diff)
         }
-        fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
+        async fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
             self.snapshot = <SemioPresentationDiff as protocol::MutationDiff<SemioPresentationSnapshot>>::apply(&diff, &self.snapshot)?;
             Ok(self)
         }
-        fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
+        async fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
             Ok(self.snapshot)
         }
     }
@@ -124,7 +124,7 @@ pub mod derived_construction {
         use crate::artifacts::semio::standards::v1::subsets::presentation::schema::snapshot::{Slide, SlideLayout, SlideMaster};
 
         #[test]
-        fn empty_from_snapshot_and_build_round_trip() {
+        async fn empty_from_snapshot_and_build_round_trip() {
             let builder = SemioPresentationBuilderConstruction::empty();
             assert_eq!(builder.clone().build().unwrap(), SemioPresentationSnapshot::default());
 
@@ -134,7 +134,7 @@ pub mod derived_construction {
         }
 
         #[test]
-        fn from_text_and_from_binary_round_trip_through_a_mutated_snapshot() {
+        async fn from_text_and_from_binary_round_trip_through_a_mutated_snapshot() {
             let mut snap = SemioPresentationSnapshot::default();
             snap.masters.push(SlideMaster { id: "m1".into(), shapes: Vec::new() });
             snap.layouts.push(SlideLayout { id: "l1".into(), master_id: "m1".into(), shapes: Vec::new() });
@@ -150,7 +150,7 @@ pub mod derived_construction {
         }
 
         #[test]
-        fn mutate_then_absorb_matches_direct_apply() {
+        async fn mutate_then_absorb_matches_direct_apply() {
             let builder = SemioPresentationBuilderConstruction::empty();
             let mutation = SemioPresentationMutation::InsertMaster { master: SlideMaster { id: "m1".into(), shapes: Vec::new() } };
             let (builder, diff) = builder.mutate(mutation);
@@ -182,7 +182,7 @@ pub mod derived_analysis {
         type Parts = SemioPresentationParts;
         const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("presentation") };
 
-        fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
+        async fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
             match source {
                 AnalyzeSource::Binary(bytes) => {
                     let marker = STDIO_SEMIOPRESENTATION_DOCUMENT_SCHEMA.as_bytes();
@@ -202,7 +202,7 @@ pub mod derived_analysis {
             }
         }
 
-        fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
+        async fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
             let mut parts = SemioPresentationParts::default();
             let mut diagnostics = Vec::new();
             let mut confidence = IoConfidence::High;
@@ -234,12 +234,12 @@ pub mod derived_analysis {
         use super::*;
         use crate::artifacts::semio::standards::v1::subsets::presentation::schema::snapshot::SlideMaster;
 
-        fn sample() -> SemioPresentationSnapshot {
+        async fn sample() -> SemioPresentationSnapshot {
             SemioPresentationSnapshot { masters: vec![SlideMaster { id: "m1".into(), shapes: Vec::new() }], ..Default::default() }
         }
 
         #[test]
-        fn sniff_reports_high_for_real_payloads_low_for_garbage() {
+        async fn sniff_reports_high_for_real_payloads_low_for_garbage() {
             let bytes = <SemioPresentationSnapshot as store::ArtifactPack>::encode_pack(&sample());
             assert_eq!(SemioPresentationAnalyzerAnalysis::sniff(&AnalyzeSource::Binary(&bytes)), IoConfidence::High);
             assert_eq!(SemioPresentationAnalyzerAnalysis::sniff(&AnalyzeSource::Binary(b"not a presentation")), IoConfidence::Low);
@@ -250,7 +250,7 @@ pub mod derived_analysis {
         }
 
         #[test]
-        fn analyze_decodes_binary_and_text_sources() {
+        async fn analyze_decodes_binary_and_text_sources() {
             let snap = sample();
             let bytes = <SemioPresentationSnapshot as store::ArtifactPack>::encode_pack(&snap);
             let analysis = SemioPresentationAnalyzerAnalysis::analyze(&[AnalyzeSource::Binary(&bytes)]);
@@ -263,7 +263,7 @@ pub mod derived_analysis {
         }
 
         #[test]
-        fn analyze_flags_low_confidence_on_undecodable_source() {
+        async fn analyze_flags_low_confidence_on_undecodable_source() {
             let analysis = SemioPresentationAnalyzerAnalysis::analyze(&[AnalyzeSource::Binary(b"garbage")]);
             assert_eq!(analysis.confidence, IoConfidence::Low);
             assert!(!analysis.diagnostics.is_empty());

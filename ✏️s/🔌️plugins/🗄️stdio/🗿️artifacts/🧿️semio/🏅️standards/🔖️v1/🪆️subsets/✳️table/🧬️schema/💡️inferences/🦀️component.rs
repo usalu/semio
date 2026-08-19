@@ -26,7 +26,7 @@ pub struct SemioTableInference {
 }
 
 impl protocol::Inference<SemioTableSnapshot> for SemioTableInference {
-    fn infer(snapshot: &SemioTableSnapshot) -> Self {
+    async fn infer(snapshot: &SemioTableSnapshot) -> Self {
         Self { shape: compute_semio_table_shape(snapshot) }
     }
 }
@@ -36,19 +36,19 @@ impl protocol::Inference<SemioTableSnapshot> for SemioTableInference {
 /// to `infer` keeps the law correct even if that default ever stops being all-empty (the same
 /// defensive pattern raster's `RasterInference` documents).
 impl Default for SemioTableInference {
-    fn default() -> Self {
+    async fn default() -> Self {
         <Self as protocol::Inference<SemioTableSnapshot>>::infer(&SemioTableSnapshot::default())
     }
 }
 
 impl protocol::InferenceSpec<SemioTableSnapshot> for SemioTableInference {
-    fn inference_schema_id() -> &'static str {
+    async fn inference_schema_id() -> &'static str {
         "s.stdio.semio.table.inference"
     }
-    fn schema_version() -> u32 {
+    async fn schema_version() -> u32 {
         1
     }
-    fn fields() -> &'static [protocol::InferenceFieldSpec] {
+    async fn fields() -> &'static [protocol::InferenceFieldSpec] {
         &[protocol::InferenceFieldSpec { id: "s.stdio.semio.table.inference.shape", reads: &["columns", "rows"] }]
     }
 }
@@ -67,7 +67,7 @@ impl ArtifactInferrer for crate::artifacts::semio::standards::v1::subsets::table
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.stdio.semio.table.inference`'s facet leaves into the OS-wide inference catalog
 /// — call once at plugin init, alongside `semio_table_artifact_schema_descriptor`'s registration.
-pub fn semio_table_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
+pub async fn semio_table_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
     schema::ArtifactInferenceDescriptor {
         id: "s.stdio.semio.table.inference",
         inference: schema::FacetLeaves {
@@ -88,13 +88,13 @@ mod tests {
     use protocol::Inference;
 
     #[test]
-    fn inference_determinism_law() {
+    async fn inference_determinism_law() {
         let snapshot = SemioTableSnapshot::default();
         assert_eq!(SemioTableInference::infer(&snapshot), SemioTableInference::infer(&snapshot));
     }
 
     #[test]
-    fn inference_default_law() {
+    async fn inference_default_law() {
         assert_eq!(SemioTableInference::infer(&SemioTableSnapshot::default()), SemioTableInference::default());
     }
 }

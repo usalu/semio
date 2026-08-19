@@ -12,13 +12,13 @@ const LOWPOLY_PANEL_TAB_LAYERS_ID: &str = "framework.panel.layers";
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
-pub fn definition() -> PanelTabDefinition {
+pub async fn definition() -> PanelTabDefinition {
     PanelTabDefinition { kind: PanelTabKind::App(LOWPOLY_PANEL_TAB_LAYERS_ID.into()), label: LocalizedLabel::native("Layers", "Ebenen"), group: PanelGroup::Workbench, body_key: Some(LOWPOLY_PLAY_BODY_LAYERS.into()), children: Vec::new() }
 }
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(view: LowpolyView<'_>, labels: &LowpolyLabels) -> UiNode {
+pub async fn render(view: LowpolyView<'_>, labels: &LowpolyLabels) -> UiNode {
     let object = active_object(view);
     let layers = object.map_or(&[][..], |entry| entry.paint_layers.as_slice());
     let active_layer = view.config.active_paint_layer;
@@ -40,7 +40,7 @@ mod tests {
     use crate::editor::lowpoly::testkit::{app, render};
 
     #[test]
-    fn layers_panel_lists_the_base_layer() {
+    async fn layers_panel_lists_the_base_layer() {
         let mut a = app();
         let json = render(&mut a, super::LOWPOLY_PLAY_BODY_LAYERS);
         assert!(json.contains("lowpoly-layer:0"));

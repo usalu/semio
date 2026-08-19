@@ -14,6 +14,6 @@ pub struct NodeGraphViewport {
     pub zoom: f64,
 }
 
-pub fn handle(payload: &NodeGraphViewport, _doc: &ArtifactView<'_, DagSnapshot>, _cfg: &ConfigView<'_, DagConfig>) -> Result<Emit<DagMutation, DagConfigMutation>, Fault> {
+pub async fn handle(payload: &NodeGraphViewport, _doc: &ArtifactView<'_, DagSnapshot>, _cfg: &ConfigView<'_, DagConfig>) -> Result<Emit<DagMutation, DagConfigMutation>, Fault> {
     Ok(Emit::config(vec![DagConfigMutation::SetCamera { x: payload.x, y: payload.y, zoom: payload.zoom }]))
 }

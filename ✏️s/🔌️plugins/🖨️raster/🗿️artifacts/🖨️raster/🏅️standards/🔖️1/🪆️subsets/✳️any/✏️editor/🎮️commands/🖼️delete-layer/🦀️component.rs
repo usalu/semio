@@ -20,7 +20,7 @@ pub struct DeleteLayer {
 /// so a deleted-but-still-selected id is a documented, framework-level gap (Flat domains are never
 /// auto-pruned by `validate_state`; see the ticket's `w3b-summary.md`), not something this command
 /// can restore without re-declaring the domain as `Topology`.
-pub fn handle(payload: &DeleteLayer, doc: &ArtifactView<'_, RasterSnapshot>, _cfg: &ConfigView<'_, RasterConfig>) -> Result<Emit<RasterMutation, RasterConfigMutation>, Fault> {
+pub async fn handle(payload: &DeleteLayer, doc: &ArtifactView<'_, RasterSnapshot>, _cfg: &ConfigView<'_, RasterConfig>) -> Result<Emit<RasterMutation, RasterConfigMutation>, Fault> {
     let document = doc.snapshot;
     if find_layer(&document.layers, &payload.layer_id).is_none() {
         return Ok(Emit::default());

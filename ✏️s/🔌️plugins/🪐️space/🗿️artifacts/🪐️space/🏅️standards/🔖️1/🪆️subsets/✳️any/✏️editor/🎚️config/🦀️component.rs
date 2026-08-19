@@ -34,7 +34,7 @@ pub struct SpaceIndexArtifactPresence {
 
 impl SpaceIndexArtifactPresence {
     /// 🪪️ The live actor ids for this artifact, empty-string-safe.
-    pub fn actor_ids(&self) -> Vec<&str> {
+    pub async fn actor_ids(&self) -> Vec<&str> {
         if self.actors_csv.is_empty() {
             Vec::new()
         } else {
@@ -60,14 +60,14 @@ pub struct SpaceIndexConfig {
 }
 
 impl Default for SpaceIndexConfig {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self { visibility: "private".into(), members: Vec::new(), presence: Vec::new() }
     }
 }
 
 impl SpaceIndexConfig {
     /// 👥️ The live actor ids on `artifact_id`'s documents, empty when nothing is folded in yet.
-    pub fn presence_for(&self, artifact_id: &str) -> Vec<&str> {
+    pub async fn presence_for(&self, artifact_id: &str) -> Vec<&str> {
         self.presence.iter().find(|row| row.artifact_id == artifact_id).map(SpaceIndexArtifactPresence::actor_ids).unwrap_or_default()
     }
 }
@@ -75,10 +75,10 @@ impl SpaceIndexConfig {
 //#region 🔖️ArtifactCodec
 impl store::ArtifactDsl for SpaceIndexConfig {
     const EXTENSION: &'static str = "sspacecfg";
-    fn envelope_id() -> &'static str {
+    async fn envelope_id() -> &'static str {
         "s.space.config"
     }
-    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+    async fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
         let body = match store::semio_format::split_text_preamble(text) {
             Ok((_, rest)) => rest,
             Err(_) => text,
@@ -86,7 +86,7 @@ impl store::ArtifactDsl for SpaceIndexConfig {
         let record = dsl::parse(body, &Self::__dsl_spec(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Document })?;
         Self::__dsl_from_record(&record)
     }
-    fn print_dsl(&self) -> String {
+    async fn print_dsl(&self) -> String {
         let body = dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), dsl::JoinMode::Document);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
@@ -94,12 +94,12 @@ impl store::ArtifactDsl for SpaceIndexConfig {
 }
 
 impl store::ArtifactPack for SpaceIndexConfig {
-    fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
+    async fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let inner = store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &inner))
     }
-    fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
+    async fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
         if envelope.envelope_id() != <Self as store::ArtifactDsl>::envelope_id() {
             return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.envelope_id())));
@@ -107,7 +107,7 @@ impl store::ArtifactPack for SpaceIndexConfig {
         let (record, _report) = store::pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
         Self::__dsl_from_record(&record).map_err(store::text_error_to_pack_error)
     }
-    fn record_spec() -> Option<dsl::RecordSpec> {
+    async fn record_spec() -> Option<dsl::RecordSpec> {
         Some(Self::__dsl_spec())
     }
 }
@@ -131,19 +131,19 @@ pub enum SpaceIndexConfigMutation {
 impl Mutation<SpaceIndexConfig> for SpaceIndexConfigMutation {
     type Diff = SpaceIndexConfig;
 
-    fn diff(&self, _base: &SpaceIndexConfig) -> protocol::MutationOutcome<SpaceIndexConfig> {
+    async fn diff(&self, _base: &SpaceIndexConfig) -> protocol::MutationOutcome<SpaceIndexConfig> {
         let SpaceIndexConfigMutation::Snapshot { config } = self;
         protocol::MutationOutcome::new(config.clone())
     }
 
-    fn inverse(&self, base: &SpaceIndexConfig) -> Vec<Self> {
+    async fn inverse(&self, base: &SpaceIndexConfig) -> Vec<Self> {
         vec![SpaceIndexConfigMutation::Snapshot { config: base.clone() }]
     }
 }
 
 //#region 🔖️OpCodec
 impl protocol::OpText for SpaceIndexConfigMutation {
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
+    async fn parse_op(line: &str) -> Result<Self, store::TextError> {
         let variants = <Self as dsl::DslVariants>::variants();
         for (keyword, spec_fn) in &variants {
             let probe = format!("{} ", keyword);
@@ -154,7 +154,7 @@ impl protocol::OpText for SpaceIndexConfigMutation {
         }
         Err(dsl::__rt::field_error(format!("unknown mutation line '{line}'")))
     }
-    fn print_op(&self) -> String {
+    async fn print_op(&self) -> String {
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
         let variants = <Self as dsl::DslVariants>::variants();
         let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
@@ -163,7 +163,7 @@ impl protocol::OpText for SpaceIndexConfigMutation {
 }
 
 impl protocol::OpBinary for SpaceIndexConfigMutation {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         const OP_BINARY_FORMAT: u8 = 1;
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
         let variants = <Self as dsl::DslVariants>::variants();
@@ -176,7 +176,7 @@ impl protocol::OpBinary for SpaceIndexConfigMutation {
         out.extend_from_slice(&body);
         Ok(out)
     }
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         const OP_BINARY_FORMAT: u8 = 1;
         let mut reader = store::pack_rt::ByteReader::new(bytes);
         let format = reader.read_u8()?;
@@ -201,7 +201,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn default_config_is_private_with_no_members_or_presence() {
+    async fn default_config_is_private_with_no_members_or_presence() {
         let config = SpaceIndexConfig::default();
         assert_eq!(config.visibility, "private");
         assert!(config.members.is_empty());
@@ -209,14 +209,14 @@ mod tests {
     }
 
     #[test]
-    fn presence_for_splits_the_csv() {
+    async fn presence_for_splits_the_csv() {
         let config = SpaceIndexConfig { presence: vec![SpaceIndexArtifactPresence { artifact_id: "artifact-1".into(), actors_csv: "user:1,user:2".into() }], ..Default::default() };
         assert_eq!(config.presence_for("artifact-1"), vec!["user:1", "user:2"]);
         assert!(config.presence_for("ghost").is_empty());
     }
 
     #[test]
-    fn config_dsl_round_trips() {
+    async fn config_dsl_round_trips() {
         let config = SpaceIndexConfig {
             visibility: "public".into(),
             members: vec![SpaceIndexMember { user_id: "u-1".into(), email: "a@example.com".into(), display_name: "Alice".into(), role: "author".into() }],
@@ -226,7 +226,7 @@ mod tests {
     }
 
     #[test]
-    fn config_mutation_snapshot_replaces_wholesale_and_inverse_restores() {
+    async fn config_mutation_snapshot_replaces_wholesale_and_inverse_restores() {
         let base = SpaceIndexConfig::default();
         let next = SpaceIndexConfig { visibility: "public".into(), ..Default::default() };
         let mutation = SpaceIndexConfigMutation::Snapshot { config: next.clone() };
@@ -239,7 +239,7 @@ mod tests {
     }
 
     #[test]
-    fn config_mutation_op_text_round_trips() {
+    async fn config_mutation_op_text_round_trips() {
         store::os_store::test_support::assert_op_line_round_trip(&SpaceIndexConfigMutation::Snapshot { config: SpaceIndexConfig::default() });
     }
 }

@@ -8,7 +8,7 @@ use crate::artifacts::semio::standards::v1::subsets::text::schema::diff::{SemioT
 use crate::artifacts::semio::standards::v1::subsets::text::schema::snapshot::SemioTextSnapshot;
 
 //#region 🔖️Diff
-pub fn diff(payload: &InsertRun, base: &SemioTextSnapshot) -> protocol::MutationOutcome<SemioTextDiff> {
+pub async fn diff(payload: &InsertRun, base: &SemioTextSnapshot) -> protocol::MutationOutcome<SemioTextDiff> {
     let mut runs = base.runs.clone();
     let at = payload.index.min(runs.len());
     runs.insert(at, payload.run.clone());

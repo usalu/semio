@@ -16,10 +16,10 @@ use crate::artifacts::vcs::VcsSnapshot;
 //#region 🔖️ArtifactDslCodec
 impl store::ArtifactDsl for VcsSnapshot {
     const EXTENSION: &'static str = "vcs";
-    fn envelope_id() -> &'static str {
+    async fn envelope_id() -> &'static str {
         "vcs.vcs"
     }
-    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+    async fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
         let body = match store::semio_format::split_text_preamble(text) {
             Ok((_, rest)) => rest,
             Err(_) => text,
@@ -34,7 +34,7 @@ impl store::ArtifactDsl for VcsSnapshot {
         )?;
         Self::__dsl_from_record(&record)
     }
-    fn print_dsl(&self) -> String {
+    async fn print_dsl(&self) -> String {
         let body = dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), dsl::JoinMode::Document);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
             <Self as store::ArtifactDsl>::envelope_id(),
@@ -53,12 +53,12 @@ impl store::ArtifactDsl for VcsSnapshot {
 pub const VCS_DEMO_DEFAULT_EXAMPLE_TEXT: &str = include_str!("../../../📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio");
 
 /// 📖️ Parses `.vcsdemo` DSL text into a `VcsSnapshot`.
-pub fn parse_dsl(text: &str) -> Result<VcsSnapshot, store::TextError> {
+pub async fn parse_dsl(text: &str) -> Result<VcsSnapshot, store::TextError> {
     <VcsSnapshot as store::ArtifactDsl>::parse_dsl(text)
 }
 
 /// 🖨️ Prints a `VcsSnapshot` back to `.vcsdemo` DSL text.
-pub fn print_dsl(projection: &VcsSnapshot) -> String {
+pub async fn print_dsl(projection: &VcsSnapshot) -> String {
     store::ArtifactDsl::print_dsl(projection)
 }
 //#endregion 🔖️Example
@@ -69,12 +69,12 @@ mod tests {
     use super::*;
 
     #[test]
-    fn vcs_demo_projection_dsl_round_trips() {
+    async fn vcs_demo_projection_dsl_round_trips() {
         store::os_store::test_support::assert_dsl_round_trip(&crate::artifacts::vcs::standards::v1::subsets::any::schema::empty_vcs_snapshot());
     }
 
     #[test]
-    fn default_example_dsl_round_trips() {
+    async fn default_example_dsl_round_trips() {
         let document = parse_dsl(VCS_DEMO_DEFAULT_EXAMPLE_TEXT).expect("parse default .vcsdemo example");
         store::os_store::test_support::assert_dsl_round_trip(&document);
     }

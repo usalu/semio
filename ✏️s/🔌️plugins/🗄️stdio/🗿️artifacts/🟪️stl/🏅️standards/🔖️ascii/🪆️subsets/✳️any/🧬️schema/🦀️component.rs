@@ -24,24 +24,24 @@ pub struct StlArtifact {
 
 //#region 🔖️Conversions
 impl Default for StlArtifact {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self::from_snapshot(StlSnapshot::default())
     }
 }
 
 impl StlArtifact {
     /// 📸️ Persisted subset.
-    pub fn to_snapshot(&self) -> StlSnapshot {
+    pub async fn to_snapshot(&self) -> StlSnapshot {
         StlSnapshot { schema: self.schema.clone(), solid_name: self.solid_name.clone(), triangles: self.triangles.clone() }
     }
 
     /// 🧬️ Builds a full artifact from a snapshot.
-    pub fn from_snapshot(snapshot: StlSnapshot) -> Self {
+    pub async fn from_snapshot(snapshot: StlSnapshot) -> Self {
         Self { schema: snapshot.schema, solid_name: snapshot.solid_name, triangles: snapshot.triangles }
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
-    pub fn set_snapshot(&mut self, snapshot: StlSnapshot) {
+    pub async fn set_snapshot(&mut self, snapshot: StlSnapshot) {
         self.schema = snapshot.schema;
         self.solid_name = snapshot.solid_name;
         self.triangles = snapshot.triangles;
@@ -51,7 +51,7 @@ impl StlArtifact {
 
 //#region 🔖️Descriptor
 /// 🧬️ Descriptor for `s.stdio.stl`.
-pub fn stl_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
+pub async fn stl_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
     schema::ArtifactSchemaDescriptor {
         id: "s.stdio.stl",
         artifact: schema::FacetLeaves {
@@ -102,27 +102,27 @@ pub mod derived_construction {
         type Snapshot = StlSnapshot;
         type Mutation = StlMutation;
         type Diff = StlDiff;
-        fn empty() -> Self {
+        async fn empty() -> Self {
             Self { snapshot: StlSnapshot::default(), diagnostics: Vec::new() }
         }
-        fn from_snapshot(snapshot: Self::Snapshot) -> Self {
+        async fn from_snapshot(snapshot: Self::Snapshot) -> Self {
             Self { snapshot, diagnostics: Vec::new() }
         }
-        fn from_text(text: &str) -> Result<Self, store::TextError> {
+        async fn from_text(text: &str) -> Result<Self, store::TextError> {
             Ok(Self::from_snapshot(<StlSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
-        fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
+        async fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
             Ok(Self::from_snapshot(<StlSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
         }
-        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
+        async fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let diff = crate::artifacts::stl::schema::mutations::apply_stl_mutation(&mut self.snapshot, &mutation);
             (self, diff)
         }
-        fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
+        async fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
             self.snapshot = <StlDiff as protocol::MutationDiff<StlSnapshot>>::apply(&diff, &self.snapshot)?;
             Ok(self)
         }
-        fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
+        async fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
             if self.diagnostics.is_empty() {
                 Ok(self.snapshot)
             } else {
@@ -155,7 +155,7 @@ pub mod derived_analysis {
     /// 🔍 ASCII STL starts with a `solid` keyword and a real body has `facet`/`vertex`
     /// structure; binary STL has no fixed magic, so a plausible triangle-count framing
     /// (`84 + count*50 == len`) is the best available signal.
-    fn looks_like_stl(bytes: &[u8]) -> IoConfidence {
+    async fn looks_like_stl(bytes: &[u8]) -> IoConfidence {
         if bytes.starts_with(b"solid") {
             if let Ok(text) = std::str::from_utf8(bytes) {
                 if text.contains("facet") && text.contains("vertex") && text.contains("endsolid") {
@@ -177,7 +177,7 @@ pub mod derived_analysis {
         type Parts = StlParts;
         const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.stl", standard: StandardId("ascii"), subset: SubsetId("*") };
 
-        fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
+        async fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
             match source {
                 AnalyzeSource::Text(text) => {
                     let body = match store::semio_format::split_text_preamble(text) {
@@ -193,7 +193,7 @@ pub mod derived_analysis {
             }
         }
 
-        fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
+        async fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
             let mut parts = StlParts::default();
             let mut diagnostics = Vec::new();
             let mut confidence = IoConfidence::High;
@@ -226,13 +226,13 @@ pub mod derived_analysis {
         use super::*;
 
         #[test]
-        fn sniff_real_ascii_stl_is_high() {
+        async fn sniff_real_ascii_stl_is_high() {
             let text = "solid mesh\n  facet normal 0 0 1\n    outer loop\n      vertex 0 0 0\n      vertex 1 0 0\n      vertex 0 1 0\n    endloop\n  endfacet\nendsolid mesh\n";
             assert_eq!(StlAnalyzerAnalysis::sniff(&AnalyzeSource::Text(text)), IoConfidence::High);
         }
 
         #[test]
-        fn sniff_unrelated_text_is_low() {
+        async fn sniff_unrelated_text_is_low() {
             assert_eq!(StlAnalyzerAnalysis::sniff(&AnalyzeSource::Text("not an stl file")), IoConfidence::Low);
         }
     }
@@ -258,7 +258,7 @@ semio_framework_plugin::derive_artifact_facets!(
 /// 🌱 Empty persisted snapshot. Dissolved out of `⚙️engine`
 /// (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES) — reached as
 /// `crate::artifacts::stl::engine::empty_stl_snapshot` through the `engine` barrel shim.
-pub fn empty_stl_snapshot() -> StlSnapshot {
+pub async fn empty_stl_snapshot() -> StlSnapshot {
     StlSnapshot::default()
 }
 
@@ -276,7 +276,7 @@ pub fn empty_stl_snapshot() -> StlSnapshot {
 /// primitives don't cleanly cover (same "model realistically" convention this ticket's recipe
 /// documents throughout, not a `mechanism_gaps` entry of its own since it's a strict subset of the
 /// already-documented `protocol-prim-ref-recursion`-adjacent raw-span family).
-pub fn demo_stl_snapshot() -> StlSnapshot {
+pub async fn demo_stl_snapshot() -> StlSnapshot {
     StlSnapshot {
         schema: STDIO_STL_DOCUMENT_SCHEMA.into(),
         solid_name: "demo".into(),

@@ -17,7 +17,7 @@ pub struct GlazingLayer {
 
 impl GlazingLayer {
     /// 🧊️ Layer thermal resistance [m²·K/W].
-    pub fn resistance_m2k_w(&self) -> f64 {
+    pub async fn resistance_m2k_w(&self) -> f64 {
         self.thickness_m / self.conductivity_w_m_k.max(1e-6)
     }
 }
@@ -38,7 +38,7 @@ impl ShadeState {
     pub const OPEN: Self = Self { deployed: false, solar_transmittance: 1.0, solar_reflectance: 0.0, visible_transmittance: 1.0, ir_transmittance: 1.0 };
 
     /// 🌤️ Effective solar transmittance with shade deployed.
-    pub fn effective_solar_transmittance(&self) -> f64 {
+    pub async fn effective_solar_transmittance(&self) -> f64 {
         if self.deployed {
             self.solar_transmittance
         } else {
@@ -64,7 +64,7 @@ pub struct WindowModel {
 
 impl WindowModel {
     /// 🔥️ Center-of-glass U-value [W/(m²·K)] from layer stack.
-    pub fn center_u_value_w_m2k(&self) -> f64 {
+    pub async fn center_u_value_w_m2k(&self) -> f64 {
         let mut r = R_FILM_INTERIOR_M2K_W + R_FILM_EXTERIOR_M2K_W;
         for (i, layer) in self.glazing_layers.iter().enumerate() {
             r += layer.resistance_m2k_w();
@@ -76,7 +76,7 @@ impl WindowModel {
     }
 
     /// ☀️ Center-of-glass solar heat gain coefficient (normal incidence).
-    pub fn center_shgc(&self) -> f64 {
+    pub async fn center_shgc(&self) -> f64 {
         let mut tau = 1.0_f64;
         for layer in &self.glazing_layers {
             tau *= layer.solar_transmittance;
@@ -87,7 +87,7 @@ impl WindowModel {
     }
 
     /// 🔥️ Area-weighted overall U including frame and divider.
-    pub fn overall_u_value_w_m2k(&self, area_m2: f64) -> f64 {
+    pub async fn overall_u_value_w_m2k(&self, area_m2: f64) -> f64 {
         let a_cog = area_m2 * (1.0 - self.frame_fraction - self.divider_fraction).max(0.0);
         let a_frame = area_m2 * self.frame_fraction;
         let u_cog = self.center_u_value_w_m2k();
@@ -98,7 +98,7 @@ impl WindowModel {
     }
 
     /// 🌡️ Interior glazing surface temperature [°C] (simplified steady state).
-    pub fn interior_glazing_temp_c(&self, outside_temp_c: f64, inside_temp_c: f64, h_interior_w_m2k: f64, h_exterior_w_m2k: f64) -> f64 {
+    pub async fn interior_glazing_temp_c(&self, outside_temp_c: f64, inside_temp_c: f64, h_interior_w_m2k: f64, h_exterior_w_m2k: f64) -> f64 {
         let r_int = 1.0 / h_interior_w_m2k.max(0.1);
         let r_ext = 1.0 / h_exterior_w_m2k.max(0.1);
         let mut r_glazing = 0.0_f64;
@@ -116,12 +116,12 @@ impl WindowModel {
 
 // #region 🔖️HeatTransfer
 /// 🔥️ Window conductive heat loss [W] (positive = heat into zone from outside).
-pub fn window_conduction_w(outside_temp_c: f64, inside_temp_c: f64, u_value_w_m2k: f64, area_m2: f64) -> f64 {
+pub async fn window_conduction_w(outside_temp_c: f64, inside_temp_c: f64, u_value_w_m2k: f64, area_m2: f64) -> f64 {
     u_value_w_m2k * (outside_temp_c - inside_temp_c) * area_m2
 }
 
 /// ☀️ Solar gain through window [W].
-pub fn window_solar_gain_w(beam_normal_irradiance_w_m2: f64, incidence_cosine: f64, shgc: f64, area_m2: f64) -> f64 {
+pub async fn window_solar_gain_w(beam_normal_irradiance_w_m2: f64, incidence_cosine: f64, shgc: f64, area_m2: f64) -> f64 {
     beam_normal_irradiance_w_m2 * incidence_cosine.max(0.0) * shgc * area_m2
 }
 // #endregion 🔖️HeatTransfer
@@ -136,7 +136,7 @@ pub enum CondensationRisk {
 }
 
 /// 💧️ Assess interior surface condensation vs zone dew point.
-pub fn condensation_risk(interior_surface_temp_c: f64, _zone_air_temp_c: f64, humidity_ratio: f64, atmospheric_pressure_pa: f64) -> CondensationRisk {
+pub async fn condensation_risk(interior_surface_temp_c: f64, _zone_air_temp_c: f64, humidity_ratio: f64, atmospheric_pressure_pa: f64) -> CondensationRisk {
     let dew = dew_point_c(humidity_ratio, atmospheric_pressure_pa);
     let margin = interior_surface_temp_c - dew;
     if margin <= 0.0 {
@@ -149,7 +149,7 @@ pub fn condensation_risk(interior_surface_temp_c: f64, _zone_air_temp_c: f64, hu
 }
 
 /// 💧️ Interior surface RH given surface temperature.
-pub fn interior_surface_rh(surface_temp_c: f64, zone_air_temp_c: f64, zone_rh: f64) -> f64 {
+pub async fn interior_surface_rh(surface_temp_c: f64, zone_air_temp_c: f64, zone_rh: f64) -> f64 {
     let p_ws_air = saturation_pressure_pa(zone_air_temp_c);
     let p_w = zone_rh * p_ws_air;
     let p_ws_surf = saturation_pressure_pa(surface_temp_c);
@@ -161,7 +161,7 @@ pub fn interior_surface_rh(surface_temp_c: f64, zone_air_temp_c: f64, zone_rh: f
 mod tests {
     use super::*;
 
-    fn double_glazing() -> WindowModel {
+    async fn double_glazing() -> WindowModel {
         WindowModel {
             glazing_layers: vec![
                 GlazingLayer { thickness_m: 0.004, conductivity_w_m_k: 0.9, solar_transmittance: 0.82, solar_reflectance: 0.08, visible_transmittance: 0.88, ir_emissivity: 0.84 },
@@ -178,7 +178,7 @@ mod tests {
     }
 
     #[test]
-    fn double_glazing_u_below_single() {
+    async fn double_glazing_u_below_single() {
         let win = double_glazing();
         let u_double = win.center_u_value_w_m2k();
         let single = WindowModel { glazing_layers: vec![win.glazing_layers[0]], gap_resistance_m2k_w: vec![], ..win.clone() };
@@ -186,20 +186,20 @@ mod tests {
     }
 
     #[test]
-    fn shade_reduces_shgc() {
+    async fn shade_reduces_shgc() {
         let mut win = double_glazing();
         win.interior_shade = ShadeState { deployed: true, solar_transmittance: 0.1, solar_reflectance: 0.5, visible_transmittance: 0.1, ir_transmittance: 0.2 };
         assert!(win.center_shgc() < 0.2);
     }
 
     #[test]
-    fn conduction_cold_outside_negative_into_zone() {
+    async fn conduction_cold_outside_negative_into_zone() {
         let q = window_conduction_w(-10.0, 20.0, 1.2, 2.0);
         assert!(q < 0.0);
     }
 
     #[test]
-    fn condensation_when_surface_cold() {
+    async fn condensation_when_surface_cold() {
         let risk = condensation_risk(5.0, 22.0, 0.012, 101_325.0);
         assert!(matches!(risk, CondensationRisk::Condensing | CondensationRisk::Risk { .. }));
     }

@@ -2,6 +2,6 @@ use crate::artifacts::binary::schema::mutations::{apply_binary_mutation, BinaryM
 use crate::artifacts::binary::BinarySnapshot;
 
 /// ▶️ Applies a set-snapshot mutation.
-pub fn apply(projection: &mut BinarySnapshot, mutation: &BinaryMutation) {
+pub async fn apply(projection: &mut BinarySnapshot, mutation: &BinaryMutation) {
     apply_binary_mutation(projection, mutation);
 }

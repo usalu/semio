@@ -14,7 +14,7 @@ pub mod select_register {
         pub register_id: String,
     }
 
-    pub fn handle(payload: &SelectRegister, _doc: &ArtifactView<'_, ProgramSnapshot>, cfg: &ConfigView<'_, ArchitectConfig>) -> Result<Emit<ProgramMutation, ArchitectConfigMutation>, Fault> {
+    pub async fn handle(payload: &SelectRegister, _doc: &ArtifactView<'_, ProgramSnapshot>, cfg: &ConfigView<'_, ArchitectConfig>) -> Result<Emit<ProgramMutation, ArchitectConfigMutation>, Fault> {
         let mut next = cfg.snapshot.clone();
         next.active_register = payload.register_id.clone();
         Ok(Emit::config(snapshot(next)))
@@ -42,7 +42,7 @@ pub mod add_register_item {
     /// the selection here — selection is framework-owned `InteractionState` now, only ever mutated by
     /// the framework's own injected `interactionSelect` handling, never by an app command's `Emit`
     /// (mirrors note's `add-block`).
-    pub fn handle(payload: &AddRegisterItem, doc: &ArtifactView<'_, ProgramSnapshot>, cfg: &ConfigView<'_, ArchitectConfig>) -> Result<Emit<ProgramMutation, ArchitectConfigMutation>, Fault> {
+    pub async fn handle(payload: &AddRegisterItem, doc: &ArtifactView<'_, ProgramSnapshot>, cfg: &ConfigView<'_, ArchitectConfig>) -> Result<Emit<ProgramMutation, ArchitectConfigMutation>, Fault> {
         let program = doc.snapshot;
         if let Some(template_id) = &payload.template_id {
             let template_id = EntityId(template_id.clone());
@@ -79,7 +79,7 @@ pub mod remove_register_item {
     /// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: no longer prunes the deleted id
     /// out of a config-owned selection — the framework owns pruning of the "program" domain's
     /// selection now (`validate_state`, run after every dispatch).
-    pub fn handle(payload: &RemoveRegisterItem, doc: &ArtifactView<'_, ProgramSnapshot>, _cfg: &ConfigView<'_, ArchitectConfig>) -> Result<Emit<ProgramMutation, ArchitectConfigMutation>, Fault> {
+    pub async fn handle(payload: &RemoveRegisterItem, doc: &ArtifactView<'_, ProgramSnapshot>, _cfg: &ConfigView<'_, ArchitectConfig>) -> Result<Emit<ProgramMutation, ArchitectConfigMutation>, Fault> {
         let program = doc.snapshot;
         let entity_id = EntityId(payload.entity_id.clone());
         let mut operations = Vec::new();
@@ -112,7 +112,7 @@ pub mod patch_register_item {
         pub patch_json: String,
     }
 
-    pub fn handle(payload: &PatchRegisterItem, doc: &ArtifactView<'_, ProgramSnapshot>, _cfg: &ConfigView<'_, ArchitectConfig>) -> Result<Emit<ProgramMutation, ArchitectConfigMutation>, Fault> {
+    pub async fn handle(payload: &PatchRegisterItem, doc: &ArtifactView<'_, ProgramSnapshot>, _cfg: &ConfigView<'_, ArchitectConfig>) -> Result<Emit<ProgramMutation, ArchitectConfigMutation>, Fault> {
         let Ok(patch) = serde_json::from_str::<Value>(&payload.patch_json) else {
             return Ok(Emit::default());
         };

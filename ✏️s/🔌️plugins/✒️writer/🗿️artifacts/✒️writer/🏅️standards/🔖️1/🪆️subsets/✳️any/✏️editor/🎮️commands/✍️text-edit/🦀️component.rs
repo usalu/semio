@@ -15,7 +15,7 @@ pub struct TextEdit {
 /// ⌨️ Keystroke-granular edits coalesce under a stable key so a typing burst amends into a few undo
 /// steps, not one-per-keystroke. Any interrupting command applies without this key and breaks the
 /// coalescing run.
-pub fn handle(payload: &TextEdit, _doc: &ArtifactView<'_, WriterSnapshot>, _cfg: &ConfigView<'_, WriterConfig>) -> Result<Emit<WriterMutation, WriterConfigMutation>, Fault> {
+pub async fn handle(payload: &TextEdit, _doc: &ArtifactView<'_, WriterSnapshot>, _cfg: &ConfigView<'_, WriterConfig>) -> Result<Emit<WriterMutation, WriterConfigMutation>, Fault> {
     Ok(Emit::amend(vec![WriterMutation::EditText(EditText { text: payload.text.clone() })], "writer-text-edit"))
 }
 
@@ -36,7 +36,7 @@ mod tests {
     /// emits (`SetSnapshot` is banned — see `reset_document_effect`'s doc comment) — the standard
     /// way this file's tests observe a replaced document, mirroring `📐️cad`'s own
     /// `import_cad_file_action_imports_...` tests.
-    fn loaded_document(result: &semio_framework_plugin::InvocationResult) -> WriterSnapshot {
+    async fn loaded_document(result: &semio_framework_plugin::InvocationResult) -> WriterSnapshot {
         let Effect::LoadDocument { pack, .. } = result.requested_effects.first().expect("expected a LoadDocument effect") else {
             panic!("expected a LoadDocument effect");
         };
@@ -44,7 +44,7 @@ mod tests {
     }
 
     #[test]
-    fn text_edit_burst_coalesces_into_one_undo_step() {
+    async fn text_edit_burst_coalesces_into_one_undo_step() {
         let mut app = new_app();
         for text in ["h", "he", "hel", "hell", "hello"] {
             dispatch(&mut app, WriterCommand::TextEdit(super::TextEdit { text: text.into() }));
@@ -57,7 +57,7 @@ mod tests {
     }
 
     #[test]
-    fn format_artifact_reformats_jack_query() {
+    async fn format_artifact_reformats_jack_query() {
         let mut app = app_with_jack();
         dispatch(&mut app, WriterCommand::SetText(set_text::SetText { text: "MATCH (a:Piece)   WHERE a.name='core' RETURN a.name".into() }));
         let result = app.dispatch_typed(WriterCommand::FormatDocument(format_document::FormatDocument {}), &semio_framework_plugin::testkit::meta("local")).expect("format");
@@ -66,7 +66,7 @@ mod tests {
     }
 
     #[test]
-    fn format_document_without_change_emits_no_operation() {
+    async fn format_document_without_change_emits_no_operation() {
         // A no-operation format (already-formatted or non-jack empty doc) bumps the format signal but must
         // not record a history entry.
         let mut app = new_app();
@@ -75,7 +75,7 @@ mod tests {
     }
 
     #[test]
-    fn set_text_action_updates_projection() {
+    async fn set_text_action_updates_projection() {
         let mut app = new_app();
         let result = app.dispatch_typed(WriterCommand::SetText(set_text::SetText { text: "MATCH (a) RETURN a".into() }), &semio_framework_plugin::testkit::meta("local")).expect("set text");
         assert_eq!(result.mutations.len(), 1);
@@ -83,7 +83,7 @@ mod tests {
     }
 
     #[test]
-    fn set_text_undo_redo_round_trips_through_the_wrapper() {
+    async fn set_text_undo_redo_round_trips_through_the_wrapper() {
         let mut app = new_app();
         dispatch(&mut app, WriterCommand::SetText(set_text::SetText { text: "first".into() }));
         dispatch(&mut app, WriterCommand::SetText(set_text::SetText { text: "second".into() }));
@@ -97,7 +97,7 @@ mod tests {
     }
 
     #[test]
-    fn commit_rename_renames_all_spans_at_the_config_selection() {
+    async fn commit_rename_renames_all_spans_at_the_config_selection() {
         let mut app = app_with_jack();
         let occurrences = jack_variable_occurrences(CANONICAL_QUERY, "a");
         assert_eq!(occurrences.len(), 3);
@@ -116,7 +116,7 @@ mod tests {
     /// `setActiveExample` now surfaces as a `Effect::LoadDocument` carrying the replacement
     /// document's pack bytes, exactly like `📐️cad`'s `importCadFile` (`reset_document_effect`).
     #[test]
-    fn set_active_example_loads_jack_fixture() {
+    async fn set_active_example_loads_jack_fixture() {
         let mut app = new_app();
         let result = app.dispatch_typed(WriterCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: "jack".into() }), &semio_framework_plugin::testkit::meta("local")).expect("load");
         assert!(result.mutations.is_empty(), "whole-document replace is an effect, not an in-history mutation");
@@ -126,7 +126,7 @@ mod tests {
     }
 
     #[test]
-    fn set_active_example_loads_dag_jack_fixture() {
+    async fn set_active_example_loads_dag_jack_fixture() {
         let mut app = new_app();
         let result = app.dispatch_typed(WriterCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: "dag.jack".into() }), &semio_framework_plugin::testkit::meta("local")).expect("load");
         assert!(result.mutations.is_empty());
@@ -134,7 +134,7 @@ mod tests {
     }
 
     #[test]
-    fn set_active_example_falls_back_to_empty_document() {
+    async fn set_active_example_falls_back_to_empty_document() {
         let mut app = app_with_jack();
         let result = app.dispatch_typed(WriterCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: String::new() }), &semio_framework_plugin::testkit::meta("local")).expect("load");
         assert!(result.mutations.is_empty());

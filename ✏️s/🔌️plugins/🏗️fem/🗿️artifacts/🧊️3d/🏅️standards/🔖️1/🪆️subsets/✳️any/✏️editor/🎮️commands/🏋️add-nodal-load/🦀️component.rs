@@ -11,14 +11,14 @@ use serde::{Deserialize, Serialize};
 /// found, else the document's first load case, else `None` — a missing case is not resolved here,
 /// the caller decides between `add-load` (existing case) and `create-load-case` (pre-seeded with the
 /// new load, synthesized `"case-1"`/`"Load Case 1"`) once it knows which branch it's in.
-fn resolve_load_case(doc: &Fem3dSnapshot, case_id: Option<&str>) -> Option<FemLoadCase> {
+async fn resolve_load_case(doc: &Fem3dSnapshot, case_id: Option<&str>) -> Option<FemLoadCase> {
     case_id.and_then(|id| doc.load_cases.iter().find(|lc| lc.id == id).cloned()).or_else(|| doc.load_cases.first().cloned())
 }
 
 /// 🌉️ Shared resolve-or-create gesture behind `add-nodal-load`/`add-member-udl`/`add-area-load`:
 /// attaches `load` to the named/first load case via `add-load` if one exists, else synthesizes a
 /// fresh `"case-1"`/`"Load Case 1"` case pre-seeded with `load` via `create-load-case`.
-fn add_load_mutation(doc: &Fem3dSnapshot, case_id: Option<&str>, load: FemLoad) -> Fem3dMutation {
+async fn add_load_mutation(doc: &Fem3dSnapshot, case_id: Option<&str>, load: FemLoad) -> Fem3dMutation {
     match resolve_load_case(doc, case_id) {
         Some(existing) => Fem3dMutation::AddLoad(add_load::mutation::AddLoad { case_id: existing.id, load: Box::new(load) }),
         None => Fem3dMutation::CreateLoadCase(create_load_case::mutation::CreateLoadCase { load_case: FemLoadCase { id: "case-1".into(), name: "Load Case 1".into(), loads: vec![load], self_weight: false } }),
@@ -27,7 +27,7 @@ fn add_load_mutation(doc: &Fem3dSnapshot, case_id: Option<&str>, load: FemLoad) 
 
 /// 🌉️ The load id a new load on the (possibly not-yet-existing) target case should get — reads the
 /// existing case's loads for `next_id` continuity, or starts fresh for a synthesized case.
-fn next_load_id(doc: &Fem3dSnapshot, case_id: Option<&str>) -> String {
+async fn next_load_id(doc: &Fem3dSnapshot, case_id: Option<&str>) -> String {
     let loads = resolve_load_case(doc, case_id).map(|lc| lc.loads).unwrap_or_default();
     crate::app_surface::next_id(loads.iter().map(|l| crate::artifacts::fem3d::load_id(l).to_string()), "l")
 }
@@ -64,7 +64,7 @@ pub struct AddNodalLoad {
     pub case_id: Option<String>,
 }
 
-pub fn handle(payload: &AddNodalLoad, doc: &ArtifactView<'_, Fem3dSnapshot>, _cfg: &ConfigView<'_, Fem3dConfig>) -> Result<Emit<Fem3dMutation, Fem3dConfigMutation>, Fault> {
+pub async fn handle(payload: &AddNodalLoad, doc: &ArtifactView<'_, Fem3dSnapshot>, _cfg: &ConfigView<'_, Fem3dConfig>) -> Result<Emit<Fem3dMutation, Fem3dConfigMutation>, Fault> {
     let load_id = next_load_id(doc.snapshot, payload.case_id.as_deref());
     let load = FemLoad::Nodal { id: load_id, node_id: payload.node_id.clone(), dof: payload.dof, value: payload.value };
     Ok(Emit::mutations(vec![add_load_mutation(doc.snapshot, payload.case_id.as_deref(), load)]))
@@ -77,20 +77,20 @@ mod tests {
     use crate::editor::fem3d::testkit::{dispatch, fem3d_app, Fem3dApp};
     use crate::editor::fem3d::Fem3dCommand;
 
-    fn app_with_load_case() -> Fem3dApp {
+    async fn app_with_load_case() -> Fem3dApp {
         let mut app = fem3d_app();
         dispatch(&mut app, Fem3dCommand::AddLoadCase(add_load_case::AddLoadCase { name: "Dead".into(), self_weight: false }));
         app
     }
 
     #[test]
-    fn resolve_load_case_returns_none_when_none_exist() {
+    async fn resolve_load_case_returns_none_when_none_exist() {
         let snapshot = Fem3dSnapshot::default();
         assert!(resolve_load_case(&snapshot, None).is_none());
     }
 
     #[test]
-    fn add_nodal_load_with_no_existing_case_creates_one() {
+    async fn add_nodal_load_with_no_existing_case_creates_one() {
         let mut app = fem3d_app();
         dispatch(&mut app, Fem3dCommand::AddNodalLoad(AddNodalLoad { node_id: "n2".into(), dof: crate::artifacts::fem3d::FemDof::Tz, value: -5000.0, case_id: None }));
         let snapshot = app.snapshot().expect("snapshot");
@@ -100,7 +100,7 @@ mod tests {
     }
 
     #[test]
-    fn add_member_udl_action_emits_op_3d() {
+    async fn add_member_udl_action_emits_op_3d() {
         let mut app = app_with_load_case();
         dispatch(&mut app, Fem3dCommand::AddMemberUdl(add_member_udl::AddMemberUdl { element_id: "e1".into(), wx: 0.0, wy: 0.0, wz: -2000.0, case_id: None }));
         let snapshot = app.snapshot().expect("snapshot");
@@ -109,7 +109,7 @@ mod tests {
     }
 
     #[test]
-    fn add_nodal_load_targets_named_case() {
+    async fn add_nodal_load_targets_named_case() {
         let mut app = app_with_load_case();
         dispatch(&mut app, Fem3dCommand::AddLoadCase(add_load_case::AddLoadCase { name: "Live".into(), self_weight: false }));
         let live_case_id = app.snapshot().expect("snapshot").load_cases[1].id.clone();
@@ -120,7 +120,7 @@ mod tests {
     }
 
     #[test]
-    fn set_self_weight_toggles_existing_case() {
+    async fn set_self_weight_toggles_existing_case() {
         let mut app = app_with_load_case();
         let case_id = app.snapshot().expect("snapshot").load_cases[0].id.clone();
         dispatch(&mut app, Fem3dCommand::SetSelfWeight(set_self_weight::SetSelfWeight { case_id, enabled: true }));
@@ -128,14 +128,14 @@ mod tests {
     }
 
     #[test]
-    fn set_self_weight_unknown_case_is_a_no_op() {
+    async fn set_self_weight_unknown_case_is_a_no_op() {
         let mut app = app_with_load_case();
         dispatch(&mut app, Fem3dCommand::SetSelfWeight(set_self_weight::SetSelfWeight { case_id: "missing".into(), enabled: true }));
         assert!(!app.snapshot().expect("snapshot").load_cases[0].self_weight);
     }
 
     #[test]
-    fn add_combination_parses_terms_json() {
+    async fn add_combination_parses_terms_json() {
         let mut app = app_with_load_case();
         dispatch(&mut app, Fem3dCommand::AddCombination(add_combination::AddCombination { name: "ULS".into(), terms: "[[\"case-0\",1.35]]".into() }));
         let snapshot = app.snapshot().expect("snapshot");
@@ -144,7 +144,7 @@ mod tests {
     }
 
     #[test]
-    fn add_combination_invalid_terms_json_is_a_no_op() {
+    async fn add_combination_invalid_terms_json_is_a_no_op() {
         let mut app = app_with_load_case();
         dispatch(&mut app, Fem3dCommand::AddCombination(add_combination::AddCombination { name: "ULS".into(), terms: "not json".into() }));
         assert!(app.snapshot().expect("snapshot").combinations.is_empty());

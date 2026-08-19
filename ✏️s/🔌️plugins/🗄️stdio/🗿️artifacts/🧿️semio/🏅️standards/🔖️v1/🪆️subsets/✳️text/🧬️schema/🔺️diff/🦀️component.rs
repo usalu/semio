@@ -34,13 +34,13 @@ pub struct SemioTextDiff {
 }
 
 impl SemioTextDiff {
-    pub fn is_empty_diff(&self) -> bool {
+    pub async fn is_empty_diff(&self) -> bool {
         self.runs.is_none()
     }
 }
 
 impl MutationDiff<SemioTextSnapshot> for SemioTextDiff {
-    fn apply(&self, base: &SemioTextSnapshot) -> protocol::MutationApplyResult<SemioTextSnapshot> {
+    async fn apply(&self, base: &SemioTextSnapshot) -> protocol::MutationApplyResult<SemioTextSnapshot> {
         let mut next = base.clone();
         if let Some(list) = &self.runs {
             next.runs = list.values.clone();
@@ -48,7 +48,7 @@ impl MutationDiff<SemioTextSnapshot> for SemioTextDiff {
         Ok(next)
     }
 
-    fn absorb(&mut self, other: Self) {
+    async fn absorb(&mut self, other: Self) {
         if other.runs.is_some() {
             self.runs = other.runs;
         }
@@ -61,13 +61,13 @@ impl MutationDiff<SemioTextSnapshot> for SemioTextDiff {
 /// mutable field, so a change is fully described by "the new/old `runs` value", same shape every
 /// mutation triad's own `🔺️diff` leaf already produces.
 impl protocol::command::DiffAlgebra<SemioTextSnapshot> for SemioTextDiff {
-    fn between(base: &SemioTextSnapshot, other: &SemioTextSnapshot) -> Self {
+    async fn between(base: &SemioTextSnapshot, other: &SemioTextSnapshot) -> Self {
         SemioTextDiff { runs: (base.runs != other.runs).then(|| SemioTextRunList { values: other.runs.clone() }) }
     }
-    fn inverse(&self, base: &SemioTextSnapshot) -> Self {
+    async fn inverse(&self, base: &SemioTextSnapshot) -> Self {
         SemioTextDiff { runs: self.runs.as_ref().map(|_| SemioTextRunList { values: base.runs.clone() }) }
     }
-    fn is_empty(&self) -> bool {
+    async fn is_empty(&self) -> bool {
         self.is_empty_diff()
     }
 }
@@ -78,64 +78,64 @@ impl protocol::command::DiffAlgebra<SemioTextSnapshot> for SemioTextDiff {
 /// `runs=[<run>,...]` (empty string = no-op diff), reusing the snapshot facet's own real
 /// hex/bracket run/mark encoders (duplicated locally, same convention every sibling subset's
 /// `🔺️diff` facet already establishes — see that facet's own doc comment for why).
-fn hex_encode(bytes: &[u8]) -> String {
+async fn hex_encode(bytes: &[u8]) -> String {
     bytes.iter().map(|b| format!("{b:02x}")).collect()
 }
-fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
+async fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
     if s.len() % 2 != 0 {
         return Err(format!("odd hex length: {s:?}"));
     }
     (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()
 }
-fn enc_str(s: &str) -> String {
+async fn enc_str(s: &str) -> String {
     hex_encode(s.as_bytes())
 }
-fn dec_str(s: &str) -> Result<String, String> {
+async fn dec_str(s: &str) -> Result<String, String> {
     String::from_utf8(hex_decode(s)?).map_err(|e| e.to_string())
 }
 
 use crate::artifacts::semio::standards::v1::subsets::any::schema::triples::{split_top_level, strip_brackets};
 use crate::artifacts::semio::standards::v1::subsets::text::schema::snapshot::SemioTextMark;
 
-fn enc_mark_kind(k: crate::artifacts::semio::standards::v1::subsets::text::schema::snapshot::SemioTextMarkKind) -> char {
+async fn enc_mark_kind(k: crate::artifacts::semio::standards::v1::subsets::text::schema::snapshot::SemioTextMarkKind) -> char {
     crate::artifacts::semio::standards::v1::subsets::text::schema::snapshot::enc_mark_kind(k)
 }
-fn dec_mark_kind(s: &str) -> Result<crate::artifacts::semio::standards::v1::subsets::text::schema::snapshot::SemioTextMarkKind, String> {
+async fn dec_mark_kind(s: &str) -> Result<crate::artifacts::semio::standards::v1::subsets::text::schema::snapshot::SemioTextMarkKind, String> {
     crate::artifacts::semio::standards::v1::subsets::text::schema::snapshot::dec_mark_kind(s)
 }
-fn enc_mark(m: &SemioTextMark) -> String {
+async fn enc_mark(m: &SemioTextMark) -> String {
     format!("[{},{}]", enc_mark_kind(m.kind), enc_str(&m.href))
 }
-fn dec_mark(s: &str) -> Result<SemioTextMark, String> {
+async fn dec_mark(s: &str) -> Result<SemioTextMark, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [kind, href] = parts.as_slice() else { return Err(format!("mark: expected 2 fields, got {}", parts.len())) };
     Ok(SemioTextMark { kind: dec_mark_kind(kind)?, href: dec_str(href)? })
 }
-fn enc_run(r: &SemioTextRun) -> String {
+async fn enc_run(r: &SemioTextRun) -> String {
     let marks = r.marks.iter().map(enc_mark).collect::<Vec<_>>().join(",");
     format!("[{},{},[{}]]", enc_str(&r.language), enc_str(&r.content), marks)
 }
-fn dec_run(s: &str) -> Result<SemioTextRun, String> {
+async fn dec_run(s: &str) -> Result<SemioTextRun, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [language, content, marks] = parts.as_slice() else { return Err(format!("run: expected 3 fields, got {}", parts.len())) };
     let marks = split_top_level(strip_brackets(marks)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_mark).collect::<Result<Vec<_>, String>>()?;
     Ok(SemioTextRun { language: dec_str(language)?, content: dec_str(content)?, marks })
 }
-fn enc_runs(list: &SemioTextRunList) -> String {
+async fn enc_runs(list: &SemioTextRunList) -> String {
     format!("[{}]", list.values.iter().map(enc_run).collect::<Vec<_>>().join(","))
 }
-fn dec_runs(s: &str) -> Result<SemioTextRunList, String> {
+async fn dec_runs(s: &str) -> Result<SemioTextRunList, String> {
     let values = split_top_level(strip_brackets(s)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_run).collect::<Result<Vec<_>, String>>()?;
     Ok(SemioTextRunList { values })
 }
 
-fn print_text_diff(d: &SemioTextDiff) -> String {
+async fn print_text_diff(d: &SemioTextDiff) -> String {
     match &d.runs {
         Some(list) => format!("runs={}", enc_runs(list)),
         None => String::new(),
     }
 }
-fn parse_text_diff(line: &str) -> Result<SemioTextDiff, String> {
+async fn parse_text_diff(line: &str) -> Result<SemioTextDiff, String> {
     if line.is_empty() {
         return Ok(SemioTextDiff::default());
     }
@@ -144,10 +144,10 @@ fn parse_text_diff(line: &str) -> Result<SemioTextDiff, String> {
 }
 
 impl protocol::DiffCodec for SemioTextDiff {
-    fn print_diff(&self) -> String {
+    async fn print_diff(&self) -> String {
         print_text_diff(self)
     }
-    fn parse_diff(line: &str) -> Result<Self, store::TextError> {
+    async fn parse_diff(line: &str) -> Result<Self, store::TextError> {
         parse_text_diff(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
 
@@ -156,7 +156,7 @@ impl protocol::DiffCodec for SemioTextDiff {
     /// (reusing the snapshot facet's own `write_run`/`read_run`) rather than a text-blob-in-binary
     /// shortcut — `text`'s diff has exactly one collection field, so no opaque multi-field payload
     /// chain is needed.
-    fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    async fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         const DIFF_BINARY_FORMAT: u8 = 1;
         use crate::artifacts::semio::standards::v1::subsets::text::schema::snapshot::write_run;
         let presence: u8 = if self.runs.is_some() { 0b0000_0001 } else { 0 };
@@ -169,7 +169,7 @@ impl protocol::DiffCodec for SemioTextDiff {
         }
         Ok(out)
     }
-    fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    async fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         const DIFF_BINARY_FORMAT: u8 = 1;
         use crate::artifacts::semio::standards::v1::subsets::text::schema::snapshot::read_run;
         if bytes.len() < 2 {
@@ -199,7 +199,7 @@ impl protocol::DiffCodec for SemioTextDiff {
 /// 🌱 Representative `SemioTextDiff` cases — single source of truth for `diff_grammar_conformance_
 /// law`/`protocol_walk_law` in `🚪️io/🦀️component.rs`.
 #[cfg(test)]
-pub(crate) fn demo_diff_cases() -> Vec<SemioTextDiff> {
+pub(crate) async fn demo_diff_cases() -> Vec<SemioTextDiff> {
     use crate::artifacts::semio::standards::v1::subsets::text::schema::snapshot::{demo_text_snapshot, SemioTextMarkKind};
     vec![
         SemioTextDiff::default(),
@@ -217,7 +217,7 @@ mod tests {
     use protocol::DiffCodec;
 
     #[test]
-    fn apply_replaces_runs_wholesale() {
+    async fn apply_replaces_runs_wholesale() {
         let base = SemioTextSnapshot { schema: STDIO_SEMIOTEXT_DOCUMENT_SCHEMA.into(), runs: vec![SemioTextRun { language: "en".into(), content: "a".into(), marks: vec![] }] };
         let diff = SemioTextDiff { runs: Some(SemioTextRunList { values: vec![SemioTextRun { language: "en".into(), content: "b".into(), marks: vec![] }] }) };
         let next = diff.apply(&base).expect("apply must succeed for a well-formed fixture");
@@ -225,7 +225,7 @@ mod tests {
     }
 
     #[test]
-    fn absorb_last_write_wins() {
+    async fn absorb_last_write_wins() {
         let mut d1 = SemioTextDiff { runs: Some(SemioTextRunList { values: vec![SemioTextRun { language: "en".into(), content: "a".into(), marks: vec![] }] }) };
         let d2 = SemioTextDiff { runs: Some(SemioTextRunList { values: vec![SemioTextRun { language: "en".into(), content: "b".into(), marks: vec![] }] }) };
         d1.absorb(d2.clone());
@@ -233,7 +233,7 @@ mod tests {
     }
 
     #[test]
-    fn diff_codec_text_binary_roundtrip_law() {
+    async fn diff_codec_text_binary_roundtrip_law() {
         for d in demo_diff_cases() {
             let printed = d.print_diff();
             assert!(!printed.contains('\n'), "print_diff must be one line, got {printed:?}");
@@ -247,7 +247,7 @@ mod tests {
     }
 
     #[test]
-    fn mark_kind_helper_smoke() {
+    async fn mark_kind_helper_smoke() {
         assert_eq!(dec_mark_kind("l").unwrap(), SemioTextMarkKind::Link);
     }
 }

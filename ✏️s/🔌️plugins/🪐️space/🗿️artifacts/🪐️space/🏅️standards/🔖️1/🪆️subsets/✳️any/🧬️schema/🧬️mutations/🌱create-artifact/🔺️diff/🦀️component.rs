@@ -4,7 +4,7 @@ use crate::artifacts::space::standards::v1::subsets::any::schema::diff::SSpaceDi
 use crate::artifacts::space::standards::v1::subsets::any::schema::snapshot::SSpaceSnapshot;
 
 //#region 🔖️Diff
-pub fn diff(payload: &super::mutation::CreateArtifact, base: &SSpaceSnapshot) -> protocol::MutationOutcome<SSpaceDiff> {
+pub async fn diff(payload: &super::mutation::CreateArtifact, base: &SSpaceSnapshot) -> protocol::MutationOutcome<SSpaceDiff> {
     if base.artifacts.iter().any(|row| row.id == payload.artifact.id) {
         return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("An artifact with id \"{}\" already exists.", payload.artifact.id), [payload.artifact.id.clone()]);
     }

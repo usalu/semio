@@ -18,7 +18,7 @@ pub const ARCHITECT_VIEW_BODY_REGISTER: &str = "architect.view.register";
 
 //#region 🔖️Definition
 /// 👁️ Stitched into the viewer manifest by `crate::viewer::architect::create_architect_viewer`.
-pub fn definition() -> WindowKindDefinition {
+pub async fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
         id: ARCHITECT_VIEW_WINDOW_REGISTER.into(),
         label: LocalizedLabel::native("Register Overview", "Register-Übersicht"),
@@ -43,22 +43,22 @@ pub fn definition() -> WindowKindDefinition {
 /// 👁️ Local tree-node helpers, mirroring the sibling surface's own presentation factories in shape —
 /// deliberately NOT reused from there (a viewer must never depend on the sibling surface, see this
 /// file's own doc comment); this is intentional, minimal duplication, not an oversight.
-fn view_tree_item(id: impl Into<String>, label: impl Into<String>) -> UiTreeItemNode {
+async fn view_tree_item(id: impl Into<String>, label: impl Into<String>) -> UiTreeItemNode {
     UiTreeItemNode::base(id, Label::data(label.into()))
 }
 
-fn view_tree_section(id: impl Into<String>, label: Option<String>, items: Vec<UiTreeItemNode>) -> UiTreeSectionNode {
+async fn view_tree_section(id: impl Into<String>, label: Option<String>, items: Vec<UiTreeItemNode>) -> UiTreeSectionNode {
     UiTreeSectionNode { id: id.into(), label: label.map(Label::data), default_open: Some(true), presence: UiPresence::default(), items }
 }
 
-fn view_tree_node(sections: Vec<UiTreeSectionNode>) -> UiNode {
+async fn view_tree_node(sections: Vec<UiTreeSectionNode>) -> UiNode {
     UiNode::Tree(UiTreeNode { sections, presence: UiPresence::default(), interaction_domain: None, drop_action: None, menu: None })
 }
 
 /// 👁️ Pure `ProgramSnapshot -> UiNode` read: every non-empty register's entity count plus its
 /// draft/approved split, one tree section per register, sourced entirely from the shared artifact-level
 /// `status_summary` inference (no config, no selection state).
-pub fn render(program: &ProgramSnapshot) -> UiNode {
+pub async fn render(program: &ProgramSnapshot) -> UiNode {
     let summary = status_summary(program);
     if summary.total_entities == 0 {
         return ui_text(Label::data("No entities in this program yet."));
@@ -87,21 +87,21 @@ mod tests {
     use crate::artifacts::program::{empty_plugin, sample_plugin};
 
     #[test]
-    fn definition_declares_the_table_surface_and_body_key() {
+    async fn definition_declares_the_table_surface_and_body_key() {
         let definition = definition();
         assert_eq!(definition.body_key, ARCHITECT_VIEW_BODY_REGISTER);
         assert!(matches!(definition.surface_kind, SurfaceKind::Table));
     }
 
     #[test]
-    fn the_overview_lists_every_non_empty_register_with_its_counts() {
+    async fn the_overview_lists_every_non_empty_register_with_its_counts() {
         let json = serde_json::to_string(&render(&sample_plugin())).expect("json");
         assert!(json.contains("\"elements\""));
         assert!(json.contains("Total: 2"));
     }
 
     #[test]
-    fn an_empty_program_renders_the_placeholder() {
+    async fn an_empty_program_renders_the_placeholder() {
         let json = serde_json::to_string(&render(&empty_plugin())).expect("json");
         assert!(json.contains("No entities in this program yet."));
     }

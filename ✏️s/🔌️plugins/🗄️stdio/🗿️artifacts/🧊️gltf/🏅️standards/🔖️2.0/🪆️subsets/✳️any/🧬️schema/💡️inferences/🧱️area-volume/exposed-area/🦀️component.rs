@@ -12,11 +12,11 @@ impl GltfInferenceLeaf for GltfExposedAreaInference {
     const DESCRIPTOR: GltfInferenceLeafDescriptor = GltfInferenceLeafDescriptor { id: "s.stdio.gltf.inference.exposed-area.v1", algorithm_version: 1, cache_key: "s.stdio.gltf.inference.exposed-area.v1:geometry-v2", reads: GLTF_GEOMETRY_READS };
 }
 
-pub fn descriptor() -> GltfInferenceLeafDescriptor {
+pub async fn descriptor() -> GltfInferenceLeafDescriptor {
     GltfExposedAreaInference::DESCRIPTOR
 }
 
-pub(crate) fn from_assembly(surface_area: &GltfMeasure<f64>, part_count: usize, contact_area: f64, complete: bool, sample_count: usize, topology: Topology) -> GltfMeasure<f64> {
+pub(crate) async fn from_assembly(surface_area: &GltfMeasure<f64>, part_count: usize, contact_area: f64, complete: bool, sample_count: usize, topology: Topology) -> GltfMeasure<f64> {
     if part_count <= 1 {
         return surface_area.clone();
     }
@@ -25,15 +25,15 @@ pub(crate) fn from_assembly(surface_area: &GltfMeasure<f64>, part_count: usize, 
     }
     unavailable(GltfUnit::SquareMetre, GltfAvailability::Unavailable, Vec::new(), sample_count, Some(topology))
 }
-pub(crate) fn infer(context: &GltfGeometryContext<'_>) -> GltfMeasure<f64> {
+pub(crate) async fn infer(context: &GltfGeometryContext<'_>) -> GltfMeasure<f64> {
     unavailable(GltfUnit::SquareMetre, GltfAvailability::Unavailable, Vec::new(), context.sample_count, Some(context.topology))
 }
 
-pub fn unavailable_measure(ids: &[String]) -> GltfMeasure<f64> {
+pub async fn unavailable_measure(ids: &[String]) -> GltfMeasure<f64> {
     unavailable(GltfUnit::SquareMetre, GltfAvailability::Unavailable, ids.to_vec(), 0, None)
 }
 
-pub fn encode_result(indicators: &GltfEntityIndicators) -> Result<serde_json::Value, serde_json::Error> {
+pub async fn encode_result(indicators: &GltfEntityIndicators) -> Result<serde_json::Value, serde_json::Error> {
     serde_json::to_value(&indicators.area_volume.exposed_area)
 }
 
@@ -42,7 +42,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn descriptor_is_versioned_and_cacheable() {
+    async fn descriptor_is_versioned_and_cacheable() {
         assert_eq!(descriptor().id, "s.stdio.gltf.inference.exposed-area.v1");
         assert_eq!(descriptor().algorithm_version, 1);
     }

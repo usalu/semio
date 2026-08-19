@@ -5,7 +5,7 @@ use crate::artifacts::semio::standards::v1::subsets::mesh::schema::mutations::{d
 use crate::artifacts::semio::standards::v1::subsets::mesh::schema::snapshot::SemioMeshSnapshot;
 
 //#region 🔖️Inverse
-pub fn inverse(payload: &CreateMaterial, _base: &SemioMeshSnapshot) -> Vec<SemioMeshMutation> {
+pub async fn inverse(payload: &CreateMaterial, _base: &SemioMeshSnapshot) -> Vec<SemioMeshMutation> {
     vec![SemioMeshMutation::DeleteMaterial(delete_material::mutation::DeleteMaterial { id: payload.material.id.clone() })]
 }
 //#endregion 🔖️Inverse

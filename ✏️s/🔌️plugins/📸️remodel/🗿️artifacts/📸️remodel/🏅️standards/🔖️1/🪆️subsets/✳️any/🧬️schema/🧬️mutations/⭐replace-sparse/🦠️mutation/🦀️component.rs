@@ -17,20 +17,20 @@ pub struct ReplaceSparse {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn replace_sparse(sparse: Option<SparseCloud>) -> RemodelMutation {
+pub async fn replace_sparse(sparse: Option<SparseCloud>) -> RemodelMutation {
     RemodelMutation::ReplaceSparse(ReplaceSparse { sparse })
 }
 
 impl protocol::MutationKind<RemodelSnapshot, RemodelMutation> for ReplaceSparse {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "replace", entity: "sparse", kind: "replace-sparse", record: "ReplacedSparse" };
 
-    fn diff(&self, base: &RemodelSnapshot) -> protocol::MutationOutcome<RemodelDiff> {
+    async fn diff(&self, base: &RemodelSnapshot) -> protocol::MutationOutcome<RemodelDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &RemodelSnapshot) -> Vec<RemodelMutation> {
+    async fn inverse(&self, base: &RemodelSnapshot) -> Vec<RemodelMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         "Replace sparse".to_string()
     }
 }

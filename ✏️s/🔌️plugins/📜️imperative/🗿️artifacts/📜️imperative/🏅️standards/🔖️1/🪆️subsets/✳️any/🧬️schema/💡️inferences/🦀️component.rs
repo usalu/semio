@@ -23,7 +23,7 @@ pub struct ImperativeInference {
 }
 
 impl protocol::Inference<ImperativeSnapshot> for ImperativeInference {
-    fn infer(snapshot: &ImperativeSnapshot) -> Self {
+    async fn infer(snapshot: &ImperativeSnapshot) -> Self {
         let path = crate::artifacts::imperative::imperative_working_scene(snapshot).path;
         Self { topology: compute_imperative_topology(&path) }
     }
@@ -36,19 +36,19 @@ impl protocol::Inference<ImperativeSnapshot> for ImperativeInference {
 /// scene `path` is already empty, but the explicit `infer`-based impl keeps every inference family
 /// in this fan-out consistent regardless of which artifacts' defaults are trivial.
 impl Default for ImperativeInference {
-    fn default() -> Self {
+    async fn default() -> Self {
         <Self as protocol::Inference<ImperativeSnapshot>>::infer(&ImperativeSnapshot::default())
     }
 }
 
 impl protocol::InferenceSpec<ImperativeSnapshot> for ImperativeInference {
-    fn inference_schema_id() -> &'static str {
+    async fn inference_schema_id() -> &'static str {
         "s.imperative.imperative.inference"
     }
-    fn schema_version() -> u32 {
+    async fn schema_version() -> u32 {
         1
     }
-    fn fields() -> &'static [protocol::InferenceFieldSpec] {
+    async fn fields() -> &'static [protocol::InferenceFieldSpec] {
         &[protocol::InferenceFieldSpec { id: "s.imperative.imperative.inference.topology", reads: &["flow"] }]
     }
 }
@@ -65,7 +65,7 @@ impl ArtifactInferrer for crate::artifacts::imperative::standards::v1::subsets::
 /// 💡️ Registers `s.imperative.imperative.inference`'s facet leaves into the OS-wide inference
 /// catalog — call once at plugin init, alongside `imperative_artifact_schema_descriptor`'s
 /// registration.
-pub fn imperative_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
+pub async fn imperative_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
     schema::ArtifactInferenceDescriptor {
         id: "s.imperative.imperative.inference",
         inference: schema::FacetLeaves {
@@ -87,7 +87,7 @@ mod tests {
     use protocol::Inference;
     use std::collections::BTreeMap;
 
-    fn chain_snapshot() -> ImperativeSnapshot {
+    async fn chain_snapshot() -> ImperativeSnapshot {
         let path = Path {
             steps: vec![
                 Step { id: "a".into(), kind: "noop".into(), params: Default::default(), bodies: BTreeMap::new() },
@@ -98,18 +98,18 @@ mod tests {
     }
 
     #[test]
-    fn inference_determinism_law() {
+    async fn inference_determinism_law() {
         let snapshot = chain_snapshot();
         assert_eq!(ImperativeInference::infer(&snapshot), ImperativeInference::infer(&snapshot));
     }
 
     #[test]
-    fn inference_default_law() {
+    async fn inference_default_law() {
         assert_eq!(ImperativeInference::infer(&ImperativeSnapshot::default()), ImperativeInference::default());
     }
 
     #[test]
-    fn topology_counts_every_step_exactly_once() {
+    async fn topology_counts_every_step_exactly_once() {
         let snapshot = chain_snapshot();
         let inferred = ImperativeInference::infer(&snapshot);
         assert_eq!(inferred.topology.node_count, 2);

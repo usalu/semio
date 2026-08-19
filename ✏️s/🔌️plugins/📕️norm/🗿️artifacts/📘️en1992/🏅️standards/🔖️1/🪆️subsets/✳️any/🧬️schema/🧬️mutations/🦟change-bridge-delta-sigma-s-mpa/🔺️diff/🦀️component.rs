@@ -5,7 +5,7 @@ use crate::artifacts::en1992::mutations::change_bridge_delta_sigma_s_mpa::mutati
 use crate::artifacts::en1992::En1992Snapshot;
 
 //#region 🔖️Diff
-pub fn diff(payload: &ChangeBridgeDeltaSigmaSMpa, base: &En1992Snapshot) -> protocol::MutationOutcome<En1992Diff> {
+pub async fn diff(payload: &ChangeBridgeDeltaSigmaSMpa, base: &En1992Snapshot) -> protocol::MutationOutcome<En1992Diff> {
     if !payload.new_bridge_delta_sigma_s_mpa.is_finite() {
         return protocol::MutationOutcome::fatal("mutation.invariant", "Bridge delta sigma s mpa must be a finite number.", Vec::<String>::new());
     }

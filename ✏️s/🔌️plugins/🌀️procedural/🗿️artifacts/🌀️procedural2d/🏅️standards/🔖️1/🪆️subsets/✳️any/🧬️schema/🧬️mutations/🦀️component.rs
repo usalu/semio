@@ -30,12 +30,12 @@ use store::{ArtifactEnvelope, ArtifactStore};
 
 //#region 🔖️Addressing
 /// 🌡️ Resolves a widget's stable id to its BASE-state index in the fixture's widget list.
-pub fn widget_index(fixture: &FlowFixture, id: &str) -> Option<usize> {
+pub async fn widget_index(fixture: &FlowFixture, id: &str) -> Option<usize> {
     fixture.widgets.iter().position(|widget| widget_id(widget) == id)
 }
 
 /// 🌡️ Resolves a synapse's stable id to its BASE-state index in the fixture's synapse list.
-pub fn synapse_index(fixture: &FlowFixture, id: &str) -> Option<usize> {
+pub async fn synapse_index(fixture: &FlowFixture, id: &str) -> Option<usize> {
     fixture.synapses.iter().position(|synapse| synapse.id == id)
 }
 //#endregion 🔖️Addressing
@@ -69,7 +69,7 @@ pub enum Procedural2dMutation {
 /// site, not learn this facet's internal triad-leaf module paths. Twin of procedural3d's
 /// `generation_mutation_to_procedural3d` — the two facets' generation payloads differ only in field
 /// naming (`name`/`value` here, `new_name`/`new_value` there).
-pub fn generation_mutation_to_procedural2d(operation: GenerationMutation) -> Procedural2dMutation {
+pub async fn generation_mutation_to_procedural2d(operation: GenerationMutation) -> Procedural2dMutation {
     match operation {
         GenerationMutation::Add { generation } => Procedural2dMutation::CreateGeneration(super::create_generation::mutation::CreateGeneration { generation }),
         GenerationMutation::Remove { id } => Procedural2dMutation::DeleteGeneration(super::delete_generation::mutation::DeleteGeneration { id }),
@@ -101,7 +101,7 @@ pub use super::change_schema::mutation::change_schema;
 /// created/replaced/deleted widgets and synapses (keyed by id), moved/cleared layout entries, and
 /// a changed fixture schema. The canvas camera is ephemeral view state (app config), never a
 /// document operation.
-pub fn procedural2d_fixture_operations(before: &FlowFixture, after: &FlowFixture) -> Vec<Procedural2dMutation> {
+pub async fn procedural2d_fixture_operations(before: &FlowFixture, after: &FlowFixture) -> Vec<Procedural2dMutation> {
     let mut operations = Vec::new();
     for widget in &before.widgets {
         if !after.widgets.iter().any(|entry| widget_id(entry) == widget_id(widget)) {
@@ -149,7 +149,7 @@ pub type Procedural2dStore = ArtifactStore<Procedural2dSnapshot, Procedural2dMut
 
 /// 🧬️ Applies a mutation to a projection — generic over every variant, so it never needs edits
 /// when the semantic vocabulary grows.
-pub fn apply_procedural2d_mutation(projection: &mut Procedural2dSnapshot, mutation: &Procedural2dMutation) -> protocol::MutationApplyResult<()> {
+pub async fn apply_procedural2d_mutation(projection: &mut Procedural2dSnapshot, mutation: &Procedural2dMutation) -> protocol::MutationApplyResult<()> {
     let (next, _) = vcs::apply_mutation(projection, mutation)?;
 
     *projection = next;
@@ -157,7 +157,7 @@ pub fn apply_procedural2d_mutation(projection: &mut Procedural2dSnapshot, mutati
 }
 
 /// ↩️ Computes a mutation's inverse against a projection — generic over every variant.
-pub fn inverse_procedural2d_mutation(projection: &Procedural2dSnapshot, mutation: &Procedural2dMutation) -> Vec<Procedural2dMutation> {
+pub async fn inverse_procedural2d_mutation(projection: &Procedural2dSnapshot, mutation: &Procedural2dMutation) -> Vec<Procedural2dMutation> {
     mutation.inverse(projection)
 }
 
@@ -171,7 +171,7 @@ mod tests {
     use protocol::{Mutation, MutationDiff, SemanticMutation};
     use vcs::apply_mutation;
 
-    fn round_trip(projection: &Procedural2dSnapshot, mutation: &Procedural2dMutation) -> Procedural2dSnapshot {
+    async fn round_trip(projection: &Procedural2dSnapshot, mutation: &Procedural2dMutation) -> Procedural2dSnapshot {
         let (forward, _) = apply_mutation(projection, mutation).expect("valid mutation");
         let mut restored = forward.clone();
         for back in mutation.inverse(projection) {
@@ -184,7 +184,7 @@ mod tests {
     }
 
     #[test]
-    fn fixture_ops_ignore_camera() {
+    async fn fixture_ops_ignore_camera() {
         let before = FlowFixture::default();
         let mut after = before.clone();
         after.camera = CameraJson { x: 7.0, y: 8.0, zoom: 2.0 };
@@ -193,7 +193,7 @@ mod tests {
     }
 
     #[test]
-    fn delete_and_recreate_widget_round_trips() {
+    async fn delete_and_recreate_widget_round_trips() {
         let base = empty_procedural2d_snapshot();
         let removed_id = widget_id(&base.fixture.widgets[0]).to_string();
         let after = round_trip(&base, &delete_widget(removed_id.clone()));
@@ -201,7 +201,7 @@ mod tests {
     }
 
     #[test]
-    fn fixture_ops_capture_widget_creation() {
+    async fn fixture_ops_capture_widget_creation() {
         let before = FlowFixture::default();
         let mut after = before.clone();
         after.widgets.push(Widget::InputNote { id: "note-1".into(), text: String::new() });
@@ -210,7 +210,7 @@ mod tests {
     }
 
     #[test]
-    fn fixture_ops_capture_widget_replacement() {
+    async fn fixture_ops_capture_widget_replacement() {
         let mut before = FlowFixture::default();
         before.widgets.clear();
         before.widgets.push(Widget::InputNote { id: "note-1".into(), text: "old".into() });
@@ -221,7 +221,7 @@ mod tests {
     }
 
     #[test]
-    fn generation_lifecycle_round_trips() {
+    async fn generation_lifecycle_round_trips() {
         let before = empty_procedural2d_snapshot();
         let generation = FormGeneration { id: "generation-1".into(), name: "Generation 1".into(), values: serde_json::Map::new() };
         let after = round_trip(&before, &create_generation(generation));
@@ -230,14 +230,14 @@ mod tests {
 
     //#region 🔖️MutationInverseLawTests
     #[test]
-    fn create_widget_inverse_law() {
+    async fn create_widget_inverse_law() {
         let base = empty_procedural2d_snapshot();
         let mutation = create_widget(0, Widget::InputNote { id: "brand-new".into(), text: String::new() });
         assert_mutation_inverse_law(&base, &mutation);
     }
 
     #[test]
-    fn replace_widget_inverse_law() {
+    async fn replace_widget_inverse_law() {
         let base = empty_procedural2d_snapshot();
         let id = widget_id(&base.fixture.widgets[1]).to_string();
         let mutation = replace_widget(Widget::InputNote { id, text: "replaced".into() });
@@ -245,14 +245,14 @@ mod tests {
     }
 
     #[test]
-    fn replace_widget_on_unknown_id_is_a_noop_with_no_inverse() {
+    async fn replace_widget_on_unknown_id_is_a_noop_with_no_inverse() {
         let base = empty_procedural2d_snapshot();
         let mutation = replace_widget(Widget::InputNote { id: "does-not-exist".into(), text: String::new() });
         assert!(mutation.inverse(&base).is_empty());
     }
 
     #[test]
-    fn delete_widget_inverse_law() {
+    async fn delete_widget_inverse_law() {
         let base = empty_procedural2d_snapshot();
         let id = widget_id(&base.fixture.widgets[1]).to_string();
         let mutation = delete_widget(id);
@@ -260,7 +260,7 @@ mod tests {
     }
 
     #[test]
-    fn delete_widget_on_unknown_id_is_a_noop_with_no_inverse() {
+    async fn delete_widget_on_unknown_id_is_a_noop_with_no_inverse() {
         let base = empty_procedural2d_snapshot();
         let mutation = delete_widget("does-not-exist".into());
         assert!(mutation.inverse(&base).is_empty());
@@ -269,7 +269,7 @@ mod tests {
     }
 
     #[test]
-    fn connect_synapse_inverse_law() {
+    async fn connect_synapse_inverse_law() {
         let base = empty_procedural2d_snapshot();
         let synapse = SynapseSpec { id: "brand-new-synapse".into(), from: "slider".into(), to: "add".into(), from_port: "number".into(), to_port: "b".into() };
         let mutation = connect_synapse(0, synapse);
@@ -277,7 +277,7 @@ mod tests {
     }
 
     #[test]
-    fn replace_synapse_inverse_law() {
+    async fn replace_synapse_inverse_law() {
         let base = empty_procedural2d_snapshot();
         let id = base.fixture.synapses[0].id.clone();
         let mutation = replace_synapse(SynapseSpec { id, from: "add".into(), to: "preview".into(), from_port: "sum".into(), to_port: "changed".into() });
@@ -285,7 +285,7 @@ mod tests {
     }
 
     #[test]
-    fn disconnect_synapse_inverse_law() {
+    async fn disconnect_synapse_inverse_law() {
         let base = empty_procedural2d_snapshot();
         let id = base.fixture.synapses[0].id.clone();
         let mutation = disconnect_synapse(id);
@@ -293,14 +293,14 @@ mod tests {
     }
 
     #[test]
-    fn disconnect_synapse_on_unknown_id_is_a_noop_with_no_inverse() {
+    async fn disconnect_synapse_on_unknown_id_is_a_noop_with_no_inverse() {
         let base = empty_procedural2d_snapshot();
         let mutation = disconnect_synapse("missing".into());
         assert!(mutation.inverse(&base).is_empty());
     }
 
     #[test]
-    fn move_widget_inverse_law_over_prior_layout() {
+    async fn move_widget_inverse_law_over_prior_layout() {
         let mut base = empty_procedural2d_snapshot();
         let id = widget_id(&base.fixture.widgets[0]).to_string();
         base.fixture.layout.insert(id.clone(), WidgetLayout { x: 1.0, y: 1.0 });
@@ -309,7 +309,7 @@ mod tests {
     }
 
     #[test]
-    fn move_widget_creating_a_layout_entry_clears_on_undo() {
+    async fn move_widget_creating_a_layout_entry_clears_on_undo() {
         let base = empty_procedural2d_snapshot();
         assert!(base.fixture.layout.is_empty());
         let mutation = move_widget("slider".into(), WidgetLayout { x: 2.0, y: 2.0 });
@@ -318,7 +318,7 @@ mod tests {
     }
 
     #[test]
-    fn clear_widget_layout_inverse_law() {
+    async fn clear_widget_layout_inverse_law() {
         let mut base = empty_procedural2d_snapshot();
         base.fixture.layout.insert("slider".into(), WidgetLayout { x: 4.0, y: 5.0 });
         let mutation = clear_widget_layout("slider".into());
@@ -326,42 +326,42 @@ mod tests {
     }
 
     #[test]
-    fn clear_widget_layout_on_unknown_id_is_a_noop_with_no_inverse() {
+    async fn clear_widget_layout_on_unknown_id_is_a_noop_with_no_inverse() {
         let base = empty_procedural2d_snapshot();
         let mutation = clear_widget_layout("missing".into());
         assert!(mutation.inverse(&base).is_empty());
     }
 
     #[test]
-    fn update_camera_inverse_law() {
+    async fn update_camera_inverse_law() {
         let base = empty_procedural2d_snapshot();
         let mutation = update_camera(CameraJson { x: 42.0, y: -3.0, zoom: 5.0 });
         assert_mutation_inverse_law(&base, &mutation);
     }
 
     #[test]
-    fn change_schema_inverse_law() {
+    async fn change_schema_inverse_law() {
         let base = empty_procedural2d_snapshot();
         let mutation = change_schema("changed.schema".into());
         assert_mutation_inverse_law(&base, &mutation);
     }
 
     #[test]
-    fn create_generation_inverse_law() {
+    async fn create_generation_inverse_law() {
         let base = empty_procedural2d_snapshot();
         let generation = FormGeneration { id: "generation-1".into(), name: "Generation 1".into(), values: serde_json::Map::new() };
         assert_mutation_inverse_law(&base, &create_generation(generation));
     }
 
     #[test]
-    fn rename_generation_inverse_law() {
+    async fn rename_generation_inverse_law() {
         let mut base = empty_procedural2d_snapshot();
         base.generation.generations.push(FormGeneration { id: "generation-1".into(), name: "Generation 1".into(), values: serde_json::Map::new() });
         assert_mutation_inverse_law(&base, &rename_generation("generation-1".into(), "Renamed".into()));
     }
 
     #[test]
-    fn change_generation_value_diff_absorb_law() {
+    async fn change_generation_value_diff_absorb_law() {
         let mut base = empty_procedural2d_snapshot();
         base.generation.generations.push(FormGeneration { id: "generation-1".into(), name: "Generation 1".into(), values: serde_json::Map::new() });
         let d1 = change_generation_value("generation-1".into(), "q1".into(), serde_json::json!(1)).diff(&base);
@@ -372,7 +372,7 @@ mod tests {
     //#endregion 🔖️MutationInverseLawTests
 
     #[test]
-    fn dispatch_registers_semantic_descriptors() {
+    async fn dispatch_registers_semantic_descriptors() {
         register_procedural2d_mutation_descriptors();
         for kind in Procedural2dMutation::kinds() {
             assert!(protocol::is_approved_verb(kind.verb), "verb '{}' must be in APPROVED_VERBS", kind.verb);
@@ -382,7 +382,7 @@ mod tests {
 
     //#region 🔖️FixtureOpsTests
     #[test]
-    fn fixture_ops_widget_id_matches_every_widget_kind() {
+    async fn fixture_ops_widget_id_matches_every_widget_kind() {
         let widgets = vec![
             Widget::Neuron { id: "w-neuron".into(), neuron_kind: "math.add".into(), params: Default::default(), input_ports: vec![], output_ports: vec![], preview: true },
             Widget::InputSlider { id: "w-slider".into(), value: 1.0, min: 0.0, max: 2.0, step: 0.5 },
@@ -406,7 +406,7 @@ mod tests {
     }
 
     #[test]
-    fn widgets_diff_apply_replaces_by_id_and_removes_by_id() {
+    async fn widgets_diff_apply_replaces_by_id_and_removes_by_id() {
         let mut widgets = vec![Widget::InputNote { id: "a".into(), text: "1".into() }, Widget::InputNote { id: "b".into(), text: "2".into() }];
         let diff = crate::artifacts::procedural2d::diff::WidgetsDiff { removed: vec!["b".into()], set: vec![(0, Widget::InputNote { id: "a".into(), text: "replaced".into() })] };
         crate::artifacts::procedural2d::diff::apply_widgets_diff(&mut widgets, &diff);
@@ -414,7 +414,7 @@ mod tests {
     }
 
     #[test]
-    fn synapses_diff_apply_replaces_by_id_and_removes_by_id() {
+    async fn synapses_diff_apply_replaces_by_id_and_removes_by_id() {
         let mut synapses = vec![SynapseSpec { id: "s1".into(), from: "a".into(), to: "b".into(), from_port: "out".into(), to_port: "in".into() }];
         let diff = crate::artifacts::procedural2d::diff::SynapsesDiff { removed: vec![], set: vec![(0, SynapseSpec { id: "s1".into(), from: "a".into(), to: "c".into(), from_port: "out".into(), to_port: "in".into() })] };
         crate::artifacts::procedural2d::diff::apply_synapses_diff(&mut synapses, &diff);

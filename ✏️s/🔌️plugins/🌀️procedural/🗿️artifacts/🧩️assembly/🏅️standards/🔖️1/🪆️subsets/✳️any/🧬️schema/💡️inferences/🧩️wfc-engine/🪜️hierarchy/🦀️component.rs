@@ -48,7 +48,7 @@ pub(crate) enum HierarchyOutcome {
 /// a single splitmix64-style mixing step (matching `crate::wfc_engine::chunk::chunk_seed`'s approach), so the
 /// same macro seed always regenerates identical children.
 #[allow(dead_code)] // exercised today only by this module's own tests; see HierarchyOutcome's note
-fn child_seed(macro_seed: u64, node: NodeId) -> u64 {
+async fn child_seed(macro_seed: u64, node: NodeId) -> u64 {
     let mut z = macro_seed ^ (node.get() as u64).wrapping_add(0x9E37_79B9_7F4A_7C15);
     z = (z ^ (z >> 30)).wrapping_mul(0xBF58_476D_1CE4_E5B9);
     z = (z ^ (z >> 27)).wrapping_mul(0x94D0_49BB_1331_11EB);
@@ -62,7 +62,7 @@ fn child_seed(macro_seed: u64, node: NodeId) -> u64 {
 /// generated hierarchy usually isn't useful to a caller that hasn't decided its own fallback
 /// policy yet.
 #[allow(dead_code)] // exercised today only by this module's own tests; see HierarchyOutcome's note
-pub(crate) fn solve_hierarchy<MT, CT>(macro_model: &CompiledModel, macro_topo: &MT, macro_config: &SearchConfig, macro_seed: u64, child_model_for: impl Fn(NodeId, PatternId) -> (CompiledModel, CT, SearchConfig)) -> HierarchyOutcome
+pub(crate) async fn solve_hierarchy<MT, CT>(macro_model: &CompiledModel, macro_topo: &MT, macro_config: &SearchConfig, macro_seed: u64, child_model_for: impl Fn(NodeId, PatternId) -> (CompiledModel, CT, SearchConfig)) -> HierarchyOutcome
 where
     MT: Topology,
     CT: Topology,
@@ -93,7 +93,7 @@ mod tests {
     use crate::wfc_engine::model::ModelBuilder;
     use crate::wfc_engine::topology::{GraphTopology, GraphTopologyBuilder};
 
-    fn checkerboard(n: usize) -> (CompiledModel, GraphTopology) {
+    async fn checkerboard(n: usize) -> (CompiledModel, GraphTopology) {
         let mut b = ModelBuilder::new();
         let black = b.add_pattern(1.0);
         let white = b.add_pattern(1.0);
@@ -108,7 +108,7 @@ mod tests {
         (model, tb.build().unwrap())
     }
 
-    fn single_node_model(pattern_count: usize) -> (CompiledModel, GraphTopology) {
+    async fn single_node_model(pattern_count: usize) -> (CompiledModel, GraphTopology) {
         let mut b = ModelBuilder::new();
         for _ in 0..pattern_count {
             b.add_pattern(1.0);
@@ -117,13 +117,13 @@ mod tests {
         (b.compile().unwrap(), GraphTopologyBuilder::new(1).build().unwrap())
     }
 
-    fn always_satisfiable_child(_node: NodeId, _pattern: PatternId) -> (CompiledModel, GraphTopology, SearchConfig) {
+    async fn always_satisfiable_child(_node: NodeId, _pattern: PatternId) -> (CompiledModel, GraphTopology, SearchConfig) {
         let (model, topo) = single_node_model(2);
         (model, topo, SearchConfig::default())
     }
 
     #[test]
-    fn solves_macro_then_every_child() {
+    async fn solves_macro_then_every_child() {
         let (model, topo) = checkerboard(4);
         let config = SearchConfig::default();
         match solve_hierarchy(&model, &topo, &config, 1, always_satisfiable_child) {
@@ -140,7 +140,7 @@ mod tests {
     }
 
     #[test]
-    fn reports_macro_unsatisfiable_without_attempting_children() {
+    async fn reports_macro_unsatisfiable_without_attempting_children() {
         // K5 with only 4 colors: unsatisfiable regardless of any child model.
         let mut b = ModelBuilder::new();
         let patterns: Vec<_> = (0..4).map(|_| b.add_pattern(1.0)).collect();
@@ -170,7 +170,7 @@ mod tests {
 
     /// 🧪️ A two-node model whose single relation allows nothing at all — any arc using it is
     /// unsatisfiable, regardless of pattern count.
-    fn unsatisfiable_child(_node: NodeId, _pattern: PatternId) -> (CompiledModel, GraphTopology, SearchConfig) {
+    async fn unsatisfiable_child(_node: NodeId, _pattern: PatternId) -> (CompiledModel, GraphTopology, SearchConfig) {
         let mut b = ModelBuilder::new();
         b.add_pattern(1.0);
         let never = b.add_relation("never");
@@ -182,7 +182,7 @@ mod tests {
     }
 
     #[test]
-    fn reports_which_node_child_failed_at() {
+    async fn reports_which_node_child_failed_at() {
         let (model, topo) = checkerboard(3);
         let config = SearchConfig::default();
         let child_model_for = |node: NodeId, pattern: PatternId| -> (CompiledModel, GraphTopology, SearchConfig) {
@@ -198,7 +198,7 @@ mod tests {
     }
 
     #[test]
-    fn child_seeds_differ_by_node_and_reproduce_deterministically() {
+    async fn child_seeds_differ_by_node_and_reproduce_deterministically() {
         assert_eq!(child_seed(1, NodeId(0)), child_seed(1, NodeId(0)));
         assert_ne!(child_seed(1, NodeId(0)), child_seed(1, NodeId(1)));
         assert_ne!(child_seed(1, NodeId(0)), child_seed(2, NodeId(0)));

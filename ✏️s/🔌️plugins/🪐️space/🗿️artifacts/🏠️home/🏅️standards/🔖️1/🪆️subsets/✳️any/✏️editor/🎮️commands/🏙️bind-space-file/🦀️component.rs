@@ -20,7 +20,7 @@ pub struct BindSpaceFile {
 /// @emoji 🎯️ This IS "save this draft as a real asset" for a whole space manifest — binding a studio
 /// to a real file/catalog location is the natural persist moment.
 #[cfg(not(target_arch = "wasm32"))]
-fn bind_studio_file(space_id: &str, file_path: &str) -> Result<(), VcsError> {
+async fn bind_studio_file(space_id: &str, file_path: &str) -> Result<(), VcsError> {
     use semio_framework_os::{document_backbone_ref, encode_backbone_payload, OS_SPACE_BACKBONE_URI_PREFIX};
     let uri = format!("file://{file_path}");
     let port = semio_framework_os::open_file_space_backbone(file_path)?;
@@ -35,7 +35,7 @@ fn bind_studio_file(space_id: &str, file_path: &str) -> Result<(), VcsError> {
     Ok(())
 }
 
-pub fn handle(payload: &BindSpaceFile, _doc: &ArtifactView<'_, SHomeSnapshot>, _cfg: &ConfigView<'_, HomeConfig>) -> Result<Emit<SHomeMutation, HomeConfigMutation>, Fault> {
+pub async fn handle(payload: &BindSpaceFile, _doc: &ArtifactView<'_, SHomeSnapshot>, _cfg: &ConfigView<'_, HomeConfig>) -> Result<Emit<SHomeMutation, HomeConfigMutation>, Fault> {
     #[cfg(not(target_arch = "wasm32"))]
     {
         let _ = bind_studio_file(&payload.space_id, &payload.file_path);

@@ -16,7 +16,7 @@ use crate::artifacts::playground::standards::v1::subsets::any::schema::diff::*;
 //#region 🔖️Apply
 impl PlaygroundDiff {
     /// 🧬️ Applies every sparse entry onto a full artifact.
-    pub fn apply_to_artifact(&self, artifact: &PlaygroundArtifact) -> protocol::MutationApplyResult<PlaygroundArtifact> {
+    pub async fn apply_to_artifact(&self, artifact: &PlaygroundArtifact) -> protocol::MutationApplyResult<PlaygroundArtifact> {
         Ok({
             if let Some(replacement) = &self.artifact {
                 return Ok((**replacement).clone());
@@ -31,7 +31,7 @@ impl PlaygroundDiff {
 }
 
 impl MutationDiff<PlaygroundSnapshot> for PlaygroundDiff {
-    fn apply(&self, snapshot: &PlaygroundSnapshot) -> protocol::MutationApplyResult<PlaygroundSnapshot> {
+    async fn apply(&self, snapshot: &PlaygroundSnapshot) -> protocol::MutationApplyResult<PlaygroundSnapshot> {
         Ok({
             if let Some(replacement) = &self.artifact {
                 return Ok(replacement.to_snapshot());
@@ -43,7 +43,7 @@ impl MutationDiff<PlaygroundSnapshot> for PlaygroundDiff {
             next
         })
     }
-    fn absorb(&mut self, other: Self) {
+    async fn absorb(&mut self, other: Self) {
         if other.artifact.is_some() {
             *self = other;
             return;
@@ -57,7 +57,7 @@ impl MutationDiff<PlaygroundSnapshot> for PlaygroundDiff {
 
 //#region 🔖️Helpers
 /// 🖼️ Whole-snapshot replacement diff.
-pub fn diff_set_snapshot(snapshot: &PlaygroundSnapshot) -> PlaygroundDiff {
+pub async fn diff_set_snapshot(snapshot: &PlaygroundSnapshot) -> PlaygroundDiff {
     PlaygroundDiff {
         artifact: Some(Box::new(PlaygroundArtifact::from_snapshot(snapshot.clone()))),
         ..Default::default()
@@ -71,7 +71,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn empty_diff_is_a_no_operation() {
+    async fn empty_diff_is_a_no_operation() {
         let base = crate::artifacts::playground::standards::v1::subsets::any::schema::empty_playground_snapshot();
         let diff = PlaygroundDiff::default();
         assert_eq!(diff.apply(&base).expect("valid mutation diff"), base);

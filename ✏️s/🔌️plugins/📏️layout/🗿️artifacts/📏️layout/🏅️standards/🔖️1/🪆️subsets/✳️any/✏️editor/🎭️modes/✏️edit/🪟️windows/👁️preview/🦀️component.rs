@@ -16,7 +16,7 @@ pub const LAYOUT_PLAY_SURFACE_PREVIEW: &str = "layout.play.preview";
 //#region 🔖️Definition
 /// 🧱️ Stitched into the app manifest by `crate::editor::layout::create_layout_app`. `options.measures`
 /// stays empty: layout declares no config-derived chrome measures for this window.
-pub fn definition() -> WindowKindDefinition {
+pub async fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
         id: LAYOUT_PLAY_WINDOW_PREVIEW.into(),
         label: LocalizedLabel::native("Preview", "Vorschau"),
@@ -37,7 +37,7 @@ pub fn definition() -> WindowKindDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(engine: &mut crate::editor::layout::engine::scene::LayoutEngine, doc: &LayoutSnapshot, config: &LayoutConfig) -> UiNode {
+pub async fn render(engine: &mut crate::editor::layout::engine::scene::LayoutEngine, doc: &LayoutSnapshot, config: &LayoutConfig) -> UiNode {
     let camera = &config.preview_camera;
     build_canvas_2d_scene(LAYOUT_PLAY_SURFACE_PREVIEW, LAYOUT_PLAY_APP_ID, Canvas2dScene { camera_x: camera.x, camera_y: camera.y, zoom: camera.zoom, layers_json: canvas_layers(engine, doc, config, false) })
 }
@@ -50,13 +50,13 @@ mod tests {
     use crate::editor::layout::testkit::{layout_app, render as render_body};
 
     #[test]
-    fn renders_preview_canvas_scene() {
+    async fn renders_preview_canvas_scene() {
         let mut app = layout_app();
         assert!(render_body(&mut app, LAYOUT_PLAY_BODY_PREVIEW).contains("canvas-2d"));
     }
 
     #[test]
-    fn preview_scene_has_white_background_and_no_guides() {
+    async fn preview_scene_has_white_background_and_no_guides() {
         let mut app = layout_app();
         let json = render_body(&mut app, LAYOUT_PLAY_BODY_PREVIEW);
         assert!(json.contains("layout.page-bg"));
@@ -64,7 +64,7 @@ mod tests {
     }
 
     #[test]
-    fn definition_declares_the_canvas_2d_surface_and_body_key() {
+    async fn definition_declares_the_canvas_2d_surface_and_body_key() {
         let definition = definition();
         assert_eq!(definition.body_key, LAYOUT_PLAY_BODY_PREVIEW);
         assert!(matches!(definition.surface_kind, SurfaceKind::Canvas2d));

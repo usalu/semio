@@ -11,7 +11,7 @@ pub const BLOCK2D_BODY_DOCUMENT: &str = "block2d.play.document";
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
-pub fn definition() -> PanelTabDefinition {
+pub async fn definition() -> PanelTabDefinition {
     PanelTabDefinition {
         kind: PanelTabKind::App(FRAMEWORK_PANEL_TAB_ARTIFACT_ID.into()),
         label: LocalizedLabel::native(FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL, "Dokument"),
@@ -27,7 +27,7 @@ pub fn definition() -> PanelTabDefinition {
 /// `handleKind:{id}`/`handle:{id}` targets `Block2dPlayApp::interaction_topology` declares for the
 /// `handle` domain — the framework stamps this tree's selection/hover presence from that domain
 /// (`.interaction_domain`) and prunes stale ids through that same topology.
-pub fn render(definition: &Block2dSnapshot, labels: &Block2dLabels) -> UiNode {
+pub async fn render(definition: &Block2dSnapshot, labels: &Block2dLabels) -> UiNode {
     let builder = PanelTreeBuilder::new("block2d-play-document");
     let handle_kind_items: Vec<UiTreeItemNode> = definition
         .handle_kinds
@@ -54,7 +54,7 @@ mod tests {
     use crate::editor::block2d::testkit::{new_app, render as render_body};
 
     #[test]
-    fn renders_document_tree() {
+    async fn renders_document_tree() {
         let mut app = new_app();
         assert!(render_body(&mut app, BLOCK2D_BODY_DOCUMENT).contains("Handle Kinds"));
     }

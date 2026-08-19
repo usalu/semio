@@ -50,7 +50,7 @@ pub struct FormsArtifact {
 
 //#region 🔖️Conversions
 impl Default for FormsArtifact {
-    fn default() -> Self {
+    async fn default() -> Self {
         let empty = forms_snapshot_with_state(FORMS_DOCUMENT_SCHEMA.into(), "forms".into(), "1".into(), None, Vec::new());
         Self {
             schema: empty.schema,
@@ -70,7 +70,7 @@ impl Default for FormsArtifact {
 
 impl FormsArtifact {
     /// 📸️ Persisted subset.
-    pub fn to_snapshot(&self) -> FormsSnapshot {
+    pub async fn to_snapshot(&self) -> FormsSnapshot {
         FormsSnapshot {
             schema: self.schema.clone(),
             id: self.id.clone(),
@@ -82,7 +82,7 @@ impl FormsArtifact {
     }
 
     /// 🧬️ Builds a full artifact from a snapshot, leaving UI fields at defaults.
-    pub fn from_snapshot(snapshot: FormsSnapshot) -> Self {
+    pub async fn from_snapshot(snapshot: FormsSnapshot) -> Self {
         Self {
             schema: snapshot.schema,
             id: snapshot.id,
@@ -95,7 +95,7 @@ impl FormsArtifact {
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
-    pub fn set_snapshot(&mut self, snapshot: FormsSnapshot) {
+    pub async fn set_snapshot(&mut self, snapshot: FormsSnapshot) {
         self.schema = snapshot.schema;
         self.id = snapshot.id;
         self.version = snapshot.version;
@@ -116,20 +116,20 @@ pub use crate::playbook::{
     is_block_visible as is_question_visible, is_extension_block_kind as is_extension_question_kind, step_errors, visible_blocks as visible_questions,
 };
 
-pub fn initial_try_values(spec: &FormsSnapshot, overrides: &serde_json::Map<String, Value>) -> serde_json::Map<String, Value> {
+pub async fn initial_try_values(spec: &FormsSnapshot, overrides: &serde_json::Map<String, Value>) -> serde_json::Map<String, Value> {
     crate::playbook::initial_values(&crate::artifacts::forms::mutations::as_playbook_spec(spec), overrides)
 }
 //#endregion 🔖️PlaybookVocabulary
 
 //#region 🔖️DocumentHelpers
 /// 🌱️ The forms app's empty document — a single "Inputs" step with no blocks yet.
-pub fn empty_forms_snapshot() -> FormsSnapshot {
+pub async fn empty_forms_snapshot() -> FormsSnapshot {
     forms_snapshot_with_state(FORMS_DOCUMENT_SCHEMA.into(), "forms".into(), "1".into(), None, vec![FormStep { id: "s".into(), title: "Inputs".into(), description: None, blocks: Vec::new() }])
 }
 
 /// 🌱️ The forms app's default document — the building-component fixture, seeded from its derive-
 /// generated `.forms` DSL text.
-pub fn building_component_spec() -> FormsSnapshot {
+pub async fn building_component_spec() -> FormsSnapshot {
     forms_dsl::parse_playbook_example_dsl(forms_dsl::BUILDING_COMPONENT_EXAMPLE_TEXT).unwrap_or_else(|_| empty_forms_snapshot())
 }
 
@@ -137,30 +137,30 @@ pub fn building_component_spec() -> FormsSnapshot {
 /// for every "default" example call site (`setActiveExample`, `App::example`). Loaded through
 /// `parse_playbook_example_dsl` (ticket 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM), not `parse_dsl`
 /// — see that function's own doc comment for why.
-pub fn default_example_spec() -> FormsSnapshot {
+pub async fn default_example_spec() -> FormsSnapshot {
     forms_dsl::parse_playbook_example_dsl(forms_dsl::DEFAULT_EXAMPLE_TEXT).unwrap_or_else(|_| empty_forms_snapshot())
 }
 
 /// 📄️ JSON re-serialization of [`default_example_spec`], for the framework-generic call sites that
 /// contractually require JSON text (`App::example`'s manifest `document_json`).
-pub fn default_example_json() -> String {
+pub async fn default_example_json() -> String {
     serde_json::to_string(&default_example_spec()).expect("serialize default example document")
 }
 
 /// 📄️ The `onboarding` example, parsed once from `forms_dsl::ONBOARDING_EXAMPLE_TEXT`.
-pub fn onboarding_example_spec() -> FormsSnapshot {
+pub async fn onboarding_example_spec() -> FormsSnapshot {
     forms_dsl::parse_playbook_example_dsl(forms_dsl::ONBOARDING_EXAMPLE_TEXT).unwrap_or_else(|_| empty_forms_snapshot())
 }
 
 /// 📄️ JSON re-serialization of [`onboarding_example_spec`], for the framework-generic call sites that
 /// contractually require JSON text (`App::example`'s manifest `document_json`).
-pub fn onboarding_example_json() -> String {
+pub async fn onboarding_example_json() -> String {
     serde_json::to_string(&onboarding_example_spec()).expect("serialize onboarding example document")
 }
 
 /// 🔠️ Every `(step title, question)` pair in document order — the empty-inspector diagnostic and every
 /// command test's "did the edit land" assertion share this flattening.
-pub fn flatten_questions(spec: &FormsSnapshot) -> Vec<(String, FormQuestion)> {
+pub async fn flatten_questions(spec: &FormsSnapshot) -> Vec<(String, FormQuestion)> {
     let mut pairs = Vec::new();
     for step in forms_steps(spec) {
         for question in step.blocks {
@@ -179,7 +179,7 @@ pub struct QuestionLocation {
 
 /// 🔎️ Locates a question by id anywhere in the document — the single lookup every question-editing
 /// command (`❓️question`, `🔘️option`, `📐️vector`) and the inspection panel share.
-pub fn locate_question(spec: &FormsSnapshot, question_id: &str) -> Option<QuestionLocation> {
+pub async fn locate_question(spec: &FormsSnapshot, question_id: &str) -> Option<QuestionLocation> {
     for step in forms_steps(spec) {
         if let Some(question) = step.blocks.into_iter().find(|question| question.id == question_id) {
             return Some(QuestionLocation { step_id: step.id, question });
@@ -191,7 +191,7 @@ pub fn locate_question(spec: &FormsSnapshot, question_id: &str) -> Option<Questi
 /// ✏️ Locates `question_id` in `spec`, applies `mutate` to a clone, and returns the `replace-block`
 /// operation that records the edit — the single seam every inspector/command patch flows through.
 /// Returns `None` if the question no longer exists.
-pub fn update_block_operation(spec: &FormsSnapshot, question_id: &str, mutate: impl FnOnce(&mut FormQuestion)) -> Option<FormMutation> {
+pub async fn update_block_operation(spec: &FormsSnapshot, question_id: &str, mutate: impl FnOnce(&mut FormQuestion)) -> Option<FormMutation> {
     let location = locate_question(spec, question_id)?;
     let mut question = location.question;
     mutate(&mut question);
@@ -202,7 +202,7 @@ pub fn update_block_operation(spec: &FormsSnapshot, question_id: &str, mutate: i
 //#region 🔖️Ids
 /// 🆔️ A process-unique id for a newly created step/question/option — shared by every command that
 /// creates one (`addStep`, `addQuestion`, `dropQuestionKind`, `addQuestionOption`).
-pub fn create_form_id(prefix: &str) -> String {
+pub async fn create_form_id(prefix: &str) -> String {
     static COUNTER: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(1);
     let next = COUNTER.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
     format!("{prefix}-{next}")
@@ -210,7 +210,7 @@ pub fn create_form_id(prefix: &str) -> String {
 
 /// 🌳️ The document-tree node id for a step — shared by the document panel (tree item ids) and the
 /// question drag/drop commands (resolving a drop target back to its owning step).
-pub fn forms_play_step_tree_id(step_id: &str) -> String {
+pub async fn forms_play_step_tree_id(step_id: &str) -> String {
     format!("step:{step_id}")
 }
 //#endregion 🔖️Ids
@@ -218,30 +218,30 @@ pub fn forms_play_step_tree_id(step_id: &str) -> String {
 //#region 🔖️Values
 /// 🔄️ Converts a `serde_json::Value` to a `dsl::DslValue` — falls back to `Null` on an unsupported shape
 /// (never occurs for the plain JSON literals every question default carries).
-pub fn value_to_dsl(value: &Value) -> dsl::DslValue {
+pub async fn value_to_dsl(value: &Value) -> dsl::DslValue {
     dsl::to_dsl_value(value).unwrap_or(dsl::DslValue::Null)
 }
 
 /// 🔄️ Converts a `dsl::DslValue` back to a `serde_json::Value`.
-pub fn dsl_to_value(value: &dsl::DslValue) -> Value {
+pub async fn dsl_to_value(value: &dsl::DslValue) -> Value {
     dsl::from_dsl_value(value.clone()).unwrap_or(Value::Null)
 }
 
 /// 🔤️ A `dsl::DslValue` rendered as a display string — the inspector's text-field representation of a
 /// question's typed default.
-pub fn dsl_string_value(value: &dsl::DslValue) -> String {
+pub async fn dsl_string_value(value: &dsl::DslValue) -> String {
     json_string_value(&dsl_to_value(value))
 }
 
 /// 🔢️ A `dsl::DslValue` rendered as `f64` — the inspector's numeric-field representation of a question's
 /// typed default.
-pub fn dsl_f64_value(value: &dsl::DslValue) -> f64 {
+pub async fn dsl_f64_value(value: &dsl::DslValue) -> f64 {
     json_f64_value(&dsl_to_value(value))
 }
 
 /// 🔤️ A `serde_json::Value` rendered as a display string — shared by the inspector's editable fields and
 /// the try wizard's current-answer rendering.
-pub fn json_string_value(value: &Value) -> String {
+pub async fn json_string_value(value: &Value) -> String {
     match value {
         Value::String(text) => text.clone(),
         Value::Bool(flag) => flag.to_string(),
@@ -252,14 +252,14 @@ pub fn json_string_value(value: &Value) -> String {
 }
 
 /// 🔢️ A `serde_json::Value` rendered as `f64` (0.0 on a non-numeric shape).
-pub fn json_f64_value(value: &Value) -> f64 {
+pub async fn json_f64_value(value: &Value) -> f64 {
     value.as_f64().unwrap_or(0.0)
 }
 //#endregion 🔖️Values
 
 //#region 🔖️Descriptor
 /// 🧬️ Descriptor for `s.forms.forms` — twenty handcrafted schema leaves.
-pub fn forms_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
+pub async fn forms_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
     schema::ArtifactSchemaDescriptor {
         id: "s.forms.forms",
         artifact: schema::FacetLeaves {
@@ -308,7 +308,7 @@ mod tests {
     use serde_json::json;
 
     #[test]
-    fn locate_question_finds_a_question_anywhere_in_the_document() {
+    async fn locate_question_finds_a_question_anywhere_in_the_document() {
         let spec = building_component_spec();
         let steps = forms_steps(&spec);
         let first_id = steps[0].blocks[0].id.clone();
@@ -317,13 +317,13 @@ mod tests {
     }
 
     #[test]
-    fn update_block_operation_returns_none_for_a_missing_question() {
+    async fn update_block_operation_returns_none_for_a_missing_question() {
         let spec = empty_forms_snapshot();
         assert!(update_block_operation(&spec, "missing", |question| question.label = "x".into()).is_none());
     }
 
     #[test]
-    fn update_block_operation_patches_the_located_question() {
+    async fn update_block_operation_patches_the_located_question() {
         let mut spec = building_component_spec();
         let question_id = forms_steps(&spec)[0].blocks[0].id.clone();
         let operation = update_block_operation(&spec, &question_id, |question| question.label = "Renamed".into()).expect("operation");
@@ -331,23 +331,23 @@ mod tests {
         assert_eq!(forms_steps(&spec)[0].blocks[0].label, "Renamed");
     }
 
-    fn apply_form_edit_mutation(spec: &FormsSnapshot, operation: &FormMutation) -> FormsSnapshot {
+    async fn apply_form_edit_mutation(spec: &FormsSnapshot, operation: &FormMutation) -> FormsSnapshot {
         crate::artifacts::forms::op::apply_form_edit_mutation(spec, operation)
             .expect("valid mutation diff")
     }
 
     #[test]
-    fn create_form_id_is_unique_per_call() {
+    async fn create_form_id_is_unique_per_call() {
         assert_ne!(create_form_id("q"), create_form_id("q"));
     }
 
     #[test]
-    fn forms_play_step_tree_id_prefixes_with_step() {
+    async fn forms_play_step_tree_id_prefixes_with_step() {
         assert_eq!(forms_play_step_tree_id("s1"), "step:s1");
     }
 
     #[test]
-    fn dsl_value_conversions_round_trip_through_json() {
+    async fn dsl_value_conversions_round_trip_through_json() {
         // 🩹️ A whole-number float (e.g. `6.0`) round-trips through `dsl::DslValue` as the integer-typed
         // `serde_json::Number` (`6`), which does not `==` the float-typed literal despite being numerically
         // equal — a `dsl` value-system characteristic, not something this conversion controls. Use a
@@ -359,13 +359,13 @@ mod tests {
     }
 
     #[test]
-    fn flatten_questions_lists_every_block_across_steps() {
+    async fn flatten_questions_lists_every_block_across_steps() {
         let spec = onboarding_example_spec();
         assert!(!flatten_questions(&spec).is_empty());
     }
 
     #[test]
-    fn json_value_helpers_stringify_primitives() {
+    async fn json_value_helpers_stringify_primitives() {
         assert_eq!(json_string_value(&json!("a")), "a");
         assert_eq!(json_string_value(&json!(true)), "true");
         assert_eq!(json_string_value(&Value::Null), "");
@@ -374,7 +374,7 @@ mod tests {
     }
 
     #[test]
-    fn default_and_onboarding_examples_parse_and_serialize() {
+    async fn default_and_onboarding_examples_parse_and_serialize() {
         assert!(!default_example_json().is_empty());
         assert!(!onboarding_example_json().is_empty());
     }

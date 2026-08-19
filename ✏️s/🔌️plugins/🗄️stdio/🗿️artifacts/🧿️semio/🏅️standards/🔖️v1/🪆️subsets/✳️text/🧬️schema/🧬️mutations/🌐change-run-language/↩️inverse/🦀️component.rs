@@ -6,7 +6,7 @@ use crate::artifacts::semio::standards::v1::subsets::text::schema::mutations::Se
 use crate::artifacts::semio::standards::v1::subsets::text::schema::snapshot::SemioTextSnapshot;
 
 //#region 🔖️Inverse
-pub fn inverse(payload: &ChangeRunLanguage, base: &SemioTextSnapshot) -> Vec<SemioTextMutation> {
+pub async fn inverse(payload: &ChangeRunLanguage, base: &SemioTextSnapshot) -> Vec<SemioTextMutation> {
     match base.runs.get(payload.index) {
         Some(run) => vec![SemioTextMutation::ChangeRunLanguage(ChangeRunLanguage { index: payload.index, new_language: run.language.clone() })],
         None => Vec::new(),

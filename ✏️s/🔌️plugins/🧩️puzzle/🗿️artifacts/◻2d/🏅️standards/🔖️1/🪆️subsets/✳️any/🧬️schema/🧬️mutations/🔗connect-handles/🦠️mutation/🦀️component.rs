@@ -34,7 +34,7 @@ pub struct ConnectHandles {
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
 #[allow(clippy::too_many_arguments)]
-pub fn connect_handles(
+pub async fn connect_handles(
     id: String, source: String, target: String, edge_kind: Option<String>,
     gap: f64, shift: f64, rise: f64, rotation: f64, turn: f64, tilt: f64, x: f64, y: f64,
     source_tip: Option<String>, target_tip: Option<String>,
@@ -45,16 +45,16 @@ pub fn connect_handles(
 impl protocol::MutationKind<Puzzle2dSnapshot, Puzzle2dMutation> for ConnectHandles {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "connect", entity: "handles", kind: "connect-handles", record: "ConnectedHandles" };
 
-    fn diff(&self, base: &Puzzle2dSnapshot) -> protocol::MutationOutcome<Puzzle2dDiff> {
+    async fn diff(&self, base: &Puzzle2dSnapshot) -> protocol::MutationOutcome<Puzzle2dDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &Puzzle2dSnapshot) -> Vec<Puzzle2dMutation> {
+    async fn inverse(&self, base: &Puzzle2dSnapshot) -> Vec<Puzzle2dMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         format!("Connect \"{}\" to \"{}\"", self.source, self.target)
     }
-    fn target(&self) -> Vec<String> {
+    async fn target(&self) -> Vec<String> {
         vec![self.id.clone()]
     }
 }

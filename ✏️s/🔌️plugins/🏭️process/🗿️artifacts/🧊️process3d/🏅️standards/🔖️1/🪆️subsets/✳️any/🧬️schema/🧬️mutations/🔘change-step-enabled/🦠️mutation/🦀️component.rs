@@ -17,19 +17,19 @@ pub struct ChangeStepEnabled {
 impl protocol::MutationKind<Process3dSnapshot, Process3dMutation> for ChangeStepEnabled {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "step", kind: "change-step-enabled", record: "ChangedStepEnabled" };
 
-    fn diff(&self, base: &Process3dSnapshot) -> protocol::MutationOutcome<Process3dDiff> {
+    async fn diff(&self, base: &Process3dSnapshot) -> protocol::MutationOutcome<Process3dDiff> {
         crate::artifacts::process3d::mutations::change_step_enabled::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &Process3dSnapshot) -> Vec<Process3dMutation> {
+    async fn inverse(&self, base: &Process3dSnapshot) -> Vec<Process3dMutation> {
         crate::artifacts::process3d::mutations::change_step_enabled::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         if self.new_enabled { format!("Enable step \"{}\"", self.id) } else { format!("Disable step \"{}\"", self.id) }
     }
 
-    fn target(&self) -> Vec<String> {
+    async fn target(&self) -> Vec<String> {
         vec![self.id.clone()]
     }
 }

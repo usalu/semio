@@ -8,7 +8,7 @@ use crate::artifacts::program::ProgramSnapshot;
 use protocol::Patchable;
 
 /// 🔁️ Error `mutation.target-missing` if absent, Warning `mutation.no-op` if the value is unchanged (both empty diff), else `patched = [{id, full patch}]` via `Patchable::diff_patch`.
-pub fn diff(payload: &ReplaceStakeholder, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
+pub async fn diff(payload: &ReplaceStakeholder, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
     let Some(existing) = base.stakeholders.iter().find(|row| row.header.id == payload.stakeholder.header.id) else {
         return protocol::MutationOutcome::error("mutation.target-missing", "No stakeholder exists with this id.", [payload.stakeholder.header.id.0.clone()]);
     };

@@ -14,16 +14,16 @@ pub struct RotateObject {
 impl protocol::MutationKind<SemioObjectSnapshot, SemioObjectMutation> for RotateObject {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "rotate", entity: "object", kind: "rotate-object", record: "RotatedObject" };
 
-    fn diff(&self, base: &SemioObjectSnapshot) -> protocol::MutationOutcome<<SemioObjectMutation as protocol::Mutation<SemioObjectSnapshot>>::Diff> {
+    async fn diff(&self, base: &SemioObjectSnapshot) -> protocol::MutationOutcome<<SemioObjectMutation as protocol::Mutation<SemioObjectSnapshot>>::Diff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &SemioObjectSnapshot) -> Vec<SemioObjectMutation> {
+    async fn inverse(&self, base: &SemioObjectSnapshot) -> Vec<SemioObjectMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         "Rotate object".to_string()
     }
-    fn target(&self) -> Vec<String> {
+    async fn target(&self) -> Vec<String> {
         vec!["transform".to_string()]
     }
 }

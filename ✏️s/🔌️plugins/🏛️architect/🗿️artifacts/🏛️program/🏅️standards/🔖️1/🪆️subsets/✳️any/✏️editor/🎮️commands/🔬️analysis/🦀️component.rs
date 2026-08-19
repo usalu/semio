@@ -13,7 +13,7 @@ pub mod run_validation {
     #[dsl(keyword = "run-validation")]
     pub struct RunValidation {}
 
-    pub fn handle(_payload: &RunValidation, doc: &ArtifactView<'_, ProgramSnapshot>, cfg: &ConfigView<'_, ArchitectConfig>) -> Result<Emit<ProgramMutation, ArchitectConfigMutation>, Fault> {
+    pub async fn handle(_payload: &RunValidation, doc: &ArtifactView<'_, ProgramSnapshot>, cfg: &ConfigView<'_, ArchitectConfig>) -> Result<Emit<ProgramMutation, ArchitectConfigMutation>, Fault> {
         let diagnostics = validate_plugin(doc.snapshot);
         let mut next = cfg.snapshot.clone();
         next.last_result_json = serde_json::to_string_pretty(&diagnostics).unwrap_or_else(|_| "{}".into());
@@ -37,7 +37,7 @@ pub mod run_analysis {
         pub analysis_kind: String,
     }
 
-    pub fn handle(payload: &RunAnalysis, doc: &ArtifactView<'_, ProgramSnapshot>, cfg: &ConfigView<'_, ArchitectConfig>) -> Result<Emit<ProgramMutation, ArchitectConfigMutation>, Fault> {
+    pub async fn handle(payload: &RunAnalysis, doc: &ArtifactView<'_, ProgramSnapshot>, cfg: &ConfigView<'_, ArchitectConfig>) -> Result<Emit<ProgramMutation, ArchitectConfigMutation>, Fault> {
         let program = doc.snapshot;
         let kind = analysis_kind_from_str(&payload.analysis_kind);
         let result = run_analysis(program, kind);
@@ -66,7 +66,7 @@ pub mod run_report {
         pub report_kind: String,
     }
 
-    pub fn handle(payload: &RunReport, doc: &ArtifactView<'_, ProgramSnapshot>, cfg: &ConfigView<'_, ArchitectConfig>) -> Result<Emit<ProgramMutation, ArchitectConfigMutation>, Fault> {
+    pub async fn handle(payload: &RunReport, doc: &ArtifactView<'_, ProgramSnapshot>, cfg: &ConfigView<'_, ArchitectConfig>) -> Result<Emit<ProgramMutation, ArchitectConfigMutation>, Fault> {
         let program = doc.snapshot;
         let kind = report_kind_from_str(&payload.report_kind);
         let report = build_report(program, kind);

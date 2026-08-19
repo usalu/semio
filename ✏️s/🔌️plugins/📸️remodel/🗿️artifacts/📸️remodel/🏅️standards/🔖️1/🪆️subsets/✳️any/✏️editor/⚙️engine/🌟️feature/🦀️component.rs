@@ -28,7 +28,7 @@ const ORB_FAST_THRESHOLD: f32 = 0.08;
 const ORB_GRID_CELL: u32 = 24;
 const ORB_CENTROID_RADIUS: i32 = 9;
 
-fn fast_longest_arc(signs: &[i8; 16]) -> Option<(usize, usize)> {
+async fn fast_longest_arc(signs: &[i8; 16]) -> Option<(usize, usize)> {
     let mut best: Option<(usize, usize)> = None;
     for start in 0..16 {
         let sign = signs[start];
@@ -48,7 +48,7 @@ fn fast_longest_arc(signs: &[i8; 16]) -> Option<(usize, usize)> {
 
 /// 🟢️ Classic FAST-9 corner response: for every pixel with a 3px border margin, samples the 16-point Bresenham radius-3 circle and looks for a contiguous arc of at least 9 points all brighter than `center + threshold` or all darker than `center - threshold`; the returned score is the summed absolute intensity difference from the center over the qualifying arc.
 /// <https://www.edwardrosten.com/work/fast.html>
-pub fn fast_corners(img: &ImageGray, threshold: f32) -> Vec<(u32, u32, f32)> {
+pub async fn fast_corners(img: &ImageGray, threshold: f32) -> Vec<(u32, u32, f32)> {
     let (w, h) = (i64::from(img.width), i64::from(img.height));
     let mut out = Vec::new();
     if w <= 2 * FAST_BORDER_MARGIN || h <= 2 * FAST_BORDER_MARGIN {
@@ -81,7 +81,7 @@ pub fn fast_corners(img: &ImageGray, threshold: f32) -> Vec<(u32, u32, f32)> {
     out
 }
 
-fn structure_tensor_fields(img: &ImageGray) -> (ImageGray, ImageGray, ImageGray) {
+async fn structure_tensor_fields(img: &ImageGray) -> (ImageGray, ImageGray, ImageGray) {
     let g = scharr_gradients(img);
     let gx2 = ImageGray { width: img.width, height: img.height, data: g.gx.iter().map(|&v| v * v).collect() };
     let gy2 = ImageGray { width: img.width, height: img.height, data: g.gy.iter().map(|&v| v * v).collect() };
@@ -91,7 +91,7 @@ fn structure_tensor_fields(img: &ImageGray) -> (ImageGray, ImageGray, ImageGray)
 
 /// 🌄️ Per-pixel Harris corner response `det(M) - k trace(M)^2` from the gaussian-weighted structure tensor `M` of the Scharr gradients.
 /// <https://en.wikipedia.org/wiki/Corner_detection#The_Harris_.26_Stephens_.2F_Plessey_.2F_Shi.E2.80.93Tomasi_corner_detection_algorithms>
-pub fn harris_response(img: &ImageGray, k: f32) -> Vec<f32> {
+pub async fn harris_response(img: &ImageGray, k: f32) -> Vec<f32> {
     let (sxx, syy, sxy) = structure_tensor_fields(img);
     sxx.data
         .iter()
@@ -107,7 +107,7 @@ pub fn harris_response(img: &ImageGray, k: f32) -> Vec<f32> {
 
 /// 🗺️ Grid-based adaptive non-maximal suppression: partitions the image into `cell x cell` bins and keeps, per bin, the top `per_cell` pixels by Shi-Tomasi minimum eigenvalue `mean(M) - sqrt(diff(M)^2 + off(M)^2)` of the gaussian-weighted structure tensor, for spatially uniform coverage.
 /// <https://en.wikipedia.org/wiki/Corner_detection#The_Harris_.26_Stephens_.2F_Plessey_.2F_Shi.E2.80.93Tomasi_corner_detection_algorithms>
-pub fn shi_tomasi_grid(img: &ImageGray, cell: u32, per_cell: usize) -> Vec<(u32, u32, f32)> {
+pub async fn shi_tomasi_grid(img: &ImageGray, cell: u32, per_cell: usize) -> Vec<(u32, u32, f32)> {
     let cell = cell.max(1);
     let (sxx, syy, sxy) = structure_tensor_fields(img);
     let cells_x = img.width.div_ceil(cell).max(1);
@@ -130,7 +130,7 @@ pub fn shi_tomasi_grid(img: &ImageGray, cell: u32, per_cell: usize) -> Vec<(u32,
     out
 }
 
-fn bucket_top_k(points: &[(u32, u32, f32)], cell: u32, cells_x: u32, per_cell: usize) -> Vec<(u32, u32, f32)> {
+async fn bucket_top_k(points: &[(u32, u32, f32)], cell: u32, cells_x: u32, per_cell: usize) -> Vec<(u32, u32, f32)> {
     let mut buckets: std::collections::HashMap<u32, Vec<(u32, u32, f32)>> = std::collections::HashMap::new();
     for &(x, y, score) in points {
         let bucket = (y / cell) * cells_x + (x / cell);
@@ -147,7 +147,7 @@ fn bucket_top_k(points: &[(u32, u32, f32)], cell: u32, cells_x: u32, per_cell: u
     out
 }
 
-fn intensity_centroid_angle(level: &ImageGray, cx: f32, cy: f32, radius: i32) -> f32 {
+async fn intensity_centroid_angle(level: &ImageGray, cx: f32, cy: f32, radius: i32) -> f32 {
     let mut m10 = 0.0f32;
     let mut m01 = 0.0f32;
     let radius_sq = (radius * radius) as f32;
@@ -167,7 +167,7 @@ fn intensity_centroid_angle(level: &ImageGray, cx: f32, cy: f32, radius: i32) ->
 
 /// 🎯️ Oriented-FAST keypoint detector across a pyramid: runs [`fast_corners`] per level, rescoring survivors with [`harris_response`] (dropping edge/flat responses), distributes `target_count` across levels proportional to pixel area, applies a grid-bucketed top-k (à la [`shi_tomasi_grid`]) for spatial spread, and assigns an orientation via the intensity centroid `atan2(sum(y I), sum(x I))` over a circular neighbourhood.
 /// <https://en.wikipedia.org/wiki/Oriented_FAST_and_rotated_BRIEF>
-pub fn detect_orb_keypoints(pyramid: &Pyramid, target_count: usize) -> Vec<Keypoint> {
+pub async fn detect_orb_keypoints(pyramid: &Pyramid, target_count: usize) -> Vec<Keypoint> {
     if pyramid.levels.is_empty() || target_count == 0 {
         return Vec::new();
     }
@@ -200,7 +200,7 @@ pub fn detect_orb_keypoints(pyramid: &Pyramid, target_count: usize) -> Vec<Keypo
 
 /// 🌄️ Standalone Harris-only keypoint detector — the third `detector: harris` option promised by the plugin UI, independent of FAST: scores every pixel with [`harris_response`], keeps the positive-response ones, applies the same grid-bucketed top-k spatial spread as [`detect_orb_keypoints`], and assigns orientation via the intensity centroid, so the resulting [`Keypoint`]s (all at `octave: 0`, single-level) feed straight into [`describe_orb`]/[`match_brute`] unchanged.
 /// <https://en.wikipedia.org/wiki/Harris_Corner_Detector>
-pub fn detect_harris_keypoints(image: &ImageGray, target_count: usize) -> Vec<Keypoint> {
+pub async fn detect_harris_keypoints(image: &ImageGray, target_count: usize) -> Vec<Keypoint> {
     if target_count == 0 || image.width == 0 || image.height == 0 {
         return Vec::new();
     }
@@ -233,20 +233,20 @@ pub struct Descriptor256(pub [u64; 4]);
 
 impl Descriptor256 {
     /// 📏️ Hamming distance to `other`, as an inherent method for callers that prefer `a.hamming_distance(&b)` over the free [`hamming`] function; both are the same population-count-of-XOR computation, so AKAZE M-LDB descriptors from [`describe_akaze`] (emitted into this same type) match through either.
-    pub fn hamming_distance(&self, other: &Descriptor256) -> u32 {
+    pub async fn hamming_distance(&self, other: &Descriptor256) -> u32 {
         hamming(self, other)
     }
 }
 
 /// 📏️ Hamming distance between two descriptors: population count of the XOR of each of the 4 words, summed.
 /// <https://en.wikipedia.org/wiki/Hamming_distance>
-pub fn hamming(a: &Descriptor256, b: &Descriptor256) -> u32 {
+pub async fn hamming(a: &Descriptor256, b: &Descriptor256) -> u32 {
     a.0.iter().zip(b.0.iter()).map(|(&x, &y)| (x ^ y).count_ones()).sum()
 }
 
 type BriefOffsetPair = ((i32, i32), (i32, i32));
 
-fn brief_pattern() -> &'static [BriefOffsetPair; 256] {
+async fn brief_pattern() -> &'static [BriefOffsetPair; 256] {
     static PATTERN: std::sync::OnceLock<[BriefOffsetPair; 256]> = std::sync::OnceLock::new();
     PATTERN.get_or_init(|| {
         let mut rng = geometry::random::Rng::from_seed(BRIEF_SEED);
@@ -260,7 +260,7 @@ fn brief_pattern() -> &'static [BriefOffsetPair; 256] {
 
 /// 🧬️ Oriented rBRIEF description: for each keypoint, extracts a `(2 BRIEF_PATCH_RADIUS + 1)^2` patch steered by the keypoint's angle (rotation folded into the bilinear sampling grid of [`extract_patch`]), gaussian pre-blurs it to damp noise, then sets bit `i` when the blurred intensity at the pattern's first fixed point-pair offset is less than at its second. The 256 offset pairs are generated once from a fixed published seed via `geometry::random`, so the pattern — and hence every descriptor — is identical across builds and runs.
 /// <https://en.wikipedia.org/wiki/Oriented_FAST_and_rotated_BRIEF>
-pub fn describe_orb(pyramid: &Pyramid, keypoints: &[Keypoint]) -> Vec<Descriptor256> {
+pub async fn describe_orb(pyramid: &Pyramid, keypoints: &[Keypoint]) -> Vec<Descriptor256> {
     let pattern = brief_pattern();
     let side = 2 * BRIEF_PATCH_RADIUS + 1;
     keypoints
@@ -298,7 +298,7 @@ pub struct Match {
     pub distance: u32,
 }
 
-fn best_and_second_hamming(query: &Descriptor256, pool: &[Descriptor256]) -> (u32, u32, u32) {
+async fn best_and_second_hamming(query: &Descriptor256, pool: &[Descriptor256]) -> (u32, u32, u32) {
     let mut best = (u32::MAX, u32::MAX);
     let mut second = u32::MAX;
     for (j, candidate) in pool.iter().enumerate() {
@@ -315,7 +315,7 @@ fn best_and_second_hamming(query: &Descriptor256, pool: &[Descriptor256]) -> (u3
 
 /// 🤝️ Brute-force Hamming matching from `desc_a` into `desc_b` with Lowe's ratio test (best distance must be less than `ratio` times the second-best), optionally cross-checked so a match only survives when it is also `desc_a`'s best match for its own best-in-`desc_b` partner.
 /// <https://en.wikipedia.org/wiki/Nearest_neighbor_search#Nearest_neighbor_algorithms_in_high-dimensional_spaces>
-pub fn match_brute(desc_a: &[Descriptor256], desc_b: &[Descriptor256], ratio: f32, mutual: bool) -> Vec<Match> {
+pub async fn match_brute(desc_a: &[Descriptor256], desc_b: &[Descriptor256], ratio: f32, mutual: bool) -> Vec<Match> {
     if desc_b.is_empty() {
         return Vec::new();
     }
@@ -335,7 +335,7 @@ pub fn match_brute(desc_a: &[Descriptor256], desc_b: &[Descriptor256], ratio: f3
     matches
 }
 
-fn epipolar_line_candidates(grid: &crate::spatial::Grid2, line: (f64, f64, f64), bounds: (f32, f32, f32, f32), step: f64) -> Vec<u32> {
+async fn epipolar_line_candidates(grid: &crate::spatial::Grid2, line: (f64, f64, f64), bounds: (f32, f32, f32, f32), step: f64) -> Vec<u32> {
     let (l0, l1, l2) = line;
     let (min_x, max_x, min_y, max_y) = bounds;
     let mut seen = std::collections::HashSet::new();
@@ -365,7 +365,7 @@ fn epipolar_line_candidates(grid: &crate::spatial::Grid2, line: (f64, f64, f64),
 
 /// 🧭️ Epipolar-guided matching: for each keypoint in `kp_a`, computes its epipolar line `l = F [x, y, 1]` in image B, walks that line (stepping through a [`crate::spatial::Grid2`] bucketed over `kp_b` for efficiency) to gather candidates within `band_px` of the line by point-to-line distance, then runs the same Lowe's-ratio matching as [`match_brute`] restricted to those candidates.
 /// <https://en.wikipedia.org/wiki/Epipolar_geometry>
-pub fn match_guided_epipolar(kp_a: &[Keypoint], desc_a: &[Descriptor256], kp_b: &[Keypoint], desc_b: &[Descriptor256], f_matrix: &[[f64; 3]; 3], band_px: f32) -> Vec<Match> {
+pub async fn match_guided_epipolar(kp_a: &[Keypoint], desc_a: &[Descriptor256], kp_b: &[Keypoint], desc_b: &[Descriptor256], f_matrix: &[[f64; 3]; 3], band_px: f32) -> Vec<Match> {
     if kp_b.is_empty() {
         return Vec::new();
     }
@@ -411,7 +411,7 @@ pub fn match_guided_epipolar(kp_a: &[Keypoint], desc_a: &[Descriptor256], kp_b: 
 }
 
 /// 🩹️ ZNCC patch-correlation fallback for pairs where binary descriptors fail (cross-sensor or low-texture imagery): for each keypoint in `kp_a`, gathers `kp_b` candidates within `search_radius` via a [`crate::spatial::Grid2`], scores each with [`zncc`] over patches from [`extract_patch`], and keeps the best candidate above a `0.6` correlation floor. The reported `distance` is `round((1 - zncc) * 1000)`, a monotone integer proxy so lower still means a better match.
-pub fn match_zncc_fallback(img_a: &ImageGray, kp_a: &[Keypoint], img_b: &ImageGray, kp_b: &[Keypoint], search_radius: f32) -> Vec<Match> {
+pub async fn match_zncc_fallback(img_a: &ImageGray, kp_a: &[Keypoint], img_b: &ImageGray, kp_b: &[Keypoint], search_radius: f32) -> Vec<Match> {
     if kp_b.is_empty() {
         return Vec::new();
     }
@@ -458,7 +458,7 @@ pub struct TrackPoint {
     pub error: f32,
 }
 
-fn klt_lucas_kanade_level(level_a: &ImageGray, level_b: &ImageGray, lx: f32, ly: f32, initial_disp: (f32, f32), window_radius: i32, max_iters: usize) -> ((f32, f32), bool, f32) {
+async fn klt_lucas_kanade_level(level_a: &ImageGray, level_b: &ImageGray, lx: f32, ly: f32, initial_disp: (f32, f32), window_radius: i32, max_iters: usize) -> ((f32, f32), bool, f32) {
     let r = window_radius;
     let mut window = Vec::with_capacity(((2 * r + 1) * (2 * r + 1)) as usize);
     for dy in -r..=r {
@@ -511,7 +511,7 @@ fn klt_lucas_kanade_level(level_a: &ImageGray, level_b: &ImageGray, lx: f32, ly:
     (disp, true, error)
 }
 
-fn klt_track_single(pyr_a: &Pyramid, pyr_b: &Pyramid, x0: f32, y0: f32, window_radius: i32, max_iters: usize) -> TrackPoint {
+async fn klt_track_single(pyr_a: &Pyramid, pyr_b: &Pyramid, x0: f32, y0: f32, window_radius: i32, max_iters: usize) -> TrackPoint {
     let n_levels = pyr_a.levels.len().min(pyr_b.levels.len());
     if n_levels == 0 {
         return TrackPoint { x: x0, y: y0, valid: false, error: f32::INFINITY };
@@ -539,13 +539,13 @@ fn klt_track_single(pyr_a: &Pyramid, pyr_b: &Pyramid, x0: f32, y0: f32, window_r
 
 /// 🌊️ Pyramidal Lucas-Kanade tracking of `points` (given in `pyr_a`'s level-0 coordinates) from `pyr_a` into `pyr_b`: coarse-to-fine over shared pyramid levels, each level running Gauss-Newton on a 2-DoF translation using the template's gradient structure tensor (an inverse-compositional simplification, since a pure translation warp has a constant Jacobian) and the image-difference residual over a `(2 window_radius + 1)^2` window. A point is marked invalid if its structure tensor is near-singular, a sample step leaves the image bounds, or the final position lands outside the level-0 image.
 /// <https://en.wikipedia.org/wiki/Lucas%E2%80%93Kanade_method>
-pub fn klt_track(pyr_a: &Pyramid, pyr_b: &Pyramid, points: &[(f32, f32)], window_radius: i32, max_iters: usize) -> Vec<TrackPoint> {
+pub async fn klt_track(pyr_a: &Pyramid, pyr_b: &Pyramid, points: &[(f32, f32)], window_radius: i32, max_iters: usize) -> Vec<TrackPoint> {
     points.iter().map(|&(x0, y0)| klt_track_single(pyr_a, pyr_b, x0, y0, window_radius, max_iters)).collect()
 }
 
 /// ↩️ Forward-backward consistency pruning: re-tracks each already-valid `tracked` point from `pyr_b` back into `pyr_a` and invalidates it (in place) if the backward track itself fails or its round-trip distance to the original `points` entry exceeds `max_fb_error`.
 /// <https://en.wikipedia.org/wiki/Lucas%E2%80%93Kanade_method>
-pub fn forward_backward_prune(pyr_a: &Pyramid, pyr_b: &Pyramid, points: &[(f32, f32)], tracked: &mut [TrackPoint], window_radius: i32, max_iters: usize, max_fb_error: f32) {
+pub async fn forward_backward_prune(pyr_a: &Pyramid, pyr_b: &Pyramid, points: &[(f32, f32)], tracked: &mut [TrackPoint], window_radius: i32, max_iters: usize, max_fb_error: f32) {
     for (tp, &(ox, oy)) in tracked.iter_mut().zip(points.iter()) {
         if !tp.valid {
             continue;
@@ -583,7 +583,7 @@ pub struct ScaleSpace {
 
 /// 📊️ Perona-Malik contrast factor `k`: the 70th-percentile gradient magnitude of a `sigma=1` gaussian-presmoothed image — the standard AKAZE contrast-factor estimation procedure that keeps the diffusion's edge-stopping behaviour scaled to the image's own contrast.
 /// <https://en.wikipedia.org/wiki/Anisotropic_diffusion>
-fn estimate_contrast_factor(img: &ImageGray) -> f32 {
+async fn estimate_contrast_factor(img: &ImageGray) -> f32 {
     let smoothed = gaussian_blur(img, 1.0);
     let g = scharr_gradients(&smoothed);
     let mut magnitudes: Vec<f32> = g.gx.iter().zip(g.gy.iter()).map(|(&gx, &gy)| gx.hypot(gy)).collect();
@@ -597,14 +597,14 @@ fn estimate_contrast_factor(img: &ImageGray) -> f32 {
 
 /// 🌊️ Perona-Malik `g2` conductivity `1 / (1 + (|∇L| / k)^2)` per pixel: decays toward `0` across strong edges (preserving them) and stays near `1` in flat regions (smoothing them freely).
 /// <https://en.wikipedia.org/wiki/Anisotropic_diffusion>
-fn perona_malik_g2(gradient: &GradientField, k: f32) -> Vec<f32> {
+async fn perona_malik_g2(gradient: &GradientField, k: f32) -> Vec<f32> {
     let k_sq = (k * k).max(1e-12);
     gradient.gx.iter().zip(gradient.gy.iter()).map(|(&gx, &gy)| 1.0 / (1.0 + (gx * gx + gy * gy) / k_sq)).collect()
 }
 
 /// ⏱️ Fast Explicit Diffusion step schedule reaching total evolution time `t` in one stable cycle: `n = ceil(sqrt(3t/tau_max + 1/4) - 1/2)` steps with `tau_i = tau_max / (2 cos(pi (2i+1) / (4n+2)))` — the FED scheme AKAZE/KAZE use to take far larger stable steps than plain explicit diffusion.
 /// <https://en.wikipedia.org/wiki/Anisotropic_diffusion>
-fn fed_tau_schedule(t: f32, tau_max: f32) -> Vec<f32> {
+async fn fed_tau_schedule(t: f32, tau_max: f32) -> Vec<f32> {
     if t <= 0.0 {
         return Vec::new();
     }
@@ -615,7 +615,7 @@ fn fed_tau_schedule(t: f32, tau_max: f32) -> Vec<f32> {
 
 /// 🧮️ One explicit nonlinear-diffusion step: for every pixel, sums flux across its 4-neighbourhood weighted by the average conductivity between center and neighbour, `L' = L + tau * div(g grad L)`, with clamped (zero-flux) borders.
 /// <https://en.wikipedia.org/wiki/Anisotropic_diffusion>
-fn diffusion_step(l: &ImageGray, g: &[f32], tau: f32) -> ImageGray {
+async fn diffusion_step(l: &ImageGray, g: &[f32], tau: f32) -> ImageGray {
     let (w, h) = (l.width, l.height);
     let mut out = l.clone();
     if w == 0 || h == 0 {
@@ -644,7 +644,7 @@ fn diffusion_step(l: &ImageGray, g: &[f32], tau: f32) -> ImageGray {
 
 /// 🌀️ Builds a full AKAZE nonlinear diffusion scale space over `octaves` octaves of `sublevels` sublevels each: per octave, starts from [`build_pyramid`]'s anti-aliased downsample of `image` (sublevel 0, not yet diffused), estimates a per-octave Perona-Malik contrast factor once via [`estimate_contrast_factor`] on that octave's base image, then for each further sublevel recomputes conductivity from the currently-evolved image's [`scharr_gradients`] and walks a [`fed_tau_schedule`] of explicit [`diffusion_step`]s covering the incremental evolution time `0.5 sigma^2` between consecutive sublevel scales `sigma = base_sigma * 2^(sublevel / sublevels)`.
 /// <https://en.wikipedia.org/wiki/Anisotropic_diffusion>
-pub fn build_akaze_scale_space(image: &ImageGray, octaves: u8, sublevels: u8) -> ScaleSpace {
+pub async fn build_akaze_scale_space(image: &ImageGray, octaves: u8, sublevels: u8) -> ScaleSpace {
     let octaves = octaves.max(1);
     let sublevels = sublevels.max(1);
     let pyramid = build_pyramid(image, usize::from(octaves));
@@ -686,7 +686,7 @@ const AKAZE_BORDER_MARGIN: u32 = 2;
 
 /// 🧮️ Scale-normalized Hessian determinant `sigma_local^4 (L_xx L_yy - L_xy^2)` at every pixel of `image`, with second derivatives from two passes of [`scharr_gradients`] (gradient-of-the-gradient) — the standard blob-strength measure driving AKAZE's scale-space extrema search.
 /// <https://en.wikipedia.org/wiki/Blob_detection#The_determinant_of_the_Hessian>
-fn hessian_determinant_response(image: &ImageGray, sigma_local: f32) -> Vec<f32> {
+async fn hessian_determinant_response(image: &ImageGray, sigma_local: f32) -> Vec<f32> {
     let g1 = scharr_gradients(image);
     let gx_img = ImageGray { width: image.width, height: image.height, data: g1.gx };
     let gy_img = ImageGray { width: image.width, height: image.height, data: g1.gy };
@@ -705,7 +705,7 @@ fn hessian_determinant_response(image: &ImageGray, sigma_local: f32) -> Vec<f32>
 }
 
 /// 📐️ Sub-pixel offset from a local 2D quadratic (Taylor) fit of a response map around integer pixel `(x, y)`: solves the Newton step `H offset = -grad` from central-difference first/second derivatives, clamped to `[-0.5, 0.5]` per axis; a near-singular Hessian yields a zero offset (keep the integer position).
-fn quadratic_refine_2d(response: &[f32], width: u32, x: u32, y: u32) -> (f32, f32) {
+async fn quadratic_refine_2d(response: &[f32], width: u32, x: u32, y: u32) -> (f32, f32) {
     let at = |dx: i32, dy: i32| response[((y as i32 + dy) as u32 * width + (x as i32 + dx) as u32) as usize];
     let center = at(0, 0);
     let dx = (at(1, 0) - at(-1, 0)) * 0.5;
@@ -729,7 +729,7 @@ struct AkazeCandidate {
     level: u32,
 }
 
-fn akaze_grid_top_k(candidates: Vec<AkazeCandidate>, image_w: u32, image_h: u32, cell: u32, target_count: usize) -> Vec<AkazeCandidate> {
+async fn akaze_grid_top_k(candidates: Vec<AkazeCandidate>, image_w: u32, image_h: u32, cell: u32, target_count: usize) -> Vec<AkazeCandidate> {
     if candidates.is_empty() || target_count == 0 {
         return Vec::new();
     }
@@ -758,7 +758,7 @@ fn akaze_grid_top_k(candidates: Vec<AkazeCandidate>, image_w: u32, image_h: u32,
 
 /// 🎯️ Hessian-determinant blob detector over an AKAZE [`ScaleSpace`]: scores every level (every octave × every sublevel) with [`hessian_determinant_response`], keeps pixels that are a strict spatial local maximum in their level's own `3x3` neighbourhood and positive, sub-pixel refines the `(x, y)` position via [`quadratic_refine_2d`], rescales to base-image coordinates, and assigns an intensity-centroid orientation from the owning level's diffused image. Candidates from every level are then pooled and passed through the same grid-bucketed top-k spatial spread as [`detect_orb_keypoints`] (which, since a genuine blob typically survives as a local max across several neighbouring sublevels, also acts as the cross-scale duplicate suppression). Each returned [`Keypoint`]'s `octave` field is the flat index into `scale_space.levels` it was detected at (not a true octave number), so [`describe_akaze`] can look the owning [`ScaleLevel`] back up directly.
 /// <https://en.wikipedia.org/wiki/Blob_detection>
-pub fn detect_akaze_keypoints(scale_space: &ScaleSpace, target_count: usize) -> Vec<Keypoint> {
+pub async fn detect_akaze_keypoints(scale_space: &ScaleSpace, target_count: usize) -> Vec<Keypoint> {
     if scale_space.levels.is_empty() || target_count == 0 {
         return Vec::new();
     }
@@ -811,7 +811,7 @@ pub fn detect_akaze_keypoints(scale_space: &ScaleSpace, target_count: usize) -> 
         .collect()
 }
 
-fn mldb_pattern() -> &'static [(u8, u8); 256] {
+async fn mldb_pattern() -> &'static [(u8, u8); 256] {
     static PATTERN: std::sync::OnceLock<[(u8, u8); 256]> = std::sync::OnceLock::new();
     PATTERN.get_or_init(|| {
         let mut rng = geometry::random::Rng::from_seed(MLDB_SEED);
@@ -828,7 +828,7 @@ fn mldb_pattern() -> &'static [(u8, u8); 256] {
 
 /// 🧬️ M-LDB (Modified Local Difference Binary) description: for each keypoint, extracts a `(2 MLDB_PATCH_RADIUS + 1)^2` patch from its owning [`ScaleLevel`] (looked up via `Keypoint::octave` as a flat scale-space index, per [`detect_akaze_keypoints`]), steered by the keypoint's angle via [`extract_patch`], splits it into a `4x4` grid of sub-cells and averages 3 channels per cell — mean intensity and the two mean [`scharr_gradients`] components — into 48 scalar values, then sets bit `i` from a fixed published-seed pattern of 256 value-index pairs (generated once via `geometry::random`, so identical across builds and runs) whenever the pattern's first value is less than its second. Emits into the same [`Descriptor256`] the rBRIEF path produces, so [`match_brute`]/[`hamming`] work unchanged on AKAZE descriptors.
 /// <https://en.wikipedia.org/wiki/AKAZE>
-pub fn describe_akaze(scale_space: &ScaleSpace, keypoints: &[Keypoint]) -> Vec<Descriptor256> {
+pub async fn describe_akaze(scale_space: &ScaleSpace, keypoints: &[Keypoint]) -> Vec<Descriptor256> {
     let pattern = mldb_pattern();
     let side = 2 * MLDB_PATCH_RADIUS + 1;
     let cell = (side / MLDB_GRID).max(1);
@@ -886,7 +886,7 @@ mod tests {
     use remodel_image::{build_pyramid, warp_affine};
 
     // #region 🔖️Fixtures
-    fn corner_image(size: u32) -> ImageGray {
+    async fn corner_image(size: u32) -> ImageGray {
         let mut img = ImageGray::new(size, size);
         for y in 0..size {
             for x in 0..size {
@@ -897,7 +897,7 @@ mod tests {
         img
     }
 
-    fn textured_image(size: u32) -> ImageGray {
+    async fn textured_image(size: u32) -> ImageGray {
         let mut img = ImageGray::new(size, size);
         for v in img.data.iter_mut() {
             *v = 0.1;
@@ -919,12 +919,12 @@ mod tests {
         img
     }
 
-    fn lcg_next(state: &mut u32) -> f32 {
+    async fn lcg_next(state: &mut u32) -> f32 {
         *state = state.wrapping_mul(1_664_525).wrapping_add(1_013_904_223);
         (*state >> 8) as f32 / 16_777_216.0
     }
 
-    fn lcg_texture(size: u32, seed: u32) -> ImageGray {
+    async fn lcg_texture(size: u32, seed: u32) -> ImageGray {
         let mut img = ImageGray::new(size, size);
         let mut state = seed;
         for v in img.data.iter_mut() {
@@ -933,7 +933,7 @@ mod tests {
         img
     }
 
-    fn smooth_texture(size: u32) -> ImageGray {
+    async fn smooth_texture(size: u32) -> ImageGray {
         let mut img = ImageGray::new(size, size);
         for y in 0..size {
             for x in 0..size {
@@ -948,7 +948,7 @@ mod tests {
 
     // #region 🔖️DetectTests
     #[test]
-    fn fast_corners_detects_planted_corner_not_flat_region() {
+    async fn fast_corners_detects_planted_corner_not_flat_region() {
         let img = corner_image(48);
         let corners = fast_corners(&img, 0.2);
         assert!(!corners.is_empty(), "expected at least one detected corner");
@@ -959,7 +959,7 @@ mod tests {
     }
 
     #[test]
-    fn harris_response_is_low_on_flat_and_high_on_corner() {
+    async fn harris_response_is_low_on_flat_and_high_on_corner() {
         let mut flat = ImageGray::new(32, 32);
         for v in flat.data.iter_mut() {
             *v = 0.5;
@@ -975,7 +975,7 @@ mod tests {
     }
 
     #[test]
-    fn detect_orb_keypoints_returns_roughly_target_count_and_spread() {
+    async fn detect_orb_keypoints_returns_roughly_target_count_and_spread() {
         let img = textured_image(64);
         let pyramid = build_pyramid(&img, 3);
         let target = 40usize;
@@ -992,7 +992,7 @@ mod tests {
     }
 
     #[test]
-    fn detect_harris_keypoints_clusters_near_known_corner() {
+    async fn detect_harris_keypoints_clusters_near_known_corner() {
         let img = corner_image(48);
         let keypoints = detect_harris_keypoints(&img, 30);
         assert!(!keypoints.is_empty(), "expected some harris keypoints on a corner image");
@@ -1002,7 +1002,7 @@ mod tests {
     }
 
     #[test]
-    fn detect_orb_keypoints_returns_empty_for_empty_pyramid_or_zero_target() {
+    async fn detect_orb_keypoints_returns_empty_for_empty_pyramid_or_zero_target() {
         let img = textured_image(32);
         let pyramid = build_pyramid(&img, 2);
         assert!(detect_orb_keypoints(&pyramid, 0).is_empty(), "zero target_count should yield no keypoints");
@@ -1011,7 +1011,7 @@ mod tests {
     }
 
     #[test]
-    fn detect_harris_keypoints_returns_empty_for_zero_target_or_empty_image() {
+    async fn detect_harris_keypoints_returns_empty_for_zero_target_or_empty_image() {
         let img = textured_image(16);
         assert!(detect_harris_keypoints(&img, 0).is_empty(), "zero target_count should yield no keypoints");
         assert!(detect_harris_keypoints(&ImageGray::new(0, 0), 10).is_empty(), "a zero-width/height image should yield no keypoints");
@@ -1019,7 +1019,7 @@ mod tests {
     }
 
     #[test]
-    fn shi_tomasi_grid_prefers_planted_corner_and_caps_per_cell() {
+    async fn shi_tomasi_grid_prefers_planted_corner_and_caps_per_cell() {
         let img = corner_image(48);
         let cell = 16u32;
         let results = shi_tomasi_grid(&img, cell, 1);
@@ -1034,7 +1034,7 @@ mod tests {
     }
 
     #[test]
-    fn shi_tomasi_grid_handles_zero_cell_without_panicking() {
+    async fn shi_tomasi_grid_handles_zero_cell_without_panicking() {
         let img = corner_image(8);
         let results = shi_tomasi_grid(&img, 0, 2);
         assert!(!results.is_empty(), "a zero cell size should be clamped to 1 and still return candidates");
@@ -1044,7 +1044,7 @@ mod tests {
 
     // #region 🔖️DescribeTests
     #[test]
-    fn describe_orb_is_deterministic_and_self_hamming_zero() {
+    async fn describe_orb_is_deterministic_and_self_hamming_zero() {
         let img = textured_image(48);
         let pyramid = build_pyramid(&img, 2);
         let kp = Keypoint { x: 24.0, y: 24.0, octave: 0, angle: 0.4, response: 1.0 };
@@ -1057,7 +1057,7 @@ mod tests {
 
     // #region 🔖️MatchTests
     #[test]
-    fn match_brute_recovers_known_translation_correspondences() {
+    async fn match_brute_recovers_known_translation_correspondences() {
         let size = 72u32;
         let img_a = lcg_texture(size, 123);
         let (tx, ty) = (3.0f32, 2.0f32);
@@ -1090,13 +1090,13 @@ mod tests {
     }
 
     #[test]
-    fn match_brute_desc_b_empty_returns_empty() {
+    async fn match_brute_desc_b_empty_returns_empty() {
         let desc_a = [Descriptor256([0, 0, 0, 0])];
         assert!(match_brute(&desc_a, &[], 0.75, false).is_empty(), "matching against an empty pool should yield no matches");
     }
 
     #[test]
-    fn match_brute_single_candidate_bypasses_ratio_test() {
+    async fn match_brute_single_candidate_bypasses_ratio_test() {
         let desc_a = [Descriptor256([0, 0, 0, 0]), Descriptor256([u64::MAX, 0, 0, 0])];
         let desc_b = [Descriptor256([0, 0, 0, 0])];
         let matches = match_brute(&desc_a, &desc_b, 0.01, false);
@@ -1105,7 +1105,7 @@ mod tests {
     }
 
     #[test]
-    fn match_brute_mutual_filters_non_reciprocal_matches() {
+    async fn match_brute_mutual_filters_non_reciprocal_matches() {
         let a0 = Descriptor256([0, 0, 0, 0]);
         let a1 = Descriptor256([0xF, 0, 0, 0]);
         let b0 = Descriptor256([0, 0, 0, 0]);
@@ -1121,7 +1121,7 @@ mod tests {
     }
 
     #[test]
-    fn match_guided_epipolar_recovers_match_along_horizontal_line_and_filters_off_line_candidate() {
+    async fn match_guided_epipolar_recovers_match_along_horizontal_line_and_filters_off_line_candidate() {
         let zero = Descriptor256([0, 0, 0, 0]);
         let kp_a = [Keypoint { x: 10.0, y: 20.0, octave: 0, angle: 0.0, response: 1.0 }];
         let desc_a = [zero];
@@ -1142,7 +1142,7 @@ mod tests {
     }
 
     #[test]
-    fn match_guided_epipolar_handles_vertical_epipolar_line() {
+    async fn match_guided_epipolar_handles_vertical_epipolar_line() {
         let zero = Descriptor256([0, 0, 0, 0]);
         let kp_a = [Keypoint { x: 15.0, y: 5.0, octave: 0, angle: 0.0, response: 1.0 }];
         let desc_a = [zero];
@@ -1157,7 +1157,7 @@ mod tests {
     }
 
     #[test]
-    fn match_guided_epipolar_returns_empty_for_empty_kp_b_and_degenerate_matrix() {
+    async fn match_guided_epipolar_returns_empty_for_empty_kp_b_and_degenerate_matrix() {
         let kp_a = [Keypoint { x: 10.0, y: 20.0, octave: 0, angle: 0.0, response: 1.0 }];
         let desc_a = [Descriptor256([0, 0, 0, 0])];
         let f_matrix = [[0.0, 0.0, 0.0], [0.0, 0.0, -1.0], [0.0, 1.0, 0.0]];
@@ -1169,7 +1169,7 @@ mod tests {
     }
 
     #[test]
-    fn match_zncc_fallback_finds_correct_correspondence_within_radius() {
+    async fn match_zncc_fallback_finds_correct_correspondence_within_radius() {
         let size = 64u32;
         let img_a = lcg_texture(size, 55);
         let shift = 3.0f32;
@@ -1185,14 +1185,14 @@ mod tests {
     }
 
     #[test]
-    fn match_zncc_fallback_returns_empty_for_empty_kp_b() {
+    async fn match_zncc_fallback_returns_empty_for_empty_kp_b() {
         let img = lcg_texture(32, 1);
         let kp_a = [Keypoint { x: 16.0, y: 16.0, octave: 0, angle: 0.0, response: 1.0 }];
         assert!(match_zncc_fallback(&img, &kp_a, &img, &[], 5.0).is_empty(), "an empty kp_b should yield no matches");
     }
 
     #[test]
-    fn match_zncc_fallback_no_match_when_correlation_below_threshold() {
+    async fn match_zncc_fallback_no_match_when_correlation_below_threshold() {
         let img_a = lcg_texture(48, 1);
         let img_b = lcg_texture(48, 2);
         let kp_a = [Keypoint { x: 24.0, y: 24.0, octave: 0, angle: 0.0, response: 1.0 }];
@@ -1203,7 +1203,7 @@ mod tests {
 
     // #region 🔖️FlowTests
     #[test]
-    fn klt_track_recovers_known_shift_and_flags_out_of_bounds() {
+    async fn klt_track_recovers_known_shift_and_flags_out_of_bounds() {
         let size = 48u32;
         let img_a = smooth_texture(size);
         let shift = 2.3f32;
@@ -1222,7 +1222,7 @@ mod tests {
     }
 
     #[test]
-    fn forward_backward_prune_invalidates_degenerate_track_and_keeps_good_one() {
+    async fn forward_backward_prune_invalidates_degenerate_track_and_keeps_good_one() {
         let size = 48u32;
         let img_a = smooth_texture(size);
         let shift = 1.5f32;
@@ -1240,7 +1240,7 @@ mod tests {
     }
 
     #[test]
-    fn forward_backward_prune_skips_already_invalid_points() {
+    async fn forward_backward_prune_skips_already_invalid_points() {
         let size = 32u32;
         let img = smooth_texture(size);
         let pyr = build_pyramid(&img, 2);
@@ -1252,7 +1252,7 @@ mod tests {
     }
 
     #[test]
-    fn klt_track_returns_invalid_for_empty_pyramid_levels() {
+    async fn klt_track_returns_invalid_for_empty_pyramid_levels() {
         let empty_pyr = Pyramid { levels: Vec::new(), scale: 0.5 };
         let other_pyr = Pyramid { levels: vec![ImageGray::new(8, 8)], scale: 0.5 };
         let tracked = klt_track(&empty_pyr, &other_pyr, &[(1.0, 1.0)], 3, 5);
@@ -1264,7 +1264,7 @@ mod tests {
     }
 
     #[test]
-    fn klt_track_flags_invalid_on_singular_flat_region() {
+    async fn klt_track_flags_invalid_on_singular_flat_region() {
         let flat = ImageGray::new(32, 32);
         let pyr = build_pyramid(&flat, 2);
         let tracked = klt_track(&pyr, &pyr, &[(10.0, 10.0)], 5, 10);
@@ -1273,7 +1273,7 @@ mod tests {
     // #endregion 🔖️FlowTests
 
     // #region 🔖️AkazeTests
-    fn blob_image(size: u32) -> ImageGray {
+    async fn blob_image(size: u32) -> ImageGray {
         let mut img = ImageGray::new(size, size);
         for v in img.data.iter_mut() {
             *v = 0.1;
@@ -1302,19 +1302,19 @@ mod tests {
         scale: f32,
     }
 
-    fn rotate_scale_matrix(t: &TestTransform) -> [[f32; 3]; 2] {
+    async fn rotate_scale_matrix(t: &TestTransform) -> [[f32; 3]; 2] {
         let (sin_t, cos_t) = t.theta.sin_cos();
         let inv_s = 1.0 / t.scale;
         [[cos_t * inv_s, sin_t * inv_s, t.cx - t.cx * cos_t * inv_s - t.cy * sin_t * inv_s], [-sin_t * inv_s, cos_t * inv_s, t.cy + t.cx * sin_t * inv_s - t.cy * cos_t * inv_s]]
     }
 
-    fn transform_point(t: &TestTransform, x: f32, y: f32) -> (f32, f32) {
+    async fn transform_point(t: &TestTransform, x: f32, y: f32) -> (f32, f32) {
         let (sin_t, cos_t) = t.theta.sin_cos();
         let (dx, dy) = (x - t.cx, y - t.cy);
         (t.cx + t.scale * (cos_t * dx - sin_t * dy), t.cy + t.scale * (sin_t * dx + cos_t * dy))
     }
 
-    fn repeatability_fraction(base: &[Keypoint], transformed: &[Keypoint], t: &TestTransform, size: u32, margin: f32, tolerance: f32) -> f64 {
+    async fn repeatability_fraction(base: &[Keypoint], transformed: &[Keypoint], t: &TestTransform, size: u32, margin: f32, tolerance: f32) -> f64 {
         let mut checked = 0u32;
         let mut matched = 0u32;
         for kp in base {
@@ -1338,7 +1338,7 @@ mod tests {
     }
 
     #[test]
-    fn akaze_repeatability_is_at_least_orb_repeatability_under_scale_and_rotation() {
+    async fn akaze_repeatability_is_at_least_orb_repeatability_under_scale_and_rotation() {
         let size = 96u32;
         let img_a = blob_image(size);
         let transform = TestTransform { cx: size as f32 / 2.0, cy: size as f32 / 2.0, theta: 12f32.to_radians(), scale: 1.25 };
@@ -1365,7 +1365,7 @@ mod tests {
     }
 
     #[test]
-    fn describe_akaze_is_deterministic_and_self_hamming_zero() {
+    async fn describe_akaze_is_deterministic_and_self_hamming_zero() {
         let img = textured_image(64);
         let scale_space = build_akaze_scale_space(&img, 3, 4);
         let kp = Keypoint { x: 32.0, y: 32.0, octave: 0, angle: 0.3, response: 1.0 };
@@ -1376,28 +1376,28 @@ mod tests {
     }
 
     #[test]
-    fn fed_tau_schedule_returns_empty_for_non_positive_time() {
+    async fn fed_tau_schedule_returns_empty_for_non_positive_time() {
         assert!(fed_tau_schedule(0.0, AKAZE_FED_TAU_MAX).is_empty());
         assert!(fed_tau_schedule(-1.0, AKAZE_FED_TAU_MAX).is_empty());
         assert!(!fed_tau_schedule(1.0, AKAZE_FED_TAU_MAX).is_empty(), "a positive evolution time should produce at least one FED step");
     }
 
     #[test]
-    fn diffusion_step_returns_input_clone_for_zero_sized_image() {
+    async fn diffusion_step_returns_input_clone_for_zero_sized_image() {
         let empty = ImageGray { width: 0, height: 0, data: Vec::new() };
         let out = diffusion_step(&empty, &[], 0.1);
         assert_eq!(out, empty, "a zero-width/height image should pass through diffusion_step unchanged");
     }
 
     #[test]
-    fn akaze_grid_top_k_returns_empty_for_no_candidates_or_zero_target() {
+    async fn akaze_grid_top_k_returns_empty_for_no_candidates_or_zero_target() {
         assert!(akaze_grid_top_k(Vec::new(), 64, 64, 16, 10).is_empty(), "no candidates should yield no selection");
         let candidates = vec![AkazeCandidate { x: 1.0, y: 1.0, response: 1.0, level: 0 }];
         assert!(akaze_grid_top_k(candidates, 64, 64, 16, 0).is_empty(), "a zero target_count should yield no selection");
     }
 
     #[test]
-    fn quadratic_refine_2d_returns_zero_offset_for_singular_hessian() {
+    async fn quadratic_refine_2d_returns_zero_offset_for_singular_hessian() {
         let response = vec![1.0f32; 25];
         let (ox, oy) = quadratic_refine_2d(&response, 5, 2, 2);
         assert_eq!((ox, oy), (0.0, 0.0), "a perfectly flat response has a singular Hessian and should refine to a zero offset");

@@ -18,7 +18,7 @@ pub(crate) struct RawPart {
     pub(crate) triangles: Vec<[usize; 3]>,
     pub(crate) diagnostic_ids: Vec<String>,
 }
-pub(crate) fn policy() -> GltfAnalysisPolicy {
+pub(crate) async fn policy() -> GltfAnalysisPolicy {
     GltfAnalysisPolicy {
         schema_version: 2,
         absolute_length_tolerance: 1e-9,
@@ -34,7 +34,7 @@ pub(crate) fn policy() -> GltfAnalysisPolicy {
         fingerprint: "gltf-geometry-policy-v2-1e-9-1e-7-4096".into(),
     }
 }
-pub(crate) fn provenance(space: GltfCoordinateSpace) -> GltfProvenance {
+pub(crate) async fn provenance(space: GltfCoordinateSpace) -> GltfProvenance {
     GltfProvenance {
         algorithm: "s.stdio.gltf.geometry".into(),
         algorithm_version: 2,
@@ -45,30 +45,30 @@ pub(crate) fn provenance(space: GltfCoordinateSpace) -> GltfProvenance {
         pose: Some("static-node-and-mesh-morph-weights;skinning-unapplied".into()),
     }
 }
-pub(crate) fn quality(method: GltfComputationMethod, n: usize, topology: Option<Topology>) -> GltfQuality {
+pub(crate) async fn quality(method: GltfComputationMethod, n: usize, topology: Option<Topology>) -> GltfQuality {
     let t = topology.unwrap_or(Topology { components: 0, boundary_loops: 0, chi: 0, genus: None, manifold: true, watertight: false, oriented: true });
     GltfQuality { method, coverage: if n == 0 { 0.0 } else { 1.0 }, absolute_error: None, relative_error: None, sample_count: n as u64, watertight: t.watertight, manifold: t.manifold, consistently_oriented: t.oriented, warnings: Vec::new() }
 }
 
-pub(crate) fn add(a: V3, b: V3) -> V3 {
+pub(crate) async fn add(a: V3, b: V3) -> V3 {
     [a[0] + b[0], a[1] + b[1], a[2] + b[2]]
 }
-pub(crate) fn sub(a: V3, b: V3) -> V3 {
+pub(crate) async fn sub(a: V3, b: V3) -> V3 {
     [a[0] - b[0], a[1] - b[1], a[2] - b[2]]
 }
-pub(crate) fn mul(a: V3, s: f64) -> V3 {
+pub(crate) async fn mul(a: V3, s: f64) -> V3 {
     [a[0] * s, a[1] * s, a[2] * s]
 }
-pub(crate) fn dot(a: V3, b: V3) -> f64 {
+pub(crate) async fn dot(a: V3, b: V3) -> f64 {
     a[0] * b[0] + a[1] * b[1] + a[2] * b[2]
 }
-pub(crate) fn cross(a: V3, b: V3) -> V3 {
+pub(crate) async fn cross(a: V3, b: V3) -> V3 {
     [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]]
 }
-pub(crate) fn norm(a: V3) -> f64 {
+pub(crate) async fn norm(a: V3) -> f64 {
     dot(a, a).sqrt()
 }
-pub(crate) fn normalize(a: V3) -> V3 {
+pub(crate) async fn normalize(a: V3) -> V3 {
     let n = norm(a);
     if n > 0.0 {
         mul(a, 1.0 / n)
@@ -76,10 +76,10 @@ pub(crate) fn normalize(a: V3) -> V3 {
         [1.0, 0.0, 0.0]
     }
 }
-fn identity() -> M4 {
+async fn identity() -> M4 {
     [1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0]
 }
-fn mat_mul(a: M4, b: M4) -> M4 {
+async fn mat_mul(a: M4, b: M4) -> M4 {
     let mut c = [0.0; 16];
     for col in 0..4 {
         for row in 0..4 {
@@ -88,10 +88,10 @@ fn mat_mul(a: M4, b: M4) -> M4 {
     }
     c
 }
-fn transform(m: M4, p: V3) -> V3 {
+async fn transform(m: M4, p: V3) -> V3 {
     [m[0] * p[0] + m[4] * p[1] + m[8] * p[2] + m[12], m[1] * p[0] + m[5] * p[1] + m[9] * p[2] + m[13], m[2] * p[0] + m[6] * p[1] + m[10] * p[2] + m[14]]
 }
-fn node_matrix(node: &crate::artifacts::gltf::schema::snapshot::GltfNode) -> M4 {
+async fn node_matrix(node: &crate::artifacts::gltf::schema::snapshot::GltfNode) -> M4 {
     if let Some(m) = node.matrix {
         return m;
     }
@@ -119,7 +119,7 @@ fn node_matrix(node: &crate::artifacts::gltf::schema::snapshot::GltfNode) -> M4 
         1.0,
     ]
 }
-pub(crate) fn fingerprint(points: &[V3], triangles: &[[usize; 3]]) -> String {
+pub(crate) async fn fingerprint(points: &[V3], triangles: &[[usize; 3]]) -> String {
     let mut h = 1469598103934665603u64;
     for p in points {
         for x in p {
@@ -135,7 +135,7 @@ pub(crate) fn fingerprint(points: &[V3], triangles: &[[usize; 3]]) -> String {
     }
     format!("{h:016x}")
 }
-pub(crate) fn byte_fingerprint(bytes: &[u8]) -> String {
+pub(crate) async fn byte_fingerprint(bytes: &[u8]) -> String {
     let mut hash = 1469598103934665603u64;
     for byte in bytes {
         hash ^= *byte as u64;
@@ -144,7 +144,7 @@ pub(crate) fn byte_fingerprint(bytes: &[u8]) -> String {
     format!("{hash:016x}")
 }
 
-fn primitive_triangles(mode: u64, indices: &[usize]) -> Result<Vec<[usize; 3]>, GltfAvailability> {
+async fn primitive_triangles(mode: u64, indices: &[usize]) -> Result<Vec<[usize; 3]>, GltfAvailability> {
     let mut out = Vec::new();
     match mode {
         4 => {
@@ -171,7 +171,7 @@ fn primitive_triangles(mode: u64, indices: &[usize]) -> Result<Vec<[usize; 3]>, 
     Ok(out)
 }
 
-fn decode_part(snapshot: &GltfSnapshot, mesh_index: usize, primitive_index: usize, matrix: M4, scene: Option<usize>, path: &[usize], weights: &[f64], diagnostics: &mut Vec<GltfDiagnostic>) -> Option<RawPart> {
+async fn decode_part(snapshot: &GltfSnapshot, mesh_index: usize, primitive_index: usize, matrix: M4, scene: Option<usize>, path: &[usize], weights: &[f64], diagnostics: &mut Vec<GltfDiagnostic>) -> Option<RawPart> {
     let mesh = snapshot.document.meshes.get(mesh_index)?;
     let primitive = mesh.primitives.get(primitive_index)?;
     let Some(position_accessor) = primitive.attributes.iter().find(|(s, _)| s == "POSITION").map(|x| x.1) else {
@@ -297,8 +297,8 @@ fn decode_part(snapshot: &GltfSnapshot, mesh_index: usize, primitive_index: usiz
     Some(RawPart { address, name: mesh.name.clone(), points, triangles, diagnostic_ids: Vec::new() })
 }
 
-pub(crate) fn collect_parts(snapshot: &GltfSnapshot, diagnostics: &mut Vec<GltfDiagnostic>) -> (Vec<RawPart>, u64) {
-    fn visit(snapshot: &GltfSnapshot, scene: usize, node_index: usize, parent: M4, path: &mut Vec<usize>, stack: &mut BTreeSet<usize>, parts: &mut Vec<RawPart>, diagnostics: &mut Vec<GltfDiagnostic>, instances: &mut u64) {
+pub(crate) async fn collect_parts(snapshot: &GltfSnapshot, diagnostics: &mut Vec<GltfDiagnostic>) -> (Vec<RawPart>, u64) {
+    async fn visit(snapshot: &GltfSnapshot, scene: usize, node_index: usize, parent: M4, path: &mut Vec<usize>, stack: &mut BTreeSet<usize>, parts: &mut Vec<RawPart>, diagnostics: &mut Vec<GltfDiagnostic>, instances: &mut u64) {
         let Some(node) = snapshot.document.nodes.get(node_index) else { return };
         if !stack.insert(node_index) {
             let id = format!("gltf-geometry-{}", diagnostics.len());
@@ -344,7 +344,7 @@ pub(crate) fn collect_parts(snapshot: &GltfSnapshot, diagnostics: &mut Vec<GltfD
     (parts, instances)
 }
 
-fn bounds(points: &[V3]) -> Option<(V3, V3, V3)> {
+async fn bounds(points: &[V3]) -> Option<(V3, V3, V3)> {
     let first = *points.first()?;
     let mut lo = first;
     let mut hi = first;
@@ -368,12 +368,12 @@ pub(crate) struct GltfPairGeometry {
     pub(crate) sample_count: usize,
 }
 
-fn sampled_points(points: &[V3], limit: usize) -> impl Iterator<Item = V3> + '_ {
+async fn sampled_points(points: &[V3], limit: usize) -> impl Iterator<Item = V3> + '_ {
     let step = points.len().div_ceil(limit.max(1));
     points.iter().step_by(step).copied()
 }
 
-pub(crate) fn pair_geometry(first: &RawPart, second: &RawPart, policy: &GltfAnalysisPolicy) -> Option<GltfPairGeometry> {
+pub(crate) async fn pair_geometry(first: &RawPart, second: &RawPart, policy: &GltfAnalysisPolicy) -> Option<GltfPairGeometry> {
     let (first_lo, first_hi, _) = bounds(&first.points)?;
     let (second_lo, second_hi, _) = bounds(&second.points)?;
     let point_limit = ((policy.sampling_budget as f64).sqrt() as usize).max(1);
@@ -402,11 +402,11 @@ pub(crate) fn pair_geometry(first: &RawPart, second: &RawPart, policy: &GltfAnal
     })
 }
 
-pub(crate) fn triangle_area(a: V3, b: V3, c: V3) -> f64 {
+pub(crate) async fn triangle_area(a: V3, b: V3, c: V3) -> f64 {
     0.5 * norm(cross(sub(b, a), sub(c, a)))
 }
 
-pub(crate) fn convex_hull_metrics(points: &[V3], tolerance: f64) -> Option<(f64, f64, Vec<(V3, f64)>)> {
+pub(crate) async fn convex_hull_metrics(points: &[V3], tolerance: f64) -> Option<(f64, f64, Vec<(V3, f64)>)> {
     if points.len() < 4 {
         return None;
     }
@@ -482,7 +482,7 @@ pub(crate) fn convex_hull_metrics(points: &[V3], tolerance: f64) -> Option<(f64,
     Some((area, volume.abs(), supporting_planes))
 }
 
-pub(crate) fn hull_sample(points: &[V3], budget: usize) -> Vec<V3> {
+pub(crate) async fn hull_sample(points: &[V3], budget: usize) -> Vec<V3> {
     let limit = budget.min(32).max(4);
     if points.len() <= limit {
         return points.to_vec();
@@ -507,7 +507,7 @@ pub(crate) fn hull_sample(points: &[V3], budget: usize) -> Vec<V3> {
     selected.into_iter().take(limit).map(|index| points[index]).collect()
 }
 
-fn ray_triangle(origin: V3, direction: V3, a: V3, b: V3, c: V3, tolerance: f64) -> Option<f64> {
+async fn ray_triangle(origin: V3, direction: V3, a: V3, b: V3, c: V3, tolerance: f64) -> Option<f64> {
     let e1 = sub(b, a);
     let e2 = sub(c, a);
     let h = cross(direction, e2);
@@ -534,7 +534,7 @@ fn ray_triangle(origin: V3, direction: V3, a: V3, b: V3, c: V3, tolerance: f64) 
     }
 }
 
-pub(crate) fn thickness_samples(points: &[V3], faces: &[[usize; 3]], budget: usize, tolerance: f64) -> Vec<f64> {
+pub(crate) async fn thickness_samples(points: &[V3], faces: &[[usize; 3]], budget: usize, tolerance: f64) -> Vec<f64> {
     let mut normals = vec![[0.0; 3]; points.len()];
     for f in faces {
         let n = cross(sub(points[f[1]], points[f[0]]), sub(points[f[2]], points[f[0]]));
@@ -569,7 +569,7 @@ pub(crate) fn thickness_samples(points: &[V3], faces: &[[usize; 3]], budget: usi
     out
 }
 
-pub(crate) fn roughness_samples(points: &[V3], faces: &[[usize; 3]]) -> Vec<f64> {
+pub(crate) async fn roughness_samples(points: &[V3], faces: &[[usize; 3]]) -> Vec<f64> {
     let mut neighbors = vec![BTreeSet::new(); points.len()];
     for f in faces {
         for &(a, b) in &[(f[0], f[1]), (f[1], f[2]), (f[2], f[0])] {
@@ -596,16 +596,16 @@ struct Dsu {
     r: Vec<u8>,
 }
 impl Dsu {
-    fn new(n: usize) -> Self {
+    async fn new(n: usize) -> Self {
         Self { p: (0..n).collect(), r: vec![0; n] }
     }
-    fn find(&mut self, x: usize) -> usize {
+    async fn find(&mut self, x: usize) -> usize {
         if self.p[x] != x {
             self.p[x] = self.find(self.p[x])
         }
         self.p[x]
     }
-    fn union(&mut self, a: usize, b: usize) {
+    async fn union(&mut self, a: usize, b: usize) {
         let (mut a, mut b) = (self.find(a), self.find(b));
         if a == b {
             return;
@@ -620,7 +620,7 @@ impl Dsu {
     }
 }
 
-fn topology(points: &[V3], faces: &[[usize; 3]]) -> (Topology, Vec<V3>, Vec<[usize; 3]>, BTreeMap<(usize, usize), Vec<(usize, bool)>>) {
+async fn topology(points: &[V3], faces: &[[usize; 3]]) -> (Topology, Vec<V3>, Vec<[usize; 3]>, BTreeMap<(usize, usize), Vec<(usize, bool)>>) {
     let diagonal = bounds(points).map(|x| norm(x.2)).unwrap_or(0.0);
     let tol = (diagonal * 1e-9).max(1e-9);
     let mut map = BTreeMap::<(i64, i64, i64), usize>::new();
@@ -676,11 +676,11 @@ fn topology(points: &[V3], faces: &[[usize; 3]]) -> (Topology, Vec<V3>, Vec<[usi
     (Topology { components, boundary_loops, chi, genus, manifold, watertight, oriented }, welded, clean, edges)
 }
 
-pub(crate) fn topology_summary(points: &[V3], faces: &[[usize; 3]]) -> Topology {
+pub(crate) async fn topology_summary(points: &[V3], faces: &[[usize; 3]]) -> Topology {
     topology(points, faces).0
 }
 
-fn point_triangle_distance_squared(point: V3, a: V3, b: V3, c: V3) -> f64 {
+async fn point_triangle_distance_squared(point: V3, a: V3, b: V3, c: V3) -> f64 {
     let ab = sub(b, a);
     let ac = sub(c, a);
     let ap = sub(point, a);
@@ -721,7 +721,7 @@ fn point_triangle_distance_squared(point: V3, a: V3, b: V3, c: V3) -> f64 {
     dot(sub(point, projection), sub(point, projection))
 }
 
-fn segment_distance_squared(first_start: V3, first_end: V3, second_start: V3, second_end: V3) -> f64 {
+async fn segment_distance_squared(first_start: V3, first_end: V3, second_start: V3, second_end: V3) -> f64 {
     let first_direction = sub(first_end, first_start);
     let second_direction = sub(second_end, second_start);
     let between = sub(first_start, second_start);
@@ -739,7 +739,7 @@ fn segment_distance_squared(first_start: V3, first_end: V3, second_start: V3, se
     dot(delta, delta)
 }
 
-fn triangle_distance(first: [V3; 3], second: [V3; 3]) -> f64 {
+async fn triangle_distance(first: [V3; 3], second: [V3; 3]) -> f64 {
     let mut squared =
         first.iter().map(|point| point_triangle_distance_squared(*point, second[0], second[1], second[2])).chain(second.iter().map(|point| point_triangle_distance_squared(*point, first[0], first[1], first[2]))).fold(f64::INFINITY, f64::min);
     for first_edge in [(first[0], first[1]), (first[1], first[2]), (first[2], first[0])] {
@@ -750,7 +750,7 @@ fn triangle_distance(first: [V3; 3], second: [V3; 3]) -> f64 {
     squared.sqrt()
 }
 
-fn point_in_closed_mesh(point: V3, points: &[V3], faces: &[[usize; 3]], tolerance: f64) -> Option<bool> {
+async fn point_in_closed_mesh(point: V3, points: &[V3], faces: &[[usize; 3]], tolerance: f64) -> Option<bool> {
     let directions = [normalize([1.0, 0.371, 0.529]), normalize([0.233, 1.0, 0.419]), normalize([0.317, 0.271, 1.0])];
     let mut votes = Vec::new();
     for direction in directions {
@@ -769,7 +769,7 @@ fn point_in_closed_mesh(point: V3, points: &[V3], faces: &[[usize; 3]], toleranc
     }
 }
 
-fn shell_material_metrics(points: &[V3], faces: &[[usize; 3]], edge_faces: &BTreeMap<(usize, usize), Vec<(usize, bool)>>, tolerance: f64, budget: usize) -> Option<(f64, f64, f64, V3)> {
+async fn shell_material_metrics(points: &[V3], faces: &[[usize; 3]], edge_faces: &BTreeMap<(usize, usize), Vec<(usize, bool)>>, tolerance: f64, budget: usize) -> Option<(f64, f64, f64, V3)> {
     let mut neighbors = vec![BTreeSet::new(); faces.len()];
     for incidences in edge_faces.values().filter(|incidences| incidences.len() == 2) {
         neighbors[incidences[0].0].insert(incidences[1].0);
@@ -866,7 +866,7 @@ fn shell_material_metrics(points: &[V3], faces: &[[usize; 3]], edge_faces: &BTre
     Some((material, enclosed, (enclosed - material).max(0.0), mul(material_centroid, 1.0 / material)))
 }
 
-pub(crate) fn statistics(values: &[f64], edges: &[f64]) -> GltfStatistics {
+pub(crate) async fn statistics(values: &[f64], edges: &[f64]) -> GltfStatistics {
     if values.is_empty() {
         return GltfStatistics::default();
     }
@@ -899,7 +899,7 @@ pub(crate) fn statistics(values: &[f64], edges: &[f64]) -> GltfStatistics {
     }
 }
 
-fn principal_frame(points: &[V3], centroid: V3) -> GltfPrincipalFrame {
+async fn principal_frame(points: &[V3], centroid: V3) -> GltfPrincipalFrame {
     let mut a = [[0.0; 3]; 3];
     for p in points {
         let d = sub(*p, centroid);
@@ -975,7 +975,7 @@ pub(crate) struct GltfGeometryContext<'a> {
 }
 
 impl<'a> GltfGeometryContext<'a> {
-    pub(crate) fn new(points: &[V3], triangles: &[[usize; 3]], policy: &'a GltfAnalysisPolicy) -> Option<Self> {
+    pub(crate) async fn new(points: &[V3], triangles: &[[usize; 3]], policy: &'a GltfAnalysisPolicy) -> Option<Self> {
         let (topology, points, faces, edge_faces) = topology(points, triangles);
         let sample_count = points.len();
         let (lo, hi, dimensions) = bounds(&points)?;
@@ -1035,7 +1035,7 @@ mod tests {
     };
     use super::*;
 
-    fn box_part(lo: V3, hi: V3) -> RawPart {
+    async fn box_part(lo: V3, hi: V3) -> RawPart {
         RawPart {
             address: GltfEntityAddress { scope: GltfEntityScope::Primitive, scene: Some(0), node_path: vec![0], mesh: Some(0), primitive: Some(0), component: None, surface_region: None, content_fingerprint: "pair-geometry-test".into() },
             name: None,
@@ -1046,7 +1046,7 @@ mod tests {
     }
 
     #[test]
-    fn pair_geometry_preserves_contact_distance_and_box_overlap_leaf_semantics() {
+    async fn pair_geometry_preserves_contact_distance_and_box_overlap_leaf_semantics() {
         let first = box_part([0.0, 0.0, 0.0], [4.0, 3.0, 3.0]);
         let contact = box_part([4.0, 0.0, 0.0], [5.0, 3.0, 3.0]);
         let overlapping = box_part([2.0, 1.0, -1.0], [5.0, 5.0, 4.0]);

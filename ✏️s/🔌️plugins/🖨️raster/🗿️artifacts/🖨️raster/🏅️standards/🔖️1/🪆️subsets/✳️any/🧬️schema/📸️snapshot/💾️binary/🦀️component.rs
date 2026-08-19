@@ -12,12 +12,12 @@ use crate::artifacts::raster::RasterSnapshot;
 use store::PackError;
 
 /// 📦️ Encodes a `RasterSnapshot` to its binary pack form.
-pub fn encode(document: &RasterSnapshot) -> Vec<u8> {
+pub async fn encode(document: &RasterSnapshot) -> Vec<u8> {
     store::ArtifactPack::encode_pack(document)
 }
 
 /// 📖️ Decodes a `RasterSnapshot` from its binary pack form.
-pub fn decode(bytes: &[u8]) -> Result<RasterSnapshot, PackError> {
+pub async fn decode(bytes: &[u8]) -> Result<RasterSnapshot, PackError> {
     <RasterSnapshot as store::ArtifactPack>::decode_pack(bytes)
 }
 
@@ -31,7 +31,7 @@ mod tests {
     use std::collections::BTreeMap;
 
     #[test]
-    fn pack_round_trips_and_agrees_with_dsl() {
+    async fn pack_round_trips_and_agrees_with_dsl() {
         let document = crate::artifacts::raster::schema::semio_fixture_snapshot();
         store::os_store::test_support::assert_dsl_pack_equivalence(&document);
         let bytes = encode(&document);
@@ -39,7 +39,7 @@ mod tests {
     }
 
     #[test]
-    fn pack_round_trips_representative_document() {
+    async fn pack_round_trips_representative_document() {
         let mut assets = BTreeMap::new();
         assets.insert("asset-1".into(), crate::artifacts::raster::image_asset_child_handle("asset-1", &RasterImageAsset { mime: "image/png".into(), data: b"abc".to_vec() }));
         let mut params = BTreeMap::new();
@@ -103,7 +103,7 @@ mod tests {
     /// existing pack round-trip laws (same pattern as `mathematical_pack`'s own
     /// `command_envelope_round_trip_holds_for_an_applied_operation`).
     #[test]
-    fn command_envelope_round_trip_holds_for_an_applied_operation() {
+    async fn command_envelope_round_trip_holds_for_an_applied_operation() {
         use protocol::{ArtifactId, Edit, SchemaId};
         use store::{create_document_envelope, ArtifactCommand, ArtifactStore};
 

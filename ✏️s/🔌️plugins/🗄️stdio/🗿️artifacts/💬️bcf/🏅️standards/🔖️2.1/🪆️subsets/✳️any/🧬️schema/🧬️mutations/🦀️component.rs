@@ -119,7 +119,7 @@ pub enum BcfMutation {
 //#region 🔖️Apply
 /// ▶️ Applies `mutation` to `snapshot`. Single semantics source: the returned diff IS what gets
 /// applied.
-pub fn apply_bcf_mutation(snapshot: &mut BcfSnapshot, mutation: &BcfMutation) -> protocol::MutationOutcome<BcfDiff> {
+pub async fn apply_bcf_mutation(snapshot: &mut BcfSnapshot, mutation: &BcfMutation) -> protocol::MutationOutcome<BcfDiff> {
     let outcome = <BcfMutation as Mutation<BcfSnapshot>>::diff(mutation, snapshot);
     match protocol::MutationDiff::apply(outcome.diff(), snapshot) {
         Ok(next) => {
@@ -135,7 +135,7 @@ pub fn apply_bcf_mutation(snapshot: &mut BcfSnapshot, mutation: &BcfMutation) ->
 impl Mutation<BcfSnapshot> for BcfMutation {
     type Diff = BcfDiff;
 
-    fn diff(&self, base: &BcfSnapshot) -> protocol::MutationOutcome<Self::Diff> {
+    async fn diff(&self, base: &BcfSnapshot) -> protocol::MutationOutcome<Self::Diff> {
         protocol::MutationOutcome::new(match self {
             BcfMutation::NoMutation => BcfDiff::default(),
             BcfMutation::SetSnapshot { snapshot } => diff_set_snapshot(base, snapshot),
@@ -171,7 +171,7 @@ impl Mutation<BcfSnapshot> for BcfMutation {
         })
     }
 
-    fn inverse(&self, base: &BcfSnapshot) -> Vec<Self> {
+    async fn inverse(&self, base: &BcfSnapshot) -> Vec<Self> {
         match self {
             BcfMutation::NoMutation => vec![BcfMutation::NoMutation],
             BcfMutation::SetSnapshot { .. } => vec![BcfMutation::SetSnapshot { snapshot: base.clone() }],
@@ -235,15 +235,15 @@ impl Mutation<BcfSnapshot> for BcfMutation {
     }
 }
 
-fn find_topic<'a>(base: &'a BcfSnapshot, guid: &str) -> Option<&'a BcfTopic> {
+async fn find_topic<'a>(base: &'a BcfSnapshot, guid: &str) -> Option<&'a BcfTopic> {
     base.topics.iter().find(|t| t.guid == guid)
 }
 
-fn find_comment<'a>(base: &'a BcfSnapshot, topic_guid: &str, guid: &str) -> Option<&'a BcfComment> {
+async fn find_comment<'a>(base: &'a BcfSnapshot, topic_guid: &str, guid: &str) -> Option<&'a BcfComment> {
     find_topic(base, topic_guid)?.comments.iter().find(|c| c.guid == guid)
 }
 
-fn find_viewpoint<'a>(base: &'a BcfSnapshot, topic_guid: &str, guid: &str) -> Option<&'a BcfViewpoint> {
+async fn find_viewpoint<'a>(base: &'a BcfSnapshot, topic_guid: &str, guid: &str) -> Option<&'a BcfViewpoint> {
     find_topic(base, topic_guid)?.viewpoints.iter().find(|v| v.guid == guid)
 }
 //#endregion 🔖️MutationTrait
@@ -254,16 +254,16 @@ fn find_viewpoint<'a>(base: &'a BcfSnapshot, topic_guid: &str, guid: &str) -> Op
 /// primitives (`enc_str`/`enc_camera`/`enc_topic`/`encode_option`/...) rather than duplicating them
 /// a second time in this file, same pattern `SvgMutation` established. Grammar: `keyword arg=value
 /// ...` (space-separated), one match arm per variant.
-fn enc_bcf_snapshot(s: &BcfSnapshot) -> String {
+async fn enc_bcf_snapshot(s: &BcfSnapshot) -> String {
     format!("[{},{},{},{}]", enc_str(&s.schema), enc_str(&s.version), enc_list(&s.topics, enc_topic), enc_list(&s.parts, enc_part))
 }
-fn dec_bcf_snapshot(s: &str) -> Result<BcfSnapshot, String> {
+async fn dec_bcf_snapshot(s: &str) -> Result<BcfSnapshot, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [schema, version, topics, parts_field] = parts.as_slice() else { return Err(format!("bcf snapshot: expected 4 fields, got {}", parts.len())) };
     Ok(BcfSnapshot { schema: dec_str(schema)?, version: dec_str(version)?, topics: dec_list(topics, dec_topic)?, parts: dec_list(parts_field, dec_part)? })
 }
 
-fn print_bcf_mutation(m: &BcfMutation) -> String {
+async fn print_bcf_mutation(m: &BcfMutation) -> String {
     match m {
         BcfMutation::NoMutation => "no-mutation".to_string(),
         BcfMutation::SetSnapshot { snapshot } => format!("set-snapshot snapshot={}", enc_bcf_snapshot(snapshot)),
@@ -299,7 +299,7 @@ fn print_bcf_mutation(m: &BcfMutation) -> String {
         BcfMutation::SetViewpointSnapshot { topic_guid, guid, snapshot } => format!("set-viewpoint-snapshot topic-guid={} guid={} snapshot={}", enc_str(topic_guid), enc_str(guid), encode_option(snapshot, |b: &Vec<u8>| enc_bytes(b))),
     }
 }
-fn parse_bcf_mutation(line: &str) -> Result<BcfMutation, String> {
+async fn parse_bcf_mutation(line: &str) -> Result<BcfMutation, String> {
     if line == "no-mutation" {
         return Ok(BcfMutation::NoMutation);
     }
@@ -341,10 +341,10 @@ fn parse_bcf_mutation(line: &str) -> Result<BcfMutation, String> {
 }
 
 impl protocol::OpText for BcfMutation {
-    fn print_op(&self) -> String {
+    async fn print_op(&self) -> String {
         print_bcf_mutation(self)
     }
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
+    async fn parse_op(line: &str) -> Result<Self, store::TextError> {
         parse_bcf_mutation(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
 }
@@ -356,22 +356,22 @@ impl protocol::OpText for BcfMutation {
 /// `BcfComment`/`BcfViewpoint`/`BcfCamera`/`BcfComponents`) reuses `../🔺️diff/🦀️component.rs`'s
 /// own `pub(crate)` binary primitives directly (imported above), same intra-artifact reuse pattern
 /// this file's text-form `OpText` impl already established for the string-grammar codecs.
-fn write_opt_str_bin(out: &mut Vec<u8>, opt: &Option<String>) {
+async fn write_opt_str_bin(out: &mut Vec<u8>, opt: &Option<String>) {
     out.push(if opt.is_some() { 1 } else { 0 });
     if let Some(v) = opt {
         write_str_lp(out, v);
     }
 }
-fn read_opt_str_bin(reader: &mut store::ByteReader<'_>) -> Result<Option<String>, String> {
+async fn read_opt_str_bin(reader: &mut store::ByteReader<'_>) -> Result<Option<String>, String> {
     Ok(if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(read_str_lp(reader)?) } else { None })
 }
-fn write_str_list_bin(out: &mut Vec<u8>, items: &[String]) {
+async fn write_str_list_bin(out: &mut Vec<u8>, items: &[String]) {
     store::pack_rt::write_varint_u64(out, items.len() as u64);
     for s in items {
         write_str_lp(out, s);
     }
 }
-fn read_str_list_bin(reader: &mut store::ByteReader<'_>) -> Result<Vec<String>, String> {
+async fn read_str_list_bin(reader: &mut store::ByteReader<'_>) -> Result<Vec<String>, String> {
     let count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut out = Vec::with_capacity(count as usize);
     for _ in 0..count {
@@ -386,7 +386,7 @@ fn read_str_list_bin(reader: &mut store::ByteReader<'_>) -> Result<Vec<String>, 
 /// upgraded from F6's `print_op().into_bytes()` text-as-binary shortcut. `tag` is the
 /// `BcfMutation` variant ordinal, in the same 0-13 declaration order `enum BcfMutation` above uses.
 impl protocol::OpBinary for BcfMutation {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         let tag: u8 = match self {
             BcfMutation::NoMutation => 0,
             BcfMutation::SetSnapshot { .. } => 1,
@@ -478,7 +478,7 @@ impl protocol::OpBinary for BcfMutation {
         Ok(out)
     }
 
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         let mut reader = store::ByteReader::new(bytes);
         let malformed = |what: &'static str, offset: usize, detail: String| protocol::ProtocolError::Malformed { what, offset: offset as u64, detail };
         let _format = reader.read_u8().map_err(|e| malformed("op format", 0, e.to_string()))?;
@@ -564,7 +564,7 @@ impl protocol::OpBinary for BcfMutation {
 /// conformance tests, same shape `📜️docx/…/🧬️mutations/🦀️component.rs`'s own
 /// `demo_mutation_cases()` establishes.
 #[cfg(test)]
-pub(crate) fn demo_mutation_cases() -> Vec<BcfMutation> {
+pub(crate) async fn demo_mutation_cases() -> Vec<BcfMutation> {
     use crate::artifacts::bcf::schema::diff::{demo_snapshot_a, demo_snapshot_b};
     let base = demo_snapshot_a();
     let snapshot = demo_snapshot_b();

@@ -8,7 +8,7 @@ pub const FORMS_PLAY_BODY_INSPECTION: &str = "forms.play.inspection";
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
-pub fn definition() -> PanelTabDefinition {
+pub async fn definition() -> PanelTabDefinition {
     PanelTabDefinition {
         kind: PanelTabKind::App(FRAMEWORK_PANEL_TAB_INSPECTION_ID.into()),
         label: LocalizedLabel::native(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, "Inspektion"),
@@ -26,7 +26,7 @@ pub fn definition() -> PanelTabDefinition {
 /// summary now; the per-selected-question kind editor (label/kind/required/options/vector fields/…,
 /// driven by `patchQuestions`/`patchQuestionOptions`/`patchVectorField`) that used to read
 /// `cfg.selected_ids` is gone with it.
-pub fn render(spec: &FormsSnapshot) -> UiNode {
+pub async fn render(spec: &FormsSnapshot) -> UiNode {
     ui_declarative_sections_to_tree(&[UiSectionNode {
         id: "forms-play-inspector.summary".into(),
         label: Some(Label::data(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL)),
@@ -50,14 +50,14 @@ mod tests {
     use crate::editor::forms::FORMS_PLAY_BODY_INSPECTION as BODY_INSPECTION;
 
     #[test]
-    fn the_inspector_always_shows_the_document_summary() {
+    async fn the_inspector_always_shows_the_document_summary() {
         let mut app = forms_app();
         let json = render_body(&mut app, BODY_INSPECTION);
         assert!(json.contains("forms-play-inspector.summary"));
     }
 
     #[test]
-    fn definition_binds_the_framework_inspection_tab_to_this_body() {
+    async fn definition_binds_the_framework_inspection_tab_to_this_body() {
         let definition = definition();
         assert_eq!(definition.body_key.as_deref(), Some(FORMS_PLAY_BODY_INSPECTION));
         assert!(matches!(definition.group, PanelGroup::Details));

@@ -20,7 +20,7 @@ pub mod engagement_input {
         pub value: String,
     }
 
-    pub fn handle(payload: &EngagementInput, _doc: &ArtifactView<'_, LowpolySnapshot>, _cfg: &ConfigView<'_, LowpolyConfig>, _ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
+    pub async fn handle(payload: &EngagementInput, _doc: &ArtifactView<'_, LowpolySnapshot>, _cfg: &ConfigView<'_, LowpolyConfig>, _ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
         Ok(Emit::config(vec![LowpolyConfigMutation::SetEngagementInput { value: payload.value.clone() }]))
     }
 }
@@ -36,7 +36,7 @@ pub mod engagement_submit {
         pub value: Option<String>,
     }
 
-    pub fn handle(payload: &EngagementSubmit, doc: &ArtifactView<'_, LowpolySnapshot>, cfg: &ConfigView<'_, LowpolyConfig>, ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
+    pub async fn handle(payload: &EngagementSubmit, doc: &ArtifactView<'_, LowpolySnapshot>, cfg: &ConfigView<'_, LowpolyConfig>, ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
         const ENGAGEMENT_COMMANDS: &[&str] = &["extrude", "inset", "bevel", "loopCut", "subdivide", "triangulate", "mirror", "decimate", "flipFaces", "merge", "dissolve", "snap"];
         let Some(typed) = payload.value.as_deref().map(str::trim).filter(|value| !value.is_empty()) else {
             return Ok(Emit::default());
@@ -71,7 +71,7 @@ mod tests {
     use crate::editor::lowpoly::LowpolyCommand;
 
     #[test]
-    fn engagement_submit_resolves_a_typed_token_into_a_real_command() {
+    async fn engagement_submit_resolves_a_typed_token_into_a_real_command() {
         use semio_framework_plugin::PluginApp;
         let mut a = app_with_registry();
         let object_id = a.snapshot().expect("projection").objects[0].id.clone();
@@ -82,7 +82,7 @@ mod tests {
     }
 
     #[test]
-    fn engagement_submit_ignores_unresolvable_input() {
+    async fn engagement_submit_ignores_unresolvable_input() {
         let mut a = app_with_registry();
         let result = dispatch(&mut a, LowpolyCommand::EngagementSubmit(super::engagement_submit::EngagementSubmit { value: Some("bogus".into()) }));
         assert!(result.mutations.is_empty());

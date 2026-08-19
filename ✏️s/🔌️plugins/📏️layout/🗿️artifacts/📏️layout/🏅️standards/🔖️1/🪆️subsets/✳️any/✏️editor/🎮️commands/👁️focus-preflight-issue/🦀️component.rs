@@ -15,7 +15,7 @@ pub struct FocusPreflightIssue {
 /// 👁️ `object_id` used to write straight into `LayoutConfigMutation::SetSelection`; selection is
 /// framework-owned now (domain "elements"), so a hit asks the host to redispatch `interactionSelect`
 /// via an effect instead — see `crate::editor::layout::layout_select_effect`.
-pub fn handle(payload: &FocusPreflightIssue, _doc: &ArtifactView<'_, LayoutSnapshot>, _cfg: &ConfigView<'_, LayoutConfig>) -> Result<Emit<LayoutMutation, LayoutConfigMutation>, Fault> {
+pub async fn handle(payload: &FocusPreflightIssue, _doc: &ArtifactView<'_, LayoutSnapshot>, _cfg: &ConfigView<'_, LayoutConfig>) -> Result<Emit<LayoutMutation, LayoutConfigMutation>, Fault> {
     let mut config_mutations = Vec::new();
     let mut effects = Vec::new();
     if let Some(object_id) = &payload.object_id {
@@ -37,7 +37,7 @@ mod tests {
     use semio_framework_plugin::INTERACTION_SELECT_ACTION_ID;
 
     #[test]
-    fn focus_preflight_issue_requests_a_select_effect_and_sets_active_page() {
+    async fn focus_preflight_issue_requests_a_select_effect_and_sets_active_page() {
         let mut app = layout_app();
         let result = dispatch(&mut app, LayoutCommand::FocusPreflightIssue(FocusPreflightIssue { object_id: Some("frame-1".into()), page_id: Some("page-2".into()) }));
         assert!(result.mutations.is_empty(), "preflight focus is config/effect-only, never a document operation");
@@ -45,7 +45,7 @@ mod tests {
     }
 
     #[test]
-    fn focus_preflight_issue_without_an_object_id_only_sets_active_page() {
+    async fn focus_preflight_issue_without_an_object_id_only_sets_active_page() {
         let mut app = layout_app();
         let result = dispatch(&mut app, LayoutCommand::FocusPreflightIssue(FocusPreflightIssue { object_id: None, page_id: Some("page-2".into()) }));
         assert!(result.requested_effects.is_empty(), "no object id means no select effect");

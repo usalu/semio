@@ -19,33 +19,33 @@ mod document_vcs {
     #[wasm_bindgen]
     impl RasterArtifactVcs {
         #[wasm_bindgen(constructor)]
-        pub fn new(envelope_json: &str) -> Result<RasterArtifactVcs, JsValue> {
+        pub async fn new(envelope_json: &str) -> Result<RasterArtifactVcs, JsValue> {
             let envelope: RasterEnvelope = serde_json::from_str(envelope_json).map_err(|e| JsValue::from_str(&e.to_string()))?;
             Ok(Self { store: RefCell::new(RasterStore::new(envelope).map_err(|e| JsValue::from_str(&e.to_string()))?) })
         }
 
         #[wasm_bindgen(js_name = dispatchText)]
-        pub fn dispatch_text(&self, command_text: &str) -> Result<(), JsValue> {
+        pub async fn dispatch_text(&self, command_text: &str) -> Result<(), JsValue> {
             self.store.borrow_mut().dispatch_text(command_text).map(|_| ()).map_err(|e| JsValue::from_str(&e.to_string()))
         }
 
         #[wasm_bindgen(js_name = dispatchBinary)]
-        pub fn dispatch_binary(&self, command_bytes: &[u8]) -> Result<(), JsValue> {
+        pub async fn dispatch_binary(&self, command_bytes: &[u8]) -> Result<(), JsValue> {
             self.store.borrow_mut().dispatch_binary(command_bytes).map(|_| ()).map_err(|e| JsValue::from_str(&e.to_string()))
         }
 
         #[wasm_bindgen(js_name = projectionJson)]
-        pub fn projection_json(&self) -> Result<String, JsValue> {
+        pub async fn projection_json(&self) -> Result<String, JsValue> {
             self.store.borrow().snapshot_json().map_err(|e| JsValue::from_str(&e.to_string()))
         }
 
         #[wasm_bindgen(js_name = envelopeJson)]
-        pub fn envelope_json(&self) -> Result<String, JsValue> {
+        pub async fn envelope_json(&self) -> Result<String, JsValue> {
             self.store.borrow().envelope_json().map_err(|e| JsValue::from_str(&e.to_string()))
         }
 
         #[wasm_bindgen(js_name = generation)]
-        pub fn generation(&self) -> u32 {
+        pub async fn generation(&self) -> u32 {
             self.store.borrow().generation() as u32
         }
     }

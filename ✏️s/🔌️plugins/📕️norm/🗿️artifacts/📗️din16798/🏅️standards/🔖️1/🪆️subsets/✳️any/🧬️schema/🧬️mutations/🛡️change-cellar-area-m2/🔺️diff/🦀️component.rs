@@ -5,7 +5,7 @@ use crate::artifacts::din16798::mutations::change_cellar_area_m2::mutation::Chan
 use crate::artifacts::din16798::Din16798Snapshot;
 
 //#region 🔖️Diff
-pub fn diff(payload: &ChangeCellarAreaM2, base: &Din16798Snapshot) -> protocol::MutationOutcome<Din16798Diff> {
+pub async fn diff(payload: &ChangeCellarAreaM2, base: &Din16798Snapshot) -> protocol::MutationOutcome<Din16798Diff> {
     if !payload.new_cellar_area_m2.is_finite() {
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("Cellar area must be a finite number, got {}.", payload.new_cellar_area_m2), Vec::<String>::new());
     }

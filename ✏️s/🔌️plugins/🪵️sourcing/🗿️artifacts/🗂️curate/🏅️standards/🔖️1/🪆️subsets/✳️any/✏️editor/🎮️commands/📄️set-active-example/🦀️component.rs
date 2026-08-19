@@ -14,7 +14,7 @@ pub struct SetActiveExample {
     pub example_id: String,
 }
 
-pub fn handle(payload: &SetActiveExample, _doc: &ArtifactView<'_, CurateSnapshot>, _cfg: &ConfigView<'_, SourcingCurateConfig>) -> Result<Emit<SourcingMutation, SourcingCurateConfigMutation>, Fault> {
+pub async fn handle(payload: &SetActiveExample, _doc: &ArtifactView<'_, CurateSnapshot>, _cfg: &ConfigView<'_, SourcingCurateConfig>) -> Result<Emit<SourcingMutation, SourcingCurateConfigMutation>, Fault> {
     let next = if payload.example_id.is_empty() || payload.example_id == EMPTY_EXAMPLE_ID { empty_document() } else { default_document() };
     Ok(Emit { effects: vec![reset_document_effect(&next)], ..Default::default() })
 }

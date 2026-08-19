@@ -25,21 +25,21 @@ pub struct LasArtifact {
 
 //#region 🔖️Conversions
 impl Default for LasArtifact {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self::from_snapshot(LasSnapshot::default())
     }
 }
 
 impl LasArtifact {
-    pub fn to_snapshot(&self) -> LasSnapshot {
+    pub async fn to_snapshot(&self) -> LasSnapshot {
         LasSnapshot { schema: self.schema.clone(), header: self.header.clone(), vlrs: self.vlrs.clone(), points: self.points.clone() }
     }
 
-    pub fn from_snapshot(snapshot: LasSnapshot) -> Self {
+    pub async fn from_snapshot(snapshot: LasSnapshot) -> Self {
         Self { schema: snapshot.schema, header: snapshot.header, vlrs: snapshot.vlrs, points: snapshot.points }
     }
 
-    pub fn set_snapshot(&mut self, snapshot: LasSnapshot) {
+    pub async fn set_snapshot(&mut self, snapshot: LasSnapshot) {
         self.schema = snapshot.schema;
         self.header = snapshot.header;
         self.vlrs = snapshot.vlrs;
@@ -49,7 +49,7 @@ impl LasArtifact {
 //#endregion 🔖️Conversions
 
 //#region 🔖️Descriptor
-pub fn las_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
+pub async fn las_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
     schema::ArtifactSchemaDescriptor {
         id: "s.stdio.las",
         artifact: schema::FacetLeaves {
@@ -100,27 +100,27 @@ pub mod derived_construction {
         type Snapshot = LasSnapshot;
         type Mutation = LasMutation;
         type Diff = LasDiff;
-        fn empty() -> Self {
+        async fn empty() -> Self {
             Self { snapshot: LasSnapshot::default(), diagnostics: Vec::new() }
         }
-        fn from_snapshot(snapshot: Self::Snapshot) -> Self {
+        async fn from_snapshot(snapshot: Self::Snapshot) -> Self {
             Self { snapshot, diagnostics: Vec::new() }
         }
-        fn from_text(text: &str) -> Result<Self, store::TextError> {
+        async fn from_text(text: &str) -> Result<Self, store::TextError> {
             Ok(Self::from_snapshot(<LasSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
-        fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
+        async fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
             Ok(Self::from_snapshot(<LasSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
         }
-        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
+        async fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let diff = crate::artifacts::las::schema::mutations::apply_las_mutation(&mut self.snapshot, &mutation);
             (self, diff)
         }
-        fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
+        async fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
             self.snapshot = <LasDiff as protocol::MutationDiff<LasSnapshot>>::apply(&diff, &self.snapshot)?;
             Ok(self)
         }
-        fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
+        async fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
             if self.diagnostics.is_empty() {
                 Ok(self.snapshot)
             } else {
@@ -154,7 +154,7 @@ pub mod derived_analysis {
         type Parts = LasParts;
         const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.las", standard: StandardId("1.0"), subset: SubsetId("*") };
 
-        fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
+        async fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
             const SIG: [u8; 4] = *b"LASF";
             match source {
                 AnalyzeSource::Binary(bytes) => {
@@ -191,7 +191,7 @@ pub mod derived_analysis {
             }
         }
 
-        fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
+        async fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
             let mut parts = LasParts::default();
             let mut diagnostics = Vec::new();
             let mut confidence = IoConfidence::High;
@@ -236,7 +236,7 @@ semio_framework_plugin::derive_artifact_facets!(
 
 //#region 🔖️DocumentHelpers
 /// 🌱 Empty persisted snapshot.
-pub fn empty_las_snapshot() -> LasSnapshot {
+pub async fn empty_las_snapshot() -> LasSnapshot {
     LasSnapshot::default()
 }
 
@@ -245,7 +245,7 @@ pub fn empty_las_snapshot() -> LasSnapshot {
 /// (`📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio`/`🎒️example.pack.semio`, both regenerated
 /// from this snapshot's real `print_dsl`/`encode_pack` output). Single source of truth for those
 /// fixtures, asserted equal by `conformance_laws::fixture_honesty_law`.
-pub fn demo_las_snapshot() -> LasSnapshot {
+pub async fn demo_las_snapshot() -> LasSnapshot {
     use crate::artifacts::las::schema::snapshot::{LasHeader, LasPoint, LasVlr};
     use crate::artifacts::las::{LasSnapshot, STDIO_LAS_DOCUMENT_SCHEMA};
     LasSnapshot {
@@ -325,5 +325,5 @@ pub fn demo_las_snapshot() -> LasSnapshot {
 /// reachable as `crate::artifacts::las::engine::register_schema_specs` (the plugin root's
 /// `.setup(...)` call, ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE W6 g4) — `dsl::registry::
 /// register_schema_spec` is a separate registry no `ArtifactDeclaration` field covers.
-pub fn register_schema_specs() {}
+pub async fn register_schema_specs() {}
 //#endregion 🔖️Register

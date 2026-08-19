@@ -4,7 +4,7 @@ use super::mutation::ChangeSiloBulkDensityKnM3;
 use crate::artifacts::en1991::{En1991Diff, En1991Snapshot};
 
 //#region 🔖️Diff
-pub fn diff(payload: &ChangeSiloBulkDensityKnM3, base: &En1991Snapshot) -> protocol::MutationOutcome<En1991Diff> {
+pub async fn diff(payload: &ChangeSiloBulkDensityKnM3, base: &En1991Snapshot) -> protocol::MutationOutcome<En1991Diff> {
     if !payload.new_silo_bulk_density_kn_m3.is_finite() {
         return protocol::MutationOutcome::fatal("mutation.invariant", "Silo bulk density kn m3 must be a finite number.", Vec::<String>::new());
     }

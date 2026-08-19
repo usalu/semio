@@ -56,12 +56,12 @@ impl ArtifactDeserializer for SemioImageFromJpg {
 mod tests {
     use super::*;
 
-    fn sample_jpg() -> JpgSnapshot {
+    async fn sample_jpg() -> JpgSnapshot {
         JpgSnapshot { width: 2, height: 1, pixels: vec![255, 0, 0, 255, 0, 255, 0, 255], other_segments: vec![JpgSegment { marker: COM_MARKER, data: b"semio fixture".to_vec() }], ..JpgSnapshot::default() }
     }
 
     #[test]
-    fn maps_pixels_and_comment() {
+    async fn maps_pixels_and_comment() {
         let semio = semio_framework_plugin::resolve_ready(SemioImageFromJpg::deserialize(&sample_jpg())).expect("deserialize");
         assert_eq!(semio.width, 2);
         assert_eq!(semio.height, 1);

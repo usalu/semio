@@ -13,12 +13,12 @@ use crate::artifacts::block5d::schema::mutations::text::Block5dMutation;
 use protocol::OpBinary;
 
 /// 📦️ Encodes a `Block5dMutation` to its binary command form.
-pub fn encode_op(operation: &Block5dMutation) -> Result<Vec<u8>, protocol::ProtocolError> {
+pub async fn encode_op(operation: &Block5dMutation) -> Result<Vec<u8>, protocol::ProtocolError> {
     operation.encode_op()
 }
 
 /// 📖️ Decodes a `Block5dMutation` from its binary command form.
-pub fn decode_op(bytes: &[u8]) -> Result<Block5dMutation, protocol::ProtocolError> {
+pub async fn decode_op(bytes: &[u8]) -> Result<Block5dMutation, protocol::ProtocolError> {
     Block5dMutation::decode_op(bytes)
 }
 
@@ -30,7 +30,7 @@ mod tests {
     use store::{create_document_envelope, ArtifactCommand};
 
     #[test]
-    fn block5d_document_vcs_replays_granular_operations() {
+    async fn block5d_document_vcs_replays_granular_operations() {
         use crate::artifacts::block5d::schema::mutations::{self as m, Block5dStore};
 
         let mut store = Block5dStore::new(create_document_envelope(BLOCK_5D_SCHEMA, "block5d", Block5dSnapshot::default(), None)).expect("valid initial state");
@@ -40,7 +40,7 @@ mod tests {
     }
 
     #[test]
-    fn block5d_operation_binary_round_trips() {
+    async fn block5d_operation_binary_round_trips() {
         let operation = crate::artifacts::block5d::schema::mutations::delete_grip("g0".into());
         let bytes = encode_op(&operation).expect("encode");
         assert_eq!(decode_op(&bytes).expect("decode"), operation);

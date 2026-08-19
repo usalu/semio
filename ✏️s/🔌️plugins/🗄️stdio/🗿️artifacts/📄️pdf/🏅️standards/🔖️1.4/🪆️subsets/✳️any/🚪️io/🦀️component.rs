@@ -28,11 +28,11 @@ pub mod derived_composition {
         type Snapshot = PdfSnapshot;
         const WRITES: Dialect = DIALECT;
 
-        fn reads() -> &'static [Dialect] {
+        async fn reads() -> &'static [Dialect] {
             &[DIALECT, DEP_BINARY, DEP_DEFLATE]
         }
 
-        fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+        async fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
             // 🌱 Every listed read dialect's payload is raw text/bytes that this artifact's own
             // analyzer already round-trips through `store::Document{Dsl,Pack}` -- including bytes
             // claiming a dependency's dialect, since (for a single-standard DAG-adjacent dependency
@@ -58,7 +58,7 @@ pub use derived_composition::*;
 //#endregion 🎹️DerivedComposition
 
 //#region 🔖️Codec
-pub fn encode_pdf(snap: &PdfSnapshot) -> Result<Vec<u8>, String> {
+pub async fn encode_pdf(snap: &PdfSnapshot) -> Result<Vec<u8>, String> {
     let page = &snap.page;
     let w = page.width.max(1.0);
     let h = page.height.max(1.0);
@@ -87,7 +87,7 @@ pub fn encode_pdf(snap: &PdfSnapshot) -> Result<Vec<u8>, String> {
     Ok(body)
 }
 
-fn escape_pdf(s: &str) -> String {
+async fn escape_pdf(s: &str) -> String {
     s.replace('\\', "\\\\").replace('(', "\\(").replace(')', "\\)")
 }
 
@@ -96,11 +96,11 @@ fn escape_pdf(s: &str) -> String {
 /// (the deflate-compressed stream payload is essentially never valid UTF-8, so slicing a
 /// `String::from_utf8_lossy` copy corrupts the very bytes being extracted -- `codec_retention_law`
 /// caught this as a real, pre-existing decode bug).
-fn find_subslice(data: &[u8], needle: &[u8]) -> Option<usize> {
+async fn find_subslice(data: &[u8], needle: &[u8]) -> Option<usize> {
     data.windows(needle.len()).position(|w| w == needle)
 }
 
-pub fn decode_pdf(data: &[u8]) -> Result<PdfSnapshot, String> {
+pub async fn decode_pdf(data: &[u8]) -> Result<PdfSnapshot, String> {
     if !data.starts_with(b"%PDF") {
         return Err("not pdf".into());
     }
@@ -136,13 +136,13 @@ pub fn decode_pdf(data: &[u8]) -> Result<PdfSnapshot, String> {
 /// identical registration functions document: `register_schema_spec` registers one spec under one
 /// schema id, and there is no single canonical id for a Mutation enum's per-variant shapes.
 #[cfg(not(target_arch = "wasm32"))]
-pub fn register_schema_specs() {
+pub async fn register_schema_specs() {
     dsl::registry::register_schema_spec("stdio.pdf", PdfSnapshot::__dsl_spec);
     dsl::registry::register_schema_spec("stdio.pdf#diff", PdfDiff::__dsl_diff_spec);
 }
 
 #[cfg(target_arch = "wasm32")]
-pub fn register_schema_specs() {}
+pub async fn register_schema_specs() {}
 //#endregion 🔖️SchemaSpecs
 
 #[cfg(test)]
@@ -155,7 +155,7 @@ mod tests {
     /// are NOT retained by `decode_pdf` (documented pre-real-codec scope boundary, W0 recon: 1.4
     /// stays a frozen stub, no decode enrichment), so only `text` is asserted here.
     #[test]
-    fn codec_retention_law_text_round_trips_through_encode_decode() {
+    async fn codec_retention_law_text_round_trips_through_encode_decode() {
         let original = PdfSnapshot { schema: STDIO_PDF_DOCUMENT_SCHEMA.into(), page: PageDoc { width: 612.0, height: 792.0, text: "Hello Semio".into() } };
         let bytes = encode_pdf(&original).expect("encode");
         let redecoded = decode_pdf(&bytes).expect("decode");
@@ -163,7 +163,7 @@ mod tests {
     }
 
     #[test]
-    fn demo_snapshot_round_trip() {
+    async fn demo_snapshot_round_trip() {
         let snap = demo_pdf_snapshot();
         let text = store::ArtifactDsl::print_dsl(&snap);
         let parsed = <PdfSnapshot as store::ArtifactDsl>::parse_dsl(&text).expect("parse");
@@ -184,7 +184,7 @@ mod tests {
         use crate::artifacts::pdf::standards::v1_4::subsets::any::schema::{diff, mutations, snapshot};
         use protocol::{DiffCodec, OpBinary, OpText};
 
-        fn demo_mutation_cases() -> Vec<PdfMutation> {
+        async fn demo_mutation_cases() -> Vec<PdfMutation> {
             vec![
                 PdfMutation::NoMutation,
                 PdfMutation::SetSnapshot { snapshot: demo_pdf_snapshot() },
@@ -192,7 +192,7 @@ mod tests {
             ]
         }
 
-        fn demo_diff_cases() -> Vec<PdfDiff> {
+        async fn demo_diff_cases() -> Vec<PdfDiff> {
             let a = demo_pdf_snapshot();
             let b = PdfSnapshot { schema: STDIO_PDF_DOCUMENT_SCHEMA.into(), page: PageDoc { width: 300.5, height: 400.25, text: "changed text".into() } };
             vec![<PdfDiff as protocol::command::DiffAlgebra<PdfSnapshot>>::between(&a, &b), PdfDiff::default()]
@@ -201,7 +201,7 @@ mod tests {
         /// ✅️ "committed files parse": all 6 handcrafted `.grammar.semio`/`.protocol.semio` files
         /// parse under the real dialect.
         #[test]
-        fn committed_facet_files_parse() {
+        async fn committed_facet_files_parse() {
             for (label, text) in [("snapshot grammar", snapshot::text::COMPONENT_GRAMMAR_SEMIO), ("mutations grammar", mutations::text::COMPONENT_GRAMMAR_SEMIO), ("diff grammar", diff::text::COMPONENT_GRAMMAR_SEMIO)] {
                 let grammar = dsl::parse_grammar(text).unwrap_or_else(|e| panic!("{label}: parse_grammar failed: {e:?}"));
                 assert_eq!(grammar.dialect, dsl::SemioDialect::Grammar, "{label}: expected grammar dialect");
@@ -213,7 +213,7 @@ mod tests {
 
         /// ✅️ `grammar_conformance_law`: the snapshot grammar recognizes real `print_dsl` output.
         #[test]
-        fn grammar_conformance_law() {
+        async fn grammar_conformance_law() {
             let grammar = dsl::parse_grammar(snapshot::text::COMPONENT_GRAMMAR_SEMIO).expect("parse snapshot grammar");
             let recognizer = dsl::Recognizer::compile(&grammar);
             let text = store::ArtifactDsl::print_dsl(&demo_pdf_snapshot());
@@ -225,7 +225,7 @@ mod tests {
         /// ✅️ `ops_grammar_conformance_law`: the mutations grammar recognizes real `print_op`
         /// output for every demo `PdfMutation`.
         #[test]
-        fn ops_grammar_conformance_law() {
+        async fn ops_grammar_conformance_law() {
             let grammar = dsl::parse_grammar(mutations::text::COMPONENT_GRAMMAR_SEMIO).expect("parse mutations grammar");
             let recognizer = dsl::Recognizer::compile(&grammar);
             for mutation in demo_mutation_cases() {
@@ -236,7 +236,7 @@ mod tests {
 
         /// ✅️ `diff_grammar_conformance_law`: the diff grammar recognizes real `print_diff` output.
         #[test]
-        fn diff_grammar_conformance_law() {
+        async fn diff_grammar_conformance_law() {
             let grammar = dsl::parse_grammar(diff::text::COMPONENT_GRAMMAR_SEMIO).expect("parse diff grammar");
             let recognizer = dsl::Recognizer::compile(&grammar);
             for d in demo_diff_cases() {
@@ -247,7 +247,7 @@ mod tests {
 
         /// ✅️ `protocol_walk_law`: `walk_protocol` against REAL bytes for all three facets.
         #[test]
-        fn protocol_walk_law() {
+        async fn protocol_walk_law() {
             let pack_spec = dsl::parse_protocol(snapshot::binary::COMPONENT_PROTOCOL_SEMIO).expect("parse snapshot protocol");
             let packed = store::ArtifactPack::encode_pack(&demo_pdf_snapshot());
             let (_, inner) = store::semio_format::unwrap_binary(&packed).expect("unwrap semio envelope");
@@ -272,7 +272,7 @@ mod tests {
         /// ✅️ `fixture_honesty_law`: the shipped `.dsl.semio`/`.pack.semio` fixtures are GENUINE
         /// `print_dsl`/`encode_pack` output of `demo_pdf_snapshot()`.
         #[test]
-        fn fixture_honesty_law() {
+        async fn fixture_honesty_law() {
             const FIXTURE_DSL: &str = include_str!("../📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio");
             const FIXTURE_PACK: &[u8] = include_bytes!("../📚️examples/🎬️demo/🖼️assets/🎒️example.pack.semio");
 
@@ -300,7 +300,7 @@ pub mod io_registry {
 
     static ENTRIES: OnceLock<Vec<ComposerEntry>> = OnceLock::new();
 
-    pub fn entries() -> &'static [ComposerEntry] {
+    pub async fn entries() -> &'static [ComposerEntry] {
         ENTRIES.get_or_init(|| vec![composer_entry_of::<PdfRawAnyComposer>(), composer_entry_of::<PdfAComposer>(), composer_entry_of::<PdfXComposer>()]).as_slice()
     }
 }

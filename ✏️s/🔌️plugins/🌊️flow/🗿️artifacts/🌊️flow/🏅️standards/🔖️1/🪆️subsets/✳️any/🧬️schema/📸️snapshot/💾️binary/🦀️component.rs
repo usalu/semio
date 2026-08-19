@@ -10,12 +10,12 @@ use crate::artifacts::flow::FlowSnapshot;
 use store::PackError;
 
 /// 📦️ Encodes a `FlowSnapshot` to its binary pack form.
-pub fn encode(snapshot: &FlowSnapshot) -> Vec<u8> {
+pub async fn encode(snapshot: &FlowSnapshot) -> Vec<u8> {
     store::ArtifactPack::encode_pack(snapshot)
 }
 
 /// 📖️ Decodes a `FlowSnapshot` from its binary pack form.
-pub fn decode(bytes: &[u8]) -> Result<FlowSnapshot, PackError> {
+pub async fn decode(bytes: &[u8]) -> Result<FlowSnapshot, PackError> {
     <FlowSnapshot as store::ArtifactPack>::decode_pack(bytes)
 }
 
@@ -26,7 +26,7 @@ mod tests {
     use crate::artifacts::flow::dsl;
 
     #[test]
-    fn pack_round_trips_and_agrees_with_dsl() {
+    async fn pack_round_trips_and_agrees_with_dsl() {
         let snapshot = dsl::parse_dsl(dsl::FLOW_EXAMPLE_TEXT).expect("parse default snapshot");
         store::os_store::test_support::assert_dsl_pack_equivalence(&snapshot);
         let bytes = encode(&snapshot);
@@ -34,7 +34,7 @@ mod tests {
     }
 
     #[test]
-    fn pack_protocol_names_snapshot_segment() {
+    async fn pack_protocol_names_snapshot_segment() {
         assert!(COMPONENT_PROTOCOL_SEMIO.contains("segment payload"));
     }
 }

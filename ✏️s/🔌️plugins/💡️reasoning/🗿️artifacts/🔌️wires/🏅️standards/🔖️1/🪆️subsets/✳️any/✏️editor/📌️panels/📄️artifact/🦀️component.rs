@@ -15,7 +15,7 @@ const WIRES_PLAY_DOCUMENT_NAMESPACE: &str = "wires-play-document";
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
-pub fn definition() -> PanelTabDefinition {
+pub async fn definition() -> PanelTabDefinition {
     PanelTabDefinition {
         kind: PanelTabKind::App(FRAMEWORK_PANEL_TAB_ARTIFACT_ID.into()),
         label: LocalizedLabel::native(FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL, "Dokument"),
@@ -27,11 +27,11 @@ pub fn definition() -> PanelTabDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-fn identity_label_lookup(wires: &dsl::DslValue, identity_id: u64) -> Option<String> {
+async fn identity_label_lookup(wires: &dsl::DslValue, identity_id: u64) -> Option<String> {
     wires_identities(wires).iter().find(|identity| dsl_id(identity.get("identityId")) == Some(identity_id)).and_then(|identity| identity.get("label").and_then(|value| value.as_str())).map(str::to_string)
 }
 
-fn wires_identity_kind_name(wires: &dsl::DslValue, identity_kind_id: &str) -> Option<String> {
+async fn wires_identity_kind_name(wires: &dsl::DslValue, identity_kind_id: &str) -> Option<String> {
     wires
         .get("kindCatalogs")
         .and_then(|value| value.get("identityKinds"))
@@ -44,7 +44,7 @@ fn wires_identity_kind_name(wires: &dsl::DslValue, identity_kind_id: &str) -> Op
         .map(str::to_string)
 }
 
-fn wires_relationship_document_label(wires: &dsl::DslValue, edge_id: &str, labels: &WiresLabels) -> Option<String> {
+async fn wires_relationship_document_label(wires: &dsl::DslValue, edge_id: &str, labels: &WiresLabels) -> Option<String> {
     let relationship = wires_relationships(wires).iter().find(|row| row.get("edgeId").and_then(|value| value.as_str()) == Some(edge_id))?;
     let kind = relationship.get("kind")?.as_str()?;
     let source_id = dsl_id(relationship.get("sourceIdentityId"))?;
@@ -59,7 +59,7 @@ fn wires_relationship_document_label(wires: &dsl::DslValue, edge_id: &str, label
 /// ids against a row's own `id` verbatim, and canvas hit-testing resolves those exact bare ids too;
 /// a prefixed row id would desync tree/canvas cross-highlighting (ticket
 /// 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM).
-pub fn render(document: &WiresSnapshot, labels: &WiresLabels) -> UiNode {
+pub async fn render(document: &WiresSnapshot, labels: &WiresLabels) -> UiNode {
     let wires = &document.wires_fixture;
     let board = &crate::artifacts::wires::wires_working_board(document);
     let identity_items: Vec<UiTreeItemNode> = wires_identities(wires)
@@ -108,7 +108,7 @@ mod tests {
     use crate::editor::wires::WIRES_PLAY_BODY_DOCUMENT as APP_BODY_DOCUMENT;
 
     #[test]
-    fn document_has_identities_section() {
+    async fn document_has_identities_section() {
         let mut app = metabolism_app();
         let json = render_body(&mut app, APP_BODY_DOCUMENT);
         assert!(json.contains("wires-play-document.identities"));
@@ -116,7 +116,7 @@ mod tests {
     }
 
     #[test]
-    fn definition_binds_the_framework_document_tab_to_this_body_key() {
+    async fn definition_binds_the_framework_document_tab_to_this_body_key() {
         let definition = definition();
         assert_eq!(definition.id(), FRAMEWORK_PANEL_TAB_ARTIFACT_ID);
         assert_eq!(definition.body_key.as_deref(), Some(WIRES_PLAY_BODY_DOCUMENT));

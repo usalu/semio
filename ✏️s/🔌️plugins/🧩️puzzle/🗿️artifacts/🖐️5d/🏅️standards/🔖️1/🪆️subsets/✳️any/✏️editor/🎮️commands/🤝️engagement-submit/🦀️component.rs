@@ -6,7 +6,7 @@ use serde_json::Value;
 
 /// ⌨️ One submitted token: `select`/`brush`/`fill` switch the utility (the 3D window's `select` lands
 /// on the `move` gumball instead), `clear` drops the selection, `rectangle`/`lasso` set the marquee.
-pub fn engagement_submit(ctx: &mut Puzzle5dActionCtx<'_>, args: Option<&Value>) {
+pub async fn engagement_submit(ctx: &mut Puzzle5dActionCtx<'_>, args: Option<&Value>) {
     let window = args.and_then(|value| value.get("window")).and_then(|value| value.as_str()).unwrap_or(board2d::WINDOW_KIND_ID).to_string();
     let value = args.and_then(|value| value.get("value")).and_then(|value| value.as_str()).map_or("", str::trim).to_lowercase();
     match value.as_str() {

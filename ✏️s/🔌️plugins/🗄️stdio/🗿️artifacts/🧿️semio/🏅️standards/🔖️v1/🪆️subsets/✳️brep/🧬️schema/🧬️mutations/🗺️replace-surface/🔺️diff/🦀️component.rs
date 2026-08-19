@@ -9,7 +9,7 @@ use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::{BrepFa
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::SemioBrepSnapshot;
 
 //#region 🔖️Diff
-pub fn diff(payload: &ReplaceSurface, base: &SemioBrepSnapshot) -> protocol::MutationOutcome<SemioBrepDiff> {
+pub async fn diff(payload: &ReplaceSurface, base: &SemioBrepSnapshot) -> protocol::MutationOutcome<SemioBrepDiff> {
     let Some(face) = base.faces.iter().find(|f| f.id == payload.face_id) else {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Face \"{}\" does not exist.", payload.face_id), [payload.face_id.clone()]);
     };

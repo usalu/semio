@@ -4,7 +4,7 @@ use crate::artifacts::remodel::diff::{RemodelDiff, RemodelGcpList};
 use crate::artifacts::remodel::RemodelSnapshot;
 
 //#region 🔖️Diff
-pub fn diff(payload: &super::mutation::AddGcpObservation, base: &RemodelSnapshot) -> protocol::MutationOutcome<RemodelDiff> {
+pub async fn diff(payload: &super::mutation::AddGcpObservation, base: &RemodelSnapshot) -> protocol::MutationOutcome<RemodelDiff> {
     let Some(gcp) = base.gcps.iter().find(|gcp| gcp.id == payload.id) else {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("GCP \"{}\" does not exist.", payload.id), [payload.id.clone()]);
     };

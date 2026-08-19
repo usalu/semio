@@ -7,7 +7,7 @@ use crate::artifacts::mathematical::{mathematical_children_from_state, mathemati
 /// 🔺️ A duplicate edge `id` is Fatal `duplicate-id`, matching `create-node`'s handling. A missing
 /// endpoint node is Error `target-missing`. A parallel edge (same source/target as an existing
 /// edge, under a fresh id) is Warning `no-op` — parallel edges are forbidden in this graph model.
-pub fn diff(payload: &ConnectNodes, base: &MathematicalSnapshot) -> protocol::MutationOutcome<MathematicalDiff> {
+pub async fn diff(payload: &ConnectNodes, base: &MathematicalSnapshot) -> protocol::MutationOutcome<MathematicalDiff> {
     let mut graph = mathematical_graph(base);
     if graph.edges.iter().any(|edge| edge.id == payload.id) {
         return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("An edge with id \"{}\" already exists.", payload.id), [payload.id.clone()]);

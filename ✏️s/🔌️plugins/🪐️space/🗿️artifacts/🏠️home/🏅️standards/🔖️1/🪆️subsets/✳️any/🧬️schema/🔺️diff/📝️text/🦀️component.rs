@@ -16,7 +16,7 @@ use crate::artifacts::home::schema::diff::*;
 //#region 🔖️Apply
 impl SHomeDiff {
     /// 🧬️ Applies every sparse entry (all state classes) onto a full artifact.
-    pub fn apply_to_artifact(&self, artifact: &SHomeArtifact) -> protocol::MutationApplyResult<SHomeArtifact> {
+    pub async fn apply_to_artifact(&self, artifact: &SHomeArtifact) -> protocol::MutationApplyResult<SHomeArtifact> {
         Ok({
             let mut next = artifact.clone();
             if let Some(schema) = &self.schema {
@@ -37,7 +37,7 @@ impl SHomeDiff {
 }
 
 impl MutationDiff<SHomeSnapshot> for SHomeDiff {
-    fn apply(&self, snapshot: &SHomeSnapshot) -> protocol::MutationApplyResult<SHomeSnapshot> {
+    async fn apply(&self, snapshot: &SHomeSnapshot) -> protocol::MutationApplyResult<SHomeSnapshot> {
         Ok({
             let mut next = snapshot.clone();
             if let Some(schema) = &self.schema {
@@ -49,7 +49,7 @@ impl MutationDiff<SHomeSnapshot> for SHomeDiff {
             next
         })
     }
-    fn absorb(&mut self, other: Self) {
+    async fn absorb(&mut self, other: Self) {
         macro_rules! take {
             ($field:ident) => {
                 if other.$field.is_some() {

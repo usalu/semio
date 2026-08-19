@@ -51,7 +51,7 @@ impl ArtifactDeserializer for SemioAudioFromMp3 {
 /// 📐️ MPEG-1/2/2.5 Layer III sample rate table (ISO/IEC 11172-3 Table 3.B.2), keyed by
 /// `(mpeg_version_id, sample_rate_index)`. `sample_rate_index == 3` is spec-reserved; falls back
 /// honestly to `0` (never a fabricated guess) for both the reserved index and unrecognized version.
-fn mpeg_sample_rate(version_id: u8, index: u8) -> u32 {
+async fn mpeg_sample_rate(version_id: u8, index: u8) -> u32 {
     match (version_id, index) {
         (3, 0) => 44_100,
         (3, 1) => 48_000,
@@ -70,7 +70,7 @@ fn mpeg_sample_rate(version_id: u8, index: u8) -> u32 {
 /// w/ BOM, `2`/`3`=UTF-16BE/UTF-8 in ID3v2.4) followed by the text; falls back to a lossy
 /// byte-for-byte Latin-1 mapping on anything this doesn't recognize -- never panics, never drops
 /// the frame outright.
-fn decode_id3_text(data: &[u8]) -> String {
+async fn decode_id3_text(data: &[u8]) -> String {
     match data.first() {
         Some(0) => data[1..].iter().map(|&b| b as char).collect(),
         Some(3) => String::from_utf8_lossy(&data[1..]).into_owned(),
@@ -89,7 +89,7 @@ mod tests {
     use super::*;
     use crate::artifacts::mp3::standards::mpeg1_layer3::subsets::any::schema::snapshot::{Id3Frame, Id3v1Tag, Id3v2Tag, Mp3Frame, Mp3FrameHeader};
 
-    fn real_world_mp3() -> Mp3Snapshot {
+    async fn real_world_mp3() -> Mp3Snapshot {
         Mp3Snapshot {
             schema: "stdio.mp3".into(),
             id3v2: Some(Id3v2Tag {
@@ -128,7 +128,7 @@ mod tests {
     }
 
     #[test]
-    fn deserialize_derives_real_sample_rate_and_channel_count_leaves_samples_empty() {
+    async fn deserialize_derives_real_sample_rate_and_channel_count_leaves_samples_empty() {
         let audio = semio_framework_plugin::resolve_ready(SemioAudioFromMp3::deserialize(&real_world_mp3())).expect("deserialize");
         assert_eq!(audio.sample_rate, 44_100); // MPEG1, index 0
         assert_eq!(audio.channels.len(), 2); // channel_mode 0 = stereo
@@ -138,14 +138,14 @@ mod tests {
     }
 
     #[test]
-    fn deserialize_carries_real_id3v2_title_and_id3v1_presence_as_tags() {
+    async fn deserialize_carries_real_id3v2_title_and_id3v1_presence_as_tags() {
         let audio = semio_framework_plugin::resolve_ready(SemioAudioFromMp3::deserialize(&real_world_mp3())).expect("deserialize");
         assert!(audio.tags.iter().any(|t| t.key == "TIT2" && t.value == "Test Tone"));
         assert!(audio.tags.iter().any(|t| t.key == "id3v1.raw"));
     }
 
     #[test]
-    fn mono_channel_mode_maps_to_a_single_channel() {
+    async fn mono_channel_mode_maps_to_a_single_channel() {
         let mut mp3 = real_world_mp3();
         mp3.frames[0].header.channel_mode = 3;
         let audio = semio_framework_plugin::resolve_ready(SemioAudioFromMp3::deserialize(&mp3)).expect("deserialize");
@@ -153,7 +153,7 @@ mod tests {
     }
 
     #[test]
-    fn no_frames_honestly_yields_zero_sample_rate_and_zero_channels() {
+    async fn no_frames_honestly_yields_zero_sample_rate_and_zero_channels() {
         let mp3 = Mp3Snapshot::default();
         let audio = semio_framework_plugin::resolve_ready(SemioAudioFromMp3::deserialize(&mp3)).expect("deserialize");
         assert_eq!(audio.sample_rate, 0);

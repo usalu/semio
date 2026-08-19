@@ -9,7 +9,7 @@ use crate::artifacts::semio::standards::v1::subsets::table::schema::mutations::{
 use crate::artifacts::semio::standards::v1::subsets::table::schema::snapshot::SemioTableSnapshot;
 
 //#region 🔖️Inverse
-pub fn inverse(payload: &DeleteColumn, base: &SemioTableSnapshot) -> Vec<SemioTableMutation> {
+pub async fn inverse(payload: &DeleteColumn, base: &SemioTableSnapshot) -> Vec<SemioTableMutation> {
     let Some(at) = base.columns.iter().position(|c| c.name == payload.name) else {
         return Vec::new();
     };

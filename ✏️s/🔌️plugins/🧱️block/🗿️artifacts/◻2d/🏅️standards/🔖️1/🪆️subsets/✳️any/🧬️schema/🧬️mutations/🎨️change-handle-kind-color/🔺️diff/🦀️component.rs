@@ -5,7 +5,7 @@ use crate::artifacts::block2d::Block2dSnapshot;
 use crate::artifacts::block2d::{Block2dHandleKind};
 
 //#region 🔖️Diff
-pub fn diff(payload: &super::mutation::ChangeHandleKindColor, base: &Block2dSnapshot) -> protocol::MutationOutcome<Block2dDiff> {
+pub async fn diff(payload: &super::mutation::ChangeHandleKindColor, base: &Block2dSnapshot) -> protocol::MutationOutcome<Block2dDiff> {
     let Some(existing) = base.handle_kinds.iter().find(|item| item.id == payload.id) else {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("{} \"{}\" not found", "handle-kind", payload.id), vec![payload.id.clone()]);
     };

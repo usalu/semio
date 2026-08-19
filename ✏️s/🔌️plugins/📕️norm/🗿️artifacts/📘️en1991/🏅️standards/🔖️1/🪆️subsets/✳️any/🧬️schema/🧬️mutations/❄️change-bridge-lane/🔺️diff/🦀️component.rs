@@ -4,7 +4,7 @@ use super::mutation::ChangeBridgeLane;
 use crate::artifacts::en1991::{En1991Diff, En1991Snapshot};
 
 //#region 🔖️Diff
-pub fn diff(payload: &ChangeBridgeLane, base: &En1991Snapshot) -> protocol::MutationOutcome<En1991Diff> {
+pub async fn diff(payload: &ChangeBridgeLane, base: &En1991Snapshot) -> protocol::MutationOutcome<En1991Diff> {
     if base.bridge_lane == payload.new_bridge_lane {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", "Bridge lane already has this value.");
     }

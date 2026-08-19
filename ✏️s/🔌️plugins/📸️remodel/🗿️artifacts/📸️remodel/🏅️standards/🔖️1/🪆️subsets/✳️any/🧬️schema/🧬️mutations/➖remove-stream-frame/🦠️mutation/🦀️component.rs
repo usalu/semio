@@ -18,23 +18,23 @@ pub struct RemoveStreamFrame {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn remove_stream_frame(id: String, frame_index: u32) -> RemodelMutation {
+pub async fn remove_stream_frame(id: String, frame_index: u32) -> RemodelMutation {
     RemodelMutation::RemoveStreamFrame(RemoveStreamFrame { id, frame_index })
 }
 
 impl protocol::MutationKind<RemodelSnapshot, RemodelMutation> for RemoveStreamFrame {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "stream", kind: "remove-stream-frame", record: "RemovedStreamFrame" };
 
-    fn diff(&self, base: &RemodelSnapshot) -> protocol::MutationOutcome<RemodelDiff> {
+    async fn diff(&self, base: &RemodelSnapshot) -> protocol::MutationOutcome<RemodelDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &RemodelSnapshot) -> Vec<RemodelMutation> {
+    async fn inverse(&self, base: &RemodelSnapshot) -> Vec<RemodelMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         format!("Remove frame {} from stream \"{}\"", self.frame_index, self.id)
     }
-    fn target(&self) -> Vec<String> {
+    async fn target(&self) -> Vec<String> {
         vec![self.id.clone()]
     }
 }

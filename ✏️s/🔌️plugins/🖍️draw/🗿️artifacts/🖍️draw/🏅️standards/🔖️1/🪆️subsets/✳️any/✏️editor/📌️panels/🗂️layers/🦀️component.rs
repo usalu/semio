@@ -12,13 +12,13 @@ pub const DRAW_PLAY_BODY_LAYERS: &str = "draw.play.layers";
 pub const DRAW_LAYER_KIND_DRAG_MIME: &str = "application/x-semio-draw-layer-kind";
 
 //#region 🔖️Definition
-pub fn definition() -> PanelTabDefinition {
+pub async fn definition() -> PanelTabDefinition {
     PanelTabDefinition { kind: PanelTabKind::App(FRAMEWORK_PANEL_TAB_ARTIFACT_ID.into()), label: semio_framework_plugin::LocalizedLabel::native(FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL, "Dokument"), group: PanelGroup::Workbench, body_key: Some(DRAW_PLAY_BODY_LAYERS.into()), children: Vec::new() }
 }
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-fn layer_icon(layer: &DrawLayerNode) -> &str {
+async fn layer_icon(layer: &DrawLayerNode) -> &str {
     match layer {
         DrawLayerNode::Group(_) => "folder",
         DrawLayerNode::Boolean(_) => "combine",
@@ -33,7 +33,7 @@ fn layer_icon(layer: &DrawLayerNode) -> &str {
 /// 🕹️ No per-row selection `action`: the tree is bound to the `strokes` interaction domain via
 /// `.interaction_domain(...)` below, so the framework auto-injects `interactionSelect` for row
 /// clicks — never declare that yourself (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM).
-fn layer_tree_item(doc: &DrawSnapshot, layer: &DrawLayerNode) -> UiTreeItemNode {
+async fn layer_tree_item(doc: &DrawSnapshot, layer: &DrawLayerNode) -> UiTreeItemNode {
     let row_id = draw_play_layers_tree_row_id(layer);
     let base = layer_base(layer);
     let nested_items = match layer {
@@ -59,7 +59,7 @@ fn layer_tree_item(doc: &DrawSnapshot, layer: &DrawLayerNode) -> UiTreeItemNode 
     }
 }
 
-fn boolean_child_item(doc: &DrawSnapshot, boolean_id: &str, child_id: &str) -> UiTreeItemNode {
+async fn boolean_child_item(doc: &DrawSnapshot, boolean_id: &str, child_id: &str) -> UiTreeItemNode {
     let row_id = draw_play_boolean_child_row_id(boolean_id, child_id);
     match find_draw_layer(doc, child_id) {
         Some(child) => UiTreeItemNode { description: Some(crate::artifacts::draw::schema::layer_kind_label(child)), draggable: Some(false), menu: None, ..tree_item(row_id, Label::data(layer_base(child).name.clone())) },
@@ -67,11 +67,11 @@ fn boolean_child_item(doc: &DrawSnapshot, boolean_id: &str, child_id: &str) -> U
     }
 }
 
-fn tree_button(id: &str, label: impl Into<Label>, icon: &str, action: &str, args: serde_json::Value) -> UiTreeItemNode {
+async fn tree_button(id: &str, label: impl Into<Label>, icon: &str, action: &str, args: serde_json::Value) -> UiTreeItemNode {
     UiTreeItemNode { icon_id: Some(icon.into()), menu: None, ..tree_item_with_action(id, label, None, draw_play_action(action, Some(args))) }
 }
 
-pub fn render(document: &DrawSnapshot, labels: &DrawPlayLabels) -> UiNode {
+pub async fn render(document: &DrawSnapshot, labels: &DrawPlayLabels) -> UiNode {
     let action_items = vec![
         tree_button("draw-play-layers.add.path", labels.add_path, "pen-tool", "addLayer", json!({ "kind": "path" })),
         tree_button("draw-play-layers.add.rect", labels.add_rectangle, "square", "addLayer", json!({ "kind": "shape:rect" })),

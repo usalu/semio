@@ -15,7 +15,7 @@ pub struct DeleteSelection {}
 /// still requires a `handle` of this signature to exist even though it is reachable only through that
 /// macro-generated path (`FlowPlayApp::handle` always routes this command through `apply` below
 /// instead) — degrades to treating the selection as empty, mirroring `space::delete_selection::handle`.
-pub fn handle(_payload: &DeleteSelection, _doc: &ArtifactView<'_, FlowSnapshot>, _cfg: &ConfigView<'_, FlowConfig>, _session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, FlowConfigMutation>, Fault> {
+pub async fn handle(_payload: &DeleteSelection, _doc: &ArtifactView<'_, FlowSnapshot>, _cfg: &ConfigView<'_, FlowConfig>, _session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, FlowConfigMutation>, Fault> {
     Ok(Emit::default())
 }
 
@@ -25,7 +25,7 @@ pub fn handle(_payload: &DeleteSelection, _doc: &ArtifactView<'_, FlowSnapshot>,
 /// `interaction_topology`. `app_commands!`'s generated `dispatch(doc, cfg, session)` is framework-fixed
 /// at that 3-arg shape (no `interaction` slot), so `FlowPlayApp::handle` routes this command through
 /// `apply` directly instead (mirrors `space`'s `delete_selection::apply`).
-pub fn apply(_payload: &DeleteSelection, doc: &ArtifactView<'_, FlowSnapshot>, cfg: &ConfigView<'_, FlowConfig>, session: &mut FlowEvalSession, interaction: &InteractionView<'_>) -> Result<Emit<FlowMutation, FlowConfigMutation>, Fault> {
+pub async fn apply(_payload: &DeleteSelection, doc: &ArtifactView<'_, FlowSnapshot>, cfg: &ConfigView<'_, FlowConfig>, session: &mut FlowEvalSession, interaction: &InteractionView<'_>) -> Result<Emit<FlowMutation, FlowConfigMutation>, Fault> {
     let (nodes, edges) = flow_graph_selection_domains(&interaction.selection(FLOW_INTERACTION_GRAPH).ids);
     let operations = host_operations(doc.snapshot, cfg.snapshot, session, |host| {
         sync_host_selection_domains(host, &nodes, &edges, &[]);
@@ -45,7 +45,7 @@ mod tests {
     use crate::editor::flow::{FlowCommand, FLOW_PLAY_BODY_MAIN};
 
     #[test]
-    fn delete_selection_deletes_the_widgets_picked_via_interaction_select() {
+    async fn delete_selection_deletes_the_widgets_picked_via_interaction_select() {
         let mut app = flow_app_with_registry();
         select_graph(&mut app, &["slider"], &[]);
         let result = dispatch(&mut app, FlowCommand::DeleteSelection(DeleteSelection {}));
@@ -54,7 +54,7 @@ mod tests {
     }
 
     #[test]
-    fn delete_selection_action_removes_selected_synapses() {
+    async fn delete_selection_action_removes_selected_synapses() {
         let mut app = flow_app_with_registry();
         let before = app.snapshot().expect("snapshot").to_fixture().synapses.len();
         select_graph(&mut app, &[], &["s1"]);
@@ -70,7 +70,7 @@ mod tests {
     /// (framework layer, unmigrated this wave) still dispatches it on right-click; a blank id (or any
     /// id) is a genuine no-operation.
     #[test]
-    fn context_menu_at_is_a_no_operation() {
+    async fn context_menu_at_is_a_no_operation() {
         use crate::editor::flow::commands::context_menu_at;
         let mut app = flow_app_with_registry();
         let result = dispatch(&mut app, FlowCommand::ContextMenuAt(context_menu_at::ContextMenuAt { id: String::new() }));

@@ -4,7 +4,7 @@ use super::mutation::ChangeFYMpa;
 use crate::artifacts::en1994::{En1994Diff, En1994Snapshot};
 
 //#region 🔖️Diff
-pub fn diff(payload: &ChangeFYMpa, base: &En1994Snapshot) -> protocol::MutationOutcome<En1994Diff> {
+pub async fn diff(payload: &ChangeFYMpa, base: &En1994Snapshot) -> protocol::MutationOutcome<En1994Diff> {
     if !payload.new_f_y_mpa.is_finite() {
         return protocol::MutationOutcome::fatal("mutation.invariant", "Fy mpa must be a finite number.", Vec::<String>::new());
     }

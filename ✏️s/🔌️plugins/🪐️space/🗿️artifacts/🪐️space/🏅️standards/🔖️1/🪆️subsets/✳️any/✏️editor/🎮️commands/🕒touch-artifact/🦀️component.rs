@@ -17,7 +17,7 @@ pub struct TouchArtifact {
     pub actor: String,
 }
 
-pub fn handle(payload: &TouchArtifact, _doc: &ArtifactView<'_, SSpaceSnapshot>, _cfg: &ConfigView<'_, SpaceIndexConfig>) -> Result<Emit<SSpaceMutation, SpaceIndexConfigMutation>, Fault> {
+pub async fn handle(payload: &TouchArtifact, _doc: &ArtifactView<'_, SSpaceSnapshot>, _cfg: &ConfigView<'_, SpaceIndexConfig>) -> Result<Emit<SSpaceMutation, SpaceIndexConfigMutation>, Fault> {
     Ok(Emit::mutations(vec![touch_artifact(payload.id.clone(), payload.now_ms, payload.actor.clone())]))
 }
 
@@ -30,7 +30,7 @@ mod tests {
     
 
     #[test]
-    fn touch_artifact_stamps_the_row() {
+    async fn touch_artifact_stamps_the_row() {
         let mut app = testkit::new_app();
         app.dispatch_typed(SpaceIndexCommand::CreateArtifact(create_artifact::CreateArtifact { name: "First".into(), kind_id: "draw".into(), now_ms: 1, actor: "user:1".into() }), &semio_framework_plugin::testkit::meta("local")).expect("create artifact");
         let id = app.snapshot().unwrap().artifacts[0].id.clone();

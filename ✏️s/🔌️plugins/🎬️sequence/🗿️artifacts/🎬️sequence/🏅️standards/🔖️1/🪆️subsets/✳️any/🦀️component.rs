@@ -11,18 +11,18 @@ use semio_framework_plugin::app::declarations::{editor_surface, viewer_surface, 
 use semio_framework_plugin::ExampleSource;
 use std::sync::OnceLock;
 
-fn examples() -> &'static [ExampleSource] {
+async fn examples() -> &'static [ExampleSource] {
     static EXAMPLES: OnceLock<Vec<ExampleSource>> = OnceLock::new();
     EXAMPLES.get_or_init(|| vec![crate::artifacts::sequence::examples::demo::source()]).as_slice()
 }
 
-fn inference_descriptors() -> &'static [::schema::ArtifactInferenceDescriptor] {
+async fn inference_descriptors() -> &'static [::schema::ArtifactInferenceDescriptor] {
     static DESCRIPTORS: OnceLock<Vec<::schema::ArtifactInferenceDescriptor>> = OnceLock::new();
     DESCRIPTORS.get_or_init(|| vec![schema::inferences::sequence_artifact_inference_descriptor()]).as_slice()
 }
 
 /// 🌳️ `standard "1" / subset "any"`'s complete declaration — the only subset this artifact has.
-pub fn subset() -> SubsetDeclaration {
+pub async fn subset() -> SubsetDeclaration {
     SubsetDeclaration {
         dialect: SEQUENCE_DIALECT,
         schema: SchemaDeclaration { descriptor: schema::sequence_artifact_schema_descriptor(), inferences: inference_descriptors(), inference_services: Vec::new() },

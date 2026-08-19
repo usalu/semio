@@ -8,7 +8,7 @@ pub const BLOCK5D_EXAMPLE_CAPSULE: &str = "nakagin-capsule";
 //#region 🔖️ReplaceDocument
 /// ✏️ Emits the minimal ordered batch of semantic mutations that carries `current` to `next` — the
 /// whole-document-load replacement for a document-wide replace mutation (banned outright).
-fn replace_document_operations(current: &Block5dSnapshot, next: &Block5dSnapshot) -> Vec<Block5dMutation> {
+async fn replace_document_operations(current: &Block5dSnapshot, next: &Block5dSnapshot) -> Vec<Block5dMutation> {
     use crate::artifacts::block5d::mutations as m;
     let mut ops = Vec::new();
 
@@ -218,7 +218,7 @@ pub struct SetActiveExample {
     pub id: String,
 }
 
-pub fn handle(payload: &SetActiveExample, doc: &ArtifactView<'_, Block5dSnapshot>, _cfg: &ConfigView<'_, Block5dConfig>) -> Result<Emit<Block5dMutation, Block5dConfigMutation>, Fault> {
+pub async fn handle(payload: &SetActiveExample, doc: &ArtifactView<'_, Block5dSnapshot>, _cfg: &ConfigView<'_, Block5dConfig>) -> Result<Emit<Block5dMutation, Block5dConfigMutation>, Fault> {
     let example = match payload.id.as_str() {
         BLOCK5D_EXAMPLE_FOREST_LEFT => crate::artifacts::block5d::dsl::parse_dsl(crate::artifacts::block5d::dsl::BLOCK5D_CONCRETE_FOREST_LEFT_EXAMPLE_TEXT).ok(),
         BLOCK5D_EXAMPLE_CAPSULE => crate::artifacts::block5d::dsl::parse_dsl(crate::artifacts::block5d::dsl::BLOCK5D_NAKAGIN_CAPSULE_EXAMPLE_TEXT).ok(),

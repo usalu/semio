@@ -3,6 +3,6 @@ use crate::artifacts::semio::standards::v1::subsets::video::schema::snapshot::Se
 use protocol::Mutation;
 
 /// ↩️ Inverse of set-snapshot.
-pub fn inverse(base: &SemioVideoSnapshot, mutation: &SemioVideoMutation) -> Vec<SemioVideoMutation> {
+pub async fn inverse(base: &SemioVideoSnapshot, mutation: &SemioVideoMutation) -> Vec<SemioVideoMutation> {
     <SemioVideoMutation as Mutation<SemioVideoSnapshot>>::inverse(mutation, base)
 }

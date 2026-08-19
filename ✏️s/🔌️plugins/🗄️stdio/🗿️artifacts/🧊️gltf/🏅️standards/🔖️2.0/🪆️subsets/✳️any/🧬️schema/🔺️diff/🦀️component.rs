@@ -34,13 +34,13 @@ use serde::{Deserialize, Serialize};
 /// 📐️ Shared rank/unrank arithmetic for index-keyed collection diffs (`between`/`absorb`/
 /// `inverse`) — see `🧬️schema-design.md` §Absorb and the plan's "Absorb" section for the
 /// derivation. `excluded_sorted` must be sorted ascending.
-fn count_le(sorted: &[usize], x: usize) -> usize {
+async fn count_le(sorted: &[usize], x: usize) -> usize {
     sorted.partition_point(|&v| v <= x)
 }
-fn rank_excluding(pos: usize, excluded_sorted: &[usize]) -> usize {
+async fn rank_excluding(pos: usize, excluded_sorted: &[usize]) -> usize {
     pos - count_le(excluded_sorted, pos)
 }
-fn unrank_excluding(rank: usize, excluded_sorted: &[usize]) -> usize {
+async fn unrank_excluding(rank: usize, excluded_sorted: &[usize]) -> usize {
     let mut candidate = rank;
     loop {
         let next = rank + count_le(excluded_sorted, candidate);
@@ -50,7 +50,7 @@ fn unrank_excluding(rank: usize, excluded_sorted: &[usize]) -> usize {
         candidate = next;
     }
 }
-fn transport_forward(index: usize, removed_sorted: &[usize], added_index_sorted: &[usize]) -> usize {
+async fn transport_forward(index: usize, removed_sorted: &[usize], added_index_sorted: &[usize]) -> usize {
     unrank_excluding(rank_excluding(index, removed_sorted), added_index_sorted)
 }
 //#endregion 🔖️IndexTransport
@@ -60,7 +60,7 @@ fn transport_forward(index: usize, removed_sorted: &[usize], added_index_sorted:
 /// `T` and its per-item diff type `D`. Canonical correctness verified against the plan's 3
 /// mandated cases in this module's tests. See `🧬️schema-design.md` §Absorb.
 #[allow(clippy::too_many_arguments)]
-fn absorb_indexed_collection<T: Clone, D: Clone>(
+async fn absorb_indexed_collection<T: Clone, D: Clone>(
     removed1: Vec<usize>,
     modified1: Vec<(usize, D)>,
     added1: Vec<(usize, T)>,
@@ -144,7 +144,7 @@ fn absorb_indexed_collection<T: Clone, D: Clone>(
 }
 
 /// ↩️ Diff-level inverse for an index-keyed collection triple, given the ORIGINAL base items.
-fn inverse_indexed_collection<T: Clone, D: Clone>(removed: &[usize], modified: &[(usize, D)], added: &[(usize, T)], base_items: &[T], diff_inverse: impl Fn(&D, &T) -> D) -> (Vec<usize>, Vec<(usize, D)>, Vec<(usize, T)>) {
+async fn inverse_indexed_collection<T: Clone, D: Clone>(removed: &[usize], modified: &[(usize, D)], added: &[(usize, T)], base_items: &[T], diff_inverse: impl Fn(&D, &T) -> D) -> (Vec<usize>, Vec<(usize, D)>, Vec<(usize, T)>) {
     let mut removed_sorted = removed.to_vec();
     removed_sorted.sort_unstable();
     let mut added_index_sorted: Vec<usize> = added.iter().map(|(i, _)| *i).collect();
@@ -175,25 +175,25 @@ fn inverse_indexed_collection<T: Clone, D: Clone>(removed: &[usize], modified: &
 /// structs for STRONG entities (`GltfNodeDiff`, `GltfMeshDiff`, …), and by the blanket `T for T`
 /// impl below for WEAK entities (the "diff" IS the whole new value).
 pub trait ItemDiff<T>: Clone + PartialEq {
-    fn between(base: &T, other: &T) -> Self;
-    fn apply(&self, base: &T) -> T;
-    fn inverse(&self, base: &T) -> Self;
-    fn absorb_into(&mut self, other: Self);
+    async fn between(base: &T, other: &T) -> Self;
+    async fn apply(&self, base: &T) -> T;
+    async fn inverse(&self, base: &T) -> Self;
+    async fn absorb_into(&mut self, other: Self);
 }
 
 /// 🍃️ WEAK entities: the diff type IS the item type (whole-value replace), per the recipe's
 /// strong/weak split -- no further sub-structure worth diffing.
 impl<T: Clone + PartialEq> ItemDiff<T> for T {
-    fn between(_base: &T, other: &T) -> Self {
+    async fn between(_base: &T, other: &T) -> Self {
         other.clone()
     }
-    fn apply(&self, _base: &T) -> T {
+    async fn apply(&self, _base: &T) -> T {
         self.clone()
     }
-    fn inverse(&self, base: &T) -> Self {
+    async fn inverse(&self, base: &T) -> Self {
         base.clone()
     }
-    fn absorb_into(&mut self, other: Self) {
+    async fn absorb_into(&mut self, other: Self) {
         *self = other;
     }
 }
@@ -235,17 +235,17 @@ pub struct GltfCollectionDiff<T, D> {
 }
 
 impl<T, D> Default for GltfCollectionDiff<T, D> {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self { removed: Vec::new(), modified: Vec::new(), added: Vec::new() }
     }
 }
 
 impl<T: Clone + PartialEq, D: ItemDiff<T>> GltfCollectionDiff<T, D> {
-    pub fn is_empty(&self) -> bool {
+    pub async fn is_empty(&self) -> bool {
         self.removed.is_empty() && self.modified.is_empty() && self.added.is_empty()
     }
 
-    pub fn between(base: &[T], other: &[T]) -> Self {
+    pub async fn between(base: &[T], other: &[T]) -> Self {
         let min = base.len().min(other.len());
         let mut modified = Vec::new();
         for i in 0..min {
@@ -258,7 +258,7 @@ impl<T: Clone + PartialEq, D: ItemDiff<T>> GltfCollectionDiff<T, D> {
         Self { removed, modified, added }
     }
 
-    pub fn validate_apply(&self, base_len: usize, target: &str) -> protocol::MutationApplyResult<()> {
+    pub async fn validate_apply(&self, base_len: usize, target: &str) -> protocol::MutationApplyResult<()> {
         let mut removed = std::collections::BTreeSet::new();
         for &index in &self.removed {
             if index >= base_len || !removed.insert(index) {
@@ -285,7 +285,7 @@ impl<T: Clone + PartialEq, D: ItemDiff<T>> GltfCollectionDiff<T, D> {
         Ok(())
     }
 
-    pub fn apply(&self, base: &[T]) -> Vec<T> {
+    pub async fn apply(&self, base: &[T]) -> Vec<T> {
         let mut next: Vec<Option<T>> = base.iter().cloned().map(Some).collect();
         for m in &self.modified {
             if let Some(slot) = next.get_mut(m.index) {
@@ -312,7 +312,7 @@ impl<T: Clone + PartialEq, D: ItemDiff<T>> GltfCollectionDiff<T, D> {
         out
     }
 
-    pub fn absorb(&mut self, other: Self) {
+    pub async fn absorb(&mut self, other: Self) {
         let (removed, modified, added) = absorb_indexed_collection(
             std::mem::take(&mut self.removed),
             std::mem::take(&mut self.modified).into_iter().map(|m| (m.index, m.diff)).collect(),
@@ -328,7 +328,7 @@ impl<T: Clone + PartialEq, D: ItemDiff<T>> GltfCollectionDiff<T, D> {
         self.added = added.into_iter().map(|(index, item)| GltfAdded { index, item }).collect();
     }
 
-    pub fn inverse(&self, base_items: &[T]) -> Self {
+    pub async fn inverse(&self, base_items: &[T]) -> Self {
         let (removed, modified, added) =
             inverse_indexed_collection(&self.removed, &self.modified.iter().map(|m| (m.index, m.diff.clone())).collect::<Vec<_>>(), &self.added.iter().map(|a| (a.index, a.item.clone())).collect::<Vec<_>>(), base_items, |d, item| d.inverse(item));
         Self { removed, modified: modified.into_iter().map(|(index, diff)| GltfModified { index, diff }).collect(), added: added.into_iter().map(|(index, item)| GltfAdded { index, item }).collect() }
@@ -360,10 +360,10 @@ pub struct GltfAssetDiff {
 }
 
 impl GltfAssetDiff {
-    pub fn is_empty(&self) -> bool {
+    pub async fn is_empty(&self) -> bool {
         self.version.is_none() && self.generator.is_none() && self.copyright.is_none() && self.min_version.is_none() && self.extensions.is_none() && self.extras.is_none()
     }
-    pub fn between(base: &GltfAsset, other: &GltfAsset) -> Self {
+    pub async fn between(base: &GltfAsset, other: &GltfAsset) -> Self {
         Self {
             version: (base.version != other.version).then(|| other.version.clone()),
             generator: (base.generator != other.generator).then(|| other.generator.clone()),
@@ -373,7 +373,7 @@ impl GltfAssetDiff {
             extras: (base.extras != other.extras).then(|| other.extras.clone()),
         }
     }
-    pub fn apply(&self, base: &GltfAsset) -> GltfAsset {
+    pub async fn apply(&self, base: &GltfAsset) -> GltfAsset {
         let mut next = base.clone();
         if let Some(v) = &self.version {
             next.version = v.clone();
@@ -395,7 +395,7 @@ impl GltfAssetDiff {
         }
         next
     }
-    pub fn inverse(&self, base: &GltfAsset) -> Self {
+    pub async fn inverse(&self, base: &GltfAsset) -> Self {
         Self {
             version: self.version.as_ref().map(|_| base.version.clone()),
             generator: self.generator.as_ref().map(|_| base.generator.clone()),
@@ -405,7 +405,7 @@ impl GltfAssetDiff {
             extras: self.extras.as_ref().map(|_| base.extras.clone()),
         }
     }
-    pub fn absorb(&mut self, other: Self) {
+    pub async fn absorb(&mut self, other: Self) {
         if other.version.is_some() {
             self.version = other.version;
         }
@@ -443,7 +443,7 @@ pub struct GltfSceneDiff {
 }
 
 impl ItemDiff<GltfScene> for GltfSceneDiff {
-    fn between(base: &GltfScene, other: &GltfScene) -> Self {
+    async fn between(base: &GltfScene, other: &GltfScene) -> Self {
         Self {
             nodes: (base.nodes != other.nodes).then(|| other.nodes.clone()),
             name: (base.name != other.name).then(|| other.name.clone()),
@@ -451,7 +451,7 @@ impl ItemDiff<GltfScene> for GltfSceneDiff {
             extras: (base.extras != other.extras).then(|| other.extras.clone()),
         }
     }
-    fn apply(&self, base: &GltfScene) -> GltfScene {
+    async fn apply(&self, base: &GltfScene) -> GltfScene {
         let mut next = base.clone();
         if let Some(v) = &self.nodes {
             next.nodes = v.clone();
@@ -467,7 +467,7 @@ impl ItemDiff<GltfScene> for GltfSceneDiff {
         }
         next
     }
-    fn inverse(&self, base: &GltfScene) -> Self {
+    async fn inverse(&self, base: &GltfScene) -> Self {
         Self {
             nodes: self.nodes.as_ref().map(|_| base.nodes.clone()),
             name: self.name.as_ref().map(|_| base.name.clone()),
@@ -475,7 +475,7 @@ impl ItemDiff<GltfScene> for GltfSceneDiff {
             extras: self.extras.as_ref().map(|_| base.extras.clone()),
         }
     }
-    fn absorb_into(&mut self, other: Self) {
+    async fn absorb_into(&mut self, other: Self) {
         if other.nodes.is_some() {
             self.nodes = other.nodes;
         }
@@ -523,7 +523,7 @@ pub struct GltfNodeDiff {
 }
 
 impl ItemDiff<GltfNode> for GltfNodeDiff {
-    fn between(base: &GltfNode, other: &GltfNode) -> Self {
+    async fn between(base: &GltfNode, other: &GltfNode) -> Self {
         Self {
             children: (base.children != other.children).then(|| other.children.clone()),
             mesh: (base.mesh != other.mesh).then_some(other.mesh),
@@ -539,7 +539,7 @@ impl ItemDiff<GltfNode> for GltfNodeDiff {
             extras: (base.extras != other.extras).then(|| other.extras.clone()),
         }
     }
-    fn apply(&self, base: &GltfNode) -> GltfNode {
+    async fn apply(&self, base: &GltfNode) -> GltfNode {
         let mut next = base.clone();
         if let Some(v) = &self.children {
             next.children = v.clone();
@@ -579,7 +579,7 @@ impl ItemDiff<GltfNode> for GltfNodeDiff {
         }
         next
     }
-    fn inverse(&self, base: &GltfNode) -> Self {
+    async fn inverse(&self, base: &GltfNode) -> Self {
         Self {
             children: self.children.as_ref().map(|_| base.children.clone()),
             mesh: self.mesh.map(|_| base.mesh),
@@ -595,7 +595,7 @@ impl ItemDiff<GltfNode> for GltfNodeDiff {
             extras: self.extras.as_ref().map(|_| base.extras.clone()),
         }
     }
-    fn absorb_into(&mut self, other: Self) {
+    async fn absorb_into(&mut self, other: Self) {
         if other.children.is_some() {
             self.children = other.children;
         }
@@ -653,7 +653,7 @@ pub struct GltfMeshDiff {
 }
 
 impl ItemDiff<GltfMesh> for GltfMeshDiff {
-    fn between(base: &GltfMesh, other: &GltfMesh) -> Self {
+    async fn between(base: &GltfMesh, other: &GltfMesh) -> Self {
         Self {
             primitives: (base.primitives != other.primitives).then(|| other.primitives.clone()),
             weights: (base.weights != other.weights).then(|| other.weights.clone()),
@@ -662,7 +662,7 @@ impl ItemDiff<GltfMesh> for GltfMeshDiff {
             extras: (base.extras != other.extras).then(|| other.extras.clone()),
         }
     }
-    fn apply(&self, base: &GltfMesh) -> GltfMesh {
+    async fn apply(&self, base: &GltfMesh) -> GltfMesh {
         let mut next = base.clone();
         if let Some(v) = &self.primitives {
             next.primitives = v.clone();
@@ -681,7 +681,7 @@ impl ItemDiff<GltfMesh> for GltfMeshDiff {
         }
         next
     }
-    fn inverse(&self, base: &GltfMesh) -> Self {
+    async fn inverse(&self, base: &GltfMesh) -> Self {
         Self {
             primitives: self.primitives.as_ref().map(|_| base.primitives.clone()),
             weights: self.weights.as_ref().map(|_| base.weights.clone()),
@@ -690,7 +690,7 @@ impl ItemDiff<GltfMesh> for GltfMeshDiff {
             extras: self.extras.as_ref().map(|_| base.extras.clone()),
         }
     }
-    fn absorb_into(&mut self, other: Self) {
+    async fn absorb_into(&mut self, other: Self) {
         if other.primitives.is_some() {
             self.primitives = other.primitives;
         }
@@ -741,7 +741,7 @@ pub struct GltfAccessorDiff {
 }
 
 impl ItemDiff<GltfAccessor> for GltfAccessorDiff {
-    fn between(base: &GltfAccessor, other: &GltfAccessor) -> Self {
+    async fn between(base: &GltfAccessor, other: &GltfAccessor) -> Self {
         Self {
             buffer_view: (base.buffer_view != other.buffer_view).then_some(other.buffer_view),
             byte_offset: (base.byte_offset != other.byte_offset).then_some(other.byte_offset),
@@ -757,7 +757,7 @@ impl ItemDiff<GltfAccessor> for GltfAccessorDiff {
             extras: (base.extras != other.extras).then(|| other.extras.clone()),
         }
     }
-    fn apply(&self, base: &GltfAccessor) -> GltfAccessor {
+    async fn apply(&self, base: &GltfAccessor) -> GltfAccessor {
         let mut next = base.clone();
         if let Some(v) = self.buffer_view {
             next.buffer_view = v;
@@ -797,7 +797,7 @@ impl ItemDiff<GltfAccessor> for GltfAccessorDiff {
         }
         next
     }
-    fn inverse(&self, base: &GltfAccessor) -> Self {
+    async fn inverse(&self, base: &GltfAccessor) -> Self {
         Self {
             buffer_view: self.buffer_view.map(|_| base.buffer_view),
             byte_offset: self.byte_offset.map(|_| base.byte_offset),
@@ -813,7 +813,7 @@ impl ItemDiff<GltfAccessor> for GltfAccessorDiff {
             extras: self.extras.as_ref().map(|_| base.extras.clone()),
         }
     }
-    fn absorb_into(&mut self, other: Self) {
+    async fn absorb_into(&mut self, other: Self) {
         if other.buffer_view.is_some() {
             self.buffer_view = other.buffer_view;
         }
@@ -883,7 +883,7 @@ pub struct GltfMaterialDiff {
 }
 
 impl ItemDiff<GltfMaterial> for GltfMaterialDiff {
-    fn between(base: &GltfMaterial, other: &GltfMaterial) -> Self {
+    async fn between(base: &GltfMaterial, other: &GltfMaterial) -> Self {
         Self {
             name: (base.name != other.name).then(|| other.name.clone()),
             pbr_metallic_roughness: (base.pbr_metallic_roughness != other.pbr_metallic_roughness).then(|| other.pbr_metallic_roughness.clone()),
@@ -898,7 +898,7 @@ impl ItemDiff<GltfMaterial> for GltfMaterialDiff {
             extras: (base.extras != other.extras).then(|| other.extras.clone()),
         }
     }
-    fn apply(&self, base: &GltfMaterial) -> GltfMaterial {
+    async fn apply(&self, base: &GltfMaterial) -> GltfMaterial {
         let mut next = base.clone();
         if let Some(v) = &self.name {
             next.name = v.clone();
@@ -935,7 +935,7 @@ impl ItemDiff<GltfMaterial> for GltfMaterialDiff {
         }
         next
     }
-    fn inverse(&self, base: &GltfMaterial) -> Self {
+    async fn inverse(&self, base: &GltfMaterial) -> Self {
         Self {
             name: self.name.as_ref().map(|_| base.name.clone()),
             pbr_metallic_roughness: self.pbr_metallic_roughness.as_ref().map(|_| base.pbr_metallic_roughness.clone()),
@@ -950,7 +950,7 @@ impl ItemDiff<GltfMaterial> for GltfMaterialDiff {
             extras: self.extras.as_ref().map(|_| base.extras.clone()),
         }
     }
-    fn absorb_into(&mut self, other: Self) {
+    async fn absorb_into(&mut self, other: Self) {
         if other.name.is_some() {
             self.name = other.name;
         }
@@ -1010,7 +1010,7 @@ pub struct GltfBufferDiff {
 }
 
 impl ItemDiff<GltfBuffer> for GltfBufferDiff {
-    fn between(base: &GltfBuffer, other: &GltfBuffer) -> Self {
+    async fn between(base: &GltfBuffer, other: &GltfBuffer) -> Self {
         Self {
             byte_length: (base.byte_length != other.byte_length).then_some(other.byte_length),
             uri: (base.uri != other.uri).then(|| other.uri.clone()),
@@ -1019,7 +1019,7 @@ impl ItemDiff<GltfBuffer> for GltfBufferDiff {
             extras: (base.extras != other.extras).then(|| other.extras.clone()),
         }
     }
-    fn apply(&self, base: &GltfBuffer) -> GltfBuffer {
+    async fn apply(&self, base: &GltfBuffer) -> GltfBuffer {
         let mut next = base.clone();
         if let Some(v) = self.byte_length {
             next.byte_length = v;
@@ -1038,7 +1038,7 @@ impl ItemDiff<GltfBuffer> for GltfBufferDiff {
         }
         next
     }
-    fn inverse(&self, base: &GltfBuffer) -> Self {
+    async fn inverse(&self, base: &GltfBuffer) -> Self {
         Self {
             byte_length: self.byte_length.map(|_| base.byte_length),
             uri: self.uri.as_ref().map(|_| base.uri.clone()),
@@ -1047,7 +1047,7 @@ impl ItemDiff<GltfBuffer> for GltfBufferDiff {
             extras: self.extras.as_ref().map(|_| base.extras.clone()),
         }
     }
-    fn absorb_into(&mut self, other: Self) {
+    async fn absorb_into(&mut self, other: Self) {
         if other.byte_length.is_some() {
             self.byte_length = other.byte_length;
         }
@@ -1156,7 +1156,7 @@ pub struct GltfDiff {
 }
 
 impl GltfDiff {
-    pub fn is_empty_diff(&self) -> bool {
+    pub async fn is_empty_diff(&self) -> bool {
         self.asset.as_ref().map(GltfAssetDiff::is_empty).unwrap_or(true)
             && self.scene.is_none()
             && self.scenes.as_ref().map(GltfScenesDiff::is_empty).unwrap_or(true)
@@ -1183,7 +1183,7 @@ impl GltfDiff {
 
 //#region 🗺️TouchedRegions
 impl protocol::DiffRegions for GltfDiff {
-    fn touches(&self) -> protocol::TouchedPaths {
+    async fn touches(&self) -> protocol::TouchedPaths {
         let mut paths = Vec::new();
         if self.asset.as_ref().is_some_and(|diff| !diff.is_empty()) {
             paths.push("document/asset".to_string());
@@ -1303,7 +1303,7 @@ impl protocol::DiffRegions for GltfDiff {
 //#endregion 🗺️TouchedRegions
 
 impl MutationDiff<GltfSnapshot> for GltfDiff {
-    fn apply(&self, base: &GltfSnapshot) -> protocol::MutationApplyResult<GltfSnapshot> {
+    async fn apply(&self, base: &GltfSnapshot) -> protocol::MutationApplyResult<GltfSnapshot> {
         macro_rules! validate_collection {
             ($field:ident, $base:expr, $target:literal) => {
                 if let Some(diff) = &self.$field {
@@ -1398,7 +1398,7 @@ impl MutationDiff<GltfSnapshot> for GltfDiff {
         Ok(next)
     }
 
-    fn absorb(&mut self, other: Self) {
+    async fn absorb(&mut self, other: Self) {
         match (&mut self.asset, other.asset) {
             (Some(mine), Some(theirs)) => mine.absorb(theirs),
             (slot @ None, Some(theirs)) => *slot = Some(theirs),
@@ -1449,7 +1449,7 @@ impl MutationDiff<GltfSnapshot> for GltfDiff {
 }
 
 impl DiffAlgebra<GltfSnapshot> for GltfDiff {
-    fn inverse(&self, base: &GltfSnapshot) -> Self {
+    async fn inverse(&self, base: &GltfSnapshot) -> Self {
         let doc = &base.document;
         Self {
             asset: self.asset.as_ref().map(|d| d.inverse(&doc.asset)),
@@ -1476,7 +1476,7 @@ impl DiffAlgebra<GltfSnapshot> for GltfDiff {
         }
     }
 
-    fn between(base: &GltfSnapshot, other: &GltfSnapshot) -> Self {
+    async fn between(base: &GltfSnapshot, other: &GltfSnapshot) -> Self {
         let (bd, od) = (&base.document, &other.document);
         let asset_diff = GltfAssetDiff::between(&bd.asset, &od.asset);
         let scenes_diff = GltfScenesDiff::between(&bd.scenes, &od.scenes);
@@ -1518,7 +1518,7 @@ impl DiffAlgebra<GltfSnapshot> for GltfDiff {
         }
     }
 
-    fn is_empty(&self) -> bool {
+    async fn is_empty(&self) -> bool {
         self.is_empty_diff()
     }
 }
@@ -1529,7 +1529,7 @@ impl DiffAlgebra<GltfSnapshot> for GltfDiff {
 /// every collection's `added`/`modified` entries are real, not fabricated) — used by this
 /// artifact's own `diff_grammar_conformance_law`/`protocol_walk_law` conformance tests
 /// (⚙️engine/component.rs), mirroring json's own `demo_diff_cases()` role in its pilot report.
-pub fn demo_diff_cases() -> Vec<GltfDiff> {
+pub async fn demo_diff_cases() -> Vec<GltfDiff> {
     let base = crate::artifacts::gltf::engine::demo_gltf_snapshot();
     let mut other = base.clone();
     other.document.asset.generator = Some("semio-fg3".into());
@@ -1562,7 +1562,7 @@ pub fn demo_diff_cases() -> Vec<GltfDiff> {
 }
 
 /// 🧩 Builds a set-snapshot diff — sparse field-by-field, never a full-replace slot.
-pub fn diff_set_snapshot(base: &GltfSnapshot, snapshot: &GltfSnapshot) -> GltfDiff {
+pub async fn diff_set_snapshot(base: &GltfSnapshot, snapshot: &GltfSnapshot) -> GltfDiff {
     <GltfDiff as DiffAlgebra<GltfSnapshot>>::between(base, snapshot)
 }
 //#endregion 🔖️Diff
@@ -1602,25 +1602,25 @@ pub fn diff_set_snapshot(base: &GltfSnapshot, snapshot: &GltfSnapshot) -> GltfDi
 /// GROUP (asset/scene/node; mesh/accessor/material; buffer family; texture/image/sampler/skin;
 /// animation; camera) rather than one monolithic function, per the recon's own suggested structure.
 //#region 🔖️Primitives
-pub(crate) fn hex_encode(bytes: &[u8]) -> String {
+pub(crate) async fn hex_encode(bytes: &[u8]) -> String {
     bytes.iter().map(|b| format!("{b:02x}")).collect()
 }
-pub(crate) fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
+pub(crate) async fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
     if s.len() % 2 != 0 {
         return Err(format!("odd hex length: {s:?}"));
     }
     (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()
 }
-pub(crate) fn enc_str(s: &str) -> String {
+pub(crate) async fn enc_str(s: &str) -> String {
     hex_encode(s.as_bytes())
 }
-pub(crate) fn dec_str(s: &str) -> Result<String, String> {
+pub(crate) async fn dec_str(s: &str) -> Result<String, String> {
     String::from_utf8(hex_decode(s)?).map_err(|e| e.to_string())
 }
-pub(crate) fn parse_usize(s: &str) -> Result<usize, String> {
+pub(crate) async fn parse_usize(s: &str) -> Result<usize, String> {
     s.parse().map_err(|e: std::num::ParseIntError| e.to_string())
 }
-pub(crate) fn split_top_level(s: &str, sep: char) -> Vec<&str> {
+pub(crate) async fn split_top_level(s: &str, sep: char) -> Vec<&str> {
     if s.is_empty() {
         return Vec::new();
     }
@@ -1641,16 +1641,16 @@ pub(crate) fn split_top_level(s: &str, sep: char) -> Vec<&str> {
     out.push(&s[start..]);
     out
 }
-pub(crate) fn strip_brackets(s: &str) -> Result<&str, String> {
+pub(crate) async fn strip_brackets(s: &str) -> Result<&str, String> {
     s.strip_prefix('[').and_then(|s| s.strip_suffix(']')).ok_or_else(|| format!("expected [...], got {s:?}"))
 }
-pub(crate) fn encode_option<T>(opt: &Option<T>, enc: impl Fn(&T) -> String) -> String {
+pub(crate) async fn encode_option<T>(opt: &Option<T>, enc: impl Fn(&T) -> String) -> String {
     match opt {
         None => "[0]".to_string(),
         Some(v) => format!("[1,{}]", enc(v)),
     }
 }
-pub(crate) fn decode_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Option<T>, String> {
+pub(crate) async fn decode_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Option<T>, String> {
     let inner = strip_brackets(s)?;
     match split_top_level(inner, ',').as_slice() {
         ["0"] => Ok(None),
@@ -1663,69 +1663,69 @@ pub(crate) fn decode_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>)
 /// layer when the tri-state value itself is embedded as a single positional field inside a larger
 /// bracketed tuple (e.g. one field of `GltfAssetDiff`/`GltfNodeDiff`), where both layers must be
 /// explicit since there is no "absent token" to lean on.
-pub(crate) fn encode_option_option<T>(opt: &Option<Option<T>>, enc: impl Fn(&T) -> String) -> String {
+pub(crate) async fn encode_option_option<T>(opt: &Option<Option<T>>, enc: impl Fn(&T) -> String) -> String {
     encode_option(opt, |inner: &Option<T>| encode_option(inner, &enc))
 }
-pub(crate) fn decode_option_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Option<Option<T>>, String> {
+pub(crate) async fn decode_option_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Option<Option<T>>, String> {
     decode_option(s, |inner: &str| decode_option(inner, &dec))
 }
 //#endregion 🔖️Primitives
 
 //#region 🔖️ScalarCodecs
-pub(crate) fn enc_f64(v: f64) -> String {
+pub(crate) async fn enc_f64(v: f64) -> String {
     v.to_string()
 }
-pub(crate) fn dec_f64(s: &str) -> Result<f64, String> {
+pub(crate) async fn dec_f64(s: &str) -> Result<f64, String> {
     s.parse::<f64>().map_err(|e: std::num::ParseFloatError| e.to_string())
 }
-pub(crate) fn enc_u64(v: u64) -> String {
+pub(crate) async fn enc_u64(v: u64) -> String {
     v.to_string()
 }
-pub(crate) fn dec_u64(s: &str) -> Result<u64, String> {
+pub(crate) async fn dec_u64(s: &str) -> Result<u64, String> {
     s.parse::<u64>().map_err(|e: std::num::ParseIntError| e.to_string())
 }
-pub(crate) fn enc_bool(v: bool) -> String {
+pub(crate) async fn enc_bool(v: bool) -> String {
     if v {
         "1".to_string()
     } else {
         "0".to_string()
     }
 }
-pub(crate) fn dec_bool(s: &str) -> Result<bool, String> {
+pub(crate) async fn dec_bool(s: &str) -> Result<bool, String> {
     match s {
         "0" => Ok(false),
         "1" => Ok(true),
         other => Err(format!("bool: expected 0/1, got {other:?}")),
     }
 }
-pub(crate) fn enc_f64_slice(v: &[f64]) -> String {
+pub(crate) async fn enc_f64_slice(v: &[f64]) -> String {
     format!("[{}]", v.iter().map(|x| enc_f64(*x)).collect::<Vec<_>>().join(","))
 }
-pub(crate) fn dec_f64_vec(s: &str) -> Result<Vec<f64>, String> {
+pub(crate) async fn dec_f64_vec(s: &str) -> Result<Vec<f64>, String> {
     split_top_level(strip_brackets(s)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_f64).collect()
 }
-pub(crate) fn dec_f64_array<const N: usize>(s: &str) -> Result<[f64; N], String> {
+pub(crate) async fn dec_f64_array<const N: usize>(s: &str) -> Result<[f64; N], String> {
     let v = dec_f64_vec(s)?;
     let len = v.len();
     v.try_into().map_err(|_| format!("expected {N} floats, got {len}"))
 }
-pub(crate) fn enc_usize_vec(v: &[usize]) -> String {
+pub(crate) async fn enc_usize_vec(v: &[usize]) -> String {
     format!("[{}]", v.iter().map(|x| x.to_string()).collect::<Vec<_>>().join(","))
 }
-pub(crate) fn dec_usize_vec(s: &str) -> Result<Vec<usize>, String> {
+pub(crate) async fn dec_usize_vec(s: &str) -> Result<Vec<usize>, String> {
     split_top_level(strip_brackets(s)?, ',').into_iter().filter(|s| !s.is_empty()).map(parse_usize).collect()
 }
-pub(crate) fn enc_string_vec(v: &[String]) -> String {
+pub(crate) async fn enc_string_vec(v: &[String]) -> String {
     format!("[{}]", v.iter().map(|s| enc_str(s)).collect::<Vec<_>>().join(","))
 }
-pub(crate) fn dec_string_vec(s: &str) -> Result<Vec<String>, String> {
+pub(crate) async fn dec_string_vec(s: &str) -> Result<Vec<String>, String> {
     split_top_level(strip_brackets(s)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_str).collect()
 }
 /// 🏷️ `GltfPrimitive::attributes` -- `Vec<(String, usize)>`, name-keyed and order-preserving.
-pub(crate) fn enc_attr_pairs(v: &[(String, usize)]) -> String {
+pub(crate) async fn enc_attr_pairs(v: &[(String, usize)]) -> String {
     format!("[{}]", v.iter().map(|(k, idx)| format!("{}:{idx}", enc_str(k))).collect::<Vec<_>>().join(","))
 }
-pub(crate) fn dec_attr_pairs(s: &str) -> Result<Vec<(String, usize)>, String> {
+pub(crate) async fn dec_attr_pairs(s: &str) -> Result<Vec<(String, usize)>, String> {
     split_top_level(strip_brackets(s)?, ',')
         .into_iter()
         .filter(|s| !s.is_empty())
@@ -1742,7 +1742,7 @@ pub(crate) fn dec_attr_pairs(s: &str) -> Result<Vec<(String, usize)>, String> {
 /// `Z`=Null (bare, no payload), `B[0|1]`=Bool, `F[<f64>]`=Number, `S[<hex>]`=String,
 /// `A[v,v,...]`=Array, `O[k:v,k:v,...]`=Object (member order preserved, matching `GltfJson::
 /// Object`'s own `Vec<(String,GltfJson)>` shape rather than a map).
-pub(crate) fn enc_json(v: &GltfJson) -> String {
+pub(crate) async fn enc_json(v: &GltfJson) -> String {
     match v {
         GltfJson::Null => "Z".to_string(),
         GltfJson::Bool(b) => format!("B[{}]", enc_bool(*b)),
@@ -1754,7 +1754,7 @@ pub(crate) fn enc_json(v: &GltfJson) -> String {
         }
     }
 }
-pub(crate) fn dec_json(s: &str) -> Result<GltfJson, String> {
+pub(crate) async fn dec_json(s: &str) -> Result<GltfJson, String> {
     if s == "Z" {
         return Ok(GltfJson::Null);
     }
@@ -1783,20 +1783,20 @@ pub(crate) fn dec_json(s: &str) -> Result<GltfJson, String> {
 //#region 🔖️UnitEnumCodecs
 /// 🔢️ Wire code, not a word tag -- reuses [`GltfComponentType::code`]/`from_code` (the same spec
 /// numeric code the JSON serde impl uses, `crate::artifacts::gltf::engine`).
-pub(crate) fn enc_component_type(t: GltfComponentType) -> String {
+pub(crate) async fn enc_component_type(t: GltfComponentType) -> String {
     t.code().to_string()
 }
-pub(crate) fn dec_component_type(s: &str) -> Result<GltfComponentType, String> {
+pub(crate) async fn dec_component_type(s: &str) -> Result<GltfComponentType, String> {
     GltfComponentType::from_code(dec_u64(s)?)
 }
 /// 🔤️ Word tag -- reuses [`GltfAccessorType::as_str`]/`from_str`.
-pub(crate) fn enc_accessor_type(t: GltfAccessorType) -> String {
+pub(crate) async fn enc_accessor_type(t: GltfAccessorType) -> String {
     t.as_str().to_string()
 }
-pub(crate) fn dec_accessor_type(s: &str) -> Result<GltfAccessorType, String> {
+pub(crate) async fn dec_accessor_type(s: &str) -> Result<GltfAccessorType, String> {
     GltfAccessorType::from_str(s)
 }
-pub(crate) fn enc_alpha_mode(m: GltfAlphaMode) -> String {
+pub(crate) async fn enc_alpha_mode(m: GltfAlphaMode) -> String {
     match m {
         GltfAlphaMode::Opaque => "OPAQUE",
         GltfAlphaMode::Mask => "MASK",
@@ -1804,7 +1804,7 @@ pub(crate) fn enc_alpha_mode(m: GltfAlphaMode) -> String {
     }
     .to_string()
 }
-pub(crate) fn dec_alpha_mode(s: &str) -> Result<GltfAlphaMode, String> {
+pub(crate) async fn dec_alpha_mode(s: &str) -> Result<GltfAlphaMode, String> {
     match s {
         "OPAQUE" => Ok(GltfAlphaMode::Opaque),
         "MASK" => Ok(GltfAlphaMode::Mask),
@@ -1812,7 +1812,7 @@ pub(crate) fn dec_alpha_mode(s: &str) -> Result<GltfAlphaMode, String> {
         other => Err(format!("alpha mode: unknown {other:?}")),
     }
 }
-pub(crate) fn enc_interpolation(i: GltfInterpolation) -> String {
+pub(crate) async fn enc_interpolation(i: GltfInterpolation) -> String {
     match i {
         GltfInterpolation::Linear => "LINEAR",
         GltfInterpolation::Step => "STEP",
@@ -1820,7 +1820,7 @@ pub(crate) fn enc_interpolation(i: GltfInterpolation) -> String {
     }
     .to_string()
 }
-pub(crate) fn dec_interpolation(s: &str) -> Result<GltfInterpolation, String> {
+pub(crate) async fn dec_interpolation(s: &str) -> Result<GltfInterpolation, String> {
     match s {
         "LINEAR" => Ok(GltfInterpolation::Linear),
         "STEP" => Ok(GltfInterpolation::Step),
@@ -1828,7 +1828,7 @@ pub(crate) fn dec_interpolation(s: &str) -> Result<GltfInterpolation, String> {
         other => Err(format!("interpolation: unknown {other:?}")),
     }
 }
-pub(crate) fn enc_animation_path(p: GltfAnimationPath) -> String {
+pub(crate) async fn enc_animation_path(p: GltfAnimationPath) -> String {
     match p {
         GltfAnimationPath::Translation => "translation",
         GltfAnimationPath::Rotation => "rotation",
@@ -1837,7 +1837,7 @@ pub(crate) fn enc_animation_path(p: GltfAnimationPath) -> String {
     }
     .to_string()
 }
-pub(crate) fn dec_animation_path(s: &str) -> Result<GltfAnimationPath, String> {
+pub(crate) async fn dec_animation_path(s: &str) -> Result<GltfAnimationPath, String> {
     match s {
         "translation" => Ok(GltfAnimationPath::Translation),
         "rotation" => Ok(GltfAnimationPath::Rotation),
@@ -1846,14 +1846,14 @@ pub(crate) fn dec_animation_path(s: &str) -> Result<GltfAnimationPath, String> {
         other => Err(format!("animation path: unknown {other:?}")),
     }
 }
-pub(crate) fn enc_source_form(f: GltfSourceForm) -> String {
+pub(crate) async fn enc_source_form(f: GltfSourceForm) -> String {
     match f {
         GltfSourceForm::Json => "json",
         GltfSourceForm::Glb => "glb",
     }
     .to_string()
 }
-pub(crate) fn dec_source_form(s: &str) -> Result<GltfSourceForm, String> {
+pub(crate) async fn dec_source_form(s: &str) -> Result<GltfSourceForm, String> {
     match s {
         "json" => Ok(GltfSourceForm::Json),
         "glb" => Ok(GltfSourceForm::Glb),
@@ -1863,7 +1863,7 @@ pub(crate) fn dec_source_form(s: &str) -> Result<GltfSourceForm, String> {
 //#endregion 🔖️UnitEnumCodecs
 
 //#region 🔖️AssetSceneNodeGroupCodecs
-pub(crate) fn enc_asset_diff(d: &GltfAssetDiff) -> String {
+pub(crate) async fn enc_asset_diff(d: &GltfAssetDiff) -> String {
     format!(
         "[{},{},{},{},{},{}]",
         encode_option(&d.version, |v| enc_str(v)),
@@ -1874,7 +1874,7 @@ pub(crate) fn enc_asset_diff(d: &GltfAssetDiff) -> String {
         encode_option_option(&d.extras, enc_json),
     )
 }
-pub(crate) fn dec_asset_diff(s: &str) -> Result<GltfAssetDiff, String> {
+pub(crate) async fn dec_asset_diff(s: &str) -> Result<GltfAssetDiff, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [version, generator, copyright, min_version, extensions, extras] = parts.as_slice() else {
         return Err(format!("asset diff: expected 6 fields, got {}", parts.len()));
@@ -1889,24 +1889,24 @@ pub(crate) fn dec_asset_diff(s: &str) -> Result<GltfAssetDiff, String> {
     })
 }
 
-pub(crate) fn enc_scene(sc: &GltfScene) -> String {
+pub(crate) async fn enc_scene(sc: &GltfScene) -> String {
     format!("[{},{},{},{}]", enc_usize_vec(&sc.nodes), encode_option(&sc.name, |v| enc_str(v)), encode_option(&sc.extensions, enc_json), encode_option(&sc.extras, enc_json),)
 }
-pub(crate) fn dec_scene(s: &str) -> Result<GltfScene, String> {
+pub(crate) async fn dec_scene(s: &str) -> Result<GltfScene, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [nodes, name, extensions, extras] = parts.as_slice() else { return Err(format!("scene: expected 4 fields, got {}", parts.len())) };
     Ok(GltfScene { nodes: dec_usize_vec(nodes)?, name: decode_option(name, dec_str)?, extensions: decode_option(extensions, dec_json)?, extras: decode_option(extras, dec_json)? })
 }
-pub(crate) fn enc_scene_diff(d: &GltfSceneDiff) -> String {
+pub(crate) async fn enc_scene_diff(d: &GltfSceneDiff) -> String {
     format!("[{},{},{},{}]", encode_option(&d.nodes, |v| enc_usize_vec(v)), encode_option_option(&d.name, |v| enc_str(v)), encode_option_option(&d.extensions, enc_json), encode_option_option(&d.extras, enc_json),)
 }
-pub(crate) fn dec_scene_diff(s: &str) -> Result<GltfSceneDiff, String> {
+pub(crate) async fn dec_scene_diff(s: &str) -> Result<GltfSceneDiff, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [nodes, name, extensions, extras] = parts.as_slice() else { return Err(format!("scene diff: expected 4 fields, got {}", parts.len())) };
     Ok(GltfSceneDiff { nodes: decode_option(nodes, dec_usize_vec)?, name: decode_option_option(name, dec_str)?, extensions: decode_option_option(extensions, dec_json)?, extras: decode_option_option(extras, dec_json)? })
 }
 
-pub(crate) fn enc_node(n: &GltfNode) -> String {
+pub(crate) async fn enc_node(n: &GltfNode) -> String {
     format!(
         "[{},{},{},{},{},{},{},{},{},{},{},{}]",
         enc_usize_vec(&n.children),
@@ -1923,7 +1923,7 @@ pub(crate) fn enc_node(n: &GltfNode) -> String {
         encode_option(&n.extras, enc_json),
     )
 }
-pub(crate) fn dec_node(s: &str) -> Result<GltfNode, String> {
+pub(crate) async fn dec_node(s: &str) -> Result<GltfNode, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [children, mesh, camera, skin, matrix, translation, rotation, scale, weights, name, extensions, extras] = parts.as_slice() else {
         return Err(format!("node: expected 12 fields, got {}", parts.len()));
@@ -1943,7 +1943,7 @@ pub(crate) fn dec_node(s: &str) -> Result<GltfNode, String> {
         extras: decode_option(extras, dec_json)?,
     })
 }
-pub(crate) fn enc_node_diff(d: &GltfNodeDiff) -> String {
+pub(crate) async fn enc_node_diff(d: &GltfNodeDiff) -> String {
     format!(
         "[{},{},{},{},{},{},{},{},{},{},{},{}]",
         encode_option(&d.children, |v| enc_usize_vec(v)),
@@ -1960,7 +1960,7 @@ pub(crate) fn enc_node_diff(d: &GltfNodeDiff) -> String {
         encode_option_option(&d.extras, enc_json),
     )
 }
-pub(crate) fn dec_node_diff(s: &str) -> Result<GltfNodeDiff, String> {
+pub(crate) async fn dec_node_diff(s: &str) -> Result<GltfNodeDiff, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [children, mesh, camera, skin, matrix, translation, rotation, scale, weights, name, extensions, extras] = parts.as_slice() else {
         return Err(format!("node diff: expected 12 fields, got {}", parts.len()));
@@ -1983,7 +1983,7 @@ pub(crate) fn dec_node_diff(s: &str) -> Result<GltfNodeDiff, String> {
 //#endregion 🔖️AssetSceneNodeGroupCodecs
 
 //#region 🔖️MeshAccessorMaterialGroupCodecs
-pub(crate) fn enc_primitive(p: &GltfPrimitive) -> String {
+pub(crate) async fn enc_primitive(p: &GltfPrimitive) -> String {
     format!(
         "[{},{},{},{},{},{},{}]",
         enc_attr_pairs(&p.attributes),
@@ -1995,7 +1995,7 @@ pub(crate) fn enc_primitive(p: &GltfPrimitive) -> String {
         encode_option(&p.extras, enc_json),
     )
 }
-pub(crate) fn dec_primitive(s: &str) -> Result<GltfPrimitive, String> {
+pub(crate) async fn dec_primitive(s: &str) -> Result<GltfPrimitive, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [attributes, indices, material, mode, targets, extensions, extras] = parts.as_slice() else {
         return Err(format!("primitive: expected 7 fields, got {}", parts.len()));
@@ -2010,21 +2010,21 @@ pub(crate) fn dec_primitive(s: &str) -> Result<GltfPrimitive, String> {
         extras: decode_option(extras, dec_json)?,
     })
 }
-pub(crate) fn enc_primitive_vec(v: &[GltfPrimitive]) -> String {
+pub(crate) async fn enc_primitive_vec(v: &[GltfPrimitive]) -> String {
     format!("[{}]", v.iter().map(enc_primitive).collect::<Vec<_>>().join(","))
 }
-pub(crate) fn dec_primitive_vec(s: &str) -> Result<Vec<GltfPrimitive>, String> {
+pub(crate) async fn dec_primitive_vec(s: &str) -> Result<Vec<GltfPrimitive>, String> {
     split_top_level(strip_brackets(s)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_primitive).collect()
 }
-pub(crate) fn enc_mesh(m: &GltfMesh) -> String {
+pub(crate) async fn enc_mesh(m: &GltfMesh) -> String {
     format!("[{},{},{},{},{}]", enc_primitive_vec(&m.primitives), enc_f64_slice(&m.weights), encode_option(&m.name, |v| enc_str(v)), encode_option(&m.extensions, enc_json), encode_option(&m.extras, enc_json),)
 }
-pub(crate) fn dec_mesh(s: &str) -> Result<GltfMesh, String> {
+pub(crate) async fn dec_mesh(s: &str) -> Result<GltfMesh, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [primitives, weights, name, extensions, extras] = parts.as_slice() else { return Err(format!("mesh: expected 5 fields, got {}", parts.len())) };
     Ok(GltfMesh { primitives: dec_primitive_vec(primitives)?, weights: dec_f64_vec(weights)?, name: decode_option(name, dec_str)?, extensions: decode_option(extensions, dec_json)?, extras: decode_option(extras, dec_json)? })
 }
-pub(crate) fn enc_mesh_diff(d: &GltfMeshDiff) -> String {
+pub(crate) async fn enc_mesh_diff(d: &GltfMeshDiff) -> String {
     format!(
         "[{},{},{},{},{}]",
         encode_option(&d.primitives, |v| enc_primitive_vec(v)),
@@ -2034,7 +2034,7 @@ pub(crate) fn enc_mesh_diff(d: &GltfMeshDiff) -> String {
         encode_option_option(&d.extras, enc_json),
     )
 }
-pub(crate) fn dec_mesh_diff(s: &str) -> Result<GltfMeshDiff, String> {
+pub(crate) async fn dec_mesh_diff(s: &str) -> Result<GltfMeshDiff, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [primitives, weights, name, extensions, extras] = parts.as_slice() else { return Err(format!("mesh diff: expected 5 fields, got {}", parts.len())) };
     Ok(GltfMeshDiff {
@@ -2046,31 +2046,31 @@ pub(crate) fn dec_mesh_diff(s: &str) -> Result<GltfMeshDiff, String> {
     })
 }
 
-pub(crate) fn enc_sparse_indices(v: &GltfSparseIndices) -> String {
+pub(crate) async fn enc_sparse_indices(v: &GltfSparseIndices) -> String {
     format!("[{},{},{}]", v.buffer_view, v.byte_offset, enc_component_type(v.component_type))
 }
-pub(crate) fn dec_sparse_indices(s: &str) -> Result<GltfSparseIndices, String> {
+pub(crate) async fn dec_sparse_indices(s: &str) -> Result<GltfSparseIndices, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [buffer_view, byte_offset, component_type] = parts.as_slice() else { return Err(format!("sparse indices: expected 3 fields, got {}", parts.len())) };
     Ok(GltfSparseIndices { buffer_view: parse_usize(buffer_view)?, byte_offset: parse_usize(byte_offset)?, component_type: dec_component_type(component_type)? })
 }
-pub(crate) fn enc_sparse_values(v: &GltfSparseValues) -> String {
+pub(crate) async fn enc_sparse_values(v: &GltfSparseValues) -> String {
     format!("[{},{}]", v.buffer_view, v.byte_offset)
 }
-pub(crate) fn dec_sparse_values(s: &str) -> Result<GltfSparseValues, String> {
+pub(crate) async fn dec_sparse_values(s: &str) -> Result<GltfSparseValues, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [buffer_view, byte_offset] = parts.as_slice() else { return Err(format!("sparse values: expected 2 fields, got {}", parts.len())) };
     Ok(GltfSparseValues { buffer_view: parse_usize(buffer_view)?, byte_offset: parse_usize(byte_offset)? })
 }
-pub(crate) fn enc_sparse_accessor(v: &GltfSparseAccessor) -> String {
+pub(crate) async fn enc_sparse_accessor(v: &GltfSparseAccessor) -> String {
     format!("[{},{},{}]", v.count, enc_sparse_indices(&v.indices), enc_sparse_values(&v.values))
 }
-pub(crate) fn dec_sparse_accessor(s: &str) -> Result<GltfSparseAccessor, String> {
+pub(crate) async fn dec_sparse_accessor(s: &str) -> Result<GltfSparseAccessor, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [count, indices, values] = parts.as_slice() else { return Err(format!("sparse accessor: expected 3 fields, got {}", parts.len())) };
     Ok(GltfSparseAccessor { count: parse_usize(count)?, indices: dec_sparse_indices(indices)?, values: dec_sparse_values(values)? })
 }
-pub(crate) fn enc_accessor(a: &GltfAccessor) -> String {
+pub(crate) async fn enc_accessor(a: &GltfAccessor) -> String {
     format!(
         "[{},{},{},{},{},{},{},{},{},{},{},{}]",
         encode_option(&a.buffer_view, |v| v.to_string()),
@@ -2087,7 +2087,7 @@ pub(crate) fn enc_accessor(a: &GltfAccessor) -> String {
         encode_option(&a.extras, enc_json),
     )
 }
-pub(crate) fn dec_accessor(s: &str) -> Result<GltfAccessor, String> {
+pub(crate) async fn dec_accessor(s: &str) -> Result<GltfAccessor, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [buffer_view, byte_offset, component_type, normalized, count, kind, max, min, sparse, name, extensions, extras] = parts.as_slice() else {
         return Err(format!("accessor: expected 12 fields, got {}", parts.len()));
@@ -2107,7 +2107,7 @@ pub(crate) fn dec_accessor(s: &str) -> Result<GltfAccessor, String> {
         extras: decode_option(extras, dec_json)?,
     })
 }
-pub(crate) fn enc_accessor_diff(d: &GltfAccessorDiff) -> String {
+pub(crate) async fn enc_accessor_diff(d: &GltfAccessorDiff) -> String {
     format!(
         "[{},{},{},{},{},{},{},{},{},{},{},{}]",
         encode_option_option(&d.buffer_view, |v| v.to_string()),
@@ -2124,7 +2124,7 @@ pub(crate) fn enc_accessor_diff(d: &GltfAccessorDiff) -> String {
         encode_option_option(&d.extras, enc_json),
     )
 }
-pub(crate) fn dec_accessor_diff(s: &str) -> Result<GltfAccessorDiff, String> {
+pub(crate) async fn dec_accessor_diff(s: &str) -> Result<GltfAccessorDiff, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [buffer_view, byte_offset, component_type, normalized, count, kind, max, min, sparse, name, extensions, extras] = parts.as_slice() else {
         return Err(format!("accessor diff: expected 12 fields, got {}", parts.len()));
@@ -2145,31 +2145,31 @@ pub(crate) fn dec_accessor_diff(s: &str) -> Result<GltfAccessorDiff, String> {
     })
 }
 
-pub(crate) fn enc_texture_info(v: &GltfTextureInfo) -> String {
+pub(crate) async fn enc_texture_info(v: &GltfTextureInfo) -> String {
     format!("[{},{},{},{}]", v.index, enc_u64(v.tex_coord), encode_option(&v.extensions, enc_json), encode_option(&v.extras, enc_json))
 }
-pub(crate) fn dec_texture_info(s: &str) -> Result<GltfTextureInfo, String> {
+pub(crate) async fn dec_texture_info(s: &str) -> Result<GltfTextureInfo, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [index, tex_coord, extensions, extras] = parts.as_slice() else { return Err(format!("texture info: expected 4 fields, got {}", parts.len())) };
     Ok(GltfTextureInfo { index: parse_usize(index)?, tex_coord: dec_u64(tex_coord)?, extensions: decode_option(extensions, dec_json)?, extras: decode_option(extras, dec_json)? })
 }
-pub(crate) fn enc_normal_texture_info(v: &GltfNormalTextureInfo) -> String {
+pub(crate) async fn enc_normal_texture_info(v: &GltfNormalTextureInfo) -> String {
     format!("[{},{},{},{},{}]", v.index, enc_u64(v.tex_coord), enc_f64(v.scale), encode_option(&v.extensions, enc_json), encode_option(&v.extras, enc_json))
 }
-pub(crate) fn dec_normal_texture_info(s: &str) -> Result<GltfNormalTextureInfo, String> {
+pub(crate) async fn dec_normal_texture_info(s: &str) -> Result<GltfNormalTextureInfo, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [index, tex_coord, scale, extensions, extras] = parts.as_slice() else { return Err(format!("normal texture info: expected 5 fields, got {}", parts.len())) };
     Ok(GltfNormalTextureInfo { index: parse_usize(index)?, tex_coord: dec_u64(tex_coord)?, scale: dec_f64(scale)?, extensions: decode_option(extensions, dec_json)?, extras: decode_option(extras, dec_json)? })
 }
-pub(crate) fn enc_occlusion_texture_info(v: &GltfOcclusionTextureInfo) -> String {
+pub(crate) async fn enc_occlusion_texture_info(v: &GltfOcclusionTextureInfo) -> String {
     format!("[{},{},{},{},{}]", v.index, enc_u64(v.tex_coord), enc_f64(v.strength), encode_option(&v.extensions, enc_json), encode_option(&v.extras, enc_json))
 }
-pub(crate) fn dec_occlusion_texture_info(s: &str) -> Result<GltfOcclusionTextureInfo, String> {
+pub(crate) async fn dec_occlusion_texture_info(s: &str) -> Result<GltfOcclusionTextureInfo, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [index, tex_coord, strength, extensions, extras] = parts.as_slice() else { return Err(format!("occlusion texture info: expected 5 fields, got {}", parts.len())) };
     Ok(GltfOcclusionTextureInfo { index: parse_usize(index)?, tex_coord: dec_u64(tex_coord)?, strength: dec_f64(strength)?, extensions: decode_option(extensions, dec_json)?, extras: decode_option(extras, dec_json)? })
 }
-pub(crate) fn enc_pbr(v: &GltfPbrMetallicRoughness) -> String {
+pub(crate) async fn enc_pbr(v: &GltfPbrMetallicRoughness) -> String {
     format!(
         "[{},{},{},{},{},{},{}]",
         enc_f64_slice(&v.base_color_factor),
@@ -2181,7 +2181,7 @@ pub(crate) fn enc_pbr(v: &GltfPbrMetallicRoughness) -> String {
         encode_option(&v.extras, enc_json),
     )
 }
-pub(crate) fn dec_pbr(s: &str) -> Result<GltfPbrMetallicRoughness, String> {
+pub(crate) async fn dec_pbr(s: &str) -> Result<GltfPbrMetallicRoughness, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [base_color_factor, base_color_texture, metallic_factor, roughness_factor, metallic_roughness_texture, extensions, extras] = parts.as_slice() else {
         return Err(format!("pbr: expected 7 fields, got {}", parts.len()));
@@ -2196,7 +2196,7 @@ pub(crate) fn dec_pbr(s: &str) -> Result<GltfPbrMetallicRoughness, String> {
         extras: decode_option(extras, dec_json)?,
     })
 }
-pub(crate) fn enc_material(m: &GltfMaterial) -> String {
+pub(crate) async fn enc_material(m: &GltfMaterial) -> String {
     format!(
         "[{},{},{},{},{},{},{},{},{},{},{}]",
         encode_option(&m.name, |v| enc_str(v)),
@@ -2212,7 +2212,7 @@ pub(crate) fn enc_material(m: &GltfMaterial) -> String {
         encode_option(&m.extras, enc_json),
     )
 }
-pub(crate) fn dec_material(s: &str) -> Result<GltfMaterial, String> {
+pub(crate) async fn dec_material(s: &str) -> Result<GltfMaterial, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [name, pbr, normal_texture, occlusion_texture, emissive_texture, emissive_factor, alpha_mode, alpha_cutoff, double_sided, extensions, extras] = parts.as_slice() else {
         return Err(format!("material: expected 11 fields, got {}", parts.len()));
@@ -2231,7 +2231,7 @@ pub(crate) fn dec_material(s: &str) -> Result<GltfMaterial, String> {
         extras: decode_option(extras, dec_json)?,
     })
 }
-pub(crate) fn enc_material_diff(d: &GltfMaterialDiff) -> String {
+pub(crate) async fn enc_material_diff(d: &GltfMaterialDiff) -> String {
     format!(
         "[{},{},{},{},{},{},{},{},{},{},{}]",
         encode_option_option(&d.name, |v| enc_str(v)),
@@ -2247,7 +2247,7 @@ pub(crate) fn enc_material_diff(d: &GltfMaterialDiff) -> String {
         encode_option_option(&d.extras, enc_json),
     )
 }
-pub(crate) fn dec_material_diff(s: &str) -> Result<GltfMaterialDiff, String> {
+pub(crate) async fn dec_material_diff(s: &str) -> Result<GltfMaterialDiff, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [name, pbr, normal_texture, occlusion_texture, emissive_texture, emissive_factor, alpha_mode, alpha_cutoff, double_sided, extensions, extras] = parts.as_slice() else {
         return Err(format!("material diff: expected 11 fields, got {}", parts.len()));
@@ -2269,15 +2269,15 @@ pub(crate) fn dec_material_diff(s: &str) -> Result<GltfMaterialDiff, String> {
 //#endregion 🔖️MeshAccessorMaterialGroupCodecs
 
 //#region 🔖️BufferGroupCodecs
-pub(crate) fn enc_buffer(b: &GltfBuffer) -> String {
+pub(crate) async fn enc_buffer(b: &GltfBuffer) -> String {
     format!("[{},{},{},{},{}]", b.byte_length, encode_option(&b.uri, |v| enc_str(v)), encode_option(&b.name, |v| enc_str(v)), encode_option(&b.extensions, enc_json), encode_option(&b.extras, enc_json))
 }
-pub(crate) fn dec_buffer(s: &str) -> Result<GltfBuffer, String> {
+pub(crate) async fn dec_buffer(s: &str) -> Result<GltfBuffer, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [byte_length, uri, name, extensions, extras] = parts.as_slice() else { return Err(format!("buffer: expected 5 fields, got {}", parts.len())) };
     Ok(GltfBuffer { byte_length: parse_usize(byte_length)?, uri: decode_option(uri, dec_str)?, name: decode_option(name, dec_str)?, extensions: decode_option(extensions, dec_json)?, extras: decode_option(extras, dec_json)? })
 }
-pub(crate) fn enc_buffer_diff(d: &GltfBufferDiff) -> String {
+pub(crate) async fn enc_buffer_diff(d: &GltfBufferDiff) -> String {
     format!(
         "[{},{},{},{},{}]",
         encode_option(&d.byte_length, |v| v.to_string()),
@@ -2287,7 +2287,7 @@ pub(crate) fn enc_buffer_diff(d: &GltfBufferDiff) -> String {
         encode_option_option(&d.extras, enc_json),
     )
 }
-pub(crate) fn dec_buffer_diff(s: &str) -> Result<GltfBufferDiff, String> {
+pub(crate) async fn dec_buffer_diff(s: &str) -> Result<GltfBufferDiff, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [byte_length, uri, name, extensions, extras] = parts.as_slice() else { return Err(format!("buffer diff: expected 5 fields, got {}", parts.len())) };
     Ok(GltfBufferDiff {
@@ -2298,7 +2298,7 @@ pub(crate) fn dec_buffer_diff(s: &str) -> Result<GltfBufferDiff, String> {
         extras: decode_option_option(extras, dec_json)?,
     })
 }
-pub(crate) fn enc_buffer_view(v: &GltfBufferView) -> String {
+pub(crate) async fn enc_buffer_view(v: &GltfBufferView) -> String {
     format!(
         "[{},{},{},{},{},{},{},{}]",
         v.buffer,
@@ -2311,7 +2311,7 @@ pub(crate) fn enc_buffer_view(v: &GltfBufferView) -> String {
         encode_option(&v.extras, enc_json),
     )
 }
-pub(crate) fn dec_buffer_view(s: &str) -> Result<GltfBufferView, String> {
+pub(crate) async fn dec_buffer_view(s: &str) -> Result<GltfBufferView, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [buffer, byte_offset, byte_length, byte_stride, target, name, extensions, extras] = parts.as_slice() else {
         return Err(format!("buffer view: expected 8 fields, got {}", parts.len()));
@@ -2330,24 +2330,24 @@ pub(crate) fn dec_buffer_view(s: &str) -> Result<GltfBufferView, String> {
 /// 🧬️ Raw buffer bytes (`GltfSnapshot::buffers[i]`) -- hex, same as every other byte payload in
 /// this grammar (no base64: no external dep, matching the family's own hex idiom, see
 /// `f6-recon-report.md` §5).
-pub(crate) fn enc_bytes(v: &[u8]) -> String {
+pub(crate) async fn enc_bytes(v: &[u8]) -> String {
     hex_encode(v)
 }
-pub(crate) fn dec_bytes(s: &str) -> Result<Vec<u8>, String> {
+pub(crate) async fn dec_bytes(s: &str) -> Result<Vec<u8>, String> {
     hex_decode(s)
 }
 //#endregion 🔖️BufferGroupCodecs
 
 //#region 🔖️TextureImageSamplerSkinGroupCodecs
-pub(crate) fn enc_texture(t: &GltfTexture) -> String {
+pub(crate) async fn enc_texture(t: &GltfTexture) -> String {
     format!("[{},{},{},{},{}]", encode_option(&t.sampler, |v| v.to_string()), encode_option(&t.source, |v| v.to_string()), encode_option(&t.name, |v| enc_str(v)), encode_option(&t.extensions, enc_json), encode_option(&t.extras, enc_json),)
 }
-pub(crate) fn dec_texture(s: &str) -> Result<GltfTexture, String> {
+pub(crate) async fn dec_texture(s: &str) -> Result<GltfTexture, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [sampler, source, name, extensions, extras] = parts.as_slice() else { return Err(format!("texture: expected 5 fields, got {}", parts.len())) };
     Ok(GltfTexture { sampler: decode_option(sampler, parse_usize)?, source: decode_option(source, parse_usize)?, name: decode_option(name, dec_str)?, extensions: decode_option(extensions, dec_json)?, extras: decode_option(extras, dec_json)? })
 }
-pub(crate) fn enc_image(i: &GltfImage) -> String {
+pub(crate) async fn enc_image(i: &GltfImage) -> String {
     format!(
         "[{},{},{},{},{},{}]",
         encode_option(&i.uri, |v| enc_str(v)),
@@ -2358,7 +2358,7 @@ pub(crate) fn enc_image(i: &GltfImage) -> String {
         encode_option(&i.extras, enc_json),
     )
 }
-pub(crate) fn dec_image(s: &str) -> Result<GltfImage, String> {
+pub(crate) async fn dec_image(s: &str) -> Result<GltfImage, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [uri, mime_type, buffer_view, name, extensions, extras] = parts.as_slice() else { return Err(format!("image: expected 6 fields, got {}", parts.len())) };
     Ok(GltfImage {
@@ -2370,7 +2370,7 @@ pub(crate) fn dec_image(s: &str) -> Result<GltfImage, String> {
         extras: decode_option(extras, dec_json)?,
     })
 }
-pub(crate) fn enc_sampler(s: &GltfSampler) -> String {
+pub(crate) async fn enc_sampler(s: &GltfSampler) -> String {
     format!(
         "[{},{},{},{},{},{},{}]",
         encode_option(&s.mag_filter, |v| enc_u64(*v)),
@@ -2382,7 +2382,7 @@ pub(crate) fn enc_sampler(s: &GltfSampler) -> String {
         encode_option(&s.extras, enc_json),
     )
 }
-pub(crate) fn dec_sampler(s: &str) -> Result<GltfSampler, String> {
+pub(crate) async fn dec_sampler(s: &str) -> Result<GltfSampler, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [mag_filter, min_filter, wrap_s, wrap_t, name, extensions, extras] = parts.as_slice() else {
         return Err(format!("sampler: expected 7 fields, got {}", parts.len()));
@@ -2397,7 +2397,7 @@ pub(crate) fn dec_sampler(s: &str) -> Result<GltfSampler, String> {
         extras: decode_option(extras, dec_json)?,
     })
 }
-pub(crate) fn enc_skin(v: &GltfSkin) -> String {
+pub(crate) async fn enc_skin(v: &GltfSkin) -> String {
     format!(
         "[{},{},{},{},{},{}]",
         encode_option(&v.inverse_bind_matrices, |x| x.to_string()),
@@ -2408,7 +2408,7 @@ pub(crate) fn enc_skin(v: &GltfSkin) -> String {
         encode_option(&v.extras, enc_json),
     )
 }
-pub(crate) fn dec_skin(s: &str) -> Result<GltfSkin, String> {
+pub(crate) async fn dec_skin(s: &str) -> Result<GltfSkin, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [inverse_bind_matrices, skeleton, joints, name, extensions, extras] = parts.as_slice() else {
         return Err(format!("skin: expected 6 fields, got {}", parts.len()));
@@ -2425,31 +2425,31 @@ pub(crate) fn dec_skin(s: &str) -> Result<GltfSkin, String> {
 //#endregion 🔖️TextureImageSamplerSkinGroupCodecs
 
 //#region 🔖️AnimationGroupCodecs
-pub(crate) fn enc_animation_channel_target(t: &GltfAnimationChannelTarget) -> String {
+pub(crate) async fn enc_animation_channel_target(t: &GltfAnimationChannelTarget) -> String {
     format!("[{},{},{},{}]", encode_option(&t.node, |v| v.to_string()), enc_animation_path(t.path), encode_option(&t.extensions, enc_json), encode_option(&t.extras, enc_json))
 }
-pub(crate) fn dec_animation_channel_target(s: &str) -> Result<GltfAnimationChannelTarget, String> {
+pub(crate) async fn dec_animation_channel_target(s: &str) -> Result<GltfAnimationChannelTarget, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [node, path, extensions, extras] = parts.as_slice() else { return Err(format!("animation channel target: expected 4 fields, got {}", parts.len())) };
     Ok(GltfAnimationChannelTarget { node: decode_option(node, parse_usize)?, path: dec_animation_path(path)?, extensions: decode_option(extensions, dec_json)?, extras: decode_option(extras, dec_json)? })
 }
-pub(crate) fn enc_animation_channel(c: &GltfAnimationChannel) -> String {
+pub(crate) async fn enc_animation_channel(c: &GltfAnimationChannel) -> String {
     format!("[{},{},{},{}]", c.sampler, enc_animation_channel_target(&c.target), encode_option(&c.extensions, enc_json), encode_option(&c.extras, enc_json))
 }
-pub(crate) fn dec_animation_channel(s: &str) -> Result<GltfAnimationChannel, String> {
+pub(crate) async fn dec_animation_channel(s: &str) -> Result<GltfAnimationChannel, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [sampler, target, extensions, extras] = parts.as_slice() else { return Err(format!("animation channel: expected 4 fields, got {}", parts.len())) };
     Ok(GltfAnimationChannel { sampler: parse_usize(sampler)?, target: dec_animation_channel_target(target)?, extensions: decode_option(extensions, dec_json)?, extras: decode_option(extras, dec_json)? })
 }
-pub(crate) fn enc_animation_sampler(s: &GltfAnimationSampler) -> String {
+pub(crate) async fn enc_animation_sampler(s: &GltfAnimationSampler) -> String {
     format!("[{},{},{},{},{}]", s.input, enc_interpolation(s.interpolation), s.output, encode_option(&s.extensions, enc_json), encode_option(&s.extras, enc_json))
 }
-pub(crate) fn dec_animation_sampler(s: &str) -> Result<GltfAnimationSampler, String> {
+pub(crate) async fn dec_animation_sampler(s: &str) -> Result<GltfAnimationSampler, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [input, interpolation, output, extensions, extras] = parts.as_slice() else { return Err(format!("animation sampler: expected 5 fields, got {}", parts.len())) };
     Ok(GltfAnimationSampler { input: parse_usize(input)?, interpolation: dec_interpolation(interpolation)?, output: parse_usize(output)?, extensions: decode_option(extensions, dec_json)?, extras: decode_option(extras, dec_json)? })
 }
-pub(crate) fn enc_animation(a: &GltfAnimation) -> String {
+pub(crate) async fn enc_animation(a: &GltfAnimation) -> String {
     format!(
         "[{},{},{},{},{}]",
         format!("[{}]", a.channels.iter().map(enc_animation_channel).collect::<Vec<_>>().join(",")),
@@ -2459,7 +2459,7 @@ pub(crate) fn enc_animation(a: &GltfAnimation) -> String {
         encode_option(&a.extras, enc_json),
     )
 }
-pub(crate) fn dec_animation(s: &str) -> Result<GltfAnimation, String> {
+pub(crate) async fn dec_animation(s: &str) -> Result<GltfAnimation, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [channels, samplers, name, extensions, extras] = parts.as_slice() else { return Err(format!("animation: expected 5 fields, got {}", parts.len())) };
     Ok(GltfAnimation {
@@ -2473,10 +2473,10 @@ pub(crate) fn dec_animation(s: &str) -> Result<GltfAnimation, String> {
 //#endregion 🔖️AnimationGroupCodecs
 
 //#region 🔖️CameraGroupCodecs
-pub(crate) fn enc_perspective(p: &GltfPerspective) -> String {
+pub(crate) async fn enc_perspective(p: &GltfPerspective) -> String {
     format!("[{},{},{},{},{},{}]", encode_option(&p.aspect_ratio, |v| enc_f64(*v)), enc_f64(p.yfov), encode_option(&p.zfar, |v| enc_f64(*v)), enc_f64(p.znear), encode_option(&p.extensions, enc_json), encode_option(&p.extras, enc_json),)
 }
-pub(crate) fn dec_perspective(s: &str) -> Result<GltfPerspective, String> {
+pub(crate) async fn dec_perspective(s: &str) -> Result<GltfPerspective, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [aspect_ratio, yfov, zfar, znear, extensions, extras] = parts.as_slice() else { return Err(format!("perspective: expected 6 fields, got {}", parts.len())) };
     Ok(GltfPerspective {
@@ -2488,23 +2488,23 @@ pub(crate) fn dec_perspective(s: &str) -> Result<GltfPerspective, String> {
         extras: decode_option(extras, dec_json)?,
     })
 }
-pub(crate) fn enc_orthographic(o: &GltfOrthographic) -> String {
+pub(crate) async fn enc_orthographic(o: &GltfOrthographic) -> String {
     format!("[{},{},{},{},{},{}]", enc_f64(o.xmag), enc_f64(o.ymag), enc_f64(o.zfar), enc_f64(o.znear), encode_option(&o.extensions, enc_json), encode_option(&o.extras, enc_json))
 }
-pub(crate) fn dec_orthographic(s: &str) -> Result<GltfOrthographic, String> {
+pub(crate) async fn dec_orthographic(s: &str) -> Result<GltfOrthographic, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [xmag, ymag, zfar, znear, extensions, extras] = parts.as_slice() else { return Err(format!("orthographic: expected 6 fields, got {}", parts.len())) };
     Ok(GltfOrthographic { xmag: dec_f64(xmag)?, ymag: dec_f64(ymag)?, zfar: dec_f64(zfar)?, znear: dec_f64(znear)?, extensions: decode_option(extensions, dec_json)?, extras: decode_option(extras, dec_json)? })
 }
 /// 🔀️ `GltfCameraProjection` is a real data-carrying enum (§3a) -- tag prefix `P`=Perspective,
 /// `O`=Orthographic.
-pub(crate) fn enc_camera_projection(p: &GltfCameraProjection) -> String {
+pub(crate) async fn enc_camera_projection(p: &GltfCameraProjection) -> String {
     match p {
         GltfCameraProjection::Perspective(v) => format!("P{}", enc_perspective(v)),
         GltfCameraProjection::Orthographic(v) => format!("O{}", enc_orthographic(v)),
     }
 }
-pub(crate) fn dec_camera_projection(s: &str) -> Result<GltfCameraProjection, String> {
+pub(crate) async fn dec_camera_projection(s: &str) -> Result<GltfCameraProjection, String> {
     let (tag, rest) = s.split_at(1);
     match tag {
         "P" => Ok(GltfCameraProjection::Perspective(dec_perspective(rest)?)),
@@ -2512,10 +2512,10 @@ pub(crate) fn dec_camera_projection(s: &str) -> Result<GltfCameraProjection, Str
         other => Err(format!("camera projection: unknown tag {other:?}")),
     }
 }
-pub(crate) fn enc_camera(c: &GltfCamera) -> String {
+pub(crate) async fn enc_camera(c: &GltfCamera) -> String {
     format!("[{},{},{},{}]", enc_camera_projection(&c.projection), encode_option(&c.name, |v| enc_str(v)), encode_option(&c.extensions, enc_json), encode_option(&c.extras, enc_json))
 }
-pub(crate) fn dec_camera(s: &str) -> Result<GltfCamera, String> {
+pub(crate) async fn dec_camera(s: &str) -> Result<GltfCamera, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [projection, name, extensions, extras] = parts.as_slice() else { return Err(format!("camera: expected 4 fields, got {}", parts.len())) };
     Ok(GltfCamera { projection: dec_camera_projection(projection)?, name: decode_option(name, dec_str)?, extensions: decode_option(extensions, dec_json)?, extras: decode_option(extras, dec_json)? })
@@ -2527,13 +2527,13 @@ pub(crate) fn dec_camera(s: &str) -> Result<GltfCamera, String> {
 /// (STRONG entities pass a real per-item diff encoder; WEAK entities pass the same `enc_item`/
 /// `dec_item` for both `enc_item`/`enc_diff` via `GltfWeakCollectionDiff<T> = GltfCollectionDiff<T,
 /// T>`) -- one real generic codec, not 14 hand-duplicated ones.
-pub(crate) fn enc_collection<T, D>(c: &GltfCollectionDiff<T, D>, enc_item: impl Fn(&T) -> String, enc_diff: impl Fn(&D) -> String) -> String {
+pub(crate) async fn enc_collection<T, D>(c: &GltfCollectionDiff<T, D>, enc_item: impl Fn(&T) -> String, enc_diff: impl Fn(&D) -> String) -> String {
     let removed = c.removed.iter().map(|i| i.to_string()).collect::<Vec<_>>().join(",");
     let modified = c.modified.iter().map(|m| format!("{}:{}", m.index, enc_diff(&m.diff))).collect::<Vec<_>>().join(",");
     let added = c.added.iter().map(|a| format!("{}:{}", a.index, enc_item(&a.item))).collect::<Vec<_>>().join(",");
     format!("[{removed}];[{modified}];[{added}]")
 }
-pub(crate) fn dec_collection<T, D>(s: &str, dec_item: impl Fn(&str) -> Result<T, String>, dec_diff: impl Fn(&str) -> Result<D, String>) -> Result<GltfCollectionDiff<T, D>, String> {
+pub(crate) async fn dec_collection<T, D>(s: &str, dec_item: impl Fn(&str) -> Result<T, String>, dec_diff: impl Fn(&str) -> Result<D, String>) -> Result<GltfCollectionDiff<T, D>, String> {
     let three = split_top_level(s, ';');
     let [removed_s, modified_s, added_s] = three.as_slice() else { return Err(format!("collection: expected 3 sections, got {}", three.len())) };
     let removed = split_top_level(strip_brackets(removed_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(parse_usize).collect::<Result<Vec<_>, String>>()?;
@@ -2566,23 +2566,23 @@ pub(crate) fn dec_collection<T, D>(s: &str, dec_item: impl Fn(&str) -> Result<T,
 /// reachable with no `use` needed beyond the absolute path). `pub(crate)` so `🧬️mutations/
 /// 🦀️component.rs`'s hand-rolled `OpBinary` can reuse every one of these the same way it already
 /// reuses this module's TEXT `enc_*`/`dec_*` primitives.
-pub(crate) fn write_bin_blob(w: &mut dsl::ByteWriter, bytes: &[u8]) {
+pub(crate) async fn write_bin_blob(w: &mut dsl::ByteWriter, bytes: &[u8]) {
     w.write_varint_u64(bytes.len() as u64);
     w.write_bytes(bytes);
 }
-pub(crate) fn read_bin_blob(r: &mut dsl::ByteReader<'_>) -> Result<Vec<u8>, dsl::PackError> {
+pub(crate) async fn read_bin_blob(r: &mut dsl::ByteReader<'_>) -> Result<Vec<u8>, dsl::PackError> {
     let len = r.read_varint_u64()? as usize;
     Ok(r.read_bytes(len)?.to_vec())
 }
-pub(crate) fn write_bin_str(w: &mut dsl::ByteWriter, s: &str) {
+pub(crate) async fn write_bin_str(w: &mut dsl::ByteWriter, s: &str) {
     write_bin_blob(w, s.as_bytes());
 }
-pub(crate) fn read_bin_str(r: &mut dsl::ByteReader<'_>) -> Result<String, dsl::PackError> {
+pub(crate) async fn read_bin_str(r: &mut dsl::ByteReader<'_>) -> Result<String, dsl::PackError> {
     let bytes = read_bin_blob(r)?;
     String::from_utf8(bytes).map_err(|e| dsl::PackError::Malformed { what: "gltf binary utf8 string", offset: 0, detail: e.to_string() })
 }
 /// 🧩 2-way presence flag (`0`=None, `1`=Some) — shared by every plain `Option<T>` field.
-pub(crate) fn write_bin_option<T>(w: &mut dsl::ByteWriter, v: &Option<T>, write_value: impl FnOnce(&mut dsl::ByteWriter, &T)) {
+pub(crate) async fn write_bin_option<T>(w: &mut dsl::ByteWriter, v: &Option<T>, write_value: impl FnOnce(&mut dsl::ByteWriter, &T)) {
     match v {
         None => w.write_u8(0),
         Some(val) => {
@@ -2591,7 +2591,7 @@ pub(crate) fn write_bin_option<T>(w: &mut dsl::ByteWriter, v: &Option<T>, write_
         }
     }
 }
-pub(crate) fn read_bin_option<T>(r: &mut dsl::ByteReader<'_>, read_value: impl FnOnce(&mut dsl::ByteReader<'_>) -> Result<T, dsl::PackError>) -> Result<Option<T>, dsl::PackError> {
+pub(crate) async fn read_bin_option<T>(r: &mut dsl::ByteReader<'_>, read_value: impl FnOnce(&mut dsl::ByteReader<'_>) -> Result<T, dsl::PackError>) -> Result<Option<T>, dsl::PackError> {
     match r.read_u8()? {
         0 => Ok(None),
         1 => Ok(Some(read_value(r)?)),
@@ -2603,7 +2603,7 @@ pub(crate) fn read_bin_option<T>(r: &mut dsl::ByteReader<'_>, read_value: impl F
 /// chaining two `if`-guarded conditional fields at the PROTOCOL-DESCRIPTION level,
 /// `protocol-cond-cannot-chain`; the Rust codec here has no such limitation but keeps the same
 /// 3-way-flag SHAPE for parity with `../💾️binary/📡️component.protocol.semio`).
-pub(crate) fn write_bin_tri<T>(w: &mut dsl::ByteWriter, v: &Option<Option<T>>, write_value: impl FnOnce(&mut dsl::ByteWriter, &T)) {
+pub(crate) async fn write_bin_tri<T>(w: &mut dsl::ByteWriter, v: &Option<Option<T>>, write_value: impl FnOnce(&mut dsl::ByteWriter, &T)) {
     match v {
         None => w.write_u8(0),
         Some(None) => w.write_u8(1),
@@ -2613,7 +2613,7 @@ pub(crate) fn write_bin_tri<T>(w: &mut dsl::ByteWriter, v: &Option<Option<T>>, w
         }
     }
 }
-pub(crate) fn read_bin_tri<T>(r: &mut dsl::ByteReader<'_>, read_value: impl FnOnce(&mut dsl::ByteReader<'_>) -> Result<T, dsl::PackError>) -> Result<Option<Option<T>>, dsl::PackError> {
+pub(crate) async fn read_bin_tri<T>(r: &mut dsl::ByteReader<'_>, read_value: impl FnOnce(&mut dsl::ByteReader<'_>) -> Result<T, dsl::PackError>) -> Result<Option<Option<T>>, dsl::PackError> {
     match r.read_u8()? {
         0 => Ok(None),
         1 => Ok(Some(None)),
@@ -2621,13 +2621,13 @@ pub(crate) fn read_bin_tri<T>(r: &mut dsl::ByteReader<'_>, read_value: impl FnOn
         other => Err(dsl::PackError::Malformed { what: "gltf binary tri-flag", offset: 0, detail: format!("unknown flag {other}") }),
     }
 }
-pub(crate) fn write_bin_vec<T>(w: &mut dsl::ByteWriter, items: &[T], write_item: impl Fn(&mut dsl::ByteWriter, &T)) {
+pub(crate) async fn write_bin_vec<T>(w: &mut dsl::ByteWriter, items: &[T], write_item: impl Fn(&mut dsl::ByteWriter, &T)) {
     w.write_varint_u64(items.len() as u64);
     for item in items {
         write_item(w, item);
     }
 }
-pub(crate) fn read_bin_vec<T>(r: &mut dsl::ByteReader<'_>, mut read_item: impl FnMut(&mut dsl::ByteReader<'_>) -> Result<T, dsl::PackError>) -> Result<Vec<T>, dsl::PackError> {
+pub(crate) async fn read_bin_vec<T>(r: &mut dsl::ByteReader<'_>, mut read_item: impl FnMut(&mut dsl::ByteReader<'_>) -> Result<T, dsl::PackError>) -> Result<Vec<T>, dsl::PackError> {
     let n = r.read_varint_u64()? as usize;
     let mut out = Vec::with_capacity(n.min(1 << 20));
     for _ in 0..n {
@@ -2635,46 +2635,46 @@ pub(crate) fn read_bin_vec<T>(r: &mut dsl::ByteReader<'_>, mut read_item: impl F
     }
     Ok(out)
 }
-pub(crate) fn write_bin_f64_array<const N: usize>(w: &mut dsl::ByteWriter, v: &[f64; N]) {
+pub(crate) async fn write_bin_f64_array<const N: usize>(w: &mut dsl::ByteWriter, v: &[f64; N]) {
     for x in v {
         w.write_f64_le(*x);
     }
 }
-pub(crate) fn read_bin_f64_array<const N: usize>(r: &mut dsl::ByteReader<'_>) -> Result<[f64; N], dsl::PackError> {
+pub(crate) async fn read_bin_f64_array<const N: usize>(r: &mut dsl::ByteReader<'_>) -> Result<[f64; N], dsl::PackError> {
     let mut out = [0.0f64; N];
     for slot in out.iter_mut() {
         *slot = r.read_f64_le()?;
     }
     Ok(out)
 }
-pub(crate) fn write_bin_f64_vec(w: &mut dsl::ByteWriter, v: &[f64]) {
+pub(crate) async fn write_bin_f64_vec(w: &mut dsl::ByteWriter, v: &[f64]) {
     write_bin_vec(w, v, |w, x| w.write_f64_le(*x));
 }
-pub(crate) fn read_bin_f64_vec(r: &mut dsl::ByteReader<'_>) -> Result<Vec<f64>, dsl::PackError> {
+pub(crate) async fn read_bin_f64_vec(r: &mut dsl::ByteReader<'_>) -> Result<Vec<f64>, dsl::PackError> {
     read_bin_vec(r, |r| r.read_f64_le())
 }
-pub(crate) fn write_bin_usize_vec(w: &mut dsl::ByteWriter, v: &[usize]) {
+pub(crate) async fn write_bin_usize_vec(w: &mut dsl::ByteWriter, v: &[usize]) {
     write_bin_vec(w, v, |w, x: &usize| w.write_varint_u64(*x as u64));
 }
-pub(crate) fn read_bin_usize_vec(r: &mut dsl::ByteReader<'_>) -> Result<Vec<usize>, dsl::PackError> {
+pub(crate) async fn read_bin_usize_vec(r: &mut dsl::ByteReader<'_>) -> Result<Vec<usize>, dsl::PackError> {
     read_bin_vec(r, |r| Ok(r.read_varint_u64()? as usize))
 }
-pub(crate) fn write_bin_string_vec(w: &mut dsl::ByteWriter, v: &[String]) {
+pub(crate) async fn write_bin_string_vec(w: &mut dsl::ByteWriter, v: &[String]) {
     write_bin_vec(w, v, |w, s: &String| write_bin_str(w, s));
 }
-pub(crate) fn read_bin_string_vec(r: &mut dsl::ByteReader<'_>) -> Result<Vec<String>, dsl::PackError> {
+pub(crate) async fn read_bin_string_vec(r: &mut dsl::ByteReader<'_>) -> Result<Vec<String>, dsl::PackError> {
     read_bin_vec(r, read_bin_str)
 }
-pub(crate) fn write_bin_attr_pairs(w: &mut dsl::ByteWriter, v: &[(String, usize)]) {
+pub(crate) async fn write_bin_attr_pairs(w: &mut dsl::ByteWriter, v: &[(String, usize)]) {
     write_bin_vec(w, v, |w, (k, idx): &(String, usize)| {
         write_bin_str(w, k);
         w.write_varint_u64(*idx as u64);
     });
 }
-pub(crate) fn read_bin_attr_pairs(r: &mut dsl::ByteReader<'_>) -> Result<Vec<(String, usize)>, dsl::PackError> {
+pub(crate) async fn read_bin_attr_pairs(r: &mut dsl::ByteReader<'_>) -> Result<Vec<(String, usize)>, dsl::PackError> {
     read_bin_vec(r, |r| Ok((read_bin_str(r)?, r.read_varint_u64()? as usize)))
 }
-pub(crate) fn gltf_bin_err(e: dsl::PackError) -> protocol::ProtocolError {
+pub(crate) async fn gltf_bin_err(e: dsl::PackError) -> protocol::ProtocolError {
     protocol::ProtocolError::Malformed { what: "gltf binary", offset: 0, detail: e.to_string() }
 }
 //#endregion 🔖️RealBinaryPrimitives
@@ -2682,7 +2682,7 @@ pub(crate) fn gltf_bin_err(e: dsl::PackError) -> protocol::ProtocolError {
 //#region 🔖️RealBinaryJsonCodec
 /// 🌳 `GltfJson` -- genuinely recursive real binary: tag `u8` (0=Null,1=Bool,2=Number,3=String,
 /// 4=Array,5=Object) then the payload, matching `enc_json`/`dec_json`'s own tag scheme.
-pub(crate) fn write_bin_json(w: &mut dsl::ByteWriter, v: &GltfJson) {
+pub(crate) async fn write_bin_json(w: &mut dsl::ByteWriter, v: &GltfJson) {
     match v {
         GltfJson::Null => w.write_u8(0),
         GltfJson::Bool(b) => {
@@ -2710,7 +2710,7 @@ pub(crate) fn write_bin_json(w: &mut dsl::ByteWriter, v: &GltfJson) {
         }
     }
 }
-pub(crate) fn read_bin_json(r: &mut dsl::ByteReader<'_>) -> Result<GltfJson, dsl::PackError> {
+pub(crate) async fn read_bin_json(r: &mut dsl::ByteReader<'_>) -> Result<GltfJson, dsl::PackError> {
     match r.read_u8()? {
         0 => Ok(GltfJson::Null),
         1 => Ok(GltfJson::Bool(r.read_u8()? != 0)),
@@ -2721,10 +2721,10 @@ pub(crate) fn read_bin_json(r: &mut dsl::ByteReader<'_>) -> Result<GltfJson, dsl
         other => Err(dsl::PackError::Malformed { what: "gltf json binary tag", offset: 0, detail: format!("unknown tag {other}") }),
     }
 }
-pub(crate) fn write_bin_json_opt(w: &mut dsl::ByteWriter, v: &Option<GltfJson>) {
+pub(crate) async fn write_bin_json_opt(w: &mut dsl::ByteWriter, v: &Option<GltfJson>) {
     write_bin_option(w, v, write_bin_json);
 }
-pub(crate) fn read_bin_json_opt(r: &mut dsl::ByteReader<'_>) -> Result<Option<GltfJson>, dsl::PackError> {
+pub(crate) async fn read_bin_json_opt(r: &mut dsl::ByteReader<'_>) -> Result<Option<GltfJson>, dsl::PackError> {
     read_bin_option(r, read_bin_json)
 }
 //#endregion 🔖️RealBinaryJsonCodec
@@ -2733,16 +2733,16 @@ pub(crate) fn read_bin_json_opt(r: &mut dsl::ByteReader<'_>) -> Result<Option<Gl
 /// 🔢️ Real spec numeric code (5120..5126), matching `GltfComponentType::code`/`from_code` exactly
 /// -- NOT a re-derived discriminant table (the spec code IS this enum's real wire value, same one
 /// the artifact's own `serde` impl emits).
-pub(crate) fn write_bin_component_type(w: &mut dsl::ByteWriter, t: GltfComponentType) {
+pub(crate) async fn write_bin_component_type(w: &mut dsl::ByteWriter, t: GltfComponentType) {
     w.write_u32_le(t.code() as u32);
 }
-pub(crate) fn read_bin_component_type(r: &mut dsl::ByteReader<'_>) -> Result<GltfComponentType, dsl::PackError> {
+pub(crate) async fn read_bin_component_type(r: &mut dsl::ByteReader<'_>) -> Result<GltfComponentType, dsl::PackError> {
     GltfComponentType::from_code(r.read_u32_le()? as u64).map_err(|e| dsl::PackError::Malformed { what: "gltf component_type", offset: 0, detail: e })
 }
 /// 🔢️ Compact `u8` discriminants for the remaining small unit-variant enums (real spec strings
 /// only exist on the TEXT side; the binary frame is free to use its own dense encoding since
 /// nothing outside this codec pair ever reads these bytes directly).
-pub(crate) fn write_bin_accessor_type(w: &mut dsl::ByteWriter, t: GltfAccessorType) {
+pub(crate) async fn write_bin_accessor_type(w: &mut dsl::ByteWriter, t: GltfAccessorType) {
     w.write_u8(match t {
         GltfAccessorType::Scalar => 0,
         GltfAccessorType::Vec2 => 1,
@@ -2753,7 +2753,7 @@ pub(crate) fn write_bin_accessor_type(w: &mut dsl::ByteWriter, t: GltfAccessorTy
         GltfAccessorType::Mat4 => 6,
     });
 }
-pub(crate) fn read_bin_accessor_type(r: &mut dsl::ByteReader<'_>) -> Result<GltfAccessorType, dsl::PackError> {
+pub(crate) async fn read_bin_accessor_type(r: &mut dsl::ByteReader<'_>) -> Result<GltfAccessorType, dsl::PackError> {
     Ok(match r.read_u8()? {
         0 => GltfAccessorType::Scalar,
         1 => GltfAccessorType::Vec2,
@@ -2765,14 +2765,14 @@ pub(crate) fn read_bin_accessor_type(r: &mut dsl::ByteReader<'_>) -> Result<Gltf
         other => return Err(dsl::PackError::Malformed { what: "gltf accessor_type", offset: 0, detail: format!("unknown tag {other}") }),
     })
 }
-pub(crate) fn write_bin_alpha_mode(w: &mut dsl::ByteWriter, m: GltfAlphaMode) {
+pub(crate) async fn write_bin_alpha_mode(w: &mut dsl::ByteWriter, m: GltfAlphaMode) {
     w.write_u8(match m {
         GltfAlphaMode::Opaque => 0,
         GltfAlphaMode::Mask => 1,
         GltfAlphaMode::Blend => 2,
     });
 }
-pub(crate) fn read_bin_alpha_mode(r: &mut dsl::ByteReader<'_>) -> Result<GltfAlphaMode, dsl::PackError> {
+pub(crate) async fn read_bin_alpha_mode(r: &mut dsl::ByteReader<'_>) -> Result<GltfAlphaMode, dsl::PackError> {
     Ok(match r.read_u8()? {
         0 => GltfAlphaMode::Opaque,
         1 => GltfAlphaMode::Mask,
@@ -2780,14 +2780,14 @@ pub(crate) fn read_bin_alpha_mode(r: &mut dsl::ByteReader<'_>) -> Result<GltfAlp
         other => return Err(dsl::PackError::Malformed { what: "gltf alpha_mode", offset: 0, detail: format!("unknown tag {other}") }),
     })
 }
-pub(crate) fn write_bin_interpolation(w: &mut dsl::ByteWriter, i: GltfInterpolation) {
+pub(crate) async fn write_bin_interpolation(w: &mut dsl::ByteWriter, i: GltfInterpolation) {
     w.write_u8(match i {
         GltfInterpolation::Linear => 0,
         GltfInterpolation::Step => 1,
         GltfInterpolation::CubicSpline => 2,
     });
 }
-pub(crate) fn read_bin_interpolation(r: &mut dsl::ByteReader<'_>) -> Result<GltfInterpolation, dsl::PackError> {
+pub(crate) async fn read_bin_interpolation(r: &mut dsl::ByteReader<'_>) -> Result<GltfInterpolation, dsl::PackError> {
     Ok(match r.read_u8()? {
         0 => GltfInterpolation::Linear,
         1 => GltfInterpolation::Step,
@@ -2795,7 +2795,7 @@ pub(crate) fn read_bin_interpolation(r: &mut dsl::ByteReader<'_>) -> Result<Gltf
         other => return Err(dsl::PackError::Malformed { what: "gltf interpolation", offset: 0, detail: format!("unknown tag {other}") }),
     })
 }
-pub(crate) fn write_bin_animation_path(w: &mut dsl::ByteWriter, p: GltfAnimationPath) {
+pub(crate) async fn write_bin_animation_path(w: &mut dsl::ByteWriter, p: GltfAnimationPath) {
     w.write_u8(match p {
         GltfAnimationPath::Translation => 0,
         GltfAnimationPath::Rotation => 1,
@@ -2803,7 +2803,7 @@ pub(crate) fn write_bin_animation_path(w: &mut dsl::ByteWriter, p: GltfAnimation
         GltfAnimationPath::Weights => 3,
     });
 }
-pub(crate) fn read_bin_animation_path(r: &mut dsl::ByteReader<'_>) -> Result<GltfAnimationPath, dsl::PackError> {
+pub(crate) async fn read_bin_animation_path(r: &mut dsl::ByteReader<'_>) -> Result<GltfAnimationPath, dsl::PackError> {
     Ok(match r.read_u8()? {
         0 => GltfAnimationPath::Translation,
         1 => GltfAnimationPath::Rotation,
@@ -2812,13 +2812,13 @@ pub(crate) fn read_bin_animation_path(r: &mut dsl::ByteReader<'_>) -> Result<Glt
         other => return Err(dsl::PackError::Malformed { what: "gltf animation_path", offset: 0, detail: format!("unknown tag {other}") }),
     })
 }
-pub(crate) fn write_bin_source_form(w: &mut dsl::ByteWriter, f: GltfSourceForm) {
+pub(crate) async fn write_bin_source_form(w: &mut dsl::ByteWriter, f: GltfSourceForm) {
     w.write_u8(match f {
         GltfSourceForm::Json => 0,
         GltfSourceForm::Glb => 1,
     });
 }
-pub(crate) fn read_bin_source_form(r: &mut dsl::ByteReader<'_>) -> Result<GltfSourceForm, dsl::PackError> {
+pub(crate) async fn read_bin_source_form(r: &mut dsl::ByteReader<'_>) -> Result<GltfSourceForm, dsl::PackError> {
     Ok(match r.read_u8()? {
         0 => GltfSourceForm::Json,
         1 => GltfSourceForm::Glb,
@@ -2828,7 +2828,7 @@ pub(crate) fn read_bin_source_form(r: &mut dsl::ByteReader<'_>) -> Result<GltfSo
 //#endregion 🔖️RealBinaryUnitEnumCodecs
 
 //#region 🔖️RealBinaryAssetSceneNodeGroupCodecs
-pub(crate) fn write_bin_asset_diff(w: &mut dsl::ByteWriter, d: &GltfAssetDiff) {
+pub(crate) async fn write_bin_asset_diff(w: &mut dsl::ByteWriter, d: &GltfAssetDiff) {
     write_bin_option(w, &d.version, |w, v| write_bin_str(w, v));
     write_bin_tri(w, &d.generator, |w, v| write_bin_str(w, v));
     write_bin_tri(w, &d.copyright, |w, v| write_bin_str(w, v));
@@ -2836,7 +2836,7 @@ pub(crate) fn write_bin_asset_diff(w: &mut dsl::ByteWriter, d: &GltfAssetDiff) {
     write_bin_tri(w, &d.extensions, write_bin_json);
     write_bin_tri(w, &d.extras, write_bin_json);
 }
-pub(crate) fn read_bin_asset_diff(r: &mut dsl::ByteReader<'_>) -> Result<GltfAssetDiff, dsl::PackError> {
+pub(crate) async fn read_bin_asset_diff(r: &mut dsl::ByteReader<'_>) -> Result<GltfAssetDiff, dsl::PackError> {
     Ok(GltfAssetDiff {
         version: read_bin_option(r, read_bin_str)?,
         generator: read_bin_tri(r, read_bin_str)?,
@@ -2846,25 +2846,25 @@ pub(crate) fn read_bin_asset_diff(r: &mut dsl::ByteReader<'_>) -> Result<GltfAss
         extras: read_bin_tri(r, read_bin_json)?,
     })
 }
-pub(crate) fn write_bin_scene(w: &mut dsl::ByteWriter, sc: &GltfScene) {
+pub(crate) async fn write_bin_scene(w: &mut dsl::ByteWriter, sc: &GltfScene) {
     write_bin_usize_vec(w, &sc.nodes);
     write_bin_option(w, &sc.name, |w, v| write_bin_str(w, v));
     write_bin_json_opt(w, &sc.extensions);
     write_bin_json_opt(w, &sc.extras);
 }
-pub(crate) fn read_bin_scene(r: &mut dsl::ByteReader<'_>) -> Result<GltfScene, dsl::PackError> {
+pub(crate) async fn read_bin_scene(r: &mut dsl::ByteReader<'_>) -> Result<GltfScene, dsl::PackError> {
     Ok(GltfScene { nodes: read_bin_usize_vec(r)?, name: read_bin_option(r, read_bin_str)?, extensions: read_bin_json_opt(r)?, extras: read_bin_json_opt(r)? })
 }
-pub(crate) fn write_bin_scene_diff(w: &mut dsl::ByteWriter, d: &GltfSceneDiff) {
+pub(crate) async fn write_bin_scene_diff(w: &mut dsl::ByteWriter, d: &GltfSceneDiff) {
     write_bin_option(w, &d.nodes, |w, v| write_bin_usize_vec(w, v));
     write_bin_tri(w, &d.name, |w, v| write_bin_str(w, v));
     write_bin_tri(w, &d.extensions, write_bin_json);
     write_bin_tri(w, &d.extras, write_bin_json);
 }
-pub(crate) fn read_bin_scene_diff(r: &mut dsl::ByteReader<'_>) -> Result<GltfSceneDiff, dsl::PackError> {
+pub(crate) async fn read_bin_scene_diff(r: &mut dsl::ByteReader<'_>) -> Result<GltfSceneDiff, dsl::PackError> {
     Ok(GltfSceneDiff { nodes: read_bin_option(r, read_bin_usize_vec)?, name: read_bin_tri(r, read_bin_str)?, extensions: read_bin_tri(r, read_bin_json)?, extras: read_bin_tri(r, read_bin_json)? })
 }
-pub(crate) fn write_bin_node(w: &mut dsl::ByteWriter, n: &GltfNode) {
+pub(crate) async fn write_bin_node(w: &mut dsl::ByteWriter, n: &GltfNode) {
     write_bin_usize_vec(w, &n.children);
     write_bin_option(w, &n.mesh, |w, v| w.write_varint_u64(*v as u64));
     write_bin_option(w, &n.camera, |w, v| w.write_varint_u64(*v as u64));
@@ -2878,7 +2878,7 @@ pub(crate) fn write_bin_node(w: &mut dsl::ByteWriter, n: &GltfNode) {
     write_bin_json_opt(w, &n.extensions);
     write_bin_json_opt(w, &n.extras);
 }
-pub(crate) fn read_bin_node(r: &mut dsl::ByteReader<'_>) -> Result<GltfNode, dsl::PackError> {
+pub(crate) async fn read_bin_node(r: &mut dsl::ByteReader<'_>) -> Result<GltfNode, dsl::PackError> {
     Ok(GltfNode {
         children: read_bin_usize_vec(r)?,
         mesh: read_bin_option(r, |r| Ok(r.read_varint_u64()? as usize))?,
@@ -2894,7 +2894,7 @@ pub(crate) fn read_bin_node(r: &mut dsl::ByteReader<'_>) -> Result<GltfNode, dsl
         extras: read_bin_json_opt(r)?,
     })
 }
-pub(crate) fn write_bin_node_diff(w: &mut dsl::ByteWriter, d: &GltfNodeDiff) {
+pub(crate) async fn write_bin_node_diff(w: &mut dsl::ByteWriter, d: &GltfNodeDiff) {
     write_bin_option(w, &d.children, |w, v| write_bin_usize_vec(w, v));
     write_bin_tri(w, &d.mesh, |w, v| w.write_varint_u64(*v as u64));
     write_bin_tri(w, &d.camera, |w, v| w.write_varint_u64(*v as u64));
@@ -2908,7 +2908,7 @@ pub(crate) fn write_bin_node_diff(w: &mut dsl::ByteWriter, d: &GltfNodeDiff) {
     write_bin_tri(w, &d.extensions, write_bin_json);
     write_bin_tri(w, &d.extras, write_bin_json);
 }
-pub(crate) fn read_bin_node_diff(r: &mut dsl::ByteReader<'_>) -> Result<GltfNodeDiff, dsl::PackError> {
+pub(crate) async fn read_bin_node_diff(r: &mut dsl::ByteReader<'_>) -> Result<GltfNodeDiff, dsl::PackError> {
     Ok(GltfNodeDiff {
         children: read_bin_option(r, read_bin_usize_vec)?,
         mesh: read_bin_tri(r, |r| Ok(r.read_varint_u64()? as usize))?,
@@ -2927,7 +2927,7 @@ pub(crate) fn read_bin_node_diff(r: &mut dsl::ByteReader<'_>) -> Result<GltfNode
 //#endregion 🔖️RealBinaryAssetSceneNodeGroupCodecs
 
 //#region 🔖️RealBinaryMeshAccessorMaterialGroupCodecs
-pub(crate) fn write_bin_primitive(w: &mut dsl::ByteWriter, p: &GltfPrimitive) {
+pub(crate) async fn write_bin_primitive(w: &mut dsl::ByteWriter, p: &GltfPrimitive) {
     write_bin_attr_pairs(w, &p.attributes);
     write_bin_option(w, &p.indices, |w, v| w.write_varint_u64(*v as u64));
     write_bin_option(w, &p.material, |w, v| w.write_varint_u64(*v as u64));
@@ -2936,7 +2936,7 @@ pub(crate) fn write_bin_primitive(w: &mut dsl::ByteWriter, p: &GltfPrimitive) {
     write_bin_json_opt(w, &p.extensions);
     write_bin_json_opt(w, &p.extras);
 }
-pub(crate) fn read_bin_primitive(r: &mut dsl::ByteReader<'_>) -> Result<GltfPrimitive, dsl::PackError> {
+pub(crate) async fn read_bin_primitive(r: &mut dsl::ByteReader<'_>) -> Result<GltfPrimitive, dsl::PackError> {
     Ok(GltfPrimitive {
         attributes: read_bin_attr_pairs(r)?,
         indices: read_bin_option(r, |r| Ok(r.read_varint_u64()? as usize))?,
@@ -2947,30 +2947,30 @@ pub(crate) fn read_bin_primitive(r: &mut dsl::ByteReader<'_>) -> Result<GltfPrim
         extras: read_bin_json_opt(r)?,
     })
 }
-pub(crate) fn write_bin_primitive_vec(w: &mut dsl::ByteWriter, v: &[GltfPrimitive]) {
+pub(crate) async fn write_bin_primitive_vec(w: &mut dsl::ByteWriter, v: &[GltfPrimitive]) {
     write_bin_vec(w, v, write_bin_primitive);
 }
-pub(crate) fn read_bin_primitive_vec(r: &mut dsl::ByteReader<'_>) -> Result<Vec<GltfPrimitive>, dsl::PackError> {
+pub(crate) async fn read_bin_primitive_vec(r: &mut dsl::ByteReader<'_>) -> Result<Vec<GltfPrimitive>, dsl::PackError> {
     read_bin_vec(r, read_bin_primitive)
 }
-pub(crate) fn write_bin_mesh(w: &mut dsl::ByteWriter, m: &GltfMesh) {
+pub(crate) async fn write_bin_mesh(w: &mut dsl::ByteWriter, m: &GltfMesh) {
     write_bin_primitive_vec(w, &m.primitives);
     write_bin_f64_vec(w, &m.weights);
     write_bin_option(w, &m.name, |w, v| write_bin_str(w, v));
     write_bin_json_opt(w, &m.extensions);
     write_bin_json_opt(w, &m.extras);
 }
-pub(crate) fn read_bin_mesh(r: &mut dsl::ByteReader<'_>) -> Result<GltfMesh, dsl::PackError> {
+pub(crate) async fn read_bin_mesh(r: &mut dsl::ByteReader<'_>) -> Result<GltfMesh, dsl::PackError> {
     Ok(GltfMesh { primitives: read_bin_primitive_vec(r)?, weights: read_bin_f64_vec(r)?, name: read_bin_option(r, read_bin_str)?, extensions: read_bin_json_opt(r)?, extras: read_bin_json_opt(r)? })
 }
-pub(crate) fn write_bin_mesh_diff(w: &mut dsl::ByteWriter, d: &GltfMeshDiff) {
+pub(crate) async fn write_bin_mesh_diff(w: &mut dsl::ByteWriter, d: &GltfMeshDiff) {
     write_bin_option(w, &d.primitives, |w, v| write_bin_primitive_vec(w, v));
     write_bin_option(w, &d.weights, |w, v| write_bin_f64_vec(w, v));
     write_bin_tri(w, &d.name, |w, v| write_bin_str(w, v));
     write_bin_tri(w, &d.extensions, write_bin_json);
     write_bin_tri(w, &d.extras, write_bin_json);
 }
-pub(crate) fn read_bin_mesh_diff(r: &mut dsl::ByteReader<'_>) -> Result<GltfMeshDiff, dsl::PackError> {
+pub(crate) async fn read_bin_mesh_diff(r: &mut dsl::ByteReader<'_>) -> Result<GltfMeshDiff, dsl::PackError> {
     Ok(GltfMeshDiff {
         primitives: read_bin_option(r, read_bin_primitive_vec)?,
         weights: read_bin_option(r, read_bin_f64_vec)?,
@@ -2979,30 +2979,30 @@ pub(crate) fn read_bin_mesh_diff(r: &mut dsl::ByteReader<'_>) -> Result<GltfMesh
         extras: read_bin_tri(r, read_bin_json)?,
     })
 }
-pub(crate) fn write_bin_sparse_indices(w: &mut dsl::ByteWriter, v: &GltfSparseIndices) {
+pub(crate) async fn write_bin_sparse_indices(w: &mut dsl::ByteWriter, v: &GltfSparseIndices) {
     w.write_varint_u64(v.buffer_view as u64);
     w.write_varint_u64(v.byte_offset as u64);
     write_bin_component_type(w, v.component_type);
 }
-pub(crate) fn read_bin_sparse_indices(r: &mut dsl::ByteReader<'_>) -> Result<GltfSparseIndices, dsl::PackError> {
+pub(crate) async fn read_bin_sparse_indices(r: &mut dsl::ByteReader<'_>) -> Result<GltfSparseIndices, dsl::PackError> {
     Ok(GltfSparseIndices { buffer_view: r.read_varint_u64()? as usize, byte_offset: r.read_varint_u64()? as usize, component_type: read_bin_component_type(r)? })
 }
-pub(crate) fn write_bin_sparse_values(w: &mut dsl::ByteWriter, v: &GltfSparseValues) {
+pub(crate) async fn write_bin_sparse_values(w: &mut dsl::ByteWriter, v: &GltfSparseValues) {
     w.write_varint_u64(v.buffer_view as u64);
     w.write_varint_u64(v.byte_offset as u64);
 }
-pub(crate) fn read_bin_sparse_values(r: &mut dsl::ByteReader<'_>) -> Result<GltfSparseValues, dsl::PackError> {
+pub(crate) async fn read_bin_sparse_values(r: &mut dsl::ByteReader<'_>) -> Result<GltfSparseValues, dsl::PackError> {
     Ok(GltfSparseValues { buffer_view: r.read_varint_u64()? as usize, byte_offset: r.read_varint_u64()? as usize })
 }
-pub(crate) fn write_bin_sparse_accessor(w: &mut dsl::ByteWriter, v: &GltfSparseAccessor) {
+pub(crate) async fn write_bin_sparse_accessor(w: &mut dsl::ByteWriter, v: &GltfSparseAccessor) {
     w.write_varint_u64(v.count as u64);
     write_bin_sparse_indices(w, &v.indices);
     write_bin_sparse_values(w, &v.values);
 }
-pub(crate) fn read_bin_sparse_accessor(r: &mut dsl::ByteReader<'_>) -> Result<GltfSparseAccessor, dsl::PackError> {
+pub(crate) async fn read_bin_sparse_accessor(r: &mut dsl::ByteReader<'_>) -> Result<GltfSparseAccessor, dsl::PackError> {
     Ok(GltfSparseAccessor { count: r.read_varint_u64()? as usize, indices: read_bin_sparse_indices(r)?, values: read_bin_sparse_values(r)? })
 }
-pub(crate) fn write_bin_accessor(w: &mut dsl::ByteWriter, a: &GltfAccessor) {
+pub(crate) async fn write_bin_accessor(w: &mut dsl::ByteWriter, a: &GltfAccessor) {
     write_bin_option(w, &a.buffer_view, |w, v| w.write_varint_u64(*v as u64));
     w.write_varint_u64(a.byte_offset as u64);
     write_bin_component_type(w, a.component_type);
@@ -3016,7 +3016,7 @@ pub(crate) fn write_bin_accessor(w: &mut dsl::ByteWriter, a: &GltfAccessor) {
     write_bin_json_opt(w, &a.extensions);
     write_bin_json_opt(w, &a.extras);
 }
-pub(crate) fn read_bin_accessor(r: &mut dsl::ByteReader<'_>) -> Result<GltfAccessor, dsl::PackError> {
+pub(crate) async fn read_bin_accessor(r: &mut dsl::ByteReader<'_>) -> Result<GltfAccessor, dsl::PackError> {
     Ok(GltfAccessor {
         buffer_view: read_bin_option(r, |r| Ok(r.read_varint_u64()? as usize))?,
         byte_offset: r.read_varint_u64()? as usize,
@@ -3032,7 +3032,7 @@ pub(crate) fn read_bin_accessor(r: &mut dsl::ByteReader<'_>) -> Result<GltfAcces
         extras: read_bin_json_opt(r)?,
     })
 }
-pub(crate) fn write_bin_accessor_diff(w: &mut dsl::ByteWriter, d: &GltfAccessorDiff) {
+pub(crate) async fn write_bin_accessor_diff(w: &mut dsl::ByteWriter, d: &GltfAccessorDiff) {
     write_bin_tri(w, &d.buffer_view, |w, v| w.write_varint_u64(*v as u64));
     write_bin_option(w, &d.byte_offset, |w, v| w.write_varint_u64(*v as u64));
     write_bin_option(w, &d.component_type, |w, v| write_bin_component_type(w, *v));
@@ -3046,7 +3046,7 @@ pub(crate) fn write_bin_accessor_diff(w: &mut dsl::ByteWriter, d: &GltfAccessorD
     write_bin_tri(w, &d.extensions, write_bin_json);
     write_bin_tri(w, &d.extras, write_bin_json);
 }
-pub(crate) fn read_bin_accessor_diff(r: &mut dsl::ByteReader<'_>) -> Result<GltfAccessorDiff, dsl::PackError> {
+pub(crate) async fn read_bin_accessor_diff(r: &mut dsl::ByteReader<'_>) -> Result<GltfAccessorDiff, dsl::PackError> {
     Ok(GltfAccessorDiff {
         buffer_view: read_bin_tri(r, |r| Ok(r.read_varint_u64()? as usize))?,
         byte_offset: read_bin_option(r, |r| Ok(r.read_varint_u64()? as usize))?,
@@ -3062,36 +3062,36 @@ pub(crate) fn read_bin_accessor_diff(r: &mut dsl::ByteReader<'_>) -> Result<Gltf
         extras: read_bin_tri(r, read_bin_json)?,
     })
 }
-pub(crate) fn write_bin_texture_info(w: &mut dsl::ByteWriter, v: &GltfTextureInfo) {
+pub(crate) async fn write_bin_texture_info(w: &mut dsl::ByteWriter, v: &GltfTextureInfo) {
     w.write_varint_u64(v.index as u64);
     w.write_varint_u64(v.tex_coord);
     write_bin_json_opt(w, &v.extensions);
     write_bin_json_opt(w, &v.extras);
 }
-pub(crate) fn read_bin_texture_info(r: &mut dsl::ByteReader<'_>) -> Result<GltfTextureInfo, dsl::PackError> {
+pub(crate) async fn read_bin_texture_info(r: &mut dsl::ByteReader<'_>) -> Result<GltfTextureInfo, dsl::PackError> {
     Ok(GltfTextureInfo { index: r.read_varint_u64()? as usize, tex_coord: r.read_varint_u64()?, extensions: read_bin_json_opt(r)?, extras: read_bin_json_opt(r)? })
 }
-pub(crate) fn write_bin_normal_texture_info(w: &mut dsl::ByteWriter, v: &GltfNormalTextureInfo) {
+pub(crate) async fn write_bin_normal_texture_info(w: &mut dsl::ByteWriter, v: &GltfNormalTextureInfo) {
     w.write_varint_u64(v.index as u64);
     w.write_varint_u64(v.tex_coord);
     w.write_f64_le(v.scale);
     write_bin_json_opt(w, &v.extensions);
     write_bin_json_opt(w, &v.extras);
 }
-pub(crate) fn read_bin_normal_texture_info(r: &mut dsl::ByteReader<'_>) -> Result<GltfNormalTextureInfo, dsl::PackError> {
+pub(crate) async fn read_bin_normal_texture_info(r: &mut dsl::ByteReader<'_>) -> Result<GltfNormalTextureInfo, dsl::PackError> {
     Ok(GltfNormalTextureInfo { index: r.read_varint_u64()? as usize, tex_coord: r.read_varint_u64()?, scale: r.read_f64_le()?, extensions: read_bin_json_opt(r)?, extras: read_bin_json_opt(r)? })
 }
-pub(crate) fn write_bin_occlusion_texture_info(w: &mut dsl::ByteWriter, v: &GltfOcclusionTextureInfo) {
+pub(crate) async fn write_bin_occlusion_texture_info(w: &mut dsl::ByteWriter, v: &GltfOcclusionTextureInfo) {
     w.write_varint_u64(v.index as u64);
     w.write_varint_u64(v.tex_coord);
     w.write_f64_le(v.strength);
     write_bin_json_opt(w, &v.extensions);
     write_bin_json_opt(w, &v.extras);
 }
-pub(crate) fn read_bin_occlusion_texture_info(r: &mut dsl::ByteReader<'_>) -> Result<GltfOcclusionTextureInfo, dsl::PackError> {
+pub(crate) async fn read_bin_occlusion_texture_info(r: &mut dsl::ByteReader<'_>) -> Result<GltfOcclusionTextureInfo, dsl::PackError> {
     Ok(GltfOcclusionTextureInfo { index: r.read_varint_u64()? as usize, tex_coord: r.read_varint_u64()?, strength: r.read_f64_le()?, extensions: read_bin_json_opt(r)?, extras: read_bin_json_opt(r)? })
 }
-pub(crate) fn write_bin_pbr(w: &mut dsl::ByteWriter, v: &GltfPbrMetallicRoughness) {
+pub(crate) async fn write_bin_pbr(w: &mut dsl::ByteWriter, v: &GltfPbrMetallicRoughness) {
     write_bin_f64_array::<4>(w, &v.base_color_factor);
     write_bin_option(w, &v.base_color_texture, write_bin_texture_info);
     w.write_f64_le(v.metallic_factor);
@@ -3100,7 +3100,7 @@ pub(crate) fn write_bin_pbr(w: &mut dsl::ByteWriter, v: &GltfPbrMetallicRoughnes
     write_bin_json_opt(w, &v.extensions);
     write_bin_json_opt(w, &v.extras);
 }
-pub(crate) fn read_bin_pbr(r: &mut dsl::ByteReader<'_>) -> Result<GltfPbrMetallicRoughness, dsl::PackError> {
+pub(crate) async fn read_bin_pbr(r: &mut dsl::ByteReader<'_>) -> Result<GltfPbrMetallicRoughness, dsl::PackError> {
     Ok(GltfPbrMetallicRoughness {
         base_color_factor: read_bin_f64_array::<4>(r)?,
         base_color_texture: read_bin_option(r, read_bin_texture_info)?,
@@ -3111,7 +3111,7 @@ pub(crate) fn read_bin_pbr(r: &mut dsl::ByteReader<'_>) -> Result<GltfPbrMetalli
         extras: read_bin_json_opt(r)?,
     })
 }
-pub(crate) fn write_bin_material(w: &mut dsl::ByteWriter, m: &GltfMaterial) {
+pub(crate) async fn write_bin_material(w: &mut dsl::ByteWriter, m: &GltfMaterial) {
     write_bin_option(w, &m.name, |w, v| write_bin_str(w, v));
     write_bin_option(w, &m.pbr_metallic_roughness, write_bin_pbr);
     write_bin_option(w, &m.normal_texture, write_bin_normal_texture_info);
@@ -3124,7 +3124,7 @@ pub(crate) fn write_bin_material(w: &mut dsl::ByteWriter, m: &GltfMaterial) {
     write_bin_json_opt(w, &m.extensions);
     write_bin_json_opt(w, &m.extras);
 }
-pub(crate) fn read_bin_material(r: &mut dsl::ByteReader<'_>) -> Result<GltfMaterial, dsl::PackError> {
+pub(crate) async fn read_bin_material(r: &mut dsl::ByteReader<'_>) -> Result<GltfMaterial, dsl::PackError> {
     Ok(GltfMaterial {
         name: read_bin_option(r, read_bin_str)?,
         pbr_metallic_roughness: read_bin_option(r, read_bin_pbr)?,
@@ -3139,7 +3139,7 @@ pub(crate) fn read_bin_material(r: &mut dsl::ByteReader<'_>) -> Result<GltfMater
         extras: read_bin_json_opt(r)?,
     })
 }
-pub(crate) fn write_bin_material_diff(w: &mut dsl::ByteWriter, d: &GltfMaterialDiff) {
+pub(crate) async fn write_bin_material_diff(w: &mut dsl::ByteWriter, d: &GltfMaterialDiff) {
     write_bin_tri(w, &d.name, |w, v| write_bin_str(w, v));
     write_bin_tri(w, &d.pbr_metallic_roughness, write_bin_pbr);
     write_bin_tri(w, &d.normal_texture, write_bin_normal_texture_info);
@@ -3152,7 +3152,7 @@ pub(crate) fn write_bin_material_diff(w: &mut dsl::ByteWriter, d: &GltfMaterialD
     write_bin_tri(w, &d.extensions, write_bin_json);
     write_bin_tri(w, &d.extras, write_bin_json);
 }
-pub(crate) fn read_bin_material_diff(r: &mut dsl::ByteReader<'_>) -> Result<GltfMaterialDiff, dsl::PackError> {
+pub(crate) async fn read_bin_material_diff(r: &mut dsl::ByteReader<'_>) -> Result<GltfMaterialDiff, dsl::PackError> {
     Ok(GltfMaterialDiff {
         name: read_bin_tri(r, read_bin_str)?,
         pbr_metallic_roughness: read_bin_tri(r, read_bin_pbr)?,
@@ -3170,24 +3170,24 @@ pub(crate) fn read_bin_material_diff(r: &mut dsl::ByteReader<'_>) -> Result<Gltf
 //#endregion 🔖️RealBinaryMeshAccessorMaterialGroupCodecs
 
 //#region 🔖️RealBinaryBufferGroupCodecs
-pub(crate) fn write_bin_buffer(w: &mut dsl::ByteWriter, b: &GltfBuffer) {
+pub(crate) async fn write_bin_buffer(w: &mut dsl::ByteWriter, b: &GltfBuffer) {
     w.write_varint_u64(b.byte_length as u64);
     write_bin_option(w, &b.uri, |w, v| write_bin_str(w, v));
     write_bin_option(w, &b.name, |w, v| write_bin_str(w, v));
     write_bin_json_opt(w, &b.extensions);
     write_bin_json_opt(w, &b.extras);
 }
-pub(crate) fn read_bin_buffer(r: &mut dsl::ByteReader<'_>) -> Result<GltfBuffer, dsl::PackError> {
+pub(crate) async fn read_bin_buffer(r: &mut dsl::ByteReader<'_>) -> Result<GltfBuffer, dsl::PackError> {
     Ok(GltfBuffer { byte_length: r.read_varint_u64()? as usize, uri: read_bin_option(r, read_bin_str)?, name: read_bin_option(r, read_bin_str)?, extensions: read_bin_json_opt(r)?, extras: read_bin_json_opt(r)? })
 }
-pub(crate) fn write_bin_buffer_diff(w: &mut dsl::ByteWriter, d: &GltfBufferDiff) {
+pub(crate) async fn write_bin_buffer_diff(w: &mut dsl::ByteWriter, d: &GltfBufferDiff) {
     write_bin_option(w, &d.byte_length, |w, v| w.write_varint_u64(*v as u64));
     write_bin_tri(w, &d.uri, |w, v| write_bin_str(w, v));
     write_bin_tri(w, &d.name, |w, v| write_bin_str(w, v));
     write_bin_tri(w, &d.extensions, write_bin_json);
     write_bin_tri(w, &d.extras, write_bin_json);
 }
-pub(crate) fn read_bin_buffer_diff(r: &mut dsl::ByteReader<'_>) -> Result<GltfBufferDiff, dsl::PackError> {
+pub(crate) async fn read_bin_buffer_diff(r: &mut dsl::ByteReader<'_>) -> Result<GltfBufferDiff, dsl::PackError> {
     Ok(GltfBufferDiff {
         byte_length: read_bin_option(r, |r| Ok(r.read_varint_u64()? as usize))?,
         uri: read_bin_tri(r, read_bin_str)?,
@@ -3196,7 +3196,7 @@ pub(crate) fn read_bin_buffer_diff(r: &mut dsl::ByteReader<'_>) -> Result<GltfBu
         extras: read_bin_tri(r, read_bin_json)?,
     })
 }
-pub(crate) fn write_bin_buffer_view(w: &mut dsl::ByteWriter, v: &GltfBufferView) {
+pub(crate) async fn write_bin_buffer_view(w: &mut dsl::ByteWriter, v: &GltfBufferView) {
     w.write_varint_u64(v.buffer as u64);
     w.write_varint_u64(v.byte_offset as u64);
     w.write_varint_u64(v.byte_length as u64);
@@ -3206,7 +3206,7 @@ pub(crate) fn write_bin_buffer_view(w: &mut dsl::ByteWriter, v: &GltfBufferView)
     write_bin_json_opt(w, &v.extensions);
     write_bin_json_opt(w, &v.extras);
 }
-pub(crate) fn read_bin_buffer_view(r: &mut dsl::ByteReader<'_>) -> Result<GltfBufferView, dsl::PackError> {
+pub(crate) async fn read_bin_buffer_view(r: &mut dsl::ByteReader<'_>) -> Result<GltfBufferView, dsl::PackError> {
     Ok(GltfBufferView {
         buffer: r.read_varint_u64()? as usize,
         byte_offset: r.read_varint_u64()? as usize,
@@ -3221,14 +3221,14 @@ pub(crate) fn read_bin_buffer_view(r: &mut dsl::ByteReader<'_>) -> Result<GltfBu
 //#endregion 🔖️RealBinaryBufferGroupCodecs
 
 //#region 🔖️RealBinaryTextureImageSamplerSkinGroupCodecs
-pub(crate) fn write_bin_texture(w: &mut dsl::ByteWriter, t: &GltfTexture) {
+pub(crate) async fn write_bin_texture(w: &mut dsl::ByteWriter, t: &GltfTexture) {
     write_bin_option(w, &t.sampler, |w, v| w.write_varint_u64(*v as u64));
     write_bin_option(w, &t.source, |w, v| w.write_varint_u64(*v as u64));
     write_bin_option(w, &t.name, |w, v| write_bin_str(w, v));
     write_bin_json_opt(w, &t.extensions);
     write_bin_json_opt(w, &t.extras);
 }
-pub(crate) fn read_bin_texture(r: &mut dsl::ByteReader<'_>) -> Result<GltfTexture, dsl::PackError> {
+pub(crate) async fn read_bin_texture(r: &mut dsl::ByteReader<'_>) -> Result<GltfTexture, dsl::PackError> {
     Ok(GltfTexture {
         sampler: read_bin_option(r, |r| Ok(r.read_varint_u64()? as usize))?,
         source: read_bin_option(r, |r| Ok(r.read_varint_u64()? as usize))?,
@@ -3237,7 +3237,7 @@ pub(crate) fn read_bin_texture(r: &mut dsl::ByteReader<'_>) -> Result<GltfTextur
         extras: read_bin_json_opt(r)?,
     })
 }
-pub(crate) fn write_bin_image(w: &mut dsl::ByteWriter, i: &GltfImage) {
+pub(crate) async fn write_bin_image(w: &mut dsl::ByteWriter, i: &GltfImage) {
     write_bin_option(w, &i.uri, |w, v| write_bin_str(w, v));
     write_bin_option(w, &i.mime_type, |w, v| write_bin_str(w, v));
     write_bin_option(w, &i.buffer_view, |w, v| w.write_varint_u64(*v as u64));
@@ -3245,7 +3245,7 @@ pub(crate) fn write_bin_image(w: &mut dsl::ByteWriter, i: &GltfImage) {
     write_bin_json_opt(w, &i.extensions);
     write_bin_json_opt(w, &i.extras);
 }
-pub(crate) fn read_bin_image(r: &mut dsl::ByteReader<'_>) -> Result<GltfImage, dsl::PackError> {
+pub(crate) async fn read_bin_image(r: &mut dsl::ByteReader<'_>) -> Result<GltfImage, dsl::PackError> {
     Ok(GltfImage {
         uri: read_bin_option(r, read_bin_str)?,
         mime_type: read_bin_option(r, read_bin_str)?,
@@ -3255,7 +3255,7 @@ pub(crate) fn read_bin_image(r: &mut dsl::ByteReader<'_>) -> Result<GltfImage, d
         extras: read_bin_json_opt(r)?,
     })
 }
-pub(crate) fn write_bin_sampler(w: &mut dsl::ByteWriter, s: &GltfSampler) {
+pub(crate) async fn write_bin_sampler(w: &mut dsl::ByteWriter, s: &GltfSampler) {
     write_bin_option(w, &s.mag_filter, |w, v| w.write_varint_u64(*v));
     write_bin_option(w, &s.min_filter, |w, v| w.write_varint_u64(*v));
     w.write_varint_u64(s.wrap_s);
@@ -3264,7 +3264,7 @@ pub(crate) fn write_bin_sampler(w: &mut dsl::ByteWriter, s: &GltfSampler) {
     write_bin_json_opt(w, &s.extensions);
     write_bin_json_opt(w, &s.extras);
 }
-pub(crate) fn read_bin_sampler(r: &mut dsl::ByteReader<'_>) -> Result<GltfSampler, dsl::PackError> {
+pub(crate) async fn read_bin_sampler(r: &mut dsl::ByteReader<'_>) -> Result<GltfSampler, dsl::PackError> {
     Ok(GltfSampler {
         mag_filter: read_bin_option(r, |r| r.read_varint_u64())?,
         min_filter: read_bin_option(r, |r| r.read_varint_u64())?,
@@ -3275,7 +3275,7 @@ pub(crate) fn read_bin_sampler(r: &mut dsl::ByteReader<'_>) -> Result<GltfSample
         extras: read_bin_json_opt(r)?,
     })
 }
-pub(crate) fn write_bin_skin(w: &mut dsl::ByteWriter, v: &GltfSkin) {
+pub(crate) async fn write_bin_skin(w: &mut dsl::ByteWriter, v: &GltfSkin) {
     write_bin_option(w, &v.inverse_bind_matrices, |w, x| w.write_varint_u64(*x as u64));
     write_bin_option(w, &v.skeleton, |w, x| w.write_varint_u64(*x as u64));
     write_bin_usize_vec(w, &v.joints);
@@ -3283,7 +3283,7 @@ pub(crate) fn write_bin_skin(w: &mut dsl::ByteWriter, v: &GltfSkin) {
     write_bin_json_opt(w, &v.extensions);
     write_bin_json_opt(w, &v.extras);
 }
-pub(crate) fn read_bin_skin(r: &mut dsl::ByteReader<'_>) -> Result<GltfSkin, dsl::PackError> {
+pub(crate) async fn read_bin_skin(r: &mut dsl::ByteReader<'_>) -> Result<GltfSkin, dsl::PackError> {
     Ok(GltfSkin {
         inverse_bind_matrices: read_bin_option(r, |r| Ok(r.read_varint_u64()? as usize))?,
         skeleton: read_bin_option(r, |r| Ok(r.read_varint_u64()? as usize))?,
@@ -3296,48 +3296,48 @@ pub(crate) fn read_bin_skin(r: &mut dsl::ByteReader<'_>) -> Result<GltfSkin, dsl
 //#endregion 🔖️RealBinaryTextureImageSamplerSkinGroupCodecs
 
 //#region 🔖️RealBinaryAnimationGroupCodecs
-pub(crate) fn write_bin_animation_channel_target(w: &mut dsl::ByteWriter, t: &GltfAnimationChannelTarget) {
+pub(crate) async fn write_bin_animation_channel_target(w: &mut dsl::ByteWriter, t: &GltfAnimationChannelTarget) {
     write_bin_option(w, &t.node, |w, v| w.write_varint_u64(*v as u64));
     write_bin_animation_path(w, t.path);
     write_bin_json_opt(w, &t.extensions);
     write_bin_json_opt(w, &t.extras);
 }
-pub(crate) fn read_bin_animation_channel_target(r: &mut dsl::ByteReader<'_>) -> Result<GltfAnimationChannelTarget, dsl::PackError> {
+pub(crate) async fn read_bin_animation_channel_target(r: &mut dsl::ByteReader<'_>) -> Result<GltfAnimationChannelTarget, dsl::PackError> {
     Ok(GltfAnimationChannelTarget { node: read_bin_option(r, |r| Ok(r.read_varint_u64()? as usize))?, path: read_bin_animation_path(r)?, extensions: read_bin_json_opt(r)?, extras: read_bin_json_opt(r)? })
 }
-pub(crate) fn write_bin_animation_channel(w: &mut dsl::ByteWriter, c: &GltfAnimationChannel) {
+pub(crate) async fn write_bin_animation_channel(w: &mut dsl::ByteWriter, c: &GltfAnimationChannel) {
     w.write_varint_u64(c.sampler as u64);
     write_bin_animation_channel_target(w, &c.target);
     write_bin_json_opt(w, &c.extensions);
     write_bin_json_opt(w, &c.extras);
 }
-pub(crate) fn read_bin_animation_channel(r: &mut dsl::ByteReader<'_>) -> Result<GltfAnimationChannel, dsl::PackError> {
+pub(crate) async fn read_bin_animation_channel(r: &mut dsl::ByteReader<'_>) -> Result<GltfAnimationChannel, dsl::PackError> {
     Ok(GltfAnimationChannel { sampler: r.read_varint_u64()? as usize, target: read_bin_animation_channel_target(r)?, extensions: read_bin_json_opt(r)?, extras: read_bin_json_opt(r)? })
 }
-pub(crate) fn write_bin_animation_sampler(w: &mut dsl::ByteWriter, s: &GltfAnimationSampler) {
+pub(crate) async fn write_bin_animation_sampler(w: &mut dsl::ByteWriter, s: &GltfAnimationSampler) {
     w.write_varint_u64(s.input as u64);
     write_bin_interpolation(w, s.interpolation);
     w.write_varint_u64(s.output as u64);
     write_bin_json_opt(w, &s.extensions);
     write_bin_json_opt(w, &s.extras);
 }
-pub(crate) fn read_bin_animation_sampler(r: &mut dsl::ByteReader<'_>) -> Result<GltfAnimationSampler, dsl::PackError> {
+pub(crate) async fn read_bin_animation_sampler(r: &mut dsl::ByteReader<'_>) -> Result<GltfAnimationSampler, dsl::PackError> {
     Ok(GltfAnimationSampler { input: r.read_varint_u64()? as usize, interpolation: read_bin_interpolation(r)?, output: r.read_varint_u64()? as usize, extensions: read_bin_json_opt(r)?, extras: read_bin_json_opt(r)? })
 }
-pub(crate) fn write_bin_animation(w: &mut dsl::ByteWriter, a: &GltfAnimation) {
+pub(crate) async fn write_bin_animation(w: &mut dsl::ByteWriter, a: &GltfAnimation) {
     write_bin_vec(w, &a.channels, write_bin_animation_channel);
     write_bin_vec(w, &a.samplers, write_bin_animation_sampler);
     write_bin_option(w, &a.name, |w, v| write_bin_str(w, v));
     write_bin_json_opt(w, &a.extensions);
     write_bin_json_opt(w, &a.extras);
 }
-pub(crate) fn read_bin_animation(r: &mut dsl::ByteReader<'_>) -> Result<GltfAnimation, dsl::PackError> {
+pub(crate) async fn read_bin_animation(r: &mut dsl::ByteReader<'_>) -> Result<GltfAnimation, dsl::PackError> {
     Ok(GltfAnimation { channels: read_bin_vec(r, read_bin_animation_channel)?, samplers: read_bin_vec(r, read_bin_animation_sampler)?, name: read_bin_option(r, read_bin_str)?, extensions: read_bin_json_opt(r)?, extras: read_bin_json_opt(r)? })
 }
 //#endregion 🔖️RealBinaryAnimationGroupCodecs
 
 //#region 🔖️RealBinaryCameraGroupCodecs
-pub(crate) fn write_bin_perspective(w: &mut dsl::ByteWriter, p: &GltfPerspective) {
+pub(crate) async fn write_bin_perspective(w: &mut dsl::ByteWriter, p: &GltfPerspective) {
     write_bin_option(w, &p.aspect_ratio, |w, v| w.write_f64_le(*v));
     w.write_f64_le(p.yfov);
     write_bin_option(w, &p.zfar, |w, v| w.write_f64_le(*v));
@@ -3345,10 +3345,10 @@ pub(crate) fn write_bin_perspective(w: &mut dsl::ByteWriter, p: &GltfPerspective
     write_bin_json_opt(w, &p.extensions);
     write_bin_json_opt(w, &p.extras);
 }
-pub(crate) fn read_bin_perspective(r: &mut dsl::ByteReader<'_>) -> Result<GltfPerspective, dsl::PackError> {
+pub(crate) async fn read_bin_perspective(r: &mut dsl::ByteReader<'_>) -> Result<GltfPerspective, dsl::PackError> {
     Ok(GltfPerspective { aspect_ratio: read_bin_option(r, |r| r.read_f64_le())?, yfov: r.read_f64_le()?, zfar: read_bin_option(r, |r| r.read_f64_le())?, znear: r.read_f64_le()?, extensions: read_bin_json_opt(r)?, extras: read_bin_json_opt(r)? })
 }
-pub(crate) fn write_bin_orthographic(w: &mut dsl::ByteWriter, o: &GltfOrthographic) {
+pub(crate) async fn write_bin_orthographic(w: &mut dsl::ByteWriter, o: &GltfOrthographic) {
     w.write_f64_le(o.xmag);
     w.write_f64_le(o.ymag);
     w.write_f64_le(o.zfar);
@@ -3356,11 +3356,11 @@ pub(crate) fn write_bin_orthographic(w: &mut dsl::ByteWriter, o: &GltfOrthograph
     write_bin_json_opt(w, &o.extensions);
     write_bin_json_opt(w, &o.extras);
 }
-pub(crate) fn read_bin_orthographic(r: &mut dsl::ByteReader<'_>) -> Result<GltfOrthographic, dsl::PackError> {
+pub(crate) async fn read_bin_orthographic(r: &mut dsl::ByteReader<'_>) -> Result<GltfOrthographic, dsl::PackError> {
     Ok(GltfOrthographic { xmag: r.read_f64_le()?, ymag: r.read_f64_le()?, zfar: r.read_f64_le()?, znear: r.read_f64_le()?, extensions: read_bin_json_opt(r)?, extras: read_bin_json_opt(r)? })
 }
 /// 🔀️ `GltfCameraProjection` real data-carrying enum -- tag `u8` (0=Perspective, 1=Orthographic).
-pub(crate) fn write_bin_camera_projection(w: &mut dsl::ByteWriter, p: &GltfCameraProjection) {
+pub(crate) async fn write_bin_camera_projection(w: &mut dsl::ByteWriter, p: &GltfCameraProjection) {
     match p {
         GltfCameraProjection::Perspective(v) => {
             w.write_u8(0);
@@ -3372,20 +3372,20 @@ pub(crate) fn write_bin_camera_projection(w: &mut dsl::ByteWriter, p: &GltfCamer
         }
     }
 }
-pub(crate) fn read_bin_camera_projection(r: &mut dsl::ByteReader<'_>) -> Result<GltfCameraProjection, dsl::PackError> {
+pub(crate) async fn read_bin_camera_projection(r: &mut dsl::ByteReader<'_>) -> Result<GltfCameraProjection, dsl::PackError> {
     match r.read_u8()? {
         0 => Ok(GltfCameraProjection::Perspective(read_bin_perspective(r)?)),
         1 => Ok(GltfCameraProjection::Orthographic(read_bin_orthographic(r)?)),
         other => Err(dsl::PackError::Malformed { what: "gltf camera_projection", offset: 0, detail: format!("unknown tag {other}") }),
     }
 }
-pub(crate) fn write_bin_camera(w: &mut dsl::ByteWriter, c: &GltfCamera) {
+pub(crate) async fn write_bin_camera(w: &mut dsl::ByteWriter, c: &GltfCamera) {
     write_bin_camera_projection(w, &c.projection);
     write_bin_option(w, &c.name, |w, v| write_bin_str(w, v));
     write_bin_json_opt(w, &c.extensions);
     write_bin_json_opt(w, &c.extras);
 }
-pub(crate) fn read_bin_camera(r: &mut dsl::ByteReader<'_>) -> Result<GltfCamera, dsl::PackError> {
+pub(crate) async fn read_bin_camera(r: &mut dsl::ByteReader<'_>) -> Result<GltfCamera, dsl::PackError> {
     Ok(GltfCamera { projection: read_bin_camera_projection(r)?, name: read_bin_option(r, read_bin_str)?, extensions: read_bin_json_opt(r)?, extras: read_bin_json_opt(r)? })
 }
 //#endregion 🔖️RealBinaryCameraGroupCodecs
@@ -3394,7 +3394,7 @@ pub(crate) fn read_bin_camera(r: &mut dsl::ByteReader<'_>) -> Result<GltfCamera,
 /// 🧮️ Generic index-keyed collection triple real binary codec, shared by every one of the 14
 /// top-level arrays -- mirrors `enc_collection`/`dec_collection`'s TEXT shape exactly, real varint
 /// counts + real per-item recursive encoding (never text-as-bytes).
-pub(crate) fn write_bin_collection<T, D>(w: &mut dsl::ByteWriter, c: &GltfCollectionDiff<T, D>, write_item: impl Fn(&mut dsl::ByteWriter, &T), write_diff: impl Fn(&mut dsl::ByteWriter, &D)) {
+pub(crate) async fn write_bin_collection<T, D>(w: &mut dsl::ByteWriter, c: &GltfCollectionDiff<T, D>, write_item: impl Fn(&mut dsl::ByteWriter, &T), write_diff: impl Fn(&mut dsl::ByteWriter, &D)) {
     write_bin_vec(w, &c.removed, |w, v: &usize| w.write_varint_u64(*v as u64));
     write_bin_vec(w, &c.modified, |w, m: &GltfModified<D>| {
         w.write_varint_u64(m.index as u64);
@@ -3405,7 +3405,7 @@ pub(crate) fn write_bin_collection<T, D>(w: &mut dsl::ByteWriter, c: &GltfCollec
         write_item(w, &a.item);
     });
 }
-pub(crate) fn read_bin_collection<T, D>(
+pub(crate) async fn read_bin_collection<T, D>(
     r: &mut dsl::ByteReader<'_>,
     read_item: impl Fn(&mut dsl::ByteReader<'_>) -> Result<T, dsl::PackError>,
     read_diff: impl Fn(&mut dsl::ByteReader<'_>) -> Result<D, dsl::PackError>,
@@ -3428,12 +3428,12 @@ pub(crate) fn read_bin_collection<T, D>(
 /// blob's OWN internal removed/modified/added shape isn't further protocol-walkable,
 /// `protocol-prim-ref-recursion`/`protocol-array-of-records`, same documented limitation as every
 /// other stdio pilot's own nested-payload field).
-pub(crate) fn write_bin_collection_blob<T, D>(c: &GltfCollectionDiff<T, D>, write_item: impl Fn(&mut dsl::ByteWriter, &T), write_diff: impl Fn(&mut dsl::ByteWriter, &D)) -> Vec<u8> {
+pub(crate) async fn write_bin_collection_blob<T, D>(c: &GltfCollectionDiff<T, D>, write_item: impl Fn(&mut dsl::ByteWriter, &T), write_diff: impl Fn(&mut dsl::ByteWriter, &D)) -> Vec<u8> {
     let mut inner = dsl::ByteWriter::new();
     write_bin_collection(&mut inner, c, write_item, write_diff);
     inner.into_bytes()
 }
-pub(crate) fn read_bin_collection_blob<T, D>(
+pub(crate) async fn read_bin_collection_blob<T, D>(
     bytes: &[u8],
     read_item: impl Fn(&mut dsl::ByteReader<'_>) -> Result<T, dsl::PackError>,
     read_diff: impl Fn(&mut dsl::ByteReader<'_>) -> Result<D, dsl::PackError>,
@@ -3444,7 +3444,7 @@ pub(crate) fn read_bin_collection_blob<T, D>(
 //#endregion 🔖️RealBinaryGenericCollectionCodec
 
 //#region 🔖️TopLevel
-fn print_gltf_diff(d: &GltfDiff) -> String {
+async fn print_gltf_diff(d: &GltfDiff) -> String {
     let mut tokens: Vec<String> = Vec::new();
     if let Some(v) = &d.asset {
         tokens.push(format!("asset={}", enc_asset_diff(v)));
@@ -3511,7 +3511,7 @@ fn print_gltf_diff(d: &GltfDiff) -> String {
     }
     tokens.join(" ")
 }
-fn parse_gltf_diff(line: &str) -> Result<GltfDiff, String> {
+async fn parse_gltf_diff(line: &str) -> Result<GltfDiff, String> {
     let mut d = GltfDiff::default();
     if line.is_empty() {
         return Ok(d);
@@ -3567,10 +3567,10 @@ fn parse_gltf_diff(line: &str) -> Result<GltfDiff, String> {
 }
 
 impl protocol::DiffCodec for GltfDiff {
-    fn print_diff(&self) -> String {
+    async fn print_diff(&self) -> String {
         print_gltf_diff(self)
     }
-    fn parse_diff(line: &str) -> Result<Self, store::TextError> {
+    async fn parse_diff(line: &str) -> Result<Self, store::TextError> {
         parse_gltf_diff(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
     /// ⚡️ P2-FG3: real binary diff-frame — upgraded from the F6-era `print_diff().into_bytes()`
@@ -3584,7 +3584,7 @@ impl protocol::DiffCodec for GltfDiff {
     /// binary `removed`/`modified`/`added` encoding (`write_bin_collection_blob`) — the blob's
     /// OWN internal shape isn't further protocol-walkable (`Prim::Ref` recursion gap), but this
     /// Rust side IS genuinely, fully structured real binary throughout, never text-as-bytes.
-    fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    async fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         let mut w = dsl::ByteWriter::new();
         // `asset`/`extensions_used`/`extensions_required`/`extensions`/`extras` are each wrapped
         // in a length-prefixed blob (matching `../💾️binary/📡️component.protocol.semio`'s
@@ -3645,7 +3645,7 @@ impl protocol::DiffCodec for GltfDiff {
         write_bin_option(&mut w, &self.source_form, |w, v| write_bin_source_form(w, *v));
         Ok(w.into_bytes())
     }
-    fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    async fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         let mut r = dsl::ByteReader::new(bytes);
         let asset = read_bin_option(&mut r, |r| {
             let b = read_bin_blob(r)?;
@@ -3762,16 +3762,16 @@ mod tests {
     use crate::artifacts::gltf::STDIO_GLTF_DOCUMENT_SCHEMA;
 
     //#region 🔖️Fixtures
-    fn scene(seed: usize) -> GltfScene {
+    async fn scene(seed: usize) -> GltfScene {
         GltfScene { nodes: vec![seed, seed + 1], name: Some(format!("scene{seed}")), extensions: None, extras: None }
     }
-    fn node(seed: usize) -> GltfNode {
+    async fn node(seed: usize) -> GltfNode {
         GltfNode { children: vec![seed], mesh: Some(seed), name: Some(format!("node{seed}")), ..GltfNode::default() }
     }
-    fn mesh(seed: usize) -> GltfMesh {
+    async fn mesh(seed: usize) -> GltfMesh {
         GltfMesh { primitives: vec![GltfPrimitive { attributes: vec![("POSITION".into(), seed)], material: Some(seed), mode: Some(4), ..GltfPrimitive::default() }], name: Some(format!("mesh{seed}")), ..GltfMesh::default() }
     }
-    fn accessor(seed: usize) -> GltfAccessor {
+    async fn accessor(seed: usize) -> GltfAccessor {
         GltfAccessor {
             buffer_view: Some(seed),
             byte_offset: 0,
@@ -3787,17 +3787,17 @@ mod tests {
             extras: None,
         }
     }
-    fn material(seed: usize) -> GltfMaterial {
+    async fn material(seed: usize) -> GltfMaterial {
         GltfMaterial { name: Some(format!("mat{seed}")), double_sided: seed % 2 == 0, ..GltfMaterial::default() }
     }
-    fn buffer_meta(seed: usize) -> GltfBuffer {
+    async fn buffer_meta(seed: usize) -> GltfBuffer {
         GltfBuffer { byte_length: seed * 4, uri: None, name: Some(format!("buf{seed}")), extensions: None, extras: None }
     }
-    fn animation(seed: usize) -> GltfAnimation {
+    async fn animation(seed: usize) -> GltfAnimation {
         GltfAnimation { name: Some(format!("anim{seed}")), ..GltfAnimation::default() }
     }
 
-    fn base_snapshot() -> GltfSnapshot {
+    async fn base_snapshot() -> GltfSnapshot {
         GltfSnapshot {
             schema: STDIO_GLTF_DOCUMENT_SCHEMA.into(),
             document: GltfDocument {
@@ -3823,7 +3823,7 @@ mod tests {
     //#region 🔖️AbsorbCanonicalCases
     /// 🧪️ Canonical absorb case 1: `Insert(2,x)` then `Remove(0)` → `{removed:[0], added:[(1,x)]}`.
     #[test]
-    fn absorb_law_insert_then_remove_before_shifts_index() {
+    async fn absorb_law_insert_then_remove_before_shifts_index() {
         let n = node(9);
         let mut d1 = GltfNodesDiff { added: vec![GltfAdded { index: 2, item: n.clone() }], ..Default::default() };
         let d2 = GltfNodesDiff { removed: vec![0], ..Default::default() };
@@ -3835,7 +3835,7 @@ mod tests {
 
     /// 🧪️ Canonical absorb case 2: `Insert(2,f)` then `Insert(2,g)` → BOTH survive.
     #[test]
-    fn absorb_law_insert_insert_same_index_both_survive() {
+    async fn absorb_law_insert_insert_same_index_both_survive() {
         let f = node(1);
         let g = node(2);
         let mut d1 = GltfNodesDiff { added: vec![GltfAdded { index: 2, item: f.clone() }], ..Default::default() };
@@ -3847,7 +3847,7 @@ mod tests {
     /// 🧪️ Canonical absorb case 3: `Insert(1,f)` then `SetField(1,name)` patches INTO the added
     /// payload -- merged has only `added`, no separate `modified` entry.
     #[test]
-    fn absorb_law_insert_then_set_field_patches_into_added() {
+    async fn absorb_law_insert_then_set_field_patches_into_added() {
         let f = node(1);
         let mut d1 = GltfNodesDiff { added: vec![GltfAdded { index: 1, item: f.clone() }], ..Default::default() };
         let d2 = GltfNodesDiff { modified: vec![GltfModified { index: 1, diff: GltfNodeDiff { name: Some(Some("renamed".into())), ..Default::default() } }], ..Default::default() };
@@ -3862,7 +3862,7 @@ mod tests {
     /// then `Modify(0)` (post-remove index 0 refers to a DIFFERENT surviving base item) must NOT
     /// corrupt the removed item and must attach the d2 patch to the correct transported base index.
     #[test]
-    fn absorb_law_remove_then_modify_transports_to_correct_surviving_item() {
+    async fn absorb_law_remove_then_modify_transports_to_correct_surviving_item() {
         let mut d1 = GltfNodesDiff { removed: vec![0], ..Default::default() };
         // after d1, base[1] is now at position 0 -- d2 modifies position 0 (== base[1]).
         let d2 = GltfNodesDiff { modified: vec![GltfModified { index: 0, diff: GltfNodeDiff { name: Some(Some("x".into())), ..Default::default() } }], ..Default::default() };
@@ -3873,7 +3873,7 @@ mod tests {
     }
 
     #[test]
-    fn absorb_law_holds_over_curated_ops() {
+    async fn absorb_law_holds_over_curated_ops() {
         let base = base_snapshot();
         let mid = {
             let mut s = base.clone();
@@ -3900,7 +3900,7 @@ mod tests {
 
     //#region 🔖️BetweenRoundtripLaw
     #[test]
-    fn between_roundtrip_law_holds_on_synthetic_fixture() {
+    async fn between_roundtrip_law_holds_on_synthetic_fixture() {
         let a = base_snapshot();
         let mut b = a.clone();
         b.document.nodes.push(node(5));
@@ -3916,7 +3916,7 @@ mod tests {
 
     //#region 🔖️InverseLaw
     #[test]
-    fn inverse_law_diff_level_round_trips() {
+    async fn inverse_law_diff_level_round_trips() {
         let base = base_snapshot();
         let next = {
             let mut s = base.clone();
@@ -3942,7 +3942,7 @@ mod tests {
     /// roundtrip_law` (`HandcraftedDiffCodec` tests, further down) can reuse the exact same
     /// comprehensive diff rather than re-deriving a second copy. `pub(super)` (not private) so the
     /// sibling `handcrafted_diff_codec_tests` module can reach it via `super::tests::sweep_a()`.
-    pub(super) fn sweep_a() -> GltfSnapshot {
+    pub(super) async fn sweep_a() -> GltfSnapshot {
         GltfSnapshot {
             schema: STDIO_GLTF_DOCUMENT_SCHEMA.into(),
             document: GltfDocument {
@@ -3970,7 +3970,7 @@ mod tests {
             source_form: GltfSourceForm::Json,
         }
     }
-    pub(super) fn sweep_b() -> GltfSnapshot {
+    pub(super) async fn sweep_b() -> GltfSnapshot {
         GltfSnapshot {
             schema: STDIO_GLTF_DOCUMENT_SCHEMA.into(),
             document: GltfDocument {
@@ -4015,7 +4015,7 @@ mod tests {
     /// field, incl. every tri-state exercising `Some(None)`, with asymmetric collection lengths
     /// split across both `between()` directions (F1's structural trap).
     #[test]
-    fn field_sweep_covers_every_mutable_field() {
+    async fn field_sweep_covers_every_mutable_field() {
         let sweep_a = sweep_a();
         let sweep_b = sweep_b();
 
@@ -4057,7 +4057,7 @@ mod tests {
     }
 
     #[test]
-    fn touched_regions_are_stable_precise_for_modification_and_conservative_for_transport() {
+    async fn touched_regions_are_stable_precise_for_modification_and_conservative_for_transport() {
         use protocol::DiffRegions as _;
         let modified = GltfDiff {
             nodes: Some(GltfNodesDiff { modified: vec![GltfModified { index: 3, diff: GltfNodeDiff { translation: Some(Some([1.0, 2.0, 3.0])), ..Default::default() } }], ..Default::default() }),
@@ -4080,7 +4080,7 @@ mod handcrafted_diff_codec_tests {
     use protocol::DiffCodec;
 
     //#region 🔖️Fixtures
-    fn node_tristate_a() -> GltfNode {
+    async fn node_tristate_a() -> GltfNode {
         GltfNode {
             children: vec![0, 1],
             mesh: Some(0),
@@ -4099,7 +4099,7 @@ mod handcrafted_diff_codec_tests {
     /// 🎯️ Every one of `node_tristate_a`'s nullable fields flips the OTHER way (`Some -> None` OR
     /// `None -> Some`), so `between()` exercises `Some(None)` on `mesh`/`camera`/`skin`/`matrix`/
     /// `extensions` AND `Some(Some(_))` on `translation`/`rotation`/`scale`/`extras` in one pair.
-    fn node_tristate_b() -> GltfNode {
+    async fn node_tristate_b() -> GltfNode {
         GltfNode {
             children: vec![2],
             mesh: None,
@@ -4115,26 +4115,26 @@ mod handcrafted_diff_codec_tests {
             extras: Some(GltfJson::Array(vec![GltfJson::Null, GltfJson::Number(-1.5), GltfJson::String("x".into())])),
         }
     }
-    fn accessor_sparse_a() -> GltfAccessor {
+    async fn accessor_sparse_a() -> GltfAccessor {
         GltfAccessor { buffer_view: Some(1), byte_offset: 0, component_type: GltfComponentType::UnsignedShort, normalized: true, count: 4, kind: GltfAccessorType::Vec2, max: None, min: None, sparse: None, name: None, extensions: None, extras: None }
     }
     /// 🎯️ `sparse` flips `None -> Some(GltfSparseAccessor{..})` -- the one accessor field not
     /// exercised by `sweep_a`/`sweep_b` above.
-    fn accessor_sparse_b() -> GltfAccessor {
+    async fn accessor_sparse_b() -> GltfAccessor {
         GltfAccessor {
             sparse: Some(GltfSparseAccessor { count: 2, indices: GltfSparseIndices { buffer_view: 2, byte_offset: 0, component_type: GltfComponentType::UnsignedByte }, values: GltfSparseValues { buffer_view: 3, byte_offset: 0 } }),
             max: Some(vec![1.0, 1.0]),
             ..accessor_sparse_a()
         }
     }
-    fn material_textures_a() -> GltfMaterial {
+    async fn material_textures_a() -> GltfMaterial {
         GltfMaterial::default()
     }
     /// 🎯️ Every optional texture slot (`pbr_metallic_roughness`/`normal_texture`/
     /// `occlusion_texture`/`emissive_texture`) flips `None -> Some(_)` -- none of which
     /// `sweep_a`/`sweep_b` above touch (both leave `GltfMaterial::default()`'s texture slots at
     /// `None`).
-    fn material_textures_b() -> GltfMaterial {
+    async fn material_textures_b() -> GltfMaterial {
         GltfMaterial {
             pbr_metallic_roughness: Some(GltfPbrMetallicRoughness { base_color_texture: Some(GltfTextureInfo { index: 0, tex_coord: 1, extensions: None, extras: None }), ..Default::default() }),
             normal_texture: Some(GltfNormalTextureInfo { index: 1, tex_coord: 0, scale: 2.0, extensions: None, extras: None }),
@@ -4144,13 +4144,13 @@ mod handcrafted_diff_codec_tests {
             ..GltfMaterial::default()
         }
     }
-    fn buffer_uri_a() -> GltfBuffer {
+    async fn buffer_uri_a() -> GltfBuffer {
         GltfBuffer { byte_length: 4, uri: Some("data:...".into()), name: None, extensions: None, extras: None }
     }
-    fn buffer_uri_b() -> GltfBuffer {
+    async fn buffer_uri_b() -> GltfBuffer {
         GltfBuffer { uri: None, ..buffer_uri_a() }
     }
-    fn camera_orthographic() -> GltfCamera {
+    async fn camera_orthographic() -> GltfCamera {
         GltfCamera {
             projection: GltfCameraProjection::Orthographic(GltfOrthographic { xmag: 1.0, ymag: 1.0, zfar: 10.0, znear: 0.1, extensions: None, extras: Some(GltfJson::Null) }),
             name: None,
@@ -4159,7 +4159,7 @@ mod handcrafted_diff_codec_tests {
         }
     }
 
-    fn tristate_snapshot_a() -> GltfSnapshot {
+    async fn tristate_snapshot_a() -> GltfSnapshot {
         GltfSnapshot {
             schema: STDIO_GLTF_DOCUMENT_SCHEMA.into(),
             document: GltfDocument {
@@ -4175,7 +4175,7 @@ mod handcrafted_diff_codec_tests {
             source_form: GltfSourceForm::Json,
         }
     }
-    fn tristate_snapshot_b() -> GltfSnapshot {
+    async fn tristate_snapshot_b() -> GltfSnapshot {
         GltfSnapshot {
             schema: STDIO_GLTF_DOCUMENT_SCHEMA.into(),
             document: GltfDocument {
@@ -4212,7 +4212,7 @@ mod handcrafted_diff_codec_tests {
     /// (`Asset`/`Scene`/`Node`/`Mesh`/`Accessor`/`Material`/`Buffer`), which is the representative
     /// slice this law test commits to (documented here, not literally all 42 occurrences).
     #[test]
-    fn diff_codec_text_binary_roundtrip_law() {
+    async fn diff_codec_text_binary_roundtrip_law() {
         let sweep_a = tests::sweep_a();
         let sweep_b = tests::sweep_b();
         let tri_a = tristate_snapshot_a();

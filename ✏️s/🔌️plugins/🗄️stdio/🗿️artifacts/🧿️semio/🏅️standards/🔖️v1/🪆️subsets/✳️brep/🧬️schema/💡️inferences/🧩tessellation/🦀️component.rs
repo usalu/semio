@@ -31,7 +31,7 @@ const ENDPOINT_TOL: f64 = 1e-9;
 // #region 🔖️Api
 
 /// 🧩 Tessellates every face of `solid` with edge-first shared discretization into one [`MeshTransfer`].
-pub fn tessellate_solid(body: &Body, solid: SolidId, deflection: f64) -> Result<MeshTransfer, KernelError> {
+pub async fn tessellate_solid(body: &Body, solid: SolidId, deflection: f64) -> Result<MeshTransfer, KernelError> {
     if body.solids.get(solid).is_none() {
         return Err(KernelError::MissingEntity(solid.to_string()));
     }
@@ -50,7 +50,7 @@ pub fn tessellate_solid(body: &Body, solid: SolidId, deflection: f64) -> Result<
 }
 
 /// 🧵 Tessellates a wire into edge polylines only (no shaded triangles).
-pub fn tessellate_wire(body: &Body, wire: &Wire, deflection: f64) -> Result<MeshTransfer, KernelError> {
+pub async fn tessellate_wire(body: &Body, wire: &Wire, deflection: f64) -> Result<MeshTransfer, KernelError> {
     let deflection = deflection.max(1e-9);
     let mut edges = Vec::new();
     for (edge_id, _forward) in &wire.members {
@@ -61,7 +61,7 @@ pub fn tessellate_wire(body: &Body, wire: &Wire, deflection: f64) -> Result<Mesh
 }
 
 /// 🧩 Tessellates a single face into a [`MeshTransfer`] with one [`FaceGroup`].
-pub fn tessellate_face(body: &Body, face: FaceId, deflection: f64) -> Result<MeshTransfer, KernelError> {
+pub async fn tessellate_face(body: &Body, face: FaceId, deflection: f64) -> Result<MeshTransfer, KernelError> {
     if body.faces.get(face).is_none() {
         return Err(KernelError::MissingEntity(face.to_string()));
     }
@@ -83,7 +83,7 @@ pub fn tessellate_face(body: &Body, face: FaceId, deflection: f64) -> Result<Mes
 }
 
 /// 🧩 Samples `edge` to a deflection-bounded polyline and returns packed xyz `f32` positions.
-pub fn sample_edge_polyline(body: &Body, edge: EdgeId, deflection: f64) -> Vec<f32> {
+pub async fn sample_edge_polyline(body: &Body, edge: EdgeId, deflection: f64) -> Vec<f32> {
     match sample_edge_points(body, edge, deflection.max(1e-9)) {
         Ok(points) => points.iter().flat_map(|p| [p.x as f32, p.y as f32, p.z as f32]).collect(),
         Err(_) => Vec::new(),
@@ -94,7 +94,7 @@ pub fn sample_edge_polyline(body: &Body, edge: EdgeId, deflection: f64) -> Vec<f
 
 // #region 🧮EdgeSample
 
-fn sample_solid_edge_cache(body: &Body, solid: SolidId, deflection: f64) -> Result<HashMap<EdgeId, Vec<Pnt3>>, KernelError> {
+async fn sample_solid_edge_cache(body: &Body, solid: SolidId, deflection: f64) -> Result<HashMap<EdgeId, Vec<Pnt3>>, KernelError> {
     let mut cache = HashMap::new();
     for face in body.solid_faces(solid) {
         for coedge_id in body.face_coedges(face) {
@@ -107,7 +107,7 @@ fn sample_solid_edge_cache(body: &Body, solid: SolidId, deflection: f64) -> Resu
     Ok(cache)
 }
 
-fn sample_edge_points(body: &Body, edge_id: EdgeId, deflection: f64) -> Result<Vec<Pnt3>, KernelError> {
+async fn sample_edge_points(body: &Body, edge_id: EdgeId, deflection: f64) -> Result<Vec<Pnt3>, KernelError> {
     let edge = body.edges.get(edge_id).ok_or_else(|| KernelError::MissingEntity(edge_id.to_string()))?;
     let curve = body.curves3.get(edge.curve).ok_or_else(|| KernelError::MissingEntity(edge.curve.to_string()))?;
     let v0 = body.vertices.get(edge.v0).ok_or_else(|| KernelError::MissingEntity(edge.v0.to_string()))?.position;
@@ -136,7 +136,7 @@ fn sample_edge_points(body: &Body, edge_id: EdgeId, deflection: f64) -> Result<V
     Ok(out)
 }
 
-fn sample_uniform(curve: &Curve3, t0: f64, t1: f64, count: usize) -> Vec<Pnt3> {
+async fn sample_uniform(curve: &Curve3, t0: f64, t1: f64, count: usize) -> Vec<Pnt3> {
     let n = count.max(2);
     (0..n)
         .map(|i| {
@@ -146,14 +146,14 @@ fn sample_uniform(curve: &Curve3, t0: f64, t1: f64, count: usize) -> Vec<Pnt3> {
         .collect()
 }
 
-fn sample_nurbs_adaptive(curve: &Curve3, t0: f64, t1: f64, deflection: f64) -> Vec<Pnt3> {
+async fn sample_nurbs_adaptive(curve: &Curve3, t0: f64, t1: f64, deflection: f64) -> Vec<Pnt3> {
     let coarse_n = 16usize;
     let max_dev = measure_max_chord_deviation(curve, t0, t1, coarse_n);
     let n = if max_dev <= deflection { coarse_n } else { ((coarse_n as f64) * (max_dev / deflection).sqrt()).ceil() as usize }.clamp(8, 4096);
     sample_uniform(curve, t0, t1, n + 1)
 }
 
-fn measure_max_chord_deviation(curve: &Curve3, t0: f64, t1: f64, n: usize) -> f64 {
+async fn measure_max_chord_deviation(curve: &Curve3, t0: f64, t1: f64, n: usize) -> f64 {
     let mut max_dev = 0.0_f64;
     for i in 0..n {
         let a = t0 + (t1 - t0) * (i as f64) / (n as f64);
@@ -167,7 +167,7 @@ fn measure_max_chord_deviation(curve: &Curve3, t0: f64, t1: f64, n: usize) -> f6
     max_dev
 }
 
-fn segments_for_chord_deviation(radius: f64, arc_range: f64, deflection: f64, angular_tol: f64) -> usize {
+async fn segments_for_chord_deviation(radius: f64, arc_range: f64, deflection: f64, angular_tol: f64) -> usize {
     if radius <= 0.0 || deflection <= 0.0 || arc_range <= 0.0 {
         return 8;
     }
@@ -181,7 +181,7 @@ fn segments_for_chord_deviation(radius: f64, arc_range: f64, deflection: f64, an
     n.max(n_min).max(4)
 }
 
-fn pack_edge_segments(body: &Body, solid: SolidId, cache: &HashMap<EdgeId, Vec<Pnt3>>) -> Vec<f32> {
+async fn pack_edge_segments(body: &Body, solid: SolidId, cache: &HashMap<EdgeId, Vec<Pnt3>>) -> Vec<f32> {
     let mut edges = Vec::new();
     let mut seen = HashMap::<EdgeId, ()>::new();
     for face in body.solid_faces(solid) {
@@ -198,7 +198,7 @@ fn pack_edge_segments(body: &Body, solid: SolidId, cache: &HashMap<EdgeId, Vec<P
     edges
 }
 
-fn push_polyline_segments(out: &mut Vec<f32>, points: &[Pnt3]) {
+async fn push_polyline_segments(out: &mut Vec<f32>, points: &[Pnt3]) {
     for window in points.windows(2) {
         let a = window[0];
         let b = window[1];
@@ -210,7 +210,7 @@ fn push_polyline_segments(out: &mut Vec<f32>, points: &[Pnt3]) {
 
 // #region 🧊FaceTessellate
 
-fn append_face_mesh(transfer: &mut MeshTransfer, body: &Body, face_id: FaceId, deflection: f64, edge_cache: &HashMap<EdgeId, Vec<Pnt3>>) -> Result<(), KernelError> {
+async fn append_face_mesh(transfer: &mut MeshTransfer, body: &Body, face_id: FaceId, deflection: f64, edge_cache: &HashMap<EdgeId, Vec<Pnt3>>) -> Result<(), KernelError> {
     let face = body.faces.get(face_id).ok_or_else(|| KernelError::MissingEntity(face_id.to_string()))?;
     let surface = body.surfaces.get(face.surface).ok_or_else(|| KernelError::MissingEntity(face.surface.to_string()))?;
     let Some(outer_id) = face.outer else {
@@ -247,7 +247,7 @@ fn append_face_mesh(transfer: &mut MeshTransfer, body: &Body, face_id: FaceId, d
     Ok(())
 }
 
-fn collect_loop_polyline(body: &Body, loop_id: crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::arena::LoopId, edge_cache: &HashMap<EdgeId, Vec<Pnt3>>) -> Result<Vec<Pnt3>, KernelError> {
+async fn collect_loop_polyline(body: &Body, loop_id: crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::arena::LoopId, edge_cache: &HashMap<EdgeId, Vec<Pnt3>>) -> Result<Vec<Pnt3>, KernelError> {
     let mut points: Vec<Pnt3> = Vec::new();
     for coedge_id in body.loop_coedges(loop_id) {
         let coedge = body.coedges.get(coedge_id).ok_or_else(|| KernelError::MissingEntity(coedge_id.to_string()))?;
@@ -267,7 +267,7 @@ fn collect_loop_polyline(body: &Body, loop_id: crate::artifacts::semio::standard
     Ok(points)
 }
 
-fn remove_closing_duplicate(points: &mut Vec<Pnt3>) {
+async fn remove_closing_duplicate(points: &mut Vec<Pnt3>) {
     if points.len() > 2 {
         if let (Some(&first), Some(&last)) = (points.first(), points.last()) {
             if first.distance(last) <= ENDPOINT_TOL {
@@ -277,12 +277,12 @@ fn remove_closing_duplicate(points: &mut Vec<Pnt3>) {
     }
 }
 
-fn project_to_uv(surface: &Surface, point: Pnt3) -> (f64, f64) {
+async fn project_to_uv(surface: &Surface, point: Pnt3) -> (f64, f64) {
     let (u, v, _) = surface_ops::closest_point(surface, surface.domain(), point, 8);
     (u, v)
 }
 
-fn face_normal(surface: &Surface, flipped: bool, uvs: &[(f64, f64)]) -> Vec3 {
+async fn face_normal(surface: &Surface, flipped: bool, uvs: &[(f64, f64)]) -> Vec3 {
     let (u, v) = uvs.first().copied().unwrap_or((0.0, 0.0));
     let mut n = surface.normal(u, v).unwrap_or(Vec3::Z);
     if flipped {
@@ -291,7 +291,7 @@ fn face_normal(surface: &Surface, flipped: bool, uvs: &[(f64, f64)]) -> Vec3 {
     n
 }
 
-fn face_vertex_normal(surface: &Surface, flipped: bool, u: f64, v: f64, point: &Pnt3, positions: &[Pnt3], indices: &[u32], vertex: usize) -> Vec3 {
+async fn face_vertex_normal(surface: &Surface, flipped: bool, u: f64, v: f64, point: &Pnt3, positions: &[Pnt3], indices: &[u32], vertex: usize) -> Vec3 {
     if let Some(mut n) = surface.normal(u, v) {
         if flipped {
             n = -n;
@@ -311,7 +311,7 @@ fn face_vertex_normal(surface: &Surface, flipped: bool, u: f64, v: f64, point: &
     accum.normalized().unwrap_or(Vec3::Z)
 }
 
-fn refine_interior_if_needed(surface: &Surface, boundary: &[Pnt3], holes: &[Vec<Pnt3>], deflection: f64) -> (Vec<Pnt3>, Vec<(f64, f64)>) {
+async fn refine_interior_if_needed(surface: &Surface, boundary: &[Pnt3], holes: &[Vec<Pnt3>], deflection: f64) -> (Vec<Pnt3>, Vec<(f64, f64)>) {
     let mut positions = boundary.to_vec();
     for hole in holes {
         positions.extend(hole.iter().copied());
@@ -353,7 +353,7 @@ fn refine_interior_if_needed(surface: &Surface, boundary: &[Pnt3], holes: &[Vec<
     (positions, uvs)
 }
 
-fn interior_segments(surface: &Surface, u0: f64, u1: f64, v0: f64, v1: f64, deflection: f64) -> (usize, usize) {
+async fn interior_segments(surface: &Surface, u0: f64, u1: f64, v0: f64, v1: f64, deflection: f64) -> (usize, usize) {
     match surface {
         Surface::Cylinder { radius, .. } => {
             let nu = segments_for_chord_deviation(*radius, (u1 - u0).abs().max(1e-9), deflection, DEFAULT_ANGULAR_TOL);
@@ -379,7 +379,7 @@ fn interior_segments(surface: &Surface, u0: f64, u1: f64, v0: f64, v1: f64, defl
     }
 }
 
-fn point_in_outer_uv(ring: &[(f64, f64)], u: f64, v: f64) -> bool {
+async fn point_in_outer_uv(ring: &[(f64, f64)], u: f64, v: f64) -> bool {
     if ring.len() < 3 {
         return false;
     }
@@ -401,7 +401,7 @@ fn point_in_outer_uv(ring: &[(f64, f64)], u: f64, v: f64) -> bool {
 
 // #region ▲Triangulate
 
-fn triangulate_uv(positions: &[Pnt3], uvs: &[(f64, f64)], outer_count: usize, holes: &[Vec<Pnt3>]) -> Result<Vec<u32>, KernelError> {
+async fn triangulate_uv(positions: &[Pnt3], uvs: &[(f64, f64)], outer_count: usize, holes: &[Vec<Pnt3>]) -> Result<Vec<u32>, KernelError> {
     if holes.is_empty() && positions.len() == outer_count {
         return Ok(ear_clip(uvs));
     }
@@ -412,11 +412,11 @@ fn triangulate_uv(positions: &[Pnt3], uvs: &[(f64, f64)], outer_count: usize, ho
     Ok(constrained_triangulate(uvs, outer_count, holes_uv_counts(holes)))
 }
 
-fn holes_uv_counts(holes: &[Vec<Pnt3>]) -> Vec<usize> {
+async fn holes_uv_counts(holes: &[Vec<Pnt3>]) -> Vec<usize> {
     holes.iter().map(Vec::len).collect()
 }
 
-fn constrained_triangulate(uvs: &[(f64, f64)], outer_count: usize, hole_counts: Vec<usize>) -> Vec<u32> {
+async fn constrained_triangulate(uvs: &[(f64, f64)], outer_count: usize, hole_counts: Vec<usize>) -> Vec<u32> {
     if outer_count < 3 {
         return Vec::new();
     }
@@ -453,7 +453,7 @@ fn constrained_triangulate(uvs: &[(f64, f64)], outer_count: usize, hole_counts: 
     local.into_iter().map(|i| ring[i as usize] as u32).collect()
 }
 
-fn ear_clip(uvs: &[(f64, f64)]) -> Vec<u32> {
+async fn ear_clip(uvs: &[(f64, f64)]) -> Vec<u32> {
     let n = uvs.len();
     if n < 3 {
         return Vec::new();
@@ -493,7 +493,7 @@ fn ear_clip(uvs: &[(f64, f64)]) -> Vec<u32> {
     tris
 }
 
-fn is_convex_ear(uvs: &[(f64, f64)], i0: usize, i1: usize, i2: usize) -> bool {
+async fn is_convex_ear(uvs: &[(f64, f64)], i0: usize, i1: usize, i2: usize) -> bool {
     let a = uvs[i0];
     let b = uvs[i1];
     let c = uvs[i2];
@@ -501,7 +501,7 @@ fn is_convex_ear(uvs: &[(f64, f64)], i0: usize, i1: usize, i2: usize) -> bool {
     cross > 0.0
 }
 
-fn ear_contains_point(uvs: &[(f64, f64)], ring: &[usize], i0: usize, i1: usize, i2: usize) -> bool {
+async fn ear_contains_point(uvs: &[(f64, f64)], ring: &[usize], i0: usize, i1: usize, i2: usize) -> bool {
     let a = uvs[i0];
     let b = uvs[i1];
     let c = uvs[i2];
@@ -516,7 +516,7 @@ fn ear_contains_point(uvs: &[(f64, f64)], ring: &[usize], i0: usize, i1: usize, 
     false
 }
 
-fn point_in_triangle(p: (f64, f64), a: (f64, f64), b: (f64, f64), c: (f64, f64)) -> bool {
+async fn point_in_triangle(p: (f64, f64), a: (f64, f64), b: (f64, f64), c: (f64, f64)) -> bool {
     let area = |p0: (f64, f64), p1: (f64, f64), p2: (f64, f64)| (p1.0 - p0.0) * (p2.1 - p0.1) - (p1.1 - p0.1) * (p2.0 - p0.0);
     let a0 = area(p, a, b);
     let a1 = area(p, b, c);
@@ -524,7 +524,7 @@ fn point_in_triangle(p: (f64, f64), a: (f64, f64), b: (f64, f64), c: (f64, f64))
     (a0 >= -1e-14 && a1 >= -1e-14 && a2 >= -1e-14) || (a0 <= 1e-14 && a1 <= 1e-14 && a2 <= 1e-14)
 }
 
-fn fan_triangulate(n: usize) -> Vec<u32> {
+async fn fan_triangulate(n: usize) -> Vec<u32> {
     let mut tris = Vec::with_capacity((n.saturating_sub(2)) * 3);
     for i in 1..n.saturating_sub(1) {
         tris.extend([0, i as u32, (i + 1) as u32]);
@@ -532,7 +532,7 @@ fn fan_triangulate(n: usize) -> Vec<u32> {
     tris
 }
 
-fn fan_from_centroid(uvs: &[(f64, f64)], outer_count: usize) -> Vec<u32> {
+async fn fan_from_centroid(uvs: &[(f64, f64)], outer_count: usize) -> Vec<u32> {
     if outer_count < 3 {
         return Vec::new();
     }
@@ -564,7 +564,7 @@ fn fan_from_centroid(uvs: &[(f64, f64)], outer_count: usize) -> Vec<u32> {
     tris
 }
 
-fn ensure_winding(positions: &[Pnt3], indices: &mut [u32], desired: Vec3) {
+async fn ensure_winding(positions: &[Pnt3], indices: &mut [u32], desired: Vec3) {
     if indices.len() < 3 {
         return;
     }
@@ -595,7 +595,7 @@ mod tests {
     use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::Body;
     use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::matrix::Frame3;
 
-    fn build_unit_box(body: &mut Body, rec: &mut OpRecorder) -> SolidId {
+    async fn build_unit_box(body: &mut Body, rec: &mut OpRecorder) -> SolidId {
         let positions = [Pnt3::new(0.0, 0.0, 0.0), Pnt3::new(1.0, 0.0, 0.0), Pnt3::new(1.0, 1.0, 0.0), Pnt3::new(0.0, 1.0, 0.0), Pnt3::new(0.0, 0.0, 1.0), Pnt3::new(1.0, 0.0, 1.0), Pnt3::new(1.0, 1.0, 1.0), Pnt3::new(0.0, 1.0, 1.0)];
         let vertices: Vec<_> = positions.iter().map(|&p| make_vertex(body, p, Tol::DEFAULT, rec)).collect();
         let edge_pairs = [(0, 1), (1, 2), (2, 3), (3, 0), (4, 5), (5, 6), (6, 7), (7, 4), (0, 4), (1, 5), (2, 6), (3, 7)];
@@ -630,7 +630,7 @@ mod tests {
     }
 
     #[test]
-    fn unit_box_has_six_face_groups_and_unit_normals() {
+    async fn unit_box_has_six_face_groups_and_unit_normals() {
         let mut body = Body::new();
         let mut rec = OpRecorder::new();
         let solid = build_unit_box(&mut body, &mut rec);
@@ -651,7 +651,7 @@ mod tests {
     }
 
     #[test]
-    fn tessellate_face_matches_one_box_face() {
+    async fn tessellate_face_matches_one_box_face() {
         let mut body = Body::new();
         let mut rec = OpRecorder::new();
         let solid = build_unit_box(&mut body, &mut rec);
@@ -663,7 +663,7 @@ mod tests {
     }
 
     #[test]
-    fn sample_edge_polyline_returns_line_endpoints() {
+    async fn sample_edge_polyline_returns_line_endpoints() {
         let mut body = Body::new();
         let mut rec = OpRecorder::new();
         let v0 = make_vertex(&mut body, Pnt3::new(0.0, 0.0, 0.0), Tol::DEFAULT, &mut rec);
@@ -677,7 +677,7 @@ mod tests {
     }
 
     #[test]
-    fn shared_edge_samples_are_identical_across_adjacent_faces() {
+    async fn shared_edge_samples_are_identical_across_adjacent_faces() {
         let mut body = Body::new();
         let mut rec = OpRecorder::new();
         let solid = build_unit_box(&mut body, &mut rec);
@@ -689,7 +689,7 @@ mod tests {
     }
 
     #[test]
-    fn circle_edge_samples_respect_deflection() {
+    async fn circle_edge_samples_respect_deflection() {
         let mut body = Body::new();
         let mut rec = OpRecorder::new();
         let frame = Frame3::WORLD;
@@ -704,14 +704,14 @@ mod tests {
     }
 
     #[test]
-    fn missing_solid_returns_missing_entity() {
+    async fn missing_solid_returns_missing_entity() {
         let body = Body::new();
         let err = tessellate_solid(&body, SolidId::from_raw(9, 0), 0.1).unwrap_err();
         assert!(matches!(err, KernelError::MissingEntity(_)));
     }
 
     #[test]
-    fn tessellate_rectangle_wire_emits_edge_segments() {
+    async fn tessellate_rectangle_wire_emits_edge_segments() {
         use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::primitives::make_rectangle_wire;
         let mut body = Body::new();
         let mut rec = OpRecorder::new();

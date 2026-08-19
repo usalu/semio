@@ -15,15 +15,15 @@ pub struct ChangeAirSpeedMS {
 impl protocol::MutationKind<Din16798Snapshot, Din16798Mutation> for ChangeAirSpeedMS {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "air-speed-ms", kind: "change-air-speed-ms", record: "ChangedAirSpeedMS" };
 
-    fn diff(&self, base: &Din16798Snapshot) -> protocol::MutationOutcome<Din16798Diff> {
+    async fn diff(&self, base: &Din16798Snapshot) -> protocol::MutationOutcome<Din16798Diff> {
         crate::artifacts::din16798::mutations::change_air_speed_m_s::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &Din16798Snapshot) -> Vec<Din16798Mutation> {
+    async fn inverse(&self, base: &Din16798Snapshot) -> Vec<Din16798Mutation> {
         crate::artifacts::din16798::mutations::change_air_speed_m_s::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         format!("Change air speed to {}", self.new_air_speed_m_s)
     }
 }

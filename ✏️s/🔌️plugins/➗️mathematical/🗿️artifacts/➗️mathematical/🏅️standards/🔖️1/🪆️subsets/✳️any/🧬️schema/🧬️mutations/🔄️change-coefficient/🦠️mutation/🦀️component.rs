@@ -22,16 +22,16 @@ pub struct ChangeCoefficient {
 impl protocol::MutationKind<MathematicalSnapshot, MathematicalMutation> for ChangeCoefficient {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "coefficient", kind: "change-coefficient", record: "ChangedCoefficient" };
 
-    fn diff(&self, base: &MathematicalSnapshot) -> protocol::MutationOutcome<<MathematicalMutation as protocol::Mutation<MathematicalSnapshot>>::Diff> {
+    async fn diff(&self, base: &MathematicalSnapshot) -> protocol::MutationOutcome<<MathematicalMutation as protocol::Mutation<MathematicalSnapshot>>::Diff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &MathematicalSnapshot) -> Vec<MathematicalMutation> {
+    async fn inverse(&self, base: &MathematicalSnapshot) -> Vec<MathematicalMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         format!("Change coefficient {} to {}/{}", self.label.0, self.numer, self.denom)
     }
-    fn target(&self) -> Vec<String> {
+    async fn target(&self) -> Vec<String> {
         vec![self.label.0.to_string()]
     }
 }

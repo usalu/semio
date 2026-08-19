@@ -14,7 +14,7 @@ pub const SEQUENCE_PLAY_BODY_DOCUMENT: &str = "sequence.play.document";
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
-pub fn definition() -> PanelTabDefinition {
+pub async fn definition() -> PanelTabDefinition {
     PanelTabDefinition {
         kind: PanelTabKind::App(FRAMEWORK_PANEL_TAB_ARTIFACT_ID.into()),
         label: LocalizedLabel::native(FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL, "Dokument"),
@@ -28,7 +28,7 @@ pub fn definition() -> PanelTabDefinition {
 //#region 🔖️Helpers
 /// 🗣️ Localizes a control-flow slot name ("then"/"else"/"body") for tree display; unknown slot names
 /// fall back to the raw id as genuine runtime data (never authored UI copy).
-fn slot_label(slot_name: &str, labels: &SequenceLabels) -> Label {
+async fn slot_label(slot_name: &str, labels: &SequenceLabels) -> Label {
     match slot_name {
         "then" => labels.slot_then.into(),
         "else" => labels.slot_else.into(),
@@ -43,7 +43,7 @@ fn slot_label(slot_name: &str, labels: &SequenceLabels) -> Label {
 /// selection/hover presence from that domain (`.interaction_domain`) and prunes stale ids through
 /// that same topology, so no per-item click action is declared here anymore (clicks are translated
 /// into `interactionSelect` generically).
-fn build_step_tree_item(step: &SequenceStep, fixture: &SequenceFixture, labels: &SequenceLabels) -> UiTreeItemNode {
+async fn build_step_tree_item(step: &SequenceStep, fixture: &SequenceFixture, labels: &SequenceLabels) -> UiTreeItemNode {
     let mut item = tree_item_desc(step.id.clone(), Label::data(format!("{} ({})", step.id, step.kind)), Some(step.kind.clone()));
     if is_control_kind(&step.kind) {
         item.control = Some(UiControlNode::Toggle(UiToggleNode {
@@ -86,7 +86,7 @@ fn build_step_tree_item(step: &SequenceStep, fixture: &SequenceFixture, labels: 
 //#endregion 🔖️Helpers
 
 //#region 🔖️Render
-pub fn render(fixture: &SequenceFixture, labels: &SequenceLabels) -> UiNode {
+pub async fn render(fixture: &SequenceFixture, labels: &SequenceLabels) -> UiNode {
     let step_items: Vec<UiTreeItemNode> = fixture.steps.iter().filter(|step| step.slot.is_none()).map(|step| build_step_tree_item(step, fixture, labels)).collect();
     let edge_items: Vec<UiTreeItemNode> = fixture.edges.iter().map(|edge| tree_item_desc(format!("sequence-play-document.edge.{}", edge.id), Label::data(format!("{} → {}", edge.from, edge.to)), Some(edge.id.clone()))).collect();
     PanelTreeBuilder::new("sequence-play-document")
@@ -104,13 +104,13 @@ mod tests {
     use crate::editor::sequence::testkit::{new_app, render as render_body};
 
     #[test]
-    fn document_lists_steps() {
+    async fn document_lists_steps() {
         let mut app = new_app();
         assert!(render_body(&mut app, SEQUENCE_PLAY_BODY_DOCUMENT).contains("sequence-play-document.steps"));
     }
 
     #[test]
-    fn definition_binds_the_framework_document_tab_to_this_body_key() {
+    async fn definition_binds_the_framework_document_tab_to_this_body_key() {
         let definition = definition();
         assert_eq!(definition.id(), FRAMEWORK_PANEL_TAB_ARTIFACT_ID);
         assert_eq!(definition.body_key.as_deref(), Some(SEQUENCE_PLAY_BODY_DOCUMENT));

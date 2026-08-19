@@ -55,7 +55,7 @@ pub enum SemioSubsetSnapshot {
 }
 
 impl Default for SemioSubsetSnapshot {
-    fn default() -> Self {
+    async fn default() -> Self {
         SemioSubsetSnapshot::Brep(SemioBrepSnapshot::default())
     }
 }
@@ -79,7 +79,7 @@ pub struct SemioSnapshot {
 }
 
 impl Default for SemioSnapshot {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self { schema: STDIO_SEMIO_DOCUMENT_SCHEMA.into(), subset: Default::default() }
     }
 }
@@ -91,7 +91,7 @@ impl Default for SemioSnapshot {
 /// `pub(crate)` (not private) since `💡️inferences/🏷️kind/🦀️component.rs`
 /// (ticket 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING) is a sibling
 /// module, not a descendant, and needs this same dispatch as its own honest derivation.
-pub(crate) fn subset_tag(s: &SemioSubsetSnapshot) -> &'static str {
+pub(crate) async fn subset_tag(s: &SemioSubsetSnapshot) -> &'static str {
     match s {
         SemioSubsetSnapshot::Brep(_) => "brep",
         SemioSubsetSnapshot::Mesh(_) => "mesh",
@@ -116,7 +116,7 @@ pub(crate) fn subset_tag(s: &SemioSubsetSnapshot) -> &'static str {
 
 /// 🔢️ The binary sibling of [`subset_tag`] — a real, individually protocol-walkable `u8` ordinal
 /// (0-13, enum declaration order), used by the binary pack header instead of a length-prefixed name.
-pub(crate) fn subset_ordinal(s: &SemioSubsetSnapshot) -> u8 {
+pub(crate) async fn subset_ordinal(s: &SemioSubsetSnapshot) -> u8 {
     match s {
         SemioSubsetSnapshot::Brep(_) => 0,
         SemioSubsetSnapshot::Mesh(_) => 1,
@@ -150,24 +150,24 @@ pub(crate) fn subset_ordinal(s: &SemioSubsetSnapshot) -> u8 {
 /// matching subset's own real `parse_dsl` — every one of those already tolerates a missing
 /// preamble (falls back to treating the whole text as body), the same convention this envelope's
 /// own `parse_dsl` itself relies on one level up.
-fn hex_encode(bytes: &[u8]) -> String {
+async fn hex_encode(bytes: &[u8]) -> String {
     bytes.iter().map(|b| format!("{b:02x}")).collect()
 }
-fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
+async fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
     if s.len() % 2 != 0 {
         return Err(format!("odd hex length: {s:?}"));
     }
     (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()
 }
 
-fn strip_inner_preamble(text: &str) -> &str {
+async fn strip_inner_preamble(text: &str) -> &str {
     match store::semio_format::split_text_preamble(text) {
         Ok((_, rest)) => rest,
         Err(_) => text,
     }
 }
 
-fn enc_semio_snapshot_body(snap: &SemioSnapshot) -> String {
+async fn enc_semio_snapshot_body(snap: &SemioSnapshot) -> String {
     let tag = subset_tag(&snap.subset);
     let inner_printed = match &snap.subset {
         SemioSubsetSnapshot::Brep(s) => <SemioBrepSnapshot as store::ArtifactDsl>::print_dsl(s),
@@ -193,7 +193,7 @@ fn enc_semio_snapshot_body(snap: &SemioSnapshot) -> String {
     format!("subset={tag}\nschema={}\n{inner_body}", hex_encode(snap.schema.as_bytes()))
 }
 
-fn dec_semio_snapshot_body(body: &str) -> Result<SemioSnapshot, String> {
+async fn dec_semio_snapshot_body(body: &str) -> Result<SemioSnapshot, String> {
     let mut parts = body.splitn(3, '\n');
     let subset_line = parts.next().ok_or_else(|| "semio snapshot: missing subset line".to_string())?.trim();
     let tag = subset_line.strip_prefix("subset=").ok_or_else(|| format!("semio snapshot: expected subset= line, got {subset_line:?}"))?;
@@ -232,18 +232,18 @@ fn dec_semio_snapshot_body(body: &str) -> Result<SemioSnapshot, String> {
 /// full, already-real `ArtifactPack::encode_pack()` bytes as one opaque trailing payload — that
 /// call already applies THAT subset's own `semio_format` envelope internally, so this is a real,
 /// honest double-envelope (delegation, not a re-derivation of any subset's own binary layout).
-fn write_bytes_lp(out: &mut Vec<u8>, bytes: &[u8]) {
+async fn write_bytes_lp(out: &mut Vec<u8>, bytes: &[u8]) {
     store::pack_rt::write_varint_u64(out, bytes.len() as u64);
     out.extend_from_slice(bytes);
 }
-fn read_bytes_lp(reader: &mut store::ByteReader<'_>) -> Result<Vec<u8>, String> {
+async fn read_bytes_lp(reader: &mut store::ByteReader<'_>) -> Result<Vec<u8>, String> {
     let len = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
     Ok(reader.read_bytes(len).map_err(|e| e.to_string())?.to_vec())
 }
 
 const PACK_BINARY_FORMAT: u8 = 1;
 
-fn encode_semio_snapshot_binary(snap: &SemioSnapshot) -> Vec<u8> {
+async fn encode_semio_snapshot_binary(snap: &SemioSnapshot) -> Vec<u8> {
     let mut out = Vec::new();
     out.push(PACK_BINARY_FORMAT);
     out.push(subset_ordinal(&snap.subset));
@@ -272,7 +272,7 @@ fn encode_semio_snapshot_binary(snap: &SemioSnapshot) -> Vec<u8> {
     out
 }
 
-fn decode_semio_snapshot_binary(bytes: &[u8]) -> Result<SemioSnapshot, String> {
+async fn decode_semio_snapshot_binary(bytes: &[u8]) -> Result<SemioSnapshot, String> {
     let mut reader = store::ByteReader::new(bytes);
     let format = reader.read_u8().map_err(|e| e.to_string())?;
     if format != PACK_BINARY_FORMAT {
@@ -313,11 +313,11 @@ fn decode_semio_snapshot_binary(bytes: &[u8]) -> Result<SemioSnapshot, String> {
 /// `subset`/`schema` header and the outer `store::semio_format` wrapping every stdio artifact uses.
 impl store::ArtifactDsl for SemioSnapshot {
     const EXTENSION: &'static str = "semio";
-    fn envelope_id() -> &'static str {
+    async fn envelope_id() -> &'static str {
         STDIO_SEMIO_DOCUMENT_SCHEMA
     }
 
-    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+    async fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
         let body = match store::semio_format::split_text_preamble(text) {
             Ok((_, rest)) => rest,
             Err(_) => text,
@@ -325,7 +325,7 @@ impl store::ArtifactDsl for SemioSnapshot {
         dec_semio_snapshot_body(body).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
 
-    fn print_dsl(&self) -> String {
+    async fn print_dsl(&self) -> String {
         let body = enc_semio_snapshot_body(self);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
@@ -333,14 +333,14 @@ impl store::ArtifactDsl for SemioSnapshot {
 }
 
 impl store::ArtifactPack for SemioSnapshot {
-    fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
+    async fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
         let raw = encode_semio_snapshot_binary(self);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &raw))
     }
 
-    fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
+    async fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
         if envelope.envelope_id() != <Self as store::ArtifactDsl>::envelope_id() {
             return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.envelope_id())));
@@ -358,7 +358,7 @@ impl store::ArtifactPack for SemioSnapshot {
 /// `📚️examples/🌐️envelope/🖼️assets/🗣️example.dsl.semio`/`🎒️example.pack.semio` and this facet's
 /// own conformance-law tests.
 #[cfg(test)]
-pub(crate) fn demo_semio_snapshot() -> SemioSnapshot {
+pub(crate) async fn demo_semio_snapshot() -> SemioSnapshot {
     use crate::artifacts::semio::standards::v1::subsets::flow::schema::snapshot::demo_flow_snapshot;
     SemioSnapshot { schema: STDIO_SEMIO_DOCUMENT_SCHEMA.into(), subset: SemioSubsetSnapshot::Flow(demo_flow_snapshot()) }
 }
@@ -370,7 +370,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn pack_round_trips_default_subset() {
+    async fn pack_round_trips_default_subset() {
         let snap = SemioSnapshot::default();
         let bytes = <SemioSnapshot as store::ArtifactPack>::encode_pack(&snap);
         let back = <SemioSnapshot as store::ArtifactPack>::decode_pack(&bytes).expect("decode");
@@ -378,7 +378,7 @@ mod tests {
     }
 
     #[test]
-    fn dsl_text_round_trips_default_subset() {
+    async fn dsl_text_round_trips_default_subset() {
         let snap = SemioSnapshot::default();
         let text = <SemioSnapshot as store::ArtifactDsl>::print_dsl(&snap);
         let back = <SemioSnapshot as store::ArtifactDsl>::parse_dsl(&text).expect("parse");
@@ -389,7 +389,7 @@ mod tests {
     /// text/binary round trips must both hold, proving this isn't merely round-tripping an
     /// all-zero stub.
     #[test]
-    fn pack_and_dsl_round_trip_the_demo_snapshot() {
+    async fn pack_and_dsl_round_trip_the_demo_snapshot() {
         let snap = demo_semio_snapshot();
         let bytes = <SemioSnapshot as store::ArtifactPack>::encode_pack(&snap);
         assert_eq!(<SemioSnapshot as store::ArtifactPack>::decode_pack(&bytes).expect("decode"), snap);
@@ -401,7 +401,7 @@ mod tests {
     /// dispatch tables (text AND binary) are wired correctly for every wrapped subset, not just
     /// the one exercised by [`demo_semio_snapshot`].
     #[test]
-    fn all_eighteen_subset_tags_round_trip_text_and_binary() {
+    async fn all_eighteen_subset_tags_round_trip_text_and_binary() {
         let subsets: Vec<SemioSubsetSnapshot> = vec![
             SemioSubsetSnapshot::Brep(Default::default()),
             SemioSubsetSnapshot::Mesh(Default::default()),

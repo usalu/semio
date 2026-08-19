@@ -23,19 +23,19 @@ pub struct Mp3Artifact {
 }
 
 impl Default for Mp3Artifact {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self::from_snapshot(Mp3Snapshot::default())
     }
 }
 
 impl Mp3Artifact {
-    pub fn to_snapshot(&self) -> Mp3Snapshot {
+    pub async fn to_snapshot(&self) -> Mp3Snapshot {
         Mp3Snapshot { schema: self.schema.clone(), id3v2: self.id3v2.clone(), frames: self.frames.clone(), id3v1: self.id3v1.clone() }
     }
-    pub fn from_snapshot(snapshot: Mp3Snapshot) -> Self {
+    pub async fn from_snapshot(snapshot: Mp3Snapshot) -> Self {
         Self { schema: snapshot.schema, id3v2: snapshot.id3v2, frames: snapshot.frames, id3v1: snapshot.id3v1 }
     }
-    pub fn set_snapshot(&mut self, snapshot: Mp3Snapshot) {
+    pub async fn set_snapshot(&mut self, snapshot: Mp3Snapshot) {
         self.schema = snapshot.schema;
         self.id3v2 = snapshot.id3v2;
         self.frames = snapshot.frames;
@@ -43,7 +43,7 @@ impl Mp3Artifact {
     }
 }
 
-pub fn mp3_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
+pub async fn mp3_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
     schema::ArtifactSchemaDescriptor {
         id: "s.stdio.mp3",
         artifact: schema::FacetLeaves {
@@ -82,7 +82,7 @@ pub fn mp3_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
 /// `💡️inferences/⏱duration` needs the same real table for its duration derivation and
 /// `🧬️schema` must never depend on `🚪️io` — `🚪️io` depends on `🧬️schema` instead (both call
 /// sites reuse this one definition, never re-declare it).
-pub fn sample_rate_hz(version_id: u8, index: u8) -> Option<u32> {
+pub async fn sample_rate_hz(version_id: u8, index: u8) -> Option<u32> {
     match (version_id, index) {
         (3, 0) => Some(44_100),
         (3, 1) => Some(48_000),
@@ -114,27 +114,27 @@ pub mod derived_construction {
         type Snapshot = Mp3Snapshot;
         type Mutation = Mp3Mutation;
         type Diff = Mp3Diff;
-        fn empty() -> Self {
+        async fn empty() -> Self {
             Self { snapshot: Mp3Snapshot::default() }
         }
-        fn from_snapshot(snapshot: Self::Snapshot) -> Self {
+        async fn from_snapshot(snapshot: Self::Snapshot) -> Self {
             Self { snapshot }
         }
-        fn from_text(text: &str) -> Result<Self, store::TextError> {
+        async fn from_text(text: &str) -> Result<Self, store::TextError> {
             Ok(Self::from_snapshot(<Mp3Snapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
-        fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
+        async fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
             Ok(Self::from_snapshot(<Mp3Snapshot as store::ArtifactPack>::decode_pack(bytes)?))
         }
-        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
+        async fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let diff = apply_mp3_mutation(&mut self.snapshot, &mutation);
             (self, diff)
         }
-        fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
+        async fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
             self.snapshot = <Mp3Diff as protocol::MutationDiff<Mp3Snapshot>>::apply(&diff, &self.snapshot)?;
             Ok(self)
         }
-        fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
+        async fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
             Ok(self.snapshot)
         }
     }
@@ -159,7 +159,7 @@ pub mod derived_analysis {
         type Parts = Mp3Parts;
         const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.mp3", standard: StandardId("mpeg1-layer3"), subset: SubsetId("*") };
 
-        fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
+        async fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
             match source {
                 AnalyzeSource::Binary(bytes) => {
                     if io::sniff_real_bytes(bytes) {
@@ -182,7 +182,7 @@ pub mod derived_analysis {
             }
         }
 
-        fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
+        async fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
             let mut parts = Mp3Parts::default();
             let mut diagnostics = Vec::new();
             let mut confidence = IoConfidence::High;

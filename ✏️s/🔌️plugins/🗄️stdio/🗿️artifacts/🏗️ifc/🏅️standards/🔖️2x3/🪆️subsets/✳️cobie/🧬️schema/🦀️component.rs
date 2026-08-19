@@ -12,7 +12,7 @@ pub mod derived_construction {
     use dsl::{Diagnostic, Severity};
     use semio_framework_plugin::ArtifactBuilder;
 
-    fn stage_mutation_errors(diagnostics: &mut Vec<Diagnostic>, outcome: &protocol::MutationOutcome<Ifc2x3Diff>) {
+    async fn stage_mutation_errors(diagnostics: &mut Vec<Diagnostic>, outcome: &protocol::MutationOutcome<Ifc2x3Diff>) {
         diagnostics.extend(outcome.messages().iter().filter(|message| message.level >= Severity::Error).map(|message| Diagnostic {
             code: message.code.clone(),
             severity: message.level,
@@ -23,7 +23,7 @@ pub mod derived_construction {
         }));
     }
 
-    fn seeded_document() -> Part21Document {
+    async fn seeded_document() -> Part21Document {
         let header = Part21Header {
             file_description: vec![Part21Value::List(vec![Part21Value::Str("ViewDefinition [FMHandOverView]".into())]), Part21Value::Str("2;1".into())],
             file_name: vec![],
@@ -45,12 +45,12 @@ pub mod derived_construction {
     }
 
     impl Ifc2x3CobieBuilderConstruction {
-        pub fn new() -> Self {
+        pub async fn new() -> Self {
             Self { snapshot: Ifc2x3Snapshot { schema: "stdio.ifc.2x3".into(), document: seeded_document(), edm_preamble: None }, next_id: 100, diagnostics: Vec::new() }
         }
 
         /// 🏷️ Adds a named `IFCSPACE` (COBie's `Space` sheet row).
-        pub fn add_space(mut self, name: &str) -> Self {
+        pub async fn add_space(mut self, name: &str) -> Self {
             let id = self.next_id;
             self.next_id += 1;
             let instance = Part21Instance { id, entities: vec![("IFCSPACE".into(), vec![Part21Value::Str(format!("guid-{id}")), Part21Value::Unset, Part21Value::Str(name.to_string())])] };
@@ -61,7 +61,7 @@ pub mod derived_construction {
     }
 
     impl Default for Ifc2x3CobieBuilderConstruction {
-        fn default() -> Self {
+        async fn default() -> Self {
             Self::new()
         }
     }
@@ -71,27 +71,27 @@ pub mod derived_construction {
         type Mutation = Ifc2x3Mutation;
         type Diff = Ifc2x3Diff;
 
-        fn empty() -> Self {
+        async fn empty() -> Self {
             Self::new()
         }
-        fn from_snapshot(snapshot: Self::Snapshot) -> Self {
+        async fn from_snapshot(snapshot: Self::Snapshot) -> Self {
             Self { snapshot, next_id: 100, diagnostics: Vec::new() }
         }
-        fn from_text(text: &str) -> Result<Self, store::TextError> {
+        async fn from_text(text: &str) -> Result<Self, store::TextError> {
             Ok(Self::from_snapshot(<Ifc2x3Snapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
-        fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
+        async fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
             Ok(Self::from_snapshot(<Ifc2x3Snapshot as store::ArtifactPack>::decode_pack(bytes)?))
         }
-        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
+        async fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let diff = apply_ifc2x3_mutation(&mut self.snapshot, &mutation);
             (self, diff)
         }
-        fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
+        async fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
             self.snapshot = <Ifc2x3Diff as protocol::MutationDiff<Ifc2x3Snapshot>>::apply(&diff, &self.snapshot)?;
             Ok(self)
         }
-        fn build(self) -> Result<Self::Snapshot, Vec<Diagnostic>> {
+        async fn build(self) -> Result<Self::Snapshot, Vec<Diagnostic>> {
             let Self { snapshot, mut diagnostics, .. } = self;
             diagnostics.extend(check_cobie_conformance(&snapshot).into_iter().filter(|d| matches!(d.severity, Severity::Error | Severity::Fatal)));
             if diagnostics.is_empty() {
@@ -108,13 +108,13 @@ pub mod derived_construction {
         use super::*;
 
         #[test]
-        fn new_builds_clean() {
+        async fn new_builds_clean() {
             let snapshot = Ifc2x3CobieBuilderConstruction::new().add_space("Room 101").build().expect("conforming construction must build");
             assert_eq!(snapshot.document.instances.len(), 5);
         }
 
         #[test]
-        fn wrong_schema_via_raw_mutate_still_fails_build() {
+        async fn wrong_schema_via_raw_mutate_still_fails_build() {
             let snapshot = Ifc2x3CobieBuilderConstruction::new().build().unwrap();
             let mut bad = snapshot.clone();
             bad.document.header.file_schema = vec![Part21Value::List(vec![Part21Value::Str("IFC4".into())])];
@@ -144,17 +144,17 @@ pub mod derived_analysis {
     pub const CODE_TYPE_ASSIGNMENT: &str = "stdio.ifc.2x3.cobie.missing-type-assignment";
     //#endregion 🔖️Codes
 
-    fn hard(code: &'static str, message: String) -> Diagnostic {
+    async fn hard(code: &'static str, message: String) -> Diagnostic {
         Diagnostic { code: FaultCode::new(code), severity: Severity::Error, span: TextSpan::at(1, 1), message, expected: None, scope: FaultScope::default() }
     }
-    fn soft(code: &'static str, message: String) -> Diagnostic {
+    async fn soft(code: &'static str, message: String) -> Diagnostic {
         Diagnostic { code: FaultCode::new(code), severity: Severity::Warning, span: TextSpan::at(1, 1), message, expected: None, scope: FaultScope::default() }
     }
 
-    fn declares_schema(snapshot: &Ifc2x3Snapshot, name: &str) -> bool {
+    async fn declares_schema(snapshot: &Ifc2x3Snapshot, name: &str) -> bool {
         snapshot.document.header.file_schema.iter().any(|v| v.as_list().map(|items| items.iter().any(|item| item.as_str() == Some(name))).unwrap_or(false))
     }
-    fn view_definition_names(snapshot: &Ifc2x3Snapshot, view: &str) -> bool {
+    async fn view_definition_names(snapshot: &Ifc2x3Snapshot, view: &str) -> bool {
         snapshot.document.header.file_description.first().and_then(|v| v.as_list()).map(|items| items.iter().any(|item| item.as_str().map(|s| s.contains(view)).unwrap_or(false))).unwrap_or(false)
     }
 
@@ -162,7 +162,7 @@ pub mod derived_analysis {
     /// 🛡️ Real Basic FM Handover (COBie) conformance checks. Shared source of truth for
     /// `Ifc2x3CobieComposer::compose`, `Ifc2x3CobieBuilder::build`, and the registered
     /// `SubsetValidator`.
-    pub fn check_cobie_conformance(snapshot: &Ifc2x3Snapshot) -> Vec<Diagnostic> {
+    pub async fn check_cobie_conformance(snapshot: &Ifc2x3Snapshot) -> Vec<Diagnostic> {
         let mut out = Vec::new();
         if !declares_schema(snapshot, "IFC2X3") {
             out.push(hard(CODE_FILE_SCHEMA, "FILE_SCHEMA does not declare IFC2X3".into()));
@@ -205,11 +205,11 @@ pub mod derived_analysis {
         type Parts = Ifc2x3Parts;
         const DIALECT: Dialect = DIALECT;
 
-        fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
+        async fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
             Ifc2x3AnyAnalyzer::sniff(source)
         }
 
-        fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
+        async fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
             let inner = Ifc2x3AnyAnalyzer::analyze(sources);
             let mut diagnostics = inner.diagnostics.clone();
             let mut confidence = inner.confidence;
@@ -231,7 +231,7 @@ pub mod derived_analysis {
         use super::*;
         use crate::artifacts::step::engine::part21::{Part21Document, Part21Header, Part21Instance, Part21Value};
 
-        fn header(view: &str) -> Part21Header {
+        async fn header(view: &str) -> Part21Header {
             Part21Header {
                 file_description: vec![Part21Value::List(vec![Part21Value::Str(format!("ViewDefinition [{view}]"))]), Part21Value::Str("2;1".into())],
                 file_name: vec![],
@@ -239,7 +239,7 @@ pub mod derived_analysis {
             }
         }
 
-        fn conforming_snapshot() -> Ifc2x3Snapshot {
+        async fn conforming_snapshot() -> Ifc2x3Snapshot {
             let space = Part21Instance { id: 1, entities: vec![("IFCSPACE".into(), vec![Part21Value::Str("guid".into()), Part21Value::Unset, Part21Value::Str("Room 101".into())])] };
             let building = Part21Instance { id: 2, entities: vec![("IFCBUILDING".into(), vec![])] };
             let storey = Part21Instance { id: 3, entities: vec![("IFCBUILDINGSTOREY".into(), vec![])] };
@@ -249,13 +249,13 @@ pub mod derived_analysis {
         }
 
         #[test]
-        fn conforming_snapshot_has_no_hard_diagnostics() {
+        async fn conforming_snapshot_has_no_hard_diagnostics() {
             let diagnostics = check_cobie_conformance(&conforming_snapshot());
             assert!(diagnostics.iter().all(|d| d.severity != Severity::Error), "got {diagnostics:?}");
         }
 
         #[test]
-        fn wrong_view_definition_is_hard() {
+        async fn wrong_view_definition_is_hard() {
             let mut snap = conforming_snapshot();
             snap.document.header = header("CoordinationView");
             let diagnostics = check_cobie_conformance(&snap);
@@ -263,7 +263,7 @@ pub mod derived_analysis {
         }
 
         #[test]
-        fn unnamed_space_is_soft() {
+        async fn unnamed_space_is_soft() {
             let mut snap = conforming_snapshot();
             for (name, args) in snap.document.instances[0].entities.iter_mut() {
                 if name == "IFCSPACE" {
@@ -275,7 +275,7 @@ pub mod derived_analysis {
         }
 
         #[test]
-        fn missing_storey_is_soft() {
+        async fn missing_storey_is_soft() {
             let mut snap = conforming_snapshot();
             snap.document.instances.retain(|i| !i.is_type("IFCBUILDINGSTOREY"));
             let diagnostics = check_cobie_conformance(&snap);
@@ -283,7 +283,7 @@ pub mod derived_analysis {
         }
 
         #[test]
-        fn missing_type_assignment_is_soft() {
+        async fn missing_type_assignment_is_soft() {
             let mut snap = conforming_snapshot();
             snap.document.instances.retain(|i| !i.is_type("IFCRELDEFINESBYTYPE"));
             let diagnostics = check_cobie_conformance(&snap);

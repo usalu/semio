@@ -52,7 +52,7 @@ pub struct ZoneEquipmentOutput {
 // #region 🔖️Simulate
 impl ZoneEquipment {
     /// 🏠️ Simulate zone equipment for one timestep.
-    pub fn simulate(&self, request: &ZoneEquipmentRequest) -> ZoneEquipmentOutput {
+    pub async fn simulate(&self, request: &ZoneEquipmentRequest) -> ZoneEquipmentOutput {
         match self {
             ZoneEquipment::Baseboard { heating } => {
                 let inlet = CoilAirState { temperature_c: request.zone_temperature_c, humidity_ratio: request.zone_humidity_ratio, mass_flow_kg_s: 0.1, pressure_pa: request.outdoor_pressure_pa };
@@ -204,7 +204,7 @@ mod tests {
     use crate::units::P_STD;
 
     #[test]
-    fn baseboard_delivers_heat() {
+    async fn baseboard_delivers_heat() {
         let eq = ZoneEquipment::Baseboard { heating: HeatingCoil::Electric { capacity_w: 5000.0, efficiency: 1.0 } };
         let req = ZoneEquipmentRequest {
             zone_temperature_c: 18.0,
@@ -223,7 +223,7 @@ mod tests {
     }
 
     #[test]
-    fn vrf_respects_capacity() {
+    async fn vrf_respects_capacity() {
         let eq = ZoneEquipment::VrfTerminal { heating_cap_w: 2000.0, cooling_cap_w: 2500.0, cop_heating: 3.5, cop_cooling: 3.0 };
         let req = ZoneEquipmentRequest {
             zone_temperature_c: 24.0,
@@ -243,7 +243,7 @@ mod tests {
     }
 
     #[test]
-    fn fan_coil_runs_coils_and_fan() {
+    async fn fan_coil_runs_coils_and_fan() {
         let eq = ZoneEquipment::FanCoil {
             heating: None,
             cooling: Some(CoolingCoil::DxSingleSpeed { rated_capacity_w: 8000.0, rated_shr: 0.75, cop_curve: PerformanceCurve::Constant(1.0) }),

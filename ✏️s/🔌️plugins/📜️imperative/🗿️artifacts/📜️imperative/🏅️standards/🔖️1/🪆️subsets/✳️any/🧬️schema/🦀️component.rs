@@ -33,12 +33,12 @@ pub struct ImperativeArtifact {
 //#endregion 🔖️Artifact
 
 //#region 🔖️Conversions
-fn default_contributions_json() -> String {
+async fn default_contributions_json() -> String {
     "[]".into()
 }
 
 impl Default for ImperativeArtifact {
-    fn default() -> Self {
+    async fn default() -> Self {
         let empty = crate::artifacts::imperative::schema::snapshot::ImperativeSnapshot::default();
         Self {
             schema: empty.schema,
@@ -54,7 +54,7 @@ impl Default for ImperativeArtifact {
 
 impl ImperativeArtifact {
     /// 📸️ Persisted subset.
-    pub fn to_snapshot(&self) -> crate::artifacts::imperative::ImperativeSnapshot {
+    pub async fn to_snapshot(&self) -> crate::artifacts::imperative::ImperativeSnapshot {
         crate::artifacts::imperative::ImperativeSnapshot {
             schema: self.schema.clone(),
             flow: self.flow.clone(),
@@ -63,7 +63,7 @@ impl ImperativeArtifact {
     }
 
     /// 🧬️ Builds a full artifact from a snapshot, leaving UI fields at defaults.
-    pub fn from_snapshot(snapshot: crate::artifacts::imperative::ImperativeSnapshot) -> Self {
+    pub async fn from_snapshot(snapshot: crate::artifacts::imperative::ImperativeSnapshot) -> Self {
         Self {
             schema: snapshot.schema,
             flow: snapshot.flow,
@@ -73,7 +73,7 @@ impl ImperativeArtifact {
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
-    pub fn set_snapshot(&mut self, snapshot: crate::artifacts::imperative::ImperativeSnapshot) {
+    pub async fn set_snapshot(&mut self, snapshot: crate::artifacts::imperative::ImperativeSnapshot) {
         self.schema = snapshot.schema;
         self.flow = snapshot.flow;
         self.text = snapshot.text;
@@ -83,7 +83,7 @@ impl ImperativeArtifact {
 
 //#region 🔖️Descriptor
 /// 🧬️ Descriptor for `s.imperative.imperative` — twenty handcrafted schema leaves.
-pub fn imperative_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
+pub async fn imperative_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
     schema::ArtifactSchemaDescriptor {
         id: "s.imperative.imperative",
         artifact: schema::FacetLeaves {
@@ -134,15 +134,15 @@ pub mod derived_construction {
         type Snapshot = ImperativeSnapshot;
         type Mutation = ImperativeMutation;
         type Diff = ImperativeDiff;
-        fn empty() -> Self { Self { snapshot: ImperativeSnapshot::default(), diagnostics: Vec::new() } }
-        fn from_snapshot(snapshot: Self::Snapshot) -> Self { Self { snapshot, diagnostics: Vec::new() } }
-        fn from_text(text: &str) -> Result<Self, store::TextError> {
+        async fn empty() -> Self { Self { snapshot: ImperativeSnapshot::default(), diagnostics: Vec::new() } }
+        async fn from_snapshot(snapshot: Self::Snapshot) -> Self { Self { snapshot, diagnostics: Vec::new() } }
+        async fn from_text(text: &str) -> Result<Self, store::TextError> {
             Ok(Self::from_snapshot(<ImperativeSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
-        fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
+        async fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
             Ok(Self::from_snapshot(<ImperativeSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
         }
-        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
+        async fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let outcome = <ImperativeMutation as protocol::Mutation<ImperativeSnapshot>>::diff(&mutation, &self.snapshot);
             match protocol::MutationDiff::apply(outcome.diff(), &self.snapshot) {
                 Ok(snapshot) => self.snapshot = snapshot,
@@ -154,7 +154,7 @@ pub mod derived_construction {
             }
             (self, outcome)
         }
-        fn absorb(
+        async fn absorb(
             mut self,
             diff: Self::Diff,
         ) -> protocol::MutationApplyResult<Self> {
@@ -162,7 +162,7 @@ pub mod derived_construction {
             self.snapshot = snapshot;
             Ok(self)
         }
-        fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
+        async fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
             if self.diagnostics.is_empty() { Ok(self.snapshot) } else { Err(self.diagnostics) }
         }
     }
@@ -186,11 +186,11 @@ pub mod derived_analysis {
         type Parts = ImperativeParts;
         const DIALECT: Dialect = Dialect { artifact_kind: "s.imperative", standard: StandardId("1"), subset: SubsetId("*") };
 
-        fn sniff(_source: &AnalyzeSource<'_>) -> IoConfidence {
+        async fn sniff(_source: &AnalyzeSource<'_>) -> IoConfidence {
             IoConfidence::Medium
         }
 
-        fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
+        async fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
             let mut parts = ImperativeParts::default();
             let mut diagnostics = Vec::new();
             let mut confidence = IoConfidence::High;
@@ -242,7 +242,7 @@ semio_framework_plugin::derive_artifact_facets!(
 /// `ImperativeWorkingScene`'s doc comment) — building the canonical default directly here, then
 /// printing it to regenerate the fixture text (see `📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio`),
 /// is the honest source of truth, matching `writer`'s/`flow`'s own fixture-builder precedent.
-fn default_path() -> crate::artifacts::imperative::Path {
+async fn default_path() -> crate::artifacts::imperative::Path {
     use crate::artifacts::imperative::{Dictionary, Path, Step};
     use neural_engine::{Atom, Value};
     Path {
@@ -266,7 +266,7 @@ fn default_path() -> crate::artifacts::imperative::Path {
 /// 📄️ The default `imperative` document — {@link default_path}'s two steps, empty seed. Relocated
 /// from the deleted `⚙️engine` (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES) — pure
 /// over document types, no app-runtime parameter, so it belongs beside the schema it builds.
-pub fn default_snapshot() -> crate::artifacts::imperative::ImperativeSnapshot {
+pub async fn default_snapshot() -> crate::artifacts::imperative::ImperativeSnapshot {
     crate::artifacts::imperative::imperative_snapshot_with_content("imperative.document", &default_path(), &std::collections::BTreeMap::new())
 }
 //#endregion 🔖️DocumentHelpers

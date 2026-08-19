@@ -15,15 +15,15 @@ pub struct ChangeFireRating {
 impl protocol::MutationKind<En1992Snapshot, En1992Mutation> for ChangeFireRating {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "fire-rating", kind: "change-fire-rating", record: "ChangedFireRating" };
 
-    fn diff(&self, base: &En1992Snapshot) -> protocol::MutationOutcome<En1992Diff> {
+    async fn diff(&self, base: &En1992Snapshot) -> protocol::MutationOutcome<En1992Diff> {
         crate::artifacts::en1992::mutations::change_fire_rating::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &En1992Snapshot) -> Vec<En1992Mutation> {
+    async fn inverse(&self, base: &En1992Snapshot) -> Vec<En1992Mutation> {
         crate::artifacts::en1992::mutations::change_fire_rating::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         format!("Change fire rating to {:?}", self.new_fire_rating)
     }
 }

@@ -16,7 +16,7 @@ const NOTE_PLAY_SURFACE_NAVIGATOR: &str = "note.play.navigator";
 /// 🧱️ Stitched into the app manifest by `crate::editor::note::create_note_app`. `options.measures` stays
 /// empty here on purpose: note's measures are config-derived and rebuilt per frame by
 /// [`window_measures`], not frozen into the manifest.
-pub fn definition() -> WindowKindDefinition {
+pub async fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
         id: NOTE_PLAY_WINDOW_NAVIGATOR.into(),
         label: LocalizedLabel::native("Navigator", "Navigator"),
@@ -37,11 +37,11 @@ pub fn definition() -> WindowKindDefinition {
 }
 
 /// 🎚️ The live chrome measures for this window, collected from its `🎚️options/*` components.
-pub fn window_measures(document: &NoteSnapshot, camera: &NoteCamera, labels: &NotePlayLabels) -> Vec<WindowMeasure> {
+pub async fn window_measures(document: &NoteSnapshot, camera: &NoteCamera, labels: &NotePlayLabels) -> Vec<WindowMeasure> {
     vec![options::zoom::measure(camera, labels), options::grid_visible::measure(document, labels)]
 }
 
-pub fn engagement(active_utility: &str) -> WindowEngagement {
+pub async fn engagement(active_utility: &str) -> WindowEngagement {
     WindowEngagement {
         session_active: Some(false),
         options: None,
@@ -64,7 +64,7 @@ pub fn engagement(active_utility: &str) -> WindowEngagement {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(document: &NoteSnapshot, cfg: &NoteConfig) -> UiNode {
+pub async fn render(document: &NoteSnapshot, cfg: &NoteConfig) -> UiNode {
     crate::editor::note::modes::edit::windows::composite::render_canvas_scene(document, &cfg.camera, &cfg.active_utility_id, NOTE_PLAY_SURFACE_NAVIGATOR, "navigator")
 }
 //#endregion 🔖️Render
@@ -77,7 +77,7 @@ mod tests {
     use crate::editor::note::NOTE_PLAY_BODY_NAVIGATOR as BODY_NAVIGATOR;
 
     #[test]
-    fn renders_navigator_canvas() {
+    async fn renders_navigator_canvas() {
         let mut app = note_app();
         let json = render_body(&mut app, BODY_NAVIGATOR);
         assert!(json.contains("ink-canvas"));
@@ -85,7 +85,7 @@ mod tests {
     }
 
     #[test]
-    fn definition_declares_the_ink_canvas_surface_and_body_key() {
+    async fn definition_declares_the_ink_canvas_surface_and_body_key() {
         let definition = definition();
         assert_eq!(definition.body_key, NOTE_PLAY_BODY_NAVIGATOR);
         assert!(matches!(definition.surface_kind, SurfaceKind::InkCanvas));

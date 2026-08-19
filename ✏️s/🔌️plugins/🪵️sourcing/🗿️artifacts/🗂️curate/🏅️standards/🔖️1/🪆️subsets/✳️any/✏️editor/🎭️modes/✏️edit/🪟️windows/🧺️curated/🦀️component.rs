@@ -13,7 +13,7 @@ const SOURCING_CURATE_SURFACE_CURATED: &str = "sourcing.curated.table";
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
-pub fn definition() -> WindowKindDefinition {
+pub async fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
         id: SOURCING_CURATE_WINDOW_CURATED.into(),
         label: LocalizedLabel::native("Curated", "Kuratiert"),
@@ -34,7 +34,7 @@ pub fn definition() -> WindowKindDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(document: &CurateSnapshot, labels: &SourcingLabels) -> UiNode {
+pub async fn render(document: &CurateSnapshot, labels: &SourcingLabels) -> UiNode {
     let columns = json!([
         {"id": "name", "label": labels.col_name.as_str()},
         {"id": "availability", "label": labels.col_availability.as_str()},
@@ -82,14 +82,14 @@ mod tests {
     use crate::editor::sourcing::testkit::{new_app, render as render_body};
 
     #[test]
-    fn definition_declares_the_table_surface_and_body_key() {
+    async fn definition_declares_the_table_surface_and_body_key() {
         let def = definition();
         assert_eq!(def.body_key, SOURCING_CURATE_BODY_CURATED);
         assert!(matches!(def.surface_kind, SurfaceKind::Table));
     }
 
     #[test]
-    fn renders_curated_table_scene() {
+    async fn renders_curated_table_scene() {
         let mut app = new_app();
         assert!(render_body(&mut app, SOURCING_CURATE_BODY_CURATED).contains("table"));
     }

@@ -5,7 +5,7 @@ use crate::artifacts::note::schema::mutations::CreateBlock;
 use crate::artifacts::note::NoteSnapshot;
 
 //#region 🔖️Inverse
-pub fn inverse(payload: &DeleteBlocks, base: &NoteSnapshot) -> Vec<NoteMutation> {
+pub async fn inverse(payload: &DeleteBlocks, base: &NoteSnapshot) -> Vec<NoteMutation> {
     // 🩹 Pre-existing bug fixed here (confirmed via `git log --date=iso`: this file was authored
     // 2026-08-12 15:50:51 by an unrelated wave, unrelated to composition — never touched `content`/
     // `paragraphs`). Every `MutationKind::inverse` caller (`protocol::testkit::assert_mutation_inverse_law`

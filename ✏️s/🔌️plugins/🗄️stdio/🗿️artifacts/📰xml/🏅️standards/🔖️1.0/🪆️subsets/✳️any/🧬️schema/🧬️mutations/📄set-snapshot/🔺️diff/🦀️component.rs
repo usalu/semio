@@ -5,7 +5,7 @@ use crate::artifacts::xml::XmlSnapshot;
 
 /// 🔺️ Diff helper for set-snapshot -- the sparse field-by-field `XmlDiff::between(base, next)`,
 /// never a whole-`XmlSnapshot` replace slot.
-pub fn diff(base: &XmlSnapshot, next: &XmlSnapshot) -> protocol::MutationOutcome<XmlDiff> {
+pub async fn diff(base: &XmlSnapshot, next: &XmlSnapshot) -> protocol::MutationOutcome<XmlDiff> {
     if base == next {
         return protocol::MutationOutcome::new(XmlDiff::default()).warn("mutation.no-op", "set-snapshot: new snapshot is identical to the current one");
     }

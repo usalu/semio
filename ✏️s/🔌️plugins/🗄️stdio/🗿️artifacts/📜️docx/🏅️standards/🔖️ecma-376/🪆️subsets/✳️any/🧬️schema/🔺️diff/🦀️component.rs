@@ -45,7 +45,7 @@ pub struct IndexedTripleDiff<D, T> {
 }
 
 impl<D, T> Default for IndexedTripleDiff<D, T> {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self { removed: Vec::new(), modified: Vec::new(), added: Vec::new() }
     }
 }
@@ -78,7 +78,7 @@ pub struct NamedTripleDiff<K, D, T> {
 }
 
 impl<K, D, T> Default for NamedTripleDiff<K, D, T> {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self { removed: Vec::new(), modified: Vec::new(), added: Vec::new() }
     }
 }
@@ -273,7 +273,7 @@ enum DocxBlockLeaf {
 }
 
 impl DocxBlockLeaf {
-    fn into_blocks_diff(self, index: usize) -> DocxBlocksDiff {
+    async fn into_blocks_diff(self, index: usize) -> DocxBlocksDiff {
         match self {
             Self::Modified(diff) => DocxBlocksDiff { modified: vec![IndexModified { index, diff }], ..Default::default() },
             Self::Inserted(block) => DocxBlocksDiff { added: vec![IndexAdded { index, item: block }], ..Default::default() },
@@ -285,8 +285,8 @@ impl DocxBlockLeaf {
 /// 🧭️ Lowers a `leaf` diff targeting the block addressed by `path` into a full `DocxDiff` by
 /// nesting it through `Table -> rows -> cells -> blocks` from the document root down to that
 /// depth. `path.segments == []` addresses `document.body` directly.
-fn wrap_body_diff(path: &DocxBlockPath, leaf: DocxBlockLeaf) -> DocxDiff {
-    fn go(segments: &[DocxPathSegment], index: usize, leaf: DocxBlockLeaf) -> DocxBlocksDiff {
+async fn wrap_body_diff(path: &DocxBlockPath, leaf: DocxBlockLeaf) -> DocxDiff {
+    async fn go(segments: &[DocxPathSegment], index: usize, leaf: DocxBlockLeaf) -> DocxBlocksDiff {
         match segments.split_first() {
             None => leaf.into_blocks_diff(index),
             Some((seg, rest)) => {
@@ -307,7 +307,7 @@ fn wrap_body_diff(path: &DocxBlockPath, leaf: DocxBlockLeaf) -> DocxDiff {
 /// 🧭️ Resolves the block list a path's segments navigate to (the parent list `path.index` slots
 /// into), immutable form. `pub` so the mutations module can look up prior state for its own
 /// handcrafted `diff()`/`inverse()` bodies without duplicating this traversal.
-pub fn resolve_blocks<'a>(body: &'a [DocxBlock], segments: &[DocxPathSegment]) -> Option<&'a [DocxBlock]> {
+pub async fn resolve_blocks<'a>(body: &'a [DocxBlock], segments: &[DocxPathSegment]) -> Option<&'a [DocxBlock]> {
     match segments.split_first() {
         None => Some(body),
         Some((seg, rest)) => {
@@ -323,7 +323,7 @@ pub fn resolve_blocks<'a>(body: &'a [DocxBlock], segments: &[DocxPathSegment]) -
 //#region 🔖️GenericIndexedEngine
 /// 🧮️ Between (positional, per the recipe's index-keyed matching rule): pairwise-compares
 /// `0..min(base,other)` as `modified`, base tail as `removed`, other tail as `added`.
-fn between_indexed<T, D>(base: &[T], other: &[T], diff_item: impl Fn(&T, &T) -> Option<D>) -> Option<IndexedTripleDiff<D, T>>
+async fn between_indexed<T, D>(base: &[T], other: &[T], diff_item: impl Fn(&T, &T) -> Option<D>) -> Option<IndexedTripleDiff<D, T>>
 where
     T: Clone + PartialEq,
 {
@@ -345,7 +345,7 @@ where
     }
 }
 
-fn apply_indexed<T, D>(items: &mut Vec<T>, diff: &IndexedTripleDiff<D, T>, apply_item: impl Fn(&mut T, &D) -> MutationApplyResult<()>) -> MutationApplyResult<()>
+async fn apply_indexed<T, D>(items: &mut Vec<T>, diff: &IndexedTripleDiff<D, T>, apply_item: impl Fn(&mut T, &D) -> MutationApplyResult<()>) -> MutationApplyResult<()>
 where
     T: Clone,
 {
@@ -397,7 +397,7 @@ where
     Ok(())
 }
 
-fn inverse_indexed<T, D>(base_items: &[T], diff: &IndexedTripleDiff<D, T>, inverse_item: impl Fn(&T, &D) -> D) -> IndexedTripleDiff<D, T>
+async fn inverse_indexed<T, D>(base_items: &[T], diff: &IndexedTripleDiff<D, T>, inverse_item: impl Fn(&T, &D) -> D) -> IndexedTripleDiff<D, T>
 where
     T: Clone,
 {
@@ -421,7 +421,7 @@ where
 
 /// 🧮️ Maps a base-side index through a diff's OWN removed/added to the position it ends up at
 /// once that diff has been applied (svg `SvgDiff`'s `transform_index`, generalized).
-fn transform_index<T>(idx: usize, removed: &[usize], added: &[IndexAdded<T>]) -> usize {
+async fn transform_index<T>(idx: usize, removed: &[usize], added: &[IndexAdded<T>]) -> usize {
     let removed_before = removed.iter().filter(|&&r| r < idx).count();
     let pos = idx - removed_before;
     let mut order: Vec<usize> = added.iter().map(|a| a.index).collect();
@@ -442,7 +442,7 @@ enum ItemOrigin {
     Added(usize),
 }
 
-fn simulate_mid_origins<T>(base_len: usize, removed: &[usize], added: &[IndexAdded<T>]) -> Vec<ItemOrigin> {
+async fn simulate_mid_origins<T>(base_len: usize, removed: &[usize], added: &[IndexAdded<T>]) -> Vec<ItemOrigin> {
     let mut mid: Vec<ItemOrigin> = (0..base_len).filter(|i| !removed.contains(i)).map(ItemOrigin::Base).collect();
     let mut order: Vec<(usize, usize)> = added.iter().enumerate().map(|(k, a)| (a.index, k)).collect();
     order.sort_by_key(|(idx, _)| *idx);
@@ -457,7 +457,7 @@ fn simulate_mid_origins<T>(base_len: usize, removed: &[usize], added: &[IndexAdd
 /// generalized): `absorb_item` recursively absorbs two per-field diffs of the SAME item;
 /// `apply_item` patches a `D` onto a `T` (needed when `d2` modifies an item `d1` just added).
 #[allow(clippy::too_many_arguments)]
-fn absorb_indexed<T, D>(d1: IndexedTripleDiff<D, T>, d2: IndexedTripleDiff<D, T>, absorb_item: impl Fn(D, D) -> D, apply_item: impl Fn(&T, &D) -> T) -> IndexedTripleDiff<D, T>
+async fn absorb_indexed<T, D>(d1: IndexedTripleDiff<D, T>, d2: IndexedTripleDiff<D, T>, absorb_item: impl Fn(D, D) -> D, apply_item: impl Fn(&T, &D) -> T) -> IndexedTripleDiff<D, T>
 where
     T: Clone,
     D: Clone,
@@ -536,7 +536,7 @@ where
 //#endregion 🔖️GenericIndexedEngine
 
 //#region 🔖️GenericNamedEngine
-fn between_named<K, T, D>(base: &[T], other: &[T], key_of: impl Fn(&T) -> K, diff_item: impl Fn(&T, &T) -> Option<D>) -> Option<NamedTripleDiff<K, D, T>>
+async fn between_named<K, T, D>(base: &[T], other: &[T], key_of: impl Fn(&T) -> K, diff_item: impl Fn(&T, &T) -> Option<D>) -> Option<NamedTripleDiff<K, D, T>>
 where
     K: PartialEq + Clone,
     T: Clone + PartialEq,
@@ -569,7 +569,7 @@ where
     }
 }
 
-fn apply_named<K, T, D>(items: &mut Vec<T>, diff: &NamedTripleDiff<K, D, T>, key_of: impl Fn(&T) -> K, apply_item: impl Fn(&mut T, &D) -> MutationApplyResult<()>) -> MutationApplyResult<()>
+async fn apply_named<K, T, D>(items: &mut Vec<T>, diff: &NamedTripleDiff<K, D, T>, key_of: impl Fn(&T) -> K, apply_item: impl Fn(&mut T, &D) -> MutationApplyResult<()>) -> MutationApplyResult<()>
 where
     K: PartialEq + Clone,
     T: Clone,
@@ -617,7 +617,7 @@ where
     Ok(())
 }
 
-fn inverse_named<K, T, D>(base_items: &[T], diff: &NamedTripleDiff<K, D, T>, key_of: impl Fn(&T) -> K, inverse_item: impl Fn(&T, &D) -> D) -> NamedTripleDiff<K, D, T>
+async fn inverse_named<K, T, D>(base_items: &[T], diff: &NamedTripleDiff<K, D, T>, key_of: impl Fn(&T) -> K, inverse_item: impl Fn(&T, &D) -> D) -> NamedTripleDiff<K, D, T>
 where
     K: PartialEq + Clone,
     T: Clone,
@@ -641,7 +641,7 @@ where
 /// 🧮️ Name-keyed absorb — identity is the KEY (not position), so no index transport is needed:
 /// a `d2`-removal of a `d1`-added key annihilates the add; a `d2`-modify of a `d1`-added key
 /// patches into the carried payload; everything else composes directly on the shared key space.
-fn absorb_named<K, T, D>(d1: NamedTripleDiff<K, D, T>, d2: NamedTripleDiff<K, D, T>, key_of: impl Fn(&T) -> K, absorb_item: impl Fn(D, D) -> D, apply_item: impl Fn(&mut T, &D)) -> NamedTripleDiff<K, D, T>
+async fn absorb_named<K, T, D>(d1: NamedTripleDiff<K, D, T>, d2: NamedTripleDiff<K, D, T>, key_of: impl Fn(&T) -> K, absorb_item: impl Fn(D, D) -> D, apply_item: impl Fn(&mut T, &D)) -> NamedTripleDiff<K, D, T>
 where
     K: PartialEq + Clone,
     T: Clone,
@@ -684,7 +684,7 @@ where
 //#endregion 🔖️GenericNamedEngine
 
 //#region 🔖️DocumentDiffLogic
-fn diff_block(old: &DocxBlock, new: &DocxBlock) -> Option<DocxBlockDiff> {
+async fn diff_block(old: &DocxBlock, new: &DocxBlock) -> Option<DocxBlockDiff> {
     if old == new {
         return None;
     }
@@ -695,7 +695,7 @@ fn diff_block(old: &DocxBlock, new: &DocxBlock) -> Option<DocxBlockDiff> {
     }
 }
 
-fn diff_paragraph(old: &DocxParagraph, new: &DocxParagraph) -> Option<DocxParagraphDiff> {
+async fn diff_paragraph(old: &DocxParagraph, new: &DocxParagraph) -> Option<DocxParagraphDiff> {
     let runs = between_indexed(&old.runs, &new.runs, diff_run);
     let style = if old.style != new.style { Some(new.style.clone()) } else { None };
     if runs.is_none() && style.is_none() {
@@ -705,7 +705,7 @@ fn diff_paragraph(old: &DocxParagraph, new: &DocxParagraph) -> Option<DocxParagr
     }
 }
 
-fn diff_run(old: &DocxRun, new: &DocxRun) -> Option<DocxRunDiff> {
+async fn diff_run(old: &DocxRun, new: &DocxRun) -> Option<DocxRunDiff> {
     if old == new {
         return None;
     }
@@ -717,7 +717,7 @@ fn diff_run(old: &DocxRun, new: &DocxRun) -> Option<DocxRunDiff> {
     })
 }
 
-fn diff_table(old: &DocxTable, new: &DocxTable) -> Option<DocxTableDiff> {
+async fn diff_table(old: &DocxTable, new: &DocxTable) -> Option<DocxTableDiff> {
     let rows = between_indexed(&old.rows, &new.rows, diff_row);
     if rows.is_none() {
         None
@@ -726,7 +726,7 @@ fn diff_table(old: &DocxTable, new: &DocxTable) -> Option<DocxTableDiff> {
     }
 }
 
-fn diff_row(old: &DocxTableRow, new: &DocxTableRow) -> Option<DocxTableRowDiff> {
+async fn diff_row(old: &DocxTableRow, new: &DocxTableRow) -> Option<DocxTableRowDiff> {
     let cells = between_indexed(&old.cells, &new.cells, diff_cell);
     if cells.is_none() {
         None
@@ -735,7 +735,7 @@ fn diff_row(old: &DocxTableRow, new: &DocxTableRow) -> Option<DocxTableRowDiff> 
     }
 }
 
-fn diff_cell(old: &DocxTableCell, new: &DocxTableCell) -> Option<DocxTableCellDiff> {
+async fn diff_cell(old: &DocxTableCell, new: &DocxTableCell) -> Option<DocxTableCellDiff> {
     let blocks = between_indexed(&old.blocks, &new.blocks, diff_block);
     if blocks.is_none() {
         None
@@ -744,14 +744,14 @@ fn diff_cell(old: &DocxTableCell, new: &DocxTableCell) -> Option<DocxTableCellDi
     }
 }
 
-fn diff_style(old: &DocxStyle, new: &DocxStyle) -> Option<DocxStyleDiff> {
+async fn diff_style(old: &DocxStyle, new: &DocxStyle) -> Option<DocxStyleDiff> {
     if old == new {
         return None;
     }
     Some(DocxStyleDiff { name: (old.name != new.name).then(|| new.name.clone()), based_on: (old.based_on != new.based_on).then(|| new.based_on.clone()) })
 }
 
-fn diff_document(base: &DocxDocument, other: &DocxDocument) -> Option<DocxDocumentDiff> {
+async fn diff_document(base: &DocxDocument, other: &DocxDocument) -> Option<DocxDocumentDiff> {
     let body = between_indexed(&base.body, &other.body, diff_block);
     let styles = between_named(&base.styles, &other.styles, |s| s.id.clone(), diff_style);
     if body.is_none() && styles.is_none() {
@@ -761,7 +761,7 @@ fn diff_document(base: &DocxDocument, other: &DocxDocument) -> Option<DocxDocume
     }
 }
 
-fn apply_block(block: &mut DocxBlock, diff: &DocxBlockDiff) -> MutationApplyResult<()> {
+async fn apply_block(block: &mut DocxBlock, diff: &DocxBlockDiff) -> MutationApplyResult<()> {
     match diff {
         DocxBlockDiff::Replace { block: new } => *block = new.clone(),
         DocxBlockDiff::Paragraph(pd) => {
@@ -787,7 +787,7 @@ fn apply_block(block: &mut DocxBlock, diff: &DocxBlockDiff) -> MutationApplyResu
     Ok(())
 }
 
-fn apply_run(run: &mut DocxRun, diff: &DocxRunDiff) -> MutationApplyResult<()> {
+async fn apply_run(run: &mut DocxRun, diff: &DocxRunDiff) -> MutationApplyResult<()> {
     if let Some(v) = &diff.text {
         run.text = v.clone();
     }
@@ -803,21 +803,21 @@ fn apply_run(run: &mut DocxRun, diff: &DocxRunDiff) -> MutationApplyResult<()> {
     Ok(())
 }
 
-fn apply_row(row: &mut DocxTableRow, diff: &DocxTableRowDiff) -> MutationApplyResult<()> {
+async fn apply_row(row: &mut DocxTableRow, diff: &DocxTableRowDiff) -> MutationApplyResult<()> {
     if let Some(cd) = &diff.cells {
         apply_indexed(&mut row.cells, cd, apply_cell).map_err(|error| error.under(["cells"]))?;
     }
     Ok(())
 }
 
-fn apply_cell(cell: &mut DocxTableCell, diff: &DocxTableCellDiff) -> MutationApplyResult<()> {
+async fn apply_cell(cell: &mut DocxTableCell, diff: &DocxTableCellDiff) -> MutationApplyResult<()> {
     if let Some(bd) = &diff.blocks {
         apply_indexed(&mut cell.blocks, bd, apply_block).map_err(|error| error.under(["blocks"]))?;
     }
     Ok(())
 }
 
-fn apply_style(style: &mut DocxStyle, diff: &DocxStyleDiff) -> MutationApplyResult<()> {
+async fn apply_style(style: &mut DocxStyle, diff: &DocxStyleDiff) -> MutationApplyResult<()> {
     if let Some(v) = &diff.name {
         style.name = v.clone();
     }
@@ -827,7 +827,7 @@ fn apply_style(style: &mut DocxStyle, diff: &DocxStyleDiff) -> MutationApplyResu
     Ok(())
 }
 
-fn apply_document_diff(doc: &mut DocxDocument, diff: &DocxDocumentDiff) -> MutationApplyResult<()> {
+async fn apply_document_diff(doc: &mut DocxDocument, diff: &DocxDocumentDiff) -> MutationApplyResult<()> {
     if let Some(bd) = &diff.body {
         apply_indexed(&mut doc.body, bd, apply_block).map_err(|error| error.under(["body"]))?;
     }
@@ -837,31 +837,31 @@ fn apply_document_diff(doc: &mut DocxDocument, diff: &DocxDocumentDiff) -> Mutat
     Ok(())
 }
 
-fn block_with_diff_applied(block: &DocxBlock, diff: &DocxBlockDiff) -> DocxBlock {
+async fn block_with_diff_applied(block: &DocxBlock, diff: &DocxBlockDiff) -> DocxBlock {
     let mut out = block.clone();
     apply_block_for_absorb(&mut out, diff);
     out
 }
 
-fn run_with_diff_applied(run: &DocxRun, diff: &DocxRunDiff) -> DocxRun {
+async fn run_with_diff_applied(run: &DocxRun, diff: &DocxRunDiff) -> DocxRun {
     let mut out = run.clone();
     apply_run_for_absorb(&mut out, diff);
     out
 }
 
-fn row_with_diff_applied(row: &DocxTableRow, diff: &DocxTableRowDiff) -> DocxTableRow {
+async fn row_with_diff_applied(row: &DocxTableRow, diff: &DocxTableRowDiff) -> DocxTableRow {
     let mut out = row.clone();
     apply_row_for_absorb(&mut out, diff);
     out
 }
 
-fn cell_with_diff_applied(cell: &DocxTableCell, diff: &DocxTableCellDiff) -> DocxTableCell {
+async fn cell_with_diff_applied(cell: &DocxTableCell, diff: &DocxTableCellDiff) -> DocxTableCell {
     let mut out = cell.clone();
     apply_cell_for_absorb(&mut out, diff);
     out
 }
 
-fn apply_indexed_for_absorb<T, D>(items: &mut Vec<T>, diff: &IndexedTripleDiff<D, T>, apply_item: impl Fn(&mut T, &D))
+async fn apply_indexed_for_absorb<T, D>(items: &mut Vec<T>, diff: &IndexedTripleDiff<D, T>, apply_item: impl Fn(&mut T, &D))
 where
     T: Clone,
 {
@@ -880,7 +880,7 @@ where
     }
 }
 
-fn apply_block_for_absorb(block: &mut DocxBlock, diff: &DocxBlockDiff) {
+async fn apply_block_for_absorb(block: &mut DocxBlock, diff: &DocxBlockDiff) {
     match diff {
         DocxBlockDiff::Replace { block: new } => *block = new.clone(),
         DocxBlockDiff::Paragraph(pd) => {
@@ -903,7 +903,7 @@ fn apply_block_for_absorb(block: &mut DocxBlock, diff: &DocxBlockDiff) {
     }
 }
 
-fn apply_run_for_absorb(run: &mut DocxRun, diff: &DocxRunDiff) {
+async fn apply_run_for_absorb(run: &mut DocxRun, diff: &DocxRunDiff) {
     if let Some(value) = &diff.text {
         run.text = value.clone();
     }
@@ -918,19 +918,19 @@ fn apply_run_for_absorb(run: &mut DocxRun, diff: &DocxRunDiff) {
     }
 }
 
-fn apply_row_for_absorb(row: &mut DocxTableRow, diff: &DocxTableRowDiff) {
+async fn apply_row_for_absorb(row: &mut DocxTableRow, diff: &DocxTableRowDiff) {
     if let Some(cells) = &diff.cells {
         apply_indexed_for_absorb(&mut row.cells, cells, apply_cell_for_absorb);
     }
 }
 
-fn apply_cell_for_absorb(cell: &mut DocxTableCell, diff: &DocxTableCellDiff) {
+async fn apply_cell_for_absorb(cell: &mut DocxTableCell, diff: &DocxTableCellDiff) {
     if let Some(blocks) = &diff.blocks {
         apply_indexed_for_absorb(&mut cell.blocks, blocks, apply_block_for_absorb);
     }
 }
 
-fn apply_style_for_absorb(style: &mut DocxStyle, diff: &DocxStyleDiff) {
+async fn apply_style_for_absorb(style: &mut DocxStyle, diff: &DocxStyleDiff) {
     if let Some(value) = &diff.name {
         style.name = value.clone();
     }
@@ -939,7 +939,7 @@ fn apply_style_for_absorb(style: &mut DocxStyle, diff: &DocxStyleDiff) {
     }
 }
 
-fn inverse_block(base: &DocxBlock, diff: &DocxBlockDiff) -> DocxBlockDiff {
+async fn inverse_block(base: &DocxBlock, diff: &DocxBlockDiff) -> DocxBlockDiff {
     match diff {
         DocxBlockDiff::Replace { .. } => DocxBlockDiff::Replace { block: base.clone() },
         DocxBlockDiff::Paragraph(pd) => {
@@ -953,27 +953,27 @@ fn inverse_block(base: &DocxBlock, diff: &DocxBlockDiff) -> DocxBlockDiff {
     }
 }
 
-fn inverse_run(base: &DocxRun, diff: &DocxRunDiff) -> DocxRunDiff {
+async fn inverse_run(base: &DocxRun, diff: &DocxRunDiff) -> DocxRunDiff {
     DocxRunDiff { text: diff.text.as_ref().map(|_| base.text.clone()), bold: diff.bold.map(|_| base.bold), italic: diff.italic.map(|_| base.italic), underline: diff.underline.map(|_| base.underline) }
 }
 
-fn inverse_row(base: &DocxTableRow, diff: &DocxTableRowDiff) -> DocxTableRowDiff {
+async fn inverse_row(base: &DocxTableRow, diff: &DocxTableRowDiff) -> DocxTableRowDiff {
     DocxTableRowDiff { cells: diff.cells.as_ref().map(|cd| inverse_indexed(&base.cells, cd, inverse_cell)) }
 }
 
-fn inverse_cell(base: &DocxTableCell, diff: &DocxTableCellDiff) -> DocxTableCellDiff {
+async fn inverse_cell(base: &DocxTableCell, diff: &DocxTableCellDiff) -> DocxTableCellDiff {
     DocxTableCellDiff { blocks: diff.blocks.as_ref().map(|bd| inverse_indexed(&base.blocks, bd, inverse_block)) }
 }
 
-fn inverse_style(base: &DocxStyle, diff: &DocxStyleDiff) -> DocxStyleDiff {
+async fn inverse_style(base: &DocxStyle, diff: &DocxStyleDiff) -> DocxStyleDiff {
     DocxStyleDiff { name: diff.name.as_ref().map(|_| base.name.clone()), based_on: diff.based_on.as_ref().map(|_| base.based_on.clone()) }
 }
 
-fn inverse_document_diff(base: &DocxDocument, diff: &DocxDocumentDiff) -> DocxDocumentDiff {
+async fn inverse_document_diff(base: &DocxDocument, diff: &DocxDocumentDiff) -> DocxDocumentDiff {
     DocxDocumentDiff { body: diff.body.as_ref().map(|bd| inverse_indexed(&base.body, bd, inverse_block)), styles: diff.styles.as_ref().map(|sd| inverse_named(&base.styles, sd, |s| s.id.clone(), inverse_style)) }
 }
 
-fn absorb_block_diff(a: DocxBlockDiff, b: DocxBlockDiff) -> DocxBlockDiff {
+async fn absorb_block_diff(a: DocxBlockDiff, b: DocxBlockDiff) -> DocxBlockDiff {
     match (a, b) {
         (_, DocxBlockDiff::Replace { block }) => DocxBlockDiff::Replace { block },
         (DocxBlockDiff::Replace { block }, b) => DocxBlockDiff::Replace { block: block_with_diff_applied(&block, &b) },
@@ -983,7 +983,7 @@ fn absorb_block_diff(a: DocxBlockDiff, b: DocxBlockDiff) -> DocxBlockDiff {
     }
 }
 
-fn absorb_paragraph_diff(mut a: DocxParagraphDiff, b: DocxParagraphDiff) -> DocxParagraphDiff {
+async fn absorb_paragraph_diff(mut a: DocxParagraphDiff, b: DocxParagraphDiff) -> DocxParagraphDiff {
     if b.style.is_some() {
         a.style = b.style;
     }
@@ -995,11 +995,11 @@ fn absorb_paragraph_diff(mut a: DocxParagraphDiff, b: DocxParagraphDiff) -> Docx
     a
 }
 
-fn absorb_run_diff(a: DocxRunDiff, b: DocxRunDiff) -> DocxRunDiff {
+async fn absorb_run_diff(a: DocxRunDiff, b: DocxRunDiff) -> DocxRunDiff {
     DocxRunDiff { text: b.text.or(a.text), bold: b.bold.or(a.bold), italic: b.italic.or(a.italic), underline: b.underline.or(a.underline) }
 }
 
-fn absorb_table_diff(mut a: DocxTableDiff, b: DocxTableDiff) -> DocxTableDiff {
+async fn absorb_table_diff(mut a: DocxTableDiff, b: DocxTableDiff) -> DocxTableDiff {
     a.rows = match (a.rows.take(), b.rows) {
         (None, x) => x,
         (x, None) => x,
@@ -1008,7 +1008,7 @@ fn absorb_table_diff(mut a: DocxTableDiff, b: DocxTableDiff) -> DocxTableDiff {
     a
 }
 
-fn absorb_row_diff(mut a: DocxTableRowDiff, b: DocxTableRowDiff) -> DocxTableRowDiff {
+async fn absorb_row_diff(mut a: DocxTableRowDiff, b: DocxTableRowDiff) -> DocxTableRowDiff {
     a.cells = match (a.cells.take(), b.cells) {
         (None, x) => x,
         (x, None) => x,
@@ -1017,7 +1017,7 @@ fn absorb_row_diff(mut a: DocxTableRowDiff, b: DocxTableRowDiff) -> DocxTableRow
     a
 }
 
-fn absorb_cell_diff(mut a: DocxTableCellDiff, b: DocxTableCellDiff) -> DocxTableCellDiff {
+async fn absorb_cell_diff(mut a: DocxTableCellDiff, b: DocxTableCellDiff) -> DocxTableCellDiff {
     a.blocks = match (a.blocks.take(), b.blocks) {
         (None, x) => x,
         (x, None) => x,
@@ -1026,7 +1026,7 @@ fn absorb_cell_diff(mut a: DocxTableCellDiff, b: DocxTableCellDiff) -> DocxTable
     a
 }
 
-fn absorb_style_diff(mut a: DocxStyleDiff, b: DocxStyleDiff) -> DocxStyleDiff {
+async fn absorb_style_diff(mut a: DocxStyleDiff, b: DocxStyleDiff) -> DocxStyleDiff {
     if b.name.is_some() {
         a.name = b.name;
     }
@@ -1036,7 +1036,7 @@ fn absorb_style_diff(mut a: DocxStyleDiff, b: DocxStyleDiff) -> DocxStyleDiff {
     a
 }
 
-fn absorb_document_diff(a: DocxDocumentDiff, b: DocxDocumentDiff) -> DocxDocumentDiff {
+async fn absorb_document_diff(a: DocxDocumentDiff, b: DocxDocumentDiff) -> DocxDocumentDiff {
     DocxDocumentDiff {
         body: match (a.body, b.body) {
             (None, x) => x,
@@ -1053,11 +1053,11 @@ fn absorb_document_diff(a: DocxDocumentDiff, b: DocxDocumentDiff) -> DocxDocumen
 //#endregion 🔖️DocumentDiffLogic
 
 //#region 🔖️OpcDiffLogic
-fn diff_ct_entries(old: &[(String, String)], new: &[(String, String)]) -> Option<DocxOpcCtEntriesDiff> {
+async fn diff_ct_entries(old: &[(String, String)], new: &[(String, String)]) -> Option<DocxOpcCtEntriesDiff> {
     between_named(old, new, |(k, _)| k.clone(), |(_, ov), (_, nv)| (ov != nv).then(|| nv.clone()))
 }
 
-fn apply_ct_entries(entries: &mut Vec<(String, String)>, diff: &DocxOpcCtEntriesDiff) -> MutationApplyResult<()> {
+async fn apply_ct_entries(entries: &mut Vec<(String, String)>, diff: &DocxOpcCtEntriesDiff) -> MutationApplyResult<()> {
     apply_named(
         entries,
         diff,
@@ -1069,17 +1069,17 @@ fn apply_ct_entries(entries: &mut Vec<(String, String)>, diff: &DocxOpcCtEntries
     )
 }
 
-fn inverse_ct_entries(base: &[(String, String)], diff: &DocxOpcCtEntriesDiff) -> DocxOpcCtEntriesDiff {
+async fn inverse_ct_entries(base: &[(String, String)], diff: &DocxOpcCtEntriesDiff) -> DocxOpcCtEntriesDiff {
     inverse_named(base, diff, |(k, _)| k.clone(), |(_, v), _| v.clone())
 }
 
-fn absorb_ct_entries(a: DocxOpcCtEntriesDiff, b: DocxOpcCtEntriesDiff) -> DocxOpcCtEntriesDiff {
+async fn absorb_ct_entries(a: DocxOpcCtEntriesDiff, b: DocxOpcCtEntriesDiff) -> DocxOpcCtEntriesDiff {
     // 🏷️ `D = String` here is already a whole-value replace (LWW) -- absorbing two such diffs on
     // the SAME key is just "the later one wins", i.e. `b`.
     absorb_named(a, b, |(k, _)| k.clone(), |_av, bv| bv, |(_, v), nv| *v = nv.clone())
 }
 
-fn diff_content_types(old: &OpcContentTypes, new: &OpcContentTypes) -> Option<DocxOpcContentTypesDiff> {
+async fn diff_content_types(old: &OpcContentTypes, new: &OpcContentTypes) -> Option<DocxOpcContentTypesDiff> {
     let defaults = diff_ct_entries(&old.defaults, &new.defaults);
     let overrides = diff_ct_entries(&old.overrides, &new.overrides);
     if defaults.is_none() && overrides.is_none() {
@@ -1089,14 +1089,14 @@ fn diff_content_types(old: &OpcContentTypes, new: &OpcContentTypes) -> Option<Do
     }
 }
 
-fn diff_part(old: &OpcPart, new: &OpcPart) -> Option<DocxOpcPartDiff> {
+async fn diff_part(old: &OpcPart, new: &OpcPart) -> Option<DocxOpcPartDiff> {
     if old == new {
         return None;
     }
     Some(DocxOpcPartDiff { content_type: (old.content_type != new.content_type).then(|| new.content_type.clone()), bytes: (old.bytes != new.bytes).then(|| new.bytes.clone()) })
 }
 
-fn apply_part(part: &mut OpcPart, diff: &DocxOpcPartDiff) {
+async fn apply_part(part: &mut OpcPart, diff: &DocxOpcPartDiff) {
     if let Some(v) = &diff.content_type {
         part.content_type = v.clone();
     }
@@ -1105,17 +1105,17 @@ fn apply_part(part: &mut OpcPart, diff: &DocxOpcPartDiff) {
     }
 }
 
-fn part_with_diff_applied(part: &OpcPart, diff: &DocxOpcPartDiff) -> OpcPart {
+async fn part_with_diff_applied(part: &OpcPart, diff: &DocxOpcPartDiff) -> OpcPart {
     let mut out = part.clone();
     apply_part(&mut out, diff);
     out
 }
 
-fn inverse_part(base: &OpcPart, diff: &DocxOpcPartDiff) -> DocxOpcPartDiff {
+async fn inverse_part(base: &OpcPart, diff: &DocxOpcPartDiff) -> DocxOpcPartDiff {
     DocxOpcPartDiff { content_type: diff.content_type.as_ref().map(|_| base.content_type.clone()), bytes: diff.bytes.as_ref().map(|_| base.bytes.clone()) }
 }
 
-fn absorb_part_diff(mut a: DocxOpcPartDiff, b: DocxOpcPartDiff) -> DocxOpcPartDiff {
+async fn absorb_part_diff(mut a: DocxOpcPartDiff, b: DocxOpcPartDiff) -> DocxOpcPartDiff {
     if b.content_type.is_some() {
         a.content_type = b.content_type;
     }
@@ -1125,18 +1125,18 @@ fn absorb_part_diff(mut a: DocxOpcPartDiff, b: DocxOpcPartDiff) -> DocxOpcPartDi
     a
 }
 
-fn diff_parts(old: &[OpcPart], new: &[OpcPart]) -> Option<DocxOpcPartsDiff> {
+async fn diff_parts(old: &[OpcPart], new: &[OpcPart]) -> Option<DocxOpcPartsDiff> {
     between_named(old, new, |p| p.path.clone(), diff_part)
 }
 
-fn diff_rel(old: &OpcRelationship, new: &OpcRelationship) -> Option<DocxOpcRelDiff> {
+async fn diff_rel(old: &OpcRelationship, new: &OpcRelationship) -> Option<DocxOpcRelDiff> {
     if old == new {
         return None;
     }
     Some(DocxOpcRelDiff { rel_type: (old.rel_type != new.rel_type).then(|| new.rel_type.clone()), target: (old.target != new.target).then(|| new.target.clone()), target_mode: (old.target_mode != new.target_mode).then_some(new.target_mode) })
 }
 
-fn apply_rel(rel: &mut OpcRelationship, diff: &DocxOpcRelDiff) {
+async fn apply_rel(rel: &mut OpcRelationship, diff: &DocxOpcRelDiff) {
     if let Some(v) = &diff.rel_type {
         rel.rel_type = v.clone();
     }
@@ -1148,11 +1148,11 @@ fn apply_rel(rel: &mut OpcRelationship, diff: &DocxOpcRelDiff) {
     }
 }
 
-fn inverse_rel(base: &OpcRelationship, diff: &DocxOpcRelDiff) -> DocxOpcRelDiff {
+async fn inverse_rel(base: &OpcRelationship, diff: &DocxOpcRelDiff) -> DocxOpcRelDiff {
     DocxOpcRelDiff { rel_type: diff.rel_type.as_ref().map(|_| base.rel_type.clone()), target: diff.target.as_ref().map(|_| base.target.clone()), target_mode: diff.target_mode.map(|_| base.target_mode) }
 }
 
-fn absorb_rel_diff(mut a: DocxOpcRelDiff, b: DocxOpcRelDiff) -> DocxOpcRelDiff {
+async fn absorb_rel_diff(mut a: DocxOpcRelDiff, b: DocxOpcRelDiff) -> DocxOpcRelDiff {
     if b.rel_type.is_some() {
         a.rel_type = b.rel_type;
     }
@@ -1165,11 +1165,11 @@ fn absorb_rel_diff(mut a: DocxOpcRelDiff, b: DocxOpcRelDiff) -> DocxOpcRelDiff {
     a
 }
 
-fn diff_rel_list(old: &[OpcRelationship], new: &[OpcRelationship]) -> Option<DocxOpcRelListDiff> {
+async fn diff_rel_list(old: &[OpcRelationship], new: &[OpcRelationship]) -> Option<DocxOpcRelListDiff> {
     between_named(old, new, |r| r.id.clone(), diff_rel)
 }
 
-fn apply_rel_list(list: &mut Vec<OpcRelationship>, diff: &DocxOpcRelListDiff) -> MutationApplyResult<()> {
+async fn apply_rel_list(list: &mut Vec<OpcRelationship>, diff: &DocxOpcRelListDiff) -> MutationApplyResult<()> {
     apply_named(
         list,
         diff,
@@ -1181,7 +1181,7 @@ fn apply_rel_list(list: &mut Vec<OpcRelationship>, diff: &DocxOpcRelListDiff) ->
     )
 }
 
-fn rel_list_with_diff_applied(list: &[OpcRelationship], diff: &DocxOpcRelListDiff) -> Vec<OpcRelationship> {
+async fn rel_list_with_diff_applied(list: &[OpcRelationship], diff: &DocxOpcRelListDiff) -> Vec<OpcRelationship> {
     let mut out = list.to_vec();
     out.retain(|relationship| !diff.removed.contains(&relationship.id));
     for modified in &diff.modified {
@@ -1193,15 +1193,15 @@ fn rel_list_with_diff_applied(list: &[OpcRelationship], diff: &DocxOpcRelListDif
     out
 }
 
-fn inverse_rel_list(base: &[OpcRelationship], diff: &DocxOpcRelListDiff) -> DocxOpcRelListDiff {
+async fn inverse_rel_list(base: &[OpcRelationship], diff: &DocxOpcRelListDiff) -> DocxOpcRelListDiff {
     inverse_named(base, diff, |r| r.id.clone(), inverse_rel)
 }
 
-fn absorb_rel_list_diff(a: DocxOpcRelListDiff, b: DocxOpcRelListDiff) -> DocxOpcRelListDiff {
+async fn absorb_rel_list_diff(a: DocxOpcRelListDiff, b: DocxOpcRelListDiff) -> DocxOpcRelListDiff {
     absorb_named(a, b, |r| r.id.clone(), absorb_rel_diff, apply_rel)
 }
 
-fn diff_relationships(old: &HashMap<String, Vec<OpcRelationship>>, new: &HashMap<String, Vec<OpcRelationship>>) -> Option<DocxOpcRelationshipsDiff> {
+async fn diff_relationships(old: &HashMap<String, Vec<OpcRelationship>>, new: &HashMap<String, Vec<OpcRelationship>>) -> Option<DocxOpcRelationshipsDiff> {
     let mut removed = Vec::new();
     let mut modified = Vec::new();
     for (owner, list) in old {
@@ -1227,7 +1227,7 @@ fn diff_relationships(old: &HashMap<String, Vec<OpcRelationship>>, new: &HashMap
     }
 }
 
-fn apply_relationships(rels: &mut HashMap<String, Vec<OpcRelationship>>, diff: &DocxOpcRelationshipsDiff) -> MutationApplyResult<()> {
+async fn apply_relationships(rels: &mut HashMap<String, Vec<OpcRelationship>>, diff: &DocxOpcRelationshipsDiff) -> MutationApplyResult<()> {
     let mut added = std::collections::HashSet::new();
     for owner in &diff.removed {
         if !rels.contains_key(owner) {
@@ -1263,7 +1263,7 @@ fn apply_relationships(rels: &mut HashMap<String, Vec<OpcRelationship>>, diff: &
     Ok(())
 }
 
-fn inverse_relationships(base: &HashMap<String, Vec<OpcRelationship>>, diff: &DocxOpcRelationshipsDiff) -> DocxOpcRelationshipsDiff {
+async fn inverse_relationships(base: &HashMap<String, Vec<OpcRelationship>>, diff: &DocxOpcRelationshipsDiff) -> DocxOpcRelationshipsDiff {
     let removed: Vec<String> = diff.added.iter().map(|(owner, _)| owner.clone()).collect();
     let mut modified = Vec::new();
     for m in &diff.modified {
@@ -1280,11 +1280,11 @@ fn inverse_relationships(base: &HashMap<String, Vec<OpcRelationship>>, diff: &Do
     DocxOpcRelationshipsDiff { removed, modified, added }
 }
 
-fn absorb_relationships(d1: DocxOpcRelationshipsDiff, d2: DocxOpcRelationshipsDiff) -> DocxOpcRelationshipsDiff {
+async fn absorb_relationships(d1: DocxOpcRelationshipsDiff, d2: DocxOpcRelationshipsDiff) -> DocxOpcRelationshipsDiff {
     absorb_named(d1, d2, |(owner, _)| owner.clone(), absorb_rel_list_diff, |(_, list), diff| *list = rel_list_with_diff_applied(list, diff))
 }
 
-fn diff_opc(base: &OpcPackage, other: &OpcPackage) -> Option<DocxOpcDiff> {
+async fn diff_opc(base: &OpcPackage, other: &OpcPackage) -> Option<DocxOpcDiff> {
     let content_types = diff_content_types(&base.content_types, &other.content_types);
     let parts = diff_parts(&base.parts, &other.parts);
     let relationships = diff_relationships(&base.relationships, &other.relationships);
@@ -1295,7 +1295,7 @@ fn diff_opc(base: &OpcPackage, other: &OpcPackage) -> Option<DocxOpcDiff> {
     }
 }
 
-fn apply_opc_diff(opc: &mut OpcPackage, diff: &DocxOpcDiff) -> MutationApplyResult<()> {
+async fn apply_opc_diff(opc: &mut OpcPackage, diff: &DocxOpcDiff) -> MutationApplyResult<()> {
     if let Some(d) = &diff.content_types {
         if let Some(dd) = &d.defaults {
             apply_ct_entries(&mut opc.content_types.defaults, dd).map_err(|error| error.under(["contentTypes", "defaults"]))?;
@@ -1322,7 +1322,7 @@ fn apply_opc_diff(opc: &mut OpcPackage, diff: &DocxOpcDiff) -> MutationApplyResu
     Ok(())
 }
 
-fn inverse_opc_diff(base: &OpcPackage, diff: &DocxOpcDiff) -> DocxOpcDiff {
+async fn inverse_opc_diff(base: &OpcPackage, diff: &DocxOpcDiff) -> DocxOpcDiff {
     DocxOpcDiff {
         content_types: diff
             .content_types
@@ -1333,7 +1333,7 @@ fn inverse_opc_diff(base: &OpcPackage, diff: &DocxOpcDiff) -> DocxOpcDiff {
     }
 }
 
-fn absorb_opc_diff(a: DocxOpcDiff, b: DocxOpcDiff) -> DocxOpcDiff {
+async fn absorb_opc_diff(a: DocxOpcDiff, b: DocxOpcDiff) -> DocxOpcDiff {
     DocxOpcDiff {
         content_types: match (a.content_types, b.content_types) {
             (None, x) => x,
@@ -1367,7 +1367,7 @@ fn absorb_opc_diff(a: DocxOpcDiff, b: DocxOpcDiff) -> DocxOpcDiff {
 
 //#region 🔖️Apply
 impl MutationDiff<DocxSnapshot> for DocxDiff {
-    fn apply(&self, base: &DocxSnapshot) -> MutationApplyResult<DocxSnapshot> {
+    async fn apply(&self, base: &DocxSnapshot) -> MutationApplyResult<DocxSnapshot> {
         let mut next = base.clone();
         if let Some(d) = &self.opc {
             apply_opc_diff(&mut next.opc, d).map_err(|error| error.under(["opc"]))?;
@@ -1378,7 +1378,7 @@ impl MutationDiff<DocxSnapshot> for DocxDiff {
         Ok(next)
     }
 
-    fn absorb(&mut self, other: Self) {
+    async fn absorb(&mut self, other: Self) {
         self.opc = match (self.opc.take(), other.opc) {
             (None, x) => x,
             (x, None) => x,
@@ -1395,15 +1395,15 @@ impl MutationDiff<DocxSnapshot> for DocxDiff {
 
 //#region 🔖️DiffAlgebra
 impl DiffAlgebra<DocxSnapshot> for DocxDiff {
-    fn inverse(&self, base: &DocxSnapshot) -> Self {
+    async fn inverse(&self, base: &DocxSnapshot) -> Self {
         DocxDiff { opc: self.opc.as_ref().map(|d| inverse_opc_diff(&base.opc, d)), document: self.document.as_ref().map(|d| inverse_document_diff(&base.document, d)) }
     }
 
-    fn between(base: &DocxSnapshot, other: &DocxSnapshot) -> Self {
+    async fn between(base: &DocxSnapshot, other: &DocxSnapshot) -> Self {
         DocxDiff { opc: diff_opc(&base.opc, &other.opc), document: diff_document(&base.document, &other.document) }
     }
 
-    fn is_empty(&self) -> bool {
+    async fn is_empty(&self) -> bool {
         self.opc.is_none() && self.document.is_none()
     }
 }
@@ -1412,25 +1412,25 @@ impl DiffAlgebra<DocxSnapshot> for DocxDiff {
 //#region 🔖️SetSnapshot
 /// 🧩 Builds the sparse field-by-field diff for a `SetSnapshot` mutation. No `snapshot:
 /// Option<DocxSnapshot>` full-replace slot -- this IS `DocxDiff::between`.
-pub fn diff_set_snapshot(base: &DocxSnapshot, next: &DocxSnapshot) -> DocxDiff {
+pub async fn diff_set_snapshot(base: &DocxSnapshot, next: &DocxSnapshot) -> DocxDiff {
     DocxDiff::between(base, next)
 }
 
 /// 🧩 Builds the diff for inserting `block` at `path` (`path.index` = insertion index, FINAL
 /// state).
-pub fn diff_insert_block(path: &DocxBlockPath, block: DocxBlock) -> DocxDiff {
+pub async fn diff_insert_block(path: &DocxBlockPath, block: DocxBlock) -> DocxDiff {
     wrap_body_diff(path, DocxBlockLeaf::Inserted(block))
 }
 
 /// 🧩 Builds the diff for removing the block at `path` (`path.index` = BASE-state index).
-pub fn diff_remove_block(path: &DocxBlockPath) -> DocxDiff {
+pub async fn diff_remove_block(path: &DocxBlockPath) -> DocxDiff {
     wrap_body_diff(path, DocxBlockLeaf::Removed)
 }
 
 /// 🧩 Builds the diff for replacing the block at `path` (BASE-state index) with `new_block`'s full
 /// content, via a real structural comparison against `old_block` (never full-replace unless the
 /// block KIND actually changed).
-pub fn diff_set_block_content(path: &DocxBlockPath, old_block: &DocxBlock, new_block: &DocxBlock) -> DocxDiff {
+pub async fn diff_set_block_content(path: &DocxBlockPath, old_block: &DocxBlock, new_block: &DocxBlock) -> DocxDiff {
     match diff_block(old_block, new_block) {
         None => DocxDiff::default(),
         Some(d) => wrap_body_diff(path, DocxBlockLeaf::Modified(d)),
@@ -1438,7 +1438,7 @@ pub fn diff_set_block_content(path: &DocxBlockPath, old_block: &DocxBlock, new_b
 }
 
 /// 🧩 Builds the diff for editing one run's text within the paragraph at `path`.
-pub fn diff_set_run_text(document: &DocxDocument, path: &DocxBlockPath, run_index: usize, text: &str) -> DocxDiff {
+pub async fn diff_set_run_text(document: &DocxDocument, path: &DocxBlockPath, run_index: usize, text: &str) -> DocxDiff {
     let Some(blocks) = resolve_blocks(&document.body, &path.segments) else { return DocxDiff::default() };
     let Some(DocxBlock::Paragraph(p)) = blocks.get(path.index) else { return DocxDiff::default() };
     let Some(run) = p.runs.get(run_index) else { return DocxDiff::default() };
@@ -1453,7 +1453,7 @@ pub fn diff_set_run_text(document: &DocxDocument, path: &DocxBlockPath, run_inde
 
 /// 🧩 Builds the diff for setting one run's bold/italic/underline flags within the paragraph at
 /// `path`.
-pub fn diff_set_run_formatting(document: &DocxDocument, path: &DocxBlockPath, run_index: usize, bold: bool, italic: bool, underline: bool) -> DocxDiff {
+pub async fn diff_set_run_formatting(document: &DocxDocument, path: &DocxBlockPath, run_index: usize, bold: bool, italic: bool, underline: bool) -> DocxDiff {
     let Some(blocks) = resolve_blocks(&document.body, &path.segments) else { return DocxDiff::default() };
     let Some(DocxBlock::Paragraph(p)) = blocks.get(path.index) else { return DocxDiff::default() };
     let Some(run) = p.runs.get(run_index) else { return DocxDiff::default() };
@@ -1467,29 +1467,29 @@ pub fn diff_set_run_formatting(document: &DocxDocument, path: &DocxBlockPath, ru
 }
 
 /// 🧩 Builds the diff for inserting a style.
-pub fn diff_insert_style(style: DocxStyle) -> DocxDiff {
+pub async fn diff_insert_style(style: DocxStyle) -> DocxDiff {
     DocxDiff { opc: None, document: Some(DocxDocumentDiff { body: None, styles: Some(DocxStylesDiff { added: vec![style], ..Default::default() }) }) }
 }
 
 /// 🧩 Builds the diff for removing a style by id.
-pub fn diff_remove_style(id: &str) -> DocxDiff {
+pub async fn diff_remove_style(id: &str) -> DocxDiff {
     DocxDiff { opc: None, document: Some(DocxDocumentDiff { body: None, styles: Some(DocxStylesDiff { removed: vec![id.to_string()], ..Default::default() }) }) }
 }
 
 /// 🧩 Builds the diff for setting a style's name.
-pub fn diff_set_style_name(id: &str, name: &str) -> DocxDiff {
+pub async fn diff_set_style_name(id: &str, name: &str) -> DocxDiff {
     let sd = DocxStyleDiff { name: Some(name.to_string()), based_on: None };
     DocxDiff { opc: None, document: Some(DocxDocumentDiff { body: None, styles: Some(DocxStylesDiff { modified: vec![NamedModified { key: id.to_string(), diff: sd }], ..Default::default() }) }) }
 }
 
 /// 🧩 Builds the diff for setting (or clearing, `based_on: None`) a style's `based_on`.
-pub fn diff_set_style_based_on(id: &str, based_on: Option<String>) -> DocxDiff {
+pub async fn diff_set_style_based_on(id: &str, based_on: Option<String>) -> DocxDiff {
     let sd = DocxStyleDiff { name: None, based_on: Some(based_on) };
     DocxDiff { opc: None, document: Some(DocxDocumentDiff { body: None, styles: Some(DocxStylesDiff { modified: vec![NamedModified { key: id.to_string(), diff: sd }], ..Default::default() }) }) }
 }
 
 /// 🧩 Builds the diff for setting a raw OPC part (content this typed layer doesn't cover).
-pub fn diff_set_part(opc: &OpcPackage, path: &str, content_type: &str, bytes: Vec<u8>) -> DocxDiff {
+pub async fn diff_set_part(opc: &OpcPackage, path: &str, content_type: &str, bytes: Vec<u8>) -> DocxDiff {
     let p = path.trim_start_matches('/').to_string();
     match opc.parts.iter().find(|part| part.path == p) {
         Some(existing) => {
@@ -1506,7 +1506,7 @@ pub fn diff_set_part(opc: &OpcPackage, path: &str, content_type: &str, bytes: Ve
 }
 
 /// 🧩 Builds the diff for removing a raw OPC part by path.
-pub fn diff_remove_part(path: &str) -> DocxDiff {
+pub async fn diff_remove_part(path: &str) -> DocxDiff {
     let p = path.trim_start_matches('/').to_string();
     DocxDiff { opc: Some(DocxOpcDiff { content_types: None, parts: Some(DocxOpcPartsDiff { removed: vec![p], ..Default::default() }), relationships: None }), document: None }
 }
@@ -1526,40 +1526,40 @@ pub fn diff_remove_part(path: &str) -> DocxDiff {
 /// row/cell/`styles`/OPC-parts/OPC-relationships instantiation, instead of five-plus bespoke
 /// per-collection encoders.
 //#region 🔖️Primitives
-pub(crate) fn hex_encode(bytes: &[u8]) -> String {
+pub(crate) async fn hex_encode(bytes: &[u8]) -> String {
     bytes.iter().map(|b| format!("{b:02x}")).collect()
 }
-pub(crate) fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
+pub(crate) async fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
     if s.len() % 2 != 0 {
         return Err(format!("odd hex length: {s:?}"));
     }
     (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()
 }
-pub(crate) fn enc_str(s: &str) -> String {
+pub(crate) async fn enc_str(s: &str) -> String {
     hex_encode(s.as_bytes())
 }
-pub(crate) fn dec_str(s: &str) -> Result<String, String> {
+pub(crate) async fn dec_str(s: &str) -> Result<String, String> {
     String::from_utf8(hex_decode(s)?).map_err(|e| e.to_string())
 }
-pub(crate) fn enc_bool(b: &bool) -> String {
+pub(crate) async fn enc_bool(b: &bool) -> String {
     if *b {
         "1".to_string()
     } else {
         "0".to_string()
     }
 }
-pub(crate) fn dec_bool(s: &str) -> Result<bool, String> {
+pub(crate) async fn dec_bool(s: &str) -> Result<bool, String> {
     match s {
         "1" => Ok(true),
         "0" => Ok(false),
         other => Err(format!("bool: bad value {other:?}")),
     }
 }
-pub(crate) fn parse_usize(s: &str) -> Result<usize, String> {
+pub(crate) async fn parse_usize(s: &str) -> Result<usize, String> {
     s.parse().map_err(|e: std::num::ParseIntError| e.to_string())
 }
 
-pub(crate) fn split_top_level(s: &str, sep: char) -> Vec<&str> {
+pub(crate) async fn split_top_level(s: &str, sep: char) -> Vec<&str> {
     if s.is_empty() {
         return Vec::new();
     }
@@ -1580,16 +1580,16 @@ pub(crate) fn split_top_level(s: &str, sep: char) -> Vec<&str> {
     out.push(&s[start..]);
     out
 }
-pub(crate) fn strip_brackets(s: &str) -> Result<&str, String> {
+pub(crate) async fn strip_brackets(s: &str) -> Result<&str, String> {
     s.strip_prefix('[').and_then(|s| s.strip_suffix(']')).ok_or_else(|| format!("expected [...], got {s:?}"))
 }
-pub(crate) fn encode_option<T>(opt: &Option<T>, enc: impl Fn(&T) -> String) -> String {
+pub(crate) async fn encode_option<T>(opt: &Option<T>, enc: impl Fn(&T) -> String) -> String {
     match opt {
         None => "[0]".to_string(),
         Some(v) => format!("[1,{}]", enc(v)),
     }
 }
-pub(crate) fn decode_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Option<T>, String> {
+pub(crate) async fn decode_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Option<T>, String> {
     let inner = strip_brackets(s)?;
     match split_top_level(inner, ',').as_slice() {
         ["0"] => Ok(None),
@@ -1597,10 +1597,10 @@ pub(crate) fn decode_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>)
         other => Err(format!("option decode: bad shape {other:?}")),
     }
 }
-pub(crate) fn enc_list<T>(items: &[T], enc: impl Fn(&T) -> String) -> String {
+pub(crate) async fn enc_list<T>(items: &[T], enc: impl Fn(&T) -> String) -> String {
     format!("[{}]", items.iter().map(|i| enc(i)).collect::<Vec<_>>().join(","))
 }
-pub(crate) fn dec_list<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Vec<T>, String> {
+pub(crate) async fn dec_list<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Vec<T>, String> {
     split_top_level(strip_brackets(s)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec).collect()
 }
 //#endregion 🔖️Primitives
@@ -1611,15 +1611,15 @@ pub(crate) fn dec_list<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> R
 /// hand-rolled codecs use (own copy per the no-shared-helpers-module convention). Needed here
 /// because every `extra_*_properties: Vec<XmlNode>` raw-retention field (on `DocxRun`/
 /// `DocxParagraph`/`DocxTableCell`/`DocxTableRow`/`DocxTable`) carries this type verbatim.
-fn enc_attr(a: &XmlAttr) -> String {
+async fn enc_attr(a: &XmlAttr) -> String {
     format!("[{},{}]", enc_str(&a.name), enc_str(&a.value))
 }
-fn dec_attr(s: &str) -> Result<XmlAttr, String> {
+async fn dec_attr(s: &str) -> Result<XmlAttr, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [name, value] = parts.as_slice() else { return Err(format!("attr: expected 2 fields, got {}", parts.len())) };
     Ok(XmlAttr { name: dec_str(name)?, value: dec_str(value)? })
 }
-pub(crate) fn enc_xml_node(n: &XmlNode) -> String {
+pub(crate) async fn enc_xml_node(n: &XmlNode) -> String {
     match n {
         XmlNode::Element { name, attrs, children } => {
             let attrs = attrs.iter().map(enc_attr).collect::<Vec<_>>().join(",");
@@ -1632,7 +1632,7 @@ pub(crate) fn enc_xml_node(n: &XmlNode) -> String {
         XmlNode::ProcessingInstruction { target, data } => format!("P[{},{}]", enc_str(target), enc_str(data)),
     }
 }
-pub(crate) fn dec_xml_node(s: &str) -> Result<XmlNode, String> {
+pub(crate) async fn dec_xml_node(s: &str) -> Result<XmlNode, String> {
     let (tag, rest) = s.split_at(1);
     let inner = strip_brackets(rest)?;
     match tag {
@@ -1661,13 +1661,13 @@ pub(crate) fn dec_xml_node(s: &str) -> Result<XmlNode, String> {
 /// `SetSnapshot`'s mutation-side codec (see `mutations/component.rs`) carry whole. `pub(crate)` so
 /// the mutations file reuses them rather than re-deriving its own copies (same intra-artifact reuse
 /// pattern `SvgDiff`/`SvgMutation` established).
-pub(crate) fn enc_target_mode(m: &OpcTargetMode) -> String {
+pub(crate) async fn enc_target_mode(m: &OpcTargetMode) -> String {
     match m {
         OpcTargetMode::Internal => "0".to_string(),
         OpcTargetMode::External => "1".to_string(),
     }
 }
-pub(crate) fn dec_target_mode(s: &str) -> Result<OpcTargetMode, String> {
+pub(crate) async fn dec_target_mode(s: &str) -> Result<OpcTargetMode, String> {
     match s {
         "0" => Ok(OpcTargetMode::Internal),
         "1" => Ok(OpcTargetMode::External),
@@ -1675,50 +1675,50 @@ pub(crate) fn dec_target_mode(s: &str) -> Result<OpcTargetMode, String> {
     }
 }
 
-fn enc_run(r: &DocxRun) -> String {
+async fn enc_run(r: &DocxRun) -> String {
     format!("[{},{},{},{},{}]", enc_str(&r.text), enc_bool(&r.bold), enc_bool(&r.italic), enc_bool(&r.underline), enc_list(&r.extra_run_properties, enc_xml_node))
 }
-fn dec_run(s: &str) -> Result<DocxRun, String> {
+async fn dec_run(s: &str) -> Result<DocxRun, String> {
     let inner = strip_brackets(s)?;
     let parts = split_top_level(inner, ',');
     let [text, bold, italic, underline, extra] = parts.as_slice() else { return Err(format!("run: expected 5 fields, got {}", parts.len())) };
     Ok(DocxRun { text: dec_str(text)?, bold: dec_bool(bold)?, italic: dec_bool(italic)?, underline: dec_bool(underline)?, extra_run_properties: dec_list(extra, dec_xml_node)? })
 }
 
-fn enc_paragraph(p: &DocxParagraph) -> String {
+async fn enc_paragraph(p: &DocxParagraph) -> String {
     format!("[{},{},{}]", enc_list(&p.runs, enc_run), encode_option(&p.style, |v| enc_str(v)), enc_list(&p.extra_paragraph_properties, enc_xml_node))
 }
-fn dec_paragraph(s: &str) -> Result<DocxParagraph, String> {
+async fn dec_paragraph(s: &str) -> Result<DocxParagraph, String> {
     let inner = strip_brackets(s)?;
     let parts = split_top_level(inner, ',');
     let [runs, style, extra] = parts.as_slice() else { return Err(format!("paragraph: expected 3 fields, got {}", parts.len())) };
     Ok(DocxParagraph { runs: dec_list(runs, dec_run)?, style: decode_option(style, dec_str)?, extra_paragraph_properties: dec_list(extra, dec_xml_node)? })
 }
 
-fn enc_cell(c: &DocxTableCell) -> String {
+async fn enc_cell(c: &DocxTableCell) -> String {
     format!("[{},{}]", enc_list(&c.blocks, enc_block), enc_list(&c.extra_cell_properties, enc_xml_node))
 }
-fn dec_cell(s: &str) -> Result<DocxTableCell, String> {
+async fn dec_cell(s: &str) -> Result<DocxTableCell, String> {
     let inner = strip_brackets(s)?;
     let parts = split_top_level(inner, ',');
     let [blocks, extra] = parts.as_slice() else { return Err(format!("cell: expected 2 fields, got {}", parts.len())) };
     Ok(DocxTableCell { blocks: dec_list(blocks, dec_block)?, extra_cell_properties: dec_list(extra, dec_xml_node)? })
 }
 
-fn enc_row(r: &DocxTableRow) -> String {
+async fn enc_row(r: &DocxTableRow) -> String {
     format!("[{},{}]", enc_list(&r.cells, enc_cell), enc_list(&r.extra_row_properties, enc_xml_node))
 }
-fn dec_row(s: &str) -> Result<DocxTableRow, String> {
+async fn dec_row(s: &str) -> Result<DocxTableRow, String> {
     let inner = strip_brackets(s)?;
     let parts = split_top_level(inner, ',');
     let [cells, extra] = parts.as_slice() else { return Err(format!("row: expected 2 fields, got {}", parts.len())) };
     Ok(DocxTableRow { cells: dec_list(cells, dec_cell)?, extra_row_properties: dec_list(extra, dec_xml_node)? })
 }
 
-fn enc_table(t: &DocxTable) -> String {
+async fn enc_table(t: &DocxTable) -> String {
     format!("[{},{}]", enc_list(&t.rows, enc_row), enc_list(&t.extra_table_properties, enc_xml_node))
 }
-fn dec_table(s: &str) -> Result<DocxTable, String> {
+async fn dec_table(s: &str) -> Result<DocxTable, String> {
     let inner = strip_brackets(s)?;
     let parts = split_top_level(inner, ',');
     let [rows, extra] = parts.as_slice() else { return Err(format!("table: expected 2 fields, got {}", parts.len())) };
@@ -1726,13 +1726,13 @@ fn dec_table(s: &str) -> Result<DocxTable, String> {
 }
 
 /// 🌳️ `P[paragraph]` / `T[table]` -- `DocxBlock`'s two variants, tag-prefixed like `enc_xml_node`.
-pub(crate) fn enc_block(b: &DocxBlock) -> String {
+pub(crate) async fn enc_block(b: &DocxBlock) -> String {
     match b {
         DocxBlock::Paragraph(p) => format!("P{}", enc_paragraph(p)),
         DocxBlock::Table(t) => format!("T{}", enc_table(t)),
     }
 }
-pub(crate) fn dec_block(s: &str) -> Result<DocxBlock, String> {
+pub(crate) async fn dec_block(s: &str) -> Result<DocxBlock, String> {
     let (tag, rest) = s.split_at(1);
     match tag {
         "P" => Ok(DocxBlock::Paragraph(dec_paragraph(rest)?)),
@@ -1741,40 +1741,40 @@ pub(crate) fn dec_block(s: &str) -> Result<DocxBlock, String> {
     }
 }
 
-pub(crate) fn enc_style(s: &DocxStyle) -> String {
+pub(crate) async fn enc_style(s: &DocxStyle) -> String {
     format!("[{},{},{}]", enc_str(&s.id), enc_str(&s.name), encode_option(&s.based_on, |v| enc_str(v)))
 }
-pub(crate) fn dec_style(s: &str) -> Result<DocxStyle, String> {
+pub(crate) async fn dec_style(s: &str) -> Result<DocxStyle, String> {
     let inner = strip_brackets(s)?;
     let parts = split_top_level(inner, ',');
     let [id, name, based_on] = parts.as_slice() else { return Err(format!("style: expected 3 fields, got {}", parts.len())) };
     Ok(DocxStyle { id: dec_str(id)?, name: dec_str(name)?, based_on: decode_option(based_on, dec_str)? })
 }
 
-pub(crate) fn enc_opc_part(p: &OpcPart) -> String {
+pub(crate) async fn enc_opc_part(p: &OpcPart) -> String {
     format!("[{},{},{}]", enc_str(&p.path), enc_str(&p.content_type), hex_encode(&p.bytes))
 }
-pub(crate) fn dec_opc_part(s: &str) -> Result<OpcPart, String> {
+pub(crate) async fn dec_opc_part(s: &str) -> Result<OpcPart, String> {
     let inner = strip_brackets(s)?;
     let parts = split_top_level(inner, ',');
     let [path, content_type, bytes] = parts.as_slice() else { return Err(format!("opc part: expected 3 fields, got {}", parts.len())) };
     Ok(OpcPart { path: dec_str(path)?, content_type: dec_str(content_type)?, bytes: hex_decode(bytes)? })
 }
 
-pub(crate) fn enc_rel(r: &OpcRelationship) -> String {
+pub(crate) async fn enc_rel(r: &OpcRelationship) -> String {
     format!("[{},{},{},{}]", enc_str(&r.id), enc_str(&r.rel_type), enc_str(&r.target), enc_target_mode(&r.target_mode))
 }
-pub(crate) fn dec_rel(s: &str) -> Result<OpcRelationship, String> {
+pub(crate) async fn dec_rel(s: &str) -> Result<OpcRelationship, String> {
     let inner = strip_brackets(s)?;
     let parts = split_top_level(inner, ',');
     let [id, rel_type, target, target_mode] = parts.as_slice() else { return Err(format!("relationship: expected 4 fields, got {}", parts.len())) };
     Ok(OpcRelationship { id: dec_str(id)?, rel_type: dec_str(rel_type)?, target: dec_str(target)?, target_mode: dec_target_mode(target_mode)? })
 }
 
-pub(crate) fn enc_ct_entry(e: &(String, String)) -> String {
+pub(crate) async fn enc_ct_entry(e: &(String, String)) -> String {
     format!("[{},{}]", enc_str(&e.0), enc_str(&e.1))
 }
-pub(crate) fn dec_ct_entry(s: &str) -> Result<(String, String), String> {
+pub(crate) async fn dec_ct_entry(s: &str) -> Result<(String, String), String> {
     let inner = strip_brackets(s)?;
     let parts = split_top_level(inner, ',');
     let [k, v] = parts.as_slice() else { return Err(format!("ct entry: expected 2 fields, got {}", parts.len())) };
@@ -1782,10 +1782,10 @@ pub(crate) fn dec_ct_entry(s: &str) -> Result<(String, String), String> {
 }
 
 /// 🗺️ One `relationships` map entry (owner path -> that owner's relationship list).
-pub(crate) fn enc_rel_owner_entry(e: &(String, Vec<OpcRelationship>)) -> String {
+pub(crate) async fn enc_rel_owner_entry(e: &(String, Vec<OpcRelationship>)) -> String {
     format!("[{},{}]", enc_str(&e.0), enc_list(&e.1, enc_rel))
 }
-pub(crate) fn dec_rel_owner_entry(s: &str) -> Result<(String, Vec<OpcRelationship>), String> {
+pub(crate) async fn dec_rel_owner_entry(s: &str) -> Result<(String, Vec<OpcRelationship>), String> {
     let inner = strip_brackets(s)?;
     let parts = split_top_level(inner, ',');
     let [owner, list] = parts.as_slice() else { return Err(format!("rel owner entry: expected 2 fields, got {}", parts.len())) };
@@ -1797,13 +1797,13 @@ pub(crate) fn dec_rel_owner_entry(s: &str) -> Result<(String, Vec<OpcRelationshi
 /// 🌳️ `[removed];[modified];[added]` -- generic over `IndexedTripleDiff<D,T>`'s own `D`/`T`, reused
 /// for every index-keyed collection (`body`/`runs`/table rows/cells) instead of one bespoke
 /// encoder per collection.
-fn enc_indexed_triple<D, T>(diff: &IndexedTripleDiff<D, T>, enc_d: impl Fn(&D) -> String, enc_t: impl Fn(&T) -> String) -> String {
+async fn enc_indexed_triple<D, T>(diff: &IndexedTripleDiff<D, T>, enc_d: impl Fn(&D) -> String, enc_t: impl Fn(&T) -> String) -> String {
     let removed = diff.removed.iter().map(|i| i.to_string()).collect::<Vec<_>>().join(",");
     let modified = diff.modified.iter().map(|m| format!("{}:{}", m.index, enc_d(&m.diff))).collect::<Vec<_>>().join(",");
     let added = diff.added.iter().map(|a| format!("{}:{}", a.index, enc_t(&a.item))).collect::<Vec<_>>().join(",");
     format!("[{removed}];[{modified}];[{added}]")
 }
-fn dec_indexed_triple<D, T>(body: &str, dec_d: impl Fn(&str) -> Result<D, String>, dec_t: impl Fn(&str) -> Result<T, String>) -> Result<IndexedTripleDiff<D, T>, String> {
+async fn dec_indexed_triple<D, T>(body: &str, dec_d: impl Fn(&str) -> Result<D, String>, dec_t: impl Fn(&str) -> Result<T, String>) -> Result<IndexedTripleDiff<D, T>, String> {
     let three = split_top_level(body, ';');
     let [removed_s, modified_s, added_s] = three.as_slice() else { return Err(format!("indexed triple: expected 3 sections, got {}", three.len())) };
     let removed = split_top_level(strip_brackets(removed_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(parse_usize).collect::<Result<Vec<_>, String>>()?;
@@ -1829,13 +1829,13 @@ fn dec_indexed_triple<D, T>(body: &str, dec_d: impl Fn(&str) -> Result<D, String
 /// 🏷️ `[removed];[modified];[added]` -- generic over `NamedTripleDiff<K,D,T>`'s own `K`/`D`/`T`,
 /// reused for `styles` and every OPC-layer name-keyed collection (content-type entries, parts,
 /// relationship lists, relationships-by-owner).
-fn enc_named_triple<K, D, T>(diff: &NamedTripleDiff<K, D, T>, enc_k: impl Fn(&K) -> String, enc_d: impl Fn(&D) -> String, enc_t: impl Fn(&T) -> String) -> String {
+async fn enc_named_triple<K, D, T>(diff: &NamedTripleDiff<K, D, T>, enc_k: impl Fn(&K) -> String, enc_d: impl Fn(&D) -> String, enc_t: impl Fn(&T) -> String) -> String {
     let removed = diff.removed.iter().map(|k| enc_k(k)).collect::<Vec<_>>().join(",");
     let modified = diff.modified.iter().map(|m| format!("{}:{}", enc_k(&m.key), enc_d(&m.diff))).collect::<Vec<_>>().join(",");
     let added = diff.added.iter().map(|t| enc_t(t)).collect::<Vec<_>>().join(",");
     format!("[{removed}];[{modified}];[{added}]")
 }
-fn dec_named_triple<K, D, T>(body: &str, dec_k: impl Fn(&str) -> Result<K, String>, dec_d: impl Fn(&str) -> Result<D, String>, dec_t: impl Fn(&str) -> Result<T, String>) -> Result<NamedTripleDiff<K, D, T>, String> {
+async fn dec_named_triple<K, D, T>(body: &str, dec_k: impl Fn(&str) -> Result<K, String>, dec_d: impl Fn(&str) -> Result<D, String>, dec_t: impl Fn(&str) -> Result<T, String>) -> Result<NamedTripleDiff<K, D, T>, String> {
     let three = split_top_level(body, ';');
     let [removed_s, modified_s, added_s] = three.as_slice() else { return Err(format!("named triple: expected 3 sections, got {}", three.len())) };
     let removed = split_top_level(strip_brackets(removed_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(|s| dec_k(s)).collect::<Result<Vec<_>, String>>()?;
@@ -1853,89 +1853,89 @@ fn dec_named_triple<K, D, T>(body: &str, dec_k: impl Fn(&str) -> Result<K, Strin
 //#endregion 🔖️GenericTripleCodecs
 
 //#region 🔖️DiffValueCodecs
-fn enc_runs_diff(d: &DocxRunsDiff) -> String {
+async fn enc_runs_diff(d: &DocxRunsDiff) -> String {
     enc_indexed_triple(d, enc_run_diff, enc_run)
 }
-fn dec_runs_diff(s: &str) -> Result<DocxRunsDiff, String> {
+async fn dec_runs_diff(s: &str) -> Result<DocxRunsDiff, String> {
     dec_indexed_triple(s, dec_run_diff, dec_run)
 }
 
-fn enc_blocks_diff(d: &DocxBlocksDiff) -> String {
+async fn enc_blocks_diff(d: &DocxBlocksDiff) -> String {
     enc_indexed_triple(d, enc_block_diff, enc_block)
 }
-fn dec_blocks_diff(s: &str) -> Result<DocxBlocksDiff, String> {
+async fn dec_blocks_diff(s: &str) -> Result<DocxBlocksDiff, String> {
     dec_indexed_triple(s, dec_block_diff, dec_block)
 }
 
-fn enc_table_rows_diff(d: &DocxTableRowsDiff) -> String {
+async fn enc_table_rows_diff(d: &DocxTableRowsDiff) -> String {
     enc_indexed_triple(d, enc_table_row_diff, enc_row)
 }
-fn dec_table_rows_diff(s: &str) -> Result<DocxTableRowsDiff, String> {
+async fn dec_table_rows_diff(s: &str) -> Result<DocxTableRowsDiff, String> {
     dec_indexed_triple(s, dec_table_row_diff, dec_row)
 }
 
-fn enc_table_cells_diff(d: &DocxTableCellsDiff) -> String {
+async fn enc_table_cells_diff(d: &DocxTableCellsDiff) -> String {
     enc_indexed_triple(d, enc_table_cell_diff, enc_cell)
 }
-fn dec_table_cells_diff(s: &str) -> Result<DocxTableCellsDiff, String> {
+async fn dec_table_cells_diff(s: &str) -> Result<DocxTableCellsDiff, String> {
     dec_indexed_triple(s, dec_table_cell_diff, dec_cell)
 }
 
-fn enc_styles_diff(d: &DocxStylesDiff) -> String {
+async fn enc_styles_diff(d: &DocxStylesDiff) -> String {
     enc_named_triple(d, |k| enc_str(k), enc_style_diff, enc_style)
 }
-fn dec_styles_diff(s: &str) -> Result<DocxStylesDiff, String> {
+async fn dec_styles_diff(s: &str) -> Result<DocxStylesDiff, String> {
     dec_named_triple(s, dec_str, dec_style_diff, dec_style)
 }
 
-fn enc_run_diff(d: &DocxRunDiff) -> String {
+async fn enc_run_diff(d: &DocxRunDiff) -> String {
     format!("[{},{},{},{}]", encode_option(&d.text, |v| enc_str(v)), encode_option(&d.bold, enc_bool), encode_option(&d.italic, enc_bool), encode_option(&d.underline, enc_bool))
 }
-fn dec_run_diff(s: &str) -> Result<DocxRunDiff, String> {
+async fn dec_run_diff(s: &str) -> Result<DocxRunDiff, String> {
     let inner = strip_brackets(s)?;
     let parts = split_top_level(inner, ',');
     let [text, bold, italic, underline] = parts.as_slice() else { return Err(format!("run diff: expected 4 fields, got {}", parts.len())) };
     Ok(DocxRunDiff { text: decode_option(text, dec_str)?, bold: decode_option(bold, dec_bool)?, italic: decode_option(italic, dec_bool)?, underline: decode_option(underline, dec_bool)? })
 }
 
-fn enc_paragraph_diff(pd: &DocxParagraphDiff) -> String {
+async fn enc_paragraph_diff(pd: &DocxParagraphDiff) -> String {
     format!("[{},{}]", encode_option(&pd.runs, enc_runs_diff), encode_option(&pd.style, |inner: &Option<String>| encode_option(inner, |v| enc_str(v))))
 }
-fn dec_paragraph_diff(s: &str) -> Result<DocxParagraphDiff, String> {
+async fn dec_paragraph_diff(s: &str) -> Result<DocxParagraphDiff, String> {
     let inner = strip_brackets(s)?;
     let parts = split_top_level(inner, ',');
     let [runs, style] = parts.as_slice() else { return Err(format!("paragraph diff: expected 2 fields, got {}", parts.len())) };
     Ok(DocxParagraphDiff { runs: decode_option(runs, dec_runs_diff)?, style: decode_option(style, |s| decode_option(s, dec_str))? })
 }
 
-fn enc_table_diff(d: &DocxTableDiff) -> String {
+async fn enc_table_diff(d: &DocxTableDiff) -> String {
     format!("[{}]", encode_option(&d.rows, enc_table_rows_diff))
 }
-fn dec_table_diff(s: &str) -> Result<DocxTableDiff, String> {
+async fn dec_table_diff(s: &str) -> Result<DocxTableDiff, String> {
     let inner = strip_brackets(s)?;
     Ok(DocxTableDiff { rows: decode_option(inner, dec_table_rows_diff)? })
 }
 
-fn enc_table_row_diff(d: &DocxTableRowDiff) -> String {
+async fn enc_table_row_diff(d: &DocxTableRowDiff) -> String {
     format!("[{}]", encode_option(&d.cells, enc_table_cells_diff))
 }
-fn dec_table_row_diff(s: &str) -> Result<DocxTableRowDiff, String> {
+async fn dec_table_row_diff(s: &str) -> Result<DocxTableRowDiff, String> {
     let inner = strip_brackets(s)?;
     Ok(DocxTableRowDiff { cells: decode_option(inner, dec_table_cells_diff)? })
 }
 
-fn enc_table_cell_diff(d: &DocxTableCellDiff) -> String {
+async fn enc_table_cell_diff(d: &DocxTableCellDiff) -> String {
     format!("[{}]", encode_option(&d.blocks, enc_blocks_diff))
 }
-fn dec_table_cell_diff(s: &str) -> Result<DocxTableCellDiff, String> {
+async fn dec_table_cell_diff(s: &str) -> Result<DocxTableCellDiff, String> {
     let inner = strip_brackets(s)?;
     Ok(DocxTableCellDiff { blocks: decode_option(inner, dec_blocks_diff)? })
 }
 
-fn enc_style_diff(d: &DocxStyleDiff) -> String {
+async fn enc_style_diff(d: &DocxStyleDiff) -> String {
     format!("[{},{}]", encode_option(&d.name, |v| enc_str(v)), encode_option(&d.based_on, |inner: &Option<String>| encode_option(inner, |v| enc_str(v))))
 }
-fn dec_style_diff(s: &str) -> Result<DocxStyleDiff, String> {
+async fn dec_style_diff(s: &str) -> Result<DocxStyleDiff, String> {
     let inner = strip_brackets(s)?;
     let parts = split_top_level(inner, ',');
     let [name, based_on] = parts.as_slice() else { return Err(format!("style diff: expected 2 fields, got {}", parts.len())) };
@@ -1943,14 +1943,14 @@ fn dec_style_diff(s: &str) -> Result<DocxStyleDiff, String> {
 }
 
 /// 🌳️ `P[paragraph diff]` / `T[table diff]` / `R[block]` (wholesale replace, node-KIND changed).
-fn enc_block_diff(d: &DocxBlockDiff) -> String {
+async fn enc_block_diff(d: &DocxBlockDiff) -> String {
     match d {
         DocxBlockDiff::Paragraph(pd) => format!("P{}", enc_paragraph_diff(pd)),
         DocxBlockDiff::Table(td) => format!("T{}", enc_table_diff(td)),
         DocxBlockDiff::Replace { block } => format!("R[{}]", enc_block(block)),
     }
 }
-fn dec_block_diff(s: &str) -> Result<DocxBlockDiff, String> {
+async fn dec_block_diff(s: &str) -> Result<DocxBlockDiff, String> {
     let (tag, rest) = s.split_at(1);
     match tag {
         "P" => Ok(DocxBlockDiff::Paragraph(dec_paragraph_diff(rest)?)),
@@ -1960,78 +1960,78 @@ fn dec_block_diff(s: &str) -> Result<DocxBlockDiff, String> {
     }
 }
 
-fn enc_ct_entries_diff(d: &DocxOpcCtEntriesDiff) -> String {
+async fn enc_ct_entries_diff(d: &DocxOpcCtEntriesDiff) -> String {
     enc_named_triple(d, |k| enc_str(k), |v: &String| enc_str(v), enc_ct_entry)
 }
-fn dec_ct_entries_diff(s: &str) -> Result<DocxOpcCtEntriesDiff, String> {
+async fn dec_ct_entries_diff(s: &str) -> Result<DocxOpcCtEntriesDiff, String> {
     dec_named_triple(s, dec_str, dec_str, dec_ct_entry)
 }
 
-fn enc_parts_diff(d: &DocxOpcPartsDiff) -> String {
+async fn enc_parts_diff(d: &DocxOpcPartsDiff) -> String {
     enc_named_triple(d, |k| enc_str(k), enc_opc_part_diff, enc_opc_part)
 }
-fn dec_parts_diff(s: &str) -> Result<DocxOpcPartsDiff, String> {
+async fn dec_parts_diff(s: &str) -> Result<DocxOpcPartsDiff, String> {
     dec_named_triple(s, dec_str, dec_opc_part_diff, dec_opc_part)
 }
 
-fn enc_rel_list_diff(d: &DocxOpcRelListDiff) -> String {
+async fn enc_rel_list_diff(d: &DocxOpcRelListDiff) -> String {
     enc_named_triple(d, |k| enc_str(k), enc_rel_diff, enc_rel)
 }
-fn dec_rel_list_diff(s: &str) -> Result<DocxOpcRelListDiff, String> {
+async fn dec_rel_list_diff(s: &str) -> Result<DocxOpcRelListDiff, String> {
     dec_named_triple(s, dec_str, dec_rel_diff, dec_rel)
 }
 
-fn enc_relationships_diff(d: &DocxOpcRelationshipsDiff) -> String {
+async fn enc_relationships_diff(d: &DocxOpcRelationshipsDiff) -> String {
     enc_named_triple(d, |k| enc_str(k), enc_rel_list_diff, enc_rel_owner_entry)
 }
-fn dec_relationships_diff(s: &str) -> Result<DocxOpcRelationshipsDiff, String> {
+async fn dec_relationships_diff(s: &str) -> Result<DocxOpcRelationshipsDiff, String> {
     dec_named_triple(s, dec_str, dec_rel_list_diff, dec_rel_owner_entry)
 }
 
-fn enc_opc_part_diff(d: &DocxOpcPartDiff) -> String {
+async fn enc_opc_part_diff(d: &DocxOpcPartDiff) -> String {
     format!("[{},{}]", encode_option(&d.content_type, |v| enc_str(v)), encode_option(&d.bytes, |v: &Vec<u8>| hex_encode(v)))
 }
-fn dec_opc_part_diff(s: &str) -> Result<DocxOpcPartDiff, String> {
+async fn dec_opc_part_diff(s: &str) -> Result<DocxOpcPartDiff, String> {
     let inner = strip_brackets(s)?;
     let parts = split_top_level(inner, ',');
     let [ct, bytes] = parts.as_slice() else { return Err(format!("opc part diff: expected 2 fields, got {}", parts.len())) };
     Ok(DocxOpcPartDiff { content_type: decode_option(ct, dec_str)?, bytes: decode_option(bytes, hex_decode)? })
 }
 
-fn enc_rel_diff(d: &DocxOpcRelDiff) -> String {
+async fn enc_rel_diff(d: &DocxOpcRelDiff) -> String {
     format!("[{},{},{}]", encode_option(&d.rel_type, |v| enc_str(v)), encode_option(&d.target, |v| enc_str(v)), encode_option(&d.target_mode, enc_target_mode))
 }
-fn dec_rel_diff(s: &str) -> Result<DocxOpcRelDiff, String> {
+async fn dec_rel_diff(s: &str) -> Result<DocxOpcRelDiff, String> {
     let inner = strip_brackets(s)?;
     let parts = split_top_level(inner, ',');
     let [rel_type, target, target_mode] = parts.as_slice() else { return Err(format!("rel diff: expected 3 fields, got {}", parts.len())) };
     Ok(DocxOpcRelDiff { rel_type: decode_option(rel_type, dec_str)?, target: decode_option(target, dec_str)?, target_mode: decode_option(target_mode, dec_target_mode)? })
 }
 
-fn enc_content_types_diff(d: &DocxOpcContentTypesDiff) -> String {
+async fn enc_content_types_diff(d: &DocxOpcContentTypesDiff) -> String {
     format!("[{},{}]", encode_option(&d.defaults, enc_ct_entries_diff), encode_option(&d.overrides, enc_ct_entries_diff))
 }
-fn dec_content_types_diff(s: &str) -> Result<DocxOpcContentTypesDiff, String> {
+async fn dec_content_types_diff(s: &str) -> Result<DocxOpcContentTypesDiff, String> {
     let inner = strip_brackets(s)?;
     let parts = split_top_level(inner, ',');
     let [defaults, overrides] = parts.as_slice() else { return Err(format!("content types diff: expected 2 fields, got {}", parts.len())) };
     Ok(DocxOpcContentTypesDiff { defaults: decode_option(defaults, dec_ct_entries_diff)?, overrides: decode_option(overrides, dec_ct_entries_diff)? })
 }
 
-fn enc_opc_diff(d: &DocxOpcDiff) -> String {
+async fn enc_opc_diff(d: &DocxOpcDiff) -> String {
     format!("[{},{},{}]", encode_option(&d.content_types, enc_content_types_diff), encode_option(&d.parts, enc_parts_diff), encode_option(&d.relationships, enc_relationships_diff))
 }
-fn dec_opc_diff(s: &str) -> Result<DocxOpcDiff, String> {
+async fn dec_opc_diff(s: &str) -> Result<DocxOpcDiff, String> {
     let inner = strip_brackets(s)?;
     let parts = split_top_level(inner, ',');
     let [ct, p, rel] = parts.as_slice() else { return Err(format!("opc diff: expected 3 fields, got {}", parts.len())) };
     Ok(DocxOpcDiff { content_types: decode_option(ct, dec_content_types_diff)?, parts: decode_option(p, dec_parts_diff)?, relationships: decode_option(rel, dec_relationships_diff)? })
 }
 
-fn enc_document_diff(d: &DocxDocumentDiff) -> String {
+async fn enc_document_diff(d: &DocxDocumentDiff) -> String {
     format!("[{},{}]", encode_option(&d.body, enc_blocks_diff), encode_option(&d.styles, enc_styles_diff))
 }
-fn dec_document_diff(s: &str) -> Result<DocxDocumentDiff, String> {
+async fn dec_document_diff(s: &str) -> Result<DocxDocumentDiff, String> {
     let inner = strip_brackets(s)?;
     let parts = split_top_level(inner, ',');
     let [body, styles] = parts.as_slice() else { return Err(format!("document diff: expected 2 fields, got {}", parts.len())) };
@@ -2051,18 +2051,18 @@ fn dec_document_diff(s: &str) -> Result<DocxDocumentDiff, String> {
 /// per-artifact hand-roll convention (no shared "hand-roll helpers" module exists yet, see this
 /// file's own `HandcraftedDiffCodec` doc comment).
 //#region 🔖️BinaryPrimitives
-pub(crate) fn write_bytes_lp(out: &mut Vec<u8>, bytes: &[u8]) {
+pub(crate) async fn write_bytes_lp(out: &mut Vec<u8>, bytes: &[u8]) {
     store::pack_rt::write_varint_u64(out, bytes.len() as u64);
     out.extend_from_slice(bytes);
 }
-pub(crate) fn read_bytes_lp(reader: &mut store::ByteReader<'_>) -> Result<Vec<u8>, String> {
+pub(crate) async fn read_bytes_lp(reader: &mut store::ByteReader<'_>) -> Result<Vec<u8>, String> {
     let len = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
     Ok(reader.read_bytes(len).map_err(|e| e.to_string())?.to_vec())
 }
-pub(crate) fn write_str_lp(out: &mut Vec<u8>, s: &str) {
+pub(crate) async fn write_str_lp(out: &mut Vec<u8>, s: &str) {
     write_bytes_lp(out, s.as_bytes());
 }
-pub(crate) fn read_str_lp(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
+pub(crate) async fn read_str_lp(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
     String::from_utf8(read_bytes_lp(reader)?).map_err(|e| e.to_string())
 }
 //#endregion 🔖️BinaryPrimitives
@@ -2070,16 +2070,16 @@ pub(crate) fn read_str_lp(reader: &mut store::ByteReader<'_>) -> Result<String, 
 //#region 🔖️XmlValueBinaryCodecs
 /// 🌳️ Binary twin of `enc_xml_node`/`dec_xml_node` -- 1-byte kind tag (`0`=Element/`1`=Text/
 /// `2`=CData/`3`=Comment/`4`=ProcessingInstruction, matching xml's own binary tag numbering).
-pub(crate) fn enc_attr_bin(a: &XmlAttr, out: &mut Vec<u8>) {
+pub(crate) async fn enc_attr_bin(a: &XmlAttr, out: &mut Vec<u8>) {
     write_str_lp(out, &a.name);
     write_str_lp(out, &a.value);
 }
-pub(crate) fn dec_attr_bin(reader: &mut store::ByteReader<'_>) -> Result<XmlAttr, String> {
+pub(crate) async fn dec_attr_bin(reader: &mut store::ByteReader<'_>) -> Result<XmlAttr, String> {
     let name = read_str_lp(reader)?;
     let value = read_str_lp(reader)?;
     Ok(XmlAttr { name, value })
 }
-pub(crate) fn enc_xml_node_bin(node: &XmlNode, out: &mut Vec<u8>) {
+pub(crate) async fn enc_xml_node_bin(node: &XmlNode, out: &mut Vec<u8>) {
     match node {
         XmlNode::Element { name, attrs, children } => {
             out.push(0);
@@ -2112,7 +2112,7 @@ pub(crate) fn enc_xml_node_bin(node: &XmlNode, out: &mut Vec<u8>) {
         }
     }
 }
-pub(crate) fn dec_xml_node_bin(reader: &mut store::ByteReader<'_>) -> Result<XmlNode, String> {
+pub(crate) async fn dec_xml_node_bin(reader: &mut store::ByteReader<'_>) -> Result<XmlNode, String> {
     let tag = reader.read_u8().map_err(|e| e.to_string())?;
     match tag {
         0 => {
@@ -2140,13 +2140,13 @@ pub(crate) fn dec_xml_node_bin(reader: &mut store::ByteReader<'_>) -> Result<Xml
         other => Err(format!("xml node binary: unknown tag {other}")),
     }
 }
-fn enc_xml_node_list_bin(nodes: &[XmlNode], out: &mut Vec<u8>) {
+async fn enc_xml_node_list_bin(nodes: &[XmlNode], out: &mut Vec<u8>) {
     store::pack_rt::write_varint_u64(out, nodes.len() as u64);
     for n in nodes {
         enc_xml_node_bin(n, out);
     }
 }
-fn dec_xml_node_list_bin(reader: &mut store::ByteReader<'_>) -> Result<Vec<XmlNode>, String> {
+async fn dec_xml_node_list_bin(reader: &mut store::ByteReader<'_>) -> Result<Vec<XmlNode>, String> {
     let count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut out = Vec::with_capacity(count as usize);
     for _ in 0..count {
@@ -2160,13 +2160,13 @@ fn dec_xml_node_list_bin(reader: &mut store::ByteReader<'_>) -> Result<Vec<XmlNo
 /// 🌳️ Full-item (non-diff) binary codecs, mirrored one-for-one against `../🔖️ValueCodecs`'s text
 /// forms above. `pub(crate)` so `../🧬️mutations/🦀️component.rs` reuses these rather than
 /// re-deriving its own copies (same intra-artifact reuse pattern the text codecs already use).
-pub(crate) fn enc_target_mode_bin(m: &OpcTargetMode, out: &mut Vec<u8>) {
+pub(crate) async fn enc_target_mode_bin(m: &OpcTargetMode, out: &mut Vec<u8>) {
     out.push(match m {
         OpcTargetMode::Internal => 0,
         OpcTargetMode::External => 1,
     });
 }
-pub(crate) fn dec_target_mode_bin(reader: &mut store::ByteReader<'_>) -> Result<OpcTargetMode, String> {
+pub(crate) async fn dec_target_mode_bin(reader: &mut store::ByteReader<'_>) -> Result<OpcTargetMode, String> {
     match reader.read_u8().map_err(|e| e.to_string())? {
         0 => Ok(OpcTargetMode::Internal),
         1 => Ok(OpcTargetMode::External),
@@ -2174,14 +2174,14 @@ pub(crate) fn dec_target_mode_bin(reader: &mut store::ByteReader<'_>) -> Result<
     }
 }
 
-fn enc_run_bin(r: &DocxRun, out: &mut Vec<u8>) {
+async fn enc_run_bin(r: &DocxRun, out: &mut Vec<u8>) {
     write_str_lp(out, &r.text);
     out.push(r.bold as u8);
     out.push(r.italic as u8);
     out.push(r.underline as u8);
     enc_xml_node_list_bin(&r.extra_run_properties, out);
 }
-fn dec_run_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxRun, String> {
+async fn dec_run_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxRun, String> {
     let text = read_str_lp(reader)?;
     let bold = reader.read_u8().map_err(|e| e.to_string())? != 0;
     let italic = reader.read_u8().map_err(|e| e.to_string())? != 0;
@@ -2190,7 +2190,7 @@ fn dec_run_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxRun, String> {
     Ok(DocxRun { text, bold, italic, underline, extra_run_properties })
 }
 
-fn enc_paragraph_bin(p: &DocxParagraph, out: &mut Vec<u8>) {
+async fn enc_paragraph_bin(p: &DocxParagraph, out: &mut Vec<u8>) {
     store::pack_rt::write_varint_u64(out, p.runs.len() as u64);
     for r in &p.runs {
         enc_run_bin(r, out);
@@ -2201,7 +2201,7 @@ fn enc_paragraph_bin(p: &DocxParagraph, out: &mut Vec<u8>) {
     }
     enc_xml_node_list_bin(&p.extra_paragraph_properties, out);
 }
-fn dec_paragraph_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxParagraph, String> {
+async fn dec_paragraph_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxParagraph, String> {
     let run_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut runs = Vec::with_capacity(run_count as usize);
     for _ in 0..run_count {
@@ -2212,14 +2212,14 @@ fn dec_paragraph_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxParagraph
     Ok(DocxParagraph { runs, style, extra_paragraph_properties })
 }
 
-fn enc_cell_bin(c: &DocxTableCell, out: &mut Vec<u8>) {
+async fn enc_cell_bin(c: &DocxTableCell, out: &mut Vec<u8>) {
     store::pack_rt::write_varint_u64(out, c.blocks.len() as u64);
     for b in &c.blocks {
         enc_block_bin(b, out);
     }
     enc_xml_node_list_bin(&c.extra_cell_properties, out);
 }
-fn dec_cell_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxTableCell, String> {
+async fn dec_cell_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxTableCell, String> {
     let block_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut blocks = Vec::with_capacity(block_count as usize);
     for _ in 0..block_count {
@@ -2229,14 +2229,14 @@ fn dec_cell_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxTableCell, Str
     Ok(DocxTableCell { blocks, extra_cell_properties })
 }
 
-fn enc_row_bin(r: &DocxTableRow, out: &mut Vec<u8>) {
+async fn enc_row_bin(r: &DocxTableRow, out: &mut Vec<u8>) {
     store::pack_rt::write_varint_u64(out, r.cells.len() as u64);
     for c in &r.cells {
         enc_cell_bin(c, out);
     }
     enc_xml_node_list_bin(&r.extra_row_properties, out);
 }
-fn dec_row_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxTableRow, String> {
+async fn dec_row_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxTableRow, String> {
     let cell_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut cells = Vec::with_capacity(cell_count as usize);
     for _ in 0..cell_count {
@@ -2246,14 +2246,14 @@ fn dec_row_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxTableRow, Strin
     Ok(DocxTableRow { cells, extra_row_properties })
 }
 
-fn enc_table_bin(t: &DocxTable, out: &mut Vec<u8>) {
+async fn enc_table_bin(t: &DocxTable, out: &mut Vec<u8>) {
     store::pack_rt::write_varint_u64(out, t.rows.len() as u64);
     for r in &t.rows {
         enc_row_bin(r, out);
     }
     enc_xml_node_list_bin(&t.extra_table_properties, out);
 }
-fn dec_table_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxTable, String> {
+async fn dec_table_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxTable, String> {
     let row_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut rows = Vec::with_capacity(row_count as usize);
     for _ in 0..row_count {
@@ -2264,7 +2264,7 @@ fn dec_table_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxTable, String
 }
 
 /// 🌳️ `0`=Paragraph / `1`=Table -- `DocxBlock`'s two variants, tag-prefixed like `enc_xml_node_bin`.
-pub(crate) fn enc_block_bin(b: &DocxBlock, out: &mut Vec<u8>) {
+pub(crate) async fn enc_block_bin(b: &DocxBlock, out: &mut Vec<u8>) {
     match b {
         DocxBlock::Paragraph(p) => {
             out.push(0);
@@ -2276,7 +2276,7 @@ pub(crate) fn enc_block_bin(b: &DocxBlock, out: &mut Vec<u8>) {
         }
     }
 }
-pub(crate) fn dec_block_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxBlock, String> {
+pub(crate) async fn dec_block_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxBlock, String> {
     match reader.read_u8().map_err(|e| e.to_string())? {
         0 => Ok(DocxBlock::Paragraph(dec_paragraph_bin(reader)?)),
         1 => Ok(DocxBlock::Table(dec_table_bin(reader)?)),
@@ -2284,7 +2284,7 @@ pub(crate) fn dec_block_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxBl
     }
 }
 
-pub(crate) fn enc_style_bin(s: &DocxStyle, out: &mut Vec<u8>) {
+pub(crate) async fn enc_style_bin(s: &DocxStyle, out: &mut Vec<u8>) {
     write_str_lp(out, &s.id);
     write_str_lp(out, &s.name);
     out.push(if s.based_on.is_some() { 1 } else { 0 });
@@ -2292,32 +2292,32 @@ pub(crate) fn enc_style_bin(s: &DocxStyle, out: &mut Vec<u8>) {
         write_str_lp(out, based_on);
     }
 }
-pub(crate) fn dec_style_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxStyle, String> {
+pub(crate) async fn dec_style_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxStyle, String> {
     let id = read_str_lp(reader)?;
     let name = read_str_lp(reader)?;
     let based_on = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(read_str_lp(reader)?) } else { None };
     Ok(DocxStyle { id, name, based_on })
 }
 
-pub(crate) fn enc_opc_part_bin(p: &OpcPart, out: &mut Vec<u8>) {
+pub(crate) async fn enc_opc_part_bin(p: &OpcPart, out: &mut Vec<u8>) {
     write_str_lp(out, &p.path);
     write_str_lp(out, &p.content_type);
     write_bytes_lp(out, &p.bytes);
 }
-pub(crate) fn dec_opc_part_bin(reader: &mut store::ByteReader<'_>) -> Result<OpcPart, String> {
+pub(crate) async fn dec_opc_part_bin(reader: &mut store::ByteReader<'_>) -> Result<OpcPart, String> {
     let path = read_str_lp(reader)?;
     let content_type = read_str_lp(reader)?;
     let bytes = read_bytes_lp(reader)?;
     Ok(OpcPart { path, content_type, bytes })
 }
 
-pub(crate) fn enc_rel_bin(r: &OpcRelationship, out: &mut Vec<u8>) {
+pub(crate) async fn enc_rel_bin(r: &OpcRelationship, out: &mut Vec<u8>) {
     write_str_lp(out, &r.id);
     write_str_lp(out, &r.rel_type);
     write_str_lp(out, &r.target);
     enc_target_mode_bin(&r.target_mode, out);
 }
-pub(crate) fn dec_rel_bin(reader: &mut store::ByteReader<'_>) -> Result<OpcRelationship, String> {
+pub(crate) async fn dec_rel_bin(reader: &mut store::ByteReader<'_>) -> Result<OpcRelationship, String> {
     let id = read_str_lp(reader)?;
     let rel_type = read_str_lp(reader)?;
     let target = read_str_lp(reader)?;
@@ -2325,25 +2325,25 @@ pub(crate) fn dec_rel_bin(reader: &mut store::ByteReader<'_>) -> Result<OpcRelat
     Ok(OpcRelationship { id, rel_type, target, target_mode })
 }
 
-pub(crate) fn enc_ct_entry_bin(e: &(String, String), out: &mut Vec<u8>) {
+pub(crate) async fn enc_ct_entry_bin(e: &(String, String), out: &mut Vec<u8>) {
     write_str_lp(out, &e.0);
     write_str_lp(out, &e.1);
 }
-pub(crate) fn dec_ct_entry_bin(reader: &mut store::ByteReader<'_>) -> Result<(String, String), String> {
+pub(crate) async fn dec_ct_entry_bin(reader: &mut store::ByteReader<'_>) -> Result<(String, String), String> {
     let k = read_str_lp(reader)?;
     let v = read_str_lp(reader)?;
     Ok((k, v))
 }
 
 /// 🗺️ One `relationships` map entry (owner path -> that owner's relationship list).
-pub(crate) fn enc_rel_owner_entry_bin(e: &(String, Vec<OpcRelationship>), out: &mut Vec<u8>) {
+pub(crate) async fn enc_rel_owner_entry_bin(e: &(String, Vec<OpcRelationship>), out: &mut Vec<u8>) {
     write_str_lp(out, &e.0);
     store::pack_rt::write_varint_u64(out, e.1.len() as u64);
     for r in &e.1 {
         enc_rel_bin(r, out);
     }
 }
-pub(crate) fn dec_rel_owner_entry_bin(reader: &mut store::ByteReader<'_>) -> Result<(String, Vec<OpcRelationship>), String> {
+pub(crate) async fn dec_rel_owner_entry_bin(reader: &mut store::ByteReader<'_>) -> Result<(String, Vec<OpcRelationship>), String> {
     let owner = read_str_lp(reader)?;
     let count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut list = Vec::with_capacity(count as usize);
@@ -2357,7 +2357,7 @@ pub(crate) fn dec_rel_owner_entry_bin(reader: &mut store::ByteReader<'_>) -> Res
 //#region 🔖️GenericTripleBinaryCodecs
 /// 🌳️ Binary twin of `enc_indexed_triple`/`dec_indexed_triple` -- three varint-counted sections
 /// (removed indices / modified index+diff pairs / added index+item pairs), generic over `D`/`T`.
-fn enc_indexed_triple_bin<D, T>(diff: &IndexedTripleDiff<D, T>, enc_d: impl Fn(&D, &mut Vec<u8>), enc_t: impl Fn(&T, &mut Vec<u8>), out: &mut Vec<u8>) {
+async fn enc_indexed_triple_bin<D, T>(diff: &IndexedTripleDiff<D, T>, enc_d: impl Fn(&D, &mut Vec<u8>), enc_t: impl Fn(&T, &mut Vec<u8>), out: &mut Vec<u8>) {
     store::pack_rt::write_varint_u64(out, diff.removed.len() as u64);
     for i in &diff.removed {
         store::pack_rt::write_varint_u64(out, *i as u64);
@@ -2373,7 +2373,7 @@ fn enc_indexed_triple_bin<D, T>(diff: &IndexedTripleDiff<D, T>, enc_d: impl Fn(&
         enc_t(&a.item, out);
     }
 }
-fn dec_indexed_triple_bin<D, T>(reader: &mut store::ByteReader<'_>, dec_d: impl Fn(&mut store::ByteReader<'_>) -> Result<D, String>, dec_t: impl Fn(&mut store::ByteReader<'_>) -> Result<T, String>) -> Result<IndexedTripleDiff<D, T>, String> {
+async fn dec_indexed_triple_bin<D, T>(reader: &mut store::ByteReader<'_>, dec_d: impl Fn(&mut store::ByteReader<'_>) -> Result<D, String>, dec_t: impl Fn(&mut store::ByteReader<'_>) -> Result<T, String>) -> Result<IndexedTripleDiff<D, T>, String> {
     let removed_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut removed = Vec::with_capacity(removed_count as usize);
     for _ in 0..removed_count {
@@ -2398,7 +2398,7 @@ fn dec_indexed_triple_bin<D, T>(reader: &mut store::ByteReader<'_>, dec_d: impl 
 
 /// 🏷️ Binary twin of `enc_named_triple`/`dec_named_triple` -- three varint-counted sections
 /// (removed keys / modified key+diff pairs / added whole items), generic over `K`/`D`/`T`.
-fn enc_named_triple_bin<K, D, T>(diff: &NamedTripleDiff<K, D, T>, enc_k: impl Fn(&K, &mut Vec<u8>), enc_d: impl Fn(&D, &mut Vec<u8>), enc_t: impl Fn(&T, &mut Vec<u8>), out: &mut Vec<u8>) {
+async fn enc_named_triple_bin<K, D, T>(diff: &NamedTripleDiff<K, D, T>, enc_k: impl Fn(&K, &mut Vec<u8>), enc_d: impl Fn(&D, &mut Vec<u8>), enc_t: impl Fn(&T, &mut Vec<u8>), out: &mut Vec<u8>) {
     store::pack_rt::write_varint_u64(out, diff.removed.len() as u64);
     for k in &diff.removed {
         enc_k(k, out);
@@ -2413,7 +2413,7 @@ fn enc_named_triple_bin<K, D, T>(diff: &NamedTripleDiff<K, D, T>, enc_k: impl Fn
         enc_t(t, out);
     }
 }
-fn dec_named_triple_bin<K, D, T>(
+async fn dec_named_triple_bin<K, D, T>(
     reader: &mut store::ByteReader<'_>,
     dec_k: impl Fn(&mut store::ByteReader<'_>) -> Result<K, String>,
     dec_d: impl Fn(&mut store::ByteReader<'_>) -> Result<D, String>,
@@ -2441,42 +2441,42 @@ fn dec_named_triple_bin<K, D, T>(
 //#endregion 🔖️GenericTripleBinaryCodecs
 
 //#region 🔖️DiffValueBinaryCodecs
-fn enc_runs_diff_bin(d: &DocxRunsDiff, out: &mut Vec<u8>) {
+async fn enc_runs_diff_bin(d: &DocxRunsDiff, out: &mut Vec<u8>) {
     enc_indexed_triple_bin(d, enc_run_diff_bin, enc_run_bin, out)
 }
-fn dec_runs_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxRunsDiff, String> {
+async fn dec_runs_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxRunsDiff, String> {
     dec_indexed_triple_bin(reader, dec_run_diff_bin, dec_run_bin)
 }
 
-fn enc_blocks_diff_bin(d: &DocxBlocksDiff, out: &mut Vec<u8>) {
+async fn enc_blocks_diff_bin(d: &DocxBlocksDiff, out: &mut Vec<u8>) {
     enc_indexed_triple_bin(d, enc_block_diff_bin, enc_block_bin, out)
 }
-fn dec_blocks_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxBlocksDiff, String> {
+async fn dec_blocks_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxBlocksDiff, String> {
     dec_indexed_triple_bin(reader, dec_block_diff_bin, dec_block_bin)
 }
 
-fn enc_table_rows_diff_bin(d: &DocxTableRowsDiff, out: &mut Vec<u8>) {
+async fn enc_table_rows_diff_bin(d: &DocxTableRowsDiff, out: &mut Vec<u8>) {
     enc_indexed_triple_bin(d, enc_table_row_diff_bin, enc_row_bin, out)
 }
-fn dec_table_rows_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxTableRowsDiff, String> {
+async fn dec_table_rows_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxTableRowsDiff, String> {
     dec_indexed_triple_bin(reader, dec_table_row_diff_bin, dec_row_bin)
 }
 
-fn enc_table_cells_diff_bin(d: &DocxTableCellsDiff, out: &mut Vec<u8>) {
+async fn enc_table_cells_diff_bin(d: &DocxTableCellsDiff, out: &mut Vec<u8>) {
     enc_indexed_triple_bin(d, enc_table_cell_diff_bin, enc_cell_bin, out)
 }
-fn dec_table_cells_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxTableCellsDiff, String> {
+async fn dec_table_cells_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxTableCellsDiff, String> {
     dec_indexed_triple_bin(reader, dec_table_cell_diff_bin, dec_cell_bin)
 }
 
-fn enc_styles_diff_bin(d: &DocxStylesDiff, out: &mut Vec<u8>) {
+async fn enc_styles_diff_bin(d: &DocxStylesDiff, out: &mut Vec<u8>) {
     enc_named_triple_bin(d, |k, out| write_str_lp(out, k), enc_style_diff_bin, enc_style_bin, out)
 }
-fn dec_styles_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxStylesDiff, String> {
+async fn dec_styles_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxStylesDiff, String> {
     dec_named_triple_bin(reader, |r| read_str_lp(r), dec_style_diff_bin, dec_style_bin)
 }
 
-fn enc_run_diff_bin(d: &DocxRunDiff, out: &mut Vec<u8>) {
+async fn enc_run_diff_bin(d: &DocxRunDiff, out: &mut Vec<u8>) {
     out.push(if d.text.is_some() { 1 } else { 0 });
     if let Some(v) = &d.text {
         write_str_lp(out, v);
@@ -2494,7 +2494,7 @@ fn enc_run_diff_bin(d: &DocxRunDiff, out: &mut Vec<u8>) {
         out.push(v as u8);
     }
 }
-fn dec_run_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxRunDiff, String> {
+async fn dec_run_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxRunDiff, String> {
     let text = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(read_str_lp(reader)?) } else { None };
     let bold = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(reader.read_u8().map_err(|e| e.to_string())? != 0) } else { None };
     let italic = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(reader.read_u8().map_err(|e| e.to_string())? != 0) } else { None };
@@ -2502,7 +2502,7 @@ fn dec_run_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxRunDiff, S
     Ok(DocxRunDiff { text, bold, italic, underline })
 }
 
-fn enc_paragraph_diff_bin(pd: &DocxParagraphDiff, out: &mut Vec<u8>) {
+async fn enc_paragraph_diff_bin(pd: &DocxParagraphDiff, out: &mut Vec<u8>) {
     out.push(if pd.runs.is_some() { 1 } else { 0 });
     if let Some(runs) = &pd.runs {
         enc_runs_diff_bin(runs, out);
@@ -2515,46 +2515,46 @@ fn enc_paragraph_diff_bin(pd: &DocxParagraphDiff, out: &mut Vec<u8>) {
         }
     }
 }
-fn dec_paragraph_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxParagraphDiff, String> {
+async fn dec_paragraph_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxParagraphDiff, String> {
     let runs = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(dec_runs_diff_bin(reader)?) } else { None };
     let style = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(read_str_lp(reader)?) } else { None }) } else { None };
     Ok(DocxParagraphDiff { runs, style })
 }
 
-fn enc_table_diff_bin(d: &DocxTableDiff, out: &mut Vec<u8>) {
+async fn enc_table_diff_bin(d: &DocxTableDiff, out: &mut Vec<u8>) {
     out.push(if d.rows.is_some() { 1 } else { 0 });
     if let Some(rows) = &d.rows {
         enc_table_rows_diff_bin(rows, out);
     }
 }
-fn dec_table_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxTableDiff, String> {
+async fn dec_table_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxTableDiff, String> {
     let rows = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(dec_table_rows_diff_bin(reader)?) } else { None };
     Ok(DocxTableDiff { rows })
 }
 
-fn enc_table_row_diff_bin(d: &DocxTableRowDiff, out: &mut Vec<u8>) {
+async fn enc_table_row_diff_bin(d: &DocxTableRowDiff, out: &mut Vec<u8>) {
     out.push(if d.cells.is_some() { 1 } else { 0 });
     if let Some(cells) = &d.cells {
         enc_table_cells_diff_bin(cells, out);
     }
 }
-fn dec_table_row_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxTableRowDiff, String> {
+async fn dec_table_row_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxTableRowDiff, String> {
     let cells = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(dec_table_cells_diff_bin(reader)?) } else { None };
     Ok(DocxTableRowDiff { cells })
 }
 
-fn enc_table_cell_diff_bin(d: &DocxTableCellDiff, out: &mut Vec<u8>) {
+async fn enc_table_cell_diff_bin(d: &DocxTableCellDiff, out: &mut Vec<u8>) {
     out.push(if d.blocks.is_some() { 1 } else { 0 });
     if let Some(blocks) = &d.blocks {
         enc_blocks_diff_bin(blocks, out);
     }
 }
-fn dec_table_cell_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxTableCellDiff, String> {
+async fn dec_table_cell_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxTableCellDiff, String> {
     let blocks = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(dec_blocks_diff_bin(reader)?) } else { None };
     Ok(DocxTableCellDiff { blocks })
 }
 
-fn enc_style_diff_bin(d: &DocxStyleDiff, out: &mut Vec<u8>) {
+async fn enc_style_diff_bin(d: &DocxStyleDiff, out: &mut Vec<u8>) {
     out.push(if d.name.is_some() { 1 } else { 0 });
     if let Some(v) = &d.name {
         write_str_lp(out, v);
@@ -2567,7 +2567,7 @@ fn enc_style_diff_bin(d: &DocxStyleDiff, out: &mut Vec<u8>) {
         }
     }
 }
-fn dec_style_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxStyleDiff, String> {
+async fn dec_style_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxStyleDiff, String> {
     let name = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(read_str_lp(reader)?) } else { None };
     let based_on = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(read_str_lp(reader)?) } else { None }) } else { None };
     Ok(DocxStyleDiff { name, based_on })
@@ -2575,7 +2575,7 @@ fn dec_style_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxStyleDif
 
 /// 🌳️ `0`=Paragraph / `1`=Table / `2`=Replace (wholesale replace, block KIND changed) -- binary
 /// twin of `enc_block_diff`/`dec_block_diff`.
-fn enc_block_diff_bin(d: &DocxBlockDiff, out: &mut Vec<u8>) {
+async fn enc_block_diff_bin(d: &DocxBlockDiff, out: &mut Vec<u8>) {
     match d {
         DocxBlockDiff::Paragraph(pd) => {
             out.push(0);
@@ -2591,7 +2591,7 @@ fn enc_block_diff_bin(d: &DocxBlockDiff, out: &mut Vec<u8>) {
         }
     }
 }
-fn dec_block_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxBlockDiff, String> {
+async fn dec_block_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxBlockDiff, String> {
     match reader.read_u8().map_err(|e| e.to_string())? {
         0 => Ok(DocxBlockDiff::Paragraph(dec_paragraph_diff_bin(reader)?)),
         1 => Ok(DocxBlockDiff::Table(dec_table_diff_bin(reader)?)),
@@ -2600,14 +2600,14 @@ fn dec_block_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxBlockDif
     }
 }
 
-fn enc_ct_entries_diff_bin(d: &DocxOpcCtEntriesDiff, out: &mut Vec<u8>) {
+async fn enc_ct_entries_diff_bin(d: &DocxOpcCtEntriesDiff, out: &mut Vec<u8>) {
     enc_named_triple_bin(d, |k, out| write_str_lp(out, k), |v: &String, out| write_str_lp(out, v), enc_ct_entry_bin, out)
 }
-fn dec_ct_entries_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxOpcCtEntriesDiff, String> {
+async fn dec_ct_entries_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxOpcCtEntriesDiff, String> {
     dec_named_triple_bin(reader, |r| read_str_lp(r), |r| read_str_lp(r), dec_ct_entry_bin)
 }
 
-fn enc_opc_part_diff_bin(d: &DocxOpcPartDiff, out: &mut Vec<u8>) {
+async fn enc_opc_part_diff_bin(d: &DocxOpcPartDiff, out: &mut Vec<u8>) {
     out.push(if d.content_type.is_some() { 1 } else { 0 });
     if let Some(v) = &d.content_type {
         write_str_lp(out, v);
@@ -2617,20 +2617,20 @@ fn enc_opc_part_diff_bin(d: &DocxOpcPartDiff, out: &mut Vec<u8>) {
         write_bytes_lp(out, v);
     }
 }
-fn dec_opc_part_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxOpcPartDiff, String> {
+async fn dec_opc_part_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxOpcPartDiff, String> {
     let content_type = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(read_str_lp(reader)?) } else { None };
     let bytes = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(read_bytes_lp(reader)?) } else { None };
     Ok(DocxOpcPartDiff { content_type, bytes })
 }
 
-fn enc_parts_diff_bin(d: &DocxOpcPartsDiff, out: &mut Vec<u8>) {
+async fn enc_parts_diff_bin(d: &DocxOpcPartsDiff, out: &mut Vec<u8>) {
     enc_named_triple_bin(d, |k, out| write_str_lp(out, k), enc_opc_part_diff_bin, enc_opc_part_bin, out)
 }
-fn dec_parts_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxOpcPartsDiff, String> {
+async fn dec_parts_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxOpcPartsDiff, String> {
     dec_named_triple_bin(reader, |r| read_str_lp(r), dec_opc_part_diff_bin, dec_opc_part_bin)
 }
 
-fn enc_rel_diff_bin(d: &DocxOpcRelDiff, out: &mut Vec<u8>) {
+async fn enc_rel_diff_bin(d: &DocxOpcRelDiff, out: &mut Vec<u8>) {
     out.push(if d.rel_type.is_some() { 1 } else { 0 });
     if let Some(v) = &d.rel_type {
         write_str_lp(out, v);
@@ -2644,28 +2644,28 @@ fn enc_rel_diff_bin(d: &DocxOpcRelDiff, out: &mut Vec<u8>) {
         enc_target_mode_bin(v, out);
     }
 }
-fn dec_rel_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxOpcRelDiff, String> {
+async fn dec_rel_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxOpcRelDiff, String> {
     let rel_type = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(read_str_lp(reader)?) } else { None };
     let target = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(read_str_lp(reader)?) } else { None };
     let target_mode = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(dec_target_mode_bin(reader)?) } else { None };
     Ok(DocxOpcRelDiff { rel_type, target, target_mode })
 }
 
-fn enc_rel_list_diff_bin(d: &DocxOpcRelListDiff, out: &mut Vec<u8>) {
+async fn enc_rel_list_diff_bin(d: &DocxOpcRelListDiff, out: &mut Vec<u8>) {
     enc_named_triple_bin(d, |k, out| write_str_lp(out, k), enc_rel_diff_bin, enc_rel_bin, out)
 }
-fn dec_rel_list_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxOpcRelListDiff, String> {
+async fn dec_rel_list_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxOpcRelListDiff, String> {
     dec_named_triple_bin(reader, |r| read_str_lp(r), dec_rel_diff_bin, dec_rel_bin)
 }
 
-fn enc_relationships_diff_bin(d: &DocxOpcRelationshipsDiff, out: &mut Vec<u8>) {
+async fn enc_relationships_diff_bin(d: &DocxOpcRelationshipsDiff, out: &mut Vec<u8>) {
     enc_named_triple_bin(d, |k, out| write_str_lp(out, k), enc_rel_list_diff_bin, enc_rel_owner_entry_bin, out)
 }
-fn dec_relationships_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxOpcRelationshipsDiff, String> {
+async fn dec_relationships_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxOpcRelationshipsDiff, String> {
     dec_named_triple_bin(reader, |r| read_str_lp(r), dec_rel_list_diff_bin, dec_rel_owner_entry_bin)
 }
 
-fn enc_content_types_diff_bin(d: &DocxOpcContentTypesDiff, out: &mut Vec<u8>) {
+async fn enc_content_types_diff_bin(d: &DocxOpcContentTypesDiff, out: &mut Vec<u8>) {
     out.push(if d.defaults.is_some() { 1 } else { 0 });
     if let Some(v) = &d.defaults {
         enc_ct_entries_diff_bin(v, out);
@@ -2675,13 +2675,13 @@ fn enc_content_types_diff_bin(d: &DocxOpcContentTypesDiff, out: &mut Vec<u8>) {
         enc_ct_entries_diff_bin(v, out);
     }
 }
-fn dec_content_types_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxOpcContentTypesDiff, String> {
+async fn dec_content_types_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxOpcContentTypesDiff, String> {
     let defaults = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(dec_ct_entries_diff_bin(reader)?) } else { None };
     let overrides = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(dec_ct_entries_diff_bin(reader)?) } else { None };
     Ok(DocxOpcContentTypesDiff { defaults, overrides })
 }
 
-pub(crate) fn enc_opc_diff_bin(d: &DocxOpcDiff, out: &mut Vec<u8>) {
+pub(crate) async fn enc_opc_diff_bin(d: &DocxOpcDiff, out: &mut Vec<u8>) {
     out.push(if d.content_types.is_some() { 1 } else { 0 });
     if let Some(v) = &d.content_types {
         enc_content_types_diff_bin(v, out);
@@ -2695,14 +2695,14 @@ pub(crate) fn enc_opc_diff_bin(d: &DocxOpcDiff, out: &mut Vec<u8>) {
         enc_relationships_diff_bin(v, out);
     }
 }
-pub(crate) fn dec_opc_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxOpcDiff, String> {
+pub(crate) async fn dec_opc_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxOpcDiff, String> {
     let content_types = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(dec_content_types_diff_bin(reader)?) } else { None };
     let parts = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(dec_parts_diff_bin(reader)?) } else { None };
     let relationships = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(dec_relationships_diff_bin(reader)?) } else { None };
     Ok(DocxOpcDiff { content_types, parts, relationships })
 }
 
-pub(crate) fn enc_document_diff_bin(d: &DocxDocumentDiff, out: &mut Vec<u8>) {
+pub(crate) async fn enc_document_diff_bin(d: &DocxDocumentDiff, out: &mut Vec<u8>) {
     out.push(if d.body.is_some() { 1 } else { 0 });
     if let Some(v) = &d.body {
         enc_blocks_diff_bin(v, out);
@@ -2712,7 +2712,7 @@ pub(crate) fn enc_document_diff_bin(d: &DocxDocumentDiff, out: &mut Vec<u8>) {
         enc_styles_diff_bin(v, out);
     }
 }
-pub(crate) fn dec_document_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxDocumentDiff, String> {
+pub(crate) async fn dec_document_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxDocumentDiff, String> {
     let body = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(dec_blocks_diff_bin(reader)?) } else { None };
     let styles = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(dec_styles_diff_bin(reader)?) } else { None };
     Ok(DocxDocumentDiff { body, styles })
@@ -2721,7 +2721,7 @@ pub(crate) fn dec_document_diff_bin(reader: &mut store::ByteReader<'_>) -> Resul
 //#endregion 🔖️BinaryCodecs
 
 //#region 🔖️TopLevel
-fn print_docx_diff(d: &DocxDiff) -> String {
+async fn print_docx_diff(d: &DocxDiff) -> String {
     let mut tokens: Vec<String> = Vec::new();
     if let Some(v) = &d.opc {
         tokens.push(format!("opc={}", enc_opc_diff(v)));
@@ -2731,7 +2731,7 @@ fn print_docx_diff(d: &DocxDiff) -> String {
     }
     tokens.join(" ")
 }
-fn parse_docx_diff(line: &str) -> Result<DocxDiff, String> {
+async fn parse_docx_diff(line: &str) -> Result<DocxDiff, String> {
     let mut d = DocxDiff::default();
     if line.is_empty() {
         return Ok(d);
@@ -2749,10 +2749,10 @@ fn parse_docx_diff(line: &str) -> Result<DocxDiff, String> {
 }
 
 impl protocol::DiffCodec for DocxDiff {
-    fn print_diff(&self) -> String {
+    async fn print_diff(&self) -> String {
         print_docx_diff(self)
     }
-    fn parse_diff(line: &str) -> Result<Self, store::TextError> {
+    async fn parse_diff(line: &str) -> Result<Self, store::TextError> {
         parse_docx_diff(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
     /// 🧪️ FG-wave: REAL binary frame (`format u8 | flags u8 | [opc][document]`), matching
@@ -2762,7 +2762,7 @@ impl protocol::DiffCodec for DocxDiff {
     /// shortcut before this pilot ladder). `flags` bits 0/1 mark `opc`/`document` presence; each
     /// present field's own recursive binary payload follows in that fixed order (see
     /// `🔖️BinaryCodecs` above).
-    fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    async fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         let mut flags: u8 = 0;
         if self.opc.is_some() {
             flags |= 0b01;
@@ -2779,7 +2779,7 @@ impl protocol::DiffCodec for DocxDiff {
         }
         Ok(out)
     }
-    fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    async fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         let mut reader = store::ByteReader::new(bytes);
         let malformed = |what: &'static str, offset: usize, detail: String| protocol::ProtocolError::Malformed { what, offset: offset as u64, detail };
         let _format = reader.read_u8().map_err(|e| malformed("diff format", 0, e.to_string()))?;
@@ -2800,12 +2800,12 @@ impl protocol::DiffCodec for DocxDiff {
 /// conformance tests, same shape `📷️png/…/🔺️diff/🦀️component.rs`'s own `demo_diff_cases()`
 /// establishes.
 #[cfg(test)]
-pub(crate) fn xml_node(name: &str) -> XmlNode {
+pub(crate) async fn xml_node(name: &str) -> XmlNode {
     XmlNode::Element { name: name.to_string(), attrs: vec![XmlAttr { name: "a".into(), value: "1".into() }], children: vec![] }
 }
 
 #[cfg(test)]
-pub(crate) fn snapshot_a() -> DocxSnapshot {
+pub(crate) async fn snapshot_a() -> DocxSnapshot {
     let mut opc = OpcPackage::empty();
     opc.content_types.set_default("rels", crate::artifacts::zip::opc::RELS_CONTENT_TYPE);
     opc.content_types.set_default("xml", "application/xml");
@@ -2827,7 +2827,7 @@ pub(crate) fn snapshot_a() -> DocxSnapshot {
 }
 
 #[cfg(test)]
-pub(crate) fn snapshot_b() -> DocxSnapshot {
+pub(crate) async fn snapshot_b() -> DocxSnapshot {
     let mut opc = OpcPackage::empty();
     opc.content_types.set_default("rels", crate::artifacts::zip::opc::RELS_CONTENT_TYPE);
     opc.content_types.set_default("xml", "application/xml");
@@ -2853,7 +2853,7 @@ pub(crate) fn snapshot_b() -> DocxSnapshot {
 /// 🧪️ The demo cases proper — `default()` (empty diff) plus every real `between()` shape (both
 /// directions, and the trivially-empty self-diff).
 #[cfg(test)]
-pub(crate) fn demo_diff_cases() -> Vec<DocxDiff> {
+pub(crate) async fn demo_diff_cases() -> Vec<DocxDiff> {
     let a = snapshot_a();
     let b = snapshot_b();
     vec![DocxDiff::default(), DocxDiff::between(&a, &b), DocxDiff::between(&b, &a), DocxDiff::between(&a, &a)]
@@ -2872,7 +2872,7 @@ mod handcrafted_diff_codec_tests {
     /// parts/relationships-by-owner triples, and every removed/modified/added flavor via a real
     /// `between()` result in both directions.
     #[test]
-    fn diff_codec_text_binary_roundtrip_law() {
+    async fn diff_codec_text_binary_roundtrip_law() {
         let a = snapshot_a();
         let b = snapshot_b();
         let cases = vec![DocxDiff::default(), DocxDiff::between(&a, &b), DocxDiff::between(&b, &a), DocxDiff::between(&a, &a)];
@@ -2918,7 +2918,7 @@ mod result_apply_tests {
     use super::*;
 
     #[test]
-    fn rejects_missing_style_target_without_mutating_base() {
+    async fn rejects_missing_style_target_without_mutating_base() {
         let base = DocxSnapshot::default();
         let diff =
             DocxDiff { document: Some(DocxDocumentDiff { styles: Some(DocxStylesDiff { modified: vec![NamedModified { key: "missing".into(), diff: DocxStyleDiff::default() }], ..Default::default() }), ..Default::default() }), ..Default::default() };

@@ -14,7 +14,7 @@ pub const BODY_KEY: &str = TableWindowKit::KIND_ID;
 
 //#region 🔖️Definition
 /// 🧱️ Stitched into the editor manifest by `crate::editor::csv::create_csv_editor`.
-pub fn definition() -> WindowKindDefinition {
+pub async fn definition() -> WindowKindDefinition {
     WindowKindDefinition { label: LocalizedLabel::native("Table", "Tabelle"), icon_id: "table-2".into(), ..TableWindowKit::editable_window_kind() }
 }
 //#endregion 🔖️Definition
@@ -24,7 +24,7 @@ pub fn definition() -> WindowKindDefinition {
 /// record is one editable row — `set-cell`'s `row`/`column` index this rendered grid directly
 /// (see the surface root's `CsvEditorCommand::SetCell` for the row-offset math back to
 /// `CsvMutation::SetField`'s `record_index`).
-pub fn render(document: &CsvSnapshot) -> UiNode {
+pub async fn render(document: &CsvSnapshot) -> UiNode {
     let (columns, data_rows): (Vec<String>, &[crate::artifacts::csv::CsvRecord]) = if document.has_header && !document.records.is_empty() {
         (document.records[0].fields.iter().map(|field| field.value.clone()).collect(), &document.records[1..])
     } else {
@@ -42,14 +42,14 @@ mod tests {
     use super::*;
 
     #[test]
-    fn definition_declares_a_table_window() {
+    async fn definition_declares_a_table_window() {
         let def = definition();
         assert_eq!(def.id, WINDOW_KIND_ID);
         assert_eq!(def.body_key, BODY_KEY);
     }
 
     #[test]
-    fn render_splits_header_from_data_rows() {
+    async fn render_splits_header_from_data_rows() {
         let document = CsvSnapshot {
             schema: "stdio.csv".into(),
             has_header: true,

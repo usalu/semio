@@ -18,26 +18,26 @@ pub struct SemioValueArtifact {
 }
 
 impl Default for SemioValueArtifact {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self::from_snapshot(SemioValueSnapshot::default())
     }
 }
 
 impl SemioValueArtifact {
-    pub fn to_snapshot(&self) -> SemioValueSnapshot {
+    pub async fn to_snapshot(&self) -> SemioValueSnapshot {
         SemioValueSnapshot { schema: self.schema.clone(), root: self.root.clone(), nodes: self.nodes.clone() }
     }
-    pub fn from_snapshot(snapshot: SemioValueSnapshot) -> Self {
+    pub async fn from_snapshot(snapshot: SemioValueSnapshot) -> Self {
         Self { schema: snapshot.schema, root: snapshot.root, nodes: snapshot.nodes }
     }
-    pub fn set_snapshot(&mut self, snapshot: SemioValueSnapshot) {
+    pub async fn set_snapshot(&mut self, snapshot: SemioValueSnapshot) {
         self.schema = snapshot.schema;
         self.root = snapshot.root;
         self.nodes = snapshot.nodes;
     }
 }
 
-pub fn semio_value_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
+pub async fn semio_value_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
     schema::ArtifactSchemaDescriptor {
         id: "s.stdio.semio.value",
         artifact: schema::FacetLeaves {
@@ -86,27 +86,27 @@ pub mod derived_construction {
         type Snapshot = SemioValueSnapshot;
         type Mutation = SemioValueMutation;
         type Diff = SemioValueTreeDiff;
-        fn empty() -> Self {
+        async fn empty() -> Self {
             Self { snapshot: SemioValueSnapshot::default() }
         }
-        fn from_snapshot(snapshot: Self::Snapshot) -> Self {
+        async fn from_snapshot(snapshot: Self::Snapshot) -> Self {
             Self { snapshot }
         }
-        fn from_text(text: &str) -> Result<Self, store::TextError> {
+        async fn from_text(text: &str) -> Result<Self, store::TextError> {
             Ok(Self::from_snapshot(<SemioValueSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
-        fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
+        async fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
             Ok(Self::from_snapshot(<SemioValueSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
         }
-        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
+        async fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let diff = apply_semio_value_mutation(&mut self.snapshot, &mutation);
             (self, diff)
         }
-        fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
+        async fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
             self.snapshot = <SemioValueTreeDiff as protocol::MutationDiff<SemioValueSnapshot>>::apply(&diff, &self.snapshot)?;
             Ok(self)
         }
-        fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
+        async fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
             Ok(self.snapshot)
         }
     }
@@ -130,7 +130,7 @@ pub mod derived_analysis {
         type Parts = SemioValueParts;
         const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("value") };
 
-        fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
+        async fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
             match source {
                 AnalyzeSource::Binary(bytes) => {
                     let marker = STDIO_SEMIOVALUE_DOCUMENT_SCHEMA.as_bytes();
@@ -150,7 +150,7 @@ pub mod derived_analysis {
             }
         }
 
-        fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
+        async fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
             let mut parts = SemioValueParts::default();
             let mut diagnostics = Vec::new();
             let mut confidence = IoConfidence::High;

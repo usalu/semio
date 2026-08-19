@@ -6,7 +6,7 @@ use crate::editor::puzzle2d::{Puzzle2dActionCtx, PUZZLE2D_PANES};
 use semio_framework_plugin::kernel::Effect;
 use serde_json::Value;
 
-pub fn engagement_abort(ctx: &mut Puzzle2dActionCtx<'_>, args: Option<&Value>) {
+pub async fn engagement_abort(ctx: &mut Puzzle2dActionCtx<'_>, args: Option<&Value>) {
     let pane = args.and_then(|value| value.get("pane")).and_then(|value| value.as_str()).unwrap_or(overview::WINDOW_KIND_ID);
     if PUZZLE2D_PANES.contains(&pane) {
         ctx.scene.runtime.engagement_input_by_pane.insert(pane.to_string(), String::new());

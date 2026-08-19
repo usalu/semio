@@ -15,7 +15,7 @@ pub struct OpenInstance {
 /// 🕹️ Selection now only informs which node opens, not a `SetSelection` config mutation (the
 /// framework owns `graph`'s selection state now — ticket
 /// 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM).
-fn open_with_selection(payload: &OpenInstance, doc: &ArtifactView<'_, WorkflowSnapshot>, config: &SpaceConfig, selected: &[String]) -> Emit<WorkflowMutation, SpaceConfigMutation> {
+async fn open_with_selection(payload: &OpenInstance, doc: &ArtifactView<'_, WorkflowSnapshot>, config: &SpaceConfig, selected: &[String]) -> Emit<WorkflowMutation, SpaceConfigMutation> {
     match payload.node_id.clone().or_else(|| crate::engine::space::primary_selected_node_id(selected, config)) {
         Some(node_id) => match doc.snapshot.graph.nodes.iter().find(|row| row.id == node_id) {
             Some(node) => Emit {
@@ -34,11 +34,11 @@ fn open_with_selection(payload: &OpenInstance, doc: &ArtifactView<'_, WorkflowSn
 /// only through that macro-generated path (`SpaceApp::handle` always routes this command through
 /// `apply` below instead); `payload.node_id` (when set) is unaffected — only the "fall back to the
 /// live selection" step degrades to empty.
-pub fn handle(payload: &OpenInstance, doc: &ArtifactView<'_, WorkflowSnapshot>, cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
+pub async fn handle(payload: &OpenInstance, doc: &ArtifactView<'_, WorkflowSnapshot>, cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
     Ok(open_with_selection(payload, doc, cfg.snapshot, &[]))
 }
 
-pub fn apply(payload: &OpenInstance, doc: &ArtifactView<'_, WorkflowSnapshot>, cfg: &ConfigView<'_, SpaceConfig>, interaction: &InteractionView<'_>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
+pub async fn apply(payload: &OpenInstance, doc: &ArtifactView<'_, WorkflowSnapshot>, cfg: &ConfigView<'_, SpaceConfig>, interaction: &InteractionView<'_>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
     Ok(open_with_selection(payload, doc, cfg.snapshot, &interaction.selection("graph").ids))
 }
 
@@ -51,13 +51,13 @@ mod tests {
     use crate::demo_space_projection;
 
     #[test]
-    fn space_command_op_text_round_trips_every_variant() {
+    async fn space_command_op_text_round_trips_every_variant() {
         store::os_store::test_support::assert_op_line_round_trip(&SpaceCommand::OpenInstance(OpenInstance { node_id: Some("n1".into()) }));
         store::os_store::test_support::assert_op_line_round_trip(&SpaceCommand::CloseFocusedInstance(crate::engine::space::commands::close_focused_instance::CloseFocusedInstance {}));
     }
 
     #[test]
-    fn open_instance_emits_open_plugin_instance_effect_matching_instance() {
+    async fn open_instance_emits_open_plugin_instance_effect_matching_instance() {
         seed_draw_plugin();
         let projection = demo_space_projection();
         let node = projection.graph.nodes.iter().find(|node| node.plugin_id == "draw").expect("draw node").clone();
@@ -78,7 +78,7 @@ mod tests {
     }
 
     #[test]
-    fn open_and_close_focused_instance() {
+    async fn open_and_close_focused_instance() {
         let projection = demo_space_projection();
         let config = SpaceConfig::default();
         let node_id = projection.graph.nodes.first().expect("node").id.clone();

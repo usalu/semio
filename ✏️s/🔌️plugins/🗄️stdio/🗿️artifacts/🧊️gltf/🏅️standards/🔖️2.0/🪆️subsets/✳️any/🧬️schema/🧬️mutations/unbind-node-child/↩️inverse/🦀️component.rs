@@ -15,7 +15,7 @@ pub struct GltfUnbindNodeChildInverse {
     pub touched_paths: Vec<String>,
 }
 
-pub fn derive(payload: &GltfUnbindNodeChildPayload, base: &GltfSnapshot) -> Result<GltfUnbindNodeChildInverse, GltfTopLevelMutationRejection> {
+pub async fn derive(payload: &GltfUnbindNodeChildPayload, base: &GltfSnapshot) -> Result<GltfUnbindNodeChildInverse, GltfTopLevelMutationRejection> {
     validate(payload, base)?;
     let position =
         base.document.nodes[payload.parent].children.iter().position(|child| *child == payload.child).ok_or_else(|| reject("gltf.mutation.relation-absent", format!("document/nodes/{}/children", payload.parent), "child is not linked to parent"))?;
@@ -29,7 +29,7 @@ pub fn derive(payload: &GltfUnbindNodeChildPayload, base: &GltfSnapshot) -> Resu
     })
 }
 
-pub fn apply(base: &GltfSnapshot, inverse: &GltfUnbindNodeChildInverse) -> Result<GltfSnapshot, GltfTopLevelMutationRejection> {
+pub async fn apply(base: &GltfSnapshot, inverse: &GltfUnbindNodeChildInverse) -> Result<GltfSnapshot, GltfTopLevelMutationRejection> {
     let path = format!("document/nodes/{}/children/{}", inverse.parent, inverse.position);
     if inverse.touched_paths.len() != 1 || inverse.touched_paths[0] != path {
         return Err(reject("gltf.mutation.invalid-touched-path", path, "inverse touched path does not match its edge coordinates"));
@@ -43,6 +43,6 @@ pub fn apply(base: &GltfSnapshot, inverse: &GltfUnbindNodeChildInverse) -> Resul
     Ok(next)
 }
 
-pub fn encode(inverse: &GltfUnbindNodeChildInverse) -> Result<Vec<u8>, serde_json::Error> {
+pub async fn encode(inverse: &GltfUnbindNodeChildInverse) -> Result<Vec<u8>, serde_json::Error> {
     serde_json::to_vec(inverse)
 }

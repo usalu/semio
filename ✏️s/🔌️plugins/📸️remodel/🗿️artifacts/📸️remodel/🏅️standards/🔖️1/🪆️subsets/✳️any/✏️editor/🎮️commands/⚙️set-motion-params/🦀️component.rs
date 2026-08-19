@@ -17,7 +17,7 @@ pub struct SetMotionParams {
     pub min_track_length_frames: u32,
 }
 
-pub fn handle(payload: &SetMotionParams, _doc: &ArtifactView<'_, RemodelSnapshot>, _cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelMutation, RemodelConfigMutation>, Fault> {
+pub async fn handle(payload: &SetMotionParams, _doc: &ArtifactView<'_, RemodelSnapshot>, _cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelMutation, RemodelConfigMutation>, Fault> {
     Ok(Emit::mutations(vec![update_motion_params(MotionParams {
         enabled: payload.enabled,
         max_tracks: payload.max_tracks,

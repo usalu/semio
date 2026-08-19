@@ -15,7 +15,7 @@ pub struct CanvasPointerMove {
     pub y: f64,
 }
 
-pub fn handle(payload: &CanvasPointerMove, doc: &ArtifactView<'_, WiresSnapshot>, cfg: &ConfigView<'_, WiresConfig>) -> Result<Emit<WiresMutation, WiresConfigMutation>, Fault> {
+pub async fn handle(payload: &CanvasPointerMove, doc: &ArtifactView<'_, WiresSnapshot>, cfg: &ConfigView<'_, WiresConfig>) -> Result<Emit<WiresMutation, WiresConfigMutation>, Fault> {
     let document = doc.snapshot;
     let config = cfg.snapshot;
     let Some(drag_node_id) = config.drag_node_id.clone() else { return Ok(Emit::default()) };

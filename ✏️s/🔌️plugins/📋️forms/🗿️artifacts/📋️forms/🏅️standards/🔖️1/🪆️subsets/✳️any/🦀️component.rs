@@ -5,7 +5,7 @@
 //! per-plugin convention — `grep -n "pub mod editor\b\|pub mod viewer\b" 📦️glue.rs` confirms — not
 //! nested under `artifacts::forms::…`, per `📓️recipe-subset.md` §5 gotcha 1).
 
-pub fn subset() -> semio_framework_plugin::app::declarations::SubsetDeclaration {
+pub async fn subset() -> semio_framework_plugin::app::declarations::SubsetDeclaration {
     use crate::artifacts::forms::standards::v1::subsets::any::{io, schema};
     use crate::artifacts::forms::FORMS_DIALECT;
     use crate::editor::forms as editor;
@@ -14,12 +14,12 @@ pub fn subset() -> semio_framework_plugin::app::declarations::SubsetDeclaration 
     use semio_framework_plugin::ExampleSource;
     use std::sync::OnceLock;
 
-    fn examples() -> &'static [ExampleSource] {
+    async fn examples() -> &'static [ExampleSource] {
         static EXAMPLES: OnceLock<Vec<ExampleSource>> = OnceLock::new();
         EXAMPLES.get_or_init(|| vec![crate::artifacts::forms::examples::demo::source()]).as_slice()
     }
 
-    fn inference_descriptors() -> &'static [::schema::ArtifactInferenceDescriptor] {
+    async fn inference_descriptors() -> &'static [::schema::ArtifactInferenceDescriptor] {
         static DESCRIPTORS: OnceLock<Vec<::schema::ArtifactInferenceDescriptor>> = OnceLock::new();
         DESCRIPTORS.get_or_init(|| vec![schema::inferences::forms_artifact_inference_descriptor()]).as_slice()
     }

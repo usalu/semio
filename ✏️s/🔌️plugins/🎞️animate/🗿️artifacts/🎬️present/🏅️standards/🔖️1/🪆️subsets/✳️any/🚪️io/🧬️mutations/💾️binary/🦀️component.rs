@@ -25,12 +25,12 @@ use protocol::OpBinary;
 use store::{create_document_envelope, materialize_document_snapshot, ArtifactEnvelope, ArtifactStore};
 
 /// 📦️ Encodes a `PresentMutation` to its binary state-patch form.
-pub fn encode_op(operation: &PresentMutation) -> Result<Vec<u8>, protocol::ProtocolError> {
+pub async fn encode_op(operation: &PresentMutation) -> Result<Vec<u8>, protocol::ProtocolError> {
     operation.encode_op()
 }
 
 /// 📖️ Decodes a `PresentMutation` from its binary state-patch form.
-pub fn decode_op(bytes: &[u8]) -> Result<PresentMutation, protocol::ProtocolError> {
+pub async fn decode_op(bytes: &[u8]) -> Result<PresentMutation, protocol::ProtocolError> {
     PresentMutation::decode_op(bytes)
 }
 
@@ -41,12 +41,12 @@ pub type PresentStore = ArtifactStore<PresentSnapshot, PresentMutation>;
 
 //#region 🔖️VcsEnvelope
 /// 📦️ Creates an empty typed VCS envelope for a presentation deck document.
-pub fn create_present_envelope(id: &str) -> PresentEnvelope {
+pub async fn create_present_envelope(id: &str) -> PresentEnvelope {
     create_document_envelope(PRESENT_DOCUMENT_SCHEMA, id, empty_present_snapshot(), None)
 }
 
 /// 📐️ Replays every stored edit in `envelope_json` and returns the materialized deck projection.
-pub fn materialize_present_projection_json(envelope_json: &str) -> Result<PresentSnapshot, PresentError> {
+pub async fn materialize_present_projection_json(envelope_json: &str) -> Result<PresentSnapshot, PresentError> {
     let envelope: PresentEnvelope = serde_json::from_str(envelope_json)?;
     let edit_ids: Vec<String> = envelope.vcs.edits.iter().map(|edit| edit.id.clone()).collect();
     Ok(materialize_document_snapshot(&envelope, &edit_ids)?)
@@ -62,7 +62,7 @@ mod tests {
     use store::{os_store::test_support, ArtifactCommand};
 
     #[test]
-    fn op_binary_round_trips_and_agrees_with_text() {
+    async fn op_binary_round_trips_and_agrees_with_text() {
         let operation = PresentMutation::ReplaceTiles(replace_tiles::mutation::ReplaceTiles { new_tiles: Vec::new() });
         test_support::assert_op_text_binary_equivalence(&operation);
         let bytes = encode_op(&operation).expect("encode");
@@ -70,7 +70,7 @@ mod tests {
     }
 
     #[test]
-    fn envelope_helpers_round_trip() {
+    async fn envelope_helpers_round_trip() {
         let envelope = create_present_envelope("deck-1");
         let json = serde_json::to_string(&envelope).expect("serialize");
         let deck = materialize_present_projection_json(&json).expect("materialize");
@@ -79,7 +79,7 @@ mod tests {
     }
 
     #[test]
-    fn present_deck_materializes() {
+    async fn present_deck_materializes() {
         let mut store = PresentStore::new(create_document_envelope(PRESENT_DOCUMENT_SCHEMA, "animate-present", empty_present_snapshot(), None)).expect("valid artifact store fixture");
         store
             .dispatch(ArtifactCommand::Apply {
@@ -92,7 +92,7 @@ mod tests {
 
     //#region 🔖️DocumentTextTests
     #[test]
-    fn document_text_round_trip_with_operation_applied() {
+    async fn document_text_round_trip_with_operation_applied() {
         let mut store = PresentStore::new(create_document_envelope(PRESENT_DOCUMENT_SCHEMA, "animate-present", crate::artifacts::present::default_present_snapshot(), None)).expect("valid artifact store fixture");
         store
             .dispatch(ArtifactCommand::Apply {

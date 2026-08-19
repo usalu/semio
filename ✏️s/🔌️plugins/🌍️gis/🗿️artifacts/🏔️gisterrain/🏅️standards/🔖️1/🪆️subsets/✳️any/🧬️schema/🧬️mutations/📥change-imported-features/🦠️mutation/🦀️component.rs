@@ -20,15 +20,15 @@ pub struct ChangeImportedFeatures {
 impl MutationKind<GisTerrainSnapshot, GisTerrainMutation> for ChangeImportedFeatures {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "change", entity: "imported-features", kind: "change-imported-features", record: "ChangedImportedFeatures" };
 
-    fn diff(&self, base: &GisTerrainSnapshot) -> protocol::MutationOutcome<GisTerrainDiff> {
+    async fn diff(&self, base: &GisTerrainSnapshot) -> protocol::MutationOutcome<GisTerrainDiff> {
         super::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &GisTerrainSnapshot) -> Vec<GisTerrainMutation> {
+    async fn inverse(&self, base: &GisTerrainSnapshot) -> Vec<GisTerrainMutation> {
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         "Change imported terrain features".to_string()
     }
 }

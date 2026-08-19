@@ -6,7 +6,7 @@ use crate::artifacts::program::ProgramMutation;
 use crate::artifacts::program::ProgramSnapshot;
 
 /// ↩️ Undo a delete by recreating the captured row. Missing target ⇒ nothing to undo.
-pub fn inverse(payload: &super::mutation::DeleteComplianceRecord, base: &ProgramSnapshot) -> Vec<ProgramMutation> {
+pub async fn inverse(payload: &super::mutation::DeleteComplianceRecord, base: &ProgramSnapshot) -> Vec<ProgramMutation> {
     match base.compliance_records.iter().find(|row| row.header.id == payload.id) {
         Some(existing) => vec![ProgramMutation::CreateComplianceRecord(super::super::create_compliance_record::mutation::CreateComplianceRecord { compliance_record: existing.clone() })],
         None => Vec::new(),

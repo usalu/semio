@@ -9,7 +9,7 @@ use serde::{Deserialize, Serialize};
 
 /// 🕸️ Re-lays out the board and diffs the moved nodes into `move-node` operations — shared by both
 /// `ForceLayout` and `Reorganize`.
-fn force_layout_operations(document: &WiresSnapshot) -> Vec<WiresMutation> {
+async fn force_layout_operations(document: &WiresSnapshot) -> Vec<WiresMutation> {
     let mut board = crate::artifacts::wires::wires_working_board(document);
     force_layout_board(&mut board);
     fixture_nodes(&board)
@@ -36,6 +36,6 @@ fn force_layout_operations(document: &WiresSnapshot) -> Vec<WiresMutation> {
 #[dsl(keyword = "reorganize")]
 pub struct Reorganize {}
 
-pub fn handle(_payload: &Reorganize, doc: &ArtifactView<'_, WiresSnapshot>, _cfg: &ConfigView<'_, WiresConfig>) -> Result<Emit<WiresMutation, WiresConfigMutation>, Fault> {
+pub async fn handle(_payload: &Reorganize, doc: &ArtifactView<'_, WiresSnapshot>, _cfg: &ConfigView<'_, WiresConfig>) -> Result<Emit<WiresMutation, WiresConfigMutation>, Fault> {
     Ok(Emit::mutations(force_layout_operations(doc.snapshot)))
 }

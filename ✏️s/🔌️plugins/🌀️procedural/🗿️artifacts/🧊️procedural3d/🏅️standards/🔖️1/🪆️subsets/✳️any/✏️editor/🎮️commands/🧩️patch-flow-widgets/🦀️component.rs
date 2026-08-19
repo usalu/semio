@@ -15,7 +15,7 @@ pub struct PatchFlowWidgets {
     pub field: String,
     pub value: Option<f64>}
 
-pub fn handle(payload: &PatchFlowWidgets, doc: &ArtifactView<'_, Procedural3dSnapshot>, _cfg: &ConfigView<'_, Procedural3dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural3dMutation, Procedural3dConfigMutation>, Fault> {
+pub async fn handle(payload: &PatchFlowWidgets, doc: &ArtifactView<'_, Procedural3dSnapshot>, _cfg: &ConfigView<'_, Procedural3dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural3dMutation, Procedural3dConfigMutation>, Fault> {
     let fixture = &doc.snapshot.fixture;
     let mut host = host_from_fixture(fixture);
     let baseline = host.fixture.clone();

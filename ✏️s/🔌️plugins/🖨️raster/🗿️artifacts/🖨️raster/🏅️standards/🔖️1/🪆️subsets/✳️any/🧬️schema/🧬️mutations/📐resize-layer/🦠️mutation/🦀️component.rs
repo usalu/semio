@@ -19,19 +19,19 @@ pub struct ResizeLayer {
 impl protocol::MutationKind<RasterSnapshot, RasterMutation> for ResizeLayer {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "resize", entity: "layer", kind: "resize-layer", record: "ResizedLayer" };
 
-    fn diff(&self, base: &RasterSnapshot) -> protocol::MutationOutcome<RasterDiff> {
+    async fn diff(&self, base: &RasterSnapshot) -> protocol::MutationOutcome<RasterDiff> {
         crate::artifacts::raster::mutations::resize_layer::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &RasterSnapshot) -> Vec<RasterMutation> {
+    async fn inverse(&self, base: &RasterSnapshot) -> Vec<RasterMutation> {
         crate::artifacts::raster::mutations::resize_layer::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         format!("Resize layer {} to {}x{}", self.layer_id, self.new_width, self.new_height)
     }
 
-    fn target(&self) -> Vec<String> {
+    async fn target(&self) -> Vec<String> {
         vec![self.layer_id.clone()]
     }
 }

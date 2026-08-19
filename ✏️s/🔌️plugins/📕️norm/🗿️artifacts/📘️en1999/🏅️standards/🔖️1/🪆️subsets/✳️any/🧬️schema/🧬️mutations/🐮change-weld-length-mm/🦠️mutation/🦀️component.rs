@@ -15,15 +15,15 @@ pub struct ChangeWeldLengthMm {
 impl protocol::MutationKind<En1999Snapshot, En1999Mutation> for ChangeWeldLengthMm {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "weld-length-mm", kind: "change-weld-length-mm", record: "ChangedWeldLengthMm" };
 
-    fn diff(&self, base: &En1999Snapshot) -> protocol::MutationOutcome<En1999Diff> {
+    async fn diff(&self, base: &En1999Snapshot) -> protocol::MutationOutcome<En1999Diff> {
         crate::artifacts::en1999::mutations::change_weld_length_mm::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &En1999Snapshot) -> Vec<En1999Mutation> {
+    async fn inverse(&self, base: &En1999Snapshot) -> Vec<En1999Mutation> {
         crate::artifacts::en1999::mutations::change_weld_length_mm::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         format!("Change weld length [mm] to {}", self.new_weld_length_mm)
     }
 }

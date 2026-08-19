@@ -28,7 +28,7 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 /// primitive every single-field node mutation (`move-node`/`resize-node`/`change-node-kind`/
 /// `change-node-shape`/`edit-node-text`/`set-node-root`) builds its `🔺️diff` from. No-op when
 /// `node_id` isn't found (the diff simply carries no change for a missing target).
-pub fn set_node_field(board: &mut DslValue, node_id: &str, key: &str, value: DslValue) {
+pub async fn set_node_field(board: &mut DslValue, node_id: &str, key: &str, value: DslValue) {
     if let Some(DslValue::Object(entries)) = array_mut(board, "nodes").iter_mut().find(|node| entity_id(node, "id") == Some(node_id)) {
         match entries.iter_mut().find(|(entry_key, _)| entry_key.as_str() == key) {
             Some((_, slot)) => *slot = value,
@@ -85,11 +85,11 @@ mod tests {
     use store::apply_mutation;
     use store::os_store::test_support::assert_op_line_round_trip;
 
-    fn node(id: &str, text: &str) -> DslValue {
+    async fn node(id: &str, text: &str) -> DslValue {
         dsl::to_dsl_value(&json!({ "id": id, "nodeKind": "identity", "shape": "circle", "x": 0.0, "y": 0.0, "radius": 24.0, "text": text, "handles": [] })).unwrap()
     }
 
-    fn round_trip(snapshot: &WiresSnapshot, operation: &WiresMutation) -> WiresSnapshot {
+    async fn round_trip(snapshot: &WiresSnapshot, operation: &WiresMutation) -> WiresSnapshot {
         let (forward, _messages) = apply_mutation(snapshot, operation).expect("valid mutation");
         let mut restored = forward.clone();
         for back in operation.inverse(snapshot) {
@@ -101,7 +101,7 @@ mod tests {
     }
 
     #[test]
-    fn create_delete_node_round_trip() {
+    async fn create_delete_node_round_trip() {
         let snapshot = empty_wires_snapshot();
         let with_node = round_trip(&snapshot, &create_node(node("node-1", "Alpha")));
         assert_eq!(crate::artifacts::wires::wires_working_board(&with_node).get("nodes").and_then(|value| value.as_array()).map(|items| items.len()), Some(1));
@@ -110,7 +110,7 @@ mod tests {
     }
 
     #[test]
-    fn move_node_round_trip() {
+    async fn move_node_round_trip() {
         let snapshot = round_trip(&empty_wires_snapshot(), &create_node(node("node-1", "Alpha")));
         let moved = round_trip(&snapshot, &move_node("node-1".into(), 40.0, 30.0));
         let found = find_board_node(&moved, "node-1").expect("node-1");
@@ -119,42 +119,42 @@ mod tests {
     }
 
     #[test]
-    fn resize_node_round_trip() {
+    async fn resize_node_round_trip() {
         let snapshot = round_trip(&empty_wires_snapshot(), &create_node(node("node-1", "Alpha")));
         let resized = round_trip(&snapshot, &resize_node("node-1".into(), Some(48.0), None, None));
         assert_eq!(find_board_node(&resized, "node-1").and_then(|node| node.get("radius").and_then(|value| value.as_f64())), Some(48.0));
     }
 
     #[test]
-    fn change_node_kind_round_trip() {
+    async fn change_node_kind_round_trip() {
         let snapshot = round_trip(&empty_wires_snapshot(), &create_node(node("node-1", "Alpha")));
         let changed = round_trip(&snapshot, &change_node_kind("node-1".into(), "topic".into()));
         assert_eq!(find_board_node(&changed, "node-1").and_then(|node| node.get("nodeKind").and_then(|value| value.as_str()).map(str::to_string)), Some("topic".to_string()));
     }
 
     #[test]
-    fn change_node_shape_round_trip() {
+    async fn change_node_shape_round_trip() {
         let snapshot = round_trip(&empty_wires_snapshot(), &create_node(node("node-1", "Alpha")));
         let changed = round_trip(&snapshot, &change_node_shape("node-1".into(), "rectangle".into()));
         assert_eq!(find_board_node(&changed, "node-1").and_then(|node| node.get("shape").and_then(|value| value.as_str()).map(str::to_string)), Some("rectangle".to_string()));
     }
 
     #[test]
-    fn edit_node_text_round_trip() {
+    async fn edit_node_text_round_trip() {
         let snapshot = round_trip(&empty_wires_snapshot(), &create_node(node("node-1", "Alpha")));
         let edited = round_trip(&snapshot, &edit_node_text("node-1".into(), "Renamed".into()));
         assert_eq!(find_board_node(&edited, "node-1").and_then(|node| node.get("text").cloned()), Some(DslValue::String("Renamed".into())));
     }
 
     #[test]
-    fn set_node_root_round_trip() {
+    async fn set_node_root_round_trip() {
         let snapshot = round_trip(&empty_wires_snapshot(), &create_node(node("node-1", "Alpha")));
         let set = round_trip(&snapshot, &set_node_root("node-1".into(), true));
         assert_eq!(find_board_node(&set, "node-1").and_then(|node| node.get("root").and_then(|value| value.as_bool())), Some(true));
     }
 
     #[test]
-    fn connect_disconnect_nodes_round_trip() {
+    async fn connect_disconnect_nodes_round_trip() {
         let mut snapshot = empty_wires_snapshot();
         snapshot = apply_mutation(&snapshot, &create_node(node("node-1", "A")))
             .expect("valid mutation")
@@ -173,12 +173,12 @@ mod tests {
     }
 
     #[test]
-    fn op_text_round_trip_create_node() {
+    async fn op_text_round_trip_create_node() {
         assert_op_line_round_trip(&create_node(node("node-1", "Alpha")));
     }
 
     #[test]
-    fn op_text_round_trip_move_node() {
+    async fn op_text_round_trip_move_node() {
         assert_op_line_round_trip(&move_node("node-1".into(), 1.0, 2.0));
     }
 
@@ -188,7 +188,7 @@ mod tests {
     /// kinds: an id-keyed create/delete pair (`create-node`) and a single-field addressed setter
     /// (`move-node`).
     #[test]
-    fn create_node_satisfies_the_inverse_and_absorb_laws() {
+    async fn create_node_satisfies_the_inverse_and_absorb_laws() {
         let base = empty_wires_snapshot();
         let mutation = create_node(node("node-1", "Alpha"));
         protocol::testkit::assert_mutation_inverse_law(&base, &mutation);
@@ -198,7 +198,7 @@ mod tests {
     }
 
     #[test]
-    fn move_node_satisfies_the_inverse_law() {
+    async fn move_node_satisfies_the_inverse_law() {
         let base = round_trip(&empty_wires_snapshot(), &create_node(node("node-1", "Alpha")));
         let mutation = move_node("node-1".into(), 40.0, 30.0);
         protocol::testkit::assert_mutation_inverse_law(&base, &mutation);
@@ -209,25 +209,25 @@ mod tests {
     /// ⚖️ `📋️contract-freeze.md` §C2 laws, per verb family (`assert_outcome_policy_matrix` is not yet
     /// landed in `📡️spr/🧪️testkit` — TODO(1-D testkit laws pending) once it lands).
     #[test]
-    fn delete_missing_node_is_a_target_missing_error() {
+    async fn delete_missing_node_is_a_target_missing_error() {
         let base = empty_wires_snapshot();
         protocol::testkit::assert_missing_target_is_error(&base, &delete_node("does-not-exist".into()));
     }
 
     #[test]
-    fn move_missing_node_is_a_target_missing_error() {
+    async fn move_missing_node_is_a_target_missing_error() {
         let base = empty_wires_snapshot();
         protocol::testkit::assert_missing_target_is_error(&base, &move_node("does-not-exist".into(), 1.0, 2.0));
     }
 
     #[test]
-    fn disconnect_missing_edge_is_a_target_missing_error() {
+    async fn disconnect_missing_edge_is_a_target_missing_error() {
         let base = empty_wires_snapshot();
         protocol::testkit::assert_missing_target_is_error(&base, &disconnect_nodes("does-not-exist".into()));
     }
 
     #[test]
-    fn create_node_duplicate_id_never_applies() {
+    async fn create_node_duplicate_id_never_applies() {
         let base = round_trip(&empty_wires_snapshot(), &create_node(node("node-1", "Alpha")));
         let duplicate = create_node(node("node-1", "Alpha Again"));
         protocol::testkit::assert_fatal_never_applies(&duplicate.diff(&base));
@@ -235,7 +235,7 @@ mod tests {
     //#endregion 🧪️OutcomeLaws
 
     #[test]
-    fn dispatch_registers_semantic_descriptors() {
+    async fn dispatch_registers_semantic_descriptors() {
         register_wires_mutation_descriptors();
         assert_eq!(WiresMutation::kinds().len(), 10);
         for kind in WiresMutation::kinds() {

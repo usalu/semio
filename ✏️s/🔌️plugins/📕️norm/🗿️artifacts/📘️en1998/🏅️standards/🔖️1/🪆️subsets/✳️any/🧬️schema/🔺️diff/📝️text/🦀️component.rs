@@ -13,7 +13,7 @@ use protocol::MutationDiff;
 
 //#region 🔖️Apply
 impl En1998Diff {
-    pub fn apply_to_artifact(&self, artifact: &En1998Artifact) -> protocol::MutationApplyResult<En1998Artifact> {
+    pub async fn apply_to_artifact(&self, artifact: &En1998Artifact) -> protocol::MutationApplyResult<En1998Artifact> {
         Ok({
             if let Some(replacement) = &self.artifact {
                 return Ok((**replacement).clone());
@@ -175,7 +175,7 @@ impl En1998Diff {
 }
 
 impl MutationDiff<En1998Snapshot> for En1998Diff {
-    fn apply(&self, snapshot: &En1998Snapshot) -> protocol::MutationApplyResult<En1998Snapshot> {
+    async fn apply(&self, snapshot: &En1998Snapshot) -> protocol::MutationApplyResult<En1998Snapshot> {
         Ok({
             if let Some(replacement) = &self.artifact {
                 return Ok(replacement.to_snapshot());
@@ -331,7 +331,7 @@ impl MutationDiff<En1998Snapshot> for En1998Diff {
             next
         })
     }
-    fn absorb(&mut self, other: Self) {
+    async fn absorb(&mut self, other: Self) {
         if other.artifact.is_some() {
             *self = other;
             return;
@@ -398,7 +398,7 @@ impl MutationDiff<En1998Snapshot> for En1998Diff {
 //#endregion 🔖️Apply
 
 //#region 🔖️Helpers
-pub fn diff_set_snapshot(snapshot: &En1998Snapshot) -> En1998Diff {
+pub async fn diff_set_snapshot(snapshot: &En1998Snapshot) -> En1998Diff {
     En1998Diff { artifact: Some(Box::new(En1998Artifact::from_snapshot(snapshot.clone()))), ..Default::default() }
 }
 //#endregion 🔖️Helpers
@@ -411,7 +411,7 @@ mod tests {
     use protocol::{Mutation as _, MutationDiff};
 
     #[test]
-    fn change_mutation_diff_updates_only_its_field() {
+    async fn change_mutation_diff_updates_only_its_field() {
         let base = En1998Snapshot::default();
         let mutation = En1998Mutation::ChangeSeismicZone(crate::artifacts::en1998::mutations::change_seismic_zone::mutation::ChangeSeismicZone { new_seismic_zone: 3 });
         let outcome = mutation.diff(&base);

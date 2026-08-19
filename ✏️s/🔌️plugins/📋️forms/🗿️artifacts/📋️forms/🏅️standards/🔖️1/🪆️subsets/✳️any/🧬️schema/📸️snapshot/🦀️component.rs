@@ -34,7 +34,7 @@ pub struct FormsSnapshot {
 }
 
 impl Default for FormsSnapshot {
-    fn default() -> Self {
+    async fn default() -> Self {
         forms_snapshot_with_state(FORMS_DOCUMENT_SCHEMA.into(), "forms".into(), "1".into(), None, Vec::new())
     }
 }

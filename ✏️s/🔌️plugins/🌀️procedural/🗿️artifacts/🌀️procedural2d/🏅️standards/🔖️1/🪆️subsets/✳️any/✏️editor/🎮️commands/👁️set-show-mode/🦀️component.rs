@@ -12,7 +12,7 @@ use serde::{Deserialize, Serialize};
 pub struct SetShowMode {
     pub value: String}
 
-pub fn handle(payload: &SetShowMode, _doc: &ArtifactView<'_, Procedural2dSnapshot>, _cfg: &ConfigView<'_, Procedural2dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural2dMutation, Procedural2dConfigMutation>, Fault> {
+pub async fn handle(payload: &SetShowMode, _doc: &ArtifactView<'_, Procedural2dSnapshot>, _cfg: &ConfigView<'_, Procedural2dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural2dMutation, Procedural2dConfigMutation>, Fault> {
     Ok(Emit::config(vec![Procedural2dConfigMutation::SetShowMode { value: payload.value.clone() }]))
 }
 
@@ -24,7 +24,7 @@ mod tests {
     use crate::editor::procedural2d::Procedural2dCommand;
 
     #[test]
-    fn set_show_mode_is_config_only() {
+    async fn set_show_mode_is_config_only() {
         let mut app = app();
         let before = app.snapshot().expect("snapshot");
         dispatch(&mut app, Procedural2dCommand::SetShowMode(SetShowMode { value: "wire".into() }));

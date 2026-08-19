@@ -9,6 +9,6 @@ use serde::{Deserialize, Serialize};
 #[dsl(keyword = "previous-step")]
 pub struct PreviousStep {}
 
-pub fn handle(_payload: &PreviousStep, _doc: &ArtifactView<'_, FormsSnapshot>, cfg: &ConfigView<'_, FormsConfig>) -> Result<Emit<FormMutation, FormsConfigMutation>, Fault> {
+pub async fn handle(_payload: &PreviousStep, _doc: &ArtifactView<'_, FormsSnapshot>, cfg: &ConfigView<'_, FormsConfig>) -> Result<Emit<FormMutation, FormsConfigMutation>, Fault> {
     Ok(Emit::config(vec![FormsConfigMutation::SetStepIndex { index: cfg.snapshot.current_step_index.saturating_sub(1) }]))
 }

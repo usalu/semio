@@ -6,6 +6,6 @@ use crate::artifacts::gltf::schema::mutations::change_scene_name::mutation::{val
 use crate::artifacts::gltf::schema::mutations::top_level_private::GltfTopLevelMutationRejection;
 #[derive(Clone,Debug,PartialEq,Serialize,Deserialize)]#[serde(rename_all="camelCase")]
 pub struct GltfChangeSceneNameDiff{pub operation:GltfChangeSceneNamePayload,pub after:Option<String>,pub touched_paths:Vec<String>}
-pub fn derive(operation:&GltfChangeSceneNamePayload,base:&GltfSnapshot)->Result<GltfChangeSceneNameDiff,GltfTopLevelMutationRejection>{validate(operation,base)?;let after=operation.value.clone();Ok(GltfChangeSceneNameDiff{operation:operation.clone(),after,touched_paths:["document/scenes/*/name"].into_iter().map(str::to_owned).collect()})}
-pub fn apply(base:&GltfSnapshot,diff:&GltfChangeSceneNameDiff)->Result<GltfSnapshot,GltfTopLevelMutationRejection>{let mut next=base.clone();next.document.scenes[diff.operation.scene].name=diff.after.clone();Ok(next)}
-pub fn encode(diff:&GltfChangeSceneNameDiff)->Result<Vec<u8>,serde_json::Error>{serde_json::to_vec(diff)}
+pub async fn derive(operation:&GltfChangeSceneNamePayload,base:&GltfSnapshot)->Result<GltfChangeSceneNameDiff,GltfTopLevelMutationRejection>{validate(operation,base)?;let after=operation.value.clone();Ok(GltfChangeSceneNameDiff{operation:operation.clone(),after,touched_paths:["document/scenes/*/name"].into_iter().map(str::to_owned).collect()})}
+pub async fn apply(base:&GltfSnapshot,diff:&GltfChangeSceneNameDiff)->Result<GltfSnapshot,GltfTopLevelMutationRejection>{let mut next=base.clone();next.document.scenes[diff.operation.scene].name=diff.after.clone();Ok(next)}
+pub async fn encode(diff:&GltfChangeSceneNameDiff)->Result<Vec<u8>,serde_json::Error>{serde_json::to_vec(diff)}

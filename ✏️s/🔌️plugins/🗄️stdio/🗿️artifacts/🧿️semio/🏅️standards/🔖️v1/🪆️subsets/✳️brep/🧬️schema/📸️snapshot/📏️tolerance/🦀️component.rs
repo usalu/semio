@@ -26,7 +26,7 @@ impl Resolution {
 }
 
 impl Default for Resolution {
-    fn default() -> Self {
+    async fn default() -> Self {
         Resolution::DEFAULT
     }
 }
@@ -43,35 +43,35 @@ pub struct Tol(pub f64);
 impl Tol {
     pub const DEFAULT: Tol = Tol(Resolution::DEFAULT.linear);
 
-    pub fn new(value: f64) -> Self {
+    pub async fn new(value: f64) -> Self {
         debug_assert!(value.is_finite(), "tolerance must be finite");
         Tol(value.max(0.0))
     }
-    pub fn value(self) -> f64 {
+    pub async fn value(self) -> f64 {
         self.0
     }
     /// 🎚️ True when `distance` is within this tolerance of zero.
-    pub fn contains(self, distance: f64) -> bool {
+    pub async fn contains(self, distance: f64) -> bool {
         distance.abs() <= self.0
     }
     /// 🎚️ The tighter (smaller) of two tolerances — used when an operation must satisfy both
     /// operands' requirements simultaneously.
-    pub fn tighter(self, o: Tol) -> Tol {
+    pub async fn tighter(self, o: Tol) -> Tol {
         Tol(self.0.min(o.0))
     }
     /// 🎚️ The looser (larger) of two tolerances — used when propagating tolerance up the
     /// containment hierarchy (an edge's tolerance must cover every incident vertex tolerance).
-    pub fn looser(self, o: Tol) -> Tol {
+    pub async fn looser(self, o: Tol) -> Tol {
         Tol(self.0.max(o.0))
     }
     /// 🎚️ Scales the tolerance, clamping to zero rather than going negative on a negative factor.
-    pub fn scaled(self, factor: f64) -> Tol {
+    pub async fn scaled(self, factor: f64) -> Tol {
         Tol((self.0 * factor).max(0.0))
     }
 }
 
 impl Default for Tol {
-    fn default() -> Self {
+    async fn default() -> Self {
         Tol::DEFAULT
     }
 }
@@ -80,7 +80,7 @@ impl Default for Tol {
 /// corresponding bound in `coarser` (e.g. a vertex's tolerance must be ≥ zero and every incident
 /// edge's tolerance ≥ the vertex's, every incident face's ≥ the edge's). Returns the first
 /// violating pair, if any.
-pub fn check_containment(finer_label: &str, finer: Tol, coarser_label: &str, coarser: Tol) -> Option<(String, String)> {
+pub async fn check_containment(finer_label: &str, finer: Tol, coarser_label: &str, coarser: Tol) -> Option<(String, String)> {
     if finer.value() > coarser.value() {
         Some((finer_label.to_string(), coarser_label.to_string()))
     } else {
@@ -103,19 +103,19 @@ pub struct Iv {
 }
 
 impl Iv {
-    pub fn exact(v: f64) -> Self {
+    pub async fn exact(v: f64) -> Self {
         Iv { lo: v, hi: v }
     }
-    pub fn new(lo: f64, hi: f64) -> Self {
+    pub async fn new(lo: f64, hi: f64) -> Self {
         debug_assert!(lo <= hi);
         Iv { lo, hi }
     }
-    pub fn contains_zero(self) -> bool {
+    pub async fn contains_zero(self) -> bool {
         self.lo <= 0.0 && self.hi >= 0.0
     }
     /// 🎚️ `Some(true)`/`Some(false)` when the sign is certain, `None` when the interval straddles
     /// zero and the caller must escalate to an exact recomputation.
-    pub fn sign(self) -> Option<std::cmp::Ordering> {
+    pub async fn sign(self) -> Option<std::cmp::Ordering> {
         if self.hi < 0.0 {
             Some(std::cmp::Ordering::Less)
         } else if self.lo > 0.0 {
@@ -127,23 +127,23 @@ impl Iv {
         }
     }
     #[allow(clippy::should_implement_trait)]
-    pub fn add(self, o: Iv) -> Iv {
+    pub async fn add(self, o: Iv) -> Iv {
         Iv::new(self.lo + o.lo, self.hi + o.hi)
     }
     #[allow(clippy::should_implement_trait)]
-    pub fn sub(self, o: Iv) -> Iv {
+    pub async fn sub(self, o: Iv) -> Iv {
         Iv::new(self.lo - o.hi, self.hi - o.lo)
     }
     #[allow(clippy::should_implement_trait)]
-    pub fn mul(self, o: Iv) -> Iv {
+    pub async fn mul(self, o: Iv) -> Iv {
         let candidates = [self.lo * o.lo, self.lo * o.hi, self.hi * o.lo, self.hi * o.hi];
         Iv::new(candidates.iter().copied().fold(f64::INFINITY, f64::min), candidates.iter().copied().fold(f64::NEG_INFINITY, f64::max))
     }
     #[allow(clippy::should_implement_trait)]
-    pub fn neg(self) -> Iv {
+    pub async fn neg(self) -> Iv {
         Iv::new(-self.hi, -self.lo)
     }
-    pub fn widen(self, epsilon: f64) -> Iv {
+    pub async fn widen(self, epsilon: f64) -> Iv {
         Iv::new(self.lo - epsilon, self.hi + epsilon)
     }
 }
@@ -156,7 +156,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn tol_contains_checks_absolute_distance() {
+    async fn tol_contains_checks_absolute_distance() {
         let t = Tol::new(0.01);
         assert!(t.contains(0.005));
         assert!(t.contains(-0.005));
@@ -164,7 +164,7 @@ mod tests {
     }
 
     #[test]
-    fn tol_tighter_and_looser_pick_correctly() {
+    async fn tol_tighter_and_looser_pick_correctly() {
         let a = Tol::new(0.1);
         let b = Tol::new(0.5);
         assert_eq!(a.tighter(b), a);
@@ -172,12 +172,12 @@ mod tests {
     }
 
     #[test]
-    fn negative_tolerance_clamps_to_zero() {
+    async fn negative_tolerance_clamps_to_zero() {
         assert_eq!(Tol::new(-1.0), Tol::new(0.0));
     }
 
     #[test]
-    fn check_containment_flags_violation() {
+    async fn check_containment_flags_violation() {
         // A vertex whose own tolerance ball (0.1) is larger than its incident edge's tube (0.01)
         // violates the containment hierarchy: the finer (vertex) must fit inside the coarser (edge).
         let vertex_tol = Tol::new(0.1);
@@ -189,7 +189,7 @@ mod tests {
     }
 
     #[test]
-    fn interval_add_widens_conservatively() {
+    async fn interval_add_widens_conservatively() {
         let a = Iv::new(1.0, 2.0);
         let b = Iv::new(-1.0, 3.0);
         let sum = a.add(b);
@@ -197,19 +197,19 @@ mod tests {
     }
 
     #[test]
-    fn interval_sign_is_none_when_straddling_zero() {
+    async fn interval_sign_is_none_when_straddling_zero() {
         let iv = Iv::new(-0.001, 0.001);
         assert_eq!(iv.sign(), None);
     }
 
     #[test]
-    fn interval_sign_certain_when_strictly_positive_or_negative() {
+    async fn interval_sign_certain_when_strictly_positive_or_negative() {
         assert_eq!(Iv::new(0.5, 1.0).sign(), Some(std::cmp::Ordering::Greater));
         assert_eq!(Iv::new(-1.0, -0.5).sign(), Some(std::cmp::Ordering::Less));
     }
 
     #[test]
-    fn interval_mul_contains_true_product_for_mixed_signs() {
+    async fn interval_mul_contains_true_product_for_mixed_signs() {
         let a = Iv::new(-2.0, 3.0);
         let b = Iv::new(-1.0, 4.0);
         let product = a.mul(b);
@@ -220,7 +220,7 @@ mod tests {
         use super::*;
 
         #[test]
-        fn interval_arithmetic_always_contains_scalar_result() {
+        async fn interval_arithmetic_always_contains_scalar_result() {
             let mut rng = semio_framework_geometry::random::Rng::from_seed(3);
             for _ in 0..500 {
                 let a = rng.next_f64() * 20.0 - 10.0;

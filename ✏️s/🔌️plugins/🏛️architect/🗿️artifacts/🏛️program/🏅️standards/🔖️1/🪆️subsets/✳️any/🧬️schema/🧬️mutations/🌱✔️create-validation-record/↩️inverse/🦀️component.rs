@@ -6,6 +6,6 @@ use crate::artifacts::program::ProgramMutation;
 use crate::artifacts::program::ProgramSnapshot;
 
 /// ↩️ Undo a create by deleting the row it added.
-pub fn inverse(payload: &super::mutation::CreateValidationRecord, _base: &ProgramSnapshot) -> Vec<ProgramMutation> {
+pub async fn inverse(payload: &super::mutation::CreateValidationRecord, _base: &ProgramSnapshot) -> Vec<ProgramMutation> {
     vec![ProgramMutation::DeleteValidationRecord(super::super::delete_validation_record::mutation::DeleteValidationRecord { id: payload.validation_record.header.id.clone() })]
 }

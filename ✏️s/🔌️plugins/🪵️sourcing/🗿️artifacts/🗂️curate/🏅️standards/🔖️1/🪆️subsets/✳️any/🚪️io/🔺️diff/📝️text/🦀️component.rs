@@ -16,7 +16,7 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 
 
 //#region 🔖️Apply
-pub fn apply_stock_extra_delta(
+pub async fn apply_stock_extra_delta(
     stock_extra: &[ObjectKindExtra],
     delta: &CurateStockExtraDelta,
 ) -> protocol::MutationApplyResult<Vec<ObjectKindExtra>> {
@@ -94,7 +94,7 @@ pub fn apply_stock_extra_delta(
     reorder_named(next, delta.reordered.as_deref(), |extra| extra.id.as_str())
 }
 
-pub fn apply_curated_delta(
+pub async fn apply_curated_delta(
     curated: &[CuratedItem],
     delta: &CurateCuratedDelta,
 ) -> protocol::MutationApplyResult<Vec<CuratedItem>> {
@@ -170,7 +170,7 @@ pub fn apply_curated_delta(
     reorder_named(next, delta.reordered.as_deref(), |item| item.object_id.as_str())
 }
 
-fn reorder_named<T>(
+async fn reorder_named<T>(
     items: Vec<T>,
     order: Option<&[String]>,
     id: impl for<'a> Fn(&'a T) -> &'a str,
@@ -206,7 +206,7 @@ fn reorder_named<T>(
 
 impl CurateDiff {
     /// 🧬️ Applies every sparse entry (all state classes) onto a full artifact.
-    pub fn apply_to_artifact(&self, artifact: &CurateArtifact) -> protocol::MutationApplyResult<CurateArtifact> {
+    pub async fn apply_to_artifact(&self, artifact: &CurateArtifact) -> protocol::MutationApplyResult<CurateArtifact> {
         Ok({
             if let Some(replacement) = &self.artifact {
                 return Ok((**replacement).clone());
@@ -238,7 +238,7 @@ impl CurateDiff {
 }
 
 /// 🖼️ Whole-artifact replacement from a snapshot (UI fields defaulted).
-pub fn diff_set_snapshot(snapshot: &CurateSnapshot) -> CurateDiff {
+pub async fn diff_set_snapshot(snapshot: &CurateSnapshot) -> CurateDiff {
     CurateDiff {
         artifact: Some(Box::new(CurateArtifact::from_snapshot(snapshot.clone()))),
         ..Default::default()
@@ -246,7 +246,7 @@ pub fn diff_set_snapshot(snapshot: &CurateSnapshot) -> CurateDiff {
 }
 
 impl MutationDiff<CurateSnapshot> for CurateDiff {
-    fn apply(&self, snapshot: &CurateSnapshot) -> protocol::MutationApplyResult<CurateSnapshot> {
+    async fn apply(&self, snapshot: &CurateSnapshot) -> protocol::MutationApplyResult<CurateSnapshot> {
         Ok({
             if let Some(replacement) = &self.artifact {
                 return Ok(replacement.to_snapshot());
@@ -266,7 +266,7 @@ impl MutationDiff<CurateSnapshot> for CurateDiff {
             next
         })
     }
-    fn absorb(&mut self, other: Self) {
+    async fn absorb(&mut self, other: Self) {
         if other.artifact.is_some() {
             *self = other;
             return;
@@ -332,7 +332,7 @@ mod tests {
     /// it any more (the former whole-snapshot-replace variant is banned outright, see `📓️taxonomy.md`), so this exercises the
     /// function directly rather than through a mutation's `diff()`.
     #[test]
-    fn diff_set_snapshot_carries_whole_replacement() {
+    async fn diff_set_snapshot_carries_whole_replacement() {
         let base = CurateSnapshot::default();
         let next = CurateSnapshot::default();
         let diff = diff_set_snapshot(&next);
@@ -340,7 +340,7 @@ mod tests {
     }
 
     #[test]
-    fn absorb_keeps_later_artifact_replacement() {
+    async fn absorb_keeps_later_artifact_replacement() {
         let mut first = CurateDiff {
             artifact: Some(Box::new(CurateArtifact::default())),
             ..Default::default()

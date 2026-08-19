@@ -30,7 +30,7 @@ pub enum JsonAnyEditorCommand {
 }
 
 /// 🧭️ `main::encode_path_id`'s inverse — `""` decodes to the empty (root) path.
-fn decode_path_id(node_id: &str) -> Result<JsonPath, String> {
+async fn decode_path_id(node_id: &str) -> Result<JsonPath, String> {
     if node_id.is_empty() {
         return Ok(Vec::new());
     }
@@ -49,11 +49,11 @@ fn decode_path_id(node_id: &str) -> Result<JsonPath, String> {
 }
 
 impl protocol::OpText for JsonAnyEditorCommand {
-    fn print_op(&self) -> String {
+    async fn print_op(&self) -> String {
         let JsonAnyEditorCommand::SetNode { node_id, value } = self;
         format!("set-node node-id={} value={}", node_id.replace(' ', "%20"), value.replace(' ', "%20"))
     }
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
+    async fn parse_op(line: &str) -> Result<Self, store::TextError> {
         let rest = line.strip_prefix("set-node ").ok_or_else(|| store::TextError::new(format!("json editor command: unknown line {line:?}"), dsl::TextSpan::at(1, 1)))?;
         let mut node_id = None;
         let mut value = None;
@@ -72,10 +72,10 @@ impl protocol::OpText for JsonAnyEditorCommand {
 }
 
 impl protocol::OpBinary for JsonAnyEditorCommand {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         Ok(<Self as protocol::OpText>::print_op(self).into_bytes())
     }
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         let line = String::from_utf8(bytes.to_vec()).map_err(|error| protocol::ProtocolError::Malformed { what: "json editor command utf8", offset: 0, detail: error.to_string() })?;
         <Self as protocol::OpText>::parse_op(&line).map_err(|error| protocol::ProtocolError::Malformed { what: "json editor command", offset: 0, detail: error.to_string() })
     }
@@ -102,14 +102,14 @@ impl ArtifactEditor for JsonAnyEditor {
     const DIALECT: Dialect = JSON_EDITOR_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = STDIO_JSON_DOCUMENT_SCHEMA;
 
-    fn initial_snapshot() -> JsonSnapshot {
+    async fn initial_snapshot() -> JsonSnapshot {
         JsonSnapshot::default()
     }
 
     /// ✏️ An unparseable `node_id` is a documented no-op (`Emit::default()`), never a panic. The
     /// new leaf value always lands as `JsonValue::String` — scalar-type-preserving edits (number,
     /// bool) are a documented future scope, not attempted here.
-    fn handle(
+    async fn handle(
         command: &Self::Command,
         _doc: &ArtifactView<'_, Self::Snapshot>,
         _cfg: &ConfigView<'_, Self::Config>,
@@ -122,7 +122,7 @@ impl ArtifactEditor for JsonAnyEditor {
         Ok(Emit { artifact_mutations: vec![JsonMutation::SetScalar { path, value: JsonValue::String { value: value.clone() } }], description: Some(format!("Set node {node_id}")), ..Default::default() })
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> UiNode {
+    async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> UiNode {
         match body_key {
             main::BODY_KEY => main::render(doc.snapshot),
             _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))),
@@ -132,7 +132,7 @@ impl ArtifactEditor for JsonAnyEditor {
 //#endregion 🔖️Editor
 
 //#region 🔖️Manifest
-pub fn create_json_editor() -> semio_framework_plugin::AppDefinition {
+pub async fn create_json_editor() -> semio_framework_plugin::AppDefinition {
     Editor::builder(JSON_EDITOR_DIALECT)
         .document(["semio", "stdio", "json"])
         .icon_id("list-tree")
@@ -150,32 +150,32 @@ mod tests {
     use super::*;
 
     #[test]
-    fn create_json_editor_builds_a_definition_for_the_editor_role() {
+    async fn create_json_editor_builds_a_definition_for_the_editor_role() {
         let def = create_json_editor();
         assert_eq!(def.role, semio_framework_plugin::AppRole::Editor);
         assert_eq!(def.dialect, JSON_EDITOR_DIALECT.into());
     }
 
     #[test]
-    fn editor_dialect_matches_the_artifact_coordinate() {
+    async fn editor_dialect_matches_the_artifact_coordinate() {
         assert_eq!(<JsonAnyEditor as ArtifactEditor>::DIALECT, JSON_EDITOR_DIALECT);
     }
 
     #[test]
-    fn editor_declares_the_tree_window() {
+    async fn editor_declares_the_tree_window() {
         let def = create_json_editor();
         assert!(def.window_kinds.iter().any(|window| window.id == main::WINDOW_KIND_ID));
     }
 
     #[test]
-    fn decode_path_id_roundtrips_root_and_nested() {
+    async fn decode_path_id_roundtrips_root_and_nested() {
         assert_eq!(decode_path_id("").unwrap(), Vec::<JsonPathSegment>::new());
         assert_eq!(decode_path_id("k=a/i=0").unwrap(), vec![JsonPathSegment::Key("a".into()), JsonPathSegment::Index(0)]);
         assert!(decode_path_id("bad").is_err());
     }
 
     #[test]
-    fn op_text_roundtrip() {
+    async fn op_text_roundtrip() {
         let command = JsonAnyEditorCommand::SetNode { node_id: "k=a/i=0".into(), value: "hello world".into() };
         let printed = <JsonAnyEditorCommand as protocol::OpText>::print_op(&command);
         let parsed = <JsonAnyEditorCommand as protocol::OpText>::parse_op(&printed).expect("parse ok");

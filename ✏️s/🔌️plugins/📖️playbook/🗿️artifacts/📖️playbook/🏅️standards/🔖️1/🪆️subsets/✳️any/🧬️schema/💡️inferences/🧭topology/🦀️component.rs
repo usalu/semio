@@ -22,7 +22,7 @@ pub struct PlaybookTopology {
 //#endregion 🔖️Topology
 
 //#region 🔖️Compute
-fn collect_condition_vars(expr: &PlaybookExpr, names: &mut Vec<String>) {
+async fn collect_condition_vars(expr: &PlaybookExpr, names: &mut Vec<String>) {
     match expr {
         PlaybookExpr::Const { .. } => {}
         PlaybookExpr::Var { name } => names.push(name.clone()),
@@ -41,7 +41,7 @@ fn collect_condition_vars(expr: &PlaybookExpr, names: &mut Vec<String>) {
 
 /// 🧭️ Builds the step/block dependency graph (declaration order + condition-var reads) and
 /// topologically sorts it.
-pub fn compute_playbook_topology(steps: &[PlaybookStep]) -> PlaybookTopology {
+pub async fn compute_playbook_topology(steps: &[PlaybookStep]) -> PlaybookTopology {
     let mut nodes: Vec<String> = Vec::new();
     let mut edges: Vec<(String, String)> = Vec::new();
     let mut block_ids: HashSet<String> = HashSet::new();
@@ -83,7 +83,7 @@ pub fn compute_playbook_topology(steps: &[PlaybookStep]) -> PlaybookTopology {
 /// 🧮️ Kahn's algorithm: a stable (declaration-order-first) topological sort that also yields each
 /// node's longest-path depth from a root, and reports `cycleFree = false` when the queue drains
 /// before every node is visited (the unvisited remainder is exactly the cyclic subgraph).
-fn topological_sort(nodes: Vec<String>, edges: Vec<(String, String)>) -> PlaybookTopology {
+async fn topological_sort(nodes: Vec<String>, edges: Vec<(String, String)>) -> PlaybookTopology {
     let node_count = nodes.len() as u32;
     let mut indegree: HashMap<String, u32> = nodes.iter().map(|id| (id.clone(), 0)).collect();
     let mut adjacency: HashMap<String, Vec<String>> = HashMap::new();
@@ -138,7 +138,7 @@ mod tests {
     use super::*;
     use crate::artifacts::playbook::PlaybookBlock;
 
-    fn block(id: &str, condition: Option<PlaybookExpr>) -> PlaybookBlock {
+    async fn block(id: &str, condition: Option<PlaybookExpr>) -> PlaybookBlock {
         PlaybookBlock {
             id: id.into(),
             label: id.into(),
@@ -163,13 +163,13 @@ mod tests {
         }
     }
 
-    fn step(id: &str, blocks: Vec<PlaybookBlock>) -> PlaybookStep {
+    async fn step(id: &str, blocks: Vec<PlaybookBlock>) -> PlaybookStep {
         PlaybookStep { id: id.into(), title: id.into(), description: None, blocks }
     }
 
     //#region 🧪️TopologyLaws
     #[test]
-    fn a_direct_cycle_between_two_blocks_is_reported() {
+    async fn a_direct_cycle_between_two_blocks_is_reported() {
         let a = block("a", Some(PlaybookExpr::Var { name: "b".into() }));
         let b = block("b", Some(PlaybookExpr::Var { name: "a".into() }));
         let topology = compute_playbook_topology(&[step("s1", vec![a, b])]);
@@ -177,7 +177,7 @@ mod tests {
     }
 
     #[test]
-    fn sequential_steps_without_conditions_stay_cycle_free_with_increasing_depth() {
+    async fn sequential_steps_without_conditions_stay_cycle_free_with_increasing_depth() {
         let topology = compute_playbook_topology(&[step("s1", vec![block("q1", None)]), step("s2", vec![block("q2", None)])]);
         assert!(topology.cycle_free);
         assert_eq!(topology.topo_order, vec!["s1", "q1", "s2", "q2"]);

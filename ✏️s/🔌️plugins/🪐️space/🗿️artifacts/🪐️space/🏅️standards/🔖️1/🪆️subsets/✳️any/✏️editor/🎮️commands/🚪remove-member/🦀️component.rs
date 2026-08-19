@@ -15,7 +15,7 @@ pub struct RemoveMember {
     pub user_id: String,
 }
 
-pub fn handle(payload: &RemoveMember, doc: &ArtifactView<'_, SSpaceSnapshot>, _cfg: &ConfigView<'_, SpaceIndexConfig>) -> Result<Emit<SSpaceMutation, SpaceIndexConfigMutation>, Fault> {
+pub async fn handle(payload: &RemoveMember, doc: &ArtifactView<'_, SSpaceSnapshot>, _cfg: &ConfigView<'_, SpaceIndexConfig>) -> Result<Emit<SSpaceMutation, SpaceIndexConfigMutation>, Fault> {
     Ok(Emit::effect(Effect::ReplayShellCommand { action_id: "os.directory.remove-member".into(), args: semio_framework::optional_json_to_dsl(Some(json!({ "spaceId": doc.snapshot.space_id, "userId": payload.user_id }))) }))
 }
 
@@ -27,7 +27,7 @@ mod tests {
     
 
     #[test]
-    fn remove_member_relays_remove_member() {
+    async fn remove_member_relays_remove_member() {
         let mut app = testkit::new_app();
         let result = app.dispatch_typed(SpaceIndexCommand::RemoveMember(RemoveMember { user_id: "u-1".into() }), &semio_framework_plugin::testkit::meta("local")).expect("remove");
         assert_eq!(result.requested_effects.len(), 1);

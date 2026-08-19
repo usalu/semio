@@ -45,7 +45,7 @@ pub struct IndexedTripleDiff<D, T> {
 }
 
 impl<D, T> Default for IndexedTripleDiff<D, T> {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self { removed: Vec::new(), modified: Vec::new(), added: Vec::new() }
     }
 }
@@ -73,13 +73,13 @@ pub struct NamedTripleDiff<K, D, T> {
 }
 
 impl<K, D, T> Default for NamedTripleDiff<K, D, T> {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self { removed: Vec::new(), modified: Vec::new(), added: Vec::new() }
     }
 }
 
 /// 🛡️ Rejects malformed indexed collection operations before any candidate snapshot is changed.
-pub fn validate_indexed_triple<D, T>(diff: &IndexedTripleDiff<D, T>, base_len: usize, target: impl IntoIterator<Item = impl Into<String>>) -> protocol::MutationApplyResult<()> {
+pub async fn validate_indexed_triple<D, T>(diff: &IndexedTripleDiff<D, T>, base_len: usize, target: impl IntoIterator<Item = impl Into<String>>) -> protocol::MutationApplyResult<()> {
     let target: Vec<String> = target.into_iter().map(Into::into).collect();
     let mut removed = std::collections::BTreeSet::new();
     for &index in &diff.removed {
@@ -107,7 +107,7 @@ pub fn validate_indexed_triple<D, T>(diff: &IndexedTripleDiff<D, T>, base_len: u
 }
 
 /// 🛡️ Rejects missing, duplicate, overlapping, or colliding named collection operations.
-pub fn validate_named_triple<K, D, T, A>(base: &[T], diff: &NamedTripleDiff<K, D, A>, key_of_base: impl Fn(&T) -> K, key_of_added: impl Fn(&A) -> K, target: impl IntoIterator<Item = impl Into<String>>) -> protocol::MutationApplyResult<()>
+pub async fn validate_named_triple<K, D, T, A>(base: &[T], diff: &NamedTripleDiff<K, D, A>, key_of_base: impl Fn(&T) -> K, key_of_added: impl Fn(&A) -> K, target: impl IntoIterator<Item = impl Into<String>>) -> protocol::MutationApplyResult<()>
 where
     K: PartialEq + Clone + std::fmt::Debug,
 {
@@ -166,7 +166,7 @@ pub struct NamedAdded<T> {
 //#region 🔖️Parsing
 /// 📐️ Bracket-depth-aware split — a `sep` inside `[...]` never splits (so a modified/added
 /// entry's own nested `[...]` payload survives the outer `;`/`,` split intact).
-pub fn split_top_level(s: &str, sep: char) -> Vec<&str> {
+pub async fn split_top_level(s: &str, sep: char) -> Vec<&str> {
     if s.is_empty() {
         return Vec::new();
     }
@@ -188,20 +188,20 @@ pub fn split_top_level(s: &str, sep: char) -> Vec<&str> {
     out
 }
 
-pub fn strip_brackets(s: &str) -> Result<&str, String> {
+pub async fn strip_brackets(s: &str) -> Result<&str, String> {
     s.strip_prefix('[').and_then(|s| s.strip_suffix(']')).ok_or_else(|| format!("expected [...], got {s:?}"))
 }
 //#endregion 🔖️Parsing
 
 //#region 🔖️IndexedCodec
-pub fn enc_indexed_triple<D, T>(diff: &IndexedTripleDiff<D, T>, enc_d: impl Fn(&D) -> String, enc_t: impl Fn(&T) -> String) -> String {
+pub async fn enc_indexed_triple<D, T>(diff: &IndexedTripleDiff<D, T>, enc_d: impl Fn(&D) -> String, enc_t: impl Fn(&T) -> String) -> String {
     let removed = diff.removed.iter().map(|i| i.to_string()).collect::<Vec<_>>().join(",");
     let modified = diff.modified.iter().map(|m| format!("{}:{}", m.index, enc_d(&m.diff))).collect::<Vec<_>>().join(",");
     let added = diff.added.iter().map(|a| format!("{}:{}", a.index, enc_t(&a.item))).collect::<Vec<_>>().join(",");
     format!("[{removed}];[{modified}];[{added}]")
 }
 
-pub fn dec_indexed_triple<D, T>(body: &str, dec_d: impl Fn(&str) -> Result<D, String>, dec_t: impl Fn(&str) -> Result<T, String>) -> Result<IndexedTripleDiff<D, T>, String> {
+pub async fn dec_indexed_triple<D, T>(body: &str, dec_d: impl Fn(&str) -> Result<D, String>, dec_t: impl Fn(&str) -> Result<T, String>) -> Result<IndexedTripleDiff<D, T>, String> {
     let three = split_top_level(body, ';');
     let [removed_s, modified_s, added_s] = three.as_slice() else { return Err(format!("indexed triple: expected 3 sections, got {}", three.len())) };
     let removed = split_top_level(strip_brackets(removed_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(|s| s.parse::<usize>().map_err(|e: std::num::ParseIntError| e.to_string())).collect::<Result<Vec<_>, String>>()?;
@@ -226,14 +226,14 @@ pub fn dec_indexed_triple<D, T>(body: &str, dec_d: impl Fn(&str) -> Result<D, St
 //#endregion 🔖️IndexedCodec
 
 //#region 🔖️NamedCodec
-pub fn enc_named_triple<K, D, T>(triple: &NamedTripleDiff<K, D, T>, enc_k: impl Fn(&K) -> String, enc_d: impl Fn(&D) -> String, enc_t: impl Fn(&T) -> String) -> String {
+pub async fn enc_named_triple<K, D, T>(triple: &NamedTripleDiff<K, D, T>, enc_k: impl Fn(&K) -> String, enc_d: impl Fn(&D) -> String, enc_t: impl Fn(&T) -> String) -> String {
     let removed = triple.removed.iter().map(|k| enc_k(k)).collect::<Vec<_>>().join(",");
     let modified = triple.modified.iter().map(|m| format!("{}:{}", enc_k(&m.key), enc_d(&m.diff))).collect::<Vec<_>>().join(",");
     let added = triple.added.iter().map(|t| enc_t(t)).collect::<Vec<_>>().join(",");
     format!("[{removed}];[{modified}];[{added}]")
 }
 
-pub fn dec_named_triple<K, D, T>(s: &str, dec_k: impl Fn(&str) -> Result<K, String>, dec_d: impl Fn(&str) -> Result<D, String>, dec_t: impl Fn(&str) -> Result<T, String>) -> Result<NamedTripleDiff<K, D, T>, String> {
+pub async fn dec_named_triple<K, D, T>(s: &str, dec_k: impl Fn(&str) -> Result<K, String>, dec_d: impl Fn(&str) -> Result<D, String>, dec_t: impl Fn(&str) -> Result<T, String>) -> Result<NamedTripleDiff<K, D, T>, String> {
     let three = split_top_level(s, ';');
     let [removed_s, modified_s, added_s] = three.as_slice() else { return Err(format!("named triple: expected 3 sections, got {}", three.len())) };
     let removed = split_top_level(strip_brackets(removed_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(|e| dec_k(e)).collect::<Result<Vec<_>, String>>()?;
@@ -254,10 +254,10 @@ pub fn dec_named_triple<K, D, T>(s: &str, dec_k: impl Fn(&str) -> Result<K, Stri
 /// consumer instantiating `NamedTripleDiff<K, D, NamedAdded<T>>`, pass
 /// `|a| enc_named_added(a, enc_t)`/`|s| dec_named_added(s, dec_t)` as `enc_named_triple`'s/
 /// `dec_named_triple`'s own `enc_t`/`dec_t` argument.
-pub fn enc_named_added<T>(a: &NamedAdded<T>, enc_t: impl Fn(&T) -> String) -> String {
+pub async fn enc_named_added<T>(a: &NamedAdded<T>, enc_t: impl Fn(&T) -> String) -> String {
     format!("{}:{}", a.index, enc_t(&a.item))
 }
-pub fn dec_named_added<T>(s: &str, dec_t: impl Fn(&str) -> Result<T, String>) -> Result<NamedAdded<T>, String> {
+pub async fn dec_named_added<T>(s: &str, dec_t: impl Fn(&str) -> Result<T, String>) -> Result<NamedAdded<T>, String> {
     let (idx, rest) = s.split_once(':').ok_or_else(|| format!("named added: bad entry {s:?}"))?;
     Ok(NamedAdded { index: idx.parse::<usize>().map_err(|e: std::num::ParseIntError| e.to_string())?, item: dec_t(rest)? })
 }
@@ -268,21 +268,21 @@ pub fn dec_named_added<T>(s: &str, dec_t: impl Fn(&str) -> Result<T, String>) ->
 mod tests {
     use super::*;
 
-    fn enc_u32(v: &u32) -> String {
+    async fn enc_u32(v: &u32) -> String {
         v.to_string()
     }
-    fn dec_u32(s: &str) -> Result<u32, String> {
+    async fn dec_u32(s: &str) -> Result<u32, String> {
         s.parse().map_err(|e: std::num::ParseIntError| e.to_string())
     }
-    fn enc_str(v: &String) -> String {
+    async fn enc_str(v: &String) -> String {
         v.clone()
     }
-    fn dec_str(s: &str) -> Result<String, String> {
+    async fn dec_str(s: &str) -> Result<String, String> {
         Ok(s.to_string())
     }
 
     #[test]
-    fn indexed_triple_round_trips_through_hex_shape() {
+    async fn indexed_triple_round_trips_through_hex_shape() {
         let diff: IndexedTripleDiff<u32, String> = IndexedTripleDiff { removed: vec![2, 5], modified: vec![IndexModified { index: 1, diff: 7 }], added: vec![IndexAdded { index: 3, item: "new".to_string() }] };
         let encoded = enc_indexed_triple(&diff, enc_u32, enc_str);
         let decoded = dec_indexed_triple(&encoded, dec_u32, dec_str).expect("decode");
@@ -290,7 +290,7 @@ mod tests {
     }
 
     #[test]
-    fn named_triple_round_trips_through_hex_shape() {
+    async fn named_triple_round_trips_through_hex_shape() {
         let diff: NamedTripleDiff<String, u32, String> = NamedTripleDiff { removed: vec!["gone".to_string()], modified: vec![NamedModified { key: "kept".to_string(), diff: 9 }], added: vec!["fresh".to_string()] };
         let encoded = enc_named_triple(&diff, enc_str, enc_u32, enc_str);
         let decoded = dec_named_triple(&encoded, dec_str, dec_u32, dec_str).expect("decode");
@@ -298,7 +298,7 @@ mod tests {
     }
 
     #[test]
-    fn named_added_round_trips_through_hex_shape() {
+    async fn named_added_round_trips_through_hex_shape() {
         let diff: NamedTripleDiff<String, u32, NamedAdded<String>> = NamedTripleDiff { removed: vec![], modified: vec![], added: vec![NamedAdded { index: 2, item: "reinserted".to_string() }] };
         let encoded = enc_named_triple(&diff, enc_str, enc_u32, |a| enc_named_added(a, enc_str));
         let decoded = dec_named_triple(&encoded, dec_str, dec_u32, |s| dec_named_added(s, dec_str)).expect("decode");
@@ -313,7 +313,7 @@ mod tests {
     struct NoDefault(u32);
 
     #[test]
-    fn serde_json_round_trips_a_non_default_item_type() {
+    async fn serde_json_round_trips_a_non_default_item_type() {
         let diff: NamedTripleDiff<String, NoDefault, NoDefault> = NamedTripleDiff { removed: vec!["gone".to_string()], modified: vec![NamedModified { key: "kept".to_string(), diff: NoDefault(9) }], added: vec![NoDefault(3)] };
         let json = serde_json::to_string(&diff).expect("serialize");
         let decoded: NamedTripleDiff<String, NoDefault, NoDefault> = serde_json::from_str(&json).expect("deserialize");
@@ -326,7 +326,7 @@ mod tests {
     }
 
     #[test]
-    fn empty_triples_round_trip_to_empty_brackets() {
+    async fn empty_triples_round_trip_to_empty_brackets() {
         let diff: IndexedTripleDiff<u32, String> = IndexedTripleDiff::default();
         let encoded = enc_indexed_triple(&diff, enc_u32, enc_str);
         assert_eq!(encoded, "[];[];[]");
@@ -335,13 +335,13 @@ mod tests {
     }
 
     #[test]
-    fn nested_bracket_payload_does_not_confuse_the_top_level_split() {
+    async fn nested_bracket_payload_does_not_confuse_the_top_level_split() {
         // 🧪️ Depth-awareness proof: an item whose own encoding contains "[a,b]" must not be torn
         // apart by the outer added-list comma split.
-        fn enc_pair(v: &(u32, u32)) -> String {
+        async fn enc_pair(v: &(u32, u32)) -> String {
             format!("[{},{}]", v.0, v.1)
         }
-        fn dec_pair(s: &str) -> Result<(u32, u32), String> {
+        async fn dec_pair(s: &str) -> Result<(u32, u32), String> {
             let inner = strip_brackets(s)?;
             let parts = split_top_level(inner, ',');
             let [a, b] = parts.as_slice() else { return Err("expected 2 fields".to_string()) };
@@ -354,7 +354,7 @@ mod tests {
     }
 
     #[test]
-    fn indexed_preflight_rejects_missing_and_clamped_targets() {
+    async fn indexed_preflight_rejects_missing_and_clamped_targets() {
         let missing: IndexedTripleDiff<(), ()> = IndexedTripleDiff { removed: vec![2], modified: Vec::new(), added: Vec::new() };
         let error = validate_indexed_triple(&missing, 1, ["items"]).unwrap_err();
         assert_eq!(error.code, "mutation.apply.invalid-remove-index");
@@ -366,7 +366,7 @@ mod tests {
     }
 
     #[test]
-    fn named_preflight_rejects_missing_and_colliding_keys() {
+    async fn named_preflight_rejects_missing_and_colliding_keys() {
         let missing: NamedTripleDiff<String, (), String> = NamedTripleDiff { removed: Vec::new(), modified: vec![NamedModified { key: "absent".into(), diff: () }], added: Vec::new() };
         let error = validate_named_triple(&["present".to_string()], &missing, Clone::clone, Clone::clone, ["items"]).unwrap_err();
         assert_eq!(error.code, "mutation.apply.invalid-modify-key");

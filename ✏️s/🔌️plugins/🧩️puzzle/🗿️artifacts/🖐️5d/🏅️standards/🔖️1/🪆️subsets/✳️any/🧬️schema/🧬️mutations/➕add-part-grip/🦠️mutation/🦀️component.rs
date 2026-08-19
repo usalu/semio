@@ -18,23 +18,23 @@ pub struct AddPartGrip {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn add_part_grip(part_id: String, grip: Puzzle5dGrip, index: Option<usize>) -> Puzzle5dMutation {
+pub async fn add_part_grip(part_id: String, grip: Puzzle5dGrip, index: Option<usize>) -> Puzzle5dMutation {
     Puzzle5dMutation::AddPartGrip(AddPartGrip { part_id, grip, index })
 }
 
 impl protocol::MutationKind<Puzzle5dSnapshot, Puzzle5dMutation> for AddPartGrip {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "add", entity: "part-grip", kind: "add-part-grip", record: "AddedPartGrip" };
 
-    fn diff(&self, base: &Puzzle5dSnapshot) -> protocol::MutationOutcome<Puzzle5dDiff> {
+    async fn diff(&self, base: &Puzzle5dSnapshot) -> protocol::MutationOutcome<Puzzle5dDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &Puzzle5dSnapshot) -> Vec<Puzzle5dMutation> {
+    async fn inverse(&self, base: &Puzzle5dSnapshot) -> Vec<Puzzle5dMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         format!("Add grip \"{}\" to part \"{}\"", self.grip.id, self.part_id)
     }
-    fn target(&self) -> Vec<String> {
+    async fn target(&self) -> Vec<String> {
         vec![self.part_id.clone(), self.grip.id.clone()]
     }
 }

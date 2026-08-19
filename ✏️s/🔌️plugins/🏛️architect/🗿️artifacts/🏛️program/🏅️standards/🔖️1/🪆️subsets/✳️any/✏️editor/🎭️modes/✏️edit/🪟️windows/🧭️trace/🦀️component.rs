@@ -12,7 +12,7 @@ pub const ARCHITECT_BODY_TRACE: &str = "architect.trace";
 
 //#region 🔖️Definition
 /// 🏛️ Stitched into the app manifest by `crate::editor::architect::create_architect_app`.
-pub fn definition() -> WindowKindDefinition {
+pub async fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
         id: ARCHITECT_WINDOW_TRACE.into(),
         label: LocalizedLabel::native("Trace", "Nachverfolgung"),
@@ -41,7 +41,7 @@ pub fn definition() -> WindowKindDefinition {
 /// longer scope trace chain/impact to a selected entity — both sections needed a root id and are
 /// gone with it; the audit trail degrades to the document-wide feed (`audit_trail(program, None)`)
 /// instead of one scoped to a selection.
-pub fn render(program: &ProgramSnapshot) -> UiNode {
+pub async fn render(program: &ProgramSnapshot) -> UiNode {
     let trail = audit_trail(program, None);
     let audit_items: Vec<UiTreeItemNode> = trail.events.iter().take(12).enumerate().map(|(index, event)| tree_item(format!("architect-trace.audit.{index}"), format!("{:?} @ {} — {}", event.action, event.timestamp, event.header.name))).collect();
     tree_node(vec![tree_section("architect-trace.audit", Some(format!("Audit Trail ({})", trail.events.len())), if audit_items.is_empty() { vec![tree_item("architect-trace.audit.empty", "(no events)")] } else { audit_items })])
@@ -58,14 +58,14 @@ mod tests {
     use crate::artifacts::program::EntityId;
 
     #[test]
-    fn definition_declares_the_text_editor_surface_and_body_key() {
+    async fn definition_declares_the_text_editor_surface_and_body_key() {
         let definition = definition();
         assert_eq!(definition.body_key, ARCHITECT_BODY_TRACE);
         assert!(matches!(definition.surface_kind, SurfaceKind::TextEditor));
     }
 
     #[test]
-    fn no_events_renders_the_empty_placeholder_row() {
+    async fn no_events_renders_the_empty_placeholder_row() {
         let json = serde_json::to_string(&render(&sample_plugin())).expect("json");
         assert!(json.contains("architect-trace.audit"));
         assert!(json.contains("architect-trace.audit.empty"));
@@ -75,7 +75,7 @@ mod tests {
     /// now (no `InteractionView` in `render` to scope it to a selected entity) — every event shows,
     /// not just ones touching one subject.
     #[test]
-    fn renders_every_document_wide_audit_event() {
+    async fn renders_every_document_wide_audit_event() {
         let mut program = sample_plugin();
         program.audit_events.push(AuditEvent {
             header: EntityHeader::new(EntityId::new_serial("audit", "created"), "created"),

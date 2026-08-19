@@ -29,7 +29,7 @@ pub mod patch_cad_play_reference {
         pub delta: Option<f64>,
     }
 
-    pub fn handle(payload: &PatchCadPlayReference, doc: &ArtifactView<'_, CadSnapshot>, _cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx<'_>) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
+    pub async fn handle(payload: &PatchCadPlayReference, doc: &ArtifactView<'_, CadSnapshot>, _cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx<'_>) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
         let document = doc.snapshot;
         let value_json = payload.value.as_deref().map(|entry| command_value_json(&payload.field, entry));
         let delta_json = payload.delta.map(|entry| json!(entry));
@@ -67,7 +67,7 @@ pub mod set_reference_selection {
         pub reference_id: Option<String>,
     }
 
-    pub fn handle(payload: &SetReferenceSelection, _doc: &ArtifactView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx<'_>) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
+    pub async fn handle(payload: &SetReferenceSelection, _doc: &ArtifactView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx<'_>) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
         let mut runtime = runtime_of(cfg);
         let pane_id = payload.pane.as_deref().map(cad_pane_id_from_suffix).or_else(|| payload.model_definition_id.as_deref().and_then(cad_pane_from_model_definition_id)).unwrap_or(CadPaneId::Shape);
         runtime.selected_reference_model_definition_id = Some(pane_id.model_definition_id().into());
@@ -91,7 +91,7 @@ pub mod reference_hover {
         pub reference_id: Option<String>,
     }
 
-    pub fn handle(payload: &ReferenceHover, _doc: &ArtifactView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx<'_>) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
+    pub async fn handle(payload: &ReferenceHover, _doc: &ArtifactView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx<'_>) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
         let mut runtime = runtime_of(cfg);
         runtime.hovered_reference_id = payload.reference_id.clone();
         Ok(Emit::config(vec![snapshot_of(&runtime, cfg.snapshot)]))

@@ -5,7 +5,7 @@ use crate::artifacts::din16798::mutations::change_comfort_category::mutation::Ch
 use crate::artifacts::din16798::Din16798Snapshot;
 
 //#region 🔖️Diff
-pub fn diff(payload: &ChangeComfortCategory, base: &Din16798Snapshot) -> protocol::MutationOutcome<Din16798Diff> {
+pub async fn diff(payload: &ChangeComfortCategory, base: &Din16798Snapshot) -> protocol::MutationOutcome<Din16798Diff> {
     if base.comfort_category == payload.new_comfort_category {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Comfort category is already \"{}\".", payload.new_comfort_category));
     }

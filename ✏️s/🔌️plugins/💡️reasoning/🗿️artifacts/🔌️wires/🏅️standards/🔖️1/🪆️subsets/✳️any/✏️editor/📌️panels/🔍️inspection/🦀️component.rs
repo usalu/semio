@@ -11,7 +11,7 @@ pub const WIRES_PLAY_BODY_PROPERTIES: &str = "reasoning.wires.properties";
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
-pub fn definition() -> PanelTabDefinition {
+pub async fn definition() -> PanelTabDefinition {
     PanelTabDefinition {
         kind: PanelTabKind::App(FRAMEWORK_PANEL_TAB_INSPECTION_ID.into()),
         label: LocalizedLabel::native(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, "Inspektion"),
@@ -30,7 +30,7 @@ pub fn definition() -> PanelTabDefinition {
 /// selection to render against and always falls through to the document summary below — the same gap
 /// layout's/gis2d's/puzzle3d's inspection panels flag (see this ticket's w3b-summary.md). Not fixed
 /// here (framework file, out of this crate's remit).
-pub fn render(document: &WiresSnapshot) -> UiNode {
+pub async fn render(document: &WiresSnapshot) -> UiNode {
     let board = crate::artifacts::wires::wires_working_board(document);
     let extension = DefaultWiresExtension::from_fixture_json(&fixture_json_string(&document.wires_fixture)).ok();
     ui_stack_vertical(vec![
@@ -84,7 +84,7 @@ pub enum RelationshipKind {
 
 impl RelationshipKind {
     /// 🏷️ Stable relationship slug for fixtures and UI.
-    pub fn label(self) -> &'static str {
+    pub async fn label(self) -> &'static str {
         match self {
             Self::Owns => "owns",
             Self::Is => "is",
@@ -101,9 +101,9 @@ impl RelationshipKind {
 // #region 🔖️WiresExtensionTrait
 /// 🔗️ WIRES semantics over a mindmap (normal undirected graph).
 pub trait WiresExtension: canvas::board::GraphExtension {
-    fn topic_label(&self, topic_id: TopicId) -> Option<&str>;
-    fn relationship_kind_label(&self, relationship_id: graph::EdgeId) -> Option<&str>;
-    fn validate_identity_set(&self, identities: &[TopicId]) -> Result<(), WiresError>;
+    async fn topic_label(&self, topic_id: TopicId) -> Option<&str>;
+    async fn relationship_kind_label(&self, relationship_id: graph::EdgeId) -> Option<&str>;
+    async fn validate_identity_set(&self, identities: &[TopicId]) -> Result<(), WiresError>;
 }
 
 /// 🧭️ Default WIRES extension with fixed identity vocabulary and relationship kinds.
@@ -115,7 +115,7 @@ pub struct DefaultWiresExtension {
 }
 
 impl canvas::CanvasExtension for DefaultWiresExtension {
-    fn extension_id(&self) -> &str {
+    async fn extension_id(&self) -> &str {
         "reasoning.mindmap/wires"
     }
 }
@@ -126,7 +126,7 @@ impl canvas::board::GraphExtension for DefaultWiresExtension {}
 
 impl DefaultWiresExtension {
     /// 🔗️ Hydrate extension state from `reasoning.wires.fixture` JSON.
-    pub fn from_fixture_json(json: &str) -> Result<Self, WiresError> {
+    pub async fn from_fixture_json(json: &str) -> Result<Self, WiresError> {
         let root: Value = serde_json::from_str(json)?;
         let Some(obj) = root.as_object() else {
             return Err(WiresError::FixtureRootNotObject);
@@ -173,15 +173,15 @@ impl DefaultWiresExtension {
 }
 
 impl WiresExtension for DefaultWiresExtension {
-    fn topic_label(&self, topic_id: TopicId) -> Option<&str> {
+    async fn topic_label(&self, topic_id: TopicId) -> Option<&str> {
         self.topics.get(&topic_id).map(String::as_str)
     }
 
-    fn relationship_kind_label(&self, relationship_id: graph::EdgeId) -> Option<&str> {
+    async fn relationship_kind_label(&self, relationship_id: graph::EdgeId) -> Option<&str> {
         self.relationships.get(&relationship_id).map(|r| r.label())
     }
 
-    fn validate_identity_set(&self, identities: &[TopicId]) -> Result<(), WiresError> {
+    async fn validate_identity_set(&self, identities: &[TopicId]) -> Result<(), WiresError> {
         if self.allowed_identities.is_empty() {
             return Ok(());
         }
@@ -203,7 +203,7 @@ mod tests {
     use crate::editor::wires::testkit::{metabolism_app, render as render_body};
 
     #[test]
-    fn empty_selection_shows_document_summary() {
+    async fn empty_selection_shows_document_summary() {
         let mut app = metabolism_app();
         let json = render_body(&mut app, WIRES_PLAY_BODY_PROPERTIES);
         assert!(json.contains("Schema:"));
@@ -211,19 +211,19 @@ mod tests {
     }
 
     #[test]
-    fn definition_binds_the_inspection_tab_to_this_body_key() {
+    async fn definition_binds_the_inspection_tab_to_this_body_key() {
         let definition = definition();
         assert_eq!(definition.body_key.as_deref(), Some(WIRES_PLAY_BODY_PROPERTIES));
     }
 
     #[test]
-    fn relationship_kind_labels() {
+    async fn relationship_kind_labels() {
         assert_eq!(RelationshipKind::Owns.label(), "owns");
         assert_eq!(RelationshipKind::Has.label(), "has");
     }
 
     #[test]
-    fn fixed_identity_set_validation() {
+    async fn fixed_identity_set_validation() {
         let mut ext = DefaultWiresExtension::default();
         ext.allowed_identities.insert(1);
         ext.allowed_identities.insert(2);
@@ -232,21 +232,21 @@ mod tests {
     }
 
     #[test]
-    fn relationship_lookup() {
+    async fn relationship_lookup() {
         let mut ext = DefaultWiresExtension::default();
         ext.relationships.insert(7, RelationshipKind::References);
         assert_eq!(ext.relationship_kind_label(7), Some("references"));
     }
 
     #[test]
-    fn topic_lookup_stays_local_to_the_wires_extension() {
+    async fn topic_lookup_stays_local_to_the_wires_extension() {
         let mut ext = DefaultWiresExtension::default();
         ext.topics.insert(7, "Context".into());
         assert_eq!(ext.topic_label(7), Some("Context"));
     }
 
     #[test]
-    fn metabolism_fixture_hydrates_extension() {
+    async fn metabolism_fixture_hydrates_extension() {
         // 📜️ The `.wires` fixture is handcrafted in `crate::artifacts::wires::dsl`'s DSL — parse it,
         // then hydrate this crate's JSON-facing extension from its `wires_fixture` value, the same
         // shape `from_fixture_json` has always expected.

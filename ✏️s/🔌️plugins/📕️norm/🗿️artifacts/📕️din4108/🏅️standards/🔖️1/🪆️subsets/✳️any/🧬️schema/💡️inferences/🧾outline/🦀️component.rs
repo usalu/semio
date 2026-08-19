@@ -39,7 +39,7 @@ pub struct Din4108Outline {
 }
 
 impl Din4108Outline {
-    pub fn compute(snapshot: &Din4108Snapshot) -> Self {
+    pub async fn compute(snapshot: &Din4108Snapshot) -> Self {
         let section_outline: Vec<String> = SECTION_FIELDS.iter().map(|s| s.to_string()).collect();
         let field_count = section_outline.len() as u32;
         let entry_count = snapshot.layers.len() as u32;
@@ -48,7 +48,7 @@ impl Din4108Outline {
 }
 
 impl Default for Din4108Outline {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self::compute(&Din4108Snapshot::default())
     }
 }
@@ -60,13 +60,13 @@ mod tests {
     use super::*;
 
     #[test]
-    fn outline_field_count_matches_section_outline_length() {
+    async fn outline_field_count_matches_section_outline_length() {
         let outline = Din4108Outline::compute(&Din4108Snapshot::default());
         assert_eq!(outline.field_count as usize, outline.section_outline.len());
     }
 
     #[test]
-    fn outline_is_deterministic() {
+    async fn outline_is_deterministic() {
         let snapshot = Din4108Snapshot::default();
         assert_eq!(Din4108Outline::compute(&snapshot), Din4108Outline::compute(&snapshot));
     }

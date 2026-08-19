@@ -26,11 +26,11 @@ pub mod derived_composition {
         type Snapshot = SemioDrawingSnapshot;
         const WRITES: Dialect = DIALECT;
 
-        fn reads() -> &'static [Dialect] {
+        async fn reads() -> &'static [Dialect] {
             &[DIALECT]
         }
 
-        fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+        async fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
             let native: Vec<AnalyzeSource<'_>> = sources
                 .iter()
                 .filter(|s| s.dialect == DIALECT)
@@ -58,7 +58,7 @@ pub mod derived_composition {
 
     impl SubsetValidator for SemioDrawingValidator {
         const DIALECT: Dialect = DIALECT;
-        fn validate(payload: &IoPayload) -> Vec<dsl::Diagnostic> {
+        async fn validate(payload: &IoPayload) -> Vec<dsl::Diagnostic> {
             let decoded = match payload {
                 IoPayload::Binary(bytes) => <SemioDrawingSnapshot as store::ArtifactPack>::decode_pack(bytes).ok(),
                 IoPayload::Text(text) => <SemioDrawingSnapshot as store::ArtifactDsl>::parse_dsl(text).ok(),
@@ -72,7 +72,7 @@ pub mod derived_composition {
 
     /// 🔎️ Real referential-invariant checks over `SemioDrawingSnapshot`'s own collections (no
     /// cross-artifact lookups needed -- both invariants are internal to this subset).
-    pub fn check_drawing_invariants(snapshot: &SemioDrawingSnapshot) -> Vec<dsl::Diagnostic> {
+    pub async fn check_drawing_invariants(snapshot: &SemioDrawingSnapshot) -> Vec<dsl::Diagnostic> {
         let mut diagnostics = Vec::new();
 
         let mut seen_layer_ids = std::collections::HashSet::new();
@@ -82,7 +82,7 @@ pub mod derived_composition {
             }
         }
 
-        fn walk(node: &DrawNode, style_names: &std::collections::HashSet<&str>, diagnostics: &mut Vec<dsl::Diagnostic>) {
+        async fn walk(node: &DrawNode, style_names: &std::collections::HashSet<&str>, diagnostics: &mut Vec<dsl::Diagnostic>) {
             match node {
                 DrawNode::Path { style: Some(name), .. } | DrawNode::Text { style: Some(name), .. } => {
                     if !style_names.contains(name.as_str()) {
@@ -106,7 +106,7 @@ pub mod derived_composition {
     }
 
     static VALIDATOR_ENTRY: std::sync::OnceLock<SubsetValidatorEntry> = std::sync::OnceLock::new();
-    fn validator_entry() -> &'static SubsetValidatorEntry {
+    async fn validator_entry() -> &'static SubsetValidatorEntry {
         VALIDATOR_ENTRY.get_or_init(subset_validator_entry_of::<SemioDrawingValidator>)
     }
     //#endregion 🔖️SubsetValidator
@@ -118,7 +118,7 @@ pub mod derived_composition {
     /// honestly text-only bridge (this codec's own snapshot never exposes decoded content-stream
     /// vector ops) — see each pair's own leaf doc comment for the full rationale.
     static IO_ENTRIES: std::sync::OnceLock<Vec<ComposerEntry>> = std::sync::OnceLock::new();
-    fn io_entries() -> &'static [ComposerEntry] {
+    async fn io_entries() -> &'static [ComposerEntry] {
         IO_ENTRIES
             .get_or_init(|| {
                 vec![
@@ -137,7 +137,7 @@ pub mod derived_composition {
     //#region 🔖️Register
     /// 📌️ Registers this subset's schema descriptor, document codec, SubsetValidator, and (W4) its
     /// semio↔format io bridges. Called from this artifact's standard-level `engine::register()`.
-    pub fn register() {
+    pub async fn register() {
         ::schema::register_artifact_schema_descriptor(crate::artifacts::semio::standards::v1::subsets::drawing::schema::semio_drawing_artifact_schema_descriptor());
         let _ = store::register_document_codec(store::ArtifactCodec::of::<SemioDrawingSnapshot, crate::artifacts::semio::standards::v1::subsets::drawing::schema::mutations::SemioDrawingMutation>(
             crate::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::STDIO_SEMIODRAWING_DOCUMENT_SCHEMA,
@@ -150,7 +150,7 @@ pub mod derived_composition {
     /// 💡️ Registers `s.stdio.semio.drawing.inference`'s facet leaves into the OS-wide inference
     /// catalog — sibling to `register_artifact_schema_descriptor` above (separate registry,
     /// ticket 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING).
-    pub fn register_artifact_inferences() {
+    pub async fn register_artifact_inferences() {
         ::schema::register_artifact_inference_descriptor(crate::artifacts::semio::standards::v1::subsets::drawing::schema::inferences::semio_drawing_artifact_inference_descriptor());
     }
     //#endregion 🔖️Register
@@ -163,7 +163,7 @@ pub mod derived_composition {
         use crate::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::{DrawLayer, DrawStyle};
 
         #[test]
-        fn dangling_style_ref_and_duplicate_layer_id_are_both_reported() {
+        async fn dangling_style_ref_and_duplicate_layer_id_are_both_reported() {
             let snapshot = SemioDrawingSnapshot {
                 styles: vec![DrawStyle { name: "ok".into(), fill: None, stroke: None, stroke_width: None, opacity: None }],
                 layers: vec![
@@ -178,7 +178,7 @@ pub mod derived_composition {
         }
 
         #[test]
-        fn clean_snapshot_reports_no_diagnostics() {
+        async fn clean_snapshot_reports_no_diagnostics() {
             let snapshot = SemioDrawingSnapshot {
                 styles: vec![DrawStyle { name: "ok".into(), fill: None, stroke: None, stroke_width: None, opacity: None }],
                 layers: vec![DrawLayer { id: "l0".into(), name: "a".into(), visible: true, root: DrawNode::Group { transform: SemioTransform::identity(), children: vec![DrawNode::Path { segments: vec![], style: Some("ok".into()) }] } }],
@@ -203,7 +203,7 @@ pub mod derived_composition {
             /// parse under the real dialect — independent of, and cheaper than, the two `recognize`/
             /// `walk_protocol` laws below.
             #[test]
-            fn committed_facet_files_parse() {
+            async fn committed_facet_files_parse() {
                 for (label, text) in [("snapshot grammar", snapshot::text::COMPONENT_GRAMMAR_SEMIO), ("mutations grammar", mutations::text::COMPONENT_GRAMMAR_SEMIO), ("diff grammar", diff::text::COMPONENT_GRAMMAR_SEMIO)] {
                     let grammar = dsl::parse_grammar(text).unwrap_or_else(|e| panic!("{label}: parse_grammar failed: {e:?}"));
                     assert_eq!(grammar.dialect, dsl::SemioDialect::Grammar, "{label}: expected grammar dialect");
@@ -219,7 +219,7 @@ pub mod derived_composition {
             /// `artifact-mark` token), so this is a direct proof this facet will pass that harness once
             /// graduated.
             #[test]
-            fn grammar_conformance_law() {
+            async fn grammar_conformance_law() {
                 let grammar = dsl::parse_grammar(snapshot::text::COMPONENT_GRAMMAR_SEMIO).expect("parse snapshot grammar");
                 let recognizer = dsl::Recognizer::compile(&grammar);
                 let text = store::ArtifactDsl::print_dsl(&snapshot::demo_drawing_snapshot());
@@ -231,7 +231,7 @@ pub mod derived_composition {
             /// ✅️ `ops_grammar_conformance_law`: the mutations grammar recognizes real `print_op` output
             /// for every `SemioDrawingMutation` variant (`mutations::demo_mutation_cases()`).
             #[test]
-            fn ops_grammar_conformance_law() {
+            async fn ops_grammar_conformance_law() {
                 let grammar = dsl::parse_grammar(mutations::text::COMPONENT_GRAMMAR_SEMIO).expect("parse mutations grammar");
                 let recognizer = dsl::Recognizer::compile(&grammar);
                 for mutation in mutations::demo_mutation_cases() {
@@ -244,7 +244,7 @@ pub mod derived_composition {
             /// for every representative `SemioDrawingDiff` (`diff::demo_diff_cases()`), incl. the empty
             /// (no-op) diff.
             #[test]
-            fn diff_grammar_conformance_law() {
+            async fn diff_grammar_conformance_law() {
                 let grammar = dsl::parse_grammar(diff::text::COMPONENT_GRAMMAR_SEMIO).expect("parse diff grammar");
                 let recognizer = dsl::Recognizer::compile(&grammar);
                 for d in diff::demo_diff_cases() {
@@ -257,7 +257,7 @@ pub mod derived_composition {
             /// snapshot pack (`encode_pack`, envelope-unwrapped first), every demo mutation's
             /// `encode_op`, and every demo diff's `encode_diff` — asserting `consumed == bytes.len()`.
             #[test]
-            fn protocol_walk_law() {
+            async fn protocol_walk_law() {
                 let pack_spec = dsl::parse_protocol(snapshot::binary::COMPONENT_PROTOCOL_SEMIO).expect("parse snapshot protocol");
                 let packed = store::ArtifactPack::encode_pack(&snapshot::demo_drawing_snapshot());
                 let (_, inner) = store::semio_format::unwrap_binary(&packed).expect("unwrap semio envelope");
@@ -284,7 +284,7 @@ pub mod derived_composition {
             /// `parse_dsl(fixture) == demo()`, `print_dsl(demo()) == fixture` (byte-for-byte), and the
             /// pack twin — so the fixtures can never silently drift back to a fake.
             #[test]
-            fn fixture_honesty_law() {
+            async fn fixture_honesty_law() {
                 const FIXTURE_DSL: &str = include_str!("../../✳️any/📚️examples/🖍️sketch/🖼️assets/🗣️example.dsl.semio");
                 const FIXTURE_PACK: &[u8] = include_bytes!("../../✳️any/📚️examples/🖍️sketch/🖼️assets/🎒️example.pack.semio");
 

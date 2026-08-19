@@ -6,7 +6,7 @@ use crate::artifacts::mathematical::{mathematical_children_from_state, mathemati
 //#region 🔖️Diff
 /// 🔺️ Ascending-insert-clamped: an out-of-range `index` lands at the end rather than panicking,
 /// reported as Warning `clamped`.
-pub fn diff(payload: &InsertPoint, base: &MathematicalSnapshot) -> protocol::MutationOutcome<MathematicalDiff> {
+pub async fn diff(payload: &InsertPoint, base: &MathematicalSnapshot) -> protocol::MutationOutcome<MathematicalDiff> {
     let mut geometry = mathematical_geometry(base);
     let index = payload.index.min(geometry.points.len());
     let was_clamped = index != payload.index;

@@ -13,7 +13,7 @@ pub struct MoveStep {
     pub index: u64,
 }
 
-pub fn handle(payload: &MoveStep, _doc: &ArtifactView<'_, FormsSnapshot>, _cfg: &ConfigView<'_, FormsConfig>) -> Result<Emit<FormMutation, FormsConfigMutation>, Fault> {
+pub async fn handle(payload: &MoveStep, _doc: &ArtifactView<'_, FormsSnapshot>, _cfg: &ConfigView<'_, FormsConfig>) -> Result<Emit<FormMutation, FormsConfigMutation>, Fault> {
     if payload.step_id.is_empty() {
         return Ok(Emit::default());
     }

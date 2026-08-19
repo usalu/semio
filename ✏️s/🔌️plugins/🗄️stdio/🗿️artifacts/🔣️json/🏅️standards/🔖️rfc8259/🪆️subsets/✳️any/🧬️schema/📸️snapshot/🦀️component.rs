@@ -38,13 +38,13 @@ pub enum JsonValue {
 }
 
 impl Default for JsonValue {
-    fn default() -> Self {
+    async fn default() -> Self {
         JsonValue::Null
     }
 }
 
 impl From<serde_json::Value> for JsonValue {
-    fn from(v: serde_json::Value) -> Self {
+    async fn from(v: serde_json::Value) -> Self {
         match v {
             serde_json::Value::Null => JsonValue::Null,
             serde_json::Value::Bool(b) => JsonValue::Bool { value: b },
@@ -57,7 +57,7 @@ impl From<serde_json::Value> for JsonValue {
 }
 
 impl From<&serde_json::Value> for JsonValue {
-    fn from(v: &serde_json::Value) -> Self {
+    async fn from(v: &serde_json::Value) -> Self {
         match v {
             serde_json::Value::Null => JsonValue::Null,
             serde_json::Value::Bool(b) => JsonValue::Bool { value: *b },
@@ -70,7 +70,7 @@ impl From<&serde_json::Value> for JsonValue {
 }
 
 impl From<JsonValue> for serde_json::Value {
-    fn from(v: JsonValue) -> Self {
+    async fn from(v: JsonValue) -> Self {
         match v {
             JsonValue::Null => serde_json::Value::Null,
             JsonValue::Bool { value } => serde_json::Value::Bool(value),
@@ -97,7 +97,7 @@ impl From<JsonValue> for serde_json::Value {
 }
 
 impl From<&JsonValue> for serde_json::Value {
-    fn from(v: &JsonValue) -> Self {
+    async fn from(v: &JsonValue) -> Self {
         match v {
             JsonValue::Null => serde_json::Value::Null,
             JsonValue::Bool { value } => serde_json::Value::Bool(*value),
@@ -136,15 +136,15 @@ struct Parser<'a> {
 }
 
 impl<'a> Parser<'a> {
-    fn new(text: &'a str) -> Self {
+    async fn new(text: &'a str) -> Self {
         Self { bytes: text.as_bytes(), pos: 0, line: 1, col: 1 }
     }
 
-    fn peek(&self) -> Option<u8> {
+    async fn peek(&self) -> Option<u8> {
         self.bytes.get(self.pos).copied()
     }
 
-    fn advance(&mut self) -> Option<u8> {
+    async fn advance(&mut self) -> Option<u8> {
         let byte = self.peek()?;
         self.pos += 1;
         if byte == b'\n' {
@@ -156,21 +156,21 @@ impl<'a> Parser<'a> {
         Some(byte)
     }
 
-    fn span(&self) -> TextSpan {
+    async fn span(&self) -> TextSpan {
         TextSpan::at(self.line, self.col)
     }
 
-    fn err(&self, message: impl Into<String>) -> TextError {
+    async fn err(&self, message: impl Into<String>) -> TextError {
         TextError::new(message, self.span())
     }
 
-    fn skip_ws(&mut self) {
+    async fn skip_ws(&mut self) {
         while matches!(self.peek(), Some(b' ' | b'\t' | b'\n' | b'\r')) {
             self.advance();
         }
     }
 
-    fn expect(&mut self, byte: u8) -> Result<(), TextError> {
+    async fn expect(&mut self, byte: u8) -> Result<(), TextError> {
         match self.peek() {
             Some(b) if b == byte => {
                 self.advance();
@@ -181,7 +181,7 @@ impl<'a> Parser<'a> {
         }
     }
 
-    fn parse_value(&mut self) -> Result<JsonValue, TextError> {
+    async fn parse_value(&mut self) -> Result<JsonValue, TextError> {
         self.skip_ws();
         match self.peek() {
             Some(b'{') => self.parse_object(),
@@ -196,7 +196,7 @@ impl<'a> Parser<'a> {
         }
     }
 
-    fn parse_literal(&mut self, literal: &str, value: JsonValue) -> Result<JsonValue, TextError> {
+    async fn parse_literal(&mut self, literal: &str, value: JsonValue) -> Result<JsonValue, TextError> {
         for expected in literal.bytes() {
             match self.advance() {
                 Some(b) if b == expected => {}
@@ -206,7 +206,7 @@ impl<'a> Parser<'a> {
         Ok(value)
     }
 
-    fn parse_object(&mut self) -> Result<JsonValue, TextError> {
+    async fn parse_object(&mut self) -> Result<JsonValue, TextError> {
         self.expect(b'{')?;
         let mut members = Vec::new();
         self.skip_ws();
@@ -240,7 +240,7 @@ impl<'a> Parser<'a> {
         Ok(JsonValue::Object { members })
     }
 
-    fn parse_array(&mut self) -> Result<JsonValue, TextError> {
+    async fn parse_array(&mut self) -> Result<JsonValue, TextError> {
         self.expect(b'[')?;
         let mut items = Vec::new();
         self.skip_ws();
@@ -270,7 +270,7 @@ impl<'a> Parser<'a> {
     /// 🔤️ Parses a quoted string, decoding escapes (incl. `\uXXXX` surrogate pairs) into their
     /// literal characters — the LITERAL decoded value is stored (never the wire escape form), the
     /// same convention `stdio.xml`'s `XmlNode::Text` uses for entity decoding.
-    fn parse_string(&mut self) -> Result<String, TextError> {
+    async fn parse_string(&mut self) -> Result<String, TextError> {
         self.expect(b'"')?;
         let mut out = String::new();
         loop {
@@ -315,7 +315,7 @@ impl<'a> Parser<'a> {
         Ok(out)
     }
 
-    fn parse_unicode_escape(&mut self) -> Result<char, TextError> {
+    async fn parse_unicode_escape(&mut self) -> Result<char, TextError> {
         let high = self.parse_hex4()?;
         if (0xD800..=0xDBFF).contains(&high) {
             if self.advance() != Some(b'\\') {
@@ -337,7 +337,7 @@ impl<'a> Parser<'a> {
         }
     }
 
-    fn parse_hex4(&mut self) -> Result<u32, TextError> {
+    async fn parse_hex4(&mut self) -> Result<u32, TextError> {
         let mut value = 0u32;
         for _ in 0..4 {
             let byte = self.advance().ok_or_else(|| self.err("unexpected end of input in \\u escape"))?;
@@ -354,7 +354,7 @@ impl<'a> Parser<'a> {
 
     /// 🔢️ Captures the ORIGINAL number lexeme verbatim per RFC8259 §6 grammar
     /// (`-? (0 | [1-9][0-9]*) (.[0-9]+)? ([eE][+-]?[0-9]+)?`) — never parsed into `f64`.
-    fn parse_number(&mut self) -> Result<JsonValue, TextError> {
+    async fn parse_number(&mut self) -> Result<JsonValue, TextError> {
         let start = self.pos;
         if self.peek() == Some(b'-') {
             self.advance();
@@ -397,7 +397,7 @@ impl<'a> Parser<'a> {
 }
 
 /// 🔓️ Parses a complete RFC8259 JSON text into a [`JsonValue`], rejecting trailing content.
-pub fn parse_json_text(text: &str) -> Result<JsonValue, TextError> {
+pub async fn parse_json_text(text: &str) -> Result<JsonValue, TextError> {
     let mut parser = Parser::new(text);
     let value = parser.parse_value()?;
     parser.skip_ws();
@@ -411,13 +411,13 @@ pub fn parse_json_text(text: &str) -> Result<JsonValue, TextError> {
 //#region 🔖️Serializer
 /// 🔒️ Compact (no extraneous whitespace) RFC8259 serialization — used for the `pack` (binary)
 /// representation.
-pub fn write_json_text(value: &JsonValue) -> String {
+pub async fn write_json_text(value: &JsonValue) -> String {
     let mut out = String::new();
     write_value_compact(value, &mut out);
     out
 }
 
-fn write_value_compact(value: &JsonValue, out: &mut String) {
+async fn write_value_compact(value: &JsonValue, out: &mut String) {
     match value {
         JsonValue::Null => out.push_str("null"),
         JsonValue::Bool { value: true } => out.push_str("true"),
@@ -450,19 +450,19 @@ fn write_value_compact(value: &JsonValue, out: &mut String) {
 }
 
 /// 🎀️ 2-space-indented pretty print — used for the `dsl` (text-on-disk) representation.
-pub fn write_json_pretty(value: &JsonValue) -> String {
+pub async fn write_json_pretty(value: &JsonValue) -> String {
     let mut out = String::new();
     write_value_pretty(value, &mut out, 0);
     out
 }
 
-fn push_indent(out: &mut String, depth: usize) {
+async fn push_indent(out: &mut String, depth: usize) {
     for _ in 0..depth {
         out.push_str("  ");
     }
 }
 
-fn write_value_pretty(value: &JsonValue, out: &mut String, depth: usize) {
+async fn write_value_pretty(value: &JsonValue, out: &mut String, depth: usize) {
     match value {
         JsonValue::Array { items } if !items.is_empty() => {
             out.push_str("[\n");
@@ -498,7 +498,7 @@ fn write_value_pretty(value: &JsonValue, out: &mut String, depth: usize) {
     }
 }
 
-fn write_string_escaped(s: &str, out: &mut String) {
+async fn write_string_escaped(s: &str, out: &mut String) {
     out.push('"');
     for ch in s.chars() {
         match ch {
@@ -531,17 +531,17 @@ pub struct JsonSnapshot {
 }
 
 impl Default for JsonSnapshot {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self { schema: STDIO_JSON_DOCUMENT_SCHEMA.into(), value: JsonValue::Null }
     }
 }
 
 impl JsonSnapshot {
-    pub fn from_value(value: impl Into<JsonValue>) -> Self {
+    pub async fn from_value(value: impl Into<JsonValue>) -> Self {
         Self { schema: STDIO_JSON_DOCUMENT_SCHEMA.into(), value: value.into() }
     }
 
-    pub fn to_serde_value(&self) -> serde_json::Value {
+    pub async fn to_serde_value(&self) -> serde_json::Value {
         serde_json::Value::from(&self.value)
     }
 }
@@ -550,11 +550,11 @@ impl JsonSnapshot {
 //#region 🔖️HandcraftedArtifactCodecs
 impl store::ArtifactDsl for JsonSnapshot {
     const EXTENSION: &'static str = "json";
-    fn envelope_id() -> &'static str {
+    async fn envelope_id() -> &'static str {
         "stdio.json"
     }
 
-    fn parse_dsl(text: &str) -> Result<Self, TextError> {
+    async fn parse_dsl(text: &str) -> Result<Self, TextError> {
         let body = match store::semio_format::split_text_preamble(text) {
             Ok((_, rest)) => rest,
             Err(_) => text,
@@ -562,7 +562,7 @@ impl store::ArtifactDsl for JsonSnapshot {
         let value = parse_json_text(body.trim())?;
         Ok(Self { schema: STDIO_JSON_DOCUMENT_SCHEMA.into(), value })
     }
-    fn print_dsl(&self) -> String {
+    async fn print_dsl(&self) -> String {
         let body = write_json_pretty(&self.value);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
@@ -570,13 +570,13 @@ impl store::ArtifactDsl for JsonSnapshot {
 }
 
 impl store::ArtifactPack for JsonSnapshot {
-    fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
+    async fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
         let raw = write_json_text(&self.value).into_bytes();
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &raw))
     }
-    fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
+    async fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
         if envelope.envelope_id() != <Self as store::ArtifactDsl>::envelope_id() {
             return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.envelope_id())));
@@ -592,7 +592,7 @@ impl store::ArtifactPack for JsonSnapshot {
 //#region 🔖️DocumentHelpers
 /// 🌱 Empty persisted snapshot. Dissolved out of the former `⚙️engine` (ticket
 /// 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES) — pure document helper, no engine needed.
-pub fn empty_json_snapshot() -> JsonSnapshot {
+pub async fn empty_json_snapshot() -> JsonSnapshot {
     JsonSnapshot::default()
 }
 
@@ -603,7 +603,7 @@ pub fn empty_json_snapshot() -> JsonSnapshot {
 /// snapshot's `print_dsl`/`encode_pack` output, asserted equal by `fixture_honesty_law` in
 /// `../💡️inferences/🦀️component.rs`'s `conformance_laws`) and for
 /// `nontrivial_nested_value_round_trip` below, which calls this instead of duplicating the literal.
-pub fn demo_json_snapshot() -> JsonSnapshot {
+pub async fn demo_json_snapshot() -> JsonSnapshot {
     let value = JsonValue::Object {
         members: vec![
             JsonMember { key: "name".into(), value: JsonValue::String { value: "semio".into() } },
@@ -634,12 +634,12 @@ pub fn demo_json_snapshot() -> JsonSnapshot {
 mod tests {
     use super::*;
 
-    fn obj(pairs: Vec<(&str, JsonValue)>) -> JsonValue {
+    async fn obj(pairs: Vec<(&str, JsonValue)>) -> JsonValue {
         JsonValue::Object { members: pairs.into_iter().map(|(k, v)| JsonMember { key: k.into(), value: v }).collect() }
     }
 
     #[test]
-    fn parses_all_scalar_kinds() {
+    async fn parses_all_scalar_kinds() {
         assert_eq!(parse_json_text("null").unwrap(), JsonValue::Null);
         assert_eq!(parse_json_text("true").unwrap(), JsonValue::Bool { value: true });
         assert_eq!(parse_json_text("false").unwrap(), JsonValue::Bool { value: false });
@@ -648,7 +648,7 @@ mod tests {
     }
 
     #[test]
-    fn preserves_number_lexeme_verbatim() {
+    async fn preserves_number_lexeme_verbatim() {
         for lexeme in ["0", "-0", "3.140", "1e10", "1E+10", "-1.5e-3", "9007199254740993", "100000000000000000000000000000"] {
             let value = parse_json_text(lexeme).unwrap();
             assert_eq!(value, JsonValue::Number { lexeme: lexeme.into() });
@@ -657,12 +657,12 @@ mod tests {
     }
 
     #[test]
-    fn rejects_leading_zero_number() {
+    async fn rejects_leading_zero_number() {
         assert!(parse_json_text("01").is_err());
     }
 
     #[test]
-    fn preserves_object_member_insertion_order() {
+    async fn preserves_object_member_insertion_order() {
         let value = parse_json_text(r#"{"z": 1, "a": 2, "m": 3}"#).unwrap();
         match &value {
             JsonValue::Object { members } => {
@@ -675,13 +675,13 @@ mod tests {
     }
 
     #[test]
-    fn decodes_string_escapes_incl_surrogate_pair() {
+    async fn decodes_string_escapes_incl_surrogate_pair() {
         let value = parse_json_text(r#""a\tb\nc\"\\ A 😀""#).unwrap();
         assert_eq!(value, JsonValue::String { value: "a\tb\nc\"\\ A 😀".into() });
     }
 
     #[test]
-    fn nested_structure_round_trips() {
+    async fn nested_structure_round_trips() {
         let text = r#"{"name":"semio","count":42,"ratio":3.5,"active":true,"missing":null,"tags":["a","b","c"],"nested":{"deep":{"deeper":[1,2,3]}}}"#;
         let value = parse_json_text(text).unwrap();
         assert_eq!(write_json_text(&value), text);
@@ -691,14 +691,14 @@ mod tests {
     }
 
     #[test]
-    fn empty_snapshot_matches_schema() {
+    async fn empty_snapshot_matches_schema() {
         let snapshot = JsonSnapshot::default();
         assert_eq!(snapshot.schema, STDIO_JSON_DOCUMENT_SCHEMA);
         assert_eq!(snapshot.value, JsonValue::Null);
     }
 
     #[test]
-    fn snapshot_dsl_and_pack_round_trip() {
+    async fn snapshot_dsl_and_pack_round_trip() {
         let snapshot = JsonSnapshot { schema: STDIO_JSON_DOCUMENT_SCHEMA.into(), value: obj(vec![("a", JsonValue::Number { lexeme: "1".into() }), ("b", JsonValue::Array { items: vec![JsonValue::Bool { value: true }, JsonValue::Null] })]) };
         let text = store::ArtifactDsl::print_dsl(&snapshot);
         let parsed = <JsonSnapshot as store::ArtifactDsl>::parse_dsl(&text).expect("parse");
@@ -714,7 +714,7 @@ mod tests {
     // survives via `empty_snapshot_matches_schema` above (same fact, `JsonSnapshot::default()`).
 
     #[test]
-    fn codec_round_trip() {
+    async fn codec_round_trip() {
         let snap = empty_json_snapshot();
         let text = store::ArtifactDsl::print_dsl(&snap);
         let parsed = <JsonSnapshot as store::ArtifactDsl>::parse_dsl(&text).expect("parse");
@@ -725,7 +725,7 @@ mod tests {
     }
 
     #[test]
-    fn nontrivial_nested_value_round_trip() {
+    async fn nontrivial_nested_value_round_trip() {
         let snap = demo_json_snapshot();
         let text = store::ArtifactDsl::print_dsl(&snap);
         let parsed = <JsonSnapshot as store::ArtifactDsl>::parse_dsl(&text).expect("parse");

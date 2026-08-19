@@ -18,16 +18,16 @@ pub struct CreateRegulatoryRequirement {
 }
 impl MutationKind<ProgramSnapshot, ProgramMutation> for CreateRegulatoryRequirement {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "create", entity: "regulatory-requirement", kind: "create-regulatory-requirement", record: "CreatedRegulatoryRequirement" };
-    fn diff(&self, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
+    async fn diff(&self, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {
+    async fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         format!("Create regulatory requirement \"{}\"", self.regulatory_requirement.header.name)
     }
-    fn target(&self) -> Vec<String> {
+    async fn target(&self) -> Vec<String> {
         vec![self.regulatory_requirement.header.id.0.clone()]
     }
 }

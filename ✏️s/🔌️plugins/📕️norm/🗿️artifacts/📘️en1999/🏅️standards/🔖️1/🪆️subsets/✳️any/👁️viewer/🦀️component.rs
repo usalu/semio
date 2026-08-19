@@ -29,10 +29,10 @@ pub enum En1999ViewCommand {
 }
 
 impl protocol::OpBinary for En1999ViewCommand {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         Ok(Vec::new())
     }
-    fn decode_op(_bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    async fn decode_op(_bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         Ok(En1999ViewCommand::Noop)
     }
 }
@@ -56,18 +56,18 @@ impl ArtifactViewer for En1999Viewer {
     const DIALECT: Dialect = EN1999_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = EN1999_DOCUMENT_SCHEMA;
 
-    fn initial_snapshot() -> En1999Snapshot {
+    async fn initial_snapshot() -> En1999Snapshot {
         En1999Snapshot::default()
     }
 
     /// 👁️ Structurally read-only: the sole `En1999ViewCommand::Noop` variant never carries a config
     /// change, so this always returns the empty `ViewEmit`. Kept as a real dispatch (not
     /// `unreachable!()`) so a future view-only action is a pure addition here, never a signature change.
-    fn handle(_command: &Self::Command, _doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _interaction: &InteractionView<'_>, _engines: &EngineHandles) -> Result<ViewEmit<Self::ConfigMutation>, Fault> {
+    async fn handle(_command: &Self::Command, _doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _interaction: &InteractionView<'_>, _engines: &EngineHandles) -> Result<ViewEmit<Self::ConfigMutation>, Fault> {
         Ok(ViewEmit::default())
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> UiNode {
+    async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> UiNode {
         match body_key {
             report::BODY_KEY => report::render(doc.snapshot),
             _ => ui_text(Label::data(format!("Unknown body: {body_key}"))),
@@ -77,7 +77,7 @@ impl ArtifactViewer for En1999Viewer {
 //#endregion 🔖️Viewer
 
 //#region 🔖️Manifest
-pub fn create_en1999_viewer() -> semio_framework_plugin::AppDefinition {
+pub async fn create_en1999_viewer() -> semio_framework_plugin::AppDefinition {
     Viewer::builder(EN1999_DIALECT)
         .document(["semio", "norm", "en1999"])
         .icon_id("check-circle")
@@ -95,18 +95,18 @@ mod tests {
     use super::*;
 
     #[test]
-    fn create_en1999_viewer_builds_a_definition_for_this_dialect() {
+    async fn create_en1999_viewer_builds_a_definition_for_this_dialect() {
         let def = create_en1999_viewer();
         assert_eq!(def.dialect, EN1999_DIALECT.into());
     }
 
     #[test]
-    fn viewer_dialect_matches_the_artifact_coordinate() {
+    async fn viewer_dialect_matches_the_artifact_coordinate() {
         assert_eq!(<En1999Viewer as ArtifactViewer>::DIALECT, EN1999_DIALECT);
     }
 
     #[test]
-    fn an_unknown_body_key_falls_back_to_a_text_node() {
+    async fn an_unknown_body_key_falls_back_to_a_text_node() {
         let snapshot = En1999Snapshot::default();
         let history = semio_framework_plugin::HistoryView::empty();
         let doc = ArtifactView::new(&snapshot, &history);

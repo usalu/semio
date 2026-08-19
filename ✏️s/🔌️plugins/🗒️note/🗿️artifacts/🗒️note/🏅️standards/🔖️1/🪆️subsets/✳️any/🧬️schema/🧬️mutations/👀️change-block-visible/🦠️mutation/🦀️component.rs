@@ -16,23 +16,23 @@ pub struct ChangeBlockVisible {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn change_block_visible(id: String, new_visible: bool) -> NoteMutation {
+pub async fn change_block_visible(id: String, new_visible: bool) -> NoteMutation {
     NoteMutation::ChangeBlockVisible(ChangeBlockVisible { id, new_visible })
 }
 
 impl MutationKind<NoteSnapshot, NoteMutation> for ChangeBlockVisible {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "change", entity: "block-visible", kind: "change-block-visible", record: "ChangedBlockVisible" };
 
-    fn diff(&self, base: &NoteSnapshot) -> protocol::MutationOutcome<NoteDiff> {
+    async fn diff(&self, base: &NoteSnapshot) -> protocol::MutationOutcome<NoteDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &NoteSnapshot) -> Vec<NoteMutation> {
+    async fn inverse(&self, base: &NoteSnapshot) -> Vec<NoteMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         format!("Change block \"{}\" visible to {}", self.id, self.new_visible)
     }
-    fn target(&self) -> Vec<String> {
+    async fn target(&self) -> Vec<String> {
         vec![self.id.clone()]
     }
 }

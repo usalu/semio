@@ -15,7 +15,7 @@ pub mod set_contributions {
         pub json: String,
     }
 
-    pub fn handle(payload: &SetContributions, _doc: &ArtifactView<'_, Process3dSnapshot>, _cfg: &ConfigView<'_, Process3dConfig>, _ctx: &mut crate::editor::process3d::Process3dDispatchCtx) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
+    pub async fn handle(payload: &SetContributions, _doc: &ArtifactView<'_, Process3dSnapshot>, _cfg: &ConfigView<'_, Process3dConfig>, _ctx: &mut crate::editor::process3d::Process3dDispatchCtx) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
         Ok(Emit::config(vec![Process3dConfigMutation::SetContributions { json: payload.json.clone() }]))
     }
 }

@@ -12,7 +12,7 @@ use crate::editor::rewrite::config::RewriteConfig;
 use crate::artifacts::rewrite::RewriteSnapshot;
 use semio_framework_plugin::{build_text_editor_scene, TextEditorScene, UiNode};
 
-pub(crate) fn render(state: &RewriteSnapshot, _cfg: &RewriteConfig) -> UiNode {
+pub(crate) async fn render(state: &RewriteSnapshot, _cfg: &RewriteConfig) -> UiNode {
     let query = crate::editor::rewrite::compiled_jack_query(state);
     build_text_editor_scene(
         crate::editor::rewrite::TRINITY_REWRITE_PLAY_SURFACE_JACK,

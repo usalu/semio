@@ -15,7 +15,7 @@ const PROCEDURAL2D_PLAY_SURFACE_PREVIEW: &str = "procedural2d.play.preview";
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
-pub fn definition() -> WindowKindDefinition {
+pub async fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
         id: PROCEDURAL2D_PLAY_WINDOW_PREVIEW.into(),
         label: LocalizedLabel::native("Preview", "Vorschau"),
@@ -37,7 +37,7 @@ pub fn definition() -> WindowKindDefinition {
 //#region 🔖️Render
 /// 👁️ Overlays evaluated draw-handle layers, plus (in `"wire"` show mode) a schematic node box per
 /// visible widget.
-pub fn render(document: &Procedural2dSnapshot, config: &Procedural2dConfig, session: &FlowEvalSession) -> UiNode {
+pub async fn render(document: &Procedural2dSnapshot, config: &Procedural2dConfig, session: &FlowEvalSession) -> UiNode {
     let fixture = &document.fixture;
     let eval_json = session.eval_json();
     let prefix = "procedural2d-preview";
@@ -83,7 +83,7 @@ mod tests {
     use crate::editor::procedural2d::testkit::{app, render as render_body};
 
     #[test]
-    fn renders_preview_canvas_scene() {
+    async fn renders_preview_canvas_scene() {
         let mut app = app();
         assert!(render_body(&mut app, PROCEDURAL2D_PLAY_BODY_PREVIEW).contains("canvas-2d"));
     }

@@ -12,6 +12,6 @@ pub struct RemoveVortex {
     pub id: String,
 }
 
-pub fn handle(payload: &RemoveVortex, _doc: &ArtifactView<'_, Block3dSnapshot>, _cfg: &ConfigView<'_, Block3dConfig>) -> Result<Emit<Block3dMutation, Block3dConfigMutation>, Fault> {
+pub async fn handle(payload: &RemoveVortex, _doc: &ArtifactView<'_, Block3dSnapshot>, _cfg: &ConfigView<'_, Block3dConfig>) -> Result<Emit<Block3dMutation, Block3dConfigMutation>, Fault> {
     Ok(Emit::mutations(vec![crate::artifacts::block3d::mutations::delete_vortex(payload.id.clone())]))
 }

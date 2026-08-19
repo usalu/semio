@@ -1518,7 +1518,7 @@ impl WasmtimeNodeHost {
                 });
             }
         }
-        self.mutation_router.register_roster(plugin_id, &manifest.dependencies, mutation_roster).map_err(|error| RunError::Host(error.to_string()))?;
+        self.mutation_router.register_roster_with_runtime(plugin_id, &manifest.dependencies, Arc::clone(&handle), mutation_roster).map_err(|error| RunError::Host(error.to_string()))?;
 
         let inference_roster: Vec<serde_json::Value> = descriptor
             .contributions

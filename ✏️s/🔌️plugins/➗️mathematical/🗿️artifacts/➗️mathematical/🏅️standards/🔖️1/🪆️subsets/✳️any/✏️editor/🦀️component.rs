@@ -48,7 +48,7 @@ pub use graph_window::MATH_PLAY_BODY_GRAPH;
 /// `create_mathematical_app` declares via `.artifact_kind(...)` (`computation.mathematical`), plus one
 /// extra output port: `result:out`, the current graph+geometry projection as a generic data value
 /// (WORKFLOWS-END-TO-END-TYPED-PORTS port recipe).
-pub fn mathematical_io() -> semio_framework_plugin::AppIo {
+pub async fn mathematical_io() -> semio_framework_plugin::AppIo {
     semio_framework_plugin::AppIo {
         document_schema: MATH_DOCUMENT_SCHEMA.into(),
         document_media_type: MediaType { class: MediaClass::Computation, form: MediaForm::Value },
@@ -71,7 +71,7 @@ pub fn mathematical_io() -> semio_framework_plugin::AppIo {
 //#region 🔖️Scene
 /// 🖼️ An empty `UiComponentSceneNode` shell for a body key, ready for its `node_graph`/`canvas_2d` field
 /// to be filled in — shared by both `🎭️modes/✏️edit/🪟️windows/*` renderers.
-pub fn empty_component_scene(surface_id: &str, component_kind: SurfaceKind) -> UiComponentSceneNode {
+pub async fn empty_component_scene(surface_id: &str, component_kind: SurfaceKind) -> UiComponentSceneNode {
     UiComponentSceneNode {
         surface_id: surface_id.into(),
         controller_id: MATH_APP_ID.into(),
@@ -101,7 +101,7 @@ pub fn empty_component_scene(surface_id: &str, component_kind: SurfaceKind) -> U
 
 //#region 🔖️GraphAlgorithms
 /// 🕸️ Runs the selected algorithm over the current graph and returns a per-node label suffix overlay.
-pub fn algorithm_overlay(graph: &MathematicalGraph) -> std::collections::HashMap<String, String> {
+pub async fn algorithm_overlay(graph: &MathematicalGraph) -> std::collections::HashMap<String, String> {
     use graph::algorithms::{adjacency, bfs_distances, connected_components, strongly_connected_components, topo_sort, IdIndex};
 
     let index = IdIndex::from_ids(graph.nodes.iter().map(|n| n.id.as_str()));
@@ -154,7 +154,7 @@ pub fn algorithm_overlay(graph: &MathematicalGraph) -> std::collections::HashMap
     overlay
 }
 
-pub fn workflow_json(graph: &MathematicalGraph) -> (Vec<NodeGraphNodeRecord>, Vec<NodeGraphEdgeRecord>) {
+pub async fn workflow_json(graph: &MathematicalGraph) -> (Vec<NodeGraphNodeRecord>, Vec<NodeGraphEdgeRecord>) {
     let overlay = algorithm_overlay(graph);
     let nodes: Vec<NodeGraphNodeRecord> = graph
         .nodes
@@ -171,7 +171,7 @@ pub fn workflow_json(graph: &MathematicalGraph) -> (Vec<NodeGraphNodeRecord>, Ve
 //#endregion 🔖️GraphAlgorithms
 
 //#region 🔖️Geometry
-pub fn geometry_layers_json(geometry: &MathematicalGeometry) -> String {
+pub async fn geometry_layers_json(geometry: &MathematicalGeometry) -> String {
     let points: Vec<geometry::Point> = geometry.points.iter().map(|p| geometry::Point::new(p.x, p.y)).collect();
     let hull = geometry::convex_hull(&points);
     let centroid = geometry::polygon_centroid(&hull);
@@ -239,26 +239,26 @@ impl ArtifactEditor for MathematicalPlayApp {
     const DIALECT: Dialect = MATHEMATICAL_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = MATH_DOCUMENT_SCHEMA;
 
-    fn app_schema() -> Option<::schema::AppSchemaDescriptor> {
+    async fn app_schema() -> Option<::schema::AppSchemaDescriptor> {
         Some(crate::editor::mathematical::config::schema::app_schema_descriptor())
     }
 
-    fn initial_snapshot() -> MathematicalSnapshot {
+    async fn initial_snapshot() -> MathematicalSnapshot {
         MathematicalSnapshot::default()
     }
 
-    fn io() -> Option<semio_framework_plugin::AppIo> {
+    async fn io() -> Option<semio_framework_plugin::AppIo> {
         Some(mathematical_io())
     }
 
     /// 🏷️ The manifest action id each command was declared under — supplied wholesale by
     /// `app_commands!`'s generated `command_id()`. `setLocale` has no manifest declaration (host-pushed,
     /// not a user-facing action).
-    fn command_id(command: &MathematicalCommand) -> &'static str {
+    async fn command_id(command: &MathematicalCommand) -> &'static str {
         command.command_id()
     }
 
-    fn handle(command: &MathematicalCommand, doc: &ArtifactView<'_, MathematicalSnapshot>, cfg: &ConfigView<'_, MathematicalConfig>, _interaction: &InteractionView<'_>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<MathematicalMutation, MathematicalConfigMutation, Self::DraftMutation>, Fault> {
+    async fn handle(command: &MathematicalCommand, doc: &ArtifactView<'_, MathematicalSnapshot>, cfg: &ConfigView<'_, MathematicalConfig>, _interaction: &InteractionView<'_>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<MathematicalMutation, MathematicalConfigMutation, Self::DraftMutation>, Fault> {
         command.dispatch(doc, cfg)
     }
 
@@ -283,7 +283,7 @@ impl ArtifactEditor for MathematicalPlayApp {
         }
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, MathematicalSnapshot>, cfg: &ConfigView<'_, MathematicalConfig>) -> UiNode {
+    async fn render(body_key: &str, doc: &ArtifactView<'_, MathematicalSnapshot>, cfg: &ConfigView<'_, MathematicalConfig>) -> UiNode {
         match body_key {
             MATH_PLAY_BODY_GRAPH => graph_window::render(&crate::artifacts::mathematical::mathematical_graph(doc.snapshot), &cfg.snapshot.camera),
             MATH_PLAY_BODY_GEOMETRY => geometry_window::render(&crate::artifacts::mathematical::mathematical_geometry(doc.snapshot)),
@@ -305,7 +305,7 @@ impl ArtifactEditor for MathematicalPlayApp {
 /// in the migration report). The subset's own `📚️examples/🎬️demo` facet
 /// (`crate::artifacts::mathematical::examples::...`, real content, pre-existing) is the modern,
 /// role-agnostic replacement surface for example registration.
-pub fn create_mathematical_app() -> semio_framework_plugin::AppDefinition {
+pub async fn create_mathematical_app() -> semio_framework_plugin::AppDefinition {
     Editor::builder(MATHEMATICAL_DIALECT)
         .document(["semio", "mathematical"])
         .artifact_kind(crate::artifacts::mathematical::artifact_kind())
@@ -359,7 +359,7 @@ pub(crate) mod testkit {
     pub type MathApp = VcsArtifactApp<EditorApp<MathematicalPlayApp>>;
 
     /// 🧪️ A bare app instance — no `AppActionRegistry`, so undeclared internal commands dispatch freely.
-    pub fn math_app() -> MathApp {
+    pub async fn math_app() -> MathApp {
         new_app::<EditorApp<MathematicalPlayApp>>()
     }
 
@@ -367,20 +367,20 @@ pub(crate) mod testkit {
     /// definition, examples }` shape `testkit::assert_declared_actions_bridge_to_commands` still
     /// expects — framework testkit gap, not modifiable here (`🧰️framework/**` is outside this
     /// packet's lease).
-    pub fn mathematical_app_manifest_for_testkit() -> semio_framework_plugin::App {
+    pub async fn mathematical_app_manifest_for_testkit() -> semio_framework_plugin::App {
         semio_framework_plugin::App { definition: create_mathematical_app(), examples: Vec::new() }
     }
 
     /// 🧪️ An app wired to the real manifest registry — enforces View/Shell kind discipline.
-    pub fn math_app_with_registry() -> MathApp {
+    pub async fn math_app_with_registry() -> MathApp {
         new_app_with_registry::<EditorApp<MathematicalPlayApp>>(mathematical_app_manifest_for_testkit)
     }
 
-    pub fn dispatch(app: &mut MathApp, command: MathematicalCommand) -> InvocationResult {
+    pub async fn dispatch(app: &mut MathApp, command: MathematicalCommand) -> InvocationResult {
         app.dispatch_typed(command, &meta("local")).expect("dispatch")
     }
 
-    pub fn render(app: &mut MathApp, body_key: &str) -> String {
+    pub async fn render(app: &mut MathApp, body_key: &str) -> String {
         serde_json::to_string(&app.render(body_key, None, &ViewModel::default()).expect("render")).expect("render json")
     }
 }
@@ -396,7 +396,7 @@ mod tests {
     /// 🏷️ Every declared manifest action id must be reachable as exactly one command row, and every row's
     /// wire keyword must be distinct — the cross-cutting invariant `app_commands!` is there to hold.
     #[test]
-    fn command_ids_are_unique_and_the_full_row_set_is_covered() {
+    async fn command_ids_are_unique_and_the_full_row_set_is_covered() {
         let commands = every_command();
         let ids: Vec<&str> = commands.iter().map(|command| command.command_id()).collect();
         let mut sorted = ids.clone();
@@ -408,7 +408,7 @@ mod tests {
 
     /// ⚖️ LAW: text and binary are two projections of the same command, for every single row.
     #[test]
-    fn every_command_round_trips_through_text_and_binary() {
+    async fn every_command_round_trips_through_text_and_binary() {
         for command in every_command() {
             store::os_store::test_support::assert_op_text_binary_equivalence(&command);
         }
@@ -425,7 +425,7 @@ mod tests {
     /// exception list simply never accounted for the second declared divergence. Fixed outright
     /// per this ticket's own "trivial, safe, unambiguous" guidance rather than left unresolved.
     #[test]
-    fn every_printed_op_line_starts_with_the_rows_wire_keyword() {
+    async fn every_printed_op_line_starts_with_the_rows_wire_keyword() {
         for command in every_command() {
             let id = command.command_id();
             let expected = match id {
@@ -439,7 +439,7 @@ mod tests {
     }
 
     /// 🧾️ One representative value per row, in declaration (= binary ordinal) order.
-    pub(super) fn every_command() -> Vec<MathematicalCommand> {
+    pub(super) async fn every_command() -> Vec<MathematicalCommand> {
         vec![
             MathematicalCommand::SetArtifact(set_artifact::SetArtifact { graph: crate::artifacts::mathematical::dsl::math_graph_to_dsl(&crate::artifacts::mathematical::MathematicalGraph::default()), geometry: crate::artifacts::mathematical::MathematicalGeometry::default() }),
             MathematicalCommand::SetAlgorithm(set_algorithm::SetAlgorithm { algorithm: "bfs".into(), seed: Some("a".into()) }),
@@ -455,7 +455,7 @@ mod tests {
     /// captured from the pre-merge `mathematical_protocol` crate (see the ticket's
     /// `🧪️wire-baseline-before.txt`).
     #[test]
-    fn optional_field_rows_keep_their_pre_migration_bytes() {
+    async fn optional_field_rows_keep_their_pre_migration_bytes() {
         let cases: [(MathematicalCommand, &str, &str); 2] = [
             (MathematicalCommand::SetAlgorithm(set_algorithm::SetAlgorithm { algorithm: "topo".into(), seed: None }), "set-algorithm algorithm=topo", "01010104746f706f01000600"),
             (MathematicalCommand::SetAlgorithm(set_algorithm::SetAlgorithm { algorithm: "bfs".into(), seed: Some("a".into()) }), "set-algorithm algorithm=bfs seed=a", "01010201610362667302000601010600"),
@@ -470,7 +470,7 @@ mod tests {
 
     //#region 🔖️ManifestSanity
     #[test]
-    fn the_manifest_stitches_every_taxonomy_node() {
+    async fn the_manifest_stitches_every_taxonomy_node() {
         let json = serde_json::to_string(&create_mathematical_app()).expect("app definition json");
         for id in [graph_window::MATH_PLAY_WINDOW_GRAPH, geometry_window::MATH_PLAY_WINDOW_GEOMETRY] {
             assert!(json.contains(id), "window kind {id} missing from the manifest: {json}");
@@ -480,7 +480,7 @@ mod tests {
     }
 
     #[test]
-    fn mathematical_io_is_declared_on_the_manifest() {
+    async fn mathematical_io_is_declared_on_the_manifest() {
         let app = create_mathematical_app();
         assert_eq!(app.io.artifact.id, "computation.mathematical");
         assert_eq!(app.io.ports.len(), 1);
@@ -488,35 +488,35 @@ mod tests {
     }
 
     #[test]
-    fn create_mathematical_app_builds_a_definition_for_the_editor_role() {
+    async fn create_mathematical_app_builds_a_definition_for_the_editor_role() {
         let def = create_mathematical_app();
         assert_eq!(def.role, semio_framework::AppRole::Editor);
         assert_eq!(def.dialect, MATHEMATICAL_DIALECT.into());
     }
 
     #[test]
-    fn editor_dialect_matches_the_artifact_coordinate() {
+    async fn editor_dialect_matches_the_artifact_coordinate() {
         assert_eq!(<MathematicalPlayApp as ArtifactEditor>::DIALECT, MATHEMATICAL_DIALECT);
     }
     //#endregion 🔖️ManifestSanity
 
     //#region 🔖️CrossCutting
     #[test]
-    fn an_unknown_body_key_renders_a_diagnostic_instead_of_panicking() {
+    async fn an_unknown_body_key_renders_a_diagnostic_instead_of_panicking() {
         use crate::editor::mathematical::testkit::render;
         let mut app = math_app();
         assert!(render(&mut app, "mathematical.play.nope").contains("Unknown body"));
     }
 
     #[test]
-    fn command_surface_is_registry_clean() {
+    async fn command_surface_is_registry_clean() {
         let _app = math_app_with_registry();
     }
     //#endregion 🔖️CrossCutting
 
     //#region 🔖️MathematicalIo
     #[test]
-    fn mathematical_io_declares_result_out_with_the_computation_mathematical_kind() {
+    async fn mathematical_io_declares_result_out_with_the_computation_mathematical_kind() {
         let io = mathematical_io();
         assert_eq!(io.document_schema, "semio.mathematical/v1");
         assert_eq!(io.artifact.id, "computation.mathematical");
@@ -532,7 +532,7 @@ mod tests {
 
     //#region 🔖️GraphAlgorithms
     #[test]
-    fn topo_algorithm_overlay_orders_dag_nodes() {
+    async fn topo_algorithm_overlay_orders_dag_nodes() {
         let graph = MathematicalGraph::default();
         let overlay = algorithm_overlay(&graph);
         assert!(overlay.get("a").unwrap().starts_with(" #0"));
@@ -540,7 +540,7 @@ mod tests {
     }
 
     #[test]
-    fn components_algorithm_overlay_groups_disconnected_node() {
+    async fn components_algorithm_overlay_groups_disconnected_node() {
         use crate::artifacts::mathematical::MathematicalNode;
         let mut graph = MathematicalGraph { algorithm: "components".into(), ..MathematicalGraph::default() };
         graph.nodes.push(MathematicalNode { id: "z".into(), label: "Z".into(), x: 0.0, y: 0.0 });
@@ -549,7 +549,7 @@ mod tests {
     }
 
     #[test]
-    fn bfs_algorithm_overlay_reports_hop_distance() {
+    async fn bfs_algorithm_overlay_reports_hop_distance() {
         let graph = MathematicalGraph { algorithm: "bfs".into(), algorithm_seed: Some("a".into()), ..MathematicalGraph::default() };
         let overlay = algorithm_overlay(&graph);
         assert_eq!(overlay.get("a").unwrap(), " d0");
@@ -557,7 +557,7 @@ mod tests {
     }
 
     #[test]
-    fn workflow_json_round_trips_node_count() {
+    async fn workflow_json_round_trips_node_count() {
         let graph = MathematicalGraph::default();
         let (nodes, edges) = workflow_json(&graph);
         assert_eq!(nodes.len(), graph.nodes.len());
@@ -567,7 +567,7 @@ mod tests {
 
     //#region 🔖️Geometry
     #[test]
-    fn geometry_layers_include_hull_and_centroid() {
+    async fn geometry_layers_include_hull_and_centroid() {
         let geometry = MathematicalGeometry::default();
         let layers_json = geometry_layers_json(&geometry);
         assert!(layers_json.contains("\"hull\""));

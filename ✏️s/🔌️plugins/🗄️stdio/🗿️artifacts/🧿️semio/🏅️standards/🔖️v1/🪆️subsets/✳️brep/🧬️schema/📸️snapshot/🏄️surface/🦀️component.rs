@@ -56,7 +56,7 @@ pub struct SurfaceDerivatives {
 }
 
 impl Surface {
-    pub fn domain(&self) -> ((f64, f64), (f64, f64)) {
+    pub async fn domain(&self) -> ((f64, f64), (f64, f64)) {
         match self {
             Surface::Plane { .. } => ((f64::NEG_INFINITY, f64::INFINITY), (f64::NEG_INFINITY, f64::INFINITY)),
             Surface::Cylinder { .. } => ((0.0, std::f64::consts::TAU), (f64::NEG_INFINITY, f64::INFINITY)),
@@ -66,13 +66,13 @@ impl Surface {
             Surface::Nurbs { u_knots, v_knots, .. } => (u_knots.domain(), v_knots.domain()),
         }
     }
-    pub fn is_u_periodic(&self) -> bool {
+    pub async fn is_u_periodic(&self) -> bool {
         matches!(self, Surface::Cylinder { .. } | Surface::Cone { .. } | Surface::Sphere { .. } | Surface::Torus { .. })
     }
-    pub fn is_v_periodic(&self) -> bool {
+    pub async fn is_v_periodic(&self) -> bool {
         matches!(self, Surface::Torus { .. })
     }
-    pub fn eval(&self, u: f64, v: f64) -> Pnt3 {
+    pub async fn eval(&self, u: f64, v: f64) -> Pnt3 {
         match self {
             Surface::Plane { frame } => frame.to_world(Pnt3::new(u, v, 0.0)),
             Surface::Cylinder { frame, radius } => frame.to_world(Pnt3::new(radius * u.cos(), radius * u.sin(), v)),
@@ -91,7 +91,7 @@ impl Surface {
     /// 🗺️ First and second partial derivatives at `(u, v)`. Analytic surfaces use closed forms;
     /// NURBS surfaces use central finite differences (see [`crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::curve`]'s equivalent note —
     /// adequate for normal/curvature/tessellation use, not for tight Newton iterations).
-    pub fn derivatives(&self, u: f64, v: f64) -> SurfaceDerivatives {
+    pub async fn derivatives(&self, u: f64, v: f64) -> SurfaceDerivatives {
         match self {
             Surface::Plane { frame } => SurfaceDerivatives { point: self.eval(u, v), du: frame.x, dv: frame.y, duu: Vec3::ZERO, duv: Vec3::ZERO, dvv: Vec3::ZERO },
             Surface::Cylinder { frame, radius } => {
@@ -130,13 +130,13 @@ impl Surface {
     }
     /// 🗺️ Unit surface normal `du × dv` (falls back to `None` at a singular point, e.g. a sphere
     /// pole or a cone apex, where `du` degenerates to zero).
-    pub fn normal(&self, u: f64, v: f64) -> Option<Vec3> {
+    pub async fn normal(&self, u: f64, v: f64) -> Option<Vec3> {
         let d = self.derivatives(u, v);
         d.du.cross(d.dv).normalized()
     }
     /// 🗺️ Gaussian curvature `K = (LN - M²) / (EG - F²)` and mean curvature `H = (EN - 2FM + GL) /
     /// (2(EG - F²))`, from the first fundamental form `(E, F, G)` and second `(L, M, N)`.
-    pub fn curvature(&self, u: f64, v: f64) -> Option<(f64, f64)> {
+    pub async fn curvature(&self, u: f64, v: f64) -> Option<(f64, f64)> {
         let d = self.derivatives(u, v);
         let n = d.du.cross(d.dv).normalized()?;
         let e = d.du.dot(d.du);
@@ -155,17 +155,17 @@ impl Surface {
     }
     /// 🗺️ Principal curvatures `(κ1, κ2)` derived from Gaussian `K` and mean `H` curvature via
     /// `κ = H ± √(H² - K)`.
-    pub fn principal_curvatures(&self, u: f64, v: f64) -> Option<(f64, f64)> {
+    pub async fn principal_curvatures(&self, u: f64, v: f64) -> Option<(f64, f64)> {
         let (gaussian, mean) = self.curvature(u, v)?;
         let disc = (mean * mean - gaussian).max(0.0).sqrt();
         Some((mean + disc, mean - disc))
     }
-    pub fn is_planar(&self) -> bool {
+    pub async fn is_planar(&self) -> bool {
         matches!(self, Surface::Plane { .. })
     }
 }
 
-fn eval_nurbs_point(u_knots: &KnotVector, v_knots: &KnotVector, controls: &[Vec<Pnt3>], weights: &[Vec<f64>], u: f64, v: f64) -> Pnt3 {
+async fn eval_nurbs_point(u_knots: &KnotVector, v_knots: &KnotVector, controls: &[Vec<Pnt3>], weights: &[Vec<f64>], u: f64, v: f64) -> Pnt3 {
     let u_span = u_knots.find_span(u);
     let v_span = v_knots.find_span(v);
     let nu = basis_function_derivatives(u_knots, u_span, u, 0);
@@ -192,7 +192,7 @@ fn eval_nurbs_point(u_knots: &KnotVector, v_knots: &KnotVector, controls: &[Vec<
     Pnt3::new(hx / hw, hy / hw, hz / hw)
 }
 
-fn finite_difference_derivatives(surface: &Surface, u: f64, v: f64) -> SurfaceDerivatives {
+async fn finite_difference_derivatives(surface: &Surface, u: f64, v: f64) -> SurfaceDerivatives {
     let h = 1e-4;
     let p = surface.eval(u, v);
     let du = (surface.eval(u + h, v) - surface.eval(u - h, v)) * (1.0 / (2.0 * h));
@@ -210,17 +210,17 @@ fn finite_difference_derivatives(surface: &Surface, u: f64, v: f64) -> SurfaceDe
 mod tests {
     use super::*;
 
-    fn fd_du(s: &Surface, u: f64, v: f64) -> Vec3 {
+    async fn fd_du(s: &Surface, u: f64, v: f64) -> Vec3 {
         let h = 1e-6;
         (s.eval(u + h, v) - s.eval(u - h, v)) * (1.0 / (2.0 * h))
     }
-    fn fd_dv(s: &Surface, u: f64, v: f64) -> Vec3 {
+    async fn fd_dv(s: &Surface, u: f64, v: f64) -> Vec3 {
         let h = 1e-6;
         (s.eval(u, v + h) - s.eval(u, v - h)) * (1.0 / (2.0 * h))
     }
 
     #[test]
-    fn plane_eval_and_normal() {
+    async fn plane_eval_and_normal() {
         let frame = Frame3::from_normal(Pnt3::new(1.0, 2.0, 3.0), Vec3::Z).unwrap();
         let s = Surface::Plane { frame };
         let p = s.eval(2.0, 3.0);
@@ -230,7 +230,7 @@ mod tests {
     }
 
     #[test]
-    fn cylinder_derivatives_match_finite_differences_and_lie_on_cylinder() {
+    async fn cylinder_derivatives_match_finite_differences_and_lie_on_cylinder() {
         let frame = Frame3::from_normal(Pnt3::new(0.0, 0.0, 0.0), Vec3::Z).unwrap();
         let s = Surface::Cylinder { frame, radius: 2.0 };
         for (u, v) in [(0.3, 1.0), (2.0, -3.0), (5.0, 0.5)] {
@@ -244,7 +244,7 @@ mod tests {
     }
 
     #[test]
-    fn cylinder_gaussian_curvature_is_zero_and_mean_curvature_is_half_reciprocal_radius() {
+    async fn cylinder_gaussian_curvature_is_zero_and_mean_curvature_is_half_reciprocal_radius() {
         let frame = Frame3::WORLD;
         let s = Surface::Cylinder { frame, radius: 3.0 };
         let (gaussian, mean) = s.curvature(0.5, 1.0).unwrap();
@@ -253,7 +253,7 @@ mod tests {
     }
 
     #[test]
-    fn sphere_gaussian_curvature_equals_reciprocal_radius_squared() {
+    async fn sphere_gaussian_curvature_equals_reciprocal_radius_squared() {
         let frame = Frame3::WORLD;
         let s = Surface::Sphere { frame, radius: 4.0 };
         for (u, v) in [(0.0, 0.0), (1.0, 0.3), (4.0, -0.5)] {
@@ -263,7 +263,7 @@ mod tests {
     }
 
     #[test]
-    fn sphere_eval_stays_on_sphere_and_derivatives_match_finite_differences() {
+    async fn sphere_eval_stays_on_sphere_and_derivatives_match_finite_differences() {
         let frame = Frame3::from_normal(Pnt3::new(1.0, -1.0, 2.0), Vec3::new(0.2, 0.3, 1.0)).unwrap();
         let s = Surface::Sphere { frame, radius: 5.0 };
         for (u, v) in [(0.2, 0.1), (3.0, -0.4), (5.5, 0.7)] {
@@ -276,7 +276,7 @@ mod tests {
     }
 
     #[test]
-    fn torus_eval_stays_at_correct_distance_from_main_circle() {
+    async fn torus_eval_stays_at_correct_distance_from_main_circle() {
         let frame = Frame3::WORLD;
         let s = Surface::Torus { frame, major_radius: 5.0, minor_radius: 1.5 };
         for (u, v) in [(0.0, 0.0), (1.0, 2.0), (4.0, 5.0)] {
@@ -288,7 +288,7 @@ mod tests {
     }
 
     #[test]
-    fn torus_derivatives_match_finite_differences() {
+    async fn torus_derivatives_match_finite_differences() {
         let frame = Frame3::WORLD;
         let s = Surface::Torus { frame, major_radius: 4.0, minor_radius: 1.0 };
         for (u, v) in [(0.3, 0.7), (2.0, 4.0)] {
@@ -299,7 +299,7 @@ mod tests {
     }
 
     #[test]
-    fn cone_radius_grows_linearly_with_v_and_derivatives_match_finite_differences() {
+    async fn cone_radius_grows_linearly_with_v_and_derivatives_match_finite_differences() {
         let frame = Frame3::from_normal(Pnt3::new(0.0, 0.0, 0.0), Vec3::Z).unwrap();
         let half_angle = std::f64::consts::FRAC_PI_6;
         let s = Surface::Cone { frame, half_angle };
@@ -314,7 +314,7 @@ mod tests {
     }
 
     #[test]
-    fn plane_second_derivatives_are_zero_and_gaussian_curvature_is_zero() {
+    async fn plane_second_derivatives_are_zero_and_gaussian_curvature_is_zero() {
         let frame = Frame3::WORLD;
         let s = Surface::Plane { frame };
         let d = s.derivatives(0.5, 0.5);

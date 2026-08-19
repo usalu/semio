@@ -3,6 +3,6 @@ use crate::artifacts::csv::CsvSnapshot;
 use protocol::Mutation;
 
 /// ↩️ Inverse of set-snapshot.
-pub fn inverse(base: &CsvSnapshot, mutation: &CsvMutation) -> Vec<CsvMutation> {
+pub async fn inverse(base: &CsvSnapshot, mutation: &CsvMutation) -> Vec<CsvMutation> {
     <CsvMutation as Mutation<CsvSnapshot>>::inverse(mutation, base)
 }

@@ -6,7 +6,7 @@ use crate::artifacts::semio::standards::v1::subsets::text::schema::mutations::Se
 use crate::artifacts::semio::standards::v1::subsets::text::schema::snapshot::SemioTextSnapshot;
 
 //#region 🔖️Inverse
-pub fn inverse(payload: &ReorderRuns, base: &SemioTextSnapshot) -> Vec<SemioTextMutation> {
+pub async fn inverse(payload: &ReorderRuns, base: &SemioTextSnapshot) -> Vec<SemioTextMutation> {
     let len = base.runs.len();
     if len == 0 || payload.from >= len {
         return Vec::new();

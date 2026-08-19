@@ -12,7 +12,7 @@ pub const VCS_PLAY_BODY_EDITOR: &str = "vcs.play.editor";
 
 //#region 🔖️Definition
 /// 🧱️ Stitched into the app manifest by `crate::editor::vcs::create_vcs_app`.
-pub fn definition() -> WindowKindDefinition {
+pub async fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
         id: VCS_PLAY_WINDOW_EDITOR.into(),
         label: LocalizedLabel::native("Editor", "Editor"),
@@ -35,11 +35,11 @@ pub fn definition() -> WindowKindDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-fn ui_stack_horizontal(children: Vec<UiNode>) -> UiNode {
+async fn ui_stack_horizontal(children: Vec<UiNode>) -> UiNode {
     UiNode::Stack(UiStackNode { direction: "horizontal".into(), gap: Some("tight".into()), padding: Some("none".into()), id: None, presence: UiPresence::default(), activate: None, drop_action: None, drop_overlay: None, children, menu: None })
 }
 
-fn editor_button(id: &str, icon_id: &str, label: impl Into<Label>, action: &str) -> UiNode {
+async fn editor_button(id: &str, icon_id: &str, label: impl Into<Label>, action: &str) -> UiNode {
     UiNode::Button(UiButtonNode { id: Some(format!("vcs-play-editor.{id}")), icon_id: icon_id.into(), label: label.into(), action: vcs_action(action, None), style: None, presence: UiPresence::default(), menu: None })
 }
 
@@ -48,7 +48,7 @@ fn editor_button(id: &str, icon_id: &str, label: impl Into<Label>, action: &str)
 /// their label width, so a wide/growing label overflows and overlaps its neighbor in the (narrower)
 /// Editor panel of the default layout. A leading heading clears the window's Action/Viewport tab chrome,
 /// which otherwise overlaps content placed flush at the panel top.
-pub fn render(projection: &VcsSnapshot, labels: &VcsPlayLabels) -> UiNode {
+pub async fn render(projection: &VcsSnapshot, labels: &VcsPlayLabels) -> UiNode {
     let heading = ui_text(labels.actions);
     let increment_row = ui_stack_horizontal(vec![editor_button("increment", "plus", Label::data(format!("+ {} ({})", labels.counter.as_str(), projection.counter)), "incrementCounter")]);
     let commit_row = ui_stack_horizontal(vec![editor_button("commit", "git-commit", labels.commit, "commitCheckpoint"), editor_button("new-alternative", "git-branch", labels.branch, "createAlternative")]);
@@ -66,7 +66,7 @@ mod tests {
     use crate::editor::vcs::testkit::{app, render as render_body};
 
     #[test]
-    fn renders_editor_scene() {
+    async fn renders_editor_scene() {
         let mut instance = app();
         let json = render_body(&mut instance, VCS_PLAY_BODY_EDITOR);
         assert!(!json.contains("text-editor"), "editor must no longer be a raw JSON editor: {json}");
@@ -77,7 +77,7 @@ mod tests {
     }
 
     #[test]
-    fn vcs_labels_resolve_native_english_by_default() {
+    async fn vcs_labels_resolve_native_english_by_default() {
         let mut instance = app();
         let json = render_body(&mut instance, VCS_PLAY_BODY_EDITOR);
         assert!(json.contains("Actions"));

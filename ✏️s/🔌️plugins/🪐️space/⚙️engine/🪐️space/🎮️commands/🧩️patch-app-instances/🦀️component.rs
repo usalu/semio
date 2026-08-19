@@ -14,7 +14,7 @@ pub struct PatchAppInstances {
     pub value: String,
 }
 
-pub fn handle(payload: &PatchAppInstances, _doc: &ArtifactView<'_, WorkflowSnapshot>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
+pub async fn handle(payload: &PatchAppInstances, _doc: &ArtifactView<'_, WorkflowSnapshot>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
     if payload.field == "label" {
         Ok(Emit::mutations(payload.node_ids.iter().cloned().map(|node_id| WorkflowMutation::PatchNode { node_id, label: payload.value.clone() }).collect()))
     } else {

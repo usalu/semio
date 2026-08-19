@@ -6,7 +6,7 @@ use crate::artifacts::en1992::mutations::En1992Mutation;
 use crate::artifacts::en1992::En1992Snapshot;
 
 //#region 🔖️Inverse
-pub fn inverse(_payload: &ChangeProvidedAxisDistanceMm, base: &En1992Snapshot) -> Vec<En1992Mutation> {
+pub async fn inverse(_payload: &ChangeProvidedAxisDistanceMm, base: &En1992Snapshot) -> Vec<En1992Mutation> {
     vec![En1992Mutation::ChangeProvidedAxisDistanceMm(ChangeProvidedAxisDistanceMm { new_provided_axis_distance_mm: base.provided_axis_distance_mm.clone() })]
 }
 //#endregion 🔖️Inverse

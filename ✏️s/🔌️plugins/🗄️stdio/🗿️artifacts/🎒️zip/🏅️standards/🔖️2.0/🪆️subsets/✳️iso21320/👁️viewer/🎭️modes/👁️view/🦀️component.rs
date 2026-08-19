@@ -8,13 +8,13 @@ pub const ZIP_ISO21320_VIEW_MODE_ID: &str = "view";
 
 //#region 🔖️Definition
 /// 🧱️ Stitched into the viewer manifest by `crate::viewer::zip::iso21320::create_zip_iso21320_viewer`.
-pub fn definition() -> ModeDefinition {
+pub async fn definition() -> ModeDefinition {
     ModeDefinition { id: ZIP_ISO21320_VIEW_MODE_ID.into(), label: LocalizedLabel::native("View", "Ansicht"), icon_id: "eye".into(), tools: Vec::new(), layout_id: None, commands: Vec::new() }
 }
 
 /// 🪟️ One window, one layout slot — mirrors the editor's own default layout shape minus the
 /// mutation-shaped window kind.
-pub fn layout() -> WindowLayout {
+pub async fn layout() -> WindowLayout {
     create_stack_layout(&[main::WINDOW_KIND_ID.into()], Some(&["Archive".into()]))
 }
 //#endregion 🔖️Definition
@@ -25,7 +25,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn the_view_layout_lists_the_one_read_only_window() {
+    async fn the_view_layout_lists_the_one_read_only_window() {
         let json = serde_json::to_string(&layout()).expect("layout json");
         assert!(json.contains(main::WINDOW_KIND_ID), "layout must reference the main window kind: {json}");
     }

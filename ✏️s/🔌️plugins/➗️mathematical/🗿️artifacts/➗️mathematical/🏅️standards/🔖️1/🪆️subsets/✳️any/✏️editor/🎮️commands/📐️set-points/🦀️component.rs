@@ -14,7 +14,7 @@ pub struct SetPoints {
     pub geometry: MathematicalGeometry,
 }
 
-pub fn handle(payload: &SetPoints, _doc: &ArtifactView<'_, MathematicalSnapshot>, _cfg: &ConfigView<'_, MathematicalConfig>) -> Result<Emit<MathematicalMutation, MathematicalConfigMutation>, Fault> {
+pub async fn handle(payload: &SetPoints, _doc: &ArtifactView<'_, MathematicalSnapshot>, _cfg: &ConfigView<'_, MathematicalConfig>) -> Result<Emit<MathematicalMutation, MathematicalConfigMutation>, Fault> {
     Ok(Emit::mutations(vec![MathematicalMutation::ReplacePoints(ReplacePoints { points: payload.geometry.points.clone() })]))
 }
 
@@ -27,7 +27,7 @@ mod tests {
     use crate::artifacts::mathematical::{MathematicalGeometry, MathematicalPoint};
 
     #[test]
-    fn set_points_replaces_geometry() {
+    async fn set_points_replaces_geometry() {
         let mut app = math_app();
         let geometry = MathematicalGeometry { points: vec![MathematicalPoint { x: 1.0, y: 2.0 }] };
         dispatch(&mut app, MathematicalCommand::SetPoints(SetPoints { geometry: geometry.clone() }));

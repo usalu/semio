@@ -7,7 +7,7 @@ use crate::editor::raster::raster_action;
 use semio_framework_plugin::WindowMeasure;
 
 //#region 🔖️Measure
-pub fn measure(config: &RasterConfig) -> WindowMeasure {
+pub async fn measure(config: &RasterConfig) -> WindowMeasure {
     WindowMeasure::Group {
         id: "raster-utility-options-paintEraser".into(),
         label: "Eraser".into(),

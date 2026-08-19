@@ -15,7 +15,7 @@ pub const ARCHITECT_BODY_REGISTER: &str = "architect.register";
 
 //#region 🔖️Definition
 /// 🏛️ Stitched into the app manifest by `crate::editor::architect::create_architect_app`.
-pub fn definition() -> WindowKindDefinition {
+pub async fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
         id: ARCHITECT_WINDOW_REGISTER.into(),
         label: LocalizedLabel::native("Register", "Register"),
@@ -56,7 +56,7 @@ struct RegisterBlockItem {
     kind: String,
 }
 
-pub fn render(program: &ProgramSnapshot, cfg: &ArchitectConfig) -> UiNode {
+pub async fn render(program: &ProgramSnapshot, cfg: &ArchitectConfig) -> UiNode {
     let register = active_register(cfg);
     let entities = register_entities(program, register);
     if entities.is_empty() {
@@ -95,20 +95,20 @@ mod tests {
     use crate::artifacts::program::sample_plugin;
 
     #[test]
-    fn definition_declares_the_block_list_surface_and_body_key() {
+    async fn definition_declares_the_block_list_surface_and_body_key() {
         let definition = definition();
         assert_eq!(definition.body_key, ARCHITECT_BODY_REGISTER);
         assert!(matches!(definition.surface_kind, SurfaceKind::BlockList));
     }
 
     #[test]
-    fn the_active_registers_rows_become_block_list_steps() {
+    async fn the_active_registers_rows_become_block_list_steps() {
         let json = serde_json::to_string(&render(&sample_plugin(), &ArchitectConfig::default())).expect("json");
         assert!(json.contains("Reception"));
     }
 
     #[test]
-    fn an_empty_register_renders_the_placeholder() {
+    async fn an_empty_register_renders_the_placeholder() {
         let cfg = ArchitectConfig { active_register: "benchmarks".into(), ..ArchitectConfig::default() };
         let json = serde_json::to_string(&render(&sample_plugin(), &cfg)).expect("json");
         assert!(json.contains("No entities in register 'benchmarks'"));

@@ -34,7 +34,7 @@ pub struct MapFeature {
 }
 
 impl Identified<String> for MapFeature {
-    fn id(&self) -> &String {
+    async fn id(&self) -> &String {
         &self.id
     }
 }
@@ -47,13 +47,13 @@ pub struct MapFeaturePatch {
 }
 
 impl Patchable<MapFeaturePatch> for MapFeature {
-    fn apply_patch(&mut self, patch: &MapFeaturePatch) {
+    async fn apply_patch(&mut self, patch: &MapFeaturePatch) {
         if let Some(data) = &patch.data {
             self.data = data.clone();
         }
     }
 
-    fn diff_patch(&self, other: &Self) -> Option<MapFeaturePatch> {
+    async fn diff_patch(&self, other: &Self) -> Option<MapFeaturePatch> {
         (self.data != other.data).then(|| MapFeaturePatch { data: Some(other.data.clone()) })
     }
 }
@@ -81,7 +81,7 @@ pub type GisMapValueChild = store::ArtifactChild<SemioValueSnapshot>;
 /// 🕸️ Deterministic content-addressed CHILD handle for the map's composed drawing — same
 /// `(child_id, target)` for identical `content_key`, a different pair once the features actually
 /// change. Mirrors `🏔️gisterrain`'s `gis_terrain_mesh_child_handle`/`💠️lowpoly`'s `mesh_child_handle`.
-pub fn gis_map_drawing_child_handle(content_key: &str) -> GisMapDrawingChild {
+pub async fn gis_map_drawing_child_handle(content_key: &str) -> GisMapDrawingChild {
     use std::hash::{Hash, Hasher};
     let mut hasher = std::collections::hash_map::DefaultHasher::new();
     content_key.hash(&mut hasher);
@@ -94,7 +94,7 @@ pub fn gis_map_drawing_child_handle(content_key: &str) -> GisMapDrawingChild {
 
 /// 🕸️ Deterministic content-addressed CHILD handle for the map's composed value graph — same
 /// hashing/dialect shape as `gis_map_drawing_child_handle`, targeting `s.stdio.semio.value` instead.
-pub fn gis_map_value_child_handle(content_key: &str) -> GisMapValueChild {
+pub async fn gis_map_value_child_handle(content_key: &str) -> GisMapValueChild {
     use std::hash::{Hash, Hasher};
     let mut hasher = std::collections::hash_map::DefaultHasher::new();
     content_key.hash(&mut hasher);
@@ -110,7 +110,7 @@ pub fn gis_map_value_child_handle(content_key: &str) -> GisMapValueChild {
 /// mirrors stdio's own `semio_value_from_json` for its `json` artifact, written locally here since
 /// that one converts stdio's OWN `JsonValue` AST, not `serde_json::Value`, and gis already speaks
 /// `serde_json::Value` everywhere else in this file).
-pub fn semio_value_from_serde_json(value: &serde_json::Value) -> SemioValue {
+pub async fn semio_value_from_serde_json(value: &serde_json::Value) -> SemioValue {
     match value {
         serde_json::Value::Null => SemioValue::Null,
         serde_json::Value::Bool(value) => SemioValue::Bool { value: *value },
@@ -132,7 +132,7 @@ pub fn semio_value_from_serde_json(value: &serde_json::Value) -> SemioValue {
 /// (this format's graph-reference variant) never appears in content this bridge itself produces —
 /// resolved defensively to `Null` rather than panicking, matching the honesty convention this
 /// ticket's other converters use for out-of-scope input shapes.
-pub fn serde_json_from_semio_value(value: &SemioValue) -> serde_json::Value {
+pub async fn serde_json_from_semio_value(value: &SemioValue) -> serde_json::Value {
     match value {
         SemioValue::Null => serde_json::Value::Null,
         SemioValue::Bool { value } => serde_json::Value::Bool(*value),
@@ -147,14 +147,14 @@ pub fn serde_json_from_semio_value(value: &SemioValue) -> serde_json::Value {
 
 /// 🌉️ Builds the map's composed `value` child content — the lossless `{positions,routes,regions}`
 /// descriptor JSON (`gis_map_descriptor_json`) lifted into a real `SemioValueSnapshot` graph.
-pub fn gis_map_value_from_descriptor_json(descriptor_json: &str) -> SemioValueSnapshot {
+pub async fn gis_map_value_from_descriptor_json(descriptor_json: &str) -> SemioValueSnapshot {
     let value: serde_json::Value = serde_json::from_str(descriptor_json).unwrap_or(serde_json::Value::Null);
     SemioValueSnapshot { schema: STDIO_SEMIOVALUE_DOCUMENT_SCHEMA.into(), root: semio_value_from_serde_json(&value), nodes: Vec::new() }
 }
 
 /// 🌉️ The exact inverse of `gis_map_value_from_descriptor_json` — recovers the descriptor JSON a
 /// `value` child's content actually carries.
-pub fn gis_map_descriptor_json_from_value(value: &SemioValueSnapshot) -> String {
+pub async fn gis_map_descriptor_json_from_value(value: &SemioValueSnapshot) -> String {
     serde_json_from_semio_value(&value.root).to_string()
 }
 
@@ -163,7 +163,7 @@ pub fn gis_map_descriptor_json_from_value(value: &SemioValueSnapshot) -> String 
 /// what they actually describe (`image` stays `None`, honestly — see this region's own doc comment).
 /// Uses the SAME `gis_map_content_key` hash basis `GisMapSnapshot::default()` uses (`📸️snapshot/🦀️component.rs`)
 /// so two paths building an identical empty/edited document always converge on the identical handles.
-pub fn gis_map_snapshot_with_derived_children(mut document: GisMapSnapshot) -> GisMapSnapshot {
+pub async fn gis_map_snapshot_with_derived_children(mut document: GisMapSnapshot) -> GisMapSnapshot {
     let content_key = crate::artifacts::gismap::schema::snapshot::gis_map_content_key(&document.positions, &document.routes, &document.regions);
     document.drawing = gis_map_drawing_child_handle(&content_key);
     document.value = gis_map_value_child_handle(&content_key);
@@ -173,7 +173,7 @@ pub fn gis_map_snapshot_with_derived_children(mut document: GisMapSnapshot) -> G
 
 //#region 🔹ArtifactKind
 /// The `2d.map` artifact kind declaration.
-pub fn artifact_kind() -> ArtifactKindSpec {
+pub async fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "2d.map".into(),
         name: "2D Map".into(),
@@ -198,7 +198,7 @@ pub fn artifact_kind() -> ArtifactKindSpec {
 /// 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE reloc-g2): `declaration()` describes the artifact
 /// (kind, schema, io ports, ownership), which is not engine behaviour.
 /// 🧾️ Defines s.gismap's immutable runtime capability leaves.
-pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
+pub async fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
     use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
 
     ArtifactDefinition::new(ArtifactIdentity::parse("s.gismap")?)
@@ -254,7 +254,7 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
 }
 
 /// 🔖️ Assembles s.gismap's typed runtime declaration.
-pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
+pub async fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
     semio_framework_plugin::ArtifactDeclaration::builder(definition()?)
         .schema(crate::artifacts::gismap::schema::gismap_artifact_schema_descriptor())
         .inferences([crate::artifacts::gismap::standards::v1::subsets::any::schema::inferences::gismap_artifact_inference_descriptor()])
@@ -270,14 +270,14 @@ mod tests {
     use super::*;
 
     #[test]
-    fn map_artifact_kind_matches_the_map_out_interchange_kind() {
+    async fn map_artifact_kind_matches_the_map_out_interchange_kind() {
         let kind = artifact_kind();
         assert_eq!(kind.id, "2d.map");
         assert_eq!(kind.schema, GIS_MAP_SCHEMA);
     }
 
     #[test]
-    fn the_map_snapshot_defaults_to_empty_feature_collections() {
+    async fn the_map_snapshot_defaults_to_empty_feature_collections() {
         let document = GisMapSnapshot::default();
         assert!(document.positions.is_empty());
         assert!(document.routes.is_empty());

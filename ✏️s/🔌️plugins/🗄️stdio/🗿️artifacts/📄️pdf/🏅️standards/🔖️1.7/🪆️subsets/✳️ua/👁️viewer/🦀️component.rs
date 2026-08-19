@@ -25,10 +25,10 @@ pub enum Pdf17UaViewCommand {
 }
 
 impl protocol::OpBinary for Pdf17UaViewCommand {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         Ok(Vec::new())
     }
-    fn decode_op(_bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    async fn decode_op(_bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         Ok(Pdf17UaViewCommand::Noop)
     }
 }
@@ -52,13 +52,13 @@ impl ArtifactViewer for Pdf17UaViewer {
     const DIALECT: Dialect = PDF17UA_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = STDIO_PDF_DOCUMENT_SCHEMA;
 
-    fn initial_snapshot() -> PdfSnapshot {
+    async fn initial_snapshot() -> PdfSnapshot {
         PdfSnapshot::default()
     }
 
     /// 👁️ Structurally read-only: the sole `Noop` variant never carries a config change. Kept as a
     /// real dispatch (not `unreachable!()`) so a future view-only action is a pure addition.
-    fn handle(
+    async fn handle(
         _command: &Self::Command,
         _doc: &ArtifactView<'_, Self::Snapshot>,
         _cfg: &ConfigView<'_, Self::Config>,
@@ -68,7 +68,7 @@ impl ArtifactViewer for Pdf17UaViewer {
         Ok(ViewEmit::default())
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> UiNode {
+    async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> UiNode {
         match body_key {
             main::BODY_KEY => main::render(doc.snapshot),
             _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))),
@@ -78,7 +78,7 @@ impl ArtifactViewer for Pdf17UaViewer {
 //#endregion 🔖️Viewer
 
 //#region 🔖️Manifest
-pub fn create_pdf17_ua_viewer() -> semio_framework_plugin::AppDefinition {
+pub async fn create_pdf17_ua_viewer() -> semio_framework_plugin::AppDefinition {
     Viewer::builder(PDF17UA_DIALECT)
         .document(["stdio", "pdf", "1.7", "ua"])
         .icon_id("file-text")
@@ -96,19 +96,19 @@ mod tests {
     use super::*;
 
     #[test]
-    fn create_pdf17_ua_viewer_builds_a_definition_for_the_viewer_role() {
+    async fn create_pdf17_ua_viewer_builds_a_definition_for_the_viewer_role() {
         let def = create_pdf17_ua_viewer();
         assert_eq!(def.role, semio_framework_plugin::AppRole::Viewer);
         assert_eq!(def.dialect, PDF17UA_DIALECT.into());
     }
 
     #[test]
-    fn viewer_dialect_matches_the_artifact_coordinate() {
+    async fn viewer_dialect_matches_the_artifact_coordinate() {
         assert_eq!(<Pdf17UaViewer as ArtifactViewer>::DIALECT, PDF17UA_DIALECT);
     }
 
     #[test]
-    fn viewer_declares_the_main_window() {
+    async fn viewer_declares_the_main_window() {
         let def = create_pdf17_ua_viewer();
         assert!(def.window_kinds.iter().any(|w| w.id == main::WINDOW_KIND_ID));
     }

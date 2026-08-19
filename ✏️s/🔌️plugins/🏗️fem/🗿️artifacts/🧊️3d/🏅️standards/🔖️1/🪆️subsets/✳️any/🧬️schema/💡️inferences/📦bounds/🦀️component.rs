@@ -26,7 +26,7 @@ pub struct Fem3dBounds {
 
 /// 📦️ Computes `bounds` from a fem3d snapshot's `nodes`/`elements` — the min/max extent of every
 /// node's `(x, y, z)`, plus their counts. Empty `nodes` yields the origin-degenerate box.
-pub fn compute_fem3d_bounds(snapshot: &Fem3dSnapshot) -> Fem3dBounds {
+pub async fn compute_fem3d_bounds(snapshot: &Fem3dSnapshot) -> Fem3dBounds {
     let mut min = [f64::INFINITY; 3];
     let mut max = [f64::NEG_INFINITY; 3];
     for node in &snapshot.nodes {
@@ -56,7 +56,7 @@ mod tests {
     use crate::artifacts::fem3d::{FemElement, FemNode};
 
     //#region 🧸️Fixtures
-    fn sample_snapshot() -> Fem3dSnapshot {
+    async fn sample_snapshot() -> Fem3dSnapshot {
         Fem3dSnapshot {
             nodes: vec![
                 FemNode { id: "n1".into(), x: -2.0, y: 1.0, z: 0.0 },
@@ -77,18 +77,18 @@ mod tests {
 
     //#region 🧪️InferenceLaws
     #[test]
-    fn inference_determinism_law() {
+    async fn inference_determinism_law() {
         let snapshot = sample_snapshot();
         assert_eq!(compute_fem3d_bounds(&snapshot), compute_fem3d_bounds(&snapshot));
     }
 
     #[test]
-    fn inference_default_law() {
+    async fn inference_default_law() {
         assert_eq!(compute_fem3d_bounds(&Fem3dSnapshot::default()), Fem3dBounds::default());
     }
 
     #[test]
-    fn bounds_matches_hand_built_node_extent() {
+    async fn bounds_matches_hand_built_node_extent() {
         let bounds = compute_fem3d_bounds(&sample_snapshot());
         assert_eq!(bounds.bounding_box.min, [-2.0, 1.0, -3.0]);
         assert_eq!(bounds.bounding_box.max, [5.0, 7.5, 6.0]);

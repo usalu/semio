@@ -12,7 +12,7 @@ pub const BLOCK2D_BODY_BOARD: &str = "block2d.play.board";
 
 //#region 🔖️Definition
 /// 🧱️ Stitched into the app manifest by `crate::editor::block2d::create_block2d_app`.
-pub fn definition() -> WindowKindDefinition {
+pub async fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
         id: BLOCK2D_WINDOW_BOARD.into(),
         label: LocalizedLabel::native("Node Kind", "Knotenart"),
@@ -33,7 +33,7 @@ pub fn definition() -> WindowKindDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(definition: &Block2dSnapshot, labels: &Block2dLabels) -> UiNode {
+pub async fn render(definition: &Block2dSnapshot, labels: &Block2dLabels) -> UiNode {
     ui_stack_vertical(vec![
         ui_text(Label::data(format!("{}: {}", labels.summary.as_str(), if definition.node_kind.label.is_empty() { "—" } else { &definition.node_kind.label }))),
         ui_text(Label::data(format!("{} {}, {} {}", definition.handle_kinds.len(), labels.handle_kinds.as_str(), definition.handles.len(), labels.handles.as_str()))),
@@ -47,7 +47,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn definition_declares_the_board_surface_and_body_key() {
+    async fn definition_declares_the_board_surface_and_body_key() {
         let definition = definition();
         assert_eq!(definition.body_key, BLOCK2D_BODY_BOARD);
         assert!(matches!(definition.surface_kind, SurfaceKind::Board2d));

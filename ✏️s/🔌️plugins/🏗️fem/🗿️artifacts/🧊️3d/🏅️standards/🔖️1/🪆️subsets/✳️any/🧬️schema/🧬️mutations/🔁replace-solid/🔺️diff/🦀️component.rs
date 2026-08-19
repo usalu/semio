@@ -4,7 +4,7 @@ use crate::artifacts::fem3d::diff::{Fem3dDiff, Fem3dSolidsDelta, Fem3dSolidsPatc
 use crate::artifacts::fem3d::Fem3dSnapshot;
 
 //#region 🔖️Diff
-pub fn diff(payload: &ReplaceSolid, base: &Fem3dSnapshot) -> protocol::MutationOutcome<Fem3dDiff> {
+pub async fn diff(payload: &ReplaceSolid, base: &Fem3dSnapshot) -> protocol::MutationOutcome<Fem3dDiff> {
     let Some(existing) = base.solids.iter().find(|solid| solid.id == payload.id) else {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Solid \"{}\" does not exist.", payload.id), [payload.id.clone()]);
     };

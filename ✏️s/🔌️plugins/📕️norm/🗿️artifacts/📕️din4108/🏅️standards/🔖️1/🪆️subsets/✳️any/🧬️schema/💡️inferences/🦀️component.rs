@@ -24,19 +24,19 @@ pub struct Din4108Inference {
 }
 
 impl protocol::Inference<Din4108Snapshot> for Din4108Inference {
-    fn infer(snapshot: &Din4108Snapshot) -> Self {
+    async fn infer(snapshot: &Din4108Snapshot) -> Self {
         Self { outline: Din4108Outline::compute(snapshot) }
     }
 }
 
 impl protocol::InferenceSpec<Din4108Snapshot> for Din4108Inference {
-    fn inference_schema_id() -> &'static str {
+    async fn inference_schema_id() -> &'static str {
         "s.norm.din4108.inference"
     }
-    fn schema_version() -> u32 {
+    async fn schema_version() -> u32 {
         1
     }
-    fn fields() -> &'static [protocol::InferenceFieldSpec] {
+    async fn fields() -> &'static [protocol::InferenceFieldSpec] {
         &[protocol::InferenceFieldSpec { id: "s.norm.din4108.inference.outline", reads: &["layers"] }]
     }
 }
@@ -52,7 +52,7 @@ impl ArtifactInferrer for crate::artifacts::din4108::standards::v1::subsets::any
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.norm.din4108.inference`'s facet leaves into the OS-wide inference catalog — call once at
 /// plugin init, alongside `din4108_artifact_schema_descriptor`'s registration.
-pub fn din4108_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
+pub async fn din4108_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
     schema::ArtifactInferenceDescriptor {
         id: "s.norm.din4108.inference",
         inference: schema::FacetLeaves {
@@ -73,13 +73,13 @@ mod tests {
     use protocol::Inference;
 
     #[test]
-    fn inference_determinism_law() {
+    async fn inference_determinism_law() {
         let snapshot = Din4108Snapshot::default();
         assert_eq!(Din4108Inference::infer(&snapshot), Din4108Inference::infer(&snapshot));
     }
 
     #[test]
-    fn inference_default_law() {
+    async fn inference_default_law() {
         assert_eq!(Din4108Inference::infer(&Din4108Snapshot::default()), Din4108Inference::default());
     }
 }
@@ -94,11 +94,11 @@ use crate::artifacts::din4108::standards::v1::subsets::any::schema::{bb_2, part_
 use crate::document::{AnnexChoice, CheckReport, CheckResult, ClauseId, ClimateZoneDe, NormError, Quantity};
 
 /// 📋️ Run all applicable DIN 4108 checks for a typical opaque wall.
-pub fn check_opaque_wall(category: part_2::BuildingCategory, layers: &[part_2::Layer], climate: ClimateZoneDe, airtightness_n50: f64) -> Result<CheckReport, NormError> {
+pub async fn check_opaque_wall(category: part_2::BuildingCategory, layers: &[part_2::Layer], climate: ClimateZoneDe, airtightness_n50: f64) -> Result<CheckReport, NormError> {
     check_opaque_wall_with_bridges(category, layers, climate, airtightness_n50, 0.02)
 }
 
-fn moisture_layers_from_wall(layers: &[part_2::Layer], mu_exterior: f64, mu_interior: f64) -> Vec<part_3::MoistureLayer> {
+async fn moisture_layers_from_wall(layers: &[part_2::Layer], mu_exterior: f64, mu_interior: f64) -> Vec<part_3::MoistureLayer> {
     layers
         .iter()
         .enumerate()
@@ -109,7 +109,7 @@ fn moisture_layers_from_wall(layers: &[part_2::Layer], mu_exterior: f64, mu_inte
         .collect()
 }
 
-fn parse_airtightness_class(class: &str) -> part_7::AirtightnessClass {
+async fn parse_airtightness_class(class: &str) -> part_7::AirtightnessClass {
     match class.to_ascii_lowercase().as_str() {
         "class1" | "1" => part_7::AirtightnessClass::Class1,
         "class3" | "3" => part_7::AirtightnessClass::Class3,
@@ -117,7 +117,7 @@ fn parse_airtightness_class(class: &str) -> part_7::AirtightnessClass {
     }
 }
 
-fn parse_application_type(value: &str) -> part_10::ApplicationType {
+async fn parse_application_type(value: &str) -> part_10::ApplicationType {
     match value.to_ascii_uppercase().as_str() {
         "DAA" => part_10::ApplicationType::Daa,
         "DUK" => part_10::ApplicationType::Duk,
@@ -128,7 +128,7 @@ fn parse_application_type(value: &str) -> part_10::ApplicationType {
     }
 }
 
-fn parse_application_class(value: &str) -> part_10::ApplicationClass {
+async fn parse_application_class(value: &str) -> part_10::ApplicationClass {
     match value.to_ascii_lowercase().as_str() {
         "dk" => part_10::ApplicationClass::Dk,
         "dg" => part_10::ApplicationClass::Dg,
@@ -137,13 +137,13 @@ fn parse_application_class(value: &str) -> part_10::ApplicationClass {
 }
 
 /// 📋️ Opaque wall checks including thermal bridge correction ψ·l [W/(m²K)].
-pub fn check_opaque_wall_with_bridges(category: part_2::BuildingCategory, layers: &[part_2::Layer], climate: ClimateZoneDe, airtightness_n50: f64, psi_times_l_sum: f64) -> Result<CheckReport, NormError> {
+pub async fn check_opaque_wall_with_bridges(category: part_2::BuildingCategory, layers: &[part_2::Layer], climate: ClimateZoneDe, airtightness_n50: f64, psi_times_l_sum: f64) -> Result<CheckReport, NormError> {
     check_full_envelope(category, layers, climate, airtightness_n50, psi_times_l_sum, 0.5, 20.0, 0.6, 600.0, 15.0, 1.3, "mineral_wool", "AW-01", "class2", 100.0, true, "DEO", "dk")
 }
 
 /// 📋️ Full DIN 4108 parts 1, 2–8, 10, and Beiblatt 2 envelope compliance check.
 #[allow(clippy::too_many_arguments, reason = "one argument per parameter the published clause formula itself names; bundling them into a struct would break the 1:1 reading against the standard")]
-pub fn check_full_envelope(
+pub async fn check_full_envelope(
     category: part_2::BuildingCategory,
     layers: &[part_2::Layer],
     climate: ClimateZoneDe,
@@ -190,7 +190,7 @@ pub fn check_full_envelope(
     Ok(report)
 }
 
-fn parse_category(category: &str) -> part_2::BuildingCategory {
+async fn parse_category(category: &str) -> part_2::BuildingCategory {
     match category.to_ascii_lowercase().as_str() {
         "office" => part_2::BuildingCategory::Office,
         "school" => part_2::BuildingCategory::School,
@@ -200,7 +200,7 @@ fn parse_category(category: &str) -> part_2::BuildingCategory {
 }
 
 /// 📋️ `Din4108Snapshot -> CheckReport` conformance law — the artifact's compliance evaluation.
-pub fn evaluate(document: &Din4108Snapshot) -> CheckReport {
+pub async fn evaluate(document: &Din4108Snapshot) -> CheckReport {
     let layers: Vec<part_2::Layer> = document.layers.iter().map(|layer| part_2::Layer { thickness_m: layer.thickness_m, lambda_w_mk: layer.lambda_w_mk }).collect();
     check_full_envelope(
         parse_category(&document.category),
@@ -241,22 +241,22 @@ pub fn evaluate(document: &Din4108Snapshot) -> CheckReport {
 mod compliance_report_tests {
     use super::*;
 
-    fn sample_wall() -> Vec<part_2::Layer> {
+    async fn sample_wall() -> Vec<part_2::Layer> {
         vec![part_2::Layer { thickness_m: 0.24, lambda_w_mk: 0.81 }, part_2::Layer { thickness_m: 0.14, lambda_w_mk: 0.035 }]
     }
 
-    fn sample_moisture_wall() -> Vec<part_3::MoistureLayer> {
+    async fn sample_moisture_wall() -> Vec<part_3::MoistureLayer> {
         vec![part_3::MoistureLayer { thickness_m: 0.24, lambda_w_mk: 0.81, mu: 15.0 }, part_3::MoistureLayer { thickness_m: 0.14, lambda_w_mk: 0.035, mu: 1.3 }]
     }
 
     #[test]
-    fn opaque_wall_passes_din_4108_suite() {
+    async fn opaque_wall_passes_din_4108_suite() {
         let report = check_opaque_wall(part_2::BuildingCategory::Residential, &sample_wall(), ClimateZoneDe::Zone2, 2.5).expect("inputs complete");
         assert!(report.all_pass(), "checks: {:?}", report.checks);
     }
 
     #[test]
-    fn full_envelope_evaluate_covers_all_eight_parts() {
+    async fn full_envelope_evaluate_covers_all_eight_parts() {
         let document = Din4108Snapshot::default();
         let report = evaluate(&document);
         assert!(report.checks.len() >= 15, "expected parts 1–8 checks, got {}", report.checks.len());

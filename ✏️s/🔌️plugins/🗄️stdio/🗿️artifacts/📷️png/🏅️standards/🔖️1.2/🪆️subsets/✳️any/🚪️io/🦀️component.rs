@@ -32,11 +32,11 @@ pub mod derived_composition {
         type Snapshot = PngSnapshot;
         const WRITES: Dialect = DIALECT;
 
-        fn reads() -> &'static [Dialect] {
+        async fn reads() -> &'static [Dialect] {
             &[DIALECT, DEP_BINARY, DEP_DEFLATE]
         }
 
-        fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+        async fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
             // 🌱 Every listed read dialect's payload is raw text/bytes that this artifact's own
             // analyzer already round-trips through `store::Document{Dsl,Pack}` -- including bytes
             // claiming a dependency's dialect, since (for a single-standard DAG-adjacent dependency
@@ -66,13 +66,13 @@ const PNG_SIGNATURE: [u8; 8] = [137, 80, 78, 71, 13, 10, 26, 10];
 //#endregion Signature
 
 //#region Crc
-fn png_crc32(data: &[u8]) -> u32 {
+async fn png_crc32(data: &[u8]) -> u32 {
     crate::artifacts::zip::standards::v2_0::subsets::any::io::crc32(data)
 }
 //#endregion Crc
 
 //#region ChunkIo
-fn write_chunk(out: &mut Vec<u8>, ty: &[u8; 4], data: &[u8]) {
+async fn write_chunk(out: &mut Vec<u8>, ty: &[u8; 4], data: &[u8]) {
     out.extend_from_slice(&(data.len() as u32).to_be_bytes());
     out.extend_from_slice(ty);
     out.extend_from_slice(data);
@@ -84,7 +84,7 @@ fn write_chunk(out: &mut Vec<u8>, ty: &[u8; 4], data: &[u8]) {
 
 /// 📖 Splits a PNG byte stream into `(type, data)` chunks, rejecting CRC mismatches and
 /// truncation up front so downstream decode logic never has to re-check framing.
-fn read_chunks(data: &[u8]) -> Result<Vec<([u8; 4], &[u8])>, String> {
+async fn read_chunks(data: &[u8]) -> Result<Vec<([u8; 4], &[u8])>, String> {
     if data.len() < 8 || data[0..8] != PNG_SIGNATURE {
         return Err("png: bad signature".into());
     }
@@ -131,7 +131,7 @@ struct Ihdr {
     interlace: u8,
 }
 
-fn parse_ihdr(data: &[u8]) -> Result<Ihdr, String> {
+async fn parse_ihdr(data: &[u8]) -> Result<Ihdr, String> {
     if data.len() != 13 {
         return Err("png IHDR: expected 13 bytes".into());
     }
@@ -168,7 +168,7 @@ fn parse_ihdr(data: &[u8]) -> Result<Ihdr, String> {
     Ok(Ihdr { width, height, bit_depth, color_type, interlace })
 }
 
-fn samples_per_pixel(color_type: u8) -> usize {
+async fn samples_per_pixel(color_type: u8) -> usize {
     match color_type {
         0 => 1,
         2 => 3,
@@ -179,18 +179,18 @@ fn samples_per_pixel(color_type: u8) -> usize {
     }
 }
 
-fn bpp_bytes(ihdr: &Ihdr) -> usize {
+async fn bpp_bytes(ihdr: &Ihdr) -> usize {
     ((samples_per_pixel(ihdr.color_type) * ihdr.bit_depth as usize + 7) / 8).max(1)
 }
 
-fn packed_row_bytes(width: u32, color_type: u8, bit_depth: u8) -> usize {
+async fn packed_row_bytes(width: u32, color_type: u8, bit_depth: u8) -> usize {
     let bits = width as usize * samples_per_pixel(color_type) * bit_depth as usize;
     (bits + 7) / 8
 }
 //#endregion Ihdr
 
 //#region Filter
-fn paeth(a: u8, b: u8, c: u8) -> u8 {
+async fn paeth(a: u8, b: u8, c: u8) -> u8 {
     let (a, b, c) = (a as i32, b as i32, c as i32);
     let p = a + b - c;
     let pa = (p - a).abs();
@@ -205,7 +205,7 @@ fn paeth(a: u8, b: u8, c: u8) -> u8 {
     }
 }
 
-fn filter_row(filter_type: u8, cur: &[u8], prev: Option<&[u8]>, bpp: usize) -> Vec<u8> {
+async fn filter_row(filter_type: u8, cur: &[u8], prev: Option<&[u8]>, bpp: usize) -> Vec<u8> {
     let mut out = vec![0u8; cur.len()];
     for x in 0..cur.len() {
         let a = if x >= bpp { cur[x - bpp] } else { 0 };
@@ -223,7 +223,7 @@ fn filter_row(filter_type: u8, cur: &[u8], prev: Option<&[u8]>, bpp: usize) -> V
     out
 }
 
-fn defilter_row(filter_type: u8, filt: &[u8], prev: Option<&[u8]>, bpp: usize) -> Result<Vec<u8>, String> {
+async fn defilter_row(filter_type: u8, filt: &[u8], prev: Option<&[u8]>, bpp: usize) -> Result<Vec<u8>, String> {
     if filter_type > 4 {
         return Err(format!("png: unsupported filter type {filter_type}"));
     }
@@ -246,7 +246,7 @@ fn defilter_row(filter_type: u8, filt: &[u8], prev: Option<&[u8]>, bpp: usize) -
 
 /// 🧮 Minimum-sum-of-absolute-values heuristic (bytes read as signed), the common
 /// real-world choice per PNG spec §9.8 — not optimal, but genuinely per-scanline-adaptive.
-fn choose_filter(cur: &[u8], prev: Option<&[u8]>, bpp: usize) -> (u8, Vec<u8>) {
+async fn choose_filter(cur: &[u8], prev: Option<&[u8]>, bpp: usize) -> (u8, Vec<u8>) {
     let mut best_ft = 0u8;
     let mut best_sum = i64::MAX;
     let mut best = Vec::new();
@@ -262,7 +262,7 @@ fn choose_filter(cur: &[u8], prev: Option<&[u8]>, bpp: usize) -> (u8, Vec<u8>) {
     (best_ft, best)
 }
 
-fn defilter_pass(raw: &[u8], mut pos: usize, height: u32, row_bytes: usize, bpp: usize) -> Result<(Vec<Vec<u8>>, usize), String> {
+async fn defilter_pass(raw: &[u8], mut pos: usize, height: u32, row_bytes: usize, bpp: usize) -> Result<(Vec<Vec<u8>>, usize), String> {
     let mut rows = Vec::with_capacity(height as usize);
     let mut prev: Option<Vec<u8>> = None;
     for _ in 0..height {
@@ -288,7 +288,7 @@ fn defilter_pass(raw: &[u8], mut pos: usize, height: u32, row_bytes: usize, bpp:
 /// 🪜 Pass geometry `(start_x, start_y, step_x, step_y)`, PNG spec §8.2.
 const ADAM7: [(u32, u32, u32, u32); 7] = [(0, 0, 8, 8), (4, 0, 8, 8), (0, 4, 4, 8), (2, 0, 4, 4), (0, 2, 2, 4), (1, 0, 2, 2), (0, 1, 1, 2)];
 
-fn adam7_pass_dims(width: u32, height: u32, pass: usize) -> (u32, u32) {
+async fn adam7_pass_dims(width: u32, height: u32, pass: usize) -> (u32, u32) {
     let (sx, sy, stx, sty) = ADAM7[pass];
     let w = if width > sx { (width - sx + stx - 1) / stx } else { 0 };
     let h = if height > sy { (height - sy + sty - 1) / sty } else { 0 };
@@ -297,7 +297,7 @@ fn adam7_pass_dims(width: u32, height: u32, pass: usize) -> (u32, u32) {
 //#endregion Adam7
 
 //#region Unpack
-fn unpack_samples(row: &[u8], width: usize, spp: usize, bit_depth: u8) -> Vec<u32> {
+async fn unpack_samples(row: &[u8], width: usize, spp: usize, bit_depth: u8) -> Vec<u32> {
     let count = width * spp;
     let mut out = Vec::with_capacity(count);
     if bit_depth == 16 {
@@ -324,7 +324,7 @@ fn unpack_samples(row: &[u8], width: usize, spp: usize, bit_depth: u8) -> Vec<u3
     out
 }
 
-fn scale_to_8(sample: u32, bit_depth: u8) -> u8 {
+async fn scale_to_8(sample: u32, bit_depth: u8) -> u8 {
     match bit_depth {
         8 => sample as u8,
         16 => (sample >> 8) as u8,
@@ -336,7 +336,7 @@ fn scale_to_8(sample: u32, bit_depth: u8) -> u8 {
 }
 
 /// 🎨 Converts one pixel's raw (unscaled) samples to 8-bit RGBA using PLTE/tRNS as needed.
-fn pixel_to_rgba(samples: &[u32], ihdr: &Ihdr, palette: &[[u8; 3]], palette_alpha: &[u8], gray_trans: Option<u32>, rgb_trans: Option<(u32, u32, u32)>) -> Result<[u8; 4], String> {
+async fn pixel_to_rgba(samples: &[u32], ihdr: &Ihdr, palette: &[[u8; 3]], palette_alpha: &[u8], gray_trans: Option<u32>, rgb_trans: Option<(u32, u32, u32)>) -> Result<[u8; 4], String> {
     match ihdr.color_type {
         0 => {
             let g = samples[0];
@@ -370,7 +370,7 @@ fn pixel_to_rgba(samples: &[u32], ihdr: &Ihdr, palette: &[[u8; 3]], palette_alph
 // 🧩 Typed encode/decode for the ancillary chunk set — kept next to the chunk-order-aware
 // `encode_png`/`decode_png` bodies since every one of these is a single (type, wire-shape) pair.
 
-fn encode_trns(t: &PngTransparency) -> Vec<u8> {
+async fn encode_trns(t: &PngTransparency) -> Vec<u8> {
     match t {
         PngTransparency::Indexed { alpha } => alpha.clone(),
         PngTransparency::Grayscale { gray } => gray.to_be_bytes().to_vec(),
@@ -384,7 +384,7 @@ fn encode_trns(t: &PngTransparency) -> Vec<u8> {
     }
 }
 
-fn encode_bkgd(b: &PngBackground) -> Vec<u8> {
+async fn encode_bkgd(b: &PngBackground) -> Vec<u8> {
     match b {
         PngBackground::Grayscale { gray } => gray.to_be_bytes().to_vec(),
         PngBackground::Rgb { r, g, b } => {
@@ -399,7 +399,7 @@ fn encode_bkgd(b: &PngBackground) -> Vec<u8> {
 }
 
 /// 📝 Serializes one `PngTextChunk` back to its real `tEXt`/`zTXt`/`iTXt` wire shape (§11.3.4).
-fn write_text_chunk(out: &mut Vec<u8>, tc: &PngTextChunk) {
+async fn write_text_chunk(out: &mut Vec<u8>, tc: &PngTextChunk) {
     match tc.kind {
         PngTextKind::Text => {
             let mut data = Vec::with_capacity(tc.keyword.len() + 1 + tc.value.len());
@@ -446,7 +446,7 @@ fn write_text_chunk(out: &mut Vec<u8>, tc: &PngTextChunk) {
 /// file's IDAT — only its pixel content (see `codec_retention_law`). Decode (below) fully
 /// supports the input diversity; only the raster half of encode canonicalizes — every typed
 /// ancillary/text/unknown chunk IS honestly re-emitted, in the decoded relative chunk order.
-pub fn encode_png(snap: &PngSnapshot) -> Result<Vec<u8>, String> {
+pub async fn encode_png(snap: &PngSnapshot) -> Result<Vec<u8>, String> {
     let expected_len = (snap.width as usize).checked_mul(snap.height as usize).and_then(|p| p.checked_mul(4)).ok_or("dimensions overflow")?;
     if snap.pixels.len() != expected_len {
         return Err("pixels length mismatch".into());
@@ -568,7 +568,7 @@ pub fn encode_png(snap: &PngSnapshot) -> Result<Vec<u8>, String> {
     Ok(out)
 }
 
-pub fn decode_png(data: &[u8]) -> Result<PngSnapshot, String> {
+pub async fn decode_png(data: &[u8]) -> Result<PngSnapshot, String> {
     let chunks = read_chunks(data)?;
     let mut ihdr: Option<Ihdr> = None;
     let mut palette: Vec<[u8; 3]> = Vec::new();
@@ -829,7 +829,7 @@ pub mod io_registry {
 
     static ENTRIES: OnceLock<Vec<ComposerEntry>> = OnceLock::new();
 
-    pub fn entries() -> &'static [ComposerEntry] {
+    pub async fn entries() -> &'static [ComposerEntry] {
         ENTRIES.get_or_init(|| vec![composer_entry_of::<PngRawAnyComposer>()]).as_slice()
     }
 }
@@ -840,7 +840,7 @@ pub mod io_registry {
 mod codec_tests {
     use super::*;
 
-    fn gradient_checkerboard_rgba(w: u32, h: u32) -> Vec<u8> {
+    async fn gradient_checkerboard_rgba(w: u32, h: u32) -> Vec<u8> {
         let mut out = Vec::with_capacity((w * h * 4) as usize);
         for y in 0..h {
             for x in 0..w {
@@ -851,7 +851,7 @@ mod codec_tests {
         out
     }
 
-    fn canonical_snapshot(w: u32, h: u32, rgba: Vec<u8>) -> PngSnapshot {
+    async fn canonical_snapshot(w: u32, h: u32, rgba: Vec<u8>) -> PngSnapshot {
         PngSnapshot { schema: crate::artifacts::png::STDIO_PNG_DOCUMENT_SCHEMA.into(), width: w, height: h, pixels: rgba, ..Default::default() }
     }
 
@@ -860,7 +860,7 @@ mod codec_tests {
     /// Under the old always-filter-0 encode + no-reconstruction decode this still happened
     /// to pass trivially only for solid colors — a gradient/checkerboard is what exposes it.
     #[test]
-    fn gradient_checkerboard_round_trip() {
+    async fn gradient_checkerboard_round_trip() {
         let (w, h) = (17u32, 13u32);
         let rgba = gradient_checkerboard_rgba(w, h);
         let snap = canonical_snapshot(w, h, rgba.clone());
@@ -872,7 +872,7 @@ mod codec_tests {
     }
 
     #[test]
-    fn solid_color_round_trip_still_works() {
+    async fn solid_color_round_trip_still_works() {
         let (w, h) = (4u32, 4u32);
         let rgba: Vec<u8> = (0..w * h).flat_map(|_| [10u8, 20, 30, 255]).collect();
         let snap = canonical_snapshot(w, h, rgba.clone());
@@ -882,7 +882,7 @@ mod codec_tests {
     }
 
     #[test]
-    fn crc_mismatch_is_rejected() {
+    async fn crc_mismatch_is_rejected() {
         let (w, h) = (2u32, 2u32);
         let rgba = gradient_checkerboard_rgba(w, h);
         let snap = canonical_snapshot(w, h, rgba);
@@ -894,13 +894,13 @@ mod codec_tests {
     }
 
     #[test]
-    fn sniff_rejects_non_png_bytes() {
+    async fn sniff_rejects_non_png_bytes() {
         let err = decode_png(b"not a png at all").unwrap_err();
         assert!(err.contains("signature"));
     }
 
     //#region ColorTypeFixtures
-    fn hand_encode(width: u32, height: u32, bit_depth: u8, color_type: u8, plte: Option<&[u8]>, trns: Option<&[u8]>, raw_rows: &[u8]) -> Vec<u8> {
+    async fn hand_encode(width: u32, height: u32, bit_depth: u8, color_type: u8, plte: Option<&[u8]>, trns: Option<&[u8]>, raw_rows: &[u8]) -> Vec<u8> {
         let bpp = bpp_bytes(&Ihdr { width, height, bit_depth, color_type, interlace: 0 });
         let row_bytes = packed_row_bytes(width, color_type, bit_depth);
         assert_eq!(raw_rows.len(), row_bytes * height as usize);
@@ -933,7 +933,7 @@ mod codec_tests {
     }
 
     #[test]
-    fn color_type_0_grayscale() {
+    async fn color_type_0_grayscale() {
         // 4x1, bit depth 8: values 0, 85, 170, 255
         let raw = vec![0u8, 85, 170, 255];
         let bytes = hand_encode(4, 1, 8, 0, None, None, &raw);
@@ -946,7 +946,7 @@ mod codec_tests {
     }
 
     #[test]
-    fn color_type_2_rgb() {
+    async fn color_type_2_rgb() {
         let raw = vec![10u8, 20, 30, 40, 50, 60]; // 2x1 RGB
         let bytes = hand_encode(2, 1, 8, 2, None, None, &raw);
         let snap = decode_png(&bytes).expect("decode rgb");
@@ -955,7 +955,7 @@ mod codec_tests {
     }
 
     #[test]
-    fn color_type_3_palette_with_trns() {
+    async fn color_type_3_palette_with_trns() {
         // palette of 3 entries; tRNS makes entry 1 half-transparent, entry 2 fully so
         let plte = [255u8, 0, 0, 0, 255, 0, 0, 0, 255]; // red, green, blue
         let trns = [255u8, 128, 0];
@@ -969,7 +969,7 @@ mod codec_tests {
     }
 
     #[test]
-    fn color_type_3_sub_byte_indices() {
+    async fn color_type_3_sub_byte_indices() {
         // bit depth 2, 4 indices packed into a single byte: 0,1,2,3 -> 0b00_01_10_11 = 0x1B
         let plte = [0u8, 0, 0, 64, 64, 64, 128, 128, 128, 255, 255, 255];
         let raw = vec![0b00_01_10_11u8];
@@ -980,7 +980,7 @@ mod codec_tests {
     }
 
     #[test]
-    fn color_type_4_grayscale_alpha() {
+    async fn color_type_4_grayscale_alpha() {
         let raw = vec![100u8, 200, 50, 10]; // 2x1: (gray,alpha) pairs
         let bytes = hand_encode(2, 1, 8, 4, None, None, &raw);
         let snap = decode_png(&bytes).expect("decode grayscale+alpha");
@@ -989,7 +989,7 @@ mod codec_tests {
     }
 
     #[test]
-    fn color_type_6_rgba_bit_depth_16() {
+    async fn color_type_6_rgba_bit_depth_16() {
         // 1x1 pixel, 16-bit RGBA; high byte should be what survives scale_to_8
         let raw = vec![0x12u8, 0x34, 0x56, 0x78, 0x9A, 0xBC, 0xDE, 0xF0];
         let bytes = hand_encode(1, 1, 16, 6, None, None, &raw);
@@ -1004,7 +1004,7 @@ mod codec_tests {
     /// genuinely unknown private chunk — proves decode both TYPES every known ancillary field
     /// AND retains the unknown one verbatim, in the real relative chunk order.
     #[test]
-    fn ancillary_chunks_round_trip_typed_and_unknown() {
+    async fn ancillary_chunks_round_trip_typed_and_unknown() {
         let raw = vec![0u8, 0, 0, 255]; // 1x1 opaque black RGBA8
         let bpp = 4usize;
         let (ft, filtered) = choose_filter(&raw, None, bpp);
@@ -1089,7 +1089,7 @@ mod codec_tests {
     }
 
     #[test]
-    fn ztxt_and_itxt_round_trip() {
+    async fn ztxt_and_itxt_round_trip() {
         // zTXt: keyword\0 + compression-method(0) + zlib(value)
         let mut ztxt = b"Comment\0\0".to_vec();
         ztxt.extend_from_slice(&crate::artifacts::deflate::standards::v_rfc1950::subsets::any::io::zlib_compress(b"compressed value").unwrap());
@@ -1139,7 +1139,7 @@ mod codec_tests {
     /// prove `decode_png` de-interlaces correctly. Production `encode_png` intentionally
     /// always emits interlace method 0 (see 🚫️EncodeScopeNote on `encode_png`); this helper
     /// is not exposed outside tests.
-    fn adam7_encode_fixture(width: u32, height: u32, rgba: &[u8]) -> Vec<u8> {
+    async fn adam7_encode_fixture(width: u32, height: u32, rgba: &[u8]) -> Vec<u8> {
         let bpp = 4usize;
         let mut idat = Vec::new();
         for pass in 0..7 {
@@ -1177,7 +1177,7 @@ mod codec_tests {
     }
 
     #[test]
-    fn adam7_interlaced_decode_round_trip() {
+    async fn adam7_interlaced_decode_round_trip() {
         let (w, h) = (9u32, 11u32); // deliberately not a multiple of 8, exercises partial passes
         let rgba = gradient_checkerboard_rgba(w, h);
         let bytes = adam7_encode_fixture(w, h, &rgba);

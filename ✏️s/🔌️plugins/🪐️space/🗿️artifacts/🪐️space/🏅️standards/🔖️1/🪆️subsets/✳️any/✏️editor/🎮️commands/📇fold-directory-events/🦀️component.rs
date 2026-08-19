@@ -19,21 +19,21 @@ pub struct FoldDirectoryEvents {
     pub events_json: String,
 }
 
-fn role_str(role: DirectorySpaceRole) -> &'static str {
+async fn role_str(role: DirectorySpaceRole) -> &'static str {
     match role {
         DirectorySpaceRole::Author => "author",
         DirectorySpaceRole::Spectator => "spectator",
     }
 }
 
-fn visibility_str(visibility: DirectorySpaceVisibility) -> &'static str {
+async fn visibility_str(visibility: DirectorySpaceVisibility) -> &'static str {
     match visibility {
         DirectorySpaceVisibility::Private => "private",
         DirectorySpaceVisibility::Public => "public",
     }
 }
 
-pub fn handle(payload: &FoldDirectoryEvents, doc: &ArtifactView<'_, SSpaceSnapshot>, cfg: &ConfigView<'_, SpaceIndexConfig>) -> Result<Emit<SSpaceMutation, SpaceIndexConfigMutation>, Fault> {
+pub async fn handle(payload: &FoldDirectoryEvents, doc: &ArtifactView<'_, SSpaceSnapshot>, cfg: &ConfigView<'_, SpaceIndexConfig>) -> Result<Emit<SSpaceMutation, SpaceIndexConfigMutation>, Fault> {
     let events: Vec<DirectoryEvent> = serde_json::from_str(&payload.events_json).map_err(|error| Fault::new(FaultOrigin::App, FaultCode::new("s.space.directory.decode"), error.to_string()))?;
     let model = fold_all(DirectoryReadModel::default(), &events);
     let Some(space) = model.spaces.get(&doc.snapshot.space_id) else {
@@ -54,16 +54,16 @@ mod tests {
     use semio_framework_os_kernel::os_directory::{DirectoryActor, DirectoryActorKind, DirectoryEventBody, DirectorySpaceKind, Hlc};
     use semio_framework_plugin::{ArtifactView, HistoryView};
 
-    fn event(seq: u64, body: DirectoryEventBody, space_id: Option<&str>) -> DirectoryEvent {
+    async fn event(seq: u64, body: DirectoryEventBody, space_id: Option<&str>) -> DirectoryEvent {
         DirectoryEvent { seq, id: format!("evt-{seq}"), hlc: Hlc { physical_ms: seq as i64, logical: 0 }, actor: DirectoryActor { kind: DirectoryActorKind::System, id: "system:test".into() }, space_id: space_id.map(Into::into), user_id: None, body, recorded_at_ms: seq as i64 }
     }
 
-    fn view_for(space_id: &str) -> SSpaceSnapshot {
+    async fn view_for(space_id: &str) -> SSpaceSnapshot {
         SSpaceSnapshot { space_id: space_id.into(), ..Default::default() }
     }
 
     #[test]
-    fn folds_visibility_and_members_for_this_space_into_config() {
+    async fn folds_visibility_and_members_for_this_space_into_config() {
         let snapshot = view_for("space-1");
         let history = HistoryView::empty();
         let doc = ArtifactView::new(&snapshot, &history);
@@ -85,7 +85,7 @@ mod tests {
     }
 
     #[test]
-    fn folding_events_for_a_different_space_is_a_no_op() {
+    async fn folding_events_for_a_different_space_is_a_no_op() {
         let snapshot = view_for("space-1");
         let history = HistoryView::empty();
         let doc = ArtifactView::new(&snapshot, &history);

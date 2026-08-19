@@ -16,23 +16,23 @@ pub struct SetNodeRoot {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn set_node_root(node_id: String, new_root: bool) -> WiresMutation {
+pub async fn set_node_root(node_id: String, new_root: bool) -> WiresMutation {
     WiresMutation::SetNodeRoot(SetNodeRoot { node_id, new_root })
 }
 
 impl protocol::MutationKind<WiresSnapshot, WiresMutation> for SetNodeRoot {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "node", kind: "set-node-root", record: "SetNodeRoot" };
 
-    fn diff(&self, base: &WiresSnapshot) -> protocol::MutationOutcome<WiresDiff> {
+    async fn diff(&self, base: &WiresSnapshot) -> protocol::MutationOutcome<WiresDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &WiresSnapshot) -> Vec<WiresMutation> {
+    async fn inverse(&self, base: &WiresSnapshot) -> Vec<WiresMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         format!("Set node \"{}\" root to {}", self.node_id, self.new_root)
     }
-    fn target(&self) -> Vec<String> {
+    async fn target(&self) -> Vec<String> {
         vec![self.node_id.clone()]
     }
 }

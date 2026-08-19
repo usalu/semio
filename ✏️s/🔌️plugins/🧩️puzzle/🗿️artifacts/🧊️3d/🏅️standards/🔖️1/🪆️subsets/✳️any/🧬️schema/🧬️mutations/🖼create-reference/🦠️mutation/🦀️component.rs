@@ -17,23 +17,23 @@ pub struct CreateReference {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn create_reference(reference: Puzzle3dReference, index: Option<usize>) -> Puzzle3dMutation {
+pub async fn create_reference(reference: Puzzle3dReference, index: Option<usize>) -> Puzzle3dMutation {
     Puzzle3dMutation::CreateReference(CreateReference { reference, index })
 }
 
 impl protocol::MutationKind<Puzzle3dSnapshot, Puzzle3dMutation> for CreateReference {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "create", entity: "reference", kind: "create-reference", record: "CreatedReference" };
 
-    fn diff(&self, base: &Puzzle3dSnapshot) -> protocol::MutationOutcome<Puzzle3dDiff> {
+    async fn diff(&self, base: &Puzzle3dSnapshot) -> protocol::MutationOutcome<Puzzle3dDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &Puzzle3dSnapshot) -> Vec<Puzzle3dMutation> {
+    async fn inverse(&self, base: &Puzzle3dSnapshot) -> Vec<Puzzle3dMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         format!("Create reference \"{}\"", self.reference.id)
     }
-    fn target(&self) -> Vec<String> {
+    async fn target(&self) -> Vec<String> {
         vec![self.reference.id.clone()]
     }
 }

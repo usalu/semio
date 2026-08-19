@@ -21,7 +21,7 @@ pub enum LineEnding {
 
 impl LineEnding {
     /// 🔤️ The literal byte sequence this line ending prints as.
-    pub fn as_str(self) -> &'static str {
+    pub async fn as_str(self) -> &'static str {
         match self {
             LineEnding::Lf => "\n",
             LineEnding::CrLf => "\r\n",
@@ -57,7 +57,7 @@ pub struct TxtSnapshot {
 }
 
 impl Default for TxtSnapshot {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self { schema: STDIO_TXT_DOCUMENT_SCHEMA.into(), lines: Vec::new(), trailing_newline: false, line_ending: LineEnding::Lf }
     }
 }
@@ -65,7 +65,7 @@ impl Default for TxtSnapshot {
 impl TxtSnapshot {
     /// 🧵️ Reconstructs the full text body (lines joined by `line_ending`, with the trailing
     /// newline appended iff `trailing_newline`). Inverse of [`Self::from_body`].
-    pub fn to_body(&self) -> String {
+    pub async fn to_body(&self) -> String {
         let sep = self.line_ending.as_str();
         let mut out = self.lines.join(sep);
         if self.trailing_newline {
@@ -77,7 +77,7 @@ impl TxtSnapshot {
     /// 🔍️ Splits a raw text body into `(lines, trailing_newline, line_ending)`. An empty body
     /// is zero lines (not one empty line) — the only case that needs special-casing, since
     /// `"".split(sep)` would otherwise yield a single empty-string element.
-    pub fn from_body(body: &str) -> Self {
+    pub async fn from_body(body: &str) -> Self {
         if body.is_empty() {
             return Self { schema: STDIO_TXT_DOCUMENT_SCHEMA.into(), lines: Vec::new(), trailing_newline: false, line_ending: LineEnding::Lf };
         }
@@ -101,27 +101,27 @@ impl TxtSnapshot {
 /// Proven by `carrier_native_is_raw` in `🚪️io/🦀️component.rs`.
 impl store::ArtifactDsl for TxtSnapshot {
     const EXTENSION: &'static str = "txt";
-    fn envelope_id() -> &'static str {
+    async fn envelope_id() -> &'static str {
         "stdio.txt"
     }
 
-    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+    async fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
         Ok(Self::from_body(text))
     }
-    fn print_dsl(&self) -> String {
+    async fn print_dsl(&self) -> String {
         self.to_body()
     }
 }
 
 impl store::ArtifactPack for TxtSnapshot {
-    fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
+    async fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
 
         let raw = self.to_body();
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
         Ok(store::semio_format::wrap_binary(&envelope, raw.as_bytes()))
     }
-    fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
+    async fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
         if envelope.envelope_id() != <Self as store::ArtifactDsl>::envelope_id() {
             return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.envelope_id())));

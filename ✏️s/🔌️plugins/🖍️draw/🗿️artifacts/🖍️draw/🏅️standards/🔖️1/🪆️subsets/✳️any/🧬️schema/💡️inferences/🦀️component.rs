@@ -26,7 +26,7 @@ pub struct DrawInference {
 }
 
 impl protocol::Inference<DrawSnapshot> for DrawInference {
-    fn infer(snapshot: &DrawSnapshot) -> Self {
+    async fn infer(snapshot: &DrawSnapshot) -> Self {
         Self { topology: compute_draw_topology(snapshot) }
     }
 }
@@ -34,19 +34,19 @@ impl protocol::Inference<DrawSnapshot> for DrawInference {
 /// 🌱 Defined in terms of `infer` (not derived) — keeps the law correct regardless of whether
 /// `DrawSnapshot::default()`'s `layers` field ever stops being empty.
 impl Default for DrawInference {
-    fn default() -> Self {
+    async fn default() -> Self {
         <Self as protocol::Inference<DrawSnapshot>>::infer(&DrawSnapshot::default())
     }
 }
 
 impl protocol::InferenceSpec<DrawSnapshot> for DrawInference {
-    fn inference_schema_id() -> &'static str {
+    async fn inference_schema_id() -> &'static str {
         "s.draw.draw.inference"
     }
-    fn schema_version() -> u32 {
+    async fn schema_version() -> u32 {
         1
     }
-    fn fields() -> &'static [protocol::InferenceFieldSpec] {
+    async fn fields() -> &'static [protocol::InferenceFieldSpec] {
         &[protocol::InferenceFieldSpec { id: "s.draw.draw.inference.topology", reads: &["layers"] }]
     }
 }
@@ -62,7 +62,7 @@ impl ArtifactInferrer for crate::artifacts::draw::standards::v1::subsets::any::s
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.draw.draw.inference`'s facet leaves into the OS-wide inference catalog — call
 /// once at plugin init, alongside `draw_artifact_schema_descriptor`'s registration.
-pub fn draw_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
+pub async fn draw_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
     schema::ArtifactInferenceDescriptor {
         id: "s.draw.draw.inference",
         inference: schema::FacetLeaves {
@@ -83,13 +83,13 @@ mod tests {
     use protocol::Inference;
 
     #[test]
-    fn inference_determinism_law() {
+    async fn inference_determinism_law() {
         let snapshot = DrawSnapshot::default();
         assert_eq!(DrawInference::infer(&snapshot), DrawInference::infer(&snapshot));
     }
 
     #[test]
-    fn inference_default_law() {
+    async fn inference_default_law() {
         assert_eq!(DrawInference::infer(&DrawSnapshot::default()), DrawInference::default());
     }
 }

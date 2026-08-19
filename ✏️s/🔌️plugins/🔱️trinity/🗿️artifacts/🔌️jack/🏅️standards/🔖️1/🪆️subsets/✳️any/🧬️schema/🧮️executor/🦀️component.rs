@@ -16,7 +16,7 @@ pub struct Binding {
 }
 
 /// ▶️ Execute a jack query against a graph and emit CQRS operations for mutations.
-pub fn execute(graph: &Graph, query: &Query) -> Result<(QueryResult, Vec<TrinityGraphMutation>), String> {
+pub async fn execute(graph: &Graph, query: &Query) -> Result<(QueryResult, Vec<TrinityGraphMutation>), String> {
     let mut fixture = graph.to_fixture();
     let mut view = graph.clone();
     let mut bindings: Vec<Binding> = vec![Binding::default()];
@@ -78,7 +78,7 @@ pub fn execute(graph: &Graph, query: &Query) -> Result<(QueryResult, Vec<Trinity
 }
 
 /// ▶️ Parse and execute jack in one step.
-pub fn run(graph: &mut Graph, source: &str) -> Result<QueryResult, String> {
+pub async fn run(graph: &mut Graph, source: &str) -> Result<QueryResult, String> {
     let query = parse(source)?;
     let (result, operations) = execute(graph, &query)?;
     if !operations.is_empty() {
@@ -89,12 +89,12 @@ pub fn run(graph: &mut Graph, source: &str) -> Result<QueryResult, String> {
 }
 
 /// ▶️ Execute jack and return JSON result.
-pub fn run_json(graph: &mut Graph, source: &str) -> Result<String, String> {
+pub async fn run_json(graph: &mut Graph, source: &str) -> Result<String, String> {
     let result = run(graph, source)?;
     serde_json::to_string(&result).map_err(|e| e.to_string())
 }
 
-fn match_patterns(graph: &Graph, patterns: &[Pattern]) -> Result<Vec<Binding>, String> {
+async fn match_patterns(graph: &Graph, patterns: &[Pattern]) -> Result<Vec<Binding>, String> {
     let mut bindings = vec![Binding::default()];
     for pattern in patterns {
         let mut next = Vec::new();
@@ -106,7 +106,7 @@ fn match_patterns(graph: &Graph, patterns: &[Pattern]) -> Result<Vec<Binding>, S
     Ok(bindings)
 }
 
-fn match_pattern(graph: &Graph, pattern: &Pattern, base: &Binding) -> Result<Vec<Binding>, String> {
+async fn match_pattern(graph: &Graph, pattern: &Pattern, base: &Binding) -> Result<Vec<Binding>, String> {
     let left = pattern.nodes.first().ok_or_else(|| "empty pattern".to_string())?;
     if let Some(edge_pat) = &pattern.edge {
         let mut out = Vec::new();
@@ -160,11 +160,11 @@ fn match_pattern(graph: &Graph, pattern: &Pattern, base: &Binding) -> Result<Vec
     Ok(out)
 }
 
-fn binding_conflicts(base: &Binding, var: &str, node_id: &str) -> bool {
+async fn binding_conflicts(base: &Binding, var: &str, node_id: &str) -> bool {
     base.nodes.get(var).is_some_and(|existing| existing != node_id)
 }
 
-fn eval_expr(graph: &Graph, binding: &Binding, expr: &Expr) -> bool {
+async fn eval_expr(graph: &Graph, binding: &Binding, expr: &Expr) -> bool {
     match expr {
         Expr::Eq { var, prop, value } => binding_value(graph, binding, var, prop) == Some(value.clone()),
         Expr::Ne { var, prop, value } => binding_value(graph, binding, var, prop) != Some(value.clone()),
@@ -173,7 +173,7 @@ fn eval_expr(graph: &Graph, binding: &Binding, expr: &Expr) -> bool {
     }
 }
 
-fn binding_value(graph: &Graph, binding: &Binding, var: &str, prop: &str) -> Option<PropertyValue> {
+async fn binding_value(graph: &Graph, binding: &Binding, var: &str, prop: &str) -> Option<PropertyValue> {
     let node_id = binding.nodes.get(var)?;
     let node = graph.node(node_id)?;
     match prop {
@@ -184,18 +184,18 @@ fn binding_value(graph: &Graph, binding: &Binding, var: &str, prop: &str) -> Opt
     }
 }
 
-fn binding_has_entity(binding: &Binding, var: &str) -> bool {
+async fn binding_has_entity(binding: &Binding, var: &str) -> bool {
     binding.nodes.contains_key(var) || binding.edges.contains_key(var)
 }
 
-fn return_items_want_graph(items: &[ReturnItem], bindings: &[Binding]) -> bool {
+async fn return_items_want_graph(items: &[ReturnItem], bindings: &[Binding]) -> bool {
     items.iter().any(|item| {
         let ReturnItem::Var(v) = item else { return false };
         bindings.iter().any(|b| binding_has_entity(b, v))
     })
 }
 
-fn collect_graph_entities(bindings: &[Binding], items: &[ReturnItem]) -> (BTreeSet<String>, BTreeSet<String>) {
+async fn collect_graph_entities(bindings: &[Binding], items: &[ReturnItem]) -> (BTreeSet<String>, BTreeSet<String>) {
     let mut node_ids = BTreeSet::new();
     let mut edge_ids = BTreeSet::new();
     for binding in bindings {
@@ -213,7 +213,7 @@ fn collect_graph_entities(bindings: &[Binding], items: &[ReturnItem]) -> (BTreeS
     (node_ids, edge_ids)
 }
 
-fn build_return(graph: &Graph, bindings: &[Binding], items: &[ReturnItem]) -> QueryResult {
+async fn build_return(graph: &Graph, bindings: &[Binding], items: &[ReturnItem]) -> QueryResult {
     let columns: Vec<String> = items
         .iter()
         .map(|item| match item {
@@ -241,7 +241,7 @@ fn build_return(graph: &Graph, bindings: &[Binding], items: &[ReturnItem]) -> Qu
     QueryResult::table(columns, rows)
 }
 
-fn emit_set_operation(fixture: &JackSnapshot, node_id: &str, prop: &str, value: PropertyValue) -> Result<TrinityGraphMutation, String> {
+async fn emit_set_operation(fixture: &JackSnapshot, node_id: &str, prop: &str, value: PropertyValue) -> Result<TrinityGraphMutation, String> {
     let scene = crate::artifacts::jack::jack_working_scene(fixture);
     let node = scene.nodes.iter().find(|node| node.id == node_id).ok_or_else(|| format!("node {node_id} not found"))?;
     match prop {
@@ -263,7 +263,7 @@ fn emit_set_operation(fixture: &JackSnapshot, node_id: &str, prop: &str, value: 
     }
 }
 
-fn emit_create_operations(fixture: &JackSnapshot, pattern: &Pattern) -> Result<Vec<TrinityGraphMutation>, String> {
+async fn emit_create_operations(fixture: &JackSnapshot, pattern: &Pattern) -> Result<Vec<TrinityGraphMutation>, String> {
     let scene = crate::artifacts::jack::jack_working_scene(fixture);
     let left = pattern.nodes.first().ok_or_else(|| "empty create pattern".to_string())?;
     let left_id = format!("{}-{}", left.var, scene.nodes.len());
@@ -304,7 +304,7 @@ mod tests {
     use crate::language_service::{complete, format as format_source, hover, lint, semantic_tokens};
     use crate::lexer::{lex, tokenize, TokenClass};
 
-    fn mini_graph() -> Graph {
+    async fn mini_graph() -> Graph {
         let fixture = JackSnapshot::with_content(
             JackSnapshot::SCHEMA.into(),
             "mini".into(),
@@ -353,13 +353,13 @@ mod tests {
     }
 
     #[test]
-    fn parse_match_return() {
+    async fn parse_match_return() {
         let q = parse("MATCH (a:Piece)-[r:Connection]->(b:Piece) RETURN a.name, b.name").unwrap();
         assert_eq!(q.clauses.len(), 2);
     }
 
     #[test]
-    fn run_match_return() {
+    async fn run_match_return() {
         let mut g = mini_graph();
         let result = run(&mut g, "MATCH (a:Piece)-[r:Connection]->(b:Piece) RETURN a.name, b.name").unwrap();
         assert_eq!(result.kind, QueryResultKind::Table);
@@ -368,7 +368,7 @@ mod tests {
     }
 
     #[test]
-    fn run_match_return_graph() {
+    async fn run_match_return_graph() {
         let mut g = mini_graph();
         let result = run(&mut g, "MATCH (a:Piece)-[r:Connection]->(b:Piece) RETURN a, r, b").unwrap();
         assert_eq!(result.kind, QueryResultKind::Graph);
@@ -378,14 +378,14 @@ mod tests {
     }
 
     #[test]
-    fn run_create() {
+    async fn run_create() {
         let mut g = mini_graph();
         run(&mut g, "CREATE (n:Piece)").unwrap();
         assert_eq!(g.nodes.len(), 3);
     }
 
     #[test]
-    fn run_set() {
+    async fn run_set() {
         let mut g = mini_graph();
         run(&mut g, "MATCH (a:Piece) WHERE a.name = 'core' SET a.label = 'root-core'").unwrap();
         let node = g.node("root").unwrap();
@@ -393,62 +393,62 @@ mod tests {
     }
 
     #[test]
-    fn tokenize_keywords_and_strings() {
+    async fn tokenize_keywords_and_strings() {
         let spans = tokenize("MATCH (a:Piece) WHERE a.name = 'core'");
         assert!(spans.iter().any(|s| s.class == TokenClass::Keyword && s.start == 0));
         assert!(spans.iter().any(|s| s.class == TokenClass::String));
     }
 
     #[test]
-    fn tokenize_unterminated_string_is_error() {
+    async fn tokenize_unterminated_string_is_error() {
         let spans = tokenize("MATCH (a:Piece) WHERE a.name = 'core");
         assert!(spans.iter().any(|s| s.class == TokenClass::Error));
     }
 
     #[test]
-    fn complete_clause_keywords() {
+    async fn complete_clause_keywords() {
         let g = mini_graph();
         let items = complete(&g, "MAT", 3);
         assert!(items.iter().any(|row| row.label == "MATCH"));
     }
 
     #[test]
-    fn complete_node_kinds_after_colon() {
+    async fn complete_node_kinds_after_colon() {
         let g = mini_graph();
         let items = complete(&g, "MATCH (a:P", 11);
         assert!(items.iter().any(|row| row.label == "Piece"));
     }
 
     #[test]
-    fn complete_properties_after_dot() {
+    async fn complete_properties_after_dot() {
         let g = mini_graph();
         let items = complete(&g, "MATCH (a:Piece) WHERE a.n", 25);
         assert!(items.iter().any(|row| row.label == "name"));
     }
 
     #[test]
-    fn complete_bound_variables() {
+    async fn complete_bound_variables() {
         let g = mini_graph();
         let items = complete(&g, "MATCH (a:Piece) RETURN a", 24);
         assert!(items.iter().any(|row| row.label == "a"));
     }
 
     #[test]
-    fn lint_unterminated_string() {
+    async fn lint_unterminated_string() {
         let g = mini_graph();
         let diags = lint(&g, "MATCH (a:Piece) WHERE a.name = 'core");
         assert!(diags.iter().any(|d| d.code.as_deref() == Some("jack/unterminated-string")));
     }
 
     #[test]
-    fn lint_unbound_variable() {
+    async fn lint_unbound_variable() {
         let g = mini_graph();
         let diags = lint(&g, "RETURN a.name");
         assert!(diags.iter().any(|d| d.code.as_deref() == Some("jack/unbound-variable")));
     }
 
     #[test]
-    fn format_is_idempotent() {
+    async fn format_is_idempotent() {
         let source = "MATCH (a:Piece)--[r:Connection]->(b:Piece) RETURN a.name, b.name";
         let once = format_source(source).unwrap();
         let twice = format_source(&once).unwrap();
@@ -458,21 +458,21 @@ mod tests {
     }
 
     #[test]
-    fn hover_keyword() {
+    async fn hover_keyword() {
         let g = mini_graph();
         let info = hover(&g, "MATCH (a:Piece) RETURN a.name", 2).unwrap();
         assert!(info.contents.contains("MATCH"));
     }
 
     #[test]
-    fn semantic_tokens_cover_keywords() {
+    async fn semantic_tokens_cover_keywords() {
         let tokens = semantic_tokens("MATCH (a:Piece) RETURN a.name");
         assert!(tokens.iter().any(|t| t.class == "keyword"));
         assert!(tokens.iter().any(|t| t.class == "ident"));
     }
 
     #[test]
-    fn run_create_edge() {
+    async fn run_create_edge() {
         let mut g = mini_graph();
         while g.nodes.len() < 9 {
             run(&mut g, "CREATE (n:Piece)").unwrap();
@@ -483,7 +483,7 @@ mod tests {
     }
 
     #[test]
-    fn run_delete() {
+    async fn run_delete() {
         let mut g = mini_graph();
         run(&mut g, "MATCH (n:Piece) WHERE n.name = 'capsule' DELETE n").unwrap();
         assert_eq!(g.nodes.len(), 1);
@@ -491,7 +491,7 @@ mod tests {
     }
 
     #[test]
-    fn run_merge_noop_when_pattern_exists() {
+    async fn run_merge_noop_when_pattern_exists() {
         let mut g = mini_graph();
         run(&mut g, "MERGE (a:Piece)-[:Connection]->(b:Piece)").unwrap();
         assert_eq!(g.nodes.len(), 2);
@@ -499,7 +499,7 @@ mod tests {
     }
 
     #[test]
-    fn run_merge_creates_disconnected_pattern() {
+    async fn run_merge_creates_disconnected_pattern() {
         let mut g = mini_graph();
         g.edges.clear();
         run(&mut g, "MERGE (x:Piece)-[:Connection]->(y:Piece)").unwrap();
@@ -508,7 +508,7 @@ mod tests {
     }
 
     #[test]
-    fn lex_not_equal() {
+    async fn lex_not_equal() {
         let tokens = lex("WHERE a.name != 'core'").unwrap();
         assert!(tokens.iter().any(|t| matches!(t, Token::Ne)));
     }

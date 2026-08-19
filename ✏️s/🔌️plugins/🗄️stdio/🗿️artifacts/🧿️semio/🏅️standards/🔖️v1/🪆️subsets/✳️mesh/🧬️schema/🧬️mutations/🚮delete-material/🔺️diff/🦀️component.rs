@@ -9,7 +9,7 @@ use crate::artifacts::semio::standards::v1::subsets::mesh::schema::diff::SemioMe
 use crate::artifacts::semio::standards::v1::subsets::mesh::schema::snapshot::SemioMeshSnapshot;
 
 //#region 🔖️Diff
-pub fn diff(payload: &DeleteMaterial, base: &SemioMeshSnapshot) -> protocol::MutationOutcome<SemioMeshDiff> {
+pub async fn diff(payload: &DeleteMaterial, base: &SemioMeshSnapshot) -> protocol::MutationOutcome<SemioMeshDiff> {
     if crate::artifacts::semio::standards::v1::subsets::mesh::schema::diff::material_at(base, &payload.id).is_none() {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Material \"{}\" does not exist.", payload.id), [payload.id.clone()]);
     }

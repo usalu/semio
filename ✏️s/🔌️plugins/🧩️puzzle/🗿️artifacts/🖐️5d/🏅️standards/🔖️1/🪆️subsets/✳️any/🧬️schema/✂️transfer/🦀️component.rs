@@ -13,11 +13,11 @@ use std::collections::{HashMap, HashSet};
 
 //#region 🔖️GripRefs
 /// 🧩️ The part id a `"part_id:grip_id"` full grip reference belongs to.
-fn owning_part_id(grip_ref: &str) -> &str {
+async fn owning_part_id(grip_ref: &str) -> &str {
     grip_ref.split(':').next().unwrap_or(grip_ref)
 }
 
-fn rewrite_grip_ref(grip_ref: &str, id_map: &HashMap<String, String>) -> String {
+async fn rewrite_grip_ref(grip_ref: &str, id_map: &HashMap<String, String>) -> String {
     match grip_ref.split_once(':') {
         Some((part_id, grip_id)) => match id_map.get(part_id) {
             Some(fresh_part_id) => format!("{fresh_part_id}:{grip_id}"),
@@ -33,7 +33,7 @@ fn rewrite_grip_ref(grip_ref: &str, id_map: &HashMap<String, String>) -> String 
 /// selected fastener's endpoint parts, then expands the fastener set to include every fastener whose
 /// BOTH endpoints are now in the part set — mirrors semio_compose_rs's `copyDesign` closure rule
 /// (`semio_compose_rs/dev/algorithm/js/index.ts:483`).
-pub fn copy_selection(projection: &Puzzle5dSnapshot, part_ids: &[String], fastener_ids: &[String]) -> (Vec<Puzzle5dPart>, Vec<Puzzle5dFastener>) {
+pub async fn copy_selection(projection: &Puzzle5dSnapshot, part_ids: &[String], fastener_ids: &[String]) -> (Vec<Puzzle5dPart>, Vec<Puzzle5dFastener>) {
     let mut part_set: HashSet<String> = part_ids.iter().cloned().collect();
     for fastener in &projection.fasteners {
         if fastener_ids.contains(&fastener.id) {
@@ -57,7 +57,7 @@ pub fn copy_selection(projection: &Puzzle5dSnapshot, part_ids: &[String], fasten
 }
 
 /// 🧮️ The average 2D board position of `parts` — `None` for an empty slice.
-pub fn centroid_2d(parts: &[Puzzle5dPart]) -> Option<(f64, f64)> {
+pub async fn centroid_2d(parts: &[Puzzle5dPart]) -> Option<(f64, f64)> {
     if parts.is_empty() {
         return None;
     }
@@ -76,7 +76,7 @@ pub fn centroid_2d(parts: &[Puzzle5dPart]) -> Option<(f64, f64)> {
 /// semio_compose_rs's `pasteDesign` (`semio_compose_rs/dev/algorithm/js/index.ts:515`). Returns the ready-to-insert
 /// parts/fasteners; the caller turns each into one `SetPart`/`SetFastener` operation appended past the
 /// document's current `parts`/`fasteners` length.
-pub fn paste_selection(projection: &Puzzle5dSnapshot, fragment_parts: &[Puzzle5dPart], fragment_fasteners: &[Puzzle5dFastener], delta_2d: (f64, f64)) -> (Vec<Puzzle5dPart>, Vec<Puzzle5dFastener>) {
+pub async fn paste_selection(projection: &Puzzle5dSnapshot, fragment_parts: &[Puzzle5dPart], fragment_fasteners: &[Puzzle5dFastener], delta_2d: (f64, f64)) -> (Vec<Puzzle5dPart>, Vec<Puzzle5dFastener>) {
     let mut id_map: HashMap<String, String> = HashMap::new();
     let mut existing_ids: HashSet<String> = projection.parts.iter().map(|part| part.id.clone()).collect();
     let mut fresh_parts = Vec::with_capacity(fragment_parts.len());
@@ -111,7 +111,7 @@ pub fn paste_selection(projection: &Puzzle5dSnapshot, fragment_parts: &[Puzzle5d
 /// explicit, so a translate is a direct position write). Mirrors
 /// `semio_compose_rs/dev/algorithm/js/index.ts:424,451`. Returns `(index, updated part)` pairs ready for
 /// `SetPart` operations.
-pub fn translate_parts(projection: &Puzzle5dSnapshot, part_ids: &[String], delta_2d: (f64, f64), delta_3d: [f64; 3]) -> Vec<(usize, Puzzle5dPart)> {
+pub async fn translate_parts(projection: &Puzzle5dSnapshot, part_ids: &[String], delta_2d: (f64, f64), delta_3d: [f64; 3]) -> Vec<(usize, Puzzle5dPart)> {
     projection
         .parts
         .iter()
@@ -133,7 +133,7 @@ pub fn translate_parts(projection: &Puzzle5dSnapshot, part_ids: &[String], delta
 /// `part_id`'s own grip kinds (excluding `part_id`'s current kind) — candidates a "replace kind"
 /// picker offers. Mirrors semio_compose_rs's `findReplaceableTypesForSelection` (`semio_compose_rs/dev/algorithm/js/
 /// index.ts:84`), computed for real against `kind_catalogs`/`kind_compatibility` instead of a fixture stub.
-pub fn find_replaceable_kinds(projection: &Puzzle5dSnapshot, part_id: &str) -> Vec<String> {
+pub async fn find_replaceable_kinds(projection: &Puzzle5dSnapshot, part_id: &str) -> Vec<String> {
     let Some(part) = projection.parts.iter().find(|part| part.id == part_id) else {
         return Vec::new();
     };
@@ -167,7 +167,7 @@ mod tests {
     use super::*;
     use crate::artifacts::puzzle5d::{Puzzle5dCompatSpecificity, Puzzle5dGripTemplate, Puzzle5dCatalogPartKind, Puzzle5dGrip, Puzzle5dKindCatalogs, Puzzle5dKindCompatibility, Puzzle5dPart2d, Puzzle5dPart3d, Puzzle5dPartAnchor};
 
-    fn part_at(id: &str, x: f64, y: f64) -> Puzzle5dPart {
+    async fn part_at(id: &str, x: f64, y: f64) -> Puzzle5dPart {
         Puzzle5dPart {
             id: id.to_string(),
             anchor: Puzzle5dPartAnchor::Fixed,
@@ -178,7 +178,7 @@ mod tests {
         }
     }
 
-    fn three_part_projection() -> Puzzle5dSnapshot {
+    async fn three_part_projection() -> Puzzle5dSnapshot {
         let mut projection = Puzzle5dSnapshot::default();
         projection.parts.push(part_at("p1", 0.0, 0.0));
         projection.parts.push(part_at("p2", 10.0, 0.0));
@@ -189,7 +189,7 @@ mod tests {
     }
 
     #[test]
-    fn copy_selection_pulls_in_fastener_endpoints_and_internal_links() {
+    async fn copy_selection_pulls_in_fastener_endpoints_and_internal_links() {
         let projection = three_part_projection();
         // Selecting only p1 and p2 (no fastener) should still close over f1 since both endpoints are selected.
         let (parts, fasteners) = copy_selection(&projection, &["p1".into(), "p2".into()], &[]);
@@ -198,7 +198,7 @@ mod tests {
     }
 
     #[test]
-    fn copy_selection_expands_parts_from_selected_fastener() {
+    async fn copy_selection_expands_parts_from_selected_fastener() {
         let projection = three_part_projection();
         // Selecting only fastener f2 should pull in its endpoint parts p2 and p3.
         let (parts, fasteners) = copy_selection(&projection, &[], &["f2".into()]);
@@ -207,14 +207,14 @@ mod tests {
     }
 
     #[test]
-    fn centroid_2d_averages_positions() {
+    async fn centroid_2d_averages_positions() {
         let parts = vec![part_at("a", 0.0, 0.0), part_at("b", 10.0, 0.0)];
         assert_eq!(centroid_2d(&parts), Some((5.0, 0.0)));
         assert_eq!(centroid_2d(&[]), None);
     }
 
     #[test]
-    fn paste_selection_mints_fresh_ids_shifts_positions_and_remaps_fastener_endpoints() {
+    async fn paste_selection_mints_fresh_ids_shifts_positions_and_remaps_fastener_endpoints() {
         let projection = three_part_projection();
         let (fragment_parts, fragment_fasteners) = copy_selection(&projection, &["p1".into(), "p2".into()], &[]);
         let (fresh_parts, fresh_fasteners) = paste_selection(&projection, &fragment_parts, &fragment_fasteners, (100.0, 0.0));
@@ -233,7 +233,7 @@ mod tests {
     }
 
     #[test]
-    fn translate_parts_shifts_selected_parts_only() {
+    async fn translate_parts_shifts_selected_parts_only() {
         let projection = three_part_projection();
         let updated = translate_parts(&projection, &["p2".into()], (5.0, 5.0), [5.0, 5.0, 5.0]);
         assert_eq!(updated.len(), 1);
@@ -245,7 +245,7 @@ mod tests {
     }
 
     #[test]
-    fn find_replaceable_kinds_walks_kind_compatibility() {
+    async fn find_replaceable_kinds_walks_kind_compatibility() {
         let mut projection = three_part_projection();
         projection.parts[0].part_kind = Some("kind-a".into());
         projection.kind_compatibility.push(Puzzle5dKindCompatibility { source: "k".into(), target: "k2".into(), bidirectional: false, important: false, specificity: Puzzle5dCompatSpecificity::General });

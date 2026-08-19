@@ -14,23 +14,23 @@ pub struct DeleteRepresentation {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn delete_representation(id: String) -> Block5dMutation {
+pub async fn delete_representation(id: String) -> Block5dMutation {
     Block5dMutation::DeleteRepresentation(DeleteRepresentation { id })
 }
 
 impl protocol::MutationKind<Block5dSnapshot, Block5dMutation> for DeleteRepresentation {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "delete", entity: "representation", kind: "delete-representation", record: "DeletedRepresentation" };
 
-    fn diff(&self, base: &Block5dSnapshot) -> protocol::MutationOutcome<Block5dDiff> {
+    async fn diff(&self, base: &Block5dSnapshot) -> protocol::MutationOutcome<Block5dDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &Block5dSnapshot) -> Vec<Block5dMutation> {
+    async fn inverse(&self, base: &Block5dSnapshot) -> Vec<Block5dMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         format!("Delete representation \"{}\"", self.id)
     }
-    fn target(&self) -> Vec<String> {
+    async fn target(&self) -> Vec<String> {
         vec![self.id.clone()]
     }
 }

@@ -5,7 +5,7 @@ use crate::artifacts::din16798::mutations::change_dhw_delivery_c::mutation::Chan
 use crate::artifacts::din16798::Din16798Snapshot;
 
 //#region 🔖️Diff
-pub fn diff(payload: &ChangeDhwDeliveryC, base: &Din16798Snapshot) -> protocol::MutationOutcome<Din16798Diff> {
+pub async fn diff(payload: &ChangeDhwDeliveryC, base: &Din16798Snapshot) -> protocol::MutationOutcome<Din16798Diff> {
     if !payload.new_dhw_delivery_c.is_finite() {
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("DHW delivery temperature must be a finite number, got {}.", payload.new_dhw_delivery_c), Vec::<String>::new());
     }

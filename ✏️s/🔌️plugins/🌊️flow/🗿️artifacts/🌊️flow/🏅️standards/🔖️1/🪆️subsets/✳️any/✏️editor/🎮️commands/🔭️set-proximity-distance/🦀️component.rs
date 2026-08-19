@@ -11,6 +11,6 @@ pub struct SetProximityDistance {
     pub value: f64,
 }
 
-pub fn handle(payload: &SetProximityDistance, _doc: &ArtifactView<'_, FlowSnapshot>, _cfg: &ConfigView<'_, FlowConfig>, _session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, FlowConfigMutation>, Fault> {
+pub async fn handle(payload: &SetProximityDistance, _doc: &ArtifactView<'_, FlowSnapshot>, _cfg: &ConfigView<'_, FlowConfig>, _session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, FlowConfigMutation>, Fault> {
     Ok(Emit::config(vec![FlowConfigMutation::SetProximityDistance { value: payload.value.max(0.0) }]))
 }

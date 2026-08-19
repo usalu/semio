@@ -30,7 +30,7 @@ pub(crate) struct GltfConcavityRaw {
     pub(crate) reentrant_area: Option<f64>,
 }
 
-pub(crate) fn raw(context: &GltfGeometryContext<'_>) -> GltfConcavityRaw {
+pub(crate) async fn raw(context: &GltfGeometryContext<'_>) -> GltfConcavityRaw {
     let hull_input = hull_sample(&context.points, context.policy.sampling_budget as usize);
     let tolerance = (context.diagonal * context.policy.relative_tolerance).max(context.policy.absolute_length_tolerance);
     let hull = convex_hull_metrics(&hull_input, tolerance);
@@ -51,7 +51,7 @@ pub(crate) fn raw(context: &GltfGeometryContext<'_>) -> GltfConcavityRaw {
 impl GltfInferenceStage<GltfGeometryContext<'_>> for GltfConcavityInference {
     type Output = GltfConcavityIndicators;
 
-    fn infer(context: &GltfGeometryContext<'_>) -> Self::Output {
+    async fn infer(context: &GltfGeometryContext<'_>) -> Self::Output {
         let raw = raw(context);
         Self::Output {
             convex_hull_gap: convex_hull_gap::from_raw(context, &raw),
@@ -61,7 +61,7 @@ impl GltfInferenceStage<GltfGeometryContext<'_>> for GltfConcavityInference {
         }
     }
 
-    fn unavailable(diagnostic_ids: &[String]) -> Self::Output {
+    async fn unavailable(diagnostic_ids: &[String]) -> Self::Output {
         Self::Output {
             convex_hull_gap: convex_hull_gap::unavailable_measure(diagnostic_ids),
             reentrant_area: reentrant_area::unavailable_measure(diagnostic_ids),

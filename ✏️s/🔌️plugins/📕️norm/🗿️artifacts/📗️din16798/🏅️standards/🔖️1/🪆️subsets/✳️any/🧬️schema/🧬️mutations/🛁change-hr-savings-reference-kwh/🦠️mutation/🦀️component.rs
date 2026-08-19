@@ -15,15 +15,15 @@ pub struct ChangeHrSavingsReferenceKwh {
 impl protocol::MutationKind<Din16798Snapshot, Din16798Mutation> for ChangeHrSavingsReferenceKwh {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "hr-savings-reference-kwh", kind: "change-hr-savings-reference-kwh", record: "ChangedHrSavingsReferenceKwh" };
 
-    fn diff(&self, base: &Din16798Snapshot) -> protocol::MutationOutcome<Din16798Diff> {
+    async fn diff(&self, base: &Din16798Snapshot) -> protocol::MutationOutcome<Din16798Diff> {
         crate::artifacts::din16798::mutations::change_hr_savings_reference_kwh::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &Din16798Snapshot) -> Vec<Din16798Mutation> {
+    async fn inverse(&self, base: &Din16798Snapshot) -> Vec<Din16798Mutation> {
         crate::artifacts::din16798::mutations::change_hr_savings_reference_kwh::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         format!("Change heat recovery savings reference to {}", self.new_hr_savings_reference_kwh)
     }
 }

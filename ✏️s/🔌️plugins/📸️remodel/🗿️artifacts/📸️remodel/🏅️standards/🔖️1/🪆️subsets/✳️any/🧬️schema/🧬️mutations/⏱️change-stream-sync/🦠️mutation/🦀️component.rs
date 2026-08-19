@@ -15,23 +15,23 @@ pub struct ChangeStreamSync {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn change_stream_sync(id: String, new_sync_offset_ms: f64) -> RemodelMutation {
+pub async fn change_stream_sync(id: String, new_sync_offset_ms: f64) -> RemodelMutation {
     RemodelMutation::ChangeStreamSync(ChangeStreamSync { id, new_sync_offset_ms })
 }
 
 impl protocol::MutationKind<RemodelSnapshot, RemodelMutation> for ChangeStreamSync {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "stream", kind: "change-stream-sync", record: "ChangedStreamSync" };
 
-    fn diff(&self, base: &RemodelSnapshot) -> protocol::MutationOutcome<RemodelDiff> {
+    async fn diff(&self, base: &RemodelSnapshot) -> protocol::MutationOutcome<RemodelDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &RemodelSnapshot) -> Vec<RemodelMutation> {
+    async fn inverse(&self, base: &RemodelSnapshot) -> Vec<RemodelMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         format!("Change stream \"{}\" sync offset to {}ms", self.id, self.new_sync_offset_ms)
     }
-    fn target(&self) -> Vec<String> {
+    async fn target(&self) -> Vec<String> {
         vec![self.id.clone()]
     }
 }

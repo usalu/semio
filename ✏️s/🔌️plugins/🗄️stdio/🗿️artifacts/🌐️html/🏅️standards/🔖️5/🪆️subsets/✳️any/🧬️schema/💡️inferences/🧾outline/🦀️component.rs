@@ -19,7 +19,7 @@ pub struct HtmlOutline {
 
 /// 🌳️ Recursively walks `node`, returning `(element_count, max_depth, text_length)` — `depth` is
 /// the caller's own nesting level (the root element call passes `1`).
-fn walk(node: &HtmlNode, depth: u32) -> (u32, u32, u32) {
+async fn walk(node: &HtmlNode, depth: u32) -> (u32, u32, u32) {
     match node {
         HtmlNode::Element { children, .. } => {
             let mut count = 1u32;
@@ -40,7 +40,7 @@ fn walk(node: &HtmlNode, depth: u32) -> (u32, u32, u32) {
 }
 
 impl HtmlOutline {
-    pub fn compute(snapshot: &HtmlSnapshot) -> Self {
+    pub async fn compute(snapshot: &HtmlSnapshot) -> Self {
         let (element_count, max_depth, text_length) = walk(&snapshot.root, 1);
         Self { element_count, max_depth, text_length }
     }
@@ -53,7 +53,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn counts_elements_depth_and_text_over_nested_structure() {
+    async fn counts_elements_depth_and_text_over_nested_structure() {
         let root = HtmlNode::Element { name: "html".into(), attributes: vec![], children: vec![HtmlNode::Element { name: "body".into(), attributes: vec![], children: vec![HtmlNode::Text { text: "hello".into() }] }] };
         let snapshot = HtmlSnapshot { schema: "stdio.html".into(), doctype: None, root };
         let outline = HtmlOutline::compute(&snapshot);
@@ -63,7 +63,7 @@ mod tests {
     }
 
     #[test]
-    fn default_snapshot_has_one_element_and_no_text() {
+    async fn default_snapshot_has_one_element_and_no_text() {
         let outline = HtmlOutline::compute(&HtmlSnapshot::default());
         assert_eq!(outline.element_count, 1);
         assert_eq!(outline.max_depth, 1);
@@ -71,7 +71,7 @@ mod tests {
     }
 
     #[test]
-    fn outline_is_deterministic() {
+    async fn outline_is_deterministic() {
         let snapshot = HtmlSnapshot::default();
         assert_eq!(HtmlOutline::compute(&snapshot), HtmlOutline::compute(&snapshot));
     }

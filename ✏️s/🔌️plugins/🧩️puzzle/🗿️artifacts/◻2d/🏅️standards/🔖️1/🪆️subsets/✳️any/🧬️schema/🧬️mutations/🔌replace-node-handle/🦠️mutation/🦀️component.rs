@@ -18,23 +18,23 @@ pub struct ReplaceNodeHandle {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn replace_node_handle(node_id: String, handle_id: String, new_handle: Puzzle2dHandle) -> Puzzle2dMutation {
+pub async fn replace_node_handle(node_id: String, handle_id: String, new_handle: Puzzle2dHandle) -> Puzzle2dMutation {
     Puzzle2dMutation::ReplaceNodeHandle(ReplaceNodeHandle { node_id, handle_id, new_handle })
 }
 
 impl protocol::MutationKind<Puzzle2dSnapshot, Puzzle2dMutation> for ReplaceNodeHandle {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "replace", entity: "node-handle", kind: "replace-node-handle", record: "ReplacedNodeHandle" };
 
-    fn diff(&self, base: &Puzzle2dSnapshot) -> protocol::MutationOutcome<Puzzle2dDiff> {
+    async fn diff(&self, base: &Puzzle2dSnapshot) -> protocol::MutationOutcome<Puzzle2dDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &Puzzle2dSnapshot) -> Vec<Puzzle2dMutation> {
+    async fn inverse(&self, base: &Puzzle2dSnapshot) -> Vec<Puzzle2dMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         format!("Replace handle \"{}\" on node \"{}\"", self.handle_id, self.node_id)
     }
-    fn target(&self) -> Vec<String> {
+    async fn target(&self) -> Vec<String> {
         vec![self.node_id.clone(), self.handle_id.clone()]
     }
 }

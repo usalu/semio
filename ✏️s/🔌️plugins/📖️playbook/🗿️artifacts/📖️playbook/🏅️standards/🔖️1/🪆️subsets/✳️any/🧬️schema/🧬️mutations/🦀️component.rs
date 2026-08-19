@@ -47,7 +47,7 @@ pub use super::update_step::mutation::{update_step_operation, UpdateStep};
 
 /// ▶️ Applies `mutation` via its diff. External call site: `derived_construction`'s
 /// `ArtifactBuilder::mutate` (`../🦀️component.rs`).
-pub fn apply_playbook_mutation(
+pub async fn apply_playbook_mutation(
     snapshot: &PlaybookSnapshot,
     mutation: &PlaybookMutation,
 ) -> protocol::MutationApplyResult<PlaybookSnapshot> {
@@ -55,7 +55,7 @@ pub fn apply_playbook_mutation(
 }
 
 /// ↩️ Computes `mutation`'s inverse from the pre-state `snapshot`.
-pub fn inverse_playbook_mutation(snapshot: &PlaybookSnapshot, mutation: &PlaybookMutation) -> Vec<PlaybookMutation> {
+pub async fn inverse_playbook_mutation(snapshot: &PlaybookSnapshot, mutation: &PlaybookMutation) -> Vec<PlaybookMutation> {
     protocol::Mutation::inverse(mutation, snapshot)
 }
 
@@ -68,7 +68,7 @@ mod tests {
     use protocol::testkit::{assert_missing_target_is_error, assert_mutation_diff_absorb_law, assert_mutation_inverse_law};
     use protocol::SemanticMutation;
 
-    fn sample_block(id: &str, kind: &str, label: &str) -> PlaybookBlock {
+    async fn sample_block(id: &str, kind: &str, label: &str) -> PlaybookBlock {
         PlaybookBlock {
             id: id.into(),
             label: label.into(),
@@ -93,7 +93,7 @@ mod tests {
         }
     }
 
-    fn sample_snapshot() -> PlaybookSnapshot {
+    async fn sample_snapshot() -> PlaybookSnapshot {
         let base = PlaybookSnapshot::default();
         let mut steps = base.steps();
         steps.push(PlaybookStep { id: "s2".into(), title: "Review".into(), description: None, blocks: vec![sample_block("b1", "number", "Team size")] });
@@ -102,39 +102,39 @@ mod tests {
 
     //#region 🔖️MutationLaws
     #[test]
-    fn add_step_inverse_law() {
+    async fn add_step_inverse_law() {
         let base = sample_snapshot();
         let step = PlaybookStep { id: "s3".into(), title: "New".into(), description: None, blocks: Vec::new() };
         assert_mutation_inverse_law(&base, &PlaybookMutation::AddStep(AddStep { step, index: None }));
     }
 
     #[test]
-    fn remove_step_inverse_law() {
+    async fn remove_step_inverse_law() {
         let base = sample_snapshot();
         assert_mutation_inverse_law(&base, &PlaybookMutation::RemoveStep(RemoveStep { step_id: "s2".into() }));
     }
 
     #[test]
-    fn move_step_inverse_law() {
+    async fn move_step_inverse_law() {
         let base = sample_snapshot();
         assert_mutation_inverse_law(&base, &PlaybookMutation::MoveStep(MoveStep { step_id: "s2".into(), index: 0 }));
     }
 
     #[test]
-    fn add_block_inverse_law() {
+    async fn add_block_inverse_law() {
         let base = sample_snapshot();
         let block = sample_block("b2", "text", "New");
         assert_mutation_inverse_law(&base, &PlaybookMutation::AddBlock(AddBlock { step_id: "s2".into(), block, index: None }));
     }
 
     #[test]
-    fn remove_block_inverse_law() {
+    async fn remove_block_inverse_law() {
         let base = sample_snapshot();
         assert_mutation_inverse_law(&base, &PlaybookMutation::RemoveBlock(RemoveBlock { step_id: "s2".into(), block_id: "b1".into() }));
     }
 
     #[test]
-    fn move_block_same_step_inverse_law() {
+    async fn move_block_same_step_inverse_law() {
         let base = sample_snapshot();
         let mut steps = base.steps();
         steps[1].blocks.push(sample_block("b2", "text", "Other"));
@@ -143,13 +143,13 @@ mod tests {
     }
 
     #[test]
-    fn move_block_cross_step_inverse_law() {
+    async fn move_block_cross_step_inverse_law() {
         let base = sample_snapshot();
         assert_mutation_inverse_law(&base, &PlaybookMutation::MoveBlock(MoveBlock { block_id: "b1".into(), from_step_id: "s2".into(), to_step_id: "s".into(), index: 0 }));
     }
 
     #[test]
-    fn replace_block_inverse_law() {
+    async fn replace_block_inverse_law() {
         let base = sample_snapshot();
         let mut block = sample_block("b1", "number", "Team size (people)");
         block.required = Some(true);
@@ -160,19 +160,19 @@ mod tests {
     }
 
     #[test]
-    fn update_step_inverse_law() {
+    async fn update_step_inverse_law() {
         let base = sample_snapshot();
         assert_mutation_inverse_law(&base, &PlaybookMutation::UpdateStep(UpdateStep { step_id: "s2".into(), title: "Review carefully".into(), description: Some("d".into()) }));
     }
 
     #[test]
-    fn change_title_inverse_law() {
+    async fn change_title_inverse_law() {
         let base = sample_snapshot();
         assert_mutation_inverse_law(&base, &PlaybookMutation::ChangeTitle(ChangeTitle { new_title: Some("Recipe".into()) }));
     }
 
     #[test]
-    fn move_step_diff_absorb_law() {
+    async fn move_step_diff_absorb_law() {
         let base = sample_snapshot();
         let d1 = MoveStep { step_id: "s2".into(), index: 0 }.diff(&base).into_parts().0;
         let mid = protocol::MutationDiff::apply(&d1, &base).expect("valid mutation diff");
@@ -181,7 +181,7 @@ mod tests {
     }
 
     #[test]
-    fn move_block_cross_step_diff_never_falls_back_to_a_whole_artifact_replacement() {
+    async fn move_block_cross_step_diff_never_falls_back_to_a_whole_artifact_replacement() {
         let base = sample_snapshot();
         let diff = MoveBlock { block_id: "b1".into(), from_step_id: "s2".into(), to_step_id: "s".into(), index: 0 }.diff(&base).into_parts().0;
         assert!(diff.artifact.is_none(), "cross-step MoveBlock diff must be a real per-field replacement, not the old whole-artifact fallback");
@@ -192,7 +192,7 @@ mod tests {
     }
 
     #[test]
-    fn dispatch_registers_semantic_descriptors() {
+    async fn dispatch_registers_semantic_descriptors() {
         register_playbook_mutation_descriptors();
         for kind in PlaybookMutation::kinds() {
             assert!(protocol::is_approved_verb(kind.verb), "verb '{}' must be in APPROVED_VERBS", kind.verb);
@@ -210,33 +210,33 @@ mod tests {
     // `assert_outcome_policy_matrix` is NOT landed under that name (only the generic closure-based
     // `assert_policy_matrix` exists) — see this ticket's report.
     #[test]
-    fn add_family_missing_target_is_error() {
+    async fn add_family_missing_target_is_error() {
         let base = sample_snapshot();
         assert_missing_target_is_error(&base, &PlaybookMutation::AddBlock(AddBlock { step_id: "missing".into(), block: sample_block("b1", "text", "New"), index: None }));
     }
 
     #[test]
-    fn remove_family_missing_target_is_error() {
+    async fn remove_family_missing_target_is_error() {
         let base = sample_snapshot();
         assert_missing_target_is_error(&base, &PlaybookMutation::RemoveStep(RemoveStep { step_id: "missing".into() }));
         assert_missing_target_is_error(&base, &PlaybookMutation::RemoveBlock(RemoveBlock { step_id: "missing".into(), block_id: "b1".into() }));
     }
 
     #[test]
-    fn move_family_missing_target_is_error() {
+    async fn move_family_missing_target_is_error() {
         let base = sample_snapshot();
         assert_missing_target_is_error(&base, &PlaybookMutation::MoveStep(MoveStep { step_id: "missing".into(), index: 0 }));
         assert_missing_target_is_error(&base, &PlaybookMutation::MoveBlock(MoveBlock { block_id: "b1".into(), from_step_id: "missing".into(), to_step_id: "s2".into(), index: 0 }));
     }
 
     #[test]
-    fn replace_family_missing_target_is_error() {
+    async fn replace_family_missing_target_is_error() {
         let base = sample_snapshot();
         assert_missing_target_is_error(&base, &PlaybookMutation::ReplaceBlock(ReplaceBlock { step_id: "missing".into(), block: sample_block("b1", "text", "New") }));
     }
 
     #[test]
-    fn update_family_missing_target_is_error() {
+    async fn update_family_missing_target_is_error() {
         let base = sample_snapshot();
         assert_missing_target_is_error(&base, &PlaybookMutation::UpdateStep(UpdateStep { step_id: "missing".into(), title: "x".into(), description: None }));
     }

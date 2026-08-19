@@ -29,7 +29,7 @@ semio_framework_plugin::app_labels! {
 
 //#region 🔖️Resolvers
 /// 🗣️ Resolves the active label set from `cfg.locale`; falls back to native English.
-pub fn sourcing_curate_labels(cfg: &SourcingCurateConfig) -> &'static SourcingLabels {
+pub async fn sourcing_curate_labels(cfg: &SourcingCurateConfig) -> &'static SourcingLabels {
     semio_framework_plugin::resolve_labels_for_locale::<SourcingLabels>(&cfg.locale)
 }
 //#endregion 🔖️Resolvers
@@ -40,7 +40,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn labels_resolve_native_english_and_german_from_the_config_locale() {
+    async fn labels_resolve_native_english_and_german_from_the_config_locale() {
         assert_eq!(sourcing_curate_labels(&SourcingCurateConfig::default()).window_pool.as_str(), "Pool");
         assert_eq!(sourcing_curate_labels(&SourcingCurateConfig { locale: "de-DE".into(), ..SourcingCurateConfig::default() }).col_curated.as_str(), "Kuratiert");
     }

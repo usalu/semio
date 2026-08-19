@@ -4,7 +4,7 @@
 use crate::artifacts::assembly::mutations::{change_weight, remove_weight, AssemblyMutation};
 use crate::artifacts::assembly::schema::snapshot::AssemblySnapshot;
 
-pub fn inverse(payload: &super::mutation::ChangeWeight, base: &AssemblySnapshot) -> Vec<AssemblyMutation> {
+pub async fn inverse(payload: &super::mutation::ChangeWeight, base: &AssemblySnapshot) -> Vec<AssemblyMutation> {
     match base.weights.iter().find(|weight| weight.module_id == payload.module_id) {
         Some(prior) => vec![change_weight(payload.module_id.clone(), prior.weight)],
         None => vec![remove_weight(payload.module_id.clone())],

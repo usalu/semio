@@ -15,16 +15,16 @@ pub struct ReplaceGraph {
 impl protocol::MutationKind<MathematicalSnapshot, MathematicalMutation> for ReplaceGraph {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "replace", entity: "graph", kind: "replace-graph", record: "ReplacedGraph" };
 
-    fn diff(&self, base: &MathematicalSnapshot) -> protocol::MutationOutcome<<MathematicalMutation as protocol::Mutation<MathematicalSnapshot>>::Diff> {
+    async fn diff(&self, base: &MathematicalSnapshot) -> protocol::MutationOutcome<<MathematicalMutation as protocol::Mutation<MathematicalSnapshot>>::Diff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &MathematicalSnapshot) -> Vec<MathematicalMutation> {
+    async fn inverse(&self, base: &MathematicalSnapshot) -> Vec<MathematicalMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         "Replace graph".into()
     }
-    fn target(&self) -> Vec<String> {
+    async fn target(&self) -> Vec<String> {
         vec!["graph".into()]
     }
 }

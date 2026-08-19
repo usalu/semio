@@ -81,7 +81,7 @@ mod tests {
         stale_distant_inverse: Option<Rejection>,
     }
 
-    fn snapshot(state: &SceneState) -> GltfSnapshot {
+    async fn snapshot(state: &SceneState) -> GltfSnapshot {
         let mut snapshot = GltfSnapshot::default();
         snapshot.schema = "gltf/2.0".into();
         snapshot.document.scene = state.scene;
@@ -89,12 +89,12 @@ mod tests {
         snapshot
     }
 
-    fn state(snapshot: &GltfSnapshot) -> SceneState {
+    async fn state(snapshot: &GltfSnapshot) -> SceneState {
         SceneState { scene: snapshot.document.scene, scenes: snapshot.document.scenes.clone() }
     }
 
     #[test]
-    fn create_scene_shared_vector_executes_descriptor_and_phase_laws() {
+    async fn create_scene_shared_vector_executes_descriptor_and_phase_laws() {
         let contract: Contract = serde_json::from_str(include_str!("🔣️component.json")).expect("canonical vector decodes");
         assert_eq!(contract.id, mutation::ID);
         for vector in &contract.vectors {

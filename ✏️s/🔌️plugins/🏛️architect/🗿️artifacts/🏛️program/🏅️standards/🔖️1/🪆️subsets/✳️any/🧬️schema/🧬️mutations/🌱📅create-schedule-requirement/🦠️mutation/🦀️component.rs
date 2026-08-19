@@ -18,16 +18,16 @@ pub struct CreateScheduleRequirement {
 }
 impl MutationKind<ProgramSnapshot, ProgramMutation> for CreateScheduleRequirement {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "create", entity: "schedule-requirement", kind: "create-schedule-requirement", record: "CreatedScheduleRequirement" };
-    fn diff(&self, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
+    async fn diff(&self, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {
+    async fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         format!("Create schedule requirement \"{}\"", self.schedule_requirement.header.name)
     }
-    fn target(&self) -> Vec<String> {
+    async fn target(&self) -> Vec<String> {
         vec![self.schedule_requirement.header.id.0.clone()]
     }
 }

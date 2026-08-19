@@ -23,12 +23,12 @@ pub mod derived_composition {
         type Snapshot = SvgSnapshot;
         const WRITES: Dialect = DIALECT_BASIC;
 
-        fn reads() -> &'static [Dialect] {
+        async fn reads() -> &'static [Dialect] {
             &[DIALECT_ANY, DIALECT_BASIC, DEP_XML]
         }
 
-        fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
-            let inner = SvgAnyComposer::compose(sources)?;
+        async fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+            let inner = semio_framework_plugin::resolve_ready(SvgAnyComposer::compose(sources))?;
             let mut snapshot = inner.snapshot;
             if let Some(root) = snapshot.doc.root.as_mut() {
                 set_element_attr(root, "baseProfile", Some("basic".into()));
@@ -56,7 +56,7 @@ pub mod derived_composition {
     impl SubsetValidator for SvgBasicValidator {
         const DIALECT: Dialect = DIALECT_BASIC;
 
-        fn validate(payload: &IoPayload) -> Vec<Diagnostic> {
+        async fn validate(payload: &IoPayload) -> Vec<Diagnostic> {
             let decoded = match payload {
                 IoPayload::Binary(bytes) => <SvgSnapshot as store::ArtifactPack>::decode_pack(bytes).ok(),
                 IoPayload::Text(text) => <SvgSnapshot as store::ArtifactDsl>::parse_dsl(text).ok(),
@@ -77,7 +77,7 @@ pub mod derived_composition {
 
     static VALIDATOR_ENTRY: OnceLock<SubsetValidatorEntry> = OnceLock::new();
 
-    fn validator_entry() -> &'static SubsetValidatorEntry {
+    async fn validator_entry() -> &'static SubsetValidatorEntry {
         VALIDATOR_ENTRY.get_or_init(subset_validator_entry_of::<SvgBasicValidator>)
     }
 
@@ -85,7 +85,7 @@ pub mod derived_composition {
     /// validate-on-build hook). Called from the 1.1 standard's own `⚙️engine::register()`. The
     /// `ComposerEntry` itself is registered separately by the standard-level composer aggregator
     /// (`crate::artifacts::svg::standards::v1_1::engine::io_registry::entries()`).
-    pub fn register() {
+    pub async fn register() {
         let _ = register_subset_validator(validator_entry());
     }
     //#endregion 🔖️SubsetValidator
@@ -99,7 +99,7 @@ pub mod derived_composition {
         use semio_framework_plugin::ArtifactBuilder as _;
 
         #[test]
-        fn conforming_document_composes_and_stamps_basic() {
+        async fn conforming_document_composes_and_stamps_basic() {
             let text = r#"<svg xmlns="http://www.w3.org/2000/svg"><rect x="0" y="0" width="10" height="10"/></svg>"#;
             let sources = vec![ComposeSource { dialect: DIALECT_ANY, payload: AnalyzeSource::Text(text) }];
             let composed = SvgBasicComposerComposition::compose(&sources).expect("clean document must compose to basic");
@@ -114,7 +114,7 @@ pub mod derived_composition {
         }
 
         #[test]
-        fn blocklisted_filter_primitive_fails_compose_with_real_diagnostic() {
+        async fn blocklisted_filter_primitive_fails_compose_with_real_diagnostic() {
             let text = r#"<svg xmlns="http://www.w3.org/2000/svg"><filter id="f1"><feTurbulence/></filter></svg>"#;
             let sources = vec![ComposeSource { dialect: DIALECT_ANY, payload: AnalyzeSource::Text(text) }];
             let err = SvgBasicComposerComposition::compose(&sources).expect_err("a document with feTurbulence must not stamp basic");
@@ -122,7 +122,7 @@ pub mod derived_composition {
         }
 
         #[test]
-        fn subset_validator_recheck_flags_no_hard_issue_on_a_clean_builder_document() {
+        async fn subset_validator_recheck_flags_no_hard_issue_on_a_clean_builder_document() {
             let snapshot = SvgBasicBuilder::empty().build().expect("empty document builds clean");
             let bytes = <SvgSnapshot as store::ArtifactPack>::encode_pack(&snapshot);
             let diagnostics = SvgBasicValidator::validate(&IoPayload::Binary(bytes));

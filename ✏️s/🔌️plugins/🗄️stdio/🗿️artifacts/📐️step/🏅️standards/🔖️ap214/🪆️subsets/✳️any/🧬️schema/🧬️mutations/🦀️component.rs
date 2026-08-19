@@ -63,7 +63,7 @@ pub enum StepMutation {
 //#region 🔖️Apply
 /// ▶️ Applies `mutation` to `snapshot` — diff is the single semantics source: computed first,
 /// then applied, never re-derived by hand.
-pub fn apply_step_mutation(snapshot: &mut StepSnapshot, mutation: &StepMutation) -> protocol::MutationOutcome<StepDiff> {
+pub async fn apply_step_mutation(snapshot: &mut StepSnapshot, mutation: &StepMutation) -> protocol::MutationOutcome<StepDiff> {
     let outcome = <StepMutation as Mutation<StepSnapshot>>::diff(mutation, snapshot);
     match MutationDiff::apply(outcome.diff(), snapshot) {
         Ok(next) => {
@@ -79,7 +79,7 @@ pub fn apply_step_mutation(snapshot: &mut StepSnapshot, mutation: &StepMutation)
 impl Mutation<StepSnapshot> for StepMutation {
     type Diff = StepDiff;
 
-    fn diff(&self, base: &StepSnapshot) -> protocol::MutationOutcome<Self::Diff> {
+    async fn diff(&self, base: &StepSnapshot) -> protocol::MutationOutcome<Self::Diff> {
         protocol::MutationOutcome::new(match self {
             StepMutation::NoMutation => StepDiff::default(),
 
@@ -144,7 +144,7 @@ impl Mutation<StepSnapshot> for StepMutation {
         })
     }
 
-    fn inverse(&self, base: &StepSnapshot) -> Vec<Self> {
+    async fn inverse(&self, base: &StepSnapshot) -> Vec<Self> {
         match self {
             StepMutation::NoMutation => vec![StepMutation::NoMutation],
 
@@ -195,7 +195,7 @@ impl Mutation<StepSnapshot> for StepMutation {
 /// `enc_entity`/`enc_step_snapshot`/...) rather than duplicating them — same pattern `SvgMutation`
 /// uses against `SvgDiff`. Grammar: `keyword arg=value ...` (space-separated), one match arm per
 /// variant (no `DslVariants` scaffolding available since nothing here derives it).
-fn print_step_mutation(m: &StepMutation) -> String {
+async fn print_step_mutation(m: &StepMutation) -> String {
     match m {
         StepMutation::NoMutation => "no-mutation".to_string(),
         StepMutation::SetSnapshot { snapshot } => format!("set-snapshot snapshot={}", enc_step_snapshot(snapshot)),
@@ -210,7 +210,7 @@ fn print_step_mutation(m: &StepMutation) -> String {
         StepMutation::RemoveEntityArg { id, arg_index } => format!("remove-entity-arg id={id} arg-index={arg_index}"),
     }
 }
-fn parse_step_mutation(line: &str) -> Result<StepMutation, String> {
+async fn parse_step_mutation(line: &str) -> Result<StepMutation, String> {
     if line == "no-mutation" {
         return Ok(StepMutation::NoMutation);
     }
@@ -235,10 +235,10 @@ fn parse_step_mutation(line: &str) -> Result<StepMutation, String> {
 }
 
 impl OpText for StepMutation {
-    fn print_op(&self) -> String {
+    async fn print_op(&self) -> String {
         print_step_mutation(self)
     }
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
+    async fn parse_op(line: &str) -> Result<Self, store::TextError> {
         parse_step_mutation(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
 }
@@ -251,7 +251,7 @@ impl OpText for StepMutation {
 /// `enc_step_snapshot_bin`/`write_str_bin` primitives (`../../🔺️diff/🦀️component.rs`, imported
 /// above) — same intra-artifact-reuse split the TEXT codec above already uses.
 impl OpBinary for StepMutation {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         let tag: u8 = match self {
             StepMutation::NoMutation => 0,
             StepMutation::SetSnapshot { .. } => 1,
@@ -299,7 +299,7 @@ impl OpBinary for StepMutation {
         Ok(out)
     }
 
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         let mut reader = store::ByteReader::new(bytes);
         let malformed = |what: &'static str, offset: usize, detail: String| protocol::ProtocolError::Malformed { what, offset: offset as u64, detail };
         let _format = reader.read_u8().map_err(|e| malformed("op format", 0, e.to_string()))?;
@@ -365,7 +365,7 @@ impl OpBinary for StepMutation {
 /// (incl. the recursive `Aggregate`/`TypedValue` cases) and `InsertEntity`'s bare `StepEntity`
 /// payload are exercised at least once.
 #[cfg(test)]
-pub(crate) fn demo_mutation_cases() -> Vec<StepMutation> {
+pub(crate) async fn demo_mutation_cases() -> Vec<StepMutation> {
     use crate::artifacts::step::schema::snapshot::{StepFileDescription, StepFileName, StepFileSchema, StepValue as SV};
     let demo_entity = |id: u64, name: &str, args: Vec<StepValue>| StepEntity { id, name: name.into(), args, complex: Vec::new() };
     vec![
@@ -417,11 +417,11 @@ mod tests {
     use super::*;
     use crate::artifacts::step::schema::snapshot::{StepHeader, StepValue as SV};
 
-    fn entity(id: u64, name: &str, args: Vec<StepValue>) -> StepEntity {
+    async fn entity(id: u64, name: &str, args: Vec<StepValue>) -> StepEntity {
         StepEntity { id, name: name.into(), args, complex: Vec::new() }
     }
 
-    fn base_snapshot() -> StepSnapshot {
+    async fn base_snapshot() -> StepSnapshot {
         StepSnapshot {
             schema: crate::artifacts::step::STDIO_STEP_DOCUMENT_SCHEMA.into(),
             header: StepHeader::default(),
@@ -431,7 +431,7 @@ mod tests {
 
     /// 🧪️ `mutation_diff_law`: ∀ variant, `m.diff(base).diff().apply(base) == { apply(&mut s, m); s }`
     /// and the returned diff equals `m.diff(base)`.
-    fn assert_mutation_diff_law(base: &StepSnapshot, m: StepMutation) {
+    async fn assert_mutation_diff_law(base: &StepSnapshot, m: StepMutation) {
         let expected_diff = <StepMutation as Mutation<StepSnapshot>>::diff(&m, base);
         let expected_state = expected_diff.diff().apply(base).expect("valid mutation diff");
         let mut actual_state = base.clone();
@@ -441,7 +441,7 @@ mod tests {
     }
 
     #[test]
-    fn mutation_diff_law_covers_every_variant() {
+    async fn mutation_diff_law_covers_every_variant() {
         let base = base_snapshot();
         assert_mutation_diff_law(&base, StepMutation::NoMutation);
         let mut next = base.clone();
@@ -459,7 +459,7 @@ mod tests {
     }
 
     #[test]
-    fn missing_and_out_of_range_targets_are_rejected_without_mutating() {
+    async fn missing_and_out_of_range_targets_are_rejected_without_mutating() {
         let base = base_snapshot();
         let mut snapshot = base.clone();
         let outcome = apply_step_mutation(&mut snapshot, &StepMutation::RemoveEntity { id: 999 });
@@ -472,7 +472,7 @@ mod tests {
 
     /// 🧪️ `inverse_law` (mutation level): every variant's `inverse()` round-trips.
     #[test]
-    fn inverse_law_mutation_level_round_trips_every_variant() {
+    async fn inverse_law_mutation_level_round_trips_every_variant() {
         let base = base_snapshot();
         let variants = vec![
             StepMutation::SetFileSchema { file_schema: StepFileSchema { schemas: vec!["CONFIG_CONTROL_DESIGN".into()] } },
@@ -500,7 +500,7 @@ mod tests {
     /// `SetEntityArg`/`InsertEntityArg`'s bare `StepValue` payload (every `StepValue` variant,
     /// incl. the recursive `Aggregate`/`TypedValue` cases).
     #[test]
-    fn op_text_binary_roundtrip_law() {
+    async fn op_text_binary_roundtrip_law() {
         let base = base_snapshot();
         let mutations = vec![
             StepMutation::NoMutation,

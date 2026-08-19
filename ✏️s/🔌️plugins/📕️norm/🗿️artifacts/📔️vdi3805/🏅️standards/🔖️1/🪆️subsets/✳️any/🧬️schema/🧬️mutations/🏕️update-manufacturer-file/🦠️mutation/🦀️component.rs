@@ -13,13 +13,13 @@ pub struct UpdateManufacturerFile {
 impl protocol::MutationKind<Vdi3805Snapshot, Vdi3805Mutation> for UpdateManufacturerFile {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "update", entity: "manufacturer-file", kind: "update-manufacturer-file", record: "UpdatedManufacturerFile" };
 
-    fn diff(&self, base: &Vdi3805Snapshot) -> protocol::MutationOutcome<<Vdi3805Mutation as protocol::Mutation<Vdi3805Snapshot>>::Diff> {
+    async fn diff(&self, base: &Vdi3805Snapshot) -> protocol::MutationOutcome<<Vdi3805Mutation as protocol::Mutation<Vdi3805Snapshot>>::Diff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &Vdi3805Snapshot) -> Vec<Vdi3805Mutation> {
+    async fn inverse(&self, base: &Vdi3805Snapshot) -> Vec<Vdi3805Mutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         format!("Update manufacturer file header (manufacturer=\"{}\")", self.new_manufacturer_file.manufacturer)
     }
 }

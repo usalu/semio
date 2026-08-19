@@ -10,7 +10,7 @@ use crate::artifacts::semio::standards::v1::subsets::table::schema::snapshot::{S
 use crate::artifacts::semio::standards::v1::subsets::value::schema::snapshot::SemioValue;
 
 //#region 🔖️Diff
-pub fn diff(payload: &CreateColumn, base: &SemioTableSnapshot) -> protocol::MutationOutcome<SemioTableDiff> {
+pub async fn diff(payload: &CreateColumn, base: &SemioTableSnapshot) -> protocol::MutationOutcome<SemioTableDiff> {
     if base.columns.iter().any(|c| c.name == payload.name) {
         return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("A column named \"{}\" already exists.", payload.name), [payload.name.clone()]);
     }

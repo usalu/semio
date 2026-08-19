@@ -316,7 +316,7 @@ mod tests {
     use crate::artifacts::program::{empty_plugin, sample_plugin};
     use protocol::{Mutation, MutationDiff, OpText, SemanticMutation};
 
-    fn round_trip(snapshot: &ProgramSnapshot, operation: &ProgramMutation) -> ProgramSnapshot {
+    async fn round_trip(snapshot: &ProgramSnapshot, operation: &ProgramMutation) -> ProgramSnapshot {
         let forward = operation.diff(snapshot).diff().apply(snapshot).expect("valid mutation diff");
         let mut backward = operation.inverse(snapshot);
         backward.reverse();
@@ -330,7 +330,7 @@ mod tests {
 
     //#region 👥stakeholders
     #[test]
-    fn stakeholders_create_rename_replace_delete_round_trip() {
+    async fn stakeholders_create_rename_replace_delete_round_trip() {
         let snapshot = sample_plugin();
         let new_id = EntityId::new_serial("stakeholder", "stakeholder");
         let mut new_stakeholder = snapshot.stakeholders[0].clone();
@@ -357,7 +357,7 @@ mod tests {
     }
 
     #[test]
-    fn delete_stakeholder_of_a_missing_id_has_an_empty_inverse() {
+    async fn delete_stakeholder_of_a_missing_id_has_an_empty_inverse() {
         let snapshot = sample_plugin();
         let delete = ProgramMutation::DeleteStakeholder(super::super::delete_stakeholder::mutation::DeleteStakeholder { id: EntityId("nope".into()) });
         assert!(delete.inverse(&snapshot).is_empty(), "deleting an absent id has nothing to undo");
@@ -366,7 +366,7 @@ mod tests {
 
     //#region 🧱elements
     #[test]
-    fn elements_create_rename_replace_delete_round_trip() {
+    async fn elements_create_rename_replace_delete_round_trip() {
         let snapshot = sample_plugin();
         let new_id = EntityId::new_serial("element", "element");
         let mut new_element = snapshot.elements[0].clone();
@@ -395,7 +395,7 @@ mod tests {
 
     //#region 🏷️📁🏛️meta-project-governance
     #[test]
-    fn update_meta_rename_and_replace_round_trip() {
+    async fn update_meta_rename_and_replace_round_trip() {
         let snapshot = empty_plugin();
         let rename = ProgramMutation::RenameMeta(super::super::rename_meta::mutation::RenameMeta { new_title: "Clinic".into() });
         let renamed = round_trip(&snapshot, &rename);
@@ -409,7 +409,7 @@ mod tests {
     }
 
     #[test]
-    fn update_project_rename_and_replace_round_trip() {
+    async fn update_project_rename_and_replace_round_trip() {
         let snapshot = empty_plugin();
         let rename = ProgramMutation::RenameProject(super::super::rename_project::mutation::RenameProject { new_code: "CLN-001".into() });
         let renamed = round_trip(&snapshot, &rename);
@@ -423,7 +423,7 @@ mod tests {
     }
 
     #[test]
-    fn update_governance_rename_and_replace_round_trip() {
+    async fn update_governance_rename_and_replace_round_trip() {
         let snapshot = empty_plugin();
         let rename = ProgramMutation::RenameGovernance(super::super::rename_governance::mutation::RenameGovernance { new_framework: "ISO 41001".into() });
         let renamed = round_trip(&snapshot, &rename);
@@ -439,7 +439,7 @@ mod tests {
 
     //#region 🗺️🧹connect-disconnect-adjacency
     #[test]
-    fn connect_and_disconnect_adjacency_round_trip() {
+    async fn connect_and_disconnect_adjacency_round_trip() {
         let snapshot = sample_plugin();
         let a = snapshot.elements[0].header.id.clone();
         let b = snapshot.elements[1].header.id.clone();
@@ -477,7 +477,7 @@ mod tests {
     }
 
     #[test]
-    fn connect_adjacency_upserts_an_existing_pair_by_endpoint_identity() {
+    async fn connect_adjacency_upserts_an_existing_pair_by_endpoint_identity() {
         let snapshot = sample_plugin();
         let existing = &snapshot.adjacencies[0];
         let mut updated = existing.clone();
@@ -493,7 +493,7 @@ mod tests {
 
     //#region 🧵connect-disconnect-trace
     #[test]
-    fn connect_and_disconnect_trace_round_trip() {
+    async fn connect_and_disconnect_trace_round_trip() {
         let snapshot = sample_plugin();
         let trace = TraceLink::new(snapshot.elements[0].header.id.clone(), snapshot.elements[1].header.id.clone(), TraceKind::FullAuditTrail);
         let id = trace.id.clone();
@@ -509,7 +509,7 @@ mod tests {
 
     //#region 🗣️OpText
     #[test]
-    fn program_mutation_op_text_round_trips_a_sample_of_variants() {
+    async fn program_mutation_op_text_round_trips_a_sample_of_variants() {
         let stakeholder = sample_plugin().stakeholders[0].clone();
         store::os_store::test_support::assert_op_line_round_trip(&ProgramMutation::CreateStakeholder(super::super::create_stakeholder::mutation::CreateStakeholder { stakeholder: stakeholder.clone() }));
         store::os_store::test_support::assert_op_line_round_trip(&ProgramMutation::DeleteStakeholder(super::super::delete_stakeholder::mutation::DeleteStakeholder { id: stakeholder.header.id.clone() }));
@@ -526,7 +526,7 @@ mod tests {
     /// structurally distinct new kinds: an id-keyed collection create/delete pair, a document-level
     /// scalar facet rename, and an edge upsert.
     #[test]
-    fn create_stakeholder_obeys_the_inverse_and_absorb_laws() {
+    async fn create_stakeholder_obeys_the_inverse_and_absorb_laws() {
         let base = sample_plugin();
         let mut new_stakeholder = base.stakeholders[0].clone();
         new_stakeholder.header.id = EntityId::new_serial("stakeholder", "stakeholder");
@@ -539,14 +539,14 @@ mod tests {
     }
 
     #[test]
-    fn rename_meta_obeys_the_inverse_law() {
+    async fn rename_meta_obeys_the_inverse_law() {
         let base = sample_plugin();
         let rename = ProgramMutation::RenameMeta(super::super::rename_meta::mutation::RenameMeta { new_title: "Renamed Program".into() });
         protocol::os_spr::testkit::assert_mutation_inverse_law(&base, &rename);
     }
 
     #[test]
-    fn connect_adjacency_obeys_the_inverse_law() {
+    async fn connect_adjacency_obeys_the_inverse_law() {
         let base = sample_plugin();
         let mut updated = base.adjacencies[0].clone();
         updated.weight = 9.0;
@@ -557,7 +557,7 @@ mod tests {
 
     //#region 📋️DescriptorLaws
     #[test]
-    fn semantic_kinds_cover_every_variant() {
+    async fn semantic_kinds_cover_every_variant() {
         assert_eq!(ProgramMutation::kinds().len(), 266);
         let stakeholder = sample_plugin().stakeholders[0].clone();
         let mutation = ProgramMutation::RenameStakeholder(super::super::rename_stakeholder::mutation::RenameStakeholder { id: stakeholder.header.id, new_name: "X".into() });

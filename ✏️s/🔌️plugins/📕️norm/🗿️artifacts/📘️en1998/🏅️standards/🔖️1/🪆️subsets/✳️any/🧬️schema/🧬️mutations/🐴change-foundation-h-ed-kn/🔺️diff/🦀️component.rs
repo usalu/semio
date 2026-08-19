@@ -5,7 +5,7 @@ use crate::artifacts::en1998::mutations::change_foundation_h_ed_kn::mutation::Ch
 use crate::artifacts::en1998::En1998Snapshot;
 
 //#region 🔖️Diff
-pub fn diff(payload: &ChangeFoundationHEdKn, base: &En1998Snapshot) -> protocol::MutationOutcome<En1998Diff> {
+pub async fn diff(payload: &ChangeFoundationHEdKn, base: &En1998Snapshot) -> protocol::MutationOutcome<En1998Diff> {
     if !payload.new_foundation_h_ed_kn.is_finite() {
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("Foundation design horizontal force H_Ed [kN] must be a finite number, got {}.", payload.new_foundation_h_ed_kn), Vec::<String>::new());
     }

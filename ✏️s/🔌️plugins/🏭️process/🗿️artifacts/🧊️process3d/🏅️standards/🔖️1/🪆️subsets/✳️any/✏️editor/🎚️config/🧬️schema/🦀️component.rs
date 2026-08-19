@@ -34,7 +34,7 @@ pub struct Process3dConfig {
 
 //#region 🔖️AppSchemaDescriptor
 /// 📎 `s.process.3d`'s config and presence schema, owned by this leaf.
-pub fn app_schema_descriptor() -> schema::AppSchemaDescriptor {
+pub async fn app_schema_descriptor() -> schema::AppSchemaDescriptor {
     schema::AppSchemaDescriptor {
         id: "s.process.3d",
         config: schema::FacetLeaves {

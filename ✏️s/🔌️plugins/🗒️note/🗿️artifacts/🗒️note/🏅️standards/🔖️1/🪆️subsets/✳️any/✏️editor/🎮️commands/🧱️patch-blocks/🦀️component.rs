@@ -24,7 +24,7 @@ pub struct PatchBlocks {
 /// owns it — one mutation per (id, field) pair, batched into a single `Emit` so a multi-select
 /// patch is still one undo step. Replaces the old `note_engine::patch_block_field`
 /// whole-document-clone + whole-collection re-dump.
-pub fn handle(payload: &PatchBlocks, doc: &ArtifactView<'_, NoteSnapshot>, _cfg: &ConfigView<'_, NoteConfig>, _ctx: &mut crate::editor::note::NoteDispatchCtx) -> Result<Emit<NoteMutation, NoteConfigMutation>, Fault> {
+pub async fn handle(payload: &PatchBlocks, doc: &ArtifactView<'_, NoteSnapshot>, _cfg: &ConfigView<'_, NoteConfig>, _ctx: &mut crate::editor::note::NoteDispatchCtx) -> Result<Emit<NoteMutation, NoteConfigMutation>, Fault> {
     if payload.block_ids.is_empty() || payload.field.is_empty() {
         return Ok(Emit::default());
     }

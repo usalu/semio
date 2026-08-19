@@ -45,7 +45,7 @@ pub enum GltfInferenceTextError {
 }
 
 impl fmt::Display for GltfInferenceTextError {
-    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+    async fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Self::Serialization(error) => write!(formatter, "inference leaf serialization failed: {error}"),
             Self::CarriageReturn => formatter.write_str("text envelope must be LF-only"),
@@ -64,14 +64,14 @@ impl fmt::Display for GltfInferenceTextError {
 
 impl std::error::Error for GltfInferenceTextError {}
 
-pub fn encode_gltf_inference_leaf_text(value: &GltfInferenceLeafEnvelope) -> Result<String, GltfInferenceTextError> {
+pub async fn encode_gltf_inference_leaf_text(value: &GltfInferenceLeafEnvelope) -> Result<String, GltfInferenceTextError> {
     validate_leaf_id(&value.id)?;
     let payload = canonical_json_bytes(value)?;
     let payload = String::from_utf8(payload).map_err(|error| GltfInferenceTextError::Serialization(error.to_string()))?;
     Ok(format!("schema {}\nversion {GLTF_INFERENCE_LEAF_ENVELOPE_VERSION}\nlength {}\nchecksum {:08x}\n{payload}", value.id, payload.len(), crc32_iso_hdlc(payload.as_bytes())))
 }
 
-pub fn decode_gltf_inference_leaf_text(input: &str) -> Result<GltfInferenceLeafEnvelope, GltfInferenceTextError> {
+pub async fn decode_gltf_inference_leaf_text(input: &str) -> Result<GltfInferenceLeafEnvelope, GltfInferenceTextError> {
     if input.contains('\r') {
         return Err(GltfInferenceTextError::CarriageReturn);
     }
@@ -114,11 +114,11 @@ pub fn decode_gltf_inference_leaf_text(input: &str) -> Result<GltfInferenceLeafE
     Ok(value)
 }
 
-fn validate_leaf_id(id: &str) -> Result<(), GltfInferenceTextError> {
+async fn validate_leaf_id(id: &str) -> Result<(), GltfInferenceTextError> {
     GLTF_INFERENCE_FIELDS.iter().any(|field| field.id == id).then_some(()).ok_or_else(|| GltfInferenceTextError::UnknownLeafId(id.into()))
 }
 
-fn check_header(line: u8, actual: Option<&str>, expected: &str) -> Result<(), GltfInferenceTextError> {
+async fn check_header(line: u8, actual: Option<&str>, expected: &str) -> Result<(), GltfInferenceTextError> {
     let actual = actual.ok_or(GltfInferenceTextError::MissingPayload)?;
     if actual != expected {
         return Err(GltfInferenceTextError::Header { line, expected: expected.into(), actual: actual.into() });
@@ -126,14 +126,14 @@ fn check_header(line: u8, actual: Option<&str>, expected: &str) -> Result<(), Gl
     Ok(())
 }
 
-pub(crate) fn canonical_json_bytes<T: Serialize>(value: &T) -> Result<Vec<u8>, GltfInferenceTextError> {
+pub(crate) async fn canonical_json_bytes<T: Serialize>(value: &T) -> Result<Vec<u8>, GltfInferenceTextError> {
     let value = serde_json::to_value(value).map_err(|error| GltfInferenceTextError::Serialization(error.to_string()))?;
     let mut output = String::new();
     write_canonical_json(&value, &mut output)?;
     Ok(output.into_bytes())
 }
 
-fn write_canonical_json(value: &Value, output: &mut String) -> Result<(), GltfInferenceTextError> {
+async fn write_canonical_json(value: &Value, output: &mut String) -> Result<(), GltfInferenceTextError> {
     match value {
         Value::Null => output.push_str("null"),
         Value::Bool(value) => output.push_str(if *value { "true" } else { "false" }),
@@ -167,11 +167,11 @@ fn write_canonical_json(value: &Value, output: &mut String) -> Result<(), GltfIn
     Ok(())
 }
 
-fn utf16_cmp(left: &str, right: &str) -> Ordering {
+async fn utf16_cmp(left: &str, right: &str) -> Ordering {
     left.encode_utf16().cmp(right.encode_utf16())
 }
 
-fn canonical_number(value: &serde_json::Number) -> Result<String, GltfInferenceTextError> {
+async fn canonical_number(value: &serde_json::Number) -> Result<String, GltfInferenceTextError> {
     if let Some(value) = value.as_i64() {
         return Ok(value.to_string());
     }
@@ -210,7 +210,7 @@ fn canonical_number(value: &serde_json::Number) -> Result<String, GltfInferenceT
     Ok(result)
 }
 
-pub(crate) fn crc32_iso_hdlc(bytes: &[u8]) -> u32 {
+pub(crate) async fn crc32_iso_hdlc(bytes: &[u8]) -> u32 {
     let mut crc = u32::MAX;
     for byte in bytes {
         crc ^= u32::from(*byte);
@@ -227,7 +227,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn canonical_leaf_roundtrip_is_id_bound() {
+    async fn canonical_leaf_roundtrip_is_id_bound() {
         let value = GltfInferenceLeafEnvelope {
             id: "s.stdio.gltf.inference.overall-size.v1".into(),
             algorithm_version: 1,

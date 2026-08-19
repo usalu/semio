@@ -55,7 +55,7 @@ mod tests {
     use protocol::{Mutation, MutationDiff, SemanticMutation};
 
     #[test]
-    fn replace_graph_diff_carries_the_whole_derived_triple() {
+    async fn replace_graph_diff_carries_the_whole_derived_triple() {
         // 🔎️ `notation`/`results`/`computed` are three co-derived projections of the SAME
         // `(graph, geometry)` pair, so a graph-scoped mutation always regenerates all three —
         // unlike the pre-migration single `graph` slot this test named before composition.
@@ -72,7 +72,7 @@ mod tests {
     }
 
     #[test]
-    fn create_then_delete_node_round_trips() {
+    async fn create_then_delete_node_round_trips() {
         let base = MathematicalSnapshot::default();
         let create = MathematicalMutation::CreateNode(create_node::mutation::CreateNode { id: "z".into(), label: "Z".into(), x: 1.0, y: 2.0 });
         let after_create = create.diff(&base).diff().apply(&base).expect("valid mutation diff");
@@ -89,7 +89,7 @@ mod tests {
     }
 
     #[test]
-    fn delete_node_inverse_recreates_node_and_severed_edges() {
+    async fn delete_node_inverse_recreates_node_and_severed_edges() {
         let base = MathematicalSnapshot::default();
         let delete = MathematicalMutation::DeleteNode(delete_node::mutation::DeleteNode { id: "a".into() });
         let after_delete = delete.diff(&base).diff().apply(&base).expect("valid mutation diff");
@@ -131,7 +131,7 @@ mod tests {
     }
 
     #[test]
-    fn move_point_inverse_restores_old_position() {
+    async fn move_point_inverse_restores_old_position() {
         let base = MathematicalSnapshot::default();
         let original = mathematical_geometry(&base).points[0].clone();
         let mutation = MathematicalMutation::MovePoint(move_point::mutation::MovePoint { index: 0, x: 999.0, y: 999.0 });
@@ -147,7 +147,7 @@ mod tests {
     }
 
     #[test]
-    fn insert_point_inverse_is_remove_point_at_same_index() {
+    async fn insert_point_inverse_is_remove_point_at_same_index() {
         let base = MathematicalSnapshot::default();
         let mutation = MathematicalMutation::InsertPoint(insert_point::mutation::InsertPoint { index: 1, x: 5.0, y: 6.0 });
         let after = mutation.diff(&base).diff().apply(&base).expect("valid mutation diff");
@@ -162,7 +162,7 @@ mod tests {
     }
 
     #[test]
-    fn delete_nodes_plural_cascades_like_the_singular_form() {
+    async fn delete_nodes_plural_cascades_like_the_singular_form() {
         let base = MathematicalSnapshot::default();
         let ids = vec!["a".to_string(), "b".to_string()];
         let mutation = MathematicalMutation::DeleteNodes(delete_nodes::mutation::DeleteNodes { ids: ids.clone() });
@@ -179,7 +179,7 @@ mod tests {
     }
 
     #[test]
-    fn semantic_kinds_cover_every_variant() {
+    async fn semantic_kinds_cover_every_variant() {
         assert_eq!(MathematicalMutation::kinds().len(), 15);
         let mutation = MathematicalMutation::ChangeGraphDirected(change_graph_directed::mutation::ChangeGraphDirected { new_directed: false });
         assert_eq!(mutation.semantics().kind, "change-graph-directed");
@@ -187,7 +187,7 @@ mod tests {
     }
 
     #[test]
-    fn connect_then_disconnect_nodes_round_trips() {
+    async fn connect_then_disconnect_nodes_round_trips() {
         let base = MathematicalSnapshot::default();
         let connect = MathematicalMutation::ConnectNodes(connect_nodes::mutation::ConnectNodes { id: "e-new".into(), source: "a".into(), target: "d".into() });
         let after_connect = connect.diff(&base).diff().apply(&base).expect("valid mutation diff");
@@ -206,21 +206,21 @@ mod tests {
     /// already covered by an explicit round-trip test above: the two document-root scalar
     /// setters and the two remaining collection verbs (`change`/`remove`).
     #[test]
-    fn change_graph_directed_obeys_the_inverse_law() {
+    async fn change_graph_directed_obeys_the_inverse_law() {
         let base = MathematicalSnapshot::default();
         let mutation = MathematicalMutation::ChangeGraphDirected(change_graph_directed::mutation::ChangeGraphDirected { new_directed: !mathematical_graph(&base).directed });
         protocol::testkit::assert_mutation_inverse_law(&base, &mutation);
     }
 
     #[test]
-    fn update_graph_algorithm_obeys_the_inverse_law() {
+    async fn update_graph_algorithm_obeys_the_inverse_law() {
         let base = MathematicalSnapshot::default();
         let mutation = MathematicalMutation::UpdateGraphAlgorithm(update_graph_algorithm::mutation::UpdateGraphAlgorithm { new_algorithm: "dijkstra".into(), new_algorithm_seed: Some("seed-1".into()) });
         protocol::testkit::assert_mutation_inverse_law(&base, &mutation);
     }
 
     #[test]
-    fn change_node_label_obeys_the_inverse_law() {
+    async fn change_node_label_obeys_the_inverse_law() {
         let base = MathematicalSnapshot::default();
         let id = mathematical_graph(&base).nodes[0].id.clone();
         let mutation = MathematicalMutation::ChangeNodeLabel(change_node_label::mutation::ChangeNodeLabel { id, new_label: "Relabeled".into() });
@@ -228,14 +228,14 @@ mod tests {
     }
 
     #[test]
-    fn remove_point_obeys_the_inverse_law() {
+    async fn remove_point_obeys_the_inverse_law() {
         let base = MathematicalSnapshot::default();
         let mutation = MathematicalMutation::RemovePoint(remove_point::mutation::RemovePoint { index: 0 });
         protocol::testkit::assert_mutation_inverse_law(&base, &mutation);
     }
 
     #[test]
-    fn change_coefficient_obeys_the_inverse_law() {
+    async fn change_coefficient_obeys_the_inverse_law() {
         // 🔎️ Default `equation` is the integer literal `0` at label 0 — a numeric leaf, so this
         // exercises the real replace/restore path, not the no-op branch.
         let base = MathematicalSnapshot::default();
@@ -245,7 +245,7 @@ mod tests {
     }
 
     #[test]
-    fn change_coefficient_sets_the_targeted_numeric_leaf() {
+    async fn change_coefficient_sets_the_targeted_numeric_leaf() {
         let base = MathematicalSnapshot::default();
         let label = base.equation.expr.label;
         let mutation = MathematicalMutation::ChangeCoefficient(change_coefficient::mutation::ChangeCoefficient { label, numer: "7".into(), denom: "1".into() });
@@ -257,7 +257,7 @@ mod tests {
     }
 
     #[test]
-    fn change_coefficient_at_an_unknown_label_is_a_no_op() {
+    async fn change_coefficient_at_an_unknown_label_is_a_no_op() {
         // 🔎️ Diff computed from `(payload, base)` — a stale/foreign label leaves `equation`
         // byte-identical to `base`'s, never a panic or a silently-inserted wrong node.
         let base = MathematicalSnapshot::default();
@@ -278,21 +278,21 @@ mod tests {
     /// which asserts the frozen 3×4 policy table directly rather than one outcome per verb family,
     /// so it is not a drop-in substitute here; see this lane's report to the coordinator.
     #[test]
-    fn delete_node_missing_target_is_error() {
+    async fn delete_node_missing_target_is_error() {
         let base = MathematicalSnapshot::default();
         let mutation = MathematicalMutation::DeleteNode(delete_node::mutation::DeleteNode { id: "nonexistent".into() });
         protocol::testkit::assert_missing_target_is_error(&base, &mutation);
     }
 
     #[test]
-    fn delete_nodes_all_missing_targets_is_error() {
+    async fn delete_nodes_all_missing_targets_is_error() {
         let base = MathematicalSnapshot::default();
         let mutation = MathematicalMutation::DeleteNodes(delete_nodes::mutation::DeleteNodes { ids: vec!["nonexistent-1".into(), "nonexistent-2".into()] });
         protocol::testkit::assert_missing_target_is_error(&base, &mutation);
     }
 
     #[test]
-    fn remove_point_missing_target_is_error() {
+    async fn remove_point_missing_target_is_error() {
         let base = MathematicalSnapshot::default();
         let out_of_range = mathematical_geometry(&base).points.len();
         let mutation = MathematicalMutation::RemovePoint(remove_point::mutation::RemovePoint { index: out_of_range });
@@ -300,35 +300,35 @@ mod tests {
     }
 
     #[test]
-    fn move_node_missing_target_is_error() {
+    async fn move_node_missing_target_is_error() {
         let base = MathematicalSnapshot::default();
         let mutation = MathematicalMutation::MoveNode(move_node::mutation::MoveNode { id: "nonexistent".into(), x: 1.0, y: 1.0 });
         protocol::testkit::assert_missing_target_is_error(&base, &mutation);
     }
 
     #[test]
-    fn change_node_label_missing_target_is_error() {
+    async fn change_node_label_missing_target_is_error() {
         let base = MathematicalSnapshot::default();
         let mutation = MathematicalMutation::ChangeNodeLabel(change_node_label::mutation::ChangeNodeLabel { id: "nonexistent".into(), new_label: "X".into() });
         protocol::testkit::assert_missing_target_is_error(&base, &mutation);
     }
 
     #[test]
-    fn connect_nodes_missing_target_is_error() {
+    async fn connect_nodes_missing_target_is_error() {
         let base = MathematicalSnapshot::default();
         let mutation = MathematicalMutation::ConnectNodes(connect_nodes::mutation::ConnectNodes { id: "e-new".into(), source: "nonexistent".into(), target: "a".into() });
         protocol::testkit::assert_missing_target_is_error(&base, &mutation);
     }
 
     #[test]
-    fn disconnect_nodes_missing_target_is_error() {
+    async fn disconnect_nodes_missing_target_is_error() {
         let base = MathematicalSnapshot::default();
         let mutation = MathematicalMutation::DisconnectNodes(disconnect_nodes::mutation::DisconnectNodes { id: "nonexistent".into() });
         protocol::testkit::assert_missing_target_is_error(&base, &mutation);
     }
 
     #[test]
-    fn create_node_duplicate_id_fatal_never_applies() {
+    async fn create_node_duplicate_id_fatal_never_applies() {
         let base = MathematicalSnapshot::default();
         let existing_id = mathematical_graph(&base).nodes[0].id.clone();
         let mutation = MathematicalMutation::CreateNode(create_node::mutation::CreateNode { id: existing_id, label: "dup".into(), x: 0.0, y: 0.0 });
@@ -336,7 +336,7 @@ mod tests {
     }
 
     #[test]
-    fn connect_nodes_duplicate_id_fatal_never_applies() {
+    async fn connect_nodes_duplicate_id_fatal_never_applies() {
         let base = MathematicalSnapshot::default();
         let existing_edge_id = mathematical_graph(&base).edges[0].id.clone();
         let mutation = MathematicalMutation::ConnectNodes(connect_nodes::mutation::ConnectNodes { id: existing_edge_id, source: "a".into(), target: "d".into() });
@@ -344,14 +344,14 @@ mod tests {
     }
 
     #[test]
-    fn move_point_non_finite_fatal_never_applies() {
+    async fn move_point_non_finite_fatal_never_applies() {
         let base = MathematicalSnapshot::default();
         let mutation = MathematicalMutation::MovePoint(move_point::mutation::MovePoint { index: 0, x: f64::NAN, y: 0.0 });
         protocol::testkit::assert_fatal_never_applies(&Mutation::diff(&mutation, &base));
     }
 
     #[test]
-    fn change_coefficient_zero_denominator_fatal_never_applies() {
+    async fn change_coefficient_zero_denominator_fatal_never_applies() {
         let base = MathematicalSnapshot::default();
         let label = base.equation.expr.label;
         let mutation = MathematicalMutation::ChangeCoefficient(change_coefficient::mutation::ChangeCoefficient { label, numer: "1".into(), denom: "0".into() });

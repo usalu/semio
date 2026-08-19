@@ -13,16 +13,16 @@ pub struct DeleteStory {
 
 impl MutationKind<LayoutSnapshot, LayoutMutation> for DeleteStory {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "delete", entity: "story", kind: "delete-story", record: "DeletedStory" };
-    fn diff(&self, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
+    async fn diff(&self, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
         super::diff::diff_delete_story(self, base)
     }
-    fn inverse(&self, base: &LayoutSnapshot) -> Vec<LayoutMutation> {
+    async fn inverse(&self, base: &LayoutSnapshot) -> Vec<LayoutMutation> {
         super::inverse::inverse_delete_story(self, base)
     }
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         format!("Delete story \"{}\"", self.id)
     }
-    fn target(&self) -> Vec<String> {
+    async fn target(&self) -> Vec<String> {
         vec![self.id.clone()]
     }
 }

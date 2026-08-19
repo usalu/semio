@@ -25,7 +25,7 @@ pub struct TiffDimensions {
 }
 
 /// 📐️ Computes [`TiffDimensions`] from a snapshot's IFD 0 tags — pure, total, O(1).
-pub fn compute_tiff_dimensions(snapshot: &TiffSnapshot) -> TiffDimensions {
+pub async fn compute_tiff_dimensions(snapshot: &TiffSnapshot) -> TiffDimensions {
     let width = snapshot.width().unwrap_or(0);
     let height = snapshot.height().unwrap_or(0);
     let bit_depth = snapshot.tag(TAG_BITS_PER_SAMPLE).and_then(|tag| tag.values.first_u32()).unwrap_or(1);
@@ -41,12 +41,12 @@ mod tests {
     use super::*;
     use crate::artifacts::tiff::schema::snapshot::{TiffFieldType, TiffIfd, TiffTag, TiffValues, TAG_IMAGE_LENGTH, TAG_IMAGE_WIDTH};
 
-    fn snapshot_with_tags(tags: Vec<TiffTag>) -> TiffSnapshot {
+    async fn snapshot_with_tags(tags: Vec<TiffTag>) -> TiffSnapshot {
         TiffSnapshot { ifds: vec![TiffIfd { entries: tags }], ..TiffSnapshot::default() }
     }
 
     #[test]
-    fn derives_from_baseline_tags() {
+    async fn derives_from_baseline_tags() {
         let snapshot = snapshot_with_tags(vec![
             TiffTag { tag: TAG_IMAGE_WIDTH, kind: TiffFieldType::Long, values: TiffValues::Long(vec![4]) },
             TiffTag { tag: TAG_IMAGE_LENGTH, kind: TiffFieldType::Long, values: TiffValues::Long(vec![3]) },
@@ -58,7 +58,7 @@ mod tests {
     }
 
     #[test]
-    fn missing_bits_per_sample_falls_back_to_one() {
+    async fn missing_bits_per_sample_falls_back_to_one() {
         assert_eq!(compute_tiff_dimensions(&TiffSnapshot::default()).bit_depth, 1);
     }
 }

@@ -12,7 +12,7 @@ pub struct SetActiveUtility {
     pub utility_id: String,
 }
 
-pub fn handle(payload: &SetActiveUtility, _doc: &ArtifactView<'_, NoteSnapshot>, _cfg: &ConfigView<'_, NoteConfig>, _ctx: &mut crate::editor::note::NoteDispatchCtx) -> Result<Emit<NoteMutation, NoteConfigMutation>, Fault> {
+pub async fn handle(payload: &SetActiveUtility, _doc: &ArtifactView<'_, NoteSnapshot>, _cfg: &ConfigView<'_, NoteConfig>, _ctx: &mut crate::editor::note::NoteDispatchCtx) -> Result<Emit<NoteMutation, NoteConfigMutation>, Fault> {
     Ok(Emit::config(vec![NoteConfigMutation::SetActiveUtility { utility_id: payload.utility_id.clone() }]))
 }
 
@@ -26,7 +26,7 @@ mod tests {
     /// 🧰️ The active utility now lives in `cfg.active_utility_id` — switching utilities is still
     /// document-op-free, but it must actually persist.
     #[test]
-    fn set_active_utility_emits_no_artifact_mutations_but_persists_in_config() {
+    async fn set_active_utility_emits_no_artifact_mutations_but_persists_in_config() {
         let mut app = note_app();
         let before = app.snapshot().expect("snapshot");
         let result = dispatch(&mut app, NoteCommand::SetActiveUtility(SetActiveUtility { utility_id: "pencil".into() }));
@@ -36,7 +36,7 @@ mod tests {
     }
 
     #[test]
-    fn world_pick_style_registry_enforcement_allows_the_active_utility_switch() {
+    async fn world_pick_style_registry_enforcement_allows_the_active_utility_switch() {
         // 🧬️ Mirrors `shooting_ui`'s registry-backed coverage: dispatching through
         // `new_app_with_registry` exercises `AppActionRegistry` kind discipline for a View command.
         let mut app = note_app_with_registry();

@@ -28,10 +28,10 @@ pub struct MathematicalConfig {
 /// 📜️ Handcrafted ArtifactDsl (P6): uses this type's `__dsl_*` helpers + parse/print, not derive emission.
 impl store::ArtifactDsl for MathematicalConfig {
     const EXTENSION: &'static str = Self::__DSL_EXTENSION;
-    fn envelope_id() -> &'static str {
+    async fn envelope_id() -> &'static str {
         Self::__DSL_ENVELOPE_ID
     }
-    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+    async fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
         let body = match store::semio_format::split_text_preamble(text) {
             Ok((_, rest)) => rest,
             Err(_) => text,
@@ -43,7 +43,7 @@ impl store::ArtifactDsl for MathematicalConfig {
         )?;
         Self::__dsl_from_record(&record)
     }
-    fn print_dsl(&self) -> String {
+    async fn print_dsl(&self) -> String {
         let body = dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), dsl::JoinMode::Document);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
             <Self as store::ArtifactDsl>::envelope_id(),
@@ -57,7 +57,7 @@ impl store::ArtifactDsl for MathematicalConfig {
 
 /// 📦️ Handcrafted ArtifactPack (P6): envelope-wrapped pack body via `__dsl_*` record lowering.
 impl store::ArtifactPack for MathematicalConfig {
-    fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
+    async fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let inner = store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
             <Self as store::ArtifactDsl>::envelope_id(),
@@ -67,7 +67,7 @@ impl store::ArtifactPack for MathematicalConfig {
         .map_err(|e| store::PackError::Schema(e.to_string()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &inner))
     }
-    fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
+    async fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
         if envelope.envelope_id() != <Self as store::ArtifactDsl>::envelope_id() {
             return Err(store::PackError::Schema(format!(
@@ -79,7 +79,7 @@ impl store::ArtifactPack for MathematicalConfig {
         let (record, _report) = store::pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
         Self::__dsl_from_record(&record).map_err(store::text_error_to_pack_error)
     }
-    fn record_spec() -> Option<dsl::RecordSpec> {
+    async fn record_spec() -> Option<dsl::RecordSpec> {
         Some(Self::__dsl_spec())
     }
 }
@@ -88,7 +88,7 @@ impl store::ArtifactPack for MathematicalConfig {
 
 
 impl Default for MathematicalConfig {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self { camera: MathematicalCamera::default(), locale: "en-US".into() }
     }
 }
@@ -116,7 +116,7 @@ pub enum MathematicalConfigMutation {
 
 //#region 🔖️OpCodec
 impl protocol::OpText for MathematicalConfigMutation {
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
+    async fn parse_op(line: &str) -> Result<Self, store::TextError> {
         let variants = <Self as dsl::DslVariants>::variants();
         for (keyword, spec_fn) in &variants {
             let probe = format!("{} ", keyword);
@@ -131,7 +131,7 @@ impl protocol::OpText for MathematicalConfigMutation {
         }
         Err(dsl::__rt::field_error(format!("unknown operation line '{line}'")))
     }
-    fn print_op(&self) -> String {
+    async fn print_op(&self) -> String {
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
         let variants = <Self as dsl::DslVariants>::variants();
         let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
@@ -141,7 +141,7 @@ impl protocol::OpText for MathematicalConfigMutation {
 
 /// 🎯️ Handcrafted OpBinary (P6).
 impl protocol::OpBinary for MathematicalConfigMutation {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         const OP_BINARY_FORMAT: u8 = 1;
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
         let variants = <Self as dsl::DslVariants>::variants();
@@ -158,7 +158,7 @@ impl protocol::OpBinary for MathematicalConfigMutation {
         out.extend_from_slice(&body);
         Ok(out)
     }
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         const OP_BINARY_FORMAT: u8 = 1;
         let mut reader = store::pack_rt::ByteReader::new(bytes);
         let format = reader.read_u8()?;
@@ -189,7 +189,7 @@ impl protocol::OpBinary for MathematicalConfigMutation {
 impl Mutation<MathematicalConfig> for MathematicalConfigMutation {
     type Diff = MathematicalConfig;
 
-    fn diff(&self, base: &MathematicalConfig) -> protocol::MutationOutcome<MathematicalConfig> {
+    async fn diff(&self, base: &MathematicalConfig) -> protocol::MutationOutcome<MathematicalConfig> {
         let mut next = base.clone();
         match self {
             MathematicalConfigMutation::SetCamera { camera } => {
@@ -208,7 +208,7 @@ impl Mutation<MathematicalConfig> for MathematicalConfigMutation {
         protocol::MutationOutcome::new(next)
     }
 
-    fn inverse(&self, base: &MathematicalConfig) -> Vec<Self> {
+    async fn inverse(&self, base: &MathematicalConfig) -> Vec<Self> {
         match self {
             MathematicalConfigMutation::SetCamera { .. } => vec![MathematicalConfigMutation::SetCamera { camera: base.camera.clone() }],
             MathematicalConfigMutation::SetLocale { .. } => vec![MathematicalConfigMutation::SetLocale { value: base.locale.clone() }],
@@ -223,21 +223,21 @@ mod tests {
     use super::*;
 
     #[test]
-    fn math_config_default_is_the_identity_camera_and_english_locale() {
+    async fn math_config_default_is_the_identity_camera_and_english_locale() {
         let config = MathematicalConfig::default();
         assert_eq!(config.camera, MathematicalCamera::default());
         assert_eq!(config.locale, "en-US");
     }
 
     #[test]
-    fn math_config_dsl_round_trips() {
+    async fn math_config_dsl_round_trips() {
         let config = MathematicalConfig { camera: MathematicalCamera { x: 5.0, y: 6.0, zoom: 2.0 }, locale: "de-DE".into() };
         store::os_store::test_support::assert_dsl_round_trip(&config);
         store::os_store::test_support::assert_dsl_pack_equivalence(&config);
     }
 
     #[test]
-    fn config_operation_set_camera_diff_writes_the_targeted_field() {
+    async fn config_operation_set_camera_diff_writes_the_targeted_field() {
         let base = MathematicalConfig::default();
         let camera = MathematicalCamera { x: 5.0, y: 6.0, zoom: 2.0 };
         let operation = MathematicalConfigMutation::SetCamera { camera: camera.clone() };
@@ -245,7 +245,7 @@ mod tests {
     }
 
     #[test]
-    fn config_operation_set_camera_round_trips() {
+    async fn config_operation_set_camera_round_trips() {
         let base = MathematicalConfig::default();
         let camera = MathematicalCamera { x: 5.0, y: 6.0, zoom: 2.0 };
         let operation = MathematicalConfigMutation::SetCamera { camera: camera.clone() };
@@ -258,7 +258,7 @@ mod tests {
     }
 
     #[test]
-    fn config_operation_set_locale_round_trips() {
+    async fn config_operation_set_locale_round_trips() {
         store::os_store::test_support::assert_op_line_round_trip(&MathematicalConfigMutation::SetLocale { value: "de-DE".into() });
     }
 }

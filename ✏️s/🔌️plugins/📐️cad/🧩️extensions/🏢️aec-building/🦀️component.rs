@@ -56,7 +56,7 @@ struct CadComputersManifest {
     transformation_appliers: Vec<&'static str>,
 }
 
-fn building_layer_typology() -> BTreeMap<&'static str, &'static str> {
+async fn building_layer_typology() -> BTreeMap<&'static str, &'static str> {
     BTreeMap::from([
         ("slab", "building.building.slab"),
         ("slabs", "building.building.slab"),
@@ -83,7 +83,7 @@ fn building_layer_typology() -> BTreeMap<&'static str, &'static str> {
     ])
 }
 
-fn computers_manifest() -> CadComputersManifest {
+async fn computers_manifest() -> CadComputersManifest {
     CadComputersManifest {
         model_definition_ids: vec!["aec.building"],
         stat_computers: Vec::new(),
@@ -100,7 +100,7 @@ fn computers_manifest() -> CadComputersManifest {
     }
 }
 
-fn bundle() -> ExtensionBundle {
+async fn bundle() -> ExtensionBundle {
     ExtensionBundle::new(EXTENSION_ID, "CAD AEC Building", "0.1.0")
         .extends("cad")
         .depends_on("cad", semio_framework::VersionReq::parse("^0.1.0").expect("valid version req"))
@@ -142,7 +142,7 @@ pub struct CreateBuildingStorey {
 }
 
 impl CreateBuildingStorey {
-    fn storey_label(&self) -> String {
+    async fn storey_label(&self) -> String {
         format!("Level {}: {}", self.level_index, self.storey_name)
     }
 }
@@ -150,16 +150,16 @@ impl CreateBuildingStorey {
 impl protocol::CompositeMutationKind<CadSnapshot, CadMutation> for CreateBuildingStorey {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "create", entity: "building-storey", kind: "create-building-storey", record: "CreatedBuildingStorey" };
 
-    fn plan(&self, _base: &CadSnapshot, planner: &mut protocol::Planner<CadSnapshot, CadMutation>) -> Result<(), protocol::PlanError> {
+    async fn plan(&self, _base: &CadSnapshot, planner: &mut protocol::Planner<CadSnapshot, CadMutation>) -> Result<(), protocol::PlanError> {
         planner.call(CadMutation::CreateNode(CreateNode { node: CadNode { id: self.storey_id.clone(), label: self.storey_label(), kind: "building-storey".into() } }))?;
         planner.call(CadMutation::ChangeActiveModelDefinition(ChangeActiveModelDefinition { new_model_definition_id: "aec.building".into() }))
     }
 
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         format!("Create building storey \"{}\"", self.storey_label())
     }
 
-    fn target(&self) -> Vec<String> {
+    async fn target(&self) -> Vec<String> {
         vec![self.storey_id.clone()]
     }
 }
@@ -175,7 +175,7 @@ struct BuildingStructureSummary {
     storey_count: u32,
 }
 
-fn building_structure_summary_service() -> ArtifactInferenceService {
+async fn building_structure_summary_service() -> ArtifactInferenceService {
     ArtifactInferenceService::new(
         ArtifactInferenceServiceMetadata {
             owner: EXTENSION_ID,
@@ -193,7 +193,7 @@ fn building_structure_summary_service() -> ArtifactInferenceService {
     )
 }
 
-fn infer_building_structure_summary(request: &ArtifactInferenceExecutionRequest<'_>) -> Result<ArtifactInferenceExecution, ArtifactInferenceExecutionError> {
+async fn infer_building_structure_summary(request: &ArtifactInferenceExecutionRequest<'_>) -> Result<ArtifactInferenceExecution, ArtifactInferenceExecutionError> {
     let snapshot = <CadSnapshot as store::ArtifactPack>::decode_pack(request.canonical_payload).map_err(|error| ArtifactInferenceExecutionError::new("cad-extension-aec-building.inference.snapshot-decode", error.to_string()))?;
     let summary = BuildingStructureSummary { building_model_present: snapshot.building_model.is_some(), storey_count: snapshot.nodes.iter().filter(|node| node.kind == "building-storey").count() as u32 };
     let canonical_payload = serde_json::to_vec(&summary).map_err(|error| ArtifactInferenceExecutionError::new("cad-extension-aec-building.inference.encode", error.to_string()))?;
@@ -202,7 +202,7 @@ fn infer_building_structure_summary(request: &ArtifactInferenceExecutionRequest<
 
 /// 🗂️ The single `ArtifactContribution` this extension registers onto cad's `s.cad.cad` artifact —
 /// one composite mutation, one inference, both gated by the `.depends_on("cad", …)` declared above.
-fn building_storey_contribution() -> ArtifactContribution {
+async fn building_storey_contribution() -> ArtifactContribution {
     ArtifactContribution::builder(CAD_ARTIFACT_KIND).mutation::<CadSnapshot, CadMutation, CreateBuildingStorey>(CAD_DOCUMENT_SCHEMA, 1, 1).inference_service(building_structure_summary_service()).build()
 }
 //#endregion 🔖️Composite
@@ -215,7 +215,7 @@ mod tests {
     use semio_framework_plugin::{WireArtifactInferenceBudget, WireArtifactInferenceCacheMode};
 
     #[test]
-    fn bundle_contributes_building_import_profile() {
+    async fn bundle_contributes_building_import_profile() {
         let manifest = bundle().manifest;
         let topic_contribution = &manifest.topic_contributions[0];
         assert_eq!(topic_contribution.topic, "cad.computer");
@@ -229,7 +229,7 @@ mod tests {
     /// dependency" — `bundle()` calling `.contributes(...)` without panicking already proves the
     /// registration gate accepted it; this test additionally pins the exact ids landed.
     #[test]
-    fn bundle_declares_the_cad_dependency_and_registers_the_building_storey_contribution() {
+    async fn bundle_declares_the_cad_dependency_and_registers_the_building_storey_contribution() {
         let manifest = bundle().manifest;
         assert_eq!(manifest.extends, "cad");
         assert_eq!(manifest.dependencies[0].plugin_id, "cad");
@@ -260,7 +260,7 @@ mod tests {
     /// `.depends_on("cad", …)` must be caught here via `catch_unwind`, mirroring the framework's own
     /// `extension_bundle_dependency_tests`.
     #[test]
-    fn contribution_onto_cad_requires_a_declared_dependency() {
+    async fn contribution_onto_cad_requires_a_declared_dependency() {
         let result = std::panic::catch_unwind(|| {
             ExtensionBundle::new("cad-extension-aec-building-test-missing-dep", "Test Missing Dep", "0.1.0")
                 .extends("cad")
@@ -274,7 +274,7 @@ mod tests {
     /// structural proof (contract freeze §3's `:` segment) plus an explicit sweep of cad's own
     /// `CadMutation::kinds()` roster.
     #[test]
-    fn contributed_mutation_id_structurally_cannot_collide_with_any_cad_owner_kind() {
+    async fn contributed_mutation_id_structurally_cannot_collide_with_any_cad_owner_kind() {
         let mutation_id = bundle().manifest.contributions[0].mutations[0].mutation_id.clone();
         let hash_at = mutation_id.rfind('#').expect("contributed id has a #");
         assert!(mutation_id[hash_at + 1..].contains(':'), "contributed id must carry the contributor ':' segment");
@@ -290,7 +290,7 @@ mod tests {
     /// hand" — `protocol::fold_plan_diff` over `CreateBuildingStorey::plan` must equal sequentially
     /// applying `create-node` then `change-active-model-definition` directly.
     #[test]
-    fn plan_folds_to_the_same_snapshot_as_applying_cads_leaf_mutations_by_hand() {
+    async fn plan_folds_to_the_same_snapshot_as_applying_cads_leaf_mutations_by_hand() {
         let base = semio_s_plugin_cad::artifacts::cad::empty_cad_snapshot();
         let kind = CreateBuildingStorey { storey_id: "storey-1".into(), level_index: 2, storey_name: "Level Two".into() };
 
@@ -310,7 +310,7 @@ mod tests {
     }
 
     #[test]
-    fn contributed_inference_computes_a_real_building_summary() {
+    async fn contributed_inference_computes_a_real_building_summary() {
         let mut base = semio_s_plugin_cad::artifacts::cad::empty_cad_snapshot();
         base.nodes.push(CadNode { id: "storey-1".into(), label: "Level One".into(), kind: "building-storey".into() });
         let pack = <CadSnapshot as store::ArtifactPack>::encode_pack(&base);

@@ -7,7 +7,7 @@ use crate::artifacts::semio::standards::v1::subsets::object::schema::diff::Semio
 use crate::artifacts::semio::standards::v1::subsets::object::schema::snapshot::SemioObjectSnapshot;
 
 //#region 🔖️Diff
-pub fn diff(payload: &CreateBrep, base: &SemioObjectSnapshot) -> protocol::MutationOutcome<SemioObjectDiff> {
+pub async fn diff(payload: &CreateBrep, base: &SemioObjectSnapshot) -> protocol::MutationOutcome<SemioObjectDiff> {
     if base.brep.is_some() {
         return protocol::MutationOutcome::fatal("mutation.duplicate-id", "The object already has a brep child.".to_string(), ["brep".to_string()]);
     }

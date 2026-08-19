@@ -62,7 +62,7 @@ pub struct ShootingArtifact {
 
 //#region 🔖️Conversions
 impl Default for ShootingArtifact {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self {
             schema: crate::artifacts::shooting::SHOOTING_DOCUMENT_SCHEMA.into(),
             assets: Vec::new(),
@@ -88,7 +88,7 @@ impl Default for ShootingArtifact {
 
 impl ShootingArtifact {
     /// 📸️ Persisted subset.
-    pub fn to_snapshot(&self) -> ShootingSnapshot {
+    pub async fn to_snapshot(&self) -> ShootingSnapshot {
         ShootingSnapshot {
             schema: self.schema.clone(),
             assets: self.assets.clone(),
@@ -102,7 +102,7 @@ impl ShootingArtifact {
     }
 
     /// 🧬️ Builds a full artifact from a snapshot, leaving UI fields at defaults.
-    pub fn from_snapshot(snapshot: ShootingSnapshot) -> Self {
+    pub async fn from_snapshot(snapshot: ShootingSnapshot) -> Self {
         Self {
             schema: snapshot.schema,
             assets: snapshot.assets,
@@ -117,7 +117,7 @@ impl ShootingArtifact {
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
-    pub fn set_snapshot(&mut self, snapshot: ShootingSnapshot) {
+    pub async fn set_snapshot(&mut self, snapshot: ShootingSnapshot) {
         self.schema = snapshot.schema;
         self.assets = snapshot.assets;
         self.saved_cameras = snapshot.saved_cameras;
@@ -133,7 +133,7 @@ impl ShootingArtifact {
 //#region 🔖️DocumentHelpers
 /// 🔢️ Mints a fresh, process-unique id (`"{prefix}-{n}"`) — shared by every mutation that creates a
 /// new shot/asset/saved-camera record.
-pub fn next_shooting_id(prefix: &str) -> String {
+pub async fn next_shooting_id(prefix: &str) -> String {
     static COUNTER: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(1);
     let next = COUNTER.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
     format!("{prefix}-{next}")
@@ -143,7 +143,7 @@ pub fn next_shooting_id(prefix: &str) -> String {
 /// and to bridge into the framework's still-JSON-only `App::example` surface, so
 /// `crate::artifacts::shooting::dsl::SHOOTING_EXAMPLE_TEXT` stays the single source of truth for the
 /// snapshot.
-pub fn default_snapshot() -> ShootingSnapshot {
+pub async fn default_snapshot() -> ShootingSnapshot {
     crate::artifacts::shooting::dsl::parse_dsl(crate::artifacts::shooting::dsl::SHOOTING_EXAMPLE_TEXT).unwrap_or_else(|_| crate::artifacts::shooting::empty_shooting_snapshot())
 }
 
@@ -151,24 +151,24 @@ pub fn default_snapshot() -> ShootingSnapshot {
 /// `serde_json::from_str` on its `document_json` parameter (shared framework machinery, out of scope
 /// for this migration) — derives the JSON from the DSL fixture rather than keeping a second, redundant
 /// JSON copy of it on disk.
-pub fn default_snapshot_json() -> String {
+pub async fn default_snapshot_json() -> String {
     serde_json::to_string(&default_snapshot()).unwrap_or_default()
 }
 
 /// 📸️ The active shot — falls back to the first shot when `active_shot_id` names nothing (an empty
 /// document, or a stale id left over after a delete).
-pub fn active_shot(snapshot: &ShootingSnapshot) -> Option<&ShootingShot> {
+pub async fn active_shot(snapshot: &ShootingSnapshot) -> Option<&ShootingShot> {
     snapshot.shots.iter().find(|shot| shot.id == snapshot.active_shot_id).or_else(|| snapshot.shots.first())
 }
 
 /// 📦️ The active asset — same fallback rule as `active_shot`.
-pub fn active_asset(snapshot: &ShootingSnapshot) -> Option<&ShootingAsset> {
+pub async fn active_asset(snapshot: &ShootingSnapshot) -> Option<&ShootingAsset> {
     snapshot.assets.iter().find(|asset| asset.id == snapshot.active_asset_id).or_else(|| snapshot.assets.first())
 }
 
 /// 🌫️ A background of `""`/`"transparent"` means "let the surface show through" — shared by the scene
 /// window's environment JSON and the icon-render request below (two consumers).
-pub fn is_transparent_shooting_background(background: &str) -> bool {
+pub async fn is_transparent_shooting_background(background: &str) -> bool {
     background.is_empty() || background == "transparent"
 }
 //#endregion 🔖️DocumentHelpers
@@ -191,7 +191,7 @@ pub fn is_transparent_shooting_background(background: &str) -> bool {
 /// `s.stdio.semio/v1/drawing` → svg export leaf never reads it — the background is therefore
 /// painted as an explicit filled `Path` layer child instead, which the export leaf DOES lower
 /// into real SVG markup.
-fn shooting_scene_to_semio_drawing(snapshot: &ShootingSnapshot) -> (SemioDrawingSnapshot, u32, u32) {
+async fn shooting_scene_to_semio_drawing(snapshot: &ShootingSnapshot) -> (SemioDrawingSnapshot, u32, u32) {
     let shot = active_shot(snapshot);
     let asset = active_asset(snapshot);
     let (width, height) = shot.map_or((256, 256), |entry| (entry.width, entry.height));
@@ -222,7 +222,7 @@ fn shooting_scene_to_semio_drawing(snapshot: &ShootingSnapshot) -> (SemioDrawing
 /// draws a full ellipse via the standard two-`A`rc-command SVG technique (`M` to the right vertex,
 /// two semicircular arcs back to the same point); anything else (`"rectangle"` in practice) draws
 /// the four canvas edges as `L`ine segments.
-fn shooting_shape_path_segments(shape: &str, width: f64, height: f64) -> Vec<PathSegment> {
+async fn shooting_shape_path_segments(shape: &str, width: f64, height: f64) -> Vec<PathSegment> {
     if shape == "ellipse" {
         let (cx, cy, rx, ry) = (width / 2.0, height / 2.0, width / 2.0, height / 2.0);
         vec![
@@ -245,7 +245,7 @@ fn shooting_shape_path_segments(shape: &str, width: f64, height: f64) -> Vec<Pat
 /// 🎨️ `"#rrggbb"`/`"#rrggbbaa"` (the only two hex shapes the shooting document ever stores in
 /// `scene.background`) into a `SemioRgba`. `None` for anything else (an empty string is handled
 /// by the caller's own default-color fallback before this ever runs).
-fn shooting_hex_color_to_rgba(hex: &str) -> Option<SemioRgba> {
+async fn shooting_hex_color_to_rgba(hex: &str) -> Option<SemioRgba> {
     let trimmed = hex.trim().trim_start_matches('#');
     let byte = |s: &str| u8::from_str_radix(s, 16).ok().map(|v| v as f32 / 255.0);
     match trimmed.len() {
@@ -259,7 +259,7 @@ fn shooting_hex_color_to_rgba(hex: &str) -> Option<SemioRgba> {
 /// idempotent (`register_composer_entries`/`register_document_codec` both overwrite on
 /// re-registration, neither panics), so this is safe to call regardless of whether the hosting
 /// OS/plugin runtime already ran stdio's own boot-time `plugin()` registration first.
-fn shooting_ensure_semio_drawing_bridge_registered() {
+async fn shooting_ensure_semio_drawing_bridge_registered() {
     static ONCE: std::sync::Once = std::sync::Once::new();
     ONCE.call_once(semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::drawing::io::register);
 }
@@ -269,7 +269,7 @@ fn shooting_ensure_semio_drawing_bridge_registered() {
 /// hand-rolled SVG string. Returns the exporter's own `write_svg_xml` output (raw `<svg>…</svg>`
 /// markup, no semio envelope preamble) so callers can hand it straight to
 /// `rasterize_svg_to_png_base64`/embed it in an `<img>`, exactly like the old `wrap_svg` output did.
-fn shooting_drawing_to_svg_text(drawing: &SemioDrawingSnapshot) -> Result<String, String> {
+async fn shooting_drawing_to_svg_text(drawing: &SemioDrawingSnapshot) -> Result<String, String> {
     shooting_ensure_semio_drawing_bridge_registered();
     let key = semio_framework_plugin::IoKey {
         artifact_kind: "s.stdio.semio".into(),
@@ -284,7 +284,7 @@ fn shooting_drawing_to_svg_text(drawing: &SemioDrawingSnapshot) -> Result<String
         dialect: semio_framework_plugin::Dialect { artifact_kind: "s.stdio.semio", standard: semio_framework_plugin::StandardId("v1"), subset: semio_framework_plugin::SubsetId("drawing") },
         payload: semio_framework_plugin::IoPayload::Binary(<SemioDrawingSnapshot as store::ArtifactPack>::encode_pack(drawing)),
     };
-    let composed = semio_framework_plugin::io_dispatch(&key, std::slice::from_ref(&source)).map_err(|error| error.message)?;
+    let composed = semio_framework_plugin::resolve_ready(semio_framework_plugin::io_dispatch(&key, std::slice::from_ref(&source))).map_err(|error| error.message)?;
     let bytes = match composed.payload {
         semio_framework_plugin::IoPayload::Binary(bytes) => bytes,
         semio_framework_plugin::IoPayload::Text(_) => return Err("s.stdio.semio/v1/drawing -> s.stdio.svg dispatch returned Text, expected Binary (ArtifactPack)".into()),
@@ -297,14 +297,14 @@ fn shooting_drawing_to_svg_text(drawing: &SemioDrawingSnapshot) -> Result<String
 /// emblem override (if any) as an embedded raster image, and the asset name as a text label — via
 /// the `s.stdio.semio/v1/drawing` → svg stdio bridge (`shooting_scene_to_semio_drawing` +
 /// `shooting_drawing_to_svg_text`), never hand-rolled SVG string formatting.
-pub fn shooting_scene_svg(snapshot: &ShootingSnapshot) -> Result<(String, u32, u32), String> {
+pub async fn shooting_scene_svg(snapshot: &ShootingSnapshot) -> Result<(String, u32, u32), String> {
     let (drawing, width, height) = shooting_scene_to_semio_drawing(snapshot);
     let svg = shooting_drawing_to_svg_text(&drawing)?;
     Ok((svg, width, height))
 }
 
 /// 🌉️ `shooting_scene_svg` over an already-deserialized document `Value`.
-pub fn shooting_document_json_to_svg(value: &Value) -> Result<(String, u32, u32), String> {
+pub async fn shooting_document_json_to_svg(value: &Value) -> Result<(String, u32, u32), String> {
     let snapshot: ShootingSnapshot = serde_json::from_value(value.clone()).map_err(|error| error.to_string())?;
     shooting_scene_svg(&snapshot)
 }
@@ -312,7 +312,7 @@ pub fn shooting_document_json_to_svg(value: &Value) -> Result<(String, u32, u32)
 /// 🖼️ Builds the icon-render host request JSON for `shot`/`asset` under `fixture`'s scene lighting —
 /// consumed both by the icon window's `render()` and by the `exportActiveShot`/`exportAllShots` shell
 /// commands (`🎮️commands/🖨️export`), two consumers.
-pub fn shooting_icon_render_request_json(snapshot: &ShootingSnapshot, shot: &ShootingShot, asset: &ShootingAsset, fallback_camera: &ShootingCamera) -> String {
+pub async fn shooting_icon_render_request_json(snapshot: &ShootingSnapshot, shot: &ShootingShot, asset: &ShootingAsset, fallback_camera: &ShootingCamera) -> String {
     let camera = crate::artifacts::shooting::shooting_resolve_shot_camera(snapshot, shot, fallback_camera);
     let scene = &snapshot.scene;
     let mut camera_value = json!({
@@ -365,14 +365,14 @@ pub fn shooting_icon_render_request_json(snapshot: &ShootingSnapshot, shot: &Sho
 /// in the app's `🦀️config.rs`), and `register_dwg_import_handler`'s callback signature
 /// (`&DwgDrawing -> Result<Value, String>`) has no channel back into that runtime state, so this no
 /// longer reframes the camera to the drawing extent (dropped, not moved — see the ticket notes).
-pub fn shooting_document_json_from_dwg(_drawing: &semio_s_plugin_stdio::artifacts::dwg::DwgDrawing) -> Result<Value, String> {
+pub async fn shooting_document_json_from_dwg(_drawing: &semio_s_plugin_stdio::artifacts::dwg::DwgDrawing) -> Result<Value, String> {
     serde_json::to_value(default_snapshot()).map_err(|error| error.to_string())
 }
 //#endregion 🔖️MediaImport
 
 //#region 🔖️Descriptor
 /// 🧬️ Descriptor for `s.shooting.shooting` — twenty handcrafted schema leaves.
-pub fn shooting_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
+pub async fn shooting_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
     schema::ArtifactSchemaDescriptor {
         id: "s.shooting.shooting",
         artifact: schema::FacetLeaves {
@@ -423,15 +423,15 @@ pub mod derived_construction {
         type Snapshot = ShootingSnapshot;
         type Mutation = ShootingMutation;
         type Diff = ShootingDiff;
-        fn empty() -> Self { Self { snapshot: ShootingSnapshot::default(), diagnostics: Vec::new() } }
-        fn from_snapshot(snapshot: Self::Snapshot) -> Self { Self { snapshot, diagnostics: Vec::new() } }
-        fn from_text(text: &str) -> Result<Self, store::TextError> {
+        async fn empty() -> Self { Self { snapshot: ShootingSnapshot::default(), diagnostics: Vec::new() } }
+        async fn from_snapshot(snapshot: Self::Snapshot) -> Self { Self { snapshot, diagnostics: Vec::new() } }
+        async fn from_text(text: &str) -> Result<Self, store::TextError> {
             Ok(Self::from_snapshot(<ShootingSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
-        fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
+        async fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
             Ok(Self::from_snapshot(<ShootingSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
         }
-        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
+        async fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let outcome = <ShootingMutation as protocol::Mutation<ShootingSnapshot>>::diff(&mutation, &self.snapshot);
             match protocol::MutationDiff::apply(outcome.diff(), &self.snapshot) {
                 Ok(snapshot) => self.snapshot = snapshot,
@@ -443,7 +443,7 @@ pub mod derived_construction {
             }
             (self, outcome)
         }
-        fn absorb(
+        async fn absorb(
             mut self,
             diff: Self::Diff,
         ) -> protocol::MutationApplyResult<Self> {
@@ -451,7 +451,7 @@ pub mod derived_construction {
             self.snapshot = snapshot;
             Ok(self)
         }
-        fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
+        async fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
             if self.diagnostics.is_empty() { Ok(self.snapshot) } else { Err(self.diagnostics) }
         }
     }
@@ -475,11 +475,11 @@ pub mod derived_analysis {
         type Parts = ShootingParts;
         const DIALECT: Dialect = Dialect { artifact_kind: "s.shooting", standard: StandardId("1"), subset: SubsetId("*") };
 
-        fn sniff(_source: &AnalyzeSource<'_>) -> IoConfidence {
+        async fn sniff(_source: &AnalyzeSource<'_>) -> IoConfidence {
             IoConfidence::Medium
         }
 
-        fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
+        async fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
             let mut parts = ShootingParts::default();
             let mut diagnostics = Vec::new();
             let mut confidence = IoConfidence::High;
@@ -528,7 +528,7 @@ mod tests {
     use crate::artifacts::shooting::SHOOTING_DOCUMENT_SCHEMA;
 
     #[test]
-    fn default_example_fixture_parses() {
+    async fn default_example_fixture_parses() {
         let snapshot = default_snapshot();
         assert_eq!(snapshot.schema, SHOOTING_DOCUMENT_SCHEMA);
         assert!(!snapshot.shots.is_empty());
@@ -536,7 +536,7 @@ mod tests {
     }
 
     #[test]
-    fn scene_svg_embeds_active_asset_name_and_shot_shape() {
+    async fn scene_svg_embeds_active_asset_name_and_shot_shape() {
         let snapshot = default_snapshot();
         let (svg, width, height) = shooting_scene_svg(&snapshot).expect("scene svg via the semio/drawing stdio bridge");
         let shot = active_shot(&snapshot).expect("default fixture shot");
@@ -554,7 +554,7 @@ mod tests {
     /// 🌉️ Exercises the ellipse branch the default fixture (shape "rectangle") never hits —
     /// confirms `shooting_shape_path_segments` really emits the two-arc ellipse technique.
     #[test]
-    fn ellipse_shot_shape_renders_via_svg_arc_commands() {
+    async fn ellipse_shot_shape_renders_via_svg_arc_commands() {
         let mut snapshot = default_snapshot();
         let shot_id = snapshot.active_shot_id.clone();
         for shot in snapshot.shots.iter_mut() {
@@ -568,7 +568,7 @@ mod tests {
     }
 
     #[test]
-    fn export_svg_uses_scene_render_not_title_card() {
+    async fn export_svg_uses_scene_render_not_title_card() {
         let snapshot = default_snapshot();
         let document = serde_json::to_value(&snapshot).unwrap();
         let (svg, _width, _height) = shooting_document_json_to_svg(&document).expect("export svg");
@@ -581,7 +581,7 @@ mod tests {
     /// state (never a document field), the import hook has no channel back into it — this asserts the
     /// surviving intent: import still succeeds and stays schema-valid for a non-trivial extent.
     #[test]
-    fn dwg_import_stays_schema_valid_for_a_non_trivial_extent() {
+    async fn dwg_import_stays_schema_valid_for_a_non_trivial_extent() {
         let drawing = semio_s_plugin_stdio::artifacts::dwg::DwgDrawing { extmin: [0.0, 0.0, 0.0], extmax: [100.0, 200.0, 0.0], ..Default::default() };
         let document = shooting_document_json_from_dwg(&drawing).expect("dwg import never errors");
         let snapshot: ShootingSnapshot = serde_json::from_value(document).expect("schema-valid snapshot");
@@ -590,7 +590,7 @@ mod tests {
     }
 
     #[test]
-    fn dwg_import_never_errors_on_empty_drawing() {
+    async fn dwg_import_never_errors_on_empty_drawing() {
         let drawing = semio_s_plugin_stdio::artifacts::dwg::DwgDrawing::default();
         let document = shooting_document_json_from_dwg(&drawing).expect("dwg import never errors on empty drawing");
         let snapshot: ShootingSnapshot = serde_json::from_value(document).expect("schema-valid fixture");
@@ -598,7 +598,7 @@ mod tests {
     }
 
     #[test]
-    fn transparent_background_predicate_covers_empty_and_literal_transparent() {
+    async fn transparent_background_predicate_covers_empty_and_literal_transparent() {
         assert!(is_transparent_shooting_background(""));
         assert!(is_transparent_shooting_background("transparent"));
         assert!(!is_transparent_shooting_background("#000000"));

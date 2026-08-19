@@ -11,13 +11,13 @@ use semio_framework_plugin::{
 use serde_json::json;
 
 //#region 🔖️Manifest
-pub fn definition() -> PanelTabDefinition {
+pub async fn definition() -> PanelTabDefinition {
     PanelTabDefinition { kind: PanelTabKind::App(S_PLAY_PARAMETERS_TAB_ID.into()), label: LocalizedLabel::native(FRAMEWORK_PANEL_TAB_PARAMETERS_LABEL, "Parameter"), group: PanelGroup::Workbench, body_key: Some(S_PLAY_PARAMETERS_BODY_KEY.into()), children: Vec::new() }
 }
 //#endregion 🔖️Manifest
 
 //#region 🔖️Render
-fn parameter_value_control(parameter: &WorkflowParameter, labels: &SStudioLabels) -> UiNode {
+async fn parameter_value_control(parameter: &WorkflowParameter, labels: &SStudioLabels) -> UiNode {
     match parameter {
         WorkflowParameter::Numeric { id, value, step, .. } => UiNode::NumberStepper(UiNumberStepperNode {
             presence: UiPresence::default(),
@@ -63,7 +63,7 @@ fn parameter_value_control(parameter: &WorkflowParameter, labels: &SStudioLabels
     }
 }
 
-fn parameter_constraint_fields(parameter: &WorkflowParameter, labels: &SStudioLabels) -> Vec<UiNode> {
+async fn parameter_constraint_fields(parameter: &WorkflowParameter, labels: &SStudioLabels) -> Vec<UiNode> {
     match parameter {
         WorkflowParameter::Numeric { id, min, max, step, .. } => vec![
             UiNode::Field(UiFieldNode {
@@ -177,7 +177,7 @@ fn parameter_constraint_fields(parameter: &WorkflowParameter, labels: &SStudioLa
     }
 }
 
-pub fn render(projection: &WorkflowSnapshot, labels: &SStudioLabels) -> UiNode {
+pub async fn render(projection: &WorkflowSnapshot, labels: &SStudioLabels) -> UiNode {
     let mut children = vec![UiSectionNode {
         id: "s-play-parameters.header".into(),
         label: Some(Label::data(FRAMEWORK_PANEL_TAB_PARAMETERS_LABEL)),

@@ -25,7 +25,7 @@ pub struct StlInference {
 }
 
 impl protocol::Inference<StlSnapshot> for StlInference {
-    fn infer(snapshot: &StlSnapshot) -> Self {
+    async fn infer(snapshot: &StlSnapshot) -> Self {
         Self { bounds: compute_stl_bounds(snapshot) }
     }
 }
@@ -33,19 +33,19 @@ impl protocol::Inference<StlSnapshot> for StlInference {
 /// 🌱 Defined in terms of `infer` (not derived) — keeps the law correct regardless of whether
 /// `StlSnapshot::default()`'s `triangles` ever stops being empty.
 impl Default for StlInference {
-    fn default() -> Self {
+    async fn default() -> Self {
         <Self as protocol::Inference<StlSnapshot>>::infer(&StlSnapshot::default())
     }
 }
 
 impl protocol::InferenceSpec<StlSnapshot> for StlInference {
-    fn inference_schema_id() -> &'static str {
+    async fn inference_schema_id() -> &'static str {
         "s.stdio.stl.inference"
     }
-    fn schema_version() -> u32 {
+    async fn schema_version() -> u32 {
         1
     }
-    fn fields() -> &'static [protocol::InferenceFieldSpec] {
+    async fn fields() -> &'static [protocol::InferenceFieldSpec] {
         &[protocol::InferenceFieldSpec { id: "s.stdio.stl.inference.bounds", reads: &["triangles"] }]
     }
 }
@@ -65,7 +65,7 @@ impl ArtifactInferrer for crate::artifacts::stl::standards::v_ascii::subsets::an
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.stdio.stl.inference`'s facet leaves into the OS-wide inference catalog —
 /// call once at plugin init, alongside `stl_artifact_schema_descriptor`'s registration.
-pub fn stl_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
+pub async fn stl_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
     schema::ArtifactInferenceDescriptor {
         id: "s.stdio.stl.inference",
         inference: schema::FacetLeaves {
@@ -86,13 +86,13 @@ mod tests {
     use protocol::Inference;
 
     #[test]
-    fn inference_determinism_law() {
+    async fn inference_determinism_law() {
         let snapshot = StlSnapshot::default();
         assert_eq!(StlInference::infer(&snapshot), StlInference::infer(&snapshot));
     }
 
     #[test]
-    fn inference_default_law() {
+    async fn inference_default_law() {
         assert_eq!(StlInference::infer(&StlSnapshot::default()), StlInference::default());
     }
 }

@@ -5,7 +5,7 @@ use crate::artifacts::din16798::mutations::change_residential_ventilation_m3_h::
 use crate::artifacts::din16798::Din16798Snapshot;
 
 //#region 🔖️Diff
-pub fn diff(payload: &ChangeResidentialVentilationM3H, base: &Din16798Snapshot) -> protocol::MutationOutcome<Din16798Diff> {
+pub async fn diff(payload: &ChangeResidentialVentilationM3H, base: &Din16798Snapshot) -> protocol::MutationOutcome<Din16798Diff> {
     if !payload.new_residential_ventilation_m3_h.is_finite() {
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("Residential ventilation air flow must be a finite number, got {}.", payload.new_residential_ventilation_m3_h), Vec::<String>::new());
     }

@@ -21,15 +21,15 @@ pub struct ReplacePositionData {
 impl MutationKind<GisMapSnapshot, GisMapMutation> for ReplacePositionData {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "replace", entity: "position-data", kind: "replace-position-data", record: "ReplacedPositionData" };
 
-    fn diff(&self, base: &GisMapSnapshot) -> protocol::MutationOutcome<GisMapDiff> {
+    async fn diff(&self, base: &GisMapSnapshot) -> protocol::MutationOutcome<GisMapDiff> {
         super::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &GisMapSnapshot) -> Vec<GisMapMutation> {
+    async fn inverse(&self, base: &GisMapSnapshot) -> Vec<GisMapMutation> {
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         format!("Replace position \"{}\" data", self.id)
     }
 }

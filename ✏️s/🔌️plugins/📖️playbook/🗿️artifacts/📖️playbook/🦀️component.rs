@@ -38,12 +38,12 @@ pub const PLAYBOOK_ARTIFACT_SCHEMA_ID: &str = "s.playbook.playbook";
 pub const PLAYBOOK_DIALECT: Dialect = Dialect { artifact_kind: "s.playbook.playbook", standard: StandardId("1"), subset: SubsetId::ANY };
 
 /// 📸️ Default persisted playbook document for new stores and demos.
-pub fn empty_playbook_snapshot() -> PlaybookSnapshot {
+pub async fn empty_playbook_snapshot() -> PlaybookSnapshot {
     PlaybookSnapshot::default()
 }
 
 /// 🧱️ Flattens all blocks across steps — delegates to the kernel helper.
-pub fn flatten_playbook_blocks(snapshot: &PlaybookSnapshot) -> Vec<PlaybookBlock> {
+pub async fn flatten_playbook_blocks(snapshot: &PlaybookSnapshot) -> Vec<PlaybookBlock> {
     crate::playbook::flatten_playbook_blocks(&snapshot.as_kernel()).into_iter().cloned().collect()
 }
 //#endregion 🔖️Types
@@ -65,7 +65,7 @@ pub type PlaybookFlowChild = store::ArtifactChild<SemioFlowSnapshot>;
 /// document order — `nodes`' own `Vec` order is the actual source read back by
 /// [`steps_from_flow_content`], never the edges (a `Vec` already carries order; the edges exist so a
 /// flow-graph consumer sees genuine `next`/`prev` connectivity, not just an implicit array position).
-pub fn flow_content_snapshot_from_steps(steps: &[PlaybookStep]) -> SemioFlowSnapshot {
+pub async fn flow_content_snapshot_from_steps(steps: &[PlaybookStep]) -> SemioFlowSnapshot {
     let nodes: Vec<SemioFlowNode> = steps
         .iter()
         .enumerate()
@@ -86,7 +86,7 @@ pub fn flow_content_snapshot_from_steps(steps: &[PlaybookStep]) -> SemioFlowSnap
 
 /// 🌉 Inverse of [`flow_content_snapshot_from_steps`] — real and lossless: every `PlaybookStep`
 /// field (including the full `blocks` vocabulary) round-trips through `blocksJson`/`description`.
-pub fn steps_from_flow_content(content: &SemioFlowSnapshot) -> Vec<PlaybookStep> {
+pub async fn steps_from_flow_content(content: &SemioFlowSnapshot) -> Vec<PlaybookStep> {
     content
         .nodes
         .iter()
@@ -104,7 +104,7 @@ pub fn steps_from_flow_content(content: &SemioFlowSnapshot) -> Vec<PlaybookStep>
 /// `Paragraph` per step (title/description). LOSSY BY DESIGN in the reverse direction only: a bare
 /// document cannot recover a step's `blocks`/`condition` data (see [`steps_from_document`]'s own doc
 /// comment) — `flow` is this data's lossless source of truth, `document` is a read/export companion.
-pub fn document_snapshot_from_steps(title: Option<&str>, steps: &[PlaybookStep]) -> SemioDocumentSnapshot {
+pub async fn document_snapshot_from_steps(title: Option<&str>, steps: &[PlaybookStep]) -> SemioDocumentSnapshot {
     let mut blocks = Vec::new();
     if let Some(title) = title {
         blocks.push(DocBlock::Heading { level: 1, style_id: None, runs: vec![DocRun::plain(title)] });
@@ -123,7 +123,7 @@ pub fn document_snapshot_from_steps(title: Option<&str>, steps: &[PlaybookStep])
 /// none of that). Only used when a caller genuinely has nothing but narrative content to start from
 /// (e.g. a bare txt/md/pdf import with no procedural side) — every in-app mutation instead reads/
 /// writes through the lossless `flow` child via [`steps_from_flow_content`].
-pub fn steps_from_document(content: &SemioDocumentSnapshot) -> (Option<String>, Vec<PlaybookStep>) {
+pub async fn steps_from_document(content: &SemioDocumentSnapshot) -> (Option<String>, Vec<PlaybookStep>) {
     let mut title = None;
     let mut steps: Vec<PlaybookStep> = Vec::new();
     let mut index = 0usize;
@@ -150,7 +150,7 @@ pub fn steps_from_document(content: &SemioDocumentSnapshot) -> (Option<String>, 
 /// 🕸️ Deterministic content-addressed CHILD handle for the flow content — same `(child_id, target)`
 /// for identical `steps`, a different pair once the content actually changes; mirrors writer's
 /// `document_child_handle`/flow's `flow_content_child_handle`.
-pub fn flow_content_child_handle(steps: &[PlaybookStep]) -> PlaybookFlowChild {
+pub async fn flow_content_child_handle(steps: &[PlaybookStep]) -> PlaybookFlowChild {
     use std::hash::{Hash, Hasher};
     let snapshot = flow_content_snapshot_from_steps(steps);
     let content_json = serde_json::to_string(&snapshot).unwrap_or_default();
@@ -165,7 +165,7 @@ pub fn flow_content_child_handle(steps: &[PlaybookStep]) -> PlaybookFlowChild {
 
 /// 🕸️ Deterministic content-addressed CHILD handle for the narrative document projection — same
 /// `(child_id, target)` for identical `(title, steps)`.
-pub fn document_child_handle(title: Option<&str>, steps: &[PlaybookStep]) -> PlaybookDocumentChild {
+pub async fn document_child_handle(title: Option<&str>, steps: &[PlaybookStep]) -> PlaybookDocumentChild {
     use std::hash::{Hash, Hasher};
     let snapshot = document_snapshot_from_steps(title, steps);
     let content_json = serde_json::to_string(&snapshot).unwrap_or_default();
@@ -221,25 +221,25 @@ thread_local! {
 /// 📝 Seeds the scratch cache for the `flow` child's handle — call whenever new step content is
 /// about to become a document's `flow`/`document` field pair (every mutation-diff/fixture builder in
 /// this plugin does, via [`playbook_content_handles_and_cache`]).
-pub fn cache_playbook_steps(flow_child_id: &str, steps: Vec<PlaybookStep>) {
+pub async fn cache_playbook_steps(flow_child_id: &str, steps: Vec<PlaybookStep>) {
     PLAYBOOK_SCRATCH.with(|cache| cache.borrow_mut().insert(flow_child_id.to_string(), steps));
 }
 
 /// 🔎 Reads the cached live steps for a `flow` child handle — an empty scene (never a panic) when
 /// nothing has cached it yet (see this region's module doc comment for why that can happen).
-pub fn playbook_working_scene_for_handle(handle: &PlaybookFlowChild) -> PlaybookWorkingScene {
+pub async fn playbook_working_scene_for_handle(handle: &PlaybookFlowChild) -> PlaybookWorkingScene {
     PLAYBOOK_SCRATCH.with(|cache| cache.borrow().get(&handle.child_id).cloned()).map(|steps| PlaybookWorkingScene { steps }).unwrap_or_default()
 }
 
 /// 🔎 Reads the current document's live steps off its `flow` child handle — the single read call
 /// site every mutation diff/inverse/render path in this plugin uses instead of the old
 /// `snapshot.steps` field access.
-pub fn playbook_working_scene(snapshot: &PlaybookSnapshot) -> PlaybookWorkingScene {
+pub async fn playbook_working_scene(snapshot: &PlaybookSnapshot) -> PlaybookWorkingScene {
     playbook_working_scene_for_handle(&snapshot.flow)
 }
 
 /// 🔎 Convenience: just the steps (see [`playbook_working_scene`]).
-pub fn playbook_steps(snapshot: &PlaybookSnapshot) -> Vec<PlaybookStep> {
+pub async fn playbook_steps(snapshot: &PlaybookSnapshot) -> Vec<PlaybookStep> {
     playbook_working_scene(snapshot).steps
 }
 
@@ -247,7 +247,7 @@ pub fn playbook_steps(snapshot: &PlaybookSnapshot) -> Vec<PlaybookStep> {
 /// steps in one call — the standard way every mutation-diff/fixture builder in this plugin creates a
 /// `(document, flow)` field pair; never construct handles without also caching, or
 /// [`playbook_working_scene`] will read back empty.
-pub fn playbook_content_handles_and_cache(title: Option<&str>, steps: Vec<PlaybookStep>) -> (PlaybookDocumentChild, PlaybookFlowChild) {
+pub async fn playbook_content_handles_and_cache(title: Option<&str>, steps: Vec<PlaybookStep>) -> (PlaybookDocumentChild, PlaybookFlowChild) {
     let flow_handle = flow_content_child_handle(&steps);
     let document_handle = document_child_handle(title, &steps);
     cache_playbook_steps(&flow_handle.child_id, steps);
@@ -257,7 +257,7 @@ pub fn playbook_content_handles_and_cache(title: Option<&str>, steps: Vec<Playbo
 /// 🏗️ Builds a full `PlaybookSnapshot` from literal steps — the standard fixture/import constructor
 /// replacing the old 5-field `PlaybookSnapshot { ..., steps }` struct literal now that
 /// `document`/`flow` are composed child handles, not a plain field.
-pub fn playbook_snapshot_with_steps(schema: &str, id: &str, version: &str, title: Option<String>, steps: Vec<PlaybookStep>) -> PlaybookSnapshot {
+pub async fn playbook_snapshot_with_steps(schema: &str, id: &str, version: &str, title: Option<String>, steps: Vec<PlaybookStep>) -> PlaybookSnapshot {
     let (document, flow) = playbook_content_handles_and_cache(title.as_deref(), steps);
     PlaybookSnapshot { schema: schema.into(), id: id.into(), version: version.into(), title, document, flow }
 }
@@ -272,7 +272,7 @@ pub fn playbook_snapshot_with_steps(schema: &str, id: &str, version: &str, title
 /// (see that struct's own doc) — `register_app_schema_descriptor` is not in §6's artifact-scoped
 /// function set. Lives at the artifact root, not `⚙️engine` (reloc-g7 revision of that same ticket) —
 /// `declaration()` describes the artifact (kind/schema/io/ownership), it is not engine behaviour.
-pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
+pub async fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
     use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
     let rows: &[(&str, &str, &str, &[(&str, &str)], Option<(&str, &str)>)] = &[
         ("s.playbook.standard.v1", "standard", "1", &[], None),
@@ -312,7 +312,7 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
     Ok(definition)
 }
 
-pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
+pub async fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
     semio_framework_plugin::ArtifactDeclaration::builder(definition()?)
         .schema(crate::artifacts::playbook::schema::playbook_artifact_schema_descriptor())
         .inferences([crate::artifacts::playbook::standards::v1::subsets::any::schema::inferences::playbook_artifact_inference_descriptor()])
@@ -326,7 +326,7 @@ pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semi
 /// and leaked to a `&'static` slice since `dsl::passthrough_hooks` isn't `const fn`. Private:
 /// `declaration()` above is its only caller (moved here with it from `⚙️engine`, ticket
 /// 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE reloc-g7 — kept unexported, not widened).
-fn pilot_languages() -> &'static [dsl::LanguageSpec] {
+async fn pilot_languages() -> &'static [dsl::LanguageSpec] {
     static LANGUAGES: std::sync::OnceLock<Vec<dsl::LanguageSpec>> = std::sync::OnceLock::new();
     LANGUAGES
         .get_or_init(|| {
@@ -390,7 +390,7 @@ fn pilot_languages() -> &'static [dsl::LanguageSpec] {
 //#region 🔖️ArtifactKind
 /// 🗂️ This artifact's `ArtifactKindSpec` — stitched into the app manifest by
 /// `crate::editor::playbook::create_playbook_play_app`'s `🔖️Manifest` region.
-pub fn artifact_kind() -> ArtifactKindSpec {
+pub async fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "text.playbook".into(),
         name: "Playbook".into(),
@@ -414,13 +414,13 @@ mod tests {
     use super::*;
 
     #[test]
-    fn artifact_kind_uses_the_playbook_media_kind_as_both_id_and_schema() {
+    async fn artifact_kind_uses_the_playbook_media_kind_as_both_id_and_schema() {
         assert_eq!(artifact_kind().id, "text.playbook");
         assert_eq!(artifact_kind().schema, PLAYBOOK_DOCUMENT_SCHEMA);
     }
 
     #[test]
-    fn block_fields_roundtrip() {
+    async fn block_fields_roundtrip() {
         let json = r#"{
             "id":"b1",
             "label":"Panel Count",
@@ -438,7 +438,7 @@ mod tests {
     }
 
     //#region 🌉️ContentBridgeLaws
-    fn sample_steps() -> Vec<PlaybookStep> {
+    async fn sample_steps() -> Vec<PlaybookStep> {
         vec![
             PlaybookStep {
                 id: "intro".into(),
@@ -475,7 +475,7 @@ mod tests {
     /// `condition` trees) round-trips through `flow_content_snapshot_from_steps`/
     /// `steps_from_flow_content` exactly.
     #[test]
-    fn flow_content_round_trips_every_step_field_losslessly() {
+    async fn flow_content_round_trips_every_step_field_losslessly() {
         let steps = sample_steps();
         let content = crate::artifacts::playbook::flow_content_snapshot_from_steps(&steps);
         assert_eq!(content.nodes.len(), steps.len());
@@ -488,7 +488,7 @@ mod tests {
     /// title/description, and `document -> steps` recovers exactly that title/description skeleton
     /// (never `blocks`/`condition`, which prose carries none of — documented lossy by design).
     #[test]
-    fn document_projection_round_trips_titles_and_descriptions_only() {
+    async fn document_projection_round_trips_titles_and_descriptions_only() {
         let steps = sample_steps();
         let content = crate::artifacts::playbook::document_snapshot_from_steps(Some("My Playbook"), &steps);
         let (title, restored) = crate::artifacts::playbook::steps_from_document(&content);

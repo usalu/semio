@@ -74,7 +74,7 @@ pub enum HtmlMutation {
 /// ▶️ Applies `mutation` to `snapshot`: `let d = mutation.diff(&*snapshot); *snapshot =
 /// d.apply(snapshot); d` — the diff is the single semantics source, never a separate imperative
 /// apply path (apply-and-capture is banned).
-pub fn apply_html_mutation(snapshot: &mut HtmlSnapshot, mutation: &HtmlMutation) -> protocol::MutationOutcome<HtmlDiff> {
+pub async fn apply_html_mutation(snapshot: &mut HtmlSnapshot, mutation: &HtmlMutation) -> protocol::MutationOutcome<HtmlDiff> {
     let outcome = Mutation::diff(mutation, snapshot);
     match protocol::MutationDiff::apply(outcome.diff(), snapshot) {
         Ok(next) => {
@@ -90,7 +90,7 @@ pub fn apply_html_mutation(snapshot: &mut HtmlSnapshot, mutation: &HtmlMutation)
 /// 🏷️ Shared diff-construction for `SetAttribute`. Resolves the PRIOR tri-state of `name` on the
 /// element addressed by `path` against `base`, then builds the exact `HtmlAttributesDiff` entry
 /// the transition requires, lowered through `diff_at_path`.
-fn attribute_diff_at_path(base: &HtmlSnapshot, path: &[usize], name: &str, value: Option<Option<String>>) -> HtmlDiff {
+async fn attribute_diff_at_path(base: &HtmlSnapshot, path: &[usize], name: &str, value: Option<Option<String>>) -> HtmlDiff {
     let target = node_at(base, path).ok();
     let existing: Option<&Option<String>> = target.and_then(|n| element_attr(n, name));
     let attrs_diff = match (existing, value) {
@@ -111,7 +111,7 @@ fn attribute_diff_at_path(base: &HtmlSnapshot, path: &[usize], name: &str, value
 /// 🔎 Reads the PRIOR tri-state of attribute `name` on the element addressed by `path` in `base`:
 /// `None` = attribute absent, `Some(None)` = present and valueless, `Some(Some(v))` = present with
 /// value `v`.
-fn prior_attribute(base: &HtmlSnapshot, path: &[usize], name: &str) -> Option<Option<String>> {
+async fn prior_attribute(base: &HtmlSnapshot, path: &[usize], name: &str) -> Option<Option<String>> {
     node_at(base, path).ok().and_then(|n| element_attr(n, name)).cloned()
 }
 //#endregion 🔖️AttributeHelper
@@ -120,7 +120,7 @@ fn prior_attribute(base: &HtmlSnapshot, path: &[usize], name: &str) -> Option<Op
 impl Mutation<HtmlSnapshot> for HtmlMutation {
     type Diff = HtmlDiff;
 
-    fn diff(&self, base: &HtmlSnapshot) -> protocol::MutationOutcome<Self::Diff> {
+    async fn diff(&self, base: &HtmlSnapshot) -> protocol::MutationOutcome<Self::Diff> {
         protocol::MutationOutcome::new(match self {
             HtmlMutation::NoMutation => HtmlDiff::default(),
             HtmlMutation::SetSnapshot { snapshot } => diff_set_snapshot(base, snapshot),
@@ -140,7 +140,7 @@ impl Mutation<HtmlSnapshot> for HtmlMutation {
         })
     }
 
-    fn inverse(&self, base: &HtmlSnapshot) -> Vec<Self> {
+    async fn inverse(&self, base: &HtmlSnapshot) -> Vec<Self> {
         match self {
             HtmlMutation::NoMutation => vec![HtmlMutation::NoMutation],
             HtmlMutation::SetSnapshot { .. } => vec![HtmlMutation::SetSnapshot { snapshot: base.clone() }],
@@ -194,29 +194,29 @@ impl Mutation<HtmlSnapshot> for HtmlMutation {
 /// `DiffCodec`: `#[derive(dsl::DslOps)]` requires `DslField` on every reachable type, which no
 /// data-carrying enum implements) — reuses the diff module's `pub(crate)` grammar primitives.
 /// Grammar: `keyword arg=value ...` (space-separated), one match arm per variant.
-fn enc_node_path(p: &NodePath) -> String {
+async fn enc_node_path(p: &NodePath) -> String {
     format!("[{}]", p.iter().map(|i| i.to_string()).collect::<Vec<_>>().join(","))
 }
-fn dec_node_path(s: &str) -> Result<NodePath, String> {
+async fn dec_node_path(s: &str) -> Result<NodePath, String> {
     split_top_level(strip_brackets(s)?, ',').into_iter().filter(|s| !s.is_empty()).map(|s| s.parse().map_err(|e: std::num::ParseIntError| e.to_string())).collect()
 }
-fn enc_html_snapshot(s: &HtmlSnapshot) -> String {
+async fn enc_html_snapshot(s: &HtmlSnapshot) -> String {
     format!("[{},{},{}]", enc_str(&s.schema), encode_option(&s.doctype, |v| enc_str(v)), enc_html_node(&s.root))
 }
-fn dec_html_snapshot(s: &str) -> Result<HtmlSnapshot, String> {
+async fn dec_html_snapshot(s: &str) -> Result<HtmlSnapshot, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [schema, doctype, root] = parts.as_slice() else { return Err(format!("html snapshot: expected 3 fields, got {}", parts.len())) };
     Ok(HtmlSnapshot { schema: dec_str(schema)?, doctype: decode_option(doctype, dec_str)?, root: dec_html_node(root)? })
 }
 /// 🏳️ Tri-state attribute value: `[0]` = remove, `[1,[0]]` = valueless, `[1,[1,hex]]` = set value.
-fn enc_attr_value_tristate(v: &Option<Option<String>>) -> String {
+async fn enc_attr_value_tristate(v: &Option<Option<String>>) -> String {
     encode_option(v, |inner: &Option<String>| encode_option(inner, |s| enc_str(s)))
 }
-fn dec_attr_value_tristate(s: &str) -> Result<Option<Option<String>>, String> {
+async fn dec_attr_value_tristate(s: &str) -> Result<Option<Option<String>>, String> {
     decode_option(s, |inner| decode_option(inner, dec_str))
 }
 
-fn print_html_mutation(m: &HtmlMutation) -> String {
+async fn print_html_mutation(m: &HtmlMutation) -> String {
     match m {
         HtmlMutation::NoMutation => "no-mutation".to_string(),
         HtmlMutation::SetSnapshot { snapshot } => format!("set-snapshot snapshot={}", enc_html_snapshot(snapshot)),
@@ -230,7 +230,7 @@ fn print_html_mutation(m: &HtmlMutation) -> String {
         HtmlMutation::SetRawText { path, text } => format!("set-raw-text path={} text={}", enc_node_path(path), enc_str(text)),
     }
 }
-fn parse_html_mutation(line: &str) -> Result<HtmlMutation, String> {
+async fn parse_html_mutation(line: &str) -> Result<HtmlMutation, String> {
     if line == "no-mutation" {
         return Ok(HtmlMutation::NoMutation);
     }
@@ -253,20 +253,20 @@ fn parse_html_mutation(line: &str) -> Result<HtmlMutation, String> {
 }
 
 impl OpText for HtmlMutation {
-    fn print_op(&self) -> String {
+    async fn print_op(&self) -> String {
         print_html_mutation(self)
     }
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
+    async fn parse_op(line: &str) -> Result<Self, store::TextError> {
         parse_html_mutation(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
 }
 
 /// ⚡️ Binary = the text bytes verbatim, same simplification as `HtmlDiff`'s hand-rolled codec.
 impl OpBinary for HtmlMutation {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         Ok(self.print_op().into_bytes())
     }
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         let line = std::str::from_utf8(bytes).map_err(|e| protocol::ProtocolError::Malformed { what: "op utf8", offset: 0, detail: e.to_string() })?;
         Self::parse_op(line).map_err(|e| protocol::ProtocolError::Malformed { what: "op text", offset: 0, detail: e.to_string() })
     }
@@ -282,16 +282,16 @@ mod tests {
     use protocol::command::DiffAlgebra;
     use protocol::MutationDiff;
 
-    fn el(name: &str, attrs: Vec<HtmlAttr>, children: Vec<HtmlNode>) -> HtmlNode {
+    async fn el(name: &str, attrs: Vec<HtmlAttr>, children: Vec<HtmlNode>) -> HtmlNode {
         HtmlNode::Element { name: name.into(), attributes: attrs, children }
     }
 
-    fn fixture() -> HtmlSnapshot {
+    async fn fixture() -> HtmlSnapshot {
         <HtmlSnapshot as store::ArtifactDsl>::parse_dsl("<!DOCTYPE html>\n<html><body><p id=\"x\" width=\"5\">hi</p></body></html>\n").unwrap()
     }
 
     #[test]
-    fn insert_then_remove_node_apply_and_inverse() {
+    async fn insert_then_remove_node_apply_and_inverse() {
         let base = fixture();
         let insert = HtmlMutation::InsertNode { parent: vec![0], index: 1, node: el("span", vec![HtmlAttr::new("class", "x")], vec![]) };
         let mut after = base.clone();
@@ -309,7 +309,7 @@ mod tests {
     }
 
     #[test]
-    fn set_attribute_tristate_apply_and_inverse_round_trip() {
+    async fn set_attribute_tristate_apply_and_inverse_round_trip() {
         let base = fixture();
         // Some(Some(v)): modify existing value.
         let m1 = HtmlMutation::SetAttribute { path: vec![0, 0], name: "width".into(), value: Some(Some("99".into())) };
@@ -354,7 +354,7 @@ mod tests {
     }
 
     #[test]
-    fn remove_node_inverse_restores_removed_node() {
+    async fn remove_node_inverse_restores_removed_node() {
         let base = fixture();
         let remove = HtmlMutation::RemoveNode { parent: vec![0], index: 0 };
         let mut after = base.clone();
@@ -370,7 +370,7 @@ mod tests {
     }
 
     #[test]
-    fn set_element_name_apply_and_inverse() {
+    async fn set_element_name_apply_and_inverse() {
         let base = fixture();
         let mutation = HtmlMutation::SetElementName { path: vec![0, 0], name: "div".into() };
         let mut after = base.clone();
@@ -393,7 +393,7 @@ mod tests {
     /// children triple and `added` at the nested triple inside the modified child, while that
     /// modified child's OWN diff (name+attributes+children all `Some`) is the
     /// "modified-in-every-field" collection entry.
-    fn sweep_a() -> HtmlSnapshot {
+    async fn sweep_a() -> HtmlSnapshot {
         HtmlSnapshot {
             schema: STDIO_HTML_DOCUMENT_SCHEMA.into(),
             doctype: Some("DOCTYPE html".into()),
@@ -405,7 +405,7 @@ mod tests {
         }
     }
 
-    fn sweep_b() -> HtmlSnapshot {
+    async fn sweep_b() -> HtmlSnapshot {
         HtmlSnapshot {
             schema: STDIO_HTML_DOCUMENT_SCHEMA.into(),
             doctype: None,
@@ -419,7 +419,7 @@ mod tests {
     //#endregion 🔖️Fixtures
 
     //#region 🔖️MutationDiffLaw
-    fn sample_mutations() -> Vec<HtmlMutation> {
+    async fn sample_mutations() -> Vec<HtmlMutation> {
         vec![
             HtmlMutation::NoMutation,
             HtmlMutation::SetSnapshot { snapshot: sweep_b() },
@@ -435,7 +435,7 @@ mod tests {
     }
 
     #[test]
-    fn mutation_diff_law() {
+    async fn mutation_diff_law() {
         for mutation in sample_mutations() {
             let base = fixture();
             let diff_direct = Mutation::diff(&mutation, &base);
@@ -452,7 +452,7 @@ mod tests {
 
     //#region 🔖️InverseLaw
     #[test]
-    fn inverse_law() {
+    async fn inverse_law() {
         for mutation in sample_mutations() {
             let base = fixture();
 
@@ -473,11 +473,11 @@ mod tests {
     //#endregion 🔖️InverseLaw
 
     //#region 🔖️AbsorbLaw
-    fn two_child_root(a_name: &str, b_name: &str) -> HtmlSnapshot {
+    async fn two_child_root(a_name: &str, b_name: &str) -> HtmlSnapshot {
         HtmlSnapshot { schema: STDIO_HTML_DOCUMENT_SCHEMA.into(), doctype: None, root: el("html", vec![], vec![el(a_name, vec![], vec![]), el(b_name, vec![], vec![])]) }
     }
 
-    fn assert_absorb_matches_sequential(base: &HtmlSnapshot, d1: &HtmlDiff, d2: &HtmlDiff) -> HtmlDiff {
+    async fn assert_absorb_matches_sequential(base: &HtmlSnapshot, d1: &HtmlDiff, d2: &HtmlDiff) -> HtmlDiff {
         let sequential = MutationDiff::apply(d2, &MutationDiff::apply(d1, base).unwrap()).unwrap();
         let mut absorbed = d1.clone();
         MutationDiff::absorb(&mut absorbed, d2.clone());
@@ -485,7 +485,7 @@ mod tests {
         absorbed
     }
 
-    fn root_children_diff(diff: &HtmlDiff) -> &HtmlChildrenDiff {
+    async fn root_children_diff(diff: &HtmlDiff) -> &HtmlChildrenDiff {
         match diff.root.as_ref().expect("root diff present") {
             HtmlNodeDiffT::Element(e) => e.children.as_ref().expect("children diff present"),
             other => panic!("expected element diff, got {other:?}"),
@@ -493,7 +493,7 @@ mod tests {
     }
 
     #[test]
-    fn absorb_law() {
+    async fn absorb_law() {
         {
             let base = two_child_root("a", "b");
             let d1 = Mutation::diff(&HtmlMutation::InsertNode { parent: vec![], index: 2, node: el("f", vec![], vec![]) }, &base);
@@ -574,7 +574,7 @@ mod tests {
 
     //#region 🔖️BetweenRoundtripLaw
     #[test]
-    fn between_roundtrip_law() {
+    async fn between_roundtrip_law() {
         let a = sweep_a();
         let b = sweep_b();
         assert_eq!(MutationDiff::apply(&<HtmlDiff as DiffAlgebra<HtmlSnapshot>>::between(&a, &b), &a).unwrap(), b);
@@ -594,7 +594,7 @@ mod tests {
 
     //#region 🔖️FieldSweep
     #[test]
-    fn field_sweep() {
+    async fn field_sweep() {
         let a = sweep_a();
         let b = sweep_b();
 
@@ -631,7 +631,7 @@ mod tests {
     /// — exercises every variant incl. `InsertNode`'s bare `HtmlNode` payload and `SetAttribute`'s
     /// tri-state value.
     #[test]
-    fn op_text_binary_roundtrip_law() {
+    async fn op_text_binary_roundtrip_law() {
         let base = fixture();
         let mutations = vec![
             HtmlMutation::NoMutation,

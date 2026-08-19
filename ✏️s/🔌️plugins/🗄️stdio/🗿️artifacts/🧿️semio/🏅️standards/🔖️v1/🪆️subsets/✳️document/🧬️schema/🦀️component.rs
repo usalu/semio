@@ -23,19 +23,19 @@ pub struct SemioDocumentArtifact {
 }
 
 impl Default for SemioDocumentArtifact {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self::from_snapshot(SemioDocumentSnapshot::default())
     }
 }
 
 impl SemioDocumentArtifact {
-    pub fn to_snapshot(&self) -> SemioDocumentSnapshot {
+    pub async fn to_snapshot(&self) -> SemioDocumentSnapshot {
         SemioDocumentSnapshot { schema: self.schema.clone(), styles: self.styles.clone(), images: self.images.clone(), blocks: self.blocks.clone() }
     }
-    pub fn from_snapshot(snapshot: SemioDocumentSnapshot) -> Self {
+    pub async fn from_snapshot(snapshot: SemioDocumentSnapshot) -> Self {
         Self { schema: snapshot.schema, styles: snapshot.styles, images: snapshot.images, blocks: snapshot.blocks }
     }
-    pub fn set_snapshot(&mut self, snapshot: SemioDocumentSnapshot) {
+    pub async fn set_snapshot(&mut self, snapshot: SemioDocumentSnapshot) {
         self.schema = snapshot.schema;
         self.styles = snapshot.styles;
         self.images = snapshot.images;
@@ -43,7 +43,7 @@ impl SemioDocumentArtifact {
     }
 }
 
-pub fn semio_document_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
+pub async fn semio_document_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
     schema::ArtifactSchemaDescriptor {
         id: "s.stdio.semio.document",
         artifact: schema::FacetLeaves {
@@ -90,17 +90,17 @@ pub mod derived_construction {
 
     impl SemioDocumentBuilderConstruction {
         /// 🎨️ Fluent: appends a named style.
-        pub fn with_style(mut self, style: DocStyle) -> Self {
+        pub async fn with_style(mut self, style: DocStyle) -> Self {
             self.snapshot.styles.push(style);
             self
         }
         /// 🖼️ Fluent: appends a named image.
-        pub fn with_image(mut self, image: DocImage) -> Self {
+        pub async fn with_image(mut self, image: DocImage) -> Self {
             self.snapshot.images.push(image);
             self
         }
         /// 🧱️ Fluent: appends a top-level block.
-        pub fn with_block(mut self, block: DocBlock) -> Self {
+        pub async fn with_block(mut self, block: DocBlock) -> Self {
             self.snapshot.blocks.push(block);
             self
         }
@@ -110,27 +110,27 @@ pub mod derived_construction {
         type Snapshot = SemioDocumentSnapshot;
         type Mutation = SemioDocumentMutation;
         type Diff = SemioDocumentDiff;
-        fn empty() -> Self {
+        async fn empty() -> Self {
             Self { snapshot: SemioDocumentSnapshot::default() }
         }
-        fn from_snapshot(snapshot: Self::Snapshot) -> Self {
+        async fn from_snapshot(snapshot: Self::Snapshot) -> Self {
             Self { snapshot }
         }
-        fn from_text(text: &str) -> Result<Self, store::TextError> {
+        async fn from_text(text: &str) -> Result<Self, store::TextError> {
             Ok(Self::from_snapshot(<SemioDocumentSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
-        fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
+        async fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
             Ok(Self::from_snapshot(<SemioDocumentSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
         }
-        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
+        async fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let diff = apply_semio_document_mutation(&mut self.snapshot, &mutation);
             (self, diff)
         }
-        fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
+        async fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
             self.snapshot = <SemioDocumentDiff as protocol::MutationDiff<SemioDocumentSnapshot>>::apply(&diff, &self.snapshot)?;
             Ok(self)
         }
-        fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
+        async fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
             Ok(self.snapshot)
         }
     }
@@ -141,7 +141,7 @@ pub mod derived_construction {
         use super::*;
 
         #[test]
-        fn fluent_builder_round_trips_through_text_and_binary() {
+        async fn fluent_builder_round_trips_through_text_and_binary() {
             let built = SemioDocumentBuilderConstruction::empty()
                 .with_style(DocStyle { id: "Normal".into(), name: "Normal".into(), based_on: None })
                 .with_image(DocImage { id: "img1".into(), mime: "image/png".into(), bytes: vec![1, 2, 3] })
@@ -162,7 +162,7 @@ pub mod derived_construction {
         }
 
         #[test]
-        fn mutate_then_absorb_round_trips() {
+        async fn mutate_then_absorb_round_trips() {
             let (builder, diff) = SemioDocumentBuilderConstruction::empty().mutate(SemioDocumentMutation::InsertStyle { style: DocStyle { id: "s".into(), name: "S".into(), based_on: None } });
             let rebuilt = SemioDocumentBuilderConstruction::empty().absorb(diff.diff().clone()).expect("absorb must succeed for a well-formed fixture");
             assert_eq!(builder.build().unwrap(), rebuilt.build().unwrap());
@@ -189,7 +189,7 @@ pub mod derived_analysis {
         type Parts = SemioDocumentParts;
         const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("document") };
 
-        fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
+        async fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
             match source {
                 AnalyzeSource::Binary(bytes) => {
                     let marker = STDIO_SEMIODOCUMENT_DOCUMENT_SCHEMA.as_bytes();
@@ -209,7 +209,7 @@ pub mod derived_analysis {
             }
         }
 
-        fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
+        async fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
             let mut parts = SemioDocumentParts::default();
             let mut diagnostics = Vec::new();
             let mut confidence = IoConfidence::High;
@@ -241,12 +241,12 @@ pub mod derived_analysis {
         use super::*;
         use crate::artifacts::semio::standards::v1::subsets::document::schema::snapshot::{DocBlock, DocStyle};
 
-        fn rich_snapshot() -> SemioDocumentSnapshot {
+        async fn rich_snapshot() -> SemioDocumentSnapshot {
             SemioDocumentSnapshot { schema: STDIO_SEMIODOCUMENT_DOCUMENT_SCHEMA.into(), styles: vec![DocStyle { id: "n".into(), name: "Normal".into(), based_on: None }], images: Vec::new(), blocks: vec![DocBlock::paragraph("hi")] }
         }
 
         #[test]
-        fn sniff_detects_own_binary_and_text_payloads() {
+        async fn sniff_detects_own_binary_and_text_payloads() {
             let snap = rich_snapshot();
             let bytes = store::ArtifactPack::encode_pack(&snap);
             assert_eq!(SemioDocumentAnalyzerAnalysis::sniff(&AnalyzeSource::Binary(&bytes)), IoConfidence::High);
@@ -256,7 +256,7 @@ pub mod derived_analysis {
         }
 
         #[test]
-        fn analyze_decodes_binary_source_into_snapshot() {
+        async fn analyze_decodes_binary_source_into_snapshot() {
             let snap = rich_snapshot();
             let bytes = store::ArtifactPack::encode_pack(&snap);
             let analysis = SemioDocumentAnalyzerAnalysis::analyze(&[AnalyzeSource::Binary(&bytes)]);
@@ -265,7 +265,7 @@ pub mod derived_analysis {
         }
 
         #[test]
-        fn analyze_reports_low_confidence_on_malformed_text() {
+        async fn analyze_reports_low_confidence_on_malformed_text() {
             let analysis = SemioDocumentAnalyzerAnalysis::analyze(&[AnalyzeSource::Text("not valid semio document dsl")]);
             assert_eq!(analysis.confidence, IoConfidence::Low);
             assert!(!analysis.diagnostics.is_empty());

@@ -17,7 +17,7 @@
 //! tests).
 
 //#region 🔖️IoDeclaration
-pub fn io() -> semio_framework_plugin::app::declarations::IoDeclaration {
+pub async fn io() -> semio_framework_plugin::app::declarations::IoDeclaration {
     use crate::artifacts::dag::standards::v1::subsets::any::io::export::serializers::artifacts as export;
     use crate::artifacts::dag::standards::v1::subsets::any::io::import::deserializers::artifacts as import;
     use crate::artifacts::dag::{DagMutation, DagSnapshot, DAG_DIALECT, DAG_DOCUMENT_SCHEMA};
@@ -25,7 +25,7 @@ pub fn io() -> semio_framework_plugin::app::declarations::IoDeclaration {
     use semio_framework_plugin::app::declarations::{IoDeclaration, LanguagePair, NativeCodecs};
     use std::sync::OnceLock;
 
-    fn entries() -> &'static [IoEntry] {
+    async fn entries() -> &'static [IoEntry] {
         static ENTRIES: OnceLock<Vec<IoEntry>> = OnceLock::new();
         ENTRIES
             .get_or_init(|| {

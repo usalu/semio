@@ -19,16 +19,16 @@ pub struct RenameFlexibilityRequirement {
 }
 impl MutationKind<ProgramSnapshot, ProgramMutation> for RenameFlexibilityRequirement {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "rename", entity: "flexibility-requirement", kind: "rename-flexibility-requirement", record: "RenamedFlexibilityRequirement" };
-    fn diff(&self, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
+    async fn diff(&self, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {
+    async fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         format!("Rename flexibility requirement to \"{}\"", self.new_name)
     }
-    fn target(&self) -> Vec<String> {
+    async fn target(&self) -> Vec<String> {
         vec![self.id.0.clone()]
     }
 }

@@ -47,14 +47,14 @@ pub struct ObjArtifact {
 
 //#region 🔖️Conversions
 impl Default for ObjArtifact {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self::from_snapshot(ObjSnapshot::default())
     }
 }
 
 impl ObjArtifact {
     /// 📸️ Persisted subset.
-    pub fn to_snapshot(&self) -> ObjSnapshot {
+    pub async fn to_snapshot(&self) -> ObjSnapshot {
         ObjSnapshot {
             schema: self.schema.clone(),
             vertices: self.vertices.clone(),
@@ -71,7 +71,7 @@ impl ObjArtifact {
     }
 
     /// 🧬️ Builds a full artifact from a snapshot.
-    pub fn from_snapshot(snapshot: ObjSnapshot) -> Self {
+    pub async fn from_snapshot(snapshot: ObjSnapshot) -> Self {
         Self {
             schema: snapshot.schema,
             vertices: snapshot.vertices,
@@ -88,7 +88,7 @@ impl ObjArtifact {
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
-    pub fn set_snapshot(&mut self, snapshot: ObjSnapshot) {
+    pub async fn set_snapshot(&mut self, snapshot: ObjSnapshot) {
         self.schema = snapshot.schema;
         self.vertices = snapshot.vertices;
         self.texcoords = snapshot.texcoords;
@@ -106,7 +106,7 @@ impl ObjArtifact {
 
 //#region 🔖️Descriptor
 /// 🧬️ Descriptor for `s.stdio.obj`.
-pub fn obj_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
+pub async fn obj_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
     schema::ArtifactSchemaDescriptor {
         id: "s.stdio.obj",
         artifact: schema::FacetLeaves {
@@ -157,27 +157,27 @@ pub mod derived_construction {
         type Snapshot = ObjSnapshot;
         type Mutation = ObjMutation;
         type Diff = ObjDiff;
-        fn empty() -> Self {
+        async fn empty() -> Self {
             Self { snapshot: ObjSnapshot::default(), diagnostics: Vec::new() }
         }
-        fn from_snapshot(snapshot: Self::Snapshot) -> Self {
+        async fn from_snapshot(snapshot: Self::Snapshot) -> Self {
             Self { snapshot, diagnostics: Vec::new() }
         }
-        fn from_text(text: &str) -> Result<Self, store::TextError> {
+        async fn from_text(text: &str) -> Result<Self, store::TextError> {
             Ok(Self::from_snapshot(<ObjSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
-        fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
+        async fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
             Ok(Self::from_snapshot(<ObjSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
         }
-        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
+        async fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let diff = crate::artifacts::obj::schema::mutations::apply_obj_mutation(&mut self.snapshot, &mutation);
             (self, diff)
         }
-        fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
+        async fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
             self.snapshot = <ObjDiff as protocol::MutationDiff<ObjSnapshot>>::apply(&diff, &self.snapshot)?;
             Ok(self)
         }
-        fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
+        async fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
             if self.diagnostics.is_empty() {
                 Ok(self.snapshot)
             } else {
@@ -207,7 +207,7 @@ pub mod derived_analysis {
     /// 🔍 OBJ has no magic byte signature (it's plain text) — sniff by scanning the first
     /// ~200 non-blank lines for real Wavefront keyword shapes (`v `/`f ` are the strong
     /// signal; `vt`/`vn`/`o`/`g`/`usemtl`/`s`/`mtllib` are weaker corroborating signals).
-    fn looks_like_obj(text: &str) -> IoConfidence {
+    async fn looks_like_obj(text: &str) -> IoConfidence {
         let mut vertex_lines = 0u32;
         let mut face_lines = 0u32;
         let mut other_tokens = 0u32;
@@ -241,7 +241,7 @@ pub mod derived_analysis {
         type Parts = ObjParts;
         const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.obj", standard: StandardId("3.0"), subset: SubsetId("*") };
 
-        fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
+        async fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
             match source {
                 AnalyzeSource::Text(text) => {
                     let body = match store::semio_format::split_text_preamble(text) {
@@ -263,7 +263,7 @@ pub mod derived_analysis {
             }
         }
 
-        fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
+        async fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
             let mut parts = ObjParts::default();
             let mut diagnostics = Vec::new();
             let mut confidence = IoConfidence::High;
@@ -296,13 +296,13 @@ pub mod derived_analysis {
         use super::*;
 
         #[test]
-        fn sniff_real_obj_text_is_high() {
+        async fn sniff_real_obj_text_is_high() {
             let text = "v 0 0 0\nv 1 0 0\nv 0 1 0\nf 1 2 3\n";
             assert_eq!(ObjAnalyzerAnalysis::sniff(&AnalyzeSource::Text(text)), IoConfidence::High);
         }
 
         #[test]
-        fn sniff_unrelated_text_is_low() {
+        async fn sniff_unrelated_text_is_low() {
             let text = "{\"not\": \"an obj file at all\"}";
             assert_eq!(ObjAnalyzerAnalysis::sniff(&AnalyzeSource::Text(text)), IoConfidence::Low);
         }
@@ -329,7 +329,7 @@ semio_framework_plugin::derive_artifact_facets!(
 /// 🌱 Empty persisted snapshot. Dissolved out of `⚙️engine`
 /// (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES) — reached as
 /// `crate::artifacts::obj::engine::empty_obj_snapshot` through the `engine` barrel shim.
-pub fn empty_obj_snapshot() -> ObjSnapshot {
+pub async fn empty_obj_snapshot() -> ObjSnapshot {
     ObjSnapshot::default()
 }
 
@@ -358,7 +358,7 @@ weird_directive foo bar\n";
 /// `print_dsl(demo_obj_snapshot())` is genuinely stable, matching `🗣️example.dsl.semio`'s own
 /// `fixture_honesty_law` requirement exactly. Same pattern `stdio.txt`'s own
 /// `demo_txt_snapshot()`/`stdio.csv`'s own `demo_csv_snapshot()` establish.
-pub fn demo_obj_snapshot() -> ObjSnapshot {
+pub async fn demo_obj_snapshot() -> ObjSnapshot {
     let gen1 = crate::artifacts::obj::engine::decode_obj(DEMO_OBJ_TEXT).unwrap_or_else(|_| empty_obj_snapshot());
     let gen2_text = crate::artifacts::obj::engine::encode_obj(&gen1);
     crate::artifacts::obj::engine::decode_obj(&gen2_text).unwrap_or(gen1)
@@ -380,10 +380,10 @@ pub fn demo_obj_snapshot() -> ObjSnapshot {
 /// `.setup(crate::artifacts::obj::engine::register_schema_specs)`, reached through the `engine`
 /// barrel shim.
 #[cfg(not(target_arch = "wasm32"))]
-pub fn register_schema_specs() {
+pub async fn register_schema_specs() {
     dsl::registry::register_schema_spec("stdio.obj", ObjSnapshot::__dsl_spec);
 }
 
 #[cfg(target_arch = "wasm32")]
-pub fn register_schema_specs() {}
+pub async fn register_schema_specs() {}
 //#endregion 🔖️RegisterSchemaSpecs

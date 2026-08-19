@@ -13,7 +13,7 @@ use protocol::MutationDiff;
 
 //#region 🔖️Apply
 impl En1991Diff {
-    pub fn apply_to_artifact(&self, artifact: &En1991Artifact) -> protocol::MutationApplyResult<En1991Artifact> {
+    pub async fn apply_to_artifact(&self, artifact: &En1991Artifact) -> protocol::MutationApplyResult<En1991Artifact> {
         Ok({
             if let Some(replacement) = &self.artifact {
                 return Ok((**replacement).clone());
@@ -124,7 +124,7 @@ impl En1991Diff {
 }
 
 impl MutationDiff<En1991Snapshot> for En1991Diff {
-    fn apply(&self, snapshot: &En1991Snapshot) -> protocol::MutationApplyResult<En1991Snapshot> {
+    async fn apply(&self, snapshot: &En1991Snapshot) -> protocol::MutationApplyResult<En1991Snapshot> {
         Ok({
             if let Some(replacement) = &self.artifact {
                 return Ok(replacement.to_snapshot());
@@ -229,7 +229,7 @@ impl MutationDiff<En1991Snapshot> for En1991Diff {
             next
         })
     }
-    fn absorb(&mut self, other: Self) {
+    async fn absorb(&mut self, other: Self) {
         if other.artifact.is_some() {
             *self = other;
             return;
@@ -279,7 +279,7 @@ impl MutationDiff<En1991Snapshot> for En1991Diff {
 //#endregion 🔖️Apply
 
 //#region 🔖️Helpers
-pub fn diff_set_snapshot(snapshot: &En1991Snapshot) -> En1991Diff {
+pub async fn diff_set_snapshot(snapshot: &En1991Snapshot) -> En1991Diff {
     En1991Diff { artifact: Some(Box::new(En1991Artifact::from_snapshot(snapshot.clone()))), ..Default::default() }
 }
 //#endregion 🔖️Helpers

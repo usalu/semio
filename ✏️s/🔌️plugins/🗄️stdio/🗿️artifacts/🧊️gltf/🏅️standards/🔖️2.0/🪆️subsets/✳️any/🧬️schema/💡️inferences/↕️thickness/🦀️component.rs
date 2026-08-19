@@ -24,7 +24,7 @@ pub struct GltfThicknessIndicators {
 
 pub struct GltfThicknessInference;
 
-pub(crate) fn samples(context: &GltfGeometryContext<'_>) -> Vec<f64> {
+pub(crate) async fn samples(context: &GltfGeometryContext<'_>) -> Vec<f64> {
     if context.topology.watertight && context.topology.manifold {
         thickness_samples(&context.points, &context.faces, context.policy.sampling_budget as usize, context.policy.absolute_length_tolerance)
     } else {
@@ -32,14 +32,14 @@ pub(crate) fn samples(context: &GltfGeometryContext<'_>) -> Vec<f64> {
     }
 }
 
-pub(crate) fn distribution(context: &GltfGeometryContext<'_>) -> GltfStatistics {
+pub(crate) async fn distribution(context: &GltfGeometryContext<'_>) -> GltfStatistics {
     statistics(&samples(context), &context.policy.histogram_edges)
 }
 
 impl GltfInferenceStage<GltfGeometryContext<'_>> for GltfThicknessInference {
     type Output = GltfThicknessIndicators;
 
-    fn infer(context: &GltfGeometryContext<'_>) -> Self::Output {
+    async fn infer(context: &GltfGeometryContext<'_>) -> Self::Output {
         Self::Output {
             mean_thickness: mean_thickness::infer(context),
             minimum_thickness: minimum_thickness::infer(context),
@@ -48,7 +48,7 @@ impl GltfInferenceStage<GltfGeometryContext<'_>> for GltfThicknessInference {
         }
     }
 
-    fn unavailable(diagnostic_ids: &[String]) -> Self::Output {
+    async fn unavailable(diagnostic_ids: &[String]) -> Self::Output {
         Self::Output {
             mean_thickness: mean_thickness::unavailable_measure(diagnostic_ids),
             minimum_thickness: minimum_thickness::unavailable_measure(diagnostic_ids),

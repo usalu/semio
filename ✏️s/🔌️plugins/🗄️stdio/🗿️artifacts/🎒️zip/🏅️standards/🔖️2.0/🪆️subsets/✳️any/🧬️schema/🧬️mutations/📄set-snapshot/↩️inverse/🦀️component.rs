@@ -3,6 +3,6 @@ use crate::artifacts::zip::ZipSnapshot;
 use protocol::Mutation;
 
 /// ↩️ Inverse of set-snapshot.
-pub fn inverse(base: &ZipSnapshot, mutation: &ZipMutation) -> Vec<ZipMutation> {
+pub async fn inverse(base: &ZipSnapshot, mutation: &ZipMutation) -> Vec<ZipMutation> {
     <ZipMutation as Mutation<ZipSnapshot>>::inverse(mutation, base)
 }

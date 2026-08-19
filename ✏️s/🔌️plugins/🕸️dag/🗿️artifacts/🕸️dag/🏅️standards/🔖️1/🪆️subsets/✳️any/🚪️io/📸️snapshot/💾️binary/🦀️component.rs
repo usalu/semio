@@ -16,32 +16,32 @@ pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️comp
 
 
 /// 📦️ Encodes a `DagSnapshot` to its binary pack form.
-pub fn encode(document: &DagSnapshot) -> Vec<u8> {
+pub async fn encode(document: &DagSnapshot) -> Vec<u8> {
     store::ArtifactPack::encode_pack(document)
 }
 
 /// 📖️ Decodes a `DagSnapshot` from its binary pack form.
-pub fn decode(bytes: &[u8]) -> Result<DagSnapshot, PackError> {
+pub async fn decode(bytes: &[u8]) -> Result<DagSnapshot, PackError> {
     <DagSnapshot as store::ArtifactPack>::decode_pack(bytes)
 }
 
 //#region 🔖️BinaryPrimitives
-fn write_bytes_lp(out: &mut Vec<u8>, bytes: &[u8]) {
+async fn write_bytes_lp(out: &mut Vec<u8>, bytes: &[u8]) {
     store::pack_rt::write_varint_u64(out, bytes.len() as u64);
     out.extend_from_slice(bytes);
 }
-fn read_bytes_lp(reader: &mut store::ByteReader<'_>) -> Result<Vec<u8>, String> {
+async fn read_bytes_lp(reader: &mut store::ByteReader<'_>) -> Result<Vec<u8>, String> {
     let len = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
     Ok(reader.read_bytes(len).map_err(|e| e.to_string())?.to_vec())
 }
-pub(crate) fn write_str_lp(out: &mut Vec<u8>, s: &str) {
+pub(crate) async fn write_str_lp(out: &mut Vec<u8>, s: &str) {
     write_bytes_lp(out, s.as_bytes());
 }
-pub(crate) fn read_str_lp(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
+pub(crate) async fn read_str_lp(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
     String::from_utf8(read_bytes_lp(reader)?).map_err(|e| e.to_string())
 }
 
-fn encode_dag_snapshot_binary(s: &DagSnapshot) -> Vec<u8> {
+async fn encode_dag_snapshot_binary(s: &DagSnapshot) -> Vec<u8> {
     const PACK_BINARY_FORMAT: u8 = 1;
     let scene = crate::artifacts::dag::dag_working_scene(s);
     let mut out = Vec::new();
@@ -51,7 +51,7 @@ fn encode_dag_snapshot_binary(s: &DagSnapshot) -> Vec<u8> {
     write_str_lp(&mut out, &serde_json::to_string(&scene.edges).unwrap_or_default());
     out
 }
-fn decode_dag_snapshot_binary(bytes: &[u8]) -> Result<DagSnapshot, String> {
+async fn decode_dag_snapshot_binary(bytes: &[u8]) -> Result<DagSnapshot, String> {
     const PACK_BINARY_FORMAT: u8 = 1;
     let mut reader = store::ByteReader::new(bytes);
     let format = reader.read_u8().map_err(|e| e.to_string())?;
@@ -68,13 +68,13 @@ fn decode_dag_snapshot_binary(bytes: &[u8]) -> Result<DagSnapshot, String> {
 
 //#region 🔖️HandcraftedArtifactPack
 impl store::ArtifactPack for DagSnapshot {
-    fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
+    async fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
         let raw = encode_dag_snapshot_binary(self);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &raw))
     }
-    fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
+    async fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
         if envelope.envelope_id() != <Self as store::ArtifactDsl>::envelope_id() {
             return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.envelope_id())));
@@ -94,7 +94,7 @@ mod tests {
     use crate::artifacts::dag::dsl;
 
     #[test]
-    fn pack_round_trips_and_agrees_with_dsl() {
+    async fn pack_round_trips_and_agrees_with_dsl() {
         let document = dsl::parse_dsl(dsl::DAG_EXAMPLE_TEXT).expect("parse default fixture");
         store::os_store::test_support::assert_dsl_pack_equivalence(&document);
         let bytes = encode(&document);
@@ -107,7 +107,7 @@ mod tests {
     /// existing dsl/pack round-trip law (same pattern as `mathematical`'s own
     /// `command_envelope_round_trip_holds_for_an_applied_operation`).
     #[test]
-    fn command_envelope_round_trip_holds_for_an_applied_operation() {
+    async fn command_envelope_round_trip_holds_for_an_applied_operation() {
         use crate::artifacts::dag::op::DagMutation;
         use crate::artifacts::dag::DAG_DOCUMENT_SCHEMA;
         use protocol::{ArtifactId, Edit, SchemaId};
@@ -129,7 +129,7 @@ mod semio_protocol_conformance {
     use super::*;
 
     #[test]
-    fn component_protocol_semio_is_protocol_dialect() {
+    async fn component_protocol_semio_is_protocol_dialect() {
         let g = ::dsl::parse_grammar(COMPONENT_PROTOCOL_SEMIO).expect("parse protocol.semio");
         assert_eq!(g.dialect, ::dsl::SemioDialect::Protocol);
         assert!(!COMPONENT_PROTOCOL_SEMIO.is_empty());
@@ -137,7 +137,7 @@ mod semio_protocol_conformance {
     }
 
     #[test]
-    fn verify_protocol_bytes_against_encoded_pack() {
+    async fn verify_protocol_bytes_against_encoded_pack() {
         let document = crate::artifacts::dag::dsl::parse_dsl(crate::artifacts::dag::dsl::DAG_EXAMPLE_TEXT)
             .expect("parse fixture");
         let bytes = encode(&document);

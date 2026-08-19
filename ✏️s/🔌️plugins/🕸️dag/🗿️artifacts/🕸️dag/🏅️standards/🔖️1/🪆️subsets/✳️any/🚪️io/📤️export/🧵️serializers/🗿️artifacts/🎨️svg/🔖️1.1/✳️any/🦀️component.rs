@@ -12,7 +12,7 @@ use semio_s_plugin_stdio::artifacts::svg::SvgSnapshot;
 
 pub const SVG_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.svg", standard: StandardId("1.1"), subset: SubsetId::ANY };
 
-pub fn serialize(from: &DagSnapshot) -> Result<SvgSnapshot, store::PackError> {
+pub async fn serialize(from: &DagSnapshot) -> Result<SvgSnapshot, store::PackError> {
     let value = serde_json::to_value(from).map_err(|e| store::PackError::Schema(e.to_string()))?;
     serde_json::from_value(value).map_err(|e| store::PackError::Schema(e.to_string()))
 }
@@ -22,7 +22,7 @@ pub struct DagIntoSvg;
 impl Serializer<DagSnapshot> for DagIntoSvg {
     const INTO: Dialect = SVG_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Lossy;
-    fn serialize(from: &DagSnapshot) -> IoResult<IoPayload> {
+    async fn serialize(from: &DagSnapshot) -> IoResult<IoPayload> {
         let svg = serialize(from).map_err(|error| IoError { message: format!("DagIntoSvg: {error}"), diagnostics: Vec::new() })?;
         Ok(IoOutcome::clean(IoPayload::Binary(<SvgSnapshot as store::ArtifactPack>::encode_pack(&svg))))
     }

@@ -20,7 +20,7 @@ use protocol::MutationDiff;
 //#region 🔖️Apply
 impl Process3dDiff {
     /// 🧬️ Applies every sparse entry (all state classes) onto a full artifact.
-    pub fn apply_to_artifact(&self, artifact: &Process3dArtifact) -> protocol::MutationApplyResult<Process3dArtifact> {
+    pub async fn apply_to_artifact(&self, artifact: &Process3dArtifact) -> protocol::MutationApplyResult<Process3dArtifact> {
         Ok({
             if let Some(replacement) = &self.artifact {
                 return Ok((**replacement).clone());
@@ -86,7 +86,7 @@ impl Process3dDiff {
 }
 
 impl MutationDiff<Process3dSnapshot> for Process3dDiff {
-    fn apply(&self, snapshot: &Process3dSnapshot) -> protocol::MutationApplyResult<Process3dSnapshot> {
+    async fn apply(&self, snapshot: &Process3dSnapshot) -> protocol::MutationApplyResult<Process3dSnapshot> {
         Ok({
             if let Some(replacement) = &self.artifact {
                 return Ok(replacement.to_snapshot());
@@ -119,7 +119,7 @@ impl MutationDiff<Process3dSnapshot> for Process3dDiff {
             next
         })
     }
-    fn absorb(&mut self, other: Self) {
+    async fn absorb(&mut self, other: Self) {
         if other.artifact.is_some() {
             *self = other;
             return;
@@ -165,7 +165,7 @@ impl MutationDiff<Process3dSnapshot> for Process3dDiff {
 
 //#region 🔖️Helpers
 /// 📸️ Whole-snapshot replacement diff.
-pub fn diff_set_snapshot(snapshot: &Process3dSnapshot) -> Process3dDiff {
+pub async fn diff_set_snapshot(snapshot: &Process3dSnapshot) -> Process3dDiff {
     Process3dDiff {
         artifact: Some(Box::new(Process3dArtifact::from_snapshot(snapshot.clone()))),
         ..Default::default()
@@ -179,7 +179,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn a_whole_artifact_diff_wins_over_every_field_diff() {
+    async fn a_whole_artifact_diff_wins_over_every_field_diff() {
         let base = crate::artifacts::process3d::empty_process3d_snapshot();
         let replacement = Process3dSnapshot { stock_label: "Beam".into(), ..crate::artifacts::process3d::empty_process3d_snapshot() };
         let mut diff = Process3dDiff {
@@ -191,7 +191,7 @@ mod tests {
     }
 
     #[test]
-    fn stock_solid_handle_swap_applies() {
+    async fn stock_solid_handle_swap_applies() {
         let base = crate::artifacts::process3d::empty_process3d_snapshot();
         let new_content = crate::artifacts::process3d::brep_snapshot_for_working_solid(&crate::artifacts::process3d::WorkingSolid::Sphere { radius: 0.5 });
         let new_handle = crate::artifacts::process3d::brep_child_handle("stock", &new_content);

@@ -34,7 +34,7 @@ pub enum BooleanOp {
 /// 🔀 Combines solids `a` and `b` under `op`, preferring AABB fast paths then classified triangle-soup stitch.
 /// `rec` accumulates the whole operation's [`crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::history::OpDelta`] — every helper below
 /// threads it through instead of building its own and discarding it at a private function boundary.
-pub fn boolean_solid(body: &mut Body, a: SolidId, b: SolidId, op: BooleanOp, tol: f64, rec: &mut OpRecorder) -> Result<SolidId, KernelError> {
+pub async fn boolean_solid(body: &mut Body, a: SolidId, b: SolidId, op: BooleanOp, tol: f64, rec: &mut OpRecorder) -> Result<SolidId, KernelError> {
     require_tol(tol)?;
     require_solid(body, a)?;
     require_solid(body, b)?;
@@ -53,7 +53,7 @@ pub fn boolean_solid(body: &mut Body, a: SolidId, b: SolidId, op: BooleanOp, tol
 }
 
 /// 🔀 Successively cuts `tools` from `target` (folded [`BooleanOp::Cut`]).
-pub fn compound_cut(body: &mut Body, target: SolidId, tools: &[SolidId], tol: f64, rec: &mut OpRecorder) -> Result<SolidId, KernelError> {
+pub async fn compound_cut(body: &mut Body, target: SolidId, tools: &[SolidId], tol: f64, rec: &mut OpRecorder) -> Result<SolidId, KernelError> {
     require_tol(tol)?;
     require_solid(body, target)?;
     if tools.is_empty() {
@@ -69,7 +69,7 @@ pub fn compound_cut(body: &mut Body, target: SolidId, tools: &[SolidId], tol: f6
 /// 🔀 Planar section of `solid` by the plane `(origin, normal)`.
 ///
 /// Collects in-plane vertices and edge/plane hits, then builds one planar face from those points.
-pub fn section_solid_by_plane(body: &mut Body, solid: SolidId, origin: Pnt3, normal: Vec3, tol: f64, rec: &mut OpRecorder) -> Result<Vec<FaceId>, KernelError> {
+pub async fn section_solid_by_plane(body: &mut Body, solid: SolidId, origin: Pnt3, normal: Vec3, tol: f64, rec: &mut OpRecorder) -> Result<Vec<FaceId>, KernelError> {
     require_tol(tol)?;
     require_solid(body, solid)?;
     let n = plane_normal(normal)?;
@@ -116,7 +116,7 @@ pub fn section_solid_by_plane(body: &mut Body, solid: SolidId, origin: Pnt3, nor
 }
 
 /// 🔀 Splits `solid` by the plane `(origin, normal)` into two solids (classified triangle soups; hull fallback).
-pub fn split_solid_by_plane(body: &mut Body, solid: SolidId, origin: Pnt3, normal: Vec3, tol: f64, rec: &mut OpRecorder) -> Result<(SolidId, SolidId), KernelError> {
+pub async fn split_solid_by_plane(body: &mut Body, solid: SolidId, origin: Pnt3, normal: Vec3, tol: f64, rec: &mut OpRecorder) -> Result<(SolidId, SolidId), KernelError> {
     require_tol(tol)?;
     require_solid(body, solid)?;
     let n = plane_normal(normal)?;
@@ -184,7 +184,7 @@ pub fn split_solid_by_plane(body: &mut Body, solid: SolidId, origin: Pnt3, norma
 
 // #region 🔖️AabbFastPath
 
-fn aabb_fast_path(body: &mut Body, a: SolidId, b: SolidId, bb_a: &AxisAlignedBox, bb_b: &AxisAlignedBox, op: BooleanOp, tol: f64, rec: &mut OpRecorder) -> Result<Option<SolidId>, KernelError> {
+async fn aabb_fast_path(body: &mut Body, a: SolidId, b: SolidId, bb_a: &AxisAlignedBox, bb_b: &AxisAlignedBox, op: BooleanOp, tol: f64, rec: &mut OpRecorder) -> Result<Option<SolidId>, KernelError> {
     let gap = aabb_gap(bb_a, bb_b);
     match op {
         BooleanOp::Intersect => {
@@ -227,7 +227,7 @@ fn aabb_fast_path(body: &mut Body, a: SolidId, b: SolidId, bb_a: &AxisAlignedBox
     }
 }
 
-fn is_aabb_box_solid(body: &Body, solid: SolidId, bb: &AxisAlignedBox) -> Result<bool, KernelError> {
+async fn is_aabb_box_solid(body: &Body, solid: SolidId, bb: &AxisAlignedBox) -> Result<bool, KernelError> {
     let faces = body.solid_faces(solid);
     if faces.len() != 6 {
         return Ok(false);
@@ -244,7 +244,7 @@ fn is_aabb_box_solid(body: &Body, solid: SolidId, bb: &AxisAlignedBox) -> Result
 
 // #region 🔖️MeshFallback
 
-fn mesh_boolean(body: &mut Body, a: SolidId, b: SolidId, op: BooleanOp, tol: f64, rec: &mut OpRecorder) -> Result<SolidId, KernelError> {
+async fn mesh_boolean(body: &mut Body, a: SolidId, b: SolidId, op: BooleanOp, tol: f64, rec: &mut OpRecorder) -> Result<SolidId, KernelError> {
     let deflection = tol.max(1e-3);
     let mesh_a = tessellate_solid(body, a, deflection)?;
     let mesh_b = tessellate_solid(body, b, deflection)?;
@@ -266,7 +266,7 @@ fn mesh_boolean(body: &mut Body, a: SolidId, b: SolidId, op: BooleanOp, tol: f64
     }
 }
 
-fn append_kept_triangles(body: &Body, mesh: &MeshTransfer, other: SolidId, op: BooleanOp, from_a: bool, tol: f64, out_points: &mut Vec<Pnt3>, out_tris: &mut Vec<[Pnt3; 3]>) -> Result<(), KernelError> {
+async fn append_kept_triangles(body: &Body, mesh: &MeshTransfer, other: SolidId, op: BooleanOp, from_a: bool, tol: f64, out_points: &mut Vec<Pnt3>, out_tris: &mut Vec<[Pnt3; 3]>) -> Result<(), KernelError> {
     let npos = mesh.position.len() / 3;
     if mesh.index.len() % 3 != 0 {
         return Err(KernelError::InvalidInput("mesh index length must be a multiple of 3".into()));
@@ -293,7 +293,7 @@ fn append_kept_triangles(body: &Body, mesh: &MeshTransfer, other: SolidId, op: B
     Ok(())
 }
 
-fn keep_triangle(op: BooleanOp, from_a: bool, class: PointClassification) -> bool {
+async fn keep_triangle(op: BooleanOp, from_a: bool, class: PointClassification) -> bool {
     match op {
         BooleanOp::Unite => matches!(class, PointClassification::Outside | PointClassification::OnBoundary),
         BooleanOp::Intersect => matches!(class, PointClassification::Inside | PointClassification::OnBoundary),
@@ -307,7 +307,7 @@ fn keep_triangle(op: BooleanOp, from_a: bool, class: PointClassification) -> boo
     }
 }
 
-fn mesh_position(mesh: &MeshTransfer, i: usize) -> Pnt3 {
+async fn mesh_position(mesh: &MeshTransfer, i: usize) -> Pnt3 {
     let o = i * 3;
     Pnt3::new(mesh.position[o] as f64, mesh.position[o + 1] as f64, mesh.position[o + 2] as f64)
 }
@@ -316,7 +316,7 @@ fn mesh_position(mesh: &MeshTransfer, i: usize) -> Pnt3 {
 
 // #region 🔖️ShellHelpers
 
-fn solid_from_outer_faces(body: &mut Body, outer_faces: Vec<FaceId>, inner_face_sets: Vec<Vec<FaceId>>, rec: &mut OpRecorder) -> Result<SolidId, KernelError> {
+async fn solid_from_outer_faces(body: &mut Body, outer_faces: Vec<FaceId>, inner_face_sets: Vec<Vec<FaceId>>, rec: &mut OpRecorder) -> Result<SolidId, KernelError> {
     if outer_faces.is_empty() {
         return Err(KernelError::InvalidInput("outer shell requires at least one face".into()));
     }
@@ -331,7 +331,7 @@ fn solid_from_outer_faces(body: &mut Body, outer_faces: Vec<FaceId>, inner_face_
     Ok(add_solid(body, outer, inners, rec))
 }
 
-fn clone_solid_shells(body: &mut Body, solid: SolidId, rec: &mut OpRecorder) -> Result<SolidId, KernelError> {
+async fn clone_solid_shells(body: &mut Body, solid: SolidId, rec: &mut OpRecorder) -> Result<SolidId, KernelError> {
     let data = body.solids.get(solid).ok_or_else(|| KernelError::MissingEntity(format!("solid {solid}")))?.clone();
     let outer = outer_faces(body, solid)?;
     let mut inners = Vec::new();
@@ -342,13 +342,13 @@ fn clone_solid_shells(body: &mut Body, solid: SolidId, rec: &mut OpRecorder) -> 
     solid_from_outer_faces(body, outer, inners, rec)
 }
 
-fn outer_faces(body: &Body, solid: SolidId) -> Result<Vec<FaceId>, KernelError> {
+async fn outer_faces(body: &Body, solid: SolidId) -> Result<Vec<FaceId>, KernelError> {
     let data = body.solids.get(solid).ok_or_else(|| KernelError::MissingEntity(format!("solid {solid}")))?;
     let shell = body.shells.get(data.outer).ok_or_else(|| KernelError::MissingEntity(format!("shell {}", data.outer)))?;
     Ok(shell.faces.clone())
 }
 
-fn solid_vertex_positions(body: &Body, solid: SolidId) -> Result<Vec<Pnt3>, KernelError> {
+async fn solid_vertex_positions(body: &Body, solid: SolidId) -> Result<Vec<Pnt3>, KernelError> {
     let mut seen: HashSet<VertexId> = HashSet::new();
     let mut points = Vec::new();
     for face in body.solid_faces(solid) {
@@ -391,27 +391,27 @@ fn solid_vertex_positions(body: &Body, solid: SolidId) -> Result<Vec<Pnt3>, Kern
 
 // #region 🔖️AabbMath
 
-fn aabb_finite(bb: &AxisAlignedBox) -> bool {
+async fn aabb_finite(bb: &AxisAlignedBox) -> bool {
     bb.min.x.is_finite() && bb.min.y.is_finite() && bb.min.z.is_finite() && bb.max.x.is_finite() && bb.max.y.is_finite() && bb.max.z.is_finite()
 }
 
-fn aabb_dims(bb: &AxisAlignedBox) -> (f64, f64, f64) {
+async fn aabb_dims(bb: &AxisAlignedBox) -> (f64, f64, f64) {
     (bb.max.x - bb.min.x, bb.max.y - bb.min.y, bb.max.z - bb.min.z)
 }
 
-fn aabb_volume(bb: &AxisAlignedBox) -> f64 {
+async fn aabb_volume(bb: &AxisAlignedBox) -> f64 {
     let (w, d, h) = aabb_dims(bb);
     w * d * h
 }
 
-fn aabb_gap(a: &AxisAlignedBox, b: &AxisAlignedBox) -> f64 {
+async fn aabb_gap(a: &AxisAlignedBox, b: &AxisAlignedBox) -> f64 {
     let dx = gap_1d(a.min.x, a.max.x, b.min.x, b.max.x);
     let dy = gap_1d(a.min.y, a.max.y, b.min.y, b.max.y);
     let dz = gap_1d(a.min.z, a.max.z, b.min.z, b.max.z);
     (dx * dx + dy * dy + dz * dz).sqrt()
 }
 
-fn gap_1d(a0: f64, a1: f64, b0: f64, b1: f64) -> f64 {
+async fn gap_1d(a0: f64, a1: f64, b0: f64, b1: f64) -> f64 {
     if a1 < b0 {
         b0 - a1
     } else if b1 < a0 {
@@ -421,7 +421,7 @@ fn gap_1d(a0: f64, a1: f64, b0: f64, b1: f64) -> f64 {
     }
 }
 
-fn aabb_intersection(a: &AxisAlignedBox, b: &AxisAlignedBox) -> Option<AxisAlignedBox> {
+async fn aabb_intersection(a: &AxisAlignedBox, b: &AxisAlignedBox) -> Option<AxisAlignedBox> {
     let min = Pnt3::new(a.min.x.max(b.min.x), a.min.y.max(b.min.y), a.min.z.max(b.min.z));
     let max = Pnt3::new(a.max.x.min(b.max.x), a.max.y.min(b.max.y), a.max.z.min(b.max.z));
     if min.x < max.x && min.y < max.y && min.z < max.z {
@@ -431,11 +431,11 @@ fn aabb_intersection(a: &AxisAlignedBox, b: &AxisAlignedBox) -> Option<AxisAlign
     }
 }
 
-fn aabb_union(a: &AxisAlignedBox, b: &AxisAlignedBox) -> AxisAlignedBox {
+async fn aabb_union(a: &AxisAlignedBox, b: &AxisAlignedBox) -> AxisAlignedBox {
     AxisAlignedBox { min: Pnt3::new(a.min.x.min(b.min.x), a.min.y.min(b.min.y), a.min.z.min(b.min.z)), max: Pnt3::new(a.max.x.max(b.max.x), a.max.y.max(b.max.y), a.max.z.max(b.max.z)) }
 }
 
-fn aabb_contains(outer: &AxisAlignedBox, inner: &AxisAlignedBox, tol: f64) -> bool {
+async fn aabb_contains(outer: &AxisAlignedBox, inner: &AxisAlignedBox, tol: f64) -> bool {
     outer.min.x <= inner.min.x + tol && outer.min.y <= inner.min.y + tol && outer.min.z <= inner.min.z + tol && outer.max.x + tol >= inner.max.x && outer.max.y + tol >= inner.max.y && outer.max.z + tol >= inner.max.z
 }
 
@@ -443,7 +443,7 @@ fn aabb_contains(outer: &AxisAlignedBox, inner: &AxisAlignedBox, tol: f64) -> bo
 
 // #region 🔖️Validate
 
-fn require_tol(tol: f64) -> Result<(), KernelError> {
+async fn require_tol(tol: f64) -> Result<(), KernelError> {
     if tol.is_finite() && tol > 0.0 {
         Ok(())
     } else {
@@ -451,7 +451,7 @@ fn require_tol(tol: f64) -> Result<(), KernelError> {
     }
 }
 
-fn require_solid(body: &Body, solid: SolidId) -> Result<(), KernelError> {
+async fn require_solid(body: &Body, solid: SolidId) -> Result<(), KernelError> {
     if body.solids.get(solid).is_some() {
         Ok(())
     } else {
@@ -459,7 +459,7 @@ fn require_solid(body: &Body, solid: SolidId) -> Result<(), KernelError> {
     }
 }
 
-fn plane_normal(normal: Vec3) -> Result<Vec3, KernelError> {
+async fn plane_normal(normal: Vec3) -> Result<Vec3, KernelError> {
     normal.normalized().ok_or_else(|| KernelError::InvalidInput("plane normal must be non-zero".into()))
 }
 
@@ -470,7 +470,7 @@ mod tests {
     use super::*;
     use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::primitives::make_box;
 
-    fn offset_unit_cube(body: &mut Body, offset: Pnt3, rec: &mut OpRecorder) -> SolidId {
+    async fn offset_unit_cube(body: &mut Body, offset: Pnt3, rec: &mut OpRecorder) -> SolidId {
         let corners = [
             offset + Vec3::new(0.0, 0.0, 0.0),
             offset + Vec3::new(1.0, 0.0, 0.0),
@@ -485,7 +485,7 @@ mod tests {
     }
 
     #[test]
-    fn disjoint_unit_boxes_fuse_volume_near_two() {
+    async fn disjoint_unit_boxes_fuse_volume_near_two() {
         let mut body = Body::new();
         let mut rec = OpRecorder::new();
         let a = make_box(&mut body, 1.0, 1.0, 1.0, &mut rec).unwrap();
@@ -496,7 +496,7 @@ mod tests {
     }
 
     #[test]
-    fn overlapping_aabb_intersect_volume_matches_dims() {
+    async fn overlapping_aabb_intersect_volume_matches_dims() {
         let mut body = Body::new();
         let mut rec = OpRecorder::new();
         let a = make_box(&mut body, 1.0, 1.0, 1.0, &mut rec).unwrap();
@@ -508,7 +508,7 @@ mod tests {
     }
 
     #[test]
-    fn boolean_unite_is_deterministic() {
+    async fn boolean_unite_is_deterministic() {
         let mut body = Body::new();
         let mut rec = OpRecorder::new();
         let a = make_box(&mut body, 1.0, 1.0, 1.0, &mut rec).unwrap();
@@ -526,7 +526,7 @@ mod tests {
     }
 
     #[test]
-    fn cut_disjoint_preserves_volume() {
+    async fn cut_disjoint_preserves_volume() {
         let mut body = Body::new();
         let mut rec = OpRecorder::new();
         let a = make_box(&mut body, 1.0, 1.0, 1.0, &mut rec).unwrap();
@@ -538,7 +538,7 @@ mod tests {
     }
 
     #[test]
-    fn adversarial_scale_sweep_determinism() {
+    async fn adversarial_scale_sweep_determinism() {
         let mut body = Body::new();
         let mut rec = OpRecorder::new();
         for scale in [0.1_f64, 1.0, 10.0, 100.0] {
@@ -564,7 +564,7 @@ mod tests {
     }
 
     #[test]
-    fn fuzz_random_aabb_intersect_volume_nonnegative() {
+    async fn fuzz_random_aabb_intersect_volume_nonnegative() {
         let mut body = Body::new();
         let mut rec = OpRecorder::new();
         let mut seed = 1u64;

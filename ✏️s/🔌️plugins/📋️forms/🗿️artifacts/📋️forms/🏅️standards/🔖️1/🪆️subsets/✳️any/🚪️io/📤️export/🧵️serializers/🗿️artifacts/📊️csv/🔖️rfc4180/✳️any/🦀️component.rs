@@ -14,7 +14,7 @@ use semio_s_plugin_stdio::artifacts::csv::{CsvField, CsvRecord, CsvSnapshot, STD
 
 pub const CSV_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.csv", standard: StandardId("rfc4180"), subset: SubsetId::ANY };
 
-fn field(value: String) -> CsvField {
+async fn field(value: String) -> CsvField {
     CsvField { value, quoted: false }
 }
 
@@ -23,7 +23,7 @@ pub struct FormsIntoCsv;
 impl Serializer<FormsSnapshot> for FormsIntoCsv {
     const INTO: Dialect = CSV_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Lossy;
-    fn serialize(from: &FormsSnapshot) -> IoResult<IoPayload> {
+    async fn serialize(from: &FormsSnapshot) -> IoResult<IoPayload> {
         let mut records = vec![CsvRecord { fields: ["id", "stepId", "label", "kind", "required"].into_iter().map(|header| field(header.to_string())).collect() }];
         for step in forms_steps(from) {
             for block in step.blocks {
@@ -50,7 +50,7 @@ mod tests {
     use crate::artifacts::forms::schema::onboarding_example_spec;
 
     #[test]
-    fn export_flattens_one_row_per_question_plus_header() {
+    async fn export_flattens_one_row_per_question_plus_header() {
         let spec = onboarding_example_spec();
         let question_count: usize = forms_steps(&spec).iter().map(|step| step.blocks.len()).sum();
         let IoOutcome { value: IoPayload::Binary(bytes), .. } = FormsIntoCsv::serialize(&spec).expect("serialize") else {

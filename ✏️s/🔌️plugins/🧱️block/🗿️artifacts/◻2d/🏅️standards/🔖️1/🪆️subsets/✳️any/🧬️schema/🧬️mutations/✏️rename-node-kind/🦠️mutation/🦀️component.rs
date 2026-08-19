@@ -14,20 +14,20 @@ pub struct RenameNodeKind {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn rename_node_kind(new_name: String) -> Block2dMutation {
+pub async fn rename_node_kind(new_name: String) -> Block2dMutation {
     Block2dMutation::RenameNodeKind(RenameNodeKind { new_name })
 }
 
 impl protocol::MutationKind<Block2dSnapshot, Block2dMutation> for RenameNodeKind {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "rename", entity: "node-kind", kind: "rename-node-kind", record: "RenamedNodeKind" };
 
-    fn diff(&self, base: &Block2dSnapshot) -> protocol::MutationOutcome<Block2dDiff> {
+    async fn diff(&self, base: &Block2dSnapshot) -> protocol::MutationOutcome<Block2dDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &Block2dSnapshot) -> Vec<Block2dMutation> {
+    async fn inverse(&self, base: &Block2dSnapshot) -> Vec<Block2dMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         format!("Rename node kind to \"{}\"", self.new_name)
     }
 }

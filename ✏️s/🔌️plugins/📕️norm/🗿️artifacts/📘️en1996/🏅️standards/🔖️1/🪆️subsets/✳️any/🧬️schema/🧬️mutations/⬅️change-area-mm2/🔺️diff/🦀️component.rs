@@ -5,7 +5,7 @@ use crate::artifacts::en1996::mutations::change_area_mm2::mutation::ChangeAreaMm
 use crate::artifacts::en1996::En1996Snapshot;
 
 //#region 🔖️Diff
-pub fn diff(payload: &ChangeAreaMm2, base: &En1996Snapshot) -> protocol::MutationOutcome<En1996Diff> {
+pub async fn diff(payload: &ChangeAreaMm2, base: &En1996Snapshot) -> protocol::MutationOutcome<En1996Diff> {
     if !payload.new_area_mm2.is_finite() {
         return protocol::MutationOutcome::fatal("mutation.invariant", "Area mm2 must be a finite number.", Vec::<String>::new());
     }

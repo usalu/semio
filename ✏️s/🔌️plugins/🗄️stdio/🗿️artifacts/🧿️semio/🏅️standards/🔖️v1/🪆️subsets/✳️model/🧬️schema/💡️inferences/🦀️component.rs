@@ -27,7 +27,7 @@ pub struct SemioModelInference {
 }
 
 impl protocol::Inference<SemioModelSnapshot> for SemioModelInference {
-    fn infer(snapshot: &SemioModelSnapshot) -> Self {
+    async fn infer(snapshot: &SemioModelSnapshot) -> Self {
         Self { bounds: compute_semio_model_bounds(snapshot) }
     }
 }
@@ -37,19 +37,19 @@ impl protocol::Inference<SemioModelSnapshot> for SemioModelInference {
 /// tying `Default` to `infer` keeps the law correct even if that default ever stops being
 /// all-empty (the same defensive pattern raster's `RasterInference` documents).
 impl Default for SemioModelInference {
-    fn default() -> Self {
+    async fn default() -> Self {
         <Self as protocol::Inference<SemioModelSnapshot>>::infer(&SemioModelSnapshot::default())
     }
 }
 
 impl protocol::InferenceSpec<SemioModelSnapshot> for SemioModelInference {
-    fn inference_schema_id() -> &'static str {
+    async fn inference_schema_id() -> &'static str {
         "s.stdio.semio.model.inference"
     }
-    fn schema_version() -> u32 {
+    async fn schema_version() -> u32 {
         1
     }
-    fn fields() -> &'static [protocol::InferenceFieldSpec] {
+    async fn fields() -> &'static [protocol::InferenceFieldSpec] {
         &[protocol::InferenceFieldSpec { id: "s.stdio.semio.model.inference.bounds", reads: &["spatial", "elements"] }]
     }
 }
@@ -68,7 +68,7 @@ impl ArtifactInferrer for crate::artifacts::semio::standards::v1::subsets::model
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.stdio.semio.model.inference`'s facet leaves into the OS-wide inference catalog
 /// — call once at plugin init, alongside `semio_model_artifact_schema_descriptor`'s registration.
-pub fn semio_model_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
+pub async fn semio_model_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
     schema::ArtifactInferenceDescriptor {
         id: "s.stdio.semio.model.inference",
         inference: schema::FacetLeaves {
@@ -89,13 +89,13 @@ mod tests {
     use protocol::Inference;
 
     #[test]
-    fn inference_determinism_law() {
+    async fn inference_determinism_law() {
         let snapshot = SemioModelSnapshot::default();
         assert_eq!(SemioModelInference::infer(&snapshot), SemioModelInference::infer(&snapshot));
     }
 
     #[test]
-    fn inference_default_law() {
+    async fn inference_default_law() {
         assert_eq!(SemioModelInference::infer(&SemioModelSnapshot::default()), SemioModelInference::default());
     }
 }

@@ -14,6 +14,6 @@ pub struct SetActiveUtility {
     pub utility_id: String,
 }
 
-pub fn handle(payload: &SetActiveUtility, _doc: &ArtifactView<'_, RemodelSnapshot>, _cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelMutation, RemodelConfigMutation>, Fault> {
+pub async fn handle(payload: &SetActiveUtility, _doc: &ArtifactView<'_, RemodelSnapshot>, _cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelMutation, RemodelConfigMutation>, Fault> {
     Ok(Emit::config(vec![RemodelConfigMutation::SetActiveUtility { utility_id: payload.utility_id.clone() }]))
 }

@@ -16,7 +16,7 @@ pub const HEX_PREVIEW_CAP_BYTES: usize = 4096;
 
 //#region 🔖️Definition
 /// 🧱️ Stitched into the viewer manifest by `crate::viewer::binary::create_binary_viewer`.
-pub fn definition() -> WindowKindDefinition {
+pub async fn definition() -> WindowKindDefinition {
     WindowKindDefinition { label: LocalizedLabel::native("Bytes", "Bytes"), ..TextWindowKit::window_kind() }
 }
 //#endregion 🔖️Definition
@@ -24,7 +24,7 @@ pub fn definition() -> WindowKindDefinition {
 //#region 🔖️Render
 /// 👁️ Pure `BinarySnapshot -> UiNode` read: the first `HEX_PREVIEW_CAP_BYTES` bytes as contiguous
 /// lowercase hex, always `read_only: true`, plus a trailing `#`-prefixed byte-count comment.
-pub fn render(document: &BinarySnapshot) -> UiNode {
+pub async fn render(document: &BinarySnapshot) -> UiNode {
     let total = document.bytes.len();
     let shown = total.min(HEX_PREVIEW_CAP_BYTES);
     let hex: String = document.bytes[..shown].iter().map(|byte| format!("{byte:02x}")).collect();
@@ -39,7 +39,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn definition_declares_a_read_only_text_window() {
+    async fn definition_declares_a_read_only_text_window() {
         let def = definition();
         assert_eq!(def.id, WINDOW_KIND_ID);
         assert_eq!(def.body_key, BODY_KEY);
@@ -47,7 +47,7 @@ mod tests {
     }
 
     #[test]
-    fn render_carries_the_bytes_as_read_only_hex() {
+    async fn render_carries_the_bytes_as_read_only_hex() {
         let document = BinarySnapshot { bytes: vec![0xde, 0xad, 0xbe, 0xef], ..BinarySnapshot::default() };
         let UiNode::ComponentScene(node) = render(&document) else { panic!("expected ComponentScene") };
         let scene = node.text_editor.expect("text_editor scene");

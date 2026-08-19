@@ -15,7 +15,7 @@ pub const CSV_ARTIFACT_SCHEMA_ID: &str = "s.stdio.csv";
 
 //#region 🔖️ArtifactKind
 /// 🗂️ This artifact's `ArtifactKindSpec`.
-pub fn artifact_kind() -> ArtifactKindSpec {
+pub async fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "stdio.csv".into(),
         name: "Csv".into(),
@@ -47,11 +47,11 @@ pub fn artifact_kind() -> ArtifactKindSpec {
 /// `register_schema_specs` needs, per txt's own doc ("unlike json/csv...") — so there is no
 /// uncovered call left behind here.
 /// 🧩️ Binds this executable root to its sole schema-owned definition.
-pub fn assembly(definition: semio_framework_plugin::ArtifactDefinition) -> Result<crate::registry::ArtifactAssembly, semio_framework_plugin::PluginAssemblyError> {
+pub async fn assembly(definition: semio_framework_plugin::ArtifactDefinition) -> Result<crate::registry::ArtifactAssembly, semio_framework_plugin::PluginAssemblyError> {
     crate::registry::runtime_assembly("csv", definition, declaration)
 }
 
-pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
+pub async fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
     let formats = crate::registry::format_descriptors_for("csv")?;
     semio_framework_plugin::ArtifactDeclaration::builder(definition)
         .schema(crate::artifacts::csv::schema::csv_artifact_schema_descriptor())
@@ -67,7 +67,7 @@ pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Re
 /// and leaked to a `&'static` slice since `dsl::passthrough_hooks` isn't `const fn`, mirroring the
 /// `🔋️energy` exemplar's helper of the same shape. Verbatim copy of `standards::v_rfc4180::subsets::
 /// any::engine::register_pilot_languages()`'s five `LanguageSpec`s.
-fn pilot_languages() -> &'static [dsl::LanguageSpec] {
+async fn pilot_languages() -> &'static [dsl::LanguageSpec] {
     static LANGUAGES: std::sync::OnceLock<Vec<dsl::LanguageSpec>> = std::sync::OnceLock::new();
     LANGUAGES
         .get_or_init(|| {
@@ -136,16 +136,16 @@ pub mod io_registry {
 
     static ENTRIES: OnceLock<Vec<&'static ComposerEntry>> = OnceLock::new();
 
-    pub fn entries() -> &'static [&'static ComposerEntry] {
+    pub async fn entries() -> &'static [&'static ComposerEntry] {
         ENTRIES.get_or_init(|| v_rfc4180::entries().iter().collect()).as_slice()
     }
 
-    pub fn compose(target: Dialect, sources: &[ErasedComposeSource]) -> Result<ComposedArtifact, ComposeError> {
+    pub async fn compose(target: Dialect, sources: &[ErasedComposeSource]) -> Result<ComposedArtifact, ComposeError> {
         let entry = entries().iter().find(|e| e.writes == target).ok_or_else(|| ComposeError { message: format!("CsvComposer: no entry writes {:?}", target), diagnostics: Vec::new() })?;
         semio_framework_plugin::resolve_ready((entry.compose)(sources))
     }
 
-    pub fn register() {
+    pub async fn register() {
         let _ = register_composer_entries(v_rfc4180::entries());
     }
 }

@@ -14,20 +14,20 @@ pub struct ChangeManifestId {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn change_manifest_id(new_manifest_id: Option<String>) -> Puzzle2dMutation {
+pub async fn change_manifest_id(new_manifest_id: Option<String>) -> Puzzle2dMutation {
     Puzzle2dMutation::ChangeManifestId(ChangeManifestId { new_manifest_id })
 }
 
 impl protocol::MutationKind<Puzzle2dSnapshot, Puzzle2dMutation> for ChangeManifestId {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "manifest-id", kind: "change-manifest-id", record: "ChangedManifestId" };
 
-    fn diff(&self, base: &Puzzle2dSnapshot) -> protocol::MutationOutcome<Puzzle2dDiff> {
+    async fn diff(&self, base: &Puzzle2dSnapshot) -> protocol::MutationOutcome<Puzzle2dDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &Puzzle2dSnapshot) -> Vec<Puzzle2dMutation> {
+    async fn inverse(&self, base: &Puzzle2dSnapshot) -> Vec<Puzzle2dMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         "Change manifest id".to_string()
     }
 }

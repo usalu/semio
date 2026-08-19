@@ -18,7 +18,7 @@ const PROCEDURAL_3D_PLAY_SURFACE_GENERATE_PREVIEW: &str = "procedural.play.gener
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
-pub fn definition() -> WindowKindDefinition {
+pub async fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
         id: PROCEDURAL_3D_PLAY_WINDOW_GENERATE_PREVIEW.into(),
         label: LocalizedLabel::native("Preview", "Vorschau"),
@@ -37,14 +37,14 @@ pub fn definition() -> WindowKindDefinition {
 }
 
 /// 🎚️ Shares the same show-mode + sun measures as the edit-mode 3D preview window.
-pub fn window_measures(config: &Procedural3dConfig, procedural_action: impl Fn(&str, Option<serde_json::Value>) -> semio_framework_plugin::ActionDescriptor + Copy) -> Vec<WindowMeasure> {
+pub async fn window_measures(config: &Procedural3dConfig, procedural_action: impl Fn(&str, Option<serde_json::Value>) -> semio_framework_plugin::ActionDescriptor + Copy) -> Vec<WindowMeasure> {
     let sun = config.sun();
     vec![show_mode_measure(&config.show_mode, procedural_action), world3d_sun_measures("procedural3d", &sun, procedural_action)]
 }
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(fixture: &FlowFixture, generation: &GenerationPlayState, cfg: &Procedural3dConfig, labels: &Procedural3dLabels, active_utility: &str) -> UiNode {
+pub async fn render(fixture: &FlowFixture, generation: &GenerationPlayState, cfg: &Procedural3dConfig, labels: &Procedural3dLabels, active_utility: &str) -> UiNode {
     let (meshes_json, instances_json) = match selected_generation(generation) {
         Some(_) => {
             let gen_fixture = generation_fixture_for(fixture, generation);
@@ -68,7 +68,7 @@ mod tests {
     use crate::editor::procedural3d::testkit::{app, render as render_body};
 
     #[test]
-    fn generate_preview_hints_without_evaluated_output() {
+    async fn generate_preview_hints_without_evaluated_output() {
         let mut app = app();
         assert!(render_body(&mut app, PROCEDURAL_3D_PLAY_BODY_GENERATE_PREVIEW).contains("evaluate a generation"));
     }

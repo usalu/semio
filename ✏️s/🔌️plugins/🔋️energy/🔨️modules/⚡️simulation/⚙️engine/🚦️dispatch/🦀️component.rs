@@ -50,12 +50,12 @@ pub struct Dispatcher {
 }
 
 impl Dispatcher {
-    pub fn new(scheme: DispatchScheme, equipment: Vec<EquipmentPriority>) -> Self {
+    pub async fn new(scheme: DispatchScheme, equipment: Vec<EquipmentPriority>) -> Self {
         Self { scheme, equipment }
     }
 
     /// 🎛️ Distribute load across equipment per dispatch scheme.
-    pub fn dispatch(&self, request: &DispatchRequest) -> Vec<DispatchResult> {
+    pub async fn dispatch(&self, request: &DispatchRequest) -> Vec<DispatchResult> {
         let mut sorted = self.equipment.clone();
         sorted.sort_by_key(|e| e.priority);
 
@@ -67,7 +67,7 @@ impl Dispatcher {
         }
     }
 
-    fn dispatch_sequential(&self, equipment: &[EquipmentPriority], request: &DispatchRequest) -> Vec<DispatchResult> {
+    async fn dispatch_sequential(&self, equipment: &[EquipmentPriority], request: &DispatchRequest) -> Vec<DispatchResult> {
         let mut remaining = request.total_load_w;
         let mut results = Vec::new();
         for eq in equipment {
@@ -79,7 +79,7 @@ impl Dispatcher {
         results
     }
 
-    fn dispatch_uniform(&self, equipment: &[EquipmentPriority], request: &DispatchRequest) -> Vec<DispatchResult> {
+    async fn dispatch_uniform(&self, equipment: &[EquipmentPriority], request: &DispatchRequest) -> Vec<DispatchResult> {
         let active: Vec<_> = equipment.iter().filter(|e| e.capacity_w > 0.0).collect();
         if active.is_empty() {
             return Vec::new();
@@ -89,7 +89,7 @@ impl Dispatcher {
         active.iter().map(|eq| DispatchResult { equipment_id: eq.equipment_id, load_w: eq.capacity_w * plr, part_load_ratio: plr, runtime_fraction: if plr > 0.01 { 1.0 } else { 0.0 } }).collect()
     }
 
-    fn dispatch_optimal(&self, equipment: &[EquipmentPriority], request: &DispatchRequest) -> Vec<DispatchResult> {
+    async fn dispatch_optimal(&self, equipment: &[EquipmentPriority], request: &DispatchRequest) -> Vec<DispatchResult> {
         self.dispatch_uniform(equipment, request)
     }
 }
@@ -100,7 +100,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn sequential_fills_first_unit() {
+    async fn sequential_fills_first_unit() {
         let d = Dispatcher::new(
             DispatchScheme::Sequential,
             vec![EquipmentPriority { equipment_id: 1, priority: 1, min_runtime_hours: 0.0, capacity_w: 5000.0 }, EquipmentPriority { equipment_id: 2, priority: 2, min_runtime_hours: 0.0, capacity_w: 5000.0 }],
@@ -111,7 +111,7 @@ mod tests {
     }
 
     #[test]
-    fn uniform_splits_proportionally_to_capacity() {
+    async fn uniform_splits_proportionally_to_capacity() {
         let d = Dispatcher::new(
             DispatchScheme::Uniform,
             vec![EquipmentPriority { equipment_id: 1, priority: 1, min_runtime_hours: 0.0, capacity_w: 3000.0 }, EquipmentPriority { equipment_id: 2, priority: 2, min_runtime_hours: 0.0, capacity_w: 1000.0 }],
@@ -125,14 +125,14 @@ mod tests {
     }
 
     #[test]
-    fn uniform_with_no_capacity_returns_empty() {
+    async fn uniform_with_no_capacity_returns_empty() {
         let d = Dispatcher::new(DispatchScheme::Uniform, vec![EquipmentPriority { equipment_id: 1, priority: 1, min_runtime_hours: 0.0, capacity_w: 0.0 }]);
         let results = d.dispatch(&DispatchRequest { total_load_w: 1000.0, available_capacity_w: 1000.0, outdoor_temp_c: 20.0 });
         assert!(results.is_empty());
     }
 
     #[test]
-    fn optimal_delegates_to_uniform() {
+    async fn optimal_delegates_to_uniform() {
         let equip = vec![EquipmentPriority { equipment_id: 1, priority: 1, min_runtime_hours: 0.0, capacity_w: 2000.0 }];
         let request = DispatchRequest { total_load_w: 1000.0, available_capacity_w: 2000.0, outdoor_temp_c: 20.0 };
         let optimal = Dispatcher::new(DispatchScheme::Optimal, equip.clone()).dispatch(&request);
@@ -141,7 +141,7 @@ mod tests {
     }
 
     #[test]
-    fn unhandled_scheme_falls_back_to_sequential() {
+    async fn unhandled_scheme_falls_back_to_sequential() {
         let equip = vec![EquipmentPriority { equipment_id: 1, priority: 1, min_runtime_hours: 0.0, capacity_w: 500.0 }];
         let request = DispatchRequest { total_load_w: 300.0, available_capacity_w: 500.0, outdoor_temp_c: 20.0 };
         let results = Dispatcher::new(DispatchScheme::ThermalStorage, equip).dispatch(&request);

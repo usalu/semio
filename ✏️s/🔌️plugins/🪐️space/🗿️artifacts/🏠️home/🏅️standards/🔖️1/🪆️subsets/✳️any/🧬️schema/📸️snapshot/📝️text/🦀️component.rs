@@ -16,12 +16,12 @@ use crate::artifacts::home::SHomeSnapshot;
 pub const HOME_EXAMPLE_TEXT: &str = include_str!("../../../📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio");
 
 /// 📖️ Parses `.shome` DSL text into an `SHomeSnapshot`.
-pub fn parse_dsl(text: &str) -> Result<SHomeSnapshot, store::TextError> {
+pub async fn parse_dsl(text: &str) -> Result<SHomeSnapshot, store::TextError> {
     <SHomeSnapshot as store::ArtifactDsl>::parse_dsl(text)
 }
 
 /// 🖨️ Prints an `SHomeSnapshot` back to `.shome` DSL text.
-pub fn print_dsl(document: &SHomeSnapshot) -> String {
+pub async fn print_dsl(document: &SHomeSnapshot) -> String {
     store::ArtifactDsl::print_dsl(document)
 }
 
@@ -31,13 +31,13 @@ mod tests {
     use super::*;
 
     #[test]
-    fn home_dsl_round_trips_default_and_populated_documents() {
+    async fn home_dsl_round_trips_default_and_populated_documents() {
         store::os_store::test_support::assert_dsl_round_trip(&SHomeSnapshot { schema: "s.home".into(), catalog_generation: 0 });
         store::os_store::test_support::assert_dsl_round_trip(&SHomeSnapshot { schema: "s.home".into(), catalog_generation: 42 });
     }
 
     #[test]
-    fn home_dsl_round_trips_bundled_default_example() {
+    async fn home_dsl_round_trips_bundled_default_example() {
         let document = parse_dsl(HOME_EXAMPLE_TEXT).expect("parse default example");
         store::os_store::test_support::assert_dsl_round_trip(&document);
     }

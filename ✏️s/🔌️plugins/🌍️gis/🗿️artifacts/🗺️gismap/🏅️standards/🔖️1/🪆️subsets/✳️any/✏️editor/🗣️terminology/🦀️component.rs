@@ -41,13 +41,13 @@ semio_framework_plugin::app_labels! {
 }
 
 /// 🗣️ Resolves the active label set from `cfg.locale`; falls back to native English.
-pub fn gis2d_labels(cfg: &Gis2dConfig) -> &'static Gis2dPlayLabels {
+pub async fn gis2d_labels(cfg: &Gis2dConfig) -> &'static Gis2dPlayLabels {
     semio_framework_plugin::resolve_labels_for_locale::<Gis2dPlayLabels>(&cfg.locale)
 }
 
 /// 🗣️ Resolves a standard map layer's display label from its stable id; unknown ids fall back to the
 /// catalog's native English text.
-pub fn gis2d_layer_label(layer_id: &str, labels: &Gis2dPlayLabels) -> &'static str {
+pub async fn gis2d_layer_label(layer_id: &str, labels: &Gis2dPlayLabels) -> &'static str {
     match layer_id {
         "raster" => labels.layer_raster.as_str(),
         "water" => labels.layer_water.as_str(),
@@ -72,13 +72,13 @@ mod tests {
     use super::*;
 
     #[test]
-    fn labels_resolve_native_english_and_german_from_the_config_locale() {
+    async fn labels_resolve_native_english_and_german_from_the_config_locale() {
         assert_eq!(gis2d_labels(&Gis2dConfig::default()).map_view.as_str(), "Map View");
         assert_eq!(gis2d_labels(&Gis2dConfig { locale: "de-DE".into(), ..Gis2dConfig::default() }).map_view.as_str(), "Kartenansicht");
     }
 
     #[test]
-    fn every_declared_layer_id_resolves_to_a_non_empty_label() {
+    async fn every_declared_layer_id_resolves_to_a_non_empty_label() {
         let labels = gis2d_labels(&Gis2dConfig::default());
         for (id, _, _) in crate::editor::gis2d::GIS_MAP_LAYER_IDS {
             assert!(!gis2d_layer_label(id, labels).is_empty(), "layer {id} has no label");

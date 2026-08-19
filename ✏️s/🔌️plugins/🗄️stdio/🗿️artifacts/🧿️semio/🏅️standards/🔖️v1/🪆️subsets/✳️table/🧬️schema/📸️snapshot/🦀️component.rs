@@ -87,7 +87,7 @@ pub struct SemioTableSnapshot {
 }
 
 impl Default for SemioTableSnapshot {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self { schema: STDIO_SEMIOTABLE_DOCUMENT_SCHEMA.into(), columns: Vec::new(), rows: Vec::new() }
     }
 }
@@ -99,14 +99,14 @@ impl Default for SemioTableSnapshot {
 /// codec (`enc_semio_value`/`dec_semio_value`) are IMPORTED from `✳️value`'s own `🔺️diff` module
 /// (never re-derived, per this ticket's binding reuse mandate) — only the column/row shapes that
 /// are genuinely local to `table` are defined here.
-fn enc_list<T>(items: &[T], enc: impl Fn(&T) -> String) -> String {
+async fn enc_list<T>(items: &[T], enc: impl Fn(&T) -> String) -> String {
     format!("[{}]", items.iter().map(|it| enc(it)).collect::<Vec<_>>().join(","))
 }
-fn dec_list<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Vec<T>, String> {
+async fn dec_list<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Vec<T>, String> {
     split_top_level(strip_brackets(s)?, ',').into_iter().filter(|s| !s.is_empty()).map(|entry| dec(entry)).collect()
 }
 
-pub(crate) fn enc_cell_kind(k: SemioTableCellKind) -> char {
+pub(crate) async fn enc_cell_kind(k: SemioTableCellKind) -> char {
     match k {
         SemioTableCellKind::Null => 'n',
         SemioTableCellKind::Bool => 'b',
@@ -116,7 +116,7 @@ pub(crate) fn enc_cell_kind(k: SemioTableCellKind) -> char {
         SemioTableCellKind::Bytes => 'y',
     }
 }
-pub(crate) fn dec_cell_kind(s: &str) -> Result<SemioTableCellKind, String> {
+pub(crate) async fn dec_cell_kind(s: &str) -> Result<SemioTableCellKind, String> {
     match s {
         "n" => Ok(SemioTableCellKind::Null),
         "b" => Ok(SemioTableCellKind::Bool),
@@ -127,18 +127,18 @@ pub(crate) fn dec_cell_kind(s: &str) -> Result<SemioTableCellKind, String> {
         other => Err(format!("bad cell kind {other:?}")),
     }
 }
-pub(crate) fn enc_column(c: &SemioTableColumn) -> String {
+pub(crate) async fn enc_column(c: &SemioTableColumn) -> String {
     format!("[{},{}]", enc_str(&c.name), enc_cell_kind(c.kind))
 }
-pub(crate) fn dec_column(s: &str) -> Result<SemioTableColumn, String> {
+pub(crate) async fn dec_column(s: &str) -> Result<SemioTableColumn, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [name, kind] = parts.as_slice() else { return Err(format!("column: expected 2 fields, got {}", parts.len())) };
     Ok(SemioTableColumn { name: dec_str(name)?, kind: dec_cell_kind(kind)? })
 }
-pub(crate) fn enc_row(r: &SemioTableRow) -> String {
+pub(crate) async fn enc_row(r: &SemioTableRow) -> String {
     enc_list(&r.cells, enc_semio_value)
 }
-pub(crate) fn dec_row(s: &str) -> Result<SemioTableRow, String> {
+pub(crate) async fn dec_row(s: &str) -> Result<SemioTableRow, String> {
     Ok(SemioTableRow { cells: dec_list(s, dec_semio_value)? })
 }
 
@@ -146,10 +146,10 @@ pub(crate) fn dec_row(s: &str) -> Result<SemioTableRow, String> {
 /// `rows=[<row>,...]` — matching the grammar's `document = artifact-mark schema-line columns-line
 /// rows-line`. Newlines are pure lexer trivia in the shared dialect, so this is genuinely
 /// recognizable by `dsl::Recognizer`, not merely readable.
-fn print_table_snapshot_body(s: &SemioTableSnapshot) -> String {
+async fn print_table_snapshot_body(s: &SemioTableSnapshot) -> String {
     format!("schema={}\ncolumns={}\nrows={}", enc_str(&s.schema), enc_list(&s.columns, enc_column), enc_list(&s.rows, enc_row))
 }
-fn parse_table_snapshot_body(body: &str) -> Result<SemioTableSnapshot, String> {
+async fn parse_table_snapshot_body(body: &str) -> Result<SemioTableSnapshot, String> {
     let mut schema = None;
     let mut columns = Vec::new();
     let mut rows = Vec::new();
@@ -176,7 +176,7 @@ fn parse_table_snapshot_body(body: &str) -> Result<SemioTableSnapshot, String> {
 /// 🧪️ `write_str_lp`/`read_str_lp` are IMPORTED from `✳️value`'s own `🔺️diff` module (real
 /// LEB128-varint-length-prefixed binary primitives, `store::pack_rt::write_varint_u64`/
 /// `store::ByteReader`-backed) — reused, not re-derived.
-pub(crate) fn write_column(out: &mut Vec<u8>, c: &SemioTableColumn) {
+pub(crate) async fn write_column(out: &mut Vec<u8>, c: &SemioTableColumn) {
     write_str_lp(out, &c.name);
     out.push(match c.kind {
         SemioTableCellKind::Null => 0,
@@ -187,7 +187,7 @@ pub(crate) fn write_column(out: &mut Vec<u8>, c: &SemioTableColumn) {
         SemioTableCellKind::Bytes => 5,
     });
 }
-pub(crate) fn read_column(reader: &mut store::ByteReader<'_>) -> Result<SemioTableColumn, String> {
+pub(crate) async fn read_column(reader: &mut store::ByteReader<'_>) -> Result<SemioTableColumn, String> {
     let name = read_str_lp(reader)?;
     let tag = reader.read_u8().map_err(|e| e.to_string())?;
     let kind = match tag {
@@ -201,13 +201,13 @@ pub(crate) fn read_column(reader: &mut store::ByteReader<'_>) -> Result<SemioTab
     };
     Ok(SemioTableColumn { name, kind })
 }
-pub(crate) fn write_row(out: &mut Vec<u8>, r: &SemioTableRow) {
+pub(crate) async fn write_row(out: &mut Vec<u8>, r: &SemioTableRow) {
     store::pack_rt::write_varint_u64(out, r.cells.len() as u64);
     for cell in &r.cells {
         crate::artifacts::semio::standards::v1::subsets::value::schema::diff::enc_semio_value_bin(cell, out);
     }
 }
-pub(crate) fn read_row(reader: &mut store::ByteReader<'_>) -> Result<SemioTableRow, String> {
+pub(crate) async fn read_row(reader: &mut store::ByteReader<'_>) -> Result<SemioTableRow, String> {
     let count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut cells = Vec::with_capacity(count as usize);
     for _ in 0..count {
@@ -221,7 +221,7 @@ pub(crate) fn read_row(reader: &mut store::ByteReader<'_>) -> Result<SemioTableR
 /// then `columns`/`rows` (varint counts + per-item real recursive encodings) as the honest opaque
 /// `payload` tail (`protocol-array-of-records` gap — homogeneous, variable-length repeated
 /// records), same boundary `✳️text`'s own snapshot binary uses for `runs`.
-fn encode_table_snapshot_binary(s: &SemioTableSnapshot) -> Vec<u8> {
+async fn encode_table_snapshot_binary(s: &SemioTableSnapshot) -> Vec<u8> {
     const PACK_BINARY_FORMAT: u8 = 1;
     let mut out = Vec::new();
     out.push(PACK_BINARY_FORMAT);
@@ -236,7 +236,7 @@ fn encode_table_snapshot_binary(s: &SemioTableSnapshot) -> Vec<u8> {
     }
     out
 }
-fn decode_table_snapshot_binary(bytes: &[u8]) -> Result<SemioTableSnapshot, String> {
+async fn decode_table_snapshot_binary(bytes: &[u8]) -> Result<SemioTableSnapshot, String> {
     const PACK_BINARY_FORMAT: u8 = 1;
     let mut reader = store::ByteReader::new(bytes);
     let format = reader.read_u8().map_err(|e| e.to_string())?;
@@ -262,11 +262,11 @@ fn decode_table_snapshot_binary(bytes: &[u8]) -> Result<SemioTableSnapshot, Stri
 /// 🎁 Real structured text/binary codecs, wrapped in the repo-wide `store::semio_format` envelope.
 impl store::ArtifactDsl for SemioTableSnapshot {
     const EXTENSION: &'static str = "semio";
-    fn envelope_id() -> &'static str {
+    async fn envelope_id() -> &'static str {
         STDIO_SEMIOTABLE_DOCUMENT_SCHEMA
     }
 
-    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+    async fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
         let body = match store::semio_format::split_text_preamble(text) {
             Ok((_, rest)) => rest,
             Err(_) => text,
@@ -274,7 +274,7 @@ impl store::ArtifactDsl for SemioTableSnapshot {
         parse_table_snapshot_body(body).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
 
-    fn print_dsl(&self) -> String {
+    async fn print_dsl(&self) -> String {
         let body = print_table_snapshot_body(self);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
@@ -282,14 +282,14 @@ impl store::ArtifactDsl for SemioTableSnapshot {
 }
 
 impl store::ArtifactPack for SemioTableSnapshot {
-    fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
+    async fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
         let raw = encode_table_snapshot_binary(self);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &raw))
     }
 
-    fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
+    async fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
         if envelope.envelope_id() != <Self as store::ArtifactDsl>::envelope_id() {
             return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.envelope_id())));
@@ -309,7 +309,7 @@ impl store::ArtifactPack for SemioTableSnapshot {
 /// truth for `📚️examples/📃️sheet/🖼️assets/🗣️example.dsl.semio`/`🎒️example.pack.semio` and for the
 /// conformance-law tests in `🚪️io/🦀️component.rs`.
 #[cfg(test)]
-pub(crate) fn demo_table_snapshot() -> SemioTableSnapshot {
+pub(crate) async fn demo_table_snapshot() -> SemioTableSnapshot {
     SemioTableSnapshot {
         schema: STDIO_SEMIOTABLE_DOCUMENT_SCHEMA.into(),
         columns: vec![SemioTableColumn { name: "label".into(), kind: SemioTableCellKind::Str }, SemioTableColumn { name: "score".into(), kind: SemioTableCellKind::Float }, SemioTableColumn { name: "active".into(), kind: SemioTableCellKind::Bool }],
@@ -327,12 +327,12 @@ pub(crate) fn demo_table_snapshot() -> SemioTableSnapshot {
 mod tests {
     use super::*;
 
-    fn populated() -> SemioTableSnapshot {
+    async fn populated() -> SemioTableSnapshot {
         demo_table_snapshot()
     }
 
     #[test]
-    fn json_pack_round_trips() {
+    async fn json_pack_round_trips() {
         let snap = SemioTableSnapshot::default();
         let bytes = <SemioTableSnapshot as store::ArtifactPack>::encode_pack(&snap);
         let back = <SemioTableSnapshot as store::ArtifactPack>::decode_pack(&bytes).expect("decode");
@@ -340,7 +340,7 @@ mod tests {
     }
 
     #[test]
-    fn dsl_text_round_trips() {
+    async fn dsl_text_round_trips() {
         let snap = SemioTableSnapshot::default();
         let text = <SemioTableSnapshot as store::ArtifactDsl>::print_dsl(&snap);
         let back = <SemioTableSnapshot as store::ArtifactDsl>::parse_dsl(&text).expect("parse");
@@ -351,7 +351,7 @@ mod tests {
     /// on a fully-populated snapshot (columns/rows non-empty), not just the default. Also asserts
     /// the CRITICAL row/column alignment invariant survives a round trip untouched.
     #[test]
-    fn codec_retention_law() {
+    async fn codec_retention_law() {
         let snap = populated();
         let bytes = <SemioTableSnapshot as store::ArtifactPack>::encode_pack(&snap);
         let back = <SemioTableSnapshot as store::ArtifactPack>::decode_pack(&bytes).expect("decode");

@@ -13,7 +13,7 @@ use crate::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::
 use protocol::MutationDiff;
 
 //#region 🔖️Diff
-pub fn diff(payload: &DragNodes, base: &SemioDrawingSnapshot) -> protocol::MutationOutcome<SemioDrawingDiff> {
+pub async fn diff(payload: &DragNodes, base: &SemioDrawingSnapshot) -> protocol::MutationOutcome<SemioDrawingDiff> {
     if !payload.offset.x.is_finite() || !payload.offset.y.is_finite() {
         return protocol::MutationOutcome::fatal("mutation.invariant", "Drag offset has a non-finite component.".to_string(), payload.ats.iter().map(|a| a.layer.to_string()));
     }

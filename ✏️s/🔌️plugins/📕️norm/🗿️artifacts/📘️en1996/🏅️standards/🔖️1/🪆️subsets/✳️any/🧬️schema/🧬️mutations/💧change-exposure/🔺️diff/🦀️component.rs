@@ -5,7 +5,7 @@ use crate::artifacts::en1996::mutations::change_exposure::mutation::ChangeExposu
 use crate::artifacts::en1996::En1996Snapshot;
 
 //#region 🔖️Diff
-pub fn diff(payload: &ChangeExposure, base: &En1996Snapshot) -> protocol::MutationOutcome<En1996Diff> {
+pub async fn diff(payload: &ChangeExposure, base: &En1996Snapshot) -> protocol::MutationOutcome<En1996Diff> {
     if base.exposure == payload.new_exposure {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", "Exposure already has this value.");
     }

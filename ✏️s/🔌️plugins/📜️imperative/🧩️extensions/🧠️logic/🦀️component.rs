@@ -2,19 +2,19 @@
 
 use neural_engine::{Atom, ChannelSpec, Dictionary, EvalError, Operator, OperatorImpl, OperatorInfo, Registry, Value};
 
-fn read_string(input: &Dictionary, key: &str) -> Result<String, EvalError> {
+async fn read_string(input: &Dictionary, key: &str) -> Result<String, EvalError> {
     input.get(key).and_then(|v| v.as_atom()).and_then(|a| a.as_str()).map(str::to_string).ok_or_else(|| EvalError::MissingInput(key.into()))
 }
 
-fn read_scope_bool(input: &Dictionary, key: &str) -> bool {
+async fn read_scope_bool(input: &Dictionary, key: &str) -> bool {
     input.get(key).and_then(|v| v.as_atom()).and_then(|a| a.as_bool()).unwrap_or(false)
 }
 
-fn read_scope_number(input: &Dictionary, key: &str) -> f64 {
+async fn read_scope_number(input: &Dictionary, key: &str) -> f64 {
     input.get(key).and_then(|v| v.as_atom()).and_then(|a| a.as_f64()).unwrap_or(0.0)
 }
 
-fn write_bool(input: &Dictionary, value: bool) -> Result<Dictionary, EvalError> {
+async fn write_bool(input: &Dictionary, value: bool) -> Result<Dictionary, EvalError> {
     let into = read_string(input, "into")?;
     Ok(Dictionary::new().insert(into, Value::Atom(Atom::Boolean(value))))
 }
@@ -22,7 +22,7 @@ fn write_bool(input: &Dictionary, value: bool) -> Result<Dictionary, EvalError> 
 pub struct LogicCompare;
 
 impl Operator for LogicCompare {
-    fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
+    async fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         let left_key = read_string(input, "left")?;
         let right_key = read_string(input, "right")?;
         let operator = read_string(input, "operator").unwrap_or_else(|_| "eq".into());
@@ -44,7 +44,7 @@ impl Operator for LogicCompare {
 pub struct LogicAnd;
 
 impl Operator for LogicAnd {
-    fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
+    async fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         let left = read_string(input, "left")?;
         let right = read_string(input, "right")?;
         write_bool(input, read_scope_bool(input, &left) && read_scope_bool(input, &right))
@@ -54,7 +54,7 @@ impl Operator for LogicAnd {
 pub struct LogicOr;
 
 impl Operator for LogicOr {
-    fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
+    async fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         let left = read_string(input, "left")?;
         let right = read_string(input, "right")?;
         write_bool(input, read_scope_bool(input, &left) || read_scope_bool(input, &right))
@@ -64,25 +64,25 @@ impl Operator for LogicOr {
 pub struct LogicNot;
 
 impl Operator for LogicNot {
-    fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
+    async fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         let source = read_string(input, "source")?;
         write_bool(input, !read_scope_bool(input, &source))
     }
 }
 
-fn string_channel(name: &str) -> ChannelSpec {
+async fn string_channel(name: &str) -> ChannelSpec {
     ChannelSpec::named("S", "Str", name, name)
 }
 
-fn operator_info(id: &str, name: &str, abbreviation: &str, summary: &str, inputs: Vec<ChannelSpec>) -> OperatorInfo {
+async fn operator_info(id: &str, name: &str, abbreviation: &str, summary: &str, inputs: Vec<ChannelSpec>) -> OperatorInfo {
     OperatorInfo { id: id.into(), extension: "imperative".into(), name: name.into(), abbreviation: abbreviation.into(), icon: "emoji:🧠️".into(), summary: summary.into(), inputs, outputs: vec![ChannelSpec::wildcard()], ..Default::default() }
 }
 
-fn register_simple(registry: &mut Registry, info: OperatorInfo, operation: Box<dyn Operator>) {
+async fn register_simple(registry: &mut Registry, info: OperatorInfo, operation: Box<dyn Operator>) {
     registry.register_operator(info, vec![OperatorImpl { schemas: vec![], operator: operation }], &[]);
 }
 
-pub fn register(registry: &mut Registry) {
+pub async fn register(registry: &mut Registry) {
     register_simple(
         registry,
         operator_info("logic.compare", "Compare", "Cmp", "Compares two numeric scope keys and writes a boolean result", vec![string_channel("left"), string_channel("right"), string_channel("operator"), string_channel("into")]),
@@ -94,7 +94,7 @@ pub fn register(registry: &mut Registry) {
     registry.finalize();
 }
 
-pub fn catalogue_json(registry: &Registry) -> String {
+pub async fn catalogue_json(registry: &Registry) -> String {
     let items: Vec<serde_json::Value> = registry
         .operator_catalogue()
         .into_iter()
@@ -125,7 +125,7 @@ pub fn catalogue_json(registry: &Registry) -> String {
     .unwrap_or_else(|_| "{}".into())
 }
 
-pub fn module_registry() -> Registry {
+pub async fn module_registry() -> Registry {
     let mut registry = Registry::new();
     register(&mut registry);
     registry
@@ -135,7 +135,7 @@ pub fn module_registry() -> Registry {
 const EXTENSION_ID: &str = "imperative-extension-logic";
 const MODULE_VERSION: &str = "0.1.0";
 
-pub fn imperative_module_contribution() -> semio_framework::ProgramContributionEntry {
+pub async fn imperative_module_contribution() -> semio_framework::ProgramContributionEntry {
     let registry = module_registry();
     let catalogue = catalogue_json(&registry);
     imperative_extension_sdk::imperative_module_contribution(EXTENSION_ID, "logic", "Logic", "brain", "logic", "Logic", MODULE_VERSION, &registry, Some(&catalogue))
@@ -143,14 +143,14 @@ pub fn imperative_module_contribution() -> semio_framework::ProgramContributionE
 
 /// 🗺️ Open-registry twin of [`imperative_module_contribution`] — see
 /// `imperative_extension_sdk::imperative_module_topic_contribution`.
-pub fn imperative_module_topic_contribution() -> semio_framework::TopicContribution {
+pub async fn imperative_module_topic_contribution() -> semio_framework::TopicContribution {
     let registry = module_registry();
     let catalogue = catalogue_json(&registry);
     imperative_extension_sdk::imperative_module_topic_contribution("logic", "Logic", "brain", "logic", "Logic", MODULE_VERSION, &registry, Some(&catalogue))
 }
 
 #[cfg(target_arch = "wasm32")]
-fn bundle() -> semio_framework_plugin::ExtensionBundle {
+async fn bundle() -> semio_framework_plugin::ExtensionBundle {
     let topic_contribution = imperative_module_topic_contribution();
     semio_framework_plugin::ExtensionBundle::new(EXTENSION_ID, "Imperative Logic", MODULE_VERSION)
         .extends("imperative")
@@ -172,7 +172,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn logic_compare_gt() {
+    async fn logic_compare_gt() {
         let registry = module_registry();
         let input = Dictionary::new()
             .insert("left", Value::Atom(Atom::String("a".into())))

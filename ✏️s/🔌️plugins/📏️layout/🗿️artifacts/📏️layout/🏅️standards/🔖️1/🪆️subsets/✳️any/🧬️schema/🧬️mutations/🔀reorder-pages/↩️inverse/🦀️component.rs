@@ -5,7 +5,7 @@ use crate::artifacts::layout::mutations::LayoutMutation;
 use crate::artifacts::layout::LayoutSnapshot;
 
 //#region 🔀ReorderPages
-pub fn inverse_reorder_pages(payload: &ReorderPages, base: &LayoutSnapshot) -> Vec<LayoutMutation> {
+pub async fn inverse_reorder_pages(payload: &ReorderPages, base: &LayoutSnapshot) -> Vec<LayoutMutation> {
     match base.pages.iter().position(|page| page.id == payload.id) {
         Some(original_index) => vec![LayoutMutation::ReorderPages(ReorderPages { id: payload.id.clone(), to_index: original_index })],
         None => Vec::new(),

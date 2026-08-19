@@ -38,11 +38,11 @@ pub struct Wire {
 
 // #region 🔖️Helpers
 
-fn placeholder_face() -> FaceId {
+async fn placeholder_face() -> FaceId {
     ArenaId::from_raw(0, 0)
 }
 
-fn require_positive(name: &str, value: f64) -> Result<(), KernelError> {
+async fn require_positive(name: &str, value: f64) -> Result<(), KernelError> {
     if value <= Tol::DEFAULT.value() {
         Err(KernelError::InvalidInput(format!("{name} must be positive, got {value}")))
     } else {
@@ -50,34 +50,34 @@ fn require_positive(name: &str, value: f64) -> Result<(), KernelError> {
     }
 }
 
-pub(crate) fn attach_face(body: &mut Body, surface_id: crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::arena::SurfaceId, members: &[(EdgeId, bool)], flipped: bool, tol: Tol, rec: &mut OpRecorder) -> FaceId {
+pub(crate) async fn attach_face(body: &mut Body, surface_id: crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::arena::SurfaceId, members: &[(EdgeId, bool)], flipped: bool, tol: Tol, rec: &mut OpRecorder) -> FaceId {
     let outer = make_loop(body, placeholder_face(), members);
     let face = add_face(body, surface_id, Some(outer), vec![], flipped, tol, rec);
     body.loops.get_mut(outer).unwrap().face = face;
     face
 }
 
-pub(crate) fn line_edge(body: &mut Body, a: Pnt3, b: Pnt3, va: VertexId, vb: VertexId, tol: Tol, rec: &mut OpRecorder) -> EdgeId {
+pub(crate) async fn line_edge(body: &mut Body, a: Pnt3, b: Pnt3, va: VertexId, vb: VertexId, tol: Tol, rec: &mut OpRecorder) -> EdgeId {
     let curve = body.curves3.insert(Curve3::Line { origin: a, dir: b - a });
     make_edge(body, curve, (0.0, 1.0), va, vb, tol, rec)
 }
 
-fn circle_edge(body: &mut Body, center: Pnt3, normal: Vec3, radius: f64, vertex: VertexId, tol: Tol, rec: &mut OpRecorder) -> EdgeId {
+async fn circle_edge(body: &mut Body, center: Pnt3, normal: Vec3, radius: f64, vertex: VertexId, tol: Tol, rec: &mut OpRecorder) -> EdgeId {
     let frame = Frame3::from_normal(center, normal).expect("circle frame");
     let curve = body.curves3.insert(Curve3::Circle { frame, radius });
     make_edge(body, curve, (0.0, TAU), vertex, vertex, tol, rec)
 }
 
-pub(crate) fn plane_at(origin: Pnt3, normal: Vec3) -> Surface {
+pub(crate) async fn plane_at(origin: Pnt3, normal: Vec3) -> Surface {
     Surface::Plane { frame: Frame3::from_normal(origin, normal).expect("plane frame") }
 }
 
-pub(crate) fn finish_solid(body: &mut Body, faces: Vec<FaceId>, rec: &mut OpRecorder) -> SolidId {
+pub(crate) async fn finish_solid(body: &mut Body, faces: Vec<FaceId>, rec: &mut OpRecorder) -> SolidId {
     let shell = add_shell(body, faces, rec);
     add_solid(body, shell, vec![], rec)
 }
 
-fn newell_normal(points: &[Pnt3]) -> Option<Vec3> {
+async fn newell_normal(points: &[Pnt3]) -> Option<Vec3> {
     if points.len() < 3 {
         return None;
     }
@@ -99,7 +99,7 @@ fn newell_normal(points: &[Pnt3]) -> Option<Vec3> {
 /// 🧱 Axis-aligned box from the origin to `(w, d, h)` with six planar faces (V=8, E=12, F=6).
 /// Threads the caller-owned `rec` through every euler call so the whole box's [`crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::history::OpDelta`]
 /// is observable after this call returns, instead of being discarded at the function boundary.
-pub fn make_box(body: &mut Body, w: f64, d: f64, h: f64, rec: &mut OpRecorder) -> Result<SolidId, KernelError> {
+pub async fn make_box(body: &mut Body, w: f64, d: f64, h: f64, rec: &mut OpRecorder) -> Result<SolidId, KernelError> {
     require_positive("box width", w)?;
     require_positive("box depth", d)?;
     require_positive("box height", h)?;
@@ -135,7 +135,7 @@ pub fn make_box(body: &mut Body, w: f64, d: f64, h: f64, rec: &mut OpRecorder) -
 }
 
 /// 🧱 Sphere centered at the origin as two hemispherical faces sharing an `segments`-gon equator.
-pub fn make_sphere(body: &mut Body, radius: f64, segments: usize, rec: &mut OpRecorder) -> Result<SolidId, KernelError> {
+pub async fn make_sphere(body: &mut Body, radius: f64, segments: usize, rec: &mut OpRecorder) -> Result<SolidId, KernelError> {
     require_positive("sphere radius", radius)?;
     if segments < 4 {
         return Err(KernelError::InvalidInput(format!("sphere needs at least 4 segments, got {segments}")));
@@ -167,7 +167,7 @@ pub fn make_sphere(body: &mut Body, radius: f64, segments: usize, rec: &mut OpRe
 /// 🧱 Cylinder along +Z from `z=0` to `z=height` with analytic lateral surface and planar caps.
 ///
 /// `segments` is retained for tessellation hints and must be ≥ 3; topology uses a single seam.
-pub fn make_cylinder(body: &mut Body, radius: f64, height: f64, segments: usize, rec: &mut OpRecorder) -> Result<SolidId, KernelError> {
+pub async fn make_cylinder(body: &mut Body, radius: f64, height: f64, segments: usize, rec: &mut OpRecorder) -> Result<SolidId, KernelError> {
     require_positive("cylinder radius", radius)?;
     require_positive("cylinder height", height)?;
     if segments < 3 {
@@ -194,7 +194,7 @@ pub fn make_cylinder(body: &mut Body, radius: f64, height: f64, segments: usize,
 /// 🧱 Pointed cone with base radius at `z=0` and apex at `(0,0,height)`.
 ///
 /// `segments` is a tessellation hint (≥ 3); topology uses a single generator seam.
-pub fn make_cone(body: &mut Body, radius: f64, height: f64, segments: usize, rec: &mut OpRecorder) -> Result<SolidId, KernelError> {
+pub async fn make_cone(body: &mut Body, radius: f64, height: f64, segments: usize, rec: &mut OpRecorder) -> Result<SolidId, KernelError> {
     require_positive("cone radius", radius)?;
     require_positive("cone height", height)?;
     if segments < 3 {
@@ -221,7 +221,7 @@ pub fn make_cone(body: &mut Body, radius: f64, height: f64, segments: usize, rec
 }
 
 /// 🧱 Torus in the XY plane as one toroidal face with the fundamental-polygon seam wire (genus 1).
-pub fn make_torus(body: &mut Body, major: f64, minor: f64, segments: usize, rec: &mut OpRecorder) -> Result<SolidId, KernelError> {
+pub async fn make_torus(body: &mut Body, major: f64, minor: f64, segments: usize, rec: &mut OpRecorder) -> Result<SolidId, KernelError> {
     require_positive("torus major radius", major)?;
     require_positive("torus minor radius", minor)?;
     if minor >= major {
@@ -292,7 +292,7 @@ pub fn make_torus(body: &mut Body, major: f64, minor: f64, segments: usize, rec:
 }
 
 /// 🧱 Builds a (possibly non-convex) solid from a triangle soup — used when convex-hull boolean fails.
-pub fn solid_from_triangle_soup(body: &mut Body, triangles: &[[Pnt3; 3]], rec: &mut OpRecorder) -> Result<SolidId, KernelError> {
+pub async fn solid_from_triangle_soup(body: &mut Body, triangles: &[[Pnt3; 3]], rec: &mut OpRecorder) -> Result<SolidId, KernelError> {
     if triangles.is_empty() {
         return Err(KernelError::InvalidInput("triangle soup is empty".into()));
     }
@@ -341,7 +341,7 @@ pub fn solid_from_triangle_soup(body: &mut Body, triangles: &[[Pnt3; 3]], rec: &
 }
 
 /// 🧱 Convex hull of a point cloud as a closed solid of planar triangles (Quickhull).
-pub fn make_convex_hull(body: &mut Body, points: &[Pnt3], rec: &mut OpRecorder) -> Result<SolidId, KernelError> {
+pub async fn make_convex_hull(body: &mut Body, points: &[Pnt3], rec: &mut OpRecorder) -> Result<SolidId, KernelError> {
     let hull = convex_hull_3d(points).ok_or_else(|| KernelError::InvalidInput("points are coplanar or degenerate — cannot form a 3D convex hull".into()))?;
     let tol = Tol::DEFAULT;
     let vertex_ids: Vec<VertexId> = hull.vertices.iter().map(|&p| make_vertex(body, p, tol, rec)).collect();
@@ -378,7 +378,7 @@ pub fn make_convex_hull(body: &mut Body, points: &[Pnt3], rec: &mut OpRecorder) 
 // #region 🔖️WiresFaces
 
 /// 🧱 Open or closed polyline wire through `points` (closed requires ≥ 3 points).
-pub fn make_polyline_wire(body: &mut Body, points: &[Pnt3], closed: bool, rec: &mut OpRecorder) -> Result<Wire, KernelError> {
+pub async fn make_polyline_wire(body: &mut Body, points: &[Pnt3], closed: bool, rec: &mut OpRecorder) -> Result<Wire, KernelError> {
     if points.len() < 2 {
         return Err(KernelError::InvalidInput("polyline needs at least 2 points".into()));
     }
@@ -398,14 +398,14 @@ pub fn make_polyline_wire(body: &mut Body, points: &[Pnt3], closed: bool, rec: &
 }
 
 /// 🧱 Axis-aligned rectangle wire in the XY plane from the origin to `(width, height)`.
-pub fn make_rectangle_wire(body: &mut Body, width: f64, height: f64, rec: &mut OpRecorder) -> Result<Wire, KernelError> {
+pub async fn make_rectangle_wire(body: &mut Body, width: f64, height: f64, rec: &mut OpRecorder) -> Result<Wire, KernelError> {
     require_positive("rectangle width", width)?;
     require_positive("rectangle height", height)?;
     make_polyline_wire(body, &[Pnt3::new(0.0, 0.0, 0.0), Pnt3::new(width, 0.0, 0.0), Pnt3::new(width, height, 0.0), Pnt3::new(0.0, height, 0.0)], true, rec)
 }
 
 /// 🧱 Regular `sides`-gon wire of given `radius` in the XY plane, centered at the origin.
-pub fn make_regular_polygon_wire(body: &mut Body, radius: f64, sides: usize, rec: &mut OpRecorder) -> Result<Wire, KernelError> {
+pub async fn make_regular_polygon_wire(body: &mut Body, radius: f64, sides: usize, rec: &mut OpRecorder) -> Result<Wire, KernelError> {
     require_positive("polygon radius", radius)?;
     if sides < 3 {
         return Err(KernelError::InvalidInput(format!("polygon needs at least 3 sides, got {sides}")));
@@ -420,7 +420,7 @@ pub fn make_regular_polygon_wire(body: &mut Body, radius: f64, sides: usize, rec
 }
 
 /// 🧱 Planar face from a closed point loop (Newell normal); points must be non-collinear.
-pub fn make_planar_face_from_points(body: &mut Body, points: &[Pnt3], rec: &mut OpRecorder) -> Result<FaceId, KernelError> {
+pub async fn make_planar_face_from_points(body: &mut Body, points: &[Pnt3], rec: &mut OpRecorder) -> Result<FaceId, KernelError> {
     if points.len() < 3 {
         return Err(KernelError::InvalidInput("planar face needs at least 3 points".into()));
     }
@@ -430,7 +430,7 @@ pub fn make_planar_face_from_points(body: &mut Body, points: &[Pnt3], rec: &mut 
 }
 
 /// 🧱 Planar face whose outer loop is an existing closed [`Wire`].
-pub fn make_planar_face_from_wire(body: &mut Body, wire: &Wire, origin: Pnt3, normal: Vec3, rec: &mut OpRecorder) -> Result<FaceId, KernelError> {
+pub async fn make_planar_face_from_wire(body: &mut Body, wire: &Wire, origin: Pnt3, normal: Vec3, rec: &mut OpRecorder) -> Result<FaceId, KernelError> {
     if !wire.closed {
         return Err(KernelError::InvalidInput("planar face requires a closed wire".into()));
     }
@@ -458,15 +458,15 @@ struct ConvexHull {
     faces: Vec<[usize; 3]>,
 }
 
-fn face_normal(pts: &[Pnt3], a: usize, b: usize, c: usize) -> Vec3 {
+async fn face_normal(pts: &[Pnt3], a: usize, b: usize, c: usize) -> Vec3 {
     (pts[b] - pts[a]).cross(pts[c] - pts[a]).normalized().unwrap_or(Vec3::Z)
 }
 
-fn signed_distance(face: &HullFace, p: Pnt3) -> f64 {
+async fn signed_distance(face: &HullFace, p: Pnt3) -> f64 {
     face.normal.dot(p.to_vec()) + face.d
 }
 
-fn find_initial_tetrahedron(pts: &[Pnt3]) -> Option<[usize; 4]> {
+async fn find_initial_tetrahedron(pts: &[Pnt3]) -> Option<[usize; 4]> {
     let mut i0 = 0usize;
     for (i, p) in pts.iter().enumerate() {
         if p.x < pts[i0].x {
@@ -523,7 +523,7 @@ fn find_initial_tetrahedron(pts: &[Pnt3]) -> Option<[usize; 4]> {
     Some([i0, i1, i2, i3])
 }
 
-fn convex_hull_3d(points: &[Pnt3]) -> Option<ConvexHull> {
+async fn convex_hull_3d(points: &[Pnt3]) -> Option<ConvexHull> {
     if points.len() < 4 {
         return None;
     }
@@ -610,7 +610,7 @@ mod tests {
     use super::*;
     use crate::artifacts::semio::standards::v1::subsets::brep::schema::inferences::validation_report::validate_body;
 
-    fn solid_counts(body: &Body, solid: SolidId) -> (usize, usize, usize) {
+    async fn solid_counts(body: &Body, solid: SolidId) -> (usize, usize, usize) {
         let faces = body.solid_faces(solid);
         let mut edge_ids = std::collections::HashSet::new();
         let mut vertex_ids = std::collections::HashSet::new();
@@ -626,14 +626,14 @@ mod tests {
         (vertex_ids.len(), edge_ids.len(), faces.len())
     }
 
-    fn assert_rings_ok(body: &Body) {
+    async fn assert_rings_ok(body: &Body) {
         let issues = validate_body(body);
         let ring_issues: Vec<_> = issues.iter().filter(|i| matches!(i.code, "empty-loop" | "broken-ring" | "loop-not-closed" | "next-prev-mismatch")).collect();
         assert!(ring_issues.is_empty(), "ring integrity failed: {ring_issues:?}");
     }
 
     #[test]
-    fn make_box_euler_and_validate() {
+    async fn make_box_euler_and_validate() {
         let mut body = Body::new();
         let mut rec = OpRecorder::new();
         let solid = make_box(&mut body, 2.0, 3.0, 4.0, &mut rec).unwrap();
@@ -647,7 +647,7 @@ mod tests {
 
     /// 🧱 The whole box's provenance escapes the call — this is Phase 1's real deliverable, tested.
     #[test]
-    fn make_box_surfaces_its_op_delta_to_the_caller() {
+    async fn make_box_surfaces_its_op_delta_to_the_caller() {
         let mut body = Body::new();
         let mut rec = OpRecorder::new();
         make_box(&mut body, 2.0, 3.0, 4.0, &mut rec).unwrap();
@@ -657,7 +657,7 @@ mod tests {
     }
 
     #[test]
-    fn make_box_rejects_non_positive() {
+    async fn make_box_rejects_non_positive() {
         let mut body = Body::new();
         let mut rec = OpRecorder::new();
         assert!(make_box(&mut body, 0.0, 1.0, 1.0, &mut rec).is_err());
@@ -665,7 +665,7 @@ mod tests {
     }
 
     #[test]
-    fn make_sphere_two_hemispheres_euler() {
+    async fn make_sphere_two_hemispheres_euler() {
         let mut body = Body::new();
         let mut rec = OpRecorder::new();
         let solid = make_sphere(&mut body, 1.0, 8, &mut rec).unwrap();
@@ -679,7 +679,7 @@ mod tests {
     }
 
     #[test]
-    fn make_cylinder_three_faces_and_rings() {
+    async fn make_cylinder_three_faces_and_rings() {
         let mut body = Body::new();
         let mut rec = OpRecorder::new();
         let solid = make_cylinder(&mut body, 1.0, 2.0, 16, &mut rec).unwrap();
@@ -691,7 +691,7 @@ mod tests {
     }
 
     #[test]
-    fn make_cone_pointed_two_faces() {
+    async fn make_cone_pointed_two_faces() {
         let mut body = Body::new();
         let mut rec = OpRecorder::new();
         let solid = make_cone(&mut body, 1.0, 2.0, 12, &mut rec).unwrap();
@@ -701,7 +701,7 @@ mod tests {
     }
 
     #[test]
-    fn make_torus_genus_one_euler() {
+    async fn make_torus_genus_one_euler() {
         let mut body = Body::new();
         let mut rec = OpRecorder::new();
         let solid = make_torus(&mut body, 3.0, 1.0, 8, &mut rec).unwrap();
@@ -715,7 +715,7 @@ mod tests {
     }
 
     #[test]
-    fn make_convex_hull_tetrahedron() {
+    async fn make_convex_hull_tetrahedron() {
         let mut body = Body::new();
         let mut rec = OpRecorder::new();
         let pts = [Pnt3::new(0.0, 0.0, 0.0), Pnt3::new(1.0, 0.0, 0.0), Pnt3::new(0.0, 1.0, 0.0), Pnt3::new(0.0, 0.0, 1.0)];
@@ -729,7 +729,7 @@ mod tests {
     }
 
     #[test]
-    fn make_convex_hull_rejects_coplanar() {
+    async fn make_convex_hull_rejects_coplanar() {
         let mut body = Body::new();
         let mut rec = OpRecorder::new();
         let pts = [Pnt3::new(0.0, 0.0, 0.0), Pnt3::new(1.0, 0.0, 0.0), Pnt3::new(0.0, 1.0, 0.0), Pnt3::new(1.0, 1.0, 0.0)];
@@ -737,7 +737,7 @@ mod tests {
     }
 
     #[test]
-    fn wires_and_planar_faces() {
+    async fn wires_and_planar_faces() {
         let mut body = Body::new();
         let mut rec = OpRecorder::new();
         let rect = make_rectangle_wire(&mut body, 2.0, 3.0, &mut rec).unwrap();
@@ -753,7 +753,7 @@ mod tests {
     }
 
     #[test]
-    fn open_polyline_wire() {
+    async fn open_polyline_wire() {
         let mut body = Body::new();
         let mut rec = OpRecorder::new();
         let wire = make_polyline_wire(&mut body, &[Pnt3::new(0.0, 0.0, 0.0), Pnt3::new(1.0, 0.0, 0.0), Pnt3::new(1.0, 1.0, 0.0)], false, &mut rec).unwrap();

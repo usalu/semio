@@ -28,7 +28,7 @@ const INTO_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.gif", standard: 
 /// opaque `(r,g,b)` (and one canonical `(0,0,0)` slot for any transparent pixel) becomes exactly
 /// one palette entry, in first-seen order. Errors — never silently drops colors — once a 257th
 /// distinct entry would be needed (GIF's real `2..=256` palette-size ceiling).
-fn quantize(frames: &[&[u8]]) -> Result<(GifColorTable, Vec<Vec<u8>>, Option<u8>), store::PackError> {
+async fn quantize(frames: &[&[u8]]) -> Result<(GifColorTable, Vec<Vec<u8>>, Option<u8>), store::PackError> {
     let mut colors: Vec<(u8, u8, u8)> = Vec::new();
     let mut transparent_index: Option<u8> = None;
     let mut indexed_frames = Vec::with_capacity(frames.len());
@@ -106,7 +106,7 @@ mod tests {
     use super::*;
     use crate::artifacts::semio::standards::v1::subsets::image::schema::snapshot::{SemioColorspace, SemioImageFrame, SemioImageMetadataEntry};
 
-    fn sample_semio() -> SemioImageSnapshot {
+    async fn sample_semio() -> SemioImageSnapshot {
         SemioImageSnapshot {
             colorspace: SemioColorspace::Indexed,
             bit_depth: 8,
@@ -120,7 +120,7 @@ mod tests {
     }
 
     #[test]
-    fn quantizes_and_real_byte_round_trips_through_gif_codec() {
+    async fn quantizes_and_real_byte_round_trips_through_gif_codec() {
         let semio = sample_semio();
         let gif = semio_framework_plugin::resolve_ready(SemioImageToGif::serialize(&semio)).expect("serialize");
         assert_eq!(gif.frames.len(), 1);
@@ -139,7 +139,7 @@ mod tests {
     }
 
     #[test]
-    fn errors_past_256_distinct_colors() {
+    async fn errors_past_256_distinct_colors() {
         let mut rgba = Vec::new();
         for i in 0..257u32 {
             rgba.extend_from_slice(&[(i % 256) as u8, ((i / 2) % 256) as u8, ((i / 3) % 256) as u8, 255]);

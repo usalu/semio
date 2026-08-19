@@ -24,14 +24,14 @@ pub mod derived_composition {
         type Snapshot = PdfSnapshot;
         const WRITES: Dialect = DIALECT_H;
 
-        fn reads() -> &'static [Dialect] {
+        async fn reads() -> &'static [Dialect] {
             &[DIALECT_ANY, DIALECT_H, DEP_BINARY, DEP_DEFLATE]
         }
 
         /// ✅ Always `Ok` -- PDF/H has no hard checks to gate on (see module doc comment). Advisory
         /// diagnostics from `check_h_conformance` are folded onto the successful `Composition`.
-        fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
-            let inner = PdfAnyComposer::compose(sources)?;
+        async fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+            let inner = semio_framework_plugin::resolve_ready(PdfAnyComposer::compose(sources))?;
             let checks = check_h_conformance(&inner.snapshot);
             let mut diagnostics = inner.diagnostics;
             diagnostics.extend(checks);
@@ -46,7 +46,7 @@ pub mod derived_composition {
     impl SubsetValidator for PdfHValidator {
         const DIALECT: Dialect = DIALECT_H;
 
-        fn validate(payload: &IoPayload) -> Vec<Diagnostic> {
+        async fn validate(payload: &IoPayload) -> Vec<Diagnostic> {
             let decoded = match payload {
                 IoPayload::Binary(bytes) => <PdfSnapshot as store::ArtifactPack>::decode_pack(bytes).ok(),
                 IoPayload::Text(text) => <PdfSnapshot as store::ArtifactDsl>::parse_dsl(text).ok(),
@@ -67,11 +67,11 @@ pub mod derived_composition {
 
     static VALIDATOR_ENTRY: OnceLock<SubsetValidatorEntry> = OnceLock::new();
 
-    fn validator_entry() -> &'static SubsetValidatorEntry {
+    async fn validator_entry() -> &'static SubsetValidatorEntry {
         VALIDATOR_ENTRY.get_or_init(subset_validator_entry_of::<PdfHValidator>)
     }
 
-    pub fn register() {
+    pub async fn register() {
         let _ = register_subset_validator(validator_entry());
     }
     //#endregion 🔖️SubsetValidator
@@ -84,7 +84,7 @@ pub mod derived_composition {
         use semio_framework_plugin::ArtifactBuilder as _;
 
         #[test]
-        fn compose_always_succeeds_even_with_zero_setup() {
+        async fn compose_always_succeeds_even_with_zero_setup() {
             let snapshot = PdfSnapshot::default();
             let bytes = <PdfSnapshot as store::ArtifactPack>::encode_pack(&snapshot);
             let sources = vec![ComposeSource { dialect: DIALECT_ANY, payload: AnalyzeSource::Binary(&bytes) }];
@@ -93,7 +93,7 @@ pub mod derived_composition {
         }
 
         #[test]
-        fn conforming_builder_snapshot_composes_with_fewer_advisories() {
+        async fn conforming_builder_snapshot_composes_with_fewer_advisories() {
             let snapshot = PdfHBuilder::new()
                 .add_page(crate::artifacts::pdf::standards::v1_7::subsets::any::schema::snapshot::PdfPage::new(100.0, 100.0))
                 .set_info(crate::artifacts::pdf::standards::v1_7::subsets::any::schema::snapshot::PdfInfo { title: Some("A Chart".into()), author: Some("Dr. X".into()), ..Default::default() })

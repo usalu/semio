@@ -33,14 +33,14 @@ pub struct SemioValueCensus {
 /// `inference_default_law` below) — the same non-empty-default correction `flow`'s own
 /// `SemioFlowTopology::default()` documents for its own zero case.
 impl Default for SemioValueCensus {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self { null_count: 1, bool_count: 0, int_count: 0, float_count: 0, str_count: 0, bytes_count: 0, list_count: 0, map_count: 0, ref_count: 0, node_count: 0, max_depth: 1 }
     }
 }
 
 /// 🌳️ Recursively walks `value`, tallying its own variant into `census` and returning the max
 /// depth reached at or below it (`depth` is this node's own 1-based depth).
-fn walk(value: &SemioValue, census: &mut SemioValueCensus, depth: u32) -> u32 {
+async fn walk(value: &SemioValue, census: &mut SemioValueCensus, depth: u32) -> u32 {
     match value {
         SemioValue::Null => {
             census.null_count += 1;
@@ -84,7 +84,7 @@ fn walk(value: &SemioValue, census: &mut SemioValueCensus, depth: u32) -> u32 {
 /// 🌳️ Computes [`SemioValueCensus`] — pure, total, O(root's tree size + every node's own tree
 /// size). `root` and every `nodes[].value` are each walked as an independent tree rooted at
 /// depth 1 — see module doc comment for why `Ref` is never dereferenced.
-pub fn compute_semio_value_census(snapshot: &SemioValueSnapshot) -> SemioValueCensus {
+pub async fn compute_semio_value_census(snapshot: &SemioValueSnapshot) -> SemioValueCensus {
     let mut census = SemioValueCensus { null_count: 0, bool_count: 0, int_count: 0, float_count: 0, str_count: 0, bytes_count: 0, list_count: 0, map_count: 0, ref_count: 0, node_count: 0, max_depth: 0 };
     let mut max_depth = walk(&snapshot.root, &mut census, 1);
     for node in &snapshot.nodes {
@@ -105,7 +105,7 @@ mod tests {
     /// 🌱 A hand-built, non-empty graph: a 3-deep map/list root (Map -> List -> Str, depth 3) plus
     /// one backing node holding a 2-deep value (Map -> Bool, depth 2) — exercises every variant and
     /// a genuine max-depth comparison across root vs. nodes.
-    fn populated() -> SemioValueSnapshot {
+    async fn populated() -> SemioValueSnapshot {
         SemioValueSnapshot {
             schema: STDIO_SEMIOVALUE_DOCUMENT_SCHEMA.into(),
             root: SemioValue::Map {
@@ -119,7 +119,7 @@ mod tests {
     }
 
     #[test]
-    fn tallies_every_variant_and_finds_the_true_max_depth() {
+    async fn tallies_every_variant_and_finds_the_true_max_depth() {
         let census = compute_semio_value_census(&populated());
         assert_eq!(census.map_count, 2, "root map + node's own map");
         assert_eq!(census.list_count, 1);
@@ -133,13 +133,13 @@ mod tests {
     }
 
     #[test]
-    fn inference_determinism_law() {
+    async fn inference_determinism_law() {
         let snapshot = populated();
         assert_eq!(compute_semio_value_census(&snapshot), compute_semio_value_census(&snapshot));
     }
 
     #[test]
-    fn inference_default_law() {
+    async fn inference_default_law() {
         assert_eq!(compute_semio_value_census(&SemioValueSnapshot::default()), SemioValueCensus::default());
     }
 }

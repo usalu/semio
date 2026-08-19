@@ -13,7 +13,7 @@ pub struct SetLodMode {
 
 /// 🎚️ Unknown lod ids are rejected outright (rather than clamped) — the select control only ever
 /// offers `FLOW_LOD_MODE_AUTOMATIC` plus the real `DagDrawLod` ids.
-pub fn handle(payload: &SetLodMode, _doc: &ArtifactView<'_, FlowSnapshot>, _cfg: &ConfigView<'_, FlowConfig>, _session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, FlowConfigMutation>, Fault> {
+pub async fn handle(payload: &SetLodMode, _doc: &ArtifactView<'_, FlowSnapshot>, _cfg: &ConfigView<'_, FlowConfig>, _session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, FlowConfigMutation>, Fault> {
     if payload.value == FLOW_LOD_MODE_AUTOMATIC || DagDrawLod::from_id(&payload.value).is_some() {
         Ok(Emit::config(vec![FlowConfigMutation::SetLodMode { value: payload.value.clone() }]))
     } else {
@@ -29,7 +29,7 @@ mod tests {
     use crate::editor::flow::{FlowCommand, FLOW_PLAY_BODY_MAIN};
 
     #[test]
-    fn set_lod_mode_rejects_unknown_and_accepts_known() {
+    async fn set_lod_mode_rejects_unknown_and_accepts_known() {
         let mut app = flow_app();
         dispatch(&mut app, FlowCommand::SetLodMode(SetLodMode { value: "bogus".into() }));
         dispatch(&mut app, FlowCommand::SetLodMode(SetLodMode { value: "micro".into() }));
@@ -38,21 +38,21 @@ mod tests {
     }
 
     #[test]
-    fn default_runtime_enables_proximity_distance() {
+    async fn default_runtime_enables_proximity_distance() {
         let mut app = flow_app();
         let json = render(&mut app, FLOW_PLAY_BODY_MAIN);
         assert!(json.contains("proximityDistance") && !json.contains(r#""proximityDistance":0"#));
     }
 
     #[test]
-    fn set_proximity_distance_updates_scene_lod_json() {
+    async fn set_proximity_distance_updates_scene_lod_json() {
         let mut app = flow_app();
         dispatch(&mut app, FlowCommand::SetProximityDistance(crate::editor::flow::commands::set_proximity_distance::SetProximityDistance { value: 96.0 }));
         assert!(render(&mut app, FLOW_PLAY_BODY_MAIN).contains("96"));
     }
 
     #[test]
-    fn negative_proximity_distances_clamp_to_zero() {
+    async fn negative_proximity_distances_clamp_to_zero() {
         let mut app = flow_app();
         let result = dispatch(&mut app, FlowCommand::SetProximityDistance(crate::editor::flow::commands::set_proximity_distance::SetProximityDistance { value: -10.0 }));
         assert!(result.mutations.is_empty(), "a view command emits no document operations");

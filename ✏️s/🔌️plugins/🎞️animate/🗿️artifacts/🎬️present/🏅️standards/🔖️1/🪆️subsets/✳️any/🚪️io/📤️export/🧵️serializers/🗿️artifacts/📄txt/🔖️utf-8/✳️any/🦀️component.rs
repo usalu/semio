@@ -15,7 +15,7 @@ pub struct PresentIntoTxt;
 impl Serializer<PresentSnapshot> for PresentIntoTxt {
     const INTO: Dialect = TXT_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Lossy;
-    fn serialize(_from: &PresentSnapshot) -> IoResult<IoPayload> {
+    async fn serialize(_from: &PresentSnapshot) -> IoResult<IoPayload> {
         Err(IoError { message: "txt export not yet implemented".into(), diagnostics: Vec::new() })
     }
 }

@@ -5,7 +5,7 @@ use crate::artifacts::layout::mutations::LayoutMutation;
 use crate::artifacts::layout::LayoutSnapshot;
 
 //#region 📐UpdatePageMargins
-pub fn inverse_update_page_margins(payload: &UpdatePageMargins, base: &LayoutSnapshot) -> Vec<LayoutMutation> {
+pub async fn inverse_update_page_margins(payload: &UpdatePageMargins, base: &LayoutSnapshot) -> Vec<LayoutMutation> {
     match base.pages.iter().find(|page| page.id == payload.id) {
         Some(page) => vec![LayoutMutation::UpdatePageMargins(UpdatePageMargins {
             id: payload.id.clone(),

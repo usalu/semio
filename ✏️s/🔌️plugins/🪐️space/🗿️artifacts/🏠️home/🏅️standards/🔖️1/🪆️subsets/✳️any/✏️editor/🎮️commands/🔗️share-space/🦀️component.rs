@@ -23,7 +23,7 @@ pub struct ShareSpace {
 //#endregion 🔖️Payload
 
 //#region 🔖️Handle
-pub fn handle(payload: &ShareSpace, _doc: &ArtifactView<'_, SHomeSnapshot>, _cfg: &ConfigView<'_, HomeConfig>) -> Result<Emit<SHomeMutation, HomeConfigMutation>, Fault> {
+pub async fn handle(payload: &ShareSpace, _doc: &ArtifactView<'_, SHomeSnapshot>, _cfg: &ConfigView<'_, HomeConfig>) -> Result<Emit<SHomeMutation, HomeConfigMutation>, Fault> {
     if payload.email.trim().is_empty() {
         let args = dsl::to_dsl_value(&json!({ "spaceId": payload.space_id })).ok();
         return Ok(Emit::effect(Effect::OpenDialog {req: semio_framework_plugin::RequestId(126),  dialog_id: "shareSpace".into(), args }));
@@ -39,12 +39,12 @@ pub fn handle(payload: &ShareSpace, _doc: &ArtifactView<'_, SHomeSnapshot>, _cfg
 mod tests {
     use super::*;
 
-    fn doc_view<'a>(history: &'a semio_framework_plugin::HistoryView, doc_snapshot: &'a SHomeSnapshot) -> ArtifactView<'a, SHomeSnapshot> {
+    async fn doc_view<'a>(history: &'a semio_framework_plugin::HistoryView, doc_snapshot: &'a SHomeSnapshot) -> ArtifactView<'a, SHomeSnapshot> {
         ArtifactView::new(doc_snapshot, history)
     }
 
     #[test]
-    fn empty_email_opens_the_share_dialog() {
+    async fn empty_email_opens_the_share_dialog() {
         let history = semio_framework_plugin::HistoryView::empty();
         let doc_snapshot = SHomeSnapshot::default();
         let doc = doc_view(&history, &doc_snapshot);
@@ -55,7 +55,7 @@ mod tests {
     }
 
     #[test]
-    fn email_and_role_relay_upsert_member() {
+    async fn email_and_role_relay_upsert_member() {
         let history = semio_framework_plugin::HistoryView::empty();
         let doc_snapshot = SHomeSnapshot::default();
         let doc = doc_view(&history, &doc_snapshot);
@@ -77,7 +77,7 @@ mod tests {
     }
 
     #[test]
-    fn blank_role_defaults_to_spectator() {
+    async fn blank_role_defaults_to_spectator() {
         let history = semio_framework_plugin::HistoryView::empty();
         let doc_snapshot = SHomeSnapshot::default();
         let doc = doc_view(&history, &doc_snapshot);

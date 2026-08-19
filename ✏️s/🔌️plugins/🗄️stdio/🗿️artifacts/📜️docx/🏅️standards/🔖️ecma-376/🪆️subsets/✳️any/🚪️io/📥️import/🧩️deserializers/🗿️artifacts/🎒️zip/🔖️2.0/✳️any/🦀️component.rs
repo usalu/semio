@@ -5,17 +5,17 @@ use crate::artifacts::docx::{DocxSnapshot, STDIO_DOCX_DOCUMENT_SCHEMA};
 
 //#region Codec
 /// Register deserializer hooks.
-pub fn register() {}
+pub async fn register() {}
 
 /// 🎒️ Parse ZIP container bytes into a DocxSnapshot.
-pub fn deserialize(from: &BinarySnapshot) -> Result<DocxSnapshot, store::PackError> {
+pub async fn deserialize(from: &BinarySnapshot) -> Result<DocxSnapshot, store::PackError> {
     let mut snap = crate::artifacts::docx::engine::decode_docx(&from.bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
     snap.schema = STDIO_DOCX_DOCUMENT_SCHEMA.into();
     Ok(snap)
 }
 
 /// Decode a Binary pack then parse ZIP.
-pub fn deserialize_bytes(bytes: &[u8]) -> Result<DocxSnapshot, store::PackError> {
+pub async fn deserialize_bytes(bytes: &[u8]) -> Result<DocxSnapshot, store::PackError> {
     deserialize(&<BinarySnapshot as store::ArtifactPack>::decode_pack(bytes)?)
 }
 //#endregion Codec

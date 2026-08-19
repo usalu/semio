@@ -5,7 +5,7 @@ use crate::artifacts::din16798::mutations::change_h_st_w_k::mutation::ChangeHStW
 use crate::artifacts::din16798::Din16798Snapshot;
 
 //#region 🔖️Diff
-pub fn diff(payload: &ChangeHStWK, base: &Din16798Snapshot) -> protocol::MutationOutcome<Din16798Diff> {
+pub async fn diff(payload: &ChangeHStWK, base: &Din16798Snapshot) -> protocol::MutationOutcome<Din16798Diff> {
     if !payload.new_h_st_w_k.is_finite() {
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("Storage heat transfer coefficient must be a finite number, got {}.", payload.new_h_st_w_k), Vec::<String>::new());
     }

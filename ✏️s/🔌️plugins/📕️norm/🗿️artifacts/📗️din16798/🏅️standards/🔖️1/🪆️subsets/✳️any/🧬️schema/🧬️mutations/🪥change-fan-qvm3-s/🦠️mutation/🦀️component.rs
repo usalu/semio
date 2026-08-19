@@ -15,15 +15,15 @@ pub struct ChangeFanQVM3S {
 impl protocol::MutationKind<Din16798Snapshot, Din16798Mutation> for ChangeFanQVM3S {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "fan-qvm3-s", kind: "change-fan-qvm3-s", record: "ChangedFanQVM3S" };
 
-    fn diff(&self, base: &Din16798Snapshot) -> protocol::MutationOutcome<Din16798Diff> {
+    async fn diff(&self, base: &Din16798Snapshot) -> protocol::MutationOutcome<Din16798Diff> {
         crate::artifacts::din16798::mutations::change_fan_q_v_m3_s::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &Din16798Snapshot) -> Vec<Din16798Mutation> {
+    async fn inverse(&self, base: &Din16798Snapshot) -> Vec<Din16798Mutation> {
         crate::artifacts::din16798::mutations::change_fan_q_v_m3_s::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         format!("Change fan volume flow to {}", self.new_fan_q_v_m3_s)
     }
 }

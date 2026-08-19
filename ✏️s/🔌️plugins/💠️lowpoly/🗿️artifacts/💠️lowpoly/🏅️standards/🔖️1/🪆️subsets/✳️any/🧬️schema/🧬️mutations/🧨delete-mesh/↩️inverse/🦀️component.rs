@@ -12,7 +12,7 @@ use crate::artifacts::lowpoly::mutations::create_mesh;
 use crate::artifacts::lowpoly::{LowpolyMutation, LowpolySnapshot};
 
 //#region 🔖️Inverse
-pub fn inverse(payload: &DeleteMesh, base: &LowpolySnapshot) -> Vec<LowpolyMutation> {
+pub async fn inverse(payload: &DeleteMesh, base: &LowpolySnapshot) -> Vec<LowpolyMutation> {
     let Some(object) = base.objects.iter().find(|object| object.id == payload.id) else {
         return Vec::new();
     };

@@ -14,23 +14,23 @@ pub struct DeleteRigExtrinsic {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn delete_rig_extrinsic(camera_id: String) -> RemodelMutation {
+pub async fn delete_rig_extrinsic(camera_id: String) -> RemodelMutation {
     RemodelMutation::DeleteRigExtrinsic(DeleteRigExtrinsic { camera_id })
 }
 
 impl protocol::MutationKind<RemodelSnapshot, RemodelMutation> for DeleteRigExtrinsic {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "delete", entity: "rig-extrinsic", kind: "delete-rig-extrinsic", record: "DeletedRigExtrinsic" };
 
-    fn diff(&self, base: &RemodelSnapshot) -> protocol::MutationOutcome<RemodelDiff> {
+    async fn diff(&self, base: &RemodelSnapshot) -> protocol::MutationOutcome<RemodelDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &RemodelSnapshot) -> Vec<RemodelMutation> {
+    async fn inverse(&self, base: &RemodelSnapshot) -> Vec<RemodelMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         format!("Delete rig extrinsic \"{}\"", self.camera_id)
     }
-    fn target(&self) -> Vec<String> {
+    async fn target(&self) -> Vec<String> {
         vec![self.camera_id.clone()]
     }
 }

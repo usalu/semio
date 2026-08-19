@@ -22,7 +22,7 @@ const FLOW_VIEW_APP_ID: &str = "flow-view";
 
 //#region 🔖️Definition
 /// 🧱️ Stitched into the viewer manifest by `crate::viewer::flow::create_flow_viewer`.
-pub fn definition() -> WindowKindDefinition {
+pub async fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
         id: WINDOW_KIND_ID.into(),
         label: LocalizedLabel::native("Flow", "Flow"),
@@ -45,11 +45,11 @@ pub fn definition() -> WindowKindDefinition {
 //#region 🔖️Render
 /// 👁️ Own copy of the mutation-capable Main window's identically named helper (duplication is the
 /// deliberate cost of a genuinely independent viewer, contract §2.2).
-fn split_endpoint(endpoint: &str) -> (String, String) {
+async fn split_endpoint(endpoint: &str) -> (String, String) {
     endpoint.split_once('@').map_or_else(|| (endpoint.to_string(), "out".into()), |(node, port)| (node.to_string(), port.to_string()))
 }
 
-fn fixture_to_workflow(fixture: &DagFixture) -> (Vec<NodeGraphNodeRecord>, Vec<NodeGraphEdgeRecord>) {
+async fn fixture_to_workflow(fixture: &DagFixture) -> (Vec<NodeGraphNodeRecord>, Vec<NodeGraphEdgeRecord>) {
     let nodes: Vec<NodeGraphNodeRecord> = fixture
         .nodes
         .iter()
@@ -81,7 +81,7 @@ fn fixture_to_workflow(fixture: &DagFixture) -> (Vec<NodeGraphNodeRecord>, Vec<N
 /// (never persisted — a viewer has no `Transient`/`Config` lane to hold one), the artifact's own pure
 /// LOD/grid/proximity defaults (`Config = NoConfig` means there is no persisted per-session camera or
 /// canvas state to read), no selection, no preview-off overlay.
-pub fn render(document: &FlowSnapshot) -> UiNode {
+pub async fn render(document: &FlowSnapshot) -> UiNode {
     let live = document.to_fixture();
     let session = FlowEvalSession::new();
     let host = flow_host_with_session(&live, &session);
@@ -114,14 +114,14 @@ mod tests {
     use super::*;
 
     #[test]
-    fn definition_declares_the_node_graph_surface_and_body_key() {
+    async fn definition_declares_the_node_graph_surface_and_body_key() {
         let definition = definition();
         assert_eq!(definition.body_key, BODY_KEY);
         assert!(matches!(definition.surface_kind, SurfaceKind::NodeGraph));
     }
 
     #[test]
-    fn renders_node_graph_scene_for_the_default_document() {
+    async fn renders_node_graph_scene_for_the_default_document() {
         let document = FlowSnapshot::default();
         let json = serde_json::to_string(&render(&document)).expect("render json");
         assert!(json.contains("node-graph"));

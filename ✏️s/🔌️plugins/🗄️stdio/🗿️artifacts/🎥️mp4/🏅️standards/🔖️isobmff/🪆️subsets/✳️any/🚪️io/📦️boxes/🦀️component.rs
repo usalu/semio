@@ -11,16 +11,16 @@
 pub struct FourCc(pub [u8; 4]);
 
 impl FourCc {
-    pub const fn new(bytes: &[u8; 4]) -> Self {
+    pub async fn new(bytes: &[u8; 4]) -> Self {
         Self(*bytes)
     }
-    pub fn as_str(&self) -> std::borrow::Cow<'_, str> {
+    pub async fn as_str(&self) -> std::borrow::Cow<'_, str> {
         String::from_utf8_lossy(&self.0)
     }
 }
 
 impl std::fmt::Debug for FourCc {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    async fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "FourCc({:?})", self.as_str())
     }
 }
@@ -33,7 +33,7 @@ pub enum BoxError {
 }
 
 impl std::fmt::Display for BoxError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    async fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::Truncated => write!(f, "mp4: truncated box stream"),
             Self::Bad(msg) => write!(f, "mp4: malformed box: {msg}"),
@@ -49,40 +49,40 @@ pub struct ByteReader<'a> {
 }
 
 impl<'a> ByteReader<'a> {
-    pub fn new(data: &'a [u8]) -> Self {
+    pub async fn new(data: &'a [u8]) -> Self {
         Self { data, pos: 0 }
     }
-    pub fn pos(&self) -> usize {
+    pub async fn pos(&self) -> usize {
         self.pos
     }
-    pub fn remaining(&self) -> usize {
+    pub async fn remaining(&self) -> usize {
         self.data.len() - self.pos
     }
-    pub fn take(&mut self, n: usize) -> Result<&'a [u8], BoxError> {
+    pub async fn take(&mut self, n: usize) -> Result<&'a [u8], BoxError> {
         let end = self.pos.checked_add(n).ok_or(BoxError::Truncated)?;
         let slice = self.data.get(self.pos..end).ok_or(BoxError::Truncated)?;
         self.pos = end;
         Ok(slice)
     }
-    pub fn skip(&mut self, n: usize) -> Result<(), BoxError> {
+    pub async fn skip(&mut self, n: usize) -> Result<(), BoxError> {
         self.take(n).map(|_| ())
     }
-    pub fn u8(&mut self) -> Result<u8, BoxError> {
+    pub async fn u8(&mut self) -> Result<u8, BoxError> {
         Ok(self.take(1)?[0])
     }
-    pub fn u16_be(&mut self) -> Result<u16, BoxError> {
+    pub async fn u16_be(&mut self) -> Result<u16, BoxError> {
         Ok(u16::from_be_bytes(self.take(2)?.try_into().unwrap()))
     }
-    pub fn u32_be(&mut self) -> Result<u32, BoxError> {
+    pub async fn u32_be(&mut self) -> Result<u32, BoxError> {
         Ok(u32::from_be_bytes(self.take(4)?.try_into().unwrap()))
     }
-    pub fn u64_be(&mut self) -> Result<u64, BoxError> {
+    pub async fn u64_be(&mut self) -> Result<u64, BoxError> {
         Ok(u64::from_be_bytes(self.take(8)?.try_into().unwrap()))
     }
-    pub fn i32_be(&mut self) -> Result<i32, BoxError> {
+    pub async fn i32_be(&mut self) -> Result<i32, BoxError> {
         Ok(i32::from_be_bytes(self.take(4)?.try_into().unwrap()))
     }
-    pub fn fourcc(&mut self) -> Result<FourCc, BoxError> {
+    pub async fn fourcc(&mut self) -> Result<FourCc, BoxError> {
         Ok(FourCc(self.take(4)?.try_into().unwrap()))
     }
 }
@@ -103,13 +103,13 @@ pub struct Mp4BoxIter<'a> {
     pos: usize,
 }
 
-pub fn iter_boxes(data: &[u8]) -> Mp4BoxIter<'_> {
+pub async fn iter_boxes(data: &[u8]) -> Mp4BoxIter<'_> {
     Mp4BoxIter { data, pos: 0 }
 }
 
 impl<'a> Iterator for Mp4BoxIter<'a> {
     type Item = Result<Mp4BoxRef<'a>, BoxError>;
-    fn next(&mut self) -> Option<Self::Item> {
+    async fn next(&mut self) -> Option<Self::Item> {
         if self.pos >= self.data.len() {
             return None;
         }
@@ -146,7 +146,7 @@ impl<'a> Iterator for Mp4BoxIter<'a> {
 }
 
 /// 🔍️ First direct-child box of the given type (moved from remodel's `find_box`).
-pub fn find_box<'a>(data: &'a [u8], want: &[u8; 4]) -> Result<Option<&'a [u8]>, BoxError> {
+pub async fn find_box<'a>(data: &'a [u8], want: &[u8; 4]) -> Result<Option<&'a [u8]>, BoxError> {
     for item in iter_boxes(data) {
         let b = item?;
         if b.kind.0 == *want {
@@ -157,7 +157,7 @@ pub fn find_box<'a>(data: &'a [u8], want: &[u8; 4]) -> Result<Option<&'a [u8]>, 
 }
 
 /// 🔍️ Every direct-child box of the given type, in document order (moved from `find_boxes`).
-pub fn find_boxes<'a>(data: &'a [u8], want: &[u8; 4]) -> Result<Vec<&'a [u8]>, BoxError> {
+pub async fn find_boxes<'a>(data: &'a [u8], want: &[u8; 4]) -> Result<Vec<&'a [u8]>, BoxError> {
     let mut out = Vec::new();
     for item in iter_boxes(data) {
         let b = item?;
@@ -169,7 +169,7 @@ pub fn find_boxes<'a>(data: &'a [u8], want: &[u8; 4]) -> Result<Vec<&'a [u8]>, B
 }
 
 /// 🔍️ Like [`find_box`] but a missing box is itself the error (moved from `require_box`).
-pub fn require_box<'a>(data: &'a [u8], want: &[u8; 4], ctx: &'static str) -> Result<&'a [u8], BoxError> {
+pub async fn require_box<'a>(data: &'a [u8], want: &[u8; 4], ctx: &'static str) -> Result<&'a [u8], BoxError> {
     find_box(data, want)?.ok_or(BoxError::Bad(ctx))
 }
 //#endregion 🔖️Iter
@@ -178,7 +178,7 @@ pub fn require_box<'a>(data: &'a [u8], want: &[u8; 4], ctx: &'static str) -> Res
 /// ✍️ Frames `payload` under `fourcc` with a standard 32-bit box header (moved from remodel's
 /// `mp4_box`). Every box this engine writes fits in a 32-bit size (real fixtures are far under
 /// 4GiB); 64-bit `largesize` framing is a read-side-only concern here.
-pub fn write_box(fourcc: &[u8; 4], payload: &[u8]) -> Vec<u8> {
+pub async fn write_box(fourcc: &[u8; 4], payload: &[u8]) -> Vec<u8> {
     let mut out = Vec::with_capacity(8 + payload.len());
     out.extend_from_slice(&((payload.len() + 8) as u32).to_be_bytes());
     out.extend_from_slice(fourcc);
@@ -192,7 +192,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn iterates_two_sibling_boxes_and_resolves_sizes() {
+    async fn iterates_two_sibling_boxes_and_resolves_sizes() {
         let ftyp = write_box(b"ftyp", b"isom");
         let free = write_box(b"free", &[0, 0]);
         let mut bytes = ftyp.clone();
@@ -207,7 +207,7 @@ mod tests {
     }
 
     #[test]
-    fn require_box_errors_when_absent() {
+    async fn require_box_errors_when_absent() {
         let bytes = write_box(b"ftyp", b"isom");
         assert!(require_box(&bytes, b"moov", "missing moov").is_err());
     }

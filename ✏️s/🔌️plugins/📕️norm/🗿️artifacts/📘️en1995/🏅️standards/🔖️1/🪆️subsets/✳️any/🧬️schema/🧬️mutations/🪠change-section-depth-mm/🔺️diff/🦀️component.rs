@@ -5,7 +5,7 @@ use crate::artifacts::en1995::mutations::change_section_depth_mm::mutation::Chan
 use crate::artifacts::en1995::En1995Snapshot;
 
 //#region 🔖️Diff
-pub fn diff(payload: &ChangeSectionDepthMm, base: &En1995Snapshot) -> protocol::MutationOutcome<En1995Diff> {
+pub async fn diff(payload: &ChangeSectionDepthMm, base: &En1995Snapshot) -> protocol::MutationOutcome<En1995Diff> {
     if !payload.new_section_depth_mm.is_finite() {
         return protocol::MutationOutcome::fatal("mutation.invariant", "Section depth mm must be a finite number.", Vec::<String>::new());
     }

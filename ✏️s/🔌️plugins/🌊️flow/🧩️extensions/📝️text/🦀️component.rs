@@ -7,7 +7,7 @@ use neural_engine::{channel_output, Atom, ChannelSpec, Dictionary, EvalError, Op
 pub struct Concat;
 
 impl Operator for Concat {
-    fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
+    async fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         Ok(channel_output("text", text_dictionary(format!("{}{}", read_channel_text(input, "a")?, read_channel_text(input, "b")?))))
     }
 }
@@ -18,33 +18,33 @@ impl Operator for Concat {
 pub struct Upper;
 
 impl Operator for Upper {
-    fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
+    async fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         Ok(channel_output("text", text_dictionary(read_channel_text(input, "text")?.to_uppercase())))
     }
 }
 // #endregion 🔖️Upper
 
 // #region 🔖️Helpers
-fn text_dictionary(value: String) -> Dictionary {
+async fn text_dictionary(value: String) -> Dictionary {
     Dictionary::with_schema("text").insert("value", Value::Atom(Atom::String(value)))
 }
 
-fn read_channel_text(input: &Dictionary, key: &str) -> Result<String, EvalError> {
+async fn read_channel_text(input: &Dictionary, key: &str) -> Result<String, EvalError> {
     input.get(key).and_then(|v| v.as_dictionary()).and_then(|d| d.get("value")).and_then(|v| v.as_atom()).and_then(|a| a.as_str()).map(str::to_string).ok_or_else(|| EvalError::MissingInput(key.into()))
 }
 
-fn text_channel(id: &str, operator_id: &str) -> ChannelSpec {
+async fn text_channel(id: &str, operator_id: &str) -> ChannelSpec {
     ChannelSpec::text_default(id, "", &[operator_id])
 }
 
-fn info(id: &str, name: &str, summary: &str, inputs: Vec<ChannelSpec>, output: ChannelSpec) -> OperatorInfo {
+async fn info(id: &str, name: &str, summary: &str, inputs: Vec<ChannelSpec>, output: ChannelSpec) -> OperatorInfo {
     OperatorInfo { id: id.into(), extension: "text".into(), name: name.into(), abbreviation: name.into(), icon: "emoji:📝️".into(), summary: summary.into(), inputs, outputs: vec![output], ..Default::default() }
 }
 
 // #endregion 🔖️Helpers
 
 /// 📦️ Registers all text operators.
-pub fn register(registry: &mut Registry) {
+pub async fn register(registry: &mut Registry) {
     registry.register_operator(
         info("text.concat", "Concat", "Joins two text values", vec![text_channel("a", "text.concat"), text_channel("b", "text.concat")], ChannelSpec::named("T", "Txt", "text", "JoinedText")),
         vec![OperatorImpl { schemas: vec!["text".into(), "text".into()], operator: Box::new(Concat) }],
@@ -61,13 +61,13 @@ pub fn register(registry: &mut Registry) {
 
 // #region 🔖️Manifest
 /// 📦️ Flow extension manifest JSON contributed to host catalogues.
-pub fn extension_manifest_json() -> String {
+pub async fn extension_manifest_json() -> String {
     use flow_extension_sdk::{build_manifest_json, FlowExtensionCommand};
     build_manifest_json("text", "Text", "0.1.0", &module_registry(), vec!["onStartup".into()], vec![], vec![FlowExtensionCommand { id: "text.showHelp".into(), title: "Text: Show Help".into() }], vec![])
 }
 
 /// 🌊️ Builds an in-process operator registry for this extension.
-pub fn module_registry() -> Registry {
+pub async fn module_registry() -> Registry {
     let mut registry = Registry::new();
     register(&mut registry);
     registry
@@ -81,7 +81,7 @@ mod tests {
     use flow_extension_sdk::{build_manifest_json, evaluate_json, FlowExtensionCommand};
 
     #[test]
-    fn concat_joins_text() {
+    async fn concat_joins_text() {
         let mut reg = Registry::new();
         register(&mut reg);
         let input = Dictionary::new().insert("a", Value::Dictionary(text_dictionary("hi".into()))).insert("b", Value::Dictionary(text_dictionary("!".into())));
@@ -92,14 +92,14 @@ mod tests {
     }
 
     #[test]
-    fn manifest_lists_text_operators() {
+    async fn manifest_lists_text_operators() {
         let json = build_manifest_json("text", "Text", "0.1.0", &module_registry(), vec!["onStartup".into()], vec![], vec![FlowExtensionCommand { id: "text.showHelp".into(), title: "Text: Show Help".into() }], vec![]);
         assert!(json.contains("text.concat"));
         assert!(json.contains("\"operators\""));
     }
 
     #[test]
-    fn evaluate_json_uppercases_text() {
+    async fn evaluate_json_uppercases_text() {
         let input = Dictionary::new().insert("text", Value::Dictionary(text_dictionary("hi".into())));
         let out_json = evaluate_json(&module_registry(), "text.upper", &serde_json::to_string(&input).unwrap());
         let out: Dictionary = serde_json::from_str(&out_json).unwrap();
@@ -132,7 +132,7 @@ mod extension_guest {
         input_json: String,
     }
 
-    fn flow_extension_contribution(app_id: &str, manifest_json: String) -> serde_json::Value {
+    async fn flow_extension_contribution(app_id: &str, manifest_json: String) -> serde_json::Value {
         let icon_id = "text";
         let topic_payload = serde_json::json!({
             "appId": app_id,
@@ -144,7 +144,7 @@ mod extension_guest {
         topic_payload
     }
 
-    fn bundle() -> ExtensionBundle {
+    async fn bundle() -> ExtensionBundle {
         let manifest_json = extension_manifest_json();
         let flow_topic_payload = flow_extension_contribution(FLOW_APP_ID, manifest_json.clone());
         let procedural3d_topic_payload = flow_extension_contribution(PROCEDURAL3D_APP_ID, manifest_json);

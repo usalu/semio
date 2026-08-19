@@ -13,19 +13,19 @@ pub struct PortUndirectedGraph {
 }
 
 impl Default for PortUndirectedGraph {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self::new()
     }
 }
 
 impl PortUndirectedGraph {
     /// 🆕️ Empty multigraph.
-    pub fn new() -> Self {
+    pub async fn new() -> Self {
         Self { storage: Storage::new(), default_handle: BTreeMap::new() }
     }
 
     /// 🪝️ Looks up, or lazily allocates via `Storage::add_handle`, the single default handle every node routes all of its edges through. Panics if `node` isn't already present in `storage` — every call site uses `ensure_node` first, so this never fires in practice.
-    fn handle_of(&mut self, node: NodeId) -> HandleId {
+    async fn handle_of(&mut self, node: NodeId) -> HandleId {
         match self.default_handle.get(&node) {
             Some(&handle) => handle,
             None => {
@@ -37,7 +37,7 @@ impl PortUndirectedGraph {
     }
 
     /// 🌱️ Creates `id` with empty attrs if not already present (NetworkX `MultiGraph.add_edge` auto-creates endpoint nodes).
-    fn ensure_node(&mut self, id: NodeId) {
+    async fn ensure_node(&mut self, id: NodeId) {
         if !self.storage.contains_node(id) {
             self.storage.add_node_with_id(id, PropertyBag::default());
         }
@@ -47,26 +47,26 @@ impl PortUndirectedGraph {
 
 // #region 🔖️NodeOperations
 impl PortUndirectedGraph {
-    pub fn add_node(&mut self) -> NodeId {
+    pub async fn add_node(&mut self) -> NodeId {
         self.storage.add_node()
     }
 
-    pub fn add_node_with(&mut self, attrs: PropertyBag) -> NodeId {
+    pub async fn add_node_with(&mut self, attrs: PropertyBag) -> NodeId {
         self.storage.add_node_with(attrs)
     }
 
-    pub fn add_node_with_id(&mut self, id: NodeId, attrs: PropertyBag) -> NodeId {
+    pub async fn add_node_with_id(&mut self, id: NodeId, attrs: PropertyBag) -> NodeId {
         self.storage.add_node_with_id(id, attrs)
     }
 
-    pub fn add_nodes_from(&mut self, nodes: impl IntoIterator<Item = NodeId>) {
+    pub async fn add_nodes_from(&mut self, nodes: impl IntoIterator<Item = NodeId>) {
         for id in nodes {
             self.add_node_with_id(id, PropertyBag::default());
         }
     }
 
     /// 🗑️ Removes `id` and cascades (edges, handles) via `Storage::remove_node`, then drops this facade's own `default_handle` bookkeeping entry for it.
-    pub fn remove_node(&mut self, id: NodeId) -> bool {
+    pub async fn remove_node(&mut self, id: NodeId) -> bool {
         let removed = self.storage.remove_node(id);
         if removed {
             self.default_handle.remove(&id);
@@ -74,25 +74,25 @@ impl PortUndirectedGraph {
         removed
     }
 
-    pub fn remove_nodes_from(&mut self, nodes: impl IntoIterator<Item = NodeId>) {
+    pub async fn remove_nodes_from(&mut self, nodes: impl IntoIterator<Item = NodeId>) {
         for id in nodes {
             self.remove_node(id);
         }
     }
 
-    pub fn has_node(&self, id: NodeId) -> bool {
+    pub async fn has_node(&self, id: NodeId) -> bool {
         self.storage.contains_node(id)
     }
 
-    pub fn number_of_nodes(&self) -> usize {
+    pub async fn number_of_nodes(&self) -> usize {
         self.storage.node_count()
     }
 
-    pub fn order(&self) -> usize {
+    pub async fn order(&self) -> usize {
         self.storage.node_count()
     }
 
-    pub fn nodes(&self) -> impl Iterator<Item = NodeId> + '_ {
+    pub async fn nodes(&self) -> impl Iterator<Item = NodeId> + '_ {
         self.storage.nodes()
     }
 }
@@ -101,11 +101,11 @@ impl PortUndirectedGraph {
 // #region 🔖️EdgeOperations
 impl PortUndirectedGraph {
     /// ➕️ Always creates a NEW parallel edge (NetworkX `MultiGraph.add_edge`); auto-creates `u`/`v` if unseen.
-    pub fn add_edge(&mut self, u: NodeId, v: NodeId) -> EdgeId {
+    pub async fn add_edge(&mut self, u: NodeId, v: NodeId) -> EdgeId {
         self.add_edge_with(u, v, PropertyBag::default())
     }
 
-    pub fn add_edge_with(&mut self, u: NodeId, v: NodeId, attrs: PropertyBag) -> EdgeId {
+    pub async fn add_edge_with(&mut self, u: NodeId, v: NodeId, attrs: PropertyBag) -> EdgeId {
         self.ensure_node(u);
         self.ensure_node(v);
         let hu = self.handle_of(u);
@@ -113,11 +113,11 @@ impl PortUndirectedGraph {
         self.storage.add_edge_with(hu, hv, attrs)
     }
 
-    pub fn add_edges_from(&mut self, edges: impl IntoIterator<Item = (NodeId, NodeId)>) -> Vec<EdgeId> {
+    pub async fn add_edges_from(&mut self, edges: impl IntoIterator<Item = (NodeId, NodeId)>) -> Vec<EdgeId> {
         edges.into_iter().map(|(u, v)| self.add_edge(u, v)).collect()
     }
 
-    pub fn add_weighted_edges_from(&mut self, edges: impl IntoIterator<Item = (NodeId, NodeId, f64)>) -> Vec<EdgeId> {
+    pub async fn add_weighted_edges_from(&mut self, edges: impl IntoIterator<Item = (NodeId, NodeId, f64)>) -> Vec<EdgeId> {
         edges
             .into_iter()
             .map(|(u, v, weight)| {
@@ -129,24 +129,24 @@ impl PortUndirectedGraph {
     }
 
     /// 🗑️ Keyed removal — NetworkX `remove_edge(u, v, key)`. Here `EdgeId` IS the key (see the crate doc's simplification note), so this facade's `remove_edge` takes just the id rather than the simple-graph facades' `(u, v)`-keyed removal.
-    pub fn remove_edge(&mut self, id: EdgeId) -> bool {
+    pub async fn remove_edge(&mut self, id: EdgeId) -> bool {
         self.storage.remove_edge(id)
     }
 
     /// 🗑️ NetworkX's convenience `remove_edge(u, v)` without a key removes an arbitrary parallel edge; this picks the smallest `EdgeId` for determinism.
-    pub fn remove_one_edge(&mut self, u: NodeId, v: NodeId) -> bool {
+    pub async fn remove_one_edge(&mut self, u: NodeId, v: NodeId) -> bool {
         match self.edges_between(u, v).min() {
             Some(id) => self.storage.remove_edge(id),
             None => false,
         }
     }
 
-    pub fn has_edge(&self, u: NodeId, v: NodeId) -> bool {
+    pub async fn has_edge(&self, u: NodeId, v: NodeId) -> bool {
         self.storage.edges_between(u, v).next().is_some()
     }
 
     /// 🔢️ Total edge count if both `u`/`v` are `None`; edge count between a specific pair if both are `Some` (the mixed one-`Some` NetworkX form is unsupported here — it falls back to the total).
-    pub fn number_of_edges(&self, u: Option<NodeId>, v: Option<NodeId>) -> usize {
+    pub async fn number_of_edges(&self, u: Option<NodeId>, v: Option<NodeId>) -> usize {
         match (u, v) {
             (Some(u), Some(v)) => self.storage.edges_between(u, v).count(),
             _ => self.storage.edge_count(),
@@ -154,21 +154,21 @@ impl PortUndirectedGraph {
     }
 
     /// 🏷️ Keyed attribute lookup — several edges can share a `(u, v)` pair, so lookup is always by `EdgeId`.
-    pub fn get_edge_data(&self, id: EdgeId) -> Option<&PropertyBag> {
+    pub async fn get_edge_data(&self, id: EdgeId) -> Option<&PropertyBag> {
         self.storage.edge_attrs(id)
     }
 
-    pub fn edges_between(&self, u: NodeId, v: NodeId) -> impl Iterator<Item = EdgeId> + '_ {
+    pub async fn edges_between(&self, u: NodeId, v: NodeId) -> impl Iterator<Item = EdgeId> + '_ {
         self.storage.edges_between(u, v).map(|e| e.id)
     }
 
-    pub fn add_path(&mut self, nodes: impl IntoIterator<Item = NodeId>) -> Vec<EdgeId> {
+    pub async fn add_path(&mut self, nodes: impl IntoIterator<Item = NodeId>) -> Vec<EdgeId> {
         let nodes: Vec<NodeId> = nodes.into_iter().collect();
         pairwise(&nodes).map(|(a, b)| self.add_edge(a, b)).collect()
     }
 
     /// 🔁️ Mirrors NetworkX `add_cycle`: a single node produces one self-loop, an empty input produces no edges, everything else wraps the last node back to the first.
-    pub fn add_cycle(&mut self, nodes: impl IntoIterator<Item = NodeId>) -> Vec<EdgeId> {
+    pub async fn add_cycle(&mut self, nodes: impl IntoIterator<Item = NodeId>) -> Vec<EdgeId> {
         let nodes: Vec<NodeId> = nodes.into_iter().collect();
         match nodes.len() {
             0 => Vec::new(),
@@ -182,7 +182,7 @@ impl PortUndirectedGraph {
     }
 
     /// ⭐️ First node is the semio_hub, the rest are leaves connected to it (NetworkX `add_star`).
-    pub fn add_star(&mut self, nodes: impl IntoIterator<Item = NodeId>) -> Vec<EdgeId> {
+    pub async fn add_star(&mut self, nodes: impl IntoIterator<Item = NodeId>) -> Vec<EdgeId> {
         let nodes: Vec<NodeId> = nodes.into_iter().collect();
         let Some(&semio_hub) = nodes.first() else { return Vec::new() };
         nodes[1..].iter().map(|&leaf| self.add_edge(semio_hub, leaf)).collect()
@@ -193,17 +193,17 @@ impl PortUndirectedGraph {
 // #region 🔖️Queries
 impl PortUndirectedGraph {
     /// 🎯️ Distinct neighbor node ids; a node with several parallel edges to the same neighbor still yields it once (`Storage`'s adjacency map is already keyed by neighbor id, so this is deterministic and deduplicated for free).
-    pub fn neighbors(&self, node: NodeId) -> impl Iterator<Item = NodeId> + '_ {
+    pub async fn neighbors(&self, node: NodeId) -> impl Iterator<Item = NodeId> + '_ {
         self.storage.neighbors(node)
     }
 
     /// 🔢️ Counts every parallel edge; a self-loop counts twice (delegates straight to `Storage::degree`, which already encodes both conventions).
-    pub fn degree(&self, node: NodeId) -> usize {
+    pub async fn degree(&self, node: NodeId) -> usize {
         self.storage.degree(node)
     }
 
     /// ⚖️ Sums the named numeric attribute (default `1.0` per edge) over every incident edge, counting a self-loop's weight twice like `degree`.
-    pub fn weighted_degree(&self, node: NodeId, weight_name: &str) -> f64 {
+    pub async fn weighted_degree(&self, node: NodeId, weight_name: &str) -> f64 {
         let weight = AttrWeight { graph: &self.storage, name: weight_name, default: 1.0 };
         let mut total = 0.0;
         for neighbor in self.storage.neighbors(node) {
@@ -215,7 +215,7 @@ impl PortUndirectedGraph {
     }
 
     /// 📐️ `2*m/(n*(n-1))` using the multi-edge count `m`, matching NetworkX's `density` formula for `MultiGraph` — deliberately NOT clamped to `1.0`, since parallel edges can push it arbitrarily high.
-    pub fn density(&self) -> f64 {
+    pub async fn density(&self) -> f64 {
         let n = self.storage.node_count() as f64;
         let m = self.storage.edge_count() as f64;
         if n <= 1.0 {
@@ -226,7 +226,7 @@ impl PortUndirectedGraph {
     }
 
     /// 🕳️ NetworkX `is_empty`: true when the graph has no EDGES (nodes may still be present).
-    pub fn is_empty(&self) -> bool {
+    pub async fn is_empty(&self) -> bool {
         self.storage.edge_count() == 0
     }
 }
@@ -234,12 +234,12 @@ impl PortUndirectedGraph {
 
 // #region 🔖️Transforms
 impl PortUndirectedGraph {
-    pub fn copy(&self) -> Self {
+    pub async fn copy(&self) -> Self {
         self.clone()
     }
 
     /// 🔎️ Owned copy restricted to `nodes`; rebuilt via a `SubgraphView` over `self`, so it gets fresh `NodeId`-stable but new `EdgeId`s (see the core `Views` module doc on why views never mutate in place).
-    pub fn subgraph(&self, nodes: impl IntoIterator<Item = NodeId>) -> Self {
+    pub async fn subgraph(&self, nodes: impl IntoIterator<Item = NodeId>) -> Self {
         let view = SubgraphView::new(&self.storage, nodes);
         let mut out = Self::new();
         for node in view.nodes() {
@@ -255,7 +255,7 @@ impl PortUndirectedGraph {
     }
 
     /// 🔎️ Owned copy restricted to `edges`; nodes are exactly those edges' endpoints (`EdgeSubgraphView`).
-    pub fn edge_subgraph(&self, edges: impl IntoIterator<Item = EdgeId>) -> Self {
+    pub async fn edge_subgraph(&self, edges: impl IntoIterator<Item = EdgeId>) -> Self {
         let view = EdgeSubgraphView::new(&self.storage, edges);
         let mut out = Self::new();
         for node in view.nodes() {
@@ -271,7 +271,7 @@ impl PortUndirectedGraph {
     }
 
     /// 🧵️ Collapses parallel edges into one simple edge per node pair, summing each collapsed group's `"weight"` attribute (missing weight defaults to `1.0` per parallel edge, matching `EdgeWeights`'s convention). Returns the raw `Storage`, not a sibling facade type, to avoid a circular dependency on the not-yet-built `graph_core::normal::undirected` crate — not a literal NetworkX method, but a common multigraph-to-simple-graph convenience.
-    pub fn to_simple(&self) -> Storage<Normal, Undirected> {
+    pub async fn to_simple(&self) -> Storage<Normal, Undirected> {
         let mut simple = Storage::<Normal, Undirected>::new();
         for node in self.storage.nodes() {
             let attrs = self.storage.node_attrs(node).cloned().unwrap_or_default();
@@ -293,7 +293,7 @@ impl PortUndirectedGraph {
     }
 
     /// ➡️ Each undirected parallel edge becomes two directed parallel edges (one each way), attributes cloned onto both; an undirected self-loop becomes exactly ONE directed self-loop, since NetworkX's own `to_directed` walks the (already-collapsed) adjacency structure where a self-loop appears only once. Builds a fresh handle-bookkeeping map for the new `Directed` storage — the old `default_handle` handle ids belong to a different `Storage` instance and can't be reused.
-    pub fn to_directed(&self) -> Storage<Ported, Directed> {
+    pub async fn to_directed(&self) -> Storage<Ported, Directed> {
         let mut directed = Storage::<Ported, Directed>::new();
         for node in self.storage.nodes() {
             let attrs = self.storage.node_attrs(node).cloned().unwrap_or_default();
@@ -314,13 +314,13 @@ impl PortUndirectedGraph {
     }
 
     /// 🧹️ Removes every node, edge, and handle; also drops this facade's `default_handle` bookkeeping.
-    pub fn clear(&mut self) {
+    pub async fn clear(&mut self) {
         self.storage.clear();
         self.default_handle.clear();
     }
 
     /// 🧹️ Removes every edge but keeps nodes AND their handles — `default_handle` is intentionally left untouched, since handles are anchored on nodes, not edges, and only get dropped when their owning node is removed.
-    pub fn clear_edges(&mut self) {
+    pub async fn clear_edges(&mut self) {
         self.storage.clear_edges();
     }
 }
@@ -328,32 +328,32 @@ impl PortUndirectedGraph {
 
 // #region 🔖️Attributes
 impl PortUndirectedGraph {
-    pub fn set_node_attributes(&mut self, node: NodeId, attrs: PropertyBag) {
+    pub async fn set_node_attributes(&mut self, node: NodeId, attrs: PropertyBag) {
         if let Some(bag) = self.storage.node_attrs_mut(node) {
             bag.extend(attrs);
         }
     }
 
-    pub fn get_node_attributes(&self, node: NodeId) -> Option<&PropertyBag> {
+    pub async fn get_node_attributes(&self, node: NodeId) -> Option<&PropertyBag> {
         self.storage.node_attrs(node)
     }
 
     /// 🏷️ Keyed by `EdgeId` (not `(u, v)`), since several parallel edges can share a node pair.
-    pub fn set_edge_attributes(&mut self, edge: EdgeId, attrs: PropertyBag) {
+    pub async fn set_edge_attributes(&mut self, edge: EdgeId, attrs: PropertyBag) {
         if let Some(bag) = self.storage.edge_attrs_mut(edge) {
             bag.extend(attrs);
         }
     }
 
-    pub fn get_edge_attributes(&self, edge: EdgeId) -> Option<&PropertyBag> {
+    pub async fn get_edge_attributes(&self, edge: EdgeId) -> Option<&PropertyBag> {
         self.storage.edge_attrs(edge)
     }
 
-    pub fn name(&self) -> Option<&str> {
+    pub async fn name(&self) -> Option<&str> {
         self.storage.graph_attrs().get("name").and_then(PropertyValue::as_str)
     }
 
-    pub fn set_name(&mut self, name: impl Into<String>) {
+    pub async fn set_name(&mut self, name: impl Into<String>) {
         self.storage.graph_attrs_mut().insert("name".to_string(), PropertyValue::String(name.into()));
     }
 }
@@ -361,15 +361,15 @@ impl PortUndirectedGraph {
 
 // #region 🔖️SelfLoops
 impl PortUndirectedGraph {
-    pub fn selfloop_edges(&self) -> impl Iterator<Item = EdgeId> + '_ {
+    pub async fn selfloop_edges(&self) -> impl Iterator<Item = EdgeId> + '_ {
         self.storage.edges().filter(|edge| edge.u == edge.v).map(|edge| edge.id)
     }
 
-    pub fn number_of_selfloops(&self) -> usize {
+    pub async fn number_of_selfloops(&self) -> usize {
         self.selfloop_edges().count()
     }
 
-    pub fn nodes_with_selfloops(&self) -> impl Iterator<Item = NodeId> + '_ {
+    pub async fn nodes_with_selfloops(&self) -> impl Iterator<Item = NodeId> + '_ {
         let nodes: BTreeSet<NodeId> = self.storage.edges().filter(|edge| edge.u == edge.v).map(|edge| edge.u).collect();
         nodes.into_iter()
     }
@@ -379,64 +379,64 @@ impl PortUndirectedGraph {
 // #region 🔖️Views
 /// 🪟️ Structural view delegation — every method borrows `self.storage`'s own `GraphView` impl, which already operates at node level regardless of the `Ported` model underneath.
 impl GraphView for PortUndirectedGraph {
-    fn node_count(&self) -> usize {
+    async fn node_count(&self) -> usize {
         self.storage.node_count()
     }
-    fn nodes(&self) -> impl Iterator<Item = NodeId> {
+    async fn nodes(&self) -> impl Iterator<Item = NodeId> {
         self.storage.nodes()
     }
-    fn contains_node(&self, node: NodeId) -> bool {
+    async fn contains_node(&self, node: NodeId) -> bool {
         self.storage.contains_node(node)
     }
-    fn edge_count(&self) -> usize {
+    async fn edge_count(&self) -> usize {
         self.storage.edge_count()
     }
-    fn edges(&self) -> impl Iterator<Item = EdgeRef> {
+    async fn edges(&self) -> impl Iterator<Item = EdgeRef> {
         self.storage.edges()
     }
-    fn neighbors(&self, node: NodeId) -> impl Iterator<Item = NodeId> {
+    async fn neighbors(&self, node: NodeId) -> impl Iterator<Item = NodeId> {
         self.storage.neighbors(node)
     }
-    fn out_neighbors(&self, node: NodeId) -> impl Iterator<Item = NodeId> {
+    async fn out_neighbors(&self, node: NodeId) -> impl Iterator<Item = NodeId> {
         self.storage.out_neighbors(node)
     }
-    fn in_neighbors(&self, node: NodeId) -> impl Iterator<Item = NodeId> {
+    async fn in_neighbors(&self, node: NodeId) -> impl Iterator<Item = NodeId> {
         self.storage.in_neighbors(node)
     }
-    fn degree(&self, node: NodeId) -> usize {
+    async fn degree(&self, node: NodeId) -> usize {
         self.storage.degree(node)
     }
-    fn out_degree(&self, node: NodeId) -> usize {
+    async fn out_degree(&self, node: NodeId) -> usize {
         self.storage.out_degree(node)
     }
-    fn in_degree(&self, node: NodeId) -> usize {
+    async fn in_degree(&self, node: NodeId) -> usize {
         self.storage.in_degree(node)
     }
-    fn is_directed(&self) -> bool {
+    async fn is_directed(&self) -> bool {
         self.storage.is_directed()
     }
-    fn is_multigraph(&self) -> bool {
+    async fn is_multigraph(&self) -> bool {
         self.storage.is_multigraph()
     }
-    fn edges_between(&self, u: NodeId, v: NodeId) -> impl Iterator<Item = EdgeRef> {
+    async fn edges_between(&self, u: NodeId, v: NodeId) -> impl Iterator<Item = EdgeRef> {
         self.storage.edges_between(u, v)
     }
 }
 
 impl AttrView for PortUndirectedGraph {
-    fn node_attrs(&self, node: NodeId) -> Option<&PropertyBag> {
+    async fn node_attrs(&self, node: NodeId) -> Option<&PropertyBag> {
         self.storage.node_attrs(node)
     }
-    fn edge_attrs(&self, edge: EdgeId) -> Option<&PropertyBag> {
+    async fn edge_attrs(&self, edge: EdgeId) -> Option<&PropertyBag> {
         self.storage.edge_attrs(edge)
     }
-    fn graph_attrs(&self) -> &PropertyBag {
+    async fn graph_attrs(&self) -> &PropertyBag {
         self.storage.graph_attrs()
     }
 }
 
 impl EdgeWeights for PortUndirectedGraph {
-    fn weight(&self, edge: EdgeRef) -> f64 {
+    async fn weight(&self, edge: EdgeRef) -> f64 {
         self.storage.weight(edge)
     }
 }
@@ -448,7 +448,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn parallel_edges_get_distinct_ids() {
+    async fn parallel_edges_get_distinct_ids() {
         let mut g = PortUndirectedGraph::new();
         let a = g.add_node();
         let b = g.add_node();
@@ -459,7 +459,7 @@ mod tests {
     }
 
     #[test]
-    fn neighbors_dedupe_across_parallel_edges() {
+    async fn neighbors_dedupe_across_parallel_edges() {
         let mut g = PortUndirectedGraph::new();
         let a = g.add_node();
         let b = g.add_node();
@@ -471,7 +471,7 @@ mod tests {
     }
 
     #[test]
-    fn degree_counts_every_parallel_edge() {
+    async fn degree_counts_every_parallel_edge() {
         let mut g = PortUndirectedGraph::new();
         let a = g.add_node();
         let b = g.add_node();
@@ -482,7 +482,7 @@ mod tests {
     }
 
     #[test]
-    fn self_loop_counts_twice_towards_degree() {
+    async fn self_loop_counts_twice_towards_degree() {
         let mut g = PortUndirectedGraph::new();
         let a = g.add_node();
         g.add_edge(a, a);
@@ -490,7 +490,7 @@ mod tests {
     }
 
     #[test]
-    fn remove_one_edge_drops_exactly_one_parallel_edge() {
+    async fn remove_one_edge_drops_exactly_one_parallel_edge() {
         let mut g = PortUndirectedGraph::new();
         let a = g.add_node();
         let b = g.add_node();
@@ -503,7 +503,7 @@ mod tests {
     }
 
     #[test]
-    fn to_simple_sums_parallel_edge_weights() {
+    async fn to_simple_sums_parallel_edge_weights() {
         let mut g = PortUndirectedGraph::new();
         let a = g.add_node();
         let b = g.add_node();
@@ -520,7 +520,7 @@ mod tests {
     }
 
     #[test]
-    fn edges_between_returns_all_parallel_ids() {
+    async fn edges_between_returns_all_parallel_ids() {
         let mut g = PortUndirectedGraph::new();
         let a = g.add_node();
         let b = g.add_node();
@@ -535,7 +535,7 @@ mod tests {
     }
 
     #[test]
-    fn add_edge_auto_creates_unseen_nodes() {
+    async fn add_edge_auto_creates_unseen_nodes() {
         let mut g = PortUndirectedGraph::new();
         assert!(!g.has_node(42));
         assert!(!g.has_node(7));
@@ -546,7 +546,7 @@ mod tests {
     }
 
     #[test]
-    fn subgraph_and_edge_subgraph_are_independent_copies() {
+    async fn subgraph_and_edge_subgraph_are_independent_copies() {
         let mut g = PortUndirectedGraph::new();
         let a = g.add_node();
         let b = g.add_node();
@@ -568,7 +568,7 @@ mod tests {
     }
 
     #[test]
-    fn add_node_with_stores_attrs() {
+    async fn add_node_with_stores_attrs() {
         let mut g = PortUndirectedGraph::new();
         let mut attrs = PropertyBag::default();
         attrs.insert("color".to_string(), PropertyValue::String("red".to_string()));
@@ -577,7 +577,7 @@ mod tests {
     }
 
     #[test]
-    fn add_node_with_id_reuses_given_id() {
+    async fn add_node_with_id_reuses_given_id() {
         let mut g = PortUndirectedGraph::new();
         let n = g.add_node_with_id(99, PropertyBag::default());
         assert_eq!(n, 99);
@@ -585,7 +585,7 @@ mod tests {
     }
 
     #[test]
-    fn add_nodes_from_creates_every_node() {
+    async fn add_nodes_from_creates_every_node() {
         let mut g = PortUndirectedGraph::new();
         g.add_nodes_from([1, 2, 3]);
         assert_eq!(g.number_of_nodes(), 3);
@@ -593,7 +593,7 @@ mod tests {
     }
 
     #[test]
-    fn remove_node_drops_incident_edges_and_reallocates_fresh_handle() {
+    async fn remove_node_drops_incident_edges_and_reallocates_fresh_handle() {
         let mut g = PortUndirectedGraph::new();
         let a = g.add_node();
         let b = g.add_node();
@@ -608,7 +608,7 @@ mod tests {
     }
 
     #[test]
-    fn remove_nodes_from_removes_every_listed_node() {
+    async fn remove_nodes_from_removes_every_listed_node() {
         let mut g = PortUndirectedGraph::new();
         let a = g.add_node();
         let b = g.add_node();
@@ -620,7 +620,7 @@ mod tests {
     }
 
     #[test]
-    fn order_matches_number_of_nodes_and_nodes_iterator() {
+    async fn order_matches_number_of_nodes_and_nodes_iterator() {
         let mut g = PortUndirectedGraph::new();
         let a = g.add_node();
         let b = g.add_node();
@@ -631,7 +631,7 @@ mod tests {
     }
 
     #[test]
-    fn add_edges_from_and_add_weighted_edges_from() {
+    async fn add_edges_from_and_add_weighted_edges_from() {
         let mut g = PortUndirectedGraph::new();
         let a = g.add_node();
         let b = g.add_node();
@@ -647,7 +647,7 @@ mod tests {
     }
 
     #[test]
-    fn remove_edge_by_id_and_missing_edge_data() {
+    async fn remove_edge_by_id_and_missing_edge_data() {
         let mut g = PortUndirectedGraph::new();
         let a = g.add_node();
         let b = g.add_node();
@@ -658,7 +658,7 @@ mod tests {
     }
 
     #[test]
-    fn remove_one_edge_returns_false_when_pair_has_no_edge() {
+    async fn remove_one_edge_returns_false_when_pair_has_no_edge() {
         let mut g = PortUndirectedGraph::new();
         let a = g.add_node();
         let b = g.add_node();
@@ -666,7 +666,7 @@ mod tests {
     }
 
     #[test]
-    fn number_of_edges_falls_back_to_total_unless_both_endpoints_given() {
+    async fn number_of_edges_falls_back_to_total_unless_both_endpoints_given() {
         let mut g = PortUndirectedGraph::new();
         let a = g.add_node();
         let b = g.add_node();
@@ -680,7 +680,7 @@ mod tests {
     }
 
     #[test]
-    fn add_path_chains_consecutive_nodes() {
+    async fn add_path_chains_consecutive_nodes() {
         let mut g = PortUndirectedGraph::new();
         let a = g.add_node();
         let b = g.add_node();
@@ -692,7 +692,7 @@ mod tests {
     }
 
     #[test]
-    fn add_cycle_empty_single_and_many() {
+    async fn add_cycle_empty_single_and_many() {
         let mut empty_graph = PortUndirectedGraph::new();
         assert!(empty_graph.add_cycle(Vec::<NodeId>::new()).is_empty());
 
@@ -712,7 +712,7 @@ mod tests {
     }
 
     #[test]
-    fn add_star_empty_and_hub_with_leaves() {
+    async fn add_star_empty_and_hub_with_leaves() {
         let mut g = PortUndirectedGraph::new();
         assert!(g.add_star(Vec::<NodeId>::new()).is_empty());
 
@@ -726,7 +726,7 @@ mod tests {
     }
 
     #[test]
-    fn weighted_degree_sums_named_attribute_with_default_and_counts_selfloop_twice() {
+    async fn weighted_degree_sums_named_attribute_with_default_and_counts_selfloop_twice() {
         let mut g = PortUndirectedGraph::new();
         let a = g.add_node();
         let b = g.add_node();
@@ -745,7 +745,7 @@ mod tests {
     }
 
     #[test]
-    fn density_zero_for_zero_or_one_node_else_multigraph_formula() {
+    async fn density_zero_for_zero_or_one_node_else_multigraph_formula() {
         let empty_graph = PortUndirectedGraph::new();
         assert_eq!(empty_graph.density(), 0.0);
 
@@ -762,7 +762,7 @@ mod tests {
     }
 
     #[test]
-    fn is_empty_reflects_edge_presence_not_node_presence() {
+    async fn is_empty_reflects_edge_presence_not_node_presence() {
         let mut g = PortUndirectedGraph::new();
         let a = g.add_node();
         let b = g.add_node();
@@ -772,7 +772,7 @@ mod tests {
     }
 
     #[test]
-    fn copy_is_an_independent_snapshot() {
+    async fn copy_is_an_independent_snapshot() {
         let mut g = PortUndirectedGraph::new();
         let a = g.add_node();
         let b = g.add_node();
@@ -784,7 +784,7 @@ mod tests {
     }
 
     #[test]
-    fn to_directed_mirrors_edges_both_ways_but_selfloop_once() {
+    async fn to_directed_mirrors_edges_both_ways_but_selfloop_once() {
         let mut g = PortUndirectedGraph::new();
         let a = g.add_node();
         let b = g.add_node();
@@ -798,7 +798,7 @@ mod tests {
     }
 
     #[test]
-    fn clear_removes_nodes_edges_and_handles() {
+    async fn clear_removes_nodes_edges_and_handles() {
         let mut g = PortUndirectedGraph::new();
         let a = g.add_node();
         let b = g.add_node();
@@ -810,7 +810,7 @@ mod tests {
     }
 
     #[test]
-    fn clear_edges_keeps_nodes_but_drops_edges() {
+    async fn clear_edges_keeps_nodes_but_drops_edges() {
         let mut g = PortUndirectedGraph::new();
         let a = g.add_node();
         let b = g.add_node();
@@ -822,7 +822,7 @@ mod tests {
     }
 
     #[test]
-    fn set_node_attributes_extends_existing_and_ignores_missing_node() {
+    async fn set_node_attributes_extends_existing_and_ignores_missing_node() {
         let mut g = PortUndirectedGraph::new();
         let a = g.add_node();
         let mut attrs = PropertyBag::default();
@@ -837,7 +837,7 @@ mod tests {
     }
 
     #[test]
-    fn set_edge_attributes_extends_and_get_edge_attributes_missing() {
+    async fn set_edge_attributes_extends_and_get_edge_attributes_missing() {
         let mut g = PortUndirectedGraph::new();
         let a = g.add_node();
         let b = g.add_node();
@@ -850,7 +850,7 @@ mod tests {
     }
 
     #[test]
-    fn name_defaults_to_none_then_reflects_set_name() {
+    async fn name_defaults_to_none_then_reflects_set_name() {
         let mut g = PortUndirectedGraph::new();
         assert_eq!(g.name(), None);
         g.set_name("social");
@@ -858,7 +858,7 @@ mod tests {
     }
 
     #[test]
-    fn selfloop_edges_and_nodes_with_selfloops_report_only_loops() {
+    async fn selfloop_edges_and_nodes_with_selfloops_report_only_loops() {
         let mut g = PortUndirectedGraph::new();
         let a = g.add_node();
         let b = g.add_node();
@@ -872,7 +872,7 @@ mod tests {
     }
 
     #[test]
-    fn graphview_trait_delegates_match_native_methods() {
+    async fn graphview_trait_delegates_match_native_methods() {
         let mut g = PortUndirectedGraph::new();
         let a = g.add_node();
         let b = g.add_node();
@@ -896,7 +896,7 @@ mod tests {
     }
 
     #[test]
-    fn attrview_and_edgeweights_delegate_correctly() {
+    async fn attrview_and_edgeweights_delegate_correctly() {
         let mut g = PortUndirectedGraph::new();
         let a = g.add_node();
         let b = g.add_node();

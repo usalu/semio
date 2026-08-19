@@ -39,7 +39,7 @@ crate::impl_norm_artifact_record!(Iso16757Snapshot, extension = "iso16757", enve
 //#endregion 🔖️HandcraftedArtifactCodecs
 
 impl Default for Iso16757Snapshot {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self::reference_fixture()
     }
 }

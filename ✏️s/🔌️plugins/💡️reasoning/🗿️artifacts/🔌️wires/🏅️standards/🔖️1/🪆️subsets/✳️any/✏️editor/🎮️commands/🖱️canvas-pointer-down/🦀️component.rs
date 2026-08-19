@@ -20,7 +20,7 @@ pub struct CanvasPointerDown {
 /// a hit no longer writes `WiresConfigMutation::SetSelection` directly, it asks the host to
 /// redispatch `interactionSelect` for the "graph" domain's "node" granularity — the in-flight drag
 /// state (`SetDrag`) stays a plain config mutation since it is genuinely app-specific.
-pub fn handle(payload: &CanvasPointerDown, doc: &ArtifactView<'_, WiresSnapshot>, _cfg: &ConfigView<'_, WiresConfig>) -> Result<Emit<WiresMutation, WiresConfigMutation>, Fault> {
+pub async fn handle(payload: &CanvasPointerDown, doc: &ArtifactView<'_, WiresSnapshot>, _cfg: &ConfigView<'_, WiresConfig>) -> Result<Emit<WiresMutation, WiresConfigMutation>, Fault> {
     let document = doc.snapshot;
     match payload.id.as_deref().filter(|id| find_board_node(document, id).is_some()) {
         Some(id) => Ok(Emit {
@@ -44,7 +44,7 @@ mod tests {
     use semio_framework::kernel::Effect;
 
     #[test]
-    fn pointer_drag_translates_node_by_screen_delta() {
+    async fn pointer_drag_translates_node_by_screen_delta() {
         let mut app = new_app();
         dispatch(&mut app, WiresCommand::AddNode(add_node::AddNode { kind: "identity".into() }));
         dispatch(&mut app, WiresCommand::CanvasPointerDown(CanvasPointerDown { id: Some("node-1".into()), x: 100.0, y: 100.0 }));
@@ -62,7 +62,7 @@ mod tests {
     /// 🕹️ A hit requests `interactionSelect` for the "graph" domain's "node" granularity instead of
     /// mutating config directly.
     #[test]
-    fn pointer_down_requests_a_select_effect_for_the_hit_node() {
+    async fn pointer_down_requests_a_select_effect_for_the_hit_node() {
         let mut app = new_app();
         dispatch(&mut app, WiresCommand::AddNode(add_node::AddNode { kind: "identity".into() }));
         let result = dispatch(&mut app, WiresCommand::CanvasPointerDown(CanvasPointerDown { id: Some("node-1".into()), x: 10.0, y: 20.0 }));
@@ -75,7 +75,7 @@ mod tests {
     }
 
     #[test]
-    fn pointer_down_on_empty_space_requests_no_select_effect() {
+    async fn pointer_down_on_empty_space_requests_no_select_effect() {
         let mut app = new_app();
         let result = dispatch(&mut app, WiresCommand::CanvasPointerDown(CanvasPointerDown { id: None, x: 0.0, y: 0.0 }));
         assert!(result.requested_effects.is_empty());

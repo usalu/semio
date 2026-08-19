@@ -4,7 +4,7 @@ use crate::editor::puzzle3d::{default_fixture, drive_precompute, empty_fixture, 
 use crate::editor::puzzle3d::config::Puzzle3dRuntime;
 use serde_json::Value;
 
-pub fn set_active_example(ctx: &mut Puzzle3dActionCtx<'_>, args: Option<&Value>) {
+pub async fn set_active_example(ctx: &mut Puzzle3dActionCtx<'_>, args: Option<&Value>) {
     let example_id = args.and_then(|value| value.get("exampleId")).and_then(|value| value.as_str()).unwrap_or("");
     let next = if example_id.is_empty() {
         Some(empty_fixture())

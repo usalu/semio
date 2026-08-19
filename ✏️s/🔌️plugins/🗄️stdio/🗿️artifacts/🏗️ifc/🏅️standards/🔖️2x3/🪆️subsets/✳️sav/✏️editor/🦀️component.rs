@@ -33,10 +33,10 @@ pub enum Ifc2x3SavEditCommand {
 }
 
 impl protocol::OpBinary for Ifc2x3SavEditCommand {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         Ok(Vec::new())
     }
-    fn decode_op(_bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    async fn decode_op(_bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         Ok(Ifc2x3SavEditCommand::SetVertex)
     }
 }
@@ -62,16 +62,16 @@ impl ArtifactEditor for Ifc2x3SavEditor {
     const DIALECT: Dialect = IFC2X3_SAV_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = IFC2X3_SAV_DOCUMENT_SCHEMA;
 
-    fn initial_snapshot() -> Ifc2x3Snapshot {
+    async fn initial_snapshot() -> Ifc2x3Snapshot {
         Ifc2x3Snapshot::default()
     }
 
-    fn handle(command: &Self::Command, _doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _interaction: &InteractionView<'_>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
+    async fn handle(command: &Self::Command, _doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _interaction: &InteractionView<'_>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
         let _ = command;
         Ok(Emit::default())
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> UiNode {
+    async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> UiNode {
         match body_key {
             main::BODY_KEY => main::render(doc.snapshot),
             _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))),
@@ -81,7 +81,7 @@ impl ArtifactEditor for Ifc2x3SavEditor {
 //#endregion 🔖️Editor
 
 //#region 🔖️Manifest
-pub fn create_ifc2x3_sav_editor() -> semio_framework_plugin::AppDefinition {
+pub async fn create_ifc2x3_sav_editor() -> semio_framework_plugin::AppDefinition {
     Editor::builder(IFC2X3_SAV_DIALECT)
         .document(["stdio", "ifc2x3"])
         .icon_id("box")
@@ -99,19 +99,19 @@ mod tests {
     use super::*;
 
     #[test]
-    fn create_editor_builds_a_definition_for_the_editor_role() {
+    async fn create_editor_builds_a_definition_for_the_editor_role() {
         let def = create_ifc2x3_sav_editor();
         assert_eq!(def.role, semio_framework_plugin::AppRole::Editor);
         assert_eq!(def.dialect, IFC2X3_SAV_DIALECT.into());
     }
 
     #[test]
-    fn editor_dialect_matches_the_artifact_coordinate() {
+    async fn editor_dialect_matches_the_artifact_coordinate() {
         assert_eq!(<Ifc2x3SavEditor as ArtifactEditor>::DIALECT, IFC2X3_SAV_DIALECT);
     }
 
     #[test]
-    fn editor_and_viewer_share_one_dialect() {
+    async fn editor_and_viewer_share_one_dialect() {
         semio_framework_plugin::testkit::assert_editor_and_viewer_share_dialect::<Ifc2x3SavEditor, crate::viewer::ifc2x3_sav::Ifc2x3SavViewer>();
     }
 }

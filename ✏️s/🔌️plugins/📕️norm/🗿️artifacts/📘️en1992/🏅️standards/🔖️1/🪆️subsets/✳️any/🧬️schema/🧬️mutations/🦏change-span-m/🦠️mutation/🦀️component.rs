@@ -15,15 +15,15 @@ pub struct ChangeSpanM {
 impl protocol::MutationKind<En1992Snapshot, En1992Mutation> for ChangeSpanM {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "span-m", kind: "change-span-m", record: "ChangedSpanM" };
 
-    fn diff(&self, base: &En1992Snapshot) -> protocol::MutationOutcome<En1992Diff> {
+    async fn diff(&self, base: &En1992Snapshot) -> protocol::MutationOutcome<En1992Diff> {
         crate::artifacts::en1992::mutations::change_span_m::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &En1992Snapshot) -> Vec<En1992Mutation> {
+    async fn inverse(&self, base: &En1992Snapshot) -> Vec<En1992Mutation> {
         crate::artifacts::en1992::mutations::change_span_m::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         format!("Change span m to {:?}", self.new_span_m)
     }
 }

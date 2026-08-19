@@ -18,12 +18,12 @@ pub const PUZZLE5D_NAKAGIN_EXAMPLE_TEXT: &str = include_str!("../../../📚️ex
 pub const PUZZLE5D_CAPSULE_DREAM_EXAMPLE_TEXT: &str = include_str!("../../../📚️examples/🌙️capsule-dream/🖼️assets/🗣️dream.dsl.semio");
 
 /// 📖️ Parses `.puzzle5d` DSL text into a `Puzzle5dSnapshot`.
-pub fn parse_dsl(text: &str) -> Result<Puzzle5dSnapshot, store::TextError> {
+pub async fn parse_dsl(text: &str) -> Result<Puzzle5dSnapshot, store::TextError> {
     <Puzzle5dSnapshot as store::ArtifactDsl>::parse_dsl(text)
 }
 
 /// 🖨️ Prints a `Puzzle5dSnapshot` back to `.puzzle5d` DSL text.
-pub fn print_dsl(document: &Puzzle5dSnapshot) -> String {
+pub async fn print_dsl(document: &Puzzle5dSnapshot) -> String {
     store::ArtifactDsl::print_dsl(document)
 }
 
@@ -34,7 +34,7 @@ mod tests {
     use crate::artifacts::puzzle5d::{Puzzle5dFastener, Puzzle5dGrip, Puzzle5dGrip2d, Puzzle5dGrip3d, Puzzle5dKindCompatibility, Puzzle5dMeta, Puzzle5dPart, Puzzle5dPart2d, Puzzle5dPart3d, Puzzle5dScale, Puzzle5dPartAnchor, Puzzle5dCompatSpecificity};
 
     #[test]
-    fn puzzle5d_projection_dsl_round_trips() {
+    async fn puzzle5d_projection_dsl_round_trips() {
         let empty = Puzzle5dSnapshot::default();
         semio_framework_os_kernel::os_store::test_support::assert_dsl_round_trip(&empty);
         semio_framework_os_kernel::os_store::test_support::assert_dsl_pack_equivalence(&empty);
@@ -84,7 +84,7 @@ mod tests {
     /// 🎫️convertpuzzle2d3d5dtotypeddslderiveengine) parse as `.puzzle5d` DSL text and round-trip
     /// through `print_dsl`/`parse_dsl` exactly.
     #[test]
-    fn puzzle5d_example_fixtures_parse_and_round_trip_as_dsl() {
+    async fn puzzle5d_example_fixtures_parse_and_round_trip_as_dsl() {
         for (name, dsl_text) in [("forest", PUZZLE5D_CONCRETE_FOREST_EXAMPLE_TEXT), ("tower", PUZZLE5D_NAKAGIN_EXAMPLE_TEXT)] {
             let projection = parse_dsl(dsl_text).unwrap_or_else(|error| panic!("{name} example fixture parses as dsl: {error}"));
             semio_framework_os_kernel::os_store::test_support::assert_dsl_round_trip(&projection);
@@ -102,7 +102,7 @@ mod tests {
     /// `SetPart` operation (not a `#[dsl(table)]` collection), so this is unaffected by the
     /// known table-column pack bug noted above.
     #[test]
-    fn command_envelope_round_trip_holds_for_an_applied_operation() {
+    async fn command_envelope_round_trip_holds_for_an_applied_operation() {
         use crate::artifacts::puzzle5d::op::Puzzle5dMutation;
         use crate::artifacts::puzzle5d::spr::Puzzle5dStore;
         use protocol::{ArtifactId, Edit, SchemaId};

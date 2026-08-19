@@ -4,7 +4,7 @@ use crate::artifacts::block3d::Block3dSnapshot;
 use crate::{BlockKindIdentity};
 
 //#region 🔖️Diff
-pub fn diff(payload: &super::mutation::RenameObjectKind, base: &Block3dSnapshot) -> protocol::MutationOutcome<Block3dDiff> {
+pub async fn diff(payload: &super::mutation::RenameObjectKind, base: &Block3dSnapshot) -> protocol::MutationOutcome<Block3dDiff> {
     // 🪪️ `object_kind` is the document's single root kind (not a catalog member addressed by id), so
     // there is no missing-target case and no collection to collide with — only the no-op check applies.
     if payload.new_name == base.object_kind.name {

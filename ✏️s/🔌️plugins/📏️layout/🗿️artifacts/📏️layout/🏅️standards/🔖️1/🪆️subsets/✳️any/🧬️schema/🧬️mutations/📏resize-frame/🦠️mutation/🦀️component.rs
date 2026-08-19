@@ -16,16 +16,16 @@ pub struct ResizeFrame {
 
 impl MutationKind<LayoutSnapshot, LayoutMutation> for ResizeFrame {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "resize", entity: "frame", kind: "resize-frame", record: "ResizedFrame" };
-    fn diff(&self, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
+    async fn diff(&self, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
         super::diff::diff_resize_frame(self, base)
     }
-    fn inverse(&self, base: &LayoutSnapshot) -> Vec<LayoutMutation> {
+    async fn inverse(&self, base: &LayoutSnapshot) -> Vec<LayoutMutation> {
         super::inverse::inverse_resize_frame(self, base)
     }
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         format!("Resize frame \"{}\"", self.frame_id)
     }
-    fn target(&self) -> Vec<String> {
+    async fn target(&self) -> Vec<String> {
         vec![self.page_id.clone(), self.frame_id.clone()]
     }
 }

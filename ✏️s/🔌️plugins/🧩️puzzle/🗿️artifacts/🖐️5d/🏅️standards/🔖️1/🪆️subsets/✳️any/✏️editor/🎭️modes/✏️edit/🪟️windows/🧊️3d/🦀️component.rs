@@ -35,7 +35,7 @@ pub const SURFACE_ID: &str = "puzzle.5d.play.3d";
 /// 🔁️ The `brush`/`fill` utility ids it binds resolve to the definitions declared once under the 2D
 /// window (`🪟️windows/◻2d/🪛️utilities/{🖌️brush,🪣️fill}`) — both windows expose the identical utility,
 /// so it is never duplicated here.
-pub fn definition(envelope: &Puzzle5dScene, precompute: &Puzzle5dPrecomputeSession, labels: &Puzzle5dLabels) -> WindowKindDefinition {
+pub async fn definition(envelope: &Puzzle5dScene, precompute: &Puzzle5dPrecomputeSession, labels: &Puzzle5dLabels) -> WindowKindDefinition {
     WindowKindDefinition {
         id: WINDOW_KIND_ID.into(),
         label: puzzle5d_localized(|l| l.window_3d),
@@ -63,24 +63,24 @@ pub fn definition(envelope: &Puzzle5dScene, precompute: &Puzzle5dPrecomputeSessi
 
 /// 🎚️ The live chrome measures for this window: its own sun group plus the mode-level brush/fill
 /// Utility Options groups it shares with the 2D window.
-pub fn window_measures(envelope: &Puzzle5dScene, precompute: &Puzzle5dPrecomputeSession, labels: &Puzzle5dLabels) -> Vec<WindowMeasure> {
+pub async fn window_measures(envelope: &Puzzle5dScene, precompute: &Puzzle5dPrecomputeSession, labels: &Puzzle5dLabels) -> Vec<WindowMeasure> {
     vec![options::sun::measure(&envelope.runtime), mode_options::fill::measure(envelope, labels), mode_options::brush::measure(envelope, precompute, labels)]
 }
 
-pub fn engagement(envelope: &Puzzle5dScene, labels: &Puzzle5dLabels) -> WindowEngagement {
+pub async fn engagement(envelope: &Puzzle5dScene, labels: &Puzzle5dLabels) -> WindowEngagement {
     edit::puzzle5d_engagement(envelope, WINDOW_KIND_ID, labels)
 }
 //#endregion 🔖️Definition
 
 //#region 🔖️SceneJson
-pub fn camera3d_json(camera: &Puzzle5dCamera3d) -> String {
+pub async fn camera3d_json(camera: &Puzzle5dCamera3d) -> String {
     json!({ "position": camera.position, "target": camera.target, "zoom": camera.zoom, "fov": 45.0 }).to_string()
 }
 
 /// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM known gap: `selected`/`hovered` per
 /// instance always read `false` now — see `world_selection_json_ex`'s doc comment for why (`render`
 /// has no `InteractionView`).
-fn world_instances_json(document: &Puzzle5dDocument, _runtime: &Puzzle5dRuntime) -> String {
+async fn world_instances_json(document: &Puzzle5dDocument, _runtime: &Puzzle5dRuntime) -> String {
     let instances: Vec<Value> = document
         .parts
         .iter()
@@ -102,11 +102,11 @@ fn world_instances_json(document: &Puzzle5dDocument, _runtime: &Puzzle5dRuntime)
     serde_json::to_string(&instances).unwrap_or_else(|_| "[]".into())
 }
 
-fn world_meshes_json(document: &Puzzle5dDocument) -> String {
+async fn world_meshes_json(document: &Puzzle5dDocument) -> String {
     world3d_meshes_json_from_urls(&collect_mesh_urls(document))
 }
 
-fn grip_color(kind_catalogs: Option<&Value>, grip_kind: &str) -> String {
+async fn grip_color(kind_catalogs: Option<&Value>, grip_kind: &str) -> String {
     kind_catalogs
         .and_then(|catalogs| catalogs.get("grips"))
         .and_then(|value| value.as_array())
@@ -115,7 +115,7 @@ fn grip_color(kind_catalogs: Option<&Value>, grip_kind: &str) -> String {
         .unwrap_or_else(|| "#38bdf8".into())
 }
 
-fn world_grips_json(document: &Puzzle5dDocument) -> String {
+async fn world_grips_json(document: &Puzzle5dDocument) -> String {
     let mut records = Vec::new();
     for part in &document.parts {
         for grip in &part.grips {
@@ -133,7 +133,7 @@ fn world_grips_json(document: &Puzzle5dDocument) -> String {
     serde_json::to_string(&records).unwrap_or_else(|_| "[]".into())
 }
 
-fn world_fasteners_json(document: &Puzzle5dDocument) -> String {
+async fn world_fasteners_json(document: &Puzzle5dDocument) -> String {
     let records: Vec<Value> = document
         .fasteners
         .iter()
@@ -152,7 +152,7 @@ fn world_fasteners_json(document: &Puzzle5dDocument) -> String {
 /// the framework-owned `vortex` interaction domain; `render` has no `InteractionView` to read it from
 /// (see `puzzle3d`'s `world_selection_json` doc comment for the identical gap), so this payload
 /// carries no live ids until that framework gap closes.
-fn world_selection_json_ex(envelope: &Puzzle5dScene) -> String {
+async fn world_selection_json_ex(envelope: &Puzzle5dScene) -> String {
     let runtime = &envelope.runtime;
     let mut value: Value = serde_json::from_str(&world3d_selection_json("pick", &[], None)).unwrap_or_else(|_| json!({}));
     if let Some(object) = value.as_object_mut() {
@@ -167,7 +167,7 @@ fn world_selection_json_ex(envelope: &Puzzle5dScene) -> String {
     value.to_string()
 }
 
-fn world_interaction_json(runtime: &Puzzle5dRuntime, active_utility: &str) -> String {
+async fn world_interaction_json(runtime: &Puzzle5dRuntime, active_utility: &str) -> String {
     json!({
         "activeUtility": puzzle5d_scene_mode(active_utility),
         "brushCandidateIndex": runtime.brush_candidate_index,
@@ -177,7 +177,7 @@ fn world_interaction_json(runtime: &Puzzle5dRuntime, active_utility: &str) -> St
 }
 
 /// 👻️ Ghost placement for the brush utility — only while the brush utility is actually active.
-fn world_brush_preview_json(session: &Puzzle5dPrecomputeSession, envelope: &Puzzle5dScene) -> Option<String> {
+async fn world_brush_preview_json(session: &Puzzle5dPrecomputeSession, envelope: &Puzzle5dScene) -> Option<String> {
     if envelope.active_utility != board2d::utilities::brush::UTILITY_ID {
         return None;
     }
@@ -187,7 +187,7 @@ fn world_brush_preview_json(session: &Puzzle5dPrecomputeSession, envelope: &Puzz
 //#endregion 🔖️SceneJson
 
 //#region 🔖️Render
-pub fn render(envelope: &Puzzle5dScene, precompute: &Puzzle5dPrecomputeSession) -> UiNode {
+pub async fn render(envelope: &Puzzle5dScene, precompute: &Puzzle5dPrecomputeSession) -> UiNode {
     let brush_preview = world_brush_preview_json(precompute, envelope);
     build_world_3d_scene(
         SURFACE_ID,
@@ -226,7 +226,7 @@ mod tests {
     use crate::editor::puzzle5d::testkit::*;
 
     #[test]
-    fn renders_the_world_scene() {
+    async fn renders_the_world_scene() {
         let mut app = app();
         assert!(render_body(&mut app, BODY_KEY).contains("world-3d"));
     }

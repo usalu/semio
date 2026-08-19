@@ -24,7 +24,7 @@ pub struct BcfTopicStats {
 
 /// 🗒️ Computes [`BcfTopicStats`] via one pass over `topics` — see module doc comment for the
 /// exact per-field derivation.
-pub fn compute_bcf_topic_stats(snapshot: &BcfSnapshot) -> BcfTopicStats {
+pub async fn compute_bcf_topic_stats(snapshot: &BcfSnapshot) -> BcfTopicStats {
     let mut comment_count = 0u32;
     let mut viewpoint_count = 0u32;
     let mut authors: BTreeSet<&str> = BTreeSet::new();
@@ -49,16 +49,16 @@ mod tests {
     use crate::artifacts::bcf::standards::v2_1::subsets::any::schema::snapshot::{BcfComment, BcfTopic, BcfViewpoint};
     use crate::artifacts::bcf::STDIO_BCF_DOCUMENT_SCHEMA;
 
-    fn comment(guid: &str, author: &str) -> BcfComment {
+    async fn comment(guid: &str, author: &str) -> BcfComment {
         BcfComment { guid: guid.into(), date: "2026-01-01T00:00:00Z".into(), author: author.into(), text: "note".into(), viewpoint_ref: None }
     }
 
-    fn viewpoint(guid: &str) -> BcfViewpoint {
+    async fn viewpoint(guid: &str) -> BcfViewpoint {
         BcfViewpoint { guid: guid.into(), camera: None, components: None, snapshot: None }
     }
 
     #[test]
-    fn counts_topics_comments_viewpoints_and_distinct_authors() {
+    async fn counts_topics_comments_viewpoints_and_distinct_authors() {
         let snapshot = BcfSnapshot {
             schema: STDIO_BCF_DOCUMENT_SCHEMA.into(),
             version: "2.1".into(),
@@ -99,13 +99,13 @@ mod tests {
     }
 
     #[test]
-    fn inference_determinism_law() {
+    async fn inference_determinism_law() {
         let snapshot = BcfSnapshot::default();
         assert_eq!(compute_bcf_topic_stats(&snapshot), compute_bcf_topic_stats(&snapshot));
     }
 
     #[test]
-    fn inference_default_law() {
+    async fn inference_default_law() {
         assert_eq!(compute_bcf_topic_stats(&BcfSnapshot::default()), BcfTopicStats::default());
     }
 }

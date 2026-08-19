@@ -27,12 +27,12 @@ pub struct SemioCadBounds {
 /// entity set has no honest min/max — `[0,0]`/`[0,0]` matches what `compute` returns for zero
 /// entities (the fold's identity value), keeping the inference-default law correct.
 impl Default for SemioCadBounds {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self { min: SemioPoint2 { x: 0.0, y: 0.0 }, max: SemioPoint2 { x: 0.0, y: 0.0 }, entity_count: 0 }
     }
 }
 
-fn expand(min: &mut SemioPoint2, max: &mut SemioPoint2, seen: &mut bool, p: SemioPoint2) {
+async fn expand(min: &mut SemioPoint2, max: &mut SemioPoint2, seen: &mut bool, p: SemioPoint2) {
     if !*seen {
         *min = p;
         *max = p;
@@ -45,12 +45,12 @@ fn expand(min: &mut SemioPoint2, max: &mut SemioPoint2, seen: &mut bool, p: Semi
     max.y = max.y.max(p.y);
 }
 
-fn expand_circle(min: &mut SemioPoint2, max: &mut SemioPoint2, seen: &mut bool, center: SemioPoint2, radius: f64) {
+async fn expand_circle(min: &mut SemioPoint2, max: &mut SemioPoint2, seen: &mut bool, center: SemioPoint2, radius: f64) {
     expand(min, max, seen, SemioPoint2 { x: center.x - radius, y: center.y - radius });
     expand(min, max, seen, SemioPoint2 { x: center.x + radius, y: center.y + radius });
 }
 
-fn expand_entity(min: &mut SemioPoint2, max: &mut SemioPoint2, seen: &mut bool, entity: &CadEntity) {
+async fn expand_entity(min: &mut SemioPoint2, max: &mut SemioPoint2, seen: &mut bool, entity: &CadEntity) {
     match entity {
         CadEntity::Line { a, b } => {
             expand(min, max, seen, *a);
@@ -84,7 +84,7 @@ fn expand_entity(min: &mut SemioPoint2, max: &mut SemioPoint2, seen: &mut bool, 
 
 /// 📦️ Computes [`SemioCadBounds`] over every top-level `entities` record plus every block's own
 /// nested `entities` — see module doc comment for the per-variant bounding rule.
-pub fn compute_semio_cad_bounds(snapshot: &SemioCadSnapshot) -> SemioCadBounds {
+pub async fn compute_semio_cad_bounds(snapshot: &SemioCadSnapshot) -> SemioCadBounds {
     let mut min = SemioPoint2 { x: 0.0, y: 0.0 };
     let mut max = SemioPoint2 { x: 0.0, y: 0.0 };
     let mut seen = false;
@@ -106,16 +106,16 @@ mod tests {
     use super::*;
     use crate::artifacts::semio::standards::v1::subsets::cad::schema::snapshot::{CadBlock, CadEntityRecord, STDIO_SEMIOCAD_DOCUMENT_SCHEMA};
 
-    fn point(x: f64, y: f64) -> SemioPoint2 {
+    async fn point(x: f64, y: f64) -> SemioPoint2 {
         SemioPoint2 { x, y }
     }
 
-    fn record(handle: &str, layer: &str, entity: CadEntity) -> CadEntityRecord {
+    async fn record(handle: &str, layer: &str, entity: CadEntity) -> CadEntityRecord {
         CadEntityRecord { handle: handle.into(), layer: layer.into(), entity }
     }
 
     #[test]
-    fn bounds_matches_hand_built_entity_extent() {
+    async fn bounds_matches_hand_built_entity_extent() {
         let snapshot = SemioCadSnapshot {
             schema: STDIO_SEMIOCAD_DOCUMENT_SCHEMA.into(),
             layers: Vec::new(),
@@ -129,13 +129,13 @@ mod tests {
     }
 
     #[test]
-    fn inference_determinism_law() {
+    async fn inference_determinism_law() {
         let snapshot = SemioCadSnapshot { schema: STDIO_SEMIOCAD_DOCUMENT_SCHEMA.into(), layers: Vec::new(), blocks: Vec::new(), entities: vec![record("h0", "0", CadEntity::Line { a: point(0.0, 0.0), b: point(1.0, 1.0) })] };
         assert_eq!(compute_semio_cad_bounds(&snapshot), compute_semio_cad_bounds(&snapshot));
     }
 
     #[test]
-    fn inference_default_law() {
+    async fn inference_default_law() {
         assert_eq!(compute_semio_cad_bounds(&SemioCadSnapshot::default()), SemioCadBounds::default());
     }
 }

@@ -24,7 +24,7 @@ pub struct SemioCadInference {
 }
 
 impl protocol::Inference<SemioCadSnapshot> for SemioCadInference {
-    fn infer(snapshot: &SemioCadSnapshot) -> Self {
+    async fn infer(snapshot: &SemioCadSnapshot) -> Self {
         Self { bounds: compute_semio_cad_bounds(snapshot) }
     }
 }
@@ -32,19 +32,19 @@ impl protocol::Inference<SemioCadSnapshot> for SemioCadInference {
 /// 🌱 Defined in terms of `infer` (not derived) — keeps the law correct regardless of whether
 /// `SemioCadSnapshot::default()`'s `entities`/`blocks` ever stop being empty.
 impl Default for SemioCadInference {
-    fn default() -> Self {
+    async fn default() -> Self {
         <Self as protocol::Inference<SemioCadSnapshot>>::infer(&SemioCadSnapshot::default())
     }
 }
 
 impl protocol::InferenceSpec<SemioCadSnapshot> for SemioCadInference {
-    fn inference_schema_id() -> &'static str {
+    async fn inference_schema_id() -> &'static str {
         "s.stdio.semio.cad.inference"
     }
-    fn schema_version() -> u32 {
+    async fn schema_version() -> u32 {
         1
     }
-    fn fields() -> &'static [protocol::InferenceFieldSpec] {
+    async fn fields() -> &'static [protocol::InferenceFieldSpec] {
         &[protocol::InferenceFieldSpec { id: "s.stdio.semio.cad.inference.bounds", reads: &["entities", "blocks"] }]
     }
 }
@@ -65,7 +65,7 @@ impl ArtifactInferrer for crate::artifacts::semio::standards::v1::subsets::cad::
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.stdio.semio.cad.inference`'s facet leaves into the OS-wide inference catalog —
 /// call once at plugin init, alongside `semio_cad_artifact_schema_descriptor`'s registration.
-pub fn semio_cad_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
+pub async fn semio_cad_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
     schema::ArtifactInferenceDescriptor {
         id: "s.stdio.semio.cad.inference",
         inference: schema::FacetLeaves {
@@ -86,13 +86,13 @@ mod tests {
     use protocol::Inference;
 
     #[test]
-    fn inference_determinism_law() {
+    async fn inference_determinism_law() {
         let snapshot = SemioCadSnapshot::default();
         assert_eq!(SemioCadInference::infer(&snapshot), SemioCadInference::infer(&snapshot));
     }
 
     #[test]
-    fn inference_default_law() {
+    async fn inference_default_law() {
         assert_eq!(SemioCadInference::infer(&SemioCadSnapshot::default()), SemioCadInference::default());
     }
 }

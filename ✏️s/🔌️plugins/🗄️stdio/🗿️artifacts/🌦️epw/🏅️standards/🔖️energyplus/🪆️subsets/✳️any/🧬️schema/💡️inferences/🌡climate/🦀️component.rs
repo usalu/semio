@@ -28,14 +28,14 @@ pub struct EpwClimateSummary {
 /// explicitly rather than assumed to fall out of `#[derive(Default)]` — the divide-by-zero guard
 /// logic lives in `compute_epw_climate_summary`, not in a derive.
 impl Default for EpwClimateSummary {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self { record_count: 0, parsed_temp_count: 0, min_dry_bulb_c: 0.0, max_dry_bulb_c: 0.0, avg_dry_bulb_c: 0.0 }
     }
 }
 
 /// 🌡️ Computes [`EpwClimateSummary`] via one pass over `records` — see module doc comment for the
 /// exact parse/skip/fold rule.
-pub fn compute_epw_climate_summary(snapshot: &EpwSnapshot) -> EpwClimateSummary {
+pub async fn compute_epw_climate_summary(snapshot: &EpwSnapshot) -> EpwClimateSummary {
     let mut parsed_temp_count = 0u32;
     let mut min = f64::INFINITY;
     let mut max = f64::NEG_INFINITY;
@@ -62,12 +62,12 @@ mod tests {
     use super::*;
     use crate::artifacts::epw::standards::energyplus::subsets::any::schema::snapshot::{EpwRecord, STDIO_EPW_DOCUMENT_SCHEMA};
 
-    fn record(dry_bulb_temp: &str) -> EpwRecord {
+    async fn record(dry_bulb_temp: &str) -> EpwRecord {
         EpwRecord { dry_bulb_temp: dry_bulb_temp.into(), ..Default::default() }
     }
 
     #[test]
-    fn folds_parseable_temps_and_skips_malformed_ones() {
+    async fn folds_parseable_temps_and_skips_malformed_ones() {
         let snapshot = EpwSnapshot { schema: STDIO_EPW_DOCUMENT_SCHEMA.into(), records: vec![record("10.0"), record("not-a-number"), record("30.0"), record("20.0")], ..Default::default() };
         let climate = compute_epw_climate_summary(&snapshot);
         assert_eq!(climate.record_count, 4);
@@ -78,13 +78,13 @@ mod tests {
     }
 
     #[test]
-    fn inference_determinism_law() {
+    async fn inference_determinism_law() {
         let snapshot = EpwSnapshot::default();
         assert_eq!(compute_epw_climate_summary(&snapshot), compute_epw_climate_summary(&snapshot));
     }
 
     #[test]
-    fn inference_default_law() {
+    async fn inference_default_law() {
         assert_eq!(compute_epw_climate_summary(&EpwSnapshot::default()), EpwClimateSummary::default());
     }
 }

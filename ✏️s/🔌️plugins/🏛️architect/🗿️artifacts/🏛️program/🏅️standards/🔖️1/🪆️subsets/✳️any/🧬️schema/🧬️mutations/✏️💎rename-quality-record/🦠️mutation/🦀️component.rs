@@ -19,16 +19,16 @@ pub struct RenameQualityRecord {
 }
 impl MutationKind<ProgramSnapshot, ProgramMutation> for RenameQualityRecord {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "rename", entity: "quality-record", kind: "rename-quality-record", record: "RenamedQualityRecord" };
-    fn diff(&self, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
+    async fn diff(&self, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {
+    async fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         format!("Rename quality record to \"{}\"", self.new_name)
     }
-    fn target(&self) -> Vec<String> {
+    async fn target(&self) -> Vec<String> {
         vec![self.id.0.clone()]
     }
 }

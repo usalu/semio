@@ -15,16 +15,16 @@ pub struct RemoveMark {
 impl protocol::MutationKind<SemioTextSnapshot, SemioTextMutation> for RemoveMark {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "mark", kind: "remove-mark", record: "RemovedMarkFromRun" };
 
-    fn diff(&self, base: &SemioTextSnapshot) -> protocol::MutationOutcome<<SemioTextMutation as protocol::Mutation<SemioTextSnapshot>>::Diff> {
+    async fn diff(&self, base: &SemioTextSnapshot) -> protocol::MutationOutcome<<SemioTextMutation as protocol::Mutation<SemioTextSnapshot>>::Diff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &SemioTextSnapshot) -> Vec<SemioTextMutation> {
+    async fn inverse(&self, base: &SemioTextSnapshot) -> Vec<SemioTextMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         format!("Remove mark #{} from run #{}", self.index, self.run_index)
     }
-    fn target(&self) -> Vec<String> {
+    async fn target(&self) -> Vec<String> {
         vec![self.run_index.to_string(), self.index.to_string()]
     }
 }

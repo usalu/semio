@@ -4,7 +4,7 @@ use super::mutation::DeleteSavedCamera;
 use crate::artifacts::shooting::ShootingSnapshot;
 use crate::artifacts::shooting::diff::{ShootingSavedCamerasDelta, ShootingDiff};
 
-pub fn diff(payload: &DeleteSavedCamera, base: &ShootingSnapshot) -> protocol::MutationOutcome<ShootingDiff> {
+pub async fn diff(payload: &DeleteSavedCamera, base: &ShootingSnapshot) -> protocol::MutationOutcome<ShootingDiff> {
     if !base.saved_cameras.iter().any(|camera| camera.id == payload.id) {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Saved camera \"{}\" does not exist.", payload.id), [payload.id.clone()]);
     }

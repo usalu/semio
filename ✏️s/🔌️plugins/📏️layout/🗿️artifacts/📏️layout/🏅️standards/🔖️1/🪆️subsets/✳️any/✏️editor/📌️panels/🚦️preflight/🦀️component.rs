@@ -17,7 +17,7 @@ pub const LAYOUT_PLAY_PREFLIGHT_TAB_ID: &str = "layout.panel.preflight";
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
-pub fn definition() -> PanelTabDefinition {
+pub async fn definition() -> PanelTabDefinition {
     PanelTabDefinition { kind: PanelTabKind::App(LAYOUT_PLAY_PREFLIGHT_TAB_ID.into()), label: LocalizedLabel::native("Preflight", "Preflight"), group: PanelGroup::Workbench, body_key: Some(LAYOUT_PLAY_BODY_PREFLIGHT.into()), children: Vec::new() }
 }
 //#endregion 🔖️Definition
@@ -35,7 +35,7 @@ pub struct PreflightIssue {
     pub page_id: Option<String>,
 }
 
-fn resolve_link_state(link: &crate::artifacts::layout::ImageLink) -> &str {
+async fn resolve_link_state(link: &crate::artifacts::layout::ImageLink) -> &str {
     if let Some(state) = link.state.as_deref() {
         return state;
     }
@@ -48,7 +48,7 @@ fn resolve_link_state(link: &crate::artifacts::layout::ImageLink) -> &str {
     "ok"
 }
 
-fn resolve_run_style(doc: &LayoutSnapshot, paragraph_style_id: Option<&str>, character_style_id: Option<&str>) -> (String, f64) {
+async fn resolve_run_style(doc: &LayoutSnapshot, paragraph_style_id: Option<&str>, character_style_id: Option<&str>) -> (String, f64) {
     let paragraph = paragraph_style_id.and_then(|id| doc.paragraph_styles.iter().find(|style| style.id == id)).or_else(|| doc.paragraph_styles.first());
     let (mut family, mut size) = paragraph.map_or_else(|| ("Layout Sans".into(), 12.0), |style| (style.font_family.clone(), style.font_size));
     if let Some(character_id) = character_style_id {
@@ -66,7 +66,7 @@ fn resolve_run_style(doc: &LayoutSnapshot, paragraph_style_id: Option<&str>, cha
 
 /// 🚦️ Runs every preflight check over the document, returning the flat issue list — shared by this
 /// panel's tree and the export package's zip manifest.
-pub fn run_layout_preflight(doc: &LayoutSnapshot, labels: &LayoutLabels) -> Vec<PreflightIssue> {
+pub async fn run_layout_preflight(doc: &LayoutSnapshot, labels: &LayoutLabels) -> Vec<PreflightIssue> {
     let mut issues = Vec::new();
     for page in &doc.pages {
         let resolved = crate::artifacts::layout::schema::resolve_page(doc, page);
@@ -176,7 +176,7 @@ pub fn run_layout_preflight(doc: &LayoutSnapshot, labels: &LayoutLabels) -> Vec<
 //#endregion 🔖️Preflight
 
 //#region 🔖️Render
-fn layout_tree_item(id: impl Into<String>, label: impl Into<Label>, description: Option<String>, icon_id: Option<String>, action: Option<semio_framework_plugin::ActionDescriptor>) -> UiTreeItemNode {
+async fn layout_tree_item(id: impl Into<String>, label: impl Into<Label>, description: Option<String>, icon_id: Option<String>, action: Option<semio_framework_plugin::ActionDescriptor>) -> UiTreeItemNode {
     let mut item = match action {
         Some(action) => tree_item_with_action(id, label, description, action),
         None => tree_item_desc(id, label, description),
@@ -185,7 +185,7 @@ fn layout_tree_item(id: impl Into<String>, label: impl Into<Label>, description:
     item
 }
 
-pub fn render(doc: &LayoutSnapshot, cfg: &crate::editor::layout::config::LayoutConfig) -> UiNode {
+pub async fn render(doc: &LayoutSnapshot, cfg: &crate::editor::layout::config::LayoutConfig) -> UiNode {
     let labels = layout_labels(cfg);
     let issues = run_layout_preflight(doc, labels);
     let items: Vec<UiTreeItemNode> = if issues.is_empty() {
@@ -216,7 +216,7 @@ mod tests {
     use semio_framework_plugin::AppLabels;
 
     #[test]
-    fn preflight_finds_missing_asset() {
+    async fn preflight_finds_missing_asset() {
         let issues = run_layout_preflight(&crate::artifacts::layout::schema::default_document(), LayoutLabels::labels(semio_framework_plugin::Locale::En, semio_framework_plugin::Terminology::Native));
         assert!(issues.iter().any(|issue| issue.code == "asset.missing"));
         let mut app = layout_app();
@@ -225,7 +225,7 @@ mod tests {
     }
 
     #[test]
-    fn preflight_reports_all_expected_issue_codes() {
+    async fn preflight_reports_all_expected_issue_codes() {
         let json = r#"{
             "schema": "layout.layout",
             "name": "Preflight Fixture",
@@ -279,7 +279,7 @@ mod tests {
     }
 
     #[test]
-    fn definition_binds_the_preflight_tab_to_this_body_key() {
+    async fn definition_binds_the_preflight_tab_to_this_body_key() {
         let definition = definition();
         assert_eq!(definition.id(), LAYOUT_PLAY_PREFLIGHT_TAB_ID);
         assert_eq!(definition.body_key.as_deref(), Some(LAYOUT_PLAY_BODY_PREFLIGHT));

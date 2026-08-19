@@ -5,7 +5,7 @@ use crate::artifacts::din16798::mutations::change_sfp_required_class::mutation::
 use crate::artifacts::din16798::Din16798Snapshot;
 
 //#region 🔖️Diff
-pub fn diff(payload: &ChangeSfpRequiredClass, base: &Din16798Snapshot) -> protocol::MutationOutcome<Din16798Diff> {
+pub async fn diff(payload: &ChangeSfpRequiredClass, base: &Din16798Snapshot) -> protocol::MutationOutcome<Din16798Diff> {
     if base.sfp_required_class == payload.new_sfp_required_class {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Required SFP class is already {}.", payload.new_sfp_required_class));
     }

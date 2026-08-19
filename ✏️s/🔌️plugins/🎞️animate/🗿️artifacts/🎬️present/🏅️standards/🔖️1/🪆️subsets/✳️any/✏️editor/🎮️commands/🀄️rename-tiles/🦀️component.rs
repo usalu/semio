@@ -15,7 +15,7 @@ pub struct RenameTiles {
     pub value: String,
 }
 
-pub fn handle(payload: &RenameTiles, doc: &ArtifactView<'_, PresentSnapshot>, _cfg: &ConfigView<'_, PresentConfig>, _ctx: &mut PresentDispatchCtx) -> Result<Emit<PresentMutation, PresentConfigMutation>, Fault> {
+pub async fn handle(payload: &RenameTiles, doc: &ArtifactView<'_, PresentSnapshot>, _cfg: &ConfigView<'_, PresentConfig>, _ctx: &mut PresentDispatchCtx) -> Result<Emit<PresentMutation, PresentConfigMutation>, Fault> {
     let deck = doc.snapshot;
     let name = payload.value.trim();
     if name.is_empty() {

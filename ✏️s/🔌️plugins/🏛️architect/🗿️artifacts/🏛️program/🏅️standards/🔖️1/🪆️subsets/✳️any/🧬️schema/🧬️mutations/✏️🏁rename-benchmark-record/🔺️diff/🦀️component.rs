@@ -8,7 +8,7 @@ use crate::artifacts::program::ProgramSnapshot;
 /// ✏️ Sets the target row's `header.name` within the working-scene cache, then re-mints a fresh
 /// content-addressed `table` child handle. Error `mutation.target-missing` if absent, Warning
 /// `mutation.no-op` if the name is unchanged (both empty diff).
-pub fn diff(payload: &RenameBenchmarkRecord, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
+pub async fn diff(payload: &RenameBenchmarkRecord, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
     let mut records = crate::artifacts::program::program_benchmarks(base);
     let Some(existing) = records.iter_mut().find(|row| row.header.id == payload.id) else {
         return protocol::MutationOutcome::error("mutation.target-missing", "No benchmark record exists with this id.", [payload.id.0.clone()]);

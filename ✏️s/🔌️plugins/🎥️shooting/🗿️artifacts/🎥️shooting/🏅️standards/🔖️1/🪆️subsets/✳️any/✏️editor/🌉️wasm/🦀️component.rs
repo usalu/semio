@@ -25,7 +25,7 @@ mod wasm_bridge {
     #[wasm_bindgen]
     impl ShootingArtifactVcs {
         #[wasm_bindgen(constructor)]
-        pub fn new(envelope_json: Option<String>) -> Result<ShootingArtifactVcs, JsValue> {
+        pub async fn new(envelope_json: Option<String>) -> Result<ShootingArtifactVcs, JsValue> {
             let store = match envelope_json {
                 Some(json) => {
                     let envelope: ShootingEnvelope = serde_json::from_str(&json).map_err(|e| JsValue::from_str(&e.to_string()))?;
@@ -37,17 +37,17 @@ mod wasm_bridge {
         }
 
         #[wasm_bindgen(js_name = dispatchText)]
-        pub fn dispatch_text(&self, command_text: &str) -> Result<(), JsValue> {
+        pub async fn dispatch_text(&self, command_text: &str) -> Result<(), JsValue> {
             self.store.borrow_mut().dispatch_text(command_text).map(|_| ()).map_err(|e| JsValue::from_str(&e.to_string()))
         }
 
         #[wasm_bindgen(js_name = dispatchBinary)]
-        pub fn dispatch_binary(&self, command_bytes: &[u8]) -> Result<(), JsValue> {
+        pub async fn dispatch_binary(&self, command_bytes: &[u8]) -> Result<(), JsValue> {
             self.store.borrow_mut().dispatch_binary(command_bytes).map(|_| ()).map_err(|e| JsValue::from_str(&e.to_string()))
         }
 
         #[wasm_bindgen(js_name = projectionJson)]
-        pub fn projection_json(&self) -> Result<String, JsValue> {
+        pub async fn projection_json(&self) -> Result<String, JsValue> {
             self.store.borrow().snapshot_json().map_err(|e| JsValue::from_str(&e.to_string()))
         }
     }
@@ -62,7 +62,7 @@ mod tests {
     /// 🧪️ The non-wasm32 half of this file (the type aliases) must still compile and be usable from a
     /// native test — the `wasm_bridge` module itself only builds under `target_arch = "wasm32"`.
     #[test]
-    fn shooting_store_type_alias_constructs_from_an_empty_envelope() {
+    async fn shooting_store_type_alias_constructs_from_an_empty_envelope() {
         let store = ShootingStore::new(store::create_document_envelope(crate::artifacts::shooting::SHOOTING_DOCUMENT_SCHEMA, "shooting", crate::artifacts::shooting::empty_shooting_snapshot(), None));
         assert!(store.snapshot().expect("snapshot").assets.is_empty());
     }

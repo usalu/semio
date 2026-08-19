@@ -24,19 +24,19 @@ pub struct En1992Inference {
 }
 
 impl protocol::Inference<En1992Snapshot> for En1992Inference {
-    fn infer(snapshot: &En1992Snapshot) -> Self {
+    async fn infer(snapshot: &En1992Snapshot) -> Self {
         Self { outline: En1992Outline::compute(snapshot) }
     }
 }
 
 impl protocol::InferenceSpec<En1992Snapshot> for En1992Inference {
-    fn inference_schema_id() -> &'static str {
+    async fn inference_schema_id() -> &'static str {
         "s.norm.en1992.inference"
     }
-    fn schema_version() -> u32 {
+    async fn schema_version() -> u32 {
         1
     }
-    fn fields() -> &'static [protocol::InferenceFieldSpec] {
+    async fn fields() -> &'static [protocol::InferenceFieldSpec] {
         &[protocol::InferenceFieldSpec { id: "s.norm.en1992.inference.outline", reads: &[] }]
     }
 }
@@ -52,7 +52,7 @@ impl ArtifactInferrer for crate::artifacts::en1992::standards::v1::subsets::any:
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.norm.en1992.inference`'s facet leaves into the OS-wide inference catalog — call once at
 /// plugin init, alongside `en1992_artifact_schema_descriptor`'s registration.
-pub fn en1992_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
+pub async fn en1992_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
     schema::ArtifactInferenceDescriptor {
         id: "s.norm.en1992.inference",
         inference: schema::FacetLeaves {
@@ -73,13 +73,13 @@ mod tests {
     use protocol::Inference;
 
     #[test]
-    fn inference_determinism_law() {
+    async fn inference_determinism_law() {
         let snapshot = En1992Snapshot::default();
         assert_eq!(En1992Inference::infer(&snapshot), En1992Inference::infer(&snapshot));
     }
 
     #[test]
-    fn inference_default_law() {
+    async fn inference_default_law() {
         assert_eq!(En1992Inference::infer(&En1992Snapshot::default()), En1992Inference::default());
     }
 }
@@ -96,7 +96,7 @@ use crate::artifacts::en1992::standards::v1::subsets::any::schema::{check_full_r
 use crate::document::CheckReport;
 
 /// 📋️ `En1992Snapshot -> CheckReport` conformance law — the artifact's compliance evaluation.
-pub fn evaluate(document: &En1992Snapshot) -> CheckReport {
+pub async fn evaluate(document: &En1992Snapshot) -> CheckReport {
     let mut report = if document.use_fem {
         #[cfg(feature = "cross-fem")]
         {
@@ -135,7 +135,7 @@ mod compliance_report_tests {
 
     #[test]
     #[cfg(feature = "cross-fem")]
-    fn evaluate_fem_path() {
+    async fn evaluate_fem_path() {
         let doc = En1992Snapshot { use_fem: true, ..En1992Snapshot::default() };
         let report = evaluate(&doc);
         assert!(!report.checks.is_empty());
@@ -144,7 +144,7 @@ mod compliance_report_tests {
     }
 
     #[test]
-    fn evaluate_analytical_with_prestress() {
+    async fn evaluate_analytical_with_prestress() {
         let doc = En1992Snapshot { p_kn: 800.0, ..En1992Snapshot::default() };
         let report = evaluate(&doc);
         assert_eq!(report.checks.len(), 10);
@@ -152,7 +152,7 @@ mod compliance_report_tests {
     }
 
     #[test]
-    fn evaluate_covers_all_parts() {
+    async fn evaluate_covers_all_parts() {
         let report = evaluate(&En1992Snapshot::default());
         assert_eq!(report.checks.len(), 9);
         let families: Vec<&str> = report.checks.iter().map(|c| c.clause.family.as_str()).collect();

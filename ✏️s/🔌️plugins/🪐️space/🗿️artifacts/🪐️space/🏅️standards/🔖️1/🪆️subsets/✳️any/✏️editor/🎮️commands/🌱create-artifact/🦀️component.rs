@@ -25,7 +25,7 @@ pub struct CreateArtifact {
 /// `createSpace` handler (`🏠️home/…/🎮️commands/🌱create-space/🦀️component.rs`) — a raw toolbar-button
 /// click (`#s-space-create-artifact`, contract §C0) dispatches with no args at all, and this must open
 /// the already-declared `createArtifact` dialog instead of failing on an unknown empty `kind_id`.
-pub fn handle(payload: &CreateArtifact, doc: &ArtifactView<'_, SSpaceSnapshot>, _cfg: &ConfigView<'_, SpaceIndexConfig>) -> Result<Emit<SSpaceMutation, SpaceIndexConfigMutation>, Fault> {
+pub async fn handle(payload: &CreateArtifact, doc: &ArtifactView<'_, SSpaceSnapshot>, _cfg: &ConfigView<'_, SpaceIndexConfig>) -> Result<Emit<SSpaceMutation, SpaceIndexConfigMutation>, Fault> {
     if payload.name.trim().is_empty() || payload.kind_id.trim().is_empty() {
         return Ok(Emit::effect(Effect::OpenDialog {req: semio_framework_plugin::RequestId(130),  dialog_id: "createArtifact".into(), args: None }));
     }
@@ -58,7 +58,7 @@ mod tests {
     
 
     #[test]
-    fn create_artifact_mints_an_id_adds_a_row_and_relays_the_open_command() {
+    async fn create_artifact_mints_an_id_adds_a_row_and_relays_the_open_command() {
         let mut app = testkit::new_app();
         let result = app.dispatch_typed(SpaceIndexCommand::CreateArtifact(CreateArtifact { name: "First".into(), kind_id: "draw".into(), now_ms: 1, actor: "user:1".into() }), &semio_framework_plugin::testkit::meta("local")).expect("create artifact");
         let snapshot = app.snapshot().expect("projection");
@@ -80,7 +80,7 @@ mod tests {
     }
 
     #[test]
-    fn empty_name_and_kind_open_the_dialog_instead_of_failing() {
+    async fn empty_name_and_kind_open_the_dialog_instead_of_failing() {
         let mut app = testkit::new_app();
         let result = app
             .dispatch_typed(SpaceIndexCommand::CreateArtifact(CreateArtifact { name: String::new(), kind_id: String::new(), now_ms: 0, actor: String::new() }), &semio_framework_plugin::testkit::meta("local"))
@@ -98,14 +98,14 @@ mod tests {
     }
 
     #[test]
-    fn create_artifact_rejects_an_unknown_kind() {
+    async fn create_artifact_rejects_an_unknown_kind() {
         let mut app = testkit::new_app();
         let error = app.dispatch_typed(SpaceIndexCommand::CreateArtifact(CreateArtifact { name: "First".into(), kind_id: "nope".into(), now_ms: 1, actor: "user:1".into() }), &semio_framework_plugin::testkit::meta("local")).expect_err("unknown kind must fail");
         assert_eq!(error.code.0, "s.space.unknown-kind");
     }
 
     #[test]
-    fn create_artifact_mints_distinct_ids_for_two_rows_created_at_the_same_instant() {
+    async fn create_artifact_mints_distinct_ids_for_two_rows_created_at_the_same_instant() {
         let mut app = testkit::new_app();
         app.dispatch_typed(SpaceIndexCommand::CreateArtifact(CreateArtifact { name: "A".into(), kind_id: "draw".into(), now_ms: 5, actor: "user:1".into() }), &semio_framework_plugin::testkit::meta("local")).expect("create a");
         app.dispatch_typed(SpaceIndexCommand::CreateArtifact(CreateArtifact { name: "B".into(), kind_id: "draw".into(), now_ms: 5, actor: "user:1".into() }), &semio_framework_plugin::testkit::meta("local")).expect("create b");

@@ -4,7 +4,7 @@ use crate::artifacts::note::NoteDiff;
 use crate::artifacts::note::NoteSnapshot;
 
 //#region 🔖️Diff
-pub fn diff(payload: &ChangeGridVisible, base: &NoteSnapshot) -> protocol::MutationOutcome<NoteDiff> {
+pub async fn diff(payload: &ChangeGridVisible, base: &NoteSnapshot) -> protocol::MutationOutcome<NoteDiff> {
     if payload.new_visible == base.grid_visible {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", "Grid visibility already has this value.");
     }

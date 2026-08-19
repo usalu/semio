@@ -21,7 +21,7 @@ pub struct Procedural3dConfig {
 
 //region 📎 App-schema descriptor
 /// 📎 Returns the `s.procedural.3d` app-schema descriptor for `ArtifactApp::app_schema`.
-pub fn app_schema_descriptor() -> ::schema::AppSchemaDescriptor {
+pub async fn app_schema_descriptor() -> ::schema::AppSchemaDescriptor {
     ::schema::AppSchemaDescriptor {
         id: "s.procedural.3d",
         config: ::schema::FacetLeaves {

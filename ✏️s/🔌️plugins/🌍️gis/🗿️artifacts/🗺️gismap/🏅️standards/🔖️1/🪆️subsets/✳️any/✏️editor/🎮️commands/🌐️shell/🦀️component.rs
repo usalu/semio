@@ -19,7 +19,7 @@ pub mod open_source {
         pub feature_id: String,
     }
 
-    pub fn handle(payload: &OpenSource, doc: &ArtifactView<'_, GisMapSnapshot>, cfg: &ConfigView<'_, Gis2dConfig>) -> Result<Emit<GisMapMutation, Gis2dConfigMutation>, Fault> {
+    pub async fn handle(payload: &OpenSource, doc: &ArtifactView<'_, GisMapSnapshot>, cfg: &ConfigView<'_, Gis2dConfig>) -> Result<Emit<GisMapMutation, Gis2dConfigMutation>, Fault> {
         let host = map_host_from(doc.snapshot, cfg.snapshot);
         match host.features.positions.get(&payload.feature_id).and_then(|row| row.source_url.clone()) {
             Some(url) => Ok(Emit::effect(Effect::OpenExternalUrl { url })),
@@ -37,7 +37,7 @@ mod tests {
     use crate::editor::gis2d::Gis2dCommand;
 
     #[test]
-    fn open_source_on_an_unknown_feature_emits_no_effect() {
+    async fn open_source_on_an_unknown_feature_emits_no_effect() {
         let mut app = app();
         let result = dispatch(&mut app, Gis2dCommand::OpenSource(open_source::OpenSource { feature_id: "nope".into() }));
         assert!(result.mutations.is_empty());
@@ -47,7 +47,7 @@ mod tests {
     /// 🌐️ A Shell action never emits document operations — the registry's kind-discipline guard
     /// rejects one that does.
     #[test]
-    fn open_source_is_a_shell_action_that_emits_no_operations() {
+    async fn open_source_is_a_shell_action_that_emits_no_operations() {
         let definition = crate::editor::gis2d::create_gis2d_app().definition;
         let action = definition.window_kinds.iter().flat_map(|window| window.actions.iter()).find(|action| action.id == "openSource").expect("openSource declared");
         assert!(matches!(action.kind, semio_framework_plugin::ActionKind::Shell));

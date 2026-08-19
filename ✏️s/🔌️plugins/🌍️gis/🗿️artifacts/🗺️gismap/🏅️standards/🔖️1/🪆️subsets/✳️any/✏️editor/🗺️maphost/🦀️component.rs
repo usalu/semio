@@ -13,7 +13,7 @@ use serde_json::Value;
 //#region 🔖️MapHost
 /// 🗺️ Builds a `MapHost` from the document content (derived descriptor JSON) plus the config's
 /// camera/render/style/LOD/selection view state.
-pub fn map_host_from(document: &GisMapSnapshot, cfg: &Gis2dConfig) -> MapHost {
+pub async fn map_host_from(document: &GisMapSnapshot, cfg: &Gis2dConfig) -> MapHost {
     let mut host = MapHost::new();
     let descriptor = gis_map_descriptor_json(document);
     let _ = host.sync_map_json(&descriptor);
@@ -42,7 +42,7 @@ mod tests {
     use crate::artifacts::gismap::schema::default_document;
 
     #[test]
-    fn the_host_mirrors_the_document_features_and_the_config_camera() {
+    async fn the_host_mirrors_the_document_features_and_the_config_camera() {
         let document = default_document();
         let config = Gis2dConfig { camera_json: r#"{"x":10,"y":20,"zoom":4}"#.into(), ..Gis2dConfig::default() };
         let host = map_host_from(&document, &config);
@@ -52,7 +52,7 @@ mod tests {
     }
 
     #[test]
-    fn a_malformed_camera_json_leaves_the_host_at_its_own_default() {
+    async fn a_malformed_camera_json_leaves_the_host_at_its_own_default() {
         let config = Gis2dConfig { camera_json: "not json".into(), ..Gis2dConfig::default() };
         let host = map_host_from(&GisMapSnapshot::default(), &config);
         assert!(serde_json::from_str::<Value>(&host.camera_json()).is_ok(), "the host still reports a valid camera");

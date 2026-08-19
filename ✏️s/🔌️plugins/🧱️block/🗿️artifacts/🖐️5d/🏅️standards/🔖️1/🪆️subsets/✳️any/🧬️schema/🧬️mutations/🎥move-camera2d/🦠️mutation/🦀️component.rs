@@ -15,20 +15,20 @@ pub struct MoveCamera2d {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn move_camera2d(new_x: f64, new_y: f64) -> Block5dMutation {
+pub async fn move_camera2d(new_x: f64, new_y: f64) -> Block5dMutation {
     Block5dMutation::MoveCamera2d(MoveCamera2d { new_x, new_y })
 }
 
 impl protocol::MutationKind<Block5dSnapshot, Block5dMutation> for MoveCamera2d {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "move", entity: "camera2d", kind: "move-camera2d", record: "MovedCamera2d" };
 
-    fn diff(&self, base: &Block5dSnapshot) -> protocol::MutationOutcome<Block5dDiff> {
+    async fn diff(&self, base: &Block5dSnapshot) -> protocol::MutationOutcome<Block5dDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &Block5dSnapshot) -> Vec<Block5dMutation> {
+    async fn inverse(&self, base: &Block5dSnapshot) -> Vec<Block5dMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         format!("Move 2D camera to ({}, {})", self.new_x, self.new_y)
     }
 }

@@ -5,7 +5,7 @@ use crate::editor::jack::terminology::TrinityJackLabels;
 use semio_framework_plugin::{tree_item, tree_item_with_action, Label, PanelTreeBuilder, UiNode, UiTreeItemNode};
 use serde_json::json;
 
-pub(crate) fn render(cfg: &JackConfig, labels: &TrinityJackLabels) -> UiNode {
+pub(crate) async fn render(cfg: &JackConfig, labels: &TrinityJackLabels) -> UiNode {
     let jack_action = crate::editor::jack::jack_action;
     let preset_query = crate::editor::jack::commands::query::preset_query;
     let fixtures = [("nakagin", "Nakagin — Table"), ("branch-chain", "Branch — Graph")];

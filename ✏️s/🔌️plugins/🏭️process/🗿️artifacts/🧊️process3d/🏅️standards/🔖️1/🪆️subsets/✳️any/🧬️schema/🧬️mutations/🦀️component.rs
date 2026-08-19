@@ -103,15 +103,15 @@ mod tests {
     use move_stock::mutation::MoveStock;
     use create_step::mutation::CreateStep;
 
-    fn cut_step(id: &str) -> ProcessStep {
+    async fn cut_step(id: &str) -> ProcessStep {
         ProcessStep { id: id.into(), label: "Cut".into(), enabled: true, origin: None, measure: ProcessMeasure::Cut { tool: WorkingSolid::Box { width: 0.1, depth: 0.1, height: 0.1 }, pose: Pose::default() } }
     }
 
-    fn saw_machine(id: &str) -> WorkshopMachine {
+    async fn saw_machine(id: &str) -> WorkshopMachine {
         WorkshopMachine { id: id.into(), label: "Saw".into(), icon_id: "scissors".into(), catalog_id: None, capabilities: vec![] }
     }
 
-    fn round_trip(base: &Process3dSnapshot, mutation: &Process3dMutation) -> Process3dSnapshot {
+    async fn round_trip(base: &Process3dSnapshot, mutation: &Process3dMutation) -> Process3dSnapshot {
         let (forward, _messages) =
             vcs::apply_mutation(base, mutation).expect("valid mutation");
         let mut restored = forward.clone();
@@ -125,7 +125,7 @@ mod tests {
     }
 
     /// ⚖️ One value per `Process3dMutation` variant — the closed set the semantics test iterates.
-    fn every_mutation() -> Vec<Process3dMutation> {
+    async fn every_mutation() -> Vec<Process3dMutation> {
         vec![
             Process3dMutation::CreateStep(CreateStep { index: 0, step: cut_step("step-fresh") }),
             Process3dMutation::DeleteStep(DeleteStep { id: "step-1".into() }),
@@ -147,7 +147,7 @@ mod tests {
     }
 
     #[test]
-    fn every_variant_registers_an_approved_semantic_descriptor() {
+    async fn every_variant_registers_an_approved_semantic_descriptor() {
         for mutation in every_mutation() {
             let descriptor = protocol::SemanticMutation::semantics(&mutation);
             assert!(protocol::is_approved_verb(descriptor.verb), "unapproved verb {:?} on {mutation:?}", descriptor.verb);
@@ -165,7 +165,7 @@ mod tests {
     /// tests assert exactly that, matching `📐️cad`'s own precedent
     /// (`add_object_action_is_a_documented_no_op_pending_the_child_dispatch_seam`).
     #[test]
-    fn create_step_diff_is_a_documented_no_op() {
+    async fn create_step_diff_is_a_documented_no_op() {
         let base = empty_process3d_snapshot();
         let mutation = Process3dMutation::CreateStep(CreateStep { index: 0, step: cut_step("step-9") });
         assert_eq!(mutation.diff(&base).diff(), &Process3dDiff::default());
@@ -173,7 +173,7 @@ mod tests {
     }
 
     #[test]
-    fn delete_step_diff_is_a_documented_no_op() {
+    async fn delete_step_diff_is_a_documented_no_op() {
         let base = empty_process3d_snapshot();
         let mutation = Process3dMutation::DeleteStep(DeleteStep { id: "step-1".into() });
         assert_eq!(mutation.diff(&base).diff(), &Process3dDiff::default());
@@ -181,7 +181,7 @@ mod tests {
     }
 
     #[test]
-    fn rename_step_diff_is_a_documented_no_op() {
+    async fn rename_step_diff_is_a_documented_no_op() {
         let base = empty_process3d_snapshot();
         let mutation = Process3dMutation::RenameStep(RenameStep { id: "step-1".into(), new_label: "Renamed".into() });
         assert_eq!(mutation.diff(&base).diff(), &Process3dDiff::default());
@@ -189,7 +189,7 @@ mod tests {
     }
 
     #[test]
-    fn change_step_enabled_diff_is_a_documented_no_op() {
+    async fn change_step_enabled_diff_is_a_documented_no_op() {
         let base = empty_process3d_snapshot();
         let mutation = Process3dMutation::ChangeStepEnabled(ChangeStepEnabled { id: "step-1".into(), new_enabled: false });
         assert_eq!(mutation.diff(&base).diff(), &Process3dDiff::default());
@@ -197,7 +197,7 @@ mod tests {
     }
 
     #[test]
-    fn change_step_origin_diff_is_a_documented_no_op() {
+    async fn change_step_origin_diff_is_a_documented_no_op() {
         let base = empty_process3d_snapshot();
         let origin = StepOrigin { machine_id: "saw".into(), capability_id: "cut".into() };
         let mutation = Process3dMutation::ChangeStepOrigin(ChangeStepOrigin { id: "step-1".into(), new_origin: Some(origin) });
@@ -206,7 +206,7 @@ mod tests {
     }
 
     #[test]
-    fn replace_step_measure_diff_is_a_documented_no_op() {
+    async fn replace_step_measure_diff_is_a_documented_no_op() {
         let base = empty_process3d_snapshot();
         let new_measure = ProcessMeasure::Drill { radius: 0.02, depth: 0.3, pose: Pose::default() };
         let mutation = Process3dMutation::ReplaceStepMeasure(ReplaceStepMeasure { id: "step-1".into(), new_measure });
@@ -215,7 +215,7 @@ mod tests {
     }
 
     #[test]
-    fn reorder_steps_diff_is_a_documented_no_op() {
+    async fn reorder_steps_diff_is_a_documented_no_op() {
         let base = empty_process3d_snapshot();
         let mutation = Process3dMutation::ReorderSteps(ReorderSteps { id: "b".into(), to_index: 0 });
         assert_eq!(mutation.diff(&base).diff(), &Process3dDiff::default());
@@ -224,14 +224,14 @@ mod tests {
     //#endregion 🔖️StepMutationsAreDocumentedNoOps
 
     #[test]
-    fn create_machine_round_trips() {
+    async fn create_machine_round_trips() {
         let base = empty_process3d_snapshot();
         let after = round_trip(&base, &Process3dMutation::CreateMachine(CreateMachine { index: 0, machine: saw_machine("machine-9") }));
         assert!(after.workshop.machines.iter().any(|machine| machine.id == "machine-9"));
     }
 
     #[test]
-    fn delete_machine_round_trips() {
+    async fn delete_machine_round_trips() {
         let mut base = empty_process3d_snapshot();
         base.workshop.machines.push(saw_machine("machine-1"));
         let after = round_trip(&base, &Process3dMutation::DeleteMachine(DeleteMachine { id: "machine-1".into() }));
@@ -239,13 +239,13 @@ mod tests {
     }
 
     #[test]
-    fn inverse_delete_machine_when_missing_returns_empty() {
+    async fn inverse_delete_machine_when_missing_returns_empty() {
         let base = empty_process3d_snapshot();
         assert!(Process3dMutation::DeleteMachine(DeleteMachine { id: "ghost".into() }).inverse(&base).is_empty());
     }
 
     #[test]
-    fn rename_machine_round_trips() {
+    async fn rename_machine_round_trips() {
         let mut base = empty_process3d_snapshot();
         base.workshop.machines.push(saw_machine("machine-1"));
         let after = round_trip(&base, &Process3dMutation::RenameMachine(RenameMachine { id: "machine-1".into(), new_label: "Big Saw".into() }));
@@ -253,7 +253,7 @@ mod tests {
     }
 
     #[test]
-    fn change_machine_icon_round_trips() {
+    async fn change_machine_icon_round_trips() {
         let mut base = empty_process3d_snapshot();
         base.workshop.machines.push(saw_machine("machine-1"));
         let after = round_trip(&base, &Process3dMutation::ChangeMachineIcon(ChangeMachineIcon { id: "machine-1".into(), new_icon_id: "drill".into() }));
@@ -261,7 +261,7 @@ mod tests {
     }
 
     #[test]
-    fn replace_machine_capabilities_round_trips() {
+    async fn replace_machine_capabilities_round_trips() {
         let mut base = empty_process3d_snapshot();
         base.workshop.machines.push(saw_machine("machine-1"));
         let after = round_trip(&base, &Process3dMutation::ReplaceMachineCapabilities(ReplaceMachineCapabilities { id: "machine-1".into(), new_capabilities: vec![] }));
@@ -269,7 +269,7 @@ mod tests {
     }
 
     #[test]
-    fn move_stock_round_trips() {
+    async fn move_stock_round_trips() {
         let base = empty_process3d_snapshot();
         let new_pose = Pose { position: [1.0, 2.0, 3.0], ..Pose::default() };
         let after = round_trip(&base, &Process3dMutation::MoveStock(MoveStock { new_pose: new_pose.clone() }));
@@ -277,14 +277,14 @@ mod tests {
     }
 
     #[test]
-    fn change_stock_label_round_trips() {
+    async fn change_stock_label_round_trips() {
         let base = empty_process3d_snapshot();
         let after = round_trip(&base, &Process3dMutation::ChangeStockLabel(ChangeStockLabel { new_label: "Beam".into() }));
         assert_eq!(after.stock_label, "Beam");
     }
 
     #[test]
-    fn replace_stock_solid_round_trips() {
+    async fn replace_stock_solid_round_trips() {
         let base = empty_process3d_snapshot();
         let new_handle = brep_child_handle("stock", &brep_snapshot_for_working_solid(&WorkingSolid::Sphere { radius: 0.5 }));
         let after = round_trip(&base, &Process3dMutation::ReplaceStockSolid(ReplaceStockSolid { new_solid: new_handle.clone() }));
@@ -292,7 +292,7 @@ mod tests {
     }
 
     #[test]
-    fn change_cursor_round_trips() {
+    async fn change_cursor_round_trips() {
         let base = empty_process3d_snapshot();
         let after = round_trip(&base, &Process3dMutation::ChangeCursor(ChangeCursor { new_resolved_up_to: Some(0) }));
         assert_eq!(after.resolved_up_to, Some(0));
@@ -305,7 +305,7 @@ mod tests {
     /// (`create-step`), an id-keyed create/delete pair on an unordered collection
     /// (`create-machine`), and a document-level facet setter (`change-stock-label`).
     #[test]
-    fn create_step_satisfies_the_inverse_and_absorb_laws() {
+    async fn create_step_satisfies_the_inverse_and_absorb_laws() {
         let base = empty_process3d_snapshot();
         let mutation = Process3dMutation::CreateStep(CreateStep { index: 0, step: cut_step("step-fresh") });
         protocol::testkit::assert_mutation_inverse_law(&base, &mutation);
@@ -315,7 +315,7 @@ mod tests {
     }
 
     #[test]
-    fn create_machine_satisfies_the_inverse_and_absorb_laws() {
+    async fn create_machine_satisfies_the_inverse_and_absorb_laws() {
         let base = empty_process3d_snapshot();
         let mutation = Process3dMutation::CreateMachine(CreateMachine { index: 0, machine: saw_machine("machine-fresh") });
         protocol::testkit::assert_mutation_inverse_law(&base, &mutation);
@@ -325,7 +325,7 @@ mod tests {
     }
 
     #[test]
-    fn change_stock_label_satisfies_the_inverse_and_absorb_laws() {
+    async fn change_stock_label_satisfies_the_inverse_and_absorb_laws() {
         let base = empty_process3d_snapshot();
         let mutation = Process3dMutation::ChangeStockLabel(ChangeStockLabel { new_label: "Beam".into() });
         protocol::testkit::assert_mutation_inverse_law(&base, &mutation);
@@ -343,21 +343,21 @@ mod tests {
     /// `🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧪️testkit/🦀️component.rs`); TODO(1-D testkit
     /// laws pending): add a `MergePolicy` × `Severity` matrix test per verb family here once it lands.
     #[test]
-    fn delete_machine_missing_target_is_an_error() {
+    async fn delete_machine_missing_target_is_an_error() {
         let base = empty_process3d_snapshot();
         let mutation = Process3dMutation::DeleteMachine(DeleteMachine { id: "does-not-exist".into() });
         protocol::testkit::assert_missing_target_is_error(&base, &mutation);
     }
 
     #[test]
-    fn rename_machine_missing_target_is_an_error() {
+    async fn rename_machine_missing_target_is_an_error() {
         let base = empty_process3d_snapshot();
         let mutation = Process3dMutation::RenameMachine(RenameMachine { id: "does-not-exist".into(), new_label: "X".into() });
         protocol::testkit::assert_missing_target_is_error(&base, &mutation);
     }
 
     #[test]
-    fn create_machine_duplicate_id_is_fatal_and_never_applies() {
+    async fn create_machine_duplicate_id_is_fatal_and_never_applies() {
         let mut base = empty_process3d_snapshot();
         base.workshop.machines.push(saw_machine("machine-1"));
         let mutation = Process3dMutation::CreateMachine(CreateMachine { index: 0, machine: saw_machine("machine-1") });

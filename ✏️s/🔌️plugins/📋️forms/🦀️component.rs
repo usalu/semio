@@ -19,7 +19,7 @@ use semio_framework_plugin::{ExecutionMode, Plugin};
 /// actor runs `Isolated` (no cross-plugin extension attachment, no `.handler(...)` — the SDK
 /// default holds), and it asks the broker for document write access because `FormsPlayApp`
 /// persists question/field edits back to the open document.
-pub fn plugin() -> Result<Plugin, semio_framework_plugin::PluginAssemblyError> {
+pub async fn plugin() -> Result<Plugin, semio_framework_plugin::PluginAssemblyError> {
     Plugin::builder("forms")
         .label("Forms")
         .version("0.1.0")

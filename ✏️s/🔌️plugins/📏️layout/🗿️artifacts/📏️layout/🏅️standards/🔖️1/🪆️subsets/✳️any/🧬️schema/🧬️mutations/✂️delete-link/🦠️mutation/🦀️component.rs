@@ -13,16 +13,16 @@ pub struct DeleteLink {
 
 impl MutationKind<LayoutSnapshot, LayoutMutation> for DeleteLink {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "delete", entity: "link", kind: "delete-link", record: "DeletedLink" };
-    fn diff(&self, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
+    async fn diff(&self, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
         super::diff::diff_delete_link(self, base)
     }
-    fn inverse(&self, base: &LayoutSnapshot) -> Vec<LayoutMutation> {
+    async fn inverse(&self, base: &LayoutSnapshot) -> Vec<LayoutMutation> {
         super::inverse::inverse_delete_link(self, base)
     }
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         format!("Delete link \"{}\"", self.id)
     }
-    fn target(&self) -> Vec<String> {
+    async fn target(&self) -> Vec<String> {
         vec![self.id.clone()]
     }
 }

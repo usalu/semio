@@ -13,7 +13,7 @@ use protocol::{MutationDiff, Patchable};
 
 //#region 🔹Apply
 /// Applies an identified-collection delta to a feature list.
-pub fn apply_features_delta(
+pub async fn apply_features_delta(
     items: &[MapFeature],
     delta: &GisMapFeaturesDelta,
 ) -> protocol::MutationApplyResult<Vec<MapFeature>> {
@@ -118,7 +118,7 @@ pub fn apply_features_delta(
     Ok(next)
 }
 
-fn apply_map_delta<V: Clone>(
+async fn apply_map_delta<V: Clone>(
     target: &mut std::collections::BTreeMap<String, V>,
     entries: &std::collections::BTreeMap<String, Option<V>>,
 ) -> protocol::MutationApplyResult<()> {
@@ -146,7 +146,7 @@ fn apply_map_delta<V: Clone>(
     Ok(())
 }
 
-fn absorb_features_delta(target: &mut Option<GisMapFeaturesDelta>, incoming: Option<GisMapFeaturesDelta>) {
+async fn absorb_features_delta(target: &mut Option<GisMapFeaturesDelta>, incoming: Option<GisMapFeaturesDelta>) {
     if let Some(src) = incoming {
         match target {
             Some(dst) => {
@@ -164,7 +164,7 @@ fn absorb_features_delta(target: &mut Option<GisMapFeaturesDelta>, incoming: Opt
 
 impl GisMapDiff {
     /// 🧬️ Applies every sparse entry (all state classes) onto a full artifact.
-    pub fn apply_to_artifact(&self, artifact: &GisMapArtifact) -> protocol::MutationApplyResult<GisMapArtifact> {
+    pub async fn apply_to_artifact(&self, artifact: &GisMapArtifact) -> protocol::MutationApplyResult<GisMapArtifact> {
         Ok({
             if let Some(replacement) = &self.artifact {
                 return Ok((**replacement).clone());
@@ -201,7 +201,7 @@ impl GisMapDiff {
 }
 
 impl MutationDiff<GisMapSnapshot> for GisMapDiff {
-    fn apply(&self, snapshot: &GisMapSnapshot) -> protocol::MutationApplyResult<GisMapSnapshot> {
+    async fn apply(&self, snapshot: &GisMapSnapshot) -> protocol::MutationApplyResult<GisMapSnapshot> {
         Ok({
             if let Some(replacement) = &self.artifact {
                 return Ok(replacement.to_snapshot());
@@ -225,7 +225,7 @@ impl MutationDiff<GisMapSnapshot> for GisMapDiff {
             next
         })
     }
-    fn absorb(&mut self, other: Self) {
+    async fn absorb(&mut self, other: Self) {
         if other.artifact.is_some() {
             *self = other;
             return;
@@ -260,7 +260,7 @@ impl MutationDiff<GisMapSnapshot> for GisMapDiff {
 //#endregion 🔹Apply
 
 //#region 🔹Helpers
-pub fn diff_set_snapshot(snapshot: &GisMapSnapshot) -> GisMapDiff {
+pub async fn diff_set_snapshot(snapshot: &GisMapSnapshot) -> GisMapDiff {
     GisMapDiff {
         artifact: Some(Box::new(GisMapArtifact::from_snapshot(snapshot.clone()))),
         ..Default::default()
@@ -273,12 +273,12 @@ pub fn diff_set_snapshot(snapshot: &GisMapSnapshot) -> GisMapDiff {
 mod tests {
     use super::*;
 
-    fn feature(id: &str) -> MapFeature {
+    async fn feature(id: &str) -> MapFeature {
         MapFeature { id: id.into(), data: dsl::DslValue::String(id.into()) }
     }
 
     #[test]
-    fn a_whole_artifact_diff_wins_over_every_collection_diff() {
+    async fn a_whole_artifact_diff_wins_over_every_collection_diff() {
         let base = GisMapSnapshot { positions: vec![feature("p1")], ..Default::default() };
         let replacement = crate::artifacts::gismap::gis_map_snapshot_with_derived_children(GisMapSnapshot { routes: vec![feature("r1")], ..Default::default() });
         let mut diff = GisMapDiff {
@@ -290,7 +290,7 @@ mod tests {
     }
 
     #[test]
-    fn collection_diffs_absorb_and_apply_add_remove_patch() {
+    async fn collection_diffs_absorb_and_apply_add_remove_patch() {
         let base = GisMapSnapshot { positions: vec![feature("p1")], ..Default::default() };
         let mut diff = GisMapDiff {
             positions: Some(GisMapFeaturesDelta { removed: vec!["p1".into()], ..Default::default() }),

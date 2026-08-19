@@ -54,18 +54,18 @@ pub struct BinaryDiff {
 }
 
 impl MutationDiff<BinarySnapshot> for BinaryDiff {
-    fn apply(&self, base: &BinarySnapshot) -> protocol::MutationApplyResult<BinarySnapshot> {
+    async fn apply(&self, base: &BinarySnapshot) -> protocol::MutationApplyResult<BinarySnapshot> {
         validate_binary_diff(self, base)?;
         Ok(apply_binary_diff_unchecked(self, base))
     }
 
     /// ➕️ Sequential-coalesce absorb via [`absorb_splices`]'s byte-range index-transport.
-    fn absorb(&mut self, other: Self) {
+    async fn absorb(&mut self, other: Self) {
         self.splices = absorb_splices(&self.splices, &other.splices);
     }
 }
 
-fn validate_binary_diff(diff: &BinaryDiff, base: &BinarySnapshot) -> protocol::MutationApplyResult<()> {
+async fn validate_binary_diff(diff: &BinaryDiff, base: &BinarySnapshot) -> protocol::MutationApplyResult<()> {
     let mut previous = None;
     for (position, splice) in diff.splices.iter().enumerate() {
         if splice.offset > base.bytes.len() {
@@ -82,7 +82,7 @@ fn validate_binary_diff(diff: &BinaryDiff, base: &BinarySnapshot) -> protocol::M
     Ok(())
 }
 
-fn apply_binary_diff_unchecked(diff: &BinaryDiff, base: &BinarySnapshot) -> BinarySnapshot {
+async fn apply_binary_diff_unchecked(diff: &BinaryDiff, base: &BinarySnapshot) -> BinarySnapshot {
     let mut bytes = base.bytes.clone();
     let mut splices = diff.splices.clone();
     splices.sort_by(|a, b| b.offset.cmp(&a.offset));
@@ -95,14 +95,14 @@ fn apply_binary_diff_unchecked(diff: &BinaryDiff, base: &BinarySnapshot) -> Bina
 }
 
 impl DiffAlgebra<BinarySnapshot> for BinaryDiff {
-    fn inverse(&self, base: &BinarySnapshot) -> Self {
+    async fn inverse(&self, base: &BinarySnapshot) -> Self {
         let next = apply_binary_diff_unchecked(self, base);
         Self::between(&next, base)
     }
 
     /// 🧭️ Minimal common-prefix/common-suffix splice: a single `ByteSplice` covering exactly
     /// the differing middle region (empty splice list iff `base.bytes == other.bytes`).
-    fn between(base: &BinarySnapshot, other: &BinarySnapshot) -> Self {
+    async fn between(base: &BinarySnapshot, other: &BinarySnapshot) -> Self {
         let a = &base.bytes;
         let b = &other.bytes;
         let mut prefix = 0usize;
@@ -119,7 +119,7 @@ impl DiffAlgebra<BinarySnapshot> for BinaryDiff {
         BinaryDiff { splices }
     }
 
-    fn is_empty(&self) -> bool {
+    async fn is_empty(&self) -> bool {
         self.splices.is_empty()
     }
 }
@@ -136,7 +136,7 @@ enum Lbl {
     New(u8),
 }
 
-fn simulate_labels(labels: Vec<Lbl>, removed: &[usize], added: &[(usize, Lbl)]) -> Vec<Lbl> {
+async fn simulate_labels(labels: Vec<Lbl>, removed: &[usize], added: &[(usize, Lbl)]) -> Vec<Lbl> {
     let removed_set: std::collections::HashSet<usize> = removed.iter().copied().collect();
     let mut survivors: Vec<Lbl> = labels.into_iter().enumerate().filter(|(i, _)| !removed_set.contains(i)).map(|(_, l)| l).collect();
     let mut added_sorted = added.to_vec();
@@ -151,7 +151,7 @@ fn simulate_labels(labels: Vec<Lbl>, removed: &[usize], added: &[(usize, Lbl)]) 
 /// 🗑️ All BASE-relative indices removed by a splice list (order-independent; each splice's
 /// range is always relative to the shared base, never to a prior splice's result in the same
 /// list -- that's the whole point of `apply`'s descending-offset processing order).
-fn splice_removed_indices(splices: &[ByteSplice]) -> Vec<usize> {
+async fn splice_removed_indices(splices: &[ByteSplice]) -> Vec<usize> {
     let mut out = Vec::new();
     for s in splices {
         for i in s.offset..(s.offset + s.remove_len) {
@@ -169,7 +169,7 @@ fn splice_removed_indices(splices: &[ByteSplice]) -> Vec<usize> {
 /// `Vec::splice` calls accumulate. Using bare `offset + k` here silently reorders sibling
 /// inserts within one absorbed diff whenever it has ≥2 splices (caught by fuzz-testing in the
 /// scratch crate this diff's tests were validated against — see `deviations` in the F1 report).
-fn splice_added_targets(splices: &[ByteSplice]) -> Vec<(usize, Lbl)> {
+async fn splice_added_targets(splices: &[ByteSplice]) -> Vec<(usize, Lbl)> {
     let mut sorted: Vec<&ByteSplice> = splices.iter().collect();
     sorted.sort_by_key(|s| s.offset);
     let mut out = Vec::new();
@@ -188,7 +188,7 @@ fn splice_added_targets(splices: &[ByteSplice]) -> Vec<(usize, Lbl)> {
 /// splice list, simulated exactly like the line-diff case (per-byte instead of per-line
 /// labels), then the resulting label array is run-length-encoded back into a minimal ordered
 /// `ByteSplice` list.
-fn absorb_splices(d1: &[ByteSplice], d2: &[ByteSplice]) -> Vec<ByteSplice> {
+async fn absorb_splices(d1: &[ByteSplice], d2: &[ByteSplice]) -> Vec<ByteSplice> {
     // 🧭️ `l1` (the virtual base's assumed size) must cover every index EITHER diff references,
     // not just `d1`'s -- a `d1` that's empty/a no-op must not collapse the virtual base to zero
     // elements when `d2` still references real base positions `d1` never touched.
@@ -235,7 +235,7 @@ fn absorb_splices(d1: &[ByteSplice], d2: &[ByteSplice]) -> Vec<ByteSplice> {
 //#endregion 🔖️Diff
 
 /// 🧩 Builds the sparse field-by-field diff for a `SetSnapshot` mutation.
-pub fn diff_set_snapshot(base: &BinarySnapshot, snapshot: &BinarySnapshot) -> BinaryDiff {
+pub async fn diff_set_snapshot(base: &BinarySnapshot, snapshot: &BinarySnapshot) -> BinaryDiff {
     BinaryDiff::between(base, snapshot)
 }
 
@@ -244,7 +244,7 @@ pub fn diff_set_snapshot(base: &BinarySnapshot, snapshot: &BinarySnapshot) -> Bi
 /// roundtrip_law` below AND the new `diff_grammar_conformance_law`/`protocol_walk_law`
 /// conformance tests in `⚙️engine/🦀️component.rs`, per CLAUDE.md (no duplicated literal case lists).
 #[cfg(test)]
-pub(crate) fn demo_diff_cases() -> Vec<BinaryDiff> {
+pub(crate) async fn demo_diff_cases() -> Vec<BinaryDiff> {
     vec![
         BinaryDiff::default(),
         BinaryDiff { splices: vec![ByteSplice { offset: 1, remove_len: 2, insert: vec![9, 9, 9] }] },
@@ -258,7 +258,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn insert_then_remove_before_matches_canonical_shape() {
+    async fn insert_then_remove_before_matches_canonical_shape() {
         // Insert(0xAA) at offset 2, then Remove 1 byte at offset 0 -- byte-level analog of the
         // line-diff canonical case: {removed:[0], added:[(1,0xAA)]}.
         let d1 = vec![ByteSplice { offset: 2, remove_len: 0, insert: vec![0xAA] }];
@@ -272,7 +272,7 @@ mod tests {
     }
 
     #[test]
-    fn insert_insert_same_offset_both_survive() {
+    async fn insert_insert_same_offset_both_survive() {
         let d1 = vec![ByteSplice { offset: 2, remove_len: 0, insert: vec![0xAA] }];
         let d2 = vec![ByteSplice { offset: 2, remove_len: 0, insert: vec![0xBB] }];
         let merged = absorb_splices(&d1, &d2);
@@ -285,7 +285,7 @@ mod tests {
     }
 
     #[test]
-    fn modify_then_remove_drops_the_modify() {
+    async fn modify_then_remove_drops_the_modify() {
         let d1 = vec![ByteSplice { offset: 0, remove_len: 1, insert: vec![0xFF] }];
         let d2 = vec![ByteSplice { offset: 0, remove_len: 1, insert: vec![] }];
         let merged = absorb_splices(&d1, &d2);
@@ -297,7 +297,7 @@ mod tests {
     }
 
     #[test]
-    fn absorb_associative_over_a_triple() {
+    async fn absorb_associative_over_a_triple() {
         let base = BinarySnapshot { bytes: vec![10, 20, 30, 40, 50], ..Default::default() };
         let d1 = BinaryDiff { splices: vec![ByteSplice { offset: 1, remove_len: 1, insert: vec![] }] };
         let d2 = BinaryDiff { splices: vec![ByteSplice { offset: 0, remove_len: 0, insert: vec![99] }] };
@@ -322,7 +322,7 @@ mod tests {
     }
 
     #[test]
-    fn between_roundtrip_synthetic() {
+    async fn between_roundtrip_synthetic() {
         let a = BinarySnapshot { bytes: vec![1, 2, 3, 4, 5], ..Default::default() };
         let b = BinarySnapshot { bytes: vec![1, 9, 9, 4, 5, 6], ..Default::default() };
         assert_eq!(BinaryDiff::between(&a, &b).apply(&a).unwrap(), b);
@@ -331,7 +331,7 @@ mod tests {
     }
 
     #[test]
-    fn inverse_diff_level_roundtrip() {
+    async fn inverse_diff_level_roundtrip() {
         let base = BinarySnapshot { bytes: vec![1, 2, 3, 4], ..Default::default() };
         let d = BinaryDiff { splices: vec![ByteSplice { offset: 1, remove_len: 2, insert: vec![9, 9, 9] }] };
         let next = d.apply(&base).unwrap();
@@ -340,7 +340,7 @@ mod tests {
     }
 
     #[test]
-    fn apply_rejects_invalid_splice_without_mutating_base() {
+    async fn apply_rejects_invalid_splice_without_mutating_base() {
         let base = BinarySnapshot { bytes: vec![1, 2, 3], ..Default::default() };
         let diff = BinaryDiff { splices: vec![ByteSplice { offset: 2, remove_len: 2, insert: vec![9] }] };
         assert!(diff.apply(&base).is_err());
@@ -349,7 +349,7 @@ mod tests {
 
     /// 🧪️ F6-PILOT: `DiffCodec` round-trip laws (derived via `dsl::DslDiff`).
     #[test]
-    fn diff_codec_text_binary_roundtrip_law() {
+    async fn diff_codec_text_binary_roundtrip_law() {
         use protocol::DiffCodec;
         for d in demo_diff_cases() {
             let printed = d.print_diff();

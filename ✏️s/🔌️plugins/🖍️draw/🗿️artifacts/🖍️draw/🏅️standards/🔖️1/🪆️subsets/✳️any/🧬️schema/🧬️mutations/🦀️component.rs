@@ -34,7 +34,7 @@ pub enum DrawMutation {
 /// 🎛️ Generic single-field layer editor bridge (properties panel / bulk patch commands) — maps a
 /// wire `field` name + JSON `value` onto the one semantic mutation that owns that field. Returns
 /// `None` for an unknown field or a field that doesn't apply to `layer`'s kind.
-pub fn draw_op_for_layer_field(doc: &DrawSnapshot, layer_id: &str, field: &str, value: &serde_json::Value) -> Option<DrawMutation> {
+pub async fn draw_op_for_layer_field(doc: &DrawSnapshot, layer_id: &str, field: &str, value: &serde_json::Value) -> Option<DrawMutation> {
     let layer = find_draw_layer(doc, layer_id)?;
     let operation = match field {
         "name" => rename_layer(layer_id.into(), value.as_str().unwrap_or("").into()),
@@ -88,7 +88,7 @@ pub fn draw_op_for_layer_field(doc: &DrawSnapshot, layer_id: &str, field: &str, 
 
 /// 🩹 Applies one field patch directly to `doc` — used by callers that don't need the mutation
 /// value itself (`draw_op_for_layer_field` is the undoable/command-facing entry point).
-pub fn patch_layer_field(doc: &DrawSnapshot, layer_id: &str, field: &str, value: &serde_json::Value) -> protocol::MutationApplyResult<DrawSnapshot> {
+pub async fn patch_layer_field(doc: &DrawSnapshot, layer_id: &str, field: &str, value: &serde_json::Value) -> protocol::MutationApplyResult<DrawSnapshot> {
     use protocol::{Mutation, MutationDiff};
     match draw_op_for_layer_field(doc, layer_id, field, value) {
         Some(operation) => operation.diff(doc).diff().apply(doc).map_err(|error| error.under(["layers", layer_id])),
@@ -120,14 +120,14 @@ mod tests {
     use protocol::testkit::{assert_fatal_never_applies, assert_missing_target_is_error, assert_mutation_diff_absorb_law, assert_mutation_inverse_law};
     use protocol::{Mutation, MutationDiff, SemanticMutation};
 
-    fn base_document() -> DrawSnapshot {
+    async fn base_document() -> DrawSnapshot {
         let mut doc = default_draw_document("mutations-test", None);
         doc.layers.push(create_draw_shape_layer_rect("Rect"));
         doc
     }
 
     #[test]
-    fn set_layer_visible_inverse_law() {
+    async fn set_layer_visible_inverse_law() {
         let base = base_document();
         let layer_id = crate::artifacts::draw::schema::layer_id(&base.layers[0]).to_string();
         let mutation = set_layer_visible(layer_id, false);
@@ -135,7 +135,7 @@ mod tests {
     }
 
     #[test]
-    fn rename_layer_inverse_law() {
+    async fn rename_layer_inverse_law() {
         let base = base_document();
         let layer_id = crate::artifacts::draw::schema::layer_id(&base.layers[0]).to_string();
         let mutation = rename_layer(layer_id, "Renamed".into());
@@ -143,14 +143,14 @@ mod tests {
     }
 
     #[test]
-    fn create_layer_inverse_law() {
+    async fn create_layer_inverse_law() {
         let base = base_document();
         let mutation = create_layer(None, None, create_draw_path_layer("New", Vec::new()));
         assert_mutation_inverse_law(&base, &mutation);
     }
 
     #[test]
-    fn delete_layer_inverse_law() {
+    async fn delete_layer_inverse_law() {
         let base = base_document();
         let layer_id = crate::artifacts::draw::schema::layer_id(&base.layers[0]).to_string();
         let mutation = delete_layer(layer_id);
@@ -158,7 +158,7 @@ mod tests {
     }
 
     #[test]
-    fn duplicate_layer_inverse_law() {
+    async fn duplicate_layer_inverse_law() {
         let base = base_document();
         let layer_id = crate::artifacts::draw::schema::layer_id(&base.layers[0]).to_string();
         let mutation = duplicate_layer(layer_id);
@@ -166,7 +166,7 @@ mod tests {
     }
 
     #[test]
-    fn reorder_layer_inverse_law() {
+    async fn reorder_layer_inverse_law() {
         let mut base = base_document();
         base.layers.push(create_draw_path_layer("Second", Vec::new()));
         let layer_id = crate::artifacts::draw::schema::layer_id(&base.layers[0]).to_string();
@@ -175,7 +175,7 @@ mod tests {
     }
 
     #[test]
-    fn set_layer_opacity_diff_absorb_law() {
+    async fn set_layer_opacity_diff_absorb_law() {
         let base = base_document();
         let layer_id = crate::artifacts::draw::schema::layer_id(&base.layers[0]).to_string();
         let d1 = set_layer_opacity(layer_id.clone(), 0.5).diff(&base).diff().clone();
@@ -188,25 +188,25 @@ mod tests {
     /// ⚖️ `📋️contract-freeze.md` §C2 laws, per verb family (`assert_outcome_policy_matrix` is not yet
     /// landed in `📡️spr/🧪️testkit` — TODO(1-D testkit laws pending) once it lands).
     #[test]
-    fn delete_missing_layer_is_a_target_missing_error() {
+    async fn delete_missing_layer_is_a_target_missing_error() {
         let base = base_document();
         assert_missing_target_is_error(&base, &delete_layer("does-not-exist".into()));
     }
 
     #[test]
-    fn rename_missing_layer_is_a_target_missing_error() {
+    async fn rename_missing_layer_is_a_target_missing_error() {
         let base = base_document();
         assert_missing_target_is_error(&base, &rename_layer("does-not-exist".into(), "New Name".into()));
     }
 
     #[test]
-    fn set_layer_opacity_missing_layer_is_a_target_missing_error() {
+    async fn set_layer_opacity_missing_layer_is_a_target_missing_error() {
         let base = base_document();
         assert_missing_target_is_error(&base, &set_layer_opacity("does-not-exist".into(), 0.5));
     }
 
     #[test]
-    fn create_layer_duplicate_id_never_applies() {
+    async fn create_layer_duplicate_id_never_applies() {
         let base = base_document();
         // Re-creating the exact existing node collides on id for real (ids are content-addressed).
         let duplicate = create_layer(None, None, base.layers[0].clone());
@@ -215,7 +215,7 @@ mod tests {
     //#endregion 🧪️OutcomeLaws
 
     #[test]
-    fn dispatch_registers_semantic_descriptors() {
+    async fn dispatch_registers_semantic_descriptors() {
         register_draw_mutation_descriptors();
         for kind in DrawMutation::kinds() {
             assert!(protocol::is_approved_verb(kind.verb), "verb '{}' must be in APPROVED_VERBS", kind.verb);

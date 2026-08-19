@@ -11,6 +11,6 @@ use serde::{Deserialize, Serialize};
 #[dsl(keyword = "import-space-pack")]
 pub struct ImportSpacePack {}
 
-pub fn handle(_payload: &ImportSpacePack, _doc: &ArtifactView<'_, WorkflowSnapshot>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
+pub async fn handle(_payload: &ImportSpacePack, _doc: &ArtifactView<'_, WorkflowSnapshot>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
     Ok(Emit::effect(Effect::RequestFileOpen {req: semio_framework_plugin::RequestId(121),  accept: ".pack".into(), read_as: Some("dataUrl".into()), import_action: "importSpacePackPayload".into(), multiple: false }))
 }

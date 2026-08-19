@@ -10,7 +10,7 @@ use semio_framework_plugin::{LabelText, WindowMeasure};
 use serde_json::json;
 
 //#region 🔖️Measure
-pub fn measure(layers: &RemodelLayerVisibility, labels: &RemodelLabels) -> WindowMeasure {
+pub async fn measure(layers: &RemodelLayerVisibility, labels: &RemodelLabels) -> WindowMeasure {
     let toggle = |id: &str, icon: &str, label: LabelText, pressed: bool, layer: &str| WindowMeasure::Toggle {
         id: format!("remodel-measure-layer-{id}"),
         icon_id: icon.into(),
@@ -50,7 +50,7 @@ mod tests {
     use crate::editor::remodel::config::RemodelConfig;
 
     #[test]
-    fn every_layer_gets_its_own_toggle_and_a_default_open_group() {
+    async fn every_layer_gets_its_own_toggle_and_a_default_open_group() {
         let config = RemodelConfig::default();
         let labels = semio_framework_plugin::resolve_labels_for_locale::<RemodelLabels>("en-US");
         let WindowMeasure::Group { children, default_open, .. } = measure(&config.layers, labels) else { panic!("expected a Group measure") };

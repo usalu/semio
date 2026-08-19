@@ -14,7 +14,7 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 //#region 🔖️HandcraftedOpCodecs
 /// ⚡️ P6 handcrafted OpText/OpBinary (derive no longer emits these traits).
 impl protocol::OpText for WriterMutation {
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
+    async fn parse_op(line: &str) -> Result<Self, store::TextError> {
         let variants = <Self as dsl::DslVariants>::variants();
         for (keyword, spec_fn) in &variants {
             let probe = format!("{} ", keyword);
@@ -29,7 +29,7 @@ impl protocol::OpText for WriterMutation {
         }
         Err(dsl::__rt::field_error(format!("unknown mutation line '{line}'")))
     }
-    fn print_op(&self) -> String {
+    async fn print_op(&self) -> String {
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
         let variants = <Self as dsl::DslVariants>::variants();
         let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
@@ -38,10 +38,10 @@ impl protocol::OpText for WriterMutation {
 }
 
 impl protocol::OpBinary for WriterMutation {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         dsl::variants_binary::encode_op(self)
     }
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         dsl::variants_binary::decode_op(bytes)
     }
 }
@@ -53,7 +53,7 @@ mod tests {
     use super::*;
 
     /// ✍️ Hand-built representative document — used across the artifact's own component tests.
-    fn jack_snapshot() -> crate::artifacts::writer::WriterSnapshot {
+    async fn jack_snapshot() -> crate::artifacts::writer::WriterSnapshot {
         crate::artifacts::writer::writer_snapshot_with_text(
             "writer.document",
             "jack",
@@ -64,7 +64,7 @@ mod tests {
     }
 
     #[test]
-    fn writer_op_text_round_trips_every_variant() {
+    async fn writer_op_text_round_trips_every_variant() {
         let jack = jack_snapshot();
         store::os_store::test_support::assert_op_line_round_trip(&WriterMutation::EditText(EditText { text: "line one\nline two".into() }));
         store::os_store::test_support::assert_op_line_round_trip(&WriterMutation::RenameWriter(RenameWriter { new_id: jack.id.clone() }));
@@ -79,7 +79,7 @@ mod semio_grammar_conformance {
     use super::*;
 
     #[test]
-    fn component_grammar_semio_is_grammar_dialect() {
+    async fn component_grammar_semio_is_grammar_dialect() {
         let g = ::dsl::parse_grammar(COMPONENT_GRAMMAR_SEMIO).expect("parse grammar.semio");
         assert_eq!(g.dialect, ::dsl::SemioDialect::Grammar);
         assert!(!COMPONENT_GRAMMAR_SEMIO.is_empty());

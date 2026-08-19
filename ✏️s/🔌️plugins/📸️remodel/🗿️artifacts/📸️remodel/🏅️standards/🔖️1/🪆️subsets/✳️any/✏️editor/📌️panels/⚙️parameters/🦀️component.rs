@@ -11,13 +11,13 @@ pub const REMODEL_PLAY_BODY_PARAMETERS: &str = "remodel.play.parameters";
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
-pub fn definition() -> PanelTabDefinition {
+pub async fn definition() -> PanelTabDefinition {
     PanelTabDefinition { kind: PanelTabKind::App(REMODEL_PANEL_PARAMETERS_ID.into()), label: LocalizedLabel::native("Parameters", "Parameter"), group: PanelGroup::Details, body_key: Some(REMODEL_PLAY_BODY_PARAMETERS.into()), children: Vec::new() }
 }
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(scene: &RemodelSnapshot, labels: &RemodelLabels) -> UiNode {
+pub async fn render(scene: &RemodelSnapshot, labels: &RemodelLabels) -> UiNode {
     let p = &scene.params;
     ui_stack_vertical(vec![
         ui_text(Label::data(format!(
@@ -68,7 +68,7 @@ mod tests {
     use crate::editor::remodel::RemodelCommand;
 
     #[test]
-    fn the_parameters_panel_reflects_a_live_param_edit() {
+    async fn the_parameters_panel_reflects_a_live_param_edit() {
         let mut app = app();
         dispatch(&mut app, RemodelCommand::SetIngestParams(SetIngestParams { frame_sample_stride: 9, max_frames: 200, downscale_long_edge_px: 1600, min_sharpness: 0.3 }));
         assert!(render_body(&mut app, REMODEL_PLAY_BODY_PARAMETERS).contains("stride 9"));

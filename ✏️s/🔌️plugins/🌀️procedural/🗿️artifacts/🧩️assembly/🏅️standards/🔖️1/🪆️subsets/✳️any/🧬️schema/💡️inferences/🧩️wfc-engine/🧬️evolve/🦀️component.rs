@@ -28,7 +28,7 @@ pub struct EvolveConfig {
 }
 
 impl Default for EvolveConfig {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self { population_size: 8, generations: 5, elite_count: 2 }
     }
 }
@@ -42,7 +42,7 @@ pub struct EvolveResult {
 // #endregion 🔖️Config
 
 // #region 🔖️Evolve
-fn derive_seed(seed: u64, salt: u64) -> u64 {
+async fn derive_seed(seed: u64, salt: u64) -> u64 {
     let mut z = seed ^ salt.wrapping_add(0x9E37_79B9_7F4A_7C15);
     z = (z ^ (z >> 30)).wrapping_mul(0xBF58_476D_1CE4_E5B9);
     z = (z ^ (z >> 27)).wrapping_mul(0x94D0_49BB_1331_11EB);
@@ -54,7 +54,7 @@ fn derive_seed(seed: u64, salt: u64) -> u64 {
 /// cancelled attempt is simply excluded from selection, not treated as an error). Higher
 /// `scorer.score(...)` is always better here (unlike `best_of_n`, which lets the caller pick a
 /// direction) — a caller wanting to minimize a quantity should negate it in their scorer.
-pub fn evolve(base_seed: u64, config: EvolveConfig, scorer: &dyn SoftConstraint, mut solve_one: impl FnMut(u64) -> Option<Vec<PatternId>>) -> EvolveResult {
+pub async fn evolve(base_seed: u64, config: EvolveConfig, scorer: &dyn SoftConstraint, mut solve_one: impl FnMut(u64) -> Option<Vec<PatternId>>) -> EvolveResult {
     let population_size = config.population_size.max(1);
     let elite_count = config.elite_count.clamp(1, population_size);
     let mut population: Vec<u64> = (0..population_size as u64).map(|i| derive_seed(base_seed, i)).collect();
@@ -102,7 +102,7 @@ mod tests {
     use crate::wfc_engine::soft::ScoreFn;
     use crate::wfc_engine::topology::GraphTopologyBuilder;
 
-    fn checkerboard(n: usize) -> (crate::wfc_engine::model::CompiledModel, crate::wfc_engine::topology::GraphTopology) {
+    async fn checkerboard(n: usize) -> (crate::wfc_engine::model::CompiledModel, crate::wfc_engine::topology::GraphTopology) {
         let mut b = ModelBuilder::new();
         let black = b.add_pattern(1.0);
         let white = b.add_pattern(1.0);
@@ -118,14 +118,14 @@ mod tests {
     }
 
     #[test]
-    fn derive_seed_is_deterministic_and_varies_by_salt() {
+    async fn derive_seed_is_deterministic_and_varies_by_salt() {
         assert_eq!(derive_seed(1, 2), derive_seed(1, 2));
         assert_ne!(derive_seed(1, 2), derive_seed(1, 3));
         assert_ne!(derive_seed(1, 2), derive_seed(4, 2));
     }
 
     #[test]
-    fn evolve_finds_a_solution_and_tracks_evaluated_count() {
+    async fn evolve_finds_a_solution_and_tracks_evaluated_count() {
         let (model, topo) = checkerboard(6);
         let config = SearchConfig::default();
         let scorer = ScoreFn { name: "count_black", f: |a: &[PatternId]| a.iter().filter(|&&p| p == PatternId(0)).count() as f64 };
@@ -142,7 +142,7 @@ mod tests {
     }
 
     #[test]
-    fn evolve_prefers_higher_scores_across_generations() {
+    async fn evolve_prefers_higher_scores_across_generations() {
         // A scorer with a clear maximum (3 black nodes is the best achievable on this 5-node
         // path — see the identical checkerboard fixture in 🦀️search.rs's own tests) lets us assert
         // the loop actually converges toward it rather than just returning whatever it finds
@@ -162,7 +162,7 @@ mod tests {
     }
 
     #[test]
-    fn evolve_reports_no_best_when_every_attempt_fails() {
+    async fn evolve_reports_no_best_when_every_attempt_fails() {
         let scorer = ScoreFn { name: "zero", f: |_: &[PatternId]| 0.0 };
         let evolve_config = EvolveConfig { population_size: 3, generations: 2, elite_count: 1 };
 

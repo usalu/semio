@@ -3,6 +3,6 @@ use crate::artifacts::las::LasSnapshot;
 use protocol::Mutation;
 
 /// ↩️ Inverse of set-snapshot.
-pub fn inverse(base: &LasSnapshot, mutation: &LasMutation) -> Vec<LasMutation> {
+pub async fn inverse(base: &LasSnapshot, mutation: &LasMutation) -> Vec<LasMutation> {
     <LasMutation as Mutation<LasSnapshot>>::inverse(mutation, base)
 }

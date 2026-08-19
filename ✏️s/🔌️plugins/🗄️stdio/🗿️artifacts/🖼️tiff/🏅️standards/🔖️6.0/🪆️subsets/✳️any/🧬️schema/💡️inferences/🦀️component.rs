@@ -22,7 +22,7 @@ pub struct TiffInference {
 }
 
 impl protocol::Inference<TiffSnapshot> for TiffInference {
-    fn infer(snapshot: &TiffSnapshot) -> Self {
+    async fn infer(snapshot: &TiffSnapshot) -> Self {
         Self { dimensions: compute_tiff_dimensions(snapshot) }
     }
 }
@@ -33,19 +33,19 @@ impl protocol::Inference<TiffSnapshot> for TiffInference {
 /// "match `infer` of the real default, don't derive structurally" trick as `AddInference`'s
 /// hand-written `Default` in `📡️spr/🎮️command/🦀️component.rs`.
 impl Default for TiffInference {
-    fn default() -> Self {
+    async fn default() -> Self {
         <Self as protocol::Inference<TiffSnapshot>>::infer(&TiffSnapshot::default())
     }
 }
 
 impl protocol::InferenceSpec<TiffSnapshot> for TiffInference {
-    fn inference_schema_id() -> &'static str {
+    async fn inference_schema_id() -> &'static str {
         "s.stdio.tiff.inference"
     }
-    fn schema_version() -> u32 {
+    async fn schema_version() -> u32 {
         1
     }
-    fn fields() -> &'static [protocol::InferenceFieldSpec] {
+    async fn fields() -> &'static [protocol::InferenceFieldSpec] {
         &[protocol::InferenceFieldSpec { id: "s.stdio.tiff.inference.dimensions", reads: &["ifds"] }]
     }
 }
@@ -63,7 +63,7 @@ impl semio_framework_plugin::ArtifactInferrer for crate::artifacts::tiff::standa
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.stdio.tiff.inference`'s facet leaves into the OS-wide inference catalog — call
 /// once at plugin init, alongside `tiff_artifact_schema_descriptor`'s registration.
-pub fn tiff_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
+pub async fn tiff_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
     schema::ArtifactInferenceDescriptor {
         id: "s.stdio.tiff.inference",
         inference: schema::FacetLeaves {
@@ -84,13 +84,13 @@ mod tests {
     use protocol::Inference;
 
     #[test]
-    fn inference_determinism_law() {
+    async fn inference_determinism_law() {
         let snapshot = TiffSnapshot::default();
         assert_eq!(TiffInference::infer(&snapshot), TiffInference::infer(&snapshot));
     }
 
     #[test]
-    fn inference_default_law() {
+    async fn inference_default_law() {
         assert_eq!(TiffInference::infer(&TiffSnapshot::default()), TiffInference::default());
     }
 }

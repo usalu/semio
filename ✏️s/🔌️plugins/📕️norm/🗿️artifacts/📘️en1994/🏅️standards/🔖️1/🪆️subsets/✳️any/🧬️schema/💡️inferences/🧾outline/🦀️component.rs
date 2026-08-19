@@ -43,7 +43,7 @@ pub struct En1994Outline {
 }
 
 impl En1994Outline {
-    pub fn compute(_snapshot: &En1994Snapshot) -> Self {
+    pub async fn compute(_snapshot: &En1994Snapshot) -> Self {
         let section_outline: Vec<String> = SECTION_FIELDS.iter().map(|s| s.to_string()).collect();
         let field_count = section_outline.len() as u32;
         let entry_count = 0;
@@ -52,7 +52,7 @@ impl En1994Outline {
 }
 
 impl Default for En1994Outline {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self::compute(&En1994Snapshot::default())
     }
 }
@@ -64,13 +64,13 @@ mod tests {
     use super::*;
 
     #[test]
-    fn outline_field_count_matches_section_outline_length() {
+    async fn outline_field_count_matches_section_outline_length() {
         let outline = En1994Outline::compute(&En1994Snapshot::default());
         assert_eq!(outline.field_count as usize, outline.section_outline.len());
     }
 
     #[test]
-    fn outline_is_deterministic() {
+    async fn outline_is_deterministic() {
         let snapshot = En1994Snapshot::default();
         assert_eq!(En1994Outline::compute(&snapshot), En1994Outline::compute(&snapshot));
     }

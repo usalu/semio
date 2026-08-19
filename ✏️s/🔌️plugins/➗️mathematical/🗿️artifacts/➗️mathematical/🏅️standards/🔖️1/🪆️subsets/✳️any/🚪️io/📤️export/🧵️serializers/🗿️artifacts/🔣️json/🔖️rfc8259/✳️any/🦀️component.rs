@@ -15,7 +15,7 @@ pub struct MathematicalIntoJson;
 impl Serializer<MathematicalSnapshot> for MathematicalIntoJson {
     const INTO: Dialect = JSON_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Exact;
-    fn serialize(from: &MathematicalSnapshot) -> IoResult<IoPayload> {
+    async fn serialize(from: &MathematicalSnapshot) -> IoResult<IoPayload> {
         let _ = STDIO_JSON_DOCUMENT_SCHEMA;
         let value = serde_json::to_value(from).map_err(|error| IoError { message: format!("MathematicalIntoJson: {error}"), diagnostics: Vec::new() })?;
         let bytes = serde_json::to_vec_pretty(&value).map_err(|error| IoError { message: format!("MathematicalIntoJson: {error}"), diagnostics: Vec::new() })?;

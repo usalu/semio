@@ -13,7 +13,7 @@ pub const WINDOW_KIND_ID: &str = TableWindowKit::KIND_ID;
 pub const BODY_KEY: &str = TableWindowKit::KIND_ID;
 
 //#region 🔖️Definition
-pub fn definition() -> WindowKindDefinition {
+pub async fn definition() -> WindowKindDefinition {
     TableWindowKit::window_kind()
 }
 //#endregion 🔖️Definition
@@ -22,7 +22,7 @@ pub fn definition() -> WindowKindDefinition {
 /// 🧱️ Every stock object kind as one flat row — id/name/module/typology/availability, string cells
 /// only (the framework `TableView` view-model has no typed-cell concept, unlike the editor's
 /// `TableCell::{Text,Number,Stepper,Buttons}` — a viewer renders nothing interactive per cell).
-pub fn view_model(document: &CurateSnapshot) -> TableView {
+pub async fn view_model(document: &CurateSnapshot) -> TableView {
     let stock = stock_of(document);
     let rows = stock
         .iter()
@@ -31,7 +31,7 @@ pub fn view_model(document: &CurateSnapshot) -> TableView {
     TableView { columns: vec!["Id".into(), "Name".into(), "Module".into(), "Typology".into(), "Availability".into()], rows }
 }
 
-pub fn render(document: &CurateSnapshot) -> UiNode {
+pub async fn render(document: &CurateSnapshot) -> UiNode {
     TableWindowKit::render(&view_model(document))
 }
 //#endregion 🔖️Render
@@ -42,14 +42,14 @@ mod tests {
     use super::*;
 
     #[test]
-    fn definition_uses_the_framework_table_window_kit() {
+    async fn definition_uses_the_framework_table_window_kit() {
         let def = definition();
         assert_eq!(def.id, TableWindowKit::KIND_ID);
         assert_eq!(def.body_key, BODY_KEY);
     }
 
     #[test]
-    fn view_model_lists_every_stock_row_with_five_columns() {
+    async fn view_model_lists_every_stock_row_with_five_columns() {
         let document = crate::artifacts::curate::schema::default_document();
         let stock = stock_of(&document);
         let view = view_model(&document);
@@ -58,7 +58,7 @@ mod tests {
     }
 
     #[test]
-    fn render_produces_a_table_ui_node() {
+    async fn render_produces_a_table_ui_node() {
         let document = crate::artifacts::curate::schema::default_document();
         let json = serde_json::to_string(&render(&document)).expect("render json");
         assert!(json.contains("table"), "expected a table UiNode: {json}");

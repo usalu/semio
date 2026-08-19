@@ -11,12 +11,12 @@ pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️comp
 //#endregion 📡️SemioProtocol
 
 /// 📦️ Encodes a `CadSnapshot` to its binary pack form.
-pub fn encode(document: &CadSnapshot) -> Vec<u8> {
+pub async fn encode(document: &CadSnapshot) -> Vec<u8> {
     store::ArtifactPack::encode_pack(document)
 }
 
 /// 📖️ Decodes a `CadSnapshot` from its binary pack form.
-pub fn decode(bytes: &[u8]) -> Result<CadSnapshot, PackError> {
+pub async fn decode(bytes: &[u8]) -> Result<CadSnapshot, PackError> {
     <CadSnapshot as store::ArtifactPack>::decode_pack(bytes)
 }
 
@@ -27,7 +27,7 @@ mod tests {
     use crate::artifacts::cad::testkit::sample_scene;
 
     #[test]
-    fn cad_scene_round_trips_through_pack() {
+    async fn cad_scene_round_trips_through_pack() {
         store::os_store::test_support::assert_dsl_pack_equivalence(&sample_scene());
         let bytes = encode(&sample_scene());
         assert_eq!(decode(&bytes).expect("decode"), sample_scene());
@@ -39,7 +39,7 @@ mod tests {
     /// existing dsl/pack round-trip laws (same pattern as `mathematical_pack`'s own
     /// `command_envelope_round_trip_holds_for_an_applied_operation`).
     #[test]
-    fn command_envelope_round_trip_holds_for_an_applied_operation() {
+    async fn command_envelope_round_trip_holds_for_an_applied_operation() {
         use crate::artifacts::cad::mutations::create_shape_model::mutation::CreateShapeModel;
         use crate::artifacts::cad::op::CadMutation;
         use crate::artifacts::cad::{empty_cad_snapshot, testkit::sample_model_child, CAD_DOCUMENT_SCHEMA};

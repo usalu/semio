@@ -15,15 +15,15 @@ pub struct ChangeTightnessClass {
 impl protocol::MutationKind<En1992Snapshot, En1992Mutation> for ChangeTightnessClass {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "tightness-class", kind: "change-tightness-class", record: "ChangedTightnessClass" };
 
-    fn diff(&self, base: &En1992Snapshot) -> protocol::MutationOutcome<En1992Diff> {
+    async fn diff(&self, base: &En1992Snapshot) -> protocol::MutationOutcome<En1992Diff> {
         crate::artifacts::en1992::mutations::change_tightness_class::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &En1992Snapshot) -> Vec<En1992Mutation> {
+    async fn inverse(&self, base: &En1992Snapshot) -> Vec<En1992Mutation> {
         crate::artifacts::en1992::mutations::change_tightness_class::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         format!("Change tightness class to {:?}", self.new_tightness_class)
     }
 }

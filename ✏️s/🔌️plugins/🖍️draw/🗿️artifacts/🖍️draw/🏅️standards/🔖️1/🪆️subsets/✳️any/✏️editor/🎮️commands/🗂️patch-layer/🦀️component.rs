@@ -13,7 +13,7 @@ use serde_json::Value;
 /// string when it isn't valid JSON) so one `String` wire field covers every heterogeneous
 /// `draw_op_for_layer_field` value type (bool/number/string) — mirrors
 /// `shooting_protocol::ShootingCommand`'s `PatchShots`/`PatchAssets` shape.
-fn patch_value_json(value: &str) -> Value {
+async fn patch_value_json(value: &str) -> Value {
     serde_json::from_str(value).unwrap_or_else(|_| Value::String(value.to_string()))
 }
 //#endregion 🔖️DocumentHelpers
@@ -36,7 +36,7 @@ pub struct PatchLayer {
     pub value: String,
 }
 
-pub fn handle(payload: &PatchLayer, doc: &ArtifactView<'_, DrawSnapshot>, _cfg: &ConfigView<'_, DrawConfig>, _session: &mut DrawSession) -> Result<Emit<DrawMutation, DrawConfigMutation>, Fault> {
+pub async fn handle(payload: &PatchLayer, doc: &ArtifactView<'_, DrawSnapshot>, _cfg: &ConfigView<'_, DrawConfig>, _session: &mut DrawSession) -> Result<Emit<DrawMutation, DrawConfigMutation>, Fault> {
     let document = doc.snapshot;
     let json_value = patch_value_json(&payload.value);
     match draw_op_for_layer_field(document, &payload.layer_id, &payload.field, &json_value) {

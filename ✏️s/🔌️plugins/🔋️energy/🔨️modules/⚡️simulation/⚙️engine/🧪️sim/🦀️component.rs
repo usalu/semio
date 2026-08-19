@@ -20,7 +20,7 @@ pub struct Engine;
 
 impl Engine {
     /// ⚡️ Run full building energy simulation.
-    pub fn run(model: &Model, config: &SimulationConfig) -> Result<Results, Error> {
+    pub async fn run(model: &Model, config: &SimulationConfig) -> Result<Results, Error> {
         model.validate().map_err(|d| d.messages.into_iter().find(|m| m.severity == crate::error::Severity::Fatal).unwrap_or_else(|| Error::severe("model validation failed")))?;
 
         let start = Instant::now();
@@ -113,7 +113,7 @@ impl Engine {
         })
     }
 
-    fn resolve_weather(config: &SimulationConfig) -> Vec<WeatherRecord> {
+    async fn resolve_weather(config: &SimulationConfig) -> Vec<WeatherRecord> {
         if let Some(epw) = &config.weather {
             return epw.records.clone();
         }
@@ -124,13 +124,13 @@ impl Engine {
         }
     }
 
-    fn synthetic_weather_year() -> Vec<WeatherRecord> {
+    async fn synthetic_weather_year() -> Vec<WeatherRecord> {
         (0..8760).map(synthetic_hour).collect()
     }
 }
 // #endregion 🔖️Engine
 
-fn synthetic_hour(h: u32) -> WeatherRecord {
+async fn synthetic_hour(h: u32) -> WeatherRecord {
     let day = h / 24;
     let hour = h % 24;
     let month = (day / 30 + 1).min(12) as u8;
@@ -156,7 +156,7 @@ fn synthetic_hour(h: u32) -> WeatherRecord {
     }
 }
 
-fn design_day_weather(dry_bulb_c: f64) -> Vec<WeatherRecord> {
+async fn design_day_weather(dry_bulb_c: f64) -> Vec<WeatherRecord> {
     (0..24)
         .map(|hour| WeatherRecord {
             year: 2026,
@@ -181,7 +181,7 @@ fn design_day_weather(dry_bulb_c: f64) -> Vec<WeatherRecord> {
 
 // #region 🔖️Fixtures
 /// 🧪️ Build a minimal test model for integration tests.
-pub fn test_model_single_zone() -> Model {
+pub async fn test_model_single_zone() -> Model {
     use crate::model::*;
     Model {
         name: "BESTEST Single Zone".into(),
@@ -227,7 +227,7 @@ pub fn test_model_single_zone() -> Model {
 }
 
 /// 🧪️ Full topology test model with plant, PV, AFN, daylight.
-pub fn test_model_full_topology() -> Model {
+pub async fn test_model_full_topology() -> Model {
     use crate::model::*;
     let mut model = test_model_single_zone();
     model.name = "Full Topology".into();
@@ -245,7 +245,7 @@ mod tests {
     use crate::calendar::RunPeriod;
 
     #[test]
-    fn engine_runs_single_zone() {
+    async fn engine_runs_single_zone() {
         let model = test_model_single_zone();
         let config = SimulationConfig { warmup_days: 1, run_period_end_month: 1, run_period_end_day: 3, environment: SimulationEnvironment::WeatherRunPeriod, ..Default::default() };
         let results = Engine::run(&model, &config).unwrap();
@@ -254,7 +254,7 @@ mod tests {
     }
 
     #[test]
-    fn engine_deterministic_repeatability() {
+    async fn engine_deterministic_repeatability() {
         let model = test_model_single_zone();
         let config = SimulationConfig { warmup_days: 0, run_period_end_month: 1, run_period_end_day: 2, ..Default::default() };
         let r1 = Engine::run(&model, &config).unwrap();
@@ -264,7 +264,7 @@ mod tests {
     }
 
     #[test]
-    fn ashrae_140_case600_base() {
+    async fn ashrae_140_case600_base() {
         let model = test_model_single_zone();
         let config = SimulationConfig { warmup_days: 0, run_period_end_month: 1, run_period_end_day: 1, environment: SimulationEnvironment::HeatingDesignDay, ..Default::default() };
         let results = Engine::run(&model, &config).unwrap();
@@ -273,13 +273,13 @@ mod tests {
     }
 
     #[test]
-    fn invalid_model_rejected() {
+    async fn invalid_model_rejected() {
         let model = Model::default();
         assert!(Engine::run(&model, &SimulationConfig::default()).is_err());
     }
 
     #[test]
-    fn energy_conservation_order_of_magnitude() {
+    async fn energy_conservation_order_of_magnitude() {
         let model = test_model_single_zone();
         let config = SimulationConfig { warmup_days: 0, run_period_end_month: 1, run_period_end_day: 2, ..Default::default() };
         let results = Engine::run(&model, &config).unwrap();
@@ -288,7 +288,7 @@ mod tests {
     }
 
     #[test]
-    fn full_topology_e2e() {
+    async fn full_topology_e2e() {
         let model = test_model_full_topology();
         let config = SimulationConfig { warmup_days: 0, run_period_end_month: 1, run_period_end_day: 2, ..Default::default() };
         let results = Engine::run(&model, &config).unwrap();
@@ -297,7 +297,7 @@ mod tests {
     }
 
     #[test]
-    fn hvac_bestest_heating_day() {
+    async fn hvac_bestest_heating_day() {
         let model = test_model_single_zone();
         let config = SimulationConfig { warmup_days: 0, run_period_end_month: 1, run_period_end_day: 1, environment: SimulationEnvironment::HeatingDesignDay, ..Default::default() };
         let results = Engine::run(&model, &config).unwrap();
@@ -306,7 +306,7 @@ mod tests {
     }
 
     #[test]
-    fn run_period_honors_calendar() {
+    async fn run_period_honors_calendar() {
         let period = RunPeriod { start_month: 1, start_day: 1, end_month: 1, end_day: 7, year: 2026 };
         assert_eq!(period.total_hours(), 168);
         let config = SimulationConfig { run_period_start_month: 1, run_period_start_day: 1, run_period_end_month: 1, run_period_end_day: 7, warmup_days: 0, ..Default::default() };

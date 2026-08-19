@@ -20,7 +20,7 @@ const FROM_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.dwg", standard: 
 const INTO_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("mesh") };
 
 //#region 🔖️MeshBuild
-fn append_geometry(geometry: &DwgGeometry, positions: &mut Vec<SemioPoint3>, indices: &mut Vec<u32>) {
+async fn append_geometry(geometry: &DwgGeometry, positions: &mut Vec<SemioPoint3>, indices: &mut Vec<u32>) {
     match geometry {
         DwgGeometry::PolyfaceMesh { vertices, faces } => {
             let base = positions.len() as u32;
@@ -51,7 +51,7 @@ fn append_geometry(geometry: &DwgGeometry, positions: &mut Vec<SemioPoint3>, ind
     }
 }
 
-fn semio_meshes_from_drawing(drawing: &DwgDrawing) -> Vec<SemioMesh> {
+async fn semio_meshes_from_drawing(drawing: &DwgDrawing) -> Vec<SemioMesh> {
     let mut meshes = Vec::new();
     for (layer_index, layer) in drawing.layers.iter().enumerate() {
         let mut positions = Vec::new();
@@ -91,7 +91,7 @@ mod tests {
     use crate::artifacts::dwg::schema::snapshot::DwgLogicalDrawing;
     use crate::artifacts::dwg::{DwgColor, DwgEntity};
 
-    fn sample_dwg() -> DwgSnapshot {
+    async fn sample_dwg() -> DwgSnapshot {
         let mut drawing = DwgDrawing::default();
         let layer = drawing.ensure_layer("walls");
         drawing.entities.push(DwgEntity { layer, color: DwgColor::ByLayer, geometry: DwgGeometry::PolyfaceMesh { vertices: vec![[0.0, 0.0, 0.0], [1.0, 0.0, 0.0], [1.0, 1.0, 0.0], [0.0, 1.0, 0.0]], faces: vec![[1, 2, 3, 4]] } });
@@ -99,7 +99,7 @@ mod tests {
     }
 
     #[test]
-    fn groups_polyface_mesh_by_layer_name() {
+    async fn groups_polyface_mesh_by_layer_name() {
         let semio = semio_framework_plugin::resolve_ready(SemioMeshFromDwg::deserialize(&sample_dwg())).expect("deserialize");
         assert_eq!(semio.meshes.len(), 1);
         assert_eq!(semio.meshes[0].id, "walls");
@@ -110,7 +110,7 @@ mod tests {
     }
 
     #[test]
-    fn rejects_malformed_payload() {
+    async fn rejects_malformed_payload() {
         let bad = DwgSnapshot { drawing: DwgLogicalDrawing { extmax: vec![0.0], ..Default::default() }, ..DwgSnapshot::default() };
         assert!(semio_framework_plugin::resolve_ready(SemioMeshFromDwg::deserialize(&bad)).is_err());
     }

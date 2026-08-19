@@ -19,13 +19,13 @@ use crate::artifacts::semio::standards::v1::subsets::document::schema::snapshot:
 use semio_framework_plugin::{ArtifactSerializer, Dialect, StandardId, SubsetId};
 
 //#region 🔖️FieldMapping
-fn join_runs(runs: &[crate::artifacts::semio::standards::v1::subsets::document::schema::snapshot::DocRun]) -> String {
+async fn join_runs(runs: &[crate::artifacts::semio::standards::v1::subsets::document::schema::snapshot::DocRun]) -> String {
     runs.iter().map(|r| r.text.as_str()).collect::<Vec<_>>().join("")
 }
 
 /// 🧱 One `DocBlock` -> zero or more plain-text lines (same honest flattening this group's
 /// `document`<->`txt` pair uses).
-fn block_to_lines(block: &DocBlock) -> Vec<String> {
+async fn block_to_lines(block: &DocBlock) -> Vec<String> {
     match block {
         DocBlock::Paragraph { runs, .. } => vec![join_runs(runs)],
         DocBlock::Heading { runs, .. } => vec![join_runs(runs)],
@@ -38,7 +38,7 @@ fn block_to_lines(block: &DocBlock) -> Vec<String> {
     }
 }
 
-fn make_page(lines: &[String]) -> PdfPage {
+async fn make_page(lines: &[String]) -> PdfPage {
     let mut page = PdfPage::new(612.0, 792.0);
     page.text = lines.join("\n");
     page
@@ -79,7 +79,7 @@ mod tests {
     use super::*;
     use crate::artifacts::semio::standards::v1::subsets::document::schema::snapshot::{DocRun, STDIO_SEMIODOCUMENT_DOCUMENT_SCHEMA};
 
-    fn sample_semio() -> SemioDocumentSnapshot {
+    async fn sample_semio() -> SemioDocumentSnapshot {
         SemioDocumentSnapshot {
             schema: STDIO_SEMIODOCUMENT_DOCUMENT_SCHEMA.into(),
             styles: Vec::new(),
@@ -89,7 +89,7 @@ mod tests {
     }
 
     #[test]
-    fn splits_pages_on_pagebreak() {
+    async fn splits_pages_on_pagebreak() {
         let pdf = semio_framework_plugin::resolve_ready(SemioDocumentToPdf::serialize(&sample_semio())).expect("serialize");
         assert_eq!(pdf.pages.len(), 2);
         assert_eq!(pdf.pages[0].text, "Page one text.");
@@ -98,7 +98,7 @@ mod tests {
     }
 
     #[test]
-    fn empty_document_yields_zero_pages() {
+    async fn empty_document_yields_zero_pages() {
         let snap = SemioDocumentSnapshot { schema: STDIO_SEMIODOCUMENT_DOCUMENT_SCHEMA.into(), styles: Vec::new(), images: Vec::new(), blocks: Vec::new() };
         let pdf = semio_framework_plugin::resolve_ready(SemioDocumentToPdf::serialize(&snap)).expect("serialize");
         assert!(pdf.pages.is_empty());

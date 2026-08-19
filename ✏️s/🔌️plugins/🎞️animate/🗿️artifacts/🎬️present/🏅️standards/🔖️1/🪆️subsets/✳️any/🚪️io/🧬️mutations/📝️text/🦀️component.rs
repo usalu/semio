@@ -15,7 +15,7 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 //#region 🔖️HandcraftedOpCodecs
 /// ⚡️ P6 handcrafted OpText/OpBinary (derive no longer emits these traits).
 impl protocol::OpText for PresentMutation {
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
+    async fn parse_op(line: &str) -> Result<Self, store::TextError> {
         let variants = <Self as dsl::DslVariants>::variants();
         for (keyword, spec_fn) in &variants {
             let probe = format!("{} ", keyword);
@@ -30,7 +30,7 @@ impl protocol::OpText for PresentMutation {
         }
         Err(dsl::__rt::field_error(format!("unknown mutation line '{line}'")))
     }
-    fn print_op(&self) -> String {
+    async fn print_op(&self) -> String {
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
         let variants = <Self as dsl::DslVariants>::variants();
         let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
@@ -39,10 +39,10 @@ impl protocol::OpText for PresentMutation {
 }
 
 impl protocol::OpBinary for PresentMutation {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         dsl::variants_binary::encode_op(self)
     }
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         dsl::variants_binary::decode_op(bytes)
     }
 }
@@ -57,7 +57,7 @@ mod tests {
     use crate::artifacts::present::schema::{populate_tile_drafts_from_grid, FigureTileGridSeedSpec};
     use store::os_store::test_support;
 
-    fn round_trip(deck: &PresentSnapshot, operation: &PresentMutation) -> PresentSnapshot {
+    async fn round_trip(deck: &PresentSnapshot, operation: &PresentMutation) -> PresentSnapshot {
         let (forward, _messages) =
             vcs::apply_mutation(deck, operation).expect("valid mutation");
         let mut restored = forward.clone();
@@ -71,7 +71,7 @@ mod tests {
     }
 
     #[test]
-    fn replace_tiles_and_clear_round_trip() {
+    async fn replace_tiles_and_clear_round_trip() {
         let deck = default_present_snapshot();
         let (source, _) = crate::artifacts::present::present_working_scene(&deck);
         let tiles = populate_tile_drafts_from_grid(FigureTileGridSeedSpec { source: &source, rows: 2, columns: 2, gap: 0.0, key_prefix: "tile" });
@@ -82,7 +82,7 @@ mod tests {
     }
 
     #[test]
-    fn tile_create_rename_resize_delete_round_trip() {
+    async fn tile_create_rename_resize_delete_round_trip() {
         let deck = default_present_snapshot();
         let tile = FigureTileDraft { id: "t1".into(), name: "A".into(), crop: FigureTileFrame { x: 0.1, y: 0.1, width: 0.2, height: 0.2 } };
         let added = round_trip(&deck, &PresentMutation::CreateTile(create_tile::mutation::CreateTile { index: 0, tile }));
@@ -100,49 +100,49 @@ mod tests {
 
     //#region 🔖️OpTextTests
     #[test]
-    fn op_text_round_trip_create_tile() {
+    async fn op_text_round_trip_create_tile() {
         let tile = FigureTileDraft { id: "t1".into(), name: "A".into(), crop: FigureTileFrame { x: 0.1, y: 0.1, width: 0.2, height: 0.2 } };
         test_support::assert_op_line_round_trip(&PresentMutation::CreateTile(create_tile::mutation::CreateTile { index: 0, tile }));
     }
 
     #[test]
-    fn op_text_round_trip_delete_tile() {
+    async fn op_text_round_trip_delete_tile() {
         test_support::assert_op_line_round_trip(&PresentMutation::DeleteTile(delete_tile::mutation::DeleteTile { id: "t1".into() }));
     }
 
     #[test]
-    fn op_text_round_trip_delete_tiles() {
+    async fn op_text_round_trip_delete_tiles() {
         test_support::assert_op_line_round_trip(&PresentMutation::DeleteTiles(delete_tiles::mutation::DeleteTiles { ids: vec!["t1".into(), "t2".into()] }));
     }
 
     #[test]
-    fn op_text_round_trip_reorder_tiles() {
+    async fn op_text_round_trip_reorder_tiles() {
         test_support::assert_op_line_round_trip(&PresentMutation::ReorderTiles(reorder_tiles::mutation::ReorderTiles { id: "t1".into(), to_index: 2 }));
     }
 
     #[test]
-    fn op_text_round_trip_rename_tile() {
+    async fn op_text_round_trip_rename_tile() {
         test_support::assert_op_line_round_trip(&PresentMutation::RenameTile(rename_tile::mutation::RenameTile { id: "t1".into(), new_name: "Renamed".into() }));
     }
 
     #[test]
-    fn op_text_round_trip_resize_tile_crop() {
+    async fn op_text_round_trip_resize_tile_crop() {
         let new_crop = FigureTileFrame { x: 0.3, y: 0.3, width: 0.4, height: 0.4 };
         test_support::assert_op_line_round_trip(&PresentMutation::ResizeTileCrop(resize_tile_crop::mutation::ResizeTileCrop { id: "t1".into(), new_crop }));
     }
 
     #[test]
-    fn op_text_round_trip_replace_source() {
+    async fn op_text_round_trip_replace_source() {
         test_support::assert_op_line_round_trip(&PresentMutation::ReplaceSource(replace_source::mutation::ReplaceSource { new_source: default_figure_tile_source() }));
     }
 
     #[test]
-    fn op_text_round_trip_resize_source_frame() {
+    async fn op_text_round_trip_resize_source_frame() {
         test_support::assert_op_line_round_trip(&PresentMutation::ResizeSourceFrame(resize_source_frame::mutation::ResizeSourceFrame { new_frame: FigureTileFrame { x: 0.0, y: 0.0, width: 1.0, height: 1.0 } }));
     }
 
     #[test]
-    fn op_text_round_trip_replace_tiles() {
+    async fn op_text_round_trip_replace_tiles() {
         let source = default_figure_tile_source();
         let tiles = populate_tile_drafts_from_grid(FigureTileGridSeedSpec { source: &source, rows: 2, columns: 2, gap: 0.0, key_prefix: "tile" });
         test_support::assert_op_line_round_trip(&PresentMutation::ReplaceTiles(replace_tiles::mutation::ReplaceTiles { new_tiles: tiles }));

@@ -74,7 +74,7 @@ pub struct LayoutArtifact {
 
 //#region 🔖️Conversions
 impl Default for LayoutArtifact {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self {
             schema: LAYOUT_DOCUMENT_SCHEMA.into(),
             name: String::new(),
@@ -108,7 +108,7 @@ impl Default for LayoutArtifact {
 
 impl LayoutArtifact {
     /// 📸️ Persisted subset.
-    pub fn to_snapshot(&self) -> crate::artifacts::layout::LayoutSnapshot {
+    pub async fn to_snapshot(&self) -> crate::artifacts::layout::LayoutSnapshot {
         crate::artifacts::layout::LayoutSnapshot {
             schema: self.schema.clone(),
             name: self.name.clone(),
@@ -128,7 +128,7 @@ impl LayoutArtifact {
     }
 
     /// 🧬️ Builds a full artifact from a snapshot, leaving UI fields at defaults.
-    pub fn from_snapshot(snapshot: crate::artifacts::layout::LayoutSnapshot) -> Self {
+    pub async fn from_snapshot(snapshot: crate::artifacts::layout::LayoutSnapshot) -> Self {
         Self {
             schema: snapshot.schema,
             name: snapshot.name,
@@ -149,7 +149,7 @@ impl LayoutArtifact {
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
-    pub fn set_snapshot(&mut self, snapshot: crate::artifacts::layout::LayoutSnapshot) {
+    pub async fn set_snapshot(&mut self, snapshot: crate::artifacts::layout::LayoutSnapshot) {
         self.schema = snapshot.schema;
         self.name = snapshot.name;
         self.grid = snapshot.grid;
@@ -170,7 +170,7 @@ impl LayoutArtifact {
 
 //#region 🔖️Descriptor
 /// 🧬️ Descriptor for `s.layout.layout` — twenty handcrafted schema leaves.
-pub fn layout_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
+pub async fn layout_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
     schema::ArtifactSchemaDescriptor {
         id: "s.layout.layout",
         artifact: schema::FacetLeaves {
@@ -219,20 +219,20 @@ pub mod derived_construction {
         type Snapshot = LayoutSnapshot;
         type Mutation = LayoutMutation;
         type Diff = LayoutDiff;
-        fn empty() -> Self {
+        async fn empty() -> Self {
             Self {
                 snapshot: crate::artifacts::layout::schema::default_document(),
                 diagnostics: Vec::new(),
             }
         }
-        fn from_snapshot(snapshot: Self::Snapshot) -> Self { Self { snapshot, diagnostics: Vec::new() } }
-        fn from_text(text: &str) -> Result<Self, store::TextError> {
+        async fn from_snapshot(snapshot: Self::Snapshot) -> Self { Self { snapshot, diagnostics: Vec::new() } }
+        async fn from_text(text: &str) -> Result<Self, store::TextError> {
             Ok(Self::from_snapshot(<LayoutSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
-        fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
+        async fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
             Ok(Self::from_snapshot(<LayoutSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
         }
-        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
+        async fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let outcome = <Self::Mutation as protocol::Mutation<Self::Snapshot>>::diff(&mutation, &self.snapshot);
             match <Self::Diff as protocol::MutationDiff<Self::Snapshot>>::apply(outcome.diff(), &self.snapshot) {
                 Ok(snapshot) => self.snapshot = snapshot,
@@ -244,7 +244,7 @@ pub mod derived_construction {
             }
             (self, outcome)
         }
-        fn absorb(
+        async fn absorb(
             mut self,
             diff: Self::Diff,
         ) -> protocol::MutationApplyResult<Self> {
@@ -252,7 +252,7 @@ pub mod derived_construction {
             self.snapshot = snapshot;
             Ok(self)
         }
-        fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
+        async fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
             if self.diagnostics.is_empty() { Ok(self.snapshot) } else { Err(self.diagnostics) }
         }
     }
@@ -276,11 +276,11 @@ pub mod derived_analysis {
         type Parts = LayoutParts;
         const DIALECT: Dialect = Dialect { artifact_kind: "s.layout", standard: StandardId("1"), subset: SubsetId("*") };
 
-        fn sniff(_source: &AnalyzeSource<'_>) -> IoConfidence {
+        async fn sniff(_source: &AnalyzeSource<'_>) -> IoConfidence {
             IoConfidence::Medium
         }
 
-        fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
+        async fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
             let mut parts = LayoutParts::default();
             let mut diagnostics = Vec::new();
             let mut confidence = IoConfidence::High;
@@ -312,7 +312,7 @@ pub use derived_analysis::*;
 //#region 📄️Document
 /// 📄️ Relocated from the deleted `⚙️engine` (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES)
 /// — pure over `LayoutSnapshot`/`Page`, no engine state, no app type.
-pub fn parse_layout_document(json: &str) -> Result<crate::artifacts::layout::LayoutSnapshot, crate::artifacts::layout::io::LayoutError> {
+pub async fn parse_layout_document(json: &str) -> Result<crate::artifacts::layout::LayoutSnapshot, crate::artifacts::layout::io::LayoutError> {
     let doc: crate::artifacts::layout::LayoutSnapshot = serde_json::from_str(json)?;
     if doc.schema != LAYOUT_DOCUMENT_SCHEMA {
         return Err(crate::artifacts::layout::io::LayoutError::UnexpectedSchema(doc.schema));
@@ -325,7 +325,7 @@ pub struct ResolvedFrame {
     pub inherited: bool,
 }
 
-pub fn resolve_page<'a>(doc: &'a crate::artifacts::layout::LayoutSnapshot, page: &'a Page) -> Vec<ResolvedFrame> {
+pub async fn resolve_page<'a>(doc: &'a crate::artifacts::layout::LayoutSnapshot, page: &'a Page) -> Vec<ResolvedFrame> {
     let mut frames = Vec::new();
     if let Some(parent_id) = &page.parent_page_id {
         if let Some(parent) = doc.parent_pages.iter().find(|p| p.id == *parent_id) {
@@ -346,11 +346,11 @@ pub fn resolve_page<'a>(doc: &'a crate::artifacts::layout::LayoutSnapshot, page:
 /// 📄️ The bundled sample fixture, parsed once — the source of truth for `LayoutPlayApp::initial_snapshot`
 /// and the app manifest's `.example(...)` document. Relocated from the deleted `⚙️engine` (ticket
 /// 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES).
-pub fn default_document() -> crate::artifacts::layout::LayoutSnapshot {
+pub async fn default_document() -> crate::artifacts::layout::LayoutSnapshot {
     build_demo_layout_snapshot()
 }
 
-fn build_demo_layout_snapshot() -> crate::artifacts::layout::LayoutSnapshot {
+async fn build_demo_layout_snapshot() -> crate::artifacts::layout::LayoutSnapshot {
     crate::artifacts::layout::LayoutSnapshot {
         schema: LAYOUT_DOCUMENT_SCHEMA.into(),
         name: "Demo".into(),
@@ -484,19 +484,19 @@ fn build_demo_layout_snapshot() -> crate::artifacts::layout::LayoutSnapshot {
 /// 🌉️ JSON bridge for `semio_framework_plugin::App::example`, which hardcodes `serde_json::from_str`
 /// on its `document_json` parameter (shared framework machinery, out of scope for this DSL migration) —
 /// derives the JSON from the DSL fixture rather than keeping a second, redundant JSON copy of it on disk.
-pub fn layout_sample_document_json() -> String {
+pub async fn layout_sample_document_json() -> String {
     serde_json::to_string(&default_document()).unwrap_or_default()
 }
 
 /// 🎨️ Formats an optional RGBA color as a comma-separated text field value; two consumers
 /// (`📌️panels/🔍️inspection` reads it, `🎮️commands/✏️add-frame` parses it back via `text_to_rgba`).
-pub fn rgba_to_text(color: &Option<[f32; 4]>) -> String {
+pub async fn rgba_to_text(color: &Option<[f32; 4]>) -> String {
     color.map(|channels| channels.iter().map(|channel| channel.to_string()).collect::<Vec<_>>().join(", ")).unwrap_or_default()
 }
 
 /// 🎨️ Parses a comma-separated `r, g, b, a` text field value back into an RGBA color, or `None` if it
 /// does not have exactly four numeric components.
-pub fn text_to_rgba(text: &str) -> Option<[f32; 4]> {
+pub async fn text_to_rgba(text: &str) -> Option<[f32; 4]> {
     let parts: Vec<f32> = text.split(',').filter_map(|part| part.trim().parse::<f32>().ok()).collect();
     (parts.len() == 4).then(|| [parts[0], parts[1], parts[2], parts[3]])
 }
@@ -507,11 +507,11 @@ pub fn text_to_rgba(text: &str) -> Option<[f32; 4]> {
 mod document_tests {
     use super::*;
 
-    fn rect_frame(id: &str, visible: Option<bool>) -> crate::artifacts::layout::Frame {
+    async fn rect_frame(id: &str, visible: Option<bool>) -> crate::artifacts::layout::Frame {
         crate::artifacts::layout::Frame::Rect { id: id.into(), layer_id: "layer-1".into(), bounds: crate::artifacts::layout::LayoutBounds { x: 0.0, y: 0.0, width: 10.0, height: 10.0, rotation: 0.0 }, locked: None, visible, fill: None, stroke: None }
     }
 
-    fn base_doc() -> crate::artifacts::layout::LayoutSnapshot {
+    async fn base_doc() -> crate::artifacts::layout::LayoutSnapshot {
         crate::artifacts::layout::LayoutSnapshot {
             schema: LAYOUT_DOCUMENT_SCHEMA.into(),
             name: "t".into(),
@@ -531,7 +531,7 @@ mod document_tests {
     }
 
     #[test]
-    fn resolve_page_marks_overridden_parent_frames_and_ignores_missing_parent() {
+    async fn resolve_page_marks_overridden_parent_frames_and_ignores_missing_parent() {
         let mut doc = base_doc();
         doc.parent_pages.push(crate::artifacts::layout::ParentPage {
             id: "parent-1".into(),
@@ -578,7 +578,7 @@ mod document_tests {
     }
 
     #[test]
-    fn parse_layout_document_rejects_wrong_schema_and_invalid_json() {
+    async fn parse_layout_document_rejects_wrong_schema_and_invalid_json() {
         let wrong_schema = r#"{"schema":"other.schema","name":"t","grid":{"baselineGrid":12,"baselineOffset":0,"snapToBaseline":false},"paragraphStyles":[],"characterStyles":[],"stories":[],"links":[],"parentPages":[],"spreads":[],"pages":[]}"#;
         let error = parse_layout_document(wrong_schema).expect_err("wrong schema must fail");
         assert!(matches!(error, crate::artifacts::layout::io::LayoutError::UnexpectedSchema(schema) if schema == "other.schema"));
@@ -589,7 +589,7 @@ mod document_tests {
     }
 
     #[test]
-    fn rgba_text_round_trips() {
+    async fn rgba_text_round_trips() {
         assert_eq!(rgba_to_text(&Some([0.1, 0.2, 0.3, 1.0])), "0.1, 0.2, 0.3, 1");
         assert_eq!(rgba_to_text(&None), "");
         assert_eq!(text_to_rgba("0.5, 0.4, 0.3, 1"), Some([0.5, 0.4, 0.3, 1.0]));

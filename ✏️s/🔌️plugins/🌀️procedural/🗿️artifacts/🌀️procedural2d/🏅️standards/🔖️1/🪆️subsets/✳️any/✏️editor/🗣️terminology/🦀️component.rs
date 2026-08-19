@@ -37,7 +37,7 @@ semio_framework_plugin::app_labels! {
 }
 
 /// 🗣️ Resolves the active label set from the config-carried locale; falls back to native English.
-pub fn procedural2d_labels(cfg: &Procedural2dConfig) -> &'static Procedural2dLabels {
+pub async fn procedural2d_labels(cfg: &Procedural2dConfig) -> &'static Procedural2dLabels {
     semio_framework_plugin::resolve_labels_for_locale::<Procedural2dLabels>(&cfg.locale)
 }
 //#endregion 🔖️Labels
@@ -48,7 +48,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn labels_resolve_native_english_and_german_from_the_config_locale() {
+    async fn labels_resolve_native_english_and_german_from_the_config_locale() {
         assert_eq!(procedural2d_labels(&Procedural2dConfig::default()).sources.as_str(), "Sources");
         assert_eq!(procedural2d_labels(&Procedural2dConfig { locale: "de-DE".into(), ..Procedural2dConfig::default() }).sources.as_str(), "Quellen");
     }

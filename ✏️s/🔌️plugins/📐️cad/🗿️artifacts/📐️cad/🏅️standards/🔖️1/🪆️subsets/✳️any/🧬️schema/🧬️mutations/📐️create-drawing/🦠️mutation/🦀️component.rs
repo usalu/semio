@@ -20,16 +20,16 @@ pub struct CreateDrawing {
 impl MutationKind<CadSnapshot, CadMutation> for CreateDrawing {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "create", entity: "drawing", kind: "create-drawing", record: "CreatedDrawing" };
 
-    fn diff(&self, base: &CadSnapshot) -> protocol::MutationOutcome<crate::artifacts::cad::diff::CadDiff> {
+    async fn diff(&self, base: &CadSnapshot) -> protocol::MutationOutcome<crate::artifacts::cad::diff::CadDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &CadSnapshot) -> Vec<CadMutation> {
+    async fn inverse(&self, base: &CadSnapshot) -> Vec<CadMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         format!("Create drawing child {}", self.child_id)
     }
-    fn target(&self) -> Vec<String> {
+    async fn target(&self) -> Vec<String> {
         vec![self.child_id.clone()]
     }
 }

@@ -17,16 +17,16 @@ pub struct DeleteElement {
 impl MutationKind<Fem2dSnapshot, Fem2dMutation> for DeleteElement {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "delete", entity: "element", kind: "delete-element", record: "DeletedElement" };
 
-    fn diff(&self, base: &Fem2dSnapshot) -> protocol::MutationOutcome<crate::artifacts::fem2d::diff::Fem2dDiff> {
+    async fn diff(&self, base: &Fem2dSnapshot) -> protocol::MutationOutcome<crate::artifacts::fem2d::diff::Fem2dDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &Fem2dSnapshot) -> Vec<Fem2dMutation> {
+    async fn inverse(&self, base: &Fem2dSnapshot) -> Vec<Fem2dMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         format!("Delete element \"{}\"", self.id)
     }
-    fn target(&self) -> Vec<String> {
+    async fn target(&self) -> Vec<String> {
         vec![self.id.clone()]
     }
 }

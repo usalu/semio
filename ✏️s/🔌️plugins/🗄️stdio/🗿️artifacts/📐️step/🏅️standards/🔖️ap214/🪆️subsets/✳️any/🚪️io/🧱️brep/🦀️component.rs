@@ -63,13 +63,13 @@ struct BrepBuilder<'a> {
 }
 
 impl<'a> BrepBuilder<'a> {
-    fn point(&self, id: u64) -> Option<[f64; 3]> {
+    async fn point(&self, id: u64) -> Option<[f64; 3]> {
         let args = self.doc.instance(id)?.entity("CARTESIAN_POINT")?;
         let coords = args.get(1)?.as_list()?;
         Some([coords.first()?.as_real()?, coords.get(1)?.as_real()?, coords.get(2)?.as_real()?])
     }
 
-    fn vertex_point(&mut self, id: u64) -> Option<usize> {
+    async fn vertex_point(&mut self, id: u64) -> Option<usize> {
         if let Some(&idx) = self.vertex_of.get(&id) {
             return Some(idx);
         }
@@ -83,7 +83,7 @@ impl<'a> BrepBuilder<'a> {
     }
 
     /// ➡️ `(start_vertex_idx, end_vertex_idx)` honoring `ORIENTED_EDGE.orientation`.
-    fn oriented_edge_endpoints(&mut self, oriented_edge_id: u64) -> Option<(usize, usize)> {
+    async fn oriented_edge_endpoints(&mut self, oriented_edge_id: u64) -> Option<(usize, usize)> {
         let args = self.doc.instance(oriented_edge_id)?.entity("ORIENTED_EDGE")?;
         let edge_ref = args.get(3)?.as_ref_id()?;
         let orientation = matches!(args.get(4), Some(Part21Value::Enum(e)) if e == "T");
@@ -102,7 +102,7 @@ impl<'a> BrepBuilder<'a> {
         Some(if orientation { (start, end) } else { (end, start) })
     }
 
-    fn edge_loop(&mut self, edge_loop_id: u64) -> Option<Vec<usize>> {
+    async fn edge_loop(&mut self, edge_loop_id: u64) -> Option<Vec<usize>> {
         let args = self.doc.instance(edge_loop_id)?.entity("EDGE_LOOP")?;
         let edges = args.get(1)?.as_list()?.to_vec();
         let mut indices = Vec::with_capacity(edges.len());
@@ -114,7 +114,7 @@ impl<'a> BrepBuilder<'a> {
         Some(indices)
     }
 
-    fn face_bound_loop(&mut self, bound_id: u64) -> Option<Vec<usize>> {
+    async fn face_bound_loop(&mut self, bound_id: u64) -> Option<Vec<usize>> {
         let inst = self.doc.instance(bound_id)?;
         let (bound_type, args) = inst.primary()?;
         if !(bound_type.eq_ignore_ascii_case("FACE_BOUND") || bound_type.eq_ignore_ascii_case("FACE_OUTER_BOUND")) {
@@ -129,7 +129,7 @@ impl<'a> BrepBuilder<'a> {
         Some(indices)
     }
 
-    fn advanced_face(&mut self, face_id: u64) -> Option<BrepFace> {
+    async fn advanced_face(&mut self, face_id: u64) -> Option<BrepFace> {
         let args = self.doc.instance(face_id)?.entity("ADVANCED_FACE")?;
         let bounds = args.get(1)?.as_list()?.to_vec();
         if let Some(geom_ref) = args.get(2).and_then(Part21Value::as_ref_id) {
@@ -153,7 +153,7 @@ impl<'a> BrepBuilder<'a> {
 /// 🧐️ Derives a `BrepMeshView` from the generic Part-21 graph. Real walk, not a scraper:
 /// prefers `CLOSED_SHELL`s' own face lists; falls back to every `ADVANCED_FACE` in the document
 /// when no shell groups them (still real data, just ungrouped).
-pub fn analyze_brep_mesh(doc: &Part21Document) -> BrepMeshView {
+pub async fn analyze_brep_mesh(doc: &Part21Document) -> BrepMeshView {
     let mut builder = BrepBuilder { doc, vertex_of: HashMap::new(), vertices: Vec::new(), issues: Vec::new() };
     let mut face_ids: Vec<u64> = Vec::new();
     for shell in doc.by_type("CLOSED_SHELL") {
@@ -183,7 +183,7 @@ pub fn analyze_brep_mesh(doc: &Part21Document) -> BrepMeshView {
 //#endregion 🔖️Analyze
 
 //#region 🔖️Write
-fn face_normal(mesh: &BrepMesh, indices: &[usize]) -> Option<[f64; 3]> {
+async fn face_normal(mesh: &BrepMesh, indices: &[usize]) -> Option<[f64; 3]> {
     if indices.len() < 3 {
         return None;
     }
@@ -200,17 +200,17 @@ fn face_normal(mesh: &BrepMesh, indices: &[usize]) -> Option<[f64; 3]> {
     Some([nx / len, ny / len, nz / len])
 }
 
-fn s(text: &str) -> Part21Value {
+async fn s(text: &str) -> Part21Value {
     Part21Value::Str(text.to_string())
 }
-fn xyz(v: [f64; 3]) -> Part21Value {
+async fn xyz(v: [f64; 3]) -> Part21Value {
     Part21Value::List(vec![Part21Value::Real(v[0].into()), Part21Value::Real(v[1].into()), Part21Value::Real(v[2].into())])
 }
 
 /// 📤️ Regenerates a real, minimal AP214 `EDGE_LOOP`-based faceted b-rep from a `BrepMesh` —
 /// the inverse of `analyze_brep_mesh` for planar faces (used by cross-plugin producers, e.g.
 /// the cad plugin's step export, so nothing outside this module hand-rolls Part-21 text).
-pub fn brep_mesh_to_part21(mesh: &BrepMesh) -> Part21Document {
+pub async fn brep_mesh_to_part21(mesh: &BrepMesh) -> Part21Document {
     let mut b = Part21Builder::new();
     let point_ids: Vec<u64> = mesh.vertices.iter().map(|v| b.alloc("CARTESIAN_POINT", vec![s(""), xyz([v.x, v.y, v.z])])).collect();
     let vertex_ids: Vec<u64> = point_ids.iter().map(|&p| b.alloc("VERTEX_POINT", vec![s(""), Part21Value::Ref(p)])).collect();
@@ -268,7 +268,7 @@ mod tests {
     const FIXTURE: &str = "ISO-10303-21;\nHEADER;\nFILE_DESCRIPTION((''),'2;1');\nFILE_NAME('semio.step','2026-08-10T00:00:00',('Ueli'),('semio'),'semio','','');\nFILE_SCHEMA(('AUTOMOTIVE_DESIGN'));\nENDSEC;\nDATA;\n#1=CARTESIAN_POINT('',(0.,0.,0.));\n#2=CARTESIAN_POINT('',(10.,0.,0.));\n#3=CARTESIAN_POINT('',(10.,10.,0.));\n#4=DIRECTION('',(0.,0.,1.));\n#5=VERTEX_POINT('',#1);\n#6=VERTEX_POINT('',#2);\n#7=VERTEX_POINT('',#3);\n#8=EDGE_CURVE('',#5,#6,#20,.T.);\n#9=EDGE_CURVE('',#6,#7,#21,.T.);\n#10=EDGE_CURVE('',#7,#5,#22,.T.);\n#20=LINE('',#1,#30);\n#21=LINE('',#2,#31);\n#22=LINE('',#3,#32);\n#30=VECTOR('',#4,1.);\n#31=VECTOR('',#4,1.);\n#32=VECTOR('',#4,1.);\n#11=ORIENTED_EDGE('',*,*,#8,.T.);\n#12=ORIENTED_EDGE('',*,*,#9,.T.);\n#13=ORIENTED_EDGE('',*,*,#10,.T.);\n#14=EDGE_LOOP('',(#11,#12,#13));\n#15=FACE_OUTER_BOUND('',#14,.T.);\n#16=PLANE('',#40);\n#40=AXIS2_PLACEMENT_3D('',#1,#4,$);\n#17=ADVANCED_FACE('',(#15),#16,.T.);\n#18=CLOSED_SHELL('',(#17));\n#19=MANIFOLD_SOLID_BREP('',#18);\nENDSEC;\nEND-ISO-10303-21;\n";
 
     #[test]
-    fn analyzes_real_non_degenerate_mesh() {
+    async fn analyzes_real_non_degenerate_mesh() {
         let doc = parse_part21(FIXTURE).expect("parse fixture");
         let view = analyze_brep_mesh(&doc);
         assert!(view.issues.is_empty(), "unexpected issues: {:?}", view.issues);
@@ -284,7 +284,7 @@ mod tests {
     }
 
     #[test]
-    fn curved_surface_flagged_unsupported_not_fabricated() {
+    async fn curved_surface_flagged_unsupported_not_fabricated() {
         let text = FIXTURE.replace("#16=PLANE('',#40);", "#16=B_SPLINE_SURFACE_WITH_KNOTS('',3,3,((#1,#2,#3)),.UNSPECIFIED.,.F.,.F.,.F.,(4,4),(4,4),(0.,1.),(0.,1.),.UNSPECIFIED.);");
         let doc = parse_part21(&text).expect("parse");
         let view = analyze_brep_mesh(&doc);
@@ -293,7 +293,7 @@ mod tests {
     }
 
     #[test]
-    fn writer_round_trips_through_analyzer() {
+    async fn writer_round_trips_through_analyzer() {
         let mesh =
             BrepMesh { vertices: vec![BrepVertex { x: 0.0, y: 0.0, z: 0.0 }, BrepVertex { x: 4.0, y: 0.0, z: 0.0 }, BrepVertex { x: 4.0, y: 3.0, z: 0.0 }, BrepVertex { x: 0.0, y: 3.0, z: 0.0 }], faces: vec![BrepFace { indices: vec![0, 1, 2, 3] }] };
         let doc = brep_mesh_to_part21(&mesh);
@@ -307,7 +307,7 @@ mod tests {
     }
 
     #[test]
-    fn empty_mesh_writer_still_produces_valid_document() {
+    async fn empty_mesh_writer_still_produces_valid_document() {
         let doc = brep_mesh_to_part21(&BrepMesh::default());
         let text = super::super::part21::write_part21(&doc);
         let reparsed = parse_part21(&text).expect("reparse empty mesh document");

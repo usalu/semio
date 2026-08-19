@@ -44,7 +44,7 @@ pub struct StlTriangle {
 }
 
 impl Default for StlTriangle {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self { normal: [0.0; 3], vertices: [[0.0; 3]; 3] }
     }
 }
@@ -73,7 +73,7 @@ pub struct StlSnapshot {
 }
 
 impl Default for StlSnapshot {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self { schema: STDIO_STL_DOCUMENT_SCHEMA.into(), solid_name: String::new(), triangles: Vec::new() }
     }
 }
@@ -84,18 +84,18 @@ impl Default for StlSnapshot {
 // `encode_stl_binary`/`decode_stl_binary` (https://en.wikipedia.org/wiki/STL_(file_format)).
 impl store::ArtifactDsl for StlSnapshot {
     const EXTENSION: &'static str = "stl";
-    fn envelope_id() -> &'static str {
+    async fn envelope_id() -> &'static str {
         "stdio.stl"
     }
 
-    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+    async fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
         let body = match store::semio_format::split_text_preamble(text) {
             Ok((_, rest)) => rest,
             Err(_) => text,
         };
         crate::artifacts::stl::engine::decode_stl_ascii(body).map_err(|e| store::TextError::new(format!("stl parse: {e}"), dsl::TextSpan::at(1, 1)))
     }
-    fn print_dsl(&self) -> String {
+    async fn print_dsl(&self) -> String {
         let body = crate::artifacts::stl::engine::encode_stl_ascii(self);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
@@ -103,13 +103,13 @@ impl store::ArtifactDsl for StlSnapshot {
 }
 
 impl store::ArtifactPack for StlSnapshot {
-    fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
+    async fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
         let raw = crate::artifacts::stl::engine::encode_stl_ascii(self).into_bytes();
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &raw))
     }
-    fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
+    async fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
         if envelope.envelope_id() != <Self as store::ArtifactDsl>::envelope_id() {
             return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.envelope_id())));

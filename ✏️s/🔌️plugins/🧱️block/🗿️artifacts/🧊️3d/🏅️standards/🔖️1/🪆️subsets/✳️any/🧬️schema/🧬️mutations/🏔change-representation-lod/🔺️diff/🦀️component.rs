@@ -5,7 +5,7 @@ use crate::artifacts::block3d::Block3dSnapshot;
 use crate::{BlockRepresentation};
 
 //#region 🔖️Diff
-pub fn diff(payload: &super::mutation::ChangeRepresentationLod, base: &Block3dSnapshot) -> protocol::MutationOutcome<Block3dDiff> {
+pub async fn diff(payload: &super::mutation::ChangeRepresentationLod, base: &Block3dSnapshot) -> protocol::MutationOutcome<Block3dDiff> {
     let Some(existing) = base.representations.iter().find(|item| item.id == payload.id) else {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("{} \"{}\" not found", "representation", payload.id), vec![payload.id.clone()]);
     };

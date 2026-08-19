@@ -19,23 +19,23 @@ pub struct ReplaceBlock {
 }
 
 /// 🏗️ Builder.
-pub fn replace_block_operation(step_id: &str, block: PlaybookBlock) -> PlaybookMutation {
+pub async fn replace_block_operation(step_id: &str, block: PlaybookBlock) -> PlaybookMutation {
     PlaybookMutation::ReplaceBlock(ReplaceBlock { step_id: step_id.into(), block })
 }
 
 impl protocol::MutationKind<PlaybookSnapshot, PlaybookMutation> for ReplaceBlock {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "replace", entity: "block", kind: "replace-block", record: "ReplacedBlock" };
 
-    fn diff(&self, base: &PlaybookSnapshot) -> protocol::MutationOutcome<crate::artifacts::playbook::PlaybookDiff> {
+    async fn diff(&self, base: &PlaybookSnapshot) -> protocol::MutationOutcome<crate::artifacts::playbook::PlaybookDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &PlaybookSnapshot) -> Vec<PlaybookMutation> {
+    async fn inverse(&self, base: &PlaybookSnapshot) -> Vec<PlaybookMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         format!("Replace block \"{}\"", self.block.label)
     }
-    fn target(&self) -> Vec<String> {
+    async fn target(&self) -> Vec<String> {
         vec![self.step_id.clone(), self.block.id.clone()]
     }
 }

@@ -7,12 +7,12 @@ pub const SEMIO_DOCUMENT_EDIT_MODE_ID: &str = "edit";
 
 //#region 🔖️Definition
 /// 🧱️ Stitched into the editor manifest by the surface root's `create_*_editor`.
-pub fn definition() -> ModeDefinition {
+pub async fn definition() -> ModeDefinition {
     ModeDefinition { id: SEMIO_DOCUMENT_EDIT_MODE_ID.into(), label: LocalizedLabel::native("Edit", "Bearbeiten"), icon_id: "pencil".into(), tools: Vec::new(), layout_id: None, commands: Vec::new() }
 }
 
 /// 🪟️ Single full-pane Main window.
-pub fn layout() -> WindowLayout {
+pub async fn layout() -> WindowLayout {
     WindowLayout {
         root: WindowLayoutRoot::Stack(WindowLayoutStackNode {
             kind: "stack".into(),

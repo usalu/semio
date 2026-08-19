@@ -21,7 +21,7 @@ pub struct ImperativeTopology {
 }
 
 impl Default for ImperativeTopology {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self { topo_order: Vec::new(), depth: BTreeMap::new(), cycle_free: true, node_count: 0 }
     }
 }
@@ -30,14 +30,14 @@ impl Default for ImperativeTopology {
 /// scope-key iteration order is already deterministic); `cycle_free` is always `true` — a
 /// `Path`/`Step` tree cannot contain a cycle by construction (no step ever references another
 /// step's id, only owns nested `Path`s).
-pub fn compute_imperative_topology(path: &Path) -> ImperativeTopology {
+pub async fn compute_imperative_topology(path: &Path) -> ImperativeTopology {
     let mut topo_order = Vec::new();
     let mut depth = BTreeMap::new();
     walk(path, 0, &mut topo_order, &mut depth);
     ImperativeTopology { node_count: topo_order.len() as u32, topo_order, depth, cycle_free: true }
 }
 
-fn walk(path: &Path, level: u32, topo_order: &mut Vec<String>, depth: &mut BTreeMap<String, u32>) {
+async fn walk(path: &Path, level: u32, topo_order: &mut Vec<String>, depth: &mut BTreeMap<String, u32>) {
     for step in &path.steps {
         topo_order.push(step.id.clone());
         depth.insert(step.id.clone(), level);
@@ -55,12 +55,12 @@ mod tests {
     use crate::artifacts::imperative::Step;
     use std::collections::BTreeMap as StdBTreeMap;
 
-    fn step(id: &str, bodies: StdBTreeMap<String, Path>) -> Step {
+    async fn step(id: &str, bodies: StdBTreeMap<String, Path>) -> Step {
         Step { id: id.into(), kind: "noop".into(), params: Default::default(), bodies }
     }
 
     #[test]
-    fn a_flat_path_orders_steps_at_depth_zero() {
+    async fn a_flat_path_orders_steps_at_depth_zero() {
         let path = Path { steps: vec![step("a", StdBTreeMap::new()), step("b", StdBTreeMap::new())] };
         let topology = compute_imperative_topology(&path);
         assert_eq!(topology.topo_order, vec!["a".to_string(), "b".to_string()]);
@@ -71,7 +71,7 @@ mod tests {
     }
 
     #[test]
-    fn a_nested_body_step_sits_one_depth_deeper_and_still_counts() {
+    async fn a_nested_body_step_sits_one_depth_deeper_and_still_counts() {
         let inner = Path { steps: vec![step("inner", StdBTreeMap::new())] };
         let mut bodies = StdBTreeMap::new();
         bodies.insert("then".to_string(), inner);
@@ -84,7 +84,7 @@ mod tests {
     }
 
     #[test]
-    fn an_empty_path_is_the_zero_topology() {
+    async fn an_empty_path_is_the_zero_topology() {
         assert_eq!(compute_imperative_topology(&Path::new()), ImperativeTopology::default());
     }
 }

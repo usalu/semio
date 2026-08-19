@@ -17,12 +17,12 @@ pub const BLOCK3D_NAKAGIN_CAPSULE_EXAMPLE_TEXT: &str = include_str!("../../../�
 pub const BLOCK3D_CONCRETE_FOREST_LEFT_EXAMPLE_TEXT: &str = include_str!("../../../📚️examples/🎬️hexagonal-cut-concrete-forest-left/🖼️assets/🗣️hexagonal-cut-concrete-forest-left.dsl.semio");
 
 /// 📖️ Parses `.block3d` DSL text into a `Block3dSnapshot`.
-pub fn parse_dsl(text: &str) -> Result<Block3dSnapshot, store::TextError> {
+pub async fn parse_dsl(text: &str) -> Result<Block3dSnapshot, store::TextError> {
     <Block3dSnapshot as store::ArtifactDsl>::parse_dsl(text)
 }
 
 /// 🖨️ Prints a `Block3dSnapshot` back to `.block3d` DSL text.
-pub fn print_dsl(document: &Block3dSnapshot) -> String {
+pub async fn print_dsl(document: &Block3dSnapshot) -> String {
     store::ArtifactDsl::print_dsl(document)
 }
 
@@ -33,7 +33,7 @@ mod tests {
     use crate::artifacts::block3d::{Block3dVortexKind, Block3dVortexTemplate};
     use crate::{BlockCamera3d, BlockKindIdentity, BlockRepresentation};
 
-    pub fn nakagin_capsule() -> Block3dSnapshot {
+    pub async fn nakagin_capsule() -> Block3dSnapshot {
         let mut definition = Block3dSnapshot {
             object_kind: BlockKindIdentity { id: "Capsule J".into(), name: "Capsule J".into(), label: "Capsule J".into(), ..Default::default() },
             camera3d: BlockCamera3d { position: [10.0, -10.0, 6.0], target: [0.0, 0.0, 1.0], zoom: 1.0 },
@@ -63,7 +63,7 @@ mod tests {
     }
 
     #[test]
-    fn block3d_definition_dsl_round_trips() {
+    async fn block3d_definition_dsl_round_trips() {
         let empty = Block3dSnapshot::default();
         store::os_store::test_support::assert_dsl_round_trip(&empty);
         store::os_store::test_support::assert_dsl_pack_equivalence(&empty);
@@ -73,7 +73,7 @@ mod tests {
     }
 
     #[test]
-    fn block3d_example_fixtures_parse_and_round_trip_as_dsl() {
+    async fn block3d_example_fixtures_parse_and_round_trip_as_dsl() {
         for dsl_text in [BLOCK3D_NAKAGIN_CAPSULE_EXAMPLE_TEXT, BLOCK3D_CONCRETE_FOREST_LEFT_EXAMPLE_TEXT] {
             let definition = parse_dsl(dsl_text).expect("example fixture parses as dsl");
             store::os_store::test_support::assert_dsl_round_trip(&definition);

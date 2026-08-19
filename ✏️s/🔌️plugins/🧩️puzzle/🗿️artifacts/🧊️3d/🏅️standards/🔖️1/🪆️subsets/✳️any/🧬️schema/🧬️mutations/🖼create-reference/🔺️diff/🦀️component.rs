@@ -4,7 +4,7 @@ use crate::artifacts::puzzle3d::diff::{Puzzle3dReferencesDelta, Puzzle3dDiff};
 use crate::artifacts::puzzle3d::Puzzle3dSnapshot;
 
 //#region 🔖️Diff
-pub fn diff(payload: &super::mutation::CreateReference, base: &Puzzle3dSnapshot) -> protocol::MutationOutcome<Puzzle3dDiff> {
+pub async fn diff(payload: &super::mutation::CreateReference, base: &Puzzle3dSnapshot) -> protocol::MutationOutcome<Puzzle3dDiff> {
     if base.references.iter().any(|entry| entry.id == payload.reference.id) {
         return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("{} already exists", "reference"), vec![payload.reference.id.clone()]);
     }

@@ -30,7 +30,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn documents_unsupported_direction_as_a_real_error_not_fabricated_bytes() {
+    async fn documents_unsupported_direction_as_a_real_error_not_fabricated_bytes() {
         let err = semio_framework_plugin::resolve_ready(SemioCadToDwg::serialize(&SemioCadSnapshot::default())).unwrap_err();
         match err {
             store::PackError::Schema(msg) => assert!(msg.contains("unsupported")),

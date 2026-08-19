@@ -12,7 +12,7 @@ use serde::{Deserialize, Serialize};
 #[dsl(keyword = "delete-selection")]
 pub struct DeleteSelection {}
 
-fn delete_selected(fixture: &flow::FlowFixture, selected: &[String]) -> Emit<Procedural3dMutation, Procedural3dConfigMutation> {
+async fn delete_selected(fixture: &flow::FlowFixture, selected: &[String]) -> Emit<Procedural3dMutation, Procedural3dConfigMutation> {
     let mut host = host_from_fixture(fixture);
     for id in selected {
         let _ = host.remove_widget(id);
@@ -25,13 +25,13 @@ fn delete_selected(fixture: &flow::FlowFixture, selected: &[String]) -> Emit<Pro
 /// shape (no `interaction` slot — ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM) —
 /// reachable only through that macro-generated path (`Procedural3dPlayApp::handle` always routes this
 /// command through `apply` below instead), so it degrades to treating the selection as empty.
-pub fn handle(_payload: &DeleteSelection, doc: &ArtifactView<'_, Procedural3dSnapshot>, _cfg: &ConfigView<'_, Procedural3dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural3dMutation, Procedural3dConfigMutation>, Fault> {
+pub async fn handle(_payload: &DeleteSelection, doc: &ArtifactView<'_, Procedural3dSnapshot>, _cfg: &ConfigView<'_, Procedural3dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural3dMutation, Procedural3dConfigMutation>, Fault> {
     Ok(delete_selected(&doc.snapshot.fixture, &[]))
 }
 
 /// 🕹️ Reads the `graph` domain's current selection instead of a deleted config field — no config
 /// mutation needed afterwards, the framework auto-prunes the deleted ids out of `graph`'s selection
 /// via `interaction_topology`.
-pub fn apply(_payload: &DeleteSelection, doc: &ArtifactView<'_, Procedural3dSnapshot>, _cfg: &ConfigView<'_, Procedural3dConfig>, interaction: &InteractionView<'_>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural3dMutation, Procedural3dConfigMutation>, Fault> {
+pub async fn apply(_payload: &DeleteSelection, doc: &ArtifactView<'_, Procedural3dSnapshot>, _cfg: &ConfigView<'_, Procedural3dConfig>, interaction: &InteractionView<'_>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural3dMutation, Procedural3dConfigMutation>, Fault> {
     Ok(delete_selected(&doc.snapshot.fixture, &interaction.selection("graph").ids))
 }

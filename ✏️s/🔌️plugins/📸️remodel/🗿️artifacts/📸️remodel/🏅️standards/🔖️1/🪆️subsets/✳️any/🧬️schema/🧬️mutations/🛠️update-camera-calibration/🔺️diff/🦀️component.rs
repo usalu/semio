@@ -4,7 +4,7 @@ use crate::artifacts::remodel::diff::RemodelDiff;
 use crate::artifacts::remodel::RemodelSnapshot;
 
 //#region 🔖️Diff
-pub fn diff(payload: &super::mutation::UpdateCameraCalibration, base: &RemodelSnapshot) -> protocol::MutationOutcome<RemodelDiff> {
+pub async fn diff(payload: &super::mutation::UpdateCameraCalibration, base: &RemodelSnapshot) -> protocol::MutationOutcome<RemodelDiff> {
     let Some(existing) = base.calibration.cameras.iter().find(|camera| camera.id == payload.camera.id) else {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Camera calibration \"{}\" does not exist.", payload.camera.id), [payload.camera.id.clone()]);
     };

@@ -18,7 +18,7 @@ pub mod derived_construction {
     //#region 🔖️Seed
     /// 🌱️ Seeds a fresh snapshot with a real tagged-PDF Catalog: `/MarkInfo/Marked true`, a
     /// (minimal) `/StructTreeRoot`, `/Lang`, and `/ViewerPreferences/DisplayDocTitle true`.
-    fn seeded_snapshot(lang: String) -> PdfSnapshot {
+    async fn seeded_snapshot(lang: String) -> PdfSnapshot {
         let objects = vec![
             PdfIndirectObject {
                 id: ObjRef { num: 1, gen: 0 },
@@ -46,17 +46,17 @@ pub mod derived_construction {
 
     impl PdfUaBuilderConstruction {
         /// ➕ The recommended entry point: REQUIRES a language tag (e.g. `"en-US"`) up front.
-        pub fn new(lang: impl Into<String>) -> Self {
+        pub async fn new(lang: impl Into<String>) -> Self {
             Self { snapshot: seeded_snapshot(lang.into()) }
         }
 
-        pub fn add_page(mut self, page: PdfPage) -> Self {
+        pub async fn add_page(mut self, page: PdfPage) -> Self {
             let index = self.snapshot.pages.len();
             apply_pdf_mutation(&mut self.snapshot, &PdfMutation::InsertPage { index, page });
             self
         }
 
-        pub fn set_info(mut self, info: PdfInfo) -> Self {
+        pub async fn set_info(mut self, info: PdfInfo) -> Self {
             apply_pdf_mutation(&mut self.snapshot, &PdfMutation::SetInfo { info });
             self
         }
@@ -67,33 +67,33 @@ pub mod derived_construction {
         type Mutation = PdfMutation;
         type Diff = PdfDiff;
 
-        fn empty() -> Self {
+        async fn empty() -> Self {
             Self::new("en")
         }
 
-        fn from_snapshot(snapshot: Self::Snapshot) -> Self {
+        async fn from_snapshot(snapshot: Self::Snapshot) -> Self {
             Self { snapshot }
         }
 
-        fn from_text(text: &str) -> Result<Self, store::TextError> {
+        async fn from_text(text: &str) -> Result<Self, store::TextError> {
             Ok(Self::from_snapshot(<PdfSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
 
-        fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
+        async fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
             Ok(Self::from_snapshot(<PdfSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
         }
 
-        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
+        async fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let diff = apply_pdf_mutation(&mut self.snapshot, &mutation);
             (self, diff)
         }
 
-        fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
+        async fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
             self.snapshot = <PdfDiff as protocol::MutationDiff<PdfSnapshot>>::apply(&diff, &self.snapshot)?;
             Ok(self)
         }
 
-        fn build(self) -> Result<Self::Snapshot, Vec<Diagnostic>> {
+        async fn build(self) -> Result<Self::Snapshot, Vec<Diagnostic>> {
             let hard: Vec<Diagnostic> = check_ua_conformance(&self.snapshot).into_iter().filter(|d| matches!(d.severity, Severity::Error | Severity::Fatal)).collect();
             if hard.is_empty() {
                 Ok(self.snapshot)
@@ -109,13 +109,13 @@ pub mod derived_construction {
         use super::*;
 
         #[test]
-        fn new_requires_lang_and_builds_clean() {
+        async fn new_requires_lang_and_builds_clean() {
             let snapshot = PdfUaBuilderConstruction::new("en-US").add_page(PdfPage::new(200.0, 200.0)).set_info(PdfInfo { title: Some("An Accessible Doc".into()), ..PdfInfo::default() }).build().expect("conforming construction must build");
             assert_eq!(snapshot.pages.len(), 1);
         }
 
         #[test]
-        fn hard_violation_injected_via_raw_mutate_still_fails_build() {
+        async fn hard_violation_injected_via_raw_mutate_still_fails_build() {
             let mut snapshot = PdfUaBuilderConstruction::new("en-US").add_page(PdfPage::new(100.0, 100.0)).build().unwrap();
             // Strip the seeded /StructTreeRoot to simulate a stripped-down document reaching the
             // builder via the generic `SetSnapshot` escape hatch.
@@ -152,55 +152,55 @@ pub mod derived_analysis {
     pub const CODE_INFO_TITLE: &str = "stdio.pdf.ua.missing-info-title";
     pub const CODE_FONT_NOT_EMBEDDED: &str = "stdio.pdf.ua.font-not-embedded";
 
-    fn dict_name<'a>(dict: &'a [PdfDictEntry], key: &str) -> Option<&'a str> {
+    async fn dict_name<'a>(dict: &'a [PdfDictEntry], key: &str) -> Option<&'a str> {
         dict.iter().find(|e| e.key == key).and_then(|e| e.value.as_name())
     }
 
-    fn resolve_ref<'a>(objects: &'a [PdfIndirectObject], r: ObjRef) -> Option<&'a PdfObject> {
+    async fn resolve_ref<'a>(objects: &'a [PdfIndirectObject], r: ObjRef) -> Option<&'a PdfObject> {
         objects.iter().find(|o| o.id == r).map(|o| &o.value)
     }
 
-    fn resolve_item<'a>(objects: &'a [PdfIndirectObject], item: &'a PdfObject) -> Option<&'a PdfObject> {
+    async fn resolve_item<'a>(objects: &'a [PdfIndirectObject], item: &'a PdfObject) -> Option<&'a PdfObject> {
         match item {
             PdfObject::Ref(r) => resolve_ref(objects, *r),
             other => Some(other),
         }
     }
 
-    fn find_catalog(objects: &[PdfIndirectObject]) -> Option<&PdfObject> {
+    async fn find_catalog(objects: &[PdfIndirectObject]) -> Option<&PdfObject> {
         objects.iter().find(|o| o.value.as_dict().map(|d| dict_name(d, "Type") == Some("Catalog")).unwrap_or(false)).map(|o| &o.value)
     }
 
-    fn resolved_dict_entry<'a>(objects: &'a [PdfIndirectObject], catalog: &'a PdfObject, key: &str) -> Option<&'a PdfObject> {
+    async fn resolved_dict_entry<'a>(objects: &'a [PdfIndirectObject], catalog: &'a PdfObject, key: &str) -> Option<&'a PdfObject> {
         catalog.dict_get(key).and_then(|v| resolve_item(objects, v))
     }
 
     /// ✅ Real check: `/Root/MarkInfo` resolves to a dict carrying `/Marked true`.
-    fn has_marked_true(objects: &[PdfIndirectObject], catalog: &PdfObject) -> bool {
+    async fn has_marked_true(objects: &[PdfIndirectObject], catalog: &PdfObject) -> bool {
         resolved_dict_entry(objects, catalog, "MarkInfo").and_then(|v| v.dict_get("Marked")).map(|v| matches!(v, PdfObject::Bool(true))).unwrap_or(false)
     }
 
     /// 🌳️ Real check: `/Root` carries a `/StructTreeRoot` key at all (any value -- presence is what
     /// PDF/UA requires; deep structure-tree content validation is out of this schema's reach).
-    fn has_struct_tree_root(catalog: &PdfObject) -> bool {
+    async fn has_struct_tree_root(catalog: &PdfObject) -> bool {
         catalog.dict_get("StructTreeRoot").is_some()
     }
 
     /// 🗣️ Real check: `/Root/Lang` is a non-empty text string.
-    fn has_nonempty_lang(catalog: &PdfObject) -> bool {
+    async fn has_nonempty_lang(catalog: &PdfObject) -> bool {
         catalog.dict_get("Lang").map(|v| matches!(v, PdfObject::Str(s) if !s.is_empty())).unwrap_or(false)
     }
 
     /// 🏷️ Real check: `/Root/ViewerPreferences` resolves to a dict carrying `/DisplayDocTitle true`.
-    fn has_display_doc_title(objects: &[PdfIndirectObject], catalog: &PdfObject) -> bool {
+    async fn has_display_doc_title(objects: &[PdfIndirectObject], catalog: &PdfObject) -> bool {
         resolved_dict_entry(objects, catalog, "ViewerPreferences").and_then(|v| v.dict_get("DisplayDocTitle")).map(|v| matches!(v, PdfObject::Bool(true))).unwrap_or(false)
     }
 
-    fn descriptor_has_embedded_file(objects: &[PdfIndirectObject], desc_ref: ObjRef) -> bool {
+    async fn descriptor_has_embedded_file(objects: &[PdfIndirectObject], desc_ref: ObjRef) -> bool {
         resolve_ref(objects, desc_ref).and_then(|o| o.as_dict()).map(|d| d.iter().any(|e| e.key == "FontFile" || e.key == "FontFile2" || e.key == "FontFile3")).unwrap_or(false)
     }
 
-    fn non_embedded_fonts(objects: &[PdfIndirectObject]) -> Vec<ObjRef> {
+    async fn non_embedded_fonts(objects: &[PdfIndirectObject]) -> Vec<ObjRef> {
         let mut out = Vec::new();
         for o in objects {
             let Some(d) = o.value.as_dict() else { continue };
@@ -225,18 +225,18 @@ pub mod derived_analysis {
         out
     }
 
-    fn hard(code: &'static str, message: String) -> Diagnostic {
+    async fn hard(code: &'static str, message: String) -> Diagnostic {
         Diagnostic { code: FaultCode::new(code), severity: Severity::Error, span: TextSpan::at(1, 1), message, expected: None, scope: FaultScope::default() }
     }
 
-    fn soft(code: &'static str, message: String) -> Diagnostic {
+    async fn soft(code: &'static str, message: String) -> Diagnostic {
         Diagnostic { code: FaultCode::new(code), severity: Severity::Warning, span: TextSpan::at(1, 1), message, expected: None, scope: FaultScope::default() }
     }
 
     /// 🛡️ Real ISO 14289-1:2014 (PDF/UA-1) conformance checks against one already-decoded
     /// `PdfSnapshot`. Shared single source of truth used by `PdfUaComposer`, `PdfUaBuilder`, and
     /// `PdfUaValidator`.
-    pub fn check_ua_conformance(snapshot: &PdfSnapshot) -> Vec<Diagnostic> {
+    pub async fn check_ua_conformance(snapshot: &PdfSnapshot) -> Vec<Diagnostic> {
         let objects = &snapshot.objects;
         let mut out = Vec::new();
         let catalog = find_catalog(objects);
@@ -279,11 +279,11 @@ pub mod derived_analysis {
         type Parts = PdfParts;
         const DIALECT: Dialect = DIALECT;
 
-        fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
+        async fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
             PdfAnyAnalyzer::sniff(source)
         }
 
-        fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
+        async fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
             let inner = PdfAnyAnalyzer::analyze(sources);
             let mut diagnostics = inner.diagnostics.clone();
             let mut confidence = inner.confidence;
@@ -304,7 +304,7 @@ pub mod derived_analysis {
         use super::*;
         use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::snapshot::PdfInfo;
 
-        fn tagged_catalog_objects() -> Vec<PdfIndirectObject> {
+        async fn tagged_catalog_objects() -> Vec<PdfIndirectObject> {
             vec![
                 PdfIndirectObject {
                     id: ObjRef { num: 1, gen: 0 },
@@ -323,14 +323,14 @@ pub mod derived_analysis {
         }
 
         #[test]
-        fn fully_tagged_conforming_document_has_no_diagnostics() {
+        async fn fully_tagged_conforming_document_has_no_diagnostics() {
             let snapshot = PdfSnapshot { objects: tagged_catalog_objects(), info: PdfInfo { title: Some("A Title".into()), ..PdfInfo::default() }, ..PdfSnapshot::default() };
             let diagnostics = check_ua_conformance(&snapshot);
             assert!(diagnostics.is_empty(), "got {diagnostics:?}");
         }
 
         #[test]
-        fn missing_markinfo_and_structtreeroot_are_hard() {
+        async fn missing_markinfo_and_structtreeroot_are_hard() {
             let objects = vec![PdfIndirectObject { id: ObjRef { num: 1, gen: 0 }, value: PdfObject::Dict(vec![PdfDictEntry { key: "Type".into(), value: PdfObject::Name("Catalog".into()) }]) }];
             let snapshot = PdfSnapshot { objects, ..PdfSnapshot::default() };
             let diagnostics = check_ua_conformance(&snapshot);
@@ -339,7 +339,7 @@ pub mod derived_analysis {
         }
 
         #[test]
-        fn marked_false_is_still_hard() {
+        async fn marked_false_is_still_hard() {
             let objects = vec![
                 PdfIndirectObject {
                     id: ObjRef { num: 1, gen: 0 },
@@ -358,7 +358,7 @@ pub mod derived_analysis {
         }
 
         #[test]
-        fn missing_lang_title_and_displaydoctitle_are_soft() {
+        async fn missing_lang_title_and_displaydoctitle_are_soft() {
             let snapshot = PdfSnapshot { objects: tagged_catalog_objects().into_iter().filter(|o| o.id.num != 4).collect(), ..PdfSnapshot::default() };
             let mut objects = snapshot.objects.clone();
             if let Some(cat) = objects.iter_mut().find(|o| o.id.num == 1) {

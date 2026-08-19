@@ -11,7 +11,7 @@ pub struct SetLocale {
     pub value: String,
 }
 
-pub fn handle(payload: &SetLocale, _doc: &ArtifactView<'_, VcsSnapshot>, _cfg: &ConfigView<'_, VcsDemoConfig>) -> Result<Emit<VcsDemoMutation, VcsDemoConfigMutation>, Fault> {
+pub async fn handle(payload: &SetLocale, _doc: &ArtifactView<'_, VcsSnapshot>, _cfg: &ConfigView<'_, VcsDemoConfig>) -> Result<Emit<VcsDemoMutation, VcsDemoConfigMutation>, Fault> {
     Ok(Emit::config(vec![VcsDemoConfigMutation::SetLocale { value: payload.value.clone() }]))
 }
 
@@ -23,14 +23,14 @@ mod tests {
     use crate::editor::vcs::VcsCommand;
 
     #[test]
-    fn vcs_demo_command_op_text_round_trips() {
+    async fn vcs_demo_command_op_text_round_trips() {
         store::os_store::test_support::assert_op_line_round_trip(&VcsCommand::SetLocale(SetLocale { value: "de-DE".into() }));
     }
 
     /// 🗣️ B1: locale is now `cfg.locale`, set via the typed `SetLocale` config command — no more passing
     /// a `ViewModel` into `render`/`app_labels` for this purpose (mirrors `shooting_ui`'s identical test).
     #[test]
-    fn vcs_labels_resolve_german_locale() {
+    async fn vcs_labels_resolve_german_locale() {
         use crate::editor::vcs::{VCS_PLAY_BODY_DOCUMENT, VCS_PLAY_BODY_EDITOR, VCS_PLAY_BODY_INSPECTION};
         let mut instance = app();
         dispatch(&mut instance, VcsCommand::SetLocale(SetLocale { value: "de-DE".into() }));

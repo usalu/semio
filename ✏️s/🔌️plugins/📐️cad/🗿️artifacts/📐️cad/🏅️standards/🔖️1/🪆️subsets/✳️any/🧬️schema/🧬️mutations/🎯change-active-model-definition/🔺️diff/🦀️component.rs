@@ -4,7 +4,7 @@ use crate::artifacts::cad::diff::CadDiff;
 use crate::artifacts::cad::CadSnapshot;
 
 //#region 🔖️Diff
-pub fn diff(payload: &ChangeActiveModelDefinition, base: &CadSnapshot) -> protocol::MutationOutcome<CadDiff> {
+pub async fn diff(payload: &ChangeActiveModelDefinition, base: &CadSnapshot) -> protocol::MutationOutcome<CadDiff> {
     if base.active_model_definition_id == payload.new_model_definition_id {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Active model definition is already \"{}\".", payload.new_model_definition_id));
     }

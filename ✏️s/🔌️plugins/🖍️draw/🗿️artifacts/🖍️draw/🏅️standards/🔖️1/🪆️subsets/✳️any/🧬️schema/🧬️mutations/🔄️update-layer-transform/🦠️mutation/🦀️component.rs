@@ -18,23 +18,23 @@ pub struct UpdateLayerTransform {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn update_layer_transform(layer_id: String, transform: DrawTransform) -> DrawMutation {
+pub async fn update_layer_transform(layer_id: String, transform: DrawTransform) -> DrawMutation {
     DrawMutation::UpdateLayerTransform(UpdateLayerTransform { layer_id, transform })
 }
 
 impl protocol::MutationKind<DrawSnapshot, DrawMutation> for UpdateLayerTransform {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "update", entity: "layer", kind: "update-layer-transform", record: "UpdatedLayerTransform" };
 
-    fn diff(&self, base: &DrawSnapshot) -> protocol::MutationOutcome<DrawDiff> {
+    async fn diff(&self, base: &DrawSnapshot) -> protocol::MutationOutcome<DrawDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &DrawSnapshot) -> Vec<DrawMutation> {
+    async fn inverse(&self, base: &DrawSnapshot) -> Vec<DrawMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         format!("Update layer \"{}\" transform", self.layer_id)
     }
-    fn target(&self) -> Vec<String> {
+    async fn target(&self) -> Vec<String> {
         vec![self.layer_id.clone()]
     }
 }

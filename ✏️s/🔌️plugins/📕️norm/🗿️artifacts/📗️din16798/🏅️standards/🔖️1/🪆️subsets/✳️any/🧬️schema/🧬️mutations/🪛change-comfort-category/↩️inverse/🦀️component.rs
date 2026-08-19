@@ -6,7 +6,7 @@ use crate::artifacts::din16798::mutations::Din16798Mutation;
 use crate::artifacts::din16798::Din16798Snapshot;
 
 //#region 🔖️Inverse
-pub fn inverse(_payload: &ChangeComfortCategory, base: &Din16798Snapshot) -> Vec<Din16798Mutation> {
+pub async fn inverse(_payload: &ChangeComfortCategory, base: &Din16798Snapshot) -> Vec<Din16798Mutation> {
     vec![Din16798Mutation::ChangeComfortCategory(ChangeComfortCategory { new_comfort_category: base.comfort_category.clone() })]
 }
 //#endregion 🔖️Inverse

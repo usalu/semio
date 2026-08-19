@@ -13,20 +13,20 @@ pub struct ChangeCounter {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn change_counter(new_counter: i64) -> VcsDemoMutation {
+pub async fn change_counter(new_counter: i64) -> VcsDemoMutation {
     VcsDemoMutation::ChangeCounter(ChangeCounter { new_counter })
 }
 
 impl protocol::MutationKind<VcsSnapshot, VcsDemoMutation> for ChangeCounter {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "vcs", kind: "change-counter", record: "ChangedVcsCounter" };
 
-    fn diff(&self, base: &VcsSnapshot) -> protocol::MutationOutcome<VcsDiff> {
+    async fn diff(&self, base: &VcsSnapshot) -> protocol::MutationOutcome<VcsDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &VcsSnapshot) -> Vec<VcsDemoMutation> {
+    async fn inverse(&self, base: &VcsSnapshot) -> Vec<VcsDemoMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         format!("Change counter to {}", self.new_counter)
     }
 }

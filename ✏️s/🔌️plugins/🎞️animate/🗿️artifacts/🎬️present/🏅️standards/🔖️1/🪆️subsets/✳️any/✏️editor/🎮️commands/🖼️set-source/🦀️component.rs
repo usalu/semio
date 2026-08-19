@@ -16,7 +16,7 @@ pub struct SetSource {
     pub source: FigureTileSource,
 }
 
-pub fn handle(payload: &SetSource, doc: &ArtifactView<'_, PresentSnapshot>, _cfg: &ConfigView<'_, PresentConfig>, _ctx: &mut PresentDispatchCtx) -> Result<Emit<PresentMutation, PresentConfigMutation>, Fault> {
+pub async fn handle(payload: &SetSource, doc: &ArtifactView<'_, PresentSnapshot>, _cfg: &ConfigView<'_, PresentConfig>, _ctx: &mut PresentDispatchCtx) -> Result<Emit<PresentMutation, PresentConfigMutation>, Fault> {
     let deck = doc.snapshot;
     let (deck_source, _) = crate::artifacts::present::present_working_scene(deck);
     let replaced = payload.source.src != deck_source.src;
@@ -38,7 +38,7 @@ mod tests {
     use crate::editor::animate::PresentCommand;
 
     #[test]
-    fn set_source_replaces_source_and_clears_tiles_when_src_changes() {
+    async fn set_source_replaces_source_and_clears_tiles_when_src_changes() {
         let mut app = present_app();
         dispatch(&mut app, PresentCommand::SeedGrid(crate::editor::animate::commands::seed_grid::SeedGrid { rows: 2, columns: 2 }));
         assert_eq!(crate::artifacts::present::present_working_scene(&app.snapshot().expect("projection")).1.len(), 4);
@@ -54,7 +54,7 @@ mod tests {
     }
 
     #[test]
-    fn set_source_with_same_src_keeps_existing_tiles() {
+    async fn set_source_with_same_src_keeps_existing_tiles() {
         let mut app = present_app();
         dispatch(&mut app, PresentCommand::SeedGrid(crate::editor::animate::commands::seed_grid::SeedGrid { rows: 2, columns: 2 }));
         let (mut source, _) = crate::artifacts::present::present_working_scene(&app.snapshot().expect("projection"));
@@ -64,7 +64,7 @@ mod tests {
     }
 
     #[test]
-    fn set_frame_updates_source_frame() {
+    async fn set_frame_updates_source_frame() {
         let mut app = present_app();
         dispatch(&mut app, PresentCommand::SetFrame(set_frame::SetFrame { frame: FigureTileFrame { x: 0.1, y: 0.2, width: 0.3, height: 0.4 } }));
         let frame = crate::artifacts::present::present_working_scene(&app.snapshot().expect("projection")).0.frame;
@@ -80,7 +80,7 @@ mod tests {
     /// never applies `effects` to its own store (that's the real host's job), so this asserts directly
     /// on the emitted effect rather than through `app.snapshot()`.
     #[test]
-    fn set_active_example_demo_emits_a_reset_effect() {
+    async fn set_active_example_demo_emits_a_reset_effect() {
         use semio_framework_plugin::Effect;
         let mut app = present_app();
         dispatch(&mut app, PresentCommand::SeedGrid(crate::editor::animate::commands::seed_grid::SeedGrid { rows: 2, columns: 2 }));
@@ -99,7 +99,7 @@ mod tests {
     }
 
     #[test]
-    fn set_active_example_unknown_id_is_a_no_op() {
+    async fn set_active_example_unknown_id_is_a_no_op() {
         let deck = default_present_snapshot();
         let history = semio_framework_plugin::HistoryView::empty();
         let doc = ArtifactView::new(&deck, &history);

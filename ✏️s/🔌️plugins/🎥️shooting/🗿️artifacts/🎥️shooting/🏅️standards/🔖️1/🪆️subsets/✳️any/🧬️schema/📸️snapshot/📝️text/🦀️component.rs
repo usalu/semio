@@ -19,12 +19,12 @@ use crate::artifacts::shooting::ShootingSnapshot;
 pub const SHOOTING_EXAMPLE_TEXT: &str = include_str!("../../../📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio");
 
 /// 📖️ Parses `.shooting` DSL text into a `ShootingSnapshot`.
-pub fn parse_dsl(text: &str) -> Result<ShootingSnapshot, store::TextError> {
+pub async fn parse_dsl(text: &str) -> Result<ShootingSnapshot, store::TextError> {
     <ShootingSnapshot as store::ArtifactDsl>::parse_dsl(text)
 }
 
 /// 🖨️ Prints a `ShootingSnapshot` back to `.shooting` DSL text.
-pub fn print_dsl(snapshot: &ShootingSnapshot) -> String {
+pub async fn print_dsl(snapshot: &ShootingSnapshot) -> String {
     store::ArtifactDsl::print_dsl(snapshot)
 }
 
@@ -36,7 +36,7 @@ mod tests {
 
     /// 🎞️ A fixture exercising every field/variant, shared verbatim by the DSL and OpText law tests.
     #[allow(clippy::approx_constant, reason = "0.7071 is deliberately an approximate quaternion component in this snapshot, not the FRAC_1_SQRT_2 constant")]
-    fn representative_snapshot() -> ShootingSnapshot {
+    async fn representative_snapshot() -> ShootingSnapshot {
         ShootingSnapshot {
             schema: SHOOTING_DOCUMENT_SCHEMA.into(),
             assets: vec![
@@ -62,23 +62,23 @@ mod tests {
     }
 
     #[test]
-    fn shooting_dsl_round_trips_representative_fixture() {
+    async fn shooting_dsl_round_trips_representative_fixture() {
         store::os_store::test_support::assert_dsl_round_trip(&representative_snapshot());
     }
 
     #[test]
-    fn shooting_dsl_round_trips_empty_fixture() {
+    async fn shooting_dsl_round_trips_empty_fixture() {
         store::os_store::test_support::assert_dsl_round_trip(&crate::artifacts::shooting::empty_shooting_snapshot());
     }
 
     #[test]
-    fn shooting_dsl_round_trips_base_icon_example() {
+    async fn shooting_dsl_round_trips_base_icon_example() {
         let snapshot = parse_dsl(SHOOTING_EXAMPLE_TEXT).expect("base-icon example parses");
         store::os_store::test_support::assert_dsl_round_trip(&snapshot);
     }
 
     #[test]
-    fn shooting_dsl_angle_deg_field_round_trips_bit_exactly() {
+    async fn shooting_dsl_angle_deg_field_round_trips_bit_exactly() {
         let mut snapshot = representative_snapshot();
         snapshot.saved_cameras[0].camera.fov = 30.0;
         snapshot.scene.sun.azimuth = 30.0;

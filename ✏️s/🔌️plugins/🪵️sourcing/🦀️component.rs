@@ -18,7 +18,7 @@ use semio_framework_plugin::{ExecutionMode, Plugin};
 /// beyond the sandbox default — nothing in this crate's own effects, all UI-chrome/RPC `Effect`
 /// variants with no documented `CapabilityId`, justifies otherwise), and it asks the broker for
 /// document write access to persist edits.
-pub fn plugin() -> Result<Plugin, semio_framework_plugin::PluginAssemblyError> {
+pub async fn plugin() -> Result<Plugin, semio_framework_plugin::PluginAssemblyError> {
     Plugin::builder("sourcing")
         .label("Sourcing")
         .version("0.1.0")
@@ -37,7 +37,7 @@ mod surface_tests {
     /// 👁️✏️ Editor and viewer must share the exact same `Dialect` — both surfaces address the same
     /// artifact coordinate, only the role differs (contract §2.5).
     #[test]
-    fn editor_and_viewer_share_the_same_dialect() {
+    async fn editor_and_viewer_share_the_same_dialect() {
         semio_framework_plugin::testkit::assert_editor_and_viewer_share_dialect::<crate::editor::sourcing::SourcingCurateApp, crate::viewer::sourcing::SourcingViewer>();
     }
 
@@ -45,7 +45,7 @@ mod surface_tests {
     /// (contract §2.2/§2.5) — dispatches `SourcingViewCommand::default()` through the full
     /// `VcsArtifactApp<ViewerApp<SourcingViewer>>` runtime path.
     #[test]
-    fn viewer_never_mutates() {
+    async fn viewer_never_mutates() {
         semio_framework_plugin::testkit::assert_viewer_never_mutates::<crate::viewer::sourcing::SourcingViewer>();
     }
 }

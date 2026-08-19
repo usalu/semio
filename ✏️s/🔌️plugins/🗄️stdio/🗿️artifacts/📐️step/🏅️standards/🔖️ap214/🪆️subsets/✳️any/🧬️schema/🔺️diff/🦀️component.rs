@@ -21,13 +21,13 @@ use serde::{Deserialize, Serialize};
 /// `inverse`) — see `🧬️schema-design.md` §Absorb. `excluded_sorted` must be sorted ascending.
 /// Own copy (not imported from gif) per the recipe's specific-code mandate — small and
 /// self-contained enough that duplicating it per artifact is the honest choice, not a defect.
-fn count_le(sorted: &[usize], x: usize) -> usize {
+async fn count_le(sorted: &[usize], x: usize) -> usize {
     sorted.partition_point(|&v| v <= x)
 }
-fn rank_excluding(pos: usize, excluded_sorted: &[usize]) -> usize {
+async fn rank_excluding(pos: usize, excluded_sorted: &[usize]) -> usize {
     pos - count_le(excluded_sorted, pos)
 }
-fn unrank_excluding(rank: usize, excluded_sorted: &[usize]) -> usize {
+async fn unrank_excluding(rank: usize, excluded_sorted: &[usize]) -> usize {
     let mut candidate = rank;
     loop {
         let next = rank + count_le(excluded_sorted, candidate);
@@ -37,7 +37,7 @@ fn unrank_excluding(rank: usize, excluded_sorted: &[usize]) -> usize {
         candidate = next;
     }
 }
-fn transport_forward(index: usize, removed_sorted: &[usize], added_index_sorted: &[usize]) -> usize {
+async fn transport_forward(index: usize, removed_sorted: &[usize], added_index_sorted: &[usize]) -> usize {
     unrank_excluding(rank_excluding(index, removed_sorted), added_index_sorted)
 }
 //#endregion 🔖️IndexTransport
@@ -48,7 +48,7 @@ fn transport_forward(index: usize, removed_sorted: &[usize], added_index_sorted:
 /// whole new value). Canonical correctness verified against the plan's 3 mandated cases in this
 /// module's tests.
 #[allow(clippy::too_many_arguments)]
-fn absorb_indexed_collection<T: Clone, D: Clone>(
+async fn absorb_indexed_collection<T: Clone, D: Clone>(
     removed1: Vec<usize>,
     modified1: Vec<(usize, D)>,
     added1: Vec<(usize, T)>,
@@ -126,7 +126,7 @@ fn absorb_indexed_collection<T: Clone, D: Clone>(
 }
 
 /// ↩️ Diff-level inverse for an index-keyed collection triple, given the ORIGINAL base items.
-fn inverse_indexed_collection<T: Clone, D: Clone>(removed: &[usize], modified: &[(usize, D)], added: &[(usize, T)], base_items: &[T], diff_inverse: impl Fn(&D, &T) -> D) -> (Vec<usize>, Vec<(usize, D)>, Vec<(usize, T)>) {
+async fn inverse_indexed_collection<T: Clone, D: Clone>(removed: &[usize], modified: &[(usize, D)], added: &[(usize, T)], base_items: &[T], diff_inverse: impl Fn(&D, &T) -> D) -> (Vec<usize>, Vec<(usize, D)>, Vec<(usize, T)>) {
     let mut removed_sorted = removed.to_vec();
     removed_sorted.sort_unstable();
     let mut added_index_sorted: Vec<usize> = added.iter().map(|(i, _)| *i).collect();
@@ -182,11 +182,11 @@ pub struct StepArgsDiff {
 }
 
 impl StepArgsDiff {
-    pub fn is_empty(&self) -> bool {
+    pub async fn is_empty(&self) -> bool {
         self.removed.is_empty() && self.modified.is_empty() && self.added.is_empty()
     }
 
-    pub fn between(base: &[StepValue], other: &[StepValue]) -> Self {
+    pub async fn between(base: &[StepValue], other: &[StepValue]) -> Self {
         let min = base.len().min(other.len());
         let mut modified = Vec::new();
         for i in 0..min {
@@ -199,7 +199,7 @@ impl StepArgsDiff {
         Self { removed, modified, added }
     }
 
-    pub fn apply(&self, base: &[StepValue]) -> Vec<StepValue> {
+    pub async fn apply(&self, base: &[StepValue]) -> Vec<StepValue> {
         let mut next = base.to_vec();
         for m in &self.modified {
             next[m.index] = m.value.clone();
@@ -218,7 +218,7 @@ impl StepArgsDiff {
         next
     }
 
-    fn absorb(&mut self, other: Self) {
+    async fn absorb(&mut self, other: Self) {
         let (removed, modified, added) = absorb_indexed_collection(
             std::mem::take(&mut self.removed),
             std::mem::take(&mut self.modified).into_iter().map(|m| (m.index, m.value)).collect(),
@@ -234,7 +234,7 @@ impl StepArgsDiff {
         self.added = added.into_iter().map(|(index, value)| StepArgAdded { index, value }).collect();
     }
 
-    fn inverse(&self, base_args: &[StepValue]) -> Self {
+    async fn inverse(&self, base_args: &[StepValue]) -> Self {
         let (removed, modified, added) = inverse_indexed_collection(
             &self.removed,
             &self.modified.iter().map(|m| (m.index, m.value.clone())).collect::<Vec<_>>(),
@@ -262,16 +262,16 @@ pub struct StepEntityDiff {
 }
 
 impl StepEntityDiff {
-    pub fn is_empty(&self) -> bool {
+    pub async fn is_empty(&self) -> bool {
         self.name.is_none() && self.args.is_none() && self.complex.is_none()
     }
 
-    pub fn between(base: &StepEntity, other: &StepEntity) -> Self {
+    pub async fn between(base: &StepEntity, other: &StepEntity) -> Self {
         let args_diff = StepArgsDiff::between(&base.args, &other.args);
         Self { name: (base.name != other.name).then(|| other.name.clone()), args: (!args_diff.is_empty()).then_some(args_diff), complex: (base.complex != other.complex).then(|| other.complex.clone()) }
     }
 
-    pub fn apply(&self, base: &StepEntity) -> StepEntity {
+    pub async fn apply(&self, base: &StepEntity) -> StepEntity {
         let mut next = base.clone();
         if let Some(v) = &self.name {
             next.name = v.clone();
@@ -285,11 +285,11 @@ impl StepEntityDiff {
         next
     }
 
-    pub fn inverse(&self, base: &StepEntity) -> Self {
+    pub async fn inverse(&self, base: &StepEntity) -> Self {
         Self { name: self.name.as_ref().map(|_| base.name.clone()), args: self.args.as_ref().map(|d| d.inverse(&base.args)), complex: self.complex.as_ref().map(|_| base.complex.clone()) }
     }
 
-    fn absorb(&mut self, other: Self) {
+    async fn absorb(&mut self, other: Self) {
         if other.name.is_some() {
             self.name = other.name;
         }
@@ -336,11 +336,11 @@ pub struct StepEntitiesDiff {
 }
 
 impl StepEntitiesDiff {
-    pub fn is_empty(&self) -> bool {
+    pub async fn is_empty(&self) -> bool {
         self.removed.is_empty() && self.modified.is_empty() && self.added.is_empty()
     }
 
-    pub fn between(base: &[StepEntity], other: &[StepEntity]) -> Self {
+    pub async fn between(base: &[StepEntity], other: &[StepEntity]) -> Self {
         let base_ids: HashSet<u64> = base.iter().map(|e| e.id).collect();
         let other_ids: HashSet<u64> = other.iter().map(|e| e.id).collect();
 
@@ -361,7 +361,7 @@ impl StepEntitiesDiff {
         Self { removed, modified, added }
     }
 
-    pub fn apply(&self, base: &[StepEntity]) -> Vec<StepEntity> {
+    pub async fn apply(&self, base: &[StepEntity]) -> Vec<StepEntity> {
         let mut entities: Vec<StepEntity> = base.to_vec();
         if !self.removed.is_empty() {
             let removed: HashSet<u64> = self.removed.iter().copied().collect();
@@ -388,7 +388,7 @@ impl StepEntitiesDiff {
 /// zip's names, a `#123` instance number is never reassigned by this recipe's mutation
 /// vocabulary). Structural, total, base-free, sequential-coalesce, same shape as zip's
 /// `absorb_entries` minus the rename machinery.
-fn absorb_entities(d1: Option<StepEntitiesDiff>, d2: Option<StepEntitiesDiff>) -> Option<StepEntitiesDiff> {
+async fn absorb_entities(d1: Option<StepEntitiesDiff>, d2: Option<StepEntitiesDiff>) -> Option<StepEntitiesDiff> {
     let (mut d1, d2) = match (d1, d2) {
         (None, None) => return None,
         (Some(d1), None) => return Some(d1),
@@ -478,16 +478,16 @@ pub struct StepDiff {
 }
 
 impl StepDiff {
-    pub fn is_empty_diff(&self) -> bool {
+    pub async fn is_empty_diff(&self) -> bool {
         self.file_description.is_none() && self.file_name.is_none() && self.file_schema.is_none() && self.entities.as_ref().map(StepEntitiesDiff::is_empty).unwrap_or(true)
     }
 }
 
-fn target_error(code: &'static str, message: &'static str, target: Vec<String>) -> MutationApplyError {
+async fn target_error(code: &'static str, message: &'static str, target: Vec<String>) -> MutationApplyError {
     MutationApplyError::new(code, message).at(target)
 }
 
-fn validate_args_diff(base_len: usize, diff: &StepArgsDiff, prefix: &[String]) -> MutationApplyResult<()> {
+async fn validate_args_diff(base_len: usize, diff: &StepArgsDiff, prefix: &[String]) -> MutationApplyResult<()> {
     let mut removed = BTreeSet::new();
     for &index in &diff.removed {
         let mut target = prefix.to_vec();
@@ -520,7 +520,7 @@ fn validate_args_diff(base_len: usize, diff: &StepArgsDiff, prefix: &[String]) -
     Ok(())
 }
 
-fn validate_entities_diff(base: &[StepEntity], diff: &StepEntitiesDiff) -> MutationApplyResult<()> {
+async fn validate_entities_diff(base: &[StepEntity], diff: &StepEntitiesDiff) -> MutationApplyResult<()> {
     let mut base_by_id = BTreeMap::new();
     for entity in base {
         if base_by_id.insert(entity.id, entity).is_some() {
@@ -558,7 +558,7 @@ fn validate_entities_diff(base: &[StepEntity], diff: &StepEntitiesDiff) -> Mutat
     Ok(())
 }
 
-fn apply_step_diff_unchecked(diff: &StepDiff, base: &StepSnapshot) -> StepSnapshot {
+async fn apply_step_diff_unchecked(diff: &StepDiff, base: &StepSnapshot) -> StepSnapshot {
     let mut next = base.clone();
     if let Some(value) = &diff.file_description {
         next.header.file_description = value.clone();
@@ -576,14 +576,14 @@ fn apply_step_diff_unchecked(diff: &StepDiff, base: &StepSnapshot) -> StepSnapsh
 }
 
 impl MutationDiff<StepSnapshot> for StepDiff {
-    fn apply(&self, base: &StepSnapshot) -> MutationApplyResult<StepSnapshot> {
+    async fn apply(&self, base: &StepSnapshot) -> MutationApplyResult<StepSnapshot> {
         if let Some(diff) = &self.entities {
             validate_entities_diff(&base.entities, diff)?;
         }
         Ok(apply_step_diff_unchecked(self, base))
     }
 
-    fn absorb(&mut self, other: Self) {
+    async fn absorb(&mut self, other: Self) {
         if other.file_description.is_some() {
             self.file_description = other.file_description;
         }
@@ -601,12 +601,12 @@ impl DiffAlgebra<StepSnapshot> for StepDiff {
     /// 🔁️ Diff-level undo, derived generically (correct by construction): the state delta from
     /// `self.apply(base)` back to `base` — `between` is the single source of truth for turning a
     /// state pair into a diff.
-    fn inverse(&self, base: &StepSnapshot) -> Self {
+    async fn inverse(&self, base: &StepSnapshot) -> Self {
         let mutated = apply_step_diff_unchecked(self, base);
         Self::between(&mutated, base)
     }
 
-    fn between(base: &StepSnapshot, other: &StepSnapshot) -> Self {
+    async fn between(base: &StepSnapshot, other: &StepSnapshot) -> Self {
         let entities_diff = StepEntitiesDiff::between(&base.entities, &other.entities);
         Self {
             file_description: (base.header.file_description != other.header.file_description).then(|| other.header.file_description.clone()),
@@ -616,13 +616,13 @@ impl DiffAlgebra<StepSnapshot> for StepDiff {
         }
     }
 
-    fn is_empty(&self) -> bool {
+    async fn is_empty(&self) -> bool {
         self.is_empty_diff()
     }
 }
 
 /// 🧩 Builds a set-snapshot diff — sparse field-by-field, never a full-replace slot.
-pub fn diff_set_snapshot(base: &StepSnapshot, next: &StepSnapshot) -> StepDiff {
+pub async fn diff_set_snapshot(base: &StepSnapshot, next: &StepSnapshot) -> StepDiff {
     <StepDiff as DiffAlgebra<StepSnapshot>>::between(base, next)
 }
 //#endregion 🔖️Diff
@@ -643,29 +643,29 @@ pub fn diff_set_snapshot(base: &StepSnapshot, next: &StepSnapshot) -> StepDiff {
 /// `IndexTransport` region doc comment for the same rationale), reused by `StepMutation`'s
 /// `OpText`/`OpBinary` via `pub(crate)`.
 //#region 🔖️Primitives
-pub(crate) fn hex_encode(bytes: &[u8]) -> String {
+pub(crate) async fn hex_encode(bytes: &[u8]) -> String {
     bytes.iter().map(|b| format!("{b:02x}")).collect()
 }
-pub(crate) fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
+pub(crate) async fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
     if s.len() % 2 != 0 {
         return Err(format!("odd hex length: {s:?}"));
     }
     (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()
 }
-pub(crate) fn enc_str(s: &str) -> String {
+pub(crate) async fn enc_str(s: &str) -> String {
     hex_encode(s.as_bytes())
 }
-pub(crate) fn dec_str(s: &str) -> Result<String, String> {
+pub(crate) async fn dec_str(s: &str) -> Result<String, String> {
     String::from_utf8(hex_decode(s)?).map_err(|e| e.to_string())
 }
-pub(crate) fn parse_usize(s: &str) -> Result<usize, String> {
+pub(crate) async fn parse_usize(s: &str) -> Result<usize, String> {
     s.parse().map_err(|e: std::num::ParseIntError| e.to_string())
 }
-pub(crate) fn parse_u64(s: &str) -> Result<u64, String> {
+pub(crate) async fn parse_u64(s: &str) -> Result<u64, String> {
     s.parse().map_err(|e: std::num::ParseIntError| e.to_string())
 }
 
-pub(crate) fn split_top_level(s: &str, sep: char) -> Vec<&str> {
+pub(crate) async fn split_top_level(s: &str, sep: char) -> Vec<&str> {
     if s.is_empty() {
         return Vec::new();
     }
@@ -686,16 +686,16 @@ pub(crate) fn split_top_level(s: &str, sep: char) -> Vec<&str> {
     out.push(&s[start..]);
     out
 }
-pub(crate) fn strip_brackets(s: &str) -> Result<&str, String> {
+pub(crate) async fn strip_brackets(s: &str) -> Result<&str, String> {
     s.strip_prefix('[').and_then(|s| s.strip_suffix(']')).ok_or_else(|| format!("expected [...], got {s:?}"))
 }
-pub(crate) fn encode_option<T>(opt: &Option<T>, enc: impl Fn(&T) -> String) -> String {
+pub(crate) async fn encode_option<T>(opt: &Option<T>, enc: impl Fn(&T) -> String) -> String {
     match opt {
         None => "[0]".to_string(),
         Some(v) => format!("[1,{}]", enc(v)),
     }
 }
-pub(crate) fn decode_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Option<T>, String> {
+pub(crate) async fn decode_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Option<T>, String> {
     let inner = strip_brackets(s)?;
     match split_top_level(inner, ',').as_slice() {
         ["0"] => Ok(None),
@@ -713,21 +713,21 @@ pub(crate) fn decode_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>)
 /// reinventing varint encode/decode. `pub(crate)` so the mutations sibling can reuse these rather
 /// than duplicating them a second time in that file (same intra-artifact-reuse split the TEXT
 /// codec primitives above use).
-pub(crate) fn write_str_bin(out: &mut Vec<u8>, s: &str) {
+pub(crate) async fn write_str_bin(out: &mut Vec<u8>, s: &str) {
     store::pack_rt::write_varint_u64(out, s.len() as u64);
     out.extend_from_slice(s.as_bytes());
 }
-pub(crate) fn read_str_bin(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
+pub(crate) async fn read_str_bin(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
     let len = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
     String::from_utf8(reader.read_bytes(len).map_err(|e| e.to_string())?.to_vec()).map_err(|e| e.to_string())
 }
-pub(crate) fn write_f64_bin(out: &mut Vec<u8>, v: f64) {
+pub(crate) async fn write_f64_bin(out: &mut Vec<u8>, v: f64) {
     out.extend_from_slice(&v.to_le_bytes());
 }
-pub(crate) fn read_f64_bin(reader: &mut store::ByteReader<'_>) -> Result<f64, String> {
+pub(crate) async fn read_f64_bin(reader: &mut store::ByteReader<'_>) -> Result<f64, String> {
     reader.read_f64_le().map_err(|e| e.to_string())
 }
-pub(crate) fn write_option_bin<T>(out: &mut Vec<u8>, opt: &Option<T>, enc: impl FnOnce(&T, &mut Vec<u8>)) {
+pub(crate) async fn write_option_bin<T>(out: &mut Vec<u8>, opt: &Option<T>, enc: impl FnOnce(&T, &mut Vec<u8>)) {
     match opt {
         None => out.push(0),
         Some(v) => {
@@ -736,20 +736,20 @@ pub(crate) fn write_option_bin<T>(out: &mut Vec<u8>, opt: &Option<T>, enc: impl 
         }
     }
 }
-pub(crate) fn read_option_bin<T>(reader: &mut store::ByteReader<'_>, dec: impl FnOnce(&mut store::ByteReader<'_>) -> Result<T, String>) -> Result<Option<T>, String> {
+pub(crate) async fn read_option_bin<T>(reader: &mut store::ByteReader<'_>, dec: impl FnOnce(&mut store::ByteReader<'_>) -> Result<T, String>) -> Result<Option<T>, String> {
     match reader.read_u8().map_err(|e| e.to_string())? {
         0 => Ok(None),
         1 => Ok(Some(dec(reader)?)),
         other => Err(format!("option binary: unknown tag {other}")),
     }
 }
-pub(crate) fn write_str_list_bin(out: &mut Vec<u8>, list: &[String]) {
+pub(crate) async fn write_str_list_bin(out: &mut Vec<u8>, list: &[String]) {
     store::pack_rt::write_varint_u64(out, list.len() as u64);
     for s in list {
         write_str_bin(out, s);
     }
 }
-pub(crate) fn read_str_list_bin(reader: &mut store::ByteReader<'_>) -> Result<Vec<String>, String> {
+pub(crate) async fn read_str_list_bin(reader: &mut store::ByteReader<'_>) -> Result<Vec<String>, String> {
     let count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     (0..count).map(|_| read_str_bin(reader)).collect()
 }
@@ -759,7 +759,7 @@ pub(crate) fn read_str_list_bin(reader: &mut store::ByteReader<'_>) -> Result<Ve
 /// 🔤️ `StepValue` — single-uppercase-letter tag prefix like `enc_xml_node`, one per variant: `U`
 /// Unset, `D` Derived, `I` Integer, `R` Real, `S` String, `E` Enum, `F` reFerence (`R` taken by
 /// Real), `A` Aggregate (recursive list), `T` TypedValue (recursive, name + one wrapped value).
-pub(crate) fn enc_value(v: &StepValue) -> String {
+pub(crate) async fn enc_value(v: &StepValue) -> String {
     match v {
         StepValue::Unset => "U[]".to_string(),
         StepValue::Derived => "D[]".to_string(),
@@ -772,7 +772,7 @@ pub(crate) fn enc_value(v: &StepValue) -> String {
         StepValue::TypedValue { type_name, value } => format!("T[{},{}]", enc_str(type_name), enc_value(value)),
     }
 }
-pub(crate) fn dec_value(s: &str) -> Result<StepValue, String> {
+pub(crate) async fn dec_value(s: &str) -> Result<StepValue, String> {
     if s.len() < 3 {
         return Err(format!("step value: too short {s:?}"));
     }
@@ -799,20 +799,20 @@ pub(crate) fn dec_value(s: &str) -> Result<StepValue, String> {
     }
 }
 
-fn enc_complex(c: &StepComplexType) -> String {
+async fn enc_complex(c: &StepComplexType) -> String {
     format!("[{},[{}]]", enc_str(&c.name), c.args.iter().map(enc_value).collect::<Vec<_>>().join(","))
 }
-fn dec_complex(s: &str) -> Result<StepComplexType, String> {
+async fn dec_complex(s: &str) -> Result<StepComplexType, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [name, args] = parts.as_slice() else { return Err(format!("complex type: expected 2 fields, got {}", parts.len())) };
     let args = split_top_level(strip_brackets(args)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_value).collect::<Result<Vec<_>, String>>()?;
     Ok(StepComplexType { name: dec_str(name)?, args })
 }
 
-pub(crate) fn enc_entity(e: &StepEntity) -> String {
+pub(crate) async fn enc_entity(e: &StepEntity) -> String {
     format!("[{},{},[{}],[{}]]", e.id, enc_str(&e.name), e.args.iter().map(enc_value).collect::<Vec<_>>().join(","), e.complex.iter().map(enc_complex).collect::<Vec<_>>().join(","),)
 }
-pub(crate) fn dec_entity(s: &str) -> Result<StepEntity, String> {
+pub(crate) async fn dec_entity(s: &str) -> Result<StepEntity, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [id, name, args, complex] = parts.as_slice() else { return Err(format!("entity: expected 4 fields, got {}", parts.len())) };
     Ok(StepEntity {
@@ -823,16 +823,16 @@ pub(crate) fn dec_entity(s: &str) -> Result<StepEntity, String> {
     })
 }
 
-pub(crate) fn enc_file_description(d: &StepFileDescription) -> String {
+pub(crate) async fn enc_file_description(d: &StepFileDescription) -> String {
     format!("[[{}],{}]", d.description.iter().map(|s| enc_str(s)).collect::<Vec<_>>().join(","), enc_str(&d.implementation_level))
 }
-pub(crate) fn dec_file_description(s: &str) -> Result<StepFileDescription, String> {
+pub(crate) async fn dec_file_description(s: &str) -> Result<StepFileDescription, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [description, implementation_level] = parts.as_slice() else { return Err(format!("file description: expected 2 fields, got {}", parts.len())) };
     Ok(StepFileDescription { description: split_top_level(strip_brackets(description)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_str).collect::<Result<Vec<_>, String>>()?, implementation_level: dec_str(implementation_level)? })
 }
 
-pub(crate) fn enc_file_name(f: &StepFileName) -> String {
+pub(crate) async fn enc_file_name(f: &StepFileName) -> String {
     format!(
         "[{},{},[{}],[{}],{},{},{}]",
         enc_str(&f.name),
@@ -844,7 +844,7 @@ pub(crate) fn enc_file_name(f: &StepFileName) -> String {
         enc_str(&f.authorization),
     )
 }
-pub(crate) fn dec_file_name(s: &str) -> Result<StepFileName, String> {
+pub(crate) async fn dec_file_name(s: &str) -> Result<StepFileName, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [name, timestamp, author, organization, preprocessor_version, originating_system, authorization] = parts.as_slice() else {
         return Err(format!("file name: expected 7 fields, got {}", parts.len()));
@@ -860,10 +860,10 @@ pub(crate) fn dec_file_name(s: &str) -> Result<StepFileName, String> {
     })
 }
 
-pub(crate) fn enc_file_schema(s: &StepFileSchema) -> String {
+pub(crate) async fn enc_file_schema(s: &StepFileSchema) -> String {
     format!("[{}]", s.schemas.iter().map(|x| enc_str(x)).collect::<Vec<_>>().join(","))
 }
-pub(crate) fn dec_file_schema(s: &str) -> Result<StepFileSchema, String> {
+pub(crate) async fn dec_file_schema(s: &str) -> Result<StepFileSchema, String> {
     let schemas = split_top_level(strip_brackets(s)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_str).collect::<Result<Vec<_>, String>>()?;
     Ok(StepFileSchema { schemas })
 }
@@ -871,10 +871,10 @@ pub(crate) fn dec_file_schema(s: &str) -> Result<StepFileSchema, String> {
 /// 📸️ Full `StepSnapshot` codec — needed by `SetSnapshot`'s `OpText`/`OpBinary` (mutations file
 /// imports this `pub(crate)`), never by `StepDiff` itself (no `snapshot: Option<StepSnapshot>`
 /// full-replace slot exists on the diff).
-pub(crate) fn enc_step_snapshot(s: &StepSnapshot) -> String {
+pub(crate) async fn enc_step_snapshot(s: &StepSnapshot) -> String {
     format!("[{},{},{},{},[{}]]", enc_str(&s.schema), enc_file_description(&s.header.file_description), enc_file_name(&s.header.file_name), enc_file_schema(&s.header.file_schema), s.entities.iter().map(enc_entity).collect::<Vec<_>>().join(","),)
 }
-pub(crate) fn dec_step_snapshot(s: &str) -> Result<StepSnapshot, String> {
+pub(crate) async fn dec_step_snapshot(s: &str) -> Result<StepSnapshot, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [schema, file_description, file_name, file_schema, entities] = parts.as_slice() else {
         return Err(format!("step snapshot: expected 5 fields, got {}", parts.len()));
@@ -895,7 +895,7 @@ pub(crate) fn dec_step_snapshot(s: &str) -> Result<StepSnapshot, String> {
 /// `Prim::Ref` protocol-dialect blocker (cited on the sibling `.protocol.semio` files) constrains
 /// only the DECLARATIVE description, never hand-written Rust, which recurses here exactly like
 /// `enc_value`'s own text twin does two regions up.
-pub(crate) fn enc_value_bin(v: &StepValue, out: &mut Vec<u8>) {
+pub(crate) async fn enc_value_bin(v: &StepValue, out: &mut Vec<u8>) {
     match v {
         StepValue::Unset => out.push(0),
         StepValue::Derived => out.push(1),
@@ -933,7 +933,7 @@ pub(crate) fn enc_value_bin(v: &StepValue, out: &mut Vec<u8>) {
         }
     }
 }
-pub(crate) fn dec_value_bin(reader: &mut store::ByteReader<'_>) -> Result<StepValue, String> {
+pub(crate) async fn dec_value_bin(reader: &mut store::ByteReader<'_>) -> Result<StepValue, String> {
     let tag = reader.read_u8().map_err(|e| e.to_string())?;
     match tag {
         0 => Ok(StepValue::Unset),
@@ -957,21 +957,21 @@ pub(crate) fn dec_value_bin(reader: &mut store::ByteReader<'_>) -> Result<StepVa
     }
 }
 
-pub(crate) fn enc_complex_bin(c: &StepComplexType, out: &mut Vec<u8>) {
+pub(crate) async fn enc_complex_bin(c: &StepComplexType, out: &mut Vec<u8>) {
     write_str_bin(out, &c.name);
     store::pack_rt::write_varint_u64(out, c.args.len() as u64);
     for a in &c.args {
         enc_value_bin(a, out);
     }
 }
-pub(crate) fn dec_complex_bin(reader: &mut store::ByteReader<'_>) -> Result<StepComplexType, String> {
+pub(crate) async fn dec_complex_bin(reader: &mut store::ByteReader<'_>) -> Result<StepComplexType, String> {
     let name = read_str_bin(reader)?;
     let count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let args = (0..count).map(|_| dec_value_bin(reader)).collect::<Result<Vec<_>, String>>()?;
     Ok(StepComplexType { name, args })
 }
 
-pub(crate) fn enc_entity_bin(e: &StepEntity, out: &mut Vec<u8>) {
+pub(crate) async fn enc_entity_bin(e: &StepEntity, out: &mut Vec<u8>) {
     store::pack_rt::write_varint_u64(out, e.id);
     write_str_bin(out, &e.name);
     store::pack_rt::write_varint_u64(out, e.args.len() as u64);
@@ -983,7 +983,7 @@ pub(crate) fn enc_entity_bin(e: &StepEntity, out: &mut Vec<u8>) {
         enc_complex_bin(c, out);
     }
 }
-pub(crate) fn dec_entity_bin(reader: &mut store::ByteReader<'_>) -> Result<StepEntity, String> {
+pub(crate) async fn dec_entity_bin(reader: &mut store::ByteReader<'_>) -> Result<StepEntity, String> {
     let id = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let name = read_str_bin(reader)?;
     let args_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
@@ -993,17 +993,17 @@ pub(crate) fn dec_entity_bin(reader: &mut store::ByteReader<'_>) -> Result<StepE
     Ok(StepEntity { id, name, args, complex })
 }
 
-pub(crate) fn enc_file_description_bin(d: &StepFileDescription, out: &mut Vec<u8>) {
+pub(crate) async fn enc_file_description_bin(d: &StepFileDescription, out: &mut Vec<u8>) {
     write_str_list_bin(out, &d.description);
     write_str_bin(out, &d.implementation_level);
 }
-pub(crate) fn dec_file_description_bin(reader: &mut store::ByteReader<'_>) -> Result<StepFileDescription, String> {
+pub(crate) async fn dec_file_description_bin(reader: &mut store::ByteReader<'_>) -> Result<StepFileDescription, String> {
     let description = read_str_list_bin(reader)?;
     let implementation_level = read_str_bin(reader)?;
     Ok(StepFileDescription { description, implementation_level })
 }
 
-pub(crate) fn enc_file_name_bin(f: &StepFileName, out: &mut Vec<u8>) {
+pub(crate) async fn enc_file_name_bin(f: &StepFileName, out: &mut Vec<u8>) {
     write_str_bin(out, &f.name);
     write_str_bin(out, &f.timestamp);
     write_str_list_bin(out, &f.author);
@@ -1012,7 +1012,7 @@ pub(crate) fn enc_file_name_bin(f: &StepFileName, out: &mut Vec<u8>) {
     write_str_bin(out, &f.originating_system);
     write_str_bin(out, &f.authorization);
 }
-pub(crate) fn dec_file_name_bin(reader: &mut store::ByteReader<'_>) -> Result<StepFileName, String> {
+pub(crate) async fn dec_file_name_bin(reader: &mut store::ByteReader<'_>) -> Result<StepFileName, String> {
     Ok(StepFileName {
         name: read_str_bin(reader)?,
         timestamp: read_str_bin(reader)?,
@@ -1024,10 +1024,10 @@ pub(crate) fn dec_file_name_bin(reader: &mut store::ByteReader<'_>) -> Result<St
     })
 }
 
-pub(crate) fn enc_file_schema_bin(s: &StepFileSchema, out: &mut Vec<u8>) {
+pub(crate) async fn enc_file_schema_bin(s: &StepFileSchema, out: &mut Vec<u8>) {
     write_str_list_bin(out, &s.schemas);
 }
-pub(crate) fn dec_file_schema_bin(reader: &mut store::ByteReader<'_>) -> Result<StepFileSchema, String> {
+pub(crate) async fn dec_file_schema_bin(reader: &mut store::ByteReader<'_>) -> Result<StepFileSchema, String> {
     Ok(StepFileSchema { schemas: read_str_list_bin(reader)? })
 }
 
@@ -1035,7 +1035,7 @@ pub(crate) fn dec_file_schema_bin(reader: &mut store::ByteReader<'_>) -> Result<
 /// imports this `pub(crate)`), never by `StepDiff` itself (no `snapshot: Option<StepSnapshot>`
 /// full-replace slot exists on the diff), same split [`enc_step_snapshot`]/[`dec_step_snapshot`]
 /// (the TEXT twin) uses.
-pub(crate) fn enc_step_snapshot_bin(s: &StepSnapshot, out: &mut Vec<u8>) {
+pub(crate) async fn enc_step_snapshot_bin(s: &StepSnapshot, out: &mut Vec<u8>) {
     write_str_bin(out, &s.schema);
     enc_file_description_bin(&s.header.file_description, out);
     enc_file_name_bin(&s.header.file_name, out);
@@ -1045,7 +1045,7 @@ pub(crate) fn enc_step_snapshot_bin(s: &StepSnapshot, out: &mut Vec<u8>) {
         enc_entity_bin(e, out);
     }
 }
-pub(crate) fn dec_step_snapshot_bin(reader: &mut store::ByteReader<'_>) -> Result<StepSnapshot, String> {
+pub(crate) async fn dec_step_snapshot_bin(reader: &mut store::ByteReader<'_>) -> Result<StepSnapshot, String> {
     let schema = read_str_bin(reader)?;
     let file_description = dec_file_description_bin(reader)?;
     let file_name = dec_file_name_bin(reader)?;
@@ -1057,13 +1057,13 @@ pub(crate) fn dec_step_snapshot_bin(reader: &mut store::ByteReader<'_>) -> Resul
 //#endregion 🔖️ValueBinaryCodecs
 
 //#region 🔖️DiffValueCodecs
-fn enc_args_diff(d: &StepArgsDiff) -> String {
+async fn enc_args_diff(d: &StepArgsDiff) -> String {
     let removed = d.removed.iter().map(|i| i.to_string()).collect::<Vec<_>>().join(",");
     let modified = d.modified.iter().map(|m| format!("{}:{}", m.index, enc_value(&m.value))).collect::<Vec<_>>().join(",");
     let added = d.added.iter().map(|a| format!("{}:{}", a.index, enc_value(&a.value))).collect::<Vec<_>>().join(",");
     format!("[{removed}];[{modified}];[{added}]")
 }
-fn dec_args_diff(body: &str) -> Result<StepArgsDiff, String> {
+async fn dec_args_diff(body: &str) -> Result<StepArgsDiff, String> {
     let three = split_top_level(body, ';');
     let [removed_s, modified_s, added_s] = three.as_slice() else { return Err(format!("args diff: expected 3 sections, got {}", three.len())) };
     let removed = split_top_level(strip_brackets(removed_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(parse_usize).collect::<Result<Vec<_>, String>>()?;
@@ -1086,10 +1086,10 @@ fn dec_args_diff(body: &str) -> Result<StepArgsDiff, String> {
     Ok(StepArgsDiff { removed, modified, added })
 }
 
-fn enc_entity_diff(d: &StepEntityDiff) -> String {
+async fn enc_entity_diff(d: &StepEntityDiff) -> String {
     format!("[{},{},{}]", encode_option(&d.name, |v| enc_str(v)), encode_option(&d.args, enc_args_diff), encode_option(&d.complex, |v| format!("[{}]", v.iter().map(enc_complex).collect::<Vec<_>>().join(","))),)
 }
-fn dec_entity_diff(s: &str) -> Result<StepEntityDiff, String> {
+async fn dec_entity_diff(s: &str) -> Result<StepEntityDiff, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [name, args, complex] = parts.as_slice() else { return Err(format!("entity diff: expected 3 fields, got {}", parts.len())) };
     Ok(StepEntityDiff {
@@ -1099,13 +1099,13 @@ fn dec_entity_diff(s: &str) -> Result<StepEntityDiff, String> {
     })
 }
 
-fn enc_entities_diff(d: &StepEntitiesDiff) -> String {
+async fn enc_entities_diff(d: &StepEntitiesDiff) -> String {
     let removed = d.removed.iter().map(|i| i.to_string()).collect::<Vec<_>>().join(",");
     let modified = d.modified.iter().map(|m| format!("{}:{}", m.id, enc_entity_diff(&m.diff))).collect::<Vec<_>>().join(",");
     let added = d.added.iter().map(|a| format!("{}:{}", a.index, enc_entity(&a.entity))).collect::<Vec<_>>().join(",");
     format!("[{removed}];[{modified}];[{added}]")
 }
-fn dec_entities_diff(body: &str) -> Result<StepEntitiesDiff, String> {
+async fn dec_entities_diff(body: &str) -> Result<StepEntitiesDiff, String> {
     let three = split_top_level(body, ';');
     let [removed_s, modified_s, added_s] = three.as_slice() else { return Err(format!("entities diff: expected 3 sections, got {}", three.len())) };
     let removed = split_top_level(strip_brackets(removed_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(parse_u64).collect::<Result<Vec<_>, String>>()?;
@@ -1133,7 +1133,7 @@ fn dec_entities_diff(body: &str) -> Result<StepEntitiesDiff, String> {
 /// 🧪️ P2-FG1: real recursive binary twins of [`enc_args_diff`]/[`enc_entity_diff`]/
 /// [`enc_entities_diff`] — same three-section (removed/modified/added) collection-triple shape,
 /// backing the upgraded `DiffCodec::encode_diff`/`decode_diff` below.
-pub(crate) fn enc_args_diff_bin(d: &StepArgsDiff, out: &mut Vec<u8>) {
+pub(crate) async fn enc_args_diff_bin(d: &StepArgsDiff, out: &mut Vec<u8>) {
     store::pack_rt::write_varint_u64(out, d.removed.len() as u64);
     for i in &d.removed {
         store::pack_rt::write_varint_u64(out, *i as u64);
@@ -1149,7 +1149,7 @@ pub(crate) fn enc_args_diff_bin(d: &StepArgsDiff, out: &mut Vec<u8>) {
         enc_value_bin(&a.value, out);
     }
 }
-pub(crate) fn dec_args_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<StepArgsDiff, String> {
+pub(crate) async fn dec_args_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<StepArgsDiff, String> {
     let removed_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut removed = Vec::with_capacity(removed_count as usize);
     for _ in 0..removed_count {
@@ -1172,7 +1172,7 @@ pub(crate) fn dec_args_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<St
     Ok(StepArgsDiff { removed, modified, added })
 }
 
-pub(crate) fn enc_entity_diff_bin(d: &StepEntityDiff, out: &mut Vec<u8>) {
+pub(crate) async fn enc_entity_diff_bin(d: &StepEntityDiff, out: &mut Vec<u8>) {
     write_option_bin(out, &d.name, |v, o| write_str_bin(o, v));
     write_option_bin(out, &d.args, |v, o| enc_args_diff_bin(v, o));
     write_option_bin(out, &d.complex, |v, o| {
@@ -1182,7 +1182,7 @@ pub(crate) fn enc_entity_diff_bin(d: &StepEntityDiff, out: &mut Vec<u8>) {
         }
     });
 }
-pub(crate) fn dec_entity_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<StepEntityDiff, String> {
+pub(crate) async fn dec_entity_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<StepEntityDiff, String> {
     let name = read_option_bin(reader, read_str_bin)?;
     let args = read_option_bin(reader, dec_args_diff_bin)?;
     let complex = read_option_bin(reader, |r| {
@@ -1192,7 +1192,7 @@ pub(crate) fn dec_entity_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<
     Ok(StepEntityDiff { name, args, complex })
 }
 
-pub(crate) fn enc_entities_diff_bin(d: &StepEntitiesDiff, out: &mut Vec<u8>) {
+pub(crate) async fn enc_entities_diff_bin(d: &StepEntitiesDiff, out: &mut Vec<u8>) {
     store::pack_rt::write_varint_u64(out, d.removed.len() as u64);
     for id in &d.removed {
         store::pack_rt::write_varint_u64(out, *id);
@@ -1208,7 +1208,7 @@ pub(crate) fn enc_entities_diff_bin(d: &StepEntitiesDiff, out: &mut Vec<u8>) {
         enc_entity_bin(&a.entity, out);
     }
 }
-pub(crate) fn dec_entities_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<StepEntitiesDiff, String> {
+pub(crate) async fn dec_entities_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<StepEntitiesDiff, String> {
     let removed_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut removed = Vec::with_capacity(removed_count as usize);
     for _ in 0..removed_count {
@@ -1233,7 +1233,7 @@ pub(crate) fn dec_entities_diff_bin(reader: &mut store::ByteReader<'_>) -> Resul
 //#endregion 🔖️DiffValueBinaryCodecs
 
 //#region 🔖️TopLevel
-fn print_step_diff(d: &StepDiff) -> String {
+async fn print_step_diff(d: &StepDiff) -> String {
     let mut tokens: Vec<String> = Vec::new();
     if let Some(v) = &d.file_description {
         tokens.push(format!("file-description={}", enc_file_description(v)));
@@ -1249,7 +1249,7 @@ fn print_step_diff(d: &StepDiff) -> String {
     }
     tokens.join(" ")
 }
-fn parse_step_diff(line: &str) -> Result<StepDiff, String> {
+async fn parse_step_diff(line: &str) -> Result<StepDiff, String> {
     let mut d = StepDiff::default();
     if line.is_empty() {
         return Ok(d);
@@ -1271,10 +1271,10 @@ fn parse_step_diff(line: &str) -> Result<StepDiff, String> {
 }
 
 impl protocol::DiffCodec for StepDiff {
-    fn print_diff(&self) -> String {
+    async fn print_diff(&self) -> String {
         print_step_diff(self)
     }
-    fn parse_diff(line: &str) -> Result<Self, store::TextError> {
+    async fn parse_diff(line: &str) -> Result<Self, store::TextError> {
         parse_step_diff(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
     /// 🧪️ P2-FG1: REAL binary frame (`format u8 | flags u8 | present-field payloads`), matching
@@ -1284,7 +1284,7 @@ impl protocol::DiffCodec for StepDiff {
     /// bit3=`entities`) — `StepDiff` has FOUR independently optional top-level fields, same shape
     /// dxf's own `DxfDiff` (also four) upgraded to this same wave, unlike md/json's single
     /// `has_value` byte.
-    fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    async fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         let flags: u8 = (self.file_description.is_some() as u8) | ((self.file_name.is_some() as u8) << 1) | ((self.file_schema.is_some() as u8) << 2) | ((self.entities.is_some() as u8) << 3);
         let mut out = vec![store::pack_rt::OP_BINARY_FORMAT, flags];
         if let Some(v) = &self.file_description {
@@ -1301,7 +1301,7 @@ impl protocol::DiffCodec for StepDiff {
         }
         Ok(out)
     }
-    fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    async fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         let mut reader = store::ByteReader::new(bytes);
         let malformed = |what: &'static str, offset: usize, detail: String| protocol::ProtocolError::Malformed { what, offset: offset as u64, detail };
         let _format = reader.read_u8().map_err(|e| malformed("diff format", 0, e.to_string()))?;
@@ -1322,7 +1322,7 @@ impl protocol::DiffCodec for StepDiff {
 /// `between()` result exercising every top-level field plus all three `entities`/`args`
 /// collection-triple flavors and `StepEntityDiff.complex`, and its reverse direction.
 #[cfg(test)]
-pub(crate) fn demo_diff_cases() -> Vec<StepDiff> {
+pub(crate) async fn demo_diff_cases() -> Vec<StepDiff> {
     let a = crate::artifacts::step::engine::demo_step_snapshot();
     let mut b = a.clone();
     b.header.file_schema.schemas.push("CONFIG_CONTROL_DESIGN".into());
@@ -1343,7 +1343,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn invalid_collection_targets_are_rejected_before_mutation() {
+    async fn invalid_collection_targets_are_rejected_before_mutation() {
         let base = StepSnapshot::default();
         let diff = StepDiff { entities: Some(StepEntitiesDiff { removed: vec![1], ..Default::default() }), ..Default::default() };
         let error = diff.apply(&base).expect_err("missing entity target must be rejected");
@@ -1354,11 +1354,11 @@ mod tests {
     use crate::artifacts::step::schema::snapshot::{StepFileDescription, StepFileName, StepFileSchema, StepHeader};
     use crate::artifacts::step::STDIO_STEP_DOCUMENT_SCHEMA;
 
-    fn entity(id: u64, name: &str, args: Vec<StepValue>) -> StepEntity {
+    async fn entity(id: u64, name: &str, args: Vec<StepValue>) -> StepEntity {
         StepEntity { id, name: name.into(), args, complex: Vec::new() }
     }
 
-    fn base_snapshot() -> StepSnapshot {
+    async fn base_snapshot() -> StepSnapshot {
         StepSnapshot {
             schema: STDIO_STEP_DOCUMENT_SCHEMA.into(),
             header: StepHeader {
@@ -1385,7 +1385,7 @@ mod tests {
     /// 🧪️ Canonical absorb case 1: `InsertEntity(2,e)` then `RemoveEntity(base-id-at-0)` →
     /// removed base id survives, added index shifts down by one.
     #[test]
-    fn absorb_insert_then_remove_before_shifts_index() {
+    async fn absorb_insert_then_remove_before_shifts_index() {
         let e = entity(50, "THING", vec![]);
         let d1 = StepEntitiesDiff { added: vec![StepEntityAdded { index: 2, entity: e.clone() }], ..Default::default() };
         let d2 = StepEntitiesDiff { removed: vec![1], ..Default::default() };
@@ -1403,7 +1403,7 @@ mod tests {
     /// merged diff proves both survive at the right FINAL positions even though the stored
     /// `index` fields are both still `2`.
     #[test]
-    fn absorb_insert_insert_same_index_both_survive() {
+    async fn absorb_insert_insert_same_index_both_survive() {
         let e = entity(50, "A", vec![]);
         let f = entity(51, "B", vec![]);
         let d1 = StepEntitiesDiff { added: vec![StepEntityAdded { index: 2, entity: e.clone() }], ..Default::default() };
@@ -1421,7 +1421,7 @@ mod tests {
     /// 🧪️ Canonical absorb case 3: `InsertEntity(1,e)` then `SetEntityName(e.id, "X")` patches
     /// INTO the added payload.
     #[test]
-    fn absorb_insert_then_set_field_patches_into_added() {
+    async fn absorb_insert_then_set_field_patches_into_added() {
         let e = entity(50, "A", vec![]);
         let d1 = StepEntitiesDiff { added: vec![StepEntityAdded { index: 1, entity: e.clone() }], ..Default::default() };
         let d2 = StepEntitiesDiff { modified: vec![StepEntityModified { id: 50, diff: StepEntityDiff { name: Some("X".into()), ..Default::default() } }], ..Default::default() };
@@ -1433,7 +1433,7 @@ mod tests {
     }
 
     #[test]
-    fn absorb_law_holds_over_curated_ops() {
+    async fn absorb_law_holds_over_curated_ops() {
         let base = base_snapshot();
         let mid = {
             let mut s = base.clone();
@@ -1456,7 +1456,7 @@ mod tests {
     }
 
     #[test]
-    fn between_roundtrip_law() {
+    async fn between_roundtrip_law() {
         let a = base_snapshot();
         let mut b = a.clone();
         b.entities.push(entity(4, "EXTRA", vec![StepValue::Enum("T".into())]));
@@ -1469,7 +1469,7 @@ mod tests {
     }
 
     #[test]
-    fn inverse_law() {
+    async fn inverse_law() {
         let base = base_snapshot();
         let next = {
             let mut s = base.clone();
@@ -1490,7 +1490,7 @@ mod tests {
     /// structural trap — a single index/id-keyed `between()` call can show `removed` XOR `added`,
     /// never both, from one direction alone).
     #[test]
-    fn field_sweep_covers_every_mutable_field() {
+    async fn field_sweep_covers_every_mutable_field() {
         let sweep_a = StepSnapshot {
             schema: STDIO_STEP_DOCUMENT_SCHEMA.into(),
             header: StepHeader {
@@ -1561,11 +1561,11 @@ mod handcrafted_diff_codec_tests {
     use crate::artifacts::step::STDIO_STEP_DOCUMENT_SCHEMA;
     use protocol::DiffCodec;
 
-    fn entity(id: u64, name: &str, args: Vec<StepValue>) -> StepEntity {
+    async fn entity(id: u64, name: &str, args: Vec<StepValue>) -> StepEntity {
         StepEntity { id, name: name.into(), args, complex: Vec::new() }
     }
 
-    fn snapshot() -> StepSnapshot {
+    async fn snapshot() -> StepSnapshot {
         StepSnapshot {
             schema: STDIO_STEP_DOCUMENT_SCHEMA.into(),
             header: StepHeader {
@@ -1592,7 +1592,7 @@ mod handcrafted_diff_codec_tests {
     /// recursive `Aggregate`/`TypedValue` cases), `StepComplexType`, and all three `entities`
     /// collection-triple flavors (removed/modified/added) at once via a real `between()` result.
     #[test]
-    fn diff_codec_text_binary_roundtrip_law() {
+    async fn diff_codec_text_binary_roundtrip_law() {
         let a = snapshot();
         let mut b = a.clone();
         b.header.file_schema.schemas.push("CONFIG_CONTROL_DESIGN".into());

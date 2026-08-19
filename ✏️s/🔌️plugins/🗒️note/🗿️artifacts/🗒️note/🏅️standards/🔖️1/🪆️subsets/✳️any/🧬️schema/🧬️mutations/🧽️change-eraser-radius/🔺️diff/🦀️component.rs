@@ -4,7 +4,7 @@ use crate::artifacts::note::NoteDiff;
 use crate::artifacts::note::NoteSnapshot;
 
 //#region 🔖️Diff
-pub fn diff(payload: &ChangeEraserRadius, base: &NoteSnapshot) -> protocol::MutationOutcome<NoteDiff> {
+pub async fn diff(payload: &ChangeEraserRadius, base: &NoteSnapshot) -> protocol::MutationOutcome<NoteDiff> {
     if let Some(radius) = payload.new_radius {
         if !radius.is_finite() || radius <= 0.0 {
             return protocol::MutationOutcome::fatal("mutation.invariant", format!("Eraser radius must be a positive number, got {radius}."), Vec::<String>::new());

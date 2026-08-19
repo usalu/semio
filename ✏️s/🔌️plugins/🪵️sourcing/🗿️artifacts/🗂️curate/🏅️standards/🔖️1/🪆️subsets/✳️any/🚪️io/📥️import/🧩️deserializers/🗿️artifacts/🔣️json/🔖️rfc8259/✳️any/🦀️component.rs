@@ -18,14 +18,14 @@ use semio_s_plugin_stdio::artifacts::json::JsonSnapshot;
 
 pub const JSON_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.json", standard: StandardId("rfc8259"), subset: SubsetId::ANY };
 
-pub fn deserialize(from: &JsonSnapshot) -> Result<CurateSnapshot, store::TextError> {
+pub async fn deserialize(from: &JsonSnapshot) -> Result<CurateSnapshot, store::TextError> {
     let _ = SOURCING_CURATE_SCHEMA;
     let out: CurateSnapshot = serde_json::from_value(from.to_serde_value())
         .map_err(|e| store::TextError::new(format!("curate<-json: {e}"), dsl::TextSpan::at(1, 1)))?;
     Ok(out)
 }
 
-pub fn deserialize_bytes(bytes: &[u8]) -> Result<CurateSnapshot, store::TextError> {
+pub async fn deserialize_bytes(bytes: &[u8]) -> Result<CurateSnapshot, store::TextError> {
     let text = std::str::from_utf8(bytes).map_err(|e| store::TextError::new(e.to_string(), dsl::TextSpan::at(1, 1)))?;
     let value = parse_json_text(text)?;
     deserialize(&JsonSnapshot::from_value(value))
@@ -36,7 +36,7 @@ pub struct JsonIntoCurate;
 impl Deserializer<CurateSnapshot> for JsonIntoCurate {
     const FROM: Dialect = JSON_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Exact;
-    fn deserialize(payload: &IoPayload) -> IoResult<CurateSnapshot> {
+    async fn deserialize(payload: &IoPayload) -> IoResult<CurateSnapshot> {
         let IoPayload::Text(text) = payload else {
             return Err(IoError { message: "JsonIntoCurate: expected a text json payload".to_string(), diagnostics: Vec::new() });
         };

@@ -15,15 +15,15 @@ pub struct ChangeNCyclesBridge {
 impl protocol::MutationKind<En1995Snapshot, En1995Mutation> for ChangeNCyclesBridge {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "n-cycles-bridge", kind: "change-n-cycles-bridge", record: "ChangedNCyclesBridge" };
 
-    fn diff(&self, base: &En1995Snapshot) -> protocol::MutationOutcome<En1995Diff> {
+    async fn diff(&self, base: &En1995Snapshot) -> protocol::MutationOutcome<En1995Diff> {
         crate::artifacts::en1995::mutations::change_n_cycles_bridge::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &En1995Snapshot) -> Vec<En1995Mutation> {
+    async fn inverse(&self, base: &En1995Snapshot) -> Vec<En1995Mutation> {
         crate::artifacts::en1995::mutations::change_n_cycles_bridge::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         format!("Change n cycles bridge to {:?}", self.new_n_cycles_bridge)
     }
 }

@@ -5,7 +5,7 @@ use crate::artifacts::layout::schema::diff::{LayoutStoriesDelta, LayoutStoryPatc
 use crate::artifacts::layout::{LayoutDiff, LayoutSnapshot, TextStoryPatch};
 
 //#region 📝EditStory
-pub fn diff_edit_story(payload: &EditStory, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
+pub async fn diff_edit_story(payload: &EditStory, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
     let Some(story) = base.stories.iter().find(|story| story.id == payload.id) else {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Story \"{}\" does not exist.", payload.id), [payload.id.clone()]);
     };

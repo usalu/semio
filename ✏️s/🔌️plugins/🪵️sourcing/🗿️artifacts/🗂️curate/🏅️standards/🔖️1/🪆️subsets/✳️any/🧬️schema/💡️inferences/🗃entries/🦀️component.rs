@@ -22,7 +22,7 @@ pub struct CurateEntries {
 /// `types` — reading the sourcing-owned overflow list directly avoids resolving the composed child
 /// just to count it); `entryCount` = `curated.len()`; `totalCount` = sum of every curated line's
 /// `count`.
-pub fn compute_curate_entries(snapshot: &CurateSnapshot) -> CurateEntries {
+pub async fn compute_curate_entries(snapshot: &CurateSnapshot) -> CurateEntries {
     CurateEntries {
         stock_count: snapshot.stock_extra.len() as u32,
         entry_count: snapshot.curated.len() as u32,
@@ -37,18 +37,18 @@ mod tests {
     use super::*;
     use crate::artifacts::curate::{CuratedItem, GeometryRecipe, ObjectKind};
 
-    fn object_kind(id: &str) -> ObjectKind {
+    async fn object_kind(id: &str) -> ObjectKind {
         ObjectKind { id: id.into(), name: id.into(), module_id: "beams".into(), typology_path: vec!["beams".into()], availability: 1, geometry: Box::new(GeometryRecipe::Box { width: 0.2, height: 0.4, depth: 6.0 }) }
     }
 
     #[test]
-    fn empty_snapshot_yields_a_zero_census() {
+    async fn empty_snapshot_yields_a_zero_census() {
         let entries = compute_curate_entries(&CurateSnapshot::default());
         assert_eq!(entries, CurateEntries::default());
     }
 
     #[test]
-    fn stock_and_curated_lines_are_counted_exactly() {
+    async fn stock_and_curated_lines_are_counted_exactly() {
         let snapshot = crate::artifacts::curate::curate_snapshot_from_stock(
             vec![object_kind("a"), object_kind("b"), object_kind("c")],
             vec![CuratedItem { object_id: "a".into(), count: 5 }, CuratedItem { object_id: "b".into(), count: 3 }],
@@ -60,7 +60,7 @@ mod tests {
     }
 
     #[test]
-    fn entries_is_deterministic() {
+    async fn entries_is_deterministic() {
         let snapshot = crate::artifacts::curate::curate_snapshot_from_stock(Vec::new(), vec![CuratedItem { object_id: "a".into(), count: 1 }]);
         assert_eq!(compute_curate_entries(&snapshot), compute_curate_entries(&snapshot));
     }

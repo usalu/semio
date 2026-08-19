@@ -43,13 +43,13 @@ pub struct FourCc(pub [u8; 4]);
 
 impl FourCc {
     /// 🧭️ Builds a `FourCc` from an ASCII byte-string literal, e.g. `FourCc::new(b"moov")`.
-    pub const fn new(bytes: &[u8; 4]) -> Self {
+    pub async fn new(bytes: &[u8; 4]) -> Self {
         Self(*bytes)
     }
 }
 
 impl std::fmt::Debug for FourCc {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    async fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         if self.0.iter().all(|&b| (0x20..0x7F).contains(&b)) {
             write!(f, "FourCc({:?})", std::str::from_utf8(&self.0).unwrap_or("?"))
         } else {
@@ -59,7 +59,7 @@ impl std::fmt::Debug for FourCc {
 }
 
 impl std::fmt::Display for FourCc {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    async fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         if self.0.iter().all(|&b| (0x20..0x7F).contains(&b)) {
             write!(f, "{}", std::str::from_utf8(&self.0).unwrap_or("????"))
         } else {
@@ -86,7 +86,7 @@ pub enum VideoError {
 }
 
 impl std::fmt::Display for VideoError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    async fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::Truncated => write!(f, "video container truncated"),
             Self::Container(msg) => write!(f, "video container error: {msg}"),
@@ -101,13 +101,13 @@ impl std::fmt::Display for VideoError {
 impl std::error::Error for VideoError {}
 
 impl From<remodel_image::ImageError> for VideoError {
-    fn from(e: remodel_image::ImageError) -> Self {
+    async fn from(e: remodel_image::ImageError) -> Self {
         Self::Jpeg(e)
     }
 }
 
 impl From<H264Error> for VideoError {
-    fn from(e: H264Error) -> Self {
+    async fn from(e: H264Error) -> Self {
         Self::H264(e)
     }
 }
@@ -124,7 +124,7 @@ pub enum VideoCodec {
     Unknown(FourCc),
 }
 
-fn fourcc_from_str(s: &str) -> FourCc {
+async fn fourcc_from_str(s: &str) -> FourCc {
     let mut out = [b' '; 4];
     for (i, b) in s.as_bytes().iter().take(4).enumerate() {
         out[i] = *b;
@@ -134,7 +134,7 @@ fn fourcc_from_str(s: &str) -> FourCc {
 
 /// 🏷️ Classifies a container-reported fourcc string into [`VideoCodec`] — shared by both container
 /// families (stdio's `Mp4Codec::Other::fourcc` and `AviStreamFormat::BitmapInfo::compression`).
-fn codec_from_fourcc_str(fourcc: &str) -> VideoCodec {
+async fn codec_from_fourcc_str(fourcc: &str) -> VideoCodec {
     match fourcc.to_ascii_lowercase().as_str() {
         "avc1" | "avc3" => VideoCodec::Avc,
         "hvc1" | "hev1" => VideoCodec::Hevc,
@@ -187,7 +187,7 @@ pub struct AviInfo {
 /// `Mp4Info` shape: per-sample presentation timestamps recovered from `duration`/`cts_offset`
 /// (same DTS-accumulate-then-add-CTS-offset formula this file's pre-extraction `probe_mp4` used),
 /// and the real `avcC` SPS/PPS lists when the track is AVC.
-fn probe_mp4(bytes: &[u8]) -> Result<Mp4Info, VideoError> {
+async fn probe_mp4(bytes: &[u8]) -> Result<Mp4Info, VideoError> {
     let snapshot = mp4_engine::decode_mp4(bytes).map_err(VideoError::Container)?;
     let track = snapshot.tracks.first().ok_or(VideoError::NoVideoTrack)?;
     let codec = VideoCodec::Avc;
@@ -208,7 +208,7 @@ fn probe_mp4(bytes: &[u8]) -> Result<Mp4Info, VideoError> {
 /// 📥️ Probes a RIFF/AVI byte stream via stdio's real `avi::engine::decode_avi`, then adapts its
 /// first `vids` stream into this crate's own `AviInfo` shape (fps from `strh.rate/scale`, falling
 /// back to `avih.micro_sec_per_frame` — same formula this file's pre-extraction `probe_avi` used).
-fn probe_avi(bytes: &[u8]) -> Result<AviInfo, VideoError> {
+async fn probe_avi(bytes: &[u8]) -> Result<AviInfo, VideoError> {
     let snapshot = avi_engine::decode_avi(bytes).map_err(VideoError::Container)?;
     let stream = snapshot.streams.iter().find(|s| s.strh.fcc_type == "vids").ok_or(VideoError::NoVideoTrack)?;
     let compression = match &stream.strf {
@@ -249,7 +249,7 @@ pub enum H264Error {
 }
 
 impl std::fmt::Display for H264Error {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    async fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::Truncated => write!(f, "h264 bitstream truncated"),
             Self::Malformed(msg) => write!(f, "malformed h264 bitstream: {msg}"),
@@ -273,11 +273,11 @@ struct BitReader<'a> {
 }
 
 impl<'a> BitReader<'a> {
-    fn new(data: &'a [u8]) -> Self {
+    async fn new(data: &'a [u8]) -> Self {
         Self { data, byte_pos: 0, bit_pos: 0 }
     }
 
-    fn u1(&mut self) -> Result<u32, H264Error> {
+    async fn u1(&mut self) -> Result<u32, H264Error> {
         let &byte = self.data.get(self.byte_pos).ok_or(H264Error::Truncated)?;
         let bit = (byte >> (7 - self.bit_pos)) & 1;
         self.bit_pos += 1;
@@ -288,7 +288,7 @@ impl<'a> BitReader<'a> {
         Ok(u32::from(bit))
     }
 
-    fn u(&mut self, n: u8) -> Result<u32, H264Error> {
+    async fn u(&mut self, n: u8) -> Result<u32, H264Error> {
         let mut v = 0u32;
         for _ in 0..n {
             v = (v << 1) | self.u1()?;
@@ -297,7 +297,7 @@ impl<'a> BitReader<'a> {
     }
 
     /// 🧮️ Exp-Golomb unsigned code (`ue(v)`, clause 9.1).
-    fn ue(&mut self) -> Result<u32, H264Error> {
+    async fn ue(&mut self) -> Result<u32, H264Error> {
         let mut leading_zero_bits = 0u32;
         while self.u1()? == 0 {
             leading_zero_bits += 1;
@@ -313,14 +313,14 @@ impl<'a> BitReader<'a> {
     }
 
     /// 🧮️ Exp-Golomb signed code (`se(v)`, clause 9.1.1): maps the unsigned code `k` to `(-1)^(k+1) * ceil(k/2)`.
-    fn se(&mut self) -> Result<i32, H264Error> {
+    async fn se(&mut self) -> Result<i32, H264Error> {
         let code = self.ue()? as i64;
         let magnitude = (code + 1) / 2;
         let value = if code % 2 == 0 { -magnitude } else { magnitude };
         i32::try_from(value).map_err(|_| H264Error::Malformed("se(v) value out of range"))
     }
 
-    fn byte_align(&mut self) {
+    async fn byte_align(&mut self) {
         if self.bit_pos != 0 {
             self.bit_pos = 0;
             self.byte_pos += 1;
@@ -329,7 +329,7 @@ impl<'a> BitReader<'a> {
 
     /// 🏁️ `more_rbsp_data()` (clause 7.2): locates `rbsp_stop_one_bit` (the last `1` bit in the RBSP) and
     /// reports whether the cursor still sits strictly before it.
-    fn more_rbsp_data(&self) -> bool {
+    async fn more_rbsp_data(&self) -> bool {
         if self.byte_pos >= self.data.len() {
             return false;
         }
@@ -351,7 +351,7 @@ impl<'a> BitReader<'a> {
 // #region 🔖️Rbsp
 /// 🧹️ Removes `emulation_prevention_three_byte`s (`00 00 03` → `00 00`) from a NAL's EBSP, yielding its RBSP.
 /// <https://www.itu.int/rec/T-REC-H.264> (clause 7.4.1.1)
-fn strip_emulation_prevention(ebsp: &[u8]) -> Vec<u8> {
+async fn strip_emulation_prevention(ebsp: &[u8]) -> Vec<u8> {
     let mut out = Vec::with_capacity(ebsp.len());
     let mut i = 0;
     while i < ebsp.len() {
@@ -376,7 +376,7 @@ struct NalUnit {
 }
 
 /// 📥️ Parses a single NAL's 1-byte header and strips emulation prevention from the rest.
-fn parse_nal(nal_bytes: &[u8]) -> Result<NalUnit, H264Error> {
+async fn parse_nal(nal_bytes: &[u8]) -> Result<NalUnit, H264Error> {
     let &header = nal_bytes.first().ok_or(H264Error::Truncated)?;
     if header & 0x80 != 0 {
         return Err(H264Error::Malformed("nal forbidden_zero_bit is set"));
@@ -387,7 +387,7 @@ fn parse_nal(nal_bytes: &[u8]) -> Result<NalUnit, H264Error> {
 
 /// ✂️ Splits one AVCC length-prefixed access unit into its constituent NAL byte ranges (each still including
 /// the 1-byte NAL header); `length_size` is `avcC`'s `lengthSizeMinusOne + 1` (1, 2 or 4 bytes).
-fn split_avcc_nals(data: &[u8], length_size: u8) -> Result<Vec<&[u8]>, H264Error> {
+async fn split_avcc_nals(data: &[u8], length_size: u8) -> Result<Vec<&[u8]>, H264Error> {
     let n = length_size as usize;
     if !(1..=4).contains(&n) || n == 3 {
         return Err(H264Error::Unsupported("nal length size other than 1, 2 or 4 bytes"));
@@ -409,7 +409,7 @@ fn split_avcc_nals(data: &[u8], length_size: u8) -> Result<Vec<&[u8]>, H264Error
 /// for parity with the spec's other framing convention, alongside [`split_avcc_nals`] which this crate's own
 /// [`H264Decoder`]/[`Mux`](mod@self) plumbing actually uses.
 #[allow(dead_code, reason = "public per the plan's 🔖️Rbsp subregion spec even though this crate's own mux/decode path only exercises AVCC framing")]
-fn split_annexb_nals(data: &[u8]) -> Vec<&[u8]> {
+async fn split_annexb_nals(data: &[u8]) -> Vec<&[u8]> {
     let mut starts = Vec::new();
     let mut i = 0;
     while i + 2 < data.len() {
@@ -455,7 +455,7 @@ struct SpsInfo {
 }
 
 /// 📥️ Parses a Sequence Parameter Set RBSP. <https://www.itu.int/rec/T-REC-H.264> (clause 7.3.2.1.1)
-fn parse_sps(rbsp: &[u8]) -> Result<SpsInfo, H264Error> {
+async fn parse_sps(rbsp: &[u8]) -> Result<SpsInfo, H264Error> {
     let mut b = BitReader::new(rbsp);
     let profile_idc = b.u(8)?;
     if profile_idc != 66 {
@@ -514,7 +514,7 @@ struct PpsInfo {
 }
 
 /// 📥️ Parses a Picture Parameter Set RBSP. <https://www.itu.int/rec/T-REC-H.264> (clause 7.3.2.2)
-fn parse_pps(rbsp: &[u8]) -> Result<PpsInfo, H264Error> {
+async fn parse_pps(rbsp: &[u8]) -> Result<PpsInfo, H264Error> {
     let mut b = BitReader::new(rbsp);
     b.ue()?;
     b.ue()?;
@@ -566,7 +566,7 @@ struct SliceHeaderInfo {
 /// 📥️ Parses a slice header RBSP prefix (up to but not including `slice_data()`), advancing `b` so the
 /// caller can continue reading macroblock data from the same cursor. <https://www.itu.int/rec/T-REC-H.264>
 /// (clause 7.3.3)
-fn parse_slice_header(b: &mut BitReader<'_>, nal_unit_type: u8, sps: &SpsInfo, pps: &PpsInfo) -> Result<SliceHeaderInfo, H264Error> {
+async fn parse_slice_header(b: &mut BitReader<'_>, nal_unit_type: u8, sps: &SpsInfo, pps: &PpsInfo) -> Result<SliceHeaderInfo, H264Error> {
     let first_mb_in_slice = b.ue()?;
     let slice_type = b.ue()?;
     let slice_type_mod5 = slice_type % 5;
@@ -667,14 +667,14 @@ const COEFF_TOKEN_TABLES: [CoeffTokenTable; 4] = [
 const CHROMA_DC_COEFF_TOKEN: CoeffTokenTable = CoeffTokenTable { len: &[2, 0, 0, 0, 6, 1, 0, 0, 6, 6, 3, 0, 6, 7, 7, 6, 6, 8, 8, 7], bits: &[1, 0, 0, 0, 7, 1, 0, 0, 4, 6, 1, 0, 3, 3, 2, 5, 2, 3, 2, 0] };
 
 /// 🔎️ Reads one `coeff_token` from `table`, returning `(total_coeff, trailing_ones)`.
-fn read_coeff_token(b: &mut BitReader<'_>, table: &CoeffTokenTable) -> Result<(u32, u32), H264Error> {
+async fn read_coeff_token(b: &mut BitReader<'_>, table: &CoeffTokenTable) -> Result<(u32, u32), H264Error> {
     let idx = read_vlc(b, table.len, table.bits)?;
     Ok((idx / 4, idx % 4))
 }
 
 /// 🔎️ Reads `coeff_token` for `nC >= 8`: a fixed 6-bit code, `((TotalCoeff-1)<<2)|TrailingOnes`, with `000011`
 /// as the sole exception encoding `TotalCoeff == 0`.
-fn read_coeff_token_fixed(b: &mut BitReader<'_>) -> Result<(u32, u32), H264Error> {
+async fn read_coeff_token_fixed(b: &mut BitReader<'_>) -> Result<(u32, u32), H264Error> {
     let v = b.u(6)?;
     if v == 3 {
         return Ok((0, 0));
@@ -684,7 +684,7 @@ fn read_coeff_token_fixed(b: &mut BitReader<'_>) -> Result<(u32, u32), H264Error
 
 /// 🧮️ Predicted `nC` (clause 9.2.1): average of the left/above 4×4 neighbor blocks' total_coeff, rounded up,
 /// or just one of them when the other is unavailable, or `0` when neither is available.
-fn predict_nc(left: Option<u8>, above: Option<u8>) -> u32 {
+async fn predict_nc(left: Option<u8>, above: Option<u8>) -> u32 {
     match (left, above) {
         (Some(l), Some(a)) => (u32::from(l) + u32::from(a)).div_ceil(2),
         (Some(l), None) => u32::from(l),
@@ -737,7 +737,7 @@ const RUN_BEFORE_BITS: [&[u8]; 7] = [&[1, 0], &[1, 1, 0], &[3, 2, 1, 0], &[3, 2,
 
 /// 🔎️ Generic canonical-VLC reader matching bits MSB-first against parallel `(len, bits)` slices, returning
 /// the matching slice index (the semantic value depends on the table: `total_zeros`, `run_before`, ...).
-fn read_vlc(b: &mut BitReader<'_>, len: &[u8], bits: &[u8]) -> Result<u32, H264Error> {
+async fn read_vlc(b: &mut BitReader<'_>, len: &[u8], bits: &[u8]) -> Result<u32, H264Error> {
     let mut code = 0u32;
     for l in 1..=16u32 {
         code = (code << 1) | b.u1()?;
@@ -751,7 +751,7 @@ fn read_vlc(b: &mut BitReader<'_>, len: &[u8], bits: &[u8]) -> Result<u32, H264E
 }
 
 /// 🔎️ `level_prefix` (clause 9.2.2.1): a unary prefix, counted as leading `0` bits before the terminating `1`.
-fn read_level_prefix(b: &mut BitReader<'_>) -> Result<u32, H264Error> {
+async fn read_level_prefix(b: &mut BitReader<'_>) -> Result<u32, H264Error> {
     let mut count = 0u32;
     while b.u1()? == 0 {
         count += 1;
@@ -773,7 +773,7 @@ struct ResidualBlock {
 /// the same pass. `scan` is the raster position for each scan index: [`ZIGZAG_4X4`] (16 entries) for luma
 /// 4×4/`Intra16x16DCLevel`, `&ZIGZAG_4X4[1..]` (15 entries, DC excluded) for `Intra16x16ACLevel`/chroma AC, or
 /// `&[0, 1, 2, 3]` for chroma DC (2×2, `nC == -1`, no real zig-zag).
-fn read_residual_block(b: &mut BitReader<'_>, nc_selector: NcSelector, scan: &[usize]) -> Result<ResidualBlock, H264Error> {
+async fn read_residual_block(b: &mut BitReader<'_>, nc_selector: NcSelector, scan: &[usize]) -> Result<ResidualBlock, H264Error> {
     let max_coeff = scan.len() as u8;
     let (total_coeff, trailing_ones) = match nc_selector {
         NcSelector::ChromaDc => read_coeff_token(b, &CHROMA_DC_COEFF_TOKEN)?,
@@ -883,7 +883,7 @@ enum NcSelector {
 const LEVEL_SCALE_BASE: [[i32; 3]; 6] = [[10, 13, 16], [11, 14, 18], [13, 16, 20], [14, 18, 23], [16, 20, 25], [18, 23, 29]];
 
 /// 🧮️ `normAdjust4x4(m, i, j)` (clause 8.5.9).
-fn norm_adjust(m: usize, i: usize, j: usize) -> i32 {
+async fn norm_adjust(m: usize, i: usize, j: usize) -> i32 {
     if i.is_multiple_of(2) && j.is_multiple_of(2) {
         LEVEL_SCALE_BASE[m][0]
     } else if i % 2 == 1 && j % 2 == 1 {
@@ -894,7 +894,7 @@ fn norm_adjust(m: usize, i: usize, j: usize) -> i32 {
 }
 
 /// 🧮️ Scales quantized 4×4 residual coefficients (raster order) back to the transform domain (clause 8.5.12.1).
-fn dequant4x4(coeffs: &[i32; 16], qp: i32) -> [i32; 16] {
+async fn dequant4x4(coeffs: &[i32; 16], qp: i32) -> [i32; 16] {
     let m = qp.rem_euclid(6) as usize;
     let shift = qp.div_euclid(6);
     let mut out = [0i32; 16];
@@ -910,7 +910,7 @@ fn dequant4x4(coeffs: &[i32; 16], qp: i32) -> [i32; 16] {
 
 /// 🌊️ H.264's integer core transform butterfly, applied separably (clause 8.5.12.2); its own inverse up to
 /// the final `(x + 32) >> 6` rounding/normalization.
-fn idct4x4_1d(input: [i32; 4]) -> [i32; 4] {
+async fn idct4x4_1d(input: [i32; 4]) -> [i32; 4] {
     let e0 = input[0] + input[2];
     let e1 = input[0] - input[2];
     let e2 = (input[1] >> 1) - input[3];
@@ -919,7 +919,7 @@ fn idct4x4_1d(input: [i32; 4]) -> [i32; 4] {
 }
 
 /// 🌊️ Full separable 4×4 inverse core transform: dequantized coefficients (raster order) → spatial residual.
-fn idct4x4(d: &[i32; 16]) -> [i32; 16] {
+async fn idct4x4(d: &[i32; 16]) -> [i32; 16] {
     let mut cols = [0i32; 16];
     for c in 0..4 {
         let t = idct4x4_1d([d[c], d[4 + c], d[8 + c], d[12 + c]]);
@@ -938,7 +938,7 @@ fn idct4x4(d: &[i32; 16]) -> [i32; 16] {
 }
 
 /// 🌊️ 4×4 Hadamard butterfly (symmetric, its own inverse up to scale), shared by the luma-DC transform.
-fn hadamard4_1d(input: [i32; 4]) -> [i32; 4] {
+async fn hadamard4_1d(input: [i32; 4]) -> [i32; 4] {
     let e0 = input[0] + input[2];
     let e1 = input[0] - input[2];
     let e2 = input[1] - input[3];
@@ -949,7 +949,7 @@ fn hadamard4_1d(input: [i32; 4]) -> [i32; 4] {
 /// 🌊️ Inverse-transforms and dequantizes the 16 `Intra16x16DCLevel` coefficients (raster block order, i.e.
 /// `dc[blockRow*4+blockCol]`) into per-block DC values to splice into position 0 of each luma 4×4 AC block
 /// (clause 8.5.10).
-fn transform_luma16x16_dc(dc: &[i32; 16], qp: i32) -> [i32; 16] {
+async fn transform_luma16x16_dc(dc: &[i32; 16], qp: i32) -> [i32; 16] {
     let mut cols = [0i32; 16];
     for c in 0..4 {
         let t = hadamard4_1d([dc[c], dc[4 + c], dc[8 + c], dc[12 + c]]);
@@ -976,7 +976,7 @@ fn transform_luma16x16_dc(dc: &[i32; 16], qp: i32) -> [i32; 16] {
 
 /// 🌊️ Inverse-transforms and dequantizes the 4 `ChromaDCLevel` coefficients (`[cb00,cb01,cb10,cb11]` raster)
 /// into per-4×4-block DC values (clause 8.5.11).
-fn transform_chroma_dc(dc: &[i32; 4], qp: i32) -> [i32; 4] {
+async fn transform_chroma_dc(dc: &[i32; 4], qp: i32) -> [i32; 4] {
     let e00 = dc[0] + dc[1] + dc[2] + dc[3];
     let e01 = dc[0] - dc[1] + dc[2] - dc[3];
     let e10 = dc[0] + dc[1] - dc[2] - dc[3];
@@ -1013,7 +1013,7 @@ struct Picture {
 }
 
 impl Picture {
-    fn new(mb_width: u32, mb_height: u32) -> Self {
+    async fn new(mb_width: u32, mb_height: u32) -> Self {
         let lw = (mb_width * 16) as usize;
         let lh = (mb_height * 16) as usize;
         let cw = (mb_width * 8) as usize;
@@ -1041,44 +1041,44 @@ impl Picture {
         }
     }
 
-    fn luma_width(&self) -> usize {
+    async fn luma_width(&self) -> usize {
         (self.mb_width * 16) as usize
     }
 
-    fn luma4_width(&self) -> usize {
+    async fn luma4_width(&self) -> usize {
         (self.mb_width * 4) as usize
     }
 
-    fn chroma_width(&self) -> usize {
+    async fn chroma_width(&self) -> usize {
         (self.mb_width * 8) as usize
     }
 
-    fn chroma4_width(&self) -> usize {
+    async fn chroma4_width(&self) -> usize {
         (self.mb_width * 2) as usize
     }
 
     /// 🔍️ Reconstructed luma sample at `(x, y)`, or `None` outside the (macroblock-padded) picture.
-    fn luma_at(&self, x: i32, y: i32) -> Option<u8> {
+    async fn luma_at(&self, x: i32, y: i32) -> Option<u8> {
         if x < 0 || y < 0 || x as usize >= self.luma_width() || y as usize >= (self.mb_height * 16) as usize {
             return None;
         }
         Some(self.luma[y as usize * self.luma_width() + x as usize])
     }
 
-    fn luma4_available(&self, bx: i32, by: i32) -> bool {
+    async fn luma4_available(&self, bx: i32, by: i32) -> bool {
         if bx < 0 || by < 0 || bx as usize >= self.luma4_width() || by as usize >= (self.mb_height * 4) as usize {
             return false;
         }
         self.decoded_luma4[by as usize * self.luma4_width() + bx as usize]
     }
 
-    fn mb_index(&self, mb_x: u32, mb_y: u32) -> usize {
+    async fn mb_index(&self, mb_x: u32, mb_y: u32) -> usize {
         (mb_y * self.mb_width + mb_x) as usize
     }
 
     /// 🎨️ Writes one reconstructed 4×4 luma block (clamped to `[0,255]`) at 4×4-block grid position `(bx, by)`
     /// and marks it decoded.
-    fn write_luma4(&mut self, bx: u32, by: u32, block: &[i32; 16]) {
+    async fn write_luma4(&mut self, bx: u32, by: u32, block: &[i32; 16]) {
         let w = self.luma_width();
         let (px, py) = (bx as usize * 4, by as usize * 4);
         for r in 0..4 {
@@ -1091,7 +1091,7 @@ impl Picture {
     }
 
     /// 🎨️ Writes one reconstructed 4×4 chroma block into `plane` (`cb`/`cr`) at chroma-pixel origin `(px, py)`.
-    fn write_chroma4(plane: &mut [u8], stride: usize, px: usize, py: usize, block: &[i32; 16]) {
+    async fn write_chroma4(plane: &mut [u8], stride: usize, px: usize, py: usize, block: &[i32; 16]) {
         for r in 0..4 {
             for c in 0..4 {
                 plane[(py + r) * stride + px + c] = block[r * 4 + c].clamp(0, 255) as u8;
@@ -1101,7 +1101,7 @@ impl Picture {
 
     /// ✂️ Crops the macroblock-padded planes down to the sequence's coded `width`×`height`, producing the
     /// final displayable [`remodel_image::ImageRgba8`] via [`ycbcr420_to_rgba`].
-    fn crop_to(&self, width: u32, height: u32) -> remodel_image::ImageRgba8 {
+    async fn crop_to(&self, width: u32, height: u32) -> remodel_image::ImageRgba8 {
         ycbcr420_to_rgba(&self.luma, self.luma_width(), &self.cb, &self.cr, self.chroma_width(), width, height)
     }
 }
@@ -1120,7 +1120,7 @@ struct Intra4Neighbors {
 }
 
 /// 🎨️ Predicts one 4×4 luma block for `mode` (0..8, clause 8.3.1.2); callers add the residual afterward.
-fn predict_intra4x4(mode: u8, n: &Intra4Neighbors) -> Result<[i32; 16], H264Error> {
+async fn predict_intra4x4(mode: u8, n: &Intra4Neighbors) -> Result<[i32; 16], H264Error> {
     let t = n.top.unwrap_or([128; 4]);
     let l = n.left.unwrap_or([128; 4]);
     let tl = n.corner;
@@ -1245,7 +1245,7 @@ fn predict_intra4x4(mode: u8, n: &Intra4Neighbors) -> Result<[i32; 16], H264Erro
 }
 
 /// 🎨️ Neighbor-average DC prediction for an `n×n` block (Intra16x16 luma `n=16`, chroma DC quadrant `n=4`).
-fn dc_pred(top: Option<&[i32]>, left: Option<&[i32]>, n: usize) -> i32 {
+async fn dc_pred(top: Option<&[i32]>, left: Option<&[i32]>, n: usize) -> i32 {
     match (top, left) {
         (Some(t), Some(l)) => (t.iter().sum::<i32>() + l.iter().sum::<i32>() + n as i32) / (2 * n as i32),
         (Some(t), None) => (t.iter().sum::<i32>() + (n as i32) / 2) / n as i32,
@@ -1256,7 +1256,7 @@ fn dc_pred(top: Option<&[i32]>, left: Option<&[i32]>, n: usize) -> i32 {
 
 /// 🎨️ Plane-mode gradient prediction shared by Intra16x16 luma (`size=16`) and intra chroma (`size=8`), clause
 /// 8.3.3.4 / 8.3.4.4 (the `(5,32,6)` vs `(17,16,5)` rounding constants are the only difference between them).
-fn plane_pred(top: &[i32], left: &[i32], corner: i32, size: usize, h_mul: i32, h_round: i32, h_shift: u32) -> Vec<i32> {
+async fn plane_pred(top: &[i32], left: &[i32], corner: i32, size: usize, h_mul: i32, h_round: i32, h_shift: u32) -> Vec<i32> {
     let half = size / 2;
     let t = |i: i32| if i < 0 { corner } else { top[i as usize] };
     let l = |i: i32| if i < 0 { corner } else { left[i as usize] };
@@ -1294,30 +1294,30 @@ struct RefPlanes<'a> {
 }
 
 impl<'a> RefPlanes<'a> {
-    fn luma_px(&self, x: i32, y: i32) -> i32 {
+    async fn luma_px(&self, x: i32, y: i32) -> i32 {
         let cx = x.clamp(0, self.luma_w - 1);
         let cy = y.clamp(0, self.luma_h - 1);
         i32::from(self.luma[(cy * self.luma_w + cx) as usize])
     }
 
-    fn chroma_px(plane: &[u8], w: i32, h: i32, x: i32, y: i32) -> i32 {
+    async fn chroma_px(plane: &[u8], w: i32, h: i32, x: i32, y: i32) -> i32 {
         let cx = x.clamp(0, w - 1);
         let cy = y.clamp(0, h - 1);
         i32::from(plane[(cy * w + cx) as usize])
     }
 }
 
-fn clip_u8(v: i32) -> i32 {
+async fn clip_u8(v: i32) -> i32 {
     v.clamp(0, 255)
 }
 
 /// 🌊️ Raw (unrounded, unclipped) horizontal 6-tap sum at the half-pel position between luma columns `x`/`x+1`.
-fn h264_h6_raw(rp: &RefPlanes<'_>, x: i32, y: i32) -> i32 {
+async fn h264_h6_raw(rp: &RefPlanes<'_>, x: i32, y: i32) -> i32 {
     rp.luma_px(x - 2, y) - 5 * rp.luma_px(x - 1, y) + 20 * rp.luma_px(x, y) + 20 * rp.luma_px(x + 1, y) - 5 * rp.luma_px(x + 2, y) + rp.luma_px(x + 3, y)
 }
 
 /// 🌊️ Raw (unrounded, unclipped) vertical 6-tap sum at the half-pel position between luma rows `y`/`y+1`.
-fn h264_v6_raw(rp: &RefPlanes<'_>, x: i32, y: i32) -> i32 {
+async fn h264_v6_raw(rp: &RefPlanes<'_>, x: i32, y: i32) -> i32 {
     rp.luma_px(x, y - 2) - 5 * rp.luma_px(x, y - 1) + 20 * rp.luma_px(x, y) + 20 * rp.luma_px(x, y + 1) - 5 * rp.luma_px(x, y + 2) + rp.luma_px(x, y + 3)
 }
 
@@ -1325,7 +1325,7 @@ fn h264_v6_raw(rp: &RefPlanes<'_>, x: i32, y: i32) -> i32 {
 /// units (clause 8.4.2.2.1): the six named half-pel positions (`b`, `h`, `j`, plus the row-below/col-right
 /// helpers `m`/`s`) are derived via 6-tap filtering, and the twelve quarter-pel positions average their two
 /// nearest half/integer neighbors.
-fn luma_qpel_sample(rp: &RefPlanes<'_>, x0: i32, y0: i32, fx: i32, fy: i32) -> i32 {
+async fn luma_qpel_sample(rp: &RefPlanes<'_>, x0: i32, y0: i32, fx: i32, fy: i32) -> i32 {
     if fx == 0 && fy == 0 {
         return rp.luma_px(x0, y0);
     }
@@ -1369,7 +1369,7 @@ fn luma_qpel_sample(rp: &RefPlanes<'_>, x0: i32, y0: i32, fx: i32, fy: i32) -> i
 /// 🌊️ The `j` center half-pel's raw two-pass sum: the horizontal 6-tap filter's *unrounded* output at 6
 /// consecutive rows, combined with the vertical 6-tap filter (clause 8.4.2.2.1); callers finish with
 /// `(raw + 512) >> 10` and clip.
-fn h264_v6_raw_of_horiz(rp: &RefPlanes<'_>, x: i32, y: i32) -> i32 {
+async fn h264_v6_raw_of_horiz(rp: &RefPlanes<'_>, x: i32, y: i32) -> i32 {
     let r = |dy: i32| h264_h6_raw(rp, x, y + dy);
     r(-2) - 5 * r(-1) + 20 * r(0) + 20 * r(1) - 5 * r(2) + r(3)
 }
@@ -1377,7 +1377,7 @@ fn h264_v6_raw_of_horiz(rp: &RefPlanes<'_>, x: i32, y: i32) -> i32 {
 /// 🎯️ Bilinear chroma sample at 1/8-pel precision (clause 8.4.2.2.2): `mv_x8`/`mv_y8` are the chroma motion
 /// vector components in eighth-chroma-pel units (numerically identical to the luma quarter-pel MV, since
 /// chroma is half-resolution in 4:2:0).
-fn chroma_bilinear_sample(plane: &[u8], w: i32, h: i32, x: i32, y: i32, mv_x8: i32, mv_y8: i32) -> i32 {
+async fn chroma_bilinear_sample(plane: &[u8], w: i32, h: i32, x: i32, y: i32, mv_x8: i32, mv_y8: i32) -> i32 {
     let full_x = x + (mv_x8 >> 3);
     let full_y = y + (mv_y8 >> 3);
     let frac_x = mv_x8 & 7;
@@ -1391,7 +1391,7 @@ fn chroma_bilinear_sample(plane: &[u8], w: i32, h: i32, x: i32, y: i32, mv_x8: i
 
 /// 🎯️ Motion-compensates one `w×h` luma block at picture position `(px, py)` from `mv` (quarter-pel), writing
 /// samples into `out` (row-major, `w*h`).
-fn mc_luma_block(rp: &RefPlanes<'_>, px: i32, py: i32, w: usize, h: usize, mv: [i32; 2], out: &mut [i32]) {
+async fn mc_luma_block(rp: &RefPlanes<'_>, px: i32, py: i32, w: usize, h: usize, mv: [i32; 2], out: &mut [i32]) {
     for y in 0..h {
         for x in 0..w {
             let full_x = px + x as i32 + (mv[0] >> 2);
@@ -1407,7 +1407,7 @@ fn mc_luma_block(rp: &RefPlanes<'_>, px: i32, py: i32, w: usize, h: usize, mv: [
     clippy::too_many_arguments,
     reason = "one plane plus its geometry (dims, origin, size) plus the motion vector is the natural, self-describing parameter list for a block motion-compensation primitive; bundling them into a struct would just rename the same fields"
 )]
-fn mc_chroma_block(plane: &[u8], plane_w: i32, plane_h: i32, px: i32, py: i32, w: usize, h: usize, mv: [i32; 2], out: &mut [i32]) {
+async fn mc_chroma_block(plane: &[u8], plane_w: i32, plane_h: i32, px: i32, py: i32, w: usize, h: usize, mv: [i32; 2], out: &mut [i32]) {
     for y in 0..h {
         for x in 0..w {
             out[y * w + x] = chroma_bilinear_sample(plane, plane_w, plane_h, px + x as i32, py + y as i32, mv[0], mv[1]);
@@ -1418,7 +1418,7 @@ fn mc_chroma_block(plane: &[u8], plane_w: i32, plane_h: i32, px: i32, py: i32, w
 /// 🧭️ Median motion-vector predictor (clause 8.4.1.3): `A`/`B`/`C` are the left/above/above-right neighbors'
 /// `(mv, ref_idx)`; `D` is the above-left fallback used only when `C` is unavailable. The 16×8/8×16 single-
 /// neighbor shortcuts are handled by the caller (they only apply to those partition shapes).
-fn median_mv_predict(a: ([i32; 2], i8), b: ([i32; 2], i8), c: ([i32; 2], i8), ref_idx: i8) -> [i32; 2] {
+async fn median_mv_predict(a: ([i32; 2], i8), b: ([i32; 2], i8), c: ([i32; 2], i8), ref_idx: i8) -> [i32; 2] {
     let matches: Vec<[i32; 2]> = [a, b, c].iter().filter(|&&(_, r)| r == ref_idx).map(|&(mv, _)| mv).collect();
     if matches.len() == 1 {
         return matches[0];
@@ -1500,7 +1500,7 @@ const DEBLOCK_TC0: [[i32; 3]; 52] = [
 /// side has nonzero luma coefficients, `1` if the motion differs (reference frame, or either MV component by
 /// `>= 4` quarter-pel units), else `0` (no filtering).
 #[allow(clippy::too_many_arguments, reason = "boundary strength genuinely depends on this many independent per-block facts; bundling them into a struct would just rename the same inputs")]
-fn boundary_strength(is_mb_edge: bool, p_intra: bool, q_intra: bool, p_nnz: u8, q_nnz: u8, p_mv: [i32; 2], p_ref: i8, q_mv: [i32; 2], q_ref: i8) -> u8 {
+async fn boundary_strength(is_mb_edge: bool, p_intra: bool, q_intra: bool, p_nnz: u8, q_nnz: u8, p_mv: [i32; 2], p_ref: i8, q_mv: [i32; 2], q_ref: i8) -> u8 {
     if p_intra || q_intra {
         return if is_mb_edge { 4 } else { 3 };
     }
@@ -1519,7 +1519,7 @@ fn boundary_strength(is_mb_edge: bool, p_intra: bool, q_intra: bool, p_nnz: u8, 
 /// 🧮️ Clause 8.7.2.3's strong (`bS == 4`) luma sample filter for one row/column of 4 pixels straddling an
 /// edge; `p`/`q` are `[p3,p2,p1,p0]`/`[q0,q1,q2,q3]` (`p0`/`q0` adjacent to the edge), returned as the filtered
 /// `[p2,p1,p0,q0,q1,q2]` (only `p2`/`q2` change when `!(ap < beta)`/`!(aq < beta)`, spliced in by the caller).
-fn filter_luma_strong(p: [i32; 4], q: [i32; 4], alpha: i32, beta: i32) -> ([i32; 3], [i32; 3]) {
+async fn filter_luma_strong(p: [i32; 4], q: [i32; 4], alpha: i32, beta: i32) -> ([i32; 3], [i32; 3]) {
     let (p3, p2, p1, p0) = (p[0], p[1], p[2], p[3]);
     let (q0, q1, q2, q3) = (q[0], q[1], q[2], q[3]);
     let strong = (p0 - q0).abs() < alpha && (p1 - p0).abs() < beta && (q1 - q0).abs() < beta;
@@ -1538,7 +1538,7 @@ fn filter_luma_strong(p: [i32; 4], q: [i32; 4], alpha: i32, beta: i32) -> ([i32;
 
 /// 🧮️ Clause 8.7.2.3's normal (`bS` 1..3) luma sample filter, returning filtered `(p1, p0, q0, q1)`; `p1`/`q1`
 /// only change when the local activity is low enough (`ap < beta` / `aq < beta`).
-fn filter_luma_normal(p: [i32; 3], q: [i32; 3], alpha: i32, beta: i32, tc0: i32) -> Option<(i32, i32, i32, i32)> {
+async fn filter_luma_normal(p: [i32; 3], q: [i32; 3], alpha: i32, beta: i32, tc0: i32) -> Option<(i32, i32, i32, i32)> {
     let (p2, p1, p0) = (p[0], p[1], p[2]);
     let (q0, q1, q2) = (q[0], q[1], q[2]);
     if (p0 - q0).abs() >= alpha || (p1 - p0).abs() >= beta || (q1 - q0).abs() >= beta {
@@ -1556,7 +1556,7 @@ fn filter_luma_normal(p: [i32; 3], q: [i32; 3], alpha: i32, beta: i32, tc0: i32)
 }
 
 /// 🧮️ Chroma edge filter (clause 8.7.2.4), `bS` 1..3: filtered `(p0, q0)`.
-fn filter_chroma_normal(p1: i32, p0: i32, q0: i32, q1: i32, alpha: i32, beta: i32, tc: i32) -> Option<(i32, i32)> {
+async fn filter_chroma_normal(p1: i32, p0: i32, q0: i32, q1: i32, alpha: i32, beta: i32, tc: i32) -> Option<(i32, i32)> {
     if (p0 - q0).abs() >= alpha || (p1 - p0).abs() >= beta || (q1 - q0).abs() >= beta {
         return None;
     }
@@ -1565,7 +1565,7 @@ fn filter_chroma_normal(p1: i32, p0: i32, q0: i32, q1: i32, alpha: i32, beta: i3
 }
 
 /// 🧮️ Chroma edge filter, `bS == 4`: unconditional averaging (clause 8.7.2.4).
-fn filter_chroma_strong(p1: i32, p0: i32, q0: i32, q1: i32, alpha: i32, beta: i32) -> Option<(i32, i32)> {
+async fn filter_chroma_strong(p1: i32, p0: i32, q0: i32, q1: i32, alpha: i32, beta: i32) -> Option<(i32, i32)> {
     if (p0 - q0).abs() >= alpha || (p1 - p0).abs() >= beta || (q1 - q0).abs() >= beta {
         return None;
     }
@@ -1574,7 +1574,7 @@ fn filter_chroma_strong(p1: i32, p0: i32, q0: i32, q1: i32, alpha: i32, beta: i3
 /// 🧮️ Filters the 4 luma edges (macroblock edge + 3 internal, clause 8.7) of one 4-row segment straddling a
 /// vertical edge at picture column `edge_x`, rows `[y, y+4)`.
 #[allow(clippy::too_many_arguments, reason = "the deblocking filter's boundary-strength/threshold lookup genuinely needs this many independent per-edge facts")]
-fn deblock_vertical_segment(pic: &mut Picture, edge_x: usize, y: usize, is_mb_edge: bool, p_intra: bool, q_intra: bool, p_qp: i32, q_qp: i32, block_y: usize, p_block_x: usize, q_block_x: usize, a_off: i32, b_off: i32) {
+async fn deblock_vertical_segment(pic: &mut Picture, edge_x: usize, y: usize, is_mb_edge: bool, p_intra: bool, q_intra: bool, p_qp: i32, q_qp: i32, block_y: usize, p_block_x: usize, q_block_x: usize, a_off: i32, b_off: i32) {
     let lw4 = pic.luma4_width();
     let p_nnz = pic.nnz_luma[block_y * lw4 + p_block_x];
     let q_nnz = pic.nnz_luma[block_y * lw4 + q_block_x];
@@ -1616,7 +1616,7 @@ fn deblock_vertical_segment(pic: &mut Picture, edge_x: usize, y: usize, is_mb_ed
 /// 🧮️ Filters the 4 luma edges of one 4-column segment straddling a horizontal edge at picture row `edge_y`,
 /// columns `[x, x+4)` — the transpose of [`deblock_vertical_segment`].
 #[allow(clippy::too_many_arguments, reason = "same as deblock_vertical_segment, whose transpose this is")]
-fn deblock_horizontal_segment(pic: &mut Picture, x: usize, edge_y: usize, is_mb_edge: bool, p_intra: bool, q_intra: bool, p_qp: i32, q_qp: i32, block_x: usize, p_block_y: usize, q_block_y: usize, a_off: i32, b_off: i32) {
+async fn deblock_horizontal_segment(pic: &mut Picture, x: usize, edge_y: usize, is_mb_edge: bool, p_intra: bool, q_intra: bool, p_qp: i32, q_qp: i32, block_x: usize, p_block_y: usize, q_block_y: usize, a_off: i32, b_off: i32) {
     let lw4 = pic.luma4_width();
     let p_nnz = pic.nnz_luma[p_block_y * lw4 + block_x];
     let q_nnz = pic.nnz_luma[q_block_y * lw4 + block_x];
@@ -1659,7 +1659,7 @@ fn deblock_horizontal_segment(pic: &mut Picture, x: usize, edge_y: usize, is_mb_
 /// raster order), then all horizontal edges, each macroblock edge before its own internal edges. Luma only —
 /// chroma filtering is a scoped-out simplification of this decoder (see crate-level notes); harmless for this
 /// crate's own encoder output, which always sets `disable_deblocking_filter_idc = 1`.
-fn deblock_picture(pic: &mut Picture, sps: &SpsInfo, header: &SliceHeaderInfo) {
+async fn deblock_picture(pic: &mut Picture, sps: &SpsInfo, header: &SliceHeaderInfo) {
     if header.disable_deblocking_filter_idc == 1 {
         return;
     }
@@ -1721,7 +1721,7 @@ fn deblock_picture(pic: &mut Picture, sps: &SpsInfo, header: &SliceHeaderInfo) {
 /// encoder, which always disables the filter). `bS` is re-derived directly from the co-located luma 4×4
 /// block's side information rather than precisely reusing clause 8.7.2.1's luma-edge bS array at chroma
 /// sub-positions.
-fn deblock_chroma_mb_edges(pic: &mut Picture, sps: &SpsInfo, a_off: i32, b_off: i32) {
+async fn deblock_chroma_mb_edges(pic: &mut Picture, sps: &SpsInfo, a_off: i32, b_off: i32) {
     let (mb_width, mb_height) = (sps.pic_width_in_mbs, sps.pic_height_in_mbs);
     let lw4 = pic.luma4_width();
     let cw = pic.chroma_width();
@@ -1776,15 +1776,15 @@ struct Dpb {
 }
 
 impl Dpb {
-    fn new(max_num_ref_frames: u32) -> Self {
+    async fn new(max_num_ref_frames: u32) -> Self {
         Self { pictures: Vec::new(), max_num_ref_frames: (max_num_ref_frames as usize).max(1) }
     }
 
-    fn clear(&mut self) {
+    async fn clear(&mut self) {
         self.pictures.clear();
     }
 
-    fn push(&mut self, pic: Picture) {
+    async fn push(&mut self, pic: Picture) {
         self.pictures.push(pic);
         while self.pictures.len() > self.max_num_ref_frames {
             self.pictures.remove(0);
@@ -1794,7 +1794,7 @@ impl Dpb {
     /// 📜️ `RefPicList0`'s default initialization for P slices (clause 8.2.4.2.1): descending `PicNum`, i.e.
     /// most-recently-decoded reference first. This decoder rejects explicit reordering, so this *is*
     /// `RefPicList0`.
-    fn ref_list0(&self) -> Vec<&Picture> {
+    async fn ref_list0(&self) -> Vec<&Picture> {
         self.pictures.iter().rev().collect()
     }
 }
@@ -1804,7 +1804,7 @@ impl Dpb {
 /// 🎨️ 4:2:0 planes → RGBA, cropped to `width`×`height` (clause E.2.1's default YCbCr matrix, BT.601 full range
 /// — kept as a local, private duplicate of `remodel_image`'s identical JPEG conversion rather than a new
 /// public cross-crate dependency surface for one formula).
-fn ycbcr420_to_rgba(luma: &[u8], luma_stride: usize, cb: &[u8], cr: &[u8], chroma_stride: usize, width: u32, height: u32) -> remodel_image::ImageRgba8 {
+async fn ycbcr420_to_rgba(luma: &[u8], luma_stride: usize, cb: &[u8], cr: &[u8], chroma_stride: usize, width: u32, height: u32) -> remodel_image::ImageRgba8 {
     let mut out = remodel_image::ImageRgba8::new(width, height);
     for y in 0..height as usize {
         for x in 0..width as usize {
@@ -1833,13 +1833,13 @@ const GOLOMB_TO_INTER_CBP: [u8; 48] = [0, 16, 1, 2, 4, 8, 32, 3, 5, 10, 12, 15, 
 /// 🎚️ `QPc` as a function of `qPI = Clip3(0, 51, QPY + chroma_qp_index_offset)` (clause 8.5.8, Table 8-15).
 const CHROMA_QP_TABLE: [i32; 52] = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 29, 30, 31, 32, 32, 33, 34, 34, 35, 35, 36, 36, 37, 37, 37, 38, 38, 38, 39, 39, 39, 39];
 
-fn chroma_qp(luma_qp: i32, offset: i32) -> i32 {
+async fn chroma_qp(luma_qp: i32, offset: i32) -> i32 {
     CHROMA_QP_TABLE[(luma_qp + offset).clamp(0, 51) as usize]
 }
 
 /// 🎛️ `te(v)`, mapped Exp-Golomb (clause 9.1): a single inverted bit when `max_val == 1`, plain `ue(v)`
 /// otherwise (and always `0`, no bits consumed, when `max_val == 0`).
-fn read_te(b: &mut BitReader<'_>, max_val: u32) -> Result<u32, H264Error> {
+async fn read_te(b: &mut BitReader<'_>, max_val: u32) -> Result<u32, H264Error> {
     match max_val {
         0 => Ok(0),
         1 => Ok(1 - b.u1()?),
@@ -1849,21 +1849,21 @@ fn read_te(b: &mut BitReader<'_>, max_val: u32) -> Result<u32, H264Error> {
 
 /// 🧭️ Luma 4×4 block-scan index `n` (0..15) → its `(blockX, blockY)` position in the macroblock's 4×4 grid
 /// (clause 6.4.3): a raster scan of four 8×8 quadrants, each itself a raster scan of four 4×4 blocks.
-fn block4x4_grid_pos(n: usize) -> (u32, u32) {
+async fn block4x4_grid_pos(n: usize) -> (u32, u32) {
     let i8x8 = n / 4;
     let i4x4 = n % 4;
     (((i8x8 % 2) * 2 + i4x4 % 2) as u32, ((i8x8 / 2) * 2 + i4x4 / 2) as u32)
 }
 
 /// 🧭️ Chroma 4×4 quadrant index `n` (0..3) → its `(blockX, blockY)` position in the 8×8 chroma block's 2×2 grid.
-fn chroma_quad_pos(n: usize) -> (u32, u32) {
+async fn chroma_quad_pos(n: usize) -> (u32, u32) {
     ((n % 2) as u32, (n / 2) as u32)
 }
 
 /// 🔍️ `nC` neighbor lookup for luma 4×4 blocks: the neighbor's `total_coeff` if it has already been decoded
 /// (in-picture, and — since macroblocks/blocks decode in raster/scan order — necessarily earlier), else
 /// `None` (unavailable, matching clause 9.2.1's substitution for out-of-picture/not-yet-decoded neighbors).
-fn luma_nc(pic: &Picture, gx: i32, gy: i32) -> Option<u8> {
+async fn luma_nc(pic: &Picture, gx: i32, gy: i32) -> Option<u8> {
     if gx < 0 || gy < 0 || gx as u32 >= pic.mb_width * 4 || gy as u32 >= pic.mb_height * 4 {
         return None;
     }
@@ -1877,7 +1877,7 @@ fn luma_nc(pic: &Picture, gx: i32, gy: i32) -> Option<u8> {
 
 /// 🔍️ Left/above `intra4x4_pred_mode` neighbor for clause 8.3.1.1's mode prediction; unavailable or non-
 /// `Intra_4x4` neighbors substitute `2` (DC), per spec.
-fn intra4x4_mode_neighbor(pic: &Picture, gx: i32, gy: i32) -> u8 {
+async fn intra4x4_mode_neighbor(pic: &Picture, gx: i32, gy: i32) -> u8 {
     if gx < 0 || gy < 0 || gx as u32 >= pic.mb_width * 4 || gy as u32 >= pic.mb_height * 4 {
         return 2;
     }
@@ -1895,7 +1895,7 @@ fn intra4x4_mode_neighbor(pic: &Picture, gx: i32, gy: i32) -> u8 {
 
 /// 🎨️ Gathers a 4×4 luma block's intra-prediction neighbors from the picture buffer (clause 6.4.11.4 /
 /// 8.3.1.2.1): `top_right` unavailability substitutes the rightmost available top sample.
-fn gather_intra4_neighbors(pic: &Picture, gx: u32, gy: u32) -> Intra4Neighbors {
+async fn gather_intra4_neighbors(pic: &Picture, gx: u32, gy: u32) -> Intra4Neighbors {
     let (px, py) = (gx as i32 * 4, gy as i32 * 4);
     let top = pic.luma4_available(gx as i32, gy as i32 - 1).then(|| std::array::from_fn(|i| i32::from(pic.luma_at(px + i as i32, py - 1).unwrap_or(128))));
     let left = pic.luma4_available(gx as i32 - 1, gy as i32).then(|| std::array::from_fn(|i| i32::from(pic.luma_at(px - 1, py + i as i32).unwrap_or(128))));
@@ -1913,7 +1913,7 @@ fn gather_intra4_neighbors(pic: &Picture, gx: u32, gy: u32) -> Intra4Neighbors {
 
 /// 🎨️ Applies dequant + inverse transform to a raster-order coefficient block, adds `pred`, writes the
 /// result into `pic`'s luma plane at 4×4 grid `(gx, gy)`, and records `total_coeff` for `nC` prediction.
-fn reconstruct_luma4(pic: &mut Picture, gx: u32, gy: u32, pred: &[i32; 16], coeffs: &[i32; 16], qp: i32, total_coeff: u8) {
+async fn reconstruct_luma4(pic: &mut Picture, gx: u32, gy: u32, pred: &[i32; 16], coeffs: &[i32; 16], qp: i32, total_coeff: u8) {
     let residual = idct4x4(&dequant4x4(coeffs, qp));
     let mut block = [0i32; 16];
     for i in 0..16 {
@@ -1926,7 +1926,7 @@ fn reconstruct_luma4(pic: &mut Picture, gx: u32, gy: u32, pred: &[i32; 16], coef
 
 /// 🎨️ Intra chroma prediction (clause 8.3.4): `mode` 0=DC, 1=Horizontal, 2=Vertical, 3=Plane, applied
 /// identically to `cb`/`cr`. DC is computed per 4×4 quadrant per clause 8.3.4.1's four independent rules.
-fn predict_intra_chroma(plane: &[u8], stride: usize, mb_px: usize, mb_py: usize, mode: u8, top_avail: bool, left_avail: bool) -> [i32; 64] {
+async fn predict_intra_chroma(plane: &[u8], stride: usize, mb_px: usize, mb_py: usize, mode: u8, top_avail: bool, left_avail: bool) -> [i32; 64] {
     let top: Option<[i32; 8]> = top_avail.then(|| std::array::from_fn(|i| i32::from(plane[(mb_py - 1) * stride + mb_px + i])));
     let left: Option<[i32; 8]> = left_avail.then(|| std::array::from_fn(|i| i32::from(plane[(mb_py + i) * stride + mb_px - 1])));
     let corner = if top_avail && left_avail { i32::from(plane[(mb_py - 1) * stride + mb_px - 1]) } else { 128 };
@@ -1995,7 +1995,7 @@ fn predict_intra_chroma(plane: &[u8], stride: usize, mb_px: usize, mb_py: usize,
 /// position 0), and records `nC` bookkeeping. `cbp_chroma` `0` skips reading entirely (all-zero residual),
 /// `1` reads DC only, `2` reads DC and AC.
 #[allow(clippy::type_complexity, reason = "the return is just \"4 cb quadrant blocks, 4 cr quadrant blocks\", each already a self-explanatory raster 4x4; a wrapper struct would only rename these two fields")]
-fn read_chroma_residual(b: &mut BitReader<'_>, pic: &mut Picture, mb_x: u32, mb_y: u32, cbp_chroma: u8, qp_cb: i32, qp_cr: i32) -> Result<([[i32; 16]; 4], [[i32; 16]; 4]), H264Error> {
+async fn read_chroma_residual(b: &mut BitReader<'_>, pic: &mut Picture, mb_x: u32, mb_y: u32, cbp_chroma: u8, qp_cb: i32, qp_cr: i32) -> Result<([[i32; 16]; 4], [[i32; 16]; 4]), H264Error> {
     let mut cb_out = [[0i32; 16]; 4];
     let mut cr_out = [[0i32; 16]; 4];
     if cbp_chroma == 0 {
@@ -2050,7 +2050,7 @@ fn read_chroma_residual(b: &mut BitReader<'_>, pic: &mut Picture, mb_x: u32, mb_
 /// 📥️ Decodes one `I_NxN` (`Intra_4x4`, no 8×8-transform support) macroblock: per-block prediction-mode
 /// syntax, chroma pred mode, `coded_block_pattern`, optional `mb_qp_delta`, then luma/chroma residual —
 /// reconstructing pixel-by-pixel in 4×4 scan order so each block's neighbors are already available.
-fn decode_intra4x4_mb(b: &mut BitReader<'_>, pic: &mut Picture, mb_x: u32, mb_y: u32, pps: &PpsInfo, prev_qp: &mut i32) -> Result<(), H264Error> {
+async fn decode_intra4x4_mb(b: &mut BitReader<'_>, pic: &mut Picture, mb_x: u32, mb_y: u32, pps: &PpsInfo, prev_qp: &mut i32) -> Result<(), H264Error> {
     let mut modes = [0u8; 16];
     for (n, mode) in modes.iter_mut().enumerate() {
         let (bx, by) = block4x4_grid_pos(n);
@@ -2149,7 +2149,7 @@ fn decode_intra4x4_mb(b: &mut BitReader<'_>, pic: &mut Picture, mb_x: u32, mb_y:
 /// 📥️ Decodes one `Intra_16x16` macroblock: prediction mode / `CodedBlockPattern` are derived directly from
 /// `mb_type` (clause 7.4.5, Table 7-11), `mb_qp_delta` is always present, and the luma DC coefficients go
 /// through the extra Hadamard transform before splicing into each 4×4 AC block's position 0.
-fn decode_intra16x16_mb(b: &mut BitReader<'_>, pic: &mut Picture, mb_x: u32, mb_y: u32, code_num: u32, pps: &PpsInfo, prev_qp: &mut i32) -> Result<(), H264Error> {
+async fn decode_intra16x16_mb(b: &mut BitReader<'_>, pic: &mut Picture, mb_x: u32, mb_y: u32, code_num: u32, pps: &PpsInfo, prev_qp: &mut i32) -> Result<(), H264Error> {
     let pred_mode = (code_num % 4) as u8;
     let cbp_chroma = ((code_num / 4) % 3) as u8;
     let cbp_luma = if code_num < 12 { 0u8 } else { 15u8 };
@@ -2243,7 +2243,7 @@ fn decode_intra16x16_mb(b: &mut BitReader<'_>, pic: &mut Picture, mb_x: u32, mb_
 /// 📥️ Decodes one `I_PCM` macroblock (clause 7.3.5): byte-aligns, then copies 256 raw luma + 64+64 raw chroma
 /// samples verbatim — no prediction, transform or entropy coding. `TotalCoeff` for every 4×4 block is
 /// inferred as `16` (clause 7.4.5), and `QPY` is inferred as `0`, both per spec.
-fn decode_pcm_mb(b: &mut BitReader<'_>, pic: &mut Picture, mb_x: u32, mb_y: u32) -> Result<(), H264Error> {
+async fn decode_pcm_mb(b: &mut BitReader<'_>, pic: &mut Picture, mb_x: u32, mb_y: u32) -> Result<(), H264Error> {
     b.byte_align();
     let (px, py) = (mb_x as usize * 16, mb_y as usize * 16);
     let lw = pic.luma_width();
@@ -2286,7 +2286,7 @@ fn decode_pcm_mb(b: &mut BitReader<'_>, pic: &mut Picture, mb_x: u32, mb_y: u32)
 
 /// 🔍️ `(mv, ref_idx)` at 4×4 grid `(gx, gy)`; out-of-picture and never-written (intra, or genuinely not yet
 /// decoded) positions both read as `([0, 0], -1)` — the same "unavailable" substitution clause 8.4.1.3.2 uses.
-fn neighbor_mv_ref(pic: &Picture, gx: i32, gy: i32) -> ([i32; 2], i8) {
+async fn neighbor_mv_ref(pic: &Picture, gx: i32, gy: i32) -> ([i32; 2], i8) {
     if gx < 0 || gy < 0 || gx as u32 >= pic.mb_width * 4 || gy as u32 >= pic.mb_height * 4 {
         return ([0, 0], -1);
     }
@@ -2298,7 +2298,7 @@ fn neighbor_mv_ref(pic: &Picture, gx: i32, gy: i32) -> ([i32; 2], i8) {
 /// blocks wide, falling back to `D` (above-left) when `C` would fall in a not-yet-decoded macroblock later in
 /// the current row (clause 6.4.11.7) — the one genuinely order-dependent case among A/B/C/D for the whole-
 /// partition motion predictors this decoder supports (16×16/16×8/8×16/skip).
-fn neighbor_c_mv_ref(pic: &Picture, mb_x: u32, mb_y: u32, part_gx: i32, part_gy: i32, part_w4: i32) -> ([i32; 2], i8) {
+async fn neighbor_c_mv_ref(pic: &Picture, mb_x: u32, mb_y: u32, part_gx: i32, part_gy: i32, part_w4: i32) -> ([i32; 2], i8) {
     let c_gx = part_gx + part_w4;
     let c_gy = part_gy - 1;
     let c_mb_row = if c_gy >= 0 { c_gy / 4 } else { -1 };
@@ -2313,7 +2313,7 @@ fn neighbor_c_mv_ref(pic: &Picture, mb_x: u32, mb_y: u32, part_gx: i32, part_gy:
 /// 📥️ Decodes one `P_Skip` macroblock (implied by `mb_skip_run`, clause 7.3.4 / 8.4.1.1): no bits consumed
 /// beyond the skip run itself. Motion is `(0, 0)` when either macroblock neighbor is unavailable or either
 /// neighbor's own motion is `(0, 0)` against reference `0`; otherwise the usual median predictor.
-fn decode_p_skip_mb(pic: &mut Picture, mb_x: u32, mb_y: u32, ref0: &Picture, qp: i32) {
+async fn decode_p_skip_mb(pic: &mut Picture, mb_x: u32, mb_y: u32, ref0: &Picture, qp: i32) {
     let (gx0, gy0) = (mb_x as i32 * 4, mb_y as i32 * 4);
     let (mv_a, ref_a) = neighbor_mv_ref(pic, gx0 - 1, gy0);
     let (mv_b, ref_b) = neighbor_mv_ref(pic, gx0, gy0 - 1);
@@ -2377,7 +2377,7 @@ fn decode_p_skip_mb(pic: &mut Picture, mb_x: u32, mb_y: u32, ref0: &Picture, qp:
     clippy::too_many_arguments,
     reason = "these are the macroblock's own coordinates, the always-needed parsed-header context (pps/header), the reference list, and the running QP predictor — the natural, self-describing parameter list for a single-slice macroblock decoder with no surrounding decoder-state struct"
 )]
-fn decode_p_mb(b: &mut BitReader<'_>, pic: &mut Picture, mb_x: u32, mb_y: u32, code_num: u32, pps: &PpsInfo, header: &SliceHeaderInfo, ref_list0: &[&Picture], prev_qp: &mut i32) -> Result<(), H264Error> {
+async fn decode_p_mb(b: &mut BitReader<'_>, pic: &mut Picture, mb_x: u32, mb_y: u32, code_num: u32, pps: &PpsInfo, header: &SliceHeaderInfo, ref_list0: &[&Picture], prev_qp: &mut i32) -> Result<(), H264Error> {
     if code_num >= 3 {
         return Err(H264Error::Unsupported("P_8x8 sub-macroblock partitions"));
     }
@@ -2516,7 +2516,7 @@ fn decode_p_mb(b: &mut BitReader<'_>, pic: &mut Picture, mb_x: u32, mb_y: u32, c
 /// 🔀️ Dispatches one coded macroblock by `mb_type`: P slices see `0..5` as P partition types and `5..` as the
 /// I-macroblock table shifted by 5; I slices see the I-macroblock table directly.
 #[allow(clippy::too_many_arguments, reason = "same rationale as decode_p_mb, which this just dispatches to alongside the intra macroblock decoders")]
-fn decode_macroblock(b: &mut BitReader<'_>, pic: &mut Picture, mb_x: u32, mb_y: u32, pps: &PpsInfo, header: &SliceHeaderInfo, is_p_slice: bool, ref_list0: &[&Picture], prev_qp: &mut i32) -> Result<(), H264Error> {
+async fn decode_macroblock(b: &mut BitReader<'_>, pic: &mut Picture, mb_x: u32, mb_y: u32, pps: &PpsInfo, header: &SliceHeaderInfo, is_p_slice: bool, ref_list0: &[&Picture], prev_qp: &mut i32) -> Result<(), H264Error> {
     let mb_type = b.ue()?;
     let i_type = if is_p_slice {
         if mb_type < 5 {
@@ -2537,7 +2537,7 @@ fn decode_macroblock(b: &mut BitReader<'_>, pic: &mut Picture, mb_x: u32, mb_y: 
 /// 📥️ Decodes `slice_data()` (clause 7.3.4): the `mb_skip_run`-driven loop for P slices, dispatching each
 /// coded macroblock via [`decode_macroblock`]. Only a single slice per picture is supported (this decoder
 /// requires `first_mb_in_slice == 0` and consumes macroblocks until the whole picture is covered).
-fn decode_slice_data(b: &mut BitReader<'_>, pic: &mut Picture, sps: &SpsInfo, pps: &PpsInfo, header: &SliceHeaderInfo, ref_list0: &[&Picture]) -> Result<(), H264Error> {
+async fn decode_slice_data(b: &mut BitReader<'_>, pic: &mut Picture, sps: &SpsInfo, pps: &PpsInfo, header: &SliceHeaderInfo, ref_list0: &[&Picture]) -> Result<(), H264Error> {
     let total_mbs = sps.pic_width_in_mbs * sps.pic_height_in_mbs;
     let is_p_slice = header.slice_type_mod5 == 0;
     let mut mb_addr = header.first_mb_in_slice;
@@ -2596,7 +2596,7 @@ impl H264Decoder {
     /// entries (exactly [`probe_mp4`]'s `avcC` extraction format; classified by NAL type, order-
     /// independent). Rejects any non-baseline SPS/PPS feature immediately (see crate docs) rather than
     /// deferring the failure to the first `decode_sample` call.
-    pub fn new(sps_pps_nals: &[u8]) -> Result<Self, H264Error> {
+    pub async fn new(sps_pps_nals: &[u8]) -> Result<Self, H264Error> {
         let mut sps: Option<SpsInfo> = None;
         let mut pps: Option<PpsInfo> = None;
         let mut pos = 0usize;
@@ -2621,7 +2621,7 @@ impl H264Decoder {
 
     /// 🔧️ Overrides the AVCC NAL length-prefix size (default `4`, the overwhelmingly common `avcC` value);
     /// callers that extracted `nal_length_size` from a real `avcC` box should pass it through here.
-    pub fn with_nal_length_size(mut self, size: u8) -> Self {
+    pub async fn with_nal_length_size(mut self, size: u8) -> Self {
         self.nal_length_size = size;
         self
     }
@@ -2630,7 +2630,7 @@ impl H264Decoder {
     /// `2 * frame_num` approximation for `type == 2` (exact for the non-wrapping, all-reference-frame,
     /// P/I-only streams this decoder ever produces or consumes; ordering only ever matters for output — this
     /// decoder never reorders, so precision here is informational, not load-bearing).
-    fn compute_poc(&mut self, header: &SliceHeaderInfo, is_idr: bool) -> i32 {
+    async fn compute_poc(&mut self, header: &SliceHeaderInfo, is_idr: bool) -> i32 {
         match self.sps.pic_order_cnt_type {
             0 => {
                 let max_lsb = 1i32 << self.sps.log2_max_pic_order_cnt_lsb;
@@ -2655,7 +2655,7 @@ impl H264Decoder {
     /// 📥️ Decodes one AVCC-length-prefixed access unit (exactly one slice NAL, optionally alongside SEI/AUD
     /// NALs it skips) into a full RGBA frame. `Ok(None)` never occurs for this decoder's supported baseline
     /// P/I-only content — output is always immediate, never buffered pending reordering.
-    pub fn decode_sample(&mut self, nal_bytes: &[u8]) -> Result<Option<remodel_image::ImageRgba8>, H264Error> {
+    pub async fn decode_sample(&mut self, nal_bytes: &[u8]) -> Result<Option<remodel_image::ImageRgba8>, H264Error> {
         let nals = split_avcc_nals(nal_bytes, self.nal_length_size)?;
         let mut slice_nal: Option<NalUnit> = None;
         for raw in nals {
@@ -2710,7 +2710,7 @@ struct BitWriter {
 }
 
 impl BitWriter {
-    fn put_bit(&mut self, bit: u32) {
+    async fn put_bit(&mut self, bit: u32) {
         self.acc = (self.acc << 1) | (bit & 1);
         self.nbits += 1;
         if self.nbits == 8 {
@@ -2720,13 +2720,13 @@ impl BitWriter {
         }
     }
 
-    fn put_u(&mut self, v: u32, n: u8) {
+    async fn put_u(&mut self, v: u32, n: u8) {
         for i in (0..n).rev() {
             self.put_bit((v >> i) & 1);
         }
     }
 
-    fn put_ue(&mut self, v: u32) {
+    async fn put_ue(&mut self, v: u32) {
         let x = v + 1;
         let nbits = 32 - x.leading_zeros();
         for _ in 0..nbits - 1 {
@@ -2737,13 +2737,13 @@ impl BitWriter {
         }
     }
 
-    fn put_se(&mut self, v: i32) {
+    async fn put_se(&mut self, v: i32) {
         let code = if v <= 0 { (-v) as u32 * 2 } else { (v as u32) * 2 - 1 };
         self.put_ue(code);
     }
 
     /// 🏁️ `rbsp_trailing_bits()`: a `1` stop bit, then zero-padded to a byte boundary.
-    fn rbsp_trailing(&mut self) {
+    async fn rbsp_trailing(&mut self) {
         self.put_bit(1);
         while self.nbits != 0 {
             self.put_bit(0);
@@ -2752,7 +2752,7 @@ impl BitWriter {
 
     /// 🏁️ Mid-stream `pcm_alignment_zero_bit` padding: zero bits up to the next byte boundary, writing
     /// nothing at all when already aligned (unlike [`Self::rbsp_trailing`], which always emits a stop bit).
-    fn zero_align(&mut self) {
+    async fn zero_align(&mut self) {
         while self.nbits != 0 {
             self.put_bit(0);
         }
@@ -2761,7 +2761,7 @@ impl BitWriter {
 
 /// 🧹️ Inverse of [`strip_emulation_prevention`]: inserts `emulation_prevention_three_byte` (`00 00 0x` →
 /// `00 00 03 0x` for `x <= 3`) so the RBSP round-trips through a real NAL byte stream.
-fn add_emulation_prevention(rbsp: &[u8]) -> Vec<u8> {
+async fn add_emulation_prevention(rbsp: &[u8]) -> Vec<u8> {
     let mut out = Vec::with_capacity(rbsp.len());
     let mut zero_run = 0u32;
     for &byte in rbsp {
@@ -2775,7 +2775,7 @@ fn add_emulation_prevention(rbsp: &[u8]) -> Vec<u8> {
     out
 }
 
-fn write_nal(nal_ref_idc: u8, nal_unit_type: u8, rbsp: &[u8]) -> Vec<u8> {
+async fn write_nal(nal_ref_idc: u8, nal_unit_type: u8, rbsp: &[u8]) -> Vec<u8> {
     let mut out = vec![(nal_ref_idc << 5) | nal_unit_type];
     out.extend(add_emulation_prevention(rbsp));
     out
@@ -2783,7 +2783,7 @@ fn write_nal(nal_ref_idc: u8, nal_unit_type: u8, rbsp: &[u8]) -> Vec<u8> {
 
 /// ✍️ Length-prefixes `nal` with a 4-byte big-endian length, matching this crate's own AVCC framing
 /// (`H264Decoder`'s default `nal_length_size`).
-fn avcc_frame(nal: &[u8]) -> Vec<u8> {
+async fn avcc_frame(nal: &[u8]) -> Vec<u8> {
     let mut out = (nal.len() as u32).to_be_bytes().to_vec();
     out.extend_from_slice(nal);
     out
@@ -2792,7 +2792,7 @@ fn avcc_frame(nal: &[u8]) -> Vec<u8> {
 /// 🏗️ Builds a minimal baseline SPS+PPS pair for an `mb_w*16 × mb_h*16` picture: `pic_order_cnt_type = 2`
 /// (no extra POC fields), a single reference frame, deblocking always disabled (`disable_deblocking_filter_idc
 /// = 1` is written per-slice, but PPS still declares control present so the slice header carries it).
-fn h264_enc_sps_pps_nals(mb_w: u32, mb_h: u32) -> (Vec<u8>, Vec<u8>) {
+async fn h264_enc_sps_pps_nals(mb_w: u32, mb_h: u32) -> (Vec<u8>, Vec<u8>) {
     let mut sps = BitWriter::default();
     sps.put_u(66, 8);
     sps.put_u(0, 8);
@@ -2833,7 +2833,7 @@ fn h264_enc_sps_pps_nals(mb_w: u32, mb_h: u32) -> (Vec<u8>, Vec<u8>) {
 
 /// 🏗️ SPS+PPS in [`H264Decoder::new`]'s expected `(u16 length, NAL)*` format, for an `mb_w*16 × mb_h*16`
 /// picture — pass the result straight to `H264Decoder::new`.
-pub fn h264_enc_sps_pps(mb_w: u32, mb_h: u32) -> Vec<u8> {
+pub async fn h264_enc_sps_pps(mb_w: u32, mb_h: u32) -> Vec<u8> {
     let (sps, pps) = h264_enc_sps_pps_nals(mb_w, mb_h);
     let mut out = Vec::new();
     for nal in [&sps, &pps] {
@@ -2847,7 +2847,7 @@ pub fn h264_enc_sps_pps(mb_w: u32, mb_h: u32) -> Vec<u8> {
 /// entropy-coding-free round trip by construction — this crate's contract test for the whole NAL/slice-
 /// header/SPS-PPS/PCM-macroblock plumbing. `luma`/`cb`/`cr` must be exactly `mb_w*16*mb_h*16`/`mb_w*8*mb_h*8`
 /// samples (row-major); deblocking is disabled so the decoder returns these samples unchanged.
-pub fn h264_enc_i_pcm_sample(mb_w: u32, mb_h: u32, frame_num: u32, luma: &[u8], cb: &[u8], cr: &[u8]) -> Vec<u8> {
+pub async fn h264_enc_i_pcm_sample(mb_w: u32, mb_h: u32, frame_num: u32, luma: &[u8], cb: &[u8], cr: &[u8]) -> Vec<u8> {
     let mut s = BitWriter::default();
     s.put_ue(0);
     s.put_ue(7);
@@ -2888,7 +2888,7 @@ pub fn h264_enc_i_pcm_sample(mb_w: u32, mb_h: u32, frame_num: u32, luma: &[u8], 
 /// 🏗️ Encodes one whole-frame `P_Skip` slice (non-IDR, references `frame_num - 1`): every macroblock skipped,
 /// no residual/MV entropy coding at all — exercises the DPB reference lookup and the `mb_skip_run` slice-data
 /// path without needing CAVLC-coded content.
-pub fn h264_enc_p_skip_sample(mb_w: u32, mb_h: u32, frame_num: u32) -> Vec<u8> {
+pub async fn h264_enc_p_skip_sample(mb_w: u32, mb_h: u32, frame_num: u32) -> Vec<u8> {
     let mut s = BitWriter::default();
     s.put_ue(0);
     s.put_ue(5);
@@ -2909,7 +2909,7 @@ pub fn h264_enc_p_skip_sample(mb_w: u32, mb_h: u32, frame_num: u32) -> Vec<u8> {
 /// ✍️ Muxes pre-encoded JPEG frames into a minimal `mjpg`-codec MP4 via stdio's real
 /// `mp4::engine::encode_mp4`, fixture-synthesis only (no `avcC`, timescale fixed at milliseconds).
 /// Dimensions come from decoding `frames[0]`.
-pub fn write_mp4_mjpeg(frames: &[Vec<u8>], fps: f64) -> Vec<u8> {
+pub async fn write_mp4_mjpeg(frames: &[Vec<u8>], fps: f64) -> Vec<u8> {
     let (width, height) = frames.first().and_then(|f| remodel_image::decode_jpeg(f).ok()).map_or((0, 0), |img| (img.width, img.height));
     let delta = if fps > 0.0 { (1000.0 / fps).round() as u32 } else { 1000 }.max(1);
     let samples: Vec<_> = frames.iter().map(|data| Mp4Sample { data: data.clone(), duration: delta, cts_offset: 0, sync: true }).collect();
@@ -2925,7 +2925,7 @@ pub fn write_mp4_mjpeg(frames: &[Vec<u8>], fps: f64) -> Vec<u8> {
 
 /// 📐️ Recovers `(width, height)` from a raw SPS NAL (header byte + RBSP — [`h264_enc_sps_pps_nals`]'s
 /// own output shape) via this crate's own [`parse_nal`]/[`parse_sps`] — `(0, 0)` if not a valid SPS.
-fn sps_nal_dimensions(sps_nal: &[u8]) -> (u32, u32) {
+async fn sps_nal_dimensions(sps_nal: &[u8]) -> (u32, u32) {
     parse_nal(sps_nal).ok().filter(|nal| nal.nal_unit_type == 7).and_then(|nal| parse_sps(&nal.rbsp).ok()).map_or((0, 0), |sps| (sps.width_px, sps.height_px))
 }
 
@@ -2933,7 +2933,7 @@ fn sps_nal_dimensions(sps_nal: &[u8]) -> (u32, u32) {
 /// [`h264_enc_p_skip_sample`]) into a minimal `avc1`-codec MP4 via stdio's real
 /// `mp4::engine::encode_mp4`, fixture-synthesis only. Dimensions are recovered from `sps_nal` itself
 /// (as [`h264_enc_sps_pps_nals`] produces).
-pub fn write_mp4_avc(nal_samples: &[Vec<u8>], sps_nal: &[u8], pps_nal: &[u8], fps: f64) -> Vec<u8> {
+pub async fn write_mp4_avc(nal_samples: &[Vec<u8>], sps_nal: &[u8], pps_nal: &[u8], fps: f64) -> Vec<u8> {
     let (width, height) = sps_nal_dimensions(sps_nal);
     let delta = if fps > 0.0 { (1000.0 / fps).round() as u32 } else { 1000 }.max(1);
     let samples: Vec<_> = nal_samples.iter().map(|data| Mp4Sample { data: data.clone(), duration: delta, cts_offset: 0, sync: true }).collect();
@@ -2949,7 +2949,7 @@ pub fn write_mp4_avc(nal_samples: &[Vec<u8>], sps_nal: &[u8], pps_nal: &[u8], fp
 
 /// ✍️ Muxes pre-encoded JPEG frames into a minimal MJPG-codec AVI via stdio's real
 /// `avi::engine::encode_avi`, fixture-synthesis only. Dimensions come from decoding `frames[0]`.
-pub fn write_avi_mjpg(frames: &[Vec<u8>], fps: f64) -> Vec<u8> {
+pub async fn write_avi_mjpg(frames: &[Vec<u8>], fps: f64) -> Vec<u8> {
     let (width, height) = frames.first().and_then(|f| remodel_image::decode_jpeg(f).ok()).map_or((0, 0), |img| (img.width, img.height));
     let micro_sec_per_frame = if fps > 0.0 { (1_000_000.0 / fps).round() as u32 } else { 1_000_000 };
     let rate = if fps > 0.0 { (fps * 1000.0).round() as u32 } else { 1000 };
@@ -3009,7 +3009,7 @@ pub enum VideoProbe {
 /// 🔍️ Sniffs `bytes` as RIFF/AVI (`RIFF` magic) or ISO-BMFF/MP4 otherwise, and probes accordingly via
 /// stdio's real `decode_mp4`/`decode_avi`. Succeeds for any well-formed container regardless of
 /// codec — [`extract_frames`] is what may reject an undecodable codec.
-pub fn probe(bytes: &[u8]) -> Result<VideoProbe, VideoError> {
+pub async fn probe(bytes: &[u8]) -> Result<VideoProbe, VideoError> {
     if bytes.len() >= 4 && &bytes[0..4] == b"RIFF" {
         Ok(VideoProbe::Avi(probe_avi(bytes)?))
     } else {
@@ -3018,7 +3018,7 @@ pub fn probe(bytes: &[u8]) -> Result<VideoProbe, VideoError> {
 }
 
 /// 🏷️ A human/log-facing fourcc for a codec, for [`VideoError::UnsupportedCodec`] diagnostics.
-fn codec_fourcc_hint(codec: VideoCodec) -> FourCc {
+async fn codec_fourcc_hint(codec: VideoCodec) -> FourCc {
     match codec {
         VideoCodec::Avc => FourCc(*b"avc1"),
         VideoCodec::Hevc => FourCc(*b"hvc1"),
@@ -3041,7 +3041,7 @@ pub struct ExtractedFrame {
 /// 🔻️ Box-filtered (bilinear-sampled) downscale so the longer side is at most `max_long_edge_px`; a no-operation
 /// when already within budget or `max_long_edge_px == 0`. Built on [`remodel_image::ImageRgba8::sample_rgb`]
 /// rather than a new resize primitive in `remodel_image` itself.
-fn resize_to_max_long_edge(img: remodel_image::ImageRgba8, max_long_edge_px: u32) -> remodel_image::ImageRgba8 {
+async fn resize_to_max_long_edge(img: remodel_image::ImageRgba8, max_long_edge_px: u32) -> remodel_image::ImageRgba8 {
     if max_long_edge_px == 0 || img.width == 0 || img.height == 0 {
         return img;
     }
@@ -3069,7 +3069,7 @@ fn resize_to_max_long_edge(img: remodel_image::ImageRgba8, max_long_edge_px: u32
 }
 
 /// 🎞️ Which selected sample indices (post-`stride`/`max_frames`) to output.
-fn select_sample_indices(total: usize, opts: &VideoIngestOptions) -> Vec<usize> {
+async fn select_sample_indices(total: usize, opts: &VideoIngestOptions) -> Vec<usize> {
     let stride = opts.stride.max(1) as usize;
     let mut out = Vec::new();
     let mut i = 0usize;
@@ -3082,7 +3082,7 @@ fn select_sample_indices(total: usize, opts: &VideoIngestOptions) -> Vec<usize> 
 
 /// 🧬️ SPS/PPS as separate NAL lists (stdio's `Mp4Codec` shape) flattened back into
 /// [`H264Decoder::new`]'s expected `(u16 length, NAL)*` format.
-fn flatten_sps_pps(sps_list: &[Vec<u8>], pps_list: &[Vec<u8>]) -> Vec<u8> {
+async fn flatten_sps_pps(sps_list: &[Vec<u8>], pps_list: &[Vec<u8>]) -> Vec<u8> {
     let mut out = Vec::new();
     for nal in sps_list.iter().chain(pps_list.iter()) {
         out.extend_from_slice(&(nal.len() as u16).to_be_bytes());
@@ -3107,7 +3107,7 @@ pub struct FrameIter {
 }
 
 impl FrameIter {
-    fn new(samples: Vec<SampleInfo>, decoder: Option<H264Decoder>, opts: VideoIngestOptions) -> Self {
+    async fn new(samples: Vec<SampleInfo>, decoder: Option<H264Decoder>, opts: VideoIngestOptions) -> Self {
         let selected = select_sample_indices(samples.len(), &opts);
         Self { samples, decoder, opts, selected, cursor: 0, sample_idx: 0 }
     }
@@ -3116,7 +3116,7 @@ impl FrameIter {
 impl Iterator for FrameIter {
     type Item = Result<ExtractedFrame, VideoError>;
 
-    fn next(&mut self) -> Option<Self::Item> {
+    async fn next(&mut self) -> Option<Self::Item> {
         if self.cursor >= self.selected.len() {
             return None;
         }
@@ -3159,7 +3159,7 @@ impl Iterator for FrameIter {
 /// 📥️ Probes `bytes`, then returns a lazy [`FrameIter`] applying `opts`. Succeeds for MJPEG (either
 /// container) and baseline AVC (MP4 only); any other codec is [`VideoError::UnsupportedCodec`], routing the
 /// caller to a host decoder.
-pub fn extract_frames(bytes: &[u8], opts: &VideoIngestOptions) -> Result<FrameIter, VideoError> {
+pub async fn extract_frames(bytes: &[u8], opts: &VideoIngestOptions) -> Result<FrameIter, VideoError> {
     match probe(bytes)? {
         VideoProbe::Mp4(info) => match info.codec {
             VideoCodec::Mjpeg => Ok(FrameIter::new(info.samples, None, *opts)),
@@ -3182,16 +3182,16 @@ pub fn extract_frames(bytes: &[u8], opts: &VideoIngestOptions) -> Result<FrameIt
 mod tests {
     use super::*;
 
-    fn lcg(state: &mut u64) -> u8 {
+    async fn lcg(state: &mut u64) -> u8 {
         *state = state.wrapping_mul(6364136223846793005).wrapping_add(1442695040888963407);
         (*state >> 56) as u8
     }
 
-    fn fill_deterministic(state: &mut u64, len: usize) -> Vec<u8> {
+    async fn fill_deterministic(state: &mut u64, len: usize) -> Vec<u8> {
         (0..len).map(|_| lcg(state)).collect()
     }
 
-    fn synth_rgba(width: u32, height: u32, seed: u64) -> remodel_image::ImageRgba8 {
+    async fn synth_rgba(width: u32, height: u32, seed: u64) -> remodel_image::ImageRgba8 {
         let mut state = seed;
         let mut img = remodel_image::ImageRgba8::new(width, height);
         for px in img.data.chunks_mut(4) {
@@ -3205,21 +3205,21 @@ mod tests {
 
     // #region 🔖️CoreTests
     #[test]
-    fn fourcc_debug_and_display_render_printable_ascii() {
+    async fn fourcc_debug_and_display_render_printable_ascii() {
         let fcc = FourCc::new(b"avc1");
         assert_eq!(format!("{fcc:?}"), "FourCc(\"avc1\")");
         assert_eq!(format!("{fcc}"), "avc1");
     }
 
     #[test]
-    fn fourcc_debug_and_display_render_non_ascii_as_hex() {
+    async fn fourcc_debug_and_display_render_non_ascii_as_hex() {
         let fcc = FourCc([0x00, 0x01, 0xFF, 0x80]);
         assert_eq!(format!("{fcc:?}"), "FourCc(0001ff80)");
         assert_eq!(format!("{fcc}"), "0001ff80");
     }
 
     #[test]
-    fn video_error_display_messages() {
+    async fn video_error_display_messages() {
         assert_eq!(VideoError::Truncated.to_string(), "video container truncated");
         assert_eq!(VideoError::Container("x".into()).to_string(), "video container error: x");
         assert_eq!(VideoError::NoVideoTrack.to_string(), "container has no video track");
@@ -3228,7 +3228,7 @@ mod tests {
     }
 
     #[test]
-    fn h264_error_display_messages() {
+    async fn h264_error_display_messages() {
         assert_eq!(H264Error::Truncated.to_string(), "h264 bitstream truncated");
         assert_eq!(H264Error::Malformed("y").to_string(), "malformed h264 bitstream: y");
         assert_eq!(H264Error::Unsupported("z").to_string(), "unsupported h264 feature: z");
@@ -3243,7 +3243,7 @@ mod tests {
     /// recovered timestamp — proves the adapter's DTS-accumulation formula matches stdio's own
     /// `duration`/`cts_offset` semantics, not just that types line up.
     #[test]
-    fn write_mp4_mjpeg_probe_round_trip_reports_exact_frames() {
+    async fn write_mp4_mjpeg_probe_round_trip_reports_exact_frames() {
         let frames: Vec<Vec<u8>> = (0..5).map(|i| remodel_image::encode_jpeg(&synth_rgba(16, 16, 100 + i), 90)).collect();
         let mp4 = write_mp4_mjpeg(&frames, 10.0);
         let info = probe_mp4(&mp4).expect("probes");
@@ -3257,7 +3257,7 @@ mod tests {
     }
 
     #[test]
-    fn mp4_probe_detects_avc1_codec_from_avcc_sample_entry() {
+    async fn mp4_probe_detects_avc1_codec_from_avcc_sample_entry() {
         let (sps_nal, pps_nal) = h264_enc_sps_pps_nals(1, 1);
         let mp4 = write_mp4_avc(&[h264_enc_i_pcm_sample(1, 1, 0, &[0; 256], &[0; 64], &[0; 64])], &sps_nal, &pps_nal, 5.0);
         let info = probe_mp4(&mp4).expect("probes");
@@ -3270,20 +3270,20 @@ mod tests {
     /// 🔬 `probe_mp4` surfaces stdio's own decode error verbatim through `VideoError::Container`,
     /// rather than swallowing or misclassifying it.
     #[test]
-    fn mp4_probe_wraps_stdio_decode_errors_as_container() {
+    async fn mp4_probe_wraps_stdio_decode_errors_as_container() {
         assert!(matches!(probe_mp4(&[]), Err(VideoError::Container(_))));
         assert!(matches!(probe_mp4(b"not an mp4 at all"), Err(VideoError::Container(_))));
     }
 
     #[test]
-    fn mp4_probe_reports_no_video_track_when_none_present() {
+    async fn mp4_probe_reports_no_video_track_when_none_present() {
         let snapshot = Mp4Snapshot { schema: STDIO_MP4_DOCUMENT_SCHEMA.into(), ftyp: Mp4Ftyp { major_brand: "isom".into(), minor_version: 0, compatible_brands: vec!["isom".into()] }, movie: Default::default(), tracks: vec![] };
         let bytes = mp4_engine::encode_mp4(&snapshot);
         assert!(matches!(probe_mp4(&bytes), Err(VideoError::NoVideoTrack)));
     }
 
     #[test]
-    fn write_avi_mjpg_probe_round_trip_reports_exact_frames() {
+    async fn write_avi_mjpg_probe_round_trip_reports_exact_frames() {
         let frames: Vec<Vec<u8>> = (0..4).map(|i| remodel_image::encode_jpeg(&synth_rgba(8, 8, 300 + i), 85)).collect();
         let avi = write_avi_mjpg(&frames, 8.0);
         let info = probe_avi(&avi).expect("probes");
@@ -3298,12 +3298,12 @@ mod tests {
     }
 
     #[test]
-    fn avi_probe_rejects_non_riff_bytes() {
+    async fn avi_probe_rejects_non_riff_bytes() {
         assert!(matches!(probe_avi(b"not an avi at all!!"), Err(VideoError::Container(_))));
     }
 
     #[test]
-    fn avi_probe_reports_no_video_track_when_only_audio_present() {
+    async fn avi_probe_reports_no_video_track_when_only_audio_present() {
         let snapshot = AviSnapshot {
             schema: STDIO_AVI_DOCUMENT_SCHEMA.into(),
             main_header: AviMainHeader { micro_sec_per_frame: 0, max_bytes_per_sec: 0, padding_granularity: 0, flags: 0, total_frames: 0, initial_frames: 0, streams: 1, suggested_buffer_size: 0, width: 0, height: 0, reserved: vec![0, 0, 0, 0] },
@@ -3320,7 +3320,7 @@ mod tests {
     }
 
     #[test]
-    fn probe_dispatches_by_riff_magic() {
+    async fn probe_dispatches_by_riff_magic() {
         let frames: Vec<Vec<u8>> = (0..2).map(|i| remodel_image::encode_jpeg(&synth_rgba(4, 4, 900 + i), 80)).collect();
         let avi = write_avi_mjpg(&frames, 5.0);
         assert!(matches!(probe(&avi), Ok(VideoProbe::Avi(_))));
@@ -3329,7 +3329,7 @@ mod tests {
     }
 
     #[test]
-    fn codec_fourcc_hint_maps_each_codec_variant() {
+    async fn codec_fourcc_hint_maps_each_codec_variant() {
         assert_eq!(codec_fourcc_hint(VideoCodec::Avc), FourCc(*b"avc1"));
         assert_eq!(codec_fourcc_hint(VideoCodec::Hevc), FourCc(*b"hvc1"));
         assert_eq!(codec_fourcc_hint(VideoCodec::Vp9), FourCc(*b"vp09"));
@@ -3341,7 +3341,7 @@ mod tests {
 
     // #region 🔖️ExtractTests
     #[test]
-    fn extract_frames_mjpeg_applies_stride_and_max_frames_exactly() {
+    async fn extract_frames_mjpeg_applies_stride_and_max_frames_exactly() {
         let frames: Vec<Vec<u8>> = (0..10).map(|i| remodel_image::encode_jpeg(&synth_rgba(8, 8, 500 + i), 85)).collect();
         let mp4 = write_mp4_mjpeg(&frames, 10.0);
         let opts = VideoIngestOptions { stride: 3, max_frames: 2, max_long_edge_px: 0 };
@@ -3352,7 +3352,7 @@ mod tests {
     }
 
     #[test]
-    fn extract_frames_mjpeg_lazily_skips_undecoded_frames() {
+    async fn extract_frames_mjpeg_lazily_skips_undecoded_frames() {
         let mut frames: Vec<Vec<u8>> = (0..6).map(|i| remodel_image::encode_jpeg(&synth_rgba(8, 8, 600 + i), 85)).collect();
         for i in [1usize, 2, 4, 5] {
             frames[i] = vec![0xDE, 0xAD, 0xBE, 0xEF];
@@ -3367,7 +3367,7 @@ mod tests {
     }
 
     #[test]
-    fn extract_frames_applies_max_long_edge_downscale() {
+    async fn extract_frames_applies_max_long_edge_downscale() {
         let frames = vec![remodel_image::encode_jpeg(&synth_rgba(32, 16, 700), 90)];
         let mp4 = write_mp4_mjpeg(&frames, 5.0);
         let opts = VideoIngestOptions { stride: 1, max_frames: 0, max_long_edge_px: 16 };
@@ -3378,7 +3378,7 @@ mod tests {
     }
 
     #[test]
-    fn extract_frames_rejects_unsupported_codec_with_provenance() {
+    async fn extract_frames_rejects_unsupported_codec_with_provenance() {
         let track = Mp4Track {
             track_id: 1,
             timescale: 1000,
@@ -3398,7 +3398,7 @@ mod tests {
     }
 
     #[test]
-    fn extract_frames_mjpeg_propagates_jpeg_decode_error() {
+    async fn extract_frames_mjpeg_propagates_jpeg_decode_error() {
         let frames = vec![vec![0xDE, 0xAD, 0xBE, 0xEF]];
         let mp4 = write_mp4_mjpeg(&frames, 5.0);
         let opts = VideoIngestOptions { stride: 1, max_frames: 0, max_long_edge_px: 0 };
@@ -3407,7 +3407,7 @@ mod tests {
     }
 
     #[test]
-    fn extract_frames_avi_rejects_unsupported_codec_with_provenance() {
+    async fn extract_frames_avi_rejects_unsupported_codec_with_provenance() {
         let snapshot = AviSnapshot {
             schema: STDIO_AVI_DOCUMENT_SCHEMA.into(),
             main_header: AviMainHeader { micro_sec_per_frame: 166_667, max_bytes_per_sec: 0, padding_granularity: 0, flags: 0x10, total_frames: 0, initial_frames: 0, streams: 1, suggested_buffer_size: 0, width: 8, height: 8, reserved: vec![0, 0, 0, 0] },
@@ -3427,7 +3427,7 @@ mod tests {
     }
 
     #[test]
-    fn resize_to_max_long_edge_noop_when_budget_zero_or_already_small() {
+    async fn resize_to_max_long_edge_noop_when_budget_zero_or_already_small() {
         let same = resize_to_max_long_edge(synth_rgba(10, 5, 1), 0);
         assert_eq!((same.width, same.height), (10, 5));
         let same2 = resize_to_max_long_edge(synth_rgba(10, 5, 2), 20);
@@ -3435,26 +3435,26 @@ mod tests {
     }
 
     #[test]
-    fn resize_to_max_long_edge_downscales_preserving_aspect_ratio() {
+    async fn resize_to_max_long_edge_downscales_preserving_aspect_ratio() {
         let out = resize_to_max_long_edge(synth_rgba(40, 20, 3), 20);
         assert_eq!((out.width, out.height), (20, 10));
     }
 
     #[test]
-    fn select_sample_indices_treats_stride_zero_as_one_and_respects_max_frames() {
+    async fn select_sample_indices_treats_stride_zero_as_one_and_respects_max_frames() {
         let opts = VideoIngestOptions { stride: 0, max_frames: 3, max_long_edge_px: 0 };
         assert_eq!(select_sample_indices(10, &opts), vec![0, 1, 2]);
     }
 
     #[test]
-    fn select_sample_indices_max_frames_zero_is_unbounded() {
+    async fn select_sample_indices_max_frames_zero_is_unbounded() {
         let opts = VideoIngestOptions { stride: 4, max_frames: 0, max_long_edge_px: 0 };
         assert_eq!(select_sample_indices(10, &opts), vec![0, 4, 8]);
     }
     // #endregion 🔖️ExtractTests
 
     // #region 🔖️H264Tests
-    fn pcm_frame(mb_w: u32, mb_h: u32, seed: u64) -> (Vec<u8>, Vec<u8>, Vec<u8>) {
+    async fn pcm_frame(mb_w: u32, mb_h: u32, seed: u64) -> (Vec<u8>, Vec<u8>, Vec<u8>) {
         let mut state = seed;
         let luma = fill_deterministic(&mut state, (mb_w * 16 * mb_h * 16) as usize);
         let cb = fill_deterministic(&mut state, (mb_w * 8 * mb_h * 8) as usize);
@@ -3463,7 +3463,7 @@ mod tests {
     }
 
     #[test]
-    fn h264_i_pcm_single_frame_decodes_bit_exactly() {
+    async fn h264_i_pcm_single_frame_decodes_bit_exactly() {
         let (mb_w, mb_h) = (2, 2);
         let (luma, cb, cr) = pcm_frame(mb_w, mb_h, 42);
         let sps_pps = h264_enc_sps_pps(mb_w, mb_h);
@@ -3475,7 +3475,7 @@ mod tests {
     }
 
     #[test]
-    fn h264_p_skip_chain_propagates_the_i_pcm_frame_unchanged() {
+    async fn h264_p_skip_chain_propagates_the_i_pcm_frame_unchanged() {
         let (mb_w, mb_h) = (2, 2);
         let (luma, cb, cr) = pcm_frame(mb_w, mb_h, 7);
         let sps_pps = h264_enc_sps_pps(mb_w, mb_h);
@@ -3491,7 +3491,7 @@ mod tests {
     }
 
     #[test]
-    fn h264_truncated_nal_errors_not_panics() {
+    async fn h264_truncated_nal_errors_not_panics() {
         let (mb_w, mb_h) = (1, 1);
         let (luma, cb, cr) = pcm_frame(mb_w, mb_h, 99);
         let sps_pps = h264_enc_sps_pps(mb_w, mb_h);
@@ -3505,7 +3505,7 @@ mod tests {
     }
 
     #[test]
-    fn h264_garbage_bytes_error_not_panic() {
+    async fn h264_garbage_bytes_error_not_panic() {
         let (mb_w, mb_h) = (1, 1);
         let sps_pps = h264_enc_sps_pps(mb_w, mb_h);
         let mut state = 12345u64;
@@ -3517,14 +3517,14 @@ mod tests {
     }
 
     #[test]
-    fn h264_new_rejects_truncated_or_missing_sps_pps() {
+    async fn h264_new_rejects_truncated_or_missing_sps_pps() {
         assert!(matches!(H264Decoder::new(&[]), Err(H264Error::NoSps)));
         assert!(matches!(H264Decoder::new(&[0, 100]), Err(H264Error::Truncated)));
         assert!(matches!(H264Decoder::new(&[0, 1, 2]), Err(H264Error::NoSps)));
     }
 
     #[test]
-    fn h264_cabac_pps_is_unsupported() {
+    async fn h264_cabac_pps_is_unsupported() {
         let (sps, _) = h264_enc_sps_pps_nals(1, 1);
         let mut pps_bits = BitWriter::default();
         pps_bits.put_ue(0);
@@ -3553,7 +3553,7 @@ mod tests {
     }
 
     #[test]
-    fn h264_b_slice_is_unsupported() {
+    async fn h264_b_slice_is_unsupported() {
         let (mb_w, mb_h) = (1, 1);
         let sps_pps = h264_enc_sps_pps(mb_w, mb_h);
         let mut dec = H264Decoder::new(&sps_pps).expect("sps/pps parse");
@@ -3574,7 +3574,7 @@ mod tests {
     }
 
     #[test]
-    fn h264_decode_sample_rejects_nonzero_first_mb_in_slice() {
+    async fn h264_decode_sample_rejects_nonzero_first_mb_in_slice() {
         let (mb_w, mb_h) = (2, 1);
         let sps_pps = h264_enc_sps_pps(mb_w, mb_h);
         let mut dec = H264Decoder::new(&sps_pps).expect("sps/pps parse");
@@ -3594,7 +3594,7 @@ mod tests {
     }
 
     #[test]
-    fn h264_decode_sample_rejects_multiple_slice_nals_in_one_access_unit() {
+    async fn h264_decode_sample_rejects_multiple_slice_nals_in_one_access_unit() {
         let (mb_w, mb_h) = (1, 1);
         let sps_pps = h264_enc_sps_pps(mb_w, mb_h);
         let mut dec = H264Decoder::new(&sps_pps).expect("sps/pps parse");
@@ -3606,7 +3606,7 @@ mod tests {
     }
 
     #[test]
-    fn h264_new_rejects_non_baseline_profile() {
+    async fn h264_new_rejects_non_baseline_profile() {
         let mut sps = BitWriter::default();
         sps.put_u(77, 8);
         sps.rbsp_trailing();
@@ -3616,7 +3616,7 @@ mod tests {
     }
 
     #[test]
-    fn h264_new_rejects_pic_order_cnt_type_one() {
+    async fn h264_new_rejects_pic_order_cnt_type_one() {
         let mut sps = BitWriter::default();
         sps.put_u(66, 8);
         sps.put_u(0, 8);
@@ -3631,7 +3631,7 @@ mod tests {
     }
 
     #[test]
-    fn h264_new_rejects_pic_order_cnt_type_out_of_range() {
+    async fn h264_new_rejects_pic_order_cnt_type_out_of_range() {
         let mut sps = BitWriter::default();
         sps.put_u(66, 8);
         sps.put_u(0, 8);
@@ -3646,7 +3646,7 @@ mod tests {
     }
 
     #[test]
-    fn h264_new_rejects_interlaced_sps() {
+    async fn h264_new_rejects_interlaced_sps() {
         let mut sps = BitWriter::default();
         sps.put_u(66, 8);
         sps.put_u(0, 8);
@@ -3666,7 +3666,7 @@ mod tests {
     }
 
     #[test]
-    fn h264_new_rejects_multiple_slice_groups_pps() {
+    async fn h264_new_rejects_multiple_slice_groups_pps() {
         let (sps, _) = h264_enc_sps_pps_nals(1, 1);
         let mut pps_bits = BitWriter::default();
         pps_bits.put_ue(0);
@@ -3685,7 +3685,7 @@ mod tests {
     }
 
     #[test]
-    fn h264_new_rejects_transform_8x8_mode_pps() {
+    async fn h264_new_rejects_transform_8x8_mode_pps() {
         let (sps, _) = h264_enc_sps_pps_nals(1, 1);
         let mut pps_bits = BitWriter::default();
         pps_bits.put_ue(0);
@@ -3717,7 +3717,7 @@ mod tests {
     /// 🏗️ Like [`h264_enc_i_pcm_sample`] but with a configurable `disable_deblocking_filter_idc`/offsets, to
     /// exercise the in-loop deblocking filter path that this crate's own encoder never turns on.
     #[allow(clippy::too_many_arguments)]
-    fn i_pcm_sample_with_deblocking(mb_w: u32, mb_h: u32, frame_num: u32, luma: &[u8], cb: &[u8], cr: &[u8], disable_idc: u32, alpha_off_div2: i32, beta_off_div2: i32) -> Vec<u8> {
+    async fn i_pcm_sample_with_deblocking(mb_w: u32, mb_h: u32, frame_num: u32, luma: &[u8], cb: &[u8], cr: &[u8], disable_idc: u32, alpha_off_div2: i32, beta_off_div2: i32) -> Vec<u8> {
         let mut s = BitWriter::default();
         s.put_ue(0);
         s.put_ue(7);
@@ -3759,7 +3759,7 @@ mod tests {
     }
 
     #[test]
-    fn h264_i_pcm_with_deblocking_enabled_flat_picture_stays_flat() {
+    async fn h264_i_pcm_with_deblocking_enabled_flat_picture_stays_flat() {
         let (mb_w, mb_h) = (2, 2);
         let luma = vec![128u8; (mb_w * 16 * mb_h * 16) as usize];
         let cb = vec![128u8; (mb_w * 8 * mb_h * 8) as usize];
@@ -3773,7 +3773,7 @@ mod tests {
     }
 
     #[test]
-    fn split_annexb_nals_splits_multiple_start_coded_nals() {
+    async fn split_annexb_nals_splits_multiple_start_coded_nals() {
         let mut stream = Vec::new();
         stream.extend_from_slice(&[0, 0, 0, 1]);
         stream.extend_from_slice(&[0x67, 0xAA, 0xBB]);
@@ -3786,7 +3786,7 @@ mod tests {
     }
 
     #[test]
-    fn bitreader_ue_se_roundtrip_via_bitwriter() {
+    async fn bitreader_ue_se_roundtrip_via_bitwriter() {
         for v in [0u32, 1, 2, 5, 100, 1000] {
             let mut w = BitWriter::default();
             w.put_ue(v);
@@ -3804,14 +3804,14 @@ mod tests {
     }
 
     #[test]
-    fn bitreader_ue_rejects_overlong_leading_zero_run() {
+    async fn bitreader_ue_rejects_overlong_leading_zero_run() {
         let data = [0x00u8, 0x00, 0x00, 0x00, 0x80];
         let mut r = BitReader::new(&data);
         assert!(matches!(r.ue(), Err(H264Error::Malformed(_))));
     }
 
     #[test]
-    fn bitreader_more_rbsp_data_detects_remaining_bits() {
+    async fn bitreader_more_rbsp_data_detects_remaining_bits() {
         let empty = BitReader::new(&[]);
         assert!(!empty.more_rbsp_data());
         let only_stop_bit = BitReader::new(&[0x80]);
@@ -3824,7 +3824,7 @@ mod tests {
 
     // #region 🔖️H264PixelMathTests
     #[test]
-    fn predict_intra4x4_uniform_neighbors_yield_uniform_output_for_all_modes() {
+    async fn predict_intra4x4_uniform_neighbors_yield_uniform_output_for_all_modes() {
         let n = Intra4Neighbors { top: Some([100; 4]), left: Some([100; 4]), top_right: [100; 4], corner: 100 };
         for mode in 0..=8u8 {
             let out = predict_intra4x4(mode, &n).unwrap();
@@ -3833,7 +3833,7 @@ mod tests {
     }
 
     #[test]
-    fn predict_intra4x4_vertical_and_horizontal_require_their_neighbor() {
+    async fn predict_intra4x4_vertical_and_horizontal_require_their_neighbor() {
         let no_top = Intra4Neighbors { top: None, left: Some([1; 4]), top_right: [1; 4], corner: 1 };
         assert!(matches!(predict_intra4x4(0, &no_top), Err(H264Error::Malformed(_))));
         let no_left = Intra4Neighbors { top: Some([1; 4]), left: None, top_right: [1; 4], corner: 1 };
@@ -3841,13 +3841,13 @@ mod tests {
     }
 
     #[test]
-    fn predict_intra4x4_rejects_out_of_range_mode() {
+    async fn predict_intra4x4_rejects_out_of_range_mode() {
         let n = Intra4Neighbors { top: Some([0; 4]), left: Some([0; 4]), top_right: [0; 4], corner: 0 };
         assert!(matches!(predict_intra4x4(9, &n), Err(H264Error::Malformed(_))));
     }
 
     #[test]
-    fn predict_intra4x4_dc_mode_averages_available_neighbors() {
+    async fn predict_intra4x4_dc_mode_averages_available_neighbors() {
         let both = Intra4Neighbors { top: Some([4, 4, 4, 4]), left: Some([12, 12, 12, 12]), top_right: [0; 4], corner: 0 };
         assert_eq!(predict_intra4x4(2, &both).unwrap(), [8; 16]);
         let top_only = Intra4Neighbors { top: Some([4, 4, 4, 4]), left: None, top_right: [0; 4], corner: 0 };
@@ -3859,7 +3859,7 @@ mod tests {
     }
 
     #[test]
-    fn dc_pred_all_neighbor_availability_branches() {
+    async fn dc_pred_all_neighbor_availability_branches() {
         let top = [10i32, 20, 30, 40];
         let left = [1i32, 2, 3, 4];
         assert_eq!(dc_pred(Some(&top), Some(&left), 4), 14);
@@ -3869,7 +3869,7 @@ mod tests {
     }
 
     #[test]
-    fn plane_pred_flat_neighbors_are_a_noop() {
+    async fn plane_pred_flat_neighbors_are_a_noop() {
         let top16 = vec![100i32; 16];
         let left16 = vec![100i32; 16];
         assert_eq!(plane_pred(&top16, &left16, 100, 16, 5, 32, 6), vec![100i32; 256]);
@@ -3879,21 +3879,21 @@ mod tests {
     }
 
     #[test]
-    fn clip_u8_clamps_to_byte_range() {
+    async fn clip_u8_clamps_to_byte_range() {
         assert_eq!(clip_u8(-10), 0);
         assert_eq!(clip_u8(300), 255);
         assert_eq!(clip_u8(128), 128);
     }
 
     #[test]
-    fn norm_adjust_selects_scale_by_position_parity() {
+    async fn norm_adjust_selects_scale_by_position_parity() {
         assert_eq!(norm_adjust(0, 0, 0), 10);
         assert_eq!(norm_adjust(0, 1, 1), 13);
         assert_eq!(norm_adjust(0, 0, 1), 16);
     }
 
     #[test]
-    fn dequant4x4_applies_shift_and_rounding_branches() {
+    async fn dequant4x4_applies_shift_and_rounding_branches() {
         let coeffs = [1i32; 16];
         let low_qp = dequant4x4(&coeffs, 0);
         assert_eq!((low_qp[0], low_qp[1], low_qp[5]), (1, 1, 1));
@@ -3902,34 +3902,34 @@ mod tests {
     }
 
     #[test]
-    fn idct4x4_zero_input_is_zero() {
+    async fn idct4x4_zero_input_is_zero() {
         assert_eq!(idct4x4(&[0; 16]), [0; 16]);
     }
 
     #[test]
-    fn idct4x4_dc_only_produces_uniform_output() {
+    async fn idct4x4_dc_only_produces_uniform_output() {
         let mut d = [0i32; 16];
         d[0] = 64;
         assert_eq!(idct4x4(&d), [1; 16]);
     }
 
     #[test]
-    fn hadamard4_1d_basic_butterfly() {
+    async fn hadamard4_1d_basic_butterfly() {
         assert_eq!(hadamard4_1d([1, 2, 3, 4]), [10, -4, 0, -2]);
     }
 
     #[test]
-    fn transform_luma16x16_dc_zero_input_is_zero() {
+    async fn transform_luma16x16_dc_zero_input_is_zero() {
         assert_eq!(transform_luma16x16_dc(&[0; 16], 10), [0; 16]);
     }
 
     #[test]
-    fn transform_chroma_dc_computes_expected_values() {
+    async fn transform_chroma_dc_computes_expected_values() {
         assert_eq!(transform_chroma_dc(&[4, 0, 0, 0], 0), [1, 1, 1, 1]);
     }
 
     #[test]
-    fn chroma_qp_maps_table_and_clamps_offset() {
+    async fn chroma_qp_maps_table_and_clamps_offset() {
         assert_eq!(chroma_qp(0, 0), 0);
         assert_eq!(chroma_qp(30, 0), 29);
         assert_eq!(chroma_qp(51, 0), 39);
@@ -3937,7 +3937,7 @@ mod tests {
     }
 
     #[test]
-    fn read_te_variants_by_max_val() {
+    async fn read_te_variants_by_max_val() {
         assert_eq!(read_te(&mut BitReader::new(&[]), 0).unwrap(), 0);
         let mut inverted_one = BitReader::new(&[0b1000_0000]);
         assert_eq!(read_te(&mut inverted_one, 1).unwrap(), 0);
@@ -3946,7 +3946,7 @@ mod tests {
     }
 
     #[test]
-    fn block4x4_grid_pos_covers_full_4x4_grid_bijectively() {
+    async fn block4x4_grid_pos_covers_full_4x4_grid_bijectively() {
         let mut seen = std::collections::HashSet::new();
         for n in 0..16 {
             let pos = block4x4_grid_pos(n);
@@ -3957,7 +3957,7 @@ mod tests {
     }
 
     #[test]
-    fn chroma_quad_pos_maps_known_indices() {
+    async fn chroma_quad_pos_maps_known_indices() {
         assert_eq!(chroma_quad_pos(0), (0, 0));
         assert_eq!(chroma_quad_pos(1), (1, 0));
         assert_eq!(chroma_quad_pos(2), (0, 1));
@@ -3965,7 +3965,7 @@ mod tests {
     }
 
     #[test]
-    fn boundary_strength_covers_all_branches() {
+    async fn boundary_strength_covers_all_branches() {
         assert_eq!(boundary_strength(true, true, false, 0, 0, [0, 0], 0, [0, 0], 0), 4);
         assert_eq!(boundary_strength(false, true, true, 0, 0, [0, 0], 0, [0, 0], 0), 3);
         assert_eq!(boundary_strength(false, false, false, 1, 0, [0, 0], 0, [0, 0], 0), 2);
@@ -3975,7 +3975,7 @@ mod tests {
     }
 
     #[test]
-    fn median_mv_predict_single_ref_match_shortcut() {
+    async fn median_mv_predict_single_ref_match_shortcut() {
         let a = ([1, 1], 0i8);
         let b = ([2, 2], 0i8);
         let c = ([3, 3], 1i8);
@@ -3983,7 +3983,7 @@ mod tests {
     }
 
     #[test]
-    fn median_mv_predict_falls_back_to_componentwise_median() {
+    async fn median_mv_predict_falls_back_to_componentwise_median() {
         let a = ([1, 5], 0i8);
         let b = ([2, 6], 0i8);
         let c = ([9, 1], 0i8);
@@ -3991,46 +3991,46 @@ mod tests {
     }
 
     #[test]
-    fn filter_luma_strong_computes_expected_edge_samples() {
+    async fn filter_luma_strong_computes_expected_edge_samples() {
         let (pf, qf) = filter_luma_strong([10, 20, 30, 40], [45, 50, 60, 70], 100, 50);
         assert_eq!(pf, [24, 34, 38]);
         assert_eq!(qf, [45, 49, 57]);
     }
 
     #[test]
-    fn filter_luma_strong_passes_through_unfiltered_above_threshold() {
+    async fn filter_luma_strong_passes_through_unfiltered_above_threshold() {
         let (pf, qf) = filter_luma_strong([10, 20, 30, 40], [200, 190, 180, 170], 5, 5);
         assert_eq!(pf, [20, 30, 40]);
         assert_eq!(qf, [200, 190, 180]);
     }
 
     #[test]
-    fn filter_luma_normal_computes_expected_deltas_when_below_threshold() {
+    async fn filter_luma_normal_computes_expected_deltas_when_below_threshold() {
         assert_eq!(filter_luma_normal([50, 60, 70], [80, 90, 100], 100, 50, 3), Some((62, 71, 79, 87)));
     }
 
     #[test]
-    fn filter_luma_normal_returns_none_above_threshold() {
+    async fn filter_luma_normal_returns_none_above_threshold() {
         assert_eq!(filter_luma_normal([50, 60, 70], [200, 90, 100], 30, 50, 3), None);
     }
 
     #[test]
-    fn filter_chroma_normal_computes_expected_values_when_below_threshold() {
+    async fn filter_chroma_normal_computes_expected_values_when_below_threshold() {
         assert_eq!(filter_chroma_normal(60, 70, 80, 90, 100, 50, 5), Some((71, 79)));
     }
 
     #[test]
-    fn filter_chroma_normal_returns_none_above_threshold() {
+    async fn filter_chroma_normal_returns_none_above_threshold() {
         assert_eq!(filter_chroma_normal(60, 70, 250, 90, 30, 50, 5), None);
     }
 
     #[test]
-    fn filter_chroma_strong_averages_when_below_threshold() {
+    async fn filter_chroma_strong_averages_when_below_threshold() {
         assert_eq!(filter_chroma_strong(60, 70, 80, 90, 100, 50), Some((70, 80)));
     }
 
     #[test]
-    fn filter_chroma_strong_returns_none_above_threshold() {
+    async fn filter_chroma_strong_returns_none_above_threshold() {
         assert_eq!(filter_chroma_strong(60, 70, 250, 90, 30, 50), None);
     }
     // #endregion 🔖️H264PixelMathTests
@@ -4040,7 +4040,7 @@ mod tests {
         use super::*;
 
         #[test]
-        fn video_in_contract_i_pcm_then_p_skip_chain_via_full_mp4_pipeline() {
+        async fn video_in_contract_i_pcm_then_p_skip_chain_via_full_mp4_pipeline() {
             let (mb_w, mb_h) = (3, 2);
             let (width, height) = (mb_w * 16, mb_h * 16);
             let (luma, cb, cr) = pcm_frame(mb_w, mb_h, 2026);

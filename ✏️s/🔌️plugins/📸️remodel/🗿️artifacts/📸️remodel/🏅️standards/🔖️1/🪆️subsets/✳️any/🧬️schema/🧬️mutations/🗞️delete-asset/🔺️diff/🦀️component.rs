@@ -6,7 +6,7 @@ use crate::artifacts::remodel::diff::RemodelDiff;
 use crate::artifacts::remodel::RemodelSnapshot;
 
 //#region 🔖️Diff
-pub fn diff(payload: &super::mutation::DeleteAsset, base: &RemodelSnapshot) -> protocol::MutationOutcome<RemodelDiff> {
+pub async fn diff(payload: &super::mutation::DeleteAsset, base: &RemodelSnapshot) -> protocol::MutationOutcome<RemodelDiff> {
     if !base.assets.contains_key(&payload.key) {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Asset \"{}\" does not exist.", payload.key), [payload.key.clone()]);
     }

@@ -29,10 +29,10 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 //#region 🔖️ScalarCodec
 /// 🔤️ Quoted-string encode/decode — the only value kind that can contain a raw space, used to
 /// wrap the JSON form of the three enum-typed fields.
-fn enc_str(s: &str) -> String {
+async fn enc_str(s: &str) -> String {
     format!("\"{}\"", s.replace('\\', "\\\\").replace('"', "\\\""))
 }
-fn dec_str(s: &str) -> Result<String, String> {
+async fn dec_str(s: &str) -> Result<String, String> {
     let inner = s.strip_prefix('"').and_then(|s| s.strip_suffix('"')).ok_or_else(|| format!("expected quoted string, got {s:?}"))?;
     let mut out = String::with_capacity(inner.len());
     let mut chars = inner.chars();
@@ -50,23 +50,23 @@ fn dec_str(s: &str) -> Result<String, String> {
     }
     Ok(out)
 }
-fn enc_json<T: serde::Serialize>(value: &T) -> String {
+async fn enc_json<T: serde::Serialize>(value: &T) -> String {
     enc_str(&serde_json::to_string(value).expect("en1992 mutation payload field always serializes"))
 }
-fn dec_json<T: serde::de::DeserializeOwned>(s: &str) -> Result<T, String> {
+async fn dec_json<T: serde::de::DeserializeOwned>(s: &str) -> Result<T, String> {
     serde_json::from_str(&dec_str(s)?).map_err(|e| e.to_string())
 }
-fn dec_f64(s: &str) -> Result<f64, String> {
+async fn dec_f64(s: &str) -> Result<f64, String> {
     s.parse().map_err(|e: std::num::ParseFloatError| e.to_string())
 }
-fn dec_bool(s: &str) -> Result<bool, String> {
+async fn dec_bool(s: &str) -> Result<bool, String> {
     s.parse().map_err(|e: std::str::ParseBoolError| e.to_string())
 }
 //#endregion 🔖️ScalarCodec
 
 //#region 🔖️Tokenizer
 /// 🔡️ Splits `key=value` tokens on plain spaces, EXCEPT spaces inside a `"..."` quoted value.
-fn tokenize_args(rest: &str) -> Vec<String> {
+async fn tokenize_args(rest: &str) -> Vec<String> {
     let mut tokens = Vec::new();
     let mut current = String::new();
     let mut in_quotes = false;
@@ -96,13 +96,13 @@ fn tokenize_args(rest: &str) -> Vec<String> {
     }
     tokens
 }
-fn parse_args(rest: &str) -> Result<std::collections::BTreeMap<String, String>, String> {
+async fn parse_args(rest: &str) -> Result<std::collections::BTreeMap<String, String>, String> {
     tokenize_args(rest).into_iter().map(|token| token.split_once('=').map(|(k, v)| (k.to_string(), v.to_string())).ok_or_else(|| format!("bad arg token {token:?}"))).collect()
 }
 //#endregion 🔖️Tokenizer
 
 //#region 🔖️OpText
-fn print_en1992_mutation(mutation: &En1992Mutation) -> String {
+async fn print_en1992_mutation(mutation: &En1992Mutation) -> String {
     match mutation {
         En1992Mutation::ChangeAnnex(p) => format!("change-annex new-annex={}", enc_json(&p.new_annex)),
         En1992Mutation::ChangeMEdKnm(p) => format!("change-m-ed-knm new-m_ed_knm={}", p.new_m_ed_knm),
@@ -142,7 +142,7 @@ fn print_en1992_mutation(mutation: &En1992Mutation) -> String {
     }
 }
 
-fn parse_en1992_mutation(line: &str) -> Result<En1992Mutation, String> {
+async fn parse_en1992_mutation(line: &str) -> Result<En1992Mutation, String> {
     let (keyword, rest) = line.split_once(' ').unwrap_or((line, ""));
     let args = parse_args(rest)?;
     let arg = |k: &str| args.get(k).cloned().ok_or_else(|| format!("en1992 mutation: missing arg '{k}' for '{keyword}'"));
@@ -187,10 +187,10 @@ fn parse_en1992_mutation(line: &str) -> Result<En1992Mutation, String> {
 }
 
 impl protocol::OpText for En1992Mutation {
-    fn print_op(&self) -> String {
+    async fn print_op(&self) -> String {
         print_en1992_mutation(self)
     }
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
+    async fn parse_op(line: &str) -> Result<Self, store::TextError> {
         parse_en1992_mutation(line).map_err(|e| store::TextError::new(e, store::TextSpan::at(1, 1)))
     }
 }
@@ -199,36 +199,36 @@ impl protocol::OpText for En1992Mutation {
 //#region 🔖️OpBinaryCodec
 /// 🎞️ Every variant's binary form is `tag u8 | value`; scalar fields write their native binary
 /// form directly, the three enum-typed fields go through the same JSON bridge as `OpText` above.
-fn write_str_bin(out: &mut Vec<u8>, s: &str) {
+async fn write_str_bin(out: &mut Vec<u8>, s: &str) {
     store::pack_rt::write_varint_u64(out, s.len() as u64);
     out.extend_from_slice(s.as_bytes());
 }
-fn read_str_bin(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
+async fn read_str_bin(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
     let len = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
     let bytes = reader.read_bytes(len).map_err(|e| e.to_string())?;
     String::from_utf8(bytes.to_vec()).map_err(|e| e.to_string())
 }
-fn write_json_bin<T: serde::Serialize>(out: &mut Vec<u8>, value: &T) {
+async fn write_json_bin<T: serde::Serialize>(out: &mut Vec<u8>, value: &T) {
     write_str_bin(out, &serde_json::to_string(value).expect("en1992 mutation payload field always serializes"));
 }
-fn read_json_bin<T: serde::de::DeserializeOwned>(reader: &mut store::ByteReader<'_>) -> Result<T, String> {
+async fn read_json_bin<T: serde::de::DeserializeOwned>(reader: &mut store::ByteReader<'_>) -> Result<T, String> {
     serde_json::from_str(&read_str_bin(reader)?).map_err(|e| e.to_string())
 }
-fn write_f64_bin(out: &mut Vec<u8>, v: f64) {
+async fn write_f64_bin(out: &mut Vec<u8>, v: f64) {
     out.extend_from_slice(&v.to_le_bytes());
 }
-fn read_f64_bin(reader: &mut store::ByteReader<'_>) -> Result<f64, String> {
+async fn read_f64_bin(reader: &mut store::ByteReader<'_>) -> Result<f64, String> {
     reader.read_f64_le().map_err(|e| e.to_string())
 }
-fn write_bool_bin(out: &mut Vec<u8>, v: bool) {
+async fn write_bool_bin(out: &mut Vec<u8>, v: bool) {
     out.push(if v { 1 } else { 0 });
 }
-fn read_bool_bin(reader: &mut store::ByteReader<'_>) -> Result<bool, String> {
+async fn read_bool_bin(reader: &mut store::ByteReader<'_>) -> Result<bool, String> {
     Ok(reader.read_u8().map_err(|e| e.to_string())? != 0)
 }
 
 impl protocol::OpBinary for En1992Mutation {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         let tag: u8 = match self {
             En1992Mutation::ChangeAnnex(_) => 0,
             En1992Mutation::ChangeMEdKnm(_) => 1,
@@ -307,7 +307,7 @@ impl protocol::OpBinary for En1992Mutation {
         Ok(out)
     }
 
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         let mut reader = store::ByteReader::new(bytes);
         let malformed = |what: &'static str, offset: usize, detail: String| protocol::ProtocolError::Malformed { what, offset: offset as u64, detail };
         let _format = reader.read_u8().map_err(|e| malformed("op format", 0, e.to_string()))?;
@@ -357,7 +357,7 @@ impl protocol::OpBinary for En1992Mutation {
 //#region 🔖️DemoCases
 /// 🧪️ One representative value per variant — reused by the round-trip law test below.
 #[cfg(test)]
-pub(crate) fn demo_mutation_cases() -> Vec<En1992Mutation> {
+pub(crate) async fn demo_mutation_cases() -> Vec<En1992Mutation> {
     vec![
         En1992Mutation::ChangeAnnex(ChangeAnnex { new_annex: crate::document::AnnexChoice::En }),
         En1992Mutation::ChangeMEdKnm(ChangeMEdKnm { new_m_ed_knm: 150.0 }),
@@ -405,7 +405,7 @@ mod tests {
     use protocol::{OpBinary, OpText};
 
     #[test]
-    fn op_text_binary_roundtrip_law() {
+    async fn op_text_binary_roundtrip_law() {
         for mutation in demo_mutation_cases() {
             let printed = mutation.print_op();
             assert!(!printed.contains('\n'), "print_op must be one line, got {printed:?}");

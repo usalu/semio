@@ -31,28 +31,28 @@ pub mod derived_construction {
         type Mutation = TiffMutation;
         type Diff = TiffDiff;
 
-        fn empty() -> Self {
+        async fn empty() -> Self {
             Self { snapshot: TiffSnapshot::default(), diagnostics: Vec::new() }
         }
 
-        fn from_snapshot(snapshot: Self::Snapshot) -> Self {
+        async fn from_snapshot(snapshot: Self::Snapshot) -> Self {
             Self { snapshot, diagnostics: Vec::new() }
         }
 
-        fn from_text(text: &str) -> Result<Self, store::TextError> {
+        async fn from_text(text: &str) -> Result<Self, store::TextError> {
             Ok(Self::from_snapshot(<TiffSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
 
-        fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
+        async fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
             Ok(Self::from_snapshot(<TiffSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
         }
 
-        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
+        async fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let diff = crate::artifacts::tiff::standards::v6_0::subsets::any::schema::mutations::apply_tiff_mutation(&mut self.snapshot, &mutation);
             (self, diff)
         }
 
-        fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
+        async fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
             self.snapshot = <TiffDiff as protocol::MutationDiff<TiffSnapshot>>::apply(&diff, &self.snapshot)?;
             Ok(self)
         }
@@ -60,7 +60,7 @@ pub mod derived_construction {
         /// 🛡️ Re-runs the honestly-scope-limited Baseline TIFF check -- always SOFT at this schema,
         /// so `build()` never fails; the diagnostics still surface via the analyzer/composer/
         /// validator paths for anyone inspecting them.
-        fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
+        async fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
             let _ = check_tiff_baseline_conformance(&self.snapshot);
             if self.diagnostics.is_empty() {
                 Ok(self.snapshot)
@@ -76,7 +76,7 @@ pub mod derived_construction {
         use super::*;
 
         #[test]
-        fn pass_through_build_never_fails_on_conformance_grounds() {
+        async fn pass_through_build_never_fails_on_conformance_grounds() {
             let snapshot = TiffBaselineBuilderConstruction::empty().build().expect("all conformance findings are soft by policy; build must succeed");
             assert!(snapshot.ifds.is_empty());
         }
@@ -104,11 +104,11 @@ pub mod derived_analysis {
     pub const CODE_TILED_NOT_BASELINE: &str = "stdio.tiff.baseline.tiled-not-baseline";
     pub const CODE_MISSING_STRIP_OFFSETS: &str = "stdio.tiff.baseline.missing-strip-offsets";
 
-    fn soft(code: &'static str, message: String) -> Diagnostic {
+    async fn soft(code: &'static str, message: String) -> Diagnostic {
         Diagnostic { code: FaultCode::new(code), severity: Severity::Warning, span: TextSpan::at(1, 1), message, expected: None, scope: FaultScope::default() }
     }
 
-    fn ifd0_u32_list(snapshot: &TiffSnapshot, tag: u16) -> Vec<u32> {
+    async fn ifd0_u32_list(snapshot: &TiffSnapshot, tag: u16) -> Vec<u32> {
         match snapshot.ifds.first().and_then(|ifd| ifd.entries.iter().find(|t| t.tag == tag)) {
             Some(t) => match &t.values {
                 TiffValues::Short(v) => v.iter().map(|&x| x as u32).collect(),
@@ -122,7 +122,7 @@ pub mod derived_analysis {
     /// 🛡️ Real Baseline TIFF conformance check against one already-decoded `TiffSnapshot`. Shared
     /// single source of truth: `TiffBaselineComposer::compose` and the registered
     /// `SubsetValidator` both call this.
-    pub fn check_tiff_baseline_conformance(snapshot: &TiffSnapshot) -> Vec<Diagnostic> {
+    pub async fn check_tiff_baseline_conformance(snapshot: &TiffSnapshot) -> Vec<Diagnostic> {
         let mut out = Vec::new();
 
         let Some(ifd0) = snapshot.ifds.first() else {
@@ -174,11 +174,11 @@ pub mod derived_analysis {
         type Parts = TiffParts;
         const DIALECT: Dialect = DIALECT;
 
-        fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
+        async fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
             TiffAnyAnalyzer::sniff(source)
         }
 
-        fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
+        async fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
             let inner = TiffAnyAnalyzer::analyze(sources);
             let mut diagnostics = inner.diagnostics.clone();
             if let Some(snapshot) = &inner.parts.snapshot {
@@ -194,11 +194,11 @@ pub mod derived_analysis {
         use super::*;
         use crate::artifacts::tiff::standards::v6_0::subsets::any::schema::snapshot::{TiffByteOrder, TiffFieldType, TiffIfd, TiffTag};
 
-        fn tag(id: u16, kind: TiffFieldType, values: TiffValues) -> TiffTag {
+        async fn tag(id: u16, kind: TiffFieldType, values: TiffValues) -> TiffTag {
             TiffTag { tag: id, kind, values }
         }
 
-        fn snapshot_with(width: u32, height: u32, pixels: Vec<u8>) -> TiffSnapshot {
+        async fn snapshot_with(width: u32, height: u32, pixels: Vec<u8>) -> TiffSnapshot {
             TiffSnapshot {
                 schema: "stdio.tiff".into(),
                 byte_order: TiffByteOrder::LittleEndian,
@@ -217,7 +217,7 @@ pub mod derived_analysis {
         }
 
         #[test]
-        fn no_ifd_is_flagged_soft() {
+        async fn no_ifd_is_flagged_soft() {
             let snapshot = TiffSnapshot::default();
             let diagnostics = check_tiff_baseline_conformance(&snapshot);
             assert!(diagnostics.iter().any(|d| d.code.0 == CODE_NO_IFD && d.severity == Severity::Warning), "got {diagnostics:?}");
@@ -225,28 +225,28 @@ pub mod derived_analysis {
         }
 
         #[test]
-        fn degenerate_zero_dimensions_are_flagged_soft() {
+        async fn degenerate_zero_dimensions_are_flagged_soft() {
             let snapshot = snapshot_with(0, 0, Vec::new());
             let diagnostics = check_tiff_baseline_conformance(&snapshot);
             assert!(diagnostics.iter().any(|d| d.code.0 == CODE_DEGENERATE_RASTER && d.severity == Severity::Warning), "got {diagnostics:?}");
         }
 
         #[test]
-        fn rgba_length_mismatch_is_flagged_soft() {
+        async fn rgba_length_mismatch_is_flagged_soft() {
             let snapshot = snapshot_with(4, 4, vec![0u8; 4]); // way too short for 4x4 RGBA
             let diagnostics = check_tiff_baseline_conformance(&snapshot);
             assert!(diagnostics.iter().any(|d| d.code.0 == CODE_DEGENERATE_RASTER), "got {diagnostics:?}");
         }
 
         #[test]
-        fn well_formed_raster_has_no_findings() {
+        async fn well_formed_raster_has_no_findings() {
             let snapshot = snapshot_with(3, 2, vec![0u8; 3 * 2 * 4]);
             let diagnostics = check_tiff_baseline_conformance(&snapshot);
             assert!(diagnostics.is_empty(), "expected zero findings for a fully baseline-conformant IFD, got {diagnostics:?}");
         }
 
         #[test]
-        fn unsupported_compression_is_flagged_soft() {
+        async fn unsupported_compression_is_flagged_soft() {
             let mut snapshot = snapshot_with(2, 2, vec![0u8; 2 * 2 * 4]);
             snapshot.ifds[0].entries.iter_mut().find(|t| t.tag == 259).unwrap().values = TiffValues::Short(vec![5]); // LZW
             let diagnostics = check_tiff_baseline_conformance(&snapshot);
@@ -254,7 +254,7 @@ pub mod derived_analysis {
         }
 
         #[test]
-        fn unsupported_bits_per_sample_is_flagged_soft() {
+        async fn unsupported_bits_per_sample_is_flagged_soft() {
             let mut snapshot = snapshot_with(2, 2, vec![0u8; 2 * 2 * 4]);
             snapshot.ifds[0].entries.iter_mut().find(|t| t.tag == 258).unwrap().values = TiffValues::Short(vec![16]);
             let diagnostics = check_tiff_baseline_conformance(&snapshot);
@@ -262,7 +262,7 @@ pub mod derived_analysis {
         }
 
         #[test]
-        fn tiled_organization_is_flagged_soft() {
+        async fn tiled_organization_is_flagged_soft() {
             let mut snapshot = snapshot_with(2, 2, vec![0u8; 2 * 2 * 4]);
             snapshot.ifds[0].entries.push(tag(322, TiffFieldType::Long, TiffValues::Long(vec![16]))); // TileWidth
             let diagnostics = check_tiff_baseline_conformance(&snapshot);

@@ -31,7 +31,7 @@ semio_framework_plugin::app_labels! {
 /// 🗣️ B1: resolves the active label set from `cfg.locale` (was the host-pushed `ViewModel.locale`);
 /// unknown/absent locales fall back to native English. `PresentConfig` carries no terminology axis,
 /// so this app is always `Terminology::Native` — mirrors `sequence_ui`'s identical pair.
-pub fn animate_present_locale(config: &PresentConfig) -> Locale {
+pub async fn animate_present_locale(config: &PresentConfig) -> Locale {
     if config.locale.starts_with("de") {
         Locale::De
     } else {
@@ -39,7 +39,7 @@ pub fn animate_present_locale(config: &PresentConfig) -> Locale {
     }
 }
 
-pub fn animate_present_labels(config: &PresentConfig) -> &'static AnimatePresentLabels {
+pub async fn animate_present_labels(config: &PresentConfig) -> &'static AnimatePresentLabels {
     AnimatePresentLabels::labels(animate_present_locale(config), Terminology::Native)
 }
 //#endregion 🔖️Resolvers
@@ -50,7 +50,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn labels_resolve_native_english_and_german_from_the_config_locale() {
+    async fn labels_resolve_native_english_and_german_from_the_config_locale() {
         assert_eq!(animate_present_labels(&PresentConfig::default()).tiles_section.as_str(), "Tiles");
         assert_eq!(animate_present_labels(&PresentConfig { locale: "de-DE".into(), ..PresentConfig::default() }).tiles_section.as_str(), "Kacheln");
     }
@@ -59,7 +59,7 @@ mod tests {
     /// 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM) — exercises the same app-wide label
     /// resolution, unrelated to selection.
     #[test]
-    fn animate_present_labels_resolve_native_by_default() {
+    async fn animate_present_labels_resolve_native_by_default() {
         use crate::editor::animate::testkit::{present_app, render};
         use crate::editor::animate::{PRESENT_PLAY_BODY_CATALOGUE, PRESENT_PLAY_BODY_DETAILS};
         let mut app = present_app();
@@ -72,7 +72,7 @@ mod tests {
     }
 
     #[test]
-    fn animate_present_labels_translate_panels_in_german() {
+    async fn animate_present_labels_translate_panels_in_german() {
         use crate::editor::animate::commands::set_locale;
         use crate::editor::animate::testkit::{dispatch, present_app, render};
         use crate::editor::animate::{PresentCommand, PRESENT_PLAY_BODY_CATALOGUE, PRESENT_PLAY_BODY_DOCUMENT};

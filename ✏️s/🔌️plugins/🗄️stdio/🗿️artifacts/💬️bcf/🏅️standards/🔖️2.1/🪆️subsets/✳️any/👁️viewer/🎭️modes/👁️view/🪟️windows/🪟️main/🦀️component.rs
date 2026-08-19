@@ -16,7 +16,7 @@ pub const BODY_KEY: &str = TableWindowKit::KIND_ID;
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
-pub fn definition() -> WindowKindDefinition {
+pub async fn definition() -> WindowKindDefinition {
     TableWindowKit::window_kind()
 }
 //#endregion 🔖️Definition
@@ -24,7 +24,7 @@ pub fn definition() -> WindowKindDefinition {
 //#region 🔖️Render
 /// 👁️ Pure `BcfSnapshot -> UiNode` read: one row per topic, real fields
 /// (guid/title/status/priority/creation author) straight off the document.
-pub fn render(document: &BcfSnapshot) -> UiNode {
+pub async fn render(document: &BcfSnapshot) -> UiNode {
     let columns = vec!["GUID".to_string(), "Title".to_string(), "Status".to_string(), "Priority".to_string(), "Author".to_string()];
     let rows: Vec<Vec<String>> = document.topics.iter().map(|topic| vec![topic.guid.clone(), topic.title.clone(), topic.status.clone(), topic.priority.clone(), topic.creation_author.clone()]).collect();
     let view = TableView { columns, rows };
@@ -38,18 +38,18 @@ mod tests {
     use super::*;
 
     #[test]
-    fn definition_declares_the_shared_table_window_kit() {
+    async fn definition_declares_the_shared_table_window_kit() {
         assert_eq!(definition().id, TableWindowKit::KIND_ID);
     }
 
     #[test]
-    fn render_produces_a_table_node_for_the_default_document() {
+    async fn render_produces_a_table_node_for_the_default_document() {
         let document = BcfSnapshot::default();
         let _node = render(&document);
     }
 
     #[test]
-    fn render_lists_one_row_per_topic() {
+    async fn render_lists_one_row_per_topic() {
         let mut document = BcfSnapshot::default();
         document.topics.push(crate::artifacts::bcf::schema::snapshot::BcfTopic { guid: "g1".into(), title: "Clash".into(), description: String::new(), status: "open".into(), priority: "high".into(), labels: Vec::new(), creation_date: String::new(), creation_author: "tester".into(), comments: Vec::new(), viewpoints: Vec::new() });
         let _node = render(&document);

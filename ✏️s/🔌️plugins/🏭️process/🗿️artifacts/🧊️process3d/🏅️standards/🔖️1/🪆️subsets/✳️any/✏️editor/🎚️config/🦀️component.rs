@@ -52,10 +52,10 @@ pub struct Process3dConfig {
 /// 📜️ Handcrafted ArtifactDsl (P6): uses this type's `__dsl_*` helpers + parse/print, not derive emission.
 impl store::ArtifactDsl for Process3dConfig {
     const EXTENSION: &'static str = Self::__DSL_EXTENSION;
-    fn envelope_id() -> &'static str {
+    async fn envelope_id() -> &'static str {
         Self::__DSL_ENVELOPE_ID
     }
-    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+    async fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
         let body = match store::semio_format::split_text_preamble(text) {
             Ok((_, rest)) => rest,
             Err(_) => text,
@@ -67,7 +67,7 @@ impl store::ArtifactDsl for Process3dConfig {
         )?;
         Self::__dsl_from_record(&record)
     }
-    fn print_dsl(&self) -> String {
+    async fn print_dsl(&self) -> String {
         let body = dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), dsl::JoinMode::Document);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
             <Self as store::ArtifactDsl>::envelope_id(),
@@ -81,7 +81,7 @@ impl store::ArtifactDsl for Process3dConfig {
 
 /// 📦️ Handcrafted ArtifactPack (P6): envelope-wrapped pack body via `__dsl_*` record lowering.
 impl store::ArtifactPack for Process3dConfig {
-    fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
+    async fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let inner = store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
             <Self as store::ArtifactDsl>::envelope_id(),
@@ -91,7 +91,7 @@ impl store::ArtifactPack for Process3dConfig {
         .map_err(|e| store::PackError::Schema(e.to_string()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &inner))
     }
-    fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
+    async fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
         if envelope.envelope_id() != <Self as store::ArtifactDsl>::envelope_id() {
             return Err(store::PackError::Schema(format!(
@@ -103,7 +103,7 @@ impl store::ArtifactPack for Process3dConfig {
         let (record, _report) = store::pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
         Self::__dsl_from_record(&record).map_err(store::text_error_to_pack_error)
     }
-    fn record_spec() -> Option<dsl::RecordSpec> {
+    async fn record_spec() -> Option<dsl::RecordSpec> {
         Some(Self::__dsl_spec())
     }
 }
@@ -111,12 +111,12 @@ impl store::ArtifactPack for Process3dConfig {
 //#endregion 🔖️ArtifactCodec
 
 
-fn default_contributions_json() -> String {
+async fn default_contributions_json() -> String {
     "[]".into()
 }
 
 impl Default for Process3dConfig {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self {
             engagement_input: String::new(),
             camera_position: [3.0, -3.0, 2.0],
@@ -137,7 +137,7 @@ impl Default for Process3dConfig {
 impl Process3dConfig {
     /// 🧰️ Resolves the config-owned active utility, falling back to [`PROCESS3D_DEFAULT_UTILITY`] (only
     /// ever triggers if a config value somehow arrives empty).
-    pub fn active_utility(&self) -> &str {
+    pub async fn active_utility(&self) -> &str {
         if self.active_utility_id.is_empty() {
             PROCESS3D_DEFAULT_UTILITY
         } else {
@@ -178,7 +178,7 @@ pub enum Process3dConfigMutation {
 
 //#region 🔖️OpCodec
 impl protocol::OpText for Process3dConfigMutation {
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
+    async fn parse_op(line: &str) -> Result<Self, store::TextError> {
         let variants = <Self as dsl::DslVariants>::variants();
         for (keyword, spec_fn) in &variants {
             let probe = format!("{} ", keyword);
@@ -193,7 +193,7 @@ impl protocol::OpText for Process3dConfigMutation {
         }
         Err(dsl::__rt::field_error(format!("unknown mutation line '{line}'")))
     }
-    fn print_op(&self) -> String {
+    async fn print_op(&self) -> String {
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
         let variants = <Self as dsl::DslVariants>::variants();
         let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
@@ -203,7 +203,7 @@ impl protocol::OpText for Process3dConfigMutation {
 
 /// 🎯️ Handcrafted OpBinary (P6).
 impl protocol::OpBinary for Process3dConfigMutation {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         const OP_BINARY_FORMAT: u8 = 1;
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
         let variants = <Self as dsl::DslVariants>::variants();
@@ -220,7 +220,7 @@ impl protocol::OpBinary for Process3dConfigMutation {
         out.extend_from_slice(&body);
         Ok(out)
     }
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         const OP_BINARY_FORMAT: u8 = 1;
         let mut reader = store::pack_rt::ByteReader::new(bytes);
         let format = reader.read_u8()?;
@@ -254,7 +254,7 @@ impl Mutation<Process3dConfig> for Process3dConfigMutation {
     /// 📦️ Whole-config field-setter — every variant addresses the single always-present
     /// `Process3dConfig` by value, so there is no target to be missing; message-free outcome per
     /// the contract's root-scoped shrink-only allowlist.
-    fn diff(&self, base: &Process3dConfig) -> protocol::MutationOutcome<Process3dConfig> {
+    async fn diff(&self, base: &Process3dConfig) -> protocol::MutationOutcome<Process3dConfig> {
         let mut next = base.clone();
         match self {
             Process3dConfigMutation::SetEngagementInput { value } => next.engagement_input = value.clone(),
@@ -280,7 +280,7 @@ impl Mutation<Process3dConfig> for Process3dConfigMutation {
         protocol::MutationOutcome::new(next)
     }
 
-    fn inverse(&self, base: &Process3dConfig) -> Vec<Self> {
+    async fn inverse(&self, base: &Process3dConfig) -> Vec<Self> {
         match self {
             Process3dConfigMutation::SetEngagementInput { .. } => vec![Process3dConfigMutation::SetEngagementInput { value: base.engagement_input.clone() }],
             Process3dConfigMutation::SetCamera { .. } => {
@@ -307,7 +307,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn process3d_config_dsl_and_pack_round_trip() {
+    async fn process3d_config_dsl_and_pack_round_trip() {
         use store::ArtifactPack;
         let config = Process3dConfig { sun_enabled: true, active_utility_id: "cut".into(), ..Process3dConfig::default() };
         store::os_store::test_support::assert_dsl_round_trip(&config);
@@ -316,7 +316,7 @@ mod tests {
     }
 
     #[test]
-    fn process3d_config_operation_backwards_restores_the_same_field_from_base() {
+    async fn process3d_config_operation_backwards_restores_the_same_field_from_base() {
         let base = Process3dConfig::default();
         let operation = Process3dConfigMutation::SetLocale { value: "de-DE".into() };
         let inverse = operation.inverse(&base);
@@ -324,7 +324,7 @@ mod tests {
     }
 
     #[test]
-    fn process3d_config_operation_diff_applies_expected_fields() {
+    async fn process3d_config_operation_diff_applies_expected_fields() {
         let base = Process3dConfig::default();
         let next = Process3dConfigMutation::SetCamera { position: [1.0, 2.0, 3.0], target: [0.1, 0.2, 0.3], fov: 60.0 }.diff(&base).into_parts().0;
         assert_eq!(next.camera_position, [1.0, 2.0, 3.0]);
@@ -340,7 +340,7 @@ mod tests {
     }
 
     #[test]
-    fn process3d_config_op_text_round_trips_every_variant() {
+    async fn process3d_config_op_text_round_trips_every_variant() {
         store::os_store::test_support::assert_op_line_round_trip(&Process3dConfigMutation::SetEngagementInput { value: "cut".into() });
         store::os_store::test_support::assert_op_line_round_trip(&Process3dConfigMutation::SetCamera { position: [1.0, 2.0, 3.0], target: [0.1, 0.2, 0.3], fov: 60.0 });
         store::os_store::test_support::assert_op_line_round_trip(&Process3dConfigMutation::SetSun { enabled: true, azimuth: 10.0, elevation: 20.0, intensity: 0.5, color: "#123456".into() });
@@ -350,7 +350,7 @@ mod tests {
     }
 
     #[test]
-    fn process3d_config_default_matches_the_existing_runtime_defaults() {
+    async fn process3d_config_default_matches_the_existing_runtime_defaults() {
         let config = Process3dConfig::default();
         assert_eq!(config.camera_position, [3.0, -3.0, 2.0]);
         assert_eq!(config.camera_target, [0.0, 0.0, 0.0]);

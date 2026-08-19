@@ -31,7 +31,7 @@ mod tests {
     use protocol::{Mutation, MutationDiff, SemanticMutation};
 
     #[test]
-    fn playground_mutation_round_trips_store() {
+    async fn playground_mutation_round_trips_store() {
         let mut store = store::ArtifactStore::<PlaygroundSnapshot, PlaygroundMutation>::new(store::create_document_envelope(
             "playground.document",
             "playground",
@@ -48,7 +48,7 @@ mod tests {
     }
 
     #[test]
-    fn change_schema_inverse_round_trips() {
+    async fn change_schema_inverse_round_trips() {
         let base = PlaygroundSnapshot::default();
         let mutation = PlaygroundMutation::ChangeSchema(super::super::change_schema::mutation::ChangeSchema { new_schema: "playground.custom".into() });
         let after = mutation.diff(&base).diff().apply(&base).expect("valid mutation diff");
@@ -64,7 +64,7 @@ mod tests {
     }
 
     #[test]
-    fn semantic_kinds_cover_every_variant() {
+    async fn semantic_kinds_cover_every_variant() {
         assert_eq!(PlaygroundMutation::kinds().len(), 1);
         let mutation = PlaygroundMutation::ChangeSchema(super::super::change_schema::mutation::ChangeSchema { new_schema: "x".into() });
         assert_eq!(mutation.semantics().kind, "change-schema");
@@ -76,7 +76,7 @@ mod tests {
     /// reachable via this crate's existing `semio-framework-os-kernel` dependency — no new Cargo
     /// dependency needed) against the facet's one mutation kind.
     #[test]
-    fn change_schema_obeys_the_inverse_and_absorb_laws() {
+    async fn change_schema_obeys_the_inverse_and_absorb_laws() {
         let base = PlaygroundSnapshot { schema: "playground.base".into() };
         let change = PlaygroundMutation::ChangeSchema(super::super::change_schema::mutation::ChangeSchema { new_schema: "playground.changed".into() });
         protocol::os_spr::testkit::assert_mutation_inverse_law(&base, &change);
@@ -97,14 +97,14 @@ mod tests {
     /// `🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧪️testkit/🦀️component.rs`); TODO(1-D testkit
     /// laws pending): add a `MergePolicy` × `Severity` matrix test here once it lands.
     #[test]
-    fn change_schema_outcome_is_deterministic() {
+    async fn change_schema_outcome_is_deterministic() {
         let base = PlaygroundSnapshot { schema: "playground.base".into() };
         let mutation = PlaygroundMutation::ChangeSchema(super::super::change_schema::mutation::ChangeSchema { new_schema: "playground.changed".into() });
         protocol::os_spr::testkit::assert_outcome_deterministic(&base, &mutation);
     }
 
     #[test]
-    fn change_schema_no_op_when_unchanged() {
+    async fn change_schema_no_op_when_unchanged() {
         let base = PlaygroundSnapshot { schema: "playground.same".into() };
         let mutation = PlaygroundMutation::ChangeSchema(super::super::change_schema::mutation::ChangeSchema { new_schema: "playground.same".into() });
         let outcome = mutation.diff(&base);

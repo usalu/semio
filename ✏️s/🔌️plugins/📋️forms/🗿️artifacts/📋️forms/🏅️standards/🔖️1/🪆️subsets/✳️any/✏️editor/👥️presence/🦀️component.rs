@@ -15,33 +15,33 @@ pub struct FormsPresence {}
 
 impl store::ArtifactDsl for FormsPresence {
     const EXTENSION: &'static str = "formspres";
-    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+    async fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
         if text.trim().is_empty() {
             return Ok(Self::default());
         }
         Err(store::TextError::new("no forms presence", store::TextSpan::at(1, 1)))
     }
-    fn print_dsl(&self) -> String {
+    async fn print_dsl(&self) -> String {
         String::new()
     }
 }
 
 impl ArtifactPack for FormsPresence {
-    fn encode_pack_with(&self, _options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
+    async fn encode_pack_with(&self, _options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         Ok(Vec::new())
     }
-    fn decode_pack_with(_bytes: &[u8], _options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
+    async fn decode_pack_with(_bytes: &[u8], _options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         Ok(Self::default())
     }
 }
 
 impl protocol::MutationDiff<FormsPresence> for FormsPresence {
-    fn apply(&self, base: &FormsPresence) -> protocol::MutationApplyResult<FormsPresence> {
+    async fn apply(&self, base: &FormsPresence) -> protocol::MutationApplyResult<FormsPresence> {
         Ok({
             base.clone()
         })
     }
-    fn absorb(&mut self, _other: Self) {}
+    async fn absorb(&mut self, _other: Self) {}
 }
 //#endregion 🔖️Presence
 
@@ -55,17 +55,17 @@ pub enum FormsPresenceMutation {
 impl Mutation<FormsPresence> for FormsPresenceMutation {
     type Diff = FormsPresence;
 
-    fn diff(&self, _base: &FormsPresence) -> protocol::MutationOutcome<FormsPresence> {
+    async fn diff(&self, _base: &FormsPresence) -> protocol::MutationOutcome<FormsPresence> {
         protocol::MutationOutcome::new(FormsPresence::default())
     }
 
-    fn inverse(&self, _base: &FormsPresence) -> Vec<Self> {
+    async fn inverse(&self, _base: &FormsPresence) -> Vec<Self> {
         vec![FormsPresenceMutation::Noop]
     }
 }
 
 impl protocol::OpText for FormsPresenceMutation {
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
+    async fn parse_op(line: &str) -> Result<Self, store::TextError> {
         let variants = <Self as dsl::DslVariants>::variants();
         for (keyword, spec_fn) in &variants {
             let probe = format!("{keyword} ");
@@ -88,7 +88,7 @@ impl protocol::OpText for FormsPresenceMutation {
         }
         Err(dsl::__rt::field_error(format!("unknown operation line '{line}'")))
     }
-    fn print_op(&self) -> String {
+    async fn print_op(&self) -> String {
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
         let variants = <Self as dsl::DslVariants>::variants();
         let spec_fn = variants
@@ -106,10 +106,10 @@ impl protocol::OpText for FormsPresenceMutation {
 }
 
 impl protocol::OpBinary for FormsPresenceMutation {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         dsl::variants_binary::encode_op(self)
     }
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         dsl::variants_binary::decode_op(bytes)
     }
 }

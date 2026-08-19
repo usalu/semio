@@ -6,7 +6,7 @@ use crate::artifacts::shooting::ShootingSnapshot;
 use crate::artifacts::shooting::diff::{ShootingAssetPatchEntry, ShootingAssetsDelta, ShootingDiff};
 use crate::artifacts::shooting::ShootingAssetPatch;
 
-pub fn diff(payload: &DragAssets, base: &ShootingSnapshot) -> protocol::MutationOutcome<ShootingDiff> {
+pub async fn diff(payload: &DragAssets, base: &ShootingSnapshot) -> protocol::MutationOutcome<ShootingDiff> {
     let patched: Vec<ShootingAssetPatchEntry> = base
         .assets
         .iter()

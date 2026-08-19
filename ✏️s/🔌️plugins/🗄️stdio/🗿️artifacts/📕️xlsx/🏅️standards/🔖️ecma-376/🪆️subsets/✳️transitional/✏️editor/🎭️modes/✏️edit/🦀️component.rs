@@ -9,12 +9,12 @@ pub const XLSX_TRANSITIONAL_EDIT_MODE_ID: &str = "edit";
 
 //#region 🔖️Definition
 /// 🧱️ Stitched into the editor manifest by `create_xlsx_transitional_editor` (subset root).
-pub fn definition() -> ModeDefinition {
+pub async fn definition() -> ModeDefinition {
     ModeDefinition { id: XLSX_TRANSITIONAL_EDIT_MODE_ID.into(), label: LocalizedLabel::native("Edit", "Bearbeiten"), icon_id: "pencil".into(), tools: Vec::new(), layout_id: None, commands: Vec::new() }
 }
 
 /// 🪟️ One window filling the whole canvas — this subset has exactly one real window.
-pub fn layout() -> WindowLayout {
+pub async fn layout() -> WindowLayout {
     WindowLayout {
         root: WindowLayoutRoot::Stack(WindowLayoutStackNode {
             kind: "stack".into(),

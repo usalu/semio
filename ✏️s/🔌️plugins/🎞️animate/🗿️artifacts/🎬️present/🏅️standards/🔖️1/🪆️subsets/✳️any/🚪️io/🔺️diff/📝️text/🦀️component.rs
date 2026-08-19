@@ -15,7 +15,7 @@ use crate::artifacts::present::schema::diff::*;
 //#region 🔖️Apply
 impl PresentDiff {
     /// 🧬️ Applies every sparse entry (all state classes) onto a full artifact.
-    pub fn apply_to_artifact(&self, artifact: &PresentArtifact) -> protocol::MutationApplyResult<PresentArtifact> {
+    pub async fn apply_to_artifact(&self, artifact: &PresentArtifact) -> protocol::MutationApplyResult<PresentArtifact> {
         Ok({
             if let Some(replacement) = &self.artifact {
                 return Ok((**replacement).clone());
@@ -42,7 +42,7 @@ impl PresentDiff {
 }
 
 impl MutationDiff<PresentSnapshot> for PresentDiff {
-    fn apply(&self, snapshot: &PresentSnapshot) -> protocol::MutationApplyResult<PresentSnapshot> {
+    async fn apply(&self, snapshot: &PresentSnapshot) -> protocol::MutationApplyResult<PresentSnapshot> {
         Ok({
             if let Some(replacement) = &self.artifact {
                 return Ok(replacement.to_snapshot());
@@ -57,7 +57,7 @@ impl MutationDiff<PresentSnapshot> for PresentDiff {
             next
         })
     }
-    fn absorb(&mut self, other: Self) {
+    async fn absorb(&mut self, other: Self) {
         if other.artifact.is_some() {
             *self = other;
             return;
@@ -83,7 +83,7 @@ impl MutationDiff<PresentSnapshot> for PresentDiff {
 /// replacement and seeds the working-scene cache with it (`presentation_child_handle_and_cache`) —
 /// real handcrafted construction, never apply-then-capture, never a snapshot clone. The standard
 /// builder every mutation triad in this facet's `🧬️mutations` uses.
-pub fn diff_set_presentation(source: &crate::artifacts::present::FigureTileSource, tiles: &[crate::artifacts::present::FigureTileDraft]) -> PresentDiff {
+pub async fn diff_set_presentation(source: &crate::artifacts::present::FigureTileSource, tiles: &[crate::artifacts::present::FigureTileDraft]) -> PresentDiff {
     PresentDiff { presentation: Some(crate::artifacts::present::presentation_child_handle_and_cache(source, tiles)), ..Default::default() }
 }
 //#endregion 🔖️Helpers
@@ -98,7 +98,7 @@ mod tests {
     use protocol::Mutation;
 
     #[test]
-    fn replace_source_diff_applies_onto_the_base_snapshot() {
+    async fn replace_source_diff_applies_onto_the_base_snapshot() {
         let base = default_present_snapshot();
         let (source, _tiles) = crate::artifacts::present::present_working_scene(&base);
         let mut next_source = source.clone();

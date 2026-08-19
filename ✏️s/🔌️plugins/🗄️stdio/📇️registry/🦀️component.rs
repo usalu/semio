@@ -175,12 +175,12 @@ pub struct CapabilityLedger {
     pub verified: CapabilityCounts,
 }
 
-fn capability_counts<T>(items: &[T], status: impl Fn(&T) -> &str, registered: impl Fn(&T) -> bool) -> (usize, usize, usize, usize) {
+async fn capability_counts<T>(items: &[T], status: impl Fn(&T) -> &str, registered: impl Fn(&T) -> bool) -> (usize, usize, usize, usize) {
     (items.len(), items.iter().filter(|item| registered(item)).count(), items.iter().filter(|item| status(item) == "implemented").count(), items.iter().filter(|item| status(item) == "verified").count())
 }
 
 /// 📊️ Returns separate schema declaration, runtime registration, implementation, and verification counts.
-pub fn capability_ledger() -> Result<CapabilityLedger, PluginAssemblyError> {
+pub async fn capability_ledger() -> Result<CapabilityLedger, PluginAssemblyError> {
     let values = sources()?;
     validate_catalog(&values)?;
     let mut ledger = CapabilityLedger::default();
@@ -245,29 +245,29 @@ const SOURCES: [&str; 36] = [
     include_str!("../🗿️artifacts/🌐️html/🧬️schema/📜️artifact-definition.json"),
 ];
 
-fn failure(message: impl Into<String>) -> PluginAssemblyError {
+async fn failure(message: impl Into<String>) -> PluginAssemblyError {
     PluginAssemblyError::new("stdio.definition", message)
 }
 
-fn descriptor<T: Serialize>(value: &T) -> Result<Vec<u8>, PluginAssemblyError> {
+async fn descriptor<T: Serialize>(value: &T) -> Result<Vec<u8>, PluginAssemblyError> {
     serde_json::to_vec(value).map_err(|error| failure(format!("cannot serialize definition descriptor: {error}")))
 }
 
-fn sources() -> Result<Vec<Source>, PluginAssemblyError> {
+async fn sources() -> Result<Vec<Source>, PluginAssemblyError> {
     SOURCES.into_iter().map(|value| serde_json::from_str(value).map_err(|error| failure(format!("cannot parse artifact definition: {error}")))).collect()
 }
 //#endregion SourceLoading
 
 //#region Validation
-fn id(value: &str) -> Result<(), PluginAssemblyError> {
+async fn id(value: &str) -> Result<(), PluginAssemblyError> {
     ArtifactIdentity::parse(value).map(|_| ()).map_err(PluginAssemblyError::definition)
 }
 
-fn child<'a>(id: &'a str, owner: &str, namespace: &str) -> Result<&'a str, PluginAssemblyError> {
+async fn child<'a>(id: &'a str, owner: &str, namespace: &str) -> Result<&'a str, PluginAssemblyError> {
     id.strip_prefix(&format!("{owner}.{namespace}.")).filter(|value| !value.contains('.')).ok_or_else(|| failure(format!("{id:?} is not a direct {namespace} leaf of {owner}")))
 }
 
-fn versioned_leaf(id: &str, prefix: &str) -> Result<(), PluginAssemblyError> {
+async fn versioned_leaf(id: &str, prefix: &str) -> Result<(), PluginAssemblyError> {
     let leaf = id.strip_prefix(prefix).ok_or_else(|| failure(format!("{id:?} is not owned by {prefix:?}")))?;
     let (semantic, version) = leaf.rsplit_once(".v").ok_or_else(|| failure(format!("{id:?} must end in a canonical vN leaf")))?;
     if semantic.is_empty() || semantic.contains('.') || version.is_empty() || !version.bytes().all(|byte| byte.is_ascii_digit()) || version.starts_with('0') {
@@ -276,7 +276,7 @@ fn versioned_leaf(id: &str, prefix: &str) -> Result<(), PluginAssemblyError> {
     ArtifactIdentity::parse(id).map(|_| ()).map_err(PluginAssemblyError::definition)
 }
 
-fn leaf_kind(category: &str) -> Result<ArtifactCapabilityKind, PluginAssemblyError> {
+async fn leaf_kind(category: &str) -> Result<ArtifactCapabilityKind, PluginAssemblyError> {
     match category {
         "schema" => Ok(ArtifactCapabilityKind::schema()),
         "inference" => Ok(ArtifactCapabilityKind::inference()),
@@ -289,16 +289,16 @@ fn leaf_kind(category: &str) -> Result<ArtifactCapabilityKind, PluginAssemblyErr
     }
 }
 
-fn representation_claims(item: &Representation) -> BTreeSet<(String, String)> {
+async fn representation_claims(item: &Representation) -> BTreeSet<(String, String)> {
     item.mimes.iter().map(|value| ("mime".into(), value.clone())).chain(item.extensions.iter().map(|value| ("extension".into(), value.clone()))).collect()
 }
 
-fn runtime_claims(item: &RuntimeCapability) -> BTreeSet<(String, String)> {
+async fn runtime_claims(item: &RuntimeCapability) -> BTreeSet<(String, String)> {
     item.claims.iter().map(|claim| (claim.namespace.clone(), claim.value.clone())).collect()
 }
 
 /// 🧷️ Maps exactly the schema leaves that declare a native executable.
-fn executable_mappings(source: &Source) -> Result<BTreeMap<String, ArtifactExecutableIdentity>, PluginAssemblyError> {
+async fn executable_mappings(source: &Source) -> Result<BTreeMap<String, ArtifactExecutableIdentity>, PluginAssemblyError> {
     let services = match source.artifact.as_str() {
         "gltf" => crate::artifacts::gltf::gltf_inference_services(),
         _ => Vec::new(),
@@ -322,7 +322,7 @@ fn executable_mappings(source: &Source) -> Result<BTreeMap<String, ArtifactExecu
     Ok(mappings)
 }
 
-fn expected_executable_ids(source: &Source) -> BTreeSet<String> {
+async fn expected_executable_ids(source: &Source) -> BTreeSet<String> {
     source
         .codecs
         .iter()
@@ -334,14 +334,14 @@ fn expected_executable_ids(source: &Source) -> BTreeSet<String> {
         .collect()
 }
 
-fn same(label: &str, left: impl IntoIterator<Item = String>, right: impl IntoIterator<Item = String>) -> Result<(), PluginAssemblyError> {
+async fn same(label: &str, left: impl IntoIterator<Item = String>, right: impl IntoIterator<Item = String>) -> Result<(), PluginAssemblyError> {
     if left.into_iter().collect::<BTreeSet<_>>() != right.into_iter().collect::<BTreeSet<_>>() {
         return Err(failure(format!("{label} diverges from its schema collection")));
     }
     Ok(())
 }
 
-fn validate(source: &Source) -> Result<(), PluginAssemblyError> {
+async fn validate(source: &Source) -> Result<(), PluginAssemblyError> {
     let owner = format!("s.stdio.{}", source.artifact);
     if source.definition_version != 1 || source.id != owner {
         return Err(failure(format!("{owner} must use definition_version 1")));
@@ -511,7 +511,7 @@ fn validate(source: &Source) -> Result<(), PluginAssemblyError> {
     Ok(())
 }
 
-fn validate_catalog(values: &[Source]) -> Result<(), PluginAssemblyError> {
+async fn validate_catalog(values: &[Source]) -> Result<(), PluginAssemblyError> {
     if values.len() != 36 {
         return Err(failure(format!("expected 36 artifact definitions, got {}", values.len())));
     }
@@ -573,7 +573,7 @@ pub enum ArtifactAssembly {
 }
 
 /// 🧷️ Binds an executable artifact root to the definition it owns.
-pub fn runtime_assembly(artifact: &str, definition: ArtifactDefinition, factory: fn(ArtifactDefinition) -> Result<ArtifactDeclaration, ArtifactDefinitionError>) -> Result<ArtifactAssembly, PluginAssemblyError> {
+pub async fn runtime_assembly(artifact: &str, definition: ArtifactDefinition, factory: fn(ArtifactDefinition) -> Result<ArtifactDeclaration, ArtifactDefinitionError>) -> Result<ArtifactAssembly, PluginAssemblyError> {
     if definition.identity().as_str() != format!("s.stdio.{artifact}") {
         return Err(failure(format!("runtime artifact {artifact} received definition {}", definition.identity())));
     }
@@ -581,14 +581,14 @@ pub fn runtime_assembly(artifact: &str, definition: ArtifactDefinition, factory:
 }
 
 /// 🧾️ Preserves a schema-only artifact without fabricating runtime capabilities.
-pub fn definition_only_assembly(artifact: &str, definition: ArtifactDefinition) -> Result<ArtifactAssembly, PluginAssemblyError> {
+pub async fn definition_only_assembly(artifact: &str, definition: ArtifactDefinition) -> Result<ArtifactAssembly, PluginAssemblyError> {
     if definition.identity().as_str() != format!("s.stdio.{artifact}") {
         return Err(failure(format!("definition-only artifact {artifact} received definition {}", definition.identity())));
     }
     Ok(ArtifactAssembly::Definition(definition))
 }
 
-fn declared_capability<T: Serialize>(mappings: &BTreeMap<String, ArtifactExecutableIdentity>, id: &str, kind: ArtifactCapabilityKind, value: &T) -> Result<ArtifactCapability, PluginAssemblyError> {
+async fn declared_capability<T: Serialize>(mappings: &BTreeMap<String, ArtifactExecutableIdentity>, id: &str, kind: ArtifactCapabilityKind, value: &T) -> Result<ArtifactCapability, PluginAssemblyError> {
     let mut capability = ArtifactCapability::new(ArtifactIdentity::parse(id).map_err(PluginAssemblyError::definition)?, kind).descriptor(descriptor(value)?).map_err(PluginAssemblyError::definition)?;
     if let Some(executable) = mappings.get(id) {
         capability = capability.executable(*executable);
@@ -596,7 +596,7 @@ fn declared_capability<T: Serialize>(mappings: &BTreeMap<String, ArtifactExecuta
     Ok(capability)
 }
 
-fn runtime_capability(item: &RuntimeCapability) -> Result<ArtifactCapability, PluginAssemblyError> {
+async fn runtime_capability(item: &RuntimeCapability) -> Result<ArtifactCapability, PluginAssemblyError> {
     let mut capability = ArtifactCapability::new(ArtifactIdentity::parse(&item.id).map_err(PluginAssemblyError::definition)?, leaf_kind(&item.category)?).descriptor(item.descriptor.as_bytes().to_vec()).map_err(PluginAssemblyError::definition)?;
     for claim in &item.claims {
         capability = capability
@@ -606,7 +606,7 @@ fn runtime_capability(item: &RuntimeCapability) -> Result<ArtifactCapability, Pl
     Ok(capability)
 }
 
-fn build(source: &Source) -> Result<ArtifactDefinition, PluginAssemblyError> {
+async fn build(source: &Source) -> Result<ArtifactDefinition, PluginAssemblyError> {
     let mappings = executable_mappings(source)?;
     let mut definition = ArtifactDefinition::stdio(&source.artifact).map_err(PluginAssemblyError::definition)?;
     for item in &source.standards {
@@ -646,14 +646,14 @@ fn build(source: &Source) -> Result<ArtifactDefinition, PluginAssemblyError> {
 }
 
 /// 🧾️ Builds every schema-owned artifact definition in catalog order.
-pub fn artifact_definitions() -> Result<Vec<ArtifactDefinition>, PluginAssemblyError> {
+pub async fn artifact_definitions() -> Result<Vec<ArtifactDefinition>, PluginAssemblyError> {
     let values = sources()?;
     validate_catalog(&values)?;
     values.iter().map(build).collect()
 }
 
 /// 🧭️ Assembles every artifact root in schema-catalog order.
-fn artifact_factories() -> BTreeMap<&'static str, fn(ArtifactDefinition) -> Result<ArtifactAssembly, PluginAssemblyError>> {
+async fn artifact_factories() -> BTreeMap<&'static str, fn(ArtifactDefinition) -> Result<ArtifactAssembly, PluginAssemblyError>> {
     BTreeMap::from([
         ("binary", crate::artifacts::binary::assembly as fn(ArtifactDefinition) -> Result<ArtifactAssembly, PluginAssemblyError>),
         ("txt", crate::artifacts::txt::assembly),
@@ -695,7 +695,7 @@ fn artifact_factories() -> BTreeMap<&'static str, fn(ArtifactDefinition) -> Resu
 }
 
 /// 🧭️ Assembles every artifact root by its schema-owned artifact key.
-pub fn artifact_assemblies() -> Result<Vec<ArtifactAssembly>, PluginAssemblyError> {
+pub async fn artifact_assemblies() -> Result<Vec<ArtifactAssembly>, PluginAssemblyError> {
     let factories = artifact_factories();
     let values = sources()?;
     validate_catalog(&values)?;
@@ -705,7 +705,7 @@ pub fn artifact_assemblies() -> Result<Vec<ArtifactAssembly>, PluginAssemblyErro
     values.iter().map(|source| factories.get(source.artifact.as_str()).ok_or_else(|| failure(format!("missing factory for {}", source.artifact)))?(build(source)?)).collect()
 }
 
-fn source_format_descriptors(source: &Source) -> Result<Vec<FormatDescriptor>, PluginAssemblyError> {
+async fn source_format_descriptors(source: &Source) -> Result<Vec<FormatDescriptor>, PluginAssemblyError> {
     source
         .runtime_capabilities
         .iter()
@@ -730,7 +730,7 @@ fn source_format_descriptors(source: &Source) -> Result<Vec<FormatDescriptor>, P
 }
 
 /// 🗂️ Derives one runtime root's format descriptors from its exact representation capability records.
-pub fn format_descriptors_for(artifact: &str) -> Result<Vec<FormatDescriptor>, ArtifactDefinitionError> {
+pub async fn format_descriptors_for(artifact: &str) -> Result<Vec<FormatDescriptor>, ArtifactDefinitionError> {
     let values = sources().and_then(|values| {
         validate_catalog(&values)?;
         let source = values.iter().find(|source| source.artifact == artifact).ok_or_else(|| failure(format!("unknown stdio artifact {artifact}")))?;
@@ -740,7 +740,7 @@ pub fn format_descriptors_for(artifact: &str) -> Result<Vec<FormatDescriptor>, A
 }
 
 /// 🛂️ Derives every runtime format descriptor from schema-owned representations.
-pub fn format_descriptors() -> Result<Vec<FormatDescriptor>, PluginAssemblyError> {
+pub async fn format_descriptors() -> Result<Vec<FormatDescriptor>, PluginAssemblyError> {
     let values = sources()?;
     validate_catalog(&values)?;
     values.iter().map(source_format_descriptors).collect::<Result<Vec<_>, _>>().map(|groups| groups.into_iter().flatten().collect())
@@ -750,15 +750,15 @@ pub fn format_descriptors() -> Result<Vec<FormatDescriptor>, PluginAssemblyError
 mod tests {
     use super::*;
 
-    fn runtime_key(category: &str, claims: impl IntoIterator<Item = (String, String)>) -> String {
+    async fn runtime_key(category: &str, claims: impl IntoIterator<Item = (String, String)>) -> String {
         format!("{category}|{}", claims.into_iter().map(|(namespace, value)| format!("{namespace}:{value}")).collect::<BTreeSet<_>>().into_iter().collect::<Vec<_>>().join("|"))
     }
 
-    fn schema_runtime_keys(source: &Source) -> BTreeSet<String> {
+    async fn schema_runtime_keys(source: &Source) -> BTreeSet<String> {
         source.runtime_capabilities.iter().map(|capability| runtime_key(&capability.category, runtime_claims(capability))).collect()
     }
 
-    fn declaration_runtime_keys(declaration: &ArtifactDeclaration) -> BTreeSet<String> {
+    async fn declaration_runtime_keys(declaration: &ArtifactDeclaration) -> BTreeSet<String> {
         declaration
             .runtime_capability_requirements()
             .unwrap()
@@ -768,7 +768,7 @@ mod tests {
     }
 
     #[test]
-    fn schema_runtime_capabilities_exactly_match_registered_declarations() {
+    async fn schema_runtime_capabilities_exactly_match_registered_declarations() {
         let factories = artifact_factories();
         for source in sources().unwrap() {
             let assembly = factories.get(source.artifact.as_str()).expect("schema artifact factory")(build(&source).expect("schema definition")).expect("runtime parity");
@@ -780,7 +780,7 @@ mod tests {
     }
 
     #[test]
-    fn gltf_capability_ledger_is_honest() {
+    async fn gltf_capability_ledger_is_honest() {
         let ledger = capability_ledger().unwrap();
         assert_eq!(ledger.declared, CapabilityCounts { codecs: 6, mutations: 3, inferences: 67 });
         assert_eq!(ledger.registered, CapabilityCounts { codecs: 0, mutations: 3, inferences: 67 });
@@ -789,7 +789,7 @@ mod tests {
     }
 
     #[test]
-    fn gltf_executable_identity_keys_are_exactly_the_registered_services() {
+    async fn gltf_executable_identity_keys_are_exactly_the_registered_services() {
         let source = sources().unwrap().into_iter().find(|source| source.artifact == "gltf").expect("gltf source");
         let mappings = executable_mappings(&source).expect("gltf executable mappings");
         assert_eq!(mappings.keys().cloned().collect::<BTreeSet<_>>(), expected_executable_ids(&source));
@@ -806,13 +806,13 @@ mod tests {
     }
 
     #[test]
-    fn schema_keys_and_runtime_factories_are_exact() {
+    async fn schema_keys_and_runtime_factories_are_exact() {
         let sources = sources().unwrap();
         assert_eq!(artifact_factories().keys().copied().collect::<BTreeSet<_>>(), sources.iter().map(|source| source.artifact.as_str()).collect());
     }
 
     #[test]
-    fn gltf_representation_capability_has_exact_format_claims() {
+    async fn gltf_representation_capability_has_exact_format_claims() {
         let definition = artifact_definitions().unwrap().into_iter().find(|definition| definition.identity().as_str() == "s.stdio.gltf").expect("gltf definition");
         let capability = definition.capabilities().find(|capability| capability.identity().as_str() == "s.stdio.gltf.runtime.representation.mime-model-gltf-json-extension-gltf.v1").expect("gltf runtime representation");
         assert_eq!(capability.kind().as_str(), "representation");

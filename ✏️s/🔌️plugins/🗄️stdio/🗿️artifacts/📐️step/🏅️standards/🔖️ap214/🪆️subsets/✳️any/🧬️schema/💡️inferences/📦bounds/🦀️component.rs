@@ -30,14 +30,14 @@ pub struct StepBounds {
 /// `compute_step_bounds` returns for zero `CARTESIAN_POINT` entities (the fold's identity value),
 /// keeping the inference-default law correct.
 impl Default for StepBounds {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self { min: [0.0, 0.0, 0.0], max: [0.0, 0.0, 0.0], point_count: 0 }
     }
 }
 
 /// 🔢️ `StepValue::Real`/`Integer` -> `f64`, mirroring `IfcValue::as_real`/`Part21Value::as_real`
 /// since `StepValue` itself has no such helper.
-fn step_value_as_real(v: &StepValue) -> Option<f64> {
+async fn step_value_as_real(v: &StepValue) -> Option<f64> {
     match v {
         StepValue::Real(r) => Some(*r),
         StepValue::Integer(i) => Some(*i as f64),
@@ -48,7 +48,7 @@ fn step_value_as_real(v: &StepValue) -> Option<f64> {
 /// 🔍️ Finds `entity.args`'s coordinate aggregate: the first `Aggregate` of 2-4 members, every
 /// member real/integer-convertible — tolerates AP214's real `('label',(x,y,z))` arg order (the
 /// aggregate at index 1) without assuming a fixed position.
-fn coordinate_aggregate(args: &[StepValue]) -> Option<Vec<f64>> {
+async fn coordinate_aggregate(args: &[StepValue]) -> Option<Vec<f64>> {
     args.iter().find_map(|v| match v {
         StepValue::Aggregate(items) if (2..=4).contains(&items.len()) => {
             let reals: Vec<f64> = items.iter().filter_map(step_value_as_real).collect();
@@ -60,7 +60,7 @@ fn coordinate_aggregate(args: &[StepValue]) -> Option<Vec<f64>> {
 
 /// 📦️ Computes [`StepBounds`] by folding every `CARTESIAN_POINT` entity's coordinate aggregate
 /// (found via [`coordinate_aggregate`], honest about AP214's real leading-label arg shape).
-pub fn compute_step_bounds(snapshot: &StepSnapshot) -> StepBounds {
+pub async fn compute_step_bounds(snapshot: &StepSnapshot) -> StepBounds {
     let mut min = [0.0f64; 3];
     let mut max = [0.0f64; 3];
     let mut seen = false;
@@ -96,12 +96,12 @@ mod tests {
     use crate::artifacts::step::schema::snapshot::StepEntity;
     use crate::artifacts::step::STDIO_STEP_DOCUMENT_SCHEMA;
 
-    fn point_entity(id: u64, x: f64, y: f64, z: f64) -> StepEntity {
+    async fn point_entity(id: u64, x: f64, y: f64, z: f64) -> StepEntity {
         StepEntity { id, name: "CARTESIAN_POINT".into(), args: vec![StepValue::String(String::new()), StepValue::Aggregate(vec![StepValue::Real(x), StepValue::Real(y), StepValue::Real(z)])], complex: Vec::new() }
     }
 
     #[test]
-    fn bounds_matches_hand_built_entity_extent() {
+    async fn bounds_matches_hand_built_entity_extent() {
         let snapshot = StepSnapshot {
             schema: STDIO_STEP_DOCUMENT_SCHEMA.into(),
             header: Default::default(),
@@ -114,13 +114,13 @@ mod tests {
     }
 
     #[test]
-    fn inference_determinism_law() {
+    async fn inference_determinism_law() {
         let snapshot = StepSnapshot { schema: STDIO_STEP_DOCUMENT_SCHEMA.into(), header: Default::default(), entities: vec![point_entity(1, 1.0, 1.0, 1.0)] };
         assert_eq!(compute_step_bounds(&snapshot), compute_step_bounds(&snapshot));
     }
 
     #[test]
-    fn inference_default_law() {
+    async fn inference_default_law() {
         assert_eq!(compute_step_bounds(&StepSnapshot::default()), StepBounds::default());
     }
 }

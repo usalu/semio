@@ -28,15 +28,15 @@ const MESH_EDGE_COLOR: &str = "#475569";
 //#endregion 🔖️Constants
 
 //#region 🔖️SharedDrawHelpers
-pub(crate) fn screen_2d(x: f64, y: f64) -> (f64, f64) {
+pub(crate) async fn screen_2d(x: f64, y: f64) -> (f64, f64) {
     (x * SCALE_2D + ORIGIN_2D, -y * SCALE_2D + ORIGIN_2D)
 }
 
-pub(crate) fn find_node_2d<'a>(nodes: &'a [crate::artifacts::fem2d::FemNode], id: &str) -> Option<&'a crate::artifacts::fem2d::FemNode> {
+pub(crate) async fn find_node_2d<'a>(nodes: &'a [crate::artifacts::fem2d::FemNode], id: &str) -> Option<&'a crate::artifacts::fem2d::FemNode> {
     nodes.iter().find(|n| n.id == id)
 }
 
-pub(crate) fn fem2d_element_endpoints(element: &FemElement) -> (&str, &str) {
+pub(crate) async fn fem2d_element_endpoints(element: &FemElement) -> (&str, &str) {
     match element {
         FemElement::Bar { start, end, .. } | FemElement::Beam { start, end, .. } => (start.as_str(), end.as_str()),
     }
@@ -45,7 +45,7 @@ pub(crate) fn fem2d_element_endpoints(element: &FemElement) -> (&str, &str) {
 /// 📐️ Bounding-box diagonal (in model meters) over every node plus every region outline vertex — the
 /// reference length `MODE_SHAPE_AMPLITUDE_RATIO` scales a normalized mode shape against. Falls back to
 /// `1.0` for a degenerate (empty or point-like) model so mode-shape rendering never divides by zero.
-pub(crate) fn fem2d_model_extent(doc: &Fem2dSnapshot) -> f64 {
+pub(crate) async fn fem2d_model_extent(doc: &Fem2dSnapshot) -> f64 {
     let mut min = [f64::INFINITY; 2];
     let mut max = [f64::NEG_INFINITY; 2];
     let mut expand = |x: f64, y: f64| {
@@ -71,7 +71,7 @@ pub(crate) fn fem2d_model_extent(doc: &Fem2dSnapshot) -> f64 {
 
 /// 🖼️ Nodes/members/supports as Canvas2d layers — shared by this window (bright colors) and the results
 /// window's faint undeformed backdrop (a single muted color for every layer kind).
-pub(crate) fn fem2d_structure_layers(doc: &Fem2dSnapshot, node_color: &str, line_color: &str, support_color: &str) -> Vec<serde_json::Value> {
+pub(crate) async fn fem2d_structure_layers(doc: &Fem2dSnapshot, node_color: &str, line_color: &str, support_color: &str) -> Vec<serde_json::Value> {
     let mut layers = Vec::new();
     for node in &doc.nodes {
         let (sx, sy) = screen_2d(node.x, node.y);
@@ -98,7 +98,7 @@ pub(crate) fn fem2d_structure_layers(doc: &Fem2dSnapshot, node_color: &str, line
 /// element id matches `fem2d_solve`/`fem2d_solve_all`'s `Tri3Cst` ids (`"{region_id}_t{tri_index}"`),
 /// so callers can correlate a solved `ElementResult::Plane` back to on-screen triangle geometry. A
 /// mesh failure for one region silently yields fewer triangles rather than failing the whole render.
-pub(crate) fn fem2d_region_triangles(doc: &Fem2dSnapshot) -> Vec<(String, [(f64, f64); 3])> {
+pub(crate) async fn fem2d_region_triangles(doc: &Fem2dSnapshot) -> Vec<(String, [(f64, f64); 3])> {
     let mut out = Vec::new();
     let Ok(meshes) = crate::fem2d_engine::mesh_preview::fem2d_mesh_preview(doc) else { return out };
     for mesh in &meshes {
@@ -116,7 +116,7 @@ pub(crate) fn fem2d_region_triangles(doc: &Fem2dSnapshot) -> Vec<(String, [(f64,
 /// 🗺️ Every meshed region's triangles as `(element_id, screen points, node ids)` — like
 /// `fem2d_region_triangles` but also carrying each vertex's mesh node id, needed to look values up in
 /// `fem2d_nodal_von_mises`'s node-keyed map for banded contour rendering.
-pub(crate) fn fem2d_region_mesh_triangles(doc: &Fem2dSnapshot) -> Vec<(String, [(f64, f64); 3], [String; 3])> {
+pub(crate) async fn fem2d_region_mesh_triangles(doc: &Fem2dSnapshot) -> Vec<(String, [(f64, f64); 3], [String; 3])> {
     let mut out = Vec::new();
     let Ok(meshes) = crate::fem2d_engine::mesh_preview::fem2d_mesh_preview(doc) else { return out };
     for mesh in &meshes {
@@ -134,7 +134,7 @@ pub(crate) fn fem2d_region_mesh_triangles(doc: &Fem2dSnapshot) -> Vec<(String, [
 
 /// 🖼️ Every element's deformed-shape polyline (pink), given a node-id-keyed displacement map and a
 /// display scale — shared by the static, modal, and buckling results renders.
-pub(crate) fn fem2d_deformed_shape_layers(doc: &Fem2dSnapshot, disp_map: &HashMap<String, [f64; 6]>, deform_scale: f64) -> Vec<serde_json::Value> {
+pub(crate) async fn fem2d_deformed_shape_layers(doc: &Fem2dSnapshot, disp_map: &HashMap<String, [f64; 6]>, deform_scale: f64) -> Vec<serde_json::Value> {
     let mut layers = Vec::new();
     for element in &doc.elements {
         let (start, end) = fem2d_element_endpoints(element);
@@ -159,7 +159,7 @@ pub(crate) fn fem2d_deformed_shape_layers(doc: &Fem2dSnapshot, disp_map: &HashMa
 //#endregion 🔖️SharedDrawHelpers
 
 //#region 🔖️Render
-pub fn render(doc: &Fem2dSnapshot, camera: &FemCamera) -> UiNode {
+pub async fn render(doc: &Fem2dSnapshot, camera: &FemCamera) -> UiNode {
     let mut layers = fem2d_structure_layers(doc, "#38bdf8", "#94a3b8", "#f97316");
     for (tri_index, (_, tri)) in fem2d_region_triangles(doc).iter().enumerate() {
         let [(x0, y0), (x1, y1), (x2, y2)] = *tri;
@@ -182,13 +182,13 @@ mod tests {
     use crate::editor::fem2d::testkit::{fem2d_app, render as render_body};
 
     #[test]
-    fn renders_fem2d_model_scene() {
+    async fn renders_fem2d_model_scene() {
         let mut app = fem2d_app();
         assert!(render_body(&mut app, BODY_KEY).contains("canvas-2d"));
     }
 
     #[test]
-    fn mesh_preview_renders_region_edges() {
+    async fn mesh_preview_renders_region_edges() {
         let mut app = fem2d_app();
         crate::editor::fem2d::testkit::dispatch(&mut app, crate::editor::fem2d::Fem2dCommand::SetActiveExample(crate::editor::fem2d::commands::set_active_example::SetActiveExample { example_id: "default".into() }));
         let json = render_body(&mut app, BODY_KEY);
@@ -196,7 +196,7 @@ mod tests {
     }
 
     #[test]
-    fn fem2d_model_extent_degenerate_model_returns_one() {
+    async fn fem2d_model_extent_degenerate_model_returns_one() {
         assert_eq!(fem2d_model_extent(&crate::artifacts::fem2d::schema::empty_fem2d_snapshot()), 1.0);
     }
 }

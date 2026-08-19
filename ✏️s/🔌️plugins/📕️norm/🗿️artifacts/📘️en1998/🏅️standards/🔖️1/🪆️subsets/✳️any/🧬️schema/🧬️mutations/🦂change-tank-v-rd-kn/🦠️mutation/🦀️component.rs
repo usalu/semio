@@ -15,15 +15,15 @@ pub struct ChangeTankVRdKn {
 impl protocol::MutationKind<En1998Snapshot, En1998Mutation> for ChangeTankVRdKn {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "tank-v-rd-kn", kind: "change-tank-v-rd-kn", record: "ChangedTankVRdKn" };
 
-    fn diff(&self, base: &En1998Snapshot) -> protocol::MutationOutcome<En1998Diff> {
+    async fn diff(&self, base: &En1998Snapshot) -> protocol::MutationOutcome<En1998Diff> {
         crate::artifacts::en1998::mutations::change_tank_v_rd_kn::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &En1998Snapshot) -> Vec<En1998Mutation> {
+    async fn inverse(&self, base: &En1998Snapshot) -> Vec<En1998Mutation> {
         crate::artifacts::en1998::mutations::change_tank_v_rd_kn::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         format!("Change tank shear resistance V_Rd [kN] to {}", self.new_tank_v_rd_kn)
     }
 }

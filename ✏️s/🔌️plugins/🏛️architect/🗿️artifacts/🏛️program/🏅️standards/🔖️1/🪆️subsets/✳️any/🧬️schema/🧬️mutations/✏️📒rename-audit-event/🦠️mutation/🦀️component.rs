@@ -19,16 +19,16 @@ pub struct RenameAuditEvent {
 }
 impl MutationKind<ProgramSnapshot, ProgramMutation> for RenameAuditEvent {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "rename", entity: "audit-event", kind: "rename-audit-event", record: "RenamedAuditEvent" };
-    fn diff(&self, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
+    async fn diff(&self, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {
+    async fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         format!("Rename audit event to \"{}\"", self.new_name)
     }
-    fn target(&self) -> Vec<String> {
+    async fn target(&self) -> Vec<String> {
         vec![self.id.0.clone()]
     }
 }

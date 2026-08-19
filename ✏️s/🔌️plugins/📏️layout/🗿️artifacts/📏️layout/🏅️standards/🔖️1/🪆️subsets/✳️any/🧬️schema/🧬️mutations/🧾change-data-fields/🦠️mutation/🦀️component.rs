@@ -15,13 +15,13 @@ pub struct ChangeDataFields {
 
 impl MutationKind<LayoutSnapshot, LayoutMutation> for ChangeDataFields {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "change", entity: "data-fields", kind: "change-data-fields", record: "ChangedDataFields" };
-    fn diff(&self, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
+    async fn diff(&self, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
         super::diff::diff_change_data_fields(self, base)
     }
-    fn inverse(&self, base: &LayoutSnapshot) -> Vec<LayoutMutation> {
+    async fn inverse(&self, base: &LayoutSnapshot) -> Vec<LayoutMutation> {
         super::inverse::inverse_change_data_fields(self, base)
     }
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         "Change data fields".into()
     }
 }

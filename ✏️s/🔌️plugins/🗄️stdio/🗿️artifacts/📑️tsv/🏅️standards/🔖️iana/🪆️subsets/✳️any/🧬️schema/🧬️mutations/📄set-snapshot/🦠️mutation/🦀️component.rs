@@ -2,6 +2,6 @@ use crate::artifacts::tsv::standards::iana::subsets::any::schema::mutations::{ap
 use crate::artifacts::tsv::standards::iana::subsets::any::schema::snapshot::TsvSnapshot;
 
 /// ▶️ Applies a set-snapshot mutation.
-pub fn apply(projection: &mut TsvSnapshot, mutation: &TsvMutation) {
+pub async fn apply(projection: &mut TsvSnapshot, mutation: &TsvMutation) {
     let _ = apply_tsv_mutation(projection, mutation);
 }

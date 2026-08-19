@@ -95,7 +95,7 @@ pub struct Mp3Snapshot {
 }
 
 impl Default for Mp3Snapshot {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self { schema: STDIO_MP3_DOCUMENT_SCHEMA.into(), id3v2: Default::default(), frames: Default::default(), id3v1: Default::default() }
     }
 }
@@ -108,11 +108,11 @@ impl Default for Mp3Snapshot {
 /// `store::semio_format` envelope, not a JSON re-serialization of the Rust type).
 impl store::ArtifactDsl for Mp3Snapshot {
     const EXTENSION: &'static str = "mp3";
-    fn envelope_id() -> &'static str {
+    async fn envelope_id() -> &'static str {
         STDIO_MP3_DOCUMENT_SCHEMA
     }
 
-    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+    async fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
         let body = match store::semio_format::split_text_preamble(text) {
             Ok((_, rest)) => rest,
             Err(_) => text,
@@ -131,7 +131,7 @@ impl store::ArtifactDsl for Mp3Snapshot {
         crate::artifacts::mp3::standards::mpeg1_layer3::subsets::any::io::decode_mp3(&bytes).map_err(|e| store::TextError::new(format!("mp3 decode: {e}"), dsl::TextSpan::at(1, 1)))
     }
 
-    fn print_dsl(&self) -> String {
+    async fn print_dsl(&self) -> String {
         let bytes = crate::artifacts::mp3::standards::mpeg1_layer3::subsets::any::io::encode_mp3(self);
         let body: String = bytes.iter().map(|b| format!("{b:02x}")).collect();
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
@@ -140,14 +140,14 @@ impl store::ArtifactDsl for Mp3Snapshot {
 }
 
 impl store::ArtifactPack for Mp3Snapshot {
-    fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
+    async fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
         let raw = crate::artifacts::mp3::standards::mpeg1_layer3::subsets::any::io::encode_mp3(self);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &raw))
     }
 
-    fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
+    async fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
         if envelope.envelope_id() != <Self as store::ArtifactDsl>::envelope_id() {
             return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.envelope_id())));
@@ -163,7 +163,7 @@ impl store::ArtifactPack for Mp3Snapshot {
 mod tests {
     use super::*;
 
-    fn sample_snapshot() -> Mp3Snapshot {
+    async fn sample_snapshot() -> Mp3Snapshot {
         Mp3Snapshot {
             id3v2: Some(Id3v2Tag { major_version: 3, minor_version: 0, flags: 0, frames: vec![Id3Frame { id: "TIT2".into(), flags: 0, data: vec![0, b's', b'x'] }] }),
             frames: vec![Mp3Frame {
@@ -188,7 +188,7 @@ mod tests {
     }
 
     #[test]
-    fn json_pack_round_trips() {
+    async fn json_pack_round_trips() {
         let snap = sample_snapshot();
         let bytes = <Mp3Snapshot as store::ArtifactPack>::encode_pack(&snap);
         let back = <Mp3Snapshot as store::ArtifactPack>::decode_pack(&bytes).expect("decode");
@@ -196,7 +196,7 @@ mod tests {
     }
 
     #[test]
-    fn dsl_text_round_trips() {
+    async fn dsl_text_round_trips() {
         let snap = sample_snapshot();
         let text = <Mp3Snapshot as store::ArtifactDsl>::print_dsl(&snap);
         let back = <Mp3Snapshot as store::ArtifactDsl>::parse_dsl(&text).expect("parse");

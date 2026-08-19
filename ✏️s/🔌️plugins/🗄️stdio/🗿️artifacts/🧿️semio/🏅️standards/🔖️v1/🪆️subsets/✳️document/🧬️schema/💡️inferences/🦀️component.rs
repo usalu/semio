@@ -25,7 +25,7 @@ pub struct SemioDocumentInference {
 }
 
 impl protocol::Inference<SemioDocumentSnapshot> for SemioDocumentInference {
-    fn infer(snapshot: &SemioDocumentSnapshot) -> Self {
+    async fn infer(snapshot: &SemioDocumentSnapshot) -> Self {
         Self { outline: compute_semio_document_outline(snapshot) }
     }
 }
@@ -33,19 +33,19 @@ impl protocol::Inference<SemioDocumentSnapshot> for SemioDocumentInference {
 /// 🌱 Defined in terms of `infer` (not derived) — keeps the law correct regardless of whether
 /// `SemioDocumentSnapshot::default()`'s `blocks` ever stops being empty.
 impl Default for SemioDocumentInference {
-    fn default() -> Self {
+    async fn default() -> Self {
         <Self as protocol::Inference<SemioDocumentSnapshot>>::infer(&SemioDocumentSnapshot::default())
     }
 }
 
 impl protocol::InferenceSpec<SemioDocumentSnapshot> for SemioDocumentInference {
-    fn inference_schema_id() -> &'static str {
+    async fn inference_schema_id() -> &'static str {
         "s.stdio.semio.document.inference"
     }
-    fn schema_version() -> u32 {
+    async fn schema_version() -> u32 {
         1
     }
-    fn fields() -> &'static [protocol::InferenceFieldSpec] {
+    async fn fields() -> &'static [protocol::InferenceFieldSpec] {
         &[protocol::InferenceFieldSpec { id: "s.stdio.semio.document.inference.outline", reads: &["blocks"] }]
     }
 }
@@ -65,7 +65,7 @@ impl ArtifactInferrer for crate::artifacts::semio::standards::v1::subsets::docum
 /// 💡️ Registers `s.stdio.semio.document.inference`'s facet leaves into the OS-wide inference
 /// catalog — call once at plugin init, alongside `semio_document_artifact_schema_descriptor`'s
 /// registration.
-pub fn semio_document_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
+pub async fn semio_document_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
     schema::ArtifactInferenceDescriptor {
         id: "s.stdio.semio.document.inference",
         inference: schema::FacetLeaves {
@@ -86,13 +86,13 @@ mod tests {
     use protocol::Inference;
 
     #[test]
-    fn inference_determinism_law() {
+    async fn inference_determinism_law() {
         let snapshot = SemioDocumentSnapshot::default();
         assert_eq!(SemioDocumentInference::infer(&snapshot), SemioDocumentInference::infer(&snapshot));
     }
 
     #[test]
-    fn inference_default_law() {
+    async fn inference_default_law() {
         assert_eq!(SemioDocumentInference::infer(&SemioDocumentSnapshot::default()), SemioDocumentInference::default());
     }
 }

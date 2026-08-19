@@ -20,7 +20,7 @@ pub mod set_stock {
     /// whole-document replace, not a targeted edit — no in-history mutation exists for that (see
     /// `📓️taxonomy.md`'s forbidden vocabulary), so this routes through
     /// `editor::process3d::reset_process3d_document_effect` (a `Effect::LoadDocument`) instead.
-    pub fn handle(payload: &SetStock, doc: &ArtifactView<'_, Process3dSnapshot>, cfg: &ConfigView<'_, Process3dConfig>, _ctx: &mut crate::editor::process3d::Process3dDispatchCtx) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
+    pub async fn handle(payload: &SetStock, doc: &ArtifactView<'_, Process3dSnapshot>, cfg: &ConfigView<'_, Process3dConfig>, _ctx: &mut crate::editor::process3d::Process3dDispatchCtx) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
         let fixture = doc.snapshot;
         let config = cfg.snapshot;
         let solid = match payload.kind.as_str() {

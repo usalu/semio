@@ -12,6 +12,6 @@ pub struct CompiledDagEngagementInput {
     pub value: String,
 }
 
-pub fn handle(payload: &CompiledDagEngagementInput, _doc: &ArtifactView<'_, WorkflowSnapshot>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
+pub async fn handle(payload: &CompiledDagEngagementInput, _doc: &ArtifactView<'_, WorkflowSnapshot>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
     Ok(Emit::config(vec![SpaceConfigMutation::SetCompiledDagEngagementInput { value: payload.value.clone() }]))
 }

@@ -22,7 +22,7 @@ pub struct JpgDimensions {
 }
 
 /// 📐️ Computes [`JpgDimensions`] from a snapshot's canonical/SOF fields — pure, total, O(1).
-pub fn compute_jpg_dimensions(snapshot: &JpgSnapshot) -> JpgDimensions {
+pub async fn compute_jpg_dimensions(snapshot: &JpgSnapshot) -> JpgDimensions {
     let bit_depth = snapshot.frame.as_ref().map(|frame| frame.precision as u32).unwrap_or(8);
     JpgDimensions { width: snapshot.width, height: snapshot.height, bit_depth, has_alpha: false, pixel_count: snapshot.width as u64 * snapshot.height as u64 }
 }
@@ -34,13 +34,13 @@ mod tests {
     use super::*;
 
     #[test]
-    fn falls_back_to_canonical_8bit_precision_without_a_decoded_frame() {
+    async fn falls_back_to_canonical_8bit_precision_without_a_decoded_frame() {
         let snapshot = JpgSnapshot { width: 4, height: 2, ..JpgSnapshot::default() };
         assert_eq!(compute_jpg_dimensions(&snapshot), JpgDimensions { width: 4, height: 2, bit_depth: 8, has_alpha: false, pixel_count: 8 });
     }
 
     #[test]
-    fn never_reports_alpha() {
+    async fn never_reports_alpha() {
         assert!(!compute_jpg_dimensions(&JpgSnapshot::default()).has_alpha);
     }
 }

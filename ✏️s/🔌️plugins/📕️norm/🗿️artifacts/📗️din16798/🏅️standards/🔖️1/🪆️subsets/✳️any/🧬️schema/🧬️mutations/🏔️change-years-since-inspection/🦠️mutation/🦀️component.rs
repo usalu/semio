@@ -15,15 +15,15 @@ pub struct ChangeYearsSinceInspection {
 impl protocol::MutationKind<Din16798Snapshot, Din16798Mutation> for ChangeYearsSinceInspection {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "years-since-inspection", kind: "change-years-since-inspection", record: "ChangedYearsSinceInspection" };
 
-    fn diff(&self, base: &Din16798Snapshot) -> protocol::MutationOutcome<Din16798Diff> {
+    async fn diff(&self, base: &Din16798Snapshot) -> protocol::MutationOutcome<Din16798Diff> {
         crate::artifacts::din16798::mutations::change_years_since_inspection::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &Din16798Snapshot) -> Vec<Din16798Mutation> {
+    async fn inverse(&self, base: &Din16798Snapshot) -> Vec<Din16798Mutation> {
         crate::artifacts::din16798::mutations::change_years_since_inspection::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         format!("Change years since last inspection to {}", self.new_years_since_inspection)
     }
 }

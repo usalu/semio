@@ -5,7 +5,7 @@ use crate::artifacts::gisterrain::GisTerrainSnapshot;
 
 //#region 🔹Inverse
 /// ↩️ Undo restores `base.exaggeration` — captured from pre-state, never from the applied diff.
-pub fn inverse(_payload: &ChangeExaggeration, base: &GisTerrainSnapshot) -> Vec<GisTerrainMutation> {
+pub async fn inverse(_payload: &ChangeExaggeration, base: &GisTerrainSnapshot) -> Vec<GisTerrainMutation> {
     vec![GisTerrainMutation::ChangeExaggeration(ChangeExaggeration { new_exaggeration: base.exaggeration })]
 }
 //#endregion 🔹Inverse

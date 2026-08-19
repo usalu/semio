@@ -86,7 +86,7 @@ pub struct SemioAudioSnapshot {
 }
 
 impl Default for SemioAudioSnapshot {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self { schema: STDIO_SEMIOAUDIO_DOCUMENT_SCHEMA.into(), sample_rate: 0, format: SemioAudioFormat::default(), channels: Vec::new(), tags: Vec::new() }
     }
 }
@@ -110,26 +110,26 @@ impl Default for SemioAudioSnapshot {
 /// facets (rather than a derive-based codec that would print/parse a structurally different wire
 /// shape) is the honest, single-source-of-truth choice — same boundary `✳️flow`'s/`✳️mesh`'s/
 /// `✳️image`'s own pilots each independently reached for their own shape.
-fn hex_encode(bytes: &[u8]) -> String {
+async fn hex_encode(bytes: &[u8]) -> String {
     bytes.iter().map(|b| format!("{b:02x}")).collect()
 }
-fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
+async fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
     if s.len() % 2 != 0 {
         return Err(format!("odd hex length: {s:?}"));
     }
     (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()
 }
-fn enc_str(s: &str) -> String {
+async fn enc_str(s: &str) -> String {
     hex_encode(s.as_bytes())
 }
-fn dec_str(s: &str) -> Result<String, String> {
+async fn dec_str(s: &str) -> Result<String, String> {
     String::from_utf8(hex_decode(s)?).map_err(|e| e.to_string())
 }
-fn parse_u32(s: &str) -> Result<u32, String> {
+async fn parse_u32(s: &str) -> Result<u32, String> {
     s.parse().map_err(|e: std::num::ParseIntError| e.to_string())
 }
 
-fn enc_format(f: SemioAudioFormat) -> &'static str {
+async fn enc_format(f: SemioAudioFormat) -> &'static str {
     match f {
         SemioAudioFormat::Pcm8 => "pcm8",
         SemioAudioFormat::Pcm16 => "pcm16",
@@ -139,7 +139,7 @@ fn enc_format(f: SemioAudioFormat) -> &'static str {
         SemioAudioFormat::Float64 => "f64",
     }
 }
-fn dec_format(s: &str) -> Result<SemioAudioFormat, String> {
+async fn dec_format(s: &str) -> Result<SemioAudioFormat, String> {
     match s {
         "pcm8" => Ok(SemioAudioFormat::Pcm8),
         "pcm16" => Ok(SemioAudioFormat::Pcm16),
@@ -155,34 +155,34 @@ fn dec_format(s: &str) -> Result<SemioAudioFormat, String> {
 /// text (sidesteps float-formatting precision loss and NaN/-0.0 print-ambiguity entirely). Same
 /// convention this subset's own `🔺️diff` facet's `enc_f32_list` uses (duplicated, not imported —
 /// see this region's own doc comment for why).
-fn enc_f32_list(v: &[f32]) -> String {
+async fn enc_f32_list(v: &[f32]) -> String {
     format!("[{}]", v.iter().map(|f| format!("{:08x}", f.to_bits())).collect::<Vec<_>>().join(","))
 }
-fn dec_f32_list(s: &str) -> Result<Vec<f32>, String> {
+async fn dec_f32_list(s: &str) -> Result<Vec<f32>, String> {
     let inner = strip_brackets(s)?;
     if inner.is_empty() {
         return Ok(Vec::new());
     }
     split_top_level(inner, ',').into_iter().map(|tok| u32::from_str_radix(tok, 16).map(f32::from_bits).map_err(|e| e.to_string())).collect()
 }
-fn enc_channel(c: &SemioAudioChannel) -> String {
+async fn enc_channel(c: &SemioAudioChannel) -> String {
     enc_f32_list(&c.samples)
 }
-fn dec_channel(s: &str) -> Result<SemioAudioChannel, String> {
+async fn dec_channel(s: &str) -> Result<SemioAudioChannel, String> {
     Ok(SemioAudioChannel { samples: dec_f32_list(s)? })
 }
-fn enc_tag(t: &SemioAudioTag) -> String {
+async fn enc_tag(t: &SemioAudioTag) -> String {
     format!("[{},{}]", enc_str(&t.key), enc_str(&t.value))
 }
-fn dec_tag(s: &str) -> Result<SemioAudioTag, String> {
+async fn dec_tag(s: &str) -> Result<SemioAudioTag, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [key, value] = parts.as_slice() else { return Err(format!("tag: expected 2 fields, got {}", parts.len())) };
     Ok(SemioAudioTag { key: dec_str(key)?, value: dec_str(value)? })
 }
-fn enc_list<T>(items: &[T], enc: impl Fn(&T) -> String) -> String {
+async fn enc_list<T>(items: &[T], enc: impl Fn(&T) -> String) -> String {
     format!("[{}]", items.iter().map(|it| enc(it)).collect::<Vec<_>>().join(","))
 }
-fn dec_list<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Vec<T>, String> {
+async fn dec_list<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Vec<T>, String> {
     split_top_level(strip_brackets(s)?, ',').into_iter().filter(|s| !s.is_empty()).map(|entry| dec(entry)).collect()
 }
 
@@ -191,10 +191,10 @@ fn dec_list<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Vec<T
 /// `document = artifact-mark schema-line sample-rate-line format-line channels-line tags-line`.
 /// Newlines are pure lexer trivia in the shared dialect, so this is genuinely recognizable by
 /// `dsl::Recognizer`, not merely readable.
-fn print_audio_snapshot_body(s: &SemioAudioSnapshot) -> String {
+async fn print_audio_snapshot_body(s: &SemioAudioSnapshot) -> String {
     format!("schema={}\nsampleRate={}\nformat={}\nchannels={}\ntags={}", enc_str(&s.schema), s.sample_rate, enc_format(s.format), enc_list(&s.channels, enc_channel), enc_list(&s.tags, enc_tag),)
 }
-fn parse_audio_snapshot_body(body: &str) -> Result<SemioAudioSnapshot, String> {
+async fn parse_audio_snapshot_body(body: &str) -> Result<SemioAudioSnapshot, String> {
     let mut schema = None;
     let mut sample_rate = None;
     let mut format = None;
@@ -234,27 +234,27 @@ fn parse_audio_snapshot_body(body: &str) -> Result<SemioAudioSnapshot, String> {
 /// `store::ByteReader`, same helpers `✳️flow`'s/`✳️mesh`'s/`✳️image`'s own upgraded
 /// `ArtifactPack` uses) backing the real `ArtifactPack` below — replaces the old
 /// `serde_json::to_vec`-in-envelope shortcut.
-fn write_bytes_lp(out: &mut Vec<u8>, bytes: &[u8]) {
+async fn write_bytes_lp(out: &mut Vec<u8>, bytes: &[u8]) {
     store::pack_rt::write_varint_u64(out, bytes.len() as u64);
     out.extend_from_slice(bytes);
 }
-fn read_bytes_lp(reader: &mut store::ByteReader<'_>) -> Result<Vec<u8>, String> {
+async fn read_bytes_lp(reader: &mut store::ByteReader<'_>) -> Result<Vec<u8>, String> {
     let len = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
     Ok(reader.read_bytes(len).map_err(|e| e.to_string())?.to_vec())
 }
-fn write_str_lp(out: &mut Vec<u8>, s: &str) {
+async fn write_str_lp(out: &mut Vec<u8>, s: &str) {
     write_bytes_lp(out, s.as_bytes());
 }
-fn read_str_lp(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
+async fn read_str_lp(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
     String::from_utf8(read_bytes_lp(reader)?).map_err(|e| e.to_string())
 }
-fn read_f32_le(reader: &mut store::ByteReader<'_>) -> Result<f32, String> {
+async fn read_f32_le(reader: &mut store::ByteReader<'_>) -> Result<f32, String> {
     let bytes = reader.read_bytes(4).map_err(|e| e.to_string())?;
     let arr: [u8; 4] = bytes.try_into().map_err(|_| "f32 read: truncated".to_string())?;
     Ok(f32::from_le_bytes(arr))
 }
 
-fn format_tag(f: SemioAudioFormat) -> u8 {
+async fn format_tag(f: SemioAudioFormat) -> u8 {
     match f {
         SemioAudioFormat::Pcm8 => 0,
         SemioAudioFormat::Pcm16 => 1,
@@ -264,7 +264,7 @@ fn format_tag(f: SemioAudioFormat) -> u8 {
         SemioAudioFormat::Float64 => 5,
     }
 }
-fn format_from_tag(tag: u8) -> Result<SemioAudioFormat, String> {
+async fn format_from_tag(tag: u8) -> Result<SemioAudioFormat, String> {
     match tag {
         0 => Ok(SemioAudioFormat::Pcm8),
         1 => Ok(SemioAudioFormat::Pcm16),
@@ -283,7 +283,7 @@ fn format_from_tag(tag: u8) -> Result<SemioAudioFormat, String> {
 /// (varint count + per-entry varint-length-prefixed `key`/`value` UTF-8) as the honest opaque
 /// `payload` tail (`protocol-array-of-records` gap — `channels`/`tags` are homogeneous
 /// variable-length repeated records).
-fn encode_audio_snapshot_binary(s: &SemioAudioSnapshot) -> Vec<u8> {
+async fn encode_audio_snapshot_binary(s: &SemioAudioSnapshot) -> Vec<u8> {
     const PACK_BINARY_FORMAT: u8 = 1;
     let mut out = Vec::new();
     out.push(PACK_BINARY_FORMAT);
@@ -304,7 +304,7 @@ fn encode_audio_snapshot_binary(s: &SemioAudioSnapshot) -> Vec<u8> {
     }
     out
 }
-fn decode_audio_snapshot_binary(bytes: &[u8]) -> Result<SemioAudioSnapshot, String> {
+async fn decode_audio_snapshot_binary(bytes: &[u8]) -> Result<SemioAudioSnapshot, String> {
     const PACK_BINARY_FORMAT: u8 = 1;
     let mut reader = store::ByteReader::new(bytes);
     let format = reader.read_u8().map_err(|e| e.to_string())?;
@@ -340,11 +340,11 @@ fn decode_audio_snapshot_binary(bytes: &[u8]) -> Result<SemioAudioSnapshot, Stri
 /// Wrapped in the repo-wide `store::semio_format` envelope, unchanged.
 impl store::ArtifactDsl for SemioAudioSnapshot {
     const EXTENSION: &'static str = "semio";
-    fn envelope_id() -> &'static str {
+    async fn envelope_id() -> &'static str {
         STDIO_SEMIOAUDIO_DOCUMENT_SCHEMA
     }
 
-    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+    async fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
         let body = match store::semio_format::split_text_preamble(text) {
             Ok((_, rest)) => rest,
             Err(_) => text,
@@ -352,7 +352,7 @@ impl store::ArtifactDsl for SemioAudioSnapshot {
         parse_audio_snapshot_body(body).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
 
-    fn print_dsl(&self) -> String {
+    async fn print_dsl(&self) -> String {
         let body = print_audio_snapshot_body(self);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
@@ -360,14 +360,14 @@ impl store::ArtifactDsl for SemioAudioSnapshot {
 }
 
 impl store::ArtifactPack for SemioAudioSnapshot {
-    fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
+    async fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
         let raw = encode_audio_snapshot_binary(self);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &raw))
     }
 
-    fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
+    async fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
         if envelope.envelope_id() != <Self as store::ArtifactDsl>::envelope_id() {
             return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.envelope_id())));
@@ -384,7 +384,7 @@ impl store::ArtifactPack for SemioAudioSnapshot {
 /// Single source of truth for `📚️examples/…/🖼️assets/🗣️example.dsl.semio`/`🎒️example.pack.semio`
 /// and for the conformance-law tests in `🎹️composer/🦀️component.rs`.
 #[cfg(test)]
-pub(crate) fn demo_audio_snapshot() -> SemioAudioSnapshot {
+pub(crate) async fn demo_audio_snapshot() -> SemioAudioSnapshot {
     SemioAudioSnapshot {
         schema: STDIO_SEMIOAUDIO_DOCUMENT_SCHEMA.into(),
         sample_rate: 44_100,
@@ -402,12 +402,12 @@ mod tests {
 
     /// 🌱 Reuses `demo_audio_snapshot()` (single source of truth, also feeds the shipped fixtures
     /// and `🎹️composer/🦀️component.rs`'s conformance-law tests) rather than an independent copy.
-    fn sample_snapshot() -> SemioAudioSnapshot {
+    async fn sample_snapshot() -> SemioAudioSnapshot {
         demo_audio_snapshot()
     }
 
     #[test]
-    fn json_pack_round_trips() {
+    async fn json_pack_round_trips() {
         let snap = sample_snapshot();
         let bytes = <SemioAudioSnapshot as store::ArtifactPack>::encode_pack(&snap);
         let back = <SemioAudioSnapshot as store::ArtifactPack>::decode_pack(&bytes).expect("decode");
@@ -415,7 +415,7 @@ mod tests {
     }
 
     #[test]
-    fn dsl_text_round_trips() {
+    async fn dsl_text_round_trips() {
         let snap = sample_snapshot();
         let text = <SemioAudioSnapshot as store::ArtifactDsl>::print_dsl(&snap);
         let back = <SemioAudioSnapshot as store::ArtifactDsl>::parse_dsl(&text).expect("parse");
@@ -423,7 +423,7 @@ mod tests {
     }
 
     #[test]
-    fn default_snapshot_has_no_channels_or_tags() {
+    async fn default_snapshot_has_no_channels_or_tags() {
         let snap = SemioAudioSnapshot::default();
         assert!(snap.channels.is_empty());
         assert!(snap.tags.is_empty());
@@ -433,7 +433,7 @@ mod tests {
     /// 🧪️ codec_retention_law: decode(encode(snapshot)) is byte-for-byte structurally identical
     /// on a fully-populated snapshot (channels/tags non-empty), not just the default.
     #[test]
-    fn codec_retention_law() {
+    async fn codec_retention_law() {
         let snap = sample_snapshot();
         let bytes = <SemioAudioSnapshot as store::ArtifactPack>::encode_pack(&snap);
         let back = <SemioAudioSnapshot as store::ArtifactPack>::decode_pack(&bytes).expect("decode");

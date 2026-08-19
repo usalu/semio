@@ -15,12 +15,12 @@ pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️comp
 //#endregion 📡️SemioProtocol
 
 /// 📦️ Encodes a `CadMutation` to its binary command form.
-pub fn encode_op(operation: &CadMutation) -> Result<Vec<u8>, protocol::ProtocolError> {
+pub async fn encode_op(operation: &CadMutation) -> Result<Vec<u8>, protocol::ProtocolError> {
     operation.encode_op()
 }
 
 /// 📖️ Decodes a `CadMutation` from its binary command form.
-pub fn decode_op(bytes: &[u8]) -> Result<CadMutation, protocol::ProtocolError> {
+pub async fn decode_op(bytes: &[u8]) -> Result<CadMutation, protocol::ProtocolError> {
     CadMutation::decode_op(bytes)
 }
 
@@ -38,7 +38,7 @@ mod tests {
     use store::{create_document_envelope, ArtifactCommand};
 
     #[test]
-    fn encode_decode_op_round_trips_a_representative_operation() {
+    async fn encode_decode_op_round_trips_a_representative_operation() {
         let sample = sample_model_child("op-round-trip-1");
         let operation = CadMutation::CreateShapeModel(CreateShapeModel { child_id: sample.child_id.clone(), target: sample.target.to_uri() });
         let bytes = encode_op(&operation).expect("encode");
@@ -46,13 +46,13 @@ mod tests {
     }
 
     #[test]
-    fn cad_projection_defaults() {
+    async fn cad_projection_defaults() {
         let store = CadStore::new(create_document_envelope(CAD_DOCUMENT_SCHEMA, "cad", empty_cad_snapshot(), None)).expect("store");
         assert_eq!(store.snapshot().expect("projection").id, "cad");
     }
 
     #[test]
-    fn create_shape_model_round_trips_through_store() {
+    async fn create_shape_model_round_trips_through_store() {
         let mut store = CadStore::new(create_document_envelope(CAD_DOCUMENT_SCHEMA, "cad", empty_cad_snapshot(), None)).expect("store");
         let sample = sample_model_child("store-round-trip-1");
         store.dispatch(ArtifactCommand::Apply { mutations: vec![CadMutation::CreateShapeModel(CreateShapeModel { child_id: sample.child_id.clone(), target: sample.target.to_uri() })], description: None }).expect("apply");

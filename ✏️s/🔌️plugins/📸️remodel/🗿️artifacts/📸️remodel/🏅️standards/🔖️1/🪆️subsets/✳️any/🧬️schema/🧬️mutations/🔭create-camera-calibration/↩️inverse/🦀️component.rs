@@ -4,7 +4,7 @@ use crate::artifacts::remodel::mutations::RemodelMutation;
 use crate::artifacts::remodel::RemodelSnapshot;
 
 //#region 🔖️Inverse
-pub fn inverse(payload: &super::mutation::CreateCameraCalibration, base: &RemodelSnapshot) -> Vec<RemodelMutation> {
+pub async fn inverse(payload: &super::mutation::CreateCameraCalibration, base: &RemodelSnapshot) -> Vec<RemodelMutation> {
     if base.calibration.cameras.iter().any(|camera| camera.id == payload.camera.id) {
         return Vec::new();
     }

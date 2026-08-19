@@ -72,7 +72,7 @@ pub enum TiffMutation {
 //#region 🔖️Apply
 /// ▶️ Applies `mutation` to `snapshot`: `let d = mutation.diff(&*snapshot); *snapshot =
 /// d.apply(snapshot); d` — the diff is the single semantics source (csv/png precedent).
-pub fn apply_tiff_mutation(snapshot: &mut TiffSnapshot, mutation: &TiffMutation) -> protocol::MutationOutcome<TiffDiff> {
+pub async fn apply_tiff_mutation(snapshot: &mut TiffSnapshot, mutation: &TiffMutation) -> protocol::MutationOutcome<TiffDiff> {
     let outcome = <TiffMutation as Mutation<TiffSnapshot>>::diff(mutation, snapshot);
     match MutationDiff::apply(outcome.diff(), snapshot) {
         Ok(next) => {
@@ -88,7 +88,7 @@ pub fn apply_tiff_mutation(snapshot: &mut TiffSnapshot, mutation: &TiffMutation)
 impl Mutation<TiffSnapshot> for TiffMutation {
     type Diff = TiffDiff;
 
-    fn diff(&self, base: &TiffSnapshot) -> protocol::MutationOutcome<Self::Diff> {
+    async fn diff(&self, base: &TiffSnapshot) -> protocol::MutationOutcome<Self::Diff> {
         protocol::MutationOutcome::new(match self {
             TiffMutation::NoMutation => TiffDiff::default(),
             TiffMutation::SetSnapshot { snapshot } => diff::diff_set_snapshot(base, snapshot),
@@ -103,7 +103,7 @@ impl Mutation<TiffSnapshot> for TiffMutation {
 
     /// ↩️ Handcrafted, index/tag-aware mutation-level inverses. Out-of-range targets invert to
     /// `NoMutation` (nothing to undo).
-    fn inverse(&self, base: &TiffSnapshot) -> Vec<Self> {
+    async fn inverse(&self, base: &TiffSnapshot) -> Vec<Self> {
         match self {
             TiffMutation::NoMutation => vec![TiffMutation::NoMutation],
             TiffMutation::SetSnapshot { .. } => vec![TiffMutation::SetSnapshot { snapshot: base.clone() }],
@@ -137,16 +137,16 @@ impl Mutation<TiffSnapshot> for TiffMutation {
 /// second time in this file. Grammar: `keyword arg=value ...` (space-separated, same shape the
 /// derive's own handcrafted-wrapper convention uses), one match arm per variant (no `DslVariants`
 /// scaffolding available since nothing here derives it).
-fn enc_snapshot(s: &TiffSnapshot) -> String {
+async fn enc_snapshot(s: &TiffSnapshot) -> String {
     format!("[{},{},{},{}]", enc_str(&s.schema), enc_byte_order(s.byte_order), enc_list(&s.ifds, enc_ifd), hex_encode(&s.pixels))
 }
-fn dec_snapshot(s: &str) -> Result<TiffSnapshot, String> {
+async fn dec_snapshot(s: &str) -> Result<TiffSnapshot, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [schema, byte_order, ifds, pixels] = parts.as_slice() else { return Err(format!("tiff snapshot: expected 4 fields, got {}", parts.len())) };
     Ok(TiffSnapshot { schema: dec_str(schema)?, byte_order: dec_byte_order(byte_order)?, ifds: dec_list(ifds, dec_ifd)?, pixels: hex_decode(pixels)? })
 }
 
-fn print_tiff_mutation(m: &TiffMutation) -> String {
+async fn print_tiff_mutation(m: &TiffMutation) -> String {
     match m {
         TiffMutation::NoMutation => "no-mutation".to_string(),
         TiffMutation::SetSnapshot { snapshot } => format!("set-snapshot snapshot={}", enc_snapshot(snapshot)),
@@ -160,7 +160,7 @@ fn print_tiff_mutation(m: &TiffMutation) -> String {
         TiffMutation::SetPixels { pixels } => format!("set-pixels pixels={}", hex_encode(pixels)),
     }
 }
-fn parse_tiff_mutation(line: &str) -> Result<TiffMutation, String> {
+async fn parse_tiff_mutation(line: &str) -> Result<TiffMutation, String> {
     if line == "no-mutation" {
         return Ok(TiffMutation::NoMutation);
     }
@@ -182,10 +182,10 @@ fn parse_tiff_mutation(line: &str) -> Result<TiffMutation, String> {
 }
 
 impl OpText for TiffMutation {
-    fn print_op(&self) -> String {
+    async fn print_op(&self) -> String {
         print_tiff_mutation(self)
     }
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
+    async fn parse_op(line: &str) -> Result<Self, store::TextError> {
         parse_tiff_mutation(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
 }
@@ -195,7 +195,7 @@ impl OpText for TiffMutation {
 /// `TiffDiff`'s `pub(crate)` [`write_str_lp`]/[`read_str_lp`]/[`write_bytes_lp`]/[`read_bytes_lp`]/
 /// [`enc_ifd_bin`]/[`dec_ifd_bin`] (`../🔺️diff/🦀️component.rs`), same intra-artifact reuse
 /// convention this file's own text codec already uses off `TiffDiff`'s grammar primitives.
-fn enc_snapshot_bin(s: &TiffSnapshot, out: &mut Vec<u8>) {
+async fn enc_snapshot_bin(s: &TiffSnapshot, out: &mut Vec<u8>) {
     write_str_lp(out, &s.schema);
     out.push(match s.byte_order {
         TiffByteOrder::LittleEndian => 0,
@@ -205,7 +205,7 @@ fn enc_snapshot_bin(s: &TiffSnapshot, out: &mut Vec<u8>) {
     s.ifds.iter().for_each(|ifd| enc_ifd_bin(ifd, out));
     write_bytes_lp(out, &s.pixels);
 }
-fn dec_snapshot_bin(reader: &mut store::ByteReader<'_>) -> Result<TiffSnapshot, String> {
+async fn dec_snapshot_bin(reader: &mut store::ByteReader<'_>) -> Result<TiffSnapshot, String> {
     let schema = read_str_lp(reader)?;
     let byte_order = if reader.read_u8().map_err(|e| e.to_string())? == 0 { TiffByteOrder::LittleEndian } else { TiffByteOrder::BigEndian };
     let n = reader.read_varint_u64().map_err(|e| e.to_string())?;
@@ -224,7 +224,7 @@ fn dec_snapshot_bin(reader: &mut store::ByteReader<'_>) -> Result<TiffSnapshot, 
 /// `TiffMutation` variant ordinal, in the same 0-7 order `print_tiff_mutation`'s own keyword
 /// match uses.
 impl OpBinary for TiffMutation {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         let tag: u8 = match self {
             TiffMutation::NoMutation => 0,
             TiffMutation::SetSnapshot { .. } => 1,
@@ -263,7 +263,7 @@ impl OpBinary for TiffMutation {
         Ok(out)
     }
 
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         let mut reader = store::ByteReader::new(bytes);
         let malformed = |what: &'static str, offset: usize, detail: String| protocol::ProtocolError::Malformed { what, offset: offset as u64, detail };
         let _format = reader.read_u8().map_err(|e| malformed("op format", 0, e.to_string()))?;
@@ -314,7 +314,7 @@ impl OpBinary for TiffMutation {
 /// field-type family the recursive `SetTag` payload can carry) — the single source of truth
 /// reused by `ops_grammar_conformance_law`/`protocol_walk_law` below (`⚙️engine/🦀️component.rs`).
 #[cfg(test)]
-pub(crate) fn demo_mutation_cases() -> Vec<TiffMutation> {
+pub(crate) async fn demo_mutation_cases() -> Vec<TiffMutation> {
     vec![
         TiffMutation::NoMutation,
         TiffMutation::SetByteOrder { byte_order: TiffByteOrder::BigEndian },
@@ -339,11 +339,11 @@ mod tests {
     use protocol::command::DiffAlgebra;
 
     //#region 🔖️Fixtures
-    fn short_tag(tag: u16, v: u16) -> TiffTag {
+    async fn short_tag(tag: u16, v: u16) -> TiffTag {
         TiffTag { tag, kind: TiffFieldType::Short, values: TiffValues::Short(vec![v]) }
     }
 
-    fn base_snapshot() -> TiffSnapshot {
+    async fn base_snapshot() -> TiffSnapshot {
         TiffSnapshot {
             schema: "stdio.tiff".into(),
             byte_order: TiffByteOrder::LittleEndian,
@@ -368,7 +368,7 @@ mod tests {
     /// directions workaround (positional pairwise matching), while the TAG-level triple is
     /// id-keyed via a `BTreeMap` union, so it genuinely shows removed+modified+added from a
     /// SINGLE `between()` call — no split needed there.
-    fn sweep_a() -> TiffSnapshot {
+    async fn sweep_a() -> TiffSnapshot {
         TiffSnapshot {
             schema: "stdio.tiff".into(),
             byte_order: TiffByteOrder::LittleEndian,
@@ -380,7 +380,7 @@ mod tests {
         }
     }
 
-    fn sweep_b() -> TiffSnapshot {
+    async fn sweep_b() -> TiffSnapshot {
         TiffSnapshot {
             schema: "stdio.tiff".into(),
             byte_order: TiffByteOrder::BigEndian,
@@ -391,7 +391,7 @@ mod tests {
     //#endregion 🔖️FieldSweepFixtures
 
     //#region 🔖️mutation_diff_law
-    fn assert_mutation_diff_law(base: &TiffSnapshot, mutation: TiffMutation) {
+    async fn assert_mutation_diff_law(base: &TiffSnapshot, mutation: TiffMutation) {
         let expected_diff = mutation.diff(base);
         let mut applied_snapshot = base.clone();
         let returned_diff = apply_tiff_mutation(&mut applied_snapshot, &mutation);
@@ -399,7 +399,7 @@ mod tests {
         assert_eq!(expected_diff.diff().apply(base).expect("diff must apply to base"), applied_snapshot, "diff.diff().apply(base) must equal the imperative mutation result for {mutation:?}");
     }
 
-    fn all_variants(base: &TiffSnapshot) -> Vec<TiffMutation> {
+    async fn all_variants(base: &TiffSnapshot) -> Vec<TiffMutation> {
         vec![
             TiffMutation::NoMutation,
             TiffMutation::SetSnapshot {
@@ -425,7 +425,7 @@ mod tests {
     }
 
     #[test]
-    fn mutation_diff_law() {
+    async fn mutation_diff_law() {
         let base = base_snapshot();
         for m in all_variants(&base) {
             assert_mutation_diff_law(&base, m);
@@ -435,7 +435,7 @@ mod tests {
 
     //#region 🔖️inverse_law
     #[test]
-    fn inverse_law() {
+    async fn inverse_law() {
         let base = base_snapshot();
         for m in all_variants(&base) {
             // Mutation-level round trip.
@@ -456,7 +456,7 @@ mod tests {
     //#endregion 🔖️inverse_law
 
     //#region 🔖️absorb_law
-    fn assert_absorb_law(base: &TiffSnapshot, m1: TiffMutation, m2: TiffMutation) {
+    async fn assert_absorb_law(base: &TiffSnapshot, m1: TiffMutation, m2: TiffMutation) {
         let d1 = m1.diff(base);
         let mid = d1.diff().apply(base).unwrap();
         let d2 = m2.diff(&mid);
@@ -468,7 +468,7 @@ mod tests {
     }
 
     #[test]
-    fn absorb_law() {
+    async fn absorb_law() {
         let base = base_snapshot();
 
         // IFD-level (index-keyed), Insert+Remove-before: insert a new IFD at 1 -> [ifd0,new],
@@ -498,7 +498,7 @@ mod tests {
     }
 
     #[test]
-    fn absorb_law_associativity() {
+    async fn absorb_law_associativity() {
         let base = base_snapshot();
         let d1 = TiffMutation::SetTag { ifd_index: 0, tag: 315, kind: TiffFieldType::Ascii, values: TiffValues::Ascii("a".into()) }.diff(&base);
         let s1 = d1.diff().apply(&base).unwrap();
@@ -526,7 +526,7 @@ mod tests {
 
     //#region 🔖️between_roundtrip_law
     #[test]
-    fn between_roundtrip_law() {
+    async fn between_roundtrip_law() {
         let a = base_snapshot();
         let mut b = base_snapshot();
         b.byte_order = TiffByteOrder::BigEndian;
@@ -543,7 +543,7 @@ mod tests {
 
     //#region 🔖️codec_retention_law
     #[test]
-    fn codec_retention_law() {
+    async fn codec_retention_law() {
         let bytes = crate::artifacts::tiff::engine::encode_tiff(&base_snapshot()).expect("encode synthetic fixture");
         let decoded = crate::artifacts::tiff::engine::decode_tiff(&bytes).expect("decode fixture");
         let reencoded = crate::artifacts::tiff::engine::encode_tiff(&decoded).expect("re-encode fixture");
@@ -559,7 +559,7 @@ mod tests {
 
     //#region 🔖️field_sweep
     #[test]
-    fn field_sweep_covers_every_mutable_field() {
+    async fn field_sweep_covers_every_mutable_field() {
         let a = sweep_a();
         let b = sweep_b();
 
@@ -604,7 +604,7 @@ mod tests {
     //#endregion 🔖️field_sweep
 
     #[test]
-    fn out_of_range_mutation_is_noop_not_panic() {
+    async fn out_of_range_mutation_is_noop_not_panic() {
         let base = base_snapshot();
         let mut snap = base.clone();
         apply_tiff_mutation(&mut snap, &TiffMutation::RemoveIfd { index: 42 });
@@ -623,7 +623,7 @@ mod tests {
     /// every one of the 12 field-type variants (`Rational`/`SRational` pair lists, `Ascii`/`Byte`/
     /// `Undefined` hex, signed and unsigned numeric lists, `Float`/`Double`).
     #[test]
-    fn op_text_binary_roundtrip_law() {
+    async fn op_text_binary_roundtrip_law() {
         let base = base_snapshot();
         let mutations = vec![
             TiffMutation::NoMutation,

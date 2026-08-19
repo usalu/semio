@@ -20,26 +20,26 @@ pub struct SemioGraphArtifact {
 }
 
 impl Default for SemioGraphArtifact {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self::from_snapshot(SemioGraphSnapshot::default())
     }
 }
 
 impl SemioGraphArtifact {
-    pub fn to_snapshot(&self) -> SemioGraphSnapshot {
+    pub async fn to_snapshot(&self) -> SemioGraphSnapshot {
         SemioGraphSnapshot { schema: self.schema.clone(), nodes: self.nodes.clone(), edges: self.edges.clone() }
     }
-    pub fn from_snapshot(snapshot: SemioGraphSnapshot) -> Self {
+    pub async fn from_snapshot(snapshot: SemioGraphSnapshot) -> Self {
         Self { schema: snapshot.schema, nodes: snapshot.nodes, edges: snapshot.edges }
     }
-    pub fn set_snapshot(&mut self, snapshot: SemioGraphSnapshot) {
+    pub async fn set_snapshot(&mut self, snapshot: SemioGraphSnapshot) {
         self.schema = snapshot.schema;
         self.nodes = snapshot.nodes;
         self.edges = snapshot.edges;
     }
 }
 
-pub fn semio_graph_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
+pub async fn semio_graph_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
     schema::ArtifactSchemaDescriptor {
         id: "s.stdio.semio.graph",
         artifact: schema::FacetLeaves {
@@ -89,17 +89,17 @@ pub mod derived_construction {
     //#region 🔖️TypedConstructors
     impl SemioGraphBuilderConstruction {
         /// 🏗️ Starts a fresh, empty graph document.
-        pub fn new() -> Self {
+        pub async fn new() -> Self {
             Self { snapshot: SemioGraphSnapshot::default() }
         }
         /// 🏗️ Appends one node, in insertion order (id-keyed set — order carries no display
         /// meaning, but insertion order is preserved for determinism).
-        pub fn add_node(mut self, id: impl Into<String>, kind: impl Into<String>, label: impl Into<String>, position: SemioPoint2, ports: Vec<SemioGraphPort>, properties: Vec<SemioValueEntry>) -> Self {
+        pub async fn add_node(mut self, id: impl Into<String>, kind: impl Into<String>, label: impl Into<String>, position: SemioPoint2, ports: Vec<SemioGraphPort>, properties: Vec<SemioValueEntry>) -> Self {
             self.snapshot.nodes.push(SemioGraphNode { id: GraphNodeId::new(id), kind: kind.into(), label: label.into(), position, ports, properties });
             self
         }
         /// 🏗️ Appends one edge, in insertion order.
-        pub fn add_edge(mut self, id: impl Into<String>, source: impl Into<String>, target: impl Into<String>, kind: impl Into<String>, label: impl Into<String>) -> Self {
+        pub async fn add_edge(mut self, id: impl Into<String>, source: impl Into<String>, target: impl Into<String>, kind: impl Into<String>, label: impl Into<String>) -> Self {
             self.snapshot.edges.push(SemioGraphEdge { id: GraphEdgeId::new(id), source: GraphNodeId::new(source), target: GraphNodeId::new(target), kind: kind.into(), label: label.into() });
             self
         }
@@ -110,28 +110,28 @@ pub mod derived_construction {
         type Snapshot = SemioGraphSnapshot;
         type Mutation = SemioGraphMutation;
         type Diff = SemioGraphDiff;
-        fn empty() -> Self {
+        async fn empty() -> Self {
             Self { snapshot: SemioGraphSnapshot::default() }
         }
-        fn from_snapshot(snapshot: Self::Snapshot) -> Self {
+        async fn from_snapshot(snapshot: Self::Snapshot) -> Self {
             Self { snapshot }
         }
-        fn from_text(text: &str) -> Result<Self, store::TextError> {
+        async fn from_text(text: &str) -> Result<Self, store::TextError> {
             Ok(Self::from_snapshot(<SemioGraphSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
-        fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
+        async fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
             Ok(Self::from_snapshot(<SemioGraphSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
         }
-        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
+        async fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let diff = <Self::Mutation as protocol::Mutation<SemioGraphSnapshot>>::diff(&mutation, &self.snapshot);
             let diff = diff.apply_to(&mut self.snapshot);
             (self, diff)
         }
-        fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
+        async fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
             self.snapshot = <SemioGraphDiff as protocol::MutationDiff<SemioGraphSnapshot>>::apply(&diff, &self.snapshot)?;
             Ok(self)
         }
-        fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
+        async fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
             Ok(self.snapshot)
         }
     }
@@ -142,7 +142,7 @@ pub mod derived_construction {
         use super::*;
 
         #[test]
-        fn typed_constructors_build_a_populated_snapshot() {
+        async fn typed_constructors_build_a_populated_snapshot() {
             let snapshot = SemioGraphBuilderConstruction::new()
                 .add_node("n1", "source", "Source", SemioPoint2 { x: 0.0, y: 0.0 }, vec![], vec![])
                 .add_node("n2", "sink", "Sink", SemioPoint2 { x: 10.0, y: 10.0 }, vec![], vec![])
@@ -174,7 +174,7 @@ pub mod derived_analysis {
         type Parts = SemioGraphParts;
         const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("graph") };
 
-        fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
+        async fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
             match source {
                 AnalyzeSource::Binary(bytes) => {
                     let marker = STDIO_SEMIOGRAPH_DOCUMENT_SCHEMA.as_bytes();
@@ -194,7 +194,7 @@ pub mod derived_analysis {
             }
         }
 
-        fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
+        async fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
             let mut parts = SemioGraphParts::default();
             let mut diagnostics = Vec::new();
             let mut confidence = IoConfidence::High;

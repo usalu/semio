@@ -25,17 +25,17 @@ pub struct Grid2dSolverBuilder {
 }
 
 impl Grid2dSolverBuilder {
-    pub fn new(model: CompiledModel, topology: Grid2dTopology) -> Self {
+    pub async fn new(model: CompiledModel, topology: Grid2dTopology) -> Self {
         Self { model, topology, init_domains: None, fixed: Vec::new(), config: SearchConfig::default(), constraints: Vec::new() }
     }
 
-    pub fn fix(mut self, x: usize, y: usize, p: PatternId) -> Result<Self, SolveError> {
+    pub async fn fix(mut self, x: usize, y: usize, p: PatternId) -> Result<Self, SolveError> {
         let n = self.topology.node_at(x, y).ok_or(SolveError::ModelTopologyMismatch { reason: "fix() coordinate out of range" })?;
         self.fixed.push((n, p));
         Ok(self)
     }
 
-    pub fn domain(mut self, x: usize, y: usize, allowed: PatternSet) -> Result<Self, SolveError> {
+    pub async fn domain(mut self, x: usize, y: usize, allowed: PatternSet) -> Result<Self, SolveError> {
         let n = self.topology.node_at(x, y).ok_or(SolveError::ModelTopologyMismatch { reason: "domain() coordinate out of range" })?;
         let node_count = self.topology.node_count();
         let domains = self.init_domains.get_or_insert_with(|| vec![self.model.full_domain(); node_count]);
@@ -43,19 +43,19 @@ impl Grid2dSolverBuilder {
         Ok(self)
     }
 
-    pub fn config(mut self, cfg: SearchConfig) -> Self {
+    pub async fn config(mut self, cfg: SearchConfig) -> Self {
         self.config = cfg;
         self
     }
 
     /// 🏗️ Adds a global constraint. See [`crate::wfc_engine::constraint::Constraint`]'s docs for exactly when
     /// it runs (initial restriction + complete-assignment validation, not incremental mid-search).
-    pub fn constraint(mut self, c: Box<dyn Constraint>) -> Self {
+    pub async fn constraint(mut self, c: Box<dyn Constraint>) -> Self {
         self.constraints.push(c);
         self
     }
 
-    pub fn build(self) -> Result<Grid2dSolver, SolveError> {
+    pub async fn build(self) -> Result<Grid2dSolver, SolveError> {
         let node_count = self.topology.node_count();
         let mut init_domains = self.init_domains.unwrap_or_else(|| vec![self.model.full_domain(); node_count]);
         let mut fixed = self.fixed;
@@ -87,7 +87,7 @@ pub struct Grid2dSolver {
 }
 
 impl Grid2dSolver {
-    fn constraint_set(&self) -> Option<ConstraintSet<'_>> {
+    async fn constraint_set(&self) -> Option<ConstraintSet<'_>> {
         if self.constraints.is_empty() {
             None
         } else {
@@ -95,32 +95,32 @@ impl Grid2dSolver {
         }
     }
 
-    pub fn solve(&mut self, seed: u64) -> SolveOutcome {
+    pub async fn solve(&mut self, seed: u64) -> SolveOutcome {
         match self.constraint_set() {
             Some(cs) => search::solve_with_constraints(&self.model, &self.topology, &self.config, seed, Some(&self.init_domains), &self.fixed, None, &cs),
             None => search::solve(&self.model, &self.topology, &self.config, seed, Some(&self.init_domains), &self.fixed),
         }
     }
 
-    pub fn solve_cancellable(&mut self, seed: u64, cancel: &CancelToken) -> SolveOutcome {
+    pub async fn solve_cancellable(&mut self, seed: u64, cancel: &CancelToken) -> SolveOutcome {
         match self.constraint_set() {
             Some(cs) => search::solve_with_constraints(&self.model, &self.topology, &self.config, seed, Some(&self.init_domains), &self.fixed, Some(cancel), &cs),
             None => search::solve_cancellable(&self.model, &self.topology, &self.config, seed, Some(&self.init_domains), &self.fixed, cancel),
         }
     }
 
-    pub fn solve_all(&mut self, seed: u64, limit: usize) -> (Vec<Solution>, bool) {
+    pub async fn solve_all(&mut self, seed: u64, limit: usize) -> (Vec<Solution>, bool) {
         match self.constraint_set() {
             Some(cs) => search::solve_all_with_constraints(&self.model, &self.topology, &self.config, seed, Some(&self.init_domains), &self.fixed, limit, &cs),
             None => search::solve_all(&self.model, &self.topology, &self.config, seed, Some(&self.init_domains), &self.fixed, limit),
         }
     }
 
-    pub fn model(&self) -> &CompiledModel {
+    pub async fn model(&self) -> &CompiledModel {
         &self.model
     }
 
-    pub fn topology(&self) -> &Grid2dTopology {
+    pub async fn topology(&self) -> &Grid2dTopology {
         &self.topology
     }
 
@@ -128,12 +128,12 @@ impl Grid2dSolver {
     /// cell whose value a neighboring chunk already committed, and the seed is deterministically
     /// derived from `world_seed` plus `(chunk_x, chunk_y)` — see [`crate::wfc_engine::chunk`]'s docs for the
     /// exact contract. Re-solving the same chunk coordinate later reproduces identical content.
-    pub fn solve_chunk(&self, world_seed: u64, chunk_x: i64, chunk_y: i64, seam_fixed: &[(crate::wfc_engine::ids::NodeId, PatternId)]) -> SolveOutcome {
+    pub async fn solve_chunk(&self, world_seed: u64, chunk_x: i64, chunk_y: i64, seam_fixed: &[(crate::wfc_engine::ids::NodeId, PatternId)]) -> SolveOutcome {
         chunk::solve_chunk(&self.model, &self.topology, &self.config, world_seed, chunk_x, chunk_y, Some(&self.init_domains), seam_fixed)
     }
 
     /// 🧱️ The pattern assigned at `(x, y)` in `solution`.
-    pub fn get(&self, solution: &Solution, x: usize, y: usize) -> Option<PatternId> {
+    pub async fn get(&self, solution: &Solution, x: usize, y: usize) -> Option<PatternId> {
         let n = self.topology.node_at(x, y)?;
         solution.assignment.get(n.index()).copied()
     }
@@ -141,7 +141,7 @@ impl Grid2dSolver {
     /// 🧱️ Row-major `width * height` tile decode via each pattern's authored tile provenance.
     /// Patterns with no tile provenance (e.g. built directly via [`crate::wfc_engine::model::ModelBuilder`])
     /// decode to `None` at that cell.
-    pub fn decode_tiles(&self, solution: &Solution) -> Vec<Option<crate::wfc_engine::ids::TileId>> {
+    pub async fn decode_tiles(&self, solution: &Solution) -> Vec<Option<crate::wfc_engine::ids::TileId>> {
         solution.assignment.iter().map(|&p| self.model.pattern_info(p).tile).collect()
     }
 }
@@ -154,7 +154,7 @@ mod tests {
     use crate::wfc_engine::grid2d::{declare_stencil_relations_tiled, Boundary, Stencil2d};
     use crate::wfc_engine::tiled::TiledModelBuilder;
 
-    fn checkerboard(width: usize, height: usize, boundary: Boundary) -> (CompiledModel, Grid2dTopology) {
+    async fn checkerboard(width: usize, height: usize, boundary: Boundary) -> (CompiledModel, Grid2dTopology) {
         let mut b = TiledModelBuilder::new();
         let black = b.tile(1.0);
         let white = b.tile(1.0);
@@ -168,7 +168,7 @@ mod tests {
     }
 
     #[test]
-    fn solves_a_checkerboard_grid() {
+    async fn solves_a_checkerboard_grid() {
         let (model, topo) = checkerboard(5, 5, Boundary::Open);
         let mut solver = Grid2dSolverBuilder::new(model, topo).build().unwrap();
         let outcome = solver.solve(1);
@@ -176,7 +176,7 @@ mod tests {
     }
 
     #[test]
-    fn fix_pins_a_cell_and_propagates() {
+    async fn fix_pins_a_cell_and_propagates() {
         let (model, topo) = checkerboard(4, 4, Boundary::Open);
         let black = PatternId(0);
         let white = PatternId(1);
@@ -192,7 +192,7 @@ mod tests {
     }
 
     #[test]
-    fn solve_chunk_respects_seam_pins_and_reproduces_deterministically() {
+    async fn solve_chunk_respects_seam_pins_and_reproduces_deterministically() {
         let (model, topo) = checkerboard(5, 5, Boundary::Open);
         let seam_node = topo.node_at(0, 0).unwrap();
         let solver = Grid2dSolverBuilder::new(model, topo).build().unwrap();
@@ -210,7 +210,7 @@ mod tests {
     }
 
     #[test]
-    fn masked_cells_are_excluded_and_solve_completes() {
+    async fn masked_cells_are_excluded_and_solve_completes() {
         let mut b = TiledModelBuilder::new();
         let black = b.tile(1.0);
         let white = b.tile(1.0);
@@ -228,7 +228,7 @@ mod tests {
     }
 
     #[test]
-    fn wrap_boundary_solves_consistently() {
+    async fn wrap_boundary_solves_consistently() {
         let (model, topo) = checkerboard(4, 4, Boundary::Wrap);
         let mut solver = Grid2dSolverBuilder::new(model, topo).build().unwrap();
         let outcome = solver.solve(1);
@@ -236,7 +236,7 @@ mod tests {
     }
 
     #[test]
-    fn odd_size_wrap_is_unsatisfiable_for_two_color_checkerboard() {
+    async fn odd_size_wrap_is_unsatisfiable_for_two_color_checkerboard() {
         // A 3x3 wrapped grid forces an odd cycle along each axis; two colors can't 2-color it.
         let (model, topo) = checkerboard(3, 3, Boundary::Wrap);
         let mut solver = Grid2dSolverBuilder::new(model, topo).config(SearchConfig { mode: search::SearchMode::Backtrack, ..Default::default() }).build().unwrap();
@@ -245,7 +245,7 @@ mod tests {
     }
 
     #[test]
-    fn graph_vs_grid2d_strict_equivalence_von_neumann_open() {
+    async fn graph_vs_grid2d_strict_equivalence_von_neumann_open() {
         // Independently hand-enumerated arcs for a 3x4 VonNeumann/Open grid (not derived from
         // 🦀️grid2d.rs's own resolve_coord logic) fed into a GraphTopology, compared against the
         // same model solved through Grid2dTopology: both must produce byte-identical assignments
@@ -305,7 +305,7 @@ mod tests {
     }
 
     #[test]
-    fn decode_tiles_round_trips_tile_provenance() {
+    async fn decode_tiles_round_trips_tile_provenance() {
         let (model, topo) = checkerboard(2, 2, Boundary::Open);
         let mut solver = Grid2dSolverBuilder::new(model, topo).build().unwrap();
         match solver.solve(1) {

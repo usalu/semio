@@ -82,11 +82,11 @@ pub struct ScheduleSet {
 }
 
 impl ScheduleSet {
-    pub fn constant_value(&self, id: ScheduleId) -> Option<f64> {
+    pub async fn constant_value(&self, id: ScheduleId) -> Option<f64> {
         self.constants.iter().find(|c| c.id == id).map(|c| c.value)
     }
 
-    pub fn daily_value(&self, id: ScheduleId, hour: u8) -> Option<f64> {
+    pub async fn daily_value(&self, id: ScheduleId, hour: u8) -> Option<f64> {
         let daily = self.daily.iter().find(|d| d.id == id)?;
         let h = (hour as usize).min(23);
         let mut v = daily.hourly_values[h];
@@ -96,13 +96,13 @@ impl ScheduleSet {
         Some(v)
     }
 
-    pub fn weekly_value(&self, id: ScheduleId, day_of_week: u8, hour: u8) -> Option<f64> {
+    pub async fn weekly_value(&self, id: ScheduleId, day_of_week: u8, hour: u8) -> Option<f64> {
         let weekly = self.weekly.iter().find(|w| w.id == id)?;
         let dow = (day_of_week as usize).min(6);
         self.daily_value(weekly.daily_schedule_ids[dow], hour)
     }
 
-    pub fn annual_value(&self, id: ScheduleId, year: u16, month: u8, day: u8, hour: u8) -> Option<f64> {
+    pub async fn annual_value(&self, id: ScheduleId, year: u16, month: u8, day: u8, hour: u8) -> Option<f64> {
         let annual = self.annual.iter().find(|a| a.id == id)?;
         if annual.holiday_dates.contains(&(year, month, day)) {
             if let Some(hid) = annual.holiday_daily_schedule_id {
@@ -117,7 +117,7 @@ impl ScheduleSet {
         self.daily_value(annual.default_daily_schedule_id, hour)
     }
 
-    pub fn lookup(&self, id: ScheduleId, ctx: &ScheduleContext) -> f64 {
+    pub async fn lookup(&self, id: ScheduleId, ctx: &ScheduleContext) -> f64 {
         if let Some(v) = self.constant_value(id) {
             return v;
         }
@@ -138,7 +138,7 @@ impl ScheduleSet {
     }
 
     /// 📦️ Pre-expand schedule values for all timesteps in a run period.
-    pub fn expand(&self, id: ScheduleId, ctxs: &[ScheduleContext]) -> Vec<f64> {
+    pub async fn expand(&self, id: ScheduleId, ctxs: &[ScheduleContext]) -> Vec<f64> {
         ctxs.iter().map(|c| self.lookup(id, c)).collect()
     }
 }
@@ -157,7 +157,7 @@ pub struct ScheduleContext {
     pub is_dst: bool,
 }
 
-fn date_in_range(m: u8, d: u8, sm: u8, sd: u8, em: u8, ed: u8) -> bool {
+async fn date_in_range(m: u8, d: u8, sm: u8, sd: u8, em: u8, ed: u8) -> bool {
     let md = m as u16 * 32 + d as u16;
     let start = sm as u16 * 32 + sd as u16;
     let end = em as u16 * 32 + ed as u16;
@@ -174,14 +174,14 @@ mod tests {
     use super::*;
 
     #[test]
-    fn constant_schedule_lookup() {
+    async fn constant_schedule_lookup() {
         let set = ScheduleSet { constants: vec![ConstantSchedule { id: ScheduleId(1), value: 0.5 }], ..Default::default() };
         let ctx = ScheduleContext { year: 2026, month: 1, day: 1, hour: 12, day_of_week: 4, timestep_index: 0, is_dst: false };
         assert!((set.lookup(ScheduleId(1), &ctx) - 0.5).abs() < 1e-9);
     }
 
     #[test]
-    fn daily_schedule_respects_limits() {
+    async fn daily_schedule_respects_limits() {
         let set = ScheduleSet { daily: vec![DailySchedule { id: ScheduleId(2), hourly_values: [2.0; 24], interpolation: ScheduleInterpolation::Discrete, limits: Some(ScheduleLimits { min: 0.0, max: 1.0 }) }], ..Default::default() };
         assert!((set.daily_value(ScheduleId(2), 10).unwrap() - 1.0).abs() < 1e-9);
     }

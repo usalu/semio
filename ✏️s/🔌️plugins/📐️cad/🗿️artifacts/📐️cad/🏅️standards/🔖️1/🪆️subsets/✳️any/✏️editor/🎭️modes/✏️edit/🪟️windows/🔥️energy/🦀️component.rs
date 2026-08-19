@@ -20,7 +20,7 @@ pub const PANE: CadPaneId = CadPaneId::Energy;
 /// 🧱️ Stitched into the app manifest by `crate::editor::cad::create_cad_app`. `options.measures` stays
 /// empty on purpose: cad's measures are config-derived and rebuilt per frame by [`window_measures`],
 /// never frozen into the manifest.
-pub fn definition() -> WindowKindDefinition {
+pub async fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
         id: WINDOW_KIND_ID.into(),
         label: LocalizedLabel::native("Energy", "Energie"),
@@ -40,17 +40,17 @@ pub fn definition() -> WindowKindDefinition {
 }
 
 /// 🎚️ The live chrome measures for this window, collected from the mode's `🎚️options/*` components.
-pub fn window_measures(runtime: &CadPlayRuntime, is_de: bool) -> Vec<WindowMeasure> {
+pub async fn window_measures(runtime: &CadPlayRuntime, is_de: bool) -> Vec<WindowMeasure> {
     vec![options::projection::measure(runtime, PANE), options::sun::measure(runtime), options::dislocate::measure(runtime.dislocate_options(WINDOW_KIND_ID), is_de)]
 }
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(view: &CadPlayView, active_utility: Option<&str>, options: CadDislocateOptions) -> UiNode {
+pub async fn render(view: &CadPlayView, active_utility: Option<&str>, options: CadDislocateOptions) -> UiNode {
     edit::build_world_scene_for_pane(view, PANE, SURFACE_ID, active_utility, options)
 }
 
-pub fn engagement(view: &CadPlayView, labels: &CadLabels) -> WindowEngagement {
+pub async fn engagement(view: &CadPlayView, labels: &CadLabels) -> WindowEngagement {
     edit::cad_window_engagement(view, PANE, labels)
 }
 //#endregion 🔖️Render

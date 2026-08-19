@@ -30,7 +30,7 @@ semio_framework_plugin::app_labels! {
 
 /// 🗣️ Resolves the raster app's label set for a config's locale — the one call site every window/panel
 /// render fn goes through.
-pub fn raster_play_labels(cfg: &RasterConfig) -> &'static RasterPlayLabels {
+pub async fn raster_play_labels(cfg: &RasterConfig) -> &'static RasterPlayLabels {
     semio_framework_plugin::resolve_labels_for_locale::<RasterPlayLabels>(&cfg.locale)
 }
 //#endregion 🔖️Terminology

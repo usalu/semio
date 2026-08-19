@@ -22,16 +22,16 @@ pub struct GroupNodes {
 impl protocol::MutationKind<SemioDrawingSnapshot, SemioDrawingMutation> for GroupNodes {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "group", entity: "nodes", kind: "group", record: "GroupedNodes" };
 
-    fn diff(&self, base: &SemioDrawingSnapshot) -> protocol::MutationOutcome<<SemioDrawingMutation as protocol::Mutation<SemioDrawingSnapshot>>::Diff> {
+    async fn diff(&self, base: &SemioDrawingSnapshot) -> protocol::MutationOutcome<<SemioDrawingMutation as protocol::Mutation<SemioDrawingSnapshot>>::Diff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &SemioDrawingSnapshot) -> Vec<SemioDrawingMutation> {
+    async fn inverse(&self, base: &SemioDrawingSnapshot) -> Vec<SemioDrawingMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         format!("Group {} node(s) in layer #{}", self.indices.len(), self.parent.layer)
     }
-    fn target(&self) -> Vec<String> {
+    async fn target(&self) -> Vec<String> {
         vec![self.parent.layer.to_string()]
     }
 }

@@ -10,6 +10,6 @@ use crate::artifacts::curate::standards::v1::subsets;
 use semio_framework_plugin::app::declarations::{MediaDeclaration, StandardDeclaration};
 use semio_framework_plugin::StandardId;
 
-pub fn standard() -> StandardDeclaration {
+pub async fn standard() -> StandardDeclaration {
     StandardDeclaration { id: StandardId("1"), media: MediaDeclaration { mimes: &["application/vnd.semio.sourcing.curate+json"], extensions: &["curate"] }, subsets: vec![subsets::any::subset()] }
 }

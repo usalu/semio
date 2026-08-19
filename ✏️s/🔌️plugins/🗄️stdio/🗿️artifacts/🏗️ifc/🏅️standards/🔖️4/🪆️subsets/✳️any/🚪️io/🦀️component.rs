@@ -28,11 +28,11 @@ pub mod derived_composition {
         type Snapshot = IfcSnapshot;
         const WRITES: Dialect = DIALECT;
 
-        fn reads() -> &'static [Dialect] {
+        async fn reads() -> &'static [Dialect] {
             &[DIALECT, DEP_TXT]
         }
 
-        fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+        async fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
             // 🌱 Every listed read dialect's payload is raw text/bytes that this artifact's own
             // analyzer already round-trips through `store::Document{Dsl,Pack}` -- including bytes
             // claiming a dependency's dialect, since (for a single-standard DAG-adjacent dependency
@@ -66,13 +66,13 @@ mod tests {
     use crate::artifacts::ifc::STDIO_IFC_DOCUMENT_SCHEMA;
 
     #[test]
-    fn empty_snapshot_matches_schema() {
+    async fn empty_snapshot_matches_schema() {
         let snapshot = empty_ifc_snapshot();
         assert_eq!(snapshot.schema, STDIO_IFC_DOCUMENT_SCHEMA);
     }
 
     #[test]
-    fn codec_round_trip() {
+    async fn codec_round_trip() {
         let snap = empty_ifc_snapshot();
         let text = store::ArtifactDsl::print_dsl(&snap);
         let parsed = <IfcSnapshot as store::ArtifactDsl>::parse_dsl(&text).expect("parse");
@@ -97,7 +97,7 @@ mod tests {
         /// ✅️ "committed files parse": all 6 handcrafted `.grammar.semio`/`.protocol.semio` files
         /// parse under the real dialect.
         #[test]
-        fn committed_facet_files_parse() {
+        async fn committed_facet_files_parse() {
             for (label, text) in [("snapshot grammar", snapshot::text::COMPONENT_GRAMMAR_SEMIO), ("mutations grammar", mutations::text::COMPONENT_GRAMMAR_SEMIO), ("diff grammar", diff::text::COMPONENT_GRAMMAR_SEMIO)] {
                 let grammar = dsl::parse_grammar(text).unwrap_or_else(|e| panic!("{label}: parse_grammar failed: {e:?}"));
                 assert_eq!(grammar.dialect, dsl::SemioDialect::Grammar, "{label}: expected grammar dialect");
@@ -111,7 +111,7 @@ mod tests {
         /// for the demo snapshot, preamble-stripped-and-reconstructed the same way
         /// `m5_handcrafted_grammar_conformance` itself does.
         #[test]
-        fn grammar_conformance_law() {
+        async fn grammar_conformance_law() {
             let grammar = dsl::parse_grammar(snapshot::text::COMPONENT_GRAMMAR_SEMIO).expect("parse snapshot grammar");
             let recognizer = dsl::Recognizer::compile(&grammar);
             let text = store::ArtifactDsl::print_dsl(&demo_ifc_snapshot());
@@ -130,7 +130,7 @@ mod tests {
         /// ✅️ `ops_grammar_conformance_law`: the mutations grammar recognizes real `print_op`
         /// output for every `IfcMutation` demo case.
         #[test]
-        fn ops_grammar_conformance_law() {
+        async fn ops_grammar_conformance_law() {
             let grammar = dsl::parse_grammar(mutations::text::COMPONENT_GRAMMAR_SEMIO).expect("parse mutations grammar");
             let recognizer = dsl::Recognizer::compile(&grammar);
             for mutation in mutations::demo_mutation_cases() {
@@ -142,7 +142,7 @@ mod tests {
         /// ✅️ `diff_grammar_conformance_law`: the diff grammar recognizes real `print_diff` output
         /// for every representative `IfcDiff` demo case.
         #[test]
-        fn diff_grammar_conformance_law() {
+        async fn diff_grammar_conformance_law() {
             let grammar = dsl::parse_grammar(diff::text::COMPONENT_GRAMMAR_SEMIO).expect("parse diff grammar");
             let recognizer = dsl::Recognizer::compile(&grammar);
             for d in diff::demo_diff_cases() {
@@ -155,7 +155,7 @@ mod tests {
         /// snapshot pack (envelope-unwrapped first), every demo mutation's `encode_op`, every demo
         /// diff's `encode_diff` — asserting `consumed == bytes.len()`.
         #[test]
-        fn protocol_walk_law() {
+        async fn protocol_walk_law() {
             let pack_spec = dsl::parse_protocol(snapshot::binary::COMPONENT_PROTOCOL_SEMIO).expect("parse snapshot protocol");
             let packed = store::ArtifactPack::encode_pack(&demo_ifc_snapshot());
             let (_, inner) = store::semio_format::unwrap_binary(&packed).expect("unwrap semio envelope");
@@ -180,7 +180,7 @@ mod tests {
         /// ✅️ `fixture_honesty_law`: the shipped `.dsl.semio`/`.pack.semio` fixtures are GENUINE
         /// `print_dsl`/`encode_pack` output of `demo_ifc_snapshot()`.
         #[test]
-        fn fixture_honesty_law() {
+        async fn fixture_honesty_law() {
             const FIXTURE_DSL: &str = include_str!("../../../../🔖️2x3/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio");
             const FIXTURE_PACK: &[u8] = include_bytes!("../../../../🔖️2x3/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🎒️example.pack.semio");
 
@@ -208,7 +208,7 @@ pub mod io_registry {
 
     static ENTRIES: OnceLock<Vec<ComposerEntry>> = OnceLock::new();
 
-    pub fn entries() -> &'static [ComposerEntry] {
+    pub async fn entries() -> &'static [ComposerEntry] {
         ENTRIES.get_or_init(|| vec![composer_entry_of::<IfcRawAnyComposer>()]).as_slice()
     }
 }

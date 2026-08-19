@@ -24,12 +24,12 @@ pub mod derived_composition {
         type Snapshot = PptxSnapshot;
         const WRITES: Dialect = DIALECT_STRICT;
 
-        fn reads() -> &'static [Dialect] {
+        async fn reads() -> &'static [Dialect] {
             &[DIALECT_ANY, DIALECT_STRICT, DEP_ZIP, DEP_XML]
         }
 
-        fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
-            let inner = PptxAnyComposer::compose(sources)?;
+        async fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+            let inner = semio_framework_plugin::resolve_ready(PptxAnyComposer::compose(sources))?;
             let checks = check_strict_conformance(&inner.snapshot);
             let (hard, soft): (Vec<Diagnostic>, Vec<Diagnostic>) = checks.into_iter().partition(|d| matches!(d.severity, Severity::Error | Severity::Fatal));
             if !hard.is_empty() {
@@ -50,7 +50,7 @@ pub mod derived_composition {
     impl SubsetValidator for PptxStrictValidator {
         const DIALECT: Dialect = DIALECT_STRICT;
 
-        fn validate(payload: &IoPayload) -> Vec<Diagnostic> {
+        async fn validate(payload: &IoPayload) -> Vec<Diagnostic> {
             let decoded = match payload {
                 IoPayload::Binary(bytes) => <PptxSnapshot as store::ArtifactPack>::decode_pack(bytes).ok(),
                 IoPayload::Text(text) => <PptxSnapshot as store::ArtifactDsl>::parse_dsl(text).ok(),
@@ -71,7 +71,7 @@ pub mod derived_composition {
 
     static VALIDATOR_ENTRY: OnceLock<SubsetValidatorEntry> = OnceLock::new();
 
-    fn validator_entry() -> &'static SubsetValidatorEntry {
+    async fn validator_entry() -> &'static SubsetValidatorEntry {
         VALIDATOR_ENTRY.get_or_init(subset_validator_entry_of::<PptxStrictValidator>)
     }
 
@@ -80,7 +80,7 @@ pub mod derived_composition {
     /// itself is registered separately by the standard-level composer aggregator
     /// (`crate::artifacts::pptx::standards::v_ecma_376::engine::io_registry::entries()`), matching how `✳️any`'s
     /// own entry is registered.
-    pub fn register() {
+    pub async fn register() {
         let _ = register_subset_validator(validator_entry());
     }
     //#endregion 🔖️SubsetValidator
@@ -98,7 +98,7 @@ pub mod derived_composition {
             "</p:presentation>",
         );
 
-        fn hex_encode(bytes: &[u8]) -> String {
+        async fn hex_encode(bytes: &[u8]) -> String {
             bytes.iter().map(|b| format!("{b:02x}")).collect()
         }
 
@@ -109,7 +109,7 @@ pub mod derived_composition {
         /// content). Routing through `AnalyzeSource::Text(hex)` (`ArtifactDsl::parse_dsl`) is how the
         /// `📄️pdf` 1.7 `✳️a` pilot's own composer tests exercise the real decode path -- same
         /// technique here.
-        fn strict_package_hex() -> String {
+        async fn strict_package_hex() -> String {
             let mut opc = OpcPackage::empty();
             opc.content_types.set_default("rels", RELS_CONTENT_TYPE);
             opc.content_types.set_default("xml", "application/xml");
@@ -122,7 +122,7 @@ pub mod derived_composition {
         }
 
         #[test]
-        fn conforming_strict_package_composes_and_stamps_strict() {
+        async fn conforming_strict_package_composes_and_stamps_strict() {
             let hex = strict_package_hex();
             let sources = vec![ComposeSource { dialect: DIALECT_ANY, payload: AnalyzeSource::Text(&hex) }];
             let composed = PptxStrictComposerComposition::compose(&sources).expect("clean Strict document must compose to strict");
@@ -130,7 +130,7 @@ pub mod derived_composition {
         }
 
         #[test]
-        fn transitional_document_fails_compose_with_real_diagnostic() {
+        async fn transitional_document_fails_compose_with_real_diagnostic() {
             let mut opc = OpcPackage::empty();
             opc.content_types.set_default("rels", RELS_CONTENT_TYPE);
             opc.content_types.set_default("xml", "application/xml");
@@ -152,7 +152,7 @@ pub mod derived_composition {
         }
 
         #[test]
-        fn subset_validator_recheck_flags_clean_document_as_clean() {
+        async fn subset_validator_recheck_flags_clean_document_as_clean() {
             let hex = strict_package_hex();
             let diagnostics = PptxStrictValidator::validate(&IoPayload::Text(hex));
             assert!(diagnostics.iter().all(|d| d.severity != Severity::Error), "wire recheck must never report a hard violation for a clean Strict document: {diagnostics:?}");

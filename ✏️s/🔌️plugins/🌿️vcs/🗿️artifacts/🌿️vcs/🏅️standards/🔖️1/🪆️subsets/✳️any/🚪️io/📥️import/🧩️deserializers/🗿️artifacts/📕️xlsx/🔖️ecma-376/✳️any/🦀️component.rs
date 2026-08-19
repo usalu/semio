@@ -17,7 +17,7 @@ pub struct XlsxIntoVcs;
 impl Deserializer<VcsSnapshot> for XlsxIntoVcs {
     const FROM: Dialect = XLSX_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Lossy;
-    fn deserialize(payload: &IoPayload) -> IoResult<VcsSnapshot> {
+    async fn deserialize(payload: &IoPayload) -> IoResult<VcsSnapshot> {
         let IoPayload::Binary(bytes) = payload else {
             return Err(IoError { message: "XlsxIntoVcs: expected a binary xlsx payload".to_string(), diagnostics: Vec::new() });
         };

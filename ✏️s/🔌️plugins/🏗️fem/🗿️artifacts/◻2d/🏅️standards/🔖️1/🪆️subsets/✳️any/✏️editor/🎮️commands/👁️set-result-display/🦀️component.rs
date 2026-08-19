@@ -18,7 +18,7 @@ pub struct SetResultDisplay {
     pub mode_index: u32,
 }
 
-pub fn handle(payload: &SetResultDisplay, _doc: &ArtifactView<'_, Fem2dSnapshot>, _cfg: &ConfigView<'_, Fem2dConfig>) -> Result<Emit<Fem2dMutation, Fem2dConfigMutation>, Fault> {
+pub async fn handle(payload: &SetResultDisplay, _doc: &ArtifactView<'_, Fem2dSnapshot>, _cfg: &ConfigView<'_, Fem2dConfig>) -> Result<Emit<Fem2dMutation, Fem2dConfigMutation>, Fault> {
     Ok(Emit::config(vec![Fem2dConfigMutation::SetResultDisplay { source_id: payload.source_id.clone(), mode: payload.mode.clone(), mode_index: payload.mode_index }]))
 }
 
@@ -30,7 +30,7 @@ mod tests {
     use crate::editor::fem2d::Fem2dCommand;
 
     #[test]
-    fn set_result_display_is_config_only() {
+    async fn set_result_display_is_config_only() {
         let mut app = fem2d_app();
         let before = app.snapshot().expect("snapshot");
         let result = dispatch(&mut app, Fem2dCommand::SetResultDisplay(SetResultDisplay { source_id: Some("dead".into()), mode: "modal".into(), mode_index: 0 }));

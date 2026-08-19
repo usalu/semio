@@ -26,7 +26,7 @@ const FROM_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.dxf", standard: 
 const INTO_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("drawing") };
 
 //#region 🔖️Geometry
-fn ellipse_path(cx: f64, cy: f64, r: f64) -> Vec<PathSegment> {
+async fn ellipse_path(cx: f64, cy: f64, r: f64) -> Vec<PathSegment> {
     vec![
         PathSegment::MoveTo { to: SemioPoint2 { x: cx + r, y: cy } },
         PathSegment::ArcTo { rx: r, ry: r, x_rotation: 0.0, large_arc: true, sweep: true, to: SemioPoint2 { x: cx - r, y: cy } },
@@ -35,7 +35,7 @@ fn ellipse_path(cx: f64, cy: f64, r: f64) -> Vec<PathSegment> {
     ]
 }
 
-fn arc_path(cx: f64, cy: f64, r: f64, start_deg: f64, end_deg: f64) -> Vec<PathSegment> {
+async fn arc_path(cx: f64, cy: f64, r: f64, start_deg: f64, end_deg: f64) -> Vec<PathSegment> {
     let (sr, er) = (start_deg.to_radians(), end_deg.to_radians());
     let start = SemioPoint2 { x: cx + r * sr.cos(), y: cy + r * sr.sin() };
     let end = SemioPoint2 { x: cx + r * er.cos(), y: cy + r * er.sin() };
@@ -46,7 +46,7 @@ fn arc_path(cx: f64, cy: f64, r: f64, start_deg: f64, end_deg: f64) -> Vec<PathS
 //#endregion 🔖️Geometry
 
 //#region 🔖️EntityMap
-fn draw_node_from_entity(e: &DxfEntity) -> Option<DrawNode> {
+async fn draw_node_from_entity(e: &DxfEntity) -> Option<DrawNode> {
     match e {
         DxfEntity::Line { start, end, .. } => Some(DrawNode::Path { segments: vec![PathSegment::MoveTo { to: SemioPoint2 { x: start[0], y: start[1] } }, PathSegment::LineTo { to: SemioPoint2 { x: end[0], y: end[1] } }], style: None }),
         DxfEntity::Circle { center, radius, .. } => Some(DrawNode::Path { segments: ellipse_path(center[0], center[1], *radius), style: None }),
@@ -84,7 +84,7 @@ fn draw_node_from_entity(e: &DxfEntity) -> Option<DrawNode> {
     }
 }
 
-fn entity_layer(e: &DxfEntity) -> Option<&str> {
+async fn entity_layer(e: &DxfEntity) -> Option<&str> {
     match e {
         DxfEntity::Line { layer, .. } | DxfEntity::Circle { layer, .. } | DxfEntity::Arc { layer, .. } | DxfEntity::Polyline { layer, .. } | DxfEntity::Text { layer, .. } | DxfEntity::Solid { layer, .. } | DxfEntity::Insert { layer, .. } => {
             Some(layer.as_str())
@@ -131,7 +131,7 @@ impl ArtifactDeserializer for SemioDrawingFromDxf {
 mod tests {
     use super::*;
 
-    fn sample_dxf() -> DxfSnapshot {
+    async fn sample_dxf() -> DxfSnapshot {
         DxfSnapshot {
             entities: vec![
                 DxfEntity::Line { start: [0.0, 0.0, 0.0], end: [1.0, 0.0, 0.0], layer: "0".into(), unknown_group_codes: vec![] },
@@ -143,7 +143,7 @@ mod tests {
     }
 
     #[test]
-    fn buckets_entities_by_layer_and_drops_unmodeled() {
+    async fn buckets_entities_by_layer_and_drops_unmodeled() {
         let drawing = semio_framework_plugin::resolve_ready(SemioDrawingFromDxf::deserialize(&sample_dxf())).expect("deserialize");
         assert_eq!(drawing.layers.len(), 2);
         assert_eq!(drawing.layers[0].id, "0");

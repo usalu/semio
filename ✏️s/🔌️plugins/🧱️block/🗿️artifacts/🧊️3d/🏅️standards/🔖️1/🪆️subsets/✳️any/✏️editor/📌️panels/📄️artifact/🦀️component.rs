@@ -11,7 +11,7 @@ pub const BLOCK3D_BODY_DOCUMENT: &str = "block3d.play.document";
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
-pub fn definition() -> PanelTabDefinition {
+pub async fn definition() -> PanelTabDefinition {
     PanelTabDefinition {
         kind: PanelTabKind::App(FRAMEWORK_PANEL_TAB_ARTIFACT_ID.into()),
         label: LocalizedLabel::native(FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL, "Dokument"),
@@ -28,7 +28,7 @@ pub fn definition() -> PanelTabDefinition {
 /// `vortex` domain — the framework stamps this tree's selection/hover presence from that domain
 /// (`.interaction_domain`) and prunes stale ids through that same topology, so no per-item click
 /// action is declared here anymore (clicks are translated into `interactionSelect` generically).
-pub fn render(definition: &Block3dSnapshot, labels: &Block3dLabels) -> UiNode {
+pub async fn render(definition: &Block3dSnapshot, labels: &Block3dLabels) -> UiNode {
     let builder = PanelTreeBuilder::new("block3d-play-document");
     let representation_items: Vec<UiTreeItemNode> = definition
         .representations
@@ -55,7 +55,7 @@ mod tests {
     use crate::editor::block3d::testkit::{new_app, render as render_body};
 
     #[test]
-    fn renders_document_tree() {
+    async fn renders_document_tree() {
         let mut app = new_app();
         assert!(render_body(&mut app, BLOCK3D_BODY_DOCUMENT).contains("Representations"));
     }

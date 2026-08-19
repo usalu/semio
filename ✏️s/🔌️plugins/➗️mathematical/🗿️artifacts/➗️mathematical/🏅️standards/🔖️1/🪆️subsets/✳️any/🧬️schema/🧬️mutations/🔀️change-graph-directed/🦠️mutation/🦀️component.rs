@@ -12,16 +12,16 @@ pub struct ChangeGraphDirected {
 impl protocol::MutationKind<MathematicalSnapshot, MathematicalMutation> for ChangeGraphDirected {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "graph", kind: "change-graph-directed", record: "ChangedGraphDirected" };
 
-    fn diff(&self, base: &MathematicalSnapshot) -> protocol::MutationOutcome<<MathematicalMutation as protocol::Mutation<MathematicalSnapshot>>::Diff> {
+    async fn diff(&self, base: &MathematicalSnapshot) -> protocol::MutationOutcome<<MathematicalMutation as protocol::Mutation<MathematicalSnapshot>>::Diff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &MathematicalSnapshot) -> Vec<MathematicalMutation> {
+    async fn inverse(&self, base: &MathematicalSnapshot) -> Vec<MathematicalMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         format!("Set graph direction to {}", if self.new_directed { "directed" } else { "undirected" })
     }
-    fn target(&self) -> Vec<String> {
+    async fn target(&self) -> Vec<String> {
         vec!["graph".into()]
     }
 }

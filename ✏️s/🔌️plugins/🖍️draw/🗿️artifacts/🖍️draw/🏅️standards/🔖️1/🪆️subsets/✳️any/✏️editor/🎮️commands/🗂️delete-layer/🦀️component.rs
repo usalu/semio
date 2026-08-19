@@ -14,7 +14,7 @@ pub struct DeleteLayer {
     pub layer_id: String,
 }
 
-pub fn handle(payload: &DeleteLayer, doc: &ArtifactView<'_, DrawSnapshot>, _cfg: &ConfigView<'_, DrawConfig>, _session: &mut DrawSession) -> Result<Emit<DrawMutation, DrawConfigMutation>, Fault> {
+pub async fn handle(payload: &DeleteLayer, doc: &ArtifactView<'_, DrawSnapshot>, _cfg: &ConfigView<'_, DrawConfig>, _session: &mut DrawSession) -> Result<Emit<DrawMutation, DrawConfigMutation>, Fault> {
     let document = doc.snapshot;
     if payload.layer_id.is_empty() || find_draw_layer(document, &payload.layer_id).is_none() {
         return Ok(Emit::default());

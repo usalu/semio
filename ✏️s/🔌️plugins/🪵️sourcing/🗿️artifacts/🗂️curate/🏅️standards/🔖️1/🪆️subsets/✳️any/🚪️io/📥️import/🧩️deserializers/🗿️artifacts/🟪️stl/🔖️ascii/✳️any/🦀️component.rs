@@ -14,13 +14,13 @@ use semio_s_plugin_stdio::artifacts::stl::{StlSnapshot, STDIO_STL_DOCUMENT_SCHEM
 
 pub const STL_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.stl", standard: StandardId("ascii"), subset: SubsetId::ANY };
 
-pub fn deserialize(from: &StlSnapshot) -> Result<CurateSnapshot, store::TextError> {
+pub async fn deserialize(from: &StlSnapshot) -> Result<CurateSnapshot, store::TextError> {
     let _ = STDIO_STL_DOCUMENT_SCHEMA;
     let bytes = <StlSnapshot as store::ArtifactPack>::encode_pack(from);
     deserialize_bytes(&bytes)
 }
 
-pub fn deserialize_bytes(bytes: &[u8]) -> Result<CurateSnapshot, store::TextError> {
+pub async fn deserialize_bytes(bytes: &[u8]) -> Result<CurateSnapshot, store::TextError> {
     <CurateSnapshot as store::ArtifactPack>::decode_pack(bytes).or_else(|_| {
         <CurateSnapshot as store::ArtifactDsl>::parse_dsl(&String::from_utf8_lossy(bytes))
     })
@@ -31,7 +31,7 @@ pub struct StlIntoCurate;
 impl Deserializer<CurateSnapshot> for StlIntoCurate {
     const FROM: Dialect = STL_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Lossy;
-    fn deserialize(payload: &IoPayload) -> IoResult<CurateSnapshot> {
+    async fn deserialize(payload: &IoPayload) -> IoResult<CurateSnapshot> {
         let IoPayload::Binary(bytes) = payload else {
             return Err(IoError { message: "StlIntoCurate: expected a binary stl payload".to_string(), diagnostics: Vec::new() });
         };

@@ -38,13 +38,13 @@ pub struct EpwArtifact {
 }
 
 impl Default for EpwArtifact {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self::from_snapshot(EpwSnapshot::default())
     }
 }
 
 impl EpwArtifact {
-    pub fn to_snapshot(&self) -> EpwSnapshot {
+    pub async fn to_snapshot(&self) -> EpwSnapshot {
         EpwSnapshot {
             schema: self.schema.clone(),
             location: self.location.clone(),
@@ -58,7 +58,7 @@ impl EpwArtifact {
             records: self.records.clone(),
         }
     }
-    pub fn from_snapshot(snapshot: EpwSnapshot) -> Self {
+    pub async fn from_snapshot(snapshot: EpwSnapshot) -> Self {
         Self {
             schema: snapshot.schema,
             location: snapshot.location,
@@ -72,7 +72,7 @@ impl EpwArtifact {
             records: snapshot.records,
         }
     }
-    pub fn set_snapshot(&mut self, snapshot: EpwSnapshot) {
+    pub async fn set_snapshot(&mut self, snapshot: EpwSnapshot) {
         self.schema = snapshot.schema;
         self.location = snapshot.location;
         self.design_conditions = snapshot.design_conditions;
@@ -86,7 +86,7 @@ impl EpwArtifact {
     }
 }
 
-pub fn epw_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
+pub async fn epw_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
     schema::ArtifactSchemaDescriptor {
         id: "s.stdio.epw",
         artifact: schema::FacetLeaves {
@@ -135,27 +135,27 @@ pub mod derived_construction {
         type Snapshot = EpwSnapshot;
         type Mutation = EpwMutation;
         type Diff = EpwDiff;
-        fn empty() -> Self {
+        async fn empty() -> Self {
             Self { snapshot: EpwSnapshot::default() }
         }
-        fn from_snapshot(snapshot: Self::Snapshot) -> Self {
+        async fn from_snapshot(snapshot: Self::Snapshot) -> Self {
             Self { snapshot }
         }
-        fn from_text(text: &str) -> Result<Self, store::TextError> {
+        async fn from_text(text: &str) -> Result<Self, store::TextError> {
             Ok(Self::from_snapshot(<EpwSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
-        fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
+        async fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
             Ok(Self::from_snapshot(<EpwSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
         }
-        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
+        async fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let diff = apply_epw_mutation(&mut self.snapshot, &mutation);
             (self, diff)
         }
-        fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
+        async fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
             self.snapshot = <EpwDiff as protocol::MutationDiff<EpwSnapshot>>::apply(&diff, &self.snapshot)?;
             Ok(self)
         }
-        fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
+        async fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
             Ok(self.snapshot)
         }
     }
@@ -180,7 +180,7 @@ pub mod derived_analysis {
         type Parts = EpwParts;
         const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.epw", standard: StandardId("energyplus"), subset: SubsetId("*") };
 
-        fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
+        async fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
             match source {
                 AnalyzeSource::Binary(bytes) => {
                     if io::sniff_real_bytes(bytes) {
@@ -203,7 +203,7 @@ pub mod derived_analysis {
             }
         }
 
-        fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
+        async fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
             let mut parts = EpwParts::default();
             let mut diagnostics = Vec::new();
             let mut confidence = IoConfidence::High;

@@ -15,23 +15,23 @@ pub struct CreateStream {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn create_stream(stream: MediaStream) -> RemodelMutation {
+pub async fn create_stream(stream: MediaStream) -> RemodelMutation {
     RemodelMutation::CreateStream(CreateStream { stream })
 }
 
 impl protocol::MutationKind<RemodelSnapshot, RemodelMutation> for CreateStream {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "create", entity: "stream", kind: "create-stream", record: "CreatedStream" };
 
-    fn diff(&self, base: &RemodelSnapshot) -> protocol::MutationOutcome<RemodelDiff> {
+    async fn diff(&self, base: &RemodelSnapshot) -> protocol::MutationOutcome<RemodelDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &RemodelSnapshot) -> Vec<RemodelMutation> {
+    async fn inverse(&self, base: &RemodelSnapshot) -> Vec<RemodelMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         format!("Create stream \"{}\"", self.stream.id)
     }
-    fn target(&self) -> Vec<String> {
+    async fn target(&self) -> Vec<String> {
         vec![self.stream.id.clone()]
     }
 }

@@ -27,15 +27,15 @@ pub struct GltfCreateSceneDiff {
     pub scene: GltfScene,
 }
 
-fn paths(position: u32, default_scene_before: Option<u32>) -> Result<Vec<String>, GltfCreateSceneRejection> {
+async fn paths(position: u32, default_scene_before: Option<u32>) -> Result<Vec<String>, GltfCreateSceneRejection> {
     Ok(if default_scene_before == default_after(default_scene_before, position)? { vec![format!("document/scenes/{position}")] } else { vec![format!("document/scenes/{position}"), "document/scene".into()] })
 }
 
-pub fn touched_paths(diff: &GltfCreateSceneDiff, _base: &GltfSnapshot) -> Result<Vec<String>, GltfCreateSceneRejection> {
+pub async fn touched_paths(diff: &GltfCreateSceneDiff, _base: &GltfSnapshot) -> Result<Vec<String>, GltfCreateSceneRejection> {
     paths(diff.position, diff.expected_default_scene_before)
 }
 
-pub fn validate(diff: &GltfCreateSceneDiff, base: &GltfSnapshot) -> Result<(), GltfCreateSceneRejection> {
+pub async fn validate(diff: &GltfCreateSceneDiff, base: &GltfSnapshot) -> Result<(), GltfCreateSceneRejection> {
     if diff.id != ID || diff.version != 1 || diff.phase != GltfCreateSceneDiffPhase::Diff {
         return Err(reject("gltf.mutation.invalid-diff-envelope", "diff", "canonical identity or phase does not match"));
     }
@@ -58,18 +58,18 @@ pub fn validate(diff: &GltfCreateSceneDiff, base: &GltfSnapshot) -> Result<(), G
     Ok(())
 }
 
-pub fn apply(diff: &GltfCreateSceneDiff, base: &GltfSnapshot) -> Result<GltfSnapshot, GltfCreateSceneRejection> {
+pub async fn apply(diff: &GltfCreateSceneDiff, base: &GltfSnapshot) -> Result<GltfSnapshot, GltfCreateSceneRejection> {
     validate(diff, base)?;
     let mut next = base.clone();
     insert_empty_scene(&mut next, insertion_position(diff.position, base)?)?;
     Ok(next)
 }
 
-pub fn encode(diff: &GltfCreateSceneDiff) -> Result<Vec<u8>, GltfCreateSceneRejection> {
+pub async fn encode(diff: &GltfCreateSceneDiff) -> Result<Vec<u8>, GltfCreateSceneRejection> {
     serde_json::to_vec(diff).map_err(|error| reject("gltf.mutation.encode-failed", "diff", error.to_string()))
 }
 
-pub fn derive(base: &GltfSnapshot, position: u32) -> Result<GltfCreateSceneDiff, GltfCreateSceneRejection> {
+pub async fn derive(base: &GltfSnapshot, position: u32) -> Result<GltfCreateSceneDiff, GltfCreateSceneRejection> {
     insertion_position(position, base)?;
     let mut diff = GltfCreateSceneDiff {
         id: ID.into(),

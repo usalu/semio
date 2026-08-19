@@ -9,16 +9,16 @@ impl GltfInferenceLeaf for GltfCharacteristicLengthInference {
     const DESCRIPTOR: GltfInferenceLeafDescriptor =
         GltfInferenceLeafDescriptor { id: "s.stdio.gltf.inference.characteristic-length.v1", algorithm_version: 1, cache_key: "s.stdio.gltf.inference.characteristic-length.v1:geometry-v2", reads: GLTF_GEOMETRY_READS };
 }
-pub fn descriptor() -> GltfInferenceLeafDescriptor {
+pub async fn descriptor() -> GltfInferenceLeafDescriptor {
     GltfCharacteristicLengthInference::DESCRIPTOR
 }
-pub(crate) fn infer(context: &GltfGeometryContext<'_>) -> GltfMeasure<f64> {
+pub(crate) async fn infer(context: &GltfGeometryContext<'_>) -> GltfMeasure<f64> {
     exact(if context.surface_area > 0.0 { context.surface_area.sqrt() } else { context.diagonal }, GltfUnit::Metre, context.sample_count, Some(context.topology))
 }
-pub fn unavailable_measure(ids: &[String]) -> GltfMeasure<f64> {
+pub async fn unavailable_measure(ids: &[String]) -> GltfMeasure<f64> {
     unavailable(GltfUnit::Metre, GltfAvailability::Unavailable, ids.to_vec(), 0, None)
 }
 
-pub fn encode_result(indicators: &GltfEntityIndicators) -> Result<serde_json::Value, serde_json::Error> {
+pub async fn encode_result(indicators: &GltfEntityIndicators) -> Result<serde_json::Value, serde_json::Error> {
     serde_json::to_value(&indicators.size.characteristic_length)
 }

@@ -5,7 +5,7 @@ use crate::artifacts::din16798::mutations::change_co2_ppm::mutation::ChangeCo2Pp
 use crate::artifacts::din16798::Din16798Snapshot;
 
 //#region 🔖️Diff
-pub fn diff(payload: &ChangeCo2Ppm, base: &Din16798Snapshot) -> protocol::MutationOutcome<Din16798Diff> {
+pub async fn diff(payload: &ChangeCo2Ppm, base: &Din16798Snapshot) -> protocol::MutationOutcome<Din16798Diff> {
     if !payload.new_co2_ppm.is_finite() {
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("CO2 concentration must be a finite number, got {}.", payload.new_co2_ppm), Vec::<String>::new());
     }

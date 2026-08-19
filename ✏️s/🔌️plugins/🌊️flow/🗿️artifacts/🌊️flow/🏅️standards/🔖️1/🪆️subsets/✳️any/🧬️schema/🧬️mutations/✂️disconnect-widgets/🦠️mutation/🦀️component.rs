@@ -14,16 +14,16 @@ pub struct DisconnectWidgets {
 impl MutationKind<FlowSnapshot, FlowMutation> for DisconnectWidgets {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "disconnect", entity: "synapse", kind: "disconnect-widgets", record: "DisconnectedWidgets" };
 
-    fn diff(&self, base: &FlowSnapshot) -> protocol::MutationOutcome<FlowDiff> {
+    async fn diff(&self, base: &FlowSnapshot) -> protocol::MutationOutcome<FlowDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &FlowSnapshot) -> Vec<FlowMutation> {
+    async fn inverse(&self, base: &FlowSnapshot) -> Vec<FlowMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         format!("Disconnect \"{}\"", self.id)
     }
-    fn target(&self) -> Vec<String> {
+    async fn target(&self) -> Vec<String> {
         vec![self.id.clone()]
     }
 }

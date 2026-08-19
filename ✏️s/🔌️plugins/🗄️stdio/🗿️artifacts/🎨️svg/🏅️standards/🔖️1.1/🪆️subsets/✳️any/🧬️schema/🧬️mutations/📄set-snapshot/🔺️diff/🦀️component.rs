@@ -5,7 +5,7 @@ use crate::artifacts::svg::SvgSnapshot;
 
 /// 🔺️ Diff helper for set-snapshot -- the sparse field-by-field `SvgDiff::between(base, next)`,
 /// never a whole-`SvgSnapshot` replace slot.
-pub fn diff(base: &SvgSnapshot, next: &SvgSnapshot) -> protocol::MutationOutcome<SvgDiff> {
+pub async fn diff(base: &SvgSnapshot, next: &SvgSnapshot) -> protocol::MutationOutcome<SvgDiff> {
     if base == next {
         return protocol::MutationOutcome::new(SvgDiff::default()).warn("mutation.no-op", "set-snapshot: new snapshot is identical to the current one");
     }

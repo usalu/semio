@@ -5,7 +5,7 @@ use super::mutation::ReorderVariableActions;
 use crate::artifacts::en1990::{En1990Mutation, En1990Snapshot};
 
 //#region 🔖️Inverse
-pub fn inverse(payload: &ReorderVariableActions, base: &En1990Snapshot) -> Vec<En1990Mutation> {
+pub async fn inverse(payload: &ReorderVariableActions, base: &En1990Snapshot) -> Vec<En1990Mutation> {
     let len = crate::artifacts::en1990::en1990_qk(base).len();
     if len == 0 || payload.from >= len {
         return Vec::new();

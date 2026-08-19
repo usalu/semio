@@ -7,7 +7,7 @@ use crate::artifacts::semio::standards::v1::subsets::object::schema::diff::Semio
 use crate::artifacts::semio::standards::v1::subsets::object::schema::snapshot::SemioObjectSnapshot;
 
 //#region 🔖️Diff
-pub fn diff(payload: &CreateProperties, base: &SemioObjectSnapshot) -> protocol::MutationOutcome<SemioObjectDiff> {
+pub async fn diff(payload: &CreateProperties, base: &SemioObjectSnapshot) -> protocol::MutationOutcome<SemioObjectDiff> {
     if base.properties.is_some() {
         return protocol::MutationOutcome::fatal("mutation.duplicate-id", "The object already has a properties child.".to_string(), ["properties".to_string()]);
     }

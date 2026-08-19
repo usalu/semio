@@ -136,7 +136,7 @@ impl ArtifactSerializer for SemioAnimationToGltf {
 /// 📦️ Writes `values` (already the flat, row-major component list) into its own new buffer, spans
 /// it with one bufferView, and registers one accessor over it (`count` elements of `accessor_type`
 /// each). Returns the new accessor index.
-fn push_accessor(buffers: &mut Vec<Vec<u8>>, buffer_views: &mut Vec<GltfBufferView>, accessors: &mut Vec<GltfAccessor>, component_type: GltfComponentType, accessor_type: GltfAccessorType, values: &[f32], count: usize) -> usize {
+async fn push_accessor(buffers: &mut Vec<Vec<u8>>, buffer_views: &mut Vec<GltfBufferView>, accessors: &mut Vec<GltfAccessor>, component_type: GltfComponentType, accessor_type: GltfAccessorType, values: &[f32], count: usize) -> usize {
     let mut bytes = Vec::with_capacity(values.len() * 4);
     for v in values {
         bytes.extend_from_slice(&v.to_le_bytes());
@@ -161,7 +161,7 @@ mod tests {
     use crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::{SemioPoint3, SemioQuaternion};
     use semio_framework_plugin::ArtifactDeserializer;
 
-    fn real_world_animation() -> SemioAnimationSnapshot {
+    async fn real_world_animation() -> SemioAnimationSnapshot {
         SemioAnimationSnapshot {
             schema: STDIO_SEMIOANIMATION_DOCUMENT_SCHEMA.into(),
             timelines: vec![AnimTimeline {
@@ -194,18 +194,18 @@ mod tests {
     /// represent for these property kinds survives); CubicSpline/Custom are documented-lossy and
     /// deliberately excluded from THIS fixture (see the dedicated tests below for their behavior).
     #[test]
-    fn animation_to_gltf_to_animation_round_trips_everything_representable() {
+    async fn animation_to_gltf_to_animation_round_trips_everything_representable() {
         let original = real_world_animation();
         let gltf = semio_framework_plugin::resolve_ready(SemioAnimationToGltf::serialize(&original)).expect("serialize");
         assert_eq!(gltf.document.animations.len(), 1);
         assert_eq!(gltf.document.animations[0].channels.len(), 2);
         assert_eq!(gltf.document.nodes.len(), 2);
-        let back = SemioAnimationFromGltf::deserialize(&gltf).expect("deserialize");
+        let back = semio_framework_plugin::resolve_ready(SemioAnimationFromGltf::deserialize(&gltf)).expect("deserialize");
         assert_eq!(back, original);
     }
 
     #[test]
-    fn accessors_decode_to_the_real_values_written() {
+    async fn accessors_decode_to_the_real_values_written() {
         let gltf = semio_framework_plugin::resolve_ready(SemioAnimationToGltf::serialize(&real_world_animation())).expect("serialize");
         let sampler = &gltf.document.animations[0].samplers[0];
         let decoded = decode_accessor(&gltf.document, &gltf.buffers, sampler.output).expect("decode");
@@ -213,7 +213,7 @@ mod tests {
     }
 
     #[test]
-    fn custom_target_property_is_honestly_dropped_not_fabricated() {
+    async fn custom_target_property_is_honestly_dropped_not_fabricated() {
         let mut snap = real_world_animation();
         snap.timelines[0].channels.push(AnimChannel {
             target: AnimTarget { node: "rig".into(), property: AnimTargetProperty::Custom { name: "opacity".into() } },
@@ -225,7 +225,7 @@ mod tests {
     }
 
     #[test]
-    fn cubic_spline_downgrades_to_linear_on_export_documented() {
+    async fn cubic_spline_downgrades_to_linear_on_export_documented() {
         let mut snap = real_world_animation();
         snap.timelines[0].channels[0].interpolation = AnimInterpolation::CubicSpline;
         let gltf = semio_framework_plugin::resolve_ready(SemioAnimationToGltf::serialize(&snap)).expect("serialize");

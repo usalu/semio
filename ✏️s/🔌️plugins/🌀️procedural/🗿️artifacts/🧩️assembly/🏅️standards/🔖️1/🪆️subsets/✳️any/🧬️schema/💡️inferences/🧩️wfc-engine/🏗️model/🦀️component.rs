@@ -50,12 +50,12 @@ pub struct ModelBuilder {
 }
 
 impl ModelBuilder {
-    pub fn new() -> Self {
+    pub async fn new() -> Self {
         Self::default()
     }
 
     /// 🏗️ Registers a new pattern with the given weight, returning its dense id.
-    pub fn add_pattern(&mut self, weight: f64) -> PatternId {
+    pub async fn add_pattern(&mut self, weight: f64) -> PatternId {
         let id = PatternId::from_index(self.weights.len());
         self.weights.push(weight);
         self.tags.push(Vec::new());
@@ -64,16 +64,16 @@ impl ModelBuilder {
         id
     }
 
-    pub fn set_tile(&mut self, p: PatternId, tile: TileId) {
+    pub async fn set_tile(&mut self, p: PatternId, tile: TileId) {
         self.tiles[p.index()] = Some(tile);
     }
 
-    pub fn set_orbit_canonical(&mut self, p: PatternId, canonical: PatternId) {
+    pub async fn set_orbit_canonical(&mut self, p: PatternId, canonical: PatternId) {
         self.orbit_canonical[p.index()] = Some(canonical);
     }
 
     /// 🏗️ Tags `p` with `name`, interning the name on first use. Idempotent.
-    pub fn add_tag(&mut self, p: PatternId, name: &str) -> u32 {
+    pub async fn add_tag(&mut self, p: PatternId, name: &str) -> u32 {
         let id = self.intern_tag(name);
         let tags = &mut self.tags[p.index()];
         if !tags.contains(&id) {
@@ -82,7 +82,7 @@ impl ModelBuilder {
         id
     }
 
-    fn intern_tag(&mut self, name: &str) -> u32 {
+    async fn intern_tag(&mut self, name: &str) -> u32 {
         if let Some(&id) = self.tag_ids.get(name) {
             return id;
         }
@@ -94,7 +94,7 @@ impl ModelBuilder {
 
     /// 🏗️ Registers a new directed relation, self-inverse by default until paired via
     /// [`ModelBuilder::set_relation_inverse`].
-    pub fn add_relation(&mut self, name: &str) -> RelationId {
+    pub async fn add_relation(&mut self, name: &str) -> RelationId {
         let id = RelationId::from_index(self.relation_names.len());
         self.relation_names.push(name.to_string());
         self.relation_inverse.push(id);
@@ -104,23 +104,23 @@ impl ModelBuilder {
     }
 
     /// 🏗️ Declares `a` and `b` as each other's directed inverse (e.g. north ↔ south).
-    pub fn set_relation_inverse(&mut self, a: RelationId, b: RelationId) {
+    pub async fn set_relation_inverse(&mut self, a: RelationId, b: RelationId) {
         self.relation_inverse[a.index()] = b;
         self.relation_inverse[b.index()] = a;
     }
 
-    pub fn allow(&mut self, r: RelationId, src: PatternId, dst: PatternId) {
+    pub async fn allow(&mut self, r: RelationId, src: PatternId, dst: PatternId) {
         self.allow_pairs[r.index()].push((src, dst));
     }
 
     /// 🏗️ `deny` always wins over `allow` at compile time, regardless of call order.
-    pub fn deny(&mut self, r: RelationId, src: PatternId, dst: PatternId) {
+    pub async fn deny(&mut self, r: RelationId, src: PatternId, dst: PatternId) {
         self.deny_pairs[r.index()].push((src, dst));
     }
 
     /// 🏗️ Convenience: `allow(r, src, dst)` plus `allow(inverse(r), dst, src)` in one call — the
     /// common case where compatibility is meant to hold symmetrically under the declared inverse.
-    pub fn allow_mirrored(&mut self, r: RelationId, src: PatternId, dst: PatternId) {
+    pub async fn allow_mirrored(&mut self, r: RelationId, src: PatternId, dst: PatternId) {
         let inv = self.relation_inverse[r.index()];
         self.allow(r, src, dst);
         self.allow(inv, dst, src);
@@ -128,7 +128,7 @@ impl ModelBuilder {
 
     /// 🏗️ Resolves every accumulated pair into dense `allowed`/`supporters` bitset tables and
     /// returns the immutable [`CompiledModel`]. Consumes `self` — a builder compiles exactly once.
-    pub fn compile(self) -> Result<CompiledModel, ModelError> {
+    pub async fn compile(self) -> Result<CompiledModel, ModelError> {
         let pattern_count = self.weights.len();
         if pattern_count == 0 {
             return Err(ModelError::EmptyPatternUniverse);
@@ -188,63 +188,63 @@ pub struct CompiledModel {
 
 impl CompiledModel {
     #[inline]
-    pub fn pattern_count(&self) -> usize {
+    pub async fn pattern_count(&self) -> usize {
         self.patterns.len()
     }
 
     #[inline]
-    pub fn relation_count(&self) -> usize {
+    pub async fn relation_count(&self) -> usize {
         self.relations.len()
     }
 
     #[inline]
-    pub fn weights(&self) -> &WeightTable {
+    pub async fn weights(&self) -> &WeightTable {
         &self.weights
     }
 
     #[inline]
-    pub fn pattern_info(&self, p: PatternId) -> &PatternInfo {
+    pub async fn pattern_info(&self, p: PatternId) -> &PatternInfo {
         &self.patterns[p.index()]
     }
 
     #[inline]
-    pub fn relation_info(&self, r: RelationId) -> &RelationInfo {
+    pub async fn relation_info(&self, r: RelationId) -> &RelationInfo {
         &self.relations[r.index()]
     }
 
     #[inline]
-    pub fn inverse(&self, r: RelationId) -> RelationId {
+    pub async fn inverse(&self, r: RelationId) -> RelationId {
         self.relations[r.index()].inverse
     }
 
     #[inline]
-    pub fn allowed(&self, r: RelationId, src: PatternId) -> &PatternSet {
+    pub async fn allowed(&self, r: RelationId, src: PatternId) -> &PatternSet {
         &self.allowed[r.index() * self.pattern_count() + src.index()]
     }
 
     #[inline]
-    pub fn supporters(&self, r: RelationId, tgt: PatternId) -> &PatternSet {
+    pub async fn supporters(&self, r: RelationId, tgt: PatternId) -> &PatternSet {
         &self.supporters[r.index() * self.pattern_count() + tgt.index()]
     }
 
     #[inline]
-    pub fn base_support(&self, r: RelationId, tgt: PatternId) -> u32 {
+    pub async fn base_support(&self, r: RelationId, tgt: PatternId) -> u32 {
         self.base_support[r.index() * self.pattern_count() + tgt.index()]
     }
 
-    pub fn tag_id(&self, name: &str) -> Option<u32> {
+    pub async fn tag_id(&self, name: &str) -> Option<u32> {
         self.tag_ids.get(name).copied()
     }
 
-    pub fn tag_name(&self, id: u32) -> Option<&str> {
+    pub async fn tag_name(&self, id: u32) -> Option<&str> {
         self.tag_names.get(id as usize).map(|s| s.as_str())
     }
 
-    pub fn full_domain(&self) -> PatternSet {
+    pub async fn full_domain(&self) -> PatternSet {
         PatternSet::new_full(self.pattern_count())
     }
 
-    fn compute_fingerprint(&self) -> u64 {
+    async fn compute_fingerprint(&self) -> u64 {
         let mut h: u64 = 0xcbf2_9ce4_8422_2325;
         let mut mix = |bytes: &[u8]| {
             for &b in bytes {
@@ -274,13 +274,13 @@ impl CompiledModel {
     }
 
     #[inline]
-    pub fn fingerprint(&self) -> u64 {
+    pub async fn fingerprint(&self) -> u64 {
         self.fingerprint
     }
 
     /// ✅️ Checks that every relation's compiled table is the exact transpose of its declared
     /// inverse's table (`allowed(r,a,b) == allowed(inv(r),b,a)` for every `a, b`).
-    pub fn validate(&self) -> Result<(), ModelError> {
+    pub async fn validate(&self) -> Result<(), ModelError> {
         if self.patterns.is_empty() {
             return Err(ModelError::EmptyPatternUniverse);
         }
@@ -301,7 +301,7 @@ impl CompiledModel {
     }
 
     /// 🔍️ Non-fatal structural findings a model author probably wants to know about.
-    pub fn lint(&self) -> Vec<LintFinding> {
+    pub async fn lint(&self) -> Vec<LintFinding> {
         let mut findings = Vec::new();
         let p = self.pattern_count();
         for ri in 0..self.relations.len() {
@@ -326,7 +326,7 @@ impl CompiledModel {
         findings
     }
 
-    pub fn stats(&self) -> ModelStats {
+    pub async fn stats(&self) -> ModelStats {
         let p = self.pattern_count();
         let r = self.relation_count();
         let mut allowed_pair_count = 0usize;
@@ -378,7 +378,7 @@ pub struct ModelStats {
 mod tests {
     use super::*;
 
-    fn checkerboard_model() -> CompiledModel {
+    async fn checkerboard_model() -> CompiledModel {
         let mut b = ModelBuilder::new();
         let black = b.add_pattern(1.0);
         let white = b.add_pattern(1.0);
@@ -389,20 +389,20 @@ mod tests {
     }
 
     #[test]
-    fn compile_rejects_empty_pattern_universe() {
+    async fn compile_rejects_empty_pattern_universe() {
         let b = ModelBuilder::new();
         assert_eq!(b.compile().unwrap_err(), ModelError::EmptyPatternUniverse);
     }
 
     #[test]
-    fn compile_rejects_invalid_weight() {
+    async fn compile_rejects_invalid_weight() {
         let mut b = ModelBuilder::new();
         b.add_pattern(-1.0);
         assert!(matches!(b.compile().unwrap_err(), ModelError::InvalidWeight { .. }));
     }
 
     #[test]
-    fn allowed_and_supporters_are_transposes() {
+    async fn allowed_and_supporters_are_transposes() {
         let m = checkerboard_model();
         let adj = RelationId(0);
         for src in 0..m.pattern_count() {
@@ -414,13 +414,13 @@ mod tests {
     }
 
     #[test]
-    fn validate_passes_on_mirrored_model() {
+    async fn validate_passes_on_mirrored_model() {
         let m = checkerboard_model();
         assert!(m.validate().is_ok());
     }
 
     #[test]
-    fn validate_fails_on_asymmetric_declaration() {
+    async fn validate_fails_on_asymmetric_declaration() {
         let mut b = ModelBuilder::new();
         let a = b.add_pattern(1.0);
         let c = b.add_pattern(1.0);
@@ -431,7 +431,7 @@ mod tests {
     }
 
     #[test]
-    fn deny_wins_over_allow_regardless_of_order() {
+    async fn deny_wins_over_allow_regardless_of_order() {
         let mut b = ModelBuilder::new();
         let a = b.add_pattern(1.0);
         let c = b.add_pattern(1.0);
@@ -443,7 +443,7 @@ mod tests {
     }
 
     #[test]
-    fn fingerprint_is_deterministic_and_sensitive() {
+    async fn fingerprint_is_deterministic_and_sensitive() {
         let m1 = checkerboard_model();
         let m2 = checkerboard_model();
         assert_eq!(m1.fingerprint(), m2.fingerprint());
@@ -459,7 +459,7 @@ mod tests {
     }
 
     #[test]
-    fn lint_flags_unconstrained_and_unsupported() {
+    async fn lint_flags_unconstrained_and_unsupported() {
         let mut b = ModelBuilder::new();
         let a = b.add_pattern(1.0);
         let c = b.add_pattern(1.0);
@@ -476,7 +476,7 @@ mod tests {
     }
 
     #[test]
-    fn stats_report_sane_values() {
+    async fn stats_report_sane_values() {
         let m = checkerboard_model();
         let stats = m.stats();
         assert_eq!(stats.pattern_count, 2);
@@ -487,7 +487,7 @@ mod tests {
     }
 
     #[test]
-    fn tags_are_interned_and_deduplicated() {
+    async fn tags_are_interned_and_deduplicated() {
         let mut b = ModelBuilder::new();
         let p = b.add_pattern(1.0);
         let id1 = b.add_tag(p, "solid");

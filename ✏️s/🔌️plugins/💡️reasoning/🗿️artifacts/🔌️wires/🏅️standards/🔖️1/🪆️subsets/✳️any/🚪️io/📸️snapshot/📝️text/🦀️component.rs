@@ -25,10 +25,10 @@ pub const REASONING_WIRES_EXAMPLE_METABOLISM_TEXT: &str = include_str!("../../..
 /// 🧪️ Real hex-encoded text primitives — one `key=<hex>` line per field (`📓️migration-recipe.md`
 /// §2's convention), duplicated locally rather than imported across facets (keeps this file
 /// independently compilable, matching `✳️graph`'s own `🔖️GraphPrimitives` precedent in stdio).
-fn hex_encode(bytes: &[u8]) -> String {
+async fn hex_encode(bytes: &[u8]) -> String {
     bytes.iter().map(|b| format!("{b:02x}")).collect()
 }
-fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
+async fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
     if s.len() % 2 != 0 {
         return Err(format!("odd hex length: {s:?}"));
     }
@@ -43,30 +43,30 @@ fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
 /// `PartialEq` — a real bug this pass's round-trip tests caught (not just latent risk). `DslValue`'s
 /// own hand-written `Serialize`/`Deserialize` impl (`dsl_value_serde.rs`) preserves entry order
 /// end-to-end, so encoding/decoding it directly (bypassing `serde_json::Value` entirely) is lossless.
-fn enc_dsl(value: &DslValue) -> String {
+async fn enc_dsl(value: &DslValue) -> String {
     hex_encode(serde_json::to_string(value).unwrap_or_default().as_bytes())
 }
-fn dec_dsl(s: &str) -> Result<DslValue, String> {
+async fn dec_dsl(s: &str) -> Result<DslValue, String> {
     let bytes = hex_decode(s)?;
     let text = String::from_utf8(bytes).map_err(|e| e.to_string())?;
     serde_json::from_str::<DslValue>(&text).map_err(|e| e.to_string())
 }
-fn enc_dsl_list(values: &[DslValue]) -> String {
+async fn enc_dsl_list(values: &[DslValue]) -> String {
     hex_encode(serde_json::to_string(values).unwrap_or_default().as_bytes())
 }
-fn dec_dsl_list(s: &str) -> Result<Vec<DslValue>, String> {
+async fn dec_dsl_list(s: &str) -> Result<Vec<DslValue>, String> {
     let bytes = hex_decode(s)?;
     let text = String::from_utf8(bytes).map_err(|e| e.to_string())?;
     serde_json::from_str::<Vec<DslValue>>(&text).map_err(|e| e.to_string())
 }
 
-fn to_text_error(message: String) -> store::TextError {
+async fn to_text_error(message: String) -> store::TextError {
     store::TextError::new(message, dsl::TextSpan::at(1, 1))
 }
 
 /// 📄️ The real structured body: `wires=<hex>` / `nodes=[<hex>...]` / `edges=[<hex>...]` /
 /// `camera=<hex>` / `meta=<hex>` — five lines, each independently hex-decodable.
-fn print_wires_snapshot_body(snapshot: &WiresSnapshot) -> String {
+async fn print_wires_snapshot_body(snapshot: &WiresSnapshot) -> String {
     let scene = wires_working_scene(snapshot);
     format!(
         "wires={}\nnodes={}\nedges={}\ncamera={}\nmeta={}",
@@ -78,7 +78,7 @@ fn print_wires_snapshot_body(snapshot: &WiresSnapshot) -> String {
     )
 }
 
-fn parse_wires_snapshot_body(body: &str) -> Result<WiresSnapshot, store::TextError> {
+async fn parse_wires_snapshot_body(body: &str) -> Result<WiresSnapshot, store::TextError> {
     let mut wires_fixture = None;
     let mut nodes = Vec::new();
     let mut edges = Vec::new();
@@ -118,17 +118,17 @@ fn parse_wires_snapshot_body(body: &str) -> Result<WiresSnapshot, store::TextErr
 /// composed `ArtifactChild` — see this file's module doc).
 impl store::ArtifactDsl for WiresSnapshot {
     const EXTENSION: &'static str = "wires";
-    fn envelope_id() -> &'static str {
+    async fn envelope_id() -> &'static str {
         "reasoning.wires"
     }
-    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+    async fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
         let body = match store::semio_format::split_text_preamble(text) {
             Ok((_, rest)) => rest,
             Err(_) => text,
         };
         parse_wires_snapshot_body(body)
     }
-    fn print_dsl(&self) -> String {
+    async fn print_dsl(&self) -> String {
         let body = print_wires_snapshot_body(self);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
@@ -137,12 +137,12 @@ impl store::ArtifactDsl for WiresSnapshot {
 //#endregion 🔖️HandcraftedArtifactDsl
 
 /// 📖️ Parses `.wires` DSL text into a `WiresSnapshot`.
-pub fn parse_dsl(text: &str) -> Result<WiresSnapshot, store::TextError> {
+pub async fn parse_dsl(text: &str) -> Result<WiresSnapshot, store::TextError> {
     <WiresSnapshot as store::ArtifactDsl>::parse_dsl(text)
 }
 
 /// 🖨️ Prints a `WiresSnapshot` back to `.wires` DSL text.
-pub fn print_dsl(document: &WiresSnapshot) -> String {
+pub async fn print_dsl(document: &WiresSnapshot) -> String {
     store::ArtifactDsl::print_dsl(document)
 }
 
@@ -152,7 +152,7 @@ mod tests {
     use super::*;
     use crate::artifacts::wires::{empty_wires_snapshot, wires_working_board};
 
-    fn populated() -> WiresSnapshot {
+    async fn populated() -> WiresSnapshot {
         let mut snapshot = empty_wires_snapshot();
         let node = dsl::to_dsl_value(&serde_json::json!({ "id": "node-1", "nodeKind": "identity", "shape": "circle", "x": 1.0, "y": 2.0, "radius": 24.0, "text": "Alpha", "handles": [] })).unwrap();
         snapshot = store::apply_mutation(&snapshot, &crate::artifacts::wires::mutations::create_node(node))
@@ -162,13 +162,13 @@ mod tests {
     }
 
     #[test]
-    fn dsl_round_trip_empty_document() {
+    async fn dsl_round_trip_empty_document() {
         let document = crate::artifacts::wires::empty_wires_snapshot();
         store::os_store::test_support::assert_dsl_round_trip(&document);
     }
 
     #[test]
-    fn dsl_round_trip_metabolism_fixture() {
+    async fn dsl_round_trip_metabolism_fixture() {
         let document = crate::artifacts::wires::schema::metabolism_wires_example_snapshot()
             .expect("valid metabolism fixture mutations");
         assert_eq!(document.wires_fixture.get("identities").and_then(|value| value.as_array()).map(|items| items.len()), Some(7));
@@ -179,7 +179,7 @@ mod tests {
     }
 
     #[test]
-    fn dsl_text_round_trips_empty() {
+    async fn dsl_text_round_trips_empty() {
         let snapshot = empty_wires_snapshot();
         let text = <WiresSnapshot as store::ArtifactDsl>::print_dsl(&snapshot);
         let back = <WiresSnapshot as store::ArtifactDsl>::parse_dsl(&text).expect("parse");
@@ -191,7 +191,7 @@ mod tests {
     /// BOTH codecs — this is what a bare-handle-only codec would silently fail (see this file's module
     /// doc, `dag`'s bug writeup).
     #[test]
-    fn codec_retention_law_carries_real_node_content_not_just_the_handle() {
+    async fn codec_retention_law_carries_real_node_content_not_just_the_handle() {
         let snapshot = populated();
         let text = <WiresSnapshot as store::ArtifactDsl>::print_dsl(&snapshot);
         let back_text = <WiresSnapshot as store::ArtifactDsl>::parse_dsl(&text).expect("parse");

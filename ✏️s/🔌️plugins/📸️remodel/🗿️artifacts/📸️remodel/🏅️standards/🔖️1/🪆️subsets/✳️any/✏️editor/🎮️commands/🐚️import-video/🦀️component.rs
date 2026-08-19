@@ -28,7 +28,7 @@ pub struct ImportVideo {}
 
 /// 🎞️ Asks the host to decode and sample the picked video, using the document's own ingest params;
 /// `fallback_action` hands the raw container back when the host cannot decode it.
-pub fn handle(_payload: &ImportVideo, doc: &ArtifactView<'_, RemodelSnapshot>, _cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelMutation, RemodelConfigMutation>, Fault> {
+pub async fn handle(_payload: &ImportVideo, doc: &ArtifactView<'_, RemodelSnapshot>, _cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelMutation, RemodelConfigMutation>, Fault> {
     let ingest = &doc.snapshot.params.ingest;
     Ok(Emit::effect(Effect::RequestMediaFrames {req: semio_framework_plugin::RequestId(118), 
         accept: REMODEL_VIDEO_ACCEPT.into(),

@@ -4,7 +4,7 @@ use crate::artifacts::note::NoteDiff;
 use crate::artifacts::note::NoteSnapshot;
 
 //#region 🔖️Diff
-pub fn diff(payload: &ChangePencilWidth, base: &NoteSnapshot) -> protocol::MutationOutcome<NoteDiff> {
+pub async fn diff(payload: &ChangePencilWidth, base: &NoteSnapshot) -> protocol::MutationOutcome<NoteDiff> {
     if let Some(width) = payload.new_width {
         if !width.is_finite() || width <= 0.0 {
             return protocol::MutationOutcome::fatal("mutation.invariant", format!("Pencil width must be a positive number, got {width}."), Vec::<String>::new());

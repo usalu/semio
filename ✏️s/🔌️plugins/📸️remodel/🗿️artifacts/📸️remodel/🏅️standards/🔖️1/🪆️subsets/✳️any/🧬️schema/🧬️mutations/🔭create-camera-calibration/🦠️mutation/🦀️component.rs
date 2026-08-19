@@ -17,23 +17,23 @@ pub struct CreateCameraCalibration {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn create_camera_calibration(camera: CameraCalibration) -> RemodelMutation {
+pub async fn create_camera_calibration(camera: CameraCalibration) -> RemodelMutation {
     RemodelMutation::CreateCameraCalibration(CreateCameraCalibration { camera })
 }
 
 impl protocol::MutationKind<RemodelSnapshot, RemodelMutation> for CreateCameraCalibration {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "create", entity: "camera-calibration", kind: "create-camera-calibration", record: "CreatedCameraCalibration" };
 
-    fn diff(&self, base: &RemodelSnapshot) -> protocol::MutationOutcome<RemodelDiff> {
+    async fn diff(&self, base: &RemodelSnapshot) -> protocol::MutationOutcome<RemodelDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &RemodelSnapshot) -> Vec<RemodelMutation> {
+    async fn inverse(&self, base: &RemodelSnapshot) -> Vec<RemodelMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         format!("Create camera calibration \"{}\"", self.camera.id)
     }
-    fn target(&self) -> Vec<String> {
+    async fn target(&self) -> Vec<String> {
         vec![self.camera.id.clone()]
     }
 }

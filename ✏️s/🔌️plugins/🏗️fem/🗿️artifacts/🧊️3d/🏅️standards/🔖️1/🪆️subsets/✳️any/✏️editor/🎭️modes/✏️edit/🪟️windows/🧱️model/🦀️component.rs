@@ -14,7 +14,7 @@ pub const FEM3D_BODY_MODEL: &str = "fem3d.play.model";
 /// 🧱️ Renders the undeformed structure: the same node/member/solid instances every results view
 /// deforms, at deformation scale `doc.analysis.deformation_scale` with no displacement offset applied
 /// (`None` displacements) and no stress coloring.
-pub fn render(doc: &Fem3dSnapshot, camera: &FemCamera) -> semio_framework_plugin::UiNode {
+pub async fn render(doc: &Fem3dSnapshot, camera: &FemCamera) -> semio_framework_plugin::UiNode {
     use crate::editor::fem3d::{fem3d_camera_json, fem3d_scene_parts};
 
     let (meshes_json, instances_json) = fem3d_scene_parts(doc, None, doc.analysis.deformation_scale, None);
@@ -32,14 +32,14 @@ mod tests {
     use crate::editor::fem3d::testkit::{fem3d_app, render as render_body};
 
     #[test]
-    fn renders_fem3d_model_scene() {
+    async fn renders_fem3d_model_scene() {
         let mut app = fem3d_app();
         let json = render_body(&mut app, FEM3D_BODY_MODEL);
         assert!(json.contains("world-3d"));
     }
 
     #[test]
-    fn model_scene_renders_solid_mesh_and_oriented_member_instances_3d() {
+    async fn model_scene_renders_solid_mesh_and_oriented_member_instances_3d() {
         let mut app = fem3d_app();
         crate::editor::fem3d::testkit::dispatch(&mut app, crate::editor::fem3d::Fem3dCommand::SetActiveExample(crate::editor::fem3d::commands::set_active_example::SetActiveExample { example_id: "default".into() }));
         let json = render_body(&mut app, FEM3D_BODY_MODEL);

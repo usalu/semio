@@ -18,23 +18,23 @@ pub struct ConnectKindCompatibility {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn connect_kind_compatibility(source: String, target: String, bidirectional: bool, important: bool, specificity: Puzzle2dCompatSpecificity) -> Puzzle2dMutation {
+pub async fn connect_kind_compatibility(source: String, target: String, bidirectional: bool, important: bool, specificity: Puzzle2dCompatSpecificity) -> Puzzle2dMutation {
     Puzzle2dMutation::ConnectKindCompatibility(ConnectKindCompatibility { source, target, bidirectional, important, specificity })
 }
 
 impl protocol::MutationKind<Puzzle2dSnapshot, Puzzle2dMutation> for ConnectKindCompatibility {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "connect", entity: "kind-compatibility", kind: "connect-kind-compatibility", record: "ConnectedKindCompatibility" };
 
-    fn diff(&self, base: &Puzzle2dSnapshot) -> protocol::MutationOutcome<Puzzle2dDiff> {
+    async fn diff(&self, base: &Puzzle2dSnapshot) -> protocol::MutationOutcome<Puzzle2dDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &Puzzle2dSnapshot) -> Vec<Puzzle2dMutation> {
+    async fn inverse(&self, base: &Puzzle2dSnapshot) -> Vec<Puzzle2dMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         format!("Connect kind compatibility \"{}\" -> \"{}\"", self.source, self.target)
     }
-    fn target(&self) -> Vec<String> {
+    async fn target(&self) -> Vec<String> {
         vec![self.source.clone(), self.target.clone()]
     }
 }

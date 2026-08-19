@@ -35,7 +35,7 @@ pub enum GltfInferenceBinaryError {
 }
 
 impl fmt::Display for GltfInferenceBinaryError {
-    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+    async fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Self::Payload(error) => write!(formatter, "invalid canonical leaf payload: {error}"),
             Self::TooShort { actual } => write!(formatter, "binary envelope is shorter than 40 bytes: {actual}"),
@@ -55,12 +55,12 @@ impl fmt::Display for GltfInferenceBinaryError {
 
 impl std::error::Error for GltfInferenceBinaryError {}
 impl From<text::GltfInferenceTextError> for GltfInferenceBinaryError {
-    fn from(error: text::GltfInferenceTextError) -> Self {
+    async fn from(error: text::GltfInferenceTextError) -> Self {
         Self::Payload(error)
     }
 }
 
-pub fn encode_gltf_inference_leaf_binary(value: &GltfInferenceLeafEnvelope) -> Result<Vec<u8>, GltfInferenceBinaryError> {
+pub async fn encode_gltf_inference_leaf_binary(value: &GltfInferenceLeafEnvelope) -> Result<Vec<u8>, GltfInferenceBinaryError> {
     let payload = text::canonical_json_bytes(value)?;
     let length = u64::try_from(payload.len()).map_err(|_| GltfInferenceBinaryError::PayloadLengthOverflow { declared: u64::MAX })?;
     let mut output = Vec::with_capacity(GLTF_INFERENCE_LEAF_BINARY_HEADER_LENGTH + payload.len());
@@ -77,7 +77,7 @@ pub fn encode_gltf_inference_leaf_binary(value: &GltfInferenceLeafEnvelope) -> R
     Ok(output)
 }
 
-pub fn decode_gltf_inference_leaf_binary(input: &[u8]) -> Result<GltfInferenceLeafEnvelope, GltfInferenceBinaryError> {
+pub async fn decode_gltf_inference_leaf_binary(input: &[u8]) -> Result<GltfInferenceLeafEnvelope, GltfInferenceBinaryError> {
     if input.len() < GLTF_INFERENCE_LEAF_BINARY_HEADER_LENGTH {
         return Err(GltfInferenceBinaryError::TooShort { actual: input.len() });
     }
@@ -132,13 +132,13 @@ pub fn decode_gltf_inference_leaf_binary(input: &[u8]) -> Result<GltfInferenceLe
     .map_err(Into::into)
 }
 
-fn read_u16(input: &[u8], offset: usize) -> u16 {
+async fn read_u16(input: &[u8], offset: usize) -> u16 {
     u16::from_le_bytes(input[offset..offset + 2].try_into().expect("fixed header slice"))
 }
-fn read_u32(input: &[u8], offset: usize) -> u32 {
+async fn read_u32(input: &[u8], offset: usize) -> u32 {
     u32::from_le_bytes(input[offset..offset + 4].try_into().expect("fixed header slice"))
 }
-fn read_u64(input: &[u8], offset: usize) -> u64 {
+async fn read_u64(input: &[u8], offset: usize) -> u64 {
     u64::from_le_bytes(input[offset..offset + 8].try_into().expect("fixed header slice"))
 }
 //#endregion 📨️Envelope
@@ -148,7 +148,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn deterministic_leaf_roundtrip() {
+    async fn deterministic_leaf_roundtrip() {
         let value = GltfInferenceLeafEnvelope {
             id: "s.stdio.gltf.inference.overall-size.v1".into(),
             algorithm_version: 1,

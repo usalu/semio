@@ -5,7 +5,7 @@ use crate::artifacts::remodel::diff::RemodelDiff;
 use crate::artifacts::remodel::RemodelSnapshot;
 
 //#region 🔖️Diff
-pub fn diff(payload: &super::mutation::CreateRigExtrinsic, base: &RemodelSnapshot) -> protocol::MutationOutcome<RemodelDiff> {
+pub async fn diff(payload: &super::mutation::CreateRigExtrinsic, base: &RemodelSnapshot) -> protocol::MutationOutcome<RemodelDiff> {
     if base.calibration.rig.iter().any(|extrinsic| extrinsic.camera_id == payload.extrinsic.camera_id) {
         return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("A rig extrinsic for camera \"{}\" already exists.", payload.extrinsic.camera_id), [payload.extrinsic.camera_id.clone()]);
     }

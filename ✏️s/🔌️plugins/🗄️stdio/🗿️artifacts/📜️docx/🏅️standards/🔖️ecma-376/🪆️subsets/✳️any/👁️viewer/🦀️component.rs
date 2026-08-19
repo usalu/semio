@@ -24,10 +24,10 @@ pub enum DocxViewCommand {
 }
 
 impl protocol::OpBinary for DocxViewCommand {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         Ok(Vec::new())
     }
-    fn decode_op(_bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    async fn decode_op(_bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         Ok(DocxViewCommand::Noop)
     }
 }
@@ -51,13 +51,13 @@ impl ArtifactViewer for DocxViewer {
     const DIALECT: Dialect = DOCX_VIEWER_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = STDIO_DOCX_DOCUMENT_SCHEMA;
 
-    fn initial_snapshot() -> DocxSnapshot {
+    async fn initial_snapshot() -> DocxSnapshot {
         DocxSnapshot::default()
     }
 
     /// 👁️ Structurally read-only: the sole `DocxViewCommand::Noop` variant never carries a config
     /// change, so this always returns the empty `ViewEmit`.
-    fn handle(
+    async fn handle(
         _command: &Self::Command,
         _doc: &ArtifactView<'_, Self::Snapshot>,
         _cfg: &ConfigView<'_, Self::Config>,
@@ -67,7 +67,7 @@ impl ArtifactViewer for DocxViewer {
         Ok(ViewEmit::default())
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> UiNode {
+    async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> UiNode {
         match body_key {
             main::BODY_KEY => main::render(doc.snapshot),
             _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))),
@@ -77,7 +77,7 @@ impl ArtifactViewer for DocxViewer {
 //#endregion 🔖️Viewer
 
 //#region 🔖️Manifest
-pub fn create_docx_viewer() -> semio_framework_plugin::AppDefinition {
+pub async fn create_docx_viewer() -> semio_framework_plugin::AppDefinition {
     Viewer::builder(DOCX_VIEWER_DIALECT)
         .document(["semio", "stdio", "docx"])
         .icon_id("file-text")
@@ -95,19 +95,19 @@ mod tests {
     use super::*;
 
     #[test]
-    fn create_docx_viewer_builds_a_definition_for_the_viewer_role() {
+    async fn create_docx_viewer_builds_a_definition_for_the_viewer_role() {
         let def = create_docx_viewer();
         assert_eq!(def.role, semio_framework_plugin::AppRole::Viewer);
         assert_eq!(def.dialect, DOCX_VIEWER_DIALECT.into());
     }
 
     #[test]
-    fn viewer_dialect_matches_the_artifact_coordinate() {
+    async fn viewer_dialect_matches_the_artifact_coordinate() {
         assert_eq!(<DocxViewer as ArtifactViewer>::DIALECT, DOCX_VIEWER_DIALECT);
     }
 
     #[test]
-    fn viewer_declares_the_document_window() {
+    async fn viewer_declares_the_document_window() {
         let def = create_docx_viewer();
         assert!(def.window_kinds.iter().any(|window| window.id == main::WINDOW_KIND_ID));
     }

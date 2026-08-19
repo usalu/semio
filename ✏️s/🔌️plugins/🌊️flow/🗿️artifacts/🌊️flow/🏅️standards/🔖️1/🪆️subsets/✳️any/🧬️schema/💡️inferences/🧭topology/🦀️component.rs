@@ -22,7 +22,7 @@ pub struct FlowTopology {
 }
 
 impl Default for FlowTopology {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self { topo_order: Vec::new(), depth: BTreeMap::new(), cycle_free: true, node_count: 0 }
     }
 }
@@ -31,7 +31,7 @@ impl Default for FlowTopology {
 /// `BTreeMap`/sorted-adjacency iteration order; widgets left over after the queue drains (a
 /// cycle) are appended in id order so `topo_order` always stays a total permutation of every
 /// widget id.
-pub fn compute_flow_topology(widgets: &[Widget], synapses: &[SynapseSpec]) -> FlowTopology {
+pub async fn compute_flow_topology(widgets: &[Widget], synapses: &[SynapseSpec]) -> FlowTopology {
     let ids: BTreeSet<String> = widgets.iter().map(|widget| widget_id(widget).to_string()).collect();
     let mut indegree: BTreeMap<String, u32> = ids.iter().cloned().map(|id| (id, 0)).collect();
     let mut adjacency: BTreeMap<String, Vec<String>> = ids.iter().cloned().map(|id| (id, Vec::new())).collect();
@@ -88,16 +88,16 @@ pub fn compute_flow_topology(widgets: &[Widget], synapses: &[SynapseSpec]) -> Fl
 mod tests {
     use super::*;
 
-    fn slider(id: &str) -> Widget {
+    async fn slider(id: &str) -> Widget {
         Widget::InputSlider { id: id.into(), value: 0.0, min: 0.0, max: 1.0, step: 0.1 }
     }
 
-    fn synapse(id: &str, from: &str, to: &str) -> SynapseSpec {
+    async fn synapse(id: &str, from: &str, to: &str) -> SynapseSpec {
         SynapseSpec { id: id.into(), from: from.into(), to: to.into(), from_port: String::new(), to_port: String::new() }
     }
 
     #[test]
-    fn linear_chain_orders_roots_before_leaves_with_increasing_depth() {
+    async fn linear_chain_orders_roots_before_leaves_with_increasing_depth() {
         let widgets = vec![slider("a"), slider("b"), slider("c")];
         let synapses = vec![synapse("s1", "a", "b"), synapse("s2", "b", "c")];
         let topology = compute_flow_topology(&widgets, &synapses);
@@ -108,7 +108,7 @@ mod tests {
     }
 
     #[test]
-    fn a_cycle_is_reported_as_not_cycle_free_but_still_totals_every_widget() {
+    async fn a_cycle_is_reported_as_not_cycle_free_but_still_totals_every_widget() {
         let widgets = vec![slider("a"), slider("b")];
         let synapses = vec![synapse("s1", "a", "b"), synapse("s2", "b", "a")];
         let topology = compute_flow_topology(&widgets, &synapses);

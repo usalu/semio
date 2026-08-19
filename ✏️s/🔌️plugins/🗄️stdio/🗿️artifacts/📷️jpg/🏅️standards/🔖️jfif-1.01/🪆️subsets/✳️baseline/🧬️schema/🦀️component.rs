@@ -23,23 +23,23 @@ pub mod derived_construction {
         type Mutation = JpgMutation;
         type Diff = JpgDiff;
 
-        fn empty() -> Self {
+        async fn empty() -> Self {
             Self(JpgAnyBuilder::empty())
         }
-        fn from_snapshot(snapshot: Self::Snapshot) -> Self {
+        async fn from_snapshot(snapshot: Self::Snapshot) -> Self {
             Self(JpgAnyBuilder::from_snapshot(snapshot))
         }
-        fn from_text(text: &str) -> Result<Self, store::TextError> {
+        async fn from_text(text: &str) -> Result<Self, store::TextError> {
             Ok(Self(JpgAnyBuilder::from_text(text)?))
         }
-        fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
+        async fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
             Ok(Self(JpgAnyBuilder::from_binary(bytes)?))
         }
-        fn mutate(self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
+        async fn mutate(self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let (inner, diff) = self.0.mutate(mutation);
             (Self(inner), diff)
         }
-        fn absorb(self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
+        async fn absorb(self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
             Ok(Self(self.0.absorb(diff)?))
         }
 
@@ -47,7 +47,7 @@ pub mod derived_construction {
         /// violation fails `build()` -- soft diagnostics are not surfaced here (`ArtifactBuilder`'s
         /// `build` has no diagnostics-on-success channel), matching `JpgAnyBuilder::build`'s existing
         /// contract of "diagnostics accumulated during mutation, not from validation".
-        fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
+        async fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
             let snapshot = self.0.build()?;
             let hard: Vec<dsl::Diagnostic> = check_baseline_conformance(&snapshot).into_iter().filter(|d| matches!(d.severity, dsl::Severity::Error | dsl::Severity::Fatal)).collect();
             if hard.is_empty() {
@@ -63,7 +63,7 @@ pub mod derived_construction {
     mod tests {
         use super::*;
 
-        fn gradient_image(w: u32, h: u32) -> Vec<u8> {
+        async fn gradient_image(w: u32, h: u32) -> Vec<u8> {
             let mut out = vec![0u8; (w * h * 4) as usize];
             for y in 0..h {
                 for x in 0..w {
@@ -78,7 +78,7 @@ pub mod derived_construction {
         }
 
         #[test]
-        fn real_encoded_jpeg_builds_clean_via_from_binary() {
+        async fn real_encoded_jpeg_builds_clean_via_from_binary() {
             let (w, h) = (24u32, 24u32);
             let snap = JpgSnapshot { width: w, height: h, pixels: gradient_image(w, h), ..JpgSnapshot::default() };
             let bytes = crate::artifacts::jpg::standards::v_jfif_1_01::engine::encode_jpg(&snap).expect("encode");
@@ -89,7 +89,7 @@ pub mod derived_construction {
         }
 
         #[test]
-        fn empty_snapshot_fails_build_with_no_frame() {
+        async fn empty_snapshot_fails_build_with_no_frame() {
             let err = JpgBaselineBuilderConstruction::empty().build().expect_err("an empty snapshot has no SOF0 frame -- must fail build()");
             assert!(err.iter().any(|d| d.code.0 == crate::artifacts::jpg::standards::v_jfif_1_01::subsets::baseline::schema::CODE_NO_FRAME));
         }
@@ -121,11 +121,11 @@ pub mod derived_analysis {
     pub const CODE_HUFFMAN_TABLE_COUNT: &str = "stdio.jpg.baseline.huffman-table-count";
     pub const CODE_COMPONENT_SAMPLING: &str = "stdio.jpg.baseline.component-sampling";
 
-    fn hard(code: &'static str, message: String) -> Diagnostic {
+    async fn hard(code: &'static str, message: String) -> Diagnostic {
         Diagnostic { code: FaultCode::new(code), severity: Severity::Error, span: TextSpan::at(1, 1), message, expected: None, scope: FaultScope::default() }
     }
 
-    fn soft(code: &'static str, message: String) -> Diagnostic {
+    async fn soft(code: &'static str, message: String) -> Diagnostic {
         Diagnostic { code: FaultCode::new(code), severity: Severity::Warning, span: TextSpan::at(1, 1), message, expected: None, scope: FaultScope::default() }
     }
 
@@ -134,7 +134,7 @@ pub mod derived_analysis {
     /// `JpgBaselineComposer::compose` hard-gates on this (pre-serialization, authoritative),
     /// `JpgBaselineBuilder::build` hard-gates on this too, and the registered `SubsetValidator`
     /// re-runs it post-hoc against the wire payload for the D5 validate-on-build hook.
-    pub fn check_baseline_conformance(snapshot: &JpgSnapshot) -> Vec<Diagnostic> {
+    pub async fn check_baseline_conformance(snapshot: &JpgSnapshot) -> Vec<Diagnostic> {
         let mut out = Vec::new();
 
         let Some(frame) = &snapshot.frame else {
@@ -181,11 +181,11 @@ pub mod derived_analysis {
         type Parts = JpgParts;
         const DIALECT: Dialect = DIALECT;
 
-        fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
+        async fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
             JpgAnyAnalyzer::sniff(source)
         }
 
-        fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
+        async fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
             let inner = JpgAnyAnalyzer::analyze(sources);
             let mut diagnostics = inner.diagnostics.clone();
             let mut confidence = inner.confidence;
@@ -206,7 +206,7 @@ pub mod derived_analysis {
         use super::*;
         use crate::artifacts::jpg::schema::snapshot::{JpgFrameComponent, JpgFrameHeader, JpgHuffmanTable};
 
-        fn conforming_snapshot() -> JpgSnapshot {
+        async fn conforming_snapshot() -> JpgSnapshot {
             JpgSnapshot {
                 frame: Some(JpgFrameHeader {
                     precision: 8,
@@ -234,13 +234,13 @@ pub mod derived_analysis {
         }
 
         #[test]
-        fn conforming_snapshot_has_no_diagnostics() {
+        async fn conforming_snapshot_has_no_diagnostics() {
             let diagnostics = check_baseline_conformance(&conforming_snapshot());
             assert!(diagnostics.is_empty(), "got {diagnostics:?}");
         }
 
         #[test]
-        fn missing_frame_is_hard() {
+        async fn missing_frame_is_hard() {
             let snapshot = JpgSnapshot::default();
             let diagnostics = check_baseline_conformance(&snapshot);
             assert_eq!(diagnostics.len(), 1);
@@ -249,7 +249,7 @@ pub mod derived_analysis {
         }
 
         #[test]
-        fn non_sof0_marker_is_hard() {
+        async fn non_sof0_marker_is_hard() {
             let mut snapshot = conforming_snapshot();
             snapshot.sof_marker = 0xC2; // SOF2 (progressive)
             let diagnostics = check_baseline_conformance(&snapshot);
@@ -257,7 +257,7 @@ pub mod derived_analysis {
         }
 
         #[test]
-        fn non_8bit_precision_is_hard() {
+        async fn non_8bit_precision_is_hard() {
             let mut snapshot = conforming_snapshot();
             snapshot.frame.as_mut().unwrap().precision = 12;
             let diagnostics = check_baseline_conformance(&snapshot);
@@ -265,7 +265,7 @@ pub mod derived_analysis {
         }
 
         #[test]
-        fn arithmetic_conditioning_present_is_hard() {
+        async fn arithmetic_conditioning_present_is_hard() {
             let mut snapshot = conforming_snapshot();
             snapshot.arithmetic = true;
             let diagnostics = check_baseline_conformance(&snapshot);
@@ -273,7 +273,7 @@ pub mod derived_analysis {
         }
 
         #[test]
-        fn excess_huffman_tables_is_soft() {
+        async fn excess_huffman_tables_is_soft() {
             let mut snapshot = conforming_snapshot();
             snapshot.huffman_tables.push(JpgHuffmanTable { id: 2, class: JpgHuffmanClass::Dc, bits: [0; 16], values: vec![] });
             let diagnostics = check_baseline_conformance(&snapshot);
@@ -281,7 +281,7 @@ pub mod derived_analysis {
         }
 
         #[test]
-        fn excess_components_is_soft() {
+        async fn excess_components_is_soft() {
             let mut snapshot = conforming_snapshot();
             let frame = snapshot.frame.as_mut().unwrap();
             frame.components.push(JpgFrameComponent { id: 4, h_sampling: 1, v_sampling: 1, quant_table_id: 1 });
@@ -291,7 +291,7 @@ pub mod derived_analysis {
         }
 
         #[test]
-        fn out_of_range_sampling_is_soft() {
+        async fn out_of_range_sampling_is_soft() {
             let mut snapshot = conforming_snapshot();
             snapshot.frame.as_mut().unwrap().components[0].h_sampling = 8;
             let diagnostics = check_baseline_conformance(&snapshot);

@@ -16,7 +16,7 @@ use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vec
 /// for [`Surface::Plane`] and [`Surface::Sphere`]; otherwise coarse-grid seeding followed by a 2D
 /// Newton iteration on the first-order optimality conditions `(S(u,v)-P)·Su = 0`, `(S(u,v)-P)·Sv = 0`.
 /// Returns `(u, v, distance)`.
-pub fn closest_point(surface: &Surface, domain: ((f64, f64), (f64, f64)), target: Pnt3, samples: usize) -> (f64, f64, f64) {
+pub async fn closest_point(surface: &Surface, domain: ((f64, f64), (f64, f64)), target: Pnt3, samples: usize) -> (f64, f64, f64) {
     match surface {
         Surface::Plane { frame } => {
             let local = frame.to_local(target);
@@ -38,7 +38,7 @@ pub fn closest_point(surface: &Surface, domain: ((f64, f64), (f64, f64)), target
 /// 🧭️ Wraps into a periodic domain (mirrors [`crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::curve::curve_ops`]'s identical fix for closed
 /// curves) rather than clamping — otherwise Newton can get trapped exactly at a domain boundary
 /// when the true optimum sits just across the periodic seam.
-fn wrap_or_clamp(x: f64, lo: f64, hi: f64, periodic: bool) -> f64 {
+async fn wrap_or_clamp(x: f64, lo: f64, hi: f64, periodic: bool) -> f64 {
     if periodic {
         let period = hi - lo;
         let mut w = (x - lo) % period;
@@ -51,7 +51,7 @@ fn wrap_or_clamp(x: f64, lo: f64, hi: f64, periodic: bool) -> f64 {
     }
 }
 
-fn closest_point_numeric(surface: &Surface, domain: ((f64, f64), (f64, f64)), target: Pnt3, samples: usize) -> (f64, f64, f64) {
+async fn closest_point_numeric(surface: &Surface, domain: ((f64, f64), (f64, f64)), target: Pnt3, samples: usize) -> (f64, f64, f64) {
     let (u_dom, v_dom) = domain;
     let u_periodic = surface.is_u_periodic();
     let v_periodic = surface.is_v_periodic();
@@ -112,7 +112,7 @@ fn closest_point_numeric(surface: &Surface, domain: ((f64, f64), (f64, f64)), ta
 /// `u=1` boundaries (functions of `v`). Requires the four curves to agree at shared corners
 /// (`c0(0)==d0(0)`, `c0(1)==d1(0)`, `c1(0)==d0(1)`, `c1(1)==d1(1)`) — the caller is responsible for
 /// that consistency; this function does not check it.
-pub fn coons_patch_eval(c0: &dyn Fn(f64) -> Pnt3, c1: &dyn Fn(f64) -> Pnt3, d0: &dyn Fn(f64) -> Pnt3, d1: &dyn Fn(f64) -> Pnt3, u: f64, v: f64) -> Pnt3 {
+pub async fn coons_patch_eval(c0: &dyn Fn(f64) -> Pnt3, c1: &dyn Fn(f64) -> Pnt3, d0: &dyn Fn(f64) -> Pnt3, d1: &dyn Fn(f64) -> Pnt3, u: f64, v: f64) -> Pnt3 {
     let p00 = c0(0.0);
     let p10 = c0(1.0);
     let p01 = c1(0.0);
@@ -132,7 +132,7 @@ mod tests {
     use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::matrix::Frame3;
 
     #[test]
-    fn closest_point_on_plane_matches_orthogonal_projection() {
+    async fn closest_point_on_plane_matches_orthogonal_projection() {
         let frame = Frame3::WORLD;
         let s = Surface::Plane { frame };
         let target = Pnt3::new(2.0, 3.0, 5.0);
@@ -143,7 +143,7 @@ mod tests {
     }
 
     #[test]
-    fn closest_point_on_sphere_matches_radial_projection() {
+    async fn closest_point_on_sphere_matches_radial_projection() {
         let frame = Frame3::from_normal(Pnt3::new(1.0, 1.0, 1.0), Vec3::Z).unwrap();
         let s = Surface::Sphere { frame, radius: 3.0 };
         let target = Pnt3::new(1.0, 1.0, 21.0); // 20 units above the sphere along its axis
@@ -152,7 +152,7 @@ mod tests {
     }
 
     #[test]
-    fn closest_point_on_cylinder_matches_expected_geometry() {
+    async fn closest_point_on_cylinder_matches_expected_geometry() {
         let frame = Frame3::from_normal(Pnt3::new(0.0, 0.0, 0.0), Vec3::Z).unwrap();
         let s = Surface::Cylinder { frame, radius: 2.0 };
         let target = Pnt3::new(10.0, 0.0, 5.0);
@@ -163,7 +163,7 @@ mod tests {
     }
 
     #[test]
-    fn coons_patch_reproduces_boundary_curves_exactly() {
+    async fn coons_patch_reproduces_boundary_curves_exactly() {
         let c0 = |u: f64| Pnt3::new(u, 0.0, 0.0);
         let c1 = |u: f64| Pnt3::new(u, 1.0, u * u);
         let d0 = |v: f64| Pnt3::new(0.0, v, 0.0);
@@ -178,7 +178,7 @@ mod tests {
     }
 
     #[test]
-    fn coons_patch_of_planar_boundaries_is_the_bilinear_plane() {
+    async fn coons_patch_of_planar_boundaries_is_the_bilinear_plane() {
         let c0 = |u: f64| Pnt3::new(u, 0.0, 0.0);
         let c1 = |u: f64| Pnt3::new(u, 1.0, 0.0);
         let d0 = |v: f64| Pnt3::new(0.0, v, 0.0);
@@ -191,7 +191,7 @@ mod tests {
         use super::*;
 
         #[test]
-        fn closest_point_on_cylinder_matches_brute_force_grid_oracle() {
+        async fn closest_point_on_cylinder_matches_brute_force_grid_oracle() {
             let mut rng = semio_framework_geometry::random::Rng::from_seed(71);
             for _ in 0..50 {
                 let frame =

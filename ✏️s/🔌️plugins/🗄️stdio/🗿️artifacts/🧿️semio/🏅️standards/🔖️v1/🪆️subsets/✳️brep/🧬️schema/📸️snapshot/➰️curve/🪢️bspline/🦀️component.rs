@@ -19,7 +19,7 @@ pub struct KnotVector {
 
 impl KnotVector {
     /// 🧵️ Builds and validates a knot vector: non-decreasing, correct length for `(n, degree)`.
-    pub fn new(knots: Vec<f64>, degree: usize, control_point_count: usize) -> Option<Self> {
+    pub async fn new(knots: Vec<f64>, degree: usize, control_point_count: usize) -> Option<Self> {
         if knots.len() != control_point_count + degree + 1 {
             return None;
         }
@@ -30,7 +30,7 @@ impl KnotVector {
     }
     /// 🧵️ A clamped (open) uniform knot vector: the first and last knots repeat `degree+1` times,
     /// the standard choice so the curve interpolates its first/last control points.
-    pub fn clamped_uniform(control_point_count: usize, degree: usize) -> Self {
+    pub async fn clamped_uniform(control_point_count: usize, degree: usize) -> Self {
         let n = control_point_count;
         let p = degree;
         let interior = n.saturating_sub(p + 1);
@@ -41,22 +41,22 @@ impl KnotVector {
         knots.extend(std::iter::repeat_n(1.0, p + 1));
         KnotVector { knots, degree: p }
     }
-    pub fn domain(&self) -> (f64, f64) {
+    pub async fn domain(&self) -> (f64, f64) {
         (self.knots[self.degree], self.knots[self.knots.len() - self.degree - 1])
     }
-    pub fn control_point_count(&self) -> usize {
+    pub async fn control_point_count(&self) -> usize {
         self.knots.len() - self.degree - 1
     }
-    pub fn is_periodic_compatible(&self) -> bool {
+    pub async fn is_periodic_compatible(&self) -> bool {
         // A periodic (non-clamped) knot vector has no repeated end knots beyond multiplicity 1.
         self.multiplicity_at_index(0) == 1
     }
-    fn multiplicity_at_index(&self, i: usize) -> usize {
+    async fn multiplicity_at_index(&self, i: usize) -> usize {
         self.knots.iter().filter(|&&k| k == self.knots[i]).count()
     }
     /// 🧵️ Finds the knot span index `i` such that `knots[i] <= u < knots[i+1]` (or the last valid
     /// span if `u` equals the domain's upper bound), via binary search — O(log n) per evaluation.
-    pub fn find_span(&self, u: f64) -> usize {
+    pub async fn find_span(&self, u: f64) -> usize {
         let n = self.control_point_count() - 1;
         let p = self.degree;
         if u >= self.knots[n + 1] {
@@ -79,7 +79,7 @@ impl KnotVector {
     }
     /// 🧵️ The multiplicity of the knot value equal to `u`, or `0` if `u` is not an existing knot
     /// (within exact equality — callers should snap to a known knot value before calling this).
-    pub fn multiplicity(&self, u: f64) -> usize {
+    pub async fn multiplicity(&self, u: f64) -> usize {
         self.knots.iter().filter(|&&k| k == u).count()
     }
 }
@@ -91,7 +91,7 @@ impl KnotVector {
 /// 🧵️ Evaluates all `degree+1` nonzero basis functions at `u` in the knot span `span` (the
 /// Cox-de Boor triangular recurrence, computed bottom-up per the standard NURBS-book algorithm —
 /// `O(p²)` and numerically stable, unlike the naive top-down recursive definition).
-pub fn basis_functions(knots: &KnotVector, span: usize, u: f64) -> Vec<f64> {
+pub async fn basis_functions(knots: &KnotVector, span: usize, u: f64) -> Vec<f64> {
     let p = knots.degree;
     let mut n = vec![0.0; p + 1];
     n[0] = 1.0;
@@ -114,7 +114,7 @@ pub fn basis_functions(knots: &KnotVector, span: usize, u: f64) -> Vec<f64> {
 
 /// 🧵️ Evaluates the nonzero basis functions and their derivatives up to order `max_deriv` at `u`
 /// in `span`. Returns `derivs[k][j]` = the `k`-th derivative of the `j`-th nonzero basis function.
-pub fn basis_function_derivatives(knots: &KnotVector, span: usize, u: f64, max_deriv: usize) -> Vec<Vec<f64>> {
+pub async fn basis_function_derivatives(knots: &KnotVector, span: usize, u: f64, max_deriv: usize) -> Vec<Vec<f64>> {
     let p = knots.degree;
     let max_deriv = max_deriv.min(p);
     let mut ndu = vec![vec![0.0; p + 1]; p + 1];
@@ -182,7 +182,7 @@ pub fn basis_function_derivatives(knots: &KnotVector, span: usize, u: f64, max_d
 
 /// 🧵️ De Boor's algorithm for a rational (homogeneous) curve, evaluating one weighted-coordinate
 /// channel — call once per coordinate (x, y, z, w) and divide by the resulting `w` to dehomogenize.
-pub fn de_boor(knots: &KnotVector, control_values: &[f64], u: f64) -> f64 {
+pub async fn de_boor(knots: &KnotVector, control_values: &[f64], u: f64) -> f64 {
     let span = knots.find_span(u);
     let p = knots.degree;
     let n = basis_functions(knots, span, u);
@@ -196,7 +196,7 @@ pub fn de_boor(knots: &KnotVector, control_values: &[f64], u: f64) -> f64 {
 /// 🧵️ Inserts a single knot `u` (Boehm's algorithm), returning the new knot vector and the new
 /// control values for one coordinate channel — geometrically a no-op (the curve is unchanged),
 /// used to raise local control or to harmonize two curves onto a shared knot vector.
-pub fn insert_knot(knots: &KnotVector, control_values: &[f64], u: f64) -> (KnotVector, Vec<f64>) {
+pub async fn insert_knot(knots: &KnotVector, control_values: &[f64], u: f64) -> (KnotVector, Vec<f64>) {
     let p = knots.degree;
     let span = knots.find_span(u);
     let mut new_knots = knots.knots.clone();
@@ -216,7 +216,7 @@ pub fn insert_knot(knots: &KnotVector, control_values: &[f64], u: f64) -> (KnotV
 /// 🧵️ Elevates a Bézier segment's degree by one via the shared [`crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::curve::bezier`] elevation
 /// formula, exposed here so B-spline code can raise a single-span curve's degree without
 /// round-tripping through the `Bernstein`/`Poly` types.
-pub fn elevate_bezier_span(control_values: &[f64]) -> Vec<f64> {
+pub async fn elevate_bezier_span(control_values: &[f64]) -> Vec<f64> {
     let n = control_values.len() - 1;
     let m = n + 1;
     (0..=m)
@@ -237,23 +237,23 @@ pub fn elevate_bezier_span(control_values: &[f64]) -> Vec<f64> {
 mod tests {
     use super::*;
 
-    fn cubic_clamped_5cp() -> KnotVector {
+    async fn cubic_clamped_5cp() -> KnotVector {
         // degree 3, 5 control points -> knot vector length 9: [0,0,0,0, 0.5, 1,1,1,1]
         KnotVector::new(vec![0.0, 0.0, 0.0, 0.0, 0.5, 1.0, 1.0, 1.0, 1.0], 3, 5).unwrap()
     }
 
     #[test]
-    fn knot_vector_rejects_wrong_length() {
+    async fn knot_vector_rejects_wrong_length() {
         assert!(KnotVector::new(vec![0.0, 0.0, 1.0, 1.0], 3, 5).is_none());
     }
 
     #[test]
-    fn knot_vector_rejects_decreasing_sequence() {
+    async fn knot_vector_rejects_decreasing_sequence() {
         assert!(KnotVector::new(vec![0.0, 0.5, 0.2, 1.0, 1.0], 1, 3).is_none());
     }
 
     #[test]
-    fn clamped_uniform_has_correct_domain_and_multiplicity() {
+    async fn clamped_uniform_has_correct_domain_and_multiplicity() {
         let kv = KnotVector::clamped_uniform(5, 3);
         assert_eq!(kv.domain(), (0.0, 1.0));
         assert_eq!(kv.multiplicity(0.0), 4);
@@ -262,7 +262,7 @@ mod tests {
     }
 
     #[test]
-    fn find_span_matches_brute_force_scan() {
+    async fn find_span_matches_brute_force_scan() {
         let kv = cubic_clamped_5cp();
         for i in 0..=100 {
             let u = i as f64 / 100.0;
@@ -271,7 +271,7 @@ mod tests {
         }
     }
 
-    fn brute_force_span(kv: &KnotVector, u: f64) -> usize {
+    async fn brute_force_span(kv: &KnotVector, u: f64) -> usize {
         let n = kv.control_point_count() - 1;
         for i in kv.degree..=n {
             if u >= kv.knots[i] && u < kv.knots[i + 1] {
@@ -282,7 +282,7 @@ mod tests {
     }
 
     #[test]
-    fn basis_functions_sum_to_one_everywhere_in_domain() {
+    async fn basis_functions_sum_to_one_everywhere_in_domain() {
         let kv = cubic_clamped_5cp();
         for i in 0..=50 {
             let u = i as f64 / 50.0;
@@ -294,7 +294,7 @@ mod tests {
     }
 
     #[test]
-    fn basis_functions_are_nonnegative() {
+    async fn basis_functions_are_nonnegative() {
         let kv = cubic_clamped_5cp();
         for i in 0..=50 {
             let u = i as f64 / 50.0;
@@ -305,7 +305,7 @@ mod tests {
     }
 
     #[test]
-    fn de_boor_interpolates_endpoints_of_clamped_curve() {
+    async fn de_boor_interpolates_endpoints_of_clamped_curve() {
         let kv = cubic_clamped_5cp();
         let values = vec![0.0, 1.0, -2.0, 3.0, 5.0];
         let (lo, hi) = kv.domain();
@@ -314,7 +314,7 @@ mod tests {
     }
 
     #[test]
-    fn basis_function_derivatives_match_finite_differences() {
+    async fn basis_function_derivatives_match_finite_differences() {
         let kv = cubic_clamped_5cp();
         let u = 0.37;
         let span = kv.find_span(u);
@@ -329,7 +329,7 @@ mod tests {
     }
 
     #[test]
-    fn basis_function_derivatives_order_zero_matches_basis_functions() {
+    async fn basis_function_derivatives_order_zero_matches_basis_functions() {
         let kv = cubic_clamped_5cp();
         let u = 0.63;
         let span = kv.find_span(u);
@@ -341,7 +341,7 @@ mod tests {
     }
 
     #[test]
-    fn insert_knot_does_not_change_the_curve() {
+    async fn insert_knot_does_not_change_the_curve() {
         let kv = cubic_clamped_5cp();
         let values = vec![0.0, 2.0, -1.0, 3.0, 1.0];
         let (new_kv, new_values) = insert_knot(&kv, &values, 0.3);
@@ -355,7 +355,7 @@ mod tests {
     }
 
     #[test]
-    fn elevate_bezier_span_preserves_curve_value() {
+    async fn elevate_bezier_span_preserves_curve_value() {
         // Single bezier span is a B-spline with degree = n and a clamped, no-interior-knot vector.
         let control_values = vec![0.0, 3.0, -2.0, 5.0];
         let elevated = elevate_bezier_span(&control_values);
@@ -372,7 +372,7 @@ mod tests {
         use super::*;
 
         #[test]
-        fn de_boor_matches_bernstein_sum_oracle_on_random_bezier_span_curves() {
+        async fn de_boor_matches_bernstein_sum_oracle_on_random_bezier_span_curves() {
             // A single-span (no interior knots) clamped B-spline of degree p is exactly the
             // Bernstein-basis polynomial with the same control values — an independent oracle.
             let mut rng = semio_framework_geometry::random::Rng::from_seed(41);
@@ -392,7 +392,7 @@ mod tests {
         }
 
         #[test]
-        fn knot_insertion_is_geometrically_a_no_op_on_random_curves() {
+        async fn knot_insertion_is_geometrically_a_no_op_on_random_curves() {
             let mut rng = semio_framework_geometry::random::Rng::from_seed(43);
             for _ in 0..100 {
                 let degree = 1 + rng.next_range(0, 4) as usize;

@@ -5,7 +5,7 @@ use crate::artifacts::en1999::mutations::change_i_t_mm4::mutation::ChangeITMm4;
 use crate::artifacts::en1999::En1999Snapshot;
 
 //#region 🔖️Diff
-pub fn diff(payload: &ChangeITMm4, base: &En1999Snapshot) -> protocol::MutationOutcome<En1999Diff> {
+pub async fn diff(payload: &ChangeITMm4, base: &En1999Snapshot) -> protocol::MutationOutcome<En1999Diff> {
     if !payload.new_i_t_mm4.is_finite() {
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("Torsion constant I_t [mm4] must be a finite number, got {}.", payload.new_i_t_mm4), Vec::<String>::new());
     }

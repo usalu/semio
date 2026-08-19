@@ -11,12 +11,12 @@ pub const LAYOUT_VIEW_MODE_VIEW: &str = "view";
 
 //#region 🔖️Definition
 /// 🧱️ Stitched into the viewer manifest by `crate::viewer::layout::create_layout_viewer`.
-pub fn definition() -> ModeDefinition {
+pub async fn definition() -> ModeDefinition {
     ModeDefinition { id: LAYOUT_VIEW_MODE_VIEW.into(), label: LocalizedLabel::native("View", "Ansicht"), icon_id: "eye".into(), tools: Vec::new(), layout_id: None, commands: Vec::new() }
 }
 
 /// 🪟️ Single full-pane Preview window — the read-only viewer has no side-by-side layout to allocate.
-pub fn layout() -> WindowLayout {
+pub async fn layout() -> WindowLayout {
     WindowLayout {
         root: WindowLayoutRoot::Stack(WindowLayoutStackNode {
             kind: "stack".into(),
@@ -34,7 +34,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn the_default_layout_references_the_preview_window() {
+    async fn the_default_layout_references_the_preview_window() {
         let json = serde_json::to_string(&layout()).expect("layout json");
         assert!(json.contains(preview::WINDOW_KIND_ID), "layout must reference the preview window kind: {json}");
     }

@@ -18,19 +18,19 @@ pub struct ChangeLayerAdjustmentKind {
 impl protocol::MutationKind<RasterSnapshot, RasterMutation> for ChangeLayerAdjustmentKind {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "layer", kind: "change-layer-adjustment-kind", record: "ChangedLayerAdjustmentKind" };
 
-    fn diff(&self, base: &RasterSnapshot) -> protocol::MutationOutcome<RasterDiff> {
+    async fn diff(&self, base: &RasterSnapshot) -> protocol::MutationOutcome<RasterDiff> {
         crate::artifacts::raster::mutations::change_layer_adjustment_kind::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &RasterSnapshot) -> Vec<RasterMutation> {
+    async fn inverse(&self, base: &RasterSnapshot) -> Vec<RasterMutation> {
         crate::artifacts::raster::mutations::change_layer_adjustment_kind::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         format!("Set layer {} adjustment kind to {}", self.layer_id, self.new_adjustment_kind)
     }
 
-    fn target(&self) -> Vec<String> {
+    async fn target(&self) -> Vec<String> {
         vec![self.layer_id.clone()]
     }
 }

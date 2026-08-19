@@ -34,7 +34,7 @@ use semio_framework_plugin::{ExecutionMode, Plugin};
 /// the OS bridge's own live consumer — the OS-level export/import dispatch this file does not own —
 /// was not traced this pass) — deleting on inference alone risks silently breaking real export/import
 /// UI functionality, which this ticket's "get everything working" rule forbids doing speculatively.
-pub fn plugin() -> Result<Plugin, semio_framework_plugin::PluginAssemblyError> {
+pub async fn plugin() -> Result<Plugin, semio_framework_plugin::PluginAssemblyError> {
     Plugin::builder("puzzle")
         .label("Puzzle")
         .version("0.1.0")
@@ -88,32 +88,32 @@ mod surface_tests {
     use semio_framework_plugin::testkit::{assert_editor_and_viewer_share_dialect, assert_viewer_never_mutates};
 
     #[test]
-    fn puzzle2d_viewer_never_mutates() {
+    async fn puzzle2d_viewer_never_mutates() {
         assert_viewer_never_mutates::<crate::viewer::puzzle2d::Puzzle2dViewer>();
     }
 
     #[test]
-    fn puzzle2d_editor_and_viewer_share_dialect() {
+    async fn puzzle2d_editor_and_viewer_share_dialect() {
         assert_editor_and_viewer_share_dialect::<crate::editor::puzzle2d::Puzzle2dPlayApp, crate::viewer::puzzle2d::Puzzle2dViewer>();
     }
 
     #[test]
-    fn puzzle3d_viewer_never_mutates() {
+    async fn puzzle3d_viewer_never_mutates() {
         assert_viewer_never_mutates::<crate::viewer::puzzle3d::Puzzle3dViewer>();
     }
 
     #[test]
-    fn puzzle3d_editor_and_viewer_share_dialect() {
+    async fn puzzle3d_editor_and_viewer_share_dialect() {
         assert_editor_and_viewer_share_dialect::<crate::editor::puzzle3d::Puzzle3dPlayApp, crate::viewer::puzzle3d::Puzzle3dViewer>();
     }
 
     #[test]
-    fn puzzle5d_viewer_never_mutates() {
+    async fn puzzle5d_viewer_never_mutates() {
         assert_viewer_never_mutates::<crate::viewer::puzzle5d::Puzzle5dViewer>();
     }
 
     #[test]
-    fn puzzle5d_editor_and_viewer_share_dialect() {
+    async fn puzzle5d_editor_and_viewer_share_dialect() {
         assert_editor_and_viewer_share_dialect::<crate::editor::puzzle5d::Puzzle5dPlayApp, crate::viewer::puzzle5d::Puzzle5dViewer>();
     }
 }

@@ -12,7 +12,7 @@ use crate::artifacts::xml::schema::snapshot::{xml_document_from_text, XmlDocumen
 use crate::artifacts::zip::opc::{self, REL_TYPE_OFFICE_DOCUMENT};
 
 //#region 🔖️SharedStringsXml
-fn collect_text(node: &XmlNode, out: &mut String) {
+async fn collect_text(node: &XmlNode, out: &mut String) {
     if let XmlNode::Element { name, children, .. } = node {
         if name == "t" {
             for c in children {
@@ -28,7 +28,7 @@ fn collect_text(node: &XmlNode, out: &mut String) {
     }
 }
 
-fn shared_strings_from_xml(doc: &XmlDocument, part: &str) -> Result<Vec<String>, XlsxError> {
+async fn shared_strings_from_xml(doc: &XmlDocument, part: &str) -> Result<Vec<String>, XlsxError> {
     let bad = |detail: String| XlsxError::Xml { part: part.into(), detail };
     let root = doc.root.as_ref().ok_or_else(|| bad("empty document".into()))?;
     let XmlNode::Element { name, children, .. } = root else { return Err(bad("root is not an element".into())) };
@@ -55,7 +55,7 @@ struct SheetRef {
     r_id: String,
 }
 
-fn workbook_sheets_from_xml(doc: &XmlDocument, part: &str) -> Result<Vec<SheetRef>, XlsxError> {
+async fn workbook_sheets_from_xml(doc: &XmlDocument, part: &str) -> Result<Vec<SheetRef>, XlsxError> {
     let bad = |detail: String| XlsxError::Xml { part: part.into(), detail };
     let root = doc.root.as_ref().ok_or_else(|| bad("empty document".into()))?;
     let XmlNode::Element { name, children, .. } = root else { return Err(bad("root is not an element".into())) };
@@ -84,7 +84,7 @@ fn workbook_sheets_from_xml(doc: &XmlDocument, part: &str) -> Result<Vec<SheetRe
 //#endregion 🔖️WorkbookXml
 
 //#region 🔖️WorksheetXml
-fn find_v_text(children: &[XmlNode]) -> Option<String> {
+async fn find_v_text(children: &[XmlNode]) -> Option<String> {
     children.iter().find_map(|c| match c {
         XmlNode::Element { name, children, .. } if name == "v" => {
             let mut text = String::new();
@@ -99,7 +99,7 @@ fn find_v_text(children: &[XmlNode]) -> Option<String> {
     })
 }
 
-fn find_f_text(children: &[XmlNode]) -> Option<String> {
+async fn find_f_text(children: &[XmlNode]) -> Option<String> {
     children.iter().find_map(|c| match c {
         XmlNode::Element { name, children, .. } if name == "f" => {
             let mut text = String::new();
@@ -120,7 +120,7 @@ fn find_f_text(children: &[XmlNode]) -> Option<String> {
 /// keeps the index (see the module doc comment). `t="e"`/non-formula `t="str"` normalize to
 /// `InlineString` (a documented normalization: this union has no dedicated error/formula-string
 /// variant for a BARE cell — see `Formula.cached`, which IS typed, for the formula case).
-fn extract_typed_value(children: &[XmlNode], t: Option<&str>, sst_len: usize, part: &str) -> Result<XlsxCellValue, XlsxError> {
+async fn extract_typed_value(children: &[XmlNode], t: Option<&str>, sst_len: usize, part: &str) -> Result<XlsxCellValue, XlsxError> {
     match t {
         Some("s") => {
             let v = find_v_text(children).ok_or_else(|| XlsxError::Xml { part: part.into(), detail: "t=\"s\" cell missing <v>".into() })?;
@@ -159,7 +159,7 @@ fn extract_typed_value(children: &[XmlNode], t: Option<&str>, sst_len: usize, pa
 /// 🔎️ Resolves one `<c>` element's full value — a `<f>` child present makes this a `Formula`
 /// cell (ECMA-376 §18.3.1.40); its `cached` is the SAME `<v>`/`t` pair, re-typed by
 /// `extract_typed_value` (absent `<v>` = uncalculated, `cached: None`).
-fn extract_cell_value(children: &[XmlNode], t: Option<&str>, sst_len: usize, part: &str) -> Result<XlsxCellValue, XlsxError> {
+async fn extract_cell_value(children: &[XmlNode], t: Option<&str>, sst_len: usize, part: &str) -> Result<XlsxCellValue, XlsxError> {
     if let Some(expr) = find_f_text(children) {
         let cached = if find_v_text(children).is_some() { Some(Box::new(extract_typed_value(children, t, sst_len, part)?)) } else { None };
         return Ok(XlsxCellValue::Formula { expr, cached });
@@ -171,7 +171,7 @@ fn extract_cell_value(children: &[XmlNode], t: Option<&str>, sst_len: usize, par
 /// `(row, col)`-addressed list — `row` from the enclosing `<row r>`, `col` from the cell's own
 /// `<c r>` column-letter prefix (`col` in the cell's own `r` MUST agree with the row-digit suffix
 /// per spec; only the column letters carry information this decoder doesn't already have).
-fn worksheet_cells_from_xml(doc: &XmlDocument, sst_len: usize, part: &str) -> Result<Vec<XlsxCell>, XlsxError> {
+async fn worksheet_cells_from_xml(doc: &XmlDocument, sst_len: usize, part: &str) -> Result<Vec<XlsxCell>, XlsxError> {
     let bad = |detail: String| XlsxError::Xml { part: part.into(), detail };
     let root = doc.root.as_ref().ok_or_else(|| bad("empty document".into()))?;
     let XmlNode::Element { name, children, .. } = root else { return Err(bad("root is not an element".into())) };
@@ -209,7 +209,7 @@ fn worksheet_cells_from_xml(doc: &XmlDocument, sst_len: usize, part: &str) -> Re
 //#endregion 🔖️WorksheetXml
 
 //#region 🔖️Codec
-pub fn decode_xlsx(data: &[u8]) -> Result<XlsxSnapshot, XlsxError> {
+pub async fn decode_xlsx(data: &[u8]) -> Result<XlsxSnapshot, XlsxError> {
     let opc = opc::decode_opc(data)?;
     // 🏅️ Recognizes either the Transitional or Strict officeDocument relationship TYPE (see the
     // `REL_TYPE_OFFICE_DOCUMENT_STRICT` doc comment above) -- additive, doesn't change decode for
@@ -251,7 +251,7 @@ pub fn decode_xlsx(data: &[u8]) -> Result<XlsxSnapshot, XlsxError> {
 //#region 🔖️Sniff
 /// 🕵️ Real xlsx sniff: OPC-shaped bytes whose root officeDocument relationship resolves under
 /// `xl/` — disambiguates from docx/pptx sharing the same zip magic and OPC shape.
-pub fn sniff_xlsx_bytes(data: &[u8]) -> bool {
+pub async fn sniff_xlsx_bytes(data: &[u8]) -> bool {
     let Ok(opc) = opc::decode_opc(data) else { return false };
     let path = opc.resolve_relationship("", REL_TYPE_OFFICE_DOCUMENT).or_else(|| opc.resolve_relationship("", REL_TYPE_OFFICE_DOCUMENT_STRICT));
     match path {

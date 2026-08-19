@@ -14,7 +14,7 @@ pub struct SetSelectedOpacity {
     pub value: f64,
 }
 
-pub fn handle(payload: &SetSelectedOpacity, doc: &ArtifactView<'_, DrawSnapshot>, _cfg: &ConfigView<'_, DrawConfig>, session: &mut DrawSession) -> Result<Emit<DrawMutation, DrawConfigMutation>, Fault> {
+pub async fn handle(payload: &SetSelectedOpacity, doc: &ArtifactView<'_, DrawSnapshot>, _cfg: &ConfigView<'_, DrawConfig>, session: &mut DrawSession) -> Result<Emit<DrawMutation, DrawConfigMutation>, Fault> {
     let document = doc.snapshot;
     let operations: Vec<DrawMutation> = session.interaction.ids.iter().filter(|id| find_draw_layer(document, id).is_some()).map(|id| crate::artifacts::draw::mutations::set_layer_opacity(id.clone(), payload.value)).collect();
     if operations.is_empty() {

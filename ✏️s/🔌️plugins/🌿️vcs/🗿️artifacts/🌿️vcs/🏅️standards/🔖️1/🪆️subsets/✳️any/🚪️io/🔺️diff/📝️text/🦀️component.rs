@@ -13,7 +13,7 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 pub use crate::artifacts::vcs::schema::diff::*;
 
 //#region 🔖️Apply
-pub fn apply_tags_delta(
+pub async fn apply_tags_delta(
     tags: &[String],
     delta: &VcsTagsDelta,
 ) -> protocol::MutationApplyResult<Vec<String>> {
@@ -59,7 +59,7 @@ pub fn apply_tags_delta(
     Ok(next)
 }
 
-fn absorb_tags_delta(target: &mut Option<VcsTagsDelta>, incoming: Option<VcsTagsDelta>) {
+async fn absorb_tags_delta(target: &mut Option<VcsTagsDelta>, incoming: Option<VcsTagsDelta>) {
     if let Some(src) = incoming {
         match target {
             Some(dst) => {
@@ -73,7 +73,7 @@ fn absorb_tags_delta(target: &mut Option<VcsTagsDelta>, incoming: Option<VcsTags
 
 impl VcsDiff {
     /// 🧬️ Applies every sparse entry (all state classes) onto a full artifact.
-    pub fn apply_to_artifact(&self, artifact: &VcsArtifact) -> protocol::MutationApplyResult<VcsArtifact> {
+    pub async fn apply_to_artifact(&self, artifact: &VcsArtifact) -> protocol::MutationApplyResult<VcsArtifact> {
         Ok({
             if let Some(replacement) = &self.artifact {
                 return Ok((**replacement).clone());
@@ -110,7 +110,7 @@ impl VcsDiff {
 }
 
 impl MutationDiff<VcsSnapshot> for VcsDiff {
-    fn apply(&self, snapshot: &VcsSnapshot) -> protocol::MutationApplyResult<VcsSnapshot> {
+    async fn apply(&self, snapshot: &VcsSnapshot) -> protocol::MutationApplyResult<VcsSnapshot> {
         Ok({
             if let Some(replacement) = &self.artifact {
                 return Ok(replacement.to_snapshot());
@@ -138,7 +138,7 @@ impl MutationDiff<VcsSnapshot> for VcsDiff {
             next
         })
     }
-    fn absorb(&mut self, other: Self) {
+    async fn absorb(&mut self, other: Self) {
         if other.artifact.is_some() {
             *self = other;
             return;
@@ -168,7 +168,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn empty_diff_is_a_no_operation() {
+    async fn empty_diff_is_a_no_operation() {
         let base = crate::artifacts::vcs::standards::v1::subsets::any::schema::empty_vcs_snapshot();
         let diff = VcsDiff::default();
         assert_eq!(diff.apply(&base).expect("valid mutation diff"), base);

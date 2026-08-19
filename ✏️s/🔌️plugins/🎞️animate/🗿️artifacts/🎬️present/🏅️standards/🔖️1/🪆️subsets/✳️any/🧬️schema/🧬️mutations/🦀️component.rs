@@ -54,11 +54,11 @@ mod tests {
     use crate::artifacts::present::{default_present_snapshot, present_snapshot_with_tiles, present_working_scene, FigureTileDraft, FigureTileFrame};
     use protocol::testkit::{assert_fatal_never_applies, assert_missing_target_is_error};
 
-    fn tile(id: &str) -> FigureTileDraft {
+    async fn tile(id: &str) -> FigureTileDraft {
         FigureTileDraft { id: id.into(), name: id.into(), crop: FigureTileFrame { x: 0.1, y: 0.1, width: 0.2, height: 0.2 } }
     }
 
-    fn round_trip(base: &PresentSnapshot, mutation: &PresentMutation) -> PresentSnapshot {
+    async fn round_trip(base: &PresentSnapshot, mutation: &PresentMutation) -> PresentSnapshot {
         let (forward, _messages) =
             vcs::apply_mutation(base, mutation).expect("valid mutation");
         let mut backward = mutation.inverse(base);
@@ -77,7 +77,7 @@ mod tests {
     }
 
     #[test]
-    fn tiles_create_rename_resize_delete_round_trip() {
+    async fn tiles_create_rename_resize_delete_round_trip() {
         let base = default_present_snapshot();
         let created = round_trip(&base, &PresentMutation::CreateTile(create_tile::mutation::CreateTile { index: 0, tile: tile("t1") }));
         assert_eq!(present_working_scene(&created).1.len(), 1);
@@ -93,7 +93,7 @@ mod tests {
     }
 
     #[test]
-    fn delete_tiles_removes_the_multi_select_and_reorder_tiles_moves_by_id() {
+    async fn delete_tiles_removes_the_multi_select_and_reorder_tiles_moves_by_id() {
         let (source, _) = present_working_scene(&default_present_snapshot());
         let base = present_snapshot_with_tiles(&source, &[tile("t1"), tile("t2"), tile("t3")]);
         let reordered = round_trip(&base, &PresentMutation::ReorderTiles(reorder_tiles::mutation::ReorderTiles { id: "t1".into(), to_index: 2 }));
@@ -103,7 +103,7 @@ mod tests {
     }
 
     #[test]
-    fn replace_tiles_and_replace_source_and_resize_source_frame_round_trip() {
+    async fn replace_tiles_and_replace_source_and_resize_source_frame_round_trip() {
         let base = default_present_snapshot();
         let seeded = round_trip(&base, &PresentMutation::ReplaceTiles(replace_tiles::mutation::ReplaceTiles { new_tiles: vec![tile("t1"), tile("t2")] }));
         assert_eq!(present_working_scene(&seeded).1.len(), 2);
@@ -119,7 +119,7 @@ mod tests {
     }
 
     #[test]
-    fn missing_targets_invert_to_nothing() {
+    async fn missing_targets_invert_to_nothing() {
         let base = default_present_snapshot();
         assert!(PresentMutation::DeleteTile(delete_tile::mutation::DeleteTile { id: "gone".into() }).inverse(&base).is_empty());
         assert!(PresentMutation::RenameTile(rename_tile::mutation::RenameTile { id: "gone".into(), new_name: "x".into() }).inverse(&base).is_empty());
@@ -131,7 +131,7 @@ mod tests {
     }
 
     #[test]
-    fn create_tile_obeys_the_inverse_and_diff_absorb_laws() {
+    async fn create_tile_obeys_the_inverse_and_diff_absorb_laws() {
         let (source, _) = present_working_scene(&default_present_snapshot());
         let base = present_snapshot_with_tiles(&source, &[tile("t1")]);
         let mutation = PresentMutation::CreateTile(create_tile::mutation::CreateTile { index: 1, tile: tile("t2") });
@@ -142,7 +142,7 @@ mod tests {
     }
 
     #[test]
-    fn rename_tile_obeys_the_inverse_law() {
+    async fn rename_tile_obeys_the_inverse_law() {
         let (source, _) = present_working_scene(&default_present_snapshot());
         let base = present_snapshot_with_tiles(&source, &[tile("t1")]);
         let mutation = PresentMutation::RenameTile(rename_tile::mutation::RenameTile { id: "t1".into(), new_name: "Hero".into() });
@@ -150,7 +150,7 @@ mod tests {
     }
 
     #[test]
-    fn replace_source_obeys_the_inverse_and_diff_absorb_laws() {
+    async fn replace_source_obeys_the_inverse_and_diff_absorb_laws() {
         let base = default_present_snapshot();
         let (base_source, _) = present_working_scene(&base);
         let mut source_a = base_source.clone();
@@ -166,7 +166,7 @@ mod tests {
     }
 
     #[test]
-    fn semantic_kinds_cover_every_variant() {
+    async fn semantic_kinds_cover_every_variant() {
         let kinds: Vec<&str> = PresentMutation::kinds().iter().map(|descriptor| descriptor.kind).collect();
         for expected in [
             "resize-source-frame",
@@ -191,7 +191,7 @@ mod tests {
     // `assert_outcome_policy_matrix` is NOT landed under that name (only the generic closure-based
     // `assert_policy_matrix` exists) — see this ticket's report.
     #[test]
-    fn create_family_fatal_never_applies() {
+    async fn create_family_fatal_never_applies() {
         let base = present_snapshot_with_tiles(&present_working_scene(&default_present_snapshot()).0, &[tile("t1")]);
         let outcome = PresentMutation::CreateTile(create_tile::mutation::CreateTile { index: 0, tile: tile("t1") }).diff(&base);
         assert_eq!(outcome.worst_level(), Some(protocol::Severity::Fatal));
@@ -199,26 +199,26 @@ mod tests {
     }
 
     #[test]
-    fn delete_family_missing_target_is_error() {
+    async fn delete_family_missing_target_is_error() {
         let base = default_present_snapshot();
         assert_missing_target_is_error(&base, &PresentMutation::DeleteTile(delete_tile::mutation::DeleteTile { id: "missing".into() }));
         assert_missing_target_is_error(&base, &PresentMutation::DeleteTiles(delete_tiles::mutation::DeleteTiles { ids: vec!["missing".into()] }));
     }
 
     #[test]
-    fn rename_family_missing_target_is_error() {
+    async fn rename_family_missing_target_is_error() {
         let base = default_present_snapshot();
         assert_missing_target_is_error(&base, &PresentMutation::RenameTile(rename_tile::mutation::RenameTile { id: "missing".into(), new_name: "x".into() }));
     }
 
     #[test]
-    fn resize_family_missing_target_is_error() {
+    async fn resize_family_missing_target_is_error() {
         let base = default_present_snapshot();
         assert_missing_target_is_error(&base, &PresentMutation::ResizeTileCrop(resize_tile_crop::mutation::ResizeTileCrop { id: "missing".into(), new_crop: FigureTileFrame { x: 0.0, y: 0.0, width: 0.1, height: 0.1 } }));
     }
 
     #[test]
-    fn resize_family_fatal_never_applies() {
+    async fn resize_family_fatal_never_applies() {
         let base = default_present_snapshot();
         let outcome = PresentMutation::ResizeSourceFrame(resize_source_frame::mutation::ResizeSourceFrame { new_frame: FigureTileFrame { x: 0.0, y: 0.0, width: -1.0, height: 1.0 } }).diff(&base);
         assert_eq!(outcome.worst_level(), Some(protocol::Severity::Fatal));
@@ -226,7 +226,7 @@ mod tests {
     }
 
     #[test]
-    fn reorder_family_missing_target_is_error() {
+    async fn reorder_family_missing_target_is_error() {
         let base = default_present_snapshot();
         assert_missing_target_is_error(&base, &PresentMutation::ReorderTiles(reorder_tiles::mutation::ReorderTiles { id: "missing".into(), to_index: 0 }));
     }
@@ -236,7 +236,7 @@ mod tests {
 
 //#region 🔖️Apply
 /// 📦️ Applies `mutation` onto `snapshot`, returning the resulting snapshot.
-pub fn apply_present_mutation(
+pub async fn apply_present_mutation(
     snapshot: &PresentSnapshot,
     mutation: &PresentMutation,
 ) -> protocol::MutationApplyResult<PresentSnapshot> {
@@ -244,7 +244,7 @@ pub fn apply_present_mutation(
 }
 
 /// ↩️ Computes `mutation`'s inverse mutations against `snapshot` (pre-state).
-pub fn inverse_present_mutation(snapshot: &PresentSnapshot, mutation: &PresentMutation) -> Vec<PresentMutation> {
+pub async fn inverse_present_mutation(snapshot: &PresentSnapshot, mutation: &PresentMutation) -> Vec<PresentMutation> {
     mutation.inverse(snapshot)
 }
 //#endregion 🔖️Apply

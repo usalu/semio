@@ -4,7 +4,7 @@ use crate::editor::puzzle5d::{puzzle5d_axis_index, puzzle5d_resolve_number_edit,
 use serde_json::Value;
 use std::collections::HashSet;
 
-fn arg_id_set(args: Option<&Value>, plural: &str, singular: &str) -> HashSet<String> {
+async fn arg_id_set(args: Option<&Value>, plural: &str, singular: &str) -> HashSet<String> {
     let mut ids = HashSet::new();
     if let Some(array) = args.and_then(|value| value.get(plural)).and_then(Value::as_array) {
         for entry in array {
@@ -19,7 +19,7 @@ fn arg_id_set(args: Option<&Value>, plural: &str, singular: &str) -> HashSet<Str
     ids
 }
 
-pub fn patch_part(ctx: &mut Puzzle5dActionCtx<'_>, args: Option<&Value>) {
+pub async fn patch_part(ctx: &mut Puzzle5dActionCtx<'_>, args: Option<&Value>) {
     let part_ids = arg_id_set(args, "partIds", "partId");
     if part_ids.is_empty() {
         return;

@@ -15,7 +15,7 @@ use serde::{Deserialize, Serialize};
 #[dsl(keyword = "export-package")]
 pub struct ExportPackage {}
 
-pub fn handle(_payload: &ExportPackage, doc: &ArtifactView<'_, LayoutSnapshot>, cfg: &ConfigView<'_, LayoutConfig>) -> Result<Emit<LayoutMutation, LayoutConfigMutation>, Fault> {
+pub async fn handle(_payload: &ExportPackage, doc: &ArtifactView<'_, LayoutSnapshot>, cfg: &ConfigView<'_, LayoutConfig>) -> Result<Emit<LayoutMutation, LayoutConfigMutation>, Fault> {
     let document = doc.snapshot;
     let preflight_json = serde_json::to_string(&run_layout_preflight(document, layout_labels(cfg.snapshot))).unwrap_or_else(|_| "[]".into());
     let doc_json = serde_json::to_string(document).unwrap_or_default();

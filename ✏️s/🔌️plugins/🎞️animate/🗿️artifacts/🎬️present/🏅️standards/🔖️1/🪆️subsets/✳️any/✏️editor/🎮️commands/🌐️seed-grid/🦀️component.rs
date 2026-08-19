@@ -16,7 +16,7 @@ pub struct SeedGrid {
     pub columns: u32,
 }
 
-pub fn handle(payload: &SeedGrid, doc: &ArtifactView<'_, PresentSnapshot>, _cfg: &ConfigView<'_, PresentConfig>, _ctx: &mut PresentDispatchCtx) -> Result<Emit<PresentMutation, PresentConfigMutation>, Fault> {
+pub async fn handle(payload: &SeedGrid, doc: &ArtifactView<'_, PresentSnapshot>, _cfg: &ConfigView<'_, PresentConfig>, _ctx: &mut PresentDispatchCtx) -> Result<Emit<PresentMutation, PresentConfigMutation>, Fault> {
     let deck = doc.snapshot;
     let (deck_source, _) = crate::artifacts::present::present_working_scene(deck);
     let tiles = populate_tile_drafts_from_grid(FigureTileGridSeedSpec { source: &deck_source, rows: payload.rows, columns: payload.columns, gap: 0.0, key_prefix: "tile" });
@@ -36,7 +36,7 @@ mod tests {
     use semio_framework_plugin::testkit::meta;
 
     #[test]
-    fn seed_grid_action_adds_tiles() {
+    async fn seed_grid_action_adds_tiles() {
         let mut app = present_app();
         dispatch(&mut app, PresentCommand::SeedGrid(SeedGrid { rows: 2, columns: 2 }));
         assert_eq!(crate::artifacts::present::present_working_scene(&app.snapshot().expect("projection")).1.len(), 4);
@@ -48,7 +48,7 @@ mod tests {
     /// never applies `effects` to its own store (that's the real host's job), so this asserts directly
     /// on the emitted effect rather than through `app.snapshot()`.
     #[test]
-    fn set_active_example_demo_emits_a_reset_effect_after_seed() {
+    async fn set_active_example_demo_emits_a_reset_effect_after_seed() {
         use semio_framework_plugin::Effect;
         let mut app = present_app();
         dispatch(&mut app, PresentCommand::SeedGrid(SeedGrid { rows: 2, columns: 2 }));
@@ -77,7 +77,7 @@ mod tests {
     /// framework to clear the "tiles" domain's selection too (asserted directly on the effect — the
     /// in-process test harness never applies `effects` to itself).
     #[test]
-    fn clear_tiles_action_empties_tiles_and_requests_a_selection_clear() {
+    async fn clear_tiles_action_empties_tiles_and_requests_a_selection_clear() {
         use semio_framework_plugin::Effect;
         let mut app = present_app();
         dispatch(&mut app, PresentCommand::SeedGrid(SeedGrid { rows: 2, columns: 2 }));

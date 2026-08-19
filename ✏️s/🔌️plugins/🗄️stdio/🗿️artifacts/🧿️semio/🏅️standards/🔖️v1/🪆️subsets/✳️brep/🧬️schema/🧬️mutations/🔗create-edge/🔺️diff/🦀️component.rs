@@ -10,7 +10,7 @@ use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::SemioBr
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::{BrepEdge, SemioBrepSnapshot};
 
 //#region 🔖️Diff
-pub fn diff(payload: &CreateEdge, base: &SemioBrepSnapshot) -> protocol::MutationOutcome<SemioBrepDiff> {
+pub async fn diff(payload: &CreateEdge, base: &SemioBrepSnapshot) -> protocol::MutationOutcome<SemioBrepDiff> {
     if base.edges.iter().any(|x| x.id == payload.id) {
         return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("An edge with id \"{}\" already exists.", payload.id), [payload.id.clone()]);
     }

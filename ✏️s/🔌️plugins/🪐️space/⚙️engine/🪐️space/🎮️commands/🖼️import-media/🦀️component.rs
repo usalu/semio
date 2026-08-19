@@ -14,7 +14,7 @@ pub struct ImportMedia {
     pub format: String,
 }
 
-pub fn handle(payload: &ImportMedia, _doc: &ArtifactView<'_, WorkflowSnapshot>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
+pub async fn handle(payload: &ImportMedia, _doc: &ArtifactView<'_, WorkflowSnapshot>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
     let format_kind = semio_framework::format_descriptor(&payload.format)
         .map_err(|error| Fault::new(FaultOrigin::App, FaultCode::new("s.space.media.format"), error.to_string()))?
         .map(|descriptor| descriptor.short_id)

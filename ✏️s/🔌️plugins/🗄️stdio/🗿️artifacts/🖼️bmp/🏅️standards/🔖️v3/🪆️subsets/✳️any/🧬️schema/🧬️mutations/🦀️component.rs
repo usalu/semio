@@ -79,7 +79,7 @@ pub enum BmpMutation {
 //#region 🔖️Apply
 /// ▶️ Applies `mutation` to `snapshot`: `let d = mutation.diff(&*snapshot); *snapshot =
 /// d.apply(snapshot); d` — the diff is the single semantics source.
-pub fn apply_bmp_mutation(snapshot: &mut BmpSnapshot, mutation: &BmpMutation) -> protocol::MutationOutcome<BmpDiff> {
+pub async fn apply_bmp_mutation(snapshot: &mut BmpSnapshot, mutation: &BmpMutation) -> protocol::MutationOutcome<BmpDiff> {
     let outcome = <BmpMutation as Mutation<BmpSnapshot>>::diff(mutation, snapshot);
     match MutationDiff::apply(outcome.diff(), snapshot) {
         Ok(next) => {
@@ -95,7 +95,7 @@ pub fn apply_bmp_mutation(snapshot: &mut BmpSnapshot, mutation: &BmpMutation) ->
 impl Mutation<BmpSnapshot> for BmpMutation {
     type Diff = BmpDiff;
 
-    fn diff(&self, base: &BmpSnapshot) -> protocol::MutationOutcome<Self::Diff> {
+    async fn diff(&self, base: &BmpSnapshot) -> protocol::MutationOutcome<Self::Diff> {
         protocol::MutationOutcome::new(match self {
             BmpMutation::NoMutation => BmpDiff::default(),
             BmpMutation::SetSnapshot { snapshot } => diff_set_snapshot(base, snapshot),
@@ -121,7 +121,7 @@ impl Mutation<BmpSnapshot> for BmpMutation {
         })
     }
 
-    fn inverse(&self, base: &BmpSnapshot) -> Vec<Self> {
+    async fn inverse(&self, base: &BmpSnapshot) -> Vec<Self> {
         match self {
             BmpMutation::NoMutation => vec![BmpMutation::NoMutation],
             BmpMutation::SetSnapshot { .. } => {
@@ -165,7 +165,7 @@ impl Mutation<BmpSnapshot> for BmpMutation {
 /// `OpBinary` — see `f6-recon-report.md` §0/§2) — the same ~15-line body every `DslOps`-derived
 /// enum's `OpText` impl uses verbatim (`FlowMutationDsl`/`SpaceMutation`/gif89a precedent).
 impl protocol::OpText for BmpMutation {
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
+    async fn parse_op(line: &str) -> Result<Self, store::TextError> {
         let variants = <Self as dsl::DslVariants>::variants();
         for (keyword, spec_fn) in &variants {
             let probe = format!("{} ", keyword);
@@ -176,7 +176,7 @@ impl protocol::OpText for BmpMutation {
         }
         Err(dsl::__rt::field_error(format!("unknown operation line '{line}'")))
     }
-    fn print_op(&self) -> String {
+    async fn print_op(&self) -> String {
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
         let variants = <Self as dsl::DslVariants>::variants();
         let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
@@ -186,10 +186,10 @@ impl protocol::OpText for BmpMutation {
 
 /// ⚡️ Handcrafted `OpBinary` (P6) — pure forward to `dsl::variants_binary`.
 impl protocol::OpBinary for BmpMutation {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         dsl::variants_binary::encode_op(self)
     }
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         dsl::variants_binary::decode_op(bytes)
     }
 }
@@ -201,12 +201,12 @@ impl protocol::OpBinary for BmpMutation {
 /// mirroring `stdio.png`'s own `demo_base_snapshot()` placement) so `demo_mutation_cases()`
 /// below AND `⚙️engine/🦀️component.rs`'s `conformance_laws` module can both reach it.
 #[cfg(test)]
-fn entry(b: u8, g: u8, r: u8, reserved: u8) -> BmpPaletteEntry {
+async fn entry(b: u8, g: u8, r: u8, reserved: u8) -> BmpPaletteEntry {
     BmpPaletteEntry { b, g, r, reserved }
 }
 
 #[cfg(test)]
-fn base_snapshot() -> BmpSnapshot {
+async fn base_snapshot() -> BmpSnapshot {
     BmpSnapshot {
         schema: "stdio.bmp".into(),
         header_size: 40,
@@ -230,7 +230,7 @@ fn base_snapshot() -> BmpSnapshot {
 /// to one value, a 2-entry palette (index 0 stable, index 1 will be modified in every
 /// field), 4x3 pixels.
 #[cfg(test)]
-fn sweep_a() -> BmpSnapshot {
+async fn sweep_a() -> BmpSnapshot {
     BmpSnapshot {
         schema: "stdio.bmp".into(),
         header_size: 40,
@@ -257,7 +257,7 @@ fn sweep_a() -> BmpSnapshot {
 /// below splits its collection assertions across BOTH `between()` directions), and pixels
 /// change size (8x6) + content.
 #[cfg(test)]
-fn sweep_b() -> BmpSnapshot {
+async fn sweep_b() -> BmpSnapshot {
     BmpSnapshot {
         schema: "stdio.bmp".into(),
         header_size: 56,
@@ -284,7 +284,7 @@ fn sweep_b() -> BmpSnapshot {
 /// same consolidation `stdio.png`'s own `demo_mutation_cases()` already made (single source of
 /// truth, per this repo's own CLAUDE.md).
 #[cfg(test)]
-pub(crate) fn demo_mutation_cases() -> Vec<BmpMutation> {
+pub(crate) async fn demo_mutation_cases() -> Vec<BmpMutation> {
     let base = base_snapshot();
     vec![
         BmpMutation::NoMutation,
@@ -322,7 +322,7 @@ mod tests {
 
     //#region 🔖️MutationDiffLaw
     #[test]
-    fn mutation_diff_law() {
+    async fn mutation_diff_law() {
         let base = base_snapshot();
         for m in demo_mutation_cases() {
             let diff = m.diff(&base);
@@ -339,7 +339,7 @@ mod tests {
 
     //#region 🔖️InverseLaw
     #[test]
-    fn inverse_law() {
+    async fn inverse_law() {
         let base = base_snapshot();
         for m in demo_mutation_cases() {
             // 🔁️ mutation-level round trip
@@ -361,7 +361,7 @@ mod tests {
 
     //#region 🔖️AbsorbLaw
     #[test]
-    fn absorb_law() {
+    async fn absorb_law() {
         let base = base_snapshot();
 
         // 🧩 Insert(2) + Remove(0): the two-op sequence base → mid → after.
@@ -428,7 +428,7 @@ mod tests {
 
     //#region 🔖️BetweenRoundtripLaw
     #[test]
-    fn between_roundtrip_law() {
+    async fn between_roundtrip_law() {
         let a = base_snapshot();
         let b = sweep_b();
         assert_eq!(BmpDiff::between(&a, &b).apply(&a).unwrap(), b);
@@ -439,7 +439,7 @@ mod tests {
 
     //#region 🔖️FieldSweep
     #[test]
-    fn field_sweep_covers_every_mutable_field() {
+    async fn field_sweep_covers_every_mutable_field() {
         let a = sweep_a();
         let b = sweep_b();
 
@@ -494,7 +494,7 @@ mod tests {
     /// (`SetSnapshot`/`InsertPaletteEntry`/`SetPaletteEntry`) and bare-`Vec<u8>`
     /// (`SetPixelData`) cases (`f6-recon-report.md` §9 STEP-3's mandated shape).
     #[test]
-    fn op_text_binary_roundtrip_law() {
+    async fn op_text_binary_roundtrip_law() {
         use protocol::{OpBinary, OpText};
 
         for m in demo_mutation_cases() {

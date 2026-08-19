@@ -13,7 +13,7 @@ use crate::editor::puzzle5d::document_from_json;
 use crate::editor::puzzle5d::empty_document;
 
 /// 📚️ Loads one of the two shipped examples (or the empty document), resetting the runtime with it.
-pub fn set_active_example(ctx: &mut Puzzle5dActionCtx<'_>, args: Option<&Value>) {
+pub async fn set_active_example(ctx: &mut Puzzle5dActionCtx<'_>, args: Option<&Value>) {
     let example_id = args.and_then(|value| value.get("exampleId")).and_then(|value| value.as_str()).unwrap_or("");
     let next = if example_id.is_empty() {
         Some(empty_document())

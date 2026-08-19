@@ -7,7 +7,7 @@ use crate::artifacts::process3d::mutations::move_stock::mutation::MoveStock;
 use crate::artifacts::process3d::Process3dSnapshot;
 
 //#region 🔖️Diff
-pub fn diff(payload: &MoveStock, base: &Process3dSnapshot) -> protocol::MutationOutcome<Process3dDiff> {
+pub async fn diff(payload: &MoveStock, base: &Process3dSnapshot) -> protocol::MutationOutcome<Process3dDiff> {
     let pose = &payload.new_pose;
     let finite = pose.position.iter().chain(pose.axis.iter()).all(|value| value.is_finite()) && pose.angle.is_finite();
     if !finite {

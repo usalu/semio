@@ -34,14 +34,14 @@ pub enum StatisticsError {
 // #endregion 🔖️Error
 
 // #region 🔖️Descriptive
-pub fn mean(values: &[f64]) -> Result<f64, StatisticsError> {
+pub async fn mean(values: &[f64]) -> Result<f64, StatisticsError> {
     if values.is_empty() {
         return Err(StatisticsError::InsufficientData { needed: 1, found: 0 });
     }
     Ok(values.iter().sum::<f64>() / values.len() as f64)
 }
 
-pub fn variance(values: &[f64]) -> Result<f64, StatisticsError> {
+pub async fn variance(values: &[f64]) -> Result<f64, StatisticsError> {
     if values.len() < 2 {
         return Err(StatisticsError::InsufficientData { needed: 2, found: values.len() });
     }
@@ -50,11 +50,11 @@ pub fn variance(values: &[f64]) -> Result<f64, StatisticsError> {
     Ok(ss / (values.len() as f64 - 1.0))
 }
 
-pub fn std_dev(values: &[f64]) -> Result<f64, StatisticsError> {
+pub async fn std_dev(values: &[f64]) -> Result<f64, StatisticsError> {
     Ok(variance(values)?.sqrt())
 }
 
-pub fn covariance(x: &[f64], y: &[f64]) -> Result<f64, StatisticsError> {
+pub async fn covariance(x: &[f64], y: &[f64]) -> Result<f64, StatisticsError> {
     if x.len() != y.len() {
         return Err(StatisticsError::DimensionMismatch { expected: x.len(), found: y.len() });
     }
@@ -68,7 +68,7 @@ pub fn covariance(x: &[f64], y: &[f64]) -> Result<f64, StatisticsError> {
 }
 
 /// 📈️ Pearson correlation; errors if either column has zero variance.
-pub fn correlation(x: &[f64], y: &[f64]) -> Result<f64, StatisticsError> {
+pub async fn correlation(x: &[f64], y: &[f64]) -> Result<f64, StatisticsError> {
     let cov = covariance(x, y)?;
     let sx = std_dev(x)?;
     let sy = std_dev(y)?;
@@ -80,7 +80,7 @@ pub fn correlation(x: &[f64], y: &[f64]) -> Result<f64, StatisticsError> {
 // #endregion 🔖️Descriptive
 
 // #region 🔖️Matrices
-pub fn covariance_matrix(columns: &[&[f64]]) -> Result<MatD, StatisticsError> {
+pub async fn covariance_matrix(columns: &[&[f64]]) -> Result<MatD, StatisticsError> {
     let p = columns.len();
     let mut m = MatD::zeros(p, p);
     for i in 0..p {
@@ -93,7 +93,7 @@ pub fn covariance_matrix(columns: &[&[f64]]) -> Result<MatD, StatisticsError> {
     Ok(m)
 }
 
-pub fn correlation_matrix(columns: &[&[f64]]) -> Result<MatD, StatisticsError> {
+pub async fn correlation_matrix(columns: &[&[f64]]) -> Result<MatD, StatisticsError> {
     let p = columns.len();
     let mut m = MatD::zeros(p, p);
     for i in 0..p {
@@ -109,7 +109,7 @@ pub fn correlation_matrix(columns: &[&[f64]]) -> Result<MatD, StatisticsError> {
 
 /// 📈️ Complete-case correlation matrix over the given table columns; returns the matrix alongside
 /// the effective row count (post complete-case filtering) that Fisher-z tests need.
-pub fn correlation_from_table(table: &Table, columns: &[usize]) -> Result<(MatD, usize), StatisticsError> {
+pub async fn correlation_from_table(table: &Table, columns: &[usize]) -> Result<(MatD, usize), StatisticsError> {
     let complete = table.complete_rows(columns)?;
     let n = complete.len();
     let series: Vec<Vec<f64>> = columns
@@ -126,7 +126,7 @@ pub fn correlation_from_table(table: &Table, columns: &[usize]) -> Result<(MatD,
 
 // #region 🔖️Partial
 /// 🔄️ Matrix inverse via `lu_solve` against each identity column.
-pub fn invert(matrix: &MatD) -> Result<MatD, StatisticsError> {
+pub async fn invert(matrix: &MatD) -> Result<MatD, StatisticsError> {
     if matrix.rows != matrix.cols {
         return Err(StatisticsError::DimensionMismatch { expected: matrix.rows, found: matrix.cols });
     }
@@ -145,7 +145,7 @@ pub fn invert(matrix: &MatD) -> Result<MatD, StatisticsError> {
 
 /// 🔗️ Partial correlation of `i` and `j` given a conditioning set, via the precision matrix of the
 /// submatrix restricted to `{i, j} ∪ given`: `r_ij.given = -P_ij / sqrt(P_ii * P_jj)`.
-pub fn partial_correlation(corr: &MatD, i: usize, j: usize, given: &[usize]) -> Result<f64, StatisticsError> {
+pub async fn partial_correlation(corr: &MatD, i: usize, j: usize, given: &[usize]) -> Result<f64, StatisticsError> {
     let mut idx = vec![i, j];
     idx.extend_from_slice(given);
     let k = idx.len();
@@ -179,7 +179,7 @@ pub struct LinearFit {
     pub dof: usize,
 }
 
-pub fn ols(x: &MatD, y: &[f64], intercept: bool) -> Result<LinearFit, StatisticsError> {
+pub async fn ols(x: &MatD, y: &[f64], intercept: bool) -> Result<LinearFit, StatisticsError> {
     let n = x.rows;
     if y.len() != n {
         return Err(StatisticsError::DimensionMismatch { expected: n, found: y.len() });
@@ -228,7 +228,7 @@ pub struct LogisticFit {
     pub iterations: usize,
 }
 
-fn logistic_design(x: &MatD, intercept: bool) -> MatD {
+async fn logistic_design(x: &MatD, intercept: bool) -> MatD {
     let n = x.rows;
     let p = x.cols + usize::from(intercept);
     let offset = usize::from(intercept);
@@ -245,7 +245,7 @@ fn logistic_design(x: &MatD, intercept: bool) -> MatD {
 }
 
 #[allow(clippy::needless_range_loop, reason = "each loop body indexes both a MatD by (row, col) and one or more parallel Vec<f64> by row; enumerate() only removes the Vec index and would leave the MatD access no clearer")]
-pub fn logistic(x: &MatD, y: &[f64], intercept: bool) -> Result<LogisticFit, StatisticsError> {
+pub async fn logistic(x: &MatD, y: &[f64], intercept: bool) -> Result<LogisticFit, StatisticsError> {
     const MAX_ITER: usize = 50;
     const TOL: f64 = 1e-8;
     let n = x.rows;
@@ -313,7 +313,7 @@ pub fn logistic(x: &MatD, y: &[f64], intercept: bool) -> Result<LogisticFit, Sta
 }
 
 /// 🎯️ Fitted propensity scores `P(y=1 | x)` for new rows.
-pub fn logistic_predict(fit: &LogisticFit, x: &MatD, intercept: bool) -> Result<Vec<f64>, StatisticsError> {
+pub async fn logistic_predict(fit: &LogisticFit, x: &MatD, intercept: bool) -> Result<Vec<f64>, StatisticsError> {
     let p = x.cols + usize::from(intercept);
     if fit.coefficients.len() != p {
         return Err(StatisticsError::DimensionMismatch { expected: p, found: fit.coefficients.len() });
@@ -326,7 +326,7 @@ pub fn logistic_predict(fit: &LogisticFit, x: &MatD, intercept: bool) -> Result<
 // #region 🔖️Internal
 /// 🗂️ Stratifies `(x, y)` counts by the mixed-radix code of `given`, skipping rows missing in `x`,
 /// `y`, or any conditioning column. Shared by [`g2_ci_test`] and [`conditional_mutual_information`].
-fn build_strata(x: &[u32], y: &[u32], given: &[&[u32]], nx: usize, ny: usize, given_levels: &[usize]) -> HashMap<usize, MatD> {
+async fn build_strata(x: &[u32], y: &[u32], given: &[&[u32]], nx: usize, ny: usize, given_levels: &[usize]) -> HashMap<usize, MatD> {
     let mut tables: HashMap<usize, MatD> = HashMap::new();
     for row in 0..x.len() {
         if x[row] == crate::artifacts::semio::standards::v1::subsets::table::schema::tabular_internals::MISSING_CODE || y[row] == crate::artifacts::semio::standards::v1::subsets::table::schema::tabular_internals::MISSING_CODE {
@@ -363,7 +363,7 @@ pub struct TestResult {
 
 /// 🔗️ Fisher-z test of partial correlation `r_ij.given = 0`, i.e. conditional independence for
 /// continuous data under a joint-Gaussian assumption.
-pub fn fisher_z_test(corr: &MatD, i: usize, j: usize, given: &[usize], n: usize) -> Result<TestResult, StatisticsError> {
+pub async fn fisher_z_test(corr: &MatD, i: usize, j: usize, given: &[usize], n: usize) -> Result<TestResult, StatisticsError> {
     let r = partial_correlation(corr, i, j, given)?.clamp(-1.0 + 1e-15, 1.0 - 1e-15);
     let dof = n as f64 - given.len() as f64 - 3.0;
     if dof <= 0.0 {
@@ -375,7 +375,7 @@ pub fn fisher_z_test(corr: &MatD, i: usize, j: usize, given: &[usize], n: usize)
 }
 
 /// 🗂️ Contingency-table cross-tabulation; rows missing in either column are excluded.
-pub fn crosstab(x: &[u32], y: &[u32], nx: usize, ny: usize) -> Result<MatD, StatisticsError> {
+pub async fn crosstab(x: &[u32], y: &[u32], nx: usize, ny: usize) -> Result<MatD, StatisticsError> {
     if x.len() != y.len() {
         return Err(StatisticsError::DimensionMismatch { expected: x.len(), found: y.len() });
     }
@@ -390,7 +390,7 @@ pub fn crosstab(x: &[u32], y: &[u32], nx: usize, ny: usize) -> Result<MatD, Stat
 }
 
 /// 🔢️ Pearson's chi-squared test of independence on a contingency table.
-pub fn chi2_independence(counts: &MatD) -> Result<TestResult, StatisticsError> {
+pub async fn chi2_independence(counts: &MatD) -> Result<TestResult, StatisticsError> {
     let (r, c) = (counts.rows, counts.cols);
     if r < 2 || c < 2 {
         return Err(StatisticsError::InvalidArgument("chi2_independence needs at least a 2x2 table"));
@@ -418,7 +418,7 @@ pub fn chi2_independence(counts: &MatD) -> Result<TestResult, StatisticsError> {
 
 /// 🔢️ G² (likelihood-ratio) conditional-independence test for discrete data, stratified over the
 /// conditioning columns; `levels = (nx, ny, given_levels)`.
-pub fn g2_ci_test(x: &[u32], y: &[u32], given: &[&[u32]], levels: (usize, usize, &[usize])) -> Result<TestResult, StatisticsError> {
+pub async fn g2_ci_test(x: &[u32], y: &[u32], given: &[&[u32]], levels: (usize, usize, &[usize])) -> Result<TestResult, StatisticsError> {
     let (nx, ny, given_levels) = levels;
     if y.len() != x.len() || given.iter().any(|g| g.len() != x.len()) {
         return Err(StatisticsError::DimensionMismatch { expected: x.len(), found: y.len() });
@@ -458,7 +458,7 @@ pub fn g2_ci_test(x: &[u32], y: &[u32], given: &[&[u32]], levels: (usize, usize,
 }
 
 /// 📏️ Two-sample t-test; Welch (unequal-variance, fractional Welch–Satterthwaite dof) unless `pooled`.
-pub fn t_test_two_sample(a: &[f64], b: &[f64], pooled: bool) -> Result<TestResult, StatisticsError> {
+pub async fn t_test_two_sample(a: &[f64], b: &[f64], pooled: bool) -> Result<TestResult, StatisticsError> {
     if a.len() < 2 || b.len() < 2 {
         return Err(StatisticsError::InsufficientData { needed: 2, found: a.len().min(b.len()) });
     }
@@ -483,7 +483,7 @@ pub fn t_test_two_sample(a: &[f64], b: &[f64], pooled: bool) -> Result<TestResul
 
 // #region 🔖️Information
 /// 🔢️ Shannon entropy in nats, missing codes excluded.
-pub fn entropy(codes: &[u32], n_levels: usize) -> Result<f64, StatisticsError> {
+pub async fn entropy(codes: &[u32], n_levels: usize) -> Result<f64, StatisticsError> {
     let mut counts = vec![0usize; n_levels];
     let mut total = 0usize;
     for &c in codes {
@@ -507,7 +507,7 @@ pub fn entropy(codes: &[u32], n_levels: usize) -> Result<f64, StatisticsError> {
 }
 
 /// 🔢️ Mutual information `I(X;Y)` in nats.
-pub fn mutual_information(x: &[u32], y: &[u32], nx: usize, ny: usize) -> Result<f64, StatisticsError> {
+pub async fn mutual_information(x: &[u32], y: &[u32], nx: usize, ny: usize) -> Result<f64, StatisticsError> {
     let table = crosstab(x, y, nx, ny)?;
     let total: f64 = table.data.iter().sum();
     if total <= 0.0 {
@@ -532,7 +532,7 @@ pub fn mutual_information(x: &[u32], y: &[u32], nx: usize, ny: usize) -> Result<
 }
 
 /// 🔢️ Conditional mutual information `I(X;Y|Z)` in nats, stratified over `given`.
-pub fn conditional_mutual_information(x: &[u32], y: &[u32], given: &[&[u32]], levels: (usize, usize, &[usize])) -> Result<f64, StatisticsError> {
+pub async fn conditional_mutual_information(x: &[u32], y: &[u32], given: &[&[u32]], levels: (usize, usize, &[usize])) -> Result<f64, StatisticsError> {
     let (nx, ny, given_levels) = levels;
     let tables = build_strata(x, y, given, nx, ny, given_levels);
     let grand_total: f64 = tables.values().map(|t| t.data.iter().sum::<f64>()).sum();
@@ -572,21 +572,21 @@ mod tests {
 
     // #region 🔖️DescriptiveTests
     #[test]
-    fn mean_and_variance_hand_computed() {
+    async fn mean_and_variance_hand_computed() {
         let values = [2.0, 4.0, 4.0, 4.0, 5.0, 5.0, 7.0, 9.0];
         assert!((mean(&values).unwrap() - 5.0).abs() < 1e-12);
         assert!((variance(&values).unwrap() - 32.0 / 7.0).abs() < 1e-9);
     }
 
     #[test]
-    fn correlation_of_perfect_line_is_one() {
+    async fn correlation_of_perfect_line_is_one() {
         let x = [1.0, 2.0, 3.0, 4.0, 5.0];
         let y: Vec<f64> = x.iter().map(|v| 2.0 * v + 1.0).collect();
         assert!((correlation(&x, &y).unwrap() - 1.0).abs() < 1e-9);
     }
 
     #[test]
-    fn correlation_of_orthogonal_pattern_is_zero() {
+    async fn correlation_of_orthogonal_pattern_is_zero() {
         let x = [1.0, -1.0, 1.0, -1.0];
         let y = [1.0, 1.0, -1.0, -1.0];
         assert!(correlation(&x, &y).unwrap().abs() < 1e-9);
@@ -595,7 +595,7 @@ mod tests {
 
     // #region 🔖️MatrixTests
     #[test]
-    fn correlation_matrix_diagonal_is_one() {
+    async fn correlation_matrix_diagonal_is_one() {
         let x = [1.0, 2.0, 3.0, 4.0];
         let y = [4.0, 3.0, 2.0, 1.0];
         let m = correlation_matrix(&[&x, &y]).unwrap();
@@ -604,7 +604,7 @@ mod tests {
     }
 
     #[test]
-    fn invert_round_trips_and_detects_singular() {
+    async fn invert_round_trips_and_detects_singular() {
         let mut a = MatD::zeros(3, 3);
         for (i, v) in [2.0, 0.0, 1.0, 1.0, 3.0, 2.0, 0.0, 1.0, 4.0].into_iter().enumerate() {
             a.set(i / 3, i % 3, v);
@@ -624,7 +624,7 @@ mod tests {
 
     // #region 🔖️PartialTests
     #[test]
-    fn partial_correlation_matches_closed_form() {
+    async fn partial_correlation_matches_closed_form() {
         let mut corr = MatD::identity(3);
         corr.set(0, 1, 0.5);
         corr.set(1, 0, 0.5);
@@ -637,7 +637,7 @@ mod tests {
     }
 
     #[test]
-    fn partial_correlation_with_empty_given_equals_plain_correlation() {
+    async fn partial_correlation_with_empty_given_equals_plain_correlation() {
         let mut corr = MatD::identity(2);
         corr.set(0, 1, 0.4);
         corr.set(1, 0, 0.4);
@@ -648,7 +648,7 @@ mod tests {
 
     // #region 🔖️OlsTests
     #[test]
-    fn ols_recovers_exact_line() {
+    async fn ols_recovers_exact_line() {
         let xs = [1.0, 2.0, 3.0, 4.0, 5.0];
         let ys: Vec<f64> = xs.iter().map(|x| 3.0 + 2.0 * x).collect();
         let mut design = MatD::zeros(5, 1);
@@ -664,7 +664,7 @@ mod tests {
 
     // #region 🔖️LogisticTests
     #[test]
-    fn logistic_symmetric_data_has_near_zero_intercept() {
+    async fn logistic_symmetric_data_has_near_zero_intercept() {
         // Two labels flipped near the boundary (x=-1 -> y=1, x=1 -> y=0) so the data is not
         // perfectly linearly separable — a perfectly separable fixture has no finite MLE and
         // would make IRLS diverge by construction, which is correct behavior, not a bug.
@@ -680,7 +680,7 @@ mod tests {
     }
 
     #[test]
-    fn logistic_perfect_separation_returns_error_not_panic() {
+    async fn logistic_perfect_separation_returns_error_not_panic() {
         let xs = [1.0, 2.0, 3.0, 4.0];
         let ys = [0.0, 0.0, 1.0, 1.0];
         let mut design = MatD::zeros(4, 1);
@@ -698,7 +698,7 @@ mod tests {
 
     // #region 🔖️HypothesisTests
     #[test]
-    fn fisher_z_test_matches_hand_computation() {
+    async fn fisher_z_test_matches_hand_computation() {
         let mut corr = MatD::identity(2);
         corr.set(0, 1, 0.5);
         corr.set(1, 0, 0.5);
@@ -708,7 +708,7 @@ mod tests {
     }
 
     #[test]
-    fn chi2_independence_matches_hand_computation() {
+    async fn chi2_independence_matches_hand_computation() {
         let mut counts = MatD::zeros(2, 2);
         counts.set(0, 0, 10.0);
         counts.set(0, 1, 20.0);
@@ -720,7 +720,7 @@ mod tests {
     }
 
     #[test]
-    fn g2_ci_test_is_zero_for_margin_product_counts() {
+    async fn g2_ci_test_is_zero_for_margin_product_counts() {
         let x: Vec<u32> = [0u32, 0, 1, 1].repeat(25);
         let y: Vec<u32> = [0u32, 1, 0, 1].repeat(25);
         let result = g2_ci_test(&x, &y, &[], (2, 2, &[])).unwrap();
@@ -729,7 +729,7 @@ mod tests {
     }
 
     #[test]
-    fn welch_t_test_matches_hand_computation() {
+    async fn welch_t_test_matches_hand_computation() {
         let a = [1.0, 2.0, 3.0, 4.0, 5.0];
         let b = [2.0, 3.0, 4.0, 5.0, 6.0];
         let result = t_test_two_sample(&a, &b, false).unwrap();
@@ -740,14 +740,14 @@ mod tests {
 
     // #region 🔖️InformationTests
     #[test]
-    fn entropy_of_uniform_four_levels_is_ln_four() {
+    async fn entropy_of_uniform_four_levels_is_ln_four() {
         let codes: Vec<u32> = [0u32, 1, 2, 3].repeat(100);
         let h = entropy(&codes, 4).unwrap();
         assert!((h - 4.0_f64.ln()).abs() < 1e-9);
     }
 
     #[test]
-    fn mutual_information_of_variable_with_itself_is_its_entropy() {
+    async fn mutual_information_of_variable_with_itself_is_its_entropy() {
         let codes: Vec<u32> = [0u32, 0, 1, 1, 2, 2].repeat(50);
         let mi = mutual_information(&codes, &codes, 3, 3).unwrap();
         let h = entropy(&codes, 3).unwrap();
@@ -755,7 +755,7 @@ mod tests {
     }
 
     #[test]
-    fn conditional_mutual_information_is_zero_on_markov_chain() {
+    async fn conditional_mutual_information_is_zero_on_markov_chain() {
         // X -> Z -> Y: within each Z stratum, X and Y are independently uniform over {0,1}.
         let z: Vec<u32> = [0u32, 0, 0, 0, 1, 1, 1, 1].repeat(20);
         let x: Vec<u32> = [0u32, 0, 1, 1, 0, 0, 1, 1].repeat(20);

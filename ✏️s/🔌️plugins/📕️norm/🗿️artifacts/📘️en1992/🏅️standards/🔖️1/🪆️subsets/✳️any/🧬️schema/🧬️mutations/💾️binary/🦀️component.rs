@@ -10,11 +10,11 @@ use crate::artifacts::en1992::schema::mutations::text::En1992Mutation;
 use protocol::OpBinary;
 
 /// 📦️ Encodes a document mutation to its binary op form.
-pub fn encode_op(mutation: &En1992Mutation) -> Result<Vec<u8>, protocol::ProtocolError> {
+pub async fn encode_op(mutation: &En1992Mutation) -> Result<Vec<u8>, protocol::ProtocolError> {
     mutation.encode_op()
 }
 
 /// 📖️ Decodes a document mutation from its binary op form.
-pub fn decode_op(bytes: &[u8]) -> Result<En1992Mutation, protocol::ProtocolError> {
+pub async fn decode_op(bytes: &[u8]) -> Result<En1992Mutation, protocol::ProtocolError> {
     En1992Mutation::decode_op(bytes)
 }

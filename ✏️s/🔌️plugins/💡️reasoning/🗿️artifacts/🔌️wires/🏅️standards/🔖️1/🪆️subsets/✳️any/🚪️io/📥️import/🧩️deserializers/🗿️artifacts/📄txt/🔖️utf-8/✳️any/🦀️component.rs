@@ -15,7 +15,7 @@ pub struct TxtIntoWires;
 impl Deserializer<WiresSnapshot> for TxtIntoWires {
     const FROM: Dialect = TXT_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Lossy;
-    fn deserialize(_payload: &IoPayload) -> IoResult<WiresSnapshot> {
+    async fn deserialize(_payload: &IoPayload) -> IoResult<WiresSnapshot> {
         Err(IoError { message: "txt import not yet implemented".to_string(), diagnostics: Vec::new() })
     }
 }

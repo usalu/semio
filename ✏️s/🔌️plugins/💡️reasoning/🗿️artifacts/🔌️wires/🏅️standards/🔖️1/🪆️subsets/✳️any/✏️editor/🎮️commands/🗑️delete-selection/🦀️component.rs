@@ -13,7 +13,7 @@ use serde::{Deserialize, Serialize};
 pub struct DeleteSelection {}
 
 /// 🕹️ Deletes every currently-selected node/edge — shared by `handle`/`apply` below.
-fn delete_selected(document: &WiresSnapshot, selected: &[String]) -> Emit<WiresMutation, WiresConfigMutation> {
+async fn delete_selected(document: &WiresSnapshot, selected: &[String]) -> Emit<WiresMutation, WiresConfigMutation> {
     let board = crate::artifacts::wires::wires_working_board(document);
     let mut operations = Vec::new();
     for id in selected {
@@ -30,14 +30,14 @@ fn delete_selected(document: &WiresSnapshot, selected: &[String]) -> Emit<WiresM
 /// (no `interaction` slot — ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM), reachable
 /// only through that macro-generated path (`ReasoningWiresPlayApp::handle` always routes this command
 /// through `apply` below instead), so it degrades to treating the selection as empty.
-pub fn handle(_payload: &DeleteSelection, doc: &ArtifactView<'_, WiresSnapshot>, _cfg: &ConfigView<'_, WiresConfig>) -> Result<Emit<WiresMutation, WiresConfigMutation>, Fault> {
+pub async fn handle(_payload: &DeleteSelection, doc: &ArtifactView<'_, WiresSnapshot>, _cfg: &ConfigView<'_, WiresConfig>) -> Result<Emit<WiresMutation, WiresConfigMutation>, Fault> {
     Ok(delete_selected(doc.snapshot, &[]))
 }
 
 /// 🕹️ Reads the "graph" domain's live selection instead of the deleted `config.selected_ids` — no
 /// `SetSelection` config mutation needed afterwards, the framework auto-prunes the deleted ids out of
 /// "graph"'s selection via `interaction_topology`/`validate_state`.
-pub fn apply(_payload: &DeleteSelection, doc: &ArtifactView<'_, WiresSnapshot>, _cfg: &ConfigView<'_, WiresConfig>, interaction: &InteractionView<'_>) -> Result<Emit<WiresMutation, WiresConfigMutation>, Fault> {
+pub async fn apply(_payload: &DeleteSelection, doc: &ArtifactView<'_, WiresSnapshot>, _cfg: &ConfigView<'_, WiresConfig>, interaction: &InteractionView<'_>) -> Result<Emit<WiresMutation, WiresConfigMutation>, Fault> {
     Ok(delete_selected(doc.snapshot, &interaction.selection("graph").ids))
 }
 
@@ -55,7 +55,7 @@ mod tests {
     /// 🕹️ `handle`'s macro-only path treats the selection as empty (no `InteractionView` reachable) —
     /// nothing gets deleted.
     #[test]
-    fn handle_alone_deletes_nothing_without_a_live_selection() {
+    async fn handle_alone_deletes_nothing_without_a_live_selection() {
         let mut app = new_app();
         dispatch(&mut app, WiresCommand::AddNode(add_node::AddNode { kind: "identity".into() }));
         dispatch(&mut app, WiresCommand::DeleteSelection(DeleteSelection {}));
@@ -67,7 +67,7 @@ mod tests {
     /// downstream crate can populate a genuine `InteractionView`), then confirms `deleteSelection`
     /// removes exactly that node.
     #[test]
-    fn delete_selection_removes_the_live_selected_node() {
+    async fn delete_selection_removes_the_live_selected_node() {
         let mut app = app_with_registry();
         dispatch(&mut app, WiresCommand::AddNode(add_node::AddNode { kind: "identity".into() }));
         let targets = serde_json::to_string(&vec![InteractionTarget { granularity: "node".into(), id: "node-1".into() }]).expect("targets");

@@ -24,12 +24,12 @@ pub mod derived_composition {
         type Snapshot = PdfSnapshot;
         const WRITES: Dialect = DIALECT_UA;
 
-        fn reads() -> &'static [Dialect] {
+        async fn reads() -> &'static [Dialect] {
             &[DIALECT_ANY, DIALECT_UA, DEP_BINARY, DEP_DEFLATE]
         }
 
-        fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
-            let inner = PdfAnyComposer::compose(sources)?;
+        async fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+            let inner = semio_framework_plugin::resolve_ready(PdfAnyComposer::compose(sources))?;
             let checks = check_ua_conformance(&inner.snapshot);
             let (hard, soft): (Vec<Diagnostic>, Vec<Diagnostic>) = checks.into_iter().partition(|d| matches!(d.severity, Severity::Error | Severity::Fatal));
             if !hard.is_empty() {
@@ -50,7 +50,7 @@ pub mod derived_composition {
     impl SubsetValidator for PdfUaValidator {
         const DIALECT: Dialect = DIALECT_UA;
 
-        fn validate(payload: &IoPayload) -> Vec<Diagnostic> {
+        async fn validate(payload: &IoPayload) -> Vec<Diagnostic> {
             let decoded = match payload {
                 IoPayload::Binary(bytes) => <PdfSnapshot as store::ArtifactPack>::decode_pack(bytes).ok(),
                 IoPayload::Text(text) => <PdfSnapshot as store::ArtifactDsl>::parse_dsl(text).ok(),
@@ -71,11 +71,11 @@ pub mod derived_composition {
 
     static VALIDATOR_ENTRY: OnceLock<SubsetValidatorEntry> = OnceLock::new();
 
-    fn validator_entry() -> &'static SubsetValidatorEntry {
+    async fn validator_entry() -> &'static SubsetValidatorEntry {
         VALIDATOR_ENTRY.get_or_init(subset_validator_entry_of::<PdfUaValidator>)
     }
 
-    pub fn register() {
+    pub async fn register() {
         let _ = register_subset_validator(validator_entry());
     }
     //#endregion 🔖️SubsetValidator
@@ -90,7 +90,7 @@ pub mod derived_composition {
         /// MarkInfo/StructTreeRoot can never round-trip through `encode_pack`/`decode_pack`. Hand-craft
         /// bytes and route through `AnalyzeSource::Text` instead (`decode_pdf` parses the FULL real
         /// object graph) — same pattern `✳️a`'s and `✳️x`'s own composer tests already use.
-        fn minimal_conforming_ua_pdf() -> Vec<u8> {
+        async fn minimal_conforming_ua_pdf() -> Vec<u8> {
             let mut body = Vec::new();
             body.extend_from_slice(b"%PDF-1.7\n");
             let o1 = body.len();
@@ -114,12 +114,12 @@ pub mod derived_composition {
             body
         }
 
-        fn hex_encode(bytes: &[u8]) -> String {
+        async fn hex_encode(bytes: &[u8]) -> String {
             bytes.iter().map(|b| format!("{b:02x}")).collect()
         }
 
         #[test]
-        fn conforming_builder_snapshot_composes_and_stamps_ua() {
+        async fn conforming_builder_snapshot_composes_and_stamps_ua() {
             let bytes = minimal_conforming_ua_pdf();
             let hex = hex_encode(&bytes);
             let sources = vec![ComposeSource { dialect: DIALECT_ANY, payload: AnalyzeSource::Text(&hex) }];
@@ -128,7 +128,7 @@ pub mod derived_composition {
         }
 
         #[test]
-        fn missing_markinfo_fails_compose() {
+        async fn missing_markinfo_fails_compose() {
             let snapshot = PdfSnapshot::default();
             let bytes = <PdfSnapshot as store::ArtifactPack>::encode_pack(&snapshot);
             let sources = vec![ComposeSource { dialect: DIALECT_ANY, payload: AnalyzeSource::Binary(&bytes) }];

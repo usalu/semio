@@ -17,12 +17,12 @@ use crate::artifacts::curate::schema::mutations::SourcingMutation;
 use protocol::OpBinary;
 
 /// 📦️ Encodes a `SourcingMutation` to its binary state-patch form.
-pub fn encode_op(operation: &SourcingMutation) -> Result<Vec<u8>, protocol::ProtocolError> {
+pub async fn encode_op(operation: &SourcingMutation) -> Result<Vec<u8>, protocol::ProtocolError> {
     operation.encode_op()
 }
 
 /// 📖️ Decodes a `SourcingMutation` from its binary state-patch form.
-pub fn decode_op(bytes: &[u8]) -> Result<SourcingMutation, protocol::ProtocolError> {
+pub async fn decode_op(bytes: &[u8]) -> Result<SourcingMutation, protocol::ProtocolError> {
     SourcingMutation::decode_op(bytes)
 }
 
@@ -33,7 +33,7 @@ mod tests {
     
 
     #[test]
-    fn op_binary_round_trips_and_agrees_with_text() {
+    async fn op_binary_round_trips_and_agrees_with_text() {
         let operation = crate::artifacts::curate::schema::mutations::create_curated_item(crate::artifacts::curate::CuratedItem { object_id: "beam-glulam-gl24h".into(), count: 3 });
         store::os_store::test_support::assert_op_text_binary_equivalence(&operation);
         let bytes = encode_op(&operation).expect("encode");
@@ -41,7 +41,7 @@ mod tests {
     }
 
     #[test]
-    fn curate_document_text_round_trips_through_a_vcs_store() {
+    async fn curate_document_text_round_trips_through_a_vcs_store() {
         let document = crate::artifacts::curate::curate_snapshot_from_stock(crate::artifacts::curate::schema::demo_stock(), Vec::new());
         let envelope = store::create_document_envelope(crate::artifacts::curate::SOURCING_CURATE_SCHEMA, "sourcing-curate-test", document, None);
         let mut doc_store = store::ArtifactStore::new(envelope).expect("valid artifact store fixture");

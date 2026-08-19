@@ -42,7 +42,7 @@ semio_framework_plugin::app_labels! {
 
 //#region 🔖️Resolvers
 /// 🗣️ Resolves the active label set from `cfg.locale`; falls back to native English.
-pub fn sequence_play_labels(cfg: &SequenceConfig) -> &'static SequenceLabels {
+pub async fn sequence_play_labels(cfg: &SequenceConfig) -> &'static SequenceLabels {
     semio_framework_plugin::resolve_labels_for_locale::<SequenceLabels>(&cfg.locale)
 }
 //#endregion 🔖️Resolvers
@@ -53,7 +53,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn labels_resolve_native_english_and_german_from_the_config_locale() {
+    async fn labels_resolve_native_english_and_german_from_the_config_locale() {
         assert_eq!(sequence_play_labels(&SequenceConfig::default()).steps.as_str(), "Steps");
         assert_eq!(sequence_play_labels(&SequenceConfig { locale: "de-DE".into(), ..SequenceConfig::default() }).steps.as_str(), "Schritte");
     }

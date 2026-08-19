@@ -5,7 +5,7 @@ use crate::artifacts::en1998::mutations::change_drift_mm::mutation::ChangeDriftM
 use crate::artifacts::en1998::En1998Snapshot;
 
 //#region 🔖️Diff
-pub fn diff(payload: &ChangeDriftMm, base: &En1998Snapshot) -> protocol::MutationOutcome<En1998Diff> {
+pub async fn diff(payload: &ChangeDriftMm, base: &En1998Snapshot) -> protocol::MutationOutcome<En1998Diff> {
     if !payload.new_drift_mm.is_finite() {
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("Interstorey drift [mm] must be a finite number, got {}.", payload.new_drift_mm), Vec::<String>::new());
     }

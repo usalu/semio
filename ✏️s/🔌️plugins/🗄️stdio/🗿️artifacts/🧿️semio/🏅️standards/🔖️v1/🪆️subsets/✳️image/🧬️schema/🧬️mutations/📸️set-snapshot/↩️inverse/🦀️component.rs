@@ -3,6 +3,6 @@ use crate::artifacts::semio::standards::v1::subsets::image::schema::snapshot::Se
 use protocol::Mutation;
 
 /// ↩️ Inverse of set-snapshot.
-pub fn inverse(base: &SemioImageSnapshot, mutation: &SemioImageMutation) -> Vec<SemioImageMutation> {
+pub async fn inverse(base: &SemioImageSnapshot, mutation: &SemioImageMutation) -> Vec<SemioImageMutation> {
     <SemioImageMutation as Mutation<SemioImageSnapshot>>::inverse(mutation, base)
 }

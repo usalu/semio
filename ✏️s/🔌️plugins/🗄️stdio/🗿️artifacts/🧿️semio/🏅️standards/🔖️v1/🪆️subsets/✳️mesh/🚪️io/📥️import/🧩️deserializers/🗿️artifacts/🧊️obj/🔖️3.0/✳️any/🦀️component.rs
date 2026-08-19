@@ -35,7 +35,7 @@ const INTO_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard
 /// corner's resolved position/uv/normal to the accumulators. Negative/relative OBJ indices are
 /// already resolved to absolute 0-based indices by the OBJ codec upstream (per `ObjFaceVertex`'s
 /// own doc comment) -- this only does the corner lookup + fan expansion.
-fn append_triangulated_face(from: &ObjSnapshot, face: &ObjFace, positions: &mut Vec<SemioPoint3>, normals: &mut Vec<SemioPoint3>, uvs: &mut Vec<SemioUv>) -> Result<(), String> {
+async fn append_triangulated_face(from: &ObjSnapshot, face: &ObjFace, positions: &mut Vec<SemioPoint3>, normals: &mut Vec<SemioPoint3>, uvs: &mut Vec<SemioUv>) -> Result<(), String> {
     if face.vertices.len() < 3 {
         return Err(format!("obj face has {} corners, need at least 3", face.vertices.len()));
     }
@@ -115,7 +115,7 @@ mod tests {
     use super::*;
     use crate::artifacts::obj::schema::snapshot::{ObjFaceVertex, ObjNormal, ObjTexCoord, ObjVertex};
 
-    fn sample_obj() -> ObjSnapshot {
+    async fn sample_obj() -> ObjSnapshot {
         ObjSnapshot {
             schema: "stdio.obj".into(),
             vertices: vec![ObjVertex { x: 0.0, y: 0.0, z: 0.0, w: None }, ObjVertex { x: 1.0, y: 0.0, z: 0.0, w: None }, ObjVertex { x: 1.0, y: 1.0, z: 0.0, w: None }, ObjVertex { x: 0.0, y: 1.0, z: 0.0, w: None }],
@@ -139,7 +139,7 @@ mod tests {
     }
 
     #[test]
-    fn deserialize_fan_triangulates_the_quad_into_two_triangles() {
+    async fn deserialize_fan_triangulates_the_quad_into_two_triangles() {
         let semio = semio_framework_plugin::resolve_ready(SemioMeshFromObj::deserialize(&sample_obj())).expect("deserialize");
         assert_eq!(semio.meshes.len(), 1);
         assert_eq!(semio.meshes[0].id, "mesh-0");
@@ -154,7 +154,7 @@ mod tests {
     }
 
     #[test]
-    fn objects_partition_into_separate_semio_meshes() {
+    async fn objects_partition_into_separate_semio_meshes() {
         let mut obj = sample_obj();
         obj.faces.push(ObjFace { vertices: vec![ObjFaceVertex { vertex: 0, texcoord: Some(0), normal: Some(0) }, ObjFaceVertex { vertex: 1, texcoord: Some(1), normal: Some(0) }, ObjFaceVertex { vertex: 2, texcoord: Some(2), normal: Some(0) }] });
         obj.objects = vec![crate::artifacts::obj::schema::snapshot::ObjObject { name: "quad".into(), faces: vec![0] }, crate::artifacts::obj::schema::snapshot::ObjObject { name: "tri".into(), faces: vec![1] }];
@@ -166,7 +166,7 @@ mod tests {
     }
 
     #[test]
-    fn out_of_range_vertex_reference_is_a_hard_error() {
+    async fn out_of_range_vertex_reference_is_a_hard_error() {
         let mut obj = sample_obj();
         obj.faces[0].vertices[0].vertex = 999;
         let err = semio_framework_plugin::resolve_ready(SemioMeshFromObj::deserialize(&obj)).expect_err("out-of-range vertex must error");

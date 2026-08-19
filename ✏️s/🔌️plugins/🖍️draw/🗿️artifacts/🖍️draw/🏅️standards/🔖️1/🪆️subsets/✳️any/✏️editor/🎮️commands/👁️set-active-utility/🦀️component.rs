@@ -15,7 +15,7 @@ pub struct SetActiveUtility {
 
 /// 🧰️ Host-owned utility switch: clear any in-progress gesture scratch (discarding any
 /// document-op the FSM would produce — `UtilityChanged` never carries one).
-pub fn handle(payload: &SetActiveUtility, doc: &ArtifactView<'_, DrawSnapshot>, cfg: &ConfigView<'_, DrawConfig>, session: &mut DrawSession) -> Result<Emit<DrawMutation, DrawConfigMutation>, Fault> {
+pub async fn handle(payload: &SetActiveUtility, doc: &ArtifactView<'_, DrawSnapshot>, cfg: &ConfigView<'_, DrawConfig>, session: &mut DrawSession) -> Result<Emit<DrawMutation, DrawConfigMutation>, Fault> {
     let document = doc.snapshot;
     let mut config = cfg.snapshot.clone();
     session.step_gesture(crate::editor::draw::commands::canvas_pointer_down::draw_gesture::Event::UtilityChanged, document, &mut config);

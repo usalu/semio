@@ -8,7 +8,7 @@ use crate::artifacts::program::ProgramSnapshot;
 /// ✏️ New `Governance` with only `framework` changed. Root-scoped singleton — always present, so
 /// Warning `mutation.no-op` (empty diff) covers the only degenerate case: the framework is
 /// unchanged.
-pub fn diff(payload: &RenameGovernance, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
+pub async fn diff(payload: &RenameGovernance, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
     if base.governance.framework == payload.new_framework {
         return protocol::MutationOutcome::empty().absorb_messages([protocol::MutationMessage::warn("mutation.no-op", "Governance framework already has this value.").at([base.governance.id.0.clone()])]);
     }

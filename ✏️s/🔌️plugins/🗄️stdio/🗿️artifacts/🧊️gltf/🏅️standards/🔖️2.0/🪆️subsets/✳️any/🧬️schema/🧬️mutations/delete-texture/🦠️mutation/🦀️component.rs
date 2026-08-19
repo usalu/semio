@@ -8,5 +8,5 @@ pub const ID: &str = "s.stdio.gltf.mutation.delete-texture.v1";
 pub const TOUCHED_PATHS: &[&str] = &["document/textures"];
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)] #[serde(rename_all = "camelCase")]
 pub struct GltfDeleteTexturePayload { pub index: usize }
-pub fn validate(payload: &GltfDeleteTexturePayload, base: &GltfSnapshot) -> Result<(), GltfTopLevelMutationRejection> { if payload.index >= base.document.textures.len() { return Err(reject("gltf.mutation.index-out-of-range", "document/textures", "index must address an item")); }  Ok(()) }
-pub fn apply(payload: &GltfDeleteTexturePayload, base: &GltfSnapshot) -> Result<GltfSnapshot, GltfTopLevelMutationRejection> { validate(payload, base)?; let mut next = base.clone(); textures_op(&mut next, GltfTopLevelFamily::Textures, payload.index, None, None)?;  Ok(next) }
+pub async fn validate(payload: &GltfDeleteTexturePayload, base: &GltfSnapshot) -> Result<(), GltfTopLevelMutationRejection> { if payload.index >= base.document.textures.len() { return Err(reject("gltf.mutation.index-out-of-range", "document/textures", "index must address an item")); }  Ok(()) }
+pub async fn apply(payload: &GltfDeleteTexturePayload, base: &GltfSnapshot) -> Result<GltfSnapshot, GltfTopLevelMutationRejection> { validate(payload, base)?; let mut next = base.clone(); textures_op(&mut next, GltfTopLevelFamily::Textures, payload.index, None, None)?;  Ok(next) }

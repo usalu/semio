@@ -5,42 +5,42 @@ use crate::artifacts::gltf::GltfSnapshot;
 use serde::de::DeserializeOwned;
 use serde::Serialize;
 
-fn rejection(error: crate::artifacts::gltf::schema::mutations::top_level_private::GltfTopLevelMutationRejection) -> GltfMutationLeafError {
+async fn rejection(error: crate::artifacts::gltf::schema::mutations::top_level_private::GltfTopLevelMutationRejection) -> GltfMutationLeafError {
     GltfMutationLeafError { code: error.code, path: error.path, detail: error.detail }
 }
-fn payload_error(detail: impl ToString) -> GltfMutationLeafError {
+async fn payload_error(detail: impl ToString) -> GltfMutationLeafError {
     GltfMutationLeafError { code: "gltf.mutation.invalid-payload".into(), path: "payload".into(), detail: detail.to_string() }
 }
-fn encode_error(detail: impl ToString) -> GltfMutationLeafError {
+async fn encode_error(detail: impl ToString) -> GltfMutationLeafError {
     GltfMutationLeafError { code: "gltf.mutation.encode-failed".into(), path: "payload".into(), detail: detail.to_string() }
 }
-fn decode<T: DeserializeOwned>(bytes: &[u8]) -> Result<T, GltfMutationLeafError> {
+async fn decode<T: DeserializeOwned>(bytes: &[u8]) -> Result<T, GltfMutationLeafError> {
     serde_json::from_slice(bytes).map_err(payload_error)
 }
-fn encode<T: Serialize>(value: &T) -> Result<Vec<u8>, GltfMutationLeafError> {
+async fn encode<T: Serialize>(value: &T) -> Result<Vec<u8>, GltfMutationLeafError> {
     serde_json::to_vec(value).map_err(encode_error)
 }
-fn path(parent: usize, position: usize) -> String {
+async fn path(parent: usize, position: usize) -> String {
     format!("document/nodes/{}/children/{}", parent, position)
 }
-fn plan(bytes: &[u8], base: &GltfSnapshot) -> Result<GltfMutationLeafPlan, GltfMutationLeafError> {
+async fn plan(bytes: &[u8], base: &GltfSnapshot) -> Result<GltfMutationLeafPlan, GltfMutationLeafError> {
     let payload: mutation::GltfUnbindNodeChildPayload = decode(bytes)?;
     let diff = diff::derive(&payload, base).map_err(rejection)?;
     let inverse = inverse::derive(&payload, base).map_err(rejection)?;
     Ok(GltfMutationLeafPlan { diff_payload: encode(&diff)?, inverse_payload: encode(&inverse)?, touched_paths: vec![path(diff.parent, diff.position)] })
 }
-fn plan_inverse(bytes: &[u8], base: &GltfSnapshot) -> Result<GltfMutationLeafPlan, GltfMutationLeafError> {
+async fn plan_inverse(bytes: &[u8], base: &GltfSnapshot) -> Result<GltfMutationLeafPlan, GltfMutationLeafError> {
     let inverse: inverse::GltfUnbindNodeChildInverse = decode(bytes)?;
     let _ = inverse::apply(base, &inverse).map_err(rejection)?;
     Ok(GltfMutationLeafPlan { diff_payload: encode(&inverse)?, inverse_payload: Vec::new(), touched_paths: vec![path(inverse.parent, inverse.position)] })
 }
-fn apply_diff(bytes: &[u8], base: &GltfSnapshot) -> Result<GltfMutationLeafApplication, GltfMutationLeafError> {
+async fn apply_diff(bytes: &[u8], base: &GltfSnapshot) -> Result<GltfMutationLeafApplication, GltfMutationLeafError> {
     let diff: diff::GltfUnbindNodeChildDiff = decode(bytes)?;
     let touched_paths = vec![path(diff.parent, diff.position)];
     let snapshot = diff::apply(base, &diff).map_err(rejection)?;
     Ok(GltfMutationLeafApplication { snapshot, touched_paths })
 }
-fn apply_inverse(bytes: &[u8], base: &GltfSnapshot) -> Result<GltfMutationLeafApplication, GltfMutationLeafError> {
+async fn apply_inverse(bytes: &[u8], base: &GltfSnapshot) -> Result<GltfMutationLeafApplication, GltfMutationLeafError> {
     let inverse: inverse::GltfUnbindNodeChildInverse = decode(bytes)?;
     let touched_paths = vec![path(inverse.parent, inverse.position)];
     let snapshot = inverse::apply(base, &inverse).map_err(rejection)?;

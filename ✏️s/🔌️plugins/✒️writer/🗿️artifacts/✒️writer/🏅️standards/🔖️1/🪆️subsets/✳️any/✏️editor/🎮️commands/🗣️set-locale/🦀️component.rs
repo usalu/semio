@@ -12,7 +12,7 @@ pub struct SetLocale {
     pub value: String,
 }
 
-pub fn handle(payload: &SetLocale, _doc: &ArtifactView<'_, WriterSnapshot>, _cfg: &ConfigView<'_, WriterConfig>) -> Result<Emit<WriterMutation, WriterConfigMutation>, Fault> {
+pub async fn handle(payload: &SetLocale, _doc: &ArtifactView<'_, WriterSnapshot>, _cfg: &ConfigView<'_, WriterConfig>) -> Result<Emit<WriterMutation, WriterConfigMutation>, Fault> {
     Ok(Emit::config(vec![WriterConfigMutation::SetLocale { value: payload.value.clone() }]))
 }
 
@@ -24,7 +24,7 @@ mod tests {
     use crate::editor::writer::{WriterCommand, WRITER_PLAY_BODY_INSPECTION};
 
     #[test]
-    fn writer_labels_resolve_native_english_and_german() {
+    async fn writer_labels_resolve_native_english_and_german() {
         let mut app = new_app();
         let english = render(&mut app, WRITER_PLAY_BODY_INSPECTION);
         assert!(english.contains("\"Document\"") && english.contains("\"Camera\""), "english labels: {english}");

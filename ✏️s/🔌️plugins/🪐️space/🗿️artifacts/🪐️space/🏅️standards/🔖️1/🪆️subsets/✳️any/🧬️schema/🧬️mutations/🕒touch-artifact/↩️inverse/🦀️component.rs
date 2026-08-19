@@ -3,7 +3,7 @@ use crate::artifacts::space::standards::v1::subsets::any::schema::mutations::SSp
 use crate::artifacts::space::standards::v1::subsets::any::schema::snapshot::SSpaceSnapshot;
 
 //#region 🔖️Inverse
-pub fn inverse(payload: &super::mutation::TouchArtifact, base: &SSpaceSnapshot) -> Vec<SSpaceMutation> {
+pub async fn inverse(payload: &super::mutation::TouchArtifact, base: &SSpaceSnapshot) -> Vec<SSpaceMutation> {
     base.artifacts
         .iter()
         .find(|row| row.id == payload.id)

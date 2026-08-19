@@ -25,7 +25,7 @@ pub struct SequenceInference {
 }
 
 impl protocol::Inference<SequenceSnapshot> for SequenceInference {
-    fn infer(snapshot: &SequenceSnapshot) -> Self {
+    async fn infer(snapshot: &SequenceSnapshot) -> Self {
         Self { topology: compute_sequence_topology(snapshot) }
     }
 }
@@ -35,19 +35,19 @@ impl protocol::Inference<SequenceSnapshot> for SequenceInference {
 /// `Default` (all-zero fields) would disagree with `infer(&SequenceSnapshot::default())`. Computing
 /// it via `infer` instead keeps the law correct regardless of what the default snapshot contains.
 impl Default for SequenceInference {
-    fn default() -> Self {
+    async fn default() -> Self {
         <Self as protocol::Inference<SequenceSnapshot>>::infer(&SequenceSnapshot::default())
     }
 }
 
 impl protocol::InferenceSpec<SequenceSnapshot> for SequenceInference {
-    fn inference_schema_id() -> &'static str {
+    async fn inference_schema_id() -> &'static str {
         "s.sequence.sequence.inference"
     }
-    fn schema_version() -> u32 {
+    async fn schema_version() -> u32 {
         1
     }
-    fn fields() -> &'static [protocol::InferenceFieldSpec] {
+    async fn fields() -> &'static [protocol::InferenceFieldSpec] {
         &[protocol::InferenceFieldSpec { id: "s.sequence.sequence.inference.topology", reads: &["content"] }]
     }
 }
@@ -74,7 +74,7 @@ impl ArtifactInferrer for SequenceInferrer {
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.sequence.sequence.inference`'s facet leaves into the OS-wide inference catalog
 /// — call once at plugin init, alongside `sequence_artifact_schema_descriptor`'s registration.
-pub fn sequence_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
+pub async fn sequence_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
     schema::ArtifactInferenceDescriptor {
         id: "s.sequence.sequence.inference",
         inference: schema::FacetLeaves {
@@ -96,11 +96,11 @@ mod tests {
     use protocol::Inference;
 
     //#region 🧸️Fixtures
-    fn step(id: &str) -> SequenceStep {
+    async fn step(id: &str) -> SequenceStep {
         SequenceStep { id: id.into(), kind: "state.set".into(), params: StepParams::new(), x: 0.0, y: 0.0, slot: None, collapsed: false }
     }
 
-    fn sample_snapshot() -> SequenceSnapshot {
+    async fn sample_snapshot() -> SequenceSnapshot {
         SequenceSnapshot::from_fixture(SequenceFixture {
             schema: crate::artifacts::sequence::SEQUENCE_DOCUMENT_SCHEMA.into(),
             steps: vec![step("a"), step("b")],
@@ -111,13 +111,13 @@ mod tests {
 
     //#region 🧪️InferenceLaws
     #[test]
-    fn inference_determinism_law() {
+    async fn inference_determinism_law() {
         let snapshot = sample_snapshot();
         assert_eq!(SequenceInference::infer(&snapshot), SequenceInference::infer(&snapshot));
     }
 
     #[test]
-    fn inference_default_law() {
+    async fn inference_default_law() {
         assert_eq!(SequenceInference::infer(&SequenceSnapshot::default()), SequenceInference::default());
     }
     //#endregion 🧪️InferenceLaws

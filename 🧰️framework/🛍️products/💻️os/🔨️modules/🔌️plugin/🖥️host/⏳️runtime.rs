@@ -23,8 +23,8 @@
 //! dispatch a short, non-CPU-bound concurrent call against the SAME instance while the root call is
 //! in flight (S1's own `AccessorTask`+oneshot idiom, reproduced here as harness test F for
 //! `checkpoint-async`) — that is the ONLY thing `Accessor::spawn` is used for below. Fairness BETWEEN
-//! actors comes from one `Store` per actor, multiplexed host-side by whatever executor
-//! `tokio::spawn`s each actor's [`AsyncActorTask::run`] (S1b/S1c's proven shape) — never from
+//! actors comes from one `Store` per actor, each driven by its own `tokio::spawn`ed task —
+//! [`AsyncActorTask::spawn`] does exactly that internally (S1b/S1c's proven shape) — never from
 //! `Accessor::spawn` across actors.
 
 use crate::imports::{host_async_bindings, AsyncActorHostState};
@@ -38,7 +38,6 @@ use std::task::{Context, Poll, Waker};
 use std::time::{Duration, Instant};
 use wasmtime::component::{Accessor, AccessorTask, Destination, HasSelf, Linker, StreamProducer, StreamReader, StreamResult, VecBuffer};
 use wasmtime::{AsContextMut, Config, Engine, InstanceAllocationStrategy, PoolingAllocationConfig, Store, StoreContextMut, UpdateDeadline};
-use wasmtime_wasi::WasiCtxBuilder;
 
 //#region 🐎️AsyncEngineHandle
 /// 🧩️ Mirrors `🖥️host/🦀️component.rs`'s `CORE_INSTANCES_PER_COMPONENT`/`MEMORIES_PER_COMPONENT`/
@@ -160,7 +159,7 @@ fn install_epoch_budget(store: &mut Store<AsyncActorHostState>, deadline: Arc<De
 /// ⏱️ terra-async-runtime honest gap: fuel is armed via `access.as_context_mut().set_fuel(fuel)`
 /// (`Access` implements `AsContextMut` — confirmed by reading `wasmtime-47.0.3/src/runtime/
 /// component/concurrent.rs`'s own `impl AsContextMut for Access`) directly at each call site inside
-/// [`AsyncActorTask::run`]'s control loop, rather than through a wrapper here — there is no `&mut
+/// [`AsyncActorTask::spawn`]'s control loop, rather than through a wrapper here — there is no `&mut
 /// Store` reachable from outside the `run_concurrent` closure to hand a helper function, only an
 /// `Access` obtained moment-to-moment via `accessor.with(...)`. Fuel is the HARD per-grant CPU cap
 /// (exhaustion traps immediately; `consume_fuel` is enabled with no `fuel_async_yield_interval` —
@@ -174,7 +173,7 @@ fn install_epoch_budget(store: &mut Store<AsyncActorHostState>, deadline: Arc<De
 /// `queue` still holds items from a grant that has already been spent — unlike the proven
 /// `ChunkStreamProducer`/`WakeyProducer` (`⏳️imports.rs`/S5), which only ever park on a genuinely
 /// EMPTY queue. `exhausted` is notified the INSTANT `remaining` hits zero while parking, which is
-/// exactly the boundary [`AsyncActorTask::run`]'s control loop waits on to synthesize a
+/// exactly the boundary [`AsyncActorTask::spawn`]'s control loop waits on to synthesize a
 /// [`KernelTurnResult`] — turn synthesis is driven by THIS notification, not by polling.
 struct GrantWindow {
     queue: VecDeque<host_async_bindings::semio::framework::events::Event>,
@@ -279,7 +278,7 @@ impl GrantHandle {
 /// fuel delta since the current grant was armed, `state.take_effects()` (already
 /// `semio_framework::kernel::Effect`-shaped by `⏳️imports.rs`'s own `emit` handler, so no
 /// conversion needed here), and the boundary `status` the caller determines (see call sites in
-/// [`AsyncActorTask::run`]). Never calls into the guest — this is what makes it possible to
+/// [`AsyncActorTask::spawn`]). Never calls into the guest — this is what makes it possible to
 /// synthesize a turn boundary mid-grant, without the guest itself returning from anything.
 ///
 /// 🚧️ `ui_patches: Vec::new()` — the SAME open gap `🖥️host/🦀️component.rs`'s own `execute_turn` and
@@ -471,7 +470,7 @@ impl AsyncActorTask {
                                                 Ok(())
                                             }
                                         }
-                                        let _ = accessor.spawn(CheckpointTask { instance: instance_ops, reply });
+                                        let _ = accessor.spawn(CheckpointTask { instance: instance_ops.clone(), reply });
                                     }
                                     Some(AsyncActorCommand::Restore(bytes, reply)) => {
                                         struct RestoreTask { instance: Arc<host_async_bindings::ActorAsync>, state: Vec<u8>, reply: tokio::sync::oneshot::Sender<Result<(), String>> }
@@ -483,7 +482,7 @@ impl AsyncActorTask {
                                                 Ok(())
                                             }
                                         }
-                                        let _ = accessor.spawn(RestoreTask { instance: instance_ops, state: bytes, reply });
+                                        let _ = accessor.spawn(RestoreTask { instance: instance_ops.clone(), state: bytes, reply });
                                     }
                                     Some(AsyncActorCommand::StartJob { job, kind, input, reply }) => {
                                         struct StartJobTask { instance: Arc<host_async_bindings::ActorAsync>, job: u64, kind: String, input: Vec<u8>, reply: tokio::sync::oneshot::Sender<Result<(), String>> }
@@ -495,7 +494,7 @@ impl AsyncActorTask {
                                                 Ok(())
                                             }
                                         }
-                                        let _ = accessor.spawn(StartJobTask { instance: instance_ops, job, kind, input, reply });
+                                        let _ = accessor.spawn(StartJobTask { instance: instance_ops.clone(), job, kind, input, reply });
                                     }
                                     Some(AsyncActorCommand::StepJob { job, budget, reply }) => {
                                         struct StepJobTask { instance: Arc<host_async_bindings::ActorAsync>, job: u64, budget: JobBudgetArg, reply: tokio::sync::oneshot::Sender<Result<JobStepResult, String>> }
@@ -507,7 +506,7 @@ impl AsyncActorTask {
                                                 Ok(())
                                             }
                                         }
-                                        let _ = accessor.spawn(StepJobTask { instance: instance_ops, job, budget, reply });
+                                        let _ = accessor.spawn(StepJobTask { instance: instance_ops.clone(), job, budget, reply });
                                     }
                                     Some(AsyncActorCommand::CancelJob { job }) => {
                                         struct CancelJobTask { instance: Arc<host_async_bindings::ActorAsync>, job: u64 }
@@ -517,7 +516,7 @@ impl AsyncActorTask {
                                                 Ok(())
                                             }
                                         }
-                                        let _ = accessor.spawn(CancelJobTask { instance: instance_ops, job });
+                                        let _ = accessor.spawn(CancelJobTask { instance: instance_ops.clone(), job });
                                     }
                                 }
                             }

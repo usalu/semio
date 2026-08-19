@@ -122,7 +122,7 @@ pub enum ObjMutation {
 //#region 🔖️Apply
 /// ▶️ Applies `mutation` to `snapshot`: `let d = mutation.diff(&*snapshot); *snapshot =
 /// d.apply(snapshot); d` — the diff is the single semantics source.
-pub fn apply_obj_mutation(snapshot: &mut ObjSnapshot, mutation: &ObjMutation) -> protocol::MutationOutcome<ObjDiff> {
+pub async fn apply_obj_mutation(snapshot: &mut ObjSnapshot, mutation: &ObjMutation) -> protocol::MutationOutcome<ObjDiff> {
     let outcome = <ObjMutation as Mutation<ObjSnapshot>>::diff(mutation, snapshot);
     match MutationDiff::apply(outcome.diff(), snapshot) {
         Ok(next) => {
@@ -138,7 +138,7 @@ pub fn apply_obj_mutation(snapshot: &mut ObjSnapshot, mutation: &ObjMutation) ->
 impl Mutation<ObjSnapshot> for ObjMutation {
     type Diff = ObjDiff;
 
-    fn diff(&self, base: &ObjSnapshot) -> protocol::MutationOutcome<Self::Diff> {
+    async fn diff(&self, base: &ObjSnapshot) -> protocol::MutationOutcome<Self::Diff> {
         protocol::MutationOutcome::new(match self {
             ObjMutation::NoMutation => ObjDiff::default(),
             ObjMutation::SetSnapshot { snapshot } => diff_set_snapshot(base, snapshot),
@@ -189,7 +189,7 @@ impl Mutation<ObjSnapshot> for ObjMutation {
         })
     }
 
-    fn inverse(&self, base: &ObjSnapshot) -> Vec<Self> {
+    async fn inverse(&self, base: &ObjSnapshot) -> Vec<Self> {
         match self {
             ObjMutation::NoMutation => vec![ObjMutation::NoMutation],
             ObjMutation::SetSnapshot { .. } => vec![ObjMutation::SetSnapshot { snapshot: base.clone() }],
@@ -265,7 +265,7 @@ impl Mutation<ObjSnapshot> for ObjMutation {
 /// every `DslOps`-derived enum's `OpText` impl uses (`GifMutation`, `FlowMutationDsl`,
 /// `SpaceMutation`; see `f6-recon-report.md` §2).
 impl OpText for ObjMutation {
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
+    async fn parse_op(line: &str) -> Result<Self, store::TextError> {
         let variants = <Self as dsl::DslVariants>::variants();
         for (keyword, spec_fn) in &variants {
             let probe = format!("{} ", keyword);
@@ -276,7 +276,7 @@ impl OpText for ObjMutation {
         }
         Err(dsl::__rt::field_error(format!("unknown operation line '{line}'")))
     }
-    fn print_op(&self) -> String {
+    async fn print_op(&self) -> String {
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
         let variants = <Self as dsl::DslVariants>::variants();
         let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
@@ -286,10 +286,10 @@ impl OpText for ObjMutation {
 
 /// ⚡️ Handcrafted `OpBinary` (P6) — pure forward to `dsl::variants_binary`.
 impl OpBinary for ObjMutation {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         dsl::variants_binary::encode_op(self)
     }
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         dsl::variants_binary::decode_op(bytes)
     }
 }
@@ -301,7 +301,7 @@ impl OpBinary for ObjMutation {
 /// `ops_grammar_conformance_law`/`protocol_walk_law` conformance tests (same convention P2-P1's
 /// json/zip pilots established: `mutations::demo_mutation_cases()`/`diff::demo_diff_cases()`).
 #[cfg(test)]
-pub(crate) fn base_snapshot() -> ObjSnapshot {
+pub(crate) async fn base_snapshot() -> ObjSnapshot {
     ObjSnapshot {
         schema: "stdio.obj".into(),
         vertices: vec![ObjVertex { x: 0.0, y: 0.0, z: 0.0, w: None }, ObjVertex { x: 1.0, y: 0.0, z: 0.0, w: None }, ObjVertex { x: 0.0, y: 1.0, z: 0.0, w: None }],
@@ -318,7 +318,7 @@ pub(crate) fn base_snapshot() -> ObjSnapshot {
 }
 
 #[cfg(test)]
-pub(crate) fn demo_mutation_cases() -> Vec<ObjMutation> {
+pub(crate) async fn demo_mutation_cases() -> Vec<ObjMutation> {
     vec![
         ObjMutation::NoMutation,
         ObjMutation::SetSnapshot { snapshot: sweep_b() },
@@ -358,7 +358,7 @@ pub(crate) fn demo_mutation_cases() -> Vec<ObjMutation> {
 /// has 2 items (a stable prefix item + one that will be modified); every name-keyed
 /// collection has 2 named entries (one that will be removed, one that will be modified).
 #[cfg(test)]
-pub(crate) fn sweep_a() -> ObjSnapshot {
+pub(crate) async fn sweep_a() -> ObjSnapshot {
     ObjSnapshot {
         schema: "stdio.obj".into(),
         vertices: vec![ObjVertex { x: 0.0, y: 0.0, z: 0.0, w: None }, ObjVertex { x: 1.0, y: 1.0, z: 1.0, w: None }],
@@ -381,7 +381,7 @@ pub(crate) fn sweep_a() -> ObjSnapshot {
 /// removed+modified+added simultaneously from ONE `between(a,b)` call (name-keyed
 /// collections aren't subject to the flat/positional "only one tail" limitation).
 #[cfg(test)]
-pub(crate) fn sweep_b() -> ObjSnapshot {
+pub(crate) async fn sweep_b() -> ObjSnapshot {
     ObjSnapshot {
         schema: "stdio.obj".into(),
         vertices: vec![ObjVertex { x: 0.0, y: 0.0, z: 0.0, w: None }, ObjVertex { x: 9.0, y: 9.0, z: 9.0, w: Some(0.5) }, ObjVertex { x: 5.0, y: 5.0, z: 5.0, w: Some(1.0) }],
@@ -410,7 +410,7 @@ mod tests {
 
     //#region 🔖️MutationDiffLaw
     #[test]
-    fn mutation_diff_law() {
+    async fn mutation_diff_law() {
         let base = base_snapshot();
         for m in demo_mutation_cases() {
             let diff = m.diff(&base);
@@ -427,7 +427,7 @@ mod tests {
 
     //#region 🔖️InverseLaw
     #[test]
-    fn inverse_law() {
+    async fn inverse_law() {
         let base = base_snapshot();
         for m in demo_mutation_cases() {
             let mut forward = base.clone();
@@ -447,7 +447,7 @@ mod tests {
 
     //#region 🔖️AbsorbLaw
     #[test]
-    fn absorb_law() {
+    async fn absorb_law() {
         let base = base_snapshot();
 
         // 🧩 Insert(2) + Remove(0): the two-op sequence base → mid → after.
@@ -524,7 +524,7 @@ mod tests {
 
     //#region 🔖️BetweenRoundtripLaw
     #[test]
-    fn between_roundtrip_law() {
+    async fn between_roundtrip_law() {
         let a = sweep_a();
         let b = sweep_b();
         assert_eq!(ObjDiff::between(&a, &b).apply(&a).expect("valid forward diff"), b);
@@ -535,7 +535,7 @@ mod tests {
 
     //#region 🔖️FieldSweep
     #[test]
-    fn field_sweep_every_mutable_field_changes() {
+    async fn field_sweep_every_mutable_field_changes() {
         let a = sweep_a();
         let b = sweep_b();
 
@@ -594,7 +594,7 @@ mod tests {
     /// `demo_mutation_cases()` already covers every variant, incl. `SetSnapshot`'s whole nested
     /// `ObjSnapshot` tree and every index-/name-keyed leaf payload type).
     #[test]
-    fn op_text_binary_roundtrip_law() {
+    async fn op_text_binary_roundtrip_law() {
         for m in demo_mutation_cases() {
             let printed = m.print_op();
             assert!(!printed.contains('\n'), "print_op must be one line, got {printed:?}");

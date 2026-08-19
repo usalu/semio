@@ -12,18 +12,18 @@ pub struct SimDate {
 }
 
 impl SimDate {
-    pub const fn new(year: u16, month: u8, day: u8) -> Self {
+    pub async fn new(year: u16, month: u8, day: u8) -> Self {
         Self { year, month, day }
     }
 
     /// 📅️ Day of year (1-based).
-    pub fn day_of_year(&self) -> u16 {
+    pub async fn day_of_year(&self) -> u16 {
         let days_before = days_before_month(self.month, is_leap_year(self.year));
         days_before + self.day as u16
     }
 
     /// 📅️ Day of week (1=Mon … 7=Sun).
-    pub fn day_of_week(&self) -> u8 {
+    pub async fn day_of_week(&self) -> u8 {
         let y = self.year as i32;
         let m = self.month as i32;
         let d = self.day as i32;
@@ -37,7 +37,7 @@ impl SimDate {
     }
 
     /// 📅️ Advance by one day.
-    pub fn advance_day(&mut self) {
+    pub async fn advance_day(&mut self) {
         let max_day = days_in_month(self.month, is_leap_year(self.year));
         if self.day < max_day {
             self.day += 1;
@@ -66,14 +66,14 @@ pub struct RunPeriod {
 }
 
 impl Default for RunPeriod {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self { start_month: 1, start_day: 1, end_month: 12, end_day: 31, year: 2026 }
     }
 }
 
 impl RunPeriod {
     /// 📅️ Total simulation hours in run period.
-    pub fn total_hours(&self) -> u32 {
+    pub async fn total_hours(&self) -> u32 {
         let mut date = SimDate::new(self.year, self.start_month, self.start_day);
         let end = SimDate::new(self.year, self.end_month, self.end_day);
         let mut hours = 0u32;
@@ -91,7 +91,7 @@ impl RunPeriod {
     }
 
     /// 📅️ Iterator over (date, hour) pairs.
-    pub fn hours(&self) -> RunPeriodHours {
+    pub async fn hours(&self) -> RunPeriodHours {
         RunPeriodHours { current: SimDate::new(self.year, self.start_month, self.start_day), end: SimDate::new(self.year, self.end_month, self.end_day), hour: 0u8, index: 0u32, finished: false }
     }
 }
@@ -106,7 +106,7 @@ pub struct RunPeriodHours {
 }
 
 impl RunPeriodHours {
-    pub fn index(&self) -> u32 {
+    pub async fn index(&self) -> u32 {
         self.index
     }
 }
@@ -114,7 +114,7 @@ impl RunPeriodHours {
 impl Iterator for RunPeriodHours {
     type Item = (SimDate, u8, u32);
 
-    fn next(&mut self) -> Option<Self::Item> {
+    async fn next(&mut self) -> Option<Self::Item> {
         if self.finished {
             return None;
         }
@@ -150,7 +150,7 @@ pub struct DstRule {
 
 impl DstRule {
     /// 🕐️ Whether DST is active for date/hour (local standard time).
-    pub fn is_dst(&self, date: SimDate, hour: u8) -> bool {
+    pub async fn is_dst(&self, date: SimDate, hour: u8) -> bool {
         let start_doy = nth_weekday_doy(date.year, self.start_month, self.start_week, 0);
         let end_doy = nth_weekday_doy(date.year, self.end_month, self.end_week, 0);
         let doy = date.day_of_year();
@@ -158,7 +158,7 @@ impl DstRule {
     }
 
     /// 🕐️ Schedule hour shift for DST.
-    pub fn schedule_shift(&self, date: SimDate, hour: u8) -> f64 {
+    pub async fn schedule_shift(&self, date: SimDate, hour: u8) -> f64 {
         if self.is_dst(date, hour) {
             self.shift_hours
         } else {
@@ -169,12 +169,12 @@ impl DstRule {
 // #endregion 🔖️Dst
 
 // #region 🔖️Helpers
-fn is_leap_year(year: u16) -> bool {
+async fn is_leap_year(year: u16) -> bool {
     let y = year as u32;
     (y.is_multiple_of(4) && !y.is_multiple_of(100)) || y.is_multiple_of(400)
 }
 
-fn days_in_month(month: u8, leap: bool) -> u8 {
+async fn days_in_month(month: u8, leap: bool) -> u8 {
     match month {
         1 | 3 | 5 | 7 | 8 | 10 | 12 => 31,
         4 | 6 | 9 | 11 => 30,
@@ -184,7 +184,7 @@ fn days_in_month(month: u8, leap: bool) -> u8 {
     }
 }
 
-fn days_before_month(month: u8, leap: bool) -> u16 {
+async fn days_before_month(month: u8, leap: bool) -> u16 {
     let days = [0u16, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334];
     let idx = (month.saturating_sub(1)) as usize;
     let base = days.get(idx).copied().unwrap_or(0);
@@ -195,7 +195,7 @@ fn days_before_month(month: u8, leap: bool) -> u16 {
     }
 }
 
-fn nth_weekday_doy(year: u16, month: u8, nth: u8, weekday: u8) -> u16 {
+async fn nth_weekday_doy(year: u16, month: u8, nth: u8, weekday: u8) -> u16 {
     let first = SimDate::new(year, month, 1);
     let first_dow = first.day_of_week();
     let offset = (7 + weekday - first_dow) % 7;
@@ -209,25 +209,25 @@ mod tests {
     use super::*;
 
     #[test]
-    fn leap_year_feb_has_29_days() {
+    async fn leap_year_feb_has_29_days() {
         assert_eq!(days_in_month(2, true), 29);
         assert_eq!(days_in_month(2, false), 28);
     }
 
     #[test]
-    fn run_period_jan_week_is_168_hours() {
+    async fn run_period_jan_week_is_168_hours() {
         let period = RunPeriod { start_month: 1, start_day: 1, end_month: 1, end_day: 7, year: 2026 };
         assert_eq!(period.total_hours(), 168);
     }
 
     #[test]
-    fn day_of_week_known_date() {
+    async fn day_of_week_known_date() {
         let d = SimDate::new(2026, 1, 1);
         assert!(d.day_of_week() >= 1 && d.day_of_week() <= 7);
     }
 
     #[test]
-    fn hours_iterator_count() {
+    async fn hours_iterator_count() {
         let period = RunPeriod { start_month: 1, start_day: 1, end_month: 1, end_day: 2, year: 2026 };
         assert_eq!(period.hours().count(), 48);
     }

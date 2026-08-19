@@ -23,7 +23,7 @@ use semio_framework_plugin::{ArtifactSerializer, Dialect, StandardId, SubsetId};
 /// ✍️ One run -> its inline sequence, wrapping in `Strong`/`Emphasis`/`Link` per the run's own
 /// `RunStyle` flags (innermost-first: bold wraps italic wraps link wraps the literal text, an
 /// arbitrary but stable nesting order — commonmark renders any wrap order identically).
-fn run_to_inlines(run: &DocRun) -> Vec<MdInline> {
+async fn run_to_inlines(run: &DocRun) -> Vec<MdInline> {
     let mut node = MdInline::Text { text: run.text.clone() };
     if let Some(url) = &run.style.link {
         node = MdInline::Link { text: vec![node], url: url.clone(), title: None };
@@ -37,14 +37,14 @@ fn run_to_inlines(run: &DocRun) -> Vec<MdInline> {
     vec![node]
 }
 
-fn runs_to_inlines(runs: &[DocRun]) -> Vec<MdInline> {
+async fn runs_to_inlines(runs: &[DocRun]) -> Vec<MdInline> {
     runs.iter().flat_map(run_to_inlines).collect()
 }
 
 /// 🧱 One `DocBlock` -> zero or more `MdBlock`s (`Table` cells and `List` items each flatten their
 /// own nested `DocBlock`s recursively; a `DocBlock::Image` becomes its own paragraph containing an
 /// inline image, since CommonMark has no block-level image construct).
-pub(crate) fn map_semio_block(block: &DocBlock) -> Vec<MdBlock> {
+pub(crate) async fn map_semio_block(block: &DocBlock) -> Vec<MdBlock> {
     match block {
         DocBlock::Paragraph { runs, .. } => vec![MdBlock::Paragraph { inlines: runs_to_inlines(runs) }],
         DocBlock::Heading { level, runs, .. } => vec![MdBlock::Heading { level: *level, inlines: runs_to_inlines(runs) }],
@@ -79,7 +79,7 @@ mod tests {
     use super::*;
     use crate::artifacts::semio::standards::v1::subsets::document::schema::snapshot::{DocListItem, DocTableCell, DocTableRow, RunStyle, STDIO_SEMIODOCUMENT_DOCUMENT_SCHEMA};
 
-    fn sample_semio() -> SemioDocumentSnapshot {
+    async fn sample_semio() -> SemioDocumentSnapshot {
         SemioDocumentSnapshot {
             schema: STDIO_SEMIODOCUMENT_DOCUMENT_SCHEMA.into(),
             styles: Vec::new(),
@@ -96,7 +96,7 @@ mod tests {
     }
 
     #[test]
-    fn maps_headings_lists_code_quotes_and_flattens_tables() {
+    async fn maps_headings_lists_code_quotes_and_flattens_tables() {
         let md = semio_framework_plugin::resolve_ready(SemioDocumentToMd::serialize(&sample_semio())).expect("serialize");
         assert!(matches!(&md.blocks[0], MdBlock::Heading { level: 2, inlines } if matches!(&inlines[0], MdInline::Strong { .. })));
         assert!(matches!(&md.blocks[1], MdBlock::Paragraph { .. }));

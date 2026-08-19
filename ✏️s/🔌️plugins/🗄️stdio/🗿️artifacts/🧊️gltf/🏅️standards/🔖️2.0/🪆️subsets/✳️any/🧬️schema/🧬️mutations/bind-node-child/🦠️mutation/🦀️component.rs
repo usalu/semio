@@ -12,7 +12,7 @@ pub struct GltfBindNodeChildPayload {
     pub position: usize,
 }
 
-pub fn validate(payload: &GltfBindNodeChildPayload, base: &GltfSnapshot) -> Result<(), GltfTopLevelMutationRejection> {
+pub async fn validate(payload: &GltfBindNodeChildPayload, base: &GltfSnapshot) -> Result<(), GltfTopLevelMutationRejection> {
     checked_index(payload.parent, base.document.nodes.len(), "document/nodes")?;
     checked_index(payload.child, base.document.nodes.len(), "document/nodes")?;
     checked_position(payload.position, base.document.nodes[payload.parent].children.len(), "document/nodes/children")?;
@@ -33,7 +33,7 @@ pub fn validate(payload: &GltfBindNodeChildPayload, base: &GltfSnapshot) -> Resu
     Ok(())
 }
 
-pub fn apply(payload: &GltfBindNodeChildPayload, base: &GltfSnapshot) -> Result<GltfSnapshot, GltfTopLevelMutationRejection> {
+pub async fn apply(payload: &GltfBindNodeChildPayload, base: &GltfSnapshot) -> Result<GltfSnapshot, GltfTopLevelMutationRejection> {
     validate(payload, base)?;
     let mut next = base.clone();
     next.document.nodes[payload.parent].children.insert(payload.position, payload.child);

@@ -18,13 +18,13 @@ pub struct ReplaceMeta {
 }
 impl MutationKind<ProgramSnapshot, ProgramMutation> for ReplaceMeta {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "replace", entity: "meta", kind: "replace-meta", record: "ReplacedMeta" };
-    fn diff(&self, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
+    async fn diff(&self, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {
+    async fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         format!("Replace document metadata \"{}\"", self.new_meta.title)
     }
 }

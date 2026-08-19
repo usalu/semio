@@ -6,7 +6,7 @@ use crate::artifacts::shooting::ShootingSnapshot;
 use semio_framework_plugin::WindowMeasure;
 
 //#region 🔖️Measure
-pub fn measure(snapshot: &ShootingSnapshot, labels: &ShootingLabels) -> WindowMeasure {
+pub async fn measure(snapshot: &ShootingSnapshot, labels: &ShootingLabels) -> WindowMeasure {
     WindowMeasure::Toggle { id: "shooting.measure.sun-enabled".into(), icon_id: "sun".into(), label: Some(labels.measure_sun.into()), pressed: snapshot.scene.sun.enabled, text: None, on_change: crate::editor::shooting::shooting_action("toggleSun", None) }
 }
 //#endregion 🔖️Measure
@@ -19,7 +19,7 @@ mod tests {
     use crate::editor::shooting::config::ShootingConfig;
 
     #[test]
-    fn sun_enabled_measure_mirrors_the_fixture_default_off() {
+    async fn sun_enabled_measure_mirrors_the_fixture_default_off() {
         let snapshot = crate::artifacts::shooting::schema::default_snapshot();
         let labels = shooting_play_labels(&ShootingConfig::default());
         match measure(&snapshot, labels) {

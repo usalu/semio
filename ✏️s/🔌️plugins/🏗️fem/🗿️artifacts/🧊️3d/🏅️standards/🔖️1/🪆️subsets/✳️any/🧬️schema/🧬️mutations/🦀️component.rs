@@ -95,14 +95,14 @@ pub type Fem3dStore = ArtifactStore<Fem3dSnapshot, Fem3dMutation>;
 /// 🌉️ Thin delegates to the derive-generated `protocol::Mutation` impl — kept because
 /// `🏗️builder/🦀️component.rs` (an artifact-generic caller, no per-variant knowledge) and
 /// `📝️text/🦀️component.rs`'s re-export both call these by name.
-pub fn apply_fem3d_mutation(snapshot: &mut Fem3dSnapshot, mutation: &Fem3dMutation) -> protocol::MutationApplyResult<()> {
+pub async fn apply_fem3d_mutation(snapshot: &mut Fem3dSnapshot, mutation: &Fem3dMutation) -> protocol::MutationApplyResult<()> {
     let (next, _) = vcs::apply_mutation(snapshot, mutation)?;
 
     *snapshot = next;
     Ok(())
 }
 
-pub fn inverse_fem3d_mutation(snapshot: &Fem3dSnapshot, mutation: &Fem3dMutation) -> Vec<Fem3dMutation> {
+pub async fn inverse_fem3d_mutation(snapshot: &Fem3dSnapshot, mutation: &Fem3dMutation) -> Vec<Fem3dMutation> {
     mutation.inverse(snapshot)
 }
 //#endregion 🔖️GenericDelegates
@@ -117,7 +117,7 @@ mod tests {
     use std::collections::BTreeMap;
 
     // #region 🔖️Fixtures
-    fn cantilever_fixture() -> (Fem3dSnapshot, f64, f64, f64, f64, f64) {
+    async fn cantilever_fixture() -> (Fem3dSnapshot, f64, f64, f64, f64, f64) {
         let e = 210e9;
         let g = 80.77e9;
         let a = 0.00538;
@@ -143,7 +143,7 @@ mod tests {
     /// 🧱️ A 2m x 1m x 0.5m slab footprint at the origin, meshed at `mesh_size`, with all 4 footprint
     /// corners as pre-placed document nodes fully fixed in translation (`Tet4` has no rotational DOF) —
     /// mirrors `fem_2d`'s `rectangle_region_doc` fixture pattern for `FemSolid`.
-    fn solid_slab_doc() -> Fem3dSnapshot {
+    async fn solid_slab_doc() -> Fem3dSnapshot {
         Fem3dSnapshot {
             nodes: vec![FemNode { id: "sc0".into(), x: 0.0, y: 0.0, z: 0.0 }, FemNode { id: "sc1".into(), x: 2.0, y: 0.0, z: 0.0 }, FemNode { id: "sc2".into(), x: 2.0, y: 1.0, z: 0.0 }, FemNode { id: "sc3".into(), x: 0.0, y: 1.0, z: 0.0 }],
             elements: vec![],
@@ -164,7 +164,7 @@ mod tests {
     // #endregion 🔖️Fixtures
 
     // #region 🔖️OpRoundTrip
-    fn round_trip(snapshot: &Fem3dSnapshot, operation: &Fem3dMutation) -> Fem3dSnapshot {
+    async fn round_trip(snapshot: &Fem3dSnapshot, operation: &Fem3dMutation) -> Fem3dSnapshot {
         let forward = vcs::apply_mutation(snapshot, operation)
             .expect("valid mutation")
             .0;
@@ -179,7 +179,7 @@ mod tests {
     }
 
     #[test]
-    fn node_create_and_delete_round_trip() {
+    async fn node_create_and_delete_round_trip() {
         let base = Fem3dSnapshot::default();
         let node = FemNode { id: "n1".into(), x: 1.0, y: 2.0, z: 3.0 };
         let after_create = round_trip(&base, &Fem3dMutation::CreateNode(create_node::mutation::CreateNode { node: node.clone() }));
@@ -188,7 +188,7 @@ mod tests {
     }
 
     #[test]
-    fn element_create_replace_and_delete_round_trip() {
+    async fn element_create_replace_and_delete_round_trip() {
         let (base, ..) = cantilever_fixture();
         let updated = FemElement::Frame { id: "e1".into(), start: "n1".into(), end: "n2".into(), material_id: "steel".into(), section_id: "hea200".into(), roll: 0.5 };
         let after_replace = round_trip(&base, &Fem3dMutation::ReplaceElement(replace_element::mutation::ReplaceElement { id: "e1".into(), new_element: Box::new(updated) }));
@@ -199,7 +199,7 @@ mod tests {
     }
 
     #[test]
-    fn material_create_replace_and_delete_round_trip() {
+    async fn material_create_replace_and_delete_round_trip() {
         let (base, ..) = cantilever_fixture();
         let replaced = FemMaterial { id: "steel".into(), name: "Steel Updated".into(), e: 200e9, g: 79e9, nu: 0.3, rho: 7900.0 };
         let after_replace = round_trip(&base, &Fem3dMutation::ReplaceMaterial(replace_material::mutation::ReplaceMaterial { id: "steel".into(), new_material: replaced }));
@@ -207,7 +207,7 @@ mod tests {
     }
 
     #[test]
-    fn section_create_replace_and_delete_round_trip() {
+    async fn section_create_replace_and_delete_round_trip() {
         let (base, ..) = cantilever_fixture();
         let replaced = FemSection { id: "hea200".into(), name: "HEA200 Updated".into(), area: 0.006, iy: 4e-5, iz: 1.5e-5, j: 7e-7 };
         let after_replace = round_trip(&base, &Fem3dMutation::ReplaceSection(replace_section::mutation::ReplaceSection { id: "hea200".into(), new_section: replaced }));
@@ -215,7 +215,7 @@ mod tests {
     }
 
     #[test]
-    fn support_create_replace_and_delete_round_trip() {
+    async fn support_create_replace_and_delete_round_trip() {
         let (base, ..) = cantilever_fixture();
         let replaced = FemSupport { id: "s1".into(), node_id: "n1".into(), fixed: vec![FemDof::Tx, FemDof::Ty, FemDof::Tz] };
         let after_replace = round_trip(&base, &Fem3dMutation::ReplaceSupport(replace_support::mutation::ReplaceSupport { id: "s1".into(), new_support: replaced }));
@@ -223,7 +223,7 @@ mod tests {
     }
 
     #[test]
-    fn load_case_create_and_delete_round_trip() {
+    async fn load_case_create_and_delete_round_trip() {
         let (base, ..) = cantilever_fixture();
         let load_case = FemLoadCase { id: "wind".into(), name: "Wind Load".into(), loads: vec![], self_weight: false };
         let after_create = round_trip(&base, &Fem3dMutation::CreateLoadCase(create_load_case::mutation::CreateLoadCase { load_case }));
@@ -231,7 +231,7 @@ mod tests {
     }
 
     #[test]
-    fn add_load_and_remove_load_round_trip() {
+    async fn add_load_and_remove_load_round_trip() {
         let (base, ..) = cantilever_fixture();
         let load = FemLoad::MemberUdl { id: "l2".into(), element_id: "e1".into(), wx: 0.0, wy: 0.0, wz: -900.0 };
         let after_add = round_trip(&base, &Fem3dMutation::AddLoad(add_load::mutation::AddLoad { case_id: "point".into(), load: Box::new(load.clone()) }));
@@ -240,13 +240,13 @@ mod tests {
     }
 
     #[test]
-    fn change_load_case_self_weight_round_trips() {
+    async fn change_load_case_self_weight_round_trips() {
         let (base, ..) = cantilever_fixture();
         round_trip(&base, &Fem3dMutation::ChangeLoadCaseSelfWeight(change_load_case_self_weight::mutation::ChangeLoadCaseSelfWeight { case_id: "point".into(), new_self_weight: true }));
     }
 
     #[test]
-    fn combination_create_and_delete_round_trip() {
+    async fn combination_create_and_delete_round_trip() {
         let (base, ..) = cantilever_fixture();
         let combination = FemCombination { id: "uls".into(), name: "ULS".into(), terms: BTreeMap::from([("point".into(), 1.35)]) };
         let after_create = round_trip(&base, &Fem3dMutation::CreateCombination(create_combination::mutation::CreateCombination { combination }));
@@ -254,14 +254,14 @@ mod tests {
     }
 
     #[test]
-    fn analysis_settings_update_round_trips() {
+    async fn analysis_settings_update_round_trips() {
         let base = Fem3dSnapshot::default();
         let settings = FemAnalysisSettings { modal_count: 5, buckling_count: 2, deformation_scale: 25.0 };
         round_trip(&base, &Fem3dMutation::UpdateAnalysisSettings(update_analysis_settings::mutation::UpdateAnalysisSettings { settings }));
     }
 
     #[test]
-    fn solid_create_replace_and_delete_round_trip() {
+    async fn solid_create_replace_and_delete_round_trip() {
         let base = solid_slab_doc();
         let updated = FemSolid { id: "sol1".into(), name: "Slab Updated".into(), outline: base.solids[0].outline.clone(), holes: vec![], base_z: 0.0, height: 0.8, layers: 2, mesh_size: 0.5, material_id: "concrete".into() };
         let after_replace = round_trip(&base, &Fem3dMutation::ReplaceSolid(replace_solid::mutation::ReplaceSolid { id: "sol1".into(), new_solid: updated }));
@@ -270,7 +270,7 @@ mod tests {
     }
 
     #[test]
-    fn missing_target_inverse_and_diff_are_no_ops() {
+    async fn missing_target_inverse_and_diff_are_no_ops() {
         let base = Fem3dSnapshot::default();
         assert!(Fem3dMutation::DeleteNode(delete_node::mutation::DeleteNode { id: "ghost".into() }).inverse(&base).is_empty());
         assert!(Fem3dMutation::ReplaceMaterial(replace_material::mutation::ReplaceMaterial { id: "ghost".into(), new_material: FemMaterial { id: "ghost".into(), name: "x".into(), e: 1.0, g: 1.0, nu: 0.3, rho: 1.0 } }).inverse(&base).is_empty());
@@ -281,7 +281,7 @@ mod tests {
 
     // #region 🔖️OpText
     #[test]
-    fn fem3d_op_text_round_trips_every_variant() {
+    async fn fem3d_op_text_round_trips_every_variant() {
         semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Fem3dMutation::CreateNode(create_node::mutation::CreateNode { node: FemNode { id: "n1".into(), x: 1.0, y: 2.0, z: 3.0 } }));
         semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Fem3dMutation::DeleteNode(delete_node::mutation::DeleteNode { id: "n1".into() }));
         semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Fem3dMutation::CreateElement(create_element::mutation::CreateElement {
@@ -335,7 +335,7 @@ mod tests {
 
     // #region 🔖️MutationLaws
     #[test]
-    fn mutation_law_create_node_inverse_and_diff_absorb() {
+    async fn mutation_law_create_node_inverse_and_diff_absorb() {
         let base = Fem3dSnapshot::default();
         let mutation = Fem3dMutation::CreateNode(create_node::mutation::CreateNode { node: FemNode { id: "n1".into(), x: 1.0, y: 2.0, z: 3.0 } });
         protocol::testkit::assert_mutation_inverse_law(&base, &mutation);
@@ -346,14 +346,14 @@ mod tests {
     }
 
     #[test]
-    fn mutation_law_replace_material_inverse() {
+    async fn mutation_law_replace_material_inverse() {
         let (base, ..) = cantilever_fixture();
         let mutation = Fem3dMutation::ReplaceMaterial(replace_material::mutation::ReplaceMaterial { id: "steel".into(), new_material: FemMaterial { id: "steel".into(), name: "Steel 2".into(), e: 200e9, g: 79e9, nu: 0.3, rho: 7900.0 } });
         protocol::testkit::assert_mutation_inverse_law(&base, &mutation);
     }
 
     #[test]
-    fn mutation_law_add_load_inverse_and_diff_absorb() {
+    async fn mutation_law_add_load_inverse_and_diff_absorb() {
         let (base, ..) = cantilever_fixture();
         let mutation = Fem3dMutation::AddLoad(add_load::mutation::AddLoad { case_id: "point".into(), load: Box::new(FemLoad::Area { id: "l9".into(), solid_id: "sol1".into(), pressure: 400.0 }) });
         protocol::testkit::assert_mutation_inverse_law(&base, &mutation);
@@ -364,7 +364,7 @@ mod tests {
     }
 
     #[test]
-    fn every_mutation_registers_a_semantic_descriptor() {
+    async fn every_mutation_registers_a_semantic_descriptor() {
         register_fem3d_mutation_descriptors();
         let kinds = <Fem3dMutation as protocol::SemanticMutation<Fem3dSnapshot>>::kinds();
         assert_eq!(kinds.len(), 25, "every semantic mutation kind must be registered exactly once");
@@ -380,43 +380,43 @@ mod tests {
     /// replace/add/remove/change), plus one `assert_fatal_never_applies` check for a
     /// create-duplicate-id case.
     #[test]
-    fn create_support_missing_node_is_error() {
+    async fn create_support_missing_node_is_error() {
         let base = Fem3dSnapshot::default();
         protocol::testkit::assert_missing_target_is_error(&base, &Fem3dMutation::CreateSupport(create_support::mutation::CreateSupport { support: FemSupport { id: "s1".into(), node_id: "ghost".into(), fixed: vec![] } }));
     }
 
     #[test]
-    fn delete_node_missing_target_is_error() {
+    async fn delete_node_missing_target_is_error() {
         let base = Fem3dSnapshot::default();
         protocol::testkit::assert_missing_target_is_error(&base, &Fem3dMutation::DeleteNode(delete_node::mutation::DeleteNode { id: "ghost".into() }));
     }
 
     #[test]
-    fn replace_material_missing_target_is_error() {
+    async fn replace_material_missing_target_is_error() {
         let base = Fem3dSnapshot::default();
         protocol::testkit::assert_missing_target_is_error(&base, &Fem3dMutation::ReplaceMaterial(replace_material::mutation::ReplaceMaterial { id: "ghost".into(), new_material: FemMaterial { id: "ghost".into(), name: "x".into(), e: 1.0, g: 1.0, nu: 0.3, rho: 1.0 } }));
     }
 
     #[test]
-    fn add_load_missing_case_is_error() {
+    async fn add_load_missing_case_is_error() {
         let base = Fem3dSnapshot::default();
         protocol::testkit::assert_missing_target_is_error(&base, &Fem3dMutation::AddLoad(add_load::mutation::AddLoad { case_id: "ghost".into(), load: Box::new(FemLoad::Nodal { id: "l1".into(), node_id: "n1".into(), dof: FemDof::Tz, value: 1.0 }) }));
     }
 
     #[test]
-    fn remove_load_missing_case_is_error() {
+    async fn remove_load_missing_case_is_error() {
         let base = Fem3dSnapshot::default();
         protocol::testkit::assert_missing_target_is_error(&base, &Fem3dMutation::RemoveLoad(remove_load::mutation::RemoveLoad { case_id: "ghost".into(), load_id: "ghost".into() }));
     }
 
     #[test]
-    fn change_load_case_self_weight_missing_target_is_error() {
+    async fn change_load_case_self_weight_missing_target_is_error() {
         let base = Fem3dSnapshot::default();
         protocol::testkit::assert_missing_target_is_error(&base, &Fem3dMutation::ChangeLoadCaseSelfWeight(change_load_case_self_weight::mutation::ChangeLoadCaseSelfWeight { case_id: "ghost".into(), new_self_weight: true }));
     }
 
     #[test]
-    fn create_node_duplicate_id_is_fatal() {
+    async fn create_node_duplicate_id_is_fatal() {
         let (base, ..) = cantilever_fixture();
         let outcome = Fem3dMutation::CreateNode(create_node::mutation::CreateNode { node: FemNode { id: "n1".into(), x: 0.0, y: 0.0, z: 0.0 } }).diff(&base);
         protocol::testkit::assert_fatal_never_applies(&outcome);
@@ -431,7 +431,7 @@ mod semio_grammar_conformance {
     use super::*;
 
     #[test]
-    fn component_grammar_semio_is_grammar_dialect() {
+    async fn component_grammar_semio_is_grammar_dialect() {
         let g = ::dsl::parse_grammar(COMPONENT_GRAMMAR_SEMIO).expect("parse grammar.semio");
         assert_eq!(g.dialect, ::dsl::SemioDialect::Grammar);
         assert!(!COMPONENT_GRAMMAR_SEMIO.is_empty());

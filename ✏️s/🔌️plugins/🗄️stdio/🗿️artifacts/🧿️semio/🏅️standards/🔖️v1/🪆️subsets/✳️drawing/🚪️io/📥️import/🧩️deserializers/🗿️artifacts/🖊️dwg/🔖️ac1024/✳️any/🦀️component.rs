@@ -20,7 +20,7 @@ const FROM_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.dwg", standard: 
 const INTO_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("drawing") };
 
 //#region 🔖️SegmentMap
-fn dwg_segment_to_path(segment: &crate::artifacts::dwg::DwgPathSegment) -> PathSegment {
+async fn dwg_segment_to_path(segment: &crate::artifacts::dwg::DwgPathSegment) -> PathSegment {
     use crate::artifacts::dwg::DwgPathSegment;
     match *segment {
         DwgPathSegment::Move { to } => PathSegment::MoveTo { to: SemioPoint2 { x: to[0], y: to[1] } },
@@ -34,7 +34,7 @@ fn dwg_segment_to_path(segment: &crate::artifacts::dwg::DwgPathSegment) -> PathS
 //#endregion 🔖️SegmentMap
 
 //#region 🔖️EntityMap
-fn draw_node_from_entity(geometry: &DwgGeometry) -> Option<DrawNode> {
+async fn draw_node_from_entity(geometry: &DwgGeometry) -> Option<DrawNode> {
     if let DwgGeometry::Text { at, content, .. } = geometry {
         return Some(DrawNode::Text { value: content.clone(), at: SemioPoint2 { x: at[0], y: at[1] }, style: None });
     }
@@ -77,7 +77,7 @@ mod tests {
     use crate::artifacts::dwg::schema::snapshot::DwgLogicalDrawing;
     use crate::artifacts::dwg::{DwgColor, DwgEntity};
 
-    fn sample_dwg() -> DwgSnapshot {
+    async fn sample_dwg() -> DwgSnapshot {
         let mut drawing = DwgDrawing::default();
         let layer = drawing.ensure_layer("annotations");
         drawing.entities.push(DwgEntity { layer, color: DwgColor::ByLayer, geometry: DwgGeometry::LwPolyline { closed: false, elevation: 0.0, vertices: vec![[0.0, 0.0], [5.0, 0.0]], bulges: vec![0.0, 0.0] } });
@@ -86,7 +86,7 @@ mod tests {
     }
 
     #[test]
-    fn buckets_entities_by_layer_in_entity_order() {
+    async fn buckets_entities_by_layer_in_entity_order() {
         let drawing = semio_framework_plugin::resolve_ready(SemioDrawingFromDwg::deserialize(&sample_dwg())).expect("deserialize");
         assert_eq!(drawing.layers.len(), 1);
         assert_eq!(drawing.layers[0].id, "annotations");
@@ -101,7 +101,7 @@ mod tests {
     }
 
     #[test]
-    fn rejects_malformed_payload() {
+    async fn rejects_malformed_payload() {
         let bad = DwgSnapshot { drawing: DwgLogicalDrawing { extmin: vec![0.0], ..Default::default() }, ..DwgSnapshot::default() };
         assert!(semio_framework_plugin::resolve_ready(SemioDrawingFromDwg::deserialize(&bad)).is_err());
     }

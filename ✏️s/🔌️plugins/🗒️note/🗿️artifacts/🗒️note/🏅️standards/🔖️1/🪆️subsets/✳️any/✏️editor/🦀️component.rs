@@ -51,7 +51,7 @@ pub use inspection_panel::NOTE_PLAY_BODY_PROPERTIES;
 /// 🧬️ Whole-document replace is banned from the `Mutation` enum outright (see
 /// `📓️taxonomy.md`'s forbidden vocabulary), so `setActiveExample`/`setFixtureJson` build a
 /// `Effect::LoadDocument` (outside undo history) instead of an `artifact_mutations` entry.
-pub fn reset_document_effect(document: &NoteSnapshot) -> semio_framework::kernel::Effect {
+pub async fn reset_document_effect(document: &NoteSnapshot) -> semio_framework::kernel::Effect {
     let pack = <NoteSnapshot as store::ArtifactPack>::encode_pack(document);
     let envelope = store::create_document_envelope::<NoteSnapshot, NoteMutation>(NOTE_DOCUMENT_SCHEMA, "note", document.clone(), None);
     let spr = store::print_document_spr(&envelope).expect("note document spr encode is infallible for a fresh, edit-free envelope");
@@ -62,19 +62,19 @@ pub fn reset_document_effect(document: &NoteSnapshot) -> semio_framework::kernel
 //#region 🔖️Utilities
 /// 🎯️ An `ActionDescriptor` addressed at this app — the single factory every taxonomy node's chrome
 /// (`🎚️options/*`, `📌️panels/*`) builds its `on_change`/item actions with.
-pub fn note_action(action: &str, args: Option<serde_json::Value>) -> ActionDescriptor {
+pub async fn note_action(action: &str, args: Option<serde_json::Value>) -> ActionDescriptor {
     ActionDescriptor { controller_id: NOTE_PLAY_CONTROLLER_ID.into(), action: action.into(), args: semio_framework_plugin::optional_json_to_dsl(args) }
 }
 
 /// 🛠️ An internal (non-palette) action declaration — the pointer/gesture/inspector/keybound vocabulary
 /// dispatched by the canvas/panels, never surfaced as a standalone command palette entry.
-fn note_internal_action(id: &str, label: LocalizedLabel, kind: ActionKind) -> ActionDefinition {
+async fn note_internal_action(id: &str, label: LocalizedLabel, kind: ActionKind) -> ActionDefinition {
     ActionDefinition { in_palette: false, ..ActionDefinition::new_catalog(id, label, kind) }
 }
 
 /// 🧰️ One canvas utility declaration (id/label/icon reused verbatim from the retired `utilities()`/
 /// utility bar).
-fn note_utility(id: &str, label: LocalizedLabel, icon: &str, group: &str, category: UtilityCategory) -> UtilityDefinition {
+async fn note_utility(id: &str, label: LocalizedLabel, icon: &str, group: &str, category: UtilityCategory) -> UtilityDefinition {
     UtilityDefinition { group: Some(group.into()), category: Some(category), ..UtilityDefinition::new(id, label, icon) }
 }
 //#endregion 🔖️Utilities
@@ -98,8 +98,8 @@ pub struct NoteDispatchCtx {
 /// 🌳️ `blocks` domain topology from the document's own Group nesting — row-id-prefixed ids (matching
 /// the document panel tree's own item ids), so `validate_state` prunes deleted blocks and
 /// range/transitive selection walk the real tree structure.
-fn note_blocks_topology(document: &NoteSnapshot) -> DomainTopology {
-    fn visit(blocks: &[NoteBlockNode], parent: Option<&str>, out: &mut Vec<TopologyNode>) {
+async fn note_blocks_topology(document: &NoteSnapshot) -> DomainTopology {
+    async fn visit(blocks: &[NoteBlockNode], parent: Option<&str>, out: &mut Vec<TopologyNode>) {
         for block in blocks {
             let id = crate::artifacts::note::schema::block_tree_row_id(block);
             out.push(TopologyNode { id: id.clone(), granularity: "block".into(), parent: parent.map(str::to_string) });
@@ -191,22 +191,22 @@ impl ArtifactEditor for NotePlayApp {
     const DIALECT: Dialect = crate::artifacts::note::NOTE_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = NOTE_DOCUMENT_SCHEMA;
 
-    fn app_schema() -> Option<::schema::AppSchemaDescriptor> {
+    async fn app_schema() -> Option<::schema::AppSchemaDescriptor> {
         Some(crate::editor::note::config::schema::app_schema_descriptor())
     }
 
-    fn initial_snapshot() -> NoteSnapshot {
+    async fn initial_snapshot() -> NoteSnapshot {
         empty_note_snapshot()
     }
 
     /// 🏷️ Maps each `NoteCommand` variant back to the action id it was declared under in
     /// `create_note_app` — used by `VcsArtifactApp` for command-log labeling and the registry's
     /// View/Shell kind-discipline check.
-    fn command_id(command: &NoteCommand) -> &'static str {
+    async fn command_id(command: &NoteCommand) -> &'static str {
         command.command_id()
     }
 
-    fn handle(command: &NoteCommand, doc: &ArtifactView<'_, NoteSnapshot>, cfg: &ConfigView<'_, NoteConfig>, interaction: &InteractionView<'_>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<NoteMutation, NoteConfigMutation, Self::DraftMutation>, Fault> {
+    async fn handle(command: &NoteCommand, doc: &ArtifactView<'_, NoteSnapshot>, cfg: &ConfigView<'_, NoteConfig>, interaction: &InteractionView<'_>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<NoteMutation, NoteConfigMutation, Self::DraftMutation>, Fault> {
         let selected_block_ids = interaction.selection(NOTE_INTERACTION_BLOCKS).ids.iter().filter_map(|id| crate::artifacts::note::schema::block_id_from_tree_row_id(id)).collect();
         let mut ctx = NoteDispatchCtx { selected_block_ids };
         command.dispatch(doc, cfg, &mut ctx)
@@ -214,13 +214,13 @@ impl ArtifactEditor for NotePlayApp {
 
     /// 🕹️ `blocks` domain: `HierarchyProvider::Topology` from the document's own Group nesting — see
     /// `note_blocks_topology`'s doc comment.
-    fn interaction_topology(doc: &ArtifactView<'_, NoteSnapshot>, _cfg: &ConfigView<'_, NoteConfig>) -> InteractionTopology {
+    async fn interaction_topology(doc: &ArtifactView<'_, NoteSnapshot>, _cfg: &ConfigView<'_, NoteConfig>) -> InteractionTopology {
         let mut domains = std::collections::BTreeMap::new();
         domains.insert(NOTE_INTERACTION_BLOCKS.to_string(), note_blocks_topology(doc.snapshot));
         InteractionTopology { domains }
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, NoteSnapshot>, cfg: &ConfigView<'_, NoteConfig>) -> UiNode {
+    async fn render(body_key: &str, doc: &ArtifactView<'_, NoteSnapshot>, cfg: &ConfigView<'_, NoteConfig>) -> UiNode {
         let document = doc.snapshot;
         let config = cfg.snapshot;
         let labels = note_play_labels(config);
@@ -234,7 +234,7 @@ impl ArtifactEditor for NotePlayApp {
         }
     }
 
-    fn window_engagements(doc: &ArtifactView<'_, NoteSnapshot>, cfg: &ConfigView<'_, NoteConfig>) -> HashMap<String, WindowEngagement> {
+    async fn window_engagements(doc: &ArtifactView<'_, NoteSnapshot>, cfg: &ConfigView<'_, NoteConfig>) -> HashMap<String, WindowEngagement> {
         let config = cfg.snapshot;
         HashMap::from([
             (NOTE_PLAY_WINDOW_COMPOSITE.to_string(), composite::engagement(doc.snapshot, &config.camera, &config.engagement_input)),
@@ -242,7 +242,7 @@ impl ArtifactEditor for NotePlayApp {
         ])
     }
 
-    fn window_measures(doc: &ArtifactView<'_, NoteSnapshot>, cfg: &ConfigView<'_, NoteConfig>) -> HashMap<String, Vec<WindowMeasure>> {
+    async fn window_measures(doc: &ArtifactView<'_, NoteSnapshot>, cfg: &ConfigView<'_, NoteConfig>) -> HashMap<String, Vec<WindowMeasure>> {
         let config = cfg.snapshot;
         let labels = note_play_labels(config);
         HashMap::from([(NOTE_PLAY_WINDOW_COMPOSITE.to_string(), composite::window_measures(doc.snapshot, &config.camera, labels)), (NOTE_PLAY_WINDOW_NAVIGATOR.to_string(), navigator::window_measures(doc.snapshot, &config.camera, labels))])
@@ -254,7 +254,7 @@ impl ArtifactEditor for NotePlayApp {
 /// 🧱️ The manifest stitch: one call per taxonomy node, each sourced from that node's own `definition()`.
 /// Only the leaf action/keybinding declarations (which have no dedicated `_def` passthrough) are written
 /// out inline.
-pub fn create_note_app() -> AppDefinition {
+pub async fn create_note_app() -> AppDefinition {
     let document = empty_note_snapshot();
     let mut app =
         Editor::builder(crate::artifacts::note::NOTE_DIALECT)
@@ -429,25 +429,25 @@ pub(crate) mod testkit {
     /// convention — this tiny local wrapper adapts it back into the `App { definition, examples }`
     /// shape that fn still expects (mirrors trinity/jack's `trinity_jack_manifest_for_testkit`, the
     /// first real W2 packet to hit this exact gap).
-    fn note_manifest_for_testkit() -> App {
+    async fn note_manifest_for_testkit() -> App {
         App { definition: create_note_app(), examples: Vec::new() }
     }
 
     /// 🧪️ A bare app instance — no `AppActionRegistry`, so undeclared internal commands dispatch freely.
-    pub fn note_app() -> NoteApp {
+    pub async fn note_app() -> NoteApp {
         new_app::<EditorApp<NotePlayApp>>()
     }
 
     /// 🧪️ An app wired to the real manifest registry — enforces View/Shell kind discipline.
-    pub fn note_app_with_registry() -> NoteApp {
+    pub async fn note_app_with_registry() -> NoteApp {
         new_app_with_registry::<EditorApp<NotePlayApp>>(note_manifest_for_testkit)
     }
 
-    pub fn dispatch(app: &mut NoteApp, command: NoteCommand) -> InvocationResult {
+    pub async fn dispatch(app: &mut NoteApp, command: NoteCommand) -> InvocationResult {
         app.dispatch_typed(command, &meta("local")).expect("dispatch")
     }
 
-    pub fn render(app: &mut NoteApp, body_key: &str) -> String {
+    pub async fn render(app: &mut NoteApp, body_key: &str) -> String {
         serde_json::to_string(&app.render(body_key, None, &ViewModel::default()).expect("render")).expect("render json")
     }
 
@@ -457,7 +457,7 @@ pub(crate) mod testkit {
     /// select against). `ids` are raw block ids, converted to the row-id-prefixed `InteractionTarget`
     /// id the document panel tree/`interaction_topology` both use (see `note_blocks_topology`'s doc
     /// comment).
-    pub fn select_blocks(app: &mut NoteApp, ids: &[&str]) {
+    pub async fn select_blocks(app: &mut NoteApp, ids: &[&str]) {
         let target_list: Vec<serde_json::Value> = ids.iter().map(|id| serde_json::json!({ "granularity": "block", "id": format!("note-play-block:{id}") })).collect();
         let targets = serde_json::to_string(&target_list).expect("targets json");
         app.handle_action("interactionSelect", Some(&serde_json::json!({ "domainId": NOTE_INTERACTION_BLOCKS, "targets": targets, "merge": "replace" })), &meta("test")).expect("interactionSelect");
@@ -477,7 +477,7 @@ mod tests {
     /// row's wire keyword must be distinct — the cross-cutting invariant `app_commands!` is there to
     /// hold.
     #[test]
-    fn command_ids_are_unique_across_every_row() {
+    async fn command_ids_are_unique_across_every_row() {
         let app = NotePlayApp;
         let ids: Vec<&str> = every_command().iter().map(|command| NotePlayApp::command_id(command)).collect();
         let mut sorted = ids.clone();
@@ -489,14 +489,14 @@ mod tests {
 
     /// ⚖️ LAW: text and binary are two projections of the same command, for every single row.
     #[test]
-    fn every_command_round_trips_through_text_and_binary() {
+    async fn every_command_round_trips_through_text_and_binary() {
         for command in every_command() {
             store::os_store::test_support::assert_op_text_binary_equivalence(&command);
         }
     }
 
     /// 🧾️ One representative value per row, in declaration (= binary ordinal) order.
-    pub(super) fn every_command() -> Vec<NoteCommand> {
+    pub(super) async fn every_command() -> Vec<NoteCommand> {
         vec![
             NoteCommand::SetGridVisible(set_grid_visible::SetGridVisible { value: Some(true) }),
             NoteCommand::SetGridSpacing(set_grid_spacing::SetGridSpacing { value: 16.0 }),
@@ -540,7 +540,7 @@ mod tests {
     /// 🎞️ Pins the exact hex for rows whose `Option` fields make `None`/`Some` distinct wire cases —
     /// copied from the pre-migration `🧪️wire-baseline-before.txt` dump.
     #[test]
-    fn optional_field_rows_keep_their_pre_migration_bytes() {
+    async fn optional_field_rows_keep_their_pre_migration_bytes() {
         store::os_store::test_support::assert_op_text_binary_equivalence(&NoteCommand::SetGridVisible(set_grid_visible::SetGridVisible { value: None }));
         store::os_store::test_support::assert_op_text_binary_equivalence(&NoteCommand::SetSnapEnabled(set_snap_enabled::SetSnapEnabled { value: None }));
         store::os_store::test_support::assert_op_text_binary_equivalence(&NoteCommand::EngagementSubmit(engagement_submit::EngagementSubmit { value: None }));
@@ -550,7 +550,7 @@ mod tests {
 
     //#region 🔖️ManifestSanity
     #[test]
-    fn the_manifest_stitches_every_taxonomy_node() {
+    async fn the_manifest_stitches_every_taxonomy_node() {
         let json = serde_json::to_string(&create_note_app()).expect("app definition json");
         for id in [NOTE_PLAY_WINDOW_COMPOSITE, NOTE_PLAY_WINDOW_NAVIGATOR] {
             assert!(json.contains(id), "window kind {id} missing from the manifest: {json}");
@@ -562,7 +562,7 @@ mod tests {
     }
 
     #[test]
-    fn utility_registry_declares_canvas_utilities_scoped_to_composite_window() {
+    async fn utility_registry_declares_canvas_utilities_scoped_to_composite_window() {
         let definition = create_note_app();
         let utility_ids: Vec<&str> = definition.utilities.iter().map(|utility| utility.id.as_str()).collect();
         assert_eq!(utility_ids, ["selectDirect", "selectMarquee", "text", "image", "table", "math", "pencil", "eraserStroke", "eraserPoint", "pan"]);
@@ -578,7 +578,7 @@ mod tests {
     /// 🕹️ The `blocks` domain is declared `HierarchyProvider::Topology`, transitive on both hover and
     /// selection, and scoped to the composite (canvas) window kind.
     #[test]
-    fn blocks_interaction_domain_is_declared_topology_and_transitive_on_the_composite_window() {
+    async fn blocks_interaction_domain_is_declared_topology_and_transitive_on_the_composite_window() {
         let definition = create_note_app();
         let blocks = definition.interactions.iter().find(|interaction| interaction.id == NOTE_INTERACTION_BLOCKS).expect("blocks interaction domain declared");
         assert!(matches!(blocks.hierarchy, HierarchyProvider::Topology));
@@ -591,7 +591,7 @@ mod tests {
     /// 🌳️ `interaction_topology` walks the document's own Group nesting into `TopologyNode.parent`
     /// links — a top-level block has no parent, every group child's parent is the group's own row id.
     #[test]
-    fn interaction_topology_walks_group_nesting_into_parent_links() {
+    async fn interaction_topology_walks_group_nesting_into_parent_links() {
         let document = crate::artifacts::note::schema::semio_example_snapshot();
         let config = NoteConfig::default();
         let history = semio_framework_plugin::HistoryView::empty();
@@ -606,7 +606,7 @@ mod tests {
     /// 🌱️ An empty document has no blocks to select — an empty topology (every stale `blocks`
     /// selection id gets pruned).
     #[test]
-    fn interaction_topology_is_empty_for_a_document_with_no_blocks() {
+    async fn interaction_topology_is_empty_for_a_document_with_no_blocks() {
         let document = empty_note_snapshot();
         let config = NoteConfig::default();
         let history = semio_framework_plugin::HistoryView::empty();
@@ -620,7 +620,7 @@ mod tests {
     /// `InteractionView::selection("blocks")` (via `NoteDispatchCtx`) — picking through the real
     /// injected `interactionSelect` verb, not a deleted app command.
     #[test]
-    fn delete_selection_deletes_the_blocks_picked_via_interaction_select() {
+    async fn delete_selection_deletes_the_blocks_picked_via_interaction_select() {
         use crate::editor::note::testkit::{dispatch as note_dispatch, note_app_with_registry, select_blocks};
         let mut app = note_app_with_registry();
         note_dispatch(&mut app, NoteCommand::AddBlock(add_block::AddBlock { kind: "text".into(), x: 0.0, y: 0.0 }));
@@ -633,7 +633,7 @@ mod tests {
 
     //#region 🔖️Locale
     #[test]
-    fn note_labels_resolve_native_by_default() {
+    async fn note_labels_resolve_native_by_default() {
         let mut app = note_app();
         let document_json = crate::editor::note::testkit::render(&mut app, NOTE_PLAY_BODY_DOCUMENT);
         assert!(document_json.contains("Add Text"));
@@ -644,7 +644,7 @@ mod tests {
 
     //#region 🔖️CrossCutting
     #[test]
-    fn undo_redo_round_trip_through_the_wrapper() {
+    async fn undo_redo_round_trip_through_the_wrapper() {
         let mut app = note_app();
         testkit::assert_undo_redo_round_trip(&mut app, NoteCommand::AddBlock(add_block::AddBlock { kind: "text".into(), x: 0.0, y: 0.0 }), |app| app.snapshot().expect("snapshot").blocks.len(), 0, 1);
     }
@@ -653,7 +653,7 @@ mod tests {
     /// apply DISJOINT edits, and exchanging operations over a `MemoryBackbone` converges both sides to
     /// contain BOTH edits.
     #[test]
-    fn two_instances_converge_disjoint_edits_via_backbone() {
+    async fn two_instances_converge_disjoint_edits_via_backbone() {
         testkit::assert_two_instances_converge::<semio_framework_plugin::EditorApp<NotePlayApp>, (usize, Option<bool>)>(
             "mem://note-convergence",
             NoteCommand::AddBlock(add_block::AddBlock { kind: "text".into(), x: 0.0, y: 0.0 }),
@@ -666,7 +666,7 @@ mod tests {
     }
 
     #[test]
-    fn ingest_operations_is_idempotent_for_note() {
+    async fn ingest_operations_is_idempotent_for_note() {
         testkit::assert_ingest_idempotent::<semio_framework_plugin::EditorApp<NotePlayApp>, f64>(NoteCommand::SetGridSpacing(set_grid_spacing::SetGridSpacing { value: 48.0 }), |app| app.snapshot().expect("snapshot").grid_spacing.unwrap_or_default());
     }
     //#endregion 🔖️CrossCutting

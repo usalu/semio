@@ -12,7 +12,7 @@ const PRIMITIVE_CATALOG: &[(&str, &str, &str)] = &[("box", "Cube", "box"), ("pla
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
-pub fn definition() -> PanelTabDefinition {
+pub async fn definition() -> PanelTabDefinition {
     PanelTabDefinition {
         kind: PanelTabKind::App(FRAMEWORK_PANEL_TAB_CATALOGUE_ID.into()),
         label: LocalizedLabel::native(FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, "Katalog"),
@@ -24,7 +24,7 @@ pub fn definition() -> PanelTabDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(labels: &LowpolyLabels) -> UiNode {
+pub async fn render(labels: &LowpolyLabels) -> UiNode {
     let items: Vec<UiTreeItemNode> = PRIMITIVE_CATALOG
         .iter()
         .map(|(kind, label, icon)| UiTreeItemNode {
@@ -42,7 +42,7 @@ mod tests {
     use crate::editor::lowpoly::testkit::{app, render};
 
     #[test]
-    fn catalogue_lists_primitives() {
+    async fn catalogue_lists_primitives() {
         let mut a = app();
         let json = render(&mut a, super::LOWPOLY_PLAY_BODY_CATALOGUE);
         assert!(json.contains("lowpoly-play-catalogue.box"));

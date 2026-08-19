@@ -24,10 +24,10 @@ pub enum XmlValidViewCommand {
 }
 
 impl protocol::OpBinary for XmlValidViewCommand {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         Ok(Vec::new())
     }
-    fn decode_op(_bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    async fn decode_op(_bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         Ok(XmlValidViewCommand::Noop)
     }
 }
@@ -51,15 +51,15 @@ impl ArtifactViewer for XmlValidViewer {
     const DIALECT: Dialect = XML_VALID_VIEWER_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = STDIO_XML_DOCUMENT_SCHEMA;
 
-    fn initial_snapshot() -> XmlSnapshot {
+    async fn initial_snapshot() -> XmlSnapshot {
         XmlSnapshot::default()
     }
 
-    fn handle(_command: &Self::Command, _doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _interaction: &semio_framework_plugin::app::InteractionView<'_>, _engines: &store::EngineHandles) -> Result<ViewEmit<Self::ConfigMutation>, Fault> {
+    async fn handle(_command: &Self::Command, _doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _interaction: &semio_framework_plugin::app::InteractionView<'_>, _engines: &store::EngineHandles) -> Result<ViewEmit<Self::ConfigMutation>, Fault> {
         Ok(ViewEmit::default())
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> UiNode {
+    async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> UiNode {
         match body_key {
             main::BODY_KEY => main::render(doc.snapshot),
             _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))),
@@ -69,7 +69,7 @@ impl ArtifactViewer for XmlValidViewer {
 //#endregion 🔖️Viewer
 
 //#region 🔖️Manifest
-pub fn create_xml_valid_viewer() -> semio_framework_plugin::AppDefinition {
+pub async fn create_xml_valid_viewer() -> semio_framework_plugin::AppDefinition {
     Viewer::builder(XML_VALID_VIEWER_DIALECT)
         .document(["semio", "stdio", "xml"])
         .icon_id("list-tree")
@@ -87,19 +87,19 @@ mod tests {
     use super::*;
 
     #[test]
-    fn create_xml_valid_viewer_builds_a_definition_for_the_viewer_role() {
+    async fn create_xml_valid_viewer_builds_a_definition_for_the_viewer_role() {
         let def = create_xml_valid_viewer();
         assert_eq!(def.role, semio_framework_plugin::AppRole::Viewer);
         assert_eq!(def.dialect, XML_VALID_VIEWER_DIALECT.into());
     }
 
     #[test]
-    fn viewer_dialect_matches_the_artifact_coordinate() {
+    async fn viewer_dialect_matches_the_artifact_coordinate() {
         assert_eq!(<XmlValidViewer as ArtifactViewer>::DIALECT, XML_VALID_VIEWER_DIALECT);
     }
 
     #[test]
-    fn viewer_declares_the_tree_window() {
+    async fn viewer_declares_the_tree_window() {
         let def = create_xml_valid_viewer();
         assert!(def.window_kinds.iter().any(|window| window.id == main::WINDOW_KIND_ID));
     }

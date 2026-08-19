@@ -18,16 +18,16 @@ pub struct CreateComplianceRecord {
 }
 impl MutationKind<ProgramSnapshot, ProgramMutation> for CreateComplianceRecord {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "create", entity: "compliance-record", kind: "create-compliance-record", record: "CreatedComplianceRecord" };
-    fn diff(&self, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
+    async fn diff(&self, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {
+    async fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         format!("Create compliance record \"{}\"", self.compliance_record.header.name)
     }
-    fn target(&self) -> Vec<String> {
+    async fn target(&self) -> Vec<String> {
         vec![self.compliance_record.header.id.0.clone()]
     }
 }

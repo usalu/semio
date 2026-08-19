@@ -3,7 +3,7 @@ use crate::artifacts::puzzle5d::diff::Puzzle5dDiff;
 use crate::artifacts::puzzle5d::{Puzzle5dMeta, Puzzle5dSnapshot};
 
 //#region 🔖️Diff
-pub fn diff(payload: &super::mutation::ChangeDescription, base: &Puzzle5dSnapshot) -> protocol::MutationOutcome<Puzzle5dDiff> {
+pub async fn diff(payload: &super::mutation::ChangeDescription, base: &Puzzle5dSnapshot) -> protocol::MutationOutcome<Puzzle5dDiff> {
     if payload.new_description == base.meta.description {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", "Description is unchanged.");
     }

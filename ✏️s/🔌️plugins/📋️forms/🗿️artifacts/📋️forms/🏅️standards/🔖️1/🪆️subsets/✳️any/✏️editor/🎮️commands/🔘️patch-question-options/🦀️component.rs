@@ -9,7 +9,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
 //#region 🔖️Shell
-fn patch_question_option(spec: &FormsSnapshot, question_id: &str, option_value: &str, field: &str, raw_value: &Value) -> Option<FormMutation> {
+async fn patch_question_option(spec: &FormsSnapshot, question_id: &str, option_value: &str, field: &str, raw_value: &Value) -> Option<FormMutation> {
     update_block_operation(spec, question_id, |question| {
         let mut options = question.options.take().unwrap_or_default();
         if let Some(option) = options.iter_mut().find(|entry| entry.value == option_value) {
@@ -34,7 +34,7 @@ pub struct PatchQuestionOptions {
     pub value_json: String,
 }
 
-pub fn handle(payload: &PatchQuestionOptions, doc: &ArtifactView<'_, FormsSnapshot>, _cfg: &ConfigView<'_, FormsConfig>) -> Result<Emit<FormMutation, FormsConfigMutation>, Fault> {
+pub async fn handle(payload: &PatchQuestionOptions, doc: &ArtifactView<'_, FormsSnapshot>, _cfg: &ConfigView<'_, FormsConfig>) -> Result<Emit<FormMutation, FormsConfigMutation>, Fault> {
     let spec = doc.snapshot;
     let raw_value = parse_value_json(&payload.value_json);
     let operations: Vec<FormMutation> = payload.question_ids.iter().filter_map(|question_id| patch_question_option(spec, question_id, &payload.option_value, &payload.field, &raw_value)).collect();

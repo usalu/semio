@@ -7,5 +7,5 @@ pub const TOUCHED_PATHS: &[&str] = &["document/extensionsRequired"];
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct GltfUnrequireExtensionPayload { pub extension: String }
-pub fn validate(payload: &GltfUnrequireExtensionPayload, base: &GltfSnapshot) -> Result<(), GltfTopLevelMutationRejection> { if !base.document.extensions_required.contains(&payload.extension) { return Err(reject("gltf.mutation.extension-absent", "document/extensionsRequired", "extension is not declared")); }  Ok(()) }
-pub fn apply(payload: &GltfUnrequireExtensionPayload, base: &GltfSnapshot) -> Result<GltfSnapshot, GltfTopLevelMutationRejection> { validate(payload, base)?; let mut next = base.clone(); next.document.extensions_required.retain(|value| value != &payload.extension); Ok(next) }
+pub async fn validate(payload: &GltfUnrequireExtensionPayload, base: &GltfSnapshot) -> Result<(), GltfTopLevelMutationRejection> { if !base.document.extensions_required.contains(&payload.extension) { return Err(reject("gltf.mutation.extension-absent", "document/extensionsRequired", "extension is not declared")); }  Ok(()) }
+pub async fn apply(payload: &GltfUnrequireExtensionPayload, base: &GltfSnapshot) -> Result<GltfSnapshot, GltfTopLevelMutationRejection> { validate(payload, base)?; let mut next = base.clone(); next.document.extensions_required.retain(|value| value != &payload.extension); Ok(next) }

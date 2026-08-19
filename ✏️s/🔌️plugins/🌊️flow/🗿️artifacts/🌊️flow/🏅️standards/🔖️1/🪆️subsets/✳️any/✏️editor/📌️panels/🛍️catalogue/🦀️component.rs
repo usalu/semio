@@ -21,7 +21,7 @@ pub const FLOW_WIDGET_DRAG_MIME: &str = "application/x-flow-widget";
 //#endregion 🔖️Constants
 
 //#region 🔖️WidgetDescriptors
-pub fn flow_widget_descriptor(kind: &str, neuron_kind: Option<&str>) -> Value {
+pub async fn flow_widget_descriptor(kind: &str, neuron_kind: Option<&str>) -> Value {
     if kind == "neuron" {
         json!({ "kind": "neuron", "neuronKind": neuron_kind.unwrap_or(kind) })
     } else {
@@ -31,13 +31,13 @@ pub fn flow_widget_descriptor(kind: &str, neuron_kind: Option<&str>) -> Value {
 
 /// 🪢️ Wraps a widget descriptor into the `{mime: payload}` JSON shape `tree_item_with_action_draggable`
 /// expects for its drag-data map.
-pub fn flow_widget_drag_json(descriptor: &Value) -> Value {
+pub async fn flow_widget_drag_json(descriptor: &Value) -> Value {
     json!({ FLOW_WIDGET_DRAG_MIME: descriptor.to_string() })
 }
 //#endregion 🔖️WidgetDescriptors
 
 //#region 🔖️Definition
-pub fn definition() -> PanelTabDefinition {
+pub async fn definition() -> PanelTabDefinition {
     PanelTabDefinition {
         kind: PanelTabKind::App(FRAMEWORK_PANEL_TAB_CATALOGUE_ID.into()),
         label: LocalizedLabel::native(FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, "Katalog"),
@@ -49,7 +49,7 @@ pub fn definition() -> PanelTabDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(fixture: &FlowSnapshot, config: &FlowConfig, session: &FlowEvalSession, labels: &FlowPlayLabels) -> UiNode {
+pub async fn render(fixture: &FlowSnapshot, config: &FlowConfig, session: &FlowEvalSession, labels: &FlowPlayLabels) -> UiNode {
     let host = host_from_snapshot(fixture, config, session);
     let sections: Vec<Value> = host.catalogue_json().ok().and_then(|raw| serde_json::from_str(&raw).ok()).unwrap_or_default();
     let tree_sections: Vec<UiTreeSectionNode> = sections
@@ -85,7 +85,7 @@ pub fn render(fixture: &FlowSnapshot, config: &FlowConfig, session: &FlowEvalSes
 }
 
 /// 🧩️ Installed/enabled extension palette plus actions surfaced by active extensions.
-fn flow_extensions_tree_sections(config: &FlowConfig, labels: &FlowPlayLabels) -> Vec<UiTreeSectionNode> {
+async fn flow_extensions_tree_sections(config: &FlowConfig, labels: &FlowPlayLabels) -> Vec<UiTreeSectionNode> {
     let extension_enabled = config.automation_enabled();
     let installed: Vec<UiTreeItemNode> = FLOW_AUTOMATIONS
         .iter()
@@ -114,7 +114,7 @@ fn flow_extensions_tree_sections(config: &FlowConfig, labels: &FlowPlayLabels) -
 }
 
 /// 🛟️ Used when the host catalogue is empty (a fresh/offline session) — a minimal hand-authored palette.
-fn catalogue_tree_sections_fallback(labels: &FlowPlayLabels) -> Vec<UiTreeSectionNode> {
+async fn catalogue_tree_sections_fallback(labels: &FlowPlayLabels) -> Vec<UiTreeSectionNode> {
     let sources = [("inputSlider", labels.catalogue_slider), ("inputNote", labels.catalogue_note)];
     let components = [("math.add", labels.catalogue_add), ("logic.and", labels.catalogue_and), ("text.concat", labels.catalogue_concat)];
     let sinks = [("outputPreview", labels.catalogue_preview), ("outputExport", labels.catalogue_export)];
@@ -169,14 +169,14 @@ mod tests {
     use crate::editor::flow::testkit::{flow_app, render as render_body};
 
     #[test]
-    fn flow_widget_drag_json_wraps_descriptor_under_drag_mime() {
+    async fn flow_widget_drag_json_wraps_descriptor_under_drag_mime() {
         let descriptor = flow_widget_descriptor("neuron", Some("math.add"));
         let drag = flow_widget_drag_json(&descriptor);
         assert!(drag.get(FLOW_WIDGET_DRAG_MIME).is_some());
     }
 
     #[test]
-    fn catalogue_lists_module_operators() {
+    async fn catalogue_lists_module_operators() {
         let mut app = flow_app();
         let json = render_body(&mut app, FLOW_PLAY_BODY_CATALOGUE);
         assert!(json.contains("flow-play-catalogue.math"), "expected math module section: {json}");
@@ -184,7 +184,7 @@ mod tests {
     }
 
     #[test]
-    fn catalogue_items_export_flow_widget_drag_payload() {
+    async fn catalogue_items_export_flow_widget_drag_payload() {
         let mut app = flow_app();
         let json = render_body(&mut app, FLOW_PLAY_BODY_CATALOGUE);
         assert!(json.contains(FLOW_WIDGET_DRAG_MIME), "missing drag mime: {json}");
@@ -192,7 +192,7 @@ mod tests {
     }
 
     #[test]
-    fn every_built_in_extension_is_listed_in_the_installed_section() {
+    async fn every_built_in_extension_is_listed_in_the_installed_section() {
         let mut app = flow_app();
         let json = render_body(&mut app, FLOW_PLAY_BODY_CATALOGUE);
         for (id, ..) in FLOW_AUTOMATIONS {

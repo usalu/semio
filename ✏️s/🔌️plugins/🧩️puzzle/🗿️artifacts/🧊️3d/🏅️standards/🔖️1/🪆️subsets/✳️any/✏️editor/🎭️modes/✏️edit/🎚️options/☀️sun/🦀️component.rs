@@ -7,6 +7,6 @@ use crate::editor::puzzle3d::puzzle3d_action;
 use semio_framework_plugin::{world3d_sun_measures, WindowMeasure};
 
 /// 🌞️ The sun toggle plus its azimuth/elevation/intensity sliders.
-pub fn measure(runtime: &Puzzle3dRuntime) -> WindowMeasure {
+pub async fn measure(runtime: &Puzzle3dRuntime) -> WindowMeasure {
     world3d_sun_measures("puzzle3d", &runtime.sun, puzzle3d_action)
 }

@@ -14,21 +14,21 @@ pub const DIALECT: Dialect = crate::artifacts::wires::WIRES_DIALECT;
 //#endregion 🔖️Dialect
 
 //#region 🔖️Examples
-fn examples() -> &'static [ExampleSource] {
+async fn examples() -> &'static [ExampleSource] {
     static EXAMPLES: OnceLock<Vec<ExampleSource>> = OnceLock::new();
     EXAMPLES.get_or_init(|| vec![crate::artifacts::wires::examples::demo::source()]).as_slice()
 }
 //#endregion 🔖️Examples
 
 //#region 🔖️Inferences
-fn inference_descriptors() -> &'static [::schema::ArtifactInferenceDescriptor] {
+async fn inference_descriptors() -> &'static [::schema::ArtifactInferenceDescriptor] {
     static DESCRIPTORS: OnceLock<Vec<::schema::ArtifactInferenceDescriptor>> = OnceLock::new();
     DESCRIPTORS.get_or_init(|| vec![schema::inferences::wires_artifact_inference_descriptor()]).as_slice()
 }
 //#endregion 🔖️Inferences
 
 //#region 🔖️Subset
-pub fn subset() -> SubsetDeclaration {
+pub async fn subset() -> SubsetDeclaration {
     SubsetDeclaration {
         dialect: DIALECT,
         schema: SchemaDeclaration { descriptor: schema::wires_artifact_schema_descriptor(), inferences: inference_descriptors(), inference_services: Vec::new() },

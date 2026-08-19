@@ -29,7 +29,7 @@ pub struct GltfSymmetryIndicators {
     pub modularity_ratio: GltfMeasure<f64>,
 }
 
-fn symmetry_score(points: &[[f64; 3]], centroid: [f64; 3], axis: [f64; 3], scale: f64, rotation: bool, budget: usize) -> f64 {
+async fn symmetry_score(points: &[[f64; 3]], centroid: [f64; 3], axis: [f64; 3], scale: f64, rotation: bool, budget: usize) -> f64 {
     if points.is_empty() || scale <= 1e-15 {
         return 1.0;
     }
@@ -67,7 +67,7 @@ pub(crate) struct GltfSymmetryRaw {
     pub(crate) rotations: Vec<GltfDirectionScore>,
 }
 
-pub(crate) fn raw(context: &GltfGeometryContext<'_>) -> GltfSymmetryRaw {
+pub(crate) async fn raw(context: &GltfGeometryContext<'_>) -> GltfSymmetryRaw {
     let score = |axis: GltfVec3, rotation| symmetry_score(&context.points, context.centroid, axis.array(), context.diagonal, rotation, context.policy.sampling_budget as usize);
     let axes = &context.principal_frame.axes;
     GltfSymmetryRaw {
@@ -78,7 +78,7 @@ pub(crate) fn raw(context: &GltfGeometryContext<'_>) -> GltfSymmetryRaw {
     }
 }
 
-pub(crate) fn assembly_ratios(parts: &[GltfPartInference], policy: &GltfAnalysisPolicy) -> Option<(f64, f64)> {
+pub(crate) async fn assembly_ratios(parts: &[GltfPartInference], policy: &GltfAnalysisPolicy) -> Option<(f64, f64)> {
     if parts.is_empty() {
         return None;
     }
@@ -107,7 +107,7 @@ pub(crate) fn assembly_ratios(parts: &[GltfPartInference], policy: &GltfAnalysis
 }
 
 impl GltfSymmetryInference {
-    pub(crate) fn infer_assembly(indicators: &mut GltfSymmetryIndicators, parts: &[GltfPartInference], policy: &GltfAnalysisPolicy, topology: Topology) {
+    pub(crate) async fn infer_assembly(indicators: &mut GltfSymmetryIndicators, parts: &[GltfPartInference], policy: &GltfAnalysisPolicy, topology: Topology) {
         if let Some(measure) = repetition_ratio::from_assembly(parts, policy, topology) {
             indicators.repetition_ratio = measure;
         }
@@ -120,7 +120,7 @@ impl GltfSymmetryInference {
 impl GltfInferenceStage<GltfGeometryContext<'_>> for GltfSymmetryInference {
     type Output = GltfSymmetryIndicators;
 
-    fn infer(context: &GltfGeometryContext<'_>) -> Self::Output {
+    async fn infer(context: &GltfGeometryContext<'_>) -> Self::Output {
         let raw = raw(context);
         Self::Output {
             reflection_symmetry_score: reflection_symmetry_score::from_raw(context, &raw),
@@ -132,7 +132,7 @@ impl GltfInferenceStage<GltfGeometryContext<'_>> for GltfSymmetryInference {
         }
     }
 
-    fn unavailable(diagnostic_ids: &[String]) -> Self::Output {
+    async fn unavailable(diagnostic_ids: &[String]) -> Self::Output {
         Self::Output {
             reflection_symmetry_score: reflection_symmetry_score::unavailable_measure(diagnostic_ids),
             rotational_symmetry_score: rotational_symmetry_score::unavailable_measure(diagnostic_ids),

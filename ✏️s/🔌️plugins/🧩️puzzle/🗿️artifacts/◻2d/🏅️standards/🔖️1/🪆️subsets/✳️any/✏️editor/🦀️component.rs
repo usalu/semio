@@ -69,7 +69,7 @@ const BOARD_DEFAULT_HEIGHT: u32 = 768;
 /// play app's own document must never carry a `"camera"` key (see `setCamera`'s `ActionKind::View`):
 /// leaving it in would permanently trip `puzzle2d_document_delta_operations`'s known-keys guard on
 /// every subsequent action.
-fn parse_example_dsl_without_camera(dsl_text: &str, label: &str) -> String {
+async fn parse_example_dsl_without_camera(dsl_text: &str, label: &str) -> String {
     let projection = <Puzzle2dSnapshot as store::ArtifactDsl>::parse_dsl(dsl_text).unwrap_or_else(|error| panic!("{label} example fixture parses as dsl: {error}"));
     let mut value = serde_json::to_value(&projection).unwrap_or_else(|error| panic!("serialize {label} example fixture: {error}"));
     if let Some(object) = value.as_object_mut() {
@@ -78,8 +78,8 @@ fn parse_example_dsl_without_camera(dsl_text: &str, label: &str) -> String {
     serde_json::to_string(&value).unwrap_or_else(|error| panic!("re-serialize {label} example fixture: {error}"))
 }
 
-pub fn concrete_forest_example_json() -> String { parse_example_dsl_without_camera(crate::examples::puzzle2d::concrete_forest::DSL_TEXT, "concrete-forest") }
-pub fn nakagin_example_json() -> String { parse_example_dsl_without_camera(crate::examples::puzzle2d::nakagin_capsule_tower::DSL_TEXT, "nakagin") }
+pub async fn concrete_forest_example_json() -> String { parse_example_dsl_without_camera(crate::examples::puzzle2d::concrete_forest::DSL_TEXT, "concrete-forest") }
+pub async fn nakagin_example_json() -> String { parse_example_dsl_without_camera(crate::examples::puzzle2d::nakagin_capsule_tower::DSL_TEXT, "nakagin") }
 //#endregion 🔖️Constants
 
 //#region 🔖️Scene
@@ -95,7 +95,7 @@ pub struct Puzzle2dScene {
     pub active_utility: String,
 }
 
-pub fn default_empty_fixture() -> Value {
+pub async fn default_empty_fixture() -> Value {
     json!({
         "schema": PUZZLE2D_FIXTURE_SCHEMA,
         "nodes": [],
@@ -103,14 +103,14 @@ pub fn default_empty_fixture() -> Value {
     })
 }
 
-pub fn puzzle2d_action(action: &str, args: Option<Value>) -> ActionDescriptor {
+pub async fn puzzle2d_action(action: &str, args: Option<Value>) -> ActionDescriptor {
     semio_framework_plugin::ActionFactory::new(PUZZLE2D_PLAY_CONTROLLER_ID).action(action, args)
 }
 
 /// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: builds a framework `interactionSelect`
 /// action targeting one `(granularity, id)` pair in the `vortex` domain — replaces the deleted
 /// `setSelection` action builders.
-pub fn puzzle2d_interaction_select(granularity: &str, id: &str) -> ActionDescriptor {
+pub async fn puzzle2d_interaction_select(granularity: &str, id: &str) -> ActionDescriptor {
     let targets = serde_json::to_string(&vec![InteractionTarget { granularity: granularity.into(), id: id.into() }]).unwrap_or_default();
     puzzle2d_action(INTERACTION_SELECT_ACTION_ID, Some(json!({ "domainId": PUZZLE2D_INTERACTION_DOMAIN, "targets": targets, "merge": "replace", "method": "pick" })))
 }
@@ -118,7 +118,7 @@ pub fn puzzle2d_interaction_select(granularity: &str, id: &str) -> ActionDescrip
 /// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: the `vortex` domain declaration —
 /// the deleted `Puzzle2dConfig::selected_ids` flat bag collapses into one framework-owned domain,
 /// `Flat` hierarchy (no parent/child structure was ever modeled for it).
-fn puzzle2d_interaction_definition() -> InteractionDefinition {
+async fn puzzle2d_interaction_definition() -> InteractionDefinition {
     InteractionDefinition {
         id: PUZZLE2D_INTERACTION_DOMAIN.into(),
         label: LocalizedLabel::native("Vortex", "Vortex"),
@@ -140,13 +140,13 @@ fn puzzle2d_interaction_definition() -> InteractionDefinition {
 /// ONE kind), and `Puzzle2dConfig` carries no field that ever differs between two instances of the
 /// SAME pane kind, so a self-maintained multi-instance registry would only ever produce
 /// byte-identical duplicate entries here. Always exactly one instance, keyed by the pane kind id.
-fn window_instance_ids(pane: &str) -> Vec<String> {
+async fn window_instance_ids(pane: &str) -> Vec<String> {
     vec![pane.to_string()]
 }
 
 /// 🧰️ B1: the host-owned active utility for `window_id`'s pane, now real VCS'd config — see
 /// `🎮️commands/🧰️set-active-utility`, the only writer.
-pub fn puzzle2d_active_utility(config: &Puzzle2dConfig, window_id: Option<&str>) -> String {
+pub async fn puzzle2d_active_utility(config: &Puzzle2dConfig, window_id: Option<&str>) -> String {
     if let Some(wid) = window_id {
         if let Some(utility) = config.active_utility_by_window_id.get(wid) {
             return utility.clone();
@@ -157,7 +157,7 @@ pub fn puzzle2d_active_utility(config: &Puzzle2dConfig, window_id: Option<&str>)
 
 /// 🎯️ `semio_framework_plugin::selection_ids`'s "ids" array plus a singular "id" fallback —
 /// this app's actions accept either shape depending on the caller.
-pub fn selection_ids(args: Option<&Value>) -> Vec<String> {
+pub async fn selection_ids(args: Option<&Value>) -> Vec<String> {
     let ids = semio_framework_plugin::selection_ids(args);
     if !ids.is_empty() {
         return ids;
@@ -166,25 +166,25 @@ pub fn selection_ids(args: Option<&Value>) -> Vec<String> {
 }
 
 /// 🎥️ The camera lives on `Puzzle2dConfig` — session-only view state, never a fixture field.
-pub fn runtime_camera(runtime: &Puzzle2dPlayRuntime) -> (f64, f64, f64) {
+pub async fn runtime_camera(runtime: &Puzzle2dPlayRuntime) -> (f64, f64, f64) {
     (runtime.camera_x, runtime.camera_y, runtime.camera_zoom)
 }
 
-pub fn fixture_nodes(fixture: &Value) -> &[Value] {
+pub async fn fixture_nodes(fixture: &Value) -> &[Value] {
     fixture.get("nodes").and_then(|value| value.as_array()).map_or(&[][..], |values| values.as_slice())
 }
 
-pub fn fixture_edges(fixture: &Value) -> &[Value] {
+pub async fn fixture_edges(fixture: &Value) -> &[Value] {
     fixture.get("edges").and_then(|value| value.as_array()).map_or(&[][..], |values| values.as_slice())
 }
 
-pub fn kind_catalog_entries<'a>(fixture: &'a Value, key: &str) -> Option<&'a [Value]> {
+pub async fn kind_catalog_entries<'a>(fixture: &'a Value, key: &str) -> Option<&'a [Value]> {
     fixture.get("meta").and_then(|value| value.get("kindCatalogs")).and_then(|value| value.get(key)).and_then(|value| value.as_array()).map(|values| values.as_slice())
 }
 
 /// 🗂️ The kind ids present in the document itself, used whenever the fixture carries no explicit
 /// `meta.kindCatalogs` slice.
-pub fn inferred_kind_entries(fixture: &Value, field: &str) -> Vec<Value> {
+pub async fn inferred_kind_entries(fixture: &Value, field: &str) -> Vec<Value> {
     let mut ids = BTreeSet::new();
     match field {
         "nodes" => {
@@ -217,26 +217,26 @@ pub fn inferred_kind_entries(fixture: &Value, field: &str) -> Vec<Value> {
     ids.into_iter().map(|id| json!({ "id": id, "name": id })).collect()
 }
 
-pub fn puzzle2d_kind_ids(fixture: &Value, field: &str) -> Vec<String> {
+pub async fn puzzle2d_kind_ids(fixture: &Value, field: &str) -> Vec<String> {
     let inferred = inferred_kind_entries(fixture, field);
     let entries = kind_catalog_entries(fixture, field).unwrap_or(inferred.as_slice());
     entries.iter().filter_map(|entry| entry.get("id").and_then(|value| value.as_str()).map(str::to_string)).collect()
 }
 
-fn new_node_id(prefix: &str) -> String {
+async fn new_node_id(prefix: &str) -> String {
     use std::sync::atomic::{AtomicU64, Ordering};
     static NEXT: AtomicU64 = AtomicU64::new(1);
     format!("{prefix}-{}", NEXT.fetch_add(1, Ordering::Relaxed))
 }
 
-pub fn puzzle_extension_id() -> &'static str {
+pub async fn puzzle_extension_id() -> &'static str {
     let _extension = Puzzle2dExtension;
     "puzzle.2d"
 }
 //#endregion 🔖️Scene
 
 //#region 🔖️FixtureEdits
-pub fn add_node_to_fixture(fixture: &mut Value, kind: Option<&str>, args: Option<&Value>) {
+pub async fn add_node_to_fixture(fixture: &mut Value, kind: Option<&str>, args: Option<&Value>) {
     let Some(obj) = fixture.as_object_mut() else {
         return;
     };
@@ -271,7 +271,7 @@ pub fn add_node_to_fixture(fixture: &mut Value, kind: Option<&str>, args: Option
     nodes.push(node);
 }
 
-pub fn delete_selection_from_fixture(fixture: &mut Value, selected: &[String]) {
+pub async fn delete_selection_from_fixture(fixture: &mut Value, selected: &[String]) {
     if selected.is_empty() {
         return;
     }
@@ -307,7 +307,7 @@ pub fn delete_selection_from_fixture(fixture: &mut Value, selected: &[String]) {
 }
 
 /// 🙈️ Patches `hidden`/`locked` onto every selected node, handle, and edge in the fixture.
-pub fn apply_selection_flag(fixture: &mut Value, selected: &[String], flag: &str, value: bool) {
+pub async fn apply_selection_flag(fixture: &mut Value, selected: &[String], flag: &str, value: bool) {
     if selected.is_empty() {
         return;
     }
@@ -346,7 +346,7 @@ pub fn apply_selection_flag(fixture: &mut Value, selected: &[String], flag: &str
 }
 
 /// 📋️ Clones every selected node (+24/+24 offset, fresh node+handle ids) and any edge whose both endpoints were cloned; returns the new node ids.
-pub fn duplicate_selection_in_fixture(fixture: &mut Value, selected: &[String]) -> Vec<String> {
+pub async fn duplicate_selection_in_fixture(fixture: &mut Value, selected: &[String]) -> Vec<String> {
     if selected.is_empty() {
         return Vec::new();
     }
@@ -416,7 +416,7 @@ pub fn duplicate_selection_in_fixture(fixture: &mut Value, selected: &[String]) 
 }
 
 /// 🎯️ Every node/handle id sharing a `nodeKind`/`handleKind` with anything currently selected.
-pub fn select_same_kind_ids(fixture: &Value, selected: &[String]) -> Vec<String> {
+pub async fn select_same_kind_ids(fixture: &Value, selected: &[String]) -> Vec<String> {
     let selected_set: HashSet<&str> = selected.iter().map(String::as_str).collect();
     let mut node_kinds: HashSet<&str> = HashSet::new();
     let mut handle_kinds: HashSet<&str> = HashSet::new();
@@ -453,7 +453,7 @@ pub fn select_same_kind_ids(fixture: &Value, selected: &[String]) -> Vec<String>
 }
 
 /// 🎥️ Writes an `{ x, y, zoom }` camera payload into the config — session-only view state, never the fixture.
-pub fn set_runtime_camera(runtime: &mut Puzzle2dPlayRuntime, camera: &Value) {
+pub async fn set_runtime_camera(runtime: &mut Puzzle2dPlayRuntime, camera: &Value) {
     if let Some(x) = camera.get("x").and_then(Value::as_f64) {
         runtime.camera_x = x;
     }
@@ -468,7 +468,7 @@ pub fn set_runtime_camera(runtime: &mut Puzzle2dPlayRuntime, camera: &Value) {
 /** @emoji 📐️ Patches `field` on every selected node: an absolute `value` sets it directly on all
  * of them, otherwise a numeric `delta` is added to each node's own current `field` value —
  * offset-preserving across a multi-select where nodes start at different positions. */
-pub fn patch_inspector_nodes(fixture: &mut Value, ids: &[String], field: &str, value: Option<&Value>, delta: Option<&Value>) {
+pub async fn patch_inspector_nodes(fixture: &mut Value, ids: &[String], field: &str, value: Option<&Value>, delta: Option<&Value>) {
     if let Some(nodes) = fixture.get_mut("nodes").and_then(|entry| entry.as_array_mut()) {
         for node in nodes {
             let Some(id) = node.get("id").and_then(|entry| entry.as_str()).map(str::to_string) else {
@@ -493,7 +493,7 @@ pub fn patch_inspector_nodes(fixture: &mut Value, ids: &[String], field: &str, v
 }
 
 /// 🎲️ Re-mints a node id when it collides with an existing one — client-side brush serials restart every session.
-fn unique_node_id(fixture: &Value, candidate: String) -> String {
+async fn unique_node_id(fixture: &Value, candidate: String) -> String {
     if fixture_nodes(fixture).iter().any(|node| node.get("id").and_then(|value| value.as_str()) == Some(candidate.as_str())) {
         new_node_id("node")
     } else {
@@ -501,7 +501,7 @@ fn unique_node_id(fixture: &Value, candidate: String) -> String {
     }
 }
 
-fn unique_edge_id(fixture: &Value, candidate: String) -> String {
+async fn unique_edge_id(fixture: &Value, candidate: String) -> String {
     if fixture_edges(fixture).iter().any(|edge| edge.get("id").and_then(|value| value.as_str()) == Some(candidate.as_str())) {
         new_node_id("edge")
     } else {
@@ -510,7 +510,7 @@ fn unique_edge_id(fixture: &Value, candidate: String) -> String {
 }
 
 /// 🖌️ Splices one brush placement (a node, plus the edge back to its source handle) into the fixture.
-pub fn apply_brush_place_payload(fixture: &mut Value, payload: &Value) {
+pub async fn apply_brush_place_payload(fixture: &mut Value, payload: &Value) {
     let node_id = unique_node_id(fixture, payload.get("nodeId").and_then(|value| value.as_str()).map_or_else(|| new_node_id("node"), str::to_string));
     let edge_id = unique_edge_id(fixture, payload.get("edgeId").and_then(|value| value.as_str()).map_or_else(|| new_node_id("edge"), str::to_string));
     let node_kind = payload.get("nodeKind").and_then(|value| value.as_str()).unwrap_or("node");
@@ -556,7 +556,7 @@ pub fn apply_brush_place_payload(fixture: &mut Value, payload: &Value) {
 /// 🧱️ The expensive half of syncing `host` from `envelope`: a full `clear_scene()` + rebuild of
 /// every node/handle/edge plus the kind-catalog/kind-compat re-push. Only needed when the fixture
 /// content actually changed — gated by `last_synced_fixture` in `handle`.
-fn sync_host_fixture_content(host: &mut BoardHost, envelope: &Puzzle2dScene) {
+async fn sync_host_fixture_content(host: &mut BoardHost, envelope: &Puzzle2dScene) {
     let _ = host.parse_fixture_v1(&envelope.fixture);
     if let Some(catalogs) = envelope.fixture.get("meta").and_then(|value| value.get("kindCatalogs")) {
         if let Ok(json) = serde_json::to_string(catalogs) {
@@ -573,7 +573,7 @@ fn sync_host_fixture_content(host: &mut BoardHost, envelope: &Puzzle2dScene) {
 /// 🪶️ The cheap half of syncing `host` from `envelope`: plain setters mirroring ephemeral view state
 /// (selection/utility/grid/LOD/…) — must run on every action regardless of whether the fixture
 /// content changed, since this state itself changes every action.
-fn sync_host_runtime_state(host: &mut BoardHost, envelope: &Puzzle2dScene, selected_ids: &[String]) {
+async fn sync_host_runtime_state(host: &mut BoardHost, envelope: &Puzzle2dScene, selected_ids: &[String]) {
     host.set_size(BOARD_DEFAULT_WIDTH, BOARD_DEFAULT_HEIGHT, 1.0);
     host.set_selection_ids(selected_ids);
     host.set_active_utility(&envelope.active_utility);
@@ -599,7 +599,7 @@ fn sync_host_runtime_state(host: &mut BoardHost, envelope: &Puzzle2dScene, selec
     host.set_selection_options("rectangle", "replace", true, true, true);
 }
 
-fn sync_host_from_envelope(host: &mut BoardHost, envelope: &Puzzle2dScene) {
+async fn sync_host_from_envelope(host: &mut BoardHost, envelope: &Puzzle2dScene) {
     sync_host_fixture_content(host, envelope);
     sync_host_runtime_state(host, envelope, &[]);
 }
@@ -611,7 +611,7 @@ fn sync_host_from_envelope(host: &mut BoardHost, envelope: &Puzzle2dScene) {
 /// this no longer reconciles anything selection-shaped. Camera is deliberately NOT mirrored here:
 /// every action that moves the camera already writes the config's camera fields directly — re-deriving
 /// it from `host.camera` here used to blindly overwrite that write with the *pre-action* host camera.
-pub fn apply_host_events(host: &mut BoardHost, envelope: &mut Puzzle2dScene) {
+pub async fn apply_host_events(host: &mut BoardHost, envelope: &mut Puzzle2dScene) {
     let events_raw = host.drain_events_json();
     apply_board_events::apply_board_events_from_json(&events_raw, envelope);
 }
@@ -620,25 +620,25 @@ pub fn apply_host_events(host: &mut BoardHost, envelope: &mut Puzzle2dScene) {
 //#region 🔖️UiScopes
 /// 🐢️ Narrow `UiDirtyScope` shared by pure view/selection/camera actions that only touch the 3
 /// canvas panes (never a panel or engagement/measure/utility refresh).
-pub fn puzzle2d_window_only_scope() -> UiDirtyScope {
+pub async fn puzzle2d_window_only_scope() -> UiDirtyScope {
     UiDirtyScope::Partial { window_bodies: apply_board_events::PUZZLE2D_WINDOW_BODY_KEYS.iter().map(|body_key| body_key.to_string()).collect(), panel_bodies: Vec::new(), utilities: false, tools: false, engagements: false, measures: false, labels: false }
 }
 
 /// 🐢️ Narrow `UiDirtyScope` for actions that additionally change the engagement bar (active utility,
 /// brush weights, LOD/grid settings, engagement text input) but never touch document content.
-pub fn puzzle2d_window_and_engagements_scope() -> UiDirtyScope {
+pub async fn puzzle2d_window_and_engagements_scope() -> UiDirtyScope {
     UiDirtyScope::Partial { window_bodies: apply_board_events::PUZZLE2D_WINDOW_BODY_KEYS.iter().map(|body_key| body_key.to_string()).collect(), panel_bodies: Vec::new(), utilities: false, tools: false, engagements: true, measures: false, labels: false }
 }
 
 /// 🐢️ Narrow `UiDirtyScope` for settings surfaced in the measures sidebar (LOD mode, grid, brush
 /// weights, suggestion offset) but that never touch document content or the engagement bar.
-pub fn puzzle2d_window_and_measures_scope() -> UiDirtyScope {
+pub async fn puzzle2d_window_and_measures_scope() -> UiDirtyScope {
     UiDirtyScope::Partial { window_bodies: apply_board_events::PUZZLE2D_WINDOW_BODY_KEYS.iter().map(|body_key| body_key.to_string()).collect(), panel_bodies: Vec::new(), utilities: false, tools: false, engagements: false, measures: true, labels: false }
 }
 
 /// 🐢️ Narrow `UiDirtyScope` for a runtime-only selection change: the 3 canvas panes plus the
 /// layers/properties panels (which highlight the selection) and the engagement bar.
-pub fn puzzle2d_select_scope() -> UiDirtyScope {
+pub async fn puzzle2d_select_scope() -> UiDirtyScope {
     UiDirtyScope::Partial {
         window_bodies: apply_board_events::PUZZLE2D_WINDOW_BODY_KEYS.iter().map(|body_key| body_key.to_string()).collect(),
         panel_bodies: vec![document::PUZZLE2D_PLAY_BODY_LAYERS.to_string(), inspection::PUZZLE2D_PLAY_BODY_PROPERTIES.to_string()],
@@ -675,19 +675,19 @@ macro_rules! puzzle2d_command_variants {
             /// 🏷️ The action id this variant was declared under — used both for `command_id()`
             /// (command-log labeling / registry kind-discipline) and to reconstruct the exact
             /// `action: &str` `handle` dispatches on.
-            fn action_id(&self) -> &'static str {
+            async fn action_id(&self) -> &'static str {
                 match self {
                     $(Puzzle2dCommand::$Variant { .. } => $id),*
                 }
             }
 
-            fn window_id(&self) -> Option<&str> {
+            async fn window_id(&self) -> Option<&str> {
                 match self {
                     $(Puzzle2dCommand::$Variant { window_id, .. } => window_id.as_deref()),*
                 }
             }
 
-            fn args(&self) -> Option<&Value> {
+            async fn args(&self) -> Option<&Value> {
                 match self {
                     $(Puzzle2dCommand::$Variant { args, .. } => args.as_ref()),*
                 }
@@ -697,7 +697,7 @@ macro_rules! puzzle2d_command_variants {
             /// the testkit's `dispatch(...)` helper. Panics on an unknown action id (a test bug, not
             /// a runtime path).
             #[cfg(test)]
-            fn from_action(action: &str, args: Option<Value>, window_id: Option<String>) -> Self {
+            async fn from_action(action: &str, args: Option<Value>, window_id: Option<String>) -> Self {
                 match action {
                     $($id => Puzzle2dCommand::$Variant { window_id, args }),*,
                     other => panic!("unknown puzzle2d action id in test: {other}"),
@@ -749,10 +749,10 @@ puzzle2d_command_variants! {
 }
 
 impl protocol::OpBinary for Puzzle2dCommand {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         serde_json::to_vec(self).map_err(|error| protocol::ProtocolError::Pack(store::PackError::Schema(error.to_string())))
     }
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         serde_json::from_slice(bytes).map_err(|error| protocol::ProtocolError::Pack(store::PackError::Schema(error.to_string())))
     }
 }
@@ -779,7 +779,7 @@ pub struct Puzzle2dActionCtx<'a> {
 }
 
 impl<'a> Puzzle2dActionCtx<'a> {
-    pub fn selected_ids(&self) -> Vec<String> {
+    pub async fn selected_ids(&self) -> Vec<String> {
         self.interaction.selection(PUZZLE2D_INTERACTION_DOMAIN).ids.clone()
     }
 }
@@ -792,7 +792,7 @@ impl<'a> Puzzle2dActionCtx<'a> {
 /// destructive tail. `organize_context_menu` (applied automatically at the
 /// `VcsArtifactApp::context_menu` funnel) sorts groups into `RIBBON_PARENT_CATEGORIES` order and
 /// inserts the pre-destructive separator itself, so no manual `.separator()` calls are needed here.
-fn puzzle2d_context_menu_items(registry: &semio_framework_plugin::AppActionRegistry, fixture: &Value, selected: &[String], is_de: bool) -> Vec<semio_framework_plugin::ContextMenuItemSpec> {
+async fn puzzle2d_context_menu_items(registry: &semio_framework_plugin::AppActionRegistry, fixture: &Value, selected: &[String], is_de: bool) -> Vec<semio_framework_plugin::ContextMenuItemSpec> {
     use semio_framework_plugin::{selection_count_phrase, ContextMenuItemSpec, Menu};
     // 🧩️ Bespoke-row helper (dynamic label/icon/args/disabled per selection state — not a plain
     // declared-action lookup) — appended via `Menu::item(...)`, the documented escape hatch.
@@ -867,7 +867,7 @@ fn puzzle2d_context_menu_items(registry: &semio_framework_plugin::AppActionRegis
 pub struct Puzzle2dPlayApp;
 
 impl Puzzle2dPlayApp {
-    fn scene_for(fixture: Value, config: &Puzzle2dConfig, window_id: Option<&str>) -> Puzzle2dScene {
+    async fn scene_for(fixture: Value, config: &Puzzle2dConfig, window_id: Option<&str>) -> Puzzle2dScene {
         let active_utility = puzzle2d_active_utility(config, window_id);
         Puzzle2dScene {
             fixture,
@@ -897,23 +897,23 @@ impl ArtifactEditor for Puzzle2dPlayApp {
     /// puzzle's plugin root used to reach `.setup()` for — `register_document_app`/`document_app`
     /// now call this automatically the moment `Puzzle2dPlayApp` is bound to a plugin, exactly like
     /// `🗒️note`'s own `app_schema` override.
-    fn app_schema() -> Option<artifact_schema::AppSchemaDescriptor> {
+    async fn app_schema() -> Option<artifact_schema::AppSchemaDescriptor> {
         Some(crate::editor::puzzle2d::config::schema::app_schema_descriptor())
     }
 
-    fn initial_snapshot() -> Puzzle2dPlaySnapshot {
+    async fn initial_snapshot() -> Puzzle2dPlaySnapshot {
         Puzzle2dPlaySnapshot(serde_json::to_value(default_empty_fixture()).unwrap_or(Value::Null))
     }
 
     /// 🏷️ Maps each `Puzzle2dCommand` variant back to the action id it was declared under.
-    fn command_id(command: &Puzzle2dCommand) -> &'static str {
+    async fn command_id(command: &Puzzle2dCommand) -> &'static str {
         command.action_id()
     }
 
     /// 🎬️ Dispatch only: sync the board host, delegate to the owning `🎮️commands/*` arm, then replay
     /// the host's own events and turn the mutated scene into the granular operation delta plus a
     /// config snapshot. No behaviour lives in this match.
-    fn handle(command: &Puzzle2dCommand, doc: &ArtifactView<'_, Puzzle2dPlaySnapshot>, cfg: &ConfigView<'_, Puzzle2dConfig>, interaction: &InteractionView<'_>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<Puzzle2dMutation, Puzzle2dConfigMutation, Self::DraftMutation>, Fault> {
+    async fn handle(command: &Puzzle2dCommand, doc: &ArtifactView<'_, Puzzle2dPlaySnapshot>, cfg: &ConfigView<'_, Puzzle2dConfig>, interaction: &InteractionView<'_>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<Puzzle2dMutation, Puzzle2dConfigMutation, Self::DraftMutation>, Fault> {
         let config = cfg.snapshot;
         let (action, args, window_id) = (command.action_id(), command.args(), command.window_id());
         let before = doc.snapshot.0.clone();
@@ -994,7 +994,7 @@ impl ArtifactEditor for Puzzle2dPlayApp {
 
     /// 🔌️ Declares puzzle2d's typed media I/O surface — the implicit document ports plus `kit:in`
     /// (see `import_media` below for why it stays `NotImplemented`) and `design:out`.
-    fn io() -> Option<AppIo> {
+    async fn io() -> Option<AppIo> {
         Some(
             AppIo::from_document("puzzle.2d", MediaType { class: MediaClass::TwoD, form: MediaForm::Design }, ArtifactPresentation { id: "2d.puzzle".into(), name: "2D Puzzle".into(), dimension: "2d".into(), component_kind: "puzzle2d".into() })
                 .with_ports(vec![
@@ -1026,11 +1026,11 @@ impl ArtifactEditor for Puzzle2dPlayApp {
     /// vocabulary — meshes, 3D vortex positions, cable/attraction kinds), unlike puzzle3d's `kit:in`,
     /// which DOES share block3d's object-kind vocabulary. There is no honest mapping to fabricate, so
     /// this always reports `NotImplemented` — no normalization is attempted.
-    fn import_media(_port: &str, _media: &Media, _doc: &ArtifactView<'_, Puzzle2dPlaySnapshot>) -> Result<Emit<Puzzle2dMutation, Puzzle2dConfigMutation, Self::DraftMutation>, MediaError> {
+    async fn import_media(_port: &str, _media: &Media, _doc: &ArtifactView<'_, Puzzle2dPlaySnapshot>) -> Result<Emit<Puzzle2dMutation, Puzzle2dConfigMutation, Self::DraftMutation>, MediaError> {
         Err(MediaError::NotImplemented)
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, Puzzle2dPlaySnapshot>, cfg: &ConfigView<'_, Puzzle2dConfig>) -> UiNode {
+    async fn render(body_key: &str, doc: &ArtifactView<'_, Puzzle2dPlaySnapshot>, cfg: &ConfigView<'_, Puzzle2dConfig>) -> UiNode {
         let config = cfg.snapshot;
         let document_json = doc.snapshot.0.to_string();
         // 🪟️ `body_key` already determines the pane deterministically, so the active utility resolves
@@ -1054,7 +1054,7 @@ impl ArtifactEditor for Puzzle2dPlayApp {
         }
     }
 
-    fn window_engagements(doc: &ArtifactView<'_, Puzzle2dPlaySnapshot>, cfg: &ConfigView<'_, Puzzle2dConfig>) -> HashMap<String, WindowEngagement> {
+    async fn window_engagements(doc: &ArtifactView<'_, Puzzle2dPlaySnapshot>, cfg: &ConfigView<'_, Puzzle2dConfig>) -> HashMap<String, WindowEngagement> {
         let config = cfg.snapshot;
         let labels = puzzle2d_labels(config);
         // 🪟️ One entry per live window INSTANCE of each pane kind — see `window_instance_ids`'s
@@ -1070,7 +1070,7 @@ impl ArtifactEditor for Puzzle2dPlayApp {
             .collect()
     }
 
-    fn window_measures(doc: &ArtifactView<'_, Puzzle2dPlaySnapshot>, cfg: &ConfigView<'_, Puzzle2dConfig>) -> HashMap<String, Vec<WindowMeasure>> {
+    async fn window_measures(doc: &ArtifactView<'_, Puzzle2dPlaySnapshot>, cfg: &ConfigView<'_, Puzzle2dConfig>) -> HashMap<String, Vec<WindowMeasure>> {
         let config = cfg.snapshot;
         let labels = puzzle2d_labels(config);
         PUZZLE2D_PANES
@@ -1089,14 +1089,14 @@ impl ArtifactEditor for Puzzle2dPlayApp {
             .collect()
     }
 
-    fn tool_measures(doc: &ArtifactView<'_, Puzzle2dPlaySnapshot>, cfg: &ConfigView<'_, Puzzle2dConfig>) -> HashMap<String, Vec<WindowMeasure>> {
+    async fn tool_measures(doc: &ArtifactView<'_, Puzzle2dPlaySnapshot>, cfg: &ConfigView<'_, Puzzle2dConfig>) -> HashMap<String, Vec<WindowMeasure>> {
         let config = cfg.snapshot;
         let envelope = Self::scene_for(doc.snapshot.0.clone(), config, None);
         let labels = puzzle2d_labels(config);
         HashMap::from([(fill::TOOL_ID.to_string(), vec![fill::measures(&envelope, labels)])])
     }
 
-    fn context_menu(
+    async fn context_menu(
         request: &semio_framework_plugin::ContextMenuRequest,
         doc: &ArtifactView<'_, Puzzle2dPlaySnapshot>,
         cfg: &ConfigView<'_, Puzzle2dConfig>,
@@ -1113,14 +1113,14 @@ impl ArtifactEditor for Puzzle2dPlayApp {
 //#region 🔖️Manifest
 /// 🛠️ An internal (non-palette) action declaration — the pointer/gesture/inspector/engagement-bound
 /// vocabulary dispatched by the canvas/panels, never surfaced as a standalone command palette entry.
-fn puzzle2d_internal_action(id: &str, label: impl Into<LocalizedLabel>, kind: ActionKind) -> ActionDefinition {
+async fn puzzle2d_internal_action(id: &str, label: impl Into<LocalizedLabel>, kind: ActionKind) -> ActionDefinition {
     ActionDefinition { in_palette: false, ..ActionDefinition::new_catalog(id, label, kind) }
 }
 
 /// 🗺️ Builds the full `LocalizedLabel` matrix for one `Puzzle2dLabels` field — for the static
 /// manifest, which must carry every (terminology, locale) cell up front rather than a single
 /// resolved-at-render-time `LabelText` (see `terminology::puzzle2d_labels`).
-pub fn puzzle2d_localized(field: impl Fn(&Puzzle2dLabels) -> semio_framework_plugin::LabelText) -> LocalizedLabel {
+pub async fn puzzle2d_localized(field: impl Fn(&Puzzle2dLabels) -> semio_framework_plugin::LabelText) -> LocalizedLabel {
     LocalizedLabel::from_fn(|terminology, locale| field(Puzzle2dLabels::labels(locale, terminology)).as_str().to_string())
 }
 
@@ -1129,7 +1129,7 @@ pub fn puzzle2d_localized(field: impl Fn(&Puzzle2dLabels) -> semio_framework_plu
 /// AppDefinition)` only takes the definition, `App.examples` has no seam on this builder). Flagged to
 /// the coordinator, not silently lost; see `📚️examples/🎬️demo-session` for this subset's own example
 /// facet, the likely intended replacement mechanism.
-pub fn create_puzzle2d_app() -> semio_framework_plugin::AppDefinition {
+pub async fn create_puzzle2d_app() -> semio_framework_plugin::AppDefinition {
     let mut host = puzzle_board_host();
     let envelope = Puzzle2dScene { fixture: default_empty_fixture(), runtime: Puzzle2dPlayRuntime::default(), active_utility: select_utility::UTILITY_ID.into() };
     sync_host_from_envelope(&mut host, &envelope);
@@ -1222,7 +1222,7 @@ pub fn create_puzzle2d_app() -> semio_framework_plugin::AppDefinition {
 /// production entry point.
 #[cfg(test)]
 #[allow(clippy::unnecessary_wraps, reason = "the fallible signature matches the historical `semio_framework_os::register_dwg_import_handler` shape this once fed; puzzle-2d simply has no failure mode.")]
-pub(crate) fn puzzle2d_document_json_from_dwg(_drawing: &semio_s_plugin_stdio::artifacts::dwg::DwgDrawing) -> Result<Value, String> {
+pub(crate) async fn puzzle2d_document_json_from_dwg(_drawing: &semio_s_plugin_stdio::artifacts::dwg::DwgDrawing) -> Result<Value, String> {
     Ok(default_empty_fixture())
 }
 
@@ -1269,24 +1269,24 @@ pub(crate) mod testkit {
 
     pub type Puzzle2dApp = VcsArtifactApp<EditorApp<Puzzle2dPlayApp>>;
 
-    pub fn meta(actor: &str) -> ActionMeta {
+    pub async fn meta(actor: &str) -> ActionMeta {
         semio_framework_plugin::testkit::meta(actor)
     }
 
-    pub fn app() -> Puzzle2dApp {
+    pub async fn app() -> Puzzle2dApp {
         semio_framework_plugin::testkit::new_app::<EditorApp<Puzzle2dPlayApp>>()
     }
 
     /// 🧾️ `assert_declared_actions_bridge_to_commands`/`new_app_with_registry` still take a `fn() ->
     /// App` manifest (framework testkit gap, not this packet's to fix — see the sibling `w2-cad-report`
     /// "SDK gaps" §3); `create_puzzle2d_app` now returns `AppDefinition`, so this wraps it.
-    fn puzzle2d_manifest_for_testkit() -> App {
+    async fn puzzle2d_manifest_for_testkit() -> App {
         App { definition: create_puzzle2d_app(), examples: Vec::new() }
     }
 
     /// 🧰️ A registry-backed app so kind discipline (View/Shell actions must emit no operations) and the
     /// utility contract are enforced exactly as in production.
-    pub fn app_with_registry() -> Puzzle2dApp {
+    pub async fn app_with_registry() -> Puzzle2dApp {
         semio_framework_plugin::testkit::new_app_with_registry::<EditorApp<Puzzle2dPlayApp>>(puzzle2d_manifest_for_testkit)
     }
 
@@ -1294,7 +1294,7 @@ pub(crate) mod testkit {
     /// (that method is FRAMEWORK-reserved now — an app's own actions go exclusively through the typed
     /// `Self::Command` channel). Reconstructs the `Puzzle2dCommand` from the same
     /// `(action, args, window_id)` triple every pre-B1 test already passed.
-    pub fn dispatch(app: &mut Puzzle2dApp, action: &str, args: Option<&Value>, window_id: Option<&str>) -> Result<InvocationResult, Fault> {
+    pub async fn dispatch(app: &mut Puzzle2dApp, action: &str, args: Option<&Value>, window_id: Option<&str>) -> Result<InvocationResult, Fault> {
         // 🕰️ Framework-reserved verbs (undo/redo/checkpoint/…/the six interaction verbs) stay on
         // `handle_action` — ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM added
         // interactionSelect/interactionHover/clearSelection/selectAll/setSelectionMode/
@@ -1312,32 +1312,32 @@ pub(crate) mod testkit {
     /// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: dispatches `interactionSelect`
     /// for one `(granularity, id)` pair in the `vortex` domain — the test-side replacement for the
     /// deleted `setSelection` action.
-    pub fn select_id(app: &mut Puzzle2dApp, granularity: &str, id: &str) -> Result<InvocationResult, Fault> {
+    pub async fn select_id(app: &mut Puzzle2dApp, granularity: &str, id: &str) -> Result<InvocationResult, Fault> {
         let targets = serde_json::to_string(&vec![InteractionTarget { granularity: granularity.into(), id: id.into() }]).unwrap_or_default();
         dispatch(app, "interactionSelect", Some(&json!({ "domainId": PUZZLE2D_INTERACTION_DOMAIN, "targets": targets, "merge": "replace", "method": "pick" })), None)
     }
 
-    pub fn concrete_forest_app() -> Puzzle2dApp {
+    pub async fn concrete_forest_app() -> Puzzle2dApp {
         let mut app = app();
         dispatch(&mut app, "setActiveExample", Some(&json!({ "exampleId": PUZZLE2D_PLAY_EXAMPLE_CONCRETE_FOREST_ID })), None).expect("load concrete forest");
         app
     }
 
     /// 🖼️ The rendered body, serialized — every panel/window assertion greps this string.
-    pub fn render_body(app: &mut Puzzle2dApp, body_key: &str) -> String {
+    pub async fn render_body(app: &mut Puzzle2dApp, body_key: &str) -> String {
         serde_json::to_string(&app.render(body_key, None, &ViewModel::default()).expect("render")).expect("serialize rendered node")
     }
 
     /// 🧾️ A standalone `Puzzle2dScene` for the measure/engagement builders that take one directly.
-    pub fn scene(fixture: Value, runtime: Puzzle2dPlayRuntime, active_utility: &str) -> Puzzle2dScene {
+    pub async fn scene(fixture: Value, runtime: Puzzle2dPlayRuntime, active_utility: &str) -> Puzzle2dScene {
         Puzzle2dScene { fixture, runtime, active_utility: active_utility.into() }
     }
 
-    pub fn fixture_of(app: &Puzzle2dApp) -> Value {
+    pub async fn fixture_of(app: &Puzzle2dApp) -> Value {
         app.snapshot().expect("projection").0
     }
 
-    pub fn first_node_id(app: &Puzzle2dApp) -> String {
+    pub async fn first_node_id(app: &Puzzle2dApp) -> String {
         fixture_nodes(&fixture_of(app))[0].get("id").and_then(|value| value.as_str()).expect("node id").to_string()
     }
 }
@@ -1354,8 +1354,8 @@ mod tests {
     /// 🎥️ Recovers the rendered pane camera `(x, y, zoom)` from a rendered `UiNode`'s embedded
     /// `Board2dScene.cameraJson` — the only externally observable surface for the runtime camera
     /// (the camera is never a document field, so it cannot be read back off `app.snapshot()`).
-    fn rendered_camera(rendered: &str) -> (f64, f64, f64) {
-        fn find_camera_json(value: &Value) -> Option<String> {
+    async fn rendered_camera(rendered: &str) -> (f64, f64, f64) {
+        async fn find_camera_json(value: &Value) -> Option<String> {
             if let Some(json) = value.get("cameraJson").and_then(Value::as_str) {
                 return Some(json.to_string());
             }
@@ -1373,7 +1373,7 @@ mod tests {
 
     //#region 🔖️Operations
     #[test]
-    fn add_node_action_emits_upsert_op_and_appends_node() {
+    async fn add_node_action_emits_upsert_op_and_appends_node() {
         let mut app = app();
         let result = dispatch(&mut app, "addNode", Some(&json!({ "kind": "node" })), None).expect("add node");
         assert_eq!(result.mutations.len(), 1, "addNode must emit exactly one granular operation");
@@ -1381,7 +1381,7 @@ mod tests {
     }
 
     #[test]
-    fn set_active_example_loads_concrete_forest_via_operations() {
+    async fn set_active_example_loads_concrete_forest_via_operations() {
         let mut app = app();
         dispatch(&mut app, "setActiveExample", Some(&json!({ "exampleId": PUZZLE2D_PLAY_EXAMPLE_CONCRETE_FOREST_ID })), None).expect("load example");
         assert!(!fixture_nodes(&fixture_of(&app)).is_empty());
@@ -1391,13 +1391,13 @@ mod tests {
     /// RecordValue)` pair its `parse_dsl`/`print_dsl` do (both delegate to the underlying
     /// `serde_json::Value` bridge impls).
     #[test]
-    fn puzzle2d_play_projection_pack_round_trips() {
+    async fn puzzle2d_play_projection_pack_round_trips() {
         let app = concrete_forest_app();
         semio_framework_os_kernel::os_store::test_support::assert_dsl_pack_equivalence(&app.snapshot().expect("projection"));
     }
 
     #[test]
-    fn select_then_delete_selection_removes_the_node() {
+    async fn select_then_delete_selection_removes_the_node() {
         let mut app = app_with_registry();
         dispatch(&mut app, "addNode", Some(&json!({ "kind": "node" })), None).expect("add node");
         let node_id = first_node_id(&app);
@@ -1407,7 +1407,7 @@ mod tests {
     }
 
     #[test]
-    fn undo_redo_round_trip_through_the_wrapper() {
+    async fn undo_redo_round_trip_through_the_wrapper() {
         let mut app = app();
         dispatch(&mut app, "addNode", Some(&json!({ "kind": "node" })), None).expect("add");
         assert_eq!(fixture_nodes(&fixture_of(&app)).len(), 1);
@@ -1425,7 +1425,7 @@ mod tests {
     /// — since `Puzzle2dMutation`'s canonical `Mutation<Puzzle2dSnapshot>` impl (not its
     /// `Mutation<Value>` bridge impl) is what the CW7 law is about.
     #[test]
-    fn command_envelope_round_trip_holds_for_an_applied_operation() {
+    async fn command_envelope_round_trip_holds_for_an_applied_operation() {
         use crate::artifacts::puzzle2d::spr::Puzzle2dStore;
         use crate::artifacts::puzzle2d::{Puzzle2dNode, PUZZLE_2D_SCHEMA};
         use protocol::{ArtifactId, Edit, SchemaId};
@@ -1443,7 +1443,7 @@ mod tests {
     /// 🎥️ `setCamera` is session-only view state: a camera drag never creates a VCS edit, so there is
     /// nothing to coalesce and nothing for `undo` to revert.
     #[test]
-    fn set_camera_is_session_only_and_never_undoable() {
+    async fn set_camera_is_session_only_and_never_undoable() {
         let mut app = app();
         for x in [1.0, 2.0, 3.0] {
             let result = dispatch(&mut app, "setCamera", Some(&json!({ "camera": { "x": x, "y": 0.0, "zoom": 1.0 } })), None).expect("camera");
@@ -1462,7 +1462,7 @@ mod tests {
     /// `apply_host_events` then replayed into the fixture on the *next* action, duplicating every edge
     /// once per action forever.
     #[test]
-    fn repeated_actions_do_not_duplicate_edges() {
+    async fn repeated_actions_do_not_duplicate_edges() {
         let mut app = app();
         dispatch(&mut app, "setActiveExample", Some(&json!({ "exampleId": PUZZLE2D_PLAY_EXAMPLE_NAKAGIN_ID })), None).expect("load nakagin");
         let edge_count = |app: &Puzzle2dApp| fixture_edges(&fixture_of(app)).len();
@@ -1479,7 +1479,7 @@ mod tests {
     /// host, so `apply_host_events`'s `host.selection`-is-truth re-sync silently reverted the
     /// selection to whatever the host held before the action (empty, on a fresh sync).
     #[test]
-    fn apply_board_events_select_persists_across_the_next_action() {
+    async fn apply_board_events_select_persists_across_the_next_action() {
         let mut app = concrete_forest_app();
         let node_id = first_node_id(&app);
         dispatch(&mut app, "applyBoardEvents", Some(&json!({ "eventsJson": json!([{ "name": "select", "payload": { "ids": [node_id] } }]).to_string() })), None).expect("select");
@@ -1493,7 +1493,7 @@ mod tests {
     /// *pre-action* value) against the runtime and blindly overwrite it, reverting a plain `camera`
     /// board event (used for the live wheel-zoom echo) before it ever committed.
     #[test]
-    fn apply_board_events_camera_event_commits() {
+    async fn apply_board_events_camera_event_commits() {
         let mut app = app();
         let result = dispatch(&mut app, "applyBoardEvents", Some(&json!({ "eventsJson": json!([{ "name": "camera", "payload": { "x": 5.0, "y": 6.0, "zoom": 1.2 } }]).to_string() })), None).expect("camera event");
         assert!(result.mutations.is_empty(), "a camera board event must never produce a document operation");
@@ -1507,7 +1507,7 @@ mod tests {
     /// operations (previously it fell back to a whole-document replace once the edge-duplication bug
     /// made `before` and `after` genuinely diverge).
     #[test]
-    fn select_action_emits_no_operations() {
+    async fn select_action_emits_no_operations() {
         let mut app = concrete_forest_app();
         let node_id = first_node_id(&app);
         let result = dispatch(&mut app, "applyBoardEvents", Some(&json!({ "eventsJson": json!([{ "name": "select", "payload": { "ids": [node_id] } }]).to_string() })), None).expect("select");
@@ -1520,7 +1520,7 @@ mod tests {
     /// layers/properties panels + engagements) — never `Full`, or the shell's batched `refresh-ui`
     /// call degrades back to fetching everything on every select.
     #[test]
-    fn select_action_declares_partial_ui_scope() {
+    async fn select_action_declares_partial_ui_scope() {
         let mut app = concrete_forest_app();
         let node_id = first_node_id(&app);
         let result = dispatch(&mut app, "applyBoardEvents", Some(&json!({ "eventsJson": json!([{ "name": "select", "payload": { "ids": [node_id] } }]).to_string() })), None).expect("select");
@@ -1545,7 +1545,7 @@ mod tests {
     /// 🐢️ Perf round 3: a camera-only board event touches only the 3 canvas panes — no panels,
     /// engagements, measures, or utilities.
     #[test]
-    fn camera_event_declares_window_only_ui_scope() {
+    async fn camera_event_declares_window_only_ui_scope() {
         let mut app = app();
         let result = dispatch(&mut app, "applyBoardEvents", Some(&json!({ "eventsJson": json!([{ "name": "camera", "payload": { "x": 1.0, "y": 2.0, "zoom": 1.0 } }]).to_string() })), None).expect("camera event");
         match result.ui_scope {
@@ -1561,7 +1561,7 @@ mod tests {
     /// 🐢️ Perf round 3: an empty `applyBoardEvents` batch (no-operation) must declare nothing beyond the
     /// history panel body — the View action still logs a command-history entry, but no board surface is dirtied.
     #[test]
-    fn empty_board_events_declare_none_ui_scope() {
+    async fn empty_board_events_declare_none_ui_scope() {
         let mut app = app();
         let result = dispatch(&mut app, "applyBoardEvents", Some(&json!({ "eventsJson": "[]" })), None).expect("no-operation");
         match result.ui_scope {
@@ -1577,7 +1577,7 @@ mod tests {
     /// 🐢️ Perf round 3: cold-tier structural actions (document operations) must keep the safe `Full`
     /// default — no puzzle2d scope helper narrows them.
     #[test]
-    fn add_node_action_declares_full_ui_scope() {
+    async fn add_node_action_declares_full_ui_scope() {
         let mut app = app();
         let result = dispatch(&mut app, "addNode", Some(&json!({ "kind": "node" })), None).expect("add node");
         assert!(matches!(result.ui_scope, UiDirtyScope::Full), "addNode must stay Full, got {:?}", result.ui_scope);
@@ -1586,7 +1586,7 @@ mod tests {
 
     //#region 🔖️Manifest
     #[test]
-    fn app_definition_has_three_lod_pane_window_kinds() {
+    async fn app_definition_has_three_lod_pane_window_kinds() {
         let definition = create_puzzle2d_app();
         let ids: Vec<&str> = definition.window_kinds.iter().map(|window| window.id.as_str()).collect();
         assert_eq!(ids, vec![overview::WINDOW_KIND_ID, detail::WINDOW_KIND_ID, selection::WINDOW_KIND_ID]);
@@ -1599,7 +1599,7 @@ mod tests {
     /// 🧰️ The app declares exactly the select/brush canvas utilities and binds them to the interactive
     /// overview pane; fill is declared as a mode-level tool instead.
     #[test]
-    fn utility_registry_declares_utilities() {
+    async fn utility_registry_declares_utilities() {
         let definition = create_puzzle2d_app();
         let ids: Vec<&str> = definition.utilities.iter().map(|utility| utility.id.as_str()).collect();
         assert_eq!(ids, vec![select_utility::UTILITY_ID, brush_utility::UTILITY_ID]);
@@ -1616,7 +1616,7 @@ mod tests {
 
     /// 🛠️ Fill is a mode-level tool (a whole-document generator), not a window utility.
     #[test]
-    fn tool_registry_declares_fill_tool() {
+    async fn tool_registry_declares_fill_tool() {
         use semio_framework_plugin::{ToolRef, SET_ACTIVE_TOOL_ACTION_ID};
         let definition = create_puzzle2d_app();
         let tool_ids: Vec<&str> = definition.tools.iter().map(|tool| tool.id.as_str()).collect();
@@ -1629,7 +1629,7 @@ mod tests {
     /// no live app instance to receive a runtime write) must produce a bare empty board with no
     /// `"camera"` key at all, regardless of the drawing's extents.
     #[test]
-    fn dwg_import_returns_empty_board_with_no_camera_field() {
+    async fn dwg_import_returns_empty_board_with_no_camera_field() {
         let drawing = semio_s_plugin_stdio::artifacts::dwg::DwgDrawing { extmin: [0.0, 0.0, 0.0], extmax: [100.0, 200.0, 0.0], ..semio_s_plugin_stdio::artifacts::dwg::DwgDrawing::default() };
         let fixture = puzzle2d_document_json_from_dwg(&drawing).unwrap();
         assert_eq!(fixture.get("schema").and_then(|value| value.as_str()), Some(PUZZLE2D_FIXTURE_SCHEMA));
@@ -1643,7 +1643,7 @@ mod tests {
     /// (each adds its own node) and, after exchanging operations, both converge to contain BOTH nodes —
     /// impossible under whole-document `setSnapshot` snapshots, which would clobber one side.
     #[test]
-    fn two_instances_converge_disjoint_node_edits_via_backbone() {
+    async fn two_instances_converge_disjoint_node_edits_via_backbone() {
         let mut instance_a = app();
         let mut instance_b = app();
         let (backbone_a, backbone_b) = MemoryBackbone::pair("mem://puzzle2d-convergence", "mem://puzzle2d-convergence");
@@ -1662,7 +1662,7 @@ mod tests {
     }
 
     #[test]
-    fn ingest_operations_is_idempotent() {
+    async fn ingest_operations_is_idempotent() {
         let mut sender = app();
         let (near, mut far) = MemoryBackbone::pair("mem://puzzle2d-doc", "mem://puzzle2d-doc");
         sender.attach_backbone(Box::new(near)).expect("attach");
@@ -1689,7 +1689,7 @@ mod tests {
     /// notification): switching utilities must still emit no DOCUMENT operations — the new value lands
     /// in `Puzzle2dConfig::active_utility_by_window_id` as a config operation instead.
     #[test]
-    fn utility_switch_emits_no_ops_and_no_history() {
+    async fn utility_switch_emits_no_ops_and_no_history() {
         let mut app = app_with_registry();
         let result = dispatch(&mut app, SET_ACTIVE_UTILITY_ACTION_ID, Some(&json!({ "utilityId": brush_utility::UTILITY_ID })), Some(overview::WINDOW_KIND_ID)).expect("switch utility");
         assert!(result.mutations.is_empty(), "a utility switch must not produce document operations");
@@ -1700,7 +1700,7 @@ mod tests {
     /// 🧭️ Kind discipline: every View-declared runtime/host action must run through the registry
     /// without tripping the "must not emit operations" guard (proving each is correctly classified).
     #[test]
-    fn view_actions_emit_no_ops_through_the_registry() {
+    async fn view_actions_emit_no_ops_through_the_registry() {
         let mut app = app_with_registry();
         dispatch(&mut app, "setActiveExample", Some(&json!({ "exampleId": PUZZLE2D_PLAY_EXAMPLE_CONCRETE_FOREST_ID })), None).expect("load example");
         let node_id = first_node_id(&app);
@@ -1733,7 +1733,7 @@ mod tests {
     /// 🗂️ Grouped-context-menu disclosure: the top-level row budget stays small (leaves+groups
     /// combined) and the known `deleteSelection` destructive row stays last.
     #[test]
-    fn context_menu_grouped_disclosure_stays_within_budget_and_keeps_destructive_last() {
+    async fn context_menu_grouped_disclosure_stays_within_budget_and_keeps_destructive_last() {
         use semio_framework_plugin::{ContextMenuRequest, ContextMenuSelectionGroup, ContextMenuSurfaceTarget, UiMenuRef};
 
         let mut app = app_with_registry();

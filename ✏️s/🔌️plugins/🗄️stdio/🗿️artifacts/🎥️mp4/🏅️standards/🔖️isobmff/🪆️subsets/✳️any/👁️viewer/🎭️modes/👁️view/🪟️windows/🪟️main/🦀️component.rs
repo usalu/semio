@@ -8,14 +8,14 @@ use semio_framework_plugin::{UiNode, WindowKindDefinition, WindowKit};
 pub const WINDOW_KIND_ID: &str = MediaWindowKit::KIND_ID;
 pub const BODY_KEY: &str = MediaWindowKit::KIND_ID;
 
-pub fn definition() -> WindowKindDefinition {
+pub async fn definition() -> WindowKindDefinition {
     MediaWindowKit::window_kind()
 }
 
 /// 🎬️ Duration/position stay at the kit's zero defaults — this format's decoded snapshot does not
 /// model a playable transport position yet (thin v1: the kit's own transport chrome is real, the
 /// per-document duration/position feed is a documented follow-up, not invented here).
-pub fn render(_snapshot: &Mp4Snapshot) -> UiNode {
+pub async fn render(_snapshot: &Mp4Snapshot) -> UiNode {
     MediaWindowKit::render(&MediaView { duration_ms: 0, position_ms: 0, kind: MediaKind::Video })
 }
 
@@ -24,13 +24,13 @@ mod tests {
     use super::*;
 
     #[test]
-    fn definition_uses_the_frozen_window_kit_kind_id() {
+    async fn definition_uses_the_frozen_window_kit_kind_id() {
         let def = definition();
         assert_eq!(def.id, WINDOW_KIND_ID);
     }
 
     #[test]
-    fn render_produces_a_scene_node_for_the_default_document() {
+    async fn render_produces_a_scene_node_for_the_default_document() {
         let document = Mp4Snapshot::default();
         let _node = render(&document);
     }

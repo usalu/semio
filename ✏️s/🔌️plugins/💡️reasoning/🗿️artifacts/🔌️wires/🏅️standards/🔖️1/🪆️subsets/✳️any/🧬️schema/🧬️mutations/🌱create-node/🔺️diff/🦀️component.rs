@@ -6,7 +6,7 @@ use crate::artifacts::wires::standards::v1::subsets::any::schema::inferences::fi
 use crate::artifacts::wires::WiresSnapshot;
 
 //#region 🔖️Diff
-pub fn diff(payload: &super::mutation::CreateNode, base: &WiresSnapshot) -> protocol::MutationOutcome<WiresDiff> {
+pub async fn diff(payload: &super::mutation::CreateNode, base: &WiresSnapshot) -> protocol::MutationOutcome<WiresDiff> {
     if let Some(id) = entity_id(&payload.node, "id") {
         if find_board_node(base, id).is_some() {
             return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("A node with id \"{}\" already exists.", id), [id.to_string()]);

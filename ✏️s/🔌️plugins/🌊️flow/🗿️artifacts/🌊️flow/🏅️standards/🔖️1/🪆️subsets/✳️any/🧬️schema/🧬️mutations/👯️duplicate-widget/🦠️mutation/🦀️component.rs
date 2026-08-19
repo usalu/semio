@@ -23,13 +23,13 @@ pub struct DuplicateWidget {
 impl CompositeMutationKind<FlowSnapshot, FlowMutation> for DuplicateWidget {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "duplicate", entity: "widget", kind: "duplicate-widget", record: "DuplicatedWidget" };
 
-    fn plan(&self, base: &FlowSnapshot, planner: &mut Planner<FlowSnapshot, FlowMutation>) -> Result<(), PlanError> {
+    async fn plan(&self, base: &FlowSnapshot, planner: &mut Planner<FlowSnapshot, FlowMutation>) -> Result<(), PlanError> {
         super::plan::plan(self, base, planner)
     }
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         format!("Duplicate widget \"{}\"", self.source_id)
     }
-    fn target(&self) -> Vec<String> {
+    async fn target(&self) -> Vec<String> {
         vec![self.source_id.clone(), self.new_id.clone()]
     }
 }
@@ -40,19 +40,19 @@ impl CompositeMutationKind<FlowSnapshot, FlowMutation> for DuplicateWidget {
 mod tests {
     use super::*;
 
-    fn sample() -> DuplicateWidget {
+    async fn sample() -> DuplicateWidget {
         DuplicateWidget { source_id: "note-1".into(), new_id: "note-2".into(), synapse_id: "note-1-to-note-2".into(), from_port: "out".into(), to_port: "in".into() }
     }
 
     #[test]
-    fn label_and_target_are_sensible() {
+    async fn label_and_target_are_sensible() {
         let payload = sample();
         assert_eq!(CompositeMutationKind::label(&payload), "Duplicate widget \"note-1\"");
         assert_eq!(CompositeMutationKind::target(&payload), vec!["note-1".to_string(), "note-2".to_string()]);
     }
 
     #[test]
-    fn semantics_kind_and_verb_match_the_directory() {
+    async fn semantics_kind_and_verb_match_the_directory() {
         let semantics = <DuplicateWidget as CompositeMutationKind<FlowSnapshot, FlowMutation>>::SEMANTICS;
         assert_eq!(semantics.kind, "duplicate-widget");
         assert_eq!(semantics.verb, "duplicate");

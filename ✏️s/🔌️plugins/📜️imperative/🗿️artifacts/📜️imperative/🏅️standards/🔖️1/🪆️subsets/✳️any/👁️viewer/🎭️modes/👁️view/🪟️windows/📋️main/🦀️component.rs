@@ -17,7 +17,7 @@ pub const BODY_KEY: &str = TableWindowKit::KIND_ID;
 /// window's own label stays "Steps" — `TableWindowKit::window_kind()`'s generic "Table" label is
 /// overridden here the same way every kit consumer is expected to (contract §2.6 gives the kit's id/
 /// body-key/surface-kind, not a fixed per-app label).
-pub fn definition() -> WindowKindDefinition {
+pub async fn definition() -> WindowKindDefinition {
     WindowKindDefinition { label: LocalizedLabel::native("Steps", "Schritte"), icon_id: "list".into(), ..TableWindowKit::window_kind() }
 }
 //#endregion 🔖️Definition
@@ -26,7 +26,7 @@ pub fn definition() -> WindowKindDefinition {
 /// 👁️ Pure `ImperativeSnapshot -> UiNode` read: one row per top-level step (`index`, `id`, `kind`),
 /// English-only headers (a viewer has no persisted locale — `Config = NoConfig`), no run-output row
 /// (the editor's own `run` view-action is a `Command`, and the viewer declares none).
-pub fn render(document: &ImperativeSnapshot) -> UiNode {
+pub async fn render(document: &ImperativeSnapshot) -> UiNode {
     let path = crate::artifacts::imperative::imperative_working_scene(document).path;
     let rows = path.steps.iter().enumerate().map(|(index, step)| vec![(index + 1).to_string(), step.id.clone(), step.kind.clone()]).collect();
     TableWindowKit::render(&TableView { columns: vec!["#".into(), "Id".into(), "Kind".into()], rows })
@@ -39,14 +39,14 @@ mod tests {
     use super::*;
 
     #[test]
-    fn definition_declares_a_table_window() {
+    async fn definition_declares_a_table_window() {
         let def = definition();
         assert_eq!(def.id, WINDOW_KIND_ID);
         assert_eq!(def.body_key, BODY_KEY);
     }
 
     #[test]
-    fn render_lists_one_row_per_top_level_step() {
+    async fn render_lists_one_row_per_top_level_step() {
         let document = crate::artifacts::imperative::schema::default_snapshot();
         let expected = crate::artifacts::imperative::imperative_working_scene(&document).path.steps.len();
         let UiNode::ComponentScene(node) = render(&document) else { panic!("expected ComponentScene") };

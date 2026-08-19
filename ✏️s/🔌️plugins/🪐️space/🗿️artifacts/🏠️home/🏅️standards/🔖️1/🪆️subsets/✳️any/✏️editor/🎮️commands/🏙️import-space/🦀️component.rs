@@ -15,7 +15,7 @@ pub struct ImportSpace {
     pub dsl: Option<String>,
 }
 
-pub fn handle(payload: &ImportSpace, doc: &ArtifactView<'_, SHomeSnapshot>, _cfg: &ConfigView<'_, HomeConfig>) -> Result<Emit<SHomeMutation, HomeConfigMutation>, Fault> {
+pub async fn handle(payload: &ImportSpace, doc: &ArtifactView<'_, SHomeSnapshot>, _cfg: &ConfigView<'_, HomeConfig>) -> Result<Emit<SHomeMutation, HomeConfigMutation>, Fault> {
     let generation = doc.snapshot.catalog_generation;
     match &payload.dsl {
         Some(dsl) => {

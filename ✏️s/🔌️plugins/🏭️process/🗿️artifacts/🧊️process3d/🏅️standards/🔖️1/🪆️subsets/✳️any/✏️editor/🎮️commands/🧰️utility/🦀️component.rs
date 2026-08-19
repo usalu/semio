@@ -15,7 +15,7 @@ pub mod set_active_utility {
         pub utility_id: String,
     }
 
-    pub fn handle(payload: &SetActiveUtility, _doc: &ArtifactView<'_, Process3dSnapshot>, _cfg: &ConfigView<'_, Process3dConfig>, _ctx: &mut crate::editor::process3d::Process3dDispatchCtx) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
+    pub async fn handle(payload: &SetActiveUtility, _doc: &ArtifactView<'_, Process3dSnapshot>, _cfg: &ConfigView<'_, Process3dConfig>, _ctx: &mut crate::editor::process3d::Process3dDispatchCtx) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
         Ok(Emit::config(vec![Process3dConfigMutation::SetActiveUtility { utility_id: payload.utility_id.clone() }]))
     }
 }
@@ -28,7 +28,7 @@ mod tests {
     use crate::editor::process3d::testkit;
 
     #[test]
-    fn set_active_utility_emits_no_operations() {
+    async fn set_active_utility_emits_no_operations() {
         let mut app = testkit::app();
         let result = testkit::dispatch(&mut app, crate::editor::process3d::Process3dCommand::SetActiveUtility(set_active_utility::SetActiveUtility { utility_id: "cut".into() }));
         assert!(result.mutations.is_empty(), "utility selection is host-owned config state and must never emit document operations or history");

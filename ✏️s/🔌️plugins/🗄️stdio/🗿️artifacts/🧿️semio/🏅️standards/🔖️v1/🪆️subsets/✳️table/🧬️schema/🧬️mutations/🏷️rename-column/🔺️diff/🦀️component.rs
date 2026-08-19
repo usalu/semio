@@ -9,7 +9,7 @@ use crate::artifacts::semio::standards::v1::subsets::table::schema::diff::{Semio
 use crate::artifacts::semio::standards::v1::subsets::table::schema::snapshot::SemioTableSnapshot;
 
 //#region 🔖️Diff
-pub fn diff(payload: &RenameColumn, base: &SemioTableSnapshot) -> protocol::MutationOutcome<SemioTableDiff> {
+pub async fn diff(payload: &RenameColumn, base: &SemioTableSnapshot) -> protocol::MutationOutcome<SemioTableDiff> {
     if !base.columns.iter().any(|c| c.name == payload.name) {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Column \"{}\" does not exist.", payload.name), [payload.name.clone()]);
     }

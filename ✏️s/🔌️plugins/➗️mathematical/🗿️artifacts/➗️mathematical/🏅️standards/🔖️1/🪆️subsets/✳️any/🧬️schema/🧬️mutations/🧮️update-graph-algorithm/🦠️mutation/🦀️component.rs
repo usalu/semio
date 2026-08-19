@@ -16,16 +16,16 @@ pub struct UpdateGraphAlgorithm {
 impl protocol::MutationKind<MathematicalSnapshot, MathematicalMutation> for UpdateGraphAlgorithm {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "update", entity: "graph", kind: "update-graph-algorithm", record: "UpdatedGraphAlgorithm" };
 
-    fn diff(&self, base: &MathematicalSnapshot) -> protocol::MutationOutcome<<MathematicalMutation as protocol::Mutation<MathematicalSnapshot>>::Diff> {
+    async fn diff(&self, base: &MathematicalSnapshot) -> protocol::MutationOutcome<<MathematicalMutation as protocol::Mutation<MathematicalSnapshot>>::Diff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &MathematicalSnapshot) -> Vec<MathematicalMutation> {
+    async fn inverse(&self, base: &MathematicalSnapshot) -> Vec<MathematicalMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         format!("Set graph algorithm to \"{}\"", self.new_algorithm)
     }
-    fn target(&self) -> Vec<String> {
+    async fn target(&self) -> Vec<String> {
         vec!["graph".into(), "algorithm".into()]
     }
 }

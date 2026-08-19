@@ -27,11 +27,11 @@ pub struct GltfProportionInference;
 impl GltfInferenceStage<GltfGeometryContext<'_>> for GltfProportionInference {
     type Output = GltfProportionIndicators;
 
-    fn infer(context: &GltfGeometryContext<'_>) -> Self::Output {
+    async fn infer(context: &GltfGeometryContext<'_>) -> Self::Output {
         Self::Output { aspect_ratios: aspect_ratios::infer(context), slenderness: slenderness::infer(context), flatness: flatness::infer(context), elongation: elongation::infer(context) }
     }
 
-    fn unavailable(diagnostic_ids: &[String]) -> Self::Output {
+    async fn unavailable(diagnostic_ids: &[String]) -> Self::Output {
         Self::Output {
             aspect_ratios: aspect_ratios::unavailable_measure(diagnostic_ids),
             slenderness: slenderness::unavailable_measure(diagnostic_ids),

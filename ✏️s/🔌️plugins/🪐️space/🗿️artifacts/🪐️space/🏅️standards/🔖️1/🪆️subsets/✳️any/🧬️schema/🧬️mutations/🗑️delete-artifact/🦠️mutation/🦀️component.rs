@@ -13,23 +13,23 @@ pub struct DeleteArtifact {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn delete_artifact(id: String) -> SSpaceMutation {
+pub async fn delete_artifact(id: String) -> SSpaceMutation {
     SSpaceMutation::DeleteArtifact(DeleteArtifact { id })
 }
 
 impl protocol::MutationKind<SSpaceSnapshot, SSpaceMutation> for DeleteArtifact {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "delete", entity: "artifact", kind: "delete-artifact", record: "DeletedArtifact" };
 
-    fn diff(&self, base: &SSpaceSnapshot) -> protocol::MutationOutcome<SSpaceDiff> {
+    async fn diff(&self, base: &SSpaceSnapshot) -> protocol::MutationOutcome<SSpaceDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &SSpaceSnapshot) -> Vec<SSpaceMutation> {
+    async fn inverse(&self, base: &SSpaceSnapshot) -> Vec<SSpaceMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         format!("Delete artifact \"{}\"", self.id)
     }
-    fn target(&self) -> Vec<String> {
+    async fn target(&self) -> Vec<String> {
         vec![self.id.clone()]
     }
 }

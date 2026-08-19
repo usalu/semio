@@ -11,7 +11,7 @@ use serde::{Deserialize, Serialize};
 /// for a no-op adjustment (e.g. dropping an already-zero item), which must NOT be recorded in
 /// history at all (mirrors `apply_sourcing_mutation`'s former no-op-if-unknown-id silence, now
 /// expressed as "emit nothing" instead of "emit a snapshot no-op").
-fn mutation_for(decision: CurationDecision) -> Option<SourcingMutation> {
+async fn mutation_for(decision: CurationDecision) -> Option<SourcingMutation> {
     match decision {
         CurationDecision::NoOp => None,
         CurationDecision::Create(item) => Some(crate::artifacts::curate::mutations::create_curated_item(item)),
@@ -20,7 +20,7 @@ fn mutation_for(decision: CurationDecision) -> Option<SourcingMutation> {
     }
 }
 
-fn emit_decision(decision: CurationDecision) -> Emit<SourcingMutation, SourcingCurateConfigMutation> {
+async fn emit_decision(decision: CurationDecision) -> Emit<SourcingMutation, SourcingCurateConfigMutation> {
     match mutation_for(decision) {
         Some(mutation) => Emit::mutations(vec![mutation]),
         None => Emit::default(),
@@ -48,7 +48,7 @@ pub struct CurateAdd {
     pub object_id: String,
 }
 
-pub fn handle(payload: &CurateAdd, doc: &ArtifactView<'_, CurateSnapshot>, _cfg: &ConfigView<'_, SourcingCurateConfig>) -> Result<Emit<SourcingMutation, SourcingCurateConfigMutation>, Fault> {
+pub async fn handle(payload: &CurateAdd, doc: &ArtifactView<'_, CurateSnapshot>, _cfg: &ConfigView<'_, SourcingCurateConfig>) -> Result<Emit<SourcingMutation, SourcingCurateConfigMutation>, Fault> {
     Ok(emit_decision(curation_decision_for_delta(doc.snapshot, &payload.object_id, 1)))
 }
 
@@ -62,7 +62,7 @@ mod tests {
     use crate::artifacts::curate::schema::curated_count;
 
     #[test]
-    fn curate_add_and_remove_round_trip_through_operations() {
+    async fn curate_add_and_remove_round_trip_through_operations() {
         let mut app = new_app();
         let document = app.snapshot().expect("snapshot");
         // stock[2] isn't part of the fixture's pre-curated set, so a single add lands on count 1.
@@ -75,7 +75,7 @@ mod tests {
     }
 
     #[test]
-    fn curate_set_count_supports_both_delta_and_absolute_value() {
+    async fn curate_set_count_supports_both_delta_and_absolute_value() {
         let mut app = new_app();
         let object_id = app.snapshot().expect("snapshot").stock_extra[2].id.clone();
         dispatch(&mut app, SourcingCurateCommand::CurateSetCount(curate_set_count::CurateSetCount { object_id: object_id.clone(), delta: Some(3.0), value: None }));
@@ -85,7 +85,7 @@ mod tests {
     }
 
     #[test]
-    fn drop_on_curated_and_drop_on_pool_mirror_add_and_remove() {
+    async fn drop_on_curated_and_drop_on_pool_mirror_add_and_remove() {
         let mut app = new_app();
         let document = app.snapshot().expect("snapshot");
         // stock[2] isn't part of the fixture's pre-curated set, so a single drop lands on count 1.
@@ -100,7 +100,7 @@ mod tests {
     /// 🧬️ A no-op adjustment (removing an object that was never curated) must emit NOTHING —
     /// `SourcingMutation` has no whole-snapshot no-op sentinel to fall back on any more.
     #[test]
-    fn curate_remove_on_an_uncurated_object_emits_no_mutation() {
+    async fn curate_remove_on_an_uncurated_object_emits_no_mutation() {
         let mut app = new_app();
         let object_id = app.snapshot().expect("snapshot").stock_extra[2].id.clone();
         assert_eq!(curated_count(&app.snapshot().expect("snapshot"), &object_id), 0);

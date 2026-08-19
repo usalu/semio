@@ -18,7 +18,7 @@ use crate::artifacts::xml::schema::snapshot::{xml_document_from_text, XmlDocumen
 use crate::artifacts::zip::opc;
 
 //#region 🔖️TextXml
-fn run_from_xml(node: &XmlNode) -> Option<PptxRun> {
+async fn run_from_xml(node: &XmlNode) -> Option<PptxRun> {
     let XmlNode::Element { name, children, .. } = node else { return None };
     if name != "a:r" {
         return None;
@@ -54,7 +54,7 @@ fn run_from_xml(node: &XmlNode) -> Option<PptxRun> {
     Some(PptxRun { text, bold, italic, font_size })
 }
 
-fn paragraph_from_xml(node: &XmlNode) -> PptxParagraph {
+async fn paragraph_from_xml(node: &XmlNode) -> PptxParagraph {
     let mut runs = Vec::new();
     for c in element_children(node) {
         if let Some(r) = run_from_xml(c) {
@@ -66,7 +66,7 @@ fn paragraph_from_xml(node: &XmlNode) -> PptxParagraph {
 
 /// 🔎️ Every `a:p` directly inside `p:txBody` (direct children only -- a real `p:txBody` never
 /// nests paragraphs inside anything else).
-fn text_frame_from_xml(tx_body: &XmlNode) -> Vec<PptxParagraph> {
+async fn text_frame_from_xml(tx_body: &XmlNode) -> Vec<PptxParagraph> {
     element_children(tx_body).iter().filter(|c| matches!(c, XmlNode::Element { name, .. } if name == "a:p")).map(paragraph_from_xml).collect()
 }
 //#endregion 🔖️TextXml
@@ -74,7 +74,7 @@ fn text_frame_from_xml(tx_body: &XmlNode) -> Vec<PptxParagraph> {
 //#region 🔖️ShapeXml
 /// 🔎️ Reads `p:spPr/a:xfrm`'s `a:off`/`a:ext` (defaulting each missing field to `0`, same
 /// convention this codec pair uses for "not present in the XML").
-fn position_from_xml(shape_children: &[XmlNode]) -> crate::artifacts::pptx::schema::snapshot::PptxTransform {
+async fn position_from_xml(shape_children: &[XmlNode]) -> crate::artifacts::pptx::schema::snapshot::PptxTransform {
     use crate::artifacts::pptx::schema::snapshot::PptxTransform;
     let Some(sp_pr) = find_child(shape_children, "p:spPr") else { return PptxTransform::default() };
     let Some(xfrm) = find_child(element_children(sp_pr), "a:xfrm") else { return PptxTransform::default() };
@@ -94,7 +94,7 @@ fn position_from_xml(shape_children: &[XmlNode]) -> crate::artifacts::pptx::sche
 /// 🧭️ Classifies one `p:spTree` DIRECT child into a typed `PptxShape` (`p:sp`/`p:pic` get real
 /// per-kind typing; everything else -- `p:graphicFrame`, `p:grpSp`, `p:cxnSp`, unrecognized --
 /// falls back to `Other{node}`, preserving its logical XML tree).
-fn shape_from_xml_node(node: &XmlNode) -> PptxShape {
+async fn shape_from_xml_node(node: &XmlNode) -> PptxShape {
     let XmlNode::Element { name, children, .. } = node else { return PptxShape::Other { node: node.clone() } };
     match name.as_str() {
         "p:sp" => {
@@ -130,7 +130,7 @@ fn shape_from_xml_node(node: &XmlNode) -> PptxShape {
 /// 🔎️ Collects every `p:spTree` DIRECT child (skipping the group's own `p:nvGrpSpPr`/
 /// `p:grpSpPr` container elements) into one `PptxShape` each, in document order -- shape
 /// BOUNDARIES are preserved (not flattened away like the pre-migration model).
-fn collect_shapes(root: &XmlNode) -> Vec<PptxShape> {
+async fn collect_shapes(root: &XmlNode) -> Vec<PptxShape> {
     let XmlNode::Element { children, .. } = root else { return Vec::new() };
     let Some(c_sld) = find_child(children, "p:cSld") else { return Vec::new() };
     let Some(sp_tree) = find_child(element_children(c_sld), "p:spTree") else { return Vec::new() };
@@ -139,7 +139,7 @@ fn collect_shapes(root: &XmlNode) -> Vec<PptxShape> {
 //#endregion 🔖️SlideXml
 
 //#region 🔖️PresentationXml
-fn presentation_slide_rids_from_xml(doc: &XmlDocument, part: &str) -> Result<Vec<String>, PptxError> {
+async fn presentation_slide_rids_from_xml(doc: &XmlDocument, part: &str) -> Result<Vec<String>, PptxError> {
     let bad = |detail: String| PptxError::Xml { part: part.into(), detail };
     let root = doc.root.as_ref().ok_or_else(|| bad("empty document".into()))?;
     let XmlNode::Element { name, children, .. } = root else { return Err(bad("root is not an element".into())) };
@@ -167,7 +167,7 @@ fn presentation_slide_rids_from_xml(doc: &XmlDocument, part: &str) -> Result<Vec
 
 //#region 🔖️Projection
 /// 🧭️ Derives the typed presentation view from the authoritative logical XML parts.
-pub(crate) fn project_presentation(opc: &opc::OpcPackage, xml_parts: &[PptxXmlPart]) -> Result<PptxPresentation, PptxError> {
+pub(crate) async fn project_presentation(opc: &opc::OpcPackage, xml_parts: &[PptxXmlPart]) -> Result<PptxPresentation, PptxError> {
     let presentation_path = resolve_office_document_relationship(opc).ok_or(PptxError::MissingPresentationRelationship)?;
     let presentation = xml_parts.iter().find(|part| part.path == presentation_path).ok_or_else(|| PptxError::MissingPart(presentation_path.clone()))?;
     let slide_rids = presentation_slide_rids_from_xml(&presentation.document, &presentation_path)?;
@@ -185,7 +185,7 @@ pub(crate) fn project_presentation(opc: &opc::OpcPackage, xml_parts: &[PptxXmlPa
 //#endregion 🔖️Projection
 
 //#region 🔖️Codec
-pub fn decode_pptx(data: &[u8]) -> Result<PptxSnapshot, PptxError> {
+pub async fn decode_pptx(data: &[u8]) -> Result<PptxSnapshot, PptxError> {
     let mut opc = opc::decode_opc(data)?;
     let presentation_path = resolve_office_document_relationship(&opc).ok_or(PptxError::MissingPresentationRelationship)?;
     let bytes = opc.part_bytes(&presentation_path).ok_or_else(|| PptxError::MissingPart(presentation_path.clone()))?;
@@ -229,7 +229,7 @@ pub fn decode_pptx(data: &[u8]) -> Result<PptxSnapshot, PptxError> {
 /// 🕵️ Real pptx sniff: OPC-shaped bytes whose root officeDocument relationship (Transitional or
 /// Strict) resolves under `ppt/` — disambiguates from docx/xlsx sharing the same zip magic and
 /// OPC shape.
-pub fn sniff_pptx_bytes(data: &[u8]) -> bool {
+pub async fn sniff_pptx_bytes(data: &[u8]) -> bool {
     let Ok(opc) = opc::decode_opc(data) else { return false };
     match resolve_office_document_relationship(&opc) {
         Some(path) => path.starts_with("ppt/"),

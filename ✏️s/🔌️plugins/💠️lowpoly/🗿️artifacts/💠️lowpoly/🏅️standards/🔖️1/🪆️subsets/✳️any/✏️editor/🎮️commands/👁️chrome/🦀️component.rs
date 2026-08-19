@@ -15,7 +15,7 @@ pub mod toggle_show_edges {
     #[dsl(keyword = "toggle-show-edges")]
     pub struct ToggleShowEdges {}
 
-    pub fn handle(_payload: &ToggleShowEdges, _doc: &ArtifactView<'_, LowpolySnapshot>, cfg: &ConfigView<'_, LowpolyConfig>, _ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
+    pub async fn handle(_payload: &ToggleShowEdges, _doc: &ArtifactView<'_, LowpolySnapshot>, cfg: &ConfigView<'_, LowpolyConfig>, _ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
         Ok(Emit::config(vec![LowpolyConfigMutation::SetShowEdges { value: !cfg.snapshot.show_edges }]))
     }
 }
@@ -28,7 +28,7 @@ mod tests {
     use crate::editor::lowpoly::LowpolyCommand;
 
     #[test]
-    fn toggle_show_edges_emits_config_operation() {
+    async fn toggle_show_edges_emits_config_operation() {
         let mut a = app();
         let result = dispatch(&mut a, LowpolyCommand::ToggleShowEdges(super::toggle_show_edges::ToggleShowEdges {}));
         assert!(result.mutations.is_empty(), "chrome toggle is config-only");

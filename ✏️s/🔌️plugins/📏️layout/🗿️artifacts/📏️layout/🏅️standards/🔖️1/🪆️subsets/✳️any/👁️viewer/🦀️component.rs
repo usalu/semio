@@ -24,10 +24,10 @@ pub enum LayoutViewCommand {
 }
 
 impl protocol::OpBinary for LayoutViewCommand {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         Ok(Vec::new())
     }
-    fn decode_op(_bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    async fn decode_op(_bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         Ok(LayoutViewCommand::Noop)
     }
 }
@@ -51,7 +51,7 @@ impl ArtifactViewer for LayoutViewer {
     const DIALECT: Dialect = LAYOUT_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = LAYOUT_DOCUMENT_SCHEMA;
 
-    fn initial_snapshot() -> LayoutSnapshot {
+    async fn initial_snapshot() -> LayoutSnapshot {
         crate::artifacts::layout::schema::default_document()
     }
 
@@ -59,11 +59,11 @@ impl ArtifactViewer for LayoutViewer {
     /// change, so this always returns the empty `ViewEmit` — no config mutation, no effect, no dirty
     /// scope. Kept as a real dispatch (not an `unreachable!()`) so a future view-only action (e.g.
     /// "jump to page") is a pure addition here, never a signature change.
-    fn handle(_command: &Self::Command, _doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _interaction: &InteractionView<'_>, _engines: &EngineHandles) -> Result<ViewEmit<Self::ConfigMutation>, Fault> {
+    async fn handle(_command: &Self::Command, _doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _interaction: &InteractionView<'_>, _engines: &EngineHandles) -> Result<ViewEmit<Self::ConfigMutation>, Fault> {
         Ok(ViewEmit::default())
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> UiNode {
+    async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> UiNode {
         match body_key {
             preview::BODY_KEY => preview::render(doc.snapshot),
             _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))),
@@ -73,7 +73,7 @@ impl ArtifactViewer for LayoutViewer {
 //#endregion 🔖️Viewer
 
 //#region 🔖️Manifest
-pub fn create_layout_viewer() -> semio_framework_plugin::AppDefinition {
+pub async fn create_layout_viewer() -> semio_framework_plugin::AppDefinition {
     Viewer::builder(LAYOUT_DIALECT)
         .document(["semio", "layout"])
         .icon_id("layout")
@@ -91,14 +91,14 @@ mod tests {
     use super::*;
 
     #[test]
-    fn create_layout_viewer_builds_a_definition_for_the_viewer_role() {
+    async fn create_layout_viewer_builds_a_definition_for_the_viewer_role() {
         let def = create_layout_viewer();
         assert_eq!(def.role, semio_framework::AppRole::Viewer);
         assert_eq!(def.dialect, LAYOUT_DIALECT.into());
     }
 
     #[test]
-    fn viewer_dialect_matches_the_artifact_coordinate() {
+    async fn viewer_dialect_matches_the_artifact_coordinate() {
         assert_eq!(<LayoutViewer as ArtifactViewer>::DIALECT, LAYOUT_DIALECT);
     }
 }

@@ -4,7 +4,7 @@ use crate::artifacts::dag::diff::text::diff_replace_content;
 use crate::artifacts::dag::{dag_working_scene, DagSnapshot};
 
 //#region 🔖️Diff
-pub fn diff(payload: &super::mutation::ResizeNode, base: &DagSnapshot) -> protocol::MutationOutcome<DagDiff> {
+pub async fn diff(payload: &super::mutation::ResizeNode, base: &DagSnapshot) -> protocol::MutationOutcome<DagDiff> {
     let scene = dag_working_scene(base);
     let Some(existing) = scene.nodes.iter().find(|node| node.id == payload.id) else {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Node \"{}\" does not exist.", payload.id), [payload.id.clone()]);

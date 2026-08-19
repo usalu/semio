@@ -10,7 +10,7 @@ use crate::editor::puzzle3d::{PUZZLE3D_GRANULARITY_ATTRACTION, PUZZLE3D_GRANULAR
 /// the action carries none explicitly — the inspector panel itself no longer renders per-entity
 /// controls (see `panels::inspection::render`'s doc comment), so every real caller today passes `ids`
 /// explicitly; the fallback stays for any future caller that does not.
-pub fn patch_inspector(ctx: &mut Puzzle3dActionCtx<'_>, args: Option<&Value>) {
+pub async fn patch_inspector(ctx: &mut Puzzle3dActionCtx<'_>, args: Option<&Value>) {
     let entity = args.and_then(|value| value.get("entity")).and_then(|value| value.as_str()).unwrap_or("");
     let field = args.and_then(|value| value.get("field")).and_then(|value| value.as_str()).unwrap_or("");
     let ids = args

@@ -5,7 +5,7 @@ use crate::artifacts::remodel::diff::{RemodelDiff, RemodelMediaStreamList};
 use crate::artifacts::remodel::RemodelSnapshot;
 
 //#region 🔖️Diff
-pub fn diff(payload: &super::mutation::CreateStream, base: &RemodelSnapshot) -> protocol::MutationOutcome<RemodelDiff> {
+pub async fn diff(payload: &super::mutation::CreateStream, base: &RemodelSnapshot) -> protocol::MutationOutcome<RemodelDiff> {
     if base.streams.iter().any(|stream| stream.id == payload.stream.id) {
         return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("A stream with id \"{}\" already exists.", payload.stream.id), [payload.stream.id.clone()]);
     }

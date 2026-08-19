@@ -15,7 +15,7 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 
 
 //#region 🔖️Apply
-fn apply_identified_delta<T: Clone>(
+async fn apply_identified_delta<T: Clone>(
     items: &[T],
     removed: &[String],
     added: &[T],
@@ -84,19 +84,19 @@ fn apply_identified_delta<T: Clone>(
     Ok(next)
 }
 
-pub fn apply_parts_delta(parts: &[Puzzle5dPart], delta: &Puzzle5dPartsDelta) -> protocol::MutationApplyResult<Vec<Puzzle5dPart>> {
+pub async fn apply_parts_delta(parts: &[Puzzle5dPart], delta: &Puzzle5dPartsDelta) -> protocol::MutationApplyResult<Vec<Puzzle5dPart>> {
     let patched: Vec<_> = delta.patched.iter().map(|entry| (entry.id.clone(), entry.patch.replacement.clone())).collect();
     apply_identified_delta(parts, &delta.removed, &delta.added, &patched, &delta.reordered, |p| &p.id)
 }
 
-pub fn apply_fasteners_delta(fasteners: &[Puzzle5dFastener], delta: &Puzzle5dFastenersDelta) -> protocol::MutationApplyResult<Vec<Puzzle5dFastener>> {
+pub async fn apply_fasteners_delta(fasteners: &[Puzzle5dFastener], delta: &Puzzle5dFastenersDelta) -> protocol::MutationApplyResult<Vec<Puzzle5dFastener>> {
     let patched: Vec<_> = delta.patched.iter().map(|entry| (entry.id.clone(), entry.patch.replacement.clone())).collect();
     apply_identified_delta(fasteners, &delta.removed, &delta.added, &patched, &delta.reordered, |f| &f.id)
 }
 
 impl Puzzle5dDiff {
     /// 🧬️ Applies every sparse entry onto a full artifact.
-    pub fn apply_to_artifact(&self, artifact: &Puzzle5dArtifact) -> protocol::MutationApplyResult<Puzzle5dArtifact> {
+    pub async fn apply_to_artifact(&self, artifact: &Puzzle5dArtifact) -> protocol::MutationApplyResult<Puzzle5dArtifact> {
         Ok({
             if let Some(replacement) = &self.artifact {
                 return Ok((**replacement).clone());
@@ -143,7 +143,7 @@ impl Puzzle5dDiff {
 }
 
 impl MutationDiff<Puzzle5dSnapshot> for Puzzle5dDiff {
-    fn apply(&self, snapshot: &Puzzle5dSnapshot) -> protocol::MutationApplyResult<Puzzle5dSnapshot> {
+    async fn apply(&self, snapshot: &Puzzle5dSnapshot) -> protocol::MutationApplyResult<Puzzle5dSnapshot> {
         Ok({
             if let Some(replacement) = &self.artifact {
                 return Ok(replacement.to_snapshot());
@@ -161,7 +161,7 @@ impl MutationDiff<Puzzle5dSnapshot> for Puzzle5dDiff {
             next
         })
     }
-    fn absorb(&mut self, other: Self) {
+    async fn absorb(&mut self, other: Self) {
         if other.artifact.is_some() { *self = other; return; }
         macro_rules! take { ($f:ident) => { if other.$f.is_some() { self.$f = other.$f; } }; }
         take!(schema); take!(domain); take!(label); take!(meta); take!(kind_catalogs); take!(kind_catalogs_extra); take!(kind_compatibility);

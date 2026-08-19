@@ -10,7 +10,7 @@ pub const FLOW_PLAY_BODY_INSPECTOR: &str = "flow.play.inspection";
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
-pub fn definition() -> PanelTabDefinition {
+pub async fn definition() -> PanelTabDefinition {
     PanelTabDefinition {
         kind: PanelTabKind::App(FRAMEWORK_PANEL_TAB_INSPECTION_ID.into()),
         label: LocalizedLabel::native(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, "Inspektion"),
@@ -29,7 +29,7 @@ pub fn definition() -> PanelTabDefinition {
 /// `FlowPlayApp::handle`) — dropped rather than shown stale, mirroring lowpoly's identical
 /// `render`/status-line note for the exact same gap. Peer/self selection surfaces generically off the
 /// declared domain regardless.
-pub fn render(labels: &FlowPlayLabels) -> UiNode {
+pub async fn render(labels: &FlowPlayLabels) -> UiNode {
     ui_declarative_sections_to_tree(&[UiSectionNode {
         presence: UiPresence::default(),
         id: "flow-play-inspector.empty".into(),
@@ -49,7 +49,7 @@ mod tests {
     use crate::editor::flow::FLOW_PLAY_BODY_INSPECTOR as BODY_INSPECTOR;
 
     #[test]
-    fn empty_inspector_no_longer_shows_canvas_settings() {
+    async fn empty_inspector_no_longer_shows_canvas_settings() {
         let mut app = flow_app();
         let json = render_body(&mut app, BODY_INSPECTOR);
         assert!(!json.contains("flow-play-inspector.lod-mode"));
@@ -57,7 +57,7 @@ mod tests {
     }
 
     #[test]
-    fn definition_binds_the_framework_inspection_tab_to_this_body_key() {
+    async fn definition_binds_the_framework_inspection_tab_to_this_body_key() {
         let definition = definition();
         assert_eq!(definition.id(), FRAMEWORK_PANEL_TAB_INSPECTION_ID);
         assert_eq!(definition.body_key.as_deref(), Some(FLOW_PLAY_BODY_INSPECTOR));

@@ -4,7 +4,7 @@ use semio_framework_plugin::kernel::{ActivationEvent, CapabilityId, CapabilityRe
 use semio_framework_plugin::{ExecutionMode, FlowExtensionDeclaration, FlowExtensionExecutableIdentity, FlowExtensionManifest, HostMediaHandlerDeclaration, Plugin};
 
 /// 🔌️ Builds the plugin surface for host registration.
-pub fn plugin() -> Result<Plugin, semio_framework_plugin::PluginAssemblyError> {
+pub async fn plugin() -> Result<Plugin, semio_framework_plugin::PluginAssemblyError> {
     Plugin::builder("procedural")
         .label("Procedural")
         .version("0.1.0")
@@ -96,21 +96,21 @@ mod surface_tests {
 
     /// 👁️ A viewer instance never mutates the document store, even when dispatched.
     #[test]
-    fn procedural2d_viewer_never_mutates() {
+    async fn procedural2d_viewer_never_mutates() {
         semio_framework_plugin::testkit::assert_viewer_never_mutates::<Procedural2dViewer>();
     }
     #[test]
-    fn procedural3d_viewer_never_mutates() {
+    async fn procedural3d_viewer_never_mutates() {
         semio_framework_plugin::testkit::assert_viewer_never_mutates::<Procedural3dViewer>();
     }
 
     /// 🤝️ Editor and viewer surfaces agree on the artifact dialect they address.
     #[test]
-    fn procedural2d_editor_and_viewer_share_dialect() {
+    async fn procedural2d_editor_and_viewer_share_dialect() {
         semio_framework_plugin::testkit::assert_editor_and_viewer_share_dialect::<Procedural2dPlayApp, Procedural2dViewer>();
     }
     #[test]
-    fn procedural3d_editor_and_viewer_share_dialect() {
+    async fn procedural3d_editor_and_viewer_share_dialect() {
         semio_framework_plugin::testkit::assert_editor_and_viewer_share_dialect::<Procedural3dPlayApp, Procedural3dViewer>();
     }
 }

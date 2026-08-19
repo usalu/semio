@@ -35,7 +35,7 @@ pub struct PlaybookArtifact {
 
 //#region 🔖️Conversions
 impl Default for PlaybookArtifact {
-    fn default() -> Self {
+    async fn default() -> Self {
         let snapshot = crate::artifacts::playbook::PlaybookSnapshot::default();
         Self {
             schema: PLAYBOOK_DOCUMENT_SCHEMA.into(),
@@ -53,7 +53,7 @@ impl Default for PlaybookArtifact {
 
 impl PlaybookArtifact {
     /// 📸️ Persisted subset.
-    pub fn to_snapshot(&self) -> crate::artifacts::playbook::PlaybookSnapshot {
+    pub async fn to_snapshot(&self) -> crate::artifacts::playbook::PlaybookSnapshot {
         crate::artifacts::playbook::PlaybookSnapshot {
             schema: self.schema.clone(),
             id: self.id.clone(),
@@ -65,7 +65,7 @@ impl PlaybookArtifact {
     }
 
     /// 🧬️ Builds a full artifact from a snapshot, leaving UI fields at defaults.
-    pub fn from_snapshot(snapshot: crate::artifacts::playbook::PlaybookSnapshot) -> Self {
+    pub async fn from_snapshot(snapshot: crate::artifacts::playbook::PlaybookSnapshot) -> Self {
         Self {
             schema: snapshot.schema,
             id: snapshot.id,
@@ -78,7 +78,7 @@ impl PlaybookArtifact {
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
-    pub fn set_snapshot(&mut self, snapshot: crate::artifacts::playbook::PlaybookSnapshot) {
+    pub async fn set_snapshot(&mut self, snapshot: crate::artifacts::playbook::PlaybookSnapshot) {
         self.schema = snapshot.schema;
         self.id = snapshot.id;
         self.version = snapshot.version;
@@ -91,7 +91,7 @@ impl PlaybookArtifact {
 
 //#region 🔖️Descriptor
 /// 🧬️ Descriptor for `s.playbook.playbook` — twenty handcrafted schema leaves.
-pub fn playbook_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
+pub async fn playbook_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
     schema::ArtifactSchemaDescriptor {
         id: "s.playbook.playbook",
         artifact: schema::FacetLeaves {
@@ -140,15 +140,15 @@ pub mod derived_construction {
         type Snapshot = PlaybookSnapshot;
         type Mutation = PlaybookMutation;
         type Diff = PlaybookDiff;
-        fn empty() -> Self { Self { snapshot: PlaybookSnapshot::default(), diagnostics: Vec::new() } }
-        fn from_snapshot(snapshot: Self::Snapshot) -> Self { Self { snapshot, diagnostics: Vec::new() } }
-        fn from_text(text: &str) -> Result<Self, store::TextError> {
+        async fn empty() -> Self { Self { snapshot: PlaybookSnapshot::default(), diagnostics: Vec::new() } }
+        async fn from_snapshot(snapshot: Self::Snapshot) -> Self { Self { snapshot, diagnostics: Vec::new() } }
+        async fn from_text(text: &str) -> Result<Self, store::TextError> {
             Ok(Self::from_snapshot(<PlaybookSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
-        fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
+        async fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
             Ok(Self::from_snapshot(<PlaybookSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
         }
-        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
+        async fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let outcome = <Self::Mutation as protocol::Mutation<Self::Snapshot>>::diff(&mutation, &self.snapshot);
             match <Self::Diff as protocol::MutationDiff<Self::Snapshot>>::apply(outcome.diff(), &self.snapshot) {
                 Ok(snapshot) => self.snapshot = snapshot,
@@ -160,7 +160,7 @@ pub mod derived_construction {
             }
             (self, outcome)
         }
-        fn absorb(
+        async fn absorb(
             mut self,
             diff: Self::Diff,
         ) -> protocol::MutationApplyResult<Self> {
@@ -168,7 +168,7 @@ pub mod derived_construction {
             self.snapshot = snapshot;
             Ok(self)
         }
-        fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
+        async fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
             if self.diagnostics.is_empty() { Ok(self.snapshot) } else { Err(self.diagnostics) }
         }
     }
@@ -192,11 +192,11 @@ pub mod derived_analysis {
         type Parts = PlaybookParts;
         const DIALECT: Dialect = Dialect { artifact_kind: "s.playbook", standard: StandardId("1"), subset: SubsetId("*") };
 
-        fn sniff(_source: &AnalyzeSource<'_>) -> IoConfidence {
+        async fn sniff(_source: &AnalyzeSource<'_>) -> IoConfidence {
             IoConfidence::Medium
         }
 
-        fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
+        async fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
             let mut parts = PlaybookParts::default();
             let mut diagnostics = Vec::new();
             let mut confidence = IoConfidence::High;
@@ -229,7 +229,7 @@ pub use derived_analysis::*;
 /// 🧱️ A blank block of the requested kind — every optional field defaulted, ready to be edited.
 /// Relocated from the deleted `⚙️engine` (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES)
 /// — pure over `PlaybookBlock`, no app-runtime parameter.
-pub fn default_block(id: String, kind: &str) -> crate::artifacts::playbook::PlaybookBlock {
+pub async fn default_block(id: String, kind: &str) -> crate::artifacts::playbook::PlaybookBlock {
     crate::artifacts::playbook::PlaybookBlock {
         id,
         label: kind.into(),
@@ -259,7 +259,7 @@ mod document_helpers_tests {
     use super::*;
 
     #[test]
-    fn default_block_sets_kind_and_label() {
+    async fn default_block_sets_kind_and_label() {
         assert_eq!(default_block("b1".into(), "text").kind, "text");
     }
 }

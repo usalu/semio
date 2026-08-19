@@ -22,16 +22,16 @@ pub struct CreateEdge {
 impl protocol::MutationKind<SemioGraphSnapshot, SemioGraphMutation> for CreateEdge {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "create", entity: "edge", kind: "create-edge", record: "CreatedEdge" };
 
-    fn diff(&self, base: &SemioGraphSnapshot) -> protocol::MutationOutcome<<SemioGraphMutation as protocol::Mutation<SemioGraphSnapshot>>::Diff> {
+    async fn diff(&self, base: &SemioGraphSnapshot) -> protocol::MutationOutcome<<SemioGraphMutation as protocol::Mutation<SemioGraphSnapshot>>::Diff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &SemioGraphSnapshot) -> Vec<SemioGraphMutation> {
+    async fn inverse(&self, base: &SemioGraphSnapshot) -> Vec<SemioGraphMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         format!("Create edge \"{}\" ({} -> {})", self.id.value, self.source.value, self.target.value)
     }
-    fn target(&self) -> Vec<String> {
+    async fn target(&self) -> Vec<String> {
         vec![self.id.value.clone()]
     }
 }

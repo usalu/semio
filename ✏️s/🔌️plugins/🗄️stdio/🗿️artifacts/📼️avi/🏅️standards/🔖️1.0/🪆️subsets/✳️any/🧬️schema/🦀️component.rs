@@ -24,13 +24,13 @@ pub struct AviArtifact {
 }
 
 impl AviArtifact {
-    pub fn to_snapshot(&self) -> AviSnapshot {
+    pub async fn to_snapshot(&self) -> AviSnapshot {
         AviSnapshot { schema: self.schema.clone(), main_header: self.main_header.clone(), streams: self.streams.clone(), idx1_present: self.idx1_present, unknown_chunks: self.unknown_chunks.clone() }
     }
-    pub fn from_snapshot(snapshot: AviSnapshot) -> Self {
+    pub async fn from_snapshot(snapshot: AviSnapshot) -> Self {
         Self { schema: snapshot.schema, main_header: snapshot.main_header, streams: snapshot.streams, idx1_present: snapshot.idx1_present, unknown_chunks: snapshot.unknown_chunks }
     }
-    pub fn set_snapshot(&mut self, snapshot: AviSnapshot) {
+    pub async fn set_snapshot(&mut self, snapshot: AviSnapshot) {
         self.schema = snapshot.schema;
         self.main_header = snapshot.main_header;
         self.streams = snapshot.streams;
@@ -39,7 +39,7 @@ impl AviArtifact {
     }
 }
 
-pub fn avi_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
+pub async fn avi_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
     schema::ArtifactSchemaDescriptor {
         id: "s.stdio.avi",
         artifact: schema::FacetLeaves {
@@ -88,27 +88,27 @@ pub mod derived_construction {
         type Snapshot = AviSnapshot;
         type Mutation = AviMutation;
         type Diff = AviDiff;
-        fn empty() -> Self {
+        async fn empty() -> Self {
             Self { snapshot: AviSnapshot::default() }
         }
-        fn from_snapshot(snapshot: Self::Snapshot) -> Self {
+        async fn from_snapshot(snapshot: Self::Snapshot) -> Self {
             Self { snapshot }
         }
-        fn from_text(text: &str) -> Result<Self, store::TextError> {
+        async fn from_text(text: &str) -> Result<Self, store::TextError> {
             Ok(Self::from_snapshot(<AviSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
-        fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
+        async fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
             Ok(Self::from_snapshot(<AviSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
         }
-        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
+        async fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let diff = apply_avi_mutation(&mut self.snapshot, &mutation);
             (self, diff)
         }
-        fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
+        async fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
             self.snapshot = <AviDiff as protocol::MutationDiff<AviSnapshot>>::apply(&diff, &self.snapshot)?;
             Ok(self)
         }
-        fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
+        async fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
             Ok(self.snapshot)
         }
     }
@@ -133,7 +133,7 @@ pub mod derived_analysis {
         type Parts = AviParts;
         const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.avi", standard: StandardId("1.0"), subset: SubsetId("*") };
 
-        fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
+        async fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
             match source {
                 AnalyzeSource::Binary(bytes) => {
                     if io::sniff_real_bytes(bytes) {
@@ -156,7 +156,7 @@ pub mod derived_analysis {
             }
         }
 
-        fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
+        async fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
             let mut parts = AviParts::default();
             let mut diagnostics = Vec::new();
             let mut confidence = IoConfidence::High;

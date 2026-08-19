@@ -24,19 +24,19 @@ pub struct Din18599Inference {
 }
 
 impl protocol::Inference<Din18599Snapshot> for Din18599Inference {
-    fn infer(snapshot: &Din18599Snapshot) -> Self {
+    async fn infer(snapshot: &Din18599Snapshot) -> Self {
         Self { outline: Din18599Outline::compute(snapshot) }
     }
 }
 
 impl protocol::InferenceSpec<Din18599Snapshot> for Din18599Inference {
-    fn inference_schema_id() -> &'static str {
+    async fn inference_schema_id() -> &'static str {
         "s.norm.din18599.inference"
     }
-    fn schema_version() -> u32 {
+    async fn schema_version() -> u32 {
         1
     }
-    fn fields() -> &'static [protocol::InferenceFieldSpec] {
+    async fn fields() -> &'static [protocol::InferenceFieldSpec] {
         &[protocol::InferenceFieldSpec { id: "s.norm.din18599.inference.outline", reads: &[] }]
     }
 }
@@ -52,7 +52,7 @@ impl ArtifactInferrer for crate::artifacts::din18599::standards::v1::subsets::an
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.norm.din18599.inference`'s facet leaves into the OS-wide inference catalog — call once at
 /// plugin init, alongside `din18599_artifact_schema_descriptor`'s registration.
-pub fn din18599_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
+pub async fn din18599_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
     schema::ArtifactInferenceDescriptor {
         id: "s.norm.din18599.inference",
         inference: schema::FacetLeaves {
@@ -73,13 +73,13 @@ mod tests {
     use protocol::Inference;
 
     #[test]
-    fn inference_determinism_law() {
+    async fn inference_determinism_law() {
         let snapshot = Din18599Snapshot::default();
         assert_eq!(Din18599Inference::infer(&snapshot), Din18599Inference::infer(&snapshot));
     }
 
     #[test]
-    fn inference_default_law() {
+    async fn inference_default_law() {
         assert_eq!(Din18599Inference::infer(&Din18599Snapshot::default()), Din18599Inference::default());
     }
 }
@@ -95,7 +95,7 @@ use crate::artifacts::din18599::BalancingInputs;
 use crate::document::{AnnexChoice, CheckReport, CheckResult, ClauseId, NormError, Quantity};
 
 /// 📋️ Full annual balancing per DIN V 18599.
-pub fn balance_annual(inputs: &BalancingInputs) -> Result<CheckReport, NormError> {
+pub async fn balance_annual(inputs: &BalancingInputs) -> Result<CheckReport, NormError> {
     let mut report = CheckReport::default();
     report.push(part_1::check(inputs)?);
     report.push(part_2::check(inputs)?);
@@ -113,7 +113,7 @@ pub fn balance_annual(inputs: &BalancingInputs) -> Result<CheckReport, NormError
 }
 
 /// 📋️ `Din18599Snapshot -> CheckReport` conformance law — the artifact's compliance evaluation.
-pub fn evaluate(document: &Din18599Snapshot) -> CheckReport {
+pub async fn evaluate(document: &Din18599Snapshot) -> CheckReport {
     balance_annual(document).unwrap_or_else(|err| {
         let mut report = CheckReport::default();
         report.push(CheckResult::from_utilization(
@@ -135,19 +135,19 @@ mod compliance_report_tests {
     use crate::artifacts::din18599::standards::v1::subsets::any::schema::{from_building, reference_wall_layers};
     use crate::document::ClimateZoneDe;
 
-    fn reference_100m2_inputs() -> BalancingInputs {
+    async fn reference_100m2_inputs() -> BalancingInputs {
         from_building(&reference_wall_layers(), 100.0, 4, ClimateZoneDe::Zone2, 0.0).unwrap()
     }
 
     #[test]
-    fn balance_annual_includes_all_parts() {
+    async fn balance_annual_includes_all_parts() {
         let inputs = reference_100m2_inputs();
         let report = balance_annual(&inputs).unwrap();
         assert_eq!(report.checks.len(), 12);
     }
 
     #[test]
-    fn part_1_check_reached_via_balance_annual() {
+    async fn part_1_check_reached_via_balance_annual() {
         let inputs = reference_100m2_inputs();
         let check = part_1::check(&inputs).unwrap();
         assert_eq!(check.clause.family, "DIN V 18599-1");

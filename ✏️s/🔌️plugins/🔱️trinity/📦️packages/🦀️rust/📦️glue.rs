@@ -53,10 +53,16 @@ pub mod artifacts {
         pub mod standards {
             #[path = "."]
             pub mod v1 {
+                #[path = "../../🗿️artifacts/♻️rewrite/🏅️standards/🔖️1/🦀️component.rs"]
+                mod component;
+                pub use component::*;
                 #[path = "."]
                 pub mod subsets {
                     #[path = "."]
                     pub mod any {
+                        #[path = "../../🗿️artifacts/♻️rewrite/🏅️standards/🔖️1/🪆️subsets/✳️any/🦀️component.rs"]
+                        mod component;
+                        pub use component::*;
                         #[path = "."]
                         pub mod schema {
                             #[path = "../../🗿️artifacts/♻️rewrite/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️component.rs"]
@@ -360,10 +366,16 @@ pub mod artifacts {
         pub mod standards {
             #[path = "."]
             pub mod v1 {
+                #[path = "../../🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🦀️component.rs"]
+                mod component;
+                pub use component::*;
                 #[path = "."]
                 pub mod subsets {
                     #[path = "."]
                     pub mod any {
+                        #[path = "../../🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🦀️component.rs"]
+                        mod component;
+                        pub use component::*;
                         #[path = "."]
                         pub mod schema {
                             #[path = "../../🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️component.rs"]

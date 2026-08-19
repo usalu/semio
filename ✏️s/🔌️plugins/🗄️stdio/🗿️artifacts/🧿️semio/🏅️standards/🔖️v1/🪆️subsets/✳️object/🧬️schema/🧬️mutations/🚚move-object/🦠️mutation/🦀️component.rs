@@ -14,16 +14,16 @@ pub struct MoveObject {
 impl protocol::MutationKind<SemioObjectSnapshot, SemioObjectMutation> for MoveObject {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "move", entity: "object", kind: "move-object", record: "MovedObject" };
 
-    fn diff(&self, base: &SemioObjectSnapshot) -> protocol::MutationOutcome<<SemioObjectMutation as protocol::Mutation<SemioObjectSnapshot>>::Diff> {
+    async fn diff(&self, base: &SemioObjectSnapshot) -> protocol::MutationOutcome<<SemioObjectMutation as protocol::Mutation<SemioObjectSnapshot>>::Diff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &SemioObjectSnapshot) -> Vec<SemioObjectMutation> {
+    async fn inverse(&self, base: &SemioObjectSnapshot) -> Vec<SemioObjectMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         format!("Move object to ({}, {}, {})", self.translation.x, self.translation.y, self.translation.z)
     }
-    fn target(&self) -> Vec<String> {
+    async fn target(&self) -> Vec<String> {
         vec!["transform".to_string()]
     }
 }

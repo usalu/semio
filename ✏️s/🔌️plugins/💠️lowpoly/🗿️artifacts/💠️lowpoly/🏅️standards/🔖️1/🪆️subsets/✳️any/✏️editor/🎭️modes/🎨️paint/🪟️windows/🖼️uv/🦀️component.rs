@@ -22,7 +22,7 @@ pub const LOWPOLY_UV_ACTIONS: &[&str] = &["addPaintLayer", "paintStrokeEnd", "pa
 
 //#region 🔖️Definition
 /// 🧱️ Stitched into the app manifest by `crate::editor::lowpoly::create_lowpoly_app`.
-pub fn definition() -> WindowKindDefinition {
+pub async fn definition() -> WindowKindDefinition {
     let projection = crate::artifacts::lowpoly::schema::default_snapshot();
     let config = LowpolyConfig::default();
     let labels = semio_framework_plugin::resolve_labels_for_locale::<LowpolyLabels>("en-US");
@@ -49,13 +49,13 @@ pub fn definition() -> WindowKindDefinition {
 
 /// 🎚️ The live chrome measures for this window — identical set to the Model window (see the master
 /// ticket's TEMPLATE.md §12.2 shared-options pattern).
-pub fn window_measures(config: &LowpolyConfig, labels: &LowpolyLabels) -> Vec<WindowMeasure> {
+pub async fn window_measures(config: &LowpolyConfig, labels: &LowpolyLabels) -> Vec<WindowMeasure> {
     lowpoly_window_measures(config, labels)
 }
 //#endregion 🔖️Definition
 
 //#region 🔖️Scene
-fn uv_canvas_layers_json(doc: &LowpolyDocument, view: LowpolyView<'_>, texture_cache: &HashMap<String, String>) -> String {
+async fn uv_canvas_layers_json(doc: &LowpolyDocument, view: LowpolyView<'_>, texture_cache: &HashMap<String, String>) -> String {
     use crate::editor::lowpoly::view::resolve_active_object_id;
     let object_id = resolve_active_object_id(view.snapshot, view.config);
     let mut layers = Vec::new();
@@ -98,7 +98,7 @@ fn uv_canvas_layers_json(doc: &LowpolyDocument, view: LowpolyView<'_>, texture_c
     serde_json::to_string(&layers).unwrap_or_else(|_| "[]".into())
 }
 
-pub fn render(view: LowpolyView<'_>, loaded: Option<&LowpolyDocument>, texture_cache: &HashMap<String, String>) -> UiNode {
+pub async fn render(view: LowpolyView<'_>, loaded: Option<&LowpolyDocument>, texture_cache: &HashMap<String, String>) -> UiNode {
     match loaded {
         Some(loaded) => build_canvas_2d_scene(LOWPOLY_PLAY_SURFACE_UV, crate::editor::lowpoly::LOWPOLY_PLAY_APP_ID, Canvas2dScene { camera_x: 0.0, camera_y: 0.0, zoom: 1.0, layers_json: uv_canvas_layers_json(loaded, view, texture_cache) }),
         None => semio_framework_plugin::ui_text(semio_framework_plugin::Label::data("Failed to load UV canvas")),
@@ -112,7 +112,7 @@ mod tests {
     use crate::editor::lowpoly::testkit::{app, render};
 
     #[test]
-    fn renders_uv_canvas() {
+    async fn renders_uv_canvas() {
         let mut a = app();
         assert!(render(&mut a, super::LOWPOLY_PLAY_BODY_UV).contains("canvas-2d"));
     }

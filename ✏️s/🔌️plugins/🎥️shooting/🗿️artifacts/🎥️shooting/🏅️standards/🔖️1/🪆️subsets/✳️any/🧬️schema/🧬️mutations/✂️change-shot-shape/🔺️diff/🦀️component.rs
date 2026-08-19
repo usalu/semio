@@ -6,7 +6,7 @@ use crate::artifacts::shooting::ShootingSnapshot;
 use crate::artifacts::shooting::diff::{ShootingShotPatchEntry, ShootingShotsDelta, ShootingDiff};
 use crate::artifacts::shooting::ShootingShotPatch;
 
-pub fn diff(payload: &ChangeShotShape, base: &ShootingSnapshot) -> protocol::MutationOutcome<ShootingDiff> {
+pub async fn diff(payload: &ChangeShotShape, base: &ShootingSnapshot) -> protocol::MutationOutcome<ShootingDiff> {
     let Some(existing) = base.shots.iter().find(|shot| shot.id == payload.id) else {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Shot \"{}\" does not exist.", payload.id), [payload.id.clone()]);
     };

@@ -28,7 +28,7 @@ pub struct Block2dBounds {
 /// 📦️ Computes `bounds` from a block2d snapshot — each rim handle template's polar `angle`
 /// (radians) / `radius` placement is converted to cartesian `(radius·cos(angle), radius·sin(angle))`
 /// and folded into the running min/max; an empty handle catalog yields `Block2dBounds::default()`.
-pub fn compute_block2d_bounds(snapshot: &Block2dSnapshot) -> Block2dBounds {
+pub async fn compute_block2d_bounds(snapshot: &Block2dSnapshot) -> Block2dBounds {
     if snapshot.handles.is_empty() {
         return Block2dBounds::default();
     }
@@ -52,18 +52,18 @@ mod tests {
     use crate::artifacts::block2d::Block2dHandleTemplate;
     use std::f64::consts::PI;
 
-    fn handle(id: &str, angle: f64, radius: f64) -> Block2dHandleTemplate {
+    async fn handle(id: &str, angle: f64, radius: f64) -> Block2dHandleTemplate {
         Block2dHandleTemplate { id: id.into(), handle_kind: "wire".into(), angle, radius }
     }
 
     #[test]
-    fn empty_catalog_yields_default_bounds() {
+    async fn empty_catalog_yields_default_bounds() {
         let snapshot = Block2dSnapshot::default();
         assert_eq!(compute_block2d_bounds(&snapshot), Block2dBounds::default());
     }
 
     #[test]
-    fn single_handle_bounds_equal_its_own_cartesian_point() {
+    async fn single_handle_bounds_equal_its_own_cartesian_point() {
         let mut snapshot = Block2dSnapshot::default();
         snapshot.handles.push(handle("h0", 0.0, 2.0));
         let bounds = compute_block2d_bounds(&snapshot);
@@ -76,7 +76,7 @@ mod tests {
     }
 
     #[test]
-    fn opposite_handles_span_the_full_diameter() {
+    async fn opposite_handles_span_the_full_diameter() {
         let mut snapshot = Block2dSnapshot::default();
         snapshot.handles.push(handle("h0", 0.0, 1.0));
         snapshot.handles.push(handle("h1", PI, 1.0));

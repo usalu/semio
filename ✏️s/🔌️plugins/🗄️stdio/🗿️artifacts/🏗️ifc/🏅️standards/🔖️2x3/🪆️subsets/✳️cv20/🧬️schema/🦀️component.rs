@@ -14,7 +14,7 @@ pub mod derived_construction {
     use dsl::{Diagnostic, Severity};
     use semio_framework_plugin::ArtifactBuilder;
 
-    fn stage_mutation_errors(diagnostics: &mut Vec<Diagnostic>, outcome: &protocol::MutationOutcome<Ifc2x3Diff>) {
+    async fn stage_mutation_errors(diagnostics: &mut Vec<Diagnostic>, outcome: &protocol::MutationOutcome<Ifc2x3Diff>) {
         diagnostics.extend(outcome.messages().iter().filter(|message| message.level >= Severity::Error).map(|message| Diagnostic {
             code: message.code.clone(),
             severity: message.level,
@@ -30,7 +30,7 @@ pub mod derived_construction {
     const UNITS_ID: u64 = 20;
     const PROJECT_ID: u64 = 1;
 
-    fn seeded_document() -> Part21Document {
+    async fn seeded_document() -> Part21Document {
         let header = Part21Header {
             file_description: vec![Part21Value::List(vec![Part21Value::Str("ViewDefinition [CoordinationView]".into())]), Part21Value::Str("2;1".into())],
             file_name: vec![],
@@ -69,14 +69,14 @@ pub mod derived_construction {
     impl Ifc2x3Cv20BuilderConstruction {
         /// ➕ The recommended entry point: always produces a document with `IFC2X3`/`CoordinationView`
         /// header and a real project+units pair.
-        pub fn new() -> Self {
+        pub async fn new() -> Self {
             Self { snapshot: Ifc2x3Snapshot { schema: "stdio.ifc.2x3".into(), document: seeded_document(), edm_preamble: None }, diagnostics: Vec::new() }
         }
 
         /// 🧱️ Adds a product instance of `type_name` (must be one of the geometry-bearing product
         /// types this MVD checks), always wiring `ObjectPlacement` (attribute index 5) to the seeded
         /// `IFCLOCALPLACEMENT`.
-        pub fn add_product(mut self, id: u64, type_name: &str, name: &str) -> Self {
+        pub async fn add_product(mut self, id: u64, type_name: &str, name: &str) -> Self {
             let instance = Part21Instance {
                 id,
                 entities: vec![(type_name.to_string(), vec![Part21Value::Str(format!("guid-{id}")), Part21Value::Unset, Part21Value::Str(name.to_string()), Part21Value::Unset, Part21Value::Unset, Part21Value::Ref(PLACEMENT_ID)])],
@@ -88,7 +88,7 @@ pub mod derived_construction {
     }
 
     impl Default for Ifc2x3Cv20BuilderConstruction {
-        fn default() -> Self {
+        async fn default() -> Self {
             Self::new()
         }
     }
@@ -101,35 +101,35 @@ pub mod derived_construction {
         /// ⚠️ `ArtifactBuilder::empty()` is mandated no-arg by the SDK trait -- falls back to
         /// `Ifc2x3Cv20BuilderConstruction::new()`'s seeded document rather than a truly empty (non-conforming)
         /// one, since `build()` requires conformance regardless.
-        fn empty() -> Self {
+        async fn empty() -> Self {
             Self::new()
         }
 
-        fn from_snapshot(snapshot: Self::Snapshot) -> Self {
+        async fn from_snapshot(snapshot: Self::Snapshot) -> Self {
             Self { snapshot, diagnostics: Vec::new() }
         }
 
-        fn from_text(text: &str) -> Result<Self, store::TextError> {
+        async fn from_text(text: &str) -> Result<Self, store::TextError> {
             Ok(Self::from_snapshot(<Ifc2x3Snapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
 
-        fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
+        async fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
             Ok(Self::from_snapshot(<Ifc2x3Snapshot as store::ArtifactPack>::decode_pack(bytes)?))
         }
 
-        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
+        async fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let diff = apply_ifc2x3_mutation(&mut self.snapshot, &mutation);
             (self, diff)
         }
 
-        fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
+        async fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
             self.snapshot = <Ifc2x3Diff as protocol::MutationDiff<Ifc2x3Snapshot>>::apply(&diff, &self.snapshot)?;
             Ok(self)
         }
 
         /// 🛡️ The real construction gate: however `self.snapshot` got here, a hard CV2.0 violation
         /// fails `build()`; soft diagnostics pass through as advisory (the `Err` path is not taken).
-        fn build(self) -> Result<Self::Snapshot, Vec<Diagnostic>> {
+        async fn build(self) -> Result<Self::Snapshot, Vec<Diagnostic>> {
             let Self { snapshot, mut diagnostics } = self;
             diagnostics.extend(check_cv20_conformance(&snapshot).into_iter().filter(|d| matches!(d.severity, Severity::Error | Severity::Fatal)));
             if diagnostics.is_empty() {
@@ -146,13 +146,13 @@ pub mod derived_construction {
         use super::*;
 
         #[test]
-        fn new_builds_clean() {
+        async fn new_builds_clean() {
             let snapshot = Ifc2x3Cv20BuilderConstruction::new().add_product(2, "IFCWALL", "Wall 1").build().expect("conforming construction must build");
             assert_eq!(snapshot.document.instances.len(), 4);
         }
 
         #[test]
-        fn hard_violation_injected_via_raw_mutate_still_fails_build() {
+        async fn hard_violation_injected_via_raw_mutate_still_fails_build() {
             let violating = Part21Instance { id: 99, entities: vec![("IFCSTRUCTURALANALYSISMODEL".into(), vec![])] };
             let mut snapshot = Ifc2x3Cv20BuilderConstruction::new().build().unwrap();
             snapshot.document.instances.push(violating);
@@ -191,18 +191,18 @@ pub mod derived_analysis {
     /// module doc comment for why this is a proxy list, not the full `IfcProduct` hierarchy).
     const GEOMETRY_BEARING_PRODUCT_TYPES: &[&str] = &["IFCWALL", "IFCWALLSTANDARDCASE", "IFCDOOR", "IFCWINDOW", "IFCSLAB", "IFCBEAM", "IFCCOLUMN", "IFCROOF", "IFCSTAIR", "IFCBUILDINGELEMENTPROXY"];
 
-    fn hard(code: &'static str, message: String) -> Diagnostic {
+    async fn hard(code: &'static str, message: String) -> Diagnostic {
         Diagnostic { code: FaultCode::new(code), severity: Severity::Error, span: TextSpan::at(1, 1), message, expected: None, scope: FaultScope::default() }
     }
-    fn soft(code: &'static str, message: String) -> Diagnostic {
+    async fn soft(code: &'static str, message: String) -> Diagnostic {
         Diagnostic { code: FaultCode::new(code), severity: Severity::Warning, span: TextSpan::at(1, 1), message, expected: None, scope: FaultScope::default() }
     }
 
-    fn declares_schema(snapshot: &Ifc2x3Snapshot, name: &str) -> bool {
+    async fn declares_schema(snapshot: &Ifc2x3Snapshot, name: &str) -> bool {
         snapshot.document.header.file_schema.iter().any(|v| v.as_list().map(|items| items.iter().any(|item| item.as_str() == Some(name))).unwrap_or(false))
     }
 
-    fn view_definition_names(snapshot: &Ifc2x3Snapshot, view: &str) -> bool {
+    async fn view_definition_names(snapshot: &Ifc2x3Snapshot, view: &str) -> bool {
         snapshot.document.header.file_description.first().and_then(|v| v.as_list()).map(|items| items.iter().any(|item| item.as_str().map(|s| s.contains(view)).unwrap_or(false))).unwrap_or(false)
     }
     //#endregion 🔖️Shared
@@ -212,7 +212,7 @@ pub mod derived_analysis {
     /// already-decoded `Ifc2x3Snapshot`. Shared single source of truth: `Ifc2x3Cv20Composer::compose`
     /// hard-gates on this pre-serialization, `Ifc2x3Cv20Builder::build` hard-gates on it too, and the
     /// registered `SubsetValidator` re-runs it post-hoc against the wire payload.
-    pub fn check_cv20_conformance(snapshot: &Ifc2x3Snapshot) -> Vec<Diagnostic> {
+    pub async fn check_cv20_conformance(snapshot: &Ifc2x3Snapshot) -> Vec<Diagnostic> {
         let mut out = Vec::new();
 
         if !declares_schema(snapshot, "IFC2X3") {
@@ -261,11 +261,11 @@ pub mod derived_analysis {
         type Parts = Ifc2x3Parts;
         const DIALECT: Dialect = DIALECT;
 
-        fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
+        async fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
             Ifc2x3AnyAnalyzer::sniff(source)
         }
 
-        fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
+        async fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
             let inner = Ifc2x3AnyAnalyzer::analyze(sources);
             let mut diagnostics = inner.diagnostics.clone();
             let mut confidence = inner.confidence;
@@ -287,7 +287,7 @@ pub mod derived_analysis {
         use super::*;
         use crate::artifacts::step::engine::part21::{Part21Document, Part21Header, Part21Instance, Part21Value};
 
-        fn header(view: &str) -> Part21Header {
+        async fn header(view: &str) -> Part21Header {
             Part21Header {
                 file_description: vec![Part21Value::List(vec![Part21Value::Str(format!("ViewDefinition [{view}]"))]), Part21Value::Str("2;1".into())],
                 file_name: vec![],
@@ -295,7 +295,7 @@ pub mod derived_analysis {
             }
         }
 
-        fn conforming_snapshot() -> Ifc2x3Snapshot {
+        async fn conforming_snapshot() -> Ifc2x3Snapshot {
             let placement = Part21Instance { id: 10, entities: vec![("IFCLOCALPLACEMENT".into(), vec![])] };
             let project = Part21Instance {
                 id: 1,
@@ -333,13 +333,13 @@ pub mod derived_analysis {
         }
 
         #[test]
-        fn conforming_snapshot_has_no_hard_diagnostics() {
+        async fn conforming_snapshot_has_no_hard_diagnostics() {
             let diagnostics = check_cv20_conformance(&conforming_snapshot());
             assert!(diagnostics.iter().all(|d| d.severity != Severity::Error), "got {diagnostics:?}");
         }
 
         #[test]
-        fn wrong_file_schema_is_hard() {
+        async fn wrong_file_schema_is_hard() {
             let mut snap = conforming_snapshot();
             snap.document.header.file_schema = vec![Part21Value::List(vec![Part21Value::Str("IFC4".into())])];
             let diagnostics = check_cv20_conformance(&snap);
@@ -347,7 +347,7 @@ pub mod derived_analysis {
         }
 
         #[test]
-        fn missing_view_definition_is_hard() {
+        async fn missing_view_definition_is_hard() {
             let mut snap = conforming_snapshot();
             snap.document.header = header("StructuralAnalysisView");
             let diagnostics = check_cv20_conformance(&snap);
@@ -355,7 +355,7 @@ pub mod derived_analysis {
         }
 
         #[test]
-        fn structural_entity_present_is_hard() {
+        async fn structural_entity_present_is_hard() {
             let mut snap = conforming_snapshot();
             snap.document.instances.push(Part21Instance { id: 99, entities: vec![("IFCSTRUCTURALANALYSISMODEL".into(), vec![])] });
             let diagnostics = check_cv20_conformance(&snap);
@@ -363,7 +363,7 @@ pub mod derived_analysis {
         }
 
         #[test]
-        fn missing_unit_assignment_is_soft() {
+        async fn missing_unit_assignment_is_soft() {
             let mut snap = conforming_snapshot();
             for (name, args) in snap.document.instances[1].entities.iter_mut() {
                 if name == "IFCPROJECT" {
@@ -375,7 +375,7 @@ pub mod derived_analysis {
         }
 
         #[test]
-        fn product_without_placement_is_soft() {
+        async fn product_without_placement_is_soft() {
             let mut snap = conforming_snapshot();
             for (name, args) in snap.document.instances[2].entities.iter_mut() {
                 if name == "IFCWALL" {

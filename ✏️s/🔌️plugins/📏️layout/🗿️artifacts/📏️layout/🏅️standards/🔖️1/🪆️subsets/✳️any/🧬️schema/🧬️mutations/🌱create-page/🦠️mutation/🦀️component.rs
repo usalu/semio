@@ -16,16 +16,16 @@ pub struct CreatePage {
 
 impl MutationKind<LayoutSnapshot, LayoutMutation> for CreatePage {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "create", entity: "page", kind: "create-page", record: "CreatedPage" };
-    fn diff(&self, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
+    async fn diff(&self, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
         super::diff::diff_create_page(self, base)
     }
-    fn inverse(&self, base: &LayoutSnapshot) -> Vec<LayoutMutation> {
+    async fn inverse(&self, base: &LayoutSnapshot) -> Vec<LayoutMutation> {
         super::inverse::inverse_create_page(self, base)
     }
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         format!("Create page \"{}\"", self.page.name)
     }
-    fn target(&self) -> Vec<String> {
+    async fn target(&self) -> Vec<String> {
         vec![self.page.id.clone()]
     }
 }

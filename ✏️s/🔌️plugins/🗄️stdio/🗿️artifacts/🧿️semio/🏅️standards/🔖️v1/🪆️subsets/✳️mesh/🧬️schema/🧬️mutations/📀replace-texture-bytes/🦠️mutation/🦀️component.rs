@@ -14,16 +14,16 @@ pub struct ReplaceTextureBytes {
 impl protocol::MutationKind<SemioMeshSnapshot, SemioMeshMutation> for ReplaceTextureBytes {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "replace", entity: "texture-bytes", kind: "replace-texture-bytes", record: "ReplacedTextureBytes" };
 
-    fn diff(&self, base: &SemioMeshSnapshot) -> protocol::MutationOutcome<<SemioMeshMutation as protocol::Mutation<SemioMeshSnapshot>>::Diff> {
+    async fn diff(&self, base: &SemioMeshSnapshot) -> protocol::MutationOutcome<<SemioMeshMutation as protocol::Mutation<SemioMeshSnapshot>>::Diff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &SemioMeshSnapshot) -> Vec<SemioMeshMutation> {
+    async fn inverse(&self, base: &SemioMeshSnapshot) -> Vec<SemioMeshMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         format!("Replace texture \"{}\" bytes", self.id)
     }
-    fn target(&self) -> Vec<String> {
+    async fn target(&self) -> Vec<String> {
         vec![self.id.clone()]
     }
 }

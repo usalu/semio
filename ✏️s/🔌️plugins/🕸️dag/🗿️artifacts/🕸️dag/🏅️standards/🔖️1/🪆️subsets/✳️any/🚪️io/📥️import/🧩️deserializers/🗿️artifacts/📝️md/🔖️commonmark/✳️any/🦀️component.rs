@@ -12,7 +12,7 @@ use semio_s_plugin_stdio::artifacts::md::{MdSnapshot, STDIO_MD_DOCUMENT_SCHEMA};
 
 pub const MD_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.md", standard: StandardId("commonmark"), subset: SubsetId::ANY };
 
-pub fn deserialize(from: &MdSnapshot) -> Result<DagSnapshot, store::TextError> {
+pub async fn deserialize(from: &MdSnapshot) -> Result<DagSnapshot, store::TextError> {
     let _ = STDIO_MD_DOCUMENT_SCHEMA;
     <DagSnapshot as store::ArtifactDsl>::parse_dsl(&from.to_text())
 }
@@ -22,7 +22,7 @@ pub struct MdIntoDag;
 impl Deserializer<DagSnapshot> for MdIntoDag {
     const FROM: Dialect = MD_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Canonical;
-    fn deserialize(payload: &IoPayload) -> IoResult<DagSnapshot> {
+    async fn deserialize(payload: &IoPayload) -> IoResult<DagSnapshot> {
         let IoPayload::Binary(bytes) = payload else {
             return Err(IoError { message: "MdIntoDag: expected a binary md payload".to_string(), diagnostics: Vec::new() });
         };

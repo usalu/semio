@@ -22,7 +22,7 @@ pub struct SemioVideoDuration {
 /// is expressed in units of `rate` ticks per second, so dividing by the rate converts to seconds.
 /// `0.0` for an empty stream or a zero numerator (honest degenerate case, not a panic — matches
 /// `audio`'s own `sampleRate == 0` handling).
-fn stream_duration_seconds(stream: &SemioVideoStream) -> f64 {
+async fn stream_duration_seconds(stream: &SemioVideoStream) -> f64 {
     if stream.rate.num == 0 {
         return 0.0;
     }
@@ -31,7 +31,7 @@ fn stream_duration_seconds(stream: &SemioVideoStream) -> f64 {
 }
 
 /// ⏱️ Computes [`SemioVideoDuration`] — pure, total, O(streams + samples).
-pub fn compute_semio_video_duration(snapshot: &SemioVideoSnapshot) -> SemioVideoDuration {
+pub async fn compute_semio_video_duration(snapshot: &SemioVideoSnapshot) -> SemioVideoDuration {
     let duration_seconds = snapshot.streams.iter().map(stream_duration_seconds).fold(0.0_f64, f64::max);
     let sample_count = snapshot.streams.iter().map(|s| s.samples.len() as u32).sum();
     SemioVideoDuration { duration_seconds, stream_count: snapshot.streams.len() as u32, sample_count }
@@ -44,7 +44,7 @@ mod tests {
     use super::*;
     use crate::artifacts::semio::standards::v1::subsets::video::schema::snapshot::{SemioRational, SemioVideoSample, SemioVideoStreamKind, STDIO_SEMIOVIDEO_DOCUMENT_SCHEMA};
 
-    fn populated() -> SemioVideoSnapshot {
+    async fn populated() -> SemioVideoSnapshot {
         SemioVideoSnapshot {
             schema: STDIO_SEMIOVIDEO_DOCUMENT_SCHEMA.into(),
             streams: vec![
@@ -62,7 +62,7 @@ mod tests {
     }
 
     #[test]
-    fn duration_is_the_max_across_every_stream() {
+    async fn duration_is_the_max_across_every_stream() {
         let duration = compute_semio_video_duration(&populated());
         // video stream: 59 / (30/1) ≈ 1.9667s; audio stream: 96000 / (48000/1) = 2.0s — audio wins.
         assert!((duration.duration_seconds - 2.0).abs() < 1e-9, "expected audio stream's 2.0s to win, got {}", duration.duration_seconds);
@@ -71,7 +71,7 @@ mod tests {
     }
 
     #[test]
-    fn zero_rate_stream_contributes_zero_not_a_panic() {
+    async fn zero_rate_stream_contributes_zero_not_a_panic() {
         let snapshot = SemioVideoSnapshot {
             schema: STDIO_SEMIOVIDEO_DOCUMENT_SCHEMA.into(),
             streams: vec![SemioVideoStream { kind: SemioVideoStreamKind::Subtitle, codec: "srt".into(), width: 0, height: 0, rate: SemioRational { num: 0, den: 1 }, samples: vec![SemioVideoSample { pts: 5, key: false, data: vec![] }] }],
@@ -82,13 +82,13 @@ mod tests {
     }
 
     #[test]
-    fn inference_determinism_law() {
+    async fn inference_determinism_law() {
         let snapshot = populated();
         assert_eq!(compute_semio_video_duration(&snapshot), compute_semio_video_duration(&snapshot));
     }
 
     #[test]
-    fn inference_default_law() {
+    async fn inference_default_law() {
         assert_eq!(compute_semio_video_duration(&SemioVideoSnapshot::default()), SemioVideoDuration::default());
     }
 }

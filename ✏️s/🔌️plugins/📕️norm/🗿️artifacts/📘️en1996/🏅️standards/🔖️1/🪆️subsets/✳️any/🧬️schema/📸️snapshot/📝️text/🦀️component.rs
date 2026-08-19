@@ -15,12 +15,12 @@ use crate::artifacts::en1996::En1996Snapshot;
 pub const EN1996_LOADBEARING_WALL_EXAMPLE_TEXT: &str = include_str!("../../../📚️examples/📕️loadbearing-wall/🖼️assets/🗣️loadbearing-wall.dsl.semio");
 
 /// 📖️ Parses `.en1996` DSL text into a `En1996Snapshot`.
-pub fn parse_dsl(text: &str) -> Result<En1996Snapshot, store::TextError> {
+pub async fn parse_dsl(text: &str) -> Result<En1996Snapshot, store::TextError> {
     <En1996Snapshot as store::ArtifactDsl>::parse_dsl(text)
 }
 
 /// 🖨️ Prints a `En1996Snapshot` back to `.en1996` DSL text.
-pub fn print_dsl(document: &En1996Snapshot) -> String {
+pub async fn print_dsl(document: &En1996Snapshot) -> String {
     store::ArtifactDsl::print_dsl(document)
 }
 
@@ -32,12 +32,12 @@ mod tests {
     use crate::document::{AnnexChoice, DesignSituation};
 
     #[test]
-    fn document_dsl_round_trips() {
+    async fn document_dsl_round_trips() {
         store::os_store::test_support::assert_dsl_round_trip(&En1996Snapshot::default());
     }
 
     #[test]
-    fn loadbearing_wall_example_fixture_parses_and_round_trips() {
+    async fn loadbearing_wall_example_fixture_parses_and_round_trips() {
         let document = parse_dsl(EN1996_LOADBEARING_WALL_EXAMPLE_TEXT).expect("parse loadbearing wall example");
         assert_eq!(document.annex, AnnexChoice::En);
         assert_eq!(document.masonry_class, crate::artifacts::en1996::MasonryClass::Class2);

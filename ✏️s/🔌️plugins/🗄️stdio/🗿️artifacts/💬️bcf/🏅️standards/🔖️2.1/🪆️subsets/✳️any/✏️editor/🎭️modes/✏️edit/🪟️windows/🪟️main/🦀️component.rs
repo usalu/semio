@@ -12,19 +12,19 @@ pub const BODY_KEY: &str = TableWindowKit::KIND_ID;
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
-pub fn definition() -> WindowKindDefinition {
+pub async fn definition() -> WindowKindDefinition {
     TableWindowKit::editable_window_kind()
 }
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-fn columns_and_rows(document: &BcfSnapshot) -> (Vec<String>, Vec<Vec<String>>) {
+async fn columns_and_rows(document: &BcfSnapshot) -> (Vec<String>, Vec<Vec<String>>) {
     let columns = vec!["GUID".to_string(), "Title".to_string(), "Status".to_string(), "Priority".to_string(), "Author".to_string()];
     let rows = document.topics.iter().map(|topic| vec![topic.guid.clone(), topic.title.clone(), topic.status.clone(), topic.priority.clone(), topic.creation_author.clone()]).collect();
     (columns, rows)
 }
 
-pub fn render(document: &BcfSnapshot) -> UiNode {
+pub async fn render(document: &BcfSnapshot) -> UiNode {
     let (columns, rows) = columns_and_rows(document);
     TableWindowKit::render(&TableView { columns, rows })
 }
@@ -36,14 +36,14 @@ mod tests {
     use super::*;
 
     #[test]
-    fn definition_declares_the_editable_table_window_kit() {
+    async fn definition_declares_the_editable_table_window_kit() {
         let def = definition();
         assert_eq!(def.id, TableWindowKit::KIND_ID);
         assert!(def.actions.iter().any(|action| action.id == "set-cell"));
     }
 
     #[test]
-    fn render_produces_a_table_node_for_the_default_document() {
+    async fn render_produces_a_table_node_for_the_default_document() {
         let document = BcfSnapshot::default();
         let _node = render(&document);
     }

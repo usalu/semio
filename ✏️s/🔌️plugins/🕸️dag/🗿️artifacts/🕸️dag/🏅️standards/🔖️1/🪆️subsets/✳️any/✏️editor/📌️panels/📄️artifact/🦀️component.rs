@@ -11,7 +11,7 @@ pub const DAG_PLAY_BODY_DOCUMENT: &str = "dag.play.document";
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
-pub fn definition() -> PanelTabDefinition {
+pub async fn definition() -> PanelTabDefinition {
     PanelTabDefinition { kind: PanelTabKind::App(FRAMEWORK_PANEL_TAB_ARTIFACT_ID.into()), label: LocalizedLabel::native(FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL, "Dokument"), group: PanelGroup::Workbench, body_key: Some(DAG_PLAY_BODY_DOCUMENT.into()), children: Vec::new() }
 }
 //#endregion 🔖️Definition
@@ -22,7 +22,7 @@ pub fn definition() -> PanelTabDefinition {
 /// tree's selection/hover presence from that domain (`.interaction_domain`) and prunes stale ids
 /// through that same topology, so no per-item click action is declared here anymore (clicks are
 /// translated into `interactionSelect` generically).
-pub fn render(document: &DagSnapshot, labels: &DagPlayLabels) -> UiNode {
+pub async fn render(document: &DagSnapshot, labels: &DagPlayLabels) -> UiNode {
     let scene = crate::artifacts::dag::dag_working_scene(document);
     let node_items: Vec<UiTreeItemNode> = scene
         .nodes
@@ -45,7 +45,7 @@ mod tests {
     use crate::editor::dag::testkit::{new_app, render as render_body};
 
     #[test]
-    fn dag_play_labels_resolve_native_by_default() {
+    async fn dag_play_labels_resolve_native_by_default() {
         let mut app = new_app();
         let json = render_body(&mut app, DAG_PLAY_BODY_DOCUMENT);
         assert!(json.contains("Nodes"));
@@ -53,7 +53,7 @@ mod tests {
     }
 
     #[test]
-    fn definition_binds_the_framework_document_tab_to_this_body_key() {
+    async fn definition_binds_the_framework_document_tab_to_this_body_key() {
         let definition = definition();
         assert_eq!(definition.id(), FRAMEWORK_PANEL_TAB_ARTIFACT_ID);
         assert_eq!(definition.body_key.as_deref(), Some(DAG_PLAY_BODY_DOCUMENT));

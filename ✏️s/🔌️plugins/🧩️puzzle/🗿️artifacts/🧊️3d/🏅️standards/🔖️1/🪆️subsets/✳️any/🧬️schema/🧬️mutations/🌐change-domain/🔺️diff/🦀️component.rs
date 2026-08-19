@@ -3,7 +3,7 @@ use crate::artifacts::puzzle3d::diff::Puzzle3dDiff;
 use crate::artifacts::puzzle3d::Puzzle3dSnapshot;
 
 //#region 🔖️Diff
-pub fn diff(payload: &super::mutation::ChangeDomain, base: &Puzzle3dSnapshot) -> protocol::MutationOutcome<Puzzle3dDiff> {
+pub async fn diff(payload: &super::mutation::ChangeDomain, base: &Puzzle3dSnapshot) -> protocol::MutationOutcome<Puzzle3dDiff> {
     // 🌐️ `domain` is a document-root singleton field (not a catalog member addressed by id), so
     // there is no missing-target case — only the no-op check applies.
     if payload.new_domain == base.domain {

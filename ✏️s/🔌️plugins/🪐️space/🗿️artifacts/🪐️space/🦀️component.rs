@@ -24,7 +24,7 @@ pub const SPACE_INDEX_DIALECT: semio_framework_plugin::app::Dialect =
 
 //#region 🔖️ArtifactKind
 /// 🗂️ OS artifact kind for this document.
-pub fn artifact_kind() -> ArtifactKindSpec {
+pub async fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "space.sspace".into(),
         name: "Space Artifacts".into(),
@@ -47,7 +47,7 @@ pub fn artifact_kind() -> ArtifactKindSpec {
 /// `.inferences(...)`/`.composers(...)` calls this wave: the index has no bespoke text inference and no
 /// stdio import/export composer this ticket needs (C4 only asks for the snapshot + the four mutations +
 /// the projection helper).
-pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
+pub async fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
     use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
 
     ArtifactDefinition::new(ArtifactIdentity::parse("s.space")?)
@@ -64,7 +64,7 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
 }
 
 /// 🔖️ Assembles s.space's typed runtime declaration.
-pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
+pub async fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
     semio_framework_plugin::ArtifactDeclaration::builder(definition()?)
         .schema(crate::artifacts::space::standards::v1::subsets::any::schema::sspace_index_schema_descriptor())
         .document_codec::<semio_framework_plugin::EditorApp<crate::editor::space_index::SpaceIndexEditor>>()

@@ -101,20 +101,20 @@ pub enum SemioPresentationMutation {
 //#region 🔖️Apply
 /// ▶️ `let d = mutation.diff(&*snapshot); *snapshot = d.apply(snapshot); d` -- the diff is the
 /// single semantics source, never a separate imperative apply path (apply-and-capture is banned).
-pub fn apply_semio_presentation_mutation(snapshot: &mut SemioPresentationSnapshot, mutation: &SemioPresentationMutation) -> protocol::MutationOutcome<SemioPresentationDiff> {
+pub async fn apply_semio_presentation_mutation(snapshot: &mut SemioPresentationSnapshot, mutation: &SemioPresentationMutation) -> protocol::MutationOutcome<SemioPresentationDiff> {
     let outcome = Mutation::diff(mutation, snapshot);
     outcome.apply_to(snapshot)
 }
 //#endregion 🔖️Apply
 
 //#region 🔖️Helpers
-fn shape_at<'a>(base: &'a SemioPresentationSnapshot, slide_index: usize, shape_index: usize) -> Option<&'a SlideShape> {
+async fn shape_at<'a>(base: &'a SemioPresentationSnapshot, slide_index: usize, shape_index: usize) -> Option<&'a SlideShape> {
     base.slides.get(slide_index)?.shapes.get(shape_index)
 }
-fn master_at<'a>(base: &'a SemioPresentationSnapshot, id: &str) -> Option<&'a SlideMaster> {
+async fn master_at<'a>(base: &'a SemioPresentationSnapshot, id: &str) -> Option<&'a SlideMaster> {
     base.masters.iter().find(|m| m.id == id)
 }
-fn layout_at<'a>(base: &'a SemioPresentationSnapshot, id: &str) -> Option<&'a SlideLayout> {
+async fn layout_at<'a>(base: &'a SemioPresentationSnapshot, id: &str) -> Option<&'a SlideLayout> {
     base.layouts.iter().find(|l| l.id == id)
 }
 //#endregion 🔖️Helpers
@@ -123,7 +123,7 @@ fn layout_at<'a>(base: &'a SemioPresentationSnapshot, id: &str) -> Option<&'a Sl
 impl Mutation<SemioPresentationSnapshot> for SemioPresentationMutation {
     type Diff = SemioPresentationDiff;
 
-    fn diff(&self, base: &SemioPresentationSnapshot) -> protocol::MutationOutcome<Self::Diff> {
+    async fn diff(&self, base: &SemioPresentationSnapshot) -> protocol::MutationOutcome<Self::Diff> {
         protocol::MutationOutcome::new(match self {
             SemioPresentationMutation::NoMutation => SemioPresentationDiff::default(),
             SemioPresentationMutation::SetSnapshot { snapshot } => diff_set_snapshot(base, snapshot),
@@ -143,7 +143,7 @@ impl Mutation<SemioPresentationSnapshot> for SemioPresentationMutation {
         })
     }
 
-    fn inverse(&self, base: &SemioPresentationSnapshot) -> Vec<Self> {
+    async fn inverse(&self, base: &SemioPresentationSnapshot) -> Vec<Self> {
         match self {
             SemioPresentationMutation::NoMutation => vec![SemioPresentationMutation::NoMutation],
             SemioPresentationMutation::SetSnapshot { .. } => vec![SemioPresentationMutation::SetSnapshot { snapshot: base.clone() }],
@@ -201,7 +201,7 @@ impl Mutation<SemioPresentationSnapshot> for SemioPresentationMutation {
 /// data-carrying enums the `dsl::DslOps` derive cannot bridge) — reuses the diff file's
 /// `pub(crate)` grammar primitives rather than duplicating them. Grammar: `keyword arg=value ...`
 /// (space-separated), matching the docx/gif/svg convention.
-fn print_presentation_mutation(m: &SemioPresentationMutation) -> String {
+async fn print_presentation_mutation(m: &SemioPresentationMutation) -> String {
     match m {
         SemioPresentationMutation::NoMutation => "no-mutation".to_string(),
         SemioPresentationMutation::SetSnapshot { snapshot } => format!("set-snapshot snapshot={}", crate::artifacts::semio::standards::v1::subsets::presentation::schema::diff::enc_presentation_snapshot(snapshot)),
@@ -220,7 +220,7 @@ fn print_presentation_mutation(m: &SemioPresentationMutation) -> String {
         SemioPresentationMutation::SetLayoutMaster { id, master_id } => format!("set-layout-master id={} master-id={}", enc_str(id), enc_str(master_id)),
     }
 }
-fn parse_presentation_mutation(line: &str) -> Result<SemioPresentationMutation, String> {
+async fn parse_presentation_mutation(line: &str) -> Result<SemioPresentationMutation, String> {
     if line == "no-mutation" {
         return Ok(SemioPresentationMutation::NoMutation);
     }
@@ -249,10 +249,10 @@ fn parse_presentation_mutation(line: &str) -> Result<SemioPresentationMutation, 
 }
 
 impl OpText for SemioPresentationMutation {
-    fn print_op(&self) -> String {
+    async fn print_op(&self) -> String {
         print_presentation_mutation(self)
     }
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
+    async fn parse_op(line: &str) -> Result<Self, store::TextError> {
         parse_presentation_mutation(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
 }
@@ -277,7 +277,7 @@ const OP_KEYWORDS: [&str; 15] = [
     "remove-layout",
     "set-layout-master",
 ];
-fn variant_ordinal(m: &SemioPresentationMutation) -> u8 {
+async fn variant_ordinal(m: &SemioPresentationMutation) -> u8 {
     match m {
         SemioPresentationMutation::NoMutation => 0,
         SemioPresentationMutation::SetSnapshot { .. } => 1,
@@ -299,7 +299,7 @@ fn variant_ordinal(m: &SemioPresentationMutation) -> u8 {
 /// ✂️ Just the `key=value ...` argument tail of `print_presentation_mutation` (empty for
 /// `no-mutation`) — the binary frame's `tag` byte already carries the keyword, so the text keyword
 /// itself is redundant in the binary payload.
-fn print_presentation_mutation_args(m: &SemioPresentationMutation) -> String {
+async fn print_presentation_mutation_args(m: &SemioPresentationMutation) -> String {
     match print_presentation_mutation(m).split_once(' ') {
         Some((_, rest)) => rest.to_string(),
         None => String::new(),
@@ -316,13 +316,13 @@ fn print_presentation_mutation_args(m: &SemioPresentationMutation) -> String {
 /// grammar recipe's own gap table — same honest boundary the sibling `../../🔺️diff/💾️binary/
 /// 📡️component.protocol.semio` uses).
 impl OpBinary for SemioPresentationMutation {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         const OP_BINARY_FORMAT: u8 = 1;
         let mut out = vec![OP_BINARY_FORMAT, variant_ordinal(self)];
         out.extend_from_slice(print_presentation_mutation_args(self).as_bytes());
         Ok(out)
     }
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         const OP_BINARY_FORMAT: u8 = 1;
         if bytes.len() < 2 {
             return Err(protocol::ProtocolError::Malformed { what: "op header", offset: 0, detail: "truncated (need format+tag)".to_string() });
@@ -344,7 +344,7 @@ impl OpBinary for SemioPresentationMutation {
 /// for this facet's own `op_text_binary_roundtrip_law` AND `ops_grammar_conformance_law`/
 /// `protocol_walk_law` in `🎹️composer/🦀️component.rs`.
 #[cfg(test)]
-pub(crate) fn demo_mutation_cases() -> Vec<SemioPresentationMutation> {
+pub(crate) async fn demo_mutation_cases() -> Vec<SemioPresentationMutation> {
     use crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioPoint2;
     use crate::artifacts::semio::standards::v1::subsets::presentation::schema::snapshot::{PlaceholderKind, SlidePictureImage, SlideTableCell, SlideTableRow};
 
@@ -384,14 +384,14 @@ mod tests {
     use protocol::command::DiffAlgebra;
     use protocol::MutationDiff;
 
-    fn frame(x: f64, y: f64, w: f64, h: f64) -> SlideFrame {
+    async fn frame(x: f64, y: f64, w: f64, h: f64) -> SlideFrame {
         SlideFrame { origin: SemioPoint2 { x, y }, width: w, height: h }
     }
-    fn text_block(text: &str) -> DocBlock {
+    async fn text_block(text: &str) -> DocBlock {
         DocBlock::paragraph(text)
     }
 
-    fn fixture() -> SemioPresentationSnapshot {
+    async fn fixture() -> SemioPresentationSnapshot {
         SemioPresentationSnapshot {
             schema: "s.stdio.semio.presentation".into(),
             masters: vec![SlideMaster { id: "master1".into(), shapes: Vec::new() }],
@@ -404,7 +404,7 @@ mod tests {
     }
 
     //#region 🔖️Fixtures
-    fn sweep_a() -> SemioPresentationSnapshot {
+    async fn sweep_a() -> SemioPresentationSnapshot {
         SemioPresentationSnapshot {
             schema: "s.stdio.semio.presentation".into(),
             masters: vec![
@@ -421,7 +421,7 @@ mod tests {
         }
     }
 
-    fn sweep_b() -> SemioPresentationSnapshot {
+    async fn sweep_b() -> SemioPresentationSnapshot {
         SemioPresentationSnapshot {
             schema: "s.stdio.semio.presentation".into(),
             masters: vec![
@@ -454,7 +454,7 @@ mod tests {
     //#endregion 🔖️Fixtures
 
     //#region 🔖️MutationDiffLaw
-    fn sample_mutations() -> Vec<SemioPresentationMutation> {
+    async fn sample_mutations() -> Vec<SemioPresentationMutation> {
         vec![
             SemioPresentationMutation::NoMutation,
             SemioPresentationMutation::SetSnapshot { snapshot: sweep_b() },
@@ -475,12 +475,12 @@ mod tests {
         ]
     }
 
-    fn apply_valid(diff: &SemioPresentationDiff, base: &SemioPresentationSnapshot) -> SemioPresentationSnapshot {
+    async fn apply_valid(diff: &SemioPresentationDiff, base: &SemioPresentationSnapshot) -> SemioPresentationSnapshot {
         MutationDiff::apply(diff, base).expect("valid Semio presentation diff fixture")
     }
 
     #[test]
-    fn mutation_diff_law() {
+    async fn mutation_diff_law() {
         for mutation in sample_mutations() {
             let base = fixture();
             let diff_direct = Mutation::diff(&mutation, &base);
@@ -497,7 +497,7 @@ mod tests {
 
     //#region 🔖️InverseLaw
     #[test]
-    fn inverse_law() {
+    async fn inverse_law() {
         for mutation in sample_mutations() {
             let base = fixture();
 
@@ -518,7 +518,7 @@ mod tests {
     //#endregion 🔖️InverseLaw
 
     //#region 🔖️AbsorbLaw
-    fn assert_absorb_matches_sequential(base: &SemioPresentationSnapshot, d1: &SemioPresentationDiff, d2: &SemioPresentationDiff) -> SemioPresentationDiff {
+    async fn assert_absorb_matches_sequential(base: &SemioPresentationSnapshot, d1: &SemioPresentationDiff, d2: &SemioPresentationDiff) -> SemioPresentationDiff {
         let sequential = apply_valid(d2, &apply_valid(d1, base));
         let mut absorbed = d1.clone();
         MutationDiff::absorb(&mut absorbed, d2.clone());
@@ -526,12 +526,12 @@ mod tests {
         absorbed
     }
 
-    fn slides_triple(diff: &SemioPresentationDiff) -> &crate::artifacts::semio::standards::v1::subsets::presentation::schema::diff::SlidesDiff {
+    async fn slides_triple(diff: &SemioPresentationDiff) -> &crate::artifacts::semio::standards::v1::subsets::presentation::schema::diff::SlidesDiff {
         diff.slides.as_ref().expect("slides diff present")
     }
 
     #[test]
-    fn absorb_law() {
+    async fn absorb_law() {
         // Canonical: Insert(2)+Remove(0) -> {removed:[0], added:[(1,f)]}.
         {
             let base = fixture();
@@ -617,7 +617,7 @@ mod tests {
 
     //#region 🔖️BetweenRoundtripLaw
     #[test]
-    fn between_roundtrip_law() {
+    async fn between_roundtrip_law() {
         let a = sweep_a();
         let b = sweep_b();
         assert_eq!(apply_valid(&<SemioPresentationDiff as DiffAlgebra<SemioPresentationSnapshot>>::between(&a, &b), &a), b);
@@ -638,7 +638,7 @@ mod tests {
 
     //#region 🔖️CodecRetentionLaw
     #[test]
-    fn codec_retention_law() {
+    async fn codec_retention_law() {
         let snap = fixture();
         let bytes = store::ArtifactPack::encode_pack(&snap);
         let decoded = <SemioPresentationSnapshot as store::ArtifactPack>::decode_pack(&bytes).expect("decode");
@@ -651,7 +651,7 @@ mod tests {
     /// `masters`, `layouts`, and `slides` (incl. the nested shape tree, `document::DocBlock` reuse,
     /// and the `layout_id` tri-state).
     #[test]
-    fn field_sweep() {
+    async fn field_sweep() {
         let a = sweep_a();
         let b = sweep_b();
 
@@ -702,7 +702,7 @@ mod tests {
 
     //#region 🔖️OpTextBinaryRoundtripLaw
     #[test]
-    fn op_text_binary_roundtrip_law() {
+    async fn op_text_binary_roundtrip_law() {
         let mutations = vec![
             SemioPresentationMutation::NoMutation,
             SemioPresentationMutation::SetSnapshot { snapshot: sweep_b() },

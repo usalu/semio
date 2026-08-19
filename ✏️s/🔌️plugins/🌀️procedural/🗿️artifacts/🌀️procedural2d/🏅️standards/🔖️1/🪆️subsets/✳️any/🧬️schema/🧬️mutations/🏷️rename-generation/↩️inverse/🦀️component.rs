@@ -5,7 +5,7 @@ use crate::artifacts::procedural2d::Procedural2dSnapshot;
 use crate::artifacts::procedural2d::mutations::rename_generation;
 
 //#region 🔖️Inverse
-pub fn inverse(payload: &RenameGeneration, base: &Procedural2dSnapshot) -> Vec<Procedural2dMutation> {
+pub async fn inverse(payload: &RenameGeneration, base: &Procedural2dSnapshot) -> Vec<Procedural2dMutation> {
     match base.generation.generations.iter().find(|entry| entry.id == payload.id) {
                 Some(entry) => vec![rename_generation(payload.id.clone(), entry.name.clone())],
                 None => Vec::new(),

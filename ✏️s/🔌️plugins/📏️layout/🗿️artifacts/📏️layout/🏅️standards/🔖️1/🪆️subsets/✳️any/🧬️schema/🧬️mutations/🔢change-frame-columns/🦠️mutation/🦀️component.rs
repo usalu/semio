@@ -15,16 +15,16 @@ pub struct ChangeFrameColumns {
 
 impl MutationKind<LayoutSnapshot, LayoutMutation> for ChangeFrameColumns {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "change", entity: "frame-columns", kind: "change-frame-columns", record: "ChangedFrameColumns" };
-    fn diff(&self, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
+    async fn diff(&self, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
         super::diff::diff_change_frame_columns(self, base)
     }
-    fn inverse(&self, base: &LayoutSnapshot) -> Vec<LayoutMutation> {
+    async fn inverse(&self, base: &LayoutSnapshot) -> Vec<LayoutMutation> {
         super::inverse::inverse_change_frame_columns(self, base)
     }
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         format!("Change frame \"{}\" columns", self.frame_id)
     }
-    fn target(&self) -> Vec<String> {
+    async fn target(&self) -> Vec<String> {
         vec![self.page_id.clone(), self.frame_id.clone()]
     }
 }

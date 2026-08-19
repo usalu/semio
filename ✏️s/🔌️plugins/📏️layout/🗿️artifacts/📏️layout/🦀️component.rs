@@ -45,7 +45,7 @@ pub type LayoutDrawingChild = store::ArtifactChild<SemioDrawingSnapshot>;
 /// the drawing content being wrapped so peers converge on replay instead of minting a random id.
 /// `source_tag` disambiguates which import path produced the content (`"dwg"`/`"dxf"`/`"svg"`) so two
 /// different-format imports of otherwise-identical geometry don't collide on the same child id.
-pub fn background_drawing_child_handle(source_tag: &str, content: &SemioDrawingSnapshot) -> LayoutDrawingChild {
+pub async fn background_drawing_child_handle(source_tag: &str, content: &SemioDrawingSnapshot) -> LayoutDrawingChild {
     use std::hash::{Hash, Hasher};
     let content_json = serde_json::to_string(content).expect("SemioDrawingSnapshot is always JSON-serializable");
     let mut hasher = std::collections::hash_map::DefaultHasher::new();
@@ -86,27 +86,27 @@ mod working_scene {
         static BACKGROUND_DRAWING_SCRATCH: RefCell<HashMap<String, SemioDrawingSnapshot>> = RefCell::new(HashMap::new());
     }
 
-    pub(crate) fn cache_background_drawing_content(child_id: &str, content: SemioDrawingSnapshot) {
+    pub(crate) async fn cache_background_drawing_content(child_id: &str, content: SemioDrawingSnapshot) {
         BACKGROUND_DRAWING_SCRATCH.with(|cache| {
             cache.borrow_mut().insert(child_id.to_string(), content);
         });
     }
 
-    pub(crate) fn cached_background_drawing_content(child_id: &str) -> Option<SemioDrawingSnapshot> {
+    pub(crate) async fn cached_background_drawing_content(child_id: &str) -> Option<SemioDrawingSnapshot> {
         BACKGROUND_DRAWING_SCRATCH.with(|cache| cache.borrow().get(child_id).cloned())
     }
 }
 
 /// 📝️ Populates the working-scene scratch cache for a freshly-minted `background_drawing` child —
 /// the one call site that has the literal decoded content (import), or a fixture builder.
-pub fn cache_background_drawing_content(child_id: &str, content: SemioDrawingSnapshot) {
+pub async fn cache_background_drawing_content(child_id: &str, content: SemioDrawingSnapshot) {
     working_scene::cache_background_drawing_content(child_id, content);
 }
 
 /// 🔎️ The one accessor every render/export call site funnels through — `None` both when the
 /// document has no `background_drawing` slot and when the slot's content hasn't (or no longer) lives
 /// in this process's scratch cache (see this region's staleness-gap doc).
-pub fn background_drawing_content(snapshot: &LayoutSnapshot) -> Option<SemioDrawingSnapshot> {
+pub async fn background_drawing_content(snapshot: &LayoutSnapshot) -> Option<SemioDrawingSnapshot> {
     let child = snapshot.background_drawing.as_ref()?;
     working_scene::cached_background_drawing_content(&child.child_id)
 }
@@ -134,7 +134,7 @@ pub struct LayoutCamera {
 }
 
 impl Default for LayoutCamera {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self { x: 0.0, y: 0.0, zoom: 1.0 }
     }
 }
@@ -243,19 +243,19 @@ pub enum Frame {
 }
 
 impl Frame {
-    pub fn id(&self) -> &str {
+    pub async fn id(&self) -> &str {
         match self {
             Frame::Rect { id, .. } | Frame::Text { id, .. } | Frame::Image { id, .. } => id,
         }
     }
 
-    pub fn bounds(&self) -> &LayoutBounds {
+    pub async fn bounds(&self) -> &LayoutBounds {
         match self {
             Frame::Rect { bounds, .. } | Frame::Text { bounds, .. } | Frame::Image { bounds, .. } => bounds,
         }
     }
 
-    pub fn kind_str(&self) -> &str {
+    pub async fn kind_str(&self) -> &str {
         match self {
             Frame::Rect { .. } => "rect",
             Frame::Text { .. } => "text",
@@ -263,7 +263,7 @@ impl Frame {
         }
     }
 
-    pub fn visible(&self) -> bool {
+    pub async fn visible(&self) -> bool {
         match self {
             Frame::Rect { visible, .. } | Frame::Text { visible, .. } | Frame::Image { visible, .. } => visible.unwrap_or(true),
         }
@@ -426,7 +426,7 @@ pub use crate::artifacts::layout::schema::snapshot::LayoutSnapshot;
 //#region 🔖️ArtifactKind
 /// 🗂️ This artifact's `ArtifactKindSpec` — stitched into the app manifest by
 /// `crate::editor::layout::create_layout_app`'s `🔖️Manifest` region.
-pub fn artifact_kind() -> ArtifactKindSpec {
+pub async fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "2d.layout".into(),
         name: "Layout".into(),
@@ -448,7 +448,7 @@ pub fn artifact_kind() -> ArtifactKindSpec {
 /// `OnceLock`-backed `io_registry::entries()` convention used by `standards::v1::subsets::any::io::io_registry`.
 /// Relocated from `⚙️engine/🦀️component.rs` alongside `declaration()` (ticket
 /// 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE) — `declaration()`'s only caller, kept private.
-fn pilot_languages() -> &'static [dsl::LanguageSpec] {
+async fn pilot_languages() -> &'static [dsl::LanguageSpec] {
     static LANGUAGES: std::sync::OnceLock<Vec<dsl::LanguageSpec>> = std::sync::OnceLock::new();
     LANGUAGES
         .get_or_init(|| {
@@ -520,7 +520,7 @@ fn pilot_languages() -> &'static [dsl::LanguageSpec] {
 /// `.setup()`: it registers the `LayoutPlayApp` CONFIG/PRESENCE schema, an app-scope concern
 /// `ArtifactDeclaration` deliberately has no field for (see that struct's own doc) —
 /// `register_app_schema_descriptor` is not in §6's artifact-scoped function set.
-pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
+pub async fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
     use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
     let rows: &[(&str, &str, &str, &[(&str, &str)], Option<(&str, &str)>)] = &[
         ("s.layout.standard.v1", "standard", "1", &[], None),
@@ -557,7 +557,7 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
     Ok(definition)
 }
 
-pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
+pub async fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
     semio_framework_plugin::ArtifactDeclaration::builder(definition()?)
         .schema(crate::artifacts::layout::schema::layout_artifact_schema_descriptor())
         .inferences([crate::artifacts::layout::standards::v1::subsets::any::schema::inferences::layout_artifact_inference_descriptor()])
@@ -570,19 +570,19 @@ pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semi
 
 //#region 🔖️CollectionSupport
 impl Identified<String> for Page {
-    fn id(&self) -> &String {
+    async fn id(&self) -> &String {
         &self.id
     }
 }
 
 impl Identified<String> for TextStory {
-    fn id(&self) -> &String {
+    async fn id(&self) -> &String {
         &self.id
     }
 }
 
 impl Identified<String> for ImageLink {
-    fn id(&self) -> &String {
+    async fn id(&self) -> &String {
         &self.id
     }
 }
@@ -627,7 +627,7 @@ pub struct PagePatch {
 
 /// 🩹️ Pure field-apply for a {@link FramePatch} onto a {@link Frame} — no inverse capture (every
 /// semantic mutation computes its own inverse from `base` directly; see `↩️inverse` triad leaves).
-fn apply_frame_field_patch(frame: &mut Frame, patch: &FramePatch) {
+async fn apply_frame_field_patch(frame: &mut Frame, patch: &FramePatch) {
     {
         let bounds = match frame {
             Frame::Rect { bounds, .. } | Frame::Text { bounds, .. } | Frame::Image { bounds, .. } => bounds,
@@ -667,7 +667,7 @@ fn apply_frame_field_patch(frame: &mut Frame, patch: &FramePatch) {
 }
 
 impl Patchable<PagePatch> for Page {
-    fn apply_patch(&mut self, patch: &PagePatch) {
+    async fn apply_patch(&mut self, patch: &PagePatch) {
         if let Some(name) = &patch.name {
             self.name = name.clone();
         }
@@ -717,7 +717,7 @@ impl Patchable<PagePatch> for Page {
         }
     }
 
-    fn diff_patch(&self, other: &Self) -> Option<PagePatch> {
+    async fn diff_patch(&self, other: &Self) -> Option<PagePatch> {
         let mut patch = PagePatch::default();
         let mut changed = false;
         if self.name != other.name {
@@ -767,13 +767,13 @@ pub struct TextStoryPatch {
 }
 
 impl Patchable<TextStoryPatch> for TextStory {
-    fn apply_patch(&mut self, patch: &TextStoryPatch) {
+    async fn apply_patch(&mut self, patch: &TextStoryPatch) {
         if let Some(content) = &patch.content {
             self.content = content.clone();
         }
     }
 
-    fn diff_patch(&self, other: &Self) -> Option<TextStoryPatch> {
+    async fn diff_patch(&self, other: &Self) -> Option<TextStoryPatch> {
         (self.content != other.content).then(|| TextStoryPatch { content: Some(other.content.clone()) })
     }
 }
@@ -785,13 +785,13 @@ pub struct ImageLinkPatch {
 }
 
 impl Patchable<ImageLinkPatch> for ImageLink {
-    fn apply_patch(&mut self, patch: &ImageLinkPatch) {
+    async fn apply_patch(&mut self, patch: &ImageLinkPatch) {
         if let Some(path) = &patch.path {
             self.path = path.clone();
         }
     }
 
-    fn diff_patch(&self, other: &Self) -> Option<ImageLinkPatch> {
+    async fn diff_patch(&self, other: &Self) -> Option<ImageLinkPatch> {
         (self.path != other.path).then(|| ImageLinkPatch { path: Some(other.path.clone()) })
     }
 }
@@ -820,12 +820,12 @@ pub struct FramePatch {
 mod tests {
     use super::*;
 
-    fn rect_frame(id: &str, visible: Option<bool>) -> Frame {
+    async fn rect_frame(id: &str, visible: Option<bool>) -> Frame {
         Frame::Rect { id: id.into(), layer_id: "layer-1".into(), bounds: LayoutBounds { x: 0.0, y: 0.0, width: 10.0, height: 10.0, rotation: 0.0 }, locked: None, visible, fill: None, stroke: None }
     }
 
     #[test]
-    fn frame_helpers_report_id_bounds_kind_and_visibility() {
+    async fn frame_helpers_report_id_bounds_kind_and_visibility() {
         let rect = rect_frame("frame-1", Some(false));
         assert_eq!(rect.id(), "frame-1");
         assert_eq!(rect.kind_str(), "rect");
@@ -857,7 +857,7 @@ mod tests {
     /// 🗂️ The manifest-facing `ArtifactKindSpec.schema` matches the store envelope schema for layout
     /// (unlike e.g. flow, layout uses the same string for both).
     #[test]
-    fn artifact_kind_uses_the_fixture_schema() {
+    async fn artifact_kind_uses_the_fixture_schema() {
         assert_eq!(artifact_kind().schema, LAYOUT_DOCUMENT_SCHEMA);
         assert_eq!(artifact_kind().source_format, LAYOUT_DOCUMENT_SCHEMA);
     }

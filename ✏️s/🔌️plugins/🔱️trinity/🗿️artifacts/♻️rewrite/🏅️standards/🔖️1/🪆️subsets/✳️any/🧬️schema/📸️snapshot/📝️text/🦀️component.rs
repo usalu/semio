@@ -17,12 +17,12 @@ use store::ArtifactDsl;
 pub const NAKAGIN_LABEL_CORE_EXAMPLE_TEXT: &str = include_str!("../../../📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio");
 
 /// 📖️ Parses `.rewrite` DSL text into a `RewriteSnapshot`.
-pub fn parse_dsl(text: &str) -> Result<RewriteSnapshot, store::TextError> {
+pub async fn parse_dsl(text: &str) -> Result<RewriteSnapshot, store::TextError> {
     <RewriteSnapshot as ArtifactDsl>::parse_dsl(text)
 }
 
 /// 🖨️ Prints a `RewriteSnapshot` back to `.rewrite` DSL text.
-pub fn print_dsl(document: &RewriteSnapshot) -> String {
+pub async fn print_dsl(document: &RewriteSnapshot) -> String {
     ArtifactDsl::print_dsl(document)
 }
 
@@ -35,7 +35,7 @@ mod tests {
     use std::collections::BTreeMap;
     use ::store::os_store::test_support::{assert_dsl_pack_equivalence, assert_dsl_round_trip};
 
-    fn sample_rule_state() -> RewriteSnapshot {
+    async fn sample_rule_state() -> RewriteSnapshot {
         let mut parameter_bindings = BTreeMap::new();
         parameter_bindings.insert("label".to_string(), PropertyValue::String("nakagin-core".into()));
         parameter_bindings.insert("count".to_string(), PropertyValue::Number(3.0));
@@ -51,37 +51,37 @@ mod tests {
     }
 
     #[test]
-    fn dsl_round_trip_rewrite_rule_state() {
+    async fn dsl_round_trip_rewrite_rule_state() {
         assert_dsl_round_trip(&sample_rule_state());
     }
 
     #[test]
-    fn nakagin_label_core_example_dsl_round_trips() {
+    async fn nakagin_label_core_example_dsl_round_trips() {
         let document = parse_dsl(NAKAGIN_LABEL_CORE_EXAMPLE_TEXT).expect("parse nakagin label-core example");
         assert_dsl_round_trip(&document);
         assert_dsl_pack_equivalence(&document);
     }
 
     #[test]
-    fn rewrite_rule_state_parse_dsl_errors_on_unknown_keyword() {
+    async fn rewrite_rule_state_parse_dsl_errors_on_unknown_keyword() {
         let err = RewriteSnapshot::parse_dsl("bogus line").unwrap_err();
         assert!(err.message.contains("expected"));
     }
 
     #[test]
-    fn rewrite_rule_state_parse_dsl_errors_on_malformed_binding() {
+    async fn rewrite_rule_state_parse_dsl_errors_on_malformed_binding() {
         assert!(RewriteSnapshot::parse_dsl("binding onlykey").is_err());
     }
 
     #[test]
-    fn rewrite_rule_state_parse_dsl_errors_on_malformed_layout() {
+    async fn rewrite_rule_state_parse_dsl_errors_on_malformed_layout() {
         assert!(RewriteSnapshot::parse_dsl("layout a").is_err());
         assert!(RewriteSnapshot::parse_dsl("layout a notanumber 2").is_err());
         assert!(RewriteSnapshot::parse_dsl("layout a 1 notanumber").is_err());
     }
 
     #[test]
-    fn rewrite_rule_state_parse_dsl_valid_binding_and_layout_lines() {
+    async fn rewrite_rule_state_parse_dsl_valid_binding_and_layout_lines() {
         let mut original = RewriteSnapshot { before_fixture_json: "{}".into(), lhs_json: "{}".into(), rhs_json: "{}".into(), ..Default::default() };
         original.parameter_bindings.insert("label".to_string(), PropertyValue::String("hi".into()));
         original.rule_layout.insert("a".to_string(), LayoutPoint { x: 1.0, y: 2.0 });
@@ -91,7 +91,7 @@ mod tests {
     }
 
     #[test]
-    fn rewrite_rule_state_parse_dsl_errors_on_malformed_quoted_blob() {
+    async fn rewrite_rule_state_parse_dsl_errors_on_malformed_quoted_blob() {
         assert!(RewriteSnapshot::parse_dsl("before nope").is_err());
         assert!(RewriteSnapshot::parse_dsl("before \"abc").is_err());
         assert!(RewriteSnapshot::parse_dsl("before \"ok\" trailing").is_err());
@@ -99,7 +99,7 @@ mod tests {
     }
 
     #[test]
-    fn quote_blob_round_trips_backslashes_and_quotes() {
+    async fn quote_blob_round_trips_backslashes_and_quotes() {
         let mut state = sample_rule_state();
         state.before_fixture_json = "a\\b\"c\nd".to_string();
         assert_dsl_round_trip(&state);

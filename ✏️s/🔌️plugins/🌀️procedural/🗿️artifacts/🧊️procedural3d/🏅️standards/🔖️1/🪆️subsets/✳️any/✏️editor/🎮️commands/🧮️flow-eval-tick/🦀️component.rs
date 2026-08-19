@@ -11,7 +11,7 @@ use serde::{Deserialize, Serialize};
 #[dsl(keyword = "flow-eval-tick")]
 pub struct FlowEvalTick {}
 
-pub fn handle(_payload: &FlowEvalTick, doc: &ArtifactView<'_, Procedural3dSnapshot>, cfg: &ConfigView<'_, Procedural3dConfig>, session: &mut FlowEvalSession) -> Result<Emit<Procedural3dMutation, Procedural3dConfigMutation>, Fault> {
+pub async fn handle(_payload: &FlowEvalTick, doc: &ArtifactView<'_, Procedural3dSnapshot>, cfg: &ConfigView<'_, Procedural3dConfig>, session: &mut FlowEvalSession) -> Result<Emit<Procedural3dMutation, Procedural3dConfigMutation>, Fault> {
     let fixture = &doc.snapshot.fixture;
     let mut host = flow_host_with_session(fixture, session);
     let more = session.tick(&mut host);
@@ -47,7 +47,7 @@ mod tests {
     use crate::editor::procedural3d::Procedural3dCommand;
 
     #[test]
-    fn flow_eval_tick_does_not_panic_with_nothing_pending() {
+    async fn flow_eval_tick_does_not_panic_with_nothing_pending() {
         let _serial = crate::editor::procedural3d::test_support::lock();
         let mut app = app();
         dispatch(&mut app, Procedural3dCommand::FlowEvalTick(FlowEvalTick {}));

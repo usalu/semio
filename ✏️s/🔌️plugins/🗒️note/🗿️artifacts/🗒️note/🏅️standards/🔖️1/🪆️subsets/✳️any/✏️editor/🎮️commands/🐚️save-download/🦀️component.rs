@@ -10,7 +10,7 @@ use serde::{Deserialize, Serialize};
 #[dsl(keyword = "save-download")]
 pub struct SaveDownload {}
 
-pub fn handle(_payload: &SaveDownload, doc: &ArtifactView<'_, NoteSnapshot>, _cfg: &ConfigView<'_, NoteConfig>, _ctx: &mut crate::editor::note::NoteDispatchCtx) -> Result<Emit<NoteMutation, NoteConfigMutation>, Fault> {
+pub async fn handle(_payload: &SaveDownload, doc: &ArtifactView<'_, NoteSnapshot>, _cfg: &ConfigView<'_, NoteConfig>, _ctx: &mut crate::editor::note::NoteDispatchCtx) -> Result<Emit<NoteMutation, NoteConfigMutation>, Fault> {
     let data = crate::artifacts::note::dsl::print_dsl(doc.snapshot);
     Ok(Emit::effect(Effect::DownloadMediaExport { filename: "🗒️semio.note.dsl".into(), mime_type: "text/plain".into(), data, encoding: None }))
 }
@@ -24,7 +24,7 @@ mod tests {
     use crate::editor::note::NoteCommand;
 
     #[test]
-    fn save_download_and_load_request_effects() {
+    async fn save_download_and_load_request_effects() {
         let mut app = note_app();
         let save = dispatch(&mut app, NoteCommand::SaveDownload(SaveDownload {}));
         assert!(save.mutations.is_empty());

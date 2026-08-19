@@ -18,19 +18,19 @@ pub struct MoveLayer {
 impl protocol::MutationKind<RasterSnapshot, RasterMutation> for MoveLayer {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "move", entity: "layer", kind: "move-layer", record: "MovedLayer" };
 
-    fn diff(&self, base: &RasterSnapshot) -> protocol::MutationOutcome<RasterDiff> {
+    async fn diff(&self, base: &RasterSnapshot) -> protocol::MutationOutcome<RasterDiff> {
         crate::artifacts::raster::mutations::move_layer::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &RasterSnapshot) -> Vec<RasterMutation> {
+    async fn inverse(&self, base: &RasterSnapshot) -> Vec<RasterMutation> {
         crate::artifacts::raster::mutations::move_layer::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         format!("Move layer {} to ({}, {})", self.layer_id, self.new_x, self.new_y)
     }
 
-    fn target(&self) -> Vec<String> {
+    async fn target(&self) -> Vec<String> {
         vec![self.layer_id.clone()]
     }
 }

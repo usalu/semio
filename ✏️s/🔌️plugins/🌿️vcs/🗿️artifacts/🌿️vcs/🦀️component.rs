@@ -19,7 +19,7 @@ pub const VCS_DIALECT: Dialect = Dialect { artifact_kind: "s.vcs.vcs", standard:
 //#region 🔖️ArtifactKind
 /// 🗂️ This artifact's `ArtifactKindSpec` — stitched into the editor manifest by
 /// `crate::editor::vcs::create_vcs_app`'s `🔖️Manifest` region.
-pub fn artifact_kind() -> ArtifactKindSpec {
+pub async fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "vcs.document".into(),
         name: "VCS Document".into(),
@@ -37,7 +37,7 @@ pub fn artifact_kind() -> ArtifactKindSpec {
 }
 //#endregion 🔖️ArtifactKind
 //#region 🔖️Declaration
-pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
+pub async fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
     use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
     ArtifactDefinition::new(ArtifactIdentity::parse("s.vcs")?)
         .capability(ArtifactCapability::new(ArtifactIdentity::parse("s.vcs.schema.artifact")?, ArtifactCapabilityKind::schema()).descriptor(b"s.vcs.vcs")?.claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::schema(), "s.vcs.vcs")?)?)?
@@ -74,7 +74,7 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
 /// per debt D1, deleted repo-wide only in W6); wiring them into this field too is real follow-up
 /// work, not required for the tree to register or for any law to hold (mirrors the stdio pilot's
 /// own documented deviation, `📓️w2-p-report.md`).
-pub fn artifact() -> semio_framework_plugin::app::declarations::ArtifactDeclaration {
+pub async fn artifact() -> semio_framework_plugin::app::declarations::ArtifactDeclaration {
     use semio_framework_plugin::app::declarations::ArtifactDeclaration;
     use store::os_io::ArtifactKindId;
     ArtifactDeclaration { kind: ArtifactKindId::parse("s.vcs.vcs").expect("canonical vcs.vcs kind"), localization: &[], standards: vec![crate::artifacts::vcs::standards::v1::standard()] }

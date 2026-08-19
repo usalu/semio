@@ -13,7 +13,7 @@ pub struct DeleteSelection {}
 /// 🕹️ Reads the `graph` domain's current selection instead of a deleted config field — no
 /// `SetSelection` config mutation needed afterwards, the framework auto-prunes the deleted ids out of
 /// `graph`'s selection via `interaction_topology`.
-fn delete_selected(config: &SpaceConfig, selected: &[String]) -> Emit<WorkflowMutation, SpaceConfigMutation> {
+async fn delete_selected(config: &SpaceConfig, selected: &[String]) -> Emit<WorkflowMutation, SpaceConfigMutation> {
     let artifact_mutations = selected.iter().cloned().map(|node_id| WorkflowMutation::RemoveNode { node_id }).collect();
     let mut config_mutations = Vec::new();
     if config.active_node_id.as_ref().is_some_and(|id| selected.contains(id)) {
@@ -30,11 +30,11 @@ fn delete_selected(config: &SpaceConfig, selected: &[String]) -> Emit<WorkflowMu
 /// only through that macro-generated path (`SpaceApp::handle` always routes this command through
 /// `apply` below instead), so it degrades to treating the selection as empty, matching the same gap
 /// `SpaceApp::render`'s own selection-dependent branches already carry.
-pub fn handle(_payload: &DeleteSelection, _doc: &ArtifactView<'_, WorkflowSnapshot>, cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
+pub async fn handle(_payload: &DeleteSelection, _doc: &ArtifactView<'_, WorkflowSnapshot>, cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
     Ok(delete_selected(cfg.snapshot, &[]))
 }
 
-pub fn apply(_payload: &DeleteSelection, _doc: &ArtifactView<'_, WorkflowSnapshot>, cfg: &ConfigView<'_, SpaceConfig>, interaction: &InteractionView<'_>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
+pub async fn apply(_payload: &DeleteSelection, _doc: &ArtifactView<'_, WorkflowSnapshot>, cfg: &ConfigView<'_, SpaceConfig>, interaction: &InteractionView<'_>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
     Ok(delete_selected(cfg.snapshot, &interaction.selection("graph").ids))
 }
 
@@ -53,7 +53,7 @@ mod tests {
     /// downstream crate can populate a genuine `InteractionView`, see `testkit::app`'s own doc
     /// comment), then confirms `deleteSelection` removes exactly that node.
     #[test]
-    fn delete_selection_removes_the_live_selected_node() {
+    async fn delete_selection_removes_the_live_selected_node() {
         seed_draw_plugin();
         let mut app = app_with_registry();
         dispatch(&mut app, SpaceCommand::SpawnApp(spawn_app::SpawnApp { plugin_id: "draw".into(), app_id: test_surface_id("draw"), x: 10.0, y: 10.0 }));

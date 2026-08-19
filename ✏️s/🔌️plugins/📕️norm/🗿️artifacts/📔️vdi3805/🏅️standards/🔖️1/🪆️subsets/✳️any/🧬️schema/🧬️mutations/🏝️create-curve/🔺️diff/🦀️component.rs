@@ -6,7 +6,7 @@ use crate::artifacts::vdi3805::{Vdi3805Diff, Vdi3805Snapshot};
 //#region 🔖️Diff
 /// 🔺️ A duplicate id is `mutation.duplicate-id` — an id-keyed entity that already exists cannot be
 /// "created" again.
-pub fn diff(payload: &CreateCurve, base: &Vdi3805Snapshot) -> protocol::MutationOutcome<Vdi3805Diff> {
+pub async fn diff(payload: &CreateCurve, base: &Vdi3805Snapshot) -> protocol::MutationOutcome<Vdi3805Diff> {
     if base.curves.contains_key(&payload.curve.id) {
         return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("A curve with id \"{}\" already exists.", payload.curve.id), [payload.curve.id.clone()]);
     }

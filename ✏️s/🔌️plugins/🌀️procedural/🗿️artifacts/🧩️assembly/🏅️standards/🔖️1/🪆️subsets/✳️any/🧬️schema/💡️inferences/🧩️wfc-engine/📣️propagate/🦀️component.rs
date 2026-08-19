@@ -13,11 +13,11 @@ pub(crate) struct PropQueue {
 }
 
 impl PropQueue {
-    pub fn new(node_count: usize) -> Self {
+    pub async fn new(node_count: usize) -> Self {
         Self { queue: std::collections::VecDeque::new(), in_queue: vec![false; node_count] }
     }
 
-    pub fn push(&mut self, n: NodeId) {
+    pub async fn push(&mut self, n: NodeId) {
         let idx = n.index();
         if !self.in_queue[idx] {
             self.in_queue[idx] = true;
@@ -25,23 +25,23 @@ impl PropQueue {
         }
     }
 
-    pub fn pop(&mut self) -> Option<NodeId> {
+    pub async fn pop(&mut self) -> Option<NodeId> {
         let raw = self.queue.pop_front()?;
         self.in_queue[raw as usize] = false;
         Some(NodeId(raw))
     }
 
     #[allow(dead_code)] // queue-introspection API exercised by the step/resume API added in a later phase
-    pub fn is_empty(&self) -> bool {
+    pub async fn is_empty(&self) -> bool {
         self.queue.is_empty()
     }
 
-    pub fn clear(&mut self) {
+    pub async fn clear(&mut self) {
         self.queue.clear();
         self.in_queue.iter_mut().for_each(|b| *b = false);
     }
 
-    pub fn push_all(&mut self, node_count: usize) {
+    pub async fn push_all(&mut self, node_count: usize) {
         self.clear();
         for i in 0..node_count {
             self.push(NodeId::from_index(i));
@@ -56,7 +56,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn push_dedups_and_fifo_orders() {
+    async fn push_dedups_and_fifo_orders() {
         let mut q = PropQueue::new(4);
         q.push(NodeId(1));
         q.push(NodeId(2));
@@ -67,7 +67,7 @@ mod tests {
     }
 
     #[test]
-    fn popped_node_can_be_repushed() {
+    async fn popped_node_can_be_repushed() {
         let mut q = PropQueue::new(2);
         q.push(NodeId(0));
         q.pop();
@@ -76,7 +76,7 @@ mod tests {
     }
 
     #[test]
-    fn clear_resets_membership() {
+    async fn clear_resets_membership() {
         let mut q = PropQueue::new(2);
         q.push(NodeId(0));
         q.clear();
@@ -86,7 +86,7 @@ mod tests {
     }
 
     #[test]
-    fn push_all_enqueues_every_node_once() {
+    async fn push_all_enqueues_every_node_once() {
         let mut q = PropQueue::new(3);
         q.push_all(3);
         let mut seen = Vec::new();

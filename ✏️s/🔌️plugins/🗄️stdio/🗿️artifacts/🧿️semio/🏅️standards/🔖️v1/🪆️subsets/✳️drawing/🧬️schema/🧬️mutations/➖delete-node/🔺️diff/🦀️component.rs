@@ -10,7 +10,7 @@ use crate::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::
 //#region 🔖️ParentSplit
 /// ✂️️ Splits `at` into (parent address, own index within the parent's `children`) -- `None` for
 /// the layer root (empty `path`), which has no parent to remove a child from.
-pub(crate) fn parent_and_index(at: &NodePath) -> Option<(NodePath, usize)> {
+pub(crate) async fn parent_and_index(at: &NodePath) -> Option<(NodePath, usize)> {
     let mut parent_path = at.path.clone();
     let index = parent_path.pop()?;
     Some((NodePath { layer: at.layer, path: parent_path }, index))
@@ -18,7 +18,7 @@ pub(crate) fn parent_and_index(at: &NodePath) -> Option<(NodePath, usize)> {
 //#endregion 🔖️ParentSplit
 
 //#region 🔖️Diff
-pub fn diff(payload: &DeleteNode, base: &SemioDrawingSnapshot) -> protocol::MutationOutcome<SemioDrawingDiff> {
+pub async fn diff(payload: &DeleteNode, base: &SemioDrawingSnapshot) -> protocol::MutationOutcome<SemioDrawingDiff> {
     let Some((parent, index)) = parent_and_index(&payload.at) else {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Node at layer #{} has no parent to delete from (layer root).", payload.at.layer), [payload.at.layer.to_string()]);
     };

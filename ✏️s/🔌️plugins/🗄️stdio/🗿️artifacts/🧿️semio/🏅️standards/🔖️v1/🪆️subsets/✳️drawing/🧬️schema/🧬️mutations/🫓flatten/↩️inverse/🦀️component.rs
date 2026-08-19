@@ -8,7 +8,7 @@ use crate::artifacts::semio::standards::v1::subsets::drawing::schema::mutations:
 use crate::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::{DrawNode, SemioDrawingSnapshot};
 
 //#region 🔖️Inverse
-pub fn inverse(payload: &FlattenNode, base: &SemioDrawingSnapshot) -> Vec<SemioDrawingMutation> {
+pub async fn inverse(payload: &FlattenNode, base: &SemioDrawingSnapshot) -> Vec<SemioDrawingMutation> {
     match node_at(base, &payload.at) {
         Some(node @ DrawNode::Group { children, .. }) if collect_flattened_leaves(children).is_some() => {
             vec![SemioDrawingMutation::Unflatten(unflatten::mutation::UnflattenNode { at: payload.at.clone(), original: node.clone() })]

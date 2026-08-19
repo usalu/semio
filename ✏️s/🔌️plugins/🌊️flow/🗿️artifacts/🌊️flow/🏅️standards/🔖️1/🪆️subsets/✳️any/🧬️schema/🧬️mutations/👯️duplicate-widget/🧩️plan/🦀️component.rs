@@ -11,7 +11,7 @@ use protocol::{Identified, PlanError, Planner};
 use super::mutation::DuplicateWidget;
 
 //#region 🧩️Plan
-pub fn plan(payload: &DuplicateWidget, base: &FlowSnapshot, planner: &mut Planner<FlowSnapshot, FlowMutation>) -> Result<(), PlanError> {
+pub async fn plan(payload: &DuplicateWidget, base: &FlowSnapshot, planner: &mut Planner<FlowSnapshot, FlowMutation>) -> Result<(), PlanError> {
     precondition(payload, base).map_err(PlanError::Invalid)?;
     let scene = flow_working_scene(base);
     let source = scene.widgets.iter().find(|widget| widget.id() == &payload.source_id).expect("precondition confirmed source_id is present");
@@ -33,7 +33,7 @@ pub fn plan(payload: &DuplicateWidget, base: &FlowSnapshot, planner: &mut Planne
 /// ✅️ Shared by `plan` (mapped to a typed `PlanError`, so a direct `Planner::call`/`plan_of` caller
 /// never panics on bad input) and `CompositeMutationKind::validate` (the `ArtifactStore::dispatch`
 /// pre-check every mutation gets before it is even encoded).
-pub fn precondition(payload: &DuplicateWidget, base: &FlowSnapshot) -> Result<(), String> {
+pub async fn precondition(payload: &DuplicateWidget, base: &FlowSnapshot) -> Result<(), String> {
     if payload.source_id == payload.new_id {
         return Err("duplicate-widget: new_id must differ from source_id".into());
     }
@@ -55,18 +55,18 @@ mod tests {
     use flow::Widget;
     use protocol::{fold_plan_diff, fold_plan_inverse, Mutation, MutationDiff};
 
-    fn base_with_source_widget() -> FlowSnapshot {
+    async fn base_with_source_widget() -> FlowSnapshot {
         let base = FlowSnapshot::default();
         let create = FlowMutation::CreateWidget(CreateWidget { index: 0, widget: Widget::InputNote { id: "note-1".into(), text: "hello".into() } });
         create.diff(&base).diff().apply(&base).expect("valid mutation diff")
     }
 
-    fn sample_payload() -> DuplicateWidget {
+    async fn sample_payload() -> DuplicateWidget {
         DuplicateWidget { source_id: "note-1".into(), new_id: "note-2".into(), synapse_id: "note-1-to-note-2".into(), from_port: "out".into(), to_port: "in".into() }
     }
 
     #[test]
-    fn plan_folds_to_the_same_snapshot_as_applying_create_then_connect_by_hand() {
+    async fn plan_folds_to_the_same_snapshot_as_applying_create_then_connect_by_hand() {
         let base = base_with_source_widget();
         let payload = sample_payload();
 
@@ -81,7 +81,7 @@ mod tests {
     }
 
     #[test]
-    fn fold_plan_inverse_restores_base_exactly() {
+    async fn fold_plan_inverse_restores_base_exactly() {
         let base = base_with_source_widget();
         let payload = sample_payload();
 
@@ -94,14 +94,14 @@ mod tests {
     }
 
     #[test]
-    fn precondition_rejects_a_missing_source_widget() {
+    async fn precondition_rejects_a_missing_source_widget() {
         let base = FlowSnapshot::default();
         let error = precondition(&sample_payload(), &base).expect_err("note-1 does not exist yet");
         assert!(error.contains("note-1"));
     }
 
     #[test]
-    fn precondition_rejects_a_new_id_already_taken() {
+    async fn precondition_rejects_a_new_id_already_taken() {
         let base = base_with_source_widget();
         let payload = DuplicateWidget { new_id: "note-1".into(), ..sample_payload() };
         let error = precondition(&payload, &base).expect_err("new_id collides with source_id");

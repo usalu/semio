@@ -10,7 +10,7 @@ pub const PROCEDURAL2D_PLAY_BODY_CATALOGUE: &str = "procedural2d.play.catalogue"
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
-pub fn definition() -> PanelTabDefinition {
+pub async fn definition() -> PanelTabDefinition {
     PanelTabDefinition {
         kind: PanelTabKind::App(FRAMEWORK_PANEL_TAB_CATALOGUE_ID.into()),
         label: LocalizedLabel::native(FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, "Katalog"),
@@ -21,7 +21,7 @@ pub fn definition() -> PanelTabDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(labels: &Procedural2dLabels) -> UiNode {
+pub async fn render(labels: &Procedural2dLabels) -> UiNode {
     let sources = [("inputSlider", labels.source_slider), ("inputNote", labels.source_note)];
     let components = [("math.add", labels.component_add), ("logic.and", labels.component_and), ("text.concat", labels.component_concat)];
     let sinks = [("outputPreview", labels.sink_preview), ("outputExport", labels.sink_export)];
@@ -64,13 +64,13 @@ mod tests {
     use crate::editor::procedural2d::testkit::{app, render as render_body};
 
     #[test]
-    fn catalogue_lists_show_modes() {
+    async fn catalogue_lists_show_modes() {
         let mut app = app();
         assert!(render_body(&mut app, PROCEDURAL2D_PLAY_BODY_CATALOGUE).contains("procedural2d-play-catalogue.mode.preview"));
     }
 
     #[test]
-    fn procedural2d_labels_resolve_native_english_by_default() {
+    async fn procedural2d_labels_resolve_native_english_by_default() {
         let mut app = app();
         let json = render_body(&mut app, PROCEDURAL2D_PLAY_BODY_CATALOGUE);
         assert!(json.contains("\"Sources\""));

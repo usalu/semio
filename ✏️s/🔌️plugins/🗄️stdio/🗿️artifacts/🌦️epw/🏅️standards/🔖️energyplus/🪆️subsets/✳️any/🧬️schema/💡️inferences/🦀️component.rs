@@ -25,7 +25,7 @@ pub struct EpwInference {
 }
 
 impl protocol::Inference<EpwSnapshot> for EpwInference {
-    fn infer(snapshot: &EpwSnapshot) -> Self {
+    async fn infer(snapshot: &EpwSnapshot) -> Self {
         Self { climate: compute_epw_climate_summary(snapshot) }
     }
 }
@@ -33,19 +33,19 @@ impl protocol::Inference<EpwSnapshot> for EpwInference {
 /// 🌱 Defined in terms of `infer` (not derived) — keeps the law correct regardless of whether
 /// `EpwSnapshot::default()`'s `records` ever stops being empty.
 impl Default for EpwInference {
-    fn default() -> Self {
+    async fn default() -> Self {
         <Self as protocol::Inference<EpwSnapshot>>::infer(&EpwSnapshot::default())
     }
 }
 
 impl protocol::InferenceSpec<EpwSnapshot> for EpwInference {
-    fn inference_schema_id() -> &'static str {
+    async fn inference_schema_id() -> &'static str {
         "s.stdio.epw.inference"
     }
-    fn schema_version() -> u32 {
+    async fn schema_version() -> u32 {
         1
     }
-    fn fields() -> &'static [protocol::InferenceFieldSpec] {
+    async fn fields() -> &'static [protocol::InferenceFieldSpec] {
         &[protocol::InferenceFieldSpec { id: "s.stdio.epw.inference.climate", reads: &["records"] }]
     }
 }
@@ -65,7 +65,7 @@ impl semio_framework_plugin::ArtifactInferrer for crate::artifacts::epw::standar
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.stdio.epw.inference`'s facet leaves into the OS-wide inference catalog — call
 /// once at plugin init, alongside `epw_artifact_schema_descriptor`'s registration.
-pub fn epw_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
+pub async fn epw_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
     schema::ArtifactInferenceDescriptor {
         id: "s.stdio.epw.inference",
         inference: schema::FacetLeaves {
@@ -86,13 +86,13 @@ mod tests {
     use protocol::Inference;
 
     #[test]
-    fn inference_determinism_law() {
+    async fn inference_determinism_law() {
         let snapshot = EpwSnapshot::default();
         assert_eq!(EpwInference::infer(&snapshot), EpwInference::infer(&snapshot));
     }
 
     #[test]
-    fn inference_default_law() {
+    async fn inference_default_law() {
         assert_eq!(EpwInference::infer(&EpwSnapshot::default()), EpwInference::default());
     }
 }

@@ -27,11 +27,11 @@ pub enum PptxTransitionalEditorCommand {
 }
 
 impl protocol::OpText for PptxTransitionalEditorCommand {
-    fn print_op(&self) -> String {
+    async fn print_op(&self) -> String {
         let PptxTransitionalEditorCommand::SetPage { index, text } = self;
         format!("set-page index={index} text={}", text.replace('\\', "\\\\").replace('\n', "\\n").replace(' ', "\\s"))
     }
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
+    async fn parse_op(line: &str) -> Result<Self, store::TextError> {
         let rest = line.strip_prefix("set-page ").ok_or_else(|| store::TextError::new(format!("pptx transitional editor command: unknown line {line:?}"), dsl::TextSpan::at(1, 1)))?;
         let mut index = None;
         let mut text = String::new();
@@ -50,10 +50,10 @@ impl protocol::OpText for PptxTransitionalEditorCommand {
 }
 
 impl protocol::OpBinary for PptxTransitionalEditorCommand {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         Ok(<Self as protocol::OpText>::print_op(self).into_bytes())
     }
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         let line = String::from_utf8(bytes.to_vec()).map_err(|error| protocol::ProtocolError::Malformed { what: "pptx transitional editor command utf8", offset: 0, detail: error.to_string() })?;
         <Self as protocol::OpText>::parse_op(&line).map_err(|error| protocol::ProtocolError::Malformed { what: "pptx transitional editor command", offset: 0, detail: error.to_string() })
     }
@@ -63,14 +63,14 @@ impl protocol::OpBinary for PptxTransitionalEditorCommand {
 //#region 🔖️Helpers
 /// 🧮️ The FIRST `TextBox`/`Placeholder` shape on a slide — the only shape `set-page` can ever
 /// address (see `handle`'s own doc comment for the honest multi-shape scope note).
-fn first_text_shape_index(slide: &PptxSlide) -> Option<usize> {
+async fn first_text_shape_index(slide: &PptxSlide) -> Option<usize> {
     slide.shapes.iter().position(|shape| matches!(shape, PptxShape::TextBox { .. } | PptxShape::Placeholder { .. }))
 }
 
 /// 🧮️ Pure `set-page` -> `PptxMutation` mapping, standalone so it is directly unit-testable
 /// without constructing a full `ArtifactView`. `None` covers "slide index out of range" and "no
 /// text-bearing shape on that slide" — both documented no-ops.
-fn build_set_page_mutation(snapshot: &PptxSnapshot, slide_index: usize, text: &str) -> Option<PptxMutation> {
+async fn build_set_page_mutation(snapshot: &PptxSnapshot, slide_index: usize, text: &str) -> Option<PptxMutation> {
     let slide = snapshot.presentation.slides.get(slide_index)?;
     let shape_index = first_text_shape_index(slide)?;
     let text_frame: Vec<PptxParagraph> = text.split('\n').map(PptxParagraph::text).collect();
@@ -98,7 +98,7 @@ impl ArtifactEditor for PptxTransitionalEditor {
     const DIALECT: Dialect = PPTX_TRANSITIONAL_EDITOR_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = STDIO_PPTX_DOCUMENT_SCHEMA;
 
-    fn initial_snapshot() -> PptxSnapshot {
+    async fn initial_snapshot() -> PptxSnapshot {
         PptxSnapshot::default()
     }
 
@@ -109,7 +109,7 @@ impl ArtifactEditor for PptxTransitionalEditor {
     /// simple page view — a multi-shape slide's other shapes are read-only here; a real per-shape
     /// editor is future work, not faked. A slide with no text-bearing shape, or an out-of-range
     /// `index`, is a documented no-op (`Emit::default()`).
-    fn handle(
+    async fn handle(
         command: &Self::Command,
         doc: &ArtifactView<'_, Self::Snapshot>,
         _cfg: &ConfigView<'_, Self::Config>,
@@ -125,7 +125,7 @@ impl ArtifactEditor for PptxTransitionalEditor {
         }
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> UiNode {
+    async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> UiNode {
         match body_key {
             main::BODY_KEY => main::render(doc.snapshot),
             _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))),
@@ -135,7 +135,7 @@ impl ArtifactEditor for PptxTransitionalEditor {
 //#endregion 🔖️Editor
 
 //#region 🔖️Manifest
-pub fn create_pptx_transitional_editor() -> semio_framework_plugin::AppDefinition {
+pub async fn create_pptx_transitional_editor() -> semio_framework_plugin::AppDefinition {
     Editor::builder(PPTX_TRANSITIONAL_EDITOR_DIALECT)
         .document(["semio", "stdio", "pptx"])
         .icon_id("presentation")
@@ -153,25 +153,25 @@ mod tests {
     use super::*;
 
     #[test]
-    fn create_pptx_transitional_editor_builds_a_definition_for_the_editor_role() {
+    async fn create_pptx_transitional_editor_builds_a_definition_for_the_editor_role() {
         let def = create_pptx_transitional_editor();
         assert_eq!(def.role, semio_framework_plugin::AppRole::Editor);
         assert_eq!(def.dialect, PPTX_TRANSITIONAL_EDITOR_DIALECT.into());
     }
 
     #[test]
-    fn editor_dialect_matches_the_artifact_coordinate() {
+    async fn editor_dialect_matches_the_artifact_coordinate() {
         assert_eq!(<PptxTransitionalEditor as ArtifactEditor>::DIALECT, PPTX_TRANSITIONAL_EDITOR_DIALECT);
     }
 
     #[test]
-    fn editor_declares_the_document_window() {
+    async fn editor_declares_the_document_window() {
         let def = create_pptx_transitional_editor();
         assert!(def.window_kinds.iter().any(|window| window.id == main::WINDOW_KIND_ID));
     }
 
     #[test]
-    fn set_page_writes_the_first_text_bearing_shape_only() {
+    async fn set_page_writes_the_first_text_bearing_shape_only() {
         let mut snapshot = PptxSnapshot::default();
         snapshot.presentation.slides.push(PptxSlide {
             shapes: vec![
@@ -187,14 +187,14 @@ mod tests {
     }
 
     #[test]
-    fn set_page_on_a_slide_with_no_text_shape_is_a_documented_no_op() {
+    async fn set_page_on_a_slide_with_no_text_shape_is_a_documented_no_op() {
         let mut snapshot = PptxSnapshot::default();
         snapshot.presentation.slides.push(PptxSlide { shapes: vec![PptxShape::Picture { blip_rel_id: "rId1".into(), position: Default::default() }] });
         assert!(build_set_page_mutation(&snapshot, 0, "text").is_none());
     }
 
     #[test]
-    fn op_text_roundtrip() {
+    async fn op_text_roundtrip() {
         let command = PptxTransitionalEditorCommand::SetPage { index: 3, text: "a\nmulti line value".into() };
         let printed = <PptxTransitionalEditorCommand as protocol::OpText>::print_op(&command);
         let parsed = <PptxTransitionalEditorCommand as protocol::OpText>::parse_op(&printed).expect("parse ok");

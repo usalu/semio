@@ -28,7 +28,7 @@ pub mod set_shot_camera {
         pub camera: ShootingCamera,
     }
 
-    pub fn handle(payload: &SetShotCamera, _doc: &ArtifactView<'_, ShootingSnapshot>, _cfg: &ConfigView<'_, ShootingConfig>, _ctx: &mut ShootingDispatchCtx) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
+    pub async fn handle(payload: &SetShotCamera, _doc: &ArtifactView<'_, ShootingSnapshot>, _cfg: &ConfigView<'_, ShootingConfig>, _ctx: &mut ShootingDispatchCtx) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
         Ok(Emit::mutations(vec![ShootingMutation::ReplaceShotCamera(ReplaceShotCamera { shot_id: payload.shot_id.clone(), new_camera: payload.camera.clone() })]))
     }
 }
@@ -43,7 +43,7 @@ pub mod save_camera {
     #[dsl(keyword = "save-camera")]
     pub struct SaveCamera {}
 
-    pub fn handle(_payload: &SaveCamera, doc: &ArtifactView<'_, ShootingSnapshot>, cfg: &ConfigView<'_, ShootingConfig>, _ctx: &mut ShootingDispatchCtx) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
+    pub async fn handle(_payload: &SaveCamera, doc: &ArtifactView<'_, ShootingSnapshot>, cfg: &ConfigView<'_, ShootingConfig>, _ctx: &mut ShootingDispatchCtx) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
         let snapshot = doc.snapshot;
         let config = cfg.snapshot;
         let draft = config.camera_draft_label.trim().to_string();
@@ -68,7 +68,7 @@ pub mod load_saved_camera {
         pub id: String,
     }
 
-    pub fn handle(payload: &LoadSavedCamera, doc: &ArtifactView<'_, ShootingSnapshot>, _cfg: &ConfigView<'_, ShootingConfig>, _ctx: &mut ShootingDispatchCtx) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
+    pub async fn handle(payload: &LoadSavedCamera, doc: &ArtifactView<'_, ShootingSnapshot>, _cfg: &ConfigView<'_, ShootingConfig>, _ctx: &mut ShootingDispatchCtx) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
         match doc.snapshot.saved_cameras.iter().find(|entry| entry.id == payload.id) {
             Some(saved) => Ok(Emit::config(vec![ShootingConfigMutation::SetCamera { camera: saved.camera.clone() }])),
             None => Ok(Emit::default()),
@@ -87,7 +87,7 @@ pub mod set_camera_draft_label {
         pub value: String,
     }
 
-    pub fn handle(payload: &SetCameraDraftLabel, _doc: &ArtifactView<'_, ShootingSnapshot>, _cfg: &ConfigView<'_, ShootingConfig>, _ctx: &mut ShootingDispatchCtx) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
+    pub async fn handle(payload: &SetCameraDraftLabel, _doc: &ArtifactView<'_, ShootingSnapshot>, _cfg: &ConfigView<'_, ShootingConfig>, _ctx: &mut ShootingDispatchCtx) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
         Ok(Emit::config(vec![ShootingConfigMutation::SetCameraDraftLabel { value: payload.value.clone() }]))
     }
 }
@@ -104,7 +104,7 @@ pub mod set_camera {
         pub camera: ShootingCamera,
     }
 
-    pub fn handle(payload: &SetCamera, _doc: &ArtifactView<'_, ShootingSnapshot>, _cfg: &ConfigView<'_, ShootingConfig>, _ctx: &mut ShootingDispatchCtx) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
+    pub async fn handle(payload: &SetCamera, _doc: &ArtifactView<'_, ShootingSnapshot>, _cfg: &ConfigView<'_, ShootingConfig>, _ctx: &mut ShootingDispatchCtx) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
         Ok(Emit::config(vec![ShootingConfigMutation::SetCamera { camera: payload.camera.clone() }]))
     }
 }
@@ -118,7 +118,7 @@ mod tests {
     use crate::editor::shooting::ShootingCommand;
 
     #[test]
-    fn save_and_load_camera_round_trip() {
+    async fn save_and_load_camera_round_trip() {
         let mut app = shooting_app();
         dispatch(&mut app, ShootingCommand::SetCameraDraftLabel(set_camera_draft_label::SetCameraDraftLabel { value: "Hero".into() }));
         let result = dispatch(&mut app, ShootingCommand::SaveCamera(save_camera::SaveCamera {}));
@@ -126,7 +126,7 @@ mod tests {
     }
 
     #[test]
-    fn set_camera_never_touches_the_document() {
+    async fn set_camera_never_touches_the_document() {
         let mut app = shooting_app();
         let result = dispatch(&mut app, ShootingCommand::SetCamera(set_camera::SetCamera { camera: ShootingCamera { position: [1.0, 2.0, 3.0], ..ShootingCamera::default() } }));
         assert!(result.mutations.is_empty(), "the free/live camera is config-only");

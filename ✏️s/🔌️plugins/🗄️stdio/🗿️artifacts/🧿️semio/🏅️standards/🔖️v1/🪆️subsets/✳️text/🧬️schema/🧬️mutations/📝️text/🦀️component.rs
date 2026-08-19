@@ -20,26 +20,26 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 //#endregion 📖️SemioGrammar
 
 //#region 🔖️Primitives
-fn hex_encode(bytes: &[u8]) -> String {
+async fn hex_encode(bytes: &[u8]) -> String {
     bytes.iter().map(|b| format!("{b:02x}")).collect()
 }
-fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
+async fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
     if s.len() % 2 != 0 {
         return Err(format!("odd hex length: {s:?}"));
     }
     (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()
 }
-fn enc_str(s: &str) -> String {
+async fn enc_str(s: &str) -> String {
     hex_encode(s.as_bytes())
 }
-fn dec_str(s: &str) -> Result<String, String> {
+async fn dec_str(s: &str) -> Result<String, String> {
     String::from_utf8(hex_decode(s)?).map_err(|e| e.to_string())
 }
-fn parse_usize(s: &str) -> Result<usize, String> {
+async fn parse_usize(s: &str) -> Result<usize, String> {
     s.parse().map_err(|e: std::num::ParseIntError| e.to_string())
 }
 
-fn enc_mark_kind(k: SemioTextMarkKind) -> char {
+async fn enc_mark_kind(k: SemioTextMarkKind) -> char {
     match k {
         SemioTextMarkKind::Bold => 'b',
         SemioTextMarkKind::Italic => 'i',
@@ -47,7 +47,7 @@ fn enc_mark_kind(k: SemioTextMarkKind) -> char {
         SemioTextMarkKind::Link => 'l',
     }
 }
-fn dec_mark_kind(s: &str) -> Result<SemioTextMarkKind, String> {
+async fn dec_mark_kind(s: &str) -> Result<SemioTextMarkKind, String> {
     match s {
         "b" => Ok(SemioTextMarkKind::Bold),
         "i" => Ok(SemioTextMarkKind::Italic),
@@ -56,19 +56,19 @@ fn dec_mark_kind(s: &str) -> Result<SemioTextMarkKind, String> {
         other => Err(format!("bad mark kind {other:?}")),
     }
 }
-fn enc_mark(m: &SemioTextMark) -> String {
+async fn enc_mark(m: &SemioTextMark) -> String {
     format!("[{},{}]", enc_mark_kind(m.kind), enc_str(&m.href))
 }
-fn dec_mark(s: &str) -> Result<SemioTextMark, String> {
+async fn dec_mark(s: &str) -> Result<SemioTextMark, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [kind, href] = parts.as_slice() else { return Err(format!("mark: expected 2 fields, got {}", parts.len())) };
     Ok(SemioTextMark { kind: dec_mark_kind(kind)?, href: dec_str(href)? })
 }
-fn enc_run(r: &SemioTextRun) -> String {
+async fn enc_run(r: &SemioTextRun) -> String {
     let marks = r.marks.iter().map(enc_mark).collect::<Vec<_>>().join(",");
     format!("[{},{},[{}]]", enc_str(&r.language), enc_str(&r.content), marks)
 }
-fn dec_run(s: &str) -> Result<SemioTextRun, String> {
+async fn dec_run(s: &str) -> Result<SemioTextRun, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [language, content, marks] = parts.as_slice() else { return Err(format!("run: expected 3 fields, got {}", parts.len())) };
     let marks = split_top_level(strip_brackets(marks)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_mark).collect::<Result<Vec<_>, String>>()?;
@@ -77,7 +77,7 @@ fn dec_run(s: &str) -> Result<SemioTextRun, String> {
 //#endregion 🔖️Primitives
 
 //#region 🔖️OpText
-fn print_text_mutation(m: &SemioTextMutation) -> String {
+async fn print_text_mutation(m: &SemioTextMutation) -> String {
     match m {
         SemioTextMutation::InsertRun(p) => format!("insertRun:{},{}", p.index, enc_run(&p.run)),
         SemioTextMutation::RemoveRun(p) => format!("removeRun:{}", p.index),
@@ -89,7 +89,7 @@ fn print_text_mutation(m: &SemioTextMutation) -> String {
     }
 }
 
-fn parse_text_mutation(line: &str) -> Result<SemioTextMutation, String> {
+async fn parse_text_mutation(line: &str) -> Result<SemioTextMutation, String> {
     let (tag, rest) = line.split_once(':').ok_or_else(|| format!("text mutation: missing ':' in {line:?}"))?;
     match tag {
         "insertRun" => {
@@ -125,10 +125,10 @@ fn parse_text_mutation(line: &str) -> Result<SemioTextMutation, String> {
 }
 
 impl protocol::OpText for SemioTextMutation {
-    fn print_op(&self) -> String {
+    async fn print_op(&self) -> String {
         print_text_mutation(self)
     }
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
+    async fn parse_op(line: &str) -> Result<Self, store::TextError> {
         parse_text_mutation(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
 }
@@ -138,7 +138,7 @@ impl protocol::OpText for SemioTextMutation {
 /// 🌱 One representative value per variant — single source of truth for `ops_grammar_conformance_
 /// law`/`protocol_walk_law` in `🚪️io/🦀️component.rs` and this file's own round-trip test.
 #[cfg(test)]
-pub(crate) fn demo_mutation_cases() -> Vec<SemioTextMutation> {
+pub(crate) async fn demo_mutation_cases() -> Vec<SemioTextMutation> {
     vec![
         SemioTextMutation::InsertRun(InsertRun { index: 1, run: SemioTextRun { language: "en".into(), content: "hi".into(), marks: vec![] } }),
         SemioTextMutation::RemoveRun(RemoveRun { index: 0 }),
@@ -158,7 +158,7 @@ mod tests {
     use protocol::OpText;
 
     #[test]
-    fn op_text_roundtrip_law() {
+    async fn op_text_roundtrip_law() {
         for mutation in demo_mutation_cases() {
             let printed = mutation.print_op();
             assert!(!printed.contains('\n'), "print_op must be one line, got {printed:?}");

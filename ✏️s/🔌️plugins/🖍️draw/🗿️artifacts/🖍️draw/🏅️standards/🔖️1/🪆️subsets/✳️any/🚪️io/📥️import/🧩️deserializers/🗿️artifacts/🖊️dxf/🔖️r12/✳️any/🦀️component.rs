@@ -15,7 +15,7 @@ pub struct DxfIntoDraw;
 impl Deserializer<DrawSnapshot> for DxfIntoDraw {
     const FROM: Dialect = DXF_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Lossy;
-    fn deserialize(_payload: &IoPayload) -> IoResult<DrawSnapshot> {
+    async fn deserialize(_payload: &IoPayload) -> IoResult<DrawSnapshot> {
         let mut snap = empty_draw_snapshot();
         snap.id = create_draw_id("dxf-import", b"dxf");
         snap.title = Some("Imported dxf".into());

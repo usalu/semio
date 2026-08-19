@@ -14,7 +14,7 @@ pub struct MathematicalIntoTxt;
 impl Serializer<MathematicalSnapshot> for MathematicalIntoTxt {
     const INTO: Dialect = TXT_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Lossy;
-    fn serialize(_from: &MathematicalSnapshot) -> IoResult<IoPayload> {
+    async fn serialize(_from: &MathematicalSnapshot) -> IoResult<IoPayload> {
         Err(IoError { message: "txt export not yet implemented".to_string(), diagnostics: Vec::new() })
     }
 }

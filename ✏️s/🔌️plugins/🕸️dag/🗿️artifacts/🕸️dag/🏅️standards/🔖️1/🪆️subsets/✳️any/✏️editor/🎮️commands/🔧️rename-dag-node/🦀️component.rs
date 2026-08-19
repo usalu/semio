@@ -16,7 +16,7 @@ pub struct RenameDagNode {
 
 /// 🕹️ No longer re-selects the node under its new id — no `Emit` channel writes `graph`'s selection
 /// directly anymore (the framework owns it exclusively; ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM).
-pub fn handle(payload: &RenameDagNode, doc: &ArtifactView<'_, DagSnapshot>, _cfg: &ConfigView<'_, DagConfig>) -> Result<Emit<DagMutation, DagConfigMutation>, Fault> {
+pub async fn handle(payload: &RenameDagNode, doc: &ArtifactView<'_, DagSnapshot>, _cfg: &ConfigView<'_, DagConfig>) -> Result<Emit<DagMutation, DagConfigMutation>, Fault> {
     let document = doc.snapshot;
     let trimmed = payload.value.trim();
     if trimmed.is_empty() || trimmed == payload.old_id.as_str() || document.nodes().iter().any(|node| node.id == trimmed) {

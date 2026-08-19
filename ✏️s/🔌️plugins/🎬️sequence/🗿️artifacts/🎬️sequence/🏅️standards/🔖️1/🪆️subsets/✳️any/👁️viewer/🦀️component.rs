@@ -23,10 +23,10 @@ pub enum SequenceViewCommand {
 }
 
 impl protocol::OpBinary for SequenceViewCommand {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         Ok(Vec::new())
     }
-    fn decode_op(_bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    async fn decode_op(_bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         Ok(SequenceViewCommand::Noop)
     }
 }
@@ -50,7 +50,7 @@ impl ArtifactViewer for SequenceViewer {
     const DIALECT: Dialect = SEQUENCE_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = SEQUENCE_DOCUMENT_SCHEMA;
 
-    fn initial_snapshot() -> SequenceSnapshot {
+    async fn initial_snapshot() -> SequenceSnapshot {
         default_snapshot()
     }
 
@@ -58,11 +58,11 @@ impl ArtifactViewer for SequenceViewer {
     /// change, so this always returns the empty `ViewEmit` — no config mutation, no effect, no dirty
     /// scope. Kept as a real dispatch (not an `unreachable!()`) so a future view-only action (camera
     /// pan, "focus step") is a pure addition here, never a signature change.
-    fn handle(_command: &Self::Command, _doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _interaction: &InteractionView<'_>, _engines: &EngineHandles) -> Result<ViewEmit<Self::ConfigMutation>, Fault> {
+    async fn handle(_command: &Self::Command, _doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _interaction: &InteractionView<'_>, _engines: &EngineHandles) -> Result<ViewEmit<Self::ConfigMutation>, Fault> {
         Ok(ViewEmit::default())
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> UiNode {
+    async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> UiNode {
         match body_key {
             main::SEQUENCE_VIEW_BODY_MAIN => main::render(doc.snapshot),
             _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))),
@@ -72,7 +72,7 @@ impl ArtifactViewer for SequenceViewer {
 //#endregion 🔖️Viewer
 
 //#region 🔖️Manifest
-pub fn create_sequence_viewer() -> semio_framework_plugin::AppDefinition {
+pub async fn create_sequence_viewer() -> semio_framework_plugin::AppDefinition {
     Viewer::builder(SEQUENCE_DIALECT)
         .document(["semio", "sequence"])
         .icon_id("sequence")
@@ -90,14 +90,14 @@ mod tests {
     use super::*;
 
     #[test]
-    fn create_sequence_viewer_builds_a_definition_for_the_viewer_role() {
+    async fn create_sequence_viewer_builds_a_definition_for_the_viewer_role() {
         let def = create_sequence_viewer();
         assert_eq!(def.role, semio_framework::AppRole::Viewer);
         assert_eq!(def.dialect, SEQUENCE_DIALECT.into());
     }
 
     #[test]
-    fn viewer_dialect_matches_the_artifact_coordinate() {
+    async fn viewer_dialect_matches_the_artifact_coordinate() {
         assert_eq!(<SequenceViewer as ArtifactViewer>::DIALECT, SEQUENCE_DIALECT);
     }
 }

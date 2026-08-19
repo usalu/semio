@@ -6,13 +6,13 @@ use crate::artifacts::dwg::schema::snapshot::decode_dwg;
 use semio_framework_plugin::{ExampleSource, LocalizedLabel};
 
 pub const ID: &str = "architectural";
-pub fn label() -> LocalizedLabel {
+pub async fn label() -> LocalizedLabel {
     LocalizedLabel::native("Architectural Example", "Architekturbeispiel")
 }
 pub const ICON: &str = "file";
 pub const FIXTURE_BYTES: &[u8] = include_bytes!("🖼️assets/📄️architectural.dwg");
 
-fn decoded_summary_json() -> String {
+async fn decoded_summary_json() -> String {
     match decode_dwg(FIXTURE_BYTES) {
         Ok(snap) => {
             format!(
@@ -29,6 +29,6 @@ fn decoded_summary_json() -> String {
     }
 }
 
-pub fn source() -> ExampleSource {
+pub async fn source() -> ExampleSource {
     ExampleSource::new(ID, label(), decoded_summary_json(), ICON)
 }

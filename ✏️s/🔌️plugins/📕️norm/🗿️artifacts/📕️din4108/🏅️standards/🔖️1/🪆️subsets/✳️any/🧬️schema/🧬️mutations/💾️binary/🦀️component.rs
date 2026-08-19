@@ -10,12 +10,12 @@ use crate::artifacts::din4108::schema::mutations::text::Din4108Mutation;
 use protocol::OpBinary;
 
 /// 📦️ Encodes a document mutation to its binary op form.
-pub fn encode_op(mutation: &Din4108Mutation) -> Result<Vec<u8>, protocol::ProtocolError> {
+pub async fn encode_op(mutation: &Din4108Mutation) -> Result<Vec<u8>, protocol::ProtocolError> {
     mutation.encode_op()
 }
 
 /// 📖️ Decodes a document mutation from its binary op form.
-pub fn decode_op(bytes: &[u8]) -> Result<Din4108Mutation, protocol::ProtocolError> {
+pub async fn decode_op(bytes: &[u8]) -> Result<Din4108Mutation, protocol::ProtocolError> {
     Din4108Mutation::decode_op(bytes)
 }
 
@@ -27,7 +27,7 @@ mod tests {
     use crate::artifacts::din4108::Din4108Snapshot;
 
     #[test]
-    fn op_binary_round_trips_and_agrees_with_text() {
+    async fn op_binary_round_trips_and_agrees_with_text() {
         let mutation = Din4108Mutation::ChangeAirtightnessN50(ChangeAirtightnessN50 { new_airtightness_n50: 1.2 });
         store::os_store::test_support::assert_op_text_binary_equivalence(&mutation);
         let bytes = encode_op(&mutation).expect("encode");
@@ -35,7 +35,7 @@ mod tests {
     }
 
     #[test]
-    fn document_text_round_trips_through_store() {
+    async fn document_text_round_trips_through_store() {
         let envelope = store::create_document_envelope("norm.din4108/v1", "din4108", Din4108Snapshot::default(), None);
         let mut store = store::ArtifactStore::new(envelope).expect("valid artifact store fixture");
         let mutation = Din4108Mutation::ChangeAirtightnessN50(ChangeAirtightnessN50 { new_airtightness_n50: 1.2 });

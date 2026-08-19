@@ -5,7 +5,7 @@ use super::mutation::ChangeFormTitle;
 use crate::artifacts::forms::{FormMutation, FormsSnapshot};
 
 //#region 🔖️Inverse
-pub fn inverse_change_form_title(_payload: &ChangeFormTitle, base: &FormsSnapshot) -> Vec<FormMutation> {
+pub async fn inverse_change_form_title(_payload: &ChangeFormTitle, base: &FormsSnapshot) -> Vec<FormMutation> {
     vec![FormMutation::ChangeFormTitle(ChangeFormTitle { new_title: base.title.clone() })]
 }
 //#endregion 🔖️Inverse

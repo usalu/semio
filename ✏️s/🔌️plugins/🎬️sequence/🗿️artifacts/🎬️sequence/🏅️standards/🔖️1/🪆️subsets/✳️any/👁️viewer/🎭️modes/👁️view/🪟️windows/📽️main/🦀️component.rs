@@ -25,7 +25,7 @@ const SEQUENCE_VIEW_DEFAULT_HEIGHT: f64 = 56.0;
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
-pub fn definition() -> WindowKindDefinition {
+pub async fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
         id: SEQUENCE_VIEW_WINDOW_MAIN.into(),
         label: LocalizedLabel::native("Sequence", "Sequenz"),
@@ -46,7 +46,7 @@ pub fn definition() -> WindowKindDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-fn step_node(step: &SequenceStep) -> NodeGraphNodeRecord {
+async fn step_node(step: &SequenceStep) -> NodeGraphNodeRecord {
     NodeGraphNodeRecord {
         id: step.id.clone(),
         label: Some(format!("{} ({})", step.id, step.kind)),
@@ -66,7 +66,7 @@ fn step_node(step: &SequenceStep) -> NodeGraphNodeRecord {
 /// 👁️ Pure `SequenceSnapshot -> UiNode` read: default viewport (a viewer has no persisted
 /// per-session camera), no selection/drag overlay, `editable: Some(false)` (contract §2.2's
 /// structural read-only guarantee, mirrored here at the scene level too).
-pub fn render(document: &SequenceSnapshot) -> UiNode {
+pub async fn render(document: &SequenceSnapshot) -> UiNode {
     let fixture = document.to_fixture();
     let nodes: Vec<NodeGraphNodeRecord> = fixture.steps.iter().map(step_node).collect();
     let edges: Vec<NodeGraphEdgeRecord> = fixture.edges.iter().map(|edge| NodeGraphEdgeRecord { id: edge.id.clone(), source_node_id: edge.from.clone(), source_port_id: String::new(), target_node_id: edge.to.clone(), target_port_id: String::new(), label: None }).collect();
@@ -81,14 +81,14 @@ mod tests {
     use super::*;
 
     #[test]
-    fn definition_declares_the_node_graph_surface_and_body_key() {
+    async fn definition_declares_the_node_graph_surface_and_body_key() {
         let definition = definition();
         assert_eq!(definition.body_key, SEQUENCE_VIEW_BODY_MAIN);
         assert!(matches!(definition.surface_kind, SurfaceKind::NodeGraph));
     }
 
     #[test]
-    fn render_produces_a_read_only_scene_for_the_default_document() {
+    async fn render_produces_a_read_only_scene_for_the_default_document() {
         let document = crate::artifacts::sequence::default_snapshot();
         let node = render(&document);
         let json = serde_json::to_string(&node).unwrap_or_default();

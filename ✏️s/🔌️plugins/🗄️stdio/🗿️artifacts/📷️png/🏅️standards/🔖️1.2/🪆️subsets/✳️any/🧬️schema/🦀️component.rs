@@ -61,13 +61,13 @@ pub struct PngArtifact {
 }
 
 impl Default for PngArtifact {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self::from_snapshot(PngSnapshot::default())
     }
 }
 
 impl PngArtifact {
-    pub fn to_snapshot(&self) -> PngSnapshot {
+    pub async fn to_snapshot(&self) -> PngSnapshot {
         PngSnapshot {
             schema: self.schema.clone(),
             width: self.width,
@@ -89,7 +89,7 @@ impl PngArtifact {
             unknown_chunks: self.unknown_chunks.clone(),
         }
     }
-    pub fn from_snapshot(snapshot: PngSnapshot) -> Self {
+    pub async fn from_snapshot(snapshot: PngSnapshot) -> Self {
         Self {
             schema: snapshot.schema,
             width: snapshot.width,
@@ -111,7 +111,7 @@ impl PngArtifact {
             unknown_chunks: snapshot.unknown_chunks,
         }
     }
-    pub fn set_snapshot(&mut self, snapshot: PngSnapshot) {
+    pub async fn set_snapshot(&mut self, snapshot: PngSnapshot) {
         *self = Self::from_snapshot(snapshot);
     }
 }
@@ -120,7 +120,7 @@ impl PngArtifact {
 /// 🕳️ Relocated verbatim from `⚙️engine` (ticket
 /// 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES, rule 5: pure helpers over document
 /// types live in `🧬️schema/`).
-pub fn empty_png_snapshot() -> PngSnapshot {
+pub async fn empty_png_snapshot() -> PngSnapshot {
     PngSnapshot::default()
 }
 
@@ -141,7 +141,7 @@ pub fn empty_png_snapshot() -> PngSnapshot {
 /// no non-`None` value here could ever round-trip either); `bkgd` uses the `Rgb` variant
 /// specifically (the ONLY variant whose own 6-byte wire shape matches what `color_type == 6`
 /// decodes, `2|6 => 6 bytes`).
-pub fn demo_png_snapshot() -> PngSnapshot {
+pub async fn demo_png_snapshot() -> PngSnapshot {
     let (w, h) = (3u32, 3u32);
     let mut pixels = Vec::with_capacity((w * h * 4) as usize);
     for y in 0..h {
@@ -186,7 +186,7 @@ pub fn demo_png_snapshot() -> PngSnapshot {
 }
 //#endregion 🔖️DemoFixtures
 
-pub fn png_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
+pub async fn png_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
     schema::ArtifactSchemaDescriptor {
         id: "s.stdio.png",
         artifact: schema::FacetLeaves {
@@ -236,27 +236,27 @@ pub mod derived_construction {
         type Snapshot = PngSnapshot;
         type Mutation = PngMutation;
         type Diff = PngDiff;
-        fn empty() -> Self {
+        async fn empty() -> Self {
             Self { snapshot: PngSnapshot::default(), diagnostics: Vec::new() }
         }
-        fn from_snapshot(snapshot: Self::Snapshot) -> Self {
+        async fn from_snapshot(snapshot: Self::Snapshot) -> Self {
             Self { snapshot, diagnostics: Vec::new() }
         }
-        fn from_text(text: &str) -> Result<Self, store::TextError> {
+        async fn from_text(text: &str) -> Result<Self, store::TextError> {
             Ok(Self::from_snapshot(<PngSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
-        fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
+        async fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
             Ok(Self::from_snapshot(<PngSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
         }
-        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
+        async fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let diff = crate::artifacts::png::schema::mutations::apply_png_mutation(&mut self.snapshot, &mutation);
             (self, diff)
         }
-        fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
+        async fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
             self.snapshot = <PngDiff as protocol::MutationDiff<PngSnapshot>>::apply(&diff, &self.snapshot)?;
             Ok(self)
         }
-        fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
+        async fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
             if self.diagnostics.is_empty() {
                 Ok(self.snapshot)
             } else {
@@ -290,7 +290,7 @@ pub mod derived_analysis {
         type Parts = PngParts;
         const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.png", standard: StandardId("1.2"), subset: SubsetId("*") };
 
-        fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
+        async fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
             const SIG: [u8; 8] = [137, 80, 78, 71, 13, 10, 26, 10];
             match source {
                 AnalyzeSource::Binary(bytes) => {
@@ -327,7 +327,7 @@ pub mod derived_analysis {
             }
         }
 
-        fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
+        async fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
             let mut parts = PngParts::default();
             let mut diagnostics = Vec::new();
             let mut confidence = IoConfidence::High;

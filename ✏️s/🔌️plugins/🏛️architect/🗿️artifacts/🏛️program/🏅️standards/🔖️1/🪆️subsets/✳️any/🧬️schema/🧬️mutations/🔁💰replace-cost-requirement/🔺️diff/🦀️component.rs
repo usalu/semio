@@ -8,7 +8,7 @@ use crate::artifacts::program::ProgramSnapshot;
 use protocol::Patchable;
 
 /// 🔁️ Error `mutation.target-missing` if absent, Warning `mutation.no-op` if the value is unchanged (both empty diff), else `patched = [{id, full patch}]` via `Patchable::diff_patch`.
-pub fn diff(payload: &ReplaceCostRequirement, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
+pub async fn diff(payload: &ReplaceCostRequirement, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
     let Some(existing) = base.costs.iter().find(|row| row.header.id == payload.cost_requirement.header.id) else {
         return protocol::MutationOutcome::error("mutation.target-missing", "No cost requirement exists with this id.", [payload.cost_requirement.header.id.0.clone()]);
     };

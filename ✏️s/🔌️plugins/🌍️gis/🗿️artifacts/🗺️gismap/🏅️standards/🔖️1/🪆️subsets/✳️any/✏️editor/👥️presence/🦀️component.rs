@@ -17,28 +17,28 @@ pub struct Gis2dPresence {
 }
 
 impl Default for Gis2dPresence {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self { camera_json: r#"{"x":0,"y":0,"zoom":1}"#.into() }
     }
 }
 
 impl protocol::MutationDiff<Gis2dPresence> for Gis2dPresence {
-    fn apply(&self, _base: &Gis2dPresence) -> protocol::MutationApplyResult<Gis2dPresence> {
+    async fn apply(&self, _base: &Gis2dPresence) -> protocol::MutationApplyResult<Gis2dPresence> {
         Ok({
             self.clone()
         })
     }
-    fn absorb(&mut self, other: Self) {
+    async fn absorb(&mut self, other: Self) {
         *self = other;
     }
 }
 
 impl store::ArtifactDsl for Gis2dPresence {
     const EXTENSION: &'static str = Self::__DSL_EXTENSION;
-    fn envelope_id() -> &'static str {
+    async fn envelope_id() -> &'static str {
         Self::__DSL_ENVELOPE_ID
     }
-    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+    async fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
         let body = match store::semio_format::split_text_preamble(text) {
             Ok((_, rest)) => rest,
             Err(_) => text,
@@ -53,7 +53,7 @@ impl store::ArtifactDsl for Gis2dPresence {
         )?;
         Self::__dsl_from_record(&record)
     }
-    fn print_dsl(&self) -> String {
+    async fn print_dsl(&self) -> String {
         let body = dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), dsl::JoinMode::Document);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
             <Self as store::ArtifactDsl>::envelope_id(),
@@ -66,7 +66,7 @@ impl store::ArtifactDsl for Gis2dPresence {
 }
 
 impl ArtifactPack for Gis2dPresence {
-    fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
+    async fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let inner = store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
             <Self as store::ArtifactDsl>::envelope_id(),
@@ -76,7 +76,7 @@ impl ArtifactPack for Gis2dPresence {
         .map_err(|e| store::PackError::Schema(e.to_string()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &inner))
     }
-    fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
+    async fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         if bytes.is_empty() {
             return Ok(Self::default());
         }
@@ -91,7 +91,7 @@ impl ArtifactPack for Gis2dPresence {
         let (record, _report) = store::pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
         Self::__dsl_from_record(&record).map_err(store::text_error_to_pack_error)
     }
-    fn record_spec() -> Option<dsl::RecordSpec> {
+    async fn record_spec() -> Option<dsl::RecordSpec> {
         Some(Self::__dsl_spec())
     }
 }
@@ -111,7 +111,7 @@ pub enum Gis2dPresenceMutation {
 impl Mutation<Gis2dPresence> for Gis2dPresenceMutation {
     type Diff = Gis2dPresence;
 
-    fn diff(&self, base: &Gis2dPresence) -> protocol::MutationOutcome<Gis2dPresence> {
+    async fn diff(&self, base: &Gis2dPresence) -> protocol::MutationOutcome<Gis2dPresence> {
         match self {
             Self::Snapshot { presence } => {
                 if base == presence {
@@ -122,13 +122,13 @@ impl Mutation<Gis2dPresence> for Gis2dPresenceMutation {
         }
     }
 
-    fn inverse(&self, base: &Gis2dPresence) -> Vec<Self> {
+    async fn inverse(&self, base: &Gis2dPresence) -> Vec<Self> {
         vec![Self::Snapshot { presence: base.clone() }]
     }
 }
 
 impl protocol::OpText for Gis2dPresenceMutation {
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
+    async fn parse_op(line: &str) -> Result<Self, store::TextError> {
         let variants = <Self as dsl::DslVariants>::variants();
         for (keyword, spec_fn) in &variants {
             let probe = format!("{keyword} ");
@@ -151,7 +151,7 @@ impl protocol::OpText for Gis2dPresenceMutation {
         }
         Err(dsl::__rt::field_error(format!("unknown operation line '{line}'")))
     }
-    fn print_op(&self) -> String {
+    async fn print_op(&self) -> String {
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
         let variants = <Self as dsl::DslVariants>::variants();
         let spec_fn = variants
@@ -169,10 +169,10 @@ impl protocol::OpText for Gis2dPresenceMutation {
 }
 
 impl protocol::OpBinary for Gis2dPresenceMutation {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         dsl::variants_binary::encode_op(self)
     }
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         dsl::variants_binary::decode_op(bytes)
     }
 }

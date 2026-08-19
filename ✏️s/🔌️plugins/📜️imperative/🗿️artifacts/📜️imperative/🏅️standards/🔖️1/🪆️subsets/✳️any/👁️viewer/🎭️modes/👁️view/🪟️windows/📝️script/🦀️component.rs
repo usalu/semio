@@ -15,7 +15,7 @@ pub const BODY_KEY: &str = TextWindowKit::KIND_ID;
 
 //#region 🔖️Definition
 /// 🧱️ Stitched into the viewer manifest by `crate::viewer::imperative::create_imperative_viewer`.
-pub fn definition() -> WindowKindDefinition {
+pub async fn definition() -> WindowKindDefinition {
     WindowKindDefinition { label: LocalizedLabel::native("Script", "Skript"), icon_id: "file-code".into(), ..TextWindowKit::window_kind() }
 }
 //#endregion 🔖️Definition
@@ -23,7 +23,7 @@ pub fn definition() -> WindowKindDefinition {
 //#region 🔖️Render
 /// 👁️ Pure `ImperativeSnapshot -> UiNode` read: the compiled text of the document's own working
 /// `Path`, always `read_only: true` (a viewer never emits a `replace-text` command).
-pub fn render(document: &ImperativeSnapshot) -> UiNode {
+pub async fn render(document: &ImperativeSnapshot) -> UiNode {
     let path = crate::artifacts::imperative::imperative_working_scene(document).path;
     TextWindowKit::render(&TextView { text: imperative_engine::compile_to_text(&path), language: Some("imperative".into()), read_only: true })
 }
@@ -35,14 +35,14 @@ mod tests {
     use super::*;
 
     #[test]
-    fn definition_declares_a_text_window() {
+    async fn definition_declares_a_text_window() {
         let def = definition();
         assert_eq!(def.id, WINDOW_KIND_ID);
         assert_eq!(def.body_key, BODY_KEY);
     }
 
     #[test]
-    fn render_compiles_the_default_document_into_read_only_text() {
+    async fn render_compiles_the_default_document_into_read_only_text() {
         let document = crate::artifacts::imperative::schema::default_snapshot();
         let UiNode::ComponentScene(node) = render(&document) else { panic!("expected ComponentScene") };
         let scene = node.text_editor.expect("text_editor scene");

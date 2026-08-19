@@ -8,7 +8,7 @@ use semio_framework_plugin::{ExecutionMode, Plugin};
 /// `📓️design-abi.md` §3/§6) are this crate's migration proof, mirroring `🗒️note`'s shape. No
 /// `.handler(…)` and no `🧩️extensions/` dir anywhere in this crate, so `Isolated` (the SDK default)
 /// is honest.
-pub fn plugin() -> Result<Plugin, semio_framework_plugin::PluginAssemblyError> {
+pub async fn plugin() -> Result<Plugin, semio_framework_plugin::PluginAssemblyError> {
     Plugin::builder("reasoning-mindmap")
         .label("Mindmap")
         .version("0.1.0")
@@ -29,12 +29,12 @@ mod surface_tests {
     use semio_framework_plugin::testkit::{assert_editor_and_viewer_share_dialect, assert_viewer_never_mutates};
 
     #[test]
-    fn wires_viewer_never_mutates() {
+    async fn wires_viewer_never_mutates() {
         assert_viewer_never_mutates::<crate::viewer::wires::WiresViewer>();
     }
 
     #[test]
-    fn wires_editor_and_viewer_share_dialect() {
+    async fn wires_editor_and_viewer_share_dialect() {
         assert_editor_and_viewer_share_dialect::<crate::editor::wires::ReasoningWiresPlayApp, crate::viewer::wires::WiresViewer>();
     }
 }

@@ -175,17 +175,17 @@ pub struct BcfSnapshot {
 }
 
 impl Default for BcfSnapshot {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self { schema: STDIO_BCF_DOCUMENT_SCHEMA.into(), version: String::new(), topics: Vec::new(), parts: Vec::new() }
     }
 }
 
 impl store::ArtifactDsl for BcfSnapshot {
     const EXTENSION: &'static str = "bcf";
-    fn envelope_id() -> &'static str {
+    async fn envelope_id() -> &'static str {
         "stdio.bcf"
     }
-    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+    async fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
         let body = match store::semio_format::split_text_preamble(text) {
             Ok((_, rest)) => rest,
             Err(_) => text,
@@ -200,7 +200,7 @@ impl store::ArtifactDsl for BcfSnapshot {
         }
         crate::artifacts::bcf::io::decode_bcf(&bytes).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
-    fn print_dsl(&self) -> String {
+    async fn print_dsl(&self) -> String {
         let bytes = crate::artifacts::bcf::io::encode_bcf(self).unwrap_or_default();
         let body: String = bytes.iter().map(|b| format!("{b:02x}")).collect();
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
@@ -209,13 +209,13 @@ impl store::ArtifactDsl for BcfSnapshot {
 }
 
 impl store::ArtifactPack for BcfSnapshot {
-    fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
+    async fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
         let raw = crate::artifacts::bcf::io::encode_bcf(self).map_err(|e| store::PackError::Schema(e))?;
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &raw))
     }
-    fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
+    async fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
         if envelope.envelope_id() != <Self as store::ArtifactDsl>::envelope_id() {
             return Err(store::PackError::Schema("pack envelope mismatch".into()));
@@ -229,7 +229,7 @@ impl store::ArtifactPack for BcfSnapshot {
 //#region 🔖️SnapshotFixtures
 /// 🦑 Dissolved out of the former `⚙️engine` (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-
 /// STATE-MACHINES) — pure snapshot constructors, no codec/IO concern.
-pub fn empty_bcf_snapshot() -> BcfSnapshot {
+pub async fn empty_bcf_snapshot() -> BcfSnapshot {
     BcfSnapshot::default()
 }
 
@@ -240,7 +240,7 @@ pub fn empty_bcf_snapshot() -> BcfSnapshot {
 /// `conformance_laws::grammar_conformance_law`/`protocol_walk_law`/`fixture_honesty_law` AND by
 /// the shipped `📚️examples/🎬️demo` fixtures, same shape `📜️docx/…/⚙️engine/🦀️component.rs`'s own
 /// `demo_docx_snapshot()` establishes.
-pub fn demo_bcf_snapshot() -> BcfSnapshot {
+pub async fn demo_bcf_snapshot() -> BcfSnapshot {
     BcfSnapshot {
         schema: STDIO_BCF_DOCUMENT_SCHEMA.into(),
         version: "2.1".into(),

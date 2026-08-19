@@ -12,7 +12,7 @@ pub struct SetCameraZoom {
     pub zoom: f64,
 }
 
-pub fn handle(payload: &SetCameraZoom, _doc: &ArtifactView<'_, RasterSnapshot>, cfg: &ConfigView<'_, RasterConfig>) -> Result<Emit<RasterMutation, RasterConfigMutation>, Fault> {
+pub async fn handle(payload: &SetCameraZoom, _doc: &ArtifactView<'_, RasterSnapshot>, cfg: &ConfigView<'_, RasterConfig>) -> Result<Emit<RasterMutation, RasterConfigMutation>, Fault> {
     let camera = RasterCamera { zoom: payload.zoom, ..cfg.snapshot.camera.clone() };
     Ok(Emit::config(vec![RasterConfigMutation::SetCamera { camera }]))
 }

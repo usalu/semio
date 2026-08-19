@@ -28,7 +28,7 @@ pub struct GltfCreateSceneInverse {
     pub expected_default_scene_after: Option<u32>,
 }
 
-fn paths(position: u32, before: Option<u32>, after: Option<u32>) -> Vec<String> {
+async fn paths(position: u32, before: Option<u32>, after: Option<u32>) -> Vec<String> {
     if before == after {
         vec![format!("document/scenes/{}", position)]
     } else {
@@ -36,7 +36,7 @@ fn paths(position: u32, before: Option<u32>, after: Option<u32>) -> Vec<String> 
     }
 }
 
-fn validate_restored_default(inverse: &GltfCreateSceneInverse, after: &GltfSnapshot) -> Result<(), GltfCreateSceneRejection> {
+async fn validate_restored_default(inverse: &GltfCreateSceneInverse, after: &GltfSnapshot) -> Result<(), GltfCreateSceneRejection> {
     let restored_count = after.document.scenes.len() - 1;
     if inverse.default_scene_before.is_some_and(|scene| usize::try_from(scene).map_or(true, |scene| scene >= restored_count)) {
         return Err(reject("gltf.mutation.reference-out-of-range", "inverse/defaultSceneBefore", "restored default scene must name a surviving scene"));
@@ -47,11 +47,11 @@ fn validate_restored_default(inverse: &GltfCreateSceneInverse, after: &GltfSnaps
     Ok(())
 }
 
-pub fn touched_paths(inverse: &GltfCreateSceneInverse, _after: &GltfSnapshot) -> Result<Vec<String>, GltfCreateSceneRejection> {
+pub async fn touched_paths(inverse: &GltfCreateSceneInverse, _after: &GltfSnapshot) -> Result<Vec<String>, GltfCreateSceneRejection> {
     Ok(paths(inverse.position, inverse.default_scene_before, inverse.expected_default_scene_after))
 }
 
-pub fn validate(inverse: &GltfCreateSceneInverse, after: &GltfSnapshot) -> Result<(), GltfCreateSceneRejection> {
+pub async fn validate(inverse: &GltfCreateSceneInverse, after: &GltfSnapshot) -> Result<(), GltfCreateSceneRejection> {
     if inverse.id != ID || inverse.version != 1 || inverse.phase != GltfCreateSceneInversePhase::Inverse {
         return Err(reject("gltf.mutation.invalid-inverse-envelope", "inverse", "canonical identity or phase does not match"));
     }
@@ -78,18 +78,18 @@ pub fn validate(inverse: &GltfCreateSceneInverse, after: &GltfSnapshot) -> Resul
     Ok(())
 }
 
-pub fn apply(inverse: &GltfCreateSceneInverse, after: &GltfSnapshot) -> Result<GltfSnapshot, GltfCreateSceneRejection> {
+pub async fn apply(inverse: &GltfCreateSceneInverse, after: &GltfSnapshot) -> Result<GltfSnapshot, GltfCreateSceneRejection> {
     validate(inverse, after)?;
     let mut next = after.clone();
     remove_created_scene(&mut next, existing_position(inverse.position, after)?, inverse.default_scene_before)?;
     Ok(next)
 }
 
-pub fn encode(inverse: &GltfCreateSceneInverse) -> Result<Vec<u8>, GltfCreateSceneRejection> {
+pub async fn encode(inverse: &GltfCreateSceneInverse) -> Result<Vec<u8>, GltfCreateSceneRejection> {
     serde_json::to_vec(inverse).map_err(|error| reject("gltf.mutation.encode-failed", "inverse", error.to_string()))
 }
 
-pub fn derive(base: &GltfSnapshot, position: u32) -> Result<GltfCreateSceneInverse, GltfCreateSceneRejection> {
+pub async fn derive(base: &GltfSnapshot, position: u32) -> Result<GltfCreateSceneInverse, GltfCreateSceneRejection> {
     let position_index = crate::artifacts::gltf::schema::mutations::create_scene::private::insertion_position(position, base)?;
     let default_scene_before = default_scene(base)?;
     let expected_default_scene_after = default_after(default_scene_before, position)?;

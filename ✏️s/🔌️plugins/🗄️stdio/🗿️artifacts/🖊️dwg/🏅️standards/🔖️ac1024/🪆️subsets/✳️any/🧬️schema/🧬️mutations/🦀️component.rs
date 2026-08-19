@@ -23,7 +23,7 @@ pub enum DwgMutation {
     },
 }
 
-pub fn apply_dwg_mutation(snapshot: &mut DwgSnapshot, mutation: &DwgMutation) -> protocol::MutationOutcome<DwgDiff> {
+pub async fn apply_dwg_mutation(snapshot: &mut DwgSnapshot, mutation: &DwgMutation) -> protocol::MutationOutcome<DwgDiff> {
     let outcome = mutation.diff(snapshot);
     match protocol::MutationDiff::apply(outcome.diff(), snapshot) {
         Ok(next) => {
@@ -37,7 +37,7 @@ pub fn apply_dwg_mutation(snapshot: &mut DwgSnapshot, mutation: &DwgMutation) ->
 impl Mutation<DwgSnapshot> for DwgMutation {
     type Diff = DwgDiff;
 
-    fn diff(&self, base: &DwgSnapshot) -> protocol::MutationOutcome<Self::Diff> {
+    async fn diff(&self, base: &DwgSnapshot) -> protocol::MutationOutcome<Self::Diff> {
         protocol::MutationOutcome::new(match self {
             DwgMutation::NoMutation => DwgDiff::default(),
             DwgMutation::SetSnapshot { snapshot } => diff::diff_set_snapshot(base, snapshot),
@@ -45,7 +45,7 @@ impl Mutation<DwgSnapshot> for DwgMutation {
         })
     }
 
-    fn inverse(&self, base: &DwgSnapshot) -> Vec<Self> {
+    async fn inverse(&self, base: &DwgSnapshot) -> Vec<Self> {
         match self {
             DwgMutation::NoMutation => vec![DwgMutation::NoMutation],
             DwgMutation::SetSnapshot { .. } => vec![DwgMutation::SetSnapshot { snapshot: base.clone() }],
@@ -57,7 +57,7 @@ impl Mutation<DwgSnapshot> for DwgMutation {
 
 //#region Codecs
 impl OpText for DwgMutation {
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
+    async fn parse_op(line: &str) -> Result<Self, store::TextError> {
         let variants = <Self as dsl::DslVariants>::variants();
         for (keyword, spec_fn) in &variants {
             let probe = format!("{} ", keyword);
@@ -69,7 +69,7 @@ impl OpText for DwgMutation {
         Err(dsl::__rt::field_error(format!("unknown operation line '{line}'")))
     }
 
-    fn print_op(&self) -> String {
+    async fn print_op(&self) -> String {
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
         let variants = <Self as dsl::DslVariants>::variants();
         let spec_fn = variants.iter().find(|(key, _)| key == &keyword).map(|(_, spec)| *spec).expect("variant spec must exist");
@@ -78,18 +78,18 @@ impl OpText for DwgMutation {
 }
 
 impl OpBinary for DwgMutation {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         dsl::variants_binary::encode_op(self)
     }
 
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         dsl::variants_binary::decode_op(bytes)
     }
 }
 //#endregion Codecs
 
 #[cfg(test)]
-pub(crate) fn demo_mutation_cases() -> Vec<DwgMutation> {
+pub(crate) async fn demo_mutation_cases() -> Vec<DwgMutation> {
     let base = crate::artifacts::dwg::standards::v_ac1024::engine::demo_dwg_snapshot();
     vec![DwgMutation::NoMutation, DwgMutation::SetSnapshot { snapshot: base }, DwgMutation::SetVersionInfo { version: "AC1024".into(), maintenance_version: 9, codepage: 65001 }]
 }
@@ -101,7 +101,7 @@ mod tests {
     use protocol::MutationDiff;
 
     #[test]
-    fn logical_mutations_obey_diff_and_inverse_laws() {
+    async fn logical_mutations_obey_diff_and_inverse_laws() {
         let base = DwgSnapshot { version: "AC1024".into(), maintenance_version: 2, codepage: 30, ..Default::default() };
         for mutation in demo_mutation_cases() {
             let mut applied = base.clone();
@@ -116,7 +116,7 @@ mod tests {
     }
 
     #[test]
-    fn operation_codecs_retain_logical_mutations() {
+    async fn operation_codecs_retain_logical_mutations() {
         for mutation in demo_mutation_cases() {
             assert_eq!(DwgMutation::parse_op(&mutation.print_op()).expect("text mutation"), mutation);
             assert_eq!(DwgMutation::decode_op(&mutation.encode_op().expect("binary mutation")).expect("binary mutation"), mutation);

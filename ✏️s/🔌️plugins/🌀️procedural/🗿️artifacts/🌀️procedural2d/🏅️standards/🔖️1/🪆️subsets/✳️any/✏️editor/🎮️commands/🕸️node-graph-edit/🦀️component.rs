@@ -14,7 +14,7 @@ use serde_json::Value;
 pub struct NodeGraphEdit {
     pub operations_json: String}
 
-fn apply_operations(fixture: &FlowFixture, sub_operations: &[Value], selected: &[String]) -> Emit<Procedural2dMutation, Procedural2dConfigMutation> {
+async fn apply_operations(fixture: &FlowFixture, sub_operations: &[Value], selected: &[String]) -> Emit<Procedural2dMutation, Procedural2dConfigMutation> {
     let operations = host_operations(fixture, |host| {
         for operation in sub_operations {
             match operation.get("operation").and_then(|value| value.as_str()).unwrap_or("") {
@@ -49,7 +49,7 @@ fn apply_operations(fixture: &FlowFixture, sub_operations: &[Value], selected: &
 /// reachable only through that macro-generated path (`Procedural2dPlayApp::handle` always routes this
 /// command through `apply` below instead), so `"deleteSelection"` sub-operations degrade to treating
 /// the selection as empty.
-pub fn handle(payload: &NodeGraphEdit, doc: &ArtifactView<'_, Procedural2dSnapshot>, _cfg: &ConfigView<'_, Procedural2dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural2dMutation, Procedural2dConfigMutation>, Fault> {
+pub async fn handle(payload: &NodeGraphEdit, doc: &ArtifactView<'_, Procedural2dSnapshot>, _cfg: &ConfigView<'_, Procedural2dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural2dMutation, Procedural2dConfigMutation>, Fault> {
     let sub_operations: Vec<Value> = serde_json::from_str(&payload.operations_json).unwrap_or_default();
     Ok(apply_operations(&doc.snapshot.fixture, &sub_operations, &[]))
 }
@@ -57,7 +57,7 @@ pub fn handle(payload: &NodeGraphEdit, doc: &ArtifactView<'_, Procedural2dSnapsh
 /// 🕹️ `"deleteSelection"` reads the `graph` domain's current selection instead of a deleted config
 /// field — no config mutation needed afterwards, the framework auto-prunes the deleted ids out of
 /// `graph`'s selection.
-pub fn apply(payload: &NodeGraphEdit, doc: &ArtifactView<'_, Procedural2dSnapshot>, _cfg: &ConfigView<'_, Procedural2dConfig>, interaction: &InteractionView<'_>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural2dMutation, Procedural2dConfigMutation>, Fault> {
+pub async fn apply(payload: &NodeGraphEdit, doc: &ArtifactView<'_, Procedural2dSnapshot>, _cfg: &ConfigView<'_, Procedural2dConfig>, interaction: &InteractionView<'_>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural2dMutation, Procedural2dConfigMutation>, Fault> {
     let sub_operations: Vec<Value> = serde_json::from_str(&payload.operations_json).unwrap_or_default();
     Ok(apply_operations(&doc.snapshot.fixture, &sub_operations, &interaction.selection("graph").ids))
 }

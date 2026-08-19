@@ -12,6 +12,6 @@ use serde::{Deserialize, Serialize};
 #[dsl(keyword = "go-home")]
 pub struct GoHome {}
 
-pub fn handle(_payload: &GoHome, _doc: &ArtifactView<'_, SHomeSnapshot>, _cfg: &ConfigView<'_, HomeConfig>) -> Result<Emit<SHomeMutation, HomeConfigMutation>, Fault> {
+pub async fn handle(_payload: &GoHome, _doc: &ArtifactView<'_, SHomeSnapshot>, _cfg: &ConfigView<'_, HomeConfig>) -> Result<Emit<SHomeMutation, HomeConfigMutation>, Fault> {
     Ok(Emit::effect(Effect::Navigate { uri: "/".into() }))
 }

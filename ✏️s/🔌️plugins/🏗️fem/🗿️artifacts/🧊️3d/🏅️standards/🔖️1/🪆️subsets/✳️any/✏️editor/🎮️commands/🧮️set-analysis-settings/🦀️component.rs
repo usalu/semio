@@ -18,7 +18,7 @@ pub struct SetAnalysisSettings {
 
 /// ⚙️ Every field is optional and defaults to the document's current setting when omitted — a
 /// partial update, not a whole-record replace.
-pub fn handle(payload: &SetAnalysisSettings, doc: &ArtifactView<'_, Fem3dSnapshot>, _cfg: &ConfigView<'_, Fem3dConfig>) -> Result<Emit<Fem3dMutation, Fem3dConfigMutation>, Fault> {
+pub async fn handle(payload: &SetAnalysisSettings, doc: &ArtifactView<'_, Fem3dSnapshot>, _cfg: &ConfigView<'_, Fem3dConfig>) -> Result<Emit<Fem3dMutation, Fem3dConfigMutation>, Fault> {
     let current = &doc.snapshot.analysis;
     let settings = crate::artifacts::fem3d::FemAnalysisSettings {
         modal_count: payload.modal_count.map(|value| value as usize).unwrap_or(current.modal_count),
@@ -35,7 +35,7 @@ mod tests {
     use crate::editor::fem3d::Fem3dCommand;
 
     #[test]
-    fn set_analysis_settings_partially_updates_and_keeps_the_rest() {
+    async fn set_analysis_settings_partially_updates_and_keeps_the_rest() {
         let mut app = fem3d_app();
         dispatch(&mut app, Fem3dCommand::SetAnalysisSettings(SetAnalysisSettings { modal_count: Some(5), buckling_count: None, deformation_scale: None }));
         let analysis = &app.snapshot().expect("snapshot").analysis;

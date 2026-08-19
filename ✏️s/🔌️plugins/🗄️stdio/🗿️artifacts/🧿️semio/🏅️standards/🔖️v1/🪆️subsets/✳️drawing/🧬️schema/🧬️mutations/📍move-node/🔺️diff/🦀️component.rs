@@ -10,7 +10,7 @@ use crate::artifacts::semio::standards::v1::subsets::drawing::schema::diff::{dif
 use crate::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::SemioDrawingSnapshot;
 
 //#region 🔖️Diff
-pub fn diff(payload: &MoveNode, base: &SemioDrawingSnapshot) -> protocol::MutationOutcome<SemioDrawingDiff> {
+pub async fn diff(payload: &MoveNode, base: &SemioDrawingSnapshot) -> protocol::MutationOutcome<SemioDrawingDiff> {
     if node_at(base, &payload.at).is_none() {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Node at layer #{} does not exist.", payload.at.layer), [payload.at.layer.to_string()]);
     }

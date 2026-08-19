@@ -26,21 +26,21 @@ pub struct GltfArtifact {
 
 //#region 🔖️Conversions
 impl Default for GltfArtifact {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self::from_snapshot(GltfSnapshot::default())
     }
 }
 
 impl GltfArtifact {
-    pub fn to_snapshot(&self) -> GltfSnapshot {
+    pub async fn to_snapshot(&self) -> GltfSnapshot {
         GltfSnapshot { schema: self.schema.clone(), document: self.document.clone(), buffers: self.buffers.clone(), source_form: self.source_form }
     }
 
-    pub fn from_snapshot(snapshot: GltfSnapshot) -> Self {
+    pub async fn from_snapshot(snapshot: GltfSnapshot) -> Self {
         Self { schema: snapshot.schema, document: snapshot.document, buffers: snapshot.buffers, source_form: snapshot.source_form }
     }
 
-    pub fn set_snapshot(&mut self, snapshot: GltfSnapshot) {
+    pub async fn set_snapshot(&mut self, snapshot: GltfSnapshot) {
         self.schema = snapshot.schema;
         self.document = snapshot.document;
         self.buffers = snapshot.buffers;
@@ -50,7 +50,7 @@ impl GltfArtifact {
 //#endregion 🔖️Conversions
 
 //#region 🔖️Descriptor
-pub fn gltf_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
+pub async fn gltf_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
     schema::ArtifactSchemaDescriptor {
         id: "s.stdio.gltf",
         artifact: schema::FacetLeaves {
@@ -104,19 +104,19 @@ pub mod derived_construction {
         type Snapshot = GltfSnapshot;
         type Mutation = GltfMutation;
         type Diff = GltfMutationDiff;
-        fn empty() -> Self {
+        async fn empty() -> Self {
             Self { snapshot: GltfSnapshot::default(), diagnostics: Vec::new() }
         }
-        fn from_snapshot(snapshot: Self::Snapshot) -> Self {
+        async fn from_snapshot(snapshot: Self::Snapshot) -> Self {
             Self { snapshot, diagnostics: Vec::new() }
         }
-        fn from_text(text: &str) -> Result<Self, store::TextError> {
+        async fn from_text(text: &str) -> Result<Self, store::TextError> {
             Ok(Self::from_snapshot(<GltfSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
-        fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
+        async fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
             Ok(Self::from_snapshot(<GltfSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
         }
-        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
+        async fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let outcome = protocol::Mutation::diff(&mutation, &self.snapshot);
             if outcome.worst_level().is_some_and(|level| level >= dsl::Severity::Error) {
                 self.diagnostics.push(dsl::Diagnostic::error("stdio.gltf.mutation-rejected", dsl::TextSpan::at(1, 1), format!("{:?}", outcome.messages())));
@@ -131,11 +131,11 @@ pub mod derived_construction {
             }
             (self, outcome)
         }
-        fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
+        async fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
             self.snapshot = <GltfMutationDiff as protocol::MutationDiff<GltfSnapshot>>::apply(&diff, &self.snapshot)?;
             Ok(self)
         }
-        fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
+        async fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
             if self.diagnostics.is_empty() {
                 Ok(self.snapshot)
             } else {
@@ -162,19 +162,19 @@ pub mod derived_construction {
     }
 
     impl GltfAccessorSpec {
-        pub fn new(component_type: GltfComponentType, accessor_type: GltfAccessorType, count: usize) -> Self {
+        pub async fn new(component_type: GltfComponentType, accessor_type: GltfAccessorType, count: usize) -> Self {
             Self { buffer_view: None, byte_offset: 0, component_type, accessor_type, count, normalized: false, min: None, max: None }
         }
-        pub fn with_buffer_view(mut self, buffer_view: usize, byte_offset: usize) -> Self {
+        pub async fn with_buffer_view(mut self, buffer_view: usize, byte_offset: usize) -> Self {
             self.buffer_view = Some(buffer_view);
             self.byte_offset = byte_offset;
             self
         }
-        pub fn with_normalized(mut self, normalized: bool) -> Self {
+        pub async fn with_normalized(mut self, normalized: bool) -> Self {
             self.normalized = normalized;
             self
         }
-        pub fn with_min_max(mut self, min: Vec<f64>, max: Vec<f64>) -> Self {
+        pub async fn with_min_max(mut self, min: Vec<f64>, max: Vec<f64>) -> Self {
             self.min = Some(min);
             self.max = Some(max);
             self
@@ -185,14 +185,14 @@ pub mod derived_construction {
     //#region 🔖️DocumentConstructors
     impl GltfBuilderConstruction {
         /// 🌱 Sets `asset.version` (the one glTF-mandatory field).
-        pub fn set_asset_version(&mut self, version: &str) -> &mut Self {
+        pub async fn set_asset_version(&mut self, version: &str) -> &mut Self {
             self.snapshot.document.asset.version = version.to_string();
             self
         }
 
         /// 📦️ Appends a buffer, storing its real bytes on the snapshot's `buffers` (index-aligned with
         /// `document.buffers`) and recording `byteLength` in the document. Returns the new index.
-        pub fn add_buffer(&mut self, bytes: Vec<u8>) -> usize {
+        pub async fn add_buffer(&mut self, bytes: Vec<u8>) -> usize {
             let byte_length = bytes.len();
             let idx = self.snapshot.buffers.len();
             self.snapshot.buffers.push(bytes);
@@ -203,14 +203,14 @@ pub mod derived_construction {
         /// 🪟️ Appends a `bufferView` (buffer index, byte offset/length, optional `byteStride` for
         /// interleaved data, optional `target` -- 34962 `ARRAY_BUFFER` / 34963 `ELEMENT_ARRAY_BUFFER`).
         /// Returns the new index.
-        pub fn add_buffer_view(&mut self, buffer: usize, byte_offset: usize, byte_length: usize, byte_stride: Option<usize>, target: Option<u64>) -> usize {
+        pub async fn add_buffer_view(&mut self, buffer: usize, byte_offset: usize, byte_length: usize, byte_stride: Option<usize>, target: Option<u64>) -> usize {
             let idx = self.snapshot.document.buffer_views.len();
             self.snapshot.document.buffer_views.push(GltfBufferView { buffer, byte_offset, byte_length, byte_stride, target, name: None, extensions: None, extras: None });
             idx
         }
 
         /// 🔢️ Appends an `accessor` from a typed [`GltfAccessorSpec`]. Returns the new index.
-        pub fn add_accessor(&mut self, spec: GltfAccessorSpec) -> usize {
+        pub async fn add_accessor(&mut self, spec: GltfAccessorSpec) -> usize {
             let idx = self.snapshot.document.accessors.len();
             self.snapshot.document.accessors.push(GltfAccessor {
                 buffer_view: spec.buffer_view,
@@ -230,7 +230,7 @@ pub mod derived_construction {
         }
 
         /// 🎨️ Appends a fully typed `material`. Returns the new index.
-        pub fn add_material(&mut self, material: GltfMaterial) -> usize {
+        pub async fn add_material(&mut self, material: GltfMaterial) -> usize {
             let idx = self.snapshot.document.materials.len();
             self.snapshot.document.materials.push(material);
             idx
@@ -238,7 +238,7 @@ pub mod derived_construction {
 
         /// 🕸️ Appends an empty `mesh` (primitives added via [`Self::add_mesh_primitive`]). Returns the
         /// new index.
-        pub fn add_mesh(&mut self) -> usize {
+        pub async fn add_mesh(&mut self) -> usize {
             let idx = self.snapshot.document.meshes.len();
             self.snapshot.document.meshes.push(GltfMesh::default());
             idx
@@ -247,14 +247,14 @@ pub mod derived_construction {
         /// 🔺️ Appends a primitive to `meshes[mesh]` -- `attributes` are `(semantic, accessor index)`
         /// pairs (e.g. `("POSITION", 0)`), `indices`/`material` are optional accessor/material
         /// indices, `mode` is the primitive topology (defaults to `4` TRIANGLES per spec when unset).
-        pub fn add_mesh_primitive(&mut self, mesh: usize, attributes: &[(&str, usize)], indices: Option<usize>, material: Option<usize>, mode: Option<u64>) {
+        pub async fn add_mesh_primitive(&mut self, mesh: usize, attributes: &[(&str, usize)], indices: Option<usize>, material: Option<usize>, mode: Option<u64>) {
             let primitive = GltfPrimitive { attributes: attributes.iter().map(|(name, idx)| ((*name).to_string(), *idx)).collect(), indices, material, mode, targets: Vec::new(), extensions: None, extras: None };
             let mesh_entry = self.snapshot.document.meshes.get_mut(mesh).expect("mesh index out of range -- call add_mesh first");
             mesh_entry.primitives.push(primitive);
         }
 
         /// 🧍️ Appends a `node`, optionally referencing a mesh. Returns the new index.
-        pub fn add_node(&mut self, mesh: Option<usize>) -> usize {
+        pub async fn add_node(&mut self, mesh: Option<usize>) -> usize {
             let idx = self.snapshot.document.nodes.len();
             self.snapshot.document.nodes.push(GltfNode { mesh, ..GltfNode::default() });
             idx
@@ -263,33 +263,33 @@ pub mod derived_construction {
         /// 🎬️ Appends a `scene` referencing `nodes` (root node indices), with an optional passthrough
         /// `extensions` object (real documents sometimes carry a declared-but-empty `{}` here).
         /// Returns the new index.
-        pub fn add_scene(&mut self, nodes: Vec<usize>, extensions: Option<GltfJson>) -> usize {
+        pub async fn add_scene(&mut self, nodes: Vec<usize>, extensions: Option<GltfJson>) -> usize {
             let idx = self.snapshot.document.scenes.len();
             self.snapshot.document.scenes.push(GltfScene { nodes, name: None, extensions, extras: None });
             idx
         }
 
         /// 🎬️ Sets the document's default `scene` index.
-        pub fn set_default_scene(&mut self, scene: usize) -> &mut Self {
+        pub async fn set_default_scene(&mut self, scene: usize) -> &mut Self {
             self.snapshot.document.scene = Some(scene);
             self
         }
 
         /// 🧩️ Sets `extensionsUsed` (declared, not necessarily applied -- mirrors real-world documents
         /// that declare an extension namespace without every element using it).
-        pub fn set_extensions_used(&mut self, names: Vec<String>) -> &mut Self {
+        pub async fn set_extensions_used(&mut self, names: Vec<String>) -> &mut Self {
             self.snapshot.document.extensions_used = names;
             self
         }
 
         /// 📸️ Peeks the in-progress document -- used by tests/callers that need to inspect state
         /// mid-construction without consuming the builder via `build()`.
-        pub fn document(&self) -> &crate::artifacts::gltf::schema::snapshot::GltfDocument {
+        pub async fn document(&self) -> &crate::artifacts::gltf::schema::snapshot::GltfDocument {
             &self.snapshot.document
         }
 
         /// 📦️ Peeks the in-progress resolved buffer bytes.
-        pub fn buffers(&self) -> &[Vec<u8>] {
+        pub async fn buffers(&self) -> &[Vec<u8>] {
             &self.snapshot.buffers
         }
     }
@@ -301,7 +301,7 @@ pub mod derived_construction {
         use super::*;
 
         #[test]
-        fn typed_constructors_build_a_decodable_triangle() {
+        async fn typed_constructors_build_a_decodable_triangle() {
             let mut b = GltfBuilderConstruction::empty();
             b.set_asset_version("2.0");
             let mut bytes = Vec::new();
@@ -347,14 +347,14 @@ pub mod derived_analysis {
 
     //#region 🔖️Sniff
     /// 👃️ `.glb` binary container magic: `glTF` + little-endian version `2`.
-    fn looks_like_glb(bytes: &[u8]) -> bool {
+    async fn looks_like_glb(bytes: &[u8]) -> bool {
         bytes.len() >= 12 && &bytes[0..4] == b"glTF" && u32::from_le_bytes([bytes[4], bytes[5], bytes[6], bytes[7]]) == 2
     }
 
     /// 👃️ `.gltf` JSON text: a JSON object whose top-level `asset` object carries a `version` string
     /// -- the one field glTF 2.0 §3.9 makes universally mandatory, so this is a real (if cheap) probe
     /// rather than a content-blind guess.
-    fn looks_like_gltf_json(text: &str) -> bool {
+    async fn looks_like_gltf_json(text: &str) -> bool {
         let trimmed = text.trim_start();
         if !trimmed.starts_with('{') {
             return false;
@@ -374,7 +374,7 @@ pub mod derived_analysis {
         type Parts = GltfParts;
         const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.gltf", standard: StandardId("2.0"), subset: SubsetId("*") };
 
-        fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
+        async fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
             match source {
                 AnalyzeSource::Binary(bytes) => {
                     if looks_like_glb(bytes) {
@@ -393,7 +393,7 @@ pub mod derived_analysis {
             }
         }
 
-        fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
+        async fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
             let mut parts = GltfParts::default();
             let mut diagnostics = Vec::new();
             let mut confidence = IoConfidence::High;
@@ -438,7 +438,7 @@ pub mod derived_analysis {
         use super::*;
 
         #[test]
-        fn sniff_recognizes_glb_magic() {
+        async fn sniff_recognizes_glb_magic() {
             let mut bytes = vec![b'g', b'l', b'T', b'F'];
             bytes.extend_from_slice(&2u32.to_le_bytes());
             bytes.extend_from_slice(&[0u8; 4]);
@@ -447,13 +447,13 @@ pub mod derived_analysis {
         }
 
         #[test]
-        fn sniff_recognizes_gltf_json() {
+        async fn sniff_recognizes_gltf_json() {
             assert_eq!(GltfAnalyzerAnalysis::sniff(&AnalyzeSource::Text(r#"{"asset":{"version":"2.0"}}"#)), IoConfidence::High);
             assert_eq!(GltfAnalyzerAnalysis::sniff(&AnalyzeSource::Text("not json")), IoConfidence::Medium);
         }
 
         #[test]
-        fn analyze_decodes_real_gltf_json_text_directly() {
+        async fn analyze_decodes_real_gltf_json_text_directly() {
             let text = r#"{"asset":{"version":"2.0"},"scenes":[]}"#;
             let analysis = GltfAnalyzerAnalysis::analyze(&[AnalyzeSource::Text(text)]);
             assert_eq!(analysis.confidence, IoConfidence::High);
@@ -483,7 +483,7 @@ semio_framework_plugin::derive_artifact_facets!(
 /// 🌱 Empty persisted snapshot. Dissolved out of `⚙️engine`
 /// (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES) — reached as
 /// `crate::artifacts::gltf::engine::empty_gltf_snapshot` through the `engine` barrel shim.
-pub fn empty_gltf_snapshot() -> GltfSnapshot {
+pub async fn empty_gltf_snapshot() -> GltfSnapshot {
     GltfSnapshot::default()
 }
 
@@ -493,7 +493,7 @@ pub fn empty_gltf_snapshot() -> GltfSnapshot {
 /// conformance-law tests AND by the shipped `.dsl.semio`/`.pack.semio` example fixtures (never a
 /// bare fake like the pre-FG3 `{"hello":"stdio.gltf","n":1}` stub, `fixture_honesty_law`'s own
 /// mandate). Mirrors `demo_json_snapshot`'s own role in json's pilot report.
-pub fn demo_gltf_snapshot() -> GltfSnapshot {
+pub async fn demo_gltf_snapshot() -> GltfSnapshot {
     use crate::artifacts::gltf::engine::{GltfAccessorType, GltfComponentType};
     use crate::artifacts::gltf::schema::snapshot::{
         GltfAnimation, GltfAnimationChannel, GltfAnimationChannelTarget, GltfAnimationPath, GltfAsset, GltfCamera, GltfCameraProjection, GltfImage, GltfInterpolation, GltfMaterial, GltfNode, GltfPbrMetallicRoughness, GltfPerspective, GltfSampler,

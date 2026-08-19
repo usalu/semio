@@ -5,7 +5,7 @@ use crate::artifacts::remodel::diff::RemodelDiff;
 use crate::artifacts::remodel::RemodelSnapshot;
 
 //#region 🔖️Diff
-pub fn diff(payload: &super::mutation::UpdateMeshParams, base: &RemodelSnapshot) -> protocol::MutationOutcome<RemodelDiff> {
+pub async fn diff(payload: &super::mutation::UpdateMeshParams, base: &RemodelSnapshot) -> protocol::MutationOutcome<RemodelDiff> {
     if payload.params == base.params.mesh {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", "Mesh params are already up to date.".to_string());
     }

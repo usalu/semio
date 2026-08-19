@@ -5,7 +5,7 @@ use super::mutation::MoveBlockToStep;
 use crate::artifacts::forms::{forms_steps, FormMutation, FormsSnapshot};
 
 //#region 🔖️Inverse
-pub fn inverse_move_block_to_step(payload: &MoveBlockToStep, base: &FormsSnapshot) -> Vec<FormMutation> {
+pub async fn inverse_move_block_to_step(payload: &MoveBlockToStep, base: &FormsSnapshot) -> Vec<FormMutation> {
     let steps = forms_steps(base);
     let Some(source_step) = steps.iter().find(|step| step.id == payload.step_id) else {
         return Vec::new();

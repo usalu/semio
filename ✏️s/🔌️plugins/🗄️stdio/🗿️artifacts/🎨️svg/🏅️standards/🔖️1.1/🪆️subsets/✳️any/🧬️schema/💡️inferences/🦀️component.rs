@@ -22,7 +22,7 @@ pub struct SvgInference {
 }
 
 impl protocol::Inference<SvgSnapshot> for SvgInference {
-    fn infer(snapshot: &SvgSnapshot) -> Self {
+    async fn infer(snapshot: &SvgSnapshot) -> Self {
         Self { dimensions: compute_svg_dimensions(snapshot) }
     }
 }
@@ -31,19 +31,19 @@ impl protocol::Inference<SvgSnapshot> for SvgInference {
 /// `#[derive(Default)]` — same "match `infer` of the real default, don't derive structurally"
 /// trick as `AddInference`'s hand-written `Default` in `📡️spr/🎮️command/🦀️component.rs`.
 impl Default for SvgInference {
-    fn default() -> Self {
+    async fn default() -> Self {
         <Self as protocol::Inference<SvgSnapshot>>::infer(&SvgSnapshot::default())
     }
 }
 
 impl protocol::InferenceSpec<SvgSnapshot> for SvgInference {
-    fn inference_schema_id() -> &'static str {
+    async fn inference_schema_id() -> &'static str {
         "s.stdio.svg.inference"
     }
-    fn schema_version() -> u32 {
+    async fn schema_version() -> u32 {
         1
     }
-    fn fields() -> &'static [protocol::InferenceFieldSpec] {
+    async fn fields() -> &'static [protocol::InferenceFieldSpec] {
         &[protocol::InferenceFieldSpec { id: "s.stdio.svg.inference.dimensions", reads: &["doc"] }]
     }
 }
@@ -61,7 +61,7 @@ impl semio_framework_plugin::ArtifactInferrer for crate::artifacts::svg::standar
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.stdio.svg.inference`'s facet leaves into the OS-wide inference catalog — call
 /// once at plugin init, alongside `svg_artifact_schema_descriptor`'s registration.
-pub fn svg_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
+pub async fn svg_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
     schema::ArtifactInferenceDescriptor {
         id: "s.stdio.svg.inference",
         inference: schema::FacetLeaves {
@@ -82,13 +82,13 @@ mod tests {
     use protocol::Inference;
 
     #[test]
-    fn inference_determinism_law() {
+    async fn inference_determinism_law() {
         let snapshot = SvgSnapshot::default();
         assert_eq!(SvgInference::infer(&snapshot), SvgInference::infer(&snapshot));
     }
 
     #[test]
-    fn inference_default_law() {
+    async fn inference_default_law() {
         assert_eq!(SvgInference::infer(&SvgSnapshot::default()), SvgInference::default());
     }
 }

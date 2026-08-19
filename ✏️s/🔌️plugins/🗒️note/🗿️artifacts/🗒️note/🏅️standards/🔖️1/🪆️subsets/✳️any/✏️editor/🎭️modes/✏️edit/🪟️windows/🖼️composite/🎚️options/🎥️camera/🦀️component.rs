@@ -6,7 +6,7 @@ use crate::artifacts::note::NoteCamera;
 use semio_framework_plugin::WindowMeasure;
 
 //#region 🔖️Measure
-pub fn measure(camera: &NoteCamera, labels: &NotePlayLabels) -> WindowMeasure {
+pub async fn measure(camera: &NoteCamera, labels: &NotePlayLabels) -> WindowMeasure {
     WindowMeasure::Group {
         id: "note-measures.camera".into(),
         label: labels.measure_camera.into(),

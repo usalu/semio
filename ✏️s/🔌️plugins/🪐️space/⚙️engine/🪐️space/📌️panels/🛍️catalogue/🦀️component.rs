@@ -9,7 +9,7 @@ use serde_json::json;
 use std::collections::{BTreeMap, HashMap};
 
 //#region 🔖️Manifest
-pub fn definition() -> PanelTabDefinition {
+pub async fn definition() -> PanelTabDefinition {
     PanelTabDefinition {
         kind: PanelTabKind::App(crate::engine::space::S_PLAY_CATALOGUE_TAB_ID.into()),
         label: semio_framework_plugin::LocalizedLabel::native(semio_framework_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, "Katalog"),
@@ -40,7 +40,7 @@ struct CatalogueAppEntry {
 
 /// 🌳️ Builds a catalogue tree item on top of the SDK's `tree_item_desc` skeleton — only the per-app
 /// drag-data/icon/children extensions are this app's own concern.
-fn app_catalogue_item(path: &[String], label: &str, node: AppCatalogueNode) -> UiTreeItemNode {
+async fn app_catalogue_item(path: &[String], label: &str, node: AppCatalogueNode) -> UiTreeItemNode {
     let id_path = path.join(".");
     let children = node
         .children
@@ -69,7 +69,7 @@ fn app_catalogue_item(path: &[String], label: &str, node: AppCatalogueNode) -> U
 /// 🎨️ Builds the app catalogue tree straight from the production registry — `workflow_palette()`
 /// (every registered `(plugin_id, app_id)`) joined with `os_app_registration` for the document
 /// breadcrumb/primary output kind. Always live, never stale.
-pub fn build_catalogue_tree(labels: &SStudioLabels, locale: Locale) -> UiNode {
+pub async fn build_catalogue_tree(labels: &SStudioLabels, locale: Locale) -> UiNode {
     let mut document = AppCatalogueNode::default();
     for entry in workflow_palette() {
         if entry.app_id == crate::engine::space::S_PLAY_APP_ID {
@@ -110,7 +110,7 @@ mod tests {
     use semio_framework_os::{ArtifactPresentation, MediaClass, MediaForm, MediaType};
     use semio_framework_plugin::{App, AppIo, LocalizedLabel, SurfaceKind};
 
-    fn seed_app(plugin_id: &str, app_id: &str, label: &str, document: &[&str], document_schema: &str) {
+    async fn seed_app(plugin_id: &str, app_id: &str, label: &str, document: &[&str], document_schema: &str) {
         let definition = App::builder(app_id, LocalizedLabel::data(label))
             .document(document.iter().map(|segment| segment.to_string()))
             .mode("edit", LocalizedLabel::native("Edit", "Bearbeiten"), "pencil")
@@ -121,7 +121,7 @@ mod tests {
     }
 
     #[test]
-    fn catalogue_tree_nests_apps_by_canonical_document() {
+    async fn catalogue_tree_nests_apps_by_canonical_document() {
         seed_app("puzzle", "s.puzzle2d@1/*#editor", "Puzzle 2D", &["semio", "puzzle", "2d"], "puzzle2d.document");
         seed_app("puzzle", "s.puzzle3d@1/*#editor", "Puzzle 3D", &["semio", "puzzle", "3d"], "puzzle3d.document");
         let config = crate::engine::space::config::SpaceConfig::default();

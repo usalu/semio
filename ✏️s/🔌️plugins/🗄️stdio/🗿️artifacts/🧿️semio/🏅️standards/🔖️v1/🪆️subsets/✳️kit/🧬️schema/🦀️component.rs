@@ -34,13 +34,13 @@ pub struct SemioKitArtifact {
 }
 
 impl Default for SemioKitArtifact {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self::from_snapshot(SemioKitSnapshot::default())
     }
 }
 
 impl SemioKitArtifact {
-    pub fn to_snapshot(&self) -> SemioKitSnapshot {
+    pub async fn to_snapshot(&self) -> SemioKitSnapshot {
         SemioKitSnapshot {
             schema: self.schema.clone(),
             types: self.types.clone(),
@@ -51,10 +51,10 @@ impl SemioKitArtifact {
             representations: self.representations.clone(),
         }
     }
-    pub fn from_snapshot(snapshot: SemioKitSnapshot) -> Self {
+    pub async fn from_snapshot(snapshot: SemioKitSnapshot) -> Self {
         Self { schema: snapshot.schema, types: snapshot.types, designs: snapshot.designs, objects: snapshot.objects, models: snapshot.models, properties: snapshot.properties, representations: snapshot.representations }
     }
-    pub fn set_snapshot(&mut self, snapshot: SemioKitSnapshot) {
+    pub async fn set_snapshot(&mut self, snapshot: SemioKitSnapshot) {
         self.schema = snapshot.schema;
         self.types = snapshot.types;
         self.designs = snapshot.designs;
@@ -65,7 +65,7 @@ impl SemioKitArtifact {
     }
 }
 
-pub fn semio_kit_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
+pub async fn semio_kit_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
     schema::ArtifactSchemaDescriptor {
         id: "s.stdio.semio.kit",
         artifact: schema::FacetLeaves {
@@ -114,11 +114,11 @@ pub mod derived_construction {
     //#region 🔖️TypedConstructors
     impl SemioKitBuilderConstruction {
         /// 🏗️ Starts a fresh, empty kit (no types/designs/geometry).
-        pub fn new() -> Self {
+        pub async fn new() -> Self {
             Self { snapshot: SemioKitSnapshot::default() }
         }
         /// 🏷️ Appends one TYPE to the catalog.
-        pub fn add_type(mut self, id: impl Into<String>, name: impl Into<String>, category: impl Into<String>) -> Self {
+        pub async fn add_type(mut self, id: impl Into<String>, name: impl Into<String>, category: impl Into<String>) -> Self {
             self.snapshot.types.push(SemioKitType { id: id.into(), name: name.into(), category: category.into() });
             self
         }
@@ -129,28 +129,28 @@ pub mod derived_construction {
         type Snapshot = SemioKitSnapshot;
         type Mutation = SemioKitMutation;
         type Diff = SemioKitDiff;
-        fn empty() -> Self {
+        async fn empty() -> Self {
             Self { snapshot: SemioKitSnapshot::default() }
         }
-        fn from_snapshot(snapshot: Self::Snapshot) -> Self {
+        async fn from_snapshot(snapshot: Self::Snapshot) -> Self {
             Self { snapshot }
         }
-        fn from_text(text: &str) -> Result<Self, store::TextError> {
+        async fn from_text(text: &str) -> Result<Self, store::TextError> {
             Ok(Self::from_snapshot(<SemioKitSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
-        fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
+        async fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
             Ok(Self::from_snapshot(<SemioKitSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
         }
-        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
+        async fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let diff = <Self::Mutation as protocol::Mutation<SemioKitSnapshot>>::diff(&mutation, &self.snapshot);
             let diff = diff.apply_to(&mut self.snapshot);
             (self, diff)
         }
-        fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
+        async fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
             self.snapshot = <SemioKitDiff as protocol::MutationDiff<SemioKitSnapshot>>::apply(&diff, &self.snapshot)?;
             Ok(self)
         }
-        fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
+        async fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
             Ok(self.snapshot)
         }
     }
@@ -161,7 +161,7 @@ pub mod derived_construction {
         use super::*;
 
         #[test]
-        fn typed_constructors_build_a_populated_snapshot() {
+        async fn typed_constructors_build_a_populated_snapshot() {
             let snapshot = SemioKitBuilderConstruction::new().add_type("chair", "Chair", "furniture").add_type("table", "Table", "furniture").build().expect("build");
             assert_eq!(snapshot.types.len(), 2);
             assert_eq!(snapshot.types[0].id, "chair");
@@ -188,7 +188,7 @@ pub mod derived_analysis {
         type Parts = SemioKitParts;
         const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("kit") };
 
-        fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
+        async fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
             match source {
                 AnalyzeSource::Binary(bytes) => {
                     let marker = STDIO_SEMIOKIT_DOCUMENT_SCHEMA.as_bytes();
@@ -208,7 +208,7 @@ pub mod derived_analysis {
             }
         }
 
-        fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
+        async fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
             let mut parts = SemioKitParts::default();
             let mut diagnostics = Vec::new();
             let mut confidence = IoConfidence::High;

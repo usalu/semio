@@ -20,15 +20,15 @@ pub struct CreateRoute {
 impl MutationKind<GisMapSnapshot, GisMapMutation> for CreateRoute {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "create", entity: "route", kind: "create-route", record: "CreatedRoute" };
 
-    fn diff(&self, base: &GisMapSnapshot) -> protocol::MutationOutcome<GisMapDiff> {
+    async fn diff(&self, base: &GisMapSnapshot) -> protocol::MutationOutcome<GisMapDiff> {
         super::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &GisMapSnapshot) -> Vec<GisMapMutation> {
+    async fn inverse(&self, base: &GisMapSnapshot) -> Vec<GisMapMutation> {
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         format!("Create route \"{}\"", self.item.id)
     }
 }

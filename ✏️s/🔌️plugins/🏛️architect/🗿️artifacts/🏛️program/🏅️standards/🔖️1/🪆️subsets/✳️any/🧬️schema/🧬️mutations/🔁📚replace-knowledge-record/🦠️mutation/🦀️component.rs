@@ -19,16 +19,16 @@ pub struct ReplaceKnowledgeRecord {
 }
 impl MutationKind<ProgramSnapshot, ProgramMutation> for ReplaceKnowledgeRecord {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "replace", entity: "knowledge-record", kind: "replace-knowledge-record", record: "ReplacedKnowledgeRecord" };
-    fn diff(&self, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
+    async fn diff(&self, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {
+    async fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         format!("Replace knowledge record \"{}\"", self.knowledge_record.header.name)
     }
-    fn target(&self) -> Vec<String> {
+    async fn target(&self) -> Vec<String> {
         vec![self.knowledge_record.header.id.0.clone()]
     }
 }

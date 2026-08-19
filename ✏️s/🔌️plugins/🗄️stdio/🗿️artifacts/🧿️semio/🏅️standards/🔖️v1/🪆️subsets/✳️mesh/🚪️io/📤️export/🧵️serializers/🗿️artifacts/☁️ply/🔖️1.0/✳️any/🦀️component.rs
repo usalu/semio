@@ -29,7 +29,7 @@ const INTO_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.ply", standard: 
 //#region 🔖️UniformPresence
 /// 🧭️ PLY's single `vertex` element needs one shared column set; a real, honest mismatch (some
 /// primitives populate an attribute, others don't) is a hard error, never a silent zero-fill.
-fn check_uniform_presence(meshes: &[SemioMesh]) -> Result<(bool, bool, bool), String> {
+async fn check_uniform_presence(meshes: &[SemioMesh]) -> Result<(bool, bool, bool), String> {
     let mut normals: Option<bool> = None;
     let mut uvs: Option<bool> = None;
     let mut colors: Option<bool> = None;
@@ -48,7 +48,7 @@ fn check_uniform_presence(meshes: &[SemioMesh]) -> Result<(bool, bool, bool), St
     Ok((normals.unwrap_or(false), uvs.unwrap_or(false), colors.unwrap_or(false)))
 }
 
-fn clamp_u8(v: f32) -> u8 {
+async fn clamp_u8(v: f32) -> u8 {
     (v * 255.0).round().clamp(0.0, 255.0) as u8
 }
 //#endregion 🔖️UniformPresence
@@ -156,7 +156,7 @@ mod tests {
     use crate::artifacts::semio::standards::v1::subsets::mesh::schema::snapshot::SemioPrimitive;
     use semio_framework_plugin::ArtifactDeserializer;
 
-    fn sample_semio_mesh() -> SemioMeshSnapshot {
+    async fn sample_semio_mesh() -> SemioMeshSnapshot {
         SemioMeshSnapshot {
             schema: "stdio.semio.mesh".into(),
             meshes: vec![SemioMesh {
@@ -178,21 +178,21 @@ mod tests {
     }
 
     #[test]
-    fn serialize_then_deserialize_round_trips_at_the_semio_level() {
+    async fn serialize_then_deserialize_round_trips_at_the_semio_level() {
         let original = sample_semio_mesh();
         let ply = semio_framework_plugin::resolve_ready(SemioMeshToPly::serialize(&original)).expect("serialize");
         assert_eq!(ply.elements[0].name, "vertex");
         assert_eq!(ply.elements[0].rows.len(), 4);
         assert_eq!(ply.elements[1].name, "face");
         assert_eq!(ply.elements[1].rows.len(), 2);
-        let round_tripped = SemioMeshFromPly::deserialize(&ply).expect("deserialize");
+        let round_tripped = semio_framework_plugin::resolve_ready(SemioMeshFromPly::deserialize(&ply)).expect("deserialize");
         assert_eq!(original.meshes[0].primitives[0].positions, round_tripped.meshes[0].primitives[0].positions);
         assert_eq!(original.meshes[0].primitives[0].colors, round_tripped.meshes[0].primitives[0].colors);
         assert_eq!(original.meshes[0].primitives[0].indices, round_tripped.meshes[0].primitives[0].indices);
     }
 
     #[test]
-    fn non_uniform_color_presence_is_a_hard_error() {
+    async fn non_uniform_color_presence_is_a_hard_error() {
         let mut semio = sample_semio_mesh();
         semio.meshes[0].primitives.push(SemioPrimitive {
             id: "prim-no-color".into(),
@@ -209,7 +209,7 @@ mod tests {
     }
 
     #[test]
-    fn non_triangle_non_points_topology_is_a_hard_error() {
+    async fn non_triangle_non_points_topology_is_a_hard_error() {
         let mut semio = sample_semio_mesh();
         semio.meshes[0].primitives[0].topology = SemioTopology::LineStrip;
         let err = semio_framework_plugin::resolve_ready(SemioMeshToPly::serialize(&semio)).expect_err("LineStrip must error");

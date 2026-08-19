@@ -3,6 +3,6 @@ use crate::artifacts::semio::standards::v1::subsets::image::schema::mutations::S
 use protocol::Mutation;
 
 /// ↩️ Inverse of remove-metadata-entry.
-pub fn inverse(base: &SemioImageSnapshot, key: String) -> Vec<SemioImageMutation> {
+pub async fn inverse(base: &SemioImageSnapshot, key: String) -> Vec<SemioImageMutation> {
     <SemioImageMutation as Mutation<SemioImageSnapshot>>::inverse(&SemioImageMutation::RemoveMetadataEntry { key }, base)
 }

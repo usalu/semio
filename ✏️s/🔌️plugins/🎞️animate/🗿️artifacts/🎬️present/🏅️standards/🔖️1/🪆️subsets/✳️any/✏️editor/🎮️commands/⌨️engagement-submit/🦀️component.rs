@@ -16,7 +16,7 @@ pub struct EngagementSubmit {
     pub value: String,
 }
 
-pub fn handle(payload: &EngagementSubmit, doc: &ArtifactView<'_, PresentSnapshot>, _cfg: &ConfigView<'_, PresentConfig>, _ctx: &mut PresentDispatchCtx) -> Result<Emit<PresentMutation, PresentConfigMutation>, Fault> {
+pub async fn handle(payload: &EngagementSubmit, doc: &ArtifactView<'_, PresentSnapshot>, _cfg: &ConfigView<'_, PresentConfig>, _ctx: &mut PresentDispatchCtx) -> Result<Emit<PresentMutation, PresentConfigMutation>, Fault> {
     let deck = doc.snapshot;
     let trimmed = payload.value.trim();
     let (deck_source, deck_tiles) = crate::artifacts::present::present_working_scene(deck);
@@ -62,7 +62,7 @@ mod tests {
     use semio_framework_plugin::Effect;
 
     #[test]
-    fn engagement_input_stores_draft_and_submit_parses_grid_pattern() {
+    async fn engagement_input_stores_draft_and_submit_parses_grid_pattern() {
         let mut app = present_app();
         dispatch(&mut app, PresentCommand::EngagementInput(engagement_input::EngagementInput { value: "2x3".into() }));
         dispatch(&mut app, PresentCommand::EngagementSubmit(EngagementSubmit { value: "2x3".into() }));
@@ -70,7 +70,7 @@ mod tests {
     }
 
     #[test]
-    fn engagement_submit_add_clear_and_copy_keywords() {
+    async fn engagement_submit_add_clear_and_copy_keywords() {
         use semio_framework_plugin::testkit::meta;
         let mut app = present_app();
         dispatch(&mut app, PresentCommand::EngagementSubmit(EngagementSubmit { value: "add".into() }));
@@ -85,7 +85,7 @@ mod tests {
     }
 
     #[test]
-    fn engagement_submit_unrecognized_input_is_a_no_op() {
+    async fn engagement_submit_unrecognized_input_is_a_no_op() {
         use semio_framework_plugin::testkit::meta;
         let mut app = present_app();
         let result = app.dispatch_typed(PresentCommand::EngagementSubmit(EngagementSubmit { value: "gibberish".into() }), &meta("local")).expect("unrecognized");

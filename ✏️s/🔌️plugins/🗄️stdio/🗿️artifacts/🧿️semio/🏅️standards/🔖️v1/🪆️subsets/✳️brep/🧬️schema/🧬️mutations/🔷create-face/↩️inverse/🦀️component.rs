@@ -5,7 +5,7 @@ use crate::artifacts::semio::standards::v1::subsets::brep::schema::mutations::{d
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::SemioBrepSnapshot;
 
 //#region 🔖️Inverse
-pub fn inverse(payload: &CreateFace, _base: &SemioBrepSnapshot) -> Vec<SemioBrepMutation> {
+pub async fn inverse(payload: &CreateFace, _base: &SemioBrepSnapshot) -> Vec<SemioBrepMutation> {
     vec![SemioBrepMutation::DeleteFace(delete_face::mutation::DeleteFace { id: payload.id.clone() })]
 }
 //#endregion 🔖️Inverse

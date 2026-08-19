@@ -21,7 +21,7 @@ pub struct PlaygroundTopology {
     pub node_count: u32,
 }
 
-fn infer_topology(_snapshot: &PlaygroundSnapshot) -> PlaygroundTopology {
+async fn infer_topology(_snapshot: &PlaygroundSnapshot) -> PlaygroundTopology {
     PlaygroundTopology { topo_order: Vec::new(), depth: BTreeMap::new(), cycle_free: true, node_count: 0 }
 }
 //#endregion 🧭️Topology
@@ -40,7 +40,7 @@ pub struct PlaygroundInference {
 }
 
 impl protocol::Inference<PlaygroundSnapshot> for PlaygroundInference {
-    fn infer(snapshot: &PlaygroundSnapshot) -> Self {
+    async fn infer(snapshot: &PlaygroundSnapshot) -> Self {
         Self { topology: infer_topology(snapshot) }
     }
 }
@@ -48,19 +48,19 @@ impl protocol::Inference<PlaygroundSnapshot> for PlaygroundInference {
 /// 🌱 Defined in terms of `infer` (not derived) so this stays correct regardless of what
 /// `PlaygroundSnapshot::default()` happens to contain.
 impl Default for PlaygroundInference {
-    fn default() -> Self {
+    async fn default() -> Self {
         <Self as protocol::Inference<PlaygroundSnapshot>>::infer(&PlaygroundSnapshot::default())
     }
 }
 
 impl protocol::InferenceSpec<PlaygroundSnapshot> for PlaygroundInference {
-    fn inference_schema_id() -> &'static str {
+    async fn inference_schema_id() -> &'static str {
         "s.demonstrator.playground.inference"
     }
-    fn schema_version() -> u32 {
+    async fn schema_version() -> u32 {
         1
     }
-    fn fields() -> &'static [protocol::InferenceFieldSpec] {
+    async fn fields() -> &'static [protocol::InferenceFieldSpec] {
         &[protocol::InferenceFieldSpec { id: "s.demonstrator.playground.inference.topology", reads: &[] }]
     }
 }
@@ -76,7 +76,7 @@ impl ArtifactInferrer for crate::artifacts::playground::standards::v1::subsets::
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.demonstrator.playground.inference`'s facet leaves into the OS-wide inference
 /// catalog — call once at plugin init, alongside `playground_artifact_schema_descriptor`'s registration.
-pub fn playground_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
+pub async fn playground_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
     schema::ArtifactInferenceDescriptor {
         id: "s.demonstrator.playground.inference",
         inference: schema::FacetLeaves {
@@ -97,18 +97,18 @@ mod tests {
     use protocol::Inference;
 
     #[test]
-    fn inference_determinism_law() {
+    async fn inference_determinism_law() {
         let snapshot = PlaygroundSnapshot::default();
         assert_eq!(PlaygroundInference::infer(&snapshot), PlaygroundInference::infer(&snapshot));
     }
 
     #[test]
-    fn inference_default_law() {
+    async fn inference_default_law() {
         assert_eq!(PlaygroundInference::infer(&PlaygroundSnapshot::default()), PlaygroundInference::default());
     }
 
     #[test]
-    fn topology_is_the_vacuous_empty_graph() {
+    async fn topology_is_the_vacuous_empty_graph() {
         let topology = infer_topology(&PlaygroundSnapshot::default());
         assert!(topology.topo_order.is_empty());
         assert!(topology.depth.is_empty());

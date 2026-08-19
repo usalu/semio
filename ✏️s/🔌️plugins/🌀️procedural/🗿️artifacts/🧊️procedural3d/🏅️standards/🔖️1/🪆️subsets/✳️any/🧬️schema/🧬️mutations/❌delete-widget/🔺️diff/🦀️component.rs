@@ -7,7 +7,7 @@ use crate::artifacts::procedural3d::diff::Procedural3dDiff;
 use crate::artifacts::procedural3d::Procedural3dSnapshot;
 
 /// 🏗️ Builds the sparse fixture delta removing one widget by id.
-pub fn diff(payload: &DeleteWidget, base: &Procedural3dSnapshot) -> protocol::MutationOutcome<Procedural3dDiff> {
+pub async fn diff(payload: &DeleteWidget, base: &Procedural3dSnapshot) -> protocol::MutationOutcome<Procedural3dDiff> {
     if widget_index(&base.fixture, &payload.id).is_none() {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Widget \"{}\" does not exist.", payload.id), [payload.id.clone()]);
     }

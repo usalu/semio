@@ -21,7 +21,7 @@ pub struct SemioModelBounds {
     pub entity_count: u32,
 }
 
-fn expand(min: &mut SemioPoint3, max: &mut SemioPoint3, p: &SemioPoint3, seen_any: &mut bool) {
+async fn expand(min: &mut SemioPoint3, max: &mut SemioPoint3, p: &SemioPoint3, seen_any: &mut bool) {
     if !*seen_any {
         *min = *p;
         *max = *p;
@@ -40,7 +40,7 @@ fn expand(min: &mut SemioPoint3, max: &mut SemioPoint3, p: &SemioPoint3, seen_an
 /// returns `SemioModelBounds::default()` (min == max == origin, `entity_count: 0`), matching the
 /// derived zero struct — the same degenerate-empty convention `image`'s own header-fold facet
 /// documents.
-pub fn compute_semio_model_bounds(snapshot: &SemioModelSnapshot) -> SemioModelBounds {
+pub async fn compute_semio_model_bounds(snapshot: &SemioModelSnapshot) -> SemioModelBounds {
     let mut min = SemioPoint3::default();
     let mut max = SemioPoint3::default();
     let mut seen_any = false;
@@ -64,11 +64,11 @@ mod tests {
     use crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::{SemioQuaternion, SemioTransform};
     use crate::artifacts::semio::standards::v1::subsets::model::schema::snapshot::{ElementClass, GeometryRef, SemioModelElement, SpatialKind, SpatialNode, STDIO_SEMIOMODEL_DOCUMENT_SCHEMA};
 
-    fn placed(x: f64, y: f64, z: f64) -> SemioTransform {
+    async fn placed(x: f64, y: f64, z: f64) -> SemioTransform {
         SemioTransform { translation: SemioPoint3 { x, y, z }, rotation: SemioQuaternion::default(), scale: SemioPoint3 { x: 1.0, y: 1.0, z: 1.0 } }
     }
 
-    fn populated() -> SemioModelSnapshot {
+    async fn populated() -> SemioModelSnapshot {
         SemioModelSnapshot {
             schema: STDIO_SEMIOMODEL_DOCUMENT_SCHEMA.into(),
             spatial: vec![
@@ -81,7 +81,7 @@ mod tests {
     }
 
     #[test]
-    fn folds_min_max_across_spatial_and_element_placements() {
+    async fn folds_min_max_across_spatial_and_element_placements() {
         let bounds = compute_semio_model_bounds(&populated());
         assert_eq!(bounds.entity_count, 3);
         assert_eq!(bounds.min, SemioPoint3 { x: -5.0, y: -2.0, z: 0.0 });
@@ -89,13 +89,13 @@ mod tests {
     }
 
     #[test]
-    fn inference_determinism_law() {
+    async fn inference_determinism_law() {
         let snapshot = populated();
         assert_eq!(compute_semio_model_bounds(&snapshot), compute_semio_model_bounds(&snapshot));
     }
 
     #[test]
-    fn inference_default_law() {
+    async fn inference_default_law() {
         assert_eq!(compute_semio_model_bounds(&SemioModelSnapshot::default()), SemioModelBounds::default());
     }
 }

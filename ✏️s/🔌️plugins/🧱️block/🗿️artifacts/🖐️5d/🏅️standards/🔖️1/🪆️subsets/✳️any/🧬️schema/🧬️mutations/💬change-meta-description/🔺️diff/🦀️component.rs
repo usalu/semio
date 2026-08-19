@@ -4,7 +4,7 @@ use crate::artifacts::block5d::Block5dSnapshot;
 use crate::{BlockMeta};
 
 //#region 🔖️Diff
-pub fn diff(payload: &super::mutation::ChangeMetaDescription, base: &Block5dSnapshot) -> protocol::MutationOutcome<Block5dDiff> {
+pub async fn diff(payload: &super::mutation::ChangeMetaDescription, base: &Block5dSnapshot) -> protocol::MutationOutcome<Block5dDiff> {
     if payload.new_description == base.meta.description {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", "Meta description is unchanged.");
     }

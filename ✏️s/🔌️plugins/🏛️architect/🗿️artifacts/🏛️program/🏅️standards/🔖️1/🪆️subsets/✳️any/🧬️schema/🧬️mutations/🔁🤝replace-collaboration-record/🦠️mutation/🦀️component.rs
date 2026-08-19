@@ -19,16 +19,16 @@ pub struct ReplaceCollaborationRecord {
 }
 impl MutationKind<ProgramSnapshot, ProgramMutation> for ReplaceCollaborationRecord {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "replace", entity: "collaboration-record", kind: "replace-collaboration-record", record: "ReplacedCollaborationRecord" };
-    fn diff(&self, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
+    async fn diff(&self, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {
+    async fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         format!("Replace collaboration record \"{}\"", self.collaboration_record.header.name)
     }
-    fn target(&self) -> Vec<String> {
+    async fn target(&self) -> Vec<String> {
         vec![self.collaboration_record.header.id.0.clone()]
     }
 }

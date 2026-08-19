@@ -18,22 +18,22 @@ pub struct TransformNode {
 
 impl protocol::MutationKind<GltfSnapshot, GltfMutation> for TransformNode {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "transform", entity: "node", kind: "transform-node", record: "TransformNode" };
-    fn diff(&self, base: &GltfSnapshot) -> <GltfMutation as protocol::Mutation<GltfSnapshot>>::Diff {
+    async fn diff(&self, base: &GltfSnapshot) -> <GltfMutation as protocol::Mutation<GltfSnapshot>>::Diff {
         diff::diff(self, base)
     }
-    fn inverse(&self, base: &GltfSnapshot) -> Vec<GltfMutation> {
+    async fn inverse(&self, base: &GltfSnapshot) -> Vec<GltfMutation> {
         inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         "TransformNode".into()
     }
-    fn target(&self) -> Vec<String> {
+    async fn target(&self) -> Vec<String> {
         vec![self.index.to_string()]
     }
 }
 
 impl GltfSemanticMutation for TransformNode {
-    fn apply(&self, snapshot: &mut GltfSnapshot) -> Result<(), GltfMutationRejection> {
+    async fn apply(&self, snapshot: &mut GltfSnapshot) -> Result<(), GltfMutationRejection> {
         check_index("document/nodes", self.index, snapshot.document.nodes.len())?;
         if self.matrix.is_some() && (self.translation.is_some() || self.rotation.is_some() || self.scale.is_some()) {
             return Err(reject("gltf.node.transform-exclusive", format!("document/nodes/{}", self.index), "matrix and TRS cannot coexist"));
@@ -60,7 +60,7 @@ mod diff {
     use crate::artifacts::gltf::schema::diff::GltfDiff;
     use crate::artifacts::gltf::GltfSnapshot;
     
-    pub fn diff(payload: &TransformNode, base: &GltfSnapshot) -> GltfDiff {
+    pub async fn diff(payload: &TransformNode, base: &GltfSnapshot) -> GltfDiff {
         payload.plan(base).unwrap_or_default()
     }
 }
@@ -74,7 +74,7 @@ mod inverse {
     use crate::artifacts::gltf::schema::modules::mutation_dispatch::*;
     use crate::artifacts::gltf::GltfSnapshot;
     
-    pub fn inverse(payload: &TransformNode, base: &GltfSnapshot) -> Vec<GltfMutation> {
+    pub async fn inverse(payload: &TransformNode, base: &GltfSnapshot) -> Vec<GltfMutation> {
         base.document.nodes.get(payload.index).map(|node| vec![GltfMutation::TransformNode(TransformNode { index: payload.index, matrix: node.matrix, translation: node.translation, rotation: node.rotation, scale: node.scale })]).unwrap_or_default()
     }
 }

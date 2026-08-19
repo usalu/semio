@@ -28,7 +28,7 @@ semio_framework_plugin::app_labels! {
 
 //#region 🔖️Resolvers
 /// 🗣️ Resolves the active label set from `cfg.locale`; falls back to native English.
-pub fn writer_play_labels(cfg: &WriterConfig) -> &'static WriterPlayLabels {
+pub async fn writer_play_labels(cfg: &WriterConfig) -> &'static WriterPlayLabels {
     semio_framework_plugin::resolve_labels_for_locale::<WriterPlayLabels>(&cfg.locale)
 }
 //#endregion 🔖️Resolvers
@@ -39,7 +39,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn labels_resolve_native_english_and_german_from_the_config_locale() {
+    async fn labels_resolve_native_english_and_german_from_the_config_locale() {
         assert_eq!(writer_play_labels(&WriterConfig::default()).document.as_str(), "Document");
         assert_eq!(writer_play_labels(&WriterConfig { locale: "de-DE".into(), ..WriterConfig::default() }).document.as_str(), "Dokument");
     }

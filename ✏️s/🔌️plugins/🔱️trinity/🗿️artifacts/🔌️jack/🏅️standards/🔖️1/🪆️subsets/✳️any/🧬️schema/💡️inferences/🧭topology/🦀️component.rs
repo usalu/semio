@@ -28,14 +28,14 @@ pub struct JackTopology {
 /// (`node_count: 0`) is honestly cycle-free — `compute_topology(&JackSnapshot::default())` must
 /// equal `JackTopology::default()` (the inference-default law), so this matches that zero case.
 impl Default for JackTopology {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self { topo_order: Vec::new(), depth: BTreeMap::new(), cycle_free: true, node_count: 0 }
     }
 }
 
 /// 📐️ Computes `topology` directly from `nodes`/`edges` via Kahn's algorithm — deterministic
 /// because both the root frontier and each frontier's children are drained in node-id sort order.
-pub fn compute_topology(snapshot: &JackSnapshot) -> JackTopology {
+pub async fn compute_topology(snapshot: &JackSnapshot) -> JackTopology {
     let scene = crate::artifacts::jack::jack_working_scene(snapshot);
     let node_count = scene.nodes.len() as u32;
     let mut adjacency: BTreeMap<String, Vec<String>> = scene.nodes.iter().map(|node| (node.id.clone(), Vec::new())).collect();
@@ -91,18 +91,18 @@ mod tests {
     use crate::artifacts::jack::{Edge, Node, Port, PortDirection, PropertyBag};
 
     //#region 🧸️Fixtures
-    fn node(id: &str) -> Node {
+    async fn node(id: &str) -> Node {
         Node { id: id.into(), kind: "Piece".into(), name: id.into(), x: 0.0, y: 0.0, width: 0.0, height: 0.0, properties: PropertyBag::new(), ports: vec![
             Port { id: "out".into(), kind: "Connector".into(), direction: PortDirection::Out, properties: PropertyBag::new() },
             Port { id: "in".into(), kind: "Connector".into(), direction: PortDirection::In, properties: PropertyBag::new() },
         ] }
     }
 
-    fn edge(id: &str, source: &str, target: &str) -> Edge {
+    async fn edge(id: &str, source: &str, target: &str) -> Edge {
         Edge { id: id.into(), kind: "Connection".into(), source: source.into(), target: target.into(), properties: PropertyBag::new() }
     }
 
-    fn chain_snapshot() -> JackSnapshot {
+    async fn chain_snapshot() -> JackSnapshot {
         // root -e1- mid -e2- leaf: a 3-node chain.
         JackSnapshot::with_content(
             "trinity.graph".into(),
@@ -119,7 +119,7 @@ mod tests {
 
     //#region 🧪️TopologyLaws
     #[test]
-    fn chain_is_cycle_free_with_increasing_depth() {
+    async fn chain_is_cycle_free_with_increasing_depth() {
         let topology = compute_topology(&chain_snapshot());
         assert!(topology.cycle_free);
         assert_eq!(topology.node_count, 3);
@@ -130,7 +130,7 @@ mod tests {
     }
 
     #[test]
-    fn a_cycle_is_reported_as_not_cycle_free() {
+    async fn a_cycle_is_reported_as_not_cycle_free() {
         let snapshot = chain_snapshot();
         let mut edges = snapshot.edges();
         edges.push(edge("e3", "leaf@out", "root@in"));
@@ -141,7 +141,7 @@ mod tests {
     }
 
     #[test]
-    fn empty_snapshot_yields_default_topology() {
+    async fn empty_snapshot_yields_default_topology() {
         assert_eq!(compute_topology(&JackSnapshot::default()), JackTopology::default());
     }
     //#endregion 🧪️TopologyLaws

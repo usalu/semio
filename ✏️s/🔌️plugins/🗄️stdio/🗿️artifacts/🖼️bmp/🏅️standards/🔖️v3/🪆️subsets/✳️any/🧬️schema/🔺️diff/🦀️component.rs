@@ -55,7 +55,7 @@ pub struct BmpPaletteDiff {
 }
 
 impl BmpPaletteDiff {
-    pub fn is_empty(&self) -> bool {
+    pub async fn is_empty(&self) -> bool {
         self.removed.is_empty() && self.modified.is_empty() && self.added.is_empty()
     }
 }
@@ -79,7 +79,7 @@ enum Slot {
 
 /// 🧪 Simulates `removed`(descending)/`added`(ascending, clamped) against a virtual array of
 /// `[0, len)` `Slot::Base(i)` markers, mirroring `BmpPaletteDiff` apply's own ordering exactly.
-fn simulate_slots(len: usize, removed: &[usize], added_indices: &[usize]) -> Vec<Slot> {
+async fn simulate_slots(len: usize, removed: &[usize], added_indices: &[usize]) -> Vec<Slot> {
     let mut slots: Vec<Slot> = (0..len).map(Slot::Base).collect();
     let mut removed_desc = removed.to_vec();
     removed_desc.sort_unstable_by(|a, b| b.cmp(a));
@@ -100,13 +100,13 @@ fn simulate_slots(len: usize, removed: &[usize], added_indices: &[usize]) -> Vec
 
 /// 📏 Tight virtual-array bound: one past the highest base index this diff's own
 /// removed/modified/added keys reference (0 if it references none).
-fn base_len_hint(removed: &[usize], modified_indices: impl Iterator<Item = usize>, added_indices: impl Iterator<Item = usize>) -> usize {
+async fn base_len_hint(removed: &[usize], modified_indices: impl Iterator<Item = usize>, added_indices: impl Iterator<Item = usize>) -> usize {
     removed.iter().copied().chain(modified_indices).chain(added_indices).max().map(|m| m + 1).unwrap_or(0)
 }
 
 /// ➕️ Structural, total, base-free absorb of two `palette` triples
 /// (`~/.claude/plans/the-current-schemas-are-scalable-journal.md` `## Absorb`).
-fn absorb_palette(d1: BmpPaletteDiff, d2: BmpPaletteDiff) -> BmpPaletteDiff {
+async fn absorb_palette(d1: BmpPaletteDiff, d2: BmpPaletteDiff) -> BmpPaletteDiff {
     //#region 🔖️PhiBaseToMid
     let d1_added_indices: Vec<usize> = d1.added.iter().map(|a| a.index).collect();
     let removed_count = {
@@ -270,7 +270,7 @@ pub struct BmpDiff {
 }
 
 impl MutationDiff<BmpSnapshot> for BmpDiff {
-    fn apply(&self, base: &BmpSnapshot) -> MutationApplyResult<BmpSnapshot> {
+    async fn apply(&self, base: &BmpSnapshot) -> MutationApplyResult<BmpSnapshot> {
         if let Some(palette) = &self.palette {
             validate_bmp_palette(base.palette.len(), palette)?;
         }
@@ -341,7 +341,7 @@ impl MutationDiff<BmpSnapshot> for BmpDiff {
         Ok(next)
     }
 
-    fn absorb(&mut self, other: Self) {
+    async fn absorb(&mut self, other: Self) {
         if other.header_size.is_some() {
             self.header_size = other.header_size;
         }
@@ -390,7 +390,7 @@ impl MutationDiff<BmpSnapshot> for BmpDiff {
     }
 }
 
-fn validate_bmp_palette(base_len: usize, diff: &BmpPaletteDiff) -> MutationApplyResult<()> {
+async fn validate_bmp_palette(base_len: usize, diff: &BmpPaletteDiff) -> MutationApplyResult<()> {
     let mut removed = HashSet::new();
     for &index in &diff.removed {
         if index >= base_len || !removed.insert(index) {
@@ -414,12 +414,12 @@ fn validate_bmp_palette(base_len: usize, diff: &BmpPaletteDiff) -> MutationApply
 }
 
 impl DiffAlgebra<BmpSnapshot> for BmpDiff {
-    fn inverse(&self, base: &BmpSnapshot) -> Self {
+    async fn inverse(&self, base: &BmpSnapshot) -> Self {
         let applied = self.apply(base).unwrap();
         Self::between(&applied, base)
     }
 
-    fn between(base: &BmpSnapshot, other: &BmpSnapshot) -> Self {
+    async fn between(base: &BmpSnapshot, other: &BmpSnapshot) -> Self {
         let mut d = BmpDiff {
             header_size: (base.header_size != other.header_size).then_some(other.header_size),
             width: (base.width != other.width).then_some(other.width),
@@ -457,7 +457,7 @@ impl DiffAlgebra<BmpSnapshot> for BmpDiff {
         d
     }
 
-    fn is_empty(&self) -> bool {
+    async fn is_empty(&self) -> bool {
         self.header_size.is_none()
             && self.width.is_none()
             && self.height.is_none()
@@ -476,7 +476,7 @@ impl DiffAlgebra<BmpSnapshot> for BmpDiff {
 }
 
 /// 🧩 Builds a set-snapshot diff (sparse field-by-field delta, never a full-replace slot).
-pub fn diff_set_snapshot(base: &BmpSnapshot, next: &BmpSnapshot) -> BmpDiff {
+pub async fn diff_set_snapshot(base: &BmpSnapshot, next: &BmpSnapshot) -> BmpDiff {
     BmpDiff::between(base, next)
 }
 //#endregion 🔖️Diff
@@ -486,12 +486,12 @@ pub fn diff_set_snapshot(base: &BmpSnapshot, next: &BmpSnapshot) -> BmpDiff {
 /// `demo_snap_a`/`demo_diff_cases` placement) so `⚙️engine/🦀️component.rs`'s
 /// `conformance_laws` module can reach these too.
 #[cfg(test)]
-fn entry(b: u8, g: u8, r: u8, reserved: u8) -> BmpPaletteEntry {
+async fn entry(b: u8, g: u8, r: u8, reserved: u8) -> BmpPaletteEntry {
     BmpPaletteEntry { b, g, r, reserved }
 }
 
 #[cfg(test)]
-pub(crate) fn demo_snap_a() -> BmpSnapshot {
+pub(crate) async fn demo_snap_a() -> BmpSnapshot {
     BmpSnapshot {
         schema: "stdio.bmp".into(),
         header_size: 40,
@@ -512,7 +512,7 @@ pub(crate) fn demo_snap_a() -> BmpSnapshot {
 }
 
 #[cfg(test)]
-pub(crate) fn demo_snap_b() -> BmpSnapshot {
+pub(crate) async fn demo_snap_b() -> BmpSnapshot {
     BmpSnapshot {
         schema: "stdio.bmp".into(),
         header_size: 56,
@@ -543,7 +543,7 @@ pub(crate) fn demo_snap_b() -> BmpSnapshot {
 /// `conformance_laws` module) all exercise — same consolidation `stdio.png`'s own
 /// `demo_diff_cases()` already made (single source of truth, per this repo's own CLAUDE.md).
 #[cfg(test)]
-pub(crate) fn demo_diff_cases() -> Vec<BmpDiff> {
+pub(crate) async fn demo_diff_cases() -> Vec<BmpDiff> {
     let a = demo_snap_a();
     let b = demo_snap_b();
     vec![BmpDiff::default(), BmpDiff::between(&a, &b), BmpDiff::between(&b, &a)]
@@ -559,7 +559,7 @@ mod tests {
     /// three sections (`removed`/`modified`/`added`) of the `palette` collection triple, via a
     /// real `between()` result (`f6-recon-report.md` §9 STEP-3's mandated shape).
     #[test]
-    fn diff_codec_text_binary_roundtrip_law() {
+    async fn diff_codec_text_binary_roundtrip_law() {
         use protocol::DiffCodec;
 
         for d in demo_diff_cases() {

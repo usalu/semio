@@ -25,10 +25,10 @@ pub enum Pdf14AViewCommand {
 }
 
 impl protocol::OpBinary for Pdf14AViewCommand {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         Ok(Vec::new())
     }
-    fn decode_op(_bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    async fn decode_op(_bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         Ok(Pdf14AViewCommand::Noop)
     }
 }
@@ -52,13 +52,13 @@ impl ArtifactViewer for Pdf14AViewer {
     const DIALECT: Dialect = PDF14A_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = STDIO_PDF_DOCUMENT_SCHEMA;
 
-    fn initial_snapshot() -> PdfSnapshot {
+    async fn initial_snapshot() -> PdfSnapshot {
         PdfSnapshot::default()
     }
 
     /// 👁️ Structurally read-only: the sole `Noop` variant never carries a config change. Kept as a
     /// real dispatch (not `unreachable!()`) so a future view-only action is a pure addition.
-    fn handle(
+    async fn handle(
         _command: &Self::Command,
         _doc: &ArtifactView<'_, Self::Snapshot>,
         _cfg: &ConfigView<'_, Self::Config>,
@@ -68,7 +68,7 @@ impl ArtifactViewer for Pdf14AViewer {
         Ok(ViewEmit::default())
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> UiNode {
+    async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> UiNode {
         match body_key {
             main::BODY_KEY => main::render(doc.snapshot),
             _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))),
@@ -78,7 +78,7 @@ impl ArtifactViewer for Pdf14AViewer {
 //#endregion 🔖️Viewer
 
 //#region 🔖️Manifest
-pub fn create_pdf14_a_viewer() -> semio_framework_plugin::AppDefinition {
+pub async fn create_pdf14_a_viewer() -> semio_framework_plugin::AppDefinition {
     Viewer::builder(PDF14A_DIALECT)
         .document(["stdio", "pdf", "1.4", "a"])
         .icon_id("file-text")
@@ -96,19 +96,19 @@ mod tests {
     use super::*;
 
     #[test]
-    fn create_pdf14_a_viewer_builds_a_definition_for_the_viewer_role() {
+    async fn create_pdf14_a_viewer_builds_a_definition_for_the_viewer_role() {
         let def = create_pdf14_a_viewer();
         assert_eq!(def.role, semio_framework_plugin::AppRole::Viewer);
         assert_eq!(def.dialect, PDF14A_DIALECT.into());
     }
 
     #[test]
-    fn viewer_dialect_matches_the_artifact_coordinate() {
+    async fn viewer_dialect_matches_the_artifact_coordinate() {
         assert_eq!(<Pdf14AViewer as ArtifactViewer>::DIALECT, PDF14A_DIALECT);
     }
 
     #[test]
-    fn viewer_declares_the_main_window() {
+    async fn viewer_declares_the_main_window() {
         let def = create_pdf14_a_viewer();
         assert!(def.window_kinds.iter().any(|w| w.id == main::WINDOW_KIND_ID));
     }

@@ -16,23 +16,23 @@ pub struct AddAuthor {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn add_author(author: BlockAuthor) -> Block3dMutation {
+pub async fn add_author(author: BlockAuthor) -> Block3dMutation {
     Block3dMutation::AddAuthor(AddAuthor { author })
 }
 
 impl protocol::MutationKind<Block3dSnapshot, Block3dMutation> for AddAuthor {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "add", entity: "author", kind: "add-author", record: "AddedAuthor" };
 
-    fn diff(&self, base: &Block3dSnapshot) -> protocol::MutationOutcome<Block3dDiff> {
+    async fn diff(&self, base: &Block3dSnapshot) -> protocol::MutationOutcome<Block3dDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &Block3dSnapshot) -> Vec<Block3dMutation> {
+    async fn inverse(&self, base: &Block3dSnapshot) -> Vec<Block3dMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         format!("Add author \"{}\"", self.author.name)
     }
-    fn target(&self) -> Vec<String> {
+    async fn target(&self) -> Vec<String> {
         vec![self.author.id.clone()]
     }
 }

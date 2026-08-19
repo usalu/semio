@@ -6,7 +6,7 @@ use semio_framework_plugin::{ExecutionMode, Plugin};
 /// 🔌️ Builds the plugin surface for host registration. `.activation(…)`/`.execution(…)`/
 /// `.requests(…)` (ticket 26/08/17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME M6-remaining,
 /// `📓️design-abi.md` §3/§6) are this crate's migration proof, mirroring `🗒️note`'s shape.
-pub fn plugin() -> Result<Plugin, semio_framework_plugin::PluginAssemblyError> {
+pub async fn plugin() -> Result<Plugin, semio_framework_plugin::PluginAssemblyError> {
     Plugin::builder("animate")
         .label("Animate")
         .version("0.1.0")
@@ -28,12 +28,12 @@ mod surface_tests {
     use semio_framework_plugin::testkit::{assert_editor_and_viewer_share_dialect, assert_viewer_never_mutates};
 
     #[test]
-    fn animate_viewer_never_mutates() {
+    async fn animate_viewer_never_mutates() {
         assert_viewer_never_mutates::<crate::viewer::animate::AnimatePresentViewer>();
     }
 
     #[test]
-    fn animate_editor_and_viewer_share_dialect() {
+    async fn animate_editor_and_viewer_share_dialect() {
         assert_editor_and_viewer_share_dialect::<crate::editor::animate::AnimatePresentPlayApp, crate::viewer::animate::AnimatePresentViewer>();
     }
 }

@@ -17,7 +17,7 @@ pub struct RemoveQuestion {
 // out of a config-owned selection list here — the framework's own `revalidate_interaction_state_after_
 // document_change` prunes the "fields" domain's selection against `interaction_topology` after every
 // document dispatch, so a deleted question's id is pruned automatically.
-pub fn handle(payload: &RemoveQuestion, doc: &ArtifactView<'_, FormsSnapshot>, _cfg: &ConfigView<'_, FormsConfig>) -> Result<Emit<FormMutation, FormsConfigMutation>, Fault> {
+pub async fn handle(payload: &RemoveQuestion, doc: &ArtifactView<'_, FormsSnapshot>, _cfg: &ConfigView<'_, FormsConfig>) -> Result<Emit<FormMutation, FormsConfigMutation>, Fault> {
     let spec = doc.snapshot;
     let Some(location) = locate_question(spec, &payload.question_id) else {
         return Ok(Emit::default());

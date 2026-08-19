@@ -3,12 +3,12 @@
 use semio_framework_plugin::{ExampleSource, LocalizedLabel};
 
 pub const ID: &str = "high-consequence-office";
-pub fn label() -> LocalizedLabel {
+pub async fn label() -> LocalizedLabel {
     LocalizedLabel::native("High Consequence Office", "High Consequence Office")
 }
 pub const ICON: &str = "file";
 pub const PRIMARY_TEXT: &str = include_str!("🖼️assets/🗣️high-consequence-office.dsl.semio");
-pub fn source() -> ExampleSource {
+pub async fn source() -> ExampleSource {
     ExampleSource::new(ID, label(), PRIMARY_TEXT, ICON)
 }
 
@@ -20,7 +20,7 @@ pub fn source() -> ExampleSource {
 /// content-addressed `child_id` matches whatever `PRIMARY_TEXT`'s `qK=` line decodes to — the
 /// standard way a caller (e.g. a test parsing `PRIMARY_TEXT` fresh) recovers the real entries
 /// behind a parsed-from-text handle within this process.
-pub fn reference_snapshot() -> crate::artifacts::en1990::En1990Snapshot {
+pub async fn reference_snapshot() -> crate::artifacts::en1990::En1990Snapshot {
     let q_k = crate::artifacts::en1990::en1990_qk_child_from_entries(&[
         crate::artifacts::en1990::En1990QkEntry { category: "office".into(), value: 60.0 },
         crate::artifacts::en1990::En1990QkEntry { category: "partition-walls".into(), value: 12.0 },

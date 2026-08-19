@@ -28,10 +28,10 @@ pub enum TxtEditorCommand {
 /// 🔤️ Hand-rolled hex codec — `OpText::print_op` must be one line, and `ReplaceText` carries
 /// arbitrary multi-line/UTF-8 text, so every byte is hex-escaped rather than attempting a
 /// space/newline escaping scheme.
-fn hex_encode(bytes: &[u8]) -> String {
+async fn hex_encode(bytes: &[u8]) -> String {
     bytes.iter().map(|byte| format!("{byte:02x}")).collect()
 }
-fn hex_decode(text: &str) -> Result<Vec<u8>, String> {
+async fn hex_decode(text: &str) -> Result<Vec<u8>, String> {
     if text.len() % 2 != 0 {
         return Err("odd-length hex string".into());
     }
@@ -39,11 +39,11 @@ fn hex_decode(text: &str) -> Result<Vec<u8>, String> {
 }
 
 impl protocol::OpText for TxtEditorCommand {
-    fn print_op(&self) -> String {
+    async fn print_op(&self) -> String {
         let TxtEditorCommand::ReplaceText { text } = self;
         format!("replace-text text={}", hex_encode(text.as_bytes()))
     }
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
+    async fn parse_op(line: &str) -> Result<Self, store::TextError> {
         let hex = line.strip_prefix("replace-text text=").ok_or_else(|| store::TextError::new(format!("txt editor command: unknown line {line:?}"), dsl::TextSpan::at(1, 1)))?;
         let bytes = hex_decode(hex).map_err(|error| store::TextError::new(format!("txt editor command: bad hex {error}"), dsl::TextSpan::at(1, 1)))?;
         let text = String::from_utf8(bytes).map_err(|error| store::TextError::new(format!("txt editor command: bad utf8 {error}"), dsl::TextSpan::at(1, 1)))?;
@@ -52,10 +52,10 @@ impl protocol::OpText for TxtEditorCommand {
 }
 
 impl protocol::OpBinary for TxtEditorCommand {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         Ok(<Self as protocol::OpText>::print_op(self).into_bytes())
     }
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         let line = String::from_utf8(bytes.to_vec()).map_err(|error| protocol::ProtocolError::Malformed { what: "txt editor command utf8", offset: 0, detail: error.to_string() })?;
         <Self as protocol::OpText>::parse_op(&line).map_err(|error| protocol::ProtocolError::Malformed { what: "txt editor command", offset: 0, detail: error.to_string() })
     }
@@ -66,7 +66,7 @@ impl protocol::OpBinary for TxtEditorCommand {
 /// 🧮️ Splits a plain `\n`-joined buffer into `(lines, trailing_newline)`. The document's existing
 /// `line_ending` convention is preserved rather than re-detected — a plain-text window edit never
 /// carries `\r\n` metadata worth trusting.
-fn split_text(text: &str) -> (Vec<String>, bool) {
+async fn split_text(text: &str) -> (Vec<String>, bool) {
     if text.is_empty() {
         return (Vec::new(), false);
     }
@@ -97,11 +97,11 @@ impl ArtifactEditor for TxtEditor {
     const DIALECT: Dialect = TXT_EDITOR_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = STDIO_TXT_DOCUMENT_SCHEMA;
 
-    fn initial_snapshot() -> TxtSnapshot {
+    async fn initial_snapshot() -> TxtSnapshot {
         TxtSnapshot::default()
     }
 
-    fn handle(
+    async fn handle(
         command: &Self::Command,
         doc: &ArtifactView<'_, Self::Snapshot>,
         _cfg: &ConfigView<'_, Self::Config>,
@@ -115,7 +115,7 @@ impl ArtifactEditor for TxtEditor {
         Ok(Emit { artifact_mutations: vec![TxtMutation::SetSnapshot { snapshot }], description: Some("Replace text".into()), ..Default::default() })
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> UiNode {
+    async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> UiNode {
         match body_key {
             main::BODY_KEY => main::render(doc.snapshot),
             _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))),
@@ -125,7 +125,7 @@ impl ArtifactEditor for TxtEditor {
 //#endregion 🔖️Editor
 
 //#region 🔖️Manifest
-pub fn create_txt_editor() -> semio_framework_plugin::AppDefinition {
+pub async fn create_txt_editor() -> semio_framework_plugin::AppDefinition {
     Editor::builder(TXT_EDITOR_DIALECT)
         .document(["semio", "stdio", "txt"])
         .icon_id("type")
@@ -143,32 +143,32 @@ mod tests {
     use super::*;
 
     #[test]
-    fn create_txt_editor_builds_a_definition_for_the_editor_role() {
+    async fn create_txt_editor_builds_a_definition_for_the_editor_role() {
         let def = create_txt_editor();
         assert_eq!(def.role, semio_framework_plugin::AppRole::Editor);
         assert_eq!(def.dialect, TXT_EDITOR_DIALECT.into());
     }
 
     #[test]
-    fn editor_dialect_matches_the_artifact_coordinate() {
+    async fn editor_dialect_matches_the_artifact_coordinate() {
         assert_eq!(<TxtEditor as ArtifactEditor>::DIALECT, TXT_EDITOR_DIALECT);
     }
 
     #[test]
-    fn editor_declares_the_text_window() {
+    async fn editor_declares_the_text_window() {
         let def = create_txt_editor();
         assert!(def.window_kinds.iter().any(|window| window.id == main::WINDOW_KIND_ID));
     }
 
     #[test]
-    fn split_text_detects_trailing_newline() {
+    async fn split_text_detects_trailing_newline() {
         assert_eq!(split_text("a\nb\n"), (vec!["a".to_string(), "b".to_string()], true));
         assert_eq!(split_text("a\nb"), (vec!["a".to_string(), "b".to_string()], false));
         assert_eq!(split_text(""), (Vec::new(), false));
     }
 
     #[test]
-    fn op_text_roundtrip() {
+    async fn op_text_roundtrip() {
         let command = TxtEditorCommand::ReplaceText { text: "hello\nworld".into() };
         let printed = <TxtEditorCommand as protocol::OpText>::print_op(&command);
         let parsed = <TxtEditorCommand as protocol::OpText>::parse_op(&printed).expect("parse ok");

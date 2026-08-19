@@ -16,7 +16,7 @@ use std::collections::BTreeMap;
 /// `"adjacent"` relation) and a `GraphTopology` (slots → nodes, edges → arcs) from the snapshot's
 /// problem spec, pins every slot's `pinned_module_id`, then runs the reference `GraphSolver` with
 /// `snapshot.seed` — the one and only place this artifact calls into `wfc_engine`.
-fn compile_and_solve(snapshot: &AssemblySnapshot, seed: u64) -> Result<crate::wfc_engine::outcome::SolveOutcome, String> {
+async fn compile_and_solve(snapshot: &AssemblySnapshot, seed: u64) -> Result<crate::wfc_engine::outcome::SolveOutcome, String> {
     let mut builder = crate::wfc_engine::model::ModelBuilder::new();
     let mut pattern_of: BTreeMap<String, crate::wfc_engine::ids::PatternId> = BTreeMap::new();
     for module in &snapshot.modules {
@@ -56,7 +56,7 @@ fn compile_and_solve(snapshot: &AssemblySnapshot, seed: u64) -> Result<crate::wf
     Ok(solver.solve(seed))
 }
 
-fn module_id_at_pattern_index(snapshot: &AssemblySnapshot, pattern: crate::wfc_engine::ids::PatternId) -> Option<String> {
+async fn module_id_at_pattern_index(snapshot: &AssemblySnapshot, pattern: crate::wfc_engine::ids::PatternId) -> Option<String> {
     snapshot.modules.get(pattern.index()).map(|module| module.child_id.clone())
 }
 //#endregion 🔖️Compile
@@ -82,16 +82,16 @@ impl store::InferredField<AssemblySnapshot> for AssemblySolve {
     const FIELD_ID: &'static str = "s.assembly.inference.solve";
     const SCHEMA_VERSION: u32 = 1;
 
-    fn reads() -> &'static [&'static str] {
+    async fn reads() -> &'static [&'static str] {
         &["seed", "slots", "edges", "modules", "weights", "rules"]
     }
-    fn plan(_snapshot: &AssemblySnapshot) -> Vec<store::InferenceStep<Self::Key>> {
+    async fn plan(_snapshot: &AssemblySnapshot) -> Vec<store::InferenceStep<Self::Key>> {
         vec![store::InferenceStep { key: "assembly".to_string(), parents: Vec::new() }]
     }
-    fn dep_input(snapshot: &AssemblySnapshot, _key: &Self::Key, _parents: &[Self::Key]) -> Vec<u8> {
+    async fn dep_input(snapshot: &AssemblySnapshot, _key: &Self::Key, _parents: &[Self::Key]) -> Vec<u8> {
         serde_json::to_vec(snapshot).expect("AssemblySnapshot serialization never fails")
     }
-    fn compute(snapshot: &AssemblySnapshot, _key: &Self::Key, _parents: &[Self::Value]) -> Self::Value {
+    async fn compute(snapshot: &AssemblySnapshot, _key: &Self::Key, _parents: &[Self::Value]) -> Self::Value {
         match compile_and_solve(snapshot, snapshot.seed) {
             Ok(crate::wfc_engine::outcome::SolveOutcome::Solved(solution)) => {
                 let assignments = snapshot
@@ -121,16 +121,16 @@ impl store::InferredField<AssemblySnapshot> for AssemblyContradiction {
     const FIELD_ID: &'static str = "s.assembly.inference.contradiction";
     const SCHEMA_VERSION: u32 = 1;
 
-    fn reads() -> &'static [&'static str] {
+    async fn reads() -> &'static [&'static str] {
         &["seed", "slots", "edges", "modules", "weights", "rules"]
     }
-    fn plan(_snapshot: &AssemblySnapshot) -> Vec<store::InferenceStep<Self::Key>> {
+    async fn plan(_snapshot: &AssemblySnapshot) -> Vec<store::InferenceStep<Self::Key>> {
         vec![store::InferenceStep { key: "assembly".to_string(), parents: Vec::new() }]
     }
-    fn dep_input(snapshot: &AssemblySnapshot, _key: &Self::Key, _parents: &[Self::Key]) -> Vec<u8> {
+    async fn dep_input(snapshot: &AssemblySnapshot, _key: &Self::Key, _parents: &[Self::Key]) -> Vec<u8> {
         serde_json::to_vec(snapshot).expect("AssemblySnapshot serialization never fails")
     }
-    fn compute(snapshot: &AssemblySnapshot, _key: &Self::Key, _parents: &[Self::Value]) -> Self::Value {
+    async fn compute(snapshot: &AssemblySnapshot, _key: &Self::Key, _parents: &[Self::Value]) -> Self::Value {
         matches!(compile_and_solve(snapshot, snapshot.seed), Ok(crate::wfc_engine::outcome::SolveOutcome::Solved(_)))
     }
 }
@@ -154,13 +154,13 @@ impl store::InferredField<AssemblySnapshot> for AssemblyEntropy {
     const FIELD_ID: &'static str = "s.assembly.inference.entropy";
     const SCHEMA_VERSION: u32 = 1;
 
-    fn reads() -> &'static [&'static str] {
+    async fn reads() -> &'static [&'static str] {
         &["slots", "modules", "weights"]
     }
-    fn plan(snapshot: &AssemblySnapshot) -> Vec<store::InferenceStep<Self::Key>> {
+    async fn plan(snapshot: &AssemblySnapshot) -> Vec<store::InferenceStep<Self::Key>> {
         snapshot.slots.iter().map(|slot| store::InferenceStep { key: slot.id.clone(), parents: Vec::new() }).collect()
     }
-    fn dep_input(snapshot: &AssemblySnapshot, key: &Self::Key, _parents: &[Self::Key]) -> Vec<u8> {
+    async fn dep_input(snapshot: &AssemblySnapshot, key: &Self::Key, _parents: &[Self::Key]) -> Vec<u8> {
         let mut bytes = Vec::new();
         let pinned = snapshot.slots.iter().find(|slot| &slot.id == key).and_then(|slot| slot.pinned_module_id.clone());
         bytes.extend_from_slice(pinned.unwrap_or_default().as_bytes());
@@ -176,7 +176,7 @@ impl store::InferredField<AssemblySnapshot> for AssemblyEntropy {
         }
         bytes
     }
-    fn compute(snapshot: &AssemblySnapshot, key: &Self::Key, _parents: &[Self::Value]) -> Self::Value {
+    async fn compute(snapshot: &AssemblySnapshot, key: &Self::Key, _parents: &[Self::Value]) -> Self::Value {
         let pinned = snapshot.slots.iter().find(|slot| &slot.id == key).and_then(|slot| slot.pinned_module_id.as_ref());
         if pinned.is_some() {
             return 0.0;
@@ -185,7 +185,7 @@ impl store::InferredField<AssemblySnapshot> for AssemblyEntropy {
     }
 }
 
-fn shannon_entropy_over_modules(snapshot: &AssemblySnapshot) -> f64 {
+async fn shannon_entropy_over_modules(snapshot: &AssemblySnapshot) -> f64 {
     let weights: Vec<f64> = snapshot.modules.iter().map(|module| snapshot.weights.iter().find(|w| w.module_id == module.child_id).map(|w| w.weight).unwrap_or(1.0)).collect();
     let total: f64 = weights.iter().sum();
     if weights.is_empty() || total <= 0.0 {
@@ -204,13 +204,13 @@ mod tests {
     use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::value::schema::snapshot::SemioValue;
     use store::InferredField;
 
-    fn kit_child(id: &str) -> store::ArtifactChild<SemioKitSnapshot> {
+    async fn kit_child(id: &str) -> store::ArtifactChild<SemioKitSnapshot> {
         store::ArtifactChild::new(id.to_string(), store::os_io::ArtifactRef { artifact_id: id.to_string(), dialect: store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "kit".into() } })
     }
 
     /// 🧸 Two slots, one edge, two modules ("a","b") mutually allowed to be adjacent — a WFC
     /// instance small enough to solve deterministically by hand: any seed must find SOME solution.
-    fn two_slot_two_module_snapshot() -> AssemblySnapshot {
+    async fn two_slot_two_module_snapshot() -> AssemblySnapshot {
         let mut snapshot = AssemblySnapshot::default();
         snapshot.seed = 7;
         snapshot.slots = vec![AssemblySlot { id: "s1".into(), x: 0.0, y: 0.0, z: 0.0, pinned_module_id: None }, AssemblySlot { id: "s2".into(), x: 1.0, y: 0.0, z: 0.0, pinned_module_id: None }];
@@ -221,7 +221,7 @@ mod tests {
     }
 
     #[test]
-    fn solve_over_an_always_allowed_pair_finds_an_assignment_for_every_slot() {
+    async fn solve_over_an_always_allowed_pair_finds_an_assignment_for_every_slot() {
         let snapshot = two_slot_two_module_snapshot();
         let values = store::infer_field::<AssemblySnapshot, AssemblySolve>(&snapshot, None);
         match &values["assembly"] {
@@ -231,14 +231,14 @@ mod tests {
     }
 
     #[test]
-    fn contradiction_field_agrees_with_solve_field_on_a_satisfiable_spec() {
+    async fn contradiction_field_agrees_with_solve_field_on_a_satisfiable_spec() {
         let snapshot = two_slot_two_module_snapshot();
         let satisfiable = store::infer_field::<AssemblySnapshot, AssemblyContradiction>(&snapshot, None);
         assert_eq!(satisfiable["assembly"], true);
     }
 
     #[test]
-    fn an_unsatisfiable_spec_is_reported_as_a_contradiction_not_a_panic() {
+    async fn an_unsatisfiable_spec_is_reported_as_a_contradiction_not_a_panic() {
         let mut snapshot = two_slot_two_module_snapshot();
         // 🚫 No rule allows "a" next to "a" or "b" next to "b" AND no rule allows "a"-"b" either
         // once we remove it — an edge with a fully closed-world empty allow-set is unsatisfiable.
@@ -250,7 +250,7 @@ mod tests {
     }
 
     #[test]
-    fn pinned_slot_always_resolves_to_its_pinned_module() {
+    async fn pinned_slot_always_resolves_to_its_pinned_module() {
         let mut snapshot = two_slot_two_module_snapshot();
         snapshot.slots[0].pinned_module_id = Some("a".into());
         snapshot.slots[1].pinned_module_id = Some("b".into());
@@ -265,14 +265,14 @@ mod tests {
     }
 
     #[test]
-    fn empty_assembly_solves_trivially_with_no_assignments() {
+    async fn empty_assembly_solves_trivially_with_no_assignments() {
         let snapshot = AssemblySnapshot::default();
         let values = store::infer_field::<AssemblySnapshot, AssemblySolve>(&snapshot, None);
         assert_eq!(values["assembly"], AssemblySolveResult::Solved { assignments: BTreeMap::new() });
     }
 
     #[test]
-    fn pinned_slot_has_zero_entropy_unpinned_slot_does_not() {
+    async fn pinned_slot_has_zero_entropy_unpinned_slot_does_not() {
         let mut snapshot = two_slot_two_module_snapshot();
         snapshot.slots[0].pinned_module_id = Some("a".into());
         let entropy = store::infer_field::<AssemblySnapshot, AssemblyEntropy>(&snapshot, None);
@@ -281,14 +281,14 @@ mod tests {
     }
 
     #[test]
-    fn uniform_weights_over_two_modules_yield_ln2_entropy() {
+    async fn uniform_weights_over_two_modules_yield_ln2_entropy() {
         let snapshot = two_slot_two_module_snapshot();
         let entropy = store::infer_field::<AssemblySnapshot, AssemblyEntropy>(&snapshot, None);
         assert!((entropy["s1"] - std::f64::consts::LN_2).abs() < 1e-9);
     }
 
     #[test]
-    fn skewed_weights_lower_entropy_than_uniform() {
+    async fn skewed_weights_lower_entropy_than_uniform() {
         let mut snapshot = two_slot_two_module_snapshot();
         snapshot.weights = vec![AssemblyModuleWeight { module_id: "a".into(), weight: 100.0 }, AssemblyModuleWeight { module_id: "b".into(), weight: 0.01 }];
         let entropy = store::infer_field::<AssemblySnapshot, AssemblyEntropy>(&snapshot, None);
@@ -299,7 +299,7 @@ mod tests {
     /// results — `InferredField::compute` must be a pure function of `snapshot`, WFC's internal
     /// randomness notwithstanding, since the seed itself lives in the snapshot.
     #[test]
-    fn identical_seed_and_spec_always_produce_the_same_solution() {
+    async fn identical_seed_and_spec_always_produce_the_same_solution() {
         let snapshot = two_slot_two_module_snapshot();
         let first = store::infer_field::<AssemblySnapshot, AssemblySolve>(&snapshot, None);
         let second = store::infer_field::<AssemblySnapshot, AssemblySolve>(&snapshot, None);
@@ -307,7 +307,7 @@ mod tests {
     }
 
     #[test]
-    fn changing_only_the_seed_still_solves_a_trivially_satisfiable_spec() {
+    async fn changing_only_the_seed_still_solves_a_trivially_satisfiable_spec() {
         let mut snapshot = two_slot_two_module_snapshot();
         snapshot.seed = 999;
         let values = store::infer_field::<AssemblySnapshot, AssemblySolve>(&snapshot, None);

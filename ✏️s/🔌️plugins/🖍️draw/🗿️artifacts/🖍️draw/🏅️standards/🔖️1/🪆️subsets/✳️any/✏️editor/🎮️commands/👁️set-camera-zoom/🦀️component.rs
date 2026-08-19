@@ -13,7 +13,7 @@ pub struct SetCameraZoom {
     pub value: f64,
 }
 
-pub fn handle(payload: &SetCameraZoom, _doc: &ArtifactView<'_, DrawSnapshot>, cfg: &ConfigView<'_, DrawConfig>, _session: &mut DrawSession) -> Result<Emit<DrawMutation, DrawConfigMutation>, Fault> {
+pub async fn handle(payload: &SetCameraZoom, _doc: &ArtifactView<'_, DrawSnapshot>, cfg: &ConfigView<'_, DrawConfig>, _session: &mut DrawSession) -> Result<Emit<DrawMutation, DrawConfigMutation>, Fault> {
     let config = cfg.snapshot;
     let camera = DrawCamera { zoom: payload.value, ..config.camera.clone() };
     Ok(Emit::config(vec![DrawConfigMutation::SetCamera { camera }]))

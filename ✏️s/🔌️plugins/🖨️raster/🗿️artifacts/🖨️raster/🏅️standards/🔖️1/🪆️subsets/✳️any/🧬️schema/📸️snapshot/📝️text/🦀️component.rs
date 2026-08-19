@@ -14,12 +14,12 @@ use crate::artifacts::raster::RasterSnapshot;
 pub const SEMIO_RASTER_EXAMPLE_TEXT: &str = include_str!("../../../📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio");
 
 /// 📖️ Parses `.raster` DSL text into a `RasterSnapshot`.
-pub fn parse_dsl(text: &str) -> Result<RasterSnapshot, store::TextError> {
+pub async fn parse_dsl(text: &str) -> Result<RasterSnapshot, store::TextError> {
     <RasterSnapshot as store::ArtifactDsl>::parse_dsl(text)
 }
 
 /// 🖨️ Prints a `RasterSnapshot` back to `.raster` DSL text.
-pub fn print_dsl(document: &RasterSnapshot) -> String {
+pub async fn print_dsl(document: &RasterSnapshot) -> String {
     store::ArtifactDsl::print_dsl(document)
 }
 
@@ -32,7 +32,7 @@ mod tests {
 
     /// 📄️ Handcrafted document exercising every layer kind/field, shared with the `pack`/`op`
     /// taxonomy nodes' own copies (each node keeps its own private copy, per §7 test isolation).
-    fn representative_raster_document() -> RasterSnapshot {
+    async fn representative_raster_document() -> RasterSnapshot {
         let mut assets = BTreeMap::new();
         assets.insert("asset-1".into(), crate::artifacts::raster::image_asset_child_handle("asset-1", &RasterImageAsset { mime: "image/png".into(), data: b"abc".to_vec() }));
         let mut params = BTreeMap::new();
@@ -90,7 +90,7 @@ mod tests {
     }
 
     #[test]
-    fn semio_example_dsl_round_trips() {
+    async fn semio_example_dsl_round_trips() {
         let fixture = crate::artifacts::raster::schema::semio_fixture_snapshot();
         store::os_store::test_support::assert_dsl_round_trip(&fixture);
         let printed = print_dsl(&fixture);
@@ -99,7 +99,7 @@ mod tests {
     }
 
     #[test]
-    fn raster_dsl_round_trips_representative_document() {
+    async fn raster_dsl_round_trips_representative_document() {
         store::os_store::test_support::assert_dsl_round_trip(&representative_raster_document());
     }
 }

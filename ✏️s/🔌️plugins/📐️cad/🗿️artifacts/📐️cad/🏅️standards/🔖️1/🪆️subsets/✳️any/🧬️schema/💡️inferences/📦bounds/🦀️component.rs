@@ -25,18 +25,18 @@ pub struct CadBounds {
 /// 📦 3d bounding box across every pane's object origins and brep vertex positions. `None`
 /// unconditionally now — real bounds require resolving the composed model children's content,
 /// which is out of this pure inference's reach (see module doc comment).
-pub(crate) fn scene_bounds(_snapshot: &CadSnapshot) -> Option<CadBounds> {
+pub(crate) async fn scene_bounds(_snapshot: &CadSnapshot) -> Option<CadBounds> {
     None
 }
 
 /// 📦 Number of the four fixed model-child SLOTS that are occupied (0..=4) — a real, cheap signal
 /// over what `CadSnapshot` itself can see; NOT a count of elements inside those children.
-pub(crate) fn object_count(snapshot: &CadSnapshot) -> usize {
+pub(crate) async fn object_count(snapshot: &CadSnapshot) -> usize {
     [&snapshot.shape_model, &snapshot.building_model, &snapshot.energy_model, &snapshot.structure_classic_model].into_iter().filter(|slot| slot.is_some()).count()
 }
 
 /// 📦 Vertex counting requires resolved child content (see module doc comment) — `0` unconditionally.
-pub(crate) fn vertex_count(_snapshot: &CadSnapshot) -> usize {
+pub(crate) async fn vertex_count(_snapshot: &CadSnapshot) -> usize {
     0
 }
 //#endregion 📦Bounds
@@ -48,7 +48,7 @@ mod tests {
     use crate::artifacts::cad::{empty_cad_snapshot, testkit::sample_model_child};
 
     #[test]
-    fn empty_scene_has_no_bounds() {
+    async fn empty_scene_has_no_bounds() {
         let snapshot = empty_cad_snapshot();
         assert!(scene_bounds(&snapshot).is_none());
         assert_eq!(object_count(&snapshot), 0);
@@ -56,7 +56,7 @@ mod tests {
     }
 
     #[test]
-    fn object_count_reflects_occupied_model_slots() {
+    async fn object_count_reflects_occupied_model_slots() {
         let mut snapshot = empty_cad_snapshot();
         snapshot.shape_model = Some(sample_model_child("bounds-law-1"));
         assert_eq!(object_count(&snapshot), 1);

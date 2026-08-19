@@ -30,7 +30,7 @@ pub struct AssemblyDiff {
 /// 🔀 Generic id-keyed upsert/remove merge, shared by every collection field's `absorb` step: `self`
 /// is base→mid, `other` is mid→after — a later remove always wins over an earlier upsert of the SAME
 /// id, and a later upsert always clears any earlier remove of the same id.
-fn merge_upserts<T: Clone>(
+async fn merge_upserts<T: Clone>(
     self_removed: &[String], self_upserted: &[(usize, T)], self_key: impl Fn(&T) -> &str,
     other_removed: &[String], other_upserted: &[(usize, T)], other_key: impl Fn(&T) -> &str,
 ) -> (Vec<String>, Vec<(usize, T)>) {
@@ -51,7 +51,7 @@ fn merge_upserts<T: Clone>(
 
 //#region 🔖️Apply
 /// 🧬 Validates and applies one id-keyed indexed collection delta atomically.
-fn apply_collection<T: Clone>(
+async fn apply_collection<T: Clone>(
     base: &[T],
     removed: &[String],
     upserted: &[(usize, T)],
@@ -143,7 +143,7 @@ fn apply_collection<T: Clone>(
     Ok(items)
 }
 
-fn apply_unordered_collection<T: Clone>(
+async fn apply_unordered_collection<T: Clone>(
     base: &[T],
     removed: &[String],
     upserted: &[T],
@@ -198,7 +198,7 @@ fn apply_unordered_collection<T: Clone>(
 }
 
 impl protocol::MutationDiff<AssemblySnapshot> for AssemblyDiff {
-    fn apply(&self, base: &AssemblySnapshot) -> protocol::MutationApplyResult<AssemblySnapshot> {
+    async fn apply(&self, base: &AssemblySnapshot) -> protocol::MutationApplyResult<AssemblySnapshot> {
         Ok({
             let mut next = base.clone();
             if let Some(schema) = &self.schema {
@@ -238,7 +238,7 @@ impl protocol::MutationDiff<AssemblySnapshot> for AssemblyDiff {
             next
         })
     }
-    fn absorb(&mut self, other: Self) {
+    async fn absorb(&mut self, other: Self) {
         if other.schema.is_some() {
             self.schema = other.schema;
         }
@@ -269,14 +269,14 @@ mod tests {
     use super::*;
     use protocol::MutationDiff;
 
-    fn base() -> AssemblySnapshot {
+    async fn base() -> AssemblySnapshot {
         let mut snapshot = AssemblySnapshot::default();
         snapshot.slots.push(AssemblySlot { id: "s1".into(), x: 0.0, y: 0.0, z: 0.0, pinned_module_id: None });
         snapshot
     }
 
     #[test]
-    fn upsert_by_id_replaces_in_place_never_duplicates() {
+    async fn upsert_by_id_replaces_in_place_never_duplicates() {
         let diff = AssemblyDiff { slots_upserted: vec![(0, AssemblySlot { id: "s1".into(), x: 9.0, y: 9.0, z: 0.0, pinned_module_id: None })], ..Default::default() };
         let after = diff.apply(&base()).expect("valid mutation diff");
         assert_eq!(after.slots.len(), 1);
@@ -284,7 +284,7 @@ mod tests {
     }
 
     #[test]
-    fn insert_at_index_for_a_new_id() {
+    async fn insert_at_index_for_a_new_id() {
         let diff = AssemblyDiff { slots_upserted: vec![(1, AssemblySlot { id: "s2".into(), x: 1.0, y: 1.0, z: 0.0, pinned_module_id: None })], ..Default::default() };
         let after = diff.apply(&base()).expect("valid mutation diff");
         assert_eq!(after.slots.len(), 2);
@@ -292,7 +292,7 @@ mod tests {
     }
 
     #[test]
-    fn malformed_indexed_diff_rejects_without_changing_the_base() {
+    async fn malformed_indexed_diff_rejects_without_changing_the_base() {
         let base = base();
         let diff = AssemblyDiff {
             slots_upserted: vec![(99, AssemblySlot { id: "s2".into(), ..Default::default() })],
@@ -306,14 +306,14 @@ mod tests {
     }
 
     #[test]
-    fn remove_drops_the_matching_id_only() {
+    async fn remove_drops_the_matching_id_only() {
         let diff = AssemblyDiff { slots_removed: vec!["s1".into()], ..Default::default() };
         let after = diff.apply(&base()).expect("valid mutation diff");
         assert!(after.slots.is_empty());
     }
 
     #[test]
-    fn absorb_a_later_remove_wins_over_an_earlier_upsert_of_the_same_id() {
+    async fn absorb_a_later_remove_wins_over_an_earlier_upsert_of_the_same_id() {
         let mut d1 = AssemblyDiff { slots_upserted: vec![(0, AssemblySlot { id: "s2".into(), ..Default::default() })], ..Default::default() };
         let d2 = AssemblyDiff { slots_removed: vec!["s2".into()], ..Default::default() };
         d1.absorb(d2);
@@ -322,7 +322,7 @@ mod tests {
     }
 
     #[test]
-    fn absorb_a_later_upsert_clears_an_earlier_remove_of_the_same_id() {
+    async fn absorb_a_later_upsert_clears_an_earlier_remove_of_the_same_id() {
         let mut d1 = AssemblyDiff { slots_removed: vec!["s1".into()], ..Default::default() };
         let d2 = AssemblyDiff { slots_upserted: vec![(0, AssemblySlot { id: "s1".into(), x: 5.0, ..Default::default() })], ..Default::default() };
         d1.absorb(d2);
@@ -332,7 +332,7 @@ mod tests {
     }
 
     #[test]
-    fn absorb_composes_to_the_same_result_as_applying_sequentially() {
+    async fn absorb_composes_to_the_same_result_as_applying_sequentially() {
         let start = base();
         let d1 = AssemblyDiff { seed: Some(7), ..Default::default() };
         let mid = d1.apply(&start).expect("valid mutation diff");

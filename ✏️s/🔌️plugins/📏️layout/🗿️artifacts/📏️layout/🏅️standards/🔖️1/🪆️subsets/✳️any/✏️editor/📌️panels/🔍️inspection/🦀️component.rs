@@ -11,7 +11,7 @@ pub const LAYOUT_PLAY_BODY_INSPECTION: &str = "layout.play.inspection";
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
-pub fn definition() -> PanelTabDefinition {
+pub async fn definition() -> PanelTabDefinition {
     PanelTabDefinition {
         kind: PanelTabKind::App(FRAMEWORK_PANEL_TAB_INSPECTION_ID.into()),
         label: LocalizedLabel::native(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, "Inspektion"),
@@ -31,7 +31,7 @@ pub fn definition() -> PanelTabDefinition {
 /// against and always falls through to the document summary below — the same gap gis2d's and
 /// puzzle3d's inspection panels flag (see this ticket's w3b-summary.md). Not fixed here (framework
 /// file, out of this crate's remit).
-pub fn render(doc: &LayoutSnapshot, config: &LayoutConfig, labels: &LayoutLabels) -> UiNode {
+pub async fn render(doc: &LayoutSnapshot, config: &LayoutConfig, labels: &LayoutLabels) -> UiNode {
     ui_declarative_sections_to_tree(&[UiSectionNode {
         id: "layout-play-inspector.empty".into(),
         label: Some(Label::data(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL)),
@@ -55,7 +55,7 @@ mod tests {
     use crate::editor::layout::testkit::{layout_app, render as render_body};
 
     #[test]
-    fn the_inspector_always_summarises_the_document() {
+    async fn the_inspector_always_summarises_the_document() {
         let mut app = layout_app();
         let json = render_body(&mut app, LAYOUT_PLAY_BODY_INSPECTION);
         assert!(json.contains(LAYOUT_DOCUMENT_SCHEMA));
@@ -63,7 +63,7 @@ mod tests {
     }
 
     #[test]
-    fn definition_binds_the_framework_inspection_tab_to_this_body_key() {
+    async fn definition_binds_the_framework_inspection_tab_to_this_body_key() {
         let definition = definition();
         assert_eq!(definition.id(), FRAMEWORK_PANEL_TAB_INSPECTION_ID);
         assert_eq!(definition.body_key.as_deref(), Some(LAYOUT_PLAY_BODY_INSPECTION));

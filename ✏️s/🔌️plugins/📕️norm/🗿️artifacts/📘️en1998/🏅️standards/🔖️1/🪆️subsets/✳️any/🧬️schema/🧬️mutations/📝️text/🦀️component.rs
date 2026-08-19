@@ -80,7 +80,7 @@ enum En1998MutationDsl {
 //#region 🔖️HandcraftedOpCodecs
 /// ⚡️ P6 handcrafted OpText/OpBinary (derive no longer emits these traits).
 impl OpText for En1998MutationDsl {
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
+    async fn parse_op(line: &str) -> Result<Self, store::TextError> {
         let variants = <Self as dsl::DslVariants>::variants();
         for (keyword, spec_fn) in &variants {
             let probe = format!("{} ", keyword);
@@ -91,7 +91,7 @@ impl OpText for En1998MutationDsl {
         }
         Err(dsl::__rt::field_error(format!("unknown mutation line '{line}'")))
     }
-    fn print_op(&self) -> String {
+    async fn print_op(&self) -> String {
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
         let variants = <Self as dsl::DslVariants>::variants();
         let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
@@ -100,16 +100,16 @@ impl OpText for En1998MutationDsl {
 }
 
 impl protocol::OpBinary for En1998MutationDsl {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         dsl::variants_binary::encode_op(self)
     }
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         dsl::variants_binary::decode_op(bytes)
     }
 }
 //#endregion 🔖️HandcraftedOpCodecs
 
-fn en1998_mutation_to_dsl(mutation: &En1998Mutation) -> En1998MutationDsl {
+async fn en1998_mutation_to_dsl(mutation: &En1998Mutation) -> En1998MutationDsl {
     match mutation {
         En1998Mutation::ChangeSeismicZone(payload) => En1998MutationDsl::ChangeSeismicZone { new_seismic_zone: payload.new_seismic_zone.clone() },
         En1998Mutation::ChangeGroundType(payload) => En1998MutationDsl::ChangeGroundType { new_ground_type: payload.new_ground_type.clone() },
@@ -163,7 +163,7 @@ fn en1998_mutation_to_dsl(mutation: &En1998Mutation) -> En1998MutationDsl {
     }
 }
 
-fn en1998_mutation_from_dsl(mutation: En1998MutationDsl) -> En1998Mutation {
+async fn en1998_mutation_from_dsl(mutation: En1998MutationDsl) -> En1998Mutation {
     match mutation {
         En1998MutationDsl::ChangeSeismicZone { new_seismic_zone } => En1998Mutation::ChangeSeismicZone(change_seismic_zone::mutation::ChangeSeismicZone { new_seismic_zone }),
         En1998MutationDsl::ChangeGroundType { new_ground_type } => En1998Mutation::ChangeGroundType(change_ground_type::mutation::ChangeGroundType { new_ground_type }),
@@ -220,11 +220,11 @@ fn en1998_mutation_from_dsl(mutation: En1998MutationDsl) -> En1998Mutation {
 }
 
 impl OpText for En1998Mutation {
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
+    async fn parse_op(line: &str) -> Result<Self, store::TextError> {
         Ok(en1998_mutation_from_dsl(<En1998MutationDsl as OpText>::parse_op(line)?))
     }
 
-    fn print_op(&self) -> String {
+    async fn print_op(&self) -> String {
         <En1998MutationDsl as OpText>::print_op(&en1998_mutation_to_dsl(self))
     }
 }
@@ -232,11 +232,11 @@ impl OpText for En1998Mutation {
 /// ⚡️ Binary mirror of the `OpText` bridge above — `En1998MutationDsl` already derives
 /// `OpBinary` via `#[derive(dsl::DslEnum)]`, so this is a pure to/from-dsl forward.
 impl protocol::OpBinary for En1998Mutation {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         en1998_mutation_to_dsl(self).encode_op()
     }
 
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         Ok(en1998_mutation_from_dsl(En1998MutationDsl::decode_op(bytes)?))
     }
 }
@@ -248,30 +248,30 @@ mod tests {
     use super::*;
 
     #[test]
-    fn op_text_round_trips_change_seismic_zone() {
+    async fn op_text_round_trips_change_seismic_zone() {
         store::os_store::test_support::assert_op_line_round_trip(&En1998Mutation::ChangeSeismicZone(change_seismic_zone::mutation::ChangeSeismicZone { new_seismic_zone: 3 }));
     }
 
     #[test]
-    fn op_text_round_trips_change_ground_type() {
+    async fn op_text_round_trips_change_ground_type() {
         store::os_store::test_support::assert_op_line_round_trip(&En1998Mutation::ChangeGroundType(change_ground_type::mutation::ChangeGroundType { new_ground_type: "c".to_string() }));
     }
 
     #[test]
-    fn op_text_round_trips_change_multiple_resisting_systems() {
+    async fn op_text_round_trips_change_multiple_resisting_systems() {
         store::os_store::test_support::assert_op_line_round_trip(&En1998Mutation::ChangeMultipleResistingSystems(change_multiple_resisting_systems::mutation::ChangeMultipleResistingSystems { new_multiple_resisting_systems: false }));
     }
 
     /// ⚖️ Every variant, not just the hand-picked ones above — full-coverage `OpText` round trip
     /// over the closed vocabulary, one sample value per field.
     #[test]
-    fn every_variant_op_text_round_trips() {
+    async fn every_variant_op_text_round_trips() {
         for mutation in every_mutation() {
             store::os_store::test_support::assert_op_line_round_trip(&mutation);
         }
     }
 
-    fn every_mutation() -> Vec<En1998Mutation> {
+    async fn every_mutation() -> Vec<En1998Mutation> {
         vec![
             En1998Mutation::ChangeSeismicZone(change_seismic_zone::mutation::ChangeSeismicZone { new_seismic_zone: 3 }),
             En1998Mutation::ChangeGroundType(change_ground_type::mutation::ChangeGroundType { new_ground_type: "c".to_string() }),

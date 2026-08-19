@@ -15,11 +15,11 @@ pub mod derived_composition {
         type Snapshot = TxtSnapshot;
         const WRITES: Dialect = DIALECT;
 
-        fn reads() -> &'static [Dialect] {
+        async fn reads() -> &'static [Dialect] {
             &[DIALECT, DEP_BINARY]
         }
 
-        fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+        async fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
             // 🌱 Every listed read dialect's payload is raw text/bytes that this artifact's own
             // analyzer already round-trips through `store::Document{Dsl,Pack}` -- including bytes
             // claiming a dependency's dialect, since (for a single-standard DAG-adjacent dependency
@@ -51,7 +51,7 @@ use crate::artifacts::txt::{TxtDiff, TxtMutation, TxtSnapshot, STDIO_TXT_DOCUMEN
 /// imperative plugin-root calls (`crate::artifacts::txt::engine::register()` in
 /// `🗄️stdio/🦀️component.rs`) — left callable at that exact path via a pure re-export
 /// (`standards::v_utf_8::engine::register`), body unchanged.
-pub fn register() {
+pub async fn register() {
     crate::artifacts::txt::io_registry::register();
     register_artifact_schema();
     register_artifact_inferences();
@@ -69,19 +69,19 @@ pub fn register() {
 /// `#[cfg(not(target_arch = "wasm32"))]` (📇️registry/🦀️component.rs) -- the registry simply does
 /// not exist as a compiled item on `wasm32`.
 #[cfg(not(target_arch = "wasm32"))]
-pub fn register_schema_specs() {
+pub async fn register_schema_specs() {
     dsl::registry::register_schema_spec("stdio.txt", TxtSnapshot::__dsl_spec);
     dsl::registry::register_schema_spec("stdio.txt#diff", TxtDiff::__dsl_diff_spec);
 }
 
 #[cfg(target_arch = "wasm32")]
-pub fn register_schema_specs() {}
+pub async fn register_schema_specs() {}
 
 /// 📌️ Registers handcrafted facet grammars (text) and protocols (binary) — 5-role
 /// `LanguageSpec` set (Document/Ops/Diff/Pack/Spr), following `note`'s exemplar pattern exactly
 /// (`✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/⚙️engine/🦀️component.rs`), same as
 /// the sibling `stdio.csv`/`stdio.json` P2 pilots.
-pub fn register_pilot_languages() {
+pub async fn register_pilot_languages() {
     dsl::register_language(dsl::LanguageSpec {
         id: "stdio.txt",
         extension: Some("txt"),
@@ -135,14 +135,14 @@ pub fn register_pilot_languages() {
 }
 
 /// 📌️ Registers schema leaves for `s.stdio.txt`.
-pub fn register_artifact_schema() {
+pub async fn register_artifact_schema() {
     ::schema::register_artifact_schema_descriptor(crate::artifacts::txt::schema::txt_artifact_schema_descriptor());
 }
 
 /// 💡️ Registers `s.stdio.txt.inference`'s facet leaves into the OS-wide inference catalog —
 /// sibling to `register_artifact_schema()` (separate registry, ticket
 /// 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING).
-pub fn register_artifact_inferences() {
+pub async fn register_artifact_inferences() {
     ::schema::register_artifact_inference_descriptor(crate::artifacts::txt::standards::v_utf_8::subsets::any::schema::inferences::txt_artifact_inference_descriptor());
 }
 //#endregion 🔖️Register
@@ -155,7 +155,7 @@ pub mod io_registry {
 
     static ENTRIES: OnceLock<Vec<ComposerEntry>> = OnceLock::new();
 
-    pub fn entries() -> &'static [ComposerEntry] {
+    pub async fn entries() -> &'static [ComposerEntry] {
         ENTRIES.get_or_init(|| vec![composer_entry_of::<TxtRawAnyComposer>()]).as_slice()
     }
 }
@@ -169,7 +169,7 @@ pub mod io_registry {
 /// file" — zero foreign `IoEntry` rows are needed on this side (mirrors `💾️binary`'s `io()`; see
 /// that file's doc comment for the full reasoning, incl. why the old self-referential identity
 /// leaves + `derived_composition`'s binary-dependency read stay in place this pass).
-pub fn io() -> semio_framework_plugin::app::declarations::IoDeclaration {
+pub async fn io() -> semio_framework_plugin::app::declarations::IoDeclaration {
     use semio_framework_plugin::app::declarations::{IoDeclaration, LanguagePair, NativeCodecs};
     IoDeclaration {
         native: NativeCodecs {
@@ -196,7 +196,7 @@ mod carrier_law {
     use store::ArtifactDsl;
 
     #[test]
-    fn carrier_native_is_raw() {
+    async fn carrier_native_is_raw() {
         for text in ["", "hello\n", "a\r\nb\r\nc", "just one line, no newline", "Hello, \u{4e16}\u{754c}!\n\u{1f389}"] {
             let decoded = TxtSnapshot::parse_dsl(text).expect("decode");
             let encoded = decoded.print_dsl();

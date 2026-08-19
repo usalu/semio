@@ -34,7 +34,7 @@ pub use inspection_panel::VCS_PLAY_BODY_INSPECTION;
 
 /// 🎯️ An `ActionDescriptor` addressed at this app — the single factory every taxonomy node's chrome
 /// (`📌️panels/*`, `🎭️modes/*/🪟️windows/*`) builds its `on_change`/item actions with.
-pub fn vcs_action(action: &str, args: Option<Value>) -> ActionDescriptor {
+pub async fn vcs_action(action: &str, args: Option<Value>) -> ActionDescriptor {
     semio_framework_plugin::ActionFactory::new(VCS_PLAY_APP_ID).action(action, args)
 }
 //#endregion 🔖️Constants
@@ -113,22 +113,22 @@ impl ArtifactEditor for VcsPlayApp {
     const DIALECT: Dialect = crate::artifacts::vcs::VCS_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = VCS_DOCUMENT_SCHEMA;
 
-    fn app_schema() -> Option<::schema::AppSchemaDescriptor> {
+    async fn app_schema() -> Option<::schema::AppSchemaDescriptor> {
         Some(crate::editor::vcs::config::schema::app_schema_descriptor())
     }
 
-    fn initial_snapshot() -> VcsSnapshot {
+    async fn initial_snapshot() -> VcsSnapshot {
         crate::artifacts::vcs::standards::v1::subsets::any::schema::empty_vcs_snapshot()
     }
 
     /// 🏷️ The manifest action id each command was declared under — supplied wholesale by
     /// `app_commands!`'s generated `command_id()`. `setLocale` isn't declared in the manifest (mirrors
     /// `ShootingCommand::SetLocale` — see `shooting_ui`'s identical doc), so it skips enforcement.
-    fn command_id(command: &VcsCommand) -> &'static str {
+    async fn command_id(command: &VcsCommand) -> &'static str {
         command.command_id()
     }
 
-    fn handle(
+    async fn handle(
         command: &VcsCommand,
         doc: &ArtifactView<'_, VcsSnapshot>,
         cfg: &ConfigView<'_, VcsDemoConfig>,
@@ -139,7 +139,7 @@ impl ArtifactEditor for VcsPlayApp {
         command.dispatch(doc, cfg)
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, VcsSnapshot>, cfg: &ConfigView<'_, VcsDemoConfig>) -> UiNode {
+    async fn render(body_key: &str, doc: &ArtifactView<'_, VcsSnapshot>, cfg: &ConfigView<'_, VcsDemoConfig>) -> UiNode {
         let labels = vcs_play_labels(cfg.snapshot);
         match body_key {
             VCS_PLAY_BODY_EDITOR => editor::render(doc.snapshot, labels),
@@ -156,7 +156,7 @@ impl ArtifactEditor for VcsPlayApp {
 /// 🧱️ The manifest stitch: one call per taxonomy node, each sourced from that node's own `definition()`.
 /// Only the leaf action/keybinding declarations (which have no dedicated `_def` passthrough) are written
 /// out inline.
-pub fn create_vcs_app() -> semio_framework_plugin::AppDefinition {
+pub async fn create_vcs_app() -> semio_framework_plugin::AppDefinition {
     Editor::builder(crate::artifacts::vcs::VCS_DIALECT)
             .document(["semio", "vcs"])
             .artifact_kind(crate::artifacts::vcs::artifact_kind())
@@ -232,38 +232,38 @@ pub(crate) mod testkit {
     /// ✏️ Adapts `create_vcs_app`'s `AppDefinition` (contract §2.4) into the `App { definition,
     /// examples }` shape `testkit::new_app_with_registry` still expects — framework testkit gap, not
     /// modifiable here (`🧰️framework/**` is outside this packet's lease).
-    fn vcs_app_manifest_for_testkit() -> semio_framework_plugin::App {
+    async fn vcs_app_manifest_for_testkit() -> semio_framework_plugin::App {
         semio_framework_plugin::App { definition: create_vcs_app(), examples: Vec::new() }
     }
 
     /// 🧪️ A bare, pre-seeded app instance — no `AppActionRegistry`, so undeclared internal commands
     /// dispatch freely. Seeded via `seed_vcs_demo_history` (see its own doc comment for why this
     /// replaced `ArtifactApp::seed`).
-    pub fn app() -> VcsApp {
+    pub async fn app() -> VcsApp {
         let mut instance = new_app::<EditorApp<VcsPlayApp>>();
         seed_vcs_demo_history(&mut instance);
         instance
     }
 
     /// 🧪️ A pre-seeded app wired to the real manifest registry — enforces View/Shell kind discipline.
-    pub fn app_with_registry() -> VcsApp {
+    pub async fn app_with_registry() -> VcsApp {
         let mut instance = new_app_with_registry::<EditorApp<VcsPlayApp>>(vcs_app_manifest_for_testkit);
         seed_vcs_demo_history(&mut instance);
         instance
     }
 
-    pub fn dispatch(instance: &mut VcsApp, command: VcsCommand) -> InvocationResult {
+    pub async fn dispatch(instance: &mut VcsApp, command: VcsCommand) -> InvocationResult {
         instance.dispatch_typed(command, &meta("local")).expect("dispatch")
     }
 
-    pub fn render(instance: &mut VcsApp, body_key: &str) -> String {
+    pub async fn render(instance: &mut VcsApp, body_key: &str) -> String {
         serde_json::to_string(&instance.render(body_key, None, &ViewModel::default()).expect("render")).expect("render json")
     }
 
     /// 📦️ Parses `document_pack()` (the full envelope) for tests that need to inspect raw
     /// checkpoints/alternatives directly — safe here because none of these tests undo/redo, so every
     /// edit in the log is still applied.
-    pub fn seeded_envelope(instance: &VcsApp) -> ArtifactEnvelope<VcsSnapshot, VcsDemoMutation> {
+    pub async fn seeded_envelope(instance: &VcsApp) -> ArtifactEnvelope<VcsSnapshot, VcsDemoMutation> {
         let files = instance.document_pack().expect("document pack");
         store::parse_document_pack::<VcsSnapshot, VcsDemoMutation>(&files.pack, &files.spr).expect("parse document pack").envelope
     }
@@ -280,7 +280,7 @@ pub(crate) mod testkit {
     /// hardcodes `authors: Vec::new()` with no wire path for real authors (framework-owned, out of this
     /// plugin's boundary) — no test asserts on authorship, so this is a silent, documented fidelity
     /// loss, not a functional gap.
-    pub fn seed_vcs_demo_history(app: &mut VcsApp) {
+    pub async fn seed_vcs_demo_history(app: &mut VcsApp) {
         let local = meta("local");
         let edit = |app: &mut VcsApp, f: fn(&mut VcsSnapshot)| {
             let mut next = app.snapshot().expect("materialize snapshot");
@@ -420,7 +420,7 @@ mod tests {
     /// 🏷️ Every declared manifest action id must be reachable as exactly one command row, and every row's
     /// wire keyword must be distinct — the cross-cutting invariant `app_commands!` is there to hold.
     #[test]
-    fn command_ids_are_unique_and_match_the_declared_manifest_actions() {
+    async fn command_ids_are_unique_and_match_the_declared_manifest_actions() {
         let commands = every_command();
         let ids: Vec<&str> = commands.iter().map(|command| command.command_id()).collect();
         let mut sorted = ids.clone();
@@ -432,7 +432,7 @@ mod tests {
 
     /// ⚖️ LAW: text and binary are two projections of the same command, for every single row.
     #[test]
-    fn every_command_round_trips_through_text_and_binary() {
+    async fn every_command_round_trips_through_text_and_binary() {
         for command in every_command() {
             store::os_store::test_support::assert_op_text_binary_equivalence(&command);
         }
@@ -443,7 +443,7 @@ mod tests {
     /// undeclared host-pushed command). This is what a missing `#[dsl(keyword = ..)]` on a payload struct
     /// silently breaks (the record prints with no keyword at all and no longer parses).
     #[test]
-    fn every_printed_op_line_starts_with_the_rows_wire_keyword() {
+    async fn every_printed_op_line_starts_with_the_rows_wire_keyword() {
         for command in every_command() {
             let id = command.command_id();
             let expected = if id == "setLocale" {
@@ -464,7 +464,7 @@ mod tests {
 
     /// 🧾️ One representative value per row, in declaration (= binary ordinal) order. Matches the pilot's
     /// wire baseline dump byte-for-byte (ticket `🧪️wire-baseline-before.txt`).
-    pub(super) fn every_command() -> Vec<VcsCommand> {
+    pub(super) async fn every_command() -> Vec<VcsCommand> {
         vec![
             VcsCommand::IncrementCounter(increment_counter::IncrementCounter {}),
             VcsCommand::PatchSnapshot(patch_snapshot::PatchSnapshot { field: "title".into(), value: "Renamed".into() }),
@@ -482,7 +482,7 @@ mod tests {
 
     //#region 🔖️ManifestSanity
     #[test]
-    fn the_manifest_stitches_every_taxonomy_node() {
+    async fn the_manifest_stitches_every_taxonomy_node() {
         let json = serde_json::to_string(&create_vcs_app()).expect("app definition json");
         for id in [editor::VCS_PLAY_WINDOW_EDITOR, history::VCS_PLAY_WINDOW_HISTORY] {
             assert!(json.contains(id), "window kind {id} missing from the manifest: {json}");
@@ -498,7 +498,7 @@ mod tests {
     /// manifest action — exercises `testkit::app_with_registry`, the counterpart to the bare `app()`
     /// every other node's tests use.
     #[test]
-    fn registry_enforced_app_dispatches_a_declared_action() {
+    async fn registry_enforced_app_dispatches_a_declared_action() {
         use crate::editor::vcs::testkit::app_with_registry;
         let mut instance = app_with_registry();
         let before = instance.snapshot().expect("materialize snapshot").counter;
@@ -512,7 +512,7 @@ mod tests {
     /// history window kind — see `VCS_INTERACTION_HISTORY`'s doc comment for why this is entity
     /// selection over checkpoints, not the per-row `checkoutCheckpoint`/`switchAlternative` navigation.
     #[test]
-    fn history_interaction_domain_is_declared_flat_and_scoped_to_the_history_window() {
+    async fn history_interaction_domain_is_declared_flat_and_scoped_to_the_history_window() {
         let definition = create_vcs_app();
         let history_domain = definition.interactions.iter().find(|interaction| interaction.id == VCS_INTERACTION_HISTORY).expect("history interaction domain declared");
         assert!(matches!(history_domain.hierarchy, HierarchyProvider::Flat));
@@ -528,7 +528,7 @@ mod tests {
 
     //#region 🔖️CrossCutting
     #[test]
-    fn seeded_history_has_checkpoints() {
+    async fn seeded_history_has_checkpoints() {
         let instance = app();
         let envelope = seeded_envelope(&instance);
         assert!(envelope.vcs.alternatives.len() >= 5, "expected >=5 alternatives, got {}", envelope.vcs.alternatives.len());
@@ -545,7 +545,7 @@ mod tests {
     }
 
     #[test]
-    fn checkout_then_commit_forks_across_actions() {
+    async fn checkout_then_commit_forks_across_actions() {
         let mut instance = app();
         let envelope_before = seeded_envelope(&instance);
         let root_checkpoint_id = envelope_before.vcs.checkpoints[0].id.clone();
@@ -563,7 +563,7 @@ mod tests {
     }
 
     #[test]
-    fn undo_redo_round_trips_through_the_wrapper() {
+    async fn undo_redo_round_trips_through_the_wrapper() {
         let mut instance = app();
         let before = instance.snapshot().expect("materialize snapshot").counter;
         dispatch(&mut instance, VcsCommand::IncrementCounter(increment_counter::IncrementCounter {}));
@@ -577,7 +577,7 @@ mod tests {
     }
 
     #[test]
-    fn create_and_switch_alternative_round_trip_through_the_wrapper() {
+    async fn create_and_switch_alternative_round_trip_through_the_wrapper() {
         let mut instance = app();
         let create = instance.handle_action("createAlternative", Some(&serde_json::json!({ "name": "trying-something" })), &meta("local")).expect("create alternative");
         assert!(create.mutations.is_empty());

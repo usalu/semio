@@ -29,7 +29,7 @@ use std::collections::HashMap;
 /// 🔢 Resolves a raw OBJ index (1-based positive, or negative = relative to the
 /// current end of the list at parse time) against `current_len` — the OBJ spec's
 /// own negative-index rule.
-fn resolve_index(current_len: usize, raw: i64) -> Result<u32, String> {
+async fn resolve_index(current_len: usize, raw: i64) -> Result<u32, String> {
     if raw > 0 {
         Ok((raw - 1) as u32)
     } else if raw < 0 {
@@ -44,7 +44,7 @@ fn resolve_index(current_len: usize, raw: i64) -> Result<u32, String> {
 }
 
 /// 🧩 Parses one `f` face-vertex token (`v`, `v/vt`, `v//vn`, `v/vt/vn`).
-fn parse_face_vertex(token: &str, vertex_count: usize, texcoord_count: usize, normal_count: usize) -> Result<ObjFaceVertex, String> {
+async fn parse_face_vertex(token: &str, vertex_count: usize, texcoord_count: usize, normal_count: usize) -> Result<ObjFaceVertex, String> {
     let mut parts = token.split('/');
     let v_raw: i64 = parts.next().ok_or("empty face token")?.parse().map_err(|e| format!("face vertex index: {e}"))?;
     let vertex = resolve_index(vertex_count, v_raw)?;
@@ -60,7 +60,7 @@ fn parse_face_vertex(token: &str, vertex_count: usize, texcoord_count: usize, no
 /// 📥 Parses a real Wavefront OBJ text body: `v`/`vt`/`vn` (incl. optional `w`), `f` (v, v/vt,
 /// v//vn, v/vt/vn, negative-relative indices, n-gons), `o`/`g` (multi-name)/`usemtl`/`mtllib`/`s`,
 /// with every comment and unrecognized statement retained in `unknown_statements`.
-pub fn decode_obj(text: &str) -> Result<ObjSnapshot, String> {
+pub async fn decode_obj(text: &str) -> Result<ObjSnapshot, String> {
     let mut vertices = Vec::new();
     let mut texcoords = Vec::new();
     let mut normals = Vec::new();
@@ -186,7 +186,7 @@ pub fn decode_obj(text: &str) -> Result<ObjSnapshot, String> {
 //#endregion 🔖️Decode
 
 //#region 🔖️Encode
-fn write_face_vertex(out: &mut String, fv: &ObjFaceVertex) {
+async fn write_face_vertex(out: &mut String, fv: &ObjFaceVertex) {
     match (fv.texcoord, fv.normal) {
         (Some(vt), Some(vn)) => out.push_str(&format!("{}/{}/{}", fv.vertex + 1, vt + 1, vn + 1)),
         (Some(vt), None) => out.push_str(&format!("{}/{}", fv.vertex + 1, vt + 1)),
@@ -196,7 +196,7 @@ fn write_face_vertex(out: &mut String, fv: &ObjFaceVertex) {
 }
 
 /// 📤 Writes a real Wavefront OBJ 3.0 text body per this module's documented normal form.
-pub fn encode_obj(snap: &ObjSnapshot) -> String {
+pub async fn encode_obj(snap: &ObjSnapshot) -> String {
     let mut out = String::new();
     if let Some(lib) = &snap.mtllib {
         out.push_str(&format!("mtllib {lib}\n"));
@@ -299,11 +299,11 @@ pub mod derived_composition {
         type Snapshot = ObjSnapshot;
         const WRITES: Dialect = DIALECT;
 
-        fn reads() -> &'static [Dialect] {
+        async fn reads() -> &'static [Dialect] {
             &[DIALECT, DEP_TXT]
         }
 
-        fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+        async fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
             // 🌱 Every listed read dialect's payload is raw text/bytes that this artifact's own
             // analyzer already round-trips through `store::Document{Dsl,Pack}` -- including bytes
             // claiming a dependency's dialect, since (for a single-standard DAG-adjacent dependency
@@ -334,13 +334,13 @@ mod tests {
     use super::*;
 
     #[test]
-    fn empty_snapshot_matches_schema() {
+    async fn empty_snapshot_matches_schema() {
         let snapshot = crate::artifacts::obj::engine::empty_obj_snapshot();
         assert_eq!(snapshot.schema, STDIO_OBJ_DOCUMENT_SCHEMA);
     }
 
     #[test]
-    fn codec_round_trip() {
+    async fn codec_round_trip() {
         let snap = crate::artifacts::obj::engine::empty_obj_snapshot();
         let text = store::ArtifactDsl::print_dsl(&snap);
         let parsed = <ObjSnapshot as store::ArtifactDsl>::parse_dsl(&text).expect("parse");
@@ -351,7 +351,7 @@ mod tests {
     }
 
     #[test]
-    fn negative_indices_resolve_correctly() {
+    async fn negative_indices_resolve_correctly() {
         let text = "v 0 0 0\nv 1 0 0\nv 0 1 0\nf -3 -2 -1\n";
         let snap = decode_obj(text).expect("parse");
         assert_eq!(snap.vertices.len(), 3);
@@ -360,14 +360,14 @@ mod tests {
     }
 
     #[test]
-    fn out_of_range_negative_index_is_error() {
+    async fn out_of_range_negative_index_is_error() {
         let text = "v 0 0 0\nf -2 1 1\n";
         let err = decode_obj(text).unwrap_err();
         assert!(err.contains("out of range"), "unexpected error: {err}");
     }
 
     #[test]
-    fn face_index_forms_all_supported() {
+    async fn face_index_forms_all_supported() {
         let text = "v 0 0 0\nv 1 0 0\nv 0 1 0\nvt 0 0\nvt 1 0\nvt 0 1\nvn 0 0 1\n\
                      f 1/1/1 2/2/1 3/3/1\nf 1//1 2//1 3//1\nf 1/1 2/2 3/3\nf 1 2 3\n";
         let snap = decode_obj(text).expect("parse");
@@ -383,7 +383,7 @@ mod tests {
     }
 
     #[test]
-    fn multi_group_multi_material_negative_index_round_trip() {
+    async fn multi_group_multi_material_negative_index_round_trip() {
         let text = "v 0 0 0\nv 1 0 0\nv 1 1 0\nv 0 1 0\nv 0 0 1\nv 1 0 1\n\
                      vt 0 0\nvt 1 0\nvt 1 1\nvn 0 0 1\nvn 0 0 -1\n\
                      o Cube\ng Front\nusemtl Red\ns 1\n\
@@ -420,7 +420,7 @@ mod tests {
     }
 
     #[test]
-    fn optional_w_components_retained() {
+    async fn optional_w_components_retained() {
         let text = "v 0 0 0 1.5\nv 1 0 0\nvt 0.1 0.2 0.3\nvt 0.5 0.5\nvn 0 0 1\nf 1/1/1 2/2/1 1/1/1\n";
         let snap = decode_obj(text).expect("parse");
         assert_eq!(snap.vertices[0].w, Some(1.5));
@@ -430,7 +430,7 @@ mod tests {
     }
 
     #[test]
-    fn mtllib_last_occurrence_wins() {
+    async fn mtllib_last_occurrence_wins() {
         let text = "mtllib a.mtl\nv 0 0 0\nv 1 0 0\nv 0 1 0\nmtllib b.mtl c.mtl\nf 1 2 3\n";
         let snap = decode_obj(text).expect("parse");
         assert_eq!(snap.mtllib.as_deref(), Some("b.mtl c.mtl"));
@@ -443,7 +443,7 @@ mod tests {
     /// (comments/unrecognized lines move into a trailer), so from the SECOND generation onward
     /// decode/encode is a true fixed point.
     #[test]
-    fn codec_retention_law() {
+    async fn codec_retention_law() {
         let fixture = "# leading comment\nmtllib materials.mtl\n\
                         v 0 0 0\nv 1 0 0\nv 0 1 0 1\n\
                         vt 0 0\nvt 1 0 0.5\nvn 0 0 1\n\
@@ -494,7 +494,7 @@ mod tests {
         /// `recognize`/`walk_protocol` laws below (a parse failure here fails fast with a clearer
         /// message).
         #[test]
-        fn committed_facet_files_parse() {
+        async fn committed_facet_files_parse() {
             for (label, text) in [("snapshot grammar", snapshot::text::COMPONENT_GRAMMAR_SEMIO), ("mutations grammar", mutations::text::COMPONENT_GRAMMAR_SEMIO), ("diff grammar", diff::text::COMPONENT_GRAMMAR_SEMIO)] {
                 let grammar = dsl::parse_grammar(text).unwrap_or_else(|e| panic!("{label}: parse_grammar failed: {e:?}"));
                 assert_eq!(grammar.dialect, dsl::SemioDialect::Grammar, "{label}: expected grammar dialect");
@@ -510,7 +510,7 @@ mod tests {
         /// direct proof this artifact will pass that harness once graduated, not merely an
         /// analogue.
         #[test]
-        fn grammar_conformance_law() {
+        async fn grammar_conformance_law() {
             let grammar = dsl::parse_grammar(snapshot::text::COMPONENT_GRAMMAR_SEMIO).expect("parse snapshot grammar");
             let recognizer = dsl::Recognizer::compile(&grammar);
             let text = store::ArtifactDsl::print_dsl(&crate::artifacts::obj::engine::demo_obj_snapshot());
@@ -525,7 +525,7 @@ mod tests {
         /// (this artifact's own leaf collections are all flat records, no `REST` fallback
         /// needed).
         #[test]
-        fn ops_grammar_conformance_law() {
+        async fn ops_grammar_conformance_law() {
             let grammar = dsl::parse_grammar(mutations::text::COMPONENT_GRAMMAR_SEMIO).expect("parse mutations grammar");
             let recognizer = dsl::Recognizer::compile(&grammar);
             for mutation in mutations::demo_mutation_cases() {
@@ -539,7 +539,7 @@ mod tests {
         /// diff and a two-directional `between()` result exercising every index-/name-keyed
         /// collection triple and both tri-states.
         #[test]
-        fn diff_grammar_conformance_law() {
+        async fn diff_grammar_conformance_law() {
             let grammar = dsl::parse_grammar(diff::text::COMPONENT_GRAMMAR_SEMIO).expect("parse diff grammar");
             let recognizer = dsl::Recognizer::compile(&grammar);
             for d in diff::demo_diff_cases() {
@@ -555,7 +555,7 @@ mod tests {
         /// plain `framing record` payloads (no `backward`/`jump`), so the ordinary
         /// `consumed == bytes.len()` law holds for all of them.
         #[test]
-        fn protocol_walk_law() {
+        async fn protocol_walk_law() {
             let pack_spec = dsl::parse_protocol(snapshot::binary::COMPONENT_PROTOCOL_SEMIO).expect("parse snapshot protocol");
             let packed = store::ArtifactPack::encode_pack(&crate::artifacts::obj::engine::demo_obj_snapshot());
             let (_, inner) = store::semio_format::unwrap_binary(&packed).expect("unwrap semio envelope");
@@ -582,7 +582,7 @@ mod tests {
         /// demo()`, `print_dsl(demo()) == fixture` (byte-for-byte), and the pack twin — so the
         /// fixtures can never silently drift back to a fake again.
         #[test]
-        fn fixture_honesty_law() {
+        async fn fixture_honesty_law() {
             const FIXTURE_DSL: &str = include_str!("../📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio");
             const FIXTURE_PACK: &[u8] = include_bytes!("../📚️examples/🎬️demo/🖼️assets/🎒️example.pack.semio");
 
@@ -610,7 +610,7 @@ pub mod io_registry {
 
     static ENTRIES: OnceLock<Vec<ComposerEntry>> = OnceLock::new();
 
-    pub fn entries() -> &'static [ComposerEntry] {
+    pub async fn entries() -> &'static [ComposerEntry] {
         ENTRIES.get_or_init(|| vec![composer_entry_of::<ObjRawAnyComposer>()]).as_slice()
     }
 }

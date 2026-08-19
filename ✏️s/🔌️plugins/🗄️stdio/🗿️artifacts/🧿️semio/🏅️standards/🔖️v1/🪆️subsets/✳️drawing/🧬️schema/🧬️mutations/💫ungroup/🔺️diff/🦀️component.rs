@@ -8,7 +8,7 @@ use crate::artifacts::semio::standards::v1::subsets::drawing::schema::mutations:
 use crate::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::{DrawNode, SemioDrawingSnapshot};
 
 //#region 🔖️Diff
-pub fn diff(payload: &UngroupNode, base: &SemioDrawingSnapshot) -> protocol::MutationOutcome<SemioDrawingDiff> {
+pub async fn diff(payload: &UngroupNode, base: &SemioDrawingSnapshot) -> protocol::MutationOutcome<SemioDrawingDiff> {
     let Some((parent, group_index)) = parent_and_index(&payload.at) else {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Node at layer #{} has no parent to ungroup into (layer root).", payload.at.layer), [payload.at.layer.to_string()]);
     };

@@ -47,7 +47,7 @@ pub type AssemblyEnvelope = store::ArtifactEnvelope<AssemblySnapshot, AssemblyMu
 pub type AssemblyStore = store::ArtifactStore<AssemblySnapshot, AssemblyMutation>;
 
 /// 🧬️ Applies a mutation to a projection — generic over every variant.
-pub fn apply_assembly_mutation(projection: &mut AssemblySnapshot, mutation: &AssemblyMutation) -> protocol::MutationApplyResult<()> {
+pub async fn apply_assembly_mutation(projection: &mut AssemblySnapshot, mutation: &AssemblyMutation) -> protocol::MutationApplyResult<()> {
     let (next, _) = vcs::apply_mutation(projection, mutation)?;
 
     *projection = next;
@@ -55,7 +55,7 @@ pub fn apply_assembly_mutation(projection: &mut AssemblySnapshot, mutation: &Ass
 }
 
 /// ↩️ Computes a mutation's inverse against a projection — generic over every variant.
-pub fn inverse_assembly_mutation(projection: &AssemblySnapshot, mutation: &AssemblyMutation) -> Vec<AssemblyMutation> {
+pub async fn inverse_assembly_mutation(projection: &AssemblySnapshot, mutation: &AssemblyMutation) -> Vec<AssemblyMutation> {
     mutation.inverse(projection)
 }
 
@@ -68,7 +68,7 @@ mod tests {
     use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::value::schema::snapshot::SemioValue;
     use vcs::apply_mutation;
 
-    fn round_trip(projection: &AssemblySnapshot, mutation: &AssemblyMutation) -> AssemblySnapshot {
+    async fn round_trip(projection: &AssemblySnapshot, mutation: &AssemblyMutation) -> AssemblySnapshot {
         let (forward, _) = apply_mutation(projection, mutation).expect("valid mutation");
         let mut restored = forward.clone();
         for back in mutation.inverse(projection) {
@@ -81,7 +81,7 @@ mod tests {
     }
 
     #[test]
-    fn dispatch_registers_semantic_descriptors_with_approved_verbs() {
+    async fn dispatch_registers_semantic_descriptors_with_approved_verbs() {
         for kind in AssemblyMutation::kinds() {
             assert!(protocol::is_approved_verb(kind.verb), "verb '{}' must be in APPROVED_VERBS", kind.verb);
         }
@@ -89,7 +89,7 @@ mod tests {
     }
 
     #[test]
-    fn create_slot_inverse_law_round_trips() {
+    async fn create_slot_inverse_law_round_trips() {
         let base = AssemblySnapshot::default();
         let mutation = create_slot(0, AssemblySlot { id: "s1".into(), x: 1.0, y: 2.0, z: 0.0, pinned_module_id: None });
         let after = round_trip(&base, &mutation);
@@ -97,7 +97,7 @@ mod tests {
     }
 
     #[test]
-    fn delete_slot_inverse_law_round_trips() {
+    async fn delete_slot_inverse_law_round_trips() {
         let mut base = AssemblySnapshot::default();
         base.slots.push(AssemblySlot { id: "s1".into(), x: 0.0, y: 0.0, z: 0.0, pinned_module_id: None });
         let mutation = delete_slot("s1".into());
@@ -106,7 +106,7 @@ mod tests {
     }
 
     #[test]
-    fn delete_slot_cascades_incident_edges() {
+    async fn delete_slot_cascades_incident_edges() {
         let mut base = AssemblySnapshot::default();
         base.slots.push(AssemblySlot { id: "s1".into(), ..Default::default() });
         base.slots.push(AssemblySlot { id: "s2".into(), ..Default::default() });
@@ -117,7 +117,7 @@ mod tests {
     }
 
     #[test]
-    fn create_rule_inverse_law_round_trips() {
+    async fn create_rule_inverse_law_round_trips() {
         let base = AssemblySnapshot::default();
         let mutation = create_rule(0, AssemblyRule { id: "r1".into(), module_a_id: "a".into(), module_b_id: "b".into(), allowed: true, params: SemioValue::default() });
         let after = round_trip(&base, &mutation);
@@ -125,7 +125,7 @@ mod tests {
     }
 
     #[test]
-    fn delete_rule_inverse_law_round_trips() {
+    async fn delete_rule_inverse_law_round_trips() {
         let mut base = AssemblySnapshot::default();
         base.rules.push(AssemblyRule { id: "r1".into(), module_a_id: "a".into(), module_b_id: "b".into(), allowed: true, params: SemioValue::default() });
         let mutation = delete_rule("r1".into());
@@ -134,7 +134,7 @@ mod tests {
     }
 
     #[test]
-    fn change_weight_inverse_law_restores_the_prior_value() {
+    async fn change_weight_inverse_law_restores_the_prior_value() {
         let mut base = AssemblySnapshot::default();
         base.weights.push(crate::artifacts::assembly::schema::snapshot::AssemblyModuleWeight { module_id: "m1".into(), weight: 1.0 });
         let mutation = change_weight("m1".into(), 9.0);
@@ -143,7 +143,7 @@ mod tests {
     }
 
     #[test]
-    fn change_weight_on_unknown_module_inserts_and_inverse_removes() {
+    async fn change_weight_on_unknown_module_inserts_and_inverse_removes() {
         let base = AssemblySnapshot::default();
         let mutation = change_weight("m1".into(), 4.0);
         let after = round_trip(&base, &mutation);
@@ -151,7 +151,7 @@ mod tests {
     }
 
     #[test]
-    fn connect_slots_inverse_law_round_trips() {
+    async fn connect_slots_inverse_law_round_trips() {
         let mut base = AssemblySnapshot::default();
         base.slots.push(AssemblySlot { id: "s1".into(), ..Default::default() });
         base.slots.push(AssemblySlot { id: "s2".into(), ..Default::default() });
@@ -161,7 +161,7 @@ mod tests {
     }
 
     #[test]
-    fn disconnect_slots_inverse_law_round_trips() {
+    async fn disconnect_slots_inverse_law_round_trips() {
         let mut base = AssemblySnapshot::default();
         base.edges.push(AssemblySlotEdge { id: "e1".into(), from_slot_id: "s1".into(), to_slot_id: "s2".into() });
         let mutation = disconnect_slots("e1".into());
@@ -170,7 +170,7 @@ mod tests {
     }
 
     #[test]
-    fn change_seed_inverse_law_round_trips() {
+    async fn change_seed_inverse_law_round_trips() {
         let mut base = AssemblySnapshot::default();
         base.seed = 1;
         let mutation = change_seed(42);
@@ -179,7 +179,7 @@ mod tests {
     }
 
     #[test]
-    fn diff_absorb_composes_two_change_seed_mutations() {
+    async fn diff_absorb_composes_two_change_seed_mutations() {
         let base = AssemblySnapshot::default();
         let d1 = change_seed(1).diff(&base);
         let mid = d1.apply(&base).expect("valid mutation diff");

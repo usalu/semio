@@ -9,6 +9,6 @@ use serde::{Deserialize, Serialize};
 #[dsl(keyword = "canvas-pointer-up")]
 pub struct CanvasPointerUp {}
 
-pub fn handle(_payload: &CanvasPointerUp, _doc: &ArtifactView<'_, VcsSnapshot>, _cfg: &ConfigView<'_, VcsDemoConfig>) -> Result<Emit<VcsDemoMutation, VcsDemoConfigMutation>, Fault> {
+pub async fn handle(_payload: &CanvasPointerUp, _doc: &ArtifactView<'_, VcsSnapshot>, _cfg: &ConfigView<'_, VcsDemoConfig>) -> Result<Emit<VcsDemoMutation, VcsDemoConfigMutation>, Fault> {
     Ok(Emit::default())
 }

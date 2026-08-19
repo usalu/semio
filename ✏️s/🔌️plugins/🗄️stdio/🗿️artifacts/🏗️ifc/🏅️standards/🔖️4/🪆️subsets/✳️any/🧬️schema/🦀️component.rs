@@ -27,21 +27,21 @@ pub struct IfcArtifact {
 
 //#region 🔖️Conversions
 impl Default for IfcArtifact {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self::from_snapshot(IfcSnapshot::default())
     }
 }
 
 impl IfcArtifact {
-    pub fn to_snapshot(&self) -> IfcSnapshot {
+    pub async fn to_snapshot(&self) -> IfcSnapshot {
         IfcSnapshot { schema: self.schema.clone(), header: self.header.clone(), entities: self.entities.clone() }
     }
 
-    pub fn from_snapshot(snapshot: IfcSnapshot) -> Self {
+    pub async fn from_snapshot(snapshot: IfcSnapshot) -> Self {
         Self { schema: snapshot.schema, header: snapshot.header, entities: snapshot.entities }
     }
 
-    pub fn set_snapshot(&mut self, snapshot: IfcSnapshot) {
+    pub async fn set_snapshot(&mut self, snapshot: IfcSnapshot) {
         self.schema = snapshot.schema;
         self.header = snapshot.header;
         self.entities = snapshot.entities;
@@ -50,7 +50,7 @@ impl IfcArtifact {
     /// 🏛️ Derived spatial-structure/placement/pset analyzer view — computed on demand, never
     /// stored; builds the shared generic Part-21 graph on the fly via `to_part21_document`
     /// (the analyzer's own relationship-graph traversal still walks that generic shape).
-    pub fn spatial(&self) -> crate::artifacts::ifc::engine::spatial::SpatialAnalysis {
+    pub async fn spatial(&self) -> crate::artifacts::ifc::engine::spatial::SpatialAnalysis {
         let document = crate::artifacts::ifc::schema::snapshot::to_part21_document(&self.to_snapshot());
         crate::artifacts::ifc::engine::spatial::analyze_spatial(&document)
     }
@@ -58,7 +58,7 @@ impl IfcArtifact {
 //#endregion 🔖️Conversions
 
 //#region 🔖️Descriptor
-pub fn ifc_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
+pub async fn ifc_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
     schema::ArtifactSchemaDescriptor {
         id: "s.stdio.ifc",
         artifact: schema::FacetLeaves {
@@ -109,27 +109,27 @@ pub mod derived_construction {
         type Snapshot = IfcSnapshot;
         type Mutation = IfcMutation;
         type Diff = IfcDiff;
-        fn empty() -> Self {
+        async fn empty() -> Self {
             Self { snapshot: IfcSnapshot::default(), diagnostics: Vec::new() }
         }
-        fn from_snapshot(snapshot: Self::Snapshot) -> Self {
+        async fn from_snapshot(snapshot: Self::Snapshot) -> Self {
             Self { snapshot, diagnostics: Vec::new() }
         }
-        fn from_text(text: &str) -> Result<Self, store::TextError> {
+        async fn from_text(text: &str) -> Result<Self, store::TextError> {
             Ok(Self::from_snapshot(<IfcSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
-        fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
+        async fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
             Ok(Self::from_snapshot(<IfcSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
         }
-        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
+        async fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let diff = crate::artifacts::ifc::schema::mutations::apply_ifc_mutation(&mut self.snapshot, &mutation);
             (self, diff)
         }
-        fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
+        async fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
             self.snapshot = <IfcDiff as protocol::MutationDiff<IfcSnapshot>>::apply(&diff, &self.snapshot)?;
             Ok(self)
         }
-        fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
+        async fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
             if self.diagnostics.is_empty() {
                 Ok(self.snapshot)
             } else {
@@ -163,11 +163,11 @@ pub mod derived_analysis {
         type Parts = IfcParts;
         const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.ifc", standard: StandardId("4"), subset: SubsetId("*") };
 
-        fn sniff(_source: &AnalyzeSource<'_>) -> IoConfidence {
+        async fn sniff(_source: &AnalyzeSource<'_>) -> IoConfidence {
             IoConfidence::Medium
         }
 
-        fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
+        async fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
             let mut parts = IfcParts::default();
             let mut diagnostics = Vec::new();
             let mut confidence = IoConfidence::High;
@@ -216,7 +216,7 @@ semio_framework_plugin::derive_artifact_facets!(
 /// `crate::artifacts::ifc::standards::v4::engine::empty_ifc_snapshot` through the `engine` barrel
 /// shim, and (via the root `crate::artifacts::ifc::engine` shim, glob-imported from v4) as
 /// `crate::artifacts::ifc::engine::empty_ifc_snapshot` too.
-pub fn empty_ifc_snapshot() -> IfcSnapshot {
+pub async fn empty_ifc_snapshot() -> IfcSnapshot {
     IfcSnapshot::default()
 }
 
@@ -226,7 +226,7 @@ pub fn empty_ifc_snapshot() -> IfcSnapshot {
 /// (both are literally this snapshot's `print_dsl`/`encode_pack` output, asserted equal by
 /// `fixture_honesty_law`, now in `../🚪️io/🦀️component.rs`) and for `mutations::
 /// demo_mutation_cases()`/`diff::demo_diff_cases()`.
-pub fn demo_ifc_snapshot() -> IfcSnapshot {
+pub async fn demo_ifc_snapshot() -> IfcSnapshot {
     use crate::artifacts::ifc::schema::snapshot::{IfcEntity as _IfcEntity, IfcHeader as _IfcHeader, IfcValue};
     IfcSnapshot {
         schema: STDIO_IFC_DOCUMENT_SCHEMA.into(),
@@ -264,7 +264,7 @@ pub fn demo_ifc_snapshot() -> IfcSnapshot {
 /// engine::register()` entry point before that override's `fn register()` shadows it.
 ///
 /// Registers codecs and the artifact schema descriptor.
-pub fn register() {
+pub async fn register() {
     crate::artifacts::ifc::io_registry::register();
     register_artifact_schema();
     register_artifact_inferences();
@@ -278,7 +278,7 @@ pub fn register() {
 /// dedicated "diff binary" role even though `🔺️diff/💾️binary/📡️component.protocol.semio` is a
 /// real, conformance-tested file — its binary form is exercised directly by `protocol_walk_law`
 /// below, just not wired through a 6th `LanguageRole`).
-pub fn register_pilot_languages() {
+pub async fn register_pilot_languages() {
     dsl::register_language(dsl::LanguageSpec {
         id: "stdio.ifc",
         extension: Some("ifc"),
@@ -338,14 +338,14 @@ pub fn register_pilot_languages() {
 /// fabricating an unrelated spec, per the recipe's own instruction.
 
 /// 📌️ Registers schema leaves for `s.stdio.ifc`.
-pub fn register_artifact_schema() {
+pub async fn register_artifact_schema() {
     ::schema::register_artifact_schema_descriptor(ifc_artifact_schema_descriptor());
 }
 
 /// 💡️ Registers `s.stdio.ifc.inference`'s facet leaves into the OS-wide inference catalog —
 /// sibling to `register_artifact_schema()` (separate registry, ticket
 /// 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING).
-pub fn register_artifact_inferences() {
+pub async fn register_artifact_inferences() {
     ::schema::register_artifact_inference_descriptor(crate::artifacts::ifc::standards::v4::subsets::any::schema::inferences::ifc_artifact_inference_descriptor());
 }
 //#endregion 🔖️Register

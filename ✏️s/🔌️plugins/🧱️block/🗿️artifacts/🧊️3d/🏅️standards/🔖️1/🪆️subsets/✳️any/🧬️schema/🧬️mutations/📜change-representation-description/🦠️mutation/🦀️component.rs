@@ -15,23 +15,23 @@ pub struct ChangeRepresentationDescription {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn change_representation_description(id: String, new_description: String) -> Block3dMutation {
+pub async fn change_representation_description(id: String, new_description: String) -> Block3dMutation {
     Block3dMutation::ChangeRepresentationDescription(ChangeRepresentationDescription { id, new_description })
 }
 
 impl protocol::MutationKind<Block3dSnapshot, Block3dMutation> for ChangeRepresentationDescription {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "representation", kind: "change-representation-description", record: "ChangedRepresentationDescription" };
 
-    fn diff(&self, base: &Block3dSnapshot) -> protocol::MutationOutcome<Block3dDiff> {
+    async fn diff(&self, base: &Block3dSnapshot) -> protocol::MutationOutcome<Block3dDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &Block3dSnapshot) -> Vec<Block3dMutation> {
+    async fn inverse(&self, base: &Block3dSnapshot) -> Vec<Block3dMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         format!("Change representation \"{}\" description", self.id)
     }
-    fn target(&self) -> Vec<String> {
+    async fn target(&self) -> Vec<String> {
         vec![self.id.clone()]
     }
 }

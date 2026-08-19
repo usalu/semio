@@ -20,7 +20,7 @@ pub struct SetActiveExample {
 /// 🧬️ Whole-document replace is banned from the `Mutation` enum outright (`SetSnapshot` — see
 /// `📓️taxonomy.md`'s forbidden vocabulary), so this builds `editor::fem3d::reset_document_effect`
 /// (a `Effect::LoadDocument`, outside undo history) instead of an `artifact_mutations` entry.
-pub fn handle(payload: &SetActiveExample, _doc: &ArtifactView<'_, Fem3dSnapshot>, _cfg: &ConfigView<'_, Fem3dConfig>) -> Result<Emit<Fem3dMutation, Fem3dConfigMutation>, Fault> {
+pub async fn handle(payload: &SetActiveExample, _doc: &ArtifactView<'_, Fem3dSnapshot>, _cfg: &ConfigView<'_, Fem3dConfig>) -> Result<Emit<Fem3dMutation, Fem3dConfigMutation>, Fault> {
     let document = if payload.example_id == "default" {
         <Fem3dSnapshot as store::ArtifactDsl>::parse_dsl(crate::artifacts::fem3d::dsl::FEM3D_EXAMPLE_TEXT).unwrap_or_default()
     } else {
@@ -35,7 +35,7 @@ mod tests {
     use semio_framework::kernel::Effect;
     use semio_framework_plugin::ActionKind;
 
-    fn empty_view() -> (Fem3dSnapshot, semio_framework_plugin::HistoryView) {
+    async fn empty_view() -> (Fem3dSnapshot, semio_framework_plugin::HistoryView) {
         (Fem3dSnapshot::default(), semio_framework_plugin::HistoryView::empty())
     }
 
@@ -46,7 +46,7 @@ mod tests {
     /// job), so this asserts directly on the `Emit` `import_media`-style rather than through
     /// `app.snapshot()`.
     #[test]
-    fn set_active_example_loads_default_fixture_3d() {
+    async fn set_active_example_loads_default_fixture_3d() {
         let (snapshot, history) = empty_view();
         let doc = ArtifactView::new(&snapshot, &history);
         let cfg_snapshot = Fem3dConfig::default();
@@ -63,7 +63,7 @@ mod tests {
     /// declared as a Mutation, not a View/Shell action — the framework's "View/Shell actions must not
     /// emit operations" guard would otherwise reject it.
     #[test]
-    fn set_active_example_is_declared_as_operation_3d() {
+    async fn set_active_example_is_declared_as_operation_3d() {
         let definition = crate::editor::fem3d::create_fem3d_app();
         let action = definition.window_kinds.iter().flat_map(|window| window.actions.iter()).find(|action| action.id == "setActiveExample").expect("setActiveExample declared");
         assert!(matches!(action.kind, ActionKind::Mutation), "loading an example emits a document-replace effect, so it is a Mutation");
@@ -71,7 +71,7 @@ mod tests {
     }
 
     #[test]
-    fn set_active_example_unknown_id_resets_to_empty_document() {
+    async fn set_active_example_unknown_id_resets_to_empty_document() {
         let (snapshot, history) = empty_view();
         let doc = ArtifactView::new(&snapshot, &history);
         let cfg_snapshot = Fem3dConfig::default();

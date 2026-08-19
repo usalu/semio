@@ -5,7 +5,7 @@ use crate::artifacts::en1998::mutations::change_wall_h_rd_kn::mutation::ChangeWa
 use crate::artifacts::en1998::En1998Snapshot;
 
 //#region 🔖️Diff
-pub fn diff(payload: &ChangeWallHRdKn, base: &En1998Snapshot) -> protocol::MutationOutcome<En1998Diff> {
+pub async fn diff(payload: &ChangeWallHRdKn, base: &En1998Snapshot) -> protocol::MutationOutcome<En1998Diff> {
     if !payload.new_wall_h_rd_kn.is_finite() {
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("Wall horizontal resistance H_Rd [kN] must be a finite number, got {}.", payload.new_wall_h_rd_kn), Vec::<String>::new());
     }

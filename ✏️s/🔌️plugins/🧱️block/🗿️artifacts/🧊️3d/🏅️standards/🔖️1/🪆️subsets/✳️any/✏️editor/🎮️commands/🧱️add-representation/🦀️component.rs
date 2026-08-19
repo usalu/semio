@@ -11,7 +11,7 @@ use serde::{Deserialize, Serialize};
 #[dsl(keyword = "addRepresentation")]
 pub struct AddRepresentation {}
 
-pub fn handle(_payload: &AddRepresentation, doc: &ArtifactView<'_, Block3dSnapshot>, _cfg: &ConfigView<'_, Block3dConfig>) -> Result<Emit<Block3dMutation, Block3dConfigMutation>, Fault> {
+pub async fn handle(_payload: &AddRepresentation, doc: &ArtifactView<'_, Block3dSnapshot>, _cfg: &ConfigView<'_, Block3dConfig>) -> Result<Emit<Block3dMutation, Block3dConfigMutation>, Fault> {
     let id = crate::artifacts::block3d::schema::next_id(doc.snapshot.representations.iter().map(|representation| representation.id.as_str()), "representation-");
     let representation = BlockRepresentation { id: id.clone(), name: id, mesh_url: None, tags: Vec::new(), lod: None, description: String::new(), attributes: Vec::new() };
     Ok(Emit::mutations(vec![crate::artifacts::block3d::mutations::create_representation(representation)]))

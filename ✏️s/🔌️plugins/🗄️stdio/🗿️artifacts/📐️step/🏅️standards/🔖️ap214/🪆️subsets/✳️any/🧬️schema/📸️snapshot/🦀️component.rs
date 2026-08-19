@@ -37,7 +37,7 @@ pub enum StepValue {
 }
 
 impl Default for StepValue {
-    fn default() -> Self {
+    async fn default() -> Self {
         StepValue::Unset
     }
 }
@@ -143,7 +143,7 @@ pub struct StepSnapshot {
 }
 
 impl Default for StepSnapshot {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self { schema: STDIO_STEP_DOCUMENT_SCHEMA.into(), header: StepHeader::default(), entities: Vec::new() }
     }
 }
@@ -159,7 +159,7 @@ impl Default for StepSnapshot {
 /// still captured losslessly as data (via the same `Aggregate` wrapper) but re-nests as a single
 /// list argument on re-emission — a documented normal form, never fabricated, matching the
 /// recipe's `codec_retention_law` allowance.
-fn value_from_part21(v: &Part21Value) -> StepValue {
+async fn value_from_part21(v: &Part21Value) -> StepValue {
     match v {
         Part21Value::Unset => StepValue::Unset,
         Part21Value::Derived => StepValue::Derived,
@@ -176,7 +176,7 @@ fn value_from_part21(v: &Part21Value) -> StepValue {
     }
 }
 
-fn value_to_part21(v: &StepValue) -> Part21Value {
+async fn value_to_part21(v: &StepValue) -> Part21Value {
     match v {
         StepValue::Unset => Part21Value::Unset,
         StepValue::Derived => Part21Value::Derived,
@@ -190,7 +190,7 @@ fn value_to_part21(v: &StepValue) -> Part21Value {
     }
 }
 
-fn as_string(v: Option<&Part21Value>) -> String {
+async fn as_string(v: Option<&Part21Value>) -> String {
     match v {
         Some(Part21Value::Str(s)) => s.clone(),
         Some(Part21Value::Enum(s)) => s.clone(),
@@ -198,7 +198,7 @@ fn as_string(v: Option<&Part21Value>) -> String {
     }
 }
 
-fn as_string_list(v: Option<&Part21Value>) -> Vec<String> {
+async fn as_string_list(v: Option<&Part21Value>) -> Vec<String> {
     match v {
         Some(Part21Value::List(items)) => items
             .iter()
@@ -211,14 +211,14 @@ fn as_string_list(v: Option<&Part21Value>) -> Vec<String> {
     }
 }
 
-fn file_description_from_part21(args: &[Part21Value]) -> StepFileDescription {
+async fn file_description_from_part21(args: &[Part21Value]) -> StepFileDescription {
     StepFileDescription { description: as_string_list(args.first()), implementation_level: as_string(args.get(1)) }
 }
-fn file_description_to_part21(d: &StepFileDescription) -> Vec<Part21Value> {
+async fn file_description_to_part21(d: &StepFileDescription) -> Vec<Part21Value> {
     vec![Part21Value::List(d.description.iter().cloned().map(Part21Value::Str).collect()), Part21Value::Str(d.implementation_level.clone())]
 }
 
-fn file_name_from_part21(args: &[Part21Value]) -> StepFileName {
+async fn file_name_from_part21(args: &[Part21Value]) -> StepFileName {
     StepFileName {
         name: as_string(args.first()),
         timestamp: as_string(args.get(1)),
@@ -229,7 +229,7 @@ fn file_name_from_part21(args: &[Part21Value]) -> StepFileName {
         authorization: as_string(args.get(6)),
     }
 }
-fn file_name_to_part21(f: &StepFileName) -> Vec<Part21Value> {
+async fn file_name_to_part21(f: &StepFileName) -> Vec<Part21Value> {
     vec![
         Part21Value::Str(f.name.clone()),
         Part21Value::Str(f.timestamp.clone()),
@@ -241,21 +241,21 @@ fn file_name_to_part21(f: &StepFileName) -> Vec<Part21Value> {
     ]
 }
 
-fn file_schema_from_part21(args: &[Part21Value]) -> StepFileSchema {
+async fn file_schema_from_part21(args: &[Part21Value]) -> StepFileSchema {
     StepFileSchema { schemas: as_string_list(args.first()) }
 }
-fn file_schema_to_part21(s: &StepFileSchema) -> Vec<Part21Value> {
+async fn file_schema_to_part21(s: &StepFileSchema) -> Vec<Part21Value> {
     vec![Part21Value::List(s.schemas.iter().cloned().map(Part21Value::Str).collect())]
 }
 
-fn header_from_part21(h: &Part21Header) -> StepHeader {
+async fn header_from_part21(h: &Part21Header) -> StepHeader {
     StepHeader { file_description: file_description_from_part21(&h.file_description), file_name: file_name_from_part21(&h.file_name), file_schema: file_schema_from_part21(&h.file_schema) }
 }
-fn header_to_part21(h: &StepHeader) -> Part21Header {
+async fn header_to_part21(h: &StepHeader) -> Part21Header {
     Part21Header { file_description: file_description_to_part21(&h.file_description), file_name: file_name_to_part21(&h.file_name), file_schema: file_schema_to_part21(&h.file_schema) }
 }
 
-fn entity_from_part21(inst: &Part21Instance) -> StepEntity {
+async fn entity_from_part21(inst: &Part21Instance) -> StepEntity {
     let mut types = inst.entities.iter();
     let (name, args) = match types.next() {
         Some((n, a)) => (n.clone(), a.iter().map(value_from_part21).collect()),
@@ -264,7 +264,7 @@ fn entity_from_part21(inst: &Part21Instance) -> StepEntity {
     let complex = types.map(|(n, a)| StepComplexType { name: n.clone(), args: a.iter().map(value_from_part21).collect() }).collect();
     StepEntity { id: inst.id, name, args, complex }
 }
-fn entity_to_part21(e: &StepEntity) -> Part21Instance {
+async fn entity_to_part21(e: &StepEntity) -> Part21Instance {
     let mut entities = vec![(e.name.clone(), e.args.iter().map(value_to_part21).collect())];
     entities.extend(e.complex.iter().map(|c| (c.name.clone(), c.args.iter().map(value_to_part21).collect())));
     Part21Instance { id: e.id, entities }
@@ -272,7 +272,7 @@ fn entity_to_part21(e: &StepEntity) -> Part21Instance {
 
 /// 🔁️ `Part21Document` -> `(StepHeader, Vec<StepEntity>)` — the ONLY place the shared generic
 /// graph is decoded into step's own model.
-pub fn step_snapshot_from_part21(doc: Part21Document) -> (StepHeader, Vec<StepEntity>) {
+pub async fn step_snapshot_from_part21(doc: Part21Document) -> (StepHeader, Vec<StepEntity>) {
     let header = header_from_part21(&doc.header);
     let entities = doc.instances.iter().map(entity_from_part21).collect();
     (header, entities)
@@ -280,19 +280,19 @@ pub fn step_snapshot_from_part21(doc: Part21Document) -> (StepHeader, Vec<StepEn
 /// 🔁️ `(StepHeader, &[StepEntity])` -> `Part21Document` — the inverse, used by the DSL/pack codecs
 /// and by every real consumer (conformance-class ladder checks, the cad/process3d plugins' STEP
 /// import/export) that still wants the generic view.
-pub fn step_snapshot_to_part21(header: &StepHeader, entities: &[StepEntity]) -> Part21Document {
+pub async fn step_snapshot_to_part21(header: &StepHeader, entities: &[StepEntity]) -> Part21Document {
     Part21Document { header: header_to_part21(header), instances: entities.iter().map(entity_to_part21).collect() }
 }
 
 impl StepSnapshot {
     /// 🔁️ Materializes the shared generic Part-21 graph on demand — never stored, always derived
     /// from the typed `header`/`entities` fields.
-    pub fn to_part21_document(&self) -> Part21Document {
+    pub async fn to_part21_document(&self) -> Part21Document {
         step_snapshot_to_part21(&self.header, &self.entities)
     }
     /// 🔁️ Builds a `StepSnapshot` from a generic Part-21 graph (e.g. one built by
     /// `engine::brep::brep_mesh_to_part21` or hand-assembled in a test).
-    pub fn from_part21_document(doc: Part21Document) -> Self {
+    pub async fn from_part21_document(doc: Part21Document) -> Self {
         let (header, entities) = step_snapshot_from_part21(doc);
         Self { schema: STDIO_STEP_DOCUMENT_SCHEMA.into(), header, entities }
     }
@@ -302,11 +302,11 @@ impl StepSnapshot {
 //#region 🔖️Part21Codec
 impl store::ArtifactDsl for StepSnapshot {
     const EXTENSION: &'static str = "step";
-    fn envelope_id() -> &'static str {
+    async fn envelope_id() -> &'static str {
         "stdio.step"
     }
 
-    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+    async fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
         let body = match store::semio_format::split_text_preamble(text) {
             Ok((_, rest)) => rest,
             Err(_) => text,
@@ -314,7 +314,7 @@ impl store::ArtifactDsl for StepSnapshot {
         let document = parse_part21(body).map_err(|e| store::TextError::new(format!("step parse: {e}"), dsl::TextSpan::at(1, 1)))?;
         Ok(Self::from_part21_document(document))
     }
-    fn print_dsl(&self) -> String {
+    async fn print_dsl(&self) -> String {
         let body = write_part21(&self.to_part21_document());
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
@@ -322,13 +322,13 @@ impl store::ArtifactDsl for StepSnapshot {
 }
 
 impl store::ArtifactPack for StepSnapshot {
-    fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
+    async fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
         let raw = write_part21(&self.to_part21_document()).into_bytes();
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &raw))
     }
-    fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
+    async fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
         if envelope.envelope_id() != <Self as store::ArtifactDsl>::envelope_id() {
             return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.envelope_id())));
@@ -349,7 +349,7 @@ mod tests {
     const FIXTURE: &str = "ISO-10303-21;\nHEADER;\nFILE_DESCRIPTION((''),'2;1');\nFILE_NAME('semio.step','2026-08-10T00:00:00',('Ueli'),('semio'),'semio','','');\nFILE_SCHEMA(('AUTOMOTIVE_DESIGN'));\nENDSEC;\nDATA;\n#1=CARTESIAN_POINT('',(0.,0.,0.));\n#2=CARTESIAN_POINT('',(10.,0.,0.));\nENDSEC;\nEND-ISO-10303-21;\n";
 
     #[test]
-    fn typed_snapshot_round_trips_through_part21_text() {
+    async fn typed_snapshot_round_trips_through_part21_text() {
         let snapshot = <StepSnapshot as store::ArtifactDsl>::parse_dsl(FIXTURE).expect("parse");
         assert_eq!(snapshot.header.file_schema.schemas, vec!["AUTOMOTIVE_DESIGN".to_string()]);
         assert_eq!(snapshot.header.file_name.name, "semio.step");
@@ -363,7 +363,7 @@ mod tests {
     }
 
     #[test]
-    fn typed_value_wrapper_round_trips() {
+    async fn typed_value_wrapper_round_trips() {
         let text = "ISO-10303-21;\nHEADER;\nFILE_DESCRIPTION((''),'2;1');\nFILE_NAME('','',(''),(''),'','','');\nFILE_SCHEMA(('IFC4'));\nENDSEC;\nDATA;\n#1=IFCPROPERTYSINGLEVALUE('Height',$,IFCLENGTHMEASURE(3000.),$);\nENDSEC;\nEND-ISO-10303-21;\n";
         let snapshot = <StepSnapshot as store::ArtifactDsl>::parse_dsl(text).expect("parse");
         let args = &snapshot.entities[0].args;
@@ -379,7 +379,7 @@ mod tests {
     }
 
     #[test]
-    fn complex_instance_keeps_every_type() {
+    async fn complex_instance_keeps_every_type() {
         let text =
             "ISO-10303-21;\nHEADER;\nFILE_DESCRIPTION((''),'2;1');\nFILE_NAME('','',(''),(''),'','','');\nFILE_SCHEMA(('IFC4'));\nENDSEC;\nDATA;\n#1=(IFCQUANTITYAREA($,$,$,10.5,$)IFCPHYSICALSIMPLEQUANTITY($,$,$,$));\nENDSEC;\nEND-ISO-10303-21;\n";
         let snapshot = <StepSnapshot as store::ArtifactDsl>::parse_dsl(text).expect("parse");
@@ -392,7 +392,7 @@ mod tests {
     }
 
     #[test]
-    fn pack_codec_round_trip() {
+    async fn pack_codec_round_trip() {
         let snapshot = <StepSnapshot as store::ArtifactDsl>::parse_dsl(FIXTURE).expect("parse");
         let bytes = store::ArtifactPack::encode_pack(&snapshot);
         let decoded = <StepSnapshot as store::ArtifactPack>::decode_pack(&bytes).expect("decode");
@@ -402,7 +402,7 @@ mod tests {
     /// 🧪️ `codec_retention_law`: decode -> encode is byte-preserving for both the DSL (`.step`
     /// text) and pack codecs on the real fixture.
     #[test]
-    fn codec_retention_law_decode_encode_is_stable() {
+    async fn codec_retention_law_decode_encode_is_stable() {
         let snapshot = <StepSnapshot as store::ArtifactDsl>::parse_dsl(FIXTURE).expect("parse");
         let text_once = store::ArtifactDsl::print_dsl(&snapshot);
         let reparsed = <StepSnapshot as store::ArtifactDsl>::parse_dsl(&text_once).expect("reparse");

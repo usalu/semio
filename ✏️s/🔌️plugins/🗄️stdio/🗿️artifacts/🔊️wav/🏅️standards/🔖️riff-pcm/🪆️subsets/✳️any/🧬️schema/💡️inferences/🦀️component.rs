@@ -24,7 +24,7 @@ pub struct WavInference {
 }
 
 impl protocol::Inference<WavSnapshot> for WavInference {
-    fn infer(snapshot: &WavSnapshot) -> Self {
+    async fn infer(snapshot: &WavSnapshot) -> Self {
         Self { duration: compute_wav_duration(snapshot) }
     }
 }
@@ -33,19 +33,19 @@ impl protocol::Inference<WavSnapshot> for WavInference {
 /// `WavSnapshot::default()`'s `fmt`/`data` ever stop matching this shape (its own hand-rolled
 /// `Default` already picks a real 44.1kHz mono PCM16 form, not a zeroed struct).
 impl Default for WavInference {
-    fn default() -> Self {
+    async fn default() -> Self {
         <Self as protocol::Inference<WavSnapshot>>::infer(&WavSnapshot::default())
     }
 }
 
 impl protocol::InferenceSpec<WavSnapshot> for WavInference {
-    fn inference_schema_id() -> &'static str {
+    async fn inference_schema_id() -> &'static str {
         "s.stdio.wav.inference"
     }
-    fn schema_version() -> u32 {
+    async fn schema_version() -> u32 {
         1
     }
-    fn fields() -> &'static [protocol::InferenceFieldSpec] {
+    async fn fields() -> &'static [protocol::InferenceFieldSpec] {
         &[protocol::InferenceFieldSpec { id: "s.stdio.wav.inference.duration", reads: &["fmt", "data"] }]
     }
 }
@@ -65,7 +65,7 @@ impl ArtifactInferrer for crate::artifacts::wav::standards::riff_pcm::subsets::a
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.stdio.wav.inference`'s facet leaves into the OS-wide inference catalog — call
 /// once at plugin init, alongside `wav_artifact_schema_descriptor`'s registration.
-pub fn wav_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
+pub async fn wav_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
     schema::ArtifactInferenceDescriptor {
         id: "s.stdio.wav.inference",
         inference: schema::FacetLeaves {
@@ -86,13 +86,13 @@ mod tests {
     use protocol::Inference;
 
     #[test]
-    fn inference_determinism_law() {
+    async fn inference_determinism_law() {
         let snapshot = WavSnapshot::default();
         assert_eq!(WavInference::infer(&snapshot), WavInference::infer(&snapshot));
     }
 
     #[test]
-    fn inference_default_law() {
+    async fn inference_default_law() {
         assert_eq!(WavInference::infer(&WavSnapshot::default()), WavInference::default());
     }
 }

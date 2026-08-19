@@ -68,14 +68,14 @@ semio_framework_plugin::app_labels! {
 
 //#region 🔖️Locale
 /// 🗣️ B1: local replacement for the deleted `semio_framework_plugin::is_de_locale(&ViewModel)`.
-pub fn puzzle5d_is_de_locale(config: &Puzzle5dConfig) -> bool {
+pub async fn puzzle5d_is_de_locale(config: &Puzzle5dConfig) -> bool {
     config.locale.starts_with("de")
 }
 
 /// 🗣️ Resolves the active label set from this document's persisted locale/terminology config
 /// (see `Puzzle5dConfig::locale`/`.terminology` — this app VCS's its own axes rather than reading
 /// `ViewModel`, so `resolve_labels::<Puzzle5dLabels>(view_state)` doesn't apply here).
-pub fn puzzle5d_labels(config: &Puzzle5dConfig) -> &'static Puzzle5dLabels {
+pub async fn puzzle5d_labels(config: &Puzzle5dConfig) -> &'static Puzzle5dLabels {
     let locale = if puzzle5d_is_de_locale(config) { Locale::De } else { Locale::En };
     let terminology = if config.terminology == "reuse" { Terminology::Reuse } else { Terminology::Native };
     Puzzle5dLabels::labels(locale, terminology)
@@ -84,7 +84,7 @@ pub fn puzzle5d_labels(config: &Puzzle5dConfig) -> &'static Puzzle5dLabels {
 /// 🗺️ Lifts a `Puzzle5dLabels` field accessor into a full manifest-level `LocalizedLabel` matrix —
 /// for `.operation`/`.utility`/arg-option declarations that should track this app's own native/reuse
 /// naming instead of a fixed, terminology-invariant string.
-pub fn puzzle5d_localized(field: fn(&Puzzle5dLabels) -> LabelText) -> LocalizedLabel {
+pub async fn puzzle5d_localized(field: fn(&Puzzle5dLabels) -> LabelText) -> LocalizedLabel {
     LocalizedLabel::from_fn(move |terminology, locale| field(Puzzle5dLabels::labels(locale, terminology)).as_str().to_string())
 }
 //#endregion 🔖️Locale

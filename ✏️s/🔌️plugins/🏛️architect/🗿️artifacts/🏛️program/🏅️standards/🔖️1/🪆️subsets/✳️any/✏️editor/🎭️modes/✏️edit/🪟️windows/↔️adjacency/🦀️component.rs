@@ -16,7 +16,7 @@ pub const ARCHITECT_BODY_ADJACENCY: &str = "architect.adjacency";
 
 //#region 🔖️Definition
 /// 🏛️ Stitched into the app manifest by `crate::editor::architect::create_architect_app`.
-pub fn definition() -> WindowKindDefinition {
+pub async fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
         id: ARCHITECT_WINDOW_ADJACENCY.into(),
         label: LocalizedLabel::native("Adjacency", "Adjazenz"),
@@ -42,7 +42,7 @@ pub fn definition() -> WindowKindDefinition {
 
 //#region 🔖️Render
 /// @emoji 🔺️ Signature adjacency matrix — triangle glyph strip plus lower-triangle pair rows.
-pub fn render(program: &ProgramSnapshot, cfg: &ArchitectConfig) -> UiNode {
+pub async fn render(program: &ProgramSnapshot, cfg: &ArchitectConfig) -> UiNode {
     let matrix = adjacency_matrix(program);
     let n = matrix.element_ids.len();
     if n == 0 {
@@ -111,21 +111,21 @@ mod tests {
     use crate::artifacts::program::{empty_plugin, sample_plugin};
 
     #[test]
-    fn definition_declares_the_adjacency_surface_and_body_key() {
+    async fn definition_declares_the_adjacency_surface_and_body_key() {
         let definition = definition();
         assert_eq!(definition.body_key, ARCHITECT_BODY_ADJACENCY);
         assert!(matches!(definition.surface_kind, SurfaceKind::Canvas2d));
     }
 
     #[test]
-    fn the_matrix_renders_a_triangle_strip_with_element_labels() {
+    async fn the_matrix_renders_a_triangle_strip_with_element_labels() {
         let json = serde_json::to_string(&render(&sample_plugin(), &ArchitectConfig::default())).expect("json");
         assert!(json.contains('▲'));
         assert!(json.contains("Reception"));
     }
 
     #[test]
-    fn an_empty_program_renders_the_placeholder() {
+    async fn an_empty_program_renders_the_placeholder() {
         let json = serde_json::to_string(&render(&empty_plugin(), &ArchitectConfig::default())).expect("json");
         assert!(json.contains("Add program elements"));
     }

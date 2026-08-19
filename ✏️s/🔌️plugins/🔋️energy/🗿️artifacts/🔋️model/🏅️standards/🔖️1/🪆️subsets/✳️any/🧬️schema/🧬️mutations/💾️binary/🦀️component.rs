@@ -10,12 +10,12 @@ pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️comp
 //#endregion 📡️SemioProtocol
 
 /// 📦️ Encodes an `EnergyModelMutation` to its binary state-patch form.
-pub fn encode_op(operation: &EnergyModelMutation) -> Result<Vec<u8>, protocol::ProtocolError> {
+pub async fn encode_op(operation: &EnergyModelMutation) -> Result<Vec<u8>, protocol::ProtocolError> {
     operation.encode_op()
 }
 
 /// 📖️ Decodes an `EnergyModelMutation` from its binary state-patch form.
-pub fn decode_op(bytes: &[u8]) -> Result<EnergyModelMutation, protocol::ProtocolError> {
+pub async fn decode_op(bytes: &[u8]) -> Result<EnergyModelMutation, protocol::ProtocolError> {
     EnergyModelMutation::decode_op(bytes)
 }
 
@@ -26,7 +26,7 @@ mod tests {
     use crate::artifacts::model::mutations::replace_model;
 
     #[test]
-    fn op_binary_round_trips_and_agrees_with_text() {
+    async fn op_binary_round_trips_and_agrees_with_text() {
         let operation = EnergyModelMutation::ReplaceModel(replace_model::mutation::ReplaceModel { new_model_json: "{}".to_string() });
         store::os_store::test_support::assert_op_text_binary_equivalence(&operation);
         let bytes = encode_op(&operation).expect("encode");
@@ -34,7 +34,7 @@ mod tests {
     }
 
     #[test]
-    fn replace_model_round_trips() {
+    async fn replace_model_round_trips() {
         let operation = EnergyModelMutation::ReplaceModel(replace_model::mutation::ReplaceModel { new_model_json: r#"{"name":"demo"}"#.to_string() });
         store::os_store::test_support::assert_op_text_binary_equivalence(&operation);
     }

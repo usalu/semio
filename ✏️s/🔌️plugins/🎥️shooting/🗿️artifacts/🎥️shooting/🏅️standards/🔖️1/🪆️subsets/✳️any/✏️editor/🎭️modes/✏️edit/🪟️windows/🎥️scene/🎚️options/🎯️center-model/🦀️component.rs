@@ -7,7 +7,7 @@ use crate::editor::shooting::terminology::ShootingLabels;
 use semio_framework_plugin::WindowMeasure;
 
 //#region 🔖️Measure
-pub fn measure(labels: &ShootingLabels) -> WindowMeasure {
+pub async fn measure(labels: &ShootingLabels) -> WindowMeasure {
     WindowMeasure::Toggle { id: "shooting.measure.center-model".into(), icon_id: "focus".into(), label: Some(labels.measure_center_model.into()), pressed: true, text: None, on_change: crate::editor::shooting::shooting_action("setCenterModel", None) }
 }
 //#endregion 🔖️Measure
@@ -20,7 +20,7 @@ mod tests {
     use crate::editor::shooting::terminology::shooting_play_labels;
 
     #[test]
-    fn center_model_toggle_starts_pressed() {
+    async fn center_model_toggle_starts_pressed() {
         let labels = shooting_play_labels(&ShootingConfig::default());
         match measure(labels) {
             WindowMeasure::Toggle { pressed, .. } => assert!(pressed),

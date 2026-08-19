@@ -5,7 +5,7 @@ use crate::artifacts::en1998::mutations::change_retrofit_knowledge_level::mutati
 use crate::artifacts::en1998::En1998Snapshot;
 
 //#region 🔖️Diff
-pub fn diff(payload: &ChangeRetrofitKnowledgeLevel, base: &En1998Snapshot) -> protocol::MutationOutcome<En1998Diff> {
+pub async fn diff(payload: &ChangeRetrofitKnowledgeLevel, base: &En1998Snapshot) -> protocol::MutationOutcome<En1998Diff> {
     if base.retrofit_knowledge_level == payload.new_retrofit_knowledge_level {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Retrofit knowledge level is already \"{}\".", payload.new_retrofit_knowledge_level));
     }

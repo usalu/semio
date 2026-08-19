@@ -18,14 +18,14 @@ pub struct SvgSnapshot {
 }
 
 impl Default for SvgSnapshot {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self { schema: STDIO_SVG_DOCUMENT_SCHEMA.into(), doc: XmlDocument { root: Some(XmlNode::Element { name: "svg".into(), attrs: Vec::new(), children: Vec::new() }), doctype: None, declaration: None, prolog: Vec::new() } }
     }
 }
 //#endregion 🔖️Snapshot
 
 //#region 🔖️SvgCodec
-pub fn parse_svg_xml(text: &str) -> Result<XmlDocument, String> {
+pub async fn parse_svg_xml(text: &str) -> Result<XmlDocument, String> {
     let doc = xml_document_from_text(text)?;
     if let Some(XmlNode::Element { name, .. }) = &doc.root {
         if name != "svg" && !name.ends_with(":svg") {
@@ -37,24 +37,24 @@ pub fn parse_svg_xml(text: &str) -> Result<XmlDocument, String> {
     Ok(doc)
 }
 
-pub fn write_svg_xml(doc: &XmlDocument) -> String {
+pub async fn write_svg_xml(doc: &XmlDocument) -> String {
     xml_document_to_text(doc)
 }
 
 impl SvgSnapshot {
     /// 🧠️ Returns the lossless logical SVG state used by diff and mutation laws.
-    pub fn semantic_projection(&self) -> Self {
+    pub async fn semantic_projection(&self) -> Self {
         self.clone()
     }
 
     /// 📥️ Parses SVG UTF-8 into its lossless logical XML model.
-    pub fn import_utf8(bytes: &[u8]) -> Result<Self, String> {
+    pub async fn import_utf8(bytes: &[u8]) -> Result<Self, String> {
         let text = std::str::from_utf8(bytes).map_err(|error| format!("svg source is not UTF-8: {error}"))?;
         Ok(Self { schema: STDIO_SVG_DOCUMENT_SCHEMA.into(), doc: parse_svg_xml(text)? })
     }
 
     /// 📤️ Deterministically materializes SVG from the logical XML model.
-    pub fn export_utf8(&self) -> Result<Vec<u8>, String> {
+    pub async fn export_utf8(&self) -> Result<Vec<u8>, String> {
         Ok(write_svg_xml(&self.doc).into_bytes())
     }
 }
@@ -71,26 +71,26 @@ struct NumCursor<'a> {
 }
 
 impl<'a> NumCursor<'a> {
-    fn new(s: &'a str) -> Self {
+    async fn new(s: &'a str) -> Self {
         Self { s: s.as_bytes(), pos: 0 }
     }
-    fn peek(&self) -> Option<u8> {
+    async fn peek(&self) -> Option<u8> {
         self.s.get(self.pos).copied()
     }
-    fn is_eof(&self) -> bool {
+    async fn is_eof(&self) -> bool {
         self.pos >= self.s.len()
     }
-    fn skip_wsp_comma(&mut self) {
+    async fn skip_wsp_comma(&mut self) {
         while matches!(self.peek(), Some(b' ') | Some(b'\t') | Some(b'\n') | Some(b'\r') | Some(b',')) {
             self.pos += 1;
         }
     }
-    fn skip_wsp(&mut self) {
+    async fn skip_wsp(&mut self) {
         while matches!(self.peek(), Some(b' ') | Some(b'\t') | Some(b'\n') | Some(b'\r')) {
             self.pos += 1;
         }
     }
-    fn parse_number(&mut self) -> Result<f64, String> {
+    async fn parse_number(&mut self) -> Result<f64, String> {
         self.skip_wsp_comma();
         let start = self.pos;
         if matches!(self.peek(), Some(b'+') | Some(b'-')) {
@@ -132,7 +132,7 @@ impl<'a> NumCursor<'a> {
     /// 🚩 A path arc-flag is EXACTLY one `0`/`1` byte with no separator required before the next
     /// token -- `A5 5 0 108 8` must decompose the run `108` into flags `1`,`0` then the number `8`
     /// (large-arc=1, sweep=0, x=8), never a naive 2-digit/3-digit number grab. Classic bug source.
-    fn parse_flag(&mut self) -> Result<bool, String> {
+    async fn parse_flag(&mut self) -> Result<bool, String> {
         self.skip_wsp_comma();
         match self.peek() {
             Some(b'0') => {
@@ -148,7 +148,7 @@ impl<'a> NumCursor<'a> {
     }
 }
 
-fn parse_number_list(s: &str) -> Result<Vec<f64>, String> {
+async fn parse_number_list(s: &str) -> Result<Vec<f64>, String> {
     let mut c = NumCursor::new(s);
     let mut out = Vec::new();
     loop {
@@ -161,7 +161,7 @@ fn parse_number_list(s: &str) -> Result<Vec<f64>, String> {
     Ok(out)
 }
 
-fn fmt_num(v: f64) -> String {
+async fn fmt_num(v: f64) -> String {
     v.to_string()
 }
 //#endregion 🔖️NumberGrammar
@@ -177,7 +177,7 @@ pub struct ViewBox {
     pub height: f64,
 }
 
-pub fn parse_view_box(s: &str) -> Result<ViewBox, String> {
+pub async fn parse_view_box(s: &str) -> Result<ViewBox, String> {
     let nums = parse_number_list(s)?;
     if nums.len() != 4 {
         return Err(format!("viewBox requires exactly 4 numbers, got {}", nums.len()));
@@ -185,12 +185,12 @@ pub fn parse_view_box(s: &str) -> Result<ViewBox, String> {
     Ok(ViewBox { min_x: nums[0], min_y: nums[1], width: nums[2], height: nums[3] })
 }
 
-pub fn view_box_to_string(v: &ViewBox) -> String {
+pub async fn view_box_to_string(v: &ViewBox) -> String {
     format!("{} {} {} {}", fmt_num(v.min_x), fmt_num(v.min_y), fmt_num(v.width), fmt_num(v.height))
 }
 
 /// 🔗️ `points="x1,y1 x2,y2 ..."` (polyline/polygon).
-pub fn parse_points(s: &str) -> Result<Vec<(f64, f64)>, String> {
+pub async fn parse_points(s: &str) -> Result<Vec<(f64, f64)>, String> {
     let nums = parse_number_list(s)?;
     if nums.len() % 2 != 0 {
         return Err("points list must have an even number of coordinates".into());
@@ -198,7 +198,7 @@ pub fn parse_points(s: &str) -> Result<Vec<(f64, f64)>, String> {
     Ok(nums.chunks(2).map(|c| (c[0], c[1])).collect())
 }
 
-pub fn points_to_string(points: &[(f64, f64)]) -> String {
+pub async fn points_to_string(points: &[(f64, f64)]) -> String {
     points.iter().map(|(x, y)| format!("{},{}", fmt_num(*x), fmt_num(*y))).collect::<Vec<_>>().join(" ")
 }
 //#endregion 🔖️Geometry
@@ -217,12 +217,12 @@ pub struct Matrix2D {
 }
 
 impl Matrix2D {
-    pub fn identity() -> Self {
+    pub async fn identity() -> Self {
         Self { a: 1.0, b: 0.0, c: 0.0, d: 1.0, e: 0.0, f: 0.0 }
     }
     /// ✖️ Composes `self ∘ other` (apply `other` first, then `self`) -- matches SVG's
     /// left-to-right `transform="A B"` list semantics, where the combined matrix is `A * B`.
-    pub fn multiply(&self, other: &Matrix2D) -> Matrix2D {
+    pub async fn multiply(&self, other: &Matrix2D) -> Matrix2D {
         Matrix2D {
             a: self.a * other.a + self.c * other.b,
             b: self.b * other.a + self.d * other.b,
@@ -272,7 +272,7 @@ pub enum TransformOp {
 }
 
 impl TransformOp {
-    pub fn to_matrix(&self) -> Matrix2D {
+    pub async fn to_matrix(&self) -> Matrix2D {
         match *self {
             TransformOp::Matrix { a, b, c, d, e, f } => Matrix2D { a, b, c, d, e, f },
             TransformOp::Translate { x, y } => Matrix2D { a: 1.0, b: 0.0, c: 0.0, d: 1.0, e: x, f: y.unwrap_or(0.0) },
@@ -296,11 +296,11 @@ impl TransformOp {
 }
 
 /// ✖️ Composes an entire transform list into one resolved matrix (fold in list order).
-pub fn transform_ops_to_matrix(ops: &[TransformOp]) -> Matrix2D {
+pub async fn transform_ops_to_matrix(ops: &[TransformOp]) -> Matrix2D {
     ops.iter().fold(Matrix2D::identity(), |acc, op| acc.multiply(&op.to_matrix()))
 }
 
-pub fn parse_transform_list(s: &str) -> Result<Vec<TransformOp>, String> {
+pub async fn parse_transform_list(s: &str) -> Result<Vec<TransformOp>, String> {
     let mut c = NumCursor::new(s);
     let mut ops = Vec::new();
     loop {
@@ -350,7 +350,7 @@ pub fn parse_transform_list(s: &str) -> Result<Vec<TransformOp>, String> {
     Ok(ops)
 }
 
-pub fn transform_list_to_string(ops: &[TransformOp]) -> String {
+pub async fn transform_list_to_string(ops: &[TransformOp]) -> String {
     ops.iter()
         .map(|op| match op {
             TransformOp::Matrix { a, b, c, d, e, f } => format!("matrix({},{},{},{},{},{})", fmt_num(*a), fmt_num(*b), fmt_num(*c), fmt_num(*d), fmt_num(*e), fmt_num(*f)),
@@ -391,7 +391,7 @@ pub enum PathCommand {
 /// 🖊️ Parses a `d` attribute per the SVG path mini-language grammar. Verified against 18 checks
 /// (incl. the arc-flag squeeze edge case) in a standalone scratch crate before porting here, per
 /// the technique in the ticket's STATUS.md.
-pub fn parse_path_data(d: &str) -> Result<Vec<PathCommand>, String> {
+pub async fn parse_path_data(d: &str) -> Result<Vec<PathCommand>, String> {
     let mut c = NumCursor::new(d);
     let mut cmds = Vec::new();
     // 🔁 `last_letter`/`last_relative` drive implicit command repetition: a number run with no
@@ -498,8 +498,8 @@ pub fn parse_path_data(d: &str) -> Result<Vec<PathCommand>, String> {
     Ok(cmds)
 }
 
-pub fn path_data_to_string(cmds: &[PathCommand]) -> String {
-    fn letter(base: char, relative: bool) -> char {
+pub async fn path_data_to_string(cmds: &[PathCommand]) -> String {
+    async fn letter(base: char, relative: bool) -> char {
         if relative {
             base.to_ascii_lowercase()
         } else {
@@ -560,7 +560,7 @@ pub struct PresentationAttrs {
 
 /// 🧩 Real `key: value; key2: value2` parsing (declaration-list split on `;`, each split on the
 /// FIRST `:`) -- not a substring/`contains()` hack.
-pub fn parse_style_decls(s: &str) -> Vec<(String, String)> {
+pub async fn parse_style_decls(s: &str) -> Vec<(String, String)> {
     s.split(';')
         .filter_map(|decl| {
             let decl = decl.trim();
@@ -579,7 +579,7 @@ pub fn parse_style_decls(s: &str) -> Vec<(String, String)> {
 }
 
 /// ↩️ Returns `true` if `name` is a recognized presentation property (and was applied).
-fn apply_presentation_attr(p: &mut PresentationAttrs, name: &str, value: &str) -> bool {
+async fn apply_presentation_attr(p: &mut PresentationAttrs, name: &str, value: &str) -> bool {
     match name {
         "fill" => p.fill = Some(value.to_string()),
         "stroke" => p.stroke = Some(value.to_string()),
@@ -594,7 +594,7 @@ fn apply_presentation_attr(p: &mut PresentationAttrs, name: &str, value: &str) -
     true
 }
 
-fn push_presentation_attrs(attrs: &mut Vec<XmlAttr>, p: &PresentationAttrs) {
+async fn push_presentation_attrs(attrs: &mut Vec<XmlAttr>, p: &PresentationAttrs) {
     let mut push = |name: &str, value: &Option<String>| {
         if let Some(v) = value {
             attrs.push(XmlAttr { name: name.to_string(), value: v.clone() });
@@ -636,34 +636,34 @@ pub struct CommonAttrs {
 }
 
 impl CommonAttrs {
-    pub fn new() -> Self {
+    pub async fn new() -> Self {
         Self::default()
     }
-    pub fn with_id(mut self, id: impl Into<String>) -> Self {
+    pub async fn with_id(mut self, id: impl Into<String>) -> Self {
         self.id = Some(id.into());
         self
     }
-    pub fn with_class(mut self, class: impl Into<String>) -> Self {
+    pub async fn with_class(mut self, class: impl Into<String>) -> Self {
         self.class = Some(class.into());
         self
     }
-    pub fn with_transform(mut self, ops: Vec<TransformOp>) -> Self {
+    pub async fn with_transform(mut self, ops: Vec<TransformOp>) -> Self {
         self.transform = Some(ops);
         self
     }
-    pub fn with_fill(mut self, v: impl Into<String>) -> Self {
+    pub async fn with_fill(mut self, v: impl Into<String>) -> Self {
         self.presentation.fill = Some(v.into());
         self
     }
-    pub fn with_stroke(mut self, v: impl Into<String>) -> Self {
+    pub async fn with_stroke(mut self, v: impl Into<String>) -> Self {
         self.presentation.stroke = Some(v.into());
         self
     }
-    pub fn with_stroke_width(mut self, v: impl Into<String>) -> Self {
+    pub async fn with_stroke_width(mut self, v: impl Into<String>) -> Self {
         self.presentation.stroke_width = Some(v.into());
         self
     }
-    pub fn with_opacity(mut self, v: impl Into<String>) -> Self {
+    pub async fn with_opacity(mut self, v: impl Into<String>) -> Self {
         self.presentation.opacity = Some(v.into());
         self
     }
@@ -673,7 +673,7 @@ impl CommonAttrs {
 /// elsewhere (so they don't ALSO land in `extra_attrs`). `style=""` is real-parsed and takes
 /// precedence over same-named plain attributes (CSS cascade order); unrecognized style
 /// declarations are retained in `presentation.extra_style`, never dropped.
-fn parse_common_attrs(attrs: &[XmlAttr], element_specific: &[&str]) -> CommonAttrs {
+async fn parse_common_attrs(attrs: &[XmlAttr], element_specific: &[&str]) -> CommonAttrs {
     let mut common = CommonAttrs::default();
     let style_decls = attr_val(attrs, "style").map(parse_style_decls).unwrap_or_default();
     for a in attrs {
@@ -702,7 +702,7 @@ fn parse_common_attrs(attrs: &[XmlAttr], element_specific: &[&str]) -> CommonAtt
     common
 }
 
-fn push_common_attrs(attrs: &mut Vec<XmlAttr>, common: &CommonAttrs) {
+async fn push_common_attrs(attrs: &mut Vec<XmlAttr>, common: &CommonAttrs) {
     if let Some(id) = &common.id {
         attrs.push(XmlAttr { name: "id".into(), value: id.clone() });
     }
@@ -718,31 +718,31 @@ fn push_common_attrs(attrs: &mut Vec<XmlAttr>, common: &CommonAttrs) {
 //#endregion 🔖️CommonAttrs
 
 //#region 🔖️TypedElementModel
-fn attr_val<'a>(attrs: &'a [XmlAttr], name: &str) -> Option<&'a str> {
+async fn attr_val<'a>(attrs: &'a [XmlAttr], name: &str) -> Option<&'a str> {
     attrs.iter().find(|a| a.name == name).map(|a| a.value.as_str())
 }
 
-fn attr_f64(attrs: &[XmlAttr], name: &str, default: f64) -> Result<f64, String> {
+async fn attr_f64(attrs: &[XmlAttr], name: &str, default: f64) -> Result<f64, String> {
     match attr_val(attrs, name) {
         None => Ok(default),
         Some(v) => v.trim().parse::<f64>().map_err(|_| format!("attribute '{name}' is not a number: '{v}'")),
     }
 }
 
-fn attr_f64_opt(attrs: &[XmlAttr], name: &str) -> Result<Option<f64>, String> {
+async fn attr_f64_opt(attrs: &[XmlAttr], name: &str) -> Result<Option<f64>, String> {
     match attr_val(attrs, name) {
         None => Ok(None),
         Some(v) => v.trim().parse::<f64>().map(Some).map_err(|_| format!("attribute '{name}' is not a number: '{v}'")),
     }
 }
 
-fn attr_string_opt(attrs: &[XmlAttr], name: &str) -> Option<String> {
+async fn attr_string_opt(attrs: &[XmlAttr], name: &str) -> Option<String> {
     attr_val(attrs, name).map(|s| s.to_string())
 }
 
 /// ✂️ Strips an XML namespace prefix (`xlink:href` -> `href`) for TYPED-ELEMENT DISPATCH ONLY;
 /// `Unknown` and attribute passthrough always keep the original, fully-qualified name.
-fn local_name(name: &str) -> &str {
+async fn local_name(name: &str) -> &str {
     name.rsplit(':').next().unwrap_or(name)
 }
 
@@ -905,14 +905,14 @@ pub enum SvgElement {
     },
 }
 
-fn convert_children(children: &[XmlNode]) -> Result<Vec<SvgElement>, String> {
+async fn convert_children(children: &[XmlNode]) -> Result<Vec<SvgElement>, String> {
     children.iter().map(svg_element_from_xml_node).collect()
 }
 
 /// 🌳 Converts one generic (lossless) `XmlNode` into the typed SVG model. Dispatches on the local
 /// (namespace-prefix-stripped) tag name against the typed set; anything else becomes `Unknown`
 /// (with the ORIGINAL, still-prefixed name preserved) rather than being dropped.
-pub fn svg_element_from_xml_node(node: &XmlNode) -> Result<SvgElement, String> {
+pub async fn svg_element_from_xml_node(node: &XmlNode) -> Result<SvgElement, String> {
     match node {
         XmlNode::Text { text } => Ok(SvgElement::TextNode(text.clone())),
         XmlNode::CData { text } => Ok(SvgElement::CData(text.clone())),
@@ -1026,7 +1026,7 @@ pub fn svg_element_from_xml_node(node: &XmlNode) -> Result<SvgElement, String> {
 
 /// 🌳 Lowers the typed model back into the generic (lossless) `XmlNode` tree that the xml codec's
 /// text/binary writers already know how to serialize.
-pub fn svg_element_to_xml_node(el: &SvgElement) -> XmlNode {
+pub async fn svg_element_to_xml_node(el: &SvgElement) -> XmlNode {
     match el {
         SvgElement::TextNode(t) => XmlNode::Text { text: t.clone() },
         SvgElement::CData(t) => XmlNode::CData { text: t.clone() },
@@ -1198,14 +1198,14 @@ pub fn svg_element_to_xml_node(el: &SvgElement) -> XmlNode {
     }
 }
 
-pub fn svg_document_to_typed(doc: &XmlDocument) -> Result<SvgElement, String> {
+pub async fn svg_document_to_typed(doc: &XmlDocument) -> Result<SvgElement, String> {
     match &doc.root {
         Some(node) => svg_element_from_xml_node(node),
         None => Err("svg document has no root element".into()),
     }
 }
 
-pub fn typed_to_svg_document(root: &SvgElement, doctype: Option<crate::artifacts::xml::schema::snapshot::XmlDoctype>) -> XmlDocument {
+pub async fn typed_to_svg_document(root: &SvgElement, doctype: Option<crate::artifacts::xml::schema::snapshot::XmlDoctype>) -> XmlDocument {
     XmlDocument { root: Some(svg_element_to_xml_node(root)), doctype, declaration: None, prolog: Vec::new() }
 }
 //#endregion 🔖️TypedElementModel
@@ -1216,7 +1216,7 @@ pub fn typed_to_svg_document(root: &SvgElement, doctype: Option<crate::artifacts
 /// persisted, always-lossless `XmlDocument`, not the typed view).
 pub type NodePath = Vec<usize>;
 
-pub fn node_at<'a>(doc: &'a XmlDocument, path: &[usize]) -> Result<&'a XmlNode, String> {
+pub async fn node_at<'a>(doc: &'a XmlDocument, path: &[usize]) -> Result<&'a XmlNode, String> {
     let mut node = doc.root.as_ref().ok_or("document has no root element")?;
     for &idx in path {
         match node {
@@ -1229,7 +1229,7 @@ pub fn node_at<'a>(doc: &'a XmlDocument, path: &[usize]) -> Result<&'a XmlNode, 
     Ok(node)
 }
 
-pub fn node_at_mut<'a>(doc: &'a mut XmlDocument, path: &[usize]) -> Result<&'a mut XmlNode, String> {
+pub async fn node_at_mut<'a>(doc: &'a mut XmlDocument, path: &[usize]) -> Result<&'a mut XmlNode, String> {
     let mut node = doc.root.as_mut().ok_or("document has no root element")?;
     for &idx in path {
         match node {
@@ -1242,7 +1242,7 @@ pub fn node_at_mut<'a>(doc: &'a mut XmlDocument, path: &[usize]) -> Result<&'a m
     Ok(node)
 }
 
-pub fn element_attr<'a>(node: &'a XmlNode, name: &str) -> Option<&'a str> {
+pub async fn element_attr<'a>(node: &'a XmlNode, name: &str) -> Option<&'a str> {
     match node {
         XmlNode::Element { attrs, .. } => attrs.iter().find(|a| a.name == name).map(|a| a.value.as_str()),
         _ => None,
@@ -1253,7 +1253,7 @@ pub fn element_attr<'a>(node: &'a XmlNode, name: &str) -> Option<&'a str> {
 /// in the attribute list is preserved -- only a genuinely new attribute gets appended); `None`
 /// removes it. Update-in-place (rather than remove-then-append) matters for `SetAttribute`'s
 /// apply/inverse round trip to reproduce the exact original attribute order.
-pub fn set_element_attr(node: &mut XmlNode, name: &str, value: Option<String>) {
+pub async fn set_element_attr(node: &mut XmlNode, name: &str, value: Option<String>) {
     if let XmlNode::Element { attrs, .. } = node {
         match value {
             Some(v) => match attrs.iter_mut().find(|a| a.name == name) {
@@ -1269,15 +1269,15 @@ pub fn set_element_attr(node: &mut XmlNode, name: &str, value: Option<String>) {
 //#region 🔖️HandcraftedArtifactCodecs
 impl store::ArtifactDsl for SvgSnapshot {
     const EXTENSION: &'static str = "svg";
-    fn envelope_id() -> &'static str {
+    async fn envelope_id() -> &'static str {
         "stdio.svg"
     }
 
-    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+    async fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
         let (_, body) = store::semio_format::split_text_preamble(text).map_err(|error| store::TextError::new(format!("svg state envelope: {error}"), dsl::TextSpan::at(1, 1)))?;
         crate::artifacts::svg::schema::mutations::dec_svg_snapshot(body.trim()).map_err(|e| store::TextError::new(format!("svg state parse: {e}"), dsl::TextSpan::at(1, 1)))
     }
-    fn print_dsl(&self) -> String {
+    async fn print_dsl(&self) -> String {
         let body = crate::artifacts::svg::schema::mutations::enc_svg_snapshot(self);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
@@ -1292,14 +1292,14 @@ impl store::ArtifactDsl for SvgSnapshot {
 /// generic object-serialization placeholder, which satisfied the trait but did not describe the
 /// structured SVG state frame.
 impl store::ArtifactPack for SvgSnapshot {
-    fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
+    async fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
         let mut raw = vec![1];
         crate::artifacts::svg::schema::mutations::enc_svg_snapshot_bin(self, &mut raw);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &raw))
     }
-    fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
+    async fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
         if envelope.envelope_id() != <Self as store::ArtifactDsl>::envelope_id() {
             return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.envelope_id())));
@@ -1321,7 +1321,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn schema_facets_reject_source_and_raw_doctype_shadow_state() {
+    async fn schema_facets_reject_source_and_raw_doctype_shadow_state() {
         let facets = [
             include_str!("🦀️component.rs"),
             include_str!("🟦️component.ts"),
@@ -1367,19 +1367,19 @@ mod tests {
     }
 
     #[test]
-    fn artifact_dsl_rejects_native_svg_without_a_semio_envelope() {
+    async fn artifact_dsl_rejects_native_svg_without_a_semio_envelope() {
         assert!(<SvgSnapshot as store::ArtifactDsl>::parse_dsl(r#"<svg xmlns="http://www.w3.org/2000/svg"/>"#).is_err());
     }
 
     //#region PathGrammar
     #[test]
-    fn path_implicit_lineto_repetition_after_moveto() {
+    async fn path_implicit_lineto_repetition_after_moveto() {
         let cmds = parse_path_data("M 0 0 10 10 20 20").unwrap();
         assert_eq!(cmds, vec![PathCommand::MoveTo { x: 0.0, y: 0.0, relative: false }, PathCommand::LineTo { x: 10.0, y: 10.0, relative: false }, PathCommand::LineTo { x: 20.0, y: 20.0, relative: false },]);
     }
 
     #[test]
-    fn path_arc_flag_squeeze_decomposes_correctly() {
+    async fn path_arc_flag_squeeze_decomposes_correctly() {
         // 🚩 THE classic bug: "A5 5 0 108 8" must decompose as flags 1,0 then x=8,y=8 -- not 10,8,8.
         let cmds = parse_path_data("M40,20 A5 5 0 108 8").unwrap();
         match cmds.last().unwrap() {
@@ -1393,13 +1393,13 @@ mod tests {
     }
 
     #[test]
-    fn path_relative_and_close() {
+    async fn path_relative_and_close() {
         let cmds = parse_path_data("m0,0 10,0 0,10z").unwrap();
         assert_eq!(cmds, vec![PathCommand::MoveTo { x: 0.0, y: 0.0, relative: true }, PathCommand::LineTo { x: 10.0, y: 0.0, relative: true }, PathCommand::LineTo { x: 0.0, y: 10.0, relative: true }, PathCommand::ClosePath,]);
     }
 
     #[test]
-    fn path_round_trips_through_string() {
+    async fn path_round_trips_through_string() {
         let cmds = parse_path_data("M0,0 C1,1 2,2 3,3 S4,4 5,5 A5 5 0 108 8 Z").unwrap();
         let text = path_data_to_string(&cmds);
         let reparsed = parse_path_data(&text).unwrap();
@@ -1407,14 +1407,14 @@ mod tests {
     }
 
     #[test]
-    fn path_missing_leading_command_is_error() {
+    async fn path_missing_leading_command_is_error() {
         assert!(parse_path_data("10 10 L20 20").is_err());
     }
     //#endregion PathGrammar
 
     //#region TransformGrammar
     #[test]
-    fn transform_parses_all_functions() {
+    async fn transform_parses_all_functions() {
         let ops = parse_transform_list("translate(10,20) scale(2) rotate(90,5,5) skewX(30) skewY(-15) matrix(1,0,0,1,0,0)").unwrap();
         assert_eq!(
             ops,
@@ -1430,7 +1430,7 @@ mod tests {
     }
 
     #[test]
-    fn transform_composition_order_matches_svg_semantics() {
+    async fn transform_composition_order_matches_svg_semantics() {
         // translate(10,0) rotate(90) applied to (1,0) => (10,1): rotate happens in local space first.
         let m = transform_ops_to_matrix(&parse_transform_list("translate(10,0) rotate(90)").unwrap());
         let (px, py) = (m.a * 1.0 + m.c * 0.0 + m.e, m.b * 1.0 + m.d * 0.0 + m.f);
@@ -1438,14 +1438,14 @@ mod tests {
     }
 
     #[test]
-    fn transform_rotate_about_center_fixes_that_point() {
+    async fn transform_rotate_about_center_fixes_that_point() {
         let m = transform_ops_to_matrix(&parse_transform_list("rotate(45,7,3)").unwrap());
         let (px, py) = (m.a * 7.0 + m.c * 3.0 + m.e, m.b * 7.0 + m.d * 3.0 + m.f);
         assert!((px - 7.0).abs() < 1e-9 && (py - 3.0).abs() < 1e-9);
     }
 
     #[test]
-    fn transform_wrong_arity_is_error() {
+    async fn transform_wrong_arity_is_error() {
         assert!(parse_transform_list("scale(1,2,3)").is_err());
         assert!(parse_transform_list("frobnicate(1)").is_err());
     }
@@ -1453,7 +1453,7 @@ mod tests {
 
     //#region StyleAndGeometry
     #[test]
-    fn style_declarations_parse_and_unrecognized_ones_are_retained() {
+    async fn style_declarations_parse_and_unrecognized_ones_are_retained() {
         let mut p = PresentationAttrs::default();
         for (k, v) in parse_style_decls("fill: red; stroke:blue ; opacity:0.5; letter-spacing: 2px") {
             if !apply_presentation_attr(&mut p, &k, &v) {
@@ -1467,7 +1467,7 @@ mod tests {
     }
 
     #[test]
-    fn view_box_and_points_parse() {
+    async fn view_box_and_points_parse() {
         assert_eq!(parse_view_box("0 0 100 50").unwrap(), ViewBox { min_x: 0.0, min_y: 0.0, width: 100.0, height: 50.0 });
         assert_eq!(parse_points("0,0 10,0 5,10").unwrap(), vec![(0.0, 0.0), (10.0, 0.0), (5.0, 10.0)]);
         assert!(parse_view_box("0 0 100").is_err());
@@ -1477,7 +1477,7 @@ mod tests {
 
     //#region TypedParse
     #[test]
-    fn typed_parse_of_multi_element_document_with_gradient_group_and_arc_path() {
+    async fn typed_parse_of_multi_element_document_with_gradient_group_and_arc_path() {
         // 🚧️ `r##"..."##` (not `r#"..."#`) because the fixture's `stop-color="#ff0000"` contains
         // the literal 2-char sequence `"#`, which would otherwise close a single-hash raw string.
         let text = r##"<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
@@ -1499,7 +1499,7 @@ mod tests {
         // 🧵 The fixture is pretty-printed, so raw XML children include whitespace-only text nodes
         // between elements (preserved losslessly, per the typed model's design) -- filter those
         // out before indexing into the REAL element children.
-        fn elements_only(v: &[SvgElement]) -> Vec<&SvgElement> {
+        async fn elements_only(v: &[SvgElement]) -> Vec<&SvgElement> {
             v.iter().filter(|c| !matches!(c, SvgElement::TextNode(_))).collect()
         }
 
@@ -1570,7 +1570,7 @@ mod tests {
     }
 
     #[test]
-    fn unknown_element_and_attrs_survive_losslessly() {
+    async fn unknown_element_and_attrs_survive_losslessly() {
         let text = r#"<svg xmlns="http://www.w3.org/2000/svg"><customThing data-x="1"><rect x="0" y="0" width="1" height="1"/></customThing></svg>"#;
         let doc = xml_document_from_text(text).unwrap();
         let typed = svg_document_to_typed(&doc).unwrap();

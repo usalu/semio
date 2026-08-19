@@ -5,7 +5,7 @@ use crate::artifacts::en1998::mutations::change_tower_m_ed_knm::mutation::Change
 use crate::artifacts::en1998::En1998Snapshot;
 
 //#region 🔖️Diff
-pub fn diff(payload: &ChangeTowerMEdKnm, base: &En1998Snapshot) -> protocol::MutationOutcome<En1998Diff> {
+pub async fn diff(payload: &ChangeTowerMEdKnm, base: &En1998Snapshot) -> protocol::MutationOutcome<En1998Diff> {
     if !payload.new_tower_m_ed_knm.is_finite() {
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("Tower design moment M_Ed [kNm] must be a finite number, got {}.", payload.new_tower_m_ed_knm), Vec::<String>::new());
     }

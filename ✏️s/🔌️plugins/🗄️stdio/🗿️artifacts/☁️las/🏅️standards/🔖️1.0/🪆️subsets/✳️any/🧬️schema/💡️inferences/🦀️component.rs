@@ -25,7 +25,7 @@ pub struct LasInference {
 }
 
 impl protocol::Inference<LasSnapshot> for LasInference {
-    fn infer(snapshot: &LasSnapshot) -> Self {
+    async fn infer(snapshot: &LasSnapshot) -> Self {
         Self { bounds: compute_las_bounds(snapshot) }
     }
 }
@@ -33,19 +33,19 @@ impl protocol::Inference<LasSnapshot> for LasInference {
 /// 🌱 Defined in terms of `infer` (not derived) — keeps the law correct regardless of whether
 /// `LasSnapshot::default()`'s `header` ever stops being all-zero.
 impl Default for LasInference {
-    fn default() -> Self {
+    async fn default() -> Self {
         <Self as protocol::Inference<LasSnapshot>>::infer(&LasSnapshot::default())
     }
 }
 
 impl protocol::InferenceSpec<LasSnapshot> for LasInference {
-    fn inference_schema_id() -> &'static str {
+    async fn inference_schema_id() -> &'static str {
         "s.stdio.las.inference"
     }
-    fn schema_version() -> u32 {
+    async fn schema_version() -> u32 {
         1
     }
-    fn fields() -> &'static [protocol::InferenceFieldSpec] {
+    async fn fields() -> &'static [protocol::InferenceFieldSpec] {
         &[protocol::InferenceFieldSpec { id: "s.stdio.las.inference.bounds", reads: &["header"] }]
     }
 }
@@ -65,7 +65,7 @@ impl ArtifactInferrer for crate::artifacts::las::standards::v1_0::subsets::any::
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.stdio.las.inference`'s facet leaves into the OS-wide inference catalog —
 /// call once at plugin init, alongside `las_artifact_schema_descriptor`'s registration.
-pub fn las_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
+pub async fn las_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
     schema::ArtifactInferenceDescriptor {
         id: "s.stdio.las.inference",
         inference: schema::FacetLeaves {
@@ -86,13 +86,13 @@ mod tests {
     use protocol::Inference;
 
     #[test]
-    fn inference_determinism_law() {
+    async fn inference_determinism_law() {
         let snapshot = LasSnapshot::default();
         assert_eq!(LasInference::infer(&snapshot), LasInference::infer(&snapshot));
     }
 
     #[test]
-    fn inference_default_law() {
+    async fn inference_default_law() {
         assert_eq!(LasInference::infer(&LasSnapshot::default()), LasInference::default());
     }
 }

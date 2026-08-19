@@ -44,7 +44,7 @@ impl WeightTable {
     /// ⚖️ Builds a table from raw positive-finite weights. `w_int` is populated only when every
     /// weight is already an exact non-negative integer value (the common case for hand-authored
     /// tilesets and frequency-counted extraction).
-    pub fn new(weights: &[f64]) -> Result<Self, ModelError> {
+    pub async fn new(weights: &[f64]) -> Result<Self, ModelError> {
         let mut w = Vec::with_capacity(weights.len());
         let mut ln_w = Vec::with_capacity(weights.len());
         let mut w_ln_w = Vec::with_capacity(weights.len());
@@ -68,44 +68,44 @@ impl WeightTable {
     }
 
     #[inline]
-    pub fn len(&self) -> usize {
+    pub async fn len(&self) -> usize {
         self.w.len()
     }
 
     #[inline]
-    pub fn is_empty(&self) -> bool {
+    pub async fn is_empty(&self) -> bool {
         self.w.is_empty()
     }
 
     #[inline]
-    pub fn w(&self, p: PatternId) -> f64 {
+    pub async fn w(&self, p: PatternId) -> f64 {
         self.w[p.index()]
     }
 
     #[inline]
-    pub fn ln_w(&self, p: PatternId) -> f64 {
+    pub async fn ln_w(&self, p: PatternId) -> f64 {
         self.ln_w[p.index()]
     }
 
     #[inline]
-    pub fn w_ln_w(&self, p: PatternId) -> f64 {
+    pub async fn w_ln_w(&self, p: PatternId) -> f64 {
         self.w_ln_w[p.index()]
     }
 
     /// ⚖️ Exact integer weight, when [`WeightTable::has_integer_weights`] is `true`.
     #[inline]
-    pub fn w_int(&self, p: PatternId) -> Option<u64> {
+    pub async fn w_int(&self, p: PatternId) -> Option<u64> {
         self.w_int.as_ref().map(|v| v[p.index()])
     }
 
-    pub fn has_integer_weights(&self) -> bool {
+    pub async fn has_integer_weights(&self) -> bool {
         self.w_int.is_some()
     }
 
     /// ⚖️ `(sum_w, sum_w_ln_w)` restricted to the patterns present in `set`. O(domain size); used
     /// only to rebuild caches from scratch (initialization, periodic drift correction, debug
     /// verification) — never on the hot incremental path.
-    pub fn sum_over(&self, set: &crate::wfc_engine::bitset::PatternSet) -> (f64, f64) {
+    pub async fn sum_over(&self, set: &crate::wfc_engine::bitset::PatternSet) -> (f64, f64) {
         let mut sum_w = 0.0;
         let mut sum_w_ln_w = 0.0;
         for p in set.iter_ones() {
@@ -117,7 +117,7 @@ impl WeightTable {
 
     /// ⚖️ Exact-integer analogue of [`WeightTable::sum_over`], `None` if this table lacks integer
     /// weights.
-    pub fn sum_int_over(&self, set: &crate::wfc_engine::bitset::PatternSet) -> Option<u64> {
+    pub async fn sum_int_over(&self, set: &crate::wfc_engine::bitset::PatternSet) -> Option<u64> {
         self.w_int.as_ref().map(|w_int| set.iter_ones().map(|p| w_int[p.index()]).sum())
     }
 }
@@ -130,14 +130,14 @@ mod tests {
     use crate::wfc_engine::bitset::PatternSet;
 
     #[test]
-    fn rejects_negative_and_nonfinite() {
+    async fn rejects_negative_and_nonfinite() {
         assert!(WeightTable::new(&[1.0, -1.0]).is_err());
         assert!(WeightTable::new(&[1.0, f64::NAN]).is_err());
         assert!(WeightTable::new(&[1.0, f64::INFINITY]).is_err());
     }
 
     #[test]
-    fn precomputes_terms() {
+    async fn precomputes_terms() {
         let t = WeightTable::new(&[1.0, core::f64::consts::E]).unwrap();
         assert_eq!(t.w(PatternId(0)), 1.0);
         assert!((t.ln_w(PatternId(1)) - 1.0).abs() < 1e-12);
@@ -145,14 +145,14 @@ mod tests {
     }
 
     #[test]
-    fn zero_weight_terms_are_zero_not_nan() {
+    async fn zero_weight_terms_are_zero_not_nan() {
         let t = WeightTable::new(&[0.0, 2.0]).unwrap();
         assert_eq!(t.ln_w(PatternId(0)), 0.0);
         assert_eq!(t.w_ln_w(PatternId(0)), 0.0);
     }
 
     #[test]
-    fn integer_detection() {
+    async fn integer_detection() {
         let t = WeightTable::new(&[1.0, 3.0, 5.0]).unwrap();
         assert!(t.has_integer_weights());
         assert_eq!(t.w_int(PatternId(1)), Some(3));
@@ -162,7 +162,7 @@ mod tests {
     }
 
     #[test]
-    fn sum_over_matches_manual() {
+    async fn sum_over_matches_manual() {
         let t = WeightTable::new(&[1.0, 2.0, 4.0]).unwrap();
         let mut set = PatternSet::new_empty(3);
         set.set(PatternId(0), true);

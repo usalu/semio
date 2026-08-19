@@ -11,12 +11,12 @@ pub const PUZZLE2D_VIEW_MODE_VIEW: &str = "view";
 
 //#region 🔖️Definition
 /// 🧱️ Stitched into the viewer manifest by `crate::viewer::puzzle2d::create_puzzle2d_viewer`.
-pub fn definition() -> ModeDefinition {
+pub async fn definition() -> ModeDefinition {
     ModeDefinition { id: PUZZLE2D_VIEW_MODE_VIEW.into(), label: LocalizedLabel::native("View", "Ansicht"), icon_id: "eye".into(), tools: Vec::new(), layout_id: None, commands: Vec::new() }
 }
 
 /// 🪟️ Single full-pane Board window — the read-only viewer has no quadrant layout to allocate.
-pub fn layout() -> WindowLayout {
+pub async fn layout() -> WindowLayout {
     WindowLayout {
         root: WindowLayoutRoot::Stack(WindowLayoutStackNode {
             kind: "stack".into(),

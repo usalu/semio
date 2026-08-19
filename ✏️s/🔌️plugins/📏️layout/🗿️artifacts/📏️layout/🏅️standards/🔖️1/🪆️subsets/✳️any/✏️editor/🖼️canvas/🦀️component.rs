@@ -12,13 +12,13 @@ use serde_json::{json, Value};
 //#region 🔖️ActivePage
 /// 👁️ The page shown/edited on the Blueprint surface — the config's `active_page_id`, falling back to
 /// the document's first page when that id no longer resolves.
-pub fn active_page<'a>(doc: &'a LayoutSnapshot, config: &LayoutConfig) -> Option<&'a Page> {
+pub async fn active_page<'a>(doc: &'a LayoutSnapshot, config: &LayoutConfig) -> Option<&'a Page> {
     doc.pages.iter().find(|page| page.id == config.active_page_id).or_else(|| doc.pages.first())
 }
 //#endregion 🔖️ActivePage
 
 //#region 🔖️CanvasScene
-fn rect_segments(x: f64, y: f64, width: f64, height: f64) -> Value {
+async fn rect_segments(x: f64, y: f64, width: f64, height: f64) -> Value {
     json!([
         { "kind": "move", "to": [x, y] },
         { "kind": "line", "to": [x + width, y] },
@@ -28,14 +28,14 @@ fn rect_segments(x: f64, y: f64, width: f64, height: f64) -> Value {
     ])
 }
 
-fn line_segments(x0: f64, y0: f64, x1: f64, y1: f64) -> Value {
+async fn line_segments(x0: f64, y0: f64, x1: f64, y1: f64) -> Value {
     json!([
         { "kind": "move", "to": [x0, y0] },
         { "kind": "line", "to": [x1, y1] },
     ])
 }
 
-fn host_layer(id: impl Into<String>, segments: &Value, fill: Option<[f32; 4]>, stroke: Option<([f32; 4], f64, Option<[f64; 2]>)>) -> Value {
+async fn host_layer(id: impl Into<String>, segments: &Value, fill: Option<[f32; 4]>, stroke: Option<([f32; 4], f64, Option<[f64; 2]>)>) -> Value {
     let mut layer = json!({ "id": id.into(), "segments": segments });
     if let Some(color) = fill {
         layer["fill"] = json!({ "color": color });
@@ -50,7 +50,7 @@ fn host_layer(id: impl Into<String>, segments: &Value, fill: Option<[f32; 4]>, s
     layer
 }
 
-fn guide_stroke_color(kind: &str) -> [f32; 4] {
+async fn guide_stroke_color(kind: &str) -> [f32; 4] {
     match kind {
         "margin" => [0.75, 0.2, 0.2, 0.35],
         "column" => [0.2, 0.45, 0.85, 0.25],
@@ -59,7 +59,7 @@ fn guide_stroke_color(kind: &str) -> [f32; 4] {
     }
 }
 
-fn drop_preview_fill(kind: &str) -> [f32; 4] {
+async fn drop_preview_fill(kind: &str) -> [f32; 4] {
     match kind {
         "rect" => [0.85, 0.88, 0.92, 0.45],
         "text" => [0.2, 0.55, 0.9, 0.25],
@@ -71,7 +71,7 @@ fn drop_preview_fill(kind: &str) -> [f32; 4] {
 const LAYOUT_DROP_PREVIEW_WIDTH: f64 = 200.0;
 const LAYOUT_DROP_PREVIEW_HEIGHT: f64 = 120.0;
 
-fn display_list_to_host_layers(list: &crate::editor::layout::engine::scene::DisplayList, blueprint: bool, drop_preview: &crate::artifacts::layout::LayoutDropPreviewState) -> Vec<Value> {
+async fn display_list_to_host_layers(list: &crate::editor::layout::engine::scene::DisplayList, blueprint: bool, drop_preview: &crate::artifacts::layout::LayoutDropPreviewState) -> Vec<Value> {
     let mut layers = Vec::new();
 
     let page_bg = if blueprint { [0.97, 0.97, 0.98, 1.0] } else { [1.0, 1.0, 1.0, 1.0] };
@@ -152,7 +152,7 @@ fn display_list_to_host_layers(list: &crate::editor::layout::engine::scene::Disp
 /// selected/hovered chrome strokes `display_list_to_host_layers` can still draw are simply never lit
 /// server-side; flagged, not fixed here (framework file, out of this crate's remit — ticket
 /// 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM).
-pub fn canvas_layers(engine: &mut LayoutEngine, doc: &LayoutSnapshot, config: &LayoutConfig, blueprint: bool) -> String {
+pub async fn canvas_layers(engine: &mut LayoutEngine, doc: &LayoutSnapshot, config: &LayoutConfig, blueprint: bool) -> String {
     let page = match active_page(doc, config) {
         Some(page) => page,
         None => return "[]".into(),
@@ -169,7 +169,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn active_page_falls_back_to_first_page_when_config_id_unresolved() {
+    async fn active_page_falls_back_to_first_page_when_config_id_unresolved() {
         let doc = crate::artifacts::layout::schema::default_document();
         let config = LayoutConfig { active_page_id: "no-such-page".into(), ..LayoutConfig::default() };
         let page = active_page(&doc, &config).expect("falls back to first page");
@@ -177,7 +177,7 @@ mod tests {
     }
 
     #[test]
-    fn canvas_layers_renders_the_page_background() {
+    async fn canvas_layers_renders_the_page_background() {
         let doc = crate::artifacts::layout::schema::default_document();
         let config = LayoutConfig::default();
         let mut engine = LayoutEngine::new();

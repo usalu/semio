@@ -12,7 +12,7 @@ pub struct ToggleExtension {
     pub enabled: bool,
 }
 
-pub fn handle(payload: &ToggleExtension, _doc: &ArtifactView<'_, FlowSnapshot>, cfg: &ConfigView<'_, FlowConfig>, _session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, FlowConfigMutation>, Fault> {
+pub async fn handle(payload: &ToggleExtension, _doc: &ArtifactView<'_, FlowSnapshot>, cfg: &ConfigView<'_, FlowConfig>, _session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, FlowConfigMutation>, Fault> {
     let mut map = cfg.snapshot.automation_enabled();
     map.insert(payload.id.clone(), payload.enabled);
     Ok(Emit::config(vec![FlowConfigMutation::SetAutomationEnabled { json: serde_json::to_string(&map).unwrap_or_default() }]))
@@ -26,7 +26,7 @@ mod tests {
     use crate::editor::flow::FlowCommand;
 
     #[test]
-    fn toggle_extension_and_run_action_reorganizes_fixture() {
+    async fn toggle_extension_and_run_action_reorganizes_fixture() {
         let mut app = flow_app();
         let before = app.snapshot().expect("snapshot").to_fixture().widgets.len();
         let ignored = dispatch(&mut app, FlowCommand::RunExtensionAction(crate::editor::flow::commands::run_extension_action::RunExtensionAction { action_id: "flow.extension.reorganize".into() }));
@@ -37,7 +37,7 @@ mod tests {
     }
 
     #[test]
-    fn an_unknown_extension_action_id_is_a_no_operation() {
+    async fn an_unknown_extension_action_id_is_a_no_operation() {
         let mut app = flow_app();
         let result = dispatch(&mut app, FlowCommand::RunExtensionAction(crate::editor::flow::commands::run_extension_action::RunExtensionAction { action_id: "third.party.nope".into() }));
         assert!(result.mutations.is_empty());

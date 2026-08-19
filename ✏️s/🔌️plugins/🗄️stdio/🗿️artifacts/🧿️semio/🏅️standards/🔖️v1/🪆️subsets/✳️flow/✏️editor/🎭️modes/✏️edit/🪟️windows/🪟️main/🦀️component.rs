@@ -19,7 +19,7 @@ const SEMIO_FLOW_EDIT_DEFAULT_CAMERA_FOV: f64 = 45.0;
 //#region 🔖️Definition
 /// 🧱️ Stitched into the editor manifest by the surface root's `create_*_editor`. The EDITABLE
 /// variant — `MeshWindowKit::editable_window_kind()` — carries the frozen `set-vertex` action.
-pub fn definition() -> WindowKindDefinition {
+pub async fn definition() -> WindowKindDefinition {
     MeshWindowKit::editable_window_kind()
 }
 //#endregion 🔖️Definition
@@ -28,7 +28,7 @@ pub fn definition() -> WindowKindDefinition {
 /// ✏️ Same kind-agnostic content signal as the sibling viewer window (duplicated, not imported —
 /// `policyViewerPurityBreaches` is one-directional but the two surfaces still never reference each
 /// other by design).
-fn entity_count(document: &SemioFlowSnapshot) -> usize {
+async fn entity_count(document: &SemioFlowSnapshot) -> usize {
     serde_json::to_value(document)
         .ok()
         .and_then(|value| value.as_object().map(|object| object.values().filter_map(|field| field.as_array().map(|array| array.len())).max().unwrap_or(0)))
@@ -36,7 +36,7 @@ fn entity_count(document: &SemioFlowSnapshot) -> usize {
         .clamp(1, 6)
 }
 
-fn world_instances_json(document: &SemioFlowSnapshot) -> String {
+async fn world_instances_json(document: &SemioFlowSnapshot) -> String {
     let count = entity_count(document);
     let instances: Vec<serde_json::Value> = (0..count)
         .map(|index| {
@@ -54,7 +54,7 @@ fn world_instances_json(document: &SemioFlowSnapshot) -> String {
     serde_json::to_string(&instances).unwrap_or_else(|_| "[]".into())
 }
 
-pub fn render(document: &SemioFlowSnapshot) -> UiNode {
+pub async fn render(document: &SemioFlowSnapshot) -> UiNode {
     let meshes_json = serde_json::to_string(&[serde_json::json!({ "id": SEMIO_FLOW_EDIT_FALLBACK_MESH_KIND, "data": mesh_from_kind(SEMIO_FLOW_EDIT_FALLBACK_MESH_KIND) })]).unwrap_or_else(|_| "[]".into());
     let view = MeshView {
         camera_json: world3d_camera_json(SEMIO_FLOW_EDIT_DEFAULT_CAMERA_POSITION, SEMIO_FLOW_EDIT_DEFAULT_CAMERA_TARGET, SEMIO_FLOW_EDIT_DEFAULT_CAMERA_FOV),
@@ -72,14 +72,14 @@ mod tests {
     use super::*;
 
     #[test]
-    fn definition_declares_the_editable_mesh_window_kit() {
+    async fn definition_declares_the_editable_mesh_window_kit() {
         let def = definition();
         assert_eq!(def.id, MeshWindowKit::KIND_ID);
         assert!(def.actions.iter().any(|action| action.id == "set-vertex"));
     }
 
     #[test]
-    fn render_produces_a_scene_node_for_the_default_document() {
+    async fn render_produces_a_scene_node_for_the_default_document() {
         let document = SemioFlowSnapshot::default();
         let _node = render(&document);
     }

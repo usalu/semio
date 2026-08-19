@@ -1,12 +1,12 @@
 #[test]
-fn primary_asset_is_nonempty() {
+async fn primary_asset_is_nonempty() {
     let text = include_str!("../🖼️assets/🗣️example.dsl.semio");
     assert!(text.len() > 8);
 }
 
 //#region 🧪️InferenceLaws
 #[test]
-fn inference_determinism_law() {
+async fn inference_determinism_law() {
     use protocol::Inference;
     use crate::artifacts::procedural2d::standards::v1::subsets::any::schema::inferences::Procedural2dInference;
 
@@ -16,7 +16,7 @@ fn inference_determinism_law() {
 }
 
 #[test]
-fn inference_default_law() {
+async fn inference_default_law() {
     use protocol::Inference;
     use crate::artifacts::procedural2d::standards::v1::subsets::any::schema::inferences::Procedural2dInference;
     use crate::artifacts::procedural2d::Procedural2dSnapshot;

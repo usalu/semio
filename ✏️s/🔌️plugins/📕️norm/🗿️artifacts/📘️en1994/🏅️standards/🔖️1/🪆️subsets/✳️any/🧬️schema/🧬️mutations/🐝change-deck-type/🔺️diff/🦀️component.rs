@@ -4,7 +4,7 @@ use super::mutation::ChangeDeckType;
 use crate::artifacts::en1994::{En1994Diff, En1994Snapshot};
 
 //#region 🔖️Diff
-pub fn diff(payload: &ChangeDeckType, base: &En1994Snapshot) -> protocol::MutationOutcome<En1994Diff> {
+pub async fn diff(payload: &ChangeDeckType, base: &En1994Snapshot) -> protocol::MutationOutcome<En1994Diff> {
     if base.deck_type == payload.new_deck_type {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", "Deck type already has this value.");
     }

@@ -13,7 +13,7 @@ use protocol::MutationDiff;
 
 //#region 🔖️Apply
 impl En1990Diff {
-    pub fn apply_to_artifact(&self, artifact: &En1990Artifact) -> protocol::MutationApplyResult<En1990Artifact> {
+    pub async fn apply_to_artifact(&self, artifact: &En1990Artifact) -> protocol::MutationApplyResult<En1990Artifact> {
         Ok({
             let mut next = artifact.clone();
             if let Some(value) = &self.g_k {
@@ -43,7 +43,7 @@ impl En1990Diff {
 }
 
 impl MutationDiff<En1990Snapshot> for En1990Diff {
-    fn apply(&self, snapshot: &En1990Snapshot) -> protocol::MutationApplyResult<En1990Snapshot> {
+    async fn apply(&self, snapshot: &En1990Snapshot) -> protocol::MutationApplyResult<En1990Snapshot> {
         Ok({
             let mut next = snapshot.clone();
             if let Some(value) = &self.g_k {
@@ -67,7 +67,7 @@ impl MutationDiff<En1990Snapshot> for En1990Diff {
             next
         })
     }
-    fn absorb(&mut self, other: Self) {
+    async fn absorb(&mut self, other: Self) {
         macro_rules! take {
             ($field:ident) => {
                 if other.$field.is_some() {

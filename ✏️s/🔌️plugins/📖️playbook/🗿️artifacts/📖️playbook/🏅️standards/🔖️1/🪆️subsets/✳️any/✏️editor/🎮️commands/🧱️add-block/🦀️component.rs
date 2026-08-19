@@ -18,7 +18,7 @@ pub struct AddBlock {
 // selection here — selection is framework-owned `InteractionState` now, only ever mutated by the
 // framework's own injected `interactionSelect` handling, never by an app command's `Emit` (mirrors
 // forms' `add-question`/note's `add-block`).
-pub fn handle(payload: &AddBlock, doc: &ArtifactView<'_, PlaybookSnapshot>, _cfg: &ConfigView<'_, PlaybookConfig>) -> Result<Emit<PlaybookMutation, PlaybookConfigMutation>, Fault> {
+pub async fn handle(payload: &AddBlock, doc: &ArtifactView<'_, PlaybookSnapshot>, _cfg: &ConfigView<'_, PlaybookConfig>) -> Result<Emit<PlaybookMutation, PlaybookConfigMutation>, Fault> {
     let spec = doc.snapshot;
     let steps = spec.steps();
     let Some(step_id) = payload.step_id.clone().or_else(|| steps.first().map(|step| step.id.clone())) else {
@@ -41,7 +41,7 @@ mod tests {
     /// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: the new block is no longer
     /// auto-selected by this command (selection is framework-owned now) — only the document edit itself.
     #[test]
-    fn add_block_action_appends_block() {
+    async fn add_block_action_appends_block() {
         let mut app = playbook_app();
         dispatch(&mut app, PlaybookCommand::AddBlock(AddBlock { kind: "text".into(), step_id: None }));
         let projection = app.snapshot().expect("projection");
@@ -51,7 +51,7 @@ mod tests {
     }
 
     #[test]
-    fn add_block_materializes_declared_kind_default() {
+    async fn add_block_materializes_declared_kind_default() {
         let mut app = playbook_app_with_registry();
         dispatch(&mut app, PlaybookCommand::AddStep(crate::editor::playbook::commands::add_step::AddStep {}));
         dispatch(&mut app, PlaybookCommand::AddBlock(AddBlock { kind: "text".into(), step_id: None }));
@@ -64,7 +64,7 @@ mod tests {
     /// `revalidate_interaction_state_after_document_change` against `interaction_topology`, covered by
     /// `interaction_topology_covers_every_step_and_block` in the app root's own tests.
     #[test]
-    fn remove_block_action_removes_it_from_the_document() {
+    async fn remove_block_action_removes_it_from_the_document() {
         let mut app = playbook_app();
         dispatch(&mut app, PlaybookCommand::AddBlock(AddBlock { kind: "text".into(), step_id: None }));
         let steps = app.snapshot().expect("projection").steps();
@@ -75,7 +75,7 @@ mod tests {
     }
 
     #[test]
-    fn move_block_relocates_between_steps() {
+    async fn move_block_relocates_between_steps() {
         let mut app = playbook_app();
         dispatch(&mut app, PlaybookCommand::AddStep(crate::editor::playbook::commands::add_step::AddStep {}));
         dispatch(&mut app, PlaybookCommand::AddBlock(AddBlock { kind: "text".into(), step_id: None }));

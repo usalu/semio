@@ -12,7 +12,7 @@ pub struct RemoveAppInstance {
     pub node_id: Option<String>,
 }
 
-fn remove_with_selection(payload: &RemoveAppInstance, config: &SpaceConfig, selected: &[String]) -> Emit<WorkflowMutation, SpaceConfigMutation> {
+async fn remove_with_selection(payload: &RemoveAppInstance, config: &SpaceConfig, selected: &[String]) -> Emit<WorkflowMutation, SpaceConfigMutation> {
     match payload.node_id.clone().or_else(|| crate::engine::space::primary_selected_node_id(selected, config)) {
         Some(node_id) => {
             let mut config_mutations = Vec::new();
@@ -33,10 +33,10 @@ fn remove_with_selection(payload: &RemoveAppInstance, config: &SpaceConfig, sele
 /// only through that macro-generated path (`SpaceApp::handle` always routes this command through
 /// `apply` below instead); `payload.node_id` (when set) is unaffected, and the fallback still honors
 /// `config.active_node_id` — only the "fall back to the live selection" step degrades to empty.
-pub fn handle(payload: &RemoveAppInstance, _doc: &ArtifactView<'_, WorkflowSnapshot>, cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
+pub async fn handle(payload: &RemoveAppInstance, _doc: &ArtifactView<'_, WorkflowSnapshot>, cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
     Ok(remove_with_selection(payload, cfg.snapshot, &[]))
 }
 
-pub fn apply(payload: &RemoveAppInstance, _doc: &ArtifactView<'_, WorkflowSnapshot>, cfg: &ConfigView<'_, SpaceConfig>, interaction: &InteractionView<'_>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
+pub async fn apply(payload: &RemoveAppInstance, _doc: &ArtifactView<'_, WorkflowSnapshot>, cfg: &ConfigView<'_, SpaceConfig>, interaction: &InteractionView<'_>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
     Ok(remove_with_selection(payload, cfg.snapshot, &interaction.selection("graph").ids))
 }

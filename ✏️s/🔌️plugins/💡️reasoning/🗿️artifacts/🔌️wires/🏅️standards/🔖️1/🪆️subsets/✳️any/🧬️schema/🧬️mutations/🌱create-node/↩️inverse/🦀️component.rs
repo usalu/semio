@@ -5,7 +5,7 @@ use crate::artifacts::wires::mutations::WiresMutation;
 use crate::artifacts::wires::WiresSnapshot;
 
 //#region 🔖️Inverse
-pub fn inverse(payload: &super::mutation::CreateNode, _base: &WiresSnapshot) -> Vec<WiresMutation> {
+pub async fn inverse(payload: &super::mutation::CreateNode, _base: &WiresSnapshot) -> Vec<WiresMutation> {
     match entity_id(&payload.node, "id") {
         Some(id) => vec![crate::artifacts::wires::mutations::delete_node::mutation::delete_node(id.to_string())],
         None => Vec::new(),

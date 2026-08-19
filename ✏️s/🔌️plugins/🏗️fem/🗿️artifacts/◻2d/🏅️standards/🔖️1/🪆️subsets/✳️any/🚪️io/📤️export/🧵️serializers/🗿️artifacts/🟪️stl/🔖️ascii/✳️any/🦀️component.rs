@@ -12,11 +12,11 @@ use semio_s_plugin_stdio::artifacts::stl::standards::v_ascii::engine::encode_stl
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::mesh::io::export::serializers::artifacts::stl::v_ascii::any::SemioMeshToStl;
 
 //#region 🔖️Export
-pub fn export(snapshot: &crate::artifacts::fem2d::Fem2dSnapshot) -> Result<Vec<u8>, IoError> {
+pub async fn export(snapshot: &crate::artifacts::fem2d::Fem2dSnapshot) -> Result<Vec<u8>, IoError> {
     let mesh = crate::fem2d_engine::meshing::build_semio_mesh_snapshot(snapshot);
-    let stl = SemioMeshToStl::serialize(&mesh).map_err(|e| IoError::Payload(e.to_string()))?;
+    let stl = semio_framework_plugin::resolve_ready(SemioMeshToStl::serialize(&mesh)).map_err(|e| IoError::Payload(e.to_string()))?;
     Ok(encode_stl_ascii(&stl).into_bytes())
 }
 
-pub fn register() {}
+pub async fn register() {}
 //#endregion 🔖️Export

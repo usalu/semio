@@ -4,7 +4,7 @@ use crate::artifacts::remodel::mutations::RemodelMutation;
 use crate::artifacts::remodel::RemodelSnapshot;
 
 //#region 🔖️Inverse
-pub fn inverse(payload: &super::mutation::RemoveGcpObservation, base: &RemodelSnapshot) -> Vec<RemodelMutation> {
+pub async fn inverse(payload: &super::mutation::RemoveGcpObservation, base: &RemodelSnapshot) -> Vec<RemodelMutation> {
     let Some(gcp) = base.gcps.iter().find(|gcp| gcp.id == payload.id) else {
         return Vec::new();
     };

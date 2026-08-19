@@ -5,7 +5,7 @@ use crate::artifacts::en1995::mutations::change_fire_duration_min::mutation::Cha
 use crate::artifacts::en1995::En1995Snapshot;
 
 //#region 🔖️Diff
-pub fn diff(payload: &ChangeFireDurationMin, base: &En1995Snapshot) -> protocol::MutationOutcome<En1995Diff> {
+pub async fn diff(payload: &ChangeFireDurationMin, base: &En1995Snapshot) -> protocol::MutationOutcome<En1995Diff> {
     if !payload.new_fire_duration_min.is_finite() {
         return protocol::MutationOutcome::fatal("mutation.invariant", "Fire duration min must be a finite number.", Vec::<String>::new());
     }

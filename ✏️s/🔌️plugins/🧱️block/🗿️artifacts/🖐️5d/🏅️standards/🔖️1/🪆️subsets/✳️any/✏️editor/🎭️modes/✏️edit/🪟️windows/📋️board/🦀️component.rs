@@ -11,7 +11,7 @@ pub const BLOCK5D_BODY_BOARD: &str = "block5d.play.board";
 
 //#region 🔖️Definition
 /// 🧱️ Stitched into the app manifest by `crate::editor::block5d::create_block5d_app`.
-pub fn definition() -> WindowKindDefinition {
+pub async fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
         id: BLOCK5D_WINDOW_BOARD.into(),
         label: LocalizedLabel::native("Board", "Board"),
@@ -32,7 +32,7 @@ pub fn definition() -> WindowKindDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(definition: &Block5dSnapshot, labels: &Block5dLabels) -> UiNode {
+pub async fn render(definition: &Block5dSnapshot, labels: &Block5dLabels) -> UiNode {
     ui_stack_vertical(vec![
         ui_text(Label::data(format!("{}: {}", labels.summary.as_str(), if definition.part_kind.label.is_empty() { "—" } else { &definition.part_kind.label }))),
         ui_text(Label::data(format!("2d grips: {}", definition.grips.len()))),
@@ -46,7 +46,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn definition_declares_the_board_surface_and_body_key() {
+    async fn definition_declares_the_board_surface_and_body_key() {
         let definition = definition();
         assert_eq!(definition.body_key, BLOCK5D_BODY_BOARD);
         assert!(matches!(definition.surface_kind, SurfaceKind::Board2d));

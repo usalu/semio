@@ -23,16 +23,16 @@ pub struct MoveBlockToStep {
 impl MutationKind<FormsSnapshot, FormMutation> for MoveBlockToStep {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "move", entity: "block", kind: "move-block-to-step", record: "MovedBlockToStep" };
 
-    fn diff(&self, base: &FormsSnapshot) -> protocol::MutationOutcome<FormsDiff> {
+    async fn diff(&self, base: &FormsSnapshot) -> protocol::MutationOutcome<FormsDiff> {
         super::diff::diff_move_block_to_step(self, base)
     }
-    fn inverse(&self, base: &FormsSnapshot) -> Vec<FormMutation> {
+    async fn inverse(&self, base: &FormsSnapshot) -> Vec<FormMutation> {
         super::inverse::inverse_move_block_to_step(self, base)
     }
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         format!("Move block \"{}\" to step \"{}\"", self.block_id, self.to_step_id)
     }
-    fn target(&self) -> Vec<String> {
+    async fn target(&self) -> Vec<String> {
         vec![self.step_id.clone(), self.block_id.clone()]
     }
 }

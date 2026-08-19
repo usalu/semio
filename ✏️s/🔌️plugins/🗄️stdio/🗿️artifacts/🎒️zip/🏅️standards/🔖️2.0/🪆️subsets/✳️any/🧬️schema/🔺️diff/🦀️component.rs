@@ -38,7 +38,7 @@ pub struct ZipEntriesDiff {
 }
 
 impl ZipEntriesDiff {
-    fn is_empty(&self) -> bool {
+    async fn is_empty(&self) -> bool {
         self.removed.is_empty() && self.modified.is_empty() && self.added.is_empty()
     }
 }
@@ -57,7 +57,7 @@ pub struct ZipDiff {
 //#endregion 🔖️Model
 
 //#region 🔖️EntryLogic
-fn apply_entry_diff(entry: &mut ZipEntry, diff: &ZipEntryDiff) {
+async fn apply_entry_diff(entry: &mut ZipEntry, diff: &ZipEntryDiff) {
     if let Some(name) = &diff.name {
         entry.name = name.clone();
     }
@@ -66,11 +66,11 @@ fn apply_entry_diff(entry: &mut ZipEntry, diff: &ZipEntryDiff) {
     }
 }
 
-fn entry_between(base: &ZipEntry, other: &ZipEntry) -> ZipEntryDiff {
+async fn entry_between(base: &ZipEntry, other: &ZipEntry) -> ZipEntryDiff {
     ZipEntryDiff { name: (base.name != other.name).then(|| other.name.clone()), data: (base.data != other.data).then(|| other.data.clone()) }
 }
 
-fn absorb_entry_diff(base: &mut ZipEntryDiff, other: ZipEntryDiff) {
+async fn absorb_entry_diff(base: &mut ZipEntryDiff, other: ZipEntryDiff) {
     if other.name.is_some() {
         base.name = other.name;
     }
@@ -79,7 +79,7 @@ fn absorb_entry_diff(base: &mut ZipEntryDiff, other: ZipEntryDiff) {
     }
 }
 
-fn absorb_entries(first: Option<ZipEntriesDiff>, second: Option<ZipEntriesDiff>) -> Option<ZipEntriesDiff> {
+async fn absorb_entries(first: Option<ZipEntriesDiff>, second: Option<ZipEntriesDiff>) -> Option<ZipEntriesDiff> {
     let (mut first, second) = match (first, second) {
         (None, None) => return None,
         (Some(value), None) | (None, Some(value)) => return Some(value),
@@ -128,7 +128,7 @@ fn absorb_entries(first: Option<ZipEntriesDiff>, second: Option<ZipEntriesDiff>)
 
 //#region 🔖️Algebra
 impl MutationDiff<ZipSnapshot> for ZipDiff {
-    fn apply(&self, base: &ZipSnapshot) -> MutationApplyResult<ZipSnapshot> {
+    async fn apply(&self, base: &ZipSnapshot) -> MutationApplyResult<ZipSnapshot> {
         if let Some(entries) = &self.entries {
             validate_zip_entries(&base.entries, entries)?;
         }
@@ -150,7 +150,7 @@ impl MutationDiff<ZipSnapshot> for ZipDiff {
         Ok(next)
     }
 
-    fn absorb(&mut self, other: Self) {
+    async fn absorb(&mut self, other: Self) {
         if other.comment.is_some() {
             self.comment = other.comment;
         }
@@ -158,7 +158,7 @@ impl MutationDiff<ZipSnapshot> for ZipDiff {
     }
 }
 
-fn validate_zip_entries(base: &[ZipEntry], diff: &ZipEntriesDiff) -> MutationApplyResult<()> {
+async fn validate_zip_entries(base: &[ZipEntry], diff: &ZipEntriesDiff) -> MutationApplyResult<()> {
     let base_names: HashSet<&str> = base.iter().map(|entry| entry.name.as_str()).collect();
     if base_names.len() != base.len() {
         return Err(MutationApplyError::new("mutation.apply.duplicate-target", "ZIP snapshot contains duplicate entry names").at(["entries"]));
@@ -193,11 +193,11 @@ fn validate_zip_entries(base: &[ZipEntry], diff: &ZipEntriesDiff) -> MutationApp
 }
 
 impl DiffAlgebra<ZipSnapshot> for ZipDiff {
-    fn inverse(&self, base: &ZipSnapshot) -> Self {
+    async fn inverse(&self, base: &ZipSnapshot) -> Self {
         Self::between(&self.apply(base).unwrap(), base)
     }
 
-    fn between(base: &ZipSnapshot, other: &ZipSnapshot) -> Self {
+    async fn between(base: &ZipSnapshot, other: &ZipSnapshot) -> Self {
         let comment = (base.comment != other.comment).then(|| other.comment.clone());
         let base_names: HashSet<&str> = base.entries.iter().map(|entry| entry.name.as_str()).collect();
         let other_names: HashSet<&str> = other.entries.iter().map(|entry| entry.name.as_str()).collect();
@@ -216,38 +216,38 @@ impl DiffAlgebra<ZipSnapshot> for ZipDiff {
         Self { comment, entries: (!entries.is_empty()).then_some(entries) }
     }
 
-    fn is_empty(&self) -> bool {
+    async fn is_empty(&self) -> bool {
         self.comment.is_none() && self.entries.as_ref().map_or(true, ZipEntriesDiff::is_empty)
     }
 }
 //#endregion 🔖️Algebra
 
 //#region 🔖️Builders
-pub fn diff_set_snapshot(base: &ZipSnapshot, next: &ZipSnapshot) -> ZipDiff {
+pub async fn diff_set_snapshot(base: &ZipSnapshot, next: &ZipSnapshot) -> ZipDiff {
     ZipDiff::between(base, next)
 }
 
-pub fn diff_set_archive_comment(comment: &str) -> ZipDiff {
+pub async fn diff_set_archive_comment(comment: &str) -> ZipDiff {
     ZipDiff { comment: Some(comment.into()), entries: None }
 }
 
-pub fn diff_add_entry(entry: ZipEntry) -> ZipDiff {
+pub async fn diff_add_entry(entry: ZipEntry) -> ZipDiff {
     ZipDiff { comment: None, entries: Some(ZipEntriesDiff { added: vec![entry], ..Default::default() }) }
 }
 
-pub fn diff_remove_entry(name: &str) -> ZipDiff {
+pub async fn diff_remove_entry(name: &str) -> ZipDiff {
     ZipDiff { comment: None, entries: Some(ZipEntriesDiff { removed: vec![name.into()], ..Default::default() }) }
 }
 
-fn diff_entry_field(name: &str, diff: ZipEntryDiff) -> ZipDiff {
+async fn diff_entry_field(name: &str, diff: ZipEntryDiff) -> ZipDiff {
     ZipDiff { comment: None, entries: Some(ZipEntriesDiff { modified: vec![ZipEntryModified { name: name.into(), diff }], ..Default::default() }) }
 }
 
-pub fn diff_rename_entry(name: &str, new_name: &str) -> ZipDiff {
+pub async fn diff_rename_entry(name: &str, new_name: &str) -> ZipDiff {
     diff_entry_field(name, ZipEntryDiff { name: Some(new_name.into()), data: None })
 }
 
-pub fn diff_set_entry_data(name: &str, data: Vec<u8>) -> ZipDiff {
+pub async fn diff_set_entry_data(name: &str, data: Vec<u8>) -> ZipDiff {
     diff_entry_field(name, ZipEntryDiff { name: None, data: Some(data) })
 }
 //#endregion 🔖️Builders
@@ -259,23 +259,23 @@ struct ZipDiffRecord {
 }
 
 impl protocol::DiffCodec for ZipDiff {
-    fn print_diff(&self) -> String {
+    async fn print_diff(&self) -> String {
         let model = ZipDiffRecord { value: dsl::to_dsl_value(self).expect("serializable logical ZIP diff") };
         dsl::print(&model.__dsl_to_record(), &ZipDiffRecord::__dsl_spec(), dsl::JoinMode::Document)
     }
 
-    fn parse_diff(text: &str) -> Result<Self, store::TextError> {
+    async fn parse_diff(text: &str) -> Result<Self, store::TextError> {
         let record = dsl::parse(text, &ZipDiffRecord::__dsl_spec(), &dsl::ParseOptions { limits: dsl::Limits { max_bytes: 64 * 1024 * 1024, ..dsl::Limits::default() }, mode: dsl::SourceMode::Document })?;
         let model = ZipDiffRecord::__dsl_from_record(&record)?;
         dsl::from_dsl_value(model.value).map_err(|error| store::TextError::new(error, dsl::TextSpan::at(1, 1)))
     }
 
-    fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    async fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         let value = dsl::to_dsl_value(self).map_err(|detail| protocol::ProtocolError::Malformed { what: "zip diff", offset: 0, detail })?;
         Ok(store::pack_rt::encode_wire_value(&value))
     }
 
-    fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    async fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         let value = store::pack_rt::decode_wire_value(bytes).map_err(|error| protocol::ProtocolError::Malformed { what: "zip diff", offset: 0, detail: error.to_string() })?;
         dsl::from_dsl_value(value).map_err(|detail| protocol::ProtocolError::Malformed { what: "zip diff", offset: 0, detail })
     }
@@ -283,7 +283,7 @@ impl protocol::DiffCodec for ZipDiff {
 //#endregion 🔖️Codec
 
 #[cfg(test)]
-pub(crate) fn demo_diff_cases() -> Vec<ZipDiff> {
+pub(crate) async fn demo_diff_cases() -> Vec<ZipDiff> {
     let base = ZipSnapshot { entries: vec![ZipEntry { name: "before.txt".into(), data: b"before".to_vec() }], ..Default::default() };
     let other = ZipSnapshot { entries: vec![ZipEntry { name: "after.txt".into(), data: b"after".to_vec() }], comment: "archive".into(), ..Default::default() };
     vec![ZipDiff::default(), ZipDiff::between(&base, &other), ZipDiff::between(&other, &base)]

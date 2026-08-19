@@ -14,13 +14,13 @@ pub const RASTER_PLAY_BODY_LAYERS: &str = "raster.play.layers";
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
-pub fn definition() -> PanelTabDefinition {
+pub async fn definition() -> PanelTabDefinition {
     PanelTabDefinition { kind: PanelTabKind::App(FRAMEWORK_PANEL_TAB_ARTIFACT_ID.into()), label: LocalizedLabel::native(FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL, "Dokument"), group: PanelGroup::Workbench, body_key: Some(RASTER_PLAY_BODY_LAYERS.into()), children: Vec::new() }
 }
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-fn layer_tree_item(layer: &RasterLayerNode) -> UiTreeItemNode {
+async fn layer_tree_item(layer: &RasterLayerNode) -> UiTreeItemNode {
     let nested = match layer {
         RasterLayerNode::Group { children, .. } => {
             if children.is_empty() {
@@ -57,7 +57,7 @@ fn layer_tree_item(layer: &RasterLayerNode) -> UiTreeItemNode {
 /// clicks into injected `interactionSelect` and stamp presence from `InteractionState`, replacing the
 /// deleted `.selected()`/`.highlighted()`/`.selection_change()` calls (row ids ARE the domain's ids —
 /// this tree is the sole consumer of the `"layers"` domain today).
-pub fn render(document: &RasterDocument, _runtime: &RasterConfig, labels: &RasterPlayLabels) -> UiNode {
+pub async fn render(document: &RasterDocument, _runtime: &RasterConfig, labels: &RasterPlayLabels) -> UiNode {
     let action_rows = vec![
         UiTreeItemNode { icon_id: Some("image".into()), ..tree_item_with_action(format!("{RASTER_TREE_PREFIX}.add.pixel"), labels.add_pixel, None, raster_action("addLayer", Some(json!({ "kind": "pixel" })))) },
         UiTreeItemNode { icon_id: Some("folder-plus".into()), ..tree_item_with_action(format!("{RASTER_TREE_PREFIX}.add.group"), labels.add_group, None, raster_action("addLayer", Some(json!({ "kind": "group" })))) },

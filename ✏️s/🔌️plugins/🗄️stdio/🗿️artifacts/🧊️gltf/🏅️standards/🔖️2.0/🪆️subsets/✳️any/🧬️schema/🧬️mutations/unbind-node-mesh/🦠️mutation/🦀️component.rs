@@ -9,5 +9,5 @@ pub const ID: &str = "s.stdio.gltf.mutation.unbind-node-mesh.v1";
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct GltfUnbindNodeMeshPayload { pub node: usize }
-pub fn validate(payload: &GltfUnbindNodeMeshPayload, base: &GltfSnapshot) -> Result<(), GltfTopLevelMutationRejection> { checked_index(payload.node, base.document.nodes.len(), "document/nodes")?; if base.document.nodes[payload.node].mesh.is_none() { return Err(reject("gltf.mutation.relation-absent", format!("document/nodes/{}/mesh", payload.node), "node has no binding")); } Ok(()) }
-pub fn apply(payload: &GltfUnbindNodeMeshPayload, base: &GltfSnapshot) -> Result<GltfSnapshot, GltfTopLevelMutationRejection> { validate(payload, base)?; let mut next = base.clone(); next.document.nodes[payload.node].mesh = None; Ok(next) }
+pub async fn validate(payload: &GltfUnbindNodeMeshPayload, base: &GltfSnapshot) -> Result<(), GltfTopLevelMutationRejection> { checked_index(payload.node, base.document.nodes.len(), "document/nodes")?; if base.document.nodes[payload.node].mesh.is_none() { return Err(reject("gltf.mutation.relation-absent", format!("document/nodes/{}/mesh", payload.node), "node has no binding")); } Ok(()) }
+pub async fn apply(payload: &GltfUnbindNodeMeshPayload, base: &GltfSnapshot) -> Result<GltfSnapshot, GltfTopLevelMutationRejection> { validate(payload, base)?; let mut next = base.clone(); next.document.nodes[payload.node].mesh = None; Ok(next) }

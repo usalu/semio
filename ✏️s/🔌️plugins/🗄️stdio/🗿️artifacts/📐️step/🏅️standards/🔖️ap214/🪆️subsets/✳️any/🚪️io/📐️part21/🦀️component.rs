@@ -21,7 +21,7 @@ pub struct Part21Decimal {
 }
 
 impl Part21Decimal {
-    pub fn parse(text: &str) -> Result<Self, String> {
+    pub async fn parse(text: &str) -> Result<Self, String> {
         let (negative, unsigned) = match text.as_bytes().first() {
             Some(b'-') => (true, &text[1..]),
             Some(b'+') => (false, &text[1..]),
@@ -38,25 +38,25 @@ impl Part21Decimal {
         Ok(Self { negative, coefficient: format!("{integer}{fraction}"), scale: fraction.len() as u32, exponent })
     }
 
-    pub fn from_f64(value: f64) -> Self {
+    pub async fn from_f64(value: f64) -> Self {
         let text = format!("{value}");
         let normalized = if text.contains('.') || text.contains('e') || text.contains('E') { text } else { format!("{text}.") };
         Self::parse(&normalized).expect("finite f64 has valid STEP decimal form")
     }
 
-    pub fn to_f64(&self) -> Option<f64> {
+    pub async fn to_f64(&self) -> Option<f64> {
         self.to_string().parse().ok()
     }
 }
 
 impl From<f64> for Part21Decimal {
-    fn from(value: f64) -> Self {
+    async fn from(value: f64) -> Self {
         Self::from_f64(value)
     }
 }
 
 impl fmt::Display for Part21Decimal {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    async fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         if self.negative {
             f.write_char('-')?;
         }
@@ -96,49 +96,49 @@ pub enum Part21Value {
 }
 
 impl Part21Value {
-    pub fn as_ref_id(&self) -> Option<u64> {
+    pub async fn as_ref_id(&self) -> Option<u64> {
         if let Part21Value::Ref(id) = self {
             Some(*id)
         } else {
             None
         }
     }
-    pub fn as_str(&self) -> Option<&str> {
+    pub async fn as_str(&self) -> Option<&str> {
         if let Part21Value::Str(s) = self {
             Some(s.as_str())
         } else {
             None
         }
     }
-    pub fn as_enum(&self) -> Option<&str> {
+    pub async fn as_enum(&self) -> Option<&str> {
         if let Part21Value::Enum(s) = self {
             Some(s.as_str())
         } else {
             None
         }
     }
-    pub fn as_real(&self) -> Option<f64> {
+    pub async fn as_real(&self) -> Option<f64> {
         match self {
             Part21Value::Real(r) => r.to_f64(),
             Part21Value::Int(i) => Some(*i as f64),
             _ => None,
         }
     }
-    pub fn as_list(&self) -> Option<&[Part21Value]> {
+    pub async fn as_list(&self) -> Option<&[Part21Value]> {
         if let Part21Value::List(items) = self {
             Some(items.as_slice())
         } else {
             None
         }
     }
-    pub fn as_typed(&self) -> Option<(&str, &[Part21Value])> {
+    pub async fn as_typed(&self) -> Option<(&str, &[Part21Value])> {
         if let Part21Value::Typed(name, items) = self {
             Some((name.as_str(), items.as_slice()))
         } else {
             None
         }
     }
-    pub fn is_unset(&self) -> bool {
+    pub async fn is_unset(&self) -> bool {
         matches!(self, Part21Value::Unset)
     }
 }
@@ -154,13 +154,13 @@ pub struct Part21Instance {
 }
 
 impl Part21Instance {
-    pub fn entity(&self, type_name: &str) -> Option<&Vec<Part21Value>> {
+    pub async fn entity(&self, type_name: &str) -> Option<&Vec<Part21Value>> {
         self.entities.iter().find(|(name, _)| name.eq_ignore_ascii_case(type_name)).map(|(_, args)| args)
     }
-    pub fn primary(&self) -> Option<(&str, &Vec<Part21Value>)> {
+    pub async fn primary(&self) -> Option<(&str, &Vec<Part21Value>)> {
         self.entities.first().map(|(name, args)| (name.as_str(), args))
     }
-    pub fn is_type(&self, type_name: &str) -> bool {
+    pub async fn is_type(&self, type_name: &str) -> bool {
         self.entities.iter().any(|(name, _)| name.eq_ignore_ascii_case(type_name))
     }
 }
@@ -186,16 +186,16 @@ pub struct Part21Document {
 }
 
 impl Part21Document {
-    pub fn instance(&self, id: u64) -> Option<&Part21Instance> {
+    pub async fn instance(&self, id: u64) -> Option<&Part21Instance> {
         self.instances.iter().find(|i| i.id == id)
     }
-    pub fn resolve(&self, value: &Part21Value) -> Option<&Part21Instance> {
+    pub async fn resolve(&self, value: &Part21Value) -> Option<&Part21Instance> {
         value.as_ref_id().and_then(|id| self.instance(id))
     }
-    pub fn by_type<'a>(&'a self, type_name: &'a str) -> impl Iterator<Item = &'a Part21Instance> + 'a {
+    pub async fn by_type<'a>(&'a self, type_name: &'a str) -> impl Iterator<Item = &'a Part21Instance> + 'a {
         self.instances.iter().filter(move |i| i.is_type(type_name))
     }
-    pub fn next_id(&self) -> u64 {
+    pub async fn next_id(&self) -> u64 {
         self.instances.iter().map(|i| i.id).max().unwrap_or(0) + 1
     }
 }
@@ -212,17 +212,17 @@ pub struct Part21Builder {
 }
 
 impl Part21Builder {
-    pub fn new() -> Self {
+    pub async fn new() -> Self {
         Self { instances: Vec::new(), next_id: 1 }
     }
     /// ➕️ Allocates the next `#id` and appends a simple `TYPE(args)` instance.
-    pub fn alloc(&mut self, type_name: &str, args: Vec<Part21Value>) -> u64 {
+    pub async fn alloc(&mut self, type_name: &str, args: Vec<Part21Value>) -> u64 {
         let id = self.next_id;
         self.next_id += 1;
         self.instances.push(Part21Instance { id, entities: vec![(type_name.to_string(), args)] });
         id
     }
-    pub fn build(self, header: Part21Header) -> Part21Document {
+    pub async fn build(self, header: Part21Header) -> Part21Document {
         Part21Document { header, instances: self.instances }
     }
 }
@@ -240,7 +240,7 @@ pub enum Part21Error {
 }
 
 impl fmt::Display for Part21Error {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    async fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Part21Error::UnexpectedEof { at, expected } => write!(f, "part21: unexpected end of input at char {at}, expected {expected}"),
             Part21Error::UnexpectedChar { at, found, expected } => write!(f, "part21: unexpected char {found:?} at {at}, expected {expected}"),
@@ -260,16 +260,16 @@ struct Lexer {
 }
 
 impl Lexer {
-    fn new(text: &str) -> Self {
+    async fn new(text: &str) -> Self {
         Self { chars: text.chars().collect(), pos: 0 }
     }
-    fn peek(&self) -> Option<char> {
+    async fn peek(&self) -> Option<char> {
         self.chars.get(self.pos).copied()
     }
-    fn peek_at(&self, offset: usize) -> Option<char> {
+    async fn peek_at(&self, offset: usize) -> Option<char> {
         self.chars.get(self.pos + offset).copied()
     }
-    fn bump(&mut self) -> Option<char> {
+    async fn bump(&mut self) -> Option<char> {
         let c = self.peek();
         if c.is_some() {
             self.pos += 1;
@@ -277,7 +277,7 @@ impl Lexer {
         c
     }
 
-    fn skip_ws_and_comments(&mut self) {
+    async fn skip_ws_and_comments(&mut self) {
         loop {
             match self.peek() {
                 Some(c) if c.is_whitespace() => self.pos += 1,
@@ -296,7 +296,7 @@ impl Lexer {
         }
     }
 
-    fn expect_literal(&mut self, lit: &'static str) -> Result<(), Part21Error> {
+    async fn expect_literal(&mut self, lit: &'static str) -> Result<(), Part21Error> {
         self.skip_ws_and_comments();
         for c in lit.chars() {
             if self.peek() == Some(c) {
@@ -308,7 +308,7 @@ impl Lexer {
         Ok(())
     }
 
-    fn try_literal(&mut self, lit: &str) -> bool {
+    async fn try_literal(&mut self, lit: &str) -> bool {
         let save = self.pos;
         self.skip_ws_and_comments();
         for c in lit.chars() {
@@ -322,7 +322,7 @@ impl Lexer {
         true
     }
 
-    fn read_keyword(&mut self) -> Result<String, Part21Error> {
+    async fn read_keyword(&mut self) -> Result<String, Part21Error> {
         self.skip_ws_and_comments();
         let start = self.pos;
         let mut s = String::new();
@@ -340,7 +340,7 @@ impl Lexer {
         Ok(s)
     }
 
-    fn read_string(&mut self) -> Result<String, Part21Error> {
+    async fn read_string(&mut self) -> Result<String, Part21Error> {
         self.skip_ws_and_comments();
         if self.peek() != Some('\'') {
             return Err(Part21Error::UnexpectedChar { at: self.pos, found: self.peek().unwrap_or('\0'), expected: "'" });
@@ -367,7 +367,7 @@ impl Lexer {
 
     /// 🔤️ `\X\HH\` single byte, `\X2\HHHH(HHHH)*\X0\` UCS-2 run — the two Part-21 escape
     /// forms this codebase's fixtures/writer actually emit; anything else is a typed error.
-    fn read_escape(&mut self, out: &mut String) -> Result<(), Part21Error> {
+    async fn read_escape(&mut self, out: &mut String) -> Result<(), Part21Error> {
         let start = self.pos - 1;
         match self.bump() {
             Some('X') => match self.peek() {
@@ -421,7 +421,7 @@ impl Lexer {
         }
     }
 
-    fn read_number(&mut self) -> Result<Part21Value, Part21Error> {
+    async fn read_number(&mut self) -> Result<Part21Value, Part21Error> {
         self.skip_ws_and_comments();
         let start = self.pos;
         let mut s = String::new();
@@ -473,7 +473,7 @@ impl Lexer {
         }
     }
 
-    fn read_enum(&mut self) -> Result<String, Part21Error> {
+    async fn read_enum(&mut self) -> Result<String, Part21Error> {
         self.skip_ws_and_comments();
         if self.peek() != Some('.') {
             return Err(Part21Error::UnexpectedChar { at: self.pos, found: self.peek().unwrap_or('\0'), expected: "." });
@@ -494,7 +494,7 @@ impl Lexer {
         Ok(s)
     }
 
-    fn read_value(&mut self) -> Result<Part21Value, Part21Error> {
+    async fn read_value(&mut self) -> Result<Part21Value, Part21Error> {
         self.skip_ws_and_comments();
         match self.peek() {
             Some('$') => {
@@ -545,7 +545,7 @@ impl Lexer {
         }
     }
 
-    fn read_value_list(&mut self) -> Result<Vec<Part21Value>, Part21Error> {
+    async fn read_value_list(&mut self) -> Result<Vec<Part21Value>, Part21Error> {
         self.skip_ws_and_comments();
         let mut out = Vec::new();
         if self.peek() == Some(')') {
@@ -563,7 +563,7 @@ impl Lexer {
         Ok(out)
     }
 
-    fn read_record(&mut self) -> Result<(String, Vec<Part21Value>), Part21Error> {
+    async fn read_record(&mut self) -> Result<(String, Vec<Part21Value>), Part21Error> {
         let name = self.read_keyword()?;
         self.expect_literal("(")?;
         let args = self.read_value_list()?;
@@ -571,7 +571,7 @@ impl Lexer {
         Ok((name, args))
     }
 
-    fn read_instance(&mut self) -> Result<Part21Instance, Part21Error> {
+    async fn read_instance(&mut self) -> Result<Part21Instance, Part21Error> {
         self.expect_literal("#")?;
         let start = self.pos;
         let mut id_s = String::new();
@@ -610,7 +610,7 @@ impl Lexer {
 //#region 🔖️Parse
 /// 📥️ Parses a full ISO 10303-21 physical file into the generic graph. Real tokenizer,
 /// not a scraper — every header record and every data instance/argument round-trips.
-pub fn parse_part21(text: &str) -> Result<Part21Document, Part21Error> {
+pub async fn parse_part21(text: &str) -> Result<Part21Document, Part21Error> {
     let mut lex = Lexer::new(text);
     lex.expect_literal("ISO-10303-21;")?;
     lex.expect_literal("HEADER;")?;
@@ -655,24 +655,24 @@ pub struct Part21WriteOptions {
 }
 
 impl Default for Part21WriteOptions {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self { line_ending: "\n", blank_after_header: false, blank_before_data: false, blank_before_terminator: false, space_after_instance_equals: false }
     }
 }
 
 /// 🏭️ Logical producer metadata capable of deterministic Part-21 header materialization.
 pub trait Part21Preamble {
-    fn write_preamble(&self, out: &mut String, line_ending: &str);
+    async fn write_preamble(&self, out: &mut String, line_ending: &str);
 }
 
 /// 📤️ Regenerates valid Part-21 text from the generic graph — round-trip losslessness is
 /// the writer's job; it never re-derives STEP/IFC semantics.
-pub fn write_part21(doc: &Part21Document) -> String {
+pub async fn write_part21(doc: &Part21Document) -> String {
     write_part21_with(doc, Part21WriteOptions::default(), None)
 }
 
 /// 📤️ Regenerates Part-21 with a standard-selected deterministic layout and typed preamble.
-pub fn write_part21_with(doc: &Part21Document, options: Part21WriteOptions, preamble: Option<&dyn Part21Preamble>) -> String {
+pub async fn write_part21_with(doc: &Part21Document, options: Part21WriteOptions, preamble: Option<&dyn Part21Preamble>) -> String {
     let eol = options.line_ending;
     let mut out = format!("ISO-10303-21;{eol}HEADER;{eol}");
     if options.blank_after_header {
@@ -704,7 +704,7 @@ pub fn write_part21_with(doc: &Part21Document, options: Part21WriteOptions, prea
     out
 }
 
-fn write_record(out: &mut String, name: &str, args: &[Part21Value], line_ending: &str) {
+async fn write_record(out: &mut String, name: &str, args: &[Part21Value], line_ending: &str) {
     out.push_str(name);
     out.push('(');
     write_value_list(out, args);
@@ -712,7 +712,7 @@ fn write_record(out: &mut String, name: &str, args: &[Part21Value], line_ending:
     out.push_str(line_ending);
 }
 
-fn write_instance(out: &mut String, inst: &Part21Instance, line_ending: &str, space_after_equals: bool) {
+async fn write_instance(out: &mut String, inst: &Part21Instance, line_ending: &str, space_after_equals: bool) {
     let _ = write!(out, "#{}=", inst.id);
     if space_after_equals {
         out.push(' ');
@@ -737,7 +737,7 @@ fn write_instance(out: &mut String, inst: &Part21Instance, line_ending: &str, sp
     out.push_str(line_ending);
 }
 
-fn write_value_list(out: &mut String, items: &[Part21Value]) {
+async fn write_value_list(out: &mut String, items: &[Part21Value]) {
     for (i, item) in items.iter().enumerate() {
         if i > 0 {
             out.push(',');
@@ -746,7 +746,7 @@ fn write_value_list(out: &mut String, items: &[Part21Value]) {
     }
 }
 
-fn write_value(out: &mut String, v: &Part21Value) {
+async fn write_value(out: &mut String, v: &Part21Value) {
     match v {
         Part21Value::Ref(id) => {
             let _ = write!(out, "#{id}");
@@ -783,10 +783,10 @@ fn write_value(out: &mut String, v: &Part21Value) {
 
 /// 🔡️ Inverse of the lexer's `read_escape`: `'` doubles, backslash is escaped (to stay
 /// unambiguous with `\X..` on reparse), any other non-printable-ASCII goes through `\X2\..\X0\`.
-fn escape_part21_string(s: &str) -> String {
+async fn escape_part21_string(s: &str) -> String {
     let mut out = String::new();
     let mut run: Vec<char> = Vec::new();
-    fn flush(run: &mut Vec<char>, out: &mut String) {
+    async fn flush(run: &mut Vec<char>, out: &mut String) {
         if run.is_empty() {
             return;
         }
@@ -824,7 +824,7 @@ mod tests {
     const FIXTURE: &str = "ISO-10303-21;\nHEADER;\nFILE_DESCRIPTION((''),'2;1');\nFILE_NAME('semio.step','2026-08-10T00:00:00',('Ueli'),('semio'),'semio','','');\nFILE_SCHEMA(('AUTOMOTIVE_DESIGN'));\nENDSEC;\nDATA;\n#1=CARTESIAN_POINT('',(0.,0.,0.));\n#2=CARTESIAN_POINT('',(10.,0.,0.));\n#3=CARTESIAN_POINT('',(10.,10.,0.));\n#4=DIRECTION('',(0.,0.,1.));\n#5=VERTEX_POINT('',#1);\n#6=VERTEX_POINT('',#2);\n#7=VERTEX_POINT('',#3);\n#8=EDGE_CURVE('',#5,#6,#20,.T.);\n#9=EDGE_CURVE('',#6,#7,#21,.T.);\n#10=EDGE_CURVE('',#7,#5,#22,.T.);\n#20=LINE('',#1,#30);\n#21=LINE('',#2,#31);\n#22=LINE('',#3,#32);\n#30=VECTOR('',#4,1.);\n#31=VECTOR('',#4,1.);\n#32=VECTOR('',#4,1.);\n#11=ORIENTED_EDGE('',*,*,#8,.T.);\n#12=ORIENTED_EDGE('',*,*,#9,.T.);\n#13=ORIENTED_EDGE('',*,*,#10,.T.);\n#14=EDGE_LOOP('',(#11,#12,#13));\n#15=FACE_OUTER_BOUND('',#14,.T.);\n#16=PLANE('',#40);\n#40=AXIS2_PLACEMENT_3D('',#1,#4,$);\n#17=ADVANCED_FACE('',(#15),#16,.T.);\n#18=CLOSED_SHELL('',(#17));\n#19=MANIFOLD_SOLID_BREP('',#18);\nENDSEC;\nEND-ISO-10303-21;\n";
 
     #[test]
-    fn round_trip_parse_serialize_reparse() {
+    async fn round_trip_parse_serialize_reparse() {
         let doc = parse_part21(FIXTURE).expect("parse fixture");
         assert!(!doc.instances.is_empty());
         assert_eq!(doc.header.file_schema, vec![Part21Value::List(vec![Part21Value::Str("AUTOMOTIVE_DESIGN".into())])]);
@@ -834,7 +834,7 @@ mod tests {
     }
 
     #[test]
-    fn instance_count_and_types_preserved() {
+    async fn instance_count_and_types_preserved() {
         let doc = parse_part21(FIXTURE).expect("parse");
         assert_eq!(doc.instances.len(), 26);
         assert_eq!(doc.by_type("CARTESIAN_POINT").count(), 3);
@@ -845,7 +845,7 @@ mod tests {
     }
 
     #[test]
-    fn oriented_edge_derived_attrs_are_star() {
+    async fn oriented_edge_derived_attrs_are_star() {
         let doc = parse_part21(FIXTURE).expect("parse");
         let oe = doc.instance(11).expect("oriented edge");
         let args = oe.entity("ORIENTED_EDGE").expect("typed");
@@ -854,7 +854,7 @@ mod tests {
     }
 
     #[test]
-    fn complex_instance_keeps_every_type() {
+    async fn complex_instance_keeps_every_type() {
         let text =
             "ISO-10303-21;\nHEADER;\nFILE_DESCRIPTION((''),'2;1');\nFILE_NAME('','',(''),(''),'','','');\nFILE_SCHEMA(('IFC4'));\nENDSEC;\nDATA;\n#1=(IFCQUANTITYAREA($,$,$,10.5,$)IFCPHYSICALSIMPLEQUANTITY($,$,$,$));\nENDSEC;\nEND-ISO-10303-21;\n";
         let doc = parse_part21(text).expect("parse complex instance");
@@ -867,7 +867,7 @@ mod tests {
     }
 
     #[test]
-    fn typed_value_wrapper_round_trips() {
+    async fn typed_value_wrapper_round_trips() {
         let text = "ISO-10303-21;\nHEADER;\nFILE_DESCRIPTION((''),'2;1');\nFILE_NAME('','',(''),(''),'','','');\nFILE_SCHEMA(('IFC4'));\nENDSEC;\nDATA;\n#1=IFCPROPERTYSINGLEVALUE('Height',$,IFCLENGTHMEASURE(3000.),$);\nENDSEC;\nEND-ISO-10303-21;\n";
         let doc = parse_part21(text).expect("parse");
         let args = doc.instance(1).unwrap().entity("IFCPROPERTYSINGLEVALUE").unwrap();
@@ -878,7 +878,7 @@ mod tests {
     }
 
     #[test]
-    fn string_escapes_round_trip() {
+    async fn string_escapes_round_trip() {
         for raw in ["it's a test", "unicode: \u{20AC} \u{4E2D}\u{6587}", "back\\slash", "", "plain"] {
             let text = format!("ISO-10303-21;\nHEADER;\nFILE_DESCRIPTION((''),'2;1');\nFILE_NAME('','',(''),(''),'','','');\nFILE_SCHEMA(('X'));\nENDSEC;\nDATA;\n#1=LABEL('{}');\nENDSEC;\nEND-ISO-10303-21;\n", escape_part21_string(raw));
             let doc = parse_part21(&text).unwrap_or_else(|e| panic!("parse {raw:?}: {e}"));
@@ -888,21 +888,21 @@ mod tests {
     }
 
     #[test]
-    fn doubled_quote_escape() {
+    async fn doubled_quote_escape() {
         let text = "ISO-10303-21;\nHEADER;\nFILE_DESCRIPTION((''),'2;1');\nFILE_NAME('','',(''),(''),'','','');\nFILE_SCHEMA(('X'));\nENDSEC;\nDATA;\n#1=LABEL('it''s here');\nENDSEC;\nEND-ISO-10303-21;\n";
         let doc = parse_part21(text).expect("parse");
         assert_eq!(doc.instance(1).unwrap().entity("LABEL").unwrap()[0].as_str(), Some("it's here"));
     }
 
     #[test]
-    fn unicode_x2_escape() {
+    async fn unicode_x2_escape() {
         let text = "ISO-10303-21;\nHEADER;\nFILE_DESCRIPTION((''),'2;1');\nFILE_NAME('','',(''),(''),'','','');\nFILE_SCHEMA(('X'));\nENDSEC;\nDATA;\n#1=LABEL('\\X2\\4E2D6587\\X0\\');\nENDSEC;\nEND-ISO-10303-21;\n";
         let doc = parse_part21(text).expect("parse");
         assert_eq!(doc.instance(1).unwrap().entity("LABEL").unwrap()[0].as_str(), Some("中文"));
     }
 
     #[test]
-    fn unset_and_derived_values() {
+    async fn unset_and_derived_values() {
         let text = "ISO-10303-21;\nHEADER;\nFILE_DESCRIPTION((''),'2;1');\nFILE_NAME('','',(''),(''),'','','');\nFILE_SCHEMA(('X'));\nENDSEC;\nDATA;\n#1=THING($,*,1);\nENDSEC;\nEND-ISO-10303-21;\n";
         let doc = parse_part21(text).expect("parse");
         let args = doc.instance(1).unwrap().entity("THING").unwrap();
@@ -912,7 +912,7 @@ mod tests {
     }
 
     #[test]
-    fn nested_lists_round_trip() {
+    async fn nested_lists_round_trip() {
         let text = "ISO-10303-21;\nHEADER;\nFILE_DESCRIPTION((''),'2;1');\nFILE_NAME('','',(''),(''),'','','');\nFILE_SCHEMA(('X'));\nENDSEC;\nDATA;\n#1=MATRIX(((1.,0.),(0.,1.)));\nENDSEC;\nEND-ISO-10303-21;\n";
         let doc = parse_part21(text).expect("parse");
         let args = doc.instance(1).unwrap().entity("MATRIX").unwrap();
@@ -923,7 +923,7 @@ mod tests {
     }
 
     #[test]
-    fn malformed_input_is_typed_error_not_fabrication() {
+    async fn malformed_input_is_typed_error_not_fabrication() {
         let bad = "ISO-10303-21;\nHEADER;\nFILE_DESCRIPTION((''),'2;1');\nFILE_NAME('','',(''),(''),'','','');\nFILE_SCHEMA(('X'));\nENDSEC;\nDATA;\n#1=THING(;\nENDSEC;\nEND-ISO-10303-21;\n";
         assert!(parse_part21(bad).is_err());
     }

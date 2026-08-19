@@ -21,7 +21,7 @@ pub const HOME_DIALECT: semio_framework_plugin::app::Dialect = semio_framework_p
 
 //#region 🔖️ArtifactKind
 /// 🗂️ OS artifact kind for this document.
-pub fn artifact_kind() -> ArtifactKindSpec {
+pub async fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "space.shome".into(),
         name: "S Home".into(),
@@ -56,7 +56,7 @@ pub fn artifact_kind() -> ArtifactKindSpec {
 /// deliberately has no field for app-scope schema (see that struct's own doc); it is registered by
 /// `.document_codec::<A>()` instead, keyed off `A` the same way this declaration is keyed off `kind`.
 /// 🧾️ Defines s.home's immutable runtime capability leaves.
-pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
+pub async fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
     use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
 
     ArtifactDefinition::new(ArtifactIdentity::parse("s.home")?)
@@ -98,7 +98,7 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
 }
 
 /// 🔖️ Assembles s.home's typed runtime declaration.
-pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
+pub async fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
     semio_framework_plugin::ArtifactDeclaration::builder(definition()?)
         .schema(crate::artifacts::home::schema::home_artifact_schema_descriptor())
         .inferences([crate::artifacts::home::standards::v1::subsets::any::schema::inferences::home_artifact_inference_descriptor()])

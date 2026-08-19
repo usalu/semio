@@ -46,7 +46,7 @@ pub use inspection_panel::WIRES_PLAY_BODY_PROPERTIES;
 
 /// 🎯️ An `ActionDescriptor` addressed at this app — the single factory every taxonomy node's chrome
 /// (`📌️panels/*`) builds its `on_change`/item actions with.
-pub fn wires_action(action: &str, args: Option<Value>) -> ActionDescriptor {
+pub async fn wires_action(action: &str, args: Option<Value>) -> ActionDescriptor {
     semio_framework_plugin::ActionFactory::new(WIRES_PLAY_APP_ID).action(action, args)
 }
 
@@ -54,7 +54,7 @@ pub fn wires_action(action: &str, args: Option<Value>) -> ActionDescriptor {
 /// whole document" gesture (`ArtifactStore::reset`, applied host-side) that
 /// `🎮️commands/🧬️set-active-example::set_active_example` uses instead of a banned whole-snapshot mutation. The
 /// spr is a fresh, edit-free op-log — a genesis envelope with no history to encode.
-pub fn reset_wires_document_effect(document: &WiresSnapshot) -> Effect {
+pub async fn reset_wires_document_effect(document: &WiresSnapshot) -> Effect {
     let pack = <WiresSnapshot as store::ArtifactPack>::encode_pack(document);
     let envelope = store::create_document_envelope::<WiresSnapshot, WiresMutation>(crate::artifacts::wires::MINDMAP_WIRES_SCHEMA, "reasoning-wires", document.clone(), None);
     let spr = store::print_document_spr(&envelope).expect("wires document spr encode is infallible for a fresh, edit-free envelope");
@@ -77,7 +77,7 @@ pub const WIRES_GRANULARITY_EDGE: &str = "edge";
 /// 🕹️ Builds `interactionSelect`'s JSON args for one merge over `ids` at `granularity` — shared by
 /// the canvas pointer/add commands (wrapped into a `Effect::DispatchAction`) and any document-tree
 /// row whose click should select a real canvas identity/relationship.
-pub fn wires_select_action_args(ids: &[String], granularity: &str, merge: &str) -> Value {
+pub async fn wires_select_action_args(ids: &[String], granularity: &str, merge: &str) -> Value {
     let targets: Vec<Value> = ids.iter().map(|id| json!({ "granularity": granularity, "id": id })).collect();
     json!({ "domainId": WIRES_INTERACTION_GRAPH, "targets": serde_json::to_string(&targets).unwrap_or_default(), "merge": merge, "method": "pick" })
 }
@@ -87,7 +87,7 @@ pub fn wires_select_action_args(ids: &[String], granularity: &str, merge: &str) 
 /// `ArtifactApp::handle`, so a plain config mutation can no longer express a selection change; the app
 /// asks the host to redispatch `interactionSelect` instead (master doc: "surfaces do geometric
 /// hit-testing and emit one batched `interactionSelect`").
-pub fn wires_select_effect(ids: &[String], granularity: &str, merge: &str) -> Effect {
+pub async fn wires_select_effect(ids: &[String], granularity: &str, merge: &str) -> Effect {
     Effect::DispatchAction {req: semio_framework_plugin::RequestId(112),  action: INTERACTION_SELECT_ACTION_ID.into(), args: semio_framework::optional_json_to_dsl(Some(wires_select_action_args(ids, granularity, merge))), delay_ms: 0 }
 }
 //#endregion 🔖️Interaction
@@ -139,16 +139,16 @@ impl ArtifactEditor for ReasoningWiresPlayApp {
 
     const DOCUMENT_SCHEMA: &'static str = crate::artifacts::wires::MINDMAP_WIRES_SCHEMA;
 
-    fn app_schema() -> Option<::schema::AppSchemaDescriptor> {
+    async fn app_schema() -> Option<::schema::AppSchemaDescriptor> {
         Some(crate::editor::wires::config::schema::app_schema_descriptor())
     }
 
-    fn initial_snapshot() -> WiresSnapshot {
+    async fn initial_snapshot() -> WiresSnapshot {
         crate::artifacts::wires::empty_wires_snapshot()
     }
 
     /// 🏷️ Supplied wholesale by `app_commands!`'s generated `command_id()`.
-    fn command_id(command: &WiresCommand) -> &'static str {
+    async fn command_id(command: &WiresCommand) -> &'static str {
         command.command_id()
     }
 
@@ -156,7 +156,7 @@ impl ArtifactEditor for ReasoningWiresPlayApp {
     /// `app_commands!`-generated `dispatch`, whose per-row `$module::handle(payload, doc, cfg)`
     /// signature is framework-fixed and has no `interaction` slot) — ticket
     /// 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM.
-    fn handle(
+    async fn handle(
         command: &WiresCommand,
         doc: &ArtifactView<'_, WiresSnapshot>,
         cfg: &ConfigView<'_, WiresConfig>,
@@ -170,7 +170,7 @@ impl ArtifactEditor for ReasoningWiresPlayApp {
         }
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, WiresSnapshot>, cfg: &ConfigView<'_, WiresConfig>) -> UiNode {
+    async fn render(body_key: &str, doc: &ArtifactView<'_, WiresSnapshot>, cfg: &ConfigView<'_, WiresConfig>) -> UiNode {
         let document = doc.snapshot;
         let labels = semio_framework_plugin::resolve_labels_for_locale::<crate::editor::wires::terminology::WiresLabels>(&cfg.snapshot.locale);
         match body_key {
@@ -194,7 +194,7 @@ impl ArtifactEditor for ReasoningWiresPlayApp {
 /// silently lost. The subset's own `📚️examples/🎬️demo` facet is the documented replacement mechanism
 /// for the former; `metabolism_wires_example_snapshot()` itself still lives on and is exercised
 /// directly by this file's own tests below.
-pub fn create_wires_app() -> semio_framework_plugin::AppDefinition {
+pub async fn create_wires_app() -> semio_framework_plugin::AppDefinition {
     Editor::builder(crate::artifacts::wires::WIRES_DIALECT)
         .document(["semio", "reasoning", "mindmap", "wires"])
         .artifact_kind(crate::artifacts::wires::artifact_kind())
@@ -256,7 +256,7 @@ pub(crate) mod testkit {
     pub type WiresApp = VcsArtifactApp<EditorApp<ReasoningWiresPlayApp>>;
 
     /// 🧪️ A bare app instance — no `AppActionRegistry`, so undeclared internal commands dispatch freely.
-    pub fn new_app() -> WiresApp {
+    pub async fn new_app() -> WiresApp {
         new_test_app::<EditorApp<ReasoningWiresPlayApp>>()
     }
 
@@ -265,18 +265,18 @@ pub(crate) mod testkit {
     /// unchanged for this ticket, while `create_wires_app` now returns `AppDefinition` — this tiny
     /// local wrapper bridges the two shapes with an empty `examples` list (dropped per `create_wires_app`'s
     /// own doc comment).
-    fn wires_manifest_for_testkit() -> App {
+    async fn wires_manifest_for_testkit() -> App {
         App { definition: create_wires_app(), examples: Vec::new() }
     }
 
     /// 🧪️ An app wired to the real manifest registry — required to resolve the "graph" interaction
     /// domain's declaration when dispatching a framework-injected verb like `interactionSelect`.
-    pub fn app_with_registry() -> WiresApp {
+    pub async fn app_with_registry() -> WiresApp {
         new_app_with_registry::<EditorApp<ReasoningWiresPlayApp>>(wires_manifest_for_testkit)
     }
 
     /// 🧪️ An app pre-loaded with the metabolism example document, for tests exercising a populated board.
-    pub fn metabolism_app() -> WiresApp {
+    pub async fn metabolism_app() -> WiresApp {
         let mut app = new_app();
         let document = crate::artifacts::wires::schema::metabolism_wires_example_snapshot()
             .expect("valid metabolism fixture mutations");
@@ -286,11 +286,11 @@ pub(crate) mod testkit {
         app
     }
 
-    pub fn dispatch(app: &mut WiresApp, command: WiresCommand) -> InvocationResult {
+    pub async fn dispatch(app: &mut WiresApp, command: WiresCommand) -> InvocationResult {
         app.dispatch_typed(command, &meta("local")).expect("dispatch")
     }
 
-    pub fn render(app: &mut WiresApp, body_key: &str) -> String {
+    pub async fn render(app: &mut WiresApp, body_key: &str) -> String {
         serde_json::to_string(&app.render(body_key, None, &ViewModel::default()).expect("render")).expect("render json")
     }
 }
@@ -307,7 +307,7 @@ mod tests {
     /// 🏷️ Every declared manifest action id must be reachable as exactly one command row, and every
     /// row's wire keyword must be distinct — the cross-cutting invariant `app_commands!` is there to hold.
     #[test]
-    fn command_ids_are_unique_and_match_the_declared_manifest_actions() {
+    async fn command_ids_are_unique_and_match_the_declared_manifest_actions() {
         let commands = every_command();
         let ids: Vec<&str> = commands.iter().map(|command| command.command_id()).collect();
         let mut sorted = ids.clone();
@@ -319,7 +319,7 @@ mod tests {
 
     /// ⚖️ LAW: text and binary are two projections of the same command, for every single row.
     #[test]
-    fn every_command_round_trips_through_text_and_binary() {
+    async fn every_command_round_trips_through_text_and_binary() {
         for command in every_command() {
             store::os_store::test_support::assert_op_text_binary_equivalence(&command);
         }
@@ -332,7 +332,7 @@ mod tests {
     /// prefix). This is what a missing `#[dsl(keyword = ..)]` on a payload struct silently breaks (the
     /// record prints with no keyword at all and no longer parses).
     #[test]
-    fn every_printed_op_line_starts_with_the_rows_wire_keyword() {
+    async fn every_printed_op_line_starts_with_the_rows_wire_keyword() {
         let expected_keys = [
             ("setActiveExample", "active-example"),
             ("addNode", "add-node"),
@@ -361,7 +361,7 @@ mod tests {
     /// pinned hex below are updated for the new ordinals (8 and 9); `SetActiveExample` is unaffected
     /// (ordinal 0, before the deleted rows).
     #[test]
-    fn commands_keep_their_pre_migration_wire_bytes() {
+    async fn commands_keep_their_pre_migration_wire_bytes() {
         let node = dsl::to_dsl_value(&serde_json::json!({ "id": "node-1", "nodeKind": "identity", "shape": "circle", "x": 0.0, "y": 0.0, "radius": 24.0, "text": "Alpha", "handles": [] })).unwrap();
         let _ = node;
         let cases: [(WiresCommand, &str, &str); 3] = [
@@ -377,7 +377,7 @@ mod tests {
     }
 
     /// 🧾️ One representative value per row, in declaration (= binary ordinal) order.
-    pub(super) fn every_command() -> Vec<WiresCommand> {
+    pub(super) async fn every_command() -> Vec<WiresCommand> {
         vec![
             WiresCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: "metabolism".into() }),
             WiresCommand::AddNode(add_node::AddNode { kind: "identity".into() }),
@@ -397,7 +397,7 @@ mod tests {
     /// 🕹️ The "graph" domain is declared `HierarchyProvider::Flat`, single-select/pick/replace-only,
     /// and scoped to the canvas window (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM).
     #[test]
-    fn graph_interaction_domain_is_declared_flat_and_scoped_to_the_canvas_window() {
+    async fn graph_interaction_domain_is_declared_flat_and_scoped_to_the_canvas_window() {
         let definition = create_wires_app();
         let graph = definition.interactions.iter().find(|interaction| interaction.id == WIRES_INTERACTION_GRAPH).expect("graph interaction domain declared");
         assert!(matches!(graph.hierarchy, HierarchyProvider::Flat));
@@ -410,7 +410,7 @@ mod tests {
     /// 🕹️ `wires_select_action_args` shapes the exact JSON the framework's `interactionSelect` action
     /// expects: `domainId`/`targets` (a JSON-stringified `Vec<InteractionTarget>`)/`merge`/`method`.
     #[test]
-    fn wires_select_action_args_shapes_interaction_select_payload() {
+    async fn wires_select_action_args_shapes_interaction_select_payload() {
         let args = wires_select_action_args(&["node-1".to_string()], WIRES_GRANULARITY_NODE, "replace");
         assert_eq!(args["domainId"], WIRES_INTERACTION_GRAPH);
         assert_eq!(args["merge"], "replace");
@@ -422,7 +422,7 @@ mod tests {
 
     //#region 🔖️ManifestSanity
     #[test]
-    fn the_manifest_stitches_every_taxonomy_node() {
+    async fn the_manifest_stitches_every_taxonomy_node() {
         let json = serde_json::to_string(&create_wires_app()).expect("app definition json");
         assert!(json.contains(WIRES_PLAY_WINDOW_CANVAS), "window kind missing from the manifest: {json}");
         assert!(json.contains(edit::WIRES_PLAY_MODE_EDIT), "mode missing from the manifest");
@@ -435,7 +435,7 @@ mod tests {
 
     //#region 🔖️CrossCutting
     #[test]
-    fn wires_labels_resolve_native_by_default() {
+    async fn wires_labels_resolve_native_by_default() {
         let mut app = metabolism_app();
         let json = render(&mut app, WIRES_PLAY_BODY_DOCUMENT);
         assert!(json.contains("Identities") && json.contains("Relationships"));
@@ -445,7 +445,7 @@ mod tests {
     }
 
     #[test]
-    fn metabolism_board_fixture_uses_mindmap_schema() {
+    async fn metabolism_board_fixture_uses_mindmap_schema() {
         let document = crate::artifacts::wires::schema::metabolism_wires_example_snapshot()
             .expect("valid metabolism fixture mutations");
         let board = crate::artifacts::wires::wires_working_board(&document);
@@ -454,13 +454,13 @@ mod tests {
     }
 
     #[test]
-    fn an_unknown_body_key_renders_a_diagnostic_instead_of_panicking() {
+    async fn an_unknown_body_key_renders_a_diagnostic_instead_of_panicking() {
         let mut app = new_app();
         assert!(render(&mut app, "reasoning.wires.nope").contains("Unknown body"));
     }
 
     #[test]
-    fn undo_redo_round_trip_through_the_wrapper() {
+    async fn undo_redo_round_trip_through_the_wrapper() {
         let mut app = new_app();
         semio_framework_plugin::testkit::assert_undo_redo_round_trip(
             &mut app,
@@ -472,7 +472,7 @@ mod tests {
     }
 
     #[test]
-    fn ingest_operations_is_idempotent() {
+    async fn ingest_operations_is_idempotent() {
         semio_framework_plugin::testkit::assert_ingest_idempotent::<EditorApp<ReasoningWiresPlayApp>, usize>(WiresCommand::AddNode(add_node::AddNode { kind: "identity".into() }), |app| {
             crate::artifacts::wires::schema::fixture_nodes(&crate::artifacts::wires::wires_working_board(&app.snapshot().expect("snapshot"))).len()
         });
@@ -481,7 +481,7 @@ mod tests {
     /// 🧪️ The definitional merge proof: A adds a node while B renames another node — disjoint edits
     /// on one backbone that must both survive on both instances (impossible under whole-document LWW).
     #[test]
-    fn two_instances_converge_disjoint_graph_edits_via_backbone() {
+    async fn two_instances_converge_disjoint_graph_edits_via_backbone() {
         use crate::artifacts::wires::standards::v1::subsets::any::schema::inferences::find_board_node;
         use semio_framework_plugin::testkit::meta;
         use semio_framework_plugin::PluginApp;

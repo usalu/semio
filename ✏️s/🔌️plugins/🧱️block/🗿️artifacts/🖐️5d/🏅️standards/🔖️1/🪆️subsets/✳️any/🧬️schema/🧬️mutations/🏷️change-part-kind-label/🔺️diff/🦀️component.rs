@@ -4,7 +4,7 @@ use crate::artifacts::block5d::Block5dSnapshot;
 use crate::{BlockKindIdentity};
 
 //#region 🔖️Diff
-pub fn diff(payload: &super::mutation::ChangePartKindLabel, base: &Block5dSnapshot) -> protocol::MutationOutcome<Block5dDiff> {
+pub async fn diff(payload: &super::mutation::ChangePartKindLabel, base: &Block5dSnapshot) -> protocol::MutationOutcome<Block5dDiff> {
     if payload.new_label == base.part_kind.label {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Part kind label is already \"{}\".", payload.new_label));
     }

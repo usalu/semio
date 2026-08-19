@@ -6,7 +6,7 @@ use crate::ast::{QueryResult, QueryResultKind};
 use semio_framework_plugin::{build_node_graph_scene, build_table_scene, NodeGraphScene, TableScene, UiNode};
 use serde_json::json;
 
-fn property_value_to_string(value: &PropertyValue) -> String {
+async fn property_value_to_string(value: &PropertyValue) -> String {
     match value {
         PropertyValue::String(text) => text.clone(),
         PropertyValue::Number(number) => number.to_string(),
@@ -17,7 +17,7 @@ fn property_value_to_string(value: &PropertyValue) -> String {
     }
 }
 
-fn result_to_table(result_json: &str) -> (String, String) {
+async fn result_to_table(result_json: &str) -> (String, String) {
     let parsed: QueryResult = serde_json::from_str(result_json).unwrap_or(QueryResult::table(vec![], vec![]));
     let columns: Vec<serde_json::Value> = parsed.columns.iter().map(|column| json!({ "id": column, "label": column })).collect();
     let rows: Vec<serde_json::Value> = parsed
@@ -36,7 +36,7 @@ fn result_to_table(result_json: &str) -> (String, String) {
     (serde_json::to_string(&columns).unwrap_or_else(|_| "[]".into()), serde_json::to_string(&rows).unwrap_or_else(|_| "[]".into()))
 }
 
-pub(crate) fn render(surface_id: &str, controller_id: &str, cfg: &JackConfig) -> UiNode {
+pub(crate) async fn render(surface_id: &str, controller_id: &str, cfg: &JackConfig) -> UiNode {
     let result: QueryResult = serde_json::from_str(&cfg.jack_result_json).unwrap_or(QueryResult::table(vec![], vec![]));
     if result.kind == QueryResultKind::Graph {
         if let Some(fixture) = &result.graph_fixture {

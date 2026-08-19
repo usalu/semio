@@ -5,7 +5,7 @@ use crate::artifacts::block3d::Block3dSnapshot;
 use crate::artifacts::block3d::{Block3dVortexKind};
 
 //#region 🔖️Diff
-pub fn diff(payload: &super::mutation::ChangeVortexKindColor, base: &Block3dSnapshot) -> protocol::MutationOutcome<Block3dDiff> {
+pub async fn diff(payload: &super::mutation::ChangeVortexKindColor, base: &Block3dSnapshot) -> protocol::MutationOutcome<Block3dDiff> {
     let current = crate::artifacts::block3d::vortex_kinds_of(base);
     let Some(existing) = current.iter().find(|item| item.id == payload.id) else {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("{} \"{}\" not found", "vortex-kind", payload.id), vec![payload.id.clone()]);

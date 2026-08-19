@@ -19,7 +19,7 @@ pub struct MoveLayer {
 
 /// 🌳️ This is the layer-tree DRAG gesture (drop onto/into another row) — a list REPOSITION, so it
 /// now emits `reorder-layers`, never the spatial `move-layer` (which is `transform.x`/`.y`).
-pub fn handle(payload: &MoveLayer, doc: &ArtifactView<'_, RasterSnapshot>, _cfg: &ConfigView<'_, RasterConfig>) -> Result<Emit<RasterMutation, RasterConfigMutation>, Fault> {
+pub async fn handle(payload: &MoveLayer, doc: &ArtifactView<'_, RasterSnapshot>, _cfg: &ConfigView<'_, RasterConfig>) -> Result<Emit<RasterMutation, RasterConfigMutation>, Fault> {
     let document = doc.snapshot;
     if find_layer(&document.layers, &payload.layer_id).is_none() {
         return Ok(Emit::default());

@@ -5,6 +5,6 @@
 use crate::artifacts::program::ProgramMutation;
 use crate::artifacts::program::ProgramSnapshot;
 
-pub fn inverse(_payload: &super::mutation::ReplaceGovernance, base: &ProgramSnapshot) -> Vec<ProgramMutation> {
+pub async fn inverse(_payload: &super::mutation::ReplaceGovernance, base: &ProgramSnapshot) -> Vec<ProgramMutation> {
     vec![ProgramMutation::ReplaceGovernance(super::mutation::ReplaceGovernance { new_governance: base.governance.clone() })]
 }

@@ -5,7 +5,7 @@ use crate::artifacts::en1992::mutations::change_use_fem::mutation::ChangeUseFem;
 use crate::artifacts::en1992::En1992Snapshot;
 
 //#region 🔖️Diff
-pub fn diff(payload: &ChangeUseFem, base: &En1992Snapshot) -> protocol::MutationOutcome<En1992Diff> {
+pub async fn diff(payload: &ChangeUseFem, base: &En1992Snapshot) -> protocol::MutationOutcome<En1992Diff> {
     if base.use_fem == payload.new_use_fem {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", "Use fem already has this value.");
     }

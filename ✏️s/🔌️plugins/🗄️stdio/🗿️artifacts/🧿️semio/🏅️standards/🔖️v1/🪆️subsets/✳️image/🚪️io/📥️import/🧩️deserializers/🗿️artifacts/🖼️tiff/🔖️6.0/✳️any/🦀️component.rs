@@ -31,7 +31,7 @@ const INTO_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard
 /// don't ALSO become generic metadata entries (would duplicate the same information twice).
 const CORE_TAGS: [u16; 9] = [TAG_IMAGE_WIDTH, TAG_IMAGE_LENGTH, TAG_BITS_PER_SAMPLE, TAG_COMPRESSION, TAG_PHOTOMETRIC, TAG_STRIP_OFFSETS, TAG_SAMPLES_PER_PIXEL, TAG_ROWS_PER_STRIP, TAG_STRIP_BYTE_COUNTS];
 
-fn value_to_metadata_string(v: &TiffValues) -> String {
+async fn value_to_metadata_string(v: &TiffValues) -> String {
     match v {
         TiffValues::Ascii(s) => s.clone(),
         other => other.first_u32().map(|n| n.to_string()).unwrap_or_else(|| format!("{other:?}")),
@@ -73,7 +73,7 @@ mod tests {
     use super::*;
     use crate::artifacts::tiff::schema::snapshot::{TiffFieldType, TiffIfd, TiffTag};
 
-    fn sample_tiff() -> TiffSnapshot {
+    async fn sample_tiff() -> TiffSnapshot {
         TiffSnapshot {
             ifds: vec![TiffIfd {
                 entries: vec![
@@ -91,7 +91,7 @@ mod tests {
     }
 
     #[test]
-    fn maps_pixels_and_description_tag() {
+    async fn maps_pixels_and_description_tag() {
         let semio = semio_framework_plugin::resolve_ready(SemioImageFromTiff::deserialize(&sample_tiff())).expect("deserialize");
         assert_eq!(semio.width, 2);
         assert_eq!(semio.height, 1);

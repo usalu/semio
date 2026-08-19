@@ -30,7 +30,7 @@ mod wasm_bridge {
     #[wasm_bindgen]
     impl Process3dSnapshotVcs {
         #[wasm_bindgen(constructor)]
-        pub fn new(envelope_json: Option<String>) -> Result<Process3dSnapshotVcs, JsValue> {
+        pub async fn new(envelope_json: Option<String>) -> Result<Process3dSnapshotVcs, JsValue> {
             let store = match envelope_json {
                 Some(json) => {
                     let envelope: Process3dEnvelope = serde_json::from_str(&json).map_err(|e| JsValue::from_str(&e.to_string()))?;
@@ -42,27 +42,27 @@ mod wasm_bridge {
         }
 
         #[wasm_bindgen(js_name = dispatchText)]
-        pub fn dispatch_text(&self, command_text: &str) -> Result<(), JsValue> {
+        pub async fn dispatch_text(&self, command_text: &str) -> Result<(), JsValue> {
             self.store.borrow_mut().dispatch_text(command_text).map(|_| ()).map_err(|e| JsValue::from_str(&e.to_string()))
         }
 
         #[wasm_bindgen(js_name = dispatchBinary)]
-        pub fn dispatch_binary(&self, command_bytes: &[u8]) -> Result<(), JsValue> {
+        pub async fn dispatch_binary(&self, command_bytes: &[u8]) -> Result<(), JsValue> {
             self.store.borrow_mut().dispatch_binary(command_bytes).map(|_| ()).map_err(|e| JsValue::from_str(&e.to_string()))
         }
 
         #[wasm_bindgen(js_name = projectionJson)]
-        pub fn projection_json(&self) -> Result<String, JsValue> {
+        pub async fn projection_json(&self) -> Result<String, JsValue> {
             self.store.borrow().snapshot_json().map_err(|e| JsValue::from_str(&e.to_string()))
         }
 
         #[wasm_bindgen(js_name = envelopeJson)]
-        pub fn envelope_json(&self) -> Result<String, JsValue> {
+        pub async fn envelope_json(&self) -> Result<String, JsValue> {
             self.store.borrow().envelope_json().map_err(|e| JsValue::from_str(&e.to_string()))
         }
 
         #[wasm_bindgen(js_name = generation)]
-        pub fn generation(&self) -> u32 {
+        pub async fn generation(&self) -> u32 {
             self.store.borrow().generation() as u32
         }
     }
@@ -85,11 +85,11 @@ mod tests {
     use store::{create_document_envelope, ArtifactCommand};
     use vcs::Author;
 
-    fn cut_step(id: &str) -> ProcessStep {
+    async fn cut_step(id: &str) -> ProcessStep {
         ProcessStep { id: id.into(), label: "Cut".into(), enabled: true, origin: None, measure: ProcessMeasure::Cut { tool: WorkingSolid::Box { width: 0.1, depth: 0.1, height: 0.1 }, pose: Pose::default() } }
     }
 
-    fn drill_step(id: &str) -> ProcessStep {
+    async fn drill_step(id: &str) -> ProcessStep {
         ProcessStep {
             id: id.into(),
             label: "Drill".into(),
@@ -99,7 +99,7 @@ mod tests {
         }
     }
 
-    fn new_store() -> Process3dStore {
+    async fn new_store() -> Process3dStore {
         Process3dStore::new(create_document_envelope(PROCESS_3D_SCHEMA, "process3d", empty_process3d_snapshot(), None))
     }
 
@@ -110,7 +110,7 @@ mod tests {
     /// (the snapshot is unchanged before/after, and undo is a further no-op on an already-unchanged
     /// document) rather than the pre-migration "real content" assertions.
     #[test]
-    fn step_mutations_dispatch_as_documented_no_ops() {
+    async fn step_mutations_dispatch_as_documented_no_ops() {
         let mut store = new_store();
         let before = store.snapshot().expect("snapshot");
         store.dispatch(ArtifactCommand::Apply { mutations: vec![Process3dMutation::CreateStep(CreateStep { index: 0, step: cut_step("cut-1") })], description: None }).expect("dispatch no-op create");
@@ -128,7 +128,7 @@ mod tests {
     }
 
     #[test]
-    fn moves_cursor_and_undo_restores_it() {
+    async fn moves_cursor_and_undo_restores_it() {
         let mut store = new_store();
         store.dispatch(ArtifactCommand::Apply { mutations: vec![Process3dMutation::ChangeCursor(ChangeCursor { new_resolved_up_to: Some(2) })], description: None }).expect("move cursor");
         assert_eq!(store.snapshot().expect("snapshot").resolved_up_to, Some(2));
@@ -143,7 +143,7 @@ mod tests {
     /// that actually change instead of replacing the whole `Stock` record. `ReplaceStockSolid` stays a
     /// real, fully-working mutation (a handle SWAP, never needing to read prior child content).
     #[test]
-    fn sets_stock_and_backwards_restores() {
+    async fn sets_stock_and_backwards_restores() {
         let mut store = new_store();
         let original_solid = store.snapshot().expect("snapshot").stock_solid;
         let new_handle = brep_child_handle("stock", &brep_snapshot_for_working_solid(&WorkingSolid::Cylinder { radius: 0.2, height: 2.0 }));
@@ -162,7 +162,7 @@ mod tests {
     }
 
     #[test]
-    fn sets_stock_to_imported_solid_and_backwards_restores() {
+    async fn sets_stock_to_imported_solid_and_backwards_restores() {
         let mut store = new_store();
         let original_solid = store.snapshot().expect("snapshot").stock_solid;
         let imported_handle = brep_child_handle("stock", &brep_snapshot_for_working_solid(&WorkingSolid::ImportedSolid { solid_handle: "solid-7".into() }));
@@ -182,7 +182,7 @@ mod tests {
 
     //#region 🔖️DocumentTextTests
     #[test]
-    fn process3d_document_text_round_trips_after_apply_and_checkpoint() {
+    async fn process3d_document_text_round_trips_after_apply_and_checkpoint() {
         let envelope = create_document_envelope(PROCESS_3D_SCHEMA, "process3d", empty_process3d_snapshot(), None);
         let mut store = Process3dStore::new(envelope);
         store

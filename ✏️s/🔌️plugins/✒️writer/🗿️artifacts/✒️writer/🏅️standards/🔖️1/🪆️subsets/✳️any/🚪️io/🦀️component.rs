@@ -8,7 +8,7 @@ use semio_framework::io::io_mechanism::{deserializer_entry, serializer_entry, Io
 use semio_framework_plugin::app::declarations::{IoDeclaration, LanguagePair, NativeCodecs};
 
 //#region 🔖️Io
-pub fn io() -> IoDeclaration {
+pub async fn io() -> IoDeclaration {
     IoDeclaration {
         native: NativeCodecs {
             snapshot: LanguagePair { text: None, binary: None },
@@ -21,7 +21,7 @@ pub fn io() -> IoDeclaration {
     }
 }
 
-fn entries() -> &'static [IoEntry] {
+async fn entries() -> &'static [IoEntry] {
     use crate::artifacts::writer::io::export::serializers::artifacts as export;
     use crate::artifacts::writer::io::import::deserializers::artifacts as import;
     static ENTRIES: std::sync::OnceLock<Vec<IoEntry>> = std::sync::OnceLock::new();
@@ -50,7 +50,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn io_declares_ten_entries_five_formats_both_directions() {
+    async fn io_declares_ten_entries_five_formats_both_directions() {
         assert_eq!(entries().len(), 10);
     }
 }

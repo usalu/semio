@@ -29,12 +29,12 @@ mod tests {
     
 
     #[test]
-    fn home_op_text_round_trips_every_variant() {
+    async fn home_op_text_round_trips_every_variant() {
         store::os_store::test_support::assert_op_line_round_trip(&change_catalog_generation(7));
     }
 
     #[test]
-    fn dispatch_registers_semantic_descriptors() {
+    async fn dispatch_registers_semantic_descriptors() {
         register_s_home_mutation_descriptors();
         for kind in <SHomeMutation as protocol::SemanticMutation<SHomeSnapshot>>::kinds() {
             assert!(protocol::is_approved_verb(kind.verb), "verb '{}' must be in APPROVED_VERBS", kind.verb);
@@ -44,13 +44,13 @@ mod tests {
 
     //#region 🔖️MutationLaws
     #[test]
-    fn change_catalog_generation_inverse_law() {
+    async fn change_catalog_generation_inverse_law() {
         let base = SHomeSnapshot::default();
         protocol::testkit::assert_mutation_inverse_law(&base, &change_catalog_generation(7));
     }
 
     #[test]
-    fn change_catalog_generation_diff_absorb_law() {
+    async fn change_catalog_generation_diff_absorb_law() {
         use protocol::Mutation;
         let base = SHomeSnapshot::default();
         let d1 = change_catalog_generation(3).diff(&base).diff().clone();

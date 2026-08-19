@@ -33,19 +33,19 @@ pub struct SemioDrawingInference {
 }
 
 impl protocol::Inference<SemioDrawingSnapshot> for SemioDrawingInference {
-    fn infer(snapshot: &SemioDrawingSnapshot) -> Self {
+    async fn infer(snapshot: &SemioDrawingSnapshot) -> Self {
         Self { flattened_scene: store::infer_field::<SemioDrawingSnapshot, DrawFlattenedScene>(snapshot, None).into_iter().collect() }
     }
 }
 
 impl protocol::InferenceSpec<SemioDrawingSnapshot> for SemioDrawingInference {
-    fn inference_schema_id() -> &'static str {
+    async fn inference_schema_id() -> &'static str {
         "s.stdio.semio.drawing.inference"
     }
-    fn schema_version() -> u32 {
+    async fn schema_version() -> u32 {
         1
     }
-    fn fields() -> &'static [protocol::InferenceFieldSpec] {
+    async fn fields() -> &'static [protocol::InferenceFieldSpec] {
         &[protocol::InferenceFieldSpec { id: "s.stdio.semio.drawing.inference.flattenedScene", reads: &["layers", "styles"] }]
     }
 }
@@ -56,7 +56,7 @@ impl ArtifactInferrer for crate::artifacts::semio::standards::v1::subsets::drawi
     type Snapshot = SemioDrawingSnapshot;
     type Inference = SemioDrawingInference;
 
-    fn infer_cached(snapshot: &Self::Snapshot, cache: &mut store::InferenceCache, session: &mut store::InferenceSession) -> Self::Inference {
+    async fn infer_cached(snapshot: &Self::Snapshot, cache: &mut store::InferenceCache, session: &mut store::InferenceSession) -> Self::Inference {
         let _ = session;
         let flattened_scene = store::infer_field::<SemioDrawingSnapshot, DrawFlattenedScene>(snapshot, Some(cache)).into_iter().collect();
         SemioDrawingInference { flattened_scene }
@@ -68,7 +68,7 @@ impl ArtifactInferrer for crate::artifacts::semio::standards::v1::subsets::drawi
 /// 💡️ Registers `s.stdio.semio.drawing.inference`'s facet leaves into the OS-wide inference
 /// catalog — call once at plugin init, alongside `semio_drawing_artifact_schema_descriptor`'s own
 /// registration (`../🦀️component.rs`).
-pub fn semio_drawing_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
+pub async fn semio_drawing_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
     schema::ArtifactInferenceDescriptor {
         id: "s.stdio.semio.drawing.inference",
         inference: schema::FacetLeaves {
@@ -90,7 +90,7 @@ mod tests {
     use crate::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::{DrawCanvas, DrawLayer, DrawNode, STDIO_SEMIODRAWING_DOCUMENT_SCHEMA};
     use protocol::Inference;
 
-    fn fixture() -> SemioDrawingSnapshot {
+    async fn fixture() -> SemioDrawingSnapshot {
         SemioDrawingSnapshot {
             schema: STDIO_SEMIODRAWING_DOCUMENT_SCHEMA.into(),
             canvas: DrawCanvas { width: 10.0, height: 10.0, background: None },
@@ -105,18 +105,18 @@ mod tests {
     }
 
     #[test]
-    fn inference_determinism_law() {
+    async fn inference_determinism_law() {
         let snapshot = fixture();
         assert_eq!(SemioDrawingInference::infer(&snapshot), SemioDrawingInference::infer(&snapshot));
     }
 
     #[test]
-    fn inference_default_law() {
+    async fn inference_default_law() {
         assert_eq!(SemioDrawingInference::infer(&SemioDrawingSnapshot::default()), SemioDrawingInference::default());
     }
 
     #[test]
-    fn inference_matches_direct_infer_field_call() {
+    async fn inference_matches_direct_infer_field_call() {
         let snapshot = fixture();
         let inferred = SemioDrawingInference::infer(&snapshot);
         let direct = store::infer_field::<SemioDrawingSnapshot, DrawFlattenedScene>(&snapshot, None);

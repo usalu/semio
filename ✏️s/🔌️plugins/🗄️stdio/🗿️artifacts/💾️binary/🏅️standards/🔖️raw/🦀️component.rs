@@ -10,7 +10,7 @@ use semio_framework_plugin::app::declarations::{MediaDeclaration, StandardDeclar
 use semio_framework_plugin::StandardId;
 
 /// 🌳️ `standard "raw"`'s complete declaration — one subset, `any`.
-pub fn standard() -> StandardDeclaration {
+pub async fn standard() -> StandardDeclaration {
     StandardDeclaration {
         id: StandardId("raw"),
         media: MediaDeclaration { mimes: &["application/octet-stream"], extensions: &["bin"] },

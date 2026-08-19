@@ -12,32 +12,32 @@ use store::ArtifactPack;
 pub struct Fem3dPresence {}
 
 impl protocol::MutationDiff<Fem3dPresence> for Fem3dPresence {
-    fn apply(&self, base: &Fem3dPresence) -> protocol::MutationApplyResult<Fem3dPresence> {
+    async fn apply(&self, base: &Fem3dPresence) -> protocol::MutationApplyResult<Fem3dPresence> {
         Ok({
             base.clone()
         })
     }
-    fn absorb(&mut self, _other: Self) {}
+    async fn absorb(&mut self, _other: Self) {}
 }
 
 impl store::ArtifactDsl for Fem3dPresence {
     const EXTENSION: &'static str = "fem3d.presence";
-    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+    async fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
         if text.trim().is_empty() {
             return Ok(Self::default());
         }
         Err(store::TextError::new("no presence fields", store::TextSpan::at(1, 1)))
     }
-    fn print_dsl(&self) -> String {
+    async fn print_dsl(&self) -> String {
         String::new()
     }
 }
 
 impl ArtifactPack for Fem3dPresence {
-    fn encode_pack_with(&self, _options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
+    async fn encode_pack_with(&self, _options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         Ok(Vec::new())
     }
-    fn decode_pack_with(_bytes: &[u8], _options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
+    async fn decode_pack_with(_bytes: &[u8], _options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         Ok(Self::default())
     }
 }
@@ -53,17 +53,17 @@ pub enum Fem3dPresenceMutation {
 impl Mutation<Fem3dPresence> for Fem3dPresenceMutation {
     type Diff = Fem3dPresence;
 
-    fn diff(&self, _base: &Fem3dPresence) -> protocol::MutationOutcome<Fem3dPresence> {
+    async fn diff(&self, _base: &Fem3dPresence) -> protocol::MutationOutcome<Fem3dPresence> {
         protocol::MutationOutcome::new(Fem3dPresence::default())
     }
 
-    fn inverse(&self, _base: &Fem3dPresence) -> Vec<Self> {
+    async fn inverse(&self, _base: &Fem3dPresence) -> Vec<Self> {
         vec![Fem3dPresenceMutation::Noop]
     }
 }
 
 impl protocol::OpText for Fem3dPresenceMutation {
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
+    async fn parse_op(line: &str) -> Result<Self, store::TextError> {
         let variants = <Self as dsl::DslVariants>::variants();
         for (keyword, spec_fn) in &variants {
             let probe = format!("{keyword} ");
@@ -86,7 +86,7 @@ impl protocol::OpText for Fem3dPresenceMutation {
         }
         Err(dsl::__rt::field_error(format!("unknown operation line '{line}'")))
     }
-    fn print_op(&self) -> String {
+    async fn print_op(&self) -> String {
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
         let variants = <Self as dsl::DslVariants>::variants();
         let spec_fn = variants
@@ -104,10 +104,10 @@ impl protocol::OpText for Fem3dPresenceMutation {
 }
 
 impl protocol::OpBinary for Fem3dPresenceMutation {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         dsl::variants_binary::encode_op(self)
     }
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         dsl::variants_binary::decode_op(bytes)
     }
 }

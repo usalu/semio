@@ -15,7 +15,7 @@ pub use crate::artifacts::writer::schema::diff::*;
 //#region 🔖️Apply
 impl WriterDiff {
     /// 🧬️ Applies every sparse entry onto a full artifact.
-    pub fn apply_to_artifact(&self, artifact: &WriterArtifact) -> protocol::MutationApplyResult<WriterArtifact> {
+    pub async fn apply_to_artifact(&self, artifact: &WriterArtifact) -> protocol::MutationApplyResult<WriterArtifact> {
         Ok({
             if let Some(replacement) = &self.artifact {
                 return Ok((**replacement).clone());
@@ -72,7 +72,7 @@ impl WriterDiff {
 }
 
 impl MutationDiff<WriterSnapshot> for WriterDiff {
-    fn apply(&self, snapshot: &WriterSnapshot) -> protocol::MutationApplyResult<WriterSnapshot> {
+    async fn apply(&self, snapshot: &WriterSnapshot) -> protocol::MutationApplyResult<WriterSnapshot> {
         Ok({
             if let Some(replacement) = &self.artifact {
                 return Ok(replacement.to_snapshot());
@@ -96,7 +96,7 @@ impl MutationDiff<WriterSnapshot> for WriterDiff {
             next
         })
     }
-    fn absorb(&mut self, other: Self) {
+    async fn absorb(&mut self, other: Self) {
         if other.artifact.is_some() {
             *self = other;
             return;
@@ -151,7 +151,7 @@ impl MutationDiff<WriterSnapshot> for WriterDiff {
 //#endregion 🔖️Apply
 
 //#region 🔖️Builders
-pub fn diff_set_snapshot(snapshot: &WriterSnapshot) -> WriterDiff {
+pub async fn diff_set_snapshot(snapshot: &WriterSnapshot) -> WriterDiff {
     WriterDiff {
         artifact: Some(Box::new(WriterArtifact::from_snapshot(snapshot.clone()))),
         ..Default::default()
@@ -162,25 +162,25 @@ pub fn diff_set_snapshot(snapshot: &WriterSnapshot) -> WriterDiff {
 /// seeds the working-scene cache with it (`document_child_handle_and_cache`) — real handcrafted
 /// construction, never apply-then-capture. `id`/`language_id` come from `base` since the handle's
 /// target/content both need them.
-pub fn diff_set_text(text: &str, id: &str, language_id: &str) -> WriterDiff {
+pub async fn diff_set_text(text: &str, id: &str, language_id: &str) -> WriterDiff {
     WriterDiff { document: Some(document_child_handle_and_cache(id, text, language_id)), ..Default::default() }
 }
 //#endregion 🔖️Builders
 
 impl protocol::DiffCodec for WriterDiff {
-    fn print_diff(&self) -> String {
+    async fn print_diff(&self) -> String {
         serde_json::to_string(self).expect("serialize writer diff")
     }
 
-    fn parse_diff(line: &str) -> Result<Self, store::TextError> {
+    async fn parse_diff(line: &str) -> Result<Self, store::TextError> {
         serde_json::from_str(line).map_err(|error| dsl::__rt::field_error(error.to_string()))
     }
 
-    fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    async fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         Ok(self.print_diff().into_bytes())
     }
 
-    fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    async fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         let line = std::str::from_utf8(bytes).map_err(|error| protocol::ProtocolError::Malformed {
             what: "diff utf8",
             offset: 0,
@@ -200,7 +200,7 @@ mod tests {
     use super::*;
     use protocol::DiffCodec;
 
-    fn jack_snapshot() -> WriterSnapshot {
+    async fn jack_snapshot() -> WriterSnapshot {
         crate::artifacts::writer::writer_snapshot_with_text(
             "writer.document",
             "jack",
@@ -211,7 +211,7 @@ mod tests {
     }
 
     #[test]
-    fn writer_diff_print_parse_round_trips() {
+    async fn writer_diff_print_parse_round_trips() {
         let diffs = vec![
             diff_set_text("hello", "jack", "jack"),
             diff_set_snapshot(&jack_snapshot()),
@@ -226,7 +226,7 @@ mod tests {
     }
 
     #[test]
-    fn writer_diff_encode_decode_round_trips_and_matches_text() {
+    async fn writer_diff_encode_decode_round_trips_and_matches_text() {
         let diffs = vec![
             diff_set_text("hello", "jack", "jack"),
             diff_set_snapshot(&jack_snapshot()),
@@ -243,7 +243,7 @@ mod tests {
     /// scene cache, honestly replacing the retired byte-range-edit law (composed-child handles are
     /// whole-value replacements, not sub-string patches — see this file's `🔖️Builders` doc comment).
     #[test]
-    fn diff_set_text_mints_a_document_handle_and_caches_its_text() {
+    async fn diff_set_text_mints_a_document_handle_and_caches_its_text() {
         let base = WriterSnapshot::default();
         let diff = diff_set_text("hio", "jack", "plaintext");
         let next = diff.apply(&base).expect("valid mutation diff");
@@ -257,7 +257,7 @@ mod semio_grammar_conformance {
     use super::*;
 
     #[test]
-    fn component_grammar_semio_is_grammar_dialect() {
+    async fn component_grammar_semio_is_grammar_dialect() {
         let g = ::dsl::parse_grammar(COMPONENT_GRAMMAR_SEMIO).expect("parse grammar.semio");
         assert_eq!(g.dialect, ::dsl::SemioDialect::Grammar);
         assert!(!COMPONENT_GRAMMAR_SEMIO.is_empty());

@@ -10,12 +10,12 @@ use crate::artifacts::iso16757::Iso16757Snapshot;
 use store::PackError;
 
 /// 📦️ Encodes a `Document` to its binary pack form.
-pub fn encode(document: &Iso16757Snapshot) -> Vec<u8> {
+pub async fn encode(document: &Iso16757Snapshot) -> Vec<u8> {
     store::ArtifactPack::encode_pack(document)
 }
 
 /// 📖️ Decodes a `Document` from its binary pack form.
-pub fn decode(bytes: &[u8]) -> Result<Iso16757Snapshot, PackError> {
+pub async fn decode(bytes: &[u8]) -> Result<Iso16757Snapshot, PackError> {
     <Iso16757Snapshot as store::ArtifactPack>::decode_pack(bytes)
 }
 
@@ -30,12 +30,12 @@ mod tests {
     // `#[dsl(table)]` row's nested non-primitive `Record` columns, so it can't backfill an `Option<T>`
     // sub-field of that nested record (here: `Names.short_name`, `None` on many rows of this fixture's
     // `#[dsl(table)]` catalogue tables — `ProductGroup`/`ProductClass`/`Product`/`Subject` etc. all
-    fn document_dsl_pack_equivalence_the_reference_fixture() {
+    async fn document_dsl_pack_equivalence_the_reference_fixture() {
         store::os_store::test_support::assert_dsl_pack_equivalence(&Iso16757Snapshot::reference_fixture());
     }
 
     #[test]
-    fn pack_round_trips_the_reference_fixture() {
+    async fn pack_round_trips_the_reference_fixture() {
         let document = Iso16757Snapshot::reference_fixture();
         let bytes = encode(&document);
         assert_eq!(decode(&bytes).expect("decode"), document);

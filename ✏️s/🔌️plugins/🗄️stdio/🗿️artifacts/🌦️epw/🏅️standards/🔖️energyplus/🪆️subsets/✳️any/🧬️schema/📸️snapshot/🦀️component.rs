@@ -104,7 +104,7 @@ pub const EPW_RECORD_FIELD_COUNT: usize = 35;
 
 impl EpwRecord {
     /// 📤️ Reads one field by its canonical wire index (0-based, spec column order).
-    pub fn field_at(&self, index: usize) -> Option<&str> {
+    pub async fn field_at(&self, index: usize) -> Option<&str> {
         Some(match index {
             0 => &self.year,
             1 => &self.month,
@@ -146,7 +146,7 @@ impl EpwRecord {
     }
 
     /// 📥️ Writes one field by its canonical wire index. No-op if `index` is out of range.
-    pub fn set_field_at(&mut self, index: usize, value: String) {
+    pub async fn set_field_at(&mut self, index: usize, value: String) {
         match index {
             0 => self.year = value,
             1 => self.month = value,
@@ -188,7 +188,7 @@ impl EpwRecord {
     }
 
     /// 📤️ The 35 fields in wire order (spec column order).
-    pub fn fields(&self) -> [&str; EPW_RECORD_FIELD_COUNT] {
+    pub async fn fields(&self) -> [&str; EPW_RECORD_FIELD_COUNT] {
         [
             &self.year,
             &self.month,
@@ -229,7 +229,7 @@ impl EpwRecord {
     }
 
     /// 📥️ Builds a record from exactly 35 wire-order fields.
-    pub fn from_fields(f: [String; EPW_RECORD_FIELD_COUNT]) -> Self {
+    pub async fn from_fields(f: [String; EPW_RECORD_FIELD_COUNT]) -> Self {
         let [year, month, day, hour, minute, data_source_uncertainty, dry_bulb_temp, dew_point_temp, relative_humidity, atmospheric_pressure, extraterrestrial_horizontal_radiation, extraterrestrial_direct_normal_radiation, horizontal_infrared_radiation, global_horizontal_radiation, direct_normal_radiation, diffuse_horizontal_radiation, global_horizontal_illuminance, direct_normal_illuminance, diffuse_horizontal_illuminance, zenith_luminance, wind_direction, wind_speed, total_sky_cover, opaque_sky_cover, visibility, ceiling_height, present_weather_observation, present_weather_codes, precipitable_water, aerosol_optical_depth, snow_depth, days_since_last_snowfall, albedo, liquid_precip_depth, liquid_precip_quantity] =
             f;
         Self {
@@ -325,7 +325,7 @@ pub struct EpwSnapshot {
 }
 
 impl Default for EpwSnapshot {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self {
             schema: STDIO_EPW_DOCUMENT_SCHEMA.into(),
             location: EpwLocation::default(),
@@ -347,18 +347,18 @@ impl Default for EpwSnapshot {
 // (https://bigladdersoftware.com/epx/docs/9-6/auxiliary-programs/energyplus-weather-file-epw-data-dictionary.html).
 impl store::ArtifactDsl for EpwSnapshot {
     const EXTENSION: &'static str = "epw";
-    fn envelope_id() -> &'static str {
+    async fn envelope_id() -> &'static str {
         STDIO_EPW_DOCUMENT_SCHEMA
     }
 
-    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+    async fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
         let body = match store::semio_format::split_text_preamble(text) {
             Ok((_, rest)) => rest,
             Err(_) => text,
         };
         crate::artifacts::epw::standards::energyplus::subsets::any::io::decode_epw(body).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
-    fn print_dsl(&self) -> String {
+    async fn print_dsl(&self) -> String {
         let body = crate::artifacts::epw::standards::energyplus::subsets::any::io::encode_epw(self);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
@@ -366,13 +366,13 @@ impl store::ArtifactDsl for EpwSnapshot {
 }
 
 impl store::ArtifactPack for EpwSnapshot {
-    fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
+    async fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
         let raw = crate::artifacts::epw::standards::energyplus::subsets::any::io::encode_epw(self).into_bytes();
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &raw))
     }
-    fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
+    async fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
         if envelope.envelope_id() != <Self as store::ArtifactDsl>::envelope_id() {
             return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.envelope_id())));

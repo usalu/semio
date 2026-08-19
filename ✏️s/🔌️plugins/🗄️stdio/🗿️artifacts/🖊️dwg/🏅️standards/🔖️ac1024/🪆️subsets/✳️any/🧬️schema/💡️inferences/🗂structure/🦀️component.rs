@@ -18,13 +18,13 @@ pub struct DwgStructure {
 }
 
 impl Default for DwgStructure {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self { layer_count: 0, entity_count: 0, geometry_value_count: 0, geometry_index_count: 0, text_character_count: 0, codepage: 0, version: String::new() }
     }
 }
 
 /// 🗂️ Computes [`DwgStructure`] from standard logical drawing concepts.
-pub fn compute_dwg_structure(snapshot: &DwgSnapshot) -> DwgStructure {
+pub async fn compute_dwg_structure(snapshot: &DwgSnapshot) -> DwgStructure {
     let entities = snapshot.drawing.entities();
     DwgStructure {
         layer_count: snapshot.drawing.layers.len() as u32,
@@ -45,7 +45,7 @@ mod tests {
     use crate::artifacts::dwg::standards::v_ac1024::subsets::any::schema::snapshot::{DwgEntityBody, DwgEntityCommon, DwgLineEntity, DwgLogicalDrawing, DwgLogicalLayer, DwgLogicalObject, DwgLogicalObjectBody, DwgObjectCategory};
 
     #[test]
-    fn structure_matches_hand_built_logical_drawing() {
+    async fn structure_matches_hand_built_logical_drawing() {
         let snapshot = DwgSnapshot {
             schema: "s.stdio.dwg".into(),
             version: "AC1024".into(),
@@ -82,13 +82,13 @@ mod tests {
     }
 
     #[test]
-    fn inference_determinism_law() {
+    async fn inference_determinism_law() {
         let snapshot = DwgSnapshot { schema: "s.stdio.dwg".into(), version: "AC1024".into(), codepage: 30, ..Default::default() };
         assert_eq!(compute_dwg_structure(&snapshot), compute_dwg_structure(&snapshot));
     }
 
     #[test]
-    fn inference_default_law() {
+    async fn inference_default_law() {
         assert_eq!(compute_dwg_structure(&DwgSnapshot::default()), DwgStructure::default());
     }
 }

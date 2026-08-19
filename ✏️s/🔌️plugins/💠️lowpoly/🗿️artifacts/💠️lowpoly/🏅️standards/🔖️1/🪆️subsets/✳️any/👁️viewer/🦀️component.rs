@@ -23,10 +23,10 @@ pub enum LowpolyViewCommand {
 }
 
 impl protocol::OpBinary for LowpolyViewCommand {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         Ok(Vec::new())
     }
-    fn decode_op(_bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    async fn decode_op(_bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         Ok(LowpolyViewCommand::Noop)
     }
 }
@@ -50,7 +50,7 @@ impl ArtifactViewer for LowpolyViewer {
     const DIALECT: Dialect = LOWPOLY_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = LOWPOLY_DOCUMENT_SCHEMA;
 
-    fn initial_snapshot() -> LowpolySnapshot {
+    async fn initial_snapshot() -> LowpolySnapshot {
         default_snapshot()
     }
 
@@ -58,11 +58,11 @@ impl ArtifactViewer for LowpolyViewer {
     /// change, so this always returns the empty `ViewEmit` — no config mutation, no effect, no dirty
     /// scope. Kept as a real dispatch (not an `unreachable!()`) so a future view-only action (camera
     /// orbit, "jump to object") is a pure addition here, never a signature change.
-    fn handle(_command: &Self::Command, _doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _interaction: &semio_framework_plugin::app::InteractionView<'_>, _engines: &EngineHandles) -> Result<ViewEmit<Self::ConfigMutation>, Fault> {
+    async fn handle(_command: &Self::Command, _doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _interaction: &semio_framework_plugin::app::InteractionView<'_>, _engines: &EngineHandles) -> Result<ViewEmit<Self::ConfigMutation>, Fault> {
         Ok(ViewEmit::default())
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> UiNode {
+    async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> UiNode {
         match body_key {
             model::BODY_KEY => model::render(doc.snapshot),
             _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))),
@@ -72,7 +72,7 @@ impl ArtifactViewer for LowpolyViewer {
 //#endregion 🔖️Viewer
 
 //#region 🔖️Manifest
-pub fn create_lowpoly_viewer() -> semio_framework_plugin::AppDefinition {
+pub async fn create_lowpoly_viewer() -> semio_framework_plugin::AppDefinition {
     Viewer::builder(LOWPOLY_DIALECT)
         .document(["semio", "lowpoly"])
         .icon_id("shapes")
@@ -90,19 +90,19 @@ mod tests {
     use super::*;
 
     #[test]
-    fn create_lowpoly_viewer_builds_a_definition_for_the_viewer_role() {
+    async fn create_lowpoly_viewer_builds_a_definition_for_the_viewer_role() {
         let def = create_lowpoly_viewer();
         assert_eq!(def.role, semio_framework::AppRole::Viewer);
         assert_eq!(def.dialect, LOWPOLY_DIALECT.into());
     }
 
     #[test]
-    fn viewer_dialect_matches_the_artifact_coordinate() {
+    async fn viewer_dialect_matches_the_artifact_coordinate() {
         assert_eq!(<LowpolyViewer as ArtifactViewer>::DIALECT, LOWPOLY_DIALECT);
     }
 
     #[test]
-    fn viewer_command_default_is_noop() {
+    async fn viewer_command_default_is_noop() {
         assert_eq!(LowpolyViewCommand::default(), LowpolyViewCommand::Noop);
     }
 }

@@ -54,7 +54,7 @@ pub enum FemElement {
 }
 
 /// 🪪️ A `FemElement`'s stable id, across its `Bar`/`Frame` variants.
-pub fn element_id(element: &FemElement) -> &str {
+pub async fn element_id(element: &FemElement) -> &str {
     match element {
         FemElement::Bar { id, .. } | FemElement::Frame { id, .. } => id,
     }
@@ -113,7 +113,7 @@ pub enum FemLoad {
 }
 
 /// 🪪️ A `FemLoad`'s stable id, across every variant.
-pub fn load_id(load: &FemLoad) -> &str {
+pub async fn load_id(load: &FemLoad) -> &str {
     match load {
         FemLoad::Nodal { id, .. } | FemLoad::MemberUdl { id, .. } | FemLoad::Area { id, .. } => id,
     }
@@ -184,7 +184,7 @@ pub struct FemCamera {
 }
 
 impl Default for FemCamera {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self { json: "{}".to_string() }
     }
 }
@@ -200,7 +200,7 @@ pub use crate::artifacts::fem3d::schema::Fem3dArtifact;
 /// `crate::editor::fem3d::fem3d_results_out_port`) and produced by
 /// `crate::editor::fem3d::Fem3dPlayApp::export_media`. Lifted verbatim out of the old ui crate's
 /// `create_fem3d_app`'s inline `.artifact_kind(...)` call so the app's manifest can reference it by name.
-pub fn computation_artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
+pub async fn computation_artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
     semio_framework_plugin::ArtifactKindSpec {
         id: "computation.fem3d".into(),
         name: "FEM 3D Results".into(),
@@ -228,7 +228,7 @@ pub fn computation_artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
 /// `Fem3dPlayApp`'s CONFIG/PRESENCE schema, an app-scope concern `ArtifactDeclaration` deliberately has
 /// no field for (see that struct's own doc) — `register_app_schema_descriptor` is not in §6's
 /// artifact-scoped function set.
-pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
+pub async fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
     use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
     let rows: &[(&str, &str, &str, &[(&str, &str)], Option<(&str, &str)>)] = &[
         ("s.fem3d.standard.v1", "standard", "1", &[], None),
@@ -271,7 +271,7 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
     Ok(definition)
 }
 
-pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
+pub async fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
     semio_framework_plugin::ArtifactDeclaration::builder(definition()?)
         .schema(crate::artifacts::fem3d::schema::fem3d_artifact_schema_descriptor())
         .inferences([crate::artifacts::fem3d::standards::v1::subsets::any::schema::inferences::fem3d_artifact_inference_descriptor()])
@@ -284,7 +284,7 @@ pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semi
 /// 📌️ Handcrafted facet grammars (text) and protocols (binary) for in-process execution — built once
 /// and leaked to a `&'static` slice since `dsl::passthrough_hooks` isn't `const fn`, mirroring
 /// `🗒️note`'s own `pilot_languages()` convention.
-fn pilot_languages() -> &'static [dsl::LanguageSpec] {
+async fn pilot_languages() -> &'static [dsl::LanguageSpec] {
     static LANGUAGES: std::sync::OnceLock<Vec<dsl::LanguageSpec>> = std::sync::OnceLock::new();
     LANGUAGES
         .get_or_init(|| {
@@ -352,14 +352,14 @@ mod tests {
     use crate::model::Dof;
 
     #[test]
-    fn fem_dof_round_trips_through_core_dof() {
+    async fn fem_dof_round_trips_through_core_dof() {
         for dof in FemDof::ALL {
             assert_eq!(FemDof::from(Dof::from(dof)), dof);
         }
     }
 
     #[test]
-    fn fem_analysis_settings_default_matches_pre_migration_values() {
+    async fn fem_analysis_settings_default_matches_pre_migration_values() {
         let settings = FemAnalysisSettings::default();
         assert_eq!(settings.modal_count, 3);
         assert_eq!(settings.buckling_count, 3);
@@ -367,12 +367,12 @@ mod tests {
     }
 
     #[test]
-    fn fem_camera_default_is_empty_json_object() {
+    async fn fem_camera_default_is_empty_json_object() {
         assert_eq!(FemCamera::default().json, "{}");
     }
 
     #[test]
-    fn computation_artifact_kind_matches_computation_fem3d() {
+    async fn computation_artifact_kind_matches_computation_fem3d() {
         let kind = computation_artifact_kind();
         assert_eq!(kind.id, "computation.fem3d");
         assert_eq!(kind.component_kind, "fem3d-results");

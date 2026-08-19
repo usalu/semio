@@ -19,7 +19,7 @@ const AVATAR_PLACEHOLDER_PNG_BASE64: &str = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAY
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
-pub fn definition() -> WindowKindDefinition {
+pub async fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
         id: FORMS_PLAY_WINDOW_TRY.into(),
         label: LocalizedLabel::native("Try", "Testen"),
@@ -41,11 +41,11 @@ pub fn definition() -> WindowKindDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-fn try_value_action(key: &str) -> ActionDescriptor {
+async fn try_value_action(key: &str) -> ActionDescriptor {
     forms_action("setTryValue", Some(json!({ "key": key })))
 }
 
-fn image_question_src(question: &FormQuestion) -> String {
+async fn image_question_src(question: &FormQuestion) -> String {
     let src = question.src.as_deref().unwrap_or("");
     if src.is_empty() {
         return format!("data:image/png;base64,{AVATAR_PLACEHOLDER_PNG_BASE64}");
@@ -56,19 +56,19 @@ fn image_question_src(question: &FormQuestion) -> String {
     format!("data:image/png;base64,{src}")
 }
 
-fn render_image_question(question: &FormQuestion) -> UiNode {
+async fn render_image_question(question: &FormQuestion) -> UiNode {
     semio_framework_plugin::ui_image(format!("forms-try.{}.image", question.id), image_question_src(question), Some(Label::data(question.label.clone())))
 }
 
-fn ui_text_emphasized(value: impl Into<Label>) -> UiNode {
+async fn ui_text_emphasized(value: impl Into<Label>) -> UiNode {
     UiNode::Text(UiTextNode { value: value.into(), emphasize: Some(true), data_attributes: None, presence: UiPresence::default(), menu: None })
 }
 
-fn ui_stack_horizontal(children: Vec<UiNode>) -> UiNode {
+async fn ui_stack_horizontal(children: Vec<UiNode>) -> UiNode {
     UiNode::Stack(UiStackNode { direction: "horizontal".into(), gap: Some("tight".into()), padding: Some("none".into()), id: None, presence: UiPresence::default(), activate: None, drop_action: None, drop_overlay: None, children, menu: None })
 }
 
-fn try_field(question: &FormQuestion, error: Option<&str>, child: UiNode) -> UiNode {
+async fn try_field(question: &FormQuestion, error: Option<&str>, child: UiNode) -> UiNode {
     UiNode::Field(UiFieldNode {
         id: format!("forms-try.{}", question.id),
         label: Label::data(question.label.clone()),
@@ -81,7 +81,7 @@ fn try_field(question: &FormQuestion, error: Option<&str>, child: UiNode) -> UiN
     })
 }
 
-fn render_try_question(question: &FormQuestion, values: &Map<String, Value>, contributions: &[ProgramContributionEntry], error: Option<&str>, labels: &FormsLabels) -> UiNode {
+async fn render_try_question(question: &FormQuestion, values: &Map<String, Value>, contributions: &[ProgramContributionEntry], error: Option<&str>, labels: &FormsLabels) -> UiNode {
     let value = values.get(&question.id).cloned().unwrap_or_else(|| json_value_from_dsl(question));
     let key = question.id.clone();
     match question.kind.as_str() {
@@ -251,11 +251,11 @@ fn render_try_question(question: &FormQuestion, values: &Map<String, Value>, con
 
 /// 🔄️ The question's typed default, as a `serde_json::Value` — used when no try value has been entered
 /// for it yet.
-fn json_value_from_dsl(question: &FormQuestion) -> Value {
+async fn json_value_from_dsl(question: &FormQuestion) -> Value {
     crate::artifacts::forms::schema::dsl_to_value(&default_value_for_question(question))
 }
 
-pub fn render(spec: &crate::artifacts::forms::FormsSnapshot, config: &FormsConfig, labels: &FormsLabels) -> UiNode {
+pub async fn render(spec: &crate::artifacts::forms::FormsSnapshot, config: &FormsConfig, labels: &FormsLabels) -> UiNode {
     let steps = crate::artifacts::forms::forms_steps(spec);
     if steps.is_empty() {
         return semio_framework_plugin::ui_text(labels.no_steps_in_form);
@@ -308,7 +308,7 @@ mod tests {
     use crate::editor::forms::FORMS_PLAY_BODY_TRY as BODY_TRY;
 
     #[test]
-    fn renders_try_wizard() {
+    async fn renders_try_wizard() {
         let mut app = forms_app();
         crate::editor::forms::testkit::dispatch(&mut app, crate::editor::forms::FormsCommand::SetActiveExample(crate::editor::forms::commands::set_active_example::SetActiveExample { example_id: "default".into() }));
         let json = render_body(&mut app, BODY_TRY);
@@ -317,7 +317,7 @@ mod tests {
     }
 
     #[test]
-    fn image_question_with_url_src_emits_image_node() {
+    async fn image_question_with_url_src_emits_image_node() {
         let question = FormQuestion { src: Some("https://example.com/picture.png".into()), ..crate::editor::forms::commands::add_question::question_shell("q-image".into(), "Picture".into(), "image".into()) };
         let node = render_try_question(&question, &Map::new(), &[], None, crate::editor::forms::terminology::forms_play_labels(&FormsConfig::default()));
         let json = serde_json::to_string(&node).unwrap();
@@ -326,7 +326,7 @@ mod tests {
     }
 
     #[test]
-    fn extension_question_emits_external_slot_when_contribution_registered() {
+    async fn extension_question_emits_external_slot_when_contribution_registered() {
         let node = render_try_question(&building_component_question(), &Map::new(), &building_component_contributions(), None, crate::editor::forms::terminology::forms_play_labels(&FormsConfig::default()));
         let json = serde_json::to_string(&node).unwrap();
         assert!(json.contains("externalSlot"));
@@ -334,14 +334,14 @@ mod tests {
     }
 
     #[test]
-    fn extension_question_falls_back_without_contribution() {
+    async fn extension_question_falls_back_without_contribution() {
         let node = render_try_question(&building_component_question(), &Map::new(), &[], None, crate::editor::forms::terminology::forms_play_labels(&FormsConfig::default()));
         let json = serde_json::to_string(&node).unwrap();
         assert!(json.contains("Extension unavailable"));
     }
 
     #[test]
-    fn definition_declares_the_canvas2d_surface_and_body_key() {
+    async fn definition_declares_the_canvas2d_surface_and_body_key() {
         let definition = definition();
         assert_eq!(definition.body_key, FORMS_PLAY_BODY_TRY);
         assert!(matches!(definition.surface_kind, SurfaceKind::Canvas2d));

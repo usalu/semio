@@ -14,7 +14,7 @@ pub const BLOCK5D_BODY_INSPECTOR: &str = "block5d.play.inspector";
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
-pub fn definition() -> PanelTabDefinition {
+pub async fn definition() -> PanelTabDefinition {
     PanelTabDefinition {
         kind: PanelTabKind::App(FRAMEWORK_PANEL_TAB_INSPECTION_ID.into()),
         label: LocalizedLabel::native(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, "Inspektion"),
@@ -26,7 +26,7 @@ pub fn definition() -> PanelTabDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-fn text_field(id: &str, label: impl Into<Label>, value: &str, field: &str) -> UiNode {
+async fn text_field(id: &str, label: impl Into<Label>, value: &str, field: &str) -> UiNode {
     UiNode::Field(UiFieldNode {
         presence: UiPresence::default(),
         id: id.into(),
@@ -52,7 +52,7 @@ fn text_field(id: &str, label: impl Into<Label>, value: &str, field: &str) -> Ui
     })
 }
 
-pub fn render(definition: &Block5dSnapshot, labels: &Block5dLabels) -> UiNode {
+pub async fn render(definition: &Block5dSnapshot, labels: &Block5dLabels) -> UiNode {
     ui_inspector_groups_to_tree(&[UiInspectorFieldGroup {
         id: "block5d-play-inspector".into(),
         label: labels.summary.into(),
@@ -74,7 +74,7 @@ mod tests {
     use crate::editor::block5d::testkit::{new_app, render as render_body};
 
     #[test]
-    fn renders_inspector_fields() {
+    async fn renders_inspector_fields() {
         let mut app = new_app();
         let json = render_body(&mut app, BLOCK5D_BODY_INSPECTOR);
         assert!(json.contains("\"type\":\"tree\""), "inspection body must be a tree like document");

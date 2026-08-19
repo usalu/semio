@@ -24,7 +24,7 @@ pub struct PdfInference {
 }
 
 impl Inference<PdfSnapshot> for PdfInference {
-    fn infer(snapshot: &PdfSnapshot) -> Self {
+    async fn infer(snapshot: &PdfSnapshot) -> Self {
         Self { outline: PdfOutline::compute(snapshot) }
     }
 }
@@ -35,19 +35,19 @@ impl Inference<PdfSnapshot> for PdfInference {
 /// `inference_default_law`. Defining default as "infer the default snapshot" makes the two
 /// definitionally equal.
 impl Default for PdfInference {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self::infer(&PdfSnapshot::default())
     }
 }
 
 impl protocol::InferenceSpec<PdfSnapshot> for PdfInference {
-    fn inference_schema_id() -> &'static str {
+    async fn inference_schema_id() -> &'static str {
         "s.stdio.pdf.inference"
     }
-    fn schema_version() -> u32 {
+    async fn schema_version() -> u32 {
         1
     }
-    fn fields() -> &'static [protocol::InferenceFieldSpec] {
+    async fn fields() -> &'static [protocol::InferenceFieldSpec] {
         &[protocol::InferenceFieldSpec { id: "s.stdio.pdf.inference.outline", reads: &["page"] }]
     }
 }
@@ -63,7 +63,7 @@ impl ArtifactInferrer for crate::artifacts::pdf::standards::v1_4::subsets::any::
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.stdio.pdf.inference`'s facet leaves into the OS-wide inference catalog — call
 /// once at plugin init, alongside `pdf_artifact_schema_descriptor`'s registration.
-pub fn pdf_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
+pub async fn pdf_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
     schema::ArtifactInferenceDescriptor {
         id: "s.stdio.pdf.inference",
         inference: schema::FacetLeaves {
@@ -84,13 +84,13 @@ mod tests {
     use protocol::Inference;
 
     #[test]
-    fn inference_determinism_law() {
+    async fn inference_determinism_law() {
         let snapshot = PdfSnapshot::default();
         assert_eq!(PdfInference::infer(&snapshot), PdfInference::infer(&snapshot));
     }
 
     #[test]
-    fn inference_default_law() {
+    async fn inference_default_law() {
         assert_eq!(PdfInference::infer(&PdfSnapshot::default()), PdfInference::default());
     }
 }

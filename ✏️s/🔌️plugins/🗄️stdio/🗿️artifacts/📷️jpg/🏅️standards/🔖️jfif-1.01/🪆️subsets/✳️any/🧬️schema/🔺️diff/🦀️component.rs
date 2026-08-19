@@ -30,16 +30,16 @@ pub struct JpgComponentDiff {
 }
 
 impl JpgComponentDiff {
-    fn is_empty(&self) -> bool {
+    async fn is_empty(&self) -> bool {
         self == &Self::default()
     }
-    fn apply(&self, base: &JpgFrameComponent) -> JpgFrameComponent {
+    async fn apply(&self, base: &JpgFrameComponent) -> JpgFrameComponent {
         JpgFrameComponent { id: base.id, h_sampling: self.h_sampling.unwrap_or(base.h_sampling), v_sampling: self.v_sampling.unwrap_or(base.v_sampling), quant_table_id: self.quant_table_id.unwrap_or(base.quant_table_id) }
     }
-    fn between(a: &JpgFrameComponent, b: &JpgFrameComponent) -> Self {
+    async fn between(a: &JpgFrameComponent, b: &JpgFrameComponent) -> Self {
         Self { h_sampling: (a.h_sampling != b.h_sampling).then_some(b.h_sampling), v_sampling: (a.v_sampling != b.v_sampling).then_some(b.v_sampling), quant_table_id: (a.quant_table_id != b.quant_table_id).then_some(b.quant_table_id) }
     }
-    fn absorb(&mut self, other: Self) {
+    async fn absorb(&mut self, other: Self) {
         if other.h_sampling.is_some() {
             self.h_sampling = other.h_sampling;
         }
@@ -77,7 +77,7 @@ pub struct JpgComponentsDiff {
     pub added: Vec<JpgComponentAdded>,
 }
 impl JpgComponentsDiff {
-    fn is_empty(&self) -> bool {
+    async fn is_empty(&self) -> bool {
         self.removed.is_empty() && self.modified.is_empty() && self.added.is_empty()
     }
 }
@@ -123,10 +123,10 @@ pub struct JpgQuantTableDiff {
 /// array impls stop at 32 elements).
 mod opt_quant_values {
     use serde::{Deserialize, Deserializer, Serialize, Serializer};
-    pub fn serialize<S: Serializer>(v: &Option<[u16; 64]>, s: S) -> Result<S::Ok, S::Error> {
+    pub async fn serialize<S: Serializer>(v: &Option<[u16; 64]>, s: S) -> Result<S::Ok, S::Error> {
         v.map(|a| a.to_vec()).serialize(s)
     }
-    pub fn deserialize<'de, D: Deserializer<'de>>(d: D) -> Result<Option<[u16; 64]>, D::Error> {
+    pub async fn deserialize<'de, D: Deserializer<'de>>(d: D) -> Result<Option<[u16; 64]>, D::Error> {
         let v: Option<Vec<u16>> = Option::deserialize(d)?;
         match v {
             None => Ok(None),
@@ -135,16 +135,16 @@ mod opt_quant_values {
     }
 }
 impl JpgQuantTableDiff {
-    fn is_empty(&self) -> bool {
+    async fn is_empty(&self) -> bool {
         self == &Self::default()
     }
-    fn apply(&self, base: &JpgQuantTable) -> JpgQuantTable {
+    async fn apply(&self, base: &JpgQuantTable) -> JpgQuantTable {
         JpgQuantTable { id: base.id, precision: self.precision.unwrap_or(base.precision), values: self.values.unwrap_or(base.values) }
     }
-    fn between(a: &JpgQuantTable, b: &JpgQuantTable) -> Self {
+    async fn between(a: &JpgQuantTable, b: &JpgQuantTable) -> Self {
         Self { precision: (a.precision != b.precision).then_some(b.precision), values: (a.values != b.values).then_some(b.values) }
     }
-    fn absorb(&mut self, other: Self) {
+    async fn absorb(&mut self, other: Self) {
         if other.precision.is_some() {
             self.precision = other.precision;
         }
@@ -179,7 +179,7 @@ pub struct JpgQuantTablesDiff {
     pub added: Vec<JpgQuantTableAdded>,
 }
 impl JpgQuantTablesDiff {
-    fn is_empty(&self) -> bool {
+    async fn is_empty(&self) -> bool {
         self.removed.is_empty() && self.modified.is_empty() && self.added.is_empty()
     }
 }
@@ -203,16 +203,16 @@ pub struct JpgHuffmanTableDiff {
     pub values: Option<Vec<u8>>,
 }
 impl JpgHuffmanTableDiff {
-    fn is_empty(&self) -> bool {
+    async fn is_empty(&self) -> bool {
         self == &Self::default()
     }
-    fn apply(&self, base: &JpgHuffmanTable) -> JpgHuffmanTable {
+    async fn apply(&self, base: &JpgHuffmanTable) -> JpgHuffmanTable {
         JpgHuffmanTable { id: base.id, class: base.class, bits: self.bits.unwrap_or(base.bits), values: self.values.clone().unwrap_or_else(|| base.values.clone()) }
     }
-    fn between(a: &JpgHuffmanTable, b: &JpgHuffmanTable) -> Self {
+    async fn between(a: &JpgHuffmanTable, b: &JpgHuffmanTable) -> Self {
         Self { bits: (a.bits != b.bits).then_some(b.bits), values: (a.values != b.values).then(|| b.values.clone()) }
     }
-    fn absorb(&mut self, other: Self) {
+    async fn absorb(&mut self, other: Self) {
         if other.bits.is_some() {
             self.bits = other.bits;
         }
@@ -247,11 +247,11 @@ pub struct JpgHuffmanTablesDiff {
     pub added: Vec<JpgHuffmanTableAdded>,
 }
 impl JpgHuffmanTablesDiff {
-    fn is_empty(&self) -> bool {
+    async fn is_empty(&self) -> bool {
         self.removed.is_empty() && self.modified.is_empty() && self.added.is_empty()
     }
 }
-fn huffman_key(t: &JpgHuffmanTable) -> JpgHuffmanTableKey {
+async fn huffman_key(t: &JpgHuffmanTable) -> JpgHuffmanTableKey {
     JpgHuffmanTableKey { class: t.class, id: t.id }
 }
 //#endregion 🔖️HuffmanTablesDiff
@@ -266,16 +266,16 @@ pub struct JpgSegmentDiff {
     pub data: Option<Vec<u8>>,
 }
 impl JpgSegmentDiff {
-    fn is_empty(&self) -> bool {
+    async fn is_empty(&self) -> bool {
         self == &Self::default()
     }
-    fn apply(&self, base: &JpgSegment) -> JpgSegment {
+    async fn apply(&self, base: &JpgSegment) -> JpgSegment {
         JpgSegment { marker: self.marker.unwrap_or(base.marker), data: self.data.clone().unwrap_or_else(|| base.data.clone()) }
     }
-    fn between(a: &JpgSegment, b: &JpgSegment) -> Self {
+    async fn between(a: &JpgSegment, b: &JpgSegment) -> Self {
         Self { marker: (a.marker != b.marker).then_some(b.marker), data: (a.data != b.data).then(|| b.data.clone()) }
     }
-    fn absorb(&mut self, other: Self) {
+    async fn absorb(&mut self, other: Self) {
         if other.marker.is_some() {
             self.marker = other.marker;
         }
@@ -322,7 +322,7 @@ enum Slot {
     Added(usize),
 }
 
-fn simulate_slots(len: usize, removed: &[usize], added_indices: &[usize]) -> Vec<Slot> {
+async fn simulate_slots(len: usize, removed: &[usize], added_indices: &[usize]) -> Vec<Slot> {
     let mut slots: Vec<Slot> = (0..len).map(Slot::Base).collect();
     let mut removed_desc = removed.to_vec();
     removed_desc.sort_unstable_by(|a, b| b.cmp(a));
@@ -341,11 +341,11 @@ fn simulate_slots(len: usize, removed: &[usize], added_indices: &[usize]) -> Vec
     slots
 }
 
-fn base_len_hint(removed: &[usize], modified_indices: impl Iterator<Item = usize>, added_indices: impl Iterator<Item = usize>) -> usize {
+async fn base_len_hint(removed: &[usize], modified_indices: impl Iterator<Item = usize>, added_indices: impl Iterator<Item = usize>) -> usize {
     removed.iter().copied().chain(modified_indices).chain(added_indices).max().map(|m| m + 1).unwrap_or(0)
 }
 
-fn absorb_other_segments(d1: JpgOtherSegmentsDiff, d2: JpgOtherSegmentsDiff) -> JpgOtherSegmentsDiff {
+async fn absorb_other_segments(d1: JpgOtherSegmentsDiff, d2: JpgOtherSegmentsDiff) -> JpgOtherSegmentsDiff {
     let d1_added_indices: Vec<usize> = d1.added.iter().map(|a| a.index).collect();
     let removed_count = {
         let mut r = d1.removed.clone();
@@ -430,7 +430,7 @@ fn absorb_other_segments(d1: JpgOtherSegmentsDiff, d2: JpgOtherSegmentsDiff) -> 
     JpgOtherSegmentsDiff { removed: final_removed, modified: final_modified, added: final_added }
 }
 
-fn absorb_other_segments_opt(base: &mut Option<JpgOtherSegmentsDiff>, other: Option<JpgOtherSegmentsDiff>) {
+async fn absorb_other_segments_opt(base: &mut Option<JpgOtherSegmentsDiff>, other: Option<JpgOtherSegmentsDiff>) {
     match (base.take(), other) {
         (None, o) => *base = o,
         (Some(b), None) => *base = Some(b),
@@ -438,7 +438,7 @@ fn absorb_other_segments_opt(base: &mut Option<JpgOtherSegmentsDiff>, other: Opt
     }
 }
 
-fn apply_other_segments(base: &[JpgSegment], d: &JpgOtherSegmentsDiff) -> Vec<JpgSegment> {
+async fn apply_other_segments(base: &[JpgSegment], d: &JpgOtherSegmentsDiff) -> Vec<JpgSegment> {
     let mut items = base.to_vec();
     for m in &d.modified {
         if let Some(it) = items.get_mut(m.index) {
@@ -462,7 +462,7 @@ fn apply_other_segments(base: &[JpgSegment], d: &JpgOtherSegmentsDiff) -> Vec<Jp
     items
 }
 
-fn between_other_segments(a: &[JpgSegment], b: &[JpgSegment]) -> Option<JpgOtherSegmentsDiff> {
+async fn between_other_segments(a: &[JpgSegment], b: &[JpgSegment]) -> Option<JpgOtherSegmentsDiff> {
     let min = a.len().min(b.len());
     let mut modified = Vec::new();
     for i in 0..min {
@@ -491,7 +491,7 @@ fn between_other_segments(a: &[JpgSegment], b: &[JpgSegment]) -> Option<JpgOther
 // bookkeeping on surviving `added` entries uses the same documented best-effort shift zip does:
 // exact when d2's genuine (non-annihilating) removals sit before the add.
 
-fn absorb_quant_tables(mut d1: JpgQuantTablesDiff, d2: JpgQuantTablesDiff) -> JpgQuantTablesDiff {
+async fn absorb_quant_tables(mut d1: JpgQuantTablesDiff, d2: JpgQuantTablesDiff) -> JpgQuantTablesDiff {
     let added_ids: std::collections::HashSet<u8> = d1.added.iter().map(|a| a.item.id).collect();
     let mut removed_shift = 0usize;
     for id in &d2.removed {
@@ -529,7 +529,7 @@ fn absorb_quant_tables(mut d1: JpgQuantTablesDiff, d2: JpgQuantTablesDiff) -> Jp
     JpgQuantTablesDiff { removed: d1.removed, modified: merged_modified, added: merged_added }
 }
 
-fn absorb_huffman_tables(mut d1: JpgHuffmanTablesDiff, d2: JpgHuffmanTablesDiff) -> JpgHuffmanTablesDiff {
+async fn absorb_huffman_tables(mut d1: JpgHuffmanTablesDiff, d2: JpgHuffmanTablesDiff) -> JpgHuffmanTablesDiff {
     let added_keys: std::collections::HashSet<JpgHuffmanTableKey> = d1.added.iter().map(|a| huffman_key(&a.item)).collect();
     let mut removed_shift = 0usize;
     for key in &d2.removed {
@@ -567,7 +567,7 @@ fn absorb_huffman_tables(mut d1: JpgHuffmanTablesDiff, d2: JpgHuffmanTablesDiff)
     JpgHuffmanTablesDiff { removed: d1.removed, modified: merged_modified, added: merged_added }
 }
 
-fn absorb_components(mut d1: JpgComponentsDiff, d2: JpgComponentsDiff) -> JpgComponentsDiff {
+async fn absorb_components(mut d1: JpgComponentsDiff, d2: JpgComponentsDiff) -> JpgComponentsDiff {
     let added_ids: std::collections::HashSet<u8> = d1.added.iter().map(|a| a.item.id).collect();
     let mut removed_shift = 0usize;
     for id in &d2.removed {
@@ -605,7 +605,7 @@ fn absorb_components(mut d1: JpgComponentsDiff, d2: JpgComponentsDiff) -> JpgCom
     JpgComponentsDiff { removed: d1.removed, modified: merged_modified, added: merged_added }
 }
 
-fn between_components(a: &[JpgFrameComponent], b: &[JpgFrameComponent]) -> JpgComponentsDiff {
+async fn between_components(a: &[JpgFrameComponent], b: &[JpgFrameComponent]) -> JpgComponentsDiff {
     let mut removed = Vec::new();
     let mut modified = Vec::new();
     for ac in a {
@@ -623,7 +623,7 @@ fn between_components(a: &[JpgFrameComponent], b: &[JpgFrameComponent]) -> JpgCo
     JpgComponentsDiff { removed, modified, added }
 }
 
-fn apply_components(base: &[JpgFrameComponent], d: &JpgComponentsDiff) -> Vec<JpgFrameComponent> {
+async fn apply_components(base: &[JpgFrameComponent], d: &JpgComponentsDiff) -> Vec<JpgFrameComponent> {
     let mut items: Vec<JpgFrameComponent> = base.iter().filter(|c| !d.removed.contains(&c.id)).copied().collect();
     for m in &d.modified {
         if let Some(item) = items.iter_mut().find(|c| c.id == m.id) {
@@ -639,7 +639,7 @@ fn apply_components(base: &[JpgFrameComponent], d: &JpgComponentsDiff) -> Vec<Jp
     items
 }
 
-fn between_quant_tables(a: &[JpgQuantTable], b: &[JpgQuantTable]) -> JpgQuantTablesDiff {
+async fn between_quant_tables(a: &[JpgQuantTable], b: &[JpgQuantTable]) -> JpgQuantTablesDiff {
     let mut removed = Vec::new();
     let mut modified = Vec::new();
     for at_ in a {
@@ -657,7 +657,7 @@ fn between_quant_tables(a: &[JpgQuantTable], b: &[JpgQuantTable]) -> JpgQuantTab
     JpgQuantTablesDiff { removed, modified, added }
 }
 
-fn apply_quant_tables(base: &[JpgQuantTable], d: &JpgQuantTablesDiff) -> Vec<JpgQuantTable> {
+async fn apply_quant_tables(base: &[JpgQuantTable], d: &JpgQuantTablesDiff) -> Vec<JpgQuantTable> {
     let mut items: Vec<JpgQuantTable> = base.iter().filter(|t| !d.removed.contains(&t.id)).cloned().collect();
     for m in &d.modified {
         if let Some(item) = items.iter_mut().find(|t| t.id == m.id) {
@@ -673,7 +673,7 @@ fn apply_quant_tables(base: &[JpgQuantTable], d: &JpgQuantTablesDiff) -> Vec<Jpg
     items
 }
 
-fn between_huffman_tables(a: &[JpgHuffmanTable], b: &[JpgHuffmanTable]) -> JpgHuffmanTablesDiff {
+async fn between_huffman_tables(a: &[JpgHuffmanTable], b: &[JpgHuffmanTable]) -> JpgHuffmanTablesDiff {
     let mut removed = Vec::new();
     let mut modified = Vec::new();
     for at_ in a {
@@ -692,7 +692,7 @@ fn between_huffman_tables(a: &[JpgHuffmanTable], b: &[JpgHuffmanTable]) -> JpgHu
     JpgHuffmanTablesDiff { removed, modified, added }
 }
 
-fn apply_huffman_tables(base: &[JpgHuffmanTable], d: &JpgHuffmanTablesDiff) -> Vec<JpgHuffmanTable> {
+async fn apply_huffman_tables(base: &[JpgHuffmanTable], d: &JpgHuffmanTablesDiff) -> Vec<JpgHuffmanTable> {
     let mut items: Vec<JpgHuffmanTable> = base.iter().filter(|t| !d.removed.contains(&huffman_key(t))).cloned().collect();
     for m in &d.modified {
         if let Some(item) = items.iter_mut().find(|t| huffman_key(t) == m.key) {
@@ -710,7 +710,7 @@ fn apply_huffman_tables(base: &[JpgHuffmanTable], d: &JpgHuffmanTablesDiff) -> V
 //#endregion 🔖️IdKeyedTransport
 
 //#region 🔖️FrameHelpers
-fn apply_frame(base: &Option<JpgFrameHeader>, change: &JpgFrameChange) -> Option<JpgFrameHeader> {
+async fn apply_frame(base: &Option<JpgFrameHeader>, change: &JpgFrameChange) -> Option<JpgFrameHeader> {
     match change {
         JpgFrameChange::Replace { frame } => frame.clone(),
         JpgFrameChange::Modify(fd) => {
@@ -732,7 +732,7 @@ fn apply_frame(base: &Option<JpgFrameHeader>, change: &JpgFrameChange) -> Option
     }
 }
 
-fn between_frame(a: &Option<JpgFrameHeader>, b: &Option<JpgFrameHeader>) -> Option<JpgFrameChange> {
+async fn between_frame(a: &Option<JpgFrameHeader>, b: &Option<JpgFrameHeader>) -> Option<JpgFrameChange> {
     if a == b {
         return None;
     }
@@ -758,7 +758,7 @@ fn between_frame(a: &Option<JpgFrameHeader>, b: &Option<JpgFrameHeader>) -> Opti
     }
 }
 
-fn absorb_frame(base: &mut Option<JpgFrameChange>, other: Option<JpgFrameChange>) {
+async fn absorb_frame(base: &mut Option<JpgFrameChange>, other: Option<JpgFrameChange>) {
     let Some(other) = other else { return };
     match other {
         JpgFrameChange::Replace { .. } => {
@@ -892,7 +892,7 @@ pub struct JpgDiff {
 }
 
 impl MutationDiff<JpgSnapshot> for JpgDiff {
-    fn apply(&self, base: &JpgSnapshot) -> MutationApplyResult<JpgSnapshot> {
+    async fn apply(&self, base: &JpgSnapshot) -> MutationApplyResult<JpgSnapshot> {
         validate_jpg_frame(base.frame.as_ref(), self.frame.as_ref())?;
         if let Some(quant) = &self.quant_tables {
             validate_jpg_quant_tables(&base.quant_tables, quant)?;
@@ -958,7 +958,7 @@ impl MutationDiff<JpgSnapshot> for JpgDiff {
     /// ➕️ Structural, total, base-free sequential-coalesce (`## Absorb` contract). Scalars
     /// (incl. every tri-state): LWW. `frame`: `absorb_frame`. `quant_tables`/`huffman_tables`:
     /// stable-key merge, no index-transport. `other_segments`: position-transported merge.
-    fn absorb(&mut self, other: Self) {
+    async fn absorb(&mut self, other: Self) {
         if other.width.is_some() {
             self.width = other.width;
         }
@@ -1010,7 +1010,7 @@ impl MutationDiff<JpgSnapshot> for JpgDiff {
     }
 }
 
-fn validate_jpg_frame(base: Option<&JpgFrameHeader>, change: Option<&JpgFrameChange>) -> MutationApplyResult<()> {
+async fn validate_jpg_frame(base: Option<&JpgFrameHeader>, change: Option<&JpgFrameChange>) -> MutationApplyResult<()> {
     let Some(change) = change else { return Ok(()) };
     match change {
         JpgFrameChange::Replace { .. } => Ok(()),
@@ -1041,7 +1041,7 @@ fn validate_jpg_frame(base: Option<&JpgFrameHeader>, change: Option<&JpgFrameCha
     }
 }
 
-fn validate_jpg_quant_tables(base: &[JpgQuantTable], diff: &JpgQuantTablesDiff) -> MutationApplyResult<()> {
+async fn validate_jpg_quant_tables(base: &[JpgQuantTable], diff: &JpgQuantTablesDiff) -> MutationApplyResult<()> {
     let base_ids: std::collections::HashSet<u8> = base.iter().map(|table| table.id).collect();
     let removed: std::collections::HashSet<u8> = diff.removed.iter().copied().collect();
     if removed.len() != diff.removed.len() || diff.removed.iter().any(|id| !base_ids.contains(id)) {
@@ -1062,7 +1062,7 @@ fn validate_jpg_quant_tables(base: &[JpgQuantTable], diff: &JpgQuantTablesDiff) 
     validate_jpg_additions(base.len(), diff.removed.len(), diff.added.iter().map(|entry| entry.index), ["quantTables", "added"])
 }
 
-fn validate_jpg_huffman_tables(base: &[JpgHuffmanTable], diff: &JpgHuffmanTablesDiff) -> MutationApplyResult<()> {
+async fn validate_jpg_huffman_tables(base: &[JpgHuffmanTable], diff: &JpgHuffmanTablesDiff) -> MutationApplyResult<()> {
     let base_keys: std::collections::HashSet<JpgHuffmanTableKey> = base.iter().map(huffman_key).collect();
     let removed: std::collections::HashSet<JpgHuffmanTableKey> = diff.removed.iter().copied().collect();
     if removed.len() != diff.removed.len() || diff.removed.iter().any(|key| !base_keys.contains(key)) {
@@ -1084,7 +1084,7 @@ fn validate_jpg_huffman_tables(base: &[JpgHuffmanTable], diff: &JpgHuffmanTables
     validate_jpg_additions(base.len(), diff.removed.len(), diff.added.iter().map(|entry| entry.index), ["huffmanTables", "added"])
 }
 
-fn validate_jpg_additions<I, K>(base_len: usize, removed_len: usize, added: I, path: K) -> MutationApplyResult<()>
+async fn validate_jpg_additions<I, K>(base_len: usize, removed_len: usize, added: I, path: K) -> MutationApplyResult<()>
 where
     I: IntoIterator<Item = usize>,
     K: IntoIterator,
@@ -1102,7 +1102,7 @@ where
     Ok(())
 }
 
-fn validate_jpg_indexed<I, J, K>(base_len: usize, removed: &[usize], modified: I, added: J, path: K) -> MutationApplyResult<()>
+async fn validate_jpg_indexed<I, J, K>(base_len: usize, removed: &[usize], modified: I, added: J, path: K) -> MutationApplyResult<()>
 where
     I: IntoIterator<Item = usize>,
     J: IntoIterator<Item = usize>,
@@ -1136,7 +1136,7 @@ where
 impl DiffAlgebra<JpgSnapshot> for JpgDiff {
     /// 🔁️ Diff-level undo, derived generically (correct by construction) exactly like zip's/
     /// png's: the state delta from `self.apply(base)` back to `base`.
-    fn inverse(&self, base: &JpgSnapshot) -> Self {
+    async fn inverse(&self, base: &JpgSnapshot) -> Self {
         let mutated = self.apply(base).unwrap();
         Self::between(&mutated, base)
     }
@@ -1144,7 +1144,7 @@ impl DiffAlgebra<JpgSnapshot> for JpgDiff {
     /// 🧭️ State delta (compose `GetXDiff`): id-keyed matching for `quant_tables`/
     /// `huffman_tables`/`frame.components`, position-pairwise `0..min(len)` for
     /// `other_segments`, tri-state comparison for every optional scalar.
-    fn between(base: &JpgSnapshot, other: &JpgSnapshot) -> Self {
+    async fn between(base: &JpgSnapshot, other: &JpgSnapshot) -> Self {
         let qd = between_quant_tables(&base.quant_tables, &other.quant_tables);
         let hd = between_huffman_tables(&base.huffman_tables, &other.huffman_tables);
         Self {
@@ -1167,19 +1167,19 @@ impl DiffAlgebra<JpgSnapshot> for JpgDiff {
         }
     }
 
-    fn is_empty(&self) -> bool {
+    async fn is_empty(&self) -> bool {
         self == &Self::default()
     }
 }
 
 /// 🧩 Builds a set-snapshot diff (sparse field-by-field delta, never a full-replace slot).
-pub fn diff_set_snapshot(base: &JpgSnapshot, next: &JpgSnapshot) -> JpgDiff {
+pub async fn diff_set_snapshot(base: &JpgSnapshot, next: &JpgSnapshot) -> JpgDiff {
     JpgDiff::between(base, next)
 }
 //#endregion 🔖️Diff
 
 //#region 🔖️MutationDiffBuilders
-pub fn diff_set_jfif_header(base: &JpgSnapshot, version: (u8, u8), density_units: JfifDensityUnits, x_density: u16, y_density: u16, thumbnail: Option<JfifThumbnail>) -> JpgDiff {
+pub async fn diff_set_jfif_header(base: &JpgSnapshot, version: (u8, u8), density_units: JfifDensityUnits, x_density: u16, y_density: u16, thumbnail: Option<JfifThumbnail>) -> JpgDiff {
     JpgDiff {
         jfif_version: (base.jfif_version != version).then_some(version),
         jfif_density_units: (base.jfif_density_units != density_units).then_some(density_units),
@@ -1190,7 +1190,7 @@ pub fn diff_set_jfif_header(base: &JpgSnapshot, version: (u8, u8), density_units
     }
 }
 
-pub fn diff_set_quant_table(base: &JpgSnapshot, table: JpgQuantTable) -> JpgDiff {
+pub async fn diff_set_quant_table(base: &JpgSnapshot, table: JpgQuantTable) -> JpgDiff {
     let d = match base.quant_tables.iter().position(|t| t.id == table.id) {
         Some(_) => {
             let existing = base.quant_tables.iter().find(|t| t.id == table.id).unwrap();
@@ -1206,14 +1206,14 @@ pub fn diff_set_quant_table(base: &JpgSnapshot, table: JpgQuantTable) -> JpgDiff
     JpgDiff { quant_tables: (!d.is_empty()).then_some(d), ..Default::default() }
 }
 
-pub fn diff_remove_quant_table(base: &JpgSnapshot, id: u8) -> JpgDiff {
+pub async fn diff_remove_quant_table(base: &JpgSnapshot, id: u8) -> JpgDiff {
     if !base.quant_tables.iter().any(|t| t.id == id) {
         return JpgDiff::default();
     }
     JpgDiff { quant_tables: Some(JpgQuantTablesDiff { removed: vec![id], modified: vec![], added: vec![] }), ..Default::default() }
 }
 
-pub fn diff_set_huffman_table(base: &JpgSnapshot, table: JpgHuffmanTable) -> JpgDiff {
+pub async fn diff_set_huffman_table(base: &JpgSnapshot, table: JpgHuffmanTable) -> JpgDiff {
     let key = huffman_key(&table);
     let d = match base.huffman_tables.iter().find(|t| huffman_key(t) == key) {
         Some(existing) => {
@@ -1229,34 +1229,34 @@ pub fn diff_set_huffman_table(base: &JpgSnapshot, table: JpgHuffmanTable) -> Jpg
     JpgDiff { huffman_tables: (!d.is_empty()).then_some(d), ..Default::default() }
 }
 
-pub fn diff_remove_huffman_table(base: &JpgSnapshot, key: JpgHuffmanTableKey) -> JpgDiff {
+pub async fn diff_remove_huffman_table(base: &JpgSnapshot, key: JpgHuffmanTableKey) -> JpgDiff {
     if !base.huffman_tables.iter().any(|t| huffman_key(t) == key) {
         return JpgDiff::default();
     }
     JpgDiff { huffman_tables: Some(JpgHuffmanTablesDiff { removed: vec![key], modified: vec![], added: vec![] }), ..Default::default() }
 }
 
-pub fn diff_set_restart_interval(base: &JpgSnapshot, restart_interval: Option<u16>) -> JpgDiff {
+pub async fn diff_set_restart_interval(base: &JpgSnapshot, restart_interval: Option<u16>) -> JpgDiff {
     JpgDiff { restart_interval: (base.restart_interval != restart_interval).then_some(restart_interval), ..Default::default() }
 }
 
-pub fn diff_insert_other_segment(base: &JpgSnapshot, index: usize, segment: JpgSegment) -> JpgDiff {
+pub async fn diff_insert_other_segment(base: &JpgSnapshot, index: usize, segment: JpgSegment) -> JpgDiff {
     let at = index.min(base.other_segments.len());
     JpgDiff { other_segments: Some(JpgOtherSegmentsDiff { removed: vec![], modified: vec![], added: vec![JpgSegmentAdded { index: at, item: segment }] }), ..Default::default() }
 }
 
-pub fn diff_remove_other_segment(base: &JpgSnapshot, index: usize) -> JpgDiff {
+pub async fn diff_remove_other_segment(base: &JpgSnapshot, index: usize) -> JpgDiff {
     if index >= base.other_segments.len() {
         return JpgDiff::default();
     }
     JpgDiff { other_segments: Some(JpgOtherSegmentsDiff { removed: vec![index], modified: vec![], added: vec![] }), ..Default::default() }
 }
 
-pub fn diff_set_pixels(base: &JpgSnapshot, pixels: Vec<u8>) -> JpgDiff {
+pub async fn diff_set_pixels(base: &JpgSnapshot, pixels: Vec<u8>) -> JpgDiff {
     JpgDiff { pixels: (base.pixels != pixels).then_some(pixels), ..Default::default() }
 }
 
-pub fn diff_set_re_encode_quality(base: &JpgSnapshot, quality: Option<u8>) -> JpgDiff {
+pub async fn diff_set_re_encode_quality(base: &JpgSnapshot, quality: Option<u8>) -> JpgDiff {
     JpgDiff { re_encode_quality: (base.re_encode_quality != quality).then_some(quality), ..Default::default() }
 }
 //#endregion 🔖️MutationDiffBuilders
@@ -1270,16 +1270,16 @@ pub fn diff_set_re_encode_quality(base: &JpgSnapshot, quality: Option<u8>) -> Jp
 /// duplication" note); several made `pub(crate)` so `JpgMutation`'s `OpText`/`OpBinary` can reuse
 /// them without a third copy.
 //#region 🔖️Primitives
-pub(crate) fn hex_encode(bytes: &[u8]) -> String {
+pub(crate) async fn hex_encode(bytes: &[u8]) -> String {
     bytes.iter().map(|b| format!("{b:02x}")).collect()
 }
-pub(crate) fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
+pub(crate) async fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
     if s.len() % 2 != 0 {
         return Err(format!("odd hex length: {s:?}"));
     }
     (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()
 }
-pub(crate) fn split_top_level(s: &str, sep: char) -> Vec<&str> {
+pub(crate) async fn split_top_level(s: &str, sep: char) -> Vec<&str> {
     if s.is_empty() {
         return Vec::new();
     }
@@ -1300,16 +1300,16 @@ pub(crate) fn split_top_level(s: &str, sep: char) -> Vec<&str> {
     out.push(&s[start..]);
     out
 }
-pub(crate) fn strip_brackets(s: &str) -> Result<&str, String> {
+pub(crate) async fn strip_brackets(s: &str) -> Result<&str, String> {
     s.strip_prefix('[').and_then(|s| s.strip_suffix(']')).ok_or_else(|| format!("expected [...], got {s:?}"))
 }
-pub(crate) fn encode_option<T>(opt: &Option<T>, enc: impl Fn(&T) -> String) -> String {
+pub(crate) async fn encode_option<T>(opt: &Option<T>, enc: impl Fn(&T) -> String) -> String {
     match opt {
         None => "[0]".to_string(),
         Some(v) => format!("[1,{}]", enc(v)),
     }
 }
-pub(crate) fn decode_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Option<T>, String> {
+pub(crate) async fn decode_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Option<T>, String> {
     let inner = strip_brackets(s)?;
     match split_top_level(inner, ',').as_slice() {
         ["0"] => Ok(None),
@@ -1317,19 +1317,19 @@ pub(crate) fn decode_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>)
         other => Err(format!("option decode: bad shape {other:?}")),
     }
 }
-pub(crate) fn parse_u8(s: &str) -> Result<u8, String> {
+pub(crate) async fn parse_u8(s: &str) -> Result<u8, String> {
     s.parse().map_err(|e: std::num::ParseIntError| e.to_string())
 }
-pub(crate) fn parse_u16(s: &str) -> Result<u16, String> {
+pub(crate) async fn parse_u16(s: &str) -> Result<u16, String> {
     s.parse().map_err(|e: std::num::ParseIntError| e.to_string())
 }
-pub(crate) fn parse_u32(s: &str) -> Result<u32, String> {
+pub(crate) async fn parse_u32(s: &str) -> Result<u32, String> {
     s.parse().map_err(|e: std::num::ParseIntError| e.to_string())
 }
-pub(crate) fn parse_usize(s: &str) -> Result<usize, String> {
+pub(crate) async fn parse_usize(s: &str) -> Result<usize, String> {
     s.parse().map_err(|e: std::num::ParseIntError| e.to_string())
 }
-pub(crate) fn parse_bool(s: &str) -> Result<bool, String> {
+pub(crate) async fn parse_bool(s: &str) -> Result<bool, String> {
     match s {
         "0" => Ok(false),
         "1" => Ok(true),
@@ -1343,23 +1343,23 @@ pub(crate) fn parse_bool(s: &str) -> Result<bool, String> {
 /// (below) and, via `pub(crate)`, `../🧬️mutations/🦀️component.rs`'s upgraded `OpBinary` — mirrors
 /// `📰xml`'s own `write_bytes_lp`/`read_bytes_lp` shape (`📖️grammar-recipe.md` §2.5), reusing
 /// `store::pack_rt::write_varint_u64`/`store::ByteReader` rather than reinventing varint codecs.
-pub(crate) fn write_bytes_lp(out: &mut Vec<u8>, bytes: &[u8]) {
+pub(crate) async fn write_bytes_lp(out: &mut Vec<u8>, bytes: &[u8]) {
     store::pack_rt::write_varint_u64(out, bytes.len() as u64);
     out.extend_from_slice(bytes);
 }
-pub(crate) fn read_bytes_lp(reader: &mut store::ByteReader<'_>) -> Result<Vec<u8>, String> {
+pub(crate) async fn read_bytes_lp(reader: &mut store::ByteReader<'_>) -> Result<Vec<u8>, String> {
     let len = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
     Ok(reader.read_bytes(len).map_err(|e| e.to_string())?.to_vec())
 }
 /// 🏳️ Generic `Option<T>` presence-byte codec (`0`/`1` + payload) — the binary twin of the text
 /// side's `encode_option`/`decode_option`, used for every tri-state/plain-optional field below.
-pub(crate) fn write_opt<T>(out: &mut Vec<u8>, opt: &Option<T>, enc: impl FnOnce(&T, &mut Vec<u8>)) {
+pub(crate) async fn write_opt<T>(out: &mut Vec<u8>, opt: &Option<T>, enc: impl FnOnce(&T, &mut Vec<u8>)) {
     out.push(if opt.is_some() { 1 } else { 0 });
     if let Some(v) = opt {
         enc(v, out);
     }
 }
-pub(crate) fn read_opt<T>(reader: &mut store::ByteReader<'_>, dec: impl FnOnce(&mut store::ByteReader<'_>) -> Result<T, String>) -> Result<Option<T>, String> {
+pub(crate) async fn read_opt<T>(reader: &mut store::ByteReader<'_>, dec: impl FnOnce(&mut store::ByteReader<'_>) -> Result<T, String>) -> Result<Option<T>, String> {
     let has = reader.read_u8().map_err(|e| e.to_string())?;
     if has != 0 {
         Ok(Some(dec(reader)?))
@@ -1373,43 +1373,43 @@ pub(crate) fn read_opt<T>(reader: &mut store::ByteReader<'_>, dec: impl FnOnce(&
 /// 🧪️ P2-FG2: real recursive-free binary twins of `§ValueCodecs` above — every type here is a
 /// bounded, non-recursive record/collection (unlike xml's self-recursive `XmlNode`), so every
 /// field is genuinely, individually written/read; no opaque payload anywhere in this region.
-pub(crate) fn enc_version_bin(v: &(u8, u8), out: &mut Vec<u8>) {
+pub(crate) async fn enc_version_bin(v: &(u8, u8), out: &mut Vec<u8>) {
     out.push(v.0);
     out.push(v.1);
 }
-pub(crate) fn dec_version_bin(reader: &mut store::ByteReader<'_>) -> Result<(u8, u8), String> {
+pub(crate) async fn dec_version_bin(reader: &mut store::ByteReader<'_>) -> Result<(u8, u8), String> {
     Ok((reader.read_u8().map_err(|e| e.to_string())?, reader.read_u8().map_err(|e| e.to_string())?))
 }
-pub(crate) fn enc_density_units_bin(u: &JfifDensityUnits, out: &mut Vec<u8>) {
+pub(crate) async fn enc_density_units_bin(u: &JfifDensityUnits, out: &mut Vec<u8>) {
     out.push(u.to_u8());
 }
-pub(crate) fn dec_density_units_bin(reader: &mut store::ByteReader<'_>) -> Result<JfifDensityUnits, String> {
+pub(crate) async fn dec_density_units_bin(reader: &mut store::ByteReader<'_>) -> Result<JfifDensityUnits, String> {
     JfifDensityUnits::from_u8(reader.read_u8().map_err(|e| e.to_string())?)
 }
-pub(crate) fn enc_huffman_class_bin(c: &JpgHuffmanClass, out: &mut Vec<u8>) {
+pub(crate) async fn enc_huffman_class_bin(c: &JpgHuffmanClass, out: &mut Vec<u8>) {
     out.push(c.to_u8());
 }
-pub(crate) fn dec_huffman_class_bin(reader: &mut store::ByteReader<'_>) -> Result<JpgHuffmanClass, String> {
+pub(crate) async fn dec_huffman_class_bin(reader: &mut store::ByteReader<'_>) -> Result<JpgHuffmanClass, String> {
     JpgHuffmanClass::from_u8(reader.read_u8().map_err(|e| e.to_string())?)
 }
-pub(crate) fn enc_thumbnail_bin(t: &JfifThumbnail, out: &mut Vec<u8>) {
+pub(crate) async fn enc_thumbnail_bin(t: &JfifThumbnail, out: &mut Vec<u8>) {
     out.push(t.width);
     out.push(t.height);
     write_bytes_lp(out, &t.rgb_data);
 }
-pub(crate) fn dec_thumbnail_bin(reader: &mut store::ByteReader<'_>) -> Result<JfifThumbnail, String> {
+pub(crate) async fn dec_thumbnail_bin(reader: &mut store::ByteReader<'_>) -> Result<JfifThumbnail, String> {
     let width = reader.read_u8().map_err(|e| e.to_string())?;
     let height = reader.read_u8().map_err(|e| e.to_string())?;
     let rgb_data = read_bytes_lp(reader)?;
     Ok(JfifThumbnail { width, height, rgb_data })
 }
-fn enc_frame_component_bin(c: &JpgFrameComponent, out: &mut Vec<u8>) {
+async fn enc_frame_component_bin(c: &JpgFrameComponent, out: &mut Vec<u8>) {
     out.push(c.id);
     out.push(c.h_sampling);
     out.push(c.v_sampling);
     out.push(c.quant_table_id);
 }
-fn dec_frame_component_bin(reader: &mut store::ByteReader<'_>) -> Result<JpgFrameComponent, String> {
+async fn dec_frame_component_bin(reader: &mut store::ByteReader<'_>) -> Result<JpgFrameComponent, String> {
     Ok(JpgFrameComponent {
         id: reader.read_u8().map_err(|e| e.to_string())?,
         h_sampling: reader.read_u8().map_err(|e| e.to_string())?,
@@ -1417,7 +1417,7 @@ fn dec_frame_component_bin(reader: &mut store::ByteReader<'_>) -> Result<JpgFram
         quant_table_id: reader.read_u8().map_err(|e| e.to_string())?,
     })
 }
-pub(crate) fn enc_frame_header_bin(f: &JpgFrameHeader, out: &mut Vec<u8>) {
+pub(crate) async fn enc_frame_header_bin(f: &JpgFrameHeader, out: &mut Vec<u8>) {
     out.push(f.precision);
     store::pack_rt::write_varint_u64(out, f.width as u64);
     store::pack_rt::write_varint_u64(out, f.height as u64);
@@ -1426,7 +1426,7 @@ pub(crate) fn enc_frame_header_bin(f: &JpgFrameHeader, out: &mut Vec<u8>) {
         enc_frame_component_bin(c, out);
     }
 }
-pub(crate) fn dec_frame_header_bin(reader: &mut store::ByteReader<'_>) -> Result<JpgFrameHeader, String> {
+pub(crate) async fn dec_frame_header_bin(reader: &mut store::ByteReader<'_>) -> Result<JpgFrameHeader, String> {
     let precision = reader.read_u8().map_err(|e| e.to_string())?;
     let width = reader.read_varint_u64().map_err(|e| e.to_string())? as u16;
     let height = reader.read_varint_u64().map_err(|e| e.to_string())? as u16;
@@ -1437,14 +1437,14 @@ pub(crate) fn dec_frame_header_bin(reader: &mut store::ByteReader<'_>) -> Result
     }
     Ok(JpgFrameHeader { precision, width, height, components })
 }
-pub(crate) fn enc_quant_table_bin(t: &JpgQuantTable, out: &mut Vec<u8>) {
+pub(crate) async fn enc_quant_table_bin(t: &JpgQuantTable, out: &mut Vec<u8>) {
     out.push(t.id);
     out.push(t.precision);
     for v in t.values.iter() {
         out.extend_from_slice(&v.to_le_bytes());
     }
 }
-pub(crate) fn dec_quant_table_bin(reader: &mut store::ByteReader<'_>) -> Result<JpgQuantTable, String> {
+pub(crate) async fn dec_quant_table_bin(reader: &mut store::ByteReader<'_>) -> Result<JpgQuantTable, String> {
     let id = reader.read_u8().map_err(|e| e.to_string())?;
     let precision = reader.read_u8().map_err(|e| e.to_string())?;
     let mut values = [0u16; 64];
@@ -1453,13 +1453,13 @@ pub(crate) fn dec_quant_table_bin(reader: &mut store::ByteReader<'_>) -> Result<
     }
     Ok(JpgQuantTable { id, precision, values })
 }
-pub(crate) fn enc_huffman_table_bin(t: &JpgHuffmanTable, out: &mut Vec<u8>) {
+pub(crate) async fn enc_huffman_table_bin(t: &JpgHuffmanTable, out: &mut Vec<u8>) {
     out.push(t.id);
     enc_huffman_class_bin(&t.class, out);
     out.extend_from_slice(&t.bits);
     write_bytes_lp(out, &t.values);
 }
-pub(crate) fn dec_huffman_table_bin(reader: &mut store::ByteReader<'_>) -> Result<JpgHuffmanTable, String> {
+pub(crate) async fn dec_huffman_table_bin(reader: &mut store::ByteReader<'_>) -> Result<JpgHuffmanTable, String> {
     let id = reader.read_u8().map_err(|e| e.to_string())?;
     let class = dec_huffman_class_bin(reader)?;
     let bits_vec = reader.read_bytes(16).map_err(|e| e.to_string())?.to_vec();
@@ -1467,20 +1467,20 @@ pub(crate) fn dec_huffman_table_bin(reader: &mut store::ByteReader<'_>) -> Resul
     let values = read_bytes_lp(reader)?;
     Ok(JpgHuffmanTable { id, class, bits, values })
 }
-pub(crate) fn enc_huffman_key_bin(k: &JpgHuffmanTableKey, out: &mut Vec<u8>) {
+pub(crate) async fn enc_huffman_key_bin(k: &JpgHuffmanTableKey, out: &mut Vec<u8>) {
     enc_huffman_class_bin(&k.class, out);
     out.push(k.id);
 }
-pub(crate) fn dec_huffman_key_bin(reader: &mut store::ByteReader<'_>) -> Result<JpgHuffmanTableKey, String> {
+pub(crate) async fn dec_huffman_key_bin(reader: &mut store::ByteReader<'_>) -> Result<JpgHuffmanTableKey, String> {
     let class = dec_huffman_class_bin(reader)?;
     let id = reader.read_u8().map_err(|e| e.to_string())?;
     Ok(JpgHuffmanTableKey { class, id })
 }
-pub(crate) fn enc_segment_bin(s: &JpgSegment, out: &mut Vec<u8>) {
+pub(crate) async fn enc_segment_bin(s: &JpgSegment, out: &mut Vec<u8>) {
     out.push(s.marker);
     write_bytes_lp(out, &s.data);
 }
-pub(crate) fn dec_segment_bin(reader: &mut store::ByteReader<'_>) -> Result<JpgSegment, String> {
+pub(crate) async fn dec_segment_bin(reader: &mut store::ByteReader<'_>) -> Result<JpgSegment, String> {
     let marker = reader.read_u8().map_err(|e| e.to_string())?;
     let data = read_bytes_lp(reader)?;
     Ok(JpgSegment { marker, data })
@@ -1488,103 +1488,103 @@ pub(crate) fn dec_segment_bin(reader: &mut store::ByteReader<'_>) -> Result<JpgS
 //#endregion 🔖️ValueBinaryCodecs
 
 //#region 🔖️ValueCodecs
-pub(crate) fn enc_density_units(u: &JfifDensityUnits) -> String {
+pub(crate) async fn enc_density_units(u: &JfifDensityUnits) -> String {
     u.to_u8().to_string()
 }
-pub(crate) fn dec_density_units(s: &str) -> Result<JfifDensityUnits, String> {
+pub(crate) async fn dec_density_units(s: &str) -> Result<JfifDensityUnits, String> {
     JfifDensityUnits::from_u8(parse_u8(s)?)
 }
-pub(crate) fn enc_huffman_class(c: &JpgHuffmanClass) -> String {
+pub(crate) async fn enc_huffman_class(c: &JpgHuffmanClass) -> String {
     c.to_u8().to_string()
 }
-pub(crate) fn dec_huffman_class(s: &str) -> Result<JpgHuffmanClass, String> {
+pub(crate) async fn dec_huffman_class(s: &str) -> Result<JpgHuffmanClass, String> {
     JpgHuffmanClass::from_u8(parse_u8(s)?)
 }
 
-pub(crate) fn enc_version(v: &(u8, u8)) -> String {
+pub(crate) async fn enc_version(v: &(u8, u8)) -> String {
     format!("[{},{}]", v.0, v.1)
 }
-pub(crate) fn dec_version(s: &str) -> Result<(u8, u8), String> {
+pub(crate) async fn dec_version(s: &str) -> Result<(u8, u8), String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [a, b] = parts.as_slice() else { return Err(format!("jfif version: expected 2 fields, got {}", parts.len())) };
     Ok((parse_u8(a)?, parse_u8(b)?))
 }
 
-fn enc_quant_values(v: &[u16; 64]) -> String {
+async fn enc_quant_values(v: &[u16; 64]) -> String {
     format!("[{}]", v.iter().map(|x| x.to_string()).collect::<Vec<_>>().join(","))
 }
-fn dec_quant_values(s: &str) -> Result<[u16; 64], String> {
+async fn dec_quant_values(s: &str) -> Result<[u16; 64], String> {
     let values: Vec<u16> = split_top_level(strip_brackets(s)?, ',').into_iter().map(parse_u16).collect::<Result<_, _>>()?;
     <[u16; 64]>::try_from(values).map_err(|v: Vec<u16>| format!("quant values: expected 64, got {}", v.len()))
 }
 
-fn enc_bits16(b: &[u8; 16]) -> String {
+async fn enc_bits16(b: &[u8; 16]) -> String {
     hex_encode(b)
 }
-fn dec_bits16(s: &str) -> Result<[u8; 16], String> {
+async fn dec_bits16(s: &str) -> Result<[u8; 16], String> {
     <[u8; 16]>::try_from(hex_decode(s)?).map_err(|v: Vec<u8>| format!("huffman bits: expected 16, got {}", v.len()))
 }
 
-pub(crate) fn enc_thumbnail(t: &JfifThumbnail) -> String {
+pub(crate) async fn enc_thumbnail(t: &JfifThumbnail) -> String {
     format!("[{},{},{}]", t.width, t.height, hex_encode(&t.rgb_data))
 }
-pub(crate) fn dec_thumbnail(s: &str) -> Result<JfifThumbnail, String> {
+pub(crate) async fn dec_thumbnail(s: &str) -> Result<JfifThumbnail, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [width, height, rgb_data] = parts.as_slice() else { return Err(format!("thumbnail: expected 3 fields, got {}", parts.len())) };
     Ok(JfifThumbnail { width: parse_u8(width)?, height: parse_u8(height)?, rgb_data: hex_decode(rgb_data)? })
 }
 
-fn enc_frame_component(c: &JpgFrameComponent) -> String {
+async fn enc_frame_component(c: &JpgFrameComponent) -> String {
     format!("[{},{},{},{}]", c.id, c.h_sampling, c.v_sampling, c.quant_table_id)
 }
-fn dec_frame_component(s: &str) -> Result<JpgFrameComponent, String> {
+async fn dec_frame_component(s: &str) -> Result<JpgFrameComponent, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [id, h, v, q] = parts.as_slice() else { return Err(format!("frame component: expected 4 fields, got {}", parts.len())) };
     Ok(JpgFrameComponent { id: parse_u8(id)?, h_sampling: parse_u8(h)?, v_sampling: parse_u8(v)?, quant_table_id: parse_u8(q)? })
 }
 
-pub(crate) fn enc_frame_header(f: &JpgFrameHeader) -> String {
+pub(crate) async fn enc_frame_header(f: &JpgFrameHeader) -> String {
     let comps = f.components.iter().map(enc_frame_component).collect::<Vec<_>>().join(",");
     format!("[{},{},{},[{}]]", f.precision, f.width, f.height, comps)
 }
-pub(crate) fn dec_frame_header(s: &str) -> Result<JpgFrameHeader, String> {
+pub(crate) async fn dec_frame_header(s: &str) -> Result<JpgFrameHeader, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [precision, width, height, components] = parts.as_slice() else { return Err(format!("frame header: expected 4 fields, got {}", parts.len())) };
     let components = split_top_level(strip_brackets(components)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_frame_component).collect::<Result<Vec<_>, String>>()?;
     Ok(JpgFrameHeader { precision: parse_u8(precision)?, width: parse_u16(width)?, height: parse_u16(height)?, components })
 }
 
-pub(crate) fn enc_quant_table(t: &JpgQuantTable) -> String {
+pub(crate) async fn enc_quant_table(t: &JpgQuantTable) -> String {
     format!("[{},{},{}]", t.id, t.precision, enc_quant_values(&t.values))
 }
-pub(crate) fn dec_quant_table(s: &str) -> Result<JpgQuantTable, String> {
+pub(crate) async fn dec_quant_table(s: &str) -> Result<JpgQuantTable, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [id, precision, values] = parts.as_slice() else { return Err(format!("quant table: expected 3 fields, got {}", parts.len())) };
     Ok(JpgQuantTable { id: parse_u8(id)?, precision: parse_u8(precision)?, values: dec_quant_values(values)? })
 }
 
-pub(crate) fn enc_huffman_table(t: &JpgHuffmanTable) -> String {
+pub(crate) async fn enc_huffman_table(t: &JpgHuffmanTable) -> String {
     format!("[{},{},{},{}]", t.id, enc_huffman_class(&t.class), enc_bits16(&t.bits), hex_encode(&t.values))
 }
-pub(crate) fn dec_huffman_table(s: &str) -> Result<JpgHuffmanTable, String> {
+pub(crate) async fn dec_huffman_table(s: &str) -> Result<JpgHuffmanTable, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [id, class, bits, values] = parts.as_slice() else { return Err(format!("huffman table: expected 4 fields, got {}", parts.len())) };
     Ok(JpgHuffmanTable { id: parse_u8(id)?, class: dec_huffman_class(class)?, bits: dec_bits16(bits)?, values: hex_decode(values)? })
 }
 
-pub(crate) fn enc_huffman_key(k: &JpgHuffmanTableKey) -> String {
+pub(crate) async fn enc_huffman_key(k: &JpgHuffmanTableKey) -> String {
     format!("[{},{}]", enc_huffman_class(&k.class), k.id)
 }
-pub(crate) fn dec_huffman_key(s: &str) -> Result<JpgHuffmanTableKey, String> {
+pub(crate) async fn dec_huffman_key(s: &str) -> Result<JpgHuffmanTableKey, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [class, id] = parts.as_slice() else { return Err(format!("huffman key: expected 2 fields, got {}", parts.len())) };
     Ok(JpgHuffmanTableKey { class: dec_huffman_class(class)?, id: parse_u8(id)? })
 }
 
-pub(crate) fn enc_segment(s: &JpgSegment) -> String {
+pub(crate) async fn enc_segment(s: &JpgSegment) -> String {
     format!("[{},{}]", s.marker, hex_encode(&s.data))
 }
-pub(crate) fn dec_segment(s: &str) -> Result<JpgSegment, String> {
+pub(crate) async fn dec_segment(s: &str) -> Result<JpgSegment, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [marker, data] = parts.as_slice() else { return Err(format!("segment: expected 2 fields, got {}", parts.len())) };
     Ok(JpgSegment { marker: parse_u8(marker)?, data: hex_decode(data)? })
@@ -1592,21 +1592,21 @@ pub(crate) fn dec_segment(s: &str) -> Result<JpgSegment, String> {
 //#endregion 🔖️ValueCodecs
 
 //#region 🔖️DiffValueCodecs
-fn enc_component_diff(d: &JpgComponentDiff) -> String {
+async fn enc_component_diff(d: &JpgComponentDiff) -> String {
     format!("[{},{},{}]", encode_option(&d.h_sampling, |v| v.to_string()), encode_option(&d.v_sampling, |v| v.to_string()), encode_option(&d.quant_table_id, |v| v.to_string()),)
 }
-fn dec_component_diff(s: &str) -> Result<JpgComponentDiff, String> {
+async fn dec_component_diff(s: &str) -> Result<JpgComponentDiff, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [h, v, q] = parts.as_slice() else { return Err(format!("component diff: expected 3 fields, got {}", parts.len())) };
     Ok(JpgComponentDiff { h_sampling: decode_option(h, parse_u8)?, v_sampling: decode_option(v, parse_u8)?, quant_table_id: decode_option(q, parse_u8)? })
 }
-fn enc_components_diff(d: &JpgComponentsDiff) -> String {
+async fn enc_components_diff(d: &JpgComponentsDiff) -> String {
     let removed = d.removed.iter().map(|id| id.to_string()).collect::<Vec<_>>().join(",");
     let modified = d.modified.iter().map(|m| format!("{}:{}", m.id, enc_component_diff(&m.diff))).collect::<Vec<_>>().join(",");
     let added = d.added.iter().map(|a| format!("{}:{}", a.index, enc_frame_component(&a.item))).collect::<Vec<_>>().join(",");
     format!("[{removed}];[{modified}];[{added}]")
 }
-fn dec_components_diff(body: &str) -> Result<JpgComponentsDiff, String> {
+async fn dec_components_diff(body: &str) -> Result<JpgComponentsDiff, String> {
     let three = split_top_level(body, ';');
     let [removed_s, modified_s, added_s] = three.as_slice() else { return Err(format!("components diff: expected 3 sections, got {}", three.len())) };
     let removed = split_top_level(strip_brackets(removed_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(parse_u8).collect::<Result<Vec<_>, String>>()?;
@@ -1629,21 +1629,21 @@ fn dec_components_diff(body: &str) -> Result<JpgComponentsDiff, String> {
     Ok(JpgComponentsDiff { removed, modified, added })
 }
 
-fn enc_quant_table_diff(d: &JpgQuantTableDiff) -> String {
+async fn enc_quant_table_diff(d: &JpgQuantTableDiff) -> String {
     format!("[{},{}]", encode_option(&d.precision, |v| v.to_string()), encode_option(&d.values, enc_quant_values))
 }
-fn dec_quant_table_diff(s: &str) -> Result<JpgQuantTableDiff, String> {
+async fn dec_quant_table_diff(s: &str) -> Result<JpgQuantTableDiff, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [precision, values] = parts.as_slice() else { return Err(format!("quant table diff: expected 2 fields, got {}", parts.len())) };
     Ok(JpgQuantTableDiff { precision: decode_option(precision, parse_u8)?, values: decode_option(values, dec_quant_values)? })
 }
-fn enc_quant_tables_diff(d: &JpgQuantTablesDiff) -> String {
+async fn enc_quant_tables_diff(d: &JpgQuantTablesDiff) -> String {
     let removed = d.removed.iter().map(|id| id.to_string()).collect::<Vec<_>>().join(",");
     let modified = d.modified.iter().map(|m| format!("{}:{}", m.id, enc_quant_table_diff(&m.diff))).collect::<Vec<_>>().join(",");
     let added = d.added.iter().map(|a| format!("{}:{}", a.index, enc_quant_table(&a.item))).collect::<Vec<_>>().join(",");
     format!("[{removed}];[{modified}];[{added}]")
 }
-fn dec_quant_tables_diff(body: &str) -> Result<JpgQuantTablesDiff, String> {
+async fn dec_quant_tables_diff(body: &str) -> Result<JpgQuantTablesDiff, String> {
     let three = split_top_level(body, ';');
     let [removed_s, modified_s, added_s] = three.as_slice() else { return Err(format!("quant tables diff: expected 3 sections, got {}", three.len())) };
     let removed = split_top_level(strip_brackets(removed_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(parse_u8).collect::<Result<Vec<_>, String>>()?;
@@ -1666,21 +1666,21 @@ fn dec_quant_tables_diff(body: &str) -> Result<JpgQuantTablesDiff, String> {
     Ok(JpgQuantTablesDiff { removed, modified, added })
 }
 
-fn enc_huffman_table_diff(d: &JpgHuffmanTableDiff) -> String {
+async fn enc_huffman_table_diff(d: &JpgHuffmanTableDiff) -> String {
     format!("[{},{}]", encode_option(&d.bits, enc_bits16), encode_option(&d.values, |v| hex_encode(v)))
 }
-fn dec_huffman_table_diff(s: &str) -> Result<JpgHuffmanTableDiff, String> {
+async fn dec_huffman_table_diff(s: &str) -> Result<JpgHuffmanTableDiff, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [bits, values] = parts.as_slice() else { return Err(format!("huffman table diff: expected 2 fields, got {}", parts.len())) };
     Ok(JpgHuffmanTableDiff { bits: decode_option(bits, dec_bits16)?, values: decode_option(values, hex_decode)? })
 }
-fn enc_huffman_tables_diff(d: &JpgHuffmanTablesDiff) -> String {
+async fn enc_huffman_tables_diff(d: &JpgHuffmanTablesDiff) -> String {
     let removed = d.removed.iter().map(enc_huffman_key).collect::<Vec<_>>().join(",");
     let modified = d.modified.iter().map(|m| format!("{}:{}", enc_huffman_key(&m.key), enc_huffman_table_diff(&m.diff))).collect::<Vec<_>>().join(",");
     let added = d.added.iter().map(|a| format!("{}:{}", a.index, enc_huffman_table(&a.item))).collect::<Vec<_>>().join(",");
     format!("[{removed}];[{modified}];[{added}]")
 }
-fn dec_huffman_tables_diff(body: &str) -> Result<JpgHuffmanTablesDiff, String> {
+async fn dec_huffman_tables_diff(body: &str) -> Result<JpgHuffmanTablesDiff, String> {
     let three = split_top_level(body, ';');
     let [removed_s, modified_s, added_s] = three.as_slice() else { return Err(format!("huffman tables diff: expected 3 sections, got {}", three.len())) };
     let removed = split_top_level(strip_brackets(removed_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_huffman_key).collect::<Result<Vec<_>, String>>()?;
@@ -1703,21 +1703,21 @@ fn dec_huffman_tables_diff(body: &str) -> Result<JpgHuffmanTablesDiff, String> {
     Ok(JpgHuffmanTablesDiff { removed, modified, added })
 }
 
-fn enc_segment_diff(d: &JpgSegmentDiff) -> String {
+async fn enc_segment_diff(d: &JpgSegmentDiff) -> String {
     format!("[{},{}]", encode_option(&d.marker, |v| v.to_string()), encode_option(&d.data, |v| hex_encode(v)))
 }
-fn dec_segment_diff(s: &str) -> Result<JpgSegmentDiff, String> {
+async fn dec_segment_diff(s: &str) -> Result<JpgSegmentDiff, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [marker, data] = parts.as_slice() else { return Err(format!("segment diff: expected 2 fields, got {}", parts.len())) };
     Ok(JpgSegmentDiff { marker: decode_option(marker, parse_u8)?, data: decode_option(data, hex_decode)? })
 }
-fn enc_other_segments_diff(d: &JpgOtherSegmentsDiff) -> String {
+async fn enc_other_segments_diff(d: &JpgOtherSegmentsDiff) -> String {
     let removed = d.removed.iter().map(|i| i.to_string()).collect::<Vec<_>>().join(",");
     let modified = d.modified.iter().map(|m| format!("{}:{}", m.index, enc_segment_diff(&m.diff))).collect::<Vec<_>>().join(",");
     let added = d.added.iter().map(|a| format!("{}:{}", a.index, enc_segment(&a.item))).collect::<Vec<_>>().join(",");
     format!("[{removed}];[{modified}];[{added}]")
 }
-fn dec_other_segments_diff(body: &str) -> Result<JpgOtherSegmentsDiff, String> {
+async fn dec_other_segments_diff(body: &str) -> Result<JpgOtherSegmentsDiff, String> {
     let three = split_top_level(body, ';');
     let [removed_s, modified_s, added_s] = three.as_slice() else { return Err(format!("other segments diff: expected 3 sections, got {}", three.len())) };
     let removed = split_top_level(strip_brackets(removed_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(parse_usize).collect::<Result<Vec<_>, String>>()?;
@@ -1742,13 +1742,13 @@ fn dec_other_segments_diff(body: &str) -> Result<JpgOtherSegmentsDiff, String> {
 
 /// 🌲 `JpgFrameChange`'s tag prefix: `M[fields-diff]` (Modify) / `R[frame-opt]` (Replace) — mirrors
 /// `enc_xml_node`/`enc_node_diff`'s single-letter-tag convention (svg/gif precedent).
-pub(crate) fn enc_frame_change(fc: &JpgFrameChange) -> String {
+pub(crate) async fn enc_frame_change(fc: &JpgFrameChange) -> String {
     match fc {
         JpgFrameChange::Modify(fd) => format!("M[{}]", enc_frame_fields_diff(fd)),
         JpgFrameChange::Replace { frame } => format!("R[{}]", encode_option(frame, enc_frame_header)),
     }
 }
-pub(crate) fn dec_frame_change(s: &str) -> Result<JpgFrameChange, String> {
+pub(crate) async fn dec_frame_change(s: &str) -> Result<JpgFrameChange, String> {
     let (tag, rest) = s.split_at(1);
     let inner = strip_brackets(rest)?;
     match tag {
@@ -1757,10 +1757,10 @@ pub(crate) fn dec_frame_change(s: &str) -> Result<JpgFrameChange, String> {
         other => Err(format!("frame change: unknown tag {other:?}")),
     }
 }
-fn enc_frame_fields_diff(fd: &JpgFrameFieldsDiff) -> String {
+async fn enc_frame_fields_diff(fd: &JpgFrameFieldsDiff) -> String {
     format!("[{},{},{},{}]", encode_option(&fd.precision, |v| v.to_string()), encode_option(&fd.width, |v| v.to_string()), encode_option(&fd.height, |v| v.to_string()), encode_option(&fd.components, enc_components_diff),)
 }
-fn dec_frame_fields_diff(s: &str) -> Result<JpgFrameFieldsDiff, String> {
+async fn dec_frame_fields_diff(s: &str) -> Result<JpgFrameFieldsDiff, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [precision, width, height, components] = parts.as_slice() else { return Err(format!("frame fields diff: expected 4 fields, got {}", parts.len())) };
     Ok(JpgFrameFieldsDiff { precision: decode_option(precision, parse_u8)?, width: decode_option(width, parse_u16)?, height: decode_option(height, parse_u16)?, components: decode_option(components, dec_components_diff)? })
@@ -1772,19 +1772,19 @@ fn dec_frame_fields_diff(s: &str) -> Result<JpgFrameFieldsDiff, String> {
 /// `varint-count + real-item` (removed/modified/added, matching the recipe's §1.4 shape but
 /// binary-framed rather than bracket-text-framed); no opaque payload anywhere in this region since
 /// none of jpg's diff types are self-recursive (unlike xml's `XmlNodeDiff`).
-fn enc_component_diff_bin(d: &JpgComponentDiff, out: &mut Vec<u8>) {
+async fn enc_component_diff_bin(d: &JpgComponentDiff, out: &mut Vec<u8>) {
     write_opt(out, &d.h_sampling, |v, out| out.push(*v));
     write_opt(out, &d.v_sampling, |v, out| out.push(*v));
     write_opt(out, &d.quant_table_id, |v, out| out.push(*v));
 }
-fn dec_component_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<JpgComponentDiff, String> {
+async fn dec_component_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<JpgComponentDiff, String> {
     Ok(JpgComponentDiff {
         h_sampling: read_opt(reader, |r| r.read_u8().map_err(|e| e.to_string()))?,
         v_sampling: read_opt(reader, |r| r.read_u8().map_err(|e| e.to_string()))?,
         quant_table_id: read_opt(reader, |r| r.read_u8().map_err(|e| e.to_string()))?,
     })
 }
-fn enc_components_diff_bin(d: &JpgComponentsDiff, out: &mut Vec<u8>) {
+async fn enc_components_diff_bin(d: &JpgComponentsDiff, out: &mut Vec<u8>) {
     store::pack_rt::write_varint_u64(out, d.removed.len() as u64);
     for id in &d.removed {
         out.push(*id);
@@ -1800,7 +1800,7 @@ fn enc_components_diff_bin(d: &JpgComponentsDiff, out: &mut Vec<u8>) {
         enc_frame_component_bin(&a.item, out);
     }
 }
-fn dec_components_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<JpgComponentsDiff, String> {
+async fn dec_components_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<JpgComponentsDiff, String> {
     let rc = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut removed = Vec::with_capacity(rc as usize);
     for _ in 0..rc {
@@ -1821,7 +1821,7 @@ fn dec_components_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<JpgComp
     Ok(JpgComponentsDiff { removed, modified, added })
 }
 
-fn enc_quant_table_diff_bin(d: &JpgQuantTableDiff, out: &mut Vec<u8>) {
+async fn enc_quant_table_diff_bin(d: &JpgQuantTableDiff, out: &mut Vec<u8>) {
     write_opt(out, &d.precision, |v, out| out.push(*v));
     write_opt(out, &d.values, |v, out| {
         for x in v.iter() {
@@ -1829,7 +1829,7 @@ fn enc_quant_table_diff_bin(d: &JpgQuantTableDiff, out: &mut Vec<u8>) {
         }
     });
 }
-fn dec_quant_table_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<JpgQuantTableDiff, String> {
+async fn dec_quant_table_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<JpgQuantTableDiff, String> {
     Ok(JpgQuantTableDiff {
         precision: read_opt(reader, |r| r.read_u8().map_err(|e| e.to_string()))?,
         values: read_opt(reader, |r| {
@@ -1841,7 +1841,7 @@ fn dec_quant_table_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<JpgQua
         })?,
     })
 }
-fn enc_quant_tables_diff_bin(d: &JpgQuantTablesDiff, out: &mut Vec<u8>) {
+async fn enc_quant_tables_diff_bin(d: &JpgQuantTablesDiff, out: &mut Vec<u8>) {
     store::pack_rt::write_varint_u64(out, d.removed.len() as u64);
     for id in &d.removed {
         out.push(*id);
@@ -1857,7 +1857,7 @@ fn enc_quant_tables_diff_bin(d: &JpgQuantTablesDiff, out: &mut Vec<u8>) {
         enc_quant_table_bin(&a.item, out);
     }
 }
-fn dec_quant_tables_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<JpgQuantTablesDiff, String> {
+async fn dec_quant_tables_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<JpgQuantTablesDiff, String> {
     let rc = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut removed = Vec::with_capacity(rc as usize);
     for _ in 0..rc {
@@ -1878,11 +1878,11 @@ fn dec_quant_tables_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<JpgQu
     Ok(JpgQuantTablesDiff { removed, modified, added })
 }
 
-fn enc_huffman_table_diff_bin(d: &JpgHuffmanTableDiff, out: &mut Vec<u8>) {
+async fn enc_huffman_table_diff_bin(d: &JpgHuffmanTableDiff, out: &mut Vec<u8>) {
     write_opt(out, &d.bits, |v, out| out.extend_from_slice(v));
     write_opt(out, &d.values, |v, out| write_bytes_lp(out, v));
 }
-fn dec_huffman_table_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<JpgHuffmanTableDiff, String> {
+async fn dec_huffman_table_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<JpgHuffmanTableDiff, String> {
     Ok(JpgHuffmanTableDiff {
         bits: read_opt(reader, |r| {
             let v = r.read_bytes(16).map_err(|e| e.to_string())?.to_vec();
@@ -1891,7 +1891,7 @@ fn dec_huffman_table_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<JpgH
         values: read_opt(reader, read_bytes_lp)?,
     })
 }
-fn enc_huffman_tables_diff_bin(d: &JpgHuffmanTablesDiff, out: &mut Vec<u8>) {
+async fn enc_huffman_tables_diff_bin(d: &JpgHuffmanTablesDiff, out: &mut Vec<u8>) {
     store::pack_rt::write_varint_u64(out, d.removed.len() as u64);
     for k in &d.removed {
         enc_huffman_key_bin(k, out);
@@ -1907,7 +1907,7 @@ fn enc_huffman_tables_diff_bin(d: &JpgHuffmanTablesDiff, out: &mut Vec<u8>) {
         enc_huffman_table_bin(&a.item, out);
     }
 }
-fn dec_huffman_tables_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<JpgHuffmanTablesDiff, String> {
+async fn dec_huffman_tables_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<JpgHuffmanTablesDiff, String> {
     let rc = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut removed = Vec::with_capacity(rc as usize);
     for _ in 0..rc {
@@ -1928,14 +1928,14 @@ fn dec_huffman_tables_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<Jpg
     Ok(JpgHuffmanTablesDiff { removed, modified, added })
 }
 
-fn enc_segment_diff_bin(d: &JpgSegmentDiff, out: &mut Vec<u8>) {
+async fn enc_segment_diff_bin(d: &JpgSegmentDiff, out: &mut Vec<u8>) {
     write_opt(out, &d.marker, |v, out| out.push(*v));
     write_opt(out, &d.data, |v, out| write_bytes_lp(out, v));
 }
-fn dec_segment_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<JpgSegmentDiff, String> {
+async fn dec_segment_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<JpgSegmentDiff, String> {
     Ok(JpgSegmentDiff { marker: read_opt(reader, |r| r.read_u8().map_err(|e| e.to_string()))?, data: read_opt(reader, read_bytes_lp)? })
 }
-fn enc_other_segments_diff_bin(d: &JpgOtherSegmentsDiff, out: &mut Vec<u8>) {
+async fn enc_other_segments_diff_bin(d: &JpgOtherSegmentsDiff, out: &mut Vec<u8>) {
     store::pack_rt::write_varint_u64(out, d.removed.len() as u64);
     for i in &d.removed {
         store::pack_rt::write_varint_u64(out, *i as u64);
@@ -1951,7 +1951,7 @@ fn enc_other_segments_diff_bin(d: &JpgOtherSegmentsDiff, out: &mut Vec<u8>) {
         enc_segment_bin(&a.item, out);
     }
 }
-fn dec_other_segments_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<JpgOtherSegmentsDiff, String> {
+async fn dec_other_segments_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<JpgOtherSegmentsDiff, String> {
     let rc = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut removed = Vec::with_capacity(rc as usize);
     for _ in 0..rc {
@@ -1974,7 +1974,7 @@ fn dec_other_segments_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<Jpg
 
 /// 🌲 `JpgFrameChange`'s binary tag: `0`=Modify(frame-fields-diff) / `1`=Replace(opt-frame-header)
 /// — same tag numbering convention as `xml`'s `enc_node_diff_bin` (0/1/2 by declaration order).
-fn enc_frame_change_bin(fc: &JpgFrameChange, out: &mut Vec<u8>) {
+async fn enc_frame_change_bin(fc: &JpgFrameChange, out: &mut Vec<u8>) {
     match fc {
         JpgFrameChange::Modify(fd) => {
             out.push(0);
@@ -1986,7 +1986,7 @@ fn enc_frame_change_bin(fc: &JpgFrameChange, out: &mut Vec<u8>) {
         }
     }
 }
-fn dec_frame_change_bin(reader: &mut store::ByteReader<'_>) -> Result<JpgFrameChange, String> {
+async fn dec_frame_change_bin(reader: &mut store::ByteReader<'_>) -> Result<JpgFrameChange, String> {
     let tag = reader.read_u8().map_err(|e| e.to_string())?;
     match tag {
         0 => Ok(JpgFrameChange::Modify(dec_frame_fields_diff_bin(reader)?)),
@@ -1994,13 +1994,13 @@ fn dec_frame_change_bin(reader: &mut store::ByteReader<'_>) -> Result<JpgFrameCh
         other => Err(format!("frame change binary: unknown tag {other}")),
     }
 }
-fn enc_frame_fields_diff_bin(fd: &JpgFrameFieldsDiff, out: &mut Vec<u8>) {
+async fn enc_frame_fields_diff_bin(fd: &JpgFrameFieldsDiff, out: &mut Vec<u8>) {
     write_opt(out, &fd.precision, |v, out| out.push(*v));
     write_opt(out, &fd.width, |v, out| store::pack_rt::write_varint_u64(out, *v as u64));
     write_opt(out, &fd.height, |v, out| store::pack_rt::write_varint_u64(out, *v as u64));
     write_opt(out, &fd.components, enc_components_diff_bin);
 }
-fn dec_frame_fields_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<JpgFrameFieldsDiff, String> {
+async fn dec_frame_fields_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<JpgFrameFieldsDiff, String> {
     Ok(JpgFrameFieldsDiff {
         precision: read_opt(reader, |r| r.read_u8().map_err(|e| e.to_string()))?,
         width: read_opt(reader, |r| Ok(r.read_varint_u64().map_err(|e| e.to_string())? as u16))?,
@@ -2015,7 +2015,7 @@ fn dec_frame_fields_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<JpgFr
 /// unchanged (recipe convention). Tri-state fields (`re-encode-quality`/`jfif-thumbnail`/
 /// `restart-interval`) additionally wrap their value in `[0]`/`[1,x]` since the token's presence
 /// alone only means "the tri-state slot changed", not which of {cleared, set} it changed to.
-fn print_jpg_diff(d: &JpgDiff) -> String {
+async fn print_jpg_diff(d: &JpgDiff) -> String {
     let mut tokens: Vec<String> = Vec::new();
     if let Some(v) = d.width {
         tokens.push(format!("width={v}"));
@@ -2067,7 +2067,7 @@ fn print_jpg_diff(d: &JpgDiff) -> String {
     }
     tokens.join(" ")
 }
-fn parse_jpg_diff(line: &str) -> Result<JpgDiff, String> {
+async fn parse_jpg_diff(line: &str) -> Result<JpgDiff, String> {
     let mut d = JpgDiff::default();
     if line.is_empty() {
         return Ok(d);
@@ -2113,10 +2113,10 @@ fn parse_jpg_diff(line: &str) -> Result<JpgDiff, String> {
 }
 
 impl protocol::DiffCodec for JpgDiff {
-    fn print_diff(&self) -> String {
+    async fn print_diff(&self) -> String {
         print_jpg_diff(self)
     }
-    fn parse_diff(line: &str) -> Result<Self, store::TextError> {
+    async fn parse_diff(line: &str) -> Result<Self, store::TextError> {
         parse_jpg_diff(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
     /// 🧪️ P2-FG2: REAL binary frame (`format u8 | flags u16le | <present fields, in declaration
@@ -2129,7 +2129,7 @@ impl protocol::DiffCodec for JpgDiff {
     /// the real, non-recursive binary codecs in `§ValueBinaryCodecs`/`§DiffValueBinaryCodecs`
     /// above — no opaque tail anywhere in THIS frame (unlike xml's `XmlNodeDiff`, none of jpg's
     /// diff payloads are self-recursive).
-    fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    async fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         let mut flags: u16 = 0;
         if self.width.is_some() {
             flags |= 1 << 0;
@@ -2232,7 +2232,7 @@ impl protocol::DiffCodec for JpgDiff {
         }
         Ok(out)
     }
-    fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    async fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         let mut reader = store::ByteReader::new(bytes);
         let malformed = |what: &'static str, offset: usize, detail: String| protocol::ProtocolError::Malformed { what, offset: offset as u64, detail };
         let _format = reader.read_u8().map_err(|e| malformed("diff format", 0, e.to_string()))?;
@@ -2271,14 +2271,14 @@ impl protocol::DiffCodec for JpgDiff {
 /// (kept `pub(crate)` here instead of `#[cfg(test)]`-gated so the engine's non-test conformance
 /// module can reuse it too — matches png's own `demo_diff_cases()` visibility).
 #[cfg(test)]
-pub(crate) fn demo_diff_cases() -> Vec<JpgDiff> {
-    fn quant(id: u8, seed: u16) -> JpgQuantTable {
+pub(crate) async fn demo_diff_cases() -> Vec<JpgDiff> {
+    async fn quant(id: u8, seed: u16) -> JpgQuantTable {
         JpgQuantTable { id, precision: 0, values: [seed; 64] }
     }
-    fn huffman(class: JpgHuffmanClass, id: u8, seed: u8) -> JpgHuffmanTable {
+    async fn huffman(class: JpgHuffmanClass, id: u8, seed: u8) -> JpgHuffmanTable {
         JpgHuffmanTable { id, class, bits: [seed; 16], values: vec![seed, seed.wrapping_add(1)] }
     }
-    fn segment(marker: u8, data: Vec<u8>) -> JpgSegment {
+    async fn segment(marker: u8, data: Vec<u8>) -> JpgSegment {
         JpgSegment { marker, data }
     }
 
@@ -2333,13 +2333,13 @@ mod handcrafted_diff_codec_tests {
     use protocol::command::DiffAlgebra;
     use protocol::DiffCodec;
 
-    fn quant(id: u8, seed: u16) -> JpgQuantTable {
+    async fn quant(id: u8, seed: u16) -> JpgQuantTable {
         JpgQuantTable { id, precision: 0, values: [seed; 64] }
     }
-    fn huffman(class: JpgHuffmanClass, id: u8, seed: u8) -> JpgHuffmanTable {
+    async fn huffman(class: JpgHuffmanClass, id: u8, seed: u8) -> JpgHuffmanTable {
         JpgHuffmanTable { id, class, bits: [seed; 16], values: vec![seed, seed.wrapping_add(1)] }
     }
-    fn segment(marker: u8, data: Vec<u8>) -> JpgSegment {
+    async fn segment(marker: u8, data: Vec<u8>) -> JpgSegment {
         JpgSegment { marker, data }
     }
 
@@ -2347,7 +2347,7 @@ mod handcrafted_diff_codec_tests {
     /// added per id-keyed/index-keyed collection, the recipe's documented workaround — see
     /// `f6-recon-report.md`'s `field_sweep` precedent). `snap_c` has `frame: None`, exercising
     /// `JpgFrameChange::Replace` against both `a` and `c`.
-    fn snap_a() -> JpgSnapshot {
+    async fn snap_a() -> JpgSnapshot {
         JpgSnapshot {
             schema: "stdio.jpg".into(),
             width: 4,
@@ -2373,7 +2373,7 @@ mod handcrafted_diff_codec_tests {
             other_segments: vec![segment(0xFE, vec![1, 2, 3]), segment(0xE1, vec![9, 9])],
         }
     }
-    fn snap_b() -> JpgSnapshot {
+    async fn snap_b() -> JpgSnapshot {
         JpgSnapshot {
             schema: "stdio.jpg".into(),
             width: 8,
@@ -2394,7 +2394,7 @@ mod handcrafted_diff_codec_tests {
             other_segments: vec![segment(0xFE, vec![4, 5, 6])],
         }
     }
-    fn snap_c() -> JpgSnapshot {
+    async fn snap_c() -> JpgSnapshot {
         JpgSnapshot { frame: None, ..JpgSnapshot::default() }
     }
 
@@ -2403,7 +2403,7 @@ mod handcrafted_diff_codec_tests {
     /// transition directions, and all three id/index-keyed collection triples with removed,
     /// modified, AND added entries all populated across the two `between()` directions.
     #[test]
-    fn diff_codec_text_binary_roundtrip_law() {
+    async fn diff_codec_text_binary_roundtrip_law() {
         let a = snap_a();
         let b = snap_b();
         let c = snap_c();

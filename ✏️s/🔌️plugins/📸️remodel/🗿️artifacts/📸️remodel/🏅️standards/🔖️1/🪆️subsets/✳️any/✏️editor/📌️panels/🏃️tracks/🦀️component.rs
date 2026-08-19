@@ -12,13 +12,13 @@ pub const REMODEL_PLAY_BODY_TRACKS: &str = "remodel.play.tracks";
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
-pub fn definition() -> PanelTabDefinition {
+pub async fn definition() -> PanelTabDefinition {
     PanelTabDefinition { kind: PanelTabKind::App(REMODEL_PANEL_TRACKS_ID.into()), label: LocalizedLabel::native("Tracks", "Spuren"), group: PanelGroup::Details, body_key: Some(REMODEL_PLAY_BODY_TRACKS.into()), children: Vec::new() }
 }
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(scene: &RemodelSnapshot, labels: &RemodelLabels) -> UiNode {
+pub async fn render(scene: &RemodelSnapshot, labels: &RemodelLabels) -> UiNode {
     if scene.results.tracks.is_empty() {
         return ui_stack_vertical(vec![ui_text(labels.tracks_none), ui_text(labels.motion_not_implemented)]);
     }
@@ -37,7 +37,7 @@ mod tests {
     use crate::editor::remodel::testkit::{app, render as render_body};
 
     #[test]
-    fn an_empty_track_list_renders_the_documented_gap_message() {
+    async fn an_empty_track_list_renders_the_documented_gap_message() {
         let mut app = app();
         assert!(render_body(&mut app, REMODEL_PLAY_BODY_TRACKS).contains("No motion tracks"));
     }

@@ -6,7 +6,7 @@ use crate::artifacts::semio::standards::v1::subsets::mesh::schema::diff::SemioMe
 use crate::artifacts::semio::standards::v1::subsets::mesh::schema::snapshot::SemioMeshSnapshot;
 
 //#region 🔖️Diff
-pub fn diff(payload: &ChangeTextureMime, base: &SemioMeshSnapshot) -> protocol::MutationOutcome<SemioMeshDiff> {
+pub async fn diff(payload: &ChangeTextureMime, base: &SemioMeshSnapshot) -> protocol::MutationOutcome<SemioMeshDiff> {
     let Some(texture) = crate::artifacts::semio::standards::v1::subsets::mesh::schema::diff::texture_at(base, &payload.id) else {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Texture \"{}\" does not exist.", payload.id), [payload.id.clone()]);
     };

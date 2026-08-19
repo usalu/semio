@@ -6,7 +6,7 @@ use crate::artifacts::shooting::ShootingSnapshot;
 use semio_framework_plugin::{MeasureSelectItem, WindowMeasure};
 
 //#region 🔖️Measure
-pub fn measure(snapshot: &ShootingSnapshot, labels: &ShootingLabels) -> WindowMeasure {
+pub async fn measure(snapshot: &ShootingSnapshot, labels: &ShootingLabels) -> WindowMeasure {
     let shot = crate::artifacts::shooting::schema::active_shot(snapshot);
     WindowMeasure::Select {
         id: "shooting.measure.format".into(),
@@ -29,7 +29,7 @@ mod tests {
     use crate::editor::shooting::terminology::shooting_play_labels;
 
     #[test]
-    fn format_measure_offers_svg_and_png() {
+    async fn format_measure_offers_svg_and_png() {
         let snapshot = crate::artifacts::shooting::schema::default_snapshot();
         let labels = shooting_play_labels(&ShootingConfig::default());
         match measure(&snapshot, labels) {

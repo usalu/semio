@@ -59,7 +59,7 @@ mod tests {
     use super::*;
     use crate::artifacts::gif::schema::snapshot::GifFrame;
 
-    fn real_world_gif() -> GifSnapshot {
+    async fn real_world_gif() -> GifSnapshot {
         GifSnapshot {
             schema: "stdio.gif.89a".into(),
             width: 10,
@@ -79,7 +79,7 @@ mod tests {
     }
 
     #[test]
-    fn deserialize_derives_real_cumulative_delay_as_step_scalar_keyframes() {
+    async fn deserialize_derives_real_cumulative_delay_as_step_scalar_keyframes() {
         let anim = semio_framework_plugin::resolve_ready(SemioAnimationFromGif::deserialize(&real_world_gif())).expect("deserialize");
         assert_eq!(anim.timelines.len(), 1);
         let ch = &anim.timelines[0].channels[0];
@@ -93,7 +93,7 @@ mod tests {
     }
 
     #[test]
-    fn zero_frames_yields_zero_timelines() {
+    async fn zero_frames_yields_zero_timelines() {
         let mut gif = real_world_gif();
         gif.frames.clear();
         let anim = semio_framework_plugin::resolve_ready(SemioAnimationFromGif::deserialize(&gif)).expect("deserialize");

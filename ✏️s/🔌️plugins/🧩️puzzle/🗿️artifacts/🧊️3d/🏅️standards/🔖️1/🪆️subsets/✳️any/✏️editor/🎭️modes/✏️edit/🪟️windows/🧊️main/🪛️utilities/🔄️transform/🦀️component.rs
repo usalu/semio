@@ -11,14 +11,14 @@ use serde_json::json;
 pub const UTILITY_ID: &str = "transform";
 
 /// 🧱️ Stitched into the app manifest by `crate::editor::puzzle3d::create_puzzle3d_app`.
-pub fn definition() -> UtilityDefinition {
+pub async fn definition() -> UtilityDefinition {
     UtilityDefinition::new(UTILITY_ID, LocalizedLabel::native("Transform", "Transformieren"), "transform-3d")
 }
 
 /// 🎛️ Utility Options for the Transform utility — Move and Rotate flags. Tagged with this utility's
 /// id as a routing envelope only; `partition_window_measures` unwraps the children so they render
 /// flat under the Transform toggle (the toggle already owns that row, hence the empty group label).
-pub fn options(runtime: &Puzzle3dRuntime, labels: &Puzzle3dLabels) -> WindowMeasure {
+pub async fn options(runtime: &Puzzle3dRuntime, labels: &Puzzle3dLabels) -> WindowMeasure {
     WindowMeasure::Group {
         id: format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-utility-options-transform"),
         label: String::new(),

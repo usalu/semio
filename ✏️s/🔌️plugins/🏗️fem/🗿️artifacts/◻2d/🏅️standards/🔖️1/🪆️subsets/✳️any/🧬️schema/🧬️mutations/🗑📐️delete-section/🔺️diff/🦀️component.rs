@@ -4,7 +4,7 @@ use crate::artifacts::fem2d::diff::{Fem2dDiff, Fem2dSectionsDelta};
 use crate::artifacts::fem2d::Fem2dSnapshot;
 
 //#region 🔖️Diff
-pub fn diff(payload: &DeleteSection, base: &Fem2dSnapshot) -> protocol::MutationOutcome<Fem2dDiff> {
+pub async fn diff(payload: &DeleteSection, base: &Fem2dSnapshot) -> protocol::MutationOutcome<Fem2dDiff> {
     if !base.sections.iter().any(|section| section.id == payload.id) {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Section \"{}\" does not exist.", payload.id), [payload.id.clone()]);
     }

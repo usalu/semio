@@ -42,7 +42,7 @@ const KIT_CATALOG_ARTIFACT_ID: &str = "kit.catalog";
 
 /// 🎯️ An `ActionDescriptor` addressed at this app — the single factory every taxonomy node's chrome
 /// (`📌️panels/*`, `🎮️commands/*`) builds its `on_change`/item actions with.
-pub fn block5d_action(action: &str, args: Option<Value>) -> ActionDescriptor {
+pub async fn block5d_action(action: &str, args: Option<Value>) -> ActionDescriptor {
     semio_framework_plugin::ActionFactory::new(BLOCK5D_PLAY_APP_ID).action(action, args)
 }
 //#endregion 🔖️Constants
@@ -51,7 +51,7 @@ pub fn block5d_action(action: &str, args: Option<Value>) -> ActionDescriptor {
 /// 🔌️ `Block5dPlayApp`'s typed media I/O surface (`AppDefinition.io`) — the implicit document ports
 /// (`Kit×Type`, matching the `"5d.block"` artifact kind) plus a `"catalog:out"` port giving
 /// `puzzle5d_catalog_fragment` a real caller (see `export_media` below).
-pub fn block5d_io() -> semio_framework_plugin::AppIo {
+pub async fn block5d_io() -> semio_framework_plugin::AppIo {
     semio_framework_plugin::AppIo::from_document(
         BLOCK_5D_SCHEMA,
         MediaType { class: MediaClass::Kit, form: MediaForm::Type },
@@ -110,26 +110,26 @@ impl ArtifactEditor for Block5dPlayApp {
     const DIALECT: Dialect = crate::artifacts::block5d::BLOCK5D_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = BLOCK_5D_SCHEMA;
 
-    fn app_schema() -> Option<::schema::AppSchemaDescriptor> {
+    async fn app_schema() -> Option<::schema::AppSchemaDescriptor> {
         Some(crate::editor::block5d::config::schema::app_schema_descriptor())
     }
 
-    fn initial_snapshot() -> Block5dSnapshot {
+    async fn initial_snapshot() -> Block5dSnapshot {
         crate::artifacts::block5d::schema::empty_block5d_snapshot()
     }
 
-    fn io() -> Option<semio_framework_plugin::AppIo> {
+    async fn io() -> Option<semio_framework_plugin::AppIo> {
         Some(block5d_io())
     }
 
-    fn command_id(command: &Block5dCommand) -> &'static str {
+    async fn command_id(command: &Block5dCommand) -> &'static str {
         command.command_id()
     }
 
     /// 🎯️ Maps host action id + JSON args onto `Block5dCommand` — React/wgpu still speak the stringly
     /// `{action,args}` wire; this is the typed-command bridge until those call sites send `OpBinary`
     /// bytes directly.
-    fn command_from_action(action: &str, args: Option<&Value>) -> Result<Self::Command, Fault> {
+    async fn command_from_action(action: &str, args: Option<&Value>) -> Result<Self::Command, Fault> {
         let str_field = |key: &str| args.and_then(|value| value.get(key)).and_then(Value::as_str).map(str::to_string);
         match action {
             "patchPartKind" => Ok(Block5dCommand::PatchPartKind(patch_part_kind::PatchPartKind { field: str_field("field").unwrap_or_default(), value: str_field("value").unwrap_or_default() })),
@@ -146,7 +146,7 @@ impl ArtifactEditor for Block5dPlayApp {
         }
     }
 
-    fn handle(command: &Block5dCommand, doc: &ArtifactView<'_, Block5dSnapshot>, cfg: &ConfigView<'_, Block5dConfig>, _interaction: &InteractionView<'_>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<Block5dMutation, Block5dConfigMutation, Self::DraftMutation>, Fault> {
+    async fn handle(command: &Block5dCommand, doc: &ArtifactView<'_, Block5dSnapshot>, cfg: &ConfigView<'_, Block5dConfig>, _interaction: &InteractionView<'_>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<Block5dMutation, Block5dConfigMutation, Self::DraftMutation>, Fault> {
         command.dispatch(doc, cfg)
     }
 
@@ -155,7 +155,7 @@ impl ArtifactEditor for Block5dPlayApp {
     /// nests under its own `grip_kind` (`grip` granularity), so a stale selection is pruned the moment
     /// `removeGripKind`/`removeGrip` deletes its target, and hovering/selecting a kind can transitively
     /// reach its grips.
-    fn interaction_topology(doc: &ArtifactView<'_, Block5dSnapshot>, _cfg: &ConfigView<'_, Block5dConfig>) -> InteractionTopology {
+    async fn interaction_topology(doc: &ArtifactView<'_, Block5dSnapshot>, _cfg: &ConfigView<'_, Block5dConfig>) -> InteractionTopology {
         let mut ordered: Vec<TopologyNode> = Vec::new();
         for kind in &doc.snapshot.grip_kinds {
             ordered.push(TopologyNode { id: format!("gripKind:{}", kind.id), granularity: BLOCK5D_GRANULARITY_GRIP_KIND.into(), parent: None });
@@ -168,7 +168,7 @@ impl ArtifactEditor for Block5dPlayApp {
         InteractionTopology { domains }
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, Block5dSnapshot>, cfg: &ConfigView<'_, Block5dConfig>) -> UiNode {
+    async fn render(body_key: &str, doc: &ArtifactView<'_, Block5dSnapshot>, cfg: &ConfigView<'_, Block5dConfig>) -> UiNode {
         let labels = block5d_labels(&cfg.snapshot.locale);
         match body_key {
             board::BLOCK5D_BODY_BOARD => board::render(doc.snapshot, labels),
@@ -214,7 +214,7 @@ impl ArtifactEditor for Block5dPlayApp {
 /// the subset's own `📚️examples/🎬️{hexagonal-cut-concrete-forest-left,nakagin-capsule}` facet
 /// (untouched, already wired in `📦️glue.rs`'s Examples region) is the modern, role-agnostic
 /// replacement surface for app-level example registration.
-pub fn create_block5d_app() -> semio_framework_plugin::AppDefinition {
+pub async fn create_block5d_app() -> semio_framework_plugin::AppDefinition {
     Editor::builder(crate::artifacts::block5d::BLOCK5D_DIALECT)
             .document(["semio", "block", "5d"])
             .artifact_kind(artifact_kind())
@@ -284,7 +284,7 @@ pub(crate) mod testkit {
     /// `PluginBuilder::editor::<Block5dPlayApp>` builds it.
     pub type Block5dApp = VcsArtifactApp<EditorApp<Block5dPlayApp>>;
 
-    pub fn new_app() -> Block5dApp {
+    pub async fn new_app() -> Block5dApp {
         sdk_new_app::<EditorApp<Block5dPlayApp>>()
     }
 
@@ -292,20 +292,20 @@ pub(crate) mod testkit {
     /// examples }` shape `testkit::assert_declared_actions_bridge_to_commands`/`new_app_with_registry`
     /// still expect — framework testkit gap, not modifiable here (`🧰️framework/**` is outside this
     /// packet's lease).
-    pub fn block5d_app_manifest_for_testkit() -> semio_framework_plugin::App {
+    pub async fn block5d_app_manifest_for_testkit() -> semio_framework_plugin::App {
         semio_framework_plugin::App { definition: create_block5d_app(), examples: Vec::new() }
     }
 
     /// 🧬️ A wrapper carrying the real registry so kind discipline (View-emits-operations rejection) runs.
-    pub fn app_with_registry() -> Block5dApp {
+    pub async fn app_with_registry() -> Block5dApp {
         new_app_with_registry::<EditorApp<Block5dPlayApp>>(block5d_app_manifest_for_testkit)
     }
 
-    pub fn dispatch(app: &mut Block5dApp, command: Block5dCommand) -> InvocationResult {
+    pub async fn dispatch(app: &mut Block5dApp, command: Block5dCommand) -> InvocationResult {
         app.dispatch_typed(command, &meta("local")).expect("dispatch")
     }
 
-    pub fn render(app: &mut Block5dApp, body_key: &str) -> String {
+    pub async fn render(app: &mut Block5dApp, body_key: &str) -> String {
         serde_json::to_string(&app.render(body_key, None, &ViewModel::default()).expect("render")).expect("render json")
     }
 }
@@ -320,7 +320,7 @@ mod tests {
 
 
     //#region 🔖️CommandSurface
-    fn every_command() -> Vec<Block5dCommand> {
+    async fn every_command() -> Vec<Block5dCommand> {
         vec![
             Block5dCommand::PatchPartKind(patch_part_kind::PatchPartKind { field: "name".into(), value: "x".into() }),
             Block5dCommand::AddGripKind(add_grip_kind::AddGripKind {}),
@@ -333,7 +333,7 @@ mod tests {
     }
 
     #[test]
-    fn command_ids_are_unique_and_cover_every_row() {
+    async fn command_ids_are_unique_and_cover_every_row() {
         let commands = every_command();
         let ids: Vec<&str> = commands.iter().map(Block5dCommand::command_id).collect();
         let mut sorted = ids.clone();
@@ -344,7 +344,7 @@ mod tests {
     }
 
     #[test]
-    fn every_command_round_trips_text_and_binary_under_its_declared_wire_keyword() {
+    async fn every_command_round_trips_text_and_binary_under_its_declared_wire_keyword() {
         for command in every_command() {
             store::os_store::test_support::assert_op_text_binary_equivalence(&command);
             let printed = protocol::OpText::print_op(&command);
@@ -355,7 +355,7 @@ mod tests {
     /// 🧷️ Pins the exact pre-migration bytes for the rows the `app_commands!` decomposition could have
     /// silently rewritten — copied verbatim from the ticket's `🧪️wire-baseline-5d-before.txt`.
     #[test]
-    fn optional_field_rows_keep_their_pre_migration_bytes() {
+    async fn optional_field_rows_keep_their_pre_migration_bytes() {
         let hex = |command: &Block5dCommand| protocol::OpBinary::encode_op(command).expect("encode").iter().map(|b| format!("{b:02x}")).collect::<String>();
         assert_eq!(hex(&Block5dCommand::AddGripKind(add_grip_kind::AddGripKind {})), "01010000");
         assert_eq!(hex(&Block5dCommand::AddGrip(add_grip::AddGrip {})), "01030000");
@@ -364,7 +364,7 @@ mod tests {
     /// 🌉️ Every app-declared action must bridge through `command_from_action` and round-trip
     /// `command_id`.
     #[test]
-    fn command_from_action_covers_every_declared_action_and_rejects_unknown_ones() {
+    async fn command_from_action_covers_every_declared_action_and_rejects_unknown_ones() {
         semio_framework_plugin::testkit::assert_declared_actions_bridge_to_commands::<semio_framework_plugin::EditorApp<Block5dPlayApp>>(testkit::block5d_app_manifest_for_testkit);
         assert!(<Block5dPlayApp as ArtifactEditor>::command_from_action("noSuchAction", None).is_err());
     }
@@ -372,7 +372,7 @@ mod tests {
 
     //#region 🔖️Manifest
     #[test]
-    fn the_manifest_stitches_every_taxonomy_node() {
+    async fn the_manifest_stitches_every_taxonomy_node() {
         let definition = create_block5d_app();
         assert_eq!(definition.modes.len(), 1);
         assert_eq!(definition.window_kinds.len(), 2);
@@ -385,7 +385,7 @@ mod tests {
     /// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: the `grip` domain is declared
     /// once, with both granularities, a `Topology` hierarchy, and scoped to both window kinds.
     #[test]
-    fn declares_the_grip_interaction_domain_scoped_to_both_windows() {
+    async fn declares_the_grip_interaction_domain_scoped_to_both_windows() {
         let definition = create_block5d_app();
         let interaction = definition.interactions.iter().find(|def| def.id == BLOCK5D_INTERACTION_GRIP).expect("grip domain declared");
         assert_eq!(interaction.granularities.iter().map(|granularity| granularity.id.as_str()).collect::<Vec<_>>(), vec![BLOCK5D_GRANULARITY_GRIP, BLOCK5D_GRANULARITY_GRIP_KIND]);
@@ -399,7 +399,7 @@ mod tests {
     /// 🕹️ `interaction_topology` nests every grip under its own grip-kind, enabling both pruning
     /// (`removeGripKind`/`removeGrip`) and transitive hover from a kind to its grips.
     #[test]
-    fn interaction_topology_nests_grips_under_their_grip_kind() {
+    async fn interaction_topology_nests_grips_under_their_grip_kind() {
         let mut app: Block5dApp = new_app();
         testkit::dispatch(&mut app, Block5dCommand::AddGripKind(add_grip_kind::AddGripKind {}));
         testkit::dispatch(&mut app, Block5dCommand::AddGrip(add_grip::AddGrip {}));
@@ -417,7 +417,7 @@ mod tests {
     }
 
     #[test]
-    fn block5d_io_declares_the_catalog_out_port() {
+    async fn block5d_io_declares_the_catalog_out_port() {
         let io = block5d_io();
         assert_eq!(io.document_schema, BLOCK_5D_SCHEMA);
         let ports = io.all_ports();
@@ -427,7 +427,7 @@ mod tests {
     }
 
     #[test]
-    fn an_unknown_body_key_falls_back_to_a_text_node() {
+    async fn an_unknown_body_key_falls_back_to_a_text_node() {
         let mut app = new_app();
         assert!(testkit::render(&mut app, "block5d.play.nope").contains("Unknown body"));
     }
@@ -435,7 +435,7 @@ mod tests {
 
     //#region 🔖️Behavior
     #[test]
-    fn renders_document_tree_board_and_world() {
+    async fn renders_document_tree_board_and_world() {
         let mut app: Block5dApp = new_app();
         assert!(testkit::render(&mut app, document_panel::BLOCK5D_BODY_DOCUMENT).contains("Grip Kinds"));
         assert!(testkit::render(&mut app, board::BLOCK5D_BODY_BOARD).contains("2d grips"));
@@ -443,7 +443,7 @@ mod tests {
     }
 
     #[test]
-    fn add_grip_kind_then_add_grip_then_remove_round_trips() {
+    async fn add_grip_kind_then_add_grip_then_remove_round_trips() {
         let mut app: Block5dApp = new_app();
         testkit::dispatch(&mut app, Block5dCommand::AddGripKind(add_grip_kind::AddGripKind {}));
         testkit::dispatch(&mut app, Block5dCommand::AddGrip(add_grip::AddGrip {}));
@@ -455,7 +455,7 @@ mod tests {
     }
 
     #[test]
-    fn set_active_example_loads_forest_left_fixture() {
+    async fn set_active_example_loads_forest_left_fixture() {
         let mut app: Block5dApp = new_app();
         testkit::dispatch(&mut app, Block5dCommand::SetActiveExample(set_active_example::SetActiveExample { id: set_active_example::BLOCK5D_EXAMPLE_FOREST_LEFT.into() }));
         let projection = app.snapshot().expect("snapshot");
@@ -464,7 +464,7 @@ mod tests {
     }
 
     #[test]
-    fn undo_redo_round_trips_through_the_wrapper() {
+    async fn undo_redo_round_trips_through_the_wrapper() {
         let mut app: Block5dApp = new_app();
         testkit::dispatch(&mut app, Block5dCommand::AddGripKind(add_grip_kind::AddGripKind {}));
         assert_eq!(app.snapshot().expect("snapshot").grip_kinds.len(), 1);
@@ -476,7 +476,7 @@ mod tests {
 
     /// 🌉️ `puzzle5d_catalog_fragment`'s new caller round-trips through the `"catalog:out"` media port.
     #[test]
-    fn export_media_catalog_out_wraps_the_puzzle5d_fragment() {
+    async fn export_media_catalog_out_wraps_the_puzzle5d_fragment() {
         let mut app: Block5dApp = new_app();
         testkit::dispatch(&mut app, Block5dCommand::SetActiveExample(set_active_example::SetActiveExample { id: set_active_example::BLOCK5D_EXAMPLE_FOREST_LEFT.into() }));
         let media = semio_framework_plugin::resolve_ready(app.export_media("catalog:out")).expect("export catalog");
@@ -492,7 +492,7 @@ mod tests {
     }
 
     #[test]
-    fn command_from_action_bridges_set_active_example() {
+    async fn command_from_action_bridges_set_active_example() {
         let _app = Block5dPlayApp;
         assert!(matches!(<Block5dPlayApp as ArtifactEditor>::command_from_action("setActiveExample", Some(&serde_json::json!({ "exampleId": "forest" }))), Ok(Block5dCommand::SetActiveExample(set_active_example::SetActiveExample { id })) if id == "forest"));
     }
@@ -505,7 +505,7 @@ mod tests {
     /// still earns its keep here: a genuine `Mutation`-kind command must still emit document
     /// operations under the real, kind-discipline-enforcing registry.
     #[test]
-    fn mutation_commands_still_emit_artifact_mutations_under_the_real_registry() {
+    async fn mutation_commands_still_emit_artifact_mutations_under_the_real_registry() {
         let mut app = testkit::app_with_registry();
         let result = testkit::dispatch(&mut app, Block5dCommand::AddGripKind(add_grip_kind::AddGripKind {}));
         assert!(!result.mutations.is_empty(), "addGripKind is a mutation and must reach document operations under kind discipline");

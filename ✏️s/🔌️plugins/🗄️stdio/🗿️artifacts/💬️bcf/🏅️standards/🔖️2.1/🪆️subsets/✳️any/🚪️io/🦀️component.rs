@@ -29,11 +29,11 @@ pub mod derived_composition {
         type Snapshot = BcfSnapshot;
         const WRITES: Dialect = DIALECT;
 
-        fn reads() -> &'static [Dialect] {
+        async fn reads() -> &'static [Dialect] {
             &[DIALECT, DEP_ZIP, DEP_XML]
         }
 
-        fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+        async fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
             // 🌱 Every listed read dialect's payload is raw text/bytes that this artifact's own
             // analyzer already round-trips through `store::Document{Dsl,Pack}` -- including bytes
             // claiming a dependency's dialect, since (for a single-standard DAG-adjacent dependency
@@ -60,7 +60,7 @@ pub use derived_composition::*;
 
 //#region 🔖️XmlHelpers
 /// 🌳️ Narrows an `XmlNode` to its `Element` shape, if it is one.
-fn as_element(node: &XmlNode) -> Option<(&str, &[XmlAttr], &[XmlNode])> {
+async fn as_element(node: &XmlNode) -> Option<(&str, &[XmlAttr], &[XmlNode])> {
     match node {
         XmlNode::Element { name, attrs, children } => Some((name.as_str(), attrs.as_slice(), children.as_slice())),
         _ => None,
@@ -68,23 +68,23 @@ fn as_element(node: &XmlNode) -> Option<(&str, &[XmlAttr], &[XmlNode])> {
 }
 
 /// 🔎️ First direct child element named `name`.
-fn find_child<'a>(children: &'a [XmlNode], name: &str) -> Option<&'a XmlNode> {
+async fn find_child<'a>(children: &'a [XmlNode], name: &str) -> Option<&'a XmlNode> {
     children.iter().find(|c| as_element(c).map(|(n, _, _)| n == name).unwrap_or(false))
 }
 
 /// 🔎️ All direct child elements named `name`, in document order.
-fn find_children<'a>(children: &'a [XmlNode], name: &str) -> Vec<&'a XmlNode> {
+async fn find_children<'a>(children: &'a [XmlNode], name: &str) -> Vec<&'a XmlNode> {
     children.iter().filter(|c| as_element(c).map(|(n, _, _)| n == name).unwrap_or(false)).collect()
 }
 
 /// 🏷️ Attribute value by name.
-fn attr<'a>(attrs: &'a [XmlAttr], name: &str) -> Option<&'a str> {
+async fn attr<'a>(attrs: &'a [XmlAttr], name: &str) -> Option<&'a str> {
     attrs.iter().find(|a| a.name == name).map(|a| a.value.as_str())
 }
 
 /// 🔤️ Concatenated text/CDATA content of an element's direct children (BCF's leaf elements are
 /// always simple text content, never mixed markup).
-fn text_content(node: &XmlNode) -> String {
+async fn text_content(node: &XmlNode) -> String {
     let Some((_, _, children)) = as_element(node) else { return String::new() };
     let mut out = String::new();
     for child in children {
@@ -98,18 +98,18 @@ fn text_content(node: &XmlNode) -> String {
 
 /// 🔤️ Wraps a leaf text element `<name>text</name>` (only emitted when `text` is non-empty,
 /// mirroring how real BCF writers omit optional leaf elements rather than emit them empty).
-fn text_element(name: &str, text: &str) -> Option<XmlNode> {
+async fn text_element(name: &str, text: &str) -> Option<XmlNode> {
     if text.is_empty() {
         return None;
     }
     Some(XmlNode::Element { name: name.into(), attrs: Vec::new(), children: vec![XmlNode::Text { text: text.into() }] })
 }
 
-fn parse_f64(s: &str) -> f64 {
+async fn parse_f64(s: &str) -> f64 {
     s.parse::<f64>().unwrap_or(0.0)
 }
 
-fn xml_bytes(root: XmlNode) -> Vec<u8> {
+async fn xml_bytes(root: XmlNode) -> Vec<u8> {
     let doc = XmlDocument { root: Some(root), doctype: None, declaration: None, prolog: Vec::new() };
     let mut out = String::from("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
     out.push_str(&xml_document_to_text(&doc));
@@ -119,7 +119,7 @@ fn xml_bytes(root: XmlNode) -> Vec<u8> {
 
 //#region 🔖️VersionXml
 /// 🧩️ Parses `bcf.version`'s `<Version VersionId="...">` root attribute.
-fn parse_bcf_version(data: &[u8]) -> Option<String> {
+async fn parse_bcf_version(data: &[u8]) -> Option<String> {
     let text = std::str::from_utf8(data).ok()?;
     let doc = xml_document_from_text(text).ok()?;
     let root = doc.root.as_ref()?;
@@ -130,7 +130,7 @@ fn parse_bcf_version(data: &[u8]) -> Option<String> {
     Some(attr(attrs, "VersionId").unwrap_or_default().to_string())
 }
 
-fn bcf_version_bytes(version: &str) -> Vec<u8> {
+async fn bcf_version_bytes(version: &str) -> Vec<u8> {
     let mut children = Vec::new();
     if let Some(n) = text_element("DetailedVersion", version) {
         children.push(n);
@@ -162,7 +162,7 @@ struct RawTopicMarkup {
 /// elements -- not attributes, a defect this rewrite fixes -- zero-or-more sibling `<Comment
 /// Guid="...">` elements each with `<Date>`/`<Author>`/`<Comment>`/optional `<Viewpoint Guid=
 /// "...">`, and zero-or-more `<Viewpoints Guid="...">` reference entries).
-fn parse_markup_bcf(data: &[u8]) -> Option<RawTopicMarkup> {
+async fn parse_markup_bcf(data: &[u8]) -> Option<RawTopicMarkup> {
     let text = std::str::from_utf8(data).ok()?;
     let doc = xml_document_from_text(text).ok()?;
     let root = doc.root.as_ref()?;
@@ -214,7 +214,7 @@ fn parse_markup_bcf(data: &[u8]) -> Option<RawTopicMarkup> {
 /// 🧩️ Re-emits a `BcfTopic` as a full `markup.bcf` XML document (the inverse of
 /// `parse_markup_bcf`), via the real `stdio.xml` text codec. Viewpoint references always point at
 /// this artifact's canonical `<guid>.bcfv`/`<guid>.png` filenames (documented normal form).
-fn markup_bcf_bytes(topic: &BcfTopic) -> Vec<u8> {
+async fn markup_bcf_bytes(topic: &BcfTopic) -> Vec<u8> {
     let mut topic_children = Vec::new();
     if let Some(n) = text_element("Title", &topic.title) {
         topic_children.push(n);
@@ -270,16 +270,16 @@ fn markup_bcf_bytes(topic: &BcfTopic) -> Vec<u8> {
 //#endregion 🔖️MarkupXml
 
 //#region 🔖️VisualizationInfoXml
-fn parse_point(node: &XmlNode) -> BcfPoint3 {
+async fn parse_point(node: &XmlNode) -> BcfPoint3 {
     let attrs = as_element(node).map(|(_, a, _)| a).unwrap_or(&[]);
     BcfPoint3 { x: attr(attrs, "X").map(parse_f64).unwrap_or(0.0), y: attr(attrs, "Y").map(parse_f64).unwrap_or(0.0), z: attr(attrs, "Z").map(parse_f64).unwrap_or(0.0) }
 }
 
-fn point_element(name: &str, p: &BcfPoint3) -> XmlNode {
+async fn point_element(name: &str, p: &BcfPoint3) -> XmlNode {
     XmlNode::Element { name: name.into(), attrs: vec![XmlAttr { name: "X".into(), value: p.x.to_string() }, XmlAttr { name: "Y".into(), value: p.y.to_string() }, XmlAttr { name: "Z".into(), value: p.z.to_string() }], children: Vec::new() }
 }
 
-fn parse_camera(children: &[XmlNode]) -> Option<BcfCamera> {
+async fn parse_camera(children: &[XmlNode]) -> Option<BcfCamera> {
     if let Some(persp) = find_child(children, "PerspectiveCamera") {
         let (_, _, pc) = as_element(persp)?;
         let view_point = find_child(pc, "CameraViewPoint").map(parse_point).unwrap_or_default();
@@ -299,7 +299,7 @@ fn parse_camera(children: &[XmlNode]) -> Option<BcfCamera> {
     None
 }
 
-fn camera_element(camera: &BcfCamera) -> XmlNode {
+async fn camera_element(camera: &BcfCamera) -> XmlNode {
     match camera {
         BcfCamera::Perspective { view_point, direction, up_vector, field_of_view } => XmlNode::Element {
             name: "PerspectiveCamera".into(),
@@ -324,16 +324,16 @@ fn camera_element(camera: &BcfCamera) -> XmlNode {
     }
 }
 
-fn parse_component_list(container: &XmlNode) -> Vec<String> {
+async fn parse_component_list(container: &XmlNode) -> Vec<String> {
     let Some((_, _, children)) = as_element(container) else { return Vec::new() };
     find_children(children, "Component").into_iter().filter_map(|c| as_element(c).and_then(|(_, a, _)| attr(a, "IfcGuid")).map(|s| s.to_string())).collect()
 }
 
-fn component_list_elements(guids: &[String]) -> Vec<XmlNode> {
+async fn component_list_elements(guids: &[String]) -> Vec<XmlNode> {
     guids.iter().map(|g| XmlNode::Element { name: "Component".into(), attrs: vec![XmlAttr { name: "IfcGuid".into(), value: g.clone() }], children: Vec::new() }).collect()
 }
 
-fn parse_components(components_node: &XmlNode) -> BcfComponents {
+async fn parse_components(components_node: &XmlNode) -> BcfComponents {
     let (_, _, children) = as_element(components_node).unwrap_or(("Components", &[], &[]));
     let selection = find_child(children, "Selection").map(parse_component_list).unwrap_or_default();
     let visibility = match find_child(children, "Visibility") {
@@ -361,7 +361,7 @@ fn parse_components(components_node: &XmlNode) -> BcfComponents {
     BcfComponents { selection, visibility, coloring }
 }
 
-fn components_element(components: &BcfComponents) -> XmlNode {
+async fn components_element(components: &BcfComponents) -> XmlNode {
     let mut children = Vec::new();
     if !components.selection.is_empty() {
         children.push(XmlNode::Element { name: "Selection".into(), attrs: Vec::new(), children: component_list_elements(&components.selection) });
@@ -381,7 +381,7 @@ fn components_element(components: &BcfComponents) -> XmlNode {
 /// 🧩️ Parses one `.bcfv` `<VisualizationInfo Guid="...">` document (BCF-XML 2.1 `visinfo.xsd`)
 /// into `(camera, components)` — the guid itself is already known from the `markup.bcf`
 /// `<Viewpoints>` reference entry, so it isn't re-extracted here.
-fn parse_visualization_info(data: &[u8]) -> Option<(Option<BcfCamera>, Option<BcfComponents>)> {
+async fn parse_visualization_info(data: &[u8]) -> Option<(Option<BcfCamera>, Option<BcfComponents>)> {
     let text = std::str::from_utf8(data).ok()?;
     let doc = xml_document_from_text(text).ok()?;
     let root = doc.root.as_ref()?;
@@ -394,7 +394,7 @@ fn parse_visualization_info(data: &[u8]) -> Option<(Option<BcfCamera>, Option<Bc
     Some((camera, components))
 }
 
-fn visualization_info_bytes(vp: &BcfViewpoint) -> Vec<u8> {
+async fn visualization_info_bytes(vp: &BcfViewpoint) -> Vec<u8> {
     let mut children = Vec::new();
     if let Some(components) = &vp.components {
         children.push(components_element(components));
@@ -407,7 +407,7 @@ fn visualization_info_bytes(vp: &BcfViewpoint) -> Vec<u8> {
 //#endregion 🔖️VisualizationInfoXml
 
 //#region 🔖️Codec
-pub fn encode_bcf(snap: &BcfSnapshot) -> Result<Vec<u8>, String> {
+pub async fn encode_bcf(snap: &BcfSnapshot) -> Result<Vec<u8>, String> {
     let mut entries = Vec::new();
     entries.push(ZipEntry { name: "bcf.version".into(), data: bcf_version_bytes(&snap.version), ..Default::default() });
     for topic in &snap.topics {
@@ -426,7 +426,7 @@ pub fn encode_bcf(snap: &BcfSnapshot) -> Result<Vec<u8>, String> {
     crate::artifacts::zip::standards::v2_0::subsets::any::io::encode_zip(&zip_snap).map_err(|e| e.to_string())
 }
 
-pub fn decode_bcf(data: &[u8]) -> Result<BcfSnapshot, String> {
+pub async fn decode_bcf(data: &[u8]) -> Result<BcfSnapshot, String> {
     let zip = crate::artifacts::zip::standards::v2_0::subsets::any::io::decode_zip(data).map_err(|e| e.to_string())?;
 
     let mut version = String::new();
@@ -497,15 +497,15 @@ mod tests {
     use protocol::{DiffCodec, Mutation, MutationDiff, OpBinary, OpText};
 
     //#region Fixtures
-    fn perspective_camera() -> BcfCamera {
+    async fn perspective_camera() -> BcfCamera {
         BcfCamera::Perspective { view_point: BcfPoint3 { x: 1.0, y: 2.0, z: 3.0 }, direction: BcfPoint3 { x: 0.0, y: 0.0, z: -1.0 }, up_vector: BcfPoint3 { x: 0.0, y: 1.0, z: 0.0 }, field_of_view: 60.0 }
     }
 
-    fn orthogonal_camera() -> BcfCamera {
+    async fn orthogonal_camera() -> BcfCamera {
         BcfCamera::Orthogonal { view_point: BcfPoint3 { x: 4.0, y: 5.0, z: 6.0 }, direction: BcfPoint3 { x: 1.0, y: 0.0, z: 0.0 }, up_vector: BcfPoint3 { x: 0.0, y: 0.0, z: 1.0 }, view_to_world_scale: 2.5 }
     }
 
-    fn sample_components() -> BcfComponents {
+    async fn sample_components() -> BcfComponents {
         BcfComponents {
             selection: vec!["2O2Fr$t4X7Zf8NOew3FLOH".into()],
             visibility: BcfVisibility { default_visibility: false, exceptions: vec!["1yQBoo7d5EEBLiyMxGgTLc".into()] },
@@ -513,15 +513,15 @@ mod tests {
         }
     }
 
-    fn sample_viewpoint(guid: &str) -> BcfViewpoint {
+    async fn sample_viewpoint(guid: &str) -> BcfViewpoint {
         BcfViewpoint { guid: guid.into(), camera: Some(perspective_camera()), components: Some(sample_components()), snapshot: Some(vec![0x89, b'P', b'N', b'G', 0x0d, 0x0a, 0x1a, 0x0a]) }
     }
 
-    fn sample_comment(guid: &str, viewpoint_ref: Option<&str>) -> BcfComment {
+    async fn sample_comment(guid: &str, viewpoint_ref: Option<&str>) -> BcfComment {
         BcfComment { guid: guid.into(), date: "2024-01-01T00:00:00+00:00".into(), author: "ueli@example.com".into(), text: "Please review this clash.".into(), viewpoint_ref: viewpoint_ref.map(|s| s.to_string()) }
     }
 
-    fn sample_topic(guid: &str) -> BcfTopic {
+    async fn sample_topic(guid: &str) -> BcfTopic {
         BcfTopic {
             guid: guid.into(),
             title: "Clash on Level 2".into(),
@@ -536,7 +536,7 @@ mod tests {
         }
     }
 
-    fn sample_snapshot() -> BcfSnapshot {
+    async fn sample_snapshot() -> BcfSnapshot {
         BcfSnapshot { schema: STDIO_BCF_DOCUMENT_SCHEMA.into(), version: "2.1".into(), topics: vec![sample_topic("t1")], parts: vec![BcfRawPart { name: "project.bcfp".into(), data: b"<ProjectExtension/>".to_vec() }] }
     }
     //#endregion Fixtures
@@ -546,7 +546,7 @@ mod tests {
     /// child elements), comments (incl. `viewpoint_ref`), and a viewpoint's camera/components/
     /// snapshot all survive.
     #[test]
-    fn decode_of_encode_recovers_full_typed_model() {
+    async fn decode_of_encode_recovers_full_typed_model() {
         let snap = sample_snapshot();
         let bytes = encode_bcf(&snap).expect("encode");
         let decoded = decode_bcf(&bytes).expect("decode");
@@ -579,7 +579,7 @@ mod tests {
 
     /// 🧪️ Orthogonal camera round-trips too (the `xs:choice` sibling of `PerspectiveCamera`).
     #[test]
-    fn orthogonal_camera_round_trips() {
+    async fn orthogonal_camera_round_trips() {
         let mut snap = sample_snapshot();
         snap.topics[0].viewpoints[0].camera = Some(orthogonal_camera());
         let decoded = decode_bcf(&encode_bcf(&snap).unwrap()).unwrap();
@@ -589,7 +589,7 @@ mod tests {
     /// 🧪️ A topic folder with no `markup.bcf` (only stray files) is retained verbatim as raw
     /// parts, never fabricated into a bogus topic.
     #[test]
-    fn folder_without_markup_becomes_raw_parts() {
+    async fn folder_without_markup_becomes_raw_parts() {
         let zip_snap = crate::artifacts::zip::ZipSnapshot {
             schema: crate::artifacts::zip::STDIO_ZIP_DOCUMENT_SCHEMA.into(),
             entries: vec![ZipEntry { name: "bcf.version".into(), data: bcf_version_bytes("2.1"), ..Default::default() }, ZipEntry { name: "stray/notes.txt".into(), data: b"not a topic".to_vec(), ..Default::default() }],
@@ -602,7 +602,7 @@ mod tests {
     }
 
     #[test]
-    fn empty_snapshot_matches_schema() {
+    async fn empty_snapshot_matches_schema() {
         let snapshot = empty_bcf_snapshot();
         assert_eq!(snapshot.schema, STDIO_BCF_DOCUMENT_SCHEMA);
         assert!(snapshot.topics.is_empty());
@@ -610,7 +610,7 @@ mod tests {
     }
 
     #[test]
-    fn codec_round_trip() {
+    async fn codec_round_trip() {
         let snap = decode_bcf(&encode_bcf(&sample_snapshot()).unwrap()).unwrap();
 
         let text = store::ArtifactDsl::print_dsl(&snap);
@@ -627,7 +627,7 @@ mod tests {
     /// `apply_bcf_mutation` matches `m.diff(base).diff().apply(base)`, and the returned diff equals
     /// `m.diff(base)`.
     #[test]
-    fn mutation_diff_law() {
+    async fn mutation_diff_law() {
         let base = decode_bcf(&encode_bcf(&sample_snapshot()).unwrap()).unwrap();
         let mutations = vec![
             BcfMutation::SetVersion { version: "2.2".into() },
@@ -657,7 +657,7 @@ mod tests {
     /// ⚖️ Law 2 — `inverse_law`: every mutation round-trips (mutation-level) and every diff
     /// round-trips (diff-level `d.diff().inverse(base).apply(&d.diff().apply(base)) == base`).
     #[test]
-    fn inverse_law() {
+    async fn inverse_law() {
         let base = decode_bcf(&encode_bcf(&sample_snapshot()).unwrap()).unwrap();
         let mutations = vec![
             BcfMutation::SetVersion { version: "2.2".into() },
@@ -696,7 +696,7 @@ mod tests {
     /// same-key clash needed, tested via disjoint-then-merge], Add+SetField patches into added,
     /// Modify+Remove annihilates) plus associativity.
     #[test]
-    fn absorb_law() {
+    async fn absorb_law() {
         let base = decode_bcf(&encode_bcf(&sample_snapshot()).unwrap()).unwrap();
 
         // Insert+Remove-before: insert t2, then remove t1 -- both survive independently (name-keyed,
@@ -751,7 +751,7 @@ mod tests {
         assert_eq!(left.apply(&base).expect("left must apply to base"), right.apply(&base).expect("right must apply to base"), "absorb must be associative");
     }
 
-    fn assert_absorb_matches_sequential(base: &BcfSnapshot, d1: protocol::MutationOutcome<BcfDiff>, d2: protocol::MutationOutcome<BcfDiff>) -> BcfDiff {
+    async fn assert_absorb_matches_sequential(base: &BcfSnapshot, d1: protocol::MutationOutcome<BcfDiff>, d2: protocol::MutationOutcome<BcfDiff>) -> BcfDiff {
         let mid = d1.diff().apply(base).expect("d1 must apply to base");
         let sequential = d2.diff().apply(&mid).expect("d2 must apply to mid");
         let mut absorbed = d1.diff().clone();
@@ -764,7 +764,7 @@ mod tests {
     //#region 🧪️Law4_BetweenRoundtripLaw
     /// ⚖️ Law 4 — `between_roundtrip_law`: `between(a,b).apply(a) == b` on real fixtures.
     #[test]
-    fn between_roundtrip_law() {
+    async fn between_roundtrip_law() {
         let a = decode_bcf(&encode_bcf(&sample_snapshot()).unwrap()).unwrap();
         let mut b = a.clone();
         b.version = "2.2".into();
@@ -786,7 +786,7 @@ mod tests {
     /// normal form for viewpoint/snapshot filenames -- see the snapshot module's `BcfViewpoint`
     /// doc comment).
     #[test]
-    fn codec_retention_law() {
+    async fn codec_retention_law() {
         let snap = decode_bcf(&encode_bcf(&sample_snapshot()).unwrap()).unwrap();
         let re_encoded = encode_bcf(&snap).unwrap();
         let re_decoded = decode_bcf(&re_encoded).unwrap();
@@ -798,7 +798,7 @@ mod tests {
     /// ⚖️ Law 6 — `field_sweep` (the acceptance criterion): `sweep_a`/`sweep_b` differ in EVERY
     /// mutable field, incl. per guid-keyed collection one removed/one modified-in-every-field/one
     /// added, and every tri-state field exercising `Some(None)`.
-    fn sweep_a() -> BcfSnapshot {
+    async fn sweep_a() -> BcfSnapshot {
         BcfSnapshot {
             schema: STDIO_BCF_DOCUMENT_SCHEMA.into(),
             version: "2.1".into(),
@@ -847,7 +847,7 @@ mod tests {
         }
     }
 
-    fn sweep_b() -> BcfSnapshot {
+    async fn sweep_b() -> BcfSnapshot {
         BcfSnapshot {
             schema: STDIO_BCF_DOCUMENT_SCHEMA.into(),
             version: "2.2".into(),
@@ -888,7 +888,7 @@ mod tests {
     }
 
     #[test]
-    fn field_sweep() {
+    async fn field_sweep() {
         let a = sweep_a();
         let b = sweep_b();
 
@@ -946,7 +946,7 @@ mod tests {
     /// `None`) and `SetComment`'s tri-state `viewpoint_ref` (both `Some(None)` and
     /// `Some(Some(_))`).
     #[test]
-    fn op_text_binary_roundtrip_law() {
+    async fn op_text_binary_roundtrip_law() {
         let mutations = vec![
             BcfMutation::NoMutation,
             BcfMutation::SetSnapshot { snapshot: sample_snapshot() },
@@ -997,7 +997,7 @@ mod tests {
     /// transition, via `sweep_a`/`sweep_b`'s `between()` result (the same fixtures `field_sweep`
     /// uses, incl. `BcfCamera`'s `Perspective`->`Orthogonal` transition inside `vp-keep`'s diff).
     #[test]
-    fn diff_codec_text_binary_roundtrip_law() {
+    async fn diff_codec_text_binary_roundtrip_law() {
         let a = sweep_a();
         let b = sweep_b();
         let cases = vec![BcfDiff::default(), BcfDiff::between(&a, &b), BcfDiff::between(&b, &a), BcfDiff::between(&a, &a)];
@@ -1033,7 +1033,7 @@ mod tests {
         /// `recognize`/`walk_protocol` laws below (a parse failure here fails fast with a clearer
         /// message).
         #[test]
-        fn committed_facet_files_parse() {
+        async fn committed_facet_files_parse() {
             for (label, text) in [("snapshot grammar", snapshot::text::COMPONENT_GRAMMAR_SEMIO), ("mutations grammar", mutations::text::COMPONENT_GRAMMAR_SEMIO), ("diff grammar", diff::text::COMPONENT_GRAMMAR_SEMIO)] {
                 let grammar = dsl::parse_grammar(text).unwrap_or_else(|e| panic!("{label}: parse_grammar failed: {e:?}"));
                 assert_eq!(grammar.dialect, dsl::SemioDialect::Grammar, "{label}: expected grammar dialect");
@@ -1055,7 +1055,7 @@ mod tests {
         /// text against the grammar -- direct proof the grammar matches this artifact's own real
         /// per-part XML bytes, not an invented approximation.
         #[test]
-        fn grammar_conformance_law() {
+        async fn grammar_conformance_law() {
             let grammar = dsl::parse_grammar(snapshot::text::COMPONENT_GRAMMAR_SEMIO).expect("parse snapshot grammar");
             let recognizer = dsl::Recognizer::compile(&grammar);
 
@@ -1081,7 +1081,7 @@ mod tests {
         /// ✅️ `ops_grammar_conformance_law`: the mutations grammar recognizes real `print_op`
         /// output for every `BcfMutation` variant (`mutations::demo_mutation_cases()`).
         #[test]
-        fn ops_grammar_conformance_law() {
+        async fn ops_grammar_conformance_law() {
             let grammar = dsl::parse_grammar(mutations::text::COMPONENT_GRAMMAR_SEMIO).expect("parse mutations grammar");
             let recognizer = dsl::Recognizer::compile(&grammar);
             for mutation in mutations::demo_mutation_cases() {
@@ -1093,7 +1093,7 @@ mod tests {
         /// ✅️ `diff_grammar_conformance_law`: the diff grammar recognizes real `print_diff` output
         /// for every representative `BcfDiff` (`diff::demo_diff_cases()`).
         #[test]
-        fn diff_grammar_conformance_law() {
+        async fn diff_grammar_conformance_law() {
             let grammar = dsl::parse_grammar(diff::text::COMPONENT_GRAMMAR_SEMIO).expect("parse diff grammar");
             let recognizer = dsl::Recognizer::compile(&grammar);
             for d in diff::demo_diff_cases() {
@@ -1112,7 +1112,7 @@ mod tests {
         /// instead, same as zip's/docx's own `protocol_walk_law` does; the op/diff protocols have
         /// no such exception and must consume every byte.
         #[test]
-        fn protocol_walk_law() {
+        async fn protocol_walk_law() {
             let pack_spec = dsl::parse_protocol(snapshot::binary::COMPONENT_PROTOCOL_SEMIO).expect("parse snapshot protocol");
             let demo = demo_bcf_snapshot();
             let packed = store::ArtifactPack::encode_pack(&demo);
@@ -1142,7 +1142,7 @@ mod tests {
         /// (this ticket's own recon note on the pre-FG-wave state of these two files -- the
         /// `.dsl.semio` fixture WAS exactly that placeholder before this wave).
         #[test]
-        fn fixture_honesty_law() {
+        async fn fixture_honesty_law() {
             const FIXTURE_DSL: &str = include_str!("../📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio");
             const FIXTURE_PACK: &[u8] = include_bytes!("../📚️examples/🎬️demo/🖼️assets/🎒️example.pack.semio");
 
@@ -1169,7 +1169,7 @@ pub mod io_registry {
 
     static ENTRIES: OnceLock<Vec<ComposerEntry>> = OnceLock::new();
 
-    pub fn entries() -> &'static [ComposerEntry] {
+    pub async fn entries() -> &'static [ComposerEntry] {
         ENTRIES.get_or_init(|| vec![composer_entry_of::<BcfRawAnyComposer>()]).as_slice()
     }
 }

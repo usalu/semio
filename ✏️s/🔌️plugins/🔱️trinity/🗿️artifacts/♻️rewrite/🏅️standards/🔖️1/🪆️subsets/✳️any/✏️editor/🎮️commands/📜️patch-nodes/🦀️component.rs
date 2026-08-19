@@ -7,7 +7,7 @@ use crate::artifacts::rewrite::op::RewriteRuleMutation;
 use crate::artifacts::rewrite::RewriteSnapshot;
 use semio_framework_plugin::{Emit, Fault};
 
-fn patch_fixture_nodes(fixture_json: &str, node_ids: &[String], field: &str, value: &str) -> Option<String> {
+async fn patch_fixture_nodes(fixture_json: &str, node_ids: &[String], field: &str, value: &str) -> Option<String> {
     let fixture = JackSnapshot::from_json(fixture_json).ok()?;
     let mut nodes = fixture.nodes();
     for node in nodes.iter_mut() {
@@ -24,7 +24,7 @@ fn patch_fixture_nodes(fixture_json: &str, node_ids: &[String], field: &str, val
     Graph::from_fixture(fixture).ok()?.fixture_json().ok()
 }
 
-pub(crate) fn patch_nodes(state: &RewriteSnapshot, node_ids: &[String], field: &str, value: &str) -> Result<Emit<RewriteRuleMutation, RewriteConfigMutation>, Fault> {
+pub(crate) async fn patch_nodes(state: &RewriteSnapshot, node_ids: &[String], field: &str, value: &str) -> Result<Emit<RewriteRuleMutation, RewriteConfigMutation>, Fault> {
     let trimmed = value.trim();
     if node_ids.is_empty() || field.is_empty() || trimmed.is_empty() {
         return Ok(Emit::default());

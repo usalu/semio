@@ -48,7 +48,7 @@ pub enum TiffFieldType {
 }
 
 impl TiffFieldType {
-    pub fn from_u16(v: u16) -> Result<Self, String> {
+    pub async fn from_u16(v: u16) -> Result<Self, String> {
         match v {
             1 => Ok(Self::Byte),
             2 => Ok(Self::Ascii),
@@ -65,7 +65,7 @@ impl TiffFieldType {
             other => Err(format!("tiff: unrecognized field type code {other} (TIFF 6.0 core table is 1-12)")),
         }
     }
-    pub fn to_u16(self) -> u16 {
+    pub async fn to_u16(self) -> u16 {
         match self {
             Self::Byte => 1,
             Self::Ascii => 2,
@@ -83,7 +83,7 @@ impl TiffFieldType {
     }
     /// 📏️ Byte size of ONE value of this type (TIFF6 §2 Table 2) — drives the inline-vs-offset
     /// rule (`element_size * count <= 4` stays inline in the entry's value field).
-    pub fn element_size(self) -> usize {
+    pub async fn element_size(self) -> usize {
         match self {
             Self::Byte | Self::Ascii | Self::SByte | Self::Undefined => 1,
             Self::Short | Self::SShort => 2,
@@ -119,7 +119,7 @@ pub enum TiffValues {
 }
 
 impl TiffValues {
-    pub fn kind(&self) -> TiffFieldType {
+    pub async fn kind(&self) -> TiffFieldType {
         match self {
             Self::Byte(_) => TiffFieldType::Byte,
             Self::Ascii(_) => TiffFieldType::Ascii,
@@ -137,7 +137,7 @@ impl TiffValues {
     }
     /// 🔢️ IFD entry `Count` for this value — number of elements of `kind()`, EXCEPT `Ascii`
     /// which counts BYTES including the terminating NUL (TIFF6 §2's own special case).
-    pub fn count(&self) -> u32 {
+    pub async fn count(&self) -> u32 {
         match self {
             Self::Byte(v) => v.len() as u32,
             Self::Ascii(s) => s.len() as u32 + 1,
@@ -156,7 +156,7 @@ impl TiffValues {
     /// 🔍️ First value widened to `u32`, for integer-typed variants only — convenience used by
     /// well-known-tag accessors ([`TiffSnapshot::width`] etc.) and the baseline subset's
     /// conformance checks. `None` for non-integer/empty variants.
-    pub fn first_u32(&self) -> Option<u32> {
+    pub async fn first_u32(&self) -> Option<u32> {
         match self {
             Self::Byte(v) => v.first().map(|&x| x as u32),
             Self::Short(v) => v.first().map(|&x| x as u32),
@@ -231,7 +231,7 @@ pub struct TiffSnapshot {
 }
 
 impl Default for TiffSnapshot {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self { schema: STDIO_TIFF_DOCUMENT_SCHEMA.into(), byte_order: TiffByteOrder::LittleEndian, ifds: Vec::new(), pixels: Vec::new() }
     }
 }
@@ -239,15 +239,15 @@ impl Default for TiffSnapshot {
 impl TiffSnapshot {
     /// 🔍️ Looks up a tag by id in IFD 0 (the primary image) — `None` if there is no IFD 0 or
     /// the tag isn't present in it.
-    pub fn tag(&self, tag: u16) -> Option<&TiffTag> {
+    pub async fn tag(&self, tag: u16) -> Option<&TiffTag> {
         self.ifds.first()?.entries.iter().find(|t| t.tag == tag)
     }
     /// 📐️ `ImageWidth` (256) from IFD 0, widened to `u32`.
-    pub fn width(&self) -> Option<u32> {
+    pub async fn width(&self) -> Option<u32> {
         self.tag(TAG_IMAGE_WIDTH).and_then(|t| t.values.first_u32())
     }
     /// 📐️ `ImageLength` (257) from IFD 0, widened to `u32`.
-    pub fn height(&self) -> Option<u32> {
+    pub async fn height(&self) -> Option<u32> {
         self.tag(TAG_IMAGE_LENGTH).and_then(|t| t.values.first_u32())
     }
 }
@@ -256,11 +256,11 @@ impl TiffSnapshot {
 //#region HandcraftedArtifactCodecs
 impl store::ArtifactDsl for TiffSnapshot {
     const EXTENSION: &'static str = "tiff";
-    fn envelope_id() -> &'static str {
+    async fn envelope_id() -> &'static str {
         "stdio.tiff"
     }
 
-    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+    async fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
         let body = match store::semio_format::split_text_preamble(text) {
             Ok((_, rest)) => rest,
             Err(_) => text,
@@ -279,7 +279,7 @@ impl store::ArtifactDsl for TiffSnapshot {
         crate::artifacts::tiff::engine::decode_tiff(&bytes).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
 
-    fn print_dsl(&self) -> String {
+    async fn print_dsl(&self) -> String {
         let bytes = crate::artifacts::tiff::engine::encode_tiff(self).unwrap_or_default();
         let body: String = bytes.iter().map(|b| format!("{b:02x}")).collect();
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
@@ -288,14 +288,14 @@ impl store::ArtifactDsl for TiffSnapshot {
 }
 
 impl store::ArtifactPack for TiffSnapshot {
-    fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
+    async fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
         let raw = crate::artifacts::tiff::engine::encode_tiff(self).map_err(|e| store::PackError::Schema(e))?;
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &raw))
     }
 
-    fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
+    async fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
         if envelope.envelope_id() != <Self as store::ArtifactDsl>::envelope_id() {
             return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.envelope_id())));

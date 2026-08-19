@@ -4,6 +4,6 @@
 use crate::artifacts::procedural2d::mutations::{change_schema, Procedural2dMutation};
 use crate::artifacts::procedural2d::Procedural2dSnapshot;
 
-pub fn inverse(_payload: &super::mutation::ChangeSchema, base: &Procedural2dSnapshot) -> Vec<Procedural2dMutation> {
+pub async fn inverse(_payload: &super::mutation::ChangeSchema, base: &Procedural2dSnapshot) -> Vec<Procedural2dMutation> {
     vec![change_schema(base.fixture.schema.clone())]
 }

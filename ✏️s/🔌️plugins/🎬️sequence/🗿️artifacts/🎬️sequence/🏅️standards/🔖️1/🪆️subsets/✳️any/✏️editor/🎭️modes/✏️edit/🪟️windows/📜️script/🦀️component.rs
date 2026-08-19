@@ -13,7 +13,7 @@ const SEQUENCE_PLAY_SURFACE_SCRIPT: &str = "sequence.play.script";
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
-pub fn definition() -> WindowKindDefinition {
+pub async fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
         id: SEQUENCE_PLAY_WINDOW_SCRIPT.into(),
         label: LocalizedLabel::native("Script", "Skript"),
@@ -34,7 +34,7 @@ pub fn definition() -> WindowKindDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(fixture: &SequenceSnapshot, config: &SequenceConfig) -> UiNode {
+pub async fn render(fixture: &SequenceSnapshot, config: &SequenceConfig) -> UiNode {
     let host = host_from_snapshot(fixture);
     let mut text = host.compile_text();
     if !config.last_run_json.is_empty() {
@@ -52,13 +52,13 @@ mod tests {
     use crate::editor::sequence::testkit::{new_app, render as render_body};
 
     #[test]
-    fn renders_script_editor() {
+    async fn renders_script_editor() {
         let mut app = new_app();
         assert!(render_body(&mut app, SEQUENCE_PLAY_BODY_SCRIPT).contains("text-editor"));
     }
 
     #[test]
-    fn definition_declares_the_text_editor_surface_and_body_key() {
+    async fn definition_declares_the_text_editor_surface_and_body_key() {
         let definition = definition();
         assert_eq!(definition.body_key, SEQUENCE_PLAY_BODY_SCRIPT);
         assert!(matches!(definition.surface_kind, SurfaceKind::TextEditor));

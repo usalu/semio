@@ -13,7 +13,7 @@ use serde::{Deserialize, Serialize};
 /// display option (preview camera, LOD, show mode, sun, active utility, locale)
 /// unchanged. `graph`'s selection resets on its own — the framework prunes it against the new
 /// fixture's `interaction_topology` (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM).
-fn config_after_example_load(previous: &Procedural3dConfig, flow_camera: &CameraJson) -> Procedural3dConfig {
+async fn config_after_example_load(previous: &Procedural3dConfig, flow_camera: &CameraJson) -> Procedural3dConfig {
     Procedural3dConfig {
         camera: flow_camera.clone(),
         selected_generation_id: None,
@@ -34,7 +34,7 @@ fn config_after_example_load(previous: &Procedural3dConfig, flow_camera: &Camera
 pub struct SetActiveExample {
     pub example_id: String}
 
-pub fn handle(payload: &SetActiveExample, doc: &ArtifactView<'_, Procedural3dSnapshot>, cfg: &ConfigView<'_, Procedural3dConfig>, session: &mut FlowEvalSession) -> Result<Emit<Procedural3dMutation, Procedural3dConfigMutation>, Fault> {
+pub async fn handle(payload: &SetActiveExample, doc: &ArtifactView<'_, Procedural3dSnapshot>, cfg: &ConfigView<'_, Procedural3dConfig>, session: &mut FlowEvalSession) -> Result<Emit<Procedural3dMutation, Procedural3dConfigMutation>, Fault> {
     session.set_eval_json(String::new());
     let fixture = &doc.snapshot.fixture;
     let target = if payload.example_id.is_empty() {
@@ -60,7 +60,7 @@ mod tests {
     use semio_framework_plugin::PluginApp;
 
     #[test]
-    fn set_active_example_via_string_action_loads_fixture() {
+    async fn set_active_example_via_string_action_loads_fixture() {
         let _serial = crate::editor::procedural3d::test_support::lock();
         let mut app = app_with_registry();
         app.handle_action("setActiveExample", Some(&serde_json::json!({ "exampleId": PROCEDURAL_EXAMPLE_BOX_FILLET })), &semio_framework_plugin::testkit::meta("local")).expect("set example");
@@ -69,7 +69,7 @@ mod tests {
     }
 
     #[test]
-    fn unknown_example_id_is_a_no_op() {
+    async fn unknown_example_id_is_a_no_op() {
         let _serial = crate::editor::procedural3d::test_support::lock();
         let mut app = app();
         let before = app.snapshot().expect("snapshot");

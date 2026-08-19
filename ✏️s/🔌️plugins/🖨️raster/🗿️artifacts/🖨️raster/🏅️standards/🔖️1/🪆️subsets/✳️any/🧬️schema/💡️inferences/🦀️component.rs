@@ -27,7 +27,7 @@ pub struct RasterInference {
 }
 
 impl protocol::Inference<RasterSnapshot> for RasterInference {
-    fn infer(snapshot: &RasterSnapshot) -> Self {
+    async fn infer(snapshot: &RasterSnapshot) -> Self {
         Self { topology: compute_raster_topology(snapshot) }
     }
 }
@@ -35,19 +35,19 @@ impl protocol::Inference<RasterSnapshot> for RasterInference {
 /// 🌱 Defined in terms of `infer` (not derived) — keeps the law correct regardless of whether
 /// `RasterSnapshot::default()`'s `layers` field ever stops being empty.
 impl Default for RasterInference {
-    fn default() -> Self {
+    async fn default() -> Self {
         <Self as protocol::Inference<RasterSnapshot>>::infer(&RasterSnapshot::default())
     }
 }
 
 impl protocol::InferenceSpec<RasterSnapshot> for RasterInference {
-    fn inference_schema_id() -> &'static str {
+    async fn inference_schema_id() -> &'static str {
         "s.raster.raster.inference"
     }
-    fn schema_version() -> u32 {
+    async fn schema_version() -> u32 {
         1
     }
-    fn fields() -> &'static [protocol::InferenceFieldSpec] {
+    async fn fields() -> &'static [protocol::InferenceFieldSpec] {
         &[protocol::InferenceFieldSpec { id: "s.raster.raster.inference.topology", reads: &["layers"] }]
     }
 }
@@ -63,7 +63,7 @@ impl ArtifactInferrer for crate::artifacts::raster::standards::v1::subsets::any:
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.raster.raster.inference`'s facet leaves into the OS-wide inference catalog —
 /// call once at plugin init, alongside `raster_artifact_schema_descriptor`'s registration.
-pub fn raster_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
+pub async fn raster_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
     schema::ArtifactInferenceDescriptor {
         id: "s.raster.raster.inference",
         inference: schema::FacetLeaves {
@@ -84,13 +84,13 @@ mod tests {
     use protocol::Inference;
 
     #[test]
-    fn inference_determinism_law() {
+    async fn inference_determinism_law() {
         let snapshot = RasterSnapshot::default();
         assert_eq!(RasterInference::infer(&snapshot), RasterInference::infer(&snapshot));
     }
 
     #[test]
-    fn inference_default_law() {
+    async fn inference_default_law() {
         assert_eq!(RasterInference::infer(&RasterSnapshot::default()), RasterInference::default());
     }
 }

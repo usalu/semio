@@ -14,7 +14,7 @@ pub const LOWPOLY_PAINT_TEXTURE_SIZE: usize = 1024;
 pub const LOWPOLY_DOCUMENT_SCHEMA: &str = "lowpoly.document";
 
 /// @emoji 🎨️ An opaque-white RGBA buffer sized for one paint layer.
-pub fn empty_paint_pixels() -> Vec<u8> {
+pub async fn empty_paint_pixels() -> Vec<u8> {
     let mut pixels = vec![0u8; LOWPOLY_PAINT_TEXTURE_SIZE * LOWPOLY_PAINT_TEXTURE_SIZE * 4];
     for chunk in pixels.chunks_mut(4) {
         chunk[0] = 255;
@@ -31,11 +31,11 @@ mod pixels_base64 {
     use base64::Engine;
     use serde::{Deserialize, Deserializer, Serializer};
 
-    pub fn serialize<S: Serializer>(pixels: &[u8], serializer: S) -> Result<S::Ok, S::Error> {
+    pub async fn serialize<S: Serializer>(pixels: &[u8], serializer: S) -> Result<S::Ok, S::Error> {
         serializer.serialize_str(&base64::engine::general_purpose::STANDARD.encode(pixels))
     }
 
-    pub fn deserialize<'de, D: Deserializer<'de>>(deserializer: D) -> Result<Vec<u8>, D::Error> {
+    pub async fn deserialize<'de, D: Deserializer<'de>>(deserializer: D) -> Result<Vec<u8>, D::Error> {
         let encoded = String::deserialize(deserializer)?;
         if encoded.is_empty() {
             return Ok(super::empty_paint_pixels());
@@ -56,7 +56,7 @@ pub struct LowpolyTransform {
 }
 
 impl Default for LowpolyTransform {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self { position: [0.0, 0.0, 0.0], rotation: [0.0, 0.0, 0.0], scale: [1.0, 1.0, 1.0] }
     }
 }
@@ -75,7 +75,7 @@ pub struct LowpolyPaintLayer {
 }
 
 impl LowpolyPaintLayer {
-    pub fn new(name: &str) -> Self {
+    pub async fn new(name: &str) -> Self {
         Self { name: name.into(), visible: true, opacity: 1.0, blend_mode: "normal".into(), pixels: empty_paint_pixels() }
     }
 }
@@ -87,7 +87,7 @@ impl LowpolyPaintLayer {
 /// IS the change signal. Shared by `snapshot_from_mesh_json` and the app's kernel session
 /// (`⚙️engine::LowpolyDocument::sync_meshes_to_snapshot`, `add_primitive`), which both need the
 /// identical rule so the same geometry always resolves to the same handle.
-pub fn mesh_child_handle(object_id: &str, mesh_json: &str) -> store::ArtifactChild<SemioMeshSnapshot> {
+pub async fn mesh_child_handle(object_id: &str, mesh_json: &str) -> store::ArtifactChild<SemioMeshSnapshot> {
     use std::hash::{Hash, Hasher};
     let mut hasher = std::collections::hash_map::DefaultHasher::new();
     mesh_json.hash(&mut hasher);
@@ -137,7 +137,7 @@ pub struct LowpolyObject {
 }
 
 impl Identified<String> for LowpolyObject {
-    fn id(&self) -> &String {
+    async fn id(&self) -> &String {
         &self.id
     }
 }
@@ -160,7 +160,7 @@ pub struct LowpolySelectionTargets {
 }
 
 impl Default for LowpolySelectionTargets {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self { mesh: true, vertex: false, edge: false, face: false }
     }
 }
@@ -177,7 +177,7 @@ pub struct LowpolySelection {
 }
 
 impl Default for LowpolySelection {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self { targets: LowpolySelectionTargets::default(), keys: Vec::new(), mode: "mesh".into(), ids: Vec::new() }
     }
 }
@@ -200,7 +200,7 @@ pub struct LowpolyObjectPatch {
 }
 
 impl Patchable<LowpolyObjectPatch> for LowpolyObject {
-    fn apply_patch(&mut self, patch: &LowpolyObjectPatch) {
+    async fn apply_patch(&mut self, patch: &LowpolyObjectPatch) {
         if let Some(value) = &patch.name {
             self.name = value.clone();
         }
@@ -215,7 +215,7 @@ impl Patchable<LowpolyObjectPatch> for LowpolyObject {
         }
     }
 
-    fn diff_patch(&self, other: &Self) -> Option<LowpolyObjectPatch> {
+    async fn diff_patch(&self, other: &Self) -> Option<LowpolyObjectPatch> {
         let patch = LowpolyObjectPatch {
             name: (self.name != other.name).then(|| other.name.clone()),
             smooth_shading: (self.smooth_shading != other.smooth_shading).then_some(other.smooth_shading),
@@ -227,7 +227,7 @@ impl Patchable<LowpolyObjectPatch> for LowpolyObject {
 }
 
 /// 🖌️ Applies a paint-layers sub-delta onto one object.
-pub fn apply_paint_layers_delta(
+pub async fn apply_paint_layers_delta(
     object: &mut LowpolyObject,
     delta: &crate::artifacts::lowpoly::diff::schema::LowpolyPaintLayersDelta,
 ) -> protocol::MutationApplyResult<()> {
@@ -330,7 +330,7 @@ pub const LOWPOLY_DIALECT: semio_framework_plugin::app::Dialect = semio_framewor
 //#region 🔖️ArtifactKind
 /// 🧱️ The two artifact kinds this plugin contributes — lifted out of the old ui crate's manifest
 /// builder chain so the app's `🔖️Manifest` region can stitch it in as a single passthrough.
-pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
+pub async fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
     semio_framework_plugin::ArtifactKindSpec {
         id: "3d.lowpoly".into(),
         name: "3D Lowpoly".into(),
@@ -372,7 +372,7 @@ pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
 /// CONFIG/PRESENCE schema, an app-scope concern `ArtifactDeclaration` deliberately has no field for
 /// (see that struct's own doc) — `register_app_schema_descriptor` is not in §6's artifact-scoped
 /// function set.
-pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
+pub async fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
     use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
 
     let rows: &[(&str, &str, &str, &[(&str, &str)], Option<(&str, &str)>)] = &[
@@ -412,7 +412,7 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
     Ok(definition)
 }
 
-pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
+pub async fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
     semio_framework_plugin::ArtifactDeclaration::builder(definition()?)
         .schema(crate::artifacts::lowpoly::schema::lowpoly_artifact_schema_descriptor())
         .inferences([crate::artifacts::lowpoly::standards::v1::subsets::any::schema::inferences::lowpoly_artifact_inference_descriptor()])
@@ -425,7 +425,7 @@ pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semi
 /// 📌️ Handcrafted facet grammars (text) and protocols (binary) for in-process execution — built once
 /// and leaked to a `&'static` slice since `dsl::passthrough_hooks` isn't `const fn`, mirroring the
 /// `OnceLock`-backed `io_registry::entries()` convention.
-fn pilot_languages() -> &'static [dsl::LanguageSpec] {
+async fn pilot_languages() -> &'static [dsl::LanguageSpec] {
     static LANGUAGES: std::sync::OnceLock<Vec<dsl::LanguageSpec>> = std::sync::OnceLock::new();
     LANGUAGES
         .get_or_init(|| {
@@ -492,7 +492,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn object_patch_apply_mutates_and_inverse_restores_all_fields() {
+    async fn object_patch_apply_mutates_and_inverse_restores_all_fields() {
         let mesh_workspace = "{}".to_string();
         let original_mesh = mesh_child_handle("obj-1", &mesh_workspace);
         let mut object = LowpolyObject { id: "obj-1".into(), name: "Original".into(), transform: LowpolyTransform::default(), smooth_shading: false, mesh: Some(original_mesh), paint_layers: vec![LowpolyPaintLayer::new("Base")] };
@@ -511,7 +511,7 @@ mod tests {
     }
 
     #[test]
-    fn snapshot_from_mesh_json_builds_single_object_with_base_layer() {
+    async fn snapshot_from_mesh_json_builds_single_object_with_base_layer() {
         let mesh_json = "{}".to_string();
         let snapshot = snapshot_from_mesh_json(&mesh_json, "obj-42", "Widget");
         assert_eq!(snapshot.schema, LOWPOLY_DOCUMENT_SCHEMA);
@@ -524,7 +524,7 @@ mod tests {
     }
 
     #[test]
-    fn lowpoly_selection_defaults_target_whole_mesh() {
+    async fn lowpoly_selection_defaults_target_whole_mesh() {
         let targets = LowpolySelectionTargets::default();
         assert!(targets.mesh);
         assert!(!targets.vertex && !targets.edge && !targets.face);
@@ -535,7 +535,7 @@ mod tests {
 }
 
 #[test]
-fn artifact_schema_descriptor_leaves_parse_and_field_states_match_snapshot_json() {
+async fn artifact_schema_descriptor_leaves_parse_and_field_states_match_snapshot_json() {
     use schema::{parse_state_class_kebab, ArtifactSchemaFields};
     let descriptor = crate::artifacts::lowpoly::schema::lowpoly_artifact_schema_descriptor();
     assert_eq!(descriptor.id, "s.lowpoly.lowpoly");

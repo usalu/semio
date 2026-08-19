@@ -20,8 +20,8 @@ pub const SEMIO_DRAW_EXAMPLE_TEXT: &str = include_str!("../../../📚️examples
 /// the `DrawSnapshot` struct and its `Default` impl).
 impl store::ArtifactDsl for DrawSnapshot {
     const EXTENSION: &'static str = "draw";
-    fn envelope_id() -> &'static str { "draw.draw" }
-    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+    async fn envelope_id() -> &'static str { "draw.draw" }
+    async fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
         let body = match store::semio_format::split_text_preamble(text) {
             Ok((_, rest)) => rest,
             Err(_) => text,
@@ -33,7 +33,7 @@ impl store::ArtifactDsl for DrawSnapshot {
         )?;
         Self::__dsl_from_record(&record)
     }
-    fn print_dsl(&self) -> String {
+    async fn print_dsl(&self) -> String {
         let body = dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), dsl::JoinMode::Document);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
             <Self as store::ArtifactDsl>::envelope_id(),
@@ -46,12 +46,12 @@ impl store::ArtifactDsl for DrawSnapshot {
 //#endregion 🔖️HandcraftedArtifactDsl
 
 /// 📖️ Parses `.draw` DSL text into a `DrawSnapshot`.
-pub fn parse_dsl(text: &str) -> Result<DrawSnapshot, store::TextError> {
+pub async fn parse_dsl(text: &str) -> Result<DrawSnapshot, store::TextError> {
     <DrawSnapshot as store::ArtifactDsl>::parse_dsl(text)
 }
 
 /// 🖨️ Prints a `DrawSnapshot` back to `.draw` DSL text.
-pub fn print_dsl(document: &DrawSnapshot) -> String {
+pub async fn print_dsl(document: &DrawSnapshot) -> String {
     store::ArtifactDsl::print_dsl(document)
 }
 
@@ -63,7 +63,7 @@ mod tests {
     use crate::artifacts::draw::{DrawArtboard, DrawCircle, DrawEllipse, DrawGroupBody, DrawImageAsset, DrawLayerNode, DrawLine, DrawPolygon, DrawShapeBody, DrawTextBody, FillStyle, GradientStop, PathSegment, StrokeStyle, DRAW_DOCUMENT_SCHEMA};
     use store::ArtifactDsl;
 
-    fn representative_draw_document() -> DrawSnapshot {
+    async fn representative_draw_document() -> DrawSnapshot {
         let mut assets = std::collections::BTreeMap::new();
         assets.insert("src-1".to_string(), DrawImageAsset { mime: "image/png".into(), data: "aGVsbG8=".into(), width: Some(8), height: Some(8) });
 
@@ -123,12 +123,12 @@ mod tests {
     }
 
     #[test]
-    fn dsl_round_trips_representative_document() {
+    async fn dsl_round_trips_representative_document() {
         store::os_store::test_support::assert_dsl_round_trip(&representative_draw_document());
     }
 
     #[test]
-    fn dsl_round_trips_document_without_assets_or_artboard() {
+    async fn dsl_round_trips_document_without_assets_or_artboard() {
         let mut doc = default_draw_document("no-extras", None);
         doc.assets = Default::default();
         doc.artboard = None;
@@ -137,7 +137,7 @@ mod tests {
     }
 
     #[test]
-    fn dsl_round_trips_semio_example_fixture() {
+    async fn dsl_round_trips_semio_example_fixture() {
         let doc = parse_dsl(SEMIO_DRAW_EXAMPLE_TEXT).expect("semio example fixture parses");
         assert_eq!(doc.id, "semio");
         assert_eq!(doc.title.as_deref(), Some("Semio Emblem"));
@@ -146,7 +146,7 @@ mod tests {
     }
 
     #[test]
-    fn draw_document_parse_dsl_reports_error_for_unknown_layer_kind() {
+    async fn draw_document_parse_dsl_reports_error_for_unknown_layer_kind() {
         let unknown_layer = DrawSnapshot::parse_dsl("schema=\"draw.document\" id=\"test\"\nlayers {\n  weird id=\"layer-1\"\n}\n");
         assert!(unknown_layer.is_err(), "an unrecognized layer keyword must fail to parse");
     }

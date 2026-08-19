@@ -15,7 +15,7 @@ pub struct MdIntoSequence;
 impl Deserializer<SequenceSnapshot> for MdIntoSequence {
     const FROM: Dialect = MD_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Canonical;
-    fn deserialize(payload: &IoPayload) -> IoResult<SequenceSnapshot> {
+    async fn deserialize(payload: &IoPayload) -> IoResult<SequenceSnapshot> {
         let IoPayload::Binary(bytes) = payload else {
             return Err(IoError { message: "MdIntoSequence: expected a binary md payload".to_string(), diagnostics: Vec::new() });
         };

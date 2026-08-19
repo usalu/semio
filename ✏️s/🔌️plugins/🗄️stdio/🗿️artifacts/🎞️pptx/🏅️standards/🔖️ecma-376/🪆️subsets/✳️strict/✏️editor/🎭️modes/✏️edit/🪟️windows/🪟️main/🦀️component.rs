@@ -17,17 +17,17 @@ pub const BODY_KEY: &str = DocumentWindowKit::KIND_ID;
 //#region 🔖️Definition
 /// 🧱️ Stitched into the editor manifest by `create_pptx_strict_editor` (this subset's surface
 /// root).
-pub fn definition() -> WindowKindDefinition {
+pub async fn definition() -> WindowKindDefinition {
     WindowKindDefinition { label: LocalizedLabel::native("Slides", "Folien"), icon_id: "presentation".into(), ..DocumentWindowKit::editable_window_kind() }
 }
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-fn paragraph_text(paragraph: &PptxParagraph) -> String {
+async fn paragraph_text(paragraph: &PptxParagraph) -> String {
     paragraph.runs.iter().map(|run| run.text.as_str()).collect::<Vec<_>>().join("")
 }
 
-fn shape_text(shape: &PptxShape) -> Option<String> {
+async fn shape_text(shape: &PptxShape) -> Option<String> {
     match shape {
         PptxShape::TextBox { text_frame, .. } | PptxShape::Placeholder { text_frame, .. } => Some(text_frame.iter().map(paragraph_text).collect::<Vec<_>>().join("\n")),
         PptxShape::Picture { .. } | PptxShape::Other { .. } => None,
@@ -35,7 +35,7 @@ fn shape_text(shape: &PptxShape) -> Option<String> {
 }
 
 /// ✏️ Real `PptxSnapshot -> UiNode`: one `DocumentPage` per slide.
-pub fn render(document: &PptxSnapshot) -> UiNode {
+pub async fn render(document: &PptxSnapshot) -> UiNode {
     let pages = document.presentation.slides.iter().map(|slide| DocumentPage { text: slide.shapes.iter().filter_map(shape_text).collect::<Vec<_>>().join("\n") }).collect();
     DocumentWindowKit::render(&DocumentView { pages })
 }
@@ -48,14 +48,14 @@ mod tests {
     use crate::artifacts::pptx::schema::snapshot::PptxSlide;
 
     #[test]
-    fn definition_declares_a_document_window() {
+    async fn definition_declares_a_document_window() {
         let def = definition();
         assert_eq!(def.id, WINDOW_KIND_ID);
         assert_eq!(def.body_key, BODY_KEY);
     }
 
     #[test]
-    fn render_emits_one_page_per_slide_joining_text_bearing_shapes() {
+    async fn render_emits_one_page_per_slide_joining_text_bearing_shapes() {
         let mut document = PptxSnapshot::default();
         document.presentation.slides.push(PptxSlide {
             shapes: vec![

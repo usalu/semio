@@ -103,7 +103,7 @@ pub enum PdfMutation {
 /// ▶️ Applies `mutation` to `snapshot`. Out-of-range indices / missing ids / unresolvable paths
 /// are no-ops rather than panics -- a stale reference (e.g. from a concurrent edit) should
 /// degrade gracefully, not crash the engine.
-pub fn apply_pdf_mutation(snapshot: &mut PdfSnapshot, mutation: &PdfMutation) -> protocol::MutationOutcome<PdfDiff> {
+pub async fn apply_pdf_mutation(snapshot: &mut PdfSnapshot, mutation: &PdfMutation) -> protocol::MutationOutcome<PdfDiff> {
     let outcome = <PdfMutation as Mutation<PdfSnapshot>>::diff(mutation, snapshot);
     match protocol::MutationDiff::apply(outcome.diff(), snapshot) {
         Ok(next) => {
@@ -119,7 +119,7 @@ pub fn apply_pdf_mutation(snapshot: &mut PdfSnapshot, mutation: &PdfMutation) ->
 impl Mutation<PdfSnapshot> for PdfMutation {
     type Diff = PdfDiff;
 
-    fn diff(&self, base: &PdfSnapshot) -> protocol::MutationOutcome<Self::Diff> {
+    async fn diff(&self, base: &PdfSnapshot) -> protocol::MutationOutcome<Self::Diff> {
         protocol::MutationOutcome::new(match self {
             PdfMutation::NoMutation => PdfDiff::default(),
             PdfMutation::SetSnapshot { snapshot } => diff::diff_set_snapshot(base, snapshot),
@@ -141,7 +141,7 @@ impl Mutation<PdfSnapshot> for PdfMutation {
 
     /// ↩️ Real, round-trippable inverses: `apply(inverse(m, base), apply(m, base)) == base` for
     /// every variant, proven by `mutation_apply_inverse_round_trips_every_variant` below.
-    fn inverse(&self, base: &PdfSnapshot) -> Vec<Self> {
+    async fn inverse(&self, base: &PdfSnapshot) -> Vec<Self> {
         match self {
             PdfMutation::NoMutation => vec![PdfMutation::NoMutation],
             PdfMutation::SetSnapshot { .. } => vec![PdfMutation::SetSnapshot { snapshot: base.clone() }],
@@ -191,7 +191,7 @@ impl Mutation<PdfSnapshot> for PdfMutation {
 
 /// 🔍️ Read-only lookup of the CURRENT value at `key` inside object `id`'s value tree at `path`,
 /// for building `SetDictEntry`/`RemoveDictEntry` inverses.
-fn original_dict_value(base: &PdfSnapshot, id: ObjRef, path: &[PdfPathSegment], key: &str) -> Option<PdfObject> {
+async fn original_dict_value(base: &PdfSnapshot, id: ObjRef, path: &[PdfPathSegment], key: &str) -> Option<PdfObject> {
     let obj = base.objects.iter().find(|o| o.id == id)?;
     let mut current = &obj.value;
     for seg in path {
@@ -221,13 +221,13 @@ fn original_dict_value(base: &PdfSnapshot, id: ObjRef, path: &[PdfPathSegment], 
 /// hand-rolled below, reusing `PdfDiff`'s `pub(crate)` grammar primitives (`hex_encode`/
 /// `enc_pdf_object`/`split_top_level`/`encode_option`/...) rather than duplicating them a second
 /// time in this file — same intra-artifact reuse `SvgMutation` uses over `SvgDiff`'s primitives.
-fn enc_path_segment(seg: &PdfPathSegment) -> String {
+async fn enc_path_segment(seg: &PdfPathSegment) -> String {
     match seg {
         PdfPathSegment::ArrayIndex { index } => format!("I[{index}]"),
         PdfPathSegment::DictKey { key } => format!("K[{}]", enc_str(key)),
     }
 }
-fn dec_path_segment(s: &str) -> Result<PdfPathSegment, String> {
+async fn dec_path_segment(s: &str) -> Result<PdfPathSegment, String> {
     let (tag, rest) = s.split_at(1);
     let inner = strip_brackets(rest)?;
     match tag {
@@ -236,18 +236,18 @@ fn dec_path_segment(s: &str) -> Result<PdfPathSegment, String> {
         other => Err(format!("path segment: unknown tag {other:?}")),
     }
 }
-fn enc_path(path: &[PdfPathSegment]) -> String {
+async fn enc_path(path: &[PdfPathSegment]) -> String {
     format!("[{}]", path.iter().map(enc_path_segment).collect::<Vec<_>>().join(","))
 }
-fn dec_path(s: &str) -> Result<Vec<PdfPathSegment>, String> {
+async fn dec_path(s: &str) -> Result<Vec<PdfPathSegment>, String> {
     split_top_level(strip_brackets(s)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_path_segment).collect()
 }
-fn enc_pdf_snapshot(s: &PdfSnapshot) -> String {
+async fn enc_pdf_snapshot(s: &PdfSnapshot) -> String {
     let mut bytes = Vec::new();
     enc_pdf_snapshot_bin(s, &mut bytes);
     hex_encode(&bytes)
 }
-fn dec_pdf_snapshot(s: &str) -> Result<PdfSnapshot, String> {
+async fn dec_pdf_snapshot(s: &str) -> Result<PdfSnapshot, String> {
     let bytes = hex_decode(s)?;
     let mut reader = store::ByteReader::new(&bytes);
     let snapshot = dec_pdf_snapshot_bin(&mut reader)?;
@@ -257,7 +257,7 @@ fn dec_pdf_snapshot(s: &str) -> Result<PdfSnapshot, String> {
     Ok(snapshot)
 }
 
-fn print_pdf_mutation(m: &PdfMutation) -> String {
+async fn print_pdf_mutation(m: &PdfMutation) -> String {
     match m {
         PdfMutation::NoMutation => "no-mutation".to_string(),
         PdfMutation::SetSnapshot { snapshot } => format!("set-snapshot snapshot={}", enc_pdf_snapshot(snapshot)),
@@ -276,7 +276,7 @@ fn print_pdf_mutation(m: &PdfMutation) -> String {
         PdfMutation::RemoveTrailerEntry { key } => format!("remove-trailer-entry key={}", enc_str(key)),
     }
 }
-fn parse_pdf_mutation(line: &str) -> Result<PdfMutation, String> {
+async fn parse_pdf_mutation(line: &str) -> Result<PdfMutation, String> {
     if line == "no-mutation" {
         return Ok(PdfMutation::NoMutation);
     }
@@ -304,10 +304,10 @@ fn parse_pdf_mutation(line: &str) -> Result<PdfMutation, String> {
 }
 
 impl OpText for PdfMutation {
-    fn print_op(&self) -> String {
+    async fn print_op(&self) -> String {
         print_pdf_mutation(self)
     }
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
+    async fn parse_op(line: &str) -> Result<Self, store::TextError> {
         parse_pdf_mutation(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
 }
@@ -320,7 +320,7 @@ impl OpText for PdfMutation {
 /// genuine LEB128-varint/length-prefixed recursive binary (reusing the diff facet's own
 /// `pub(crate)` primitives), never the text form's bytes.
 impl OpBinary for PdfMutation {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         let tag: u8 = match self {
             PdfMutation::NoMutation => 0,
             PdfMutation::SetSnapshot { .. } => 1,
@@ -392,7 +392,7 @@ impl OpBinary for PdfMutation {
         Ok(out)
     }
 
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         let mut reader = store::ByteReader::new(bytes);
         let malformed = |what: &'static str, offset: usize, detail: String| protocol::ProtocolError::Malformed { what, offset: offset as u64, detail };
         let format = reader.read_u8().map_err(|e| malformed("op format", 0, e.to_string()))?;
@@ -476,15 +476,15 @@ mod tests {
     use protocol::command::DiffAlgebra;
     use protocol::MutationDiff;
 
-    fn sample_page(seed: u8) -> PdfPage {
+    async fn sample_page(seed: u8) -> PdfPage {
         PdfPage { media_box: [0.0, 0.0, 612.0, 792.0], crop_box: None, rotate: 0, text: format!("page-{seed}") }
     }
 
-    fn oref(num: u32, gen: u16) -> ObjRef {
+    async fn oref(num: u32, gen: u16) -> ObjRef {
         ObjRef { num, gen }
     }
 
-    fn base_snapshot() -> PdfSnapshot {
+    async fn base_snapshot() -> PdfSnapshot {
         PdfSnapshot {
             schema: "stdio.pdf.1.7".into(),
             declared_version: "1.7".into(),
@@ -498,7 +498,7 @@ mod tests {
         }
     }
 
-    fn round_trips(base: &PdfSnapshot, mutation: PdfMutation) {
+    async fn round_trips(base: &PdfSnapshot, mutation: PdfMutation) {
         let diff = mutation.diff(base);
         let mutated = diff.diff().apply(base).unwrap();
         let inverses = mutation.inverse(base);
@@ -512,7 +512,7 @@ mod tests {
 
     //#region mutation_diff_law
     #[test]
-    fn mutation_diff_law_matches_apply_pdf_mutation() {
+    async fn mutation_diff_law_matches_apply_pdf_mutation() {
         let base = base_snapshot();
         let cases = vec![
             PdfMutation::NoMutation,
@@ -542,7 +542,7 @@ mod tests {
 
     //#region inverse_law
     #[test]
-    fn mutation_apply_inverse_round_trips_every_variant() {
+    async fn mutation_apply_inverse_round_trips_every_variant() {
         let base = base_snapshot();
         round_trips(&base, PdfMutation::NoMutation);
         round_trips(&base, PdfMutation::SetSnapshot { snapshot: PdfSnapshot { info: PdfInfo { title: Some("X".into()), ..Default::default() }, ..base.clone() } });
@@ -567,7 +567,7 @@ mod tests {
     }
 
     #[test]
-    fn set_dict_entry_nested_path_round_trips() {
+    async fn set_dict_entry_nested_path_round_trips() {
         let mut base = base_snapshot();
         base.objects.push(PdfIndirectObject { id: oref(4, 0), value: PdfObject::Dict(vec![PdfDictEntry { key: "Kids".into(), value: PdfObject::Array(vec![PdfObject::Dict(vec![PdfDictEntry { key: "Rotate".into(), value: PdfObject::Int(0) }])]) }]) });
         let path = vec![PdfPathSegment::DictKey { key: "Kids".into() }, PdfPathSegment::ArrayIndex { index: 0 }];
@@ -576,7 +576,7 @@ mod tests {
     }
 
     #[test]
-    fn remove_page_out_of_range_is_noop_not_panic() {
+    async fn remove_page_out_of_range_is_noop_not_panic() {
         let base = base_snapshot();
         let mut snap = base.clone();
         apply_pdf_mutation(&mut snap, &PdfMutation::RemovePage { index: 99 });
@@ -584,7 +584,7 @@ mod tests {
     }
 
     #[test]
-    fn set_dict_entry_unresolvable_path_is_noop_not_panic() {
+    async fn set_dict_entry_unresolvable_path_is_noop_not_panic() {
         let base = base_snapshot();
         let mut snap = base.clone();
         let d = apply_pdf_mutation(&mut snap, &PdfMutation::SetDictEntry { id: oref(999, 0), path: vec![], key: "X".into(), value: PdfObject::Int(1) });
@@ -595,7 +595,7 @@ mod tests {
 
     //#region field_sweep (see 🔺️diff module's own field_sweep tests for the full snapshot-level sweep)
     #[test]
-    fn field_sweep_mutation_vocabulary_covers_every_snapshot_field() {
+    async fn field_sweep_mutation_vocabulary_covers_every_snapshot_field() {
         // 📏 One mutation exists (or composes via SetSnapshot) per top-level PdfSnapshot field:
         // declaredVersion (via SetSnapshot), info (SetInfo), pages (Insert/Remove/SetMediaBox/
         // SetCropBox/AppendPageContent), objects (Insert/Remove/SetObjectValue/SetDictEntry/
@@ -622,7 +622,7 @@ mod tests {
     /// Array`/`Dict`/`Stream`/`Ref` recursion), `SetPageCropBox`'s tri-state-like `Option<[f64;4]>`
     /// arg, and `SetDictEntry`/`RemoveDictEntry`'s `path: Vec<PdfPathSegment>` (both segment kinds).
     #[test]
-    fn op_text_binary_roundtrip_law() {
+    async fn op_text_binary_roundtrip_law() {
         let base = base_snapshot();
         let mutations = vec![
             PdfMutation::NoMutation,

@@ -3,12 +3,12 @@
 use semio_framework_plugin::{ExampleSource, LocalizedLabel};
 
 pub const ID: &str = "demo";
-pub fn label() -> LocalizedLabel {
+pub async fn label() -> LocalizedLabel {
     LocalizedLabel::native("Demo", "Demo")
 }
 pub const ICON: &str = "file";
 pub const PRIMARY_TEXT: &str = include_str!("🖼️assets/🗣️example.dsl.semio");
-pub fn source() -> ExampleSource {
+pub async fn source() -> ExampleSource {
     ExampleSource::new(ID, label(), PRIMARY_TEXT, ICON)
 }
 
@@ -16,7 +16,7 @@ pub fn source() -> ExampleSource {
 mod tests {
     use super::*;
     #[test]
-    fn demo_source_nonempty() {
+    async fn demo_source_nonempty() {
         assert!(!PRIMARY_TEXT.is_empty());
         let _ = source();
     }
@@ -28,7 +28,7 @@ mod tests {
     /// as `standards::v87a`'s `GifSnapshot` — 89a's own laws are covered separately by the
     /// `💃️dancing` example (a real 89a fixture).
     #[test]
-    fn inference_determinism_law() {
+    async fn inference_determinism_law() {
         use crate::artifacts::gif::standards::v87a::subsets::any::schema::inferences::GifInference;
         use crate::artifacts::gif::standards::v87a::subsets::any::schema::snapshot::GifSnapshot;
         use protocol::Inference;
@@ -37,7 +37,7 @@ mod tests {
     }
 
     #[test]
-    fn inference_default_law() {
+    async fn inference_default_law() {
         use crate::artifacts::gif::standards::v87a::subsets::any::schema::inferences::GifInference;
         use crate::artifacts::gif::standards::v87a::subsets::any::schema::snapshot::GifSnapshot;
         use protocol::Inference;

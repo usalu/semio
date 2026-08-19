@@ -16,7 +16,7 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 
 
 //#region 🔖️Apply
-fn apply_identified_delta<T, P, E, F>(
+async fn apply_identified_delta<T, P, E, F>(
     items: &[T],
     removed: &[String],
     added: &[T],
@@ -84,19 +84,19 @@ where
     Ok(next)
 }
 
-pub fn apply_pages_delta(items: &[Page], delta: &LayoutPagesDelta) -> protocol::MutationApplyResult<Vec<Page>> {
+pub async fn apply_pages_delta(items: &[Page], delta: &LayoutPagesDelta) -> protocol::MutationApplyResult<Vec<Page>> {
     apply_identified_delta(items, &delta.removed, &delta.added, &delta.patched, delta.reordered.as_ref(), |entry: &LayoutPagePatchEntry| {
         (&entry.id, &entry.patch)
     })
 }
 
-pub fn apply_stories_delta(items: &[TextStory], delta: &LayoutStoriesDelta) -> protocol::MutationApplyResult<Vec<TextStory>> {
+pub async fn apply_stories_delta(items: &[TextStory], delta: &LayoutStoriesDelta) -> protocol::MutationApplyResult<Vec<TextStory>> {
     apply_identified_delta(items, &delta.removed, &delta.added, &delta.patched, delta.reordered.as_ref(), |entry: &LayoutStoryPatchEntry| {
         (&entry.id, &entry.patch)
     })
 }
 
-pub fn apply_links_delta(items: &[ImageLink], delta: &LayoutLinksDelta) -> protocol::MutationApplyResult<Vec<ImageLink>> {
+pub async fn apply_links_delta(items: &[ImageLink], delta: &LayoutLinksDelta) -> protocol::MutationApplyResult<Vec<ImageLink>> {
     apply_identified_delta(items, &delta.removed, &delta.added, &delta.patched, delta.reordered.as_ref(), |entry: &LayoutLinkPatchEntry| {
         (&entry.id, &entry.patch)
     })
@@ -104,7 +104,7 @@ pub fn apply_links_delta(items: &[ImageLink], delta: &LayoutLinksDelta) -> proto
 
 impl LayoutDiff {
     /// 🧬️ Applies every sparse entry (all state classes) onto a full artifact.
-    pub fn apply_to_artifact(&self, artifact: &LayoutArtifact) -> protocol::MutationApplyResult<LayoutArtifact> {
+    pub async fn apply_to_artifact(&self, artifact: &LayoutArtifact) -> protocol::MutationApplyResult<LayoutArtifact> {
         Ok({
             if let Some(replacement) = &self.artifact {
                 return Ok((**replacement).clone());
@@ -182,7 +182,7 @@ impl LayoutDiff {
 }
 
 impl MutationDiff<LayoutSnapshot> for LayoutDiff {
-    fn apply(&self, snapshot: &LayoutSnapshot) -> protocol::MutationApplyResult<LayoutSnapshot> {
+    async fn apply(&self, snapshot: &LayoutSnapshot) -> protocol::MutationApplyResult<LayoutSnapshot> {
         Ok({
             if let Some(replacement) = &self.artifact {
                 return Ok(replacement.to_snapshot());
@@ -221,12 +221,12 @@ impl MutationDiff<LayoutSnapshot> for LayoutDiff {
             next
         })
     }
-    fn absorb(&mut self, other: Self) {
+    async fn absorb(&mut self, other: Self) {
         if other.artifact.is_some() {
             *self = other;
             return;
         }
-        fn absorb_pages(target: &mut Option<LayoutPagesDelta>, incoming: Option<LayoutPagesDelta>) {
+        async fn absorb_pages(target: &mut Option<LayoutPagesDelta>, incoming: Option<LayoutPagesDelta>) {
             if let Some(src) = incoming {
                 match target {
                     Some(dst) => {
@@ -300,7 +300,7 @@ impl MutationDiff<LayoutSnapshot> for LayoutDiff {
 
 //#region 🔖️Helpers
 /// 🖼️ Whole-snapshot replacement diff.
-pub fn diff_set_snapshot(snapshot: &LayoutSnapshot) -> LayoutDiff {
+pub async fn diff_set_snapshot(snapshot: &LayoutSnapshot) -> LayoutDiff {
     LayoutDiff {
         artifact: Some(Box::new(LayoutArtifact::from_snapshot(snapshot.clone()))),
         ..Default::default()
@@ -315,7 +315,7 @@ mod tests {
     use protocol::Mutation;
 
     #[test]
-    fn set_data_fields_diff_applies_onto_the_base_snapshot() {
+    async fn set_data_fields_diff_applies_onto_the_base_snapshot() {
         let base = LayoutSnapshot {
             schema: crate::artifacts::layout::LAYOUT_DOCUMENT_SCHEMA.into(),
             name: "t".into(),
@@ -341,7 +341,7 @@ mod tests {
     }
 
     #[test]
-    fn absorb_replaces_with_whole_artifact_diff() {
+    async fn absorb_replaces_with_whole_artifact_diff() {
         let mut diff = LayoutDiff::default();
         let snap = LayoutSnapshot {
             schema: crate::artifacts::layout::LAYOUT_DOCUMENT_SCHEMA.into(),

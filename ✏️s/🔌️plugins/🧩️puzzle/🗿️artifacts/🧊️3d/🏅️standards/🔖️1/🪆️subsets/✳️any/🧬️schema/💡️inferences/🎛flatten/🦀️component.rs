@@ -20,7 +20,7 @@ pub struct FlattenPlane {
 }
 
 impl Default for FlattenPlane {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self { origin: [0.0, 0.0, 0.0], x_axis: [1.0, 0.0, 0.0], y_axis: [0.0, 1.0, 0.0] }
     }
 }
@@ -35,7 +35,7 @@ pub struct FlattenPose {
 }
 
 impl Default for FlattenPose {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self { plane: FlattenPlane::default(), center: [0.0, 0.0], orientation: [0.0, 0.0, 0.0, 1.0] }
     }
 }
@@ -45,7 +45,7 @@ pub const DIAGRAM_RADIUS: f64 = 2.697;
 pub const DIAGRAM_VERTICAL_V_EXTRA: f64 = 1.0;
 pub const DIAGRAM_HORIZONTAL_SCALE: f64 = 3.0633;
 
-fn normalize(v: &mut [f64; 3]) {
+async fn normalize(v: &mut [f64; 3]) {
     let len = (v[0] * v[0] + v[1] * v[1] + v[2] * v[2]).sqrt();
     if len > 0.0 {
         v[0] /= len;
@@ -54,23 +54,23 @@ fn normalize(v: &mut [f64; 3]) {
     }
 }
 
-fn cross(a: [f64; 3], b: [f64; 3]) -> [f64; 3] {
+async fn cross(a: [f64; 3], b: [f64; 3]) -> [f64; 3] {
     [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]]
 }
 
-fn dot(a: [f64; 3], b: [f64; 3]) -> f64 {
+async fn dot(a: [f64; 3], b: [f64; 3]) -> f64 {
     a[0] * b[0] + a[1] * b[1] + a[2] * b[2]
 }
 
-fn deg_to_rad(deg: f64) -> f64 {
+async fn deg_to_rad(deg: f64) -> f64 {
     deg * std::f64::consts::PI / 180.0
 }
 
-fn round_f(v: f64) -> f64 {
+async fn round_f(v: f64) -> f64 {
     (v * 1_000_000.0).round() / 1_000_000.0
 }
 
-fn plane_to_matrix(p: FlattenPlane) -> [f64; 16] {
+async fn plane_to_matrix(p: FlattenPlane) -> [f64; 16] {
     let x = p.x_axis;
     let y = p.y_axis;
     let z = cross(x, y);
@@ -80,13 +80,13 @@ fn plane_to_matrix(p: FlattenPlane) -> [f64; 16] {
 }
 
 
-fn matrix_to_plane(m: [f64; 16]) -> FlattenPlane {
+async fn matrix_to_plane(m: [f64; 16]) -> FlattenPlane {
     FlattenPlane { origin: [m[12], m[13], m[14]], x_axis: [m[0], m[1], m[2]], y_axis: [m[4], m[5], m[6]] }
 }
 
 
 
-fn mul_mat(a: [f64; 16], b: [f64; 16]) -> [f64; 16] {
+async fn mul_mat(a: [f64; 16], b: [f64; 16]) -> [f64; 16] {
     let mut out = [0.0; 16];
     for col in 0..4 {
         for row in 0..4 {
@@ -96,13 +96,13 @@ fn mul_mat(a: [f64; 16], b: [f64; 16]) -> [f64; 16] {
     out
 }
 
-fn translation(x: f64, y: f64, z: f64) -> [f64; 16] {
+async fn translation(x: f64, y: f64, z: f64) -> [f64; 16] {
     [1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, x, y, z, 1.0]
 }
 
 
 
-fn rotation_axis(axis: [f64; 3], angle: f64) -> [f64; 16] {
+async fn rotation_axis(axis: [f64; 3], angle: f64) -> [f64; 16] {
     let (x, y, z) = (axis[0], axis[1], axis[2]);
     let c = angle.cos();
     let s = angle.sin();
@@ -130,11 +130,11 @@ fn rotation_axis(axis: [f64; 3], angle: f64) -> [f64; 16] {
 
 
 
-fn apply_mat_vec3(m: [f64; 16], v: [f64; 3]) -> [f64; 3] {
+async fn apply_mat_vec3(m: [f64; 16], v: [f64; 3]) -> [f64; 3] {
     [m[0] * v[0] + m[4] * v[1] + m[8] * v[2], m[1] * v[0] + m[5] * v[1] + m[9] * v[2], m[2] * v[0] + m[6] * v[1] + m[10] * v[2]]
 }
 
-fn quaternion_from_unit_vectors(from: [f64; 3], to: [f64; 3]) -> [f64; 4] {
+async fn quaternion_from_unit_vectors(from: [f64; 3], to: [f64; 3]) -> [f64; 4] {
     let r = dot(from, to) + 1.0;
     let quat = if r < 0.000_001 {
         if from[0].abs() > from[2].abs() {
@@ -150,7 +150,7 @@ fn quaternion_from_unit_vectors(from: [f64; 3], to: [f64; 3]) -> [f64; 4] {
     [quat[0] / len, quat[1] / len, quat[2] / len, quat[3] / len]
 }
 
-fn quaternion_to_matrix(q: [f64; 4]) -> [f64; 16] {
+async fn quaternion_to_matrix(q: [f64; 4]) -> [f64; 16] {
     let (x, y, z, w) = (q[0], q[1], q[2], q[3]);
     let (x2, y2, z2) = (x + x, y + y, z + z);
     let (xx, xy, xz) = (x * x2, x * y2, x * z2);
@@ -177,7 +177,7 @@ fn quaternion_to_matrix(q: [f64; 4]) -> [f64; 16] {
 }
 
 /// 🧭️ Plane axes → ijkw quaternion (matches sketchpad `sketchpadPlaneAxesToQuaternion`).
-pub fn plane_to_orientation(plane: FlattenPlane) -> [f64; 4] {
+pub async fn plane_to_orientation(plane: FlattenPlane) -> [f64; 4] {
     let xx = plane.x_axis[0];
     let xy = plane.x_axis[1];
     let xz = plane.x_axis[2];
@@ -213,29 +213,29 @@ pub fn plane_to_orientation(plane: FlattenPlane) -> [f64; 4] {
     [(m02 + m20) / s, (m12 + m21) / s, 0.25 * s, (m10 - m01) / s]
 }
 
-pub(crate) fn orientation_to_plane(origin: [f64; 3], orientation: [f64; 4]) -> FlattenPlane {
+pub(crate) async fn orientation_to_plane(origin: [f64; 3], orientation: [f64; 4]) -> FlattenPlane {
     let m = quaternion_to_matrix(orientation);
     FlattenPlane { origin, x_axis: [m[0], m[1], m[2]], y_axis: [m[4], m[5], m[6]] }
 }
 
 
 
-pub(crate) fn parse_endpoint(endpoint: &str) -> Option<(&str, &str)> {
+pub(crate) async fn parse_endpoint(endpoint: &str) -> Option<(&str, &str)> {
     endpoint.split_once(':')
 }
 
-pub(crate) fn find_vortex<'a>(object: &'a Puzzle3dObject, vortex_id: &str) -> Option<&'a Puzzle3dVortex> {
+pub(crate) async fn find_vortex<'a>(object: &'a Puzzle3dObject, vortex_id: &str) -> Option<&'a Puzzle3dVortex> {
     object.vortices.iter().find(|vortex| vortex.id == vortex_id)
 }
 
-pub(crate) fn vortex_geom(vortex: &Puzzle3dVortex) -> ([f64; 3], [f64; 3], f64) {
+pub(crate) async fn vortex_geom(vortex: &Puzzle3dVortex) -> ([f64; 3], [f64; 3], f64) {
     let point = vortex.position;
     let mut direction = vortex.direction.unwrap_or([0.0, 0.0, 1.0]);
     normalize(&mut direction);
     (point, direction, 0.0)
 }
 
-pub(crate) fn compute_child_plane(
+pub(crate) async fn compute_child_plane(
     parent_plane: FlattenPlane,
     parent_point: [f64; 3],
     parent_dir: [f64; 3],
@@ -295,7 +295,7 @@ pub(crate) fn compute_child_plane(
     matrix_to_plane(mul_mat(parent_matrix, transform))
 }
 
-pub(crate) fn diagram_center(parent_center: [f64; 2], parent_direction: [f64; 3], parent_t: f64, attraction: &Puzzle3dAttraction) -> [f64; 2] {
+pub(crate) async fn diagram_center(parent_center: [f64; 2], parent_direction: [f64; 3], parent_t: f64, attraction: &Puzzle3dAttraction) -> [f64; 2] {
     let connection_x = attraction.x;
     let connection_y = attraction.y;
     let (child_x, child_y) = if parent_center[0] == 0.0 && parent_center[1] == 0.0 {
@@ -321,19 +321,19 @@ pub enum FlattenParent {
 }
 
 /// 🌤️ Absolute planes and diagram centers for every object in a snapshot.
-pub fn flatten_snapshot(snapshot: &Puzzle3dSnapshot) -> HashMap<String, FlattenPose> {
+pub async fn flatten_snapshot(snapshot: &Puzzle3dSnapshot) -> HashMap<String, FlattenPose> {
     flatten_objects(&snapshot.objects, &snapshot.attractions, None)
 }
 
 /// 🌤️ Absolute planes and diagram centers for object/attraction collections.
-pub fn flatten_objects(objects: &[Puzzle3dObject], attractions: &[Puzzle3dAttraction], seed_centers: Option<&HashMap<String, [f64; 2]>>) -> HashMap<String, FlattenPose> {
+pub async fn flatten_objects(objects: &[Puzzle3dObject], attractions: &[Puzzle3dAttraction], seed_centers: Option<&HashMap<String, [f64; 2]>>) -> HashMap<String, FlattenPose> {
     flatten_objects_with_assignment(objects, attractions, seed_centers).0
 }
 
 /// 🌤️🕸️ Same BFS as [`flatten_objects`], additionally returning visitation order (topological —
 /// every parent appears before its children, the exact order a 💡️inference `plan()` needs) and each
 /// object's [`FlattenParent`] assignment. Single source of truth: `flatten_objects` delegates here.
-pub fn flatten_objects_with_assignment(
+pub async fn flatten_objects_with_assignment(
     objects: &[Puzzle3dObject],
     attractions: &[Puzzle3dAttraction],
     seed_centers: Option<&HashMap<String, [f64; 2]>>,
@@ -487,7 +487,7 @@ mod tests {
     use super::*;
     use crate::artifacts::puzzle3d::{Puzzle3dAttraction, Puzzle3dObject, Puzzle3dObjectAnchor, Puzzle3dVortex};
 
-    fn vortex(id: &str, position: [f64; 3], direction: [f64; 3]) -> Puzzle3dVortex {
+    async fn vortex(id: &str, position: [f64; 3], direction: [f64; 3]) -> Puzzle3dVortex {
         Puzzle3dVortex {
             id: id.into(),
             vortex_kind: None,
@@ -500,7 +500,7 @@ mod tests {
         }
     }
 
-    fn object(id: &str, origin: [f64; 3], vortices: Vec<Puzzle3dVortex>) -> Puzzle3dObject {
+    async fn object(id: &str, origin: [f64; 3], vortices: Vec<Puzzle3dVortex>) -> Puzzle3dObject {
         Puzzle3dObject {
             id: id.into(),
             label: None,
@@ -517,7 +517,7 @@ mod tests {
     }
 
     #[test]
-    fn fixed_root_keeps_stored_plane() {
+    async fn fixed_root_keeps_stored_plane() {
         let objects = vec![object("a", [1.0, 2.0, 3.0], vec![])];
         let poses = flatten_objects(&objects, &[], None);
         let pose = poses.get("a").expect("a");
@@ -525,7 +525,7 @@ mod tests {
     }
 
     #[test]
-    fn derived_root_resets_plane_to_default() {
+    async fn derived_root_resets_plane_to_default() {
         let mut objects = vec![object("a", [1.0, 2.0, 3.0], vec![])];
         objects[0].anchor = Puzzle3dObjectAnchor::Derived;
         let poses = flatten_objects(&objects, &[], None);
@@ -534,7 +534,7 @@ mod tests {
     }
 
     #[test]
-    fn child_plane_is_deterministic_for_vertical_stack() {
+    async fn child_plane_is_deterministic_for_vertical_stack() {
         let parent = object("p", [0.0, 0.0, 0.0], vec![vortex("top", [0.0, 0.0, 1.0], [0.0, 0.0, 1.0])]);
         let mut child = object("c", [0.0, 0.0, 0.0], vec![vortex("bottom", [0.0, 0.0, -1.0], [0.0, 0.0, -1.0])]);
         child.anchor = Puzzle3dObjectAnchor::Derived;
@@ -561,7 +561,7 @@ mod tests {
     }
 
     #[test]
-    fn identity_orientation_from_default_plane() {
+    async fn identity_orientation_from_default_plane() {
         let q = plane_to_orientation(FlattenPlane::default());
         assert!((q[0]).abs() < 1e-9 && (q[1]).abs() < 1e-9 && (q[2]).abs() < 1e-9);
         assert!((q[3] - 1.0).abs() < 1e-9);

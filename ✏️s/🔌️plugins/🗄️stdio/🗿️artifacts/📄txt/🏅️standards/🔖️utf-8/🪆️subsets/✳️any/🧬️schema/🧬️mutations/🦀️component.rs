@@ -49,7 +49,7 @@ pub enum TxtMutation {
 //#region 🔖️Apply
 /// ▶️ Applies `mutation` to `snapshot`. Diff is the single semantics source: computed once,
 /// applied once, returned once.
-pub fn apply_txt_mutation(snapshot: &mut TxtSnapshot, mutation: &TxtMutation) -> protocol::MutationOutcome<TxtDiff> {
+pub async fn apply_txt_mutation(snapshot: &mut TxtSnapshot, mutation: &TxtMutation) -> protocol::MutationOutcome<TxtDiff> {
     let outcome = <TxtMutation as Mutation<TxtSnapshot>>::diff(mutation, &*snapshot);
     match protocol::MutationDiff::apply(outcome.diff(), snapshot) {
         Ok(next) => {
@@ -65,7 +65,7 @@ pub fn apply_txt_mutation(snapshot: &mut TxtSnapshot, mutation: &TxtMutation) ->
 impl Mutation<TxtSnapshot> for TxtMutation {
     type Diff = TxtDiff;
 
-    fn diff(&self, base: &TxtSnapshot) -> protocol::MutationOutcome<Self::Diff> {
+    async fn diff(&self, base: &TxtSnapshot) -> protocol::MutationOutcome<Self::Diff> {
         protocol::MutationOutcome::new(match self {
             TxtMutation::NoMutation => TxtDiff::default(),
             TxtMutation::SetSnapshot { snapshot } => diff_set_snapshot(base, snapshot),
@@ -101,7 +101,7 @@ impl Mutation<TxtSnapshot> for TxtMutation {
         })
     }
 
-    fn inverse(&self, base: &TxtSnapshot) -> Vec<Self> {
+    async fn inverse(&self, base: &TxtSnapshot) -> Vec<Self> {
         match self {
             TxtMutation::NoMutation => vec![TxtMutation::NoMutation],
             TxtMutation::SetSnapshot { .. } => vec![TxtMutation::SetSnapshot { snapshot: base.clone() }],
@@ -130,7 +130,7 @@ impl Mutation<TxtSnapshot> for TxtMutation {
 /// enum's `OpText` impl uses (see `SpaceMutation`, `FlowMutationDsl`, and this pilot's own
 /// `BinaryMutation`/`GifMutation` for precedent this copies verbatim).
 impl OpText for TxtMutation {
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
+    async fn parse_op(line: &str) -> Result<Self, store::TextError> {
         let variants = <Self as dsl::DslVariants>::variants();
         for (keyword, spec_fn) in &variants {
             let probe = format!("{} ", keyword);
@@ -141,7 +141,7 @@ impl OpText for TxtMutation {
         }
         Err(dsl::__rt::field_error(format!("unknown operation line '{line}'")))
     }
-    fn print_op(&self) -> String {
+    async fn print_op(&self) -> String {
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
         let variants = <Self as dsl::DslVariants>::variants();
         let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
@@ -153,10 +153,10 @@ impl OpText for TxtMutation {
 /// `format u8 (=1) | variant ordinal varint | record body` layout shared by every `DslVariants`
 /// type. Zero per-artifact logic.
 impl OpBinary for TxtMutation {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         dsl::variants_binary::encode_op(self)
     }
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         dsl::variants_binary::decode_op(bytes)
     }
 }
@@ -169,11 +169,11 @@ mod tests {
     use protocol::os_spr::command::DiffAlgebra;
     use protocol::MutationDiff;
 
-    fn base() -> TxtSnapshot {
+    async fn base() -> TxtSnapshot {
         TxtSnapshot { lines: vec!["a".into(), "b".into(), "c".into()], trailing_newline: true, line_ending: LineEnding::Lf, ..Default::default() }
     }
 
-    fn all_variants(b: &TxtSnapshot) -> Vec<TxtMutation> {
+    async fn all_variants(b: &TxtSnapshot) -> Vec<TxtMutation> {
         vec![
             TxtMutation::NoMutation,
             TxtMutation::SetSnapshot { snapshot: TxtSnapshot { lines: vec!["z".into()], trailing_newline: false, line_ending: LineEnding::CrLf, ..Default::default() } },
@@ -186,7 +186,7 @@ mod tests {
     }
 
     #[test]
-    fn mutation_diff_law() {
+    async fn mutation_diff_law() {
         let b = base();
         for m in all_variants(&b) {
             let mut via_apply = b.clone();
@@ -198,7 +198,7 @@ mod tests {
     }
 
     #[test]
-    fn inverse_law() {
+    async fn inverse_law() {
         let b = base();
         for m in all_variants(&b) {
             let mut mutated = b.clone();
@@ -216,7 +216,7 @@ mod tests {
     }
 
     #[test]
-    fn absorb_law_cartesian() {
+    async fn absorb_law_cartesian() {
         let b = base();
         let variants = all_variants(&b);
         for m1 in &variants {
@@ -236,7 +236,7 @@ mod tests {
     /// `dsl::DslOps`-derived `DslVariants`), exercised over every variant incl. `SetSnapshot`'s
     /// full nested-record payload.
     #[test]
-    fn op_text_binary_roundtrip_law() {
+    async fn op_text_binary_roundtrip_law() {
         let b = base();
         for m in all_variants(&b) {
             let printed = m.print_op();
@@ -254,7 +254,7 @@ mod tests {
     /// 🧪️ P2-P3: `dsl::parse_grammar` + `dsl::Recognizer::compile` + `.recognize` against REAL
     /// `print_op` output for every variant, incl. `SetSnapshot`'s full nested-block payload.
     #[test]
-    fn ops_grammar_conformance_law() {
+    async fn ops_grammar_conformance_law() {
         let grammar_text = crate::artifacts::txt::schema::mutations::text::COMPONENT_GRAMMAR_SEMIO;
         let grammar = dsl::parse_grammar(grammar_text).expect("parse mutations grammar");
         let recognizer = dsl::Recognizer::compile(&grammar);

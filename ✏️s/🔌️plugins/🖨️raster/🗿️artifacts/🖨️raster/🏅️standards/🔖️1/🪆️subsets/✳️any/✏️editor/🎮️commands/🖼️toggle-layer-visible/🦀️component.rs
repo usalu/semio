@@ -14,7 +14,7 @@ pub struct ToggleLayerVisible {
     pub layer_id: String,
 }
 
-pub fn handle(payload: &ToggleLayerVisible, doc: &ArtifactView<'_, RasterSnapshot>, _cfg: &ConfigView<'_, RasterConfig>) -> Result<Emit<RasterMutation, RasterConfigMutation>, Fault> {
+pub async fn handle(payload: &ToggleLayerVisible, doc: &ArtifactView<'_, RasterSnapshot>, _cfg: &ConfigView<'_, RasterConfig>) -> Result<Emit<RasterMutation, RasterConfigMutation>, Fault> {
     let document = doc.snapshot;
     let Some(layer) = find_layer(&document.layers, &payload.layer_id) else { return Ok(Emit::default()) };
     let resolved = !layer_visible(layer);

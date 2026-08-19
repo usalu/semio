@@ -7,7 +7,7 @@ use crate::artifacts::process3d::mutations::change_stock_label::mutation::Change
 use crate::artifacts::process3d::Process3dSnapshot;
 
 //#region 🔖️Diff
-pub fn diff(payload: &ChangeStockLabel, base: &Process3dSnapshot) -> protocol::MutationOutcome<Process3dDiff> {
+pub async fn diff(payload: &ChangeStockLabel, base: &Process3dSnapshot) -> protocol::MutationOutcome<Process3dDiff> {
     if base.stock_label == payload.new_label {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Stock is already labeled \"{}\".", payload.new_label));
     }

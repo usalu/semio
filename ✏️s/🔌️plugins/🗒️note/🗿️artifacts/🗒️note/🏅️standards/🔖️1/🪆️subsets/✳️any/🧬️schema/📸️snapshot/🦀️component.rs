@@ -64,10 +64,10 @@ pub struct NoteSnapshot {
 /// ✉️ P6 handcrafted ArtifactDsl/ArtifactPack (derive no longer emits these traits).
 impl store::ArtifactDsl for NoteSnapshot {
     const EXTENSION: &'static str = "note";
-    fn envelope_id() -> &'static str {
+    async fn envelope_id() -> &'static str {
         "note.note"
     }
-    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+    async fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
         let body = match store::semio_format::split_text_preamble(text) {
             Ok((_, rest)) => rest,
             Err(_) => text,
@@ -82,7 +82,7 @@ impl store::ArtifactDsl for NoteSnapshot {
         )?;
         Self::__dsl_from_record(&record)
     }
-    fn print_dsl(&self) -> String {
+    async fn print_dsl(&self) -> String {
         let body = dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), dsl::JoinMode::Document);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
             <Self as store::ArtifactDsl>::envelope_id(),
@@ -95,7 +95,7 @@ impl store::ArtifactDsl for NoteSnapshot {
 }
 
 impl store::ArtifactPack for NoteSnapshot {
-    fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
+    async fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let inner = store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
             <Self as store::ArtifactDsl>::envelope_id(),
@@ -105,7 +105,7 @@ impl store::ArtifactPack for NoteSnapshot {
         .map_err(|e| store::PackError::Schema(e.to_string()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &inner))
     }
-    fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
+    async fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
         if envelope.envelope_id() != <Self as store::ArtifactDsl>::envelope_id() {
             return Err(store::PackError::Schema(format!(
@@ -117,14 +117,14 @@ impl store::ArtifactPack for NoteSnapshot {
         let (record, _report) = store::pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
         Self::__dsl_from_record(&record).map_err(store::text_error_to_pack_error)
     }
-    fn record_spec() -> Option<dsl::RecordSpec> {
+    async fn record_spec() -> Option<dsl::RecordSpec> {
         Some(Self::__dsl_spec())
     }
 }
 //#endregion 🔖️HandcraftedArtifactCodecs
 
 impl Default for NoteSnapshot {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self {
             schema: NOTE_DOCUMENT_SCHEMA.into(),
             id: String::new(),
@@ -155,7 +155,7 @@ mod round_trip_tests {
     /// `content` child handle must both survive the hand-rolled text/binary codecs — codec
     /// completeness is not caught by `cargo check`, only a real round trip proves it.
     #[test]
-    fn linked_artifact_and_text_content_round_trip_through_text_and_binary() {
+    async fn linked_artifact_and_text_content_round_trip_through_text_and_binary() {
         let mut snapshot = NoteSnapshot::default();
         snapshot.id = "doc-composed".into();
         snapshot.linked_artifact = Some(store::ArtifactLink {
@@ -189,7 +189,7 @@ mod round_trip_tests {
     }
 
     #[test]
-    fn absent_linked_artifact_round_trips_as_none() {
+    async fn absent_linked_artifact_round_trips_as_none() {
         let snapshot = NoteSnapshot::default();
         let text = store::ArtifactDsl::print_dsl(&snapshot);
         assert_eq!(<NoteSnapshot as store::ArtifactDsl>::parse_dsl(&text).expect("parse"), snapshot);

@@ -11,7 +11,7 @@ use semio_s_plugin_stdio::artifacts::md::{MdSnapshot, STDIO_MD_DOCUMENT_SCHEMA};
 
 pub const MD_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.md", standard: StandardId("commonmark"), subset: SubsetId::ANY };
 
-pub fn serialize(from: &DagSnapshot) -> Result<MdSnapshot, store::PackError> {
+pub async fn serialize(from: &DagSnapshot) -> Result<MdSnapshot, store::PackError> {
     let _ = STDIO_MD_DOCUMENT_SCHEMA;
     Ok(MdSnapshot::from_text(&<DagSnapshot as store::ArtifactDsl>::print_dsl(from)))
 }
@@ -21,7 +21,7 @@ pub struct DagIntoMd;
 impl Serializer<DagSnapshot> for DagIntoMd {
     const INTO: Dialect = MD_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Canonical;
-    fn serialize(from: &DagSnapshot) -> IoResult<IoPayload> {
+    async fn serialize(from: &DagSnapshot) -> IoResult<IoPayload> {
         let md = serialize(from).map_err(|error| semio_framework::io_schema::IoError { message: format!("DagIntoMd: {error}"), diagnostics: Vec::new() })?;
         Ok(IoOutcome::clean(IoPayload::Binary(<MdSnapshot as store::ArtifactPack>::encode_pack(&md))))
     }

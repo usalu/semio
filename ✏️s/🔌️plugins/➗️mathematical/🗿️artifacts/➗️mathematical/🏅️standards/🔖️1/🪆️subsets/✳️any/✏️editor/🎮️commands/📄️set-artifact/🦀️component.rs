@@ -18,7 +18,7 @@ pub struct SetArtifact {
     pub geometry: MathematicalGeometry,
 }
 
-pub fn handle(payload: &SetArtifact, doc: &ArtifactView<'_, MathematicalSnapshot>, _cfg: &ConfigView<'_, MathematicalConfig>) -> Result<Emit<MathematicalMutation, MathematicalConfigMutation>, Fault> {
+pub async fn handle(payload: &SetArtifact, doc: &ArtifactView<'_, MathematicalSnapshot>, _cfg: &ConfigView<'_, MathematicalConfig>) -> Result<Emit<MathematicalMutation, MathematicalConfigMutation>, Fault> {
     let Ok(graph) = crate::artifacts::mathematical::dsl::math_graph_from_dsl(payload.graph.clone()) else {
         return Ok(Emit::default());
     };
@@ -41,7 +41,7 @@ mod tests {
     use crate::artifacts::mathematical::MathematicalGeometry;
 
     #[test]
-    fn set_artifact_replaces_graph_and_geometry() {
+    async fn set_artifact_replaces_graph_and_geometry() {
         let mut app = math_app();
         let geometry = MathematicalGeometry { points: vec![crate::artifacts::mathematical::MathematicalPoint { x: 1.0, y: 2.0 }] };
         dispatch(&mut app, MathematicalCommand::SetArtifact(SetArtifact { graph: crate::artifacts::mathematical::dsl::math_graph_to_dsl(&crate::artifacts::mathematical::MathematicalGraph { algorithm: "components".into(), ..Default::default() }), geometry: geometry.clone() }));

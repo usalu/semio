@@ -13,23 +13,23 @@ pub struct CreateNode {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn create_node(node: Node) -> TrinityGraphMutation {
+pub async fn create_node(node: Node) -> TrinityGraphMutation {
     TrinityGraphMutation::CreateNode(CreateNode { node })
 }
 
 impl protocol::MutationKind<JackSnapshot, TrinityGraphMutation> for CreateNode {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "create", entity: "node", kind: "create-node", record: "CreatedNode" };
 
-    fn diff(&self, base: &JackSnapshot) -> protocol::MutationOutcome<JackDiff> {
+    async fn diff(&self, base: &JackSnapshot) -> protocol::MutationOutcome<JackDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &JackSnapshot) -> Vec<TrinityGraphMutation> {
+    async fn inverse(&self, base: &JackSnapshot) -> Vec<TrinityGraphMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         format!("Create node \"{}\"", self.node.id)
     }
-    fn target(&self) -> Vec<String> {
+    async fn target(&self) -> Vec<String> {
         vec![self.node.id.clone()]
     }
 }

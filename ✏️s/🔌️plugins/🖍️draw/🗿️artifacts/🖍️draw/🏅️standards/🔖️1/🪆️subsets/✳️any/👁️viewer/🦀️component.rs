@@ -25,10 +25,10 @@ pub enum DrawViewCommand {
 }
 
 impl protocol::OpBinary for DrawViewCommand {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         Ok(Vec::new())
     }
-    fn decode_op(_bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    async fn decode_op(_bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         Ok(DrawViewCommand::Noop)
     }
 }
@@ -52,7 +52,7 @@ impl ArtifactViewer for DrawViewer {
     const DIALECT: semio_framework::Dialect = DRAW_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = DRAW_DOCUMENT_SCHEMA;
 
-    fn initial_snapshot() -> DrawSnapshot {
+    async fn initial_snapshot() -> DrawSnapshot {
         default_draw_document("empty", None)
     }
 
@@ -60,11 +60,11 @@ impl ArtifactViewer for DrawViewer {
     /// change, so this always returns the empty `ViewEmit` — no config mutation, no effect, no dirty
     /// scope. Kept as a real dispatch (not an `unreachable!()`) so a future view-only action (camera
     /// pan/zoom) is a pure addition here, never a signature change.
-    fn handle(_command: &Self::Command, _doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _interaction: &InteractionView<'_>, _engines: &EngineHandles) -> Result<ViewEmit<Self::ConfigMutation>, Fault> {
+    async fn handle(_command: &Self::Command, _doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _interaction: &InteractionView<'_>, _engines: &EngineHandles) -> Result<ViewEmit<Self::ConfigMutation>, Fault> {
         Ok(ViewEmit::default())
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> UiNode {
+    async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> UiNode {
         match body_key {
             canvas::BODY_KEY => canvas::render(doc.snapshot),
             _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))),
@@ -74,7 +74,7 @@ impl ArtifactViewer for DrawViewer {
 //#endregion 🔖️Viewer
 
 //#region 🔖️Manifest
-pub fn create_draw_viewer() -> semio_framework_plugin::AppDefinition {
+pub async fn create_draw_viewer() -> semio_framework_plugin::AppDefinition {
     Viewer::builder(DRAW_DIALECT)
         .document(["semio", "draw"])
         .icon_id("draw")
@@ -92,14 +92,14 @@ mod tests {
     use super::*;
 
     #[test]
-    fn create_draw_viewer_builds_a_definition_for_the_viewer_role() {
+    async fn create_draw_viewer_builds_a_definition_for_the_viewer_role() {
         let def = create_draw_viewer();
         assert_eq!(def.role, semio_framework::AppRole::Viewer);
         assert_eq!(def.dialect, DRAW_DIALECT.into());
     }
 
     #[test]
-    fn viewer_dialect_matches_the_artifact_coordinate() {
+    async fn viewer_dialect_matches_the_artifact_coordinate() {
         assert_eq!(<DrawViewer as ArtifactViewer>::DIALECT, DRAW_DIALECT);
     }
 }

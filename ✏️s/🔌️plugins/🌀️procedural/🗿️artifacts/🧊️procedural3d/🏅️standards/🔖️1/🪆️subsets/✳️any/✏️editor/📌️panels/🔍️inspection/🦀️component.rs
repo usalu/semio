@@ -13,7 +13,7 @@ pub const PROCEDURAL_3D_PLAY_BODY_INSPECTION: &str = "procedural.play.inspection
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
-pub fn definition() -> PanelTabDefinition {
+pub async fn definition() -> PanelTabDefinition {
     PanelTabDefinition {
         kind: PanelTabKind::App(FRAMEWORK_PANEL_TAB_INSPECTION_ID.into()),
         label: LocalizedLabel::native(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, "Inspektion"),
@@ -24,7 +24,7 @@ pub fn definition() -> PanelTabDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(fixture: &FlowFixture, selected_node_ids: &[String], labels: &Procedural3dLabels) -> UiNode {
+pub async fn render(fixture: &FlowFixture, selected_node_ids: &[String], labels: &Procedural3dLabels) -> UiNode {
     let Some(selected_id) = selected_node_ids.first() else {
         return ui_declarative_sections_to_tree(&[UiSectionNode {
             id: "procedural-play-inspector.empty".into(),
@@ -96,7 +96,7 @@ mod tests {
     use crate::editor::procedural3d::testkit::{app, render as render_body};
 
     #[test]
-    fn inspector_shows_no_selection_by_default() {
+    async fn inspector_shows_no_selection_by_default() {
         let _serial = crate::editor::procedural3d::test_support::lock();
         let mut app = app();
         assert!(render_body(&mut app, PROCEDURAL_3D_PLAY_BODY_INSPECTION).contains("Schema:"));

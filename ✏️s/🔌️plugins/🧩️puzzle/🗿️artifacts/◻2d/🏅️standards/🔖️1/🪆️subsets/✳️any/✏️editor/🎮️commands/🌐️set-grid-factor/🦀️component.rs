@@ -3,7 +3,7 @@
 use crate::editor::puzzle2d::{puzzle2d_window_and_measures_scope, Puzzle2dActionCtx};
 use serde_json::Value;
 
-pub fn set_grid_factor(ctx: &mut Puzzle2dActionCtx<'_>, args: Option<&Value>) {
+pub async fn set_grid_factor(ctx: &mut Puzzle2dActionCtx<'_>, args: Option<&Value>) {
     let Some(value) = args.and_then(|value| value.get("value")).and_then(|value| value.as_f64()) else {
         return;
     };

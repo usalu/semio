@@ -4,7 +4,7 @@ use super::mutation::UpdatePileInputs;
 use crate::artifacts::en1993::{En1993Diff, En1993Snapshot};
 
 //#region 🔖️Diff
-pub fn diff(payload: &UpdatePileInputs, base: &En1993Snapshot) -> protocol::MutationOutcome<En1993Diff> {
+pub async fn diff(payload: &UpdatePileInputs, base: &En1993Snapshot) -> protocol::MutationOutcome<En1993Diff> {
     if !payload.new_pile_sigma_mpa.is_finite() {
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("Pile sigma mpa must be a finite number, got {}.", payload.new_pile_sigma_mpa), Vec::<String>::new());
     }

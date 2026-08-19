@@ -19,16 +19,16 @@ pub struct ConnectAdjacency {
 }
 impl MutationKind<ProgramSnapshot, ProgramMutation> for ConnectAdjacency {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "connect", entity: "adjacency", kind: "connect-adjacency", record: "ConnectedAdjacency" };
-    fn diff(&self, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
+    async fn diff(&self, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {
+    async fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         format!("Connect adjacency between \"{}\" and \"{}\"", self.adjacency.element_a_id.0, self.adjacency.element_b_id.0)
     }
-    fn target(&self) -> Vec<String> {
+    async fn target(&self) -> Vec<String> {
         vec![self.adjacency.header.id.0.clone()]
     }
 }

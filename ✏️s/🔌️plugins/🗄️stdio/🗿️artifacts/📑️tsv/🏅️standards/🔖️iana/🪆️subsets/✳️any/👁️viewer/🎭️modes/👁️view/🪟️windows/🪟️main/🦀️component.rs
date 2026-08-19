@@ -13,14 +13,14 @@ pub const BODY_KEY: &str = TableWindowKit::KIND_ID;
 
 //#region 🔖️Definition
 /// 🧱️ Stitched into the viewer manifest by `crate::viewer::tsv::create_tsv_viewer`.
-pub fn definition() -> WindowKindDefinition {
+pub async fn definition() -> WindowKindDefinition {
     WindowKindDefinition { label: LocalizedLabel::native("Table", "Tabelle"), icon_id: "table-2".into(), ..TableWindowKit::window_kind() }
 }
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
 /// 👁️ Pure `TsvSnapshot -> UiNode` read: one row per record, no mutation, no selection state.
-pub fn render(document: &TsvSnapshot) -> UiNode {
+pub async fn render(document: &TsvSnapshot) -> UiNode {
     let width = document.records.iter().map(|record| record.len()).max().unwrap_or(0);
     let columns = (0..width).map(|index| format!("Column {}", index + 1)).collect();
     let rows = document.records.clone();
@@ -34,14 +34,14 @@ mod tests {
     use super::*;
 
     #[test]
-    fn definition_declares_a_table_window() {
+    async fn definition_declares_a_table_window() {
         let def = definition();
         assert_eq!(def.id, WINDOW_KIND_ID);
         assert_eq!(def.body_key, BODY_KEY);
     }
 
     #[test]
-    fn render_lists_one_row_per_record() {
+    async fn render_lists_one_row_per_record() {
         let document = TsvSnapshot { schema: "stdio.tsv".into(), records: vec![vec!["a".into(), "b".into()]], trailing_newline: false, line_ending: Default::default() };
         let UiNode::ComponentScene(node) = render(&document) else { panic!("expected ComponentScene") };
         let scene = node.table.expect("table scene");

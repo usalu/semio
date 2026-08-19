@@ -23,12 +23,12 @@ pub mod derived_composition {
         type Snapshot = StepSnapshot;
         const WRITES: Dialect = DIALECT_SELF;
 
-        fn reads() -> &'static [Dialect] {
+        async fn reads() -> &'static [Dialect] {
             &[DIALECT_ANY, DIALECT_SELF, DEP_TXT]
         }
 
-        fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
-            let inner = StepAnyComposer::compose(sources)?;
+        async fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+            let inner = semio_framework_plugin::resolve_ready(StepAnyComposer::compose(sources))?;
             let mut snapshot = inner.snapshot;
             let mut doc = snapshot.to_part21_document();
             ensure_file_schema(&mut doc, "AUTOMOTIVE_DESIGN");
@@ -55,7 +55,7 @@ pub mod derived_composition {
     impl SubsetValidator for StepCc1Validator {
         const DIALECT: Dialect = DIALECT_SELF;
 
-        fn validate(payload: &IoPayload) -> Vec<Diagnostic> {
+        async fn validate(payload: &IoPayload) -> Vec<Diagnostic> {
             let decoded = match payload {
                 IoPayload::Binary(bytes) => <StepSnapshot as store::ArtifactPack>::decode_pack(bytes).ok(),
                 IoPayload::Text(text) => <StepSnapshot as store::ArtifactDsl>::parse_dsl(text).ok(),
@@ -76,7 +76,7 @@ pub mod derived_composition {
 
     static VALIDATOR_ENTRY: OnceLock<SubsetValidatorEntry> = OnceLock::new();
 
-    fn validator_entry() -> &'static SubsetValidatorEntry {
+    async fn validator_entry() -> &'static SubsetValidatorEntry {
         VALIDATOR_ENTRY.get_or_init(subset_validator_entry_of::<StepCc1Validator>)
     }
 
@@ -84,7 +84,7 @@ pub mod derived_composition {
     /// validate-on-build hook). Called from the ap214 standard's own `⚙️engine::register()`. The
     /// `ComposerEntry` itself is registered separately by the standard-level composer aggregator
     /// (`crate::artifacts::step::standards::v_ap214::engine::io_registry::entries()`).
-    pub fn register() {
+    pub async fn register() {
         let _ = register_subset_validator(validator_entry());
     }
     //#endregion 🔖️SubsetValidator
@@ -95,7 +95,7 @@ pub mod derived_composition {
         use crate::artifacts::step::standards::v_ap214::engine::part21::{Part21Document, Part21Header, Part21Instance};
         use semio_framework_plugin::AnalyzeSource;
 
-        fn clean_bytes() -> Vec<u8> {
+        async fn clean_bytes() -> Vec<u8> {
             let doc = Part21Document {
                 header: Part21Header { file_schema: vec![], ..Part21Header::default() },
                 instances: vec![
@@ -108,7 +108,7 @@ pub mod derived_composition {
         }
 
         #[test]
-        fn composer_injects_file_schema_and_stamps_clean_document() {
+        async fn composer_injects_file_schema_and_stamps_clean_document() {
             let bytes = clean_bytes();
             let sources = vec![ComposeSource { dialect: DIALECT_ANY, payload: AnalyzeSource::Binary(&bytes) }];
             let composed = StepCc1ComposerComposition::compose(&sources).expect("a document with no illegal representation must compose to cc1");
@@ -117,7 +117,7 @@ pub mod derived_composition {
         }
 
         #[test]
-        fn subset_validator_recheck_flags_missing_file_schema_on_the_raw_wire_payload() {
+        async fn subset_validator_recheck_flags_missing_file_schema_on_the_raw_wire_payload() {
             // Unlike `compose`, `validate` never runs `ensure_file_schema` -- a wire payload that
             // skipped this subset's own composer genuinely lacks the injection.
             let bytes = clean_bytes();

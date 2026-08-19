@@ -10,7 +10,7 @@ use semio_framework_plugin::{ExecutionMode, HostMediaHandlerDeclaration, Plugin}
 /// `Isolated` (no publisher trust assumed beyond the sandbox default — nothing in this crate's own
 /// effects, all UI-chrome/RPC `Effect` variants with no documented `CapabilityId`, justifies
 /// otherwise), and it asks the broker for document write access to persist edits.
-pub fn plugin() -> Result<Plugin, semio_framework_plugin::PluginAssemblyError> {
+pub async fn plugin() -> Result<Plugin, semio_framework_plugin::PluginAssemblyError> {
     Plugin::builder("cad")
         .label("CAD")
         .version("0.1.0")
@@ -43,7 +43,7 @@ mod surface_tests {
     /// 👁️ Local stand-in for `testkit::new_viewer::<V>()` — `ViewerApp<V>` already implements the
     /// runtime `ArtifactApp` trait (the SDK adapter, contract §2.1), so the existing generic
     /// `testkit::new_app::<A: ArtifactApp>()` harness works today without any framework change.
-    fn new_viewer<V: ArtifactViewer>() -> semio_framework_plugin::VcsArtifactApp<ViewerApp<V>> {
+    async fn new_viewer<V: ArtifactViewer>() -> semio_framework_plugin::VcsArtifactApp<ViewerApp<V>> {
         semio_framework_plugin::testkit::new_app::<ViewerApp<V>>()
     }
 
@@ -53,7 +53,7 @@ mod surface_tests {
     /// mutation — so any `V` that compiles against this trait already cannot mutate, by construction.
     /// This still exercises the type end-to-end (builds a real `ViewerApp<V>` through the SDK adapter,
     /// the same path `PluginBuilder::viewer::<V>` uses) rather than asserting on the bare trait alone.
-    fn assert_viewer_never_mutates<V: ArtifactViewer>() {
+    async fn assert_viewer_never_mutates<V: ArtifactViewer>() {
         // 🏗️ Builds a real `ViewerApp<V>` through the same SDK adapter path
         // `PluginBuilder::viewer::<V>` uses. `V::handle`'s return type,
         // `Result<ViewEmit<V::ConfigMutation>, Fault>`, is fixed by the `ArtifactViewer` trait
@@ -64,17 +64,17 @@ mod surface_tests {
     }
 
     /// ✏️👁️ Local stand-in for `testkit::assert_editor_and_viewer_share_dialect::<E, V>()`.
-    fn assert_editor_and_viewer_share_dialect<E: ArtifactEditor, V: ArtifactViewer>() {
+    async fn assert_editor_and_viewer_share_dialect<E: ArtifactEditor, V: ArtifactViewer>() {
         assert_eq!(E::DIALECT, V::DIALECT, "an editor and viewer over the same subset must share one Dialect coordinate");
     }
 
     #[test]
-    fn cad_viewer_never_mutates() {
+    async fn cad_viewer_never_mutates() {
         assert_viewer_never_mutates::<crate::viewer::cad::CadViewer>();
     }
 
     #[test]
-    fn cad_editor_and_viewer_share_dialect() {
+    async fn cad_editor_and_viewer_share_dialect() {
         assert_editor_and_viewer_share_dialect::<crate::editor::cad::CadPlayApp, crate::viewer::cad::CadViewer>();
     }
 }
@@ -88,7 +88,7 @@ mod surface_tests {
 #[cfg(test)]
 mod assembly_tests {
     #[test]
-    fn cad_plugin_assembles_with_editor_and_viewer_apps() {
+    async fn cad_plugin_assembles_with_editor_and_viewer_apps() {
         let bundle = super::plugin().expect("cad plugin() must assemble; see require_declared_capability_or_record for the exact missing/misdeclared capability claim");
         let manifest = <semio_framework_plugin::Plugin as semio_framework_plugin::PluginProgram>::manifest(&bundle);
         assert_eq!(manifest.plugin_id, "cad");
@@ -103,7 +103,7 @@ mod assembly_tests {
     /// `definition()` declares a matching composer capability — pinpoints which entry (not just
     /// "some composer") is responsible when `cad_plugin_assembles_with_editor_and_viewer_apps` fails.
     #[test]
-    fn cad_composer_entries_have_declared_capabilities() {
+    async fn cad_composer_entries_have_declared_capabilities() {
         let definition = crate::artifacts::cad::definition().expect("cad definition() must build");
         let entries = crate::artifacts::cad::standards::v1::subsets::any::io::io_registry::entries();
         let mut missing = Vec::new();

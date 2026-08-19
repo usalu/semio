@@ -86,7 +86,7 @@ pub enum SemioCadMutation {
 //#region 🔖️Apply
 /// ▶️ Applies `mutation` to `snapshot`. Single semantics source: the returned diff IS what gets
 /// applied.
-pub fn apply_semio_cad_mutation(snapshot: &mut SemioCadSnapshot, mutation: &SemioCadMutation) -> protocol::MutationOutcome<SemioCadDiff> {
+pub async fn apply_semio_cad_mutation(snapshot: &mut SemioCadSnapshot, mutation: &SemioCadMutation) -> protocol::MutationOutcome<SemioCadDiff> {
     let outcome = <SemioCadMutation as Mutation<SemioCadSnapshot>>::diff(mutation, snapshot);
     outcome.apply_to(snapshot)
 }
@@ -96,7 +96,7 @@ pub fn apply_semio_cad_mutation(snapshot: &mut SemioCadSnapshot, mutation: &Semi
 impl Mutation<SemioCadSnapshot> for SemioCadMutation {
     type Diff = SemioCadDiff;
 
-    fn diff(&self, base: &SemioCadSnapshot) -> protocol::MutationOutcome<Self::Diff> {
+    async fn diff(&self, base: &SemioCadSnapshot) -> protocol::MutationOutcome<Self::Diff> {
         protocol::MutationOutcome::new(match self {
             SemioCadMutation::NoMutation => SemioCadDiff::default(),
             SemioCadMutation::SetSnapshot { snapshot } => diff_set_snapshot(base, snapshot),
@@ -117,7 +117,7 @@ impl Mutation<SemioCadSnapshot> for SemioCadMutation {
         })
     }
 
-    fn inverse(&self, base: &SemioCadSnapshot) -> Vec<Self> {
+    async fn inverse(&self, base: &SemioCadSnapshot) -> Vec<Self> {
         match self {
             SemioCadMutation::NoMutation => vec![SemioCadMutation::NoMutation],
             SemioCadMutation::SetSnapshot { .. } => vec![SemioCadMutation::SetSnapshot { snapshot: base.clone() }],
@@ -169,16 +169,16 @@ impl Mutation<SemioCadSnapshot> for SemioCadMutation {
     }
 }
 
-fn find_layer<'a>(base: &'a SemioCadSnapshot, name: &str) -> Option<&'a CadLayer> {
+async fn find_layer<'a>(base: &'a SemioCadSnapshot, name: &str) -> Option<&'a CadLayer> {
     base.layers.iter().find(|l| l.name == name)
 }
-fn find_block<'a>(base: &'a SemioCadSnapshot, name: &str) -> Option<&'a CadBlock> {
+async fn find_block<'a>(base: &'a SemioCadSnapshot, name: &str) -> Option<&'a CadBlock> {
     base.blocks.iter().find(|b| b.name == name)
 }
-fn find_entity<'a>(base: &'a SemioCadSnapshot, handle: &str) -> Option<&'a CadEntityRecord> {
+async fn find_entity<'a>(base: &'a SemioCadSnapshot, handle: &str) -> Option<&'a CadEntityRecord> {
     base.entities.iter().find(|e| e.handle == handle)
 }
-fn find_block_entity<'a>(base: &'a SemioCadSnapshot, block_name: &str, handle: &str) -> Option<&'a CadEntityRecord> {
+async fn find_block_entity<'a>(base: &'a SemioCadSnapshot, block_name: &str, handle: &str) -> Option<&'a CadEntityRecord> {
     find_block(base, block_name)?.entities.iter().find(|e| e.handle == handle)
 }
 //#endregion 🔖️MutationTrait
@@ -188,16 +188,16 @@ fn find_block_entity<'a>(base: &'a SemioCadSnapshot, block_name: &str, handle: &
 /// (`enc_str`/`enc_layer`/`enc_block`/`enc_entity`/`encode_option`/...) rather than duplicating
 /// them, same pattern `BcfMutation` established. Grammar: `keyword arg=value ...`
 /// (space-separated), one match arm per variant.
-fn enc_cad_snapshot(s: &SemioCadSnapshot) -> String {
+async fn enc_cad_snapshot(s: &SemioCadSnapshot) -> String {
     format!("[{},{},{},{}]", enc_str(&s.schema), enc_list(&s.layers, enc_layer), enc_list(&s.blocks, enc_block), enc_list(&s.entities, enc_entity_record))
 }
-fn dec_cad_snapshot(s: &str) -> Result<SemioCadSnapshot, String> {
+async fn dec_cad_snapshot(s: &str) -> Result<SemioCadSnapshot, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [schema, layers, blocks, entities] = parts.as_slice() else { return Err(format!("cad snapshot: expected 4 fields, got {}", parts.len())) };
     Ok(SemioCadSnapshot { schema: dec_str(schema)?, layers: dec_list(layers, dec_layer)?, blocks: dec_list(blocks, dec_block)?, entities: dec_list(entities, dec_entity_record)? })
 }
 
-fn print_cad_mutation(m: &SemioCadMutation) -> String {
+async fn print_cad_mutation(m: &SemioCadMutation) -> String {
     match m {
         SemioCadMutation::NoMutation => "no-mutation".to_string(),
         SemioCadMutation::SetSnapshot { snapshot } => format!("set-snapshot snapshot={}", enc_cad_snapshot(snapshot)),
@@ -224,7 +224,7 @@ fn print_cad_mutation(m: &SemioCadMutation) -> String {
     }
 }
 
-fn parse_cad_mutation(line: &str) -> Result<SemioCadMutation, String> {
+async fn parse_cad_mutation(line: &str) -> Result<SemioCadMutation, String> {
     if line == "no-mutation" {
         return Ok(SemioCadMutation::NoMutation);
     }
@@ -257,10 +257,10 @@ fn parse_cad_mutation(line: &str) -> Result<SemioCadMutation, String> {
 }
 
 impl OpText for SemioCadMutation {
-    fn print_op(&self) -> String {
+    async fn print_op(&self) -> String {
         print_cad_mutation(self)
     }
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
+    async fn parse_op(line: &str) -> Result<Self, store::TextError> {
         parse_cad_mutation(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
 }
@@ -285,7 +285,7 @@ const OP_KEYWORDS: [&str; 16] = [
     "set-block-entity-layer",
     "set-block-entity-geometry",
 ];
-fn variant_ordinal(m: &SemioCadMutation) -> u8 {
+async fn variant_ordinal(m: &SemioCadMutation) -> u8 {
     match m {
         SemioCadMutation::NoMutation => 0,
         SemioCadMutation::SetSnapshot { .. } => 1,
@@ -308,7 +308,7 @@ fn variant_ordinal(m: &SemioCadMutation) -> u8 {
 /// ✂️ Just the `key=value ...` argument tail of `print_cad_mutation` (empty for `no-mutation`) —
 /// the binary frame's `tag` byte already carries the keyword, so the text keyword itself is
 /// redundant in the binary payload.
-fn print_cad_mutation_args(m: &SemioCadMutation) -> String {
+async fn print_cad_mutation_args(m: &SemioCadMutation) -> String {
     match print_cad_mutation(m).split_once(' ') {
         Some((_, rest)) => rest.to_string(),
         None => String::new(),
@@ -322,13 +322,13 @@ fn print_cad_mutation_args(m: &SemioCadMutation) -> String {
 /// `print_cad_mutation`/`parse_cad_mutation` text codec rather than re-deriving a second
 /// independent encoding.
 impl OpBinary for SemioCadMutation {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         const OP_BINARY_FORMAT: u8 = 1;
         let mut out = vec![OP_BINARY_FORMAT, variant_ordinal(self)];
         out.extend_from_slice(print_cad_mutation_args(self).as_bytes());
         Ok(out)
     }
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         const OP_BINARY_FORMAT: u8 = 1;
         if bytes.len() < 2 {
             return Err(protocol::ProtocolError::Malformed { what: "op header", offset: 0, detail: "truncated (need format+tag)".to_string() });
@@ -351,7 +351,7 @@ impl OpBinary for SemioCadMutation {
 /// of the 9 `CadEntity` kinds) — single source of truth for this facet's own tests AND
 /// `ops_grammar_conformance_law`/`protocol_walk_law` in `🎹️composer/🦀️component.rs`.
 #[cfg(test)]
-fn fixture() -> SemioCadSnapshot {
+async fn fixture() -> SemioCadSnapshot {
     SemioCadSnapshot {
         schema: crate::artifacts::semio::standards::v1::subsets::cad::schema::snapshot::STDIO_SEMIOCAD_DOCUMENT_SCHEMA.into(),
         layers: vec![CadLayer { name: "0".into(), color_index: 7, line_type: "CONTINUOUS".into(), visible: true }, CadLayer { name: "dim".into(), color_index: 7, line_type: "CONTINUOUS".into(), visible: true }],
@@ -365,7 +365,7 @@ fn fixture() -> SemioCadSnapshot {
 }
 
 #[cfg(test)]
-pub(crate) fn demo_mutation_cases() -> Vec<SemioCadMutation> {
+pub(crate) async fn demo_mutation_cases() -> Vec<SemioCadMutation> {
     let base = fixture();
     vec![
         SemioCadMutation::NoMutation,
@@ -400,7 +400,7 @@ mod tests {
     /// ⚖️ Law 1 — `mutation_diff_law`: for every variant, `apply_semio_cad_mutation`'s returned
     /// diff equals `m.diff(base)`, and applying it matches `diff.diff().apply(base)`.
     #[test]
-    fn mutation_diff_law() {
+    async fn mutation_diff_law() {
         let base = fixture();
         for m in demo_mutation_cases() {
             let mut snap = base.clone();
@@ -416,7 +416,7 @@ mod tests {
     /// ⚖️ Law 2 — `inverse_law`: every mutation round-trips (mutation-level) and every diff
     /// round-trips (diff-level `d.diff().inverse(base).apply(&d.diff().apply(base)) == base`).
     #[test]
-    fn inverse_law() {
+    async fn inverse_law() {
         use protocol::command::DiffAlgebra;
         let base = fixture();
         for m in demo_mutation_cases() {
@@ -441,7 +441,7 @@ mod tests {
     /// hand-rolled `SemioCadMutation` grammar, covering every variant (incl. `NoMutation`) via
     /// [`demo_mutation_cases`].
     #[test]
-    fn op_text_binary_roundtrip_law() {
+    async fn op_text_binary_roundtrip_law() {
         for m in demo_mutation_cases() {
             let printed = m.print_op();
             assert!(!printed.contains('\n'), "print_op must be one line, got {printed:?}");

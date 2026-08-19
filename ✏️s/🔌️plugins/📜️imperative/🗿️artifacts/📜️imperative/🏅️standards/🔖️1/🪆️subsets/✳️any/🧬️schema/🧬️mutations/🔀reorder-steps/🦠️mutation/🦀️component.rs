@@ -16,23 +16,23 @@ pub struct ReorderSteps {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn reorder_steps(path_ref: PathRef, id: String, to_index: usize) -> ImperativeMutation {
+pub async fn reorder_steps(path_ref: PathRef, id: String, to_index: usize) -> ImperativeMutation {
     ImperativeMutation::ReorderSteps(ReorderSteps { path_ref, id, to_index })
 }
 
 impl protocol::MutationKind<ImperativeSnapshot, ImperativeMutation> for ReorderSteps {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "reorder", entity: "steps", kind: "reorder-steps", record: "ReorderedSteps" };
 
-    fn diff(&self, base: &ImperativeSnapshot) -> protocol::MutationOutcome<ImperativeDiff> {
+    async fn diff(&self, base: &ImperativeSnapshot) -> protocol::MutationOutcome<ImperativeDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &ImperativeSnapshot) -> Vec<ImperativeMutation> {
+    async fn inverse(&self, base: &ImperativeSnapshot) -> Vec<ImperativeMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         format!("Reorder step \"{}\" to position {}", self.id, self.to_index)
     }
-    fn target(&self) -> Vec<String> {
+    async fn target(&self) -> Vec<String> {
         vec![self.id.clone()]
     }
 }

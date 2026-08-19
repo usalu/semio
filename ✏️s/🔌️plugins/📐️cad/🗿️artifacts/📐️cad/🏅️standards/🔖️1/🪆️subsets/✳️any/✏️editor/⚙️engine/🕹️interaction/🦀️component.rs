@@ -21,13 +21,13 @@ pub struct CadEngagementContext(pub HashMap<String, Value>);
 
 impl std::ops::Deref for CadEngagementContext {
     type Target = HashMap<String, Value>;
-    fn deref(&self) -> &Self::Target {
+    async fn deref(&self) -> &Self::Target {
         &self.0
     }
 }
 
 impl std::ops::DerefMut for CadEngagementContext {
-    fn deref_mut(&mut self) -> &mut Self::Target {
+    async fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.0
     }
 }
@@ -117,19 +117,19 @@ const RAW_INTERACTION_ASSETS: &[(&str, &str)] = &[
 
 const LEGACY_BUILDING_INTERACTION_IDS: &[&str] = &["building.building.constructWall", "building.building.constructBeam", "building.building.constructColumn", "building.building.constructSlab"];
 
-fn is_legacy_building_id(id: &str) -> bool {
+async fn is_legacy_building_id(id: &str) -> bool {
     LEGACY_BUILDING_INTERACTION_IDS.contains(&id)
 }
 
-fn parsed_specs() -> Vec<(&'static str, InteractionSpec)> {
+async fn parsed_specs() -> Vec<(&'static str, InteractionSpec)> {
     RAW_INTERACTION_ASSETS.iter().filter_map(|(model_def, raw)| serde_json::from_str::<InteractionSpec>(raw).ok().map(|spec| (*model_def, spec))).collect()
 }
 
-fn spec_by_id(id: &str) -> Option<InteractionSpec> {
+async fn spec_by_id(id: &str) -> Option<InteractionSpec> {
     parsed_specs().into_iter().find(|(_, spec)| spec.id == id).map(|(_, spec)| spec)
 }
 
-fn catalog() -> &'static [InteractionCatalogEntry] {
+async fn catalog() -> &'static [InteractionCatalogEntry] {
     static CATALOG: OnceLock<Vec<InteractionCatalogEntry>> = OnceLock::new();
     CATALOG.get_or_init(|| {
         let mut entries = vec![
@@ -159,26 +159,26 @@ fn catalog() -> &'static [InteractionCatalogEntry] {
 //#endregion 🔖️Registry
 
 //#region 🔖️Catalog
-pub fn list_interactions_for_model_definition(model_definition_id: &str) -> Vec<&'static InteractionCatalogEntry> {
+pub async fn list_interactions_for_model_definition(model_definition_id: &str) -> Vec<&'static InteractionCatalogEntry> {
     catalog().iter().filter(|entry| entry.model_definition_id == model_definition_id).collect()
 }
 
-pub fn resolve_interaction_key(input: &str, model_definition_id: &str) -> Option<&'static InteractionCatalogEntry> {
+pub async fn resolve_interaction_key(input: &str, model_definition_id: &str) -> Option<&'static InteractionCatalogEntry> {
     let trimmed = input.trim().to_lowercase();
     catalog().iter().find(|entry| entry.model_definition_id == model_definition_id && (entry.key == trimmed || entry.id.eq_ignore_ascii_case(&trimmed) || entry.id.to_lowercase().ends_with(&format!(".{trimmed}"))))
 }
 
-pub fn interaction_by_id(id: &str) -> Option<&'static InteractionCatalogEntry> {
+pub async fn interaction_by_id(id: &str) -> Option<&'static InteractionCatalogEntry> {
     catalog().iter().find(|entry| entry.id == id)
 }
 //#endregion 🔖️Catalog
 
 //#region 🔖️Statechart
-fn vec3_json(point: [f64; 3]) -> Value {
+async fn vec3_json(point: [f64; 3]) -> Value {
     json!([point[0], point[1], point[2]])
 }
 
-fn parse_vec3(value: &Value) -> Option<[f64; 3]> {
+async fn parse_vec3(value: &Value) -> Option<[f64; 3]> {
     let array = value.as_array()?;
     if array.len() < 3 {
         return None;
@@ -186,11 +186,11 @@ fn parse_vec3(value: &Value) -> Option<[f64; 3]> {
     Some([array[0].as_f64()?, array[1].as_f64()?, array[2].as_f64()?])
 }
 
-fn context_point(session: &CadEngagementScratch, field: &str) -> Option<[f64; 3]> {
+async fn context_point(session: &CadEngagementScratch, field: &str) -> Option<[f64; 3]> {
     session.context.0.get(field).and_then(parse_vec3)
 }
 
-pub fn start_session(interaction_id: &str, pane: CadPaneId) -> Option<CadEngagementScratch> {
+pub async fn start_session(interaction_id: &str, pane: CadPaneId) -> Option<CadEngagementScratch> {
     if is_legacy_building_id(interaction_id) {
         return Some(CadEngagementScratch { interaction_id: interaction_id.to_string(), state: "idle".to_string(), context: CadEngagementContext(HashMap::new()), pane, last_response: None });
     }
@@ -198,7 +198,7 @@ pub fn start_session(interaction_id: &str, pane: CadPaneId) -> Option<CadEngagem
     Some(CadEngagementScratch { interaction_id: spec.id.clone(), state: spec.machine.initial.clone(), context: CadEngagementContext(HashMap::new()), pane, last_response: None })
 }
 
-pub fn keyed_transitions(session: &CadEngagementScratch) -> Vec<KeyedTransition> {
+pub async fn keyed_transitions(session: &CadEngagementScratch) -> Vec<KeyedTransition> {
     if is_legacy_building_id(&session.interaction_id) {
         return legacy_keyed_transitions(session);
     }
@@ -219,7 +219,7 @@ pub fn keyed_transitions(session: &CadEngagementScratch) -> Vec<KeyedTransition>
     out
 }
 
-pub fn can_commit(session: &CadEngagementScratch) -> bool {
+pub async fn can_commit(session: &CadEngagementScratch) -> bool {
     if is_legacy_building_id(&session.interaction_id) {
         return session.state == "ready";
     }
@@ -238,7 +238,7 @@ pub fn can_commit(session: &CadEngagementScratch) -> bool {
     }
 }
 
-fn context_target_field(target: &ExprPathTarget) -> Option<&str> {
+async fn context_target_field(target: &ExprPathTarget) -> Option<&str> {
     if target.root != ExprPathRoot::Context {
         return None;
     }
@@ -252,7 +252,7 @@ fn context_target_field(target: &ExprPathTarget) -> Option<&str> {
 /// `pointer.down`/`pointer.move` read `event.point`, `set.*` events read `event.value`. Callers
 /// (both `lib.rs`'s command handlers and this module's own tests) pass raw values (a `[x,y,z]`
 /// array, a bare number) for brevity — already-wrapped objects pass through unchanged.
-fn normalize_event_payload(event_kind: &str, payload: Option<&Value>) -> Option<Value> {
+async fn normalize_event_payload(event_kind: &str, payload: Option<&Value>) -> Option<Value> {
     let payload = payload?;
     if payload.is_object() {
         return Some(payload.clone());
@@ -276,7 +276,7 @@ fn normalize_event_payload(event_kind: &str, payload: Option<&Value>) -> Option<
 /// The remaining `box.*` rubber-band helpers and selection-driven actions (used only by box's
 /// advanced cube/3-point/center sub-modes and by selection-based utilities) are a documented
 /// follow-up; they no-operation here rather than error.
-fn run_named_action_effect(context: &mut HashMap<String, Value>, payload: Option<&Value>, action: &str, params: &HashMap<String, Value>) {
+async fn run_named_action_effect(context: &mut HashMap<String, Value>, payload: Option<&Value>, action: &str, params: &HashMap<String, Value>) {
     match action {
         "command.addPoint" => {
             let field = params.get("field").and_then(|value| value.as_str()).unwrap_or("points").to_string();
@@ -304,7 +304,7 @@ fn run_named_action_effect(context: &mut HashMap<String, Value>, payload: Option
     }
 }
 
-fn apply_effect(session: &mut CadEngagementScratch, payload: Option<&Value>, effect: &Effect, raised: &mut Vec<String>) {
+async fn apply_effect(session: &mut CadEngagementScratch, payload: Option<&Value>, effect: &Effect, raised: &mut Vec<String>) {
     let empty_vars = HashMap::new();
     match effect {
         Effect::Assign { target, value } => {
@@ -346,7 +346,7 @@ fn apply_effect(session: &mut CadEngagementScratch, payload: Option<&Value>, eff
     }
 }
 
-fn apply_event_generic(session: &mut CadEngagementScratch, event_kind: &str, raw_payload: Option<&Value>, depth: u8) -> bool {
+async fn apply_event_generic(session: &mut CadEngagementScratch, event_kind: &str, raw_payload: Option<&Value>, depth: u8) -> bool {
     if depth > 8 {
         return false;
     }
@@ -385,14 +385,14 @@ fn apply_event_generic(session: &mut CadEngagementScratch, event_kind: &str, raw
     true
 }
 
-fn legacy_keyed_transitions(session: &CadEngagementScratch) -> Vec<KeyedTransition> {
+async fn legacy_keyed_transitions(session: &CadEngagementScratch) -> Vec<KeyedTransition> {
     if session.state == "idle" {
         return vec![KeyedTransition { key: "s".into(), label: "Start".into(), event_kind: "start".into() }];
     }
     Vec::new()
 }
 
-fn legacy_apply_event(session: &mut CadEngagementScratch, event_kind: &str, payload: Option<&Value>) -> bool {
+async fn legacy_apply_event(session: &mut CadEngagementScratch, event_kind: &str, payload: Option<&Value>) -> bool {
     let is_column = session.interaction_id == "building.building.constructColumn";
     let changed = match (session.state.as_str(), event_kind) {
         ("idle", "start") => {
@@ -452,7 +452,7 @@ fn legacy_apply_event(session: &mut CadEngagementScratch, event_kind: &str, payl
     changed
 }
 
-pub fn apply_event(session: &mut CadEngagementScratch, event_kind: &str, payload: Option<&Value>) -> bool {
+pub async fn apply_event(session: &mut CadEngagementScratch, event_kind: &str, payload: Option<&Value>) -> bool {
     if is_legacy_building_id(&session.interaction_id) {
         return legacy_apply_event(session, event_kind, payload);
     }
@@ -462,7 +462,7 @@ pub fn apply_event(session: &mut CadEngagementScratch, event_kind: &str, payload
 /// States where a numeric-only line commits the pending height (premigration `tryCommitNumericEntry`).
 const NUMERIC_ENTRY_STATES: &[&str] = &["first_corner_height", "two_points_height", "slab_height", "column_height", "radius", "curve_height"];
 
-fn strip_prefix_ignore_case<'a>(text: &'a str, prefix: &str) -> Option<&'a str> {
+async fn strip_prefix_ignore_case<'a>(text: &'a str, prefix: &str) -> Option<&'a str> {
     if text.len() < prefix.len() {
         return None;
     }
@@ -475,7 +475,7 @@ fn strip_prefix_ignore_case<'a>(text: &'a str, prefix: &str) -> Option<&'a str> 
 /// `current_state` is the active engagement session's state (if any) — required to disambiguate a
 /// bare numeric line (e.g. `"3.5"`) as a height commit only while a numeric-entry state is active,
 /// mirroring premigration's `trySubmitLine` numeric-entry step.
-pub fn parse_repl_line(line: &str, current_state: Option<&str>) -> Option<(String, Option<Value>)> {
+pub async fn parse_repl_line(line: &str, current_state: Option<&str>) -> Option<(String, Option<Value>)> {
     let trimmed = line.trim();
     if trimmed.is_empty() {
         return None;
@@ -511,7 +511,7 @@ pub fn parse_repl_line(line: &str, current_state: Option<&str>) -> Option<(Strin
 //#endregion 🔖️Statechart
 
 //#region 🔖️CommitRunner
-fn commit_primitive_box(kernel: &mut dyn BrepKernel, params: &HashMap<String, Value>, label_count: usize, next_id: impl Fn(&str) -> String) -> Option<CadObject> {
+async fn commit_primitive_box(kernel: &mut dyn BrepKernel, params: &HashMap<String, Value>, label_count: usize, next_id: impl Fn(&str) -> String) -> Option<CadObject> {
     let corner_a = params.get("cornerA").and_then(parse_vec3)?;
     let corner_b = params.get("cornerB").and_then(parse_vec3)?;
     let height = params.get("height").and_then(|value| value.as_f64()).unwrap_or(1.0);
@@ -538,7 +538,7 @@ fn commit_primitive_box(kernel: &mut dyn BrepKernel, params: &HashMap<String, Va
 /// `aec.building.structure.classic`, and `aec.building.structure.fem.*` construction interaction
 /// (`commit.operation.action` ending in `From2PointsAndHeight`/`FromSurface`) — differentiated only
 /// by the `typology` commit param.
-fn commit_from_2_points_and_height(kernel: &mut dyn BrepKernel, params: &HashMap<String, Value>, label: &str, label_count: usize, next_id: impl Fn(&str) -> String) -> Option<CadObject> {
+async fn commit_from_2_points_and_height(kernel: &mut dyn BrepKernel, params: &HashMap<String, Value>, label: &str, label_count: usize, next_id: impl Fn(&str) -> String) -> Option<CadObject> {
     let typology = params.get("typology").and_then(|value| value.as_str()).unwrap_or("").to_string();
     let lower = typology.to_lowercase();
     let point_a = params.get("pointA").and_then(parse_vec3)?;
@@ -597,7 +597,7 @@ fn commit_from_2_points_and_height(kernel: &mut dyn BrepKernel, params: &HashMap
 /// implemented so far; other result kinds (cylinder/circle/plane/curve/boolean/...) are a
 /// documented follow-up — this returns `None` for them, matching the pre-engine fallback behavior
 /// for any not-yet-implemented interaction.
-fn commit_command_finish(kernel: &mut dyn BrepKernel, params: &HashMap<String, Value>, context: &HashMap<String, Value>, label_count: usize, next_id: impl Fn(&str) -> String) -> Option<CadObject> {
+async fn commit_command_finish(kernel: &mut dyn BrepKernel, params: &HashMap<String, Value>, context: &HashMap<String, Value>, label_count: usize, next_id: impl Fn(&str) -> String) -> Option<CadObject> {
     let result_kind = params.get("resultKind").and_then(|value| value.as_str())?;
     match result_kind {
         "sphere" => {
@@ -630,7 +630,7 @@ fn commit_command_finish(kernel: &mut dyn BrepKernel, params: &HashMap<String, V
     }
 }
 
-fn legacy_commit_object(kernel: &mut dyn BrepKernel, session: &CadEngagementScratch, label_count: usize, next_id: impl Fn(&str) -> String) -> Option<CadObject> {
+async fn legacy_commit_object(kernel: &mut dyn BrepKernel, session: &CadEngagementScratch, label_count: usize, next_id: impl Fn(&str) -> String) -> Option<CadObject> {
     let entry = interaction_by_id(&session.interaction_id)?;
     if session.interaction_id == "building.building.constructColumn" {
         let base = context_point(session, "base")?;
@@ -690,7 +690,7 @@ fn legacy_commit_object(kernel: &mut dyn BrepKernel, session: &CadEngagementScra
     })
 }
 
-pub(crate) fn commit_object(kernel: &mut dyn BrepKernel, session: &CadEngagementScratch, label_count: usize, next_id: impl Fn(&str) -> String) -> Option<CadObject> {
+pub(crate) async fn commit_object(kernel: &mut dyn BrepKernel, session: &CadEngagementScratch, label_count: usize, next_id: impl Fn(&str) -> String) -> Option<CadObject> {
     if is_legacy_building_id(&session.interaction_id) {
         return legacy_commit_object(kernel, session, label_count, next_id);
     }
@@ -714,7 +714,7 @@ pub(crate) fn commit_object(kernel: &mut dyn BrepKernel, session: &CadEngagement
 //#endregion 🔖️CommitRunner
 
 //#region 🔖️Preview
-fn preview_two_point_footprint(session: &CadEngagementScratch, include_segment: bool) -> Vec<Value> {
+async fn preview_two_point_footprint(session: &CadEngagementScratch, include_segment: bool) -> Vec<Value> {
     let mut items = Vec::new();
     if let Some(corner_a) = context_point(session, "cornerA") {
         items.push(json!({ "kind": "point", "role": "cornerA", "position": corner_a }));
@@ -727,7 +727,7 @@ fn preview_two_point_footprint(session: &CadEngagementScratch, include_segment: 
     items
 }
 
-fn legacy_preview_display_items(session: &CadEngagementScratch) -> Vec<Value> {
+async fn legacy_preview_display_items(session: &CadEngagementScratch) -> Vec<Value> {
     if session.interaction_id == "building.building.constructColumn" {
         return match session.state.as_str() {
             "column_height" | "ready" => {
@@ -747,7 +747,7 @@ fn legacy_preview_display_items(session: &CadEngagementScratch) -> Vec<Value> {
     }
 }
 
-fn display_item_to_json(item: &DisplayItemSpec, env: &ExprEnv<'_>, vars: &HashMap<String, Value>) -> Option<Value> {
+async fn display_item_to_json(item: &DisplayItemSpec, env: &ExprEnv<'_>, vars: &HashMap<String, Value>) -> Option<Value> {
     match item {
         DisplayItemSpec::Point { role, position, .. } => {
             let position = evaluate_expr(position, env, vars);
@@ -800,7 +800,7 @@ fn display_item_to_json(item: &DisplayItemSpec, env: &ExprEnv<'_>, vars: &HashMa
     }
 }
 
-pub fn preview_display_items(session: &CadEngagementScratch) -> Vec<Value> {
+pub async fn preview_display_items(session: &CadEngagementScratch) -> Vec<Value> {
     if is_legacy_building_id(&session.interaction_id) {
         return legacy_preview_display_items(session);
     }
@@ -822,7 +822,7 @@ mod tests {
     use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::Brep;
 
     #[test]
-    fn catalog_includes_json_driven_and_legacy_building_entries() {
+    async fn catalog_includes_json_driven_and_legacy_building_entries() {
         assert!(interaction_by_id("primitive.box").is_some());
         assert!(interaction_by_id("solid.sphere").is_some());
         assert!(interaction_by_id("energy.energy.constructExternalWall").is_some());
@@ -832,7 +832,7 @@ mod tests {
     }
 
     #[test]
-    fn box_interaction_commits_after_height() {
+    async fn box_interaction_commits_after_height() {
         let mut session = start_session("primitive.box", CadPaneId::Shape).expect("session");
         assert!(apply_event(&mut session, "start", None));
         assert!(apply_event(&mut session, "mode.diagonal", None));
@@ -848,7 +848,7 @@ mod tests {
     }
 
     #[test]
-    fn box_interaction_default_mode_is_point_and_requires_length_prompt() {
+    async fn box_interaction_default_mode_is_point_and_requires_length_prompt() {
         // 🔣️box.json's default `boxMode` (set by the `start` transition) is "point", not "diagonal" —
         // a plain pointer.down after start does NOT reach diagonal_rubber.
         let mut session = start_session("primitive.box", CadPaneId::Shape).expect("session");
@@ -858,7 +858,7 @@ mod tests {
     }
 
     #[test]
-    fn sphere_interaction_commits_via_command_finish() {
+    async fn sphere_interaction_commits_via_command_finish() {
         let mut session = start_session("solid.sphere", CadPaneId::Shape).expect("session");
         assert!(apply_event(&mut session, "start", None));
         assert!(apply_event(&mut session, "pointer.down", Some(&json!({ "point": [0.0, 0.0, 0.0] }))));
@@ -873,7 +873,7 @@ mod tests {
     }
 
     #[test]
-    fn external_wall_interaction_commits_via_generic_from_2_points_and_height() {
+    async fn external_wall_interaction_commits_via_generic_from_2_points_and_height() {
         let mut session = start_session("energy.energy.constructExternalWall", CadPaneId::Energy).expect("session");
         assert!(apply_event(&mut session, "mode.2points", None));
         assert!(apply_event(&mut session, "pointer.down", Some(&json!({ "point": [0.0, 0.0, 0.0] }))));
@@ -887,7 +887,7 @@ mod tests {
     }
 
     #[test]
-    fn reinforced_concrete_column_interaction_commits_as_cylinder() {
+    async fn reinforced_concrete_column_interaction_commits_as_cylinder() {
         let mut session = start_session("structure.structure.constructReinforcedConcreteColumn", CadPaneId::StructureClassic).expect("session");
         assert!(apply_event(&mut session, "mode.2points", None));
         assert!(apply_event(&mut session, "pointer.down", Some(&json!({ "point": [1.0, 1.0, 0.0] }))));
@@ -901,7 +901,7 @@ mod tests {
     }
 
     #[test]
-    fn slab_interaction_commits() {
+    async fn slab_interaction_commits() {
         let mut session = start_session("structure.structure.constructOneWayReinforcedConcreteSlab", CadPaneId::StructureClassic).expect("session");
         assert!(apply_event(&mut session, "mode.2points", None));
         assert!(apply_event(&mut session, "pointer.down", Some(&json!({ "point": [0.0, 0.0, 0.0] }))));
@@ -913,7 +913,7 @@ mod tests {
     }
 
     #[test]
-    fn slab_preview_shows_footprint_point() {
+    async fn slab_preview_shows_footprint_point() {
         let mut session = start_session("structure.structure.constructOneWayReinforcedConcreteSlab", CadPaneId::StructureClassic).expect("session");
         assert!(apply_event(&mut session, "mode.2points", None));
         assert!(apply_event(&mut session, "pointer.down", Some(&json!({ "point": [0.0, 0.0, 0.0] }))));
@@ -922,7 +922,7 @@ mod tests {
     }
 
     #[test]
-    fn legacy_column_preview_shows_base_point() {
+    async fn legacy_column_preview_shows_base_point() {
         let mut session = start_session("building.building.constructColumn", CadPaneId::Building).expect("session");
         assert!(apply_event(&mut session, "start", None));
         assert!(apply_event(&mut session, "pointer.down", Some(&json!([1.0, 2.0, 0.0]))));
@@ -931,7 +931,7 @@ mod tests {
     }
 
     #[test]
-    fn legacy_wall_interaction_still_commits() {
+    async fn legacy_wall_interaction_still_commits() {
         let mut session = start_session("building.building.constructWall", CadPaneId::Building).expect("session");
         assert!(apply_event(&mut session, "start", None));
         assert!(apply_event(&mut session, "pointer.down", Some(&json!([0.0, 0.0, 0.0]))));
@@ -945,13 +945,13 @@ mod tests {
     }
 
     #[test]
-    fn parse_repl_line_accepts_legacy_raw_forms() {
+    async fn parse_repl_line_accepts_legacy_raw_forms() {
         assert_eq!(parse_repl_line("set.height 2.5", None), Some(("set.height".into(), Some(json!(2.5)))));
         assert_eq!(parse_repl_line("dist 12", None), Some(("set.distance".into(), Some(json!(12.0)))));
     }
 
     #[test]
-    fn parse_repl_line_accepts_shell_normalized_forms() {
+    async fn parse_repl_line_accepts_shell_normalized_forms() {
         // The React shell PascalCases every draft (framework/renderer/react `normalizeEngagementCommandText`),
         // so `set.height 3.5` arrives as `SetHeight3.5` with no separators.
         assert_eq!(parse_repl_line("SetHeight3.5", None), Some(("set.height".into(), Some(json!(3.5)))));
@@ -960,7 +960,7 @@ mod tests {
     }
 
     #[test]
-    fn parse_repl_line_commits_bare_number_only_in_numeric_entry_state() {
+    async fn parse_repl_line_commits_bare_number_only_in_numeric_entry_state() {
         // Bare numeric entry (premigration `tryCommitNumericEntry`) only applies while a
         // numeric-entry state (e.g. box's first_corner_height) is active.
         assert_eq!(parse_repl_line("3.5", Some("first_corner_height")), Some(("set.height".into(), Some(json!(3.5)))));
@@ -971,7 +971,7 @@ mod tests {
     }
 
     #[test]
-    fn box_interaction_commits_via_shell_normalized_repl_line() {
+    async fn box_interaction_commits_via_shell_normalized_repl_line() {
         let mut session = start_session("primitive.box", CadPaneId::Shape).expect("session");
         assert!(apply_event(&mut session, "start", None));
         assert!(apply_event(&mut session, "mode.diagonal", None));

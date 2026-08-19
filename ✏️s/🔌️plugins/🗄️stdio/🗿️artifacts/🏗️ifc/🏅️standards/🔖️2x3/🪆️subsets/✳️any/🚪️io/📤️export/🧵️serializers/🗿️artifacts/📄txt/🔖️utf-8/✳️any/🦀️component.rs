@@ -3,14 +3,14 @@
 use crate::artifacts::ifc::standards::v2x3::subsets::any::schema::snapshot::Ifc2x3Snapshot;
 use crate::artifacts::txt::TxtSnapshot;
 
-pub fn register() {}
+pub async fn register() {}
 
-pub fn serialize(from: &Ifc2x3Snapshot) -> Result<TxtSnapshot, store::PackError> {
+pub async fn serialize(from: &Ifc2x3Snapshot) -> Result<TxtSnapshot, store::PackError> {
     let bytes = crate::artifacts::ifc::standards::v2x3::engine::encode_ifc2x3(from).map_err(store::PackError::Schema)?;
     let text = String::from_utf8(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
     Ok(TxtSnapshot::from_body(&text))
 }
 
-pub fn serialize_text(from: &Ifc2x3Snapshot) -> Result<String, store::PackError> {
+pub async fn serialize_text(from: &Ifc2x3Snapshot) -> Result<String, store::PackError> {
     Ok(store::ArtifactDsl::print_dsl(&serialize(from)?))
 }

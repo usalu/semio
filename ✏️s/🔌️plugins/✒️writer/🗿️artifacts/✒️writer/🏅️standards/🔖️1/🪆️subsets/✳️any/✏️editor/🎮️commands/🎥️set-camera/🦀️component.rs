@@ -13,7 +13,7 @@ pub struct SetCamera {
     pub camera: WriterCamera,
 }
 
-pub fn handle(payload: &SetCamera, _doc: &ArtifactView<'_, WriterSnapshot>, _cfg: &ConfigView<'_, WriterConfig>) -> Result<Emit<WriterMutation, WriterConfigMutation>, Fault> {
+pub async fn handle(payload: &SetCamera, _doc: &ArtifactView<'_, WriterSnapshot>, _cfg: &ConfigView<'_, WriterConfig>) -> Result<Emit<WriterMutation, WriterConfigMutation>, Fault> {
     Ok(Emit::config(vec![WriterConfigMutation::SetCamera { camera: payload.camera.clone() }]))
 }
 
@@ -30,7 +30,7 @@ mod tests {
     /// 🎥️ `SetCamera` is a config-only command — it must never emit a `WriterMutation` (no VCS edit,
     /// no undo entry) and instead write into `WriterConfig`, reflected in render.
     #[test]
-    fn set_camera_command_writes_config_not_operations() {
+    async fn set_camera_command_writes_config_not_operations() {
         let mut app = new_app();
         let result = app.dispatch_typed(WriterCommand::SetCamera(SetCamera { camera: WriterCamera { x: 3.0, y: 4.0, zoom: 2.0 } }), &semio_framework_plugin::testkit::meta("local")).expect("set camera");
         assert!(result.mutations.is_empty(), "setCamera must not emit a VCS operation");

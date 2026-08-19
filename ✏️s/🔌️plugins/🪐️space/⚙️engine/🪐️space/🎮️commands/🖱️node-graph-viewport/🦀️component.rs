@@ -12,7 +12,7 @@ pub struct NodeGraphViewport {
     pub viewport_json: String,
 }
 
-pub fn handle(payload: &NodeGraphViewport, _doc: &ArtifactView<'_, WorkflowSnapshot>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
+pub async fn handle(payload: &NodeGraphViewport, _doc: &ArtifactView<'_, WorkflowSnapshot>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
     match serde_json::from_str::<OsWorkflowCamera>(&payload.viewport_json) {
         Ok(camera) => Ok(Emit::config(vec![SpaceConfigMutation::SetCamera { window_id: crate::engine::space::modes::main::windows::workflow::S_PLAY_WINDOW_WORKFLOW.into(), camera: camera.into() }])),
         Err(_) => Ok(Emit::default()),

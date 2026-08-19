@@ -24,7 +24,7 @@ pub struct ObjInference {
 }
 
 impl protocol::Inference<ObjSnapshot> for ObjInference {
-    fn infer(snapshot: &ObjSnapshot) -> Self {
+    async fn infer(snapshot: &ObjSnapshot) -> Self {
         Self { bounds: compute_obj_bounds(snapshot) }
     }
 }
@@ -32,19 +32,19 @@ impl protocol::Inference<ObjSnapshot> for ObjInference {
 /// 🌱 Defined in terms of `infer` (not derived) — keeps the law correct regardless of whether
 /// `ObjSnapshot::default()`'s `vertices`/`faces`/`groups` ever stop being empty.
 impl Default for ObjInference {
-    fn default() -> Self {
+    async fn default() -> Self {
         <Self as protocol::Inference<ObjSnapshot>>::infer(&ObjSnapshot::default())
     }
 }
 
 impl protocol::InferenceSpec<ObjSnapshot> for ObjInference {
-    fn inference_schema_id() -> &'static str {
+    async fn inference_schema_id() -> &'static str {
         "s.stdio.obj.inference"
     }
-    fn schema_version() -> u32 {
+    async fn schema_version() -> u32 {
         1
     }
-    fn fields() -> &'static [protocol::InferenceFieldSpec] {
+    async fn fields() -> &'static [protocol::InferenceFieldSpec] {
         &[protocol::InferenceFieldSpec { id: "s.stdio.obj.inference.bounds", reads: &["vertices", "faces", "groups"] }]
     }
 }
@@ -64,7 +64,7 @@ impl ArtifactInferrer for crate::artifacts::obj::standards::v3_0::subsets::any::
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.stdio.obj.inference`'s facet leaves into the OS-wide inference catalog — call
 /// once at plugin init, alongside `obj_artifact_schema_descriptor`'s registration.
-pub fn obj_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
+pub async fn obj_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
     schema::ArtifactInferenceDescriptor {
         id: "s.stdio.obj.inference",
         inference: schema::FacetLeaves {
@@ -85,13 +85,13 @@ mod tests {
     use protocol::Inference;
 
     #[test]
-    fn inference_determinism_law() {
+    async fn inference_determinism_law() {
         let snapshot = ObjSnapshot::default();
         assert_eq!(ObjInference::infer(&snapshot), ObjInference::infer(&snapshot));
     }
 
     #[test]
-    fn inference_default_law() {
+    async fn inference_default_law() {
         assert_eq!(ObjInference::infer(&ObjSnapshot::default()), ObjInference::default());
     }
 }

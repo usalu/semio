@@ -11,7 +11,7 @@ pub const IMPERATIVE_PLAY_BODY_CATALOGUE: &str = "imperative.play.catalogue";
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
-pub fn definition() -> PanelTabDefinition {
+pub async fn definition() -> PanelTabDefinition {
     PanelTabDefinition {
         kind: PanelTabKind::App(FRAMEWORK_PANEL_TAB_CATALOGUE_ID.into()),
         label: LocalizedLabel::native(FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, "Katalog"),
@@ -23,7 +23,7 @@ pub fn definition() -> PanelTabDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(labels: &ImperativeLabels) -> UiNode {
+pub async fn render(labels: &ImperativeLabels) -> UiNode {
     let actions = [("state.set", labels.action_state_set), ("log.print", labels.action_log_print), ("control.if", labels.action_control_if), ("control.while", labels.action_control_while), ("math.add", labels.action_math_add)];
     let builder = PanelTreeBuilder::new("imperative-play-catalogue");
     let action_items: Vec<UiTreeItemNode> = actions.iter().map(|(kind, label)| tree_item_with_action(builder.item_id("action", kind), *label, Some((*kind).into()), imperative_action("addStep", Some(json!({ "kind": kind }))))).collect();
@@ -38,7 +38,7 @@ mod tests {
     use crate::editor::imperative::testkit::{imperative_app, render as render_body};
 
     #[test]
-    fn catalogue_lists_step_kinds_in_native_locale_by_default() {
+    async fn catalogue_lists_step_kinds_in_native_locale_by_default() {
         let mut app = imperative_app();
         let json = render_body(&mut app, IMPERATIVE_PLAY_BODY_CATALOGUE);
         assert!(json.contains("Set state"));
@@ -47,7 +47,7 @@ mod tests {
     }
 
     #[test]
-    fn catalogue_resolves_native_german_from_the_config_locale() {
+    async fn catalogue_resolves_native_german_from_the_config_locale() {
         use crate::editor::imperative::commands::set_locale;
         use crate::editor::imperative::testkit::dispatch;
         use crate::editor::imperative::ImperativeCommand;

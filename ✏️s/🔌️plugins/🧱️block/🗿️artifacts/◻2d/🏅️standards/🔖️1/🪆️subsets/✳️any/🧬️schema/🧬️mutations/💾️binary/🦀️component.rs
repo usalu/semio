@@ -13,12 +13,12 @@ use crate::artifacts::block2d::schema::mutations::text::Block2dMutation;
 use protocol::OpBinary;
 
 /// 📦️ Encodes a `Block2dMutation` to its binary command form.
-pub fn encode_op(operation: &Block2dMutation) -> Result<Vec<u8>, protocol::ProtocolError> {
+pub async fn encode_op(operation: &Block2dMutation) -> Result<Vec<u8>, protocol::ProtocolError> {
     operation.encode_op()
 }
 
 /// 📖️ Decodes a `Block2dMutation` from its binary command form.
-pub fn decode_op(bytes: &[u8]) -> Result<Block2dMutation, protocol::ProtocolError> {
+pub async fn decode_op(bytes: &[u8]) -> Result<Block2dMutation, protocol::ProtocolError> {
     Block2dMutation::decode_op(bytes)
 }
 
@@ -30,7 +30,7 @@ mod tests {
     use store::{create_document_envelope, ArtifactCommand};
 
     #[test]
-    fn block2d_document_vcs_replays_granular_operations() {
+    async fn block2d_document_vcs_replays_granular_operations() {
         use crate::artifacts::block2d::schema::mutations::{self as m, Block2dStore};
 
         let mut store = Block2dStore::new(create_document_envelope(BLOCK_2D_SCHEMA, "block2d", Block2dSnapshot::default(), None)).expect("valid initial state");
@@ -40,7 +40,7 @@ mod tests {
     }
 
     #[test]
-    fn block2d_operation_binary_round_trips() {
+    async fn block2d_operation_binary_round_trips() {
         let operation = crate::artifacts::block2d::schema::mutations::delete_handle("h0".into());
         let bytes = encode_op(&operation).expect("encode");
         assert_eq!(decode_op(&bytes).expect("decode"), operation);

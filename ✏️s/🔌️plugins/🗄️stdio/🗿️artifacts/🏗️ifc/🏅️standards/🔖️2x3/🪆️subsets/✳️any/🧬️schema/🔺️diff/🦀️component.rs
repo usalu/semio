@@ -44,7 +44,7 @@ pub struct Ifc2x3Diff {
     pub instance_order: Option<Vec<u64>>,
 }
 
-fn validate_ifc2x3_diff(diff: &Ifc2x3Diff, base: &Ifc2x3Snapshot) -> MutationApplyResult<()> {
+async fn validate_ifc2x3_diff(diff: &Ifc2x3Diff, base: &Ifc2x3Snapshot) -> MutationApplyResult<()> {
     let mut base_ids = BTreeSet::new();
     for instance in &base.document.instances {
         if !base_ids.insert(instance.id) {
@@ -83,7 +83,7 @@ fn validate_ifc2x3_diff(diff: &Ifc2x3Diff, base: &Ifc2x3Snapshot) -> MutationApp
     Ok(())
 }
 
-fn apply_ifc2x3_diff_unchecked(diff: &Ifc2x3Diff, base: &Ifc2x3Snapshot) -> Ifc2x3Snapshot {
+async fn apply_ifc2x3_diff_unchecked(diff: &Ifc2x3Diff, base: &Ifc2x3Snapshot) -> Ifc2x3Snapshot {
     let mut document = base.document.clone();
     if let Some(header) = &diff.header {
         document.header = header.clone();
@@ -112,7 +112,7 @@ fn apply_ifc2x3_diff_unchecked(diff: &Ifc2x3Diff, base: &Ifc2x3Snapshot) -> Ifc2
 }
 
 impl MutationDiff<Ifc2x3Snapshot> for Ifc2x3Diff {
-    fn apply(&self, base: &Ifc2x3Snapshot) -> MutationApplyResult<Ifc2x3Snapshot> {
+    async fn apply(&self, base: &Ifc2x3Snapshot) -> MutationApplyResult<Ifc2x3Snapshot> {
         validate_ifc2x3_diff(self, base)?;
         Ok(apply_ifc2x3_diff_unchecked(self, base))
     }
@@ -120,7 +120,7 @@ impl MutationDiff<Ifc2x3Snapshot> for Ifc2x3Diff {
     /// ➕️ Structural, base-free (id-keyed collections need no position transport, unlike an
     /// index-keyed one): `other`'s removal of an id cancels any pending upsert of that id in
     /// `self` (and vice versa — a later upsert of a formerly-removed id un-removes it).
-    fn absorb(&mut self, other: Self) {
+    async fn absorb(&mut self, other: Self) {
         if other.schema.is_some() {
             self.schema = other.schema;
         }
@@ -158,12 +158,12 @@ impl MutationDiff<Ifc2x3Snapshot> for Ifc2x3Diff {
 impl DiffAlgebra<Ifc2x3Snapshot> for Ifc2x3Diff {
     /// 🔁️ Same `apply`+`between` composition proof `txt::TxtDiff::inverse` uses: `next =
     /// self.apply(base)`, so `between(next, base)` is by definition the diff that restores `base`.
-    fn inverse(&self, base: &Ifc2x3Snapshot) -> Self {
+    async fn inverse(&self, base: &Ifc2x3Snapshot) -> Self {
         let next = apply_ifc2x3_diff_unchecked(self, base);
         Self::between(&next, base)
     }
 
-    fn between(base: &Ifc2x3Snapshot, other: &Ifc2x3Snapshot) -> Self {
+    async fn between(base: &Ifc2x3Snapshot, other: &Ifc2x3Snapshot) -> Self {
         let schema = if base.schema != other.schema { Some(other.schema.clone()) } else { None };
         let header = if base.document.header != other.document.header { Some(other.document.header.clone()) } else { None };
         let base_order = base.document.instances.iter().map(|instance| instance.id).collect::<Vec<_>>();
@@ -189,22 +189,22 @@ impl DiffAlgebra<Ifc2x3Snapshot> for Ifc2x3Diff {
         Ifc2x3Diff { schema, header, removed_instances, upserted_instances, edm_preamble, instance_order }
     }
 
-    fn is_empty(&self) -> bool {
+    async fn is_empty(&self) -> bool {
         self.schema.is_none() && self.header.is_none() && self.removed_instances.is_empty() && self.upserted_instances.is_empty() && self.edm_preamble.is_none() && self.instance_order.is_none()
     }
 }
 
 /// 🧩 Builds the sparse field-by-field diff for a `SetSnapshot` mutation.
-pub fn diff_set_snapshot(base: &Ifc2x3Snapshot, snapshot: &Ifc2x3Snapshot) -> Ifc2x3Diff {
+pub async fn diff_set_snapshot(base: &Ifc2x3Snapshot, snapshot: &Ifc2x3Snapshot) -> Ifc2x3Diff {
     Ifc2x3Diff::between(base, snapshot)
 }
-pub fn diff_upsert_instance(instance: &Part21Instance) -> Ifc2x3Diff {
+pub async fn diff_upsert_instance(instance: &Part21Instance) -> Ifc2x3Diff {
     Ifc2x3Diff { upserted_instances: vec![instance.clone()], ..Default::default() }
 }
-pub fn diff_remove_instance(id: u64) -> Ifc2x3Diff {
+pub async fn diff_remove_instance(id: u64) -> Ifc2x3Diff {
     Ifc2x3Diff { removed_instances: vec![id], ..Default::default() }
 }
-pub fn diff_set_header(header: &Part21Header) -> Ifc2x3Diff {
+pub async fn diff_set_header(header: &Part21Header) -> Ifc2x3Diff {
     Ifc2x3Diff { header: Some(header.clone()), ..Default::default() }
 }
 //#endregion 🔖️Diff
@@ -222,31 +222,31 @@ pub fn diff_set_header(header: &Part21Header) -> Ifc2x3Diff {
 /// per this dialect's per-file convention, `pub(crate)` so the mutations sibling can reuse rather
 /// than duplicating a second time (same intra-artifact-reuse split `4`'s own files use).
 //#region 🔖️TextPrimitives
-pub(crate) fn hex_encode(bytes: &[u8]) -> String {
+pub(crate) async fn hex_encode(bytes: &[u8]) -> String {
     let mut encoded = String::with_capacity(bytes.len() * 2);
     hex_encode_into(bytes, &mut encoded);
     encoded
 }
-fn hex_encode_into(bytes: &[u8], encoded: &mut String) {
+async fn hex_encode_into(bytes: &[u8], encoded: &mut String) {
     const HEX: &[u8; 16] = b"0123456789abcdef";
     for byte in bytes {
         encoded.push(HEX[(byte >> 4) as usize] as char);
         encoded.push(HEX[(byte & 0x0f) as usize] as char);
     }
 }
-pub(crate) fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
+pub(crate) async fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
     if s.len() % 2 != 0 {
         return Err(format!("odd hex length: {s:?}"));
     }
     (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()
 }
-pub(crate) fn enc_str(s: &str) -> String {
+pub(crate) async fn enc_str(s: &str) -> String {
     hex_encode(s.as_bytes())
 }
-pub(crate) fn dec_str(s: &str) -> Result<String, String> {
+pub(crate) async fn dec_str(s: &str) -> Result<String, String> {
     String::from_utf8(hex_decode(s)?).map_err(|e| e.to_string())
 }
-pub(crate) fn enc_edm_preamble(preamble: &Ifc2x3EdmPreamble) -> String {
+pub(crate) async fn enc_edm_preamble(preamble: &Ifc2x3EdmPreamble) -> String {
     format!(
         "[{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{}]",
         enc_str(&preamble.producer),
@@ -267,7 +267,7 @@ pub(crate) fn enc_edm_preamble(preamble: &Ifc2x3EdmPreamble) -> String {
         enc_str(&preamble.options)
     )
 }
-pub(crate) fn dec_edm_preamble(s: &str) -> Result<Ifc2x3EdmPreamble, String> {
+pub(crate) async fn dec_edm_preamble(s: &str) -> Result<Ifc2x3EdmPreamble, String> {
     let fields = split_top_level(strip_brackets(s)?, ',');
     let [producer, module, creation_date, host, database, database_version, database_creation_date, schema, model, model_creation_date, header_model, header_model_creation_date, user, group, license, options] = fields.as_slice() else {
         return Err(format!("EDM preamble: expected 16 fields, got {}", fields.len()));
@@ -291,23 +291,23 @@ pub(crate) fn dec_edm_preamble(s: &str) -> Result<Ifc2x3EdmPreamble, String> {
         options: dec_str(options)?,
     })
 }
-pub(crate) fn enc_optional_edm_preamble(preamble: &Option<Ifc2x3EdmPreamble>) -> String {
+pub(crate) async fn enc_optional_edm_preamble(preamble: &Option<Ifc2x3EdmPreamble>) -> String {
     preamble.as_ref().map(|value| format!("[1,{}]", enc_edm_preamble(value))).unwrap_or_else(|| "[0]".into())
 }
-pub(crate) fn dec_optional_edm_preamble(s: &str) -> Result<Option<Ifc2x3EdmPreamble>, String> {
+pub(crate) async fn dec_optional_edm_preamble(s: &str) -> Result<Option<Ifc2x3EdmPreamble>, String> {
     match split_top_level(strip_brackets(s)?, ',').as_slice() {
         ["0"] => Ok(None),
         ["1", value] => Ok(Some(dec_edm_preamble(value)?)),
         _ => Err(format!("optional EDM preamble: invalid payload {s:?}")),
     }
 }
-fn parse_u64(s: &str) -> Result<u64, String> {
+async fn parse_u64(s: &str) -> Result<u64, String> {
     s.parse().map_err(|e: std::num::ParseIntError| e.to_string())
 }
-pub(crate) fn split_top_level(s: &str, sep: char) -> Vec<&str> {
+pub(crate) async fn split_top_level(s: &str, sep: char) -> Vec<&str> {
     split_top_level_iter(s, sep).collect()
 }
-fn split_top_level_iter(s: &str, sep: char) -> impl Iterator<Item = &str> {
+async fn split_top_level_iter(s: &str, sep: char) -> impl Iterator<Item = &str> {
     let separator = sep as u8;
     let mut depth = 0i32;
     let mut start = 0usize;
@@ -334,7 +334,7 @@ fn split_top_level_iter(s: &str, sep: char) -> impl Iterator<Item = &str> {
         Some(&s[start..])
     })
 }
-pub(crate) fn strip_brackets(s: &str) -> Result<&str, String> {
+pub(crate) async fn strip_brackets(s: &str) -> Result<&str, String> {
     s.strip_prefix('[').and_then(|s| s.strip_suffix(']')).ok_or_else(|| format!("expected [...], got {s:?}"))
 }
 //#endregion 🔖️TextPrimitives
@@ -344,15 +344,15 @@ pub(crate) fn strip_brackets(s: &str) -> Result<&str, String> {
 /// same convention the text primitives above use) — reuses `store::pack_rt::write_varint_u64`/
 /// `store::ByteReader` rather than reinventing varint encode/decode. `pub(crate)` so the mutations
 /// sibling can reuse these too.
-pub(crate) fn write_str_bin(out: &mut Vec<u8>, s: &str) {
+pub(crate) async fn write_str_bin(out: &mut Vec<u8>, s: &str) {
     store::pack_rt::write_varint_u64(out, s.len() as u64);
     out.extend_from_slice(s.as_bytes());
 }
-pub(crate) fn read_str_bin(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
+pub(crate) async fn read_str_bin(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
     let len = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
     String::from_utf8(reader.read_bytes(len).map_err(|e| e.to_string())?.to_vec()).map_err(|e| e.to_string())
 }
-pub(crate) fn enc_edm_preamble_bin(preamble: &Ifc2x3EdmPreamble, out: &mut Vec<u8>) {
+pub(crate) async fn enc_edm_preamble_bin(preamble: &Ifc2x3EdmPreamble, out: &mut Vec<u8>) {
     for value in [
         &preamble.producer,
         &preamble.module,
@@ -374,7 +374,7 @@ pub(crate) fn enc_edm_preamble_bin(preamble: &Ifc2x3EdmPreamble, out: &mut Vec<u
         write_str_bin(out, value);
     }
 }
-pub(crate) fn dec_edm_preamble_bin(reader: &mut store::ByteReader<'_>) -> Result<Ifc2x3EdmPreamble, String> {
+pub(crate) async fn dec_edm_preamble_bin(reader: &mut store::ByteReader<'_>) -> Result<Ifc2x3EdmPreamble, String> {
     Ok(Ifc2x3EdmPreamble {
         producer: read_str_bin(reader)?,
         module: read_str_bin(reader)?,
@@ -397,7 +397,7 @@ pub(crate) fn dec_edm_preamble_bin(reader: &mut store::ByteReader<'_>) -> Result
 /// ➡️ Zigzag-encodes `value` into `store::pack_rt::write_varint_u64`'s unsigned domain — own local
 /// copy (`store::pack_rt` only ships the unsigned writer; the read side's zigzag decode is already
 /// built into `store::ByteReader::read_varint_i64`), same convention `4`'s own diff module uses.
-fn write_varint_i64(out: &mut Vec<u8>, value: i64) {
+async fn write_varint_i64(out: &mut Vec<u8>, value: i64) {
     let zigzag = ((value << 1) ^ (value >> 63)) as u64;
     store::pack_rt::write_varint_u64(out, zigzag);
 }
@@ -410,7 +410,7 @@ fn write_varint_i64(out: &mut Vec<u8>, value: i64) {
 /// exactly, same isomorphic 9-variant shape): `U`=Unset, `D`=Derived, `I[n]`=Int, `R[n]`=Real
 /// (Rust's `Display`/`FromStr` for `f64` round-trip exactly), `S[hex]`=Str, `E[hex]`=Enum,
 /// `F[n]`=Ref, `A[v,v,...]`=List, `T[hex,[v,v,...]]`=Typed.
-fn enc_part21_value_into(v: &Part21Value, out: &mut String) {
+async fn enc_part21_value_into(v: &Part21Value, out: &mut String) {
     match v {
         Part21Value::Unset => out.push('U'),
         Part21Value::Derived => out.push('D'),
@@ -447,7 +447,7 @@ fn enc_part21_value_into(v: &Part21Value, out: &mut String) {
         }
     }
 }
-fn enc_part21_values_into(values: &[Part21Value], out: &mut String) {
+async fn enc_part21_values_into(values: &[Part21Value], out: &mut String) {
     for (index, value) in values.iter().enumerate() {
         if index != 0 {
             out.push(',');
@@ -455,7 +455,7 @@ fn enc_part21_values_into(values: &[Part21Value], out: &mut String) {
         enc_part21_value_into(value, out);
     }
 }
-pub(crate) fn dec_part21_value(s: &str) -> Result<Part21Value, String> {
+pub(crate) async fn dec_part21_value(s: &str) -> Result<Part21Value, String> {
     if s == "U" {
         return Ok(Part21Value::Unset);
     }
@@ -486,17 +486,17 @@ pub(crate) fn dec_part21_value(s: &str) -> Result<Part21Value, String> {
         other => Err(format!("part21 value: unknown tag {other:?}")),
     }
 }
-pub(crate) fn enc_part21_value_list(vs: &[Part21Value]) -> String {
+pub(crate) async fn enc_part21_value_list(vs: &[Part21Value]) -> String {
     let mut out = String::new();
     enc_part21_value_list_into(vs, &mut out);
     out
 }
-fn enc_part21_value_list_into(vs: &[Part21Value], out: &mut String) {
+async fn enc_part21_value_list_into(vs: &[Part21Value], out: &mut String) {
     out.push('[');
     enc_part21_values_into(vs, out);
     out.push(']');
 }
-pub(crate) fn dec_part21_value_list(s: &str) -> Result<Vec<Part21Value>, String> {
+pub(crate) async fn dec_part21_value_list(s: &str) -> Result<Vec<Part21Value>, String> {
     split_top_level(strip_brackets(s)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_part21_value).collect()
 }
 
@@ -508,7 +508,7 @@ pub(crate) fn dec_part21_value_list(s: &str) -> Result<Vec<Part21Value>, String>
 /// binary all the way down, no opaque tail needed (`Part21Value` itself is fully flat/
 /// spec-expressible per variant, only the top-level `Ifc2x3Diff`/`Ifc2x3Mutation` frames stop at
 /// this recursion's OWN entry point rather than an opaque byte chain).
-pub(crate) fn enc_part21_value_bin(v: &Part21Value, out: &mut Vec<u8>) {
+pub(crate) async fn enc_part21_value_bin(v: &Part21Value, out: &mut Vec<u8>) {
     match v {
         Part21Value::Unset => out.push(0),
         Part21Value::Derived => out.push(1),
@@ -552,7 +552,7 @@ pub(crate) fn enc_part21_value_bin(v: &Part21Value, out: &mut Vec<u8>) {
         }
     }
 }
-pub(crate) fn dec_part21_value_bin(reader: &mut store::ByteReader<'_>) -> Result<Part21Value, String> {
+pub(crate) async fn dec_part21_value_bin(reader: &mut store::ByteReader<'_>) -> Result<Part21Value, String> {
     let tag = reader.read_u8().map_err(|e| e.to_string())?;
     match tag {
         0 => Ok(Part21Value::Unset),
@@ -581,13 +581,13 @@ pub(crate) fn dec_part21_value_bin(reader: &mut store::ByteReader<'_>) -> Result
         other => Err(format!("part21 value binary: unknown tag {other}")),
     }
 }
-pub(crate) fn enc_part21_value_list_bin(vs: &[Part21Value], out: &mut Vec<u8>) {
+pub(crate) async fn enc_part21_value_list_bin(vs: &[Part21Value], out: &mut Vec<u8>) {
     store::pack_rt::write_varint_u64(out, vs.len() as u64);
     for v in vs {
         enc_part21_value_bin(v, out);
     }
 }
-pub(crate) fn dec_part21_value_list_bin(reader: &mut store::ByteReader<'_>) -> Result<Vec<Part21Value>, String> {
+pub(crate) async fn dec_part21_value_list_bin(reader: &mut store::ByteReader<'_>) -> Result<Vec<Part21Value>, String> {
     let count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     (0..count).map(|_| dec_part21_value_bin(reader)).collect()
 }
@@ -598,20 +598,20 @@ pub(crate) fn dec_part21_value_list_bin(reader: &mut store::ByteReader<'_>) -> R
 /// 📦️ `[fileDescriptionList,fileNameList,fileSchemaList]` — three self-bracketed
 /// `part21-value-list`s, matching `4`'s own `enc_ifc_header` positional shape exactly (both
 /// standards' HEADER record is the same 3-tuple-of-raw-value-list Part-21 shape).
-pub(crate) fn enc_part21_header(h: &Part21Header) -> String {
+pub(crate) async fn enc_part21_header(h: &Part21Header) -> String {
     format!("[{},{},{}]", enc_part21_value_list(&h.file_description), enc_part21_value_list(&h.file_name), enc_part21_value_list(&h.file_schema))
 }
-pub(crate) fn dec_part21_header(s: &str) -> Result<Part21Header, String> {
+pub(crate) async fn dec_part21_header(s: &str) -> Result<Part21Header, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [fd, fname, fs] = parts.as_slice() else { return Err(format!("part21 header: expected 3 fields, got {}", parts.len())) };
     Ok(Part21Header { file_description: dec_part21_value_list(fd)?, file_name: dec_part21_value_list(fname)?, file_schema: dec_part21_value_list(fs)? })
 }
-pub(crate) fn enc_part21_header_bin(h: &Part21Header, out: &mut Vec<u8>) {
+pub(crate) async fn enc_part21_header_bin(h: &Part21Header, out: &mut Vec<u8>) {
     enc_part21_value_list_bin(&h.file_description, out);
     enc_part21_value_list_bin(&h.file_name, out);
     enc_part21_value_list_bin(&h.file_schema, out);
 }
-pub(crate) fn dec_part21_header_bin(reader: &mut store::ByteReader<'_>) -> Result<Part21Header, String> {
+pub(crate) async fn dec_part21_header_bin(reader: &mut store::ByteReader<'_>) -> Result<Part21Header, String> {
     let file_description = dec_part21_value_list_bin(reader)?;
     let file_name = dec_part21_value_list_bin(reader)?;
     let file_schema = dec_part21_value_list_bin(reader)?;
@@ -623,12 +623,12 @@ pub(crate) fn dec_part21_header_bin(reader: &mut store::ByteReader<'_>) -> Resul
 /// 10303-21 §4.2) — same shape `4`'s own snapshot grammar's `instance-body = entity-record |
 /// "(" entity-record+ ")"` recognizes at the exchange-file level, restated here for the diff/op
 /// wire's own positional codec. Each entity is `[hexname,[args]]`.
-pub(crate) fn enc_part21_instance(inst: &Part21Instance) -> String {
+pub(crate) async fn enc_part21_instance(inst: &Part21Instance) -> String {
     let mut out = String::new();
     enc_part21_instance_into(inst, &mut out);
     out
 }
-fn enc_part21_instance_into(inst: &Part21Instance, out: &mut String) {
+async fn enc_part21_instance_into(inst: &Part21Instance, out: &mut String) {
     out.push('[');
     write!(out, "{}", inst.id).expect("writing to String");
     out.push_str(",[");
@@ -644,7 +644,7 @@ fn enc_part21_instance_into(inst: &Part21Instance, out: &mut String) {
     }
     out.push_str("]]");
 }
-pub(crate) fn dec_part21_instance(s: &str) -> Result<Part21Instance, String> {
+pub(crate) async fn dec_part21_instance(s: &str) -> Result<Part21Instance, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [id_s, entities_s] = parts.as_slice() else {
         return Err(format!("part21 instance: expected 2 fields, got {}", parts.len()));
@@ -662,7 +662,7 @@ pub(crate) fn dec_part21_instance(s: &str) -> Result<Part21Instance, String> {
         .collect::<Result<Vec<_>, String>>()?;
     Ok(Part21Instance { id: parse_u64(id_s)?, entities })
 }
-pub(crate) fn enc_part21_instance_bin(inst: &Part21Instance, out: &mut Vec<u8>) {
+pub(crate) async fn enc_part21_instance_bin(inst: &Part21Instance, out: &mut Vec<u8>) {
     store::pack_rt::write_varint_u64(out, inst.id);
     store::pack_rt::write_varint_u64(out, inst.entities.len() as u64);
     for (name, args) in &inst.entities {
@@ -670,7 +670,7 @@ pub(crate) fn enc_part21_instance_bin(inst: &Part21Instance, out: &mut Vec<u8>) 
         enc_part21_value_list_bin(args, out);
     }
 }
-pub(crate) fn dec_part21_instance_bin(reader: &mut store::ByteReader<'_>) -> Result<Part21Instance, String> {
+pub(crate) async fn dec_part21_instance_bin(reader: &mut store::ByteReader<'_>) -> Result<Part21Instance, String> {
     let id = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut entities = Vec::with_capacity(count as usize);
@@ -681,7 +681,7 @@ pub(crate) fn dec_part21_instance_bin(reader: &mut store::ByteReader<'_>) -> Res
     }
     Ok(Part21Instance { id, entities })
 }
-pub(crate) fn enc_instance_list_into(list: &[Part21Instance], out: &mut String) {
+pub(crate) async fn enc_instance_list_into(list: &[Part21Instance], out: &mut String) {
     out.push('[');
     for (index, instance) in list.iter().enumerate() {
         if index != 0 {
@@ -691,16 +691,16 @@ pub(crate) fn enc_instance_list_into(list: &[Part21Instance], out: &mut String) 
     }
     out.push(']');
 }
-pub(crate) fn dec_instance_list(s: &str) -> Result<Vec<Part21Instance>, String> {
+pub(crate) async fn dec_instance_list(s: &str) -> Result<Vec<Part21Instance>, String> {
     split_top_level_iter(strip_brackets(s)?, ',').filter(|s| !s.is_empty()).map(dec_part21_instance).collect()
 }
-pub(crate) fn enc_instance_list_bin(list: &[Part21Instance], out: &mut Vec<u8>) {
+pub(crate) async fn enc_instance_list_bin(list: &[Part21Instance], out: &mut Vec<u8>) {
     store::pack_rt::write_varint_u64(out, list.len() as u64);
     for inst in list {
         enc_part21_instance_bin(inst, out);
     }
 }
-pub(crate) fn dec_instance_list_bin(reader: &mut store::ByteReader<'_>) -> Result<Vec<Part21Instance>, String> {
+pub(crate) async fn dec_instance_list_bin(reader: &mut store::ByteReader<'_>) -> Result<Vec<Part21Instance>, String> {
     let count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     (0..count).map(|_| dec_part21_instance_bin(reader)).collect()
 }
@@ -710,7 +710,7 @@ pub(crate) fn dec_instance_list_bin(reader: &mut store::ByteReader<'_>) -> Resul
 /// 🔖️ One line of space-separated `key=value` tokens, only the CHANGED top-level fields present,
 /// in declared field order (`schema`/`header`/`removed`/`upserted`) — matching `4`'s own
 /// `print_ifc_diff` shape exactly.
-fn print_ifc2x3_diff(d: &Ifc2x3Diff) -> String {
+async fn print_ifc2x3_diff(d: &Ifc2x3Diff) -> String {
     let mut out = String::new();
     let separate = |out: &mut String| {
         if !out.is_empty() {
@@ -761,7 +761,7 @@ fn print_ifc2x3_diff(d: &Ifc2x3Diff) -> String {
     }
     out
 }
-fn parse_ifc2x3_diff(line: &str) -> Result<Ifc2x3Diff, String> {
+async fn parse_ifc2x3_diff(line: &str) -> Result<Ifc2x3Diff, String> {
     let mut d = Ifc2x3Diff::default();
     if line.is_empty() {
         return Ok(d);
@@ -787,10 +787,10 @@ fn parse_ifc2x3_diff(line: &str) -> Result<Ifc2x3Diff, String> {
 }
 
 impl protocol::DiffCodec for Ifc2x3Diff {
-    fn print_diff(&self) -> String {
+    async fn print_diff(&self) -> String {
         print_ifc2x3_diff(self)
     }
-    fn parse_diff(line: &str) -> Result<Self, store::TextError> {
+    async fn parse_diff(line: &str) -> Result<Self, store::TextError> {
         parse_ifc2x3_diff(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
     /// 🧪️ REAL binary frame (`format u8 | flags u8 | field payloads...`), matching
@@ -802,7 +802,7 @@ impl protocol::DiffCodec for Ifc2x3Diff {
     /// all the way down — only the innermost recursive `Part21Value::List`/`Typed` payload bottoms
     /// out via `enc_part21_value_bin`'s own recursive call (not an opaque tail: `Part21Value` is
     /// fully spec-expressible per variant).
-    fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    async fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         let flags: u8 = (self.schema.is_some() as u8)
             | ((self.header.is_some() as u8) << 1)
             | ((!self.removed_instances.is_empty() as u8) << 2)
@@ -842,7 +842,7 @@ impl protocol::DiffCodec for Ifc2x3Diff {
         }
         Ok(out)
     }
-    fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    async fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         let mut reader = store::ByteReader::new(bytes);
         let malformed = |what: &'static str, offset: usize, detail: String| protocol::ProtocolError::Malformed { what, offset: offset as u64, detail };
         let format = reader.read_u8().map_err(|e| malformed("diff format", 0, e.to_string()))?;
@@ -900,7 +900,7 @@ impl protocol::DiffCodec for Ifc2x3Diff {
 /// `between()` result exercising every top-level field (schema/header/removed/upserted, incl. a
 /// COMPLEX instance and every `Part21Value` tag), and its reverse direction.
 #[cfg(test)]
-pub(crate) fn demo_diff_cases() -> Vec<Ifc2x3Diff> {
+pub(crate) async fn demo_diff_cases() -> Vec<Ifc2x3Diff> {
     let a = crate::artifacts::ifc::standards::v2x3::engine::demo_ifc2x3_snapshot();
     let mut b = a.clone();
     b.schema = "stdio.ifc.2x3.v2".into();
@@ -922,7 +922,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn invalid_instance_order_is_rejected_before_mutation() {
+    async fn invalid_instance_order_is_rejected_before_mutation() {
         let base = Ifc2x3Snapshot::default();
         let diff = Ifc2x3Diff { instance_order: Some(vec![1]), ..Default::default() };
         let error = diff.apply(&base).expect_err("unknown instance order target must be rejected");
@@ -932,11 +932,11 @@ mod tests {
     }
     use crate::artifacts::step::engine::part21::Part21Value;
 
-    fn inst(id: u64, name: &str) -> Part21Instance {
+    async fn inst(id: u64, name: &str) -> Part21Instance {
         Part21Instance { id, entities: vec![(name.to_string(), vec![Part21Value::Int(id as i64)])] }
     }
 
-    fn snap(schema: &str, header: Part21Header, instances: Vec<Part21Instance>) -> Ifc2x3Snapshot {
+    async fn snap(schema: &str, header: Part21Header, instances: Vec<Part21Instance>) -> Ifc2x3Snapshot {
         let document = crate::artifacts::step::engine::part21::Part21Document { header, instances };
         Ifc2x3Snapshot { schema: schema.into(), document, edm_preamble: None }
     }
@@ -944,7 +944,7 @@ mod tests {
     /// 🧪️ THE acceptance criterion for "diff can change every field": schema, header, and
     /// instance add/remove/modify all round-trip through `between`+`apply`.
     #[test]
-    fn field_sweep_between_covers_every_field() {
+    async fn field_sweep_between_covers_every_field() {
         let base = snap("stdio.ifc.2x3", Part21Header::default(), vec![inst(1, "IFCWALL"), inst(2, "IFCDOOR")]);
         let mut next_header = Part21Header::default();
         next_header.file_schema = vec![Part21Value::Str("IFC2X3".into())];
@@ -962,7 +962,7 @@ mod tests {
     }
 
     #[test]
-    fn absorb_upsert_then_remove_same_id_cancels_to_removed_only() {
+    async fn absorb_upsert_then_remove_same_id_cancels_to_removed_only() {
         let mut d1 = Ifc2x3Diff { upserted_instances: vec![inst(5, "IFCSLAB")], ..Default::default() };
         let d2 = Ifc2x3Diff { removed_instances: vec![5], ..Default::default() };
         d1.absorb(d2);
@@ -971,7 +971,7 @@ mod tests {
     }
 
     #[test]
-    fn absorb_remove_then_upsert_same_id_un_removes() {
+    async fn absorb_remove_then_upsert_same_id_un_removes() {
         let mut d1 = Ifc2x3Diff { removed_instances: vec![7], ..Default::default() };
         let d2 = Ifc2x3Diff { upserted_instances: vec![inst(7, "IFCBEAM")], ..Default::default() };
         d1.absorb(d2);
@@ -980,7 +980,7 @@ mod tests {
     }
 
     #[test]
-    fn absorb_matches_sequential_apply() {
+    async fn absorb_matches_sequential_apply() {
         let base = snap("stdio.ifc.2x3", Part21Header::default(), vec![inst(1, "IFCWALL")]);
         let d1 = Ifc2x3Diff { upserted_instances: vec![inst(2, "IFCDOOR")], ..Default::default() };
         let d2 = Ifc2x3Diff { removed_instances: vec![1], upserted_instances: vec![inst(3, "IFCWINDOW")], ..Default::default() };
@@ -994,7 +994,7 @@ mod tests {
     }
 
     #[test]
-    fn inverse_diff_level_roundtrip() {
+    async fn inverse_diff_level_roundtrip() {
         let base = snap("stdio.ifc.2x3", Part21Header::default(), vec![inst(1, "IFCWALL"), inst(2, "IFCDOOR")]);
         let d = Ifc2x3Diff { removed_instances: vec![2], upserted_instances: vec![inst(1, "IFCWALLSTANDARDCASE"), inst(4, "IFCCOLUMN")], ..Default::default() };
         let next = d.apply(&base).expect("valid forward diff");
@@ -1003,7 +1003,7 @@ mod tests {
     }
 
     #[test]
-    fn between_self_is_empty() {
+    async fn between_self_is_empty() {
         let base = snap("stdio.ifc.2x3", Part21Header::default(), vec![inst(1, "IFCWALL")]);
         assert!(Ifc2x3Diff::between(&base, &base).is_empty());
     }
@@ -1013,7 +1013,7 @@ mod tests {
     /// top-level field (`schema`/`header`/`removed`/`upserted`) and every `Part21Value` tag incl.
     /// `List`/`Typed` recursion and a real COMPLEX instance (2-entry `entities`).
     #[test]
-    fn diff_codec_text_binary_roundtrip_law() {
+    async fn diff_codec_text_binary_roundtrip_law() {
         use protocol::DiffCodec;
         let complex_inst =
             Part21Instance { id: 9, entities: vec![("IFCQUANTITYAREA".into(), vec![Part21Value::Real(10.5.into()), Part21Value::Int(-3), Part21Value::Enum("EDGE".into())]), ("IFCPHYSICALSIMPLEQUANTITY".into(), vec![Part21Value::Unset])] };

@@ -7,11 +7,11 @@ pub const PROCEDURAL_3D_PLAY_MODE_GENERATE: &str = "generate";
 pub const PROCEDURAL_3D_PLAY_LAYOUT_GENERATE: &str = "procedural3d-generate";
 
 //#region 🔖️Definition
-pub fn definition() -> ModeDefinition {
+pub async fn definition() -> ModeDefinition {
     ModeDefinition { id: PROCEDURAL_3D_PLAY_MODE_GENERATE.into(), label: LocalizedLabel::native("Generate", "Generieren"), icon_id: "sparkles".into(), tools: Vec::new(), layout_id: Some(PROCEDURAL_3D_PLAY_LAYOUT_GENERATE.into()), commands: Vec::new() }
 }
 
-pub fn layout() -> NamedLayout {
+pub async fn layout() -> NamedLayout {
     create_named_layout(
         PROCEDURAL_3D_PLAY_LAYOUT_GENERATE,
         "Generate",
@@ -34,7 +34,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn the_generate_layout_lists_all_three_windows() {
+    async fn the_generate_layout_lists_all_three_windows() {
         let json = serde_json::to_string(&layout()).expect("layout json");
         assert!(json.contains(generations::PROCEDURAL_3D_PLAY_WINDOW_GENERATIONS));
         assert!(json.contains(form::PROCEDURAL_3D_PLAY_WINDOW_GENERATE_FORM));

@@ -16,7 +16,7 @@ pub struct TsvOutline {
 }
 
 impl TsvOutline {
-    pub fn compute(snapshot: &TsvSnapshot) -> Self {
+    pub async fn compute(snapshot: &TsvSnapshot) -> Self {
         let record_count = snapshot.records.len() as u32;
         let column_count = snapshot.records.iter().map(|r| r.len() as u32).max().unwrap_or(0);
         Self { record_count, column_count }
@@ -30,7 +30,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn reports_widest_record_as_column_count() {
+    async fn reports_widest_record_as_column_count() {
         let snapshot = TsvSnapshot { schema: "stdio.tsv".into(), records: vec![vec!["a".into(), "b".into()], vec!["c".into()]], trailing_newline: false, line_ending: Default::default() };
         let outline = TsvOutline::compute(&snapshot);
         assert_eq!(outline.record_count, 2);
@@ -38,7 +38,7 @@ mod tests {
     }
 
     #[test]
-    fn outline_is_deterministic() {
+    async fn outline_is_deterministic() {
         let snapshot = TsvSnapshot::default();
         assert_eq!(TsvOutline::compute(&snapshot), TsvOutline::compute(&snapshot));
     }

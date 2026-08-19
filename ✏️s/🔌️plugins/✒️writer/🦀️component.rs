@@ -8,7 +8,7 @@ use semio_framework_plugin::{ExecutionMode, Plugin};
 /// `📓️design-abi.md` §3/§6) are this crate's migration proof, mirroring `🗒️note`'s shape. No
 /// `.handler(…)` and no `🧩️extensions/` dir anywhere in this crate, so `Isolated` (the SDK default)
 /// is honest.
-pub fn plugin() -> Result<Plugin, semio_framework_plugin::PluginAssemblyError> {
+pub async fn plugin() -> Result<Plugin, semio_framework_plugin::PluginAssemblyError> {
     Plugin::builder("writer")
         .label("Writer")
         .version("0.1.0")
@@ -29,12 +29,12 @@ mod surface_tests {
     //! new_viewer}` landed (W0-F gap closure) — used directly here, no local stand-ins.
 
     #[test]
-    fn writer_viewer_never_mutates() {
+    async fn writer_viewer_never_mutates() {
         semio_framework_plugin::testkit::assert_viewer_never_mutates::<crate::viewer::writer::WriterViewer>();
     }
 
     #[test]
-    fn writer_editor_and_viewer_share_dialect() {
+    async fn writer_editor_and_viewer_share_dialect() {
         semio_framework_plugin::testkit::assert_editor_and_viewer_share_dialect::<crate::editor::writer::WriterPlayApp, crate::viewer::writer::WriterViewer>();
     }
 }

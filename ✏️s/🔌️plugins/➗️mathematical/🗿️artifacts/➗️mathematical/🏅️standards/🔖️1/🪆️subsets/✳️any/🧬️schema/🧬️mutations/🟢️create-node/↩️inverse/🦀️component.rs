@@ -7,7 +7,7 @@ use crate::artifacts::mathematical::{MathematicalMutation, MathematicalSnapshot}
 use super::mutation::CreateNode;
 
 //#region 🔖️Inverse
-pub fn inverse(payload: &CreateNode, base: &MathematicalSnapshot) -> Vec<MathematicalMutation> {
+pub async fn inverse(payload: &CreateNode, base: &MathematicalSnapshot) -> Vec<MathematicalMutation> {
     if crate::artifacts::mathematical::mathematical_graph(base).nodes.iter().any(|node| node.id == payload.id) {
         return Vec::new();
     }

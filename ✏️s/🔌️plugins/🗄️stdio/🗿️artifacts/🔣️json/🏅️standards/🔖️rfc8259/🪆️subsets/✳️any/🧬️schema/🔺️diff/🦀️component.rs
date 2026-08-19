@@ -126,7 +126,7 @@ pub struct JsonDiff {
 }
 
 impl MutationDiff<JsonSnapshot> for JsonDiff {
-    fn apply(&self, base: &JsonSnapshot) -> MutationApplyResult<JsonSnapshot> {
+    async fn apply(&self, base: &JsonSnapshot) -> MutationApplyResult<JsonSnapshot> {
         if let Some(diff) = &self.value {
             validate_value_diff(diff, &base.value)?;
         }
@@ -141,7 +141,7 @@ impl MutationDiff<JsonSnapshot> for JsonDiff {
     /// helpers below for the array/object transport algorithm). A composed collection diff that
     /// ends up structurally empty (e.g. an `Insert` immediately cancelled by a matching `Remove`)
     /// collapses back to `None` rather than surviving as a no-op `Some(Array{diff: <empty>})`.
-    fn absorb(&mut self, other: Self) {
+    async fn absorb(&mut self, other: Self) {
         self.value = match (self.value.take(), other.value) {
             (None, None) => None,
             (Some(d1), None) => Some(d1),
@@ -162,21 +162,21 @@ impl DiffAlgebra<JsonSnapshot> for JsonDiff {
     /// 🔁️ Diff-level undo, derived generically from `between`: `mid = self.apply(base)`, then
     /// `between(mid, base)` is — by the `between_roundtrip_law` — exactly the diff that restores
     /// `base` when applied to `mid`.
-    fn inverse(&self, base: &JsonSnapshot) -> Self {
+    async fn inverse(&self, base: &JsonSnapshot) -> Self {
         let mid = apply_json_diff_unchecked(self, base);
         Self::between(&mid, base)
     }
 
-    fn between(base: &JsonSnapshot, other: &JsonSnapshot) -> Self {
+    async fn between(base: &JsonSnapshot, other: &JsonSnapshot) -> Self {
         JsonDiff { value: value_diff_between(&base.value, &other.value) }
     }
 
-    fn is_empty(&self) -> bool {
+    async fn is_empty(&self) -> bool {
         self.value.is_none()
     }
 }
 
-fn apply_json_diff_unchecked(diff: &JsonDiff, base: &JsonSnapshot) -> JsonSnapshot {
+async fn apply_json_diff_unchecked(diff: &JsonDiff, base: &JsonSnapshot) -> JsonSnapshot {
     let mut next = base.clone();
     if let Some(value) = &diff.value {
         next.value = apply_value_diff(value, &base.value);
@@ -186,14 +186,14 @@ fn apply_json_diff_unchecked(diff: &JsonDiff, base: &JsonSnapshot) -> JsonSnapsh
 
 /// 🧩 Builds the sparse `between(base, next)` diff for a `SetSnapshot` mutation — NOT a full
 /// `snapshot: Option<JsonSnapshot>` replace slot.
-pub fn diff_set_snapshot(base: &JsonSnapshot, next: &JsonSnapshot) -> JsonDiff {
+pub async fn diff_set_snapshot(base: &JsonSnapshot, next: &JsonSnapshot) -> JsonDiff {
     JsonDiff::between(base, next)
 }
 //#endregion 🔖️Diff
 
 //#region 🔖️Apply
 /// ▶️ Applies a [`JsonValueDiff`] against the corresponding base node.
-pub fn apply_value_diff(diff: &JsonValueDiff, base: &JsonValue) -> JsonValue {
+pub async fn apply_value_diff(diff: &JsonValueDiff, base: &JsonValue) -> JsonValue {
     match diff {
         JsonValueDiff::Replace { value } => value.clone(),
         JsonValueDiff::Bool { value } => JsonValue::Bool { value: *value },
@@ -216,7 +216,7 @@ pub fn apply_value_diff(diff: &JsonValueDiff, base: &JsonValue) -> JsonValue {
     }
 }
 
-fn validate_value_diff(diff: &JsonValueDiff, base: &JsonValue) -> MutationApplyResult<()> {
+async fn validate_value_diff(diff: &JsonValueDiff, base: &JsonValue) -> MutationApplyResult<()> {
     match diff {
         JsonValueDiff::Replace { .. } => Ok(()),
         JsonValueDiff::Bool { .. } if matches!(base, JsonValue::Bool { .. }) => Ok(()),
@@ -234,7 +234,7 @@ fn validate_value_diff(diff: &JsonValueDiff, base: &JsonValue) -> MutationApplyR
     }
 }
 
-fn validate_array_diff(diff: &JsonArrayDiff, base: &[JsonValue]) -> MutationApplyResult<()> {
+async fn validate_array_diff(diff: &JsonArrayDiff, base: &[JsonValue]) -> MutationApplyResult<()> {
     let mut removed = HashSet::new();
     for &index in &diff.removed {
         if index >= base.len() {
@@ -270,7 +270,7 @@ fn validate_array_diff(diff: &JsonArrayDiff, base: &[JsonValue]) -> MutationAppl
     Ok(())
 }
 
-fn validate_object_diff(diff: &JsonObjectDiff, base: &[JsonMember]) -> MutationApplyResult<()> {
+async fn validate_object_diff(diff: &JsonObjectDiff, base: &[JsonMember]) -> MutationApplyResult<()> {
     let keys: Vec<&str> = base.iter().map(|member| member.key.as_str()).collect();
     for (position, key) in diff.removed.iter().enumerate() {
         if !keys.contains(&key.as_str()) {
@@ -312,7 +312,7 @@ fn validate_object_diff(diff: &JsonObjectDiff, base: &[JsonMember]) -> MutationA
 /// ▶️ Apply semantics (normative): `removed`/`modified` indices refer to BASE state (removals
 /// processed descending); `added` indices refer to FINAL state (ascending insert at
 /// `min(index, len)`). Out-of-range indices are graceful no-ops.
-pub fn apply_array_diff(diff: &JsonArrayDiff, base: &[JsonValue]) -> Vec<JsonValue> {
+pub async fn apply_array_diff(diff: &JsonArrayDiff, base: &[JsonValue]) -> Vec<JsonValue> {
     let mut items: Vec<JsonValue> = base.to_vec();
     for m in &diff.modified {
         if let Some(old) = base.get(m.index) {
@@ -339,7 +339,7 @@ pub fn apply_array_diff(diff: &JsonArrayDiff, base: &[JsonValue]) -> Vec<JsonVal
 }
 
 /// ▶️ Same normative apply semantics as arrays, keyed by member name instead of position.
-pub fn apply_object_diff(diff: &JsonObjectDiff, base: &[JsonMember]) -> Vec<JsonMember> {
+pub async fn apply_object_diff(diff: &JsonObjectDiff, base: &[JsonMember]) -> Vec<JsonMember> {
     let mut members: Vec<JsonMember> = base.to_vec();
     for m in &diff.modified {
         if let Some(pos) = members.iter().position(|mem| mem.key == m.key) {
@@ -365,7 +365,7 @@ pub fn apply_object_diff(diff: &JsonObjectDiff, base: &[JsonMember]) -> Vec<Json
 //#region 🔖️Between
 /// 🧭️ State-delta construction: `None` when nodes are equal; a direct field diff when the KIND
 /// is stable; `Replace` when it changed.
-pub fn value_diff_between(a: &JsonValue, b: &JsonValue) -> Option<JsonValueDiff> {
+pub async fn value_diff_between(a: &JsonValue, b: &JsonValue) -> Option<JsonValueDiff> {
     if a == b {
         return None;
     }
@@ -395,7 +395,7 @@ pub fn value_diff_between(a: &JsonValue, b: &JsonValue) -> Option<JsonValueDiff>
 
 /// 🧭️ Index-pairwise: `modified` compares `0..min(len)`, `removed` is the base tail, `added` is
 /// the other tail (final-state indices, per the normative apply contract).
-fn array_diff_between(a: &[JsonValue], b: &[JsonValue]) -> JsonArrayDiff {
+async fn array_diff_between(a: &[JsonValue], b: &[JsonValue]) -> JsonArrayDiff {
     let min = a.len().min(b.len());
     let mut modified = Vec::new();
     for i in 0..min {
@@ -411,7 +411,7 @@ fn array_diff_between(a: &[JsonValue], b: &[JsonValue]) -> JsonArrayDiff {
 /// 🧭️ Name-keyed: base members missing from `b` are `removed`; members present in both with a
 /// changed value are `modified`; members only in `b` are `added` at their `b`-position (renames
 /// are documented as `removed`+`added` — no rename detection).
-fn object_diff_between(a: &[JsonMember], b: &[JsonMember]) -> JsonObjectDiff {
+async fn object_diff_between(a: &[JsonMember], b: &[JsonMember]) -> JsonObjectDiff {
     let mut removed = Vec::new();
     let mut modified = Vec::new();
     for am in a {
@@ -433,11 +433,11 @@ fn object_diff_between(a: &[JsonMember], b: &[JsonMember]) -> JsonObjectDiff {
     JsonObjectDiff { removed, modified, added }
 }
 
-fn is_array_diff_empty(d: &JsonArrayDiff) -> bool {
+async fn is_array_diff_empty(d: &JsonArrayDiff) -> bool {
     d.removed.is_empty() && d.modified.is_empty() && d.added.is_empty()
 }
 
-fn is_object_diff_empty(d: &JsonObjectDiff) -> bool {
+async fn is_object_diff_empty(d: &JsonObjectDiff) -> bool {
     d.removed.is_empty() && d.modified.is_empty() && d.added.is_empty()
 }
 
@@ -447,7 +447,7 @@ fn is_object_diff_empty(d: &JsonObjectDiff) -> bool {
 /// accepted LWW-field limitation `compose`'s `CanonicalKitDiff` scalar fields have) — but a
 /// collection diff with nothing removed/modified/added genuinely changes nothing and should
 /// collapse away rather than survive as a no-op wrapper.
-fn is_value_diff_effectively_empty(d: &JsonValueDiff) -> bool {
+async fn is_value_diff_effectively_empty(d: &JsonValueDiff) -> bool {
     match d {
         JsonValueDiff::Array { diff } => is_array_diff_empty(diff),
         JsonValueDiff::Object { diff } => is_object_diff_empty(diff),
@@ -462,7 +462,7 @@ fn is_value_diff_effectively_empty(d: &JsonValueDiff) -> bool {
 /// into its known literal value via `apply_value_diff`; otherwise both sides share the same node
 /// KIND (guaranteed by construction against the real intervening `mid` state) and compose
 /// per-kind, recursing into collections.
-fn absorb_value_diff(d1: JsonValueDiff, d2: JsonValueDiff) -> JsonValueDiff {
+async fn absorb_value_diff(d1: JsonValueDiff, d2: JsonValueDiff) -> JsonValueDiff {
     if matches!(d2, JsonValueDiff::Replace { .. }) {
         return d2;
     }
@@ -493,7 +493,7 @@ fn absorb_value_diff(d1: JsonValueDiff, d2: JsonValueDiff) -> JsonValueDiff {
 /// `Insert(2,f)+Insert(2,g) -> {added:[(2,g),(3,f)]}` (both survive),
 /// a `d2`-removal of a `d1`-added slot silently drops the add, and a `d2`-modify of a `d1`-added
 /// slot patches the carried payload — matching the recipe's canonical absorb cases exactly.
-fn absorb_array_diff(d1: JsonArrayDiff, d2: JsonArrayDiff) -> JsonArrayDiff {
+async fn absorb_array_diff(d1: JsonArrayDiff, d2: JsonArrayDiff) -> JsonArrayDiff {
     #[derive(Clone, Copy)]
     enum Origin {
         Base(usize),
@@ -615,7 +615,7 @@ fn absorb_array_diff(d1: JsonArrayDiff, d2: JsonArrayDiff) -> JsonArrayDiff {
 /// pattern (new members always appended — see `JsonMutation::SetMember`'s own diff construction)
 /// and for every canonical `absorb_law` case this artifact tests; see the ticket report's
 /// `deviations` for the documented residual gap on adversarial synthetic diff pairs.
-fn absorb_object_diff(d1: JsonObjectDiff, d2: JsonObjectDiff) -> JsonObjectDiff {
+async fn absorb_object_diff(d1: JsonObjectDiff, d2: JsonObjectDiff) -> JsonObjectDiff {
     let mut removed: Vec<String> = d1.removed;
     let mut modified: Vec<JsonObjectModified> = d1.modified;
     let mut added: Vec<JsonObjectAdded> = d1.added;
@@ -662,25 +662,25 @@ fn absorb_object_diff(d1: JsonObjectDiff, d2: JsonObjectDiff) -> JsonObjectDiff 
 /// `SvgDiff`'s (`f6-recon-report.md` §5), self-contained (own copies of the small primitive set,
 /// no shared "hand-roll helpers" module exists yet — same rationale `SvgDiff`'s file documents).
 //#region 🔖️Primitives
-pub(crate) fn hex_encode(bytes: &[u8]) -> String {
+pub(crate) async fn hex_encode(bytes: &[u8]) -> String {
     bytes.iter().map(|b| format!("{b:02x}")).collect()
 }
-pub(crate) fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
+pub(crate) async fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
     if s.len() % 2 != 0 {
         return Err(format!("odd hex length: {s:?}"));
     }
     (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()
 }
-pub(crate) fn enc_str(s: &str) -> String {
+pub(crate) async fn enc_str(s: &str) -> String {
     hex_encode(s.as_bytes())
 }
-pub(crate) fn dec_str(s: &str) -> Result<String, String> {
+pub(crate) async fn dec_str(s: &str) -> Result<String, String> {
     String::from_utf8(hex_decode(s)?).map_err(|e| e.to_string())
 }
-pub(crate) fn parse_usize(s: &str) -> Result<usize, String> {
+pub(crate) async fn parse_usize(s: &str) -> Result<usize, String> {
     s.parse().map_err(|e: std::num::ParseIntError| e.to_string())
 }
-pub(crate) fn split_top_level(s: &str, sep: char) -> Vec<&str> {
+pub(crate) async fn split_top_level(s: &str, sep: char) -> Vec<&str> {
     if s.is_empty() {
         return Vec::new();
     }
@@ -701,7 +701,7 @@ pub(crate) fn split_top_level(s: &str, sep: char) -> Vec<&str> {
     out.push(&s[start..]);
     out
 }
-pub(crate) fn strip_brackets(s: &str) -> Result<&str, String> {
+pub(crate) async fn strip_brackets(s: &str) -> Result<&str, String> {
     s.strip_prefix('[').and_then(|s| s.strip_suffix(']')).ok_or_else(|| format!("expected [...], got {s:?}"))
 }
 
@@ -710,18 +710,18 @@ pub(crate) fn strip_brackets(s: &str) -> Result<&str, String> {
 /// upgraded `OpBinary`/`DiffCodec` frames (see `../🧬️mutations/🦀️component.rs`'s `#region OpCodecs`
 /// and `#region 🔖️HandcraftedDiffCodec` below) — reuses `store::pack_rt::write_varint_u64` /
 /// `store::ByteReader` rather than reinventing varint encode/decode.
-pub(crate) fn write_bytes_lp(out: &mut Vec<u8>, bytes: &[u8]) {
+pub(crate) async fn write_bytes_lp(out: &mut Vec<u8>, bytes: &[u8]) {
     store::pack_rt::write_varint_u64(out, bytes.len() as u64);
     out.extend_from_slice(bytes);
 }
-pub(crate) fn read_bytes_lp(reader: &mut store::ByteReader<'_>) -> Result<Vec<u8>, String> {
+pub(crate) async fn read_bytes_lp(reader: &mut store::ByteReader<'_>) -> Result<Vec<u8>, String> {
     let len = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
     Ok(reader.read_bytes(len).map_err(|e| e.to_string())?.to_vec())
 }
-pub(crate) fn write_str_lp(out: &mut Vec<u8>, s: &str) {
+pub(crate) async fn write_str_lp(out: &mut Vec<u8>, s: &str) {
     write_bytes_lp(out, s.as_bytes());
 }
-pub(crate) fn read_str_lp(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
+pub(crate) async fn read_str_lp(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
     String::from_utf8(read_bytes_lp(reader)?).map_err(|e| e.to_string())
 }
 //#endregion 🔖️BinaryPrimitives
@@ -731,7 +731,7 @@ pub(crate) fn read_str_lp(reader: &mut store::ByteReader<'_>) -> Result<String, 
 /// 🌳 Tag-prefixed like `SvgDiff`'s `enc_xml_node`: `Z` (null, no payload, no brackets) / `B[0|1]`
 /// / `N[hex(lexeme)]` / `S[hex(value)]` / `A[v1,v2,...]` / `O[hexkey1:v1,hexkey2:v2,...]` — member
 /// insertion order preserved by construction (a list, never re-sorted).
-pub(crate) fn enc_json_value(v: &JsonValue) -> String {
+pub(crate) async fn enc_json_value(v: &JsonValue) -> String {
     match v {
         JsonValue::Null => "Z".to_string(),
         JsonValue::Bool { value } => format!("B[{}]", if *value { "1" } else { "0" }),
@@ -741,7 +741,7 @@ pub(crate) fn enc_json_value(v: &JsonValue) -> String {
         JsonValue::Object { members } => format!("O[{}]", members.iter().map(|m| format!("{}:{}", enc_str(&m.key), enc_json_value(&m.value))).collect::<Vec<_>>().join(",")),
     }
 }
-pub(crate) fn dec_json_value(s: &str) -> Result<JsonValue, String> {
+pub(crate) async fn dec_json_value(s: &str) -> Result<JsonValue, String> {
     if s == "Z" {
         return Ok(JsonValue::Null);
     }
@@ -775,7 +775,7 @@ pub(crate) fn dec_json_value(s: &str) -> Result<JsonValue, String> {
 /// for `Array`/`Object` — genuinely recursive, not text-as-bytes). Backs the upgraded `OpBinary`
 /// frame (`../🧬️mutations/🦀️component.rs`) and the `Replace`/added-item payloads inside
 /// [`enc_value_diff_bin`] below.
-pub(crate) fn enc_json_value_bin(value: &JsonValue, out: &mut Vec<u8>) {
+pub(crate) async fn enc_json_value_bin(value: &JsonValue, out: &mut Vec<u8>) {
     match value {
         JsonValue::Null => out.push(0),
         JsonValue::Bool { value } => {
@@ -807,7 +807,7 @@ pub(crate) fn enc_json_value_bin(value: &JsonValue, out: &mut Vec<u8>) {
         }
     }
 }
-pub(crate) fn dec_json_value_bin(reader: &mut store::ByteReader<'_>) -> Result<JsonValue, String> {
+pub(crate) async fn dec_json_value_bin(reader: &mut store::ByteReader<'_>) -> Result<JsonValue, String> {
     let tag = reader.read_u8().map_err(|e| e.to_string())?;
     match tag {
         0 => Ok(JsonValue::Null),
@@ -842,7 +842,7 @@ pub(crate) fn dec_json_value_bin(reader: &mut store::ByteReader<'_>) -> Result<J
 /// 🌳 `JsonValueDiff` itself needs a tag (`R`=Replace, `B`=Bool, `N`=Number, `S`=String, `A`=Array,
 /// `O`=Object) since, unlike a plain [`JsonValue`], it appears standalone (not always inside a
 /// bracketed container) at the top-level `value=` token position.
-pub(crate) fn enc_value_diff(d: &JsonValueDiff) -> String {
+pub(crate) async fn enc_value_diff(d: &JsonValueDiff) -> String {
     match d {
         JsonValueDiff::Replace { value } => format!("R[{}]", enc_json_value(value)),
         JsonValueDiff::Bool { value } => format!("B[{}]", if *value { "1" } else { "0" }),
@@ -852,7 +852,7 @@ pub(crate) fn enc_value_diff(d: &JsonValueDiff) -> String {
         JsonValueDiff::Object { diff } => format!("O[{}]", enc_object_diff(diff)),
     }
 }
-pub(crate) fn dec_value_diff(s: &str) -> Result<JsonValueDiff, String> {
+pub(crate) async fn dec_value_diff(s: &str) -> Result<JsonValueDiff, String> {
     let (tag, rest) = s.split_at(1);
     let inner = strip_brackets(rest)?;
     match tag {
@@ -866,13 +866,13 @@ pub(crate) fn dec_value_diff(s: &str) -> Result<JsonValueDiff, String> {
     }
 }
 
-fn enc_array_diff(d: &JsonArrayDiff) -> String {
+async fn enc_array_diff(d: &JsonArrayDiff) -> String {
     let removed = d.removed.iter().map(|i| i.to_string()).collect::<Vec<_>>().join(",");
     let modified = d.modified.iter().map(|m| format!("{}:{}", m.index, enc_value_diff(&m.diff))).collect::<Vec<_>>().join(",");
     let added = d.added.iter().map(|a| format!("{}:{}", a.index, enc_json_value(&a.item))).collect::<Vec<_>>().join(",");
     format!("[{removed}];[{modified}];[{added}]")
 }
-fn dec_array_diff(body: &str) -> Result<JsonArrayDiff, String> {
+async fn dec_array_diff(body: &str) -> Result<JsonArrayDiff, String> {
     let three = split_top_level(body, ';');
     let [removed_s, modified_s, added_s] = three.as_slice() else { return Err(format!("array diff: expected 3 sections, got {}", three.len())) };
     let removed = split_top_level(strip_brackets(removed_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(parse_usize).collect::<Result<Vec<_>, String>>()?;
@@ -895,13 +895,13 @@ fn dec_array_diff(body: &str) -> Result<JsonArrayDiff, String> {
     Ok(JsonArrayDiff { removed, modified, added })
 }
 
-fn enc_object_diff(d: &JsonObjectDiff) -> String {
+async fn enc_object_diff(d: &JsonObjectDiff) -> String {
     let removed = d.removed.iter().map(|k| enc_str(k)).collect::<Vec<_>>().join(",");
     let modified = d.modified.iter().map(|m| format!("{}:{}", enc_str(&m.key), enc_value_diff(&m.diff))).collect::<Vec<_>>().join(",");
     let added = d.added.iter().map(|a| format!("{}:{}:{}", a.index, enc_str(&a.key), enc_json_value(&a.item))).collect::<Vec<_>>().join(",");
     format!("[{removed}];[{modified}];[{added}]")
 }
-fn dec_object_diff(body: &str) -> Result<JsonObjectDiff, String> {
+async fn dec_object_diff(body: &str) -> Result<JsonObjectDiff, String> {
     let three = split_top_level(body, ';');
     let [removed_s, modified_s, added_s] = three.as_slice() else { return Err(format!("object diff: expected 3 sections, got {}", three.len())) };
     let removed = split_top_level(strip_brackets(removed_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_str).collect::<Result<Vec<_>, String>>()?;
@@ -931,7 +931,7 @@ fn dec_object_diff(body: &str) -> Result<JsonObjectDiff, String> {
 /// wraps a whole [`JsonValue`], not a bare scalar payload). `Array`/`Object` collection triples
 /// encode as three varint-counted, recursively-encoded lists (removed/modified/added) — genuinely
 /// structured binary, backing the upgraded `DiffCodec::encode_diff`/`decode_diff` below.
-pub(crate) fn enc_value_diff_bin(diff: &JsonValueDiff, out: &mut Vec<u8>) {
+pub(crate) async fn enc_value_diff_bin(diff: &JsonValueDiff, out: &mut Vec<u8>) {
     match diff {
         JsonValueDiff::Replace { value } => {
             out.push(6);
@@ -959,7 +959,7 @@ pub(crate) fn enc_value_diff_bin(diff: &JsonValueDiff, out: &mut Vec<u8>) {
         }
     }
 }
-pub(crate) fn dec_value_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<JsonValueDiff, String> {
+pub(crate) async fn dec_value_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<JsonValueDiff, String> {
     let tag = reader.read_u8().map_err(|e| e.to_string())?;
     match tag {
         6 => Ok(JsonValueDiff::Replace { value: dec_json_value_bin(reader)? }),
@@ -972,7 +972,7 @@ pub(crate) fn dec_value_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<J
     }
 }
 
-fn enc_array_diff_bin(diff: &JsonArrayDiff, out: &mut Vec<u8>) {
+async fn enc_array_diff_bin(diff: &JsonArrayDiff, out: &mut Vec<u8>) {
     store::pack_rt::write_varint_u64(out, diff.removed.len() as u64);
     for index in &diff.removed {
         store::pack_rt::write_varint_u64(out, *index as u64);
@@ -988,7 +988,7 @@ fn enc_array_diff_bin(diff: &JsonArrayDiff, out: &mut Vec<u8>) {
         enc_json_value_bin(&entry.item, out);
     }
 }
-fn dec_array_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<JsonArrayDiff, String> {
+async fn dec_array_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<JsonArrayDiff, String> {
     let removed_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut removed = Vec::with_capacity(removed_count as usize);
     for _ in 0..removed_count {
@@ -1011,7 +1011,7 @@ fn dec_array_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<JsonArrayDif
     Ok(JsonArrayDiff { removed, modified, added })
 }
 
-fn enc_object_diff_bin(diff: &JsonObjectDiff, out: &mut Vec<u8>) {
+async fn enc_object_diff_bin(diff: &JsonObjectDiff, out: &mut Vec<u8>) {
     store::pack_rt::write_varint_u64(out, diff.removed.len() as u64);
     for key in &diff.removed {
         write_str_lp(out, key);
@@ -1028,7 +1028,7 @@ fn enc_object_diff_bin(diff: &JsonObjectDiff, out: &mut Vec<u8>) {
         enc_json_value_bin(&entry.item, out);
     }
 }
-fn dec_object_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<JsonObjectDiff, String> {
+async fn dec_object_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<JsonObjectDiff, String> {
     let removed_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut removed = Vec::with_capacity(removed_count as usize);
     for _ in 0..removed_count {
@@ -1058,13 +1058,13 @@ fn dec_object_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<JsonObjectD
 /// 🧭️ Single-field top level (`value=<enc>`, absent = unchanged) — `JsonDiff` has exactly one
 /// diffable field (`schema` is identity-only, never diffed), so there is only ever zero or one
 /// space-separated token, unlike `SvgDiff`'s multi-field line.
-fn print_json_diff(d: &JsonDiff) -> String {
+async fn print_json_diff(d: &JsonDiff) -> String {
     match &d.value {
         Some(v) => format!("value={}", enc_value_diff(v)),
         None => String::new(),
     }
 }
-fn parse_json_diff(line: &str) -> Result<JsonDiff, String> {
+async fn parse_json_diff(line: &str) -> Result<JsonDiff, String> {
     let mut d = JsonDiff::default();
     if line.is_empty() {
         return Ok(d);
@@ -1080,10 +1080,10 @@ fn parse_json_diff(line: &str) -> Result<JsonDiff, String> {
 }
 
 impl protocol::DiffCodec for JsonDiff {
-    fn print_diff(&self) -> String {
+    async fn print_diff(&self) -> String {
         print_json_diff(self)
     }
-    fn parse_diff(line: &str) -> Result<Self, store::TextError> {
+    async fn parse_diff(line: &str) -> Result<Self, store::TextError> {
         parse_json_diff(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
     /// 🧪️ P2-P1: REAL binary frame (`format u8 | has_value u8 | value-diff payload`), matching
@@ -1091,14 +1091,14 @@ impl protocol::DiffCodec for JsonDiff {
     /// upgraded from F6's `print_diff().into_bytes()` text-as-binary shortcut (100% of stdio's
     /// `DiffCodec` impls were still on that shortcut per the P2-W0 census; this is the first real
     /// upgrade, per the ticket's own "be the good example" framing).
-    fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    async fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         let mut out = vec![store::pack_rt::OP_BINARY_FORMAT, if self.value.is_some() { 1 } else { 0 }];
         if let Some(value) = &self.value {
             enc_value_diff_bin(value, &mut out);
         }
         Ok(out)
     }
-    fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    async fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         let mut reader = store::ByteReader::new(bytes);
         let _format = reader.read_u8().map_err(|e| protocol::ProtocolError::Malformed { what: "diff format", offset: 0, detail: e.to_string() })?;
         let has_value = reader.read_u8().map_err(|e| protocol::ProtocolError::Malformed { what: "diff has_value", offset: 1, detail: e.to_string() })?;
@@ -1115,22 +1115,22 @@ impl protocol::DiffCodec for JsonDiff {
 /// `diff_codec_text_binary_roundtrip_law` below AND by `⚙️engine/🦀️component.rs`'s
 /// `diff_grammar_conformance_law`/`protocol_walk_law` conformance tests.
 #[cfg(test)]
-pub(crate) fn demo_diff_cases() -> Vec<JsonDiff> {
+pub(crate) async fn demo_diff_cases() -> Vec<JsonDiff> {
     use crate::artifacts::json::STDIO_JSON_DOCUMENT_SCHEMA;
 
-    fn snap(value: JsonValue) -> JsonSnapshot {
+    async fn snap(value: JsonValue) -> JsonSnapshot {
         JsonSnapshot { schema: STDIO_JSON_DOCUMENT_SCHEMA.into(), value }
     }
-    fn arr(items: Vec<JsonValue>) -> JsonValue {
+    async fn arr(items: Vec<JsonValue>) -> JsonValue {
         JsonValue::Array { items }
     }
-    fn objv(pairs: Vec<(&str, JsonValue)>) -> JsonValue {
+    async fn objv(pairs: Vec<(&str, JsonValue)>) -> JsonValue {
         JsonValue::Object { members: pairs.into_iter().map(|(k, v)| JsonMember { key: k.into(), value: v }).collect() }
     }
-    fn num(lexeme: &str) -> JsonValue {
+    async fn num(lexeme: &str) -> JsonValue {
         JsonValue::Number { lexeme: lexeme.into() }
     }
-    fn str_(s: &str) -> JsonValue {
+    async fn str_(s: &str) -> JsonValue {
         JsonValue::String { value: s.into() }
     }
 
@@ -1157,29 +1157,29 @@ mod tests {
     use super::*;
     use crate::artifacts::json::STDIO_JSON_DOCUMENT_SCHEMA;
 
-    fn snap(value: JsonValue) -> JsonSnapshot {
+    async fn snap(value: JsonValue) -> JsonSnapshot {
         JsonSnapshot { schema: STDIO_JSON_DOCUMENT_SCHEMA.into(), value }
     }
 
-    fn arr(items: Vec<JsonValue>) -> JsonValue {
+    async fn arr(items: Vec<JsonValue>) -> JsonValue {
         JsonValue::Array { items }
     }
 
-    fn objv(pairs: Vec<(&str, JsonValue)>) -> JsonValue {
+    async fn objv(pairs: Vec<(&str, JsonValue)>) -> JsonValue {
         JsonValue::Object { members: pairs.into_iter().map(|(k, v)| JsonMember { key: k.into(), value: v }).collect() }
     }
 
-    fn num(lexeme: &str) -> JsonValue {
+    async fn num(lexeme: &str) -> JsonValue {
         JsonValue::Number { lexeme: lexeme.into() }
     }
 
-    fn str_(s: &str) -> JsonValue {
+    async fn str_(s: &str) -> JsonValue {
         JsonValue::String { value: s.into() }
     }
 
     //#region between_roundtrip_law
     #[test]
-    fn between_roundtrip_law_scalars_and_kind_change() {
+    async fn between_roundtrip_law_scalars_and_kind_change() {
         let cases = [(JsonValue::Null, JsonValue::Bool { value: true }), (JsonValue::Bool { value: true }, JsonValue::Bool { value: false }), (num("1"), num("2.5e10")), (str_("a"), str_("b")), (num("1"), str_("1"))];
         for (a, b) in cases {
             let (sa, sb) = (snap(a.clone()), snap(b.clone()));
@@ -1189,7 +1189,7 @@ mod tests {
     }
 
     #[test]
-    fn between_roundtrip_law_nested_collections() {
+    async fn between_roundtrip_law_nested_collections() {
         let a = objv(vec![("tags", arr(vec![str_("x"), str_("y")])), ("n", num("1"))]);
         let b = objv(vec![("tags", arr(vec![str_("x"), str_("z"), str_("w")])), ("n", num("2")), ("extra", JsonValue::Bool { value: true })]);
         let (sa, sb) = (snap(a.clone()), snap(b.clone()));
@@ -1198,7 +1198,7 @@ mod tests {
     }
 
     #[test]
-    fn between_self_is_empty() {
+    async fn between_self_is_empty() {
         let a = objv(vec![("x", num("1"))]);
         let sa = snap(a);
         assert!(JsonDiff::between(&sa, &sa).is_empty());
@@ -1207,7 +1207,7 @@ mod tests {
 
     //#region inverse_law
     #[test]
-    fn inverse_law_diff_level() {
+    async fn inverse_law_diff_level() {
         let a = objv(vec![("x", num("1")), ("y", arr(vec![num("1"), num("2")]))]);
         let b = objv(vec![("x", num("2")), ("z", str_("new"))]);
         let (sa, sb) = (snap(a), snap(b));
@@ -1227,12 +1227,12 @@ mod tests {
     // VALUES is represented as a same-position `modified` entry plus a tail `added` entry, not as
     // a genuine `Insert` — the right, and separately law-tested, behavior for `between`, but the
     // wrong fixture shape for exercising the mandated Insert/Remove canonical absorb cases.
-    fn array_diff(d: JsonArrayDiff) -> JsonDiff {
+    async fn array_diff(d: JsonArrayDiff) -> JsonDiff {
         JsonDiff { value: Some(JsonValueDiff::Array { diff: d }) }
     }
 
     #[test]
-    fn absorb_array_insert_then_remove_before() {
+    async fn absorb_array_insert_then_remove_before() {
         // base = [a,b,c]; d1 = Insert(2,f) -> mid=[a,b,f,c]; d2 = Remove(0) -> after=[b,f,c].
         let base = snap(arr(vec![str_("a"), str_("b"), str_("c")]));
         let d1 = array_diff(JsonArrayDiff { added: vec![JsonArrayAdded { index: 2, item: str_("f") }], ..Default::default() });
@@ -1252,7 +1252,7 @@ mod tests {
     }
 
     #[test]
-    fn absorb_array_insert_insert_same_index_both_survive() {
+    async fn absorb_array_insert_insert_same_index_both_survive() {
         // base = [a,b]; d1 = Insert(2,f); d2 = Insert(2,g) (against mid=[a,b,f]) -> [a,b,g,f].
         let base = snap(arr(vec![str_("a"), str_("b")]));
         let d1 = array_diff(JsonArrayDiff { added: vec![JsonArrayAdded { index: 2, item: str_("f") }], ..Default::default() });
@@ -1269,7 +1269,7 @@ mod tests {
     }
 
     #[test]
-    fn absorb_array_insert_then_remove_of_same_added_item_cancels() {
+    async fn absorb_array_insert_then_remove_of_same_added_item_cancels() {
         // base = [a]; d1 = Insert(1,f) -> mid=[a,f]; d2 = Remove(1) -> after=[a].
         let base = snap(arr(vec![str_("a")]));
         let d1 = array_diff(JsonArrayDiff { added: vec![JsonArrayAdded { index: 1, item: str_("f") }], ..Default::default() });
@@ -1283,7 +1283,7 @@ mod tests {
     }
 
     #[test]
-    fn absorb_array_add_then_setfield_patches_added_payload() {
+    async fn absorb_array_add_then_setfield_patches_added_payload() {
         // base = []; d1 = Insert(0,{x:1}) -> mid=[{x:1}]; d2 = SetMember([0],y,2) -> [{x:1,y:2}].
         let base = snap(arr(vec![]));
         let d1 = array_diff(JsonArrayDiff { added: vec![JsonArrayAdded { index: 0, item: objv(vec![("x", num("1"))]) }], ..Default::default() });
@@ -1307,7 +1307,7 @@ mod tests {
     }
 
     #[test]
-    fn absorb_array_modify_then_remove_drops_pending_patch() {
+    async fn absorb_array_modify_then_remove_drops_pending_patch() {
         // base = [1,2]; d1 = Modify(0,9) -> mid=[9,2]; d2 = Remove(0) -> after=[2].
         let base = snap(arr(vec![num("1"), num("2")]));
         let d1 = array_diff(JsonArrayDiff { modified: vec![JsonArrayModified { index: 0, diff: JsonValueDiff::Number { lexeme: "9".into() } }], ..Default::default() });
@@ -1327,7 +1327,7 @@ mod tests {
     }
 
     #[test]
-    fn absorb_array_associativity() {
+    async fn absorb_array_associativity() {
         let s0 = snap(arr(vec![num("1"), num("2"), num("3")]));
         let s1 = snap(arr(vec![num("1"), num("9"), num("3")]));
         let s2 = snap(arr(vec![num("9"), num("3"), num("4")]));
@@ -1353,7 +1353,7 @@ mod tests {
 
     //#region absorb_law canonical cases (object/name-keyed)
     #[test]
-    fn absorb_object_add_then_setfield_patches_added_payload() {
+    async fn absorb_object_add_then_setfield_patches_added_payload() {
         let base = objv(vec![]);
         let mid = objv(vec![("config", objv(vec![]))]);
         let after = objv(vec![("config", objv(vec![("x", num("5"))]))]);
@@ -1374,7 +1374,7 @@ mod tests {
     }
 
     #[test]
-    fn absorb_object_modify_then_remove_drops_pending_patch() {
+    async fn absorb_object_modify_then_remove_drops_pending_patch() {
         let base = objv(vec![("a", num("1")), ("b", num("2"))]);
         let mid = objv(vec![("a", num("9")), ("b", num("2"))]);
         let after = objv(vec![("b", num("2"))]);
@@ -1394,7 +1394,7 @@ mod tests {
     }
 
     #[test]
-    fn absorb_object_insert_insert_both_survive() {
+    async fn absorb_object_insert_insert_both_survive() {
         let base = objv(vec![("a", num("1"))]);
         let mid = objv(vec![("a", num("1")), ("f", num("2"))]);
         let after = objv(vec![("a", num("1")), ("f", num("2")), ("g", num("3"))]);
@@ -1411,7 +1411,7 @@ mod tests {
     }
 
     #[test]
-    fn absorb_object_insert_then_remove_of_same_added_item_cancels() {
+    async fn absorb_object_insert_then_remove_of_same_added_item_cancels() {
         let base = objv(vec![("a", num("1"))]);
         let mid = objv(vec![("a", num("1")), ("f", num("2"))]);
         let after = objv(vec![("a", num("1"))]);
@@ -1425,7 +1425,7 @@ mod tests {
     }
 
     #[test]
-    fn absorb_object_associativity() {
+    async fn absorb_object_associativity() {
         let s0 = snap(objv(vec![("a", num("1"))]));
         let s1 = snap(objv(vec![("a", num("1")), ("b", num("2"))]));
         let s2 = snap(objv(vec![("a", num("9")), ("b", num("2"))]));
@@ -1450,7 +1450,7 @@ mod tests {
     //#endregion absorb_law canonical cases (object/name-keyed)
 
     //#region field_sweep
-    fn sweep_a() -> JsonSnapshot {
+    async fn sweep_a() -> JsonSnapshot {
         snap(objv(vec![
             ("keepBool", JsonValue::Bool { value: true }),
             ("keepNumber", num("1")),
@@ -1464,7 +1464,7 @@ mod tests {
         ]))
     }
 
-    fn sweep_b() -> JsonSnapshot {
+    async fn sweep_b() -> JsonSnapshot {
         snap(objv(vec![
             ("keepBool", JsonValue::Bool { value: false }),
             ("keepNumber", num("2.5e3")),
@@ -1479,7 +1479,7 @@ mod tests {
     }
 
     #[test]
-    fn field_sweep_between_roundtrips_both_directions() {
+    async fn field_sweep_between_roundtrips_both_directions() {
         let (a, b) = (sweep_a(), sweep_b());
         assert_eq!(JsonDiff::between(&a, &b).apply(&a).unwrap(), b);
         assert_eq!(JsonDiff::between(&b, &a).apply(&b).unwrap(), a);
@@ -1487,7 +1487,7 @@ mod tests {
     }
 
     #[test]
-    fn field_sweep_every_field_present_in_diff() {
+    async fn field_sweep_every_field_present_in_diff() {
         let (a, b) = (sweep_a(), sweep_b());
         let diff = JsonDiff::between(&a, &b);
         let object_diff = match diff.value {
@@ -1530,7 +1530,7 @@ mod tests {
     /// every `JsonValueDiff` variant (incl. the `Replace` kind-change fallback), nested
     /// array/object collection triples, and the empty (`None`) diff.
     #[test]
-    fn diff_codec_text_binary_roundtrip_law() {
+    async fn diff_codec_text_binary_roundtrip_law() {
         use protocol::DiffCodec;
 
         for d in demo_diff_cases() {

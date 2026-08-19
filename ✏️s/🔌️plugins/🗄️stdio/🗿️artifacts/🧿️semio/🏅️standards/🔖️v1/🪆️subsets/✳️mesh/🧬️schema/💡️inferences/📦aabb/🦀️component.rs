@@ -51,10 +51,10 @@ pub struct SemioAabb {
 /// contain `:`, so parsing the key back into two ids would be ambiguous; comparing constructed
 /// keys is not. O(meshes × primitives) per lookup — first-cut correctness over performance, same
 /// documented tradeoff the proven `🎛flat-position` pilot's own `assignment_for` makes.
-fn find_primitive_by_key<'a>(snapshot: &'a SemioMeshSnapshot, key: &str) -> Option<(&'a SemioMesh, &'a SemioPrimitive)> {
+async fn find_primitive_by_key<'a>(snapshot: &'a SemioMeshSnapshot, key: &str) -> Option<(&'a SemioMesh, &'a SemioPrimitive)> {
     snapshot.meshes.iter().find_map(|mesh| mesh.primitives.iter().find(|p| aabb_key(&mesh.id, &p.id) == key).map(|p| (mesh, p)))
 }
-pub(crate) fn aabb_key(mesh_id: &str, primitive_id: &str) -> String {
+pub(crate) async fn aabb_key(mesh_id: &str, primitive_id: &str) -> String {
     format!("{mesh_id}:{primitive_id}")
 }
 //#endregion 🔖️Lookup
@@ -68,11 +68,11 @@ impl store::InferredField<SemioMeshSnapshot> for MeshAabb {
     const FIELD_ID: &'static str = "s.stdio.semio.mesh.inference.aabb";
     const SCHEMA_VERSION: u32 = 1;
 
-    fn reads() -> &'static [&'static str] {
+    async fn reads() -> &'static [&'static str] {
         &["meshes"]
     }
 
-    fn plan(snapshot: &SemioMeshSnapshot) -> Vec<store::InferenceStep<Self::Key>> {
+    async fn plan(snapshot: &SemioMeshSnapshot) -> Vec<store::InferenceStep<Self::Key>> {
         snapshot.meshes.iter().flat_map(|mesh| mesh.primitives.iter().map(move |p| store::InferenceStep { key: aabb_key(&mesh.id, &p.id), parents: Vec::new() })).collect()
     }
 
@@ -80,14 +80,14 @@ impl store::InferredField<SemioMeshSnapshot> for MeshAabb {
     /// nothing else (not `normals`/`uvs`/`colors`/`indices`/`material_id`, none of which affect an
     /// AABB) — an unrelated field touch on the SAME primitive must still hit the cache, proven by
     /// the incrementality-law test below.
-    fn dep_input(snapshot: &SemioMeshSnapshot, key: &Self::Key, _parents: &[Self::Key]) -> Vec<u8> {
+    async fn dep_input(snapshot: &SemioMeshSnapshot, key: &Self::Key, _parents: &[Self::Key]) -> Vec<u8> {
         match find_primitive_by_key(snapshot, key) {
             Some((_, primitive)) => serde_json::to_vec(&primitive.positions).unwrap_or_default(),
             None => Vec::new(),
         }
     }
 
-    fn compute(snapshot: &SemioMeshSnapshot, key: &Self::Key, _parents: &[Self::Value]) -> Self::Value {
+    async fn compute(snapshot: &SemioMeshSnapshot, key: &Self::Key, _parents: &[Self::Value]) -> Self::Value {
         let Some((_, primitive)) = find_primitive_by_key(snapshot, key) else {
             return SemioAabb::default();
         };
@@ -116,7 +116,7 @@ mod tests {
     use crate::artifacts::semio::standards::v1::subsets::mesh::schema::snapshot::{SemioMesh, SemioPrimitive};
     use store::{InferenceCache, InferenceCacheConfig};
 
-    fn two_primitive_snapshot() -> SemioMeshSnapshot {
+    async fn two_primitive_snapshot() -> SemioMeshSnapshot {
         SemioMeshSnapshot {
             meshes: vec![SemioMesh {
                 id: "mesh-a".into(),
@@ -131,7 +131,7 @@ mod tests {
 
     //#region 🧪️Honesty
     #[test]
-    fn aabb_of_a_populated_primitive_is_the_real_componentwise_extent() {
+    async fn aabb_of_a_populated_primitive_is_the_real_componentwise_extent() {
         let values = store::infer_field::<SemioMeshSnapshot, MeshAabb>(&two_primitive_snapshot(), None);
         let aabb = values.get(&aabb_key("mesh-a", "prim-1")).expect("prim-1 aabb present");
         assert_eq!(aabb.min, SemioPoint3 { x: -1.0, y: 0.0, z: 0.0 });
@@ -139,7 +139,7 @@ mod tests {
     }
 
     #[test]
-    fn aabb_of_an_empty_primitive_is_the_honest_default_not_a_faked_extent() {
+    async fn aabb_of_an_empty_primitive_is_the_honest_default_not_a_faked_extent() {
         let snapshot = SemioMeshSnapshot { meshes: vec![SemioMesh { id: "mesh-a".into(), primitives: vec![SemioPrimitive { id: "empty".into(), ..Default::default() }] }], ..Default::default() };
         let values = store::infer_field::<SemioMeshSnapshot, MeshAabb>(&snapshot, None);
         assert_eq!(values.get(&aabb_key("mesh-a", "empty")), Some(&SemioAabb::default()));
@@ -148,7 +148,7 @@ mod tests {
 
     //#region 🧪️CacheTransparencyLaw
     #[test]
-    fn disabled_cache_matches_pure_recompute() {
+    async fn disabled_cache_matches_pure_recompute() {
         let snapshot = two_primitive_snapshot();
         let pure = store::infer_field::<SemioMeshSnapshot, MeshAabb>(&snapshot, None);
         let mut disabled = InferenceCache::new(InferenceCacheConfig { enabled: false, ..Default::default() });
@@ -159,7 +159,7 @@ mod tests {
 
     //#region 🧪️IncrementalityLaw
     #[test]
-    fn identical_snapshot_recompute_is_a_cache_hit() {
+    async fn identical_snapshot_recompute_is_a_cache_hit() {
         let mut cache = InferenceCache::new(InferenceCacheConfig { enabled: true, record_stats: true, ..Default::default() });
         let base = two_primitive_snapshot();
         let _ = store::infer_field::<SemioMeshSnapshot, MeshAabb>(&base, Some(&mut cache));
@@ -171,7 +171,7 @@ mod tests {
     }
 
     #[test]
-    fn changing_one_primitives_positions_misses_only_that_primitives_cache_entry() {
+    async fn changing_one_primitives_positions_misses_only_that_primitives_cache_entry() {
         let mut cache = InferenceCache::new(InferenceCacheConfig { enabled: true, record_stats: true, ..Default::default() });
         let base = two_primitive_snapshot();
         let _ = store::infer_field::<SemioMeshSnapshot, MeshAabb>(&base, Some(&mut cache));
@@ -187,7 +187,7 @@ mod tests {
     }
 
     #[test]
-    fn changing_an_unrelated_field_on_the_same_primitive_does_not_miss() {
+    async fn changing_an_unrelated_field_on_the_same_primitive_does_not_miss() {
         let mut cache = InferenceCache::new(InferenceCacheConfig { enabled: true, record_stats: true, ..Default::default() });
         let base = two_primitive_snapshot();
         let _ = store::infer_field::<SemioMeshSnapshot, MeshAabb>(&base, Some(&mut cache));

@@ -4,7 +4,7 @@ use super::mutation::ChangeDeltaTK;
 use crate::artifacts::en1991::{En1991Diff, En1991Snapshot};
 
 //#region 🔖️Diff
-pub fn diff(payload: &ChangeDeltaTK, base: &En1991Snapshot) -> protocol::MutationOutcome<En1991Diff> {
+pub async fn diff(payload: &ChangeDeltaTK, base: &En1991Snapshot) -> protocol::MutationOutcome<En1991Diff> {
     if !payload.new_delta_t_k.is_finite() {
         return protocol::MutationOutcome::fatal("mutation.invariant", "Delta tk must be a finite number.", Vec::<String>::new());
     }

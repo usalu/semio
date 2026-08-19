@@ -13,6 +13,6 @@ pub struct SetLocale {
     pub value: String,
 }
 
-pub fn handle(payload: &SetLocale, _doc: &ArtifactView<'_, DrawSnapshot>, _cfg: &ConfigView<'_, DrawConfig>, _session: &mut DrawSession) -> Result<Emit<DrawMutation, DrawConfigMutation>, Fault> {
+pub async fn handle(payload: &SetLocale, _doc: &ArtifactView<'_, DrawSnapshot>, _cfg: &ConfigView<'_, DrawConfig>, _session: &mut DrawSession) -> Result<Emit<DrawMutation, DrawConfigMutation>, Fault> {
     Ok(Emit::config(vec![DrawConfigMutation::SetLocale { value: payload.value.clone() }]))
 }

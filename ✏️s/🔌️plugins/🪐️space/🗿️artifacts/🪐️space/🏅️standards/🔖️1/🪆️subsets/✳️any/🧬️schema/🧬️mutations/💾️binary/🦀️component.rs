@@ -10,12 +10,12 @@ use crate::artifacts::space::standards::v1::subsets::any::schema::mutations::tex
 use protocol::OpBinary;
 
 /// 📦️ Encodes an `SSpaceMutation` to its binary command form.
-pub fn encode_op(operation: &SSpaceMutation) -> Result<Vec<u8>, protocol::ProtocolError> {
+pub async fn encode_op(operation: &SSpaceMutation) -> Result<Vec<u8>, protocol::ProtocolError> {
     operation.encode_op()
 }
 
 /// 📖️ Decodes an `SSpaceMutation` from its binary command form.
-pub fn decode_op(bytes: &[u8]) -> Result<SSpaceMutation, protocol::ProtocolError> {
+pub async fn decode_op(bytes: &[u8]) -> Result<SSpaceMutation, protocol::ProtocolError> {
     SSpaceMutation::decode_op(bytes)
 }
 
@@ -26,7 +26,7 @@ mod tests {
     use crate::artifacts::space::standards::v1::subsets::any::schema::mutations::touch_artifact;
 
     #[test]
-    fn op_binary_round_trips_and_agrees_with_text() {
+    async fn op_binary_round_trips_and_agrees_with_text() {
         let operation = touch_artifact("artifact-1".into(), 7, "user:1".into());
         store::os_store::test_support::assert_op_text_binary_equivalence(&operation);
         let bytes = encode_op(&operation).expect("encode");

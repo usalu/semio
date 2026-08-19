@@ -40,7 +40,7 @@ use wasmtime_wasi::{WasiCtx, WasiCtxView, WasiView};
 /// world carries `stream<u8>`, which lowers to `StreamReader<u8>` — a one-shot resource handle that
 /// is deliberately not `Clone`, and `additional_derives` applies blanket to every generated type
 /// rather than only the plain data records. The poll world has no streams, which is why it can.
-mod host_async_bindings {
+pub(crate) mod host_async_bindings {
     #![allow(dead_code)]
     wasmtime::component::bindgen!({
         world: "actor-async",

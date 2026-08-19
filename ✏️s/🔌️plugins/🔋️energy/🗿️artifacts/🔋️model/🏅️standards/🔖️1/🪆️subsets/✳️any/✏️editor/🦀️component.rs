@@ -36,7 +36,7 @@ pub enum EnergyModelEditorCommand {
 /// handcrafted per artifact). Same shape as `📕️norm`'s `NormConfigMutation`/`🔱️trinity`'s
 /// `TrinityJackCommand`.
 impl protocol::OpText for EnergyModelEditorCommand {
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
+    async fn parse_op(line: &str) -> Result<Self, store::TextError> {
         let variants = <Self as dsl::DslVariants>::variants();
         for (keyword, spec_fn) in &variants {
             let probe = format!("{} ", keyword);
@@ -47,7 +47,7 @@ impl protocol::OpText for EnergyModelEditorCommand {
         }
         Err(dsl::__rt::field_error(format!("unknown operation line '{line}'")))
     }
-    fn print_op(&self) -> String {
+    async fn print_op(&self) -> String {
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
         let variants = <Self as dsl::DslVariants>::variants();
         let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
@@ -56,7 +56,7 @@ impl protocol::OpText for EnergyModelEditorCommand {
 }
 
 impl protocol::OpBinary for EnergyModelEditorCommand {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         const OP_BINARY_FORMAT: u8 = 1;
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
         let variants = <Self as dsl::DslVariants>::variants();
@@ -69,7 +69,7 @@ impl protocol::OpBinary for EnergyModelEditorCommand {
         out.extend_from_slice(&body);
         Ok(out)
     }
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         const OP_BINARY_FORMAT: u8 = 1;
         let mut reader = store::pack_rt::ByteReader::new(bytes);
         let format = reader.read_u8()?;
@@ -108,7 +108,7 @@ impl ArtifactEditor for EnergyModelEditor {
     const DIALECT: Dialect = MODEL_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = ENERGY_MODEL_DOCUMENT_SCHEMA;
 
-    fn initial_snapshot() -> EnergyModelSnapshot {
+    async fn initial_snapshot() -> EnergyModelSnapshot {
         EnergyModelSnapshot::default()
     }
 
@@ -117,7 +117,7 @@ impl ArtifactEditor for EnergyModelEditor {
     /// — `structure`/`zones` are always regenerated together (rule 6, `🧬️mutations/🦀️component.rs`'s
     /// own doc comment), never targeted independently. An out-of-range row or unknown column/field is
     /// a documented no-op (`Emit::default()`), never a panic.
-    fn handle(
+    async fn handle(
         command: &Self::Command,
         doc: &ArtifactView<'_, Self::Snapshot>,
         _cfg: &ConfigView<'_, Self::Config>,
@@ -164,7 +164,7 @@ impl ArtifactEditor for EnergyModelEditor {
         Ok(Emit { artifact_mutations: vec![EnergyModelMutation::ReplaceModel(ReplaceModel { new_model_json })], description: Some(description), ..Default::default() })
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> UiNode {
+    async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> UiNode {
         match body_key {
             structure::BODY_KEY => structure::render(doc.snapshot),
             zones::BODY_KEY => zones::render(doc.snapshot),
@@ -175,7 +175,7 @@ impl ArtifactEditor for EnergyModelEditor {
 //#endregion 🔖️Editor
 
 //#region 🔖️Manifest
-pub fn create_energy_model_editor() -> semio_framework_plugin::AppDefinition {
+pub async fn create_energy_model_editor() -> semio_framework_plugin::AppDefinition {
     Editor::builder(MODEL_DIALECT)
         .document(["semio", "energy", "model"])
         .icon_id("battery")
@@ -194,19 +194,19 @@ mod tests {
     use super::*;
 
     #[test]
-    fn create_energy_model_editor_builds_a_definition_for_the_editor_role() {
+    async fn create_energy_model_editor_builds_a_definition_for_the_editor_role() {
         let def = create_energy_model_editor();
         assert_eq!(def.role, semio_framework_plugin::AppRole::Editor);
         assert_eq!(def.dialect, MODEL_DIALECT.into());
     }
 
     #[test]
-    fn editor_dialect_matches_the_artifact_coordinate() {
+    async fn editor_dialect_matches_the_artifact_coordinate() {
         assert_eq!(<EnergyModelEditor as ArtifactEditor>::DIALECT, MODEL_DIALECT);
     }
 
     #[test]
-    fn editor_declares_both_windows() {
+    async fn editor_declares_both_windows() {
         let def = create_energy_model_editor();
         assert!(def.window_kinds.iter().any(|w| w.id == structure::WINDOW_KIND_ID));
         assert!(def.window_kinds.iter().any(|w| w.id == zones::WINDOW_KIND_ID));

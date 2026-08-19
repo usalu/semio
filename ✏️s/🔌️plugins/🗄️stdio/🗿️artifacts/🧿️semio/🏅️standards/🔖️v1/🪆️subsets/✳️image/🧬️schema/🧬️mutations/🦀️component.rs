@@ -67,7 +67,7 @@ pub enum SemioImageMutation {
 }
 
 impl Default for SemioImageMutation {
-    fn default() -> Self {
+    async fn default() -> Self {
         SemioImageMutation::NoMutation
     }
 }
@@ -75,7 +75,7 @@ impl Default for SemioImageMutation {
 impl Mutation<SemioImageSnapshot> for SemioImageMutation {
     type Diff = SemioImageDiff;
 
-    fn diff(&self, base: &SemioImageSnapshot) -> protocol::MutationOutcome<Self::Diff> {
+    async fn diff(&self, base: &SemioImageSnapshot) -> protocol::MutationOutcome<Self::Diff> {
         protocol::MutationOutcome::new(match self {
             SemioImageMutation::NoMutation => SemioImageDiff::default(),
             SemioImageMutation::SetSnapshot { snapshot } => diff_set_snapshot(base, snapshot),
@@ -107,7 +107,7 @@ impl Mutation<SemioImageSnapshot> for SemioImageMutation {
         })
     }
 
-    fn inverse(&self, base: &SemioImageSnapshot) -> Vec<Self> {
+    async fn inverse(&self, base: &SemioImageSnapshot) -> Vec<Self> {
         match self {
             SemioImageMutation::NoMutation => vec![SemioImageMutation::NoMutation],
             SemioImageMutation::SetSnapshot { .. } => vec![SemioImageMutation::SetSnapshot { snapshot: base.clone() }],
@@ -143,7 +143,7 @@ impl Mutation<SemioImageSnapshot> for SemioImageMutation {
 
 /// ▶️ Applies a mutation to `snapshot` in place, returning the diff (mirrors gif's
 /// `apply_gif_mutation` convention — used by the builder's `mutate()` and every triad leaf).
-pub fn apply_semio_image_mutation(snapshot: &mut SemioImageSnapshot, mutation: &SemioImageMutation) -> protocol::MutationOutcome<SemioImageDiff> {
+pub async fn apply_semio_image_mutation(snapshot: &mut SemioImageSnapshot, mutation: &SemioImageMutation) -> protocol::MutationOutcome<SemioImageDiff> {
     let outcome = <SemioImageMutation as Mutation<SemioImageSnapshot>>::diff(mutation, snapshot);
     outcome.apply_to(snapshot)
 }
@@ -158,12 +158,12 @@ pub fn apply_semio_image_mutation(snapshot: &mut SemioImageSnapshot, mutation: &
 /// then comma-separated positional fields (bracket-depth-aware, reusing the shared
 /// `engine::triples` split/strip helpers so a nested `[...]` payload — e.g. `SetSnapshot`'s whole
 /// snapshot — never confuses the top-level split).
-fn enc_snapshot(s: &SemioImageSnapshot) -> String {
+async fn enc_snapshot(s: &SemioImageSnapshot) -> String {
     let frames = s.frames.iter().map(enc_frame).collect::<Vec<_>>().join(",");
     let metadata = s.metadata.iter().map(enc_metadata_entry).collect::<Vec<_>>().join(",");
     format!("[{},{},{},{},{},[{}],[{}]]", s.width, s.height, enc_colorspace(s.colorspace), s.bit_depth, encode_option(&s.icc, |b| b.iter().map(|x| format!("{x:02x}")).collect::<String>()), frames, metadata,)
 }
-fn dec_snapshot(s: &str) -> Result<SemioImageSnapshot, String> {
+async fn dec_snapshot(s: &str) -> Result<SemioImageSnapshot, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [width, height, colorspace, bit_depth, icc, frames, metadata] = parts.as_slice() else {
         return Err(format!("snapshot: expected 7 fields, got {}", parts.len()));
@@ -181,23 +181,23 @@ fn dec_snapshot(s: &str) -> Result<SemioImageSnapshot, String> {
         metadata,
     })
 }
-fn enc_bytes(b: &[u8]) -> String {
+async fn enc_bytes(b: &[u8]) -> String {
     b.iter().map(|x| format!("{x:02x}")).collect()
 }
-fn dec_bytes(s: &str) -> Result<Vec<u8>, String> {
+async fn dec_bytes(s: &str) -> Result<Vec<u8>, String> {
     if s.len() % 2 != 0 {
         return Err(format!("odd hex length: {s:?}"));
     }
     (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()
 }
-fn enc_str(s: &str) -> String {
+async fn enc_str(s: &str) -> String {
     s.bytes().map(|b| format!("{b:02x}")).collect()
 }
-fn dec_str(s: &str) -> Result<String, String> {
+async fn dec_str(s: &str) -> Result<String, String> {
     String::from_utf8(dec_bytes(s)?).map_err(|e| e.to_string())
 }
 
-fn print_image_mutation(m: &SemioImageMutation) -> String {
+async fn print_image_mutation(m: &SemioImageMutation) -> String {
     match m {
         SemioImageMutation::NoMutation => "no".to_string(),
         SemioImageMutation::SetSnapshot { snapshot } => format!("setSnapshot:{}", enc_snapshot(snapshot)),
@@ -215,7 +215,7 @@ fn print_image_mutation(m: &SemioImageMutation) -> String {
     }
 }
 
-fn parse_image_mutation(line: &str) -> Result<SemioImageMutation, String> {
+async fn parse_image_mutation(line: &str) -> Result<SemioImageMutation, String> {
     if line == "no" {
         return Ok(SemioImageMutation::NoMutation);
     }
@@ -260,10 +260,10 @@ fn parse_image_mutation(line: &str) -> Result<SemioImageMutation, String> {
 }
 
 impl OpText for SemioImageMutation {
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
+    async fn parse_op(line: &str) -> Result<Self, store::TextError> {
         parse_image_mutation(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
-    fn print_op(&self) -> String {
+    async fn print_op(&self) -> String {
         print_image_mutation(self)
     }
 }
@@ -273,7 +273,7 @@ impl OpText for SemioImageMutation {
 /// agree (see `committed_facet_files_parse`/`ops_grammar_conformance_law` in
 /// `🎹️composer/🦀️component.rs`).
 const OP_KEYWORDS: [&str; 13] = ["no", "setSnapshot", "setDimensions", "setColorspace", "setBitDepth", "setIcc", "insertFrame", "removeFrame", "moveFrame", "setFrameDelay", "setFramePixels", "setMetadataEntry", "removeMetadataEntry"];
-fn variant_ordinal(m: &SemioImageMutation) -> u8 {
+async fn variant_ordinal(m: &SemioImageMutation) -> u8 {
     match m {
         SemioImageMutation::NoMutation => 0,
         SemioImageMutation::SetSnapshot { .. } => 1,
@@ -293,7 +293,7 @@ fn variant_ordinal(m: &SemioImageMutation) -> u8 {
 /// ✂️ Just the argument tail of `print_image_mutation` (empty for `no`) — the binary frame's `tag`
 /// byte already carries the keyword, so the text keyword itself (and its `:` separator) is
 /// redundant in the binary payload.
-fn print_image_mutation_args(m: &SemioImageMutation) -> String {
+async fn print_image_mutation_args(m: &SemioImageMutation) -> String {
     match print_image_mutation(m).split_once(':') {
         Some((_, rest)) => rest.to_string(),
         None => String::new(),
@@ -306,13 +306,13 @@ fn print_image_mutation_args(m: &SemioImageMutation) -> String {
 /// opaque trailing `bytes` chain — reuses the already-real, already-tested `print_image_mutation`/
 /// `parse_image_mutation` text codec rather than re-deriving a second independent encoding.
 impl protocol::OpBinary for SemioImageMutation {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         const OP_BINARY_FORMAT: u8 = 1;
         let mut out = vec![OP_BINARY_FORMAT, variant_ordinal(self)];
         out.extend_from_slice(print_image_mutation_args(self).as_bytes());
         Ok(out)
     }
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         const OP_BINARY_FORMAT: u8 = 1;
         if bytes.len() < 2 {
             return Err(protocol::ProtocolError::Malformed { what: "op header", offset: 0, detail: "truncated (need format+tag)".to_string() });
@@ -334,11 +334,11 @@ impl protocol::OpBinary for SemioImageMutation {
 /// `ops_grammar_conformance_law`/`protocol_walk_law` in `🎹️composer/🦀️component.rs` and this
 /// file's own `op_text_binary_roundtrip_law`.
 #[cfg(test)]
-pub(crate) fn demo_mutation_cases() -> Vec<SemioImageMutation> {
-    fn frame(seed: u8, len: usize) -> SemioImageFrame {
+pub(crate) async fn demo_mutation_cases() -> Vec<SemioImageMutation> {
+    async fn frame(seed: u8, len: usize) -> SemioImageFrame {
         SemioImageFrame { delay_ms: 100, rgba8: vec![seed; len] }
     }
-    fn fixture() -> SemioImageSnapshot {
+    async fn fixture() -> SemioImageSnapshot {
         SemioImageSnapshot {
             width: 4,
             height: 4,
@@ -379,11 +379,11 @@ mod tests {
     use protocol::command::DiffAlgebra;
     use protocol::{MutationDiff, OpBinary, OpText};
 
-    fn frame(seed: u8, len: usize) -> SemioImageFrame {
+    async fn frame(seed: u8, len: usize) -> SemioImageFrame {
         SemioImageFrame { delay_ms: 100, rgba8: vec![seed; len] }
     }
 
-    fn fixture() -> SemioImageSnapshot {
+    async fn fixture() -> SemioImageSnapshot {
         SemioImageSnapshot {
             width: 4,
             height: 4,
@@ -399,13 +399,13 @@ mod tests {
     /// 🌱 Reuses `demo_mutation_cases()` (single source of truth, also feeds
     /// `ops_grammar_conformance_law`/`protocol_walk_law` in `🎹️composer/🦀️component.rs`) rather
     /// than an independent copy.
-    fn sample_mutations() -> Vec<SemioImageMutation> {
+    async fn sample_mutations() -> Vec<SemioImageMutation> {
         demo_mutation_cases()
     }
 
     //#region 🔖️MutationDiffLaw
     #[test]
-    fn mutation_diff_law() {
+    async fn mutation_diff_law() {
         for mutation in sample_mutations() {
             let base = fixture();
             let diff_direct = Mutation::diff(&mutation, &base);
@@ -422,7 +422,7 @@ mod tests {
 
     //#region 🔖️InverseLaw
     #[test]
-    fn inverse_law() {
+    async fn inverse_law() {
         for mutation in sample_mutations() {
             let base = fixture();
 
@@ -446,7 +446,7 @@ mod tests {
     /// 🧪️ codec_retention_law: `ArtifactPack` decode(encode(snapshot)) on a real (mutation-built,
     /// not just default) snapshot.
     #[test]
-    fn codec_retention_law() {
+    async fn codec_retention_law() {
         let mut snap = fixture();
         apply_semio_image_mutation(&mut snap, &SemioImageMutation::SetMetadataEntry { key: "Author".into(), value: "x".into() });
         let bytes = store::ArtifactPack::encode_pack(&snap);
@@ -457,7 +457,7 @@ mod tests {
 
     //#region 🔖️OpTextBinaryRoundtripLaw
     #[test]
-    fn op_text_binary_roundtrip_law() {
+    async fn op_text_binary_roundtrip_law() {
         for m in sample_mutations() {
             let printed = m.print_op();
             assert!(!printed.contains('\n'), "print_op must be one line, got {printed:?}");

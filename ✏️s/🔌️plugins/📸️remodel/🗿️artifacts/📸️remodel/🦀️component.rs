@@ -20,7 +20,7 @@ use std::collections::BTreeMap;
 //#region 🔖️ArtifactKind
 /// 🗿️ The `3d.remodel` artifact kind — lifted verbatim out of the manifest builder's
 /// `.artifact_kind(…)` literal so the artifact node, not the app, owns its own identity.
-pub fn artifact_kind() -> ArtifactKindSpec {
+pub async fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "3d.remodel".into(),
         name: "3D Remodel".into(),
@@ -49,7 +49,7 @@ pub fn artifact_kind() -> ArtifactKindSpec {
 /// 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE reloc-g3): `⚙️engine` was removed from the taxonomy
 /// and `declaration()` describes the artifact, not engine behaviour, so its home is the artifact
 /// root alongside `artifact_kind()`.
-pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
+pub async fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
     use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
 
     let rows: &[(&str, &str, &str, &[(&str, &str)], Option<(&str, &str)>)] = &[
@@ -89,7 +89,7 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
     Ok(definition)
 }
 
-pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
+pub async fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
     semio_framework_plugin::ArtifactDeclaration::builder(definition()?)
         .schema(crate::artifacts::remodel::schema::remodel_artifact_schema_descriptor())
         .inferences([crate::artifacts::remodel::standards::v1::subsets::any::schema::inferences::remodel_artifact_inference_descriptor()])
@@ -102,7 +102,7 @@ pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semi
 /// 📌️ Handcrafted facet grammars (text) and protocols (binary) for in-process execution — built once
 /// and leaked to a `&'static` slice since `dsl::passthrough_hooks` isn't `const fn`, mirroring the
 /// `OnceLock`-backed `io_registry::entries()` convention.
-fn pilot_languages() -> &'static [dsl::LanguageSpec] {
+async fn pilot_languages() -> &'static [dsl::LanguageSpec] {
     static LANGUAGES: std::sync::OnceLock<Vec<dsl::LanguageSpec>> = std::sync::OnceLock::new();
     LANGUAGES
         .get_or_init(|| {
@@ -220,7 +220,7 @@ pub type RemodelAssetChild = store::ArtifactChild<SemioImageSnapshot>;
 pub type RemodelMeshChild = store::ArtifactChild<SemioMeshSnapshot>;
 
 //#region 🔖️AssetHandles
-fn mint_asset_child_handle(asset_id: &str, content_hash: u64) -> RemodelAssetChild {
+async fn mint_asset_child_handle(asset_id: &str, content_hash: u64) -> RemodelAssetChild {
     let child_id = format!("remodel-asset-{content_hash:016x}");
     let dialect = store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "image".into() };
     let target = store::os_io::ArtifactRef { artifact_id: format!("{asset_id}-image"), dialect };
@@ -230,7 +230,7 @@ fn mint_asset_child_handle(asset_id: &str, content_hash: u64) -> RemodelAssetChi
 /// 🕸️ Deterministic content-addressed CHILD handle, hashed off the RAW `(mime, data)` bytes — the
 /// fallback shape used only when the bytes can't be decoded into real `SemioImageSnapshot` content
 /// (see `mint_and_stash_asset`), mirrors `🖨️raster`'s `image_asset_child_handle` exactly.
-pub fn image_asset_child_handle(asset_id: &str, asset: &ImageAsset) -> RemodelAssetChild {
+pub async fn image_asset_child_handle(asset_id: &str, asset: &ImageAsset) -> RemodelAssetChild {
     use std::hash::{Hash, Hasher};
     let mut hasher = std::collections::hash_map::DefaultHasher::new();
     asset.mime.hash(&mut hasher);
@@ -244,7 +244,7 @@ pub fn image_asset_child_handle(asset_id: &str, asset: &ImageAsset) -> RemodelAs
 /// encoders are not byte-identical, so hashing raw bytes would mint two handles for the same image).
 /// Used only when the asset decodes into real `SemioImageSnapshot` content (`image/png` today); every
 /// other mime mints off the raw bytes instead (`image_asset_child_handle`).
-fn image_content_child_handle(asset_id: &str, image: &SemioImageSnapshot) -> RemodelAssetChild {
+async fn image_content_child_handle(asset_id: &str, image: &SemioImageSnapshot) -> RemodelAssetChild {
     use std::hash::{Hash, Hasher};
     let mut hasher = std::collections::hash_map::DefaultHasher::new();
     <SemioImageSnapshot as store::ArtifactPack>::encode_pack(image).hash(&mut hasher);
@@ -267,13 +267,13 @@ thread_local! {
     static REMODEL_ASSET_SCRATCH: std::cell::RefCell<std::collections::HashMap<String, ImageAsset>> = std::cell::RefCell::new(std::collections::HashMap::new());
 }
 
-pub fn stash_remodel_asset(child_id: &str, asset: ImageAsset) {
+pub async fn stash_remodel_asset(child_id: &str, asset: ImageAsset) {
     REMODEL_ASSET_SCRATCH.with(|cache| {
         cache.borrow_mut().insert(child_id.to_string(), asset);
     });
 }
 
-pub fn cached_remodel_asset(child_id: &str) -> Option<ImageAsset> {
+pub async fn cached_remodel_asset(child_id: &str) -> Option<ImageAsset> {
     REMODEL_ASSET_SCRATCH.with(|cache| cache.borrow().get(child_id).cloned())
 }
 
@@ -283,7 +283,7 @@ pub fn cached_remodel_asset(child_id: &str) -> Option<ImageAsset> {
 /// the working-scene cache (see that field's doc comment for why, unlike raster, this never leaves the
 /// cache slot empty). Every call site that used to do `assets.insert(id, ImageAsset{..})` now calls
 /// this instead, and gets back only the handle.
-pub fn mint_and_stash_asset(asset_id: &str, asset: &ImageAsset) -> RemodelAssetChild {
+pub async fn mint_and_stash_asset(asset_id: &str, asset: &ImageAsset) -> RemodelAssetChild {
     let handle = match semio_image_snapshot_from_image_asset(asset) {
         Ok(image) => image_content_child_handle(asset_id, &image),
         Err(_) => image_asset_child_handle(asset_id, asset),
@@ -296,14 +296,14 @@ pub fn mint_and_stash_asset(asset_id: &str, asset: &ImageAsset) -> RemodelAssetC
 /// `asset_id` through the persisted handle map, then through the working-scene cache. `None` on either
 /// a missing handle OR a cold cache (store-level undo/redo bypassing `ArtifactApp::handle`, matching
 /// every prior exemplar's documented staleness gap in this ticket) — fails soft, never panics.
-pub fn remodel_asset(assets: &BTreeMap<String, RemodelAssetChild>, asset_id: &str) -> Option<ImageAsset> {
+pub async fn remodel_asset(assets: &BTreeMap<String, RemodelAssetChild>, asset_id: &str) -> Option<ImageAsset> {
     let handle = assets.get(asset_id)?;
     cached_remodel_asset(&handle.child_id)
 }
 //#endregion 🔖️AssetHandles
 
 //#region 🔖️MeshHandle
-fn mint_mesh_child_handle(content_hash: u64) -> RemodelMeshChild {
+async fn mint_mesh_child_handle(content_hash: u64) -> RemodelMeshChild {
     let child_id = format!("remodel-mesh-{content_hash:016x}");
     let dialect = store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "mesh".into() };
     let target = store::os_io::ArtifactRef { artifact_id: "remodel-mesh".into(), dialect };
@@ -314,7 +314,7 @@ fn mint_mesh_child_handle(content_hash: u64) -> RemodelMeshChild {
 /// canonical conversion's pack bytes (`mesh_data_to_semio_mesh`, already real — reused from
 /// `🚪️io/🦀️component.rs`'s existing PLY/LAS export hand-off, not reimplemented) — same
 /// canonical-content-hash rationale as `image_content_child_handle` above.
-fn mesh_content_child_handle(mesh: &MeshData) -> RemodelMeshChild {
+async fn mesh_content_child_handle(mesh: &MeshData) -> RemodelMeshChild {
     use std::hash::{Hash, Hasher};
     let mut hasher = std::collections::hash_map::DefaultHasher::new();
     let semio = mesh_data_to_semio_mesh(mesh);
@@ -326,13 +326,13 @@ thread_local! {
     static REMODEL_MESH_SCRATCH: std::cell::RefCell<std::collections::HashMap<String, MeshData>> = std::cell::RefCell::new(std::collections::HashMap::new());
 }
 
-pub fn stash_remodel_mesh(child_id: &str, mesh: MeshData) {
+pub async fn stash_remodel_mesh(child_id: &str, mesh: MeshData) {
     REMODEL_MESH_SCRATCH.with(|cache| {
         cache.borrow_mut().insert(child_id.to_string(), mesh);
     });
 }
 
-pub fn cached_remodel_mesh(child_id: &str) -> Option<MeshData> {
+pub async fn cached_remodel_mesh(child_id: &str) -> Option<MeshData> {
     REMODEL_MESH_SCRATCH.with(|cache| cache.borrow().get(child_id).cloned())
 }
 
@@ -345,7 +345,7 @@ pub fn cached_remodel_mesh(child_id: &str) -> Option<MeshData> {
 /// directly (not round-tripping through the lossy conversion) means those buffers are never lost for
 /// the live document — only a COLD cache (see the staleness gap below) ever falls back to the lossy
 /// `semio_mesh_to_mesh_data` reconstruction.
-pub fn mint_and_stash_mesh(mesh: MeshData) -> RemodelMeshChild {
+pub async fn mint_and_stash_mesh(mesh: MeshData) -> RemodelMeshChild {
     let handle = mesh_content_child_handle(&mesh);
     stash_remodel_mesh(&handle.child_id, mesh);
     handle
@@ -360,7 +360,7 @@ pub fn mint_and_stash_mesh(mesh: MeshData) -> RemodelMeshChild {
 /// `LinkResolver`/child-dispatch seam (migration recipe §3) makes the composed child's OWN
 /// `SemioMeshSnapshot` content independently resolvable — not wired in here today because nothing in
 /// this plugin populates that content separately from this cache.
-pub fn remodel_mesh_workspace(handle: &RemodelMeshChild) -> Option<MeshData> {
+pub async fn remodel_mesh_workspace(handle: &RemodelMeshChild) -> Option<MeshData> {
     cached_remodel_mesh(&handle.child_id)
 }
 //#endregion 🔖️MeshHandle
@@ -376,14 +376,14 @@ pub struct PackedF32(pub String);
 
 impl PackedF32 {
     /// 📦️ Encodes a `f32` slice as a base64 string of its little-endian bytes.
-    pub fn from_f32_slice(values: &[f32]) -> Self {
+    pub async fn from_f32_slice(values: &[f32]) -> Self {
         let bytes: Vec<u8> = values.iter().flat_map(|value| value.to_le_bytes()).collect();
         Self(base64::engine::general_purpose::STANDARD.encode(bytes))
     }
 
     /// 📦️ Decodes back into a `f32` vec; a malformed payload (bad base64, length not a multiple of 4)
     /// decodes as empty rather than panicking, since packed buffers only ever round-trip in-process.
-    pub fn to_f32_vec(&self) -> Vec<f32> {
+    pub async fn to_f32_vec(&self) -> Vec<f32> {
         let Ok(bytes) = base64::engine::general_purpose::STANDARD.decode(self.0.as_bytes()) else {
             return Vec::new();
         };
@@ -394,7 +394,7 @@ impl PackedF32 {
         chunks.iter().map(|chunk| f32::from_le_bytes(*chunk)).collect()
     }
 
-    pub fn is_empty(&self) -> bool {
+    pub async fn is_empty(&self) -> bool {
         self.0.is_empty()
     }
 }
@@ -407,16 +407,16 @@ pub struct PackedU8(pub String);
 
 impl PackedU8 {
     /// 📦️ Encodes a `u8` slice as a base64 string.
-    pub fn from_u8_slice(values: &[u8]) -> Self {
+    pub async fn from_u8_slice(values: &[u8]) -> Self {
         Self(base64::engine::general_purpose::STANDARD.encode(values))
     }
 
     /// 📦️ Decodes back into a `u8` vec; a malformed payload decodes as empty.
-    pub fn to_u8_vec(&self) -> Vec<u8> {
+    pub async fn to_u8_vec(&self) -> Vec<u8> {
         base64::engine::general_purpose::STANDARD.decode(self.0.as_bytes()).unwrap_or_default()
     }
 
-    pub fn is_empty(&self) -> bool {
+    pub async fn is_empty(&self) -> bool {
         self.0.is_empty()
     }
 }
@@ -425,13 +425,13 @@ impl PackedU8 {
 /// `Shape::Text` rather than `#[dsl(base64)]` (which is for raw `Vec<u8>` fields only) — no double
 /// encoding, no `-` sentinel: an empty buffer is just an empty quoted string.
 impl dsl::DslField for PackedF32 {
-    fn shape() -> dsl::Shape {
+    async fn shape() -> dsl::Shape {
         dsl::Shape::Text
     }
-    fn to_value(&self) -> dsl::FieldValue {
+    async fn to_value(&self) -> dsl::FieldValue {
         dsl::FieldValue::Text(self.0.clone())
     }
-    fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
+    async fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
         match value {
             dsl::FieldValue::Text(s) => Ok(Self(s.clone())),
             other => Err(format!("expected Text, found {other:?}")),
@@ -441,13 +441,13 @@ impl dsl::DslField for PackedF32 {
 
 /// 🌉️ Same reasoning as `PackedF32`'s impl above.
 impl dsl::DslField for PackedU8 {
-    fn shape() -> dsl::Shape {
+    async fn shape() -> dsl::Shape {
         dsl::Shape::Text
     }
-    fn to_value(&self) -> dsl::FieldValue {
+    async fn to_value(&self) -> dsl::FieldValue {
         dsl::FieldValue::Text(self.0.clone())
     }
-    fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
+    async fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
         match value {
             dsl::FieldValue::Text(s) => Ok(Self(s.clone())),
             other => Err(format!("expected Text, found {other:?}")),
@@ -575,7 +575,7 @@ pub struct RigExtrinsic {
 }
 
 impl Default for RigExtrinsic {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self { camera_id: String::new(), rotation_wxyz: [1.0, 0.0, 0.0, 0.0], translation_m: [0.0; 3] }
     }
 }
@@ -623,7 +623,7 @@ pub struct IngestParams {
 }
 
 impl Default for IngestParams {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self { frame_sample_stride: 5, max_frames: 200, downscale_long_edge_px: 1600, min_sharpness: 0.3 }
     }
 }
@@ -647,7 +647,7 @@ pub struct FeatureParams {
 }
 
 impl Default for FeatureParams {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self { detector: FeatureDetector::default(), target_count: 4000, octaves: 4, edge_threshold: 10.0 }
     }
 }
@@ -672,7 +672,7 @@ pub struct MatchParams {
 }
 
 impl Default for MatchParams {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self { matcher: MatcherKind::default(), ratio_test: 0.8, cross_check: true, sequential_window: 8, max_pairs_per_frame: 16, loop_closure: true }
     }
 }
@@ -698,7 +698,7 @@ pub struct SfmParams {
 }
 
 impl Default for SfmParams {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self { ransac_iterations: 1000, ransac_threshold_px: 2.0, min_track_length: 3, ba_max_iterations: 50, robust_loss: RobustLossKind::default(), huber_delta_px: 1.5 }
     }
 }
@@ -723,7 +723,7 @@ pub struct DenseParams {
 }
 
 impl Default for DenseParams {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self { resolution: DenseResolution::default(), window_radius_px: 3, min_view_consistency: 3, confidence_threshold: 0.5, max_points: 500_000 }
     }
 }
@@ -751,7 +751,7 @@ pub struct MeshParams {
 }
 
 impl Default for MeshParams {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self {
             tsdf_voxel_size_mm: 5.0,
             tsdf_truncation_mm: 20.0,
@@ -777,7 +777,7 @@ pub struct MotionParams {
 }
 
 impl Default for MotionParams {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self { enabled: false, max_tracks: 64, track_window_px: 21, min_track_quality: 0.3, min_track_length_frames: 5 }
     }
 }
@@ -799,7 +799,7 @@ pub struct GeoParams {
 }
 
 impl Default for GeoParams {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self { enabled: false, origin_lon: None, origin_lat: None, origin_alt: None, gsd_m: 0.05, dsm_cell_m: 0.1, dtm_filter_radius_m: 2.0, ortho_max_px: 4096 }
     }
 }
@@ -868,7 +868,7 @@ pub struct CameraPosePreview {
 }
 
 impl Default for CameraPosePreview {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self { camera_id: String::new(), rotation_wxyz: [1.0, 0.0, 0.0, 0.0], translation: [0.0; 3] }
     }
 }
@@ -954,7 +954,7 @@ pub struct RemodelMesh {
 }
 
 impl Default for RemodelMesh {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self { mesh: mint_and_stash_mesh(MeshData::default()), source: MeshSource::default(), texture_asset_id: None, watertight: None }
     }
 }
@@ -967,13 +967,13 @@ impl Default for RemodelMesh {
 /// `#[dsl(statements)] Box<T>` "exactly-one-tagged-value" idiom doesn't apply — this is the ordinary
 /// boxed-scalar case instead). Delegates to `RemodelMesh`'s own (now derive-generated) `DslField` impl.
 impl dsl::DslField for Box<RemodelMesh> {
-    fn shape() -> dsl::Shape {
+    async fn shape() -> dsl::Shape {
         <RemodelMesh as dsl::DslField>::shape()
     }
-    fn to_value(&self) -> dsl::FieldValue {
+    async fn to_value(&self) -> dsl::FieldValue {
         <RemodelMesh as dsl::DslField>::to_value(self.as_ref())
     }
-    fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
+    async fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
         <RemodelMesh as dsl::DslField>::from_value(value).map(Box::new)
     }
 }
@@ -1082,7 +1082,7 @@ pub use crate::artifacts::remodel::schema::snapshot::RemodelSnapshot;
 
 /// 🌱️ An empty scene seeded with a placeholder box mesh, so the 3D editor/preview always has
 /// something to render before any media has been imported/reconstructed.
-pub fn default_remodel_scene() -> RemodelSnapshot {
+pub async fn default_remodel_scene() -> RemodelSnapshot {
     RemodelSnapshot {
         schema: REMODEL_DOCUMENT_SCHEMA.into(),
         id: "remodel".into(),
@@ -1107,7 +1107,7 @@ mod tests {
     /// pre-existing `populated_scene_roundtrips_through_json`) actually walk the full document shape
     /// instead of just `default_remodel_scene()`'s mostly-empty surface. Duplicated verbatim into every
     /// taxonomy node that needs it (`🗣️dsl`, `🔧️op`, `🎒️pack`) since it is a private test-only builder.
-    fn populated_scene_fixture() -> RemodelSnapshot {
+    async fn populated_scene_fixture() -> RemodelSnapshot {
         let mut scene = default_remodel_scene();
         scene.streams.push(MediaStream {
             id: "stream-1".into(),
@@ -1191,7 +1191,7 @@ mod tests {
     }
 
     #[test]
-    fn default_scene_has_placeholder_mesh() {
+    async fn default_scene_has_placeholder_mesh() {
         let scene = default_remodel_scene();
         assert_eq!(scene.results.mesh.source, MeshSource::Placeholder);
         let mesh = remodel_mesh_workspace(&scene.results.mesh.mesh).expect("working-scene cache warm right after default_remodel_scene()");
@@ -1211,7 +1211,7 @@ mod tests {
     }
 
     #[test]
-    fn scene_roundtrips_through_json() {
+    async fn scene_roundtrips_through_json() {
         let scene = default_remodel_scene();
         let json = serde_json::to_string(&scene).expect("serialize");
         let parsed: RemodelSnapshot = serde_json::from_str(&json).expect("deserialize");
@@ -1219,7 +1219,7 @@ mod tests {
     }
 
     #[test]
-    fn populated_scene_roundtrips_through_json() {
+    async fn populated_scene_roundtrips_through_json() {
         let scene = populated_scene_fixture();
         let json = serde_json::to_string(&scene).expect("serialize");
         let parsed: RemodelSnapshot = serde_json::from_str(&json).expect("deserialize");
@@ -1227,7 +1227,7 @@ mod tests {
     }
 
     #[test]
-    fn packed_f32_roundtrips_exactly() {
+    async fn packed_f32_roundtrips_exactly() {
         let values = vec![1.5_f32, -2.25, 3.0, f32::MIN_POSITIVE, -0.0];
         let packed = PackedF32::from_f32_slice(&values);
         let value = serde_json::to_value(&packed).expect("serialize");
@@ -1242,7 +1242,7 @@ mod tests {
     }
 
     #[test]
-    fn packed_u8_roundtrips_exactly() {
+    async fn packed_u8_roundtrips_exactly() {
         let values = vec![0_u8, 128, 255, 64];
         let packed = PackedU8::from_u8_slice(&values);
         let value = serde_json::to_value(&packed).expect("serialize");
@@ -1257,7 +1257,7 @@ mod tests {
     }
 
     #[test]
-    fn reconstruction_stage_serde_is_stable() {
+    async fn reconstruction_stage_serde_is_stable() {
         let cases: [(ReconstructionStage, &str); 18] = [
             (ReconstructionStage::Idle, "\"idle\""),
             (ReconstructionStage::Ingesting, "\"ingesting\""),

@@ -9,7 +9,7 @@ use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::SemioBr
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::{BrepShell, SemioBrepSnapshot};
 
 //#region 🔖️Diff
-pub fn diff(payload: &CreateShell, base: &SemioBrepSnapshot) -> protocol::MutationOutcome<SemioBrepDiff> {
+pub async fn diff(payload: &CreateShell, base: &SemioBrepSnapshot) -> protocol::MutationOutcome<SemioBrepDiff> {
     if base.shells.iter().any(|x| x.id == payload.id) {
         return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("A shell with id \"{}\" already exists.", payload.id), [payload.id.clone()]);
     }

@@ -13,7 +13,7 @@ const REMODEL_PLAY_SURFACE_REPORT: &str = "remodel.play.report";
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
-pub fn definition() -> WindowKindDefinition {
+pub async fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
         id: REMODEL_PLAY_WINDOW_REPORT.into(),
         label: LocalizedLabel::native("Report", "Bericht"),
@@ -36,7 +36,7 @@ pub fn definition() -> WindowKindDefinition {
 //#region 🔖️Scene
 /// 📊️ The `(columns_json, rows_json)` pair for one dataset name; any unknown name falls back to the
 /// frame list.
-fn report_table_json(scene: &RemodelSnapshot, table: &str) -> (String, String) {
+async fn report_table_json(scene: &RemodelSnapshot, table: &str) -> (String, String) {
     let (columns, rows): (Vec<Value>, Vec<Value>) = match table {
         "cameras" => (
             vec![json!({ "id": "id", "label": "Id" }), json!({ "id": "model", "label": "Model" }), json!({ "id": "fx", "label": "fx" }), json!({ "id": "fy", "label": "fy" }), json!({ "id": "rms", "label": "RMS (px)" })],
@@ -67,7 +67,7 @@ fn report_table_json(scene: &RemodelSnapshot, table: &str) -> (String, String) {
     (serde_json::to_string(&columns).unwrap_or_else(|_| "[]".into()), serde_json::to_string(&rows).unwrap_or_else(|_| "[]".into()))
 }
 
-pub fn render(scene: &RemodelSnapshot, config: &RemodelConfig) -> UiNode {
+pub async fn render(scene: &RemodelSnapshot, config: &RemodelConfig) -> UiNode {
     let (columns_json, rows_json) = report_table_json(scene, &config.report_table);
     build_table_scene(REMODEL_PLAY_SURFACE_REPORT, crate::editor::remodel::REMODEL_PLAY_APP_ID, TableScene::base(columns_json, rows_json))
 }
@@ -83,7 +83,7 @@ mod tests {
     use crate::artifacts::remodel::default_remodel_scene;
 
     #[test]
-    fn every_dataset_name_yields_its_own_column_set_and_unknown_falls_back_to_frames() {
+    async fn every_dataset_name_yields_its_own_column_set_and_unknown_falls_back_to_frames() {
         let scene = default_remodel_scene();
         for (table, marker) in [("cameras", "RMS (px)"), ("tracks", "Mean Speed (m/s)"), ("gcps", "Observations"), ("qcStages", "Status"), ("matches", "Note"), ("nonsense", "Timestamp (ms)")] {
             let (columns, _rows) = report_table_json(&scene, table);
@@ -92,7 +92,7 @@ mod tests {
     }
 
     #[test]
-    fn switching_the_selected_table_changes_the_rendered_columns() {
+    async fn switching_the_selected_table_changes_the_rendered_columns() {
         let mut app = app();
         dispatch(&mut app, RemodelCommand::SetReportTable(SetReportTable { table: "gcps".into() }));
         assert!(render_body(&mut app, REMODEL_PLAY_BODY_REPORT).contains("Observations"));

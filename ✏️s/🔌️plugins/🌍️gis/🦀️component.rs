@@ -9,7 +9,7 @@ use semio_framework_plugin::{ExecutionMode, HostMediaHandlerDeclaration, Plugin}
 /// automatically by each `.editor()` call below. `.editor()`/`.viewer()` (ticket
 /// 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET) replace the retired `.document_app()` — each
 /// subset now registers an independent editor and viewer surface.
-pub fn plugin() -> Result<Plugin, semio_framework_plugin::PluginAssemblyError> {
+pub async fn plugin() -> Result<Plugin, semio_framework_plugin::PluginAssemblyError> {
     Plugin::builder("gis")
         .label("GIS")
         .version("0.1.0")
@@ -65,22 +65,22 @@ mod surface_tests {
     use semio_framework_plugin::testkit::{assert_editor_and_viewer_share_dialect, assert_viewer_never_mutates};
 
     #[test]
-    fn gismap_viewer_never_mutates() {
+    async fn gismap_viewer_never_mutates() {
         assert_viewer_never_mutates::<GisMapViewer>();
     }
 
     #[test]
-    fn gismap_editor_and_viewer_share_dialect() {
+    async fn gismap_editor_and_viewer_share_dialect() {
         assert_editor_and_viewer_share_dialect::<Gis2dPlayApp, GisMapViewer>();
     }
 
     #[test]
-    fn gisterrain_viewer_never_mutates() {
+    async fn gisterrain_viewer_never_mutates() {
         assert_viewer_never_mutates::<GisTerrainViewer>();
     }
 
     #[test]
-    fn gisterrain_editor_and_viewer_share_dialect() {
+    async fn gisterrain_editor_and_viewer_share_dialect() {
         assert_editor_and_viewer_share_dialect::<Gis3dPlayApp, GisTerrainViewer>();
     }
 }

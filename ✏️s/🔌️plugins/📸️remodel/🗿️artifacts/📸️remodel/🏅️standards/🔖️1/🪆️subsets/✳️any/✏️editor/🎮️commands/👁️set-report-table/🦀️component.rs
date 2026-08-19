@@ -12,6 +12,6 @@ pub struct SetReportTable {
     pub table: String,
 }
 
-pub fn handle(payload: &SetReportTable, _doc: &ArtifactView<'_, RemodelSnapshot>, _cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelMutation, RemodelConfigMutation>, Fault> {
+pub async fn handle(payload: &SetReportTable, _doc: &ArtifactView<'_, RemodelSnapshot>, _cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelMutation, RemodelConfigMutation>, Fault> {
     Ok(Emit::config(vec![RemodelConfigMutation::SetReportTable { table: payload.table.clone() }]))
 }

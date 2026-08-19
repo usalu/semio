@@ -16,7 +16,7 @@ use crate::artifacts::xml::schema::snapshot::{xml_document_to_text, XmlDocument,
 use crate::artifacts::zip::opc::{OpcPackage, OpcRelationship, OpcTargetMode, REL_TYPE_OFFICE_DOCUMENT};
 
 //#region 🔖️SharedStringsXml
-fn sst_to_xml(shared: &[String]) -> XmlDocument {
+async fn sst_to_xml(shared: &[String]) -> XmlDocument {
     let children =
         shared.iter().map(|s| XmlNode::Element { name: "si".into(), attrs: vec![], children: vec![XmlNode::Element { name: "t".into(), attrs: vec![attr("xml:space", "preserve")], children: vec![XmlNode::Text { text: s.clone() }] }] }).collect();
     XmlDocument {
@@ -29,7 +29,7 @@ fn sst_to_xml(shared: &[String]) -> XmlDocument {
 //#endregion 🔖️SharedStringsXml
 
 //#region 🔖️WorkbookXml
-fn workbook_to_xml(workbook: &XlsxWorkbook, rids: &[String]) -> XmlDocument {
+async fn workbook_to_xml(workbook: &XlsxWorkbook, rids: &[String]) -> XmlDocument {
     let sheets = workbook
         .sheets
         .iter()
@@ -47,19 +47,19 @@ fn workbook_to_xml(workbook: &XlsxWorkbook, rids: &[String]) -> XmlDocument {
 //#endregion 🔖️WorkbookXml
 
 //#region 🔖️WorksheetXml
-fn v_element(text: &str) -> XmlNode {
+async fn v_element(text: &str) -> XmlNode {
     XmlNode::Element { name: "v".into(), attrs: vec![], children: vec![XmlNode::Text { text: text.into() }] }
 }
 
-fn is_element(text: &str) -> XmlNode {
+async fn is_element(text: &str) -> XmlNode {
     XmlNode::Element { name: "is".into(), attrs: vec![], children: vec![XmlNode::Element { name: "t".into(), attrs: vec![attr("xml:space", "preserve")], children: vec![XmlNode::Text { text: text.into() }] }] }
 }
 
-fn f_element(expr: &str) -> XmlNode {
+async fn f_element(expr: &str) -> XmlNode {
     XmlNode::Element { name: "f".into(), attrs: vec![], children: vec![XmlNode::Text { text: expr.into() }] }
 }
 
-fn format_number(n: f64) -> String {
+async fn format_number(n: f64) -> String {
     if n.fract() == 0.0 && n.abs() < 1e15 {
         format!("{}", n as i64)
     } else {
@@ -70,7 +70,7 @@ fn format_number(n: f64) -> String {
 /// 🔎️ Renders a CACHED formula value (the `<v>`/`t` pair that follows `<f>expr</f>`, if any) —
 /// mirrors `cell_to_xml`'s own top-level match, but never itself recurses into `Formula` (a
 /// formula's cached value is never itself a formula in a spec-conformant document).
-fn cached_value_xml(cached: &XlsxCellValue) -> (Option<crate::artifacts::xml::schema::snapshot::XmlAttr>, Option<XmlNode>) {
+async fn cached_value_xml(cached: &XlsxCellValue) -> (Option<crate::artifacts::xml::schema::snapshot::XmlAttr>, Option<XmlNode>) {
     match cached {
         XlsxCellValue::Number(n) => (None, Some(v_element(&format_number(*n)))),
         XlsxCellValue::SharedString(idx) => (Some(attr("t", "s")), Some(v_element(&idx.to_string()))),
@@ -81,7 +81,7 @@ fn cached_value_xml(cached: &XlsxCellValue) -> (Option<crate::artifacts::xml::sc
     }
 }
 
-fn cell_to_xml(cell: &XlsxCell) -> XmlNode {
+async fn cell_to_xml(cell: &XlsxCell) -> XmlNode {
     let r = format!("{}{}", super::super::super::column_letter(cell.col), cell.row);
     let mut attrs = vec![attr("r", &r)];
     match &cell.value {
@@ -118,7 +118,7 @@ fn cell_to_xml(cell: &XlsxCell) -> XmlNode {
 /// 🌳 Groups `sheet.cells` (sparse, unordered `(row, col)` pairs) into SpreadsheetML's required
 /// `<row>`-then-`<c>` nesting, sorted ascending on both axes (spec order, and needed for
 /// deterministic bytes).
-fn worksheet_to_xml(sheet: &XlsxSheet) -> XmlDocument {
+async fn worksheet_to_xml(sheet: &XlsxSheet) -> XmlDocument {
     let mut by_row: std::collections::BTreeMap<u32, Vec<&XlsxCell>> = std::collections::BTreeMap::new();
     for cell in &sheet.cells {
         by_row.entry(cell.row).or_default().push(cell);
@@ -155,7 +155,7 @@ fn worksheet_to_xml(sheet: &XlsxSheet) -> XmlDocument {
 // two arbitrary snapshots are most likely to share" sitting at a STABLE position — this is what
 // makes `between_roundtrip_law`/`inverse_law`'s composed (non-`sweep_a`/`sweep_b`) fixture pairs
 // hold, not just the hand-tuned `sweep_a`/`sweep_b` pair itself.
-fn regenerate_workbook_parts(opc: &mut OpcPackage, workbook: &XlsxWorkbook) {
+async fn regenerate_workbook_parts(opc: &mut OpcPackage, workbook: &XlsxWorkbook) {
     opc.parts.retain(|p| !p.path.starts_with("xl/worksheets/") && p.path != WORKBOOK_PART && p.path != SHARED_STRINGS_PART);
     opc.content_types.set_default("rels", crate::artifacts::zip::opc::RELS_CONTENT_TYPE);
     opc.content_types.set_default("xml", "application/xml");
@@ -198,13 +198,13 @@ fn regenerate_workbook_parts(opc: &mut OpcPackage, workbook: &XlsxWorkbook) {
 /// 🏗️ Assembles a brand-new, minimal-but-valid OPC package around `workbook` — correct
 /// `[Content_Types].xml`, root `_rels/.rels`, `xl/workbook.xml`, `xl/_rels/workbook.xml.rels`,
 /// every worksheet, and a rebuilt `xl/sharedStrings.xml`.
-pub fn build_minimal_xlsx(workbook: XlsxWorkbook) -> XlsxSnapshot {
+pub async fn build_minimal_xlsx(workbook: XlsxWorkbook) -> XlsxSnapshot {
     let mut opc = OpcPackage::empty();
     regenerate_workbook_parts(&mut opc, &workbook);
     XlsxSnapshot::from_parts(opc, workbook)
 }
 
-pub fn encode_xlsx(snap: &XlsxSnapshot) -> Result<Vec<u8>, XlsxError> {
+pub async fn encode_xlsx(snap: &XlsxSnapshot) -> Result<Vec<u8>, XlsxError> {
     let mut opc = snap.opc.clone();
     regenerate_workbook_parts(&mut opc, &snap.workbook);
     Ok(crate::artifacts::zip::opc::encode_opc_with_package_order(&opc)?)

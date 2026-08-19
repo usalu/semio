@@ -15,7 +15,7 @@ pub struct PresenceHeartbeat {
 
 /// 🐢️ A heartbeat only records this client's own identity for the presence broadcast — it must
 /// declare `None` `ui_scope` so it never triggers a full-shell `refresh-ui` for the sending client.
-pub fn handle(payload: &PresenceHeartbeat, _doc: &ArtifactView<'_, WorkflowSnapshot>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
+pub async fn handle(payload: &PresenceHeartbeat, _doc: &ArtifactView<'_, WorkflowSnapshot>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
     let config_mutations = vec![SpaceConfigMutation::SetClient { client_id: Some(payload.client_id.clone()), client_name: Some(payload.name.clone()) }];
     Ok(Emit { config_mutations, ui_scope: semio_framework::kernel::UiDirtyScope::None, ..Default::default() })
 }
@@ -26,13 +26,13 @@ mod tests {
     use super::*;
 
     #[test]
-    fn space_command_op_text_round_trips_every_variant() {
+    async fn space_command_op_text_round_trips_every_variant() {
         use crate::engine::space::SpaceCommand;
         store::os_store::test_support::assert_op_line_round_trip(&SpaceCommand::PresenceHeartbeat(PresenceHeartbeat { client_id: "c1".into(), name: "Ada".into() }));
     }
 
     #[test]
-    fn presence_heartbeat_declares_none_ui_scope() {
+    async fn presence_heartbeat_declares_none_ui_scope() {
         use crate::engine::space::testkit::studio_emit;
         use crate::engine::space::SpaceCommand;
         use crate::demo_space_projection;

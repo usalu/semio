@@ -42,13 +42,13 @@ pub struct DagSnapshot {
 }
 
 impl Default for DagSnapshot {
-    fn default() -> Self {
+    async fn default() -> Self {
         default_snapshot()
     }
 }
 
 /// 🌱 Canonical default document used by the play app and examples.
-pub fn default_snapshot() -> DagSnapshot {
+pub async fn default_snapshot() -> DagSnapshot {
     crate::artifacts::dag::dsl::parse_dsl(crate::artifacts::dag::dsl::DAG_EXAMPLE_TEXT)
         .expect("bundled dag example DSL must parse")
 }
@@ -60,21 +60,21 @@ pub fn default_snapshot() -> DagSnapshot {
 /// child — the bridge goes through the working-scene converter, never through `nodes`/`edges` fields
 /// (this struct no longer has any).
 impl From<DagSnapshot> for infinite_board_port_directed_dag::DagSnapshot {
-    fn from(value: DagSnapshot) -> Self {
+    async fn from(value: DagSnapshot) -> Self {
         let scene = crate::artifacts::dag::dag_working_scene(&value);
         Self { schema: value.schema, nodes: scene.nodes, edges: scene.edges }
     }
 }
 
 impl From<infinite_board_port_directed_dag::DagSnapshot> for DagSnapshot {
-    fn from(value: infinite_board_port_directed_dag::DagSnapshot) -> Self {
+    async fn from(value: infinite_board_port_directed_dag::DagSnapshot) -> Self {
         let content = crate::artifacts::dag::dag_content_child_handle_and_cache(value.nodes, value.edges);
         Self { schema: value.schema, content }
     }
 }
 
 impl From<&DagSnapshot> for infinite_board_port_directed_dag::DagSnapshot {
-    fn from(value: &DagSnapshot) -> Self {
+    async fn from(value: &DagSnapshot) -> Self {
         value.clone().into()
     }
 }
@@ -84,10 +84,10 @@ impl From<&DagSnapshot> for infinite_board_port_directed_dag::DagSnapshot {
 /// forcing every call site to import `dag_working_scene`) to minimize the app-layer rewrite's blast
 /// radius — see `crate::artifacts::dag::dag_working_scene` for the underlying cache.
 impl DagSnapshot {
-    pub fn nodes(&self) -> Vec<DagNodeSpec> {
+    pub async fn nodes(&self) -> Vec<DagNodeSpec> {
         crate::artifacts::dag::dag_working_scene(self).nodes
     }
-    pub fn edges(&self) -> Vec<DagFixtureEdge> {
+    pub async fn edges(&self) -> Vec<DagFixtureEdge> {
         crate::artifacts::dag::dag_working_scene(self).edges
     }
 }

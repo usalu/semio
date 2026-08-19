@@ -20,7 +20,7 @@ use serde::{Deserialize, Serialize};
 /// 🧮️ Generic name/id-keyed collection glue — `between`/`apply`/`inverse`/`absorb` over the
 /// shared `NamedTripleDiff<K,D,T>` container, written once and instantiated per collection below
 /// (mirrors bcf's own local copy, `💬️bcf/…/🔺️diff/🦀️component.rs` §GenericNamedEngine).
-fn between_named<K, T, D>(base: &[T], other: &[T], key_of: impl Fn(&T) -> K, diff_item: impl Fn(&T, &T) -> Option<D>) -> Option<NamedTripleDiff<K, D, T>>
+async fn between_named<K, T, D>(base: &[T], other: &[T], key_of: impl Fn(&T) -> K, diff_item: impl Fn(&T, &T) -> Option<D>) -> Option<NamedTripleDiff<K, D, T>>
 where
     K: PartialEq + Clone,
     T: Clone + PartialEq,
@@ -53,7 +53,7 @@ where
     }
 }
 
-fn apply_named<K, T, D>(items: &mut Vec<T>, diff: &NamedTripleDiff<K, D, T>, key_of: impl Fn(&T) -> K, apply_item: impl Fn(&mut T, &D))
+async fn apply_named<K, T, D>(items: &mut Vec<T>, diff: &NamedTripleDiff<K, D, T>, key_of: impl Fn(&T) -> K, apply_item: impl Fn(&mut T, &D))
 where
     K: PartialEq + Clone,
     T: Clone,
@@ -69,7 +69,7 @@ where
     }
 }
 
-fn inverse_named<K, T, D>(base_items: &[T], diff: &NamedTripleDiff<K, D, T>, key_of: impl Fn(&T) -> K, inverse_item: impl Fn(&T, &D) -> D) -> NamedTripleDiff<K, D, T>
+async fn inverse_named<K, T, D>(base_items: &[T], diff: &NamedTripleDiff<K, D, T>, key_of: impl Fn(&T) -> K, inverse_item: impl Fn(&T, &D) -> D) -> NamedTripleDiff<K, D, T>
 where
     K: PartialEq + Clone,
     T: Clone,
@@ -92,7 +92,7 @@ where
 
 /// 🧮️ Name/id-keyed absorb — identity is the KEY (not position): a `d2`-removal of a `d1`-added
 /// key annihilates the add; a `d2`-modify of a `d1`-added key patches into the carried payload.
-fn absorb_named<K, T, D>(d1: NamedTripleDiff<K, D, T>, d2: NamedTripleDiff<K, D, T>, key_of: impl Fn(&T) -> K, absorb_item: impl Fn(D, D) -> D, apply_item: impl Fn(&mut T, &D)) -> NamedTripleDiff<K, D, T>
+async fn absorb_named<K, T, D>(d1: NamedTripleDiff<K, D, T>, d2: NamedTripleDiff<K, D, T>, key_of: impl Fn(&T) -> K, absorb_item: impl Fn(D, D) -> D, apply_item: impl Fn(&mut T, &D)) -> NamedTripleDiff<K, D, T>
 where
     K: PartialEq + Clone,
     T: Clone,
@@ -198,7 +198,7 @@ pub struct SemioModelDiff {
 
 //#region 🔖️Apply
 impl MutationDiff<SemioModelSnapshot> for SemioModelDiff {
-    fn apply(&self, base: &SemioModelSnapshot) -> protocol::MutationApplyResult<SemioModelSnapshot> {
+    async fn apply(&self, base: &SemioModelSnapshot) -> protocol::MutationApplyResult<SemioModelSnapshot> {
         let mut next = base.clone();
         if let Some(d) = &self.spatial {
             crate::artifacts::semio::standards::v1::subsets::any::schema::triples::validate_named_triple(&next.spatial, d, |item| item.id.clone(), |item| item.id.clone(), ["spatial"])?;
@@ -215,7 +215,7 @@ impl MutationDiff<SemioModelSnapshot> for SemioModelDiff {
         Ok(next)
     }
 
-    fn absorb(&mut self, other: Self) {
+    async fn absorb(&mut self, other: Self) {
         self.spatial = match (self.spatial.take(), other.spatial) {
             (None, b) => b,
             (a, None) => a,
@@ -234,7 +234,7 @@ impl MutationDiff<SemioModelSnapshot> for SemioModelDiff {
     }
 }
 
-fn apply_spatial(node: &mut SpatialNode, diff: &SpatialNodeDiff) {
+async fn apply_spatial(node: &mut SpatialNode, diff: &SpatialNodeDiff) {
     if let Some(v) = &diff.kind {
         node.kind = *v;
     }
@@ -249,7 +249,7 @@ fn apply_spatial(node: &mut SpatialNode, diff: &SpatialNodeDiff) {
     }
 }
 
-fn apply_element(element: &mut SemioModelElement, diff: &SemioModelElementDiff) {
+async fn apply_element(element: &mut SemioModelElement, diff: &SemioModelElementDiff) {
     if let Some(v) = &diff.class {
         element.class = v.clone();
     }
@@ -267,7 +267,7 @@ fn apply_element(element: &mut SemioModelElement, diff: &SemioModelElementDiff) 
     }
 }
 
-fn apply_relation(relation: &mut ModelRelation, diff: &ModelRelationDiff) {
+async fn apply_relation(relation: &mut ModelRelation, diff: &ModelRelationDiff) {
     if let Some(v) = &diff.kind {
         relation.kind = v.clone();
     }
@@ -282,7 +282,7 @@ fn apply_relation(relation: &mut ModelRelation, diff: &ModelRelationDiff) {
 
 //#region 🔖️DiffAlgebra
 impl DiffAlgebra<SemioModelSnapshot> for SemioModelDiff {
-    fn inverse(&self, base: &SemioModelSnapshot) -> Self {
+    async fn inverse(&self, base: &SemioModelSnapshot) -> Self {
         SemioModelDiff {
             spatial: self.spatial.as_ref().map(|d| inverse_named(&base.spatial, d, |n: &SpatialNode| n.id.clone(), inverse_spatial)),
             elements: self.elements.as_ref().map(|d| inverse_named(&base.elements, d, |e: &SemioModelElement| e.id.clone(), inverse_element)),
@@ -290,7 +290,7 @@ impl DiffAlgebra<SemioModelSnapshot> for SemioModelDiff {
         }
     }
 
-    fn between(base: &SemioModelSnapshot, other: &SemioModelSnapshot) -> Self {
+    async fn between(base: &SemioModelSnapshot, other: &SemioModelSnapshot) -> Self {
         SemioModelDiff {
             spatial: between_named(&base.spatial, &other.spatial, |n: &SpatialNode| n.id.clone(), between_spatial),
             elements: between_named(&base.elements, &other.elements, |e: &SemioModelElement| e.id.clone(), between_element),
@@ -298,16 +298,16 @@ impl DiffAlgebra<SemioModelSnapshot> for SemioModelDiff {
         }
     }
 
-    fn is_empty(&self) -> bool {
+    async fn is_empty(&self) -> bool {
         self.spatial.is_none() && self.elements.is_none() && self.relations.is_none()
     }
 }
 
-fn inverse_spatial(base: &SpatialNode, diff: &SpatialNodeDiff) -> SpatialNodeDiff {
+async fn inverse_spatial(base: &SpatialNode, diff: &SpatialNodeDiff) -> SpatialNodeDiff {
     SpatialNodeDiff { kind: diff.kind.as_ref().map(|_| base.kind), name: diff.name.as_ref().map(|_| base.name.clone()), parent_id: diff.parent_id.as_ref().map(|_| base.parent_id.clone()), placement: diff.placement.as_ref().map(|_| base.placement) }
 }
 
-fn inverse_element(base: &SemioModelElement, diff: &SemioModelElementDiff) -> SemioModelElementDiff {
+async fn inverse_element(base: &SemioModelElement, diff: &SemioModelElementDiff) -> SemioModelElementDiff {
     SemioModelElementDiff {
         class: diff.class.as_ref().map(|_| base.class.clone()),
         placement: diff.placement.as_ref().map(|_| base.placement),
@@ -317,11 +317,11 @@ fn inverse_element(base: &SemioModelElement, diff: &SemioModelElementDiff) -> Se
     }
 }
 
-fn inverse_relation(base: &ModelRelation, diff: &ModelRelationDiff) -> ModelRelationDiff {
+async fn inverse_relation(base: &ModelRelation, diff: &ModelRelationDiff) -> ModelRelationDiff {
     ModelRelationDiff { kind: diff.kind.as_ref().map(|_| base.kind.clone()), from: diff.from.as_ref().map(|_| base.from.clone()), to: diff.to.as_ref().map(|_| base.to.clone()) }
 }
 
-fn between_spatial(base: &SpatialNode, other: &SpatialNode) -> Option<SpatialNodeDiff> {
+async fn between_spatial(base: &SpatialNode, other: &SpatialNode) -> Option<SpatialNodeDiff> {
     let kind = if base.kind != other.kind { Some(other.kind) } else { None };
     let name = if base.name != other.name { Some(other.name.clone()) } else { None };
     let parent_id = if base.parent_id != other.parent_id { Some(other.parent_id.clone()) } else { None };
@@ -333,7 +333,7 @@ fn between_spatial(base: &SpatialNode, other: &SpatialNode) -> Option<SpatialNod
     }
 }
 
-fn between_element(base: &SemioModelElement, other: &SemioModelElement) -> Option<SemioModelElementDiff> {
+async fn between_element(base: &SemioModelElement, other: &SemioModelElement) -> Option<SemioModelElementDiff> {
     let class = if base.class != other.class { Some(other.class.clone()) } else { None };
     let placement = if base.placement != other.placement { Some(other.placement) } else { None };
     let geometry = if base.geometry != other.geometry { Some(other.geometry.clone()) } else { None };
@@ -346,7 +346,7 @@ fn between_element(base: &SemioModelElement, other: &SemioModelElement) -> Optio
     }
 }
 
-fn between_relation(base: &ModelRelation, other: &ModelRelation) -> Option<ModelRelationDiff> {
+async fn between_relation(base: &ModelRelation, other: &ModelRelation) -> Option<ModelRelationDiff> {
     let kind = if base.kind != other.kind { Some(other.kind.clone()) } else { None };
     let from = if base.from != other.from { Some(other.from.clone()) } else { None };
     let to = if base.to != other.to { Some(other.to.clone()) } else { None };
@@ -357,7 +357,7 @@ fn between_relation(base: &ModelRelation, other: &ModelRelation) -> Option<Model
     }
 }
 
-fn absorb_spatial_diff(mut a: SpatialNodeDiff, b: SpatialNodeDiff) -> SpatialNodeDiff {
+async fn absorb_spatial_diff(mut a: SpatialNodeDiff, b: SpatialNodeDiff) -> SpatialNodeDiff {
     if b.kind.is_some() {
         a.kind = b.kind;
     }
@@ -373,7 +373,7 @@ fn absorb_spatial_diff(mut a: SpatialNodeDiff, b: SpatialNodeDiff) -> SpatialNod
     a
 }
 
-fn absorb_element_diff(mut a: SemioModelElementDiff, b: SemioModelElementDiff) -> SemioModelElementDiff {
+async fn absorb_element_diff(mut a: SemioModelElementDiff, b: SemioModelElementDiff) -> SemioModelElementDiff {
     if b.class.is_some() {
         a.class = b.class;
     }
@@ -392,7 +392,7 @@ fn absorb_element_diff(mut a: SemioModelElementDiff, b: SemioModelElementDiff) -
     a
 }
 
-fn absorb_relation_diff(mut a: ModelRelationDiff, b: ModelRelationDiff) -> ModelRelationDiff {
+async fn absorb_relation_diff(mut a: ModelRelationDiff, b: ModelRelationDiff) -> ModelRelationDiff {
     if b.kind.is_some() {
         a.kind = b.kind;
     }
@@ -409,7 +409,7 @@ fn absorb_relation_diff(mut a: ModelRelationDiff, b: ModelRelationDiff) -> Model
 //#region 🔖️SetSnapshot
 /// 🧩 Builds the sparse field-by-field diff for a `SetSnapshot` mutation. No
 /// `snapshot: Option<SemioModelSnapshot>` full-replace slot -- this IS `SemioModelDiff::between`.
-pub fn diff_set_snapshot(base: &SemioModelSnapshot, next: &SemioModelSnapshot) -> SemioModelDiff {
+pub async fn diff_set_snapshot(base: &SemioModelSnapshot, next: &SemioModelSnapshot) -> SemioModelDiff {
     SemioModelDiff::between(base, next)
 }
 //#endregion 🔖️SetSnapshot
@@ -421,31 +421,31 @@ pub fn diff_set_snapshot(base: &SemioModelSnapshot, next: &SemioModelSnapshot) -
 /// artifact's own copy of the small hex/option/list primitive set (each artifact writes its own,
 /// per bcf's own module doc rationale -- cross-artifact imports would be architecturally wrong).
 //#region 🔖️Primitives
-pub(crate) fn hex_encode(bytes: &[u8]) -> String {
+pub(crate) async fn hex_encode(bytes: &[u8]) -> String {
     bytes.iter().map(|b| format!("{b:02x}")).collect()
 }
-pub(crate) fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
+pub(crate) async fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
     if s.len() % 2 != 0 {
         return Err(format!("odd hex length: {s:?}"));
     }
     (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()
 }
-pub(crate) fn enc_str(s: &str) -> String {
+pub(crate) async fn enc_str(s: &str) -> String {
     hex_encode(s.as_bytes())
 }
-pub(crate) fn dec_str(s: &str) -> Result<String, String> {
+pub(crate) async fn dec_str(s: &str) -> Result<String, String> {
     String::from_utf8(hex_decode(s)?).map_err(|e| e.to_string())
 }
-pub(crate) fn parse_f64(s: &str) -> Result<f64, String> {
+pub(crate) async fn parse_f64(s: &str) -> Result<f64, String> {
     s.parse().map_err(|e: std::num::ParseFloatError| e.to_string())
 }
-pub(crate) fn encode_option<T>(opt: &Option<T>, enc: impl Fn(&T) -> String) -> String {
+pub(crate) async fn encode_option<T>(opt: &Option<T>, enc: impl Fn(&T) -> String) -> String {
     match opt {
         None => "[0]".to_string(),
         Some(v) => format!("[1,{}]", enc(v)),
     }
 }
-pub(crate) fn decode_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Option<T>, String> {
+pub(crate) async fn decode_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Option<T>, String> {
     let inner = strip_brackets(s)?;
     match split_top_level(inner, ',').as_slice() {
         ["0"] => Ok(None),
@@ -453,59 +453,59 @@ pub(crate) fn decode_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>)
         other => Err(format!("option decode: bad shape {other:?}")),
     }
 }
-pub(crate) fn enc_list<T>(items: &[T], enc: impl Fn(&T) -> String) -> String {
+pub(crate) async fn enc_list<T>(items: &[T], enc: impl Fn(&T) -> String) -> String {
     format!("[{}]", items.iter().map(|it| enc(it)).collect::<Vec<_>>().join(","))
 }
-pub(crate) fn dec_list<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Vec<T>, String> {
+pub(crate) async fn dec_list<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Vec<T>, String> {
     split_top_level(strip_brackets(s)?, ',').into_iter().filter(|s| !s.is_empty()).map(|entry| dec(entry)).collect()
 }
 
 /// 🧪️ P2 pilot (model): real LEB128-varint-length-prefixed binary primitives (`store::pack_rt::
 /// write_varint_u64` / `store::ByteReader`, same helpers `stdio.flow`'s upgraded `DiffCodec`
 /// reuses) backing the real `DiffCodec::encode_diff`/`decode_diff` below.
-pub(crate) fn write_bytes_lp(out: &mut Vec<u8>, bytes: &[u8]) {
+pub(crate) async fn write_bytes_lp(out: &mut Vec<u8>, bytes: &[u8]) {
     store::pack_rt::write_varint_u64(out, bytes.len() as u64);
     out.extend_from_slice(bytes);
 }
-pub(crate) fn read_bytes_lp(reader: &mut store::ByteReader<'_>) -> Result<Vec<u8>, String> {
+pub(crate) async fn read_bytes_lp(reader: &mut store::ByteReader<'_>) -> Result<Vec<u8>, String> {
     let len = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
     Ok(reader.read_bytes(len).map_err(|e| e.to_string())?.to_vec())
 }
-pub(crate) fn write_str_lp(out: &mut Vec<u8>, s: &str) {
+pub(crate) async fn write_str_lp(out: &mut Vec<u8>, s: &str) {
     write_bytes_lp(out, s.as_bytes());
 }
-pub(crate) fn read_str_lp(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
+pub(crate) async fn read_str_lp(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
     String::from_utf8(read_bytes_lp(reader)?).map_err(|e| e.to_string())
 }
 //#endregion 🔖️Primitives
 
 //#region 🔖️ValueCodecs
-pub(crate) fn enc_point3(p: &SemioPoint3) -> String {
+pub(crate) async fn enc_point3(p: &SemioPoint3) -> String {
     format!("[{},{},{}]", p.x, p.y, p.z)
 }
-pub(crate) fn dec_point3(s: &str) -> Result<SemioPoint3, String> {
+pub(crate) async fn dec_point3(s: &str) -> Result<SemioPoint3, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [x, y, z] = parts.as_slice() else { return Err(format!("point3: expected 3 fields, got {}", parts.len())) };
     Ok(SemioPoint3 { x: parse_f64(x)?, y: parse_f64(y)?, z: parse_f64(z)? })
 }
-pub(crate) fn enc_quat(q: &SemioQuaternion) -> String {
+pub(crate) async fn enc_quat(q: &SemioQuaternion) -> String {
     format!("[{},{},{},{}]", q.x, q.y, q.z, q.w)
 }
-pub(crate) fn dec_quat(s: &str) -> Result<SemioQuaternion, String> {
+pub(crate) async fn dec_quat(s: &str) -> Result<SemioQuaternion, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [x, y, z, w] = parts.as_slice() else { return Err(format!("quaternion: expected 4 fields, got {}", parts.len())) };
     Ok(SemioQuaternion { x: parse_f64(x)?, y: parse_f64(y)?, z: parse_f64(z)?, w: parse_f64(w)? })
 }
-pub(crate) fn enc_transform(t: &SemioTransform) -> String {
+pub(crate) async fn enc_transform(t: &SemioTransform) -> String {
     format!("[{},{},{}]", enc_point3(&t.translation), enc_quat(&t.rotation), enc_point3(&t.scale))
 }
-pub(crate) fn dec_transform(s: &str) -> Result<SemioTransform, String> {
+pub(crate) async fn dec_transform(s: &str) -> Result<SemioTransform, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [translation, rotation, scale] = parts.as_slice() else { return Err(format!("transform: expected 3 fields, got {}", parts.len())) };
     Ok(SemioTransform { translation: dec_point3(translation)?, rotation: dec_quat(rotation)?, scale: dec_point3(scale)? })
 }
 
-pub(crate) fn enc_spatial_kind(k: &SpatialKind) -> &'static str {
+pub(crate) async fn enc_spatial_kind(k: &SpatialKind) -> &'static str {
     match k {
         SpatialKind::Site => "S",
         SpatialKind::Building => "B",
@@ -513,7 +513,7 @@ pub(crate) fn enc_spatial_kind(k: &SpatialKind) -> &'static str {
         SpatialKind::Space => "P",
     }
 }
-pub(crate) fn dec_spatial_kind(s: &str) -> Result<SpatialKind, String> {
+pub(crate) async fn dec_spatial_kind(s: &str) -> Result<SpatialKind, String> {
     match s {
         "S" => Ok(SpatialKind::Site),
         "B" => Ok(SpatialKind::Building),
@@ -523,7 +523,7 @@ pub(crate) fn dec_spatial_kind(s: &str) -> Result<SpatialKind, String> {
     }
 }
 
-pub(crate) fn enc_element_class(c: &ElementClass) -> String {
+pub(crate) async fn enc_element_class(c: &ElementClass) -> String {
     match c {
         ElementClass::Wall => "WA".to_string(),
         ElementClass::Slab => "SL".to_string(),
@@ -537,7 +537,7 @@ pub(crate) fn enc_element_class(c: &ElementClass) -> String {
         ElementClass::Other { name } => format!("OT[{}]", enc_str(name)),
     }
 }
-pub(crate) fn dec_element_class(s: &str) -> Result<ElementClass, String> {
+pub(crate) async fn dec_element_class(s: &str) -> Result<ElementClass, String> {
     match s {
         "WA" => Ok(ElementClass::Wall),
         "SL" => Ok(ElementClass::Slab),
@@ -553,14 +553,14 @@ pub(crate) fn dec_element_class(s: &str) -> Result<ElementClass, String> {
     }
 }
 
-pub(crate) fn enc_geometry_ref(g: &GeometryRef) -> String {
+pub(crate) async fn enc_geometry_ref(g: &GeometryRef) -> String {
     match g {
         GeometryRef::None => "N".to_string(),
         GeometryRef::Brep { brep_id } => format!("B[{}]", enc_str(brep_id)),
         GeometryRef::Mesh { mesh_id } => format!("M[{}]", enc_str(mesh_id)),
     }
 }
-pub(crate) fn dec_geometry_ref(s: &str) -> Result<GeometryRef, String> {
+pub(crate) async fn dec_geometry_ref(s: &str) -> Result<GeometryRef, String> {
     if s == "N" {
         return Ok(GeometryRef::None);
     }
@@ -573,14 +573,14 @@ pub(crate) fn dec_geometry_ref(s: &str) -> Result<GeometryRef, String> {
     }
 }
 
-pub(crate) fn enc_pset_value(v: &PsetValue) -> String {
+pub(crate) async fn enc_pset_value(v: &PsetValue) -> String {
     match v {
         PsetValue::Text { value } => format!("T[{}]", enc_str(value)),
         PsetValue::Number { value } => format!("N[{value}]"),
         PsetValue::Boolean { value } => format!("B[{}]", if *value { "1" } else { "0" }),
     }
 }
-pub(crate) fn dec_pset_value(s: &str) -> Result<PsetValue, String> {
+pub(crate) async fn dec_pset_value(s: &str) -> Result<PsetValue, String> {
     let (tag, rest) = s.split_at(1);
     let inner = strip_brackets(rest)?;
     match tag {
@@ -591,43 +591,43 @@ pub(crate) fn dec_pset_value(s: &str) -> Result<PsetValue, String> {
     }
 }
 
-pub(crate) fn enc_property(p: &Property) -> String {
+pub(crate) async fn enc_property(p: &Property) -> String {
     format!("[{},{}]", enc_str(&p.key), enc_pset_value(&p.value))
 }
-pub(crate) fn dec_property(s: &str) -> Result<Property, String> {
+pub(crate) async fn dec_property(s: &str) -> Result<Property, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [key, value] = parts.as_slice() else { return Err(format!("property: expected 2 fields, got {}", parts.len())) };
     Ok(Property { key: dec_str(key)?, value: dec_pset_value(value)? })
 }
 
-pub(crate) fn enc_property_set(ps: &PropertySet) -> String {
+pub(crate) async fn enc_property_set(ps: &PropertySet) -> String {
     format!("[{},{}]", enc_str(&ps.name), enc_list(&ps.properties, enc_property))
 }
-pub(crate) fn dec_property_set(s: &str) -> Result<PropertySet, String> {
+pub(crate) async fn dec_property_set(s: &str) -> Result<PropertySet, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [name, properties] = parts.as_slice() else { return Err(format!("property set: expected 2 fields, got {}", parts.len())) };
     Ok(PropertySet { name: dec_str(name)?, properties: dec_list(properties, dec_property)? })
 }
 
-pub(crate) fn enc_spatial_node(n: &SpatialNode) -> String {
+pub(crate) async fn enc_spatial_node(n: &SpatialNode) -> String {
     format!("[{},{},{},{},{}]", enc_str(&n.id), enc_spatial_kind(&n.kind), enc_str(&n.name), encode_option(&n.parent_id, |v: &String| enc_str(v)), enc_transform(&n.placement))
 }
-pub(crate) fn dec_spatial_node(s: &str) -> Result<SpatialNode, String> {
+pub(crate) async fn dec_spatial_node(s: &str) -> Result<SpatialNode, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [id, kind, name, parent_id, placement] = parts.as_slice() else { return Err(format!("spatial node: expected 5 fields, got {}", parts.len())) };
     Ok(SpatialNode { id: dec_str(id)?, kind: dec_spatial_kind(kind)?, name: dec_str(name)?, parent_id: decode_option(parent_id, dec_str)?, placement: dec_transform(placement)? })
 }
 
-pub(crate) fn enc_element(e: &SemioModelElement) -> String {
+pub(crate) async fn enc_element(e: &SemioModelElement) -> String {
     format!("[{},{},{},{},{},{}]", enc_str(&e.id), enc_element_class(&e.class), enc_transform(&e.placement), enc_geometry_ref(&e.geometry), encode_option(&e.spatial_id, |v: &String| enc_str(v)), enc_list(&e.psets, enc_property_set),)
 }
-pub(crate) fn dec_element(s: &str) -> Result<SemioModelElement, String> {
+pub(crate) async fn dec_element(s: &str) -> Result<SemioModelElement, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [id, class, placement, geometry, spatial_id, psets] = parts.as_slice() else { return Err(format!("element: expected 6 fields, got {}", parts.len())) };
     Ok(SemioModelElement { id: dec_str(id)?, class: dec_element_class(class)?, placement: dec_transform(placement)?, geometry: dec_geometry_ref(geometry)?, spatial_id: decode_option(spatial_id, dec_str)?, psets: dec_list(psets, dec_property_set)? })
 }
 
-pub(crate) fn enc_relation_kind(k: &RelationKind) -> String {
+pub(crate) async fn enc_relation_kind(k: &RelationKind) -> String {
     match k {
         RelationKind::Aggregates => "AG".to_string(),
         RelationKind::ContainedIn => "CI".to_string(),
@@ -637,7 +637,7 @@ pub(crate) fn enc_relation_kind(k: &RelationKind) -> String {
         RelationKind::Other { label } => format!("OT[{}]", enc_str(label)),
     }
 }
-pub(crate) fn dec_relation_kind(s: &str) -> Result<RelationKind, String> {
+pub(crate) async fn dec_relation_kind(s: &str) -> Result<RelationKind, String> {
     match s {
         "AG" => Ok(RelationKind::Aggregates),
         "CI" => Ok(RelationKind::ContainedIn),
@@ -649,10 +649,10 @@ pub(crate) fn dec_relation_kind(s: &str) -> Result<RelationKind, String> {
     }
 }
 
-pub(crate) fn enc_relation(r: &ModelRelation) -> String {
+pub(crate) async fn enc_relation(r: &ModelRelation) -> String {
     format!("[{},{},{},{}]", enc_str(&r.id), enc_relation_kind(&r.kind), enc_str(&r.from), enc_str(&r.to))
 }
-pub(crate) fn dec_relation(s: &str) -> Result<ModelRelation, String> {
+pub(crate) async fn dec_relation(s: &str) -> Result<ModelRelation, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [id, kind, from, to] = parts.as_slice() else { return Err(format!("relation: expected 4 fields, got {}", parts.len())) };
     Ok(ModelRelation { id: dec_str(id)?, kind: dec_relation_kind(kind)?, from: dec_str(from)?, to: dec_str(to)? })
@@ -660,7 +660,7 @@ pub(crate) fn dec_relation(s: &str) -> Result<ModelRelation, String> {
 //#endregion 🔖️ValueCodecs
 
 //#region 🔖️DiffValueCodecs
-fn enc_spatial_node_diff(d: &SpatialNodeDiff) -> String {
+async fn enc_spatial_node_diff(d: &SpatialNodeDiff) -> String {
     format!(
         "[{},{},{},{}]",
         encode_option(&d.kind, |v: &SpatialKind| enc_spatial_kind(v).to_string()),
@@ -669,13 +669,13 @@ fn enc_spatial_node_diff(d: &SpatialNodeDiff) -> String {
         encode_option(&d.placement, enc_transform),
     )
 }
-fn dec_spatial_node_diff(s: &str) -> Result<SpatialNodeDiff, String> {
+async fn dec_spatial_node_diff(s: &str) -> Result<SpatialNodeDiff, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [kind, name, parent_id, placement] = parts.as_slice() else { return Err(format!("spatial node diff: expected 4 fields, got {}", parts.len())) };
     Ok(SpatialNodeDiff { kind: decode_option(kind, dec_spatial_kind)?, name: decode_option(name, dec_str)?, parent_id: decode_option(parent_id, |s| decode_option(s, dec_str))?, placement: decode_option(placement, dec_transform)? })
 }
 
-fn enc_element_diff(d: &SemioModelElementDiff) -> String {
+async fn enc_element_diff(d: &SemioModelElementDiff) -> String {
     format!(
         "[{},{},{},{},{}]",
         encode_option(&d.class, enc_element_class),
@@ -685,7 +685,7 @@ fn enc_element_diff(d: &SemioModelElementDiff) -> String {
         encode_option(&d.psets, |v: &Vec<PropertySet>| enc_list(v, enc_property_set)),
     )
 }
-fn dec_element_diff(s: &str) -> Result<SemioModelElementDiff, String> {
+async fn dec_element_diff(s: &str) -> Result<SemioModelElementDiff, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [class, placement, geometry, spatial_id, psets] = parts.as_slice() else { return Err(format!("element diff: expected 5 fields, got {}", parts.len())) };
     Ok(SemioModelElementDiff {
@@ -697,10 +697,10 @@ fn dec_element_diff(s: &str) -> Result<SemioModelElementDiff, String> {
     })
 }
 
-fn enc_relation_diff(d: &ModelRelationDiff) -> String {
+async fn enc_relation_diff(d: &ModelRelationDiff) -> String {
     format!("[{},{},{}]", encode_option(&d.kind, enc_relation_kind), encode_option(&d.from, |v: &String| enc_str(v)), encode_option(&d.to, |v: &String| enc_str(v)))
 }
-fn dec_relation_diff(s: &str) -> Result<ModelRelationDiff, String> {
+async fn dec_relation_diff(s: &str) -> Result<ModelRelationDiff, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [kind, from, to] = parts.as_slice() else { return Err(format!("relation diff: expected 3 fields, got {}", parts.len())) };
     Ok(ModelRelationDiff { kind: decode_option(kind, dec_relation_kind)?, from: decode_option(from, dec_str)?, to: decode_option(to, dec_str)? })
@@ -708,26 +708,26 @@ fn dec_relation_diff(s: &str) -> Result<ModelRelationDiff, String> {
 //#endregion 🔖️DiffValueCodecs
 
 //#region 🔖️TopLevel
-pub(crate) fn enc_spatial_diff(d: &SpatialDiff) -> String {
+pub(crate) async fn enc_spatial_diff(d: &SpatialDiff) -> String {
     enc_named_triple(d, |k: &String| enc_str(k), enc_spatial_node_diff, enc_spatial_node)
 }
-pub(crate) fn dec_spatial_diff(s: &str) -> Result<SpatialDiff, String> {
+pub(crate) async fn dec_spatial_diff(s: &str) -> Result<SpatialDiff, String> {
     dec_named_triple(s, dec_str, dec_spatial_node_diff, dec_spatial_node)
 }
-pub(crate) fn enc_elements_diff(d: &ElementsDiff) -> String {
+pub(crate) async fn enc_elements_diff(d: &ElementsDiff) -> String {
     enc_named_triple(d, |k: &String| enc_str(k), enc_element_diff, enc_element)
 }
-pub(crate) fn dec_elements_diff(s: &str) -> Result<ElementsDiff, String> {
+pub(crate) async fn dec_elements_diff(s: &str) -> Result<ElementsDiff, String> {
     dec_named_triple(s, dec_str, dec_element_diff, dec_element)
 }
-pub(crate) fn enc_relations_diff(d: &RelationsDiff) -> String {
+pub(crate) async fn enc_relations_diff(d: &RelationsDiff) -> String {
     enc_named_triple(d, |k: &String| enc_str(k), enc_relation_diff, enc_relation)
 }
-pub(crate) fn dec_relations_diff(s: &str) -> Result<RelationsDiff, String> {
+pub(crate) async fn dec_relations_diff(s: &str) -> Result<RelationsDiff, String> {
     dec_named_triple(s, dec_str, dec_relation_diff, dec_relation)
 }
 
-fn print_semio_model_diff(d: &SemioModelDiff) -> String {
+async fn print_semio_model_diff(d: &SemioModelDiff) -> String {
     let mut tokens: Vec<String> = Vec::new();
     if let Some(v) = &d.spatial {
         tokens.push(format!("spatial={}", enc_spatial_diff(v)));
@@ -740,7 +740,7 @@ fn print_semio_model_diff(d: &SemioModelDiff) -> String {
     }
     tokens.join(" ")
 }
-fn parse_semio_model_diff(line: &str) -> Result<SemioModelDiff, String> {
+async fn parse_semio_model_diff(line: &str) -> Result<SemioModelDiff, String> {
     let mut d = SemioModelDiff::default();
     if line.is_empty() {
         return Ok(d);
@@ -760,10 +760,10 @@ fn parse_semio_model_diff(line: &str) -> Result<SemioModelDiff, String> {
 }
 
 impl DiffCodec for SemioModelDiff {
-    fn print_diff(&self) -> String {
+    async fn print_diff(&self) -> String {
         print_semio_model_diff(self)
     }
-    fn parse_diff(line: &str) -> Result<Self, store::TextError> {
+    async fn parse_diff(line: &str) -> Result<Self, store::TextError> {
         parse_semio_model_diff(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
     /// ⚡️ P2 pilot (model): real binary diff frame, replacing the old `print_diff().into_bytes()`
@@ -775,7 +775,7 @@ impl DiffCodec for SemioModelDiff {
     /// 0-3 of them (chaining a `Cond` per-segment hits the `protocol-cond-cannot-chain` gap: a
     /// second `if`-guard on a field that was itself only conditionally decoded hard-errors
     /// `eval_cond` — same gap `stdio.semio.flow`'s own diff facet hit first).
-    fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    async fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         const DIFF_BINARY_FORMAT: u8 = 1;
         let mut presence = 0u8;
         if self.spatial.is_some() {
@@ -799,7 +799,7 @@ impl DiffCodec for SemioModelDiff {
         }
         Ok(out)
     }
-    fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    async fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         const DIFF_BINARY_FORMAT: u8 = 1;
         if bytes.len() < 2 {
             return Err(protocol::ProtocolError::Malformed { what: "diff header", offset: 0, detail: "truncated (need format+presence)".to_string() });
@@ -841,11 +841,11 @@ impl DiffCodec for SemioModelDiff {
 /// `demo_diff_cases` below and the composer's `conformance_laws` can both reuse it — single source
 /// of truth, same convention `stdio.semio.flow`'s own diff facet demo cases use.
 #[cfg(test)]
-pub(crate) fn moved_transform(x: f64) -> SemioTransform {
+pub(crate) async fn moved_transform(x: f64) -> SemioTransform {
     SemioTransform { translation: SemioPoint3 { x, y: 0.0, z: 0.0 }, rotation: SemioQuaternion::default(), scale: SemioPoint3 { x: 1.0, y: 1.0, z: 1.0 } }
 }
 #[cfg(test)]
-pub(crate) fn sweep_a() -> SemioModelSnapshot {
+pub(crate) async fn sweep_a() -> SemioModelSnapshot {
     SemioModelSnapshot {
         schema: SemioModelSnapshot::default().schema,
         spatial: vec![
@@ -867,7 +867,7 @@ pub(crate) fn sweep_a() -> SemioModelSnapshot {
     }
 }
 #[cfg(test)]
-pub(crate) fn sweep_b() -> SemioModelSnapshot {
+pub(crate) async fn sweep_b() -> SemioModelSnapshot {
     SemioModelSnapshot {
         schema: SemioModelSnapshot::default().schema,
         spatial: vec![
@@ -894,7 +894,7 @@ pub(crate) fn sweep_b() -> SemioModelSnapshot {
 /// single source of truth for `grammar_conformance_law`/`protocol_walk_law` in
 /// `🎹️composer/🦀️component.rs`.
 #[cfg(test)]
-pub(crate) fn demo_diff_cases() -> Vec<SemioModelDiff> {
+pub(crate) async fn demo_diff_cases() -> Vec<SemioModelDiff> {
     let a = sweep_a();
     let b = sweep_b();
     let mut cases = vec![SemioModelDiff::default(), <SemioModelDiff as DiffAlgebra<SemioModelSnapshot>>::between(&a, &b), <SemioModelDiff as DiffAlgebra<SemioModelSnapshot>>::between(&b, &a)];
@@ -926,7 +926,7 @@ mod tests {
     /// `parent_id`/`spatial_id` tri-states in both directions (Some->None on spatial, None->Some
     /// on elements).
     #[test]
-    fn field_sweep() {
+    async fn field_sweep() {
         let a = sweep_a();
         let b = sweep_b();
         let d = SemioModelDiff::between(&a, &b);
@@ -957,7 +957,7 @@ mod tests {
 
     /// 🧪️ between_roundtrip_law: `between(a,b).apply(a) == b` and the symmetric direction.
     #[test]
-    fn between_roundtrip_law() {
+    async fn between_roundtrip_law() {
         let a = sweep_a();
         let b = sweep_b();
         assert_eq!(SemioModelDiff::between(&a, &b).apply(&a).expect("apply must succeed for a well-formed fixture"), b);
@@ -966,7 +966,7 @@ mod tests {
 
     /// 🧪️ inverse_law: `d.inverse(base).apply(&d.apply(base)) == base`.
     #[test]
-    fn inverse_law() {
+    async fn inverse_law() {
         let a = sweep_a();
         let b = sweep_b();
         let d = SemioModelDiff::between(&a, &b);
@@ -978,7 +978,7 @@ mod tests {
     /// 🧪️ absorb_law: `absorb(d1,d2).apply(base) == d2.apply(&d1.apply(base))`, including the
     /// canonical add-then-remove-before / add-then-set-field cases from schema-design.md.
     #[test]
-    fn absorb_law() {
+    async fn absorb_law() {
         let base = sweep_a();
         let mid = sweep_b();
         let mut after = sweep_b();
@@ -1020,7 +1020,7 @@ mod tests {
 
     /// 🧪️ diff_codec_text_binary_roundtrip_law: hand-rolled `DiffCodec` text+binary round trip.
     #[test]
-    fn diff_codec_text_binary_roundtrip_law() {
+    async fn diff_codec_text_binary_roundtrip_law() {
         let a = sweep_a();
         let b = sweep_b();
         let d = SemioModelDiff::between(&a, &b);

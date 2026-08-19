@@ -65,10 +65,10 @@ pub struct FlowConfig {
 /// 📜️ Handcrafted ArtifactDsl (P6): uses this type's `__dsl_*` helpers + parse/print, not derive emission.
 impl store::ArtifactDsl for FlowConfig {
     const EXTENSION: &'static str = Self::__DSL_EXTENSION;
-    fn envelope_id() -> &'static str {
+    async fn envelope_id() -> &'static str {
         Self::__DSL_ENVELOPE_ID
     }
-    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+    async fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
         let body = match store::semio_format::split_text_preamble(text) {
             Ok((_, rest)) => rest,
             Err(_) => text,
@@ -80,7 +80,7 @@ impl store::ArtifactDsl for FlowConfig {
         )?;
         Self::__dsl_from_record(&record)
     }
-    fn print_dsl(&self) -> String {
+    async fn print_dsl(&self) -> String {
         let body = dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), dsl::JoinMode::Document);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
             <Self as store::ArtifactDsl>::envelope_id(),
@@ -94,7 +94,7 @@ impl store::ArtifactDsl for FlowConfig {
 
 /// 📦️ Handcrafted ArtifactPack (P6): envelope-wrapped pack body via `__dsl_*` record lowering.
 impl store::ArtifactPack for FlowConfig {
-    fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
+    async fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let inner = store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
             <Self as store::ArtifactDsl>::envelope_id(),
@@ -104,7 +104,7 @@ impl store::ArtifactPack for FlowConfig {
         .map_err(|e| store::PackError::Schema(e.to_string()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &inner))
     }
-    fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
+    async fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
         if envelope.envelope_id() != <Self as store::ArtifactDsl>::envelope_id() {
             return Err(store::PackError::Schema(format!(
@@ -116,7 +116,7 @@ impl store::ArtifactPack for FlowConfig {
         let (record, _report) = store::pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
         Self::__dsl_from_record(&record).map_err(store::text_error_to_pack_error)
     }
-    fn record_spec() -> Option<dsl::RecordSpec> {
+    async fn record_spec() -> Option<dsl::RecordSpec> {
         Some(Self::__dsl_spec())
     }
 }
@@ -125,7 +125,7 @@ impl store::ArtifactPack for FlowConfig {
 
 
 impl Default for FlowConfig {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self {
             preview_off_node_ids: Vec::new(),
             camera: CameraJson { x: 0.0, y: 0.0, zoom: 1.0 },
@@ -145,12 +145,12 @@ impl Default for FlowConfig {
 
 impl FlowConfig {
     /// 🧩️ Parses `automation_enabled_json` — falls back to an empty map.
-    pub fn automation_enabled(&self) -> HashMap<String, bool> {
+    pub async fn automation_enabled(&self) -> HashMap<String, bool> {
         serde_json::from_str(&self.automation_enabled_json).unwrap_or_default()
     }
 
     /// 🧬️ Parses `generation_json` — falls back to `GenerationPlayState::default()`.
-    pub fn generation(&self) -> GenerationPlayState {
+    pub async fn generation(&self) -> GenerationPlayState {
         serde_json::from_str(&self.generation_json).unwrap_or_default()
     }
 }
@@ -158,7 +158,7 @@ impl FlowConfig {
 store::impl_whole_record_config!(FlowConfig);
 //#endregion 🔖️Config
 
-fn default_contributions_json() -> String {
+async fn default_contributions_json() -> String {
     "[]".into()
 }
 
@@ -210,7 +210,7 @@ pub enum FlowConfigMutation {
 
 //#region 🔖️OpCodec
 impl protocol::OpText for FlowConfigMutation {
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
+    async fn parse_op(line: &str) -> Result<Self, store::TextError> {
         let variants = <Self as dsl::DslVariants>::variants();
         for (keyword, spec_fn) in &variants {
             let probe = format!("{} ", keyword);
@@ -225,7 +225,7 @@ impl protocol::OpText for FlowConfigMutation {
         }
         Err(dsl::__rt::field_error(format!("unknown operation line '{line}'")))
     }
-    fn print_op(&self) -> String {
+    async fn print_op(&self) -> String {
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
         let variants = <Self as dsl::DslVariants>::variants();
         let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
@@ -235,7 +235,7 @@ impl protocol::OpText for FlowConfigMutation {
 
 /// 🎯️ Handcrafted OpBinary (P6).
 impl protocol::OpBinary for FlowConfigMutation {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         const OP_BINARY_FORMAT: u8 = 1;
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
         let variants = <Self as dsl::DslVariants>::variants();
@@ -252,7 +252,7 @@ impl protocol::OpBinary for FlowConfigMutation {
         out.extend_from_slice(&body);
         Ok(out)
     }
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         const OP_BINARY_FORMAT: u8 = 1;
         let mut reader = store::pack_rt::ByteReader::new(bytes);
         let format = reader.read_u8()?;
@@ -283,7 +283,7 @@ impl protocol::OpBinary for FlowConfigMutation {
 impl Mutation<FlowConfig> for FlowConfigMutation {
     type Diff = FlowConfig;
 
-    fn diff(&self, base: &FlowConfig) -> protocol::MutationOutcome<FlowConfig> {
+    async fn diff(&self, base: &FlowConfig) -> protocol::MutationOutcome<FlowConfig> {
         let mut next = base.clone();
         match self {
             FlowConfigMutation::Snapshot { config } => return protocol::MutationOutcome::new(config.clone()),
@@ -306,7 +306,7 @@ impl Mutation<FlowConfig> for FlowConfigMutation {
         protocol::MutationOutcome::new(next)
     }
 
-    fn inverse(&self, base: &FlowConfig) -> Vec<Self> {
+    async fn inverse(&self, base: &FlowConfig) -> Vec<Self> {
         vec![FlowConfigMutation::Snapshot { config: base.clone() }]
     }
 }
@@ -318,7 +318,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn flow_config_default_matches_flow_play_runtime_defaults() {
+    async fn flow_config_default_matches_flow_play_runtime_defaults() {
         let config = FlowConfig::default();
         assert_eq!(config.camera, CameraJson { x: 0.0, y: 0.0, zoom: 1.0 });
         assert_eq!(config.lod_mode, FLOW_LOD_MODE_AUTOMATIC);
@@ -334,7 +334,7 @@ mod tests {
 
     /// 🎞️ A fixture exercising every field — the dsl/pack round-trip law for `FlowConfig`.
     #[test]
-    fn flow_config_dsl_pack_round_trip() {
+    async fn flow_config_dsl_pack_round_trip() {
         let config = FlowConfig {
             preview_off_node_ids: vec!["n2".into()],
             camera: CameraJson { x: 12.5, y: -3.0, zoom: 2.25 },
@@ -353,7 +353,7 @@ mod tests {
     }
 
     #[test]
-    fn flow_config_operation_text_binary_round_trips_every_variant() {
+    async fn flow_config_operation_text_binary_round_trips_every_variant() {
         store::os_store::test_support::assert_op_line_round_trip(&FlowConfigMutation::Snapshot { config: FlowConfig { locale: "de-DE".into(), ..FlowConfig::default() } });
         store::os_store::test_support::assert_op_line_round_trip(&FlowConfigMutation::SetPreviewOff { node_ids: vec!["n1".into()] });
         store::os_store::test_support::assert_op_line_round_trip(&FlowConfigMutation::SetCamera { camera: CameraJson { x: 1.0, y: 2.0, zoom: 3.0 } });
@@ -369,7 +369,7 @@ mod tests {
     }
 
     #[test]
-    fn flow_config_operation_backwards_restores_the_pre_operation_snapshot() {
+    async fn flow_config_operation_backwards_restores_the_pre_operation_snapshot() {
         let base = FlowConfig { locale: "en-US".into(), ..FlowConfig::default() };
         let operation = FlowConfigMutation::SetPreviewOff { node_ids: vec!["n2".into()] };
         let forward = operation.diff(&base).into_parts().0;

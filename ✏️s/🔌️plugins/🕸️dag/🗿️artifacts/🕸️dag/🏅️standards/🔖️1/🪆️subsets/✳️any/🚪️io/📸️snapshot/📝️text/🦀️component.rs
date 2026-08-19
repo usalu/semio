@@ -21,12 +21,12 @@ pub const DAG_EXAMPLE_TEXT: &str =
     include_str!("../../../📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio");
 
 /// 📖️ Parses `.dag` DSL text into a `DagSnapshot`.
-pub fn parse_dsl(text: &str) -> Result<DagSnapshot, store::TextError> {
+pub async fn parse_dsl(text: &str) -> Result<DagSnapshot, store::TextError> {
     <DagSnapshot as store::ArtifactDsl>::parse_dsl(text)
 }
 
 /// 🖨️ Prints a `DagSnapshot` back to `.dag` DSL text.
-pub fn print_dsl(document: &DagSnapshot) -> String {
+pub async fn print_dsl(document: &DagSnapshot) -> String {
     store::ArtifactDsl::print_dsl(document)
 }
 
@@ -34,29 +34,29 @@ pub fn print_dsl(document: &DagSnapshot) -> String {
 /// 🧪️ Real hex/bracket-encoded value primitives backing the hand-rolled `ArtifactDsl` below — same
 /// style stdio's own `✳️graph`/`✳️text` facets already establish, duplicated locally (not imported
 /// across crates) to keep this facet independently compilable.
-fn hex_encode(bytes: &[u8]) -> String {
+async fn hex_encode(bytes: &[u8]) -> String {
     bytes.iter().map(|b| format!("{b:02x}")).collect()
 }
-fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
+async fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
     if s.len() % 2 != 0 {
         return Err(format!("odd hex length: {s:?}"));
     }
     (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()
 }
-pub(crate) fn enc_str(s: &str) -> String {
+pub(crate) async fn enc_str(s: &str) -> String {
     hex_encode(s.as_bytes())
 }
-pub(crate) fn dec_str(s: &str) -> Result<String, String> {
+pub(crate) async fn dec_str(s: &str) -> Result<String, String> {
     String::from_utf8(hex_decode(s)?).map_err(|e| e.to_string())
 }
 
-fn print_dag_snapshot_body(s: &DagSnapshot) -> String {
+async fn print_dag_snapshot_body(s: &DagSnapshot) -> String {
     let scene = crate::artifacts::dag::dag_working_scene(s);
     let nodes_json = serde_json::to_string(&scene.nodes).unwrap_or_default();
     let edges_json = serde_json::to_string(&scene.edges).unwrap_or_default();
     format!("schema={}\nnodes={}\nedges={}", enc_str(&s.schema), enc_str(&nodes_json), enc_str(&edges_json))
 }
-fn parse_dag_snapshot_body(body: &str) -> Result<DagSnapshot, String> {
+async fn parse_dag_snapshot_body(body: &str) -> Result<DagSnapshot, String> {
     let mut schema = None;
     let mut nodes: Option<Vec<DagNodeSpec>> = None;
     let mut edges: Option<Vec<DagFixtureEdge>> = None;
@@ -86,10 +86,10 @@ fn parse_dag_snapshot_body(body: &str) -> Result<DagSnapshot, String> {
 //#region 🔖️HandcraftedArtifactDsl
 impl store::ArtifactDsl for DagSnapshot {
     const EXTENSION: &'static str = "dag";
-    fn envelope_id() -> &'static str {
+    async fn envelope_id() -> &'static str {
         "dag.dag"
     }
-    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+    async fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
         let body = match store::semio_format::split_text_preamble(text) {
             Ok((_, rest)) => rest,
             Err(_) => text,
@@ -98,7 +98,7 @@ impl store::ArtifactDsl for DagSnapshot {
         snapshot.schema = DAG_DOCUMENT_SCHEMA.into();
         Ok(snapshot)
     }
-    fn print_dsl(&self) -> String {
+    async fn print_dsl(&self) -> String {
         let body = print_dag_snapshot_body(self);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
@@ -112,7 +112,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn dump_example_dsl_when_requested() {
+    async fn dump_example_dsl_when_requested() {
         if std::env::var("DUMP_DAG_EXAMPLE").is_ok() {
             use crate::artifacts::dag::snapshot::schema::DagSnapshot;
             use crate::artifacts::dag::{dag_content_child_handle_and_cache, DagFixtureEdge, DagNodeSpec, DAG_DOCUMENT_SCHEMA};
@@ -128,13 +128,13 @@ mod tests {
     }
 
     #[test]
-    fn example_fixture_dsl_round_trips() {
+    async fn example_fixture_dsl_round_trips() {
         let document = parse_dsl(DAG_EXAMPLE_TEXT).expect("parse default fixture");
         store::os_store::test_support::assert_dsl_round_trip(&document);
     }
 
     #[test]
-    fn fused_edge_arrow_wire_parses_labeled_endpoints() {
+    async fn fused_edge_arrow_wire_parses_labeled_endpoints() {
         let parsed = dsl::parse_wire_text("a -e1:Connection> b:Node@out").expect("parse fused edge");
         assert_eq!(parsed.edge_label.id.as_deref(), Some("e1"));
         assert_eq!(parsed.edge_label.kind.as_deref(), Some("Connection"));
@@ -149,7 +149,7 @@ mod semio_grammar_conformance {
     use super::*;
 
     #[test]
-    fn component_grammar_semio_is_grammar_dialect() {
+    async fn component_grammar_semio_is_grammar_dialect() {
         let g = ::dsl::parse_grammar(COMPONENT_GRAMMAR_SEMIO).expect("parse grammar.semio");
         assert_eq!(g.dialect, ::dsl::SemioDialect::Grammar);
         assert!(!COMPONENT_GRAMMAR_SEMIO.is_empty());

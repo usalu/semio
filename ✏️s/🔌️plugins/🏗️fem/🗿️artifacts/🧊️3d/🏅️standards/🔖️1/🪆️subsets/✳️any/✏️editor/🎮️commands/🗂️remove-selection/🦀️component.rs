@@ -16,7 +16,7 @@ pub struct RemoveSelection {
 /// 🗂️ Each id is looked up against every collection in a fixed precedence (nodes, elements,
 /// materials, sections, supports, load cases, solids, combinations) and removed from the first one
 /// it matches — mirrors the pre-migration `handle_action`'s exact search order.
-pub fn handle(payload: &RemoveSelection, doc: &ArtifactView<'_, Fem3dSnapshot>, _cfg: &ConfigView<'_, Fem3dConfig>) -> Result<Emit<Fem3dMutation, Fem3dConfigMutation>, Fault> {
+pub async fn handle(payload: &RemoveSelection, doc: &ArtifactView<'_, Fem3dSnapshot>, _cfg: &ConfigView<'_, Fem3dConfig>) -> Result<Emit<Fem3dMutation, Fem3dConfigMutation>, Fault> {
     let snapshot = doc.snapshot;
     let mut operations = Vec::new();
     for id in &payload.ids {
@@ -52,7 +52,7 @@ mod tests {
     use crate::editor::fem3d::Fem3dCommand;
 
     #[test]
-    fn remove_selection_covers_solids_3d() {
+    async fn remove_selection_covers_solids_3d() {
         let mut app = fem3d_app();
         dispatch(
             &mut app,
@@ -64,7 +64,7 @@ mod tests {
     }
 
     #[test]
-    fn remove_selection_with_unknown_ids_is_a_no_op() {
+    async fn remove_selection_with_unknown_ids_is_a_no_op() {
         let mut app = fem3d_app();
         dispatch(&mut app, Fem3dCommand::RemoveSelection(RemoveSelection { ids: vec!["missing".into()] }));
         assert!(app.snapshot().expect("snapshot").nodes.is_empty());

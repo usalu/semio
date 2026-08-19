@@ -17,22 +17,22 @@ pub struct ReparentNode {
 
 impl protocol::MutationKind<GltfSnapshot, GltfMutation> for ReparentNode {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "reparent", entity: "node", kind: "reparent-node", record: "ReparentNode" };
-    fn diff(&self, base: &GltfSnapshot) -> <GltfMutation as protocol::Mutation<GltfSnapshot>>::Diff {
+    async fn diff(&self, base: &GltfSnapshot) -> <GltfMutation as protocol::Mutation<GltfSnapshot>>::Diff {
         diff::diff(self, base)
     }
-    fn inverse(&self, base: &GltfSnapshot) -> Vec<GltfMutation> {
+    async fn inverse(&self, base: &GltfSnapshot) -> Vec<GltfMutation> {
         inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         "ReparentNode".into()
     }
-    fn target(&self) -> Vec<String> {
+    async fn target(&self) -> Vec<String> {
         vec![self.index.to_string()]
     }
 }
 
 impl GltfSemanticMutation for ReparentNode {
-    fn apply(&self, snapshot: &mut GltfSnapshot) -> Result<(), GltfMutationRejection> {
+    async fn apply(&self, snapshot: &mut GltfSnapshot) -> Result<(), GltfMutationRejection> {
         let document = &mut snapshot.document;
         check_index("document/nodes", self.index, document.nodes.len())?;
         if self.parent.is_some() && self.scene.is_some() {
@@ -79,7 +79,7 @@ mod diff {
     use crate::artifacts::gltf::schema::diff::GltfDiff;
     use crate::artifacts::gltf::GltfSnapshot;
     
-    pub fn diff(payload: &ReparentNode, base: &GltfSnapshot) -> GltfDiff {
+    pub async fn diff(payload: &ReparentNode, base: &GltfSnapshot) -> GltfDiff {
         payload.plan(base).unwrap_or_default()
     }
 }
@@ -93,7 +93,7 @@ mod inverse {
     use crate::artifacts::gltf::schema::modules::mutation_dispatch::*;
     use crate::artifacts::gltf::GltfSnapshot;
     
-    pub fn inverse(payload: &ReparentNode, base: &GltfSnapshot) -> Vec<GltfMutation> {
+    pub async fn inverse(payload: &ReparentNode, base: &GltfSnapshot) -> Vec<GltfMutation> {
         locate_node_owner(&base.document, payload.index).map(|(parent, scene, position)| vec![GltfMutation::ReparentNode(ReparentNode { index: payload.index, parent, scene, position })]).unwrap_or_default()
     }
 }

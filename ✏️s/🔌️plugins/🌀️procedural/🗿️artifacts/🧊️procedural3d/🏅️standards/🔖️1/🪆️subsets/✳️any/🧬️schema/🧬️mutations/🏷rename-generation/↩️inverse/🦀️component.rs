@@ -5,7 +5,7 @@ use crate::artifacts::procedural3d::mutations::rename_generation::mutation::Rena
 use crate::artifacts::procedural3d::mutations::Procedural3dMutation;
 use crate::artifacts::procedural3d::Procedural3dSnapshot;
 
-pub fn inverse(payload: &RenameGeneration, base: &Procedural3dSnapshot) -> Vec<Procedural3dMutation> {
+pub async fn inverse(payload: &RenameGeneration, base: &Procedural3dSnapshot) -> Vec<Procedural3dMutation> {
     base.generation
         .generations
         .iter()

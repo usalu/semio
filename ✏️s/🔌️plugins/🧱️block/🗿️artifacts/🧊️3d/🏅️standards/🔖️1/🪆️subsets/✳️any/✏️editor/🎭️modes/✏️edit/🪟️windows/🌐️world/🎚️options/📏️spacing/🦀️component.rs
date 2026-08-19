@@ -5,7 +5,7 @@ use crate::editor::block3d::terminology::Block3dLabels;
 use semio_framework_plugin::WindowMeasure;
 use serde_json::json;
 
-pub fn measure(config: &Block3dConfig, window_id: &str, labels: &Block3dLabels) -> WindowMeasure {
+pub async fn measure(config: &Block3dConfig, window_id: &str, labels: &Block3dLabels) -> WindowMeasure {
     let view = block3d_window_view(config, window_id);
     WindowMeasure::Slider {
         id: "block3d-spacing".into(),

@@ -141,7 +141,7 @@ pub struct Din16798Artifact {
 //#region 🔖️Conversions
 impl Din16798Artifact {
     /// 📸️ Persisted subset.
-    pub fn to_snapshot(&self) -> crate::artifacts::din16798::Din16798Snapshot {
+    pub async fn to_snapshot(&self) -> crate::artifacts::din16798::Din16798Snapshot {
         crate::artifacts::din16798::Din16798Snapshot {
             annex: self.annex,
             occupancy: self.occupancy.clone(),
@@ -209,7 +209,7 @@ impl Din16798Artifact {
     }
 
     /// 🧬️ Builds a full artifact from a snapshot, leaving UI fields at defaults.
-    pub fn from_snapshot(snapshot: crate::artifacts::din16798::Din16798Snapshot) -> Self {
+    pub async fn from_snapshot(snapshot: crate::artifacts::din16798::Din16798Snapshot) -> Self {
         Self {
             annex: snapshot.annex,
             occupancy: snapshot.occupancy.clone(),
@@ -277,7 +277,7 @@ impl Din16798Artifact {
         }
     }
     /// 🔄 Overwrite persistent fields from a snapshot; leave shared-ui untouched.
-    pub fn set_snapshot(&mut self, snapshot: crate::artifacts::din16798::Din16798Snapshot) {
+    pub async fn set_snapshot(&mut self, snapshot: crate::artifacts::din16798::Din16798Snapshot) {
         let selected = self.selected_check_index;
         *self = Self::from_snapshot(snapshot);
         self.selected_check_index = selected;
@@ -288,7 +288,7 @@ impl Din16798Artifact {
 
 //#region 🔖️Descriptor
 /// 🧬️ Descriptor for `s.norm.din16798` — twenty handcrafted schema leaves.
-pub fn din16798_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
+pub async fn din16798_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
     schema::ArtifactSchemaDescriptor {
         id: "s.norm.din16798",
         artifact: schema::FacetLeaves {
@@ -337,19 +337,19 @@ pub mod derived_construction {
         type Snapshot = Din16798Snapshot;
         type Mutation = Din16798Mutation;
         type Diff = Din16798Diff;
-        fn empty() -> Self {
+        async fn empty() -> Self {
             Self { snapshot: Din16798Snapshot::default(), diagnostics: Vec::new() }
         }
-        fn from_snapshot(snapshot: Self::Snapshot) -> Self {
+        async fn from_snapshot(snapshot: Self::Snapshot) -> Self {
             Self { snapshot, diagnostics: Vec::new() }
         }
-        fn from_text(text: &str) -> Result<Self, store::TextError> {
+        async fn from_text(text: &str) -> Result<Self, store::TextError> {
             Ok(Self::from_snapshot(<Din16798Snapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
-        fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
+        async fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
             Ok(Self::from_snapshot(<Din16798Snapshot as store::ArtifactPack>::decode_pack(bytes)?))
         }
-        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
+        async fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let outcome = <Din16798Mutation as protocol::Mutation<Din16798Snapshot>>::diff(&mutation, &self.snapshot);
             match <Self::Diff as protocol::MutationDiff<Self::Snapshot>>::apply(outcome.diff(), &self.snapshot) {
                 Ok(snapshot) => self.snapshot = snapshot,
@@ -361,7 +361,7 @@ pub mod derived_construction {
             }
             (self, outcome)
         }
-        fn absorb(
+        async fn absorb(
             mut self,
             diff: Self::Diff,
         ) -> protocol::MutationApplyResult<Self> {
@@ -369,7 +369,7 @@ pub mod derived_construction {
             self.snapshot = snapshot;
             Ok(self)
         }
-        fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
+        async fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
             if self.diagnostics.is_empty() {
                 Ok(self.snapshot)
             } else {
@@ -397,11 +397,11 @@ pub mod derived_analysis {
         type Parts = Din16798Parts;
         const DIALECT: Dialect = Dialect { artifact_kind: "s.din16798", standard: StandardId("1"), subset: SubsetId("*") };
 
-        fn sniff(_source: &AnalyzeSource<'_>) -> IoConfidence {
+        async fn sniff(_source: &AnalyzeSource<'_>) -> IoConfidence {
             IoConfidence::Medium
         }
 
-        fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
+        async fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
             let mut parts = Din16798Parts::default();
             let mut diagnostics = Vec::new();
             let mut confidence = IoConfidence::High;
@@ -475,7 +475,7 @@ pub mod part_1 {
     }
 
     /// 🌡️ Design operative temperature band [°C] per occupancy type (EN 16798-1).
-    pub fn operative_temperature_band(occupancy: OccupancyType) -> (f64, f64) {
+    pub async fn operative_temperature_band(occupancy: OccupancyType) -> (f64, f64) {
         match occupancy {
             OccupancyType::Residential => (20.0, 24.0),
             OccupancyType::Office | OccupancyType::Meeting | OccupancyType::Classroom => (20.0, 26.0),
@@ -485,17 +485,17 @@ pub mod part_1 {
     }
 
     /// 🧮️ Simplified PMV index from operative temperature, RH [%], and air speed [m/s].
-    pub fn pmv_simplified(t_op_c: f64, rh_percent: f64, air_speed_m_s: f64) -> f64 {
+    pub async fn pmv_simplified(t_op_c: f64, rh_percent: f64, air_speed_m_s: f64) -> f64 {
         let t_ref = 25.0;
         let v = air_speed_m_s.max(0.0);
         0.28 * (t_op_c - t_ref) + 0.001 * (rh_percent - 50.0) * (t_op_c - t_ref) - 0.15 * (v - 0.1)
     }
 
-    fn saturation_pressure_pa(t_c: f64) -> f64 {
+    async fn saturation_pressure_pa(t_c: f64) -> f64 {
         611.2 * (17.67 * t_c / (t_c + 243.5)).exp()
     }
 
-    fn solve_clothing_temp_c(t_a: f64, t_r: f64, m: f64, w: f64, i_cl: f64, f_cl: f64, v: f64) -> f64 {
+    async fn solve_clothing_temp_c(t_a: f64, t_r: f64, m: f64, w: f64, i_cl: f64, f_cl: f64, v: f64) -> f64 {
         let mut t_cl = t_a + (35.5 - t_a) / (3.5 * i_cl + 1.0);
         for _ in 0..50 {
             let h_c = if v < 0.1 { 2.38 * (t_cl - t_a).abs().powf(0.25) } else { 12.1 * v.sqrt() };
@@ -513,12 +513,12 @@ pub mod part_1 {
     }
 
     /// 😌️ ISO 7730 PMV with default activity 1.2 met and clothing 0.5 clo.
-    pub fn pmv_iso7730(t_op_c: f64, rh_percent: f64, air_speed_m_s: f64) -> f64 {
+    pub async fn pmv_iso7730(t_op_c: f64, rh_percent: f64, air_speed_m_s: f64) -> f64 {
         pmv_iso7730_with_activity(t_op_c, rh_percent, air_speed_m_s, 1.2, 0.5)
     }
 
     /// 😌️ ISO 7730 PMV with explicit metabolic rate [met] and clothing [clo].
-    pub fn pmv_iso7730_with_activity(t_op_c: f64, rh_percent: f64, air_speed_m_s: f64, metabolic_rate_met: f64, clothing_clo: f64) -> f64 {
+    pub async fn pmv_iso7730_with_activity(t_op_c: f64, rh_percent: f64, air_speed_m_s: f64, metabolic_rate_met: f64, clothing_clo: f64) -> f64 {
         let m = metabolic_rate_met * 58.15;
         let w = 0.0;
         let i_cl = 0.155 * clothing_clo;
@@ -542,13 +542,13 @@ pub mod part_1 {
     }
 
     /// 📊️ PPD [%] from PMV per ISO 7730.
-    pub fn ppd_from_pmv(pmv: f64) -> f64 {
+    pub async fn ppd_from_pmv(pmv: f64) -> f64 {
         let pmv_c = pmv.clamp(-3.0, 3.0);
         100.0 - 95.0 * (-0.03353 * pmv_c.powi(4) - 0.2179 * pmv_c.powi(2)).exp()
     }
 
     /// ✅️ Category II comfort band: PMV within ±0.5 (EN 16798-1).
-    pub fn check_pmv_comfort(t_op_c: f64, rh_percent: f64, air_speed_m_s: f64) -> CheckResult {
+    pub async fn check_pmv_comfort(t_op_c: f64, rh_percent: f64, air_speed_m_s: f64) -> CheckResult {
         let pmv = pmv_iso7730(t_op_c, rh_percent, air_speed_m_s);
         let limit = 0.5;
         CheckResult::from_utilization(
@@ -561,7 +561,7 @@ pub mod part_1 {
     }
 
     /// ✅️ Check operative temperature within band (EN 16798-1).
-    pub fn check_operative_temperature(occupancy: OccupancyType, t_op_c: f64) -> CheckResult {
+    pub async fn check_operative_temperature(occupancy: OccupancyType, t_op_c: f64) -> CheckResult {
         let (t_min, t_max) = operative_temperature_band(occupancy);
         let within = t_op_c >= t_min && t_op_c <= t_max;
         let status = if within { crate::document::CheckStatus::Pass } else { crate::document::CheckStatus::Fail };
@@ -577,12 +577,12 @@ pub mod part_1 {
     }
 
     /// 🌤️ Adaptive comfort operative temperature centre [°C]: θ_c,operation = 0.33·θ_rm + 18.8 (EN 16798-1 Annex A).
-    pub fn adaptive_comfort_temperature_c(theta_rm_c: f64) -> f64 {
+    pub async fn adaptive_comfort_temperature_c(theta_rm_c: f64) -> f64 {
         0.33 * theta_rm_c + 18.8
     }
 
     /// 📏️ Adaptive comfort acceptable band half-width [K] by category.
-    pub fn adaptive_band_k(category: ComfortCategory) -> f64 {
+    pub async fn adaptive_band_k(category: ComfortCategory) -> f64 {
         match category {
             ComfortCategory::I => 2.0,
             ComfortCategory::II => 3.0,
@@ -591,7 +591,7 @@ pub mod part_1 {
     }
 
     /// ✅️ Check operative temperature against the adaptive comfort model (EN 16798-1 Annex A, free-running buildings).
-    pub fn check_adaptive_comfort(theta_rm_c: f64, t_op_c: f64, category: ComfortCategory) -> CheckResult {
+    pub async fn check_adaptive_comfort(theta_rm_c: f64, t_op_c: f64, category: ComfortCategory) -> CheckResult {
         let centre = adaptive_comfort_temperature_c(theta_rm_c);
         let band = adaptive_band_k(category);
         let deviation = (t_op_c - centre).abs();
@@ -605,7 +605,7 @@ pub mod part_1 {
     }
 
     /// 🫁️ Design CO₂ limit [ppm] branching on the selected national annex (folded TR EN 16798-2).
-    pub fn design_co2_limit_ppm(occupancy: OccupancyType, annex: &AnnexParams) -> f64 {
+    pub async fn design_co2_limit_ppm(occupancy: OccupancyType, annex: &AnnexParams) -> f64 {
         match occupancy {
             OccupancyType::Residential => annex.co2_limit_residential_ppm,
             OccupancyType::Classroom => annex.co2_limit_classroom_ppm,
@@ -614,7 +614,7 @@ pub mod part_1 {
     }
 
     /// ✅️ Check indoor CO₂ concentration against the annex-specific category threshold.
-    pub fn check_co2_level(occupancy: OccupancyType, co2_ppm: f64, annex: &AnnexParams) -> CheckResult {
+    pub async fn check_co2_level(occupancy: OccupancyType, co2_ppm: f64, annex: &AnnexParams) -> CheckResult {
         let limit = design_co2_limit_ppm(occupancy, annex);
         CheckResult::from_utilization(
             ClauseId::new("EN 16798-1", annex.choice.label(), "6.2"),
@@ -626,7 +626,7 @@ pub mod part_1 {
     }
 
     /// ☀️ Minimum daylight factor [%] by IEQ category (folded TR EN 16798-10 daylight guidance).
-    pub fn daylight_factor_min_percent(category: ComfortCategory) -> f64 {
+    pub async fn daylight_factor_min_percent(category: ComfortCategory) -> f64 {
         match category {
             ComfortCategory::I => 3.0,
             ComfortCategory::II => 2.0,
@@ -635,7 +635,7 @@ pub mod part_1 {
     }
 
     /// ✅️ Check daylight factor against the IEQ category minimum.
-    pub fn check_daylight_factor(category: ComfortCategory, df_percent: f64) -> CheckResult {
+    pub async fn check_daylight_factor(category: ComfortCategory, df_percent: f64) -> CheckResult {
         let minimum = daylight_factor_min_percent(category);
         CheckResult::from_minimum(
             ClauseId::new("EN 16798-1", "Annex B", "B.1"),
@@ -647,7 +647,7 @@ pub mod part_1 {
     }
 
     /// 🔊️ Acoustic L_Aeq limit [dB] by IEQ category (folded TR EN 16798-11 acoustic guidance).
-    pub fn acoustic_limit_db_by_category(category: ComfortCategory) -> f64 {
+    pub async fn acoustic_limit_db_by_category(category: ComfortCategory) -> f64 {
         match category {
             ComfortCategory::I => 30.0,
             ComfortCategory::II => 35.0,
@@ -656,7 +656,7 @@ pub mod part_1 {
     }
 
     /// ✅️ Check ventilation sound level against the IEQ category limit.
-    pub fn check_acoustic_category(category: ComfortCategory, l_aeq_db: f64) -> CheckResult {
+    pub async fn check_acoustic_category(category: ComfortCategory, l_aeq_db: f64) -> CheckResult {
         let limit = acoustic_limit_db_by_category(category);
         CheckResult::from_utilization(
             ClauseId::new("EN 16798-1", "Annex B", "B.2"),
@@ -684,7 +684,7 @@ pub mod part_3 {
 
     impl IdaClass {
         /// 📈️ Outdoor airflow multiplier relative to the IDA2 reference rate.
-        pub fn outdoor_air_multiplier(self) -> f64 {
+        pub async fn outdoor_air_multiplier(self) -> f64 {
             match self {
                 Self::Ida1 => 1.35,
                 Self::Ida2 => 1.0,
@@ -704,7 +704,7 @@ pub mod part_3 {
 
     impl OdaClass {
         /// 🏷️ Human-readable outdoor air quality label.
-        pub fn label(self) -> &'static str {
+        pub async fn label(self) -> &'static str {
             match self {
                 Self::Oda1 => "pure",
                 Self::Oda2 => "moderate pollution",
@@ -714,7 +714,7 @@ pub mod part_3 {
     }
 
     /// 📊️ Specific outdoor airflow per person [m³/(h·person)] at IDA2 reference (EN 16798-3 Table 1).
-    pub fn outdoor_air_per_person(occupancy: OccupancyType) -> f64 {
+    pub async fn outdoor_air_per_person(occupancy: OccupancyType) -> f64 {
         match occupancy {
             OccupancyType::Office | OccupancyType::Meeting | OccupancyType::Classroom => 36.0,
             OccupancyType::Retail => 20.0,
@@ -725,12 +725,12 @@ pub mod part_3 {
     }
 
     /// 📐️ Required outdoor airflow [m³/h] for the given IDA class.
-    pub fn required_outdoor_air_m3_h(occupancy: OccupancyType, persons: u32, ida_class: IdaClass) -> f64 {
+    pub async fn required_outdoor_air_m3_h(occupancy: OccupancyType, persons: u32, ida_class: IdaClass) -> f64 {
         outdoor_air_per_person(occupancy) * persons as f64 * ida_class.outdoor_air_multiplier()
     }
 
     /// ✅️ Check ventilation rate for non-residential spaces against the IDA class requirement.
-    pub fn check_ventilation_rate(occupancy: OccupancyType, persons: u32, ida_class: IdaClass, supplied_m3_h: f64) -> CheckResult {
+    pub async fn check_ventilation_rate(occupancy: OccupancyType, persons: u32, ida_class: IdaClass, supplied_m3_h: f64) -> CheckResult {
         let required = required_outdoor_air_m3_h(occupancy, persons, ida_class);
         CheckResult::from_utilization(
             ClauseId::new("EN 16798-3", "Table 1", "q"),
@@ -757,11 +757,11 @@ pub mod part_3 {
 
     impl SfpClass {
         /// 📐️ Upper SFP bound [W/(m³/s)] for this class.
-        pub fn bound_w_m3_s(self) -> f64 {
+        pub async fn bound_w_m3_s(self) -> f64 {
             SFP_CLASS_BOUNDS_W_M3_S[self as usize]
         }
 
-        fn from_ordinal(n: usize) -> Self {
+        async fn from_ordinal(n: usize) -> Self {
             match n {
                 0 => Self::Sfp1,
                 1 => Self::Sfp2,
@@ -774,7 +774,7 @@ pub mod part_3 {
     }
 
     /// 🔢️ Parse an SFP class number (1–6) into its `SfpClass`.
-    pub fn sfp_class_from_number(n: u8) -> SfpClass {
+    pub async fn sfp_class_from_number(n: u8) -> SfpClass {
         match n {
             1 => SfpClass::Sfp1,
             2 => SfpClass::Sfp2,
@@ -786,13 +786,13 @@ pub mod part_3 {
     }
 
     /// 🔍️ Classify a design Specific Fan Power [W/(m³/s)] into its SFP class (SFP = P_el / q_v).
-    pub fn classify_sfp(sfp_w_m3_s: f64) -> SfpClass {
+    pub async fn classify_sfp(sfp_w_m3_s: f64) -> SfpClass {
         let idx = SFP_CLASS_BOUNDS_W_M3_S.iter().position(|&bound| sfp_w_m3_s <= bound).unwrap_or(SFP_CLASS_BOUNDS_W_M3_S.len() - 1);
         SfpClass::from_ordinal(idx)
     }
 
     /// ✅️ Check design SFP against the required class bound.
-    pub fn check_design_sfp(sfp_w_m3_s: f64, required_class: SfpClass) -> CheckResult {
+    pub async fn check_design_sfp(sfp_w_m3_s: f64, required_class: SfpClass) -> CheckResult {
         CheckResult::from_utilization(
             ClauseId::new("EN 16798-3", "Table 10", "SFP"),
             Quantity::new(crate::document::QuantityKind::Power, sfp_w_m3_s),
@@ -803,7 +803,7 @@ pub mod part_3 {
     }
 
     /// ✅️ Check heat-recovery system efficiency against the minimum required (EN 16798-3 §7.3).
-    pub fn check_heat_recovery_efficiency(eta_delivered: f64, eta_min: f64) -> CheckResult {
+    pub async fn check_heat_recovery_efficiency(eta_delivered: f64, eta_min: f64) -> CheckResult {
         CheckResult::from_minimum(
             ClauseId::new("EN 16798-3", "§7", "7.3"),
             Quantity::new(crate::document::QuantityKind::Dimensionless, eta_delivered),
@@ -814,14 +814,14 @@ pub mod part_3 {
     }
 
     /// 🏠️ Dwelling whole-building ventilation rate [m³/h] (folded TR EN 16798-4).
-    pub fn dwelling_ventilation_rate(floor_area_m2: f64, bedrooms: u32) -> f64 {
+    pub async fn dwelling_ventilation_rate(floor_area_m2: f64, bedrooms: u32) -> f64 {
         let by_area = 0.5 * floor_area_m2;
         let by_bedroom = 21.0 * bedrooms.max(1) as f64;
         by_area.max(by_bedroom)
     }
 
     /// ✅️ Check dwelling ventilation adequacy.
-    pub fn check_dwelling_ventilation(floor_area_m2: f64, bedrooms: u32, supplied_m3_h: f64) -> CheckResult {
+    pub async fn check_dwelling_ventilation(floor_area_m2: f64, bedrooms: u32, supplied_m3_h: f64) -> CheckResult {
         let required = dwelling_ventilation_rate(floor_area_m2, bedrooms);
         CheckResult::from_utilization(
             ClauseId::new("EN 16798-3", "§7", "7.1"),
@@ -833,14 +833,14 @@ pub mod part_3 {
     }
 
     /// 🏠️ Residential whole-building ventilation rate [m³/h] (relocated from the former part_7; consumed by DIN V 18599).
-    pub fn residential_ventilation_rate(floor_area_m2: f64, occupants: u32) -> f64 {
+    pub async fn residential_ventilation_rate(floor_area_m2: f64, occupants: u32) -> f64 {
         let by_area = 0.4 * floor_area_m2;
         let by_person = 30.0 * occupants.max(1) as f64;
         by_area.max(by_person)
     }
 
     /// ✅️ Check residential ventilation adequacy.
-    pub fn check_residential_ventilation(floor_area_m2: f64, occupants: u32, supplied_m3_h: f64) -> CheckResult {
+    pub async fn check_residential_ventilation(floor_area_m2: f64, occupants: u32, supplied_m3_h: f64) -> CheckResult {
         let required = residential_ventilation_rate(floor_area_m2, occupants);
         CheckResult::from_utilization(
             ClauseId::new("EN 16798-3", "§7", "7.2"),
@@ -852,7 +852,7 @@ pub mod part_3 {
     }
 
     /// 🔍️ Inspection interval [years] for ventilation systems (folded TR EN 16798-10).
-    pub fn inspection_interval_years(system_type: &str) -> u32 {
+    pub async fn inspection_interval_years(system_type: &str) -> u32 {
         match system_type {
             "central_mech" => 3,
             "decentral" => 5,
@@ -861,7 +861,7 @@ pub mod part_3 {
     }
 
     /// ✅️ Check whether the last inspection is within the required interval.
-    pub fn check_inspection_due(system_type: &str, years_since_inspection: u32) -> CheckResult {
+    pub async fn check_inspection_due(system_type: &str, years_since_inspection: u32) -> CheckResult {
         let interval = inspection_interval_years(system_type);
         CheckResult::from_utilization(
             ClauseId::new("EN 16798-3", "§8", "8.1"),
@@ -873,7 +873,7 @@ pub mod part_3 {
     }
 
     /// 💧️ Humidification capacity check (folded TR EN 16798-9 humidification guidance).
-    pub fn check_humidification_capacity(required_kg_h: f64, provided_kg_h: f64) -> CheckResult {
+    pub async fn check_humidification_capacity(required_kg_h: f64, provided_kg_h: f64) -> CheckResult {
         CheckResult::from_utilization(
             ClauseId::new("EN 16798-3", "§7", "7.4"),
             Quantity::new(crate::document::QuantityKind::Mass, provided_kg_h),
@@ -890,12 +890,12 @@ pub mod part_5_1 {
     use super::*;
 
     /// ⚡️ Building-level fan electrical energy [kWh]: E_fan = SFP · q_v · t_run (EN 16798-5-1).
-    pub fn fan_energy_kwh(sfp_w_m3_s: f64, q_v_m3_s: f64, t_run_h: f64) -> f64 {
+    pub async fn fan_energy_kwh(sfp_w_m3_s: f64, q_v_m3_s: f64, t_run_h: f64) -> f64 {
         sfp_w_m3_s * q_v_m3_s * t_run_h / 1000.0
     }
 
     /// ✅️ Check building-level ventilation fan energy against a reference allowance.
-    pub fn check_building_fan_energy(sfp_w_m3_s: f64, q_v_m3_s: f64, t_run_h: f64, reference_kwh: f64) -> CheckResult {
+    pub async fn check_building_fan_energy(sfp_w_m3_s: f64, q_v_m3_s: f64, t_run_h: f64, reference_kwh: f64) -> CheckResult {
         let computed = fan_energy_kwh(sfp_w_m3_s, q_v_m3_s, t_run_h);
         CheckResult::from_utilization(
             ClauseId::new("EN 16798-5-1", "§6", "6.1"),
@@ -907,7 +907,7 @@ pub mod part_5_1 {
     }
 
     /// 🎛️ Minimum night setback [K] for heating controls (folded TR EN 16798-12).
-    pub fn night_setback_k(occupancy: OccupancyType) -> f64 {
+    pub async fn night_setback_k(occupancy: OccupancyType) -> f64 {
         match occupancy {
             OccupancyType::Residential => 3.0,
             OccupancyType::Office | OccupancyType::Meeting | OccupancyType::Classroom => 4.0,
@@ -916,7 +916,7 @@ pub mod part_5_1 {
     }
 
     /// ✅️ Check that the night setback is deep enough to count as a building-level energy-saving measure.
-    pub fn check_night_setback(occupancy: OccupancyType, configured_k: f64) -> CheckResult {
+    pub async fn check_night_setback(occupancy: OccupancyType, configured_k: f64) -> CheckResult {
         let required = night_setback_k(occupancy);
         CheckResult::from_minimum(
             ClauseId::new("EN 16798-5-1", "§6", "6.2"),
@@ -937,13 +937,13 @@ pub mod part_5_2 {
     pub const AIR_CP_J_KGK: f64 = 1005.0;
 
     /// ♻️ System-level heat-recovery energy savings [kWh]: Q_hr = η_t · ṁ · c_p · ΔT · t (EN 16798-5-2).
-    pub fn heat_recovery_savings_kwh(eta_t: f64, m_dot_kg_s: f64, cp_j_kgk: f64, delta_t_c: f64, t_h: f64) -> f64 {
+    pub async fn heat_recovery_savings_kwh(eta_t: f64, m_dot_kg_s: f64, cp_j_kgk: f64, delta_t_c: f64, t_h: f64) -> f64 {
         let power_w = m_dot_kg_s * cp_j_kgk * delta_t_c;
         eta_t * power_w * t_h / 1000.0
     }
 
     /// ✅️ Check that heat-recovery energy savings meet a minimum reference requirement.
-    pub fn check_heat_recovery_savings(eta_t: f64, m_dot_kg_s: f64, cp_j_kgk: f64, delta_t_c: f64, t_h: f64, reference_kwh: f64) -> CheckResult {
+    pub async fn check_heat_recovery_savings(eta_t: f64, m_dot_kg_s: f64, cp_j_kgk: f64, delta_t_c: f64, t_h: f64, reference_kwh: f64) -> CheckResult {
         let computed = heat_recovery_savings_kwh(eta_t, m_dot_kg_s, cp_j_kgk, delta_t_c, t_h);
         CheckResult::from_minimum(
             ClauseId::new("EN 16798-5-2", "§6", "6.3"),
@@ -961,12 +961,12 @@ pub mod part_7 {
     use super::*;
 
     /// 💨️ Infiltration airflow [m³/h]: q_inf = n₅₀ · V / 20 (EN 16798-7 simplified shielding-corrected method).
-    pub fn infiltration_rate_m3_h(n50_h_inv: f64, volume_m3: f64) -> f64 {
+    pub async fn infiltration_rate_m3_h(n50_h_inv: f64, volume_m3: f64) -> f64 {
         n50_h_inv * volume_m3 / 20.0
     }
 
     /// ✅️ Check infiltration airflow against a design allowance.
-    pub fn check_infiltration(n50_h_inv: f64, volume_m3: f64, design_allowance_m3_h: f64) -> CheckResult {
+    pub async fn check_infiltration(n50_h_inv: f64, volume_m3: f64, design_allowance_m3_h: f64) -> CheckResult {
         let computed = infiltration_rate_m3_h(n50_h_inv, volume_m3);
         CheckResult::from_utilization(
             ClauseId::new("EN 16798-7", "§6", "6.1"),
@@ -978,12 +978,12 @@ pub mod part_7 {
     }
 
     /// 🏚️ Cellar ventilation rate [m³/h] per floor area (folded TR EN 16798-6).
-    pub fn cellar_ventilation_rate(cellar_area_m2: f64) -> f64 {
+    pub async fn cellar_ventilation_rate(cellar_area_m2: f64) -> f64 {
         0.3 * cellar_area_m2
     }
 
     /// ✅️ Check cellar ventilation adequacy.
-    pub fn check_cellar_ventilation(cellar_area_m2: f64, supplied_m3_h: f64) -> CheckResult {
+    pub async fn check_cellar_ventilation(cellar_area_m2: f64, supplied_m3_h: f64) -> CheckResult {
         let required = cellar_ventilation_rate(cellar_area_m2);
         CheckResult::from_utilization(
             ClauseId::new("EN 16798-7", "§6", "6.2"),
@@ -1001,21 +1001,21 @@ pub mod part_9 {
     use super::*;
 
     /// 🌡️ Raw cooling degree-hour energy demand [kWh]: (H_tr + H_ve) · max(θ_e − θ_set, 0) · Δt (EN 16798-9).
-    pub fn cooling_degree_hours_energy_kwh(h_tr_w_k: f64, h_ve_w_k: f64, theta_e_c: f64, theta_set_c: f64, delta_t_h: f64) -> f64 {
+    pub async fn cooling_degree_hours_energy_kwh(h_tr_w_k: f64, h_ve_w_k: f64, theta_e_c: f64, theta_set_c: f64, delta_t_h: f64) -> f64 {
         let h_total = h_tr_w_k + h_ve_w_k;
         let delta_theta = (theta_e_c - theta_set_c).max(0.0);
         h_total * delta_theta * delta_t_h / 1000.0
     }
 
     /// ❄️ Net cooling energy need [kWh]: raw degree-hour demand minus utilised free/internal gains.
-    pub fn cooling_energy_need_kwh(h_tr_w_k: f64, h_ve_w_k: f64, theta_e_c: f64, theta_set_c: f64, delta_t_h: f64, gains_kwh: f64, utilization_factor: f64) -> f64 {
+    pub async fn cooling_energy_need_kwh(h_tr_w_k: f64, h_ve_w_k: f64, theta_e_c: f64, theta_set_c: f64, delta_t_h: f64, gains_kwh: f64, utilization_factor: f64) -> f64 {
         let raw = cooling_degree_hours_energy_kwh(h_tr_w_k, h_ve_w_k, theta_e_c, theta_set_c, delta_t_h);
         (raw - utilization_factor * gains_kwh).max(0.0)
     }
 
     /// ✅️ Check net cooling energy need against a reference value.
     #[allow(clippy::too_many_arguments, reason = "one argument per parameter the published clause formula itself names; bundling them into a struct would break the 1:1 reading against the standard")]
-    pub fn check_cooling_energy_need(h_tr_w_k: f64, h_ve_w_k: f64, theta_e_c: f64, theta_set_c: f64, delta_t_h: f64, gains_kwh: f64, utilization_factor: f64, reference_kwh: f64) -> CheckResult {
+    pub async fn check_cooling_energy_need(h_tr_w_k: f64, h_ve_w_k: f64, theta_e_c: f64, theta_set_c: f64, delta_t_h: f64, gains_kwh: f64, utilization_factor: f64, reference_kwh: f64) -> CheckResult {
         let computed = cooling_energy_need_kwh(h_tr_w_k, h_ve_w_k, theta_e_c, theta_set_c, delta_t_h, gains_kwh, utilization_factor);
         CheckResult::from_utilization(
             ClauseId::new("EN 16798-9", "§6", "6.1"),
@@ -1041,7 +1041,7 @@ pub mod part_13 {
     }
 
     /// 📊️ Minimum EER by chiller type.
-    pub fn eer_min(chiller_type: ChillerType) -> f64 {
+    pub async fn eer_min(chiller_type: ChillerType) -> f64 {
         match chiller_type {
             ChillerType::AirCooled => 2.5,
             ChillerType::WaterCooled => 3.0,
@@ -1050,7 +1050,7 @@ pub mod part_13 {
     }
 
     /// ✅️ Check chiller EER against the minimum required for its type.
-    pub fn check_chiller_eer(chiller_type: ChillerType, eer_actual: f64) -> CheckResult {
+    pub async fn check_chiller_eer(chiller_type: ChillerType, eer_actual: f64) -> CheckResult {
         CheckResult::from_minimum(
             ClauseId::new("EN 16798-13", "Table 5", "EER"),
             Quantity::new(crate::document::QuantityKind::Dimensionless, eer_actual),
@@ -1061,12 +1061,12 @@ pub mod part_13 {
     }
 
     /// ⚡️ Cooling generation electrical energy [kWh]: E = Q_C / EER.
-    pub fn generation_energy_kwh(q_c_kwh: f64, eer: f64) -> f64 {
+    pub async fn generation_energy_kwh(q_c_kwh: f64, eer: f64) -> f64 {
         q_c_kwh / eer
     }
 
     /// ✅️ Check cooling generation energy against a reference value.
-    pub fn check_generation_energy(q_c_kwh: f64, eer: f64, reference_kwh: f64) -> CheckResult {
+    pub async fn check_generation_energy(q_c_kwh: f64, eer: f64, reference_kwh: f64) -> CheckResult {
         let computed = generation_energy_kwh(q_c_kwh, eer);
         CheckResult::from_utilization(
             ClauseId::new("EN 16798-13", "§6", "6.2"),
@@ -1078,12 +1078,12 @@ pub mod part_13 {
     }
 
     /// 🖥️ Data center supply air temperature band [°C] (folded TR EN 16798-16).
-    pub fn supply_air_temperature_band_c() -> (f64, f64) {
+    pub async fn supply_air_temperature_band_c() -> (f64, f64) {
         (18.0, 27.0)
     }
 
     /// ✅️ Check data center supply air temperature.
-    pub fn check_supply_air_temperature(t_supply_c: f64) -> CheckResult {
+    pub async fn check_supply_air_temperature(t_supply_c: f64) -> CheckResult {
         let (t_min, t_max) = supply_air_temperature_band_c();
         let within = t_supply_c >= t_min && t_supply_c <= t_max;
         let status = if within { crate::document::CheckStatus::Pass } else { crate::document::CheckStatus::Fail };
@@ -1105,23 +1105,23 @@ pub mod part_15 {
     use super::*;
 
     /// 🔥️ Storage losses [kWh]: Q_st = H_st · (θ_st − θ_amb) · t (EN 16798-15).
-    pub fn storage_losses_kwh(h_st_w_k: f64, theta_st_c: f64, theta_amb_c: f64, t_h: f64) -> f64 {
+    pub async fn storage_losses_kwh(h_st_w_k: f64, theta_st_c: f64, theta_amb_c: f64, t_h: f64) -> f64 {
         h_st_w_k * (theta_st_c - theta_amb_c) * t_h / 1000.0
     }
 
     /// ✅️ Check storage losses against an allowance.
-    pub fn check_storage_losses(h_st_w_k: f64, theta_st_c: f64, theta_amb_c: f64, t_h: f64, allowance_kwh: f64) -> CheckResult {
+    pub async fn check_storage_losses(h_st_w_k: f64, theta_st_c: f64, theta_amb_c: f64, t_h: f64, allowance_kwh: f64) -> CheckResult {
         let computed = storage_losses_kwh(h_st_w_k, theta_st_c, theta_amb_c, t_h);
         CheckResult::from_utilization(ClauseId::new("EN 16798-15", "§6", "6.1"), Quantity::new(crate::document::QuantityKind::Energy, computed), Quantity::new(crate::document::QuantityKind::Energy, allowance_kwh), "storage losses", AnnexChoice::De)
     }
 
     /// 🚿️ DHW delivery temperature band [°C] (folded TR EN 16798-14).
-    pub fn dhw_delivery_temperature_band_c() -> (f64, f64) {
+    pub async fn dhw_delivery_temperature_band_c() -> (f64, f64) {
         (55.0, 60.0)
     }
 
     /// ✅️ Check DHW delivery temperature.
-    pub fn check_dhw_temperature(t_delivery_c: f64) -> CheckResult {
+    pub async fn check_dhw_temperature(t_delivery_c: f64) -> CheckResult {
         let (t_min, t_max) = dhw_delivery_temperature_band_c();
         let within = t_delivery_c >= t_min && t_delivery_c <= t_max;
         let status = if within { crate::document::CheckStatus::Pass } else { crate::document::CheckStatus::Fail };
@@ -1152,7 +1152,7 @@ pub mod part_17 {
     }
 
     /// 📐️ Leakage coefficient c in f_max = c · p^0.65.
-    pub fn leakage_coefficient_c(class: DuctLeakageClass) -> f64 {
+    pub async fn leakage_coefficient_c(class: DuctLeakageClass) -> f64 {
         match class {
             DuctLeakageClass::A => 0.027,
             DuctLeakageClass::B => 0.009,
@@ -1162,12 +1162,12 @@ pub mod part_17 {
     }
 
     /// 🌀️ Duct leakage limit [m³/(s·m²)] at the given test pressure: f_max = c · p^0.65.
-    pub fn leakage_limit_m3_s_m2(class: DuctLeakageClass, test_pressure_pa: f64) -> f64 {
+    pub async fn leakage_limit_m3_s_m2(class: DuctLeakageClass, test_pressure_pa: f64) -> f64 {
         leakage_coefficient_c(class) * test_pressure_pa.powf(0.65)
     }
 
     /// ✅️ Check ductwork leakage at test pressure against the class limit.
-    pub fn check_duct_leakage(class: DuctLeakageClass, test_pressure_pa: f64, measured_m3_s_m2: f64) -> CheckResult {
+    pub async fn check_duct_leakage(class: DuctLeakageClass, test_pressure_pa: f64, measured_m3_s_m2: f64) -> CheckResult {
         let limit = leakage_limit_m3_s_m2(class, test_pressure_pa);
         CheckResult::from_utilization(
             ClauseId::new("EN 16798-17", "§8", "8.2"),
@@ -1196,17 +1196,17 @@ pub mod annex_params {
 
     impl AnnexParams {
         /// 🇪️🇺️ Base EN category thresholds (no national divergence).
-        pub fn en() -> Self {
+        pub async fn en() -> Self {
             Self { choice: AnnexChoice::En, co2_limit_residential_ppm: 1500.0, co2_limit_classroom_ppm: 1000.0, co2_limit_other_ppm: 1000.0, acoustic_limit_residential_db: 30.0 }
         }
 
         /// 🇩️🇪️ DIN EN 16798 NA-DE tightened thresholds.
-        pub fn de() -> Self {
+        pub async fn de() -> Self {
             Self { choice: AnnexChoice::De, co2_limit_residential_ppm: 1200.0, co2_limit_classroom_ppm: 800.0, co2_limit_other_ppm: 900.0, acoustic_limit_residential_db: 25.0 }
         }
 
         /// 🔀️ Select annex parameters by `AnnexChoice`.
-        pub fn for_choice(choice: AnnexChoice) -> Self {
+        pub async fn for_choice(choice: AnnexChoice) -> Self {
             match choice {
                 AnnexChoice::En => Self::en(),
                 AnnexChoice::De => Self::de(),
@@ -1223,20 +1223,20 @@ mod compliance_helpers_tests {
     use super::*;
 
     #[test]
-    fn pmv_simplified_neutral_at_reference() {
+    async fn pmv_simplified_neutral_at_reference() {
         let pmv = part_1::pmv_simplified(25.0, 50.0, 0.1);
         assert!(pmv.abs() < 0.01);
     }
 
     #[test]
-    fn pmv_comfort_passes_for_office_conditions() {
+    async fn pmv_comfort_passes_for_office_conditions() {
         let check = part_1::check_pmv_comfort(24.0, 50.0, 0.1);
         assert_eq!(check.status, crate::document::CheckStatus::Pass);
         assert!(check.utilization < 1.0);
     }
 
     #[test]
-    fn pmv_iso7730_neutral_at_comfort_conditions() {
+    async fn pmv_iso7730_neutral_at_comfort_conditions() {
         let pmv = part_1::pmv_iso7730(22.0, 50.0, 0.1);
         assert!(pmv.abs() < 0.5, "pmv={pmv}");
         let ppd = part_1::ppd_from_pmv(pmv);
@@ -1244,7 +1244,7 @@ mod compliance_helpers_tests {
     }
 
     #[test]
-    fn adaptive_comfort_center_and_category_band() {
+    async fn adaptive_comfort_center_and_category_band() {
         let centre = part_1::adaptive_comfort_temperature_c(20.0);
         assert!((centre - 25.4).abs() < 1e-9, "centre={centre}");
         let check = part_1::check_adaptive_comfort(20.0, 24.0, part_1::ComfortCategory::II);
@@ -1252,7 +1252,7 @@ mod compliance_helpers_tests {
     }
 
     #[test]
-    fn co2_annex_divergence_de_stricter_than_en() {
+    async fn co2_annex_divergence_de_stricter_than_en() {
         let en = annex_params::AnnexParams::en();
         let de = annex_params::AnnexParams::de();
         assert!((en.co2_limit_classroom_ppm - 1000.0).abs() < 1e-9);
@@ -1264,7 +1264,7 @@ mod compliance_helpers_tests {
     }
 
     #[test]
-    fn daylight_factor_category_ii_minimum() {
+    async fn daylight_factor_category_ii_minimum() {
         assert!((part_1::daylight_factor_min_percent(part_1::ComfortCategory::II) - 2.0).abs() < 1e-9);
         let pass = part_1::check_daylight_factor(part_1::ComfortCategory::II, 2.5);
         assert_eq!(pass.status, crate::document::CheckStatus::Pass);
@@ -1273,13 +1273,13 @@ mod compliance_helpers_tests {
     }
 
     #[test]
-    fn acoustic_category_ii_limit() {
+    async fn acoustic_category_ii_limit() {
         let check = part_1::check_acoustic_category(part_1::ComfortCategory::II, 24.0);
         assert_eq!(check.status, crate::document::CheckStatus::Pass);
     }
 
     #[test]
-    fn ventilation_rates_per_room_type_at_ida2() {
+    async fn ventilation_rates_per_room_type_at_ida2() {
         assert_eq!(part_3::outdoor_air_per_person(OccupancyType::Office), 36.0);
         assert_eq!(part_3::outdoor_air_per_person(OccupancyType::Meeting), 36.0);
         assert_eq!(part_3::outdoor_air_per_person(OccupancyType::Classroom), 36.0);
@@ -1291,7 +1291,7 @@ mod compliance_helpers_tests {
     }
 
     #[test]
-    fn sfp_1500w_1m3s_falls_in_class_4() {
+    async fn sfp_1500w_1m3s_falls_in_class_4() {
         let sfp_w_m3_s = 1500.0_f64 / 1.0;
         assert!((sfp_w_m3_s - 1500.0).abs() < 1e-9);
         assert_eq!(part_3::classify_sfp(sfp_w_m3_s), part_3::SfpClass::Sfp4);
@@ -1300,37 +1300,37 @@ mod compliance_helpers_tests {
     }
 
     #[test]
-    fn dwelling_ventilation_85m2_3_bedrooms() {
+    async fn dwelling_ventilation_85m2_3_bedrooms() {
         let rate = part_3::dwelling_ventilation_rate(85.0, 3);
         assert!((rate - 63.0).abs() < 1e-9);
     }
 
     #[test]
-    fn residential_ventilation_rate_100m2_4_occupants() {
+    async fn residential_ventilation_rate_100m2_4_occupants() {
         let rate = part_3::residential_ventilation_rate(100.0, 4);
         assert!((rate - 120.0).abs() < 1e-9);
     }
 
     #[test]
-    fn heat_recovery_efficiency_minimum() {
+    async fn heat_recovery_efficiency_minimum() {
         let check = part_3::check_heat_recovery_efficiency(0.75, 0.70);
         assert_eq!(check.status, crate::document::CheckStatus::Pass);
     }
 
     #[test]
-    fn inspection_due_within_interval() {
+    async fn inspection_due_within_interval() {
         let check = part_3::check_inspection_due("central_mech", 1);
         assert_eq!(check.status, crate::document::CheckStatus::Pass);
     }
 
     #[test]
-    fn humidification_capacity_meets_requirement() {
+    async fn humidification_capacity_meets_requirement() {
         let check = part_3::check_humidification_capacity(2.0, 2.0);
         assert_eq!(check.status, crate::document::CheckStatus::Pass);
     }
 
     #[test]
-    fn fan_energy_1500w_1m3s_8h_is_12kwh() {
+    async fn fan_energy_1500w_1m3s_8h_is_12kwh() {
         let energy = part_5_1::fan_energy_kwh(1500.0, 1.0, 8.0);
         assert!((energy - 12.0).abs() < 1e-9, "energy={energy}");
         let check = part_5_1::check_building_fan_energy(1500.0, 1.0, 8.0, 15.0);
@@ -1338,13 +1338,13 @@ mod compliance_helpers_tests {
     }
 
     #[test]
-    fn night_setback_residential_minimum() {
+    async fn night_setback_residential_minimum() {
         let check = part_5_1::check_night_setback(OccupancyType::Residential, 3.5);
         assert_eq!(check.status, crate::document::CheckStatus::Pass);
     }
 
     #[test]
-    fn heat_recovery_savings_worked_example() {
+    async fn heat_recovery_savings_worked_example() {
         let savings = part_5_2::heat_recovery_savings_kwh(0.75, 0.5, part_5_2::AIR_CP_J_KGK, 15.0, 10.0);
         assert!((savings - 56.53125).abs() < 1e-6, "savings={savings}");
         let check = part_5_2::check_heat_recovery_savings(0.75, 0.5, part_5_2::AIR_CP_J_KGK, 15.0, 10.0, 50.0);
@@ -1352,7 +1352,7 @@ mod compliance_helpers_tests {
     }
 
     #[test]
-    fn infiltration_n50_1_5_volume_500m3_is_37_5() {
+    async fn infiltration_n50_1_5_volume_500m3_is_37_5() {
         let rate = part_7::infiltration_rate_m3_h(1.5, 500.0);
         assert!((rate - 37.5).abs() < 1e-9, "rate={rate}");
         let check = part_7::check_infiltration(1.5, 500.0, 45.0);
@@ -1360,13 +1360,13 @@ mod compliance_helpers_tests {
     }
 
     #[test]
-    fn cellar_ventilation_50m2() {
+    async fn cellar_ventilation_50m2() {
         let rate = part_7::cellar_ventilation_rate(50.0);
         assert!((rate - 15.0).abs() < 1e-9);
     }
 
     #[test]
-    fn cooling_energy_need_worked_example() {
+    async fn cooling_energy_need_worked_example() {
         let net = part_9::cooling_energy_need_kwh(200.0, 100.0, 32.0, 26.0, 10.0, 5.0, 0.8);
         assert!((net - 14.0).abs() < 1e-9, "net={net}");
         let check = part_9::check_cooling_energy_need(200.0, 100.0, 32.0, 26.0, 10.0, 5.0, 0.8, 20.0);
@@ -1374,7 +1374,7 @@ mod compliance_helpers_tests {
     }
 
     #[test]
-    fn chiller_eer_table_lookup_air_cooled() {
+    async fn chiller_eer_table_lookup_air_cooled() {
         assert!((part_13::eer_min(part_13::ChillerType::AirCooled) - 2.5).abs() < 1e-9);
         let check = part_13::check_chiller_eer(part_13::ChillerType::AirCooled, 3.0);
         assert_eq!(check.status, crate::document::CheckStatus::Pass);
@@ -1383,13 +1383,13 @@ mod compliance_helpers_tests {
     }
 
     #[test]
-    fn data_center_supply_air_22c_passes() {
+    async fn data_center_supply_air_22c_passes() {
         let check = part_13::check_supply_air_temperature(22.0);
         assert_eq!(check.status, crate::document::CheckStatus::Pass);
     }
 
     #[test]
-    fn storage_losses_worked_example() {
+    async fn storage_losses_worked_example() {
         let losses = part_15::storage_losses_kwh(5.0, 60.0, 20.0, 24.0);
         assert!((losses - 4.8).abs() < 1e-9, "losses={losses}");
         let check = part_15::check_storage_losses(5.0, 60.0, 20.0, 24.0, 6.0);
@@ -1397,13 +1397,13 @@ mod compliance_helpers_tests {
     }
 
     #[test]
-    fn dhw_delivery_temperature_58c_passes() {
+    async fn dhw_delivery_temperature_58c_passes() {
         let check = part_15::check_dhw_temperature(58.0);
         assert_eq!(check.status, crate::document::CheckStatus::Pass);
     }
 
     #[test]
-    fn duct_leakage_class_c_400pa_worked_example() {
+    async fn duct_leakage_class_c_400pa_worked_example() {
         let limit = part_17::leakage_limit_m3_s_m2(part_17::DuctLeakageClass::C, 400.0);
         assert!((limit - 0.1473873631338949).abs() < 1e-6, "limit={limit}");
         let check = part_17::check_duct_leakage(part_17::DuctLeakageClass::C, 400.0, 0.10);

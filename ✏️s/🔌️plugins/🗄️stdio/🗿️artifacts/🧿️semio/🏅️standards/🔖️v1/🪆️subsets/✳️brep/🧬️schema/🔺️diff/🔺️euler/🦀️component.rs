@@ -28,19 +28,19 @@ use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vec
 
 // #region 🔖️Make
 
-fn dummy_coedge() -> CoedgeId {
+async fn dummy_coedge() -> CoedgeId {
     ArenaId::from_raw(0, 0)
 }
 
 /// ✂️ Creates a new vertex, recording it as generated.
-pub fn make_vertex(body: &mut Body, position: Pnt3, tol: Tol, rec: &mut OpRecorder) -> VertexId {
+pub async fn make_vertex(body: &mut Body, position: Pnt3, tol: Tol, rec: &mut OpRecorder) -> VertexId {
     let label = body.new_label();
     rec.record_generated(label);
     body.vertices.insert(Vertex { position, tol, label })
 }
 
 /// ✂️ Creates a new edge referencing shared curve geometry, recording it as generated.
-pub fn make_edge(body: &mut Body, curve: Curve3Id, range: (f64, f64), v0: VertexId, v1: VertexId, tol: Tol, rec: &mut OpRecorder) -> EdgeId {
+pub async fn make_edge(body: &mut Body, curve: Curve3Id, range: (f64, f64), v0: VertexId, v1: VertexId, tol: Tol, rec: &mut OpRecorder) -> EdgeId {
     let label = body.new_label();
     rec.record_generated(label);
     body.edges.insert(Edge { curve, range, v0, v1, tol, label })
@@ -49,7 +49,7 @@ pub fn make_edge(body: &mut Body, curve: Curve3Id, range: (f64, f64), v0: Vertex
 /// ✂️ Builds a closed coedge ring from `members` (one `(edge, forward)` pair per coedge, in ring
 /// order) and links it into a new [`Loop`]. Loops/coedges have no [`crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::history::PersistentLabel`]
 /// of their own (they are structural, not independently document-nameable), so nothing is recorded.
-pub fn make_loop(body: &mut Body, face: FaceId, members: &[(EdgeId, bool)]) -> LoopId {
+pub async fn make_loop(body: &mut Body, face: FaceId, members: &[(EdgeId, bool)]) -> LoopId {
     let loop_id = body.loops.insert(Loop { first: dummy_coedge(), face });
     let coedge_ids: Vec<CoedgeId> = members.iter().map(|&(edge, forward)| body.coedges.insert(Coedge { edge, forward, pcurve: None, prange: (0.0, 0.0), loop_id, next: dummy_coedge(), prev: dummy_coedge() })).collect();
     let n = coedge_ids.len();
@@ -63,21 +63,21 @@ pub fn make_loop(body: &mut Body, face: FaceId, members: &[(EdgeId, bool)]) -> L
 }
 
 /// ✂️ Creates a new face, recording it as generated.
-pub fn add_face(body: &mut Body, surface: SurfaceId, outer: Option<LoopId>, inners: Vec<LoopId>, flipped: bool, tol: Tol, rec: &mut OpRecorder) -> FaceId {
+pub async fn add_face(body: &mut Body, surface: SurfaceId, outer: Option<LoopId>, inners: Vec<LoopId>, flipped: bool, tol: Tol, rec: &mut OpRecorder) -> FaceId {
     let label = body.new_label();
     rec.record_generated(label);
     body.faces.insert(Face { surface, outer, inners, flipped, tol, label })
 }
 
 /// ✂️ Creates a new shell, recording it as generated.
-pub fn add_shell(body: &mut Body, faces: Vec<FaceId>, rec: &mut OpRecorder) -> ShellId {
+pub async fn add_shell(body: &mut Body, faces: Vec<FaceId>, rec: &mut OpRecorder) -> ShellId {
     let label = body.new_label();
     rec.record_generated(label);
     body.shells.insert(Shell { faces, label })
 }
 
 /// ✂️ Creates a new solid, recording it as generated.
-pub fn add_solid(body: &mut Body, outer: ShellId, inners: Vec<ShellId>, rec: &mut OpRecorder) -> SolidId {
+pub async fn add_solid(body: &mut Body, outer: ShellId, inners: Vec<ShellId>, rec: &mut OpRecorder) -> SolidId {
     let label = body.new_label();
     rec.record_generated(label);
     body.solids.insert(Solid { outer, inners, label })
@@ -94,7 +94,7 @@ pub fn add_solid(body: &mut Body, outer: ShellId, inners: Vec<ShellId>, rec: &mu
 /// periodic edge, e.g. a closed circle, forming a one-coedge loop). Returns
 /// `(first_half, second_half, new_vertex)`, where "first"/"second" are relative to the edge's own
 /// `v0 → v1` direction (not any particular coedge's orientation).
-pub fn split_edge(body: &mut Body, edge_id: EdgeId, t: f64, position: Pnt3, rec: &mut OpRecorder) -> (EdgeId, EdgeId, VertexId) {
+pub async fn split_edge(body: &mut Body, edge_id: EdgeId, t: f64, position: Pnt3, rec: &mut OpRecorder) -> (EdgeId, EdgeId, VertexId) {
     let old_edge = body.edges.get(edge_id).expect("split_edge requires a live edge id").clone();
     debug_assert!(t > old_edge.range.0 && t < old_edge.range.1, "split parameter must lie strictly within the edge's range");
     let new_vertex = make_vertex(body, position, old_edge.tol, rec);
@@ -143,7 +143,7 @@ pub fn split_edge(body: &mut Body, edge_id: EdgeId, t: f64, position: Pnt3, rec:
 /// Intersects the infinite line with the outer boundary in the face UV plane, splits the two hit
 /// edges (or reuses existing vertices when the hit lands on a corner), inserts a chord edge, and
 /// rebuilds two outer loops via Euler editors. Returns `(original_face, new_face)`.
-pub fn split_planar_face_by_line(body: &mut Body, face: FaceId, p0: Pnt3, p1: Pnt3) -> Result<(FaceId, FaceId), KernelError> {
+pub async fn split_planar_face_by_line(body: &mut Body, face: FaceId, p0: Pnt3, p1: Pnt3) -> Result<(FaceId, FaceId), KernelError> {
     let face_data = body.faces.get(face).ok_or_else(|| KernelError::MissingEntity(format!("face {face}")))?.clone();
     let outer = face_data.outer.ok_or_else(|| KernelError::Operation(format!("face {face} has no outer loop")))?;
     if !face_data.inners.is_empty() {
@@ -291,12 +291,12 @@ struct BoundaryHit {
     vertex_hint: Option<VertexId>,
 }
 
-fn project_uv(frame: &Frame3, p: Pnt3) -> Pnt2 {
+async fn project_uv(frame: &Frame3, p: Pnt3) -> Pnt2 {
     let local = frame.to_local(p);
     Pnt2::new(local.x, local.y)
 }
 
-fn intersect_segment_line_uv(a: Pnt2, b: Pnt2, p0: Pnt2, p1: Pnt2, tol: f64) -> Option<(f64, Pnt2)> {
+async fn intersect_segment_line_uv(a: Pnt2, b: Pnt2, p0: Pnt2, p1: Pnt2, tol: f64) -> Option<(f64, Pnt2)> {
     let r = b - a;
     let s = p1 - p0;
     let rxs = r.cross(s);
@@ -318,7 +318,7 @@ fn intersect_segment_line_uv(a: Pnt2, b: Pnt2, p0: Pnt2, p1: Pnt2, tol: f64) -> 
     Some((t_clamped, point))
 }
 
-fn edge_param_at_point(body: &Body, edge: &Edge, point: Pnt3, tol: f64) -> Result<f64, KernelError> {
+async fn edge_param_at_point(body: &Body, edge: &Edge, point: Pnt3, tol: f64) -> Result<f64, KernelError> {
     let curve = body.curves3.get(edge.curve).ok_or_else(|| KernelError::MissingEntity(format!("curve {}", edge.curve)))?;
     match curve {
         Curve3::Line { origin, dir } => {
@@ -349,7 +349,7 @@ fn edge_param_at_point(body: &Body, edge: &Edge, point: Pnt3, tol: f64) -> Resul
     }
 }
 
-fn endpoint_vertex(edge: &Edge, curve_t: f64, linear: f64) -> Option<VertexId> {
+async fn endpoint_vertex(edge: &Edge, curve_t: f64, linear: f64) -> Option<VertexId> {
     let (t0, t1) = edge.range;
     let span = (t1 - t0).abs().max(1e-30);
     let param_tol = (linear / span).clamp(1e-14, 0.25);
@@ -362,7 +362,7 @@ fn endpoint_vertex(edge: &Edge, curve_t: f64, linear: f64) -> Option<VertexId> {
     None
 }
 
-fn loop_walk(body: &Body, loop_id: LoopId) -> Result<(Vec<VertexId>, Vec<(EdgeId, bool)>), KernelError> {
+async fn loop_walk(body: &Body, loop_id: LoopId) -> Result<(Vec<VertexId>, Vec<(EdgeId, bool)>), KernelError> {
     let coedges = body.loop_coedges(loop_id);
     let mut verts = Vec::with_capacity(coedges.len());
     let mut members = Vec::with_capacity(coedges.len());
@@ -375,7 +375,7 @@ fn loop_walk(body: &Body, loop_id: LoopId) -> Result<(Vec<VertexId>, Vec<(EdgeId
     Ok((verts, members))
 }
 
-fn member_chain(members: &[(EdgeId, bool)], from: usize, to: usize) -> Vec<(EdgeId, bool)> {
+async fn member_chain(members: &[(EdgeId, bool)], from: usize, to: usize) -> Vec<(EdgeId, bool)> {
     let n = members.len();
     let mut out = Vec::new();
     let mut i = from;
@@ -391,7 +391,7 @@ fn member_chain(members: &[(EdgeId, bool)], from: usize, to: usize) -> Vec<(Edge
 
 // #endregion 🔖️UvArrange
 
-fn resolve_edge_containing_param(body: &Body, e1: EdgeId, e2: EdgeId, t: f64) -> Result<EdgeId, KernelError> {
+async fn resolve_edge_containing_param(body: &Body, e1: EdgeId, e2: EdgeId, t: f64) -> Result<EdgeId, KernelError> {
     for edge_id in [e1, e2] {
         let Some(edge) = body.edges.get(edge_id) else { continue };
         if t > edge.range.0 + 1e-14 && t < edge.range.1 - 1e-14 {
@@ -412,7 +412,7 @@ mod tests {
     /// ✂️ Builds the topology of a unit tetrahedron (4 vertices, 6 edges, 4 triangular faces, 1
     /// shell, 1 solid) purely through the checked editors above — the flagship "assemble a real
     /// closed solid from scratch" gate for this phase.
-    fn build_tetrahedron(body: &mut Body, rec: &mut OpRecorder) -> SolidId {
+    async fn build_tetrahedron(body: &mut Body, rec: &mut OpRecorder) -> SolidId {
         let positions = [Pnt3::new(0.0, 0.0, 0.0), Pnt3::new(1.0, 0.0, 0.0), Pnt3::new(0.0, 1.0, 0.0), Pnt3::new(0.0, 0.0, 1.0)];
         let vertices: Vec<VertexId> = positions.iter().map(|&p| make_vertex(body, p, Tol::DEFAULT, rec)).collect();
         let edge_pairs = [(0, 1), (1, 2), (2, 0), (0, 3), (1, 3), (2, 3)];
@@ -449,7 +449,7 @@ mod tests {
     }
 
     #[test]
-    fn tetrahedron_satisfies_euler_poincare_formula() {
+    async fn tetrahedron_satisfies_euler_poincare_formula() {
         let mut body = Body::new();
         let mut rec = OpRecorder::new();
         let solid = build_tetrahedron(&mut body, &mut rec);
@@ -463,7 +463,7 @@ mod tests {
     }
 
     #[test]
-    fn tetrahedron_build_records_every_entity_as_generated() {
+    async fn tetrahedron_build_records_every_entity_as_generated() {
         let mut body = Body::new();
         let mut rec = OpRecorder::new();
         build_tetrahedron(&mut body, &mut rec);
@@ -473,7 +473,7 @@ mod tests {
     }
 
     #[test]
-    fn each_face_loop_is_a_closed_ring_of_three_coedges() {
+    async fn each_face_loop_is_a_closed_ring_of_three_coedges() {
         let mut body = Body::new();
         let mut rec = OpRecorder::new();
         let solid = build_tetrahedron(&mut body, &mut rec);
@@ -484,7 +484,7 @@ mod tests {
     }
 
     #[test]
-    fn split_edge_on_a_free_edge_creates_two_edges_and_a_vertex() {
+    async fn split_edge_on_a_free_edge_creates_two_edges_and_a_vertex() {
         let mut body = Body::new();
         let mut rec = OpRecorder::new();
         let v0 = make_vertex(&mut body, Pnt3::new(0.0, 0.0, 0.0), Tol::DEFAULT, &mut rec);
@@ -502,7 +502,7 @@ mod tests {
     }
 
     #[test]
-    fn split_edge_within_a_loop_ring_preserves_ring_validity() {
+    async fn split_edge_within_a_loop_ring_preserves_ring_validity() {
         let mut body = Body::new();
         let mut rec = OpRecorder::new();
         let solid = build_tetrahedron(&mut body, &mut rec);
@@ -531,7 +531,7 @@ mod tests {
     }
 
     #[test]
-    fn split_edge_on_a_self_referential_single_coedge_loop_produces_a_valid_two_coedge_ring() {
+    async fn split_edge_on_a_self_referential_single_coedge_loop_produces_a_valid_two_coedge_ring() {
         let mut body = Body::new();
         let mut rec = OpRecorder::new();
         let frame = Frame3::from_normal(Pnt3::new(0.0, 0.0, 0.0), Vec3::Z).unwrap();
@@ -556,7 +556,7 @@ mod tests {
     }
 
     #[test]
-    fn split_rectangle_face_into_two() {
+    async fn split_rectangle_face_into_two() {
         let mut body = Body::new();
         let mut rec = OpRecorder::new();
         let wire = make_rectangle_wire(&mut body, 2.0, 2.0, &mut rec).unwrap();
@@ -576,7 +576,7 @@ mod tests {
     }
 
     #[test]
-    fn split_rejects_non_cutting_line() {
+    async fn split_rejects_non_cutting_line() {
         let mut body = Body::new();
         let mut rec = OpRecorder::new();
         let wire = make_rectangle_wire(&mut body, 2.0, 2.0, &mut rec).unwrap();
@@ -586,14 +586,14 @@ mod tests {
     }
 
     #[test]
-    fn split_rejects_missing_face() {
+    async fn split_rejects_missing_face() {
         let mut body = Body::new();
         let err = split_planar_face_by_line(&mut body, FaceId::from_raw(0, 0), Pnt3::new(0.0, 0.0, 0.0), Pnt3::new(1.0, 0.0, 0.0)).unwrap_err();
         assert!(matches!(err, KernelError::MissingEntity(_)));
     }
 
     #[test]
-    fn resolve_edge_containing_param_picks_survivor_after_split() {
+    async fn resolve_edge_containing_param_picks_survivor_after_split() {
         let mut body = Body::new();
         let mut rec = OpRecorder::new();
         let face =

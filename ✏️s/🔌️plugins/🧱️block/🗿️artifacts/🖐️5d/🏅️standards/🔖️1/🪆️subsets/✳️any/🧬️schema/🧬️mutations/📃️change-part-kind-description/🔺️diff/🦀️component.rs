@@ -4,7 +4,7 @@ use crate::artifacts::block5d::Block5dSnapshot;
 use crate::{BlockKindIdentity};
 
 //#region 🔖️Diff
-pub fn diff(payload: &super::mutation::ChangePartKindDescription, base: &Block5dSnapshot) -> protocol::MutationOutcome<Block5dDiff> {
+pub async fn diff(payload: &super::mutation::ChangePartKindDescription, base: &Block5dSnapshot) -> protocol::MutationOutcome<Block5dDiff> {
     if payload.new_description == base.part_kind.description {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", "Part kind description is unchanged.");
     }

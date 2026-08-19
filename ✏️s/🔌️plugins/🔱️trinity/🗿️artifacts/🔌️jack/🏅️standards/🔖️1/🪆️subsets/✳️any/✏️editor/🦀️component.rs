@@ -48,13 +48,13 @@ pub(crate) const TRINITY_JACK_DEFAULT_QUERY: &str = "MATCH (a:Piece)-[r:Connecti
 
 //#region 🔖️DocumentHelpers
 /// 📦️ The default trinity graph fixture (Nakagin capsule tower) — the initial document projection.
-pub(crate) fn default_fixture() -> JackSnapshot {
+pub(crate) async fn default_fixture() -> JackSnapshot {
     JackSnapshot::parse_dsl(NAKAGIN_FIXTURE_DSL).unwrap_or_else(|_| crate::artifacts::jack::empty_trinity_graph_fixture())
 }
 
 /// 🌱️ Seeds the initial config with the default query and its result table so the Results window is
 /// populated on load.
-fn seeded_jack_config(fixture: &JackSnapshot) -> JackConfig {
+async fn seeded_jack_config(fixture: &JackSnapshot) -> JackConfig {
     let (result_json, _) = crate::editor::jack::commands::query::run_jack_query(fixture, TRINITY_JACK_DEFAULT_QUERY);
     JackConfig { camera: fixture.camera.clone(), active_fixture_id: "nakagin".into(), jack_query: TRINITY_JACK_DEFAULT_QUERY.into(), jack_result_json: result_json, ..JackConfig::default() }
 }
@@ -62,28 +62,28 @@ fn seeded_jack_config(fixture: &JackSnapshot) -> JackConfig {
 /// 🧬️ Whole-document replace is banned from the `Mutation` enum outright (`SetFixture` — see
 /// `📓️taxonomy.md`'s forbidden vocabulary), so `setActiveExample`/`setFixtureJson` build a
 /// `Effect::LoadDocument` (outside undo history) instead of an `artifact_mutations` entry.
-pub(crate) fn reset_document_effect(fixture: &JackSnapshot) -> Effect {
+pub(crate) async fn reset_document_effect(fixture: &JackSnapshot) -> Effect {
     let pack = <JackSnapshot as ArtifactPack>::encode_pack(fixture);
     let envelope = store::create_document_envelope::<JackSnapshot, TrinityGraphMutation>(TRINITY_GRAPH_SCHEMA, "jack", fixture.clone(), None);
     let spr = store::print_document_spr(&envelope).expect("jack document spr encode is infallible for a fresh, edit-free envelope");
     Effect::LoadDocument { pack, spr }
 }
 
-pub(crate) fn jack_action(action: &str, args: Option<serde_json::Value>) -> ActionDescriptor {
+pub(crate) async fn jack_action(action: &str, args: Option<serde_json::Value>) -> ActionDescriptor {
     semio_framework_plugin::ActionFactory::new(TRINITY_JACK_PLAY_CONTROLLER_ID).action(action, args)
 }
 
-pub(crate) fn graph_from_fixture_or_default(fixture: &JackSnapshot) -> crate::artifacts::jack::Graph {
+pub(crate) async fn graph_from_fixture_or_default(fixture: &JackSnapshot) -> crate::artifacts::jack::Graph {
     crate::artifacts::jack::Graph::from_fixture(fixture.clone()).unwrap_or_else(|_| crate::artifacts::jack::Graph::from_fixture(default_fixture()).expect("nakagin graph"))
 }
 
 /// 🩹️ Delegates to `crate::artifacts::jack::parse_port_key` (the one place the `nodeId@portId`
 /// convention is owned) instead of hand-rolling a second splitter here.
-pub(crate) fn split_endpoint(endpoint: &str) -> (String, String) {
+pub(crate) async fn split_endpoint(endpoint: &str) -> (String, String) {
     crate::artifacts::jack::parse_port_key(endpoint).map_or_else(|| (endpoint.to_string(), "in".into()), |(n, p)| (n.to_string(), p.to_string()))
 }
 
-pub(crate) fn fixture_to_workflow(fixture: &JackSnapshot) -> (Vec<NodeGraphNodeRecord>, Vec<NodeGraphEdgeRecord>, NodeGraphViewport) {
+pub(crate) async fn fixture_to_workflow(fixture: &JackSnapshot) -> (Vec<NodeGraphNodeRecord>, Vec<NodeGraphEdgeRecord>, NodeGraphViewport) {
     let scene = crate::artifacts::jack::jack_working_scene(fixture);
     let nodes: Vec<NodeGraphNodeRecord> = scene.nodes.iter().map(node_to_workflow_record).collect();
     let edges: Vec<NodeGraphEdgeRecord> = scene
@@ -99,7 +99,7 @@ pub(crate) fn fixture_to_workflow(fixture: &JackSnapshot) -> (Vec<NodeGraphNodeR
     (nodes, edges, viewport)
 }
 
-fn node_to_workflow_record(node: &Node) -> NodeGraphNodeRecord {
+async fn node_to_workflow_record(node: &Node) -> NodeGraphNodeRecord {
     let width = if node.width > 0.0 { node.width } else { 96.0 };
     let height = if node.height > 0.0 { node.height } else { 48.0 };
     NodeGraphNodeRecord {
@@ -121,7 +121,7 @@ fn node_to_workflow_record(node: &Node) -> NodeGraphNodeRecord {
 /// `trinity.graph` document) plus one extra fan-out output port, `graph:out`, so a jack window can
 /// feed its live query-graph projection into other graph-consuming workflow nodes (e.g. `rewrite`'s
 /// `graph:in`).
-pub(crate) fn jack_io() -> semio_framework_plugin::AppIo {
+pub(crate) async fn jack_io() -> semio_framework_plugin::AppIo {
     semio_framework_plugin::AppIo {
         document_schema: TRINITY_GRAPH_SCHEMA.into(),
         document_media_type: MediaType { class: MediaClass::Graph, form: MediaForm::Trinity },
@@ -191,7 +191,7 @@ pub enum TrinityJackCommand {
 
 //#region 🔖️OpCodec
 impl protocol::OpText for TrinityJackCommand {
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
+    async fn parse_op(line: &str) -> Result<Self, store::TextError> {
         let variants = <Self as dsl::DslVariants>::variants();
         for (keyword, spec_fn) in &variants {
             let probe = format!("{} ", keyword);
@@ -206,7 +206,7 @@ impl protocol::OpText for TrinityJackCommand {
         }
         Err(dsl::__rt::field_error(format!("unknown mutation line '{line}'")))
     }
-    fn print_op(&self) -> String {
+    async fn print_op(&self) -> String {
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
         let variants = <Self as dsl::DslVariants>::variants();
         let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
@@ -216,7 +216,7 @@ impl protocol::OpText for TrinityJackCommand {
 
 /// 🎯️ Handcrafted OpBinary (P6).
 impl protocol::OpBinary for TrinityJackCommand {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         const OP_BINARY_FORMAT: u8 = 1;
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
         let variants = <Self as dsl::DslVariants>::variants();
@@ -233,7 +233,7 @@ impl protocol::OpBinary for TrinityJackCommand {
         out.extend_from_slice(&body);
         Ok(out)
     }
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         const OP_BINARY_FORMAT: u8 = 1;
         let mut reader = store::pack_rt::ByteReader::new(bytes);
         let format = reader.read_u8()?;
@@ -284,19 +284,19 @@ impl ArtifactEditor for TrinityJackPlayApp {
     const DIALECT: Dialect = TRINITY_JACK_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = TRINITY_GRAPH_SCHEMA;
 
-    fn app_schema() -> Option<::schema::AppSchemaDescriptor> {
+    async fn app_schema() -> Option<::schema::AppSchemaDescriptor> {
         Some(crate::editor::jack::config::schema::app_schema_descriptor())
     }
 
-    fn initial_snapshot() -> JackSnapshot {
+    async fn initial_snapshot() -> JackSnapshot {
         default_fixture()
     }
 
-    fn initial_config() -> JackConfig {
+    async fn initial_config() -> JackConfig {
         seeded_jack_config(&Self::initial_snapshot())
     }
 
-    fn io() -> Option<semio_framework_plugin::AppIo> {
+    async fn io() -> Option<semio_framework_plugin::AppIo> {
         Some(jack_io())
     }
 
@@ -321,7 +321,7 @@ impl ArtifactEditor for TrinityJackPlayApp {
 
     /// 🏷️ Maps each `TrinityJackCommand` variant back to the action id it was declared under in
     /// `create_trinity_jack_app`.
-    fn command_id(command: &TrinityJackCommand) -> &'static str {
+    async fn command_id(command: &TrinityJackCommand) -> &'static str {
         match command {
             TrinityJackCommand::SetFixtureJson { .. } => "setFixtureJson",
             TrinityJackCommand::DeleteSelection => "deleteSelection",
@@ -343,7 +343,7 @@ impl ArtifactEditor for TrinityJackPlayApp {
         }
     }
 
-    fn handle(command: &TrinityJackCommand, doc: &ArtifactView<'_, JackSnapshot>, cfg: &ConfigView<'_, JackConfig>, interaction: &InteractionView<'_>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<TrinityGraphMutation, JackConfigMutation, Self::DraftMutation>, Fault> {
+    async fn handle(command: &TrinityJackCommand, doc: &ArtifactView<'_, JackSnapshot>, cfg: &ConfigView<'_, JackConfig>, interaction: &InteractionView<'_>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<TrinityGraphMutation, JackConfigMutation, Self::DraftMutation>, Fault> {
         let fixture = doc.snapshot;
         let config = cfg.snapshot;
         match command {
@@ -367,7 +367,7 @@ impl ArtifactEditor for TrinityJackPlayApp {
         }
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, JackSnapshot>, cfg: &ConfigView<'_, JackConfig>) -> semio_framework_plugin::UiNode {
+    async fn render(body_key: &str, doc: &ArtifactView<'_, JackSnapshot>, cfg: &ConfigView<'_, JackConfig>) -> semio_framework_plugin::UiNode {
         let fixture = doc.snapshot;
         let labels = semio_framework_plugin::resolve_labels_for_locale::<crate::editor::jack::terminology::TrinityJackLabels>(&cfg.snapshot.locale);
         match body_key {
@@ -381,12 +381,12 @@ impl ArtifactEditor for TrinityJackPlayApp {
         }
     }
 
-    fn window_measures(_doc: &ArtifactView<'_, JackSnapshot>, cfg: &ConfigView<'_, JackConfig>) -> HashMap<String, Vec<WindowMeasure>> {
+    async fn window_measures(_doc: &ArtifactView<'_, JackSnapshot>, cfg: &ConfigView<'_, JackConfig>) -> HashMap<String, Vec<WindowMeasure>> {
         let mode = cfg.snapshot.lod_mode_by_window.get(TRINITY_JACK_PLAY_WINDOW_GRAPH).map_or(edit::windows::graph::TRINITY_LOD_MODE_AUTOMATIC, String::as_str);
         HashMap::from([(TRINITY_JACK_PLAY_WINDOW_GRAPH.to_string(), vec![edit::windows::graph::trinity_lod_measure(TRINITY_JACK_PLAY_WINDOW_GRAPH, mode, jack_action)])])
     }
 
-    fn context_menu(request: &ContextMenuRequest, _doc: &ArtifactView<'_, JackSnapshot>, cfg: &ConfigView<'_, JackConfig>, registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
+    async fn context_menu(request: &ContextMenuRequest, _doc: &ArtifactView<'_, JackSnapshot>, cfg: &ConfigView<'_, JackConfig>, registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
         use semio_framework_plugin::{node_graph_delete_selection_spec, selection_domains_from_surface, Menu, NodeGraphDeleteDispatch};
 
         let is_de = cfg.snapshot.locale.starts_with("de");
@@ -407,7 +407,7 @@ impl ArtifactEditor for TrinityJackPlayApp {
     /// of its first incoming connection (roots — nodes with no incoming edge — get `parent: None`).
     /// `MergeMode::Range` is not declared for this domain, so `ordered`'s sequence need not be a strict
     /// pre-order — `descendant_closure`/`ancestors` only need the (id, parent) pairs, not list order.
-    fn interaction_topology(doc: &ArtifactView<'_, JackSnapshot>, _cfg: &ConfigView<'_, JackConfig>) -> InteractionTopology {
+    async fn interaction_topology(doc: &ArtifactView<'_, JackSnapshot>, _cfg: &ConfigView<'_, JackConfig>) -> InteractionTopology {
         let fixture = doc.snapshot;
         let mut parent_of: std::collections::BTreeMap<String, String> = std::collections::BTreeMap::new();
         for edge in fixture.edges() {
@@ -431,7 +431,7 @@ use crate::editor::jack::modes::edit;
 /// not ported — `EditorBuilder::build_definition()` returns a bare `AppDefinition`, discarding
 /// `App.examples` entirely (SDK gap, see this packet's notes file; the subset's own
 /// `📚️examples/🎬️demo` facet is the likely intended replacement mechanism).
-pub fn create_trinity_jack_app() -> semio_framework_plugin::AppDefinition {
+pub async fn create_trinity_jack_app() -> semio_framework_plugin::AppDefinition {
     Editor::builder(TRINITY_JACK_DIALECT).document(["semio", "trinity", "jack"])
             .artifact_kind(ArtifactKindSpec {
                 id: "graph.trinity".into(),
@@ -539,14 +539,14 @@ mod tests {
     /// is still `fn(manifest: fn() -> App)`, unchanged for this ticket (SDK gap, see this packet's
     /// notes file) — `create_trinity_jack_app` now returns a bare `AppDefinition`, so this tiny local
     /// wrapper adapts it back into the `App { definition, examples }` shape those testkit fns expect.
-    fn trinity_jack_manifest_for_testkit() -> App {
+    async fn trinity_jack_manifest_for_testkit() -> App {
         App { definition: create_trinity_jack_app(), examples: Vec::new() }
     }
 
     /// 🎫️ Permanent wire guard (TEMPLATE.md §7): every `TrinityJackCommand` variant round-trips
     /// through both its binary (`OpBinary`, via `#[derive(dsl::DslOps)]`) and text (`OpText`) codecs.
     #[test]
-    fn trinity_jack_command_text_and_binary_round_trip() {
+    async fn trinity_jack_command_text_and_binary_round_trip() {
         let commands = vec![
             TrinityJackCommand::SetFixtureJson { json: "{}".into() },
             TrinityJackCommand::DeleteSelection,
@@ -568,38 +568,38 @@ mod tests {
         }
     }
 
-    fn meta(actor: &str) -> semio_framework_plugin::ActionMeta {
+    async fn meta(actor: &str) -> semio_framework_plugin::ActionMeta {
         testkit::meta(actor)
     }
 
     /// 🕹️ Registry-backed (not the bare `testkit::new_app`): `interactionSelect`/`interactionHover`
     /// resolve the dispatching app's declared `AppActionRegistry.interactions`, so any test exercising
     /// domain "ast" selection needs the real manifest's `.interaction(...)` declaration present.
-    fn new_app() -> VcsArtifactApp<EditorApp<TrinityJackPlayApp>> {
+    async fn new_app() -> VcsArtifactApp<EditorApp<TrinityJackPlayApp>> {
         testkit::new_app_with_registry::<EditorApp<TrinityJackPlayApp>>(trinity_jack_manifest_for_testkit)
     }
 
-    fn node_id_at(app: &VcsArtifactApp<EditorApp<TrinityJackPlayApp>>, index: usize) -> String {
+    async fn node_id_at(app: &VcsArtifactApp<EditorApp<TrinityJackPlayApp>>, index: usize) -> String {
         app.snapshot().expect("projection").nodes()[index].id.clone()
     }
 
     /// 🕹️ Dispatches the framework-injected `interactionSelect` verb against domain "ast" — the
     /// replacement for the deleted `TrinityJackCommand::SetSelection`.
-    fn select_ast(app: &mut VcsArtifactApp<EditorApp<TrinityJackPlayApp>>, ids: &[&str]) {
+    async fn select_ast(app: &mut VcsArtifactApp<EditorApp<TrinityJackPlayApp>>, ids: &[&str]) {
         let targets: Vec<serde_json::Value> = ids.iter().map(|id| serde_json::json!({ "granularity": "node", "id": id })).collect();
         let args = serde_json::json!({ "domainId": "ast", "targets": serde_json::to_string(&targets).unwrap() });
         app.handle_action("interactionSelect", Some(&args), &meta("local")).expect("interactionSelect");
     }
 
     #[test]
-    fn renders_node_graph_scene() {
+    async fn renders_node_graph_scene() {
         let mut app = new_app();
         let node = app.render(TRINITY_JACK_PLAY_BODY_GRAPH, None, &ViewModel::default()).expect("render");
         assert!(serde_json::to_string(&node).unwrap().contains("node-graph"));
     }
 
     #[test]
-    fn renders_jack_editor() {
+    async fn renders_jack_editor() {
         let mut app = new_app();
         let node = app.render(TRINITY_JACK_PLAY_BODY_EDITOR, None, &ViewModel::default()).expect("render");
         let json = serde_json::to_string(&node).unwrap();
@@ -608,7 +608,7 @@ mod tests {
     }
 
     #[test]
-    fn run_query_populates_results_and_a_set_query_mutates_projection() {
+    async fn run_query_populates_results_and_a_set_query_mutates_projection() {
         let mut app = new_app();
         app.render(TRINITY_JACK_PLAY_BODY_RESULTS, None, &ViewModel::default()).expect("render");
         let result = app.dispatch_typed(TrinityJackCommand::RunQuery { query: Some("MATCH (a:Piece) WHERE a.name = 'b' SET a.label = 'ran-label'".into()) }, &meta("local")).expect("run");
@@ -622,7 +622,7 @@ mod tests {
     }
 
     #[test]
-    fn node_graph_select_updates_selection_and_document_tree() {
+    async fn node_graph_select_updates_selection_and_document_tree() {
         let mut app = new_app();
         let node_id = node_id_at(&app, 0);
         select_ast(&mut app, &[&node_id]);
@@ -633,12 +633,12 @@ mod tests {
     }
 
     #[test]
-    fn nakagin_fixture_has_nodes() {
+    async fn nakagin_fixture_has_nodes() {
         assert!(!default_fixture().nodes().is_empty());
     }
 
     #[test]
-    fn editor_scene_has_tokens_and_diagnostics() {
+    async fn editor_scene_has_tokens_and_diagnostics() {
         let mut app = new_app();
         let node = app.render(TRINITY_JACK_PLAY_BODY_EDITOR, None, &ViewModel::default()).expect("render");
         let json = serde_json::to_string(&node).unwrap();
@@ -648,7 +648,7 @@ mod tests {
     }
 
     #[test]
-    fn text_edit_updates_query_without_operations() {
+    async fn text_edit_updates_query_without_operations() {
         let mut app = new_app();
         let result = app.dispatch_typed(TrinityJackCommand::TextEdit { text: "MATCH (a:Piece) RETURN a.name".into() }, &meta("local")).expect("edit");
         assert!(result.mutations.is_empty());
@@ -657,7 +657,7 @@ mod tests {
     }
 
     #[test]
-    fn graph_scene_has_lod_json() {
+    async fn graph_scene_has_lod_json() {
         let mut app = new_app();
         let node = app.render(TRINITY_JACK_PLAY_BODY_GRAPH, None, &ViewModel::default()).expect("render");
         let json = serde_json::to_string(&node).unwrap();
@@ -666,7 +666,7 @@ mod tests {
     }
 
     #[test]
-    fn set_lod_mode_reflects_in_window_measures() {
+    async fn set_lod_mode_reflects_in_window_measures() {
         let mut app = new_app();
         app.dispatch_typed(TrinityJackCommand::SetLodMode { window_id: TRINITY_JACK_PLAY_WINDOW_GRAPH.into(), value: "compact".into() }, &meta("local")).expect("lod");
         let measures = app.window_measures();
@@ -674,14 +674,14 @@ mod tests {
     }
 
     #[test]
-    fn catalogue_tree_renders() {
+    async fn catalogue_tree_renders() {
         let mut app = new_app();
         let node = app.render(TRINITY_JACK_PLAY_BODY_CATALOGUE, None, &ViewModel::default()).expect("render");
         assert!(serde_json::to_string(&node).unwrap().contains("trinity-jack-catalogue"));
     }
 
     #[test]
-    fn inspection_panel_renders_the_selection_prompt() {
+    async fn inspection_panel_renders_the_selection_prompt() {
         let mut app = new_app();
         let node_id = node_id_at(&app, 0);
         select_ast(&mut app, &[&node_id]);
@@ -692,7 +692,7 @@ mod tests {
     }
 
     #[test]
-    fn document_tree_de_locale_translates_labels() {
+    async fn document_tree_de_locale_translates_labels() {
         let mut app = new_app();
         app.dispatch_typed(TrinityJackCommand::SetLocale { value: "de-DE".into() }, &meta("local")).expect("set locale");
         let node = app.render(TRINITY_JACK_PLAY_BODY_DOCUMENT, None, &ViewModel::default()).expect("render");
@@ -700,7 +700,7 @@ mod tests {
     }
 
     #[test]
-    fn set_active_example_swaps_fixture_and_seeds_query() {
+    async fn set_active_example_swaps_fixture_and_seeds_query() {
         let mut app = new_app();
         let result = app.dispatch_typed(TrinityJackCommand::SetActiveExample { example_id: "branch-chain".into() }, &meta("local")).expect("set active example");
         // 🩹 Pre-existing test/implementation mismatch (traced to commit `a445617c`, 2026-08-12
@@ -715,7 +715,7 @@ mod tests {
     }
 
     #[test]
-    fn delete_selection_removes_selected_node() {
+    async fn delete_selection_removes_selected_node() {
         let mut app = new_app();
         let node_id = node_id_at(&app, 0);
         select_ast(&mut app, &[&node_id]);
@@ -726,7 +726,7 @@ mod tests {
     }
 
     #[test]
-    fn context_menu_stays_within_row_budget_and_ends_with_delete_selection() {
+    async fn context_menu_stays_within_row_budget_and_ends_with_delete_selection() {
         let mut app = testkit::new_app_with_registry::<EditorApp<TrinityJackPlayApp>>(trinity_jack_manifest_for_testkit);
         let node_id = node_id_at(&app, 0);
         let request = ContextMenuRequest {
@@ -750,7 +750,7 @@ mod tests {
     }
 
     #[test]
-    fn export_media_graph_out_matches_document_pack() {
+    async fn export_media_graph_out_matches_document_pack() {
         use semio_framework_plugin::PluginApp as _;
         let mut app = new_app();
         let document_out = semio_framework_plugin::resolve_ready(app.export_media("document:out")).expect("document:out export");
@@ -759,7 +759,7 @@ mod tests {
     }
 
     #[test]
-    fn jack_io_declares_graph_out_fan_out_port() {
+    async fn jack_io_declares_graph_out_fan_out_port() {
         let io = jack_io();
         assert_eq!(io.document_schema, TRINITY_GRAPH_SCHEMA);
         assert_eq!(io.artifact.id, "graph.trinity");

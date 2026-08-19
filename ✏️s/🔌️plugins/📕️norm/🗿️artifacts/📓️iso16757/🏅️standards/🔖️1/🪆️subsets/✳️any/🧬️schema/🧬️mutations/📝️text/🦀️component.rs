@@ -25,10 +25,10 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 //#region 🔖️ScalarCodec
 /// 🔤️ Quoted-string encode/decode — the only value kind that can contain a raw space, so every
 /// other scalar's text form stays space-free and tokenizable by [`tokenize_args`].
-fn enc_str(s: &str) -> String {
+async fn enc_str(s: &str) -> String {
     format!("\"{}\"", s.replace('\\', "\\\\").replace('"', "\\\""))
 }
-fn dec_str(s: &str) -> Result<String, String> {
+async fn dec_str(s: &str) -> Result<String, String> {
     let inner = s.strip_prefix('"').and_then(|s| s.strip_suffix('"')).ok_or_else(|| format!("expected quoted string, got {s:?}"))?;
     let mut out = String::with_capacity(inner.len());
     let mut chars = inner.chars();
@@ -46,32 +46,32 @@ fn dec_str(s: &str) -> Result<String, String> {
     }
     Ok(out)
 }
-fn enc_opt_str(s: &Option<String>) -> String {
+async fn enc_opt_str(s: &Option<String>) -> String {
     match s {
         Some(v) => enc_str(v),
         None => "-".to_string(),
     }
 }
-fn dec_opt_str(s: &str) -> Result<Option<String>, String> {
+async fn dec_opt_str(s: &str) -> Result<Option<String>, String> {
     if s == "-" {
         Ok(None)
     } else {
         Ok(Some(dec_str(s)?))
     }
 }
-fn enc_usize(v: usize) -> String {
+async fn enc_usize(v: usize) -> String {
     v.to_string()
 }
-fn dec_usize(s: &str) -> Result<usize, String> {
+async fn dec_usize(s: &str) -> Result<usize, String> {
     s.parse().map_err(|e: std::num::ParseIntError| e.to_string())
 }
-fn enc_opt_usize(v: &Option<usize>) -> String {
+async fn enc_opt_usize(v: &Option<usize>) -> String {
     match v {
         Some(index) => index.to_string(),
         None => "-".to_string(),
     }
 }
-fn dec_opt_usize(s: &str) -> Result<Option<usize>, String> {
+async fn dec_opt_usize(s: &str) -> Result<Option<usize>, String> {
     if s == "-" {
         Ok(None)
     } else {
@@ -81,10 +81,10 @@ fn dec_opt_usize(s: &str) -> Result<Option<usize>, String> {
 /// 🧬️ Every structured payload field (entity records, catalogue values, part-number rule,
 /// selection constraints) already derives `Serialize`/`Deserialize` — a quoted JSON string reuses
 /// that losslessly instead of a second handcrafted grammar per type.
-fn enc_json<T: serde::Serialize>(value: &T) -> String {
+async fn enc_json<T: serde::Serialize>(value: &T) -> String {
     enc_str(&serde_json::to_string(value).expect("iso16757 mutation payload field always serializes"))
 }
-fn dec_json<T: serde::de::DeserializeOwned>(s: &str) -> Result<T, String> {
+async fn dec_json<T: serde::de::DeserializeOwned>(s: &str) -> Result<T, String> {
     serde_json::from_str(&dec_str(s)?).map_err(|e| e.to_string())
 }
 //#endregion 🔖️ScalarCodec
@@ -92,7 +92,7 @@ fn dec_json<T: serde::de::DeserializeOwned>(s: &str) -> Result<T, String> {
 //#region 🔖️Tokenizer
 /// 🔡️ Splits `key=value` tokens on plain spaces, EXCEPT spaces inside a `"..."` quoted value —
 /// needed because names/JSON payloads may contain spaces.
-fn tokenize_args(rest: &str) -> Vec<String> {
+async fn tokenize_args(rest: &str) -> Vec<String> {
     let mut tokens = Vec::new();
     let mut current = String::new();
     let mut in_quotes = false;
@@ -122,13 +122,13 @@ fn tokenize_args(rest: &str) -> Vec<String> {
     }
     tokens
 }
-fn parse_args(rest: &str) -> Result<std::collections::BTreeMap<String, String>, String> {
+async fn parse_args(rest: &str) -> Result<std::collections::BTreeMap<String, String>, String> {
     tokenize_args(rest).into_iter().map(|token| token.split_once('=').map(|(k, v)| (k.to_string(), v.to_string())).ok_or_else(|| format!("bad arg token {token:?}"))).collect()
 }
 //#endregion 🔖️Tokenizer
 
 //#region 🔖️OpText
-fn print_iso16757_mutation(mutation: &Iso16757Mutation) -> String {
+async fn print_iso16757_mutation(mutation: &Iso16757Mutation) -> String {
     match mutation {
         Iso16757Mutation::ChangeExchangeProcess(p) => format!("change-exchange-process new-exchange-process={}", enc_json(&p.new_exchange_process)),
         Iso16757Mutation::UpdateScriptLimits(p) => format!("update-script-limits new-max-steps={} new-max-recursion={} new-timeout-ms={}", p.new_max_steps, p.new_max_recursion, p.new_timeout_ms),
@@ -154,7 +154,7 @@ fn print_iso16757_mutation(mutation: &Iso16757Mutation) -> String {
     }
 }
 
-fn parse_iso16757_mutation(line: &str) -> Result<Iso16757Mutation, String> {
+async fn parse_iso16757_mutation(line: &str) -> Result<Iso16757Mutation, String> {
     let (keyword, rest) = line.split_once(' ').unwrap_or((line, ""));
     let args = parse_args(rest)?;
     let arg = |k: &str| args.get(k).cloned().ok_or_else(|| format!("iso16757 mutation: missing arg '{k}' for '{keyword}'"));
@@ -189,10 +189,10 @@ fn parse_iso16757_mutation(line: &str) -> Result<Iso16757Mutation, String> {
 }
 
 impl protocol::OpText for Iso16757Mutation {
-    fn print_op(&self) -> String {
+    async fn print_op(&self) -> String {
         print_iso16757_mutation(self)
     }
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
+    async fn parse_op(line: &str) -> Result<Self, store::TextError> {
         parse_iso16757_mutation(line).map_err(|e| store::TextError::new(e, store::TextSpan::at(1, 1)))
     }
 }
@@ -202,22 +202,22 @@ impl protocol::OpText for Iso16757Mutation {
 /// 🎞️ Every variant's binary form is `tag u8 | json-string-per-field`; the JSON-per-field
 /// consolidation used by `OpText` above applies equally here — one `write_str_bin` per field
 /// regardless of that field's own structural complexity.
-fn write_str_bin(out: &mut Vec<u8>, s: &str) {
+async fn write_str_bin(out: &mut Vec<u8>, s: &str) {
     store::pack_rt::write_varint_u64(out, s.len() as u64);
     out.extend_from_slice(s.as_bytes());
 }
-fn read_str_bin(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
+async fn read_str_bin(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
     let len = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
     let bytes = reader.read_bytes(len).map_err(|e| e.to_string())?;
     String::from_utf8(bytes.to_vec()).map_err(|e| e.to_string())
 }
-fn write_json_bin<T: serde::Serialize>(out: &mut Vec<u8>, value: &T) {
+async fn write_json_bin<T: serde::Serialize>(out: &mut Vec<u8>, value: &T) {
     write_str_bin(out, &serde_json::to_string(value).expect("iso16757 mutation payload field always serializes"));
 }
-fn read_json_bin<T: serde::de::DeserializeOwned>(reader: &mut store::ByteReader<'_>) -> Result<T, String> {
+async fn read_json_bin<T: serde::de::DeserializeOwned>(reader: &mut store::ByteReader<'_>) -> Result<T, String> {
     serde_json::from_str(&read_str_bin(reader)?).map_err(|e| e.to_string())
 }
-fn write_opt_str_bin(out: &mut Vec<u8>, s: &Option<String>) {
+async fn write_opt_str_bin(out: &mut Vec<u8>, s: &Option<String>) {
     match s {
         Some(v) => {
             out.push(1);
@@ -226,14 +226,14 @@ fn write_opt_str_bin(out: &mut Vec<u8>, s: &Option<String>) {
         None => out.push(0),
     }
 }
-fn read_opt_str_bin(reader: &mut store::ByteReader<'_>) -> Result<Option<String>, String> {
+async fn read_opt_str_bin(reader: &mut store::ByteReader<'_>) -> Result<Option<String>, String> {
     match reader.read_u8().map_err(|e| e.to_string())? {
         0 => Ok(None),
         1 => Ok(Some(read_str_bin(reader)?)),
         other => Err(format!("bad option tag {other}")),
     }
 }
-fn write_opt_usize_bin(out: &mut Vec<u8>, v: &Option<usize>) {
+async fn write_opt_usize_bin(out: &mut Vec<u8>, v: &Option<usize>) {
     match v {
         Some(index) => {
             out.push(1);
@@ -242,7 +242,7 @@ fn write_opt_usize_bin(out: &mut Vec<u8>, v: &Option<usize>) {
         None => out.push(0),
     }
 }
-fn read_opt_usize_bin(reader: &mut store::ByteReader<'_>) -> Result<Option<usize>, String> {
+async fn read_opt_usize_bin(reader: &mut store::ByteReader<'_>) -> Result<Option<usize>, String> {
     match reader.read_u8().map_err(|e| e.to_string())? {
         0 => Ok(None),
         1 => Ok(Some(reader.read_varint_u64().map_err(|e| e.to_string())? as usize)),
@@ -251,7 +251,7 @@ fn read_opt_usize_bin(reader: &mut store::ByteReader<'_>) -> Result<Option<usize
 }
 
 impl protocol::OpBinary for Iso16757Mutation {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         let tag: u8 = match self {
             Iso16757Mutation::ChangeExchangeProcess(_) => 0,
             Iso16757Mutation::UpdateScriptLimits(_) => 1,
@@ -327,7 +327,7 @@ impl protocol::OpBinary for Iso16757Mutation {
         Ok(out)
     }
 
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         let mut reader = store::ByteReader::new(bytes);
         let malformed = |what: &'static str, offset: usize, detail: String| protocol::ProtocolError::Malformed { what, offset: offset as u64, detail };
         let _format = reader.read_u8().map_err(|e| malformed("op format", 0, e.to_string()))?;
@@ -399,7 +399,7 @@ impl protocol::OpBinary for Iso16757Mutation {
 //#region 🔖️DemoCases
 /// 🧪️ One representative value per variant — reused by the round-trip law test below.
 #[cfg(test)]
-pub(crate) fn demo_mutation_cases() -> Vec<Iso16757Mutation> {
+pub(crate) async fn demo_mutation_cases() -> Vec<Iso16757Mutation> {
     use crate::artifacts::iso16757::{part_1, part_4, part_5, Cardinality, CatalogueValue, LocalizedText, Names};
 
     let names = |text: &str| Names { preferred: LocalizedText { locale: "en".into(), text: text.into() }, short_name: None, alternatives: Vec::new() };
@@ -455,7 +455,7 @@ mod tests {
     use protocol::{OpBinary, OpText};
 
     #[test]
-    fn op_text_binary_roundtrip_law() {
+    async fn op_text_binary_roundtrip_law() {
         for mutation in demo_mutation_cases() {
             let printed = mutation.print_op();
             assert!(!printed.contains('\n'), "print_op must be one line, got {printed:?}");

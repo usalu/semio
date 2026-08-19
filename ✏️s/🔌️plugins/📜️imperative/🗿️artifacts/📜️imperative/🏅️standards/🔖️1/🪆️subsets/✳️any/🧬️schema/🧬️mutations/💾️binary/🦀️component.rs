@@ -65,7 +65,7 @@ enum ImperativeMutationDsl {
 //#region 🔖️HandcraftedOpCodecs
 /// ⚡️ P6 handcrafted OpText/OpBinary (derive no longer emits these traits).
 impl protocol::OpText for ImperativeMutationDsl {
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
+    async fn parse_op(line: &str) -> Result<Self, store::TextError> {
         let variants = <Self as dsl::DslVariants>::variants();
         for (keyword, spec_fn) in &variants {
             let probe = format!("{} ", keyword);
@@ -80,7 +80,7 @@ impl protocol::OpText for ImperativeMutationDsl {
         }
         Err(dsl::__rt::field_error(format!("unknown mutation line '{line}'")))
     }
-    fn print_op(&self) -> String {
+    async fn print_op(&self) -> String {
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
         let variants = <Self as dsl::DslVariants>::variants();
         let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
@@ -89,10 +89,10 @@ impl protocol::OpText for ImperativeMutationDsl {
 }
 
 impl OpBinary for ImperativeMutationDsl {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         dsl::variants_binary::encode_op(self)
     }
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         dsl::variants_binary::decode_op(bytes)
     }
 }
@@ -101,7 +101,7 @@ impl OpBinary for ImperativeMutationDsl {
 
 
 
-fn imperative_operation_to_dsl(operation: &ImperativeMutation) -> ImperativeMutationDsl {
+async fn imperative_operation_to_dsl(operation: &ImperativeMutation) -> ImperativeMutationDsl {
     match operation {
         ImperativeMutation::CreateStep(payload) => {
             ImperativeMutationDsl::CreateStep { owner: payload.path_ref.owner.clone(), slot: payload.path_ref.slot.clone(), item: Box::new(step_to_step_node_dsl(&payload.step)) }
@@ -116,7 +116,7 @@ fn imperative_operation_to_dsl(operation: &ImperativeMutation) -> ImperativeMuta
     }
 }
 
-fn imperative_operation_from_dsl(dsl_op: ImperativeMutationDsl) -> ImperativeMutation {
+async fn imperative_operation_from_dsl(dsl_op: ImperativeMutationDsl) -> ImperativeMutation {
     match dsl_op {
         ImperativeMutationDsl::CreateStep { owner, slot, item } => create_step(PathRef { owner, slot }, step_node_dsl_to_step(*item)),
         ImperativeMutationDsl::DeleteStep { owner, slot, id } => delete_step(PathRef { owner, slot }, id),
@@ -126,11 +126,11 @@ fn imperative_operation_from_dsl(dsl_op: ImperativeMutationDsl) -> ImperativeMut
 }
 
 impl protocol::OpText for ImperativeMutation {
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
+    async fn parse_op(line: &str) -> Result<Self, store::TextError> {
         Ok(imperative_operation_from_dsl(<ImperativeMutationDsl as protocol::OpText>::parse_op(line)?))
     }
 
-    fn print_op(&self) -> String {
+    async fn print_op(&self) -> String {
         <ImperativeMutationDsl as protocol::OpText>::print_op(&imperative_operation_to_dsl(self))
     }
 }
@@ -138,11 +138,11 @@ impl protocol::OpText for ImperativeMutation {
 /// ⚡️ Binary mirror of the `OpText` impl above — `ImperativeMutationDsl` already derives
 /// `OpBinary` via `#[derive(dsl::DslEnum)]`, so this is a pure to/from-dsl forward.
 impl OpBinary for ImperativeMutation {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         imperative_operation_to_dsl(self).encode_op()
     }
 
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         Ok(imperative_operation_from_dsl(ImperativeMutationDsl::decode_op(bytes)?))
     }
 }
@@ -150,12 +150,12 @@ impl OpBinary for ImperativeMutation {
 
 //#region 🔖️Api
 /// 📦️ Encodes an `ImperativeMutation` to its binary state-patch form.
-pub fn encode_op(operation: &ImperativeMutation) -> Result<Vec<u8>, protocol::ProtocolError> {
+pub async fn encode_op(operation: &ImperativeMutation) -> Result<Vec<u8>, protocol::ProtocolError> {
     operation.encode_op()
 }
 
 /// 📖️ Decodes an `ImperativeMutation` from its binary state-patch form.
-pub fn decode_op(bytes: &[u8]) -> Result<ImperativeMutation, protocol::ProtocolError> {
+pub async fn decode_op(bytes: &[u8]) -> Result<ImperativeMutation, protocol::ProtocolError> {
     ImperativeMutation::decode_op(bytes)
 }
 //#endregion 🔖️Api
@@ -167,7 +167,7 @@ mod tests {
     use crate::artifacts::imperative::ImperativeSnapshot;
 
     #[test]
-    fn op_binary_round_trips_and_agrees_with_text() {
+    async fn op_binary_round_trips_and_agrees_with_text() {
         let operation = delete_step(PathRef::default(), "step-1".into());
         store::os_store::test_support::assert_op_text_binary_equivalence(&operation);
         let bytes = encode_op(&operation).expect("encode");
@@ -175,7 +175,7 @@ mod tests {
     }
 
     #[test]
-    fn document_text_round_trip_with_applied_operation() {
+    async fn document_text_round_trip_with_applied_operation() {
         use crate::artifacts::imperative::{Dictionary, Step};
         use std::collections::BTreeMap;
 
@@ -190,13 +190,13 @@ mod tests {
     }
 
     #[test]
-    fn op_text_rejects_unknown_operation_keyword() {
+    async fn op_text_rejects_unknown_operation_keyword() {
         let line = r#"frobnicate owner=- slot=- id="step-1""#;
         assert!(<ImperativeMutation as protocol::OpText>::parse_op(line).is_err());
     }
 
     #[test]
-    fn op_text_round_trips_create_step_with_owner_and_slot() {
+    async fn op_text_round_trips_create_step_with_owner_and_slot() {
         use crate::artifacts::imperative::{Dictionary, Step};
         use std::collections::BTreeMap;
         let step = Step { id: "step-nested".into(), kind: "log.print".into(), params: Dictionary::new(), bodies: BTreeMap::new() };
@@ -209,7 +209,7 @@ mod tests {
     }
 
     #[test]
-    fn op_text_round_trips_reorder_steps() {
+    async fn op_text_round_trips_reorder_steps() {
         let operation = reorder_steps(PathRef::default(), "step-2".into(), 0);
         let printed = <ImperativeMutation as protocol::OpText>::print_op(&operation);
         let parsed = <ImperativeMutation as protocol::OpText>::parse_op(&printed).expect("round trips");
@@ -217,7 +217,7 @@ mod tests {
     }
 
     #[test]
-    fn op_text_round_trips_edit_step_params() {
+    async fn op_text_round_trips_edit_step_params() {
         use crate::artifacts::imperative::Dictionary;
         use neural_engine::{Atom, Value};
         let operation = edit_step_params(PathRef::default(), "step-2".into(), Dictionary::new().insert("message", Value::Atom(Atom::String("hi".into()))));

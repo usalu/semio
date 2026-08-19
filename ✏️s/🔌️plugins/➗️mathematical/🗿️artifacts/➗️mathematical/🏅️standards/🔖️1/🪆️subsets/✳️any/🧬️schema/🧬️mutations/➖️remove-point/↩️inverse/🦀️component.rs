@@ -7,7 +7,7 @@ use crate::artifacts::mathematical::{MathematicalMutation, MathematicalSnapshot}
 use super::mutation::RemovePoint;
 
 //#region 🔖️Inverse
-pub fn inverse(payload: &RemovePoint, base: &MathematicalSnapshot) -> Vec<MathematicalMutation> {
+pub async fn inverse(payload: &RemovePoint, base: &MathematicalSnapshot) -> Vec<MathematicalMutation> {
     let geometry = crate::artifacts::mathematical::mathematical_geometry(base);
     match geometry.points.get(payload.index) {
         Some(point) => vec![MathematicalMutation::InsertPoint(insert_point::mutation::InsertPoint { index: payload.index, x: point.x, y: point.y })],

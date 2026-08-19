@@ -16,7 +16,7 @@ pub const ARCHITECT_BODY_DOCUMENT: &str = "architect.document";
 
 //#region 🔖️Definition
 /// 🏛️ Stitched into the app manifest by `crate::editor::architect::create_architect_app`.
-pub fn definition() -> PanelTabDefinition {
+pub async fn definition() -> PanelTabDefinition {
     PanelTabDefinition {
         kind: PanelTabKind::App(FRAMEWORK_PANEL_TAB_ARTIFACT_ID.into()),
         label: LocalizedLabel::native(FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL, "Dokument"),
@@ -36,7 +36,7 @@ pub fn definition() -> PanelTabDefinition {
 /// the active register is unrelated to entity selection) and sit in the SAME tree, unaffected —
 /// mirrors note's document panel (`action_rows` + bare `block_items` coexisting under one
 /// `.interaction_domain(...)`).
-pub fn render(program: &ProgramSnapshot, cfg: &ArchitectConfig) -> UiNode {
+pub async fn render(program: &ProgramSnapshot, cfg: &ArchitectConfig) -> UiNode {
     let summary = status_summary(program);
     let element_items: Vec<UiTreeItemNode> = program.elements.iter().map(|element| tree_item_desc(element.header.id.to_string(), Label::data(format!("{} ({:?})", element.header.name, element.kind)), Some(element.header.id.to_string()))).collect();
     let register_items: Vec<UiTreeItemNode> = summary
@@ -69,14 +69,14 @@ mod tests {
     use crate::artifacts::program::{empty_plugin, sample_plugin};
 
     #[test]
-    fn the_tab_is_the_framework_document_tab_bound_to_this_apps_body_key() {
+    async fn the_tab_is_the_framework_document_tab_bound_to_this_apps_body_key() {
         let definition = definition();
         assert_eq!(definition.body_key.as_deref(), Some(ARCHITECT_BODY_DOCUMENT));
         assert!(matches!(definition.group, PanelGroup::Workbench));
     }
 
     #[test]
-    fn the_tree_lists_program_meta_and_the_elements() {
+    async fn the_tree_lists_program_meta_and_the_elements() {
         let program = sample_plugin();
         let json = serde_json::to_string(&render(&program, &ArchitectConfig::default())).expect("json");
         assert!(json.contains("Sample Clinic"));
@@ -87,13 +87,13 @@ mod tests {
     /// "program" interaction domain — the framework auto-injects/stamps selection over its bare
     /// element rows (see `render`'s own doc comment).
     #[test]
-    fn the_tree_binds_the_program_interaction_domain() {
+    async fn the_tree_binds_the_program_interaction_domain() {
         let json = serde_json::to_string(&render(&sample_plugin(), &ArchitectConfig::default())).expect("json");
         assert!(json.contains("\"interactionDomain\":\"program\""));
     }
 
     #[test]
-    fn an_empty_program_renders_the_none_placeholder_row() {
+    async fn an_empty_program_renders_the_none_placeholder_row() {
         let json = serde_json::to_string(&render(&empty_plugin(), &ArchitectConfig::default())).expect("json");
         assert!(json.contains("architect-document.elements.empty"));
     }

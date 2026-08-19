@@ -91,7 +91,7 @@ pub use super::scale_part_3d::mutation::{scale_part_3d, ScalePart3d};
 //#region 🔖️SnapshotDelta
 /// 🔀️ Diffs two typed snapshots into a minimal semantic mutation set — the single source of truth
 /// both the VCS layer and the `serde_json::Value` scene bridge below replay through.
-pub fn puzzle5d_snapshot_mutations(before: &Puzzle5dSnapshot, after: &Puzzle5dSnapshot) -> Vec<Puzzle5dMutation> {
+pub async fn puzzle5d_snapshot_mutations(before: &Puzzle5dSnapshot, after: &Puzzle5dSnapshot) -> Vec<Puzzle5dMutation> {
     let mut mutations = Vec::new();
     for part in &before.parts {
         if !after.parts.iter().any(|entry| entry.id == part.id) {
@@ -216,14 +216,14 @@ pub fn puzzle5d_snapshot_mutations(before: &Puzzle5dSnapshot, after: &Puzzle5dSn
 //#endregion 🔖️SnapshotDelta
 
 /// ▶️ Applies `mutation` via its diff.
-pub fn apply_puzzle5d_mutation(projection: &mut Puzzle5dSnapshot, mutation: &Puzzle5dMutation) -> protocol::MutationApplyResult<()> {
+pub async fn apply_puzzle5d_mutation(projection: &mut Puzzle5dSnapshot, mutation: &Puzzle5dMutation) -> protocol::MutationApplyResult<()> {
     let (next, _) = vcs::apply_mutation(projection, mutation)?;
 
     *projection = next;
     Ok(())
 }
 
-pub fn inverse_puzzle5d_mutation(projection: &Puzzle5dSnapshot, mutation: &Puzzle5dMutation) -> Vec<Puzzle5dMutation> {
+pub async fn inverse_puzzle5d_mutation(projection: &Puzzle5dSnapshot, mutation: &Puzzle5dMutation) -> Vec<Puzzle5dMutation> {
     mutation.inverse(projection)
 }
 
@@ -245,7 +245,7 @@ pub fn inverse_puzzle5d_mutation(projection: &Puzzle5dSnapshot, mutation: &Puzzl
 // `unwrap_or_default()` would silently reset every other field too. `normalize_kind_catalogs_for_
 // snapshot_value` is the one guard every `from_value::<Puzzle5dSnapshot>` call in this region funnels
 // through to prevent that — never assume an inbound `Value` is already handle-shaped.
-fn normalize_kind_catalogs_for_snapshot_value(value: &Value) -> Value {
+async fn normalize_kind_catalogs_for_snapshot_value(value: &Value) -> Value {
     let mut value = value.clone();
     let Some(object) = value.as_object_mut() else { return value };
     let is_embedded = object.get("kindCatalogs").map(|catalogs| catalogs.is_object() && catalogs.get("childId").is_none()).unwrap_or(false);
@@ -261,7 +261,7 @@ fn normalize_kind_catalogs_for_snapshot_value(value: &Value) -> Value {
 }
 
 impl MutationDiff<Value> for Puzzle5dDiff {
-    fn apply(&self, projection: &Value) -> protocol::MutationApplyResult<Value> {
+    async fn apply(&self, projection: &Value) -> protocol::MutationApplyResult<Value> {
         let base: Puzzle5dSnapshot = serde_json::from_value(projection.clone()).map_err(|error| {
             protocol::MutationApplyError::new("mutation.apply.invalid-base", error.to_string()).at(["document"])
         })?;
@@ -270,7 +270,7 @@ impl MutationDiff<Value> for Puzzle5dDiff {
             protocol::MutationApplyError::new("mutation.apply.invalid-result", error.to_string()).at(["document"])
         })
     }
-    fn absorb(&mut self, other: Self) {
+    async fn absorb(&mut self, other: Self) {
         MutationDiff::<Puzzle5dSnapshot>::absorb(self, other);
     }
 }
@@ -278,12 +278,12 @@ impl MutationDiff<Value> for Puzzle5dDiff {
 impl Mutation<Value> for Puzzle5dMutation {
     type Diff = Puzzle5dDiff;
 
-    fn diff(&self, projection: &Value) -> protocol::MutationOutcome<Puzzle5dDiff> {
+    async fn diff(&self, projection: &Value) -> protocol::MutationOutcome<Puzzle5dDiff> {
         let base: Puzzle5dSnapshot = serde_json::from_value(normalize_kind_catalogs_for_snapshot_value(projection)).unwrap_or_default();
         Mutation::<Puzzle5dSnapshot>::diff(self, &base)
     }
 
-    fn inverse(&self, projection: &Value) -> Vec<Self> {
+    async fn inverse(&self, projection: &Value) -> Vec<Self> {
         let base: Puzzle5dSnapshot = serde_json::from_value(normalize_kind_catalogs_for_snapshot_value(projection)).unwrap_or_default();
         Mutation::<Puzzle5dSnapshot>::inverse(self, &base)
     }
@@ -292,7 +292,7 @@ impl Mutation<Value> for Puzzle5dMutation {
 /// 🧮️ Computes the exact typed semantic mutation sequence turning `before` into `after` (both the
 /// bare document JSON the play app mutates), by round-tripping through the typed
 /// `Puzzle5dSnapshot` and delegating to [`puzzle5d_snapshot_mutations`].
-pub fn puzzle5d_document_delta_operations(before: &Value, after: &Value) -> Vec<Puzzle5dMutation> {
+pub async fn puzzle5d_document_delta_operations(before: &Value, after: &Value) -> Vec<Puzzle5dMutation> {
     let before_snapshot: Puzzle5dSnapshot = serde_json::from_value(normalize_kind_catalogs_for_snapshot_value(before)).unwrap_or_default();
     let after_snapshot: Puzzle5dSnapshot = serde_json::from_value(normalize_kind_catalogs_for_snapshot_value(after)).unwrap_or_default();
     if before_snapshot == after_snapshot {
@@ -314,7 +314,7 @@ pub fn puzzle5d_document_delta_operations(before: &Value, after: &Value) -> Vec<
 pub struct Puzzle5dPlaySnapshot(pub Value);
 
 impl PartialEq for Puzzle5dPlaySnapshot {
-    fn eq(&self, other: &Self) -> bool {
+    async fn eq(&self, other: &Self) -> bool {
         store::pack_rt::json_values_equal(&self.0, &other.0)
     }
 }
@@ -322,32 +322,32 @@ impl PartialEq for Puzzle5dPlaySnapshot {
 impl store::ArtifactDsl for Puzzle5dPlaySnapshot {
     const EXTENSION: &'static str = "puzzle5d-play";
 
-    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+    async fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
         serde_json::from_str(text).map(Puzzle5dPlaySnapshot).map_err(|error| store::TextError::new(error.to_string(), store::TextSpan::at(1, 1)))
     }
 
-    fn print_dsl(&self) -> String {
+    async fn print_dsl(&self) -> String {
         serde_json::to_string_pretty(&self.0).unwrap_or_default()
     }
 }
 
 impl store::ArtifactPack for Puzzle5dPlaySnapshot {
-    fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
+    async fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         dsl::to_dsl_value(&self.0).map_err(store::PackError::Schema)?.encode_pack_with(options)
     }
 
-    fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
+    async fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let value = dsl::DslValue::decode_pack_with(bytes, options)?;
         dsl::from_dsl_value(value).map(Puzzle5dPlaySnapshot).map_err(store::PackError::Schema)
     }
 }
 
 impl MutationDiff<Puzzle5dPlaySnapshot> for Puzzle5dDiff {
-    fn apply(&self, projection: &Puzzle5dPlaySnapshot) -> protocol::MutationApplyResult<Puzzle5dPlaySnapshot> {
+    async fn apply(&self, projection: &Puzzle5dPlaySnapshot) -> protocol::MutationApplyResult<Puzzle5dPlaySnapshot> {
         MutationDiff::<Value>::apply(self, &projection.0)
             .map(Puzzle5dPlaySnapshot)
     }
-    fn absorb(&mut self, other: Self) {
+    async fn absorb(&mut self, other: Self) {
         MutationDiff::<Puzzle5dSnapshot>::absorb(self, other);
     }
 }
@@ -355,11 +355,11 @@ impl MutationDiff<Puzzle5dPlaySnapshot> for Puzzle5dDiff {
 impl Mutation<Puzzle5dPlaySnapshot> for Puzzle5dMutation {
     type Diff = Puzzle5dDiff;
 
-    fn diff(&self, projection: &Puzzle5dPlaySnapshot) -> protocol::MutationOutcome<Puzzle5dDiff> {
+    async fn diff(&self, projection: &Puzzle5dPlaySnapshot) -> protocol::MutationOutcome<Puzzle5dDiff> {
         Mutation::<Value>::diff(self, &projection.0)
     }
 
-    fn inverse(&self, projection: &Puzzle5dPlaySnapshot) -> Vec<Puzzle5dMutation> {
+    async fn inverse(&self, projection: &Puzzle5dPlaySnapshot) -> Vec<Puzzle5dMutation> {
         Mutation::<Value>::inverse(self, &projection.0)
     }
 }
@@ -371,16 +371,16 @@ impl Mutation<Puzzle5dPlaySnapshot> for Puzzle5dMutation {
 /// immediately above, needed so `.editor_mutation_roster::<Puzzle5dPlayApp>()` can register this
 /// dialect's real semantic vocabulary against the play app's own `Snapshot` type.
 impl protocol::SemanticMutation<Puzzle5dPlaySnapshot> for Puzzle5dMutation {
-    fn kinds() -> &'static [protocol::SemanticDescriptor] {
+    async fn kinds() -> &'static [protocol::SemanticDescriptor] {
         <Self as protocol::SemanticMutation<Puzzle5dSnapshot>>::kinds()
     }
-    fn semantics(&self) -> &'static protocol::SemanticDescriptor {
+    async fn semantics(&self) -> &'static protocol::SemanticDescriptor {
         <Self as protocol::SemanticMutation<Puzzle5dSnapshot>>::semantics(self)
     }
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         <Self as protocol::SemanticMutation<Puzzle5dSnapshot>>::label(self)
     }
-    fn target(&self) -> Vec<String> {
+    async fn target(&self) -> Vec<String> {
         <Self as protocol::SemanticMutation<Puzzle5dSnapshot>>::target(self)
     }
 }
@@ -392,7 +392,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn puzzle5d_delta_ops_round_trip_and_stay_granular() {
+    async fn puzzle5d_delta_ops_round_trip_and_stay_granular() {
         let before = serde_json::json!({
             "schema": crate::artifacts::puzzle5d::PUZZLE_5D_SCHEMA, "domain": "architecture",
             "meta": { "description": "" },
@@ -434,7 +434,7 @@ mod tests {
     use protocol::SemanticMutation;
 
     #[test]
-    fn move_part_2d_diff_absorb_law() {
+    async fn move_part_2d_diff_absorb_law() {
         use crate::artifacts::puzzle5d::Puzzle5dPart;
         let base = empty();
         let part = Puzzle5dPart { id: "p1".into(), ..Default::default() };
@@ -445,12 +445,12 @@ mod tests {
         assert_mutation_diff_absorb_law(&with_part, d1, d2);
     }
 
-    fn empty() -> Puzzle5dSnapshot {
+    async fn empty() -> Puzzle5dSnapshot {
         Puzzle5dSnapshot::default()
     }
 
     #[test]
-    fn create_delete_part_inverse_law() {
+    async fn create_delete_part_inverse_law() {
         use crate::artifacts::puzzle5d::Puzzle5dPart;
         let base = empty();
         let part = Puzzle5dPart { id: "p1".into(), ..Default::default() };
@@ -460,7 +460,7 @@ mod tests {
     }
 
     #[test]
-    fn part_field_mutations_inverse_law() {
+    async fn part_field_mutations_inverse_law() {
         use crate::artifacts::puzzle5d::{Puzzle5dGrip, Puzzle5dPart, Puzzle5dPartAnchor, Puzzle5dScale};
         let base = empty();
         let part = Puzzle5dPart { id: "p1".into(), grips: vec![Puzzle5dGrip { id: "g1".into(), grip_kind: None, grip_2d: Default::default(), grip_3d: Default::default() }], ..Default::default() };
@@ -484,7 +484,7 @@ mod tests {
     }
 
     #[test]
-    fn connect_disconnect_grips_inverse_law_and_cascade() {
+    async fn connect_disconnect_grips_inverse_law_and_cascade() {
         use crate::artifacts::puzzle5d::{Puzzle5dGrip, Puzzle5dPart};
         let base = empty();
         let part_a = Puzzle5dPart { id: "a".into(), grips: vec![Puzzle5dGrip { id: "ga".into(), grip_kind: None, grip_2d: Default::default(), grip_3d: Default::default() }], ..Default::default() };
@@ -504,7 +504,7 @@ mod tests {
     }
 
     #[test]
-    fn document_scalar_mutations_inverse_law() {
+    async fn document_scalar_mutations_inverse_law() {
         use crate::artifacts::puzzle5d::{Puzzle5dCompatSpecificity, Puzzle5dKindCatalogs};
         let base = empty();
         assert_mutation_inverse_law(&base, &rename_puzzle5d(Some("Nakagin".into())));
@@ -517,7 +517,7 @@ mod tests {
     }
 
     #[test]
-    fn dispatch_registers_semantic_descriptors() {
+    async fn dispatch_registers_semantic_descriptors() {
         register_puzzle5d_mutation_descriptors();
         for kind in Puzzle5dMutation::kinds() {
             assert!(protocol::is_approved_verb(kind.verb), "verb '{}' must be in APPROVED_VERBS", kind.verb);
@@ -532,7 +532,7 @@ mod tests {
     use protocol::testkit::{assert_fatal_never_applies, assert_missing_target_is_error};
 
     #[test]
-    fn missing_target_is_error_per_verb_family() {
+    async fn missing_target_is_error_per_verb_family() {
         let base = empty();
         assert_missing_target_is_error(&base, &delete_part("missing".into())); // delete
         assert_missing_target_is_error(&base, &remove_part_grip("missing".into(), "g0".into())); // remove
@@ -543,7 +543,7 @@ mod tests {
     }
 
     #[test]
-    fn create_duplicate_id_is_fatal_and_never_applies() {
+    async fn create_duplicate_id_is_fatal_and_never_applies() {
         use crate::artifacts::puzzle5d::Puzzle5dPart;
         let mut base = empty();
         let part = Puzzle5dPart { id: "p0".into(), ..Default::default() };

@@ -23,14 +23,14 @@ pub struct ObjBounds {
 /// `compute` returns for zero vertices (the fold's identity value), keeping the inference-default
 /// law correct.
 impl Default for ObjBounds {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self { min: [0.0, 0.0, 0.0], max: [0.0, 0.0, 0.0], vertex_count: 0, face_count: 0, group_count: 0 }
     }
 }
 
 /// 📦️ Computes [`ObjBounds`] over every `vertices[].{x,y,z}` (ignoring the optional homogeneous
 /// `w`) plus direct `faces`/`groups` tallies.
-pub fn compute_obj_bounds(snapshot: &ObjSnapshot) -> ObjBounds {
+pub async fn compute_obj_bounds(snapshot: &ObjSnapshot) -> ObjBounds {
     let mut min = [0.0f64; 3];
     let mut max = [0.0f64; 3];
     let mut seen = false;
@@ -60,12 +60,12 @@ mod tests {
     use crate::artifacts::obj::schema::snapshot::{ObjFace, ObjFaceVertex, ObjGroup, ObjVertex};
     use crate::artifacts::obj::STDIO_OBJ_DOCUMENT_SCHEMA;
 
-    fn vertex(x: f64, y: f64, z: f64) -> ObjVertex {
+    async fn vertex(x: f64, y: f64, z: f64) -> ObjVertex {
         ObjVertex { x, y, z, w: None }
     }
 
     #[test]
-    fn bounds_matches_hand_built_vertex_extent() {
+    async fn bounds_matches_hand_built_vertex_extent() {
         let snapshot = ObjSnapshot {
             schema: STDIO_OBJ_DOCUMENT_SCHEMA.into(),
             vertices: vec![vertex(-1.0, 0.0, 2.0), vertex(3.0, -4.0, 1.0), vertex(0.0, 5.0, -2.0)],
@@ -92,7 +92,7 @@ mod tests {
     }
 
     #[test]
-    fn inference_determinism_law() {
+    async fn inference_determinism_law() {
         let snapshot = ObjSnapshot {
             schema: STDIO_OBJ_DOCUMENT_SCHEMA.into(),
             vertices: vec![vertex(1.0, 1.0, 1.0)],
@@ -110,7 +110,7 @@ mod tests {
     }
 
     #[test]
-    fn inference_default_law() {
+    async fn inference_default_law() {
         assert_eq!(compute_obj_bounds(&ObjSnapshot::default()), ObjBounds::default());
     }
 }

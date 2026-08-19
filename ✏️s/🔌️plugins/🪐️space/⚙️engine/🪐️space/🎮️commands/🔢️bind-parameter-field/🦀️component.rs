@@ -14,7 +14,7 @@ pub struct BindParameterField {
     pub parameter_id: String,
 }
 
-pub fn handle(payload: &BindParameterField, _doc: &ArtifactView<'_, WorkflowSnapshot>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
+pub async fn handle(payload: &BindParameterField, _doc: &ArtifactView<'_, WorkflowSnapshot>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
     if payload.parameter_id.is_empty() || payload.parameter_id == "__direct__" {
         Ok(Emit::mutations(vec![WorkflowMutation::UnbindParameterField { node_id: payload.node_id.clone(), field_path: payload.field_path.clone() }]))
     } else {

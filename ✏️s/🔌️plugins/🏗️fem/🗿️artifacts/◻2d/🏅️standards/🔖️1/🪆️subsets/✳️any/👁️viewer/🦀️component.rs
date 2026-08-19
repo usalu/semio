@@ -22,10 +22,10 @@ pub enum Fem2dViewCommand {
 }
 
 impl protocol::OpBinary for Fem2dViewCommand {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         Ok(Vec::new())
     }
-    fn decode_op(_bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    async fn decode_op(_bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         Ok(Fem2dViewCommand::Noop)
     }
 }
@@ -52,7 +52,7 @@ impl ArtifactViewer for Fem2dViewer {
     /// 🌱️ A real, non-empty default scene: the bundled `fem2d` example DSL, falling back to the empty
     /// document on a parse error (should never trigger — the fixture is asserted parseable by the
     /// sibling editor's own tests — but a viewer must never panic building its initial snapshot).
-    fn initial_snapshot() -> Fem2dSnapshot {
+    async fn initial_snapshot() -> Fem2dSnapshot {
         use store::ArtifactDsl;
         Fem2dSnapshot::parse_dsl(crate::artifacts::fem2d::dsl::FEM2D_EXAMPLE_TEXT).unwrap_or_else(|_| crate::artifacts::fem2d::schema::empty_fem2d_snapshot())
     }
@@ -61,11 +61,11 @@ impl ArtifactViewer for Fem2dViewer {
     /// change, so this always returns the empty `ViewEmit` — no config mutation, no effect, no dirty
     /// scope. Kept as a real dispatch (not an `unreachable!()`) so a future view-only action (camera
     /// pan, "jump to region") is a pure addition here, never a signature change.
-    fn handle(_command: &Self::Command, _doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _interaction: &InteractionView<'_>, _engines: &EngineHandles) -> Result<ViewEmit<Self::ConfigMutation>, Fault> {
+    async fn handle(_command: &Self::Command, _doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _interaction: &InteractionView<'_>, _engines: &EngineHandles) -> Result<ViewEmit<Self::ConfigMutation>, Fault> {
         Ok(ViewEmit::default())
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> UiNode {
+    async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> UiNode {
         match body_key {
             model::BODY_KEY => model::render(doc.snapshot),
             _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))),
@@ -75,7 +75,7 @@ impl ArtifactViewer for Fem2dViewer {
 //#endregion 🔖️Viewer
 
 //#region 🔖️Manifest
-pub fn create_fem2d_viewer() -> semio_framework_plugin::AppDefinition {
+pub async fn create_fem2d_viewer() -> semio_framework_plugin::AppDefinition {
     Viewer::builder(FEM2D_DIALECT)
         .document(["semio", "fem", "fem2d"])
         .icon_id("fem-app")
@@ -93,19 +93,19 @@ mod tests {
     use super::*;
 
     #[test]
-    fn create_fem2d_viewer_builds_a_definition_for_the_viewer_role() {
+    async fn create_fem2d_viewer_builds_a_definition_for_the_viewer_role() {
         let def = create_fem2d_viewer();
         assert_eq!(def.role, semio_framework::AppRole::Viewer);
         assert_eq!(def.dialect, FEM2D_DIALECT.into());
     }
 
     #[test]
-    fn viewer_dialect_matches_the_artifact_coordinate() {
+    async fn viewer_dialect_matches_the_artifact_coordinate() {
         assert_eq!(<Fem2dViewer as ArtifactViewer>::DIALECT, FEM2D_DIALECT);
     }
 
     #[test]
-    fn initial_snapshot_is_non_empty() {
+    async fn initial_snapshot_is_non_empty() {
         let snapshot = <Fem2dViewer as ArtifactViewer>::initial_snapshot();
         assert!(!snapshot.nodes.is_empty(), "expected the bundled example fixture's nodes");
     }

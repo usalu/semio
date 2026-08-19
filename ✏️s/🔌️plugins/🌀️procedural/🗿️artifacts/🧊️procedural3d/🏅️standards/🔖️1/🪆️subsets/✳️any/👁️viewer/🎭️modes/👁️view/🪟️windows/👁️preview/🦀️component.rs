@@ -30,7 +30,7 @@ const PROCEDURAL3D_VIEW_TOLERANCE: f64 = 0.05;
 
 //#region 🔖️Definition
 /// 🧱️ Stitched into the viewer manifest by `crate::viewer::procedural3d::create_procedural3d_viewer`.
-pub fn definition() -> WindowKindDefinition {
+pub async fn definition() -> WindowKindDefinition {
     MeshWindowKit::window_kind()
 }
 //#endregion 🔖️Definition
@@ -38,7 +38,7 @@ pub fn definition() -> WindowKindDefinition {
 //#region 🔖️Geometry
 /// 👁️ Read-only twin of the other surface's own `is_brep_geometry_handle` — duplicated (not
 /// imported) per `policyViewerPurityBreaches`.
-fn is_brep_geometry_handle(handle: &str) -> bool {
+async fn is_brep_geometry_handle(handle: &str) -> bool {
     if handle.is_empty() {
         return false;
     }
@@ -58,7 +58,7 @@ fn is_brep_geometry_handle(handle: &str) -> bool {
     handle.len() == 64 && handle.as_bytes().iter().all(u8::is_ascii_hexdigit)
 }
 
-fn collect_geometry_handles_from_eval(value: &Value, handles: &mut Vec<String>) {
+async fn collect_geometry_handles_from_eval(value: &Value, handles: &mut Vec<String>) {
     match value {
         Value::Object(map) => {
             if let Some(handle) = map.get("handle").and_then(|entry| entry.as_str()) {
@@ -79,7 +79,7 @@ fn collect_geometry_handles_from_eval(value: &Value, handles: &mut Vec<String>) 
     }
 }
 
-fn geometry_handles_for_widget(eval: &Value, widget_id: &str) -> Vec<String> {
+async fn geometry_handles_for_widget(eval: &Value, widget_id: &str) -> Vec<String> {
     let Some(widget_eval) = eval.get(widget_id) else {
         return Vec::new();
     };
@@ -92,13 +92,13 @@ fn geometry_handles_for_widget(eval: &Value, widget_id: &str) -> Vec<String> {
     handles
 }
 
-fn mesh_has_preview_geometry(data: &semio_framework_plugin::MeshData) -> bool {
+async fn mesh_has_preview_geometry(data: &semio_framework_plugin::MeshData) -> bool {
     (!data.indices.is_empty() && data.positions.len() >= 9) || data.edge_positions.len() >= 6 || (data.positions.len() >= 3 && data.indices.is_empty())
 }
 
 /// 👁️ Evaluates the whole fixture fresh (no session cache — see module doc comment) and tessellates
 /// every preview widget's geometry handles into meshes/instances at the world origin.
-fn evaluated_meshes_and_instances(fixture: &flow::FlowFixture) -> (String, String) {
+async fn evaluated_meshes_and_instances(fixture: &flow::FlowFixture) -> (String, String) {
     let mut host = flow::FlowHost::from_fixture(fixture.clone());
     host.set_neuron_kind_infos_json(&flow::flow_neuron_kind_infos_json());
     let eval_json = host.evaluate().unwrap_or_default();
@@ -137,7 +137,7 @@ fn evaluated_meshes_and_instances(fixture: &flow::FlowFixture) -> (String, Strin
 /// per-session camera — `Config = NoConfig`), no selection/gumball/engagement overlay, real evaluated
 /// preview geometry — not a fallback placeholder: procedural3d's whole purpose is generated geometry,
 /// and the pure evaluate+tessellate path needs no session/config to run once.
-pub fn render(document: &Procedural3dSnapshot) -> UiNode {
+pub async fn render(document: &Procedural3dSnapshot) -> UiNode {
     let (meshes_json, instances_json) = evaluated_meshes_and_instances(&document.fixture);
     let view = MeshView {
         camera_json: world3d_camera_json(PROCEDURAL3D_VIEW_DEFAULT_CAMERA_POSITION, PROCEDURAL3D_VIEW_DEFAULT_CAMERA_TARGET, PROCEDURAL3D_VIEW_DEFAULT_CAMERA_FOV),
@@ -155,19 +155,19 @@ mod tests {
     use super::*;
 
     #[test]
-    fn definition_declares_the_shared_mesh_window_kit() {
+    async fn definition_declares_the_shared_mesh_window_kit() {
         let def = definition();
         assert_eq!(def.id, MeshWindowKit::KIND_ID);
     }
 
     #[test]
-    fn render_produces_a_scene_node_for_the_default_document() {
+    async fn render_produces_a_scene_node_for_the_default_document() {
         let document = crate::artifacts::procedural3d::schema::default_snapshot();
         let _node = render(&document);
     }
 
     #[test]
-    fn render_emits_real_tessellated_geometry_for_the_default_fixture() {
+    async fn render_emits_real_tessellated_geometry_for_the_default_fixture() {
         let document = crate::artifacts::procedural3d::schema::default_snapshot();
         let (meshes_json, instances_json) = evaluated_meshes_and_instances(&document.fixture);
         assert_ne!(meshes_json, "[]", "default fixture should evaluate and tessellate at least one preview mesh");

@@ -8,7 +8,7 @@ use crate::artifacts::semio::standards::v1::subsets::drawing::schema::mutations:
 use crate::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::{DrawNode, SemioDrawingSnapshot};
 
 //#region 🔖️Inverse
-pub fn inverse(payload: &GroupNodes, base: &SemioDrawingSnapshot) -> Vec<SemioDrawingMutation> {
+pub async fn inverse(payload: &GroupNodes, base: &SemioDrawingSnapshot) -> Vec<SemioDrawingMutation> {
     if !is_contiguous_ascending(&payload.indices) {
         return Vec::new();
     }

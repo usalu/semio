@@ -12,7 +12,7 @@ pub const VCS_PLAY_BODY_DOCUMENT: &str = "vcs.play.document";
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
-pub fn definition() -> PanelTabDefinition {
+pub async fn definition() -> PanelTabDefinition {
     PanelTabDefinition {
         kind: PanelTabKind::App(FRAMEWORK_PANEL_TAB_ARTIFACT_ID.into()),
         label: LocalizedLabel::native(FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL, "Dokument"),
@@ -34,7 +34,7 @@ pub fn definition() -> PanelTabDefinition {
 /// interaction domain (`VCS_INTERACTION_HISTORY`'s doc comment) — the framework now owns and stamps
 /// checkpoint multi-select highlighting, replacing the deleted `selected`/`setSelection` plumbing.
 /// Per-row `checkoutCheckpoint`/`switchAlternative` clicks stay app actions (navigation, not selection).
-pub fn render(history: &HistoryView, labels: &VcsPlayLabels) -> UiNode {
+pub async fn render(history: &HistoryView, labels: &VcsPlayLabels) -> UiNode {
     let builder = PanelTreeBuilder::new("vcs-play-document");
     let checkpoint_items: Vec<UiTreeItemNode> = history
         .columns
@@ -90,14 +90,14 @@ mod tests {
     use crate::editor::vcs::testkit::{app, render as render_body};
 
     #[test]
-    fn document_lists_checkpoints() {
+    async fn document_lists_checkpoints() {
         let mut instance = app();
         let json = render_body(&mut instance, VCS_PLAY_BODY_DOCUMENT);
         assert!(json.contains("vcs-play-document.checkpoint"));
     }
 
     #[test]
-    fn vcs_labels_resolve_native_english_by_default() {
+    async fn vcs_labels_resolve_native_english_by_default() {
         let mut instance = app();
         let json = render_body(&mut instance, VCS_PLAY_BODY_DOCUMENT);
         assert!(json.contains("Alternatives"));

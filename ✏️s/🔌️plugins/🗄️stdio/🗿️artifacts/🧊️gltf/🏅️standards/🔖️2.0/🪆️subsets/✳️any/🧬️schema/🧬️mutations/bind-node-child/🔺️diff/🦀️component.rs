@@ -12,11 +12,11 @@ pub struct GltfBindNodeChildDiff {
     pub position: usize,
     pub touched_paths: Vec<String>,
 }
-pub fn derive(payload: &GltfBindNodeChildPayload, base: &GltfSnapshot) -> Result<GltfBindNodeChildDiff, GltfTopLevelMutationRejection> {
+pub async fn derive(payload: &GltfBindNodeChildPayload, base: &GltfSnapshot) -> Result<GltfBindNodeChildDiff, GltfTopLevelMutationRejection> {
     validate(payload, base)?;
     Ok(GltfBindNodeChildDiff { parent: payload.parent, child: payload.child, position: payload.position, touched_paths: vec![format!("document/nodes/{}/children/{}", payload.parent, payload.position)] })
 }
-pub fn apply(base: &GltfSnapshot, diff: &GltfBindNodeChildDiff) -> Result<GltfSnapshot, GltfTopLevelMutationRejection> {
+pub async fn apply(base: &GltfSnapshot, diff: &GltfBindNodeChildDiff) -> Result<GltfSnapshot, GltfTopLevelMutationRejection> {
     let path = format!("document/nodes/{}/children/{}", diff.parent, diff.position);
     if diff.touched_paths.len() != 1 || diff.touched_paths[0] != path {
         return Err(reject("gltf.mutation.invalid-touched-path", path, "patch touched path does not match its edge coordinates"));
@@ -40,6 +40,6 @@ pub fn apply(base: &GltfSnapshot, diff: &GltfBindNodeChildDiff) -> Result<GltfSn
     next.document.nodes[diff.parent].children.insert(diff.position, diff.child);
     Ok(next)
 }
-pub fn encode(diff: &GltfBindNodeChildDiff) -> Result<Vec<u8>, serde_json::Error> {
+pub async fn encode(diff: &GltfBindNodeChildDiff) -> Result<Vec<u8>, serde_json::Error> {
     serde_json::to_vec(diff)
 }

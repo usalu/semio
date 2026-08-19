@@ -13,6 +13,6 @@ pub struct UnbindParameterField {
     pub field_path: String,
 }
 
-pub fn handle(payload: &UnbindParameterField, _doc: &ArtifactView<'_, WorkflowSnapshot>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
+pub async fn handle(payload: &UnbindParameterField, _doc: &ArtifactView<'_, WorkflowSnapshot>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
     Ok(Emit::mutations(vec![WorkflowMutation::UnbindParameterField { node_id: payload.node_id.clone(), field_path: payload.field_path.clone() }]))
 }

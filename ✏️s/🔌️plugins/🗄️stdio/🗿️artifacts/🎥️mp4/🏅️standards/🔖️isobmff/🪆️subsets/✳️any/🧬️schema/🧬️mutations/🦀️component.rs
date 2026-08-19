@@ -59,18 +59,18 @@ pub enum Mp4Mutation {
     },
 }
 
-fn track_diff_for(track_index: usize, inner: Mp4TrackDiff) -> Mp4Diff {
+async fn track_diff_for(track_index: usize, inner: Mp4TrackDiff) -> Mp4Diff {
     Mp4Diff { ftyp: None, movie: None, tracks: Some(IndexedDiff { removed: vec![], modified: vec![IndexedModified { index: track_index, diff: inner }], added: vec![] }) }
 }
 
-fn sample_diff_for(track_index: usize, samples: IndexedDiff<Mp4Sample, Mp4SampleDiff>, chunk_sample_counts: Option<Vec<u32>>) -> Mp4Diff {
+async fn sample_diff_for(track_index: usize, samples: IndexedDiff<Mp4Sample, Mp4SampleDiff>, chunk_sample_counts: Option<Vec<u32>>) -> Mp4Diff {
     track_diff_for(track_index, Mp4TrackDiff { samples: Some(samples), chunk_sample_counts, ..Mp4TrackDiff::default() })
 }
 
 impl Mutation<Mp4Snapshot> for Mp4Mutation {
     type Diff = Mp4Diff;
 
-    fn diff(&self, base: &Mp4Snapshot) -> protocol::MutationOutcome<Self::Diff> {
+    async fn diff(&self, base: &Mp4Snapshot) -> protocol::MutationOutcome<Self::Diff> {
         protocol::MutationOutcome::new(match self {
             Mp4Mutation::NoMutation => Mp4Diff::default(),
             Mp4Mutation::SetSnapshot { snapshot } => <Mp4Diff as protocol::command::DiffAlgebra<Mp4Snapshot>>::between(base, snapshot),
@@ -93,7 +93,7 @@ impl Mutation<Mp4Snapshot> for Mp4Mutation {
         })
     }
 
-    fn inverse(&self, base: &Mp4Snapshot) -> Vec<Self> {
+    async fn inverse(&self, base: &Mp4Snapshot) -> Vec<Self> {
         match self {
             Mp4Mutation::NoMutation => vec![Mp4Mutation::NoMutation],
             Mp4Mutation::SetSnapshot { .. } => vec![Mp4Mutation::SetSnapshot { snapshot: base.clone() }],
@@ -122,7 +122,7 @@ impl Mutation<Mp4Snapshot> for Mp4Mutation {
 
 /// ▶️ Applies a mutation to `snapshot` in place, returning the diff (mirrors gif's
 /// `apply_gif_mutation` convention).
-pub fn apply_mp4_mutation(snapshot: &mut Mp4Snapshot, mutation: &Mp4Mutation) -> protocol::MutationOutcome<Mp4Diff> {
+pub async fn apply_mp4_mutation(snapshot: &mut Mp4Snapshot, mutation: &Mp4Mutation) -> protocol::MutationOutcome<Mp4Diff> {
     let outcome = <Mp4Mutation as Mutation<Mp4Snapshot>>::diff(mutation, snapshot);
     match protocol::MutationDiff::apply(outcome.diff(), snapshot) {
         Ok(next) => {
@@ -137,7 +137,7 @@ pub fn apply_mp4_mutation(snapshot: &mut Mp4Snapshot, mutation: &Mp4Mutation) ->
 //#region OpCodecs
 /// 🎙️ Structured operation text through the shared `DslVariants` record machinery.
 impl OpText for Mp4Mutation {
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
+    async fn parse_op(line: &str) -> Result<Self, store::TextError> {
         let variants = <Self as dsl::DslVariants>::variants();
         for (keyword, spec_fn) in &variants {
             let probe = format!("{} ", keyword);
@@ -148,7 +148,7 @@ impl OpText for Mp4Mutation {
         }
         Err(dsl::__rt::field_error(format!("unknown operation line '{line}'")))
     }
-    fn print_op(&self) -> String {
+    async fn print_op(&self) -> String {
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
         let variants = <Self as dsl::DslVariants>::variants();
         let spec_fn = variants.iter().find(|(candidate, _)| candidate == &keyword).map(|(_, spec)| *spec).expect("variant spec must exist");
@@ -158,10 +158,10 @@ impl OpText for Mp4Mutation {
 
 /// ⚡️ Structured operation binary through the shared tagged-record protocol.
 impl OpBinary for Mp4Mutation {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         dsl::variants_binary::encode_op(self)
     }
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         dsl::variants_binary::decode_op(bytes)
     }
 }
@@ -174,7 +174,7 @@ mod tests {
     use crate::artifacts::mp4::standards::isobmff::subsets::any::schema::snapshot::STDIO_MP4_DOCUMENT_SCHEMA;
     use protocol::MutationDiff;
 
-    fn base_snapshot() -> Mp4Snapshot {
+    async fn base_snapshot() -> Mp4Snapshot {
         Mp4Snapshot {
             schema: STDIO_MP4_DOCUMENT_SCHEMA.into(),
             ftyp: Mp4Ftyp { major_brand: "isom".into(), minor_version: 0, compatible_brands: vec!["isom".into()] },
@@ -194,7 +194,7 @@ mod tests {
 
     /// 🧪️ mutation_diff_law + inverse_law, exercised across every real variant.
     #[test]
-    fn mutation_diff_law_and_inverse_law_hold_for_every_variant() {
+    async fn mutation_diff_law_and_inverse_law_hold_for_every_variant() {
         let base = base_snapshot();
         let variants = vec![
             Mp4Mutation::SetFtyp { ftyp: Mp4Ftyp { major_brand: "mp42".into(), minor_version: 1, compatible_brands: vec![] } },
@@ -221,7 +221,7 @@ mod tests {
     }
 
     #[test]
-    fn remove_track_then_insert_track_round_trips() {
+    async fn remove_track_then_insert_track_round_trips() {
         let mut base = base_snapshot();
         base.tracks.push(Mp4Track { track_id: 2, timescale: 1000, codec: Mp4Codec::default(), width: 10, height: 10, metadata: Mp4TrackMetadata::default(), chunk_sample_counts: vec![0], samples: vec![] });
         let m = Mp4Mutation::RemoveTrack { index: 0 };
@@ -237,7 +237,7 @@ mod tests {
     }
 
     #[test]
-    fn remove_sample_then_insert_sample_round_trips() {
+    async fn remove_sample_then_insert_sample_round_trips() {
         let mut base = base_snapshot();
         base.tracks[0].samples.push(Mp4Sample { data: vec![4, 5], duration: 33, cts_offset: 0, sync: false });
         let m = Mp4Mutation::RemoveSample { track_index: 0, index: 0 };
@@ -251,7 +251,7 @@ mod tests {
     }
 
     #[test]
-    fn set_snapshot_still_works_as_a_full_replace() {
+    async fn set_snapshot_still_works_as_a_full_replace() {
         let base = base_snapshot();
         let mut next = base.clone();
         next.ftyp.major_brand = "isom-mutated".into();
@@ -266,7 +266,7 @@ mod tests {
 
     /// 🧪️ op_text_binary_roundtrip_law
     #[test]
-    fn op_text_binary_roundtrip_law() {
+    async fn op_text_binary_roundtrip_law() {
         let base = base_snapshot();
         for m in
             [Mp4Mutation::NoMutation, Mp4Mutation::SetSnapshot { snapshot: base.clone() }, Mp4Mutation::SetFtyp { ftyp: base.ftyp.clone() }, Mp4Mutation::RemoveTrack { index: 0 }, Mp4Mutation::SetSampleSync { track_index: 0, index: 0, sync: true }]
@@ -283,7 +283,7 @@ mod tests {
     }
 
     #[test]
-    fn exact_fixture_no_mutation_inverse_and_set_snapshot_binary_codec_preserve_source() {
+    async fn exact_fixture_no_mutation_inverse_and_set_snapshot_binary_codec_preserve_source() {
         let path = concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../temp/bauen-mit-bestand.mp4");
         let bytes = std::fs::read(path).expect("read exact MP4 fixture");
         let base = crate::artifacts::mp4::standards::isobmff::subsets::any::io::decode_mp4(&bytes).expect("decode exact MP4 fixture");

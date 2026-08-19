@@ -41,7 +41,7 @@ pub struct DocRun {
 }
 
 impl DocRun {
-    pub fn plain(text: impl Into<String>) -> Self {
+    pub async fn plain(text: impl Into<String>) -> Self {
         Self { text: text.into(), style: RunStyle::default() }
     }
 }
@@ -160,7 +160,7 @@ pub enum DocBlock {
 }
 
 impl DocBlock {
-    pub fn paragraph(text: impl Into<String>) -> Self {
+    pub async fn paragraph(text: impl Into<String>) -> Self {
         Self::Paragraph { style_id: None, runs: vec![DocRun::plain(text)] }
     }
 }
@@ -192,7 +192,7 @@ pub struct SemioDocumentSnapshot {
 }
 
 impl Default for SemioDocumentSnapshot {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self { schema: STDIO_SEMIODOCUMENT_DOCUMENT_SCHEMA.into(), styles: Default::default(), images: Default::default(), blocks: Default::default() }
     }
 }
@@ -206,7 +206,7 @@ impl Default for SemioDocumentSnapshot {
 /// `enc_str`/`enc_style`/`enc_image`/`enc_block` value codecs (established there pre-wave) rather
 /// than duplicating a third independent copy — this subset's own established convention (its
 /// `🧬️mutations` facet already does the same). Replaces the old hex-of-`serde_json` passthrough.
-fn print_document_snapshot_body(s: &SemioDocumentSnapshot) -> String {
+async fn print_document_snapshot_body(s: &SemioDocumentSnapshot) -> String {
     format!(
         "schema={}\nstyles=[{}]\nimages=[{}]\nblocks=[{}]",
         enc_str(&s.schema),
@@ -215,7 +215,7 @@ fn print_document_snapshot_body(s: &SemioDocumentSnapshot) -> String {
         s.blocks.iter().map(enc_block).collect::<Vec<_>>().join(",")
     )
 }
-fn parse_document_snapshot_body(body: &str) -> Result<SemioDocumentSnapshot, String> {
+async fn parse_document_snapshot_body(body: &str) -> Result<SemioDocumentSnapshot, String> {
     let mut schema = None;
     let mut styles = Vec::new();
     let mut images = Vec::new();
@@ -249,27 +249,27 @@ fn parse_document_snapshot_body(body: &str) -> Result<SemioDocumentSnapshot, Str
 /// 🧪️ Real LEB128-varint-length-prefixed binary primitives (`store::pack_rt::write_varint_u64` /
 /// `store::ByteReader`, same helpers flow/model/brep's own upgraded `ArtifactPack`s use)
 /// backing `encode_document_snapshot_binary`/`decode_document_snapshot_binary` below.
-fn write_bytes_lp(out: &mut Vec<u8>, bytes: &[u8]) {
+async fn write_bytes_lp(out: &mut Vec<u8>, bytes: &[u8]) {
     store::pack_rt::write_varint_u64(out, bytes.len() as u64);
     out.extend_from_slice(bytes);
 }
-fn read_bytes_lp(reader: &mut store::ByteReader<'_>) -> Result<Vec<u8>, String> {
+async fn read_bytes_lp(reader: &mut store::ByteReader<'_>) -> Result<Vec<u8>, String> {
     let len = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
     Ok(reader.read_bytes(len).map_err(|e| e.to_string())?.to_vec())
 }
-fn write_str_lp(out: &mut Vec<u8>, s: &str) {
+async fn write_str_lp(out: &mut Vec<u8>, s: &str) {
     write_bytes_lp(out, s.as_bytes());
 }
-fn read_str_lp(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
+async fn read_str_lp(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
     String::from_utf8(read_bytes_lp(reader)?).map_err(|e| e.to_string())
 }
-fn write_bool(out: &mut Vec<u8>, b: bool) {
+async fn write_bool(out: &mut Vec<u8>, b: bool) {
     out.push(if b { 1 } else { 0 });
 }
-fn read_bool(reader: &mut store::ByteReader<'_>) -> Result<bool, String> {
+async fn read_bool(reader: &mut store::ByteReader<'_>) -> Result<bool, String> {
     Ok(reader.read_u8().map_err(|e| e.to_string())? != 0)
 }
-fn write_opt_str(out: &mut Vec<u8>, v: &Option<String>) {
+async fn write_opt_str(out: &mut Vec<u8>, v: &Option<String>) {
     match v {
         None => out.push(0),
         Some(s) => {
@@ -278,14 +278,14 @@ fn write_opt_str(out: &mut Vec<u8>, v: &Option<String>) {
         }
     }
 }
-fn read_opt_str(reader: &mut store::ByteReader<'_>) -> Result<Option<String>, String> {
+async fn read_opt_str(reader: &mut store::ByteReader<'_>) -> Result<Option<String>, String> {
     match reader.read_u8().map_err(|e| e.to_string())? {
         0 => Ok(None),
         1 => Ok(Some(read_str_lp(reader)?)),
         other => Err(format!("opt str: bad tag {other}")),
     }
 }
-fn write_opt_f64(out: &mut Vec<u8>, v: Option<f64>) {
+async fn write_opt_f64(out: &mut Vec<u8>, v: Option<f64>) {
     match v {
         None => out.push(0),
         Some(f) => {
@@ -294,7 +294,7 @@ fn write_opt_f64(out: &mut Vec<u8>, v: Option<f64>) {
         }
     }
 }
-fn read_opt_f64(reader: &mut store::ByteReader<'_>) -> Result<Option<f64>, String> {
+async fn read_opt_f64(reader: &mut store::ByteReader<'_>) -> Result<Option<f64>, String> {
     match reader.read_u8().map_err(|e| e.to_string())? {
         0 => Ok(None),
         1 => Ok(Some(reader.read_f64_le().map_err(|e| e.to_string())?)),
@@ -302,7 +302,7 @@ fn read_opt_f64(reader: &mut store::ByteReader<'_>) -> Result<Option<f64>, Strin
     }
 }
 
-fn write_run_style(out: &mut Vec<u8>, s: &RunStyle) {
+async fn write_run_style(out: &mut Vec<u8>, s: &RunStyle) {
     write_bool(out, s.bold);
     write_bool(out, s.italic);
     write_bool(out, s.underline);
@@ -311,14 +311,14 @@ fn write_run_style(out: &mut Vec<u8>, s: &RunStyle) {
     write_opt_str(out, &s.color);
     write_opt_str(out, &s.link);
 }
-fn read_run_style(reader: &mut store::ByteReader<'_>) -> Result<RunStyle, String> {
+async fn read_run_style(reader: &mut store::ByteReader<'_>) -> Result<RunStyle, String> {
     Ok(RunStyle { bold: read_bool(reader)?, italic: read_bool(reader)?, underline: read_bool(reader)?, size: read_opt_f64(reader)?, font: read_opt_str(reader)?, color: read_opt_str(reader)?, link: read_opt_str(reader)? })
 }
-fn write_run(out: &mut Vec<u8>, r: &DocRun) {
+async fn write_run(out: &mut Vec<u8>, r: &DocRun) {
     write_str_lp(out, &r.text);
     write_run_style(out, &r.style);
 }
-fn read_run(reader: &mut store::ByteReader<'_>) -> Result<DocRun, String> {
+async fn read_run(reader: &mut store::ByteReader<'_>) -> Result<DocRun, String> {
     Ok(DocRun { text: read_str_lp(reader)?, style: read_run_style(reader)? })
 }
 
@@ -326,7 +326,7 @@ fn read_run(reader: &mut store::ByteReader<'_>) -> Result<DocRun, String> {
 /// 7=PageBreak) + fields, genuinely recursive for `List`/`Table`/`Quote`'s nested `Vec<DocBlock>`
 /// (`protocol-prim-ref-recursion`/`protocol-array-of-records` — the Rust side stays fully
 /// structured; only the `.protocol.semio` DESCRIPTION stops at an opaque tail, per the recipe).
-fn write_block(out: &mut Vec<u8>, b: &DocBlock) {
+async fn write_block(out: &mut Vec<u8>, b: &DocBlock) {
     match b {
         DocBlock::Paragraph { style_id, runs } => {
             out.push(0);
@@ -391,7 +391,7 @@ fn write_block(out: &mut Vec<u8>, b: &DocBlock) {
         DocBlock::PageBreak => out.push(7),
     }
 }
-fn read_block(reader: &mut store::ByteReader<'_>) -> Result<DocBlock, String> {
+async fn read_block(reader: &mut store::ByteReader<'_>) -> Result<DocBlock, String> {
     let tag = reader.read_u8().map_err(|e| e.to_string())?;
     match tag {
         0 => {
@@ -470,24 +470,24 @@ fn read_block(reader: &mut store::ByteReader<'_>) -> Result<DocBlock, String> {
     }
 }
 
-fn write_style(out: &mut Vec<u8>, s: &DocStyle) {
+async fn write_style(out: &mut Vec<u8>, s: &DocStyle) {
     write_str_lp(out, &s.id);
     write_str_lp(out, &s.name);
     write_opt_str(out, &s.based_on);
 }
-fn read_style(reader: &mut store::ByteReader<'_>) -> Result<DocStyle, String> {
+async fn read_style(reader: &mut store::ByteReader<'_>) -> Result<DocStyle, String> {
     Ok(DocStyle { id: read_str_lp(reader)?, name: read_str_lp(reader)?, based_on: read_opt_str(reader)? })
 }
-fn write_image(out: &mut Vec<u8>, i: &DocImage) {
+async fn write_image(out: &mut Vec<u8>, i: &DocImage) {
     write_str_lp(out, &i.id);
     write_str_lp(out, &i.mime);
     write_bytes_lp(out, &i.bytes);
 }
-fn read_image(reader: &mut store::ByteReader<'_>) -> Result<DocImage, String> {
+async fn read_image(reader: &mut store::ByteReader<'_>) -> Result<DocImage, String> {
     Ok(DocImage { id: read_str_lp(reader)?, mime: read_str_lp(reader)?, bytes: read_bytes_lp(reader)? })
 }
 
-fn encode_document_snapshot_binary(s: &SemioDocumentSnapshot) -> Vec<u8> {
+async fn encode_document_snapshot_binary(s: &SemioDocumentSnapshot) -> Vec<u8> {
     const PACK_BINARY_FORMAT: u8 = 1;
     let mut out = Vec::new();
     out.push(PACK_BINARY_FORMAT);
@@ -506,7 +506,7 @@ fn encode_document_snapshot_binary(s: &SemioDocumentSnapshot) -> Vec<u8> {
     }
     out
 }
-fn decode_document_snapshot_binary(bytes: &[u8]) -> Result<SemioDocumentSnapshot, String> {
+async fn decode_document_snapshot_binary(bytes: &[u8]) -> Result<SemioDocumentSnapshot, String> {
     const PACK_BINARY_FORMAT: u8 = 1;
     let mut reader = store::ByteReader::new(bytes);
     let format = reader.read_u8().map_err(|e| e.to_string())?;
@@ -544,11 +544,11 @@ fn decode_document_snapshot_binary(bytes: &[u8]) -> Result<SemioDocumentSnapshot
 /// compounds the gap. Hand-rolled instead, matching `🔺️diff`'s already-hand-rolled convention.
 impl store::ArtifactDsl for SemioDocumentSnapshot {
     const EXTENSION: &'static str = "semio";
-    fn envelope_id() -> &'static str {
+    async fn envelope_id() -> &'static str {
         STDIO_SEMIODOCUMENT_DOCUMENT_SCHEMA
     }
 
-    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+    async fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
         let body = match store::semio_format::split_text_preamble(text) {
             Ok((_, rest)) => rest,
             Err(_) => text,
@@ -556,7 +556,7 @@ impl store::ArtifactDsl for SemioDocumentSnapshot {
         parse_document_snapshot_body(body).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
 
-    fn print_dsl(&self) -> String {
+    async fn print_dsl(&self) -> String {
         let body = print_document_snapshot_body(self);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
@@ -564,14 +564,14 @@ impl store::ArtifactDsl for SemioDocumentSnapshot {
 }
 
 impl store::ArtifactPack for SemioDocumentSnapshot {
-    fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
+    async fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
         let raw = encode_document_snapshot_binary(self);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &raw))
     }
 
-    fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
+    async fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
         if envelope.envelope_id() != <Self as store::ArtifactDsl>::envelope_id() {
             return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.envelope_id())));
@@ -588,7 +588,7 @@ impl store::ArtifactPack for SemioDocumentSnapshot {
 /// least once. Single source of truth for `📚️examples/📄️memo/🖼️assets/🗣️example.dsl.semio`/
 /// `🎒️example.pack.semio` and for the conformance-law tests in `🎹️composer/🦀️component.rs`.
 #[cfg(test)]
-pub(crate) fn demo_semio_document_snapshot() -> SemioDocumentSnapshot {
+pub(crate) async fn demo_semio_document_snapshot() -> SemioDocumentSnapshot {
     SemioDocumentSnapshot {
         schema: STDIO_SEMIODOCUMENT_DOCUMENT_SCHEMA.into(),
         styles: vec![DocStyle { id: "heading1".into(), name: "Heading 1".into(), based_on: Some("normal".into()) }],
@@ -613,7 +613,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn json_pack_round_trips() {
+    async fn json_pack_round_trips() {
         let snap = demo_semio_document_snapshot();
         let bytes = <SemioDocumentSnapshot as store::ArtifactPack>::encode_pack(&snap);
         let back = <SemioDocumentSnapshot as store::ArtifactPack>::decode_pack(&bytes).expect("decode");
@@ -621,7 +621,7 @@ mod tests {
     }
 
     #[test]
-    fn dsl_text_round_trips() {
+    async fn dsl_text_round_trips() {
         let snap = demo_semio_document_snapshot();
         let text = <SemioDocumentSnapshot as store::ArtifactDsl>::print_dsl(&snap);
         let back = <SemioDocumentSnapshot as store::ArtifactDsl>::parse_dsl(&text).expect("parse");
@@ -629,7 +629,7 @@ mod tests {
     }
 
     #[test]
-    fn empty_snapshot_binary_round_trips() {
+    async fn empty_snapshot_binary_round_trips() {
         let snap = SemioDocumentSnapshot::default();
         let bytes = <SemioDocumentSnapshot as store::ArtifactPack>::encode_pack(&snap);
         let back = <SemioDocumentSnapshot as store::ArtifactPack>::decode_pack(&bytes).expect("decode");

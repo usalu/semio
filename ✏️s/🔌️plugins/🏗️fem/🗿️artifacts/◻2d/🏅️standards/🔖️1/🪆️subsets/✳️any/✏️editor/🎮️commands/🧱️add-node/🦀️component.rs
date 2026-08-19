@@ -36,7 +36,7 @@ pub struct AddNode {
     pub y: f64,
 }
 
-pub fn handle(payload: &AddNode, doc: &ArtifactView<'_, Fem2dSnapshot>, _cfg: &ConfigView<'_, Fem2dConfig>) -> Result<Emit<Fem2dMutation, Fem2dConfigMutation>, Fault> {
+pub async fn handle(payload: &AddNode, doc: &ArtifactView<'_, Fem2dSnapshot>, _cfg: &ConfigView<'_, Fem2dConfig>) -> Result<Emit<Fem2dMutation, Fem2dConfigMutation>, Fault> {
     let snapshot = doc.snapshot;
     let id = crate::app_surface::next_id(snapshot.nodes.iter().map(|n| n.id.clone()), "n");
     Ok(Emit::mutations(vec![Fem2dMutation::CreateNode(crate::artifacts::fem2d::mutations::create_node::mutation::CreateNode { node: FemNode { id, x: payload.x, y: payload.y } })]))
@@ -51,7 +51,7 @@ mod tests {
     use crate::editor::fem2d::Fem2dCommand;
 
     #[test]
-    fn add_node_action_emits_op_2d() {
+    async fn add_node_action_emits_op_2d() {
         let mut app = fem2d_app();
         let result = dispatch(&mut app, Fem2dCommand::AddNode(AddNode { x: 1.0, y: 2.0 }));
         assert_eq!(result.mutations.len(), 1);
@@ -59,7 +59,7 @@ mod tests {
     }
 
     #[test]
-    fn add_bar_and_add_beam_actions_emit_ops_2d() {
+    async fn add_bar_and_add_beam_actions_emit_ops_2d() {
         let mut app = fem2d_app();
         dispatch(&mut app, Fem2dCommand::AddBar(add_bar::AddBar { start: "n1".into(), end: "n2".into(), material_id: "m1".into(), section_id: "s1".into() }));
         assert!(matches!(app.snapshot().expect("snapshot").elements.last(), Some(FemElement::Bar { .. })));
@@ -68,7 +68,7 @@ mod tests {
     }
 
     #[test]
-    fn add_material_action_emits_op_2d() {
+    async fn add_material_action_emits_op_2d() {
         let mut app = fem2d_app();
         dispatch(&mut app, Fem2dCommand::AddMaterial(add_material::AddMaterial { name: "Steel".into(), e: 2.1e11 }));
         let material = app.snapshot().expect("snapshot").materials.last().expect("material added").clone();
@@ -77,21 +77,21 @@ mod tests {
     }
 
     #[test]
-    fn add_section_action_emits_op_2d() {
+    async fn add_section_action_emits_op_2d() {
         let mut app = fem2d_app();
         dispatch(&mut app, Fem2dCommand::AddSection(add_section::AddSection { name: "HEA200".into(), area: 0.00538, iy: 0.0000369 }));
         assert_eq!(app.snapshot().expect("snapshot").sections.last().expect("section added").name, "HEA200");
     }
 
     #[test]
-    fn add_support_action_emits_op_with_fixed_dofs_2d() {
+    async fn add_support_action_emits_op_with_fixed_dofs_2d() {
         let mut app = fem2d_app();
         dispatch(&mut app, Fem2dCommand::AddSupport(add_support::AddSupport { node_id: "n1".into(), fixed: vec![FemDof::Tx, FemDof::Ty] }));
         assert_eq!(app.snapshot().expect("snapshot").supports.last().expect("support added").fixed, vec![FemDof::Tx, FemDof::Ty]);
     }
 
     #[test]
-    fn add_region_action_emits_set_region_2d() {
+    async fn add_region_action_emits_set_region_2d() {
         let mut app = fem2d_app();
         dispatch(&mut app, Fem2dCommand::AddRegion(add_region::AddRegion { x: 0.0, y: 0.0, width: 4.0, height: 2.0, material_id: "steel".into(), thickness: None, mesh_size: None }));
         let region = app.snapshot().expect("snapshot").regions.last().expect("region added").clone();

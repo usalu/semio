@@ -37,11 +37,11 @@ pub mod derived_composition {
         type Snapshot = SemioAnimationSnapshot;
         const WRITES: Dialect = DIALECT;
 
-        fn reads() -> &'static [Dialect] {
+        async fn reads() -> &'static [Dialect] {
             &[DIALECT]
         }
 
-        fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+        async fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
             let native: Vec<AnalyzeSource<'_>> = sources
                 .iter()
                 .filter(|s| s.dialect == DIALECT)
@@ -69,7 +69,7 @@ pub mod derived_composition {
 
     /// 🔍️ Real referential-invariant sweep over a decoded snapshot — separated from `validate` so both
     /// the registered `SubsetValidator` and this module's own tests exercise the exact same logic.
-    fn check_semio_animation_invariants(snapshot: &SemioAnimationSnapshot) -> Vec<dsl::Diagnostic> {
+    async fn check_semio_animation_invariants(snapshot: &SemioAnimationSnapshot) -> Vec<dsl::Diagnostic> {
         let mut diagnostics = Vec::new();
         for (ti, timeline) in snapshot.timelines.iter().enumerate() {
             for (ci, channel) in timeline.channels.iter().enumerate() {
@@ -93,7 +93,7 @@ pub mod derived_composition {
 
     impl SubsetValidator for SemioAnimationValidator {
         const DIALECT: Dialect = DIALECT;
-        fn validate(payload: &IoPayload) -> Vec<dsl::Diagnostic> {
+        async fn validate(payload: &IoPayload) -> Vec<dsl::Diagnostic> {
             let decoded = match payload {
                 IoPayload::Binary(bytes) => <SemioAnimationSnapshot as store::ArtifactPack>::decode_pack(bytes).ok(),
                 IoPayload::Text(text) => <SemioAnimationSnapshot as store::ArtifactDsl>::parse_dsl(text).ok(),
@@ -106,7 +106,7 @@ pub mod derived_composition {
     }
 
     static VALIDATOR_ENTRY: std::sync::OnceLock<SubsetValidatorEntry> = std::sync::OnceLock::new();
-    fn validator_entry() -> &'static SubsetValidatorEntry {
+    async fn validator_entry() -> &'static SubsetValidatorEntry {
         VALIDATOR_ENTRY.get_or_init(subset_validator_entry_of::<SemioAnimationValidator>)
     }
     //#endregion 🔖️SubsetValidator
@@ -114,7 +114,7 @@ pub mod derived_composition {
     //#region 🔖️Register
     /// 📌️ Registers this subset's schema descriptor, document codec, and SubsetValidator. Called from
     /// this artifact's standard-level `engine::register()`.
-    pub fn register() {
+    pub async fn register() {
         ::schema::register_artifact_schema_descriptor(crate::artifacts::semio::standards::v1::subsets::animation::schema::semio_animation_artifact_schema_descriptor());
         let _ = store::register_document_codec(store::ArtifactCodec::of::<SemioAnimationSnapshot, crate::artifacts::semio::standards::v1::subsets::animation::schema::mutations::SemioAnimationMutation>(
             crate::artifacts::semio::standards::v1::subsets::animation::schema::snapshot::STDIO_SEMIOANIMATION_DOCUMENT_SCHEMA,
@@ -127,13 +127,13 @@ pub mod derived_composition {
     /// 💡️ Registers `s.stdio.semio.animation.inference`'s facet leaves into the OS-wide inference
     /// catalog — sibling to `register_artifact_schema_descriptor` above (separate registry,
     /// ticket 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING).
-    pub fn register_artifact_inferences() {
+    pub async fn register_artifact_inferences() {
         ::schema::register_artifact_inference_descriptor(crate::artifacts::semio::standards::v1::subsets::animation::schema::inferences::semio_animation_artifact_inference_descriptor());
     }
 
     /// 🌉️ animation↔gltf / animation↔mp4 / animation↔gif bridge entries (W4) -- forward + reverse rows
     /// per pair, giving all 4 IoKeys per pair per the master plan's io architecture note.
-    fn bridge_entries() -> &'static [ComposerEntry] {
+    async fn bridge_entries() -> &'static [ComposerEntry] {
         static ENTRIES: std::sync::OnceLock<Vec<ComposerEntry>> = std::sync::OnceLock::new();
         ENTRIES
             .get_or_init(|| {
@@ -156,7 +156,7 @@ pub mod derived_composition {
         use super::*;
         use crate::artifacts::semio::standards::v1::subsets::animation::schema::snapshot::{AnimChannel, AnimKeyframe, AnimTarget, AnimTargetProperty, AnimTimeline, AnimValue};
 
-        fn snapshot_with_channel(keyframes: Vec<AnimKeyframe>) -> SemioAnimationSnapshot {
+        async fn snapshot_with_channel(keyframes: Vec<AnimKeyframe>) -> SemioAnimationSnapshot {
             SemioAnimationSnapshot {
                 timelines: vec![AnimTimeline { name: None, channels: vec![AnimChannel { target: AnimTarget { node: "n".into(), property: AnimTargetProperty::Translation }, interpolation: Default::default(), keyframes }] }],
                 ..SemioAnimationSnapshot::default()
@@ -164,27 +164,27 @@ pub mod derived_composition {
         }
 
         #[test]
-        fn empty_channel_is_flagged() {
+        async fn empty_channel_is_flagged() {
             let snap = snapshot_with_channel(vec![]);
             let diagnostics = check_semio_animation_invariants(&snap);
             assert!(diagnostics.iter().any(|d| d.code.0 == "stdio.semio_animation.empty-channel"), "got {diagnostics:?}");
         }
 
         #[test]
-        fn non_monotonic_keyframes_are_flagged() {
+        async fn non_monotonic_keyframes_are_flagged() {
             let snap = snapshot_with_channel(vec![AnimKeyframe { t: 1.0, value: AnimValue::Scalar { value: 0.0 } }, AnimKeyframe { t: 0.0, value: AnimValue::Scalar { value: 1.0 } }]);
             let diagnostics = check_semio_animation_invariants(&snap);
             assert!(diagnostics.iter().any(|d| d.code.0 == "stdio.semio_animation.non-monotonic-keyframes"), "got {diagnostics:?}");
         }
 
         #[test]
-        fn well_formed_snapshot_has_no_diagnostics() {
+        async fn well_formed_snapshot_has_no_diagnostics() {
             let snap = snapshot_with_channel(vec![AnimKeyframe { t: 0.0, value: AnimValue::Scalar { value: 0.0 } }, AnimKeyframe { t: 1.0, value: AnimValue::Scalar { value: 1.0 } }]);
             assert!(check_semio_animation_invariants(&snap).is_empty());
         }
 
         #[test]
-        fn registered_validator_matches_direct_invariant_check_on_a_binary_payload() {
+        async fn registered_validator_matches_direct_invariant_check_on_a_binary_payload() {
             let snap = snapshot_with_channel(vec![]);
             let bytes = <SemioAnimationSnapshot as store::ArtifactPack>::encode_pack(&snap);
             let via_validator = SemioAnimationValidator::validate(&IoPayload::Binary(bytes));
@@ -207,7 +207,7 @@ pub mod derived_composition {
             /// parse under the real dialect — independent of, and cheaper than, the two `recognize`/
             /// `walk_protocol` laws below.
             #[test]
-            fn committed_facet_files_parse() {
+            async fn committed_facet_files_parse() {
                 for (label, text) in [("snapshot grammar", snapshot::text::COMPONENT_GRAMMAR_SEMIO), ("mutations grammar", mutations::text::COMPONENT_GRAMMAR_SEMIO), ("diff grammar", diff::text::COMPONENT_GRAMMAR_SEMIO)] {
                     let grammar = dsl::parse_grammar(text).unwrap_or_else(|e| panic!("{label}: parse_grammar failed: {e:?}"));
                     assert_eq!(grammar.dialect, dsl::SemioDialect::Grammar, "{label}: expected grammar dialect");
@@ -223,7 +223,7 @@ pub mod derived_composition {
             /// `artifact-mark` token), so this is a direct proof this facet will pass that harness once
             /// graduated.
             #[test]
-            fn grammar_conformance_law() {
+            async fn grammar_conformance_law() {
                 let grammar = dsl::parse_grammar(snapshot::text::COMPONENT_GRAMMAR_SEMIO).expect("parse snapshot grammar");
                 let recognizer = dsl::Recognizer::compile(&grammar);
                 let text = store::ArtifactDsl::print_dsl(&snapshot::demo_animation_snapshot());
@@ -235,7 +235,7 @@ pub mod derived_composition {
             /// ✅️ `ops_grammar_conformance_law`: the mutations grammar recognizes real `print_op`
             /// output for every `SemioAnimationMutation` variant (`mutations::demo_mutation_cases()`).
             #[test]
-            fn ops_grammar_conformance_law() {
+            async fn ops_grammar_conformance_law() {
                 let grammar = dsl::parse_grammar(mutations::text::COMPONENT_GRAMMAR_SEMIO).expect("parse mutations grammar");
                 let recognizer = dsl::Recognizer::compile(&grammar);
                 for mutation in mutations::demo_mutation_cases() {
@@ -248,7 +248,7 @@ pub mod derived_composition {
             /// for every representative `SemioAnimationDiff` (`diff::demo_diff_cases()`), incl. the
             /// empty (no-op) diff.
             #[test]
-            fn diff_grammar_conformance_law() {
+            async fn diff_grammar_conformance_law() {
                 let grammar = dsl::parse_grammar(diff::text::COMPONENT_GRAMMAR_SEMIO).expect("parse diff grammar");
                 let recognizer = dsl::Recognizer::compile(&grammar);
                 for d in diff::demo_diff_cases() {
@@ -261,7 +261,7 @@ pub mod derived_composition {
             /// snapshot pack (`encode_pack`, envelope-unwrapped first), every demo mutation's
             /// `encode_op`, and every demo diff's `encode_diff` — asserting `consumed == bytes.len()`.
             #[test]
-            fn protocol_walk_law() {
+            async fn protocol_walk_law() {
                 let pack_spec = dsl::parse_protocol(snapshot::binary::COMPONENT_PROTOCOL_SEMIO).expect("parse snapshot protocol");
                 let packed = store::ArtifactPack::encode_pack(&snapshot::demo_animation_snapshot());
                 let (_, inner) = store::semio_format::unwrap_binary(&packed).expect("unwrap semio envelope");
@@ -288,7 +288,7 @@ pub mod derived_composition {
             /// `parse_dsl(fixture) == demo()`, `print_dsl(demo()) == fixture` (byte-for-byte), and the
             /// pack twin — so the fixtures can never silently drift back to a fake.
             #[test]
-            fn fixture_honesty_law() {
+            async fn fixture_honesty_law() {
                 const FIXTURE_DSL: &str = include_str!("../../✳️any/📚️examples/🚶️walk/🖼️assets/🗣️example.dsl.semio");
                 const FIXTURE_PACK: &[u8] = include_bytes!("../../✳️any/📚️examples/🚶️walk/🖼️assets/🎒️example.pack.semio");
 

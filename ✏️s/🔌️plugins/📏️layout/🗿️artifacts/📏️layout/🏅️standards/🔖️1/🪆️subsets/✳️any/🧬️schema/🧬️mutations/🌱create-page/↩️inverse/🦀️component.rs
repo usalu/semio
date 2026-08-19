@@ -5,7 +5,7 @@ use crate::artifacts::layout::mutations::{delete_page, LayoutMutation};
 use crate::artifacts::layout::LayoutSnapshot;
 
 //#region 🌱️CreatePage
-pub fn inverse_create_page(payload: &CreatePage, _base: &LayoutSnapshot) -> Vec<LayoutMutation> {
+pub async fn inverse_create_page(payload: &CreatePage, _base: &LayoutSnapshot) -> Vec<LayoutMutation> {
     vec![LayoutMutation::DeletePage(delete_page::mutation::DeletePage { id: payload.page.id.clone() })]
 }
 //#endregion 🌱️CreatePage

@@ -4,7 +4,7 @@ use super::mutation::ChangeDataFields;
 use crate::artifacts::layout::{LayoutDiff, LayoutSnapshot};
 
 //#region 🧾ChangeDataFields
-pub fn diff_change_data_fields(payload: &ChangeDataFields, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
+pub async fn diff_change_data_fields(payload: &ChangeDataFields, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
     if base.data_fields_json == payload.new_json {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", "Data fields are already set to that value.");
     }

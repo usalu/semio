@@ -7,11 +7,11 @@ use semio_framework_plugin::{LocalizedLabel, ModeDefinition, WindowLayout, Windo
 pub const MODE_ID: &str = "edit";
 
 //#region 🔖️Definition
-pub fn definition() -> ModeDefinition {
+pub async fn definition() -> ModeDefinition {
     ModeDefinition { id: MODE_ID.into(), label: LocalizedLabel::native("Edit", "Bearbeiten"), icon_id: "pencil".into(), tools: Vec::new(), layout_id: None, commands: Vec::new() }
 }
 
-pub fn layout() -> WindowLayout {
+pub async fn layout() -> WindowLayout {
     WindowLayout {
         root: WindowLayoutRoot::Stack(WindowLayoutStackNode {
             kind: "stack".into(),

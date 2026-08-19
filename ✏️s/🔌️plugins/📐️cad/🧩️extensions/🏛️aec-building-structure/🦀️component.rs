@@ -34,7 +34,7 @@ struct CadComputersManifest {
     transformation_appliers: Vec<&'static str>,
 }
 
-fn structure_layer_typology() -> BTreeMap<&'static str, &'static str> {
+async fn structure_layer_typology() -> BTreeMap<&'static str, &'static str> {
     BTreeMap::from([
         ("slab", "structure.structure.onewayreinforcedconcreteslab"),
         ("column", "structure.structure.reinforcedconcretecolumn"),
@@ -46,7 +46,7 @@ fn structure_layer_typology() -> BTreeMap<&'static str, &'static str> {
     ])
 }
 
-fn structure_import_profile(model_definition_id: &'static str, prefer_presentation_layers: bool, presentation_geometry: Option<&'static str>) -> CadImportProfileManifest {
+async fn structure_import_profile(model_definition_id: &'static str, prefer_presentation_layers: bool, presentation_geometry: Option<&'static str>) -> CadImportProfileManifest {
     CadImportProfileManifest {
         model_definition_id,
         layer_typology: structure_layer_typology(),
@@ -57,7 +57,7 @@ fn structure_import_profile(model_definition_id: &'static str, prefer_presentati
     }
 }
 
-fn computers_manifest() -> CadComputersManifest {
+async fn computers_manifest() -> CadComputersManifest {
     CadComputersManifest {
         model_definition_ids: vec![
             "aec.building.structure",
@@ -79,7 +79,7 @@ fn computers_manifest() -> CadComputersManifest {
     }
 }
 
-fn bundle() -> ExtensionBundle {
+async fn bundle() -> ExtensionBundle {
     ExtensionBundle::new(EXTENSION_ID, "CAD AEC Building Structure", "0.1.0")
         .extends("cad")
         // 🚦️ `📓️design-abi.md` §5 — zero `.handler(…)`, never instantiated as an actor: this
@@ -106,7 +106,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn bundle_contributes_structure_manifest() {
+    async fn bundle_contributes_structure_manifest() {
         let manifest = bundle().manifest;
         let topic_contribution = &manifest.topic_contributions[0];
         assert_eq!(topic_contribution.topic, "cad.computer");

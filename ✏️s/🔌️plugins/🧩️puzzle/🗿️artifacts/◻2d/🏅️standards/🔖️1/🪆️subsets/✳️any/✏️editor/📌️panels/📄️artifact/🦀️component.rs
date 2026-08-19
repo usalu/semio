@@ -13,7 +13,7 @@ pub const PUZZLE2D_PLAY_BODY_LAYERS: &str = "puzzle2d.play.layers";
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
-pub fn definition() -> PanelTabDefinition {
+pub async fn definition() -> PanelTabDefinition {
     PanelTabDefinition {
         kind: PanelTabKind::App(FRAMEWORK_PANEL_TAB_ARTIFACT_ID.into()),
         label: LocalizedLabel::native(FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL, "Dokument"),
@@ -25,11 +25,11 @@ pub fn definition() -> PanelTabDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-fn node_label(node: &Value) -> String {
+async fn node_label(node: &Value) -> String {
     node.get("text").and_then(|value| value.as_str()).filter(|value| !value.is_empty()).or_else(|| node.get("id").and_then(|value| value.as_str())).unwrap_or("node").into()
 }
 
-fn edge_label(edge: &Value, fixture: &Value) -> String {
+async fn edge_label(edge: &Value, fixture: &Value) -> String {
     let source = edge.get("source").and_then(|value| value.as_str()).unwrap_or("?");
     let target = edge.get("target").and_then(|value| value.as_str()).unwrap_or("?");
     let source_label = fixture_nodes(fixture).iter().find(|node| node.get("id").and_then(|value| value.as_str()) == Some(source)).map_or_else(|| source.into(), node_label);
@@ -37,7 +37,7 @@ fn edge_label(edge: &Value, fixture: &Value) -> String {
     format!("{source_label} → {target_label}")
 }
 
-pub fn render(envelope: &Puzzle2dScene, labels: &Puzzle2dLabels) -> UiNode {
+pub async fn render(envelope: &Puzzle2dScene, labels: &Puzzle2dLabels) -> UiNode {
     let fixture = &envelope.fixture;
     let node_items: Vec<UiTreeItemNode> = fixture_nodes(fixture)
         .iter()
@@ -79,7 +79,7 @@ mod tests {
     use serde_json::json;
 
     #[test]
-    fn document_panel_lists_nodes_section() {
+    async fn document_panel_lists_nodes_section() {
         let mut app = concrete_forest_app();
         let json = render_body(&mut app, PUZZLE2D_PLAY_BODY_LAYERS);
         assert!(json.contains("puzzle2d-play-document.nodes"));
@@ -89,7 +89,7 @@ mod tests {
     /// 🗣️ B1: locale/terminology are now real VCS'd `Puzzle2dConfig` state (was a per-call `ViewModel`
     /// override) — dispatch `setLocale`/`setTerminology` to change them, then render.
     #[test]
-    fn labels_resolve_native_english_and_german_and_reuse() {
+    async fn labels_resolve_native_english_and_german_and_reuse() {
         let mut app = concrete_forest_app();
         let english = render_body(&mut app, PUZZLE2D_PLAY_BODY_LAYERS);
         assert!(english.contains("\"Nodes\"") && english.contains("\"Edges\""));

@@ -17,7 +17,7 @@ use serde::{Deserialize, Serialize};
 #[dsl(keyword = "reset-grid")]
 pub struct ResetGrid {}
 
-pub fn handle(_payload: &ResetGrid, doc: &ArtifactView<'_, PresentSnapshot>, _cfg: &ConfigView<'_, PresentConfig>, _ctx: &mut PresentDispatchCtx) -> Result<Emit<PresentMutation, PresentConfigMutation>, Fault> {
+pub async fn handle(_payload: &ResetGrid, doc: &ArtifactView<'_, PresentSnapshot>, _cfg: &ConfigView<'_, PresentConfig>, _ctx: &mut PresentDispatchCtx) -> Result<Emit<PresentMutation, PresentConfigMutation>, Fault> {
     let deck = doc.snapshot;
     let (deck_source, _) = crate::artifacts::present::present_working_scene(deck);
     let tiles = populate_tile_drafts_from_grid(FigureTileGridSeedSpec { source: &deck_source, rows: 3, columns: 5, gap: 0.0, key_prefix: "tile" });

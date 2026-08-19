@@ -3,7 +3,7 @@ use crate::artifacts::puzzle3d::diff::{Puzzle3dDiff, Puzzle3dReferencePatch, Puz
 use crate::artifacts::puzzle3d::Puzzle3dSnapshot;
 
 //#region 🔖️Diff
-pub fn diff(payload: &super::mutation::ReplaceReferenceSource, base: &Puzzle3dSnapshot) -> protocol::MutationOutcome<Puzzle3dDiff> {
+pub async fn diff(payload: &super::mutation::ReplaceReferenceSource, base: &Puzzle3dSnapshot) -> protocol::MutationOutcome<Puzzle3dDiff> {
     let Some(item) = base.references.iter().find(|entry| entry.id == payload.id) else {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("{} \"{}\" not found", "reference", payload.id), vec![payload.id.clone()]);
     };

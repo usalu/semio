@@ -32,12 +32,12 @@ pub struct CurateArtifact {
 //#endregion 🔖️Artifact
 
 //#region 🔖️Conversions
-fn default_contributions_json() -> String {
+async fn default_contributions_json() -> String {
     "[]".into()
 }
 
 impl Default for CurateArtifact {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self {
             catalog: crate::artifacts::curate::catalog_child_handle(&[]),
             stock_extra: Vec::new(),
@@ -51,7 +51,7 @@ impl Default for CurateArtifact {
 
 impl CurateArtifact {
     /// 📸️ Persisted subset.
-    pub fn to_snapshot(&self) -> CurateSnapshot {
+    pub async fn to_snapshot(&self) -> CurateSnapshot {
         CurateSnapshot {
             catalog: self.catalog.clone(),
             stock_extra: self.stock_extra.clone(),
@@ -60,7 +60,7 @@ impl CurateArtifact {
     }
 
     /// 🧬️ Builds a full artifact from a snapshot, leaving UI fields at defaults.
-    pub fn from_snapshot(snapshot: CurateSnapshot) -> Self {
+    pub async fn from_snapshot(snapshot: CurateSnapshot) -> Self {
         Self {
             catalog: snapshot.catalog,
             stock_extra: snapshot.stock_extra,
@@ -70,7 +70,7 @@ impl CurateArtifact {
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
-    pub fn set_snapshot(&mut self, snapshot: CurateSnapshot) {
+    pub async fn set_snapshot(&mut self, snapshot: CurateSnapshot) {
         self.catalog = snapshot.catalog;
         self.stock_extra = snapshot.stock_extra;
         self.curated = snapshot.curated;
@@ -80,7 +80,7 @@ impl CurateArtifact {
 
 //#region 🔖️Descriptor
 /// 🧬️ Descriptor for `s.sourcing.curate` — twenty handcrafted schema leaves.
-pub fn curate_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
+pub async fn curate_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
     schema::ArtifactSchemaDescriptor {
         id: "s.sourcing.curate",
         artifact: schema::FacetLeaves {
@@ -127,13 +127,13 @@ pub struct TypologyNode {
 }
 
 impl TypologyNode {
-    pub fn new(id: impl Into<String>, label: impl Into<String>, children: Vec<TypologyNode>) -> Self {
+    pub async fn new(id: impl Into<String>, label: impl Into<String>, children: Vec<TypologyNode>) -> Self {
         Self { id: id.into(), label: label.into(), children }
     }
 }
 
 /// 🔎️ Whether `path` (a sequence of segment ids from the root) resolves to a node in `root`'s tree.
-pub fn typology_contains(root: &TypologyNode, path: &[String]) -> bool {
+pub async fn typology_contains(root: &TypologyNode, path: &[String]) -> bool {
     match path.split_first() {
         None => true,
         Some((head, rest)) if *head == root.id => {
@@ -148,8 +148,8 @@ pub fn typology_contains(root: &TypologyNode, path: &[String]) -> bool {
 }
 
 /// 📋️ Flattens a typology tree into `(full path from root, label)` pairs, depth-first, for filter UIs.
-pub fn typology_flatten(root: &TypologyNode) -> Vec<(Vec<String>, String)> {
-    fn walk(node: &TypologyNode, prefix: &[String], out: &mut Vec<(Vec<String>, String)>) {
+pub async fn typology_flatten(root: &TypologyNode) -> Vec<(Vec<String>, String)> {
+    async fn walk(node: &TypologyNode, prefix: &[String], out: &mut Vec<(Vec<String>, String)>) {
         let mut path = prefix.to_vec();
         path.push(node.id.clone());
         out.push((path.clone(), node.label.clone()));
@@ -173,7 +173,7 @@ pub struct MeshDataSpec {
 }
 
 /// ➕️➖️ Appends `other` onto `base`, offsetting `other`'s indices past `base`'s existing vertex count.
-pub fn append_mesh_spec(base: &mut MeshDataSpec, other: MeshDataSpec) {
+pub async fn append_mesh_spec(base: &mut MeshDataSpec, other: MeshDataSpec) {
     let vertex_offset = (base.positions.len() / 3) as u32;
     base.positions.extend(other.positions);
     base.normals.extend(other.normals);
@@ -181,7 +181,7 @@ pub fn append_mesh_spec(base: &mut MeshDataSpec, other: MeshDataSpec) {
 }
 
 /// 📐️ Builds an axis-aligned box mesh centered at the origin, with per-face flat normals.
-fn box_mesh_spec(width: f64, height: f64, depth: f64) -> MeshDataSpec {
+async fn box_mesh_spec(width: f64, height: f64, depth: f64) -> MeshDataSpec {
     let (hw, hh, hd) = ((width * 0.5) as f32, (height * 0.5) as f32, (depth * 0.5) as f32);
     // 6 faces * 4 verts, wound counter-clockwise when viewed from outside along the face normal.
     let faces: [([f32; 3], [[f32; 3]; 4]); 6] = [
@@ -205,7 +205,7 @@ fn box_mesh_spec(width: f64, height: f64, depth: f64) -> MeshDataSpec {
 }
 
 /// 🪟️ Builds a rectangular frame (4 mitred boxes: top/bottom rails, left/right stiles) around an opening.
-fn frame_mesh_spec(width: f64, height: f64, depth: f64, profile: f64) -> MeshDataSpec {
+async fn frame_mesh_spec(width: f64, height: f64, depth: f64, profile: f64) -> MeshDataSpec {
     let mut spec = MeshDataSpec::default();
     let mut add = |w: f64, h: f64, cx: f64, cy: f64| {
         let mut piece = box_mesh_spec(w, h, depth);
@@ -226,7 +226,7 @@ fn frame_mesh_spec(width: f64, height: f64, depth: f64, profile: f64) -> MeshDat
 }
 
 /// 🧱️ Realizes a `GeometryRecipe` into flat mesh data.
-pub fn mesh_spec_for(recipe: &GeometryRecipe) -> MeshDataSpec {
+pub async fn mesh_spec_for(recipe: &GeometryRecipe) -> MeshDataSpec {
     match recipe {
         GeometryRecipe::Box { width, height, depth } => box_mesh_spec(*width, *height, *depth),
         GeometryRecipe::Frame { width, height, depth, profile } => frame_mesh_spec(*width, *height, *depth, *profile),
@@ -236,7 +236,7 @@ pub fn mesh_spec_for(recipe: &GeometryRecipe) -> MeshDataSpec {
 }
 
 /// 📏️ The largest bounding dimension of a recipe's geometry, used to normalize grid-cell scale.
-pub fn bounding_extent(recipe: &GeometryRecipe) -> f64 {
+pub async fn bounding_extent(recipe: &GeometryRecipe) -> f64 {
     match recipe {
         GeometryRecipe::Box { width, height, depth } => width.max(*height).max(*depth),
         GeometryRecipe::Frame { width, height, depth, .. } => width.max(*height).max(*depth),
@@ -249,7 +249,7 @@ pub fn bounding_extent(recipe: &GeometryRecipe) -> f64 {
 //#region 🔖️World3d
 /// 🌐️ JSON mesh atom for a stock kind's realized geometry — shared by the preview and grid windows
 /// (two consumers, hence schema-owned per this taxonomy's "more than one consumer" rule).
-pub fn kind_mesh_json(kind: &ObjectKind) -> Value {
+pub async fn kind_mesh_json(kind: &ObjectKind) -> Value {
     let spec = mesh_spec_for(&kind.geometry);
     let mesh = semio_framework::mesh_from_indexed(&spec.positions, &spec.normals, &spec.indices);
     json!({ "id": kind.id, "data": mesh })
@@ -257,7 +257,7 @@ pub fn kind_mesh_json(kind: &ObjectKind) -> Value {
 
 /// 🌐️ JSON instance atom placing one stock kind's mesh at `position` — shared by the preview and grid
 /// windows.
-pub fn instance_json(kind: &ObjectKind, position: [f64; 3], scale: f64, selected: bool) -> Value {
+pub async fn instance_json(kind: &ObjectKind, position: [f64; 3], scale: f64, selected: bool) -> Value {
     json!({
         "id": kind.id,
         "meshId": kind.id,
@@ -275,7 +275,7 @@ pub fn instance_json(kind: &ObjectKind, position: [f64; 3], scale: f64, selected
 /// 🔎️ The stock kinds that currently satisfy every active filter dimension. `filters` lives on
 /// `crate::apps::curate::config::SourcingCurateConfig` (session-only view state), so this takes it as a
 /// separate parameter rather than reading it off the document.
-pub fn filtered_stock(document: &CurateSnapshot, filters: &Filters) -> Vec<ObjectKind> {
+pub async fn filtered_stock(document: &CurateSnapshot, filters: &Filters) -> Vec<ObjectKind> {
     crate::artifacts::curate::stock_of(document)
         .into_iter()
         .filter(|kind| {
@@ -290,19 +290,19 @@ pub fn filtered_stock(document: &CurateSnapshot, filters: &Filters) -> Vec<Objec
 }
 
 /// 🔢️ How many units of `object_id` are currently in the curated set (0 if absent).
-pub fn curated_count(document: &CurateSnapshot, object_id: &str) -> u32 {
+pub async fn curated_count(document: &CurateSnapshot, object_id: &str) -> u32 {
     document.curated.iter().find(|item| item.object_id == object_id).map_or(0, |item| item.count)
 }
 
 /// ➕️➖️ Adjusts the curated count for `object_id` by `delta`, clamped to `0..=availability`; removes the
 /// entry entirely when the count reaches 0. Silently no-operations if `object_id` isn't in the stock.
-pub fn curate_delta(document: &mut CurateSnapshot, object_id: &str, delta: i64) {
+pub async fn curate_delta(document: &mut CurateSnapshot, object_id: &str, delta: i64) {
     apply_curation_decision(document, curation_decision_for_delta(document, object_id, delta));
 }
 
 /// 🎯️ Sets the curated count for `object_id` directly, clamped to `0..=availability`; removes the
 /// entry when the count is 0. Silently no-operations if `object_id` isn't in the stock.
-pub fn curate_set(document: &mut CurateSnapshot, object_id: &str, count: u32) {
+pub async fn curate_set(document: &mut CurateSnapshot, object_id: &str, count: u32) {
     apply_curation_decision(document, curation_decision_for_set(document, object_id, count));
 }
 //#endregion 🔖️DocumentHelpers
@@ -323,7 +323,7 @@ pub enum CurationDecision {
 
 /// 🎯️ Resolves a relative count adjustment against `document`'s CURRENT `curated`/`stock`, clamped
 /// to `0..=availability`. Unknown `object_id` (absent from stock) resolves to `NoOp`.
-pub fn curation_decision_for_delta(document: &CurateSnapshot, object_id: &str, delta: i64) -> CurationDecision {
+pub async fn curation_decision_for_delta(document: &CurateSnapshot, object_id: &str, delta: i64) -> CurationDecision {
     // 🔎️ `availability` lives on `stock_extra` (the sourcing-owned overflow half) — no need to
     // resolve the composed `catalog` child just to clamp a count, so this reads `stock_extra`
     // directly rather than going through `stock_of`'s full reassembly.
@@ -334,7 +334,7 @@ pub fn curation_decision_for_delta(document: &CurateSnapshot, object_id: &str, d
 
 /// 🎯️ Resolves an absolute count set against `document`, clamped to `0..=availability`. Unknown
 /// `object_id` (absent from stock) resolves to `NoOp`.
-pub fn curation_decision_for_set(document: &CurateSnapshot, object_id: &str, count: u32) -> CurationDecision {
+pub async fn curation_decision_for_set(document: &CurateSnapshot, object_id: &str, count: u32) -> CurationDecision {
     let Some(extra) = document.stock_extra.iter().find(|extra| extra.id == object_id) else { return CurationDecision::NoOp };
     let clamped = count.min(extra.availability);
     match document.curated.iter().find(|item| item.object_id == object_id) {
@@ -349,7 +349,7 @@ pub fn curation_decision_for_set(document: &CurateSnapshot, object_id: &str, cou
 /// ▶️ Mutates `document.curated` in place to reflect `decision` — the shared apply step behind the
 /// mutating `curate_delta`/`curate_set` schema helpers only; command handlers turn a
 /// `CurationDecision` into a real `SourcingMutation` instead of calling this.
-fn apply_curation_decision(document: &mut CurateSnapshot, decision: CurationDecision) {
+async fn apply_curation_decision(document: &mut CurateSnapshot, decision: CurationDecision) {
     match decision {
         CurationDecision::NoOp => {}
         CurationDecision::Create(item) => document.curated.push(item),
@@ -367,12 +367,12 @@ fn apply_curation_decision(document: &mut CurateSnapshot, decision: CurationDeci
 /// 🧩️ A sourcing module composes a typology subtree, demo catalogue kinds, and preview meshing for one
 /// object family (e.g. beams, windows, slabs) — modules are trait objects, not subclasses of a base app.
 pub trait SourcingModule {
-    fn module_id(&self) -> &'static str;
-    fn label(&self) -> &'static str;
-    fn typology(&self) -> TypologyNode;
-    fn demo_kinds(&self) -> Vec<ObjectKind>;
+    async fn module_id(&self) -> &'static str;
+    async fn label(&self) -> &'static str;
+    async fn typology(&self) -> TypologyNode;
+    async fn demo_kinds(&self) -> Vec<ObjectKind>;
     /// 🧱️ Realizes a kind's preview mesh; defaults to the generic geometry recipe realization.
-    fn preview_mesh(&self, kind: &ObjectKind) -> MeshDataSpec {
+    async fn preview_mesh(&self, kind: &ObjectKind) -> MeshDataSpec {
         mesh_spec_for(&kind.geometry)
     }
 }
@@ -383,13 +383,13 @@ pub mod beams {
     pub struct BeamsModule;
 
     impl SourcingModule for BeamsModule {
-        fn module_id(&self) -> &'static str {
+        async fn module_id(&self) -> &'static str {
             "beams"
         }
-        fn label(&self) -> &'static str {
+        async fn label(&self) -> &'static str {
             "Beams"
         }
-        fn typology(&self) -> TypologyNode {
+        async fn typology(&self) -> TypologyNode {
             TypologyNode::new(
                 "beams",
                 "Beams",
@@ -399,7 +399,7 @@ pub mod beams {
                 ],
             )
         }
-        fn demo_kinds(&self) -> Vec<ObjectKind> {
+        async fn demo_kinds(&self) -> Vec<ObjectKind> {
             vec![
                 ObjectKind {
                     id: "beam-glulam-gl24h".into(),
@@ -444,16 +444,16 @@ pub mod windows {
     pub struct WindowsModule;
 
     impl SourcingModule for WindowsModule {
-        fn module_id(&self) -> &'static str {
+        async fn module_id(&self) -> &'static str {
             "windows"
         }
-        fn label(&self) -> &'static str {
+        async fn label(&self) -> &'static str {
             "Windows"
         }
-        fn typology(&self) -> TypologyNode {
+        async fn typology(&self) -> TypologyNode {
             TypologyNode::new("windows", "Windows", vec![TypologyNode::new("casement", "Casement", vec![]), TypologyNode::new("fixed", "Fixed", vec![]), TypologyNode::new("tilt-turn", "Tilt & Turn", vec![])])
         }
-        fn demo_kinds(&self) -> Vec<ObjectKind> {
+        async fn demo_kinds(&self) -> Vec<ObjectKind> {
             vec![
                 ObjectKind {
                     id: "window-casement-100x120".into(),
@@ -490,16 +490,16 @@ pub mod slabs {
     pub struct SlabsModule;
 
     impl SourcingModule for SlabsModule {
-        fn module_id(&self) -> &'static str {
+        async fn module_id(&self) -> &'static str {
             "slabs"
         }
-        fn label(&self) -> &'static str {
+        async fn label(&self) -> &'static str {
             "Slabs"
         }
-        fn typology(&self) -> TypologyNode {
+        async fn typology(&self) -> TypologyNode {
             TypologyNode::new("slabs", "Slabs", vec![TypologyNode::new("concrete", "Concrete", vec![]), TypologyNode::new("clt", "CLT", vec![]), TypologyNode::new("hollow-core", "Hollow Core", vec![])])
         }
-        fn demo_kinds(&self) -> Vec<ObjectKind> {
+        async fn demo_kinds(&self) -> Vec<ObjectKind> {
             vec![
                 ObjectKind {
                     id: "slab-concrete-240".into(),
@@ -530,7 +530,7 @@ pub mod slabs {
     }
 }
 
-fn leak_str(value: String) -> &'static str {
+async fn leak_str(value: String) -> &'static str {
     Box::leak(value.into_boxed_str())
 }
 
@@ -544,19 +544,19 @@ struct ContributedSourcingModule {
 }
 
 impl SourcingModule for ContributedSourcingModule {
-    fn module_id(&self) -> &'static str {
+    async fn module_id(&self) -> &'static str {
         self.module_id
     }
 
-    fn label(&self) -> &'static str {
+    async fn label(&self) -> &'static str {
         self.label
     }
 
-    fn typology(&self) -> TypologyNode {
+    async fn typology(&self) -> TypologyNode {
         self.typology.clone()
     }
 
-    fn demo_kinds(&self) -> Vec<ObjectKind> {
+    async fn demo_kinds(&self) -> Vec<ObjectKind> {
         self.kinds.clone()
     }
 }
@@ -581,7 +581,7 @@ struct SourcingModuleTopicPayload {
 }
 //#endregion 🔖️SourcingModuleTopicPayload
 
-pub fn sync_sourcing_module_contributions(contributions_json: &str) {
+pub async fn sync_sourcing_module_contributions(contributions_json: &str) {
     let mut last = LAST_SOURCING_CONTRIBUTIONS_JSON.lock().expect("sourcing contributions lock");
     if *last == contributions_json {
         return;
@@ -614,7 +614,7 @@ pub fn sync_sourcing_module_contributions(contributions_json: &str) {
 }
 
 /// 🧩️ Every sourcing module known to this crate, in stable order.
-pub fn sourcing_modules() -> Vec<Box<dyn SourcingModule>> {
+pub async fn sourcing_modules() -> Vec<Box<dyn SourcingModule>> {
     let mut modules: Vec<Box<dyn SourcingModule>> = vec![
         Box::new(beams::BeamsModule),
         Box::new(windows::WindowsModule),
@@ -626,7 +626,7 @@ pub fn sourcing_modules() -> Vec<Box<dyn SourcingModule>> {
 }
 
 /// 🔎️ Looks up a single module by id.
-pub fn module_for(module_id: &str) -> Option<Box<dyn SourcingModule>> {
+pub async fn module_for(module_id: &str) -> Option<Box<dyn SourcingModule>> {
     sourcing_modules().into_iter().find(|module| module.module_id() == module_id)
 }
 //#endregion 🔖️Modules
@@ -641,7 +641,7 @@ pub struct ModuleCatalogue {
     pub kinds: Vec<ObjectKind>,
 }
 
-pub fn available_modules() -> Vec<ModuleCatalogue> {
+pub async fn available_modules() -> Vec<ModuleCatalogue> {
     sourcing_modules().into_iter().map(|module| ModuleCatalogue { module_id: module.module_id().to_string(), label: module.label().to_string(), typology: module.typology(), kinds: module.demo_kinds() }).collect()
 }
 //#endregion 🔖️ModuleCatalogue
@@ -649,7 +649,7 @@ pub fn available_modules() -> Vec<ModuleCatalogue> {
 //#region 🔖️GridLayout
 /// 🔢️ Places item `index` of `count` total on a `ceil(sqrt(count))`-column grid, centered at the origin,
 /// with `cell` spacing between slots — used to lay out the "all objects" 3D grid window.
-pub fn grid_placement(count: usize, index: usize, cell: f64) -> (f64, f64) {
+pub async fn grid_placement(count: usize, index: usize, cell: f64) -> (f64, f64) {
     if count == 0 {
         return (0.0, 0.0);
     }
@@ -663,7 +663,7 @@ pub fn grid_placement(count: usize, index: usize, cell: f64) -> (f64, f64) {
 }
 
 /// 📏️ The uniform scale factor that fits a recipe's largest dimension inside a `cell`-sized grid slot.
-pub fn grid_scale(recipe: &GeometryRecipe, cell: f64) -> f64 {
+pub async fn grid_scale(recipe: &GeometryRecipe, cell: f64) -> f64 {
     let extent = bounding_extent(recipe);
     if extent <= 0.0 {
         1.0
@@ -677,7 +677,7 @@ pub fn grid_scale(recipe: &GeometryRecipe, cell: f64) -> f64 {
 /// 🧩️ The canonical demo-stock catalogue — every built-in module's demo kinds, in module-registration
 /// order. Single source of truth for `default_document`'s catalog content and every test fixture that
 /// used to independently duplicate `sourcing_modules().iter().flat_map(...)`.
-pub fn demo_stock() -> Vec<ObjectKind> {
+pub async fn demo_stock() -> Vec<ObjectKind> {
     sourcing_modules().iter().flat_map(|module| module.demo_kinds()).collect()
 }
 
@@ -687,7 +687,7 @@ pub fn demo_stock() -> Vec<ObjectKind> {
 /// `crate::artifacts::curate::catalog_child_handle`) — re-deriving the same stock here and seeding the
 /// working-scene cache with it resolves that exact handle, since a composed child is a handle only,
 /// never inline content, in the persisted DSL text itself.
-pub fn default_document() -> CurateSnapshot {
+pub async fn default_document() -> CurateSnapshot {
     crate::artifacts::curate::seed_catalog_scratch(&demo_stock());
     <CurateSnapshot as store::ArtifactDsl>::parse_dsl(crate::artifacts::curate::dsl::DEMO_STOCK_TEXT).unwrap_or_default()
 }
@@ -695,7 +695,7 @@ pub fn default_document() -> CurateSnapshot {
 /// 📄️ The empty-curation example, parsed once from
 /// `crate::artifacts::curate::dsl::EMPTY_CURATION_TEXT` — empty stock, so its `catalog` handle is the
 /// same content-addressed empty-catalog handle `CurateSnapshot::default()` mints.
-pub fn empty_document() -> CurateSnapshot {
+pub async fn empty_document() -> CurateSnapshot {
     crate::artifacts::curate::seed_catalog_scratch(&[]);
     <CurateSnapshot as store::ArtifactDsl>::parse_dsl(crate::artifacts::curate::dsl::EMPTY_CURATION_TEXT).unwrap_or_default()
 }
@@ -716,12 +716,12 @@ pub type Construction = semio_framework_plugin::app::SnapshotBuilder<CurateSnaps
 mod tests {
     use super::*;
 
-    fn sample_document() -> CurateSnapshot {
+    async fn sample_document() -> CurateSnapshot {
         crate::artifacts::curate::curate_snapshot_from_stock(demo_stock(), Vec::new())
     }
 
     #[test]
-    fn filtered_stock_matches_query() {
+    async fn filtered_stock_matches_query() {
         let document = sample_document();
         let filters = Filters { query: "glulam".into(), ..Default::default() };
         let filtered = filtered_stock(&document, &filters);
@@ -730,7 +730,7 @@ mod tests {
     }
 
     #[test]
-    fn filtered_stock_matches_module() {
+    async fn filtered_stock_matches_module() {
         let document = sample_document();
         let filters = Filters { module_ids: vec!["slabs".into()], ..Default::default() };
         let filtered = filtered_stock(&document, &filters);
@@ -739,7 +739,7 @@ mod tests {
     }
 
     #[test]
-    fn filtered_stock_matches_typology_prefix() {
+    async fn filtered_stock_matches_typology_prefix() {
         let document = sample_document();
         let filters = Filters { typology_path: vec!["beams".into(), "steel".into()], ..Default::default() };
         let filtered = filtered_stock(&document, &filters);
@@ -748,7 +748,7 @@ mod tests {
     }
 
     #[test]
-    fn filtered_stock_matches_min_availability() {
+    async fn filtered_stock_matches_min_availability() {
         let document = sample_document();
         let filters = Filters { min_availability: 20, ..Default::default() };
         let filtered = filtered_stock(&document, &filters);
@@ -757,7 +757,7 @@ mod tests {
     }
 
     #[test]
-    fn curate_delta_clamps_to_availability_and_zero_floor() {
+    async fn curate_delta_clamps_to_availability_and_zero_floor() {
         let mut document = sample_document();
         curate_delta(&mut document, "beam-steel-hea160", 100);
         assert_eq!(curated_count(&document, "beam-steel-hea160"), 8);
@@ -767,14 +767,14 @@ mod tests {
     }
 
     #[test]
-    fn curate_delta_unknown_object_is_noop() {
+    async fn curate_delta_unknown_object_is_noop() {
         let mut document = sample_document();
         curate_delta(&mut document, "does-not-exist", 5);
         assert!(document.curated.is_empty());
     }
 
     #[test]
-    fn curate_set_removes_entry_at_zero() {
+    async fn curate_set_removes_entry_at_zero() {
         let mut document = sample_document();
         curate_set(&mut document, "slab-clt-160", 5);
         assert_eq!(curated_count(&document, "slab-clt-160"), 5);
@@ -784,7 +784,7 @@ mod tests {
     }
 
     #[test]
-    fn typology_contains_and_flatten() {
+    async fn typology_contains_and_flatten() {
         let module = beams::BeamsModule;
         let tree = module.typology();
         assert!(typology_contains(&tree, &["beams".into(), "steel".into(), "ipe".into()]));
@@ -793,7 +793,7 @@ mod tests {
         assert!(flattened.iter().any(|(path, _)| path == &vec!["beams".to_string(), "solid-timber".to_string(), "glulam".to_string()]));
     }
 
-    fn assert_mesh_spec_is_valid(spec: &MeshDataSpec) {
+    async fn assert_mesh_spec_is_valid(spec: &MeshDataSpec) {
         assert!(!spec.positions.is_empty());
         assert_eq!(spec.positions.len() % 3, 0);
         assert_eq!(spec.positions.len(), spec.normals.len());
@@ -803,12 +803,12 @@ mod tests {
     }
 
     #[test]
-    fn box_recipe_produces_valid_mesh() {
+    async fn box_recipe_produces_valid_mesh() {
         assert_mesh_spec_is_valid(&mesh_spec_for(&GeometryRecipe::Box { width: 0.2, height: 0.4, depth: 6.0 }));
     }
 
     #[test]
-    fn frame_recipe_concatenates_four_pieces_into_a_valid_mesh() {
+    async fn frame_recipe_concatenates_four_pieces_into_a_valid_mesh() {
         let spec = mesh_spec_for(&GeometryRecipe::Frame { width: 1.0, height: 1.2, depth: 0.08, profile: 0.08 });
         assert_mesh_spec_is_valid(&spec);
         let single_box = box_mesh_spec(1.0, 0.08, 0.08);
@@ -817,7 +817,7 @@ mod tests {
     }
 
     #[test]
-    fn grid_placement_centers_around_origin() {
+    async fn grid_placement_centers_around_origin() {
         let positions: Vec<(f64, f64)> = (0..9).map(|i| grid_placement(9, i, 2.0)).collect();
         let sum_x: f64 = positions.iter().map(|(x, _)| x).sum();
         let sum_z: f64 = positions.iter().map(|(_, z)| z).sum();
@@ -828,14 +828,14 @@ mod tests {
     }
 
     #[test]
-    fn grid_scale_normalizes_to_cell_size() {
+    async fn grid_scale_normalizes_to_cell_size() {
         let recipe = GeometryRecipe::Box { width: 0.2, height: 0.4, depth: 6.0 };
         let scale = grid_scale(&recipe, 2.0);
         assert!((bounding_extent(&recipe) * scale - 2.0).abs() < 1e-9);
     }
 
     #[test]
-    fn curate_document_dsl_round_trips_sample_and_empty() {
+    async fn curate_document_dsl_round_trips_sample_and_empty() {
         store::os_store::test_support::assert_dsl_round_trip(&sample_document());
         store::os_store::test_support::assert_dsl_round_trip(&CurateSnapshot::default());
         store::os_store::test_support::assert_dsl_pack_equivalence(&sample_document());
@@ -843,7 +843,7 @@ mod tests {
     }
 
     #[test]
-    fn available_modules_tracks_contributed_modules() {
+    async fn available_modules_tracks_contributed_modules() {
         sync_sourcing_module_contributions("[]");
         assert_eq!(available_modules().len(), 3);
         let beams = beams::BeamsModule;
@@ -869,7 +869,7 @@ mod tests {
     }
 
     #[test]
-    fn sync_sourcing_module_contributions_adds_hot_installed_modules() {
+    async fn sync_sourcing_module_contributions_adds_hot_installed_modules() {
         use semio_framework::{ProgramContributionEntry, TopicContribution};
         let entry = ProgramContributionEntry {
             plugin_id: "sourcing-module-test".into(),

@@ -26,7 +26,7 @@ const REMODEL_MAX_RECONSTRUCTION_TICKS: u32 = 200_000;
 /// stream's already-persisted frames into it, then loops `advance()` in-process until `Done`/`Failed`
 /// and returns exactly one `Emit` carrying only the FINAL state — one call, one `Emit`, one undo step;
 /// no coalesce key needed. Shared by all three rows in this group.
-pub fn run_whole_pipeline(doc: &ArtifactView<'_, RemodelSnapshot>) -> Result<Emit<RemodelMutation, RemodelConfigMutation>, Fault> {
+pub async fn run_whole_pipeline(doc: &ArtifactView<'_, RemodelSnapshot>) -> Result<Emit<RemodelMutation, RemodelConfigMutation>, Fault> {
     let scene = doc.snapshot;
     let engine_params = build_engine_params(&scene.params);
     let mut engine = remodel_engine::ReconstructionEngine::new(&engine_params);
@@ -153,6 +153,6 @@ pub struct RetryStage {
 
 /// 🔁️ A retry is a fresh whole run (see the module doc comment): resuming at `payload.stage` would
 /// need the mid-pipeline engine state the pure-trait pivot removed, so the stage name is accepted and ignored.
-pub fn handle(_payload: &RetryStage, doc: &ArtifactView<'_, RemodelSnapshot>, _cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelMutation, RemodelConfigMutation>, Fault> {
+pub async fn handle(_payload: &RetryStage, doc: &ArtifactView<'_, RemodelSnapshot>, _cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelMutation, RemodelConfigMutation>, Fault> {
     run_whole_pipeline(doc)
 }

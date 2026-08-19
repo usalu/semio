@@ -11,13 +11,13 @@ use semio_s_plugin_stdio::artifacts::json::{JsonSnapshot, STDIO_JSON_DOCUMENT_SC
 
 pub const JSON_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.json", standard: StandardId("rfc8259"), subset: SubsetId::ANY };
 
-pub fn serialize(snapshot: &CurateSnapshot) -> Result<JsonSnapshot, store::TextError> {
+pub async fn serialize(snapshot: &CurateSnapshot) -> Result<JsonSnapshot, store::TextError> {
     let _ = STDIO_JSON_DOCUMENT_SCHEMA;
     let value = serde_json::to_value(snapshot).map_err(|e| store::TextError::new(e.to_string(), dsl::TextSpan::at(1, 1)))?;
     Ok(JsonSnapshot::from_value(value))
 }
 
-pub fn serialize_bytes(snapshot: &CurateSnapshot) -> Result<Vec<u8>, store::TextError> {
+pub async fn serialize_bytes(snapshot: &CurateSnapshot) -> Result<Vec<u8>, store::TextError> {
     Ok(write_json_pretty(&serialize(snapshot)?.value).into_bytes())
 }
 
@@ -26,7 +26,7 @@ pub struct CurateIntoJson;
 impl Serializer<CurateSnapshot> for CurateIntoJson {
     const INTO: Dialect = JSON_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Exact;
-    fn serialize(from: &CurateSnapshot) -> IoResult<IoPayload> {
+    async fn serialize(from: &CurateSnapshot) -> IoResult<IoPayload> {
         let bytes = serialize_bytes(from).map_err(|error| IoError { message: format!("CurateIntoJson: {error}"), diagnostics: Vec::new() })?;
         let text = String::from_utf8(bytes).map_err(|error| IoError { message: format!("CurateIntoJson: non-utf8 json output: {error}"), diagnostics: Vec::new() })?;
         Ok(IoOutcome::clean(IoPayload::Text(text)))

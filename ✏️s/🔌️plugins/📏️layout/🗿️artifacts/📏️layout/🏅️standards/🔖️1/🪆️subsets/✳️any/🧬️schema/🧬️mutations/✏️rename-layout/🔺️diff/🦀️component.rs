@@ -4,7 +4,7 @@ use super::mutation::RenameLayout;
 use crate::artifacts::layout::{LayoutDiff, LayoutSnapshot};
 
 //#region ✏️RenameLayout
-pub fn diff_rename_layout(payload: &RenameLayout, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
+pub async fn diff_rename_layout(payload: &RenameLayout, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
     if base.name == payload.new_name {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", "Layout already has that name.");
     }

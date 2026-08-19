@@ -22,18 +22,18 @@ use crate::artifacts::zip::opc::OpcPackage;
 use semio_framework_plugin::{ArtifactSerializer, Dialect, StandardId, SubsetId};
 
 //#region 🔖️FieldMapping
-fn map_semio_run(run: &DocRun) -> DocxRun {
+async fn map_semio_run(run: &DocRun) -> DocxRun {
     DocxRun { text: run.text.clone(), bold: run.style.bold, italic: run.style.italic, underline: run.style.underline, extra_run_properties: Vec::new() }
 }
 
-fn map_semio_runs(runs: &[DocRun]) -> Vec<DocxRun> {
+async fn map_semio_runs(runs: &[DocRun]) -> Vec<DocxRun> {
     runs.iter().map(map_semio_run).collect()
 }
 
 /// 🧱 One `DocBlock` -> zero or more `DocxBlock`s: `List`/`Quote` flatten their children in place
 /// (documented lossy: grouping is lost, content order is preserved); `PageBreak` drops to nothing
 /// (docx has no page-break block).
-pub(crate) fn map_semio_block(block: &DocBlock) -> Vec<DocxBlock> {
+pub(crate) async fn map_semio_block(block: &DocBlock) -> Vec<DocxBlock> {
     match block {
         DocBlock::Paragraph { style_id, runs } => vec![DocxBlock::Paragraph(DocxParagraph { runs: map_semio_runs(runs), style: style_id.clone(), extra_paragraph_properties: Vec::new() })],
         DocBlock::Heading { level, style_id, runs } => {
@@ -79,7 +79,7 @@ mod tests {
     use super::*;
     use crate::artifacts::semio::standards::v1::subsets::document::schema::snapshot::{DocImage, DocStyle, DocTableCell, DocTableRow, RunStyle, STDIO_SEMIODOCUMENT_DOCUMENT_SCHEMA};
 
-    fn sample_semio() -> SemioDocumentSnapshot {
+    async fn sample_semio() -> SemioDocumentSnapshot {
         SemioDocumentSnapshot {
             schema: STDIO_SEMIODOCUMENT_DOCUMENT_SCHEMA.into(),
             styles: vec![DocStyle { id: "Heading1".into(), name: "Heading 1".into(), based_on: None }],
@@ -93,7 +93,7 @@ mod tests {
     }
 
     #[test]
-    fn maps_heading_paragraph_and_table() {
+    async fn maps_heading_paragraph_and_table() {
         let docx = semio_framework_plugin::resolve_ready(SemioDocumentToDocx::serialize(&sample_semio())).expect("serialize");
         assert_eq!(docx.document.styles.len(), 1);
         assert_eq!(docx.document.body.len(), 3);
@@ -103,7 +103,7 @@ mod tests {
     }
 
     #[test]
-    fn list_and_quote_flatten_image_and_pagebreak_drop() {
+    async fn list_and_quote_flatten_image_and_pagebreak_drop() {
         let snap = SemioDocumentSnapshot {
             schema: STDIO_SEMIODOCUMENT_DOCUMENT_SCHEMA.into(),
             styles: Vec::new(),

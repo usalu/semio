@@ -14,23 +14,23 @@ pub struct ReorderNodes {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn reorder_nodes(order: Vec<String>) -> DagMutation {
+pub async fn reorder_nodes(order: Vec<String>) -> DagMutation {
     DagMutation::ReorderNodes(ReorderNodes { order })
 }
 
 impl protocol::MutationKind<DagSnapshot, DagMutation> for ReorderNodes {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "reorder", entity: "nodes", kind: "reorder-nodes", record: "ReorderedNodes" };
 
-    fn diff(&self, base: &DagSnapshot) -> protocol::MutationOutcome<DagDiff> {
+    async fn diff(&self, base: &DagSnapshot) -> protocol::MutationOutcome<DagDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &DagSnapshot) -> Vec<DagMutation> {
+    async fn inverse(&self, base: &DagSnapshot) -> Vec<DagMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         "Reorder nodes".into()
     }
-    fn target(&self) -> Vec<String> {
+    async fn target(&self) -> Vec<String> {
         Vec::new()
     }
 }

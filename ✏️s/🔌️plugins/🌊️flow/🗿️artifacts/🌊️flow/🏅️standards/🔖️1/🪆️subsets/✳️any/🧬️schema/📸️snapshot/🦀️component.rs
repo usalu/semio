@@ -32,7 +32,7 @@ pub struct FlowSnapshot {
 
 //#region 🔹DefaultsAndBridge
 impl Default for FlowSnapshot {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self::from_fixture(flow::FlowFixture::default())
     }
 }
@@ -40,27 +40,27 @@ impl Default for FlowSnapshot {
 impl FlowSnapshot {
     /// 🌊️ Builds a plugin snapshot from the framework `flow::FlowFixture` document type — mints and
     /// caches a fresh content-addressed handle for the fixture's widgets/synapses/layout.
-    pub fn from_fixture(fixture: flow::FlowFixture) -> Self {
+    pub async fn from_fixture(fixture: flow::FlowFixture) -> Self {
         Self { schema: fixture.schema, camera: fixture.camera, content: flow_content_child_handle_and_cache(fixture.widgets, fixture.synapses, fixture.layout) }
     }
 
     /// 🌊️ Converts this snapshot into the framework `flow::FlowFixture` for `FlowHost` / kernel
     /// codecs — reads the live widgets/synapses/layout off the working-scene cache (see
     /// `flow_working_scene`'s doc comment for the staleness gap this bridges).
-    pub fn to_fixture(&self) -> flow::FlowFixture {
+    pub async fn to_fixture(&self) -> flow::FlowFixture {
         let scene = flow_working_scene(self);
         flow::FlowFixture { schema: self.schema.clone(), camera: self.camera.clone(), widgets: scene.widgets, synapses: scene.synapses, layout: scene.layout }
     }
 }
 
 impl From<flow::FlowFixture> for FlowSnapshot {
-    fn from(fixture: flow::FlowFixture) -> Self {
+    async fn from(fixture: flow::FlowFixture) -> Self {
         Self::from_fixture(fixture)
     }
 }
 
 impl From<FlowSnapshot> for flow::FlowFixture {
-    fn from(snapshot: FlowSnapshot) -> Self {
+    async fn from(snapshot: FlowSnapshot) -> Self {
         snapshot.to_fixture()
     }
 }
@@ -74,10 +74,10 @@ impl From<FlowSnapshot> for flow::FlowFixture {
 /// `semio-framework-os-flow`; this plugin snapshot owns a valid envelope of its own.
 impl store::ArtifactDsl for FlowSnapshot {
     const EXTENSION: &'static str = "flow";
-    fn envelope_id() -> &'static str {
+    async fn envelope_id() -> &'static str {
         "flow.flow"
     }
-    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+    async fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
         let body = match store::semio_format::split_text_preamble(text) {
             Ok((_, rest)) => rest,
             Err(_) => text,
@@ -90,7 +90,7 @@ impl store::ArtifactDsl for FlowSnapshot {
         }
         <flow::FlowFixture as store::ArtifactDsl>::parse_dsl(text).map(Self::from_fixture)
     }
-    fn print_dsl(&self) -> String {
+    async fn print_dsl(&self) -> String {
         let body = serde_json::to_string_pretty(self).expect("FlowSnapshot serde");
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
             <Self as store::ArtifactDsl>::envelope_id(),
@@ -104,7 +104,7 @@ impl store::ArtifactDsl for FlowSnapshot {
 
 /// 📦️ ArtifactPack — JSON body under envelope id `flow.flow` (see ArtifactDsl note).
 impl store::ArtifactPack for FlowSnapshot {
-    fn encode_pack_with(&self, _options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
+    async fn encode_pack_with(&self, _options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let body = serde_json::to_vec(self).map_err(|error| store::PackError::Schema(error.to_string()))?;
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
             <Self as store::ArtifactDsl>::envelope_id(),
@@ -114,7 +114,7 @@ impl store::ArtifactPack for FlowSnapshot {
         .map_err(|error| store::PackError::Schema(error.to_string()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &body))
     }
-    fn decode_pack_with(bytes: &[u8], _options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
+    async fn decode_pack_with(bytes: &[u8], _options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let (envelope, body) = store::semio_format::unwrap_binary(bytes).map_err(|error| store::PackError::Schema(error.to_string()))?;
         let our_id = <Self as store::ArtifactDsl>::envelope_id();
         if envelope.envelope_id() != our_id {
@@ -125,7 +125,7 @@ impl store::ArtifactPack for FlowSnapshot {
         }
         serde_json::from_slice(&body).map_err(|error| store::PackError::Schema(error.to_string()))
     }
-    fn record_spec() -> Option<dsl::RecordSpec> {
+    async fn record_spec() -> Option<dsl::RecordSpec> {
         None
     }
 }

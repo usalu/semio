@@ -8,7 +8,7 @@ use semio_framework_plugin::{ExampleSource, LocalizedLabel};
 pub const ID: &str = "demo-session";
 
 /// 🗣️ Localized picker label.
-pub fn label() -> LocalizedLabel {
+pub async fn label() -> LocalizedLabel {
     LocalizedLabel::native("Demo Session", "Demo-Sitzung")
 }
 

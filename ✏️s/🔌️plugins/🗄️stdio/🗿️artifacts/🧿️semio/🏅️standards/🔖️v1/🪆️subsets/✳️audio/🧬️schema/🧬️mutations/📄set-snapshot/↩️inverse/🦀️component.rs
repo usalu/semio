@@ -3,6 +3,6 @@ use crate::artifacts::semio::standards::v1::subsets::audio::schema::snapshot::Se
 use protocol::Mutation;
 
 /// ↩️ Inverse of set-snapshot.
-pub fn inverse(base: &SemioAudioSnapshot, mutation: &SemioAudioMutation) -> Vec<SemioAudioMutation> {
+pub async fn inverse(base: &SemioAudioSnapshot, mutation: &SemioAudioMutation) -> Vec<SemioAudioMutation> {
     <SemioAudioMutation as Mutation<SemioAudioSnapshot>>::inverse(mutation, base)
 }

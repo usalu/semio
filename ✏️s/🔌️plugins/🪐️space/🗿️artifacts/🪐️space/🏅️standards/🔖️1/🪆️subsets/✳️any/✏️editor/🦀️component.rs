@@ -47,11 +47,11 @@ pub const KNOWN_ARTIFACT_KINDS: [KnownArtifactKind; 4] = [
     KnownArtifactKind { id: "writer", schema: "writer.document", dialect_artifact_kind: "s.writer.writer", standard: "1", subset: "*", label_en: "Writer", label_de: "Text" },
 ];
 
-pub fn known_artifact_kind(id: &str) -> Option<&'static KnownArtifactKind> {
+pub async fn known_artifact_kind(id: &str) -> Option<&'static KnownArtifactKind> {
     KNOWN_ARTIFACT_KINDS.iter().find(|kind| kind.id == id)
 }
 
-fn create_artifact_kind_options() -> Vec<ActionArgOption> {
+async fn create_artifact_kind_options() -> Vec<ActionArgOption> {
     KNOWN_ARTIFACT_KINDS.iter().map(|kind| ActionArgOption::new(kind.id, LocalizedLabel::native(kind.label_en, kind.label_de))).collect()
 }
 //#endregion 🔖️KnownArtifactKinds
@@ -61,7 +61,7 @@ fn create_artifact_kind_options() -> Vec<ActionArgOption> {
 /// mirrors `draw_play_action`'s precedent (`🖍️draw`'s editor root).
 pub const SPACE_INDEX_CONTROLLER_ID: &str = "s-space-index";
 
-pub fn space_index_action(action: &str, args: Option<Value>) -> ActionDescriptor {
+pub async fn space_index_action(action: &str, args: Option<Value>) -> ActionDescriptor {
     ActionFactory::new(SPACE_INDEX_CONTROLLER_ID).action(action, args)
 }
 //#endregion 🔖️Actions
@@ -112,15 +112,15 @@ impl ArtifactEditor for SpaceIndexEditor {
     const DIALECT: Dialect = SPACE_INDEX_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = crate::artifacts::space::S_SPACE_INDEX_DOCUMENT_SCHEMA;
 
-    fn initial_snapshot() -> SSpaceSnapshot {
+    async fn initial_snapshot() -> SSpaceSnapshot {
         SSpaceSnapshot::default()
     }
 
-    fn command_id(command: &SpaceIndexCommand) -> &'static str {
+    async fn command_id(command: &SpaceIndexCommand) -> &'static str {
         command.command_id()
     }
 
-    fn handle(command: &SpaceIndexCommand, doc: &ArtifactView<'_, SSpaceSnapshot>, cfg: &ConfigView<'_, SpaceIndexConfig>, _interaction: &InteractionView<'_>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<SSpaceMutation, SpaceIndexConfigMutation>, Fault> {
+    async fn handle(command: &SpaceIndexCommand, doc: &ArtifactView<'_, SSpaceSnapshot>, cfg: &ConfigView<'_, SpaceIndexConfig>, _interaction: &InteractionView<'_>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<SSpaceMutation, SpaceIndexConfigMutation>, Fault> {
         command.dispatch(doc, cfg)
     }
 
@@ -133,7 +133,7 @@ impl ArtifactEditor for SpaceIndexEditor {
     /// (the new `#s-space-create-artifact` toolbar button), the members panel's invite/remove/visibility/
     /// copy-link buttons — all of it. Mirrors `HomeCommand::command_from_action`'s `str_field` idiom
     /// (`🏠️home/…/✏️editor/🦀️component.rs`) field-for-field against each command payload struct.
-    fn command_from_action(action: &str, args: Option<&Value>) -> Result<SpaceIndexCommand, Fault> {
+    async fn command_from_action(action: &str, args: Option<&Value>) -> Result<SpaceIndexCommand, Fault> {
         let str_field = |key: &str| args.and_then(|value| value.get(key)).and_then(Value::as_str).map(str::to_string);
         let u64_field = |key: &str| args.and_then(|value| value.get(key)).and_then(Value::as_u64);
         match action {
@@ -175,7 +175,7 @@ impl ArtifactEditor for SpaceIndexEditor {
         }
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, SSpaceSnapshot>, cfg: &ConfigView<'_, SpaceIndexConfig>) -> UiNode {
+    async fn render(body_key: &str, doc: &ArtifactView<'_, SSpaceSnapshot>, cfg: &ConfigView<'_, SpaceIndexConfig>) -> UiNode {
         match body_key {
             main::BODY_KEY => main::render(doc.snapshot, cfg.snapshot),
             members_panel::SPACE_INDEX_BODY_MEMBERS => members_panel::render(cfg.snapshot),
@@ -186,7 +186,7 @@ impl ArtifactEditor for SpaceIndexEditor {
 //#endregion 🔖️SpaceIndexEditor
 
 //#region 🔖️Manifest
-pub fn create_space_index_editor() -> semio_framework_plugin::AppDefinition {
+pub async fn create_space_index_editor() -> semio_framework_plugin::AppDefinition {
     Editor::builder(SPACE_INDEX_DIALECT)
         .document(["semio", "s", "space", "index"])
         .artifact_kind(crate::artifacts::space::artifact_kind())
@@ -248,12 +248,12 @@ pub(crate) mod testkit {
 
     pub type SpaceIndexApp = semio_framework_plugin::VcsArtifactApp<EditorApp<SpaceIndexEditor>>;
 
-    pub fn new_app() -> SpaceIndexApp {
+    pub async fn new_app() -> SpaceIndexApp {
         framework_new_app::<EditorApp<SpaceIndexEditor>>()
     }
 
     #[allow(dead_code)]
-    pub fn dispatch(app: &mut SpaceIndexApp, command: SpaceIndexCommand) -> semio_framework_plugin::InvocationResult {
+    pub async fn dispatch(app: &mut SpaceIndexApp, command: SpaceIndexCommand) -> semio_framework_plugin::InvocationResult {
         
         app.dispatch_typed(command, &meta("local")).expect("dispatch")
     }
@@ -266,18 +266,18 @@ mod tests {
     use super::*;
 
     #[test]
-    fn create_space_index_editor_builds_a_definition_for_this_dialect() {
+    async fn create_space_index_editor_builds_a_definition_for_this_dialect() {
         let definition = create_space_index_editor();
         assert_eq!(definition.dialect, SPACE_INDEX_DIALECT.into());
     }
 
     #[test]
-    fn editor_dialect_matches_the_artifact_coordinate() {
+    async fn editor_dialect_matches_the_artifact_coordinate() {
         assert_eq!(<SpaceIndexEditor as ArtifactEditor>::DIALECT, SPACE_INDEX_DIALECT);
     }
 
     #[test]
-    fn every_declared_mutation_action_is_registered() {
+    async fn every_declared_mutation_action_is_registered() {
         let definition = create_space_index_editor();
         for command in ["createArtifact", "deleteArtifact", "renameArtifact", "touchArtifact", "requestDeleteArtifact", "openArtifact", "openArtifactWith", "inviteMember", "requestInviteMember", "removeMember", "setVisibility", "copyInviteLink", "foldDirectoryEvents", "presenceHeartbeat"] {
             assert!(definition.window_kinds.iter().flat_map(|window| window.actions.iter()).any(|action| action.id == command), "registry declares {command}");
@@ -285,7 +285,7 @@ mod tests {
     }
 
     #[test]
-    fn the_three_dialogs_are_registered_with_the_right_submit_actions() {
+    async fn the_three_dialogs_are_registered_with_the_right_submit_actions() {
         let definition = create_space_index_editor();
         assert_eq!(definition.dialogs.len(), 3);
         let by_id = |id: &str| definition.dialogs.iter().find(|dialog| dialog.id == id).unwrap_or_else(|| panic!("dialog {id} must be registered"));
@@ -297,14 +297,14 @@ mod tests {
     }
 
     #[test]
-    fn known_artifact_kinds_resolve_by_id_and_reject_unknown_ids() {
+    async fn known_artifact_kinds_resolve_by_id_and_reject_unknown_ids() {
         assert_eq!(known_artifact_kind("draw").unwrap().dialect_artifact_kind, "s.draw.draw");
         assert_eq!(known_artifact_kind("note").unwrap().schema, "note.document");
         assert!(known_artifact_kind("nope").is_none());
     }
 
     #[test]
-    fn an_unknown_body_key_renders_a_diagnostic_instead_of_panicking() {
+    async fn an_unknown_body_key_renders_a_diagnostic_instead_of_panicking() {
         use semio_framework_plugin::{ArtifactView, ConfigView, HistoryView};
         let snapshot = SSpaceSnapshot::default();
         let history = HistoryView::empty();
@@ -316,7 +316,7 @@ mod tests {
     }
 
     #[test]
-    fn the_members_panel_body_renders_through_the_editor_dispatch() {
+    async fn the_members_panel_body_renders_through_the_editor_dispatch() {
         use semio_framework_plugin::{ArtifactView, ConfigView, HistoryView};
         let snapshot = SSpaceSnapshot::default();
         let history = HistoryView::empty();
@@ -333,7 +333,7 @@ mod tests {
     /// `command_from_action_covers_every_declared_action_and_rejects_unknown_ones` convention other
     /// artifact editors already use (e.g. `🌍️gis/🗿️artifacts/🗺️gismap`).
     #[test]
-    fn command_from_action_covers_every_declared_action_and_rejects_unknown_ones() {
+    async fn command_from_action_covers_every_declared_action_and_rejects_unknown_ones() {
         let cases: Vec<(&str, Value)> = vec![
             ("createArtifact", serde_json::json!({ "name": "First", "kindId": "draw", "nowMs": 1, "actor": "user:1" })),
             ("deleteArtifact", serde_json::json!({ "id": "artifact-1" })),
@@ -361,7 +361,7 @@ mod tests {
     /// payload (not error on missing fields) — its own handler treats empty `name`/`kindId` as "open
     /// the dialog", mirroring Home's `createSpace`.
     #[test]
-    fn command_from_action_bridges_an_empty_create_artifact_click() {
+    async fn command_from_action_bridges_an_empty_create_artifact_click() {
         let SpaceIndexCommand::CreateArtifact(payload) = SpaceIndexEditor::command_from_action("createArtifact", None).expect("no-args click must bridge") else { panic!("expected CreateArtifact") };
         assert_eq!(payload.name, "");
         assert_eq!(payload.kind_id, "");

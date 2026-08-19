@@ -17,7 +17,7 @@ pub const BODY_KEY: &str = TextWindowKit::KIND_ID;
 
 //#region 🔖️Definition
 /// 🧱️ Stitched into the viewer manifest by `crate::viewer::deflate::create_deflate_viewer`.
-pub fn definition() -> WindowKindDefinition {
+pub async fn definition() -> WindowKindDefinition {
     WindowKindDefinition { label: LocalizedLabel::native("Compression Header", "Komprimierungs-Header"), ..TextWindowKit::window_kind() }
 }
 //#endregion 🔖️Definition
@@ -25,7 +25,7 @@ pub fn definition() -> WindowKindDefinition {
 //#region 🔖️Codec
 /// 📐️ `DeflateLevelHint -> lowercase keyword` — mirrors the sibling authoring surface's own
 /// constant, kept as an independent copy per this ticket's viewer-purity rule.
-fn level_hint_keyword(hint: DeflateLevelHint) -> &'static str {
+async fn level_hint_keyword(hint: DeflateLevelHint) -> &'static str {
     match hint {
         DeflateLevelHint::Fastest => "fastest",
         DeflateLevelHint::Fast => "fast",
@@ -35,7 +35,7 @@ fn level_hint_keyword(hint: DeflateLevelHint) -> &'static str {
 }
 
 /// 📐️ `dict_id -> "none" | "<id>"`.
-fn preset_dictionary_text(dict_id: Option<u32>) -> String {
+async fn preset_dictionary_text(dict_id: Option<u32>) -> String {
     match dict_id {
         Some(id) => id.to_string(),
         None => "none".into(),
@@ -46,7 +46,7 @@ fn preset_dictionary_text(dict_id: Option<u32>) -> String {
 //#region 🔖️Render
 /// 👁️ Pure `DeflateSnapshot -> UiNode` read: the same `key=value` header summary as the sibling
 /// authoring surface, always `read_only: true`.
-pub fn render(document: &DeflateSnapshot) -> UiNode {
+pub async fn render(document: &DeflateSnapshot) -> UiNode {
     let text = format!(
         "method={}\nwindowBits={}\nlevelHint={}\npresetDictionary={}\n# payloadBytes: {} (payload content is not shown here)",
         document.compression_method,
@@ -65,7 +65,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn definition_declares_a_read_only_text_window() {
+    async fn definition_declares_a_read_only_text_window() {
         let def = definition();
         assert_eq!(def.id, WINDOW_KIND_ID);
         assert_eq!(def.body_key, BODY_KEY);
@@ -73,7 +73,7 @@ mod tests {
     }
 
     #[test]
-    fn render_carries_the_header_fields_as_read_only_text() {
+    async fn render_carries_the_header_fields_as_read_only_text() {
         let document = DeflateSnapshot { compression_method: 8, window_bits: 7, compression_level_hint: DeflateLevelHint::Default, dict_id: None, payload: vec![1, 2, 3, 4], ..DeflateSnapshot::default() };
         let UiNode::ComponentScene(node) = render(&document) else { panic!("expected ComponentScene") };
         let scene = node.text_editor.expect("text_editor scene");

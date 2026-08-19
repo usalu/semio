@@ -12,7 +12,7 @@ pub struct SetLineHeight {
     pub value: u32,
 }
 
-pub fn handle(payload: &SetLineHeight, _doc: &ArtifactView<'_, WriterSnapshot>, cfg: &ConfigView<'_, WriterConfig>) -> Result<Emit<WriterMutation, WriterConfigMutation>, Fault> {
+pub async fn handle(payload: &SetLineHeight, _doc: &ArtifactView<'_, WriterSnapshot>, cfg: &ConfigView<'_, WriterConfig>) -> Result<Emit<WriterMutation, WriterConfigMutation>, Fault> {
     let config = cfg.snapshot;
     let mut settings = config.editor_settings.clone();
     settings.line_height = payload.value;

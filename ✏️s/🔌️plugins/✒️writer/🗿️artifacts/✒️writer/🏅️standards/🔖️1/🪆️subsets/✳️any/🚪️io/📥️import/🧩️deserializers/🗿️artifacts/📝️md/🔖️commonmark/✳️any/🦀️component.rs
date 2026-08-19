@@ -17,7 +17,7 @@ impl Deserializer<WriterSnapshot> for MdIntoWriter {
     const FROM: Dialect = MD_DIALECT;
     /// 🪧️ Lossy: a markdown file carries no `schema`/`id`/`uri`/`language_id` — only content.
     const FIDELITY: IoFidelity = IoFidelity::Lossy;
-    fn deserialize(payload: &IoPayload) -> IoResult<WriterSnapshot> {
+    async fn deserialize(payload: &IoPayload) -> IoResult<WriterSnapshot> {
         let IoPayload::Text(text) = payload else {
             return Err(IoError { message: "MdIntoWriter: expected a text payload".to_string(), diagnostics: Vec::new() });
         };
@@ -33,7 +33,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn md_into_writer_uses_the_markdown_text_as_document_text() {
+    async fn md_into_writer_uses_the_markdown_text_as_document_text() {
         let outcome = MdIntoWriter::deserialize(&IoPayload::Text("hello world".into())).expect("deserialize");
         assert_eq!(crate::artifacts::writer::writer_text(&outcome.value), "hello world");
         assert_eq!(outcome.value.language_id, "plain");

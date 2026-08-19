@@ -7,7 +7,7 @@ use serde_json::Value;
 
 /// 🧭️ `setProjection`/`setProjectionParam` share one arm — a projection change that also moves the
 /// camera pose re-derives position/up from the new orientation around the unchanged target.
-pub fn set_projection(ctx: &mut Puzzle3dActionCtx<'_>, action: &str, args: Option<&Value>) {
+pub async fn set_projection(ctx: &mut Puzzle3dActionCtx<'_>, action: &str, args: Option<&Value>) {
     let moves_pose = world3d_projection_action_moves_pose(action, args);
     apply_world3d_projection_action(&mut ctx.scene.runtime.camera.projection, action, args);
     if moves_pose {

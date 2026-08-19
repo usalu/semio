@@ -6,7 +6,7 @@ use crate::artifacts::shooting::ShootingSnapshot;
 use semio_framework_plugin::WindowMeasure;
 
 //#region 🔖️Measure
-pub fn measure(snapshot: &ShootingSnapshot, labels: &ShootingLabels) -> WindowMeasure {
+pub async fn measure(snapshot: &ShootingSnapshot, labels: &ShootingLabels) -> WindowMeasure {
     WindowMeasure::Slider {
         id: "shooting.measure.roughness".into(),
         label: Some(labels.measure_roughness.into()),
@@ -32,7 +32,7 @@ mod tests {
     use crate::editor::shooting::terminology::shooting_play_labels;
 
     #[test]
-    fn roughness_measure_matches_the_fixture_default() {
+    async fn roughness_measure_matches_the_fixture_default() {
         let snapshot = crate::artifacts::shooting::schema::default_snapshot();
         let labels = shooting_play_labels(&ShootingConfig::default());
         match measure(&snapshot, labels) {

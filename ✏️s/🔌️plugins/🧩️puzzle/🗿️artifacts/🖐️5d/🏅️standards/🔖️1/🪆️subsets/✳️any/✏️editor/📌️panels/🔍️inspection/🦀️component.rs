@@ -12,7 +12,7 @@ pub const BODY_KEY: &str = "puzzle.5d.play.inspector";
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
-pub fn definition() -> PanelTabDefinition {
+pub async fn definition() -> PanelTabDefinition {
     PanelTabDefinition {
         kind: PanelTabKind::App(FRAMEWORK_PANEL_TAB_INSPECTION_ID.into()),
         label: LocalizedLabel::native(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, "Inspektion"),
@@ -30,7 +30,7 @@ pub fn definition() -> PanelTabDefinition {
 /// render against and always falls through to the document summary below. Flagged to the coordinator
 /// as the same framework-level gap noted on `puzzle5d_brush_target_grip` — not fixed here (framework
 /// file, out of this crate's remit).
-pub fn render(envelope: &Puzzle5dScene, labels: &Puzzle5dLabels) -> UiNode {
+pub async fn render(envelope: &Puzzle5dScene, labels: &Puzzle5dLabels) -> UiNode {
     ui_declarative_sections_to_tree(&[semio_framework_plugin::UiSectionNode {
         id: "puzzle5d-play-inspector.empty".into(),
         label: Some(Label::data(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL)),
@@ -54,7 +54,7 @@ mod tests {
     use crate::editor::puzzle5d::testkit::*;
 
     #[test]
-    fn empty_selection_renders_the_document_summary() {
+    async fn empty_selection_renders_the_document_summary() {
         let mut app = app();
         assert!(render_body(&mut app, BODY_KEY).contains("puzzle5d-play-inspector.empty"));
     }

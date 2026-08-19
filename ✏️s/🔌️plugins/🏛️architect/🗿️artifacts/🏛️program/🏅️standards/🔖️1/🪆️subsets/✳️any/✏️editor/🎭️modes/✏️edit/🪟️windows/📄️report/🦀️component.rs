@@ -11,7 +11,7 @@ pub const ARCHITECT_BODY_REPORT: &str = "architect.report";
 
 //#region 🔖️Definition
 /// 🏛️ Stitched into the app manifest by `crate::editor::architect::create_architect_app`.
-pub fn definition() -> WindowKindDefinition {
+pub async fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
         id: ARCHITECT_WINDOW_REPORT.into(),
         label: LocalizedLabel::native("Report", "Bericht"),
@@ -34,7 +34,7 @@ pub fn definition() -> WindowKindDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(cfg: &ArchitectConfig) -> UiNode {
+pub async fn render(cfg: &ArchitectConfig) -> UiNode {
     let Some(report) = parse_active_report(cfg) else {
         return ui_text(Label::data("Run validation, analysis, or report to populate this panel."));
     };
@@ -72,14 +72,14 @@ mod tests {
     use crate::artifacts::program::standards::v1::subsets::any::schema::inferences::build_report;
 
     #[test]
-    fn definition_declares_the_text_editor_surface_and_body_key() {
+    async fn definition_declares_the_text_editor_surface_and_body_key() {
         let definition = definition();
         assert_eq!(definition.body_key, ARCHITECT_BODY_REPORT);
         assert!(matches!(definition.surface_kind, SurfaceKind::TextEditor));
     }
 
     #[test]
-    fn a_report_in_the_config_renders_its_section_headings() {
+    async fn a_report_in_the_config_renders_its_section_headings() {
         let report = build_report(&sample_plugin(), ReportKind::ExecutiveSummary);
         let cfg = ArchitectConfig { active_report_json: serde_json::to_string(&report).expect("json"), ..ArchitectConfig::default() };
         let json = serde_json::to_string(&render(&cfg)).expect("json");
@@ -88,7 +88,7 @@ mod tests {
     }
 
     #[test]
-    fn no_report_renders_the_placeholder() {
+    async fn no_report_renders_the_placeholder() {
         let json = serde_json::to_string(&render(&ArchitectConfig::default())).expect("json");
         assert!(json.contains("Run validation, analysis, or report"));
     }

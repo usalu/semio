@@ -14,7 +14,7 @@ const PROCEDURAL2D_PLAY_SURFACE_MAIN: &str = "procedural2d.play.main";
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
-pub fn definition() -> WindowKindDefinition {
+pub async fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
         id: PROCEDURAL2D_PLAY_WINDOW_MAIN.into(),
         label: LocalizedLabel::native("Flow", "Fluss"),
@@ -34,7 +34,7 @@ pub fn definition() -> WindowKindDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(document: &Procedural2dSnapshot, config: &Procedural2dConfig, session: &FlowEvalSession) -> UiNode {
+pub async fn render(document: &Procedural2dSnapshot, config: &Procedural2dConfig, session: &FlowEvalSession) -> UiNode {
     let fixture = &document.fixture;
     let host = host_from_fixture(fixture);
     let (nodes, edges) = fixture_to_workflow(&host.dag.fixture);
@@ -69,13 +69,13 @@ mod tests {
     use crate::editor::procedural2d::testkit::{app, render as render_body};
 
     #[test]
-    fn renders_main_graph_scene() {
+    async fn renders_main_graph_scene() {
         let mut app = app();
         assert!(render_body(&mut app, PROCEDURAL2D_PLAY_BODY_MAIN).contains("node-graph"));
     }
 
     #[test]
-    fn main_graph_scene_exports_flow_backed_node_graph_fields() {
+    async fn main_graph_scene_exports_flow_backed_node_graph_fields() {
         let mut app = app();
         let json = render_body(&mut app, PROCEDURAL2D_PLAY_BODY_MAIN);
         let value: serde_json::Value = serde_json::from_str(&json).expect("ui node json");
@@ -86,7 +86,7 @@ mod tests {
     }
 
     #[test]
-    fn definition_declares_the_node_graph_surface_and_body_key() {
+    async fn definition_declares_the_node_graph_surface_and_body_key() {
         let definition = definition();
         assert_eq!(definition.body_key, PROCEDURAL2D_PLAY_BODY_MAIN);
         assert!(matches!(definition.surface_kind, SurfaceKind::NodeGraph));

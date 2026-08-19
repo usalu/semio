@@ -25,22 +25,22 @@ pub const GRAVITY: f64 = 9.806_65;
 
 // #region 🔖️Conversions
 /// 🌡️ Celsius to Kelvin.
-pub fn c_to_k(t_c: f64) -> f64 {
+pub async fn c_to_k(t_c: f64) -> f64 {
     t_c + 273.15
 }
 
 /// 🌡️ Kelvin to Celsius.
-pub fn k_to_c(t_k: f64) -> f64 {
+pub async fn k_to_c(t_k: f64) -> f64 {
     t_k - 273.15
 }
 
 /// 📐️ Degrees to radians.
-pub fn deg_to_rad(deg: f64) -> f64 {
+pub async fn deg_to_rad(deg: f64) -> f64 {
     deg * std::f64::consts::PI / 180.0
 }
 
 /// 📐️ Radians to degrees.
-pub fn rad_to_deg(rad: f64) -> f64 {
+pub async fn rad_to_deg(rad: f64) -> f64 {
     rad * 180.0 / std::f64::consts::PI
 }
 // #endregion 🔖️Conversions
@@ -73,19 +73,19 @@ pub struct Quantity {
 }
 
 impl Quantity {
-    pub const fn new(unit: Unit, value: f64) -> Self {
+    pub async fn new(unit: Unit, value: f64) -> Self {
         Self { unit, value }
     }
 
-    pub fn watts(v: f64) -> Self {
+    pub async fn watts(v: f64) -> Self {
         Self::new(Unit::Watts, v)
     }
 
-    pub fn joules(v: f64) -> Self {
+    pub async fn joules(v: f64) -> Self {
         Self::new(Unit::Joules, v)
     }
 
-    pub fn celsius(v: f64) -> Self {
+    pub async fn celsius(v: f64) -> Self {
         Self::new(Unit::Celsius, v)
     }
 }
@@ -96,7 +96,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn celsius_kelvin_roundtrip() {
+    async fn celsius_kelvin_roundtrip() {
         assert!((k_to_c(c_to_k(20.0)) - 20.0).abs() < 1e-9);
     }
 }

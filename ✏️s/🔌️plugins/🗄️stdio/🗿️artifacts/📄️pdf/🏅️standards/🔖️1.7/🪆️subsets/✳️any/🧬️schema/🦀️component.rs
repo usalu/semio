@@ -28,19 +28,19 @@ pub struct PdfArtifact {
 }
 
 impl Default for PdfArtifact {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self::from_snapshot(PdfSnapshot::default())
     }
 }
 
 impl PdfArtifact {
-    pub fn to_snapshot(&self) -> PdfSnapshot {
+    pub async fn to_snapshot(&self) -> PdfSnapshot {
         PdfSnapshot { schema: self.schema.clone(), declared_version: self.declared_version.clone(), pages: self.pages.clone(), info: self.info.clone(), objects: self.objects.clone(), trailer: self.trailer.clone() }
     }
-    pub fn from_snapshot(snapshot: PdfSnapshot) -> Self {
+    pub async fn from_snapshot(snapshot: PdfSnapshot) -> Self {
         Self { schema: snapshot.schema, declared_version: snapshot.declared_version, pages: snapshot.pages, info: snapshot.info, objects: snapshot.objects, trailer: snapshot.trailer }
     }
-    pub fn set_snapshot(&mut self, snapshot: PdfSnapshot) {
+    pub async fn set_snapshot(&mut self, snapshot: PdfSnapshot) {
         self.schema = snapshot.schema;
         self.declared_version = snapshot.declared_version;
         self.pages = snapshot.pages;
@@ -50,7 +50,7 @@ impl PdfArtifact {
     }
 }
 
-pub fn pdf_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
+pub async fn pdf_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
     schema::ArtifactSchemaDescriptor {
         id: "s.stdio.pdf.1.7",
         artifact: schema::FacetLeaves {
@@ -101,12 +101,12 @@ pub mod derived_construction {
     impl PdfBuilderConstruction {
         /// ➕ Typed construction: appends a page (the analyzer→builder round-trip acceptance test's
         /// primary entry point -- requirement #8's `InsertPage`, exposed ergonomically).
-        pub fn add_page(self, page: PdfPage) -> Self {
+        pub async fn add_page(self, page: PdfPage) -> Self {
             let index = self.snapshot.pages.len();
             let (next, _diff) = self.mutate(PdfMutation::InsertPage { index, page });
             next
         }
-        pub fn set_info(self, info: PdfInfo) -> Self {
+        pub async fn set_info(self, info: PdfInfo) -> Self {
             let (next, _diff) = self.mutate(PdfMutation::SetInfo { info });
             next
         }
@@ -116,27 +116,27 @@ pub mod derived_construction {
         type Snapshot = PdfSnapshot;
         type Mutation = PdfMutation;
         type Diff = PdfDiff;
-        fn empty() -> Self {
+        async fn empty() -> Self {
             Self { snapshot: PdfSnapshot::default(), diagnostics: Vec::new() }
         }
-        fn from_snapshot(snapshot: Self::Snapshot) -> Self {
+        async fn from_snapshot(snapshot: Self::Snapshot) -> Self {
             Self { snapshot, diagnostics: Vec::new() }
         }
-        fn from_text(text: &str) -> Result<Self, store::TextError> {
+        async fn from_text(text: &str) -> Result<Self, store::TextError> {
             Ok(Self::from_snapshot(<PdfSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
-        fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
+        async fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
             Ok(Self::from_snapshot(<PdfSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
         }
-        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
+        async fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let diff = apply_pdf_mutation(&mut self.snapshot, &mutation);
             (self, diff)
         }
-        fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
+        async fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
             self.snapshot = <PdfDiff as protocol::MutationDiff<PdfSnapshot>>::apply(&diff, &self.snapshot)?;
             Ok(self)
         }
-        fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
+        async fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
             if self.diagnostics.is_empty() {
                 Ok(self.snapshot)
             } else {
@@ -172,7 +172,7 @@ pub mod derived_analysis {
 
         /// 🔍️ Real sniff (requirement #9): inspects `%PDF-` magic + version probe via
         /// `engine::sniff_pdf`, does not discard its argument.
-        fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
+        async fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
             match source {
                 AnalyzeSource::Binary(bytes) => match crate::artifacts::pdf::standards::v1_7::subsets::any::io::sniff_pdf(bytes) {
                     Some(_version) => IoConfidence::High,
@@ -193,7 +193,7 @@ pub mod derived_analysis {
             }
         }
 
-        fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
+        async fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
             let mut parts = PdfParts::default();
             let mut diagnostics = Vec::new();
             let mut confidence = IoConfidence::High;

@@ -126,7 +126,7 @@ pub enum SemioMeshMutation {
 /// ⚡️ Real hand-rolled `OpText`, grammar `keyword arg=value ...` — reusing the sibling `🔺️diff`
 /// facet's `pub(crate)` hex/value primitives (one source of truth for entity encoding, same
 /// convention this file's pre-rewrite version and `✳️brep`/`✳️flow`'s mutations facets establish).
-fn print_semio_mesh_mutation(m: &SemioMeshMutation) -> String {
+async fn print_semio_mesh_mutation(m: &SemioMeshMutation) -> String {
     match m {
         SemioMeshMutation::CreateMesh(p) => format!("create-mesh mesh={}", enc_mesh(&p.mesh)),
         SemioMeshMutation::DeleteMesh(p) => format!("delete-mesh id={}", enc_str(&p.id)),
@@ -156,7 +156,7 @@ fn print_semio_mesh_mutation(m: &SemioMeshMutation) -> String {
         SemioMeshMutation::MoveVertex(p) => format!("move-vertex mesh-id={} primitive-id={} vertex-index={} new-point={}", enc_str(&p.mesh_id), enc_str(&p.primitive_id), p.vertex_index, enc_point3(&p.new_point)),
     }
 }
-fn parse_semio_mesh_mutation(line: &str) -> Result<SemioMeshMutation, String> {
+async fn parse_semio_mesh_mutation(line: &str) -> Result<SemioMeshMutation, String> {
     let (keyword, rest) = line.split_once(' ').unwrap_or((line, ""));
     let args: std::collections::BTreeMap<&str, &str> =
         rest.split(' ').filter(|s| !s.is_empty()).map(|tok| tok.split_once('=').ok_or_else(|| format!("semio mesh mutation: bad arg token {tok:?}"))).collect::<Result<Vec<_>, String>>()?.into_iter().collect();
@@ -207,10 +207,10 @@ fn parse_semio_mesh_mutation(line: &str) -> Result<SemioMeshMutation, String> {
 }
 
 impl OpText for SemioMeshMutation {
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
+    async fn parse_op(line: &str) -> Result<Self, store::TextError> {
         parse_semio_mesh_mutation(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
-    fn print_op(&self) -> String {
+    async fn print_op(&self) -> String {
         print_semio_mesh_mutation(self)
     }
 }
@@ -238,7 +238,7 @@ const OP_KEYWORDS: [&str; 17] = [
     "replace-texture-bytes",
     "move-vertex",
 ];
-fn variant_ordinal(m: &SemioMeshMutation) -> u8 {
+async fn variant_ordinal(m: &SemioMeshMutation) -> u8 {
     match m {
         SemioMeshMutation::CreateMesh(_) => 0,
         SemioMeshMutation::DeleteMesh(_) => 1,
@@ -262,7 +262,7 @@ fn variant_ordinal(m: &SemioMeshMutation) -> u8 {
 /// ✂️ Just the `key=value ...` argument tail of `print_semio_mesh_mutation` — the binary frame's
 /// `tag` byte already carries the keyword, so the text keyword itself is redundant in the binary
 /// payload.
-fn print_semio_mesh_mutation_args(m: &SemioMeshMutation) -> String {
+async fn print_semio_mesh_mutation_args(m: &SemioMeshMutation) -> String {
     match print_semio_mesh_mutation(m).split_once(' ') {
         Some((_, rest)) => rest.to_string(),
         None => String::new(),
@@ -275,13 +275,13 @@ fn print_semio_mesh_mutation_args(m: &SemioMeshMutation) -> String {
 /// `print_semio_mesh_mutation`/`parse_semio_mesh_mutation` text codec rather than re-deriving a
 /// second independent encoding.
 impl OpBinary for SemioMeshMutation {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         const OP_BINARY_FORMAT: u8 = 1;
         let mut out = vec![OP_BINARY_FORMAT, variant_ordinal(self)];
         out.extend_from_slice(print_semio_mesh_mutation_args(self).as_bytes());
         Ok(out)
     }
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         const OP_BINARY_FORMAT: u8 = 1;
         if bytes.len() < 2 {
             return Err(protocol::ProtocolError::Malformed { what: "op header", offset: 0, detail: "truncated (need format+tag)".to_string() });
@@ -303,7 +303,7 @@ impl OpBinary for SemioMeshMutation {
 /// of truth for this facet's own tests AND `ops_grammar_conformance_law`/`protocol_walk_law` in
 /// `🎹️composer/🦀️component.rs` (another session's file, read-only here).
 #[cfg(test)]
-pub(crate) fn fixture() -> SemioMeshSnapshot {
+pub(crate) async fn fixture() -> SemioMeshSnapshot {
     SemioMeshSnapshot {
         meshes: vec![SemioMesh {
             id: "mesh-a".into(),
@@ -325,7 +325,7 @@ pub(crate) fn fixture() -> SemioMeshSnapshot {
 }
 
 #[cfg(test)]
-pub(crate) fn demo_mutation_cases() -> Vec<SemioMeshMutation> {
+pub(crate) async fn demo_mutation_cases() -> Vec<SemioMeshMutation> {
     vec![
         SemioMeshMutation::CreateMesh(create_mesh::mutation::CreateMesh { mesh: SemioMesh { id: "mesh-b".into(), primitives: vec![] } }),
         SemioMeshMutation::DeleteMesh(delete_mesh::mutation::DeleteMesh { id: "mesh-a".into() }),
@@ -370,7 +370,7 @@ mod tests {
     /// here) restores it. Both `delete-mesh`/`delete-material`/`delete-texture`/`delete-primitive`
     /// ARE position-preserving, so plain round-trip equality (not merely set equality) is expected
     /// and asserted directly.
-    fn round_trip(base: &SemioMeshSnapshot, operation: &SemioMeshMutation) -> SemioMeshSnapshot {
+    async fn round_trip(base: &SemioMeshSnapshot, operation: &SemioMeshMutation) -> SemioMeshSnapshot {
         let forward = operation.diff(base).diff().apply(base).expect("apply must succeed for a well-formed fixture");
         let backwards = operation.inverse(base);
         let mut restored = forward.clone();
@@ -383,7 +383,7 @@ mod tests {
 
     //#region 🧪️InverseRoundTripLaw
     #[test]
-    fn inverse_round_trip_law_covers_every_variant() {
+    async fn inverse_round_trip_law_covers_every_variant() {
         let base = fixture();
         for m in demo_mutation_cases() {
             let _ = round_trip(&base, &m);
@@ -391,7 +391,7 @@ mod tests {
     }
 
     #[test]
-    fn create_delete_mesh_round_trips_explicitly() {
+    async fn create_delete_mesh_round_trips_explicitly() {
         let base = fixture();
         let create = SemioMeshMutation::CreateMesh(create_mesh::mutation::CreateMesh { mesh: SemioMesh { id: "mesh-c".into(), primitives: vec![] } });
         let after_create = round_trip(&base, &create);
@@ -406,7 +406,7 @@ mod tests {
     }
 
     #[test]
-    fn delete_of_an_absent_id_has_an_empty_inverse_and_is_a_diff_level_no_op() {
+    async fn delete_of_an_absent_id_has_an_empty_inverse_and_is_a_diff_level_no_op() {
         let base = fixture();
         let delete = SemioMeshMutation::DeleteMaterial(delete_material::mutation::DeleteMaterial { id: "mat-missing".into() });
         assert!(delete.inverse(&base).is_empty(), "deleting an absent id has nothing to undo");
@@ -414,7 +414,7 @@ mod tests {
     }
 
     #[test]
-    fn set_change_replace_move_of_an_absent_target_have_empty_inverse_and_are_no_ops() {
+    async fn set_change_replace_move_of_an_absent_target_have_empty_inverse_and_are_no_ops() {
         let base = fixture();
 
         let topo = SemioMeshMutation::SetPrimitiveTopology(set_primitive_topology::mutation::SetPrimitiveTopology { mesh_id: "mesh-missing".into(), primitive_id: "prim-missing".into(), topology: SemioTopology::Lines });
@@ -449,7 +449,7 @@ mod tests {
     /// diff.diff().apply(base))` — the sparse diff this facet hand-constructs is exactly the diff a
     /// generic before/after comparison would independently derive.
     #[test]
-    fn diff_consistency_law_matches_independent_between() {
+    async fn diff_consistency_law_matches_independent_between() {
         use protocol::command::DiffAlgebra;
         let base = fixture();
         for m in demo_mutation_cases() {
@@ -463,7 +463,7 @@ mod tests {
 
     //#region 🧪️DeterminismLaw
     #[test]
-    fn determinism_law_diff_and_inverse_are_pure_functions_of_payload_and_base() {
+    async fn determinism_law_diff_and_inverse_are_pure_functions_of_payload_and_base() {
         let base = fixture();
         for m in demo_mutation_cases() {
             assert_eq!(m.diff(&base), m.diff(&base), "diff({m:?}) must be deterministic");
@@ -474,7 +474,7 @@ mod tests {
 
     //#region 🧪️OpCodecRoundTripLaw
     #[test]
-    fn op_text_binary_roundtrip_law() {
+    async fn op_text_binary_roundtrip_law() {
         for m in demo_mutation_cases() {
             let printed = m.print_op();
             assert!(!printed.contains('\n'), "print_op must be one line, got {printed:?}");
@@ -490,7 +490,7 @@ mod tests {
 
     //#region 🧪️SemanticKinds
     #[test]
-    fn semantic_kinds_cover_every_variant() {
+    async fn semantic_kinds_cover_every_variant() {
         assert_eq!(SemioMeshMutation::kinds().len(), 17);
         let mutation = SemioMeshMutation::DeleteMesh(delete_mesh::mutation::DeleteMesh { id: "mesh-a".into() });
         assert_eq!(mutation.semantics().kind, "delete-mesh");

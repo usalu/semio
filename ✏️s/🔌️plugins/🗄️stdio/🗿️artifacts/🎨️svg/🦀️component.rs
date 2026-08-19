@@ -26,7 +26,7 @@ pub const SVG_TINY_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.svg", st
 
 //#region 🔖️ArtifactKind
 /// 🗂️ This artifact's `ArtifactKindSpec`.
-pub fn artifact_kind() -> ArtifactKindSpec {
+pub async fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "stdio.svg".into(),
         name: "Svg".into(),
@@ -61,11 +61,11 @@ pub fn artifact_kind() -> ArtifactKindSpec {
 /// instances, same registry effect. `⚙️engine` itself is untouched — this only REFERENCES what it
 /// already exposes.
 /// 🧩️ Binds this executable root to its sole schema-owned definition.
-pub fn assembly(definition: semio_framework_plugin::ArtifactDefinition) -> Result<crate::registry::ArtifactAssembly, semio_framework_plugin::PluginAssemblyError> {
+pub async fn assembly(definition: semio_framework_plugin::ArtifactDefinition) -> Result<crate::registry::ArtifactAssembly, semio_framework_plugin::PluginAssemblyError> {
     crate::registry::runtime_assembly("svg", definition, declaration)
 }
 
-pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
+pub async fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
     let formats = crate::registry::format_descriptors_for("svg")?;
     semio_framework_plugin::ArtifactDeclaration::builder(definition)
         .schema(crate::artifacts::svg::standards::v1_1::subsets::any::schema::svg_artifact_schema_descriptor())
@@ -81,7 +81,7 @@ pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Re
 /// 🛡️ Re-derives the ✳️tiny and ✳️basic subsets' `SubsetValidatorEntry`s — see `declaration()`'s own
 /// doc for why this calls `subset_validator_entry_of` directly instead of reusing either subset's
 /// own private cache.
-fn declared_subset_validators() -> &'static [semio_framework_plugin::SubsetValidatorEntry] {
+async fn declared_subset_validators() -> &'static [semio_framework_plugin::SubsetValidatorEntry] {
     static ENTRIES: std::sync::OnceLock<Vec<semio_framework_plugin::SubsetValidatorEntry>> = std::sync::OnceLock::new();
     ENTRIES
         .get_or_init(|| {
@@ -97,7 +97,7 @@ fn declared_subset_validators() -> &'static [semio_framework_plugin::SubsetValid
 /// here verbatim from `⚙️engine::register_pilot_languages` (same 5-role Document/Ops/Diff/Pack/Spr
 /// shape every stdio artifact uses), leaked to a `&'static` slice since `dsl::passthrough_hooks`
 /// isn't `const fn`, mirroring the `🗒️note`/`🔋️model` exemplars' own helper of the same shape.
-fn pilot_languages() -> &'static [dsl::LanguageSpec] {
+async fn pilot_languages() -> &'static [dsl::LanguageSpec] {
     static LANGUAGES: std::sync::OnceLock<Vec<dsl::LanguageSpec>> = std::sync::OnceLock::new();
     LANGUAGES
         .get_or_init(|| {
@@ -166,16 +166,16 @@ pub mod io_registry {
 
     static ENTRIES: OnceLock<Vec<&'static ComposerEntry>> = OnceLock::new();
 
-    pub fn entries() -> &'static [&'static ComposerEntry] {
+    pub async fn entries() -> &'static [&'static ComposerEntry] {
         ENTRIES.get_or_init(|| v1_1::entries().iter().collect()).as_slice()
     }
 
-    pub fn compose(target: Dialect, sources: &[ErasedComposeSource]) -> Result<ComposedArtifact, ComposeError> {
+    pub async fn compose(target: Dialect, sources: &[ErasedComposeSource]) -> Result<ComposedArtifact, ComposeError> {
         let entry = entries().iter().find(|e| e.writes == target).ok_or_else(|| ComposeError { message: format!("SvgComposer: no entry writes {:?}", target), diagnostics: Vec::new() })?;
         semio_framework_plugin::resolve_ready((entry.compose)(sources))
     }
 
-    pub fn register() {
+    pub async fn register() {
         let _ = register_composer_entries(v1_1::entries());
     }
 }

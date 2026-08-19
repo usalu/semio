@@ -7,7 +7,7 @@ use crate::artifacts::imperative::ImperativeSnapshot;
 //#region 🔖️Diff
 /// 🔺️ Error `target-missing` when the id is absent; Warning `no-op` when `new_params` already
 /// equals the step's current `params`.
-pub fn diff(payload: &super::mutation::EditStepParams, base: &ImperativeSnapshot) -> protocol::MutationOutcome<ImperativeDiff> {
+pub async fn diff(payload: &super::mutation::EditStepParams, base: &ImperativeSnapshot) -> protocol::MutationOutcome<ImperativeDiff> {
     let steps = crate::artifacts::imperative::mutations::resolve_steps(base, &payload.path_ref);
     let Some(existing) = steps.iter().find(|step| step.id == payload.id) else {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Step \"{}\" does not exist.", payload.id), [payload.id.clone()]);

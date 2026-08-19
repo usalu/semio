@@ -31,26 +31,26 @@ pub struct DwgInference {
 }
 
 impl protocol::Inference<DwgSnapshot> for DwgInference {
-    fn infer(snapshot: &DwgSnapshot) -> Self {
+    async fn infer(snapshot: &DwgSnapshot) -> Self {
         Self { structure: compute_dwg_structure(snapshot) }
     }
 }
 
 /// 🌱 Defined in terms of `infer` so the default follows the logical snapshot model.
 impl Default for DwgInference {
-    fn default() -> Self {
+    async fn default() -> Self {
         <Self as protocol::Inference<DwgSnapshot>>::infer(&DwgSnapshot::default())
     }
 }
 
 impl protocol::InferenceSpec<DwgSnapshot> for DwgInference {
-    fn inference_schema_id() -> &'static str {
+    async fn inference_schema_id() -> &'static str {
         "s.stdio.dwg.inference"
     }
-    fn schema_version() -> u32 {
+    async fn schema_version() -> u32 {
         1
     }
-    fn fields() -> &'static [protocol::InferenceFieldSpec] {
+    async fn fields() -> &'static [protocol::InferenceFieldSpec] {
         &[protocol::InferenceFieldSpec { id: "s.stdio.dwg.inference.structure", reads: &["drawing", "codepage", "version"] }]
     }
 }
@@ -67,7 +67,7 @@ impl ArtifactInferrer for crate::artifacts::dwg::standards::v_ac1024::subsets::a
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.stdio.dwg.inference`'s facet leaves into the OS-wide inference catalog —
 /// call once at plugin init, alongside `dwg_artifact_schema_descriptor`'s registration.
-pub fn dwg_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
+pub async fn dwg_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
     schema::ArtifactInferenceDescriptor {
         id: "s.stdio.dwg.inference",
         inference: schema::FacetLeaves {
@@ -88,13 +88,13 @@ mod tests {
     use protocol::Inference;
 
     #[test]
-    fn inference_determinism_law() {
+    async fn inference_determinism_law() {
         let snapshot = DwgSnapshot::default();
         assert_eq!(DwgInference::infer(&snapshot), DwgInference::infer(&snapshot));
     }
 
     #[test]
-    fn inference_default_law() {
+    async fn inference_default_law() {
         assert_eq!(DwgInference::infer(&DwgSnapshot::default()), DwgInference::default());
     }
 }

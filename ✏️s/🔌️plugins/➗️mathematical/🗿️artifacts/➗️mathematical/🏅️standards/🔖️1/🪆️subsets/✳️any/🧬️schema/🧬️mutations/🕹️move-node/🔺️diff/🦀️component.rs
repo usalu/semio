@@ -4,7 +4,7 @@ use super::mutation::MoveNode;
 use crate::artifacts::mathematical::{mathematical_children_from_state, mathematical_geometry, mathematical_graph, MathematicalDiff, MathematicalSnapshot};
 
 //#region 🔖️Diff
-pub fn diff(payload: &MoveNode, base: &MathematicalSnapshot) -> protocol::MutationOutcome<MathematicalDiff> {
+pub async fn diff(payload: &MoveNode, base: &MathematicalSnapshot) -> protocol::MutationOutcome<MathematicalDiff> {
     let mut graph = mathematical_graph(base);
     let Some(existing) = graph.nodes.iter().find(|node| node.id == payload.id) else {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Node \"{}\" does not exist.", payload.id), [payload.id.clone()]);

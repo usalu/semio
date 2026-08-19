@@ -18,23 +18,23 @@ pub struct ReplaceStreamSource {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn replace_stream_source(id: String, source: Option<VideoSource>) -> RemodelMutation {
+pub async fn replace_stream_source(id: String, source: Option<VideoSource>) -> RemodelMutation {
     RemodelMutation::ReplaceStreamSource(ReplaceStreamSource { id, source })
 }
 
 impl protocol::MutationKind<RemodelSnapshot, RemodelMutation> for ReplaceStreamSource {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "replace", entity: "stream", kind: "replace-stream-source", record: "ReplacedStreamSource" };
 
-    fn diff(&self, base: &RemodelSnapshot) -> protocol::MutationOutcome<RemodelDiff> {
+    async fn diff(&self, base: &RemodelSnapshot) -> protocol::MutationOutcome<RemodelDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &RemodelSnapshot) -> Vec<RemodelMutation> {
+    async fn inverse(&self, base: &RemodelSnapshot) -> Vec<RemodelMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         format!("Replace stream \"{}\" source", self.id)
     }
-    fn target(&self) -> Vec<String> {
+    async fn target(&self) -> Vec<String> {
         vec![self.id.clone()]
     }
 }

@@ -14,23 +14,23 @@ pub struct ChangeGenerationValue {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn change_generation_value(id: String, question_id: String, value: serde_json::Value) -> Procedural2dMutation {
+pub async fn change_generation_value(id: String, question_id: String, value: serde_json::Value) -> Procedural2dMutation {
     Procedural2dMutation::ChangeGenerationValue(ChangeGenerationValue { id, question_id, value })
 }
 
 impl MutationKind<Procedural2dSnapshot, Procedural2dMutation> for ChangeGenerationValue {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "change", entity: "generation-value", kind: "change-generation-value", record: "ChangedGenerationValue" };
 
-    fn diff(&self, base: &Procedural2dSnapshot) -> protocol::MutationOutcome<Procedural2dDiff> {
+    async fn diff(&self, base: &Procedural2dSnapshot) -> protocol::MutationOutcome<Procedural2dDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &Procedural2dSnapshot) -> Vec<Procedural2dMutation> {
+    async fn inverse(&self, base: &Procedural2dSnapshot) -> Vec<Procedural2dMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         format!("Change generation \"{}\" value \"{}\"", self.id, self.question_id)
     }
-    fn target(&self) -> Vec<String> {
+    async fn target(&self) -> Vec<String> {
         vec![self.id.clone(), self.question_id.clone()]
     }
 }

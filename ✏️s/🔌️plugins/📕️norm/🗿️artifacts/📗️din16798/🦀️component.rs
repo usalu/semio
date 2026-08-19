@@ -11,7 +11,7 @@
 /// 🗿️ The computed-compliance artifact this standard publishes on its app's `report:out` port —
 /// lifted out of the pre-migration manifest's inline `.artifact_kind(ArtifactKindSpec { .. })` so the
 /// artifact node, not the app, owns its own kind declaration.
-pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
+pub async fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
     crate::app_surface::artifact_kind_spec("din16798", "DIN EN 16798")
 }
 //#endregion 🔖️ArtifactKind
@@ -31,7 +31,7 @@ pub const DIN16798_DOCUMENT_SCHEMA: &str = "semio.norm.din16798/v1";
 /// the old side-effecting `register()`/`register_pilot_languages()`/`register_artifact_schema()`/
 /// `register_artifact_inferences()`/`register_io()`, each of which called a global registry directly
 /// from the plugin root's `.setup()` fan-out (`register_norm_exports`, deleted by this same wave).
-pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
+pub async fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
     use crate::artifacts::definition::{CapabilitySpec, ClaimSpec, LocalizationSpec};
     const SCHEMA: &[ClaimSpec] = &[ClaimSpec { namespace: "schema", value: "s.norm.din16798" }];
     const INFERENCE: &[ClaimSpec] = &[ClaimSpec { namespace: "schema", value: "s.norm.din16798.inference" }];
@@ -57,7 +57,7 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
     crate::artifacts::definition::assemble_definition("s.din16798", CAPABILITIES)
 }
 
-pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
+pub async fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
     semio_framework_plugin::ArtifactDeclaration::builder(definition)
         .schema(crate::artifacts::din16798::schema::din16798_artifact_schema_descriptor())
         .inferences([crate::artifacts::din16798::standards::v1::subsets::any::schema::inferences::din16798_artifact_inference_descriptor()])
@@ -70,7 +70,7 @@ pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Re
 /// 📌️ Handcrafted facet grammars (text) and protocols (binary) for in-process execution — built once
 /// and leaked to a `&'static` slice since `dsl::passthrough_hooks` isn't `const fn`, mirroring the
 /// `OnceLock`-backed `io_registry::entries()` convention below.
-fn pilot_languages() -> &'static [dsl::LanguageSpec] {
+async fn pilot_languages() -> &'static [dsl::LanguageSpec] {
     static LANGUAGES: std::sync::OnceLock<Vec<dsl::LanguageSpec>> = std::sync::OnceLock::new();
     LANGUAGES
         .get_or_init(|| {

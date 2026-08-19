@@ -18,7 +18,7 @@ pub struct Pdf17Outline {
 }
 
 impl Pdf17Outline {
-    pub fn compute(snapshot: &PdfSnapshot) -> Self {
+    pub async fn compute(snapshot: &PdfSnapshot) -> Self {
         let page_count = snapshot.pages.len() as u32;
         let word_count = snapshot.pages.iter().map(|p| p.text.split_whitespace().count() as u32).sum();
         Self { page_count, word_count, title: snapshot.info.title.clone() }
@@ -33,7 +33,7 @@ mod tests {
     use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::snapshot::{PdfInfo, PdfPage};
 
     #[test]
-    fn counts_pages_and_words_and_carries_title() {
+    async fn counts_pages_and_words_and_carries_title() {
         let snapshot = PdfSnapshot {
             schema: "stdio.pdf.1.7".into(),
             declared_version: "1.7".into(),
@@ -53,7 +53,7 @@ mod tests {
     }
 
     #[test]
-    fn outline_is_deterministic() {
+    async fn outline_is_deterministic() {
         let snapshot = PdfSnapshot::default();
         assert_eq!(Pdf17Outline::compute(&snapshot), Pdf17Outline::compute(&snapshot));
     }

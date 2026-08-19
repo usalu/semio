@@ -3,6 +3,6 @@ use crate::artifacts::epw::standards::energyplus::subsets::any::schema::snapshot
 use protocol::Mutation;
 
 /// ↩️ Inverse of set-snapshot.
-pub fn inverse(base: &EpwSnapshot, mutation: &EpwMutation) -> Vec<EpwMutation> {
+pub async fn inverse(base: &EpwSnapshot, mutation: &EpwMutation) -> Vec<EpwMutation> {
     <EpwMutation as Mutation<EpwSnapshot>>::inverse(mutation, base)
 }

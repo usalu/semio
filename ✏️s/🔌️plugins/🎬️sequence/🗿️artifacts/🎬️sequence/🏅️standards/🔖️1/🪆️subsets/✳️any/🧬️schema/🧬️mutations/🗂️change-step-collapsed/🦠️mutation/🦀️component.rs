@@ -15,23 +15,23 @@ pub struct ChangeStepCollapsed {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn change_step_collapsed(id: String, collapsed: bool) -> SequenceMutation {
+pub async fn change_step_collapsed(id: String, collapsed: bool) -> SequenceMutation {
     SequenceMutation::ChangeStepCollapsed(ChangeStepCollapsed { id, collapsed })
 }
 
 impl protocol::MutationKind<SequenceSnapshot, SequenceMutation> for ChangeStepCollapsed {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "step", kind: "change-step-collapsed", record: "ChangedStepCollapsed" };
 
-    fn diff(&self, base: &SequenceSnapshot) -> protocol::MutationOutcome<SequenceDiff> {
+    async fn diff(&self, base: &SequenceSnapshot) -> protocol::MutationOutcome<SequenceDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &SequenceSnapshot) -> Vec<SequenceMutation> {
+    async fn inverse(&self, base: &SequenceSnapshot) -> Vec<SequenceMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         format!("{} step \"{}\"", if self.collapsed { "Collapse" } else { "Expand" }, self.id)
     }
-    fn target(&self) -> Vec<String> {
+    async fn target(&self) -> Vec<String> {
         vec![self.id.clone()]
     }
 }

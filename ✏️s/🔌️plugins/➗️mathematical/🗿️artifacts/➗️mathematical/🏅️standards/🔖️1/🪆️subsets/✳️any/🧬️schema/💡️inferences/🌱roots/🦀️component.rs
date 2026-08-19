@@ -25,8 +25,8 @@ use std::collections::BTreeMap;
 /// 🌉 Structural walk of `EquationNode` → `(variable name, degree -> integer coefficient)` — `None`
 /// the instant the tree leaves this wave's scope (rational coefficient, second variable, non-integer
 /// exponent, or any `Fn`/`Piecewise`/etc node — `EquationNode` can't even represent those yet).
-fn extract_integer_polynomial(node: &EquationNode) -> Option<(String, BTreeMap<u32, number::Integer>)> {
-    fn walk(node: &EquationNode, var: &mut Option<String>) -> Option<BTreeMap<u32, number::Integer>> {
+async fn extract_integer_polynomial(node: &EquationNode) -> Option<(String, BTreeMap<u32, number::Integer>)> {
+    async fn walk(node: &EquationNode, var: &mut Option<String>) -> Option<BTreeMap<u32, number::Integer>> {
         match &node.kind {
             EquationNodeKind::Integer { lexeme } => Some(BTreeMap::from([(0u32, lexeme.parse().ok()?)])),
             EquationNodeKind::Rational { numer, denom } => {
@@ -87,7 +87,7 @@ fn extract_integer_polynomial(node: &EquationNode) -> Option<(String, BTreeMap<u
     Some((var.unwrap_or_else(|| "x".to_string()), coeffs))
 }
 
-fn to_poly_u(coeffs: &BTreeMap<u32, number::Integer>) -> crate::polynomial::univariate::PolyU<number::Integer> {
+async fn to_poly_u(coeffs: &BTreeMap<u32, number::Integer>) -> crate::polynomial::univariate::PolyU<number::Integer> {
     let mut poly = crate::polynomial::univariate::PolyU::zero();
     for (degree, coeff) in coeffs {
         poly = poly.add(&crate::polynomial::univariate::PolyU::monomial(coeff.clone(), *degree as usize));
@@ -97,7 +97,7 @@ fn to_poly_u(coeffs: &BTreeMap<u32, number::Integer>) -> crate::polynomial::univ
 
 /// 🌉 `None` when `equation` is outside this wave's scope (see module doc) — the ONE place
 /// `plan`/`dep_input`/`compute` all funnel through, so all three always agree on scope.
-fn equation_integer_polynomial(equation: &EquationSnapshot) -> Option<crate::polynomial::univariate::PolyU<number::Integer>> {
+async fn equation_integer_polynomial(equation: &EquationSnapshot) -> Option<crate::polynomial::univariate::PolyU<number::Integer>> {
     let (_, coeffs) = extract_integer_polynomial(&equation.expr)?;
     if coeffs.is_empty() {
         return None;
@@ -120,7 +120,7 @@ pub struct MathematicalRoot {
 /// 🌱️ The bisection target width every `compute()` call refines to — `1 / 10^9`, matching the
 /// precision the migrated `polynomial::algebraic` tests already assert against (`1e-6`/`1e-9`
 /// tolerances), so `roots`' output is at least as precise as what those tests already trust.
-fn refine_width() -> number::Rational {
+async fn refine_width() -> number::Rational {
     number::Rational::new(number::Integer::one(), number::Integer::from_i64(1_000_000_000)).expect("1/10^9 is a valid rational")
 }
 
@@ -133,14 +133,14 @@ impl protocol::InferredField<MathematicalSnapshot> for MathematicalRootsField {
     const FIELD_ID: &'static str = "s.mathematical.mathematical.inference.roots";
     const SCHEMA_VERSION: u32 = 1;
 
-    fn reads() -> &'static [&'static str] {
+    async fn reads() -> &'static [&'static str] {
         &["equation"]
     }
 
     /// 🧭️ Isolates once to learn how many real roots exist (Sturm-sequence sign-change counting —
     /// `polynomial::roots::isolate_real_roots`) and plans one step per index, no parents: roots of
     /// the same polynomial don't depend on each other's values.
-    fn plan(snapshot: &MathematicalSnapshot) -> Vec<protocol::InferenceStep<Self::Key>> {
+    async fn plan(snapshot: &MathematicalSnapshot) -> Vec<protocol::InferenceStep<Self::Key>> {
         let Some(poly) = equation_integer_polynomial(&snapshot.equation) else { return Vec::new() };
         (0..crate::polynomial::roots::isolate_real_roots(&poly).len()).map(|index| protocol::InferenceStep { key: index, parents: vec![] }).collect()
     }
@@ -150,7 +150,7 @@ impl protocol::InferredField<MathematicalSnapshot> for MathematicalRootsField {
     /// are a global function of ALL coefficients, unlike `flat-position`'s local per-edge deps) plus
     /// this key's isolating interval (so a coefficient edit that shifts WHICH interval index `key`
     /// lands on also invalidates, even if the isolation count happens to stay the same).
-    fn dep_input(snapshot: &MathematicalSnapshot, key: &Self::Key, _parents: &[Self::Key]) -> Vec<u8> {
+    async fn dep_input(snapshot: &MathematicalSnapshot, key: &Self::Key, _parents: &[Self::Key]) -> Vec<u8> {
         let Some(poly) = equation_integer_polynomial(&snapshot.equation) else { return Vec::new() };
         let mut bytes = Vec::new();
         for coeff in poly.coeffs() {
@@ -168,7 +168,7 @@ impl protocol::InferredField<MathematicalSnapshot> for MathematicalRootsField {
     /// 🧮️ Re-isolates (cheap relative to refinement — Sturm sequences over small integer
     /// polynomials) and bisects the `key`-th interval down to `refine_width()`, returning the
     /// refined interval's midpoint as `f64`.
-    fn compute(snapshot: &MathematicalSnapshot, key: &Self::Key, _parents: &[Self::Value]) -> Self::Value {
+    async fn compute(snapshot: &MathematicalSnapshot, key: &Self::Key, _parents: &[Self::Value]) -> Self::Value {
         let Some(poly) = equation_integer_polynomial(&snapshot.equation) else { return MathematicalRoot::default() };
         let intervals = crate::polynomial::roots::isolate_real_roots(&poly);
         let Some((lo, hi)) = intervals.get(*key) else { return MathematicalRoot::default() };
@@ -181,7 +181,7 @@ impl protocol::InferredField<MathematicalSnapshot> for MathematicalRootsField {
 /// 🌱️ Assembles the whole `roots` field via `protocol::infer_field` — the real dependency-hash-
 /// chained plan/compute orchestration `InferredField` exists for, not a hand-rolled loop over
 /// `plan()`/`compute()`. Returns a plain ascending `Vec` (index order) for `MathematicalInference`.
-pub fn compute_mathematical_roots(snapshot: &MathematicalSnapshot) -> Vec<MathematicalRoot> {
+pub async fn compute_mathematical_roots(snapshot: &MathematicalSnapshot) -> Vec<MathematicalRoot> {
     let values = protocol::infer_field::<MathematicalSnapshot, MathematicalRootsField>(snapshot, None);
     values.into_values().collect()
 }
@@ -196,7 +196,7 @@ mod tests {
     /// 🧪️ `x^2 - 3x + 2 = (x-1)(x-2)`, roots `{1, 2}` — built directly as a labeled tree (`Add` of
     /// `x^2`, `-3x`, `2`), the same shape `expr_to_equation_node` would produce from
     /// `cas::polybridge`'s own canonical `Add` term order.
-    fn quadratic_with_roots_one_and_two() -> EquationSnapshot {
+    async fn quadratic_with_roots_one_and_two() -> EquationSnapshot {
         let x = EquationNode { label: EquationNodeLabel(1), kind: EquationNodeKind::Symbol { name: "x".into() } };
         let two_exp = EquationNode { label: EquationNodeLabel(2), kind: EquationNodeKind::Integer { lexeme: "2".into() } };
         let x_squared = EquationNode { label: EquationNodeLabel(3), kind: EquationNodeKind::Pow { base: Box::new(x.clone()), exponent: Box::new(two_exp) } };
@@ -208,7 +208,7 @@ mod tests {
     }
 
     #[test]
-    fn extracts_integer_polynomial_coefficients_by_degree() {
+    async fn extracts_integer_polynomial_coefficients_by_degree() {
         let (var, coeffs) = extract_integer_polynomial(&quadratic_with_roots_one_and_two().expr).expect("polynomial in scope");
         assert_eq!(var, "x");
         assert_eq!(coeffs.get(&0).map(|c| c.to_string()), Some("2".to_string()));
@@ -217,7 +217,7 @@ mod tests {
     }
 
     #[test]
-    fn plan_has_one_step_per_isolated_root_with_no_parents() {
+    async fn plan_has_one_step_per_isolated_root_with_no_parents() {
         let mut snapshot = MathematicalSnapshot::default();
         snapshot.equation = quadratic_with_roots_one_and_two();
         let steps = <MathematicalRootsField as protocol::InferredField<MathematicalSnapshot>>::plan(&snapshot);
@@ -226,7 +226,7 @@ mod tests {
     }
 
     #[test]
-    fn compute_mathematical_roots_finds_one_and_two() {
+    async fn compute_mathematical_roots_finds_one_and_two() {
         let mut snapshot = MathematicalSnapshot::default();
         snapshot.equation = quadratic_with_roots_one_and_two();
         let mut roots: Vec<f64> = compute_mathematical_roots(&snapshot).into_iter().map(|r| r.approx).collect();
@@ -237,7 +237,7 @@ mod tests {
     }
 
     #[test]
-    fn out_of_scope_equation_plans_zero_steps_not_a_panic() {
+    async fn out_of_scope_equation_plans_zero_steps_not_a_panic() {
         // 🔎️ Rational, non-integer coefficient — documented scope boundary, not a crash.
         let snapshot = MathematicalSnapshot::default(); // default equation is the integer literal 0
         let steps = <MathematicalRootsField as protocol::InferredField<MathematicalSnapshot>>::plan(&snapshot);
@@ -248,7 +248,7 @@ mod tests {
     /// same `DepHash` chain, same values — required for `protocol::infer_field`'s cache to ever be
     /// safe to enable for this field.
     #[test]
-    fn dep_hash_is_deterministic_across_repeated_calls() {
+    async fn dep_hash_is_deterministic_across_repeated_calls() {
         let mut snapshot = MathematicalSnapshot::default();
         snapshot.equation = quadratic_with_roots_one_and_two();
         let first = <MathematicalRootsField as protocol::InferredField<MathematicalSnapshot>>::dep_input(&snapshot, &0, &[]);
@@ -260,7 +260,7 @@ mod tests {
     /// change `dep_input`'s bytes for every root, proving the chain is actually wired to
     /// `equation`, not a constant.
     #[test]
-    fn dep_input_changes_when_a_coefficient_changes() {
+    async fn dep_input_changes_when_a_coefficient_changes() {
         let mut before = MathematicalSnapshot::default();
         before.equation = quadratic_with_roots_one_and_two();
         let mut after = before.clone();

@@ -50,7 +50,7 @@ pub use tile_editor::PRESENT_PLAY_BODY_MAIN;
 
 /// 🎯️ An `ActionDescriptor` addressed at this app — the single factory every taxonomy node's chrome
 /// (`📌️panels/*`) builds its `on_change`/item actions with.
-pub fn animate_present_action(action: &str, args: Option<Value>) -> ActionDescriptor {
+pub async fn animate_present_action(action: &str, args: Option<Value>) -> ActionDescriptor {
     semio_framework_plugin::ActionFactory::new(PRESENT_PLAY_APP_ID).action(action, args)
 }
 //#endregion 🔖️Constants
@@ -72,7 +72,7 @@ pub struct PresentDispatchCtx {
 
 /// 🕹️ JSON-encodes `ids` as the `Vec<InteractionTarget>` string the framework's `interactionSelect`
 /// action requires in its `targets` arg — every hit id shares the domain's one granularity.
-fn interaction_targets_json(ids: &[String]) -> String {
+async fn interaction_targets_json(ids: &[String]) -> String {
     serde_json::to_string(&ids.iter().map(|id| serde_json::json!({ "granularity": PRESENT_INTERACTION_GRANULARITY, "id": id })).collect::<Vec<_>>()).unwrap_or_else(|_| "[]".into())
 }
 
@@ -80,7 +80,7 @@ fn interaction_targets_json(ids: &[String]) -> String {
 /// normal action funnel — the only way `canvas-pointer-down`'s hit test can drive selection now that
 /// it is framework-owned state, never a `PresentConfigMutation` (ticket
 /// 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM).
-pub(crate) fn interaction_select_effect(ids: &[String], merge: &str) -> Effect {
+pub(crate) async fn interaction_select_effect(ids: &[String], merge: &str) -> Effect {
     Effect::ReplayShellCommand {
         action_id: semio_framework::INTERACTION_SELECT_ACTION_ID.into(),
         args: semio_framework::optional_json_to_dsl(Some(serde_json::json!({ "domainId": PRESENT_INTERACTION_DOMAIN, "targets": interaction_targets_json(ids), "merge": merge, "method": "pick" }))),
@@ -93,7 +93,7 @@ pub(crate) fn interaction_select_effect(ids: &[String], merge: &str) -> Effect {
 /// 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES): this app's typed media I/O surface
 /// (`AppDefinition.io`) — mirrors `create_animate_present_app`'s `.artifact_kind(...)` literal (schema/
 /// media type copied verbatim) plus the extra `frames:in` input port (Wave-2 port recipe).
-pub fn present_io() -> AppIo {
+pub async fn present_io() -> AppIo {
     semio_framework_plugin::AppIo {
         document_schema: PRESENT_DOCUMENT_SCHEMA.into(),
         document_media_type: semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::Presentation, form: semio_framework_plugin::MediaForm::Deck },
@@ -121,11 +121,11 @@ pub fn present_io() -> AppIo {
 /// land in distinct, stable cells without needing a live host/counter.
 const FRAME_IMPORT_GRID_COLUMNS: usize = 4;
 
-pub fn next_frame_tile_id(existing_tile_count: usize) -> String {
+pub async fn next_frame_tile_id(existing_tile_count: usize) -> String {
     format!("frame-{}", existing_tile_count + 1)
 }
 
-pub fn next_frame_tile_crop(existing_tile_count: usize) -> crate::artifacts::present::FigureTileFrame {
+pub async fn next_frame_tile_crop(existing_tile_count: usize) -> crate::artifacts::present::FigureTileFrame {
     let cell = 1.0 / FRAME_IMPORT_GRID_COLUMNS as f64;
     let column = existing_tile_count % FRAME_IMPORT_GRID_COLUMNS;
     let row = existing_tile_count / FRAME_IMPORT_GRID_COLUMNS;
@@ -136,7 +136,7 @@ pub fn next_frame_tile_crop(existing_tile_count: usize) -> crate::artifacts::pre
 //#region 🔖️Helpers
 /// 🔢️ Mints a fresh, process-unique tile id — shared by `🎮️commands/🀄️add-tile::add_tile` and
 /// `🎮️commands/⌨️engagement::engagement_submit`'s `"add"` keyword.
-pub(crate) fn new_tile_id(prefix: &str) -> String {
+pub(crate) async fn new_tile_id(prefix: &str) -> String {
     let serial = {
         let hex = blake3::hash(concat!(file!(), line!()).as_bytes()).to_hex();
         u64::from_str_radix(&hex[..8], 16).unwrap_or(1)
@@ -146,7 +146,7 @@ pub(crate) fn new_tile_id(prefix: &str) -> String {
 
 /// 🧹️ Retains only the ids that reference an existing tile in `deck` — shared by every command that
 /// accepts a selection/target id list.
-pub(crate) fn valid_tile_ids(deck: &PresentSnapshot, ids: Vec<String>) -> Vec<String> {
+pub(crate) async fn valid_tile_ids(deck: &PresentSnapshot, ids: Vec<String>) -> Vec<String> {
     let (_, tiles) = crate::artifacts::present::present_working_scene(deck);
     let valid: HashSet<&str> = tiles.iter().map(|tile| tile.id.as_str()).collect();
     ids.into_iter().filter(|id| valid.contains(id.as_str())).collect()
@@ -154,7 +154,7 @@ pub(crate) fn valid_tile_ids(deck: &PresentSnapshot, ids: Vec<String>) -> Vec<St
 
 /// 🎞️ `frames:in` display name (Wave-2 port recipe) — a `Structured` payload's `"name"`/`"src"` field
 /// (falling back to a generic label), a `Binary` payload's leading blob-hash characters.
-fn frame_media_name(port: &str, media: &Media) -> Result<String, MediaError> {
+async fn frame_media_name(port: &str, media: &Media) -> Result<String, MediaError> {
     match &media.payload {
         MediaPayload::Structured { json, .. } => {
             let value: Value = serde_json::from_str(json).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
@@ -169,7 +169,7 @@ fn frame_media_name(port: &str, media: &Media) -> Result<String, MediaError> {
 /// landed `Effect` contract carries no clipboard variant, so the prompt is exported as media).
 /// Shared by `🎮️commands/🐚️copy-prompt::copy_prompt` and `🎮️commands/⌨️engagement::engagement_submit`'s
 /// `"copy"`/`"copy prompt"` keywords.
-pub(crate) fn tile_morph_prompt_effect(deck: &PresentSnapshot) -> Effect {
+pub(crate) async fn tile_morph_prompt_effect(deck: &PresentSnapshot) -> Effect {
     let (source, tiles) = crate::artifacts::present::present_working_scene(deck);
     Effect::DownloadMediaExport { filename: "tile-morph-prompt.md".into(), mime_type: "text/markdown".into(), data: build_tile_morph_prompt(&source, &tiles), encoding: None }
 }
@@ -178,7 +178,7 @@ pub(crate) fn tile_morph_prompt_effect(deck: &PresentSnapshot) -> Effect {
 /// whole document" gesture (`ArtifactStore::reset`, applied host-side) that
 /// `🎮️commands/🖼️set-source::set_active_example` uses instead of the banned whole-snapshot mutation. The
 /// spr is a fresh, edit-free op-log — a genesis envelope with no history to encode.
-pub fn reset_present_document_effect(document: &PresentSnapshot) -> Effect {
+pub async fn reset_present_document_effect(document: &PresentSnapshot) -> Effect {
     let pack = <PresentSnapshot as store::ArtifactPack>::encode_pack(document);
     let envelope = store::create_document_envelope::<PresentSnapshot, PresentMutation>(PRESENT_DOCUMENT_SCHEMA, "present", document.clone(), None);
     let spr = store::print_document_spr(&envelope).expect("present document spr encode is infallible for a fresh, edit-free envelope");
@@ -242,15 +242,15 @@ impl ArtifactEditor for AnimatePresentPlayApp {
     const DIALECT: Dialect = crate::artifacts::present::ANIMATE_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = PRESENT_DOCUMENT_SCHEMA;
 
-    fn app_schema() -> Option<::schema::AppSchemaDescriptor> {
+    async fn app_schema() -> Option<::schema::AppSchemaDescriptor> {
         Some(crate::editor::animate::config::schema::app_schema_descriptor())
     }
 
-    fn initial_snapshot() -> PresentSnapshot {
+    async fn initial_snapshot() -> PresentSnapshot {
         default_present_snapshot()
     }
 
-    fn io() -> Option<AppIo> {
+    async fn io() -> Option<AppIo> {
         Some(present_io())
     }
 
@@ -263,7 +263,7 @@ impl ArtifactEditor for AnimatePresentPlayApp {
     /// schema's single shared `source` means tiles, not `source`, are the natural insertion point).
     /// Never mutates anything directly: the caller applies the returned `Tiles(Add)` through the
     /// ordinary, undoable document store.
-    fn import_media(port: &str, media: &Media, doc: &ArtifactView<'_, PresentSnapshot>) -> Result<Emit<PresentMutation, PresentConfigMutation, Self::DraftMutation>, MediaError> {
+    async fn import_media(port: &str, media: &Media, doc: &ArtifactView<'_, PresentSnapshot>) -> Result<Emit<PresentMutation, PresentConfigMutation, Self::DraftMutation>, MediaError> {
         if port != "frames:in" {
             return Err(MediaError::NotImplemented);
         }
@@ -278,11 +278,11 @@ impl ArtifactEditor for AnimatePresentPlayApp {
 
     /// 🏷️ The manifest action id each command was declared under — supplied wholesale by
     /// `app_commands!`'s generated `command_id()`.
-    fn command_id(command: &PresentCommand) -> &'static str {
+    async fn command_id(command: &PresentCommand) -> &'static str {
         command.command_id()
     }
 
-    fn handle(
+    async fn handle(
         command: &PresentCommand,
         doc: &ArtifactView<'_, PresentSnapshot>,
         cfg: &ConfigView<'_, PresentConfig>,
@@ -300,7 +300,7 @@ impl ArtifactEditor for AnimatePresentPlayApp {
     /// `config.selected_ids` are gone from `inspection::render`; the client renders the tile-selected
     /// canvas highlight itself from the framework's own interaction state now (matches `🖍️draw`'s
     /// canvas render, same reason).
-    fn render(body_key: &str, doc: &ArtifactView<'_, PresentSnapshot>, cfg: &ConfigView<'_, PresentConfig>) -> UiNode {
+    async fn render(body_key: &str, doc: &ArtifactView<'_, PresentSnapshot>, cfg: &ConfigView<'_, PresentConfig>) -> UiNode {
         let deck = doc.snapshot;
         let config = cfg.snapshot;
         let labels = animate_present_labels(config);
@@ -319,7 +319,7 @@ impl ArtifactEditor for AnimatePresentPlayApp {
 /// 🧱️ The manifest stitch: one call per taxonomy node, each sourced from that node's own `definition()`.
 /// Only the leaf action/keybinding declarations (which have no dedicated `_def` passthrough) are written
 /// out inline.
-pub fn create_animate_present_app() -> semio_framework_plugin::AppDefinition {
+pub async fn create_animate_present_app() -> semio_framework_plugin::AppDefinition {
     Editor::builder(crate::artifacts::present::ANIMATE_DIALECT)
             .document(["semio", "animate"])
             .artifact_kind(crate::artifacts::present::artifact_kind())
@@ -417,7 +417,7 @@ pub(crate) mod testkit {
     /// builds it.
 
     /// 🧪️ A bare app instance — no `AppActionRegistry`, so undeclared internal commands dispatch freely.
-    pub fn present_app() -> PresentApp {
+    pub async fn present_app() -> PresentApp {
         new_app::<EditorApp<AnimatePresentPlayApp>>()
     }
 
@@ -425,20 +425,20 @@ pub(crate) mod testkit {
     /// `App { definition, examples }` shape `new_app_with_registry`/
     /// `testkit::assert_declared_actions_bridge_to_commands` still expect — framework testkit gap, not
     /// modifiable here (`🧰️framework/**` is outside this packet's lease).
-    fn animate_present_app_manifest_for_testkit() -> semio_framework_plugin::App {
+    async fn animate_present_app_manifest_for_testkit() -> semio_framework_plugin::App {
         semio_framework_plugin::App { definition: create_animate_present_app(), examples: Vec::new() }
     }
 
     /// 🧪️ An app wired to the real manifest registry — enforces View/Shell kind discipline.
-    pub fn present_app_with_registry() -> PresentApp {
+    pub async fn present_app_with_registry() -> PresentApp {
         new_app_with_registry::<EditorApp<AnimatePresentPlayApp>>(animate_present_app_manifest_for_testkit)
     }
 
-    pub fn dispatch(app: &mut PresentApp, command: PresentCommand) -> InvocationResult {
+    pub async fn dispatch(app: &mut PresentApp, command: PresentCommand) -> InvocationResult {
         app.dispatch_typed(command, &meta("local")).expect("dispatch")
     }
 
-    pub fn render(app: &mut PresentApp, body_key: &str) -> String {
+    pub async fn render(app: &mut PresentApp, body_key: &str) -> String {
         serde_json::to_string(&app.render(body_key, None, &ViewModel::default()).expect("render")).expect("render json")
     }
 }
@@ -454,12 +454,12 @@ mod tests {
     use semio_framework_plugin::PluginApp;
 
     #[test]
-    fn deck_schema_is_animate_present() {
+    async fn deck_schema_is_animate_present() {
         assert_eq!(default_present_snapshot().schema, PRESENT_DOCUMENT_SCHEMA);
     }
 
     #[test]
-    fn undo_redo_round_trip_through_the_wrapper() {
+    async fn undo_redo_round_trip_through_the_wrapper() {
         let mut app = present_app();
         app.dispatch_typed(PresentCommand::SeedGrid(seed_grid::SeedGrid { rows: 2, columns: 2 }), &meta("local")).expect("seed grid");
         assert_eq!(crate::artifacts::present::present_working_scene(&app.snapshot().expect("projection")).1.len(), 4);
@@ -470,7 +470,7 @@ mod tests {
     }
 
     #[test]
-    fn render_unknown_body_key_reports_it_by_name() {
+    async fn render_unknown_body_key_reports_it_by_name() {
         use semio_framework_plugin::ViewModel;
         let mut app = present_app();
         let node = app.render("some.unknown.body", None, &ViewModel::default()).expect("render unknown");
@@ -479,7 +479,7 @@ mod tests {
     }
 
     #[test]
-    fn app_manifest_declares_expected_operations_and_shell_actions() {
+    async fn app_manifest_declares_expected_operations_and_shell_actions() {
         use semio_framework_plugin::ActionKind;
         let definition = create_animate_present_app();
         let operation_ids: Vec<&str> = definition.window_kinds.iter().flat_map(|window| window.actions.iter()).filter(|action| matches!(action.kind, ActionKind::Mutation)).map(|action| action.id.as_str()).collect();
@@ -492,7 +492,7 @@ mod tests {
 
     //#region 🔖️ManifestSanity
     #[test]
-    fn the_manifest_stitches_every_taxonomy_node() {
+    async fn the_manifest_stitches_every_taxonomy_node() {
         let json = serde_json::to_string(&create_animate_present_app()).expect("app definition json");
         assert!(json.contains(tile_editor::PRESENT_PLAY_WINDOW_MAIN), "window kind missing from the manifest: {json}");
         assert!(json.contains(main::PRESENT_PLAY_MODE_MAIN), "mode missing from the manifest");
@@ -505,7 +505,7 @@ mod tests {
     /// 🕹️ The `tiles` domain is declared `HierarchyProvider::Flat`, non-transitive, broadcast, and
     /// bound to the tile-editor window (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM).
     #[test]
-    fn the_manifest_declares_the_tiles_interaction_domain() {
+    async fn the_manifest_declares_the_tiles_interaction_domain() {
         let definition = create_animate_present_app();
         let domain = definition.interactions.iter().find(|interaction| interaction.id == PRESENT_INTERACTION_DOMAIN).expect("tiles interaction domain declared");
         assert!(matches!(domain.hierarchy, HierarchyProvider::Flat));
@@ -520,7 +520,7 @@ mod tests {
     /// source), and exchanging operations over a `MemoryBackbone` converges both sides to contain BOTH
     /// edits — impossible with whole-document snapshots, which would clobber one another.
     #[test]
-    fn two_instances_converge_disjoint_edits_via_backbone() {
+    async fn two_instances_converge_disjoint_edits_via_backbone() {
         use store::MemoryBackbone;
         let mut instance_a = present_app();
         let mut instance_b = present_app();
@@ -546,7 +546,7 @@ mod tests {
 
     //#region 🔖️PortTests
     #[test]
-    fn present_io_declares_frames_in_and_document_ports() {
+    async fn present_io_declares_frames_in_and_document_ports() {
         let ports = AnimatePresentPlayApp::io().expect("io").all_ports();
         assert!(ports.iter().any(|port| port.id == "document:in"));
         assert!(ports.iter().any(|port| port.id == "document:out"));
@@ -554,7 +554,7 @@ mod tests {
     }
 
     #[test]
-    fn import_media_frames_in_inserts_a_new_tile() {
+    async fn import_media_frames_in_inserts_a_new_tile() {
         use semio_framework_plugin::{Media, MediaClass, MediaForm, MediaPayload, MediaType};
         use serde_json::json;
         let mut app = testkit::present_app_with_registry();
@@ -567,7 +567,7 @@ mod tests {
     }
 
     #[test]
-    fn import_media_frames_in_places_repeated_imports_in_distinct_cells() {
+    async fn import_media_frames_in_places_repeated_imports_in_distinct_cells() {
         use semio_framework_plugin::{Media, MediaClass, MediaForm, MediaPayload, MediaType};
         use serde_json::json;
         let mut app = testkit::present_app_with_registry();
@@ -581,7 +581,7 @@ mod tests {
     }
 
     #[test]
-    fn import_media_rejects_unknown_port() {
+    async fn import_media_rejects_unknown_port() {
         use semio_framework_plugin::{Media, MediaClass, MediaForm, MediaPayload, MediaType};
         let mut app = testkit::present_app_with_registry();
         let media = Media { media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Raster }, payload: MediaPayload::Structured { schema: "2d.image".into(), json: "{}".into() } };
@@ -589,7 +589,7 @@ mod tests {
     }
 
     #[test]
-    fn empty_present_snapshot_has_no_tiles() {
+    async fn empty_present_snapshot_has_no_tiles() {
         let snapshot = crate::artifacts::present::schema::empty_present_snapshot();
         assert!(crate::artifacts::present::present_working_scene(&snapshot).1.is_empty());
     }
@@ -598,7 +598,7 @@ mod tests {
     /// 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES) alongside `present_io`'s relocation to
     /// this file's `🔖️Io` region.
     #[test]
-    fn present_io_declares_the_frames_in_port() {
+    async fn present_io_declares_the_frames_in_port() {
         let io = present_io();
         assert_eq!(io.document_schema, PRESENT_DOCUMENT_SCHEMA);
         assert_eq!(io.ports.len(), 1);
@@ -611,7 +611,7 @@ mod tests {
     }
 
     #[test]
-    fn frame_import_placement_is_deterministic_and_non_overlapping() {
+    async fn frame_import_placement_is_deterministic_and_non_overlapping() {
         let first = next_frame_tile_crop(0);
         let second = next_frame_tile_crop(1);
         assert_ne!(first, second);
@@ -627,7 +627,7 @@ mod tests {
     /// row's wire keyword must be distinct — the cross-cutting invariant `app_commands!` is there to
     /// hold.
     #[test]
-    fn command_ids_are_unique() {
+    async fn command_ids_are_unique() {
         let commands = every_command();
         let ids: Vec<&str> = commands.iter().map(|command| command.command_id()).collect();
         let mut sorted = ids.clone();
@@ -639,7 +639,7 @@ mod tests {
 
     /// ⚖️ LAW: text and binary are two projections of the same command, for every single row.
     #[test]
-    fn every_command_round_trips_through_text_and_binary() {
+    async fn every_command_round_trips_through_text_and_binary() {
         for command in every_command() {
             store::os_store::test_support::assert_op_text_binary_equivalence(&command);
         }
@@ -649,7 +649,7 @@ mod tests {
     /// a missing `#[dsl(keyword = ..)]` on a payload struct silently breaks (the record prints with no
     /// keyword at all and no longer parses).
     #[test]
-    fn every_printed_op_line_starts_with_the_rows_wire_keyword() {
+    async fn every_printed_op_line_starts_with_the_rows_wire_keyword() {
         let expected_keywords: [(&str, &str); 18] = [
             ("seedGrid", "seed-grid"),
             ("addTile", "add-tile"),
@@ -681,7 +681,7 @@ mod tests {
     /// bytes captured from the pre-merge `present_protocol` crate. A regression here is a real format
     /// break, not a test-fixture mismatch.
     #[test]
-    fn optional_field_rows_keep_their_pre_migration_bytes() {
+    async fn optional_field_rows_keep_their_pre_migration_bytes() {
         let with_crop = PresentCommand::AddTile(add_tile::AddTile { crop: Some(crate::artifacts::present::FigureTileFrame { x: 0.1, y: 0.1, width: 0.2, height: 0.2 }) });
         let without_crop = PresentCommand::AddTile(add_tile::AddTile { crop: None });
         assert!(OpText::print_op(&with_crop).starts_with("add-tile"));
@@ -696,7 +696,7 @@ mod tests {
     }
 
     /// 🧾️ One representative value per row, in declaration (= binary ordinal) order.
-    pub(super) fn every_command() -> Vec<PresentCommand> {
+    pub(super) async fn every_command() -> Vec<PresentCommand> {
         vec![
             PresentCommand::SeedGrid(seed_grid::SeedGrid { rows: 2, columns: 3 }),
             PresentCommand::AddTile(add_tile::AddTile { crop: Some(crate::artifacts::present::FigureTileFrame { x: 0.1, y: 0.1, width: 0.2, height: 0.2 }) }),

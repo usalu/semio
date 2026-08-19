@@ -26,23 +26,23 @@ pub struct RationalBezier2 {
 }
 
 impl RationalBezier3 {
-    pub fn new(controls: Vec<Pnt3>, weights: Vec<f64>) -> Self {
+    pub async fn new(controls: Vec<Pnt3>, weights: Vec<f64>) -> Self {
         debug_assert_eq!(controls.len(), weights.len());
         RationalBezier3 { controls, weights }
     }
-    pub fn unweighted(controls: Vec<Pnt3>) -> Self {
+    pub async fn unweighted(controls: Vec<Pnt3>) -> Self {
         let weights = vec![1.0; controls.len()];
         RationalBezier3::new(controls, weights)
     }
-    pub fn degree(&self) -> usize {
+    pub async fn degree(&self) -> usize {
         self.controls.len().saturating_sub(1)
     }
-    pub fn is_rational(&self) -> bool {
+    pub async fn is_rational(&self) -> bool {
         self.weights.iter().any(|w| (w - 1.0).abs() > 1e-12)
     }
     /// 🎀️ De Casteljau evaluation via homogeneous (weighted) coordinates, so a single algorithm
     /// covers both the polynomial and rational cases.
-    pub fn eval(&self, t: f64) -> Pnt3 {
+    pub async fn eval(&self, t: f64) -> Pnt3 {
         let n = self.controls.len();
         let mut hx: Vec<f64> = (0..n).map(|i| self.controls[i].x * self.weights[i]).collect();
         let mut hy: Vec<f64> = (0..n).map(|i| self.controls[i].y * self.weights[i]).collect();
@@ -60,7 +60,7 @@ impl RationalBezier3 {
     }
     /// 🎀️ Splits into two segments at `t`, each reparameterized onto `[0, 1]`. Uses de Casteljau
     /// on the homogeneous control net so the split is exact for rational curves too.
-    pub fn subdivide(&self, t: f64) -> (RationalBezier3, RationalBezier3) {
+    pub async fn subdivide(&self, t: f64) -> (RationalBezier3, RationalBezier3) {
         let n = self.controls.len();
         let mut hx = vec![vec![0.0; n]; n];
         let mut hy = vec![vec![0.0; n]; n];
@@ -101,7 +101,7 @@ impl RationalBezier3 {
     /// control points contains an unweighted curve exactly; for rational curves with all-positive
     /// weights it still contains the curve, since the curve point is a convex combination of the
     /// control points).
-    pub fn control_hull_box(&self) -> (Pnt3, Pnt3) {
+    pub async fn control_hull_box(&self) -> (Pnt3, Pnt3) {
         let mut lo = self.controls[0];
         let mut hi = self.controls[0];
         for p in &self.controls[1..] {
@@ -113,7 +113,7 @@ impl RationalBezier3 {
     /// 🎀️ Degree-elevates a polynomial (non-rational) Bézier by one degree, preserving the exact
     /// curve. Rational elevation is not implemented (unneeded by the kernel: rational Béziers are
     /// only ever consumed at fixed degree by the conic/NURBS conversion paths).
-    pub fn elevate(&self) -> RationalBezier3 {
+    pub async fn elevate(&self) -> RationalBezier3 {
         debug_assert!(!self.is_rational(), "degree elevation is only implemented for polynomial (unweighted) Beziers");
         let n = self.degree();
         let m = n + 1;
@@ -130,18 +130,18 @@ impl RationalBezier3 {
 }
 
 impl RationalBezier2 {
-    pub fn new(controls: Vec<Pnt2>, weights: Vec<f64>) -> Self {
+    pub async fn new(controls: Vec<Pnt2>, weights: Vec<f64>) -> Self {
         debug_assert_eq!(controls.len(), weights.len());
         RationalBezier2 { controls, weights }
     }
-    pub fn unweighted(controls: Vec<Pnt2>) -> Self {
+    pub async fn unweighted(controls: Vec<Pnt2>) -> Self {
         let weights = vec![1.0; controls.len()];
         RationalBezier2::new(controls, weights)
     }
-    pub fn degree(&self) -> usize {
+    pub async fn degree(&self) -> usize {
         self.controls.len().saturating_sub(1)
     }
-    pub fn eval(&self, t: f64) -> Pnt2 {
+    pub async fn eval(&self, t: f64) -> Pnt2 {
         let n = self.controls.len();
         let mut hx: Vec<f64> = (0..n).map(|i| self.controls[i].x * self.weights[i]).collect();
         let mut hy: Vec<f64> = (0..n).map(|i| self.controls[i].y * self.weights[i]).collect();
@@ -155,7 +155,7 @@ impl RationalBezier2 {
         }
         Pnt2::new(hx[0] / hw[0], hy[0] / hw[0])
     }
-    pub fn subdivide(&self, t: f64) -> (RationalBezier2, RationalBezier2) {
+    pub async fn subdivide(&self, t: f64) -> (RationalBezier2, RationalBezier2) {
         let n = self.controls.len();
         let mut hx = vec![vec![0.0; n]; n];
         let mut hy = vec![vec![0.0; n]; n];
@@ -189,7 +189,7 @@ impl RationalBezier2 {
         }
         (RationalBezier2::new(left_c, left_w), RationalBezier2::new(right_c, right_w))
     }
-    pub fn control_hull_box(&self) -> (Pnt2, Pnt2) {
+    pub async fn control_hull_box(&self) -> (Pnt2, Pnt2) {
         let mut lo = self.controls[0];
         let mut hi = self.controls[0];
         for p in &self.controls[1..] {
@@ -207,13 +207,13 @@ impl RationalBezier2 {
 /// 🎀️ Recursively subdivides a 2D Bézier segment until every leaf's control hull is smaller than
 /// `tol` in both axes or `max_depth` is reached — the "fat line" precursor to full clipping,
 /// used directly by [`crate::int_cc`] for curve/curve intersection.
-pub fn subdivide_until_flat(b: &RationalBezier2, tol: f64, max_depth: u32) -> Vec<RationalBezier2> {
+pub async fn subdivide_until_flat(b: &RationalBezier2, tol: f64, max_depth: u32) -> Vec<RationalBezier2> {
     let mut leaves = Vec::new();
     subdivide_recursive(b.clone(), tol, max_depth, &mut leaves);
     leaves
 }
 
-fn subdivide_recursive(b: RationalBezier2, tol: f64, depth: u32, out: &mut Vec<RationalBezier2>) {
+async fn subdivide_recursive(b: RationalBezier2, tol: f64, depth: u32, out: &mut Vec<RationalBezier2>) {
     let (lo, hi) = b.control_hull_box();
     if (hi.x - lo.x) <= tol && (hi.y - lo.y) <= tol || depth == 0 {
         out.push(b);
@@ -230,7 +230,7 @@ fn subdivide_recursive(b: RationalBezier2, tol: f64, depth: u32, out: &mut Vec<R
 
 /// 🎀️ Axis-aligned bounding-box overlap test between two curves' control hulls — the cheap
 /// rejection test every pairwise intersector runs before doing real work.
-pub fn boxes_overlap2(a: (Pnt2, Pnt2), b: (Pnt2, Pnt2), tol: f64) -> bool {
+pub async fn boxes_overlap2(a: (Pnt2, Pnt2), b: (Pnt2, Pnt2), tol: f64) -> bool {
     a.0.x - tol <= b.1.x && b.0.x - tol <= a.1.x && a.0.y - tol <= b.1.y && b.0.y - tol <= a.1.y
 }
 
@@ -242,7 +242,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn unweighted_bezier_eval_matches_de_casteljau_by_hand() {
+    async fn unweighted_bezier_eval_matches_de_casteljau_by_hand() {
         // Quadratic bezier: (0,0),(1,2),(2,0) at t=0.5 -> (1, 1)
         let b = RationalBezier2::unweighted(vec![Pnt2::new(0.0, 0.0), Pnt2::new(1.0, 2.0), Pnt2::new(2.0, 0.0)]);
         let p = b.eval(0.5);
@@ -251,14 +251,14 @@ mod tests {
     }
 
     #[test]
-    fn eval_at_endpoints_matches_first_and_last_control_point() {
+    async fn eval_at_endpoints_matches_first_and_last_control_point() {
         let b = RationalBezier3::unweighted(vec![Pnt3::new(0.0, 0.0, 0.0), Pnt3::new(1.0, 5.0, -2.0), Pnt3::new(3.0, 1.0, 4.0)]);
         assert_eq!(b.eval(0.0), b.controls[0]);
         assert_eq!(b.eval(1.0), *b.controls.last().unwrap());
     }
 
     #[test]
-    fn subdivide_matches_original_at_endpoints_and_split_point() {
+    async fn subdivide_matches_original_at_endpoints_and_split_point() {
         let b = RationalBezier3::unweighted(vec![Pnt3::new(0.0, 0.0, 0.0), Pnt3::new(1.0, 2.0, 0.0), Pnt3::new(2.0, -1.0, 1.0), Pnt3::new(3.0, 0.0, 2.0)]);
         let t = 0.35;
         let (left, right) = b.subdivide(t);
@@ -269,7 +269,7 @@ mod tests {
     }
 
     #[test]
-    fn subdivide_of_rational_bezier_preserves_curve_points() {
+    async fn subdivide_of_rational_bezier_preserves_curve_points() {
         // Quarter circle as a rational quadratic Bezier.
         let s = std::f64::consts::FRAC_1_SQRT_2;
         let b = RationalBezier2::new(vec![Pnt2::new(1.0, 0.0), Pnt2::new(1.0, 1.0), Pnt2::new(0.0, 1.0)], vec![1.0, s, 1.0]);
@@ -285,7 +285,7 @@ mod tests {
     }
 
     #[test]
-    fn control_hull_box_contains_all_sampled_curve_points() {
+    async fn control_hull_box_contains_all_sampled_curve_points() {
         let b = RationalBezier3::unweighted(vec![Pnt3::new(0.0, 0.0, 0.0), Pnt3::new(5.0, 5.0, 5.0), Pnt3::new(-3.0, 2.0, -1.0), Pnt3::new(1.0, -2.0, 3.0)]);
         let (lo, hi) = b.control_hull_box();
         for i in 0..=20 {
@@ -297,7 +297,7 @@ mod tests {
     }
 
     #[test]
-    fn elevate_preserves_the_curve_exactly() {
+    async fn elevate_preserves_the_curve_exactly() {
         let b = RationalBezier3::unweighted(vec![Pnt3::new(0.0, 0.0, 0.0), Pnt3::new(1.0, 3.0, -1.0), Pnt3::new(2.0, -1.0, 2.0)]);
         let elevated = b.elevate();
         assert_eq!(elevated.degree(), b.degree() + 1);
@@ -308,7 +308,7 @@ mod tests {
     }
 
     #[test]
-    fn subdivide_until_flat_leaves_cover_the_full_parameter_range() {
+    async fn subdivide_until_flat_leaves_cover_the_full_parameter_range() {
         let b = RationalBezier2::unweighted(vec![Pnt2::new(0.0, 0.0), Pnt2::new(1.0, 5.0), Pnt2::new(2.0, -3.0), Pnt2::new(3.0, 1.0)]);
         let leaves = subdivide_until_flat(&b, 0.1, 12);
         assert!(!leaves.is_empty());
@@ -318,7 +318,7 @@ mod tests {
     }
 
     #[test]
-    fn boxes_overlap_detects_disjoint_and_touching_boxes() {
+    async fn boxes_overlap_detects_disjoint_and_touching_boxes() {
         let a = (Pnt2::new(0.0, 0.0), Pnt2::new(1.0, 1.0));
         let b = (Pnt2::new(0.5, 0.5), Pnt2::new(2.0, 2.0));
         let c = (Pnt2::new(5.0, 5.0), Pnt2::new(6.0, 6.0));

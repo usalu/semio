@@ -56,11 +56,11 @@ pub struct FigureTileDraft {
 }
 //#endregion 🔖️Domain
 
-pub fn default_figure_tile_source() -> FigureTileSource {
+pub async fn default_figure_tile_source() -> FigureTileSource {
     FigureTileSource { src: "/🖼️bauteilbörse.png".into(), kind: "figure".into(), frame: FigureTileFrame { x: 0.127, y: 0.1, width: 0.746, height: 0.75 }, source_aspect: Some(1222.0 / 896.0), pdf_page: None }
 }
 
-pub fn default_present_snapshot() -> PresentSnapshot {
+pub async fn default_present_snapshot() -> PresentSnapshot {
     default_snapshot()
 }
 
@@ -96,7 +96,7 @@ const ANIMATION_CHILD_ARTIFACT_ID: &str = "animate-present-deck-animation";
 /// through this lossy projection), so this only matters for a genuinely fresh reload with an empty
 /// cache, the same class of documented gap every `UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` exemplar
 /// (lowpoly/cad/writer) has left for its own composed slot.
-pub fn presentation_snapshot_from_source_tiles(source: &FigureTileSource, tiles: &[FigureTileDraft]) -> semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::presentation::schema::snapshot::SemioPresentationSnapshot {
+pub async fn presentation_snapshot_from_source_tiles(source: &FigureTileSource, tiles: &[FigureTileDraft]) -> semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::presentation::schema::snapshot::SemioPresentationSnapshot {
     use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioPoint2;
     use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::document::schema::snapshot::DocBlock;
     use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::presentation::schema::snapshot::{SemioPresentationSnapshot, Slide, SlideFrame, SlideMaster, SlidePictureImage, SlideShape, STDIO_SEMIOPRESENTATION_DOCUMENT_SCHEMA};
@@ -116,17 +116,17 @@ pub fn presentation_snapshot_from_source_tiles(source: &FigureTileSource, tiles:
 /// first paragraph text back into a `FigureTileDraft`. A master/slide with no `Picture` shape at all
 /// (never produced by the forward converter, but a composed child can in principle arrive from
 /// elsewhere) falls back to `default_figure_tile_source()`/an empty name rather than panicking.
-pub fn source_tiles_from_presentation_snapshot(snapshot: &semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::presentation::schema::snapshot::SemioPresentationSnapshot) -> (FigureTileSource, Vec<FigureTileDraft>) {
+pub async fn source_tiles_from_presentation_snapshot(snapshot: &semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::presentation::schema::snapshot::SemioPresentationSnapshot) -> (FigureTileSource, Vec<FigureTileDraft>) {
     use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::document::schema::snapshot::DocBlock;
     use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::presentation::schema::snapshot::SlideShape;
 
-    fn frame_from(shapes: &[SlideShape]) -> Option<(FigureTileFrame, String, String)> {
+    async fn frame_from(shapes: &[SlideShape]) -> Option<(FigureTileFrame, String, String)> {
         shapes.iter().find_map(|shape| match shape {
             SlideShape::Picture { frame, image } => Some((FigureTileFrame { x: frame.origin.x, y: frame.origin.y, width: frame.width, height: frame.height }, image.asset_id.clone(), image.mime.clone())),
             _ => None,
         })
     }
-    fn text_from_notes(notes: &[DocBlock]) -> String {
+    async fn text_from_notes(notes: &[DocBlock]) -> String {
         notes
             .iter()
             .find_map(|block| match block {
@@ -152,7 +152,7 @@ pub fn source_tiles_from_presentation_snapshot(snapshot: &semio_s_plugin_stdio::
 /// 🕸️ Deterministic content-addressed CHILD handle for the composed `presentation` deck — same
 /// `(child_id, target)` for identical `(source, tiles)`, a different pair once the content actually
 /// changes, mirroring lowpoly's `mesh_child_handle`/writer's `document_child_handle`.
-pub fn presentation_child_handle(source: &FigureTileSource, tiles: &[FigureTileDraft]) -> PresentationChild {
+pub async fn presentation_child_handle(source: &FigureTileSource, tiles: &[FigureTileDraft]) -> PresentationChild {
     use std::hash::{Hash, Hasher};
     let content = presentation_snapshot_from_source_tiles(source, tiles);
     let content_json = serde_json::to_string(&content).unwrap_or_default();
@@ -170,7 +170,7 @@ pub fn presentation_child_handle(source: &FigureTileSource, tiles: &[FigureTileD
 /// the fact that nothing in this plugin yet produces per-tile keyframe/timeline data; composed per the
 /// design mapping's `animate→C:presentation,animation` line so the slot exists for a future wave (a
 /// natural extension: per-tile camera-pan/transition timing) without another schema migration.
-pub fn animation_child_handle() -> AnimationChild {
+pub async fn animation_child_handle() -> AnimationChild {
     use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::animation::schema::snapshot::SemioAnimationSnapshot;
     let content_json = serde_json::to_string(&SemioAnimationSnapshot::default()).unwrap_or_default();
     use std::hash::{Hash, Hasher};
@@ -207,7 +207,7 @@ thread_local! {
 /// 📝 Seeds the scratch cache for a handle's `child_id` — call whenever new `(source, tiles)` content
 /// is about to become a document's `presentation` child (every mutation-diff/fixture builder in this
 /// plugin does, via [`presentation_child_handle_and_cache`]).
-pub fn cache_present_working_scene(child_id: &str, source: &FigureTileSource, tiles: &[FigureTileDraft]) {
+pub async fn cache_present_working_scene(child_id: &str, source: &FigureTileSource, tiles: &[FigureTileDraft]) {
     PRESENT_SCRATCH.with(|cache| cache.borrow_mut().insert(child_id.to_string(), (source.clone(), tiles.to_vec())));
 }
 
@@ -216,14 +216,14 @@ pub fn cache_present_working_scene(child_id: &str, source: &FigureTileSource, ti
 /// here (no live child content is reachable from this pure accessor either — see the region doc
 /// comment); falls back to `default_figure_tile_source()`/no tiles, never a panic, when nothing has
 /// cached this handle yet.
-pub fn present_working_scene_for_handle(handle: &PresentationChild) -> (FigureTileSource, Vec<FigureTileDraft>) {
+pub async fn present_working_scene_for_handle(handle: &PresentationChild) -> (FigureTileSource, Vec<FigureTileDraft>) {
     PRESENT_SCRATCH.with(|cache| cache.borrow().get(&handle.child_id).cloned()).unwrap_or_else(|| (default_figure_tile_source(), Vec::new()))
 }
 
 /// 🔎 Reads the current document's live `(source, tiles)` off its `presentation` child handle — the
 /// single read call site every mutation/render/export/inference path in this plugin uses instead of
 /// the old `snapshot.source`/`snapshot.tiles` field access.
-pub fn present_working_scene(snapshot: &PresentSnapshot) -> (FigureTileSource, Vec<FigureTileDraft>) {
+pub async fn present_working_scene(snapshot: &PresentSnapshot) -> (FigureTileSource, Vec<FigureTileDraft>) {
     present_working_scene_for_handle(&snapshot.presentation)
 }
 
@@ -231,7 +231,7 @@ pub fn present_working_scene(snapshot: &PresentSnapshot) -> (FigureTileSource, V
 /// `(source, tiles)` in one call — the standard way every mutation-diff/fixture builder in this
 /// plugin creates a `presentation` field value; never construct a handle without also caching, or
 /// [`present_working_scene`] will read back the empty default.
-pub fn presentation_child_handle_and_cache(source: &FigureTileSource, tiles: &[FigureTileDraft]) -> PresentationChild {
+pub async fn presentation_child_handle_and_cache(source: &FigureTileSource, tiles: &[FigureTileDraft]) -> PresentationChild {
     let handle = presentation_child_handle(source, tiles);
     cache_present_working_scene(&handle.child_id, source, tiles);
     handle
@@ -240,7 +240,7 @@ pub fn presentation_child_handle_and_cache(source: &FigureTileSource, tiles: &[F
 /// 🏗️ Builds a full `PresentSnapshot` from literal `(source, tiles)` — the standard fixture/import
 /// constructor replacing the old 3-field `PresentSnapshot { schema, source, tiles }` struct literal
 /// now that `presentation`/`animation` are composed child handles, not plain fields.
-pub fn present_snapshot_with_tiles(source: &FigureTileSource, tiles: &[FigureTileDraft]) -> PresentSnapshot {
+pub async fn present_snapshot_with_tiles(source: &FigureTileSource, tiles: &[FigureTileDraft]) -> PresentSnapshot {
     PresentSnapshot { schema: PRESENT_DOCUMENT_SCHEMA.into(), presentation: presentation_child_handle_and_cache(source, tiles), animation: animation_child_handle() }
 }
 //#endregion 🔖️WorkingScene
@@ -248,7 +248,7 @@ pub fn present_snapshot_with_tiles(source: &FigureTileSource, tiles: &[FigureTil
 //#region 🔖️ArtifactKind
 /// 🗂️ This artifact's `ArtifactKindSpec` — stitched into the app manifest by
 /// `crate::apps::present::create_animate_present_app`'s `🔖️Manifest` region.
-pub fn artifact_kind() -> ArtifactKindSpec {
+pub async fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: PRESENT_DOCUMENT_SCHEMA.into(),
         name: "Animate Present".into(),
@@ -268,7 +268,7 @@ pub fn artifact_kind() -> ArtifactKindSpec {
 
 //#region 🔖️CollectionSupport
 impl Identified<String> for FigureTileDraft {
-    fn id(&self) -> &String {
+    async fn id(&self) -> &String {
         &self.id
     }
 }
@@ -282,7 +282,7 @@ pub struct FigureTileDraftPatch {
 }
 
 impl Patchable<FigureTileDraftPatch> for FigureTileDraft {
-    fn apply_patch(&mut self, patch: &FigureTileDraftPatch) {
+    async fn apply_patch(&mut self, patch: &FigureTileDraftPatch) {
         if let Some(name) = &patch.name {
             self.name = name.clone();
         }
@@ -291,7 +291,7 @@ impl Patchable<FigureTileDraftPatch> for FigureTileDraft {
         }
     }
 
-    fn diff_patch(&self, other: &Self) -> Option<FigureTileDraftPatch> {
+    async fn diff_patch(&self, other: &Self) -> Option<FigureTileDraftPatch> {
         Some(FigureTileDraftPatch { name: (self.name != other.name).then(|| other.name.clone()), crop: (self.crop != other.crop).then(|| other.crop.clone()) })
     }
 }
@@ -303,19 +303,19 @@ mod tests {
     use super::*;
 
     #[test]
-    fn present_snapshot_schema_is_animate_present() {
+    async fn present_snapshot_schema_is_animate_present() {
         assert_eq!(default_present_snapshot().schema, PRESENT_DOCUMENT_SCHEMA);
     }
 
     #[test]
-    fn artifact_kind_matches_the_store_schema() {
+    async fn artifact_kind_matches_the_store_schema() {
         assert_eq!(artifact_kind().schema, PRESENT_DOCUMENT_SCHEMA);
         assert_eq!(artifact_kind().id, PRESENT_DOCUMENT_SCHEMA);
     }
 }
 //#endregion 🧪️Tests
 //#region 🔖️Declaration
-pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
+pub async fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
     use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
     ArtifactDefinition::new(ArtifactIdentity::parse("s.present")?)
         .capability(
@@ -386,7 +386,7 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
 /// (`"s.animate.present"`), NOT `definition()`'s legacy `ArtifactIdentity` root (`"s.present"`,
 /// kept unread by the new tree per debt D1). `localization: &[]` is a documented shortfall — the
 /// real en/de localized names still live on `definition()`'s kept capability rows.
-pub fn artifact() -> semio_framework_plugin::app::declarations::ArtifactDeclaration {
+pub async fn artifact() -> semio_framework_plugin::app::declarations::ArtifactDeclaration {
     use semio_framework_plugin::app::declarations::ArtifactDeclaration;
     use store::os_io::ArtifactKindId;
     ArtifactDeclaration { kind: ArtifactKindId::parse("s.animate.present").expect("canonical animate.present kind"), localization: &[], standards: vec![crate::artifacts::present::standards::v1::standard()] }

@@ -13,7 +13,7 @@ pub struct SetActiveExample {
     pub example_id: String,
 }
 
-pub fn handle(payload: &SetActiveExample, _doc: &ArtifactView<'_, WorkflowSnapshot>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
+pub async fn handle(payload: &SetActiveExample, _doc: &ArtifactView<'_, WorkflowSnapshot>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
     if payload.example_id.is_empty() {
         Ok(Emit::default())
     } else {
@@ -30,7 +30,7 @@ mod tests {
     use semio_framework_os::empty_workflow_snapshot;
 
     #[test]
-    fn space_command_op_text_round_trips_every_variant() {
+    async fn space_command_op_text_round_trips_every_variant() {
         store::os_store::test_support::assert_op_line_round_trip(&SpaceCommand::SetActiveExample(SetActiveExample { example_id: "demo".into() }));
         store::os_store::test_support::assert_op_line_round_trip(&SpaceCommand::ExportStudioPack(crate::engine::space::commands::export_studio_pack::ExportStudioPack {}));
         store::os_store::test_support::assert_op_line_round_trip(&SpaceCommand::ExportStudioDsl(crate::engine::space::commands::export_studio_dsl::ExportStudioDsl {}));
@@ -40,7 +40,7 @@ mod tests {
     }
 
     #[test]
-    fn open_studio_loads_created_empty_catalog_studio() {
+    async fn open_studio_loads_created_empty_catalog_studio() {
         use semio_framework_os::{create_os_space, MemoryBackbonePort, SpaceKind, SpaceRole, SpaceUser, SpaceVisibility};
         use std::sync::Arc;
         let port: Arc<dyn semio_framework_os::OsBackbonePort> = Arc::new(MemoryBackbonePort::new());
@@ -57,14 +57,14 @@ mod tests {
     }
 
     #[test]
-    fn open_studio_unknown_id_returns_not_found() {
+    async fn open_studio_unknown_id_returns_not_found() {
         let empty = empty_workflow_snapshot();
         let config = SpaceConfig::default();
         let err = studio_emit(&empty, &config, &SpaceCommand::OpenSpace(crate::engine::space::commands::open_space::OpenSpace { space_id: "unknown-studio-id".into() })).err().expect("not found");
         assert_eq!(err.code.0, "s.space.not-found");
     }
 
-    fn load_document_snapshot(emit: &Emit<WorkflowMutation, SpaceConfigMutation>) -> (WorkflowSnapshot, String) {
+    async fn load_document_snapshot(emit: &Emit<WorkflowMutation, SpaceConfigMutation>) -> (WorkflowSnapshot, String) {
         let (pack, spr) = emit
             .effects
             .iter()
@@ -79,7 +79,7 @@ mod tests {
     }
 
     #[test]
-    fn open_studio_demo_explicit_loads_demo_fixture() {
+    async fn open_studio_demo_explicit_loads_demo_fixture() {
         let empty = empty_workflow_snapshot();
         let config = SpaceConfig::default();
         let emit = studio_emit(&empty, &config, &SpaceCommand::OpenSpace(crate::engine::space::commands::open_space::OpenSpace { space_id: "demo".into() })).expect("handle");
@@ -89,7 +89,7 @@ mod tests {
     }
 
     #[test]
-    fn open_studio_loads_ephemeral_created_studio() {
+    async fn open_studio_loads_ephemeral_created_studio() {
         use crate::editor::home::commands::create_studio;
         use semio_framework_plugin::{ArtifactEditor, ArtifactView, ConfigView, HistoryView};
         let _home = crate::editor::home::HomeApp;
@@ -117,7 +117,7 @@ mod tests {
 
     /// 🌉️ Exercises BOTH apps together (Home's `createStudio` followed by Space's `openSpace`).
     #[test]
-    fn create_space_navigates_without_download_and_opens_empty() {
+    async fn create_space_navigates_without_download_and_opens_empty() {
         use crate::editor::home::commands::create_studio;
         use semio_framework_plugin::{ArtifactEditor, ArtifactView, ConfigView, HistoryView};
         let _home = crate::editor::home::HomeApp;

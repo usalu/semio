@@ -11,7 +11,7 @@ pub const WRITER_PLAY_BODY_INSPECTION: &str = "writer.play.inspection";
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
-pub fn definition() -> PanelTabDefinition {
+pub async fn definition() -> PanelTabDefinition {
     PanelTabDefinition {
         kind: PanelTabKind::App(FRAMEWORK_PANEL_TAB_INSPECTION_ID.into()),
         label: LocalizedLabel::native(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, "Inspektion"),
@@ -23,7 +23,7 @@ pub fn definition() -> PanelTabDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(document: &WriterSnapshot, config: &WriterConfig, labels: &WriterPlayLabels) -> UiNode {
+pub async fn render(document: &WriterSnapshot, config: &WriterConfig, labels: &WriterPlayLabels) -> UiNode {
     let text = writer_text(document);
     let mut sections = vec![
         UiSectionNode {
@@ -75,14 +75,14 @@ mod tests {
     use crate::editor::writer::WriterCommand;
 
     #[test]
-    fn definition_binds_the_framework_inspection_tab_to_this_body_key() {
+    async fn definition_binds_the_framework_inspection_tab_to_this_body_key() {
         let definition = definition();
         assert_eq!(definition.id(), FRAMEWORK_PANEL_TAB_INSPECTION_ID);
         assert_eq!(definition.body_key.as_deref(), Some(WRITER_PLAY_BODY_INSPECTION));
     }
 
     #[test]
-    fn writer_labels_resolve_native_by_default() {
+    async fn writer_labels_resolve_native_by_default() {
         let mut app = new_app();
         let inspection = render_body(&mut app, WRITER_PLAY_BODY_INSPECTION);
         assert!(inspection.contains("\"Document\""));
@@ -90,7 +90,7 @@ mod tests {
     }
 
     #[test]
-    fn writer_labels_resolve_german_locale() {
+    async fn writer_labels_resolve_german_locale() {
         let mut app = new_app();
         dispatch(&mut app, WriterCommand::SetLocale(crate::editor::writer::commands::set_locale::SetLocale { value: "de".into() }));
         let inspection = render_body(&mut app, WRITER_PLAY_BODY_INSPECTION);

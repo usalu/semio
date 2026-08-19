@@ -14,7 +14,7 @@ pub struct EngagementSubmit {
 }
 
 /// 🐚️ Routes typed export intents from the engagement bar to the matching export handler.
-pub fn handle(payload: &EngagementSubmit, doc: &ArtifactView<'_, LayoutSnapshot>, cfg: &ConfigView<'_, LayoutConfig>) -> Result<Emit<LayoutMutation, LayoutConfigMutation>, Fault> {
+pub async fn handle(payload: &EngagementSubmit, doc: &ArtifactView<'_, LayoutSnapshot>, cfg: &ConfigView<'_, LayoutConfig>) -> Result<Emit<LayoutMutation, LayoutConfigMutation>, Fault> {
     let typed = payload.value.trim();
     if engagement_token_matches(typed, "export png") || engagement_token_matches(typed, "png") {
         return export_png::handle(&export_png::ExportPng { page_id: None }, doc, cfg);

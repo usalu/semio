@@ -10,11 +10,11 @@ use crate::artifacts::md::schema::snapshot::{MdBlock, MdInline};
 /// 📏️ Leading-space count (ASCII spaces only, matching every other classifier here -- a line
 /// indented with unicode whitespace is out of scope, same pre-existing limitation as before this
 /// wave).
-fn leading_spaces(line: &str) -> usize {
+async fn leading_spaces(line: &str) -> usize {
     line.chars().take_while(|&c| c == ' ').count()
 }
 
-fn fence_open(line: &str) -> Option<(char, usize, String)> {
+async fn fence_open(line: &str) -> Option<(char, usize, String)> {
     let trimmed = line.trim_start();
     if leading_spaces(line) > 3 {
         return None;
@@ -30,7 +30,7 @@ fn fence_open(line: &str) -> Option<(char, usize, String)> {
     Some((ch, len, trimmed[len..].trim().to_string()))
 }
 
-fn atx_heading(line: &str) -> Option<(u8, &str)> {
+async fn atx_heading(line: &str) -> Option<(u8, &str)> {
     let trimmed = line.trim_start();
     if leading_spaces(line) > 3 {
         return None;
@@ -49,13 +49,13 @@ fn atx_heading(line: &str) -> Option<(u8, &str)> {
     Some((hashes as u8, content))
 }
 
-fn indented_code_line(line: &str) -> Option<&str> {
+async fn indented_code_line(line: &str) -> Option<&str> {
     line.strip_prefix("    ").or_else(|| line.strip_prefix('\t'))
 }
 
 /// 🔳 `---`, `***`, `___` (>=3 of the same char, optionally space-separated, nothing else) --
 /// checked BEFORE `list_item_marker` since `- - -` is a thematic break, not a 3-item list.
-fn thematic_break(line: &str) -> bool {
+async fn thematic_break(line: &str) -> bool {
     let trimmed = line.trim_start();
     if leading_spaces(line) > 3 {
         return false;
@@ -75,7 +75,7 @@ fn thematic_break(line: &str) -> bool {
 /// a CHAR count (not necessarily byte count, though every consumed char here is ASCII so the two
 /// coincide) of everything before `content_after_marker` -- used by the list parser to dedent
 /// continuation lines via [`dedent_by_chars`].
-fn list_item_marker(line: &str) -> Option<(bool, Option<u32>, usize, &str)> {
+async fn list_item_marker(line: &str) -> Option<(bool, Option<u32>, usize, &str)> {
     let indent = leading_spaces(line);
     let trimmed = line.trim_start();
     if indent > 3 {
@@ -97,7 +97,7 @@ fn list_item_marker(line: &str) -> Option<(bool, Option<u32>, usize, &str)> {
 /// 🏷️ `> content` (up to 3 leading spaces, `>` optionally followed by ONE space). No lazy
 /// continuation support (documented scope cut) -- a block quote ends at the first line that
 /// doesn't itself start with `>`.
-fn blockquote_marker(line: &str) -> Option<&str> {
+async fn blockquote_marker(line: &str) -> Option<&str> {
     let indent = leading_spaces(line);
     let trimmed = line.trim_start();
     if indent > 3 || !trimmed.starts_with('>') {
@@ -110,7 +110,7 @@ fn blockquote_marker(line: &str) -> Option<&str> {
 /// 🏷️ Simplified single-rule HTML block start: a line beginning (up to 3 leading spaces) with
 /// `<tag`, `</tag`, or `<!--`. Real spec has 7 distinct start conditions with different end
 /// conditions (documented scope cut) -- here every HTML block ends at the next blank line.
-fn html_block_start(line: &str) -> bool {
+async fn html_block_start(line: &str) -> bool {
     let indent = leading_spaces(line);
     let trimmed = line.trim_start();
     if indent > 3 || !trimmed.starts_with('<') {
@@ -130,7 +130,7 @@ fn html_block_start(line: &str) -> bool {
 /// spaces, returning the remainder. A line shorter than `width` but entirely spaces dedents to
 /// `""` (blank continuation). Any non-space char before reaching `width` fails the dedent
 /// (`None`) -- never panics on a multi-byte boundary, unlike raw byte slicing.
-fn dedent_by_chars(line: &str, width: usize) -> Option<String> {
+async fn dedent_by_chars(line: &str, width: usize) -> Option<String> {
     let mut out_start: Option<usize> = None;
     let mut count = 0usize;
     for (idx, ch) in line.char_indices() {
@@ -159,7 +159,7 @@ fn dedent_by_chars(line: &str, width: usize) -> Option<String> {
 
 //#region 🔖️BlockParser
 /// 📥 Top-level entry: parses `text` into the complete block sequence.
-pub fn parse_markdown_blocks(text: &str) -> Vec<MdBlock> {
+pub async fn parse_markdown_blocks(text: &str) -> Vec<MdBlock> {
     let lines: Vec<&str> = text.lines().collect();
     parse_blocks(&lines)
 }
@@ -167,7 +167,7 @@ pub fn parse_markdown_blocks(text: &str) -> Vec<MdBlock> {
 /// 📥 Recursive block parser over an already-dedented line slice -- called at the top level and
 /// recursively for block-quote content and list-item content, which is exactly how nested lists
 /// and quote-inside-list (and vice versa) fall out for free.
-fn parse_blocks(lines: &[&str]) -> Vec<MdBlock> {
+async fn parse_blocks(lines: &[&str]) -> Vec<MdBlock> {
     let mut blocks = Vec::new();
     let mut i = 0usize;
     while i < lines.len() {
@@ -268,7 +268,7 @@ fn parse_blocks(lines: &[&str]) -> Vec<MdBlock> {
 /// consumed. `tight` is a simplified approximation of the spec's real tightness rule: `false` iff
 /// ANY blank line was seen between/inside items (real spec additionally distinguishes blank lines
 /// used only for a nested block's own formatting -- documented scope cut).
-fn parse_list(lines: &[&str], ordered: bool, start: Option<u32>) -> (MdBlock, usize) {
+async fn parse_list(lines: &[&str], ordered: bool, start: Option<u32>) -> (MdBlock, usize) {
     let mut items: Vec<Vec<MdBlock>> = Vec::new();
     let mut i = 0usize;
     let mut saw_blank = false;
@@ -335,7 +335,7 @@ fn parse_list(lines: &[&str], ordered: bool, start: Option<u32>) -> (MdBlock, us
 //#endregion 🔖️BlockParser
 
 //#region 🔖️InlineParser
-fn try_parse_delim(chars: &[char], start: usize, delim: char, count: usize) -> Option<(String, usize)> {
+async fn try_parse_delim(chars: &[char], start: usize, delim: char, count: usize) -> Option<(String, usize)> {
     for k in 0..count {
         if chars.get(start + k) != Some(&delim) {
             return None;
@@ -356,7 +356,7 @@ fn try_parse_delim(chars: &[char], start: usize, delim: char, count: usize) -> O
     None
 }
 
-fn try_parse_code_span(chars: &[char], start: usize) -> Option<(String, usize)> {
+async fn try_parse_code_span(chars: &[char], start: usize) -> Option<(String, usize)> {
     let mut n = 0usize;
     while chars.get(start + n) == Some(&'`') {
         n += 1;
@@ -381,7 +381,7 @@ fn try_parse_code_span(chars: &[char], start: usize) -> Option<(String, usize)> 
     None
 }
 
-fn split_url_title(inside: &str) -> (String, Option<String>) {
+async fn split_url_title(inside: &str) -> (String, Option<String>) {
     let trimmed = inside.trim();
     if let Some(q) = trimmed.find('"') {
         let (url_part, rest) = trimmed.split_at(q);
@@ -395,7 +395,7 @@ fn split_url_title(inside: &str) -> (String, Option<String>) {
 /// 🔎️ Shared bracket-then-paren scan used by both link and image parsing: given `chars[start]`
 /// is `[`, finds the matching `]` (depth-aware) and, if immediately followed by `(...)`, the
 /// matching `)` (depth-aware). Returns `(text_range, url, title, total_consumed)`.
-fn try_parse_bracket_paren(chars: &[char], start: usize) -> Option<((usize, usize), String, Option<String>, usize)> {
+async fn try_parse_bracket_paren(chars: &[char], start: usize) -> Option<((usize, usize), String, Option<String>, usize)> {
     let mut j = start + 1;
     let text_start = j;
     let mut depth = 1i32;
@@ -443,13 +443,13 @@ fn try_parse_bracket_paren(chars: &[char], start: usize) -> Option<((usize, usiz
     Some(((text_start, text_end), url, title, k + 1 - start))
 }
 
-fn try_parse_link(chars: &[char], start: usize) -> Option<(MdInline, usize)> {
+async fn try_parse_link(chars: &[char], start: usize) -> Option<(MdInline, usize)> {
     let ((text_start, text_end), url, title, consumed) = try_parse_bracket_paren(chars, start)?;
     let text: String = chars[text_start..text_end].iter().collect();
     Some((MdInline::Link { text: parse_inline(&text), url, title }, consumed))
 }
 
-fn try_parse_image(chars: &[char], start: usize) -> Option<(MdInline, usize)> {
+async fn try_parse_image(chars: &[char], start: usize) -> Option<(MdInline, usize)> {
     // 🖼️ `start` is the index of `!`; the bracket scan begins one char later, at `[`.
     if chars.get(start + 1) != Some(&'[') {
         return None;
@@ -461,7 +461,7 @@ fn try_parse_image(chars: &[char], start: usize) -> Option<(MdInline, usize)> {
 
 /// 🏷️ Simplified inline HTML: `<!--...-->` or `<[/]tag...>` (no nested `<`, no attribute-value
 /// angle brackets -- documented scope cut). `start` is the index of `<`.
-fn try_parse_html_inline(chars: &[char], start: usize) -> Option<(String, usize)> {
+async fn try_parse_html_inline(chars: &[char], start: usize) -> Option<(String, usize)> {
     if chars.get(start) != Some(&'<') {
         return None;
     }
@@ -500,7 +500,7 @@ fn try_parse_html_inline(chars: &[char], start: usize) -> Option<(String, usize)
 /// 📥 Parses a single line's worth of inline content: images, links, inline code spans, strong
 /// (`**`/`__`), emphasis (`*`/`_`), raw inline HTML, plain text. Unrecognized/unterminated
 /// delimiter runs degrade gracefully to literal `Text` (never a parse failure).
-pub fn parse_inline(text: &str) -> Vec<MdInline> {
+pub async fn parse_inline(text: &str) -> Vec<MdInline> {
     let chars: Vec<char> = text.chars().collect();
     let mut nodes = Vec::new();
     let mut buf = String::new();
@@ -578,7 +578,7 @@ pub fn parse_inline(text: &str) -> Vec<MdInline> {
 /// 📥 Parses a paragraph's multiple RAW (pre-join) lines, inserting `SoftBreak`/`HardBreak`
 /// between them per the trailing marker on each non-final line (2+ trailing spaces or a trailing
 /// `\` => hard; a bare line ending => soft).
-fn parse_inline_lines(lines: &[&str]) -> Vec<MdInline> {
+async fn parse_inline_lines(lines: &[&str]) -> Vec<MdInline> {
     let mut out = Vec::new();
     for (idx, line) in lines.iter().enumerate() {
         let hard = line.ends_with("  ") || line.trim_end_matches(' ').ends_with('\\');

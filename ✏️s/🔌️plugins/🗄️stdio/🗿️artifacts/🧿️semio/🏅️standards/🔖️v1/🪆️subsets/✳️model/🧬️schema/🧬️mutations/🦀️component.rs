@@ -25,7 +25,7 @@ use serde::{Deserialize, Serialize};
 /// blanket `Deserialize for Option<T>` treats `null` as absence at ANY nesting depth. Combined with
 /// `skip_serializing_if = "Option::is_none"` (so "untouched" omits the key entirely), this makes
 /// key-PRESENT-with-`null` unambiguously mean `Some(None)`.
-fn deserialize_double_option<'de, D, T>(deserializer: D) -> Result<Option<Option<T>>, D::Error>
+async fn deserialize_double_option<'de, D, T>(deserializer: D) -> Result<Option<Option<T>>, D::Error>
 where
     D: serde::Deserializer<'de>,
     T: Deserialize<'de>,
@@ -109,7 +109,7 @@ pub enum SemioModelMutation {
 impl Mutation<SemioModelSnapshot> for SemioModelMutation {
     type Diff = SemioModelDiff;
 
-    fn diff(&self, base: &SemioModelSnapshot) -> protocol::MutationOutcome<Self::Diff> {
+    async fn diff(&self, base: &SemioModelSnapshot) -> protocol::MutationOutcome<Self::Diff> {
         protocol::MutationOutcome::new(match self {
             SemioModelMutation::NoMutation => SemioModelDiff::default(),
             SemioModelMutation::SetSnapshot { snapshot } => diff_set_snapshot(base, snapshot),
@@ -136,7 +136,7 @@ impl Mutation<SemioModelSnapshot> for SemioModelMutation {
         })
     }
 
-    fn inverse(&self, base: &SemioModelSnapshot) -> Vec<Self> {
+    async fn inverse(&self, base: &SemioModelSnapshot) -> Vec<Self> {
         match self {
             SemioModelMutation::NoMutation => vec![SemioModelMutation::NoMutation],
             SemioModelMutation::SetSnapshot { .. } => vec![SemioModelMutation::SetSnapshot { snapshot: base.clone() }],
@@ -189,7 +189,7 @@ impl Mutation<SemioModelSnapshot> for SemioModelMutation {
 
 /// ▶️ Applies a mutation to `snapshot` in place, returning the diff (mirrors gif's
 /// `apply_gif_mutation` convention — used by the builder's `mutate()` and the set-snapshot leaf).
-pub fn apply_semio_model_mutation(snapshot: &mut SemioModelSnapshot, mutation: &SemioModelMutation) -> protocol::MutationOutcome<SemioModelDiff> {
+pub async fn apply_semio_model_mutation(snapshot: &mut SemioModelSnapshot, mutation: &SemioModelMutation) -> protocol::MutationOutcome<SemioModelDiff> {
     let outcome = <SemioModelMutation as Mutation<SemioModelSnapshot>>::diff(mutation, snapshot);
     outcome.apply_to(snapshot)
 }
@@ -203,7 +203,7 @@ pub fn apply_semio_model_mutation(snapshot: &mut SemioModelSnapshot, mutation: &
 /// requires every nested type in the mutation's field tree to itself implement `dsl::DslField` (via
 /// `dsl::DslRecord`), a repo-wide framework capability this hand-rolled vocabulary does not depend
 /// on (f6-final-summary.md §4: generics/tuple/nested-array derive gaps).
-fn enc_semio_model_snapshot(s: &SemioModelSnapshot) -> String {
+async fn enc_semio_model_snapshot(s: &SemioModelSnapshot) -> String {
     format!(
         "[{},{},{},{}]",
         enc_str(&s.schema),
@@ -212,7 +212,7 @@ fn enc_semio_model_snapshot(s: &SemioModelSnapshot) -> String {
         format!("[{}]", s.relations.iter().map(enc_relation).collect::<Vec<_>>().join(",")),
     )
 }
-fn dec_semio_model_snapshot(s: &str) -> Result<SemioModelSnapshot, String> {
+async fn dec_semio_model_snapshot(s: &str) -> Result<SemioModelSnapshot, String> {
     let inner = strip_brackets(s)?;
     let parts = split_top_level(inner, ',');
     let [schema, spatial, elements, relations] = parts.as_slice() else { return Err(format!("snapshot: expected 4 fields, got {}", parts.len())) };
@@ -222,7 +222,7 @@ fn dec_semio_model_snapshot(s: &str) -> Result<SemioModelSnapshot, String> {
     Ok(SemioModelSnapshot { schema: dec_str(schema)?, spatial, elements, relations })
 }
 
-fn print_semio_model_mutation(m: &SemioModelMutation) -> String {
+async fn print_semio_model_mutation(m: &SemioModelMutation) -> String {
     match m {
         SemioModelMutation::NoMutation => "no-mutation".to_string(),
         SemioModelMutation::SetSnapshot { snapshot } => format!("set-snapshot snapshot={}", enc_semio_model_snapshot(snapshot)),
@@ -254,7 +254,7 @@ fn print_semio_model_mutation(m: &SemioModelMutation) -> String {
         }
     }
 }
-fn parse_semio_model_mutation(line: &str) -> Result<SemioModelMutation, String> {
+async fn parse_semio_model_mutation(line: &str) -> Result<SemioModelMutation, String> {
     if line == "no-mutation" {
         return Ok(SemioModelMutation::NoMutation);
     }
@@ -291,10 +291,10 @@ fn parse_semio_model_mutation(line: &str) -> Result<SemioModelMutation, String> 
 }
 
 impl OpText for SemioModelMutation {
-    fn print_op(&self) -> String {
+    async fn print_op(&self) -> String {
         print_semio_model_mutation(self)
     }
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
+    async fn parse_op(line: &str) -> Result<Self, store::TextError> {
         parse_semio_model_mutation(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
 }
@@ -302,7 +302,7 @@ impl OpText for SemioModelMutation {
 /// 🏷️ Ordinal table, same declaration order as `SemioModelMutation`'s own enum variants and
 /// `parse_semio_model_mutation`'s keyword match — the real binary `tag` field's source of truth.
 const OP_KEYWORDS: [&str; 11] = ["no-mutation", "set-snapshot", "insert-spatial-node", "remove-spatial-node", "set-spatial-node", "insert-element", "remove-element", "set-element", "insert-relation", "remove-relation", "set-relation"];
-fn variant_ordinal(m: &SemioModelMutation) -> u8 {
+async fn variant_ordinal(m: &SemioModelMutation) -> u8 {
     match m {
         SemioModelMutation::NoMutation => 0,
         SemioModelMutation::SetSnapshot { .. } => 1,
@@ -320,7 +320,7 @@ fn variant_ordinal(m: &SemioModelMutation) -> u8 {
 /// ✂️ Just the `key=value ...` argument tail of `print_semio_model_mutation` (empty for
 /// `no-mutation`) — the binary frame's `tag` byte already carries the keyword, so the text keyword
 /// itself is redundant in the binary payload.
-fn print_semio_model_mutation_args(m: &SemioModelMutation) -> String {
+async fn print_semio_model_mutation_args(m: &SemioModelMutation) -> String {
     match print_semio_model_mutation(m).split_once(' ') {
         Some((_, rest)) => rest.to_string(),
         None => String::new(),
@@ -334,13 +334,13 @@ fn print_semio_model_mutation_args(m: &SemioModelMutation) -> String {
 /// `print_semio_model_mutation`/`parse_semio_model_mutation` text codec rather than re-deriving a
 /// second independent encoding.
 impl OpBinary for SemioModelMutation {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         const OP_BINARY_FORMAT: u8 = 1;
         let mut out = vec![OP_BINARY_FORMAT, variant_ordinal(self)];
         out.extend_from_slice(print_semio_model_mutation_args(self).as_bytes());
         Ok(out)
     }
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         const OP_BINARY_FORMAT: u8 = 1;
         if bytes.len() < 2 {
             return Err(protocol::ProtocolError::Malformed { what: "op header", offset: 0, detail: "truncated (need format+tag)".to_string() });
@@ -362,13 +362,13 @@ impl OpBinary for SemioModelMutation {
 /// single source of truth for this facet's own tests AND `ops_grammar_conformance_law`/
 /// `protocol_walk_law` in `🎹️composer/🦀️component.rs`.
 #[cfg(test)]
-pub(crate) fn sample_transform() -> SemioTransform {
+pub(crate) async fn sample_transform() -> SemioTransform {
     use crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::{SemioPoint3, SemioQuaternion};
     SemioTransform { translation: SemioPoint3 { x: 5.0, y: 6.0, z: 7.0 }, rotation: SemioQuaternion::default(), scale: SemioPoint3 { x: 1.0, y: 1.0, z: 1.0 } }
 }
 
 #[cfg(test)]
-pub(crate) fn fixture() -> SemioModelSnapshot {
+pub(crate) async fn fixture() -> SemioModelSnapshot {
     let mut snap = SemioModelSnapshot::default();
     snap.spatial.push(SpatialNode { id: "s1".into(), kind: SpatialKind::Site, name: "Site".into(), parent_id: None, placement: SemioTransform::identity() });
     snap.elements.push(SemioModelElement { id: "e1".into(), class: ElementClass::Wall, placement: SemioTransform::identity(), geometry: GeometryRef::None, spatial_id: None, psets: vec![] });
@@ -377,7 +377,7 @@ pub(crate) fn fixture() -> SemioModelSnapshot {
 }
 
 #[cfg(test)]
-pub(crate) fn demo_mutation_cases() -> Vec<SemioModelMutation> {
+pub(crate) async fn demo_mutation_cases() -> Vec<SemioModelMutation> {
     let base = fixture();
     vec![
         SemioModelMutation::NoMutation,
@@ -403,7 +403,7 @@ mod tests {
     /// 🧪️ mutation_diff_law + inverse_law, exercised for every non-trivial variant: `mutation.diff(base)`
     /// must equal what `apply_semio_model_mutation` actually applied, and applying the mutation's
     /// own `inverse()` must restore `base` exactly.
-    fn assert_round_trips(base: &SemioModelSnapshot, mutation: SemioModelMutation) {
+    async fn assert_round_trips(base: &SemioModelSnapshot, mutation: SemioModelMutation) {
         let diff = <SemioModelMutation as Mutation<SemioModelSnapshot>>::diff(&mutation, base);
         let mut applied = base.clone();
         let produced = apply_semio_model_mutation(&mut applied, &mutation);
@@ -420,7 +420,7 @@ mod tests {
     }
 
     #[test]
-    fn mutation_diff_law_and_inverse_law_cover_every_collection() {
+    async fn mutation_diff_law_and_inverse_law_cover_every_collection() {
         let base = fixture();
 
         assert_round_trips(&base, SemioModelMutation::NoMutation);
@@ -461,7 +461,7 @@ mod tests {
     /// instance of every variant (`demo_mutation_cases()` — single source of truth also shared with
     /// the composer's `ops_grammar_conformance_law`/`protocol_walk_law`).
     #[test]
-    fn op_text_binary_roundtrip_law() {
+    async fn op_text_binary_roundtrip_law() {
         for m in demo_mutation_cases() {
             let printed = m.print_op();
             assert!(!printed.contains('\n'), "print_op must be one line, got {printed:?}");

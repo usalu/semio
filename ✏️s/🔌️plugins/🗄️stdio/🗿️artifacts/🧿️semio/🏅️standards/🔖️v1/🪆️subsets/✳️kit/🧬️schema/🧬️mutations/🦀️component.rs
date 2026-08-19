@@ -61,18 +61,18 @@ mod tests {
     use crate::artifacts::semio::standards::v1::subsets::kit::schema::snapshot::{demo_kit_snapshot, SemioKitDesign, SemioKitPiece};
     use protocol::{Mutation, MutationDiff, SemanticMutation};
 
-    fn fixture() -> SemioKitSnapshot {
+    async fn fixture() -> SemioKitSnapshot {
         demo_kit_snapshot()
     }
 
-    fn ref_of(subset: &str, id: &str) -> store::os_io::ArtifactRef {
+    async fn ref_of(subset: &str, id: &str) -> store::os_io::ArtifactRef {
         store::os_io::ArtifactRef { artifact_id: id.into(), dialect: store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: subset.into() } }
     }
 
     /// 🔧️ Each inverse's diff must be computed against the CURRENT (`restored`) state, not the
     /// stale pre-operation `base` — same fix `✳️text`'s corrected `round_trip` helper established
     /// (📌️important.md Trap #1).
-    fn round_trip(base: &SemioKitSnapshot, operation: &SemioKitMutation) -> SemioKitSnapshot {
+    async fn round_trip(base: &SemioKitSnapshot, operation: &SemioKitMutation) -> SemioKitSnapshot {
         let forward = operation.diff(base).diff().apply(base).expect("apply must succeed for a well-formed fixture");
         let backwards = operation.inverse(base);
         let mut restored = forward.clone();
@@ -107,7 +107,7 @@ mod tests {
     }
 
     #[test]
-    fn create_delete_object_round_trips() {
+    async fn create_delete_object_round_trips() {
         let base = fixture();
         let create = SemioKitMutation::CreateObject(create_object::mutation::CreateObject { child_id: "obj-99".into(), target: ref_of("object", "new-obj") });
         let after = round_trip(&base, &create);
@@ -119,7 +119,7 @@ mod tests {
     }
 
     #[test]
-    fn delete_object_of_an_absent_id_has_an_empty_inverse() {
+    async fn delete_object_of_an_absent_id_has_an_empty_inverse() {
         let base = fixture();
         let delete = SemioKitMutation::DeleteObject(delete_object::mutation::DeleteObject { child_id: "does-not-exist".into() });
         assert!(delete.inverse(&base).is_empty());
@@ -127,7 +127,7 @@ mod tests {
     }
 
     #[test]
-    fn create_delete_model_round_trips() {
+    async fn create_delete_model_round_trips() {
         let base = fixture();
         let create = SemioKitMutation::CreateModel(create_model::mutation::CreateModel { child_id: "model-99".into(), target: ref_of("model", "new-model") });
         let after = round_trip(&base, &create);
@@ -139,7 +139,7 @@ mod tests {
     }
 
     #[test]
-    fn create_delete_properties_round_trips() {
+    async fn create_delete_properties_round_trips() {
         let base = fixture();
         let create = SemioKitMutation::CreateProperties(create_properties::mutation::CreateProperties { child_id: "props-99".into(), target: ref_of("value", "new-props") });
         let after = round_trip(&base, &create);
@@ -151,7 +151,7 @@ mod tests {
     }
 
     #[test]
-    fn bind_unbind_representation_round_trips() {
+    async fn bind_unbind_representation_round_trips() {
         let base = fixture();
         let bind = SemioKitMutation::BindRepresentation(bind_representation::mutation::BindRepresentation { target: ref_of("mesh", "extra-repr"), pin: store::LinkPin::Head, role: "chair".into() });
         let after = round_trip(&base, &bind);
@@ -163,7 +163,7 @@ mod tests {
     }
 
     #[test]
-    fn unbind_representation_of_an_out_of_range_index_has_an_empty_inverse() {
+    async fn unbind_representation_of_an_out_of_range_index_has_an_empty_inverse() {
         let base = fixture();
         let unbind = SemioKitMutation::UnbindRepresentation(unbind_representation::mutation::UnbindRepresentation { index: 99 });
         assert!(unbind.inverse(&base).is_empty());
@@ -171,7 +171,7 @@ mod tests {
     }
 
     #[test]
-    fn change_representation_pin_round_trips() {
+    async fn change_representation_pin_round_trips() {
         let base = fixture();
         let change = SemioKitMutation::ChangeRepresentationPin(change_representation_pin::mutation::ChangeRepresentationPin { index: 0, pin: store::LinkPin::Checkpoint { id: "cp-1".into() } });
         let after = round_trip(&base, &change);
@@ -179,7 +179,7 @@ mod tests {
     }
 
     #[test]
-    fn add_remove_rename_type_round_trips() {
+    async fn add_remove_rename_type_round_trips() {
         let base = fixture();
         let add = SemioKitMutation::AddType(add_type::mutation::AddType { id: "table".into(), name: "Table".into(), category: "furniture".into() });
         let after = round_trip(&base, &add);
@@ -195,7 +195,7 @@ mod tests {
     }
 
     #[test]
-    fn add_remove_edit_design_round_trips() {
+    async fn add_remove_edit_design_round_trips() {
         let base = fixture();
         let add = SemioKitMutation::AddDesign(add_design::mutation::AddDesign { id: "office".into(), name: "Office".into() });
         let after = round_trip(&base, &add);
@@ -213,7 +213,7 @@ mod tests {
     }
 
     #[test]
-    fn semantic_kinds_cover_every_variant() {
+    async fn semantic_kinds_cover_every_variant() {
         assert_eq!(SemioKitMutation::kinds().len(), 15);
         let mutation = SemioKitMutation::UnbindRepresentation(unbind_representation::mutation::UnbindRepresentation { index: 1 });
         assert_eq!(mutation.semantics().kind, "unbind-representation");

@@ -28,7 +28,7 @@ use semio_framework_plugin::{ArtifactDeserializer, Dialect, StandardId, SubsetId
 /// ✍️ Flattens one inline node into zero or more runs, threading `style` down through
 /// `Emphasis`/`Strong` nesting (so `**_x_**` becomes one run with both `bold` and `italic` set).
 /// `Link`'s inner inlines are flattened too, carrying `style.link = Some(url)`.
-fn push_inline(inline: &MdInline, style: RunStyle, runs: &mut Vec<DocRun>, images: &mut Vec<DocBlock>) {
+async fn push_inline(inline: &MdInline, style: RunStyle, runs: &mut Vec<DocRun>, images: &mut Vec<DocBlock>) {
     match inline {
         MdInline::Text { text } => runs.push(DocRun { text: text.clone(), style }),
         MdInline::Emphasis { inlines } => {
@@ -58,7 +58,7 @@ fn push_inline(inline: &MdInline, style: RunStyle, runs: &mut Vec<DocRun>, image
 }
 
 /// 🧱 One inline sequence -> (runs, any image blocks pulled out of it, in trailing order).
-fn map_inlines(inlines: &[MdInline]) -> (Vec<DocRun>, Vec<DocBlock>) {
+async fn map_inlines(inlines: &[MdInline]) -> (Vec<DocRun>, Vec<DocBlock>) {
     let mut runs = Vec::new();
     let mut images = Vec::new();
     for i in inlines {
@@ -69,7 +69,7 @@ fn map_inlines(inlines: &[MdInline]) -> (Vec<DocRun>, Vec<DocBlock>) {
 
 /// 🧩 One `MdBlock` -> zero or more `DocBlock`s (an image-bearing paragraph expands to its text
 /// block plus one `Image` block per embedded image, in order).
-fn map_block(block: &MdBlock) -> Vec<DocBlock> {
+async fn map_block(block: &MdBlock) -> Vec<DocBlock> {
     match block {
         MdBlock::Heading { level, inlines } => {
             let (runs, images) = map_inlines(inlines);
@@ -114,7 +114,7 @@ impl ArtifactDeserializer for SemioDocumentFromMd {
 mod tests {
     use super::*;
 
-    pub(crate) fn sample_md() -> MdSnapshot {
+    pub(crate) async fn sample_md() -> MdSnapshot {
         MdSnapshot {
             schema: crate::artifacts::md::STDIO_MD_DOCUMENT_SCHEMA.into(),
             blocks: vec![
@@ -128,7 +128,7 @@ mod tests {
     }
 
     #[test]
-    fn maps_headings_lists_code_and_quotes() {
+    async fn maps_headings_lists_code_and_quotes() {
         let semio = semio_framework_plugin::resolve_ready(SemioDocumentFromMd::deserialize(&sample_md())).expect("deserialize");
         assert!(semio.styles.is_empty());
         assert_eq!(semio.blocks.len(), 5);
@@ -140,7 +140,7 @@ mod tests {
     }
 
     #[test]
-    fn inline_image_lifts_to_its_own_block() {
+    async fn inline_image_lifts_to_its_own_block() {
         let md = MdSnapshot {
             schema: crate::artifacts::md::STDIO_MD_DOCUMENT_SCHEMA.into(),
             blocks: vec![MdBlock::Paragraph { inlines: vec![MdInline::Text { text: "see: ".into() }, MdInline::Image { alt: "a cat".into(), url: "cat.png".into(), title: None }] }],

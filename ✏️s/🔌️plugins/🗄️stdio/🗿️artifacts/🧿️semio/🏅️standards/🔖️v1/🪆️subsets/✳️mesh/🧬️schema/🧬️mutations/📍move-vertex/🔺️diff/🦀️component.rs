@@ -8,7 +8,7 @@ use crate::artifacts::semio::standards::v1::subsets::mesh::schema::diff::SemioMe
 use crate::artifacts::semio::standards::v1::subsets::mesh::schema::snapshot::SemioMeshSnapshot;
 
 //#region 🔖️Diff
-pub fn diff(payload: &MoveVertex, base: &SemioMeshSnapshot) -> protocol::MutationOutcome<SemioMeshDiff> {
+pub async fn diff(payload: &MoveVertex, base: &SemioMeshSnapshot) -> protocol::MutationOutcome<SemioMeshDiff> {
     let Some(primitive) = crate::artifacts::semio::standards::v1::subsets::mesh::schema::diff::primitive_at(base, &payload.mesh_id, &payload.primitive_id) else {
         return protocol::MutationOutcome::error(
             "mutation.target-missing",

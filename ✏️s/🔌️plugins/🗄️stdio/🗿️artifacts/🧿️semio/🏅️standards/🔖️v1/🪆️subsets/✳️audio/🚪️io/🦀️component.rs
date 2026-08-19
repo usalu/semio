@@ -32,11 +32,11 @@ pub mod derived_composition {
         type Snapshot = SemioAudioSnapshot;
         const WRITES: Dialect = DIALECT;
 
-        fn reads() -> &'static [Dialect] {
+        async fn reads() -> &'static [Dialect] {
             &[DIALECT]
         }
 
-        fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+        async fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
             let native: Vec<AnalyzeSource<'_>> = sources
                 .iter()
                 .filter(|s| s.dialect == DIALECT)
@@ -63,7 +63,7 @@ pub mod derived_composition {
     /// function, two call sites, matching pdf/a's `check_pdf_a_conformance` precedent). None of these
     /// are hard compose-failures (audio has no PDF/A-style conformance gate) — every finding is
     /// advisory, surfaced as a real `Diagnostic` rather than silently dropped.
-    pub fn check_semio_audio_invariants(snapshot: &SemioAudioSnapshot) -> Vec<Diagnostic> {
+    pub async fn check_semio_audio_invariants(snapshot: &SemioAudioSnapshot) -> Vec<Diagnostic> {
         let mut diagnostics = Vec::new();
         if snapshot.sample_rate == 0 {
             diagnostics.push(warning("stdio.semio_audio.zero-sample-rate", "sample_rate is 0 -- no real audio can play back at this rate".to_string()));
@@ -84,7 +84,7 @@ pub mod derived_composition {
         diagnostics
     }
 
-    fn warning(code: &'static str, message: String) -> Diagnostic {
+    async fn warning(code: &'static str, message: String) -> Diagnostic {
         Diagnostic { code: dsl::FaultCode::new(code), severity: Severity::Warning, span: TextSpan::at(1, 1), message, expected: None, scope: FaultScope::default() }
     }
     //#endregion 🔖️Invariants
@@ -97,7 +97,7 @@ pub mod derived_composition {
 
     impl SubsetValidator for SemioAudioValidator {
         const DIALECT: Dialect = DIALECT;
-        fn validate(payload: &IoPayload) -> Vec<Diagnostic> {
+        async fn validate(payload: &IoPayload) -> Vec<Diagnostic> {
             let decoded = match payload {
                 IoPayload::Binary(bytes) => <SemioAudioSnapshot as store::ArtifactPack>::decode_pack(bytes).ok(),
                 IoPayload::Text(text) => <SemioAudioSnapshot as store::ArtifactDsl>::parse_dsl(text).ok(),
@@ -117,7 +117,7 @@ pub mod derived_composition {
     }
 
     static VALIDATOR_ENTRY: std::sync::OnceLock<SubsetValidatorEntry> = std::sync::OnceLock::new();
-    fn validator_entry() -> &'static SubsetValidatorEntry {
+    async fn validator_entry() -> &'static SubsetValidatorEntry {
         VALIDATOR_ENTRY.get_or_init(subset_validator_entry_of::<SemioAudioValidator>)
     }
     //#endregion 🔖️SubsetValidator
@@ -127,7 +127,7 @@ pub mod derived_composition {
     /// document-codec id, repo-wide unique per the ticket's static policy check, distinct from every
     /// other artifact's own document schema string), and `SubsetValidator`. Called from this
     /// artifact's standard-level `engine::register()`.
-    pub fn register() {
+    pub async fn register() {
         ::schema::register_artifact_schema_descriptor(crate::artifacts::semio::standards::v1::subsets::audio::schema::semio_audio_artifact_schema_descriptor());
         let _ = store::register_document_codec(store::ArtifactCodec::of::<SemioAudioSnapshot, crate::artifacts::semio::standards::v1::subsets::audio::schema::mutations::SemioAudioMutation>(
             crate::artifacts::semio::standards::v1::subsets::audio::schema::snapshot::STDIO_SEMIOAUDIO_DOCUMENT_SCHEMA,
@@ -140,13 +140,13 @@ pub mod derived_composition {
     /// 💡️ Registers `s.stdio.semio.audio.inference`'s facet leaves into the OS-wide inference
     /// catalog — sibling to `register_artifact_schema_descriptor` above (separate registry,
     /// ticket 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING).
-    pub fn register_artifact_inferences() {
+    pub async fn register_artifact_inferences() {
         ::schema::register_artifact_inference_descriptor(crate::artifacts::semio::standards::v1::subsets::audio::schema::inferences::semio_audio_artifact_inference_descriptor());
     }
 
     /// 🌉️ audio↔mp3 / audio↔wav bridge entries (W4) -- forward + reverse rows per pair, giving all 4
     /// IoKeys per pair per the master plan's io architecture note.
-    fn bridge_entries() -> &'static [ComposerEntry] {
+    async fn bridge_entries() -> &'static [ComposerEntry] {
         static ENTRIES: std::sync::OnceLock<Vec<ComposerEntry>> = std::sync::OnceLock::new();
         ENTRIES.get_or_init(|| vec![deserializer_entry_of::<SemioAudioFromMp3>(), serializer_entry_of::<SemioAudioToMp3>(), deserializer_entry_of::<SemioAudioFromWav>(), serializer_entry_of::<SemioAudioToWav>()]).as_slice()
     }
@@ -159,7 +159,7 @@ pub mod derived_composition {
         use crate::artifacts::semio::standards::v1::subsets::audio::schema::snapshot::{SemioAudioChannel, SemioAudioTag};
 
         #[test]
-        fn compose_decodes_a_real_binary_source_with_no_advisories() {
+        async fn compose_decodes_a_real_binary_source_with_no_advisories() {
             let snapshot = SemioAudioSnapshot {
                 sample_rate: 44_100,
                 channels: vec![SemioAudioChannel { samples: vec![0.0, 1.0] }, SemioAudioChannel { samples: vec![0.0, -1.0] }],
@@ -174,28 +174,28 @@ pub mod derived_composition {
         }
 
         #[test]
-        fn zero_sample_rate_surfaces_a_real_warning_not_silently() {
+        async fn zero_sample_rate_surfaces_a_real_warning_not_silently() {
             let snapshot = SemioAudioSnapshot { sample_rate: 0, ..SemioAudioSnapshot::default() };
             let diagnostics = check_semio_audio_invariants(&snapshot);
             assert!(diagnostics.iter().any(|d| d.code.0 == "stdio.semio_audio.zero-sample-rate" && d.severity == Severity::Warning), "got {diagnostics:?}");
         }
 
         #[test]
-        fn mismatched_channel_lengths_surface_a_real_warning() {
+        async fn mismatched_channel_lengths_surface_a_real_warning() {
             let snapshot = SemioAudioSnapshot { sample_rate: 44_100, channels: vec![SemioAudioChannel { samples: vec![0.0, 1.0, 2.0] }, SemioAudioChannel { samples: vec![0.0] }], ..SemioAudioSnapshot::default() };
             let diagnostics = check_semio_audio_invariants(&snapshot);
             assert!(diagnostics.iter().any(|d| d.code.0 == "stdio.semio_audio.channel-length-mismatch"), "got {diagnostics:?}");
         }
 
         #[test]
-        fn empty_tag_key_surfaces_a_real_warning() {
+        async fn empty_tag_key_surfaces_a_real_warning() {
             let snapshot = SemioAudioSnapshot { sample_rate: 44_100, tags: vec![SemioAudioTag { key: String::new(), value: "orphaned".into() }], ..SemioAudioSnapshot::default() };
             let diagnostics = check_semio_audio_invariants(&snapshot);
             assert!(diagnostics.iter().any(|d| d.code.0 == "stdio.semio_audio.empty-tag-key"), "got {diagnostics:?}");
         }
 
         #[test]
-        fn subset_validator_recheck_matches_the_composer_side_invariants() {
+        async fn subset_validator_recheck_matches_the_composer_side_invariants() {
             let snapshot = SemioAudioSnapshot { sample_rate: 0, ..SemioAudioSnapshot::default() };
             let bytes = <SemioAudioSnapshot as store::ArtifactPack>::encode_pack(&snapshot);
             let diagnostics = SemioAudioValidator::validate(&IoPayload::Binary(bytes));
@@ -216,7 +216,7 @@ pub mod derived_composition {
             /// parse under the real dialect — independent of, and cheaper than, the two `recognize`/
             /// `walk_protocol` laws below.
             #[test]
-            fn committed_facet_files_parse() {
+            async fn committed_facet_files_parse() {
                 for (label, text) in [("snapshot grammar", snapshot::text::COMPONENT_GRAMMAR_SEMIO), ("mutations grammar", mutations::text::COMPONENT_GRAMMAR_SEMIO), ("diff grammar", diff::text::COMPONENT_GRAMMAR_SEMIO)] {
                     let grammar = dsl::parse_grammar(text).unwrap_or_else(|e| panic!("{label}: parse_grammar failed: {e:?}"));
                     assert_eq!(grammar.dialect, dsl::SemioDialect::Grammar, "{label}: expected grammar dialect");
@@ -232,7 +232,7 @@ pub mod derived_composition {
             /// `artifact-mark` token), so this is a direct proof this facet will pass that harness once
             /// graduated.
             #[test]
-            fn grammar_conformance_law() {
+            async fn grammar_conformance_law() {
                 let grammar = dsl::parse_grammar(snapshot::text::COMPONENT_GRAMMAR_SEMIO).expect("parse snapshot grammar");
                 let recognizer = dsl::Recognizer::compile(&grammar);
                 let text = store::ArtifactDsl::print_dsl(&snapshot::demo_audio_snapshot());
@@ -244,7 +244,7 @@ pub mod derived_composition {
             /// ✅️ `ops_grammar_conformance_law`: the mutations grammar recognizes real `print_op` output
             /// for every `SemioAudioMutation` variant (`mutations::demo_mutation_cases()`).
             #[test]
-            fn ops_grammar_conformance_law() {
+            async fn ops_grammar_conformance_law() {
                 let grammar = dsl::parse_grammar(mutations::text::COMPONENT_GRAMMAR_SEMIO).expect("parse mutations grammar");
                 let recognizer = dsl::Recognizer::compile(&grammar);
                 for mutation in mutations::demo_mutation_cases() {
@@ -257,7 +257,7 @@ pub mod derived_composition {
             /// for every representative `SemioAudioDiff` (`diff::demo_diff_cases()`), incl. the empty
             /// (no-op) diff.
             #[test]
-            fn diff_grammar_conformance_law() {
+            async fn diff_grammar_conformance_law() {
                 let grammar = dsl::parse_grammar(diff::text::COMPONENT_GRAMMAR_SEMIO).expect("parse diff grammar");
                 let recognizer = dsl::Recognizer::compile(&grammar);
                 for d in diff::demo_diff_cases() {
@@ -270,7 +270,7 @@ pub mod derived_composition {
             /// snapshot pack (`encode_pack`, envelope-unwrapped first), every demo mutation's
             /// `encode_op`, and every demo diff's `encode_diff` — asserting `consumed == bytes.len()`.
             #[test]
-            fn protocol_walk_law() {
+            async fn protocol_walk_law() {
                 let pack_spec = dsl::parse_protocol(snapshot::binary::COMPONENT_PROTOCOL_SEMIO).expect("parse snapshot protocol");
                 let packed = store::ArtifactPack::encode_pack(&snapshot::demo_audio_snapshot());
                 let (_, inner) = store::semio_format::unwrap_binary(&packed).expect("unwrap semio envelope");
@@ -297,7 +297,7 @@ pub mod derived_composition {
             /// `parse_dsl(fixture) == demo()`, `print_dsl(demo()) == fixture` (byte-for-byte), and the
             /// pack twin — so the fixtures can never silently drift back to a fake.
             #[test]
-            fn fixture_honesty_law() {
+            async fn fixture_honesty_law() {
                 const FIXTURE_DSL: &str = include_str!("../../✳️any/📚️examples/🎵️tone/🖼️assets/🗣️example.dsl.semio");
                 const FIXTURE_PACK: &[u8] = include_bytes!("../../✳️any/📚️examples/🎵️tone/🖼️assets/🎒️example.pack.semio");
 

@@ -4,7 +4,7 @@ use super::mutation::ChangeSiloHydraulicRadiusM;
 use crate::artifacts::en1991::{En1991Diff, En1991Snapshot};
 
 //#region 🔖️Diff
-pub fn diff(payload: &ChangeSiloHydraulicRadiusM, base: &En1991Snapshot) -> protocol::MutationOutcome<En1991Diff> {
+pub async fn diff(payload: &ChangeSiloHydraulicRadiusM, base: &En1991Snapshot) -> protocol::MutationOutcome<En1991Diff> {
     if !payload.new_silo_hydraulic_radius_m.is_finite() {
         return protocol::MutationOutcome::fatal("mutation.invariant", "Silo hydraulic radius m must be a finite number.", Vec::<String>::new());
     }

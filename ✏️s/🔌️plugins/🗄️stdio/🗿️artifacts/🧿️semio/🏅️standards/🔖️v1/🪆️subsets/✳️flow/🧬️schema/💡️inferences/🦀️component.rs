@@ -28,19 +28,19 @@ pub struct SemioFlowInference {
 }
 
 impl protocol::Inference<SemioFlowSnapshot> for SemioFlowInference {
-    fn infer(snapshot: &SemioFlowSnapshot) -> Self {
+    async fn infer(snapshot: &SemioFlowSnapshot) -> Self {
         Self { topology: compute_semio_flow_topology(snapshot) }
     }
 }
 
 impl protocol::InferenceSpec<SemioFlowSnapshot> for SemioFlowInference {
-    fn inference_schema_id() -> &'static str {
+    async fn inference_schema_id() -> &'static str {
         "s.stdio.semio.flow.inference"
     }
-    fn schema_version() -> u32 {
+    async fn schema_version() -> u32 {
         1
     }
-    fn fields() -> &'static [protocol::InferenceFieldSpec] {
+    async fn fields() -> &'static [protocol::InferenceFieldSpec] {
         &[protocol::InferenceFieldSpec { id: "s.stdio.semio.flow.inference.topology", reads: &["nodes", "edges"] }]
     }
 }
@@ -60,7 +60,7 @@ impl ArtifactInferrer for crate::artifacts::semio::standards::v1::subsets::flow:
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.stdio.semio.flow.inference`'s facet leaves into the OS-wide inference catalog
 /// — call once at plugin init, alongside `semio_flow_artifact_schema_descriptor`'s registration.
-pub fn semio_flow_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
+pub async fn semio_flow_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
     schema::ArtifactInferenceDescriptor {
         id: "s.stdio.semio.flow.inference",
         inference: schema::FacetLeaves {
@@ -81,13 +81,13 @@ mod tests {
     use protocol::Inference;
 
     #[test]
-    fn inference_determinism_law() {
+    async fn inference_determinism_law() {
         let snapshot = SemioFlowSnapshot::default();
         assert_eq!(SemioFlowInference::infer(&snapshot), SemioFlowInference::infer(&snapshot));
     }
 
     #[test]
-    fn inference_default_law() {
+    async fn inference_default_law() {
         assert_eq!(SemioFlowInference::infer(&SemioFlowSnapshot::default()), SemioFlowInference::default());
     }
 }

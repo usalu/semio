@@ -73,7 +73,7 @@ pub const PLAYBOOK_INTERACTION_GRANULARITY_STEP: &str = "step";
 /// prune matched on either), so `validate_state` prunes a deleted step's OR block's id automatically
 /// after every document dispatch (`revalidate_interaction_state_after_document_change`), replacing the
 /// deleted hand-rolled prune in `remove_block::handle`.
-fn playbook_blocks_topology(spec: &PlaybookSnapshot) -> DomainTopology {
+async fn playbook_blocks_topology(spec: &PlaybookSnapshot) -> DomainTopology {
     let mut ordered = Vec::new();
     for step in spec.steps() {
         ordered.push(TopologyNode { id: step.id.clone(), granularity: PLAYBOOK_INTERACTION_GRANULARITY_STEP.into(), parent: None });
@@ -108,31 +108,31 @@ impl ArtifactEditor for PlaybookPlayApp {
     const DIALECT: Dialect = PLAYBOOK_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = PLAYBOOK_DOCUMENT_SCHEMA;
 
-    fn app_schema() -> Option<schema::AppSchemaDescriptor> {
+    async fn app_schema() -> Option<schema::AppSchemaDescriptor> {
         Some(crate::editor::playbook::config::schema::app_schema_descriptor())
     }
 
-    fn initial_snapshot() -> PlaybookSnapshot {
+    async fn initial_snapshot() -> PlaybookSnapshot {
         crate::artifacts::playbook::empty_playbook_snapshot()
     }
 
-    fn io() -> Option<semio_framework_plugin::AppIo> {
+    async fn io() -> Option<semio_framework_plugin::AppIo> {
         Some(playbook_io())
     }
 
     /// 🏷️ The manifest action id each command was declared under — supplied wholesale by
     /// `app_commands!`'s generated `command_id()`.
-    fn command_id(command: &PlaybookCommand) -> &'static str {
+    async fn command_id(command: &PlaybookCommand) -> &'static str {
         command.command_id()
     }
 
-    fn handle(command: &PlaybookCommand, doc: &ArtifactView<'_, PlaybookSnapshot>, cfg: &ConfigView<'_, PlaybookConfig>, _interaction: &InteractionView<'_>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<PlaybookMutation, PlaybookConfigMutation, Self::DraftMutation>, Fault> {
+    async fn handle(command: &PlaybookCommand, doc: &ArtifactView<'_, PlaybookSnapshot>, cfg: &ConfigView<'_, PlaybookConfig>, _interaction: &InteractionView<'_>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<PlaybookMutation, PlaybookConfigMutation, Self::DraftMutation>, Fault> {
         command.dispatch(doc, cfg)
     }
 
     /// 🕹️ `blocks` domain: `HierarchyProvider::Topology` from the document's own step/block nesting —
     /// see `playbook_blocks_topology`'s doc comment.
-    fn interaction_topology(doc: &ArtifactView<'_, PlaybookSnapshot>, _cfg: &ConfigView<'_, PlaybookConfig>) -> InteractionTopology {
+    async fn interaction_topology(doc: &ArtifactView<'_, PlaybookSnapshot>, _cfg: &ConfigView<'_, PlaybookConfig>) -> InteractionTopology {
         let mut domains = std::collections::BTreeMap::new();
         domains.insert(PLAYBOOK_INTERACTION_BLOCKS.to_string(), playbook_blocks_topology(doc.snapshot));
         InteractionTopology { domains }
@@ -142,7 +142,7 @@ impl ArtifactEditor for PlaybookPlayApp {
     /// `writer_engine::WriterChapterPayload`/`PlaybookChapterPayload`) and inserts it as a `"note"` block
     /// (free-form `text` field, non-interactive) into a dedicated `"imported"` step, created on first
     /// import and reused on every later one (idempotent step creation).
-    fn import_media(port: &str, media: &Media, doc: &ArtifactView<'_, PlaybookSnapshot>) -> Result<Emit<PlaybookMutation, PlaybookConfigMutation, Self::DraftMutation>, MediaError> {
+    async fn import_media(port: &str, media: &Media, doc: &ArtifactView<'_, PlaybookSnapshot>) -> Result<Emit<PlaybookMutation, PlaybookConfigMutation, Self::DraftMutation>, MediaError> {
         if port != "chapters:in" {
             return Err(MediaError::NotImplemented);
         }
@@ -163,7 +163,7 @@ impl ArtifactEditor for PlaybookPlayApp {
         Ok(Emit::mutations(operations))
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, PlaybookSnapshot>, cfg: &ConfigView<'_, PlaybookConfig>) -> UiNode {
+    async fn render(body_key: &str, doc: &ArtifactView<'_, PlaybookSnapshot>, cfg: &ConfigView<'_, PlaybookConfig>) -> UiNode {
         match body_key {
             PLAYBOOK_PLAY_BODY_BUILDER => builder_window::render(doc.snapshot, cfg.snapshot),
             _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))),
@@ -176,7 +176,7 @@ impl ArtifactEditor for PlaybookPlayApp {
 /// 🧱️ The manifest stitch: one call per taxonomy node, each sourced from that node's own `definition()`.
 /// Only the leaf action/keybinding declarations (which have no dedicated `_def` passthrough) are written
 /// out inline.
-pub fn create_playbook_play_app() -> semio_framework_plugin::AppDefinition {
+pub async fn create_playbook_play_app() -> semio_framework_plugin::AppDefinition {
     Editor::builder(PLAYBOOK_DIALECT)
         .command(CommandDefinition { in_palette: false, ..CommandDefinition::new_catalog("setContributions", LocalizedLabel::native("Set Contributions", "Beiträge festlegen"), "host", ActionKind::View).with_args([ActionArgDef::text("json", LocalizedLabel::native("Contributions", "Beiträge"))]) })
         .document(["semio", "playbook"])
@@ -247,7 +247,7 @@ pub(crate) mod testkit {
     pub type PlaybookApp = VcsArtifactApp<EditorApp<PlaybookPlayApp>>;
 
     /// 🧪️ A bare app instance — no `AppActionRegistry`, so undeclared internal commands dispatch freely.
-    pub fn playbook_app() -> PlaybookApp {
+    pub async fn playbook_app() -> PlaybookApp {
         new_app::<EditorApp<PlaybookPlayApp>>()
     }
 
@@ -255,21 +255,21 @@ pub(crate) mod testkit {
     /// definition, examples }` shape `new_app_with_registry`/`assert_declared_actions_bridge_to_commands`
     /// still expect — framework testkit gap, not modifiable here (`🧰️framework/**` is outside this
     /// packet's lease).
-    pub fn playbook_manifest_for_testkit() -> App {
+    pub async fn playbook_manifest_for_testkit() -> App {
         App { definition: create_playbook_play_app(), examples: Vec::new() }
     }
 
     /// 🧪️ An app wired to the real manifest registry — enforces View/Shell kind discipline, and the
     /// `kind` default declared on `addBlock` materializes host-side.
-    pub fn playbook_app_with_registry() -> PlaybookApp {
+    pub async fn playbook_app_with_registry() -> PlaybookApp {
         new_app_with_registry::<EditorApp<PlaybookPlayApp>>(playbook_manifest_for_testkit)
     }
 
-    pub fn dispatch(app: &mut PlaybookApp, command: PlaybookCommand) -> InvocationResult {
+    pub async fn dispatch(app: &mut PlaybookApp, command: PlaybookCommand) -> InvocationResult {
         app.dispatch_typed(command, &meta("local")).expect("dispatch")
     }
 
-    pub fn render(app: &mut PlaybookApp, body_key: &str) -> String {
+    pub async fn render(app: &mut PlaybookApp, body_key: &str) -> String {
         serde_json::to_string(&app.render(body_key, None, &ViewModel::default()).expect("render")).expect("render json")
     }
 }
@@ -288,7 +288,7 @@ mod tests {
     /// 🏷️ Every declared manifest action id must be reachable as exactly one command row, and every row's
     /// wire keyword must be distinct — the cross-cutting invariant `app_commands!` is there to hold.
     #[test]
-    fn command_ids_are_unique() {
+    async fn command_ids_are_unique() {
         let commands = every_command();
         let ids: Vec<&str> = commands.iter().map(|command| command.command_id()).collect();
         let mut sorted = ids.clone();
@@ -300,7 +300,7 @@ mod tests {
 
     /// ⚖️ LAW: text and binary are two projections of the same command, for every single row.
     #[test]
-    fn every_command_round_trips_through_text_and_binary() {
+    async fn every_command_round_trips_through_text_and_binary() {
         for command in every_command() {
         store::os_store::test_support::assert_op_text_binary_equivalence(&command);
         }
@@ -311,7 +311,7 @@ mod tests {
     /// pre-migration `playbook_protocol::PlaybookCommand`'s own `#[dsl(key = ..)]` attribute) so the wire
     /// format stays byte-identical across the migration; see TEMPLATE.md §5.1.
     #[test]
-    fn every_printed_op_line_starts_with_the_rows_wire_keyword() {
+    async fn every_printed_op_line_starts_with_the_rows_wire_keyword() {
         for command in every_command() {
             let id = command.command_id();
             let expected = match id {
@@ -325,7 +325,7 @@ mod tests {
     }
 
     /// 🧾️ One representative value per row, in declaration (= binary ordinal) order.
-    pub(super) fn every_command() -> Vec<PlaybookCommand> {
+    pub(super) async fn every_command() -> Vec<PlaybookCommand> {
         vec![
             PlaybookCommand::AddStep(add_step::AddStep {}),
             PlaybookCommand::RemoveStep(remove_step::RemoveStep { step_id: "s".into() }),
@@ -342,7 +342,7 @@ mod tests {
 
     //#region 🔖️ManifestSanity
     #[test]
-    fn the_manifest_stitches_every_taxonomy_node() {
+    async fn the_manifest_stitches_every_taxonomy_node() {
         let json = serde_json::to_string(&create_playbook_play_app()).expect("app definition json");
         assert!(json.contains(PLAYBOOK_PLAY_WINDOW_BUILDER), "window kind missing from the manifest: {json}");
         assert!(json.contains(builder::PLAYBOOK_PLAY_MODE_BUILDER), "mode missing from the manifest");
@@ -350,7 +350,7 @@ mod tests {
     }
 
     #[test]
-    fn playbook_play_app_declares_builder_window_only() {
+    async fn playbook_play_app_declares_builder_window_only() {
         let definition = create_playbook_play_app();
         assert_eq!(definition.window_kinds.len(), 1);
         assert_eq!(definition.window_kinds[0].id, PLAYBOOK_PLAY_WINDOW_BUILDER);
@@ -360,7 +360,7 @@ mod tests {
 
     //#region 🔖️Interaction
     #[test]
-    fn blocks_interaction_domain_is_declared_topology_pick_only_on_the_builder_window() {
+    async fn blocks_interaction_domain_is_declared_topology_pick_only_on_the_builder_window() {
         let definition = create_playbook_play_app();
         let domain = definition.interactions.iter().find(|interaction| interaction.id == PLAYBOOK_INTERACTION_BLOCKS).expect("blocks interaction domain declared");
         assert!(matches!(domain.hierarchy, HierarchyProvider::Topology));
@@ -373,7 +373,7 @@ mod tests {
     /// 🌳️ `interaction_topology` walks every step and every one of its blocks into a `TopologyNode`, so
     /// `validate_state` can prune a deleted step's OR block's id out of a stale selection.
     #[test]
-    fn interaction_topology_covers_every_step_and_block() {
+    async fn interaction_topology_covers_every_step_and_block() {
         let mut app = playbook_app();
         dispatch(&mut app, PlaybookCommand::AddStep(add_step::AddStep {}));
         let step_id = app.snapshot().expect("projection").steps()[0].id.clone();
@@ -392,13 +392,13 @@ mod tests {
 
     //#region 🔖️CrossCutting
     #[test]
-    fn undo_redo_round_trip_through_the_wrapper() {
+    async fn undo_redo_round_trip_through_the_wrapper() {
         let mut app = playbook_app();
         testkit::assert_undo_redo_round_trip(&mut app, PlaybookCommand::AddStep(add_step::AddStep {}), |app| app.snapshot().expect("materialize projection").steps().len(), 1, 2);
     }
 
     #[test]
-    fn an_unknown_body_key_renders_a_diagnostic_instead_of_panicking() {
+    async fn an_unknown_body_key_renders_a_diagnostic_instead_of_panicking() {
         use crate::editor::playbook::testkit::render;
         let mut app = playbook_app();
         assert!(render(&mut app, "playbook.play.nope").contains("Unknown body"));
@@ -409,7 +409,7 @@ mod tests {
     /// over a backbone converges both sides onto the same projection — impossible under whole-document
     /// `setDocument` snapshots, where one side's write would clobber the other's.
     #[test]
-    fn two_instances_converge_disjoint_edits_via_backbone() {
+    async fn two_instances_converge_disjoint_edits_via_backbone() {
         testkit::assert_two_instances_converge::<EditorApp<PlaybookPlayApp>, (usize, usize)>(
             "mem://playbook-convergence",
             PlaybookCommand::AddStep(add_step::AddStep {}),
@@ -425,7 +425,7 @@ mod tests {
 
     //#region 🔖️PortTests
     #[test]
-    fn playbook_io_declares_the_extra_chapters_in_port_and_its_own_kind() {
+    async fn playbook_io_declares_the_extra_chapters_in_port_and_its_own_kind() {
         let io = playbook_io();
         assert_eq!(io.artifact.id, "text.playbook");
         let ports = io.all_ports();
@@ -433,13 +433,13 @@ mod tests {
         assert_eq!(chapters_in.kind_id.as_deref(), Some("text.document"));
     }
 
-    fn chapter_media(text: &str, title: &str) -> Media {
+    async fn chapter_media(text: &str, title: &str) -> Media {
         let payload = PlaybookChapterPayload { id: "jack".into(), title: title.into(), text: text.into(), language_id: "jack".into() };
         Media { media_type: semio_framework_plugin::MediaType { class: MediaClass::Text, form: MediaForm::Document }, payload: MediaPayload::Structured { schema: "text.document".into(), json: serde_json::to_string(&payload).unwrap() } }
     }
 
     #[test]
-    fn import_media_creates_the_imported_step_and_a_note_block() {
+    async fn import_media_creates_the_imported_step_and_a_note_block() {
         let spec = crate::artifacts::playbook::empty_playbook_snapshot();
         let history = semio_framework_plugin::HistoryView::empty();
         let doc_view = ArtifactView::new(&spec, &history);
@@ -459,7 +459,7 @@ mod tests {
     }
 
     #[test]
-    fn import_media_reuses_the_imported_step_on_a_second_import() {
+    async fn import_media_reuses_the_imported_step_on_a_second_import() {
         let base = crate::artifacts::playbook::empty_playbook_snapshot();
         let mut steps = base.steps();
         steps.push(PlaybookStep { id: PLAYBOOK_IMPORTED_STEP_ID.into(), title: "Imported".into(), description: None, blocks: Vec::new() });
@@ -473,7 +473,7 @@ mod tests {
     }
 
     #[test]
-    fn import_media_rejects_unknown_ports_and_malformed_payloads() {
+    async fn import_media_rejects_unknown_ports_and_malformed_payloads() {
         let spec = crate::artifacts::playbook::empty_playbook_snapshot();
         let history = semio_framework_plugin::HistoryView::empty();
         let doc_view = ArtifactView::new(&spec, &history);

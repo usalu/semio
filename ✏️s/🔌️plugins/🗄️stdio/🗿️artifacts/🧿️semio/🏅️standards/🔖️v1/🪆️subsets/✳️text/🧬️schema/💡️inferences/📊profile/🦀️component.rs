@@ -23,7 +23,7 @@ pub struct SemioTextProfile {
 }
 
 /// 📊️ Computes [`SemioTextProfile`] — pure, total, O(runs + marks).
-pub fn compute_semio_text_profile(snapshot: &SemioTextSnapshot) -> SemioTextProfile {
+pub async fn compute_semio_text_profile(snapshot: &SemioTextSnapshot) -> SemioTextProfile {
     let mut word_count = 0u32;
     let mut char_count = 0u32;
     let mut mark_count = 0u32;
@@ -47,7 +47,7 @@ mod tests {
     use super::*;
     use crate::artifacts::semio::standards::v1::subsets::text::schema::snapshot::{SemioTextMark, SemioTextMarkKind, SemioTextRun, STDIO_SEMIOTEXT_DOCUMENT_SCHEMA};
 
-    fn populated() -> SemioTextSnapshot {
+    async fn populated() -> SemioTextSnapshot {
         SemioTextSnapshot {
             schema: STDIO_SEMIOTEXT_DOCUMENT_SCHEMA.into(),
             runs: vec![
@@ -60,7 +60,7 @@ mod tests {
     }
 
     #[test]
-    fn censuses_words_chars_marks_and_distinct_languages() {
+    async fn censuses_words_chars_marks_and_distinct_languages() {
         let profile = compute_semio_text_profile(&populated());
         assert_eq!(profile.run_count, 4);
         assert_eq!(profile.word_count, 5); // "Hello, world"(2) + "again"(1) + "semio.tech"(1) + "unspecified"(1)
@@ -69,13 +69,13 @@ mod tests {
     }
 
     #[test]
-    fn inference_determinism_law() {
+    async fn inference_determinism_law() {
         let snapshot = populated();
         assert_eq!(compute_semio_text_profile(&snapshot), compute_semio_text_profile(&snapshot));
     }
 
     #[test]
-    fn inference_default_law() {
+    async fn inference_default_law() {
         assert_eq!(compute_semio_text_profile(&SemioTextSnapshot::default()), SemioTextProfile::default());
     }
 }

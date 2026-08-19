@@ -16,7 +16,7 @@ pub struct PptxIntoPresent;
 impl Deserializer<PresentSnapshot> for PptxIntoPresent {
     const FROM: Dialect = PPTX_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Lossy;
-    fn deserialize(payload: &IoPayload) -> IoResult<PresentSnapshot> {
+    async fn deserialize(payload: &IoPayload) -> IoResult<PresentSnapshot> {
         let IoPayload::Binary(bytes) = payload else {
             return Err(IoError { message: "PptxIntoPresent: expected a binary pptx payload".to_string(), diagnostics: Vec::new() });
         };

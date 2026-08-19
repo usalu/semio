@@ -4,7 +4,7 @@
 use crate::artifacts::assembly::mutations::{connect_slots, create_slot, AssemblyMutation};
 use crate::artifacts::assembly::schema::snapshot::AssemblySnapshot;
 
-pub fn inverse(payload: &super::mutation::DeleteSlot, base: &AssemblySnapshot) -> Vec<AssemblyMutation> {
+pub async fn inverse(payload: &super::mutation::DeleteSlot, base: &AssemblySnapshot) -> Vec<AssemblyMutation> {
     let Some(slot) = base.slots.iter().find(|slot| slot.id == payload.id) else {
         return Vec::new();
     };

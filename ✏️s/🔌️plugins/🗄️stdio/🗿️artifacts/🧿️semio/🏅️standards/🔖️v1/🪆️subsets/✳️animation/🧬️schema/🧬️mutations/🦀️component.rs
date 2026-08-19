@@ -87,31 +87,31 @@ pub enum SemioAnimationMutation {
 //#region 🔖️DiffBuilders
 /// 🧱️ Wraps a per-timeline `AnimTimelineDiff` into a full `SemioAnimationDiff` — the innermost
 /// layer of the nested-diff tree every non-collection-root mutation ultimately builds on.
-fn diff_timeline_field(index: usize, diff: AnimTimelineDiff) -> SemioAnimationDiff {
+async fn diff_timeline_field(index: usize, diff: AnimTimelineDiff) -> SemioAnimationDiff {
     SemioAnimationDiff { timelines: Some(IndexedTripleDiff { modified: vec![IndexModified { index, diff }], ..Default::default() }) }
 }
-fn diff_channel_collection(timeline_index: usize, channels: IndexedTripleDiff<AnimChannelDiff, AnimChannel>) -> SemioAnimationDiff {
+async fn diff_channel_collection(timeline_index: usize, channels: IndexedTripleDiff<AnimChannelDiff, AnimChannel>) -> SemioAnimationDiff {
     diff_timeline_field(timeline_index, AnimTimelineDiff { name: None, channels: Some(channels) })
 }
-fn diff_channel_field(timeline_index: usize, index: usize, diff: AnimChannelDiff) -> SemioAnimationDiff {
+async fn diff_channel_field(timeline_index: usize, index: usize, diff: AnimChannelDiff) -> SemioAnimationDiff {
     diff_channel_collection(timeline_index, IndexedTripleDiff { modified: vec![IndexModified { index, diff }], ..Default::default() })
 }
-fn diff_keyframe_collection(timeline_index: usize, channel_index: usize, keyframes: IndexedTripleDiff<AnimKeyframeDiff, AnimKeyframe>) -> SemioAnimationDiff {
+async fn diff_keyframe_collection(timeline_index: usize, channel_index: usize, keyframes: IndexedTripleDiff<AnimKeyframeDiff, AnimKeyframe>) -> SemioAnimationDiff {
     diff_channel_field(timeline_index, channel_index, AnimChannelDiff { target: None, interpolation: None, keyframes: Some(keyframes) })
 }
-fn diff_keyframe_field(timeline_index: usize, channel_index: usize, index: usize, diff: AnimKeyframeDiff) -> SemioAnimationDiff {
+async fn diff_keyframe_field(timeline_index: usize, channel_index: usize, index: usize, diff: AnimKeyframeDiff) -> SemioAnimationDiff {
     diff_keyframe_collection(timeline_index, channel_index, IndexedTripleDiff { modified: vec![IndexModified { index, diff }], ..Default::default() })
 }
 //#endregion 🔖️DiffBuilders
 
 //#region 🔖️BaseAccessors
-fn timeline_at(base: &SemioAnimationSnapshot, i: usize) -> Option<&AnimTimeline> {
+async fn timeline_at(base: &SemioAnimationSnapshot, i: usize) -> Option<&AnimTimeline> {
     base.timelines.get(i)
 }
-fn channel_at(base: &SemioAnimationSnapshot, ti: usize, ci: usize) -> Option<&AnimChannel> {
+async fn channel_at(base: &SemioAnimationSnapshot, ti: usize, ci: usize) -> Option<&AnimChannel> {
     base.timelines.get(ti).and_then(|t| t.channels.get(ci))
 }
-fn keyframe_at(base: &SemioAnimationSnapshot, ti: usize, ci: usize, ki: usize) -> Option<&AnimKeyframe> {
+async fn keyframe_at(base: &SemioAnimationSnapshot, ti: usize, ci: usize, ki: usize) -> Option<&AnimKeyframe> {
     base.timelines.get(ti).and_then(|t| t.channels.get(ci)).and_then(|c| c.keyframes.get(ki))
 }
 //#endregion 🔖️BaseAccessors
@@ -119,7 +119,7 @@ fn keyframe_at(base: &SemioAnimationSnapshot, ti: usize, ci: usize, ki: usize) -
 impl Mutation<SemioAnimationSnapshot> for SemioAnimationMutation {
     type Diff = SemioAnimationDiff;
 
-    fn diff(&self, base: &SemioAnimationSnapshot) -> protocol::MutationOutcome<Self::Diff> {
+    async fn diff(&self, base: &SemioAnimationSnapshot) -> protocol::MutationOutcome<Self::Diff> {
         use SemioAnimationMutation::*;
         protocol::MutationOutcome::new(match self {
             NoMutation => SemioAnimationDiff::default(),
@@ -138,7 +138,7 @@ impl Mutation<SemioAnimationSnapshot> for SemioAnimationMutation {
         })
     }
 
-    fn inverse(&self, base: &SemioAnimationSnapshot) -> Vec<Self> {
+    async fn inverse(&self, base: &SemioAnimationSnapshot) -> Vec<Self> {
         use SemioAnimationMutation::*;
         match self {
             NoMutation => vec![NoMutation],
@@ -183,7 +183,7 @@ impl Mutation<SemioAnimationSnapshot> for SemioAnimationMutation {
 
 /// ▶️ Applies a mutation to `snapshot` in place, returning the diff (mirrors gif's
 /// `apply_gif_mutation` convention — used by the builder's `mutate()` and the set-snapshot leaf).
-pub fn apply_semio_animation_mutation(snapshot: &mut SemioAnimationSnapshot, mutation: &SemioAnimationMutation) -> protocol::MutationOutcome<SemioAnimationDiff> {
+pub async fn apply_semio_animation_mutation(snapshot: &mut SemioAnimationSnapshot, mutation: &SemioAnimationMutation) -> protocol::MutationOutcome<SemioAnimationDiff> {
     let outcome = <SemioAnimationMutation as Mutation<SemioAnimationSnapshot>>::diff(mutation, snapshot);
     outcome.apply_to(snapshot)
 }
@@ -195,11 +195,11 @@ pub fn apply_semio_animation_mutation(snapshot: &mut SemioAnimationSnapshot, mut
 /// the old whole-enum `serde_json::to_string`/`from_str` passthrough — a real JSON-transfer-ban
 /// violation the brief specifically flagged as a recurring pattern to check for (confirmed present
 /// here, unlike the sibling `🔺️diff` facet, which was already fully real pre-wave).
-fn enc_animation_snapshot(s: &SemioAnimationSnapshot) -> String {
+async fn enc_animation_snapshot(s: &SemioAnimationSnapshot) -> String {
     use crate::artifacts::semio::standards::v1::subsets::animation::schema::diff::{enc_list, enc_str, enc_timeline};
     format!("[{},{}]", enc_str(&s.schema), enc_list(&s.timelines, enc_timeline))
 }
-fn dec_animation_snapshot(s: &str) -> Result<SemioAnimationSnapshot, String> {
+async fn dec_animation_snapshot(s: &str) -> Result<SemioAnimationSnapshot, String> {
     use crate::artifacts::semio::standards::v1::subsets::animation::schema::diff::{dec_list, dec_str, dec_timeline};
     use crate::artifacts::semio::standards::v1::subsets::any::schema::triples::{split_top_level, strip_brackets};
     let parts = split_top_level(strip_brackets(s)?, ',');
@@ -215,7 +215,7 @@ fn dec_animation_snapshot(s: &str) -> Result<SemioAnimationSnapshot, String> {
 /// grammar. `SetSnapshot` reuses the `enc_animation_snapshot`/`dec_animation_snapshot` whole-
 /// snapshot codec above (W2c closer fix — was `serde_json`, see that region's doc comment).
 impl OpText for SemioAnimationMutation {
-    fn print_op(&self) -> String {
+    async fn print_op(&self) -> String {
         use crate::artifacts::semio::standards::v1::subsets::animation::schema::diff::{enc_channel, enc_interpolation, enc_keyframe, enc_str, enc_target, enc_timeline, enc_value};
         use SemioAnimationMutation::*;
         match self {
@@ -241,7 +241,7 @@ impl OpText for SemioAnimationMutation {
         }
     }
 
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
+    async fn parse_op(line: &str) -> Result<Self, store::TextError> {
         use crate::artifacts::semio::standards::v1::subsets::animation::schema::diff::{dec_channel, dec_interpolation, dec_keyframe, dec_str, dec_target, dec_timeline, dec_value};
         use crate::artifacts::semio::standards::v1::subsets::any::schema::triples::{split_top_level, strip_brackets};
         use SemioAnimationMutation::*;
@@ -321,7 +321,7 @@ impl OpText for SemioAnimationMutation {
 /// 🏷️ `SemioAnimationMutation` variant ordinals — declaration order, 0-12 (matches
 /// `parse_op`'s own keyword match). Used by the real `OpBinary` frame below.
 const OP_KEYWORDS: [&str; 13] = ["N", "S", "IT", "RT", "TN", "IC", "RC", "CT", "CI", "IK", "RK", "KT", "KV"];
-fn variant_ordinal(m: &SemioAnimationMutation) -> u8 {
+async fn variant_ordinal(m: &SemioAnimationMutation) -> u8 {
     use SemioAnimationMutation::*;
     match m {
         NoMutation => 0,
@@ -348,7 +348,7 @@ const OP_BINARY_FORMAT: u8 = 1;
 /// `print_op`/`parse_op` text codec (one source of truth), same treatment every prior semio wave's
 /// `OpBinary` upgrade uses.
 impl OpBinary for SemioAnimationMutation {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         let printed = <Self as OpText>::print_op(self);
         let args = match printed.split_once(':') {
             Some((_, rest)) => rest,
@@ -358,7 +358,7 @@ impl OpBinary for SemioAnimationMutation {
         out.extend_from_slice(args.as_bytes());
         Ok(out)
     }
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         let malformed = |what: &'static str, detail: String| protocol::ProtocolError::Malformed { what, offset: 0, detail };
         let [format, tag, rest @ ..] = bytes else { return Err(malformed("op header", format!("expected at least 2 bytes, got {}", bytes.len()))) };
         if *format != OP_BINARY_FORMAT {
@@ -376,7 +376,7 @@ impl OpBinary for SemioAnimationMutation {
 /// conformance-law tests can reuse them, same promotion pattern every prior semio wave's report
 /// documents (a private item of a child `mod tests` isn't visible to a sibling module).
 #[cfg(test)]
-fn fixture() -> SemioAnimationSnapshot {
+async fn fixture() -> SemioAnimationSnapshot {
     SemioAnimationSnapshot {
         timelines: vec![AnimTimeline {
             name: Some("walk".into()),
@@ -391,7 +391,7 @@ fn fixture() -> SemioAnimationSnapshot {
 }
 
 #[cfg(test)]
-pub(crate) fn demo_mutation_cases() -> Vec<SemioAnimationMutation> {
+pub(crate) async fn demo_mutation_cases() -> Vec<SemioAnimationMutation> {
     let base = fixture();
     use SemioAnimationMutation::*;
     vec![
@@ -418,7 +418,7 @@ mod tests {
 
     /// 🧪️ mutation_diff_law: `m.diff(base).diff().apply(base) == { apply_x_mutation(&mut s, m); s }`.
     #[test]
-    fn mutation_diff_law_covers_every_variant() {
+    async fn mutation_diff_law_covers_every_variant() {
         let base = fixture();
         for m in demo_mutation_cases() {
             let diff = <SemioAnimationMutation as Mutation<SemioAnimationSnapshot>>::diff(&m, &base);
@@ -434,7 +434,7 @@ mod tests {
 
     /// 🧪️ inverse_law: every variant's inverse restores `base` when applied after the mutation.
     #[test]
-    fn inverse_law_covers_every_variant() {
+    async fn inverse_law_covers_every_variant() {
         let base = fixture();
         for m in demo_mutation_cases() {
             let mut mutated = base.clone();
@@ -450,7 +450,7 @@ mod tests {
     /// 🧪️ op_text_binary_roundtrip_law: handcrafted `OpText`/`OpBinary` round trip for every
     /// variant.
     #[test]
-    fn op_text_binary_roundtrip_law() {
+    async fn op_text_binary_roundtrip_law() {
         let _base = fixture();
         for m in demo_mutation_cases() {
             let printed = m.print_op();

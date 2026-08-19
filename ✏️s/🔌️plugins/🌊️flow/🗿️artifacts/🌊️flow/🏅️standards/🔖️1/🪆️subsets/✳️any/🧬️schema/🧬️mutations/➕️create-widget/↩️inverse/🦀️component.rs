@@ -6,6 +6,6 @@ use protocol::Identified;
 
 use super::mutation::CreateWidget;
 
-pub fn inverse(payload: &CreateWidget, _base: &FlowSnapshot) -> Vec<FlowMutation> {
+pub async fn inverse(payload: &CreateWidget, _base: &FlowSnapshot) -> Vec<FlowMutation> {
     vec![FlowMutation::DeleteWidget(DeleteWidget { id: payload.widget.id().clone() })]
 }

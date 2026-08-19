@@ -3,7 +3,7 @@ use crate::artifacts::vcs::{VcsDiff, VcsSnapshot};
 
 //#region 🔖️Diff
 /// 🔺️ Warning `no-op` when `new_status` already equals `base.status`.
-pub fn diff(payload: &super::mutation::ChangeStatus, base: &VcsSnapshot) -> protocol::MutationOutcome<VcsDiff> {
+pub async fn diff(payload: &super::mutation::ChangeStatus, base: &VcsSnapshot) -> protocol::MutationOutcome<VcsDiff> {
     if base.status == payload.new_status {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Status is already \"{}\".", payload.new_status));
     }

@@ -25,19 +25,19 @@ pub struct Puzzle3dInference {
 }
 
 impl protocol::Inference<Puzzle3dSnapshot> for Puzzle3dInference {
-    fn infer(snapshot: &Puzzle3dSnapshot) -> Self {
+    async fn infer(snapshot: &Puzzle3dSnapshot) -> Self {
         Self { flat_positions: flatten_snapshot(snapshot).into_iter().collect() }
     }
 }
 
 impl protocol::InferenceSpec<Puzzle3dSnapshot> for Puzzle3dInference {
-    fn inference_schema_id() -> &'static str {
+    async fn inference_schema_id() -> &'static str {
         "s.puzzle.puzzle3d.inference"
     }
-    fn schema_version() -> u32 {
+    async fn schema_version() -> u32 {
         1
     }
-    fn fields() -> &'static [protocol::InferenceFieldSpec] {
+    async fn fields() -> &'static [protocol::InferenceFieldSpec] {
         &[
             protocol::InferenceFieldSpec { id: "s.puzzle.puzzle3d.inference.flatPosition.plane", reads: &["objects", "attractions"] },
             protocol::InferenceFieldSpec { id: "s.puzzle.puzzle3d.inference.flatPosition.center", reads: &["objects", "attractions"] },
@@ -51,7 +51,7 @@ impl ArtifactInferrer for crate::artifacts::puzzle3d::standards::v1::subsets::an
     type Snapshot = Puzzle3dSnapshot;
     type Inference = Puzzle3dInference;
 
-    fn infer_cached(snapshot: &Self::Snapshot, cache: &mut store::InferenceCache, session: &mut store::InferenceSession) -> Self::Inference {
+    async fn infer_cached(snapshot: &Self::Snapshot, cache: &mut store::InferenceCache, session: &mut store::InferenceSession) -> Self::Inference {
         let _ = session;
         let planes = store::infer_field::<Puzzle3dSnapshot, Puzzle3dFlatPlane>(snapshot, Some(cache));
         let centers = store::infer_field::<Puzzle3dSnapshot, Puzzle3dFlatCenter>(snapshot, Some(cache));
@@ -71,7 +71,7 @@ impl ArtifactInferrer for crate::artifacts::puzzle3d::standards::v1::subsets::an
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.puzzle.puzzle3d.inference`'s facet leaves into the OS-wide inference catalog —
 /// call once at plugin init, alongside `puzzle3d_artifact_schema_descriptor`'s registration.
-pub fn puzzle3d_artifact_inference_descriptor() -> artifact_schema::ArtifactInferenceDescriptor {
+pub async fn puzzle3d_artifact_inference_descriptor() -> artifact_schema::ArtifactInferenceDescriptor {
     artifact_schema::ArtifactInferenceDescriptor {
         id: "s.puzzle.puzzle3d.inference",
         inference: artifact_schema::FacetLeaves {
@@ -93,15 +93,15 @@ mod tests {
     use protocol::Inference;
 
     //#region 🧸️Fixtures
-    fn vortex(id: &str, position: [f64; 3], direction: [f64; 3]) -> Puzzle3dVortex {
+    async fn vortex(id: &str, position: [f64; 3], direction: [f64; 3]) -> Puzzle3dVortex {
         Puzzle3dVortex { id: id.into(), vortex_kind: None, label: None, position, direction: Some(direction), radius: None, hidden: false, locked: false }
     }
 
-    fn object(id: &str, origin: [f64; 3], anchor: Puzzle3dObjectAnchor, vortices: Vec<Puzzle3dVortex>) -> Puzzle3dObject {
+    async fn object(id: &str, origin: [f64; 3], anchor: Puzzle3dObjectAnchor, vortices: Vec<Puzzle3dVortex>) -> Puzzle3dObject {
         Puzzle3dObject { id: id.into(), label: None, object_kind: None, anchor, origin, orientation: Some([0.0, 0.0, 0.0, 1.0]), scale: None, mesh_url: None, vortices, hidden: false, locked: false }
     }
 
-    fn chain_snapshot() -> Puzzle3dSnapshot {
+    async fn chain_snapshot() -> Puzzle3dSnapshot {
         // root -A- mid -B- leaf: a 3-object chain — same shape as the flat-position slug's own
         // fixture, kept independent per-file per this repo's inline-fixture convention.
         let root = object("root", [0.0, 0.0, 0.0], Puzzle3dObjectAnchor::Fixed, vec![vortex("top", [0.0, 0.0, 1.0], [0.0, 0.0, 1.0])]);
@@ -115,18 +115,18 @@ mod tests {
 
     //#region 🧪️InferenceLaws
     #[test]
-    fn inference_determinism_law() {
+    async fn inference_determinism_law() {
         let snapshot = chain_snapshot();
         assert_eq!(Puzzle3dInference::infer(&snapshot), Puzzle3dInference::infer(&snapshot));
     }
 
     #[test]
-    fn inference_default_law() {
+    async fn inference_default_law() {
         assert_eq!(Puzzle3dInference::infer(&Puzzle3dSnapshot::default()), Puzzle3dInference::default());
     }
 
     #[test]
-    fn inference_matches_flatten_snapshot_directly() {
+    async fn inference_matches_flatten_snapshot_directly() {
         let snapshot = chain_snapshot();
         let inferred = Puzzle3dInference::infer(&snapshot);
         let direct = flatten_snapshot(&snapshot);

@@ -49,18 +49,18 @@ mod tests {
     use crate::artifacts::semio::standards::v1::subsets::object::schema::snapshot::demo_object_snapshot;
     use protocol::{Mutation, MutationDiff, SemanticMutation};
 
-    fn fixture() -> SemioObjectSnapshot {
+    async fn fixture() -> SemioObjectSnapshot {
         demo_object_snapshot()
     }
 
-    fn ref_of(subset: &str, id: &str) -> store::os_io::ArtifactRef {
+    async fn ref_of(subset: &str, id: &str) -> store::os_io::ArtifactRef {
         store::os_io::ArtifactRef { artifact_id: id.into(), dialect: store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: subset.into() } }
     }
 
     /// 🔧️ Each inverse's diff must be computed against the CURRENT (`restored`) state, not the
     /// stale pre-operation `base` — same fix `✳️text`'s corrected `round_trip` helper established
     /// (📌️important.md Trap #1: the `din4108`-derived helper got this wrong).
-    fn round_trip(base: &SemioObjectSnapshot, operation: &SemioObjectMutation) -> SemioObjectSnapshot {
+    async fn round_trip(base: &SemioObjectSnapshot, operation: &SemioObjectMutation) -> SemioObjectSnapshot {
         let forward = operation.diff(base).diff().apply(base).expect("apply must succeed for a well-formed fixture");
         let backwards = operation.inverse(base);
         let mut restored = forward.clone();
@@ -72,7 +72,7 @@ mod tests {
     }
 
     #[test]
-    fn move_rotate_scale_round_trip() {
+    async fn move_rotate_scale_round_trip() {
         let base = fixture();
 
         let mv = SemioObjectMutation::MoveObject(move_object::mutation::MoveObject { translation: SemioPoint3 { x: 9.0, y: 9.0, z: 9.0 } });
@@ -90,7 +90,7 @@ mod tests {
     }
 
     #[test]
-    fn create_delete_brep_round_trips() {
+    async fn create_delete_brep_round_trips() {
         let base = fixture();
         let target = ref_of("brep", "new-brep");
 
@@ -105,7 +105,7 @@ mod tests {
     }
 
     #[test]
-    fn delete_brep_of_an_absent_slot_has_an_empty_inverse() {
+    async fn delete_brep_of_an_absent_slot_has_an_empty_inverse() {
         let mut base = fixture();
         base.brep = None;
         let delete = SemioObjectMutation::DeleteBrep(delete_brep::mutation::DeleteBrep {});
@@ -114,7 +114,7 @@ mod tests {
     }
 
     #[test]
-    fn create_brep_overwriting_an_existing_handle_restores_the_prior_one_on_undo() {
+    async fn create_brep_overwriting_an_existing_handle_restores_the_prior_one_on_undo() {
         let base = fixture();
         assert!(base.brep.is_some(), "fixture must start with a brep handle to exercise overwrite");
         let create = SemioObjectMutation::CreateBrep(create_brep::mutation::CreateBrep { child_id: "brand-new".into(), target: ref_of("brep", "brand-new-target") });
@@ -123,7 +123,7 @@ mod tests {
     }
 
     #[test]
-    fn create_delete_mesh_round_trips() {
+    async fn create_delete_mesh_round_trips() {
         let base = fixture();
         let create = SemioObjectMutation::CreateMesh(create_mesh::mutation::CreateMesh { child_id: "mesh-99".into(), target: ref_of("mesh", "new-mesh") });
         let after = round_trip(&base, &create);
@@ -135,7 +135,7 @@ mod tests {
     }
 
     #[test]
-    fn create_delete_properties_round_trips() {
+    async fn create_delete_properties_round_trips() {
         let base = fixture();
         let create = SemioObjectMutation::CreateProperties(create_properties::mutation::CreateProperties { child_id: "props-99".into(), target: ref_of("value", "new-props") });
         let after = round_trip(&base, &create);
@@ -147,7 +147,7 @@ mod tests {
     }
 
     #[test]
-    fn semantic_kinds_cover_every_variant() {
+    async fn semantic_kinds_cover_every_variant() {
         assert_eq!(SemioObjectMutation::kinds().len(), 9);
         let mutation = SemioObjectMutation::DeleteMesh(delete_mesh::mutation::DeleteMesh {});
         assert_eq!(mutation.semantics().kind, "delete-mesh");

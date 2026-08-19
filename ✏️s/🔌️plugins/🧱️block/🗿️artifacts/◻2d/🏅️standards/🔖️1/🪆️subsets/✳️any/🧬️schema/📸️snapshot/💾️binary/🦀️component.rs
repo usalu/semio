@@ -12,12 +12,12 @@ use crate::artifacts::block2d::Block2dSnapshot;
 use store::PackError;
 
 /// 📦️ Encodes a `Block2dSnapshot` to its binary pack form.
-pub fn encode(document: &Block2dSnapshot) -> Vec<u8> {
+pub async fn encode(document: &Block2dSnapshot) -> Vec<u8> {
     store::ArtifactPack::encode_pack(document)
 }
 
 /// 📖️ Decodes a `Block2dSnapshot` from its binary pack form.
-pub fn decode(bytes: &[u8]) -> Result<Block2dSnapshot, PackError> {
+pub async fn decode(bytes: &[u8]) -> Result<Block2dSnapshot, PackError> {
     <Block2dSnapshot as store::ArtifactPack>::decode_pack(bytes)
 }
 
@@ -27,7 +27,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn pack_round_trips_representative_document() {
+    async fn pack_round_trips_representative_document() {
         let document = Block2dSnapshot::default();
         store::os_store::test_support::assert_dsl_pack_equivalence(&document);
         let bytes = encode(&document);

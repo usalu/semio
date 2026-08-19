@@ -53,7 +53,7 @@ mod tests {
     use super::*;
     use crate::artifacts::semio::standards::v1::subsets::animation::schema::snapshot::{AnimChannel, AnimInterpolation, AnimKeyframe, AnimTarget, AnimTargetProperty, AnimTimeline, AnimValue, STDIO_SEMIOANIMATION_DOCUMENT_SCHEMA};
 
-    fn real_world_animation() -> SemioAnimationSnapshot {
+    async fn real_world_animation() -> SemioAnimationSnapshot {
         SemioAnimationSnapshot {
             schema: STDIO_SEMIOANIMATION_DOCUMENT_SCHEMA.into(),
             timelines: vec![AnimTimeline {
@@ -68,7 +68,7 @@ mod tests {
     }
 
     #[test]
-    fn serialize_derives_real_delay_from_keyframe_time_deltas() {
+    async fn serialize_derives_real_delay_from_keyframe_time_deltas() {
         let gif = semio_framework_plugin::resolve_ready(SemioAnimationToGif::serialize(&real_world_animation())).expect("serialize");
         assert_eq!(gif.frames.len(), 3);
         assert_eq!(gif.frames[0].delay_cs, 10);
@@ -78,7 +78,7 @@ mod tests {
     }
 
     #[test]
-    fn single_keyframe_uses_the_minimum_one_centisecond_floor() {
+    async fn single_keyframe_uses_the_minimum_one_centisecond_floor() {
         let snap = SemioAnimationSnapshot {
             schema: STDIO_SEMIOANIMATION_DOCUMENT_SCHEMA.into(),
             timelines: vec![AnimTimeline {
@@ -96,7 +96,7 @@ mod tests {
     }
 
     #[test]
-    fn empty_animation_serializes_to_zero_frames() {
+    async fn empty_animation_serializes_to_zero_frames() {
         let snap = SemioAnimationSnapshot { schema: STDIO_SEMIOANIMATION_DOCUMENT_SCHEMA.into(), timelines: Vec::new() };
         let gif = semio_framework_plugin::resolve_ready(SemioAnimationToGif::serialize(&snap)).expect("serialize");
         assert!(gif.frames.is_empty());

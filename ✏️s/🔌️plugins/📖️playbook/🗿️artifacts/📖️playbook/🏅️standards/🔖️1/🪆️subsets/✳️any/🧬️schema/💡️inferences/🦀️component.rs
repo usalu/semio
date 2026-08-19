@@ -23,25 +23,25 @@ pub struct PlaybookInference {
 }
 
 impl Default for PlaybookInference {
-    fn default() -> Self {
+    async fn default() -> Self {
         <Self as protocol::Inference<PlaybookSnapshot>>::infer(&PlaybookSnapshot::default())
     }
 }
 
 impl protocol::Inference<PlaybookSnapshot> for PlaybookInference {
-    fn infer(snapshot: &PlaybookSnapshot) -> Self {
+    async fn infer(snapshot: &PlaybookSnapshot) -> Self {
         Self { topology: compute_playbook_topology(&snapshot.steps()) }
     }
 }
 
 impl protocol::InferenceSpec<PlaybookSnapshot> for PlaybookInference {
-    fn inference_schema_id() -> &'static str {
+    async fn inference_schema_id() -> &'static str {
         "s.playbook.playbook.inference"
     }
-    fn schema_version() -> u32 {
+    async fn schema_version() -> u32 {
         1
     }
-    fn fields() -> &'static [protocol::InferenceFieldSpec] {
+    async fn fields() -> &'static [protocol::InferenceFieldSpec] {
         &[protocol::InferenceFieldSpec { id: "s.playbook.playbook.inference.topology", reads: &["steps"] }]
     }
 }
@@ -57,7 +57,7 @@ impl ArtifactInferrer for crate::artifacts::playbook::standards::v1::subsets::an
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.playbook.playbook.inference`'s facet leaves into the OS-wide inference catalog
 /// — call once at plugin init, alongside `playbook_artifact_schema_descriptor`'s registration.
-pub fn playbook_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
+pub async fn playbook_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
     schema::ArtifactInferenceDescriptor {
         id: "s.playbook.playbook.inference",
         inference: schema::FacetLeaves {
@@ -81,10 +81,10 @@ mod tests {
     /// 🧸️ Built via `PlaybookStep`/`PlaybookBlock` construction (not raw JSON with a `"steps"` key —
     /// `PlaybookSnapshot` no longer has that field; it composes `document`/`flow` children instead)
     /// and minted through `playbook_snapshot_with_steps` so the working-scene cache is seeded.
-    fn step_with_conditional_block() -> PlaybookSnapshot {
+    async fn step_with_conditional_block() -> PlaybookSnapshot {
         use crate::artifacts::playbook::PlaybookBlock;
 
-        fn block(id: &str, kind: &str, condition: Option<crate::artifacts::playbook::PlaybookExpr>) -> PlaybookBlock {
+        async fn block(id: &str, kind: &str, condition: Option<crate::artifacts::playbook::PlaybookExpr>) -> PlaybookBlock {
             PlaybookBlock {
                 id: id.into(),
                 label: id.into(),
@@ -124,18 +124,18 @@ mod tests {
 
     //#region 🧪️InferenceLaws
     #[test]
-    fn inference_determinism_law() {
+    async fn inference_determinism_law() {
         let snapshot = step_with_conditional_block();
         assert_eq!(PlaybookInference::infer(&snapshot), PlaybookInference::infer(&snapshot));
     }
 
     #[test]
-    fn inference_default_law() {
+    async fn inference_default_law() {
         assert_eq!(PlaybookInference::infer(&PlaybookSnapshot::default()), PlaybookInference::default());
     }
 
     #[test]
-    fn topology_orders_the_conditioned_block_after_its_dependency() {
+    async fn topology_orders_the_conditioned_block_after_its_dependency() {
         let snapshot = step_with_conditional_block();
         let inferred = PlaybookInference::infer(&snapshot);
         let material_index = inferred.topology.topo_order.iter().position(|id| id == "material").unwrap();
@@ -145,7 +145,7 @@ mod tests {
     }
 
     #[test]
-    fn default_snapshot_has_one_empty_step() {
+    async fn default_snapshot_has_one_empty_step() {
         let inferred = PlaybookInference::infer(&PlaybookSnapshot::default());
         assert_eq!(inferred.topology.node_count, 1);
         assert!(inferred.topology.cycle_free);

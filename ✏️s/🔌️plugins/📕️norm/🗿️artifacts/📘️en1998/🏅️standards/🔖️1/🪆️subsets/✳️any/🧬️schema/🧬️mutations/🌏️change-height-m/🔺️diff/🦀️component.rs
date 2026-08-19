@@ -5,7 +5,7 @@ use crate::artifacts::en1998::mutations::change_height_m::mutation::ChangeHeight
 use crate::artifacts::en1998::En1998Snapshot;
 
 //#region 🔖️Diff
-pub fn diff(payload: &ChangeHeightM, base: &En1998Snapshot) -> protocol::MutationOutcome<En1998Diff> {
+pub async fn diff(payload: &ChangeHeightM, base: &En1998Snapshot) -> protocol::MutationOutcome<En1998Diff> {
     if !payload.new_height_m.is_finite() {
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("Building height [m] must be a finite number, got {}.", payload.new_height_m), Vec::<String>::new());
     }

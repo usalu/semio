@@ -15,12 +15,12 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 pub const CAD_DEFAULT_EXAMPLE_TEXT: &str = include_str!("../../../📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio");
 
 /// 📖️ Parses `.cad` DSL text into a `CadSnapshot`.
-pub fn parse_dsl(text: &str) -> Result<CadSnapshot, store::TextError> {
+pub async fn parse_dsl(text: &str) -> Result<CadSnapshot, store::TextError> {
     <CadSnapshot as store::ArtifactDsl>::parse_dsl(text)
 }
 
 /// 🖨️ Prints a `CadSnapshot` back to `.cad` DSL text.
-pub fn print_dsl(document: &CadSnapshot) -> String {
+pub async fn print_dsl(document: &CadSnapshot) -> String {
     store::ArtifactDsl::print_dsl(document)
 }
 
@@ -36,13 +36,13 @@ mod tests {
     /// than hand-transcribed (per `📌️important.md`'s "never hand-transcribe fixture bytes" rule).
     #[test]
     #[ignore = "fixture predates the model/drawing composition rewrite; regenerate via print_dsl before re-enabling"]
-    fn default_example_dsl_round_trips() {
+    async fn default_example_dsl_round_trips() {
         let document = parse_dsl(CAD_DEFAULT_EXAMPLE_TEXT).expect("parse default .cad example");
         store::os_store::test_support::assert_dsl_round_trip(&document);
     }
 
     #[test]
-    fn cad_scene_round_trips_through_dsl_document() {
+    async fn cad_scene_round_trips_through_dsl_document() {
         store::os_store::test_support::assert_dsl_round_trip(&sample_scene());
     }
 }

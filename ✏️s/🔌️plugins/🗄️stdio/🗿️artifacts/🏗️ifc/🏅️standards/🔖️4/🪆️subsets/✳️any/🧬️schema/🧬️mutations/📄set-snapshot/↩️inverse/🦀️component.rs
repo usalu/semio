@@ -3,6 +3,6 @@ use crate::artifacts::ifc::IfcSnapshot;
 use protocol::Mutation;
 
 /// ↩️ Inverse of set-snapshot.
-pub fn inverse(base: &IfcSnapshot, mutation: &IfcMutation) -> Vec<IfcMutation> {
+pub async fn inverse(base: &IfcSnapshot, mutation: &IfcMutation) -> Vec<IfcMutation> {
     <IfcMutation as Mutation<IfcSnapshot>>::inverse(mutation, base)
 }

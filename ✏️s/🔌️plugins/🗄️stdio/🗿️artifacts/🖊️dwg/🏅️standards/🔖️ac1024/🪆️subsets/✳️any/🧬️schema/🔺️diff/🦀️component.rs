@@ -58,7 +58,7 @@ pub struct DwgDiff {
 }
 
 impl MutationDiff<DwgSnapshot> for DwgDiff {
-    fn apply(&self, base: &DwgSnapshot) -> MutationApplyResult<DwgSnapshot> {
+    async fn apply(&self, base: &DwgSnapshot) -> MutationApplyResult<DwgSnapshot> {
         Ok(DwgSnapshot {
             schema: base.schema.clone(),
             version: self.version.clone().unwrap_or_else(|| base.version.clone()),
@@ -79,7 +79,7 @@ impl MutationDiff<DwgSnapshot> for DwgDiff {
     }
 
     /// ➕️ Coalesces sequential field replacements with last-write-wins semantics.
-    fn absorb(&mut self, other: Self) {
+    async fn absorb(&mut self, other: Self) {
         if other.version.is_some() {
             self.version = other.version;
         }
@@ -128,13 +128,13 @@ impl MutationDiff<DwgSnapshot> for DwgDiff {
 impl DiffAlgebra<DwgSnapshot> for DwgDiff {
     /// 🔁️ Diff-level undo, derived generically (correct by construction): the state delta from
     /// `self.apply(base)` back to `base`.
-    fn inverse(&self, base: &DwgSnapshot) -> Self {
+    async fn inverse(&self, base: &DwgSnapshot) -> Self {
         let mutated = self.apply(base).unwrap();
         Self::between(&mutated, base)
     }
 
     /// 🧭️ Computes a field-by-field logical state delta.
-    fn between(base: &DwgSnapshot, other: &DwgSnapshot) -> Self {
+    async fn between(base: &DwgSnapshot, other: &DwgSnapshot) -> Self {
         let version = (base.version != other.version).then(|| other.version.clone());
         let maintenance_version = (base.maintenance_version != other.maintenance_version).then_some(other.maintenance_version);
         let codepage = (base.codepage != other.codepage).then_some(other.codepage);
@@ -152,7 +152,7 @@ impl DiffAlgebra<DwgSnapshot> for DwgDiff {
         DwgDiff { version, maintenance_version, codepage, drawing, header, classes, dependencies, summary, application, template, auxiliary_header, revision_history, preview, application_history }
     }
 
-    fn is_empty(&self) -> bool {
+    async fn is_empty(&self) -> bool {
         self.version.is_none()
             && self.maintenance_version.is_none()
             && self.codepage.is_none()
@@ -174,11 +174,11 @@ impl DiffAlgebra<DwgSnapshot> for DwgDiff {
 //#region 🔖️MutationDiffBuilders
 /// 🧩 `SetSnapshot`'s diff is the sparse field-by-field `between(base, next)` — no full-replace
 /// slot exists on `DwgDiff` to short-circuit into.
-pub fn diff_set_snapshot(base: &DwgSnapshot, next: &DwgSnapshot) -> DwgDiff {
+pub async fn diff_set_snapshot(base: &DwgSnapshot, next: &DwgSnapshot) -> DwgDiff {
     DwgDiff::between(base, next)
 }
 
-pub fn diff_set_version_info(base: &DwgSnapshot, version: &str, maintenance_version: u8, codepage: u16) -> DwgDiff {
+pub async fn diff_set_version_info(base: &DwgSnapshot, version: &str, maintenance_version: u8, codepage: u16) -> DwgDiff {
     let mut next = base.clone();
     crate::artifacts::dwg::schema::snapshot::synchronize_version_info(&mut next, version, maintenance_version, codepage).expect("SetVersionInfo requires a valid DWG version sentinel");
     DwgDiff::between(base, &next)
@@ -189,7 +189,7 @@ pub fn diff_set_version_info(base: &DwgSnapshot, version: &str, maintenance_vers
 //#region 🔖️DemoCases
 /// 🎬️ Representative empty, full logical, and version-info diffs.
 #[cfg(test)]
-pub(crate) fn demo_diff_cases() -> Vec<DwgDiff> {
+pub(crate) async fn demo_diff_cases() -> Vec<DwgDiff> {
     vec![
         DwgDiff::default(),
         DwgDiff {
@@ -220,7 +220,7 @@ mod tests {
 
     /// 🧪️ Logical diff text and binary codecs retain every field.
     #[test]
-    fn diff_codec_text_binary_roundtrip_law() {
+    async fn diff_codec_text_binary_roundtrip_law() {
         use protocol::DiffCodec;
         for d in demo_diff_cases() {
             let printed = d.print_diff();

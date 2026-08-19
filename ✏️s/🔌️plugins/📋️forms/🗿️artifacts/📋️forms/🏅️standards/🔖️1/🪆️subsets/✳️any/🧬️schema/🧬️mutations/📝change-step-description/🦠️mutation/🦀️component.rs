@@ -17,16 +17,16 @@ pub struct ChangeStepDescription {
 
 impl MutationKind<FormsSnapshot, FormMutation> for ChangeStepDescription {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "change", entity: "step-description", kind: "change-step-description", record: "ChangedStepDescription" };
-    fn diff(&self, base: &FormsSnapshot) -> protocol::MutationOutcome<FormsDiff> {
+    async fn diff(&self, base: &FormsSnapshot) -> protocol::MutationOutcome<FormsDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &FormsSnapshot) -> Vec<FormMutation> {
+    async fn inverse(&self, base: &FormsSnapshot) -> Vec<FormMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         format!("Change step \"{}\" description", self.id)
     }
-    fn target(&self) -> Vec<String> {
+    async fn target(&self) -> Vec<String> {
         vec![self.id.clone()]
     }
 }

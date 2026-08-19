@@ -5,7 +5,7 @@ use crate::artifacts::semio::standards::v1::subsets::drawing::schema::mutations:
 use crate::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::SemioDrawingSnapshot;
 
 //#region 🔖️Inverse
-pub fn inverse(payload: &CreateLayer, _base: &SemioDrawingSnapshot) -> Vec<SemioDrawingMutation> {
+pub async fn inverse(payload: &CreateLayer, _base: &SemioDrawingSnapshot) -> Vec<SemioDrawingMutation> {
     vec![SemioDrawingMutation::DeleteLayer(delete_layer::mutation::DeleteLayer { id: payload.layer.id.clone() })]
 }
 //#endregion 🔖️Inverse

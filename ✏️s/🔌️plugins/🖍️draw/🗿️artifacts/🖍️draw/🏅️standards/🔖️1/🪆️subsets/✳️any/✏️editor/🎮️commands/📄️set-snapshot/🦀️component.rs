@@ -14,7 +14,7 @@ use serde::{Deserialize, Serialize};
 /// commands go through the sanctioned non-history `ArtifactStore::reset` path instead, which from
 /// an `ArtifactApp::handle` this reaches via `Effect::LoadDocument` (pack+spr bytes) — the same
 /// host-owned whole-store-swap primitive `engine::space`'s `open_space` command uses.
-fn load_document_effect(snapshot: DrawSnapshot) -> Emit<DrawMutation, DrawConfigMutation> {
+async fn load_document_effect(snapshot: DrawSnapshot) -> Emit<DrawMutation, DrawConfigMutation> {
     let envelope = store::ArtifactEnvelope::<DrawSnapshot, DrawMutation> {
         schema: DRAW_DOCUMENT_SCHEMA.into(),
         id: snapshot.id.clone(),
@@ -47,6 +47,6 @@ pub struct SetSnapshot {
     pub snapshot: DrawSnapshot,
 }
 
-pub fn handle(payload: &SetSnapshot, _doc: &ArtifactView<'_, DrawSnapshot>, _cfg: &ConfigView<'_, DrawConfig>, _session: &mut crate::editor::draw::commands::canvas_pointer_down::DrawSession) -> Result<Emit<DrawMutation, DrawConfigMutation>, Fault> {
+pub async fn handle(payload: &SetSnapshot, _doc: &ArtifactView<'_, DrawSnapshot>, _cfg: &ConfigView<'_, DrawConfig>, _session: &mut crate::editor::draw::commands::canvas_pointer_down::DrawSession) -> Result<Emit<DrawMutation, DrawConfigMutation>, Fault> {
     Ok(load_document_effect(payload.snapshot.clone()))
 }

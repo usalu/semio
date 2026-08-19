@@ -10,7 +10,7 @@ use serde_json::{json, Map, Value};
 //#region 🔖️Values
 /// ✏️ Patches one JSON-object field of a try value keyed by `key` (used by the vector-field-parameter
 /// try-value shape, e.g. a building-component question's `height`/`radius`/`sides` params).
-fn patch_try_object_field(values: &mut Map<String, Value>, key: &str, field: &str, raw: &Value) {
+async fn patch_try_object_field(values: &mut Map<String, Value>, key: &str, field: &str, raw: &Value) {
     let mut object = values.get(key).cloned().unwrap_or_else(|| json!({}));
     if let Some(map) = object.as_object_mut() {
         map.insert(field.into(), raw.clone());
@@ -20,7 +20,7 @@ fn patch_try_object_field(values: &mut Map<String, Value>, key: &str, field: &st
 
 /// ✏️ Patches one numeric index of a try value keyed by `key` (used by the vector question kind's
 /// per-component try value).
-fn patch_try_vector_field(values: &mut Map<String, Value>, key: &str, index: usize, raw: &Value) {
+async fn patch_try_vector_field(values: &mut Map<String, Value>, key: &str, index: usize, raw: &Value) {
     let mut array = values.get(key).and_then(|value| value.as_array().cloned()).unwrap_or_default();
     while array.len() <= index {
         array.push(json!(0.0));
@@ -46,7 +46,7 @@ pub struct SetTryValue {
     pub param_key: Option<String>,
 }
 
-pub fn handle(payload: &SetTryValue, _doc: &ArtifactView<'_, FormsSnapshot>, cfg: &ConfigView<'_, FormsConfig>) -> Result<Emit<FormMutation, FormsConfigMutation>, Fault> {
+pub async fn handle(payload: &SetTryValue, _doc: &ArtifactView<'_, FormsSnapshot>, cfg: &ConfigView<'_, FormsConfig>) -> Result<Emit<FormMutation, FormsConfigMutation>, Fault> {
     let config = cfg.snapshot;
     let mut values = try_values_map(config);
     if let Some(option_value) = &payload.option_value {

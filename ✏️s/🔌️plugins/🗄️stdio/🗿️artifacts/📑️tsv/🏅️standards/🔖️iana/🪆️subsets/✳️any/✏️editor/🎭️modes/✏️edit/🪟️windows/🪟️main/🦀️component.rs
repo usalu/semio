@@ -14,7 +14,7 @@ pub const BODY_KEY: &str = TableWindowKit::KIND_ID;
 
 //#region 🔖️Definition
 /// 🧱️ Stitched into the editor manifest by `crate::editor::tsv::create_tsv_editor`.
-pub fn definition() -> WindowKindDefinition {
+pub async fn definition() -> WindowKindDefinition {
     WindowKindDefinition { label: LocalizedLabel::native("Table", "Tabelle"), icon_id: "table-2".into(), ..TableWindowKit::editable_window_kind() }
 }
 //#endregion 🔖️Definition
@@ -22,7 +22,7 @@ pub fn definition() -> WindowKindDefinition {
 //#region 🔖️Render
 /// ✏️ Real `TsvSnapshot -> UiNode`: one row per record, `set-cell`'s `row`/`column` index this
 /// grid directly (a 1:1 mapping onto `records`, unlike csv's header-offset math).
-pub fn render(document: &TsvSnapshot) -> UiNode {
+pub async fn render(document: &TsvSnapshot) -> UiNode {
     let width = document.records.iter().map(|record| record.len()).max().unwrap_or(0);
     let columns = (0..width).map(|index| format!("Column {}", index + 1)).collect();
     let rows = document.records.clone();
@@ -36,14 +36,14 @@ mod tests {
     use super::*;
 
     #[test]
-    fn definition_declares_a_table_window() {
+    async fn definition_declares_a_table_window() {
         let def = definition();
         assert_eq!(def.id, WINDOW_KIND_ID);
         assert_eq!(def.body_key, BODY_KEY);
     }
 
     #[test]
-    fn render_lists_one_row_per_record() {
+    async fn render_lists_one_row_per_record() {
         let document = TsvSnapshot { schema: "stdio.tsv".into(), records: vec![vec!["a".into(), "b".into()]], trailing_newline: false, line_ending: Default::default() };
         let UiNode::ComponentScene(node) = render(&document) else { panic!("expected ComponentScene") };
         let scene = node.table.expect("table scene");

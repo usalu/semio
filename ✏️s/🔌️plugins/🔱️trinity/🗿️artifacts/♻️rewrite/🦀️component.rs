@@ -48,13 +48,13 @@ pub struct LayoutPoint {
 }
 
 impl From<(f64, f64)> for LayoutPoint {
-    fn from((x, y): (f64, f64)) -> Self {
+    async fn from((x, y): (f64, f64)) -> Self {
         Self { x, y }
     }
 }
 
 impl From<LayoutPoint> for (f64, f64) {
-    fn from(point: LayoutPoint) -> Self {
+    async fn from(point: LayoutPoint) -> Self {
         (point.x, point.y)
     }
 }
@@ -82,7 +82,7 @@ pub const TRINITY_REWRITE_DIALECT: semio_framework_plugin::Dialect = semio_frame
 
 //#region 🔖️ArtifactKind
 /// 🗂️ This artifact's `ArtifactKindSpec` — Text × Document per owner-table (`text.♻️rewrite`).
-pub fn artifact_kind() -> ArtifactKindSpec {
+pub async fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "text.♻️rewrite".into(),
         name: "Trinity Rewrite Rule".into(),
@@ -104,7 +104,11 @@ pub fn artifact_kind() -> ArtifactKindSpec {
 /// 📌️ Handcrafted facet grammars (text) and protocols (binary) for in-process execution — built once
 /// and leaked to a `&'static` slice since `dsl::passthrough_hooks` isn't `const fn`, mirroring
 /// `io_registry::entries()`'s own `OnceLock` convention.
-fn pilot_languages() -> &'static [dsl::LanguageSpec] {
+/// `pub` (ticket 26/08/17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME, fleet-trinity-recipe): the new
+/// declaration tree's `🪆️subsets/✳️any/🦀️component.rs` reads these same five `LanguageSpec`s to build
+/// its `NativeCodecs` `LanguagePair`s (see that file's own doc for why it does not delegate to a
+/// sibling `io::io()` the way `🗒️note`/`🖍️draw` do).
+pub async fn pilot_languages() -> &'static [dsl::LanguageSpec] {
     static LANGUAGES: std::sync::OnceLock<Vec<dsl::LanguageSpec>> = std::sync::OnceLock::new();
     LANGUAGES
         .get_or_init(|| {
@@ -164,13 +168,16 @@ fn pilot_languages() -> &'static [dsl::LanguageSpec] {
         .as_slice()
 }
 
-/// 🔖️ This artifact's declaration (ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE M1) — replaces
-/// the old side-effecting `register()`, which called four different global registries directly from
-/// a plugin `.setup()` callback. `crate::editor::rewrite::config::schema::register_app_schema()` is
-/// the one exception, kept alive via the plugin root's own narrowed `.setup()`: it registers the
-/// `TrinityRewritePlayApp` CONFIG/PRESENCE schema, an app-scope concern `ArtifactDeclaration`
-/// deliberately has no field for (see that struct's own doc).
-pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
+/// 🔖️ This artifact's OLD-channel definition (ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE M1).
+/// KEPT unread by the new declaration tree (ticket 26/08/17/CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM,
+/// debt D1 — deleted repo-wide only once every plugin has migrated, not this pass — `🗒️note`/`🖍️draw`
+/// precedent, `📓️terra-fleet-trinity-recipe-report.md`): the real en/de localized names
+/// (`"Rewrite"`/`"Umschreiben"`) still live only on these `ArtifactCapability` rows.
+/// `crate::editor::rewrite::config::schema::register_app_schema()` is the one exception, kept alive
+/// via the plugin root's own narrowed `.setup()`: it registers the `TrinityRewritePlayApp`
+/// CONFIG/PRESENCE schema, an app-scope concern neither the old nor the new declaration type has a
+/// field for.
+pub async fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
     use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
 
     let rows: &[(&str, &str, &str, &[(&str, &str)], Option<(&str, &str)>)] = &[
@@ -207,13 +214,16 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
     Ok(definition)
 }
 
-pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
-    semio_framework_plugin::ArtifactDeclaration::builder(definition()?)
-        .schema(crate::artifacts::rewrite::schema::rewrite_artifact_schema_descriptor())
-        .inferences([crate::artifacts::rewrite::standards::v1::subsets::any::schema::inferences::rewrite_artifact_inference_descriptor()])
-        .composers(crate::artifacts::rewrite::standards::v1::subsets::any::io::io_registry::entries())
-        .languages(pilot_languages())
-        .document_codec::<semio_framework_plugin::EditorApp<crate::editor::rewrite::TrinityRewritePlayApp>>()
-        .try_build()
+/// 🌳️ This artifact's declaration tree root (ticket 26/08/17/CLEAN-ARTIFACT-STANDARD-SUBSET-
+/// MECHANISM design.md §2, fleet-trinity-recipe) — replaces the old `declaration()`
+/// (`ArtifactDeclaration::builder(...).schema(...).inferences(...).composers(...).languages(...)
+/// .document_codec(...)` chain, deleted outright, no dual channel) as the ONLY registration channel
+/// for schema/io/viewer/editor rows. `definition()` (old `ArtifactDefinition`/capability rows, above)
+/// is kept per debt D1, and `artifact_kind()` is kept because this crate's own plugin-root
+/// `.activation(...)` still reads `artifact_kind().id`; neither has any caller left in this function.
+pub async fn artifact() -> semio_framework_plugin::app::declarations::ArtifactDeclaration {
+    use semio_framework_plugin::app::declarations::ArtifactDeclaration;
+    use store::os_io::ArtifactKindId;
+    ArtifactDeclaration { kind: ArtifactKindId::parse("s.trinity.rewrite").expect("canonical rewrite kind"), localization: &[], standards: vec![crate::artifacts::rewrite::standards::v1::standard()] }
 }
 //#endregion 🔖️Register

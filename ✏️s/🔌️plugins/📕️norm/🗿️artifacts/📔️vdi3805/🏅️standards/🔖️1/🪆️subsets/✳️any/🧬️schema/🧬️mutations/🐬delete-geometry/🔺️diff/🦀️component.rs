@@ -4,7 +4,7 @@ use super::mutation::DeleteGeometry;
 use crate::artifacts::vdi3805::{Vdi3805Diff, Vdi3805Snapshot};
 
 //#region 🔖️Diff
-pub fn diff(payload: &DeleteGeometry, base: &Vdi3805Snapshot) -> protocol::MutationOutcome<Vdi3805Diff> {
+pub async fn diff(payload: &DeleteGeometry, base: &Vdi3805Snapshot) -> protocol::MutationOutcome<Vdi3805Diff> {
     if !base.geometry.contains_key(&payload.id) {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Geometry \"{}\" does not exist.", payload.id), [payload.id.clone()]);
     }

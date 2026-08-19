@@ -26,7 +26,7 @@ pub enum Orient {
 }
 
 impl From<Ordering> for Orient {
-    fn from(o: Ordering) -> Self {
+    async fn from(o: Ordering) -> Self {
         match o {
             Ordering::Greater => Orient::Positive,
             Ordering::Less => Orient::Negative,
@@ -38,7 +38,7 @@ impl From<Ordering> for Orient {
 /// 🎯️ Decides the sign of `value` (a sum of `terms`) certainly, or returns `None` when
 /// accumulated floating-point roundoff across `terms.len()` operations could plausibly have
 /// flipped the sign — the caller must then escalate to exact arithmetic.
-fn filtered_sign(value: f64, terms: &[f64]) -> Option<Orient> {
+async fn filtered_sign(value: f64, terms: &[f64]) -> Option<Orient> {
     let magnitude: f64 = terms.iter().map(|t| t.abs()).sum();
     let bound = (terms.len() as f64 + 1.0) * f64::EPSILON * magnitude;
     if value > bound {
@@ -50,11 +50,11 @@ fn filtered_sign(value: f64, terms: &[f64]) -> Option<Orient> {
     }
 }
 
-fn to_rational(v: f64) -> Rational {
+async fn to_rational(v: f64) -> Rational {
     Rational::from_f64(v).expect("finite f64 is always exactly representable as a Rational")
 }
 
-fn rational_sign(v: &Rational) -> Orient {
+async fn rational_sign(v: &Rational) -> Orient {
     Orient::from(v.cmp(&Rational::zero()))
 }
 
@@ -64,7 +64,7 @@ fn rational_sign(v: &Rational) -> Orient {
 
 /// 🎯️ Orientation of three 2D points: [`Orient::Positive`] when `a → b → c` turns counterclockwise,
 /// [`Orient::Negative`] clockwise, [`Orient::Zero`] when collinear.
-pub fn orient2d(a: Pnt2, b: Pnt2, c: Pnt2) -> Orient {
+pub async fn orient2d(a: Pnt2, b: Pnt2, c: Pnt2) -> Orient {
     let acx = b.x - a.x;
     let acy = b.y - a.y;
     let bcx = c.x - a.x;
@@ -75,7 +75,7 @@ pub fn orient2d(a: Pnt2, b: Pnt2, c: Pnt2) -> Orient {
     filtered_sign(det, &[det_left, det_right]).unwrap_or_else(|| orient2d_exact(a, b, c))
 }
 
-fn orient2d_exact(a: Pnt2, b: Pnt2, c: Pnt2) -> Orient {
+async fn orient2d_exact(a: Pnt2, b: Pnt2, c: Pnt2) -> Orient {
     let (ax, ay) = (to_rational(a.x), to_rational(a.y));
     let (bx, by) = (to_rational(b.x), to_rational(b.y));
     let (cx, cy) = (to_rational(c.x), to_rational(c.y));
@@ -90,7 +90,7 @@ fn orient2d_exact(a: Pnt2, b: Pnt2, c: Pnt2) -> Orient {
 /// 🎯️ Orientation of four 3D points via the signed volume of tetrahedron `(a,b,c,d)`, computed as
 /// the scalar triple product `(b-a) · ((c-a) × (d-a))`. [`Orient::Positive`] when `(b-a,c-a,d-a)`
 /// form a right-handed frame; [`Orient::Zero`] when the four points are coplanar.
-pub fn orient3d(a: Pnt3, b: Pnt3, c: Pnt3, d: Pnt3) -> Orient {
+pub async fn orient3d(a: Pnt3, b: Pnt3, c: Pnt3, d: Pnt3) -> Orient {
     let u = b - a;
     let v = c - a;
     let w = d - a;
@@ -104,7 +104,7 @@ pub fn orient3d(a: Pnt3, b: Pnt3, c: Pnt3, d: Pnt3) -> Orient {
     filtered_sign(det, &[t1, t2, t3, t4, t5, t6]).unwrap_or_else(|| orient3d_exact(a, b, c, d))
 }
 
-fn orient3d_exact(a: Pnt3, b: Pnt3, c: Pnt3, d: Pnt3) -> Orient {
+async fn orient3d_exact(a: Pnt3, b: Pnt3, c: Pnt3, d: Pnt3) -> Orient {
     let ax = to_rational(a.x);
     let ay = to_rational(a.y);
     let az = to_rational(a.z);
@@ -130,7 +130,7 @@ fn orient3d_exact(a: Pnt3, b: Pnt3, c: Pnt3, d: Pnt3) -> Orient {
 /// 🎯️ The incircle test: [`Orient::Positive`] when `d` lies strictly inside the circle through
 /// `a, b, c` (assuming `a, b, c` are given counterclockwise), [`Orient::Negative`] outside,
 /// [`Orient::Zero`] on the circle.
-pub fn in_circle2d(a: Pnt2, b: Pnt2, c: Pnt2, d: Pnt2) -> Orient {
+pub async fn in_circle2d(a: Pnt2, b: Pnt2, c: Pnt2, d: Pnt2) -> Orient {
     let adx = a.x - d.x;
     let ady = a.y - d.y;
     let bdx = b.x - d.x;
@@ -147,7 +147,7 @@ pub fn in_circle2d(a: Pnt2, b: Pnt2, c: Pnt2, d: Pnt2) -> Orient {
     filtered_sign(det, &[t1, t2, t3]).unwrap_or_else(|| in_circle2d_exact(a, b, c, d))
 }
 
-fn in_circle2d_exact(a: Pnt2, b: Pnt2, c: Pnt2, d: Pnt2) -> Orient {
+async fn in_circle2d_exact(a: Pnt2, b: Pnt2, c: Pnt2, d: Pnt2) -> Orient {
     let dx = to_rational(d.x);
     let dy = to_rational(d.y);
     let adx = to_rational(a.x).sub(&dx);
@@ -167,18 +167,18 @@ fn in_circle2d_exact(a: Pnt2, b: Pnt2, c: Pnt2, d: Pnt2) -> Orient {
 }
 
 /// 🎯️ True when `a, b, c` are collinear within the exact predicate (i.e. `orient2d` is exactly zero).
-pub fn collinear2d(a: Pnt2, b: Pnt2, c: Pnt2) -> bool {
+pub async fn collinear2d(a: Pnt2, b: Pnt2, c: Pnt2) -> bool {
     orient2d(a, b, c) == Orient::Zero
 }
 
 /// 🎯️ True when `a, b, c, d` are coplanar within the exact predicate.
-pub fn coplanar3d(a: Pnt3, b: Pnt3, c: Pnt3, d: Pnt3) -> bool {
+pub async fn coplanar3d(a: Pnt3, b: Pnt3, c: Pnt3, d: Pnt3) -> bool {
     orient3d(a, b, c, d) == Orient::Zero
 }
 
 /// 🎯️ The certified sign of `u · v` — used to classify angles as acute/obtuse/right without a
 /// raw `f64` comparison.
-pub fn sign_of_dot(u: Vec3, v: Vec3) -> Orient {
+pub async fn sign_of_dot(u: Vec3, v: Vec3) -> Orient {
     let tx = u.x * v.x;
     let ty = u.y * v.y;
     let tz = u.z * v.z;
@@ -186,7 +186,7 @@ pub fn sign_of_dot(u: Vec3, v: Vec3) -> Orient {
     filtered_sign(dot, &[tx, ty, tz]).unwrap_or_else(|| sign_of_dot_exact(u, v))
 }
 
-fn sign_of_dot_exact(u: Vec3, v: Vec3) -> Orient {
+async fn sign_of_dot_exact(u: Vec3, v: Vec3) -> Orient {
     let tx = to_rational(u.x).mul(&to_rational(v.x));
     let ty = to_rational(u.y).mul(&to_rational(v.y));
     let tz = to_rational(u.z).mul(&to_rational(v.z));
@@ -202,7 +202,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn orient2d_detects_counterclockwise_and_clockwise() {
+    async fn orient2d_detects_counterclockwise_and_clockwise() {
         let a = Pnt2::new(0.0, 0.0);
         let b = Pnt2::new(1.0, 0.0);
         let c = Pnt2::new(0.0, 1.0);
@@ -211,7 +211,7 @@ mod tests {
     }
 
     #[test]
-    fn orient2d_detects_exact_collinearity() {
+    async fn orient2d_detects_exact_collinearity() {
         let a = Pnt2::new(0.0, 0.0);
         let b = Pnt2::new(1.0, 1.0);
         let c = Pnt2::new(2.0, 2.0);
@@ -221,15 +221,15 @@ mod tests {
 
     /// 🎯️ The true next representable `f64` above/below `x` — unlike adding `f64::EPSILON`, this
     /// is a real one-bit perturbation regardless of `x`'s magnitude (ULP scales with exponent).
-    fn next_up(x: f64) -> f64 {
+    async fn next_up(x: f64) -> f64 {
         f64::from_bits(x.to_bits() + 1)
     }
-    fn next_down(x: f64) -> f64 {
+    async fn next_down(x: f64) -> f64 {
         f64::from_bits(x.to_bits() - 1)
     }
 
     #[test]
-    fn orient2d_resolves_near_degenerate_case_correctly() {
+    async fn orient2d_resolves_near_degenerate_case_correctly() {
         // c sits exactly on line a->b->(2,2); perturbing it by a single ULP must still resolve
         // to the geometrically correct sign, which the interval filter alone cannot certify.
         let a = Pnt2::new(0.0, 0.0);
@@ -243,7 +243,7 @@ mod tests {
     }
 
     #[test]
-    fn orient3d_detects_right_handed_and_left_handed_tetrahedra() {
+    async fn orient3d_detects_right_handed_and_left_handed_tetrahedra() {
         let a = Pnt3::new(0.0, 0.0, 0.0);
         let b = Pnt3::new(1.0, 0.0, 0.0);
         let c = Pnt3::new(0.0, 1.0, 0.0);
@@ -253,7 +253,7 @@ mod tests {
     }
 
     #[test]
-    fn orient3d_detects_exact_coplanarity() {
+    async fn orient3d_detects_exact_coplanarity() {
         let a = Pnt3::new(0.0, 0.0, 0.0);
         let b = Pnt3::new(1.0, 0.0, 0.0);
         let c = Pnt3::new(0.0, 1.0, 0.0);
@@ -263,7 +263,7 @@ mod tests {
     }
 
     #[test]
-    fn orient3d_resolves_near_degenerate_case_correctly() {
+    async fn orient3d_resolves_near_degenerate_case_correctly() {
         let a = Pnt3::new(0.0, 0.0, 0.0);
         let b = Pnt3::new(1.0, 0.0, 0.0);
         let c = Pnt3::new(0.0, 1.0, 0.0);
@@ -275,7 +275,7 @@ mod tests {
     }
 
     #[test]
-    fn in_circle2d_detects_inside_and_outside_unit_circle() {
+    async fn in_circle2d_detects_inside_and_outside_unit_circle() {
         let a = Pnt2::new(1.0, 0.0);
         let b = Pnt2::new(0.0, 1.0);
         let c = Pnt2::new(-1.0, 0.0);
@@ -288,7 +288,7 @@ mod tests {
     }
 
     #[test]
-    fn sign_of_dot_classifies_acute_right_obtuse() {
+    async fn sign_of_dot_classifies_acute_right_obtuse() {
         assert_eq!(sign_of_dot(Vec3::X, Vec3::X), Orient::Positive);
         assert_eq!(sign_of_dot(Vec3::X, Vec3::Y), Orient::Zero);
         assert_eq!(sign_of_dot(Vec3::X, -Vec3::X), Orient::Negative);
@@ -298,7 +298,7 @@ mod tests {
         use super::*;
 
         #[test]
-        fn orient2d_filtered_agrees_with_exact_on_random_and_near_degenerate_triples() {
+        async fn orient2d_filtered_agrees_with_exact_on_random_and_near_degenerate_triples() {
             let mut rng = semio_framework_geometry::random::Rng::from_seed(11);
             for _ in 0..5000 {
                 let a = Pnt2::new(rng.next_f64() * 20.0 - 10.0, rng.next_f64() * 20.0 - 10.0);
@@ -317,7 +317,7 @@ mod tests {
         }
 
         #[test]
-        fn orient3d_filtered_agrees_with_exact_on_random_and_near_degenerate_quadruples() {
+        async fn orient3d_filtered_agrees_with_exact_on_random_and_near_degenerate_quadruples() {
             let mut rng = semio_framework_geometry::random::Rng::from_seed(13);
             for _ in 0..3000 {
                 let a = Pnt3::new(rng.next_f64() * 20.0 - 10.0, rng.next_f64() * 20.0 - 10.0, rng.next_f64() * 20.0 - 10.0);
@@ -336,7 +336,7 @@ mod tests {
         }
 
         #[test]
-        fn in_circle2d_filtered_agrees_with_exact_on_random_configurations() {
+        async fn in_circle2d_filtered_agrees_with_exact_on_random_configurations() {
             let mut rng = semio_framework_geometry::random::Rng::from_seed(17);
             for _ in 0..3000 {
                 let pts: Vec<Pnt2> = (0..4).map(|_| Pnt2::new(rng.next_f64() * 20.0 - 10.0, rng.next_f64() * 20.0 - 10.0)).collect();

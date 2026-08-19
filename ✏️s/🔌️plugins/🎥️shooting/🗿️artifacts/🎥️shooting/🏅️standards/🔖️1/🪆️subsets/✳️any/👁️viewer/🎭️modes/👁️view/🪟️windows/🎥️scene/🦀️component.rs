@@ -26,7 +26,7 @@ const SHOOTING_VIEW_FALLBACK_MESH_KIND: &str = "box";
 
 //#region 🔖️Definition
 /// 🧱️ Stitched into the viewer manifest by `crate::viewer::shooting::create_shooting_viewer`.
-pub fn definition() -> WindowKindDefinition {
+pub async fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
         id: WINDOW_KIND_ID.into(),
         label: LocalizedLabel::native("Scene", "Szene"),
@@ -47,7 +47,7 @@ pub fn definition() -> WindowKindDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-fn camera_json(camera: &ShootingCamera) -> String {
+async fn camera_json(camera: &ShootingCamera) -> String {
     let mut value = serde_json::json!({
         "position": camera.position,
         "target": camera.target,
@@ -61,7 +61,7 @@ fn camera_json(camera: &ShootingCamera) -> String {
     value.to_string()
 }
 
-fn resolve_asset_mesh_url(asset: &ShootingAsset) -> Option<String> {
+async fn resolve_asset_mesh_url(asset: &ShootingAsset) -> Option<String> {
     if asset.url.is_empty() {
         None
     } else {
@@ -69,7 +69,7 @@ fn resolve_asset_mesh_url(asset: &ShootingAsset) -> Option<String> {
     }
 }
 
-fn collect_mesh_urls(snapshot: &ShootingSnapshot) -> Vec<String> {
+async fn collect_mesh_urls(snapshot: &ShootingSnapshot) -> Vec<String> {
     let mut urls = HashSet::new();
     for asset in &snapshot.assets {
         if let Some(url) = resolve_asset_mesh_url(asset) {
@@ -81,7 +81,7 @@ fn collect_mesh_urls(snapshot: &ShootingSnapshot) -> Vec<String> {
 
 /// 👁️ Read-only twin of the editor's `world_instances_json`: no selection/hover highlight at all (a
 /// viewer has no interaction domain bound to this window), just each asset's real placed mesh.
-fn world_instances_json(snapshot: &ShootingSnapshot) -> String {
+async fn world_instances_json(snapshot: &ShootingSnapshot) -> String {
     let instances: Vec<serde_json::Value> = snapshot
         .assets
         .iter()
@@ -107,11 +107,11 @@ fn world_instances_json(snapshot: &ShootingSnapshot) -> String {
     serde_json::to_string(&instances).unwrap_or_else(|_| "[]".into())
 }
 
-fn world_meshes_json(snapshot: &ShootingSnapshot) -> String {
+async fn world_meshes_json(snapshot: &ShootingSnapshot) -> String {
     world3d_meshes_json_from_kinds_and_urls(&[SHOOTING_VIEW_FALLBACK_MESH_KIND.into()], &collect_mesh_urls(snapshot))
 }
 
-fn shooting_environment_json(snapshot: &ShootingSnapshot) -> String {
+async fn shooting_environment_json(snapshot: &ShootingSnapshot) -> String {
     let scene = &snapshot.scene;
     let mut value = serde_json::json!({
         "ambient": { "intensity": scene.ambient.intensity, "color": scene.ambient.color },
@@ -127,13 +127,13 @@ fn shooting_environment_json(snapshot: &ShootingSnapshot) -> String {
     value.to_string()
 }
 
-fn shooting_frame_json(shot: &ShootingShot) -> String {
+async fn shooting_frame_json(shot: &ShootingShot) -> String {
     serde_json::json!({ "width": shot.width, "height": shot.height, "shape": shot.shape, "badge": true }).to_string()
 }
 
 /// 👁️ Pure `ShootingSnapshot -> UiNode` read: default camera (a viewer has no persisted per-session
 /// camera), real scene lighting/asset placement/active-shot frame straight off the document.
-pub fn render(snapshot: &ShootingSnapshot) -> UiNode {
+pub async fn render(snapshot: &ShootingSnapshot) -> UiNode {
     let camera = ShootingCamera::default();
     build_world_3d_scene(
         SURFACE_ID,
@@ -153,14 +153,14 @@ mod tests {
     use super::*;
 
     #[test]
-    fn definition_declares_the_world_3d_surface_and_body_key() {
+    async fn definition_declares_the_world_3d_surface_and_body_key() {
         let def = definition();
         assert_eq!(def.body_key, BODY_KEY);
         assert!(matches!(def.surface_kind, SurfaceKind::World3d));
     }
 
     #[test]
-    fn render_produces_a_scene_node_for_the_default_document() {
+    async fn render_produces_a_scene_node_for_the_default_document() {
         let snapshot = crate::artifacts::shooting::schema::default_snapshot();
         let node = render(&snapshot);
         let json = serde_json::to_string(&node).unwrap();

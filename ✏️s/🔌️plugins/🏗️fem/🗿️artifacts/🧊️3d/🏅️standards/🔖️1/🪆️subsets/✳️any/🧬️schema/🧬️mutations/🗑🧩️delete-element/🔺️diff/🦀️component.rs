@@ -4,7 +4,7 @@ use crate::artifacts::fem3d::diff::{Fem3dDiff, Fem3dElementsDelta};
 use crate::artifacts::fem3d::{element_id, Fem3dSnapshot};
 
 //#region 🔖️Diff
-pub fn diff(payload: &DeleteElement, base: &Fem3dSnapshot) -> protocol::MutationOutcome<Fem3dDiff> {
+pub async fn diff(payload: &DeleteElement, base: &Fem3dSnapshot) -> protocol::MutationOutcome<Fem3dDiff> {
     if !base.elements.iter().any(|element| element_id(element) == payload.id) {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Element \"{}\" does not exist.", payload.id), [payload.id.clone()]);
     }

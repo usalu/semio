@@ -13,6 +13,6 @@ pub struct SetCamera {
     pub camera: BlockCamera3d,
 }
 
-pub fn handle(payload: &SetCamera, _doc: &ArtifactView<'_, Block3dSnapshot>, _cfg: &ConfigView<'_, Block3dConfig>) -> Result<Emit<Block3dMutation, Block3dConfigMutation>, Fault> {
+pub async fn handle(payload: &SetCamera, _doc: &ArtifactView<'_, Block3dSnapshot>, _cfg: &ConfigView<'_, Block3dConfig>) -> Result<Emit<Block3dMutation, Block3dConfigMutation>, Fault> {
     Ok(Emit::config(vec![Block3dConfigMutation::SetCamera { camera: payload.camera.clone() }]))
 }

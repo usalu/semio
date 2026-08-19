@@ -24,12 +24,12 @@ pub mod derived_composition {
         type Snapshot = PdfSnapshot;
         const WRITES: Dialect = DIALECT_X;
 
-        fn reads() -> &'static [Dialect] {
+        async fn reads() -> &'static [Dialect] {
             &[DIALECT_ANY, DIALECT_X, DEP_BINARY, DEP_DEFLATE]
         }
 
-        fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
-            let inner = PdfAnyComposer::compose(sources)?;
+        async fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+            let inner = semio_framework_plugin::resolve_ready(PdfAnyComposer::compose(sources))?;
             let checks = check_x_conformance(&inner.snapshot);
             let (hard, soft): (Vec<Diagnostic>, Vec<Diagnostic>) = checks.into_iter().partition(|d| matches!(d.severity, Severity::Error | Severity::Fatal));
             if !hard.is_empty() {
@@ -50,7 +50,7 @@ pub mod derived_composition {
     impl SubsetValidator for PdfXValidator {
         const DIALECT: Dialect = DIALECT_X;
 
-        fn validate(payload: &IoPayload) -> Vec<Diagnostic> {
+        async fn validate(payload: &IoPayload) -> Vec<Diagnostic> {
             let decoded = match payload {
                 IoPayload::Binary(bytes) => <PdfSnapshot as store::ArtifactPack>::decode_pack(bytes).ok(),
                 IoPayload::Text(text) => <PdfSnapshot as store::ArtifactDsl>::parse_dsl(text).ok(),
@@ -71,14 +71,14 @@ pub mod derived_composition {
 
     static VALIDATOR_ENTRY: OnceLock<SubsetValidatorEntry> = OnceLock::new();
 
-    fn validator_entry() -> &'static SubsetValidatorEntry {
+    async fn validator_entry() -> &'static SubsetValidatorEntry {
         VALIDATOR_ENTRY.get_or_init(subset_validator_entry_of::<PdfXValidator>)
     }
 
     /// 📌️ Registers this subset's `SubsetValidator` with the generic io registry. Called from the
     /// 1.7 standard's own `⚙️engine::register()`. The `ComposerEntry` itself is registered separately
     /// by the standard-level composer aggregator (`composer::entries()`).
-    pub fn register() {
+    pub async fn register() {
         let _ = register_subset_validator(validator_entry());
     }
     //#endregion 🔖️SubsetValidator
@@ -98,7 +98,7 @@ pub mod derived_composition {
         /// bytes and routing through `AnalyzeSource::Text` (which `decode_pdf`s the FULL real object
         /// graph, unlike `encode_pdf`) is the same pattern `✳️a`'s own composer tests already use for
         /// `minimal_pdf_with_extra_object` — this is that same pattern, positive-path.
-        fn minimal_conforming_x_pdf() -> Vec<u8> {
+        async fn minimal_conforming_x_pdf() -> Vec<u8> {
             let mut body = Vec::new();
             body.extend_from_slice(b"%PDF-1.7\n");
             let o1 = body.len();
@@ -120,12 +120,12 @@ pub mod derived_composition {
             body
         }
 
-        fn hex_encode(bytes: &[u8]) -> String {
+        async fn hex_encode(bytes: &[u8]) -> String {
             bytes.iter().map(|b| format!("{b:02x}")).collect()
         }
 
         #[test]
-        fn conforming_builder_snapshot_composes_and_stamps_x() {
+        async fn conforming_builder_snapshot_composes_and_stamps_x() {
             let bytes = minimal_conforming_x_pdf();
             let hex = hex_encode(&bytes);
             let sources = vec![ComposeSource { dialect: DIALECT_ANY, payload: AnalyzeSource::Text(&hex) }];
@@ -134,7 +134,7 @@ pub mod derived_composition {
         }
 
         #[test]
-        fn missing_output_intent_fails_compose() {
+        async fn missing_output_intent_fails_compose() {
             let snapshot = PdfSnapshot::default();
             let bytes = <PdfSnapshot as store::ArtifactPack>::encode_pack(&snapshot);
             let sources = vec![ComposeSource { dialect: DIALECT_ANY, payload: AnalyzeSource::Binary(&bytes) }];
@@ -143,7 +143,7 @@ pub mod derived_composition {
         }
 
         #[test]
-        fn subset_validator_recheck_runs_the_same_check() {
+        async fn subset_validator_recheck_runs_the_same_check() {
             let snapshot = PdfXBuilder::new("sRGB IEC61966-2.1").add_page(crate::artifacts::pdf::standards::v1_7::subsets::any::schema::snapshot::PdfPage::new(50.0, 50.0)).build().unwrap();
             let bytes = <PdfSnapshot as store::ArtifactPack>::encode_pack(&snapshot);
             let diagnostics = PdfXValidator::validate(&IoPayload::Binary(bytes));

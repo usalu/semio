@@ -33,19 +33,19 @@ pub struct SemioImageArtifact {
 }
 
 impl Default for SemioImageArtifact {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self::from_snapshot(SemioImageSnapshot::default())
     }
 }
 
 impl SemioImageArtifact {
-    pub fn to_snapshot(&self) -> SemioImageSnapshot {
+    pub async fn to_snapshot(&self) -> SemioImageSnapshot {
         SemioImageSnapshot { schema: self.schema.clone(), width: self.width, height: self.height, colorspace: self.colorspace, bit_depth: self.bit_depth, frames: self.frames.clone(), icc: self.icc.clone(), metadata: self.metadata.clone() }
     }
-    pub fn from_snapshot(snapshot: SemioImageSnapshot) -> Self {
+    pub async fn from_snapshot(snapshot: SemioImageSnapshot) -> Self {
         Self { schema: snapshot.schema, width: snapshot.width, height: snapshot.height, colorspace: snapshot.colorspace, bit_depth: snapshot.bit_depth, frames: snapshot.frames, icc: snapshot.icc, metadata: snapshot.metadata }
     }
-    pub fn set_snapshot(&mut self, snapshot: SemioImageSnapshot) {
+    pub async fn set_snapshot(&mut self, snapshot: SemioImageSnapshot) {
         self.schema = snapshot.schema;
         self.width = snapshot.width;
         self.height = snapshot.height;
@@ -57,7 +57,7 @@ impl SemioImageArtifact {
     }
 }
 
-pub fn semio_image_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
+pub async fn semio_image_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
     schema::ArtifactSchemaDescriptor {
         id: "s.stdio.semio.image",
         artifact: schema::FacetLeaves {
@@ -105,31 +105,31 @@ pub mod derived_construction {
     //#region 🔖️TypedConstructors
     impl SemioImageBuilderConstruction {
         /// 🏗️ Starts a fresh image at the given pixel dimensions.
-        pub fn new(width: u32, height: u32) -> Self {
+        pub async fn new(width: u32, height: u32) -> Self {
             Self { snapshot: SemioImageSnapshot { width, height, ..SemioImageSnapshot::default() } }
         }
         /// 🏗️ Sets the source colorspace.
-        pub fn set_colorspace(mut self, colorspace: SemioColorspace) -> Self {
+        pub async fn set_colorspace(mut self, colorspace: SemioColorspace) -> Self {
             self.snapshot.colorspace = colorspace;
             self
         }
         /// 🏗️ Sets the bit depth.
-        pub fn set_bit_depth(mut self, bit_depth: u8) -> Self {
+        pub async fn set_bit_depth(mut self, bit_depth: u8) -> Self {
             self.snapshot.bit_depth = bit_depth;
             self
         }
         /// 🏗️ Appends one frame, in order.
-        pub fn add_frame(mut self, frame: SemioImageFrame) -> Self {
+        pub async fn add_frame(mut self, frame: SemioImageFrame) -> Self {
             self.snapshot.frames.push(frame);
             self
         }
         /// 🏗️ Sets the embedded ICC profile (`None` clears it).
-        pub fn set_icc(mut self, icc: Option<Vec<u8>>) -> Self {
+        pub async fn set_icc(mut self, icc: Option<Vec<u8>>) -> Self {
             self.snapshot.icc = icc;
             self
         }
         /// 🏗️ Appends one metadata entry.
-        pub fn add_metadata(mut self, key: impl Into<String>, value: impl Into<String>) -> Self {
+        pub async fn add_metadata(mut self, key: impl Into<String>, value: impl Into<String>) -> Self {
             self.snapshot.metadata.push(SemioImageMetadataEntry { key: key.into(), value: value.into() });
             self
         }
@@ -140,27 +140,27 @@ pub mod derived_construction {
         type Snapshot = SemioImageSnapshot;
         type Mutation = SemioImageMutation;
         type Diff = SemioImageDiff;
-        fn empty() -> Self {
+        async fn empty() -> Self {
             Self { snapshot: SemioImageSnapshot::default() }
         }
-        fn from_snapshot(snapshot: Self::Snapshot) -> Self {
+        async fn from_snapshot(snapshot: Self::Snapshot) -> Self {
             Self { snapshot }
         }
-        fn from_text(text: &str) -> Result<Self, store::TextError> {
+        async fn from_text(text: &str) -> Result<Self, store::TextError> {
             Ok(Self::from_snapshot(<SemioImageSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
-        fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
+        async fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
             Ok(Self::from_snapshot(<SemioImageSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
         }
-        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
+        async fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let diff = apply_semio_image_mutation(&mut self.snapshot, &mutation);
             (self, diff)
         }
-        fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
+        async fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
             self.snapshot = <SemioImageDiff as protocol::MutationDiff<SemioImageSnapshot>>::apply(&diff, &self.snapshot)?;
             Ok(self)
         }
-        fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
+        async fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
             Ok(self.snapshot)
         }
     }
@@ -171,7 +171,7 @@ pub mod derived_construction {
         use super::*;
 
         #[test]
-        fn typed_constructors_build_a_populated_snapshot() {
+        async fn typed_constructors_build_a_populated_snapshot() {
             let snapshot = SemioImageBuilderConstruction::new(2, 2)
                 .set_colorspace(SemioColorspace::Rgba)
                 .set_bit_depth(8)
@@ -209,7 +209,7 @@ pub mod derived_analysis {
         type Parts = SemioImageParts;
         const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("image") };
 
-        fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
+        async fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
             match source {
                 AnalyzeSource::Binary(bytes) => {
                     let marker = STDIO_SEMIOIMAGE_DOCUMENT_SCHEMA.as_bytes();
@@ -229,7 +229,7 @@ pub mod derived_analysis {
             }
         }
 
-        fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
+        async fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
             let mut parts = SemioImageParts::default();
             let mut diagnostics = Vec::new();
             let mut confidence = IoConfidence::High;

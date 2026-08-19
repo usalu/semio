@@ -10,12 +10,12 @@ use crate::artifacts::en1997::schema::mutations::text::En1997Mutation;
 use protocol::OpBinary;
 
 /// 📦️ Encodes a document mutation to its binary op form.
-pub fn encode_op(mutation: &En1997Mutation) -> Result<Vec<u8>, protocol::ProtocolError> {
+pub async fn encode_op(mutation: &En1997Mutation) -> Result<Vec<u8>, protocol::ProtocolError> {
     mutation.encode_op()
 }
 
 /// 📖️ Decodes a document mutation from its binary op form.
-pub fn decode_op(bytes: &[u8]) -> Result<En1997Mutation, protocol::ProtocolError> {
+pub async fn decode_op(bytes: &[u8]) -> Result<En1997Mutation, protocol::ProtocolError> {
     En1997Mutation::decode_op(bytes)
 }
 
@@ -26,12 +26,12 @@ mod tests {
     use crate::artifacts::en1997::mutations::change_v_ed_kn;
     use crate::artifacts::en1997::En1997Snapshot;
 
-    fn sample_mutation() -> En1997Mutation {
+    async fn sample_mutation() -> En1997Mutation {
         En1997Mutation::ChangeVEdKn(change_v_ed_kn::mutation::ChangeVEdKn { new_v_ed_kn: 620.0 })
     }
 
     #[test]
-    fn op_binary_round_trips_and_agrees_with_text() {
+    async fn op_binary_round_trips_and_agrees_with_text() {
         let mutation = sample_mutation();
         store::os_store::test_support::assert_op_text_binary_equivalence(&mutation);
         let bytes = encode_op(&mutation).expect("encode");
@@ -39,7 +39,7 @@ mod tests {
     }
 
     #[test]
-    fn document_text_round_trips_through_store() {
+    async fn document_text_round_trips_through_store() {
         let envelope = store::create_document_envelope("norm.en1997/v1", "en1997", En1997Snapshot::default(), None);
         let mut store = store::ArtifactStore::new(envelope).expect("valid artifact store fixture");
         store.dispatch(store::ArtifactCommand::Apply { mutations: vec![sample_mutation()], description: None }).expect("apply");

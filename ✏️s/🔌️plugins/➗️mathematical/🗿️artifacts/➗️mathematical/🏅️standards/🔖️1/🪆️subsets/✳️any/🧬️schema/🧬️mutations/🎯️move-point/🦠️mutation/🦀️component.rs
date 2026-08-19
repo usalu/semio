@@ -15,16 +15,16 @@ pub struct MovePoint {
 impl protocol::MutationKind<MathematicalSnapshot, MathematicalMutation> for MovePoint {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "move", entity: "point", kind: "move-point", record: "MovedPoint" };
 
-    fn diff(&self, base: &MathematicalSnapshot) -> protocol::MutationOutcome<<MathematicalMutation as protocol::Mutation<MathematicalSnapshot>>::Diff> {
+    async fn diff(&self, base: &MathematicalSnapshot) -> protocol::MutationOutcome<<MathematicalMutation as protocol::Mutation<MathematicalSnapshot>>::Diff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &MathematicalSnapshot) -> Vec<MathematicalMutation> {
+    async fn inverse(&self, base: &MathematicalSnapshot) -> Vec<MathematicalMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         format!("Move point at {}", self.index)
     }
-    fn target(&self) -> Vec<String> {
+    async fn target(&self) -> Vec<String> {
         vec!["geometry".into(), "points".into(), self.index.to_string()]
     }
 }

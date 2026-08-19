@@ -15,7 +15,7 @@ pub const LOWPOLY_PLAY_BODY_DOCUMENT: &str = "lowpoly.play.document";
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
-pub fn definition() -> PanelTabDefinition {
+pub async fn definition() -> PanelTabDefinition {
     PanelTabDefinition {
         kind: PanelTabKind::App(FRAMEWORK_PANEL_TAB_ARTIFACT_ID.into()),
         label: LocalizedLabel::native(FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL, "Dokument"),
@@ -27,7 +27,7 @@ pub fn definition() -> PanelTabDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(view: LowpolyView<'_>, doc: &LowpolyDocument, labels: &LowpolyLabels) -> UiNode {
+pub async fn render(view: LowpolyView<'_>, doc: &LowpolyDocument, labels: &LowpolyLabels) -> UiNode {
     let active_id = resolve_active_object_id(view.snapshot, view.config);
     let items: Vec<UiTreeItemNode> = view
         .snapshot
@@ -90,7 +90,7 @@ mod tests {
     use crate::editor::lowpoly::testkit::render;
 
     #[test]
-    fn definition_binds_the_framework_document_tab_to_this_body_key() {
+    async fn definition_binds_the_framework_document_tab_to_this_body_key() {
         use semio_framework_plugin::PanelTabDefinition;
         let definition: PanelTabDefinition = super::definition();
         assert_eq!(definition.id(), semio_framework_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_ID);
@@ -98,7 +98,7 @@ mod tests {
     }
 
     #[test]
-    fn document_tree_lists_active_object() {
+    async fn document_tree_lists_active_object() {
         let mut a = crate::editor::lowpoly::testkit::app();
         assert!(render(&mut a, super::LOWPOLY_PLAY_BODY_DOCUMENT).contains("lowpoly-document."));
     }

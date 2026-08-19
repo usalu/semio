@@ -11,7 +11,7 @@ pub const PUZZLE3D_LOD_SLIDER_MIN: f64 = 0.0;
 pub const PUZZLE3D_LOD_SLIDER_MAX: f64 = 1000.0;
 //#endregion 🔖️Constants
 
-pub fn measure(runtime: &Puzzle3dRuntime, labels: &Puzzle3dLabels) -> WindowMeasure {
+pub async fn measure(runtime: &Puzzle3dRuntime, labels: &Puzzle3dLabels) -> WindowMeasure {
     WindowMeasure::Group {
         id: format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-lod"),
         label: labels.lod.into(),

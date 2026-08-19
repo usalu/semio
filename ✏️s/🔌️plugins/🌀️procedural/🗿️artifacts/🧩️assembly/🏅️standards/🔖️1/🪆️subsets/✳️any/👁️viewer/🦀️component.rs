@@ -19,10 +19,10 @@ pub enum AssemblyViewCommand {
 }
 
 impl protocol::OpBinary for AssemblyViewCommand {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         Ok(Vec::new())
     }
-    fn decode_op(_bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    async fn decode_op(_bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         Ok(AssemblyViewCommand::Noop)
     }
 }
@@ -46,13 +46,13 @@ impl ArtifactViewer for AssemblyViewer {
     const DIALECT: Dialect = ASSEMBLY_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = ASSEMBLY_DOCUMENT_SCHEMA;
 
-    fn initial_snapshot() -> AssemblySnapshot {
+    async fn initial_snapshot() -> AssemblySnapshot {
         AssemblySnapshot::default()
     }
 
     /// 👁️ Structurally read-only: the sole `AssemblyViewCommand::Noop` variant never carries a config
     /// change, so this always returns the empty `ViewEmit`.
-    fn handle(
+    async fn handle(
         _command: &Self::Command,
         _doc: &ArtifactView<'_, Self::Snapshot>,
         _cfg: &ConfigView<'_, Self::Config>,
@@ -62,7 +62,7 @@ impl ArtifactViewer for AssemblyViewer {
         Ok(ViewEmit::default())
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> UiNode {
+    async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> UiNode {
         match body_key {
             structure::BODY_KEY => structure::render(doc.snapshot),
             _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))),
@@ -72,7 +72,7 @@ impl ArtifactViewer for AssemblyViewer {
 //#endregion 🔖️Viewer
 
 //#region 🔖️Manifest
-pub fn create_assembly_viewer() -> semio_framework_plugin::AppDefinition {
+pub async fn create_assembly_viewer() -> semio_framework_plugin::AppDefinition {
     Viewer::builder(ASSEMBLY_DIALECT)
         .document(["semio", "assembly"])
         .icon_id("network")
@@ -90,19 +90,19 @@ mod tests {
     use super::*;
 
     #[test]
-    fn create_assembly_viewer_builds_a_definition_for_the_viewer_role() {
+    async fn create_assembly_viewer_builds_a_definition_for_the_viewer_role() {
         let def = create_assembly_viewer();
         assert_eq!(def.role, semio_framework_plugin::AppRole::Viewer);
         assert_eq!(def.dialect, ASSEMBLY_DIALECT.into());
     }
 
     #[test]
-    fn viewer_dialect_matches_the_artifact_coordinate() {
+    async fn viewer_dialect_matches_the_artifact_coordinate() {
         assert_eq!(<AssemblyViewer as ArtifactViewer>::DIALECT, ASSEMBLY_DIALECT);
     }
 
     #[test]
-    fn viewer_declares_the_structure_window() {
+    async fn viewer_declares_the_structure_window() {
         let def = create_assembly_viewer();
         assert!(def.window_kinds.iter().any(|w| w.id == structure::WINDOW_KIND_ID));
     }

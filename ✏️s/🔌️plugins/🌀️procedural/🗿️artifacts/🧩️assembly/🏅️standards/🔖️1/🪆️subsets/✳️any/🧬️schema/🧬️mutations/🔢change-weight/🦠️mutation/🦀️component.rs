@@ -15,23 +15,23 @@ pub struct ChangeWeight {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn change_weight(module_id: String, weight: f64) -> AssemblyMutation {
+pub async fn change_weight(module_id: String, weight: f64) -> AssemblyMutation {
     AssemblyMutation::ChangeWeight(ChangeWeight { module_id, weight })
 }
 
 impl MutationKind<AssemblySnapshot, AssemblyMutation> for ChangeWeight {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "change", entity: "weight", kind: "change-weight", record: "ChangedWeight" };
 
-    fn diff(&self, base: &AssemblySnapshot) -> protocol::MutationOutcome<AssemblyDiff> {
+    async fn diff(&self, base: &AssemblySnapshot) -> protocol::MutationOutcome<AssemblyDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &AssemblySnapshot) -> Vec<AssemblyMutation> {
+    async fn inverse(&self, base: &AssemblySnapshot) -> Vec<AssemblyMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         format!("Change weight of module \"{}\" to {}", self.module_id, self.weight)
     }
-    fn target(&self) -> Vec<String> {
+    async fn target(&self) -> Vec<String> {
         vec![self.module_id.clone()]
     }
 }

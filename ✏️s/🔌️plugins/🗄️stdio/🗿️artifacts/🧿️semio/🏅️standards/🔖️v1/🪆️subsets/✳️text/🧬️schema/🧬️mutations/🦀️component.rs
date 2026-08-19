@@ -56,7 +56,7 @@ mod tests {
     use crate::artifacts::semio::standards::v1::subsets::text::schema::snapshot::{SemioTextMark, SemioTextMarkKind, SemioTextRun};
     use protocol::{Mutation, MutationDiff, SemanticMutation};
 
-    fn fixture() -> SemioTextSnapshot {
+    async fn fixture() -> SemioTextSnapshot {
         SemioTextSnapshot {
             runs: vec![
                 SemioTextRun { language: "en".into(), content: "hello".into(), marks: vec![] },
@@ -66,7 +66,7 @@ mod tests {
         }
     }
 
-    fn round_trip(base: &SemioTextSnapshot, operation: &SemioTextMutation) -> SemioTextSnapshot {
+    async fn round_trip(base: &SemioTextSnapshot, operation: &SemioTextMutation) -> SemioTextSnapshot {
         let forward = operation.diff(base).diff().apply(base).expect("apply must succeed for a well-formed fixture");
         let backwards = operation.inverse(base);
         let mut restored = forward.clone();
@@ -85,7 +85,7 @@ mod tests {
     }
 
     #[test]
-    fn insert_remove_run_round_trips() {
+    async fn insert_remove_run_round_trips() {
         let base = fixture();
         let new_run = SemioTextRun { language: "de".into(), content: "hallo".into(), marks: vec![] };
 
@@ -104,7 +104,7 @@ mod tests {
     }
 
     #[test]
-    fn remove_run_of_an_out_of_range_index_has_an_empty_inverse() {
+    async fn remove_run_of_an_out_of_range_index_has_an_empty_inverse() {
         let base = fixture();
         let remove = SemioTextMutation::RemoveRun(remove_run::mutation::RemoveRun { index: 99 });
         assert!(remove.inverse(&base).is_empty(), "removing an absent index has nothing to undo");
@@ -112,7 +112,7 @@ mod tests {
     }
 
     #[test]
-    fn edit_run_and_change_run_language_round_trip() {
+    async fn edit_run_and_change_run_language_round_trip() {
         let base = fixture();
 
         let edit = SemioTextMutation::EditRun(edit_run::mutation::EditRun { index: 0, new_content: "greetings".into() });
@@ -129,7 +129,7 @@ mod tests {
     }
 
     #[test]
-    fn reorder_runs_round_trips() {
+    async fn reorder_runs_round_trips() {
         let base = fixture();
         assert!(base.runs.len() >= 2, "fixture must have at least two runs to exercise reorder");
 
@@ -140,7 +140,7 @@ mod tests {
     }
 
     #[test]
-    fn add_remove_mark_round_trips() {
+    async fn add_remove_mark_round_trips() {
         let base = fixture();
         let mark = SemioTextMark { kind: SemioTextMarkKind::Link, href: "https://semio.tech".into() };
 
@@ -157,7 +157,7 @@ mod tests {
     }
 
     #[test]
-    fn add_remove_mark_of_an_absent_run_has_an_empty_inverse() {
+    async fn add_remove_mark_of_an_absent_run_has_an_empty_inverse() {
         let base = fixture();
         let remove = SemioTextMutation::RemoveMark(remove_mark::mutation::RemoveMark { run_index: 99, index: 0 });
         assert!(remove.inverse(&base).is_empty());
@@ -165,7 +165,7 @@ mod tests {
     }
 
     #[test]
-    fn semantic_kinds_cover_every_variant() {
+    async fn semantic_kinds_cover_every_variant() {
         assert_eq!(SemioTextMutation::kinds().len(), 7);
         let mutation = SemioTextMutation::RemoveRun(remove_run::mutation::RemoveRun { index: 2 });
         assert_eq!(mutation.semantics().kind, "remove-run");

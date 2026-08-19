@@ -11,7 +11,7 @@ const IMPERATIVE_PLAY_SURFACE_SCRIPT: &str = "imperative.play.script";
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
-pub fn definition() -> WindowKindDefinition {
+pub async fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
         id: IMPERATIVE_PLAY_WINDOW_SCRIPT.into(),
         label: LocalizedLabel::native("Script", "Skript"),
@@ -32,7 +32,7 @@ pub fn definition() -> WindowKindDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(document: &ImperativeSnapshot) -> UiNode {
+pub async fn render(document: &ImperativeSnapshot) -> UiNode {
     let host = ImperativeHost::from_snapshot(document.clone());
     build_text_editor_scene(IMPERATIVE_PLAY_SURFACE_SCRIPT, crate::editor::imperative::IMPERATIVE_PLAY_APP_ID, TextEditorScene::base(host.compile_text(), Some("imperative".into()), None))
 }
@@ -45,7 +45,7 @@ mod tests {
     use crate::editor::imperative::testkit::{imperative_app, render as render_body};
 
     #[test]
-    fn renders_script_editor() {
+    async fn renders_script_editor() {
         let mut app = imperative_app();
         assert!(render_body(&mut app, IMPERATIVE_PLAY_BODY_SCRIPT).contains("text-editor"));
     }

@@ -15,11 +15,11 @@ pub mod derived_composition {
         type Snapshot = GifSnapshot;
         const WRITES: Dialect = DIALECT;
 
-        fn reads() -> &'static [Dialect] {
+        async fn reads() -> &'static [Dialect] {
             &[DIALECT, DEP_BINARY]
         }
 
-        fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+        async fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
             // 🌱 Every listed read dialect's payload is raw text/bytes that this artifact's own
             // analyzer already round-trips through `store::Document{Dsl,Pack}` -- including bytes
             // claiming a dependency's dialect, since (for a single-standard DAG-adjacent dependency
@@ -66,10 +66,10 @@ use crate::artifacts::gif::standards::v89a::subsets::any::schema::snapshot::{Gif
 /// reused LZW/sub-block helpers speak — 89a cannot use 87a's `color_table_to_bytes`/
 /// `color_table_from_bytes` directly since the two standards deliberately declare distinct
 /// `GifColorTable` types (per the recipe's "no copy-pasted shared types" rule).
-fn color_table_to_bytes(table: &GifColorTable) -> Vec<codec::Rgb> {
+async fn color_table_to_bytes(table: &GifColorTable) -> Vec<codec::Rgb> {
     table.colors.iter().map(|c| [c.r, c.g, c.b]).collect()
 }
-fn color_table_from_bytes(colors: Vec<codec::Rgb>, sorted: bool) -> GifColorTable {
+async fn color_table_from_bytes(colors: Vec<codec::Rgb>, sorted: bool) -> GifColorTable {
     GifColorTable { sorted, colors: colors.into_iter().map(|[r, g, b]| GifRgb { r, g, b }).collect() }
 }
 //#endregion ColorTableConv
@@ -84,7 +84,7 @@ fn color_table_from_bytes(colors: Vec<codec::Rgb>, sorted: bool) -> GifColorTabl
 /// extension, then the frames in order — real files interleave these more freely, but
 /// content-losslessness (not exact original byte position) is the contract here, matching the
 /// recipe's "decode→encode byte-preserving up to documented normalizations."
-pub fn encode_gif(snap: &GifSnapshot) -> Result<Vec<u8>, String> {
+pub async fn encode_gif(snap: &GifSnapshot) -> Result<Vec<u8>, String> {
     if snap.width == 0 || snap.height == 0 {
         return Err("gif89a: empty logical screen".into());
     }
@@ -203,14 +203,14 @@ pub fn encode_gif(snap: &GifSnapshot) -> Result<Vec<u8>, String> {
 /// 📐️ See 87a engine's `validated_color_table_size_field` doc comment — same honest-padding
 /// rationale, duplicated here only because it wraps `codec::color_table_size_field` with 89a's own
 /// error message prefix.
-fn validated_color_table_size_field(len: usize, what: &str) -> Result<u8, String> {
+async fn validated_color_table_size_field(len: usize, what: &str) -> Result<u8, String> {
     if len > 256 {
         return Err(format!("{what} color table length {len} exceeds the on-disk maximum of 256"));
     }
     Ok(codec::color_table_size_field(len))
 }
 
-fn write_gce(out: &mut Vec<u8>, frame: &GifFrame) {
+async fn write_gce(out: &mut Vec<u8>, frame: &GifFrame) {
     out.push(0x21);
     out.push(0xF9);
     out.push(4);
@@ -221,7 +221,7 @@ fn write_gce(out: &mut Vec<u8>, frame: &GifFrame) {
     out.push(0);
 }
 
-fn write_plain_text(out: &mut Vec<u8>, pt: &GifPlainText) {
+async fn write_plain_text(out: &mut Vec<u8>, pt: &GifPlainText) {
     out.push(0x21);
     out.push(0x01);
     let mut header = Vec::with_capacity(12);
@@ -241,7 +241,7 @@ fn write_plain_text(out: &mut Vec<u8>, pt: &GifPlainText) {
 /// length-prefixed sub-block sequence after its introducer+label — `unpack_sub_blocks` handles
 /// all of them uniformly (concatenating every sub-block's payload flat); the label alone decides
 /// how the flattened bytes are interpreted below.
-pub fn decode_gif(data: &[u8]) -> Result<GifSnapshot, String> {
+pub async fn decode_gif(data: &[u8]) -> Result<GifSnapshot, String> {
     if data.len() < 13 || &data[0..6] != b"GIF89a" {
         return Err("not a GIF89a file (bad magic)".into());
     }
@@ -400,7 +400,7 @@ pub fn decode_gif(data: &[u8]) -> Result<GifSnapshot, String> {
 /// which already chains `standards::v89a::composer::entries()` regardless of whether this
 /// function itself ever runs — composer entries are NOT registered here to avoid a redundant
 /// second registration attempt).
-pub fn register() {
+pub async fn register() {
     ::schema::register_artifact_schema_descriptor(crate::artifacts::gif::standards::v89a::subsets::any::schema::gif_artifact_schema_descriptor());
     register_artifact_inferences();
     register_pilot_languages();
@@ -411,7 +411,7 @@ pub fn register() {
 /// 💡️ Registers `s.stdio.gif.89a.inference`'s facet leaves into the OS-wide inference catalog —
 /// sibling to `register_artifact_schema_descriptor` above (separate registry, ticket
 /// 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING).
-pub fn register_artifact_inferences() {
+pub async fn register_artifact_inferences() {
     ::schema::register_artifact_inference_descriptor(crate::artifacts::gif::standards::v89a::subsets::any::schema::inferences::gif89a_artifact_inference_descriptor());
 }
 
@@ -420,7 +420,7 @@ pub fn register_artifact_inferences() {
 /// stays `None` (the 5-role scheme has no dedicated "diff binary" role, even though
 /// `🔺️diff/💾️binary/📡️component.protocol.semio` is a real, conformance-tested file — its
 /// binary form is exercised directly by `protocol_walk_law` below).
-pub fn register_pilot_languages() {
+pub async fn register_pilot_languages() {
     dsl::register_language(dsl::LanguageSpec {
         id: "stdio.gif.89a",
         extension: Some("gif"),
@@ -481,12 +481,12 @@ pub fn register_pilot_languages() {
 /// doc comment), so `stdio.gif.89a#diff` is deliberately NOT registered here — same
 /// `register-schema-spec-needs-recordspec` gap filed for 87a's own sibling registration.
 #[cfg(not(target_arch = "wasm32"))]
-pub fn register_schema_specs() {
+pub async fn register_schema_specs() {
     dsl::registry::register_schema_spec("stdio.gif.89a", GifSnapshot::__dsl_spec);
 }
 
 #[cfg(target_arch = "wasm32")]
-pub fn register_schema_specs() {}
+pub async fn register_schema_specs() {}
 //#endregion Register
 
 //#region 🧪️Tests
@@ -500,7 +500,7 @@ mod tests {
     /// `decoded == snap` round-trip assertion is meaningful (a non-power-of-two-length table is a
     /// real, documented, one-way encode normalization — see `validated_color_table_size_field`'s
     /// doc comment — not something `decode(encode(x))` can ever undo for arbitrary `x`).
-    fn pad_to_disk_size(mut colors: Vec<codec::Rgb>) -> Vec<codec::Rgb> {
+    async fn pad_to_disk_size(mut colors: Vec<codec::Rgb>) -> Vec<codec::Rgb> {
         let size_field = codec::color_table_size_field(colors.len());
         let target = 1usize << (size_field as usize + 1);
         while colors.len() < target {
@@ -512,7 +512,7 @@ mod tests {
     /// 🧪️ Builds a real, lossless `GifFrame` (LCT + indices, no GCT) from a synthetic RGBA pattern
     /// via `quantize_rgba` — this test helper stays byte-level while the codec itself now writes
     /// whatever palette + indices are already in the snapshot, never re-quantizing.
-    fn frame(left: u32, top: u32, width: u32, height: u32, base_color: [u8; 3], delay_cs: u16, disposal: GifDisposal, transparent_corner: bool) -> GifFrame {
+    async fn frame(left: u32, top: u32, width: u32, height: u32, base_color: [u8; 3], delay_cs: u16, disposal: GifDisposal, transparent_corner: bool) -> GifFrame {
         let mut rgba = vec![0u8; (width * height * 4) as usize];
         for y in 0..height {
             for x in 0..width {
@@ -532,7 +532,7 @@ mod tests {
         GifFrame { left, top, width, height, interlace: false, lct: Some(color_table_from_bytes(pad_to_disk_size(palette), false)), indices, delay_cs, disposal, transparent_index, user_input: false, plain_text: None }
     }
 
-    fn sample_snapshot() -> GifSnapshot {
+    async fn sample_snapshot() -> GifSnapshot {
         GifSnapshot {
             schema: STDIO_GIF89A_DOCUMENT_SCHEMA.into(),
             width: 12,
@@ -544,14 +544,14 @@ mod tests {
     }
 
     #[test]
-    fn decode_gif_rejects_garbage_and_wrong_magic() {
+    async fn decode_gif_rejects_garbage_and_wrong_magic() {
         assert!(decode_gif(b"not a gif at all").is_err());
         assert!(decode_gif(b"GIF87a").is_err(), "89a decoder must reject 87a magic");
     }
 
     /// 🧪️ Multi-frame, multi-region, GCE (delay/disposal/transparency) + NETSCAPE loop round trip.
     #[test]
-    fn encode_decode_round_trip_multiframe() {
+    async fn encode_decode_round_trip_multiframe() {
         let snap = sample_snapshot();
         let bytes = encode_gif(&snap).expect("encode");
         assert_eq!(&bytes[0..6], b"GIF89a");
@@ -561,7 +561,7 @@ mod tests {
 
     /// 🧪️ decode(encode(decode(x))) snapshot equality across frames, delays, disposal, loop count.
     #[test]
-    fn encode_decode_encode_decode_is_stable() {
+    async fn encode_decode_encode_decode_is_stable() {
         let snap = sample_snapshot();
         let once = decode_gif(&encode_gif(&snap).unwrap()).unwrap();
         let twice = decode_gif(&encode_gif(&once).unwrap()).unwrap();
@@ -569,20 +569,20 @@ mod tests {
     }
 
     #[test]
-    fn encode_gif_rejects_empty_frame_list() {
+    async fn encode_gif_rejects_empty_frame_list() {
         let snap = GifSnapshot { schema: STDIO_GIF89A_DOCUMENT_SCHEMA.into(), width: 4, height: 4, loop_count: None, frames: vec![], ..GifSnapshot::default() };
         assert!(encode_gif(&snap).is_err());
     }
 
     #[test]
-    fn encode_gif_rejects_frame_exceeding_logical_screen() {
+    async fn encode_gif_rejects_frame_exceeding_logical_screen() {
         let mut snap = sample_snapshot();
         snap.frames[0].left = 100; // pushes the frame past the 12x10 logical screen
         assert!(encode_gif(&snap).is_err());
     }
 
     #[test]
-    fn no_loop_extension_when_loop_count_is_none() {
+    async fn no_loop_extension_when_loop_count_is_none() {
         let mut snap = sample_snapshot();
         snap.loop_count = None;
         let bytes = encode_gif(&snap).expect("encode");
@@ -596,7 +596,7 @@ mod tests {
     /// round-trip losslessly and don't corrupt one another — the real spec-fidelity gain this
     /// rewrite delivers over the prior stub, which dropped everything but GCE/loop.
     #[test]
-    fn comments_and_app_extensions_round_trip() {
+    async fn comments_and_app_extensions_round_trip() {
         let mut snap = sample_snapshot();
         snap.comments = vec!["hello gif".into(), "second comment".into()];
         snap.app_extensions = vec![GifAppExtension { identifier: *b"XMP Data", auth_code: *b"XMP", data: vec![1, 2, 3, 4] }];
@@ -611,7 +611,7 @@ mod tests {
     /// 🧪️ A plain-text-only frame (no image data, `plain_text: Some`) round-trips as a real Plain
     /// Text Extension block, including its preceding GCE.
     #[test]
-    fn plain_text_only_frame_round_trips() {
+    async fn plain_text_only_frame_round_trips() {
         let mut snap = sample_snapshot();
         snap.frames.push(GifFrame {
             left: 0,
@@ -636,7 +636,7 @@ mod tests {
     /// 🧪️ A frame combining real image data with a plain-text extension is a documented
     /// unsupported combo — must be a typed encode error, never silently drop one or the other.
     #[test]
-    fn encode_gif_rejects_image_plus_plain_text_combo() {
+    async fn encode_gif_rejects_image_plus_plain_text_combo() {
         let mut snap = sample_snapshot();
         snap.frames[0].plain_text = Some(GifPlainText::default());
         assert!(encode_gif(&snap).is_err());
@@ -645,7 +645,7 @@ mod tests {
     /// 🧪️ `interlace` is a real, round-trippable field — encode must reorder rows into the
     /// on-disk interlaced pass order, and decode must invert it back to natural-order indices.
     #[test]
-    fn interlace_flag_round_trips_through_real_encode() {
+    async fn interlace_flag_round_trips_through_real_encode() {
         let mut snap = sample_snapshot();
         snap.frames[0].interlace = true;
         let original_indices = snap.frames[0].indices.clone();
@@ -657,7 +657,7 @@ mod tests {
 
     /// 🧪️ An index referencing past the end of its color table is a typed encode error.
     #[test]
-    fn encode_gif_rejects_index_past_color_table() {
+    async fn encode_gif_rejects_index_past_color_table() {
         let mut snap = sample_snapshot();
         let len = snap.frames[0].indices.len();
         snap.frames[0].indices = vec![250u8; len];
@@ -666,7 +666,7 @@ mod tests {
 
     /// 🧪️ `rgba()` derived accessor: a transparent index normalizes to `[0,0,0,0]`.
     #[test]
-    fn rgba_derived_accessor_honors_transparent_index() {
+    async fn rgba_derived_accessor_honors_transparent_index() {
         let snap = sample_snapshot();
         let transparent_frame = &snap.frames[1]; // built with transparent_corner=true
         assert!(transparent_frame.transparent_index.is_some());
@@ -690,7 +690,7 @@ mod tests {
         /// ✅️ "committed files parse": all 6 handcrafted `.grammar.semio`/`.protocol.semio`
         /// files parse under the real dialect.
         #[test]
-        fn committed_facet_files_parse() {
+        async fn committed_facet_files_parse() {
             for (label, text) in [("snapshot grammar", snapshot::text::COMPONENT_GRAMMAR_SEMIO), ("mutations grammar", mutations::text::COMPONENT_GRAMMAR_SEMIO), ("diff grammar", diff::text::COMPONENT_GRAMMAR_SEMIO)] {
                 let grammar = dsl::parse_grammar(text).unwrap_or_else(|e| panic!("{label}: parse_grammar failed: {e:?}"));
                 assert_eq!(grammar.dialect, dsl::SemioDialect::Grammar, "{label}: expected grammar dialect");
@@ -704,7 +704,7 @@ mod tests {
         /// no textual syntax of its own, see that file's own doc comment) recognizes real
         /// `print_dsl` output for the demo (dancing.gif) snapshot.
         #[test]
-        fn grammar_conformance_law() {
+        async fn grammar_conformance_law() {
             let grammar = dsl::parse_grammar(snapshot::text::COMPONENT_GRAMMAR_SEMIO).expect("parse snapshot grammar");
             let recognizer = dsl::Recognizer::compile(&grammar);
             let text = store::ArtifactDsl::print_dsl(&demo_gif_snapshot());
@@ -716,7 +716,7 @@ mod tests {
         /// ✅️ `ops_grammar_conformance_law`: the mutations grammar recognizes real `print_op`
         /// output for every `GifMutation` variant (`mutations::demo_mutation_cases()`).
         #[test]
-        fn ops_grammar_conformance_law() {
+        async fn ops_grammar_conformance_law() {
             let grammar = dsl::parse_grammar(mutations::text::COMPONENT_GRAMMAR_SEMIO).expect("parse mutations grammar");
             let recognizer = dsl::Recognizer::compile(&grammar);
             for mutation in mutations::demo_mutation_cases() {
@@ -728,7 +728,7 @@ mod tests {
         /// ✅️ `diff_grammar_conformance_law`: the diff grammar recognizes real `print_diff`
         /// output for every representative `GifDiff` (`diff::demo_diff_cases()`).
         #[test]
-        fn diff_grammar_conformance_law() {
+        async fn diff_grammar_conformance_law() {
             let grammar = dsl::parse_grammar(diff::text::COMPONENT_GRAMMAR_SEMIO).expect("parse diff grammar");
             let recognizer = dsl::Recognizer::compile(&grammar);
             for d in diff::demo_diff_cases() {
@@ -742,7 +742,7 @@ mod tests {
         /// `encode_op`, and every demo diff's `encode_diff` — asserting `consumed ==
         /// bytes.len()`.
         #[test]
-        fn protocol_walk_law() {
+        async fn protocol_walk_law() {
             let pack_spec = dsl::parse_protocol(snapshot::binary::COMPONENT_PROTOCOL_SEMIO).expect("parse snapshot protocol");
             let packed = store::ArtifactPack::encode_pack(&demo_gif_snapshot());
             let (_, inner) = store::semio_format::unwrap_binary(&packed).expect("unwrap semio envelope");
@@ -768,7 +768,7 @@ mod tests {
         /// GENUINE `print_dsl`/`encode_pack` output of `demo_gif_snapshot()` (the real
         /// dancing.gif fixture decoded via the real 89a codec).
         #[test]
-        fn fixture_honesty_law() {
+        async fn fixture_honesty_law() {
             const FIXTURE_DSL: &str = include_str!("../📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio");
             const FIXTURE_PACK: &[u8] = include_bytes!("../📚️examples/🎬️demo/🖼️assets/🎒️example.pack.semio");
 
@@ -795,7 +795,7 @@ pub mod io_registry {
 
     static ENTRIES: OnceLock<Vec<ComposerEntry>> = OnceLock::new();
 
-    pub fn entries() -> &'static [ComposerEntry] {
+    pub async fn entries() -> &'static [ComposerEntry] {
         ENTRIES.get_or_init(|| vec![composer_entry_of::<GifRawAnyComposer>()]).as_slice()
     }
 }

@@ -5,7 +5,7 @@ use crate::artifacts::layout::mutations::LayoutMutation;
 use crate::artifacts::layout::LayoutSnapshot;
 
 //#region 🕹️MoveFrame
-pub fn inverse_move_frame(payload: &MoveFrame, base: &LayoutSnapshot) -> Vec<LayoutMutation> {
+pub async fn inverse_move_frame(payload: &MoveFrame, base: &LayoutSnapshot) -> Vec<LayoutMutation> {
     let Some(page) = base.pages.iter().find(|page| page.id == payload.page_id) else {
         return Vec::new();
     };

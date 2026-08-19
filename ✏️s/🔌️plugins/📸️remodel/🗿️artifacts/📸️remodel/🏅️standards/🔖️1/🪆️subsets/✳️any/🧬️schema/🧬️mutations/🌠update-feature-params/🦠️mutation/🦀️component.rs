@@ -16,20 +16,20 @@ pub struct UpdateFeatureParams {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn update_feature_params(params: FeatureParams) -> RemodelMutation {
+pub async fn update_feature_params(params: FeatureParams) -> RemodelMutation {
     RemodelMutation::UpdateFeatureParams(UpdateFeatureParams { params })
 }
 
 impl protocol::MutationKind<RemodelSnapshot, RemodelMutation> for UpdateFeatureParams {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "update", entity: "feature-params", kind: "update-feature-params", record: "UpdatedFeatureParams" };
 
-    fn diff(&self, base: &RemodelSnapshot) -> protocol::MutationOutcome<RemodelDiff> {
+    async fn diff(&self, base: &RemodelSnapshot) -> protocol::MutationOutcome<RemodelDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &RemodelSnapshot) -> Vec<RemodelMutation> {
+    async fn inverse(&self, base: &RemodelSnapshot) -> Vec<RemodelMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         "Update feature params".to_string()
     }
 }

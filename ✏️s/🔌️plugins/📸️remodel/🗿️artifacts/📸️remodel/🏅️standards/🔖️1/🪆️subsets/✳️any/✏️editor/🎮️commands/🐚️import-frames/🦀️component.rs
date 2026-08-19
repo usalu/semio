@@ -26,7 +26,7 @@ pub const REMODEL_VIDEO_ACCEPT: &str = "video/mp4,video/quicktime,video/webm,vid
 #[dsl(keyword = "import-frames")]
 pub struct ImportFrames {}
 
-pub fn handle(_payload: &ImportFrames, _doc: &ArtifactView<'_, RemodelSnapshot>, _cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelMutation, RemodelConfigMutation>, Fault> {
+pub async fn handle(_payload: &ImportFrames, _doc: &ArtifactView<'_, RemodelSnapshot>, _cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelMutation, RemodelConfigMutation>, Fault> {
     Ok(Emit::effect(Effect::RequestFileOpen {req: semio_framework_plugin::RequestId(117),  accept: REMODEL_MEDIA_ACCEPT.into(), read_as: Some("dataUrl".into()), import_action: "importFramePayload".into(), multiple: true }))
 }
 
@@ -39,7 +39,7 @@ mod tests {
     use crate::editor::remodel::RemodelCommand;
 
     #[test]
-    fn import_pickers_emit_a_host_effect_and_no_operations() {
+    async fn import_pickers_emit_a_host_effect_and_no_operations() {
         let mut app = app();
         for command in [RemodelCommand::ImportFrames(ImportFrames {}), RemodelCommand::ImportVideo(import_video::ImportVideo {})] {
             let result = dispatch(&mut app, command);
@@ -50,7 +50,7 @@ mod tests {
 
     /// 📤️ Exporting a report the document does not have yet is a no-op, not an error.
     #[test]
-    fn export_qc_report_is_a_no_op_without_a_report() {
+    async fn export_qc_report_is_a_no_op_without_a_report() {
         let mut app = app();
         let result = dispatch(&mut app, RemodelCommand::ExportQcReport(export_qc_report::ExportQcReport {}));
         assert!(result.mutations.is_empty());

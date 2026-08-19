@@ -9,7 +9,7 @@ pub const IMPERATIVE_PLAY_BODY_INSPECTOR: &str = "imperative.play.inspection";
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
-pub fn definition() -> PanelTabDefinition {
+pub async fn definition() -> PanelTabDefinition {
     PanelTabDefinition {
         kind: PanelTabKind::App(FRAMEWORK_PANEL_TAB_INSPECTION_ID.into()),
         label: LocalizedLabel::native(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, "Inspektion"),
@@ -28,7 +28,7 @@ pub fn definition() -> PanelTabDefinition {
 /// `handle`/`copy_fragment`/`cut_operations` are). Documented reduced-fidelity gap, same shape as
 /// `🖍️draw`'s `📌️panels/🔍️properties/🦀️component.rs`: falls through to a step-count summary until a
 /// resolved-selection render path exists.
-pub fn render(document: &ImperativeSnapshot, labels: &ImperativeLabels) -> UiNode {
+pub async fn render(document: &ImperativeSnapshot, labels: &ImperativeLabels) -> UiNode {
     let path = crate::artifacts::imperative::imperative_working_scene(document).path;
     ui_inspector_groups_to_tree(&[UiInspectorFieldGroup {
         id: "imperative-play-inspector.summary".into(),
@@ -47,7 +47,7 @@ mod tests {
     use crate::editor::imperative::testkit::{imperative_app, render as render_body};
 
     #[test]
-    fn inspection_shows_step_count_summary() {
+    async fn inspection_shows_step_count_summary() {
         let mut app = imperative_app();
         assert!(render_body(&mut app, IMPERATIVE_PLAY_BODY_INSPECTOR).contains("imperative-play-inspector.steps"));
     }

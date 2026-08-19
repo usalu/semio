@@ -23,7 +23,7 @@ pub mod add_step {
     /// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: auto-selecting the just-added
     /// step is no longer reachable from this dispatch — selection is framework-owned now, written
     /// only through the injected `interactionSelect` verb.
-    pub fn handle(payload: &AddStep, doc: &ArtifactView<'_, SequenceSnapshot>, _cfg: &ConfigView<'_, SequenceConfig>) -> Result<Emit<SequenceMutation, SequenceConfigMutation>, Fault> {
+    pub async fn handle(payload: &AddStep, doc: &ArtifactView<'_, SequenceSnapshot>, _cfg: &ConfigView<'_, SequenceConfig>) -> Result<Emit<SequenceMutation, SequenceConfigMutation>, Fault> {
         let fixture = doc.snapshot;
         let mut host = host_from_snapshot(fixture);
         let _id = host.add_step(&payload.kind, payload.x, payload.y);
@@ -47,7 +47,7 @@ pub mod add_step_to_slot {
     /// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: auto-selecting the just-added
     /// step is no longer reachable from this dispatch — selection is framework-owned now, written
     /// only through the injected `interactionSelect` verb.
-    pub fn handle(payload: &AddStepToSlot, doc: &ArtifactView<'_, SequenceSnapshot>, _cfg: &ConfigView<'_, SequenceConfig>) -> Result<Emit<SequenceMutation, SequenceConfigMutation>, Fault> {
+    pub async fn handle(payload: &AddStepToSlot, doc: &ArtifactView<'_, SequenceSnapshot>, _cfg: &ConfigView<'_, SequenceConfig>) -> Result<Emit<SequenceMutation, SequenceConfigMutation>, Fault> {
         let fixture = doc.snapshot;
         let mut host = host_from_snapshot(fixture);
         let _id = host.add_step_in_slot(&payload.kind, payload.x, payload.y, Some(SlotRef { owner: payload.owner.clone(), name: payload.slot_name.clone() }));
@@ -70,7 +70,7 @@ pub mod add_step_dropped {
     /// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: auto-selecting the just-added
     /// step is no longer reachable from this dispatch — selection is framework-owned now, written
     /// only through the injected `interactionSelect` verb.
-    pub fn handle(payload: &AddStepDropped, doc: &ArtifactView<'_, SequenceSnapshot>, _cfg: &ConfigView<'_, SequenceConfig>) -> Result<Emit<SequenceMutation, SequenceConfigMutation>, Fault> {
+    pub async fn handle(payload: &AddStepDropped, doc: &ArtifactView<'_, SequenceSnapshot>, _cfg: &ConfigView<'_, SequenceConfig>) -> Result<Emit<SequenceMutation, SequenceConfigMutation>, Fault> {
         let fixture = doc.snapshot;
         let mut host = host_from_snapshot(fixture);
         let _id = host.add_step_dropped(&payload.kind, payload.x, payload.y, payload.picked_step_id.as_deref());
@@ -92,7 +92,7 @@ pub mod remove_step {
     /// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: no longer prunes the removed id
     /// out of a config selection field — the framework auto-prunes a deleted step's id out of the
     /// "steps" domain's live selection via `interaction_topology` after this dispatch lands.
-    pub fn handle(payload: &RemoveStep, doc: &ArtifactView<'_, SequenceSnapshot>, _cfg: &ConfigView<'_, SequenceConfig>) -> Result<Emit<SequenceMutation, SequenceConfigMutation>, Fault> {
+    pub async fn handle(payload: &RemoveStep, doc: &ArtifactView<'_, SequenceSnapshot>, _cfg: &ConfigView<'_, SequenceConfig>) -> Result<Emit<SequenceMutation, SequenceConfigMutation>, Fault> {
         let fixture = doc.snapshot;
         let ops = ops_from_host_mutation(fixture, |host| {
             host.remove_step(&payload.id);
@@ -109,7 +109,7 @@ pub mod delete_selection {
     #[dsl(keyword = "delete-selection")]
     pub struct DeleteSelection {}
 
-    fn delete_selected(fixture: &SequenceSnapshot, selected: &[String]) -> Emit<SequenceMutation, SequenceConfigMutation> {
+    async fn delete_selected(fixture: &SequenceSnapshot, selected: &[String]) -> Emit<SequenceMutation, SequenceConfigMutation> {
         let ops = ops_from_host_mutation(fixture, |host| {
             for step_id in selected {
                 host.remove_step(step_id);
@@ -122,11 +122,11 @@ pub mod delete_selection {
     /// shape (no `interaction` slot — ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM) —
     /// reachable only through that macro-generated path (`SequencePlayApp::handle` always routes this
     /// command through `apply` below instead), so it degrades to treating the selection as empty.
-    pub fn handle(_payload: &DeleteSelection, doc: &ArtifactView<'_, SequenceSnapshot>, _cfg: &ConfigView<'_, SequenceConfig>) -> Result<Emit<SequenceMutation, SequenceConfigMutation>, Fault> {
+    pub async fn handle(_payload: &DeleteSelection, doc: &ArtifactView<'_, SequenceSnapshot>, _cfg: &ConfigView<'_, SequenceConfig>) -> Result<Emit<SequenceMutation, SequenceConfigMutation>, Fault> {
         Ok(delete_selected(doc.snapshot, &[]))
     }
 
-    pub fn apply(_payload: &DeleteSelection, doc: &ArtifactView<'_, SequenceSnapshot>, _cfg: &ConfigView<'_, SequenceConfig>, interaction: &InteractionView<'_>) -> Result<Emit<SequenceMutation, SequenceConfigMutation>, Fault> {
+    pub async fn apply(_payload: &DeleteSelection, doc: &ArtifactView<'_, SequenceSnapshot>, _cfg: &ConfigView<'_, SequenceConfig>, interaction: &InteractionView<'_>) -> Result<Emit<SequenceMutation, SequenceConfigMutation>, Fault> {
         Ok(delete_selected(doc.snapshot, &interaction.selection(crate::editor::sequence::SEQUENCE_INTERACTION_STEPS).ids))
     }
 }
@@ -144,7 +144,7 @@ pub mod move_step {
         pub y: f64,
     }
 
-    pub fn handle(payload: &MoveStep, doc: &ArtifactView<'_, SequenceSnapshot>, _cfg: &ConfigView<'_, SequenceConfig>) -> Result<Emit<SequenceMutation, SequenceConfigMutation>, Fault> {
+    pub async fn handle(payload: &MoveStep, doc: &ArtifactView<'_, SequenceSnapshot>, _cfg: &ConfigView<'_, SequenceConfig>) -> Result<Emit<SequenceMutation, SequenceConfigMutation>, Fault> {
         let fixture = doc.snapshot;
         if !fixture.to_fixture().steps.iter().any(|step| step.id == payload.node_id) {
             return Ok(Emit::default());
@@ -172,7 +172,7 @@ pub mod set_step_params {
         pub params_json: String,
     }
 
-    pub fn handle(payload: &SetStepParams, doc: &ArtifactView<'_, SequenceSnapshot>, _cfg: &ConfigView<'_, SequenceConfig>) -> Result<Emit<SequenceMutation, SequenceConfigMutation>, Fault> {
+    pub async fn handle(payload: &SetStepParams, doc: &ArtifactView<'_, SequenceSnapshot>, _cfg: &ConfigView<'_, SequenceConfig>) -> Result<Emit<SequenceMutation, SequenceConfigMutation>, Fault> {
         let fixture = doc.snapshot;
         Ok(Emit::mutations(ops_from_host_mutation(fixture, |host| {
             let _ = host.set_step_params_json(&payload.id, &payload.params_json);
@@ -191,7 +191,7 @@ pub mod set_step_collapsed {
         pub id: String,
     }
 
-    pub fn handle(payload: &SetStepCollapsed, doc: &ArtifactView<'_, SequenceSnapshot>, _cfg: &ConfigView<'_, SequenceConfig>) -> Result<Emit<SequenceMutation, SequenceConfigMutation>, Fault> {
+    pub async fn handle(payload: &SetStepCollapsed, doc: &ArtifactView<'_, SequenceSnapshot>, _cfg: &ConfigView<'_, SequenceConfig>) -> Result<Emit<SequenceMutation, SequenceConfigMutation>, Fault> {
         let fixture = doc.snapshot;
         let collapsed = fixture.to_fixture().steps.iter().find(|step| step.id == payload.id).is_none_or(|step| !step.collapsed);
         Ok(Emit::mutations(ops_from_host_mutation(fixture, |host| {
@@ -212,14 +212,14 @@ mod tests {
     use super::remove_step::RemoveStep;
 
     #[test]
-    fn add_step_command_appends_step() {
+    async fn add_step_command_appends_step() {
         let mut app = new_app();
         dispatch(&mut app, SequenceCommand::AddStep(AddStep { kind: "log.print".into(), x: 0.0, y: 0.0 }));
         assert!(app.snapshot().expect("projection").to_fixture().steps.len() > 2);
     }
 
     #[test]
-    fn remove_step_command_deletes_step() {
+    async fn remove_step_command_deletes_step() {
         let mut app = new_app();
         let step_id = app.snapshot().expect("projection").to_fixture().steps[0].id.clone();
         dispatch(&mut app, SequenceCommand::RemoveStep(RemoveStep { id: step_id.clone() }));
@@ -232,7 +232,7 @@ mod tests {
     /// can populate a genuine `InteractionView`), then confirms `deleteSelection` removes exactly
     /// that step.
     #[test]
-    fn delete_selection_removes_the_live_selected_step() {
+    async fn delete_selection_removes_the_live_selected_step() {
         let mut app = new_app_with_registry_wired();
         select_steps(&mut app, &["step-1"]);
         dispatch(&mut app, SequenceCommand::DeleteSelection(DeleteSelection {}));

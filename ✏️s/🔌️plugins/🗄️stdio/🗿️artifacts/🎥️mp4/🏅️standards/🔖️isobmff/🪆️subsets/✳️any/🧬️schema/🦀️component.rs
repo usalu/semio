@@ -21,13 +21,13 @@ pub struct Mp4Artifact {
 }
 
 impl Mp4Artifact {
-    pub fn to_snapshot(&self) -> Mp4Snapshot {
+    pub async fn to_snapshot(&self) -> Mp4Snapshot {
         Mp4Snapshot { schema: self.schema.clone(), ftyp: self.ftyp.clone(), movie: self.movie.clone(), tracks: self.tracks.clone() }
     }
-    pub fn from_snapshot(snapshot: Mp4Snapshot) -> Self {
+    pub async fn from_snapshot(snapshot: Mp4Snapshot) -> Self {
         Self { schema: snapshot.schema, ftyp: snapshot.ftyp, movie: snapshot.movie, tracks: snapshot.tracks }
     }
-    pub fn set_snapshot(&mut self, snapshot: Mp4Snapshot) {
+    pub async fn set_snapshot(&mut self, snapshot: Mp4Snapshot) {
         self.schema = snapshot.schema;
         self.ftyp = snapshot.ftyp;
         self.movie = snapshot.movie;
@@ -35,7 +35,7 @@ impl Mp4Artifact {
     }
 }
 
-pub fn mp4_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
+pub async fn mp4_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
     schema::ArtifactSchemaDescriptor {
         id: "s.stdio.mp4",
         artifact: schema::FacetLeaves {
@@ -84,27 +84,27 @@ pub mod derived_construction {
         type Snapshot = Mp4Snapshot;
         type Mutation = Mp4Mutation;
         type Diff = Mp4Diff;
-        fn empty() -> Self {
+        async fn empty() -> Self {
             Self { snapshot: Mp4Snapshot::default() }
         }
-        fn from_snapshot(snapshot: Self::Snapshot) -> Self {
+        async fn from_snapshot(snapshot: Self::Snapshot) -> Self {
             Self { snapshot }
         }
-        fn from_text(text: &str) -> Result<Self, store::TextError> {
+        async fn from_text(text: &str) -> Result<Self, store::TextError> {
             Ok(Self::from_snapshot(<Mp4Snapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
-        fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
+        async fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
             Ok(Self::from_snapshot(<Mp4Snapshot as store::ArtifactPack>::decode_pack(bytes)?))
         }
-        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
+        async fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let diff = apply_mp4_mutation(&mut self.snapshot, &mutation);
             (self, diff)
         }
-        fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
+        async fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
             self.snapshot = <Mp4Diff as protocol::MutationDiff<Mp4Snapshot>>::apply(&diff, &self.snapshot)?;
             Ok(self)
         }
-        fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
+        async fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
             Ok(self.snapshot)
         }
     }
@@ -129,7 +129,7 @@ pub mod derived_analysis {
         type Parts = Mp4Parts;
         const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.mp4", standard: StandardId("isobmff"), subset: SubsetId("*") };
 
-        fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
+        async fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
             match source {
                 AnalyzeSource::Binary(bytes) => {
                     if io::sniff_real_bytes(bytes) {
@@ -152,7 +152,7 @@ pub mod derived_analysis {
             }
         }
 
-        fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
+        async fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
             let mut parts = Mp4Parts::default();
             let mut diagnostics = Vec::new();
             let mut confidence = IoConfidence::High;

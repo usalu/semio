@@ -7,7 +7,7 @@ use protocol::Mutation;
 /// (Error, empty diff). A `rgba8` buffer whose length does not match `base.width * base.height *
 /// 4` is `mutation.invariant` (Fatal, empty diff) — the same row-major RGBA8 domain rule this
 /// subset's own `🚪️io` serializers/deserializers already enforce for every format.
-pub fn diff(base: &SemioImageSnapshot, index: usize, rgba8: Vec<u8>) -> protocol::MutationOutcome<SemioImageDiff> {
+pub async fn diff(base: &SemioImageSnapshot, index: usize, rgba8: Vec<u8>) -> protocol::MutationOutcome<SemioImageDiff> {
     if index >= base.frames.len() {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Frame index {index} does not exist."), [index.to_string()]);
     }

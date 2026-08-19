@@ -13,6 +13,6 @@ pub struct SetActiveRepresentation {
     pub representation_id: Option<String>,
 }
 
-pub fn handle(payload: &SetActiveRepresentation, _doc: &ArtifactView<'_, Block3dSnapshot>, _cfg: &ConfigView<'_, Block3dConfig>) -> Result<Emit<Block3dMutation, Block3dConfigMutation>, Fault> {
+pub async fn handle(payload: &SetActiveRepresentation, _doc: &ArtifactView<'_, Block3dSnapshot>, _cfg: &ConfigView<'_, Block3dConfig>) -> Result<Emit<Block3dMutation, Block3dConfigMutation>, Fault> {
     Ok(Emit::config(vec![Block3dConfigMutation::SetActiveRepresentation { representation_id: payload.representation_id.clone() }]))
 }

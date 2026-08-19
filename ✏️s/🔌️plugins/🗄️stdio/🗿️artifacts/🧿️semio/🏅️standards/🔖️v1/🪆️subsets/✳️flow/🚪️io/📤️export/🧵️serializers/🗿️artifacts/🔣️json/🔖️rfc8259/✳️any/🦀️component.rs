@@ -9,32 +9,32 @@ use crate::artifacts::semio::standards::v1::subsets::flow::schema::snapshot::{Fl
 use semio_framework_plugin::{ArtifactSerializer, Dialect, StandardId, SubsetId};
 
 //#region 🔖️FieldMapping
-fn str_val(s: &str) -> JsonValue {
+async fn str_val(s: &str) -> JsonValue {
     JsonValue::String { value: s.to_string() }
 }
-fn num_val(n: f64) -> JsonValue {
+async fn num_val(n: f64) -> JsonValue {
     JsonValue::Number { lexeme: format!("{n}") }
 }
-fn member(key: &str, value: JsonValue) -> JsonMember {
+async fn member(key: &str, value: JsonValue) -> JsonMember {
     JsonMember { key: key.to_string(), value }
 }
-fn obj(members: Vec<JsonMember>) -> JsonValue {
+async fn obj(members: Vec<JsonMember>) -> JsonValue {
     JsonValue::Object { members }
 }
 
-fn point_to_json(p: &SemioPoint2) -> JsonValue {
+async fn point_to_json(p: &SemioPoint2) -> JsonValue {
     obj(vec![member("x", num_val(p.x)), member("y", num_val(p.y))])
 }
 
-fn param_to_json(p: &FlowParam) -> JsonValue {
+async fn param_to_json(p: &FlowParam) -> JsonValue {
     obj(vec![member("key", str_val(&p.key)), member("value", str_val(&p.value))])
 }
 
-fn port_ref_to_json(p: &PortRef) -> JsonValue {
+async fn port_ref_to_json(p: &PortRef) -> JsonValue {
     obj(vec![member("node", str_val(&p.node)), member("port", str_val(&p.port))])
 }
 
-fn node_to_json(n: &FlowNode) -> JsonValue {
+async fn node_to_json(n: &FlowNode) -> JsonValue {
     obj(vec![
         member("id", str_val(&n.id)),
         member("kind", str_val(&n.kind)),
@@ -44,7 +44,7 @@ fn node_to_json(n: &FlowNode) -> JsonValue {
     ])
 }
 
-fn edge_to_json(e: &FlowEdge) -> JsonValue {
+async fn edge_to_json(e: &FlowEdge) -> JsonValue {
     obj(vec![member("id", str_val(&e.id)), member("from", port_ref_to_json(&e.from)), member("to", port_ref_to_json(&e.to)), member("kind", str_val(&e.kind))])
 }
 //#endregion 🔖️FieldMapping
@@ -71,7 +71,7 @@ mod tests {
     use super::*;
     use crate::artifacts::semio::standards::v1::subsets::flow::schema::snapshot::STDIO_SEMIOFLOW_DOCUMENT_SCHEMA;
 
-    fn sample_semio() -> SemioFlowSnapshot {
+    async fn sample_semio() -> SemioFlowSnapshot {
         SemioFlowSnapshot {
             schema: STDIO_SEMIOFLOW_DOCUMENT_SCHEMA.into(),
             nodes: vec![
@@ -83,7 +83,7 @@ mod tests {
     }
 
     #[test]
-    fn maps_nodes_and_edges_to_json() {
+    async fn maps_nodes_and_edges_to_json() {
         let json = semio_framework_plugin::resolve_ready(SemioFlowToJson::serialize(&sample_semio())).expect("serialize");
         let root = match &json.value {
             JsonValue::Object { members } => members,
@@ -100,7 +100,7 @@ mod tests {
     /// `JsonSnapshot::ArtifactPack` byte codec and re-parse — proves the JSON shape this leaf emits
     /// is not just structurally right but genuinely re-parseable RFC8259 text.
     #[test]
-    fn serialized_json_round_trips_through_the_real_json_text_codec() {
+    async fn serialized_json_round_trips_through_the_real_json_text_codec() {
         let json1 = semio_framework_plugin::resolve_ready(SemioFlowToJson::serialize(&sample_semio())).expect("serialize");
         let text = crate::artifacts::json::schema::snapshot::write_json_text(&json1.value);
         let reparsed = crate::artifacts::json::schema::snapshot::parse_json_text(&text).expect("re-parse emitted json text");

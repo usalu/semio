@@ -12,7 +12,7 @@ pub const BODY_KEY: &str = TextWindowKit::KIND_ID;
 
 //#region 🔖️Definition
 /// 🧱️ Stitched into the editor manifest by `crate::editor::playground::create_playground_editor`.
-pub fn definition() -> WindowKindDefinition {
+pub async fn definition() -> WindowKindDefinition {
     WindowKindDefinition { label: LocalizedLabel::native("Schema", "Schema"), ..TextWindowKit::editable_window_kind() }
 }
 //#endregion 🔖️Definition
@@ -22,7 +22,7 @@ pub fn definition() -> WindowKindDefinition {
 /// (`read_only: false`) — the framework-catalog `replace-text` action on this window kind, plus the
 /// surface's own `changeSchema` manifest action, both dispatch through `PlaygroundEditor::handle`'s
 /// one `PlaygroundCommand::ChangeSchema` row.
-pub fn render(document: &PlaygroundSnapshot) -> UiNode {
+pub async fn render(document: &PlaygroundSnapshot) -> UiNode {
     TextWindowKit::render(&TextView { text: document.schema.clone(), language: Some("playground".into()), read_only: false })
 }
 //#endregion 🔖️Render
@@ -33,7 +33,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn definition_declares_an_editable_text_window() {
+    async fn definition_declares_an_editable_text_window() {
         let def = definition();
         assert_eq!(def.id, WINDOW_KIND_ID);
         assert_eq!(def.body_key, BODY_KEY);
@@ -41,7 +41,7 @@ mod tests {
     }
 
     #[test]
-    fn render_carries_the_schema_field_as_editable_text() {
+    async fn render_carries_the_schema_field_as_editable_text() {
         let document = PlaygroundSnapshot { schema: "playground.custom".into() };
         let UiNode::ComponentScene(node) = render(&document) else { panic!("expected ComponentScene") };
         let scene = node.text_editor.expect("text_editor scene");

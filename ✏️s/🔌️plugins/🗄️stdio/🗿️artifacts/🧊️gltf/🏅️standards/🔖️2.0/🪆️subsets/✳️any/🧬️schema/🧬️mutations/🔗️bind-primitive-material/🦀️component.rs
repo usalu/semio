@@ -16,22 +16,22 @@ pub struct BindPrimitiveMaterial {
 
 impl protocol::MutationKind<GltfSnapshot, GltfMutation> for BindPrimitiveMaterial {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "bind", entity: "primitive-material", kind: "bind-primitive-material", record: "BindPrimitiveMaterial" };
-    fn diff(&self, base: &GltfSnapshot) -> <GltfMutation as protocol::Mutation<GltfSnapshot>>::Diff {
+    async fn diff(&self, base: &GltfSnapshot) -> <GltfMutation as protocol::Mutation<GltfSnapshot>>::Diff {
         diff::diff(self, base)
     }
-    fn inverse(&self, base: &GltfSnapshot) -> Vec<GltfMutation> {
+    async fn inverse(&self, base: &GltfSnapshot) -> Vec<GltfMutation> {
         inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         "BindPrimitiveMaterial".into()
     }
-    fn target(&self) -> Vec<String> {
+    async fn target(&self) -> Vec<String> {
         vec![self.mesh.to_string(), self.primitive.to_string()]
     }
 }
 
 impl GltfSemanticMutation for BindPrimitiveMaterial {
-    fn apply(&self, snapshot: &mut GltfSnapshot) -> Result<(), GltfMutationRejection> {
+    async fn apply(&self, snapshot: &mut GltfSnapshot) -> Result<(), GltfMutationRejection> {
         check_index("document/meshes", self.mesh, snapshot.document.meshes.len())?;
         check_index(format!("document/meshes/{}/primitives", self.mesh), self.primitive, snapshot.document.meshes[self.mesh].primitives.len())?;
         if let Some(material) = self.material {
@@ -52,7 +52,7 @@ mod diff {
     use crate::artifacts::gltf::schema::diff::GltfDiff;
     use crate::artifacts::gltf::GltfSnapshot;
     
-    pub fn diff(payload: &BindPrimitiveMaterial, base: &GltfSnapshot) -> GltfDiff {
+    pub async fn diff(payload: &BindPrimitiveMaterial, base: &GltfSnapshot) -> GltfDiff {
         payload.plan(base).unwrap_or_default()
     }
 }
@@ -66,7 +66,7 @@ mod inverse {
     use crate::artifacts::gltf::schema::modules::mutation_dispatch::*;
     use crate::artifacts::gltf::GltfSnapshot;
     
-    pub fn inverse(payload: &BindPrimitiveMaterial, base: &GltfSnapshot) -> Vec<GltfMutation> {
+    pub async fn inverse(payload: &BindPrimitiveMaterial, base: &GltfSnapshot) -> Vec<GltfMutation> {
         base.document
             .meshes
             .get(payload.mesh)

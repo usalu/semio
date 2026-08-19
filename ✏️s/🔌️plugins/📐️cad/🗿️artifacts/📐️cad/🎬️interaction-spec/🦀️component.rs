@@ -109,7 +109,7 @@ pub struct ExprEnv<'a> {
     pub event: Option<&'a Value>,
 }
 
-fn expr_path_get(root_value: Option<&Value>, segments: &[ExprPathSegment]) -> Option<Value> {
+async fn expr_path_get(root_value: Option<&Value>, segments: &[ExprPathSegment]) -> Option<Value> {
     let mut current = root_value?.clone();
     for segment in segments {
         current = match segment {
@@ -120,7 +120,7 @@ fn expr_path_get(root_value: Option<&Value>, segments: &[ExprPathSegment]) -> Op
     Some(current)
 }
 
-fn expr_value_truthy(value: &Value) -> bool {
+async fn expr_value_truthy(value: &Value) -> bool {
     match value {
         Value::Null => false,
         Value::Bool(b) => *b,
@@ -131,7 +131,7 @@ fn expr_value_truthy(value: &Value) -> bool {
     }
 }
 
-fn expr_value_not_empty(value: Option<&Value>) -> bool {
+async fn expr_value_not_empty(value: Option<&Value>) -> bool {
     match value {
         None => false,
         Some(Value::Null) => false,
@@ -142,12 +142,12 @@ fn expr_value_not_empty(value: Option<&Value>) -> bool {
     }
 }
 
-fn expr_as_f64(value: &Value) -> f64 {
+async fn expr_as_f64(value: &Value) -> f64 {
     value.as_f64().unwrap_or(0.0)
 }
 
 /// Evaluates an {@link Expr} against `env` and an outer `let`-binding scope (`vars`).
-pub fn evaluate_expr(expr: &Expr, env: &ExprEnv<'_>, vars: &std::collections::HashMap<String, Value>) -> Value {
+pub async fn evaluate_expr(expr: &Expr, env: &ExprEnv<'_>, vars: &std::collections::HashMap<String, Value>) -> Value {
     match expr {
         Expr::Path { root, segments } => {
             let root_value = match root {
@@ -569,11 +569,11 @@ pub struct InteractionSpec {
 }
 
 impl InteractionSpec {
-    pub fn state<'a>(&'a self, name: &str) -> Option<&'a StateDefSpec> {
+    pub async fn state<'a>(&'a self, name: &str) -> Option<&'a StateDefSpec> {
         self.machine.states.iter().find(|state| state.name == name)
     }
 
-    pub fn guard(&self, name: &str, env: &ExprEnv<'_>) -> bool {
+    pub async fn guard(&self, name: &str, env: &ExprEnv<'_>) -> bool {
         self.guards.iter().find(|guard| guard.name == name).is_some_and(|guard| expr_value_truthy(&evaluate_expr(&guard.expr, env, &std::collections::HashMap::new())))
     }
 }
@@ -585,7 +585,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn interaction_spec_parses_box_asset() {
+    async fn interaction_spec_parses_box_asset() {
         let raw = include_str!("../🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🎬️interactions/🔣️box.json");
         let spec: InteractionSpec = serde_json::from_str(raw).expect("🔣️box.json parses as InteractionSpec");
         assert_eq!(spec.id, "primitive.box");
@@ -600,7 +600,7 @@ mod tests {
     }
 
     #[test]
-    fn interaction_spec_parses_sphere_asset_with_command_finish() {
+    async fn interaction_spec_parses_sphere_asset_with_command_finish() {
         let raw = include_str!("../🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🎬️interactions/🔣️sphere.json");
         let spec: InteractionSpec = serde_json::from_str(raw).expect("🔣️sphere.json parses as InteractionSpec");
         assert_eq!(spec.id, "solid.sphere");
@@ -609,7 +609,7 @@ mod tests {
     }
 
     #[test]
-    fn interaction_spec_parses_all_energy_and_structure_classic_assets() {
+    async fn interaction_spec_parses_all_energy_and_structure_classic_assets() {
         let sources = [
             include_str!("../🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🔥️aec.building.energy/🎬️interactions/🔣️constructBasePlate.json"),
             include_str!("../🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🔥️aec.building.energy/🎬️interactions/🔣️constructExternalWall.json"),
@@ -634,9 +634,9 @@ mod tests {
     /// Regression guard: every `interaction/*.json` asset in the tree must parse as
     /// `InteractionSpec` — catches schema drift between the JSON assets and these Rust types.
     #[test]
-    fn every_interaction_asset_on_disk_parses_as_interaction_spec() {
+    async fn every_interaction_asset_on_disk_parses_as_interaction_spec() {
         let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions");
-        fn walk(dir: &std::path::Path, out: &mut Vec<std::path::PathBuf>) {
+        async fn walk(dir: &std::path::Path, out: &mut Vec<std::path::PathBuf>) {
             let Ok(entries) = std::fs::read_dir(dir) else { return };
             for entry in entries.flatten() {
                 let path = entry.path();
@@ -661,7 +661,7 @@ mod tests {
     }
 
     #[test]
-    fn evaluate_expr_supports_path_const_var_and_boolean_combinators() {
+    async fn evaluate_expr_supports_path_const_var_and_boolean_combinators() {
         let mut context = std::collections::HashMap::new();
         context.insert("height".to_string(), json!(2.5));
         context.insert("origin".to_string(), json!([0.0, 0.0, 0.0]));
@@ -691,7 +691,7 @@ mod tests {
     }
 
     #[test]
-    fn interaction_spec_guard_evaluates_against_context() {
+    async fn interaction_spec_guard_evaluates_against_context() {
         let raw = include_str!("../🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🔥️aec.building.energy/🎬️interactions/🔣️constructExternalWall.json");
         let spec: InteractionSpec = serde_json::from_str(raw).expect("parses");
         let mut context = std::collections::HashMap::new();

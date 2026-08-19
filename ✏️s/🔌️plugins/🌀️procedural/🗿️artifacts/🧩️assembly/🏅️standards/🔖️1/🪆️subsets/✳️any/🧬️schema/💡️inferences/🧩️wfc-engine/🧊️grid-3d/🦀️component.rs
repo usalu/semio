@@ -24,7 +24,7 @@ pub enum Stencil3d {
 }
 
 impl Stencil3d {
-    pub fn offsets(&self) -> Vec<(i32, i32, i32)> {
+    pub async fn offsets(&self) -> Vec<(i32, i32, i32)> {
         match self {
             Stencil3d::Face6 => vec![(1, 0, 0), (-1, 0, 0), (0, 1, 0), (0, -1, 0), (0, 0, 1), (0, 0, -1)],
             Stencil3d::Edge18 => vertex26_offsets().into_iter().filter(|&(x, y, z)| x.abs() + y.abs() + z.abs() <= 2).collect(),
@@ -33,7 +33,7 @@ impl Stencil3d {
         }
     }
 
-    fn validate(&self) -> Result<(), TopologyError> {
+    async fn validate(&self) -> Result<(), TopologyError> {
         let offsets = self.offsets();
         if offsets.is_empty() {
             return Err(TopologyError::InvalidStencil { reason: "stencil has zero offsets" });
@@ -55,7 +55,7 @@ impl Stencil3d {
     }
 }
 
-fn vertex26_offsets() -> Vec<(i32, i32, i32)> {
+async fn vertex26_offsets() -> Vec<(i32, i32, i32)> {
     let mut v = Vec::with_capacity(26);
     for dx in -1..=1 {
         for dy in -1..=1 {
@@ -71,7 +71,7 @@ fn vertex26_offsets() -> Vec<(i32, i32, i32)> {
 
 /// 🧊️ Registers one directed relation per stencil offset (paired with its negation as inverse) and
 /// returns them in `stencil.offsets()` order, ready to pass to [`Grid3dTopology::new`].
-pub fn declare_stencil_relations_3d(builder: &mut ModelBuilder, stencil: &Stencil3d) -> Result<Vec<RelationId>, ModelError> {
+pub async fn declare_stencil_relations_3d(builder: &mut ModelBuilder, stencil: &Stencil3d) -> Result<Vec<RelationId>, ModelError> {
     stencil.validate().map_err(|_| ModelError::InvalidSymmetryGroup { reason: "invalid stencil passed to declare_stencil_relations_3d" })?;
     let offsets = stencil.offsets();
     let mut relations = Vec::with_capacity(offsets.len());
@@ -87,7 +87,7 @@ pub fn declare_stencil_relations_3d(builder: &mut ModelBuilder, stencil: &Stenci
 }
 
 /// 🧊️ [`declare_stencil_relations_3d`] for a [`TiledModelBuilder`].
-pub fn declare_stencil_relations_3d_tiled(builder: &mut TiledModelBuilder, stencil: &Stencil3d) -> Result<Vec<RelationId>, ModelError> {
+pub async fn declare_stencil_relations_3d_tiled(builder: &mut TiledModelBuilder, stencil: &Stencil3d) -> Result<Vec<RelationId>, ModelError> {
     stencil.validate().map_err(|_| ModelError::InvalidSymmetryGroup { reason: "invalid stencil passed to declare_stencil_relations_3d_tiled" })?;
     let offsets = stencil.offsets();
     let mut relations = Vec::with_capacity(offsets.len());
@@ -120,7 +120,7 @@ pub struct Grid3dTopology {
 
 impl Grid3dTopology {
     #[allow(clippy::too_many_arguments)]
-    pub fn new(width: usize, height: usize, depth: usize, stencil: &Stencil3d, relations: Vec<RelationId>, boundary_x: Boundary, boundary_y: Boundary, boundary_z: Boundary, mask: Option<Vec<bool>>) -> Result<Self, TopologyError> {
+    pub async fn new(width: usize, height: usize, depth: usize, stencil: &Stencil3d, relations: Vec<RelationId>, boundary_x: Boundary, boundary_y: Boundary, boundary_z: Boundary, mask: Option<Vec<bool>>) -> Result<Self, TopologyError> {
         if width == 0 {
             return Err(TopologyError::ZeroDimension { axis: "width" });
         }
@@ -145,25 +145,25 @@ impl Grid3dTopology {
     }
 
     #[inline]
-    pub fn width(&self) -> usize {
+    pub async fn width(&self) -> usize {
         self.width
     }
     #[inline]
-    pub fn height(&self) -> usize {
+    pub async fn height(&self) -> usize {
         self.height
     }
     #[inline]
-    pub fn depth(&self) -> usize {
+    pub async fn depth(&self) -> usize {
         self.depth
     }
 
     #[inline]
-    fn index(&self, x: usize, y: usize, z: usize) -> usize {
+    async fn index(&self, x: usize, y: usize, z: usize) -> usize {
         z * self.width * self.height + y * self.width + x
     }
 
     #[inline]
-    pub fn node_at(&self, x: usize, y: usize, z: usize) -> Option<NodeId> {
+    pub async fn node_at(&self, x: usize, y: usize, z: usize) -> Option<NodeId> {
         if x >= self.width || y >= self.height || z >= self.depth {
             return None;
         }
@@ -171,7 +171,7 @@ impl Grid3dTopology {
     }
 
     #[inline]
-    pub fn coords(&self, n: NodeId) -> (usize, usize, usize) {
+    pub async fn coords(&self, n: NodeId) -> (usize, usize, usize) {
         let idx = n.index();
         let plane = self.width * self.height;
         let z = idx / plane;
@@ -180,18 +180,18 @@ impl Grid3dTopology {
     }
 
     #[inline]
-    pub fn is_active(&self, x: usize, y: usize, z: usize) -> bool {
+    pub async fn is_active(&self, x: usize, y: usize, z: usize) -> bool {
         self.mask.as_ref().is_none_or(|m| m[self.index(x, y, z)])
     }
 
-    pub fn inactive_cells(&self) -> Vec<NodeId> {
+    pub async fn inactive_cells(&self) -> Vec<NodeId> {
         let Some(mask) = &self.mask else { return Vec::new() };
         (0..mask.len()).filter(|&i| !mask[i]).map(NodeId::from_index).collect()
     }
 
     /// 🧊️ Every `(node, relation, outside_pattern)` an edge cell must be restricted by at init
     /// time, derived from [`Boundary::FixedOutside`] axes.
-    pub fn fixed_outside_restrictions(&self) -> Vec<(NodeId, RelationId, PatternId)> {
+    pub async fn fixed_outside_restrictions(&self) -> Vec<(NodeId, RelationId, PatternId)> {
         let mut out = Vec::new();
         for z in 0..self.depth {
             for y in 0..self.height {
@@ -234,11 +234,11 @@ impl Grid3dTopology {
 
 impl Topology for Grid3dTopology {
     #[inline]
-    fn node_count(&self) -> usize {
+    async fn node_count(&self) -> usize {
         self.width * self.height * self.depth
     }
 
-    fn arc_count(&self) -> usize {
+    async fn arc_count(&self) -> usize {
         let mut count = 0;
         for z in 0..self.depth {
             for y in 0..self.height {
@@ -263,11 +263,11 @@ impl Topology for Grid3dTopology {
     }
 
     #[inline]
-    fn region_of(&self, _n: NodeId) -> RegionId {
+    async fn region_of(&self, _n: NodeId) -> RegionId {
         RegionId(0)
     }
 
-    fn for_each_out_arc(&self, n: NodeId, mut f: impl FnMut(NodeId, RelationId)) {
+    async fn for_each_out_arc(&self, n: NodeId, mut f: impl FnMut(NodeId, RelationId)) {
         let (x, y, z) = self.coords(n);
         if !self.is_active(x, y, z) {
             return;
@@ -284,7 +284,7 @@ impl Topology for Grid3dTopology {
         }
     }
 
-    fn for_each_in_arc(&self, n: NodeId, mut f: impl FnMut(NodeId, RelationId, usize)) {
+    async fn for_each_in_arc(&self, n: NodeId, mut f: impl FnMut(NodeId, RelationId, usize)) {
         let (x, y, z) = self.coords(n);
         if !self.is_active(x, y, z) {
             return;
@@ -301,7 +301,7 @@ impl Topology for Grid3dTopology {
         }
     }
 
-    fn max_in_degree(&self) -> usize {
+    async fn max_in_degree(&self) -> usize {
         self.offsets.len()
     }
 }
@@ -313,21 +313,21 @@ mod tests {
     use super::*;
 
     #[test]
-    fn face6_edge18_vertex26_offset_counts() {
+    async fn face6_edge18_vertex26_offset_counts() {
         assert_eq!(Stencil3d::Face6.offsets().len(), 6);
         assert_eq!(Stencil3d::Edge18.offsets().len(), 18);
         assert_eq!(Stencil3d::Vertex26.offsets().len(), 26);
     }
 
     #[test]
-    fn all_built_in_stencils_validate() {
+    async fn all_built_in_stencils_validate() {
         Stencil3d::Face6.validate().unwrap();
         Stencil3d::Edge18.validate().unwrap();
         Stencil3d::Vertex26.validate().unwrap();
     }
 
     #[test]
-    fn node_at_and_coords_roundtrip() {
+    async fn node_at_and_coords_roundtrip() {
         let mut b = ModelBuilder::new();
         b.add_pattern(1.0);
         let rels = declare_stencil_relations_3d(&mut b, &Stencil3d::Face6).unwrap();
@@ -338,7 +338,7 @@ mod tests {
     }
 
     #[test]
-    fn open_boundary_corner_has_three_neighbors() {
+    async fn open_boundary_corner_has_three_neighbors() {
         let mut b = ModelBuilder::new();
         b.add_pattern(1.0);
         let rels = declare_stencil_relations_3d(&mut b, &Stencil3d::Face6).unwrap();
@@ -350,7 +350,7 @@ mod tests {
     }
 
     #[test]
-    fn wrap_boundary_connects_all_axes() {
+    async fn wrap_boundary_connects_all_axes() {
         let mut b = ModelBuilder::new();
         b.add_pattern(1.0);
         let rels = declare_stencil_relations_3d(&mut b, &Stencil3d::Face6).unwrap();
@@ -362,7 +362,7 @@ mod tests {
     }
 
     #[test]
-    fn mask_excludes_inactive_voxels() {
+    async fn mask_excludes_inactive_voxels() {
         let mut b = ModelBuilder::new();
         b.add_pattern(1.0);
         let rels = declare_stencil_relations_3d(&mut b, &Stencil3d::Face6).unwrap();
@@ -377,7 +377,7 @@ mod tests {
     }
 
     #[test]
-    fn in_arc_matches_out_arc_on_open_boundary() {
+    async fn in_arc_matches_out_arc_on_open_boundary() {
         let mut b = ModelBuilder::new();
         b.add_pattern(1.0);
         let rels = declare_stencil_relations_3d(&mut b, &Stencil3d::Vertex26).unwrap();

@@ -14,10 +14,10 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 
 //#region 🔖️ScalarCodec
 /// 🔤️ Quoted-string encode/decode — the only value kind that can contain a raw space.
-fn enc_str(s: &str) -> String {
+async fn enc_str(s: &str) -> String {
     format!("\"{}\"", s.replace('\\', "\\\\").replace('"', "\\\""))
 }
-fn dec_str(s: &str) -> Result<String, String> {
+async fn dec_str(s: &str) -> Result<String, String> {
     let inner = s.strip_prefix('"').and_then(|s| s.strip_suffix('"')).ok_or_else(|| format!("expected quoted string, got {s:?}"))?;
     let mut out = String::with_capacity(inner.len());
     let mut chars = inner.chars();
@@ -39,7 +39,7 @@ fn dec_str(s: &str) -> Result<String, String> {
 
 //#region 🔖️Tokenizer
 /// 🔡️ Splits `key=value` tokens on plain spaces, EXCEPT spaces inside a `"..."` quoted value.
-fn tokenize_args(rest: &str) -> Vec<String> {
+async fn tokenize_args(rest: &str) -> Vec<String> {
     let mut tokens = Vec::new();
     let mut current = String::new();
     let mut in_quotes = false;
@@ -69,7 +69,7 @@ fn tokenize_args(rest: &str) -> Vec<String> {
     }
     tokens
 }
-fn parse_args(rest: &str) -> Result<std::collections::BTreeMap<String, String>, String> {
+async fn parse_args(rest: &str) -> Result<std::collections::BTreeMap<String, String>, String> {
     tokenize_args(rest)
         .into_iter()
         .map(|token| token.split_once('=').map(|(k, v)| (k.to_string(), v.to_string())).ok_or_else(|| format!("bad arg token {token:?}")))
@@ -78,13 +78,13 @@ fn parse_args(rest: &str) -> Result<std::collections::BTreeMap<String, String>, 
 //#endregion 🔖️Tokenizer
 
 //#region 🔖️OpText
-fn print_playground_mutation(mutation: &PlaygroundMutation) -> String {
+async fn print_playground_mutation(mutation: &PlaygroundMutation) -> String {
     match mutation {
         PlaygroundMutation::ChangeSchema(p) => format!("change-schema new-schema={}", enc_str(&p.new_schema)),
     }
 }
 
-fn parse_playground_mutation(line: &str) -> Result<PlaygroundMutation, String> {
+async fn parse_playground_mutation(line: &str) -> Result<PlaygroundMutation, String> {
     let (keyword, rest) = line.split_once(' ').unwrap_or((line, ""));
     let args = parse_args(rest)?;
     let arg = |k: &str| args.get(k).cloned().ok_or_else(|| format!("playground mutation: missing arg '{k}' for '{keyword}'"));
@@ -95,28 +95,28 @@ fn parse_playground_mutation(line: &str) -> Result<PlaygroundMutation, String> {
 }
 
 impl protocol::OpText for PlaygroundMutation {
-    fn print_op(&self) -> String {
+    async fn print_op(&self) -> String {
         print_playground_mutation(self)
     }
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
+    async fn parse_op(line: &str) -> Result<Self, store::TextError> {
         parse_playground_mutation(line).map_err(|e| store::TextError::new(e, store::TextSpan::at(1, 1)))
     }
 }
 //#endregion 🔖️OpText
 
 //#region 🔖️OpBinaryCodec
-fn write_str_bin(out: &mut Vec<u8>, s: &str) {
+async fn write_str_bin(out: &mut Vec<u8>, s: &str) {
     store::pack_rt::write_varint_u64(out, s.len() as u64);
     out.extend_from_slice(s.as_bytes());
 }
-fn read_str_bin(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
+async fn read_str_bin(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
     let len = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
     let bytes = reader.read_bytes(len).map_err(|e| e.to_string())?;
     String::from_utf8(bytes.to_vec()).map_err(|e| e.to_string())
 }
 
 impl protocol::OpBinary for PlaygroundMutation {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         let tag: u8 = match self {
             PlaygroundMutation::ChangeSchema(_) => 0,
         };
@@ -127,7 +127,7 @@ impl protocol::OpBinary for PlaygroundMutation {
         Ok(out)
     }
 
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         let mut reader = store::ByteReader::new(bytes);
         let malformed = |what: &'static str, offset: usize, detail: String| protocol::ProtocolError::Malformed { what, offset: offset as u64, detail };
         let _format = reader.read_u8().map_err(|e| malformed("op format", 0, e.to_string()))?;
@@ -146,7 +146,7 @@ impl protocol::OpBinary for PlaygroundMutation {
 //#region 🔖️DemoCases
 /// 🧪️ One representative value per variant — reused by the round-trip law test below.
 #[cfg(test)]
-pub(crate) fn demo_mutation_cases() -> Vec<PlaygroundMutation> {
+pub(crate) async fn demo_mutation_cases() -> Vec<PlaygroundMutation> {
     vec![PlaygroundMutation::ChangeSchema(ChangeSchema { new_schema: "playground.custom".into() })]
 }
 //#endregion 🔖️DemoCases
@@ -158,7 +158,7 @@ mod tests {
     use protocol::{OpBinary, OpText};
 
     #[test]
-    fn op_text_binary_roundtrip_law() {
+    async fn op_text_binary_roundtrip_law() {
         for mutation in demo_mutation_cases() {
             let printed = mutation.print_op();
             assert!(!printed.contains('\n'), "print_op must be one line, got {printed:?}");

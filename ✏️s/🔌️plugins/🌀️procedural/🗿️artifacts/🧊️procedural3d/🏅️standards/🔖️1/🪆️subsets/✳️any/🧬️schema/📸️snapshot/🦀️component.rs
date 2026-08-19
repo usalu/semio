@@ -17,7 +17,7 @@ pub struct Procedural3dSnapshot {
 //#endregion 🔖️Procedural3dSnapshot
 
 impl Default for Procedural3dSnapshot {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self {
             fixture: FlowFixture::default(),
             generation: GenerationPlayState::default()}

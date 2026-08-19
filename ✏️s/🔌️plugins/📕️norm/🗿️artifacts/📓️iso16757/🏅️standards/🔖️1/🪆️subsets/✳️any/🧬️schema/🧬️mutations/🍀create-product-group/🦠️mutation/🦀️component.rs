@@ -13,16 +13,16 @@ pub struct CreateProductGroup {
 impl protocol::MutationKind<Iso16757Snapshot, Iso16757Mutation> for CreateProductGroup {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "create", entity: "product-group", kind: "create-product-group", record: "CreatedProductGroup" };
 
-    fn diff(&self, base: &Iso16757Snapshot) -> protocol::MutationOutcome<<Iso16757Mutation as protocol::Mutation<Iso16757Snapshot>>::Diff> {
+    async fn diff(&self, base: &Iso16757Snapshot) -> protocol::MutationOutcome<<Iso16757Mutation as protocol::Mutation<Iso16757Snapshot>>::Diff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &Iso16757Snapshot) -> Vec<Iso16757Mutation> {
+    async fn inverse(&self, base: &Iso16757Snapshot) -> Vec<Iso16757Mutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         format!("Create product group \"{}\"", self.product_group.names.preferred.text)
     }
-    fn target(&self) -> Vec<String> {
+    async fn target(&self) -> Vec<String> {
         vec![self.product_group.id.clone()]
     }
 }

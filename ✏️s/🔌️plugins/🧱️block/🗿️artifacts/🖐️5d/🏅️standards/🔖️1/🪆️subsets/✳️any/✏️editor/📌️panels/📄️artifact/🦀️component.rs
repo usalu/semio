@@ -10,7 +10,7 @@ pub const BLOCK5D_BODY_DOCUMENT: &str = "block5d.play.document";
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
-pub fn definition() -> PanelTabDefinition {
+pub async fn definition() -> PanelTabDefinition {
     PanelTabDefinition {
         kind: PanelTabKind::App(FRAMEWORK_PANEL_TAB_ARTIFACT_ID.into()),
         label: LocalizedLabel::native(FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL, "Dokument"),
@@ -26,7 +26,7 @@ pub fn definition() -> PanelTabDefinition {
 /// `gripKind:{id}`/`grip:{id}` targets `Block5dPlayApp::interaction_topology` declares for the `grip`
 /// domain — the framework stamps this tree's selection/hover presence from that domain
 /// (`.interaction_domain`) and prunes stale ids through that same topology.
-pub fn render(definition: &Block5dSnapshot, labels: &Block5dLabels) -> UiNode {
+pub async fn render(definition: &Block5dSnapshot, labels: &Block5dLabels) -> UiNode {
     let builder = PanelTreeBuilder::new("block5d-play-document");
     let grip_kind_items: Vec<UiTreeItemNode> = definition
         .grip_kinds
@@ -53,7 +53,7 @@ mod tests {
     use crate::editor::block5d::testkit::{new_app, render as render_body};
 
     #[test]
-    fn renders_document_tree() {
+    async fn renders_document_tree() {
         let mut app = new_app();
         assert!(render_body(&mut app, BLOCK5D_BODY_DOCUMENT).contains("Grip Kinds"));
     }

@@ -12,7 +12,7 @@ use semio_framework_plugin::{ExecutionMode, Plugin};
 /// is deleted, not deprecated. `.editor::<E>(…)` registers the mutation-capable surface (the former
 /// sole app), `.viewer::<V>(…)` the new genuinely read-only surface — see `👁️viewer/🦀️component.rs`
 /// for why it is not a thin wrapper around the editor.
-pub fn plugin() -> Result<Plugin, semio_framework_plugin::PluginAssemblyError> {
+pub async fn plugin() -> Result<Plugin, semio_framework_plugin::PluginAssemblyError> {
     Plugin::builder("lowpoly")
         .label("Lowpoly")
         .version("0.1.0")
@@ -41,12 +41,12 @@ mod surface_tests {
     use semio_framework_plugin::testkit::{assert_editor_and_viewer_share_dialect, assert_viewer_never_mutates};
 
     #[test]
-    fn lowpoly_viewer_never_mutates() {
+    async fn lowpoly_viewer_never_mutates() {
         assert_viewer_never_mutates::<crate::viewer::lowpoly::LowpolyViewer>();
     }
 
     #[test]
-    fn lowpoly_editor_and_viewer_share_dialect() {
+    async fn lowpoly_editor_and_viewer_share_dialect() {
         assert_editor_and_viewer_share_dialect::<crate::editor::lowpoly::LowpolyPlayApp, crate::viewer::lowpoly::LowpolyViewer>();
     }
 }

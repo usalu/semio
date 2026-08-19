@@ -57,7 +57,7 @@ impl FemDof {
 }
 
 impl From<FemDof> for Dof {
-    fn from(value: FemDof) -> Self {
+    async fn from(value: FemDof) -> Self {
         match value {
             FemDof::Tx => Dof::Tx,
             FemDof::Ty => Dof::Ty,
@@ -70,7 +70,7 @@ impl From<FemDof> for Dof {
 }
 
 impl From<Dof> for FemDof {
-    fn from(value: Dof) -> Self {
+    async fn from(value: Dof) -> Self {
         match value {
             Dof::Tx => FemDof::Tx,
             Dof::Ty => FemDof::Ty,
@@ -93,7 +93,7 @@ pub enum FemElement {
 }
 
 /// 🪪️ A `FemElement`'s stable id, across both variants.
-pub fn element_id(element: &FemElement) -> &str {
+pub async fn element_id(element: &FemElement) -> &str {
     match element {
         FemElement::Bar { id, .. } | FemElement::Beam { id, .. } => id,
     }
@@ -148,7 +148,7 @@ pub enum FemLoad {
 }
 
 /// 🪪️ A `FemLoad`'s stable id, across every variant.
-pub fn load_id(load: &FemLoad) -> &str {
+pub async fn load_id(load: &FemLoad) -> &str {
     match load {
         FemLoad::Nodal { id, .. } | FemLoad::MemberUdl { id, .. } | FemLoad::Area { id, .. } => id,
     }
@@ -216,7 +216,7 @@ pub struct FemAnalysisSettings {
 }
 
 impl Default for FemAnalysisSettings {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self { modal_count: 3, buckling_count: 3, deformation_scale: 50.0 }
     }
 }
@@ -231,7 +231,7 @@ pub struct FemCamera {
 }
 
 impl Default for FemCamera {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self { x: 0.0, y: 0.0, zoom: 1.0 }
     }
 }
@@ -248,7 +248,7 @@ pub use crate::artifacts::fem2d::schema::Fem2dArtifact;
 /// wire-level `Data`×`Value` (see WORKFLOWS-END-TO-END-TYPED-PORTS-REAL-SCHEMA-FLOW-CONFIG-ON-NODE's
 /// port recipe). Lifted verbatim out of the pre-migration `fem2d_ui::create_fem2d_app`'s
 /// `.artifact_kind(...)` call so the app's manifest can call this instead of inlining the literal.
-pub fn computation_artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
+pub async fn computation_artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
     semio_framework_plugin::ArtifactKindSpec {
         id: "computation.fem2d".into(),
         name: "FEM 2D Results".into(),
@@ -275,7 +275,7 @@ pub fn computation_artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
 /// registers `Fem2dPlayApp`'s CONFIG/PRESENCE schema, an app-scope concern `ArtifactDeclaration` deliberately has
 /// no field for (see that struct's own doc) — `register_app_schema_descriptor` is not in §6's
 /// artifact-scoped function set.
-pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
+pub async fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
     use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
     let rows: &[(&str, &str, &str, &[(&str, &str)], Option<(&str, &str)>)] = &[
         ("s.fem2d.standard.v1", "standard", "1", &[], None),
@@ -318,7 +318,7 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
     Ok(definition)
 }
 
-pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
+pub async fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
     semio_framework_plugin::ArtifactDeclaration::builder(definition()?)
         .schema(crate::artifacts::fem2d::schema::fem2d_artifact_schema_descriptor())
         .inferences([crate::artifacts::fem2d::standards::v1::subsets::any::schema::inferences::fem2d_artifact_inference_descriptor()])
@@ -331,7 +331,7 @@ pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semi
 /// 📌️ Handcrafted facet grammars (text) and protocols (binary) for in-process execution — built once
 /// and leaked to a `&'static` slice since `dsl::passthrough_hooks` isn't `const fn`, mirroring
 /// `🗒️note`'s own `pilot_languages()` convention.
-fn pilot_languages() -> &'static [dsl::LanguageSpec] {
+async fn pilot_languages() -> &'static [dsl::LanguageSpec] {
     static LANGUAGES: std::sync::OnceLock<Vec<dsl::LanguageSpec>> = std::sync::OnceLock::new();
     LANGUAGES
         .get_or_init(|| {

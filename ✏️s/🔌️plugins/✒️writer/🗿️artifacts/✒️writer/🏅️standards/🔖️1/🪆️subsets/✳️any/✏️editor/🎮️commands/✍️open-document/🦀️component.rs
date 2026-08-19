@@ -14,7 +14,7 @@ pub struct OpenDocument {
     pub text: String,
 }
 
-pub fn handle(payload: &OpenDocument, _doc: &ArtifactView<'_, WriterSnapshot>, _cfg: &ConfigView<'_, WriterConfig>) -> Result<Emit<WriterMutation, WriterConfigMutation>, Fault> {
+pub async fn handle(payload: &OpenDocument, _doc: &ArtifactView<'_, WriterSnapshot>, _cfg: &ConfigView<'_, WriterConfig>) -> Result<Emit<WriterMutation, WriterConfigMutation>, Fault> {
     let id = payload.uri.rsplit('/').next().unwrap_or("document").to_string();
     let ext = payload.uri.rsplit('.').next().filter(|s| *s != &id);
     let language_id = dsl::language_for_semio_content(payload.text.as_bytes())

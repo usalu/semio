@@ -25,7 +25,7 @@ pub struct DrawConfig {
 /// 📎 The `s.draw.draw` app-schema descriptor (config + presence facets) — returned, not
 /// self-registered; `ArtifactApp::app_schema` (ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE
 /// W1c) hands it to `register_document_app` for registration.
-pub fn app_schema_descriptor() -> ::schema::AppSchemaDescriptor {
+pub async fn app_schema_descriptor() -> ::schema::AppSchemaDescriptor {
     ::schema::AppSchemaDescriptor {
         id: "s.draw.draw",
         config: ::schema::FacetLeaves {

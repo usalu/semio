@@ -1,11 +1,11 @@
 #[test]
-fn primary_asset_is_nonempty() {
+async fn primary_asset_is_nonempty() {
     let text = include_str!("../🖼️assets/🗣️aluminium-roof-purlin.dsl.semio");
     assert!(text.len() > 8);
 }
 
 #[test]
-fn inference_determinism_law() {
+async fn inference_determinism_law() {
     use crate::artifacts::en1999::schema::inferences::En1999Inference;
     use crate::artifacts::en1999::En1999Snapshot;
     use protocol::Inference;
@@ -14,7 +14,7 @@ fn inference_determinism_law() {
 }
 
 #[test]
-fn inference_default_law() {
+async fn inference_default_law() {
     use crate::artifacts::en1999::schema::inferences::En1999Inference;
     use crate::artifacts::en1999::En1999Snapshot;
     use protocol::Inference;

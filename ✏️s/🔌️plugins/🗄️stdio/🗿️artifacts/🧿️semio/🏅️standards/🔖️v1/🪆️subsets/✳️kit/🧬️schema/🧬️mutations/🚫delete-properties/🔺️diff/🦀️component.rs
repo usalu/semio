@@ -6,7 +6,7 @@ use crate::artifacts::semio::standards::v1::subsets::kit::schema::diff::SemioKit
 use crate::artifacts::semio::standards::v1::subsets::kit::schema::snapshot::SemioKitSnapshot;
 
 //#region 🔖️Diff
-pub fn diff(_payload: &DeleteProperties, base: &SemioKitSnapshot) -> protocol::MutationOutcome<SemioKitDiff> {
+pub async fn diff(_payload: &DeleteProperties, base: &SemioKitSnapshot) -> protocol::MutationOutcome<SemioKitDiff> {
     if base.properties.is_none() {
         return protocol::MutationOutcome::error(
             "mutation.target-missing",

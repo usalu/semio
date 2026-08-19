@@ -7,7 +7,7 @@ use crate::artifacts::program::ProgramDiff;
 use crate::artifacts::program::ProgramSnapshot;
 
 /// 🌱️ Fatal `mutation.duplicate-id` if the id already exists (empty diff), else `added = [payload row]`.
-pub fn diff(payload: &CreateAccessRule, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
+pub async fn diff(payload: &CreateAccessRule, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
     let id = payload.access_rule.header.id.clone();
     if base.access_rules.iter().any(|row| row.header.id == id) {
         return protocol::MutationOutcome::fatal("mutation.duplicate-id", "An access rule already exists with this id.", [id.0.clone()]);

@@ -8,7 +8,7 @@ use semio_framework_plugin::{ExampleSource, LocalizedLabel};
 pub const ID: &str = "concrete-forest";
 
 /// 🗣️ Localized picker label.
-pub fn label() -> LocalizedLabel {
+pub async fn label() -> LocalizedLabel {
     LocalizedLabel::native("Concrete Forest", "Betonwald")
 }
 
@@ -27,7 +27,7 @@ pub const PACK_BYTES: &[u8] = include_bytes!("🖼️assets/🎒️forest.pack.s
 /// 📡️ SPR fixture bytes.
 pub const SPR_BYTES: &[u8] = include_bytes!("🖼️assets/📡️forest.spr.semio");
 
-fn document_json() -> String {
+async fn document_json() -> String {
     let projection = crate::artifacts::puzzle2d::dsl::parse_dsl(DSL_TEXT)
         .unwrap_or_else(|error| panic!("{ID} example dsl parses: {error}"));
     let mut value = serde_json::to_value(&projection).expect("serialize example");

@@ -18,16 +18,16 @@ pub struct ConnectTrace {
 }
 impl MutationKind<ProgramSnapshot, ProgramMutation> for ConnectTrace {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "connect", entity: "trace", kind: "connect-trace", record: "ConnectedTrace" };
-    fn diff(&self, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
+    async fn diff(&self, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {
+    async fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         format!("Connect trace \"{}\" -> \"{}\"", self.trace.from_id.0, self.trace.to_id.0)
     }
-    fn target(&self) -> Vec<String> {
+    async fn target(&self) -> Vec<String> {
         vec![self.trace.id.0.clone()]
     }
 }

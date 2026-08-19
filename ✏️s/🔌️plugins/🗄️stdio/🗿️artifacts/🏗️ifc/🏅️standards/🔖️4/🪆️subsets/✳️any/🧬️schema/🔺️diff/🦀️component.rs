@@ -20,13 +20,13 @@ use serde::{Deserialize, Serialize};
 /// cross-artifact) of the rank/unrank arithmetic for index-keyed collection diffs, used by
 /// `IfcArgsDiff::{absorb,inverse}`. `excluded_sorted` must be sorted ascending. See
 /// `🧬️schema-design.md` §Absorb / gif 89a's diff module for the derivation this mirrors.
-fn count_le(sorted: &[usize], x: usize) -> usize {
+async fn count_le(sorted: &[usize], x: usize) -> usize {
     sorted.partition_point(|&v| v <= x)
 }
-fn rank_excluding(pos: usize, excluded_sorted: &[usize]) -> usize {
+async fn rank_excluding(pos: usize, excluded_sorted: &[usize]) -> usize {
     pos - count_le(excluded_sorted, pos)
 }
-fn unrank_excluding(rank: usize, excluded_sorted: &[usize]) -> usize {
+async fn unrank_excluding(rank: usize, excluded_sorted: &[usize]) -> usize {
     let mut candidate = rank;
     loop {
         let next = rank + count_le(excluded_sorted, candidate);
@@ -36,14 +36,14 @@ fn unrank_excluding(rank: usize, excluded_sorted: &[usize]) -> usize {
         candidate = next;
     }
 }
-fn transport_forward(index: usize, removed_sorted: &[usize], added_index_sorted: &[usize]) -> usize {
+async fn transport_forward(index: usize, removed_sorted: &[usize], added_index_sorted: &[usize]) -> usize {
     unrank_excluding(rank_excluding(index, removed_sorted), added_index_sorted)
 }
 
 /// 🧮️ Sequential-coalesce absorb for an index-keyed collection triple, generic over item `T` and
 /// its diff `D` — own local copy (see module doc).
 #[allow(clippy::too_many_arguments)]
-fn absorb_indexed_collection<T: Clone, D: Clone>(
+async fn absorb_indexed_collection<T: Clone, D: Clone>(
     removed1: Vec<usize>,
     modified1: Vec<(usize, D)>,
     added1: Vec<(usize, T)>,
@@ -121,7 +121,7 @@ fn absorb_indexed_collection<T: Clone, D: Clone>(
 }
 
 /// ↩️ Diff-level inverse for an index-keyed collection triple, given the ORIGINAL base items.
-fn inverse_indexed_collection<T: Clone, D: Clone>(removed: &[usize], modified: &[(usize, D)], added: &[(usize, T)], base_items: &[T], diff_inverse: impl Fn(&D, &T) -> D) -> (Vec<usize>, Vec<(usize, D)>, Vec<(usize, T)>) {
+async fn inverse_indexed_collection<T: Clone, D: Clone>(removed: &[usize], modified: &[(usize, D)], added: &[(usize, T)], base_items: &[T], diff_inverse: impl Fn(&D, &T) -> D) -> (Vec<usize>, Vec<(usize, D)>, Vec<(usize, T)>) {
     let mut removed_sorted = removed.to_vec();
     removed_sorted.sort_unstable();
     let mut added_index_sorted: Vec<usize> = added.iter().map(|(i, _)| *i).collect();
@@ -177,11 +177,11 @@ pub struct IfcArgsDiff {
 }
 
 impl IfcArgsDiff {
-    pub fn is_empty(&self) -> bool {
+    pub async fn is_empty(&self) -> bool {
         self.removed.is_empty() && self.modified.is_empty() && self.added.is_empty()
     }
 
-    pub fn between(base: &[IfcValue], other: &[IfcValue]) -> Self {
+    pub async fn between(base: &[IfcValue], other: &[IfcValue]) -> Self {
         let min = base.len().min(other.len());
         let modified = (0..min).filter(|&i| base[i] != other[i]).map(|i| IfcArgModified { index: i, value: other[i].clone() }).collect();
         let removed: Vec<usize> = (min..base.len()).collect();
@@ -189,7 +189,7 @@ impl IfcArgsDiff {
         Self { removed, modified, added }
     }
 
-    pub fn apply(&self, base: &[IfcValue]) -> Vec<IfcValue> {
+    pub async fn apply(&self, base: &[IfcValue]) -> Vec<IfcValue> {
         let mut next = base.to_vec();
         for m in &self.modified {
             next[m.index] = m.value.clone();
@@ -208,7 +208,7 @@ impl IfcArgsDiff {
         next
     }
 
-    fn absorb(&mut self, other: Self) {
+    async fn absorb(&mut self, other: Self) {
         let (removed, modified, added) = absorb_indexed_collection(
             std::mem::take(&mut self.removed),
             std::mem::take(&mut self.modified).into_iter().map(|m| (m.index, m.value)).collect(),
@@ -224,7 +224,7 @@ impl IfcArgsDiff {
         self.added = added.into_iter().map(|(index, value)| IfcArgAdded { index, value }).collect();
     }
 
-    fn inverse(&self, base_args: &[IfcValue]) -> Self {
+    async fn inverse(&self, base_args: &[IfcValue]) -> Self {
         let (removed, modified, added) =
             inverse_indexed_collection(&self.removed, &self.modified.iter().map(|m| (m.index, m.value.clone())).collect::<Vec<_>>(), &self.added.iter().map(|a| (a.index, a.value.clone())).collect::<Vec<_>>(), base_args, |_d, item| item.clone());
         Self { removed, modified: modified.into_iter().map(|(index, value)| IfcArgModified { index, value }).collect(), added: added.into_iter().map(|(index, value)| IfcArgAdded { index, value }).collect() }
@@ -248,16 +248,16 @@ pub struct IfcEntityDiff {
 }
 
 impl IfcEntityDiff {
-    pub fn is_empty(&self) -> bool {
+    pub async fn is_empty(&self) -> bool {
         self.name.is_none() && self.args.is_none() && self.complex.is_none()
     }
 
-    pub fn between(base: &IfcEntity, other: &IfcEntity) -> Self {
+    pub async fn between(base: &IfcEntity, other: &IfcEntity) -> Self {
         let args_diff = IfcArgsDiff::between(&base.args, &other.args);
         Self { name: (base.name != other.name).then(|| other.name.clone()), args: (!args_diff.is_empty()).then_some(args_diff), complex: (base.complex != other.complex).then(|| other.complex.clone()) }
     }
 
-    pub fn apply(&self, base: &IfcEntity) -> IfcEntity {
+    pub async fn apply(&self, base: &IfcEntity) -> IfcEntity {
         let mut next = base.clone();
         if let Some(v) = &self.name {
             next.name = v.clone();
@@ -271,11 +271,11 @@ impl IfcEntityDiff {
         next
     }
 
-    pub fn inverse(&self, base: &IfcEntity) -> Self {
+    pub async fn inverse(&self, base: &IfcEntity) -> Self {
         Self { name: self.name.as_ref().map(|_| base.name.clone()), args: self.args.as_ref().map(|d| d.inverse(&base.args)), complex: self.complex.as_ref().map(|_| base.complex.clone()) }
     }
 
-    fn absorb(&mut self, other: Self) {
+    async fn absorb(&mut self, other: Self) {
         if other.name.is_some() {
             self.name = other.name;
         }
@@ -324,11 +324,11 @@ pub struct IfcEntitiesDiff {
 }
 
 impl IfcEntitiesDiff {
-    pub fn is_empty(&self) -> bool {
+    pub async fn is_empty(&self) -> bool {
         self.removed.is_empty() && self.modified.is_empty() && self.added.is_empty()
     }
 
-    pub fn apply(&self, base: &[IfcEntity]) -> Vec<IfcEntity> {
+    pub async fn apply(&self, base: &[IfcEntity]) -> Vec<IfcEntity> {
         let mut entities: Vec<IfcEntity> = base.to_vec();
         if !self.removed.is_empty() {
             let removed: HashSet<u64> = self.removed.iter().copied().collect();
@@ -353,7 +353,7 @@ impl IfcEntitiesDiff {
 /// 🧭️ State delta (compose `GetXDiff`): id-keyed matching — every base/other entity pair sharing
 /// an `id` is compared field-by-field via [`IfcEntityDiff::between`]; ids present only in `base`
 /// are `removed`, only in `other` are `added` at their final position.
-fn entities_between(base: &[IfcEntity], other: &[IfcEntity]) -> Option<IfcEntitiesDiff> {
+async fn entities_between(base: &[IfcEntity], other: &[IfcEntity]) -> Option<IfcEntitiesDiff> {
     if base == other {
         return None;
     }
@@ -388,7 +388,7 @@ fn entities_between(base: &[IfcEntity], other: &[IfcEntity]) -> Option<IfcEntiti
 /// bookkeeping (shifted by the count of `other`'s genuine, non-annihilating removals), mirroring
 /// zip's own documented best-effort position adjustment for the same reason (this key kind's
 /// diffs don't carry full base-position information for untouched survivors).
-fn absorb_entities(d1: Option<IfcEntitiesDiff>, d2: Option<IfcEntitiesDiff>) -> Option<IfcEntitiesDiff> {
+async fn absorb_entities(d1: Option<IfcEntitiesDiff>, d2: Option<IfcEntitiesDiff>) -> Option<IfcEntitiesDiff> {
     let (mut d1, d2) = match (d1, d2) {
         (None, None) => return None,
         (Some(d1), None) => return Some(d1),
@@ -495,11 +495,11 @@ pub struct IfcDiff {
     pub entities: Option<IfcEntitiesDiff>,
 }
 
-fn target_error(code: &'static str, message: &'static str, target: Vec<String>) -> MutationApplyError {
+async fn target_error(code: &'static str, message: &'static str, target: Vec<String>) -> MutationApplyError {
     MutationApplyError::new(code, message).at(target)
 }
 
-fn validate_args_diff(base_len: usize, diff: &IfcArgsDiff, prefix: &[String]) -> MutationApplyResult<()> {
+async fn validate_args_diff(base_len: usize, diff: &IfcArgsDiff, prefix: &[String]) -> MutationApplyResult<()> {
     let mut removed = BTreeSet::new();
     for &index in &diff.removed {
         let mut target = prefix.to_vec();
@@ -532,7 +532,7 @@ fn validate_args_diff(base_len: usize, diff: &IfcArgsDiff, prefix: &[String]) ->
     Ok(())
 }
 
-fn validate_entities_diff(base: &[IfcEntity], diff: &IfcEntitiesDiff) -> MutationApplyResult<()> {
+async fn validate_entities_diff(base: &[IfcEntity], diff: &IfcEntitiesDiff) -> MutationApplyResult<()> {
     let mut base_by_id = BTreeMap::new();
     for entity in base {
         if base_by_id.insert(entity.id, entity).is_some() {
@@ -570,7 +570,7 @@ fn validate_entities_diff(base: &[IfcEntity], diff: &IfcEntitiesDiff) -> Mutatio
     Ok(())
 }
 
-fn apply_ifc_diff_unchecked(diff: &IfcDiff, base: &IfcSnapshot) -> IfcSnapshot {
+async fn apply_ifc_diff_unchecked(diff: &IfcDiff, base: &IfcSnapshot) -> IfcSnapshot {
     let mut next = base.clone();
     if let Some(value) = &diff.file_description {
         next.header.file_description = value.clone();
@@ -588,7 +588,7 @@ fn apply_ifc_diff_unchecked(diff: &IfcDiff, base: &IfcSnapshot) -> IfcSnapshot {
 }
 
 impl MutationDiff<IfcSnapshot> for IfcDiff {
-    fn apply(&self, base: &IfcSnapshot) -> MutationApplyResult<IfcSnapshot> {
+    async fn apply(&self, base: &IfcSnapshot) -> MutationApplyResult<IfcSnapshot> {
         if let Some(diff) = &self.entities {
             validate_entities_diff(&base.entities, diff)?;
         }
@@ -597,7 +597,7 @@ impl MutationDiff<IfcSnapshot> for IfcDiff {
 
     /// ➕️ Structural, total, base-free sequential-coalesce (`## Absorb` contract). Scalars: LWW.
     /// `entities`: see [`absorb_entities`].
-    fn absorb(&mut self, other: Self) {
+    async fn absorb(&mut self, other: Self) {
         if other.file_description.is_some() {
             self.file_description = other.file_description;
         }
@@ -614,13 +614,13 @@ impl MutationDiff<IfcSnapshot> for IfcDiff {
 impl DiffAlgebra<IfcSnapshot> for IfcDiff {
     /// 🔁️ Diff-level undo, derived generically (correct by construction, per zip's precedent):
     /// the state delta from `self.apply(base)` back to `base`.
-    fn inverse(&self, base: &IfcSnapshot) -> Self {
+    async fn inverse(&self, base: &IfcSnapshot) -> Self {
         let mutated = apply_ifc_diff_unchecked(self, base);
         Self::between(&mutated, base)
     }
 
     /// 🧭️ State delta (compose `GetXDiff`).
-    fn between(base: &IfcSnapshot, other: &IfcSnapshot) -> Self {
+    async fn between(base: &IfcSnapshot, other: &IfcSnapshot) -> Self {
         Self {
             file_description: (base.header.file_description != other.header.file_description).then(|| other.header.file_description.clone()),
             file_name: (base.header.file_name != other.header.file_name).then(|| other.header.file_name.clone()),
@@ -629,7 +629,7 @@ impl DiffAlgebra<IfcSnapshot> for IfcDiff {
         }
     }
 
-    fn is_empty(&self) -> bool {
+    async fn is_empty(&self) -> bool {
         self.file_description.is_none() && self.file_name.is_none() && self.file_schema.is_none() && self.entities.as_ref().map_or(true, IfcEntitiesDiff::is_empty)
     }
 }
@@ -637,37 +637,37 @@ impl DiffAlgebra<IfcSnapshot> for IfcDiff {
 //#region 🔖️MutationDiffBuilders
 /// 🧩 `SetSnapshot`'s diff is the sparse field-by-field `between(base, next)` — no full-replace
 /// slot exists on `IfcDiff` to short-circuit into.
-pub fn diff_set_snapshot(base: &IfcSnapshot, next: &IfcSnapshot) -> IfcDiff {
+pub async fn diff_set_snapshot(base: &IfcSnapshot, next: &IfcSnapshot) -> IfcDiff {
     IfcDiff::between(base, next)
 }
-pub fn diff_set_file_description(values: Vec<IfcValue>) -> IfcDiff {
+pub async fn diff_set_file_description(values: Vec<IfcValue>) -> IfcDiff {
     IfcDiff { file_description: Some(values), ..Default::default() }
 }
-pub fn diff_set_file_name(values: Vec<IfcValue>) -> IfcDiff {
+pub async fn diff_set_file_name(values: Vec<IfcValue>) -> IfcDiff {
     IfcDiff { file_name: Some(values), ..Default::default() }
 }
-pub fn diff_set_file_schema(values: Vec<IfcValue>) -> IfcDiff {
+pub async fn diff_set_file_schema(values: Vec<IfcValue>) -> IfcDiff {
     IfcDiff { file_schema: Some(values), ..Default::default() }
 }
-pub fn diff_insert_entity(index: usize, entity: IfcEntity) -> IfcDiff {
+pub async fn diff_insert_entity(index: usize, entity: IfcEntity) -> IfcDiff {
     IfcDiff { entities: Some(IfcEntitiesDiff { added: vec![IfcEntityAdded { index, entity }], ..Default::default() }), ..Default::default() }
 }
-pub fn diff_remove_entity(id: u64) -> IfcDiff {
+pub async fn diff_remove_entity(id: u64) -> IfcDiff {
     IfcDiff { entities: Some(IfcEntitiesDiff { removed: vec![id], ..Default::default() }), ..Default::default() }
 }
-fn diff_entity_field(id: u64, field: IfcEntityDiff) -> IfcDiff {
+async fn diff_entity_field(id: u64, field: IfcEntityDiff) -> IfcDiff {
     IfcDiff { entities: Some(IfcEntitiesDiff { modified: vec![IfcEntityModified { id, diff: field }], ..Default::default() }), ..Default::default() }
 }
-pub fn diff_set_entity_name(id: u64, name: &str) -> IfcDiff {
+pub async fn diff_set_entity_name(id: u64, name: &str) -> IfcDiff {
     diff_entity_field(id, IfcEntityDiff { name: Some(name.to_string()), ..Default::default() })
 }
-pub fn diff_set_entity_arg(id: u64, index: usize, value: IfcValue) -> IfcDiff {
+pub async fn diff_set_entity_arg(id: u64, index: usize, value: IfcValue) -> IfcDiff {
     diff_entity_field(id, IfcEntityDiff { args: Some(IfcArgsDiff { modified: vec![IfcArgModified { index, value }], ..Default::default() }), ..Default::default() })
 }
-pub fn diff_insert_entity_arg(id: u64, index: usize, value: IfcValue) -> IfcDiff {
+pub async fn diff_insert_entity_arg(id: u64, index: usize, value: IfcValue) -> IfcDiff {
     diff_entity_field(id, IfcEntityDiff { args: Some(IfcArgsDiff { added: vec![IfcArgAdded { index, value }], ..Default::default() }), ..Default::default() })
 }
-pub fn diff_remove_entity_arg(id: u64, index: usize) -> IfcDiff {
+pub async fn diff_remove_entity_arg(id: u64, index: usize) -> IfcDiff {
     diff_entity_field(id, IfcEntityDiff { args: Some(IfcArgsDiff { removed: vec![index], ..Default::default() }), ..Default::default() })
 }
 //#endregion 🔖️MutationDiffBuilders
@@ -682,29 +682,29 @@ pub fn diff_remove_entity_arg(id: u64, index: usize) -> IfcDiff {
 /// module exists yet (flagged there as a future extraction once ≥3 artifacts hand-roll, already the
 /// case — not done here, out of this ticket's single-artifact ownership boundary).
 //#region 🔖️Primitives
-pub(crate) fn hex_encode(bytes: &[u8]) -> String {
+pub(crate) async fn hex_encode(bytes: &[u8]) -> String {
     bytes.iter().map(|b| format!("{b:02x}")).collect()
 }
-pub(crate) fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
+pub(crate) async fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
     if s.len() % 2 != 0 {
         return Err(format!("odd hex length: {s:?}"));
     }
     (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()
 }
-pub(crate) fn enc_str(s: &str) -> String {
+pub(crate) async fn enc_str(s: &str) -> String {
     hex_encode(s.as_bytes())
 }
-pub(crate) fn dec_str(s: &str) -> Result<String, String> {
+pub(crate) async fn dec_str(s: &str) -> Result<String, String> {
     String::from_utf8(hex_decode(s)?).map_err(|e| e.to_string())
 }
-fn parse_usize(s: &str) -> Result<usize, String> {
+async fn parse_usize(s: &str) -> Result<usize, String> {
     s.parse().map_err(|e: std::num::ParseIntError| e.to_string())
 }
-fn parse_u64(s: &str) -> Result<u64, String> {
+async fn parse_u64(s: &str) -> Result<u64, String> {
     s.parse().map_err(|e: std::num::ParseIntError| e.to_string())
 }
 
-pub(crate) fn split_top_level(s: &str, sep: char) -> Vec<&str> {
+pub(crate) async fn split_top_level(s: &str, sep: char) -> Vec<&str> {
     if s.is_empty() {
         return Vec::new();
     }
@@ -725,16 +725,16 @@ pub(crate) fn split_top_level(s: &str, sep: char) -> Vec<&str> {
     out.push(&s[start..]);
     out
 }
-pub(crate) fn strip_brackets(s: &str) -> Result<&str, String> {
+pub(crate) async fn strip_brackets(s: &str) -> Result<&str, String> {
     s.strip_prefix('[').and_then(|s| s.strip_suffix(']')).ok_or_else(|| format!("expected [...], got {s:?}"))
 }
-pub(crate) fn encode_option<T>(opt: &Option<T>, enc: impl Fn(&T) -> String) -> String {
+pub(crate) async fn encode_option<T>(opt: &Option<T>, enc: impl Fn(&T) -> String) -> String {
     match opt {
         None => "[0]".to_string(),
         Some(v) => format!("[1,{}]", enc(v)),
     }
 }
-pub(crate) fn decode_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Option<T>, String> {
+pub(crate) async fn decode_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Option<T>, String> {
     let inner = strip_brackets(s)?;
     match split_top_level(inner, ',').as_slice() {
         ["0"] => Ok(None),
@@ -752,15 +752,15 @@ pub(crate) fn decode_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>)
 /// `store::ByteReader` rather than reinventing varint encode/decode. `pub(crate)` so the
 /// mutations sibling can reuse these rather than duplicating them a second time in that file (same
 /// intra-artifact-reuse split the TEXT codec primitives above already use).
-pub(crate) fn write_str_bin(out: &mut Vec<u8>, s: &str) {
+pub(crate) async fn write_str_bin(out: &mut Vec<u8>, s: &str) {
     store::pack_rt::write_varint_u64(out, s.len() as u64);
     out.extend_from_slice(s.as_bytes());
 }
-pub(crate) fn read_str_bin(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
+pub(crate) async fn read_str_bin(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
     let len = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
     String::from_utf8(reader.read_bytes(len).map_err(|e| e.to_string())?.to_vec()).map_err(|e| e.to_string())
 }
-pub(crate) fn write_option_bin<T>(out: &mut Vec<u8>, opt: &Option<T>, enc: impl FnOnce(&T, &mut Vec<u8>)) {
+pub(crate) async fn write_option_bin<T>(out: &mut Vec<u8>, opt: &Option<T>, enc: impl FnOnce(&T, &mut Vec<u8>)) {
     match opt {
         None => out.push(0),
         Some(v) => {
@@ -769,7 +769,7 @@ pub(crate) fn write_option_bin<T>(out: &mut Vec<u8>, opt: &Option<T>, enc: impl 
         }
     }
 }
-pub(crate) fn read_option_bin<T>(reader: &mut store::ByteReader<'_>, dec: impl FnOnce(&mut store::ByteReader<'_>) -> Result<T, String>) -> Result<Option<T>, String> {
+pub(crate) async fn read_option_bin<T>(reader: &mut store::ByteReader<'_>, dec: impl FnOnce(&mut store::ByteReader<'_>) -> Result<T, String>) -> Result<Option<T>, String> {
     match reader.read_u8().map_err(|e| e.to_string())? {
         0 => Ok(None),
         1 => Ok(Some(dec(reader)?)),
@@ -779,7 +779,7 @@ pub(crate) fn read_option_bin<T>(reader: &mut store::ByteReader<'_>, dec: impl F
 /// ➡️ Zigzag-encodes `value` into `store::pack_rt::write_varint_u64`'s unsigned domain — own local
 /// copy (`store::pack_rt` only ships the unsigned writer; the read side's zigzag decode is already
 /// built into `store::ByteReader::read_varint_i64`), same convention `zip`'s own diff module uses.
-fn write_varint_i64(out: &mut Vec<u8>, value: i64) {
+async fn write_varint_i64(out: &mut Vec<u8>, value: i64) {
     let zigzag = ((value << 1) ^ (value >> 63)) as u64;
     store::pack_rt::write_varint_u64(out, zigzag);
 }
@@ -792,7 +792,7 @@ fn write_varint_i64(out: &mut Vec<u8>, value: i64) {
 /// followed directly by more letters): `U`=Unset, `D`=Derived, `I[n]`=Integer, `R[n]`=Real (Rust's
 /// `Display`/`FromStr` for `f64` round-trip exactly, the shortest decimal that parses back), `S[hex]`
 /// =String, `E[hex]`=Enum, `F[n]`=Reference, `A[v,v,...]`=Aggregate, `T[hex,[v,v,...]]`=TypedValue.
-pub(crate) fn enc_ifc_value(v: &IfcValue) -> String {
+pub(crate) async fn enc_ifc_value(v: &IfcValue) -> String {
     match v {
         IfcValue::Unset => "U".to_string(),
         IfcValue::Derived => "D".to_string(),
@@ -807,7 +807,7 @@ pub(crate) fn enc_ifc_value(v: &IfcValue) -> String {
         }
     }
 }
-pub(crate) fn dec_ifc_value(s: &str) -> Result<IfcValue, String> {
+pub(crate) async fn dec_ifc_value(s: &str) -> Result<IfcValue, String> {
     if s == "U" {
         return Ok(IfcValue::Unset);
     }
@@ -838,10 +838,10 @@ pub(crate) fn dec_ifc_value(s: &str) -> Result<IfcValue, String> {
         other => Err(format!("ifc value: unknown tag {other:?}")),
     }
 }
-pub(crate) fn enc_ifc_value_list(vs: &[IfcValue]) -> String {
+pub(crate) async fn enc_ifc_value_list(vs: &[IfcValue]) -> String {
     format!("[{}]", vs.iter().map(enc_ifc_value).collect::<Vec<_>>().join(","))
 }
-pub(crate) fn dec_ifc_value_list(s: &str) -> Result<Vec<IfcValue>, String> {
+pub(crate) async fn dec_ifc_value_list(s: &str) -> Result<Vec<IfcValue>, String> {
     split_top_level(strip_brackets(s)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_ifc_value).collect()
 }
 
@@ -853,7 +853,7 @@ pub(crate) fn dec_ifc_value_list(s: &str) -> Result<Vec<IfcValue>, String> {
 /// `enc_ifc_value_list` — genuine field-by-field binary all the way down, no opaque tail needed
 /// here (unlike the top-level `IfcDiff`/`IfcMutation` frames, `IfcValue` itself is fully flat/
 /// spec-expressible per variant).
-pub(crate) fn enc_ifc_value_bin(v: &IfcValue, out: &mut Vec<u8>) {
+pub(crate) async fn enc_ifc_value_bin(v: &IfcValue, out: &mut Vec<u8>) {
     match v {
         IfcValue::Unset => out.push(0),
         IfcValue::Derived => out.push(1),
@@ -888,7 +888,7 @@ pub(crate) fn enc_ifc_value_bin(v: &IfcValue, out: &mut Vec<u8>) {
         }
     }
 }
-pub(crate) fn dec_ifc_value_bin(reader: &mut store::ByteReader<'_>) -> Result<IfcValue, String> {
+pub(crate) async fn dec_ifc_value_bin(reader: &mut store::ByteReader<'_>) -> Result<IfcValue, String> {
     let tag = reader.read_u8().map_err(|e| e.to_string())?;
     match tag {
         0 => Ok(IfcValue::Unset),
@@ -907,13 +907,13 @@ pub(crate) fn dec_ifc_value_bin(reader: &mut store::ByteReader<'_>) -> Result<If
         other => Err(format!("ifc value binary: unknown tag {other}")),
     }
 }
-pub(crate) fn enc_ifc_value_list_bin(vs: &[IfcValue], out: &mut Vec<u8>) {
+pub(crate) async fn enc_ifc_value_list_bin(vs: &[IfcValue], out: &mut Vec<u8>) {
     store::pack_rt::write_varint_u64(out, vs.len() as u64);
     for v in vs {
         enc_ifc_value_bin(v, out);
     }
 }
-pub(crate) fn dec_ifc_value_list_bin(reader: &mut store::ByteReader<'_>) -> Result<Vec<IfcValue>, String> {
+pub(crate) async fn dec_ifc_value_list_bin(reader: &mut store::ByteReader<'_>) -> Result<Vec<IfcValue>, String> {
     let count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     (0..count).map(|_| dec_ifc_value_bin(reader)).collect()
 }
@@ -921,25 +921,25 @@ pub(crate) fn dec_ifc_value_list_bin(reader: &mut store::ByteReader<'_>) -> Resu
 //#endregion 🔖️IfcValueCodecs
 
 //#region 🔖️EntityCodecs
-fn enc_complex_type(c: &IfcComplexType) -> String {
+async fn enc_complex_type(c: &IfcComplexType) -> String {
     format!("[{},{}]", enc_str(&c.name), enc_ifc_value_list(&c.args))
 }
-fn dec_complex_type(s: &str) -> Result<IfcComplexType, String> {
+async fn dec_complex_type(s: &str) -> Result<IfcComplexType, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [name, args] = parts.as_slice() else { return Err(format!("complex type: expected 2 fields, got {}", parts.len())) };
     Ok(IfcComplexType { name: dec_str(name)?, args: dec_ifc_value_list(args)? })
 }
-fn enc_complex_list(list: &[IfcComplexType]) -> String {
+async fn enc_complex_list(list: &[IfcComplexType]) -> String {
     format!("[{}]", list.iter().map(enc_complex_type).collect::<Vec<_>>().join(","))
 }
-fn dec_complex_list(s: &str) -> Result<Vec<IfcComplexType>, String> {
+async fn dec_complex_list(s: &str) -> Result<Vec<IfcComplexType>, String> {
     split_top_level(strip_brackets(s)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_complex_type).collect()
 }
 /// 📦️ `[id,hexname,[args],[complex]]` — positional, mirrors [`IfcEntity`]'s own field order.
-pub(crate) fn enc_entity(e: &IfcEntity) -> String {
+pub(crate) async fn enc_entity(e: &IfcEntity) -> String {
     format!("[{},{},{},{}]", e.id, enc_str(&e.name), enc_ifc_value_list(&e.args), enc_complex_list(&e.complex))
 }
-pub(crate) fn dec_entity(s: &str) -> Result<IfcEntity, String> {
+pub(crate) async fn dec_entity(s: &str) -> Result<IfcEntity, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [id, name, args, complex] = parts.as_slice() else { return Err(format!("entity: expected 4 fields, got {}", parts.len())) };
     Ok(IfcEntity { id: parse_u64(id)?, name: dec_str(name)?, args: dec_ifc_value_list(args)?, complex: dec_complex_list(complex)? })
@@ -951,46 +951,46 @@ pub(crate) fn dec_entity(s: &str) -> Result<IfcEntity, String> {
 /// `complex` each length-prefixed lists of the recursive `enc_ifc_value_bin`/`enc_complex_type_bin`
 /// shape. `pub(crate)` (entity + list variants) so the mutations sibling can reuse these for its
 /// own `InsertEntity`/`SetSnapshot` payloads, same intra-artifact-reuse split the TEXT codec uses.
-fn enc_complex_type_bin(c: &IfcComplexType, out: &mut Vec<u8>) {
+async fn enc_complex_type_bin(c: &IfcComplexType, out: &mut Vec<u8>) {
     write_str_bin(out, &c.name);
     enc_ifc_value_list_bin(&c.args, out);
 }
-fn dec_complex_type_bin(reader: &mut store::ByteReader<'_>) -> Result<IfcComplexType, String> {
+async fn dec_complex_type_bin(reader: &mut store::ByteReader<'_>) -> Result<IfcComplexType, String> {
     let name = read_str_bin(reader)?;
     let args = dec_ifc_value_list_bin(reader)?;
     Ok(IfcComplexType { name, args })
 }
-pub(crate) fn enc_complex_list_bin(list: &[IfcComplexType], out: &mut Vec<u8>) {
+pub(crate) async fn enc_complex_list_bin(list: &[IfcComplexType], out: &mut Vec<u8>) {
     store::pack_rt::write_varint_u64(out, list.len() as u64);
     for c in list {
         enc_complex_type_bin(c, out);
     }
 }
-pub(crate) fn dec_complex_list_bin(reader: &mut store::ByteReader<'_>) -> Result<Vec<IfcComplexType>, String> {
+pub(crate) async fn dec_complex_list_bin(reader: &mut store::ByteReader<'_>) -> Result<Vec<IfcComplexType>, String> {
     let count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     (0..count).map(|_| dec_complex_type_bin(reader)).collect()
 }
 /// 📦️ `id | name | args | complex` — positional, mirrors [`enc_entity`]'s own field order.
-pub(crate) fn enc_entity_bin(e: &IfcEntity, out: &mut Vec<u8>) {
+pub(crate) async fn enc_entity_bin(e: &IfcEntity, out: &mut Vec<u8>) {
     store::pack_rt::write_varint_u64(out, e.id);
     write_str_bin(out, &e.name);
     enc_ifc_value_list_bin(&e.args, out);
     enc_complex_list_bin(&e.complex, out);
 }
-pub(crate) fn dec_entity_bin(reader: &mut store::ByteReader<'_>) -> Result<IfcEntity, String> {
+pub(crate) async fn dec_entity_bin(reader: &mut store::ByteReader<'_>) -> Result<IfcEntity, String> {
     let id = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let name = read_str_bin(reader)?;
     let args = dec_ifc_value_list_bin(reader)?;
     let complex = dec_complex_list_bin(reader)?;
     Ok(IfcEntity { id, name, args, complex })
 }
-pub(crate) fn enc_entity_list_bin(list: &[IfcEntity], out: &mut Vec<u8>) {
+pub(crate) async fn enc_entity_list_bin(list: &[IfcEntity], out: &mut Vec<u8>) {
     store::pack_rt::write_varint_u64(out, list.len() as u64);
     for e in list {
         enc_entity_bin(e, out);
     }
 }
-pub(crate) fn dec_entity_list_bin(reader: &mut store::ByteReader<'_>) -> Result<Vec<IfcEntity>, String> {
+pub(crate) async fn dec_entity_list_bin(reader: &mut store::ByteReader<'_>) -> Result<Vec<IfcEntity>, String> {
     let count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     (0..count).map(|_| dec_entity_bin(reader)).collect()
 }
@@ -998,13 +998,13 @@ pub(crate) fn dec_entity_list_bin(reader: &mut store::ByteReader<'_>) -> Result<
 //#endregion 🔖️EntityCodecs
 
 //#region 🔖️DiffValueCodecs
-fn enc_args_diff(d: &IfcArgsDiff) -> String {
+async fn enc_args_diff(d: &IfcArgsDiff) -> String {
     let removed = d.removed.iter().map(|i| i.to_string()).collect::<Vec<_>>().join(",");
     let modified = d.modified.iter().map(|m| format!("{}:{}", m.index, enc_ifc_value(&m.value))).collect::<Vec<_>>().join(",");
     let added = d.added.iter().map(|a| format!("{}:{}", a.index, enc_ifc_value(&a.value))).collect::<Vec<_>>().join(",");
     format!("[{removed}];[{modified}];[{added}]")
 }
-fn dec_args_diff(body: &str) -> Result<IfcArgsDiff, String> {
+async fn dec_args_diff(body: &str) -> Result<IfcArgsDiff, String> {
     let three = split_top_level(body, ';');
     let [removed_s, modified_s, added_s] = three.as_slice() else { return Err(format!("args diff: expected 3 sections, got {}", three.len())) };
     let removed = split_top_level(strip_brackets(removed_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(parse_usize).collect::<Result<Vec<_>, String>>()?;
@@ -1028,7 +1028,7 @@ fn dec_args_diff(body: &str) -> Result<IfcArgsDiff, String> {
 }
 
 /// 🔖️ `[nameOpt,argsOpt,complexOpt]` — positional triple, each field individually `Option`-tagged.
-fn enc_entity_diff(d: &IfcEntityDiff) -> String {
+async fn enc_entity_diff(d: &IfcEntityDiff) -> String {
     format!(
         "[{},{},{}]",
         encode_option(&d.name, |v| enc_str(v)),
@@ -1042,7 +1042,7 @@ fn enc_entity_diff(d: &IfcEntityDiff) -> String {
         },
     )
 }
-fn dec_entity_diff(s: &str) -> Result<IfcEntityDiff, String> {
+async fn dec_entity_diff(s: &str) -> Result<IfcEntityDiff, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [name, args, complex] = parts.as_slice() else { return Err(format!("entity diff: expected 3 fields, got {}", parts.len())) };
     let args = match split_top_level(strip_brackets(args)?, ',').as_slice() {
@@ -1058,13 +1058,13 @@ fn dec_entity_diff(s: &str) -> Result<IfcEntityDiff, String> {
     Ok(IfcEntityDiff { name: decode_option(name, dec_str)?, args, complex })
 }
 
-fn enc_entities_diff(d: &IfcEntitiesDiff) -> String {
+async fn enc_entities_diff(d: &IfcEntitiesDiff) -> String {
     let removed = d.removed.iter().map(|id| id.to_string()).collect::<Vec<_>>().join(",");
     let modified = d.modified.iter().map(|m| format!("{}:{}", m.id, enc_entity_diff(&m.diff))).collect::<Vec<_>>().join(",");
     let added = d.added.iter().map(|a| format!("{}:{}", a.index, enc_entity(&a.entity))).collect::<Vec<_>>().join(",");
     format!("[{removed}];[{modified}];[{added}]")
 }
-fn dec_entities_diff(body: &str) -> Result<IfcEntitiesDiff, String> {
+async fn dec_entities_diff(body: &str) -> Result<IfcEntitiesDiff, String> {
     let three = split_top_level(body, ';');
     let [removed_s, modified_s, added_s] = three.as_slice() else { return Err(format!("entities diff: expected 3 sections, got {}", three.len())) };
     let removed = split_top_level(strip_brackets(removed_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(parse_u64).collect::<Result<Vec<_>, String>>()?;
@@ -1095,7 +1095,7 @@ fn dec_entities_diff(body: &str) -> Result<IfcEntitiesDiff, String> {
 /// per-entry `value`/`diff`/`entity` payload the flat/recursive `IfcValue`/`IfcEntityDiff`/
 /// `IfcEntity` binary shape already defined above — backing the upgraded
 /// `DiffCodec::encode_diff`/`decode_diff` below.
-fn enc_args_diff_bin(d: &IfcArgsDiff, out: &mut Vec<u8>) {
+async fn enc_args_diff_bin(d: &IfcArgsDiff, out: &mut Vec<u8>) {
     store::pack_rt::write_varint_u64(out, d.removed.len() as u64);
     for idx in &d.removed {
         store::pack_rt::write_varint_u64(out, *idx as u64);
@@ -1111,7 +1111,7 @@ fn enc_args_diff_bin(d: &IfcArgsDiff, out: &mut Vec<u8>) {
         enc_ifc_value_bin(&a.value, out);
     }
 }
-fn dec_args_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<IfcArgsDiff, String> {
+async fn dec_args_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<IfcArgsDiff, String> {
     let removed_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut removed = Vec::with_capacity(removed_count as usize);
     for _ in 0..removed_count {
@@ -1134,19 +1134,19 @@ fn dec_args_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<IfcArgsDiff, 
     Ok(IfcArgsDiff { removed, modified, added })
 }
 
-fn enc_entity_diff_bin(d: &IfcEntityDiff, out: &mut Vec<u8>) {
+async fn enc_entity_diff_bin(d: &IfcEntityDiff, out: &mut Vec<u8>) {
     write_option_bin(out, &d.name, |v, o| write_str_bin(o, v));
     write_option_bin(out, &d.args, |v, o| enc_args_diff_bin(v, o));
     write_option_bin(out, &d.complex, |v, o| enc_complex_list_bin(v, o));
 }
-fn dec_entity_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<IfcEntityDiff, String> {
+async fn dec_entity_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<IfcEntityDiff, String> {
     let name = read_option_bin(reader, read_str_bin)?;
     let args = read_option_bin(reader, dec_args_diff_bin)?;
     let complex = read_option_bin(reader, dec_complex_list_bin)?;
     Ok(IfcEntityDiff { name, args, complex })
 }
 
-fn enc_entities_diff_bin(d: &IfcEntitiesDiff, out: &mut Vec<u8>) {
+async fn enc_entities_diff_bin(d: &IfcEntitiesDiff, out: &mut Vec<u8>) {
     store::pack_rt::write_varint_u64(out, d.removed.len() as u64);
     for id in &d.removed {
         store::pack_rt::write_varint_u64(out, *id);
@@ -1162,7 +1162,7 @@ fn enc_entities_diff_bin(d: &IfcEntitiesDiff, out: &mut Vec<u8>) {
         enc_entity_bin(&a.entity, out);
     }
 }
-fn dec_entities_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<IfcEntitiesDiff, String> {
+async fn dec_entities_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<IfcEntitiesDiff, String> {
     let removed_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut removed = Vec::with_capacity(removed_count as usize);
     for _ in 0..removed_count {
@@ -1187,7 +1187,7 @@ fn dec_entities_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<IfcEntiti
 //#endregion 🔖️DiffValueBinaryCodecs
 
 //#region 🔖️TopLevel
-fn print_ifc_diff(d: &IfcDiff) -> String {
+async fn print_ifc_diff(d: &IfcDiff) -> String {
     let mut tokens: Vec<String> = Vec::new();
     if let Some(v) = &d.file_description {
         tokens.push(format!("file-description={}", enc_ifc_value_list(v)));
@@ -1203,7 +1203,7 @@ fn print_ifc_diff(d: &IfcDiff) -> String {
     }
     tokens.join(" ")
 }
-fn parse_ifc_diff(line: &str) -> Result<IfcDiff, String> {
+async fn parse_ifc_diff(line: &str) -> Result<IfcDiff, String> {
     let mut d = IfcDiff::default();
     if line.is_empty() {
         return Ok(d);
@@ -1225,10 +1225,10 @@ fn parse_ifc_diff(line: &str) -> Result<IfcDiff, String> {
 }
 
 impl protocol::DiffCodec for IfcDiff {
-    fn print_diff(&self) -> String {
+    async fn print_diff(&self) -> String {
         print_ifc_diff(self)
     }
-    fn parse_diff(line: &str) -> Result<Self, store::TextError> {
+    async fn parse_diff(line: &str) -> Result<Self, store::TextError> {
         parse_ifc_diff(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
     /// 🧪️ P2-FG1: REAL binary frame (`format u8 | flags u8 | field payloads...`), matching
@@ -1242,7 +1242,7 @@ impl protocol::DiffCodec for IfcDiff {
     /// `index` fields — only the innermost recursive `IfcValue::Aggregate`/`TypedValue` payload
     /// bottoms out via `enc_ifc_value_bin`'s own recursive call (not an opaque tail: `IfcValue` is
     /// fully spec-expressible per variant, see that fn's own doc comment).
-    fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    async fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         let flags: u8 = (self.file_description.is_some() as u8) | ((self.file_name.is_some() as u8) << 1) | ((self.file_schema.is_some() as u8) << 2) | ((self.entities.is_some() as u8) << 3);
         let mut out = vec![store::pack_rt::OP_BINARY_FORMAT, flags];
         if let Some(v) = &self.file_description {
@@ -1259,7 +1259,7 @@ impl protocol::DiffCodec for IfcDiff {
         }
         Ok(out)
     }
-    fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    async fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         let mut reader = store::ByteReader::new(bytes);
         let malformed = |what: &'static str, offset: usize, detail: String| protocol::ProtocolError::Malformed { what, offset: offset as u64, detail };
         let _format = reader.read_u8().map_err(|e| malformed("diff format", 0, e.to_string()))?;
@@ -1280,7 +1280,7 @@ impl protocol::DiffCodec for IfcDiff {
 /// `between()` result exercising every top-level field plus all three `entities`/`args`
 /// collection-triple flavors and `IfcEntityDiff.complex`, and its reverse direction.
 #[cfg(test)]
-pub(crate) fn demo_diff_cases() -> Vec<IfcDiff> {
+pub(crate) async fn demo_diff_cases() -> Vec<IfcDiff> {
     let a = crate::artifacts::ifc::engine::demo_ifc_snapshot();
     let mut b = a.clone();
     b.header.file_name = vec![IfcValue::String("changed.ifc".into())];
@@ -1300,11 +1300,11 @@ mod handcrafted_diff_codec_tests {
     use super::*;
     use protocol::DiffCodec;
 
-    fn entity(id: u64, name: &str, args: Vec<IfcValue>) -> IfcEntity {
+    async fn entity(id: u64, name: &str, args: Vec<IfcValue>) -> IfcEntity {
         IfcEntity { id, name: name.into(), args, complex: vec![] }
     }
 
-    fn base() -> IfcSnapshot {
+    async fn base() -> IfcSnapshot {
         IfcSnapshot {
             schema: "stdio.ifc".into(),
             header: crate::artifacts::ifc::schema::snapshot::IfcHeader {
@@ -1328,7 +1328,7 @@ mod handcrafted_diff_codec_tests {
     /// `IfcValue` variant (incl. `Aggregate`/`TypedValue` recursion), the `entities` collection
     /// triple, and the nested per-entity `args` collection triple + `complex` weak-list replace.
     #[test]
-    fn diff_codec_text_binary_roundtrip_law() {
+    async fn diff_codec_text_binary_roundtrip_law() {
         let a = base();
         let mut b = base();
         b.header.file_name = vec![IfcValue::String("changed".into())];

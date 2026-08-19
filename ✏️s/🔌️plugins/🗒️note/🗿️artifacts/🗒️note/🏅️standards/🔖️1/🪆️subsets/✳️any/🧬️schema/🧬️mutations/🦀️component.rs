@@ -99,7 +99,7 @@ pub use super::resize_block::mutation::{resize_block, ResizeBlock};
 
 //#region 🔖️Helpers
 /// ▶️ Applies `mutation` via its diff — the sole apply path now (no hand-written match dispatch).
-pub fn apply_note_mutation(
+pub async fn apply_note_mutation(
     snapshot: &NoteSnapshot,
     mutation: &NoteMutation,
 ) -> protocol::MutationApplyResult<NoteSnapshot> {
@@ -107,7 +107,7 @@ pub fn apply_note_mutation(
     MutationDiff::apply(&diff, snapshot)
 }
 
-pub fn inverse_note_mutation(snapshot: &NoteSnapshot, mutation: &NoteMutation) -> Vec<NoteMutation> {
+pub async fn inverse_note_mutation(snapshot: &NoteSnapshot, mutation: &NoteMutation) -> Vec<NoteMutation> {
     mutation.inverse(snapshot)
 }
 //#endregion 🔖️Helpers
@@ -120,7 +120,7 @@ mod tests {
     use protocol::testkit::{assert_fatal_never_applies, assert_missing_target_is_error, assert_mutation_diff_absorb_law, assert_mutation_inverse_law};
     use protocol::SemanticMutation;
 
-    fn sample_snapshot() -> NoteSnapshot {
+    async fn sample_snapshot() -> NoteSnapshot {
         let mut snapshot = crate::artifacts::note::schema::empty_note_snapshot();
         snapshot.blocks.push(NoteBlockNode::Text {
             id: "b1".into(), name: "Text".into(), x: 0.0, y: 0.0, width: 100.0, height: 40.0, rotation: 0.0, visible: true, locked: false,
@@ -143,7 +143,7 @@ mod tests {
         snapshot
     }
 
-    fn round_trip(snapshot: &NoteSnapshot, mutation: &NoteMutation) -> NoteSnapshot {
+    async fn round_trip(snapshot: &NoteSnapshot, mutation: &NoteMutation) -> NoteSnapshot {
         let forward = apply_note_mutation(snapshot, mutation).expect("valid mutation diff");
         let mut restored = forward.clone();
         for back in mutation.inverse(snapshot) {
@@ -154,7 +154,7 @@ mod tests {
     }
 
     #[test]
-    fn dispatch_registers_semantic_descriptors() {
+    async fn dispatch_registers_semantic_descriptors() {
         register_note_mutation_descriptors();
         for kind in NoteMutation::kinds() {
             assert!(protocol::is_approved_verb(kind.verb), "verb '{}' must be in APPROVED_VERBS", kind.verb);
@@ -164,7 +164,7 @@ mod tests {
 
     //#region 🔖️MutationLaws
     #[test]
-    fn root_scalar_inverse_and_absorb_laws() {
+    async fn root_scalar_inverse_and_absorb_laws() {
         let base = sample_snapshot();
         for mutation in [
             rename_note(Some("Renamed".into())),
@@ -186,7 +186,7 @@ mod tests {
     }
 
     #[test]
-    fn asset_inverse_law_create_replace_delete() {
+    async fn asset_inverse_law_create_replace_delete() {
         let base = sample_snapshot();
         let asset = NoteImageAsset { mime: "image/jpeg".into(), data: "e".into(), width: None, height: None };
         assert_mutation_inverse_law(&base, &create_asset("asset-2".into(), asset.clone()));
@@ -195,7 +195,7 @@ mod tests {
     }
 
     #[test]
-    fn block_lifecycle_inverse_law_create_delete_duplicate() {
+    async fn block_lifecycle_inverse_law_create_delete_duplicate() {
         let base = sample_snapshot();
         let new_block = NoteBlockNode::Text {
             id: "b99".into(), name: "New".into(), x: 5.0, y: 6.0, width: 80.0, height: 30.0, rotation: 0.0, visible: true, locked: false,
@@ -209,7 +209,7 @@ mod tests {
     }
 
     #[test]
-    fn block_reparent_and_drag_inverse_law() {
+    async fn block_reparent_and_drag_inverse_law() {
         let mut base = sample_snapshot();
         base.blocks.push(NoteBlockNode::Group { id: "g1".into(), name: "Group".into(), x: 0.0, y: 0.0, width: 200.0, height: 200.0, rotation: 0.0, visible: true, locked: false, children: Vec::new() });
         assert_mutation_inverse_law(&base, &move_block_to_container("b1".into(), Some("g1".into()), 0));
@@ -217,7 +217,7 @@ mod tests {
     }
 
     #[test]
-    fn block_field_inverse_laws() {
+    async fn block_field_inverse_laws() {
         let base = sample_snapshot();
         assert_mutation_inverse_law(&base, &rename_block("b1".into(), "Renamed".into()));
         assert_mutation_inverse_law(&base, &change_block_visible("b1".into(), false));
@@ -232,7 +232,7 @@ mod tests {
     }
 
     #[test]
-    fn table_row_column_inverse_laws() {
+    async fn table_row_column_inverse_laws() {
         let base = sample_snapshot();
         assert_mutation_inverse_law(&base, &insert_table_row("b3".into()));
         assert_mutation_inverse_law(&base, &remove_table_row("b3".into()));
@@ -241,7 +241,7 @@ mod tests {
     }
 
     #[test]
-    fn create_delete_block_round_trip_grows_and_shrinks_projection() {
+    async fn create_delete_block_round_trip_grows_and_shrinks_projection() {
         let base = sample_snapshot();
         let new_block = NoteBlockNode::Text {
             id: "b100".into(), name: "New".into(), x: 0.0, y: 0.0, width: 10.0, height: 10.0, rotation: 0.0, visible: true, locked: false,
@@ -254,7 +254,7 @@ mod tests {
     }
 
     #[test]
-    fn delete_block_at_a_non_last_index_restores_exact_position_on_undo() {
+    async fn delete_block_at_a_non_last_index_restores_exact_position_on_undo() {
         let base = sample_snapshot();
         // b1 is index 0 of 4; deleting then undoing must restore it there, not append it at the end.
         round_trip(&base, &delete_block("b1".into()));
@@ -266,7 +266,7 @@ mod tests {
     /// one `assert_missing_target_is_error`/Fatal check per verb family this facet implements
     /// (create/delete(s)/rename/change/move/resize/drag/duplicate/insert/remove/edit/replace).
     #[test]
-    fn create_block_duplicate_id_is_fatal() {
+    async fn create_block_duplicate_id_is_fatal() {
         let base = sample_snapshot();
         let existing = NoteBlockNode::Text {
             id: "b1".into(), name: "Dup".into(), x: 0.0, y: 0.0, width: 10.0, height: 10.0, rotation: 0.0, visible: true, locked: false,
@@ -278,37 +278,37 @@ mod tests {
     }
 
     #[test]
-    fn delete_block_missing_target_is_error() {
+    async fn delete_block_missing_target_is_error() {
         let base = sample_snapshot();
         assert_missing_target_is_error(&base, &delete_block("ghost".into()));
     }
 
     #[test]
-    fn delete_blocks_missing_target_is_error() {
+    async fn delete_blocks_missing_target_is_error() {
         let base = sample_snapshot();
         assert_missing_target_is_error(&base, &delete_blocks(vec!["ghost".into()]));
     }
 
     #[test]
-    fn rename_block_missing_target_is_error() {
+    async fn rename_block_missing_target_is_error() {
         let base = sample_snapshot();
         assert_missing_target_is_error(&base, &rename_block("ghost".into(), "x".into()));
     }
 
     #[test]
-    fn change_block_locked_missing_target_is_error() {
+    async fn change_block_locked_missing_target_is_error() {
         let base = sample_snapshot();
         assert_missing_target_is_error(&base, &change_block_locked("ghost".into(), true));
     }
 
     #[test]
-    fn move_block_missing_target_is_error() {
+    async fn move_block_missing_target_is_error() {
         let base = sample_snapshot();
         assert_missing_target_is_error(&base, &move_block("ghost".into(), 1.0, 1.0));
     }
 
     #[test]
-    fn move_block_non_finite_is_fatal() {
+    async fn move_block_non_finite_is_fatal() {
         let base = sample_snapshot();
         let outcome = move_block("b1".into(), f64::NAN, 0.0).diff(&base);
         assert_fatal_never_applies(&outcome);
@@ -316,19 +316,19 @@ mod tests {
     }
 
     #[test]
-    fn resize_block_missing_target_is_error() {
+    async fn resize_block_missing_target_is_error() {
         let base = sample_snapshot();
         assert_missing_target_is_error(&base, &resize_block("ghost".into(), 10.0, 10.0));
     }
 
     #[test]
-    fn drag_blocks_missing_target_is_error() {
+    async fn drag_blocks_missing_target_is_error() {
         let base = sample_snapshot();
         assert_missing_target_is_error(&base, &drag_blocks(vec!["ghost".into()], 1.0, 1.0));
     }
 
     #[test]
-    fn duplicate_block_missing_source_is_error() {
+    async fn duplicate_block_missing_source_is_error() {
         let base = sample_snapshot();
         let block = NoteBlockNode::Text {
             id: "b101".into(), name: "New".into(), x: 0.0, y: 0.0, width: 10.0, height: 10.0, rotation: 0.0, visible: true, locked: false,
@@ -338,32 +338,32 @@ mod tests {
     }
 
     #[test]
-    fn insert_table_row_missing_target_is_error() {
+    async fn insert_table_row_missing_target_is_error() {
         let base = sample_snapshot();
         assert_missing_target_is_error(&base, &insert_table_row("ghost".into()));
     }
 
     #[test]
-    fn remove_table_row_missing_target_is_error() {
+    async fn remove_table_row_missing_target_is_error() {
         let base = sample_snapshot();
         assert_missing_target_is_error(&base, &remove_table_row("ghost".into()));
     }
 
     #[test]
-    fn edit_block_text_missing_target_is_error() {
+    async fn edit_block_text_missing_target_is_error() {
         let base = sample_snapshot();
         assert_missing_target_is_error(&base, &edit_block_text("ghost".into(), Vec::new()));
     }
 
     #[test]
-    fn replace_asset_payload_missing_target_is_error() {
+    async fn replace_asset_payload_missing_target_is_error() {
         let base = sample_snapshot();
         let asset = NoteImageAsset { mime: "image/jpeg".into(), data: "e".into(), width: None, height: None };
         assert_missing_target_is_error(&base, &replace_asset_payload("ghost".into(), asset));
     }
 
     #[test]
-    fn create_asset_duplicate_id_is_fatal() {
+    async fn create_asset_duplicate_id_is_fatal() {
         let base = sample_snapshot();
         let asset = NoteImageAsset { mime: "image/png".into(), data: "d".into(), width: None, height: None };
         let outcome = create_asset("asset-1".into(), asset).diff(&base);
@@ -372,7 +372,7 @@ mod tests {
     }
 
     #[test]
-    fn delete_asset_missing_target_is_error() {
+    async fn delete_asset_missing_target_is_error() {
         let base = sample_snapshot();
         assert_missing_target_is_error(&base, &delete_asset("ghost".into()));
     }

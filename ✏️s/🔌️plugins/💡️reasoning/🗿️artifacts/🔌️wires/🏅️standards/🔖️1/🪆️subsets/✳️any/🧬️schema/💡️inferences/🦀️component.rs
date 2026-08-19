@@ -25,7 +25,7 @@ pub struct WiresInference {
 }
 
 impl protocol::Inference<WiresSnapshot> for WiresInference {
-    fn infer(snapshot: &WiresSnapshot) -> Self {
+    async fn infer(snapshot: &WiresSnapshot) -> Self {
         Self { topology: compute_wires_topology(&crate::artifacts::wires::wires_working_board(snapshot)) }
     }
 }
@@ -36,19 +36,19 @@ impl protocol::Inference<WiresSnapshot> for WiresInference {
 /// derive structurally" trick `AddInference` uses in `📡️spr/🎮️command/🦀️component.rs`, anchored on
 /// this artifact's own `empty_wires_snapshot()` rather than `Default::default()`.
 impl Default for WiresInference {
-    fn default() -> Self {
+    async fn default() -> Self {
         <Self as protocol::Inference<WiresSnapshot>>::infer(&crate::artifacts::wires::empty_wires_snapshot())
     }
 }
 
 impl protocol::InferenceSpec<WiresSnapshot> for WiresInference {
-    fn inference_schema_id() -> &'static str {
+    async fn inference_schema_id() -> &'static str {
         "s.reasoning.wires.inference"
     }
-    fn schema_version() -> u32 {
+    async fn schema_version() -> u32 {
         1
     }
-    fn fields() -> &'static [protocol::InferenceFieldSpec] {
+    async fn fields() -> &'static [protocol::InferenceFieldSpec] {
         &[protocol::InferenceFieldSpec { id: "s.reasoning.wires.inference.topology", reads: &["content"] }]
     }
 }
@@ -64,7 +64,7 @@ impl protocol::InferenceSpec<WiresSnapshot> for WiresInference {
 /// `document`'s lifetime) since UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM: the real node/edge data no longer
 /// lives inside `WiresSnapshot` itself, it's read through [`crate::artifacts::wires::wires_working_board`]
 /// (the working-scene accessor), which materializes a fresh `DslValue` every call.
-pub fn find_board_node(document: &WiresSnapshot, node_id: &str) -> Option<DslValue> {
+pub async fn find_board_node(document: &WiresSnapshot, node_id: &str) -> Option<DslValue> {
     crate::artifacts::wires::wires_working_board(document)
         .get("nodes")
         .and_then(|value| value.as_array())
@@ -74,7 +74,7 @@ pub fn find_board_node(document: &WiresSnapshot, node_id: &str) -> Option<DslVal
         .cloned()
 }
 
-pub fn find_board_edge(document: &WiresSnapshot, edge_id: &str) -> Option<DslValue> {
+pub async fn find_board_edge(document: &WiresSnapshot, edge_id: &str) -> Option<DslValue> {
     crate::artifacts::wires::wires_working_board(document)
         .get("edges")
         .and_then(|value| value.as_array())
@@ -84,7 +84,7 @@ pub fn find_board_edge(document: &WiresSnapshot, edge_id: &str) -> Option<DslVal
         .cloned()
 }
 
-pub fn find_relationship<'a>(document: &'a WiresSnapshot, edge_id: &str) -> Option<&'a DslValue> {
+pub async fn find_relationship<'a>(document: &'a WiresSnapshot, edge_id: &str) -> Option<&'a DslValue> {
     document.wires_fixture.get("relationships").and_then(|value| value.as_array()).into_iter().flatten().find(|relationship| crate::artifacts::wires::standards::v1::subsets::any::schema::entity_id(relationship, "edgeId") == Some(edge_id))
 }
 //#endregion 🔖️LookupHelpers
@@ -109,7 +109,7 @@ impl ArtifactInferrer for WiresInferrer {
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.reasoning.wires.inference`'s facet leaves into the OS-wide inference catalog —
 /// call once at plugin init, alongside `wires_artifact_schema_descriptor`'s registration.
-pub fn wires_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
+pub async fn wires_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
     schema::ArtifactInferenceDescriptor {
         id: "s.reasoning.wires.inference",
         inference: schema::FacetLeaves {
@@ -131,7 +131,7 @@ mod tests {
     use dsl::DslValue;
     use protocol::Inference;
 
-    fn chain_snapshot() -> WiresSnapshot {
+    async fn chain_snapshot() -> WiresSnapshot {
         let mut snapshot = empty_wires_snapshot();
         let nodes = vec![DslValue::object([("id".into(), DslValue::String("a".into()))]), DslValue::object([("id".into(), DslValue::String("b".into()))])];
         let edges = vec![DslValue::object([("id".into(), DslValue::String("e1".into())), ("source".into(), DslValue::String("a".into())), ("target".into(), DslValue::String("b".into()))])];
@@ -140,18 +140,18 @@ mod tests {
     }
 
     #[test]
-    fn inference_determinism_law() {
+    async fn inference_determinism_law() {
         let snapshot = chain_snapshot();
         assert_eq!(WiresInference::infer(&snapshot), WiresInference::infer(&snapshot));
     }
 
     #[test]
-    fn inference_default_law() {
+    async fn inference_default_law() {
         assert_eq!(WiresInference::infer(&empty_wires_snapshot()), WiresInference::default());
     }
 
     #[test]
-    fn topology_counts_the_board_graph() {
+    async fn topology_counts_the_board_graph() {
         let inferred = WiresInference::infer(&chain_snapshot());
         assert_eq!(inferred.topology.node_count, 2);
         assert_eq!(inferred.topology.edge_count, 1);

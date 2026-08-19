@@ -6,7 +6,7 @@ use crate::artifacts::din4108::diff::Din4108LayerList;
 use crate::artifacts::din4108::{Din4108Diff, Din4108Snapshot};
 
 //#region 🔖️Diff
-pub fn diff(payload: &ChangeLayerLambda, base: &Din4108Snapshot) -> protocol::MutationOutcome<Din4108Diff> {
+pub async fn diff(payload: &ChangeLayerLambda, base: &Din4108Snapshot) -> protocol::MutationOutcome<Din4108Diff> {
     if !payload.new_lambda_w_mk.is_finite() || payload.new_lambda_w_mk <= 0.0 {
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("Layer lambda must be a positive finite number, got {}.", payload.new_lambda_w_mk), [payload.index.to_string()]);
     }

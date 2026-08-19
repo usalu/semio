@@ -15,7 +15,7 @@ pub struct ExportMedia {
     pub format: String,
 }
 
-pub fn handle(payload: &ExportMedia, doc: &ArtifactView<'_, WorkflowSnapshot>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
+pub async fn handle(payload: &ExportMedia, doc: &ArtifactView<'_, WorkflowSnapshot>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
     let projection = doc.snapshot;
     match projection.graph.nodes.iter().find(|row| row.id == payload.node_id) {
         Some(node) => {
@@ -44,7 +44,7 @@ mod tests {
     use crate::demo_space_projection;
 
     #[test]
-    fn space_command_op_text_round_trips_every_variant() {
+    async fn space_command_op_text_round_trips_every_variant() {
         store::os_store::test_support::assert_op_line_round_trip(&SpaceCommand::ExportMedia(ExportMedia { node_id: "n1".into(), format: "dwg".into() }));
         store::os_store::test_support::assert_op_line_round_trip(&SpaceCommand::ImportMedia(crate::engine::space::commands::import_media::ImportMedia { node_id: "n1".into(), format: "dwg".into() }));
         store::os_store::test_support::assert_op_line_round_trip(&SpaceCommand::ImportMediaPayload(crate::engine::space::commands::import_media_payload::ImportMediaPayload { payload: "data:...".into() }));
@@ -62,7 +62,7 @@ mod tests {
     const DWG_FORMAT_ID: &str = "s.stdio.dwg.standard.ac1018.representation.document";
 
     #[test]
-    fn export_media_emits_download_effect_and_import_requests_file_open() {
+    async fn export_media_emits_download_effect_and_import_requests_file_open() {
         use base64::Engine;
         crate::engine::space::testkit::seed_draw_plugin();
         let stdio_descriptors = semio_s_plugin_stdio::manifest::stdio_format_descriptors().expect("stdio format descriptors");

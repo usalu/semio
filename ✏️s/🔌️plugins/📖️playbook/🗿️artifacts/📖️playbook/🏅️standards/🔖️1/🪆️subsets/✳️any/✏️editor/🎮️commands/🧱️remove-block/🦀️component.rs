@@ -17,7 +17,7 @@ pub struct RemoveBlock {
 // of a config-owned selection list here — the framework's own `revalidate_interaction_state_after_
 // document_change` prunes the "blocks" domain's selection against `interaction_topology` after every
 // document dispatch, so a deleted block's id is pruned automatically.
-pub fn handle(payload: &RemoveBlock, _doc: &ArtifactView<'_, PlaybookSnapshot>, _cfg: &ConfigView<'_, PlaybookConfig>) -> Result<Emit<PlaybookMutation, PlaybookConfigMutation>, Fault> {
+pub async fn handle(payload: &RemoveBlock, _doc: &ArtifactView<'_, PlaybookSnapshot>, _cfg: &ConfigView<'_, PlaybookConfig>) -> Result<Emit<PlaybookMutation, PlaybookConfigMutation>, Fault> {
     if payload.step_id.is_empty() || payload.block_id.is_empty() {
         return Ok(Emit::default());
     }

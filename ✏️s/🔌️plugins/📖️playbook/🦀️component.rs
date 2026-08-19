@@ -15,7 +15,7 @@ use semio_framework_plugin::{ExecutionMode, Plugin};
 /// artifact (`crate::artifacts::playbook::artifact_kind().id`) is opened, this plugin's own actor
 /// runs `Isolated` (its one `🧩️extensions/🌀️procedural` runs `Declarative` instead — see that
 /// extension's own `bundle()`), and it asks the broker for document write access to persist edits.
-pub fn plugin() -> Result<Plugin, semio_framework_plugin::PluginAssemblyError> {
+pub async fn plugin() -> Result<Plugin, semio_framework_plugin::PluginAssemblyError> {
     Plugin::builder("playbook-play")
         .label("Playbook")
         .version("0.1.0")
@@ -41,12 +41,12 @@ mod surface_tests {
     use semio_framework_plugin::testkit::{assert_editor_and_viewer_share_dialect, assert_viewer_never_mutates};
 
     #[test]
-    fn playbook_viewer_never_mutates() {
+    async fn playbook_viewer_never_mutates() {
         assert_viewer_never_mutates::<crate::viewer::playbook::PlaybookViewer>();
     }
 
     #[test]
-    fn playbook_editor_and_viewer_share_dialect() {
+    async fn playbook_editor_and_viewer_share_dialect() {
         assert_editor_and_viewer_share_dialect::<crate::editor::playbook::PlaybookPlayApp, crate::viewer::playbook::PlaybookViewer>();
     }
 }

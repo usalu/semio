@@ -23,7 +23,7 @@ pub const BODY_KEY: &str = TableWindowKit::KIND_ID;
 /// primitive's stock editable shape 1-E chose; no sortable flag exists on `TableView`/`TableWindowKit`
 /// (framework-owned, `🔌️plugin/🦀️component.rs`, outside this lease) so worker-brief task 1's "sortable
 /// if the table primitive supports it" is a documented no-op here.
-pub fn definition() -> WindowKindDefinition {
+pub async fn definition() -> WindowKindDefinition {
     TableWindowKit::editable_window_kind()
 }
 //#endregion 🔖️Definition
@@ -42,7 +42,7 @@ pub fn definition() -> WindowKindDefinition {
 /// sharedFileRequest. Labels are `Label::data` (English-only), the SAME documented, deferred limitation
 /// this app's own `📌️panels/👥️members` render already carries (no `locale` field on `SpaceIndexConfig`
 /// yet) — not a new gap.
-fn row_actions(row: &SpaceArtifactRow) -> Vec<TableRowAction> {
+async fn row_actions(row: &SpaceArtifactRow) -> Vec<TableRowAction> {
     vec![
         TableRowAction { icon_id: IconName::FolderOpen, label: Some(Label::data("Open")), action: space_index_action("openArtifact", Some(serde_json::json!({ "id": row.id }))) },
         TableRowAction { icon_id: IconName::Trash2, label: Some(Label::data("Delete")), action: space_index_action("requestDeleteArtifact", Some(serde_json::json!({ "id": row.id }))) },
@@ -54,7 +54,7 @@ fn row_actions(row: &SpaceArtifactRow) -> Vec<TableRowAction> {
 /// separately carries the `artifact:<id>` grammar contract §C0 needs. Split out from `render` (lane
 /// 4-F) so the pure table structure stays unit-testable in isolation, same rationale as Home's own
 /// `render_rows`/`render` split.
-fn render_table(document: &SSpaceSnapshot, config: &SpaceIndexConfig) -> UiNode {
+async fn render_table(document: &SSpaceSnapshot, config: &SpaceIndexConfig) -> UiNode {
     let columns = SPACE_INDEX_TABLE_COLUMNS.iter().map(|s| s.to_string()).collect();
     let rows = document
         .artifacts
@@ -72,7 +72,7 @@ fn render_table(document: &SSpaceSnapshot, config: &SpaceIndexConfig) -> UiNode 
 /// clears `--window-content-dead-line` (26px) — the same clearance `TableHost` already gets for free.
 /// Two empty separators reliably clear it (measured live). Real fix belongs in the interpreter's
 /// `UiStackHost` (framework-owned, outside this lane's lease).
-fn window_content_dead_line_spacer() -> UiNode {
+async fn window_content_dead_line_spacer() -> UiNode {
     UiNode::Separator(UiSeparatorNode { presence: Default::default(), menu: None })
 }
 
@@ -81,7 +81,7 @@ fn window_content_dead_line_spacer() -> UiNode {
 /// own handler now mirrors Home's `createSpace` "empty args open the dialog" branch (this lane's own
 /// addition), so no new dispatch machinery is needed here either — only a real DOM element with the
 /// frozen id, reachable directly instead of hunting the command palette.
-fn create_artifact_button() -> UiNode {
+async fn create_artifact_button() -> UiNode {
     ui_control_to_node(UiControlNode::Button(UiButtonNode {
         id: Some("s-space-create-artifact".into()),
         icon_id: IconName::Plus,
@@ -93,7 +93,7 @@ fn create_artifact_button() -> UiNode {
     }))
 }
 
-pub fn render(document: &SSpaceSnapshot, config: &SpaceIndexConfig) -> UiNode {
+pub async fn render(document: &SSpaceSnapshot, config: &SpaceIndexConfig) -> UiNode {
     ui_stack_vertical(vec![window_content_dead_line_spacer(), window_content_dead_line_spacer(), create_artifact_button(), render_table(document, config)])
 }
 //#endregion 🔖️Render
@@ -104,12 +104,12 @@ mod tests {
     use super::*;
 
     #[test]
-    fn render_produces_a_node_for_the_default_document() {
+    async fn render_produces_a_node_for_the_default_document() {
         let _node = render(&SSpaceSnapshot::default(), &SpaceIndexConfig::default());
     }
 
     #[test]
-    fn render_reflects_live_presence_for_a_row() {
+    async fn render_reflects_live_presence_for_a_row() {
         use crate::artifacts::space::standards::v1::subsets::any::schema::snapshot::{SpaceArtifactDialect, SpaceArtifactRow};
         use crate::editor::space_index::config::SpaceIndexArtifactPresence;
         let mut document = SSpaceSnapshot::default();
@@ -124,7 +124,7 @@ mod tests {
     /// row's open/delete buttons must be real, dispatchable `ActionDescriptor`s carrying the row's own
     /// id — per ticket 26/08/16/HUB-SPACES-LIVE-PRESENCE-AND-COLLABORATIVE-STUDIOS lane 3-F.
     #[test]
-    fn a_row_stamps_the_artifact_row_id_and_carries_dispatchable_open_and_delete_buttons() {
+    async fn a_row_stamps_the_artifact_row_id_and_carries_dispatchable_open_and_delete_buttons() {
         use crate::artifacts::space::standards::v1::subsets::any::schema::snapshot::{SpaceArtifactDialect, SpaceArtifactRow};
         let mut document = SSpaceSnapshot::default();
         document.artifacts.push(SpaceArtifactRow { id: "artifact-1".into(), name: "First".into(), dialect: SpaceArtifactDialect { artifact_kind: "s.draw.draw".into(), standard: "1".into(), subset: "*".into() }, ..Default::default() });
@@ -144,7 +144,7 @@ mod tests {
     /// frozen `s-space-create-artifact` id, dispatching `createArtifact` with no args — the harness
     /// clicks this directly instead of hunting the command palette.
     #[test]
-    fn render_wraps_the_table_with_a_real_create_artifact_button() {
+    async fn render_wraps_the_table_with_a_real_create_artifact_button() {
         use crate::editor::space_index::SPACE_INDEX_CONTROLLER_ID;
         let UiNode::Stack(stack) = render(&SSpaceSnapshot::default(), &SpaceIndexConfig::default()) else { panic!("expected a Stack wrapping button + table") };
         let button = stack.children.iter().find_map(|child| if let UiNode::Button(button) = child { Some(button) } else { None }).expect("a create-artifact button somewhere in the stack");

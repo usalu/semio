@@ -10,7 +10,7 @@ use serde::{Deserialize, Serialize};
 #[dsl(keyword = "lint-document")]
 pub struct LintDocument {}
 
-pub fn handle(_payload: &LintDocument, _doc: &ArtifactView<'_, WriterSnapshot>, cfg: &ConfigView<'_, WriterConfig>) -> Result<Emit<WriterMutation, WriterConfigMutation>, Fault> {
+pub async fn handle(_payload: &LintDocument, _doc: &ArtifactView<'_, WriterSnapshot>, cfg: &ConfigView<'_, WriterConfig>) -> Result<Emit<WriterMutation, WriterConfigMutation>, Fault> {
     let config = cfg.snapshot;
     Ok(Emit::config(vec![WriterConfigMutation::SetLintSignal { value: config.lint_signal + 1 }, WriterConfigMutation::SetRevision { value: config.revision + 1 }]))
 }
@@ -26,7 +26,7 @@ mod tests {
     use semio_framework::kernel::Effect;
 
     #[test]
-    fn lint_is_a_view_action_and_example_default_materializes() {
+    async fn lint_is_a_view_action_and_example_default_materializes() {
         let mut app = new_app_with_registry();
         // lintDocument is a declared View action: registry kind discipline requires it emit no operations.
         let result = app.dispatch_typed(WriterCommand::LintDocument(LintDocument {}), &semio_framework_plugin::testkit::meta("local")).expect("lint");

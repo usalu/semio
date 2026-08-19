@@ -15,7 +15,7 @@ pub const TXT_ARTIFACT_SCHEMA_ID: &str = "s.stdio.txt";
 
 //#region 🔖️ArtifactKind
 /// 🗂️ This artifact's `ArtifactKindSpec`.
-pub fn assembly(definition: semio_framework_plugin::ArtifactDefinition) -> Result<crate::registry::ArtifactAssembly, semio_framework_plugin::PluginAssemblyError> {
+pub async fn assembly(definition: semio_framework_plugin::ArtifactDefinition) -> Result<crate::registry::ArtifactAssembly, semio_framework_plugin::PluginAssemblyError> {
     crate::registry::definition_only_assembly("txt", definition)
 }
 
@@ -24,14 +24,14 @@ pub fn assembly(definition: semio_framework_plugin::ArtifactDefinition) -> Resul
 /// `s.stdio.txt` artifact through the declaration tree — one standard, `utf-8`, one subset,
 /// `any`. See `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💾️binary/🦀️component.rs`'s `artifact()` doc
 /// comment for the `localization: &[]` deferral rationale (identical here).
-pub fn artifact() -> semio_framework_plugin::app::declarations::ArtifactDeclaration {
+pub async fn artifact() -> semio_framework_plugin::app::declarations::ArtifactDeclaration {
     use semio_framework_plugin::app::declarations::ArtifactDeclaration;
     use store::os_io::ArtifactKindId;
     ArtifactDeclaration { kind: ArtifactKindId::parse("s.stdio.txt").expect("canonical stdio.txt kind"), localization: &[], standards: vec![crate::artifacts::txt::standards::v_utf_8::standard()] }
 }
 //#endregion 🔖️ArtifactDeclaration
 
-pub fn artifact_kind() -> ArtifactKindSpec {
+pub async fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "stdio.txt".into(),
         name: "Txt".into(),
@@ -56,16 +56,16 @@ pub mod io_registry {
 
     static ENTRIES: OnceLock<Vec<&'static ComposerEntry>> = OnceLock::new();
 
-    pub fn entries() -> &'static [&'static ComposerEntry] {
+    pub async fn entries() -> &'static [&'static ComposerEntry] {
         ENTRIES.get_or_init(|| v_utf_8::entries().iter().collect()).as_slice()
     }
 
-    pub fn compose(target: Dialect, sources: &[ErasedComposeSource]) -> Result<ComposedArtifact, ComposeError> {
+    pub async fn compose(target: Dialect, sources: &[ErasedComposeSource]) -> Result<ComposedArtifact, ComposeError> {
         let entry = entries().iter().find(|e| e.writes == target).ok_or_else(|| ComposeError { message: format!("TxtComposer: no entry writes {:?}", target), diagnostics: Vec::new() })?;
         semio_framework_plugin::resolve_ready((entry.compose)(sources))
     }
 
-    pub fn register() {
+    pub async fn register() {
         let _ = register_composer_entries(v_utf_8::entries());
     }
 }

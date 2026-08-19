@@ -12,13 +12,13 @@ pub const BODY_KEY: &str = TableWindowKit::KIND_ID;
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
-pub fn definition() -> WindowKindDefinition {
+pub async fn definition() -> WindowKindDefinition {
     TableWindowKit::window_kind()
 }
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(document: &SSpaceSnapshot) -> UiNode {
+pub async fn render(document: &SSpaceSnapshot) -> UiNode {
     let columns = SPACE_INDEX_TABLE_COLUMNS.iter().map(|s| s.to_string()).collect();
     // 👁️ The viewer folds no `fold-directory-events`/`presence-heartbeat` commands of its own (no
     // `Config` state to fold into — `NoConfig`), so its presence cell is always empty; the editor's
@@ -36,14 +36,14 @@ mod tests {
     use super::*;
 
     #[test]
-    fn render_produces_a_node_for_the_default_document() {
+    async fn render_produces_a_node_for_the_default_document() {
         let _node = render(&SSpaceSnapshot::default());
     }
 
     /// 🆔️ Contract §C0: the read-only viewer's rows must still carry `data-row-id="artifact:<id>"` —
     /// it just never attaches row action buttons to it.
     #[test]
-    fn a_row_stamps_the_artifact_row_id_with_no_actions_cell() {
+    async fn a_row_stamps_the_artifact_row_id_with_no_actions_cell() {
         use crate::artifacts::space::standards::v1::subsets::any::schema::snapshot::{SpaceArtifactDialect, SpaceArtifactRow};
         let mut document = SSpaceSnapshot::default();
         document.artifacts.push(SpaceArtifactRow { id: "artifact-1".into(), name: "First".into(), dialect: SpaceArtifactDialect { artifact_kind: "s.draw.draw".into(), standard: "1".into(), subset: "*".into() }, ..Default::default() });

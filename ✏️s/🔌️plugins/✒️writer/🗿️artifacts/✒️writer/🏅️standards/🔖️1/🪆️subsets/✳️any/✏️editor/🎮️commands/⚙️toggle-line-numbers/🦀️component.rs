@@ -10,7 +10,7 @@ use serde::{Deserialize, Serialize};
 #[dsl(keyword = "toggle-line-numbers")]
 pub struct ToggleLineNumbers {}
 
-pub fn handle(_payload: &ToggleLineNumbers, _doc: &ArtifactView<'_, WriterSnapshot>, cfg: &ConfigView<'_, WriterConfig>) -> Result<Emit<WriterMutation, WriterConfigMutation>, Fault> {
+pub async fn handle(_payload: &ToggleLineNumbers, _doc: &ArtifactView<'_, WriterSnapshot>, cfg: &ConfigView<'_, WriterConfig>) -> Result<Emit<WriterMutation, WriterConfigMutation>, Fault> {
     let config = cfg.snapshot;
     let mut settings = config.editor_settings.clone();
     settings.show_line_numbers = !settings.show_line_numbers;
@@ -25,7 +25,7 @@ mod tests {
     use crate::editor::writer::WriterCommand;
 
     #[test]
-    fn view_action_emits_no_operations() {
+    async fn view_action_emits_no_operations() {
         let mut app = new_app();
         let result = app.dispatch_typed(WriterCommand::ToggleLineNumbers(ToggleLineNumbers {}), &semio_framework_plugin::testkit::meta("local")).expect("toggle");
         assert!(result.mutations.is_empty());

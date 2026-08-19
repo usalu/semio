@@ -5,7 +5,7 @@ use crate::artifacts::note::schema::mutations::DeleteBlock;
 use crate::artifacts::note::NoteSnapshot;
 
 //#region 🔖️Inverse
-pub fn inverse(payload: &DuplicateBlock, _base: &NoteSnapshot) -> Vec<NoteMutation> {
+pub async fn inverse(payload: &DuplicateBlock, _base: &NoteSnapshot) -> Vec<NoteMutation> {
     vec![NoteMutation::DeleteBlock(DeleteBlock { id: crate::artifacts::note::schema::block_id(&payload.block).to_string() })]
 }
 //#endregion 🔖️Inverse

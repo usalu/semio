@@ -15,7 +15,7 @@ pub const GIS2D_LAYER_WEIGHTS_MEASURE_ID: &str = "gis2d-play-window.layer-weight
 
 /// 📏️ `(layer_id, label, weight)` for every layer the current LOD/render mode exposes a weight
 /// slider for; a layer with no explicit entry sits at `1.0`.
-pub fn layer_weight_entries(cfg: &Gis2dConfig, labels: &Gis2dPlayLabels) -> Vec<(String, String, f64)> {
+pub async fn layer_weight_entries(cfg: &Gis2dConfig, labels: &Gis2dPlayLabels) -> Vec<(String, String, f64)> {
     let ids: Vec<String> = serde_json::from_str(&gis_map_layer_weight_slider_ids_json(&cfg.lod_mode, &cfg.render_mode)).unwrap_or_default();
     ids.into_iter()
         .map(|layer_id| {
@@ -28,7 +28,7 @@ pub fn layer_weight_entries(cfg: &Gis2dConfig, labels: &Gis2dPlayLabels) -> Vec<
 //#endregion 🔖️Vocabulary
 
 //#region 🔖️Option
-pub fn measure(cfg: &Gis2dConfig, labels: &Gis2dPlayLabels) -> WindowMeasure {
+pub async fn measure(cfg: &Gis2dConfig, labels: &Gis2dPlayLabels) -> WindowMeasure {
     let children: Vec<WindowMeasure> = layer_weight_entries(cfg, labels)
         .into_iter()
         .map(|(layer_id, label, value)| WindowMeasure::Slider {
@@ -71,7 +71,7 @@ mod tests {
     use crate::editor::gis2d::terminology::gis2d_labels;
 
     #[test]
-    fn weight_entries_default_to_one_and_honour_explicit_overrides() {
+    async fn weight_entries_default_to_one_and_honour_explicit_overrides() {
         let mut config = Gis2dConfig::default();
         let labels = gis2d_labels(&config);
         let defaults = layer_weight_entries(&config, labels);
@@ -83,7 +83,7 @@ mod tests {
     }
 
     #[test]
-    fn the_group_is_collapsed_by_default_and_mirrors_the_entry_list() {
+    async fn the_group_is_collapsed_by_default_and_mirrors_the_entry_list() {
         let config = Gis2dConfig::default();
         let labels = gis2d_labels(&config);
         let WindowMeasure::Group { children, default_open, .. } = measure(&config, labels) else {

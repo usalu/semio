@@ -49,7 +49,7 @@ pub struct Process3dArtifact {
 
 //#region 🔖️Conversions
 impl Default for Process3dArtifact {
-    fn default() -> Self {
+    async fn default() -> Self {
         let base = crate::artifacts::process3d::empty_process3d_snapshot();
         Self {
             workshop: base.workshop,
@@ -86,7 +86,7 @@ impl Default for Process3dArtifact {
 
 impl Process3dArtifact {
     /// 📸️ Persisted subset.
-    pub fn to_snapshot(&self) -> crate::artifacts::process3d::Process3dSnapshot {
+    pub async fn to_snapshot(&self) -> crate::artifacts::process3d::Process3dSnapshot {
         crate::artifacts::process3d::Process3dSnapshot {
             workshop: self.workshop.clone(),
             stock_id: self.stock_id.clone(),
@@ -100,7 +100,7 @@ impl Process3dArtifact {
     }
 
     /// 🧬️ Builds a full artifact from a snapshot, leaving UI fields at defaults.
-    pub fn from_snapshot(snapshot: crate::artifacts::process3d::Process3dSnapshot) -> Self {
+    pub async fn from_snapshot(snapshot: crate::artifacts::process3d::Process3dSnapshot) -> Self {
         Self {
             workshop: snapshot.workshop,
             stock_id: snapshot.stock_id,
@@ -115,7 +115,7 @@ impl Process3dArtifact {
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
-    pub fn set_snapshot(&mut self, snapshot: crate::artifacts::process3d::Process3dSnapshot) {
+    pub async fn set_snapshot(&mut self, snapshot: crate::artifacts::process3d::Process3dSnapshot) {
         self.workshop = snapshot.workshop;
         self.stock_id = snapshot.stock_id;
         self.stock_label = snapshot.stock_label;
@@ -130,7 +130,7 @@ impl Process3dArtifact {
 
 //#region 🔖️Descriptor
 /// 🧬️ Descriptor for `s.process.process3d` — twenty handcrafted schema leaves.
-pub fn process3d_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
+pub async fn process3d_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
     schema::ArtifactSchemaDescriptor {
         id: "s.process.process3d",
         artifact: schema::FacetLeaves {
@@ -181,15 +181,15 @@ pub mod derived_construction {
         type Snapshot = Process3dSnapshot;
         type Mutation = Process3dMutation;
         type Diff = Process3dDiff;
-        fn empty() -> Self { Self { snapshot: Process3dSnapshot::default(), diagnostics: Vec::new() } }
-        fn from_snapshot(snapshot: Self::Snapshot) -> Self { Self { snapshot, diagnostics: Vec::new() } }
-        fn from_text(text: &str) -> Result<Self, store::TextError> {
+        async fn empty() -> Self { Self { snapshot: Process3dSnapshot::default(), diagnostics: Vec::new() } }
+        async fn from_snapshot(snapshot: Self::Snapshot) -> Self { Self { snapshot, diagnostics: Vec::new() } }
+        async fn from_text(text: &str) -> Result<Self, store::TextError> {
             Ok(Self::from_snapshot(<Process3dSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
-        fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
+        async fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
             Ok(Self::from_snapshot(<Process3dSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
         }
-        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
+        async fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let outcome = <Process3dMutation as protocol::Mutation<Process3dSnapshot>>::diff(&mutation, &self.snapshot);
             match protocol::MutationDiff::apply(outcome.diff(), &self.snapshot) {
                 Ok(snapshot) => self.snapshot = snapshot,
@@ -201,7 +201,7 @@ pub mod derived_construction {
             }
             (self, outcome)
         }
-        fn absorb(
+        async fn absorb(
             mut self,
             diff: Self::Diff,
         ) -> protocol::MutationApplyResult<Self> {
@@ -209,7 +209,7 @@ pub mod derived_construction {
             self.snapshot = snapshot;
             Ok(self)
         }
-        fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
+        async fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
             if self.diagnostics.is_empty() { Ok(self.snapshot) } else { Err(self.diagnostics) }
         }
     }
@@ -233,11 +233,11 @@ pub mod derived_analysis {
         type Parts = Process3dParts;
         const DIALECT: Dialect = Dialect { artifact_kind: "s.process3d", standard: StandardId("1"), subset: SubsetId("*") };
 
-        fn sniff(_source: &AnalyzeSource<'_>) -> IoConfidence {
+        async fn sniff(_source: &AnalyzeSource<'_>) -> IoConfidence {
             IoConfidence::Medium
         }
 
-        fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
+        async fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
             let mut parts = Process3dParts::default();
             let mut diagnostics = Vec::new();
             let mut confidence = IoConfidence::High;
@@ -282,11 +282,11 @@ semio_framework_plugin::derive_artifact_facets!(
 //#region 🔖️ExampleFixtures
 pub use crate::artifacts::process3d::dsl::{PROCESS_3D_PLATE_EXAMPLE_TEXT as PLATE_EXAMPLE_DSL, PROCESS_3D_TIMBER_EXAMPLE_TEXT as TIMBER_EXAMPLE_DSL};
 
-pub fn default_document() -> crate::artifacts::process3d::Process3dSnapshot {
+pub async fn default_document() -> crate::artifacts::process3d::Process3dSnapshot {
     crate::artifacts::process3d::Process3dSnapshot::parse_dsl(TIMBER_EXAMPLE_DSL).unwrap_or_default()
 }
 
-pub fn plate_document() -> crate::artifacts::process3d::Process3dSnapshot {
+pub async fn plate_document() -> crate::artifacts::process3d::Process3dSnapshot {
     crate::artifacts::process3d::Process3dSnapshot::parse_dsl(PLATE_EXAMPLE_DSL).unwrap_or_else(|_| default_document())
 }
 //#endregion 🔖️ExampleFixtures
@@ -294,15 +294,15 @@ pub fn plate_document() -> crate::artifacts::process3d::Process3dSnapshot {
 //#region 🔖️Catalog
 /// 🧩️ Shared capability-parameter/rule builders for every built-in domain catalog below — pulled out
 /// of the four (formerly per-material-file) private copies so the identical helper exists exactly once.
-fn parameter(id: &str, label: &str, value: f64) -> CapabilityParameter {
+async fn parameter(id: &str, label: &str, value: f64) -> CapabilityParameter {
     CapabilityParameter { id: id.into(), label: label.into(), value }
 }
 
-fn max_rule(quantity: StockQuantity, parameter: &str, margin: f64) -> CapabilityRule {
+async fn max_rule(quantity: StockQuantity, parameter: &str, margin: f64) -> CapabilityRule {
     CapabilityRule::Max { quantity, parameter: parameter.into(), margin }
 }
 
-fn min_rule(quantity: StockQuantity, parameter: &str, margin: f64) -> CapabilityRule {
+async fn min_rule(quantity: StockQuantity, parameter: &str, margin: f64) -> CapabilityRule {
     CapabilityRule::Min { quantity, parameter: parameter.into(), margin }
 }
 
@@ -312,19 +312,19 @@ fn min_rule(quantity: StockQuantity, parameter: &str, margin: f64) -> Capability
 pub struct GenericCatalog;
 
 impl MachineCatalog for GenericCatalog {
-    fn catalog_id(&self) -> &'static str {
+    async fn catalog_id(&self) -> &'static str {
         "geometry"
     }
 
-    fn label(&self) -> &'static str {
+    async fn label(&self) -> &'static str {
         "Geometry"
     }
 
-    fn icon_id(&self) -> &'static str {
+    async fn icon_id(&self) -> &'static str {
         "shapes"
     }
 
-    fn machines(&self) -> Vec<WorkshopMachine> {
+    async fn machines(&self) -> Vec<WorkshopMachine> {
         crate::artifacts::process3d::generic_machines()
     }
 }
@@ -334,19 +334,19 @@ impl MachineCatalog for GenericCatalog {
 pub struct MetalCatalog;
 
 impl MachineCatalog for MetalCatalog {
-    fn catalog_id(&self) -> &'static str {
+    async fn catalog_id(&self) -> &'static str {
         "metal"
     }
 
-    fn label(&self) -> &'static str {
+    async fn label(&self) -> &'static str {
         "Metal"
     }
 
-    fn icon_id(&self) -> &'static str {
+    async fn icon_id(&self) -> &'static str {
         "wrench"
     }
 
-    fn machines(&self) -> Vec<WorkshopMachine> {
+    async fn machines(&self) -> Vec<WorkshopMachine> {
         vec![
             WorkshopMachine {
                 id: "chopSaw".into(),
@@ -460,7 +460,7 @@ impl MachineCatalog for MetalCatalog {
     }
 }
 
-pub fn metal_catalog() -> Box<dyn MachineCatalog> {
+pub async fn metal_catalog() -> Box<dyn MachineCatalog> {
     Box::new(MetalCatalog)
 }
 
@@ -469,19 +469,19 @@ pub fn metal_catalog() -> Box<dyn MachineCatalog> {
 pub struct WoodCatalog;
 
 impl MachineCatalog for WoodCatalog {
-    fn catalog_id(&self) -> &'static str {
+    async fn catalog_id(&self) -> &'static str {
         "wood"
     }
 
-    fn label(&self) -> &'static str {
+    async fn label(&self) -> &'static str {
         "Wood"
     }
 
-    fn icon_id(&self) -> &'static str {
+    async fn icon_id(&self) -> &'static str {
         "beam"
     }
 
-    fn machines(&self) -> Vec<WorkshopMachine> {
+    async fn machines(&self) -> Vec<WorkshopMachine> {
         vec![
             WorkshopMachine {
                 id: "circularSaw".into(),
@@ -609,7 +609,7 @@ impl MachineCatalog for WoodCatalog {
     }
 }
 
-pub fn wood_catalog() -> Box<dyn MachineCatalog> {
+pub async fn wood_catalog() -> Box<dyn MachineCatalog> {
     Box::new(WoodCatalog)
 }
 
@@ -618,19 +618,19 @@ pub fn wood_catalog() -> Box<dyn MachineCatalog> {
 pub struct RoboticCatalog;
 
 impl MachineCatalog for RoboticCatalog {
-    fn catalog_id(&self) -> &'static str {
+    async fn catalog_id(&self) -> &'static str {
         "robotic"
     }
 
-    fn label(&self) -> &'static str {
+    async fn label(&self) -> &'static str {
         "Robotic"
     }
 
-    fn icon_id(&self) -> &'static str {
+    async fn icon_id(&self) -> &'static str {
         "cpu"
     }
 
-    fn machines(&self) -> Vec<WorkshopMachine> {
+    async fn machines(&self) -> Vec<WorkshopMachine> {
         vec![
             WorkshopMachine {
                 id: "sixAxisMill".into(),
@@ -738,7 +738,7 @@ impl MachineCatalog for RoboticCatalog {
     }
 }
 
-pub fn robotic_catalog() -> Box<dyn MachineCatalog> {
+pub async fn robotic_catalog() -> Box<dyn MachineCatalog> {
     Box::new(RoboticCatalog)
 }
 
@@ -747,19 +747,19 @@ pub fn robotic_catalog() -> Box<dyn MachineCatalog> {
 pub struct ConcreteCatalog;
 
 impl MachineCatalog for ConcreteCatalog {
-    fn catalog_id(&self) -> &'static str {
+    async fn catalog_id(&self) -> &'static str {
         "concrete"
     }
 
-    fn label(&self) -> &'static str {
+    async fn label(&self) -> &'static str {
         "Concrete"
     }
 
-    fn icon_id(&self) -> &'static str {
+    async fn icon_id(&self) -> &'static str {
         "slab"
     }
 
-    fn machines(&self) -> Vec<WorkshopMachine> {
+    async fn machines(&self) -> Vec<WorkshopMachine> {
         vec![
             WorkshopMachine {
                 id: "diamondSaw".into(),
@@ -863,14 +863,14 @@ impl MachineCatalog for ConcreteCatalog {
     }
 }
 
-pub fn concrete_catalog() -> Box<dyn MachineCatalog> {
+pub async fn concrete_catalog() -> Box<dyn MachineCatalog> {
     Box::new(ConcreteCatalog)
 }
 //#endregion 🔖️Catalog
 
 //#region 🔖️DocumentHelpers
 /// 🪪️ A pseudo-random step id — collision odds are astronomically low for a single-document timeline.
-pub fn next_step_id() -> String {
+pub async fn next_step_id() -> String {
     format!("step-{}", &blake3::hash(concat!(file!(), line!(), "step-{}").as_bytes()).to_hex()[..12])
 }
 
@@ -887,14 +887,14 @@ pub fn next_step_id() -> String {
 /// two builders can no longer compute a real cursor/index from `fixture.steps` (a handle has no
 /// `.len()`); `insert_step_mutations` still emits the (now no-op) `CreateStep` for call-site source
 /// compatibility but the cursor advance is honestly skipped rather than guessed.
-pub fn insert_step_mutations(fixture: &crate::artifacts::process3d::Process3dSnapshot, step: ProcessStep) -> Vec<crate::artifacts::process3d::op::Process3dMutation> {
+pub async fn insert_step_mutations(fixture: &crate::artifacts::process3d::Process3dSnapshot, step: ProcessStep) -> Vec<crate::artifacts::process3d::op::Process3dMutation> {
     use crate::artifacts::process3d::op::Process3dMutation;
     use crate::artifacts::process3d::schema::mutations::create_step;
     let _ = fixture;
     vec![Process3dMutation::CreateStep(create_step::mutation::CreateStep { index: 0, step })]
 }
 
-pub fn remove_step_mutations(fixture: &crate::artifacts::process3d::Process3dSnapshot, id: &str) -> Option<Vec<crate::artifacts::process3d::op::Process3dMutation>> {
+pub async fn remove_step_mutations(fixture: &crate::artifacts::process3d::Process3dSnapshot, id: &str) -> Option<Vec<crate::artifacts::process3d::op::Process3dMutation>> {
     use crate::artifacts::process3d::op::Process3dMutation;
     use crate::artifacts::process3d::schema::mutations::delete_step;
     let _ = fixture;
@@ -909,14 +909,14 @@ mod tests {
 
     //#region 🔖️ExampleFixtures
     #[test]
-    fn default_document_parses_timber_example() {
+    async fn default_document_parses_timber_example() {
         let document = default_document();
         assert!(!document.steps.child_id.is_empty());
         assert!(document.resolved_up_to.is_none());
     }
 
     #[test]
-    fn plate_document_parses_and_opens_mid_timeline() {
+    async fn plate_document_parses_and_opens_mid_timeline() {
         let document = plate_document();
         assert!(!document.steps.child_id.is_empty());
         assert_eq!(document.resolved_up_to, Some(2));
@@ -928,7 +928,7 @@ mod tests {
         use super::*;
 
         #[test]
-        fn every_machine_and_capability_id_is_unique() {
+        async fn every_machine_and_capability_id_is_unique() {
             let machines = MetalCatalog.machines();
             let mut machine_ids: Vec<&str> = machines.iter().map(|machine| machine.id.as_str()).collect();
             machine_ids.sort_unstable();
@@ -943,7 +943,7 @@ mod tests {
         }
 
         #[test]
-        fn every_recipe_and_rule_parameter_resolves() {
+        async fn every_recipe_and_rule_parameter_resolves() {
             for machine in MetalCatalog.machines() {
                 for capability in &machine.capabilities {
                     let ids: Vec<&str> = capability.parameters.iter().map(|parameter| parameter.id.as_str()).collect();
@@ -969,7 +969,7 @@ mod tests {
         }
 
         #[test]
-        fn machines_round_trip_json() {
+        async fn machines_round_trip_json() {
             let machines = MetalCatalog.machines();
             let json = serde_json::to_string(&machines).expect("serialize");
             let parsed: Vec<WorkshopMachine> = serde_json::from_str(&json).expect("deserialize");
@@ -977,7 +977,7 @@ mod tests {
         }
 
         #[test]
-        fn catalog_has_metal_identity() {
+        async fn catalog_has_metal_identity() {
             let catalog = MetalCatalog;
             assert_eq!(catalog.catalog_id(), "metal");
             assert_eq!(catalog.label(), "Metal");
@@ -990,7 +990,7 @@ mod tests {
         use super::*;
 
         #[test]
-        fn every_machine_and_capability_id_is_unique() {
+        async fn every_machine_and_capability_id_is_unique() {
             let machines = WoodCatalog.machines();
             let mut machine_ids: Vec<&str> = machines.iter().map(|machine| machine.id.as_str()).collect();
             machine_ids.sort_unstable();
@@ -1006,7 +1006,7 @@ mod tests {
 
         /// ✅️ Every recipe field and rule parameter must resolve within its own capability's parameters.
         #[test]
-        fn every_recipe_and_rule_parameter_resolves() {
+        async fn every_recipe_and_rule_parameter_resolves() {
             for machine in WoodCatalog.machines() {
                 for capability in &machine.capabilities {
                     let ids: Vec<&str> = capability.parameters.iter().map(|parameter| parameter.id.as_str()).collect();
@@ -1032,7 +1032,7 @@ mod tests {
         }
 
         #[test]
-        fn machines_round_trip_json() {
+        async fn machines_round_trip_json() {
             let machines = WoodCatalog.machines();
             let json = serde_json::to_string(&machines).expect("serialize");
             let parsed: Vec<WorkshopMachine> = serde_json::from_str(&json).expect("deserialize");
@@ -1040,7 +1040,7 @@ mod tests {
         }
 
         #[test]
-        fn catalog_has_wood_identity() {
+        async fn catalog_has_wood_identity() {
             let catalog = WoodCatalog;
             assert_eq!(catalog.catalog_id(), "wood");
             assert_eq!(catalog.label(), "Wood");
@@ -1053,7 +1053,7 @@ mod tests {
         use super::*;
 
         #[test]
-        fn every_machine_and_capability_id_is_unique() {
+        async fn every_machine_and_capability_id_is_unique() {
             let machines = RoboticCatalog.machines();
             let mut machine_ids: Vec<&str> = machines.iter().map(|machine| machine.id.as_str()).collect();
             machine_ids.sort_unstable();
@@ -1068,7 +1068,7 @@ mod tests {
         }
 
         #[test]
-        fn every_recipe_and_rule_parameter_resolves() {
+        async fn every_recipe_and_rule_parameter_resolves() {
             for machine in RoboticCatalog.machines() {
                 for capability in &machine.capabilities {
                     let ids: Vec<&str> = capability.parameters.iter().map(|parameter| parameter.id.as_str()).collect();
@@ -1094,7 +1094,7 @@ mod tests {
         }
 
         #[test]
-        fn machines_round_trip_json() {
+        async fn machines_round_trip_json() {
             let machines = RoboticCatalog.machines();
             let json = serde_json::to_string(&machines).expect("serialize");
             let parsed: Vec<WorkshopMachine> = serde_json::from_str(&json).expect("deserialize");
@@ -1102,7 +1102,7 @@ mod tests {
         }
 
         #[test]
-        fn catalog_has_robotic_identity() {
+        async fn catalog_has_robotic_identity() {
             let catalog = RoboticCatalog;
             assert_eq!(catalog.catalog_id(), "robotic");
             assert_eq!(catalog.label(), "Robotic");
@@ -1115,7 +1115,7 @@ mod tests {
         use super::*;
 
         #[test]
-        fn every_machine_and_capability_id_is_unique() {
+        async fn every_machine_and_capability_id_is_unique() {
             let machines = ConcreteCatalog.machines();
             let mut machine_ids: Vec<&str> = machines.iter().map(|machine| machine.id.as_str()).collect();
             machine_ids.sort_unstable();
@@ -1130,7 +1130,7 @@ mod tests {
         }
 
         #[test]
-        fn every_recipe_and_rule_parameter_resolves() {
+        async fn every_recipe_and_rule_parameter_resolves() {
             for machine in ConcreteCatalog.machines() {
                 for capability in &machine.capabilities {
                     let ids: Vec<&str> = capability.parameters.iter().map(|parameter| parameter.id.as_str()).collect();
@@ -1156,7 +1156,7 @@ mod tests {
         }
 
         #[test]
-        fn machines_round_trip_json() {
+        async fn machines_round_trip_json() {
             let machines = ConcreteCatalog.machines();
             let json = serde_json::to_string(&machines).expect("serialize");
             let parsed: Vec<WorkshopMachine> = serde_json::from_str(&json).expect("deserialize");
@@ -1164,7 +1164,7 @@ mod tests {
         }
 
         #[test]
-        fn catalog_has_concrete_identity() {
+        async fn catalog_has_concrete_identity() {
             let catalog = ConcreteCatalog;
             assert_eq!(catalog.catalog_id(), "concrete");
             assert_eq!(catalog.label(), "Concrete");

@@ -7,7 +7,7 @@ use crate::artifacts::semio::standards::v1::subsets::table::schema::mutations::S
 use crate::artifacts::semio::standards::v1::subsets::table::schema::snapshot::SemioTableSnapshot;
 
 //#region 🔖️Inverse
-pub fn inverse(payload: &ReorderRows, base: &SemioTableSnapshot) -> Vec<SemioTableMutation> {
+pub async fn inverse(payload: &ReorderRows, base: &SemioTableSnapshot) -> Vec<SemioTableMutation> {
     let len = base.rows.len();
     if len == 0 || payload.from >= len {
         return Vec::new();

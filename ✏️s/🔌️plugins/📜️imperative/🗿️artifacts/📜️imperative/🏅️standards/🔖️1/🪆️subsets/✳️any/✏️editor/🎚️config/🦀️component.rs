@@ -30,10 +30,10 @@ pub struct ImperativeConfig {
 /// 📜️ Handcrafted ArtifactDsl (P6): uses this type's `__dsl_*` helpers + parse/print, not derive emission.
 impl store::ArtifactDsl for ImperativeConfig {
     const EXTENSION: &'static str = Self::__DSL_EXTENSION;
-    fn envelope_id() -> &'static str {
+    async fn envelope_id() -> &'static str {
         Self::__DSL_ENVELOPE_ID
     }
-    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+    async fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
         let body = match store::semio_format::split_text_preamble(text) {
             Ok((_, rest)) => rest,
             Err(_) => text,
@@ -45,7 +45,7 @@ impl store::ArtifactDsl for ImperativeConfig {
         )?;
         Self::__dsl_from_record(&record)
     }
-    fn print_dsl(&self) -> String {
+    async fn print_dsl(&self) -> String {
         let body = dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), dsl::JoinMode::Document);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
             <Self as store::ArtifactDsl>::envelope_id(),
@@ -59,7 +59,7 @@ impl store::ArtifactDsl for ImperativeConfig {
 
 /// 📦️ Handcrafted ArtifactPack (P6): envelope-wrapped pack body via `__dsl_*` record lowering.
 impl store::ArtifactPack for ImperativeConfig {
-    fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
+    async fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let inner = store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
             <Self as store::ArtifactDsl>::envelope_id(),
@@ -69,7 +69,7 @@ impl store::ArtifactPack for ImperativeConfig {
         .map_err(|e| store::PackError::Schema(e.to_string()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &inner))
     }
-    fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
+    async fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
         if envelope.envelope_id() != <Self as store::ArtifactDsl>::envelope_id() {
             return Err(store::PackError::Schema(format!(
@@ -81,7 +81,7 @@ impl store::ArtifactPack for ImperativeConfig {
         let (record, _report) = store::pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
         Self::__dsl_from_record(&record).map_err(store::text_error_to_pack_error)
     }
-    fn record_spec() -> Option<dsl::RecordSpec> {
+    async fn record_spec() -> Option<dsl::RecordSpec> {
         Some(Self::__dsl_spec())
     }
 }
@@ -89,12 +89,12 @@ impl store::ArtifactPack for ImperativeConfig {
 //#endregion 🔖️ArtifactCodec
 
 
-fn default_contributions_json() -> String {
+async fn default_contributions_json() -> String {
     crate::artifacts::imperative::io::default_imperative_contributions_json()
 }
 
 impl Default for ImperativeConfig {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self { run_output_json: String::new(), locale: "en-US".into(), contributions_json: default_contributions_json() }
     }
 }
@@ -126,7 +126,7 @@ pub enum ImperativeConfigMutation {
 
 //#region 🔖️OpCodec
 impl protocol::OpText for ImperativeConfigMutation {
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
+    async fn parse_op(line: &str) -> Result<Self, store::TextError> {
         let variants = <Self as dsl::DslVariants>::variants();
         for (keyword, spec_fn) in &variants {
             let probe = format!("{} ", keyword);
@@ -141,7 +141,7 @@ impl protocol::OpText for ImperativeConfigMutation {
         }
         Err(dsl::__rt::field_error(format!("unknown mutation line '{line}'")))
     }
-    fn print_op(&self) -> String {
+    async fn print_op(&self) -> String {
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
         let variants = <Self as dsl::DslVariants>::variants();
         let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
@@ -151,7 +151,7 @@ impl protocol::OpText for ImperativeConfigMutation {
 
 /// 🎯️ Handcrafted OpBinary (P6).
 impl protocol::OpBinary for ImperativeConfigMutation {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         const OP_BINARY_FORMAT: u8 = 1;
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
         let variants = <Self as dsl::DslVariants>::variants();
@@ -168,7 +168,7 @@ impl protocol::OpBinary for ImperativeConfigMutation {
         out.extend_from_slice(&body);
         Ok(out)
     }
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         const OP_BINARY_FORMAT: u8 = 1;
         let mut reader = store::pack_rt::ByteReader::new(bytes);
         let format = reader.read_u8()?;
@@ -199,7 +199,7 @@ impl protocol::OpBinary for ImperativeConfigMutation {
 impl protocol::Mutation<ImperativeConfig> for ImperativeConfigMutation {
     type Diff = ImperativeConfig;
 
-    fn diff(&self, base: &ImperativeConfig) -> protocol::MutationOutcome<ImperativeConfig> {
+    async fn diff(&self, base: &ImperativeConfig) -> protocol::MutationOutcome<ImperativeConfig> {
         let mut next = base.clone();
         match self {
             ImperativeConfigMutation::Snapshot { config } => {
@@ -231,7 +231,7 @@ impl protocol::Mutation<ImperativeConfig> for ImperativeConfigMutation {
         protocol::MutationOutcome::new(next)
     }
 
-    fn inverse(&self, base: &ImperativeConfig) -> Vec<Self> {
+    async fn inverse(&self, base: &ImperativeConfig) -> Vec<Self> {
         vec![ImperativeConfigMutation::Snapshot { config: base.clone() }]
     }
 }
@@ -243,21 +243,21 @@ mod tests {
     use super::*;
 
     #[test]
-    fn imperative_config_default_is_empty_english() {
+    async fn imperative_config_default_is_empty_english() {
         let config = ImperativeConfig::default();
         assert!(config.run_output_json.is_empty());
         assert_eq!(config.locale, "en-US");
     }
 
     #[test]
-    fn imperative_config_dsl_round_trips() {
+    async fn imperative_config_dsl_round_trips() {
         let config = ImperativeConfig { run_output_json: r#"{"counter":1}"#.into(), locale: "de-DE".into(), contributions_json: "[]".into() };
         store::os_store::test_support::assert_dsl_round_trip(&config);
         store::os_store::test_support::assert_dsl_pack_equivalence(&config);
     }
 
     #[test]
-    fn config_operation_snapshot_diff_ignores_base() {
+    async fn config_operation_snapshot_diff_ignores_base() {
         let base = ImperativeConfig::default();
         let mut snapshot = base.clone();
         snapshot.run_output_json = r#"{"counter":1}"#.into();
@@ -266,7 +266,7 @@ mod tests {
     }
 
     #[test]
-    fn config_operation_set_run_output_and_locale_round_trip() {
+    async fn config_operation_set_run_output_and_locale_round_trip() {
         store::os_store::test_support::assert_op_line_round_trip(&ImperativeConfigMutation::SetRunOutput { json: r#"{"counter":1}"#.into() });
         store::os_store::test_support::assert_op_line_round_trip(&ImperativeConfigMutation::SetLocale { value: "de-DE".into() });
     }

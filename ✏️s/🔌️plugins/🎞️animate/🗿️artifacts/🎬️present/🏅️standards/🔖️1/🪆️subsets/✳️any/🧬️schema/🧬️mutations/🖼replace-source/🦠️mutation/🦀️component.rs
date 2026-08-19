@@ -22,19 +22,19 @@ pub struct ReplaceSource {
 impl MutationKind<PresentSnapshot, PresentMutation> for ReplaceSource {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "replace", entity: "source", kind: "replace-source", record: "ReplacedSource" };
 
-    fn diff(&self, base: &PresentSnapshot) -> protocol::MutationOutcome<PresentDiff> {
+    async fn diff(&self, base: &PresentSnapshot) -> protocol::MutationOutcome<PresentDiff> {
         super::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &PresentSnapshot) -> Vec<PresentMutation> {
+    async fn inverse(&self, base: &PresentSnapshot) -> Vec<PresentMutation> {
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         format!("Replace source with \"{}\"", self.new_source.src)
     }
 
-    fn target(&self) -> Vec<String> {
+    async fn target(&self) -> Vec<String> {
         vec!["source".into()]
     }
 }

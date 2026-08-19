@@ -27,10 +27,10 @@ pub enum SourcingViewCommand {
 }
 
 impl protocol::OpBinary for SourcingViewCommand {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         Ok(Vec::new())
     }
-    fn decode_op(_bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    async fn decode_op(_bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         Ok(SourcingViewCommand::Noop)
     }
 }
@@ -59,7 +59,7 @@ impl ArtifactViewer for SourcingViewer {
     const DIALECT: Dialect = SOURCING_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = SOURCING_CURATE_SCHEMA;
 
-    fn initial_snapshot() -> CurateSnapshot {
+    async fn initial_snapshot() -> CurateSnapshot {
         crate::artifacts::curate::schema::default_document()
     }
 
@@ -67,11 +67,11 @@ impl ArtifactViewer for SourcingViewer {
     /// change, so this always returns the empty `ViewEmit` — no config mutation, no effect, no dirty
     /// scope. Kept as a real dispatch (not an `unreachable!()`) so a future view-only action (e.g. a
     /// local sort/search toggle) is a pure addition here, never a signature change.
-    fn handle(_command: &Self::Command, _doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _interaction: &InteractionView<'_>, _engines: &EngineHandles) -> Result<ViewEmit<Self::ConfigMutation>, Fault> {
+    async fn handle(_command: &Self::Command, _doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _interaction: &InteractionView<'_>, _engines: &EngineHandles) -> Result<ViewEmit<Self::ConfigMutation>, Fault> {
         Ok(ViewEmit::default())
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> UiNode {
+    async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> UiNode {
         match body_key {
             pool::BODY_KEY => pool::render(doc.snapshot),
             _ => semio_framework_plugin::ui_text(semio_framework_plugin::Label::data(format!("Unknown body: {body_key}"))),
@@ -81,7 +81,7 @@ impl ArtifactViewer for SourcingViewer {
 //#endregion 🔖️Viewer
 
 //#region 🔖️Manifest
-pub fn create_sourcing_viewer() -> semio_framework_plugin::AppDefinition {
+pub async fn create_sourcing_viewer() -> semio_framework_plugin::AppDefinition {
     Viewer::builder(SOURCING_DIALECT)
         .document(["semio", "sourcing", "curate"])
         .icon_id("library")
@@ -99,14 +99,14 @@ mod tests {
     use super::*;
 
     #[test]
-    fn create_sourcing_viewer_builds_a_definition_for_the_viewer_role() {
+    async fn create_sourcing_viewer_builds_a_definition_for_the_viewer_role() {
         let def = create_sourcing_viewer();
         assert_eq!(def.role, semio_framework::AppRole::Viewer);
         assert_eq!(def.dialect, SOURCING_DIALECT.into());
     }
 
     #[test]
-    fn viewer_dialect_matches_the_artifact_coordinate() {
+    async fn viewer_dialect_matches_the_artifact_coordinate() {
         assert_eq!(<SourcingViewer as ArtifactViewer>::DIALECT, SOURCING_DIALECT);
     }
 }

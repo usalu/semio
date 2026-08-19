@@ -53,24 +53,24 @@ pub struct NurbsCurve3 {
 }
 
 impl Curve3 {
-    pub fn domain(&self) -> (f64, f64) {
+    pub async fn domain(&self) -> (f64, f64) {
         match self {
             Curve3::Line { .. } => (f64::NEG_INFINITY, f64::INFINITY),
             Curve3::Circle { .. } | Curve3::Ellipse { .. } => (0.0, std::f64::consts::TAU),
             Curve3::Nurbs { knots, .. } => knots.domain(),
         }
     }
-    pub fn is_periodic(&self) -> bool {
+    pub async fn is_periodic(&self) -> bool {
         matches!(self, Curve3::Circle { .. } | Curve3::Ellipse { .. })
     }
-    pub fn period(&self) -> Option<f64> {
+    pub async fn period(&self) -> Option<f64> {
         if self.is_periodic() {
             Some(std::f64::consts::TAU)
         } else {
             None
         }
     }
-    pub fn eval(&self, t: f64) -> Pnt3 {
+    pub async fn eval(&self, t: f64) -> Pnt3 {
         match self {
             Curve3::Line { origin, dir } => *origin + *dir * t,
             Curve3::Circle { frame, radius } => frame.to_world(Pnt3::new(radius * t.cos(), radius * t.sin(), 0.0)),
@@ -79,7 +79,7 @@ impl Curve3 {
         }
     }
     /// 🌀️ First derivative `dC/dt`.
-    pub fn d1(&self, t: f64) -> Vec3 {
+    pub async fn d1(&self, t: f64) -> Vec3 {
         match self {
             Curve3::Line { dir, .. } => *dir,
             Curve3::Circle { frame, radius } => frame.to_world_vector(Vec3::new(-radius * t.sin(), radius * t.cos(), 0.0)),
@@ -88,7 +88,7 @@ impl Curve3 {
         }
     }
     /// 🌀️ Second derivative `d²C/dt²`.
-    pub fn d2(&self, t: f64) -> Vec3 {
+    pub async fn d2(&self, t: f64) -> Vec3 {
         match self {
             Curve3::Line { .. } => Vec3::ZERO,
             Curve3::Circle { frame, radius } => frame.to_world_vector(Vec3::new(-radius * t.cos(), -radius * t.sin(), 0.0)),
@@ -96,11 +96,11 @@ impl Curve3 {
             Curve3::Nurbs { .. } => nurbs_derivative_finite(self, t, 2),
         }
     }
-    pub fn tangent(&self, t: f64) -> Option<Vec3> {
+    pub async fn tangent(&self, t: f64) -> Option<Vec3> {
         self.d1(t).normalized()
     }
     /// 🌀️ Signed curvature magnitude `|C' × C''| / |C'|³` (the standard space-curve formula).
-    pub fn curvature(&self, t: f64) -> f64 {
+    pub async fn curvature(&self, t: f64) -> f64 {
         let d1 = self.d1(t);
         let d2 = self.d2(t);
         let speed = d1.norm();
@@ -117,7 +117,7 @@ impl Curve3 {
     /// quadratic circle/ellipse representation, its *own* parametrization is not angle-linear
     /// except at those breakpoints (a well-known property of the construction, not an
     /// approximation: every point it produces still lies exactly on the circle/ellipse).
-    pub fn to_nurbs(&self, domain: (f64, f64)) -> NurbsCurve3 {
+    pub async fn to_nurbs(&self, domain: (f64, f64)) -> NurbsCurve3 {
         match self {
             Curve3::Line { origin, dir } => {
                 let p0 = *origin + *dir * domain.0;
@@ -131,7 +131,7 @@ impl Curve3 {
     }
 }
 
-fn eval_nurbs_curve(knots: &KnotVector, controls: &[Pnt3], weights: &[f64], t: f64) -> Pnt3 {
+async fn eval_nurbs_curve(knots: &KnotVector, controls: &[Pnt3], weights: &[f64], t: f64) -> Pnt3 {
     let hx: Vec<f64> = controls.iter().zip(weights).map(|(p, w)| p.x * w).collect();
     let hy: Vec<f64> = controls.iter().zip(weights).map(|(p, w)| p.y * w).collect();
     let hz: Vec<f64> = controls.iter().zip(weights).map(|(p, w)| p.z * w).collect();
@@ -143,7 +143,7 @@ fn eval_nurbs_curve(knots: &KnotVector, controls: &[Pnt3], weights: &[f64], t: f
 /// dedicated rational-derivative (de Boor `A_k(u)` recurrence) implementation is needed; accurate
 /// to ~1e-6, adequate for tangent/curvature use but not for tight Newton iterations on NURBS,
 /// which should prefer analytic curves or accept the extra refinement step.
-fn nurbs_derivative_finite(curve: &Curve3, t: f64, order: u32) -> Vec3 {
+async fn nurbs_derivative_finite(curve: &Curve3, t: f64, order: u32) -> Vec3 {
     let h = 1e-4;
     match order {
         1 => (curve.eval(t + h) - curve.eval(t - h)) * (1.0 / (2.0 * h)),
@@ -160,7 +160,7 @@ fn nurbs_derivative_finite(curve: &Curve3, t: f64, order: u32) -> Vec3 {
 /// 🌀️ Converts a circular/elliptical arc over `domain` into an exact rational-quadratic NURBS,
 /// splitting into `⌈span / 120°⌉` equal-angle spans (the standard well-conditioned construction:
 /// each span's middle control point sits at `radius / cos(half-span)` with weight `cos(half-span)`).
-fn arc_to_nurbs(frame: &Frame3, radius_x: f64, radius_y: f64, domain: (f64, f64)) -> NurbsCurve3 {
+async fn arc_to_nurbs(frame: &Frame3, radius_x: f64, radius_y: f64, domain: (f64, f64)) -> NurbsCurve3 {
     let span = domain.1 - domain.0;
     let max_span = std::f64::consts::TAU / 3.0; // 120 degrees
     let n_spans = (span.abs() / max_span).ceil().max(1.0) as usize;
@@ -212,14 +212,14 @@ pub enum Curve2 {
 }
 
 impl Curve2 {
-    pub fn domain(&self) -> (f64, f64) {
+    pub async fn domain(&self) -> (f64, f64) {
         match self {
             Curve2::Line { .. } => (f64::NEG_INFINITY, f64::INFINITY),
             Curve2::Circle { .. } | Curve2::Ellipse { .. } => (0.0, std::f64::consts::TAU),
             Curve2::Nurbs { knots, .. } => knots.domain(),
         }
     }
-    pub fn eval(&self, t: f64) -> Pnt2 {
+    pub async fn eval(&self, t: f64) -> Pnt2 {
         match self {
             Curve2::Line { origin, dir } => *origin + *dir * t,
             Curve2::Circle { center, radius } => *center + Vec2::new(radius * t.cos(), radius * t.sin()),
@@ -231,7 +231,7 @@ impl Curve2 {
             Curve2::Nurbs { knots, controls, weights } => eval_nurbs_curve2(knots, controls, weights, t),
         }
     }
-    pub fn d1(&self, t: f64) -> Vec2 {
+    pub async fn d1(&self, t: f64) -> Vec2 {
         match self {
             Curve2::Line { dir, .. } => *dir,
             Curve2::Circle { radius, .. } => Vec2::new(-radius * t.sin(), radius * t.cos()),
@@ -248,7 +248,7 @@ impl Curve2 {
     }
 }
 
-fn eval_nurbs_curve2(knots: &KnotVector, controls: &[Pnt2], weights: &[f64], t: f64) -> Pnt2 {
+async fn eval_nurbs_curve2(knots: &KnotVector, controls: &[Pnt2], weights: &[f64], t: f64) -> Pnt2 {
     let hx: Vec<f64> = controls.iter().zip(weights).map(|(p, w)| p.x * w).collect();
     let hy: Vec<f64> = controls.iter().zip(weights).map(|(p, w)| p.y * w).collect();
     let w = de_boor(knots, weights, t);
@@ -262,11 +262,11 @@ fn eval_nurbs_curve2(knots: &KnotVector, controls: &[Pnt2], weights: &[f64], t: 
 mod tests {
     use super::*;
 
-    fn fd_d1(curve: &Curve3, t: f64) -> Vec3 {
+    async fn fd_d1(curve: &Curve3, t: f64) -> Vec3 {
         let h = 1e-6;
         (curve.eval(t + h) - curve.eval(t - h)) * (1.0 / (2.0 * h))
     }
-    fn fd_d2(curve: &Curve3, t: f64) -> Vec3 {
+    async fn fd_d2(curve: &Curve3, t: f64) -> Vec3 {
         let h = 1e-4;
         let a = curve.eval(t + h).to_vec();
         let b = curve.eval(t).to_vec();
@@ -275,7 +275,7 @@ mod tests {
     }
 
     #[test]
-    fn line_eval_and_derivatives() {
+    async fn line_eval_and_derivatives() {
         let l = Curve3::Line { origin: Pnt3::new(1.0, 2.0, 3.0), dir: Vec3::new(2.0, 0.0, 0.0) };
         assert_eq!(l.eval(0.5), Pnt3::new(2.0, 2.0, 3.0));
         assert_eq!(l.d1(0.5), Vec3::new(2.0, 0.0, 0.0));
@@ -284,7 +284,7 @@ mod tests {
     }
 
     #[test]
-    fn circle_eval_stays_on_circle_and_derivatives_match_finite_differences() {
+    async fn circle_eval_stays_on_circle_and_derivatives_match_finite_differences() {
         let frame = Frame3::from_normal(Pnt3::new(0.0, 0.0, 0.0), Vec3::Z).unwrap();
         let c = Curve3::Circle { frame, radius: 3.0 };
         for i in 0..10 {
@@ -297,7 +297,7 @@ mod tests {
     }
 
     #[test]
-    fn circle_curvature_equals_reciprocal_radius() {
+    async fn circle_curvature_equals_reciprocal_radius() {
         let frame = Frame3::from_normal(Pnt3::new(1.0, 1.0, 1.0), Vec3::X).unwrap();
         let c = Curve3::Circle { frame, radius: 2.5 };
         for t in [0.0, 1.0, 3.0, 5.5] {
@@ -306,7 +306,7 @@ mod tests {
     }
 
     #[test]
-    fn ellipse_derivatives_match_finite_differences() {
+    async fn ellipse_derivatives_match_finite_differences() {
         let frame = Frame3::WORLD;
         let e = Curve3::Ellipse { frame, major_radius: 4.0, minor_radius: 2.0 };
         for i in 0..8 {
@@ -316,7 +316,7 @@ mod tests {
     }
 
     #[test]
-    fn line_to_nurbs_matches_line_eval() {
+    async fn line_to_nurbs_matches_line_eval() {
         let l = Curve3::Line { origin: Pnt3::new(0.0, 0.0, 0.0), dir: Vec3::new(1.0, 2.0, 3.0) };
         let nurbs = l.to_nurbs((0.0, 2.0));
         for i in 0..=10 {
@@ -331,7 +331,7 @@ mod tests {
     /// agrees with the original at `domain.0`/`domain.1` — NOT pointwise parameter equality
     /// in between, since the standard construction is not angle-linear except at breakpoints
     /// (confirmed by hand + a standalone check: see phase-2 scope note).
-    fn assert_nurbs_traces_circle(nurbs: &NurbsCurve3, frame: &Frame3, radius: f64, domain: (f64, f64), samples: usize) {
+    async fn assert_nurbs_traces_circle(nurbs: &NurbsCurve3, frame: &Frame3, radius: f64, domain: (f64, f64), samples: usize) {
         for i in 0..=samples {
             let t = domain.0 + (domain.1 - domain.0) * (i as f64 / samples as f64);
             let p = eval_nurbs_curve(&nurbs.knots, &nurbs.controls, &nurbs.weights, t);
@@ -341,7 +341,7 @@ mod tests {
     }
 
     #[test]
-    fn circle_to_nurbs_traces_the_circle_exactly_for_small_arc() {
+    async fn circle_to_nurbs_traces_the_circle_exactly_for_small_arc() {
         let frame = Frame3::from_normal(Pnt3::new(0.0, 0.0, 0.0), Vec3::Z).unwrap();
         let c = Curve3::Circle { frame, radius: 5.0 };
         let domain = (0.2, 0.2 + std::f64::consts::FRAC_PI_3); // 60 degrees, single span
@@ -352,7 +352,7 @@ mod tests {
     }
 
     #[test]
-    fn circle_to_nurbs_traces_the_circle_exactly_for_full_circle_multi_span() {
+    async fn circle_to_nurbs_traces_the_circle_exactly_for_full_circle_multi_span() {
         let frame = Frame3::from_normal(Pnt3::new(2.0, -1.0, 0.5), Vec3::new(0.3, 0.2, 1.0)).unwrap();
         let c = Curve3::Circle { frame, radius: 1.7 };
         let domain = c.domain();
@@ -364,7 +364,7 @@ mod tests {
     }
 
     #[test]
-    fn ellipse_to_nurbs_traces_the_ellipse_exactly() {
+    async fn ellipse_to_nurbs_traces_the_ellipse_exactly() {
         let frame = Frame3::WORLD;
         let major = 3.0;
         let minor = 1.0;
@@ -383,7 +383,7 @@ mod tests {
     }
 
     #[test]
-    fn curve2_line_and_circle_eval() {
+    async fn curve2_line_and_circle_eval() {
         let l = Curve2::Line { origin: Pnt2::new(0.0, 0.0), dir: Vec2::new(1.0, 1.0) };
         assert_eq!(l.eval(2.0), Pnt2::new(2.0, 2.0));
         let c = Curve2::Circle { center: Pnt2::new(1.0, 1.0), radius: 2.0 };
@@ -395,7 +395,7 @@ mod tests {
         use super::*;
 
         #[test]
-        fn circle_to_nurbs_traces_the_circle_exactly_for_random_arcs() {
+        async fn circle_to_nurbs_traces_the_circle_exactly_for_random_arcs() {
             let mut rng = semio_framework_geometry::random::Rng::from_seed(53);
             for _ in 0..100 {
                 let frame =

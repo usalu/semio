@@ -17,22 +17,22 @@ pub struct ChangeObjectLocked {
 impl protocol::MutationKind<Puzzle3dSnapshot, Puzzle3dMutation> for ChangeObjectLocked {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "object", kind: "change-object-locked", record: "ChangedObjectLocked" };
 
-    fn diff(&self, base: &Puzzle3dSnapshot) -> protocol::MutationOutcome<Puzzle3dDiff> {
+    async fn diff(&self, base: &Puzzle3dSnapshot) -> protocol::MutationOutcome<Puzzle3dDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &Puzzle3dSnapshot) -> Vec<Puzzle3dMutation> {
+    async fn inverse(&self, base: &Puzzle3dSnapshot) -> Vec<Puzzle3dMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         format!("Change object \"{}\" locked", self.id)
     }
-    fn target(&self) -> Vec<String> {
+    async fn target(&self) -> Vec<String> {
         vec![self.id.clone()]
     }
 }
 //#endregion 🔖️Mutation
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn change_object_locked(id: String, new_locked: bool) -> Puzzle3dMutation {
+pub async fn change_object_locked(id: String, new_locked: bool) -> Puzzle3dMutation {
     Puzzle3dMutation::ChangeObjectLocked(ChangeObjectLocked { id, new_locked })
 }

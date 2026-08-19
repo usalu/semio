@@ -13,14 +13,14 @@ pub const BODY_KEY: &str = TextWindowKit::KIND_ID;
 
 //#region 🔖️Definition
 /// 🧱️ Stitched into the viewer manifest by `crate::viewer::txt::create_txt_viewer`.
-pub fn definition() -> WindowKindDefinition {
+pub async fn definition() -> WindowKindDefinition {
     WindowKindDefinition { label: LocalizedLabel::native("Text", "Text"), icon_id: "type".into(), ..TextWindowKit::window_kind() }
 }
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
 /// 👁️ Pure `TxtSnapshot -> UiNode` read: same join as the editor's own render, `read_only: true`.
-pub fn render(document: &TxtSnapshot) -> UiNode {
+pub async fn render(document: &TxtSnapshot) -> UiNode {
     let mut text = document.lines.join(document.line_ending.as_str());
     if document.trailing_newline && !document.lines.is_empty() {
         text.push_str(document.line_ending.as_str());
@@ -35,14 +35,14 @@ mod tests {
     use super::*;
 
     #[test]
-    fn definition_declares_a_text_window() {
+    async fn definition_declares_a_text_window() {
         let def = definition();
         assert_eq!(def.id, WINDOW_KIND_ID);
         assert_eq!(def.body_key, BODY_KEY);
     }
 
     #[test]
-    fn render_joins_lines_with_the_line_ending() {
+    async fn render_joins_lines_with_the_line_ending() {
         let document = TxtSnapshot { schema: "stdio.txt".into(), lines: vec!["a".into(), "b".into()], trailing_newline: false, line_ending: Default::default() };
         let UiNode::ComponentScene(node) = render(&document) else { panic!("expected ComponentScene") };
         let scene = node.text_editor.expect("text editor scene");

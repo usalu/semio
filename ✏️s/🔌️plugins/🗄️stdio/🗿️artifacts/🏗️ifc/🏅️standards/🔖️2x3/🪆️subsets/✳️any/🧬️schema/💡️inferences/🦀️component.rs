@@ -26,7 +26,7 @@ pub struct Ifc2x3Inference {
 }
 
 impl protocol::Inference<Ifc2x3Snapshot> for Ifc2x3Inference {
-    fn infer(snapshot: &Ifc2x3Snapshot) -> Self {
+    async fn infer(snapshot: &Ifc2x3Snapshot) -> Self {
         Self { bounds: compute_ifc2x3_bounds(snapshot) }
     }
 }
@@ -34,19 +34,19 @@ impl protocol::Inference<Ifc2x3Snapshot> for Ifc2x3Inference {
 /// 🌱 Defined in terms of `infer` (not derived) — keeps the law correct regardless of whether
 /// `Ifc2x3Snapshot::default()`'s `document` ever stops being empty.
 impl Default for Ifc2x3Inference {
-    fn default() -> Self {
+    async fn default() -> Self {
         <Self as protocol::Inference<Ifc2x3Snapshot>>::infer(&Ifc2x3Snapshot::default())
     }
 }
 
 impl protocol::InferenceSpec<Ifc2x3Snapshot> for Ifc2x3Inference {
-    fn inference_schema_id() -> &'static str {
+    async fn inference_schema_id() -> &'static str {
         "s.stdio.ifc.2x3.inference"
     }
-    fn schema_version() -> u32 {
+    async fn schema_version() -> u32 {
         1
     }
-    fn fields() -> &'static [protocol::InferenceFieldSpec] {
+    async fn fields() -> &'static [protocol::InferenceFieldSpec] {
         &[protocol::InferenceFieldSpec { id: "s.stdio.ifc.2x3.inference.bounds", reads: &["document"] }]
     }
 }
@@ -67,7 +67,7 @@ impl ArtifactInferrer for crate::artifacts::ifc::standards::v2x3::subsets::any::
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.stdio.ifc.2x3.inference`'s facet leaves into the OS-wide inference catalog —
 /// call once at plugin init, alongside `ifc2x3_artifact_schema_descriptor`'s registration.
-pub fn ifc2x3_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
+pub async fn ifc2x3_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
     schema::ArtifactInferenceDescriptor {
         id: "s.stdio.ifc.2x3.inference",
         inference: schema::FacetLeaves {
@@ -88,13 +88,13 @@ mod tests {
     use protocol::Inference;
 
     #[test]
-    fn inference_determinism_law() {
+    async fn inference_determinism_law() {
         let snapshot = Ifc2x3Snapshot::default();
         assert_eq!(Ifc2x3Inference::infer(&snapshot), Ifc2x3Inference::infer(&snapshot));
     }
 
     #[test]
-    fn inference_default_law() {
+    async fn inference_default_law() {
         assert_eq!(Ifc2x3Inference::infer(&Ifc2x3Snapshot::default()), Ifc2x3Inference::default());
     }
 }

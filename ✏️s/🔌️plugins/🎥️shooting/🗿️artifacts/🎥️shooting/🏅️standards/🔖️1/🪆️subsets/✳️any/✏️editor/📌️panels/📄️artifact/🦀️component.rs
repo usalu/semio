@@ -11,7 +11,7 @@ pub const SHOOTING_PLAY_BODY_DOCUMENT: &str = "shooting.play.document";
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
-pub fn definition() -> PanelTabDefinition {
+pub async fn definition() -> PanelTabDefinition {
     PanelTabDefinition { kind: PanelTabKind::App(FRAMEWORK_PANEL_TAB_ARTIFACT_ID.into()), label: LocalizedLabel::native(FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL, "Dokument"), group: PanelGroup::Workbench, body_key: Some(SHOOTING_PLAY_BODY_DOCUMENT.into()), children: Vec::new() }
 }
 //#endregion 🔖️Definition
@@ -23,12 +23,12 @@ pub fn definition() -> PanelTabDefinition {
 /// `.interaction_domain(...)` (matches `cad`'s `document_tree_selected_ids` precedent) — the asset row's
 /// click action is built manually instead, one target per click (`"replace"` merge, matching the old
 /// `setSelection` row-click semantics).
-fn asset_select_action(asset_id: &str) -> semio_framework_plugin::ActionDescriptor {
+async fn asset_select_action(asset_id: &str) -> semio_framework_plugin::ActionDescriptor {
     let targets = serde_json::to_string(&json!([{ "granularity": "asset", "id": asset_id }])).unwrap_or_default();
     crate::editor::shooting::shooting_action("interactionSelect", Some(json!({ "domainId": SHOOTING_INTERACTION_DOMAIN, "targets": targets, "merge": "replace" })))
 }
 
-pub fn render(snapshot: &ShootingSnapshot, labels: &ShootingLabels) -> UiNode {
+pub async fn render(snapshot: &ShootingSnapshot, labels: &ShootingLabels) -> UiNode {
     let shot_items: Vec<semio_framework_plugin::UiTreeItemNode> = snapshot
         .shots
         .iter()
@@ -50,7 +50,7 @@ mod tests {
     use crate::editor::shooting::testkit::{render as render_body, shooting_app};
 
     #[test]
-    fn document_lists_shots_and_assets() {
+    async fn document_lists_shots_and_assets() {
         let mut app = shooting_app();
         let json = render_body(&mut app, SHOOTING_PLAY_BODY_DOCUMENT);
         assert!(json.contains("Overview Svg"));

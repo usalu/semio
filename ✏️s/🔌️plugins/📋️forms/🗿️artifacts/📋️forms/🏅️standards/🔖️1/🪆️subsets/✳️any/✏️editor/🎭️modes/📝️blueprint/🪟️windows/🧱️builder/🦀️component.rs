@@ -12,7 +12,7 @@ const FORMS_PLAY_SURFACE_BLUEPRINT: &str = "forms.play.blueprint";
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
-pub fn definition() -> WindowKindDefinition {
+pub async fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
         id: FORMS_PLAY_WINDOW_BLUEPRINT.into(),
         label: LocalizedLabel::native("Blueprint", "Entwurf"),
@@ -34,7 +34,7 @@ pub fn definition() -> WindowKindDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-fn forms_playbook_builder_config() -> crate::playbook::PlaybookBuilderConfig {
+async fn forms_playbook_builder_config() -> crate::playbook::PlaybookBuilderConfig {
     crate::playbook::PlaybookBuilderConfig { action_namespace: "forms-blueprint", controller_id: crate::editor::forms::FORMS_PLAY_APP_ID, labels: crate::playbook::PLAYBOOK_BUILDER_LABELS_EN }
 }
 
@@ -42,7 +42,7 @@ fn forms_playbook_builder_config() -> crate::playbook::PlaybookBuilderConfig {
 /// `InteractionView` (a known SDK gap — matches `gis2d`'s and `note`'s inspection panel precedent), so
 /// this block-list surface's own selected-card highlight (`render_playbook_builder`'s `selected_id`)
 /// can no longer be driven from live framework selection — it always renders with none highlighted now.
-pub fn render(spec: &FormsSnapshot, config: &FormsConfig, labels: &FormsLabels) -> UiNode {
+pub async fn render(spec: &FormsSnapshot, config: &FormsConfig, labels: &FormsLabels) -> UiNode {
     let contributions = crate::editor::forms::parse_contributions(config);
     let palette: Vec<BlockPaletteEntry> = crate::editor::forms::catalogue_kinds(&contributions, labels).into_iter().map(|(kind, label, icon_id)| BlockPaletteEntry { block_kind: kind, label, icon_id }).collect();
     let builder_config = forms_playbook_builder_config();
@@ -59,7 +59,7 @@ mod tests {
     use crate::artifacts::forms::forms_steps;
 
     #[test]
-    fn renders_blueprint_builder_cards() {
+    async fn renders_blueprint_builder_cards() {
         let mut app = forms_app();
         let first_question_id = forms_steps(&app.snapshot().expect("projection"))[0].blocks[0].id.clone();
         let json = render_body(&mut app, BODY_BLUEPRINT);
@@ -70,7 +70,7 @@ mod tests {
     }
 
     #[test]
-    fn definition_declares_the_block_list_surface_and_body_key() {
+    async fn definition_declares_the_block_list_surface_and_body_key() {
         let definition = definition();
         assert_eq!(definition.body_key, FORMS_PLAY_BODY_BLUEPRINT);
         assert!(matches!(definition.surface_kind, SurfaceKind::BlockList));

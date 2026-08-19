@@ -18,7 +18,7 @@ use semio_framework_plugin::{ExecutionMode, Plugin};
 /// `🔌️plugin/🏗️builder/🦀️component.rs`: `try_library` is a documentation-only alias that literally
 /// calls `self.try_build()`, so both are functionally identical, but `try_build` is the semantically
 /// honest choice now that this plugin carries real document apps).
-pub fn plugin() -> Result<Plugin, semio_framework_plugin::PluginAssemblyError> {
+pub async fn plugin() -> Result<Plugin, semio_framework_plugin::PluginAssemblyError> {
     Plugin::builder("energy")
         .label("Energy")
         .version("0.1.0")
@@ -44,17 +44,17 @@ mod surface_tests {
     /// stores are byte-for-byte unchanged before/after (`semio_framework_plugin::testkit`, landed by
     /// W0-F — see `📓️w0-f-report.md` Gap 2; the pilot's own local stand-in is no longer needed here).
     #[test]
-    fn energy_model_viewer_never_mutates() {
+    async fn energy_model_viewer_never_mutates() {
         assert_viewer_never_mutates::<crate::viewer::model::EnergyModelViewer>();
     }
 
     #[test]
-    fn energy_model_editor_and_viewer_share_dialect() {
+    async fn energy_model_editor_and_viewer_share_dialect() {
         assert_editor_and_viewer_share_dialect::<crate::editor::model::EnergyModelEditor, crate::viewer::model::EnergyModelViewer>();
     }
 
     #[test]
-    fn new_viewer_builds_a_runnable_energy_model_viewer_app() {
+    async fn new_viewer_builds_a_runnable_energy_model_viewer_app() {
         let _app: semio_framework_plugin::app::VcsArtifactApp<ViewerApp<crate::viewer::model::EnergyModelViewer>> = new_viewer::<crate::viewer::model::EnergyModelViewer>();
     }
 }

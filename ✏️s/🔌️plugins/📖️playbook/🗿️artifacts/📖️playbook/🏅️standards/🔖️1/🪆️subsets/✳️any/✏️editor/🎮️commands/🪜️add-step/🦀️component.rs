@@ -10,7 +10,7 @@ use serde::{Deserialize, Serialize};
 #[dsl(keyword = "add-step")]
 pub struct AddStep {}
 
-pub fn handle(_payload: &AddStep, doc: &ArtifactView<'_, PlaybookSnapshot>, _cfg: &ConfigView<'_, PlaybookConfig>) -> Result<Emit<PlaybookMutation, PlaybookConfigMutation>, Fault> {
+pub async fn handle(_payload: &AddStep, doc: &ArtifactView<'_, PlaybookSnapshot>, _cfg: &ConfigView<'_, PlaybookConfig>) -> Result<Emit<PlaybookMutation, PlaybookConfigMutation>, Fault> {
     let step_id = format!("step-{}", doc.snapshot.steps().len() + 1);
     Ok(Emit::mutations(vec![add_step_operation(doc.snapshot, step_id)]))
 }
@@ -28,7 +28,7 @@ mod tests {
     use crate::editor::playbook::commands::update_playbook::UpdatePlaybook;
 
     #[test]
-    fn add_step_action_appends_step() {
+    async fn add_step_action_appends_step() {
         let mut app = playbook_app();
         let before = app.snapshot().expect("projection").steps().len();
         dispatch(&mut app, PlaybookCommand::AddStep(AddStep {}));
@@ -36,7 +36,7 @@ mod tests {
     }
 
     #[test]
-    fn remove_and_move_step_actions() {
+    async fn remove_and_move_step_actions() {
         let mut app = playbook_app();
         dispatch(&mut app, PlaybookCommand::AddStep(AddStep {}));
         let last_step_id = app.snapshot().expect("projection").steps().last().unwrap().id.clone();
@@ -47,7 +47,7 @@ mod tests {
     }
 
     #[test]
-    fn remove_step_with_empty_id_is_a_no_op() {
+    async fn remove_step_with_empty_id_is_a_no_op() {
         let mut app = playbook_app();
         let before = app.snapshot().expect("projection").steps().len();
         dispatch(&mut app, PlaybookCommand::RemoveStep(RemoveStep { step_id: String::new() }));
@@ -55,7 +55,7 @@ mod tests {
     }
 
     #[test]
-    fn update_playbook_title_coalesces_into_one_undo_step() {
+    async fn update_playbook_title_coalesces_into_one_undo_step() {
         let mut app = playbook_app();
         for title in ["R", "Re", "Recipe"] {
             dispatch(&mut app, PlaybookCommand::UpdatePlaybook(UpdatePlaybook { value: title.into() }));

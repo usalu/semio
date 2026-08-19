@@ -145,7 +145,7 @@ pub struct HtmlChildAdded {
 /// kept as a bare `&[usize]` here so this module never needs to depend on the mutations module)
 /// into a full `HtmlDiff` by nesting it through `HtmlChildModified` entries from the root down to
 /// that depth. `path == []` addresses the root itself, so `leaf` becomes `HtmlDiff.root` directly.
-pub fn diff_at_path(path: &[usize], leaf: HtmlNodeDiff) -> HtmlDiff {
+pub async fn diff_at_path(path: &[usize], leaf: HtmlNodeDiff) -> HtmlDiff {
     let mut node_diff = leaf;
     for &index in path.iter().rev() {
         node_diff = HtmlNodeDiff::Element(HtmlElementDiff { name: None, attributes: None, children: Some(HtmlChildrenDiff { removed: Vec::new(), modified: vec![HtmlChildModified { index, diff: node_diff }], added: Vec::new() }) });
@@ -156,7 +156,7 @@ pub fn diff_at_path(path: &[usize], leaf: HtmlNodeDiff) -> HtmlDiff {
 
 //#region 🔖️Apply
 impl MutationDiff<HtmlSnapshot> for HtmlDiff {
-    fn apply(&self, base: &HtmlSnapshot) -> MutationApplyResult<HtmlSnapshot> {
+    async fn apply(&self, base: &HtmlSnapshot) -> MutationApplyResult<HtmlSnapshot> {
         if let Some(root) = &self.root {
             validate_html_node(&base.root, root)?;
         }
@@ -170,7 +170,7 @@ impl MutationDiff<HtmlSnapshot> for HtmlDiff {
         Ok(next)
     }
 
-    fn absorb(&mut self, other: Self) {
+    async fn absorb(&mut self, other: Self) {
         if other.doctype.is_some() {
             self.doctype = other.doctype;
         }
@@ -182,7 +182,7 @@ impl MutationDiff<HtmlSnapshot> for HtmlDiff {
     }
 }
 
-fn validate_html_node(base: &HtmlNode, diff: &HtmlNodeDiff) -> MutationApplyResult<()> {
+async fn validate_html_node(base: &HtmlNode, diff: &HtmlNodeDiff) -> MutationApplyResult<()> {
     match diff {
         HtmlNodeDiff::Replace { .. } => Ok(()),
         HtmlNodeDiff::Text { .. } if matches!(base, HtmlNode::Text { .. }) => Ok(()),
@@ -204,7 +204,7 @@ fn validate_html_node(base: &HtmlNode, diff: &HtmlNodeDiff) -> MutationApplyResu
     }
 }
 
-fn validate_html_attributes(base: &[HtmlAttr], diff: &HtmlAttributesDiff) -> MutationApplyResult<()> {
+async fn validate_html_attributes(base: &[HtmlAttr], diff: &HtmlAttributesDiff) -> MutationApplyResult<()> {
     let mut removed = std::collections::HashSet::new();
     for name in &diff.removed {
         if base.iter().all(|attr| &attr.name != name) || !removed.insert(name) {
@@ -227,7 +227,7 @@ fn validate_html_attributes(base: &[HtmlAttr], diff: &HtmlAttributesDiff) -> Mut
     Ok(())
 }
 
-fn validate_html_children(base: &[HtmlNode], diff: &HtmlChildrenDiff) -> MutationApplyResult<()> {
+async fn validate_html_children(base: &[HtmlNode], diff: &HtmlChildrenDiff) -> MutationApplyResult<()> {
     let mut removed = std::collections::HashSet::new();
     for &index in &diff.removed {
         if index >= base.len() || !removed.insert(index) {
@@ -251,7 +251,7 @@ fn validate_html_children(base: &[HtmlNode], diff: &HtmlChildrenDiff) -> Mutatio
     Ok(())
 }
 
-fn apply_node_diff(node: &HtmlNode, diff: &HtmlNodeDiff) -> HtmlNode {
+async fn apply_node_diff(node: &HtmlNode, diff: &HtmlNodeDiff) -> HtmlNode {
     match diff {
         HtmlNodeDiff::Replace { node: replacement } => replacement.clone(),
         HtmlNodeDiff::Text { text } => match node {
@@ -283,7 +283,7 @@ fn apply_node_diff(node: &HtmlNode, diff: &HtmlNodeDiff) -> HtmlNode {
     }
 }
 
-fn apply_attrs_diff(attrs: &[HtmlAttr], diff: &HtmlAttributesDiff) -> Vec<HtmlAttr> {
+async fn apply_attrs_diff(attrs: &[HtmlAttr], diff: &HtmlAttributesDiff) -> Vec<HtmlAttr> {
     let mut out: Vec<HtmlAttr> = attrs
         .iter()
         .filter(|a| !diff.removed.contains(&a.name))
@@ -301,7 +301,7 @@ fn apply_attrs_diff(attrs: &[HtmlAttr], diff: &HtmlAttributesDiff) -> Vec<HtmlAt
     out
 }
 
-fn apply_children_diff(children: &[HtmlNode], diff: &HtmlChildrenDiff) -> Vec<HtmlNode> {
+async fn apply_children_diff(children: &[HtmlNode], diff: &HtmlChildrenDiff) -> Vec<HtmlNode> {
     let mut slots: Vec<Option<HtmlNode>> = children.iter().cloned().map(Some).collect();
     for m in &diff.modified {
         if let Some(Some(node)) = slots.get(m.index) {
@@ -330,20 +330,20 @@ fn apply_children_diff(children: &[HtmlNode], diff: &HtmlChildrenDiff) -> Vec<Ht
 
 //#region 🔖️DiffAlgebra
 impl DiffAlgebra<HtmlSnapshot> for HtmlDiff {
-    fn inverse(&self, base: &HtmlSnapshot) -> Self {
+    async fn inverse(&self, base: &HtmlSnapshot) -> Self {
         HtmlDiff { doctype: self.doctype.as_ref().map(|_| base.doctype.clone()), root: self.root.as_ref().map(|d| inverse_node_diff(&base.root, d)) }
     }
 
-    fn between(base: &HtmlSnapshot, other: &HtmlSnapshot) -> Self {
+    async fn between(base: &HtmlSnapshot, other: &HtmlSnapshot) -> Self {
         HtmlDiff { doctype: if base.doctype != other.doctype { Some(other.doctype.clone()) } else { None }, root: node_diff_between(&base.root, &other.root) }
     }
 
-    fn is_empty(&self) -> bool {
+    async fn is_empty(&self) -> bool {
         self.doctype.is_none() && self.root.is_none()
     }
 }
 
-fn inverse_node_diff(current: &HtmlNode, diff: &HtmlNodeDiff) -> HtmlNodeDiff {
+async fn inverse_node_diff(current: &HtmlNode, diff: &HtmlNodeDiff) -> HtmlNodeDiff {
     match diff {
         HtmlNodeDiff::Replace { .. } => HtmlNodeDiff::Replace { node: current.clone() },
         HtmlNodeDiff::Text { .. } => match current {
@@ -369,7 +369,7 @@ fn inverse_node_diff(current: &HtmlNode, diff: &HtmlNodeDiff) -> HtmlNodeDiff {
     }
 }
 
-fn inverse_attrs_diff(base_attrs: &[HtmlAttr], diff: &HtmlAttributesDiff) -> HtmlAttributesDiff {
+async fn inverse_attrs_diff(base_attrs: &[HtmlAttr], diff: &HtmlAttributesDiff) -> HtmlAttributesDiff {
     let removed: Vec<String> = diff.added.iter().map(|a| a.name.clone()).collect();
     let mut modified = Vec::new();
     for m in &diff.modified {
@@ -388,7 +388,7 @@ fn inverse_attrs_diff(base_attrs: &[HtmlAttr], diff: &HtmlAttributesDiff) -> Htm
     HtmlAttributesDiff { removed, modified, added }
 }
 
-fn inverse_children_diff(base_children: &[HtmlNode], diff: &HtmlChildrenDiff) -> HtmlChildrenDiff {
+async fn inverse_children_diff(base_children: &[HtmlNode], diff: &HtmlChildrenDiff) -> HtmlChildrenDiff {
     let removed: Vec<usize> = diff.added.iter().map(|a| a.index).collect();
     let mut modified = Vec::new();
     for m in &diff.modified {
@@ -407,7 +407,7 @@ fn inverse_children_diff(base_children: &[HtmlNode], diff: &HtmlChildrenDiff) ->
     HtmlChildrenDiff { removed, modified, added }
 }
 
-fn node_diff_between(base: &HtmlNode, other: &HtmlNode) -> Option<HtmlNodeDiff> {
+async fn node_diff_between(base: &HtmlNode, other: &HtmlNode) -> Option<HtmlNodeDiff> {
     if base == other {
         return None;
     }
@@ -429,7 +429,7 @@ fn node_diff_between(base: &HtmlNode, other: &HtmlNode) -> Option<HtmlNodeDiff> 
     }
 }
 
-fn attrs_diff_between(base: &[HtmlAttr], other: &[HtmlAttr]) -> Option<HtmlAttributesDiff> {
+async fn attrs_diff_between(base: &[HtmlAttr], other: &[HtmlAttr]) -> Option<HtmlAttributesDiff> {
     let mut removed = Vec::new();
     let mut modified = Vec::new();
     for b in base {
@@ -455,7 +455,7 @@ fn attrs_diff_between(base: &[HtmlAttr], other: &[HtmlAttr]) -> Option<HtmlAttri
 /// 🧮️ Naive positional child diff per the recipe's "between matching" rule for index-keyed
 /// collections: pairwise-compare `0..min(base.len(), other.len())` as `modified`, the base tail
 /// as `removed`, the other tail as `added`. Not an LCS-based diff (no move/reorder detection).
-fn children_diff_between(base: &[HtmlNode], other: &[HtmlNode]) -> Option<HtmlChildrenDiff> {
+async fn children_diff_between(base: &[HtmlNode], other: &[HtmlNode]) -> Option<HtmlChildrenDiff> {
     let min_len = base.len().min(other.len());
     let mut modified = Vec::new();
     for i in 0..min_len {
@@ -479,7 +479,7 @@ fn children_diff_between(base: &[HtmlNode], other: &[HtmlNode]) -> Option<HtmlCh
 /// 🧮️ Sequential-coalesce absorb per the recipe's normative algorithm (base-free index-transport
 /// over `d1`'s removed/added), ported from `SvgDiff`'s own `absorb_children_diff`/`transform_index`
 /// (identical algorithm, own types).
-fn transform_index(idx: usize, removed: &[usize], added: &[HtmlChildAdded]) -> usize {
+async fn transform_index(idx: usize, removed: &[usize], added: &[HtmlChildAdded]) -> usize {
     let removed_before = removed.iter().filter(|&&r| r < idx).count();
     let pos = idx - removed_before;
     let mut order: Vec<usize> = added.iter().map(|a| a.index).collect();
@@ -505,7 +505,7 @@ enum ChildOrigin {
 /// 🧱️ Materializes a synthetic mid-array (base -> after `d1`) large enough to answer every index
 /// `d1`/`d2` actually reference. Absorb is base-free (no real snapshot access), so `base_len` is
 /// the SMALLEST synthetic length that avoids clamping any referenced position.
-fn simulate_mid_origins(base_len: usize, removed: &[usize], added: &[HtmlChildAdded]) -> Vec<ChildOrigin> {
+async fn simulate_mid_origins(base_len: usize, removed: &[usize], added: &[HtmlChildAdded]) -> Vec<ChildOrigin> {
     let mut mid: Vec<ChildOrigin> = (0..base_len).filter(|i| !removed.contains(i)).map(ChildOrigin::Base).collect();
     let mut order: Vec<(usize, usize)> = added.iter().enumerate().map(|(k, a)| (a.index, k)).collect();
     order.sort_by_key(|(idx, _)| *idx);
@@ -516,7 +516,7 @@ fn simulate_mid_origins(base_len: usize, removed: &[usize], added: &[HtmlChildAd
     mid
 }
 
-fn absorb_node_diff(a: HtmlNodeDiff, b: HtmlNodeDiff) -> HtmlNodeDiff {
+async fn absorb_node_diff(a: HtmlNodeDiff, b: HtmlNodeDiff) -> HtmlNodeDiff {
     match (a, b) {
         (_, HtmlNodeDiff::Replace { node }) => HtmlNodeDiff::Replace { node },
         (HtmlNodeDiff::Replace { node }, b) => HtmlNodeDiff::Replace { node: apply_node_diff(&node, &b) },
@@ -528,7 +528,7 @@ fn absorb_node_diff(a: HtmlNodeDiff, b: HtmlNodeDiff) -> HtmlNodeDiff {
     }
 }
 
-fn absorb_element_diff(mut a: HtmlElementDiff, b: HtmlElementDiff) -> HtmlElementDiff {
+async fn absorb_element_diff(mut a: HtmlElementDiff, b: HtmlElementDiff) -> HtmlElementDiff {
     if b.name.is_some() {
         a.name = b.name;
     }
@@ -548,7 +548,7 @@ fn absorb_element_diff(mut a: HtmlElementDiff, b: HtmlElementDiff) -> HtmlElemen
 /// 🏷️ Name-keyed absorb — attribute NAME (not position) is the stable identity; only
 /// `added.index` needs any position bookkeeping, approximated (not fully index-transported like
 /// children) since attribute order carries no spec-mandated meaning, only round-trip fidelity.
-fn absorb_attrs_diff(mut a: HtmlAttributesDiff, b: HtmlAttributesDiff) -> HtmlAttributesDiff {
+async fn absorb_attrs_diff(mut a: HtmlAttributesDiff, b: HtmlAttributesDiff) -> HtmlAttributesDiff {
     let a_added_names: std::collections::HashSet<String> = a.added.iter().map(|x| x.name.clone()).collect();
     let mut removed = a.removed.clone();
     let mut annihilated: Vec<String> = Vec::new();
@@ -588,7 +588,7 @@ fn absorb_attrs_diff(mut a: HtmlAttributesDiff, b: HtmlAttributesDiff) -> HtmlAt
     HtmlAttributesDiff { removed, modified, added }
 }
 
-fn absorb_children_diff(d1: HtmlChildrenDiff, d2: HtmlChildrenDiff) -> HtmlChildrenDiff {
+async fn absorb_children_diff(d1: HtmlChildrenDiff, d2: HtmlChildrenDiff) -> HtmlChildrenDiff {
     let d1_ref_max = d1.removed.iter().copied().chain(d1.modified.iter().map(|m| m.index)).max();
     let mut base_len = d1_ref_max.map(|m| m + 1).unwrap_or(0);
     let mid_len_needed_by_d1 = d1.added.iter().map(|a| a.index + 1).max().unwrap_or(0);
@@ -665,7 +665,7 @@ fn absorb_children_diff(d1: HtmlChildrenDiff, d2: HtmlChildrenDiff) -> HtmlChild
 //#region 🔖️SetSnapshot
 /// 🧩️ Builds the sparse field-by-field diff for a `SetSnapshot` mutation. No `snapshot:
 /// Option<HtmlSnapshot>` full-replace slot — this IS `HtmlDiff::between`.
-pub fn diff_set_snapshot(base: &HtmlSnapshot, next: &HtmlSnapshot) -> HtmlDiff {
+pub async fn diff_set_snapshot(base: &HtmlSnapshot, next: &HtmlSnapshot) -> HtmlDiff {
     HtmlDiff::between(base, next)
 }
 //#endregion 🔖️SetSnapshot
@@ -676,25 +676,25 @@ pub fn diff_set_snapshot(base: &HtmlSnapshot, next: &HtmlSnapshot) -> HtmlDiff {
 /// of the small primitive set — no shared "hand-roll helpers" module exists yet, same rationale
 /// `SvgDiff`'s file documents).
 //#region 🔖️Primitives
-pub(crate) fn hex_encode(bytes: &[u8]) -> String {
+pub(crate) async fn hex_encode(bytes: &[u8]) -> String {
     bytes.iter().map(|b| format!("{b:02x}")).collect()
 }
-pub(crate) fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
+pub(crate) async fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
     if s.len() % 2 != 0 {
         return Err(format!("odd hex length: {s:?}"));
     }
     (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()
 }
-pub(crate) fn enc_str(s: &str) -> String {
+pub(crate) async fn enc_str(s: &str) -> String {
     hex_encode(s.as_bytes())
 }
-pub(crate) fn dec_str(s: &str) -> Result<String, String> {
+pub(crate) async fn dec_str(s: &str) -> Result<String, String> {
     String::from_utf8(hex_decode(s)?).map_err(|e| e.to_string())
 }
-pub(crate) fn parse_usize(s: &str) -> Result<usize, String> {
+pub(crate) async fn parse_usize(s: &str) -> Result<usize, String> {
     s.parse().map_err(|e: std::num::ParseIntError| e.to_string())
 }
-pub(crate) fn split_top_level(s: &str, sep: char) -> Vec<&str> {
+pub(crate) async fn split_top_level(s: &str, sep: char) -> Vec<&str> {
     if s.is_empty() {
         return Vec::new();
     }
@@ -715,16 +715,16 @@ pub(crate) fn split_top_level(s: &str, sep: char) -> Vec<&str> {
     out.push(&s[start..]);
     out
 }
-pub(crate) fn strip_brackets(s: &str) -> Result<&str, String> {
+pub(crate) async fn strip_brackets(s: &str) -> Result<&str, String> {
     s.strip_prefix('[').and_then(|s| s.strip_suffix(']')).ok_or_else(|| format!("expected [...], got {s:?}"))
 }
-pub(crate) fn encode_option<T>(opt: &Option<T>, enc: impl Fn(&T) -> String) -> String {
+pub(crate) async fn encode_option<T>(opt: &Option<T>, enc: impl Fn(&T) -> String) -> String {
     match opt {
         None => "[0]".to_string(),
         Some(v) => format!("[1,{}]", enc(v)),
     }
 }
-pub(crate) fn decode_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Option<T>, String> {
+pub(crate) async fn decode_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Option<T>, String> {
     let inner = strip_brackets(s)?;
     match split_top_level(inner, ',').as_slice() {
         ["0"] => Ok(None),
@@ -735,21 +735,21 @@ pub(crate) fn decode_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>)
 //#endregion 🔖️Primitives
 
 //#region 🔖️HtmlValueCodecs
-fn enc_html_attr(a: &HtmlAttr) -> String {
+async fn enc_html_attr(a: &HtmlAttr) -> String {
     format!("[{},{}]", enc_str(&a.name), encode_option(&a.value, |v| enc_str(v)))
 }
-fn dec_html_attr(s: &str) -> Result<HtmlAttr, String> {
+async fn dec_html_attr(s: &str) -> Result<HtmlAttr, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [name, value] = parts.as_slice() else { return Err(format!("attr: expected 2 fields, got {}", parts.len())) };
     Ok(HtmlAttr { name: dec_str(name)?, value: decode_option(value, dec_str)? })
 }
-pub(crate) fn enc_raw_kind(k: RawTextKind) -> &'static str {
+pub(crate) async fn enc_raw_kind(k: RawTextKind) -> &'static str {
     match k {
         RawTextKind::Script => "0",
         RawTextKind::Style => "1",
     }
 }
-pub(crate) fn dec_raw_kind(s: &str) -> Result<RawTextKind, String> {
+pub(crate) async fn dec_raw_kind(s: &str) -> Result<RawTextKind, String> {
     match s {
         "0" => Ok(RawTextKind::Script),
         "1" => Ok(RawTextKind::Style),
@@ -759,7 +759,7 @@ pub(crate) fn dec_raw_kind(s: &str) -> Result<RawTextKind, String> {
 /// 🌳 Recursive: `E[name,[attrs],[children]]` / `T[text]` (Text) / `C[text]` (Comment) /
 /// `W[kind,text]` (RawText) — single-letter tag prefix, no ambiguity with the hex payload since
 /// hex never starts with an uppercase letter.
-pub(crate) fn enc_html_node(n: &HtmlNode) -> String {
+pub(crate) async fn enc_html_node(n: &HtmlNode) -> String {
     match n {
         HtmlNode::Element { name, attributes, children } => {
             let attrs = attributes.iter().map(enc_html_attr).collect::<Vec<_>>().join(",");
@@ -771,7 +771,7 @@ pub(crate) fn enc_html_node(n: &HtmlNode) -> String {
         HtmlNode::RawText { parent_kind, text } => format!("W[{},{}]", enc_raw_kind(*parent_kind), enc_str(text)),
     }
 }
-pub(crate) fn dec_html_node(s: &str) -> Result<HtmlNode, String> {
+pub(crate) async fn dec_html_node(s: &str) -> Result<HtmlNode, String> {
     let (tag, rest) = s.split_at(1);
     let inner = strip_brackets(rest)?;
     match tag {
@@ -795,13 +795,13 @@ pub(crate) fn dec_html_node(s: &str) -> Result<HtmlNode, String> {
 //#endregion 🔖️HtmlValueCodecs
 
 //#region 🔖️DiffValueCodecs
-fn enc_attrs_diff(d: &HtmlAttributesDiff) -> String {
+async fn enc_attrs_diff(d: &HtmlAttributesDiff) -> String {
     let removed = d.removed.iter().map(|n| enc_str(n)).collect::<Vec<_>>().join(",");
     let modified = d.modified.iter().map(|m| format!("{}:{}", enc_str(&m.name), encode_option(&m.value, |v| enc_str(v)))).collect::<Vec<_>>().join(",");
     let added = d.added.iter().map(|a| format!("{}:{}:{}", a.index, enc_str(&a.name), encode_option(&a.value, |v| enc_str(v)))).collect::<Vec<_>>().join(",");
     format!("[{removed}];[{modified}];[{added}]")
 }
-fn dec_attrs_diff(body: &str) -> Result<HtmlAttributesDiff, String> {
+async fn dec_attrs_diff(body: &str) -> Result<HtmlAttributesDiff, String> {
     let three = split_top_level(body, ';');
     let [removed_s, modified_s, added_s] = three.as_slice() else { return Err(format!("attrs diff: expected 3 sections, got {}", three.len())) };
     let removed = split_top_level(strip_brackets(removed_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_str).collect::<Result<Vec<_>, String>>()?;
@@ -828,7 +828,7 @@ fn dec_attrs_diff(body: &str) -> Result<HtmlAttributesDiff, String> {
 /// 🌳 Recursive: `HtmlNodeDiff` itself needs a tag (`E`=Element, `T`=Text, `M`=Comment, `W`=RawText,
 /// `R`=Replace) since, unlike `HtmlNode`, it appears standalone (not always inside a bracketed
 /// container) at the `root=` top-level token position.
-fn enc_node_diff(d: &HtmlNodeDiff) -> String {
+async fn enc_node_diff(d: &HtmlNodeDiff) -> String {
     match d {
         HtmlNodeDiff::Element(e) => format!(
             "E[{},{},{}]",
@@ -850,7 +850,7 @@ fn enc_node_diff(d: &HtmlNodeDiff) -> String {
         HtmlNodeDiff::Replace { node } => format!("R[{}]", enc_html_node(node)),
     }
 }
-fn dec_node_diff(s: &str) -> Result<HtmlNodeDiff, String> {
+async fn dec_node_diff(s: &str) -> Result<HtmlNodeDiff, String> {
     let (tag, rest) = s.split_at(1);
     let inner = strip_brackets(rest)?;
     match tag {
@@ -880,13 +880,13 @@ fn dec_node_diff(s: &str) -> Result<HtmlNodeDiff, String> {
         other => Err(format!("node diff: unknown tag {other:?}")),
     }
 }
-fn enc_children_diff(d: &HtmlChildrenDiff) -> String {
+async fn enc_children_diff(d: &HtmlChildrenDiff) -> String {
     let removed = d.removed.iter().map(|i| i.to_string()).collect::<Vec<_>>().join(",");
     let modified = d.modified.iter().map(|m| format!("{}:{}", m.index, enc_node_diff(&m.diff))).collect::<Vec<_>>().join(",");
     let added = d.added.iter().map(|a| format!("{}:{}", a.index, enc_html_node(&a.item))).collect::<Vec<_>>().join(",");
     format!("[{removed}];[{modified}];[{added}]")
 }
-fn dec_children_diff(body: &str) -> Result<HtmlChildrenDiff, String> {
+async fn dec_children_diff(body: &str) -> Result<HtmlChildrenDiff, String> {
     let three = split_top_level(body, ';');
     let [removed_s, modified_s, added_s] = three.as_slice() else { return Err(format!("children diff: expected 3 sections, got {}", three.len())) };
     let removed = split_top_level(strip_brackets(removed_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(parse_usize).collect::<Result<Vec<_>, String>>()?;
@@ -911,7 +911,7 @@ fn dec_children_diff(body: &str) -> Result<HtmlChildrenDiff, String> {
 //#endregion 🔖️DiffValueCodecs
 
 //#region 🔖️TopLevel
-fn print_html_diff(d: &HtmlDiff) -> String {
+async fn print_html_diff(d: &HtmlDiff) -> String {
     let mut tokens: Vec<String> = Vec::new();
     if let Some(v) = &d.doctype {
         tokens.push(format!("doctype={}", encode_option(v, |v| enc_str(v))));
@@ -921,7 +921,7 @@ fn print_html_diff(d: &HtmlDiff) -> String {
     }
     tokens.join(" ")
 }
-fn parse_html_diff(line: &str) -> Result<HtmlDiff, String> {
+async fn parse_html_diff(line: &str) -> Result<HtmlDiff, String> {
     let mut d = HtmlDiff::default();
     if line.is_empty() {
         return Ok(d);
@@ -939,19 +939,19 @@ fn parse_html_diff(line: &str) -> Result<HtmlDiff, String> {
 }
 
 impl protocol::DiffCodec for HtmlDiff {
-    fn print_diff(&self) -> String {
+    async fn print_diff(&self) -> String {
         print_html_diff(self)
     }
-    fn parse_diff(line: &str) -> Result<Self, store::TextError> {
+    async fn parse_diff(line: &str) -> Result<Self, store::TextError> {
         parse_html_diff(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
     /// ⚡️ Binary = the text bytes verbatim, same simplification `SvgDiff`/`JsonDiff` (and the
     /// repo's only other hand-rolled `DiffCodec`s) use — satisfies every `DiffCodec` law without
     /// inventing a second wire format.
-    fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    async fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         Ok(self.print_diff().into_bytes())
     }
-    fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    async fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         let line = std::str::from_utf8(bytes).map_err(|e| protocol::ProtocolError::Malformed { what: "diff utf8", offset: 0, detail: e.to_string() })?;
         Self::parse_diff(line).map_err(|e| protocol::ProtocolError::Malformed { what: "diff text", offset: 0, detail: e.to_string() })
     }
@@ -965,11 +965,11 @@ mod handcrafted_diff_codec_tests {
     use super::*;
     use protocol::DiffCodec;
 
-    fn elem(name: &str, attrs: Vec<(&str, Option<&str>)>, children: Vec<HtmlNode>) -> HtmlNode {
+    async fn elem(name: &str, attrs: Vec<(&str, Option<&str>)>, children: Vec<HtmlNode>) -> HtmlNode {
         HtmlNode::Element { name: name.to_string(), attributes: attrs.into_iter().map(|(n, v)| HtmlAttr { name: n.to_string(), value: v.map(|s| s.to_string()) }).collect(), children }
     }
 
-    fn snapshot(doctype: Option<&str>, root: HtmlNode) -> HtmlSnapshot {
+    async fn snapshot(doctype: Option<&str>, root: HtmlNode) -> HtmlSnapshot {
         HtmlSnapshot { schema: crate::artifacts::html::standards::v5::subsets::any::schema::snapshot::STDIO_HTML_DOCUMENT_SCHEMA.into(), doctype: doctype.map(|s| s.to_string()), root }
     }
 
@@ -977,7 +977,7 @@ mod handcrafted_diff_codec_tests {
     /// `Text`/`Comment`/`RawText`/`Replace` `HtmlNodeDiff` variants), the top-level tri-state, and
     /// nested attribute/child add/remove/modify.
     #[test]
-    fn diff_codec_text_binary_roundtrip_law() {
+    async fn diff_codec_text_binary_roundtrip_law() {
         let a = snapshot(Some("DOCTYPE html"), elem("html", vec![("lang", Some("en"))], vec![elem("p", vec![("id", Some("x")), ("disabled", None)], vec![])]));
         let b = snapshot(
             None,

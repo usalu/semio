@@ -5,7 +5,7 @@ use crate::artifacts::en1999::mutations::change_sheet_m_ed_knm::mutation::Change
 use crate::artifacts::en1999::En1999Snapshot;
 
 //#region 🔖️Diff
-pub fn diff(payload: &ChangeSheetMEdKnm, base: &En1999Snapshot) -> protocol::MutationOutcome<En1999Diff> {
+pub async fn diff(payload: &ChangeSheetMEdKnm, base: &En1999Snapshot) -> protocol::MutationOutcome<En1999Diff> {
     if !payload.new_sheet_m_ed_knm.is_finite() {
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("Sheet design moment M_Ed [kNm] must be a finite number, got {}.", payload.new_sheet_m_ed_knm), Vec::<String>::new());
     }

@@ -5,7 +5,7 @@ use crate::artifacts::layout::schema::diff::{LayoutPagePatchEntry, LayoutPagesDe
 use crate::artifacts::layout::{Frame, FramePatch, LayoutDiff, LayoutSnapshot, PageFramePatched, PagePatch};
 
 //#region 🔢ChangeFrameColumns
-pub fn diff_change_frame_columns(payload: &ChangeFrameColumns, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
+pub async fn diff_change_frame_columns(payload: &ChangeFrameColumns, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
     let Some(page) = base.pages.iter().find(|page| page.id == payload.page_id) else {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Page \"{}\" does not exist.", payload.page_id), [payload.page_id.clone()]);
     };

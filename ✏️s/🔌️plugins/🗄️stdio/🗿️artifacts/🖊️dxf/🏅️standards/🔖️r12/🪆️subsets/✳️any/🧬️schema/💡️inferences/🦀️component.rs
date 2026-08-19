@@ -25,7 +25,7 @@ pub struct DxfInference {
 }
 
 impl protocol::Inference<DxfSnapshot> for DxfInference {
-    fn infer(snapshot: &DxfSnapshot) -> Self {
+    async fn infer(snapshot: &DxfSnapshot) -> Self {
         Self { bounds: compute_dxf_bounds(snapshot) }
     }
 }
@@ -33,19 +33,19 @@ impl protocol::Inference<DxfSnapshot> for DxfInference {
 /// 🌱 Defined in terms of `infer` (not derived) — keeps the law correct regardless of whether
 /// `DxfSnapshot::default()`'s `entities`/`blocks` ever stop being empty.
 impl Default for DxfInference {
-    fn default() -> Self {
+    async fn default() -> Self {
         <Self as protocol::Inference<DxfSnapshot>>::infer(&DxfSnapshot::default())
     }
 }
 
 impl protocol::InferenceSpec<DxfSnapshot> for DxfInference {
-    fn inference_schema_id() -> &'static str {
+    async fn inference_schema_id() -> &'static str {
         "s.stdio.dxf.inference"
     }
-    fn schema_version() -> u32 {
+    async fn schema_version() -> u32 {
         1
     }
-    fn fields() -> &'static [protocol::InferenceFieldSpec] {
+    async fn fields() -> &'static [protocol::InferenceFieldSpec] {
         &[protocol::InferenceFieldSpec { id: "s.stdio.dxf.inference.bounds", reads: &["entities", "blocks"] }]
     }
 }
@@ -66,7 +66,7 @@ impl ArtifactInferrer for crate::artifacts::dxf::standards::v_r12::subsets::any:
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.stdio.dxf.inference`'s facet leaves into the OS-wide inference catalog —
 /// call once at plugin init, alongside `dxf_artifact_schema_descriptor`'s registration.
-pub fn dxf_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
+pub async fn dxf_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
     schema::ArtifactInferenceDescriptor {
         id: "s.stdio.dxf.inference",
         inference: schema::FacetLeaves {
@@ -87,13 +87,13 @@ mod tests {
     use protocol::Inference;
 
     #[test]
-    fn inference_determinism_law() {
+    async fn inference_determinism_law() {
         let snapshot = DxfSnapshot::default();
         assert_eq!(DxfInference::infer(&snapshot), DxfInference::infer(&snapshot));
     }
 
     #[test]
-    fn inference_default_law() {
+    async fn inference_default_law() {
         assert_eq!(DxfInference::infer(&DxfSnapshot::default()), DxfInference::default());
     }
 }

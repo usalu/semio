@@ -5,7 +5,7 @@ use crate::artifacts::remodel::diff::RemodelDiff;
 use crate::artifacts::remodel::RemodelSnapshot;
 
 //#region 🔖️Diff
-pub fn diff(payload: &super::mutation::UpdateIngestParams, base: &RemodelSnapshot) -> protocol::MutationOutcome<RemodelDiff> {
+pub async fn diff(payload: &super::mutation::UpdateIngestParams, base: &RemodelSnapshot) -> protocol::MutationOutcome<RemodelDiff> {
     if !payload.params.min_sharpness.is_finite() || payload.params.min_sharpness < 0.0 || payload.params.max_frames == 0 || payload.params.frame_sample_stride == 0 {
         return protocol::MutationOutcome::fatal(
             "mutation.invariant",

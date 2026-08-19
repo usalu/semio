@@ -18,7 +18,7 @@ pub struct DeleteTile {
 /// `tiles` is declared `HierarchyProvider::Flat` and Flat domains are deliberately never auto-pruned
 /// on document change, so a deleted tile's stale id simply stays selected until the next real pick —
 /// a documented, accepted gap, not routed around here (matches `🖍️draw`'s `delete-layer`).
-pub fn handle(payload: &DeleteTile, doc: &ArtifactView<'_, PresentSnapshot>, _cfg: &ConfigView<'_, PresentConfig>, _ctx: &mut PresentDispatchCtx) -> Result<Emit<PresentMutation, PresentConfigMutation>, Fault> {
+pub async fn handle(payload: &DeleteTile, doc: &ArtifactView<'_, PresentSnapshot>, _cfg: &ConfigView<'_, PresentConfig>, _ctx: &mut PresentDispatchCtx) -> Result<Emit<PresentMutation, PresentConfigMutation>, Fault> {
     let deck = doc.snapshot;
     let targets = valid_tile_ids(deck, vec![payload.id.clone()]);
     if targets.is_empty() {

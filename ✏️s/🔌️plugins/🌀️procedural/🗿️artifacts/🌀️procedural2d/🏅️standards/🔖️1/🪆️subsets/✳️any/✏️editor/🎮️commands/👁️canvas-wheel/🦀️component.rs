@@ -11,6 +11,6 @@ use serde::{Deserialize, Serialize};
 #[dsl(keyword = "canvas-wheel")]
 pub struct CanvasWheel {}
 
-pub fn handle(_payload: &CanvasWheel, _doc: &ArtifactView<'_, Procedural2dSnapshot>, _cfg: &ConfigView<'_, Procedural2dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural2dMutation, Procedural2dConfigMutation>, Fault> {
+pub async fn handle(_payload: &CanvasWheel, _doc: &ArtifactView<'_, Procedural2dSnapshot>, _cfg: &ConfigView<'_, Procedural2dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural2dMutation, Procedural2dConfigMutation>, Fault> {
     Ok(Emit::default())
 }

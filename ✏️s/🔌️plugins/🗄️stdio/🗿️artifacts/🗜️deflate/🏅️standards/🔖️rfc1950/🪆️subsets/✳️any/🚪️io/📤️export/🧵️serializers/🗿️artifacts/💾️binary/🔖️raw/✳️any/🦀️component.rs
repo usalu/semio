@@ -5,16 +5,16 @@ use crate::artifacts::deflate::DeflateSnapshot;
 
 //#region Codec
 /// Register serializer hooks.
-pub fn register() {}
+pub async fn register() {}
 
 /// 🗜️ Zlib-inflate deflate stream into a BinarySnapshot payload.
-pub fn serialize(from: &DeflateSnapshot) -> Result<BinarySnapshot, store::PackError> {
+pub async fn serialize(from: &DeflateSnapshot) -> Result<BinarySnapshot, store::PackError> {
     let bytes = crate::artifacts::deflate::standards::v_rfc1950::subsets::any::io::zlib_decompress(&from.payload).map_err(|e| store::PackError::Schema(e))?;
     Ok(BinarySnapshot { schema: STDIO_BINARY_DOCUMENT_SCHEMA.into(), bytes })
 }
 
 /// Inflate then encode as binary pack bytes.
-pub fn serialize_bytes(from: &DeflateSnapshot) -> Result<Vec<u8>, store::PackError> {
+pub async fn serialize_bytes(from: &DeflateSnapshot) -> Result<Vec<u8>, store::PackError> {
     store::ArtifactPack::encode_pack_with(&serialize(from)?, &store::PackEncodeOptions::default())
 }
 //#endregion Codec

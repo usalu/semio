@@ -12,7 +12,7 @@ use serde::{Deserialize, Serialize};
 #[dsl(keyword = "clear-tiles")]
 pub struct ClearTiles {}
 
-pub fn handle(_payload: &ClearTiles, _doc: &ArtifactView<'_, PresentSnapshot>, _cfg: &ConfigView<'_, PresentConfig>, _ctx: &mut PresentDispatchCtx) -> Result<Emit<PresentMutation, PresentConfigMutation>, Fault> {
+pub async fn handle(_payload: &ClearTiles, _doc: &ArtifactView<'_, PresentSnapshot>, _cfg: &ConfigView<'_, PresentConfig>, _ctx: &mut PresentDispatchCtx) -> Result<Emit<PresentMutation, PresentConfigMutation>, Fault> {
     let mut emit = Emit::mutations(vec![PresentMutation::ReplaceTiles(ReplaceTiles { new_tiles: Vec::new() })]);
     emit.effects.push(interaction_select_effect(&[], "replace"));
     Ok(emit)

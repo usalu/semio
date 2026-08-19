@@ -17,7 +17,7 @@ pub struct DuplicateWidget {
     pub widget_id: String,
 }
 
-pub fn handle(payload: &DuplicateWidget, doc: &ArtifactView<'_, FlowSnapshot>, _cfg: &ConfigView<'_, FlowConfig>, _session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, FlowConfigMutation>, Fault> {
+pub async fn handle(payload: &DuplicateWidget, doc: &ArtifactView<'_, FlowSnapshot>, _cfg: &ConfigView<'_, FlowConfig>, _session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, FlowConfigMutation>, Fault> {
     let scene = flow_working_scene(doc.snapshot);
     if !scene.widgets.iter().any(|widget| widget.id() == &payload.widget_id) {
         return Ok(Emit::mutations(Vec::new()));
@@ -34,7 +34,7 @@ pub fn handle(payload: &DuplicateWidget, doc: &ArtifactView<'_, FlowSnapshot>, _
 }
 
 /// 🏷️ Mints `"{source_id}-copy"`, bumping a numeric suffix until the id is free.
-fn unique_widget_id(scene: &FlowWorkingScene, source_id: &str) -> String {
+async fn unique_widget_id(scene: &FlowWorkingScene, source_id: &str) -> String {
     let mut candidate = format!("{source_id}-copy");
     let mut suffix = 2;
     while scene.widgets.iter().any(|widget| widget.id() == &candidate) {
@@ -45,7 +45,7 @@ fn unique_widget_id(scene: &FlowWorkingScene, source_id: &str) -> String {
 }
 
 /// 🏷️ Mints `"{from}-to-{to}"`, bumping a numeric suffix until the id is free.
-fn unique_synapse_id(scene: &FlowWorkingScene, from: &str, to: &str) -> String {
+async fn unique_synapse_id(scene: &FlowWorkingScene, from: &str, to: &str) -> String {
     let mut candidate = format!("{from}-to-{to}");
     let mut suffix = 2;
     while scene.synapses.iter().any(|synapse| synapse.id == candidate) {
@@ -63,7 +63,7 @@ mod tests {
     use crate::editor::flow::FlowCommand;
 
     #[test]
-    fn duplicate_widget_grows_widgets_and_synapses_and_leaves_the_source_untouched() {
+    async fn duplicate_widget_grows_widgets_and_synapses_and_leaves_the_source_untouched() {
         let mut app = flow_app();
         let before_widgets = app.snapshot().expect("snapshot").to_fixture().widgets.len();
         let before_synapses = app.snapshot().expect("snapshot").to_fixture().synapses.len();
@@ -80,7 +80,7 @@ mod tests {
     }
 
     #[test]
-    fn duplicate_widget_of_an_unknown_id_is_a_no_operation() {
+    async fn duplicate_widget_of_an_unknown_id_is_a_no_operation() {
         let mut app = flow_app();
         let before = app.snapshot().expect("snapshot").to_fixture().widgets.len();
         let result = dispatch(&mut app, FlowCommand::DuplicateWidget(DuplicateWidget { widget_id: "does-not-exist".into() }));
@@ -89,7 +89,7 @@ mod tests {
     }
 
     #[test]
-    fn duplicate_widget_twice_mints_distinct_ids() {
+    async fn duplicate_widget_twice_mints_distinct_ids() {
         let mut app = flow_app();
         dispatch(&mut app, FlowCommand::DuplicateWidget(DuplicateWidget { widget_id: "slider".into() }));
         dispatch(&mut app, FlowCommand::DuplicateWidget(DuplicateWidget { widget_id: "slider".into() }));

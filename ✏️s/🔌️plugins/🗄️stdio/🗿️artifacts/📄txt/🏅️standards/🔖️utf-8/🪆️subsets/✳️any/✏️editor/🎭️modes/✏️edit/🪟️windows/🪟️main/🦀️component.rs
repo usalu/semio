@@ -13,7 +13,7 @@ pub const BODY_KEY: &str = TextWindowKit::KIND_ID;
 
 //#region 🔖️Definition
 /// 🧱️ Stitched into the editor manifest by `crate::editor::txt::create_txt_editor`.
-pub fn definition() -> WindowKindDefinition {
+pub async fn definition() -> WindowKindDefinition {
     WindowKindDefinition { label: LocalizedLabel::native("Text", "Text"), icon_id: "type".into(), ..TextWindowKit::editable_window_kind() }
 }
 //#endregion 🔖️Definition
@@ -22,7 +22,7 @@ pub fn definition() -> WindowKindDefinition {
 /// ✏️ Real `TxtSnapshot -> UiNode`: `lines` joined by the document's own `line_ending`, with a
 /// trailing terminator when `trailing_newline` is set — the exact same join the artifact's own
 /// codec uses to re-serialize, so what's shown here IS what re-encoding would emit.
-pub fn render(document: &TxtSnapshot) -> UiNode {
+pub async fn render(document: &TxtSnapshot) -> UiNode {
     let mut text = document.lines.join(document.line_ending.as_str());
     if document.trailing_newline && !document.lines.is_empty() {
         text.push_str(document.line_ending.as_str());
@@ -37,14 +37,14 @@ mod tests {
     use super::*;
 
     #[test]
-    fn definition_declares_a_text_window() {
+    async fn definition_declares_a_text_window() {
         let def = definition();
         assert_eq!(def.id, WINDOW_KIND_ID);
         assert_eq!(def.body_key, BODY_KEY);
     }
 
     #[test]
-    fn render_joins_lines_with_the_line_ending() {
+    async fn render_joins_lines_with_the_line_ending() {
         let document = TxtSnapshot { schema: "stdio.txt".into(), lines: vec!["a".into(), "b".into()], trailing_newline: false, line_ending: Default::default() };
         let UiNode::ComponentScene(node) = render(&document) else { panic!("expected ComponentScene") };
         let scene = node.text_editor.expect("text editor scene");

@@ -24,11 +24,11 @@ struct FlowNetwork {
 }
 
 impl FlowNetwork {
-    fn new(n: usize) -> Self {
+    async fn new(n: usize) -> Self {
         Self { adj: vec![Vec::new(); n], to: Vec::new(), cap: Vec::new() }
     }
 
-    fn add_edge(&mut self, u: usize, v: usize, capacity: u32) {
+    async fn add_edge(&mut self, u: usize, v: usize, capacity: u32) {
         self.adj[u].push(self.to.len());
         self.to.push(v);
         self.cap.push(capacity);
@@ -40,7 +40,7 @@ impl FlowNetwork {
     /// 🚰️ One BFS augmenting-path step: finds the shortest (fewest-edges) path from `s` to `t`
     /// with remaining capacity, pushes the bottleneck amount along it, and returns that amount
     /// (`0` once no augmenting path remains).
-    fn bfs_augment(&mut self, s: usize, t: usize) -> u32 {
+    async fn bfs_augment(&mut self, s: usize, t: usize) -> u32 {
         let mut parent_edge: Vec<Option<usize>> = vec![None; self.adj.len()];
         let mut visited = vec![false; self.adj.len()];
         visited[s] = true;
@@ -79,7 +79,7 @@ impl FlowNetwork {
         bottleneck
     }
 
-    fn max_flow(&mut self, s: usize, t: usize) -> u32 {
+    async fn max_flow(&mut self, s: usize, t: usize) -> u32 {
         let mut total = 0u32;
         loop {
             let f = self.bfs_augment(s, t);
@@ -105,11 +105,11 @@ pub struct FlowConstraint {
 }
 
 impl FlowConstraint {
-    pub fn new(model: CompiledModel, selector: PatternSelector, sources: Vec<NodeId>, sinks: Vec<NodeId>, min_flow: u32) -> Self {
+    pub async fn new(model: CompiledModel, selector: PatternSelector, sources: Vec<NodeId>, sinks: Vec<NodeId>, min_flow: u32) -> Self {
         Self { selector, sources, sinks, min_flow, model }
     }
 
-    fn compute_max_flow(&self, assignment: &[PatternId], adjacency: &AdjacencyView) -> u32 {
+    async fn compute_max_flow(&self, assignment: &[PatternId], adjacency: &AdjacencyView) -> u32 {
         let n = assignment.len();
         let super_source = n;
         let super_sink = n + 1;
@@ -140,19 +140,19 @@ impl FlowConstraint {
 }
 
 impl Constraint for FlowConstraint {
-    fn name(&self) -> &'static str {
+    async fn name(&self) -> &'static str {
         "flow"
     }
 
-    fn exactness(&self) -> Exactness {
+    async fn exactness(&self) -> Exactness {
         Exactness::Exact
     }
 
-    fn initialize(&self, _domains: &DomainStore, _weights: &WeightTable, _adjacency: &AdjacencyView) -> Result<Vec<(NodeId, PatternSet)>, ConstraintError> {
+    async fn initialize(&self, _domains: &DomainStore, _weights: &WeightTable, _adjacency: &AdjacencyView) -> Result<Vec<(NodeId, PatternSet)>, ConstraintError> {
         Ok(Vec::new())
     }
 
-    fn validate_complete(&self, assignment: &[PatternId], adjacency: &AdjacencyView) -> Result<(), String> {
+    async fn validate_complete(&self, assignment: &[PatternId], adjacency: &AdjacencyView) -> Result<(), String> {
         let flow = self.compute_max_flow(assignment, adjacency);
         if flow < self.min_flow {
             Err(format!("flow constraint: max flow {flow} is below the required minimum {}", self.min_flow))
@@ -170,7 +170,7 @@ mod tests {
     use crate::wfc_engine::ids::RegionId;
     use crate::wfc_engine::model::ModelBuilder;
 
-    fn floor_wall_model() -> CompiledModel {
+    async fn floor_wall_model() -> CompiledModel {
         let mut b = ModelBuilder::new();
         let floor = b.add_pattern(1.0);
         let wall = b.add_pattern(1.0);
@@ -181,7 +181,7 @@ mod tests {
         b.compile().unwrap()
     }
 
-    fn line_adjacency(n: usize) -> AdjacencyView {
+    async fn line_adjacency(n: usize) -> AdjacencyView {
         let mut neighbors = vec![Vec::new(); n];
         for i in 0..n.saturating_sub(1) {
             neighbors[i].push(NodeId::from_index(i + 1));
@@ -192,7 +192,7 @@ mod tests {
 
     /// A 2-wide, 3-long ladder: two parallel floor corridors from node0/node1 (side by side) to
     /// node4/node5, letting up to 2 edge-disjoint paths exist when everything is floor.
-    fn ladder_adjacency() -> AdjacencyView {
+    async fn ladder_adjacency() -> AdjacencyView {
         let edges = [(0, 2), (2, 4), (1, 3), (3, 5)];
         let mut neighbors = vec![Vec::new(); 6];
         for &(a, b) in &edges {
@@ -203,7 +203,7 @@ mod tests {
     }
 
     #[test]
-    fn single_path_meets_flow_of_one() {
+    async fn single_path_meets_flow_of_one() {
         let model = floor_wall_model();
         let adjacency = line_adjacency(4);
         let c = FlowConstraint::new(model, PatternSelector::Pattern(PatternId(0)), vec![NodeId(0)], vec![NodeId(3)], 1);
@@ -212,7 +212,7 @@ mod tests {
     }
 
     #[test]
-    fn a_wall_blocking_the_only_path_fails_flow_of_one() {
+    async fn a_wall_blocking_the_only_path_fails_flow_of_one() {
         let model = floor_wall_model();
         let adjacency = line_adjacency(4);
         let c = FlowConstraint::new(model, PatternSelector::Pattern(PatternId(0)), vec![NodeId(0)], vec![NodeId(3)], 1);
@@ -221,7 +221,7 @@ mod tests {
     }
 
     #[test]
-    fn ladder_with_both_corridors_open_meets_flow_of_two() {
+    async fn ladder_with_both_corridors_open_meets_flow_of_two() {
         let model = floor_wall_model();
         let adjacency = ladder_adjacency();
         let c = FlowConstraint::new(model, PatternSelector::Pattern(PatternId(0)), vec![NodeId(0), NodeId(1)], vec![NodeId(4), NodeId(5)], 2);
@@ -230,7 +230,7 @@ mod tests {
     }
 
     #[test]
-    fn ladder_with_one_corridor_walled_off_fails_flow_of_two() {
+    async fn ladder_with_one_corridor_walled_off_fails_flow_of_two() {
         let model = floor_wall_model();
         let adjacency = ladder_adjacency();
         let c = FlowConstraint::new(model, PatternSelector::Pattern(PatternId(0)), vec![NodeId(0), NodeId(1)], vec![NodeId(4), NodeId(5)], 2);
@@ -240,7 +240,7 @@ mod tests {
     }
 
     #[test]
-    fn source_not_selected_yields_zero_flow() {
+    async fn source_not_selected_yields_zero_flow() {
         let model = floor_wall_model();
         let adjacency = line_adjacency(3);
         let c = FlowConstraint::new(model, PatternSelector::Pattern(PatternId(0)), vec![NodeId(0)], vec![NodeId(2)], 1);
@@ -249,7 +249,7 @@ mod tests {
     }
 
     #[test]
-    fn max_flow_never_exceeds_the_number_of_distinct_source_sink_edges() {
+    async fn max_flow_never_exceeds_the_number_of_distinct_source_sink_edges() {
         // A direct single-edge line: max possible flow is 1, regardless of how large min_flow's
         // check demands — this just exercises the network construction terminates and is exact.
         let model = floor_wall_model();

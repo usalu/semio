@@ -12,7 +12,7 @@ use protocol::command::DiffAlgebra;
 use protocol::DiffCodec;
 use protocol::{MutationApplyError, MutationApplyResult, MutationDiff};
 
-fn validate_indexed_targets(base_len: usize, removed_indices: &[usize], modified_indices: impl IntoIterator<Item = usize>, added_indices: impl IntoIterator<Item = usize>, target: &str) -> MutationApplyResult<()> {
+async fn validate_indexed_targets(base_len: usize, removed_indices: &[usize], modified_indices: impl IntoIterator<Item = usize>, added_indices: impl IntoIterator<Item = usize>, target: &str) -> MutationApplyResult<()> {
     let mut removed = BTreeSet::new();
     for &index in removed_indices {
         if index >= base_len || !removed.insert(index) {
@@ -56,7 +56,7 @@ enum Lbl {
 
 /// ➡️ Simulates one collection-triple's position algebra over an abstract label array: remove
 /// the given base/mid indices, then insert `added` labels ascending at `min(index, current_len)`.
-fn simulate_labels(labels: Vec<Lbl>, removed: &[usize], added: &[(usize, Lbl)]) -> Vec<Lbl> {
+async fn simulate_labels(labels: Vec<Lbl>, removed: &[usize], added: &[(usize, Lbl)]) -> Vec<Lbl> {
     let removed_set: HashSet<usize> = removed.iter().copied().collect();
     let mut survivors: Vec<Lbl> = labels.into_iter().enumerate().filter(|(i, _)| !removed_set.contains(i)).map(|(_, l)| l).collect();
     let mut added_sorted = added.to_vec();
@@ -72,7 +72,7 @@ fn simulate_labels(labels: Vec<Lbl>, removed: &[usize], added: &[(usize, Lbl)]) 
 /// mid→after (`d2`). `merge_field_diff`/`patch_item` are the only per-entity-type logic —
 /// everything else (index transport, annihilate-on-remove, patch-into-added) is the recipe's
 /// normative algorithm, identical for `vlrs` and `points`.
-fn absorb_indexed_triple<Item: Clone, D: Clone + Default + PartialEq>(
+async fn absorb_indexed_triple<Item: Clone, D: Clone + Default + PartialEq>(
     d1_removed: &[usize],
     d1_modified: &[(usize, D)],
     d1_added: &[(usize, Item)],
@@ -177,7 +177,7 @@ pub struct LasVlrDiff {
     pub data: Option<Vec<u8>>,
 }
 
-fn apply_vlr_diff(vlr: &mut LasVlr, diff: &LasVlrDiff) {
+async fn apply_vlr_diff(vlr: &mut LasVlr, diff: &LasVlrDiff) {
     if let Some(v) = &diff.user_id {
         vlr.user_id = v.clone();
     }
@@ -192,7 +192,7 @@ fn apply_vlr_diff(vlr: &mut LasVlr, diff: &LasVlrDiff) {
     }
 }
 
-fn vlr_between(a: &LasVlr, b: &LasVlr) -> LasVlrDiff {
+async fn vlr_between(a: &LasVlr, b: &LasVlr) -> LasVlrDiff {
     LasVlrDiff {
         user_id: (a.user_id != b.user_id).then(|| b.user_id.clone()),
         record_id: (a.record_id != b.record_id).then_some(b.record_id),
@@ -201,7 +201,7 @@ fn vlr_between(a: &LasVlr, b: &LasVlr) -> LasVlrDiff {
     }
 }
 
-fn absorb_vlr_diff(base: &mut LasVlrDiff, other: LasVlrDiff) {
+async fn absorb_vlr_diff(base: &mut LasVlrDiff, other: LasVlrDiff) {
     if other.user_id.is_some() {
         base.user_id = other.user_id;
     }
@@ -245,13 +245,13 @@ pub struct LasVlrsDiff {
 }
 
 impl LasVlrsDiff {
-    pub fn is_empty(&self) -> bool {
+    pub async fn is_empty(&self) -> bool {
         self.removed.is_empty() && self.modified.is_empty() && self.added.is_empty()
     }
 
     /// ▶️ Applies this triple: `modified` by BASE index (no-op if since-removed), then `removed`
     /// (descending order doesn't matter — collected as a set), then `added` ascending, clamped.
-    fn apply_unchecked(&self, base: &[LasVlr]) -> Vec<LasVlr> {
+    async fn apply_unchecked(&self, base: &[LasVlr]) -> Vec<LasVlr> {
         let mut items = base.to_vec();
         for m in &self.modified {
             apply_vlr_diff(&mut items[m.index], &m.diff);
@@ -269,12 +269,12 @@ impl LasVlrsDiff {
         items
     }
 
-    pub fn apply(&self, base: &[LasVlr]) -> MutationApplyResult<Vec<LasVlr>> {
+    pub async fn apply(&self, base: &[LasVlr]) -> MutationApplyResult<Vec<LasVlr>> {
         validate_indexed_targets(base.len(), &self.removed, self.modified.iter().map(|value| value.index), self.added.iter().map(|value| value.index), "vlrs")?;
         Ok(self.apply_unchecked(base))
     }
 
-    pub fn between(base: &[LasVlr], next: &[LasVlr]) -> Self {
+    pub async fn between(base: &[LasVlr], next: &[LasVlr]) -> Self {
         let min_len = base.len().min(next.len());
         let mut modified = Vec::new();
         for i in 0..min_len {
@@ -289,7 +289,7 @@ impl LasVlrsDiff {
     }
 }
 
-fn absorb_vlrs(d1: Option<LasVlrsDiff>, d2: Option<LasVlrsDiff>) -> Option<LasVlrsDiff> {
+async fn absorb_vlrs(d1: Option<LasVlrsDiff>, d2: Option<LasVlrsDiff>) -> Option<LasVlrsDiff> {
     let (d1, d2) = match (d1, d2) {
         (None, None) => return None,
         (Some(d1), None) => return Some(d1),
@@ -347,7 +347,7 @@ pub struct LasPointDiff {
     pub rgb: Option<Option<(u16, u16, u16)>>,
 }
 
-fn apply_point_diff(p: &mut LasPoint, diff: &LasPointDiff) {
+async fn apply_point_diff(p: &mut LasPoint, diff: &LasPointDiff) {
     if let Some(v) = diff.x {
         p.x = v;
     }
@@ -392,7 +392,7 @@ fn apply_point_diff(p: &mut LasPoint, diff: &LasPointDiff) {
     }
 }
 
-fn point_between(a: &LasPoint, b: &LasPoint) -> LasPointDiff {
+async fn point_between(a: &LasPoint, b: &LasPoint) -> LasPointDiff {
     LasPointDiff {
         x: (a.x != b.x).then_some(b.x),
         y: (a.y != b.y).then_some(b.y),
@@ -411,7 +411,7 @@ fn point_between(a: &LasPoint, b: &LasPoint) -> LasPointDiff {
     }
 }
 
-fn absorb_point_diff(base: &mut LasPointDiff, other: LasPointDiff) {
+async fn absorb_point_diff(base: &mut LasPointDiff, other: LasPointDiff) {
     if other.x.is_some() {
         base.x = other.x;
     }
@@ -485,11 +485,11 @@ pub struct LasPointsDiff {
 }
 
 impl LasPointsDiff {
-    pub fn is_empty(&self) -> bool {
+    pub async fn is_empty(&self) -> bool {
         self.removed.is_empty() && self.modified.is_empty() && self.added.is_empty()
     }
 
-    fn apply_unchecked(&self, base: &[LasPoint]) -> Vec<LasPoint> {
+    async fn apply_unchecked(&self, base: &[LasPoint]) -> Vec<LasPoint> {
         let mut items = base.to_vec();
         for m in &self.modified {
             apply_point_diff(&mut items[m.index], &m.diff);
@@ -507,12 +507,12 @@ impl LasPointsDiff {
         items
     }
 
-    pub fn apply(&self, base: &[LasPoint]) -> MutationApplyResult<Vec<LasPoint>> {
+    pub async fn apply(&self, base: &[LasPoint]) -> MutationApplyResult<Vec<LasPoint>> {
         validate_indexed_targets(base.len(), &self.removed, self.modified.iter().map(|value| value.index), self.added.iter().map(|value| value.index), "points")?;
         Ok(self.apply_unchecked(base))
     }
 
-    pub fn between(base: &[LasPoint], next: &[LasPoint]) -> Self {
+    pub async fn between(base: &[LasPoint], next: &[LasPoint]) -> Self {
         let min_len = base.len().min(next.len());
         let mut modified = Vec::new();
         for i in 0..min_len {
@@ -527,7 +527,7 @@ impl LasPointsDiff {
     }
 }
 
-fn absorb_points(d1: Option<LasPointsDiff>, d2: Option<LasPointsDiff>) -> Option<LasPointsDiff> {
+async fn absorb_points(d1: Option<LasPointsDiff>, d2: Option<LasPointsDiff>) -> Option<LasPointsDiff> {
     let (d1, d2) = match (d1, d2) {
         (None, None) => return None,
         (Some(d1), None) => return Some(d1),
@@ -639,7 +639,7 @@ pub struct LasDiff {
 }
 
 /// ▶️ Applies every header scalar patch onto `header` in place.
-fn apply_header_diff(header: &mut LasHeader, d: &LasDiff) {
+async fn apply_header_diff(header: &mut LasHeader, d: &LasDiff) {
     if let Some(v) = d.version_major {
         header.version_major = v;
     }
@@ -718,7 +718,7 @@ fn apply_header_diff(header: &mut LasHeader, d: &LasDiff) {
 }
 
 impl MutationDiff<LasSnapshot> for LasDiff {
-    fn apply(&self, base: &LasSnapshot) -> MutationApplyResult<LasSnapshot> {
+    async fn apply(&self, base: &LasSnapshot) -> MutationApplyResult<LasSnapshot> {
         if let Some(diff) = &self.vlrs {
             validate_indexed_targets(base.vlrs.len(), &diff.removed, diff.modified.iter().map(|value| value.index), diff.added.iter().map(|value| value.index), "vlrs")?;
         }
@@ -740,7 +740,7 @@ impl MutationDiff<LasSnapshot> for LasDiff {
 
     /// ➕️ Structural, total, base-free sequential-coalesce (`## Absorb` contract). Header
     /// scalars: LWW. `vlrs`/`points`: index-transport via [`absorb_indexed_triple`].
-    fn absorb(&mut self, other: Self) {
+    async fn absorb(&mut self, other: Self) {
         if other.version_major.is_some() {
             self.version_major = other.version_major;
         }
@@ -824,7 +824,7 @@ impl MutationDiff<LasSnapshot> for LasDiff {
 impl DiffAlgebra<LasSnapshot> for LasDiff {
     /// 🔁️ Diff-level undo, derived generically: the state delta from `self.apply(base)` back to
     /// `base` — `between` is the single source of truth for turning a state pair into a diff.
-    fn inverse(&self, base: &LasSnapshot) -> Self {
+    async fn inverse(&self, base: &LasSnapshot) -> Self {
         let mutated = {
             let mut header = base.header.clone();
             apply_header_diff(&mut header, self);
@@ -841,7 +841,7 @@ impl DiffAlgebra<LasSnapshot> for LasDiff {
     /// 🧭️ State delta (compose `GetXDiff`): header scalars compared field-by-field; `vlrs`/
     /// `points` index-keyed matching (pairwise `0..min(len)` = modified, base tail = removed,
     /// other tail = added — the recipe's "index keys pairwise by position" rule).
-    fn between(base: &LasSnapshot, other: &LasSnapshot) -> Self {
+    async fn between(base: &LasSnapshot, other: &LasSnapshot) -> Self {
         let bh = &base.header;
         let oh = &other.header;
         let vlrs_diff = LasVlrsDiff::between(&base.vlrs, &other.vlrs);
@@ -877,38 +877,38 @@ impl DiffAlgebra<LasSnapshot> for LasDiff {
         }
     }
 
-    fn is_empty(&self) -> bool {
+    async fn is_empty(&self) -> bool {
         self == &LasDiff::default()
     }
 }
 
 /// 🧩 `SetSnapshot`'s diff is the sparse field-by-field `between(base, next)` — no full-replace
 /// slot exists on `LasDiff` to short-circuit into.
-pub fn diff_set_snapshot(base: &LasSnapshot, next: &LasSnapshot) -> LasDiff {
+pub async fn diff_set_snapshot(base: &LasSnapshot, next: &LasSnapshot) -> LasDiff {
     LasDiff::between(base, next)
 }
-pub fn diff_set_version(major: u8, minor: u8) -> LasDiff {
+pub async fn diff_set_version(major: u8, minor: u8) -> LasDiff {
     LasDiff { version_major: Some(major), version_minor: Some(minor), ..Default::default() }
 }
-pub fn diff_set_system_identifier(system_identifier: &str) -> LasDiff {
+pub async fn diff_set_system_identifier(system_identifier: &str) -> LasDiff {
     LasDiff { system_identifier: Some(system_identifier.to_string()), ..Default::default() }
 }
-pub fn diff_set_software_info(generating_software: &str) -> LasDiff {
+pub async fn diff_set_software_info(generating_software: &str) -> LasDiff {
     LasDiff { generating_software: Some(generating_software.to_string()), ..Default::default() }
 }
-pub fn diff_set_creation_date(day_of_year: u16, year: u16) -> LasDiff {
+pub async fn diff_set_creation_date(day_of_year: u16, year: u16) -> LasDiff {
     LasDiff { creation_day_of_year: Some(day_of_year), creation_year: Some(year), ..Default::default() }
 }
-pub fn diff_set_scale_and_offset(scale: (f64, f64, f64), offset: (f64, f64, f64)) -> LasDiff {
+pub async fn diff_set_scale_and_offset(scale: (f64, f64, f64), offset: (f64, f64, f64)) -> LasDiff {
     LasDiff { x_scale: Some(scale.0), y_scale: Some(scale.1), z_scale: Some(scale.2), x_offset: Some(offset.0), y_offset: Some(offset.1), z_offset: Some(offset.2), ..Default::default() }
 }
-pub fn diff_set_bounds(max: (f64, f64, f64), min: (f64, f64, f64)) -> LasDiff {
+pub async fn diff_set_bounds(max: (f64, f64, f64), min: (f64, f64, f64)) -> LasDiff {
     LasDiff { max_x: Some(max.0), max_y: Some(max.1), max_z: Some(max.2), min_x: Some(min.0), min_y: Some(min.1), min_z: Some(min.2), ..Default::default() }
 }
-pub fn diff_set_points_by_return(counts: [u32; 5]) -> LasDiff {
+pub async fn diff_set_points_by_return(counts: [u32; 5]) -> LasDiff {
     LasDiff { points_by_return: Some(counts), ..Default::default() }
 }
-pub fn diff_insert_vlr(base: &LasSnapshot, index: usize, vlr: LasVlr) -> LasDiff {
+pub async fn diff_insert_vlr(base: &LasSnapshot, index: usize, vlr: LasVlr) -> LasDiff {
     // 🧭️ Derived from the REAL collection length (`base.vlrs.len()`), never `base.header
     // .number_of_vlrs` — the header field can be desynced from reality (a raw-decoded fixture,
     // or a directly-constructed test snapshot), and `apply_las_mutation`'s imperative body
@@ -916,27 +916,27 @@ pub fn diff_insert_vlr(base: &LasSnapshot, index: usize, vlr: LasVlr) -> LasDiff
     // `mutation_diff_law` to hold unconditionally, not just on already-synced fixtures.
     LasDiff { number_of_vlrs: Some((base.vlrs.len() + 1) as u32), vlrs: Some(LasVlrsDiff { removed: vec![], modified: vec![], added: vec![LasVlrAdded { index, vlr }] }), ..Default::default() }
 }
-pub fn diff_remove_vlr(base: &LasSnapshot, index: usize) -> LasDiff {
+pub async fn diff_remove_vlr(base: &LasSnapshot, index: usize) -> LasDiff {
     if index >= base.vlrs.len() {
         return LasDiff::default();
     }
     LasDiff { number_of_vlrs: Some((base.vlrs.len() - 1) as u32), vlrs: Some(LasVlrsDiff { removed: vec![index], modified: vec![], added: vec![] }), ..Default::default() }
 }
-pub fn diff_set_vlr_data(index: usize, data: Vec<u8>) -> LasDiff {
+pub async fn diff_set_vlr_data(index: usize, data: Vec<u8>) -> LasDiff {
     LasDiff { vlrs: Some(LasVlrsDiff { removed: vec![], modified: vec![LasVlrModified { index, diff: LasVlrDiff { data: Some(data), ..Default::default() } }], added: vec![] }), ..Default::default() }
 }
-pub fn diff_insert_point(base: &LasSnapshot, index: usize, point: LasPoint) -> LasDiff {
+pub async fn diff_insert_point(base: &LasSnapshot, index: usize, point: LasPoint) -> LasDiff {
     // 🧭️ See `diff_insert_vlr`'s doc comment — derived from `base.points.len()`, not the
     // (possibly-desynced) `base.header.number_of_point_records`.
     LasDiff { number_of_point_records: Some((base.points.len() + 1) as u32), points: Some(LasPointsDiff { removed: vec![], modified: vec![], added: vec![LasPointAdded { index, point }] }), ..Default::default() }
 }
-pub fn diff_remove_point(base: &LasSnapshot, index: usize) -> LasDiff {
+pub async fn diff_remove_point(base: &LasSnapshot, index: usize) -> LasDiff {
     if index >= base.points.len() {
         return LasDiff::default();
     }
     LasDiff { number_of_point_records: Some((base.points.len() - 1) as u32), points: Some(LasPointsDiff { removed: vec![index], modified: vec![], added: vec![] }), ..Default::default() }
 }
-pub fn diff_set_point(base: &LasSnapshot, index: usize, point: LasPoint) -> LasDiff {
+pub async fn diff_set_point(base: &LasSnapshot, index: usize, point: LasPoint) -> LasDiff {
     match base.points.get(index) {
         Some(existing) => {
             let d = point_between(existing, &point);
@@ -987,38 +987,38 @@ pub fn diff_set_point(base: &LasSnapshot, index: usize, point: LasPoint) -> LasD
 /// `U`/`R`/`N`/`X`; `LasPointDiff`: `X`/`Y`/`Z`/`I`/`R`/`N`/`D`/`E`/`C`/`A`/`U`/`P`/`G`/`B` — each
 /// namespace is local to its own `[...]` block, no cross-type collision).
 //#region 🔖️Primitives
-pub(crate) fn hex_encode(bytes: &[u8]) -> String {
+pub(crate) async fn hex_encode(bytes: &[u8]) -> String {
     bytes.iter().map(|b| format!("{b:02x}")).collect()
 }
-pub(crate) fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
+pub(crate) async fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
     if s.len() % 2 != 0 {
         return Err(format!("odd hex length: {s:?}"));
     }
     (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()
 }
-pub(crate) fn parse_u8(s: &str) -> Result<u8, String> {
+pub(crate) async fn parse_u8(s: &str) -> Result<u8, String> {
     s.parse().map_err(|e: std::num::ParseIntError| e.to_string())
 }
-pub(crate) fn parse_i8(s: &str) -> Result<i8, String> {
+pub(crate) async fn parse_i8(s: &str) -> Result<i8, String> {
     s.parse().map_err(|e: std::num::ParseIntError| e.to_string())
 }
-pub(crate) fn parse_u16(s: &str) -> Result<u16, String> {
+pub(crate) async fn parse_u16(s: &str) -> Result<u16, String> {
     s.parse().map_err(|e: std::num::ParseIntError| e.to_string())
 }
-pub(crate) fn parse_u32(s: &str) -> Result<u32, String> {
+pub(crate) async fn parse_u32(s: &str) -> Result<u32, String> {
     s.parse().map_err(|e: std::num::ParseIntError| e.to_string())
 }
-pub(crate) fn parse_usize(s: &str) -> Result<usize, String> {
+pub(crate) async fn parse_usize(s: &str) -> Result<usize, String> {
     s.parse().map_err(|e: std::num::ParseIntError| e.to_string())
 }
-pub(crate) fn parse_f64(s: &str) -> Result<f64, String> {
+pub(crate) async fn parse_f64(s: &str) -> Result<f64, String> {
     s.parse().map_err(|e: std::num::ParseFloatError| e.to_string())
 }
 
 /// 🧭️ Bracket-depth-aware split (tracks `[`/`]` only): a top-level `sep` inside nested brackets is
 /// never mistaken for a field separator — the whole hand-rolled grammar's parsing primitive
 /// (identical to gif 89a's copy — own copy per artifact, no cross-artifact type sharing).
-pub(crate) fn split_top_level(s: &str, sep: char) -> Vec<&str> {
+pub(crate) async fn split_top_level(s: &str, sep: char) -> Vec<&str> {
     if s.is_empty() {
         return Vec::new();
     }
@@ -1039,16 +1039,16 @@ pub(crate) fn split_top_level(s: &str, sep: char) -> Vec<&str> {
     out.push(&s[start..]);
     out
 }
-pub(crate) fn strip_brackets(s: &str) -> Result<&str, String> {
+pub(crate) async fn strip_brackets(s: &str) -> Result<&str, String> {
     s.strip_prefix('[').and_then(|s| s.strip_suffix(']')).ok_or_else(|| format!("expected [...], got {s:?}"))
 }
-pub(crate) fn encode_option<T>(opt: &Option<T>, enc: impl Fn(&T) -> String) -> String {
+pub(crate) async fn encode_option<T>(opt: &Option<T>, enc: impl Fn(&T) -> String) -> String {
     match opt {
         None => "[0]".to_string(),
         Some(v) => format!("[1,{}]", enc(v)),
     }
 }
-pub(crate) fn decode_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Option<T>, String> {
+pub(crate) async fn decode_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Option<T>, String> {
     let inner = strip_brackets(s)?;
     match split_top_level(inner, ',').as_slice() {
         ["0"] => Ok(None),
@@ -1059,33 +1059,33 @@ pub(crate) fn decode_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>)
 //#endregion 🔖️Primitives
 
 //#region 🔖️ValueCodecs
-pub(crate) fn enc_rgb(t: &(u16, u16, u16)) -> String {
+pub(crate) async fn enc_rgb(t: &(u16, u16, u16)) -> String {
     format!("[{},{},{}]", t.0, t.1, t.2)
 }
-pub(crate) fn dec_rgb(s: &str) -> Result<(u16, u16, u16), String> {
+pub(crate) async fn dec_rgb(s: &str) -> Result<(u16, u16, u16), String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [r, g, b] = parts.as_slice() else { return Err(format!("rgb: expected 3 fields, got {}", parts.len())) };
     Ok((parse_u16(r)?, parse_u16(g)?, parse_u16(b)?))
 }
-pub(crate) fn enc_u32x5(a: &[u32; 5]) -> String {
+pub(crate) async fn enc_u32x5(a: &[u32; 5]) -> String {
     format!("[{},{},{},{},{}]", a[0], a[1], a[2], a[3], a[4])
 }
-pub(crate) fn dec_u32x5(s: &str) -> Result<[u32; 5], String> {
+pub(crate) async fn dec_u32x5(s: &str) -> Result<[u32; 5], String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let vals: Vec<u32> = parts.iter().map(|p| parse_u32(p)).collect::<Result<_, String>>()?;
     vals.try_into().map_err(|v: Vec<u32>| format!("points-by-return: expected 5 values, got {}", v.len()))
 }
-pub(crate) fn enc_vlr(v: &LasVlr) -> String {
+pub(crate) async fn enc_vlr(v: &LasVlr) -> String {
     format!("[{},{},{},{}]", hex_encode(v.user_id.as_bytes()), v.record_id, hex_encode(v.description.as_bytes()), hex_encode(&v.data))
 }
-pub(crate) fn dec_vlr(s: &str) -> Result<LasVlr, String> {
+pub(crate) async fn dec_vlr(s: &str) -> Result<LasVlr, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [user_id, record_id, description, data] = parts.as_slice() else {
         return Err(format!("vlr: expected 4 fields, got {}", parts.len()));
     };
     Ok(LasVlr { user_id: String::from_utf8(hex_decode(user_id)?).map_err(|e| e.to_string())?, record_id: parse_u16(record_id)?, description: String::from_utf8(hex_decode(description)?).map_err(|e| e.to_string())?, data: hex_decode(data)? })
 }
-pub(crate) fn enc_point(p: &LasPoint) -> String {
+pub(crate) async fn enc_point(p: &LasPoint) -> String {
     format!(
         "[{},{},{},{},{},{},{},{},{},{},{},{},{},{}]",
         p.x,
@@ -1104,7 +1104,7 @@ pub(crate) fn enc_point(p: &LasPoint) -> String {
         encode_option(&p.rgb, enc_rgb),
     )
 }
-pub(crate) fn dec_point(s: &str) -> Result<LasPoint, String> {
+pub(crate) async fn dec_point(s: &str) -> Result<LasPoint, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [x, y, z, intensity, return_number, number_of_returns, scan_direction_flag, edge_of_flight_line, classification, scan_angle_rank, user_data, point_source_id, gps_time, rgb] = parts.as_slice() else {
         return Err(format!("point: expected 14 fields, got {}", parts.len()));
@@ -1129,7 +1129,7 @@ pub(crate) fn dec_point(s: &str) -> Result<LasPoint, String> {
 //#endregion 🔖️ValueCodecs
 
 //#region 🔖️DiffValueCodecs
-fn enc_vlr_diff(d: &LasVlrDiff) -> String {
+async fn enc_vlr_diff(d: &LasVlrDiff) -> String {
     let mut parts = Vec::new();
     if let Some(v) = &d.user_id {
         parts.push(format!("U:{}", hex_encode(v.as_bytes())));
@@ -1145,7 +1145,7 @@ fn enc_vlr_diff(d: &LasVlrDiff) -> String {
     }
     format!("[{}]", parts.join(","))
 }
-fn dec_vlr_diff(s: &str) -> Result<LasVlrDiff, String> {
+async fn dec_vlr_diff(s: &str) -> Result<LasVlrDiff, String> {
     let inner = strip_brackets(s)?;
     let mut d = LasVlrDiff::default();
     for entry in split_top_level(inner, ',') {
@@ -1164,7 +1164,7 @@ fn dec_vlr_diff(s: &str) -> Result<LasVlrDiff, String> {
     Ok(d)
 }
 
-fn enc_point_diff(d: &LasPointDiff) -> String {
+async fn enc_point_diff(d: &LasPointDiff) -> String {
     let mut parts = Vec::new();
     if let Some(v) = d.x {
         parts.push(format!("X:{v}"));
@@ -1210,7 +1210,7 @@ fn enc_point_diff(d: &LasPointDiff) -> String {
     }
     format!("[{}]", parts.join(","))
 }
-fn dec_point_diff(s: &str) -> Result<LasPointDiff, String> {
+async fn dec_point_diff(s: &str) -> Result<LasPointDiff, String> {
     let inner = strip_brackets(s)?;
     let mut d = LasPointDiff::default();
     for entry in split_top_level(inner, ',') {
@@ -1241,13 +1241,13 @@ fn dec_point_diff(s: &str) -> Result<LasPointDiff, String> {
 
 /// 🧭️ Generic-shaped 3-section `[removed];[modified];[added]` collection-triple printer/parser
 /// (identical shape to gif 89a's copy — own copy per artifact, no cross-artifact type sharing).
-fn enc_collection_triple(name: &str, removed: &[usize], modified: &[(usize, String)], added: &[(usize, String)]) -> String {
+async fn enc_collection_triple(name: &str, removed: &[usize], modified: &[(usize, String)], added: &[(usize, String)]) -> String {
     let removed = removed.iter().map(|i| i.to_string()).collect::<Vec<_>>().join(",");
     let modified = modified.iter().map(|(i, v)| format!("{i}:{v}")).collect::<Vec<_>>().join(",");
     let added = added.iter().map(|(i, v)| format!("{i}:{v}")).collect::<Vec<_>>().join(",");
     format!("{name}{{[{removed}];[{modified}];[{added}]}}")
 }
-fn dec_collection_triple(body: &str) -> Result<(Vec<usize>, Vec<(usize, String)>, Vec<(usize, String)>), String> {
+async fn dec_collection_triple(body: &str) -> Result<(Vec<usize>, Vec<(usize, String)>, Vec<(usize, String)>), String> {
     let three = split_top_level(body, ';');
     let [removed_s, modified_s, added_s] = three.as_slice() else { return Err(format!("collection: expected 3 sections, got {}", three.len())) };
     let removed = split_top_level(strip_brackets(removed_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(parse_usize).collect::<Result<Vec<_>, String>>()?;
@@ -1264,10 +1264,10 @@ fn dec_collection_triple(body: &str) -> Result<(Vec<usize>, Vec<(usize, String)>
     Ok((removed, parse_entries(modified_s)?, parse_entries(added_s)?))
 }
 
-fn enc_vlrs_diff(d: &LasVlrsDiff) -> String {
+async fn enc_vlrs_diff(d: &LasVlrsDiff) -> String {
     enc_collection_triple("vlrs", &d.removed, &d.modified.iter().map(|m| (m.index, enc_vlr_diff(&m.diff))).collect::<Vec<_>>(), &d.added.iter().map(|a| (a.index, enc_vlr(&a.vlr))).collect::<Vec<_>>())
 }
-fn dec_vlrs_diff(body: &str) -> Result<LasVlrsDiff, String> {
+async fn dec_vlrs_diff(body: &str) -> Result<LasVlrsDiff, String> {
     let (removed, modified, added) = dec_collection_triple(body)?;
     Ok(LasVlrsDiff {
         removed,
@@ -1275,10 +1275,10 @@ fn dec_vlrs_diff(body: &str) -> Result<LasVlrsDiff, String> {
         added: added.into_iter().map(|(index, enc)| Ok(LasVlrAdded { index, vlr: dec_vlr(&enc)? })).collect::<Result<Vec<_>, String>>()?,
     })
 }
-fn enc_points_diff(d: &LasPointsDiff) -> String {
+async fn enc_points_diff(d: &LasPointsDiff) -> String {
     enc_collection_triple("points", &d.removed, &d.modified.iter().map(|m| (m.index, enc_point_diff(&m.diff))).collect::<Vec<_>>(), &d.added.iter().map(|a| (a.index, enc_point(&a.point))).collect::<Vec<_>>())
 }
-fn dec_points_diff(body: &str) -> Result<LasPointsDiff, String> {
+async fn dec_points_diff(body: &str) -> Result<LasPointsDiff, String> {
     let (removed, modified, added) = dec_collection_triple(body)?;
     Ok(LasPointsDiff {
         removed,
@@ -1289,7 +1289,7 @@ fn dec_points_diff(body: &str) -> Result<LasPointsDiff, String> {
 //#endregion 🔖️DiffValueCodecs
 
 //#region 🔖️TopLevel
-fn print_las_diff(d: &LasDiff) -> String {
+async fn print_las_diff(d: &LasDiff) -> String {
     let mut tokens: Vec<String> = Vec::new();
     if let Some(v) = d.version_major {
         tokens.push(format!("version-major={v}"));
@@ -1374,7 +1374,7 @@ fn print_las_diff(d: &LasDiff) -> String {
     }
     tokens.join(" ")
 }
-fn parse_las_diff(line: &str) -> Result<LasDiff, String> {
+async fn parse_las_diff(line: &str) -> Result<LasDiff, String> {
     let mut d = LasDiff::default();
     if line.is_empty() {
         return Ok(d);
@@ -1461,18 +1461,18 @@ fn parse_las_diff(line: &str) -> Result<LasDiff, String> {
 /// semio` file's DESCRIPTION of it bottoms out in one opaque trailing chain past the two real
 /// leading fields (`format`, `header_mask`).
 //#region 🔖️BinaryPrimitives
-pub(crate) fn write_bytes_lp(out: &mut Vec<u8>, bytes: &[u8]) {
+pub(crate) async fn write_bytes_lp(out: &mut Vec<u8>, bytes: &[u8]) {
     store::pack_rt::write_varint_u64(out, bytes.len() as u64);
     out.extend_from_slice(bytes);
 }
-pub(crate) fn read_bytes_lp(reader: &mut store::ByteReader<'_>) -> Result<Vec<u8>, String> {
+pub(crate) async fn read_bytes_lp(reader: &mut store::ByteReader<'_>) -> Result<Vec<u8>, String> {
     let len = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
     Ok(reader.read_bytes(len).map_err(|e| e.to_string())?.to_vec())
 }
-pub(crate) fn write_str_lp(out: &mut Vec<u8>, s: &str) {
+pub(crate) async fn write_str_lp(out: &mut Vec<u8>, s: &str) {
     write_bytes_lp(out, s.as_bytes());
 }
-pub(crate) fn read_str_lp(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
+pub(crate) async fn read_str_lp(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
     String::from_utf8(read_bytes_lp(reader)?).map_err(|e| e.to_string())
 }
 //#endregion 🔖️BinaryPrimitives
@@ -1481,7 +1481,7 @@ pub(crate) fn read_str_lp(reader: &mut store::ByteReader<'_>) -> Result<String, 
 /// 🧭️ Full (non-sparse) `LasHeader` binary record — every field always present, declaration
 /// order — reused by `🧬️mutations/🦀️component.rs`'s `SetSnapshot` binary payload (a whole
 /// `LasSnapshot` embeds a whole `LasHeader`, never a sparse patch).
-pub(crate) fn enc_header_bin(h: &LasHeader, out: &mut Vec<u8>) {
+pub(crate) async fn enc_header_bin(h: &LasHeader, out: &mut Vec<u8>) {
     out.push(h.version_major);
     out.push(h.version_minor);
     write_str_lp(out, &h.system_identifier);
@@ -1501,7 +1501,7 @@ pub(crate) fn enc_header_bin(h: &LasHeader, out: &mut Vec<u8>) {
         out.extend_from_slice(&v.to_le_bytes());
     }
 }
-pub(crate) fn dec_header_bin(reader: &mut store::ByteReader<'_>) -> Result<LasHeader, String> {
+pub(crate) async fn dec_header_bin(reader: &mut store::ByteReader<'_>) -> Result<LasHeader, String> {
     let version_major = reader.read_u8().map_err(|e| e.to_string())?;
     let version_minor = reader.read_u8().map_err(|e| e.to_string())?;
     let system_identifier = read_str_lp(reader)?;
@@ -1552,17 +1552,17 @@ pub(crate) fn dec_header_bin(reader: &mut store::ByteReader<'_>) -> Result<LasHe
     })
 }
 
-pub(crate) fn enc_vlr_bin(v: &LasVlr, out: &mut Vec<u8>) {
+pub(crate) async fn enc_vlr_bin(v: &LasVlr, out: &mut Vec<u8>) {
     write_str_lp(out, &v.user_id);
     store::pack_rt::write_varint_u64(out, v.record_id as u64);
     write_str_lp(out, &v.description);
     write_bytes_lp(out, &v.data);
 }
-pub(crate) fn dec_vlr_bin(reader: &mut store::ByteReader<'_>) -> Result<LasVlr, String> {
+pub(crate) async fn dec_vlr_bin(reader: &mut store::ByteReader<'_>) -> Result<LasVlr, String> {
     Ok(LasVlr { user_id: read_str_lp(reader)?, record_id: reader.read_varint_u64().map_err(|e| e.to_string())? as u16, description: read_str_lp(reader)?, data: read_bytes_lp(reader)? })
 }
 
-pub(crate) fn enc_point_bin(p: &LasPoint, out: &mut Vec<u8>) {
+pub(crate) async fn enc_point_bin(p: &LasPoint, out: &mut Vec<u8>) {
     out.extend_from_slice(&p.x.to_le_bytes());
     out.extend_from_slice(&p.y.to_le_bytes());
     out.extend_from_slice(&p.z.to_le_bytes());
@@ -1592,7 +1592,7 @@ pub(crate) fn enc_point_bin(p: &LasPoint, out: &mut Vec<u8>) {
         }
     }
 }
-pub(crate) fn dec_point_bin(reader: &mut store::ByteReader<'_>) -> Result<LasPoint, String> {
+pub(crate) async fn dec_point_bin(reader: &mut store::ByteReader<'_>) -> Result<LasPoint, String> {
     let x = reader.read_f64_le().map_err(|e| e.to_string())?;
     let y = reader.read_f64_le().map_err(|e| e.to_string())?;
     let z = reader.read_f64_le().map_err(|e| e.to_string())?;
@@ -1625,7 +1625,7 @@ const VDF_RECORD_ID: u8 = 1 << 1;
 const VDF_DESCRIPTION: u8 = 1 << 2;
 const VDF_DATA: u8 = 1 << 3;
 
-fn enc_vlr_diff_bin(d: &LasVlrDiff, out: &mut Vec<u8>) {
+async fn enc_vlr_diff_bin(d: &LasVlrDiff, out: &mut Vec<u8>) {
     let mut mask = 0u8;
     if d.user_id.is_some() {
         mask |= VDF_USER_ID;
@@ -1653,7 +1653,7 @@ fn enc_vlr_diff_bin(d: &LasVlrDiff, out: &mut Vec<u8>) {
         write_bytes_lp(out, v);
     }
 }
-fn dec_vlr_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<LasVlrDiff, String> {
+async fn dec_vlr_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<LasVlrDiff, String> {
     let mask = reader.read_u8().map_err(|e| e.to_string())?;
     let mut d = LasVlrDiff::default();
     if mask & VDF_USER_ID != 0 {
@@ -1686,7 +1686,7 @@ const PDF_POINT_SOURCE_ID: u16 = 1 << 11;
 const PDF_GPS_TIME: u16 = 1 << 12;
 const PDF_RGB: u16 = 1 << 13;
 
-fn enc_point_diff_bin(d: &LasPointDiff, out: &mut Vec<u8>) {
+async fn enc_point_diff_bin(d: &LasPointDiff, out: &mut Vec<u8>) {
     let mut mask = 0u16;
     if d.x.is_some() {
         mask |= PDF_X;
@@ -1788,7 +1788,7 @@ fn enc_point_diff_bin(d: &LasPointDiff, out: &mut Vec<u8>) {
         }
     }
 }
-fn dec_point_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<LasPointDiff, String> {
+async fn dec_point_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<LasPointDiff, String> {
     let mask = reader.read_u16_le().map_err(|e| e.to_string())?;
     let mut d = LasPointDiff::default();
     if mask & PDF_X != 0 {
@@ -1844,7 +1844,7 @@ fn dec_point_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<LasPointDiff
     Ok(d)
 }
 
-fn enc_vlrs_diff_bin(d: &LasVlrsDiff, out: &mut Vec<u8>) {
+async fn enc_vlrs_diff_bin(d: &LasVlrsDiff, out: &mut Vec<u8>) {
     store::pack_rt::write_varint_u64(out, d.removed.len() as u64);
     for i in &d.removed {
         store::pack_rt::write_varint_u64(out, *i as u64);
@@ -1860,7 +1860,7 @@ fn enc_vlrs_diff_bin(d: &LasVlrsDiff, out: &mut Vec<u8>) {
         enc_vlr_bin(&a.vlr, out);
     }
 }
-fn dec_vlrs_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<LasVlrsDiff, String> {
+async fn dec_vlrs_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<LasVlrsDiff, String> {
     let removed_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let removed = (0..removed_count).map(|_| Ok(reader.read_varint_u64().map_err(|e| e.to_string())? as usize)).collect::<Result<Vec<_>, String>>()?;
     let modified_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
@@ -1882,7 +1882,7 @@ fn dec_vlrs_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<LasVlrsDiff, 
     Ok(LasVlrsDiff { removed, modified, added })
 }
 
-fn enc_points_diff_bin(d: &LasPointsDiff, out: &mut Vec<u8>) {
+async fn enc_points_diff_bin(d: &LasPointsDiff, out: &mut Vec<u8>) {
     store::pack_rt::write_varint_u64(out, d.removed.len() as u64);
     for i in &d.removed {
         store::pack_rt::write_varint_u64(out, *i as u64);
@@ -1898,7 +1898,7 @@ fn enc_points_diff_bin(d: &LasPointsDiff, out: &mut Vec<u8>) {
         enc_point_bin(&a.point, out);
     }
 }
-fn dec_points_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<LasPointsDiff, String> {
+async fn dec_points_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<LasPointsDiff, String> {
     let removed_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let removed = (0..removed_count).map(|_| Ok(reader.read_varint_u64().map_err(|e| e.to_string())? as usize)).collect::<Result<Vec<_>, String>>()?;
     let modified_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
@@ -1953,10 +1953,10 @@ const HDR_POINTS: u32 = 1 << 26;
 //#endregion 🔖️BinaryDiffCodec
 
 impl DiffCodec for LasDiff {
-    fn print_diff(&self) -> String {
+    async fn print_diff(&self) -> String {
         print_las_diff(self)
     }
-    fn parse_diff(line: &str) -> Result<Self, store::TextError> {
+    async fn parse_diff(line: &str) -> Result<Self, store::TextError> {
         parse_las_diff(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
     /// ⚡️ REAL binary frame (`format u8 | header_mask u32 | <present header fields> | <vlrs diff
@@ -1964,7 +1964,7 @@ impl DiffCodec for LasDiff {
     /// semio`'s `format`/`header_mask` leading fields exactly — upgraded from F6's
     /// `print_diff().into_bytes()` text-as-binary shortcut (see `#region 🔖️BinaryDiffCodec`'s doc
     /// comment for the full rationale).
-    fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    async fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         let mut mask = 0u32;
         if self.version_major.is_some() {
             mask |= HDR_VERSION_MAJOR;
@@ -2135,8 +2135,8 @@ impl DiffCodec for LasDiff {
         }
         Ok(out)
     }
-    fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        fn go(bytes: &[u8]) -> Result<LasDiff, String> {
+    async fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+        async fn go(bytes: &[u8]) -> Result<LasDiff, String> {
             let mut reader = store::ByteReader::new(bytes);
             let format = reader.read_u8().map_err(|e| e.to_string())?;
             if format != store::pack_rt::OP_BINARY_FORMAT {
@@ -2239,7 +2239,7 @@ impl DiffCodec for LasDiff {
 /// 🧪️ Shared demo-case fixtures (moved out of `mod tests` so both `demo_diff_cases` below AND
 /// `mod tests` itself can use them without a `tests::` qualification cycle).
 #[cfg(test)]
-pub(crate) fn base_point(seed: u8) -> LasPoint {
+pub(crate) async fn base_point(seed: u8) -> LasPoint {
     LasPoint {
         x: 100.0 + seed as f64,
         y: -50.0 + seed as f64 * 0.5,
@@ -2259,7 +2259,7 @@ pub(crate) fn base_point(seed: u8) -> LasPoint {
 }
 
 #[cfg(test)]
-pub(crate) fn base_vlr(record_id: u16) -> LasVlr {
+pub(crate) async fn base_vlr(record_id: u16) -> LasVlr {
     LasVlr { user_id: "LASF_Spec".into(), record_id, description: format!("vlr {record_id}"), data: vec![record_id as u8; 3] }
 }
 
@@ -2269,7 +2269,7 @@ pub(crate) fn base_vlr(record_id: u16) -> LasVlr {
 /// `⚙️engine/🦀️component.rs`'s `diff_grammar_conformance_law`/`protocol_walk_law` conformance
 /// tests, per CLAUDE.md (no duplicated literal case lists).
 #[cfg(test)]
-pub(crate) fn demo_diff_cases() -> Vec<LasDiff> {
+pub(crate) async fn demo_diff_cases() -> Vec<LasDiff> {
     let mut pa0 = base_point(1);
     pa0.gps_time = Some(1000.0);
     let a = LasSnapshot {
@@ -2346,7 +2346,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn invalid_collection_targets_are_rejected_before_mutation() {
+    async fn invalid_collection_targets_are_rejected_before_mutation() {
         let base = LasSnapshot::default();
         let diff = LasDiff { vlrs: Some(LasVlrsDiff { removed: vec![0], ..Default::default() }), ..Default::default() };
         let error = diff.apply(&base).expect_err("missing VLR target must be rejected");
@@ -2362,7 +2362,7 @@ mod tests {
     /// results — the single source of truth also reused by `⚙️engine/🦀️component.rs`'s
     /// `diff_grammar_conformance_law`/`protocol_walk_law`.
     #[test]
-    fn diff_codec_text_binary_roundtrip_law() {
+    async fn diff_codec_text_binary_roundtrip_law() {
         for d in demo_diff_cases() {
             let printed = d.print_diff();
             assert!(!printed.contains('\n'), "print_diff must be one line, got {printed:?}");

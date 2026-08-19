@@ -15,15 +15,15 @@ pub struct ChangeSfpRequiredClass {
 impl protocol::MutationKind<Din16798Snapshot, Din16798Mutation> for ChangeSfpRequiredClass {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "sfp-required-class", kind: "change-sfp-required-class", record: "ChangedSfpRequiredClass" };
 
-    fn diff(&self, base: &Din16798Snapshot) -> protocol::MutationOutcome<Din16798Diff> {
+    async fn diff(&self, base: &Din16798Snapshot) -> protocol::MutationOutcome<Din16798Diff> {
         crate::artifacts::din16798::mutations::change_sfp_required_class::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &Din16798Snapshot) -> Vec<Din16798Mutation> {
+    async fn inverse(&self, base: &Din16798Snapshot) -> Vec<Din16798Mutation> {
         crate::artifacts::din16798::mutations::change_sfp_required_class::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         format!("Change required SFP class to {}", self.new_sfp_required_class)
     }
 }

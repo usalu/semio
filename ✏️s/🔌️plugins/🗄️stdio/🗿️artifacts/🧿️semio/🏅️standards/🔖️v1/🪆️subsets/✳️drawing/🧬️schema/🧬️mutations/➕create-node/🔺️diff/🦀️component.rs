@@ -8,7 +8,7 @@ use crate::artifacts::semio::standards::v1::subsets::drawing::schema::diff::{dif
 use crate::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::{DrawNode, SemioDrawingSnapshot};
 
 //#region 🔖️Diff
-pub fn diff(payload: &CreateNode, base: &SemioDrawingSnapshot) -> protocol::MutationOutcome<SemioDrawingDiff> {
+pub async fn diff(payload: &CreateNode, base: &SemioDrawingSnapshot) -> protocol::MutationOutcome<SemioDrawingDiff> {
     match node_at(base, &payload.parent) {
         Some(DrawNode::Group { children, .. }) => {
             let at = payload.index.min(children.len());

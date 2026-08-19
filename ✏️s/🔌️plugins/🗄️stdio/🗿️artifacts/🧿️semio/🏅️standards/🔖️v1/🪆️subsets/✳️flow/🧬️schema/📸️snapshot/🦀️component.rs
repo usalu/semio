@@ -85,7 +85,7 @@ pub struct SemioFlowSnapshot {
 }
 
 impl Default for SemioFlowSnapshot {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self { schema: STDIO_SEMIOFLOW_DOCUMENT_SCHEMA.into(), nodes: Default::default(), edges: Default::default() }
     }
 }
@@ -102,68 +102,68 @@ impl Default for SemioFlowSnapshot {
 /// real mechanism gap: `position: SemioPoint2` would need `SemioPoint2` (`engine::geometry`,
 /// OUTSIDE this ticket's `✳️flow/`-only edit scope) to implement `dsl::DslField`/`DslRecord`,
 /// which it does not. Hand-rolled instead — see this wave's report `mechanism_gaps`.
-fn hex_encode(bytes: &[u8]) -> String {
+async fn hex_encode(bytes: &[u8]) -> String {
     bytes.iter().map(|b| format!("{b:02x}")).collect()
 }
-fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
+async fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
     if s.len() % 2 != 0 {
         return Err(format!("odd hex length: {s:?}"));
     }
     (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()
 }
-fn enc_str(s: &str) -> String {
+async fn enc_str(s: &str) -> String {
     hex_encode(s.as_bytes())
 }
-fn dec_str(s: &str) -> Result<String, String> {
+async fn dec_str(s: &str) -> Result<String, String> {
     String::from_utf8(hex_decode(s)?).map_err(|e| e.to_string())
 }
-fn enc_f64(v: f64) -> String {
+async fn enc_f64(v: f64) -> String {
     format!("{v}")
 }
-fn dec_f64(s: &str) -> Result<f64, String> {
+async fn dec_f64(s: &str) -> Result<f64, String> {
     s.parse().map_err(|e: std::num::ParseFloatError| e.to_string())
 }
-fn enc_point2(p: &SemioPoint2) -> String {
+async fn enc_point2(p: &SemioPoint2) -> String {
     format!("[{},{}]", enc_f64(p.x), enc_f64(p.y))
 }
-fn dec_point2(s: &str) -> Result<SemioPoint2, String> {
+async fn dec_point2(s: &str) -> Result<SemioPoint2, String> {
     let inner = strip_brackets(s)?;
     let parts = split_top_level(inner, ',');
     let [x, y] = parts.as_slice() else { return Err(format!("point2: expected 2 fields, got {}", parts.len())) };
     Ok(SemioPoint2 { x: dec_f64(x)?, y: dec_f64(y)? })
 }
-fn enc_port_ref(p: &PortRef) -> String {
+async fn enc_port_ref(p: &PortRef) -> String {
     format!("[{},{}]", enc_str(&p.node), enc_str(&p.port))
 }
-fn dec_port_ref(s: &str) -> Result<PortRef, String> {
+async fn dec_port_ref(s: &str) -> Result<PortRef, String> {
     let inner = strip_brackets(s)?;
     let parts = split_top_level(inner, ',');
     let [node, port] = parts.as_slice() else { return Err(format!("port ref: expected 2 fields, got {}", parts.len())) };
     Ok(PortRef { node: dec_str(node)?, port: dec_str(port)? })
 }
-fn enc_param(p: &FlowParam) -> String {
+async fn enc_param(p: &FlowParam) -> String {
     format!("[{},{}]", enc_str(&p.key), enc_str(&p.value))
 }
-fn dec_param(s: &str) -> Result<FlowParam, String> {
+async fn dec_param(s: &str) -> Result<FlowParam, String> {
     let inner = strip_brackets(s)?;
     let parts = split_top_level(inner, ',');
     let [key, value] = parts.as_slice() else { return Err(format!("param: expected 2 fields, got {}", parts.len())) };
     Ok(FlowParam { key: dec_str(key)?, value: dec_str(value)? })
 }
-fn enc_node(n: &FlowNode) -> String {
+async fn enc_node(n: &FlowNode) -> String {
     format!("[{},{},{},{},{}]", enc_str(&n.id), enc_str(&n.kind), enc_str(&n.label), format!("[{}]", n.params.iter().map(enc_param).collect::<Vec<_>>().join(",")), enc_point2(&n.position))
 }
-fn dec_node(s: &str) -> Result<FlowNode, String> {
+async fn dec_node(s: &str) -> Result<FlowNode, String> {
     let inner = strip_brackets(s)?;
     let parts = split_top_level(inner, ',');
     let [id, kind, label, params, position] = parts.as_slice() else { return Err(format!("node: expected 5 fields, got {}", parts.len())) };
     let params = split_top_level(strip_brackets(params)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_param).collect::<Result<Vec<_>, String>>()?;
     Ok(FlowNode { id: dec_str(id)?, kind: dec_str(kind)?, label: dec_str(label)?, params, position: dec_point2(position)? })
 }
-fn enc_edge(e: &FlowEdge) -> String {
+async fn enc_edge(e: &FlowEdge) -> String {
     format!("[{},{},{},{}]", enc_str(&e.id), enc_port_ref(&e.from), enc_port_ref(&e.to), enc_str(&e.kind))
 }
-fn dec_edge(s: &str) -> Result<FlowEdge, String> {
+async fn dec_edge(s: &str) -> Result<FlowEdge, String> {
     let inner = strip_brackets(s)?;
     let parts = split_top_level(inner, ',');
     let [id, from, to, kind] = parts.as_slice() else { return Err(format!("edge: expected 4 fields, got {}", parts.len())) };
@@ -174,10 +174,10 @@ fn dec_edge(s: &str) -> Result<FlowEdge, String> {
 /// `edges=[<edge>,...]` — matching the grammar's `document = artifact-mark schema-line nodes-line
 /// edges-line`. Newlines are pure lexer trivia in the shared dialect, so this is genuinely
 /// recognizable by `dsl::Recognizer`, not merely readable.
-fn print_flow_snapshot_body(s: &SemioFlowSnapshot) -> String {
+async fn print_flow_snapshot_body(s: &SemioFlowSnapshot) -> String {
     format!("schema={}\nnodes=[{}]\nedges=[{}]", enc_str(&s.schema), s.nodes.iter().map(enc_node).collect::<Vec<_>>().join(","), s.edges.iter().map(enc_edge).collect::<Vec<_>>().join(","))
 }
-fn parse_flow_snapshot_body(body: &str) -> Result<SemioFlowSnapshot, String> {
+async fn parse_flow_snapshot_body(body: &str) -> Result<SemioFlowSnapshot, String> {
     let mut schema = None;
     let mut nodes = Vec::new();
     let mut edges = Vec::new();
@@ -207,22 +207,22 @@ fn parse_flow_snapshot_body(body: &str) -> Result<SemioFlowSnapshot, String> {
 /// 🧪️ Real LEB128-varint-length-prefixed binary primitives (`store::pack_rt::write_varint_u64` /
 /// `store::ByteReader`, same helpers `stdio.json`'s upgraded `OpBinary`/`DiffCodec` reuse) backing
 /// the real `ArtifactPack` below — replaces the old `serde_json::to_vec`-in-envelope shortcut.
-fn write_bytes_lp(out: &mut Vec<u8>, bytes: &[u8]) {
+async fn write_bytes_lp(out: &mut Vec<u8>, bytes: &[u8]) {
     store::pack_rt::write_varint_u64(out, bytes.len() as u64);
     out.extend_from_slice(bytes);
 }
-fn read_bytes_lp(reader: &mut store::ByteReader<'_>) -> Result<Vec<u8>, String> {
+async fn read_bytes_lp(reader: &mut store::ByteReader<'_>) -> Result<Vec<u8>, String> {
     let len = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
     Ok(reader.read_bytes(len).map_err(|e| e.to_string())?.to_vec())
 }
-fn write_str_lp(out: &mut Vec<u8>, s: &str) {
+async fn write_str_lp(out: &mut Vec<u8>, s: &str) {
     write_bytes_lp(out, s.as_bytes());
 }
-fn read_str_lp(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
+async fn read_str_lp(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
     String::from_utf8(read_bytes_lp(reader)?).map_err(|e| e.to_string())
 }
 
-fn encode_flow_snapshot_binary(s: &SemioFlowSnapshot) -> Vec<u8> {
+async fn encode_flow_snapshot_binary(s: &SemioFlowSnapshot) -> Vec<u8> {
     const PACK_BINARY_FORMAT: u8 = 1;
     let mut out = Vec::new();
     out.push(PACK_BINARY_FORMAT);
@@ -251,7 +251,7 @@ fn encode_flow_snapshot_binary(s: &SemioFlowSnapshot) -> Vec<u8> {
     }
     out
 }
-fn decode_flow_snapshot_binary(bytes: &[u8]) -> Result<SemioFlowSnapshot, String> {
+async fn decode_flow_snapshot_binary(bytes: &[u8]) -> Result<SemioFlowSnapshot, String> {
     const PACK_BINARY_FORMAT: u8 = 1;
     let mut reader = store::ByteReader::new(bytes);
     let format = reader.read_u8().map_err(|e| e.to_string())?;
@@ -297,11 +297,11 @@ fn decode_flow_snapshot_binary(bytes: &[u8]) -> Result<SemioFlowSnapshot, String
 /// unchanged.
 impl store::ArtifactDsl for SemioFlowSnapshot {
     const EXTENSION: &'static str = "semio";
-    fn envelope_id() -> &'static str {
+    async fn envelope_id() -> &'static str {
         STDIO_SEMIOFLOW_DOCUMENT_SCHEMA
     }
 
-    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+    async fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
         let body = match store::semio_format::split_text_preamble(text) {
             Ok((_, rest)) => rest,
             Err(_) => text,
@@ -309,7 +309,7 @@ impl store::ArtifactDsl for SemioFlowSnapshot {
         parse_flow_snapshot_body(body).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
 
-    fn print_dsl(&self) -> String {
+    async fn print_dsl(&self) -> String {
         let body = print_flow_snapshot_body(self);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
@@ -317,14 +317,14 @@ impl store::ArtifactDsl for SemioFlowSnapshot {
 }
 
 impl store::ArtifactPack for SemioFlowSnapshot {
-    fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
+    async fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
         let raw = encode_flow_snapshot_binary(self);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &raw))
     }
 
-    fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
+    async fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
         if envelope.envelope_id() != <Self as store::ArtifactDsl>::envelope_id() {
             return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.envelope_id())));
@@ -341,7 +341,7 @@ impl store::ArtifactPack for SemioFlowSnapshot {
 /// source of truth for `📚️examples/🌊️pipeline/🖼️assets/🗣️example.dsl.semio`/`🎒️example.pack.semio`
 /// and for the conformance-law tests in `🎹️composer/🦀️component.rs`.
 #[cfg(test)]
-pub(crate) fn demo_flow_snapshot() -> SemioFlowSnapshot {
+pub(crate) async fn demo_flow_snapshot() -> SemioFlowSnapshot {
     SemioFlowSnapshot {
         schema: STDIO_SEMIOFLOW_DOCUMENT_SCHEMA.into(),
         nodes: vec![
@@ -364,7 +364,7 @@ pub(crate) fn demo_flow_snapshot() -> SemioFlowSnapshot {
 mod tests {
     use super::*;
 
-    fn sample() -> SemioFlowSnapshot {
+    async fn sample() -> SemioFlowSnapshot {
         SemioFlowSnapshot {
             schema: STDIO_SEMIOFLOW_DOCUMENT_SCHEMA.into(),
             nodes: vec![
@@ -376,7 +376,7 @@ mod tests {
     }
 
     #[test]
-    fn json_pack_round_trips() {
+    async fn json_pack_round_trips() {
         let snap = sample();
         let bytes = <SemioFlowSnapshot as store::ArtifactPack>::encode_pack(&snap);
         let back = <SemioFlowSnapshot as store::ArtifactPack>::decode_pack(&bytes).expect("decode");
@@ -384,7 +384,7 @@ mod tests {
     }
 
     #[test]
-    fn dsl_text_round_trips() {
+    async fn dsl_text_round_trips() {
         let snap = sample();
         let text = <SemioFlowSnapshot as store::ArtifactDsl>::print_dsl(&snap);
         let back = <SemioFlowSnapshot as store::ArtifactDsl>::parse_dsl(&text).expect("parse");
@@ -392,7 +392,7 @@ mod tests {
     }
 
     #[test]
-    fn default_snapshot_has_no_nodes_or_edges() {
+    async fn default_snapshot_has_no_nodes_or_edges() {
         let snap = SemioFlowSnapshot::default();
         assert!(snap.nodes.is_empty());
         assert!(snap.edges.is_empty());

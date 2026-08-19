@@ -14,7 +14,7 @@ pub const BODY_KEY: &str = TextWindowKit::KIND_ID;
 
 //#region 🔖️Definition
 /// 🧱️ Stitched into the viewer manifest by `crate::viewer::playground::create_playground_viewer`.
-pub fn definition() -> WindowKindDefinition {
+pub async fn definition() -> WindowKindDefinition {
     WindowKindDefinition { label: LocalizedLabel::native("Schema", "Schema"), ..TextWindowKit::window_kind() }
 }
 //#endregion 🔖️Definition
@@ -22,7 +22,7 @@ pub fn definition() -> WindowKindDefinition {
 //#region 🔖️Render
 /// 👁️ Pure `PlaygroundSnapshot -> UiNode` read, always `read_only: true` — a viewer never emits a
 /// `replace-text` command.
-pub fn render(document: &PlaygroundSnapshot) -> UiNode {
+pub async fn render(document: &PlaygroundSnapshot) -> UiNode {
     TextWindowKit::render(&TextView { text: document.schema.clone(), language: Some("playground".into()), read_only: true })
 }
 //#endregion 🔖️Render
@@ -33,7 +33,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn definition_declares_a_read_only_text_window() {
+    async fn definition_declares_a_read_only_text_window() {
         let def = definition();
         assert_eq!(def.id, WINDOW_KIND_ID);
         assert_eq!(def.body_key, BODY_KEY);
@@ -41,7 +41,7 @@ mod tests {
     }
 
     #[test]
-    fn render_carries_the_schema_field_as_read_only_text() {
+    async fn render_carries_the_schema_field_as_read_only_text() {
         let document = PlaygroundSnapshot { schema: "playground.custom".into() };
         let UiNode::ComponentScene(node) = render(&document) else { panic!("expected ComponentScene") };
         let scene = node.text_editor.expect("text_editor scene");

@@ -18,7 +18,7 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 /// `PlaybookMutation`'s own `#[derive(dsl::DslEnum)]`-generated `DslVariants` impl — every variant
 /// is a single-field tuple, so each payload's own `#[dsl(keyword = "...")]` IS the wire keyword.
 impl protocol::OpText for PlaybookMutation {
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
+    async fn parse_op(line: &str) -> Result<Self, store::TextError> {
         let variants = <Self as dsl::DslVariants>::variants();
         for (keyword, spec_fn) in &variants {
             let probe = format!("{} ", keyword);
@@ -33,7 +33,7 @@ impl protocol::OpText for PlaybookMutation {
         }
         Err(dsl::__rt::field_error(format!("unknown mutation line '{line}'")))
     }
-    fn print_op(&self) -> String {
+    async fn print_op(&self) -> String {
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
         let variants = <Self as dsl::DslVariants>::variants();
         let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
@@ -42,10 +42,10 @@ impl protocol::OpText for PlaybookMutation {
 }
 
 impl protocol::OpBinary for PlaybookMutation {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         dsl::variants_binary::encode_op(self)
     }
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         dsl::variants_binary::decode_op(bytes)
     }
 }
@@ -58,7 +58,7 @@ mod tests {
     use crate::artifacts::playbook::empty_playbook_snapshot;
 
     #[test]
-    fn change_title_op_sets_title() {
+    async fn change_title_op_sets_title() {
         let spec = empty_playbook_snapshot();
         let mutation = change_title_operation(Some("Renamed".into()));
         let next = apply_playbook_mutation(&spec, &mutation).expect("valid mutation diff");
@@ -66,14 +66,14 @@ mod tests {
     }
 
     #[test]
-    fn apply_playbook_add_step_roundtrip() {
+    async fn apply_playbook_add_step_roundtrip() {
         let spec = empty_playbook_snapshot();
         let next = apply_playbook_mutation(&spec, &add_step_operation(&spec, "step-test".into()))
             .expect("valid mutation diff");
         assert_eq!(next.steps().len(), 2);
     }
 
-    fn sample_block() -> crate::artifacts::playbook::PlaybookBlock {
+    async fn sample_block() -> crate::artifacts::playbook::PlaybookBlock {
         crate::artifacts::playbook::PlaybookBlock {
             id: "b1".into(),
             label: "Team size".into(),
@@ -99,7 +99,7 @@ mod tests {
     }
 
     #[test]
-    fn op_text_round_trips_for_every_kind() {
+    async fn op_text_round_trips_for_every_kind() {
         use protocol::OpText;
         let ops = vec![
             add_step_operation(&empty_playbook_snapshot(), "s2".into()),

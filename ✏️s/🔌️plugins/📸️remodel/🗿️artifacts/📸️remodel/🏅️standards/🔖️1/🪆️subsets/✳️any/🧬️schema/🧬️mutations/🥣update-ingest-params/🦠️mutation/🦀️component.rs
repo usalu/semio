@@ -16,20 +16,20 @@ pub struct UpdateIngestParams {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn update_ingest_params(params: IngestParams) -> RemodelMutation {
+pub async fn update_ingest_params(params: IngestParams) -> RemodelMutation {
     RemodelMutation::UpdateIngestParams(UpdateIngestParams { params })
 }
 
 impl protocol::MutationKind<RemodelSnapshot, RemodelMutation> for UpdateIngestParams {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "update", entity: "ingest-params", kind: "update-ingest-params", record: "UpdatedIngestParams" };
 
-    fn diff(&self, base: &RemodelSnapshot) -> protocol::MutationOutcome<RemodelDiff> {
+    async fn diff(&self, base: &RemodelSnapshot) -> protocol::MutationOutcome<RemodelDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &RemodelSnapshot) -> Vec<RemodelMutation> {
+    async fn inverse(&self, base: &RemodelSnapshot) -> Vec<RemodelMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         "Update ingest params".to_string()
     }
 }

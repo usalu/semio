@@ -20,24 +20,24 @@ pub struct XmlArtifact {
 
 //#region 🔖️Conversions
 impl Default for XmlArtifact {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self::from_snapshot(XmlSnapshot::default())
     }
 }
 
 impl XmlArtifact {
     /// 📸️ Persisted subset.
-    pub fn to_snapshot(&self) -> XmlSnapshot {
+    pub async fn to_snapshot(&self) -> XmlSnapshot {
         XmlSnapshot { schema: self.schema.clone(), doc: self.doc.clone() }
     }
 
     /// 🧬️ Builds a full artifact from a snapshot.
-    pub fn from_snapshot(snapshot: XmlSnapshot) -> Self {
+    pub async fn from_snapshot(snapshot: XmlSnapshot) -> Self {
         Self { schema: snapshot.schema, doc: snapshot.doc }
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
-    pub fn set_snapshot(&mut self, snapshot: XmlSnapshot) {
+    pub async fn set_snapshot(&mut self, snapshot: XmlSnapshot) {
         self.schema = snapshot.schema;
         self.doc = snapshot.doc;
     }
@@ -46,7 +46,7 @@ impl XmlArtifact {
 
 //#region 🔖️Descriptor
 /// 🧬️ Descriptor for `s.stdio.xml`.
-pub fn xml_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
+pub async fn xml_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
     schema::ArtifactSchemaDescriptor {
         id: "s.stdio.xml",
         artifact: schema::FacetLeaves {
@@ -97,27 +97,27 @@ pub mod derived_construction {
         type Snapshot = XmlSnapshot;
         type Mutation = XmlMutation;
         type Diff = XmlDiff;
-        fn empty() -> Self {
+        async fn empty() -> Self {
             Self { snapshot: XmlSnapshot::default(), diagnostics: Vec::new() }
         }
-        fn from_snapshot(snapshot: Self::Snapshot) -> Self {
+        async fn from_snapshot(snapshot: Self::Snapshot) -> Self {
             Self { snapshot, diagnostics: Vec::new() }
         }
-        fn from_text(text: &str) -> Result<Self, store::TextError> {
+        async fn from_text(text: &str) -> Result<Self, store::TextError> {
             Ok(Self::from_snapshot(<XmlSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
-        fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
+        async fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
             Ok(Self::from_snapshot(<XmlSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
         }
-        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
+        async fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let diff = crate::artifacts::xml::schema::mutations::apply_xml_mutation(&mut self.snapshot, &mutation);
             (self, diff)
         }
-        fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
+        async fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
             self.snapshot = <XmlDiff as protocol::MutationDiff<XmlSnapshot>>::apply(&diff, &self.snapshot)?;
             Ok(self)
         }
-        fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
+        async fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
             if self.diagnostics.is_empty() {
                 Ok(self.snapshot)
             } else {
@@ -151,11 +151,11 @@ pub mod derived_analysis {
         type Parts = XmlParts;
         const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.xml", standard: StandardId("1.0"), subset: SubsetId("*") };
 
-        fn sniff(_source: &AnalyzeSource<'_>) -> IoConfidence {
+        async fn sniff(_source: &AnalyzeSource<'_>) -> IoConfidence {
             IoConfidence::Medium
         }
 
-        fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
+        async fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
             let mut parts = XmlParts::default();
             let mut diagnostics = Vec::new();
             let mut confidence = IoConfidence::High;
@@ -187,7 +187,7 @@ pub use derived_analysis::*;
 
 //#region 🔖️DocumentHelpers
 /// 🌱 Empty persisted snapshot.
-pub fn empty_xml_snapshot() -> XmlSnapshot {
+pub async fn empty_xml_snapshot() -> XmlSnapshot {
     XmlSnapshot::default()
 }
 
@@ -200,7 +200,7 @@ pub fn empty_xml_snapshot() -> XmlSnapshot {
 /// instruction. The single source of truth for
 /// `📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio`/`🎒️example.pack.semio` (both are literally this
 /// snapshot's `print_dsl`/`encode_pack` output, asserted equal by `fixture_honesty_law` below).
-pub fn demo_xml_snapshot() -> XmlSnapshot {
+pub async fn demo_xml_snapshot() -> XmlSnapshot {
     use crate::artifacts::xml::schema::snapshot::{XmlAttr, XmlDeclaration, XmlDocument, XmlNode};
     use crate::artifacts::xml::STDIO_XML_DOCUMENT_SCHEMA;
     let root = XmlNode::Element {
@@ -246,7 +246,7 @@ mod tests {
     use protocol::{Mutation, MutationDiff};
 
     #[test]
-    fn schema_facets_reject_raw_doctype_and_source_shadow_state() {
+    async fn schema_facets_reject_raw_doctype_and_source_shadow_state() {
         let facets = [
             include_str!("📸️snapshot/🦀️component.rs"),
             include_str!("📸️snapshot/🟦️component.ts"),
@@ -266,13 +266,13 @@ mod tests {
     }
 
     #[test]
-    fn empty_snapshot_matches_schema() {
+    async fn empty_snapshot_matches_schema() {
         let snapshot = empty_xml_snapshot();
         assert_eq!(snapshot.schema, STDIO_XML_DOCUMENT_SCHEMA);
     }
 
     #[test]
-    fn codec_round_trip() {
+    async fn codec_round_trip() {
         let snap = empty_xml_snapshot();
         let text = store::ArtifactDsl::print_dsl(&snap);
         let parsed = <XmlSnapshot as store::ArtifactDsl>::parse_dsl(&text).expect("parse");
@@ -283,7 +283,7 @@ mod tests {
     }
 
     //#region 🔖️Fixtures
-    fn sample_snapshot() -> XmlSnapshot {
+    async fn sample_snapshot() -> XmlSnapshot {
         XmlSnapshot {
             schema: STDIO_XML_DOCUMENT_SCHEMA.into(),
             doc: XmlDocument {
@@ -307,7 +307,7 @@ mod tests {
     /// instance -- so `removed` is exercised at the top-level children triple and `added` at the
     /// nested triple inside the modified child, while that same modified child's OWN diff
     /// (name+attributes+children all `Some`) is the "modified-in-every-field" collection entry.
-    fn sweep_a() -> XmlSnapshot {
+    async fn sweep_a() -> XmlSnapshot {
         XmlSnapshot {
             schema: STDIO_XML_DOCUMENT_SCHEMA.into(),
             doc: XmlDocument {
@@ -327,7 +327,7 @@ mod tests {
         }
     }
 
-    fn sweep_b() -> XmlSnapshot {
+    async fn sweep_b() -> XmlSnapshot {
         XmlSnapshot {
             schema: STDIO_XML_DOCUMENT_SCHEMA.into(),
             doc: XmlDocument {
@@ -352,7 +352,7 @@ mod tests {
     //#endregion 🔖️Fixtures
 
     //#region 🔖️MutationDiffLaw
-    fn sample_mutations() -> Vec<XmlMutation> {
+    async fn sample_mutations() -> Vec<XmlMutation> {
         vec![
             XmlMutation::NoMutation,
             XmlMutation::SetSnapshot { snapshot: sweep_b() },
@@ -369,7 +369,7 @@ mod tests {
     }
 
     #[test]
-    fn mutation_diff_law() {
+    async fn mutation_diff_law() {
         for mutation in sample_mutations() {
             let base = sample_snapshot();
             let diff_direct = Mutation::diff(&mutation, &base);
@@ -386,7 +386,7 @@ mod tests {
 
     //#region 🔖️InverseLaw
     #[test]
-    fn inverse_law() {
+    async fn inverse_law() {
         for mutation in sample_mutations() {
             let base = sample_snapshot();
 
@@ -409,7 +409,7 @@ mod tests {
     //#endregion 🔖️InverseLaw
 
     //#region 🔖️AbsorbLaw
-    fn two_child_root(a_name: &str, b_name: &str) -> XmlSnapshot {
+    async fn two_child_root(a_name: &str, b_name: &str) -> XmlSnapshot {
         XmlSnapshot {
             schema: STDIO_XML_DOCUMENT_SCHEMA.into(),
             doc: XmlDocument {
@@ -425,7 +425,7 @@ mod tests {
         }
     }
 
-    fn assert_absorb_matches_sequential(base: &XmlSnapshot, d1: &XmlDiff, d2: &XmlDiff) -> XmlDiff {
+    async fn assert_absorb_matches_sequential(base: &XmlSnapshot, d1: &XmlDiff, d2: &XmlDiff) -> XmlDiff {
         let sequential = MutationDiff::apply(d2, &MutationDiff::apply(d1, base).unwrap()).unwrap();
         let mut absorbed = d1.clone();
         MutationDiff::absorb(&mut absorbed, d2.clone());
@@ -433,7 +433,7 @@ mod tests {
         absorbed
     }
 
-    fn root_children_diff(diff: &XmlDiff) -> &crate::artifacts::xml::schema::diff::XmlChildrenDiff {
+    async fn root_children_diff(diff: &XmlDiff) -> &crate::artifacts::xml::schema::diff::XmlChildrenDiff {
         match diff.root.as_ref().expect("root diff present") {
             XmlNodeDiff::Element(e) => e.children.as_ref().expect("children diff present"),
             other => panic!("expected element diff, got {other:?}"),
@@ -441,7 +441,7 @@ mod tests {
     }
 
     #[test]
-    fn absorb_law() {
+    async fn absorb_law() {
         // Canonical: Insert(2)+Remove(0) -> {removed:[0], added:[(1,f)]}.
         {
             let base = two_child_root("a", "b");
@@ -531,7 +531,7 @@ mod tests {
 
     //#region 🔖️BetweenRoundtripLaw
     #[test]
-    fn between_roundtrip_law() {
+    async fn between_roundtrip_law() {
         // Synthetic pairs.
         let a = sweep_a();
         let b = sweep_b();
@@ -555,7 +555,7 @@ mod tests {
 
     //#region 🔖️CodecRetentionLaw
     #[test]
-    fn codec_retention_law() {
+    async fn codec_retention_law() {
         let fixture_text = include_str!("../📚️examples/🎬️demo/🖼️assets/📰️example.xml");
         let doc = crate::artifacts::xml::schema::snapshot::xml_document_from_text(fixture_text).expect("fixture parses");
         // Documented normal form: leading/trailing whitespace around the document is trimmed (the
@@ -576,7 +576,7 @@ mod tests {
     /// fixtures' doc comment for exactly how each collection flavor -- removed/modified/added --
     /// is exercised given the recipe's naive positional `between_children`).
     #[test]
-    fn field_sweep_law() {
+    async fn field_sweep_law() {
         let a = sweep_a();
         let b = sweep_b();
 
@@ -629,7 +629,7 @@ mod tests {
         /// parse under the real dialect -- independent of, and cheaper than, the two `recognize`/
         /// `walk_protocol` laws below (a parse failure here fails fast with a clearer message).
         #[test]
-        fn committed_facet_files_parse() {
+        async fn committed_facet_files_parse() {
             for (label, text) in [("snapshot grammar", snapshot::text::COMPONENT_GRAMMAR_SEMIO), ("mutations grammar", mutations::text::COMPONENT_GRAMMAR_SEMIO), ("diff grammar", diff::text::COMPONENT_GRAMMAR_SEMIO)] {
                 let grammar = dsl::parse_grammar(text).unwrap_or_else(|e| panic!("{label}: parse_grammar failed: {e:?}"));
                 assert_eq!(grammar.dialect, dsl::SemioDialect::Grammar, "{label}: expected grammar dialect");
@@ -644,7 +644,7 @@ mod tests {
         /// `m5_handcrafted_grammar_conformance`'s own `dsl_body_from_fixture` uses, so this is a
         /// direct proof this artifact will pass that harness once graduated, not merely an analogue.
         #[test]
-        fn grammar_conformance_law() {
+        async fn grammar_conformance_law() {
             let grammar = dsl::parse_grammar(snapshot::text::COMPONENT_GRAMMAR_SEMIO).expect("parse snapshot grammar");
             let recognizer = dsl::Recognizer::compile(&grammar);
             let text = store::ArtifactDsl::print_dsl(&demo_xml_snapshot());
@@ -656,7 +656,7 @@ mod tests {
         /// ✅️ `ops_grammar_conformance_law`: the mutations grammar recognizes real `print_op` output
         /// for every `XmlMutation` variant (`mutations::demo_mutation_cases()`).
         #[test]
-        fn ops_grammar_conformance_law() {
+        async fn ops_grammar_conformance_law() {
             let grammar = dsl::parse_grammar(mutations::text::COMPONENT_GRAMMAR_SEMIO).expect("parse mutations grammar");
             let recognizer = dsl::Recognizer::compile(&grammar);
             for mutation in mutations::demo_mutation_cases() {
@@ -669,7 +669,7 @@ mod tests {
         /// for every representative `XmlDiff` (`diff::demo_diff_cases()`), incl. the empty-line
         /// (all-`None`) diff and the `Replace` kind-change fallback.
         #[test]
-        fn diff_grammar_conformance_law() {
+        async fn diff_grammar_conformance_law() {
             let grammar = dsl::parse_grammar(diff::text::COMPONENT_GRAMMAR_SEMIO).expect("parse diff grammar");
             let recognizer = dsl::Recognizer::compile(&grammar);
             for d in diff::demo_diff_cases() {
@@ -684,7 +684,7 @@ mod tests {
         /// mutation's `encode_op`, and every demo diff's `encode_diff` -- asserting `consumed ==
         /// bytes.len()`.
         #[test]
-        fn protocol_walk_law() {
+        async fn protocol_walk_law() {
             let pack_spec = dsl::parse_protocol(snapshot::binary::COMPONENT_PROTOCOL_SEMIO).expect("parse snapshot protocol");
             let packed = store::ArtifactPack::encode_pack(&demo_xml_snapshot());
             let (_, inner) = store::semio_format::unwrap_binary(&packed).expect("unwrap semio envelope");
@@ -711,7 +711,7 @@ mod tests {
         /// demo()`, `print_dsl(demo()) == fixture` (byte-for-byte), and the pack twin -- so the
         /// fixtures can never silently drift back to a fake again.
         #[test]
-        fn fixture_honesty_law() {
+        async fn fixture_honesty_law() {
             const FIXTURE_DSL: &str = include_str!("../📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio");
             const FIXTURE_PACK: &[u8] = include_bytes!("../📚️examples/🎬️demo/🖼️assets/🎒️example.pack.semio");
 

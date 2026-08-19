@@ -31,7 +31,7 @@ const MEMBER_THICKNESS_3D: f64 = 0.05;
 
 //#region 🔖️PureSceneBuild
 /// 🧭️ Hamilton quaternion product `a * b`, both `[x,y,z,w]` — applying `b`'s rotation first, then `a`'s.
-fn quat_mul(a: [f64; 4], b: [f64; 4]) -> [f64; 4] {
+async fn quat_mul(a: [f64; 4], b: [f64; 4]) -> [f64; 4] {
     let (ax, ay, az, aw) = (a[0], a[1], a[2], a[3]);
     let (bx, by, bz, bw) = (b[0], b[1], b[2], b[3]);
     [aw * bx + ax * bw + ay * bz - az * by, aw * by - ax * bz + ay * bw + az * bx, aw * bz + ax * by - ay * bx + az * bw, aw * bw - ax * bx - ay * by - az * bz]
@@ -39,13 +39,13 @@ fn quat_mul(a: [f64; 4], b: [f64; 4]) -> [f64; 4] {
 
 /// 🧭️ Rotation of `roll` radians about the LOCAL +Z axis — applied before `quat_z_to` reorients +Z to
 /// the member direction, so this spins the box prism about its own long axis (matches `Frame3`'s roll).
-fn quat_roll_z(roll: f64) -> [f64; 4] {
+async fn quat_roll_z(roll: f64) -> [f64; 4] {
     let h = roll / 2.0;
     [0.0, 0.0, h.sin(), h.cos()]
 }
 
 /// 🧭️ Shortest-arc rotation taking local `+Z` (the `"box"` mesh's long axis) onto unit direction `dir`.
-fn quat_z_to(dir: [f64; 3]) -> [f64; 4] {
+async fn quat_z_to(dir: [f64; 3]) -> [f64; 4] {
     let dot = dir[2].clamp(-1.0, 1.0);
     if dot > 0.999_999 {
         return [0.0, 0.0, 0.0, 1.0];
@@ -65,7 +65,7 @@ fn quat_z_to(dir: [f64; 3]) -> [f64; 4] {
 /// values), when present, offsets a node's position by its solved displacement scaled by `deform_scale`.
 /// The viewer never passes `Some(displacements)` today (undeformed scene only) — kept general so this
 /// stays a byte-for-byte twin of the editor's own helper.
-fn fem3d_deformed_position(pos: [f64; 3], node_id: &str, displacements: Option<&HashMap<String, [f64; 6]>>, deform_scale: f64) -> [f64; 3] {
+async fn fem3d_deformed_position(pos: [f64; 3], node_id: &str, displacements: Option<&HashMap<String, [f64; 6]>>, deform_scale: f64) -> [f64; 3] {
     let mut p = pos;
     if let Some(map) = displacements {
         if let Some(d) = map.get(node_id) {
@@ -77,18 +77,18 @@ fn fem3d_deformed_position(pos: [f64; 3], node_id: &str, displacements: Option<&
     p
 }
 
-fn find_node_3d<'a>(nodes: &'a [crate::artifacts::fem3d::FemNode], id: &str) -> Option<&'a crate::artifacts::fem3d::FemNode> {
+async fn find_node_3d<'a>(nodes: &'a [crate::artifacts::fem3d::FemNode], id: &str) -> Option<&'a crate::artifacts::fem3d::FemNode> {
     nodes.iter().find(|n| n.id == id)
 }
 
-fn fem3d_element_endpoints(element: &crate::artifacts::fem3d::FemElement) -> (&str, &str) {
+async fn fem3d_element_endpoints(element: &crate::artifacts::fem3d::FemElement) -> (&str, &str) {
     match element {
         crate::artifacts::fem3d::FemElement::Bar { start, end, .. } | crate::artifacts::fem3d::FemElement::Frame { start, end, .. } => (start.as_str(), end.as_str()),
     }
 }
 
 /// 🧊️ One small box instance per node, plus one ORIENTED box prism per `Bar`/`Frame` member.
-fn fem3d_structural_instances(doc: &Fem3dSnapshot, displacements: Option<&HashMap<String, [f64; 6]>>, deform_scale: f64) -> Vec<Value> {
+async fn fem3d_structural_instances(doc: &Fem3dSnapshot, displacements: Option<&HashMap<String, [f64; 6]>>, deform_scale: f64) -> Vec<Value> {
     let node_pos = |node: &crate::artifacts::fem3d::FemNode| fem3d_deformed_position([node.x, node.y, node.z], &node.id, displacements, deform_scale);
 
     let mut instances: Vec<Value> = Vec::new();
@@ -135,7 +135,7 @@ fn fem3d_structural_instances(doc: &Fem3dSnapshot, displacements: Option<&HashMa
 /// scene only), so every vertex gets the same neutral gray. `crate::fem3d_engine::mesh_preview` and
 /// `crate::app_surface::{hex_to_rgb01, von_mises_color}` are crate-root shared compute (not app-owned),
 /// safe to call directly from a viewer file.
-fn fem3d_solid_mesh_entries(doc: &Fem3dSnapshot, displacements: Option<&HashMap<String, [f64; 6]>>, deform_scale: f64, nodal_stress: Option<&HashMap<String, f64>>) -> (Vec<Value>, Vec<Value>) {
+async fn fem3d_solid_mesh_entries(doc: &Fem3dSnapshot, displacements: Option<&HashMap<String, [f64; 6]>>, deform_scale: f64, nodal_stress: Option<&HashMap<String, f64>>) -> (Vec<Value>, Vec<Value>) {
     use crate::app_surface::{hex_to_rgb01, von_mises_color};
 
     let mut meshes = Vec::new();
@@ -192,7 +192,7 @@ fn fem3d_solid_mesh_entries(doc: &Fem3dSnapshot, displacements: Option<&HashMap<
 
 /// 🧊️ Builds the FULL `(meshes_json, instances_json)` pair for the undeformed structure — the `"box"`
 /// primitive mesh plus every `FemSolid`'s custom surface mesh, and every node/member/solid instance.
-fn fem3d_scene_parts(doc: &Fem3dSnapshot, displacements: Option<&HashMap<String, [f64; 6]>>, deform_scale: f64, nodal_stress: Option<&HashMap<String, f64>>) -> (String, String) {
+async fn fem3d_scene_parts(doc: &Fem3dSnapshot, displacements: Option<&HashMap<String, [f64; 6]>>, deform_scale: f64, nodal_stress: Option<&HashMap<String, f64>>) -> (String, String) {
     let mut meshes: Vec<Value> = serde_json::from_str(&semio_framework_plugin::world3d_meshes_json_from_kinds(&["box".to_string()])).unwrap_or_default();
     let mut instances = fem3d_structural_instances(doc, displacements, deform_scale);
     let (solid_meshes, solid_instances) = fem3d_solid_mesh_entries(doc, displacements, deform_scale, nodal_stress);
@@ -205,7 +205,7 @@ fn fem3d_scene_parts(doc: &Fem3dSnapshot, displacements: Option<&HashMap<String,
 /// the sentinel empty-object placeholder is still set — the viewer always calls this with
 /// `FemCamera::default()`, so this always takes the fallback branch today, kept general to stay a
 /// byte-for-byte twin of the editor's own helper.
-fn fem3d_camera_json(camera: &FemCamera) -> String {
+async fn fem3d_camera_json(camera: &FemCamera) -> String {
     if camera.json == "{}" {
         semio_framework_plugin::world3d_default_camera()
     } else {
@@ -218,7 +218,7 @@ fn fem3d_camera_json(camera: &FemCamera) -> String {
 /// 🧱️ Renders the undeformed structure with a hardcoded default camera — no persisted per-session
 /// camera (`Config = NoConfig`), no displacement offset, no stress coloring: the exact same scene the
 /// editor's own Model window renders for the same document.
-pub fn render(doc: &Fem3dSnapshot) -> UiNode {
+pub async fn render(doc: &Fem3dSnapshot) -> UiNode {
     let camera = FemCamera::default();
     let (meshes_json, instances_json) = fem3d_scene_parts(doc, None, doc.analysis.deformation_scale, None);
     build_world_3d_scene(BODY_KEY, FEM3D_VIEW_CONTROLLER_ID, world3d_scene(fem3d_camera_json(&camera), meshes_json, instances_json, world3d_default_selection_json(), &WorldSunConfig::default()))
@@ -231,12 +231,12 @@ mod tests {
     use super::*;
 
     #[test]
-    fn quat_z_to_identity_for_parallel_direction() {
+    async fn quat_z_to_identity_for_parallel_direction() {
         assert_eq!(quat_z_to([0.0, 0.0, 1.0]), [0.0, 0.0, 0.0, 1.0]);
     }
 
     #[test]
-    fn renders_a_scene_node_for_the_bundled_example() {
+    async fn renders_a_scene_node_for_the_bundled_example() {
         let document = crate::artifacts::fem3d::dsl::parse_dsl(crate::artifacts::fem3d::dsl::FEM3D_EXAMPLE_TEXT).expect("example fixture parses");
         let json = serde_json::to_string(&render(&document)).expect("render json");
         assert!(json.contains("world-3d"));

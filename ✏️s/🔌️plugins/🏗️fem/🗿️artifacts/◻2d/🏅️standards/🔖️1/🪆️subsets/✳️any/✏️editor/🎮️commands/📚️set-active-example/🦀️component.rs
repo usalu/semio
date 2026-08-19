@@ -23,7 +23,7 @@ pub struct SetActiveExample {
 /// 🧬️ Whole-document replace is banned from the `Mutation` enum outright (`SetSnapshot` — see
 /// `📓️taxonomy.md`'s forbidden vocabulary), so this builds `editor::fem2d::reset_document_effect`
 /// (a `Effect::LoadDocument`, outside undo history) instead of an `artifact_mutations` entry.
-pub fn handle(payload: &SetActiveExample, _doc: &ArtifactView<'_, Fem2dSnapshot>, _cfg: &ConfigView<'_, Fem2dConfig>) -> Result<Emit<Fem2dMutation, Fem2dConfigMutation>, Fault> {
+pub async fn handle(payload: &SetActiveExample, _doc: &ArtifactView<'_, Fem2dSnapshot>, _cfg: &ConfigView<'_, Fem2dConfig>) -> Result<Emit<Fem2dMutation, Fem2dConfigMutation>, Fault> {
     let document = if payload.example_id == "default" {
         Fem2dSnapshot::parse_dsl(crate::editor::fem2d::FEM2D_EXAMPLE_DSL).unwrap_or_else(|_| crate::artifacts::fem2d::schema::empty_fem2d_snapshot())
     } else {
@@ -42,7 +42,7 @@ mod tests {
     /// never applies `effects` to its own store — that's the real host's job): asserts on the `Emit`
     /// itself, the same shape `commands::set_active_example`'s fem3d sibling tests use.
     #[test]
-    fn set_active_example_loads_default_fixture_2d() {
+    async fn set_active_example_loads_default_fixture_2d() {
         let snapshot = crate::artifacts::fem2d::schema::empty_fem2d_snapshot();
         let history = semio_framework_plugin::HistoryView::empty();
         let doc = ArtifactView::new(&snapshot, &history);
@@ -58,7 +58,7 @@ mod tests {
     }
 
     #[test]
-    fn set_active_example_unknown_id_resets_to_empty_document_2d() {
+    async fn set_active_example_unknown_id_resets_to_empty_document_2d() {
         let snapshot = crate::artifacts::fem2d::schema::empty_fem2d_snapshot();
         let history = semio_framework_plugin::HistoryView::empty();
         let doc = ArtifactView::new(&snapshot, &history);
@@ -76,7 +76,7 @@ mod tests {
     /// declared as a Mutation, not a View/Shell action — the framework's "View/Shell actions must not
     /// emit operations" guard would otherwise reject it.
     #[test]
-    fn set_active_example_is_declared_as_operation_2d() {
+    async fn set_active_example_is_declared_as_operation_2d() {
         let definition = crate::editor::fem2d::create_fem2d_app();
         let action = definition.window_kinds.iter().flat_map(|window| window.actions.iter()).find(|action| action.id == "setActiveExample").expect("setActiveExample declared");
         assert!(matches!(action.kind, semio_framework_plugin::ActionKind::Mutation), "loading an example emits a document-replace effect, so it is a Mutation");

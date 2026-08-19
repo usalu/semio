@@ -17,7 +17,7 @@ pub const FLOW_DEFAULT_GRID_FACTOR: f64 = 10.0;
 //#region 🔖️Widgets
 /// 🎛️ Every `Widget` variant carries its own `id: String` as its first field — this reaches through
 /// the tag to read it generically.
-pub fn widget_id(widget: &Widget) -> &str {
+pub async fn widget_id(widget: &Widget) -> &str {
     match widget {
         Widget::Neuron { id, .. }
         | Widget::InputSlider { id, .. }
@@ -31,7 +31,7 @@ pub fn widget_id(widget: &Widget) -> &str {
     }
 }
 
-pub fn widget_kind_label(widget: &Widget) -> &'static str {
+pub async fn widget_kind_label(widget: &Widget) -> &'static str {
     match widget {
         Widget::Neuron { .. } => "neuron",
         Widget::InputSlider { .. } => "inputSlider",
@@ -47,7 +47,7 @@ pub fn widget_kind_label(widget: &Widget) -> &'static str {
 
 /// 👯️ Clones a widget with every field but `id` copied verbatim — the `duplicate-widget` composite
 /// mutation's plan uses this to mint the copy it hands to `create-widget`.
-pub fn widget_with_id(widget: &Widget, id: String) -> Widget {
+pub async fn widget_with_id(widget: &Widget, id: String) -> Widget {
     let mut copy = widget.clone();
     match &mut copy {
         Widget::Neuron { id: widget_id, .. }
@@ -63,7 +63,7 @@ pub fn widget_with_id(widget: &Widget, id: String) -> Widget {
     copy
 }
 
-pub fn widget_tree_label(widget: &Widget) -> String {
+pub async fn widget_tree_label(widget: &Widget) -> String {
     match widget {
         Widget::Neuron { id, neuron_kind, .. } => format!("{id} ({neuron_kind})"),
         Widget::InputSlider { id, .. } => format!("{id} (slider)"),
@@ -103,14 +103,14 @@ pub struct FlowArtifact {
 
 //#region 🔹Conversions
 impl Default for FlowArtifact {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self::from_snapshot(FlowSnapshot::default())
     }
 }
 
 impl FlowArtifact {
     /// 📸️ Persisted subset.
-    pub fn to_snapshot(&self) -> FlowSnapshot {
+    pub async fn to_snapshot(&self) -> FlowSnapshot {
         FlowSnapshot {
             schema: self.schema.clone(),
             camera: self.camera.clone(),
@@ -119,7 +119,7 @@ impl FlowArtifact {
     }
 
     /// 🧬️ Builds a full artifact from a snapshot, leaving UI fields at defaults.
-    pub fn from_snapshot(snapshot: FlowSnapshot) -> Self {
+    pub async fn from_snapshot(snapshot: FlowSnapshot) -> Self {
         Self {
             schema: snapshot.schema,
             camera: snapshot.camera,
@@ -142,7 +142,7 @@ impl FlowArtifact {
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
-    pub fn set_snapshot(&mut self, snapshot: FlowSnapshot) {
+    pub async fn set_snapshot(&mut self, snapshot: FlowSnapshot) {
         self.schema = snapshot.schema;
         self.camera = snapshot.camera;
         self.content = snapshot.content;
@@ -152,7 +152,7 @@ impl FlowArtifact {
 
 //#region 🔹Descriptor
 /// 🧬️ Descriptor for `s.flow.flow` — twenty handcrafted schema leaves.
-pub fn flow_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
+pub async fn flow_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
     schema::ArtifactSchemaDescriptor {
         id: "s.flow.flow",
         artifact: schema::FacetLeaves {
@@ -201,15 +201,15 @@ pub mod derived_construction {
         type Snapshot = FlowSnapshot;
         type Mutation = FlowMutation;
         type Diff = FlowDiff;
-        fn empty() -> Self { Self { snapshot: FlowSnapshot::default(), diagnostics: Vec::new() } }
-        fn from_snapshot(snapshot: Self::Snapshot) -> Self { Self { snapshot, diagnostics: Vec::new() } }
-        fn from_text(text: &str) -> Result<Self, store::TextError> {
+        async fn empty() -> Self { Self { snapshot: FlowSnapshot::default(), diagnostics: Vec::new() } }
+        async fn from_snapshot(snapshot: Self::Snapshot) -> Self { Self { snapshot, diagnostics: Vec::new() } }
+        async fn from_text(text: &str) -> Result<Self, store::TextError> {
             Ok(Self::from_snapshot(<FlowSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
-        fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
+        async fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
             Ok(Self::from_snapshot(<FlowSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
         }
-        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
+        async fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let outcome = <Self::Mutation as protocol::Mutation<Self::Snapshot>>::diff(&mutation, &self.snapshot);
             match <Self::Diff as protocol::MutationDiff<Self::Snapshot>>::apply(outcome.diff(), &self.snapshot) {
                 Ok(snapshot) => self.snapshot = snapshot,
@@ -221,7 +221,7 @@ pub mod derived_construction {
             }
             (self, outcome)
         }
-        fn absorb(
+        async fn absorb(
             mut self,
             diff: Self::Diff,
         ) -> protocol::MutationApplyResult<Self> {
@@ -229,7 +229,7 @@ pub mod derived_construction {
             self.snapshot = snapshot;
             Ok(self)
         }
-        fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
+        async fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
             if self.diagnostics.is_empty() { Ok(self.snapshot) } else { Err(self.diagnostics) }
         }
     }
@@ -253,11 +253,11 @@ pub mod derived_analysis {
         type Parts = FlowParts;
         const DIALECT: Dialect = Dialect { artifact_kind: "s.flow", standard: StandardId("1"), subset: SubsetId("*") };
 
-        fn sniff(_source: &AnalyzeSource<'_>) -> IoConfidence {
+        async fn sniff(_source: &AnalyzeSource<'_>) -> IoConfidence {
             IoConfidence::Medium
         }
 
-        fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
+        async fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
             let mut parts = FlowParts::default();
             let mut diagnostics = Vec::new();
             let mut confidence = IoConfidence::High;
@@ -305,7 +305,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn widget_id_and_kind_label_agree_across_variants() {
+    async fn widget_id_and_kind_label_agree_across_variants() {
         let widget = Widget::InputSlider { id: "slider".into(), value: 3.0, min: 0.0, max: 10.0, step: 0.1 };
         assert_eq!(widget_id(&widget), "slider");
         assert_eq!(widget_kind_label(&widget), "inputSlider");

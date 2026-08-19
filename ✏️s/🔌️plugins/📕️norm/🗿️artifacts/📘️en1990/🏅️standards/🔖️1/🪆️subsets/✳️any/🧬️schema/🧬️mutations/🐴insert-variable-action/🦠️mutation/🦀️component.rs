@@ -16,16 +16,16 @@ pub struct InsertVariableAction {
 impl protocol::MutationKind<En1990Snapshot, En1990Mutation> for InsertVariableAction {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "insert", entity: "variable-action", kind: "insert-variable-action", record: "InsertedVariableAction" };
 
-    fn diff(&self, base: &En1990Snapshot) -> protocol::MutationOutcome<<En1990Mutation as protocol::Mutation<En1990Snapshot>>::Diff> {
+    async fn diff(&self, base: &En1990Snapshot) -> protocol::MutationOutcome<<En1990Mutation as protocol::Mutation<En1990Snapshot>>::Diff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &En1990Snapshot) -> Vec<En1990Mutation> {
+    async fn inverse(&self, base: &En1990Snapshot) -> Vec<En1990Mutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         format!("Insert variable action \"{}\" ({}) at #{}", self.category, self.value, self.index)
     }
-    fn target(&self) -> Vec<String> {
+    async fn target(&self) -> Vec<String> {
         vec![self.index.to_string()]
     }
 }

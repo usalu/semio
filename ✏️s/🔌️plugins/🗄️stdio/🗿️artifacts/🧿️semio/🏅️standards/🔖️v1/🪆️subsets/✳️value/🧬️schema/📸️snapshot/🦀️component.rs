@@ -24,7 +24,7 @@ pub struct ValueId {
 }
 
 impl ValueId {
-    pub fn new(value: impl Into<String>) -> Self {
+    pub async fn new(value: impl Into<String>) -> Self {
         Self { value: value.into() }
     }
 }
@@ -71,7 +71,7 @@ pub enum SemioValue {
 }
 
 impl Default for SemioValue {
-    fn default() -> Self {
+    async fn default() -> Self {
         SemioValue::Null
     }
 }
@@ -109,7 +109,7 @@ pub struct SemioValueSnapshot {
 }
 
 impl Default for SemioValueSnapshot {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self { schema: STDIO_SEMIOVALUE_DOCUMENT_SCHEMA.into(), root: SemioValue::default(), nodes: Vec::new() }
     }
 }
@@ -126,11 +126,11 @@ impl Default for SemioValueSnapshot {
 /// text codec is likewise shared verbatim by its diff/mutations facets' `value=` token). Single
 /// source of truth: `🧬️mutations/🦀️component.rs`'s `SetSnapshot` argument encoding calls THESE
 /// functions directly rather than keeping its own second copy.
-pub(crate) fn enc_semio_value_snapshot(s: &SemioValueSnapshot) -> String {
+pub(crate) async fn enc_semio_value_snapshot(s: &SemioValueSnapshot) -> String {
     let nodes = s.nodes.iter().map(crate::artifacts::semio::standards::v1::subsets::value::schema::diff::enc_semio_value_node).collect::<Vec<_>>().join(",");
     format!("[{},{},[{}]]", crate::artifacts::semio::standards::v1::subsets::value::schema::diff::enc_str(&s.schema), crate::artifacts::semio::standards::v1::subsets::value::schema::diff::enc_semio_value(&s.root), nodes)
 }
-pub(crate) fn dec_semio_value_snapshot(s: &str) -> Result<SemioValueSnapshot, String> {
+pub(crate) async fn dec_semio_value_snapshot(s: &str) -> Result<SemioValueSnapshot, String> {
     use crate::artifacts::semio::standards::v1::subsets::any::schema::triples::{split_top_level, strip_brackets};
     use crate::artifacts::semio::standards::v1::subsets::value::schema::diff::{dec_semio_value, dec_semio_value_node, dec_str};
     let inner = strip_brackets(s)?;
@@ -154,11 +154,11 @@ pub(crate) fn dec_semio_value_snapshot(s: &str) -> Result<SemioValueSnapshot, St
 /// `serde_json` anywhere in this impl block.
 impl store::ArtifactDsl for SemioValueSnapshot {
     const EXTENSION: &'static str = "semio";
-    fn envelope_id() -> &'static str {
+    async fn envelope_id() -> &'static str {
         STDIO_SEMIOVALUE_DOCUMENT_SCHEMA
     }
 
-    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+    async fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
         let body = match store::semio_format::split_text_preamble(text) {
             Ok((_, rest)) => rest,
             Err(_) => text,
@@ -166,7 +166,7 @@ impl store::ArtifactDsl for SemioValueSnapshot {
         dec_semio_value_snapshot(body.trim()).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
 
-    fn print_dsl(&self) -> String {
+    async fn print_dsl(&self) -> String {
         let body = enc_semio_value_snapshot(self);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
@@ -174,14 +174,14 @@ impl store::ArtifactDsl for SemioValueSnapshot {
 }
 
 impl store::ArtifactPack for SemioValueSnapshot {
-    fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
+    async fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
         let raw = enc_semio_value_snapshot(self).into_bytes();
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &raw))
     }
 
-    fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
+    async fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
         if envelope.envelope_id() != <Self as store::ArtifactDsl>::envelope_id() {
             return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.envelope_id())));
@@ -202,7 +202,7 @@ impl store::ArtifactPack for SemioValueSnapshot {
 /// `🎹️composer/🦀️component.rs`) and for this file's own round-trip tests below — same convention
 /// `json`'s `demo_json_snapshot()`/`flow`'s `demo_flow_snapshot()` use.
 #[cfg(test)]
-pub(crate) fn demo_semio_value_snapshot() -> SemioValueSnapshot {
+pub(crate) async fn demo_semio_value_snapshot() -> SemioValueSnapshot {
     SemioValueSnapshot {
         schema: STDIO_SEMIOVALUE_DOCUMENT_SCHEMA.into(),
         root: SemioValue::Map {
@@ -226,7 +226,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn json_pack_round_trips() {
+    async fn json_pack_round_trips() {
         let snap = demo_semio_value_snapshot();
         let bytes = <SemioValueSnapshot as store::ArtifactPack>::encode_pack(&snap);
         let back = <SemioValueSnapshot as store::ArtifactPack>::decode_pack(&bytes).expect("decode");
@@ -234,7 +234,7 @@ mod tests {
     }
 
     #[test]
-    fn dsl_text_round_trips() {
+    async fn dsl_text_round_trips() {
         let snap = demo_semio_value_snapshot();
         let text = <SemioValueSnapshot as store::ArtifactDsl>::print_dsl(&snap);
         let back = <SemioValueSnapshot as store::ArtifactDsl>::parse_dsl(&text).expect("parse");
@@ -246,7 +246,7 @@ mod tests {
     /// corrupt if either variant were ever routed through `i64`/`f64`) plus the `Ref`/graph shape
     /// surviving intact.
     #[test]
-    fn codec_retention_law_preserves_lexemes_bytes_and_graph_shape() {
+    async fn codec_retention_law_preserves_lexemes_bytes_and_graph_shape() {
         let snap = SemioValueSnapshot {
             schema: STDIO_SEMIOVALUE_DOCUMENT_SCHEMA.into(),
             root: SemioValue::List {

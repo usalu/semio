@@ -23,29 +23,29 @@ pub mod derived_construction {
 
     impl DocxTransitionalBuilderConstruction {
         /// ➕️ Appends a paragraph.
-        pub fn add_paragraph(mut self, paragraph: DocxParagraph) -> Self {
+        pub async fn add_paragraph(mut self, paragraph: DocxParagraph) -> Self {
             self.inner = self.inner.add_paragraph(paragraph);
             self
         }
 
         /// ➕️ Appends a single-run plain-text paragraph.
-        pub fn add_text_paragraph(self, text: impl Into<String>) -> Self {
+        pub async fn add_text_paragraph(self, text: impl Into<String>) -> Self {
             self.add_paragraph(DocxParagraph::text(text.into()))
         }
 
         /// ➕️ Appends a paragraph made of the given runs (basic bold/italic/underline formatting).
-        pub fn add_runs(self, runs: Vec<DocxRun>) -> Self {
+        pub async fn add_runs(self, runs: Vec<DocxRun>) -> Self {
             self.add_paragraph(DocxParagraph { runs, style: None, extra_paragraph_properties: Vec::new() })
         }
 
         /// ➕️ Appends a table.
-        pub fn add_table(mut self, table: DocxTable) -> Self {
+        pub async fn add_table(mut self, table: DocxTable) -> Self {
             self.inner = self.inner.add_table(table);
             self
         }
 
         /// ➕️ Appends (or replaces, by `id`) a named style.
-        pub fn add_style(mut self, style: DocxStyle) -> Self {
+        pub async fn add_style(mut self, style: DocxStyle) -> Self {
             self.inner = self.inner.add_style(style);
             self
         }
@@ -56,29 +56,29 @@ pub mod derived_construction {
         type Mutation = DocxMutation;
         type Diff = DocxDiff;
 
-        fn empty() -> Self {
+        async fn empty() -> Self {
             Self { inner: DocxAnyBuilder::empty() }
         }
 
-        fn from_snapshot(snapshot: Self::Snapshot) -> Self {
+        async fn from_snapshot(snapshot: Self::Snapshot) -> Self {
             Self { inner: DocxAnyBuilder::from_snapshot(snapshot) }
         }
 
-        fn from_text(text: &str) -> Result<Self, store::TextError> {
+        async fn from_text(text: &str) -> Result<Self, store::TextError> {
             Ok(Self { inner: DocxAnyBuilder::from_text(text)? })
         }
 
-        fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
+        async fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
             Ok(Self { inner: DocxAnyBuilder::from_binary(bytes)? })
         }
 
-        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
+        async fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let (inner, diff) = self.inner.mutate(mutation);
             self.inner = inner;
             (self, diff)
         }
 
-        fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
+        async fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
             self.inner = self.inner.absorb(diff)?;
             Ok(self)
         }
@@ -89,7 +89,7 @@ pub mod derived_construction {
         /// `encode_docx` does at real encode time) — `check_transitional_conformance` needs a
         /// materialized `word/document.xml`/relationship to find at all, and the shared `DocxAnyBuilder`
         /// this wraps doesn't materialize either until actual encode.
-        fn build(self) -> Result<Self::Snapshot, Vec<Diagnostic>> {
+        async fn build(self) -> Result<Self::Snapshot, Vec<Diagnostic>> {
             let mut snapshot = self.inner.build()?;
             crate::artifacts::docx::standards::v_ecma_376::subsets::any::io::export::serializers::sync_main_part(&mut snapshot);
             let hard: Vec<Diagnostic> = check_transitional_conformance(&snapshot).into_iter().filter(|d| matches!(d.severity, Severity::Error | Severity::Fatal)).collect();
@@ -107,18 +107,18 @@ pub mod derived_construction {
         use super::*;
 
         #[test]
-        fn empty_builder_is_transitional_conformant() {
+        async fn empty_builder_is_transitional_conformant() {
             DocxTransitionalBuilderConstruction::empty().build().expect("empty transitional builder must be conformant");
         }
 
         #[test]
-        fn add_paragraph_stays_transitional_conformant() {
+        async fn add_paragraph_stays_transitional_conformant() {
             let snapshot = DocxTransitionalBuilderConstruction::empty().add_text_paragraph("Hello, transitional world!").build().expect("must build");
             assert_eq!(snapshot.document.body.len(), 1);
         }
 
         #[test]
-        fn hard_violation_injected_via_raw_mutate_still_fails_build() {
+        async fn hard_violation_injected_via_raw_mutate_still_fails_build() {
             let mut snapshot = DocxTransitionalBuilderConstruction::empty().add_text_paragraph("clean").build().unwrap();
             snapshot.opc.set_part("word/styles.xml", "application/xml", b"<w:styles xmlns:w=\"http://purl.oclc.org/ooxml/wordprocessingml/main\"/>".to_vec());
             let (mutated, _diff) = DocxTransitionalBuilderConstruction::from_snapshot(DocxSnapshot::default()).mutate(DocxMutation::SetSnapshot { snapshot });
@@ -156,21 +156,21 @@ pub mod derived_analysis {
     /// 🔎️ Resolves the main document part via the root officeDocument relationship -- matched by
     /// relationship-type SUFFIX (`/officeDocument`) so this resolves for either conformance class; see
     /// `✳️strict::analyzer::main_document_part`'s doc comment for the full rationale.
-    fn main_document_part<'a>(opc: &'a OpcPackage) -> Option<(&'a OpcPart, String)> {
+    async fn main_document_part<'a>(opc: &'a OpcPackage) -> Option<(&'a OpcPart, String)> {
         let rel = opc.relationships_for("").iter().find(|r| r.rel_type.ends_with("/officeDocument"))?;
         let path = resolve_relationship_target("", &rel.target);
         opc.part(&path).map(|p| (p, path))
     }
 
-    fn part_contains(bytes: &[u8], needle: &str) -> bool {
+    async fn part_contains(bytes: &[u8], needle: &str) -> bool {
         !needle.is_empty() && bytes.windows(needle.len()).any(|w| w == needle.as_bytes())
     }
 
-    fn hard(code: &'static str, message: String) -> Diagnostic {
+    async fn hard(code: &'static str, message: String) -> Diagnostic {
         Diagnostic { code: FaultCode::new(code), severity: Severity::Error, span: TextSpan::at(1, 1), message, expected: None, scope: FaultScope::default() }
     }
 
-    fn soft(code: &'static str, message: String) -> Diagnostic {
+    async fn soft(code: &'static str, message: String) -> Diagnostic {
         Diagnostic { code: FaultCode::new(code), severity: Severity::Warning, span: TextSpan::at(1, 1), message, expected: None, scope: FaultScope::default() }
     }
 
@@ -178,7 +178,7 @@ pub mod derived_analysis {
     /// `DocxSnapshot`. Shared single source of truth: `DocxTransitionalComposer::compose` hard-gates
     /// on this (pre-serialization, authoritative), `DocxTransitionalBuilder::build` hard-gates on this
     /// too, and the registered `SubsetValidator` re-runs it post-hoc against the wire payload.
-    pub fn check_transitional_conformance(snapshot: &DocxSnapshot) -> Vec<Diagnostic> {
+    pub async fn check_transitional_conformance(snapshot: &DocxSnapshot) -> Vec<Diagnostic> {
         let opc = &snapshot.opc;
         let mut out = Vec::new();
 
@@ -224,11 +224,11 @@ pub mod derived_analysis {
         type Parts = DocxParts;
         const DIALECT: Dialect = DIALECT;
 
-        fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
+        async fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
             DocxAnyAnalyzer::sniff(source)
         }
 
-        fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
+        async fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
             let inner = DocxAnyAnalyzer::analyze(sources);
             let mut diagnostics = inner.diagnostics.clone();
             let mut confidence = inner.confidence;
@@ -249,11 +249,11 @@ pub mod derived_analysis {
         use super::*;
         use crate::artifacts::zip::opc::{OpcPackage, RELS_CONTENT_TYPE, REL_TYPE_OFFICE_DOCUMENT};
 
-        fn transitional_document_bytes() -> Vec<u8> {
+        async fn transitional_document_bytes() -> Vec<u8> {
             format!(r#"<w:document xmlns:w="{TRANSITIONAL_MAIN_NS}"><w:body/></w:document>"#).into_bytes()
         }
 
-        fn snapshot_with_main_part(rel_type: &str, doc_bytes: Vec<u8>) -> DocxSnapshot {
+        async fn snapshot_with_main_part(rel_type: &str, doc_bytes: Vec<u8>) -> DocxSnapshot {
             let mut opc = OpcPackage::empty();
             opc.content_types.set_default("rels", RELS_CONTENT_TYPE);
             opc.content_types.set_default("xml", "application/xml");
@@ -263,7 +263,7 @@ pub mod derived_analysis {
         }
 
         #[test]
-        fn conforming_transitional_document_has_no_hard_diagnostics() {
+        async fn conforming_transitional_document_has_no_hard_diagnostics() {
             let snapshot = snapshot_with_main_part(REL_TYPE_OFFICE_DOCUMENT, transitional_document_bytes());
             let diagnostics = check_transitional_conformance(&snapshot);
             assert!(diagnostics.iter().all(|d| d.severity != Severity::Error), "got {diagnostics:?}");
@@ -271,14 +271,14 @@ pub mod derived_analysis {
         }
 
         #[test]
-        fn missing_transitional_namespace_is_hard() {
+        async fn missing_transitional_namespace_is_hard() {
             let snapshot = snapshot_with_main_part(REL_TYPE_OFFICE_DOCUMENT, b"<w:document><w:body/></w:document>".to_vec());
             let diagnostics = check_transitional_conformance(&snapshot);
             assert!(diagnostics.iter().any(|d| d.code.0 == CODE_MAIN_NS_MISSING && d.severity == Severity::Error), "got {diagnostics:?}");
         }
 
         #[test]
-        fn strict_namespace_anywhere_is_hard() {
+        async fn strict_namespace_anywhere_is_hard() {
             let mut snapshot = snapshot_with_main_part(REL_TYPE_OFFICE_DOCUMENT, transitional_document_bytes());
             snapshot.opc.set_part("word/styles.xml", "application/xml", b"<w:styles xmlns:w=\"http://purl.oclc.org/ooxml/wordprocessingml/main\"/>".to_vec());
             let diagnostics = check_transitional_conformance(&snapshot);
@@ -286,7 +286,7 @@ pub mod derived_analysis {
         }
 
         #[test]
-        fn strict_relationship_base_anywhere_is_hard() {
+        async fn strict_relationship_base_anywhere_is_hard() {
             let mut opc = OpcPackage::empty();
             opc.content_types.set_default("rels", RELS_CONTENT_TYPE);
             opc.content_types.set_default("xml", "application/xml");
@@ -299,7 +299,7 @@ pub mod derived_analysis {
         }
 
         #[test]
-        fn conformance_strict_attribute_present_is_soft() {
+        async fn conformance_strict_attribute_present_is_soft() {
             let doc = format!(r#"<w:document xmlns:w="{TRANSITIONAL_MAIN_NS}" conformance="strict"><w:body/></w:document>"#).into_bytes();
             let snapshot = snapshot_with_main_part(REL_TYPE_OFFICE_DOCUMENT, doc);
             let diagnostics = check_transitional_conformance(&snapshot);

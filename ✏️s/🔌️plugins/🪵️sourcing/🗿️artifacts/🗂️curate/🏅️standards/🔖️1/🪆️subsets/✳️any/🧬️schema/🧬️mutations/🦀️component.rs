@@ -61,7 +61,7 @@ mod tests {
     /// 🧪️ A base with one pre-existing curated entry (`beam-glulam-gl24h`) so `delete`/`change`
     /// mutations have a real target, and `beam-kvh-c24` left uncurated so `create` has a real
     /// not-yet-existing target — mirrors `din16798`'s `sample_snapshot()` fixture shape.
-    fn sample_snapshot() -> CurateSnapshot {
+    async fn sample_snapshot() -> CurateSnapshot {
         crate::artifacts::curate::curate_snapshot_from_stock(
             crate::artifacts::curate::schema::demo_stock(),
             vec![CuratedItem { object_id: "beam-glulam-gl24h".into(), count: 2 }],
@@ -70,7 +70,7 @@ mod tests {
 
     /// ⚖️ One value per `SourcingMutation` variant — the closed set the semantics/round-trip tests
     /// iterate, mirroring `din16798`'s own `every_mutation()` fixture.
-    fn every_mutation() -> Vec<SourcingMutation> {
+    async fn every_mutation() -> Vec<SourcingMutation> {
         vec![
             SourcingMutation::CreateCuratedItem(CreateCuratedItem { item: CuratedItem { object_id: "beam-kvh-c24".into(), count: 3 } }),
             SourcingMutation::DeleteCuratedItem(DeleteCuratedItem { object_id: "beam-glulam-gl24h".into() }),
@@ -78,7 +78,7 @@ mod tests {
         ]
     }
 
-    fn round_trip(base: &CurateSnapshot, mutation: &SourcingMutation) -> CurateSnapshot {
+    async fn round_trip(base: &CurateSnapshot, mutation: &SourcingMutation) -> CurateSnapshot {
         let (forward, _messages) =
             vcs::apply_mutation(base, mutation).expect("valid mutation");
         let mut restored = forward.clone();
@@ -92,7 +92,7 @@ mod tests {
     }
 
     #[test]
-    fn every_variant_registers_an_approved_semantic_descriptor() {
+    async fn every_variant_registers_an_approved_semantic_descriptor() {
         for mutation in every_mutation() {
             let descriptor = protocol::SemanticMutation::semantics(&mutation);
             assert!(protocol::is_approved_verb(descriptor.verb), "unapproved verb {:?} on {mutation:?}", descriptor.verb);
@@ -105,7 +105,7 @@ mod tests {
     }
 
     #[test]
-    fn every_variant_round_trips_via_inverse() {
+    async fn every_variant_round_trips_via_inverse() {
         let base = sample_snapshot();
         for mutation in every_mutation() {
             round_trip(&base, &mutation);
@@ -117,7 +117,7 @@ mod tests {
     /// `🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧪️testkit/🦀️component.rs` (reachable here as
     /// `protocol::os_spr::testkit`), exercised against all three variants.
     #[test]
-    fn create_curated_item_satisfies_the_inverse_and_absorb_laws() {
+    async fn create_curated_item_satisfies_the_inverse_and_absorb_laws() {
         let base = sample_snapshot();
         let mutation = SourcingMutation::CreateCuratedItem(CreateCuratedItem { item: CuratedItem { object_id: "beam-kvh-c24".into(), count: 2 } });
         protocol::os_spr::testkit::assert_mutation_inverse_law(&base, &mutation);
@@ -128,7 +128,7 @@ mod tests {
     }
 
     #[test]
-    fn delete_curated_item_satisfies_the_inverse_and_absorb_laws() {
+    async fn delete_curated_item_satisfies_the_inverse_and_absorb_laws() {
         let mut base = sample_snapshot();
         base.curated.push(CuratedItem { object_id: "beam-steel-ipe200".into(), count: 4 });
         let mutation = SourcingMutation::DeleteCuratedItem(DeleteCuratedItem { object_id: "beam-steel-ipe200".into() });
@@ -139,7 +139,7 @@ mod tests {
     }
 
     #[test]
-    fn change_curated_item_count_satisfies_the_inverse_and_absorb_laws() {
+    async fn change_curated_item_count_satisfies_the_inverse_and_absorb_laws() {
         let base = sample_snapshot();
         let mutation = SourcingMutation::ChangeCuratedItemCount(ChangeCuratedItemCount { object_id: "beam-glulam-gl24h".into(), new_count: 6 });
         protocol::os_spr::testkit::assert_mutation_inverse_law(&base, &mutation);
@@ -157,21 +157,21 @@ mod tests {
     /// `🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧪️testkit/🦀️component.rs`); TODO(1-D testkit
     /// laws pending): add a `MergePolicy` × `Severity` matrix test per verb family here once it lands.
     #[test]
-    fn delete_curated_item_missing_target_is_an_error() {
+    async fn delete_curated_item_missing_target_is_an_error() {
         let base = sample_snapshot();
         let mutation = SourcingMutation::DeleteCuratedItem(DeleteCuratedItem { object_id: "beam-kvh-c24".into() });
         protocol::os_spr::testkit::assert_missing_target_is_error(&base, &mutation);
     }
 
     #[test]
-    fn change_curated_item_count_missing_target_is_an_error() {
+    async fn change_curated_item_count_missing_target_is_an_error() {
         let base = sample_snapshot();
         let mutation = SourcingMutation::ChangeCuratedItemCount(ChangeCuratedItemCount { object_id: "beam-kvh-c24".into(), new_count: 9 });
         protocol::os_spr::testkit::assert_missing_target_is_error(&base, &mutation);
     }
 
     #[test]
-    fn create_curated_item_duplicate_id_is_fatal_and_never_applies() {
+    async fn create_curated_item_duplicate_id_is_fatal_and_never_applies() {
         let base = sample_snapshot();
         let mutation = SourcingMutation::CreateCuratedItem(CreateCuratedItem { item: CuratedItem { object_id: "beam-glulam-gl24h".into(), count: 1 } });
         let outcome = mutation.diff(&base);

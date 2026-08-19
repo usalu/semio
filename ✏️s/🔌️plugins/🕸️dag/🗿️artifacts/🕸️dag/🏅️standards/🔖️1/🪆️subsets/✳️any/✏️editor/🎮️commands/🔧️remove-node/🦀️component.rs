@@ -15,7 +15,7 @@ pub struct RemoveNode {
 /// 🕹️ No longer filters the removed id out of a config selection field — `graph`'s selection now auto-
 /// prunes any deleted node id via `DagPlayApp::interaction_topology` (ticket
 /// 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM), so no config mutation is needed here at all.
-pub fn handle(payload: &RemoveNode, doc: &ArtifactView<'_, DagSnapshot>, _cfg: &ConfigView<'_, DagConfig>) -> Result<Emit<DagMutation, DagConfigMutation>, Fault> {
+pub async fn handle(payload: &RemoveNode, doc: &ArtifactView<'_, DagSnapshot>, _cfg: &ConfigView<'_, DagConfig>) -> Result<Emit<DagMutation, DagConfigMutation>, Fault> {
     let document = doc.snapshot;
     let removes = crate::artifacts::dag::schema::remove_nodes_operations(document, std::slice::from_ref(&payload.node_id));
     if removes.is_empty() {

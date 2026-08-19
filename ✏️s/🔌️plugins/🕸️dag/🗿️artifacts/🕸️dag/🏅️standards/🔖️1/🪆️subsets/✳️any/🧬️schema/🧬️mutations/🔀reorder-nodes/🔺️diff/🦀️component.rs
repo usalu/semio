@@ -4,7 +4,7 @@ use crate::artifacts::dag::diff::text::diff_replace_content;
 use crate::artifacts::dag::{dag_working_scene, DagSnapshot};
 
 //#region 🔖️Diff
-pub fn diff(payload: &super::mutation::ReorderNodes, base: &DagSnapshot) -> protocol::MutationOutcome<DagDiff> {
+pub async fn diff(payload: &super::mutation::ReorderNodes, base: &DagSnapshot) -> protocol::MutationOutcome<DagDiff> {
     let scene = dag_working_scene(base);
     let mut seen = std::collections::BTreeSet::new();
     let mut duplicates = Vec::new();

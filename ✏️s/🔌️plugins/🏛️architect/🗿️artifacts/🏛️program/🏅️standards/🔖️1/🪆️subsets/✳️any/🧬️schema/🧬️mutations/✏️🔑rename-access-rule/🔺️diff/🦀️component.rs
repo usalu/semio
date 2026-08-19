@@ -8,7 +8,7 @@ use crate::artifacts::program::ProgramDiff;
 use crate::artifacts::program::ProgramSnapshot;
 
 /// ✏️ Error `mutation.target-missing` if absent, Warning `mutation.no-op` if the name is unchanged (both empty diff), else `patched = [{id, name: Some(new_name)}]`.
-pub fn diff(payload: &RenameAccessRule, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
+pub async fn diff(payload: &RenameAccessRule, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
     let Some(existing) = base.access_rules.iter().find(|row| row.header.id == payload.id) else {
         return protocol::MutationOutcome::error("mutation.target-missing", "No access rule exists with this id.", [payload.id.0.clone()]);
     };

@@ -15,20 +15,20 @@ pub struct UpdatePart3d {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn update_part_3d(new_orientation: Option<[f64; 4]>, new_scale: Option<[f64; 3]>) -> Block5dMutation {
+pub async fn update_part_3d(new_orientation: Option<[f64; 4]>, new_scale: Option<[f64; 3]>) -> Block5dMutation {
     Block5dMutation::UpdatePart3d(UpdatePart3d { new_orientation, new_scale })
 }
 
 impl protocol::MutationKind<Block5dSnapshot, Block5dMutation> for UpdatePart3d {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "update", entity: "part-3d", kind: "update-part3d", record: "UpdatedPart3d" };
 
-    fn diff(&self, base: &Block5dSnapshot) -> protocol::MutationOutcome<Block5dDiff> {
+    async fn diff(&self, base: &Block5dSnapshot) -> protocol::MutationOutcome<Block5dDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &Block5dSnapshot) -> Vec<Block5dMutation> {
+    async fn inverse(&self, base: &Block5dSnapshot) -> Vec<Block5dMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         "Update part 3D pose".to_string()
     }
 }

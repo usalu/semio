@@ -25,21 +25,21 @@ pub struct StepArtifact {
 
 //#region 🔖️Conversions
 impl Default for StepArtifact {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self::from_snapshot(StepSnapshot::default())
     }
 }
 
 impl StepArtifact {
-    pub fn to_snapshot(&self) -> StepSnapshot {
+    pub async fn to_snapshot(&self) -> StepSnapshot {
         StepSnapshot { schema: self.schema.clone(), header: self.header.clone(), entities: self.entities.clone() }
     }
 
-    pub fn from_snapshot(snapshot: StepSnapshot) -> Self {
+    pub async fn from_snapshot(snapshot: StepSnapshot) -> Self {
         Self { schema: snapshot.schema, header: snapshot.header, entities: snapshot.entities }
     }
 
-    pub fn set_snapshot(&mut self, snapshot: StepSnapshot) {
+    pub async fn set_snapshot(&mut self, snapshot: StepSnapshot) {
         self.schema = snapshot.schema;
         self.header = snapshot.header;
         self.entities = snapshot.entities;
@@ -47,14 +47,14 @@ impl StepArtifact {
 
     /// 🧐️ Derived BrepMesh analyzer view — computed on demand from the typed entity graph via
     /// `StepSnapshot::to_part21_document`, never stored.
-    pub fn brep_mesh(&self) -> crate::artifacts::step::engine::brep::BrepMeshView {
+    pub async fn brep_mesh(&self) -> crate::artifacts::step::engine::brep::BrepMeshView {
         crate::artifacts::step::engine::brep::analyze_brep_mesh(&self.to_snapshot().to_part21_document())
     }
 }
 //#endregion 🔖️Conversions
 
 //#region 🔖️Descriptor
-pub fn step_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
+pub async fn step_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
     schema::ArtifactSchemaDescriptor {
         id: "s.stdio.step",
         artifact: schema::FacetLeaves {
@@ -105,27 +105,27 @@ pub mod derived_construction {
         type Snapshot = StepSnapshot;
         type Mutation = StepMutation;
         type Diff = StepDiff;
-        fn empty() -> Self {
+        async fn empty() -> Self {
             Self { snapshot: StepSnapshot::default(), diagnostics: Vec::new() }
         }
-        fn from_snapshot(snapshot: Self::Snapshot) -> Self {
+        async fn from_snapshot(snapshot: Self::Snapshot) -> Self {
             Self { snapshot, diagnostics: Vec::new() }
         }
-        fn from_text(text: &str) -> Result<Self, store::TextError> {
+        async fn from_text(text: &str) -> Result<Self, store::TextError> {
             Ok(Self::from_snapshot(<StepSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
-        fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
+        async fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
             Ok(Self::from_snapshot(<StepSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
         }
-        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
+        async fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let diff = crate::artifacts::step::schema::mutations::apply_step_mutation(&mut self.snapshot, &mutation);
             (self, diff)
         }
-        fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
+        async fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
             self.snapshot = <StepDiff as protocol::MutationDiff<StepSnapshot>>::apply(&diff, &self.snapshot)?;
             Ok(self)
         }
-        fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
+        async fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
             if self.diagnostics.is_empty() {
                 Ok(self.snapshot)
             } else {
@@ -159,11 +159,11 @@ pub mod derived_analysis {
         type Parts = StepParts;
         const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.step", standard: StandardId("ap214"), subset: SubsetId("*") };
 
-        fn sniff(_source: &AnalyzeSource<'_>) -> IoConfidence {
+        async fn sniff(_source: &AnalyzeSource<'_>) -> IoConfidence {
             IoConfidence::Medium
         }
 
-        fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
+        async fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
             let mut parts = StepParts::default();
             let mut diagnostics = Vec::new();
             let mut confidence = IoConfidence::High;
@@ -210,7 +210,7 @@ semio_framework_plugin::derive_artifact_facets!(
 /// 🌱 Empty persisted snapshot. Dissolved out of `⚙️engine`
 /// (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES) — reached as
 /// `crate::artifacts::step::engine::empty_step_snapshot` through the `engine` barrel shim.
-pub fn empty_step_snapshot() -> StepSnapshot {
+pub async fn empty_step_snapshot() -> StepSnapshot {
     StepSnapshot::default()
 }
 
@@ -219,7 +219,7 @@ pub fn empty_step_snapshot() -> StepSnapshot {
 /// `📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio`/`🎒️example.pack.semio` (both are literally
 /// this snapshot's `print_dsl`/`encode_pack` output, asserted equal by `fixture_honesty_law`) and
 /// for `mutations::demo_mutation_cases()`/`diff::demo_diff_cases()`.
-pub fn demo_step_snapshot() -> StepSnapshot {
+pub async fn demo_step_snapshot() -> StepSnapshot {
     use crate::artifacts::step::schema::snapshot::{StepEntity as _StepEntity, StepFileDescription, StepFileName, StepFileSchema, StepHeader as _StepHeader, StepValue};
     StepSnapshot {
         schema: STDIO_STEP_DOCUMENT_SCHEMA.into(),
@@ -250,13 +250,13 @@ mod tests {
     use super::*;
 
     #[test]
-    fn empty_snapshot_matches_schema() {
+    async fn empty_snapshot_matches_schema() {
         let snapshot = empty_step_snapshot();
         assert_eq!(snapshot.schema, STDIO_STEP_DOCUMENT_SCHEMA);
     }
 
     #[test]
-    fn codec_round_trip() {
+    async fn codec_round_trip() {
         let snap = empty_step_snapshot();
         let text = store::ArtifactDsl::print_dsl(&snap);
         let parsed = <StepSnapshot as store::ArtifactDsl>::parse_dsl(&text).expect("parse");
@@ -280,7 +280,7 @@ mod tests {
         /// ✅️ "committed files parse": all 6 handcrafted `.grammar.semio`/`.protocol.semio` files
         /// parse under the real dialect.
         #[test]
-        fn committed_facet_files_parse() {
+        async fn committed_facet_files_parse() {
             for (label, text) in [("snapshot grammar", snapshot::text::COMPONENT_GRAMMAR_SEMIO), ("mutations grammar", mutations::text::COMPONENT_GRAMMAR_SEMIO), ("diff grammar", diff::text::COMPONENT_GRAMMAR_SEMIO)] {
                 let grammar = dsl::parse_grammar(text).unwrap_or_else(|e| panic!("{label}: parse_grammar failed: {e:?}"));
                 assert_eq!(grammar.dialect, dsl::SemioDialect::Grammar, "{label}: expected grammar dialect");
@@ -294,7 +294,7 @@ mod tests {
         /// for the demo snapshot, preamble-stripped-and-reconstructed the same way
         /// `m5_handcrafted_grammar_conformance` itself does.
         #[test]
-        fn grammar_conformance_law() {
+        async fn grammar_conformance_law() {
             let grammar = dsl::parse_grammar(snapshot::text::COMPONENT_GRAMMAR_SEMIO).expect("parse snapshot grammar");
             let recognizer = dsl::Recognizer::compile(&grammar);
             let text = store::ArtifactDsl::print_dsl(&demo_step_snapshot());
@@ -313,7 +313,7 @@ mod tests {
         /// ✅️ `ops_grammar_conformance_law`: the mutations grammar recognizes real `print_op`
         /// output for every `StepMutation` demo case.
         #[test]
-        fn ops_grammar_conformance_law() {
+        async fn ops_grammar_conformance_law() {
             let grammar = dsl::parse_grammar(mutations::text::COMPONENT_GRAMMAR_SEMIO).expect("parse mutations grammar");
             let recognizer = dsl::Recognizer::compile(&grammar);
             for mutation in mutations::demo_mutation_cases() {
@@ -325,7 +325,7 @@ mod tests {
         /// ✅️ `diff_grammar_conformance_law`: the diff grammar recognizes real `print_diff` output
         /// for every representative `StepDiff` demo case.
         #[test]
-        fn diff_grammar_conformance_law() {
+        async fn diff_grammar_conformance_law() {
             let grammar = dsl::parse_grammar(diff::text::COMPONENT_GRAMMAR_SEMIO).expect("parse diff grammar");
             let recognizer = dsl::Recognizer::compile(&grammar);
             for d in diff::demo_diff_cases() {
@@ -338,7 +338,7 @@ mod tests {
         /// snapshot pack (envelope-unwrapped first), every demo mutation's `encode_op`, every demo
         /// diff's `encode_diff` — asserting `consumed == bytes.len()`.
         #[test]
-        fn protocol_walk_law() {
+        async fn protocol_walk_law() {
             let pack_spec = dsl::parse_protocol(snapshot::binary::COMPONENT_PROTOCOL_SEMIO).expect("parse snapshot protocol");
             let packed = store::ArtifactPack::encode_pack(&demo_step_snapshot());
             let (_, inner) = store::semio_format::unwrap_binary(&packed).expect("unwrap semio envelope");
@@ -363,7 +363,7 @@ mod tests {
         /// ✅️ `fixture_honesty_law`: the shipped `.dsl.semio`/`.pack.semio` fixtures are GENUINE
         /// `print_dsl`/`encode_pack` output of `demo_step_snapshot()`.
         #[test]
-        fn fixture_honesty_law() {
+        async fn fixture_honesty_law() {
             const FIXTURE_DSL: &str = include_str!("../📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio");
             const FIXTURE_PACK: &[u8] = include_bytes!("../📚️examples/🎬️demo/🖼️assets/🎒️example.pack.semio");
 

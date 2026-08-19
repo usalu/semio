@@ -64,7 +64,7 @@ pub struct SourceModelDoc {
 
 impl SourceModelDoc {
     /// 💾️ Captures `model`'s pattern/relation/tag/allow shape as a serializable document.
-    pub fn from_model(model: &CompiledModel) -> Self {
+    pub async fn from_model(model: &CompiledModel) -> Self {
         let patterns = (0..model.pattern_count())
             .map(|i| {
                 let info = model.pattern_info(PatternId::from_index(i));
@@ -98,7 +98,7 @@ impl SourceModelDoc {
     /// 💾️ Recompiles into a validated [`CompiledModel`] via the same `ModelBuilder::compile` +
     /// `validate()` path any hand-written builder code goes through — an untrusted document never
     /// takes a shortcut around inverse-consistency checking.
-    pub fn compile(&self) -> Result<CompiledModel, ModelError> {
+    pub async fn compile(&self) -> Result<CompiledModel, ModelError> {
         if self.version != SOURCE_MODEL_VERSION {
             return Err(ModelError::SchemaVersionMismatch { expected: SOURCE_MODEL_VERSION, actual: self.version });
         }
@@ -148,14 +148,14 @@ pub struct CheckpointDoc {
 }
 
 impl CheckpointDoc {
-    pub fn from_checkpoint(checkpoint: &Checkpoint) -> Self {
+    pub async fn from_checkpoint(checkpoint: &Checkpoint) -> Self {
         Self { version: CHECKPOINT_VERSION, domains: checkpoint.domains.clone(), model_fingerprint: checkpoint.model_fingerprint, seed: checkpoint.seed }
     }
 
     /// 💾️ Revalidates every structural invariant a deserialized checkpoint might violate, then
     /// converts into a usable [`Checkpoint`]. `node_count` and `model` should come from the live
     /// topology/model this checkpoint is about to resume against.
-    pub fn into_checkpoint(self, model: &CompiledModel, node_count: usize) -> Result<Checkpoint, SolveError> {
+    pub async fn into_checkpoint(self, model: &CompiledModel, node_count: usize) -> Result<Checkpoint, SolveError> {
         if self.version != CHECKPOINT_VERSION {
             return Err(SolveError::CheckpointVersionMismatch { expected: CHECKPOINT_VERSION, actual: self.version });
         }
@@ -184,7 +184,7 @@ mod tests {
     use super::*;
     use crate::wfc_engine::topology::GraphTopologyBuilder;
 
-    fn checkerboard() -> (CompiledModel, crate::wfc_engine::topology::GraphTopology) {
+    async fn checkerboard() -> (CompiledModel, crate::wfc_engine::topology::GraphTopology) {
         let mut b = ModelBuilder::new();
         let black = b.add_pattern(1.0);
         let white = b.add_pattern(2.0);
@@ -201,7 +201,7 @@ mod tests {
     }
 
     #[test]
-    fn from_model_compile_round_trip_preserves_fingerprint() {
+    async fn from_model_compile_round_trip_preserves_fingerprint() {
         let (model, _topo) = checkerboard();
         let doc = SourceModelDoc::from_model(&model);
         let recompiled = doc.compile().unwrap();
@@ -210,7 +210,7 @@ mod tests {
     }
 
     #[test]
-    fn source_model_doc_json_round_trips() {
+    async fn source_model_doc_json_round_trips() {
         let (model, _topo) = checkerboard();
         let doc = SourceModelDoc::from_model(&model);
         let json = serde_json::to_string(&doc).unwrap();
@@ -220,7 +220,7 @@ mod tests {
     }
 
     #[test]
-    fn compile_rejects_unknown_schema_version() {
+    async fn compile_rejects_unknown_schema_version() {
         let (model, _topo) = checkerboard();
         let mut doc = SourceModelDoc::from_model(&model);
         doc.version = 999;
@@ -228,7 +228,7 @@ mod tests {
     }
 
     #[test]
-    fn hand_authored_asymmetric_allow_fails_validate_on_compile() {
+    async fn hand_authored_asymmetric_allow_fails_validate_on_compile() {
         // A hand-edited document declares `adj` self-inverse but only allows black->white, never
         // the reverse: `compile()` must still run `validate()` and reject it, not just build
         // silently-broken bitset tables.
@@ -243,7 +243,7 @@ mod tests {
     }
 
     #[test]
-    fn checkpoint_doc_round_trips_and_resumes() {
+    async fn checkpoint_doc_round_trips_and_resumes() {
         let (model, topo) = checkerboard();
         let fingerprint = model.fingerprint();
         let mut domains = vec![model.full_domain(); topo.node_count()];
@@ -262,7 +262,7 @@ mod tests {
     }
 
     #[test]
-    fn checkpoint_doc_rejects_version_mismatch() {
+    async fn checkpoint_doc_rejects_version_mismatch() {
         let (model, topo) = checkerboard();
         let mut doc = CheckpointDoc { version: CHECKPOINT_VERSION, domains: vec![model.full_domain(); topo.node_count()], model_fingerprint: model.fingerprint(), seed: 0 };
         doc.version = 7;
@@ -270,21 +270,21 @@ mod tests {
     }
 
     #[test]
-    fn checkpoint_doc_rejects_fingerprint_mismatch() {
+    async fn checkpoint_doc_rejects_fingerprint_mismatch() {
         let (model, topo) = checkerboard();
         let doc = CheckpointDoc { version: CHECKPOINT_VERSION, domains: vec![model.full_domain(); topo.node_count()], model_fingerprint: 0xDEAD_BEEF, seed: 0 };
         assert_eq!(doc.into_checkpoint(&model, topo.node_count()).unwrap_err(), SolveError::CorruptCheckpoint { reason: "model fingerprint mismatch" });
     }
 
     #[test]
-    fn checkpoint_doc_rejects_wrong_domain_count() {
+    async fn checkpoint_doc_rejects_wrong_domain_count() {
         let (model, topo) = checkerboard();
         let doc = CheckpointDoc { version: CHECKPOINT_VERSION, domains: vec![model.full_domain(); topo.node_count() - 1], model_fingerprint: model.fingerprint(), seed: 0 };
         assert_eq!(doc.into_checkpoint(&model, topo.node_count()).unwrap_err(), SolveError::CorruptCheckpoint { reason: "domain count does not match topology node count" });
     }
 
     #[test]
-    fn checkpoint_doc_rejects_wrong_bitset_length() {
+    async fn checkpoint_doc_rejects_wrong_bitset_length() {
         let (model, topo) = checkerboard();
         let mut domains = vec![model.full_domain(); topo.node_count()];
         domains[0] = PatternSet::new_full(model.pattern_count() + 1);
@@ -293,7 +293,7 @@ mod tests {
     }
 
     #[test]
-    fn checkpoint_doc_rejects_tampered_bitset_from_raw_json() {
+    async fn checkpoint_doc_rejects_tampered_bitset_from_raw_json() {
         // Simulates a hand-edited file: valid JSON shape, but a bitset with a stray bit set past
         // its declared `len` in the `words` array — must be caught by `is_well_formed`, not panic.
         let (model, topo) = checkerboard();

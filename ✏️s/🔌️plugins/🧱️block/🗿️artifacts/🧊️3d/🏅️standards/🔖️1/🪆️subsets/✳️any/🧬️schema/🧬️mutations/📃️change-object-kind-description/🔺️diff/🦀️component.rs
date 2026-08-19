@@ -4,7 +4,7 @@ use crate::artifacts::block3d::Block3dSnapshot;
 use crate::{BlockKindIdentity};
 
 //#region 🔖️Diff
-pub fn diff(payload: &super::mutation::ChangeObjectKindDescription, base: &Block3dSnapshot) -> protocol::MutationOutcome<Block3dDiff> {
+pub async fn diff(payload: &super::mutation::ChangeObjectKindDescription, base: &Block3dSnapshot) -> protocol::MutationOutcome<Block3dDiff> {
     if payload.new_description == base.object_kind.description {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", "Object kind description is unchanged.");
     }

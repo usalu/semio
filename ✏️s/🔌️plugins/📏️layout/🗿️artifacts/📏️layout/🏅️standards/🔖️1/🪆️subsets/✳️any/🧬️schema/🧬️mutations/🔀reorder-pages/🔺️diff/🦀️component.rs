@@ -5,7 +5,7 @@ use crate::artifacts::layout::schema::diff::LayoutPagesDelta;
 use crate::artifacts::layout::{LayoutDiff, LayoutSnapshot};
 
 //#region 🔀ReorderPages
-pub fn diff_reorder_pages(payload: &ReorderPages, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
+pub async fn diff_reorder_pages(payload: &ReorderPages, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
     if !base.pages.iter().any(|page| page.id == payload.id) {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Page \"{}\" does not exist.", payload.id), [payload.id.clone()]);
     }

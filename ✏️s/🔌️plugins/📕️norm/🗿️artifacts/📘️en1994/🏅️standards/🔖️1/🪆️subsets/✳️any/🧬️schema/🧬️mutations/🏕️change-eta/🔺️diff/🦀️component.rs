@@ -4,7 +4,7 @@ use super::mutation::ChangeEta;
 use crate::artifacts::en1994::{En1994Diff, En1994Snapshot};
 
 //#region 🔖️Diff
-pub fn diff(payload: &ChangeEta, base: &En1994Snapshot) -> protocol::MutationOutcome<En1994Diff> {
+pub async fn diff(payload: &ChangeEta, base: &En1994Snapshot) -> protocol::MutationOutcome<En1994Diff> {
     if !payload.new_eta.is_finite() {
         return protocol::MutationOutcome::fatal("mutation.invariant", "Eta must be a finite number.", Vec::<String>::new());
     }

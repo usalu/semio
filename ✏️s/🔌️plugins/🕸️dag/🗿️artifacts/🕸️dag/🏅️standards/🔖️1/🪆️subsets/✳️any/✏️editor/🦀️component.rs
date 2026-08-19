@@ -46,7 +46,7 @@ pub use inspection_panel::DAG_PLAY_BODY_INSPECTOR;
 
 /// 🎯️ An `ActionDescriptor` addressed at this app — the single factory every taxonomy node's chrome
 /// (`📌️panels/*`) builds its `on_change`/item actions with.
-pub fn dag_action(action: &str, args: Option<Value>) -> ActionDescriptor {
+pub async fn dag_action(action: &str, args: Option<Value>) -> ActionDescriptor {
     ActionFactory::new(DAG_PLAY_APP_ID).action(action, args)
 }
 //#endregion 🔖️Constants
@@ -79,7 +79,7 @@ semio_framework_plugin::app_commands! {
 //#endregion 🔖️Commands
 
 //#region 🔖️ContextMenu
-fn dag_context_menu_items(registry: &AppActionRegistry, labels: &crate::editor::dag::terminology::DagPlayLabels, is_de: bool, selected: &[String], request: &ContextMenuRequest) -> Vec<ContextMenuItemSpec> {
+async fn dag_context_menu_items(registry: &AppActionRegistry, labels: &crate::editor::dag::terminology::DagPlayLabels, is_de: bool, selected: &[String], request: &ContextMenuRequest) -> Vec<ContextMenuItemSpec> {
     use semio_framework_plugin::{node_graph_delete_selection_spec, selection_domains_from_surface, Menu, NodeGraphDeleteDispatch};
 
     let (nodes, edges) = selection_domains_from_surface(request.surface.as_ref(), selected, &[]);
@@ -128,11 +128,11 @@ impl ArtifactEditor for DagPlayApp {
     const DIALECT: Dialect = crate::artifacts::dag::DAG_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = DAG_DOCUMENT_SCHEMA;
 
-    fn app_schema() -> Option<::schema::AppSchemaDescriptor> {
+    async fn app_schema() -> Option<::schema::AppSchemaDescriptor> {
         Some(crate::editor::dag::config::schema::app_schema_descriptor())
     }
 
-    fn initial_snapshot() -> DagSnapshot {
+    async fn initial_snapshot() -> DagSnapshot {
         crate::artifacts::dag::default_snapshot()
     }
 
@@ -144,7 +144,7 @@ impl ArtifactEditor for DagPlayApp {
 
     /// 🏷️ The manifest action id each command was declared under — supplied wholesale by
     /// `app_commands!`'s generated `command_id()`.
-    fn command_id(command: &DagCommand) -> &'static str {
+    async fn command_id(command: &DagCommand) -> &'static str {
         command.command_id()
     }
 
@@ -152,7 +152,7 @@ impl ArtifactEditor for DagPlayApp {
     /// `app_commands!`-generated `dispatch`, whose per-row `$module::handle(payload, doc, cfg)` signature
     /// is framework-fixed and has no `interaction` slot) — ticket
     /// 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM.
-    fn handle(command: &DagCommand, doc: &ArtifactView<'_, DagSnapshot>, cfg: &ConfigView<'_, DagConfig>, interaction: &InteractionView<'_>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<DagMutation, DagConfigMutation, Self::DraftMutation>, Fault> {
+    async fn handle(command: &DagCommand, doc: &ArtifactView<'_, DagSnapshot>, cfg: &ConfigView<'_, DagConfig>, interaction: &InteractionView<'_>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<DagMutation, DagConfigMutation, Self::DraftMutation>, Fault> {
         match command {
             DagCommand::DeleteSelection(payload) => delete_selection::apply(payload, doc, cfg, interaction),
             DagCommand::NodeGraphEdit(payload) => node_graph_edit::apply(payload, doc, cfg, interaction),
@@ -166,7 +166,7 @@ impl ArtifactEditor for DagPlayApp {
     /// threads interaction into render; the document tree instead binds `interaction_domain("graph")`
     /// so the framework's own post-render stamp paints its selection/hover, no app code needed.
     /// Flagged as a discovered framework gap, not worked around here (matches `space`'s identical gap).
-    fn render(body_key: &str, doc: &ArtifactView<'_, DagSnapshot>, cfg: &ConfigView<'_, DagConfig>) -> UiNode {
+    async fn render(body_key: &str, doc: &ArtifactView<'_, DagSnapshot>, cfg: &ConfigView<'_, DagConfig>) -> UiNode {
         let document = doc.snapshot;
         let config = cfg.snapshot;
         let camera = dag_config_camera(config);
@@ -184,7 +184,7 @@ impl ArtifactEditor for DagPlayApp {
     /// 🕹️ `context_menu` carries no `InteractionView` either (same gap as `render`), so the
     /// selection-dependent rows below always take the "nothing selected" branch — `request.surface`'s
     /// own click-carried selection (independent of `graph`'s live state) still drives the menu.
-    fn context_menu(request: &ContextMenuRequest, _doc: &ArtifactView<'_, DagSnapshot>, cfg: &ConfigView<'_, DagConfig>, registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
+    async fn context_menu(request: &ContextMenuRequest, _doc: &ArtifactView<'_, DagSnapshot>, cfg: &ConfigView<'_, DagConfig>, registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
         let labels = dag_play_labels(cfg.snapshot);
         let is_de = is_de_locale(cfg.snapshot);
         dag_context_menu_items(registry, labels, is_de, &[], request)
@@ -198,7 +198,7 @@ impl ArtifactEditor for DagPlayApp {
     /// join (a node with multiple incoming edges) picks its FIRST incoming edge's source as the single
     /// parent — `TopologyNode` has one parent slot, so a true multi-parent DAG only gets one branch of
     /// its transitive closure; a documented approximation, matching `PathDelimited`'s own precedent.
-    fn interaction_topology(doc: &ArtifactView<'_, DagSnapshot>, _cfg: &ConfigView<'_, DagConfig>) -> InteractionTopology {
+    async fn interaction_topology(doc: &ArtifactView<'_, DagSnapshot>, _cfg: &ConfigView<'_, DagConfig>) -> InteractionTopology {
         let document = doc.snapshot;
         let nodes = document.nodes();
         let edges = document.edges();
@@ -225,7 +225,7 @@ impl ArtifactEditor for DagPlayApp {
 /// 🧱️ The manifest stitch: one call per taxonomy node, each sourced from that node's own `definition()`.
 /// Only the leaf action/keybinding declarations (which have no dedicated `_def` passthrough) are written
 /// out inline.
-pub fn create_dag_app() -> semio_framework_plugin::AppDefinition {
+pub async fn create_dag_app() -> semio_framework_plugin::AppDefinition {
     Editor::builder(crate::artifacts::dag::DAG_DIALECT)
             .document(["semio", "mathematical", "graph", "port", "directed", "dag"])
             .artifact_kind(crate::artifacts::dag::artifact_kind())
@@ -318,27 +318,27 @@ pub(crate) mod testkit {
     pub type DagApp = VcsArtifactApp<EditorApp<DagPlayApp>>;
 
     /// 🧪️ A bare app instance — no `AppActionRegistry`, so undeclared internal commands dispatch freely.
-    pub fn new_app() -> DagApp {
+    pub async fn new_app() -> DagApp {
         framework_new_app::<EditorApp<DagPlayApp>>()
     }
 
     /// ✏️ Adapts `create_dag_app`'s `AppDefinition` (contract §2.4) into the `App { definition,
     /// examples }` shape `new_app_with_registry`'s framework testkit signature (contract §2.5 gap 3,
     /// not yet updated for the `AppDefinition`-returning convention) still expects.
-    pub fn dag_app_manifest_for_testkit() -> semio_framework_plugin::App {
+    pub async fn dag_app_manifest_for_testkit() -> semio_framework_plugin::App {
         semio_framework_plugin::App { definition: create_dag_app(), examples: Vec::new() }
     }
 
     /// 🧪️ An app wired to the real manifest registry — enforces View/Shell kind discipline.
-    pub fn new_app_with_registry() -> DagApp {
+    pub async fn new_app_with_registry() -> DagApp {
         framework_new_app_with_registry::<EditorApp<DagPlayApp>>(dag_app_manifest_for_testkit)
     }
 
-    pub fn dispatch(app: &mut DagApp, command: DagCommand) -> InvocationResult {
+    pub async fn dispatch(app: &mut DagApp, command: DagCommand) -> InvocationResult {
         app.dispatch_typed(command, &meta("local")).expect("dispatch")
     }
 
-    pub fn render(app: &mut DagApp, body_key: &str) -> String {
+    pub async fn render(app: &mut DagApp, body_key: &str) -> String {
         serde_json::to_string(&app.render(body_key, None, &ViewModel::default()).expect("render")).expect("render json")
     }
 }
@@ -353,7 +353,7 @@ mod tests {
 
     //#region 🔖️CommandSurface
     /// 🧾️ One representative value per row, in declaration (= binary ordinal) order.
-    pub(super) fn every_command() -> Vec<DagCommand> {
+    pub(super) async fn every_command() -> Vec<DagCommand> {
         vec![
             DagCommand::AddNode(add_node::AddNode { kind: "slider".into(), x: Some(10.0), y: None }),
             DagCommand::RemoveNode(remove_node::RemoveNode { node_id: "n1".into() }),
@@ -380,7 +380,7 @@ mod tests {
     /// 🏷️ Every declared manifest action id must be reachable as exactly one command row, and every
     /// row's wire keyword must be distinct — the cross-cutting invariant `app_commands!` is there to hold.
     #[test]
-    fn command_surface_has_the_expected_row_count_and_distinct_wire_keywords() {
+    async fn command_surface_has_the_expected_row_count_and_distinct_wire_keywords() {
         let commands = every_command();
         assert_eq!(commands.len(), 13, "every DagCommand row must be covered by every_command()");
         let mut keywords: Vec<String> = commands.iter().map(|command| protocol::OpText::print_op(command).split(' ').next().unwrap_or_default().to_string()).collect();
@@ -391,7 +391,7 @@ mod tests {
 
     /// ⚖️ LAW: text and binary are two projections of the same command, for every single row.
     #[test]
-    fn every_command_round_trips_through_text_and_binary() {
+    async fn every_command_round_trips_through_text_and_binary() {
         for command in every_command() {
             store::os_store::test_support::assert_op_text_binary_equivalence(&command);
         }
@@ -401,7 +401,7 @@ mod tests {
     /// missing `#[dsl(keyword = ..)]` on a payload struct silently breaks (the record prints with no
     /// keyword at all and no longer parses).
     #[test]
-    fn every_printed_op_line_starts_with_the_rows_declared_wire_keyword() {
+    async fn every_printed_op_line_starts_with_the_rows_declared_wire_keyword() {
         let expectations: Vec<(&str, DagCommand)> = vec![
             ("add-node", DagCommand::AddNode(add_node::AddNode { kind: "slider".into(), x: Some(10.0), y: None })),
             ("remove-node", DagCommand::RemoveNode(remove_node::RemoveNode { node_id: "n1".into() })),
@@ -428,7 +428,7 @@ mod tests {
     /// `dag_protocol` crate (this ticket's `🧪️wire-baseline-before.txt`, row 1). A regression here is a
     /// real format break, not a test-fixture mismatch.
     #[test]
-    fn optional_field_rows_keep_their_pre_migration_bytes() {
+    async fn optional_field_rows_keep_their_pre_migration_bytes() {
         let cases: [(DagCommand, &str, &str); 1] = [(DagCommand::AddNode(add_node::AddNode { kind: "slider".into(), x: Some(10.0), y: None }), "add-node add-node kind=slider x=10", "01000106736c696465720200060001050000000000002440")];
         for (command, text, hex) in cases {
             assert_eq!(protocol::OpText::print_op(&command), text);
@@ -440,7 +440,7 @@ mod tests {
 
     //#region 🔖️ManifestSanity
     #[test]
-    fn the_manifest_stitches_every_taxonomy_node() {
+    async fn the_manifest_stitches_every_taxonomy_node() {
         let json = serde_json::to_string(&create_dag_app()).expect("app definition json");
         assert!(json.contains(DAG_PLAY_WINDOW_MAIN), "main window kind missing from the manifest: {json}");
         assert!(json.contains(DAG_PLAY_WINDOW_COMPILED), "compiled window kind missing from the manifest: {json}");
@@ -458,7 +458,7 @@ mod tests {
     // on `create_dag_app`'s `.build_definition()` call), not silently — reported in the migration report.
 
     #[test]
-    fn every_declared_action_is_registered() {
+    async fn every_declared_action_is_registered() {
         let definition = create_dag_app();
         for command in ["addNode", "removeNode", "deleteSelection", "nodeGraphEdit", "connectMediaPorts", "disconnect", "moveMediaNode", "renameDagNode", "reorganize", "patchDagNodes", "nodeGraphViewport", "graphPointerDown"] {
             assert!(definition.window_kinds.iter().flat_map(|window| window.actions.iter()).any(|action| action.id == command), "registry declares {command}");
@@ -468,7 +468,7 @@ mod tests {
     /// 🕹️ `graph` is declared once, node/edge granularities, `Topology` hierarchy, scoped to the main
     /// window — the framework auto-injects the six interaction actions for it (never app-declared).
     #[test]
-    fn declares_the_graph_interaction_domain_scoped_to_the_main_window() {
+    async fn declares_the_graph_interaction_domain_scoped_to_the_main_window() {
         let definition = create_dag_app();
         let interaction = definition.interactions.iter().find(|def| def.id == DAG_PLAY_INTERACTION_DOMAIN).expect("graph domain declared");
         assert_eq!(interaction.granularities.iter().map(|granularity| granularity.id.as_str()).collect::<Vec<_>>(), vec!["node", "edge"]);
@@ -484,7 +484,7 @@ mod tests {
     /// `validate_state` to prune a stale selection the moment `removeNode`/`disconnect` deletes its
     /// target, and for transitive hover to cover a node's downstream nodes and edges.
     #[test]
-    fn interaction_topology_covers_every_node_and_edge_via_their_edges() {
+    async fn interaction_topology_covers_every_node_and_edge_via_their_edges() {
         let mut app: DagApp = new_app_with_registry();
         let snapshot = app.snapshot().expect("snapshot");
         let node_id = snapshot.nodes().first().expect("seed node").id.clone();
@@ -505,7 +505,7 @@ mod tests {
     /// `NodeGraphDeleteDispatch::ViaNodeGraphEdit`) is always last, either as a top-level leaf or as the
     /// tail of its group.
     #[test]
-    fn context_menu_grouped_disclosure_stays_within_budget_and_keeps_destructive_last() {
+    async fn context_menu_grouped_disclosure_stays_within_budget_and_keeps_destructive_last() {
         use semio_framework_plugin::{ContextMenuHit, ContextMenuSelectionGroup, ContextMenuSurfaceTarget, UiMenuRef};
 
         let mut app: DagApp = new_app_with_registry();
@@ -536,14 +536,14 @@ mod tests {
 
     //#region 🔖️CrossCutting
     #[test]
-    fn an_unknown_body_key_renders_a_diagnostic_instead_of_panicking() {
+    async fn an_unknown_body_key_renders_a_diagnostic_instead_of_panicking() {
         use crate::editor::dag::testkit::{new_app, render};
         let mut app = new_app();
         assert!(render(&mut app, "dag.play.nope").contains("Unknown body"));
     }
 
     #[test]
-    fn whole_document_operation_is_not_supported_as_an_in_history_mutation() {
+    async fn whole_document_operation_is_not_supported_as_an_in_history_mutation() {
         let replacement = crate::artifacts::dag::default_snapshot();
         assert!(DagPlayApp::whole_document_operation(replacement).is_none(), "whole-document replace goes through ArtifactStore::reset, never a mutation");
     }
@@ -551,7 +551,7 @@ mod tests {
     /// 🧬️ Two instances apply DISJOINT edits (A adds a note node, B adds a slider node) and converge to
     /// contain BOTH via a `MemoryBackbone` — impossible with whole-document snapshots.
     #[test]
-    fn two_instances_converge_disjoint_edits_via_backbone() {
+    async fn two_instances_converge_disjoint_edits_via_backbone() {
         semio_framework_plugin::testkit::assert_two_instances_converge::<semio_framework_plugin::EditorApp<DagPlayApp>, (bool, bool)>(
             "mem://dag-convergence",
             DagCommand::AddNode(add_node::AddNode { kind: "note".into(), x: None, y: None }),
@@ -565,7 +565,7 @@ mod tests {
     }
 
     #[test]
-    fn ingest_operations_is_idempotent_for_dag() {
+    async fn ingest_operations_is_idempotent_for_dag() {
         semio_framework_plugin::testkit::assert_ingest_idempotent::<semio_framework_plugin::EditorApp<DagPlayApp>, usize>(DagCommand::AddNode(add_node::AddNode { kind: "note".into(), x: None, y: None }), |app| app.snapshot().expect("projection").nodes().len());
     }
     //#endregion 🔖️CrossCutting

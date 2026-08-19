@@ -27,7 +27,7 @@ const EPS: f64 = 1e-6;
 /// cad↔dxf/svg↔drawing bridges' matching `ellipse_path` helpers) produce for a real circle —
 /// `[MoveTo(cx+r,cy), ArcTo(r,r,..,cx-r,cy), ArcTo(r,r,..,cx+r,cy), Close]` — giving an EXACT
 /// (not flattened) round trip for genuinely circular content.
-fn as_circle(segments: &[PathSegment]) -> Option<(f64, f64, f64)> {
+async fn as_circle(segments: &[PathSegment]) -> Option<(f64, f64, f64)> {
     if let [PathSegment::MoveTo { to: m }, PathSegment::ArcTo { rx: r1, ry: ry1, to: a1, .. }, PathSegment::ArcTo { rx: r2, ry: ry2, to: a2, .. }, PathSegment::Close] = segments {
         if (r1 - ry1).abs() < EPS && (r2 - ry2).abs() < EPS && (r1 - r2).abs() < EPS && (m.x - a2.x).abs() < EPS && (m.y - a2.y).abs() < EPS {
             let cx = (m.x + a1.x) / 2.0;
@@ -42,7 +42,7 @@ fn as_circle(segments: &[PathSegment]) -> Option<(f64, f64, f64)> {
 //#region 🔖️Flatten
 /// 📐️ Real parametric curve flattening (32 samples) — cubic/quadratic Bezier and elliptical arc
 /// all sampled the standard way, not approximated by their endpoints alone.
-fn flatten_to_polyline(segments: &[PathSegment]) -> (Vec<SemioPoint2>, bool) {
+async fn flatten_to_polyline(segments: &[PathSegment]) -> (Vec<SemioPoint2>, bool) {
     let mut points = Vec::new();
     let mut closed = false;
     let mut cur = SemioPoint2::default();
@@ -117,7 +117,7 @@ fn flatten_to_polyline(segments: &[PathSegment]) -> (Vec<SemioPoint2>, bool) {
 /// 🔎️ One of the (generally two) centers equidistant from `p0`/`p1` at `r` — picks the one
 /// consistent with a real circular arc; `None` when `p0`/`p1` are farther apart than `2r` (no
 /// real solution, an inconsistent/degenerate arc).
-fn arc_center(p0: SemioPoint2, p1: SemioPoint2, r: f64) -> Option<(f64, f64)> {
+async fn arc_center(p0: SemioPoint2, p1: SemioPoint2, r: f64) -> Option<(f64, f64)> {
     let (mx, my) = ((p0.x + p1.x) / 2.0, (p0.y + p1.y) / 2.0);
     let (dx, dy) = (p1.x - p0.x, p1.y - p0.y);
     let d = (dx * dx + dy * dy).sqrt();
@@ -131,7 +131,7 @@ fn arc_center(p0: SemioPoint2, p1: SemioPoint2, r: f64) -> Option<(f64, f64)> {
 //#endregion 🔖️Flatten
 
 //#region 🔖️EntityBuild
-fn dxf_entity_from_node(node: &DrawNode, layer: &str) -> Option<DxfEntity> {
+async fn dxf_entity_from_node(node: &DrawNode, layer: &str) -> Option<DxfEntity> {
     match node {
         DrawNode::Path { segments, .. } => {
             if let Some((cx, cy, r)) = as_circle(segments) {
@@ -149,7 +149,7 @@ fn dxf_entity_from_node(node: &DrawNode, layer: &str) -> Option<DxfEntity> {
     }
 }
 
-fn collect_entities(node: &DrawNode, layer: &str, out: &mut Vec<DxfEntity>) {
+async fn collect_entities(node: &DrawNode, layer: &str, out: &mut Vec<DxfEntity>) {
     match node {
         DrawNode::Group { children, .. } => {
             for c in children {
@@ -200,7 +200,7 @@ mod tests {
     use crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioTransform;
     use crate::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::DrawLayer;
 
-    fn ellipse_path(cx: f64, cy: f64, r: f64) -> Vec<PathSegment> {
+    async fn ellipse_path(cx: f64, cy: f64, r: f64) -> Vec<PathSegment> {
         vec![
             PathSegment::MoveTo { to: SemioPoint2 { x: cx + r, y: cy } },
             PathSegment::ArcTo { rx: r, ry: r, x_rotation: 0.0, large_arc: true, sweep: true, to: SemioPoint2 { x: cx - r, y: cy } },
@@ -209,7 +209,7 @@ mod tests {
         ]
     }
 
-    fn sample_drawing() -> SemioDrawingSnapshot {
+    async fn sample_drawing() -> SemioDrawingSnapshot {
         SemioDrawingSnapshot {
             layers: vec![DrawLayer {
                 id: "0".into(),
@@ -231,7 +231,7 @@ mod tests {
     /// 🧪️ Real round trip through dxf's own real ASCII writer/reader; a genuine circle round
     /// trips EXACTLY (not flattened), a straight-line path becomes a real POLYLINE.
     #[test]
-    fn real_text_round_trip_through_dxf_codec() {
+    async fn real_text_round_trip_through_dxf_codec() {
         let drawing = sample_drawing();
         let dxf = semio_framework_plugin::resolve_ready(SemioDrawingToDxf::serialize(&drawing)).expect("serialize");
         assert_eq!(dxf.entities.len(), 3);

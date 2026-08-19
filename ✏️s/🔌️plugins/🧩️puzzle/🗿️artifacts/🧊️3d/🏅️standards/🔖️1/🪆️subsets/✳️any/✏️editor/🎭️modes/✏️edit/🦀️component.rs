@@ -11,12 +11,12 @@ pub const PUZZLE3D_PLAY_MODE_EDIT: &str = "edit";
 
 //#region 🔖️Definition
 /// 🧱️ Stitched into the app manifest by `crate::editor::puzzle3d::create_puzzle3d_app`.
-pub fn definition() -> ModeDefinition {
+pub async fn definition() -> ModeDefinition {
     ModeDefinition { id: PUZZLE3D_PLAY_MODE_EDIT.into(), label: LocalizedLabel::native("Edit", "Bearbeiten"), icon_id: "pencil".into(), tools: vec![ToolRef::new(fill::TOOL_ID)], layout_id: None, commands: Vec::new() }
 }
 
 /// 🪟️ Top (left ⅓) + Perspective (right ⅔) — the default dual-pane workbench for Puzzle 3D and the Aggregator.
-pub fn layout() -> WindowLayout {
+pub async fn layout() -> WindowLayout {
     WindowLayout {
         root: WindowLayoutRoot::Axis(WindowLayoutAxisNode {
             kind: "row".into(),
@@ -47,7 +47,7 @@ mod tests {
     use crate::editor::puzzle3d::create_puzzle3d_app;
 
     #[test]
-    fn default_layout_is_top_left_third_and_perspective_right_two_thirds() {
+    async fn default_layout_is_top_left_third_and_perspective_right_two_thirds() {
         let app = create_puzzle3d_app();
         let layout = app.definition.default_layout.as_ref().expect("default layout");
         let WindowLayoutRoot::Axis(root) = &layout.root else {

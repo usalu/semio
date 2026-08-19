@@ -5,7 +5,7 @@ use super::mutation::SetActiveAsset;
 use crate::artifacts::shooting::ShootingSnapshot;
 use crate::artifacts::shooting::diff::ShootingDiff;
 
-pub fn diff(payload: &SetActiveAsset, base: &ShootingSnapshot) -> protocol::MutationOutcome<ShootingDiff> {
+pub async fn diff(payload: &SetActiveAsset, base: &ShootingSnapshot) -> protocol::MutationOutcome<ShootingDiff> {
     let next = payload.asset_id.clone().unwrap_or_default();
     if let Some(id) = &payload.asset_id {
         if !base.assets.iter().any(|asset| &asset.id == id) {

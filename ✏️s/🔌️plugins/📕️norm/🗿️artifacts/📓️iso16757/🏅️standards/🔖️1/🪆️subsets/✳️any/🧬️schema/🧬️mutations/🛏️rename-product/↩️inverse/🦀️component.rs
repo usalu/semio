@@ -5,7 +5,7 @@ use crate::artifacts::iso16757::{Iso16757Mutation, Iso16757Snapshot};
 use super::mutation::RenameProduct;
 
 //#region 🔖️Inverse
-pub fn inverse(payload: &RenameProduct, base: &Iso16757Snapshot) -> Vec<Iso16757Mutation> {
+pub async fn inverse(payload: &RenameProduct, base: &Iso16757Snapshot) -> Vec<Iso16757Mutation> {
     let Some(product) = base.catalogue.products.iter().find(|product| product.id == payload.id) else {
         return Vec::new();
     };

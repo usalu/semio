@@ -30,7 +30,7 @@ pub struct SHomeInference {
 }
 
 impl Inference<SHomeSnapshot> for SHomeInference {
-    fn infer(snapshot: &SHomeSnapshot) -> Self {
+    async fn infer(snapshot: &SHomeSnapshot) -> Self {
         Self { content_digest: compute_content_digest(snapshot) }
     }
 }
@@ -40,19 +40,19 @@ impl Inference<SHomeSnapshot> for SHomeInference {
 /// schema/generation) and would break `inference_default_law`. Defining default as "infer the
 /// default snapshot" makes the two definitionally equal.
 impl Default for SHomeInference {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self::infer(&SHomeSnapshot::default())
     }
 }
 
 impl protocol::InferenceSpec<SHomeSnapshot> for SHomeInference {
-    fn inference_schema_id() -> &'static str {
+    async fn inference_schema_id() -> &'static str {
         "s.space.home.inference"
     }
-    fn schema_version() -> u32 {
+    async fn schema_version() -> u32 {
         1
     }
-    fn fields() -> &'static [protocol::InferenceFieldSpec] {
+    async fn fields() -> &'static [protocol::InferenceFieldSpec] {
         &[protocol::InferenceFieldSpec { id: "s.space.home.inference.digest.contentDigest", reads: &["schema", "catalogGeneration"] }]
     }
 }
@@ -66,7 +66,7 @@ impl ArtifactInferrer for crate::artifacts::home::standards::v1::subsets::any::s
     /// 🎯️ Whole-snapshot scalar — nothing here is per-entity, so the cache/session are unused
     /// (same "plain `Inference`" shape the family doc calls out as correct for `dimensions`/
     /// `outline`/`bounds`-style facets).
-    fn infer_cached(snapshot: &Self::Snapshot, cache: &mut store::InferenceCache, session: &mut store::InferenceSession) -> Self::Inference {
+    async fn infer_cached(snapshot: &Self::Snapshot, cache: &mut store::InferenceCache, session: &mut store::InferenceSession) -> Self::Inference {
         let _ = (cache, session);
         <SHomeInference as Inference<SHomeSnapshot>>::infer(snapshot)
     }
@@ -76,7 +76,7 @@ impl ArtifactInferrer for crate::artifacts::home::standards::v1::subsets::any::s
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.space.home.inference`'s facet leaves into the OS-wide inference catalog — call
 /// once at plugin init, alongside `home_artifact_schema_descriptor`'s registration.
-pub fn home_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
+pub async fn home_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
     schema::ArtifactInferenceDescriptor {
         id: "s.space.home.inference",
         inference: schema::FacetLeaves {
@@ -97,18 +97,18 @@ mod tests {
 
     //#region 🧪️InferenceLaws
     #[test]
-    fn inference_determinism_law() {
+    async fn inference_determinism_law() {
         let snapshot = SHomeSnapshot { schema: "s.home".into(), catalog_generation: 7 };
         assert_eq!(SHomeInference::infer(&snapshot), SHomeInference::infer(&snapshot));
     }
 
     #[test]
-    fn inference_default_law() {
+    async fn inference_default_law() {
         assert_eq!(SHomeInference::infer(&SHomeSnapshot::default()), SHomeInference::default());
     }
 
     #[test]
-    fn different_generations_yield_different_digests() {
+    async fn different_generations_yield_different_digests() {
         let a = SHomeSnapshot { schema: "s.home".into(), catalog_generation: 1 };
         let b = SHomeSnapshot { schema: "s.home".into(), catalog_generation: 2 };
         assert_ne!(SHomeInference::infer(&a).content_digest, SHomeInference::infer(&b).content_digest);

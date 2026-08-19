@@ -17,11 +17,11 @@ pub mod derived_composition {
         type Snapshot = TsvSnapshot;
         const WRITES: Dialect = DIALECT;
 
-        fn reads() -> &'static [Dialect] {
+        async fn reads() -> &'static [Dialect] {
             &[DIALECT]
         }
 
-        fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+        async fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
             let native: Vec<AnalyzeSource<'_>> = sources
                 .iter()
                 .filter(|s| s.dialect == DIALECT)
@@ -43,7 +43,7 @@ pub mod derived_composition {
     //#region 🔖️Register
     /// 📌️ Registers this subset's schema descriptor, document codec. Called from
     /// this artifact's standard-level `engine::register()`.
-    pub fn register() {
+    pub async fn register() {
         ::schema::register_artifact_schema_descriptor(crate::artifacts::tsv::standards::iana::subsets::any::schema::tsv_artifact_schema_descriptor());
         register_artifact_inferences();
         let _ = store::register_document_codec(store::ArtifactCodec::of::<TsvSnapshot, crate::artifacts::tsv::standards::iana::subsets::any::schema::mutations::TsvMutation>(
@@ -54,7 +54,7 @@ pub mod derived_composition {
     /// 💡️ Registers `s.stdio.tsv.inference`'s facet leaves into the OS-wide inference catalog —
     /// sibling to the artifact schema descriptor above (separate registry, ticket
     /// 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING).
-    pub fn register_artifact_inferences() {
+    pub async fn register_artifact_inferences() {
         ::schema::register_artifact_inference_descriptor(crate::artifacts::tsv::standards::iana::subsets::any::schema::inferences::tsv_artifact_inference_descriptor());
     }
     //#endregion 🔖️Register
@@ -73,7 +73,7 @@ pub mod io_registry {
 
     static ENTRIES: OnceLock<Vec<ComposerEntry>> = OnceLock::new();
 
-    pub fn entries() -> &'static [ComposerEntry] {
+    pub async fn entries() -> &'static [ComposerEntry] {
         ENTRIES.get_or_init(|| vec![composer_entry_of::<TsvRawAnyComposer>()]).as_slice()
     }
 }

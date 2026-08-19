@@ -5,7 +5,7 @@ use crate::artifacts::en1997::mutations::change_phi_deg::mutation::ChangePhiDeg;
 use crate::artifacts::en1997::En1997Snapshot;
 
 //#region 🔖️Diff
-pub fn diff(payload: &ChangePhiDeg, base: &En1997Snapshot) -> protocol::MutationOutcome<En1997Diff> {
+pub async fn diff(payload: &ChangePhiDeg, base: &En1997Snapshot) -> protocol::MutationOutcome<En1997Diff> {
     if !payload.new_phi_deg.is_finite() {
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("Friction angle phi [deg] must be a finite number, got {}.", payload.new_phi_deg), Vec::<String>::new());
     }

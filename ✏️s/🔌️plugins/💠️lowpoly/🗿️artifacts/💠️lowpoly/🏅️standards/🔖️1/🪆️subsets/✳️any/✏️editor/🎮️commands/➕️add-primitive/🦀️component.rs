@@ -17,7 +17,7 @@ pub struct AddPrimitive {
     pub kind: Option<String>,
 }
 
-pub fn handle(payload: &AddPrimitive, doc: &ArtifactView<'_, LowpolySnapshot>, cfg: &ConfigView<'_, LowpolyConfig>, ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
+pub async fn handle(payload: &AddPrimitive, doc: &ArtifactView<'_, LowpolySnapshot>, cfg: &ConfigView<'_, LowpolyConfig>, ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
     let projection = doc.snapshot;
     let kind = primitive_kind(payload.kind.as_deref().unwrap_or("box")).to_string();
     let Some(mut build) = build_doc(projection, cfg.snapshot, ctx) else { return Ok(Emit::default()) };
@@ -50,7 +50,7 @@ mod tests {
     use crate::editor::lowpoly::LowpolyCommand;
 
     #[test]
-    fn add_primitive_emits_objects_add_operation() {
+    async fn add_primitive_emits_objects_add_operation() {
         let mut a = app();
         dispatch(&mut a, LowpolyCommand::AddPrimitive(AddPrimitive { kind: Some("box".into()) }));
         let projection = a.snapshot().expect("projection");
@@ -59,7 +59,7 @@ mod tests {
     }
 
     #[test]
-    fn add_primitive_supports_every_known_kind() {
+    async fn add_primitive_supports_every_known_kind() {
         let mut a = app();
         for kind in ["plane", "cylinder", "cone", "ico_sphere"] {
             dispatch(&mut a, LowpolyCommand::AddPrimitive(AddPrimitive { kind: Some(kind.into()) }));

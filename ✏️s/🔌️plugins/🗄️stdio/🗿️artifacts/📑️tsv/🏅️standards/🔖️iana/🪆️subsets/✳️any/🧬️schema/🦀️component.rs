@@ -22,19 +22,19 @@ pub struct TsvArtifact {
 }
 
 impl Default for TsvArtifact {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self::from_snapshot(TsvSnapshot::default())
     }
 }
 
 impl TsvArtifact {
-    pub fn to_snapshot(&self) -> TsvSnapshot {
+    pub async fn to_snapshot(&self) -> TsvSnapshot {
         TsvSnapshot { schema: self.schema.clone(), records: self.records.clone(), trailing_newline: self.trailing_newline, line_ending: self.line_ending }
     }
-    pub fn from_snapshot(snapshot: TsvSnapshot) -> Self {
+    pub async fn from_snapshot(snapshot: TsvSnapshot) -> Self {
         Self { schema: snapshot.schema, records: snapshot.records, trailing_newline: snapshot.trailing_newline, line_ending: snapshot.line_ending }
     }
-    pub fn set_snapshot(&mut self, snapshot: TsvSnapshot) {
+    pub async fn set_snapshot(&mut self, snapshot: TsvSnapshot) {
         self.schema = snapshot.schema;
         self.records = snapshot.records;
         self.trailing_newline = snapshot.trailing_newline;
@@ -42,7 +42,7 @@ impl TsvArtifact {
     }
 }
 
-pub fn tsv_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
+pub async fn tsv_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
     schema::ArtifactSchemaDescriptor {
         id: "s.stdio.tsv",
         artifact: schema::FacetLeaves {
@@ -91,27 +91,27 @@ pub mod derived_construction {
         type Snapshot = TsvSnapshot;
         type Mutation = TsvMutation;
         type Diff = TsvDiff;
-        fn empty() -> Self {
+        async fn empty() -> Self {
             Self { snapshot: TsvSnapshot::default() }
         }
-        fn from_snapshot(snapshot: Self::Snapshot) -> Self {
+        async fn from_snapshot(snapshot: Self::Snapshot) -> Self {
             Self { snapshot }
         }
-        fn from_text(text: &str) -> Result<Self, store::TextError> {
+        async fn from_text(text: &str) -> Result<Self, store::TextError> {
             Ok(Self::from_snapshot(<TsvSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
-        fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
+        async fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
             Ok(Self::from_snapshot(<TsvSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
         }
-        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
+        async fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let diff = apply_tsv_mutation(&mut self.snapshot, &mutation);
             (self, diff)
         }
-        fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
+        async fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
             self.snapshot = <TsvDiff as protocol::MutationDiff<TsvSnapshot>>::apply(&diff, &self.snapshot)?;
             Ok(self)
         }
-        fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
+        async fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
             Ok(self.snapshot)
         }
     }
@@ -136,7 +136,7 @@ pub mod derived_analysis {
         type Parts = TsvParts;
         const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.tsv", standard: StandardId("iana"), subset: SubsetId("*") };
 
-        fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
+        async fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
             match source {
                 AnalyzeSource::Binary(bytes) => {
                     if snapshot::sniff_real_bytes(bytes) {
@@ -159,7 +159,7 @@ pub mod derived_analysis {
             }
         }
 
-        fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
+        async fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
             let mut parts = TsvParts::default();
             let mut diagnostics = Vec::new();
             let mut confidence = IoConfidence::High;

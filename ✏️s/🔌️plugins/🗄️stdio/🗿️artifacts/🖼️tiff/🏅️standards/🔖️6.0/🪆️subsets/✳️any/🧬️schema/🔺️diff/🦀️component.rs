@@ -47,7 +47,7 @@ pub struct TiffTagsDiff {
 }
 
 impl TiffTagsDiff {
-    pub fn is_empty(&self) -> bool {
+    pub async fn is_empty(&self) -> bool {
         self.removed.is_empty() && self.modified.is_empty() && self.added.is_empty()
     }
 }
@@ -55,7 +55,7 @@ impl TiffTagsDiff {
 /// ▶️ Applies a tag-id-keyed triple to one IFD's entries. TIFF6 §2 requires ascending-tag-
 /// order within an IFD — `apply` re-sorts on every call, keeping that invariant regardless of
 /// the triple's own insertion order.
-fn apply_tags(base: &[TiffTag], d: &TiffTagsDiff) -> Vec<TiffTag> {
+async fn apply_tags(base: &[TiffTag], d: &TiffTagsDiff) -> Vec<TiffTag> {
     let mut items: Vec<TiffTag> = base.iter().filter(|t| !d.removed.contains(&t.tag)).cloned().collect();
     for m in &d.modified {
         if let Some(it) = items.iter_mut().find(|t| t.tag == m.tag) {
@@ -75,7 +75,7 @@ fn apply_tags(base: &[TiffTag], d: &TiffTagsDiff) -> Vec<TiffTag> {
     items
 }
 
-fn between_tags(a: &[TiffTag], b: &[TiffTag]) -> Option<TiffTagsDiff> {
+async fn between_tags(a: &[TiffTag], b: &[TiffTag]) -> Option<TiffTagsDiff> {
     let a_map: BTreeMap<u16, &TiffTag> = a.iter().map(|t| (t.tag, t)).collect();
     let b_map: BTreeMap<u16, &TiffTag> = b.iter().map(|t| (t.tag, t)).collect();
     let mut removed = Vec::new();
@@ -106,7 +106,7 @@ fn between_tags(a: &[TiffTag], b: &[TiffTag]) -> Option<TiffTagsDiff> {
 /// ➕️ Structural, total, base-free absorb for a TAG-ID-keyed triple. Simpler than an
 /// index-keyed collection's transport: tag ids are stable identity, never renumbered by
 /// insert/remove, so no position-simulation is needed — a plain keyed union/override algebra.
-fn absorb_tags(d1: TiffTagsDiff, d2: TiffTagsDiff) -> TiffTagsDiff {
+async fn absorb_tags(d1: TiffTagsDiff, d2: TiffTagsDiff) -> TiffTagsDiff {
     let mut removed: BTreeSet<u16> = d1.removed.into_iter().collect();
     let mut modified: BTreeMap<u16, TiffTagModified> = d1.modified.into_iter().map(|m| (m.tag, m)).collect();
     let mut added: BTreeMap<u16, TiffTagAdded> = d1.added.into_iter().map(|a| (a.tag, a)).collect();
@@ -176,7 +176,7 @@ enum Slot {
     Added(usize),
 }
 
-fn simulate_slots(len: usize, removed: &[usize], added_indices: &[usize]) -> Vec<Slot> {
+async fn simulate_slots(len: usize, removed: &[usize], added_indices: &[usize]) -> Vec<Slot> {
     let mut slots: Vec<Slot> = (0..len).map(Slot::Base).collect();
     let mut removed_desc = removed.to_vec();
     removed_desc.sort_unstable_by(|a, b| b.cmp(a));
@@ -195,11 +195,11 @@ fn simulate_slots(len: usize, removed: &[usize], added_indices: &[usize]) -> Vec
     slots
 }
 
-fn base_len_hint(removed: &[usize], modified_indices: impl Iterator<Item = usize>, added_indices: impl Iterator<Item = usize>) -> usize {
+async fn base_len_hint(removed: &[usize], modified_indices: impl Iterator<Item = usize>, added_indices: impl Iterator<Item = usize>) -> usize {
     removed.iter().copied().chain(modified_indices).chain(added_indices).max().map(|m| m + 1).unwrap_or(0)
 }
 
-fn absorb_ifds(d1: TiffIfdsDiff, d2: TiffIfdsDiff) -> TiffIfdsDiff {
+async fn absorb_ifds(d1: TiffIfdsDiff, d2: TiffIfdsDiff) -> TiffIfdsDiff {
     let d1_added_indices: Vec<usize> = d1.added.iter().map(|a| a.index).collect();
     let removed_count = {
         let mut r = d1.removed.clone();
@@ -286,7 +286,7 @@ fn absorb_ifds(d1: TiffIfdsDiff, d2: TiffIfdsDiff) -> TiffIfdsDiff {
 }
 //#endregion 🔖️IndexTransport
 
-fn apply_ifds(base: &[TiffIfd], d: &TiffIfdsDiff) -> Vec<TiffIfd> {
+async fn apply_ifds(base: &[TiffIfd], d: &TiffIfdsDiff) -> Vec<TiffIfd> {
     let mut items = base.to_vec();
     for m in &d.modified {
         if let Some(it) = items.get_mut(m.index) {
@@ -310,7 +310,7 @@ fn apply_ifds(base: &[TiffIfd], d: &TiffIfdsDiff) -> Vec<TiffIfd> {
     items
 }
 
-fn between_ifds(a: &[TiffIfd], b: &[TiffIfd]) -> Option<TiffIfdsDiff> {
+async fn between_ifds(a: &[TiffIfd], b: &[TiffIfd]) -> Option<TiffIfdsDiff> {
     let min = a.len().min(b.len());
     let mut modified = Vec::new();
     for i in 0..min {
@@ -327,7 +327,7 @@ fn between_ifds(a: &[TiffIfd], b: &[TiffIfd]) -> Option<TiffIfdsDiff> {
     }
 }
 
-fn absorb_ifds_opt(base: &mut Option<TiffIfdsDiff>, other: Option<TiffIfdsDiff>) {
+async fn absorb_ifds_opt(base: &mut Option<TiffIfdsDiff>, other: Option<TiffIfdsDiff>) {
     match (base.take(), other) {
         (None, o) => *base = o,
         (Some(b), None) => *base = Some(b),
@@ -365,7 +365,7 @@ pub struct TiffDiff {
 }
 
 impl MutationDiff<TiffSnapshot> for TiffDiff {
-    fn apply(&self, base: &TiffSnapshot) -> MutationApplyResult<TiffSnapshot> {
+    async fn apply(&self, base: &TiffSnapshot) -> MutationApplyResult<TiffSnapshot> {
         if let Some(ifds) = &self.ifds {
             validate_tiff_ifds(&base.ifds, ifds)?;
         }
@@ -385,7 +385,7 @@ impl MutationDiff<TiffSnapshot> for TiffDiff {
     /// ➕️ Structural, total, base-free sequential-coalesce (`## Absorb` contract). `byte_order`/
     /// `pixels`: LWW. `ifds`: index-transported merge with the nested tag-id-keyed merge for
     /// `modified` entries.
-    fn absorb(&mut self, other: Self) {
+    async fn absorb(&mut self, other: Self) {
         if other.byte_order.is_some() {
             self.byte_order = other.byte_order;
         }
@@ -396,7 +396,7 @@ impl MutationDiff<TiffSnapshot> for TiffDiff {
     }
 }
 
-fn validate_tiff_ifds(base: &[TiffIfd], diff: &TiffIfdsDiff) -> MutationApplyResult<()> {
+async fn validate_tiff_ifds(base: &[TiffIfd], diff: &TiffIfdsDiff) -> MutationApplyResult<()> {
     let mut removed = std::collections::HashSet::new();
     for &index in &diff.removed {
         if index >= base.len() || !removed.insert(index) {
@@ -420,7 +420,7 @@ fn validate_tiff_ifds(base: &[TiffIfd], diff: &TiffIfdsDiff) -> MutationApplyRes
     Ok(())
 }
 
-fn validate_tiff_tags(base: &[TiffTag], diff: &TiffTagsDiff) -> MutationApplyResult<()> {
+async fn validate_tiff_tags(base: &[TiffTag], diff: &TiffTagsDiff) -> MutationApplyResult<()> {
     let base_tags: std::collections::HashSet<u16> = base.iter().map(|tag| tag.tag).collect();
     let removed: std::collections::HashSet<u16> = diff.removed.iter().copied().collect();
     if removed.len() != diff.removed.len() || diff.removed.iter().any(|tag| !base_tags.contains(tag)) {
@@ -444,24 +444,24 @@ fn validate_tiff_tags(base: &[TiffTag], diff: &TiffTagsDiff) -> MutationApplyRes
 impl DiffAlgebra<TiffSnapshot> for TiffDiff {
     /// 🔁️ Diff-level undo, derived generically (correct by construction): the state delta
     /// from `self.apply(base)` back to `base`.
-    fn inverse(&self, base: &TiffSnapshot) -> Self {
+    async fn inverse(&self, base: &TiffSnapshot) -> Self {
         let mutated = self.apply(base).unwrap();
         Self::between(&mutated, base)
     }
 
     /// 🧭️ State delta (compose `GetXDiff`): index-keyed pairwise `0..min(len)` matching for
     /// `ifds`, recursive tag-id-keyed matching within each surviving IFD pair.
-    fn between(base: &TiffSnapshot, other: &TiffSnapshot) -> Self {
+    async fn between(base: &TiffSnapshot, other: &TiffSnapshot) -> Self {
         Self { byte_order: (base.byte_order != other.byte_order).then_some(other.byte_order), ifds: between_ifds(&base.ifds, &other.ifds), pixels: (base.pixels != other.pixels).then(|| other.pixels.clone()) }
     }
 
-    fn is_empty(&self) -> bool {
+    async fn is_empty(&self) -> bool {
         self.byte_order.is_none() && self.ifds.is_none() && self.pixels.is_none()
     }
 }
 
 /// 🧩 Builds a set-snapshot diff (sparse field-by-field delta, never a full-replace slot).
-pub fn diff_set_snapshot(base: &TiffSnapshot, next: &TiffSnapshot) -> TiffDiff {
+pub async fn diff_set_snapshot(base: &TiffSnapshot, next: &TiffSnapshot) -> TiffDiff {
     TiffDiff::between(base, next)
 }
 //#endregion 🔖️Diff
@@ -470,23 +470,23 @@ pub fn diff_set_snapshot(base: &TiffSnapshot, next: &TiffSnapshot) -> TiffDiff {
 // 🧩 One handcrafted builder per `schema::mutations::TiffMutation` variant (excluding
 // `NoMutation`/`SetSnapshot`, covered above).
 
-pub fn diff_set_byte_order(base: &TiffSnapshot, byte_order: TiffByteOrder) -> TiffDiff {
+pub async fn diff_set_byte_order(base: &TiffSnapshot, byte_order: TiffByteOrder) -> TiffDiff {
     TiffDiff { byte_order: (base.byte_order != byte_order).then_some(byte_order), ..Default::default() }
 }
 
-pub fn diff_insert_ifd(base: &TiffSnapshot, index: usize, ifd: TiffIfd) -> TiffDiff {
+pub async fn diff_insert_ifd(base: &TiffSnapshot, index: usize, ifd: TiffIfd) -> TiffDiff {
     let at = index.min(base.ifds.len());
     TiffDiff { ifds: Some(TiffIfdsDiff { removed: vec![], modified: vec![], added: vec![TiffIfdAdded { index: at, ifd }] }), ..Default::default() }
 }
 
-pub fn diff_remove_ifd(base: &TiffSnapshot, index: usize) -> TiffDiff {
+pub async fn diff_remove_ifd(base: &TiffSnapshot, index: usize) -> TiffDiff {
     if index >= base.ifds.len() {
         return TiffDiff::default();
     }
     TiffDiff { ifds: Some(TiffIfdsDiff { removed: vec![index], modified: vec![], added: vec![] }), ..Default::default() }
 }
 
-pub fn diff_set_tag(base: &TiffSnapshot, ifd_index: usize, tag: u16, kind: TiffFieldType, values: TiffValues) -> TiffDiff {
+pub async fn diff_set_tag(base: &TiffSnapshot, ifd_index: usize, tag: u16, kind: TiffFieldType, values: TiffValues) -> TiffDiff {
     let Some(ifd) = base.ifds.get(ifd_index) else { return TiffDiff::default() };
     let already = ifd.entries.iter().find(|t| t.tag == tag);
     if let Some(existing) = already {
@@ -505,7 +505,7 @@ pub fn diff_set_tag(base: &TiffSnapshot, ifd_index: usize, tag: u16, kind: TiffF
     }
 }
 
-pub fn diff_remove_tag(base: &TiffSnapshot, ifd_index: usize, tag: u16) -> TiffDiff {
+pub async fn diff_remove_tag(base: &TiffSnapshot, ifd_index: usize, tag: u16) -> TiffDiff {
     let Some(ifd) = base.ifds.get(ifd_index) else { return TiffDiff::default() };
     if !ifd.entries.iter().any(|t| t.tag == tag) {
         return TiffDiff::default();
@@ -513,7 +513,7 @@ pub fn diff_remove_tag(base: &TiffSnapshot, ifd_index: usize, tag: u16) -> TiffD
     TiffDiff { ifds: Some(TiffIfdsDiff { removed: vec![], modified: vec![TiffIfdModified { index: ifd_index, diff: TiffTagsDiff { removed: vec![tag], modified: vec![], added: vec![] } }], added: vec![] }), ..Default::default() }
 }
 
-pub fn diff_set_pixels(base: &TiffSnapshot, pixels: Vec<u8>) -> TiffDiff {
+pub async fn diff_set_pixels(base: &TiffSnapshot, pixels: Vec<u8>) -> TiffDiff {
     TiffDiff { pixels: (base.pixels != pixels).then_some(pixels), ..Default::default() }
 }
 //#endregion 🔖️MutationDiffBuilders
@@ -529,31 +529,31 @@ pub fn diff_set_pixels(base: &TiffSnapshot, pixels: Vec<u8>) -> TiffDiff {
 /// here — every `TiffDiff`/`TiffMutation` field is a required value, so `encode_option`/
 /// `decode_option` (present in `GifDiff`/`SvgDiff`) are deliberately omitted as dead code.
 //#region 🔖️Primitives
-pub(crate) fn hex_encode(bytes: &[u8]) -> String {
+pub(crate) async fn hex_encode(bytes: &[u8]) -> String {
     bytes.iter().map(|b| format!("{b:02x}")).collect()
 }
-pub(crate) fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
+pub(crate) async fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
     if s.len() % 2 != 0 {
         return Err(format!("odd hex length: {s:?}"));
     }
     (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()
 }
-pub(crate) fn enc_str(s: &str) -> String {
+pub(crate) async fn enc_str(s: &str) -> String {
     hex_encode(s.as_bytes())
 }
-pub(crate) fn dec_str(s: &str) -> Result<String, String> {
+pub(crate) async fn dec_str(s: &str) -> Result<String, String> {
     String::from_utf8(hex_decode(s)?).map_err(|e| e.to_string())
 }
 /// 🔢️ Generic numeric-token parser (`u8`/`u16`/`u32`/`i8`/`i16`/`i32`/`f32`/`f64`/`usize`, every
 /// scalar this grammar carries) — `f32`/`f64`'s `Display`/`FromStr` round-trip exactly for every
 /// finite value this codec ever produces (same assumption `svg`'s `ViewBox` float fields make).
-pub(crate) fn parse_num<T: std::str::FromStr>(s: &str) -> Result<T, String>
+pub(crate) async fn parse_num<T: std::str::FromStr>(s: &str) -> Result<T, String>
 where
     T::Err: std::fmt::Display,
 {
     s.parse::<T>().map_err(|e| e.to_string())
 }
-pub(crate) fn split_top_level(s: &str, sep: char) -> Vec<&str> {
+pub(crate) async fn split_top_level(s: &str, sep: char) -> Vec<&str> {
     if s.is_empty() {
         return Vec::new();
     }
@@ -574,15 +574,15 @@ pub(crate) fn split_top_level(s: &str, sep: char) -> Vec<&str> {
     out.push(&s[start..]);
     out
 }
-pub(crate) fn strip_brackets(s: &str) -> Result<&str, String> {
+pub(crate) async fn strip_brackets(s: &str) -> Result<&str, String> {
     s.strip_prefix('[').and_then(|s| s.strip_suffix(']')).ok_or_else(|| format!("expected [...], got {s:?}"))
 }
 /// 📃️ Generic bracketed comma list (`[e1,e2,...]`) — every `Vec<T>` in this grammar (IFD entries,
 /// an IFD list, a numeric value list) uses this same shape.
-pub(crate) fn enc_list<T>(items: &[T], enc: impl Fn(&T) -> String) -> String {
+pub(crate) async fn enc_list<T>(items: &[T], enc: impl Fn(&T) -> String) -> String {
     format!("[{}]", items.iter().map(|x| enc(x)).collect::<Vec<_>>().join(","))
 }
-pub(crate) fn dec_list<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Vec<T>, String> {
+pub(crate) async fn dec_list<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Vec<T>, String> {
     split_top_level(strip_brackets(s)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec).collect()
 }
 
@@ -592,41 +592,41 @@ pub(crate) fn dec_list<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> R
 /// 🦀️component.rs`'s own upgraded `OpBinary`) — reuses `store::pack_rt::write_varint_u64`/
 /// `store::ByteReader` rather than reinventing varint encode/decode, same shape `xml`'s own
 /// `write_str_lp`/`read_str_lp` uses.
-pub(crate) fn write_bytes_lp(out: &mut Vec<u8>, bytes: &[u8]) {
+pub(crate) async fn write_bytes_lp(out: &mut Vec<u8>, bytes: &[u8]) {
     store::pack_rt::write_varint_u64(out, bytes.len() as u64);
     out.extend_from_slice(bytes);
 }
-pub(crate) fn read_bytes_lp(reader: &mut store::ByteReader<'_>) -> Result<Vec<u8>, String> {
+pub(crate) async fn read_bytes_lp(reader: &mut store::ByteReader<'_>) -> Result<Vec<u8>, String> {
     let len = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
     Ok(reader.read_bytes(len).map_err(|e| e.to_string())?.to_vec())
 }
-pub(crate) fn write_str_lp(out: &mut Vec<u8>, s: &str) {
+pub(crate) async fn write_str_lp(out: &mut Vec<u8>, s: &str) {
     write_bytes_lp(out, s.as_bytes());
 }
-pub(crate) fn read_str_lp(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
+pub(crate) async fn read_str_lp(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
     String::from_utf8(read_bytes_lp(reader)?).map_err(|e| e.to_string())
 }
 //#endregion 🔖️BinaryPrimitives
 //#endregion 🔖️Primitives
 
 //#region 🔖️ValueCodecs
-pub(crate) fn enc_byte_order(b: TiffByteOrder) -> String {
+pub(crate) async fn enc_byte_order(b: TiffByteOrder) -> String {
     match b {
         TiffByteOrder::LittleEndian => "0".to_string(),
         TiffByteOrder::BigEndian => "1".to_string(),
     }
 }
-pub(crate) fn dec_byte_order(s: &str) -> Result<TiffByteOrder, String> {
+pub(crate) async fn dec_byte_order(s: &str) -> Result<TiffByteOrder, String> {
     match s {
         "0" => Ok(TiffByteOrder::LittleEndian),
         "1" => Ok(TiffByteOrder::BigEndian),
         other => Err(format!("byte order: unknown code {other:?}")),
     }
 }
-pub(crate) fn enc_field_type(k: TiffFieldType) -> String {
+pub(crate) async fn enc_field_type(k: TiffFieldType) -> String {
     k.to_u16().to_string()
 }
-pub(crate) fn dec_field_type(s: &str) -> Result<TiffFieldType, String> {
+pub(crate) async fn dec_field_type(s: &str) -> Result<TiffFieldType, String> {
     TiffFieldType::from_u16(parse_num::<u16>(s)?)
 }
 /// 📦️ `TiffValues` — single-uppercase-letter tag prefix immediately followed by the bracketed
@@ -634,7 +634,7 @@ pub(crate) fn dec_field_type(s: &str) -> Result<TiffFieldType, String> {
 /// `A`=Ascii, `S`=Short, `L`=Long, `R`=Rational, `E`=SByte, `U`=Undefined, `H`=SShort, `G`=SLong,
 /// `Q`=SRational, `F`=Float, `D`=Double. `Byte`/`Undefined` (raw octets) and `Ascii` (text) are hex;
 /// every numeric list is decimal comma-separated; `Rational`/`SRational` pairs nest as `[n,d]`.
-pub(crate) fn enc_values(v: &TiffValues) -> String {
+pub(crate) async fn enc_values(v: &TiffValues) -> String {
     match v {
         TiffValues::Byte(b) => format!("B[{}]", hex_encode(b)),
         TiffValues::Ascii(s) => format!("A[{}]", enc_str(s)),
@@ -650,7 +650,7 @@ pub(crate) fn enc_values(v: &TiffValues) -> String {
         TiffValues::Double(v) => format!("D{}", enc_list(v, |x| x.to_string())),
     }
 }
-pub(crate) fn dec_values(s: &str) -> Result<TiffValues, String> {
+pub(crate) async fn dec_values(s: &str) -> Result<TiffValues, String> {
     let (tag, rest) = s.split_at(1);
     let pair = |s: &str| -> Result<(u32, u32), String> {
         let parts = split_top_level(strip_brackets(s)?, ',');
@@ -679,19 +679,19 @@ pub(crate) fn dec_values(s: &str) -> Result<TiffValues, String> {
     }
 }
 /// 🏷️ One IFD entry: `[tag,kind,values]` positional triple.
-pub(crate) fn enc_tag(t: &TiffTag) -> String {
+pub(crate) async fn enc_tag(t: &TiffTag) -> String {
     format!("[{},{},{}]", t.tag, enc_field_type(t.kind), enc_values(&t.values))
 }
-pub(crate) fn dec_tag(s: &str) -> Result<TiffTag, String> {
+pub(crate) async fn dec_tag(s: &str) -> Result<TiffTag, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [tag, kind, values] = parts.as_slice() else { return Err(format!("tag: expected 3 fields, got {}", parts.len())) };
     Ok(TiffTag { tag: parse_num::<u16>(tag)?, kind: dec_field_type(kind)?, values: dec_values(values)? })
 }
 /// 🗂️ One IFD: bracketed list of `enc_tag` entries.
-pub(crate) fn enc_ifd(ifd: &TiffIfd) -> String {
+pub(crate) async fn enc_ifd(ifd: &TiffIfd) -> String {
     enc_list(&ifd.entries, enc_tag)
 }
-pub(crate) fn dec_ifd(s: &str) -> Result<TiffIfd, String> {
+pub(crate) async fn dec_ifd(s: &str) -> Result<TiffIfd, String> {
     Ok(TiffIfd { entries: dec_list(s, dec_tag)? })
 }
 //#endregion 🔖️ValueCodecs
@@ -706,7 +706,7 @@ pub(crate) fn dec_ifd(s: &str) -> Result<TiffIfd, String> {
 /// fixed-width elements) — genuinely typed binary, NOT text-as-bytes. Backs the upgraded
 /// `DiffCodec`/`OpBinary` frames below (`../🧬️mutations/🦀️component.rs` reuses these via its own
 /// `pub(crate)` re-export, same intra-artifact reuse convention `xml`'s `enc_xml_node_bin` uses).
-pub(crate) fn enc_values_bin(v: &TiffValues, out: &mut Vec<u8>) {
+pub(crate) async fn enc_values_bin(v: &TiffValues, out: &mut Vec<u8>) {
     match v {
         TiffValues::Byte(b) => {
             out.push(0);
@@ -773,7 +773,7 @@ pub(crate) fn enc_values_bin(v: &TiffValues, out: &mut Vec<u8>) {
         }
     }
 }
-pub(crate) fn dec_values_bin(reader: &mut store::ByteReader<'_>) -> Result<TiffValues, String> {
+pub(crate) async fn dec_values_bin(reader: &mut store::ByteReader<'_>) -> Result<TiffValues, String> {
     let tag = reader.read_u8().map_err(|e| e.to_string())?;
     let count = |reader: &mut store::ByteReader<'_>| -> Result<u64, String> { reader.read_varint_u64().map_err(|e| e.to_string()) };
     match tag {
@@ -835,12 +835,12 @@ pub(crate) fn dec_values_bin(reader: &mut store::ByteReader<'_>) -> Result<TiffV
 }
 /// 🏷️ Binary twin of [`enc_tag`]/[`dec_tag`] — `tag:u16le, kind:u8 (TIFF field-type code 1-12,
 /// always fits one byte), values:enc_values_bin`.
-pub(crate) fn enc_tag_bin(t: &TiffTag, out: &mut Vec<u8>) {
+pub(crate) async fn enc_tag_bin(t: &TiffTag, out: &mut Vec<u8>) {
     out.extend_from_slice(&t.tag.to_le_bytes());
     out.push(t.kind.to_u16() as u8);
     enc_values_bin(&t.values, out);
 }
-pub(crate) fn dec_tag_bin(reader: &mut store::ByteReader<'_>) -> Result<TiffTag, String> {
+pub(crate) async fn dec_tag_bin(reader: &mut store::ByteReader<'_>) -> Result<TiffTag, String> {
     let tag = reader.read_u16_le().map_err(|e| e.to_string())?;
     let kind = TiffFieldType::from_u16(reader.read_u8().map_err(|e| e.to_string())? as u16)?;
     let values = dec_values_bin(reader)?;
@@ -848,11 +848,11 @@ pub(crate) fn dec_tag_bin(reader: &mut store::ByteReader<'_>) -> Result<TiffTag,
 }
 /// 🗂️ Binary twin of [`enc_ifd`]/[`dec_ifd`] — varint entry count, then that many [`enc_tag_bin`]
 /// entries.
-pub(crate) fn enc_ifd_bin(ifd: &TiffIfd, out: &mut Vec<u8>) {
+pub(crate) async fn enc_ifd_bin(ifd: &TiffIfd, out: &mut Vec<u8>) {
     store::pack_rt::write_varint_u64(out, ifd.entries.len() as u64);
     ifd.entries.iter().for_each(|t| enc_tag_bin(t, out));
 }
-pub(crate) fn dec_ifd_bin(reader: &mut store::ByteReader<'_>) -> Result<TiffIfd, String> {
+pub(crate) async fn dec_ifd_bin(reader: &mut store::ByteReader<'_>) -> Result<TiffIfd, String> {
     let n = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut entries = Vec::with_capacity(n as usize);
     for _ in 0..n {
@@ -866,13 +866,13 @@ pub(crate) fn dec_ifd_bin(reader: &mut store::ByteReader<'_>) -> Result<TiffIfd,
 /// 🔺️ Tag-id-keyed `entries` triple: `[removed];[modified];[added]`, `modified`/`added` entries
 /// are `tag:kind:values` (colon-separated — safe since `kind` is bare decimal and `values` never
 /// contains a literal `:`).
-fn enc_tags_diff(d: &TiffTagsDiff) -> String {
+async fn enc_tags_diff(d: &TiffTagsDiff) -> String {
     let removed = d.removed.iter().map(|t| t.to_string()).collect::<Vec<_>>().join(",");
     let modified = d.modified.iter().map(|m| format!("{}:{}:{}", m.tag, enc_field_type(m.kind), enc_values(&m.values))).collect::<Vec<_>>().join(",");
     let added = d.added.iter().map(|a| format!("{}:{}:{}", a.tag, enc_field_type(a.kind), enc_values(&a.values))).collect::<Vec<_>>().join(",");
     format!("[{removed}];[{modified}];[{added}]")
 }
-fn dec_tags_diff(body: &str) -> Result<TiffTagsDiff, String> {
+async fn dec_tags_diff(body: &str) -> Result<TiffTagsDiff, String> {
     let three = split_top_level(body, ';');
     let [removed_s, modified_s, added_s] = three.as_slice() else { return Err(format!("tags diff: expected 3 sections, got {}", three.len())) };
     let removed = split_top_level(strip_brackets(removed_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(parse_num::<u16>).collect::<Result<Vec<_>, String>>()?;
@@ -899,13 +899,13 @@ fn dec_tags_diff(body: &str) -> Result<TiffTagsDiff, String> {
 
 /// 🗂️ Index-keyed `ifds` triple: `[removed];[modified];[added]`, `modified` entries are
 /// `index:<tags-triple>` (recursive), `added` entries are `index:<ifd>`.
-pub(crate) fn enc_ifds_diff(d: &TiffIfdsDiff) -> String {
+pub(crate) async fn enc_ifds_diff(d: &TiffIfdsDiff) -> String {
     let removed = d.removed.iter().map(|i| i.to_string()).collect::<Vec<_>>().join(",");
     let modified = d.modified.iter().map(|m| format!("{}:{}", m.index, enc_tags_diff(&m.diff))).collect::<Vec<_>>().join(",");
     let added = d.added.iter().map(|a| format!("{}:{}", a.index, enc_ifd(&a.ifd))).collect::<Vec<_>>().join(",");
     format!("[{removed}];[{modified}];[{added}]")
 }
-pub(crate) fn dec_ifds_diff(body: &str) -> Result<TiffIfdsDiff, String> {
+pub(crate) async fn dec_ifds_diff(body: &str) -> Result<TiffIfdsDiff, String> {
     let three = split_top_level(body, ';');
     let [removed_s, modified_s, added_s] = three.as_slice() else { return Err(format!("ifds diff: expected 3 sections, got {}", three.len())) };
     let removed = split_top_level(strip_brackets(removed_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(parse_num::<usize>).collect::<Result<Vec<_>, String>>()?;
@@ -934,7 +934,7 @@ pub(crate) fn dec_ifds_diff(body: &str) -> Result<TiffIfdsDiff, String> {
 /// [`enc_ifds_diff`]/[`dec_ifds_diff`] — every `removed`/`modified`/`added` triple becomes a
 /// varint-counted, recursively-encoded list (same shape XML's `enc_children_diff_bin`/
 /// `enc_attrs_diff_bin` use), backing the upgraded `DiffCodec::encode_diff`/`decode_diff` below.
-pub(crate) fn enc_tags_diff_bin(d: &TiffTagsDiff, out: &mut Vec<u8>) {
+pub(crate) async fn enc_tags_diff_bin(d: &TiffTagsDiff, out: &mut Vec<u8>) {
     store::pack_rt::write_varint_u64(out, d.removed.len() as u64);
     d.removed.iter().for_each(|&t| out.extend_from_slice(&t.to_le_bytes()));
     store::pack_rt::write_varint_u64(out, d.modified.len() as u64);
@@ -950,7 +950,7 @@ pub(crate) fn enc_tags_diff_bin(d: &TiffTagsDiff, out: &mut Vec<u8>) {
         enc_values_bin(&a.values, out);
     }
 }
-pub(crate) fn dec_tags_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<TiffTagsDiff, String> {
+pub(crate) async fn dec_tags_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<TiffTagsDiff, String> {
     let rn = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut removed = Vec::with_capacity(rn as usize);
     for _ in 0..rn {
@@ -975,7 +975,7 @@ pub(crate) fn dec_tags_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<Ti
     Ok(TiffTagsDiff { removed, modified, added })
 }
 
-pub(crate) fn enc_ifds_diff_bin(d: &TiffIfdsDiff, out: &mut Vec<u8>) {
+pub(crate) async fn enc_ifds_diff_bin(d: &TiffIfdsDiff, out: &mut Vec<u8>) {
     store::pack_rt::write_varint_u64(out, d.removed.len() as u64);
     d.removed.iter().for_each(|&i| store::pack_rt::write_varint_u64(out, i as u64));
     store::pack_rt::write_varint_u64(out, d.modified.len() as u64);
@@ -989,7 +989,7 @@ pub(crate) fn enc_ifds_diff_bin(d: &TiffIfdsDiff, out: &mut Vec<u8>) {
         enc_ifd_bin(&a.ifd, out);
     }
 }
-pub(crate) fn dec_ifds_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<TiffIfdsDiff, String> {
+pub(crate) async fn dec_ifds_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<TiffIfdsDiff, String> {
     let rn = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut removed = Vec::with_capacity(rn as usize);
     for _ in 0..rn {
@@ -1014,7 +1014,7 @@ pub(crate) fn dec_ifds_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<Ti
 //#endregion 🔖️DiffValueBinaryCodecs
 
 //#region 🔖️TopLevel
-fn print_tiff_diff(d: &TiffDiff) -> String {
+async fn print_tiff_diff(d: &TiffDiff) -> String {
     let mut tokens: Vec<String> = Vec::new();
     if let Some(v) = d.byte_order {
         tokens.push(format!("byte-order={}", enc_byte_order(v)));
@@ -1027,7 +1027,7 @@ fn print_tiff_diff(d: &TiffDiff) -> String {
     }
     tokens.join(" ")
 }
-fn parse_tiff_diff(line: &str) -> Result<TiffDiff, String> {
+async fn parse_tiff_diff(line: &str) -> Result<TiffDiff, String> {
     let mut d = TiffDiff::default();
     if line.is_empty() {
         return Ok(d);
@@ -1047,10 +1047,10 @@ fn parse_tiff_diff(line: &str) -> Result<TiffDiff, String> {
 }
 
 impl protocol::DiffCodec for TiffDiff {
-    fn print_diff(&self) -> String {
+    async fn print_diff(&self) -> String {
         print_tiff_diff(self)
     }
-    fn parse_diff(line: &str) -> Result<Self, store::TextError> {
+    async fn parse_diff(line: &str) -> Result<Self, store::TextError> {
         parse_tiff_diff(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
     /// 🧪️ P2-FG2: REAL binary frame (`format u8 | flags u8 | [byte_order][ifds][pixels]`),
@@ -1061,7 +1061,7 @@ impl protocol::DiffCodec for TiffDiff {
     /// payload follows in that fixed order (`ifds` recurses through [`enc_ifds_diff_bin`] into the
     /// tag-id-keyed triples and the 12-variant `TiffValues` union, genuinely structured all the
     /// way down, never text-as-bytes).
-    fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    async fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         let mut flags: u8 = 0;
         if self.byte_order.is_some() {
             flags |= 0b001;
@@ -1087,7 +1087,7 @@ impl protocol::DiffCodec for TiffDiff {
         }
         Ok(out)
     }
-    fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    async fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         let mut reader = store::ByteReader::new(bytes);
         let malformed = |what: &'static str, offset: usize, detail: String| protocol::ProtocolError::Malformed { what, offset: offset as u64, detail };
         let _format = reader.read_u8().map_err(|e| malformed("diff format", 0, e.to_string()))?;
@@ -1112,8 +1112,8 @@ impl protocol::DiffCodec for TiffDiff {
 /// `TiffValues` field-type family) — the single source of truth reused by
 /// `diff_grammar_conformance_law`/`protocol_walk_law` below (`⚙️engine/🦀️component.rs`).
 #[cfg(test)]
-pub(crate) fn demo_diff_cases() -> Vec<TiffDiff> {
-    fn tag(id: u16, kind: TiffFieldType, values: TiffValues) -> TiffTag {
+pub(crate) async fn demo_diff_cases() -> Vec<TiffDiff> {
+    async fn tag(id: u16, kind: TiffFieldType, values: TiffValues) -> TiffTag {
         TiffTag { tag: id, kind, values }
     }
     let a = TiffSnapshot {
@@ -1148,7 +1148,7 @@ mod handcrafted_diff_codec_tests {
     use super::*;
     use protocol::DiffCodec;
 
-    fn tag(id: u16, kind: TiffFieldType, values: TiffValues) -> TiffTag {
+    async fn tag(id: u16, kind: TiffFieldType, values: TiffValues) -> TiffTag {
         TiffTag { tag: id, kind, values }
     }
 
@@ -1157,7 +1157,7 @@ mod handcrafted_diff_codec_tests {
     /// both IFD-level (index-keyed) and tag-level (id-keyed) removed/modified/added, and the
     /// scalar `byte_order`/`pixels` tokens.
     #[test]
-    fn diff_codec_text_binary_roundtrip_law() {
+    async fn diff_codec_text_binary_roundtrip_law() {
         let a = TiffSnapshot {
             schema: "stdio.tiff".into(),
             byte_order: TiffByteOrder::LittleEndian,

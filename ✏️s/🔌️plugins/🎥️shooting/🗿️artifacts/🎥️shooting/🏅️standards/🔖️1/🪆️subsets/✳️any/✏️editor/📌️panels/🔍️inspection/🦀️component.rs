@@ -14,13 +14,13 @@ pub const SHOOTING_PLAY_BODY_INSPECTION: &str = "shooting.play.inspection";
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
-pub fn definition() -> PanelTabDefinition {
+pub async fn definition() -> PanelTabDefinition {
     PanelTabDefinition { kind: PanelTabKind::App(FRAMEWORK_PANEL_TAB_INSPECTION_ID.into()), label: LocalizedLabel::native(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, "Inspektion"), group: PanelGroup::Details, body_key: Some(SHOOTING_PLAY_BODY_INSPECTION.into()), children: Vec::new() }
 }
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-fn shot_inspector_group(shot: &ShootingShot, labels: &ShootingLabels) -> UiInspectorFieldGroup {
+async fn shot_inspector_group(shot: &ShootingShot, labels: &ShootingLabels) -> UiInspectorFieldGroup {
     let width_mixed = ui_inspector_mixed_number(&[shot.width as f64]);
     let height_mixed = ui_inspector_mixed_number(&[shot.height as f64]);
     UiInspectorFieldGroup {
@@ -109,7 +109,7 @@ fn shot_inspector_group(shot: &ShootingShot, labels: &ShootingLabels) -> UiInspe
 /// group it rendered — are DELETED: asset selection is the framework-owned `"assets"` interaction
 /// domain now, and `render` has no `InteractionView` parameter (unlike `handle`/`copy_fragment`/
 /// `cut_operations`), so it is unreachable here. Documented reduced-fidelity gap.
-pub fn render(snapshot: &ShootingSnapshot, cfg: &ShootingConfig, labels: &ShootingLabels) -> UiNode {
+pub async fn render(snapshot: &ShootingSnapshot, cfg: &ShootingConfig, labels: &ShootingLabels) -> UiNode {
     if !cfg.selected_shot_ids.is_empty() {
         let shot_id = &cfg.selected_shot_ids[0];
         if let Some(shot) = snapshot.shots.iter().find(|entry| &entry.id == shot_id) {
@@ -137,7 +137,7 @@ mod tests {
     use crate::editor::shooting::testkit::{render as render_body, shooting_app};
 
     #[test]
-    fn inspector_falls_back_to_the_active_shot() {
+    async fn inspector_falls_back_to_the_active_shot() {
         let mut app = shooting_app();
         let json = render_body(&mut app, SHOOTING_PLAY_BODY_INSPECTION);
         assert!(json.contains("Shot"));

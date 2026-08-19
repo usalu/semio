@@ -16,7 +16,7 @@ pub const GIS2D_PLAY_BODY_INSPECTION: &str = "gis2d.play.inspection";
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
-pub fn definition() -> PanelTabDefinition {
+pub async fn definition() -> PanelTabDefinition {
     PanelTabDefinition {
         kind: PanelTabKind::App(FRAMEWORK_PANEL_TAB_INSPECTION_ID.into()),
         label: LocalizedLabel::native(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, "Inspektion"),
@@ -30,7 +30,7 @@ pub fn definition() -> PanelTabDefinition {
 //#region 🔖️Render
 /// 📏️ The inspector's stroke-weight sliders — the same `(layer, label, weight)` rows the map window's
 /// `🎚️options/📏️layer-weights` group is built from, rendered as inspector fields.
-fn layer_weight_slider_fields(cfg: &Gis2dConfig, labels: &Gis2dPlayLabels) -> Vec<UiNode> {
+async fn layer_weight_slider_fields(cfg: &Gis2dConfig, labels: &Gis2dPlayLabels) -> Vec<UiNode> {
     layer_weights::layer_weight_entries(cfg, labels)
         .into_iter()
         .map(|(layer_id, label, value)| {
@@ -58,7 +58,7 @@ fn layer_weight_slider_fields(cfg: &Gis2dConfig, labels: &Gis2dPlayLabels) -> Ve
         .collect()
 }
 
-fn map_view_field_group(cfg: &Gis2dConfig, labels: &Gis2dPlayLabels) -> UiInspectorFieldGroup {
+async fn map_view_field_group(cfg: &Gis2dConfig, labels: &Gis2dPlayLabels) -> UiInspectorFieldGroup {
     let lod_items: Vec<UiSelectItem> = lod_mode::lod_select_entries(labels).into_iter().map(|(value, label)| UiSelectItem { value, label: Label::data(label) }).collect();
     let mut fields = vec![
         UiNode::Field(UiFieldNode {
@@ -133,7 +133,7 @@ fn map_view_field_group(cfg: &Gis2dConfig, labels: &Gis2dPlayLabels) -> UiInspec
 /// tell which layer is currently selected and always shows the map-wide summary now — the
 /// per-selected-layer detail branch (id/label/visible-toggle) that used to read `cfg.selected_ids`
 /// is gone with it (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM).
-pub fn render(cfg: &Gis2dConfig, labels: &Gis2dPlayLabels) -> UiNode {
+pub async fn render(cfg: &Gis2dConfig, labels: &Gis2dPlayLabels) -> UiNode {
     let map_view_group = map_view_field_group(cfg, labels);
     let visible_count = GIS_MAP_LAYER_IDS.iter().filter(|(id, _, _)| layer_visible(cfg, id)).count();
     ui_inspector_groups_to_tree(&[
@@ -159,7 +159,7 @@ mod tests {
     use crate::editor::gis2d::testkit::{app, render as render_body};
 
     #[test]
-    fn the_inspector_always_summarises_the_schema_and_visible_count() {
+    async fn the_inspector_always_summarises_the_schema_and_visible_count() {
         let mut app = app();
         let json = render_body(&mut app, GIS2D_PLAY_BODY_INSPECTION);
         assert!(json.contains(GIS_MAP_SCHEMA));
@@ -167,7 +167,7 @@ mod tests {
     }
 
     #[test]
-    fn the_definition_binds_the_framework_inspection_tab_to_this_body() {
+    async fn the_definition_binds_the_framework_inspection_tab_to_this_body() {
         let definition = definition();
         assert!(matches!(definition.group, PanelGroup::Details));
         assert_eq!(definition.body_key.as_deref(), Some(GIS2D_PLAY_BODY_INSPECTION));

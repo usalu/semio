@@ -5,7 +5,7 @@ use crate::artifacts::en1998::mutations::change_k_foundation::mutation::ChangeKF
 use crate::artifacts::en1998::En1998Snapshot;
 
 //#region 🔖️Diff
-pub fn diff(payload: &ChangeKFoundation, base: &En1998Snapshot) -> protocol::MutationOutcome<En1998Diff> {
+pub async fn diff(payload: &ChangeKFoundation, base: &En1998Snapshot) -> protocol::MutationOutcome<En1998Diff> {
     if !payload.new_k_foundation.is_finite() {
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("Foundation stiffness k [kN/m] must be a finite number, got {}.", payload.new_k_foundation), Vec::<String>::new());
     }

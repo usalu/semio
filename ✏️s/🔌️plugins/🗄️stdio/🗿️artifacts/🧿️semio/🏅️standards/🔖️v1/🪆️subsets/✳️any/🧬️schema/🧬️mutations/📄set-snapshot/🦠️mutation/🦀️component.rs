@@ -2,6 +2,6 @@ use crate::artifacts::semio::standards::v1::subsets::any::schema::mutations::{ap
 use crate::artifacts::semio::standards::v1::subsets::any::schema::snapshot::SemioSnapshot;
 
 /// ▶️ Applies a set-snapshot mutation.
-pub fn apply(projection: &mut SemioSnapshot, mutation: &SemioMutation) {
+pub async fn apply(projection: &mut SemioSnapshot, mutation: &SemioMutation) {
     let _ = apply_semio_mutation(projection, mutation);
 }

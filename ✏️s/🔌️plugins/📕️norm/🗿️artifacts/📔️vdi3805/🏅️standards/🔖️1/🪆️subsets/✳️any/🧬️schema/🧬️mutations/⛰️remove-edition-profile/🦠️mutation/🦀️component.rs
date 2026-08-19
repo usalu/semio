@@ -13,16 +13,16 @@ pub struct RemoveEditionProfile {
 impl protocol::MutationKind<Vdi3805Snapshot, Vdi3805Mutation> for RemoveEditionProfile {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "edition-profile", kind: "remove-edition-profile", record: "RemovedEditionProfile" };
 
-    fn diff(&self, base: &Vdi3805Snapshot) -> protocol::MutationOutcome<<Vdi3805Mutation as protocol::Mutation<Vdi3805Snapshot>>::Diff> {
+    async fn diff(&self, base: &Vdi3805Snapshot) -> protocol::MutationOutcome<<Vdi3805Mutation as protocol::Mutation<Vdi3805Snapshot>>::Diff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &Vdi3805Snapshot) -> Vec<Vdi3805Mutation> {
+    async fn inverse(&self, base: &Vdi3805Snapshot) -> Vec<Vdi3805Mutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         format!("Remove edition profile override for sheet {}", self.sheet)
     }
-    fn target(&self) -> Vec<String> {
+    async fn target(&self) -> Vec<String> {
         vec![self.sheet.clone()]
     }
 }

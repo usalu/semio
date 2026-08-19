@@ -7,7 +7,7 @@ use crate::artifacts::program::ProgramDiff;
 use crate::artifacts::program::ProgramSnapshot;
 
 /// 🌱️ Fatal `mutation.duplicate-id` if the id already exists (empty diff), else `added = [payload row]`.
-pub fn diff(payload: &CreateCostRequirement, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
+pub async fn diff(payload: &CreateCostRequirement, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
     let id = payload.cost_requirement.header.id.clone();
     if base.costs.iter().any(|row| row.header.id == id) {
         return protocol::MutationOutcome::fatal("mutation.duplicate-id", "A cost requirement already exists with this id.", [id.0.clone()]);

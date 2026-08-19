@@ -26,7 +26,7 @@ const GIS_TERRAIN_VIEW_DEFAULT_CAMERA_JSON: &str = r#"{"position":[800.0,-800.0,
 
 //#region 🔖️Definition
 /// 🧱️ Stitched into the viewer manifest by `crate::viewer::gisterrain::create_gisterrain_viewer`.
-pub fn definition() -> WindowKindDefinition {
+pub async fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
         id: WINDOW_KIND_ID.into(),
         label: LocalizedLabel::native("Terrain", "Gelände"),
@@ -50,7 +50,7 @@ pub fn definition() -> WindowKindDefinition {
 /// 📍️ GIS pins are emitted as plain `World3d` instances with no matching `meshesJson` entry —
 /// `WorldInstancesLayer`'s existing missing-mesh fallback renders a small colored box, so a viewer
 /// still shows every imported overlay feature, just never lets one be selected.
-fn instances_json(descriptor: &TerrainDescriptorJson) -> String {
+async fn instances_json(descriptor: &TerrainDescriptorJson) -> String {
     let instances: Vec<Value> = descriptor
         .positions
         .iter()
@@ -74,7 +74,7 @@ fn instances_json(descriptor: &TerrainDescriptorJson) -> String {
 /// trailing `Option<String>` extension fields — the last two (`domain_id`/`domain_granularity_id`)
 /// bind this window to the "features"/"pin" interaction domain (read-only for a viewer, but still the
 /// correct domain so a future hover affordance is a pure addition here), every other extension `None`.
-pub fn render(document: &GisTerrainSnapshot) -> UiNode {
+pub async fn render(document: &GisTerrainSnapshot) -> UiNode {
     let descriptor = parse_descriptor(document);
     let mut scene = world3d_scene_extended(
         GIS_TERRAIN_VIEW_DEFAULT_CAMERA_JSON.into(),
@@ -110,14 +110,14 @@ mod tests {
     use super::*;
 
     #[test]
-    fn definition_declares_a_world3d_terrain_window() {
+    async fn definition_declares_a_world3d_terrain_window() {
         let def = definition();
         assert_eq!(def.id, WINDOW_KIND_ID);
         assert_eq!(def.surface_kind, SurfaceKind::World3d);
     }
 
     #[test]
-    fn render_produces_a_scene_node_for_the_default_document() {
+    async fn render_produces_a_scene_node_for_the_default_document() {
         let document = crate::artifacts::gisterrain::schema::default_terrain_document();
         let _node = render(&document);
     }

@@ -5,7 +5,7 @@ use crate::artifacts::din16798::mutations::change_volume_m3::mutation::ChangeVol
 use crate::artifacts::din16798::Din16798Snapshot;
 
 //#region 🔖️Diff
-pub fn diff(payload: &ChangeVolumeM3, base: &Din16798Snapshot) -> protocol::MutationOutcome<Din16798Diff> {
+pub async fn diff(payload: &ChangeVolumeM3, base: &Din16798Snapshot) -> protocol::MutationOutcome<Din16798Diff> {
     if !payload.new_volume_m3.is_finite() {
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("Building volume must be a finite number, got {}.", payload.new_volume_m3), Vec::<String>::new());
     }

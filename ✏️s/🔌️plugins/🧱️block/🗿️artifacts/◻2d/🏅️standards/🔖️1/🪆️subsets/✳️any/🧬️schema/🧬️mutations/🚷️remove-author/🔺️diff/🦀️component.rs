@@ -5,7 +5,7 @@ use crate::artifacts::block2d::Block2dSnapshot;
 use crate::{BlockAuthor};
 
 //#region 🔖️Diff
-pub fn diff(payload: &super::mutation::RemoveAuthor, base: &Block2dSnapshot) -> protocol::MutationOutcome<Block2dDiff> {
+pub async fn diff(payload: &super::mutation::RemoveAuthor, base: &Block2dSnapshot) -> protocol::MutationOutcome<Block2dDiff> {
     if !base.authors.iter().any(|author| author.id == payload.id) {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("{} \"{}\" not found", "author", payload.id), vec![payload.id.clone()]);
     }

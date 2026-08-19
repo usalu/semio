@@ -5,7 +5,7 @@ use crate::artifacts::layout::schema::diff::LayoutStoriesDelta;
 use crate::artifacts::layout::{LayoutDiff, LayoutSnapshot};
 
 //#region 📖CreateStory
-pub fn diff_create_story(payload: &CreateStory, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
+pub async fn diff_create_story(payload: &CreateStory, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
     if base.stories.iter().any(|story| story.id == payload.story.id) {
         return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("A story with id \"{}\" already exists.", payload.story.id), [payload.story.id.clone()]);
     }

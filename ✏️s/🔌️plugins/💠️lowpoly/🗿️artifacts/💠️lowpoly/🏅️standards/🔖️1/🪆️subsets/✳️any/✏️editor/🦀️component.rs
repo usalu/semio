@@ -41,7 +41,7 @@ pub use crate::editor::lowpoly::panels::layers::LOWPOLY_PLAY_BODY_LAYERS;
 
 /// 🎯️ An `ActionDescriptor` addressed at this app — the single factory every taxonomy node's chrome
 /// (`🛠️options/*`, `📌️panels/*`, window/engagement builders) builds its `on_change`/item actions with.
-pub fn lowpoly_action(action: &str, args: Option<Value>) -> ActionDescriptor {
+pub async fn lowpoly_action(action: &str, args: Option<Value>) -> ActionDescriptor {
     semio_framework_plugin::ActionFactory::new(LOWPOLY_PLAY_CONTROLLER_ID).action(action, args)
 }
 //#endregion 🔖️Constants
@@ -62,7 +62,7 @@ pub fn lowpoly_action(action: &str, args: Option<Value>) -> ActionDescriptor {
 /// accepting without a specific kind pin) rather than repointing at a stdio kind id, since choosing
 /// the RIGHT replacement wiring for a cross-plugin media port is a design decision beyond this
 /// migration's boundary — flagged under `sharedFileRequests` in this wave's report.
-pub fn lowpoly_io() -> semio_framework_plugin::AppIo {
+pub async fn lowpoly_io() -> semio_framework_plugin::AppIo {
     semio_framework_plugin::AppIo {
         document_schema: LOWPOLY_DOCUMENT_SCHEMA.into(),
         document_media_type: MediaType { class: MediaClass::ThreeD, form: MediaForm::Mesh },
@@ -105,7 +105,7 @@ thread_local! {
 //#region 🔖️SharedMeasures
 /// 🎛️ Collects every window-chrome measure from the app-level `🛠️options/*` shared by both windows
 /// (Model + UV expose an identical set — see this file's top-level doc comment).
-pub fn lowpoly_window_measures(config: &LowpolyConfig, labels: &LowpolyLabels) -> Vec<WindowMeasure> {
+pub async fn lowpoly_window_measures(config: &LowpolyConfig, labels: &LowpolyLabels) -> Vec<WindowMeasure> {
     use crate::editor::lowpoly::options;
     vec![
         options::show_edges::measure(config, labels),
@@ -120,7 +120,7 @@ pub fn lowpoly_window_measures(config: &LowpolyConfig, labels: &LowpolyLabels) -
 /// 🧮️ Shared leaf builder for one utility-param slider — used by the `🧲️snap` option and by
 /// `paint_utility_params_group` below.
 #[allow(clippy::too_many_arguments, reason = "one WindowMeasure::Slider literal per call site; a params struct would only move the same 8 fields around for this single builder")]
-pub fn utility_param_slider(id: &str, label: LabelText, key: &str, params: &Value, default: f64, min: f64, max: f64, step: f64) -> WindowMeasure {
+pub async fn utility_param_slider(id: &str, label: LabelText, key: &str, params: &Value, default: f64, min: f64, max: f64, step: f64) -> WindowMeasure {
     WindowMeasure::Slider { id: format!("lowpoly-measure-{id}"), label: Some(label.into()), value: utility_param_f64(params, key, default), min, max, step: Some(step), ready: None, loading: None, disabled: None, reveal: None, on_change: lowpoly_action("setUtilityParam", Some(json!({ "key": key }))), waiting: None }
 }
 
@@ -128,7 +128,7 @@ pub fn utility_param_slider(id: &str, label: LabelText, key: &str, params: &Valu
 /// hardness sliders, tagged `active_utility_id: Some(utility)` so `partition_window_measures` surfaces
 /// them in the Utility Options rail only while that exact utility is active. Both utilities stamp
 /// through the same `stamp_brush` path, so they share an identical param set.
-pub fn paint_utility_params_group(utility: &str, params: &Value, labels: &LowpolyLabels) -> WindowMeasure {
+pub async fn paint_utility_params_group(utility: &str, params: &Value, labels: &LowpolyLabels) -> WindowMeasure {
     let slider = |suffix: &str, label: LabelText, key: &str, default: f64, min: f64, max: f64, step: f64| WindowMeasure::Slider {
         id: format!("lowpoly-measure-{utility}-{suffix}"),
         label: Some(label.into()),
@@ -168,7 +168,7 @@ pub fn paint_utility_params_group(utility: &str, params: &Value, labels: &Lowpol
 //#region 🔖️SharedEngagement
 /// 🎛️ The window engagement (options/status/input/possible-engagements) shared byte-identically by both
 /// windows — see this file's top-level doc comment.
-pub fn lowpoly_window_engagement(view: LowpolyView<'_>, active_utility: &str, labels: &LowpolyLabels) -> WindowEngagement {
+pub async fn lowpoly_window_engagement(view: LowpolyView<'_>, active_utility: &str, labels: &LowpolyLabels) -> WindowEngagement {
     let config = view.config;
     WindowEngagement {
         session_active: Some(true),
@@ -310,15 +310,15 @@ impl ArtifactEditor for LowpolyPlayApp {
     const DIALECT: semio_framework_plugin::app::Dialect = crate::artifacts::lowpoly::LOWPOLY_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = LOWPOLY_DOCUMENT_SCHEMA;
 
-    fn app_schema() -> Option<::schema::AppSchemaDescriptor> {
+    async fn app_schema() -> Option<::schema::AppSchemaDescriptor> {
         Some(crate::editor::lowpoly::config::schema::app_schema_descriptor())
     }
 
-    fn initial_snapshot() -> LowpolySnapshot {
+    async fn initial_snapshot() -> LowpolySnapshot {
         crate::artifacts::lowpoly::schema::default_snapshot()
     }
 
-    fn io() -> Option<semio_framework_plugin::AppIo> {
+    async fn io() -> Option<semio_framework_plugin::AppIo> {
         Some(lowpoly_io())
     }
 
@@ -352,7 +352,7 @@ impl ArtifactEditor for LowpolyPlayApp {
     /// 🎞️ `mesh:in` round-trips a `mesh.document` payload into a `reset_document_effect`; `document:in`
     /// replicates the trait's default whole-pack import inline (overriding `import_media` shadows the
     /// default for every port on this app, not just the new one).
-    fn import_media(port: &str, media: &Media, _doc: &ArtifactView<'_, LowpolySnapshot>) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation, Self::DraftMutation>, MediaError> {
+    async fn import_media(port: &str, media: &Media, _doc: &ArtifactView<'_, LowpolySnapshot>) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation, Self::DraftMutation>, MediaError> {
         match port {
             "mesh:in" => {
                 let MediaPayload::Structured { json, .. } = &media.payload else {
@@ -376,7 +376,7 @@ impl ArtifactEditor for LowpolyPlayApp {
         }
     }
 
-    fn command_id(command: &LowpolyCommand) -> &'static str {
+    async fn command_id(command: &LowpolyCommand) -> &'static str {
         command.command_id()
     }
 
@@ -386,7 +386,7 @@ impl ArtifactEditor for LowpolyPlayApp {
     /// of its own), so this is the one seam by which those handlers (via `view::build_doc`/
     /// `session::mesh_edit`) see the framework-owned selection. See `🧭️view/🦀️component.rs`'s
     /// `🔖️MeshDomain` region for the id scheme.
-    fn handle(command: &LowpolyCommand, doc: &ArtifactView<'_, LowpolySnapshot>, cfg: &ConfigView<'_, LowpolyConfig>, interaction: &InteractionView<'_>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation, Self::DraftMutation>, Fault> {
+    async fn handle(command: &LowpolyCommand, doc: &ArtifactView<'_, LowpolySnapshot>, cfg: &ConfigView<'_, LowpolyConfig>, interaction: &InteractionView<'_>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation, Self::DraftMutation>, Fault> {
         let active = resolve_active_object_id(doc.snapshot, cfg.snapshot);
         let selection = selection_from_interaction(&active, interaction);
         LOWPOLY_SCRATCH.with(|scratch| {
@@ -395,7 +395,7 @@ impl ArtifactEditor for LowpolyPlayApp {
         })
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, LowpolySnapshot>, cfg: &ConfigView<'_, LowpolyConfig>) -> UiNode {
+    async fn render(body_key: &str, doc: &ArtifactView<'_, LowpolySnapshot>, cfg: &ConfigView<'_, LowpolyConfig>) -> UiNode {
         let projection = doc.snapshot;
         let config = cfg.snapshot;
         let labels = crate::editor::lowpoly::terminology::lowpoly_play_labels(config);
@@ -426,7 +426,7 @@ impl ArtifactEditor for LowpolyPlayApp {
         }
     }
 
-    fn window_engagements(doc: &ArtifactView<'_, LowpolySnapshot>, cfg: &ConfigView<'_, LowpolyConfig>) -> HashMap<String, WindowEngagement> {
+    async fn window_engagements(doc: &ArtifactView<'_, LowpolySnapshot>, cfg: &ConfigView<'_, LowpolyConfig>) -> HashMap<String, WindowEngagement> {
         let config = cfg.snapshot;
         let active_utility = config.active_utility_id.as_str();
         let labels = crate::editor::lowpoly::terminology::lowpoly_play_labels(config);
@@ -434,7 +434,7 @@ impl ArtifactEditor for LowpolyPlayApp {
         HashMap::from([(edit::windows::model::LOWPOLY_PLAY_WINDOW_MAIN.into(), engagement.clone()), (paint_mode::windows::uv::LOWPOLY_PLAY_WINDOW_UV.into(), engagement)])
     }
 
-    fn window_measures(_doc: &ArtifactView<'_, LowpolySnapshot>, cfg: &ConfigView<'_, LowpolyConfig>) -> HashMap<String, Vec<WindowMeasure>> {
+    async fn window_measures(_doc: &ArtifactView<'_, LowpolySnapshot>, cfg: &ConfigView<'_, LowpolyConfig>) -> HashMap<String, Vec<WindowMeasure>> {
         let config = cfg.snapshot;
         let labels = crate::editor::lowpoly::terminology::lowpoly_play_labels(config);
         let measures = lowpoly_window_measures(config, labels);
@@ -452,7 +452,7 @@ impl ArtifactEditor for LowpolyPlayApp {
 /// `"mesh:in"`/`"document:in"` above, `commands::fixture::{set_snapshot_json,set_fixture_json}`)
 /// builds this effect instead of an `Emit::mutations([...])`. The spr is a fresh, edit-free op-log
 /// for `scene` — a genesis envelope with no history to encode.
-pub fn reset_document_effect(scene: &LowpolySnapshot) -> semio_framework_plugin::Effect {
+pub async fn reset_document_effect(scene: &LowpolySnapshot) -> semio_framework_plugin::Effect {
     let pack = <LowpolySnapshot as ArtifactPack>::encode_pack(scene);
     let envelope = store::create_document_envelope::<LowpolySnapshot, LowpolyMutation>(LOWPOLY_DOCUMENT_SCHEMA, "lowpoly", scene.clone(), None);
     let spr = store::print_document_spr(&envelope).expect("lowpoly document spr encode is infallible for a fresh, edit-free envelope");
@@ -463,7 +463,7 @@ pub fn reset_document_effect(scene: &LowpolySnapshot) -> semio_framework_plugin:
 //#region 🔖️Manifest
 /// 🧰️ One transform/paint utility declaration (id/label/icon reused verbatim from the retired
 /// `utilities()` impl).
-fn lowpoly_utility(id: &str, label: impl Into<LocalizedLabel>, icon: &str, group: &str) -> UtilityDefinition {
+async fn lowpoly_utility(id: &str, label: impl Into<LocalizedLabel>, icon: &str, group: &str) -> UtilityDefinition {
     UtilityDefinition { group: Some(group.into()), category: Some(UtilityCategory::Utilities), ..UtilityDefinition::new(id, label, icon) }
 }
 
@@ -478,7 +478,7 @@ fn lowpoly_utility(id: &str, label: impl Into<LocalizedLabel>, icon: &str, group
 /// calls this app used to make are DROPPED here, not ported — the subset's own `📚️examples/🎬️demo`
 /// facet is the intended replacement mechanism per the pilot's report, not confirmed with the
 /// coordinator by this packet.
-pub fn create_lowpoly_app() -> semio_framework_plugin::AppDefinition {
+pub async fn create_lowpoly_app() -> semio_framework_plugin::AppDefinition {
     Editor::builder(crate::artifacts::lowpoly::LOWPOLY_DIALECT)
             .document(["semio", "lowpoly"])
             .artifact_kind(artifact_kind())
@@ -632,25 +632,25 @@ pub(crate) mod testkit {
     /// unchanged for this ticket) still take `fn() -> App` — `create_lowpoly_app` now returns
     /// `AppDefinition` (contract §2.4). This tiny local wrapper is the documented bridge (pilot report
     /// `📓️w2-cad-report.md` recipe step 7), not a framework fix owed by this packet.
-    fn lowpoly_manifest_for_testkit() -> App {
+    async fn lowpoly_manifest_for_testkit() -> App {
         App { definition: create_lowpoly_app(), examples: Vec::new() }
     }
 
     /// 🧪️ A bare app instance — no `AppActionRegistry`, so undeclared internal commands dispatch freely.
-    pub fn app() -> LowpolyApp {
+    pub async fn app() -> LowpolyApp {
         new_app::<EditorApp<LowpolyPlayApp>>()
     }
 
     /// 🧪️ An app wired to the real manifest registry — enforces View/Shell kind discipline.
-    pub fn app_with_registry() -> LowpolyApp {
+    pub async fn app_with_registry() -> LowpolyApp {
         new_app_with_registry::<EditorApp<LowpolyPlayApp>>(lowpoly_manifest_for_testkit)
     }
 
-    pub fn dispatch(app: &mut LowpolyApp, command: LowpolyCommand) -> InvocationResult {
+    pub async fn dispatch(app: &mut LowpolyApp, command: LowpolyCommand) -> InvocationResult {
         app.dispatch_typed(command, &meta("local")).expect("dispatch")
     }
 
-    pub fn render(app: &mut LowpolyApp, body_key: &str) -> String {
+    pub async fn render(app: &mut LowpolyApp, body_key: &str) -> String {
         serde_json::to_string(&app.render(body_key, None, &ViewModel::default()).expect("render")).expect("render json")
     }
 
@@ -659,7 +659,7 @@ pub(crate) mod testkit {
     /// requires `app_with_registry()` (a bare `app()` has no declared interaction domains to select
     /// against). `object_id`/`face_id` address the same row id the Document panel tree renders (see
     /// `🧭️view/🦀️component.rs`'s `🔖️MeshDomain` region).
-    pub fn select_face(app: &mut LowpolyApp, object_id: &str, face_id: u32) {
+    pub async fn select_face(app: &mut LowpolyApp, object_id: &str, face_id: u32) {
         let target_id = crate::editor::lowpoly::view::document_target_row_id(object_id, 0, "face", face_id);
         let targets = serde_json::to_string(&serde_json::json!([{ "granularity": "face", "id": target_id }])).expect("targets json");
         app.handle_action("interactionSelect", Some(&serde_json::json!({ "domainId": crate::editor::lowpoly::view::MESH_INTERACTION_DOMAIN, "targets": targets, "merge": "replace" })), &meta("test")).expect("interactionSelect");
@@ -678,7 +678,7 @@ mod tests {
     /// 🏷️ Every declared manifest action id must be reachable as exactly one command row, and every row's
     /// wire keyword must be distinct — the cross-cutting invariant `app_commands!` is there to hold.
     #[test]
-    fn command_ids_are_unique() {
+    async fn command_ids_are_unique() {
         let commands = every_command();
         let ids: Vec<&str> = commands.iter().map(|command| command.command_id()).collect();
         let mut sorted = ids.clone();
@@ -690,7 +690,7 @@ mod tests {
 
     /// ⚖️ LAW: text and binary are two projections of the same command, for every single row.
     #[test]
-    fn every_command_round_trips_through_text_and_binary() {
+    async fn every_command_round_trips_through_text_and_binary() {
         for command in every_command() {
             semio_framework_os_kernel::os_store::test_support::assert_op_text_binary_equivalence(&command);
         }
@@ -698,7 +698,7 @@ mod tests {
 
     /// ⚖️ LAW: the leading token of every printed op line is the row's `dsl` wire keyword.
     #[test]
-    fn every_printed_op_line_starts_with_the_rows_wire_keyword() {
+    async fn every_printed_op_line_starts_with_the_rows_wire_keyword() {
         for command in every_command() {
             let printed = protocol::OpText::print_op(&command);
             let first_token = printed.split(' ').next().unwrap_or_default();
@@ -707,7 +707,7 @@ mod tests {
     }
 
     /// 🧾️ One representative value per row, in declaration (= binary ordinal) order.
-    pub(super) fn every_command() -> Vec<LowpolyCommand> {
+    pub(super) async fn every_command() -> Vec<LowpolyCommand> {
         vec![
             LowpolyCommand::AddPrimitive(add_primitive::AddPrimitive { kind: Some("box".into()) }),
             LowpolyCommand::PatchObject(patch_object::PatchObject { object_id: "obj-1".into(), field: "name".into(), value_json: Some("\"Renamed\"".into()) }),
@@ -762,7 +762,7 @@ mod tests {
 
     //#region 🔖️ManifestSanity
     #[test]
-    fn the_manifest_stitches_every_taxonomy_node() {
+    async fn the_manifest_stitches_every_taxonomy_node() {
         let json = serde_json::to_string(&create_lowpoly_app()).expect("app definition json");
         for id in [edit::windows::model::LOWPOLY_PLAY_WINDOW_MAIN, paint_mode::windows::uv::LOWPOLY_PLAY_WINDOW_UV] {
             assert!(json.contains(id), "window kind {id} missing from the manifest: {json}");
@@ -779,7 +779,7 @@ mod tests {
     /// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: the "mesh" domain is declared and
     /// scoped to the Model window, and the framework auto-injects its six interaction actions.
     #[test]
-    fn the_mesh_interaction_domain_is_declared_and_scoped_to_the_model_window() {
+    async fn the_mesh_interaction_domain_is_declared_and_scoped_to_the_model_window() {
         let definition = create_lowpoly_app();
         let mesh = definition.interactions.iter().find(|interaction| interaction.id == MESH_INTERACTION_DOMAIN).expect("mesh domain declared");
         assert_eq!(mesh.granularities.iter().map(|granularity| granularity.id.as_str()).collect::<Vec<_>>(), vec!["object", "vertex", "edge", "face"]);
@@ -797,7 +797,7 @@ mod tests {
 
     //#region 🔖️CrossCutting
     #[test]
-    fn two_instances_converge_disjoint_edits_via_backbone() {
+    async fn two_instances_converge_disjoint_edits_via_backbone() {
         testkit::assert_two_instances_converge::<EditorApp<LowpolyPlayApp>, _>(
             "mem://lowpoly-convergence",
             LowpolyCommand::PatchObject(patch_object::PatchObject { object_id: "obj-1".into(), field: "name".into(), value_json: Some(serde_json::to_string("Renamed By A").unwrap()) }),
@@ -807,12 +807,12 @@ mod tests {
     }
 
     #[test]
-    fn ingest_operations_is_idempotent() {
+    async fn ingest_operations_is_idempotent() {
         testkit::assert_ingest_idempotent::<EditorApp<LowpolyPlayApp>, _>(LowpolyCommand::PatchObject(patch_object::PatchObject { object_id: "obj-1".into(), field: "name".into(), value_json: Some(serde_json::to_string("Hero").unwrap()) }), |app| app.snapshot().expect("projection"));
     }
 
     #[test]
-    fn an_unknown_body_key_renders_a_diagnostic_instead_of_panicking() {
+    async fn an_unknown_body_key_renders_a_diagnostic_instead_of_panicking() {
         use crate::editor::lowpoly::testkit::render;
         let mut a = app();
         assert!(render(&mut a, "lowpoly.play.nope").contains("Unknown body"));
@@ -821,7 +821,7 @@ mod tests {
 
     //#region 🔖️MediaPorts
     #[test]
-    fn export_media_mesh_out_produces_mesh_document_payload() {
+    async fn export_media_mesh_out_produces_mesh_document_payload() {
         let mut a: LowpolyApp = app();
         let media = semio_framework_plugin::resolve_ready(a.export_media("mesh:out")).expect("export mesh:out");
         assert_eq!(media.media_type, MediaType { class: MediaClass::ThreeD, form: MediaForm::Mesh });
@@ -835,7 +835,7 @@ mod tests {
     /// `Effect::LoadDocument`, outside undo history) — whole-document replace has no replacement
     /// mutation per `📓️taxonomy.md`, so this is an effect, not an `artifact_mutations` entry.
     #[test]
-    fn import_media_mesh_in_round_trips_into_a_reset_document_effect() {
+    async fn import_media_mesh_in_round_trips_into_a_reset_document_effect() {
         let mesh = semio_framework_plugin::mesh_from_kind("box");
         let mesh_document = crate::artifacts::lowpoly::schema::mesh_document_from_mesh(&mesh).expect("mesh document");
         let json = serde_json::to_string(&mesh_document).expect("mesh document json");
@@ -855,7 +855,7 @@ mod tests {
 
     //#region 🔖️ContextMenuRegistry
     #[test]
-    fn registry_wired_app_dispatches_add_primitive() {
+    async fn registry_wired_app_dispatches_add_primitive() {
         let mut a = app_with_registry();
         crate::editor::lowpoly::testkit::dispatch(&mut a, LowpolyCommand::AddPrimitive(add_primitive::AddPrimitive { kind: Some("plane".into()) }));
         assert_eq!(a.snapshot().expect("projection").objects.len(), 2);

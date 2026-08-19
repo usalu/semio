@@ -31,19 +31,19 @@ pub struct GifArtifact {
 }
 
 impl Default for GifArtifact {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self::from_snapshot(GifSnapshot::default())
     }
 }
 
 impl GifArtifact {
-    pub fn to_snapshot(&self) -> GifSnapshot {
+    pub async fn to_snapshot(&self) -> GifSnapshot {
         GifSnapshot { schema: self.schema.clone(), width: self.width, height: self.height, gct: self.gct.clone(), background_color_index: self.background_color_index, pixel_aspect_ratio: self.pixel_aspect_ratio, images: self.images.clone() }
     }
-    pub fn from_snapshot(snapshot: GifSnapshot) -> Self {
+    pub async fn from_snapshot(snapshot: GifSnapshot) -> Self {
         Self { schema: snapshot.schema, width: snapshot.width, height: snapshot.height, gct: snapshot.gct, background_color_index: snapshot.background_color_index, pixel_aspect_ratio: snapshot.pixel_aspect_ratio, images: snapshot.images }
     }
-    pub fn set_snapshot(&mut self, snapshot: GifSnapshot) {
+    pub async fn set_snapshot(&mut self, snapshot: GifSnapshot) {
         self.schema = snapshot.schema;
         self.width = snapshot.width;
         self.height = snapshot.height;
@@ -54,7 +54,7 @@ impl GifArtifact {
     }
 }
 
-pub fn gif_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
+pub async fn gif_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
     schema::ArtifactSchemaDescriptor {
         id: "s.stdio.gif",
         artifact: schema::FacetLeaves {
@@ -104,27 +104,27 @@ pub mod derived_construction {
         type Snapshot = GifSnapshot;
         type Mutation = GifMutation;
         type Diff = GifDiff;
-        fn empty() -> Self {
+        async fn empty() -> Self {
             Self { snapshot: GifSnapshot::default(), diagnostics: Vec::new() }
         }
-        fn from_snapshot(snapshot: Self::Snapshot) -> Self {
+        async fn from_snapshot(snapshot: Self::Snapshot) -> Self {
             Self { snapshot, diagnostics: Vec::new() }
         }
-        fn from_text(text: &str) -> Result<Self, store::TextError> {
+        async fn from_text(text: &str) -> Result<Self, store::TextError> {
             Ok(Self::from_snapshot(<GifSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
-        fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
+        async fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
             Ok(Self::from_snapshot(<GifSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
         }
-        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
+        async fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let diff = crate::artifacts::gif::standards::v87a::subsets::any::schema::mutations::apply_gif_mutation(&mut self.snapshot, &mutation);
             (self, diff)
         }
-        fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
+        async fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
             self.snapshot = <GifDiff as protocol::MutationDiff<GifSnapshot>>::apply(&diff, &self.snapshot)?;
             Ok(self)
         }
-        fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
+        async fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
             if self.diagnostics.is_empty() {
                 Ok(self.snapshot)
             } else {
@@ -158,11 +158,11 @@ pub mod derived_analysis {
         type Parts = GifParts;
         const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.gif", standard: StandardId("87a"), subset: SubsetId("*") };
 
-        fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
+        async fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
             crate::artifacts::gif::standards::v87a::engine::sniff_magic(source, b"GIF87a")
         }
 
-        fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
+        async fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
             let mut parts = GifParts::default();
             let mut diagnostics = Vec::new();
             let mut confidence = IoConfidence::High;
@@ -214,7 +214,7 @@ semio_framework_plugin::derive_artifact_facets!(
 // cluster (`crate::artifacts::gif::engine::register()` is one of stdio's 10 deliberate imperative
 // plugin-root calls — untouched, reached via this standard's own inline `engine` barrel) +
 // `io_registry` all moved to `../🚪️io`; tests moved beside what they now test.
-pub fn empty_gif_snapshot() -> GifSnapshot {
+pub async fn empty_gif_snapshot() -> GifSnapshot {
     GifSnapshot::default()
 }
 
@@ -223,7 +223,7 @@ pub fn empty_gif_snapshot() -> GifSnapshot {
 /// by `conformance_laws` (in `../🚪️io`'s own tests) and by the shipped `.dsl.semio`/
 /// `.pack.semio` fixtures (`../📚️examples/🎬️demo/🖼️assets/`), matching png's own
 /// `demo_png_snapshot()` precedent.
-pub fn demo_gif_snapshot() -> GifSnapshot {
+pub async fn demo_gif_snapshot() -> GifSnapshot {
     use crate::artifacts::gif::standards::v87a::subsets::any::schema::snapshot::GifRgb;
     let gct = GifColorTable { sorted: false, colors: vec![GifRgb { r: 0, g: 0, b: 0 }, GifRgb { r: 255, g: 255, b: 255 }] };
     let image_a = GifImage { left: 0, top: 0, width: 2, height: 2, interlace: false, lct: None, indices: vec![0, 1, 1, 0] };

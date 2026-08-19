@@ -12,7 +12,7 @@ pub struct GltfBindSceneRootNodePayload {
     pub position: usize,
 }
 
-pub fn validate(payload: &GltfBindSceneRootNodePayload, base: &GltfSnapshot) -> Result<(), GltfTopLevelMutationRejection> {
+pub async fn validate(payload: &GltfBindSceneRootNodePayload, base: &GltfSnapshot) -> Result<(), GltfTopLevelMutationRejection> {
     checked_index(payload.scene, base.document.scenes.len(), "document/scenes")?;
     checked_index(payload.node, base.document.nodes.len(), "document/nodes")?;
     checked_position(payload.position, base.document.scenes[payload.scene].nodes.len(), "document/scenes/nodes")?;
@@ -22,7 +22,7 @@ pub fn validate(payload: &GltfBindSceneRootNodePayload, base: &GltfSnapshot) -> 
     Ok(())
 }
 
-pub fn apply(payload: &GltfBindSceneRootNodePayload, base: &GltfSnapshot) -> Result<GltfSnapshot, GltfTopLevelMutationRejection> {
+pub async fn apply(payload: &GltfBindSceneRootNodePayload, base: &GltfSnapshot) -> Result<GltfSnapshot, GltfTopLevelMutationRejection> {
     validate(payload, base)?;
     let mut next = base.clone();
     next.document.scenes[payload.scene].nodes.insert(payload.position, payload.node);

@@ -8,7 +8,7 @@ use crate::artifacts::writer::WriterSnapshot;
 /// `🔺️diff/📝️text` (real handcrafted construction, never apply-then-capture; that builder mints a
 /// new content-addressed `document` child handle and seeds the working-scene cache with the real
 /// text, rather than diffing character-by-character — see that file's `🔖️Builders` doc comment).
-pub fn diff(payload: &EditText, base: &WriterSnapshot) -> protocol::MutationOutcome<WriterDiff> {
+pub async fn diff(payload: &EditText, base: &WriterSnapshot) -> protocol::MutationOutcome<WriterDiff> {
     if crate::artifacts::writer::writer_text(base) == payload.text {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", "Document text is unchanged.".to_string());
     }

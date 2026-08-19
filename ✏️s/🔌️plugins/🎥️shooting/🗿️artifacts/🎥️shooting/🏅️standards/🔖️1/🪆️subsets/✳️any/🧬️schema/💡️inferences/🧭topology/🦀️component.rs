@@ -24,7 +24,7 @@ pub struct ShootingTopology {
 }
 
 /// 🧮️ Computes [`ShootingTopology`] from a shooting snapshot's saved cameras + shots.
-pub fn compute_shooting_topology(snapshot: &ShootingSnapshot) -> ShootingTopology {
+pub async fn compute_shooting_topology(snapshot: &ShootingSnapshot) -> ShootingTopology {
     let camera_ids: BTreeSet<&String> = snapshot.saved_cameras.iter().map(|camera| &camera.id).collect();
 
     let mut topo_order = Vec::with_capacity(snapshot.saved_cameras.len() + snapshot.shots.len());
@@ -58,16 +58,16 @@ mod tests {
     use super::*;
     use crate::artifacts::shooting::{ShootingCamera, ShootingSavedCamera, ShootingShot};
 
-    fn saved_camera(id: &str) -> ShootingSavedCamera {
+    async fn saved_camera(id: &str) -> ShootingSavedCamera {
         ShootingSavedCamera { id: id.into(), label: id.into(), camera: ShootingCamera::default() }
     }
 
-    fn shot(id: &str, camera_id: Option<&str>) -> ShootingShot {
+    async fn shot(id: &str, camera_id: Option<&str>) -> ShootingShot {
         ShootingShot { id: id.into(), label: id.into(), width: 1024, height: 768, format: "png".into(), shape: "rectangle".into(), background: None, camera_id: camera_id.map(Into::into) }
     }
 
     #[test]
-    fn shot_referencing_a_real_camera_sits_one_level_below_it() {
+    async fn shot_referencing_a_real_camera_sits_one_level_below_it() {
         let snapshot = ShootingSnapshot { saved_cameras: vec![saved_camera("cam-1")], shots: vec![shot("shot-1", Some("cam-1"))], ..ShootingSnapshot::default() };
         let topology = compute_shooting_topology(&snapshot);
         assert_eq!(topology.depth.get("cam-1"), Some(&0));
@@ -77,14 +77,14 @@ mod tests {
     }
 
     #[test]
-    fn shot_with_a_dangling_camera_ref_stays_a_root() {
+    async fn shot_with_a_dangling_camera_ref_stays_a_root() {
         let snapshot = ShootingSnapshot { saved_cameras: Vec::new(), shots: vec![shot("shot-1", Some("missing-cam"))], ..ShootingSnapshot::default() };
         let topology = compute_shooting_topology(&snapshot);
         assert_eq!(topology.depth.get("shot-1"), Some(&0));
     }
 
     #[test]
-    fn empty_snapshot_is_the_vacuous_topology() {
+    async fn empty_snapshot_is_the_vacuous_topology() {
         let topology = compute_shooting_topology(&ShootingSnapshot::default());
         assert!(topology.topo_order.is_empty());
         assert!(topology.cycle_free);

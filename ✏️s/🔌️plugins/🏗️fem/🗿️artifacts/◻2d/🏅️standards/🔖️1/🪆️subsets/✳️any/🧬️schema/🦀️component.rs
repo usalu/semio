@@ -32,7 +32,7 @@ pub struct Fem2dArtifact {
 
 //#region 🔖️Conversions
 impl Default for Fem2dArtifact {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self {
             nodes: Default::default(),
             elements: Default::default(),
@@ -56,14 +56,14 @@ impl Default for Fem2dArtifact {
 
 impl Fem2dArtifact {
     /// 📸️ Persisted subset.
-    pub fn to_snapshot(&self) -> crate::artifacts::fem2d::Fem2dSnapshot {
+    pub async fn to_snapshot(&self) -> crate::artifacts::fem2d::Fem2dSnapshot {
         crate::artifacts::fem2d::Fem2dSnapshot {
             nodes: self.nodes.clone(), elements: self.elements.clone(), regions: self.regions.clone(), materials: self.materials.clone(), sections: self.sections.clone(), supports: self.supports.clone(), load_cases: self.load_cases.clone(), combinations: self.combinations.clone(), analysis: self.analysis.clone(),
         }
     }
 
     /// 🧬️ Builds a full artifact from a snapshot, leaving UI/preview fields at defaults.
-    pub fn from_snapshot(snapshot: crate::artifacts::fem2d::Fem2dSnapshot) -> Self {
+    pub async fn from_snapshot(snapshot: crate::artifacts::fem2d::Fem2dSnapshot) -> Self {
         Self {
             nodes: snapshot.nodes, elements: snapshot.elements, regions: snapshot.regions, materials: snapshot.materials, sections: snapshot.sections, supports: snapshot.supports, load_cases: snapshot.load_cases, combinations: snapshot.combinations, analysis: snapshot.analysis,
             ..Self::default()
@@ -71,7 +71,7 @@ impl Fem2dArtifact {
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
-    pub fn set_snapshot(&mut self, snapshot: crate::artifacts::fem2d::Fem2dSnapshot) {
+    pub async fn set_snapshot(&mut self, snapshot: crate::artifacts::fem2d::Fem2dSnapshot) {
         self.nodes = snapshot.nodes;
         self.elements = snapshot.elements;
         self.regions = snapshot.regions;
@@ -87,7 +87,7 @@ impl Fem2dArtifact {
 
 //#region 🔖️Descriptor
 /// 🧬️ Descriptor for `s.fem.fem2d` — twenty handcrafted schema leaves.
-pub fn fem2d_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
+pub async fn fem2d_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
     schema::ArtifactSchemaDescriptor {
         id: "s.fem.fem2d",
         artifact: schema::FacetLeaves {
@@ -136,15 +136,15 @@ pub mod derived_construction {
         type Snapshot = Fem2dSnapshot;
         type Mutation = Fem2dMutation;
         type Diff = Fem2dDiff;
-        fn empty() -> Self { Self { snapshot: Fem2dSnapshot::default(), diagnostics: Vec::new() } }
-        fn from_snapshot(snapshot: Self::Snapshot) -> Self { Self { snapshot, diagnostics: Vec::new() } }
-        fn from_text(text: &str) -> Result<Self, store::TextError> {
+        async fn empty() -> Self { Self { snapshot: Fem2dSnapshot::default(), diagnostics: Vec::new() } }
+        async fn from_snapshot(snapshot: Self::Snapshot) -> Self { Self { snapshot, diagnostics: Vec::new() } }
+        async fn from_text(text: &str) -> Result<Self, store::TextError> {
             Ok(Self::from_snapshot(<Fem2dSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
-        fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
+        async fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
             Ok(Self::from_snapshot(<Fem2dSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
         }
-        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
+        async fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let outcome = <Self::Mutation as protocol::Mutation<Self::Snapshot>>::diff(&mutation, &self.snapshot);
             match <Self::Diff as protocol::MutationDiff<Self::Snapshot>>::apply(outcome.diff(), &self.snapshot) {
                 Ok(snapshot) => self.snapshot = snapshot,
@@ -156,7 +156,7 @@ pub mod derived_construction {
             }
             (self, outcome)
         }
-        fn absorb(
+        async fn absorb(
             mut self,
             diff: Self::Diff,
         ) -> protocol::MutationApplyResult<Self> {
@@ -164,7 +164,7 @@ pub mod derived_construction {
             self.snapshot = snapshot;
             Ok(self)
         }
-        fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
+        async fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
             if self.diagnostics.is_empty() { Ok(self.snapshot) } else { Err(self.diagnostics) }
         }
     }
@@ -174,7 +174,7 @@ pub use derived_construction::*;
 
 //#region 🌱️DerivedEmpty
 /// 🌱️ An empty `Fem2dSnapshot` — the app's genesis document and every test fixture's blank baseline.
-pub fn empty_fem2d_snapshot() -> crate::artifacts::fem2d::Fem2dSnapshot {
+pub async fn empty_fem2d_snapshot() -> crate::artifacts::fem2d::Fem2dSnapshot {
     crate::artifacts::fem2d::Fem2dSnapshot::default()
 }
 //#endregion 🌱️DerivedEmpty
@@ -195,11 +195,11 @@ pub mod derived_analysis {
         type Parts = Fem2dParts;
         const DIALECT: Dialect = Dialect { artifact_kind: "s.fem2d", standard: StandardId("1"), subset: SubsetId("*") };
 
-        fn sniff(_source: &AnalyzeSource<'_>) -> IoConfidence {
+        async fn sniff(_source: &AnalyzeSource<'_>) -> IoConfidence {
             IoConfidence::Medium
         }
 
-        fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
+        async fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
             let mut parts = Fem2dParts::default();
             let mut diagnostics = Vec::new();
             let mut confidence = IoConfidence::High;

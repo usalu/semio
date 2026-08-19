@@ -6,7 +6,7 @@ use crate::artifacts::en1996::mutations::En1996Mutation;
 use crate::artifacts::en1996::En1996Snapshot;
 
 //#region 🔖️Inverse
-pub fn inverse(_payload: &ChangeAreaMm2, base: &En1996Snapshot) -> Vec<En1996Mutation> {
+pub async fn inverse(_payload: &ChangeAreaMm2, base: &En1996Snapshot) -> Vec<En1996Mutation> {
     vec![En1996Mutation::ChangeAreaMm2(ChangeAreaMm2 { new_area_mm2: base.area_mm2.clone() })]
 }
 //#endregion 🔖️Inverse

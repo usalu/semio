@@ -7,11 +7,11 @@ use semio_s_plugin_stdio::artifacts::json::schema::snapshot::{JsonSnapshot, Json
 use semio_s_plugin_stdio::artifacts::json::STDIO_JSON_DOCUMENT_SCHEMA;
 use std::str::FromStr;
 
-pub fn register() {}
+pub async fn register() {}
 
 /// 🔁️ Structural `JsonValue -> serde_json::Value` conversion (reverse of the export leaf's
 /// converter — see this file's module doc comment).
-fn json_value_to_serde(value: &JsonValue) -> serde_json::Value {
+async fn json_value_to_serde(value: &JsonValue) -> serde_json::Value {
     match value {
         JsonValue::Null => serde_json::Value::Null,
         JsonValue::Bool { value } => serde_json::Value::Bool(*value),
@@ -22,11 +22,11 @@ fn json_value_to_serde(value: &JsonValue) -> serde_json::Value {
     }
 }
 
-pub fn deserialize(from: &JsonSnapshot) -> Result<LayoutSnapshot, store::TextError> {
+pub async fn deserialize(from: &JsonSnapshot) -> Result<LayoutSnapshot, store::TextError> {
     let _ = STDIO_JSON_DOCUMENT_SCHEMA;
     serde_json::from_value(from.to_serde_value()).map_err(|e| store::TextError::new(format!("layout<-json: {e}"), dsl::TextSpan::at(1, 1)))
 }
 
-pub fn deserialize_text(text: &str) -> Result<LayoutSnapshot, store::TextError> {
+pub async fn deserialize_text(text: &str) -> Result<LayoutSnapshot, store::TextError> {
     <LayoutSnapshot as store::ArtifactDsl>::parse_dsl(text)
 }

@@ -35,7 +35,7 @@ pub struct NamedTripleDiff<K, D, T> {
 }
 
 impl<K, D, T> Default for NamedTripleDiff<K, D, T> {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self { removed: Vec::new(), modified: Vec::new(), added: Vec::new() }
     }
 }
@@ -47,7 +47,7 @@ pub struct NamedModified<K, D> {
     pub diff: D,
 }
 
-fn between_named<K, T, D>(base: &[T], other: &[T], key_of: impl Fn(&T) -> K, diff_item: impl Fn(&T, &T) -> Option<D>) -> Option<NamedTripleDiff<K, D, T>>
+async fn between_named<K, T, D>(base: &[T], other: &[T], key_of: impl Fn(&T) -> K, diff_item: impl Fn(&T, &T) -> Option<D>) -> Option<NamedTripleDiff<K, D, T>>
 where
     K: PartialEq + Clone,
     T: Clone + PartialEq,
@@ -80,7 +80,7 @@ where
     }
 }
 
-fn apply_named<K, T, D>(items: &mut Vec<T>, diff: &NamedTripleDiff<K, D, T>, key_of: impl Fn(&T) -> K, apply_item: impl Fn(&mut T, &D))
+async fn apply_named<K, T, D>(items: &mut Vec<T>, diff: &NamedTripleDiff<K, D, T>, key_of: impl Fn(&T) -> K, apply_item: impl Fn(&mut T, &D))
 where
     K: PartialEq + Clone,
     T: Clone,
@@ -96,7 +96,7 @@ where
     }
 }
 
-fn validate_named<K, T, D>(items: &[T], diff: &NamedTripleDiff<K, D, T>, key_of: impl Fn(&T) -> K) -> MutationApplyResult<()>
+async fn validate_named<K, T, D>(items: &[T], diff: &NamedTripleDiff<K, D, T>, key_of: impl Fn(&T) -> K) -> MutationApplyResult<()>
 where
     K: PartialEq + Clone,
     T: Clone,
@@ -132,7 +132,7 @@ where
     Ok(())
 }
 
-fn inverse_named<K, T, D>(base_items: &[T], diff: &NamedTripleDiff<K, D, T>, key_of: impl Fn(&T) -> K, inverse_item: impl Fn(&T, &D) -> D) -> NamedTripleDiff<K, D, T>
+async fn inverse_named<K, T, D>(base_items: &[T], diff: &NamedTripleDiff<K, D, T>, key_of: impl Fn(&T) -> K, inverse_item: impl Fn(&T, &D) -> D) -> NamedTripleDiff<K, D, T>
 where
     K: PartialEq + Clone,
     T: Clone,
@@ -156,7 +156,7 @@ where
 /// 🧮️ Name-keyed absorb — identity is the KEY (not position): a `d2`-removal of a `d1`-added key
 /// annihilates the add; a `d2`-modify of a `d1`-added key patches into the carried payload;
 /// everything else composes directly on the shared key space.
-fn absorb_named<K, T, D>(d1: NamedTripleDiff<K, D, T>, d2: NamedTripleDiff<K, D, T>, key_of: impl Fn(&T) -> K, absorb_item: impl Fn(D, D) -> D, apply_item: impl Fn(&mut T, &D)) -> NamedTripleDiff<K, D, T>
+async fn absorb_named<K, T, D>(d1: NamedTripleDiff<K, D, T>, d2: NamedTripleDiff<K, D, T>, key_of: impl Fn(&T) -> K, absorb_item: impl Fn(D, D) -> D, apply_item: impl Fn(&mut T, &D)) -> NamedTripleDiff<K, D, T>
 where
     K: PartialEq + Clone,
     T: Clone,
@@ -301,24 +301,24 @@ pub struct BcfPartDiff {
 /// 🧭️ Lowers a per-topic leaf diff into a full `BcfDiff` (mirrors svg's `diff_at_path` /
 /// docx's `wrap_body_diff`, specialized to this artifact's fixed two-level guid nesting instead of
 /// a generic path — bcf's tree never grows deeper than topic -> {comment,viewpoint}).
-pub fn wrap_topic_diff(guid: &str, diff: BcfTopicDiff) -> BcfDiff {
+pub async fn wrap_topic_diff(guid: &str, diff: BcfTopicDiff) -> BcfDiff {
     BcfDiff { version: None, topics: Some(BcfTopicsDiff { removed: Vec::new(), modified: vec![NamedModified { key: guid.to_string(), diff }], added: Vec::new() }), parts: None }
 }
 
 /// 🧭️ Lowers a per-comment leaf diff (inside topic `topic_guid`) into a full `BcfDiff`.
-pub fn wrap_comment_diff(topic_guid: &str, comment_guid: &str, diff: BcfCommentDiff) -> BcfDiff {
+pub async fn wrap_comment_diff(topic_guid: &str, comment_guid: &str, diff: BcfCommentDiff) -> BcfDiff {
     wrap_topic_diff(topic_guid, BcfTopicDiff { comments: Some(BcfCommentsDiff { removed: Vec::new(), modified: vec![NamedModified { key: comment_guid.to_string(), diff }], added: Vec::new() }), ..Default::default() })
 }
 
 /// 🧭️ Lowers a per-viewpoint leaf diff (inside topic `topic_guid`) into a full `BcfDiff`.
-pub fn wrap_viewpoint_diff(topic_guid: &str, viewpoint_guid: &str, diff: BcfViewpointDiff) -> BcfDiff {
+pub async fn wrap_viewpoint_diff(topic_guid: &str, viewpoint_guid: &str, diff: BcfViewpointDiff) -> BcfDiff {
     wrap_topic_diff(topic_guid, BcfTopicDiff { viewpoints: Some(BcfViewpointsDiff { removed: Vec::new(), modified: vec![NamedModified { key: viewpoint_guid.to_string(), diff }], added: Vec::new() }), ..Default::default() })
 }
 //#endregion 🔖️WrapHelpers
 
 //#region 🔖️Apply
 impl MutationDiff<BcfSnapshot> for BcfDiff {
-    fn apply(&self, base: &BcfSnapshot) -> MutationApplyResult<BcfSnapshot> {
+    async fn apply(&self, base: &BcfSnapshot) -> MutationApplyResult<BcfSnapshot> {
         validate_bcf_diff(self, base)?;
         let mut next = base.clone();
         if let Some(v) = &self.version {
@@ -333,7 +333,7 @@ impl MutationDiff<BcfSnapshot> for BcfDiff {
         Ok(next)
     }
 
-    fn absorb(&mut self, other: Self) {
+    async fn absorb(&mut self, other: Self) {
         if other.version.is_some() {
             self.version = other.version;
         }
@@ -350,7 +350,7 @@ impl MutationDiff<BcfSnapshot> for BcfDiff {
     }
 }
 
-fn validate_bcf_diff(diff: &BcfDiff, base: &BcfSnapshot) -> MutationApplyResult<()> {
+async fn validate_bcf_diff(diff: &BcfDiff, base: &BcfSnapshot) -> MutationApplyResult<()> {
     if let Some(topics) = &diff.topics {
         validate_named(&base.topics, topics, |topic| topic.guid.clone())?;
         for modified in &topics.modified {
@@ -365,7 +365,7 @@ fn validate_bcf_diff(diff: &BcfDiff, base: &BcfSnapshot) -> MutationApplyResult<
     Ok(())
 }
 
-fn validate_topic_diff(base: &BcfTopic, diff: &BcfTopicDiff) -> MutationApplyResult<()> {
+async fn validate_topic_diff(base: &BcfTopic, diff: &BcfTopicDiff) -> MutationApplyResult<()> {
     if let Some(comments) = &diff.comments {
         validate_named(&base.comments, comments, |comment| comment.guid.clone())?;
     }
@@ -375,7 +375,7 @@ fn validate_topic_diff(base: &BcfTopic, diff: &BcfTopicDiff) -> MutationApplyRes
     Ok(())
 }
 
-fn apply_topic(topic: &mut BcfTopic, diff: &BcfTopicDiff) {
+async fn apply_topic(topic: &mut BcfTopic, diff: &BcfTopicDiff) {
     if let Some(v) = &diff.title {
         topic.title = v.clone();
     }
@@ -405,7 +405,7 @@ fn apply_topic(topic: &mut BcfTopic, diff: &BcfTopicDiff) {
     }
 }
 
-fn apply_comment(comment: &mut BcfComment, diff: &BcfCommentDiff) {
+async fn apply_comment(comment: &mut BcfComment, diff: &BcfCommentDiff) {
     if let Some(v) = &diff.date {
         comment.date = v.clone();
     }
@@ -420,7 +420,7 @@ fn apply_comment(comment: &mut BcfComment, diff: &BcfCommentDiff) {
     }
 }
 
-fn apply_viewpoint(vp: &mut BcfViewpoint, diff: &BcfViewpointDiff) {
+async fn apply_viewpoint(vp: &mut BcfViewpoint, diff: &BcfViewpointDiff) {
     if let Some(v) = &diff.camera {
         vp.camera = v.clone();
     }
@@ -432,7 +432,7 @@ fn apply_viewpoint(vp: &mut BcfViewpoint, diff: &BcfViewpointDiff) {
     }
 }
 
-fn apply_part(part: &mut BcfRawPart, diff: &BcfPartDiff) {
+async fn apply_part(part: &mut BcfRawPart, diff: &BcfPartDiff) {
     if let Some(v) = &diff.data {
         part.data = v.clone();
     }
@@ -441,7 +441,7 @@ fn apply_part(part: &mut BcfRawPart, diff: &BcfPartDiff) {
 
 //#region 🔖️DiffAlgebra
 impl DiffAlgebra<BcfSnapshot> for BcfDiff {
-    fn inverse(&self, base: &BcfSnapshot) -> Self {
+    async fn inverse(&self, base: &BcfSnapshot) -> Self {
         BcfDiff {
             version: self.version.as_ref().map(|_| base.version.clone()),
             topics: self.topics.as_ref().map(|d| inverse_named(&base.topics, d, |t| t.guid.clone(), inverse_topic)),
@@ -449,7 +449,7 @@ impl DiffAlgebra<BcfSnapshot> for BcfDiff {
         }
     }
 
-    fn between(base: &BcfSnapshot, other: &BcfSnapshot) -> Self {
+    async fn between(base: &BcfSnapshot, other: &BcfSnapshot) -> Self {
         BcfDiff {
             version: if base.version != other.version { Some(other.version.clone()) } else { None },
             topics: between_named(&base.topics, &other.topics, |t| t.guid.clone(), between_topic),
@@ -457,12 +457,12 @@ impl DiffAlgebra<BcfSnapshot> for BcfDiff {
         }
     }
 
-    fn is_empty(&self) -> bool {
+    async fn is_empty(&self) -> bool {
         self.version.is_none() && self.topics.is_none() && self.parts.is_none()
     }
 }
 
-fn inverse_topic(base: &BcfTopic, diff: &BcfTopicDiff) -> BcfTopicDiff {
+async fn inverse_topic(base: &BcfTopic, diff: &BcfTopicDiff) -> BcfTopicDiff {
     BcfTopicDiff {
         title: diff.title.as_ref().map(|_| base.title.clone()),
         description: diff.description.as_ref().map(|_| base.description.clone()),
@@ -476,7 +476,7 @@ fn inverse_topic(base: &BcfTopic, diff: &BcfTopicDiff) -> BcfTopicDiff {
     }
 }
 
-fn inverse_comment(base: &BcfComment, diff: &BcfCommentDiff) -> BcfCommentDiff {
+async fn inverse_comment(base: &BcfComment, diff: &BcfCommentDiff) -> BcfCommentDiff {
     BcfCommentDiff {
         date: diff.date.as_ref().map(|_| base.date.clone()),
         author: diff.author.as_ref().map(|_| base.author.clone()),
@@ -485,15 +485,15 @@ fn inverse_comment(base: &BcfComment, diff: &BcfCommentDiff) -> BcfCommentDiff {
     }
 }
 
-fn inverse_viewpoint(base: &BcfViewpoint, diff: &BcfViewpointDiff) -> BcfViewpointDiff {
+async fn inverse_viewpoint(base: &BcfViewpoint, diff: &BcfViewpointDiff) -> BcfViewpointDiff {
     BcfViewpointDiff { camera: diff.camera.as_ref().map(|_| base.camera.clone()), components: diff.components.as_ref().map(|_| base.components.clone()), snapshot: diff.snapshot.as_ref().map(|_| base.snapshot.clone()) }
 }
 
-fn inverse_part(base: &BcfRawPart, diff: &BcfPartDiff) -> BcfPartDiff {
+async fn inverse_part(base: &BcfRawPart, diff: &BcfPartDiff) -> BcfPartDiff {
     BcfPartDiff { data: diff.data.as_ref().map(|_| base.data.clone()) }
 }
 
-fn between_topic(base: &BcfTopic, other: &BcfTopic) -> Option<BcfTopicDiff> {
+async fn between_topic(base: &BcfTopic, other: &BcfTopic) -> Option<BcfTopicDiff> {
     let title = if base.title != other.title { Some(other.title.clone()) } else { None };
     let description = if base.description != other.description { Some(other.description.clone()) } else { None };
     let status = if base.status != other.status { Some(other.status.clone()) } else { None };
@@ -510,7 +510,7 @@ fn between_topic(base: &BcfTopic, other: &BcfTopic) -> Option<BcfTopicDiff> {
     }
 }
 
-fn between_comment(base: &BcfComment, other: &BcfComment) -> Option<BcfCommentDiff> {
+async fn between_comment(base: &BcfComment, other: &BcfComment) -> Option<BcfCommentDiff> {
     let date = if base.date != other.date { Some(other.date.clone()) } else { None };
     let author = if base.author != other.author { Some(other.author.clone()) } else { None };
     let text = if base.text != other.text { Some(other.text.clone()) } else { None };
@@ -522,7 +522,7 @@ fn between_comment(base: &BcfComment, other: &BcfComment) -> Option<BcfCommentDi
     }
 }
 
-fn between_viewpoint(base: &BcfViewpoint, other: &BcfViewpoint) -> Option<BcfViewpointDiff> {
+async fn between_viewpoint(base: &BcfViewpoint, other: &BcfViewpoint) -> Option<BcfViewpointDiff> {
     let camera = if base.camera != other.camera { Some(other.camera.clone()) } else { None };
     let components = if base.components != other.components { Some(other.components.clone()) } else { None };
     let snapshot = if base.snapshot != other.snapshot { Some(other.snapshot.clone()) } else { None };
@@ -533,7 +533,7 @@ fn between_viewpoint(base: &BcfViewpoint, other: &BcfViewpoint) -> Option<BcfVie
     }
 }
 
-fn between_part(base: &BcfRawPart, other: &BcfRawPart) -> Option<BcfPartDiff> {
+async fn between_part(base: &BcfRawPart, other: &BcfRawPart) -> Option<BcfPartDiff> {
     if base.data != other.data {
         Some(BcfPartDiff { data: Some(other.data.clone()) })
     } else {
@@ -541,7 +541,7 @@ fn between_part(base: &BcfRawPart, other: &BcfRawPart) -> Option<BcfPartDiff> {
     }
 }
 
-fn absorb_topic_diff(mut a: BcfTopicDiff, b: BcfTopicDiff) -> BcfTopicDiff {
+async fn absorb_topic_diff(mut a: BcfTopicDiff, b: BcfTopicDiff) -> BcfTopicDiff {
     if b.title.is_some() {
         a.title = b.title;
     }
@@ -576,7 +576,7 @@ fn absorb_topic_diff(mut a: BcfTopicDiff, b: BcfTopicDiff) -> BcfTopicDiff {
     a
 }
 
-fn absorb_comment_diff(mut a: BcfCommentDiff, b: BcfCommentDiff) -> BcfCommentDiff {
+async fn absorb_comment_diff(mut a: BcfCommentDiff, b: BcfCommentDiff) -> BcfCommentDiff {
     if b.date.is_some() {
         a.date = b.date;
     }
@@ -592,7 +592,7 @@ fn absorb_comment_diff(mut a: BcfCommentDiff, b: BcfCommentDiff) -> BcfCommentDi
     a
 }
 
-fn absorb_viewpoint_diff(mut a: BcfViewpointDiff, b: BcfViewpointDiff) -> BcfViewpointDiff {
+async fn absorb_viewpoint_diff(mut a: BcfViewpointDiff, b: BcfViewpointDiff) -> BcfViewpointDiff {
     if b.camera.is_some() {
         a.camera = b.camera;
     }
@@ -605,7 +605,7 @@ fn absorb_viewpoint_diff(mut a: BcfViewpointDiff, b: BcfViewpointDiff) -> BcfVie
     a
 }
 
-fn absorb_part_diff(mut a: BcfPartDiff, b: BcfPartDiff) -> BcfPartDiff {
+async fn absorb_part_diff(mut a: BcfPartDiff, b: BcfPartDiff) -> BcfPartDiff {
     if b.data.is_some() {
         a.data = b.data;
     }
@@ -616,7 +616,7 @@ fn absorb_part_diff(mut a: BcfPartDiff, b: BcfPartDiff) -> BcfPartDiff {
 //#region 🔖️SetSnapshot
 /// 🧩️ Builds the sparse field-by-field diff for a `SetSnapshot` mutation. No
 /// `snapshot: Option<BcfSnapshot>` full-replace slot -- this IS `BcfDiff::between`.
-pub fn diff_set_snapshot(base: &BcfSnapshot, next: &BcfSnapshot) -> BcfDiff {
+pub async fn diff_set_snapshot(base: &BcfSnapshot, next: &BcfSnapshot) -> BcfDiff {
     BcfDiff::between(base, next)
 }
 //#endregion 🔖️SetSnapshot
@@ -634,32 +634,32 @@ pub fn diff_set_snapshot(base: &BcfSnapshot, next: &BcfSnapshot) -> BcfDiff {
 /// codec is written generically once and instantiated per collection, rather than copy-pasted
 /// per collection the way svg's non-generic `SvgChildrenDiff`/`SvgAttributesDiff` needed).
 //#region 🔖️Primitives
-pub(crate) fn hex_encode(bytes: &[u8]) -> String {
+pub(crate) async fn hex_encode(bytes: &[u8]) -> String {
     bytes.iter().map(|b| format!("{b:02x}")).collect()
 }
-pub(crate) fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
+pub(crate) async fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
     if s.len() % 2 != 0 {
         return Err(format!("odd hex length: {s:?}"));
     }
     (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()
 }
-pub(crate) fn enc_str(s: &str) -> String {
+pub(crate) async fn enc_str(s: &str) -> String {
     hex_encode(s.as_bytes())
 }
-pub(crate) fn dec_str(s: &str) -> Result<String, String> {
+pub(crate) async fn dec_str(s: &str) -> Result<String, String> {
     String::from_utf8(hex_decode(s)?).map_err(|e| e.to_string())
 }
-pub(crate) fn enc_bytes(b: &[u8]) -> String {
+pub(crate) async fn enc_bytes(b: &[u8]) -> String {
     hex_encode(b)
 }
-pub(crate) fn dec_bytes(s: &str) -> Result<Vec<u8>, String> {
+pub(crate) async fn dec_bytes(s: &str) -> Result<Vec<u8>, String> {
     hex_decode(s)
 }
-fn parse_f64(s: &str) -> Result<f64, String> {
+async fn parse_f64(s: &str) -> Result<f64, String> {
     s.parse().map_err(|e: std::num::ParseFloatError| e.to_string())
 }
 
-pub(crate) fn split_top_level(s: &str, sep: char) -> Vec<&str> {
+pub(crate) async fn split_top_level(s: &str, sep: char) -> Vec<&str> {
     if s.is_empty() {
         return Vec::new();
     }
@@ -680,16 +680,16 @@ pub(crate) fn split_top_level(s: &str, sep: char) -> Vec<&str> {
     out.push(&s[start..]);
     out
 }
-pub(crate) fn strip_brackets(s: &str) -> Result<&str, String> {
+pub(crate) async fn strip_brackets(s: &str) -> Result<&str, String> {
     s.strip_prefix('[').and_then(|s| s.strip_suffix(']')).ok_or_else(|| format!("expected [...], got {s:?}"))
 }
-pub(crate) fn encode_option<T>(opt: &Option<T>, enc: impl Fn(&T) -> String) -> String {
+pub(crate) async fn encode_option<T>(opt: &Option<T>, enc: impl Fn(&T) -> String) -> String {
     match opt {
         None => "[0]".to_string(),
         Some(v) => format!("[1,{}]", enc(v)),
     }
 }
-pub(crate) fn decode_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Option<T>, String> {
+pub(crate) async fn decode_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Option<T>, String> {
     let inner = strip_brackets(s)?;
     match split_top_level(inner, ',').as_slice() {
         ["0"] => Ok(None),
@@ -700,10 +700,10 @@ pub(crate) fn decode_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>)
 /// 📋️ Bracketed comma-joined list -- the un-keyed sibling of `NamedTripleDiff`'s codec below, for
 /// plain `Vec<T>` fields (`labels`, `exceptions`, `selection`, `coloring`, ...) that are
 /// whole-value replaced rather than key-diffed.
-pub(crate) fn enc_list<T>(items: &[T], enc: impl Fn(&T) -> String) -> String {
+pub(crate) async fn enc_list<T>(items: &[T], enc: impl Fn(&T) -> String) -> String {
     format!("[{}]", items.iter().map(|it| enc(it)).collect::<Vec<_>>().join(","))
 }
-pub(crate) fn dec_list<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Vec<T>, String> {
+pub(crate) async fn dec_list<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Vec<T>, String> {
     split_top_level(strip_brackets(s)?, ',').into_iter().filter(|s| !s.is_empty()).map(|entry| dec(entry)).collect()
 }
 //#endregion 🔖️Primitives
@@ -714,13 +714,13 @@ pub(crate) fn dec_list<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> R
 /// list; `modified` entries are `key:diff` (colon-separated, unambiguous because every key here is
 /// hex-encoded and hex never contains `:`). Written once, generically, and instantiated per
 /// collection (`topics`/`comments`/`viewpoints`/`parts`) below.
-pub(crate) fn enc_named_triple<K, D, T>(triple: &NamedTripleDiff<K, D, T>, enc_k: impl Fn(&K) -> String, enc_d: impl Fn(&D) -> String, enc_t: impl Fn(&T) -> String) -> String {
+pub(crate) async fn enc_named_triple<K, D, T>(triple: &NamedTripleDiff<K, D, T>, enc_k: impl Fn(&K) -> String, enc_d: impl Fn(&D) -> String, enc_t: impl Fn(&T) -> String) -> String {
     let removed = triple.removed.iter().map(|k| enc_k(k)).collect::<Vec<_>>().join(",");
     let modified = triple.modified.iter().map(|m| format!("{}:{}", enc_k(&m.key), enc_d(&m.diff))).collect::<Vec<_>>().join(",");
     let added = triple.added.iter().map(|t| enc_t(t)).collect::<Vec<_>>().join(",");
     format!("[{removed}];[{modified}];[{added}]")
 }
-pub(crate) fn dec_named_triple<K, D, T>(s: &str, dec_k: impl Fn(&str) -> Result<K, String>, dec_d: impl Fn(&str) -> Result<D, String>, dec_t: impl Fn(&str) -> Result<T, String>) -> Result<NamedTripleDiff<K, D, T>, String> {
+pub(crate) async fn dec_named_triple<K, D, T>(s: &str, dec_k: impl Fn(&str) -> Result<K, String>, dec_d: impl Fn(&str) -> Result<D, String>, dec_t: impl Fn(&str) -> Result<T, String>) -> Result<NamedTripleDiff<K, D, T>, String> {
     let three = split_top_level(s, ';');
     let [removed_s, modified_s, added_s] = three.as_slice() else { return Err(format!("named triple: expected 3 sections, got {}", three.len())) };
     let removed = split_top_level(strip_brackets(removed_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(|e| dec_k(e)).collect::<Result<Vec<_>, String>>()?;
@@ -738,10 +738,10 @@ pub(crate) fn dec_named_triple<K, D, T>(s: &str, dec_k: impl Fn(&str) -> Result<
 //#endregion 🔖️NamedTripleCodec
 
 //#region 🔖️ValueCodecs
-pub(crate) fn enc_point3(p: &BcfPoint3) -> String {
+pub(crate) async fn enc_point3(p: &BcfPoint3) -> String {
     format!("[{},{},{}]", p.x, p.y, p.z)
 }
-pub(crate) fn dec_point3(s: &str) -> Result<BcfPoint3, String> {
+pub(crate) async fn dec_point3(s: &str) -> Result<BcfPoint3, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [x, y, z] = parts.as_slice() else { return Err(format!("point3: expected 3 fields, got {}", parts.len())) };
     Ok(BcfPoint3 { x: parse_f64(x)?, y: parse_f64(y)?, z: parse_f64(z)? })
@@ -750,7 +750,7 @@ pub(crate) fn dec_point3(s: &str) -> Result<BcfPoint3, String> {
 /// 📷 `P[view_point,direction,up_vector,field_of_view]` (Perspective) / `O[...,view_to_world_scale]`
 /// (Orthogonal) -- single-letter tag prefix, the `xs:choice` made concrete (same convention as
 /// `enc_xml_node`'s `E`/`T`/`D`/`M`/`P` tags in svg's hand-rolled codec).
-pub(crate) fn enc_camera(c: &BcfCamera) -> String {
+pub(crate) async fn enc_camera(c: &BcfCamera) -> String {
     match c {
         BcfCamera::Perspective { view_point, direction, up_vector, field_of_view } => {
             format!("P[{},{},{},{}]", enc_point3(view_point), enc_point3(direction), enc_point3(up_vector), field_of_view)
@@ -760,7 +760,7 @@ pub(crate) fn enc_camera(c: &BcfCamera) -> String {
         }
     }
 }
-pub(crate) fn dec_camera(s: &str) -> Result<BcfCamera, String> {
+pub(crate) async fn dec_camera(s: &str) -> Result<BcfCamera, String> {
     let (tag, rest) = s.split_at(1);
     let inner = strip_brackets(rest)?;
     let parts = split_top_level(inner, ',');
@@ -772,52 +772,52 @@ pub(crate) fn dec_camera(s: &str) -> Result<BcfCamera, String> {
     }
 }
 
-pub(crate) fn enc_visibility(v: &BcfVisibility) -> String {
+pub(crate) async fn enc_visibility(v: &BcfVisibility) -> String {
     format!("[{},{}]", if v.default_visibility { "1" } else { "0" }, enc_list(&v.exceptions, |s: &String| enc_str(s)))
 }
-pub(crate) fn dec_visibility(s: &str) -> Result<BcfVisibility, String> {
+pub(crate) async fn dec_visibility(s: &str) -> Result<BcfVisibility, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [default_visibility, exceptions] = parts.as_slice() else { return Err(format!("visibility: expected 2 fields, got {}", parts.len())) };
     Ok(BcfVisibility { default_visibility: *default_visibility == "1", exceptions: dec_list(exceptions, dec_str)? })
 }
 
-pub(crate) fn enc_coloring(c: &BcfColoring) -> String {
+pub(crate) async fn enc_coloring(c: &BcfColoring) -> String {
     format!("[{},{}]", enc_str(&c.color), enc_list(&c.components, |s: &String| enc_str(s)))
 }
-pub(crate) fn dec_coloring(s: &str) -> Result<BcfColoring, String> {
+pub(crate) async fn dec_coloring(s: &str) -> Result<BcfColoring, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [color, components] = parts.as_slice() else { return Err(format!("coloring: expected 2 fields, got {}", parts.len())) };
     Ok(BcfColoring { color: dec_str(color)?, components: dec_list(components, dec_str)? })
 }
 
-pub(crate) fn enc_components(c: &BcfComponents) -> String {
+pub(crate) async fn enc_components(c: &BcfComponents) -> String {
     format!("[{},{},{}]", enc_list(&c.selection, |s: &String| enc_str(s)), enc_visibility(&c.visibility), enc_list(&c.coloring, enc_coloring))
 }
-pub(crate) fn dec_components(s: &str) -> Result<BcfComponents, String> {
+pub(crate) async fn dec_components(s: &str) -> Result<BcfComponents, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [selection, visibility, coloring] = parts.as_slice() else { return Err(format!("components: expected 3 fields, got {}", parts.len())) };
     Ok(BcfComponents { selection: dec_list(selection, dec_str)?, visibility: dec_visibility(visibility)?, coloring: dec_list(coloring, dec_coloring)? })
 }
 
-pub(crate) fn enc_comment(c: &BcfComment) -> String {
+pub(crate) async fn enc_comment(c: &BcfComment) -> String {
     format!("[{},{},{},{},{}]", enc_str(&c.guid), enc_str(&c.date), enc_str(&c.author), enc_str(&c.text), encode_option(&c.viewpoint_ref, |v: &String| enc_str(v)),)
 }
-pub(crate) fn dec_comment(s: &str) -> Result<BcfComment, String> {
+pub(crate) async fn dec_comment(s: &str) -> Result<BcfComment, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [guid, date, author, text, viewpoint_ref] = parts.as_slice() else { return Err(format!("comment: expected 5 fields, got {}", parts.len())) };
     Ok(BcfComment { guid: dec_str(guid)?, date: dec_str(date)?, author: dec_str(author)?, text: dec_str(text)?, viewpoint_ref: decode_option(viewpoint_ref, dec_str)? })
 }
 
-pub(crate) fn enc_viewpoint(v: &BcfViewpoint) -> String {
+pub(crate) async fn enc_viewpoint(v: &BcfViewpoint) -> String {
     format!("[{},{},{},{}]", enc_str(&v.guid), encode_option(&v.camera, enc_camera), encode_option(&v.components, enc_components), encode_option(&v.snapshot, |b: &Vec<u8>| enc_bytes(b)),)
 }
-pub(crate) fn dec_viewpoint(s: &str) -> Result<BcfViewpoint, String> {
+pub(crate) async fn dec_viewpoint(s: &str) -> Result<BcfViewpoint, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [guid, camera, components, snapshot] = parts.as_slice() else { return Err(format!("viewpoint: expected 4 fields, got {}", parts.len())) };
     Ok(BcfViewpoint { guid: dec_str(guid)?, camera: decode_option(camera, dec_camera)?, components: decode_option(components, dec_components)?, snapshot: decode_option(snapshot, dec_bytes)? })
 }
 
-pub(crate) fn enc_topic(t: &BcfTopic) -> String {
+pub(crate) async fn enc_topic(t: &BcfTopic) -> String {
     format!(
         "[{},{},{},{},{},{},{},{},{},{}]",
         enc_str(&t.guid),
@@ -832,7 +832,7 @@ pub(crate) fn enc_topic(t: &BcfTopic) -> String {
         enc_list(&t.viewpoints, enc_viewpoint),
     )
 }
-pub(crate) fn dec_topic(s: &str) -> Result<BcfTopic, String> {
+pub(crate) async fn dec_topic(s: &str) -> Result<BcfTopic, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [guid, title, description, status, priority, labels, creation_date, creation_author, comments, viewpoints] = parts.as_slice() else {
         return Err(format!("topic: expected 10 fields, got {}", parts.len()));
@@ -851,10 +851,10 @@ pub(crate) fn dec_topic(s: &str) -> Result<BcfTopic, String> {
     })
 }
 
-pub(crate) fn enc_part(p: &BcfRawPart) -> String {
+pub(crate) async fn enc_part(p: &BcfRawPart) -> String {
     format!("[{},{}]", enc_str(&p.name), enc_bytes(&p.data))
 }
-pub(crate) fn dec_part(s: &str) -> Result<BcfRawPart, String> {
+pub(crate) async fn dec_part(s: &str) -> Result<BcfRawPart, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [name, data] = parts.as_slice() else { return Err(format!("part: expected 2 fields, got {}", parts.len())) };
     Ok(BcfRawPart { name: dec_str(name)?, data: dec_bytes(data)? })
@@ -862,7 +862,7 @@ pub(crate) fn dec_part(s: &str) -> Result<BcfRawPart, String> {
 //#endregion 🔖️ValueCodecs
 
 //#region 🔖️DiffValueCodecs
-pub(crate) fn enc_comment_diff(d: &BcfCommentDiff) -> String {
+pub(crate) async fn enc_comment_diff(d: &BcfCommentDiff) -> String {
     format!(
         "[{},{},{},{}]",
         encode_option(&d.date, |v: &String| enc_str(v)),
@@ -871,13 +871,13 @@ pub(crate) fn enc_comment_diff(d: &BcfCommentDiff) -> String {
         encode_option(&d.viewpoint_ref, |inner: &Option<String>| encode_option(inner, |v: &String| enc_str(v))),
     )
 }
-pub(crate) fn dec_comment_diff(s: &str) -> Result<BcfCommentDiff, String> {
+pub(crate) async fn dec_comment_diff(s: &str) -> Result<BcfCommentDiff, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [date, author, text, viewpoint_ref] = parts.as_slice() else { return Err(format!("comment diff: expected 4 fields, got {}", parts.len())) };
     Ok(BcfCommentDiff { date: decode_option(date, dec_str)?, author: decode_option(author, dec_str)?, text: decode_option(text, dec_str)?, viewpoint_ref: decode_option(viewpoint_ref, |s| decode_option(s, dec_str))? })
 }
 
-pub(crate) fn enc_viewpoint_diff(d: &BcfViewpointDiff) -> String {
+pub(crate) async fn enc_viewpoint_diff(d: &BcfViewpointDiff) -> String {
     format!(
         "[{},{},{}]",
         encode_option(&d.camera, |inner: &Option<BcfCamera>| encode_option(inner, enc_camera)),
@@ -885,21 +885,21 @@ pub(crate) fn enc_viewpoint_diff(d: &BcfViewpointDiff) -> String {
         encode_option(&d.snapshot, |inner: &Option<Vec<u8>>| encode_option(inner, |b: &Vec<u8>| enc_bytes(b))),
     )
 }
-pub(crate) fn dec_viewpoint_diff(s: &str) -> Result<BcfViewpointDiff, String> {
+pub(crate) async fn dec_viewpoint_diff(s: &str) -> Result<BcfViewpointDiff, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [camera, components, snapshot] = parts.as_slice() else { return Err(format!("viewpoint diff: expected 3 fields, got {}", parts.len())) };
     Ok(BcfViewpointDiff { camera: decode_option(camera, |s| decode_option(s, dec_camera))?, components: decode_option(components, |s| decode_option(s, dec_components))?, snapshot: decode_option(snapshot, |s| decode_option(s, dec_bytes))? })
 }
 
-pub(crate) fn enc_part_diff(d: &BcfPartDiff) -> String {
+pub(crate) async fn enc_part_diff(d: &BcfPartDiff) -> String {
     format!("[{}]", encode_option(&d.data, |b: &Vec<u8>| enc_bytes(b)))
 }
-pub(crate) fn dec_part_diff(s: &str) -> Result<BcfPartDiff, String> {
+pub(crate) async fn dec_part_diff(s: &str) -> Result<BcfPartDiff, String> {
     let inner = strip_brackets(s)?;
     Ok(BcfPartDiff { data: decode_option(inner, dec_bytes)? })
 }
 
-pub(crate) fn enc_topic_diff(d: &BcfTopicDiff) -> String {
+pub(crate) async fn enc_topic_diff(d: &BcfTopicDiff) -> String {
     format!(
         "[{},{},{},{},{},{},{},{},{}]",
         encode_option(&d.title, |v: &String| enc_str(v)),
@@ -913,7 +913,7 @@ pub(crate) fn enc_topic_diff(d: &BcfTopicDiff) -> String {
         encode_option(&d.viewpoints, |v: &BcfViewpointsDiff| enc_named_triple(v, |k: &String| enc_str(k), enc_viewpoint_diff, enc_viewpoint)),
     )
 }
-pub(crate) fn dec_topic_diff(s: &str) -> Result<BcfTopicDiff, String> {
+pub(crate) async fn dec_topic_diff(s: &str) -> Result<BcfTopicDiff, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [title, description, status, priority, labels, creation_date, creation_author, comments, viewpoints] = parts.as_slice() else {
         return Err(format!("topic diff: expected 9 fields, got {}", parts.len()));
@@ -943,27 +943,27 @@ pub(crate) fn dec_topic_diff(s: &str) -> Result<BcfTopicDiff, String> {
 /// `GenericTripleBinaryCodecs`/`DiffValueBinaryCodecs` regions establish; duplicated here (not
 /// imported) per this repo's per-artifact hand-roll convention.
 //#region 🔖️BinaryPrimitives
-pub(crate) fn write_bytes_lp(out: &mut Vec<u8>, bytes: &[u8]) {
+pub(crate) async fn write_bytes_lp(out: &mut Vec<u8>, bytes: &[u8]) {
     store::pack_rt::write_varint_u64(out, bytes.len() as u64);
     out.extend_from_slice(bytes);
 }
-pub(crate) fn read_bytes_lp(reader: &mut store::ByteReader<'_>) -> Result<Vec<u8>, String> {
+pub(crate) async fn read_bytes_lp(reader: &mut store::ByteReader<'_>) -> Result<Vec<u8>, String> {
     let len = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
     Ok(reader.read_bytes(len).map_err(|e| e.to_string())?.to_vec())
 }
-pub(crate) fn write_str_lp(out: &mut Vec<u8>, s: &str) {
+pub(crate) async fn write_str_lp(out: &mut Vec<u8>, s: &str) {
     write_bytes_lp(out, s.as_bytes());
 }
-pub(crate) fn read_str_lp(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
+pub(crate) async fn read_str_lp(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
     String::from_utf8(read_bytes_lp(reader)?).map_err(|e| e.to_string())
 }
-fn write_opt_str(out: &mut Vec<u8>, opt: &Option<String>) {
+async fn write_opt_str(out: &mut Vec<u8>, opt: &Option<String>) {
     out.push(if opt.is_some() { 1 } else { 0 });
     if let Some(v) = opt {
         write_str_lp(out, v);
     }
 }
-fn read_opt_str(reader: &mut store::ByteReader<'_>) -> Result<Option<String>, String> {
+async fn read_opt_str(reader: &mut store::ByteReader<'_>) -> Result<Option<String>, String> {
     Ok(if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(read_str_lp(reader)?) } else { None })
 }
 //#endregion 🔖️BinaryPrimitives
@@ -972,12 +972,12 @@ fn read_opt_str(reader: &mut store::ByteReader<'_>) -> Result<Option<String>, St
 /// 🌳️ Full-item (non-diff) binary codecs, mirrored one-for-one against `../🔖️ValueCodecs`'s text
 /// forms above. `pub(crate)` so `../🧬️mutations/🦀️component.rs` reuses these rather than
 /// re-deriving its own copies (same intra-artifact reuse pattern the text codecs already use).
-pub(crate) fn enc_point3_bin(p: &BcfPoint3, out: &mut Vec<u8>) {
+pub(crate) async fn enc_point3_bin(p: &BcfPoint3, out: &mut Vec<u8>) {
     out.extend_from_slice(&p.x.to_le_bytes());
     out.extend_from_slice(&p.y.to_le_bytes());
     out.extend_from_slice(&p.z.to_le_bytes());
 }
-pub(crate) fn dec_point3_bin(reader: &mut store::ByteReader<'_>) -> Result<BcfPoint3, String> {
+pub(crate) async fn dec_point3_bin(reader: &mut store::ByteReader<'_>) -> Result<BcfPoint3, String> {
     let x = reader.read_f64_le().map_err(|e| e.to_string())?;
     let y = reader.read_f64_le().map_err(|e| e.to_string())?;
     let z = reader.read_f64_le().map_err(|e| e.to_string())?;
@@ -985,7 +985,7 @@ pub(crate) fn dec_point3_bin(reader: &mut store::ByteReader<'_>) -> Result<BcfPo
 }
 
 /// 🌳️ `0`=Perspective / `1`=Orthogonal -- binary twin of `enc_camera`/`dec_camera`'s `P`/`O` tags.
-pub(crate) fn enc_camera_bin(c: &BcfCamera, out: &mut Vec<u8>) {
+pub(crate) async fn enc_camera_bin(c: &BcfCamera, out: &mut Vec<u8>) {
     match c {
         BcfCamera::Perspective { view_point, direction, up_vector, field_of_view } => {
             out.push(0);
@@ -1003,7 +1003,7 @@ pub(crate) fn enc_camera_bin(c: &BcfCamera, out: &mut Vec<u8>) {
         }
     }
 }
-pub(crate) fn dec_camera_bin(reader: &mut store::ByteReader<'_>) -> Result<BcfCamera, String> {
+pub(crate) async fn dec_camera_bin(reader: &mut store::ByteReader<'_>) -> Result<BcfCamera, String> {
     match reader.read_u8().map_err(|e| e.to_string())? {
         0 => Ok(BcfCamera::Perspective { view_point: dec_point3_bin(reader)?, direction: dec_point3_bin(reader)?, up_vector: dec_point3_bin(reader)?, field_of_view: reader.read_f64_le().map_err(|e| e.to_string())? }),
         1 => Ok(BcfCamera::Orthogonal { view_point: dec_point3_bin(reader)?, direction: dec_point3_bin(reader)?, up_vector: dec_point3_bin(reader)?, view_to_world_scale: reader.read_f64_le().map_err(|e| e.to_string())? }),
@@ -1011,13 +1011,13 @@ pub(crate) fn dec_camera_bin(reader: &mut store::ByteReader<'_>) -> Result<BcfCa
     }
 }
 
-fn enc_str_list_bin(items: &[String], out: &mut Vec<u8>) {
+async fn enc_str_list_bin(items: &[String], out: &mut Vec<u8>) {
     store::pack_rt::write_varint_u64(out, items.len() as u64);
     for s in items {
         write_str_lp(out, s);
     }
 }
-fn dec_str_list_bin(reader: &mut store::ByteReader<'_>) -> Result<Vec<String>, String> {
+async fn dec_str_list_bin(reader: &mut store::ByteReader<'_>) -> Result<Vec<String>, String> {
     let count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut out = Vec::with_capacity(count as usize);
     for _ in 0..count {
@@ -1026,27 +1026,27 @@ fn dec_str_list_bin(reader: &mut store::ByteReader<'_>) -> Result<Vec<String>, S
     Ok(out)
 }
 
-pub(crate) fn enc_visibility_bin(v: &BcfVisibility, out: &mut Vec<u8>) {
+pub(crate) async fn enc_visibility_bin(v: &BcfVisibility, out: &mut Vec<u8>) {
     out.push(v.default_visibility as u8);
     enc_str_list_bin(&v.exceptions, out);
 }
-pub(crate) fn dec_visibility_bin(reader: &mut store::ByteReader<'_>) -> Result<BcfVisibility, String> {
+pub(crate) async fn dec_visibility_bin(reader: &mut store::ByteReader<'_>) -> Result<BcfVisibility, String> {
     let default_visibility = reader.read_u8().map_err(|e| e.to_string())? != 0;
     let exceptions = dec_str_list_bin(reader)?;
     Ok(BcfVisibility { default_visibility, exceptions })
 }
 
-pub(crate) fn enc_coloring_bin(c: &BcfColoring, out: &mut Vec<u8>) {
+pub(crate) async fn enc_coloring_bin(c: &BcfColoring, out: &mut Vec<u8>) {
     write_str_lp(out, &c.color);
     enc_str_list_bin(&c.components, out);
 }
-pub(crate) fn dec_coloring_bin(reader: &mut store::ByteReader<'_>) -> Result<BcfColoring, String> {
+pub(crate) async fn dec_coloring_bin(reader: &mut store::ByteReader<'_>) -> Result<BcfColoring, String> {
     let color = read_str_lp(reader)?;
     let components = dec_str_list_bin(reader)?;
     Ok(BcfColoring { color, components })
 }
 
-pub(crate) fn enc_components_bin(c: &BcfComponents, out: &mut Vec<u8>) {
+pub(crate) async fn enc_components_bin(c: &BcfComponents, out: &mut Vec<u8>) {
     enc_str_list_bin(&c.selection, out);
     enc_visibility_bin(&c.visibility, out);
     store::pack_rt::write_varint_u64(out, c.coloring.len() as u64);
@@ -1054,7 +1054,7 @@ pub(crate) fn enc_components_bin(c: &BcfComponents, out: &mut Vec<u8>) {
         enc_coloring_bin(entry, out);
     }
 }
-pub(crate) fn dec_components_bin(reader: &mut store::ByteReader<'_>) -> Result<BcfComponents, String> {
+pub(crate) async fn dec_components_bin(reader: &mut store::ByteReader<'_>) -> Result<BcfComponents, String> {
     let selection = dec_str_list_bin(reader)?;
     let visibility = dec_visibility_bin(reader)?;
     let coloring_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
@@ -1065,14 +1065,14 @@ pub(crate) fn dec_components_bin(reader: &mut store::ByteReader<'_>) -> Result<B
     Ok(BcfComponents { selection, visibility, coloring })
 }
 
-pub(crate) fn enc_comment_bin(c: &BcfComment, out: &mut Vec<u8>) {
+pub(crate) async fn enc_comment_bin(c: &BcfComment, out: &mut Vec<u8>) {
     write_str_lp(out, &c.guid);
     write_str_lp(out, &c.date);
     write_str_lp(out, &c.author);
     write_str_lp(out, &c.text);
     write_opt_str(out, &c.viewpoint_ref);
 }
-pub(crate) fn dec_comment_bin(reader: &mut store::ByteReader<'_>) -> Result<BcfComment, String> {
+pub(crate) async fn dec_comment_bin(reader: &mut store::ByteReader<'_>) -> Result<BcfComment, String> {
     let guid = read_str_lp(reader)?;
     let date = read_str_lp(reader)?;
     let author = read_str_lp(reader)?;
@@ -1081,7 +1081,7 @@ pub(crate) fn dec_comment_bin(reader: &mut store::ByteReader<'_>) -> Result<BcfC
     Ok(BcfComment { guid, date, author, text, viewpoint_ref })
 }
 
-pub(crate) fn enc_viewpoint_bin(v: &BcfViewpoint, out: &mut Vec<u8>) {
+pub(crate) async fn enc_viewpoint_bin(v: &BcfViewpoint, out: &mut Vec<u8>) {
     write_str_lp(out, &v.guid);
     out.push(if v.camera.is_some() { 1 } else { 0 });
     if let Some(camera) = &v.camera {
@@ -1096,7 +1096,7 @@ pub(crate) fn enc_viewpoint_bin(v: &BcfViewpoint, out: &mut Vec<u8>) {
         write_bytes_lp(out, snapshot);
     }
 }
-pub(crate) fn dec_viewpoint_bin(reader: &mut store::ByteReader<'_>) -> Result<BcfViewpoint, String> {
+pub(crate) async fn dec_viewpoint_bin(reader: &mut store::ByteReader<'_>) -> Result<BcfViewpoint, String> {
     let guid = read_str_lp(reader)?;
     let camera = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(dec_camera_bin(reader)?) } else { None };
     let components = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(dec_components_bin(reader)?) } else { None };
@@ -1104,7 +1104,7 @@ pub(crate) fn dec_viewpoint_bin(reader: &mut store::ByteReader<'_>) -> Result<Bc
     Ok(BcfViewpoint { guid, camera, components, snapshot })
 }
 
-pub(crate) fn enc_topic_bin(t: &BcfTopic, out: &mut Vec<u8>) {
+pub(crate) async fn enc_topic_bin(t: &BcfTopic, out: &mut Vec<u8>) {
     write_str_lp(out, &t.guid);
     write_str_lp(out, &t.title);
     write_str_lp(out, &t.description);
@@ -1122,7 +1122,7 @@ pub(crate) fn enc_topic_bin(t: &BcfTopic, out: &mut Vec<u8>) {
         enc_viewpoint_bin(v, out);
     }
 }
-pub(crate) fn dec_topic_bin(reader: &mut store::ByteReader<'_>) -> Result<BcfTopic, String> {
+pub(crate) async fn dec_topic_bin(reader: &mut store::ByteReader<'_>) -> Result<BcfTopic, String> {
     let guid = read_str_lp(reader)?;
     let title = read_str_lp(reader)?;
     let description = read_str_lp(reader)?;
@@ -1144,11 +1144,11 @@ pub(crate) fn dec_topic_bin(reader: &mut store::ByteReader<'_>) -> Result<BcfTop
     Ok(BcfTopic { guid, title, description, status, priority, labels, creation_date, creation_author, comments, viewpoints })
 }
 
-pub(crate) fn enc_part_bin(p: &BcfRawPart, out: &mut Vec<u8>) {
+pub(crate) async fn enc_part_bin(p: &BcfRawPart, out: &mut Vec<u8>) {
     write_str_lp(out, &p.name);
     write_bytes_lp(out, &p.data);
 }
-pub(crate) fn dec_part_bin(reader: &mut store::ByteReader<'_>) -> Result<BcfRawPart, String> {
+pub(crate) async fn dec_part_bin(reader: &mut store::ByteReader<'_>) -> Result<BcfRawPart, String> {
     let name = read_str_lp(reader)?;
     let data = read_bytes_lp(reader)?;
     Ok(BcfRawPart { name, data })
@@ -1156,7 +1156,7 @@ pub(crate) fn dec_part_bin(reader: &mut store::ByteReader<'_>) -> Result<BcfRawP
 
 /// 🌱 Full (non-diff) `BcfSnapshot` binary codec -- only `SetSnapshot`'s whole-payload encoding
 /// needs this, mirroring `enc_bcf_snapshot`'s text form above.
-pub(crate) fn enc_bcf_snapshot_bin(s: &BcfSnapshot, out: &mut Vec<u8>) {
+pub(crate) async fn enc_bcf_snapshot_bin(s: &BcfSnapshot, out: &mut Vec<u8>) {
     write_str_lp(out, &s.schema);
     write_str_lp(out, &s.version);
     store::pack_rt::write_varint_u64(out, s.topics.len() as u64);
@@ -1168,7 +1168,7 @@ pub(crate) fn enc_bcf_snapshot_bin(s: &BcfSnapshot, out: &mut Vec<u8>) {
         enc_part_bin(p, out);
     }
 }
-pub(crate) fn dec_bcf_snapshot_bin(reader: &mut store::ByteReader<'_>) -> Result<BcfSnapshot, String> {
+pub(crate) async fn dec_bcf_snapshot_bin(reader: &mut store::ByteReader<'_>) -> Result<BcfSnapshot, String> {
     let schema = read_str_lp(reader)?;
     let version = read_str_lp(reader)?;
     let topic_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
@@ -1188,7 +1188,7 @@ pub(crate) fn dec_bcf_snapshot_bin(reader: &mut store::ByteReader<'_>) -> Result
 //#region 🔖️GenericNamedTripleBinaryCodecs
 /// 🏷️ Binary twin of `enc_named_triple`/`dec_named_triple` -- three varint-counted sections
 /// (removed keys / modified key+diff pairs / added whole items), generic over `K`/`D`/`T`.
-fn enc_named_triple_bin<K, D, T>(triple: &NamedTripleDiff<K, D, T>, enc_k: impl Fn(&K, &mut Vec<u8>), enc_d: impl Fn(&D, &mut Vec<u8>), enc_t: impl Fn(&T, &mut Vec<u8>), out: &mut Vec<u8>) {
+async fn enc_named_triple_bin<K, D, T>(triple: &NamedTripleDiff<K, D, T>, enc_k: impl Fn(&K, &mut Vec<u8>), enc_d: impl Fn(&D, &mut Vec<u8>), enc_t: impl Fn(&T, &mut Vec<u8>), out: &mut Vec<u8>) {
     store::pack_rt::write_varint_u64(out, triple.removed.len() as u64);
     for k in &triple.removed {
         enc_k(k, out);
@@ -1203,7 +1203,7 @@ fn enc_named_triple_bin<K, D, T>(triple: &NamedTripleDiff<K, D, T>, enc_k: impl 
         enc_t(t, out);
     }
 }
-fn dec_named_triple_bin<K, D, T>(
+async fn dec_named_triple_bin<K, D, T>(
     reader: &mut store::ByteReader<'_>,
     dec_k: impl Fn(&mut store::ByteReader<'_>) -> Result<K, String>,
     dec_d: impl Fn(&mut store::ByteReader<'_>) -> Result<D, String>,
@@ -1231,7 +1231,7 @@ fn dec_named_triple_bin<K, D, T>(
 //#endregion 🔖️GenericNamedTripleBinaryCodecs
 
 //#region 🔖️DiffValueBinaryCodecs
-pub(crate) fn enc_comment_diff_bin(d: &BcfCommentDiff, out: &mut Vec<u8>) {
+pub(crate) async fn enc_comment_diff_bin(d: &BcfCommentDiff, out: &mut Vec<u8>) {
     write_opt_str(out, &d.date);
     write_opt_str(out, &d.author);
     write_opt_str(out, &d.text);
@@ -1240,7 +1240,7 @@ pub(crate) fn enc_comment_diff_bin(d: &BcfCommentDiff, out: &mut Vec<u8>) {
         write_opt_str(out, inner);
     }
 }
-pub(crate) fn dec_comment_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<BcfCommentDiff, String> {
+pub(crate) async fn dec_comment_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<BcfCommentDiff, String> {
     let date = read_opt_str(reader)?;
     let author = read_opt_str(reader)?;
     let text = read_opt_str(reader)?;
@@ -1248,7 +1248,7 @@ pub(crate) fn dec_comment_diff_bin(reader: &mut store::ByteReader<'_>) -> Result
     Ok(BcfCommentDiff { date, author, text, viewpoint_ref })
 }
 
-pub(crate) fn enc_viewpoint_diff_bin(d: &BcfViewpointDiff, out: &mut Vec<u8>) {
+pub(crate) async fn enc_viewpoint_diff_bin(d: &BcfViewpointDiff, out: &mut Vec<u8>) {
     out.push(if d.camera.is_some() { 1 } else { 0 });
     if let Some(inner) = &d.camera {
         out.push(if inner.is_some() { 1 } else { 0 });
@@ -1271,39 +1271,39 @@ pub(crate) fn enc_viewpoint_diff_bin(d: &BcfViewpointDiff, out: &mut Vec<u8>) {
         }
     }
 }
-pub(crate) fn dec_viewpoint_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<BcfViewpointDiff, String> {
+pub(crate) async fn dec_viewpoint_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<BcfViewpointDiff, String> {
     let camera = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(dec_camera_bin(reader)?) } else { None }) } else { None };
     let components = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(dec_components_bin(reader)?) } else { None }) } else { None };
     let snapshot = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(read_bytes_lp(reader)?) } else { None }) } else { None };
     Ok(BcfViewpointDiff { camera, components, snapshot })
 }
 
-pub(crate) fn enc_part_diff_bin(d: &BcfPartDiff, out: &mut Vec<u8>) {
+pub(crate) async fn enc_part_diff_bin(d: &BcfPartDiff, out: &mut Vec<u8>) {
     out.push(if d.data.is_some() { 1 } else { 0 });
     if let Some(v) = &d.data {
         write_bytes_lp(out, v);
     }
 }
-pub(crate) fn dec_part_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<BcfPartDiff, String> {
+pub(crate) async fn dec_part_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<BcfPartDiff, String> {
     let data = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(read_bytes_lp(reader)?) } else { None };
     Ok(BcfPartDiff { data })
 }
 
-fn enc_comments_diff_bin(d: &BcfCommentsDiff, out: &mut Vec<u8>) {
+async fn enc_comments_diff_bin(d: &BcfCommentsDiff, out: &mut Vec<u8>) {
     enc_named_triple_bin(d, |k, out| write_str_lp(out, k), enc_comment_diff_bin, enc_comment_bin, out)
 }
-fn dec_comments_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<BcfCommentsDiff, String> {
+async fn dec_comments_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<BcfCommentsDiff, String> {
     dec_named_triple_bin(reader, |r| read_str_lp(r), dec_comment_diff_bin, dec_comment_bin)
 }
 
-fn enc_viewpoints_diff_bin(d: &BcfViewpointsDiff, out: &mut Vec<u8>) {
+async fn enc_viewpoints_diff_bin(d: &BcfViewpointsDiff, out: &mut Vec<u8>) {
     enc_named_triple_bin(d, |k, out| write_str_lp(out, k), enc_viewpoint_diff_bin, enc_viewpoint_bin, out)
 }
-fn dec_viewpoints_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<BcfViewpointsDiff, String> {
+async fn dec_viewpoints_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<BcfViewpointsDiff, String> {
     dec_named_triple_bin(reader, |r| read_str_lp(r), dec_viewpoint_diff_bin, dec_viewpoint_bin)
 }
 
-pub(crate) fn enc_topic_diff_bin(d: &BcfTopicDiff, out: &mut Vec<u8>) {
+pub(crate) async fn enc_topic_diff_bin(d: &BcfTopicDiff, out: &mut Vec<u8>) {
     write_opt_str(out, &d.title);
     write_opt_str(out, &d.description);
     write_opt_str(out, &d.status);
@@ -1323,7 +1323,7 @@ pub(crate) fn enc_topic_diff_bin(d: &BcfTopicDiff, out: &mut Vec<u8>) {
         enc_viewpoints_diff_bin(v, out);
     }
 }
-pub(crate) fn dec_topic_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<BcfTopicDiff, String> {
+pub(crate) async fn dec_topic_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<BcfTopicDiff, String> {
     let title = read_opt_str(reader)?;
     let description = read_opt_str(reader)?;
     let status = read_opt_str(reader)?;
@@ -1336,24 +1336,24 @@ pub(crate) fn dec_topic_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<B
     Ok(BcfTopicDiff { title, description, status, priority, labels, creation_date, creation_author, comments, viewpoints })
 }
 
-pub(crate) fn enc_topics_diff_bin(d: &BcfTopicsDiff, out: &mut Vec<u8>) {
+pub(crate) async fn enc_topics_diff_bin(d: &BcfTopicsDiff, out: &mut Vec<u8>) {
     enc_named_triple_bin(d, |k, out| write_str_lp(out, k), enc_topic_diff_bin, enc_topic_bin, out)
 }
-pub(crate) fn dec_topics_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<BcfTopicsDiff, String> {
+pub(crate) async fn dec_topics_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<BcfTopicsDiff, String> {
     dec_named_triple_bin(reader, |r| read_str_lp(r), dec_topic_diff_bin, dec_topic_bin)
 }
 
-pub(crate) fn enc_parts_diff_bin(d: &BcfPartsDiff, out: &mut Vec<u8>) {
+pub(crate) async fn enc_parts_diff_bin(d: &BcfPartsDiff, out: &mut Vec<u8>) {
     enc_named_triple_bin(d, |k, out| write_str_lp(out, k), enc_part_diff_bin, enc_part_bin, out)
 }
-pub(crate) fn dec_parts_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<BcfPartsDiff, String> {
+pub(crate) async fn dec_parts_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<BcfPartsDiff, String> {
     dec_named_triple_bin(reader, |r| read_str_lp(r), dec_part_diff_bin, dec_part_bin)
 }
 //#endregion 🔖️DiffValueBinaryCodecs
 //#endregion 🔖️BinaryCodecs
 
 //#region 🔖️TopLevel
-fn print_bcf_diff(d: &BcfDiff) -> String {
+async fn print_bcf_diff(d: &BcfDiff) -> String {
     let mut tokens: Vec<String> = Vec::new();
     if let Some(v) = &d.version {
         tokens.push(format!("version={}", enc_str(v)));
@@ -1366,7 +1366,7 @@ fn print_bcf_diff(d: &BcfDiff) -> String {
     }
     tokens.join(" ")
 }
-fn parse_bcf_diff(line: &str) -> Result<BcfDiff, String> {
+async fn parse_bcf_diff(line: &str) -> Result<BcfDiff, String> {
     let mut d = BcfDiff::default();
     if line.is_empty() {
         return Ok(d);
@@ -1386,10 +1386,10 @@ fn parse_bcf_diff(line: &str) -> Result<BcfDiff, String> {
 }
 
 impl protocol::DiffCodec for BcfDiff {
-    fn print_diff(&self) -> String {
+    async fn print_diff(&self) -> String {
         print_bcf_diff(self)
     }
-    fn parse_diff(line: &str) -> Result<Self, store::TextError> {
+    async fn parse_diff(line: &str) -> Result<Self, store::TextError> {
         parse_bcf_diff(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
     /// 🧪️ FG-wave: REAL binary frame (`format u8 | flags u8 | [version][topics][parts]`), matching
@@ -1399,7 +1399,7 @@ impl protocol::DiffCodec for BcfDiff {
     /// that shortcut before this pilot ladder). `flags` bit0/bit1/bit2 mark
     /// `version`/`topics`/`parts` presence; each present field's own binary payload follows in
     /// that fixed order (see `🔖️BinaryCodecs` above).
-    fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    async fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         let mut flags: u8 = 0;
         if self.version.is_some() {
             flags |= 0b001;
@@ -1422,7 +1422,7 @@ impl protocol::DiffCodec for BcfDiff {
         }
         Ok(out)
     }
-    fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    async fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         let mut reader = store::ByteReader::new(bytes);
         let malformed = |what: &'static str, offset: usize, detail: String| protocol::ProtocolError::Malformed { what, offset: offset as u64, detail };
         let _format = reader.read_u8().map_err(|e| malformed("diff format", 0, e.to_string()))?;
@@ -1445,7 +1445,7 @@ impl protocol::DiffCodec for BcfDiff {
 /// `diff_grammar_conformance_law`/`protocol_walk_law` conformance tests, same shape
 /// `📜️docx/…/🔺️diff/🦀️component.rs`'s own `snapshot_a()`/`snapshot_b()` establishes.
 #[cfg(test)]
-pub(crate) fn demo_snapshot_a() -> BcfSnapshot {
+pub(crate) async fn demo_snapshot_a() -> BcfSnapshot {
     BcfSnapshot {
         schema: crate::artifacts::bcf::STDIO_BCF_DOCUMENT_SCHEMA.into(),
         version: "2.1".into(),
@@ -1495,7 +1495,7 @@ pub(crate) fn demo_snapshot_a() -> BcfSnapshot {
 }
 
 #[cfg(test)]
-pub(crate) fn demo_snapshot_b() -> BcfSnapshot {
+pub(crate) async fn demo_snapshot_b() -> BcfSnapshot {
     BcfSnapshot {
         schema: crate::artifacts::bcf::STDIO_BCF_DOCUMENT_SCHEMA.into(),
         version: "2.2".into(),
@@ -1543,7 +1543,7 @@ pub(crate) fn demo_snapshot_b() -> BcfSnapshot {
 /// 🧪️ The demo cases proper — `default()` (empty diff) plus every real `between()` shape (both
 /// directions, and the trivially-empty self-diff).
 #[cfg(test)]
-pub(crate) fn demo_diff_cases() -> Vec<BcfDiff> {
+pub(crate) async fn demo_diff_cases() -> Vec<BcfDiff> {
     let a = demo_snapshot_a();
     let b = demo_snapshot_b();
     vec![BcfDiff::default(), BcfDiff::between(&a, &b), BcfDiff::between(&b, &a), BcfDiff::between(&a, &a)]

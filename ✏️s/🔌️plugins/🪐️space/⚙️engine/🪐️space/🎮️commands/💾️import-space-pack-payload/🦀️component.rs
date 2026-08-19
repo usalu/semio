@@ -13,7 +13,7 @@ pub struct ImportSpacePackPayload {
     pub payload: String,
 }
 
-pub fn handle(payload: &ImportSpacePackPayload, _doc: &ArtifactView<'_, WorkflowSnapshot>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
+pub async fn handle(payload: &ImportSpacePackPayload, _doc: &ArtifactView<'_, WorkflowSnapshot>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
     use base64::Engine;
     let base64_part = payload.payload.split_once(',').map_or(payload.payload.as_str(), |(_, data)| data);
     if let Ok(bytes) = base64::engine::general_purpose::STANDARD.decode(base64_part) {

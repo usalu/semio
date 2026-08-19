@@ -7,12 +7,12 @@ pub const PLAYGROUND_EDIT_MODE_EDIT: &str = "edit";
 
 //#region 🔖️Definition
 /// 🧱️ Stitched into the editor manifest by `crate::editor::playground::create_playground_editor`.
-pub fn definition() -> ModeDefinition {
+pub async fn definition() -> ModeDefinition {
     ModeDefinition { id: PLAYGROUND_EDIT_MODE_EDIT.into(), label: LocalizedLabel::native("Edit", "Bearbeiten"), icon_id: "pencil".into(), tools: Vec::new(), layout_id: None, commands: Vec::new() }
 }
 
 /// 🪟️ One window, one layout slot.
-pub fn layout() -> WindowLayout {
+pub async fn layout() -> WindowLayout {
     create_stack_layout(&[main::WINDOW_KIND_ID.into()], Some(&["Schema".into()]))
 }
 //#endregion 🔖️Definition
@@ -23,7 +23,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn the_edit_layout_lists_the_one_window() {
+    async fn the_edit_layout_lists_the_one_window() {
         let json = serde_json::to_string(&layout()).expect("layout json");
         assert!(json.contains(main::WINDOW_KIND_ID), "layout must reference the main window kind: {json}");
     }

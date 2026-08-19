@@ -4,7 +4,7 @@ use super::mutation::ChangeSnowAltitudeM;
 use crate::artifacts::en1991::{En1991Diff, En1991Snapshot};
 
 //#region 🔖️Diff
-pub fn diff(payload: &ChangeSnowAltitudeM, base: &En1991Snapshot) -> protocol::MutationOutcome<En1991Diff> {
+pub async fn diff(payload: &ChangeSnowAltitudeM, base: &En1991Snapshot) -> protocol::MutationOutcome<En1991Diff> {
     if !payload.new_snow_altitude_m.is_finite() {
         return protocol::MutationOutcome::fatal("mutation.invariant", "Snow altitude m must be a finite number.", Vec::<String>::new());
     }

@@ -26,22 +26,22 @@ pub struct JpgArtifact {
 }
 
 impl Default for JpgArtifact {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self::from_snapshot(JpgSnapshot::default())
     }
 }
 
 impl JpgArtifact {
-    pub fn to_snapshot(&self) -> JpgSnapshot {
+    pub async fn to_snapshot(&self) -> JpgSnapshot {
         // 🎪️ `JpgArtifact` is the reduced UI-editable view (schema+raster only) — it never
         // carries frame/table data, so `frame`/`sof_marker`/`arithmetic`/`quant_tables`/
         // `huffman_tables`/etc. fall back to `JpgSnapshot::default()`'s "no decoded frame" state.
         JpgSnapshot { schema: self.schema.clone(), width: self.width, height: self.height, pixels: self.pixels.clone(), ..JpgSnapshot::default() }
     }
-    pub fn from_snapshot(snapshot: JpgSnapshot) -> Self {
+    pub async fn from_snapshot(snapshot: JpgSnapshot) -> Self {
         Self { schema: snapshot.schema, width: snapshot.width, height: snapshot.height, pixels: snapshot.pixels }
     }
-    pub fn set_snapshot(&mut self, snapshot: JpgSnapshot) {
+    pub async fn set_snapshot(&mut self, snapshot: JpgSnapshot) {
         self.schema = snapshot.schema;
         self.width = snapshot.width;
         self.height = snapshot.height;
@@ -49,7 +49,7 @@ impl JpgArtifact {
     }
 }
 
-pub fn jpg_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
+pub async fn jpg_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
     schema::ArtifactSchemaDescriptor {
         id: "s.stdio.jpg",
         artifact: schema::FacetLeaves {
@@ -99,27 +99,27 @@ pub mod derived_construction {
         type Snapshot = JpgSnapshot;
         type Mutation = JpgMutation;
         type Diff = JpgDiff;
-        fn empty() -> Self {
+        async fn empty() -> Self {
             Self { snapshot: JpgSnapshot::default(), diagnostics: Vec::new() }
         }
-        fn from_snapshot(snapshot: Self::Snapshot) -> Self {
+        async fn from_snapshot(snapshot: Self::Snapshot) -> Self {
             Self { snapshot, diagnostics: Vec::new() }
         }
-        fn from_text(text: &str) -> Result<Self, store::TextError> {
+        async fn from_text(text: &str) -> Result<Self, store::TextError> {
             Ok(Self::from_snapshot(<JpgSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
-        fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
+        async fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
             Ok(Self::from_snapshot(<JpgSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
         }
-        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
+        async fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let diff = crate::artifacts::jpg::schema::mutations::apply_jpg_mutation(&mut self.snapshot, &mutation);
             (self, diff)
         }
-        fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
+        async fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
             self.snapshot = <JpgDiff as protocol::MutationDiff<JpgSnapshot>>::apply(&diff, &self.snapshot)?;
             Ok(self)
         }
-        fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
+        async fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
             if self.diagnostics.is_empty() {
                 Ok(self.snapshot)
             } else {
@@ -153,7 +153,7 @@ pub mod derived_analysis {
         type Parts = JpgParts;
         const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.jpg", standard: StandardId("jfif-1.01"), subset: SubsetId("*") };
 
-        fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
+        async fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
             const SIG: [u8; 2] = [0xFF, 0xD8]; // SOI
             match source {
                 AnalyzeSource::Binary(bytes) => {
@@ -190,7 +190,7 @@ pub mod derived_analysis {
             }
         }
 
-        fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
+        async fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
             let mut parts = JpgParts::default();
             let mut diagnostics = Vec::new();
             let mut confidence = IoConfidence::High;
@@ -241,7 +241,7 @@ semio_framework_plugin::derive_artifact_facets!(
 // cluster (superseded by `declaration()` in the artifact root, zero real callers) deleted
 // outright; the real codec (`encode_jpg`/`decode_jpg`/`JpgError` + every pure format algorithm)
 // and `io_registry` moved to `../🚪️io`; tests moved beside what they now test.
-pub fn empty_jpg_snapshot() -> JpgSnapshot {
+pub async fn empty_jpg_snapshot() -> JpgSnapshot {
     JpgSnapshot::default()
 }
 
@@ -257,7 +257,7 @@ pub fn empty_jpg_snapshot() -> JpgSnapshot {
 /// width*height*3 needs a two-field product; other_segments' body length needs `Lp - 2`, neither
 /// expressible by this dialect's `Field`/`Array` primitives).
 #[cfg(test)]
-pub(crate) fn demo_jpg_snapshot() -> JpgSnapshot {
+pub(crate) async fn demo_jpg_snapshot() -> JpgSnapshot {
     use crate::artifacts::jpg::JpgSnapshot;
     use crate::artifacts::jpg::STDIO_JPG_DOCUMENT_SCHEMA;
     let (w, h) = (16u32, 16u32);

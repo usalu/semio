@@ -13,16 +13,16 @@ pub const SCALE_UTILITY_ID: &str = "scale";
 const TRANSFORM_GROUP: &str = "transform";
 
 /// 🧱️ Stitched into the app manifest by `crate::editor::puzzle5d::create_puzzle5d_app`.
-pub fn move_definition() -> UtilityDefinition {
+pub async fn move_definition() -> UtilityDefinition {
     UtilityDefinition { group: Some(TRANSFORM_GROUP.into()), ..UtilityDefinition::new(MOVE_UTILITY_ID, LocalizedLabel::native("Move", "Verschieben"), "move") }
 }
 
 /// 🧱️ Stitched into the app manifest by `crate::editor::puzzle5d::create_puzzle5d_app`.
-pub fn rotate_definition() -> UtilityDefinition {
+pub async fn rotate_definition() -> UtilityDefinition {
     UtilityDefinition { group: Some(TRANSFORM_GROUP.into()), ..UtilityDefinition::new(ROTATE_UTILITY_ID, LocalizedLabel::native("Rotate", "Drehen"), "rotate-cw") }
 }
 
 /// 🧱️ Stitched into the app manifest by `crate::editor::puzzle5d::create_puzzle5d_app`.
-pub fn scale_definition() -> UtilityDefinition {
+pub async fn scale_definition() -> UtilityDefinition {
     UtilityDefinition { group: Some(TRANSFORM_GROUP.into()), ..UtilityDefinition::new(SCALE_UTILITY_ID, LocalizedLabel::native("Scale", "Skalieren"), "maximize-2") }
 }

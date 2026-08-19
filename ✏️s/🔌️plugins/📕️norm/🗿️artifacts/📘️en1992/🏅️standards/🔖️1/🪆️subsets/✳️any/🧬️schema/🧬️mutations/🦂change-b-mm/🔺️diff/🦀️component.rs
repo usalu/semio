@@ -5,7 +5,7 @@ use crate::artifacts::en1992::mutations::change_b_mm::mutation::ChangeBMm;
 use crate::artifacts::en1992::En1992Snapshot;
 
 //#region 🔖️Diff
-pub fn diff(payload: &ChangeBMm, base: &En1992Snapshot) -> protocol::MutationOutcome<En1992Diff> {
+pub async fn diff(payload: &ChangeBMm, base: &En1992Snapshot) -> protocol::MutationOutcome<En1992Diff> {
     if !payload.new_b_mm.is_finite() {
         return protocol::MutationOutcome::fatal("mutation.invariant", "B mm must be a finite number.", Vec::<String>::new());
     }

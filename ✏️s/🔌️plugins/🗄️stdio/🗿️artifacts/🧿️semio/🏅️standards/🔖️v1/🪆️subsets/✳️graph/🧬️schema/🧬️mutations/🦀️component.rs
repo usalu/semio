@@ -70,7 +70,7 @@ mod tests {
     use crate::artifacts::semio::standards::v1::subsets::value::schema::snapshot::{SemioValue, SemioValueEntry};
     use protocol::{Mutation, MutationDiff, SemanticMutation};
 
-    fn fixture() -> SemioGraphSnapshot {
+    async fn fixture() -> SemioGraphSnapshot {
         SemioGraphSnapshot {
             nodes: vec![
                 SemioGraphNode {
@@ -94,13 +94,13 @@ mod tests {
     /// legitimately lands it at the end. Comparing snapshots for round-trip fidelity must therefore
     /// be order-INSENSITIVE over `nodes`/`edges` (same SET, not same SEQUENCE) — a physical `Vec`
     /// is the storage representation, not the domain's equality contract.
-    fn sorted_by_id(mut s: SemioGraphSnapshot) -> SemioGraphSnapshot {
+    async fn sorted_by_id(mut s: SemioGraphSnapshot) -> SemioGraphSnapshot {
         s.nodes.sort_by(|a, b| a.id.value.cmp(&b.id.value));
         s.edges.sort_by(|a, b| a.id.value.cmp(&b.id.value));
         s
     }
 
-    fn round_trip(base: &SemioGraphSnapshot, operation: &SemioGraphMutation) -> SemioGraphSnapshot {
+    async fn round_trip(base: &SemioGraphSnapshot, operation: &SemioGraphMutation) -> SemioGraphSnapshot {
         let forward = operation.diff(base).diff().apply(base).expect("apply must succeed for a well-formed fixture");
         let backwards = operation.inverse(base);
         let mut restored = forward.clone();
@@ -116,7 +116,7 @@ mod tests {
     }
 
     #[test]
-    fn create_delete_node_round_trips() {
+    async fn create_delete_node_round_trips() {
         let base = fixture();
         let new_node = SemioGraphNode { id: GraphNodeId::new("n3"), kind: "extra".into(), label: "Extra".into(), position: SemioPoint2 { x: 5.0, y: 5.0 }, ports: vec![], properties: vec![] };
 
@@ -142,7 +142,7 @@ mod tests {
     }
 
     #[test]
-    fn delete_node_of_an_absent_id_has_an_empty_inverse() {
+    async fn delete_node_of_an_absent_id_has_an_empty_inverse() {
         let base = fixture();
         let delete = SemioGraphMutation::DeleteNode(delete_node::mutation::DeleteNode { id: GraphNodeId::new("absent") });
         assert!(delete.inverse(&base).is_empty(), "deleting an absent node has nothing to undo");
@@ -150,7 +150,7 @@ mod tests {
     }
 
     #[test]
-    fn delete_node_inverse_is_a_real_multi_mutation_cascade() {
+    async fn delete_node_inverse_is_a_real_multi_mutation_cascade() {
         let base = fixture();
         let delete = SemioGraphMutation::DeleteNode(delete_node::mutation::DeleteNode { id: GraphNodeId::new("n1") });
         let undo = delete.inverse(&base);
@@ -170,7 +170,7 @@ mod tests {
     }
 
     #[test]
-    fn change_node_kind_and_label_and_move_node_round_trip() {
+    async fn change_node_kind_and_label_and_move_node_round_trip() {
         let base = fixture();
 
         let change_kind = SemioGraphMutation::ChangeNodeKind(change_node_kind::mutation::ChangeNodeKind { id: GraphNodeId::new("n1"), new_kind: "relay".into() });
@@ -190,7 +190,7 @@ mod tests {
     }
 
     #[test]
-    fn add_remove_node_port_round_trips() {
+    async fn add_remove_node_port_round_trips() {
         let base = fixture();
         let port = SemioGraphPort { name: "extra".into(), kind: SemioGraphPortKind::InOut };
 
@@ -207,7 +207,7 @@ mod tests {
     }
 
     #[test]
-    fn add_remove_node_property_round_trips() {
+    async fn add_remove_node_property_round_trips() {
         let base = fixture();
         let property = SemioValueEntry { key: "weight".into(), value: SemioValue::Int { lexeme: "7".into() } };
 
@@ -224,7 +224,7 @@ mod tests {
     }
 
     #[test]
-    fn create_delete_edge_round_trips() {
+    async fn create_delete_edge_round_trips() {
         let base = fixture();
         let new_edge = SemioGraphEdge { id: GraphEdgeId::new("e2"), source: GraphNodeId::new("n2"), target: GraphNodeId::new("n1"), kind: "back".into(), label: "Return".into() };
 
@@ -242,7 +242,7 @@ mod tests {
     }
 
     #[test]
-    fn semantic_kinds_cover_every_variant() {
+    async fn semantic_kinds_cover_every_variant() {
         assert_eq!(SemioGraphMutation::kinds().len(), 11);
         let mutation = SemioGraphMutation::DeleteNode(delete_node::mutation::DeleteNode { id: GraphNodeId::new("n1") });
         assert_eq!(mutation.semantics().kind, "delete-node");

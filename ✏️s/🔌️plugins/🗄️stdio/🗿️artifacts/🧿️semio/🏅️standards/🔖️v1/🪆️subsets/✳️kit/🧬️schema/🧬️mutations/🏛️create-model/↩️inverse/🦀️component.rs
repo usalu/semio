@@ -5,7 +5,7 @@ use crate::artifacts::semio::standards::v1::subsets::kit::schema::mutations::{de
 use crate::artifacts::semio::standards::v1::subsets::kit::schema::snapshot::SemioKitSnapshot;
 
 //#region 🔖️Inverse
-pub fn inverse(payload: &CreateModel, _base: &SemioKitSnapshot) -> Vec<SemioKitMutation> {
+pub async fn inverse(payload: &CreateModel, _base: &SemioKitSnapshot) -> Vec<SemioKitMutation> {
     vec![SemioKitMutation::DeleteModel(delete_model::mutation::DeleteModel { child_id: payload.child_id.clone() })]
 }
 //#endregion 🔖️Inverse

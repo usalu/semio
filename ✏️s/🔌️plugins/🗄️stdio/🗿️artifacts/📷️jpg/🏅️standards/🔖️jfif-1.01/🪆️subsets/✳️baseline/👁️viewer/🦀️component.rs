@@ -20,10 +20,10 @@ pub enum JpgBaselineViewCommand {
 }
 
 impl protocol::OpBinary for JpgBaselineViewCommand {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         Ok(Vec::new())
     }
-    fn decode_op(_bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    async fn decode_op(_bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         Ok(JpgBaselineViewCommand::Noop)
     }
 }
@@ -47,15 +47,15 @@ impl ArtifactViewer for JpgBaselineViewer {
     const DIALECT: Dialect = JPG_BASELINE_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = STDIO_JPG_DOCUMENT_SCHEMA;
 
-    fn initial_snapshot() -> Self::Snapshot {
+    async fn initial_snapshot() -> Self::Snapshot {
         JpgSnapshot::default()
     }
 
-    fn handle(_command: &Self::Command, _doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _interaction: &semio_framework_plugin::app::InteractionView<'_>, _engines: &EngineHandles) -> Result<ViewEmit<Self::ConfigMutation>, Fault> {
+    async fn handle(_command: &Self::Command, _doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _interaction: &semio_framework_plugin::app::InteractionView<'_>, _engines: &EngineHandles) -> Result<ViewEmit<Self::ConfigMutation>, Fault> {
         Ok(ViewEmit::default())
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> UiNode {
+    async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> UiNode {
         match body_key {
             main::BODY_KEY => main::render(doc.snapshot),
             _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))),
@@ -65,7 +65,7 @@ impl ArtifactViewer for JpgBaselineViewer {
 //#endregion 🔖️Viewer
 
 //#region 🔖️Manifest
-pub fn create_jpg_baseline_viewer() -> semio_framework_plugin::AppDefinition {
+pub async fn create_jpg_baseline_viewer() -> semio_framework_plugin::AppDefinition {
     Viewer::builder(JPG_BASELINE_DIALECT)
         .document(["semio", "jpg"])
         .icon_id("image")
@@ -83,14 +83,14 @@ mod tests {
     use super::*;
 
     #[test]
-    fn create_viewer_builds_a_definition_for_the_viewer_role() {
+    async fn create_viewer_builds_a_definition_for_the_viewer_role() {
         let def = create_jpg_baseline_viewer();
         assert_eq!(def.role, semio_framework::AppRole::Viewer);
         assert_eq!(def.dialect, JPG_BASELINE_DIALECT.into());
     }
 
     #[test]
-    fn viewer_dialect_matches_the_artifact_coordinate() {
+    async fn viewer_dialect_matches_the_artifact_coordinate() {
         assert_eq!(<JpgBaselineViewer as ArtifactViewer>::DIALECT, JPG_BASELINE_DIALECT);
     }
 }

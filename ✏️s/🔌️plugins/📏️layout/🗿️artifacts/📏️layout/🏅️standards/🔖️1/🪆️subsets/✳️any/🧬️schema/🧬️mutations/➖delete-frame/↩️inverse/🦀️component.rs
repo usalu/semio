@@ -6,7 +6,7 @@ use crate::artifacts::layout::mutations::{create_frame, LayoutMutation};
 use crate::artifacts::layout::LayoutSnapshot;
 
 //#region ➖️DeleteFrame
-pub fn inverse_delete_frame(payload: &DeleteFrame, base: &LayoutSnapshot) -> Vec<LayoutMutation> {
+pub async fn inverse_delete_frame(payload: &DeleteFrame, base: &LayoutSnapshot) -> Vec<LayoutMutation> {
     let Some(page) = base.pages.iter().find(|page| page.id == payload.page_id) else {
         return Vec::new();
     };

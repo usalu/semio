@@ -33,7 +33,7 @@ pub(crate) struct GltfCompactnessRaw {
     pub(crate) hull_volume: Option<f64>,
 }
 
-pub(crate) fn raw(context: &GltfGeometryContext<'_>) -> GltfCompactnessRaw {
+pub(crate) async fn raw(context: &GltfGeometryContext<'_>) -> GltfCompactnessRaw {
     let hull_input = hull_sample(&context.points, context.policy.sampling_budget as usize);
     let tolerance = (context.diagonal * context.policy.relative_tolerance).max(context.policy.absolute_length_tolerance);
     let hull_volume = convex_hull_metrics(&hull_input, tolerance).map(|(_, volume, _)| volume);
@@ -47,7 +47,7 @@ pub(crate) fn raw(context: &GltfGeometryContext<'_>) -> GltfCompactnessRaw {
 impl GltfInferenceStage<GltfGeometryContext<'_>> for GltfCompactnessInference {
     type Output = GltfCompactnessIndicators;
 
-    fn infer(context: &GltfGeometryContext<'_>) -> Self::Output {
+    async fn infer(context: &GltfGeometryContext<'_>) -> Self::Output {
         let raw = raw(context);
         Self::Output {
             compactness: compactness::from_raw(context, &raw),
@@ -58,7 +58,7 @@ impl GltfInferenceStage<GltfGeometryContext<'_>> for GltfCompactnessInference {
         }
     }
 
-    fn unavailable(diagnostic_ids: &[String]) -> Self::Output {
+    async fn unavailable(diagnostic_ids: &[String]) -> Self::Output {
         Self::Output {
             compactness: compactness::unavailable_measure(diagnostic_ids),
             surface_to_volume_ratio: surface_to_volume_ratio::unavailable_measure(diagnostic_ids),

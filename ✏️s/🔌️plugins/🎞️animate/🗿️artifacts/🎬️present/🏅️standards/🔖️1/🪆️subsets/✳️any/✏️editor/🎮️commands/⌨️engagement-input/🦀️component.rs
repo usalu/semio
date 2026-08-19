@@ -13,6 +13,6 @@ pub struct EngagementInput {
     pub value: String,
 }
 
-pub fn handle(payload: &EngagementInput, _doc: &ArtifactView<'_, PresentSnapshot>, _cfg: &ConfigView<'_, PresentConfig>, _ctx: &mut PresentDispatchCtx) -> Result<Emit<PresentMutation, PresentConfigMutation>, Fault> {
+pub async fn handle(payload: &EngagementInput, _doc: &ArtifactView<'_, PresentSnapshot>, _cfg: &ConfigView<'_, PresentConfig>, _ctx: &mut PresentDispatchCtx) -> Result<Emit<PresentMutation, PresentConfigMutation>, Fault> {
     Ok(Emit::config(vec![PresentConfigMutation::SetEngagementInput { value: payload.value.clone() }]))
 }

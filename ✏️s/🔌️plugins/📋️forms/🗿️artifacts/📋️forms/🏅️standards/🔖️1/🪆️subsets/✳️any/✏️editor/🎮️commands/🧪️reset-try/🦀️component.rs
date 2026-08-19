@@ -10,6 +10,6 @@ use serde::{Deserialize, Serialize};
 #[dsl(keyword = "reset-try")]
 pub struct ResetTry {}
 
-pub fn handle(_payload: &ResetTry, _doc: &ArtifactView<'_, FormsSnapshot>, _cfg: &ConfigView<'_, FormsConfig>) -> Result<Emit<FormMutation, FormsConfigMutation>, Fault> {
+pub async fn handle(_payload: &ResetTry, _doc: &ArtifactView<'_, FormsSnapshot>, _cfg: &ConfigView<'_, FormsConfig>) -> Result<Emit<FormMutation, FormsConfigMutation>, Fault> {
     Ok(Emit::config(reset_try_config_mutations()))
 }

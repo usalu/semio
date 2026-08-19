@@ -39,14 +39,14 @@ pub struct NoteArtifact {
 
 //#region 🔖️Conversions
 impl Default for NoteArtifact {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self::from_snapshot(crate::artifacts::note::NoteSnapshot::default())
     }
 }
 
 impl NoteArtifact {
     /// 📸️ Persisted subset.
-    pub fn to_snapshot(&self) -> crate::artifacts::note::NoteSnapshot {
+    pub async fn to_snapshot(&self) -> crate::artifacts::note::NoteSnapshot {
         crate::artifacts::note::NoteSnapshot {
             schema: self.schema.clone(),
             id: self.id.clone(),
@@ -66,7 +66,7 @@ impl NoteArtifact {
     }
 
     /// 🧬️ Builds a full artifact from a snapshot, leaving UI fields at defaults.
-    pub fn from_snapshot(snapshot: crate::artifacts::note::NoteSnapshot) -> Self {
+    pub async fn from_snapshot(snapshot: crate::artifacts::note::NoteSnapshot) -> Self {
         Self {
             schema: snapshot.schema,
             id: snapshot.id,
@@ -86,7 +86,7 @@ impl NoteArtifact {
         }
     }
 
-    fn default_ui() -> Self {
+    async fn default_ui() -> Self {
         Self {
             schema: NOTE_DOCUMENT_SCHEMA.into(),
             id: String::new(),
@@ -114,7 +114,7 @@ impl NoteArtifact {
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
-    pub fn set_snapshot(&mut self, snapshot: crate::artifacts::note::NoteSnapshot) {
+    pub async fn set_snapshot(&mut self, snapshot: crate::artifacts::note::NoteSnapshot) {
         self.schema = snapshot.schema;
         self.id = snapshot.id;
         self.title = snapshot.title;
@@ -135,7 +135,7 @@ impl NoteArtifact {
 
 //#region 🔖️Descriptor
 /// 🧬️ Descriptor for `s.note.note` — twenty handcrafted schema leaves.
-pub fn note_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
+pub async fn note_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
     schema::ArtifactSchemaDescriptor {
         id: "s.note.note",
         artifact: schema::FacetLeaves {
@@ -176,7 +176,7 @@ pub fn note_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
 const SEMIO_NOTE_EXAMPLE_TEXT: &str = crate::artifacts::note::standards::v1::subsets::any::io::snapshot::text::SEMIO_NOTE_EXAMPLE_TEXT;
 
 /// 🆔️ Monotonic id generator for freshly created/duplicated/imported blocks.
-pub fn create_note_id(prefix: &str) -> String {
+pub async fn create_note_id(prefix: &str) -> String {
     use std::sync::atomic::{AtomicU64, Ordering};
     static NEXT: AtomicU64 = AtomicU64::new(1);
     let serial = NEXT.fetch_add(1, Ordering::Relaxed);
@@ -186,18 +186,18 @@ pub fn create_note_id(prefix: &str) -> String {
 /// 📄️ The `semio` example, parsed once from {@link SEMIO_NOTE_EXAMPLE_TEXT} — the source of truth for
 /// every "semio" example call site (`setActiveExample`, tests). Falls back to the empty document if the
 /// fixture ever fails to parse, matching the old JSON fixture's failure behavior.
-pub fn semio_example_snapshot() -> crate::artifacts::note::NoteSnapshot {
+pub async fn semio_example_snapshot() -> crate::artifacts::note::NoteSnapshot {
     <crate::artifacts::note::NoteSnapshot as store::ArtifactDsl>::parse_dsl(SEMIO_NOTE_EXAMPLE_TEXT).unwrap_or_else(|_| empty_note_snapshot())
 }
 
 /// 📄️ JSON re-serialization of {@link semio_example_snapshot}, for the framework-generic call sites that
 /// contractually require JSON text (`PluginApp::render`'s `projection_override_json`, `App::example`'s
 /// manifest `document_json`).
-pub fn semio_example_json() -> String {
+pub async fn semio_example_json() -> String {
     serde_json::to_string(&semio_example_snapshot()).expect("serialize semio example document")
 }
 
-pub fn empty_note_snapshot() -> crate::artifacts::note::NoteSnapshot {
+pub async fn empty_note_snapshot() -> crate::artifacts::note::NoteSnapshot {
     crate::artifacts::note::NoteSnapshot {
         schema: NOTE_DOCUMENT_SCHEMA.into(),
         id: "empty".into(),
@@ -216,19 +216,19 @@ pub fn empty_note_snapshot() -> crate::artifacts::note::NoteSnapshot {
     }
 }
 
-pub fn block_id(block: &NoteBlockNode) -> &str {
+pub async fn block_id(block: &NoteBlockNode) -> &str {
     match block {
         NoteBlockNode::Text { id, .. } | NoteBlockNode::Image { id, .. } | NoteBlockNode::Table { id, .. } | NoteBlockNode::Math { id, .. } | NoteBlockNode::Ink { id, .. } | NoteBlockNode::Group { id, .. } => id,
     }
 }
 
-pub fn block_name(block: &NoteBlockNode) -> &str {
+pub async fn block_name(block: &NoteBlockNode) -> &str {
     match block {
         NoteBlockNode::Text { name, .. } | NoteBlockNode::Image { name, .. } | NoteBlockNode::Table { name, .. } | NoteBlockNode::Math { name, .. } | NoteBlockNode::Ink { name, .. } | NoteBlockNode::Group { name, .. } => name,
     }
 }
 
-pub fn block_kind(block: &NoteBlockNode) -> &str {
+pub async fn block_kind(block: &NoteBlockNode) -> &str {
     match block {
         NoteBlockNode::Text { .. } => "text",
         NoteBlockNode::Image { .. } => "image",
@@ -239,19 +239,19 @@ pub fn block_kind(block: &NoteBlockNode) -> &str {
     }
 }
 
-pub fn block_visible(block: &NoteBlockNode) -> bool {
+pub async fn block_visible(block: &NoteBlockNode) -> bool {
     match block {
         NoteBlockNode::Text { visible, .. } | NoteBlockNode::Image { visible, .. } | NoteBlockNode::Table { visible, .. } | NoteBlockNode::Math { visible, .. } | NoteBlockNode::Ink { visible, .. } | NoteBlockNode::Group { visible, .. } => *visible,
     }
 }
 
-pub fn block_locked(block: &NoteBlockNode) -> bool {
+pub async fn block_locked(block: &NoteBlockNode) -> bool {
     match block {
         NoteBlockNode::Text { locked, .. } | NoteBlockNode::Image { locked, .. } | NoteBlockNode::Table { locked, .. } | NoteBlockNode::Math { locked, .. } | NoteBlockNode::Ink { locked, .. } | NoteBlockNode::Group { locked, .. } => *locked,
     }
 }
 
-pub fn block_icon(kind: &str) -> &str {
+pub async fn block_icon(kind: &str) -> &str {
     match kind {
         "text" => "type",
         "image" => "image",
@@ -262,15 +262,15 @@ pub fn block_icon(kind: &str) -> &str {
     }
 }
 
-pub fn block_tree_row_id(block: &NoteBlockNode) -> String {
+pub async fn block_tree_row_id(block: &NoteBlockNode) -> String {
     format!("note-play-block:{}", block_id(block))
 }
 
-pub fn block_id_from_tree_row_id(row_id: &str) -> Option<String> {
+pub async fn block_id_from_tree_row_id(row_id: &str) -> Option<String> {
     row_id.strip_prefix("note-play-block:").map(str::to_string)
 }
 
-pub fn find_block<'a>(blocks: &'a [NoteBlockNode], target_id: &str) -> Option<&'a NoteBlockNode> {
+pub async fn find_block<'a>(blocks: &'a [NoteBlockNode], target_id: &str) -> Option<&'a NoteBlockNode> {
     for block in blocks {
         if block_id(block) == target_id {
             return Some(block);
@@ -287,7 +287,7 @@ pub fn find_block<'a>(blocks: &'a [NoteBlockNode], target_id: &str) -> Option<&'
 /// 🧭️ Locates `target_id`'s parent (`None` = document root) and sibling index — the position a
 /// `delete-block`/`move-block-to-container` mutation's diff/inverse needs to reconstruct or
 /// reparent a node exactly, since `find_block` alone only returns the node's content.
-pub fn find_block_location(blocks: &[NoteBlockNode], target_id: &str) -> Option<(Option<String>, usize)> {
+pub async fn find_block_location(blocks: &[NoteBlockNode], target_id: &str) -> Option<(Option<String>, usize)> {
     if let Some(index) = blocks.iter().position(|block| block_id(block) == target_id) {
         return Some((None, index));
     }
@@ -304,9 +304,9 @@ pub fn find_block_location(blocks: &[NoteBlockNode], target_id: &str) -> Option<
     None
 }
 
-pub fn flatten_blocks(blocks: &[NoteBlockNode]) -> Vec<&NoteBlockNode> {
+pub async fn flatten_blocks(blocks: &[NoteBlockNode]) -> Vec<&NoteBlockNode> {
     let mut out = Vec::new();
-    fn visit<'a>(blocks: &'a [NoteBlockNode], out: &mut Vec<&'a NoteBlockNode>) {
+    async fn visit<'a>(blocks: &'a [NoteBlockNode], out: &mut Vec<&'a NoteBlockNode>) {
         for block in blocks {
             out.push(block);
             if let NoteBlockNode::Group { children, .. } = block {
@@ -318,7 +318,7 @@ pub fn flatten_blocks(blocks: &[NoteBlockNode]) -> Vec<&NoteBlockNode> {
     out
 }
 
-pub fn create_block_by_kind(kind: &str, x: f64, y: f64) -> NoteBlockNode {
+pub async fn create_block_by_kind(kind: &str, x: f64, y: f64) -> NoteBlockNode {
     let id = create_note_id(kind);
     match kind {
         "image" => NoteBlockNode::Image { id, name: "Image".into(), x, y, width: 240.0, height: 160.0, rotation: 0.0, visible: true, locked: false, image_key: "placeholder".into() },
@@ -362,7 +362,7 @@ pub fn create_block_by_kind(kind: &str, x: f64, y: f64) -> NoteBlockNode {
     }
 }
 
-pub fn remove_block_from_tree(blocks: &mut Vec<NoteBlockNode>, target_id: &str) -> bool {
+pub async fn remove_block_from_tree(blocks: &mut Vec<NoteBlockNode>, target_id: &str) -> bool {
     if let Some(index) = blocks.iter().position(|block| block_id(block) == target_id) {
         blocks.remove(index);
         return true;
@@ -377,7 +377,7 @@ pub fn remove_block_from_tree(blocks: &mut Vec<NoteBlockNode>, target_id: &str) 
     false
 }
 
-pub fn reid_block_tree(block: &mut NoteBlockNode, rename_top: bool) {
+pub async fn reid_block_tree(block: &mut NoteBlockNode, rename_top: bool) {
     let kind = block_kind(block).to_string();
     // 🧬️ A duplicated Text block must never keep its source's composed `content` child handle — two
     // distinct block ids sharing one content-addressed child slot would violate the "a child slot is
@@ -403,13 +403,13 @@ pub fn reid_block_tree(block: &mut NoteBlockNode, rename_top: bool) {
     }
 }
 
-pub fn clone_block(block: &NoteBlockNode) -> NoteBlockNode {
+pub async fn clone_block(block: &NoteBlockNode) -> NoteBlockNode {
     let mut cloned: NoteBlockNode = serde_json::from_value(serde_json::to_value(block).unwrap()).unwrap();
     reid_block_tree(&mut cloned, true);
     cloned
 }
 
-pub fn offset_block_tree(block: &mut NoteBlockNode, dx: f64, dy: f64) {
+pub async fn offset_block_tree(block: &mut NoteBlockNode, dx: f64, dy: f64) {
     match block {
         NoteBlockNode::Text { x, y, .. } | NoteBlockNode::Image { x, y, .. } | NoteBlockNode::Table { x, y, .. } | NoteBlockNode::Math { x, y, .. } | NoteBlockNode::Ink { x, y, .. } | NoteBlockNode::Group { x, y, .. } => {
             *x += dx;
@@ -423,7 +423,7 @@ pub fn offset_block_tree(block: &mut NoteBlockNode, dx: f64, dy: f64) {
     }
 }
 
-pub fn insert_after(blocks: &mut Vec<NoteBlockNode>, target_id: &str, block: NoteBlockNode) -> bool {
+pub async fn insert_after(blocks: &mut Vec<NoteBlockNode>, target_id: &str, block: NoteBlockNode) -> bool {
     if let Some(index) = blocks.iter().position(|entry| block_id(entry) == target_id) {
         blocks.insert(index + 1, block);
         return true;
@@ -438,7 +438,7 @@ pub fn insert_after(blocks: &mut Vec<NoteBlockNode>, target_id: &str, block: Not
     false
 }
 
-pub fn insert_block(blocks: &mut Vec<NoteBlockNode>, parent_id: Option<&str>, index: usize, block: NoteBlockNode) {
+pub async fn insert_block(blocks: &mut Vec<NoteBlockNode>, parent_id: Option<&str>, index: usize, block: NoteBlockNode) {
     if let Some(parent_id) = parent_id {
         for node in blocks.iter_mut() {
             if let NoteBlockNode::Group { id, children, .. } = node {
@@ -456,7 +456,7 @@ pub fn insert_block(blocks: &mut Vec<NoteBlockNode>, parent_id: Option<&str>, in
     blocks.insert(index, block);
 }
 
-pub fn update_block_in_tree(blocks: &mut [NoteBlockNode], target_id: &str, next_block: NoteBlockNode) -> bool {
+pub async fn update_block_in_tree(blocks: &mut [NoteBlockNode], target_id: &str, next_block: NoteBlockNode) -> bool {
     for block in blocks.iter_mut() {
         if block_id(block) == target_id {
             *block = next_block;
@@ -471,7 +471,7 @@ pub fn update_block_in_tree(blocks: &mut [NoteBlockNode], target_id: &str, next_
     false
 }
 
-pub fn mutate_block_in_tree(blocks: &mut [NoteBlockNode], target_id: &str, mutator: &mut impl FnMut(&NoteBlockNode) -> NoteBlockNode) -> bool {
+pub async fn mutate_block_in_tree(blocks: &mut [NoteBlockNode], target_id: &str, mutator: &mut impl FnMut(&NoteBlockNode) -> NoteBlockNode) -> bool {
     for block in blocks.iter_mut() {
         if block_id(block) == target_id {
             *block = mutator(block);
@@ -486,7 +486,7 @@ pub fn mutate_block_in_tree(blocks: &mut [NoteBlockNode], target_id: &str, mutat
     false
 }
 
-pub fn block_bounds(block: &NoteBlockNode) -> (f64, f64, f64, f64) {
+pub async fn block_bounds(block: &NoteBlockNode) -> (f64, f64, f64, f64) {
     match block {
         NoteBlockNode::Text { x, y, width, height, .. }
         | NoteBlockNode::Image { x, y, width, height, .. }
@@ -497,7 +497,7 @@ pub fn block_bounds(block: &NoteBlockNode) -> (f64, f64, f64, f64) {
     }
 }
 
-pub fn patch_block_field(document: &crate::artifacts::note::NoteSnapshot, block_id: &str, field: &str, value: &Value) -> crate::artifacts::note::NoteSnapshot {
+pub async fn patch_block_field(document: &crate::artifacts::note::NoteSnapshot, block_id: &str, field: &str, value: &Value) -> crate::artifacts::note::NoteSnapshot {
     let Some(block) = find_block(&document.blocks, block_id).cloned() else {
         return document.clone();
     };
@@ -694,7 +694,7 @@ mod tests {
 
     /// 🧪️ Relocated from the deleted `⚙️engine` (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES).
     #[test]
-    fn clone_block_reids_group_children() {
+    async fn clone_block_reids_group_children() {
         let child = create_block_by_kind("text", 0.0, 0.0);
         let child_id = block_id(&child).to_string();
         let group = NoteBlockNode::Group { id: "group-1".into(), name: "Group".into(), x: 0.0, y: 0.0, width: 100.0, height: 100.0, rotation: 0.0, visible: true, locked: false, children: vec![child] };

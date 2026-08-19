@@ -10,7 +10,7 @@ pub const PRESENT_PLAY_BODY_DOCUMENT: &str = "animate.present.play.document";
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
-pub fn definition() -> PanelTabDefinition {
+pub async fn definition() -> PanelTabDefinition {
     PanelTabDefinition { kind: PanelTabKind::App(FRAMEWORK_PANEL_TAB_ARTIFACT_ID.into()), label: LocalizedLabel::native(FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL, "Dokument"), group: PanelGroup::Workbench, body_key: Some(PRESENT_PLAY_BODY_DOCUMENT.into()), children: Vec::new() }
 }
 //#endregion 🔖️Definition
@@ -19,7 +19,7 @@ pub fn definition() -> PanelTabDefinition {
 /// 🕹️ No per-row selection `action`: the tree is bound to the `tiles` interaction domain via
 /// `.interaction_domain(...)` below, so the framework auto-injects `interactionSelect` for row
 /// clicks — never declare that yourself (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM).
-pub fn render(deck: &PresentSnapshot, labels: &AnimatePresentLabels) -> UiNode {
+pub async fn render(deck: &PresentSnapshot, labels: &AnimatePresentLabels) -> UiNode {
     let (_, tiles) = crate::artifacts::present::present_working_scene(deck);
     let items: Vec<UiTreeItemNode> = tiles.iter().map(|tile| tree_item_desc(tile.id.clone(), Label::data(tile.name.clone()), Some(format!("x={:.3} y={:.3} w={:.3} h={:.3}", tile.crop.x, tile.crop.y, tile.crop.width, tile.crop.height)))).collect();
     PanelTreeBuilder::new("animate-present-play")
@@ -37,7 +37,7 @@ mod tests {
     use crate::editor::animate::PresentCommand;
 
     #[test]
-    fn document_lists_seeded_tiles() {
+    async fn document_lists_seeded_tiles() {
         use semio_framework_plugin::testkit::meta;
         let mut app = present_app();
         app.dispatch_typed(PresentCommand::SeedGrid(crate::editor::animate::commands::seed_grid::SeedGrid { rows: 1, columns: 2 }), &meta("local")).expect("seed grid");
@@ -46,7 +46,7 @@ mod tests {
     }
 
     #[test]
-    fn definition_binds_the_framework_document_tab_to_this_body_key() {
+    async fn definition_binds_the_framework_document_tab_to_this_body_key() {
         let definition = definition();
         assert_eq!(definition.id(), FRAMEWORK_PANEL_TAB_ARTIFACT_ID);
         assert_eq!(definition.body_key.as_deref(), Some(PRESENT_PLAY_BODY_DOCUMENT));

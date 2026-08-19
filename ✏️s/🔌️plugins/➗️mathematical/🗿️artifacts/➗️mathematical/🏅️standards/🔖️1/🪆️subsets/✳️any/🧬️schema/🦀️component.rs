@@ -39,23 +39,23 @@ pub struct MathematicalArtifact {
 
 //#region 🔖️Conversions
 impl Default for MathematicalArtifact {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self::from_snapshot(crate::artifacts::mathematical::MathematicalSnapshot::default())
     }
 }
 
 impl MathematicalArtifact {
     /// 📸️ Persisted subset.
-    pub fn to_snapshot(&self) -> crate::artifacts::mathematical::MathematicalSnapshot {
+    pub async fn to_snapshot(&self) -> crate::artifacts::mathematical::MathematicalSnapshot {
         crate::artifacts::mathematical::MathematicalSnapshot { notation: self.notation.clone(), results: self.results.clone(), computed: self.computed.clone(), equation: self.equation.clone() }
     }
 
     /// 🧬️ Builds a full artifact from a snapshot, leaving UI fields at defaults.
-    pub fn from_snapshot(snapshot: crate::artifacts::mathematical::MathematicalSnapshot) -> Self {
+    pub async fn from_snapshot(snapshot: crate::artifacts::mathematical::MathematicalSnapshot) -> Self {
         Self { notation: snapshot.notation, results: snapshot.results, computed: snapshot.computed, equation: snapshot.equation, ..Self::default_ui() }
     }
 
-    fn default_ui() -> Self {
+    async fn default_ui() -> Self {
         let default_snapshot = crate::artifacts::mathematical::mathematical_snapshot_with_state(MathematicalGraph::default(), MathematicalGeometry::default());
         Self {
             notation: default_snapshot.notation,
@@ -70,7 +70,7 @@ impl MathematicalArtifact {
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
-    pub fn set_snapshot(&mut self, snapshot: crate::artifacts::mathematical::MathematicalSnapshot) {
+    pub async fn set_snapshot(&mut self, snapshot: crate::artifacts::mathematical::MathematicalSnapshot) {
         self.notation = snapshot.notation;
         self.results = snapshot.results;
         self.computed = snapshot.computed;
@@ -81,7 +81,7 @@ impl MathematicalArtifact {
 
 //#region 🔖️Descriptor
 /// 🧬️ Descriptor for `s.mathematical.mathematical` — twenty handcrafted schema leaves.
-pub fn mathematical_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
+pub async fn mathematical_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
     schema::ArtifactSchemaDescriptor {
         id: "s.mathematical.mathematical",
         artifact: schema::FacetLeaves {

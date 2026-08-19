@@ -5,7 +5,7 @@ use crate::artifacts::procedural2d::Procedural2dSnapshot;
 use crate::artifacts::procedural2d::mutations::{replace_synapse, synapse_index};
 
 //#region 🔖️Inverse
-pub fn inverse(payload: &ReplaceSynapse, base: &Procedural2dSnapshot) -> Vec<Procedural2dMutation> {
+pub async fn inverse(payload: &ReplaceSynapse, base: &Procedural2dSnapshot) -> Vec<Procedural2dMutation> {
     match synapse_index(&base.fixture, &payload.synapse.id) {
                 Some(index) => vec![replace_synapse(base.fixture.synapses[index].clone())],
                 None => Vec::new(),

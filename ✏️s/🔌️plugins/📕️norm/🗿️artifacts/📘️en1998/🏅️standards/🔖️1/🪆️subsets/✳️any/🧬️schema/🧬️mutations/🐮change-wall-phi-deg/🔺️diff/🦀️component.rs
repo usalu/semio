@@ -5,7 +5,7 @@ use crate::artifacts::en1998::mutations::change_wall_phi_deg::mutation::ChangeWa
 use crate::artifacts::en1998::En1998Snapshot;
 
 //#region 🔖️Diff
-pub fn diff(payload: &ChangeWallPhiDeg, base: &En1998Snapshot) -> protocol::MutationOutcome<En1998Diff> {
+pub async fn diff(payload: &ChangeWallPhiDeg, base: &En1998Snapshot) -> protocol::MutationOutcome<En1998Diff> {
     if !payload.new_wall_phi_deg.is_finite() {
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("Wall backfill friction angle [deg] must be a finite number, got {}.", payload.new_wall_phi_deg), Vec::<String>::new());
     }

@@ -11,7 +11,7 @@ use serde::{Deserialize, Serialize};
 #[dsl(keyword = "export-studio-dsl")]
 pub struct ExportStudioDsl {}
 
-pub fn handle(_payload: &ExportStudioDsl, _doc: &ArtifactView<'_, WorkflowSnapshot>, cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
+pub async fn handle(_payload: &ExportStudioDsl, _doc: &ArtifactView<'_, WorkflowSnapshot>, cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
     let space_id = crate::engine::space::config_space_id(cfg.snapshot);
     match crate::resolve_studio_document(&space_id) {
         Some(document) => match export_os_space_dsl(&document) {

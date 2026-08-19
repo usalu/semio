@@ -13,7 +13,7 @@ pub struct DuplicateLayer {
     pub layer_id: String,
 }
 
-pub fn handle(payload: &DuplicateLayer, _doc: &ArtifactView<'_, DrawSnapshot>, _cfg: &ConfigView<'_, DrawConfig>, _session: &mut DrawSession) -> Result<Emit<DrawMutation, DrawConfigMutation>, Fault> {
+pub async fn handle(payload: &DuplicateLayer, _doc: &ArtifactView<'_, DrawSnapshot>, _cfg: &ConfigView<'_, DrawConfig>, _session: &mut DrawSession) -> Result<Emit<DrawMutation, DrawConfigMutation>, Fault> {
     if payload.layer_id.is_empty() {
         return Ok(Emit::default());
     }

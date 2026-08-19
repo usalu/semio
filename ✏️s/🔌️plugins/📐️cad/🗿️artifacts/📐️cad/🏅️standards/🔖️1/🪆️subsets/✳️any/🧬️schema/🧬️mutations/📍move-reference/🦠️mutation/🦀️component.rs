@@ -18,16 +18,16 @@ pub struct MoveReference {
 impl MutationKind<CadSnapshot, CadMutation> for MoveReference {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "move", entity: "reference", kind: "move-reference", record: "MovedReference" };
 
-    fn diff(&self, base: &CadSnapshot) -> protocol::MutationOutcome<crate::artifacts::cad::diff::CadDiff> {
+    async fn diff(&self, base: &CadSnapshot) -> protocol::MutationOutcome<crate::artifacts::cad::diff::CadDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &CadSnapshot) -> Vec<CadMutation> {
+    async fn inverse(&self, base: &CadSnapshot) -> Vec<CadMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         format!("Move reference \"{}\"", self.reference_id)
     }
-    fn target(&self) -> Vec<String> {
+    async fn target(&self) -> Vec<String> {
         vec![self.model_definition_id.clone(), self.reference_id.clone()]
     }
 }

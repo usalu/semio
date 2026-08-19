@@ -19,16 +19,16 @@ pub struct ReplaceSearchFilter {
 }
 impl MutationKind<ProgramSnapshot, ProgramMutation> for ReplaceSearchFilter {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "replace", entity: "search-filter", kind: "replace-search-filter", record: "ReplacedSearchFilter" };
-    fn diff(&self, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
+    async fn diff(&self, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {
+    async fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         format!("Replace search filter \"{}\"", self.search_filter.header.name)
     }
-    fn target(&self) -> Vec<String> {
+    async fn target(&self) -> Vec<String> {
         vec![self.search_filter.header.id.0.clone()]
     }
 }

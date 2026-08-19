@@ -6,7 +6,7 @@ use protocol::Identified;
 
 use super::mutation::ReorderWidgets;
 
-pub fn diff(payload: &ReorderWidgets, base: &FlowSnapshot) -> protocol::MutationOutcome<FlowDiff> {
+pub async fn diff(payload: &ReorderWidgets, base: &FlowSnapshot) -> protocol::MutationOutcome<FlowDiff> {
     let mut scene = flow_working_scene(base);
     let Some(from) = scene.widgets.iter().position(|widget| widget.id() == &payload.id) else {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Widget \"{}\" does not exist.", payload.id), [payload.id.clone()]);

@@ -7,19 +7,19 @@
 use semio_framework_plugin::{ExampleSource, LocalizedLabel};
 
 pub const ID: &str = "bachelor-thesis";
-pub fn label() -> LocalizedLabel {
+pub async fn label() -> LocalizedLabel {
     LocalizedLabel::native("Bachelor Thesis", "Bachelorarbeit")
 }
 pub const ICON: &str = "file";
 pub const FIXTURE_BYTES: &[u8] = include_bytes!("🖼️assets/📄️bachelor-thesis.pdf");
 
-fn decoded_summary_json() -> String {
+async fn decoded_summary_json() -> String {
     match crate::artifacts::pdf::standards::v1_7::subsets::any::io::decode_pdf(FIXTURE_BYTES) {
         Ok(snap) => format!(r#"{{"fixture":"bachelor-thesis.pdf","bytes":{},"declaredVersion":"{}","pageCount":{},"objectCount":{}}}"#, FIXTURE_BYTES.len(), snap.declared_version, snap.pages.len(), snap.objects.len(),),
         Err(e) => format!(r#"{{"fixture":"bachelor-thesis.pdf","bytes":{},"decodeError":"{}"}}"#, FIXTURE_BYTES.len(), e),
     }
 }
 
-pub fn source() -> ExampleSource {
+pub async fn source() -> ExampleSource {
     ExampleSource::new(ID, label(), decoded_summary_json(), ICON)
 }

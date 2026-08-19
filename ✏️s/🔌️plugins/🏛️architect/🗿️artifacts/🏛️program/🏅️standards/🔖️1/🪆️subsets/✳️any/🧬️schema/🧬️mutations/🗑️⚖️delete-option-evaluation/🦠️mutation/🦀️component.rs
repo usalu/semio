@@ -18,16 +18,16 @@ pub struct DeleteOptionEvaluation {
 }
 impl MutationKind<ProgramSnapshot, ProgramMutation> for DeleteOptionEvaluation {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "delete", entity: "option-evaluation", kind: "delete-option-evaluation", record: "DeletedOptionEvaluation" };
-    fn diff(&self, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
+    async fn diff(&self, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {
+    async fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         format!("Delete option evaluation \"{}\"", self.id.0)
     }
-    fn target(&self) -> Vec<String> {
+    async fn target(&self) -> Vec<String> {
         vec![self.id.0.clone()]
     }
 }

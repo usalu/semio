@@ -12,7 +12,7 @@ pub struct SetLocale {
     pub value: String,
 }
 
-pub fn handle(payload: &SetLocale, _doc: &ArtifactView<'_, DagSnapshot>, _cfg: &ConfigView<'_, DagConfig>) -> Result<Emit<DagMutation, DagConfigMutation>, Fault> {
+pub async fn handle(payload: &SetLocale, _doc: &ArtifactView<'_, DagSnapshot>, _cfg: &ConfigView<'_, DagConfig>) -> Result<Emit<DagMutation, DagConfigMutation>, Fault> {
     Ok(Emit::config(vec![DagConfigMutation::SetLocale { value: payload.value.clone() }]))
 }
 
@@ -25,7 +25,7 @@ mod tests {
     use semio_framework_plugin::PluginApp;
 
     #[test]
-    fn dag_play_labels_resolve_native_english_and_german() {
+    async fn dag_play_labels_resolve_native_english_and_german() {
         let mut app = testkit::new_app();
         let node = app.render(DAG_PLAY_BODY_DOCUMENT, None, &semio_framework_plugin::ViewModel::default()).expect("render");
         let json = serde_json::to_string(&node).unwrap();

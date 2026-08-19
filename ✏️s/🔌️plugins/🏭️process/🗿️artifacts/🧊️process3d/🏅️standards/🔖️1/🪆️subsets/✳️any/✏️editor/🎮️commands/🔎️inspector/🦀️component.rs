@@ -12,7 +12,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 
 //#region 🔖️InspectorPatch
-fn apply_pose_patch(pose: &mut Pose, field: &str, value: f64) -> bool {
+async fn apply_pose_patch(pose: &mut Pose, field: &str, value: f64) -> bool {
     match field {
         "posX" => pose.position[0] = value,
         "posY" => pose.position[1] = value,
@@ -29,7 +29,7 @@ fn apply_pose_patch(pose: &mut Pose, field: &str, value: f64) -> bool {
 /// resolvable content (no `LinkResolver` — see `ProcessWorkingScene`'s doc comment). This is a
 /// documented gap: only `label`/pose fields (real, inline persisted fields) remain patchable; a
 /// dimension-only patch returns `None` (no mutation) rather than guessing at unknown geometry.
-fn apply_stock_patch(stock_pose: &mut Pose, stock_label: &mut String, field: &str, value: Option<&Value>) -> bool {
+async fn apply_stock_patch(stock_pose: &mut Pose, stock_label: &mut String, field: &str, value: Option<&Value>) -> bool {
     if field == "label" {
         return match value.and_then(Value::as_str) {
             Some(label) => {
@@ -45,7 +45,7 @@ fn apply_stock_patch(stock_pose: &mut Pose, stock_label: &mut String, field: &st
 
 /// 🔎️ Generic inspector edit dispatcher for a workshop machine's own label or a capability parameter
 /// value, addressed as `"{capabilityId}.{parameterId}"` so field names never collide across capabilities.
-fn apply_workshop_machine_patch(machine: &mut WorkshopMachine, field: &str, value: Option<&Value>) -> bool {
+async fn apply_workshop_machine_patch(machine: &mut WorkshopMachine, field: &str, value: Option<&Value>) -> bool {
     if field == "label" {
         return match value.and_then(Value::as_str) {
             Some(label) => {
@@ -72,7 +72,7 @@ fn apply_workshop_machine_patch(machine: &mut WorkshopMachine, field: &str, valu
 /// patch are both a DOCUMENTED NO-OP (see `apply_stock_patch`'s doc comment and
 /// `RenameStep`/`ReplaceStepMeasure`'s own triads) — `fixture.steps`/`fixture.stock_solid` carry no
 /// resolvable content without a `LinkResolver` this ticket doesn't add.
-fn process3d_inspector_patch_operation(fixture: &Process3dSnapshot, target: &str, field: &str, value: Option<&Value>) -> Option<Process3dMutation> {
+async fn process3d_inspector_patch_operation(fixture: &Process3dSnapshot, target: &str, field: &str, value: Option<&Value>) -> Option<Process3dMutation> {
     if let Some(machine_id) = target.strip_prefix("machine:") {
         let machine = fixture.workshop.machines.iter().find(|machine| machine.id == machine_id)?;
         let mut updated = machine.clone();
@@ -115,7 +115,7 @@ pub mod patch_inspector {
         pub text: Option<String>,
     }
 
-    pub fn handle(payload: &PatchInspector, doc: &ArtifactView<'_, Process3dSnapshot>, _cfg: &ConfigView<'_, Process3dConfig>, _ctx: &mut crate::editor::process3d::Process3dDispatchCtx) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
+    pub async fn handle(payload: &PatchInspector, doc: &ArtifactView<'_, Process3dSnapshot>, _cfg: &ConfigView<'_, Process3dConfig>, _ctx: &mut crate::editor::process3d::Process3dDispatchCtx) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
         let value = payload.number.map(|n| json!(n)).or_else(|| payload.text.clone().map(Value::String));
         match process3d_inspector_patch_operation(doc.snapshot, &payload.target, &payload.field, value.as_ref()) {
             Some(operation) => Ok(Emit::mutations(vec![operation])),

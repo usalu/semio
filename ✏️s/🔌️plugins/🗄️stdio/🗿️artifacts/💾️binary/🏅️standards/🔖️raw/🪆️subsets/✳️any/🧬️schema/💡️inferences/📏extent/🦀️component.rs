@@ -22,14 +22,14 @@ pub struct BinaryExtent {
 /// 📏️ Computes [`BinaryExtent`] — `byteLength`/`isEmpty` read `bytes.len()` directly;
 /// `contentDigest` folds `bytes` through `std`'s own `DefaultHasher` (same std-only reasoning
 /// `🎒️zip/🗃entries` and `🗜️deflate/🪟window` already established for a single scalar digest).
-pub fn compute_binary_extent(snapshot: &BinarySnapshot) -> BinaryExtent {
+pub async fn compute_binary_extent(snapshot: &BinarySnapshot) -> BinaryExtent {
     let mut hasher = DefaultHasher::new();
     snapshot.bytes.hash(&mut hasher);
     BinaryExtent { byte_length: snapshot.bytes.len() as u64, is_empty: snapshot.bytes.is_empty(), content_digest: format!("{:016x}", hasher.finish()) }
 }
 
 impl Default for BinaryExtent {
-    fn default() -> Self {
+    async fn default() -> Self {
         compute_binary_extent(&BinarySnapshot::default())
     }
 }
@@ -41,7 +41,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn real_bytes_yield_a_real_nonzero_extent() {
+    async fn real_bytes_yield_a_real_nonzero_extent() {
         let snapshot = BinarySnapshot { bytes: vec![1, 2, 3, 4, 5], ..BinarySnapshot::default() };
         let extent = compute_binary_extent(&snapshot);
         assert_eq!(extent.byte_length, 5);
@@ -49,27 +49,27 @@ mod tests {
     }
 
     #[test]
-    fn empty_bytes_yield_an_honest_empty_extent() {
+    async fn empty_bytes_yield_an_honest_empty_extent() {
         let extent = compute_binary_extent(&BinarySnapshot::default());
         assert_eq!(extent.byte_length, 0);
         assert!(extent.is_empty);
     }
 
     #[test]
-    fn different_bytes_yield_different_digests() {
+    async fn different_bytes_yield_different_digests() {
         let a = BinarySnapshot { bytes: vec![1, 2, 3], ..BinarySnapshot::default() };
         let b = BinarySnapshot { bytes: vec![9, 9, 9], ..BinarySnapshot::default() };
         assert_ne!(compute_binary_extent(&a).content_digest, compute_binary_extent(&b).content_digest);
     }
 
     #[test]
-    fn inference_determinism_law() {
+    async fn inference_determinism_law() {
         let snapshot = BinarySnapshot { bytes: vec![7, 7, 7], ..BinarySnapshot::default() };
         assert_eq!(compute_binary_extent(&snapshot), compute_binary_extent(&snapshot));
     }
 
     #[test]
-    fn inference_default_law() {
+    async fn inference_default_law() {
         assert_eq!(compute_binary_extent(&BinarySnapshot::default()), BinaryExtent::default());
     }
 }

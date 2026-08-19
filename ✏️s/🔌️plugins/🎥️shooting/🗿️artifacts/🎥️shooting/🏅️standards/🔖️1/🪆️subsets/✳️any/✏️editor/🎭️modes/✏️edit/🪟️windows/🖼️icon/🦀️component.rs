@@ -18,7 +18,7 @@ const SHOOTING_PLAY_SURFACE_ICON: &str = "shooting.play.icon";
 /// 🧱️ Stitched into the app manifest by `crate::editor::shooting::create_shooting_app`. `options.measures`
 /// stays empty here on purpose: shooting's measures are config-derived and rebuilt per frame by
 /// [`window_measures`], not frozen into the manifest.
-pub fn definition() -> WindowKindDefinition {
+pub async fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
         id: SHOOTING_PLAY_WINDOW_ICON.into(),
         label: LocalizedLabel::native("Icon", "Symbol"),
@@ -38,11 +38,11 @@ pub fn definition() -> WindowKindDefinition {
 }
 
 /// 🎚️ The live chrome measures for this window, collected from its `🎚️options/*` components.
-pub fn window_measures(snapshot: &ShootingSnapshot, labels: &ShootingLabels) -> Vec<WindowMeasure> {
+pub async fn window_measures(snapshot: &ShootingSnapshot, labels: &ShootingLabels) -> Vec<WindowMeasure> {
     vec![options::shot::measure(snapshot, labels), options::format::measure(snapshot, labels), options::shape::measure(snapshot, labels)]
 }
 
-pub fn engagement(snapshot: &ShootingSnapshot, labels: &ShootingLabels) -> WindowEngagement {
+pub async fn engagement(snapshot: &ShootingSnapshot, labels: &ShootingLabels) -> WindowEngagement {
     let shot = crate::artifacts::shooting::schema::active_shot(snapshot);
     WindowEngagement {
         session_active: Some(true),
@@ -66,7 +66,7 @@ pub fn engagement(snapshot: &ShootingSnapshot, labels: &ShootingLabels) -> Windo
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(snapshot: &ShootingSnapshot, cfg: &ShootingConfig) -> UiNode {
+pub async fn render(snapshot: &ShootingSnapshot, cfg: &ShootingConfig) -> UiNode {
     let (request_json, footer) = match (crate::artifacts::shooting::schema::active_shot(snapshot), crate::artifacts::shooting::schema::active_asset(snapshot)) {
         (Some(shot), Some(asset)) => (shooting_icon_render_request_json(snapshot, shot, asset, &cfg.camera), Some(format!("{} · {}×{} · {}", shot.label, shot.width, shot.height, shot.format.to_uppercase()))),
         _ => ("null".into(), None),
@@ -85,7 +85,7 @@ mod tests {
     use serde_json::{json, Value};
 
     #[test]
-    fn renders_icon_render_scene_with_real_request() {
+    async fn renders_icon_render_scene_with_real_request() {
         let mut app = shooting_app();
         let node = app.render(BODY_ICON, None, &ViewModel::default()).expect("render");
         let json = serde_json::to_string(&node).unwrap();
@@ -101,7 +101,7 @@ mod tests {
     }
 
     #[test]
-    fn window_measures_surface_three_icon_measures() {
+    async fn window_measures_surface_three_icon_measures() {
         let mut app = shooting_app();
         let measures = icon_window_measures(&mut app);
         assert_eq!(measures.len(), 3);
@@ -109,7 +109,7 @@ mod tests {
     }
 
     #[test]
-    fn definition_declares_the_icon_render_surface_and_body_key() {
+    async fn definition_declares_the_icon_render_surface_and_body_key() {
         let definition = definition();
         assert_eq!(definition.body_key, SHOOTING_PLAY_BODY_ICON);
         assert!(matches!(definition.surface_kind, SurfaceKind::IconRender));

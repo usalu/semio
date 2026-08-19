@@ -8,18 +8,18 @@ pub struct GltfFlatnessInference;
 impl GltfInferenceLeaf for GltfFlatnessInference {
     const DESCRIPTOR: GltfInferenceLeafDescriptor = GltfInferenceLeafDescriptor { id: "s.stdio.gltf.inference.flatness.v1", algorithm_version: 1, cache_key: "s.stdio.gltf.inference.flatness.v1:geometry-v2", reads: GLTF_GEOMETRY_READS };
 }
-pub fn descriptor() -> GltfInferenceLeafDescriptor {
+pub async fn descriptor() -> GltfInferenceLeafDescriptor {
     GltfFlatnessInference::DESCRIPTOR
 }
-pub(crate) fn infer(context: &GltfGeometryContext<'_>) -> GltfMeasure<f64> {
+pub(crate) async fn infer(context: &GltfGeometryContext<'_>) -> GltfMeasure<f64> {
     let mut extent = context.oriented_extent;
     extent.sort_by(|left, right| right.total_cmp(left));
     exact(if extent[1] > 0.0 { extent[2] / extent[1] } else { 0.0 }, GltfUnit::Unitless, context.sample_count, Some(context.topology))
 }
-pub fn unavailable_measure(ids: &[String]) -> GltfMeasure<f64> {
+pub async fn unavailable_measure(ids: &[String]) -> GltfMeasure<f64> {
     unavailable(GltfUnit::Unitless, GltfAvailability::Unavailable, ids.to_vec(), 0, None)
 }
-pub fn encode_result(indicators: &GltfEntityIndicators) -> Result<serde_json::Value, serde_json::Error> {
+pub async fn encode_result(indicators: &GltfEntityIndicators) -> Result<serde_json::Value, serde_json::Error> {
     serde_json::to_value(&indicators.proportion.flatness)
 }
 
@@ -49,13 +49,13 @@ mod tests {
     }
 
     #[test]
-    fn descriptor_is_versioned_and_cacheable() {
+    async fn descriptor_is_versioned_and_cacheable() {
         assert_eq!(descriptor().id, "s.stdio.gltf.inference.flatness.v1");
         assert_eq!(descriptor().algorithm_version, 1);
     }
 
     #[test]
-    fn shared_vectors_execute_the_rust_leaf() {
+    async fn shared_vectors_execute_the_rust_leaf() {
         let contract: Contract = serde_json::from_str(include_str!("🧪️contract/🔣️component.json")).unwrap();
         for vector in contract.vectors {
             let result = if vector.context.valid {

@@ -19,7 +19,7 @@ pub mod run_command {
     #[dsl(keyword = "run")]
     pub struct Run {}
 
-    pub fn handle(_payload: &Run, doc: &ArtifactView<'_, SequenceSnapshot>, _cfg: &ConfigView<'_, SequenceConfig>) -> Result<Emit<SequenceMutation, SequenceConfigMutation>, Fault> {
+    pub async fn handle(_payload: &Run, doc: &ArtifactView<'_, SequenceSnapshot>, _cfg: &ConfigView<'_, SequenceConfig>) -> Result<Emit<SequenceMutation, SequenceConfigMutation>, Fault> {
         let result = host_from_snapshot(doc.snapshot).run();
         let json = serde_json::to_string(&result).unwrap_or_default();
         Ok(Emit::config(vec![SequenceConfigMutation::SetLastRun { json }]))
@@ -35,7 +35,7 @@ pub mod stop_command {
     #[dsl(keyword = "stop")]
     pub struct Stop {}
 
-    pub fn handle(_payload: &Stop, _doc: &ArtifactView<'_, SequenceSnapshot>, _cfg: &ConfigView<'_, SequenceConfig>) -> Result<Emit<SequenceMutation, SequenceConfigMutation>, Fault> {
+    pub async fn handle(_payload: &Stop, _doc: &ArtifactView<'_, SequenceSnapshot>, _cfg: &ConfigView<'_, SequenceConfig>) -> Result<Emit<SequenceMutation, SequenceConfigMutation>, Fault> {
         Ok(Emit::config(vec![SequenceConfigMutation::SetLastRun { json: String::new() }]))
     }
 }
@@ -51,14 +51,14 @@ mod tests {
     use super::stop_command::Stop;
 
     #[test]
-    fn run_stores_result_and_renders_in_script() {
+    async fn run_stores_result_and_renders_in_script() {
         let mut app = new_app();
         dispatch(&mut app, SequenceCommand::Run(Run {}));
         assert!(render(&mut app, crate::editor::sequence::modes::edit::windows::script::SEQUENCE_PLAY_BODY_SCRIPT).contains("run result"));
     }
 
     #[test]
-    fn stop_command_clears_last_run_result() {
+    async fn stop_command_clears_last_run_result() {
         let mut app = new_app();
         dispatch(&mut app, SequenceCommand::Run(Run {}));
         dispatch(&mut app, SequenceCommand::Stop(Stop {}));

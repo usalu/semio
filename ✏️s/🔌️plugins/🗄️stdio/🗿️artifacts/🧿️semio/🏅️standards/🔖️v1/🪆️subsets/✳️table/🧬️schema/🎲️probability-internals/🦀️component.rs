@@ -24,7 +24,7 @@ pub enum ProbabilityError {
 /// 🧮️ Natural log of the gamma function via the Lanczos approximation (g=7, 9-term coefficient
 /// set), with the reflection formula `Γ(x)Γ(1-x) = π/sin(πx)` used for `x < 0.5` to keep the
 /// Lanczos series in its region of validity. Numerical Recipes §6.1 `gammln`.
-pub fn ln_gamma(x: f64) -> f64 {
+pub async fn ln_gamma(x: f64) -> f64 {
     const G: f64 = 7.0;
     const COEFFS: [f64; 9] =
         [0.999_999_999_999_809_9, 676.520_368_121_885_1, -1_259.139_216_722_402_8, 771.323_428_777_653_1, -176.615_029_162_140_6, 12.507_343_278_686_905, -0.138_571_095_265_720_12, 9.984_369_578_019_572e-6, 1.505_632_735_149_311_6e-7];
@@ -43,7 +43,7 @@ pub fn ln_gamma(x: f64) -> f64 {
 
 /// 🧮️ Regularized lower incomplete gamma `P(a, x) = γ(a, x) / Γ(a)`: a power series for `x < a+1`,
 /// a modified-Lentz continued fraction (via [`gamma_q`]) otherwise. Numerical Recipes §6.2 `gser`/`gcf`.
-pub fn gamma_p(a: f64, x: f64) -> f64 {
+pub async fn gamma_p(a: f64, x: f64) -> f64 {
     if x < 0.0 || a <= 0.0 {
         return f64::NAN;
     }
@@ -60,7 +60,7 @@ pub fn gamma_p(a: f64, x: f64) -> f64 {
 /// 🧮️ Regularized upper incomplete gamma `Q(a, x) = 1 - P(a, x)`, computed directly via the
 /// continued-fraction branch when `x >= a+1` to avoid the cancellation that `1.0 - gamma_p(a, x)`
 /// would suffer in that regime.
-pub fn gamma_q(a: f64, x: f64) -> f64 {
+pub async fn gamma_q(a: f64, x: f64) -> f64 {
     if x < 0.0 || a <= 0.0 {
         return f64::NAN;
     }
@@ -74,7 +74,7 @@ pub fn gamma_q(a: f64, x: f64) -> f64 {
     }
 }
 
-fn gamma_series(a: f64, x: f64) -> f64 {
+async fn gamma_series(a: f64, x: f64) -> f64 {
     const MAX_ITER: usize = 200;
     const EPS: f64 = 1e-15;
     let gln = ln_gamma(a);
@@ -92,7 +92,7 @@ fn gamma_series(a: f64, x: f64) -> f64 {
     sum * (-x + a * x.ln() - gln).exp()
 }
 
-fn gamma_cf(a: f64, x: f64) -> f64 {
+async fn gamma_cf(a: f64, x: f64) -> f64 {
     const MAX_ITER: usize = 200;
     const EPS: f64 = 1e-15;
     const TINY: f64 = 1e-300;
@@ -123,7 +123,7 @@ fn gamma_cf(a: f64, x: f64) -> f64 {
 }
 
 /// 🧮️ Error function via the identity `erf(x) = sign(x) * P(1/2, x²)`.
-pub fn erf(x: f64) -> f64 {
+pub async fn erf(x: f64) -> f64 {
     if x == 0.0 {
         return 0.0;
     }
@@ -133,7 +133,7 @@ pub fn erf(x: f64) -> f64 {
 
 /// 🧮️ Complementary error function `1 - erf(x)`, computed via the `gamma_q` continued-fraction
 /// branch for `x > 0` to avoid the cancellation `1.0 - erf(x)` would suffer for large `x`.
-pub fn erfc(x: f64) -> f64 {
+pub async fn erfc(x: f64) -> f64 {
     if x == 0.0 {
         return 1.0;
     }
@@ -145,14 +145,14 @@ pub fn erfc(x: f64) -> f64 {
 }
 
 /// 🧮️ Natural log of the beta function `B(a, b) = Γ(a)Γ(b) / Γ(a+b)`.
-pub fn ln_beta(a: f64, b: f64) -> f64 {
+pub async fn ln_beta(a: f64, b: f64) -> f64 {
     ln_gamma(a) + ln_gamma(b) - ln_gamma(a + b)
 }
 
 /// 🧮️ Regularized incomplete beta `I_x(a, b)` via a modified-Lentz continued fraction, with the
 /// symmetry swap `I_x(a,b) = 1 - I_{1-x}(b,a)` applied when `x > (a+1)/(a+b+2)` to keep the
 /// fraction in its fast-converging region. Numerical Recipes §6.4 `betai`/`betacf`.
-pub fn beta_inc(a: f64, b: f64, x: f64) -> f64 {
+pub async fn beta_inc(a: f64, b: f64, x: f64) -> f64 {
     if !(0.0..=1.0).contains(&x) {
         return f64::NAN;
     }
@@ -167,7 +167,7 @@ pub fn beta_inc(a: f64, b: f64, x: f64) -> f64 {
     }
 }
 
-fn beta_cf(a: f64, b: f64, x: f64) -> f64 {
+async fn beta_cf(a: f64, b: f64, x: f64) -> f64 {
     const MAX_ITER: usize = 300;
     const EPS: f64 = 1e-15;
     const TINY: f64 = 1e-300;
@@ -217,7 +217,7 @@ fn beta_cf(a: f64, b: f64, x: f64) -> f64 {
 /// 🧮️ Standard normal inverse CDF via Acklam's rational approximation (~1.15e-9 relative
 /// accuracy), refined by one Halley step using [`erfc`] to push accuracy to ~1e-14. Returns
 /// `NaN` for `p` outside `[0, 1]`, and `-inf`/`+inf` exactly at `p == 0.0`/`p == 1.0`.
-pub fn normal_quantile(p: f64) -> f64 {
+pub async fn normal_quantile(p: f64) -> f64 {
     if !(0.0..=1.0).contains(&p) {
         return f64::NAN;
     }
@@ -252,20 +252,20 @@ pub fn normal_quantile(p: f64) -> f64 {
 // #region 🔖️Traits
 /// 🔔️ A continuous univariate distribution over `f64` support.
 pub trait Continuous {
-    fn pdf(&self, x: f64) -> f64;
-    fn ln_pdf(&self, x: f64) -> f64;
-    fn cdf(&self, x: f64) -> f64;
-    fn quantile(&self, p: f64) -> Result<f64, ProbabilityError>;
-    fn sample(&self, rng: &mut semio_framework_geometry::random::Rng) -> f64;
+    async fn pdf(&self, x: f64) -> f64;
+    async fn ln_pdf(&self, x: f64) -> f64;
+    async fn cdf(&self, x: f64) -> f64;
+    async fn quantile(&self, p: f64) -> Result<f64, ProbabilityError>;
+    async fn sample(&self, rng: &mut semio_framework_geometry::random::Rng) -> f64;
 }
 
 /// 🎯️ A discrete univariate distribution over `u64` support.
 pub trait Discrete {
-    fn pmf(&self, k: u64) -> f64;
-    fn ln_pmf(&self, k: u64) -> f64;
-    fn cdf(&self, k: u64) -> f64;
-    fn quantile(&self, p: f64) -> Result<u64, ProbabilityError>;
-    fn sample(&self, rng: &mut semio_framework_geometry::random::Rng) -> u64;
+    async fn pmf(&self, k: u64) -> f64;
+    async fn ln_pmf(&self, k: u64) -> f64;
+    async fn cdf(&self, k: u64) -> f64;
+    async fn quantile(&self, p: f64) -> Result<u64, ProbabilityError>;
+    async fn sample(&self, rng: &mut semio_framework_geometry::random::Rng) -> u64;
 }
 // #endregion 🔖️Traits
 
@@ -273,7 +273,7 @@ pub trait Discrete {
 /// 🧭️ Inverts a monotone `f` at `target` by Newton's method seeded at `x0`, falling back to
 /// bisection on `[lo, hi]` the moment a Newton step would leave the bracket — shared by every
 /// non-closed-form `quantile` in this crate (all continuous distributions except [`Normal`]).
-fn newton_bisect(f: impl Fn(f64) -> f64, target: f64, lo: f64, hi: f64, x0: f64) -> Result<f64, ProbabilityError> {
+async fn newton_bisect(f: impl Fn(f64) -> f64, target: f64, lo: f64, hi: f64, x0: f64) -> Result<f64, ProbabilityError> {
     const MAX_ITER: usize = 100;
     const EPS: f64 = 1e-12;
     const H: f64 = 1e-6;
@@ -310,7 +310,7 @@ fn newton_bisect(f: impl Fn(f64) -> f64, target: f64, lo: f64, hi: f64, x0: f64)
 
 /// 🎲️ Marsaglia–Tsang (2000) gamma-variate sampler: squeeze method for `shape >= 1`, boosted by
 /// `U^(1/shape)` for `shape < 1` via the identity `Gamma(shape) = Gamma(shape+1) * U^(1/shape)`.
-fn gamma_sample(shape: f64, rng: &mut semio_framework_geometry::random::Rng) -> f64 {
+async fn gamma_sample(shape: f64, rng: &mut semio_framework_geometry::random::Rng) -> f64 {
     if shape < 1.0 {
         let u = rng.next_f64();
         return gamma_sample(shape + 1.0, rng) * u.powf(1.0 / shape);
@@ -354,7 +354,7 @@ impl Normal {
     /// 🔔️ Standard normal, `mean = 0`, `std_dev = 1`.
     pub const STANDARD: Self = Self { mean: 0.0, std_dev: 1.0 };
 
-    pub fn new(mean: f64, std_dev: f64) -> Result<Self, ProbabilityError> {
+    pub async fn new(mean: f64, std_dev: f64) -> Result<Self, ProbabilityError> {
         if std_dev.is_nan() || std_dev <= 0.0 {
             return Err(ProbabilityError::InvalidParameter { name: "std_dev", value: std_dev });
         }
@@ -363,20 +363,20 @@ impl Normal {
 }
 
 impl Continuous for Normal {
-    fn pdf(&self, x: f64) -> f64 {
+    async fn pdf(&self, x: f64) -> f64 {
         self.ln_pdf(x).exp()
     }
 
-    fn ln_pdf(&self, x: f64) -> f64 {
+    async fn ln_pdf(&self, x: f64) -> f64 {
         let z = (x - self.mean) / self.std_dev;
         -0.5 * z * z - self.std_dev.ln() - 0.5 * (2.0 * std::f64::consts::PI).ln()
     }
 
-    fn cdf(&self, x: f64) -> f64 {
+    async fn cdf(&self, x: f64) -> f64 {
         0.5 * erfc(-(x - self.mean) / (self.std_dev * std::f64::consts::SQRT_2))
     }
 
-    fn quantile(&self, p: f64) -> Result<f64, ProbabilityError> {
+    async fn quantile(&self, p: f64) -> Result<f64, ProbabilityError> {
         if !(0.0..=1.0).contains(&p) {
             return Err(ProbabilityError::OutOfDomain { name: "p", value: p });
         }
@@ -386,7 +386,7 @@ impl Continuous for Normal {
     /// 🎲️ Marsaglia polar method: rejects points outside the unit disk, transforms the accepted
     /// point, and discards the second free deviate the transform produces (an `&self` method
     /// can't cache it across calls).
-    fn sample(&self, rng: &mut semio_framework_geometry::random::Rng) -> f64 {
+    async fn sample(&self, rng: &mut semio_framework_geometry::random::Rng) -> f64 {
         loop {
             let u = 2.0 * rng.next_f64() - 1.0;
             let v = 2.0 * rng.next_f64() - 1.0;
@@ -409,7 +409,7 @@ pub struct Uniform {
 }
 
 impl Uniform {
-    pub fn new(low: f64, high: f64) -> Result<Self, ProbabilityError> {
+    pub async fn new(low: f64, high: f64) -> Result<Self, ProbabilityError> {
         if low.is_nan() || high.is_nan() || low >= high {
             return Err(ProbabilityError::InvalidParameter { name: "high", value: high });
         }
@@ -418,7 +418,7 @@ impl Uniform {
 }
 
 impl Continuous for Uniform {
-    fn pdf(&self, x: f64) -> f64 {
+    async fn pdf(&self, x: f64) -> f64 {
         if x < self.low || x > self.high {
             0.0
         } else {
@@ -426,11 +426,11 @@ impl Continuous for Uniform {
         }
     }
 
-    fn ln_pdf(&self, x: f64) -> f64 {
+    async fn ln_pdf(&self, x: f64) -> f64 {
         self.pdf(x).ln()
     }
 
-    fn cdf(&self, x: f64) -> f64 {
+    async fn cdf(&self, x: f64) -> f64 {
         if x < self.low {
             0.0
         } else if x > self.high {
@@ -440,14 +440,14 @@ impl Continuous for Uniform {
         }
     }
 
-    fn quantile(&self, p: f64) -> Result<f64, ProbabilityError> {
+    async fn quantile(&self, p: f64) -> Result<f64, ProbabilityError> {
         if !(0.0..=1.0).contains(&p) {
             return Err(ProbabilityError::OutOfDomain { name: "p", value: p });
         }
         Ok(self.low + p * (self.high - self.low))
     }
 
-    fn sample(&self, rng: &mut semio_framework_geometry::random::Rng) -> f64 {
+    async fn sample(&self, rng: &mut semio_framework_geometry::random::Rng) -> f64 {
         self.low + rng.next_f64() * (self.high - self.low)
     }
 }
@@ -461,7 +461,7 @@ pub struct ChiSquared {
 }
 
 impl ChiSquared {
-    pub fn new(dof: f64) -> Result<Self, ProbabilityError> {
+    pub async fn new(dof: f64) -> Result<Self, ProbabilityError> {
         if dof.is_nan() || dof <= 0.0 {
             return Err(ProbabilityError::InvalidParameter { name: "dof", value: dof });
         }
@@ -470,14 +470,14 @@ impl ChiSquared {
 }
 
 impl Continuous for ChiSquared {
-    fn pdf(&self, x: f64) -> f64 {
+    async fn pdf(&self, x: f64) -> f64 {
         if x < 0.0 {
             return 0.0;
         }
         self.ln_pdf(x).exp()
     }
 
-    fn ln_pdf(&self, x: f64) -> f64 {
+    async fn ln_pdf(&self, x: f64) -> f64 {
         if x < 0.0 {
             return f64::NEG_INFINITY;
         }
@@ -485,7 +485,7 @@ impl Continuous for ChiSquared {
         (k - 1.0) * x.ln() - x / 2.0 - k * 2f64.ln() - ln_gamma(k)
     }
 
-    fn cdf(&self, x: f64) -> f64 {
+    async fn cdf(&self, x: f64) -> f64 {
         if x < 0.0 {
             return 0.0;
         }
@@ -494,7 +494,7 @@ impl Continuous for ChiSquared {
 
     /// 📐️ Newton's method seeded with the Wilson–Hilferty cube-root approximation, safeguarded
     /// by bisection on `[0, upper]` where `upper` doubles until `cdf(upper) > p`.
-    fn quantile(&self, p: f64) -> Result<f64, ProbabilityError> {
+    async fn quantile(&self, p: f64) -> Result<f64, ProbabilityError> {
         if !(0.0..=1.0).contains(&p) {
             return Err(ProbabilityError::OutOfDomain { name: "p", value: p });
         }
@@ -516,7 +516,7 @@ impl Continuous for ChiSquared {
     }
 
     /// 🎲️ `2 * gamma_sample(dof/2)`.
-    fn sample(&self, rng: &mut semio_framework_geometry::random::Rng) -> f64 {
+    async fn sample(&self, rng: &mut semio_framework_geometry::random::Rng) -> f64 {
         2.0 * gamma_sample(self.dof / 2.0, rng)
     }
 }
@@ -530,7 +530,7 @@ pub struct StudentT {
 }
 
 impl StudentT {
-    pub fn new(dof: f64) -> Result<Self, ProbabilityError> {
+    pub async fn new(dof: f64) -> Result<Self, ProbabilityError> {
         if dof.is_nan() || dof <= 0.0 {
             return Err(ProbabilityError::InvalidParameter { name: "dof", value: dof });
         }
@@ -539,16 +539,16 @@ impl StudentT {
 }
 
 impl Continuous for StudentT {
-    fn pdf(&self, x: f64) -> f64 {
+    async fn pdf(&self, x: f64) -> f64 {
         self.ln_pdf(x).exp()
     }
 
-    fn ln_pdf(&self, x: f64) -> f64 {
+    async fn ln_pdf(&self, x: f64) -> f64 {
         let v = self.dof;
         ln_gamma((v + 1.0) / 2.0) - ln_gamma(v / 2.0) - 0.5 * (v * std::f64::consts::PI).ln() - (v + 1.0) / 2.0 * (1.0 + x * x / v).ln()
     }
 
-    fn cdf(&self, x: f64) -> f64 {
+    async fn cdf(&self, x: f64) -> f64 {
         let v = self.dof;
         let ib = beta_inc(v / 2.0, 0.5, v / (v + x * x));
         if x >= 0.0 {
@@ -558,7 +558,7 @@ impl Continuous for StudentT {
         }
     }
 
-    fn quantile(&self, p: f64) -> Result<f64, ProbabilityError> {
+    async fn quantile(&self, p: f64) -> Result<f64, ProbabilityError> {
         if !(0.0..=1.0).contains(&p) {
             return Err(ProbabilityError::OutOfDomain { name: "p", value: p });
         }
@@ -577,7 +577,7 @@ impl Continuous for StudentT {
     }
 
     /// 🎲️ `normal_sample / sqrt(chi2_sample(dof) / dof)`.
-    fn sample(&self, rng: &mut semio_framework_geometry::random::Rng) -> f64 {
+    async fn sample(&self, rng: &mut semio_framework_geometry::random::Rng) -> f64 {
         let z = Normal::STANDARD.sample(rng);
         let chi2 = 2.0 * gamma_sample(self.dof / 2.0, rng);
         z / (chi2 / self.dof).sqrt()
@@ -594,7 +594,7 @@ pub struct FisherF {
 }
 
 impl FisherF {
-    pub fn new(dof1: f64, dof2: f64) -> Result<Self, ProbabilityError> {
+    pub async fn new(dof1: f64, dof2: f64) -> Result<Self, ProbabilityError> {
         if dof1.is_nan() || dof1 <= 0.0 {
             return Err(ProbabilityError::InvalidParameter { name: "dof1", value: dof1 });
         }
@@ -606,14 +606,14 @@ impl FisherF {
 }
 
 impl Continuous for FisherF {
-    fn pdf(&self, x: f64) -> f64 {
+    async fn pdf(&self, x: f64) -> f64 {
         if x <= 0.0 {
             return 0.0;
         }
         self.ln_pdf(x).exp()
     }
 
-    fn ln_pdf(&self, x: f64) -> f64 {
+    async fn ln_pdf(&self, x: f64) -> f64 {
         if x <= 0.0 {
             return f64::NEG_INFINITY;
         }
@@ -621,14 +621,14 @@ impl Continuous for FisherF {
         0.5 * d1 * d1.ln() + 0.5 * d2 * d2.ln() + (0.5 * d1 - 1.0) * x.ln() - 0.5 * (d1 + d2) * (d2 + d1 * x).ln() - ln_beta(0.5 * d1, 0.5 * d2)
     }
 
-    fn cdf(&self, x: f64) -> f64 {
+    async fn cdf(&self, x: f64) -> f64 {
         if x <= 0.0 {
             return 0.0;
         }
         beta_inc(self.dof1 / 2.0, self.dof2 / 2.0, self.dof1 * x / (self.dof1 * x + self.dof2))
     }
 
-    fn quantile(&self, p: f64) -> Result<f64, ProbabilityError> {
+    async fn quantile(&self, p: f64) -> Result<f64, ProbabilityError> {
         if !(0.0..=1.0).contains(&p) {
             return Err(ProbabilityError::OutOfDomain { name: "p", value: p });
         }
@@ -646,7 +646,7 @@ impl Continuous for FisherF {
     }
 
     /// 🎲️ `(chi2_sample(dof1)/dof1) / (chi2_sample(dof2)/dof2)`.
-    fn sample(&self, rng: &mut semio_framework_geometry::random::Rng) -> f64 {
+    async fn sample(&self, rng: &mut semio_framework_geometry::random::Rng) -> f64 {
         let c1 = 2.0 * gamma_sample(self.dof1 / 2.0, rng);
         let c2 = 2.0 * gamma_sample(self.dof2 / 2.0, rng);
         (c1 / self.dof1) / (c2 / self.dof2)
@@ -666,7 +666,7 @@ pub struct Bernoulli {
 }
 
 impl Bernoulli {
-    pub fn new(p: f64) -> Result<Self, ProbabilityError> {
+    pub async fn new(p: f64) -> Result<Self, ProbabilityError> {
         if !(0.0..=1.0).contains(&p) {
             return Err(ProbabilityError::InvalidParameter { name: "p", value: p });
         }
@@ -675,7 +675,7 @@ impl Bernoulli {
 }
 
 impl Discrete for Bernoulli {
-    fn pmf(&self, k: u64) -> f64 {
+    async fn pmf(&self, k: u64) -> f64 {
         match k {
             0 => 1.0 - self.p,
             1 => self.p,
@@ -683,25 +683,25 @@ impl Discrete for Bernoulli {
         }
     }
 
-    fn ln_pmf(&self, k: u64) -> f64 {
+    async fn ln_pmf(&self, k: u64) -> f64 {
         self.pmf(k).ln()
     }
 
-    fn cdf(&self, k: u64) -> f64 {
+    async fn cdf(&self, k: u64) -> f64 {
         match k {
             0 => 1.0 - self.p,
             _ => 1.0,
         }
     }
 
-    fn quantile(&self, p: f64) -> Result<u64, ProbabilityError> {
+    async fn quantile(&self, p: f64) -> Result<u64, ProbabilityError> {
         if !(0.0..=1.0).contains(&p) {
             return Err(ProbabilityError::OutOfDomain { name: "p", value: p });
         }
         Ok(if p <= 1.0 - self.p { 0 } else { 1 })
     }
 
-    fn sample(&self, rng: &mut semio_framework_geometry::random::Rng) -> u64 {
+    async fn sample(&self, rng: &mut semio_framework_geometry::random::Rng) -> u64 {
         u64::from(rng.next_bool(self.p))
     }
 }
@@ -716,7 +716,7 @@ pub struct Binomial {
 }
 
 impl Binomial {
-    pub fn new(n: u64, p: f64) -> Result<Self, ProbabilityError> {
+    pub async fn new(n: u64, p: f64) -> Result<Self, ProbabilityError> {
         if !(0.0..=1.0).contains(&p) {
             return Err(ProbabilityError::InvalidParameter { name: "p", value: p });
         }
@@ -725,14 +725,14 @@ impl Binomial {
 }
 
 impl Discrete for Binomial {
-    fn pmf(&self, k: u64) -> f64 {
+    async fn pmf(&self, k: u64) -> f64 {
         if k > self.n {
             return 0.0;
         }
         self.ln_pmf(k).exp()
     }
 
-    fn ln_pmf(&self, k: u64) -> f64 {
+    async fn ln_pmf(&self, k: u64) -> f64 {
         if k > self.n {
             return f64::NEG_INFINITY;
         }
@@ -757,7 +757,7 @@ impl Discrete for Binomial {
 
     /// 🎯️ Exact O(1) CDF via the regularized-beta/binomial-CDF identity
     /// `P(X <= k) = I_{1-p}(n-k, k+1)`.
-    fn cdf(&self, k: u64) -> f64 {
+    async fn cdf(&self, k: u64) -> f64 {
         if k >= self.n {
             return 1.0;
         }
@@ -766,7 +766,7 @@ impl Discrete for Binomial {
 
     /// 🎯️ Walks the CDF from `0` upward — O(n), acceptable since `n` is small in the intended
     /// causal-discovery use case.
-    fn quantile(&self, p: f64) -> Result<u64, ProbabilityError> {
+    async fn quantile(&self, p: f64) -> Result<u64, ProbabilityError> {
         if !(0.0..=1.0).contains(&p) {
             return Err(ProbabilityError::OutOfDomain { name: "p", value: p });
         }
@@ -779,7 +779,7 @@ impl Discrete for Binomial {
     }
 
     /// 🎯️ `n` independent Bernoulli draws — O(n), no BTPE, not needed at this scale.
-    fn sample(&self, rng: &mut semio_framework_geometry::random::Rng) -> u64 {
+    async fn sample(&self, rng: &mut semio_framework_geometry::random::Rng) -> u64 {
         (0..self.n).filter(|_| rng.next_bool(self.p)).count() as u64
     }
 }
@@ -795,7 +795,7 @@ pub struct Multinomial {
 }
 
 impl Multinomial {
-    pub fn new(n: u64, probs: Vec<f64>) -> Result<Self, ProbabilityError> {
+    pub async fn new(n: u64, probs: Vec<f64>) -> Result<Self, ProbabilityError> {
         let sum: f64 = probs.iter().sum();
         if (sum - 1.0).abs() > 1e-9 {
             return Err(ProbabilityError::InvalidParameter { name: "probs_sum", value: sum });
@@ -806,7 +806,7 @@ impl Multinomial {
         Ok(Self { n, probs })
     }
 
-    pub fn ln_pmf(&self, counts: &[u64]) -> f64 {
+    pub async fn ln_pmf(&self, counts: &[u64]) -> f64 {
         if counts.len() != self.probs.len() || counts.iter().sum::<u64>() != self.n {
             return f64::NEG_INFINITY;
         }
@@ -820,13 +820,13 @@ impl Multinomial {
         result
     }
 
-    pub fn pmf(&self, counts: &[u64]) -> f64 {
+    pub async fn pmf(&self, counts: &[u64]) -> f64 {
         self.ln_pmf(counts).exp()
     }
 
     /// 🎲️ Sequential conditional binomial draws: category `i`'s count is `Binomial(remaining,
     /// p_i / (1 - sum of earlier p's))`, decrementing `remaining` after each draw.
-    pub fn sample(&self, rng: &mut semio_framework_geometry::random::Rng) -> Vec<u64> {
+    pub async fn sample(&self, rng: &mut semio_framework_geometry::random::Rng) -> Vec<u64> {
         let mut remaining = self.n;
         let mut remaining_prob = 1.0;
         let mut counts = Vec::with_capacity(self.probs.len());
@@ -855,27 +855,27 @@ mod tests {
 
     // #region 🔖️SpecialTests
     #[test]
-    fn erf_matches_known_values() {
+    async fn erf_matches_known_values() {
         assert!((erf(1.0) - 0.842_700_792_949_714_9).abs() < 1e-9);
         assert!((erf(0.5) - 0.520_499_877_813_046_5).abs() < 1e-9);
         assert!((erfc(2.0) - 0.004_677_734_981_063_127).abs() < 1e-9);
     }
 
     #[test]
-    fn erf_is_odd() {
+    async fn erf_is_odd() {
         for x in [0.1, 0.5, 1.0, 1.5, 2.0, 3.0] {
             assert!((erf(-x) + erf(x)).abs() < 1e-12, "erf not odd at x={x}");
         }
     }
 
     #[test]
-    fn ln_gamma_matches_known_values() {
+    async fn ln_gamma_matches_known_values() {
         assert!((ln_gamma(0.5) - std::f64::consts::PI.sqrt().ln()).abs() < 1e-9);
         assert!((ln_gamma(5.0) - 24.0_f64.ln()).abs() < 1e-9);
     }
 
     #[test]
-    fn ln_gamma_satisfies_recurrence() {
+    async fn ln_gamma_satisfies_recurrence() {
         for x in [0.3, 0.7, 1.5, 2.5, 4.2, 8.9] {
             let lhs = ln_gamma(x + 1.0) - ln_gamma(x);
             assert!((lhs - x.ln()).abs() < 1e-9, "recurrence failed at x={x}");
@@ -883,7 +883,7 @@ mod tests {
     }
 
     #[test]
-    fn gamma_p_matches_analytic_identity_for_a_one() {
+    async fn gamma_p_matches_analytic_identity_for_a_one() {
         for x in [0.1_f64, 0.5, 1.0, 2.0, 5.0, 10.0] {
             let expected = 1.0 - (-x).exp();
             assert!((gamma_p(1.0, x) - expected).abs() < 1e-9, "mismatch at x={x}");
@@ -891,7 +891,7 @@ mod tests {
     }
 
     #[test]
-    fn gamma_p_and_q_sum_to_one() {
+    async fn gamma_p_and_q_sum_to_one() {
         for a in [0.5, 1.0, 2.5, 5.0, 10.0] {
             for x in [0.1, 1.0, 3.0, 8.0, 20.0] {
                 let sum = gamma_p(a, x) + gamma_q(a, x);
@@ -901,7 +901,7 @@ mod tests {
     }
 
     #[test]
-    fn beta_inc_symmetry_identity() {
+    async fn beta_inc_symmetry_identity() {
         for (a, b, x) in [(2.0, 3.0, 0.3), (1.5, 4.5, 0.6), (5.0, 5.0, 0.5)] {
             let lhs = beta_inc(a, b, x) + beta_inc(b, a, 1.0 - x);
             assert!((lhs - 1.0).abs() < 1e-9, "a={a} b={b} x={x}");
@@ -909,34 +909,34 @@ mod tests {
     }
 
     #[test]
-    fn beta_inc_uniform_case_is_identity() {
+    async fn beta_inc_uniform_case_is_identity() {
         for x in [0.1, 0.4, 0.7, 0.9] {
             assert!((beta_inc(1.0, 1.0, x) - x).abs() < 1e-9);
         }
     }
 
     #[test]
-    fn beta_inc_symmetric_midpoint() {
+    async fn beta_inc_symmetric_midpoint() {
         assert!((beta_inc(2.0, 2.0, 0.5) - 0.5).abs() < 1e-9);
     }
     // #endregion 🔖️SpecialTests
 
     // #region 🔖️NormalTests
     #[test]
-    fn normal_cdf_matches_known_value() {
+    async fn normal_cdf_matches_known_value() {
         let n = Normal::STANDARD;
         assert!((n.cdf(1.959_963_984_540_054) - 0.975).abs() < 1e-9);
     }
 
     #[test]
-    fn normal_quantile_matches_known_value() {
+    async fn normal_quantile_matches_known_value() {
         let n = Normal::STANDARD;
         let q = n.quantile(0.975).unwrap();
         assert!((q - 1.959_963_984_540_054).abs() < 1e-9);
     }
 
     #[test]
-    fn normal_quantile_cdf_round_trip() {
+    async fn normal_quantile_cdf_round_trip() {
         let n = Normal::new(3.0, 2.0).unwrap();
         for x in [-5.0, -1.0, 0.0, 1.0, 2.5, 6.0, 10.0] {
             let p = n.cdf(x);
@@ -946,13 +946,13 @@ mod tests {
     }
 
     #[test]
-    fn normal_rejects_nonpositive_std_dev() {
+    async fn normal_rejects_nonpositive_std_dev() {
         assert!(Normal::new(0.0, 0.0).is_err());
         assert!(Normal::new(0.0, -1.0).is_err());
     }
 
     #[test]
-    fn normal_sample_mean_and_variance_within_band() {
+    async fn normal_sample_mean_and_variance_within_band() {
         let n = Normal::new(5.0, 3.0).unwrap();
         let mut rng = semio_framework_geometry::random::Rng::from_seed(42);
         let draws = 20_000;
@@ -967,7 +967,7 @@ mod tests {
 
     // #region 🔖️UniformTests
     #[test]
-    fn uniform_pdf_cdf_quantile_consistency() {
+    async fn uniform_pdf_cdf_quantile_consistency() {
         let u = Uniform::new(2.0, 6.0).unwrap();
         assert!((u.pdf(4.0) - 0.25).abs() < 1e-12);
         assert!((u.cdf(4.0) - 0.5).abs() < 1e-12);
@@ -977,13 +977,13 @@ mod tests {
     }
 
     #[test]
-    fn uniform_rejects_invalid_bounds() {
+    async fn uniform_rejects_invalid_bounds() {
         assert!(Uniform::new(5.0, 5.0).is_err());
         assert!(Uniform::new(5.0, 2.0).is_err());
     }
 
     #[test]
-    fn uniform_sample_mean_and_variance_within_band() {
+    async fn uniform_sample_mean_and_variance_within_band() {
         let u = Uniform::new(0.0, 10.0).unwrap();
         let mut rng = semio_framework_geometry::random::Rng::from_seed(7);
         let draws = 20_000;
@@ -995,7 +995,7 @@ mod tests {
 
     // #region 🔖️ChiSquaredTests
     #[test]
-    fn chi_squared_quantiles_match_standard_table() {
+    async fn chi_squared_quantiles_match_standard_table() {
         let expected = [3.841_458_820_694_124, 5.991_464_547_107_979, 7.814_727_903_251_179, 9.487_729_036_781_154, 11.070_497_693_516_351];
         for (i, &exp) in expected.iter().enumerate() {
             let dof = (i + 1) as f64;
@@ -1006,7 +1006,7 @@ mod tests {
     }
 
     #[test]
-    fn chi_squared_quantile_cdf_round_trip() {
+    async fn chi_squared_quantile_cdf_round_trip() {
         let c = ChiSquared::new(4.0).unwrap();
         for p in [0.05, 0.25, 0.5, 0.75, 0.95, 0.99] {
             let x = c.quantile(p).unwrap();
@@ -1016,7 +1016,7 @@ mod tests {
     }
 
     #[test]
-    fn chi_squared_sample_mean_within_band() {
+    async fn chi_squared_sample_mean_within_band() {
         let c = ChiSquared::new(6.0).unwrap();
         let mut rng = semio_framework_geometry::random::Rng::from_seed(11);
         let draws = 20_000;
@@ -1029,20 +1029,20 @@ mod tests {
 
     // #region 🔖️StudentTTests
     #[test]
-    fn student_t_cdf_matches_known_value() {
+    async fn student_t_cdf_matches_known_value() {
         let t = StudentT::new(10.0).unwrap();
         assert!((t.cdf(2.0) - 0.963_305_982_614_629_9).abs() < 1e-9);
     }
 
     #[test]
-    fn student_t_quantile_matches_known_value() {
+    async fn student_t_quantile_matches_known_value() {
         let t = StudentT::new(10.0).unwrap();
         let q = t.quantile(0.975).unwrap();
         assert!((q - 2.228_138_851_986_273).abs() < 1e-6);
     }
 
     #[test]
-    fn student_t_quantile_cdf_round_trip() {
+    async fn student_t_quantile_cdf_round_trip() {
         let t = StudentT::new(7.0).unwrap();
         for p in [0.05, 0.25, 0.5, 0.75, 0.95] {
             let x = t.quantile(p).unwrap();
@@ -1052,7 +1052,7 @@ mod tests {
     }
 
     #[test]
-    fn student_t_sample_mean_within_band() {
+    async fn student_t_sample_mean_within_band() {
         let t = StudentT::new(15.0).unwrap();
         let mut rng = semio_framework_geometry::random::Rng::from_seed(13);
         let draws = 20_000;
@@ -1064,7 +1064,7 @@ mod tests {
 
     // #region 🔖️FisherFTests
     #[test]
-    fn fisher_f_cdf_symmetry_point() {
+    async fn fisher_f_cdf_symmetry_point() {
         for k in [2.0, 5.0, 10.0, 20.0] {
             let f = FisherF::new(k, k).unwrap();
             assert!((f.cdf(1.0) - 0.5).abs() < 1e-9, "k={k}");
@@ -1072,7 +1072,7 @@ mod tests {
     }
 
     #[test]
-    fn fisher_f_quantile_cdf_round_trip() {
+    async fn fisher_f_quantile_cdf_round_trip() {
         let f = FisherF::new(5.0, 10.0).unwrap();
         for p in [0.1, 0.5, 0.9, 0.95] {
             let x = f.quantile(p).unwrap();
@@ -1082,7 +1082,7 @@ mod tests {
     }
 
     #[test]
-    fn fisher_f_sample_is_nonnegative() {
+    async fn fisher_f_sample_is_nonnegative() {
         let f = FisherF::new(4.0, 8.0).unwrap();
         let mut rng = semio_framework_geometry::random::Rng::from_seed(17);
         for _ in 0..1000 {
@@ -1093,7 +1093,7 @@ mod tests {
 
     // #region 🔖️BernoulliTests
     #[test]
-    fn bernoulli_pmf_cdf_quantile() {
+    async fn bernoulli_pmf_cdf_quantile() {
         let b = Bernoulli::new(0.3).unwrap();
         assert!((b.pmf(0) - 0.7).abs() < 1e-12);
         assert!((b.pmf(1) - 0.3).abs() < 1e-12);
@@ -1104,7 +1104,7 @@ mod tests {
     }
 
     #[test]
-    fn bernoulli_sample_frequency_matches_p() {
+    async fn bernoulli_sample_frequency_matches_p() {
         let b = Bernoulli::new(0.7).unwrap();
         let mut rng = semio_framework_geometry::random::Rng::from_seed(21);
         let draws = 20_000;
@@ -1116,13 +1116,13 @@ mod tests {
 
     // #region 🔖️BinomialTests
     #[test]
-    fn binomial_pmf_matches_known_value() {
+    async fn binomial_pmf_matches_known_value() {
         let b = Binomial::new(10, 0.5).unwrap();
         assert!((b.pmf(5) - 252.0 / 1024.0).abs() < 1e-9);
     }
 
     #[test]
-    fn binomial_cdf_matches_manual_partial_sum() {
+    async fn binomial_cdf_matches_manual_partial_sum() {
         let b = Binomial::new(8, 0.4).unwrap();
         for k in 0..=8 {
             let manual: f64 = (0..=k).map(|i| b.pmf(i)).sum();
@@ -1131,7 +1131,7 @@ mod tests {
     }
 
     #[test]
-    fn binomial_cdf_matches_beta_identity() {
+    async fn binomial_cdf_matches_beta_identity() {
         for (n, p, k) in [(10u64, 0.3, 4u64), (20, 0.6, 12), (15, 0.5, 7)] {
             let b = Binomial::new(n, p).unwrap();
             let manual: f64 = (0..=k).map(|i| b.pmf(i)).sum();
@@ -1140,7 +1140,7 @@ mod tests {
     }
 
     #[test]
-    fn binomial_quantile_cdf_consistency() {
+    async fn binomial_quantile_cdf_consistency() {
         let b = Binomial::new(20, 0.35).unwrap();
         for p in [0.1, 0.3, 0.5, 0.7, 0.9] {
             let k = b.quantile(p).unwrap();
@@ -1149,7 +1149,7 @@ mod tests {
     }
 
     #[test]
-    fn binomial_sample_mean_within_band() {
+    async fn binomial_sample_mean_within_band() {
         let b = Binomial::new(50, 0.4).unwrap();
         let mut rng = semio_framework_geometry::random::Rng::from_seed(23);
         let draws = 20_000;
@@ -1162,7 +1162,7 @@ mod tests {
 
     // #region 🔖️MultinomialTests
     #[test]
-    fn multinomial_pmf_matches_hand_computation() {
+    async fn multinomial_pmf_matches_hand_computation() {
         let m = Multinomial::new(4, vec![0.2, 0.3, 0.5]).unwrap();
         let counts = [1u64, 1, 2];
         // 4! / (1! 1! 2!) * 0.2^1 * 0.3^1 * 0.5^2 = 12 * 0.2 * 0.3 * 0.25 = 0.18
@@ -1171,12 +1171,12 @@ mod tests {
     }
 
     #[test]
-    fn multinomial_rejects_probs_not_summing_to_one() {
+    async fn multinomial_rejects_probs_not_summing_to_one() {
         assert!(Multinomial::new(4, vec![0.2, 0.3, 0.4]).is_err());
     }
 
     #[test]
-    fn multinomial_sample_counts_sum_to_n() {
+    async fn multinomial_sample_counts_sum_to_n() {
         let m = Multinomial::new(30, vec![0.2, 0.3, 0.5]).unwrap();
         let mut rng = semio_framework_geometry::random::Rng::from_seed(29);
         for _ in 0..100 {
@@ -1187,7 +1187,7 @@ mod tests {
     }
 
     #[test]
-    fn multinomial_sample_category_means_within_band() {
+    async fn multinomial_sample_category_means_within_band() {
         let m = Multinomial::new(100, vec![0.2, 0.3, 0.5]).unwrap();
         let mut rng = semio_framework_geometry::random::Rng::from_seed(31);
         let draws = 2000;

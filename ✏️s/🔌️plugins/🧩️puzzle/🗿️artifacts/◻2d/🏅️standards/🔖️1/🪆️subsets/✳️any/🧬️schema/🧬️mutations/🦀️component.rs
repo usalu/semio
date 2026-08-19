@@ -93,7 +93,7 @@ pub use super::scale_node::mutation::{scale_node, ScaleNode};
 //#region 🔖️SnapshotDelta
 /// 🔀️ Diffs two typed snapshots into a minimal semantic mutation set — the single source of truth
 /// both the VCS layer and the `serde_json::Value` scene bridge below replay through.
-pub fn puzzle2d_snapshot_mutations(before: &Puzzle2dSnapshot, after: &Puzzle2dSnapshot) -> Vec<Puzzle2dMutation> {
+pub async fn puzzle2d_snapshot_mutations(before: &Puzzle2dSnapshot, after: &Puzzle2dSnapshot) -> Vec<Puzzle2dMutation> {
     let mut mutations = Vec::new();
     for node in &before.nodes {
         if !after.nodes.iter().any(|entry| entry.id == node.id) {
@@ -214,14 +214,14 @@ pub fn puzzle2d_snapshot_mutations(before: &Puzzle2dSnapshot, after: &Puzzle2dSn
 //#endregion 🔖️SnapshotDelta
 
 /// ▶️ Applies `mutation` via its diff.
-pub fn apply_puzzle2d_mutation(projection: &mut Puzzle2dSnapshot, mutation: &Puzzle2dMutation) -> protocol::MutationApplyResult<()> {
+pub async fn apply_puzzle2d_mutation(projection: &mut Puzzle2dSnapshot, mutation: &Puzzle2dMutation) -> protocol::MutationApplyResult<()> {
     let (next, _) = vcs::apply_mutation(projection, mutation)?;
 
     *projection = next;
     Ok(())
 }
 
-pub fn inverse_puzzle2d_mutation(projection: &Puzzle2dSnapshot, mutation: &Puzzle2dMutation) -> Vec<Puzzle2dMutation> {
+pub async fn inverse_puzzle2d_mutation(projection: &Puzzle2dSnapshot, mutation: &Puzzle2dMutation) -> Vec<Puzzle2dMutation> {
     mutation.inverse(projection)
 }
 
@@ -234,7 +234,7 @@ pub fn inverse_puzzle2d_mutation(projection: &Puzzle2dSnapshot, mutation: &Puzzl
 // typed `Mutation<Puzzle2dSnapshot>`/`MutationDiff<Puzzle2dSnapshot>` impls stay the single source
 // of truth, so every one of this enum's 26 kinds gets `Value` support for free.
 impl MutationDiff<Value> for Puzzle2dDiff {
-    fn apply(&self, projection: &Value) -> protocol::MutationApplyResult<Value> {
+    async fn apply(&self, projection: &Value) -> protocol::MutationApplyResult<Value> {
         let base: Puzzle2dSnapshot = serde_json::from_value(projection.clone()).map_err(|error| {
             protocol::MutationApplyError::new("mutation.apply.invalid-base", error.to_string()).at(["document"])
         })?;
@@ -243,7 +243,7 @@ impl MutationDiff<Value> for Puzzle2dDiff {
             protocol::MutationApplyError::new("mutation.apply.invalid-result", error.to_string()).at(["document"])
         })
     }
-    fn absorb(&mut self, other: Self) {
+    async fn absorb(&mut self, other: Self) {
         MutationDiff::<Puzzle2dSnapshot>::absorb(self, other);
     }
 }
@@ -251,12 +251,12 @@ impl MutationDiff<Value> for Puzzle2dDiff {
 impl Mutation<Value> for Puzzle2dMutation {
     type Diff = Puzzle2dDiff;
 
-    fn diff(&self, projection: &Value) -> protocol::MutationOutcome<Puzzle2dDiff> {
+    async fn diff(&self, projection: &Value) -> protocol::MutationOutcome<Puzzle2dDiff> {
         let base: Puzzle2dSnapshot = serde_json::from_value(projection.clone()).unwrap_or_default();
         Mutation::<Puzzle2dSnapshot>::diff(self, &base)
     }
 
-    fn inverse(&self, projection: &Value) -> Vec<Self> {
+    async fn inverse(&self, projection: &Value) -> Vec<Self> {
         let base: Puzzle2dSnapshot = serde_json::from_value(projection.clone()).unwrap_or_default();
         Mutation::<Puzzle2dSnapshot>::inverse(self, &base)
     }
@@ -268,7 +268,7 @@ impl Mutation<Value> for Puzzle2dMutation {
 /// not read here: it is session-only `Puzzle2dPlayRuntime` state (see `setCamera`'s
 /// `ActionKind::View`), never persisted on the document, so a fixture must never carry a top-level
 /// `"camera"` key at all — `Puzzle2dSnapshot::camera` simply defaults when absent.
-pub fn puzzle2d_document_delta_operations(before: &Value, after: &Value) -> Vec<Puzzle2dMutation> {
+pub async fn puzzle2d_document_delta_operations(before: &Value, after: &Value) -> Vec<Puzzle2dMutation> {
     let before_snapshot: Puzzle2dSnapshot = serde_json::from_value(before.clone()).unwrap_or_default();
     let after_snapshot: Puzzle2dSnapshot = serde_json::from_value(after.clone()).unwrap_or_default();
     if before_snapshot == after_snapshot {
@@ -292,7 +292,7 @@ pub fn puzzle2d_document_delta_operations(before: &Value, after: &Value) -> Vec<
 pub struct Puzzle2dPlaySnapshot(pub Value);
 
 impl PartialEq for Puzzle2dPlaySnapshot {
-    fn eq(&self, other: &Self) -> bool {
+    async fn eq(&self, other: &Self) -> bool {
         store::pack_rt::json_values_equal(&self.0, &other.0)
     }
 }
@@ -300,32 +300,32 @@ impl PartialEq for Puzzle2dPlaySnapshot {
 impl store::ArtifactDsl for Puzzle2dPlaySnapshot {
     const EXTENSION: &'static str = "puzzle2d-play";
 
-    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+    async fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
         serde_json::from_str(text).map(Puzzle2dPlaySnapshot).map_err(|error| store::TextError::new(error.to_string(), store::TextSpan::at(1, 1)))
     }
 
-    fn print_dsl(&self) -> String {
+    async fn print_dsl(&self) -> String {
         serde_json::to_string_pretty(&self.0).unwrap_or_default()
     }
 }
 
 impl store::ArtifactPack for Puzzle2dPlaySnapshot {
-    fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
+    async fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         dsl::to_dsl_value(&self.0).map_err(store::PackError::Schema)?.encode_pack_with(options)
     }
 
-    fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
+    async fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let value = dsl::DslValue::decode_pack_with(bytes, options)?;
         dsl::from_dsl_value(value).map(Puzzle2dPlaySnapshot).map_err(store::PackError::Schema)
     }
 }
 
 impl MutationDiff<Puzzle2dPlaySnapshot> for Puzzle2dDiff {
-    fn apply(&self, projection: &Puzzle2dPlaySnapshot) -> protocol::MutationApplyResult<Puzzle2dPlaySnapshot> {
+    async fn apply(&self, projection: &Puzzle2dPlaySnapshot) -> protocol::MutationApplyResult<Puzzle2dPlaySnapshot> {
         MutationDiff::<Value>::apply(self, &projection.0)
             .map(Puzzle2dPlaySnapshot)
     }
-    fn absorb(&mut self, other: Self) {
+    async fn absorb(&mut self, other: Self) {
         MutationDiff::<Puzzle2dSnapshot>::absorb(self, other);
     }
 }
@@ -333,11 +333,11 @@ impl MutationDiff<Puzzle2dPlaySnapshot> for Puzzle2dDiff {
 impl Mutation<Puzzle2dPlaySnapshot> for Puzzle2dMutation {
     type Diff = Puzzle2dDiff;
 
-    fn diff(&self, projection: &Puzzle2dPlaySnapshot) -> protocol::MutationOutcome<Puzzle2dDiff> {
+    async fn diff(&self, projection: &Puzzle2dPlaySnapshot) -> protocol::MutationOutcome<Puzzle2dDiff> {
         Mutation::<Value>::diff(self, &projection.0)
     }
 
-    fn inverse(&self, projection: &Puzzle2dPlaySnapshot) -> Vec<Puzzle2dMutation> {
+    async fn inverse(&self, projection: &Puzzle2dPlaySnapshot) -> Vec<Puzzle2dMutation> {
         Mutation::<Value>::inverse(self, &projection.0)
     }
 }
@@ -349,16 +349,16 @@ impl Mutation<Puzzle2dPlaySnapshot> for Puzzle2dMutation {
 /// immediately above, needed so `.editor_mutation_roster::<Puzzle2dPlayApp>()` can register this
 /// dialect's real semantic vocabulary against the play app's own `Snapshot` type.
 impl protocol::SemanticMutation<Puzzle2dPlaySnapshot> for Puzzle2dMutation {
-    fn kinds() -> &'static [protocol::SemanticDescriptor] {
+    async fn kinds() -> &'static [protocol::SemanticDescriptor] {
         <Self as protocol::SemanticMutation<Puzzle2dSnapshot>>::kinds()
     }
-    fn semantics(&self) -> &'static protocol::SemanticDescriptor {
+    async fn semantics(&self) -> &'static protocol::SemanticDescriptor {
         <Self as protocol::SemanticMutation<Puzzle2dSnapshot>>::semantics(self)
     }
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         <Self as protocol::SemanticMutation<Puzzle2dSnapshot>>::label(self)
     }
-    fn target(&self) -> Vec<String> {
+    async fn target(&self) -> Vec<String> {
         <Self as protocol::SemanticMutation<Puzzle2dSnapshot>>::target(self)
     }
 }
@@ -374,7 +374,7 @@ mod tests {
     use serde_json::json;
 
     #[test]
-    fn puzzle2d_delta_ops_are_granular_and_round_trip() {
+    async fn puzzle2d_delta_ops_are_granular_and_round_trip() {
         let before = json!({ "schema": PUZZLE_2D_SCHEMA, "nodes": [{ "id": "n1", "anchor": "fixed", "x": 0.0, "y": 0.0, "handles": [] }, { "id": "n2", "anchor": "fixed", "x": 10.0, "y": 0.0, "handles": [] }], "edges": [] });
         let after = json!({ "schema": PUZZLE_2D_SCHEMA, "nodes": [{ "id": "n2", "anchor": "fixed", "x": 99.0, "y": 0.0, "handles": [] }, { "id": "n3", "anchor": "fixed", "x": 1.0, "y": 0.0, "handles": [] }], "edges": [] });
         let canonical = |value: &Value| serde_json::to_value(serde_json::from_value::<Puzzle2dSnapshot>(value.clone()).expect("typed puzzle2d fixture")).expect("canonical puzzle2d JSON");
@@ -398,7 +398,7 @@ mod tests {
     }
 
     #[test]
-    fn sparse_node_without_anchor_still_emits_create_node() {
+    async fn sparse_node_without_anchor_still_emits_create_node() {
         let before = json!({ "schema": PUZZLE_2D_SCHEMA, "nodes": [], "edges": [] });
         let after = json!({
             "schema": PUZZLE_2D_SCHEMA,
@@ -411,7 +411,7 @@ mod tests {
 
     //#region 🔖️MutationLaws
     #[test]
-    fn create_delete_node_inverse_law() {
+    async fn create_delete_node_inverse_law() {
         use crate::artifacts::puzzle2d::{schema::empty_puzzle2d_snapshot, Puzzle2dNode};
         let base = empty_puzzle2d_snapshot();
         let node = Puzzle2dNode { id: "n1".into(), ..Default::default() };
@@ -421,7 +421,7 @@ mod tests {
     }
 
     #[test]
-    fn move_node_inverse_and_absorb_law() {
+    async fn move_node_inverse_and_absorb_law() {
         use crate::artifacts::puzzle2d::{schema::empty_puzzle2d_snapshot, Puzzle2dNode};
         let base = empty_puzzle2d_snapshot();
         let node = Puzzle2dNode { id: "n1".into(), ..Default::default() };
@@ -434,7 +434,7 @@ mod tests {
     }
 
     #[test]
-    fn node_field_mutations_inverse_law() {
+    async fn node_field_mutations_inverse_law() {
         use crate::artifacts::puzzle2d::{schema::empty_puzzle2d_snapshot, Puzzle2dHandle, Puzzle2dNode, Puzzle2dNodeAnchor};
         let base = empty_puzzle2d_snapshot();
         let node = Puzzle2dNode { id: "n1".into(), handles: vec![Puzzle2dHandle { id: "h1".into(), ..Default::default() }], ..Default::default() };
@@ -454,7 +454,7 @@ mod tests {
     }
 
     #[test]
-    fn connect_disconnect_handles_inverse_law() {
+    async fn connect_disconnect_handles_inverse_law() {
         use crate::artifacts::puzzle2d::{schema::empty_puzzle2d_snapshot, Puzzle2dHandle, Puzzle2dNode};
         let base = empty_puzzle2d_snapshot();
         let node_a = Puzzle2dNode { id: "a".into(), handles: vec![Puzzle2dHandle { id: "ha".into(), ..Default::default() }], ..Default::default() };
@@ -473,7 +473,7 @@ mod tests {
     }
 
     #[test]
-    fn delete_node_severs_and_reconnects_edges() {
+    async fn delete_node_severs_and_reconnects_edges() {
         use crate::artifacts::puzzle2d::{schema::empty_puzzle2d_snapshot, Puzzle2dHandle, Puzzle2dNode};
         let base = empty_puzzle2d_snapshot();
         let node_a = Puzzle2dNode { id: "a".into(), handles: vec![Puzzle2dHandle { id: "ha".into(), ..Default::default() }], ..Default::default() };
@@ -490,7 +490,7 @@ mod tests {
     }
 
     #[test]
-    fn meta_mutations_inverse_law() {
+    async fn meta_mutations_inverse_law() {
         use crate::artifacts::puzzle2d::{schema::empty_puzzle2d_snapshot, Puzzle2dCompatSpecificity, Puzzle2dKindCatalogs};
         let base = empty_puzzle2d_snapshot();
         assert_mutation_inverse_law(&base, &change_manifest_id(Some("manifest-1".into())));
@@ -501,7 +501,7 @@ mod tests {
     }
 
     #[test]
-    fn dispatch_registers_semantic_descriptors() {
+    async fn dispatch_registers_semantic_descriptors() {
         register_puzzle2d_mutation_descriptors();
         for kind in Puzzle2dMutation::kinds() {
             assert!(protocol::is_approved_verb(kind.verb), "verb '{}' must be in APPROVED_VERBS", kind.verb);
@@ -516,7 +516,7 @@ mod tests {
     use protocol::testkit::{assert_fatal_never_applies, assert_missing_target_is_error};
 
     #[test]
-    fn missing_target_is_error_per_verb_family() {
+    async fn missing_target_is_error_per_verb_family() {
         use crate::artifacts::puzzle2d::schema::empty_puzzle2d_snapshot;
         let base = empty_puzzle2d_snapshot();
         assert_missing_target_is_error(&base, &delete_node("missing".into())); // delete
@@ -528,7 +528,7 @@ mod tests {
     }
 
     #[test]
-    fn create_duplicate_id_is_fatal_and_never_applies() {
+    async fn create_duplicate_id_is_fatal_and_never_applies() {
         use crate::artifacts::puzzle2d::{schema::empty_puzzle2d_snapshot, Puzzle2dNode};
         let mut base = empty_puzzle2d_snapshot();
         let node = Puzzle2dNode { id: "n0".into(), ..Default::default() };

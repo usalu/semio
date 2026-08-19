@@ -18,7 +18,7 @@ pub mod derived_construction {
     //#region 🔖️Seed
     /// 🌱️ Seeds a fresh snapshot with a real `/GTS_PDFX` OutputIntent (same shape `✳️x` seeds) plus
     /// a minimal `/DPartRoot` → `/DParts` → one `/DPart` node carrying `/DPM`.
-    fn seeded_snapshot(output_condition: String) -> PdfSnapshot {
+    async fn seeded_snapshot(output_condition: String) -> PdfSnapshot {
         let objects = vec![
             PdfIndirectObject {
                 id: ObjRef { num: 1, gen: 0 },
@@ -55,17 +55,17 @@ pub mod derived_construction {
 
     impl PdfVtBuilderConstruction {
         /// ➕ The recommended entry point: REQUIRES an output-condition identifier up front.
-        pub fn new(output_condition: impl Into<String>) -> Self {
+        pub async fn new(output_condition: impl Into<String>) -> Self {
             Self { snapshot: seeded_snapshot(output_condition.into()) }
         }
 
-        pub fn add_page(mut self, page: PdfPage) -> Self {
+        pub async fn add_page(mut self, page: PdfPage) -> Self {
             let index = self.snapshot.pages.len();
             apply_pdf_mutation(&mut self.snapshot, &PdfMutation::InsertPage { index, page });
             self
         }
 
-        pub fn set_info(mut self, info: PdfInfo) -> Self {
+        pub async fn set_info(mut self, info: PdfInfo) -> Self {
             apply_pdf_mutation(&mut self.snapshot, &PdfMutation::SetInfo { info });
             self
         }
@@ -76,33 +76,33 @@ pub mod derived_construction {
         type Mutation = PdfMutation;
         type Diff = PdfDiff;
 
-        fn empty() -> Self {
+        async fn empty() -> Self {
             Self::new("FOGRA39")
         }
 
-        fn from_snapshot(snapshot: Self::Snapshot) -> Self {
+        async fn from_snapshot(snapshot: Self::Snapshot) -> Self {
             Self { snapshot }
         }
 
-        fn from_text(text: &str) -> Result<Self, store::TextError> {
+        async fn from_text(text: &str) -> Result<Self, store::TextError> {
             Ok(Self::from_snapshot(<PdfSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
 
-        fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
+        async fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
             Ok(Self::from_snapshot(<PdfSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
         }
 
-        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
+        async fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let diff = apply_pdf_mutation(&mut self.snapshot, &mutation);
             (self, diff)
         }
 
-        fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
+        async fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
             self.snapshot = <PdfDiff as protocol::MutationDiff<PdfSnapshot>>::apply(&diff, &self.snapshot)?;
             Ok(self)
         }
 
-        fn build(self) -> Result<Self::Snapshot, Vec<Diagnostic>> {
+        async fn build(self) -> Result<Self::Snapshot, Vec<Diagnostic>> {
             let hard: Vec<Diagnostic> = check_vt_conformance(&self.snapshot).into_iter().filter(|d| matches!(d.severity, Severity::Error | Severity::Fatal)).collect();
             if hard.is_empty() {
                 Ok(self.snapshot)
@@ -118,13 +118,13 @@ pub mod derived_construction {
         use super::*;
 
         #[test]
-        fn new_requires_output_condition_and_builds_clean() {
+        async fn new_requires_output_condition_and_builds_clean() {
             let snapshot = PdfVtBuilderConstruction::new("FOGRA39").add_page(PdfPage::new(200.0, 200.0)).set_info(PdfInfo { title: Some("A VT Test".into()), ..PdfInfo::default() }).build().expect("conforming construction must build");
             assert_eq!(snapshot.pages.len(), 1);
         }
 
         #[test]
-        fn hard_violation_injected_via_raw_mutate_still_fails_build() {
+        async fn hard_violation_injected_via_raw_mutate_still_fails_build() {
             let mut snapshot = PdfVtBuilderConstruction::new("FOGRA39").add_page(PdfPage::new(100.0, 100.0)).build().unwrap();
             if let Some(catalog_obj) = snapshot.objects.iter_mut().find(|o| o.id.num == 1) {
                 if let PdfObject::Dict(d) = &mut catalog_obj.value {
@@ -156,22 +156,22 @@ pub mod derived_analysis {
     pub const CODE_DPART_ROOT: &str = "stdio.pdf.vt.missing-dpartroot";
     pub const CODE_DPM: &str = "stdio.pdf.vt.dpart-missing-dpm";
 
-    fn dict_name<'a>(dict: &'a [PdfDictEntry], key: &str) -> Option<&'a str> {
+    async fn dict_name<'a>(dict: &'a [PdfDictEntry], key: &str) -> Option<&'a str> {
         dict.iter().find(|e| e.key == key).and_then(|e| e.value.as_name())
     }
 
-    fn resolve_ref<'a>(objects: &'a [PdfIndirectObject], r: ObjRef) -> Option<&'a PdfObject> {
+    async fn resolve_ref<'a>(objects: &'a [PdfIndirectObject], r: ObjRef) -> Option<&'a PdfObject> {
         objects.iter().find(|o| o.id == r).map(|o| &o.value)
     }
 
-    fn resolve_item<'a>(objects: &'a [PdfIndirectObject], item: &'a PdfObject) -> Option<&'a PdfObject> {
+    async fn resolve_item<'a>(objects: &'a [PdfIndirectObject], item: &'a PdfObject) -> Option<&'a PdfObject> {
         match item {
             PdfObject::Ref(r) => resolve_ref(objects, *r),
             other => Some(other),
         }
     }
 
-    fn find_catalog(objects: &[PdfIndirectObject]) -> Option<&PdfObject> {
+    async fn find_catalog(objects: &[PdfIndirectObject]) -> Option<&PdfObject> {
         objects.iter().find(|o| o.value.as_dict().map(|d| dict_name(d, "Type") == Some("Catalog")).unwrap_or(false)).map(|o| &o.value)
     }
 
@@ -179,7 +179,7 @@ pub mod derived_analysis {
     /// node may itself carry a nested `/DParts` array. Returns the refs of every DPart node reachable
     /// from the root that lacks a `/DPM` metadata dict key. `visited` guards against a malformed
     /// document with a reference cycle.
-    fn dparts_missing_dpm(objects: &[PdfIndirectObject], node: &PdfObject, visited: &mut Vec<ObjRef>, out: &mut Vec<ObjRef>) {
+    async fn dparts_missing_dpm(objects: &[PdfIndirectObject], node: &PdfObject, visited: &mut Vec<ObjRef>, out: &mut Vec<ObjRef>) {
         let Some(dparts) = node.dict_get("DParts").and_then(|v| v.as_array()) else { return };
         for item in dparts {
             let PdfObject::Ref(r) = item else { continue };
@@ -195,11 +195,11 @@ pub mod derived_analysis {
         }
     }
 
-    fn hard(code: &'static str, message: String) -> Diagnostic {
+    async fn hard(code: &'static str, message: String) -> Diagnostic {
         Diagnostic { code: FaultCode::new(code), severity: Severity::Error, span: TextSpan::at(1, 1), message, expected: None, scope: FaultScope::default() }
     }
 
-    fn soft(code: &'static str, message: String) -> Diagnostic {
+    async fn soft(code: &'static str, message: String) -> Diagnostic {
         Diagnostic { code: FaultCode::new(code), severity: Severity::Warning, span: TextSpan::at(1, 1), message, expected: None, scope: FaultScope::default() }
     }
 
@@ -207,7 +207,7 @@ pub mod derived_analysis {
     /// `PdfSnapshot`: the full ISO 15930-7 (PDF/X-4) check suite (`✳️x::check_x_conformance`) plus
     /// VT's own `/DPartRoot`/`/DPM` checks. Shared single source of truth used by `PdfVtComposer`,
     /// `PdfVtBuilder`, and `PdfVtValidator`.
-    pub fn check_vt_conformance(snapshot: &PdfSnapshot) -> Vec<Diagnostic> {
+    pub async fn check_vt_conformance(snapshot: &PdfSnapshot) -> Vec<Diagnostic> {
         let objects = &snapshot.objects;
         let mut out = check_x_conformance(snapshot);
         let Some(catalog) = find_catalog(objects) else {
@@ -236,11 +236,11 @@ pub mod derived_analysis {
         type Parts = PdfParts;
         const DIALECT: Dialect = DIALECT;
 
-        fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
+        async fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
             PdfAnyAnalyzer::sniff(source)
         }
 
-        fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
+        async fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
             let inner = PdfAnyAnalyzer::analyze(sources);
             let mut diagnostics = inner.diagnostics.clone();
             let mut confidence = inner.confidence;
@@ -260,7 +260,7 @@ pub mod derived_analysis {
     mod tests {
         use super::*;
 
-        fn conforming_x_objects() -> Vec<PdfIndirectObject> {
+        async fn conforming_x_objects() -> Vec<PdfIndirectObject> {
             vec![
                 PdfIndirectObject {
                     id: ObjRef { num: 1, gen: 0 },
@@ -294,14 +294,14 @@ pub mod derived_analysis {
         }
 
         #[test]
-        fn fully_conforming_vt_document_has_no_hard_diagnostics() {
+        async fn fully_conforming_vt_document_has_no_hard_diagnostics() {
             let snapshot = PdfSnapshot { objects: conforming_x_objects(), ..PdfSnapshot::default() };
             let diagnostics = check_vt_conformance(&snapshot);
             assert!(diagnostics.iter().all(|d| d.severity != Severity::Error), "got {diagnostics:?}");
         }
 
         #[test]
-        fn missing_dpartroot_is_hard() {
+        async fn missing_dpartroot_is_hard() {
             let mut objects = conforming_x_objects();
             if let Some(catalog_obj) = objects.iter_mut().find(|o| o.id.num == 1) {
                 if let PdfObject::Dict(d) = &mut catalog_obj.value {
@@ -314,7 +314,7 @@ pub mod derived_analysis {
         }
 
         #[test]
-        fn x_violations_are_inherited_as_hard() {
+        async fn x_violations_are_inherited_as_hard() {
             // No OutputIntent at all -- an X-4 violation must surface through vt too.
             let snapshot = PdfSnapshot::default();
             let diagnostics = check_vt_conformance(&snapshot);
@@ -322,7 +322,7 @@ pub mod derived_analysis {
         }
 
         #[test]
-        fn dpart_missing_dpm_is_soft() {
+        async fn dpart_missing_dpm_is_soft() {
             let mut objects = conforming_x_objects();
             if let Some(dpart) = objects.iter_mut().find(|o| o.id.num == 11) {
                 if let PdfObject::Dict(d) = &mut dpart.value {

@@ -15,7 +15,7 @@ pub struct PatchMediaNodes {
     pub value: String,
 }
 
-pub fn handle(payload: &PatchMediaNodes, doc: &ArtifactView<'_, WorkflowSnapshot>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
+pub async fn handle(payload: &PatchMediaNodes, doc: &ArtifactView<'_, WorkflowSnapshot>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
     let projection = doc.snapshot;
     let numeric = payload.value.parse::<f64>().ok();
     if payload.field == "position" {

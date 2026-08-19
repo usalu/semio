@@ -36,7 +36,7 @@ pub struct Iso16757Artifact {
 //#region 🔖️Conversions
 impl Iso16757Artifact {
     /// 📸️ Persisted subset.
-    pub fn to_snapshot(&self) -> crate::artifacts::iso16757::Iso16757Snapshot {
+    pub async fn to_snapshot(&self) -> crate::artifacts::iso16757::Iso16757Snapshot {
         crate::artifacts::iso16757::Iso16757Snapshot {
             catalogue: self.catalogue.clone(),
             dictionary: self.dictionary.clone(),
@@ -50,7 +50,7 @@ impl Iso16757Artifact {
     }
 
     /// 🧬️ Builds a full artifact from a snapshot, leaving UI fields at defaults.
-    pub fn from_snapshot(snapshot: crate::artifacts::iso16757::Iso16757Snapshot) -> Self {
+    pub async fn from_snapshot(snapshot: crate::artifacts::iso16757::Iso16757Snapshot) -> Self {
         Self {
             catalogue: snapshot.catalogue,
             dictionary: snapshot.dictionary,
@@ -64,7 +64,7 @@ impl Iso16757Artifact {
         }
     }
     /// 🔄 Overwrite persistent fields from a snapshot; leave shared-ui untouched.
-    pub fn set_snapshot(&mut self, snapshot: crate::artifacts::iso16757::Iso16757Snapshot) {
+    pub async fn set_snapshot(&mut self, snapshot: crate::artifacts::iso16757::Iso16757Snapshot) {
         let selected = self.selected_check_index;
         *self = Self::from_snapshot(snapshot);
         self.selected_check_index = selected;
@@ -75,7 +75,7 @@ impl Iso16757Artifact {
 
 //#region 🔖️Descriptor
 /// 🧬️ Descriptor for `s.norm.iso16757` — twenty handcrafted schema leaves.
-pub fn iso16757_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
+pub async fn iso16757_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
     schema::ArtifactSchemaDescriptor {
         id: "s.norm.iso16757",
         artifact: schema::FacetLeaves {
@@ -124,19 +124,19 @@ pub mod derived_construction {
         type Snapshot = Iso16757Snapshot;
         type Mutation = Iso16757Mutation;
         type Diff = Iso16757Diff;
-        fn empty() -> Self {
+        async fn empty() -> Self {
             Self { snapshot: Iso16757Snapshot::default(), diagnostics: Vec::new() }
         }
-        fn from_snapshot(snapshot: Self::Snapshot) -> Self {
+        async fn from_snapshot(snapshot: Self::Snapshot) -> Self {
             Self { snapshot, diagnostics: Vec::new() }
         }
-        fn from_text(text: &str) -> Result<Self, store::TextError> {
+        async fn from_text(text: &str) -> Result<Self, store::TextError> {
             Ok(Self::from_snapshot(<Iso16757Snapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
-        fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
+        async fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
             Ok(Self::from_snapshot(<Iso16757Snapshot as store::ArtifactPack>::decode_pack(bytes)?))
         }
-        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
+        async fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let outcome = <Iso16757Mutation as protocol::Mutation<Iso16757Snapshot>>::diff(&mutation, &self.snapshot);
             match <Self::Diff as protocol::MutationDiff<Self::Snapshot>>::apply(outcome.diff(), &self.snapshot) {
                 Ok(snapshot) => self.snapshot = snapshot,
@@ -148,7 +148,7 @@ pub mod derived_construction {
             }
             (self, outcome)
         }
-        fn absorb(
+        async fn absorb(
             mut self,
             diff: Self::Diff,
         ) -> protocol::MutationApplyResult<Self> {
@@ -156,7 +156,7 @@ pub mod derived_construction {
             self.snapshot = snapshot;
             Ok(self)
         }
-        fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
+        async fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
             if self.diagnostics.is_empty() {
                 Ok(self.snapshot)
             } else {
@@ -184,11 +184,11 @@ pub mod derived_analysis {
         type Parts = Iso16757Parts;
         const DIALECT: Dialect = Dialect { artifact_kind: "s.iso16757", standard: StandardId("1"), subset: SubsetId("*") };
 
-        fn sniff(_source: &AnalyzeSource<'_>) -> IoConfidence {
+        async fn sniff(_source: &AnalyzeSource<'_>) -> IoConfidence {
             IoConfidence::Medium
         }
 
-        fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
+        async fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
             let mut parts = Iso16757Parts::default();
             let mut diagnostics = Vec::new();
             let mut confidence = IoConfidence::High;
@@ -244,7 +244,7 @@ pub mod part_1 {
     use super::*;
     use crate::artifacts::iso16757::part_1::*;
 
-    pub fn evaluate_constraint(value: &CatalogueValue, constraint: &SelectionConstraint) -> bool {
+    pub async fn evaluate_constraint(value: &CatalogueValue, constraint: &SelectionConstraint) -> bool {
         match (&constraint.operator, value, &constraint.value) {
             (ConstraintOperator::Equal, a, b) => a == b,
             (ConstraintOperator::NotEqual, a, b) => a != b,
@@ -255,7 +255,7 @@ pub mod part_1 {
         }
     }
 
-    pub fn select_products(catalogue: &Catalogue, request: &SelectionRequest) -> SelectionResult {
+    pub async fn select_products(catalogue: &Catalogue, request: &SelectionRequest) -> SelectionResult {
         let mut matches = Vec::new();
         let mut explanations = Vec::new();
         for index in &catalogue.product_indexes {
@@ -296,7 +296,7 @@ pub mod part_1 {
         SelectionResult { matches, ambiguity, explanations }
     }
 
-    pub fn detect_composition_cycle(catalogue: &Catalogue, root_product_id: &str) -> bool {
+    pub async fn detect_composition_cycle(catalogue: &Catalogue, root_product_id: &str) -> bool {
         let mut visited = HashSet::new();
         let mut stack = vec![root_product_id.to_string()];
         while let Some(current) = stack.pop() {
@@ -312,7 +312,7 @@ pub mod part_1 {
         false
     }
 
-    pub fn resolve_bim_embedding(catalogue: &Catalogue, index_id: &str, parameters: HashMap<String, CatalogueValue>) -> Result<BimEmbedding, NormError> {
+    pub async fn resolve_bim_embedding(catalogue: &Catalogue, index_id: &str, parameters: HashMap<String, CatalogueValue>) -> Result<BimEmbedding, NormError> {
         let index = catalogue.product_indexes.iter().find(|i| i.id == index_id).ok_or_else(|| NormError::InvalidValue { field: "index_id".into(), reason: "unknown product index".into() })?;
         let product = catalogue.products.iter().find(|p| p.id == index.product_id).ok_or_else(|| NormError::InvalidValue { field: "product_id".into(), reason: "unknown product".into() })?;
         let variant = index.variant_id.as_ref().and_then(|vid| product.variants.iter().find(|v| &v.id == vid)).ok_or_else(|| NormError::IncompleteInput { field: "variant_id".into() })?;
@@ -337,7 +337,7 @@ pub mod part_1 {
         })
     }
 
-    pub fn validate_catalogue_structure(catalogue: &Catalogue) -> Vec<String> {
+    pub async fn validate_catalogue_structure(catalogue: &Catalogue) -> Vec<String> {
         let mut issues = Vec::new();
         if catalogue.products.is_empty() {
             issues.push("catalogue has no products".into());
@@ -365,7 +365,7 @@ pub mod part_2 {
     use super::*;
     use crate::artifacts::iso16757::part_2::*;
 
-    pub fn substitute_parameters(node: &GeometryNode, values: &HashMap<String, f64>) -> GeometryNode {
+    pub async fn substitute_parameters(node: &GeometryNode, values: &HashMap<String, f64>) -> GeometryNode {
         match node {
             GeometryNode::Primitive { kind, parameters } => {
                 let mut resolved = BTreeMap::new();
@@ -380,7 +380,7 @@ pub mod part_2 {
         }
     }
 
-    pub fn evaluate_bounding_box(node: &GeometryNode, catalogue: &GeometryCatalogue) -> Result<BoundingBox, NormError> {
+    pub async fn evaluate_bounding_box(node: &GeometryNode, catalogue: &GeometryCatalogue) -> Result<BoundingBox, NormError> {
         match node {
             GeometryNode::Primitive { kind, parameters } => match kind.as_str() {
                 "box" => {
@@ -431,7 +431,7 @@ pub mod part_2 {
         }
     }
 
-    pub fn validate_geometry_graph(object: &GeometryObject, catalogue: &GeometryCatalogue, visited: &mut HashSet<String>) -> Vec<String> {
+    pub async fn validate_geometry_graph(object: &GeometryObject, catalogue: &GeometryCatalogue, visited: &mut HashSet<String>) -> Vec<String> {
         let mut issues = Vec::new();
         if let Some(GeometryNode::Reference { geometry_id }) = &object.shape {
             if geometry_id == &object.id {
@@ -452,7 +452,7 @@ pub mod part_2 {
         issues
     }
 
-    pub fn project_step_entity(_object: &GeometryObject, bbox: BoundingBox) -> String {
+    pub async fn project_step_entity(_object: &GeometryObject, bbox: BoundingBox) -> String {
         format!("#1=IFCCARTESIANPOINT(({:.3},{:.3},{:.3}));\n#2=IFCBOUNDINGBOX(#1,{:.3},{:.3},{:.3});", bbox.min[0], bbox.min[1], bbox.min[2], bbox.max[0] - bbox.min[0], bbox.max[1] - bbox.min[1], bbox.max[2] - bbox.min[2])
     }
 }
@@ -463,7 +463,7 @@ pub mod part_4 {
     use super::*;
     use crate::artifacts::iso16757::part_4::*;
 
-    pub fn subtype_closure(dictionary: &Dictionary, subject_id: &str) -> HashSet<String> {
+    pub async fn subtype_closure(dictionary: &Dictionary, subject_id: &str) -> HashSet<String> {
         let mut closure = HashSet::from([subject_id.to_string()]);
         let mut changed = true;
         while changed {
@@ -477,7 +477,7 @@ pub mod part_4 {
         closure
     }
 
-    pub fn detect_subtype_cycle(dictionary: &Dictionary) -> bool {
+    pub async fn detect_subtype_cycle(dictionary: &Dictionary) -> bool {
         for subject in &dictionary.subjects {
             let mut visited = HashSet::new();
             let mut stack = vec![subject.id.clone()];
@@ -493,7 +493,7 @@ pub mod part_4 {
         false
     }
 
-    pub fn filter_controlled_values(list: &ControlledValueList, subject_id: &str, dictionary: &Dictionary) -> Vec<String> {
+    pub async fn filter_controlled_values(list: &ControlledValueList, subject_id: &str, dictionary: &Dictionary) -> Vec<String> {
         if list.context_subject_ids.is_empty() {
             return list.values.clone();
         }
@@ -505,11 +505,11 @@ pub mod part_4 {
         }
     }
 
-    pub fn resolve_property<'a>(dictionary: &'a Dictionary, property_id: &str) -> Option<&'a DictionaryProperty> {
+    pub async fn resolve_property<'a>(dictionary: &'a Dictionary, property_id: &str) -> Option<&'a DictionaryProperty> {
         dictionary.properties.iter().find(|p| p.id == property_id)
     }
 
-    pub fn validate_dictionary(dictionary: &Dictionary) -> Vec<String> {
+    pub async fn validate_dictionary(dictionary: &Dictionary) -> Vec<String> {
         let mut issues = Vec::new();
         if detect_subtype_cycle(dictionary) {
             issues.push("subtype cycle detected".into());
@@ -527,7 +527,7 @@ pub mod part_4 {
         issues
     }
 
-    pub fn to_iso12006_mappings(dictionary: &Dictionary) -> Vec<Iso12006Mapping> {
+    pub async fn to_iso12006_mappings(dictionary: &Dictionary) -> Vec<Iso12006Mapping> {
         dictionary.subjects.iter().map(|subject| Iso12006Mapping { dictionary_object_id: subject.id.clone(), iso12006_uri: format!("iso12006://subject/{}", subject.id), object_kind: format!("{:?}", subject.kind) }).collect()
     }
 }
@@ -541,7 +541,7 @@ pub mod part_5 {
 
     /// 🧮️ Sandboxed calculation runtime (constrained numeric expressions).
     pub trait ScriptRuntime {
-        fn execute(&self, source: &str, inputs: &HashMap<String, f64>, limits: ScriptLimits) -> Result<ScriptResult, ScriptError>;
+        async fn execute(&self, source: &str, inputs: &HashMap<String, f64>, limits: ScriptLimits) -> Result<ScriptResult, ScriptError>;
     }
 
     /// 🔢️ Default deterministic script runtime.
@@ -549,7 +549,7 @@ pub mod part_5 {
     pub struct DefaultScriptRuntime;
 
     impl ScriptRuntime for DefaultScriptRuntime {
-        fn execute(&self, source: &str, inputs: &HashMap<String, f64>, limits: ScriptLimits) -> Result<ScriptResult, ScriptError> {
+        async fn execute(&self, source: &str, inputs: &HashMap<String, f64>, limits: ScriptLimits) -> Result<ScriptResult, ScriptError> {
             let started = Instant::now();
             let trimmed = source.trim();
             if trimmed.contains("import") || trimmed.contains("require") || trimmed.contains("fetch") || trimmed.contains("fs") {
@@ -560,7 +560,7 @@ pub mod part_5 {
         }
     }
 
-    fn eval_expression(expr: &str, inputs: &HashMap<String, f64>, steps: u32, max_recursion: u32, depth: u32, started: &Instant, timeout_ms: u64) -> Result<f64, ScriptError> {
+    async fn eval_expression(expr: &str, inputs: &HashMap<String, f64>, steps: u32, max_recursion: u32, depth: u32, started: &Instant, timeout_ms: u64) -> Result<f64, ScriptError> {
         if started.elapsed() > Duration::from_millis(timeout_ms) {
             return Err(ScriptError::Timeout(timeout_ms));
         }
@@ -601,7 +601,7 @@ pub mod part_5 {
         Err(ScriptError::InvalidExpression(expr.into()))
     }
 
-    fn split_binary<'a>(expr: &'a str, operation: &str) -> Option<(&'a str, &'a str)> {
+    async fn split_binary<'a>(expr: &'a str, operation: &str) -> Option<(&'a str, &'a str)> {
         let mut depth = 0i32;
         for (idx, ch) in expr.char_indices().rev() {
             if ch == ')' {
@@ -619,7 +619,7 @@ pub mod part_5 {
         None
     }
 
-    fn catalogue_value_as_str(value: &CatalogueValue) -> Option<String> {
+    async fn catalogue_value_as_str(value: &CatalogueValue) -> Option<String> {
         match value {
             CatalogueValue::Text { value } | CatalogueValue::Enumeration { value } | CatalogueValue::Identifier { value } => Some(value.clone()),
             CatalogueValue::Decimal { value } => Some(value.to_string()),
@@ -628,7 +628,7 @@ pub mod part_5 {
         }
     }
 
-    pub fn calculate_part_number(rule: &PartNumberRule, inputs: &BTreeMap<String, CatalogueValue>, runtime: &dyn ScriptRuntime) -> Result<String, NormError> {
+    pub async fn calculate_part_number(rule: &PartNumberRule, inputs: &BTreeMap<String, CatalogueValue>, runtime: &dyn ScriptRuntime) -> Result<String, NormError> {
         match rule {
             PartNumberRule::Literal { value } => Ok(value.clone()),
             PartNumberRule::Table { rows, output_column } => {
@@ -662,7 +662,7 @@ pub mod part_5 {
         }
     }
 
-    pub fn build_ifc_catalogue(catalogue: &crate::artifacts::iso16757::part_1::Catalogue) -> IfcCatalogue {
+    pub async fn build_ifc_catalogue(catalogue: &crate::artifacts::iso16757::part_1::Catalogue) -> IfcCatalogue {
         let metadata = IfcCatalogueNode {
             entity_type: "IfcBuildingServicesCatalogue".into(),
             global_id: catalogue.id.0.clone(),
@@ -689,7 +689,7 @@ pub mod part_5 {
         IfcCatalogue { schema: "IFC4".into(), metadata, product_classes, products, unknown_entities: Vec::new() }
     }
 
-    pub fn export_ifc_step(catalogue: &IfcCatalogue) -> String {
+    pub async fn export_ifc_step(catalogue: &IfcCatalogue) -> String {
         let mut lines = vec![format!("ISO-10303-21;\nHEADER;\nFILE_DESCRIPTION(('ISO 16757-5'),'2;1');\nFILE_NAME('{}.ifc','',(''),(''),'norm_iso_16757','','');\nENDSEC;\nDATA;", catalogue.metadata.global_id)];
         let mut id = 1u32;
         let write_node = |node: &IfcCatalogueNode, id: &mut u32| -> String {
@@ -708,7 +708,7 @@ pub mod part_5 {
         lines.join("\n")
     }
 
-    pub fn validate_exchange(catalogue: &crate::artifacts::iso16757::part_1::Catalogue, ifc: &IfcCatalogue) -> Vec<String> {
+    pub async fn validate_exchange(catalogue: &crate::artifacts::iso16757::part_1::Catalogue, ifc: &IfcCatalogue) -> Vec<String> {
         let mut issues = Vec::new();
         if ifc.schema.is_empty() {
             issues.push("missing IFC schema declaration".into());
@@ -732,7 +732,7 @@ mod compliance_helpers_tests {
     use std::collections::BTreeMap;
 
     #[test]
-    fn reference_fixture_selects_one_product() {
+    async fn reference_fixture_selects_one_product() {
         let doc = Iso16757Snapshot::default();
         let selection = part_1::select_products(&doc.catalogue, &doc.selection);
         assert_eq!(selection.matches.len(), 1);
@@ -740,7 +740,7 @@ mod compliance_helpers_tests {
     }
 
     #[test]
-    fn geometry_bbox_volume_for_box_primitive() {
+    async fn geometry_bbox_volume_for_box_primitive() {
         let doc = Iso16757Snapshot::default();
         let geom = doc.geometry.objects.get("geom.valve.50").expect("geometry");
         let bbox = part_2::evaluate_bounding_box(geom.shape.as_ref().expect("shape"), &doc.geometry).expect("bbox");
@@ -748,7 +748,7 @@ mod compliance_helpers_tests {
     }
 
     #[test]
-    fn dictionary_controlled_values_filter_by_subject() {
+    async fn dictionary_controlled_values_filter_by_subject() {
         let doc = Iso16757Snapshot::default();
         let list = doc.dictionary.controlled_lists.first().expect("list");
         let allowed = part_4::filter_controlled_values(list, "subject.valve", &doc.dictionary);
@@ -756,7 +756,7 @@ mod compliance_helpers_tests {
     }
 
     #[test]
-    fn part_number_script_is_deterministic() {
+    async fn part_number_script_is_deterministic() {
         let runtime = part_5::DefaultScriptRuntime;
         let rule = crate::artifacts::iso16757::part_5::PartNumberRule::Script { function_id: "partno".into(), source: "dn * 10 + 50".into() };
         let inputs = BTreeMap::from([("dn".into(), CatalogueValue::Decimal { value: 50.0 })]);
@@ -765,7 +765,7 @@ mod compliance_helpers_tests {
     }
 
     #[test]
-    fn ifc_step_export_contains_data_section() {
+    async fn ifc_step_export_contains_data_section() {
         let doc = Iso16757Snapshot::default();
         let ifc = part_5::build_ifc_catalogue(&doc.catalogue);
         let step = part_5::export_ifc_step(&ifc);
@@ -774,7 +774,7 @@ mod compliance_helpers_tests {
     }
 
     #[test]
-    fn composition_cycle_detected() {
+    async fn composition_cycle_detected() {
         let mut doc = Iso16757Snapshot::default();
         doc.catalogue.compositions.insert("product.a".into(), vec![crate::artifacts::iso16757::part_1::CompositionRelationship { component_product_id: "product.b".into(), quantity: 1 }]);
         doc.catalogue.compositions.insert("product.b".into(), vec![crate::artifacts::iso16757::part_1::CompositionRelationship { component_product_id: "product.a".into(), quantity: 1 }]);
@@ -782,14 +782,14 @@ mod compliance_helpers_tests {
     }
 
     #[test]
-    fn script_rejects_forbidden_import() {
+    async fn script_rejects_forbidden_import() {
         let runtime = part_5::DefaultScriptRuntime;
         let err = runtime.execute("import fs", &HashMap::new(), crate::artifacts::iso16757::part_5::ScriptLimits::default()).unwrap_err();
         assert!(matches!(err, crate::artifacts::iso16757::part_5::ScriptError::InvalidExpression(_)));
     }
 
     #[test]
-    fn evaluate_constraint_operators() {
+    async fn evaluate_constraint_operators() {
         let dec = |v: f64| CatalogueValue::Decimal { value: v };
         let mk = |op, value| crate::artifacts::iso16757::part_1::SelectionConstraint { property_id: "p".into(), operator: op, value };
         assert!(part_1::evaluate_constraint(&dec(5.0), &mk(crate::artifacts::iso16757::part_1::ConstraintOperator::NotEqual, dec(6.0))));
@@ -804,13 +804,13 @@ mod compliance_helpers_tests {
     }
 
     #[test]
-    fn evaluate_constraint_type_mismatch_returns_false() {
+    async fn evaluate_constraint_type_mismatch_returns_false() {
         let constraint = crate::artifacts::iso16757::part_1::SelectionConstraint { property_id: "p".into(), operator: crate::artifacts::iso16757::part_1::ConstraintOperator::LessThan, value: CatalogueValue::Text { value: "x".into() } };
         assert!(!part_1::evaluate_constraint(&CatalogueValue::Decimal { value: 1.0 }, &constraint));
     }
 
     #[test]
-    fn select_products_filters_by_series_id() {
+    async fn select_products_filters_by_series_id() {
         let mut doc = Iso16757Snapshot::default();
         let other_series =
             crate::artifacts::iso16757::part_1::ProductSeries { id: "series.other".into(), class_id: "class.valve".into(), names: doc.catalogue.product_series[0].names.clone(), shared_property_values: BTreeMap::new(), geometry_id: None };
@@ -837,7 +837,7 @@ mod compliance_helpers_tests {
     }
 
     #[test]
-    fn select_products_records_missing_property_and_constraint_failures() {
+    async fn select_products_records_missing_property_and_constraint_failures() {
         let mut doc = Iso16757Snapshot::default();
         doc.selection.constraints.push(crate::artifacts::iso16757::part_1::SelectionConstraint {
             property_id: "prop.missing".into(),
@@ -860,7 +860,7 @@ mod compliance_helpers_tests {
     }
 
     #[test]
-    fn select_products_flags_ambiguity_with_multiple_matches() {
+    async fn select_products_flags_ambiguity_with_multiple_matches() {
         let mut doc = Iso16757Snapshot::default();
         doc.catalogue.product_indexes.push(crate::artifacts::iso16757::part_1::ProductIndex { id: "index.cv50.dup".into(), product_id: "product.cv".into(), variant_id: Some("variant.50".into()), search_tags: Vec::new() });
         let selection = part_1::select_products(&doc.catalogue, &doc.selection);
@@ -869,7 +869,7 @@ mod compliance_helpers_tests {
     }
 
     #[test]
-    fn resolve_bim_embedding_error_paths() {
+    async fn resolve_bim_embedding_error_paths() {
         let doc = Iso16757Snapshot::default();
         let unknown_index = part_1::resolve_bim_embedding(&doc.catalogue, "index.unknown", HashMap::new());
         assert!(matches!(unknown_index, Err(NormError::InvalidValue { field, .. }) if field == "index_id"));
@@ -889,7 +889,7 @@ mod compliance_helpers_tests {
     }
 
     #[test]
-    fn resolve_bim_embedding_falls_back_to_series_geometry() {
+    async fn resolve_bim_embedding_falls_back_to_series_geometry() {
         let mut doc = Iso16757Snapshot::default();
         doc.catalogue.products[0].variants[0].geometry_id = None;
         let embedding = part_1::resolve_bim_embedding(&doc.catalogue, "index.cv50", HashMap::new()).expect("embedding");
@@ -897,7 +897,7 @@ mod compliance_helpers_tests {
     }
 
     #[test]
-    fn validate_catalogue_structure_flags_issues() {
+    async fn validate_catalogue_structure_flags_issues() {
         let mut doc = Iso16757Snapshot::default();
         doc.catalogue.products.clear();
         assert!(part_1::validate_catalogue_structure(&doc.catalogue).iter().any(|i| i.contains("no products")));
@@ -919,7 +919,7 @@ mod compliance_helpers_tests {
     }
 
     #[test]
-    fn substitute_parameters_recurses_through_node_kinds() {
+    async fn substitute_parameters_recurses_through_node_kinds() {
         let primitive = crate::artifacts::iso16757::part_2::GeometryNode::Primitive { kind: "box".into(), parameters: BTreeMap::from([("width".into(), 1.0)]) };
         let transform = crate::artifacts::iso16757::part_2::GeometryNode::Transform { translation: [1.0, 0.0, 0.0], rotation_deg: [0.0, 0.0, 0.0], child: Box::new(primitive.clone()) };
         let boolean = crate::artifacts::iso16757::part_2::GeometryNode::Boolean { operator: crate::artifacts::iso16757::part_2::BooleanOperator::Union, children: vec![primitive.clone(), transform.clone()] };
@@ -948,7 +948,7 @@ mod compliance_helpers_tests {
     }
 
     #[test]
-    fn evaluate_bounding_box_error_paths() {
+    async fn evaluate_bounding_box_error_paths() {
         let catalogue = crate::artifacts::iso16757::part_2::GeometryCatalogue::default();
         let missing_width = crate::artifacts::iso16757::part_2::GeometryNode::Primitive { kind: "box".into(), parameters: BTreeMap::new() };
         assert!(matches!(part_2::evaluate_bounding_box(&missing_width, &catalogue), Err(NormError::IncompleteInput { field }) if field == "width"));
@@ -964,7 +964,7 @@ mod compliance_helpers_tests {
     }
 
     #[test]
-    fn evaluate_bounding_box_cylinder_sphere_boolean_transform() {
+    async fn evaluate_bounding_box_cylinder_sphere_boolean_transform() {
         let catalogue = crate::artifacts::iso16757::part_2::GeometryCatalogue::default();
         let cylinder = crate::artifacts::iso16757::part_2::GeometryNode::Primitive { kind: "cylinder".into(), parameters: BTreeMap::from([("radius".into(), 1.0), ("height".into(), 2.0)]) };
         let bbox = part_2::evaluate_bounding_box(&cylinder, &catalogue).expect("cylinder bbox");
@@ -1005,7 +1005,7 @@ mod compliance_helpers_tests {
     }
 
     #[test]
-    fn validate_geometry_graph_self_reference_and_cycle() {
+    async fn validate_geometry_graph_self_reference_and_cycle() {
         let mut objects = BTreeMap::new();
         let self_ref = crate::artifacts::iso16757::part_2::GeometryObject {
             id: "geom.self".into(),
@@ -1051,7 +1051,7 @@ mod compliance_helpers_tests {
     }
 
     #[test]
-    fn validate_geometry_graph_empty_parameter_binding() {
+    async fn validate_geometry_graph_empty_parameter_binding() {
         let object = crate::artifacts::iso16757::part_2::GeometryObject {
             id: "geom.bind".into(),
             shape: None,
@@ -1068,7 +1068,7 @@ mod compliance_helpers_tests {
     }
 
     #[test]
-    fn subtype_closure_is_transitive() {
+    async fn subtype_closure_is_transitive() {
         let dictionary = crate::artifacts::iso16757::part_4::Dictionary {
             reference: crate::artifacts::iso16757::DictionaryRef { id: "d".into(), version: "1".into() },
             subjects: Vec::new(),
@@ -1097,7 +1097,7 @@ mod compliance_helpers_tests {
     }
 
     #[test]
-    fn detect_subtype_cycle_true() {
+    async fn detect_subtype_cycle_true() {
         let subject = |id: &str| crate::artifacts::iso16757::part_4::Subject {
             id: id.into(),
             kind: crate::artifacts::iso16757::part_4::SubjectKind::ProductClass,
@@ -1132,14 +1132,14 @@ mod compliance_helpers_tests {
     }
 
     #[test]
-    fn resolve_property_found_and_missing() {
+    async fn resolve_property_found_and_missing() {
         let doc = Iso16757Snapshot::default();
         assert!(part_4::resolve_property(&doc.dictionary, "prop.dn").is_some());
         assert!(part_4::resolve_property(&doc.dictionary, "prop.unknown").is_none());
     }
 
     #[test]
-    fn validate_dictionary_flags_dangling_and_cardinality_review() {
+    async fn validate_dictionary_flags_dangling_and_cardinality_review() {
         let mut doc = Iso16757Snapshot::default();
         doc.dictionary.relationships.push(crate::artifacts::iso16757::part_4::Relationship {
             id: "r.dangling".into(),
@@ -1161,7 +1161,7 @@ mod compliance_helpers_tests {
     }
 
     #[test]
-    fn filter_controlled_values_context_rules() {
+    async fn filter_controlled_values_context_rules() {
         let doc = Iso16757Snapshot::default();
         let mut empty_context_list = doc.dictionary.controlled_lists[0].clone();
         empty_context_list.context_subject_ids.clear();
@@ -1173,7 +1173,7 @@ mod compliance_helpers_tests {
     }
 
     #[test]
-    fn to_iso12006_mappings_basic() {
+    async fn to_iso12006_mappings_basic() {
         let doc = Iso16757Snapshot::default();
         let mappings = part_4::to_iso12006_mappings(&doc.dictionary);
         assert_eq!(mappings.len(), doc.dictionary.subjects.len());
@@ -1182,7 +1182,7 @@ mod compliance_helpers_tests {
     }
 
     #[test]
-    fn calculate_part_number_table_rule_paths() {
+    async fn calculate_part_number_table_rule_paths() {
         let runtime = part_5::DefaultScriptRuntime;
         let rows = vec![BTreeMap::from([("dn".to_string(), "50".to_string()), ("code".to_string(), "CV50".to_string())])];
         let rule = crate::artifacts::iso16757::part_5::PartNumberRule::Table { rows, output_column: "code".into() };
@@ -1202,7 +1202,7 @@ mod compliance_helpers_tests {
     }
 
     #[test]
-    fn script_runtime_timeout() {
+    async fn script_runtime_timeout() {
         let runtime = part_5::DefaultScriptRuntime;
         let limits = crate::artifacts::iso16757::part_5::ScriptLimits { max_steps: 100, max_recursion: 10, timeout_ms: 0 };
         let err = runtime.execute("1 + 1", &HashMap::new(), limits).unwrap_err();
@@ -1210,7 +1210,7 @@ mod compliance_helpers_tests {
     }
 
     #[test]
-    fn script_runtime_limit_errors() {
+    async fn script_runtime_limit_errors() {
         let runtime = part_5::DefaultScriptRuntime;
         let recursion_limits = crate::artifacts::iso16757::part_5::ScriptLimits { max_steps: 1000, max_recursion: 2, timeout_ms: 5_000 };
         let err = runtime.execute("(((1)))", &HashMap::new(), recursion_limits).unwrap_err();
@@ -1225,7 +1225,7 @@ mod compliance_helpers_tests {
     }
 
     #[test]
-    fn script_runtime_arithmetic_operators() {
+    async fn script_runtime_arithmetic_operators() {
         let runtime = part_5::DefaultScriptRuntime;
         let inputs = HashMap::new();
         let result = runtime.execute("(10 - 4) / 2 * 3", &inputs, crate::artifacts::iso16757::part_5::ScriptLimits::default()).expect("arithmetic");

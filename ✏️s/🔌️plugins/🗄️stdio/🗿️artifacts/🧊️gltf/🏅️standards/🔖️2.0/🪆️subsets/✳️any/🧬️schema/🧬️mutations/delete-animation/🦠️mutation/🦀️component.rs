@@ -8,5 +8,5 @@ pub const ID: &str = "s.stdio.gltf.mutation.delete-animation.v1";
 pub const TOUCHED_PATHS: &[&str] = &["document/animations"];
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)] #[serde(rename_all = "camelCase")]
 pub struct GltfDeleteAnimationPayload { pub index: usize }
-pub fn validate(payload: &GltfDeleteAnimationPayload, base: &GltfSnapshot) -> Result<(), GltfTopLevelMutationRejection> { if payload.index >= base.document.animations.len() { return Err(reject("gltf.mutation.index-out-of-range", "document/animations", "index must address an item")); }  Ok(()) }
-pub fn apply(payload: &GltfDeleteAnimationPayload, base: &GltfSnapshot) -> Result<GltfSnapshot, GltfTopLevelMutationRejection> { validate(payload, base)?; let mut next = base.clone(); animations_op(&mut next, GltfTopLevelFamily::Animations, payload.index, None, None)?;  Ok(next) }
+pub async fn validate(payload: &GltfDeleteAnimationPayload, base: &GltfSnapshot) -> Result<(), GltfTopLevelMutationRejection> { if payload.index >= base.document.animations.len() { return Err(reject("gltf.mutation.index-out-of-range", "document/animations", "index must address an item")); }  Ok(()) }
+pub async fn apply(payload: &GltfDeleteAnimationPayload, base: &GltfSnapshot) -> Result<GltfSnapshot, GltfTopLevelMutationRejection> { validate(payload, base)?; let mut next = base.clone(); animations_op(&mut next, GltfTopLevelFamily::Animations, payload.index, None, None)?;  Ok(next) }

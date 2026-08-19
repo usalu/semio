@@ -5,7 +5,7 @@ use crate::artifacts::en1999::mutations::change_shell_r_mm::mutation::ChangeShel
 use crate::artifacts::en1999::En1999Snapshot;
 
 //#region 🔖️Diff
-pub fn diff(payload: &ChangeShellRMm, base: &En1999Snapshot) -> protocol::MutationOutcome<En1999Diff> {
+pub async fn diff(payload: &ChangeShellRMm, base: &En1999Snapshot) -> protocol::MutationOutcome<En1999Diff> {
     if !payload.new_shell_r_mm.is_finite() {
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("Shell radius r [mm] must be a finite number, got {}.", payload.new_shell_r_mm), Vec::<String>::new());
     }

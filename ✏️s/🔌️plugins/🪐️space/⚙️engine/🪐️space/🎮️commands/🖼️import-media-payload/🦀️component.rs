@@ -13,7 +13,7 @@ pub struct ImportMediaPayload {
     pub payload: String,
 }
 
-pub fn handle(payload: &ImportMediaPayload, doc: &ArtifactView<'_, WorkflowSnapshot>, cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
+pub async fn handle(payload: &ImportMediaPayload, doc: &ArtifactView<'_, WorkflowSnapshot>, cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
     let config = cfg.snapshot;
     let mut config_mutations = Vec::new();
     if let (Some(node_id), Some(format_name)) = (config.pending_import_node_id.as_ref(), config.pending_import_format.as_ref()) {

@@ -16,19 +16,19 @@ pub struct ChangeLayerOpacity {
 impl protocol::MutationKind<RasterSnapshot, RasterMutation> for ChangeLayerOpacity {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "layer", kind: "change-layer-opacity", record: "ChangedLayerOpacity" };
 
-    fn diff(&self, base: &RasterSnapshot) -> protocol::MutationOutcome<RasterDiff> {
+    async fn diff(&self, base: &RasterSnapshot) -> protocol::MutationOutcome<RasterDiff> {
         crate::artifacts::raster::mutations::change_layer_opacity::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &RasterSnapshot) -> Vec<RasterMutation> {
+    async fn inverse(&self, base: &RasterSnapshot) -> Vec<RasterMutation> {
         crate::artifacts::raster::mutations::change_layer_opacity::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         format!("Set layer {} opacity to {}", self.layer_id, self.new_opacity)
     }
 
-    fn target(&self) -> Vec<String> {
+    async fn target(&self) -> Vec<String> {
         vec![self.layer_id.clone()]
     }
 }

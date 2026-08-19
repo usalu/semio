@@ -19,23 +19,23 @@ pub struct ConnectNodes {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn connect_nodes(edge: DslValue, relationship: DslValue) -> WiresMutation {
+pub async fn connect_nodes(edge: DslValue, relationship: DslValue) -> WiresMutation {
     WiresMutation::ConnectNodes(ConnectNodes { edge, relationship })
 }
 
 impl protocol::MutationKind<WiresSnapshot, WiresMutation> for ConnectNodes {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "connect", entity: "relationship", kind: "connect-nodes", record: "ConnectedNodes" };
 
-    fn diff(&self, base: &WiresSnapshot) -> protocol::MutationOutcome<WiresDiff> {
+    async fn diff(&self, base: &WiresSnapshot) -> protocol::MutationOutcome<WiresDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &WiresSnapshot) -> Vec<WiresMutation> {
+    async fn inverse(&self, base: &WiresSnapshot) -> Vec<WiresMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         format!("Connect nodes via edge \"{}\"", entity_id(&self.edge, "id").unwrap_or("?"))
     }
-    fn target(&self) -> Vec<String> {
+    async fn target(&self) -> Vec<String> {
         entity_id(&self.edge, "id").map(|id| vec![id.to_string()]).unwrap_or_default()
     }
 }

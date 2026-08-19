@@ -25,28 +25,28 @@ pub mod derived_construction {
         type Mutation = SvgMutation;
         type Diff = SvgDiff;
 
-        fn empty() -> Self {
+        async fn empty() -> Self {
             Self::default()
         }
 
-        fn from_snapshot(snapshot: Self::Snapshot) -> Self {
+        async fn from_snapshot(snapshot: Self::Snapshot) -> Self {
             Self { snapshot }
         }
 
-        fn from_text(text: &str) -> Result<Self, store::TextError> {
+        async fn from_text(text: &str) -> Result<Self, store::TextError> {
             Ok(Self::from_snapshot(<SvgSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
 
-        fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
+        async fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
             Ok(Self::from_snapshot(<SvgSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
         }
 
-        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
+        async fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let diff = crate::artifacts::svg::schema::mutations::apply_svg_mutation(&mut self.snapshot, &mutation);
             (self, diff)
         }
 
-        fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
+        async fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
             self.snapshot = <SvgDiff as protocol::MutationDiff<SvgSnapshot>>::apply(&diff, &self.snapshot)?;
             Ok(self)
         }
@@ -55,7 +55,7 @@ pub mod derived_construction {
         /// violation (however `self.snapshot` got here) fails `build()` -- soft diagnostics (external
         /// `href`) pass through silently here since `ArtifactBuilder::build`'s `Err` path only ever
         /// carries the hard set, matching the PDF/A pilot's own `build()` shape.
-        fn build(mut self) -> Result<Self::Snapshot, Vec<Diagnostic>> {
+        async fn build(mut self) -> Result<Self::Snapshot, Vec<Diagnostic>> {
             if let Some(root) = self.snapshot.doc.root.as_mut() {
                 set_element_attr(root, "baseProfile", Some("tiny".into()));
                 set_element_attr(root, "version", Some("1.1".into()));
@@ -77,7 +77,7 @@ pub mod derived_construction {
         use crate::artifacts::xml::schema::snapshot::XmlNode;
 
         #[test]
-        fn empty_builder_injects_profile_and_builds_clean() {
+        async fn empty_builder_injects_profile_and_builds_clean() {
             let snapshot = SvgTinyBuilderConstruction::empty().build().expect("empty document builds clean");
             match &snapshot.doc.root {
                 Some(XmlNode::Element { attrs, .. }) => {
@@ -89,7 +89,7 @@ pub mod derived_construction {
         }
 
         #[test]
-        fn hard_violation_injected_via_raw_mutate_still_fails_build() {
+        async fn hard_violation_injected_via_raw_mutate_still_fails_build() {
             let mut snapshot = SvgTinyBuilderConstruction::empty().build().unwrap();
             if let Some(XmlNode::Element { children, .. }) = snapshot.doc.root.as_mut() {
                 children.push(XmlNode::Element { name: "script".into(), attrs: vec![], children: vec![XmlNode::Text { text: "alert(1)".into() }] });
@@ -100,7 +100,7 @@ pub mod derived_construction {
         }
 
         #[test]
-        fn from_text_round_trips_through_tiny_build() {
+        async fn from_text_round_trips_through_tiny_build() {
             let text = r#"<svg xmlns="http://www.w3.org/2000/svg"><circle cx="5" cy="5" r="5"/></svg>"#;
             let built = SvgTinyBuilderConstruction::from_text(text).expect("parses").build().expect("conforming document builds");
             assert!(matches!(built.doc.root, Some(XmlNode::Element { .. })));
@@ -133,11 +133,11 @@ pub mod derived_analysis {
 
     /// ✂️ Strips an XML namespace prefix (`xlink:href` -> `href`) for vocabulary-matching purposes
     /// only -- diagnostics still report the original, fully-qualified name.
-    fn local_name(name: &str) -> &str {
+    async fn local_name(name: &str) -> &str {
         name.rsplit(':').next().unwrap_or(name)
     }
 
-    fn is_blocked_element(name: &str) -> bool {
+    async fn is_blocked_element(name: &str) -> bool {
         let ln = local_name(name);
         BLOCKED_ELEMENTS.contains(&ln) || ln.starts_with("fe")
     }
@@ -145,7 +145,7 @@ pub mod derived_analysis {
     /// 🌐️ `true` for a value that looks like a reference to an external document (a URI scheme or a
     /// scheme-relative `//host/...`), `false` for a same-document fragment (`#id`) or a bare relative
     /// path.
-    fn is_external_href(value: &str) -> bool {
+    async fn is_external_href(value: &str) -> bool {
         let v = value.trim();
         !v.starts_with('#') && (v.contains("://") || v.starts_with("//"))
     }
@@ -157,17 +157,17 @@ pub mod derived_analysis {
     pub const CODE_BASE_PROFILE: &str = "stdio.svg.tiny.base-profile";
     pub const CODE_EXTERNAL_HREF: &str = "stdio.svg.tiny.external-href";
 
-    fn hard(code: &'static str, message: String) -> Diagnostic {
+    async fn hard(code: &'static str, message: String) -> Diagnostic {
         Diagnostic { code: FaultCode::new(code), severity: Severity::Error, span: TextSpan::at(1, 1), message, expected: None, scope: dsl::FaultScope::default() }
     }
 
-    fn soft(code: &'static str, message: String) -> Diagnostic {
+    async fn soft(code: &'static str, message: String) -> Diagnostic {
         Diagnostic { code: FaultCode::new(code), severity: Severity::Warning, span: TextSpan::at(1, 1), message, expected: None, scope: dsl::FaultScope::default() }
     }
 
     /// 🌳 Recursively walks one element (and its descendants), reporting blocklisted elements,
     /// blocklisted attributes, and external `href`/`xlink:href` values.
-    fn walk(node: &XmlNode, out: &mut Vec<Diagnostic>) {
+    async fn walk(node: &XmlNode, out: &mut Vec<Diagnostic>) {
         if let XmlNode::Element { name, attrs, children } = node {
             if is_blocked_element(name) {
                 out.push(hard(CODE_ELEMENT, format!("element <{name}> is outside SVG Tiny 1.1's vocabulary -- REC-SVGMobile-20030114 excludes it")));
@@ -187,7 +187,7 @@ pub mod derived_analysis {
         }
     }
 
-    fn root_attrs(root: &XmlNode) -> &[XmlAttr] {
+    async fn root_attrs(root: &XmlNode) -> &[XmlAttr] {
         match root {
             XmlNode::Element { attrs, .. } => attrs.as_slice(),
             _ => &[],
@@ -199,7 +199,7 @@ pub mod derived_analysis {
     /// authoritative), `SvgTinyBuilder::build` hard-gates on this too, and the registered
     /// `SubsetValidator` (`🎹️composer::register`) re-runs it post-hoc against the wire payload for
     /// the D5 validate-on-build hook.
-    pub fn check_svg_tiny_conformance(snapshot: &SvgSnapshot) -> Vec<Diagnostic> {
+    pub async fn check_svg_tiny_conformance(snapshot: &SvgSnapshot) -> Vec<Diagnostic> {
         let mut out = Vec::new();
         let Some(root) = &snapshot.doc.root else { return out };
         walk(root, &mut out);
@@ -227,11 +227,11 @@ pub mod derived_analysis {
         type Parts = SvgParts;
         const DIALECT: Dialect = DIALECT;
 
-        fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
+        async fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
             SvgAnyAnalyzer::sniff(source)
         }
 
-        fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
+        async fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
             let inner = SvgAnyAnalyzer::analyze(sources);
             let mut diagnostics = inner.diagnostics.clone();
             let mut confidence = inner.confidence;
@@ -251,50 +251,50 @@ pub mod derived_analysis {
     mod tests {
         use super::*;
 
-        fn svg_root(attrs: Vec<XmlAttr>, children: Vec<XmlNode>) -> SvgSnapshot {
+        async fn svg_root(attrs: Vec<XmlAttr>, children: Vec<XmlNode>) -> SvgSnapshot {
             let mut snapshot = SvgSnapshot::default();
             snapshot.doc.root = Some(XmlNode::Element { name: "svg".into(), attrs, children });
             snapshot
         }
 
-        fn attr(name: &str, value: &str) -> XmlAttr {
+        async fn attr(name: &str, value: &str) -> XmlAttr {
             XmlAttr { name: name.into(), value: value.into() }
         }
 
-        fn elem(name: &str, attrs: Vec<XmlAttr>) -> XmlNode {
+        async fn elem(name: &str, attrs: Vec<XmlAttr>) -> XmlNode {
             XmlNode::Element { name: name.into(), attrs, children: vec![] }
         }
 
         #[test]
-        fn fully_conforming_document_reports_no_diagnostics() {
+        async fn fully_conforming_document_reports_no_diagnostics() {
             let snapshot = svg_root(vec![attr("baseProfile", "tiny"), attr("version", "1.1")], vec![elem("rect", vec![attr("x", "0"), attr("y", "0"), attr("width", "10"), attr("height", "10")])]);
             let diagnostics = check_svg_tiny_conformance(&snapshot);
             assert!(diagnostics.is_empty(), "got {diagnostics:?}");
         }
 
         #[test]
-        fn blocklisted_element_is_hard() {
+        async fn blocklisted_element_is_hard() {
             let snapshot = svg_root(vec![attr("baseProfile", "tiny"), attr("version", "1.1")], vec![elem("linearGradient", vec![])]);
             let diagnostics = check_svg_tiny_conformance(&snapshot);
             assert!(diagnostics.iter().any(|d| d.code.0 == CODE_ELEMENT && d.severity == Severity::Error), "got {diagnostics:?}");
         }
 
         #[test]
-        fn filter_primitive_by_prefix_is_hard() {
+        async fn filter_primitive_by_prefix_is_hard() {
             let snapshot = svg_root(vec![attr("baseProfile", "tiny"), attr("version", "1.1")], vec![elem("feGaussianBlur", vec![])]);
             let diagnostics = check_svg_tiny_conformance(&snapshot);
             assert!(diagnostics.iter().any(|d| d.code.0 == CODE_ELEMENT && d.severity == Severity::Error), "got {diagnostics:?}");
         }
 
         #[test]
-        fn blocklisted_attribute_is_hard() {
+        async fn blocklisted_attribute_is_hard() {
             let snapshot = svg_root(vec![attr("baseProfile", "tiny"), attr("version", "1.1")], vec![elem("rect", vec![attr("opacity", "0.5")])]);
             let diagnostics = check_svg_tiny_conformance(&snapshot);
             assert!(diagnostics.iter().any(|d| d.code.0 == CODE_ATTRIBUTE && d.severity == Severity::Error), "got {diagnostics:?}");
         }
 
         #[test]
-        fn missing_base_profile_is_soft() {
+        async fn missing_base_profile_is_soft() {
             let snapshot = svg_root(vec![], vec![]);
             let diagnostics = check_svg_tiny_conformance(&snapshot);
             assert_eq!(diagnostics.len(), 1);
@@ -303,14 +303,14 @@ pub mod derived_analysis {
         }
 
         #[test]
-        fn external_href_is_soft() {
+        async fn external_href_is_soft() {
             let snapshot = svg_root(vec![attr("baseProfile", "tiny"), attr("version", "1.1")], vec![elem("use", vec![attr("xlink:href", "http://example.com/sprite.svg#icon")])]);
             let diagnostics = check_svg_tiny_conformance(&snapshot);
             assert!(diagnostics.iter().any(|d| d.code.0 == CODE_EXTERNAL_HREF && d.severity == Severity::Warning), "got {diagnostics:?}");
         }
 
         #[test]
-        fn same_document_fragment_href_is_clean() {
+        async fn same_document_fragment_href_is_clean() {
             let snapshot = svg_root(vec![attr("baseProfile", "tiny"), attr("version", "1.1")], vec![elem("use", vec![attr("href", "#icon")])]);
             let diagnostics = check_svg_tiny_conformance(&snapshot);
             assert!(diagnostics.is_empty(), "got {diagnostics:?}");

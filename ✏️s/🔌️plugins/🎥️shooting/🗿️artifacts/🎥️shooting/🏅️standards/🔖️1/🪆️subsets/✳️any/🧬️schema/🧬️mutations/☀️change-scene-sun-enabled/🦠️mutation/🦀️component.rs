@@ -13,13 +13,13 @@ pub struct ChangeSceneSunEnabled {
 
 impl MutationKind<ShootingSnapshot, ShootingMutation> for ChangeSceneSunEnabled {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "change", entity: "scene-sun-enabled", kind: "change-scene-sun-enabled", record: "ChangedSceneSunEnabled" };
-    fn diff(&self, base: &ShootingSnapshot) -> protocol::MutationOutcome<ShootingDiff> {
+    async fn diff(&self, base: &ShootingSnapshot) -> protocol::MutationOutcome<ShootingDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &ShootingSnapshot) -> Vec<ShootingMutation> {
+    async fn inverse(&self, base: &ShootingSnapshot) -> Vec<ShootingMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         format!("{} sun", if self.new_enabled { "Enable" } else { "Disable" })
     }
 }

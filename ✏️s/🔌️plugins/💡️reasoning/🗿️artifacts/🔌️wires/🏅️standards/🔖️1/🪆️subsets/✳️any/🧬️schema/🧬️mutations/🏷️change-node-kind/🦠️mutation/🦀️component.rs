@@ -15,23 +15,23 @@ pub struct ChangeNodeKind {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn change_node_kind(node_id: String, new_node_kind: String) -> WiresMutation {
+pub async fn change_node_kind(node_id: String, new_node_kind: String) -> WiresMutation {
     WiresMutation::ChangeNodeKind(ChangeNodeKind { node_id, new_node_kind })
 }
 
 impl protocol::MutationKind<WiresSnapshot, WiresMutation> for ChangeNodeKind {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "node", kind: "change-node-kind", record: "ChangedNodeKind" };
 
-    fn diff(&self, base: &WiresSnapshot) -> protocol::MutationOutcome<WiresDiff> {
+    async fn diff(&self, base: &WiresSnapshot) -> protocol::MutationOutcome<WiresDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &WiresSnapshot) -> Vec<WiresMutation> {
+    async fn inverse(&self, base: &WiresSnapshot) -> Vec<WiresMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         format!("Change node \"{}\" kind to \"{}\"", self.node_id, self.new_node_kind)
     }
-    fn target(&self) -> Vec<String> {
+    async fn target(&self) -> Vec<String> {
         vec![self.node_id.clone()]
     }
 }

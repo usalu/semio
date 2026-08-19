@@ -27,7 +27,7 @@ pub struct StepInference {
 }
 
 impl protocol::Inference<StepSnapshot> for StepInference {
-    fn infer(snapshot: &StepSnapshot) -> Self {
+    async fn infer(snapshot: &StepSnapshot) -> Self {
         Self { bounds: compute_step_bounds(snapshot) }
     }
 }
@@ -35,19 +35,19 @@ impl protocol::Inference<StepSnapshot> for StepInference {
 /// 🌱 Defined in terms of `infer` (not derived) — keeps the law correct regardless of whether
 /// `StepSnapshot::default()`'s `entities` ever stops being empty.
 impl Default for StepInference {
-    fn default() -> Self {
+    async fn default() -> Self {
         <Self as protocol::Inference<StepSnapshot>>::infer(&StepSnapshot::default())
     }
 }
 
 impl protocol::InferenceSpec<StepSnapshot> for StepInference {
-    fn inference_schema_id() -> &'static str {
+    async fn inference_schema_id() -> &'static str {
         "s.stdio.step.inference"
     }
-    fn schema_version() -> u32 {
+    async fn schema_version() -> u32 {
         1
     }
-    fn fields() -> &'static [protocol::InferenceFieldSpec] {
+    async fn fields() -> &'static [protocol::InferenceFieldSpec] {
         &[protocol::InferenceFieldSpec { id: "s.stdio.step.inference.bounds", reads: &["entities"] }]
     }
 }
@@ -67,7 +67,7 @@ impl ArtifactInferrer for crate::artifacts::step::standards::v_ap214::subsets::a
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.stdio.step.inference`'s facet leaves into the OS-wide inference catalog —
 /// call once at plugin init, alongside `step_artifact_schema_descriptor`'s registration.
-pub fn step_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
+pub async fn step_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
     schema::ArtifactInferenceDescriptor {
         id: "s.stdio.step.inference",
         inference: schema::FacetLeaves {
@@ -88,13 +88,13 @@ mod tests {
     use protocol::Inference;
 
     #[test]
-    fn inference_determinism_law() {
+    async fn inference_determinism_law() {
         let snapshot = StepSnapshot::default();
         assert_eq!(StepInference::infer(&snapshot), StepInference::infer(&snapshot));
     }
 
     #[test]
-    fn inference_default_law() {
+    async fn inference_default_law() {
         assert_eq!(StepInference::infer(&StepSnapshot::default()), StepInference::default());
     }
 }

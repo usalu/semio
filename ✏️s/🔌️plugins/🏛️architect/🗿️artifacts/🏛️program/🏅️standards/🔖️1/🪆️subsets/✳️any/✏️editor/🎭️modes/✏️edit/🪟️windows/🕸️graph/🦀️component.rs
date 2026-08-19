@@ -15,7 +15,7 @@ pub const ARCHITECT_BODY_GRAPH: &str = "architect.graph";
 
 //#region 🔖️Definition
 /// 🏛️ Stitched into the app manifest by `crate::editor::architect::create_architect_app`.
-pub fn definition() -> WindowKindDefinition {
+pub async fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
         id: ARCHITECT_WINDOW_GRAPH.into(),
         label: LocalizedLabel::native("Graph", "Graph"),
@@ -50,7 +50,7 @@ pub struct GraphCamera {
 //#endregion 🔖️Camera
 
 //#region 🔖️Render
-pub fn graph_media_json(program: &ProgramSnapshot, _camera: &GraphCamera) -> (Vec<NodeGraphNodeRecord>, Vec<NodeGraphEdgeRecord>) {
+pub async fn graph_media_json(program: &ProgramSnapshot, _camera: &GraphCamera) -> (Vec<NodeGraphNodeRecord>, Vec<NodeGraphEdgeRecord>) {
     let count = program.elements.len().max(1);
     let radius = 220.0;
     let center_x = 320.0;
@@ -93,7 +93,7 @@ pub fn graph_media_json(program: &ProgramSnapshot, _camera: &GraphCamera) -> (Ve
 /// and `NodeGraphScene` has no `interaction_domain` field the wrapper could stamp post-render either
 /// (unlike `UiNode::Tree`) — `selection`/`hover` are left at `NodeGraphScene::base`'s defaults
 /// (empty/none), matching `dag`'s main window's and `space`'s workflow window's identical gap.
-pub fn render(program: &ProgramSnapshot, cfg: &ArchitectConfig) -> UiNode {
+pub async fn render(program: &ProgramSnapshot, cfg: &ArchitectConfig) -> UiNode {
     let camera = GraphCamera { x: cfg.graph_camera_x, y: cfg.graph_camera_y, zoom: cfg.graph_camera_zoom };
     let (nodes, edges) = graph_media_json(program, &camera);
     let viewport = NodeGraphViewport { x: camera.x, y: camera.y, zoom: camera.zoom };
@@ -110,20 +110,20 @@ mod tests {
     use crate::artifacts::program::sample_plugin;
 
     #[test]
-    fn definition_declares_the_node_graph_surface_and_body_key() {
+    async fn definition_declares_the_node_graph_surface_and_body_key() {
         let definition = definition();
         assert_eq!(definition.body_key, ARCHITECT_BODY_GRAPH);
         assert!(matches!(definition.surface_kind, SurfaceKind::NodeGraph));
     }
 
     #[test]
-    fn the_graph_body_emits_a_node_graph_scene() {
+    async fn the_graph_body_emits_a_node_graph_scene() {
         let json = serde_json::to_string(&render(&sample_plugin(), &ArchitectConfig::default())).expect("json");
         assert!(json.contains("node-graph"));
     }
 
     #[test]
-    fn every_element_becomes_a_node_and_every_adjacency_an_edge() {
+    async fn every_element_becomes_a_node_and_every_adjacency_an_edge() {
         let program = sample_plugin();
         let (nodes, edges) = graph_media_json(&program, &GraphCamera { x: 0.0, y: 0.0, zoom: 1.0 });
         assert_eq!(nodes.len(), program.elements.len());

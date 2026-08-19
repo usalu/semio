@@ -20,7 +20,7 @@ pub mod add_element {
     /// become the selection here — selection is framework-owned `InteractionState` now, only ever
     /// mutated by the framework's own injected `interactionSelect` handling, never by an app
     /// command's `Emit` (mirrors note's `add-block`).
-    pub fn handle(payload: &AddElement, _doc: &ArtifactView<'_, ProgramSnapshot>, cfg: &ConfigView<'_, ArchitectConfig>) -> Result<Emit<ProgramMutation, ArchitectConfigMutation>, Fault> {
+    pub async fn handle(payload: &AddElement, _doc: &ArtifactView<'_, ProgramSnapshot>, cfg: &ConfigView<'_, ArchitectConfig>) -> Result<Emit<ProgramMutation, ArchitectConfigMutation>, Fault> {
         let element = default_element(payload.name.clone());
         let mut next = cfg.snapshot.clone();
         next.active_register = "elements".into();
@@ -45,7 +45,7 @@ pub mod remove_element {
     /// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: no longer prunes the deleted id
     /// out of a config-owned selection — the framework owns pruning of the "program" domain's
     /// selection now (`validate_state`, run after every dispatch).
-    pub fn handle(payload: &RemoveElement, doc: &ArtifactView<'_, ProgramSnapshot>, _cfg: &ConfigView<'_, ArchitectConfig>) -> Result<Emit<ProgramMutation, ArchitectConfigMutation>, Fault> {
+    pub async fn handle(payload: &RemoveElement, doc: &ArtifactView<'_, ProgramSnapshot>, _cfg: &ConfigView<'_, ArchitectConfig>) -> Result<Emit<ProgramMutation, ArchitectConfigMutation>, Fault> {
         let program = doc.snapshot;
         let element_id = &payload.element_id;
         let mut operations = vec![ProgramMutation::DeleteProgramElement(leaves::delete_program_element::mutation::DeleteProgramElement { id: EntityId(element_id.clone()) })];

@@ -25,11 +25,11 @@ pub const GIF_89A_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.gif", sta
 
 //#region 🔖️ArtifactKind
 /// 🗂️ This artifact's `ArtifactKindSpec`.
-pub fn assembly(definition: semio_framework_plugin::ArtifactDefinition) -> Result<crate::registry::ArtifactAssembly, semio_framework_plugin::PluginAssemblyError> {
+pub async fn assembly(definition: semio_framework_plugin::ArtifactDefinition) -> Result<crate::registry::ArtifactAssembly, semio_framework_plugin::PluginAssemblyError> {
     crate::registry::definition_only_assembly("gif", definition)
 }
 
-pub fn artifact_kind() -> ArtifactKindSpec {
+pub async fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "stdio.gif".into(),
         name: "Gif".into(),
@@ -60,16 +60,16 @@ pub mod io_registry {
     /// `writes` matches the requested `Dialect`, so 87a and 89a coexist without either shadowing
     /// the other (unlike the flat schema/document-codec registries, which are standard-agnostic
     /// pre-D4 and would collide — see `standards::v89a::engine::register`'s doc comment).
-    pub fn entries() -> &'static [&'static ComposerEntry] {
+    pub async fn entries() -> &'static [&'static ComposerEntry] {
         ENTRIES.get_or_init(|| v87a::entries().iter().chain(v89a::entries().iter()).collect()).as_slice()
     }
 
-    pub fn compose(target: Dialect, sources: &[ErasedComposeSource]) -> Result<ComposedArtifact, ComposeError> {
+    pub async fn compose(target: Dialect, sources: &[ErasedComposeSource]) -> Result<ComposedArtifact, ComposeError> {
         let entry = entries().iter().find(|e| e.writes == target).ok_or_else(|| ComposeError { message: format!("GifComposer: no entry writes {:?}", target), diagnostics: Vec::new() })?;
         semio_framework_plugin::resolve_ready((entry.compose)(sources))
     }
 
-    pub fn register() {
+    pub async fn register() {
         let _ = register_composer_entries(v87a::entries());
         let _ = register_composer_entries(v89a::entries());
     }

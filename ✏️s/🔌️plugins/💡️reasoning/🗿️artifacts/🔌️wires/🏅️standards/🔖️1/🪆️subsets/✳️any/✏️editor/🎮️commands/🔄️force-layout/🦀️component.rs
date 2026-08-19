@@ -9,7 +9,7 @@ use serde::{Deserialize, Serialize};
 
 /// 🕸️ Re-lays out the board and diffs the moved nodes into `move-node` operations — shared by both
 /// `ForceLayout` and `Reorganize`.
-fn force_layout_operations(document: &WiresSnapshot) -> Vec<WiresMutation> {
+async fn force_layout_operations(document: &WiresSnapshot) -> Vec<WiresMutation> {
     let mut board = crate::artifacts::wires::wires_working_board(document);
     force_layout_board(&mut board);
     fixture_nodes(&board)
@@ -36,7 +36,7 @@ fn force_layout_operations(document: &WiresSnapshot) -> Vec<WiresMutation> {
 #[dsl(keyword = "force-layout")]
 pub struct ForceLayout {}
 
-pub fn handle(_payload: &ForceLayout, doc: &ArtifactView<'_, WiresSnapshot>, _cfg: &ConfigView<'_, WiresConfig>) -> Result<Emit<WiresMutation, WiresConfigMutation>, Fault> {
+pub async fn handle(_payload: &ForceLayout, doc: &ArtifactView<'_, WiresSnapshot>, _cfg: &ConfigView<'_, WiresConfig>) -> Result<Emit<WiresMutation, WiresConfigMutation>, Fault> {
     Ok(Emit::mutations(force_layout_operations(doc.snapshot)))
 }
 
@@ -49,7 +49,7 @@ mod tests {
     use crate::editor::wires::WiresCommand;
 
     #[test]
-    fn force_layout_action_repositions_metabolism_nodes() {
+    async fn force_layout_action_repositions_metabolism_nodes() {
         let mut app = metabolism_app();
         let before: Vec<(f64, f64)> = fixture_nodes(&crate::artifacts::wires::wires_working_board(&app.snapshot().expect("snapshot"))).iter().map(node_position).collect();
         dispatch(&mut app, WiresCommand::ForceLayout(ForceLayout {}));
@@ -59,7 +59,7 @@ mod tests {
     }
 
     #[test]
-    fn reorganize_repositions_metabolism_nodes() {
+    async fn reorganize_repositions_metabolism_nodes() {
         let mut app = metabolism_app();
         let before: Vec<(f64, f64)> = fixture_nodes(&crate::artifacts::wires::wires_working_board(&app.snapshot().expect("snapshot"))).iter().map(node_position).collect();
         dispatch(&mut app, WiresCommand::Reorganize(reorganize::Reorganize {}));

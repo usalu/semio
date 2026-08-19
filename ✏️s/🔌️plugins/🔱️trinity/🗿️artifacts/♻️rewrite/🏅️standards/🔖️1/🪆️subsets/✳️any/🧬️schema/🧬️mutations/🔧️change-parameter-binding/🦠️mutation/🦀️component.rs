@@ -16,23 +16,23 @@ pub struct ChangeParameterBinding {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn change_parameter_binding(key: String, new_value: PropertyValue) -> RewriteRuleMutation {
+pub async fn change_parameter_binding(key: String, new_value: PropertyValue) -> RewriteRuleMutation {
     RewriteRuleMutation::ChangeParameterBinding(ChangeParameterBinding { key, new_value })
 }
 
 impl protocol::MutationKind<RewriteSnapshot, RewriteRuleMutation> for ChangeParameterBinding {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "parameter-binding", kind: "change-parameter-binding", record: "ChangedParameterBinding" };
 
-    fn diff(&self, base: &RewriteSnapshot) -> protocol::MutationOutcome<RewriteDiff> {
+    async fn diff(&self, base: &RewriteSnapshot) -> protocol::MutationOutcome<RewriteDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &RewriteSnapshot) -> Vec<RewriteRuleMutation> {
+    async fn inverse(&self, base: &RewriteSnapshot) -> Vec<RewriteRuleMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         format!("Change parameter binding \"{}\"", self.key)
     }
-    fn target(&self) -> Vec<String> {
+    async fn target(&self) -> Vec<String> {
         vec![self.key.clone()]
     }
 }

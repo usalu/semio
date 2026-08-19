@@ -12,9 +12,9 @@
 use crate::artifacts::cad::CadSnapshot;
 
 //#region Serialize
-pub fn register() {}
+pub async fn register() {}
 
-pub fn serialize_text(from: &CadSnapshot) -> Result<String, store::PackError> {
+pub async fn serialize_text(from: &CadSnapshot) -> Result<String, store::PackError> {
     Ok(<CadSnapshot as store::ArtifactDsl>::print_dsl(from))
 }
 //#endregion Serialize

@@ -58,7 +58,7 @@ pub enum CsvMutation {
 //#region 🔖️Apply
 /// ▶️ Applies `mutation` to `snapshot`: `let d = mutation.diff(&*snapshot); *snapshot =
 /// d.apply(snapshot); d` — the diff is the single semantics source.
-pub fn apply_csv_mutation(snapshot: &mut CsvSnapshot, mutation: &CsvMutation) -> protocol::MutationOutcome<CsvDiff> {
+pub async fn apply_csv_mutation(snapshot: &mut CsvSnapshot, mutation: &CsvMutation) -> protocol::MutationOutcome<CsvDiff> {
     let outcome = <CsvMutation as Mutation<CsvSnapshot>>::diff(mutation, snapshot);
     match MutationDiff::apply(outcome.diff(), snapshot) {
         Ok(next) => {
@@ -74,7 +74,7 @@ pub fn apply_csv_mutation(snapshot: &mut CsvSnapshot, mutation: &CsvMutation) ->
 impl Mutation<CsvSnapshot> for CsvMutation {
     type Diff = CsvDiff;
 
-    fn diff(&self, base: &CsvSnapshot) -> protocol::MutationOutcome<Self::Diff> {
+    async fn diff(&self, base: &CsvSnapshot) -> protocol::MutationOutcome<Self::Diff> {
         protocol::MutationOutcome::new(match self {
             CsvMutation::NoMutation => CsvDiff::default(),
             CsvMutation::SetSnapshot { snapshot } => diff_set_snapshot(base, snapshot),
@@ -89,7 +89,7 @@ impl Mutation<CsvSnapshot> for CsvMutation {
         })
     }
 
-    fn inverse(&self, base: &CsvSnapshot) -> Vec<Self> {
+    async fn inverse(&self, base: &CsvSnapshot) -> Vec<Self> {
         match self {
             CsvMutation::NoMutation => vec![CsvMutation::NoMutation],
             CsvMutation::SetSnapshot { .. } => {
@@ -121,10 +121,10 @@ impl Mutation<CsvSnapshot> for CsvMutation {
 /// rather than duplicating them a second time in this file. Grammar: `keyword arg=value ...`
 /// (space-separated), same convention gif89a's/svg's own hand-rolled `OpText` impls use, one
 /// match arm per variant (no `DslVariants` scaffolding available since nothing here derives it).
-fn enc_csv_snapshot(s: &CsvSnapshot) -> String {
+async fn enc_csv_snapshot(s: &CsvSnapshot) -> String {
     format!("[{},{},[{}]]", enc_str(&s.schema), if s.has_header { 1 } else { 0 }, s.records.iter().map(enc_record).collect::<Vec<_>>().join(","),)
 }
-fn dec_csv_snapshot(s: &str) -> Result<CsvSnapshot, String> {
+async fn dec_csv_snapshot(s: &str) -> Result<CsvSnapshot, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [schema, has_header, records] = parts.as_slice() else {
         return Err(format!("csv snapshot: expected 3 fields, got {}", parts.len()));
@@ -133,7 +133,7 @@ fn dec_csv_snapshot(s: &str) -> Result<CsvSnapshot, String> {
     Ok(CsvSnapshot { schema: dec_str(schema)?, has_header: *has_header == "1", records })
 }
 
-fn print_csv_mutation(m: &CsvMutation) -> String {
+async fn print_csv_mutation(m: &CsvMutation) -> String {
     match m {
         CsvMutation::NoMutation => "no-mutation".to_string(),
         CsvMutation::SetSnapshot { snapshot } => format!("set-snapshot snapshot={}", enc_csv_snapshot(snapshot)),
@@ -143,7 +143,7 @@ fn print_csv_mutation(m: &CsvMutation) -> String {
         CsvMutation::SetField { record_index, field_index, value, quoted } => format!("set-field record-index={record_index} field-index={field_index} value={} quoted={}", enc_str(value), if *quoted { 1 } else { 0 },),
     }
 }
-fn parse_csv_mutation(line: &str) -> Result<CsvMutation, String> {
+async fn parse_csv_mutation(line: &str) -> Result<CsvMutation, String> {
     if line == "no-mutation" {
         return Ok(CsvMutation::NoMutation);
     }
@@ -162,10 +162,10 @@ fn parse_csv_mutation(line: &str) -> Result<CsvMutation, String> {
 }
 
 impl OpText for CsvMutation {
-    fn print_op(&self) -> String {
+    async fn print_op(&self) -> String {
         print_csv_mutation(self)
     }
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
+    async fn parse_op(line: &str) -> Result<Self, store::TextError> {
         parse_csv_mutation(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
 }
@@ -181,32 +181,32 @@ impl OpText for CsvMutation {
 /// `../💾️binary/📡️component.protocol.semio`'s real `repeat`/`arm` shape exactly — see that
 /// file's own doc comment for why the deeply nested `CsvSnapshot`/`CsvRecord` payload inside
 /// arms 1/3 is one honest opaque tail blob rather than individually walked.
-fn write_bin_str(w: &mut dsl::ByteWriter, s: &str) {
+async fn write_bin_str(w: &mut dsl::ByteWriter, s: &str) {
     let bytes = s.as_bytes();
     w.write_varint_u64(bytes.len() as u64);
     w.write_bytes(bytes);
 }
-fn read_bin_str(r: &mut dsl::ByteReader<'_>) -> Result<String, dsl::PackError> {
+async fn read_bin_str(r: &mut dsl::ByteReader<'_>) -> Result<String, dsl::PackError> {
     let len = r.read_varint_u64()? as usize;
     let bytes = r.read_bytes(len)?;
     String::from_utf8(bytes.to_vec()).map_err(|e| dsl::PackError::Malformed { what: "csv binary utf8 string", offset: 0, detail: e.to_string() })
 }
-pub(crate) fn write_bin_field(w: &mut dsl::ByteWriter, f: &CsvField) {
+pub(crate) async fn write_bin_field(w: &mut dsl::ByteWriter, f: &CsvField) {
     write_bin_str(w, &f.value);
     w.write_u8(if f.quoted { 1 } else { 0 });
 }
-pub(crate) fn read_bin_field(r: &mut dsl::ByteReader<'_>) -> Result<CsvField, dsl::PackError> {
+pub(crate) async fn read_bin_field(r: &mut dsl::ByteReader<'_>) -> Result<CsvField, dsl::PackError> {
     let value = read_bin_str(r)?;
     let quoted = r.read_u8()? != 0;
     Ok(CsvField { value, quoted })
 }
-pub(crate) fn write_bin_record(w: &mut dsl::ByteWriter, rec: &CsvRecord) {
+pub(crate) async fn write_bin_record(w: &mut dsl::ByteWriter, rec: &CsvRecord) {
     w.write_varint_u64(rec.fields.len() as u64);
     for f in &rec.fields {
         write_bin_field(w, f);
     }
 }
-pub(crate) fn read_bin_record(r: &mut dsl::ByteReader<'_>) -> Result<CsvRecord, dsl::PackError> {
+pub(crate) async fn read_bin_record(r: &mut dsl::ByteReader<'_>) -> Result<CsvRecord, dsl::PackError> {
     let n = r.read_varint_u64()? as usize;
     let mut fields = Vec::with_capacity(n);
     for _ in 0..n {
@@ -214,7 +214,7 @@ pub(crate) fn read_bin_record(r: &mut dsl::ByteReader<'_>) -> Result<CsvRecord, 
     }
     Ok(CsvRecord { fields })
 }
-fn write_bin_snapshot(w: &mut dsl::ByteWriter, s: &CsvSnapshot) {
+async fn write_bin_snapshot(w: &mut dsl::ByteWriter, s: &CsvSnapshot) {
     write_bin_str(w, &s.schema);
     w.write_u8(if s.has_header { 1 } else { 0 });
     w.write_varint_u64(s.records.len() as u64);
@@ -222,7 +222,7 @@ fn write_bin_snapshot(w: &mut dsl::ByteWriter, s: &CsvSnapshot) {
         write_bin_record(w, r);
     }
 }
-fn read_bin_snapshot(r: &mut dsl::ByteReader<'_>) -> Result<CsvSnapshot, dsl::PackError> {
+async fn read_bin_snapshot(r: &mut dsl::ByteReader<'_>) -> Result<CsvSnapshot, dsl::PackError> {
     let schema = read_bin_str(r)?;
     let has_header = r.read_u8()? != 0;
     let n = r.read_varint_u64()? as usize;
@@ -232,12 +232,12 @@ fn read_bin_snapshot(r: &mut dsl::ByteReader<'_>) -> Result<CsvSnapshot, dsl::Pa
     }
     Ok(CsvSnapshot { schema, has_header, records })
 }
-fn op_pack_err(e: dsl::PackError) -> protocol::ProtocolError {
+async fn op_pack_err(e: dsl::PackError) -> protocol::ProtocolError {
     protocol::ProtocolError::Malformed { what: "csv op binary", offset: 0, detail: e.to_string() }
 }
 
 impl OpBinary for CsvMutation {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         let mut w = dsl::ByteWriter::new();
         match self {
             CsvMutation::NoMutation => {
@@ -270,7 +270,7 @@ impl OpBinary for CsvMutation {
         }
         Ok(w.into_bytes())
     }
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         let mut r = dsl::ByteReader::new(bytes);
         let ordinal = r.read_u8().map_err(op_pack_err)?;
         let mutation = match ordinal {
@@ -308,13 +308,13 @@ mod tests {
     use protocol::command::DiffAlgebra;
 
     //#region 🔖️Fixtures
-    fn field(value: &str, quoted: bool) -> CsvField {
+    async fn field(value: &str, quoted: bool) -> CsvField {
         CsvField { value: value.into(), quoted }
     }
-    fn record(fields: &[(&str, bool)]) -> CsvRecord {
+    async fn record(fields: &[(&str, bool)]) -> CsvRecord {
         CsvRecord { fields: fields.iter().map(|(v, q)| field(v, *q)).collect() }
     }
-    fn base_snapshot() -> CsvSnapshot {
+    async fn base_snapshot() -> CsvSnapshot {
         CsvSnapshot { schema: "stdio.csv".into(), has_header: true, records: vec![record(&[("name", false), ("note", true)]), record(&[("a", false), ("b", false)]), record(&[("x", false), ("y", false)])] }
     }
     //#endregion 🔖️Fixtures
@@ -323,20 +323,20 @@ mod tests {
     /// 🧬️ Canonical "differs in every mutable field" snapshot A: 3 records — one that will
     /// be removed, one that will be modified in every field, one untouched (so `sweep_b`'s
     /// added record has something stable to anchor its own index against).
-    fn sweep_a() -> CsvSnapshot {
+    async fn sweep_a() -> CsvSnapshot {
         CsvSnapshot { schema: "stdio.csv".into(), has_header: true, records: vec![record(&[("gone", false), ("also-gone", true)]), record(&[("old-a", false), ("old-b", true)]), record(&[("stable", false)])] }
     }
     /// 🧬️ Sweep B: `has_header` flips, record 0 is removed, record 1 (now index 0) is
     /// modified in every field (value AND quoted), record 2 (now index 1) is untouched, and
     /// a brand-new record is added at the end.
-    fn sweep_b() -> CsvSnapshot {
+    async fn sweep_b() -> CsvSnapshot {
         CsvSnapshot { schema: "stdio.csv".into(), has_header: false, records: vec![record(&[("new-a", true), ("new-b", false)]), record(&[("stable", false)]), record(&[("brand-new", true)])] }
     }
     //#endregion 🔖️FieldSweepFixtures
 
     //#region 🔖️MutationDiffLaw
     #[test]
-    fn mutation_diff_law() {
+    async fn mutation_diff_law() {
         let base = base_snapshot();
         let variants = vec![
             CsvMutation::NoMutation,
@@ -361,7 +361,7 @@ mod tests {
 
     //#region 🔖️InverseLaw
     #[test]
-    fn inverse_law() {
+    async fn inverse_law() {
         let base = base_snapshot();
         let variants = vec![
             CsvMutation::NoMutation,
@@ -391,7 +391,7 @@ mod tests {
 
     //#region 🔖️AbsorbLaw
     #[test]
-    fn absorb_law() {
+    async fn absorb_law() {
         let base = base_snapshot();
 
         // 🧩 Insert(2) + Remove(0): the two-op sequence base → mid → after.
@@ -458,7 +458,7 @@ mod tests {
 
     //#region 🔖️BetweenRoundtripLaw
     #[test]
-    fn between_roundtrip_law() {
+    async fn between_roundtrip_law() {
         let a = base_snapshot();
         let b = sweep_b();
         assert_eq!(CsvDiff::between(&a, &b).apply(&a).unwrap(), b);
@@ -476,7 +476,7 @@ mod tests {
 
     //#region 🔖️FieldSweep
     #[test]
-    fn field_sweep_every_mutable_field_changes() {
+    async fn field_sweep_every_mutable_field_changes() {
         let a = sweep_a();
         let b = sweep_b();
 
@@ -509,7 +509,7 @@ mod tests {
     /// grammar's own reserved separator characters (`,`/`[`/`]`/space) to prove hex-encoding
     /// sidesteps escaping entirely.
     #[test]
-    fn op_text_binary_roundtrip_law() {
+    async fn op_text_binary_roundtrip_law() {
         let mutations = vec![
             CsvMutation::NoMutation,
             CsvMutation::SetSnapshot { snapshot: sweep_b() },
@@ -539,7 +539,7 @@ mod tests {
     /// output for several real mutations (not just one trivial case), incl. `SetSnapshot`'s own
     /// nested positional-tuple `snapshot-value` production.
     #[test]
-    fn ops_grammar_conformance_law() {
+    async fn ops_grammar_conformance_law() {
         let grammar_text = crate::artifacts::csv::schema::mutations::text::COMPONENT_GRAMMAR_SEMIO;
         let grammar = dsl::parse_grammar(grammar_text).expect("parse mutations grammar");
         let recognizer = dsl::Recognizer::compile(&grammar);

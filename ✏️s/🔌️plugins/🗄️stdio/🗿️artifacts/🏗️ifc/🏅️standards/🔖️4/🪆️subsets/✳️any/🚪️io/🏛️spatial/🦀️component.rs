@@ -28,17 +28,17 @@ pub struct SpatialNode {
 pub struct Mat4(pub [[f64; 4]; 4]);
 
 impl Default for Mat4 {
-    fn default() -> Self {
+    async fn default() -> Self {
         Mat4::identity()
     }
 }
 
 impl Mat4 {
-    pub fn identity() -> Self {
+    pub async fn identity() -> Self {
         Mat4([[1.0, 0.0, 0.0, 0.0], [0.0, 1.0, 0.0, 0.0], [0.0, 0.0, 1.0, 0.0], [0.0, 0.0, 0.0, 1.0]])
     }
     /// ✖️ `self * other` (self applied after other — i.e. `self` is the outer/parent transform).
-    pub fn mul(&self, other: &Mat4) -> Mat4 {
+    pub async fn mul(&self, other: &Mat4) -> Mat4 {
         let (a, b) = (&self.0, &other.0);
         let mut out = [[0.0; 4]; 4];
         for i in 0..4 {
@@ -48,7 +48,7 @@ impl Mat4 {
         }
         Mat4(out)
     }
-    pub fn transform_point(&self, p: [f64; 3]) -> [f64; 3] {
+    pub async fn transform_point(&self, p: [f64; 3]) -> [f64; 3] {
         let m = &self.0;
         [m[0][0] * p[0] + m[0][1] * p[1] + m[0][2] * p[2] + m[0][3], m[1][0] * p[0] + m[1][1] * p[1] + m[1][2] * p[2] + m[1][3], m[2][0] * p[0] + m[2][1] * p[1] + m[2][2] * p[2] + m[2][3]]
     }
@@ -82,13 +82,13 @@ pub struct SpatialAnalysis {
 //#endregion 🔖️Model
 
 //#region 🔖️ArgHelpers
-fn arg_ref(args: &[Part21Value], idx: usize) -> Option<u64> {
+async fn arg_ref(args: &[Part21Value], idx: usize) -> Option<u64> {
     args.get(idx).and_then(Part21Value::as_ref_id)
 }
-fn arg_refs(args: &[Part21Value], idx: usize) -> Vec<u64> {
+async fn arg_refs(args: &[Part21Value], idx: usize) -> Vec<u64> {
     args.get(idx).and_then(Part21Value::as_list).map(|items| items.iter().filter_map(Part21Value::as_ref_id).collect()).unwrap_or_default()
 }
-fn arg_str(args: &[Part21Value], idx: usize) -> Option<String> {
+async fn arg_str(args: &[Part21Value], idx: usize) -> Option<String> {
     args.get(idx).and_then(Part21Value::as_str).map(str::to_string)
 }
 //#endregion 🔖️ArgHelpers
@@ -96,7 +96,7 @@ fn arg_str(args: &[Part21Value], idx: usize) -> Option<String> {
 //#region 🔖️SpatialTree
 /// 🔗️ Builds parent->children edges from both relationship kinds — `IfcRelAggregates`
 /// (project→site→building→storey) and `IfcRelContainedInSpatialStructure` (storey→elements).
-fn collect_children(doc: &Part21Document) -> HashMap<u64, Vec<u64>> {
+async fn collect_children(doc: &Part21Document) -> HashMap<u64, Vec<u64>> {
     let mut children: HashMap<u64, Vec<u64>> = HashMap::new();
     for rel in doc.by_type("IFCRELAGGREGATES") {
         if let Some(args) = rel.entity("IFCRELAGGREGATES") {
@@ -118,7 +118,7 @@ fn collect_children(doc: &Part21Document) -> HashMap<u64, Vec<u64>> {
 /// 🌳️ Recursively builds a `SpatialNode` — `IfcRoot`'s `Name` is always attribute index 2 and
 /// `IfcProduct`'s `ObjectPlacement` is always index 5, regardless of which concrete entity type
 /// (both are supertype attributes declared before any subtype-specific ones).
-fn build_node(doc: &Part21Document, id: u64, children_map: &HashMap<u64, Vec<u64>>, seen: &mut HashSet<u64>) -> Option<SpatialNode> {
+async fn build_node(doc: &Part21Document, id: u64, children_map: &HashMap<u64, Vec<u64>>, seen: &mut HashSet<u64>) -> Option<SpatialNode> {
     if !seen.insert(id) {
         return None; // cycle guard: never revisit the same instance
     }
@@ -132,34 +132,34 @@ fn build_node(doc: &Part21Document, id: u64, children_map: &HashMap<u64, Vec<u64
 //#endregion 🔖️SpatialTree
 
 //#region 🔖️Placements
-fn cartesian_point(doc: &Part21Document, id: u64) -> Option<[f64; 3]> {
+async fn cartesian_point(doc: &Part21Document, id: u64) -> Option<[f64; 3]> {
     let args = doc.instance(id)?.entity("IFCCARTESIANPOINT")?;
     let coords = args.first()?.as_list()?;
     Some([coords.first().and_then(Part21Value::as_real).unwrap_or(0.0), coords.get(1).and_then(Part21Value::as_real).unwrap_or(0.0), coords.get(2).and_then(Part21Value::as_real).unwrap_or(0.0)])
 }
 
-fn direction(doc: &Part21Document, id: u64) -> Option<[f64; 3]> {
+async fn direction(doc: &Part21Document, id: u64) -> Option<[f64; 3]> {
     let args = doc.instance(id)?.entity("IFCDIRECTION")?;
     let r = args.first()?.as_list()?;
     Some([r.first().and_then(Part21Value::as_real).unwrap_or(0.0), r.get(1).and_then(Part21Value::as_real).unwrap_or(0.0), r.get(2).and_then(Part21Value::as_real).unwrap_or(0.0)])
 }
 
-fn sub3(a: [f64; 3], b: [f64; 3]) -> [f64; 3] {
+async fn sub3(a: [f64; 3], b: [f64; 3]) -> [f64; 3] {
     [a[0] - b[0], a[1] - b[1], a[2] - b[2]]
 }
-fn dot3(a: [f64; 3], b: [f64; 3]) -> f64 {
+async fn dot3(a: [f64; 3], b: [f64; 3]) -> f64 {
     a[0] * b[0] + a[1] * b[1] + a[2] * b[2]
 }
-fn cross3(a: [f64; 3], b: [f64; 3]) -> [f64; 3] {
+async fn cross3(a: [f64; 3], b: [f64; 3]) -> [f64; 3] {
     [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]]
 }
-fn scale3(a: [f64; 3], s: f64) -> [f64; 3] {
+async fn scale3(a: [f64; 3], s: f64) -> [f64; 3] {
     [a[0] * s, a[1] * s, a[2] * s]
 }
-fn norm3(a: [f64; 3]) -> f64 {
+async fn norm3(a: [f64; 3]) -> f64 {
     dot3(a, a).sqrt()
 }
-fn normalize3(a: [f64; 3]) -> [f64; 3] {
+async fn normalize3(a: [f64; 3]) -> [f64; 3] {
     let n = norm3(a);
     if n < 1e-12 {
         a
@@ -170,7 +170,7 @@ fn normalize3(a: [f64; 3]) -> [f64; 3] {
 
 /// 🧭️ Builds a local transform from an `IfcAxis2Placement3D` (Location + optional Axis=local Z,
 /// RefDirection=local X hint) via Gram-Schmidt, matching the pre-verified scratch algorithm.
-fn build_axis2placement(location: [f64; 3], axis_z: Option<[f64; 3]>, ref_x: Option<[f64; 3]>) -> Mat4 {
+async fn build_axis2placement(location: [f64; 3], axis_z: Option<[f64; 3]>, ref_x: Option<[f64; 3]>) -> Mat4 {
     let z = normalize3(axis_z.unwrap_or([0.0, 0.0, 1.0]));
     let x_hint = ref_x.unwrap_or([1.0, 0.0, 0.0]);
     let x_proj = sub3(x_hint, scale3(z, dot3(x_hint, z)));
@@ -184,7 +184,7 @@ fn build_axis2placement(location: [f64; 3], axis_z: Option<[f64; 3]>, ref_x: Opt
     Mat4([[x[0], y[0], z[0], location[0]], [x[1], y[1], z[1], location[1]], [x[2], y[2], z[2], location[2]], [0.0, 0.0, 0.0, 1.0]])
 }
 
-fn axis2placement3d_matrix(doc: &Part21Document, id: u64) -> Option<Mat4> {
+async fn axis2placement3d_matrix(doc: &Part21Document, id: u64) -> Option<Mat4> {
     let args = doc.instance(id)?.entity("IFCAXIS2PLACEMENT3D")?;
     let location = cartesian_point(doc, arg_ref(args, 0)?)?;
     let axis_z = arg_ref(args, 1).and_then(|r| direction(doc, r));
@@ -192,7 +192,7 @@ fn axis2placement3d_matrix(doc: &Part21Document, id: u64) -> Option<Mat4> {
     Some(build_axis2placement(location, axis_z, ref_x))
 }
 
-fn resolve_placement(doc: &Part21Document, id: u64, memo: &mut HashMap<u64, Mat4>, visiting: &mut Vec<u64>, issues: &mut Vec<String>) -> Mat4 {
+async fn resolve_placement(doc: &Part21Document, id: u64, memo: &mut HashMap<u64, Mat4>, visiting: &mut Vec<u64>, issues: &mut Vec<String>) -> Mat4 {
     if let Some(m) = memo.get(&id) {
         return m.clone();
     }
@@ -209,7 +209,7 @@ fn resolve_placement(doc: &Part21Document, id: u64, memo: &mut HashMap<u64, Mat4
 
 /// ➡️ `world = parent_world * local` — parent transforms local's coordinate frame (proven the
 /// correct order, not `local * parent`, by the standalone scratch binary's order-discriminator case).
-fn resolve_placement_inner(doc: &Part21Document, id: u64, memo: &mut HashMap<u64, Mat4>, visiting: &mut Vec<u64>, issues: &mut Vec<String>) -> Mat4 {
+async fn resolve_placement_inner(doc: &Part21Document, id: u64, memo: &mut HashMap<u64, Mat4>, visiting: &mut Vec<u64>, issues: &mut Vec<String>) -> Mat4 {
     let Some(inst) = doc.instance(id) else {
         issues.push(format!("missing instance #{id}"));
         return Mat4::identity();
@@ -234,7 +234,7 @@ fn resolve_placement_inner(doc: &Part21Document, id: u64, memo: &mut HashMap<u64
     parent.mul(&local)
 }
 
-fn compute_all_placements(doc: &Part21Document) -> (HashMap<u64, Mat4>, Vec<String>) {
+async fn compute_all_placements(doc: &Part21Document) -> (HashMap<u64, Mat4>, Vec<String>) {
     let mut memo = HashMap::new();
     let mut visiting = Vec::new();
     let mut issues = Vec::new();
@@ -246,21 +246,21 @@ fn compute_all_placements(doc: &Part21Document) -> (HashMap<u64, Mat4>, Vec<Stri
 //#endregion 🔖️Placements
 
 //#region 🔖️PropertySets
-fn single_value_property(doc: &Part21Document, id: u64) -> Option<PropertyValue> {
+async fn single_value_property(doc: &Part21Document, id: u64) -> Option<PropertyValue> {
     let args = doc.instance(id)?.entity("IFCPROPERTYSINGLEVALUE")?;
     let name = arg_str(args, 0)?;
     let value = args.get(2)?.clone();
     Some(PropertyValue { name, value })
 }
 
-fn property_set(doc: &Part21Document, id: u64) -> Option<PropertySet> {
+async fn property_set(doc: &Part21Document, id: u64) -> Option<PropertySet> {
     let args = doc.instance(id)?.entity("IFCPROPERTYSET")?;
     let name = arg_str(args, 2).unwrap_or_default();
     let properties = arg_refs(args, 4).into_iter().filter_map(|pid| single_value_property(doc, pid)).collect();
     Some(PropertySet { id, name, properties })
 }
 
-fn compute_property_sets(doc: &Part21Document) -> HashMap<u64, Vec<PropertySet>> {
+async fn compute_property_sets(doc: &Part21Document) -> HashMap<u64, Vec<PropertySet>> {
     let mut out: HashMap<u64, Vec<PropertySet>> = HashMap::new();
     for rel in doc.by_type("IFCRELDEFINESBYPROPERTIES") {
         let Some(args) = rel.entity("IFCRELDEFINESBYPROPERTIES") else { continue };
@@ -275,7 +275,7 @@ fn compute_property_sets(doc: &Part21Document) -> HashMap<u64, Vec<PropertySet>>
 
 //#region 🔖️Analyze
 /// 🧐️ Full spatial-structure + placement + property-set analysis of an IFC4 document.
-pub fn analyze_spatial(doc: &Part21Document) -> SpatialAnalysis {
+pub async fn analyze_spatial(doc: &Part21Document) -> SpatialAnalysis {
     let children_map = collect_children(doc);
     let mut seen = HashSet::new();
     let roots: Vec<SpatialNode> = doc.by_type("IFCPROJECT").filter_map(|p| build_node(doc, p.id, &children_map, &mut seen)).collect();
@@ -296,12 +296,12 @@ mod tests {
 
     const FIXTURE: &str = "ISO-10303-21;\nHEADER;\nFILE_DESCRIPTION((''),'2;1');\nFILE_NAME('semio.ifc','2026-08-10T00:00:00',('Ueli'),('semio'),'semio','','');\nFILE_SCHEMA(('IFC4'));\nENDSEC;\nDATA;\n#1=IFCPROJECT('gid-project',#2,'Demo Project',$,$,$,$,(#10),#11);\n#2=IFCOWNERHISTORY($,$,$,$,$,$,$,0);\n#10=IFCGEOMETRICREPRESENTATIONCONTEXT($,'Model',3,1.E-05,#40,$);\n#40=IFCAXIS2PLACEMENT3D(#42,$,$);\n#42=IFCCARTESIANPOINT((0.,0.,0.));\n#11=IFCUNITASSIGNMENT((#41));\n#41=IFCSIUNIT(*,.LENGTHUNIT.,$,.METRE.);\n#3=IFCSITE('gid-site',#2,'Demo Site',$,$,#50,$,$,.ELEMENT.,$,$,$,$,$);\n#50=IFCLOCALPLACEMENT($,#51);\n#51=IFCAXIS2PLACEMENT3D(#42,$,$);\n#4=IFCBUILDING('gid-building',#2,'Demo Building',$,$,#60,$,$,.ELEMENT.,$,$,$);\n#60=IFCLOCALPLACEMENT(#50,#61);\n#61=IFCAXIS2PLACEMENT3D(#62,$,$);\n#62=IFCCARTESIANPOINT((0.,0.,10.));\n#5=IFCBUILDINGSTOREY('gid-storey',#2,'Ground Floor',$,$,#70,$,$,.ELEMENT.,3.);\n#70=IFCLOCALPLACEMENT(#60,#71);\n#71=IFCAXIS2PLACEMENT3D(#72,$,$);\n#72=IFCCARTESIANPOINT((0.,0.,0.));\n#6=IFCWALL('gid-wall',#2,'Wall-01',$,$,#80,$,$,$);\n#80=IFCLOCALPLACEMENT(#70,#81);\n#81=IFCAXIS2PLACEMENT3D(#82,$,$);\n#82=IFCCARTESIANPOINT((1.,2.,0.));\n#100=IFCRELAGGREGATES('agg-1',#2,$,$,#1,(#3));\n#101=IFCRELAGGREGATES('agg-2',#2,$,$,#3,(#4));\n#102=IFCRELAGGREGATES('agg-3',#2,$,$,#4,(#5));\n#103=IFCRELCONTAINEDINSPATIALSTRUCTURE('cont-1',#2,$,$,(#6),#5);\n#200=IFCPROPERTYSET('pset-1',#2,'Pset_WallCommon',$,(#201));\n#201=IFCPROPERTYSINGLEVALUE('IsExternal',$,IFCBOOLEAN(.T.),$);\n#202=IFCRELDEFINESBYPROPERTIES('rel-1',#2,$,$,(#6),#200);\nENDSEC;\nEND-ISO-10303-21;\n";
 
-    fn fixture_doc() -> Part21Document {
+    async fn fixture_doc() -> Part21Document {
         parse_part21(FIXTURE).expect("parse ifc fixture")
     }
 
     #[test]
-    fn spatial_hierarchy_matches_real_chain() {
+    async fn spatial_hierarchy_matches_real_chain() {
         let doc = fixture_doc();
         let analysis = analyze_spatial(&doc);
         assert!(analysis.issues.is_empty(), "unexpected issues: {:?}", analysis.issues);
@@ -321,7 +321,7 @@ mod tests {
     }
 
     #[test]
-    fn placement_matrix_composes_across_four_levels() {
+    async fn placement_matrix_composes_across_four_levels() {
         let doc = fixture_doc();
         let analysis = analyze_spatial(&doc);
         let wall_placement_id = analysis.roots[0].children[0].children[0].children[0].children[0].object_placement.expect("wall placement");
@@ -334,7 +334,7 @@ mod tests {
     }
 
     #[test]
-    fn property_set_attached_to_wall() {
+    async fn property_set_attached_to_wall() {
         let doc = fixture_doc();
         let analysis = analyze_spatial(&doc);
         let psets = analysis.property_sets.get(&6).expect("wall property sets");
@@ -348,7 +348,7 @@ mod tests {
     }
 
     #[test]
-    fn cyclic_placement_is_flagged_not_infinite_loop() {
+    async fn cyclic_placement_is_flagged_not_infinite_loop() {
         let cyclic = "ISO-10303-21;\nHEADER;\nFILE_DESCRIPTION((''),'2;1');\nFILE_NAME('','',(''),(''),'','','');\nFILE_SCHEMA(('IFC4'));\nENDSEC;\nDATA;\n#1=IFCLOCALPLACEMENT(#2,#3);\n#2=IFCLOCALPLACEMENT(#1,#3);\n#3=IFCAXIS2PLACEMENT3D(#4,$,$);\n#4=IFCCARTESIANPOINT((0.,0.,0.));\nENDSEC;\nEND-ISO-10303-21;\n";
         let doc = parse_part21(cyclic).expect("parse cyclic fixture");
         let analysis = analyze_spatial(&doc);

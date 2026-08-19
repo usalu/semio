@@ -10,7 +10,7 @@ pub const PROCEDURAL_3D_PLAY_BODY_CATALOGUE: &str = "procedural.play.catalogue";
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
-pub fn definition() -> PanelTabDefinition {
+pub async fn definition() -> PanelTabDefinition {
     PanelTabDefinition {
         kind: PanelTabKind::App(FRAMEWORK_PANEL_TAB_CATALOGUE_ID.into()),
         label: LocalizedLabel::native(FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, "Katalog"),
@@ -21,11 +21,11 @@ pub fn definition() -> PanelTabDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-fn tree_item_with_icon(id: impl Into<String>, label: impl Into<semio_framework_plugin::Label>, icon_id: Option<&str>, action: semio_framework_plugin::ActionDescriptor) -> UiTreeItemNode {
+async fn tree_item_with_icon(id: impl Into<String>, label: impl Into<semio_framework_plugin::Label>, icon_id: Option<&str>, action: semio_framework_plugin::ActionDescriptor) -> UiTreeItemNode {
     UiTreeItemNode { icon_id: icon_id.map(Into::into), menu: None, ..tree_item_with_action(id, label, None, action) }
 }
 
-pub fn render(labels: &Procedural3dLabels) -> UiNode {
+pub async fn render(labels: &Procedural3dLabels) -> UiNode {
     let sections = flow::flow_palette_catalogue_sections();
     let items: Vec<UiTreeItemNode> = sections
         .iter()
@@ -48,7 +48,7 @@ mod tests {
     use crate::editor::procedural3d::testkit::{app, render as render_body};
 
     #[test]
-    fn procedural3d_labels_resolve_native_english_by_default() {
+    async fn procedural3d_labels_resolve_native_english_by_default() {
         let _serial = crate::editor::procedural3d::test_support::lock();
         let mut app = app();
         let json = render_body(&mut app, PROCEDURAL_3D_PLAY_BODY_CATALOGUE);

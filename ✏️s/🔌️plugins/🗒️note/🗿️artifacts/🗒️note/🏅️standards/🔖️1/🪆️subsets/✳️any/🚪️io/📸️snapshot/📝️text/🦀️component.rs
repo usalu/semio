@@ -13,12 +13,12 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 pub const SEMIO_NOTE_EXAMPLE_TEXT: &str = include_str!("../../../📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio");
 
 /// 📖️ Parses `.note` DSL text into a `NoteSnapshot`.
-pub fn parse_dsl(text: &str) -> Result<NoteSnapshot, store::TextError> {
+pub async fn parse_dsl(text: &str) -> Result<NoteSnapshot, store::TextError> {
     <NoteSnapshot as store::ArtifactDsl>::parse_dsl(text)
 }
 
 /// 🖨️ Prints a `NoteSnapshot` back to `.note` DSL text.
-pub fn print_dsl(document: &NoteSnapshot) -> String {
+pub async fn print_dsl(document: &NoteSnapshot) -> String {
     store::ArtifactDsl::print_dsl(document)
 }
 
@@ -30,13 +30,13 @@ mod tests {
     use std::collections::BTreeMap;
 
     #[test]
-    fn semio_example_dsl_round_trips() {
+    async fn semio_example_dsl_round_trips() {
         let document = parse_dsl(SEMIO_NOTE_EXAMPLE_TEXT).expect("parse semio example");
         store::os_store::test_support::assert_dsl_round_trip(&document);
     }
 
     #[test]
-    fn note_dsl_round_trips_representative_document() {
+    async fn note_dsl_round_trips_representative_document() {
         let mut assets = BTreeMap::new();
         assets.insert("asset-1".into(), NoteImageAsset { mime: "image/png".into(), data: "data:image/png;base64,abc==".into(), width: Some(10.0), height: Some(20.0) });
         let document = NoteSnapshot {
@@ -144,7 +144,7 @@ mod semio_grammar_conformance {
     use super::*;
 
     #[test]
-    fn component_grammar_semio_is_grammar_dialect() {
+    async fn component_grammar_semio_is_grammar_dialect() {
         let g = ::dsl::parse_grammar(COMPONENT_GRAMMAR_SEMIO).expect("parse grammar.semio");
         assert_eq!(g.dialect, ::dsl::SemioDialect::Grammar);
         assert!(!COMPONENT_GRAMMAR_SEMIO.is_empty());

@@ -5,7 +5,7 @@ use crate::artifacts::en1998::mutations::change_en_spectrum_type::mutation::Chan
 use crate::artifacts::en1998::En1998Snapshot;
 
 //#region 🔖️Diff
-pub fn diff(payload: &ChangeEnSpectrumType, base: &En1998Snapshot) -> protocol::MutationOutcome<En1998Diff> {
+pub async fn diff(payload: &ChangeEnSpectrumType, base: &En1998Snapshot) -> protocol::MutationOutcome<En1998Diff> {
     if base.en_spectrum_type == payload.new_en_spectrum_type {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("EN spectrum type is already \"{}\".", payload.new_en_spectrum_type));
     }

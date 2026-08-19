@@ -7,7 +7,7 @@ use crate::artifacts::lowpoly::diff::diff_objects_patch;
 use crate::artifacts::lowpoly::{LowpolyDiff, LowpolyObjectPatch, LowpolySnapshot};
 
 //#region 🔖️Diff
-pub fn diff(payload: &RenameObject, base: &LowpolySnapshot) -> protocol::MutationOutcome<LowpolyDiff> {
+pub async fn diff(payload: &RenameObject, base: &LowpolySnapshot) -> protocol::MutationOutcome<LowpolyDiff> {
     let Some(existing) = base.objects.iter().find(|object| object.id == payload.id) else {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Object \"{}\" does not exist.", payload.id), [payload.id.clone()]);
     };

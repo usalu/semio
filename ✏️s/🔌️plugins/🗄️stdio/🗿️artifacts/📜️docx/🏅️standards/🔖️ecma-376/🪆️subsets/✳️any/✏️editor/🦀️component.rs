@@ -28,11 +28,11 @@ pub enum DocxEditorCommand {
 }
 
 impl protocol::OpText for DocxEditorCommand {
-    fn print_op(&self) -> String {
+    async fn print_op(&self) -> String {
         let DocxEditorCommand::SetPage { index, text } = self;
         format!("set-page index={index} text={}", text.replace('\\', "\\\\").replace('\n', "\\n").replace(' ', "\\s"))
     }
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
+    async fn parse_op(line: &str) -> Result<Self, store::TextError> {
         let rest = line.strip_prefix("set-page ").ok_or_else(|| store::TextError::new(format!("docx editor command: unknown line {line:?}"), dsl::TextSpan::at(1, 1)))?;
         let mut index = None;
         let mut text = String::new();
@@ -51,10 +51,10 @@ impl protocol::OpText for DocxEditorCommand {
 }
 
 impl protocol::OpBinary for DocxEditorCommand {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         Ok(<Self as protocol::OpText>::print_op(self).into_bytes())
     }
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         let line = String::from_utf8(bytes.to_vec()).map_err(|error| protocol::ProtocolError::Malformed { what: "docx editor command utf8", offset: 0, detail: error.to_string() })?;
         <Self as protocol::OpText>::parse_op(&line).map_err(|error| protocol::ProtocolError::Malformed { what: "docx editor command", offset: 0, detail: error.to_string() })
     }
@@ -65,7 +65,7 @@ impl protocol::OpBinary for DocxEditorCommand {
 /// 🧮️ Pure `set-page` -> `DocxMutation` mapping, standalone so it is directly unit-testable
 /// without constructing a full `ArtifactView`. `None` covers both "index out of range" and "block
 /// at index is not a Paragraph" — both documented no-ops.
-fn build_set_page_mutation(snapshot: &DocxSnapshot, index: usize, text: &str) -> Option<DocxMutation> {
+async fn build_set_page_mutation(snapshot: &DocxSnapshot, index: usize, text: &str) -> Option<DocxMutation> {
     let DocxBlock::Paragraph(paragraph) = snapshot.document.body.get(index)? else { return None };
     let mut replacement = paragraph.clone();
     replacement.runs = vec![DocxRun { text: text.to_string(), ..Default::default() }];
@@ -94,7 +94,7 @@ impl ArtifactEditor for DocxEditor {
     const DIALECT: Dialect = DOCX_EDITOR_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = STDIO_DOCX_DOCUMENT_SCHEMA;
 
-    fn initial_snapshot() -> DocxSnapshot {
+    async fn initial_snapshot() -> DocxSnapshot {
         DocxSnapshot::default()
     }
 
@@ -105,7 +105,7 @@ impl ArtifactEditor for DocxEditor {
     /// `extra_paragraph_properties` are preserved unchanged. A `Table` block, or an out-of-range
     /// `index`, is a documented no-op (`Emit::default()`) — collapsing arbitrary text into a table's
     /// row/cell structure has no honest single-shot mapping, so this first pass does not attempt it.
-    fn handle(
+    async fn handle(
         command: &Self::Command,
         doc: &ArtifactView<'_, Self::Snapshot>,
         _cfg: &ConfigView<'_, Self::Config>,
@@ -121,7 +121,7 @@ impl ArtifactEditor for DocxEditor {
         }
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> UiNode {
+    async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> UiNode {
         match body_key {
             main::BODY_KEY => main::render(doc.snapshot),
             _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))),
@@ -131,7 +131,7 @@ impl ArtifactEditor for DocxEditor {
 //#endregion 🔖️Editor
 
 //#region 🔖️Manifest
-pub fn create_docx_editor() -> semio_framework_plugin::AppDefinition {
+pub async fn create_docx_editor() -> semio_framework_plugin::AppDefinition {
     Editor::builder(DOCX_EDITOR_DIALECT)
         .document(["semio", "stdio", "docx"])
         .icon_id("file-text")
@@ -149,25 +149,25 @@ mod tests {
     use super::*;
 
     #[test]
-    fn create_docx_editor_builds_a_definition_for_the_editor_role() {
+    async fn create_docx_editor_builds_a_definition_for_the_editor_role() {
         let def = create_docx_editor();
         assert_eq!(def.role, semio_framework_plugin::AppRole::Editor);
         assert_eq!(def.dialect, DOCX_EDITOR_DIALECT.into());
     }
 
     #[test]
-    fn editor_dialect_matches_the_artifact_coordinate() {
+    async fn editor_dialect_matches_the_artifact_coordinate() {
         assert_eq!(<DocxEditor as ArtifactEditor>::DIALECT, DOCX_EDITOR_DIALECT);
     }
 
     #[test]
-    fn editor_declares_the_document_window() {
+    async fn editor_declares_the_document_window() {
         let def = create_docx_editor();
         assert!(def.window_kinds.iter().any(|window| window.id == main::WINDOW_KIND_ID));
     }
 
     #[test]
-    fn set_page_replaces_a_paragraph_blocks_runs_with_a_single_plain_run() {
+    async fn set_page_replaces_a_paragraph_blocks_runs_with_a_single_plain_run() {
         let mut snapshot = DocxSnapshot::default();
         snapshot.document.body.push(DocxBlock::paragraph("hello"));
         let mutation = build_set_page_mutation(&snapshot, 0, "goodbye").expect("mutation");
@@ -179,14 +179,14 @@ mod tests {
     }
 
     #[test]
-    fn set_page_on_a_table_block_is_a_documented_no_op() {
+    async fn set_page_on_a_table_block_is_a_documented_no_op() {
         let mut snapshot = DocxSnapshot::default();
         snapshot.document.body.push(DocxBlock::Table(crate::artifacts::docx::schema::snapshot::DocxTable::default()));
         assert!(build_set_page_mutation(&snapshot, 0, "text").is_none());
     }
 
     #[test]
-    fn op_text_roundtrip() {
+    async fn op_text_roundtrip() {
         let command = DocxEditorCommand::SetPage { index: 2, text: "a\nmulti line value".into() };
         let printed = <DocxEditorCommand as protocol::OpText>::print_op(&command);
         let parsed = <DocxEditorCommand as protocol::OpText>::parse_op(&printed).expect("parse ok");

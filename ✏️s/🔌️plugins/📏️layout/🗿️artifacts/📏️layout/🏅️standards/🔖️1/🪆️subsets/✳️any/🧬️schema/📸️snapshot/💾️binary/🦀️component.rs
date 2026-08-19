@@ -12,12 +12,12 @@ use crate::artifacts::layout::LayoutSnapshot;
 use store::PackError;
 
 /// 📦️ Encodes a `LayoutSnapshot` to its binary pack form.
-pub fn encode(document: &LayoutSnapshot) -> Vec<u8> {
+pub async fn encode(document: &LayoutSnapshot) -> Vec<u8> {
     store::ArtifactPack::encode_pack(document)
 }
 
 /// 📖️ Decodes a `LayoutSnapshot` from its binary pack form.
-pub fn decode(bytes: &[u8]) -> Result<LayoutSnapshot, PackError> {
+pub async fn decode(bytes: &[u8]) -> Result<LayoutSnapshot, PackError> {
     <LayoutSnapshot as store::ArtifactPack>::decode_pack(bytes)
 }
 
@@ -29,7 +29,7 @@ mod tests {
     use crate::artifacts::layout::{CharacterStyle, Frame, GridSettings, Layer, LayoutBounds, Page, PageColumns, PageMargins, PageOverride, LAYOUT_DOCUMENT_SCHEMA};
 
     #[test]
-    fn pack_round_trips_and_agrees_with_dsl() {
+    async fn pack_round_trips_and_agrees_with_dsl() {
         let document = dsl::parse_dsl(dsl::LAYOUT_SAMPLE_TEXT).expect("parse sample layout fixture");
         store::os_store::test_support::assert_dsl_pack_equivalence(&document);
         let bytes = encode(&document);
@@ -37,7 +37,7 @@ mod tests {
     }
 
     #[test]
-    fn pack_round_trips_minimal_document_with_character_style() {
+    async fn pack_round_trips_minimal_document_with_character_style() {
         let document = LayoutSnapshot {
             schema: LAYOUT_DOCUMENT_SCHEMA.into(),
             name: "Empty".into(),
@@ -58,7 +58,7 @@ mod tests {
     }
 
     #[test]
-    fn pack_round_trips_overrides_frame_flags_and_absent_print_target() {
+    async fn pack_round_trips_overrides_frame_flags_and_absent_print_target() {
         let document = LayoutSnapshot {
             schema: LAYOUT_DOCUMENT_SCHEMA.into(),
             name: "Flags".into(),

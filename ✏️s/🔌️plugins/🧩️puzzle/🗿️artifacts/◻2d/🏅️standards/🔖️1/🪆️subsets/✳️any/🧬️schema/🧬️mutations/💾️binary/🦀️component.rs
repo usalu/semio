@@ -17,12 +17,12 @@ use protocol::OpBinary;
 use store::{ArtifactEnvelope, ArtifactStore};
 
 /// 📦️ Encodes a `Puzzle2dMutation` to its binary command form.
-pub fn encode_op(operation: &Puzzle2dMutation) -> Result<Vec<u8>, protocol::ProtocolError> {
+pub async fn encode_op(operation: &Puzzle2dMutation) -> Result<Vec<u8>, protocol::ProtocolError> {
     operation.encode_op()
 }
 
 /// 📖️ Decodes a `Puzzle2dMutation` from its binary command form.
-pub fn decode_op(bytes: &[u8]) -> Result<Puzzle2dMutation, protocol::ProtocolError> {
+pub async fn decode_op(bytes: &[u8]) -> Result<Puzzle2dMutation, protocol::ProtocolError> {
     Puzzle2dMutation::decode_op(bytes)
 }
 
@@ -37,7 +37,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn puzzle2d_document_vcs_replays_granular_operations() {
+    async fn puzzle2d_document_vcs_replays_granular_operations() {
         use crate::artifacts::puzzle2d::schema::empty_puzzle2d_snapshot;
         use crate::artifacts::puzzle2d::mutations::create_node;
         use crate::artifacts::puzzle2d::{Puzzle2dNode, PUZZLE_2D_SCHEMA};
@@ -71,7 +71,7 @@ mod wire_format_guard {
     use crate::artifacts::puzzle2d::Puzzle2dNode;
     use protocol::OpText;
 
-    fn ops() -> Vec<Puzzle2dMutation> {
+    async fn ops() -> Vec<Puzzle2dMutation> {
         let node = Puzzle2dNode { id: "n1".into(), node_kind: Some("Base".into()), shape: Some("circle".into()), x: 1.5, y: -2.25, radius: Some(3.0), text: Some("hi".into()), icon_kind: Some("base".into()), root: Some(true), scale: Some(2.0), visible: Some(true), locked: Some(false), ..Default::default() };
         vec![
             create_node(node, Some(0)),
@@ -85,7 +85,7 @@ mod wire_format_guard {
 
     /// ⚖️ Every operation still prints, parses, encodes, and decodes back to an equal value.
     #[test]
-    fn operations_round_trip_text_and_binary() {
+    async fn operations_round_trip_text_and_binary() {
         let operations = ops();
         assert!(!operations.is_empty());
         for operation in &operations {

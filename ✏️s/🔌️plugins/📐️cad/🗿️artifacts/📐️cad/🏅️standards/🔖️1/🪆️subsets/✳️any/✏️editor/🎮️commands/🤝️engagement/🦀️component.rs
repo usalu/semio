@@ -22,7 +22,7 @@ pub mod engagement_submit {
         pub pane: Option<String>,
     }
 
-    pub fn handle(payload: &EngagementSubmit, doc: &ArtifactView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx<'_>) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
+    pub async fn handle(payload: &EngagementSubmit, doc: &ArtifactView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx<'_>) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
         let mut runtime = runtime_of(cfg);
         let pane_id = payload.pane.as_deref().map_or(CadPaneId::Shape, cad_pane_id_from_suffix);
         let ops = engagement_submit_mutations(doc.snapshot, &mut runtime, pane_id);
@@ -44,7 +44,7 @@ pub mod engagement_input {
         pub pane: Option<String>,
     }
 
-    pub fn handle(payload: &EngagementInput, _doc: &ArtifactView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx<'_>) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
+    pub async fn handle(payload: &EngagementInput, _doc: &ArtifactView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx<'_>) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
         let mut runtime = runtime_of(cfg);
         runtime.engagement_input = payload.value.clone();
         runtime.engagement_pane = payload.pane.clone();
@@ -64,7 +64,7 @@ pub mod engagement_possible_select {
         pub possible_id: String,
     }
 
-    pub fn handle(payload: &EngagementPossibleSelect, _doc: &ArtifactView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx<'_>) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
+    pub async fn handle(payload: &EngagementPossibleSelect, _doc: &ArtifactView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx<'_>) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
         let mut runtime = runtime_of(cfg);
         let pane_id = payload.pane.as_deref().map_or(CadPaneId::Shape, cad_pane_id_from_suffix);
         let step = runtime.engagement_session.as_mut().and_then(|session| apply_event(session, &payload.possible_id, None).then(|| session.state.clone()));
@@ -88,7 +88,7 @@ pub mod engagement_repeat_last {
         pub pane: Option<String>,
     }
 
-    pub fn handle(payload: &EngagementRepeatLast, _doc: &ArtifactView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx<'_>) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
+    pub async fn handle(payload: &EngagementRepeatLast, _doc: &ArtifactView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx<'_>) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
         let mut runtime = runtime_of(cfg);
         let pane_id = payload.pane.as_deref().map_or(CadPaneId::Shape, cad_pane_id_from_suffix);
         if runtime.engagement_session.is_none() {
@@ -111,7 +111,7 @@ pub mod engagement_abort {
     #[dsl(keyword = "engagement-abort")]
     pub struct EngagementAbort {}
 
-    pub fn handle(_payload: &EngagementAbort, _doc: &ArtifactView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx<'_>) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
+    pub async fn handle(_payload: &EngagementAbort, _doc: &ArtifactView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx<'_>) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
         let mut runtime = runtime_of(cfg);
         runtime.engagement_input.clear();
         runtime.engagement_session = None;
@@ -135,7 +135,7 @@ pub mod world_pointer_down {
         pub z: Option<f64>,
     }
 
-    pub fn handle(payload: &WorldPointerDown, doc: &ArtifactView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx<'_>) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
+    pub async fn handle(payload: &WorldPointerDown, doc: &ArtifactView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx<'_>) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
         let document = doc.snapshot;
         let mut runtime = runtime_of(cfg);
         let pane_id = payload.pane.as_deref().map(cad_pane_id_from_suffix).or_else(|| payload.surface_id.as_deref().and_then(|surface_id| surface_id.rsplit('/').next()).map(cad_pane_id_from_suffix)).unwrap_or(CadPaneId::Shape);
@@ -168,7 +168,7 @@ pub mod world_pointer_move {
         pub z: Option<f64>,
     }
 
-    pub fn handle(payload: &WorldPointerMove, _doc: &ArtifactView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>, ctx: &mut CadDispatchCtx<'_>) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
+    pub async fn handle(payload: &WorldPointerMove, _doc: &ArtifactView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>, ctx: &mut CadDispatchCtx<'_>) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
         // Live rubber-band preview during an active engagement session: applies `pointer.move`
         // (updating the session's cursor/preview context) without ever committing an object or
         // touching VCS history — coalesced (`amend_config`) so a whole drag is one undo step.

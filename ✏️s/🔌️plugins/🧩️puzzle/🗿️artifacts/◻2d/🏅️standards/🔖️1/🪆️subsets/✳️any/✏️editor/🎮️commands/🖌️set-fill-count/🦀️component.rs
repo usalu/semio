@@ -6,7 +6,7 @@ use crate::editor::puzzle2d::{apply_brush_place_payload, Puzzle2dActionCtx};
 use semio_framework_plugin::kernel::Effect;
 use serde_json::Value;
 
-fn apply_fill_placements(ctx: &mut Puzzle2dActionCtx<'_>, step_json: &str) {
+async fn apply_fill_placements(ctx: &mut Puzzle2dActionCtx<'_>, step_json: &str) {
     let Ok(progress) = serde_json::from_str::<Value>(step_json) else {
         return;
     };
@@ -20,7 +20,7 @@ fn apply_fill_placements(ctx: &mut Puzzle2dActionCtx<'_>, step_json: &str) {
 
 /// 🪣️ The Fill tool's one-shot entry point: activates the tool, runs the whole session in one step
 /// and splices every placement into the fixture.
-pub fn set_fill_count(ctx: &mut Puzzle2dActionCtx<'_>, args: Option<&Value>) {
+pub async fn set_fill_count(ctx: &mut Puzzle2dActionCtx<'_>, args: Option<&Value>) {
     let count = args
         .and_then(|value| value.get("count").or_else(|| value.get("value")))
         .and_then(|value| value.as_f64())

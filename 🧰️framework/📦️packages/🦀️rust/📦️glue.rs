@@ -94,10 +94,13 @@ pub use io::{
     IoPayload, ErasedComposeSource, ComposedArtifact, ComposerEntry,
     IoDirection, IoKey, IoResolveError,
     register_composer_entries, register_composer_entry_refs, preflight_composer_entry_refs, resolve as io_resolve, dialects_for as io_dialects_for,
-    io_keys_for, list_composer_entries, io_dispatch, set_io_fallback_dispatcher, IoFallback, IoFallbackDispatcher,
+    io_keys_for, list_composer_entries, io_dispatch, io_compose_via, set_io_fallback_dispatcher, IoFallback, IoFallbackDispatcher,
     WireComposeSource, WireComposedArtifact, wire_list_composer_entries, wire_artifact_compose, wire_decode_composed_artifact,
     SubsetValidator, SubsetValidatorEntry, subset_validator_entry_of, register_subset_validator, register_subset_validators, preflight_subset_validators,
     FormatDescriptor, FormatRegistryError, register_format_descriptors, preflight_format_descriptors, format_descriptor, normalize_format_kind, format_accept_filter, formats_csv,
+    // 🌀️ `io-async-signatures`: the async `ComposerEntry.compose` plumbing — see that module's own
+    // doc comments (`ComposeFuture`/`AsyncComposeFn`/`resolve_ready`) for what each does.
+    ComposeFuture, AsyncComposeFn, resolve_ready,
 };
 pub use platform::{PanelVisibility, Platform, PlatformSpec};
 pub use workflow::*;

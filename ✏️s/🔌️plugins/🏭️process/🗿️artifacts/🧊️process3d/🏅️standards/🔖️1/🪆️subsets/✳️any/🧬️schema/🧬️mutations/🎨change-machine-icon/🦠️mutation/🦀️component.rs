@@ -16,19 +16,19 @@ pub struct ChangeMachineIcon {
 impl protocol::MutationKind<Process3dSnapshot, Process3dMutation> for ChangeMachineIcon {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "machine", kind: "change-machine-icon", record: "ChangedMachineIcon" };
 
-    fn diff(&self, base: &Process3dSnapshot) -> protocol::MutationOutcome<Process3dDiff> {
+    async fn diff(&self, base: &Process3dSnapshot) -> protocol::MutationOutcome<Process3dDiff> {
         crate::artifacts::process3d::mutations::change_machine_icon::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &Process3dSnapshot) -> Vec<Process3dMutation> {
+    async fn inverse(&self, base: &Process3dSnapshot) -> Vec<Process3dMutation> {
         crate::artifacts::process3d::mutations::change_machine_icon::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         format!("Change icon of machine \"{}\"", self.id)
     }
 
-    fn target(&self) -> Vec<String> {
+    async fn target(&self) -> Vec<String> {
         vec![self.id.clone()]
     }
 }

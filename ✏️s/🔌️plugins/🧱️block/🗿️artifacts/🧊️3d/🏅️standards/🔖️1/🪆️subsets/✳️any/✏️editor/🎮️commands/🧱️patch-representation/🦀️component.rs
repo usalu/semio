@@ -14,7 +14,7 @@ pub struct PatchRepresentation {
     pub value: String,
 }
 
-pub fn handle(payload: &PatchRepresentation, doc: &ArtifactView<'_, Block3dSnapshot>, _cfg: &ConfigView<'_, Block3dConfig>) -> Result<Emit<Block3dMutation, Block3dConfigMutation>, Fault> {
+pub async fn handle(payload: &PatchRepresentation, doc: &ArtifactView<'_, Block3dSnapshot>, _cfg: &ConfigView<'_, Block3dConfig>) -> Result<Emit<Block3dMutation, Block3dConfigMutation>, Fault> {
     if !doc.snapshot.representations.iter().any(|representation| representation.id == payload.id) {
         return Ok(Emit::default());
     }

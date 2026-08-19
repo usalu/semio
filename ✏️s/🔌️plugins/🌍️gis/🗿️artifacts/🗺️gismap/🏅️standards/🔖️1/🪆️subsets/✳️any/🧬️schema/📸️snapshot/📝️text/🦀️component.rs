@@ -14,12 +14,12 @@ use crate::artifacts::gismap::GisMapSnapshot;
 pub const REUSE_MAP_EXAMPLE_TEXT: &str = include_str!("../../../📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio");
 
 /// 📖️ Parses `.gismap` DSL text into a `GisMapSnapshot`.
-pub fn parse_dsl(text: &str) -> Result<GisMapSnapshot, store::TextError> {
+pub async fn parse_dsl(text: &str) -> Result<GisMapSnapshot, store::TextError> {
     <GisMapSnapshot as store::ArtifactDsl>::parse_dsl(text)
 }
 
 /// 🖨️ Prints a `GisMapSnapshot` back to `.gismap` DSL text.
-pub fn print_dsl(document: &GisMapSnapshot) -> String {
+pub async fn print_dsl(document: &GisMapSnapshot) -> String {
     store::ArtifactDsl::print_dsl(document)
 }
 
@@ -32,18 +32,18 @@ mod tests {
     use serde_json::json;
 
     #[test]
-    fn gis_map_document_dsl_round_trips_bundled_reuse_example() {
+    async fn gis_map_document_dsl_round_trips_bundled_reuse_example() {
         let document = parse_dsl(REUSE_MAP_EXAMPLE_TEXT).expect("parse reuse-map example");
         store::os_store::test_support::assert_dsl_round_trip(&document);
     }
 
     #[test]
-    fn gis_map_document_dsl_round_trips_empty_document() {
+    async fn gis_map_document_dsl_round_trips_empty_document() {
         store::os_store::test_support::assert_dsl_round_trip(&GisMapSnapshot::default());
     }
 
     #[test]
-    fn print_dsl_reproduces_the_bundled_example_text_verbatim() {
+    async fn print_dsl_reproduces_the_bundled_example_text_verbatim() {
         let document = parse_dsl(REUSE_MAP_EXAMPLE_TEXT).expect("parse reuse-map example");
         assert_eq!(parse_dsl(&print_dsl(&document)).expect("reparse"), document);
     }
@@ -56,7 +56,7 @@ mod tests {
     /// `PartialEq` even though it's the same number — an accepted engine characteristic, not a
     /// round-trip bug.
     #[test]
-    fn gis_map_document_dsl_round_trips_synthetic_value_shapes() {
+    async fn gis_map_document_dsl_round_trips_synthetic_value_shapes() {
         let dsl_of = |value: serde_json::Value| dsl::to_dsl_value(&value).unwrap_or(dsl::DslValue::Null);
         let document = GisMapSnapshot {
             positions: vec![MapFeature {

@@ -19,7 +19,7 @@ pub struct SetCamera {
     pub zoom: f64,
 }
 
-pub fn handle(payload: &SetCamera, _doc: &ArtifactView<'_, Fem2dSnapshot>, _cfg: &ConfigView<'_, Fem2dConfig>) -> Result<Emit<Fem2dMutation, Fem2dConfigMutation>, Fault> {
+pub async fn handle(payload: &SetCamera, _doc: &ArtifactView<'_, Fem2dSnapshot>, _cfg: &ConfigView<'_, Fem2dConfig>) -> Result<Emit<Fem2dMutation, Fem2dConfigMutation>, Fault> {
     Ok(Emit::config(vec![Fem2dConfigMutation::SetCamera { camera: FemCamera { x: payload.x, y: payload.y, zoom: payload.zoom } }]))
 }
 
@@ -31,7 +31,7 @@ mod tests {
     use crate::editor::fem2d::Fem2dCommand;
 
     #[test]
-    fn set_camera_action_writes_config_not_artifact_mutations() {
+    async fn set_camera_action_writes_config_not_artifact_mutations() {
         let mut app = fem2d_app();
         let before = app.snapshot().expect("snapshot");
         let result = dispatch(&mut app, Fem2dCommand::SetCamera(SetCamera { x: 1.0, y: 2.0, zoom: 1.5 }));

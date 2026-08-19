@@ -15,7 +15,7 @@ pub const BINARY_ARTIFACT_SCHEMA_ID: &str = "s.stdio.binary";
 
 //#region 🔖️ArtifactKind
 /// 🗂️ This artifact's `ArtifactKindSpec`.
-pub fn assembly(definition: semio_framework_plugin::ArtifactDefinition) -> Result<crate::registry::ArtifactAssembly, semio_framework_plugin::PluginAssemblyError> {
+pub async fn assembly(definition: semio_framework_plugin::ArtifactDefinition) -> Result<crate::registry::ArtifactAssembly, semio_framework_plugin::PluginAssemblyError> {
     crate::registry::definition_only_assembly("binary", definition)
 }
 
@@ -27,14 +27,14 @@ pub fn assembly(definition: semio_framework_plugin::ArtifactDefinition) -> Resul
 /// on for `📇️registry`'s catalog, kept per `assembly()` below); wiring them into this NEW field
 /// too is a follow-up, not required for the carrier law or for this tree to register cleanly
 /// (see `📓️w2-p-report.md` `## openQuestions`).
-pub fn artifact() -> semio_framework_plugin::app::declarations::ArtifactDeclaration {
+pub async fn artifact() -> semio_framework_plugin::app::declarations::ArtifactDeclaration {
     use semio_framework_plugin::app::declarations::ArtifactDeclaration;
     use store::os_io::ArtifactKindId;
     ArtifactDeclaration { kind: ArtifactKindId::parse("s.stdio.binary").expect("canonical stdio.binary kind"), localization: &[], standards: vec![crate::artifacts::binary::standards::v_raw::standard()] }
 }
 //#endregion 🔖️ArtifactDeclaration
 
-pub fn artifact_kind() -> ArtifactKindSpec {
+pub async fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "stdio.binary".into(),
         name: "Binary".into(),
@@ -60,18 +60,18 @@ pub mod io_registry {
     static ENTRIES: OnceLock<Vec<&'static ComposerEntry>> = OnceLock::new();
 
     /// 🎹️ Every composer entry this artifact can serve, across all its standards.
-    pub fn entries() -> &'static [&'static ComposerEntry] {
+    pub async fn entries() -> &'static [&'static ComposerEntry] {
         ENTRIES.get_or_init(|| v_raw::entries().iter().collect()).as_slice()
     }
 
     /// 🎯️ Compose into exactly one target dialect from a set of (possibly foreign-dialect) sources.
-    pub fn compose(target: Dialect, sources: &[ErasedComposeSource]) -> Result<ComposedArtifact, ComposeError> {
+    pub async fn compose(target: Dialect, sources: &[ErasedComposeSource]) -> Result<ComposedArtifact, ComposeError> {
         let entry = entries().iter().find(|e| e.writes == target).ok_or_else(|| ComposeError { message: format!("BinaryComposer: no entry writes {:?}", target), diagnostics: Vec::new() })?;
         semio_framework_plugin::resolve_ready((entry.compose)(sources))
     }
 
     /// 📌️ Registers every entry into the OS-wide typed io registry. Called once from `🔌️plugin/🔧️setup`.
-    pub fn register() {
+    pub async fn register() {
         let _ = register_composer_entries(v_raw::entries());
     }
 
@@ -84,7 +84,7 @@ pub mod io_registry {
         const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.binary", standard: StandardId("raw"), subset: SubsetId("*") };
 
         #[test]
-        fn compose_direct_round_trips_a_native_binary_payload() {
+        async fn compose_direct_round_trips_a_native_binary_payload() {
             let snapshot = crate::artifacts::binary::standards::v_raw::subsets::any::schema::empty_binary_snapshot();
             let bytes = store::ArtifactPack::encode_pack(&snapshot);
             let sources = [ErasedComposeSource { dialect: DIALECT, payload: IoPayload::Binary(bytes) }];
@@ -94,7 +94,7 @@ pub mod io_registry {
         }
 
         #[test]
-        fn register_then_resolve_through_the_typed_registry_finds_this_composer() {
+        async fn register_then_resolve_through_the_typed_registry_finds_this_composer() {
             register();
             let key = IoKey { artifact_kind: "s.stdio.binary".into(), standard: "raw".into(), subset: "*".into(), direction: IoDirection::Import, format_kind: "s.stdio.binary".into(), format_standard: "raw".into(), format_subset: "*".into() };
             let entry = io_resolve(&key).expect("resolve");

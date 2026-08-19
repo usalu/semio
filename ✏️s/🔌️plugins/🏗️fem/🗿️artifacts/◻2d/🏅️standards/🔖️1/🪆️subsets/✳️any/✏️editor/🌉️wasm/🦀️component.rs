@@ -16,7 +16,7 @@ mod wasm_bridge {
     #[wasm_bindgen]
     impl Fem2dSnapshotVcs {
         #[wasm_bindgen(constructor)]
-        pub fn new(envelope_json: Option<String>) -> Result<Fem2dSnapshotVcs, JsValue> {
+        pub async fn new(envelope_json: Option<String>) -> Result<Fem2dSnapshotVcs, JsValue> {
             let store = match envelope_json {
                 Some(json) => {
                     let envelope: Fem2dEnvelope = serde_json::from_str(&json).map_err(|e| JsValue::from_str(&e.to_string()))?;
@@ -28,27 +28,27 @@ mod wasm_bridge {
         }
 
         #[wasm_bindgen(js_name = dispatchText)]
-        pub fn dispatch_text(&self, command_text: &str) -> Result<(), JsValue> {
+        pub async fn dispatch_text(&self, command_text: &str) -> Result<(), JsValue> {
             self.store.borrow_mut().dispatch_text(command_text).map(|_| ()).map_err(|e| JsValue::from_str(&e.to_string()))
         }
 
         #[wasm_bindgen(js_name = dispatchBinary)]
-        pub fn dispatch_binary(&self, command_bytes: &[u8]) -> Result<(), JsValue> {
+        pub async fn dispatch_binary(&self, command_bytes: &[u8]) -> Result<(), JsValue> {
             self.store.borrow_mut().dispatch_binary(command_bytes).map(|_| ()).map_err(|e| JsValue::from_str(&e.to_string()))
         }
 
         #[wasm_bindgen(js_name = projectionJson)]
-        pub fn snapshot_json(&self) -> Result<String, JsValue> {
+        pub async fn snapshot_json(&self) -> Result<String, JsValue> {
             self.store.borrow().snapshot_json().map_err(|e| JsValue::from_str(&e.to_string()))
         }
 
         #[wasm_bindgen(js_name = envelopeJson)]
-        pub fn envelope_json(&self) -> Result<String, JsValue> {
+        pub async fn envelope_json(&self) -> Result<String, JsValue> {
             self.store.borrow().envelope_json().map_err(|e| JsValue::from_str(&e.to_string()))
         }
 
         #[wasm_bindgen(js_name = generation)]
-        pub fn generation(&self) -> u32 {
+        pub async fn generation(&self) -> u32 {
             self.store.borrow().generation() as u32
         }
     }
@@ -63,7 +63,7 @@ mod tests {
     /// under `target_arch = "wasm32"`, so this file's non-wasm32 half has nothing native-testable of its
     /// own beyond that shared coverage.
     #[test]
-    fn fem2d_store_type_alias_constructs_from_an_empty_envelope() {
+    async fn fem2d_store_type_alias_constructs_from_an_empty_envelope() {
         let store = crate::artifacts::fem2d::mutations::Fem2dStore::new(store::create_document_envelope(crate::artifacts::fem2d::FEM_2D_SCHEMA, "fem2d", crate::artifacts::fem2d::schema::empty_fem2d_snapshot(), None)).expect("valid store");
         assert!(store.snapshot().expect("snapshot").nodes.is_empty());
     }

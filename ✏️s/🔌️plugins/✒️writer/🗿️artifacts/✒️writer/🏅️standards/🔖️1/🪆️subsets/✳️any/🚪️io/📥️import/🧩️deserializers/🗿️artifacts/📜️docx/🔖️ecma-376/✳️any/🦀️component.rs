@@ -20,7 +20,7 @@ impl Deserializer<WriterSnapshot> for DocxIntoWriter {
     /// 🪧️ Lossy: only paragraph run text survives — `schema`/`id`/`uri`/`language_id` have no home
     /// in a docx package, tables are dropped, and run-level formatting is not modeled.
     const FIDELITY: IoFidelity = IoFidelity::Lossy;
-    fn deserialize(payload: &IoPayload) -> IoResult<WriterSnapshot> {
+    async fn deserialize(payload: &IoPayload) -> IoResult<WriterSnapshot> {
         let IoPayload::Binary(bytes) = payload else {
             return Err(IoError { message: "DocxIntoWriter: expected a binary payload".to_string(), diagnostics: Vec::new() });
         };
@@ -48,7 +48,7 @@ mod tests {
     use semio_s_plugin_stdio::artifacts::docx::schema::snapshot::DocxDocument;
 
     #[test]
-    fn docx_into_writer_joins_paragraph_runs() {
+    async fn docx_into_writer_joins_paragraph_runs() {
         let body: Vec<DocxBlock> = "line one\nline two".split('\n').map(DocxBlock::paragraph).collect();
         let docx = build_minimal_docx(DocxDocument { body, styles: Vec::new() });
         let bytes = <DocxSnapshot as store::ArtifactPack>::encode_pack(&docx);

@@ -18,16 +18,16 @@ pub struct CreateValidationRecord {
 }
 impl MutationKind<ProgramSnapshot, ProgramMutation> for CreateValidationRecord {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "create", entity: "validation-record", kind: "create-validation-record", record: "CreatedValidationRecord" };
-    fn diff(&self, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
+    async fn diff(&self, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {
+    async fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         format!("Create validation record \"{}\"", self.validation_record.header.name)
     }
-    fn target(&self) -> Vec<String> {
+    async fn target(&self) -> Vec<String> {
         vec![self.validation_record.header.id.0.clone()]
     }
 }

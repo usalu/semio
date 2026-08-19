@@ -3,12 +3,12 @@
 use semio_framework_plugin::{ExampleSource, LocalizedLabel};
 
 pub const ID: &str = "demo";
-pub fn label() -> LocalizedLabel {
+pub async fn label() -> LocalizedLabel {
     LocalizedLabel::native("Demo", "Demo")
 }
 pub const ICON: &str = "file";
 pub const PRIMARY_TEXT: &str = include_str!("🖼️assets/🗣️example.dsl.semio");
-pub fn source() -> ExampleSource {
+pub async fn source() -> ExampleSource {
     ExampleSource::new(ID, label(), PRIMARY_TEXT, ICON)
 }
 
@@ -16,7 +16,7 @@ pub fn source() -> ExampleSource {
 mod tests {
     use super::*;
     #[test]
-    fn demo_source_nonempty() {
+    async fn demo_source_nonempty() {
         assert!(!PRIMARY_TEXT.is_empty());
         let _ = source();
     }
@@ -25,7 +25,7 @@ mod tests {
     /// inference laws, exercised against this example's own real fixture (`PRIMARY_TEXT`,
     /// parsed through the real `ArtifactDsl` codec — not a hand-built stub).
     #[test]
-    fn inference_determinism_law() {
+    async fn inference_determinism_law() {
         use crate::artifacts::jpg::standards::v_jfif_1_01::subsets::any::schema::inferences::JpgInference;
         use crate::artifacts::jpg::JpgSnapshot;
         use protocol::Inference;
@@ -34,7 +34,7 @@ mod tests {
     }
 
     #[test]
-    fn inference_default_law() {
+    async fn inference_default_law() {
         use crate::artifacts::jpg::standards::v_jfif_1_01::subsets::any::schema::inferences::JpgInference;
         use crate::artifacts::jpg::JpgSnapshot;
         use protocol::Inference;

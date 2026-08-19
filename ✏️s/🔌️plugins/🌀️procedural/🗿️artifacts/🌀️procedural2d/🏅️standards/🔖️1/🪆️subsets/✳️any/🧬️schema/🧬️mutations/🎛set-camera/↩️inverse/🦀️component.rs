@@ -4,6 +4,6 @@
 use crate::artifacts::procedural2d::mutations::{update_camera, Procedural2dMutation};
 use crate::artifacts::procedural2d::Procedural2dSnapshot;
 
-pub fn inverse(_payload: &super::mutation::UpdateCamera, base: &Procedural2dSnapshot) -> Vec<Procedural2dMutation> {
+pub async fn inverse(_payload: &super::mutation::UpdateCamera, base: &Procedural2dSnapshot) -> Vec<Procedural2dMutation> {
     vec![update_camera(base.fixture.camera.clone())]
 }

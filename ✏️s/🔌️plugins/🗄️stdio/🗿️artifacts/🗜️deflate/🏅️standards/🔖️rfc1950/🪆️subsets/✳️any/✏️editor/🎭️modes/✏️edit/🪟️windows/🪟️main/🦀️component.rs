@@ -18,7 +18,7 @@ pub const BODY_KEY: &str = TextWindowKit::KIND_ID;
 
 //#region 🔖️Definition
 /// 🧱️ Stitched into the editor manifest by `crate::editor::deflate::create_deflate_editor`.
-pub fn definition() -> WindowKindDefinition {
+pub async fn definition() -> WindowKindDefinition {
     WindowKindDefinition { label: LocalizedLabel::native("Compression Header", "Komprimierungs-Header"), ..TextWindowKit::editable_window_kind() }
 }
 //#endregion 🔖️Definition
@@ -26,7 +26,7 @@ pub fn definition() -> WindowKindDefinition {
 //#region 🔖️Codec
 /// 📐️ `DeflateLevelHint <-> lowercase keyword` — shared by `render`'s summary line and the surface
 /// root's `parse_level_hint` (`replace-text` reverse direction).
-pub fn level_hint_keyword(hint: DeflateLevelHint) -> &'static str {
+pub async fn level_hint_keyword(hint: DeflateLevelHint) -> &'static str {
     match hint {
         DeflateLevelHint::Fastest => "fastest",
         DeflateLevelHint::Fast => "fast",
@@ -37,7 +37,7 @@ pub fn level_hint_keyword(hint: DeflateLevelHint) -> &'static str {
 
 /// 📐️ Inverse of [`level_hint_keyword`]. `None` on an unrecognized keyword — the surface root
 /// treats that as a malformed `replace-text` (documented no-op), never a panic.
-pub fn parse_level_hint(keyword: &str) -> Option<DeflateLevelHint> {
+pub async fn parse_level_hint(keyword: &str) -> Option<DeflateLevelHint> {
     match keyword {
         "fastest" => Some(DeflateLevelHint::Fastest),
         "fast" => Some(DeflateLevelHint::Fast),
@@ -48,7 +48,7 @@ pub fn parse_level_hint(keyword: &str) -> Option<DeflateLevelHint> {
 }
 
 /// 📐️ `dict_id -> "none" | "<id>"` — shared by `render` and the surface root's reverse parse.
-pub fn preset_dictionary_text(dict_id: Option<u32>) -> String {
+pub async fn preset_dictionary_text(dict_id: Option<u32>) -> String {
     match dict_id {
         Some(id) => id.to_string(),
         None => "none".into(),
@@ -60,7 +60,7 @@ pub fn preset_dictionary_text(dict_id: Option<u32>) -> String {
 /// ✏️ Real `DeflateSnapshot -> UiNode`: a `key=value` line per header field, editable
 /// (`read_only: false`), plus a trailing `#`-prefixed comment line stating the payload byte count
 /// (informational only — `#`-prefixed lines are never parsed back on `replace-text`).
-pub fn render(document: &DeflateSnapshot) -> UiNode {
+pub async fn render(document: &DeflateSnapshot) -> UiNode {
     let text = format!(
         "method={}\nwindowBits={}\nlevelHint={}\npresetDictionary={}\n# payloadBytes: {} (payload content is not shown or editable here)",
         document.compression_method,
@@ -79,7 +79,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn definition_declares_an_editable_text_window() {
+    async fn definition_declares_an_editable_text_window() {
         let def = definition();
         assert_eq!(def.id, WINDOW_KIND_ID);
         assert_eq!(def.body_key, BODY_KEY);
@@ -87,7 +87,7 @@ mod tests {
     }
 
     #[test]
-    fn render_carries_the_header_fields_as_editable_text() {
+    async fn render_carries_the_header_fields_as_editable_text() {
         let document = DeflateSnapshot { compression_method: 8, window_bits: 7, compression_level_hint: DeflateLevelHint::Fast, dict_id: Some(42), payload: vec![1, 2, 3], ..DeflateSnapshot::default() };
         let UiNode::ComponentScene(node) = render(&document) else { panic!("expected ComponentScene") };
         let scene = node.text_editor.expect("text_editor scene");

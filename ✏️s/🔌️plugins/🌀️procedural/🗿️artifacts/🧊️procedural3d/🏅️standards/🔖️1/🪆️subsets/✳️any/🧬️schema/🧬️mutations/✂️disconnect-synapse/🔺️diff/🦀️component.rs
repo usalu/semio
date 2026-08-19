@@ -7,7 +7,7 @@ use crate::artifacts::procedural3d::diff::Procedural3dDiff;
 use crate::artifacts::procedural3d::Procedural3dSnapshot;
 
 /// 🏗️ Builds the sparse fixture delta severing one synapse edge by id.
-pub fn diff(payload: &DisconnectSynapse, base: &Procedural3dSnapshot) -> protocol::MutationOutcome<Procedural3dDiff> {
+pub async fn diff(payload: &DisconnectSynapse, base: &Procedural3dSnapshot) -> protocol::MutationOutcome<Procedural3dDiff> {
     if synapse_index(&base.fixture, &payload.id).is_none() {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Synapse \"{}\" does not exist.", payload.id), [payload.id.clone()]);
     }

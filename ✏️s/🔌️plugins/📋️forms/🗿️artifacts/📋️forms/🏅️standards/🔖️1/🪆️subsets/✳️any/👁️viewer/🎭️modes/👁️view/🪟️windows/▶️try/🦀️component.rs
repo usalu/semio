@@ -16,7 +16,7 @@ pub const BODY_KEY: &str = "forms.view.try";
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
-pub fn definition() -> WindowKindDefinition {
+pub async fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
         id: WINDOW_KIND_ID.into(),
         label: LocalizedLabel::native("Try", "Testen"),
@@ -38,11 +38,11 @@ pub fn definition() -> WindowKindDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-fn ui_text_emphasized(value: impl Into<Label>) -> UiNode {
+async fn ui_text_emphasized(value: impl Into<Label>) -> UiNode {
     UiNode::Text(UiTextNode { value: value.into(), emphasize: Some(true), data_attributes: None, presence: UiPresence::default(), menu: None })
 }
 
-fn read_only_field(question: &FormQuestion, value_text: String) -> UiNode {
+async fn read_only_field(question: &FormQuestion, value_text: String) -> UiNode {
     UiNode::Field(UiFieldNode {
         id: format!("forms-view-try.{}", question.id),
         label: Label::data(question.label.clone()),
@@ -60,7 +60,7 @@ fn read_only_field(question: &FormQuestion, value_text: String) -> UiNode {
 /// the editor resolves through the sibling editor surface's own contribution plumbing) fall back to a
 /// plain "kind" label here rather than resolving any contribution, since a viewer declares no config
 /// lane to carry `contributions_json`.
-fn render_view_question(question: &FormQuestion) -> UiNode {
+async fn render_view_question(question: &FormQuestion) -> UiNode {
     if is_extension_question_kind(&question.kind) {
         return read_only_field(question, format!("({})", question.kind));
     }
@@ -71,7 +71,7 @@ fn render_view_question(question: &FormQuestion) -> UiNode {
 /// 👁️ Pure `FormsSnapshot -> UiNode` read: every step's questions rendered flat, in document order,
 /// each showing its typed default value as plain text. No step-by-step wizard state (no `Config`),
 /// no answer entry, no navigation — see this file's own doc comment.
-pub fn render(document: &FormsSnapshot) -> UiNode {
+pub async fn render(document: &FormsSnapshot) -> UiNode {
     let steps = forms_steps(document);
     if steps.is_empty() {
         return semio_framework_plugin::ui_text(Label::data("No steps in this form."));
@@ -96,7 +96,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn definition_declares_a_canvas2d_try_window() {
+    async fn definition_declares_a_canvas2d_try_window() {
         let def = definition();
         assert_eq!(def.id, WINDOW_KIND_ID);
         assert_eq!(def.body_key, BODY_KEY);
@@ -104,7 +104,7 @@ mod tests {
     }
 
     #[test]
-    fn render_produces_a_node_for_the_default_document() {
+    async fn render_produces_a_node_for_the_default_document() {
         let document = crate::artifacts::forms::schema::building_component_spec();
         let node = render(&document);
         let json = serde_json::to_string(&node).unwrap();
@@ -112,7 +112,7 @@ mod tests {
     }
 
     #[test]
-    fn render_falls_back_to_a_placeholder_for_an_empty_document() {
+    async fn render_falls_back_to_a_placeholder_for_an_empty_document() {
         let document = crate::artifacts::forms::schema::empty_forms_snapshot();
         let node = render(&document);
         let json = serde_json::to_string(&node).unwrap();

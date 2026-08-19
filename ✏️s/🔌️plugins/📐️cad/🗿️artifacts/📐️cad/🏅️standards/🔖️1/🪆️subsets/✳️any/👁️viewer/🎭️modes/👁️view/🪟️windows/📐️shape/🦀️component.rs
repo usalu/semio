@@ -27,7 +27,7 @@ const CAD_VIEW_FALLBACK_MESH_KIND: &str = "box";
 
 //#region 🔖️Definition
 /// 🧱️ Stitched into the viewer manifest by `crate::viewer::cad::create_cad_viewer`.
-pub fn definition() -> WindowKindDefinition {
+pub async fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
         id: WINDOW_KIND_ID.into(),
         label: LocalizedLabel::native("Shape", "Form"),
@@ -53,7 +53,7 @@ pub fn definition() -> WindowKindDefinition {
 /// straight off the document. Objects render the same fallback-box placeholder the editor's own
 /// `world_meshes_json` falls back to while composed-child object resolution is unimplemented (ticket
 /// `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` wave 3 gap, pre-existing, not introduced here).
-pub fn render(document: &CadSnapshot) -> UiNode {
+pub async fn render(document: &CadSnapshot) -> UiNode {
     let camera = CadCamera::default();
     let sun = WorldSunConfig::default();
     let camera_json = world3d_camera_projection_json(camera.position, camera.target, None, camera.zoom, &cad_camera_projection_config(&camera));
@@ -92,7 +92,7 @@ pub fn render(document: &CadSnapshot) -> UiNode {
 /// 👁️ Read-only twin of the editor's `edit::world_references_json` — background reference overlays
 /// are pure document content (`CadSnapshot.references_by_model_definition_id`), safe for a viewer to
 /// render directly.
-fn world_references_json(document: &CadSnapshot, pane: CadPaneId) -> Option<String> {
+async fn world_references_json(document: &CadSnapshot, pane: CadPaneId) -> Option<String> {
     let references = document.references_by_model_definition_id.get(pane.model_definition_id())?;
     if references.is_empty() {
         return None;
@@ -122,14 +122,14 @@ mod tests {
     use super::*;
 
     #[test]
-    fn definition_declares_a_world3d_shape_window() {
+    async fn definition_declares_a_world3d_shape_window() {
         let def = definition();
         assert_eq!(def.id, WINDOW_KIND_ID);
         assert_eq!(def.surface_kind, SurfaceKind::World3d);
     }
 
     #[test]
-    fn render_produces_a_scene_node_for_the_default_document() {
+    async fn render_produces_a_scene_node_for_the_default_document() {
         let document = crate::artifacts::cad::standards::v1::subsets::any::schema::inferences::forest_play_scene();
         let _node = render(&document);
     }

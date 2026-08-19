@@ -14,12 +14,12 @@ use crate::artifacts::layout::LayoutSnapshot;
 pub const LAYOUT_SAMPLE_TEXT: &str = include_str!("../../../📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio");
 
 /// 📖️ Parses `.layout` DSL text into a `LayoutSnapshot`.
-pub fn parse_dsl(text: &str) -> Result<LayoutSnapshot, store::TextError> {
+pub async fn parse_dsl(text: &str) -> Result<LayoutSnapshot, store::TextError> {
     <LayoutSnapshot as store::ArtifactDsl>::parse_dsl(text)
 }
 
 /// 🖨️ Prints a `LayoutSnapshot` back to `.layout` DSL text.
-pub fn print_dsl(document: &LayoutSnapshot) -> String {
+pub async fn print_dsl(document: &LayoutSnapshot) -> String {
     store::ArtifactDsl::print_dsl(document)
 }
 
@@ -29,7 +29,7 @@ mod tests {
     use super::*;
     use crate::artifacts::layout::{CharacterStyle, Frame, GridSettings, Layer, LayoutBounds, Page, PageColumns, PageMargins, PageOverride, LAYOUT_DOCUMENT_SCHEMA};
 
-    fn minimal_document_with_character_style() -> LayoutSnapshot {
+    async fn minimal_document_with_character_style() -> LayoutSnapshot {
         LayoutSnapshot {
             schema: LAYOUT_DOCUMENT_SCHEMA.into(),
             name: "Empty".into(),
@@ -48,7 +48,7 @@ mod tests {
         }
     }
 
-    fn overrides_frame_flags_document() -> LayoutSnapshot {
+    async fn overrides_frame_flags_document() -> LayoutSnapshot {
         LayoutSnapshot {
             schema: LAYOUT_DOCUMENT_SCHEMA.into(),
             name: "Flags".into(),
@@ -88,7 +88,7 @@ mod tests {
     }
 
     #[test]
-    fn sample_fixture_dsl_round_trips() {
+    async fn sample_fixture_dsl_round_trips() {
         let doc = parse_dsl(LAYOUT_SAMPLE_TEXT).expect("parse sample layout fixture");
         assert_eq!(doc.schema, LAYOUT_DOCUMENT_SCHEMA);
         assert_eq!(doc.pages.len(), 2);
@@ -97,7 +97,7 @@ mod tests {
     }
 
     #[test]
-    fn demo_dsl_snapshot() {
+    async fn demo_dsl_snapshot() {
         let text = print_dsl(&crate::artifacts::layout::schema::default_document());
         assert!(parse_dsl(&text).is_ok());
         if std::env::var("LAYOUT_EMIT_DEMO_DSL").is_ok() {
@@ -106,7 +106,7 @@ mod tests {
     }
 
     #[test]
-    fn example_fixture_matches_engine_demo() {
+    async fn example_fixture_matches_engine_demo() {
         let demo = crate::artifacts::layout::schema::default_document();
         let from_example = parse_dsl(LAYOUT_SAMPLE_TEXT).expect("example dsl");
         assert_eq!(from_example.pages.len(), demo.pages.len());
@@ -114,12 +114,12 @@ mod tests {
     }
 
     #[test]
-    fn dsl_round_trips_minimal_document_with_character_style() {
+    async fn dsl_round_trips_minimal_document_with_character_style() {
         store::os_store::test_support::assert_dsl_round_trip(&minimal_document_with_character_style());
     }
 
     #[test]
-    fn dsl_round_trips_overrides_frame_flags_and_absent_print_target() {
+    async fn dsl_round_trips_overrides_frame_flags_and_absent_print_target() {
         store::os_store::test_support::assert_dsl_round_trip(&overrides_frame_flags_document());
     }
 
@@ -128,7 +128,7 @@ mod tests {
     /// doc comment on why), replaced by the hand-rolled `key=<hex-or-json-hex>` line codec. These
     /// assertions now exercise THAT codec's real failure modes instead of the old grammar's.
     #[test]
-    fn parse_dsl_reports_hand_rolled_codec_errors() {
+    async fn parse_dsl_reports_hand_rolled_codec_errors() {
         assert!(parse_dsl("").is_err(), "empty text must fail: no schema line at all");
         assert!(parse_dsl("not a document at all").is_err(), "a line with no recognized key= prefix must fail");
         assert!(parse_dsl("name=74").is_err(), "a document missing its required schema= line must fail");

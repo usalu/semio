@@ -13,12 +13,12 @@ use crate::artifacts::block3d::schema::mutations::text::Block3dMutation;
 use protocol::OpBinary;
 
 /// 📦️ Encodes a `Block3dMutation` to its binary command form.
-pub fn encode_op(operation: &Block3dMutation) -> Result<Vec<u8>, protocol::ProtocolError> {
+pub async fn encode_op(operation: &Block3dMutation) -> Result<Vec<u8>, protocol::ProtocolError> {
     operation.encode_op()
 }
 
 /// 📖️ Decodes a `Block3dMutation` from its binary command form.
-pub fn decode_op(bytes: &[u8]) -> Result<Block3dMutation, protocol::ProtocolError> {
+pub async fn decode_op(bytes: &[u8]) -> Result<Block3dMutation, protocol::ProtocolError> {
     Block3dMutation::decode_op(bytes)
 }
 
@@ -30,7 +30,7 @@ mod tests {
     use store::{create_document_envelope, ArtifactCommand};
 
     #[test]
-    fn block3d_document_vcs_replays_granular_operations() {
+    async fn block3d_document_vcs_replays_granular_operations() {
         use crate::artifacts::block3d::schema::mutations::{self as m, Block3dStore};
 
         let mut store = Block3dStore::new(create_document_envelope(BLOCK_3D_SCHEMA, "block3d", Block3dSnapshot::default(), None)).expect("valid initial state");
@@ -42,7 +42,7 @@ mod tests {
     }
 
     #[test]
-    fn block3d_operation_binary_round_trips() {
+    async fn block3d_operation_binary_round_trips() {
         let operation = crate::artifacts::block3d::schema::mutations::delete_vortex("v0".into());
         let bytes = encode_op(&operation).expect("encode");
         assert_eq!(decode_op(&bytes).expect("decode"), operation);

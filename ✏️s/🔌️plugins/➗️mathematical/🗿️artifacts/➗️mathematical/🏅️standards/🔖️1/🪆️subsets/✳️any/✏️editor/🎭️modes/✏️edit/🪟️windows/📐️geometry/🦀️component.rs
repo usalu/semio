@@ -11,7 +11,7 @@ pub const MATH_PLAY_BODY_GEOMETRY: &str = "mathematical.play.geometry";
 
 //#region 🔖️Definition
 /// 🧱️ Stitched into the app manifest by `crate::editor::mathematical::create_mathematical_app`.
-pub fn definition() -> WindowKindDefinition {
+pub async fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
         id: MATH_PLAY_WINDOW_GEOMETRY.into(),
         label: LocalizedLabel::native("Geometry", "Geometrie"),
@@ -32,7 +32,7 @@ pub fn definition() -> WindowKindDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(geometry: &MathematicalGeometry) -> UiNode {
+pub async fn render(geometry: &MathematicalGeometry) -> UiNode {
     let mut scene = empty_component_scene(MATH_PLAY_BODY_GEOMETRY, SurfaceKind::Canvas2d);
     scene.canvas_2d = Some(Canvas2dScene { camera_x: 0.0, camera_y: 0.0, zoom: 1.0, layers_json: geometry_layers_json(geometry) });
     UiNode::ComponentScene(scene)
@@ -45,13 +45,13 @@ mod tests {
     use super::*;
 
     #[test]
-    fn renders_canvas_2d_scene() {
+    async fn renders_canvas_2d_scene() {
         let json = serde_json::to_string(&render(&MathematicalGeometry::default())).unwrap();
         assert!(json.contains("canvas-2d"));
     }
 
     #[test]
-    fn definition_declares_the_canvas_2d_surface_and_body_key() {
+    async fn definition_declares_the_canvas_2d_surface_and_body_key() {
         let definition = definition();
         assert_eq!(definition.body_key, MATH_PLAY_BODY_GEOMETRY);
         assert!(matches!(definition.surface_kind, SurfaceKind::Canvas2d));

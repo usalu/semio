@@ -19,7 +19,7 @@ pub struct XlsxOutline {
 }
 
 impl XlsxOutline {
-    pub fn compute(snapshot: &XlsxSnapshot) -> Self {
+    pub async fn compute(snapshot: &XlsxSnapshot) -> Self {
         let sheet_names: Vec<String> = snapshot.workbook.sheets.iter().map(|s| s.name.clone()).collect();
         let sheet_count = sheet_names.len() as u32;
         let cell_count = snapshot.workbook.sheets.iter().map(|s| s.cells.len() as u32).sum();
@@ -35,7 +35,7 @@ mod tests {
     use crate::artifacts::xlsx::schema::snapshot::{XlsxCell, XlsxCellValue, XlsxSheet};
 
     #[test]
-    fn counts_sheets_and_cells() {
+    async fn counts_sheets_and_cells() {
         let snapshot = XlsxSnapshot {
             schema: "stdio.xlsx".into(),
             opc: Default::default(),
@@ -51,7 +51,7 @@ mod tests {
     }
 
     #[test]
-    fn outline_is_deterministic() {
+    async fn outline_is_deterministic() {
         let snapshot = XlsxSnapshot::default();
         assert_eq!(XlsxOutline::compute(&snapshot), XlsxOutline::compute(&snapshot));
     }

@@ -63,7 +63,7 @@ pub type FormsResultsChild = store::ArtifactChild<SemioTableSnapshot>;
 /// binary/graph-reference primitive), so `dsl_from_semio_value` degrades them to `Null` — a
 /// documented gap only reachable if a foreign composer ever wrote a `Bytes`/`Ref` value into this
 /// plugin's own `structure` child, never by this plugin's own round trip.
-fn semio_value_from_dsl(value: &dsl::DslValue) -> SemioValue {
+async fn semio_value_from_dsl(value: &dsl::DslValue) -> SemioValue {
     match value {
         dsl::DslValue::Null => SemioValue::Null,
         dsl::DslValue::Bool(v) => SemioValue::Bool { value: *v },
@@ -79,7 +79,7 @@ fn semio_value_from_dsl(value: &dsl::DslValue) -> SemioValue {
         dsl::DslValue::Object(entries) => SemioValue::Map { entries: entries.iter().map(|(k, v)| SemioValueEntry { key: k.clone(), value: semio_value_from_dsl(v) }).collect() },
     }
 }
-fn dsl_from_semio_value(value: &SemioValue) -> dsl::DslValue {
+async fn dsl_from_semio_value(value: &SemioValue) -> dsl::DslValue {
     match value {
         SemioValue::Null => dsl::DslValue::Null,
         SemioValue::Bool { value } => dsl::DslValue::Bool(*value),
@@ -91,25 +91,25 @@ fn dsl_from_semio_value(value: &SemioValue) -> dsl::DslValue {
     }
 }
 
-fn semio_value_map_get<'v>(value: &'v SemioValue, key: &str) -> Option<&'v SemioValue> {
+async fn semio_value_map_get<'v>(value: &'v SemioValue, key: &str) -> Option<&'v SemioValue> {
     match value {
         SemioValue::Map { entries } => entries.iter().find(|entry| entry.key == key).map(|entry| &entry.value),
         _ => None,
     }
 }
-fn semio_str(value: Option<&SemioValue>) -> Option<String> {
+async fn semio_str(value: Option<&SemioValue>) -> Option<String> {
     match value {
         Some(SemioValue::Str { value }) => Some(value.clone()),
         _ => None,
     }
 }
-fn semio_bool(value: Option<&SemioValue>) -> Option<bool> {
+async fn semio_bool(value: Option<&SemioValue>) -> Option<bool> {
     match value {
         Some(SemioValue::Bool { value }) => Some(*value),
         _ => None,
     }
 }
-fn semio_f64(value: Option<&SemioValue>) -> Option<f64> {
+async fn semio_f64(value: Option<&SemioValue>) -> Option<f64> {
     match value {
         Some(SemioValue::Float { lexeme }) | Some(SemioValue::Int { lexeme }) => lexeme.parse().ok(),
         _ => None,
@@ -118,7 +118,7 @@ fn semio_f64(value: Option<&SemioValue>) -> Option<f64> {
 
 /// 🌉 `PlaybookExpr` (the block `condition` recursive boolean tree) <-> `SemioValue` — real,
 /// bidirectional; each variant becomes a tagged `Map{kind, ...}`.
-fn semio_value_from_expr(expr: &FormExpr) -> SemioValue {
+async fn semio_value_from_expr(expr: &FormExpr) -> SemioValue {
     match expr {
         FormExpr::Const { value } => SemioValue::Map { entries: vec![SemioValueEntry { key: "kind".into(), value: SemioValue::Str { value: "const".into() } }, SemioValueEntry { key: "value".into(), value: semio_value_from_dsl(value) }] },
         FormExpr::Var { name } => SemioValue::Map { entries: vec![SemioValueEntry { key: "kind".into(), value: SemioValue::Str { value: "var".into() } }, SemioValueEntry { key: "name".into(), value: SemioValue::Str { value: name.clone() } }] },
@@ -138,7 +138,7 @@ fn semio_value_from_expr(expr: &FormExpr) -> SemioValue {
         FormExpr::Truthy { expr } => SemioValue::Map { entries: vec![SemioValueEntry { key: "kind".into(), value: SemioValue::Str { value: "truthy".into() } }, SemioValueEntry { key: "expr".into(), value: semio_value_from_expr(expr) }] },
     }
 }
-fn expr_from_semio_value(value: &SemioValue) -> Option<FormExpr> {
+async fn expr_from_semio_value(value: &SemioValue) -> Option<FormExpr> {
     let kind = semio_str(semio_value_map_get(value, "kind"))?;
     match kind.as_str() {
         "const" => Some(FormExpr::Const { value: semio_value_map_get(value, "value").map(dsl_from_semio_value).unwrap_or(dsl::DslValue::Null) }),
@@ -168,7 +168,7 @@ fn expr_from_semio_value(value: &SemioValue) -> Option<FormExpr> {
 }
 
 /// 🌉 One `FormQuestion` (block) <-> a tagged `SemioValue::Map` — every field real, none stubbed.
-fn semio_value_from_block(block: &FormQuestion) -> SemioValue {
+async fn semio_value_from_block(block: &FormQuestion) -> SemioValue {
     let mut entries = vec![
         SemioValueEntry { key: "id".into(), value: SemioValue::Str { value: block.id.clone() } },
         SemioValueEntry { key: "label".into(), value: SemioValue::Str { value: block.label.clone() } },
@@ -254,7 +254,7 @@ fn semio_value_from_block(block: &FormQuestion) -> SemioValue {
     }
     SemioValue::Map { entries }
 }
-fn block_from_semio_value(value: &SemioValue) -> FormQuestion {
+async fn block_from_semio_value(value: &SemioValue) -> FormQuestion {
     FormQuestion {
         id: semio_str(semio_value_map_get(value, "id")).unwrap_or_default(),
         label: semio_str(semio_value_map_get(value, "label")).unwrap_or_default(),
@@ -290,7 +290,7 @@ fn block_from_semio_value(value: &SemioValue) -> FormQuestion {
 }
 
 /// 🌉 One `FormStep` <-> a tagged `SemioValue::Map` (id/title/description/blocks).
-fn semio_value_from_step(step: &FormStep) -> SemioValue {
+async fn semio_value_from_step(step: &FormStep) -> SemioValue {
     let mut entries = vec![SemioValueEntry { key: "id".into(), value: SemioValue::Str { value: step.id.clone() } }, SemioValueEntry { key: "title".into(), value: SemioValue::Str { value: step.title.clone() } }];
     if let Some(v) = &step.description {
         entries.push(SemioValueEntry { key: "description".into(), value: SemioValue::Str { value: v.clone() } });
@@ -298,7 +298,7 @@ fn semio_value_from_step(step: &FormStep) -> SemioValue {
     entries.push(SemioValueEntry { key: "blocks".into(), value: SemioValue::List { items: step.blocks.iter().map(semio_value_from_block).collect() } });
     SemioValue::Map { entries }
 }
-fn step_from_semio_value(value: &SemioValue) -> FormStep {
+async fn step_from_semio_value(value: &SemioValue) -> FormStep {
     FormStep {
         id: semio_str(semio_value_map_get(value, "id")).unwrap_or_default(),
         title: semio_str(semio_value_map_get(value, "title")).unwrap_or_default(),
@@ -313,14 +313,14 @@ fn step_from_semio_value(value: &SemioValue) -> FormStep {
 /// 🌉 REAL bidirectional converter: the whole `steps` tree <-> one structured `value` Map — the
 /// SOLE source of truth for reconstruction (see this region's own doc comment for why `results`
 /// is a derived, non-reconstructive projection instead).
-pub fn forms_structure_from_steps(steps: &[FormStep]) -> SemioValueSnapshot {
+pub async fn forms_structure_from_steps(steps: &[FormStep]) -> SemioValueSnapshot {
     SemioValueSnapshot {
         schema: STDIO_SEMIOVALUE_DOCUMENT_SCHEMA.into(),
         root: SemioValue::Map { entries: vec![SemioValueEntry { key: "steps".into(), value: SemioValue::List { items: steps.iter().map(semio_value_from_step).collect() } }] },
         nodes: Vec::new(),
     }
 }
-pub fn forms_steps_from_structure(structure: &SemioValueSnapshot) -> Vec<FormStep> {
+pub async fn forms_steps_from_structure(structure: &SemioValueSnapshot) -> Vec<FormStep> {
     match semio_value_map_get(&structure.root, "steps") {
         Some(SemioValue::List { items }) => items.iter().map(step_from_semio_value).collect(),
         _ => Vec::new(),
@@ -330,7 +330,7 @@ pub fn forms_steps_from_structure(structure: &SemioValueSnapshot) -> Vec<FormSte
 /// 🌉 DERIVED, non-reconstructive projection: one row per block, flattened in step order —
 /// "tabular/repeating-row data" for scan/display, always regenerated alongside `structure` from
 /// the SAME steps (see this region's own doc comment).
-pub fn forms_results_from_steps(steps: &[FormStep]) -> SemioTableSnapshot {
+pub async fn forms_results_from_steps(steps: &[FormStep]) -> SemioTableSnapshot {
     let mut rows = Vec::new();
     for step in steps {
         for block in &step.blocks {
@@ -384,7 +384,7 @@ thread_local! {
     static FORMS_SCRATCH: RefCell<HashMap<String, FormsWorkingScene>> = RefCell::new(HashMap::new());
 }
 
-fn forms_scene_id(steps: &[FormStep]) -> String {
+async fn forms_scene_id(steps: &[FormStep]) -> String {
     use std::hash::{Hash, Hasher};
     let content_json = serde_json::to_string(steps).unwrap_or_default();
     let mut hasher = std::collections::hash_map::DefaultHasher::new();
@@ -396,7 +396,7 @@ fn forms_scene_id(steps: &[FormStep]) -> String {
 /// call — the standard way every mutation-diff/fixture builder in this plugin creates
 /// `structure`/`results` field values; never construct these handles without also caching, or
 /// `forms_steps` will read back empty.
-pub fn forms_children_from_steps(steps: &[FormStep]) -> (FormsStructureChild, FormsResultsChild) {
+pub async fn forms_children_from_steps(steps: &[FormStep]) -> (FormsStructureChild, FormsResultsChild) {
     let scene_id = forms_scene_id(steps);
     FORMS_SCRATCH.with(|cache| {
         cache.borrow_mut().insert(scene_id.clone(), FormsWorkingScene { steps: steps.to_vec() });
@@ -408,26 +408,26 @@ pub fn forms_children_from_steps(steps: &[FormStep]) -> (FormsStructureChild, Fo
 
 /// 🔎 Reads the cached working scene behind a snapshot's composed children — an empty `steps`
 /// (never a panic) on a cache miss, per this region's own doc comment.
-pub fn forms_scene(snapshot: &FormsSnapshot) -> FormsWorkingScene {
+pub async fn forms_scene(snapshot: &FormsSnapshot) -> FormsWorkingScene {
     FORMS_SCRATCH.with(|cache| cache.borrow().get(&snapshot.structure.child_id).map(|scene| FormsWorkingScene { steps: scene.steps.clone() })).unwrap_or_else(|| FormsWorkingScene { steps: Vec::new() })
 }
 
 /// 🔎 The live `steps` tree behind a snapshot's composed children — the single read call site
 /// every render/inference/export/command path in this plugin now uses instead of the old `.steps`
 /// field.
-pub fn forms_steps(snapshot: &FormsSnapshot) -> Vec<FormStep> {
+pub async fn forms_steps(snapshot: &FormsSnapshot) -> Vec<FormStep> {
     forms_scene(snapshot).steps
 }
 
 /// 🔎 Twin of [`forms_steps`] for the UI-inclusive [`crate::artifacts::forms::schema::FormsArtifact`]
 /// (its own `structure`/`results` fields mirror the snapshot's — see that struct's own doc).
-pub fn forms_artifact_steps(artifact: &crate::artifacts::forms::schema::FormsArtifact) -> Vec<FormStep> {
+pub async fn forms_artifact_steps(artifact: &crate::artifacts::forms::schema::FormsArtifact) -> Vec<FormStep> {
     FORMS_SCRATCH.with(|cache| cache.borrow().get(&artifact.structure.child_id).map(|scene| scene.steps.clone())).unwrap_or_default()
 }
 
 /// 🏗️ Builds a full `FormsSnapshot` from a literal `steps` tree — the standard fixture/import
 /// constructor replacing the old struct literal with an inline `steps: Vec<FormStep>` field.
-pub fn forms_snapshot_with_state(schema: String, id: String, version: String, title: Option<String>, steps: Vec<FormStep>) -> FormsSnapshot {
+pub async fn forms_snapshot_with_state(schema: String, id: String, version: String, title: Option<String>, steps: Vec<FormStep>) -> FormsSnapshot {
     let (structure, results) = forms_children_from_steps(&steps);
     FormsSnapshot { schema, id, version, title, structure, results }
 }
@@ -437,7 +437,7 @@ pub fn forms_snapshot_with_state(schema: String, id: String, version: String, ti
 //#region 🔖️ArtifactKind
 /// 🗂️ This artifact's `ArtifactKindSpec` — stitched into the app manifest by
 /// `crate::editor::forms::create_forms_app`'s `🔖️Manifest` region.
-pub fn artifact_kind() -> ArtifactKindSpec {
+pub async fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "form.dictionary".into(),
         name: "Form Dictionary".into(),
@@ -468,7 +468,7 @@ pub fn artifact_kind() -> ArtifactKindSpec {
 /// `LanguagePair` fields stay `{ text: None, binary: None }` (`🚪️io/🦀️component.rs`), the same
 /// documented deferral every other subset on this ticket carries — the underlying grammar/protocol
 /// `.semio` assets themselves are untouched and still compiled into their own facet files.
-pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
+pub async fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
     use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
     let rows: &[(&str, &str, &str, &[(&str, &str)], Option<(&str, &str)>)] = &[
         ("s.forms.standard.v1", "standard", "1", &[], None),
@@ -503,7 +503,7 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
 /// (`any`). Sole registration channel (plugin root `.declare_artifact(artifact())`); the old
 /// `.artifact(declaration())`/`.editor::<>()`/`.viewer::<>()` triad is deleted, not kept alongside
 /// it (a second parallel registration channel is the compatibility layer CLAUDE.md forbids).
-pub fn artifact() -> semio_framework_plugin::app::declarations::ArtifactDeclaration {
+pub async fn artifact() -> semio_framework_plugin::app::declarations::ArtifactDeclaration {
     use semio_framework_plugin::app::declarations::ArtifactDeclaration;
     use store::os_io::ArtifactKindId;
 
@@ -517,14 +517,14 @@ mod tests {
     use super::*;
 
     #[test]
-    fn artifact_kind_uses_the_dictionary_media_kind_as_both_id_and_schema() {
+    async fn artifact_kind_uses_the_dictionary_media_kind_as_both_id_and_schema() {
         assert_eq!(artifact_kind().id, "form.dictionary");
         assert_eq!(artifact_kind().schema, "form.dictionary");
         assert_eq!(FORMS_DOCUMENT_SCHEMA, "forms.form");
     }
 
     #[test]
-    fn question_fields_roundtrip() {
+    async fn question_fields_roundtrip() {
         let json = r#"{
             "id":"q1",
             "label":"Team size",

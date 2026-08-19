@@ -11,7 +11,7 @@ use crate::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::
 //#region 🔖️CollectLeaves
 /// 🍃️️ Depth-first leaf collection through any run of identity-transform descendant `Group`s;
 /// `None` the moment a non-identity transform is found (refuse rather than approximate).
-pub(crate) fn collect_flattened_leaves(children: &[DrawNode]) -> Option<Vec<DrawNode>> {
+pub(crate) async fn collect_flattened_leaves(children: &[DrawNode]) -> Option<Vec<DrawNode>> {
     let mut out = Vec::new();
     for child in children {
         match child {
@@ -29,7 +29,7 @@ pub(crate) fn collect_flattened_leaves(children: &[DrawNode]) -> Option<Vec<Draw
 //#endregion 🔖️CollectLeaves
 
 //#region 🔖️Diff
-pub fn diff(payload: &FlattenNode, base: &SemioDrawingSnapshot) -> protocol::MutationOutcome<SemioDrawingDiff> {
+pub async fn diff(payload: &FlattenNode, base: &SemioDrawingSnapshot) -> protocol::MutationOutcome<SemioDrawingDiff> {
     let Some(node) = node_at(base, &payload.at) else {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Node at layer #{} does not exist.", payload.at.layer), [payload.at.layer.to_string()]);
     };

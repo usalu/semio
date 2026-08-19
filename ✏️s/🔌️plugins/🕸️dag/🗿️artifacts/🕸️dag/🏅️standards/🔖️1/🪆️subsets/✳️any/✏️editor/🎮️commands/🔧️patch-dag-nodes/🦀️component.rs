@@ -15,7 +15,7 @@ pub struct PatchDagNodes {
     pub value: String,
 }
 
-pub fn handle(payload: &PatchDagNodes, doc: &ArtifactView<'_, DagSnapshot>, _cfg: &ConfigView<'_, DagConfig>) -> Result<Emit<DagMutation, DagConfigMutation>, Fault> {
+pub async fn handle(payload: &PatchDagNodes, doc: &ArtifactView<'_, DagSnapshot>, _cfg: &ConfigView<'_, DagConfig>) -> Result<Emit<DagMutation, DagConfigMutation>, Fault> {
     let document = doc.snapshot;
     // 🩹️ `node_patch_for_field` only ever fills `name` (a scalar rename) or `kind`+`width`+
     // `height` together (a Slider's live-dragged value/min/max, which also refits the widget

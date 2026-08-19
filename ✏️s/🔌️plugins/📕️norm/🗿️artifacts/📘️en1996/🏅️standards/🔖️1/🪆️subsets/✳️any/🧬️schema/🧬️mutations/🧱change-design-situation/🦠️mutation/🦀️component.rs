@@ -15,15 +15,15 @@ pub struct ChangeDesignSituation {
 impl protocol::MutationKind<En1996Snapshot, En1996Mutation> for ChangeDesignSituation {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "design-situation", kind: "change-design-situation", record: "ChangedDesignSituation" };
 
-    fn diff(&self, base: &En1996Snapshot) -> protocol::MutationOutcome<En1996Diff> {
+    async fn diff(&self, base: &En1996Snapshot) -> protocol::MutationOutcome<En1996Diff> {
         crate::artifacts::en1996::mutations::change_design_situation::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &En1996Snapshot) -> Vec<En1996Mutation> {
+    async fn inverse(&self, base: &En1996Snapshot) -> Vec<En1996Mutation> {
         crate::artifacts::en1996::mutations::change_design_situation::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         format!("Change design situation to {:?}", self.new_design_situation)
     }
 }

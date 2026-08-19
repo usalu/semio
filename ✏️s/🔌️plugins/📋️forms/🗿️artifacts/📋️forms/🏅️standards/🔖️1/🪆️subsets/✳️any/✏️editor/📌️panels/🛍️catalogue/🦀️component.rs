@@ -13,7 +13,7 @@ const FORMS_QUESTION_DRAG_MIME: &str = "application/x-semio-forms-question-kind"
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
-pub fn definition() -> PanelTabDefinition {
+pub async fn definition() -> PanelTabDefinition {
     PanelTabDefinition {
         kind: PanelTabKind::App(FRAMEWORK_PANEL_TAB_CATALOGUE_ID.into()),
         label: LocalizedLabel::native(FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, "Katalog"),
@@ -25,7 +25,7 @@ pub fn definition() -> PanelTabDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(config: &FormsConfig, labels: &FormsLabels) -> UiNode {
+pub async fn render(config: &FormsConfig, labels: &FormsLabels) -> UiNode {
     let contributions = parse_contributions(config);
     let kind_items: Vec<UiTreeItemNode> = catalogue_kinds(&contributions, labels)
         .into_iter()
@@ -60,7 +60,7 @@ mod tests {
     use crate::editor::forms::FORMS_PLAY_BODY_CATALOGUE as BODY_CATALOGUE;
 
     #[test]
-    fn catalogue_lists_question_kinds() {
+    async fn catalogue_lists_question_kinds() {
         let mut app = forms_app();
         let json = render_body(&mut app, BODY_CATALOGUE);
         assert!(json.contains("forms-play-catalogue.text"));
@@ -68,7 +68,7 @@ mod tests {
     }
 
     #[test]
-    fn catalogue_items_export_the_question_kind_drag_mime() {
+    async fn catalogue_items_export_the_question_kind_drag_mime() {
         let mut app = forms_app();
         let json = render_body(&mut app, BODY_CATALOGUE);
         assert!(json.contains(FORMS_QUESTION_DRAG_MIME));

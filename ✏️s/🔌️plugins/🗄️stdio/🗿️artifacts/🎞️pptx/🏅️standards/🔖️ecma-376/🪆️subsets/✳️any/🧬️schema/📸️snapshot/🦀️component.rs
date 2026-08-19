@@ -40,7 +40,7 @@ pub struct PptxParagraph {
 }
 
 impl PptxParagraph {
-    pub fn text(text: impl Into<String>) -> Self {
+    pub async fn text(text: impl Into<String>) -> Self {
         Self { runs: vec![PptxRun { text: text.into(), bold: false, italic: false, font_size: None }] }
     }
 }
@@ -123,17 +123,17 @@ pub struct PptxXmlPart {
 }
 
 /// 📄 Classifies XML-bearing OPC parts without retaining imported syntax or container metadata.
-pub fn pptx_part_is_xml(path: &str, content_type: &str) -> bool {
+pub async fn pptx_part_is_xml(path: &str, content_type: &str) -> bool {
     let lower_path = path.to_ascii_lowercase();
     let lower_type = content_type.to_ascii_lowercase();
     lower_path.ends_with(".xml") || lower_path.ends_with(".vml") || lower_type.ends_with("+xml") || lower_type.ends_with("/xml") || lower_type.contains("vmldrawing")
 }
 
-fn numbered_path(path: &str, prefix: &str) -> Option<u32> {
+async fn numbered_path(path: &str, prefix: &str) -> Option<u32> {
     path.strip_prefix(prefix)?.strip_suffix(".xml")?.parse().ok()
 }
 
-fn content_type_override_key(path: &str) -> (u8, u32, &str) {
+async fn content_type_override_key(path: &str) -> (u8, u32, &str) {
     if path == "/ppt/presentation.xml" {
         (0, 0, path)
     } else if let Some(number) = numbered_path(path, "/ppt/slideMasters/slideMaster") {
@@ -184,19 +184,19 @@ pub struct PptxSnapshot {
 }
 
 impl Default for PptxSnapshot {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self { schema: STDIO_PPTX_DOCUMENT_SCHEMA.into(), opc: OpcPackage::default(), xml_parts: Vec::new(), presentation: PptxPresentation::default() }
     }
 }
 
 impl PptxSnapshot {
-    pub fn from_parts(opc: OpcPackage, xml_parts: Vec<PptxXmlPart>, presentation: PptxPresentation) -> Self {
+    pub async fn from_parts(opc: OpcPackage, xml_parts: Vec<PptxXmlPart>, presentation: PptxPresentation) -> Self {
         let mut snapshot = Self { schema: STDIO_PPTX_DOCUMENT_SCHEMA.into(), opc, xml_parts, presentation };
         snapshot.normalize_logical_keys();
         snapshot
     }
 
-    pub(crate) fn normalize_logical_keys(&mut self) {
+    pub(crate) async fn normalize_logical_keys(&mut self) {
         self.opc.parts.sort_by(|left, right| left.path.cmp(&right.path));
         self.opc.content_types.defaults.sort_by(|left, right| left.0.cmp(&right.0));
         self.opc.content_types.overrides.sort_by(|left, right| content_type_override_key(&left.0).cmp(&content_type_override_key(&right.0)));
@@ -233,7 +233,7 @@ pub(crate) struct PptxSnapshotRecord {
 }
 
 impl PptxSnapshotRecord {
-    pub(crate) fn from_snapshot(snapshot: &PptxSnapshot) -> Result<Self, String> {
+    pub(crate) async fn from_snapshot(snapshot: &PptxSnapshot) -> Result<Self, String> {
         let mut opc = snapshot.opc.clone();
         let binary_parts = std::mem::take(&mut opc.parts).into_iter().map(|part| PptxBinaryPartRecord { path: part.path, content_type: part.content_type, bytes: part.bytes }).collect();
         let relationships = std::mem::take(&mut opc.relationships);
@@ -242,7 +242,7 @@ impl PptxSnapshotRecord {
         Ok(Self { schema: snapshot.schema.clone(), opc: dsl::to_dsl_value(&opc)?, binary_parts, relationship_groups, xml_parts: dsl::to_dsl_value(&snapshot.xml_parts)?, presentation: dsl::to_dsl_value(&snapshot.presentation)? })
     }
 
-    pub(crate) fn into_snapshot(self) -> Result<PptxSnapshot, String> {
+    pub(crate) async fn into_snapshot(self) -> Result<PptxSnapshot, String> {
         let schema = self.schema;
         let mut opc: OpcPackage = dsl::from_dsl_value(self.opc)?;
         if !opc.parts.is_empty() {
@@ -266,10 +266,10 @@ impl PptxSnapshotRecord {
 
 impl store::ArtifactDsl for PptxSnapshot {
     const EXTENSION: &'static str = "pptx";
-    fn envelope_id() -> &'static str {
+    async fn envelope_id() -> &'static str {
         "stdio.pptx"
     }
-    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+    async fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
         let body = match store::semio_format::split_text_preamble(text) {
             Ok((_, rest)) => rest,
             Err(_) => text,
@@ -284,7 +284,7 @@ impl store::ArtifactDsl for PptxSnapshot {
         }
         crate::artifacts::pptx::standards::v_ecma_376::subsets::any::io::import::deserializers::decode_pptx(&bytes).map_err(|e| store::TextError::new(e.to_string(), dsl::TextSpan::at(1, 1)))
     }
-    fn print_dsl(&self) -> String {
+    async fn print_dsl(&self) -> String {
         let bytes = crate::artifacts::pptx::standards::v_ecma_376::subsets::any::io::export::serializers::encode_pptx(self).unwrap_or_default();
         let body: String = bytes.iter().map(|b| format!("{b:02x}")).collect();
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
@@ -293,13 +293,13 @@ impl store::ArtifactDsl for PptxSnapshot {
 }
 
 impl store::ArtifactPack for PptxSnapshot {
-    fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
+    async fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
         let raw = crate::artifacts::pptx::standards::v_ecma_376::subsets::any::io::export::serializers::encode_pptx(self).map_err(|e| store::PackError::Schema(e.to_string()))?;
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &raw))
     }
-    fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
+    async fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
         if envelope.envelope_id() != <Self as store::ArtifactDsl>::envelope_id() {
             return Err(store::PackError::Schema("pack envelope mismatch".into()));
@@ -314,7 +314,7 @@ mod shadow_tests {
     use super::*;
 
     #[test]
-    fn logical_snapshot_and_facets_have_no_shadow_state() {
+    async fn logical_snapshot_and_facets_have_no_shadow_state() {
         let json = format!("{:?}", PptxSnapshot::default());
         for forbidden in ["physical", "sourceBytes", "nativeArchive", "semanticBlake3"] {
             assert!(!json.contains(forbidden), "snapshot contains forbidden shadow field {forbidden}");

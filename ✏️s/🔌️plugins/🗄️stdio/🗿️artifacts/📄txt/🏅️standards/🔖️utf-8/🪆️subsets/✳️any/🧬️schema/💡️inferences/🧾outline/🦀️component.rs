@@ -17,7 +17,7 @@ pub struct TxtOutline {
 }
 
 impl TxtOutline {
-    pub fn compute(snapshot: &TxtSnapshot) -> Self {
+    pub async fn compute(snapshot: &TxtSnapshot) -> Self {
         let line_count = snapshot.lines.len() as u32;
         let word_count = snapshot.lines.iter().map(|line| line.split_whitespace().count() as u32).sum();
         let char_count = snapshot.lines.iter().map(|line| line.chars().count() as u32).sum();
@@ -32,7 +32,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn counts_lines_words_and_chars() {
+    async fn counts_lines_words_and_chars() {
         let snapshot = TxtSnapshot { schema: "stdio.txt".into(), lines: vec!["hello world".into(), "one two three".into()], trailing_newline: true, line_ending: Default::default() };
         let outline = TxtOutline::compute(&snapshot);
         assert_eq!(outline.line_count, 2);
@@ -41,7 +41,7 @@ mod tests {
     }
 
     #[test]
-    fn outline_is_deterministic() {
+    async fn outline_is_deterministic() {
         let snapshot = TxtSnapshot::default();
         assert_eq!(TxtOutline::compute(&snapshot), TxtOutline::compute(&snapshot));
     }

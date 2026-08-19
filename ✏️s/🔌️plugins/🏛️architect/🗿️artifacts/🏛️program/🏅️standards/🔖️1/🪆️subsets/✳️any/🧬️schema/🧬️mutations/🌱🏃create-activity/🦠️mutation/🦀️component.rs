@@ -18,16 +18,16 @@ pub struct CreateActivity {
 }
 impl MutationKind<ProgramSnapshot, ProgramMutation> for CreateActivity {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "create", entity: "activity", kind: "create-activity", record: "CreatedActivity" };
-    fn diff(&self, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
+    async fn diff(&self, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {
+    async fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         format!("Create activity \"{}\"", self.activity.header.name)
     }
-    fn target(&self) -> Vec<String> {
+    async fn target(&self) -> Vec<String> {
         vec![self.activity.header.id.0.clone()]
     }
 }

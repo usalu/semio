@@ -17,15 +17,15 @@ pub mod spatial {
     use semio_framework_3d::engine::{Aabb, Vec3};
 
     // #region 🔖️AabbHelpers
-    fn aabb_union(a: &Aabb, b: &Aabb) -> Aabb {
+    async fn aabb_union(a: &Aabb, b: &Aabb) -> Aabb {
         Aabb { min: [a.min[0].min(b.min[0]), a.min[1].min(b.min[1]), a.min[2].min(b.min[2])], max: [a.max[0].max(b.max[0]), a.max[1].max(b.max[1]), a.max[2].max(b.max[2])] }
     }
 
-    fn aabb_center(a: &Aabb) -> Vec3 {
+    async fn aabb_center(a: &Aabb) -> Vec3 {
         [(a.min[0] + a.max[0]) * 0.5, (a.min[1] + a.max[1]) * 0.5, (a.min[2] + a.max[2]) * 0.5]
     }
 
-    fn aabb_longest_axis(a: &Aabb) -> usize {
+    async fn aabb_longest_axis(a: &Aabb) -> usize {
         let extents = [a.max[0] - a.min[0], a.max[1] - a.min[1], a.max[2] - a.min[2]];
         if extents[0] >= extents[1] && extents[0] >= extents[2] {
             0
@@ -37,7 +37,7 @@ pub mod spatial {
     }
 
     /// 📏️ Squared distance from `point` to the closest point on `aabb` (0 if inside).
-    fn aabb_point_distance_sq(aabb: &Aabb, point: Vec3) -> f64 {
+    async fn aabb_point_distance_sq(aabb: &Aabb, point: Vec3) -> f64 {
         let mut d = 0.0;
         for ((&v, &lo), &hi) in point.iter().zip(aabb.min.iter()).zip(aabb.max.iter()) {
             if v < lo {
@@ -49,12 +49,12 @@ pub mod spatial {
         d
     }
 
-    fn aabb_overlaps(a: &Aabb, b: &Aabb) -> bool {
+    async fn aabb_overlaps(a: &Aabb, b: &Aabb) -> bool {
         a.min[0] <= b.max[0] && a.max[0] >= b.min[0] && a.min[1] <= b.max[1] && a.max[1] >= b.min[1] && a.min[2] <= b.max[2] && a.max[2] >= b.min[2]
     }
 
     /// 🎯️ Ray-AABB slab intersection test (`origin + t * dir`, `t >= 0`).
-    fn aabb_ray_hits(aabb: &Aabb, origin: Vec3, dir: Vec3) -> bool {
+    async fn aabb_ray_hits(aabb: &Aabb, origin: Vec3, dir: Vec3) -> bool {
         let mut tmin = f64::NEG_INFINITY;
         let mut tmax = f64::INFINITY;
         for axis in 0..3 {
@@ -87,7 +87,7 @@ pub mod spatial {
     }
 
     impl<T> Node<T> {
-        fn aabb(&self) -> &Aabb {
+        async fn aabb(&self) -> &Aabb {
             match self {
                 Node::Leaf { aabb, .. } => aabb,
                 Node::Branch { aabb, .. } => aabb,
@@ -102,11 +102,11 @@ pub mod spatial {
 
     impl<T> Bvh<T> {
         /// 🏗️ Builds a BVH from AABB-bounded items via recursive median split on the longest axis.
-        pub fn build(items: Vec<(Aabb, T)>) -> Self {
+        pub async fn build(items: Vec<(Aabb, T)>) -> Self {
             Self { root: Self::build_node(items) }
         }
 
-        fn build_node(mut items: Vec<(Aabb, T)>) -> Option<Node<T>> {
+        async fn build_node(mut items: Vec<(Aabb, T)>) -> Option<Node<T>> {
             if items.is_empty() {
                 return None;
             }
@@ -130,13 +130,13 @@ pub mod spatial {
         /// 🔍️ Returns the item whose leaf AABB is nearest to `point` (by AABB distance, not exact
         /// item-surface distance) — callers refine among close candidates via the exact kernel
         /// query; this only narrows the candidate set.
-        pub fn query_point_nearest(&self, point: Vec3) -> Option<&T> {
+        pub async fn query_point_nearest(&self, point: Vec3) -> Option<&T> {
             let mut best: Option<(&T, f64)> = None;
             Self::visit_nearest(self.root.as_ref(), point, &mut best);
             best.map(|(item, _)| item)
         }
 
-        fn visit_nearest<'a>(node: Option<&'a Node<T>>, point: Vec3, best: &mut Option<(&'a T, f64)>) {
+        async fn visit_nearest<'a>(node: Option<&'a Node<T>>, point: Vec3, best: &mut Option<(&'a T, f64)>) {
             let Some(node) = node else { return };
             let bound_dist = aabb_point_distance_sq(node.aabb(), point);
             if let Some((_, best_dist)) = best {
@@ -162,13 +162,13 @@ pub mod spatial {
         }
 
         /// 🎯️ Returns all items whose leaf AABB is crossed by the ray `origin + t * dir` (`t >= 0`).
-        pub fn query_ray(&self, origin: Vec3, dir: Vec3) -> Vec<&T> {
+        pub async fn query_ray(&self, origin: Vec3, dir: Vec3) -> Vec<&T> {
             let mut hits = Vec::new();
             Self::visit_ray(self.root.as_ref(), origin, dir, &mut hits);
             hits
         }
 
-        fn visit_ray<'a>(node: Option<&'a Node<T>>, origin: Vec3, dir: Vec3, hits: &mut Vec<&'a T>) {
+        async fn visit_ray<'a>(node: Option<&'a Node<T>>, origin: Vec3, dir: Vec3, hits: &mut Vec<&'a T>) {
             let Some(node) = node else { return };
             if !aabb_ray_hits(node.aabb(), origin, dir) {
                 return;
@@ -183,13 +183,13 @@ pub mod spatial {
         }
 
         /// 📦️ Returns all items whose leaf AABB overlaps `query`.
-        pub fn query_aabb_overlap(&self, query: &Aabb) -> Vec<&T> {
+        pub async fn query_aabb_overlap(&self, query: &Aabb) -> Vec<&T> {
             let mut hits = Vec::new();
             Self::visit_overlap(self.root.as_ref(), query, &mut hits);
             hits
         }
 
-        fn visit_overlap<'a>(node: Option<&'a Node<T>>, query: &Aabb, hits: &mut Vec<&'a T>) {
+        async fn visit_overlap<'a>(node: Option<&'a Node<T>>, query: &Aabb, hits: &mut Vec<&'a T>) {
             let Some(node) = node else { return };
             if !aabb_overlaps(node.aabb(), query) {
                 return;
@@ -210,12 +210,12 @@ pub mod spatial {
     mod tests {
         use super::*;
 
-        fn aabb(min: Vec3, max: Vec3) -> Aabb {
+        async fn aabb(min: Vec3, max: Vec3) -> Aabb {
             Aabb { min, max }
         }
 
         #[test]
-        fn empty_bvh_returns_no_matches() {
+        async fn empty_bvh_returns_no_matches() {
             let bvh: Bvh<u32> = Bvh::build(Vec::new());
             assert_eq!(bvh.query_point_nearest([0.0, 0.0, 0.0]), None);
             assert!(bvh.query_ray([0.0, 0.0, 0.0], [1.0, 0.0, 0.0]).is_empty());
@@ -223,7 +223,7 @@ pub mod spatial {
         }
 
         #[test]
-        fn nearest_point_finds_closest_leaf() {
+        async fn nearest_point_finds_closest_leaf() {
             let items = vec![(aabb([0.0, 0.0, 0.0], [1.0, 1.0, 1.0]), "near"), (aabb([10.0, 10.0, 10.0], [11.0, 11.0, 11.0]), "far")];
             let bvh = Bvh::build(items);
             assert_eq!(bvh.query_point_nearest([0.5, 0.5, 0.5]), Some(&"near"));
@@ -231,7 +231,7 @@ pub mod spatial {
         }
 
         #[test]
-        fn ray_hits_only_crossed_leaves() {
+        async fn ray_hits_only_crossed_leaves() {
             let items = vec![(aabb([0.0, -1.0, -1.0], [1.0, 1.0, 1.0]), "hit"), (aabb([0.0, 10.0, 10.0], [1.0, 11.0, 11.0]), "miss")];
             let bvh = Bvh::build(items);
             let hits = bvh.query_ray([-5.0, 0.0, 0.0], [1.0, 0.0, 0.0]);
@@ -239,7 +239,7 @@ pub mod spatial {
         }
 
         #[test]
-        fn aabb_overlap_finds_intersecting_leaves() {
+        async fn aabb_overlap_finds_intersecting_leaves() {
             let items = vec![(aabb([0.0, 0.0, 0.0], [1.0, 1.0, 1.0]), "overlap"), (aabb([5.0, 5.0, 5.0], [6.0, 6.0, 6.0]), "disjoint")];
             let bvh = Bvh::build(items);
             let mut hits = bvh.query_aabb_overlap(&aabb([0.5, 0.5, 0.5], [2.0, 2.0, 2.0]));
@@ -248,7 +248,7 @@ pub mod spatial {
         }
 
         #[test]
-        fn many_leaves_build_and_query_correctly() {
+        async fn many_leaves_build_and_query_correctly() {
             let items: Vec<(Aabb, usize)> = (0..200).map(|i| (aabb([i as f64, 0.0, 0.0], [i as f64 + 0.5, 0.5, 0.5]), i)).collect();
             let bvh = Bvh::build(items);
             assert_eq!(bvh.query_point_nearest([100.2, 0.2, 0.2]), Some(&100));
@@ -269,12 +269,12 @@ use semio_framework_3d::engine::{Aabb, Vec3};
 use spatial::Bvh;
 
 // #region 🔖️Bounds
-fn aabb_from_point(p: Pnt3) -> Aabb {
+async fn aabb_from_point(p: Pnt3) -> Aabb {
     let v = p.to_array();
     Aabb { min: v, max: v }
 }
 
-fn aabb_extend(mut a: Aabb, p: Pnt3) -> Aabb {
+async fn aabb_extend(mut a: Aabb, p: Pnt3) -> Aabb {
     let v = p.to_array();
     a.min[0] = a.min[0].min(v[0]);
     a.min[1] = a.min[1].min(v[1]);
@@ -285,7 +285,7 @@ fn aabb_extend(mut a: Aabb, p: Pnt3) -> Aabb {
     a
 }
 
-fn sample_curve_segment(curve: &Curve3, t0: f64, t1: f64, samples: usize) -> Vec<Pnt3> {
+async fn sample_curve_segment(curve: &Curve3, t0: f64, t1: f64, samples: usize) -> Vec<Pnt3> {
     if samples <= 1 {
         return vec![curve.eval(t0), curve.eval(t1)];
     }
@@ -294,7 +294,7 @@ fn sample_curve_segment(curve: &Curve3, t0: f64, t1: f64, samples: usize) -> Vec
 }
 
 /// 📦 Conservative world-space AABB for one edge's used curve segment.
-pub fn edge_aabb(body: &Body, edge: EdgeId) -> Result<Aabb, KernelError> {
+pub async fn edge_aabb(body: &Body, edge: EdgeId) -> Result<Aabb, KernelError> {
     let edge_rec = body.edges.get(edge).ok_or_else(|| KernelError::MissingEntity(edge.to_string()))?;
     let curve = body.curves3.get(edge_rec.curve).ok_or_else(|| KernelError::MissingEntity(format!("curve-{}", edge_rec.curve)))?;
     let (t0, t1) = edge_rec.range;
@@ -314,7 +314,7 @@ pub fn edge_aabb(body: &Body, edge: EdgeId) -> Result<Aabb, KernelError> {
 }
 
 /// 📦 Conservative world-space AABB for one face from its loop vertices and edge curve samples.
-pub fn face_aabb(body: &Body, face: FaceId) -> Result<Aabb, KernelError> {
+pub async fn face_aabb(body: &Body, face: FaceId) -> Result<Aabb, KernelError> {
     let coedges = body.face_coedges(face);
     if coedges.is_empty() {
         return Err(KernelError::Operation(format!("face {face} has no boundary")));
@@ -356,7 +356,7 @@ pub enum BvhIndex {
     Edges(EdgeBvh),
 }
 
-fn require_solid(body: &Body, solid: SolidId) -> Result<(), KernelError> {
+async fn require_solid(body: &Body, solid: SolidId) -> Result<(), KernelError> {
     if body.solids.get(solid).is_some() {
         Ok(())
     } else {
@@ -364,7 +364,7 @@ fn require_solid(body: &Body, solid: SolidId) -> Result<(), KernelError> {
     }
 }
 
-fn solid_unique_edges(body: &Body, solid: SolidId) -> Vec<EdgeId> {
+async fn solid_unique_edges(body: &Body, solid: SolidId) -> Vec<EdgeId> {
     let mut seen = std::collections::HashSet::new();
     for face in body.solid_faces(solid) {
         for coedge in body.face_coedges(face) {
@@ -377,7 +377,7 @@ fn solid_unique_edges(body: &Body, solid: SolidId) -> Vec<EdgeId> {
 }
 
 /// 🏗️ Builds a face BVH over every face referenced by `solid`.
-pub fn build_face_bvh(body: &Body, solid: SolidId) -> Result<FaceBvh, KernelError> {
+pub async fn build_face_bvh(body: &Body, solid: SolidId) -> Result<FaceBvh, KernelError> {
     require_solid(body, solid)?;
     let mut items = Vec::new();
     for face in body.solid_faces(solid) {
@@ -389,7 +389,7 @@ pub fn build_face_bvh(body: &Body, solid: SolidId) -> Result<FaceBvh, KernelErro
 }
 
 /// 🏗️ Builds an edge BVH over every edge incident to `solid`'s faces.
-pub fn build_edge_bvh(body: &Body, solid: SolidId) -> Result<EdgeBvh, KernelError> {
+pub async fn build_edge_bvh(body: &Body, solid: SolidId) -> Result<EdgeBvh, KernelError> {
     require_solid(body, solid)?;
     let mut items = Vec::new();
     for edge in solid_unique_edges(body, solid) {
@@ -402,34 +402,34 @@ pub fn build_edge_bvh(body: &Body, solid: SolidId) -> Result<EdgeBvh, KernelErro
 
 impl FaceBvh {
     /// 🎯️ Face ids whose leaf bounds are crossed by the ray.
-    pub fn query_ray(&self, origin: Vec3, dir: Vec3) -> Vec<FaceId> {
+    pub async fn query_ray(&self, origin: Vec3, dir: Vec3) -> Vec<FaceId> {
         self.bvh.query_ray(origin, dir).into_iter().copied().collect()
     }
 
     /// 📦 Face ids whose leaf bounds overlap `query`.
-    pub fn query_aabb(&self, query: &Aabb) -> Vec<FaceId> {
+    pub async fn query_aabb(&self, query: &Aabb) -> Vec<FaceId> {
         self.bvh.query_aabb_overlap(query).into_iter().copied().collect()
     }
 
     /// 📍 Face id whose leaf bound is nearest to `point` (AABB distance).
-    pub fn query_nearest(&self, point: Vec3) -> Option<FaceId> {
+    pub async fn query_nearest(&self, point: Vec3) -> Option<FaceId> {
         self.bvh.query_point_nearest(point).copied()
     }
 }
 
 impl EdgeBvh {
     /// 🎯️ Edge ids whose leaf bounds are crossed by the ray.
-    pub fn query_ray(&self, origin: Vec3, dir: Vec3) -> Vec<EdgeId> {
+    pub async fn query_ray(&self, origin: Vec3, dir: Vec3) -> Vec<EdgeId> {
         self.bvh.query_ray(origin, dir).into_iter().copied().collect()
     }
 
     /// 📦 Edge ids whose leaf bounds overlap `query`.
-    pub fn query_aabb(&self, query: &Aabb) -> Vec<EdgeId> {
+    pub async fn query_aabb(&self, query: &Aabb) -> Vec<EdgeId> {
         self.bvh.query_aabb_overlap(query).into_iter().copied().collect()
     }
 
     /// 📍 Edge id whose leaf bound is nearest to `point` (AABB distance).
-    pub fn query_nearest(&self, point: Vec3) -> Option<EdgeId> {
+    pub async fn query_nearest(&self, point: Vec3) -> Option<EdgeId> {
         self.bvh.query_point_nearest(point).copied()
     }
 }
@@ -448,7 +448,7 @@ mod tests {
     use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::matrix::Frame3;
     use std::collections::HashMap;
 
-    fn build_tetrahedron(body: &mut Body, rec: &mut OpRecorder) -> SolidId {
+    async fn build_tetrahedron(body: &mut Body, rec: &mut OpRecorder) -> SolidId {
         let positions = [Pnt3::new(0.0, 0.0, 0.0), Pnt3::new(1.0, 0.0, 0.0), Pnt3::new(0.0, 1.0, 0.0), Pnt3::new(0.0, 0.0, 1.0)];
         let vertices: Vec<_> = positions.iter().map(|&p| make_vertex(body, p, Tol::DEFAULT, rec)).collect();
         let edge_pairs = [(0, 1), (1, 2), (2, 0), (0, 3), (1, 3), (2, 3)];
@@ -484,7 +484,7 @@ mod tests {
     }
 
     #[test]
-    fn face_bvh_builds_over_tetrahedron_with_four_faces() {
+    async fn face_bvh_builds_over_tetrahedron_with_four_faces() {
         let mut body = Body::new();
         let mut rec = OpRecorder::new();
         let solid = build_tetrahedron(&mut body, &mut rec);
@@ -499,7 +499,7 @@ mod tests {
     }
 
     #[test]
-    fn edge_bvh_builds_six_edges_on_tetrahedron() {
+    async fn edge_bvh_builds_six_edges_on_tetrahedron() {
         let mut body = Body::new();
         let mut rec = OpRecorder::new();
         let solid = build_tetrahedron(&mut body, &mut rec);
@@ -510,7 +510,7 @@ mod tests {
     }
 
     #[test]
-    fn empty_solid_yields_empty_face_bvh_queries() {
+    async fn empty_solid_yields_empty_face_bvh_queries() {
         let mut body = Body::new();
         let mut rec = OpRecorder::new();
         let shell = add_shell(&mut body, vec![], &mut rec);
@@ -522,7 +522,7 @@ mod tests {
     }
 
     #[test]
-    fn missing_solid_returns_kernel_error() {
+    async fn missing_solid_returns_kernel_error() {
         let body = Body::new();
         let bogus = SolidId::from_raw(9, 9);
         assert!(matches!(build_face_bvh(&body, bogus), Err(KernelError::MissingEntity(_))));

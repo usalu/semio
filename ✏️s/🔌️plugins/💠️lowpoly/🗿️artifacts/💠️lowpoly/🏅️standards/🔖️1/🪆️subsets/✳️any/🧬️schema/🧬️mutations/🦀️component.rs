@@ -29,11 +29,11 @@ mod run_bytes_base64 {
     use base64::Engine;
     use serde::{Deserialize, Deserializer, Serializer};
 
-    pub fn serialize<S: Serializer>(bytes: &[u8], serializer: S) -> Result<S::Ok, S::Error> {
+    pub async fn serialize<S: Serializer>(bytes: &[u8], serializer: S) -> Result<S::Ok, S::Error> {
         serializer.serialize_str(&base64::engine::general_purpose::STANDARD.encode(bytes))
     }
 
-    pub fn deserialize<'de, D: Deserializer<'de>>(deserializer: D) -> Result<Vec<u8>, D::Error> {
+    pub async fn deserialize<'de, D: Deserializer<'de>>(deserializer: D) -> Result<Vec<u8>, D::Error> {
         let encoded = String::deserialize(deserializer)?;
         base64::engine::general_purpose::STANDARD.decode(encoded.as_bytes()).map_err(serde::de::Error::custom)
     }
@@ -71,7 +71,7 @@ mod tests {
     use crate::artifacts::lowpoly::{schema::default_snapshot, LowpolyObject};
     use protocol::{Mutation, MutationDiff};
 
-    fn tiny_object(id: &str, name: &str) -> LowpolyObject {
+    async fn tiny_object(id: &str, name: &str) -> LowpolyObject {
         let mesh = default_snapshot().objects[0].mesh.clone();
         LowpolyObject { id: id.into(), name: name.into(), transform: Default::default(), smooth_shading: false, mesh, paint_layers: Vec::new() }
     }
@@ -81,7 +81,7 @@ mod tests {
     /// reachable via this crate's existing `semio-framework-os-kernel` dependency — no new Cargo
     /// dependency needed) against an id-keyed create/delete pair and a scalar rename.
     #[test]
-    fn create_object_obeys_the_inverse_and_absorb_laws() {
+    async fn create_object_obeys_the_inverse_and_absorb_laws() {
         let base = default_snapshot();
         let create = LowpolyMutation::CreateObject(super::super::create_object::mutation::CreateObject { index: base.objects.len(), object: tiny_object("obj-99", "Extra") });
         protocol::os_spr::testkit::assert_mutation_inverse_law(&base, &create);
@@ -92,14 +92,14 @@ mod tests {
     }
 
     #[test]
-    fn delete_object_of_a_missing_id_has_an_empty_inverse() {
+    async fn delete_object_of_a_missing_id_has_an_empty_inverse() {
         let base = default_snapshot();
         let delete = LowpolyMutation::DeleteObject(super::super::delete_object::mutation::DeleteObject { id: "nope".into() });
         assert!(delete.inverse(&base).is_empty(), "deleting an absent id has nothing to undo");
     }
 
     #[test]
-    fn move_object_obeys_the_inverse_law() {
+    async fn move_object_obeys_the_inverse_law() {
         let base = default_snapshot();
         let id = base.objects[0].id.clone();
         let mutation = LowpolyMutation::MoveObject(super::super::move_object::mutation::MoveObject { id, new_position: [4.0, 5.0, 6.0] });
@@ -114,28 +114,28 @@ mod tests {
     /// `🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧪️testkit/🦀️component.rs`); TODO(1-D testkit
     /// laws pending): add a `MergePolicy` × `Severity` matrix test per verb family here once it lands.
     #[test]
-    fn delete_object_missing_target_is_an_error() {
+    async fn delete_object_missing_target_is_an_error() {
         let base = default_snapshot();
         let mutation = LowpolyMutation::DeleteObject(super::super::delete_object::mutation::DeleteObject { id: "does-not-exist".into() });
         protocol::os_spr::testkit::assert_missing_target_is_error(&base, &mutation);
     }
 
     #[test]
-    fn move_object_missing_target_is_an_error() {
+    async fn move_object_missing_target_is_an_error() {
         let base = default_snapshot();
         let mutation = LowpolyMutation::MoveObject(super::super::move_object::mutation::MoveObject { id: "does-not-exist".into(), new_position: [1.0, 2.0, 3.0] });
         protocol::os_spr::testkit::assert_missing_target_is_error(&base, &mutation);
     }
 
     #[test]
-    fn rename_object_missing_target_is_an_error() {
+    async fn rename_object_missing_target_is_an_error() {
         let base = default_snapshot();
         let mutation = LowpolyMutation::RenameObject(super::super::rename_object::mutation::RenameObject { id: "does-not-exist".into(), new_name: "X".into() });
         protocol::os_spr::testkit::assert_missing_target_is_error(&base, &mutation);
     }
 
     #[test]
-    fn create_object_duplicate_id_is_fatal_and_never_applies() {
+    async fn create_object_duplicate_id_is_fatal_and_never_applies() {
         let base = default_snapshot();
         let existing_id = base.objects[0].id.clone();
         let mutation = LowpolyMutation::CreateObject(super::super::create_object::mutation::CreateObject { index: 0, object: tiny_object(&existing_id, "Dup") });

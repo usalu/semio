@@ -5,7 +5,7 @@ use crate::artifacts::en1992::mutations::change_anchor_f_uk_mpa::mutation::Chang
 use crate::artifacts::en1992::En1992Snapshot;
 
 //#region 🔖️Diff
-pub fn diff(payload: &ChangeAnchorFUkMpa, base: &En1992Snapshot) -> protocol::MutationOutcome<En1992Diff> {
+pub async fn diff(payload: &ChangeAnchorFUkMpa, base: &En1992Snapshot) -> protocol::MutationOutcome<En1992Diff> {
     if !payload.new_anchor_f_uk_mpa.is_finite() {
         return protocol::MutationOutcome::fatal("mutation.invariant", "Anchor f uk mpa must be a finite number.", Vec::<String>::new());
     }

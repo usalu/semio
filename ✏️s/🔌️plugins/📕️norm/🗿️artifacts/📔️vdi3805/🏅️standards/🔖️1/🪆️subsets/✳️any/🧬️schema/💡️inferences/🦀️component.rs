@@ -24,19 +24,19 @@ pub struct Vdi3805Inference {
 }
 
 impl protocol::Inference<Vdi3805Snapshot> for Vdi3805Inference {
-    fn infer(snapshot: &Vdi3805Snapshot) -> Self {
+    async fn infer(snapshot: &Vdi3805Snapshot) -> Self {
         Self { outline: Vdi3805Outline::compute(snapshot) }
     }
 }
 
 impl protocol::InferenceSpec<Vdi3805Snapshot> for Vdi3805Inference {
-    fn inference_schema_id() -> &'static str {
+    async fn inference_schema_id() -> &'static str {
         "s.norm.vdi3805.inference"
     }
-    fn schema_version() -> u32 {
+    async fn schema_version() -> u32 {
         1
     }
-    fn fields() -> &'static [protocol::InferenceFieldSpec] {
+    async fn fields() -> &'static [protocol::InferenceFieldSpec] {
         &[protocol::InferenceFieldSpec { id: "s.norm.vdi3805.inference.outline", reads: &["edition_profile", "geometry", "curves"] }]
     }
 }
@@ -52,7 +52,7 @@ impl ArtifactInferrer for standards::v1::subsets::any::schema::Vdi3805Builder {
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.norm.vdi3805.inference`'s facet leaves into the OS-wide inference catalog — call once at
 /// plugin init, alongside `vdi3805_artifact_schema_descriptor`'s registration.
-pub fn vdi3805_artifact_inference_descriptor() -> ::schema::ArtifactInferenceDescriptor {
+pub async fn vdi3805_artifact_inference_descriptor() -> ::schema::ArtifactInferenceDescriptor {
     ::schema::ArtifactInferenceDescriptor {
         id: "s.norm.vdi3805.inference",
         inference: ::schema::FacetLeaves {
@@ -73,13 +73,13 @@ mod tests {
     use protocol::Inference;
 
     #[test]
-    fn inference_determinism_law() {
+    async fn inference_determinism_law() {
         let snapshot = Vdi3805Snapshot::default();
         assert_eq!(Vdi3805Inference::infer(&snapshot), Vdi3805Inference::infer(&snapshot));
     }
 
     #[test]
-    fn inference_default_law() {
+    async fn inference_default_law() {
         assert_eq!(Vdi3805Inference::infer(&Vdi3805Snapshot::default()), Vdi3805Inference::default());
     }
 }
@@ -104,11 +104,11 @@ macro_rules! define_vdi_part {
         pub mod $module {
             use super::*;
 
-            pub fn metadata() -> &'static SheetEntry {
+            pub async fn metadata() -> &'static SheetEntry {
                 &SHEET_ENTRIES[$num - 1]
             }
 
-            pub fn check(document: &Vdi3805Snapshot) -> CheckResult {
+            pub async fn check(document: &Vdi3805Snapshot) -> CheckResult {
                 let _ = document;
                 na_check(stringify!($num), "scope", format!("sheet {} reserved", $num))
             }
@@ -118,11 +118,11 @@ macro_rules! define_vdi_part {
         pub mod $module {
             use super::*;
 
-            pub fn metadata() -> &'static SheetEntry {
+            pub async fn metadata() -> &'static SheetEntry {
                 &SHEET_ENTRIES[$num - 1]
             }
 
-            pub fn check(document: &Vdi3805Snapshot) -> CheckResult {
+            pub async fn check(document: &Vdi3805Snapshot) -> CheckResult {
                 if document.strict_mode {
                     fail_check(stringify!($num), "status", "historical proposal not allowed in strict mode")
                 } else {
@@ -141,11 +141,11 @@ macro_rules! define_vdi_part {
                 Current,
             }
 
-            pub fn metadata() -> &'static SheetEntry {
+            pub async fn metadata() -> &'static SheetEntry {
                 &SHEET_ENTRIES[$num - 1]
             }
 
-            pub fn check(document: &Vdi3805Snapshot) -> CheckResult {
+            pub async fn check(document: &Vdi3805Snapshot) -> CheckResult {
                 let product = document.catalog.product_for_sheet(SheetId($num));
                 let profile = document.edition_profile.get(stringify!($num)).copied().unwrap_or(EditionProfileChoice::Current);
                 if product.is_none() {
@@ -160,11 +160,11 @@ macro_rules! define_vdi_part {
         pub mod $module {
             use super::*;
 
-            pub fn metadata() -> &'static SheetEntry {
+            pub async fn metadata() -> &'static SheetEntry {
                 &SHEET_ENTRIES[$num - 1]
             }
 
-            pub fn check(document: &Vdi3805Snapshot) -> CheckResult {
+            pub async fn check(document: &Vdi3805Snapshot) -> CheckResult {
                 if let Some(product) = document.catalog.product_for_sheet(SheetId($num)) {
                     if product.identity.article_number.is_empty() {
                         return fail_check(stringify!($num), "identity", "missing article number");
@@ -181,11 +181,11 @@ macro_rules! define_vdi_part {
 pub mod part_1 {
     use super::*;
 
-    pub fn metadata() -> &'static SheetEntry {
+    pub async fn metadata() -> &'static SheetEntry {
         &SHEET_ENTRIES[0]
     }
 
-    pub fn check(document: &Vdi3805Snapshot) -> CheckResult {
+    pub async fn check(document: &Vdi3805Snapshot) -> CheckResult {
         let issues = validate_structure(&document.catalog);
         if issues.iter().any(|d| d.severity == Severity::Error) {
             fail_check("1", "structure", "Part 1 structural errors")
@@ -297,7 +297,7 @@ define_vdi_part!(part_100, 100, multi_profile);
 // #endregion SheetParts
 
 // #region Session
-fn all_part_checks(document: &Vdi3805Snapshot) -> Vec<CheckResult> {
+async fn all_part_checks(document: &Vdi3805Snapshot) -> Vec<CheckResult> {
     vec![
         part_1::check(document),
         part_02::check(document),
@@ -402,7 +402,7 @@ fn all_part_checks(document: &Vdi3805Snapshot) -> Vec<CheckResult> {
     ]
 }
 
-pub fn evaluate(document: &Vdi3805Snapshot) -> CheckReport {
+pub async fn evaluate(document: &Vdi3805Snapshot) -> CheckReport {
     let mut report = CheckReport::default();
 
     for check in all_part_checks(document) {
@@ -495,7 +495,7 @@ mod compliance_report_tests {
     use std::collections::BTreeSet;
 
     #[test]
-    fn evaluate_reaches_operative_sheet_families() {
+    async fn evaluate_reaches_operative_sheet_families() {
         let report = evaluate(&Vdi3805Snapshot::default());
         let parts: BTreeSet<String> = report.checks.iter().map(|c| c.clause.part.clone()).filter(|p| p.chars().all(|ch| ch.is_ascii_digit())).collect();
         let registry = SchemaCatalog::current();
@@ -509,7 +509,7 @@ mod compliance_report_tests {
     }
 
     #[test]
-    fn reserved_sheet_returns_not_applicable() {
+    async fn reserved_sheet_returns_not_applicable() {
         let doc = Vdi3805Snapshot::default();
         let result = part_15::check(&doc);
         assert_eq!(result.status, CheckStatus::NotApplicable);
@@ -518,7 +518,7 @@ mod compliance_report_tests {
     }
 
     #[test]
-    fn historical_part_check_respects_strict_mode() {
+    async fn historical_part_check_respects_strict_mode() {
         let mut doc = Vdi3805Snapshot { strict_mode: true, ..Vdi3805Snapshot::default() };
         let result = part_12::check(&doc);
         assert_eq!(result.status, CheckStatus::Fail);
@@ -529,21 +529,21 @@ mod compliance_report_tests {
     }
 
     #[test]
-    fn multi_profile_part_check_reports_metadata_when_no_product() {
+    async fn multi_profile_part_check_reports_metadata_when_no_product() {
         let doc = Vdi3805Snapshot::default();
         let result = part_08::check(&doc);
         assert_eq!(result.status, CheckStatus::Pass);
     }
 
     #[test]
-    fn evaluate_reports_strict_mode_check() {
+    async fn evaluate_reports_strict_mode_check() {
         let doc = Vdi3805Snapshot { strict_mode: true, ..Vdi3805Snapshot::default() };
         let report = evaluate(&doc);
         assert!(report.checks.iter().any(|c| c.clause.section == "strict"));
     }
 
     #[test]
-    fn evaluate_skips_geometry_and_curve_checks_when_absent() {
+    async fn evaluate_skips_geometry_and_curve_checks_when_absent() {
         let mut doc = Vdi3805Snapshot::default();
         doc.geometry.clear();
         doc.curves.clear();

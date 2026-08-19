@@ -44,7 +44,7 @@ pub use super::rename_node::mutation::{rename_node, RenameNode};
 pub type TrinityGraphEnvelope = ArtifactEnvelope<JackSnapshot, TrinityGraphMutation>;
 pub type TrinityGraphStore = ArtifactStore<JackSnapshot, TrinityGraphMutation>;
 
-pub fn create_trinity_graph_envelope(id: &str, fixture: JackSnapshot) -> TrinityGraphEnvelope {
+pub async fn create_trinity_graph_envelope(id: &str, fixture: JackSnapshot) -> TrinityGraphEnvelope {
     create_document_envelope(TRINITY_GRAPH_SCHEMA, id, fixture, None)
 }
 //#endregion 🔖️Store
@@ -53,7 +53,7 @@ pub fn create_trinity_graph_envelope(id: &str, fixture: JackSnapshot) -> Trinity
 /// 🛡️ Pre-flight manifest/reference validation for one operation against `fixture` — distinct from
 /// `diff`/`inverse` (which assume a validated operation); kept centralized because it cross-checks
 /// against the compile-time `Manifest`, not a single sparse-diff concern.
-pub fn validate_trinity_graph_operation(operation: &TrinityGraphMutation, fixture: &JackSnapshot) -> Result<(), crate::artifacts::jack::TrinityRamError> {
+pub async fn validate_trinity_graph_operation(operation: &TrinityGraphMutation, fixture: &JackSnapshot) -> Result<(), crate::artifacts::jack::TrinityRamError> {
     use crate::artifacts::jack::TrinityRamError;
     let scene = crate::artifacts::jack::jack_working_scene(fixture);
     match operation {
@@ -118,7 +118,7 @@ pub fn validate_trinity_graph_operation(operation: &TrinityGraphMutation, fixtur
     Ok(())
 }
 
-fn validate_clear_data_property(fixture: &JackSnapshot, entity: &EntityRef, key: &str) -> Result<(), crate::artifacts::jack::TrinityRamError> {
+async fn validate_clear_data_property(fixture: &JackSnapshot, entity: &EntityRef, key: &str) -> Result<(), crate::artifacts::jack::TrinityRamError> {
     use crate::artifacts::jack::TrinityRamError;
     let scene = crate::artifacts::jack::jack_working_scene(fixture);
     match entity {
@@ -133,7 +133,7 @@ fn validate_clear_data_property(fixture: &JackSnapshot, entity: &EntityRef, key:
     Ok(())
 }
 
-fn validate_set_data_property(fixture: &JackSnapshot, entity: &EntityRef, key: &str, value: &PropertyValue) -> Result<(), crate::artifacts::jack::TrinityRamError> {
+async fn validate_set_data_property(fixture: &JackSnapshot, entity: &EntityRef, key: &str, value: &PropertyValue) -> Result<(), crate::artifacts::jack::TrinityRamError> {
     use crate::artifacts::jack::TrinityRamError;
     let scene = crate::artifacts::jack::jack_working_scene(fixture);
     let (defs, path_prefix) = match entity {
@@ -157,7 +157,7 @@ fn validate_set_data_property(fixture: &JackSnapshot, entity: &EntityRef, key: &
     validate_property_bag_trinity(&path_prefix, defs, &bag)
 }
 
-fn validate_node_kind_trinity(manifest: &crate::artifacts::jack::Manifest, kind: &str) -> Result<(), crate::artifacts::jack::TrinityRamError> {
+async fn validate_node_kind_trinity(manifest: &crate::artifacts::jack::Manifest, kind: &str) -> Result<(), crate::artifacts::jack::TrinityRamError> {
     if manifest.node_kind(kind).is_some() {
         Ok(())
     } else {
@@ -165,7 +165,7 @@ fn validate_node_kind_trinity(manifest: &crate::artifacts::jack::Manifest, kind:
     }
 }
 
-fn validate_edge_kind_trinity(manifest: &crate::artifacts::jack::Manifest, kind: &str) -> Result<(), crate::artifacts::jack::TrinityRamError> {
+async fn validate_edge_kind_trinity(manifest: &crate::artifacts::jack::Manifest, kind: &str) -> Result<(), crate::artifacts::jack::TrinityRamError> {
     if manifest.edge_kind(kind).is_some() {
         Ok(())
     } else {
@@ -173,7 +173,7 @@ fn validate_edge_kind_trinity(manifest: &crate::artifacts::jack::Manifest, kind:
     }
 }
 
-fn validate_port_kind_trinity(manifest: &crate::artifacts::jack::Manifest, kind: &str) -> Result<(), crate::artifacts::jack::TrinityRamError> {
+async fn validate_port_kind_trinity(manifest: &crate::artifacts::jack::Manifest, kind: &str) -> Result<(), crate::artifacts::jack::TrinityRamError> {
     if manifest.port_kind(kind).is_some() {
         Ok(())
     } else {
@@ -181,14 +181,14 @@ fn validate_port_kind_trinity(manifest: &crate::artifacts::jack::Manifest, kind:
     }
 }
 
-fn validate_edge_properties_trinity(manifest: &crate::artifacts::jack::Manifest, kind: &str, properties: &PropertyBag) -> Result<(), crate::artifacts::jack::TrinityRamError> {
+async fn validate_edge_properties_trinity(manifest: &crate::artifacts::jack::Manifest, kind: &str, properties: &PropertyBag) -> Result<(), crate::artifacts::jack::TrinityRamError> {
     let Some(def) = manifest.edge_kind(kind) else {
         return validate_edge_kind_trinity(manifest, kind);
     };
     validate_property_bag_trinity(&format!("edges/{kind}/properties"), &def.properties, properties)
 }
 
-fn validate_property_bag_trinity(path: &str, defs: &[crate::artifacts::jack::PropertyDef], bag: &PropertyBag) -> Result<(), crate::artifacts::jack::TrinityRamError> {
+async fn validate_property_bag_trinity(path: &str, defs: &[crate::artifacts::jack::PropertyDef], bag: &PropertyBag) -> Result<(), crate::artifacts::jack::TrinityRamError> {
     use crate::artifacts::jack::{PropertyKind, TrinityRamError};
     for def in defs {
         if def.kind == PropertyKind::Derived {
@@ -209,7 +209,7 @@ fn validate_property_bag_trinity(path: &str, defs: &[crate::artifacts::jack::Pro
     Ok(())
 }
 
-fn property_value_matches_type_trinity(value: &PropertyValue, def: &crate::artifacts::jack::PropertyDef) -> bool {
+async fn property_value_matches_type_trinity(value: &PropertyValue, def: &crate::artifacts::jack::PropertyDef) -> bool {
     match value {
         PropertyValue::Null => def.value_type.id() == "null",
         PropertyValue::Bool(_) => def.value_type.id() == "boolean",
@@ -233,7 +233,7 @@ fn property_value_matches_type_trinity(value: &PropertyValue, def: &crate::artif
 //#region 🔖️BatchHelpers
 /// ▶️ Diff-based apply of one mutation — thin `Mutation::diff` + `MutationDiff::apply` delegate (P6:
 /// no per-variant hand match here anymore; each kind's real logic lives in its own triad `🔺️diff` leaf).
-pub fn apply_trinity_graph_mutation(
+pub async fn apply_trinity_graph_mutation(
     snapshot: &mut JackSnapshot,
     mutation: &TrinityGraphMutation,
 ) -> protocol::MutationApplyResult<()> {
@@ -243,12 +243,12 @@ pub fn apply_trinity_graph_mutation(
     Ok(())
 }
 
-pub fn inverse_trinity_graph_mutation(projection: &JackSnapshot, mutation: &TrinityGraphMutation) -> Vec<TrinityGraphMutation> {
+pub async fn inverse_trinity_graph_mutation(projection: &JackSnapshot, mutation: &TrinityGraphMutation) -> Vec<TrinityGraphMutation> {
     mutation.inverse(projection)
 }
 
 /// ▶️ Validates then applies a batch of operations, failing atomically on the first invalid one.
-pub fn apply_trinity_graph_mutations(fixture: JackSnapshot, operations: &[TrinityGraphMutation]) -> Result<JackSnapshot, crate::artifacts::jack::TrinityRamError> {
+pub async fn apply_trinity_graph_mutations(fixture: JackSnapshot, operations: &[TrinityGraphMutation]) -> Result<JackSnapshot, crate::artifacts::jack::TrinityRamError> {
     let mut snapshot = fixture;
     for operation in operations {
         validate_trinity_graph_operation(operation, &snapshot)?;
@@ -258,7 +258,7 @@ pub fn apply_trinity_graph_mutations(fixture: JackSnapshot, operations: &[Trinit
 }
 
 /// ▶️ Validates a batch incrementally, then dispatches it as one VCS edit.
-pub fn dispatch_trinity_graph_mutations(store: &mut TrinityGraphStore, operations: Vec<TrinityGraphMutation>) -> Result<(), crate::artifacts::jack::TrinityRamError> {
+pub async fn dispatch_trinity_graph_mutations(store: &mut TrinityGraphStore, operations: Vec<TrinityGraphMutation>) -> Result<(), crate::artifacts::jack::TrinityRamError> {
     if operations.is_empty() {
         return Ok(());
     }
@@ -282,7 +282,7 @@ mod tests {
     use crate::artifacts::jack::{Camera, Manifest, PortDirection};
     use protocol::MutationDiff;
 
-    fn mini_fixture() -> JackSnapshot {
+    async fn mini_fixture() -> JackSnapshot {
         JackSnapshot::with_content(
             JackSnapshot::SCHEMA.into(),
             "mini".into(),
@@ -329,12 +329,12 @@ mod tests {
         )
     }
 
-    fn mini_node(id: &str, x: f64, y: f64, ports: Vec<Port>) -> Node {
+    async fn mini_node(id: &str, x: f64, y: f64, ports: Vec<Port>) -> Node {
         Node { id: id.into(), kind: "Piece".into(), name: id.into(), x, y, width: 80.0, height: 40.0, properties: PropertyBag::new(), ports }
     }
 
     #[test]
-    fn graph_op_rejects_port_kind_not_declared_on_operation() {
+    async fn graph_op_rejects_port_kind_not_declared_on_operation() {
         let mut fixture = mini_fixture();
         fixture.manifest = Manifest {
             node_kinds: vec![graph::manifest::TrinityNodeKindDef { name: "Piece".into(), properties: vec![], port_kinds: vec!["Connector".into()] }],
@@ -350,7 +350,7 @@ mod tests {
     }
 
     #[test]
-    fn graph_op_create_edge_rejects_invalid_port_keys() {
+    async fn graph_op_create_edge_rejects_invalid_port_keys() {
         let fixture = mini_fixture();
         let bad_source = create_edge(Edge { id: "e2".into(), kind: "Connection".into(), source: "noAt".into(), target: crate::artifacts::jack::port_key("child", "in-a"), properties: PropertyBag::new() });
         assert!(matches!(validate_trinity_graph_operation(&bad_source, &fixture), Err(crate::artifacts::jack::TrinityRamError::InvalidSourcePortKey(_))));
@@ -359,7 +359,7 @@ mod tests {
     }
 
     #[test]
-    fn graph_op_create_edge_rejects_missing_source_and_target_nodes() {
+    async fn graph_op_create_edge_rejects_missing_source_and_target_nodes() {
         let fixture = mini_fixture();
         let missing_source = create_edge(Edge { id: "e2".into(), kind: "Connection".into(), source: crate::artifacts::jack::port_key("ghost", "out"), target: crate::artifacts::jack::port_key("child", "in-a"), properties: PropertyBag::new() });
         assert!(matches!(validate_trinity_graph_operation(&missing_source, &fixture), Err(crate::artifacts::jack::TrinityRamError::SourceNodeNotFound(_))));
@@ -368,7 +368,7 @@ mod tests {
     }
 
     #[test]
-    fn graph_op_rejects_duplicate_node_and_edge_ids() {
+    async fn graph_op_rejects_duplicate_node_and_edge_ids() {
         let fixture = mini_fixture();
         let dup_node = create_node(mini_node("root", 0.0, 0.0, vec![]));
         assert!(matches!(validate_trinity_graph_operation(&dup_node, &fixture), Err(crate::artifacts::jack::TrinityRamError::NodeAlreadyExists(_))));
@@ -377,7 +377,7 @@ mod tests {
     }
 
     #[test]
-    fn graph_op_rejects_missing_entities_on_delete_rename_reposition() {
+    async fn graph_op_rejects_missing_entities_on_delete_rename_reposition() {
         let fixture = mini_fixture();
         assert!(matches!(validate_trinity_graph_operation(&delete_node("ghost".into()), &fixture), Err(crate::artifacts::jack::TrinityRamError::NodeNotFound(_))));
         assert!(matches!(validate_trinity_graph_operation(&delete_edge("ghost".into()), &fixture), Err(crate::artifacts::jack::TrinityRamError::EdgeNotFound(_))));
@@ -386,7 +386,7 @@ mod tests {
     }
 
     #[test]
-    fn graph_op_set_data_property_rejects_unknown_entity_kind() {
+    async fn graph_op_set_data_property_rejects_unknown_entity_kind() {
         let fixture = mini_fixture();
         let mut nodes = fixture.nodes();
         nodes[0].kind = "Ghost".into();
@@ -396,28 +396,28 @@ mod tests {
     }
 
     #[test]
-    fn graph_op_set_data_property_rejects_unknown_property_key() {
+    async fn graph_op_set_data_property_rejects_unknown_property_key() {
         let fixture = mini_fixture();
         let err = validate_trinity_graph_operation(&change_data_property(EntityRef::Node("root".into()), "bogus".into(), PropertyValue::Null), &fixture).expect_err("unknown key");
         assert!(matches!(err, crate::artifacts::jack::TrinityRamError::UnknownPropertyAtPath { .. }));
     }
 
     #[test]
-    fn graph_op_set_data_property_rejects_type_mismatch() {
+    async fn graph_op_set_data_property_rejects_type_mismatch() {
         let fixture = mini_fixture();
         let err = validate_trinity_graph_operation(&change_data_property(EntityRef::Node("root".into()), "label".into(), PropertyValue::Number(1.0)), &fixture).expect_err("type mismatch");
         assert!(matches!(err, crate::artifacts::jack::TrinityRamError::PropertyTypeMismatch { .. }));
     }
 
     #[test]
-    fn graph_op_clear_data_property_rejects_missing_entities() {
+    async fn graph_op_clear_data_property_rejects_missing_entities() {
         let fixture = mini_fixture();
         assert!(matches!(validate_trinity_graph_operation(&remove_data_property(EntityRef::Node("ghost".into()), "label".into()), &fixture), Err(crate::artifacts::jack::TrinityRamError::NodeNotFound(_))));
         assert!(matches!(validate_trinity_graph_operation(&remove_data_property(EntityRef::Edge("ghost".into()), "u".into()), &fixture), Err(crate::artifacts::jack::TrinityRamError::EdgeNotFound(_))));
     }
 
     #[test]
-    fn apply_trinity_graph_mutations_applies_valid_sequence_and_rejects_invalid() {
+    async fn apply_trinity_graph_mutations_applies_valid_sequence_and_rejects_invalid() {
         let fixture = mini_fixture();
         let ok = apply_trinity_graph_mutations(fixture.clone(), &[rename_node("root".into(), "renamed".into())]).expect("rename applies");
         assert_eq!(ok.nodes().iter().find(|n| n.id == "root").unwrap().name, "renamed");
@@ -427,7 +427,7 @@ mod tests {
     }
 
     #[test]
-    fn document_text_round_trip_graph_store() {
+    async fn document_text_round_trip_graph_store() {
         let mut store = TrinityGraphStore::new(create_trinity_graph_envelope("test", mini_fixture()));
         dispatch_trinity_graph_mutations(&mut store, vec![rename_node("root".into(), "renamed".into())]).expect("apply");
         ::store::os_store::test_support::assert_document_text_round_trip(&store);
@@ -435,7 +435,7 @@ mod tests {
     }
 
     #[test]
-    fn dispatch_trinity_graph_mutations_noop_on_empty() {
+    async fn dispatch_trinity_graph_mutations_noop_on_empty() {
         let mut store = TrinityGraphStore::new(create_trinity_graph_envelope("test", mini_fixture()));
         let generation_before = store.generation();
         dispatch_trinity_graph_mutations(&mut store, vec![]).expect("empty ops ok");
@@ -443,7 +443,7 @@ mod tests {
     }
 
     #[test]
-    fn graph_op_reposition_and_rename_undo_restore_prior_values() {
+    async fn graph_op_reposition_and_rename_undo_restore_prior_values() {
         let mut store = TrinityGraphStore::new(create_trinity_graph_envelope("test", mini_fixture()));
         dispatch_trinity_graph_mutations(&mut store, vec![move_node("root".into(), 50.0, 60.0)]).expect("reposition");
         assert_eq!(store.snapshot().unwrap().nodes().iter().find(|n| n.id == "root").unwrap().x, 50.0);
@@ -456,7 +456,7 @@ mod tests {
     }
 
     #[test]
-    fn graph_op_delete_edge_undo_recreates_edge() {
+    async fn graph_op_delete_edge_undo_recreates_edge() {
         let mut store = TrinityGraphStore::new(create_trinity_graph_envelope("test", mini_fixture()));
         dispatch_trinity_graph_mutations(&mut store, vec![delete_edge("e1".into())]).expect("delete edge");
         assert!(store.snapshot().unwrap().edges().is_empty());
@@ -465,7 +465,7 @@ mod tests {
     }
 
     #[test]
-    fn graph_op_delete_node_undo_restores_node_and_incident_edges() {
+    async fn graph_op_delete_node_undo_restores_node_and_incident_edges() {
         let mut store = TrinityGraphStore::new(create_trinity_graph_envelope("test", mini_fixture()));
         dispatch_trinity_graph_mutations(&mut store, vec![delete_node("root".into())]).expect("delete node");
         let projection = store.snapshot().unwrap();
@@ -478,7 +478,7 @@ mod tests {
     }
 
     #[test]
-    fn graph_op_set_and_clear_data_property_undo_round_trip() {
+    async fn graph_op_set_and_clear_data_property_undo_round_trip() {
         let mut store = TrinityGraphStore::new(create_trinity_graph_envelope("test", mini_fixture()));
         dispatch_trinity_graph_mutations(&mut store, vec![change_data_property(EntityRef::Node("root".into()), "label".into(), PropertyValue::String("first".into()))]).expect("set");
         dispatch_trinity_graph_mutations(&mut store, vec![change_data_property(EntityRef::Node("root".into()), "label".into(), PropertyValue::String("second".into()))]).expect("set again");
@@ -494,7 +494,7 @@ mod tests {
     }
 
     #[test]
-    fn dispatch_registers_semantic_descriptors() {
+    async fn dispatch_registers_semantic_descriptors() {
         register_trinity_graph_mutation_descriptors();
         for kind in <TrinityGraphMutation as protocol::SemanticMutation<JackSnapshot>>::kinds() {
             assert!(protocol::is_approved_verb(kind.verb), "verb '{}' must be in APPROVED_VERBS", kind.verb);
@@ -506,26 +506,26 @@ mod tests {
     /// ⚖️ `📋️contract-freeze.md` §C2 laws, per verb family (`assert_outcome_policy_matrix` is not yet
     /// landed in `📡️spr/🧪️testkit` — TODO(1-D testkit laws pending) once it lands).
     #[test]
-    fn delete_missing_node_is_a_target_missing_error() {
+    async fn delete_missing_node_is_a_target_missing_error() {
         let base = mini_fixture();
         protocol::testkit::assert_missing_target_is_error(&base, &TrinityGraphMutation::DeleteNode(DeleteNode { id: "does-not-exist".into() }));
     }
 
     #[test]
-    fn rename_missing_node_is_a_target_missing_error() {
+    async fn rename_missing_node_is_a_target_missing_error() {
         let base = mini_fixture();
         protocol::testkit::assert_missing_target_is_error(&base, &TrinityGraphMutation::RenameNode(RenameNode { id: "does-not-exist".into(), new_name: "New".into() }));
     }
 
     #[test]
-    fn create_node_duplicate_id_never_applies() {
+    async fn create_node_duplicate_id_never_applies() {
         let base = mini_fixture();
         let duplicate = TrinityGraphMutation::CreateNode(CreateNode { node: mini_node("root", 0.0, 0.0, vec![]) });
         protocol::testkit::assert_fatal_never_applies(&duplicate.diff(&base));
     }
 
     #[test]
-    fn create_edge_duplicate_id_never_applies() {
+    async fn create_edge_duplicate_id_never_applies() {
         let base = mini_fixture();
         let duplicate = TrinityGraphMutation::CreateEdge(CreateEdge { edge: Edge { id: "e1".into(), kind: "Connection".into(), source: "root@out-a".into(), target: "child@in-a".into(), properties: PropertyBag::new() } });
         protocol::testkit::assert_fatal_never_applies(&duplicate.diff(&base));

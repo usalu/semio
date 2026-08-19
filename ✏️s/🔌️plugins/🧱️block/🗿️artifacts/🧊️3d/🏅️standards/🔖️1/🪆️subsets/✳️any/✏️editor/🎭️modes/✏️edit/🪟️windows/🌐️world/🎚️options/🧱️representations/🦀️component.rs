@@ -6,7 +6,7 @@ use crate::artifacts::block3d::Block3dSnapshot;
 use semio_framework_plugin::WindowMeasure;
 use serde_json::json;
 
-pub fn measure(definition: &Block3dSnapshot, config: &Block3dConfig, window_id: &str, labels: &Block3dLabels) -> WindowMeasure {
+pub async fn measure(definition: &Block3dSnapshot, config: &Block3dConfig, window_id: &str, labels: &Block3dLabels) -> WindowMeasure {
     let view = block3d_window_view(config, window_id);
     let visible_set: std::collections::HashSet<&str> = if view.representation_ids.is_empty() {
         definition.representations.iter().map(|r| r.id.as_str()).collect()

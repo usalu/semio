@@ -11,7 +11,7 @@ pub struct SetLocale {
     pub value: String,
 }
 
-pub fn handle(payload: &SetLocale, _doc: &ArtifactView<'_, FormsSnapshot>, _cfg: &ConfigView<'_, FormsConfig>) -> Result<Emit<FormMutation, FormsConfigMutation>, Fault> {
+pub async fn handle(payload: &SetLocale, _doc: &ArtifactView<'_, FormsSnapshot>, _cfg: &ConfigView<'_, FormsConfig>) -> Result<Emit<FormMutation, FormsConfigMutation>, Fault> {
     Ok(Emit::config(vec![FormsConfigMutation::SetLocale { value: payload.value.clone() }]))
 }
 
@@ -23,7 +23,7 @@ mod tests {
     use crate::editor::forms::{FormsCommand, FORMS_PLAY_BODY_BLUEPRINT};
 
     #[test]
-    fn forms_labels_resolve_native_english_and_german() {
+    async fn forms_labels_resolve_native_english_and_german() {
         let mut app = forms_app();
         let english = render(&mut app, FORMS_PLAY_BODY_BLUEPRINT);
         assert!(english.contains("Boolean"), "english labels: {english}");

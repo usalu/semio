@@ -21,7 +21,7 @@ pub struct WavDiff {
 }
 
 impl MutationDiff<WavSnapshot> for WavDiff {
-    fn apply(&self, base: &WavSnapshot) -> protocol::MutationApplyResult<WavSnapshot> {
+    async fn apply(&self, base: &WavSnapshot) -> protocol::MutationApplyResult<WavSnapshot> {
         let mut next = base.clone();
         if let Some(v) = &self.fmt {
             next.fmt = v.clone();
@@ -34,7 +34,7 @@ impl MutationDiff<WavSnapshot> for WavDiff {
         }
         Ok(next)
     }
-    fn absorb(&mut self, other: Self) {
+    async fn absorb(&mut self, other: Self) {
         if other.fmt.is_some() {
             self.fmt = other.fmt;
         }
@@ -48,31 +48,31 @@ impl MutationDiff<WavSnapshot> for WavDiff {
 }
 
 impl DiffAlgebra<WavSnapshot> for WavDiff {
-    fn between(base: &WavSnapshot, other: &WavSnapshot) -> Self {
+    async fn between(base: &WavSnapshot, other: &WavSnapshot) -> Self {
         WavDiff { fmt: (base.fmt != other.fmt).then(|| other.fmt.clone()), data: (base.data != other.data).then(|| other.data.clone()), other_chunks: (base.other_chunks != other.other_chunks).then(|| other.other_chunks.clone()) }
     }
-    fn inverse(&self, base: &WavSnapshot) -> Self {
+    async fn inverse(&self, base: &WavSnapshot) -> Self {
         WavDiff { fmt: self.fmt.as_ref().map(|_| base.fmt.clone()), data: self.data.as_ref().map(|_| base.data.clone()), other_chunks: self.other_chunks.as_ref().map(|_| base.other_chunks.clone()) }
     }
-    fn is_empty(&self) -> bool {
+    async fn is_empty(&self) -> bool {
         self.fmt.is_none() && self.data.is_none() && self.other_chunks.is_none()
     }
 }
 
 /// 🧩 Builds a set-snapshot diff: the sparse field-by-field delta, never a full-replace slot.
-pub fn diff_set_snapshot(base: &WavSnapshot, snapshot: &WavSnapshot) -> WavDiff {
+pub async fn diff_set_snapshot(base: &WavSnapshot, snapshot: &WavSnapshot) -> WavDiff {
     WavDiff::between(base, snapshot)
 }
 /// 🧩 Builds a set-fmt diff.
-pub fn diff_set_fmt(fmt: WavFmt) -> WavDiff {
+pub async fn diff_set_fmt(fmt: WavFmt) -> WavDiff {
     WavDiff { fmt: Some(fmt), ..Default::default() }
 }
 /// 🧩 Builds a set-data diff.
-pub fn diff_set_data(data: WavData) -> WavDiff {
+pub async fn diff_set_data(data: WavData) -> WavDiff {
     WavDiff { data: Some(data), ..Default::default() }
 }
 /// 🧩 Builds a set-other-chunks diff.
-pub fn diff_set_other_chunks(chunks: Vec<RiffChunk>) -> WavDiff {
+pub async fn diff_set_other_chunks(chunks: Vec<RiffChunk>) -> WavDiff {
     WavDiff { other_chunks: Some(chunks), ..Default::default() }
 }
 //#endregion 🔖️Diff
@@ -88,10 +88,10 @@ pub fn diff_set_other_chunks(chunks: Vec<RiffChunk>) -> WavDiff {
 /// list is `[chunk1;chunk2;…]`. Worked example:
 /// `fmt=[1,1,8000,16000,2,16,[0]] data=p16:0100feff`.
 //#region 🔖️Primitives
-fn hex_encode(bytes: &[u8]) -> String {
+async fn hex_encode(bytes: &[u8]) -> String {
     bytes.iter().map(|b| format!("{b:02x}")).collect()
 }
-fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
+async fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
     if s.len() % 2 != 0 {
         return Err(format!("odd hex length: {s:?}"));
     }
@@ -99,7 +99,7 @@ fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
 }
 /// 🧭️ Bracket-depth-aware split (tracks `[`/`]` only) — the shared grammar contract every
 /// hand-rolled codec in this repo uses (`f6-recon-report.md` §5), kept verbatim.
-fn split_top_level(s: &str, sep: char) -> Vec<&str> {
+async fn split_top_level(s: &str, sep: char) -> Vec<&str> {
     if s.is_empty() {
         return Vec::new();
     }
@@ -120,16 +120,16 @@ fn split_top_level(s: &str, sep: char) -> Vec<&str> {
     out.push(&s[start..]);
     out
 }
-fn strip_brackets(s: &str) -> Result<&str, String> {
+async fn strip_brackets(s: &str) -> Result<&str, String> {
     s.strip_prefix('[').and_then(|s| s.strip_suffix(']')).ok_or_else(|| format!("expected [...], got {s:?}"))
 }
-fn encode_option<T>(opt: &Option<T>, enc: impl Fn(&T) -> String) -> String {
+async fn encode_option<T>(opt: &Option<T>, enc: impl Fn(&T) -> String) -> String {
     match opt {
         None => "[0]".to_string(),
         Some(v) => format!("[1,{}]", enc(v)),
     }
 }
-fn decode_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Option<T>, String> {
+async fn decode_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Option<T>, String> {
     let inner = strip_brackets(s)?;
     match split_top_level(inner, ',').as_slice() {
         ["0"] => Ok(None),
@@ -140,10 +140,10 @@ fn decode_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<
 //#endregion 🔖️Primitives
 
 //#region 🔖️ValueCodecs
-fn enc_wav_fmt(f: &WavFmt) -> String {
+async fn enc_wav_fmt(f: &WavFmt) -> String {
     format!("[{},{},{},{},{},{},{}]", f.audio_format, f.channels, f.sample_rate, f.byte_rate, f.block_align, f.bits_per_sample, encode_option(&f.ext, |v| hex_encode(v)))
 }
-fn dec_wav_fmt(s: &str) -> Result<WavFmt, String> {
+async fn dec_wav_fmt(s: &str) -> Result<WavFmt, String> {
     let inner = strip_brackets(s)?;
     let parts = split_top_level(inner, ',');
     if parts.len() != 7 {
@@ -160,7 +160,7 @@ fn dec_wav_fmt(s: &str) -> Result<WavFmt, String> {
     })
 }
 
-fn enc_wav_data(d: &WavData) -> String {
+async fn enc_wav_data(d: &WavData) -> String {
     match d {
         WavData::Pcm16(v) => format!("p16:{}", hex_encode(&v.iter().flat_map(|s| s.to_le_bytes()).collect::<Vec<u8>>())),
         WavData::Pcm8(v) => format!("p8:{}", hex_encode(v)),
@@ -168,7 +168,7 @@ fn enc_wav_data(d: &WavData) -> String {
         WavData::Raw(v) => format!("raw:{}", hex_encode(v)),
     }
 }
-fn dec_wav_data(s: &str) -> Result<WavData, String> {
+async fn dec_wav_data(s: &str) -> Result<WavData, String> {
     let (tag, rest) = s.split_once(':').ok_or_else(|| format!("wav data: missing tag in {s:?}"))?;
     let bytes = hex_decode(rest)?;
     match tag {
@@ -192,10 +192,10 @@ fn dec_wav_data(s: &str) -> Result<WavData, String> {
 
 /// 🧭️ `RiffChunk.fourcc` is a 4-char printable RIFF tag (`fmt `/`data`/`LIST`/`INFO`/…) — never
 /// contains `,`/`[`/`]`/`;` in practice, so it's safe as a bare top-level token.
-fn enc_riff_chunk(c: &RiffChunk) -> String {
+async fn enc_riff_chunk(c: &RiffChunk) -> String {
     format!("[{},{}]", c.fourcc, hex_encode(&c.data))
 }
-fn dec_riff_chunk(s: &str) -> Result<RiffChunk, String> {
+async fn dec_riff_chunk(s: &str) -> Result<RiffChunk, String> {
     let inner = strip_brackets(s)?;
     let parts = split_top_level(inner, ',');
     if parts.len() != 2 {
@@ -203,17 +203,17 @@ fn dec_riff_chunk(s: &str) -> Result<RiffChunk, String> {
     }
     Ok(RiffChunk { fourcc: parts[0].to_string(), data: hex_decode(parts[1])? })
 }
-fn enc_riff_chunks(chunks: &[RiffChunk]) -> String {
+async fn enc_riff_chunks(chunks: &[RiffChunk]) -> String {
     format!("[{}]", chunks.iter().map(enc_riff_chunk).collect::<Vec<_>>().join(";"))
 }
-fn dec_riff_chunks(s: &str) -> Result<Vec<RiffChunk>, String> {
+async fn dec_riff_chunks(s: &str) -> Result<Vec<RiffChunk>, String> {
     let inner = strip_brackets(s)?;
     split_top_level(inner, ';').into_iter().filter(|p| !p.is_empty()).map(dec_riff_chunk).collect()
 }
 //#endregion 🔖️ValueCodecs
 
 //#region 🔖️TopLevel
-fn print_wav_diff(d: &WavDiff) -> String {
+async fn print_wav_diff(d: &WavDiff) -> String {
     let mut tokens: Vec<String> = Vec::new();
     if let Some(v) = &d.fmt {
         tokens.push(format!("fmt={}", enc_wav_fmt(v)));
@@ -226,7 +226,7 @@ fn print_wav_diff(d: &WavDiff) -> String {
     }
     tokens.join(" ")
 }
-fn parse_wav_diff(line: &str) -> Result<WavDiff, String> {
+async fn parse_wav_diff(line: &str) -> Result<WavDiff, String> {
     let mut d = WavDiff::default();
     if line.is_empty() {
         return Ok(d);
@@ -246,18 +246,18 @@ fn parse_wav_diff(line: &str) -> Result<WavDiff, String> {
 }
 
 impl protocol::DiffCodec for WavDiff {
-    fn print_diff(&self) -> String {
+    async fn print_diff(&self) -> String {
         print_wav_diff(self)
     }
-    fn parse_diff(line: &str) -> Result<Self, store::TextError> {
+    async fn parse_diff(line: &str) -> Result<Self, store::TextError> {
         parse_wav_diff(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
     /// ⚡️ Binary = the text bytes verbatim (same simplification `DeflateDiff`/`GifDiff`'s
     /// hand-rolled `DiffCodec` impls use).
-    fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    async fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         Ok(self.print_diff().into_bytes())
     }
-    fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    async fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         let line = std::str::from_utf8(bytes).map_err(|e| protocol::ProtocolError::Malformed { what: "diff utf8", offset: 0, detail: e.to_string() })?;
         Self::parse_diff(line).map_err(|e| protocol::ProtocolError::Malformed { what: "diff text", offset: 0, detail: e.to_string() })
     }
@@ -271,7 +271,7 @@ mod tests {
     use super::*;
     use protocol::DiffCodec;
 
-    fn sweep_a() -> WavSnapshot {
+    async fn sweep_a() -> WavSnapshot {
         WavSnapshot {
             fmt: WavFmt { audio_format: 1, channels: 1, sample_rate: 8000, byte_rate: 16000, block_align: 2, bits_per_sample: 16, ext: None },
             data: WavData::Pcm16(vec![0, 1, -1]),
@@ -279,7 +279,7 @@ mod tests {
             ..WavSnapshot::default()
         }
     }
-    fn sweep_b() -> WavSnapshot {
+    async fn sweep_b() -> WavSnapshot {
         WavSnapshot {
             fmt: WavFmt { audio_format: 3, channels: 2, sample_rate: 48000, byte_rate: 384000, block_align: 8, bits_per_sample: 32, ext: Some(vec![0xAA, 0xBB]) },
             data: WavData::Float32(vec![0.5, -0.5]),
@@ -291,7 +291,7 @@ mod tests {
     //#region field_sweep
     /// 🧪️ `field_sweep`: `sweep_a`/`sweep_b` differ in EVERY mutable field.
     #[test]
-    fn field_sweep_between_covers_every_field() {
+    async fn field_sweep_between_covers_every_field() {
         let a = sweep_a();
         let b = sweep_b();
         let ab = WavDiff::between(&a, &b);
@@ -312,7 +312,7 @@ mod tests {
 
     //#region between_roundtrip_law
     #[test]
-    fn between_roundtrip_law() {
+    async fn between_roundtrip_law() {
         let a = sweep_a();
         let b = sweep_b();
         assert_eq!(WavDiff::between(&a, &b).apply(&a).unwrap(), b);
@@ -322,7 +322,7 @@ mod tests {
 
     //#region absorb_law
     #[test]
-    fn absorb_law_disjoint_and_lww_and_associativity() {
+    async fn absorb_law_disjoint_and_lww_and_associativity() {
         let base = sweep_a();
         let d1 = diff_set_fmt(sweep_b().fmt);
         let d2 = diff_set_data(WavData::Raw(vec![9, 9]));
@@ -357,7 +357,7 @@ mod tests {
 
     //#region inverse_law
     #[test]
-    fn inverse_law_diff_level() {
+    async fn inverse_law_diff_level() {
         let base = sweep_a();
         let d = WavDiff::between(&base, &sweep_b());
         let applied = d.apply(&base).unwrap();
@@ -371,7 +371,7 @@ mod tests {
     /// every field, `ext: None` AND `ext: Some(_)`, every `WavData` variant, and multi-chunk
     /// `other_chunks`, plus the empty diff.
     #[test]
-    fn diff_codec_text_binary_roundtrip_law() {
+    async fn diff_codec_text_binary_roundtrip_law() {
         let a = sweep_a();
         let b = sweep_b();
         let cases = vec![

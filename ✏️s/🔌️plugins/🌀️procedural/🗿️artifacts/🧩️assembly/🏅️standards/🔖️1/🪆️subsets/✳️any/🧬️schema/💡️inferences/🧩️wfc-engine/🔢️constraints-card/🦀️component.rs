@@ -19,7 +19,7 @@ pub enum Scope {
 }
 
 impl Scope {
-    fn contains(&self, n: NodeId, adjacency: &AdjacencyView) -> bool {
+    async fn contains(&self, n: NodeId, adjacency: &AdjacencyView) -> bool {
         match self {
             Scope::All => true,
             Scope::Region(r) => adjacency.region_of(n) == *r,
@@ -42,7 +42,7 @@ pub struct CardinalityConstraint {
 }
 
 impl CardinalityConstraint {
-    pub fn new(model: CompiledModel, selector: PatternSelector, scope: Scope, min: u32, max: u32) -> Result<Self, ConstraintError> {
+    pub async fn new(model: CompiledModel, selector: PatternSelector, scope: Scope, min: u32, max: u32) -> Result<Self, ConstraintError> {
         if min > max {
             return Err(ConstraintError::InvalidBounds { reason: "min must not exceed max" });
         }
@@ -51,15 +51,15 @@ impl CardinalityConstraint {
 }
 
 impl Constraint for CardinalityConstraint {
-    fn name(&self) -> &'static str {
+    async fn name(&self) -> &'static str {
         "cardinality"
     }
 
-    fn exactness(&self) -> Exactness {
+    async fn exactness(&self) -> Exactness {
         Exactness::Exact
     }
 
-    fn initialize(&self, domains: &DomainStore, _weights: &WeightTable, adjacency: &AdjacencyView) -> Result<Vec<(NodeId, PatternSet)>, ConstraintError> {
+    async fn initialize(&self, domains: &DomainStore, _weights: &WeightTable, adjacency: &AdjacencyView) -> Result<Vec<(NodeId, PatternSet)>, ConstraintError> {
         let selected = self.selector.as_pattern_set(&self.model);
         let scoped_nodes: Vec<NodeId> = (0..adjacency.node_count()).map(NodeId::from_index).filter(|&n| self.scope.contains(n, adjacency)).collect();
 
@@ -109,7 +109,7 @@ impl Constraint for CardinalityConstraint {
         Ok(out)
     }
 
-    fn validate_complete(&self, assignment: &[PatternId], adjacency: &AdjacencyView) -> Result<(), String> {
+    async fn validate_complete(&self, assignment: &[PatternId], adjacency: &AdjacencyView) -> Result<(), String> {
         let count = (0..adjacency.node_count()).filter(|&n| self.scope.contains(NodeId::from_index(n), adjacency)).filter(|&n| self.selector.matches(&self.model, assignment[n])).count() as u32;
         if count < self.min || count > self.max {
             return Err(format!("cardinality constraint: expected [{}, {}], found {count}", self.min, self.max));
@@ -125,7 +125,7 @@ mod tests {
     use super::*;
     use crate::wfc_engine::model::ModelBuilder;
 
-    fn two_pattern_model() -> CompiledModel {
+    async fn two_pattern_model() -> CompiledModel {
         let mut b = ModelBuilder::new();
         let black = b.add_pattern(1.0);
         let white = b.add_pattern(1.0);
@@ -135,7 +135,7 @@ mod tests {
         b.compile().unwrap()
     }
 
-    fn adjacency_line(n: usize) -> AdjacencyView {
+    async fn adjacency_line(n: usize) -> AdjacencyView {
         let mut neighbors = vec![Vec::new(); n];
         for i in 0..n.saturating_sub(1) {
             neighbors[i].push(NodeId::from_index(i + 1));
@@ -145,13 +145,13 @@ mod tests {
     }
 
     #[test]
-    fn rejects_invalid_bounds() {
+    async fn rejects_invalid_bounds() {
         let model = two_pattern_model();
         assert!(CardinalityConstraint::new(model, PatternSelector::Pattern(PatternId(0)), Scope::All, 5, 2).is_err());
     }
 
     #[test]
-    fn validate_complete_accepts_matching_count() {
+    async fn validate_complete_accepts_matching_count() {
         let model = two_pattern_model();
         let adjacency = adjacency_line(4);
         let c = CardinalityConstraint::new(model, PatternSelector::Pattern(PatternId(0)), Scope::All, 1, 2).unwrap();
@@ -160,7 +160,7 @@ mod tests {
     }
 
     #[test]
-    fn validate_complete_rejects_out_of_bounds_count() {
+    async fn validate_complete_rejects_out_of_bounds_count() {
         let model = two_pattern_model();
         let adjacency = adjacency_line(4);
         let c = CardinalityConstraint::new(model, PatternSelector::Pattern(PatternId(0)), Scope::All, 0, 1).unwrap();
@@ -169,7 +169,7 @@ mod tests {
     }
 
     #[test]
-    fn initialize_forces_pattern_when_min_equals_possible() {
+    async fn initialize_forces_pattern_when_min_equals_possible() {
         let model = two_pattern_model();
         let adjacency = adjacency_line(2);
         let weights = model.weights().clone();
@@ -185,7 +185,7 @@ mod tests {
     }
 
     #[test]
-    fn initialize_signals_infeasible_min_via_empty_domain() {
+    async fn initialize_signals_infeasible_min_via_empty_domain() {
         let model = two_pattern_model();
         let adjacency = adjacency_line(1);
         let weights = model.weights().clone();

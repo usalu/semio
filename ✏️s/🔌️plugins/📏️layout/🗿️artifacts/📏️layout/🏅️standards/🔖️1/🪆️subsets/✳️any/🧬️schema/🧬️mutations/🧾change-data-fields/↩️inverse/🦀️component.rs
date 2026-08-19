@@ -5,7 +5,7 @@ use crate::artifacts::layout::mutations::LayoutMutation;
 use crate::artifacts::layout::LayoutSnapshot;
 
 //#region 🧾ChangeDataFields
-pub fn inverse_change_data_fields(_payload: &ChangeDataFields, base: &LayoutSnapshot) -> Vec<LayoutMutation> {
+pub async fn inverse_change_data_fields(_payload: &ChangeDataFields, base: &LayoutSnapshot) -> Vec<LayoutMutation> {
     vec![LayoutMutation::ChangeDataFields(ChangeDataFields { new_json: base.data_fields_json.clone() })]
 }
 //#endregion 🧾ChangeDataFields

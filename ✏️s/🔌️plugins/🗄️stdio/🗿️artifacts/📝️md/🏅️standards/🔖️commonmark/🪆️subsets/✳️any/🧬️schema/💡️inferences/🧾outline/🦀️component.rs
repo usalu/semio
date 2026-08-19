@@ -31,7 +31,7 @@ pub struct MdOutline {
 /// 🔤️ Flattens a run of inlines into plain text — emphasis/strong/link recurse into their own
 /// inline children, code spans use their literal, images use their alt text, soft/hard breaks
 /// become a single space, raw inline HTML contributes nothing (it isn't prose content).
-fn inline_text(inlines: &[MdInline]) -> String {
+async fn inline_text(inlines: &[MdInline]) -> String {
     let mut out = String::new();
     for inline in inlines {
         match inline {
@@ -49,7 +49,7 @@ fn inline_text(inlines: &[MdInline]) -> String {
 
 /// 🌳️ Recursively walks `block`, appending every `Heading` encountered to `headings`, adding to
 /// `block_count`, and appending flattened text to `word_source`.
-fn walk_block(block: &MdBlock, headings: &mut Vec<MdHeadingEntry>, block_count: &mut u32, word_source: &mut String) {
+async fn walk_block(block: &MdBlock, headings: &mut Vec<MdHeadingEntry>, block_count: &mut u32, word_source: &mut String) {
     *block_count += 1;
     match block {
         MdBlock::Heading { level, inlines } => {
@@ -83,7 +83,7 @@ fn walk_block(block: &MdBlock, headings: &mut Vec<MdHeadingEntry>, block_count: 
 }
 
 impl MdOutline {
-    pub fn compute(snapshot: &MdSnapshot) -> Self {
+    pub async fn compute(snapshot: &MdSnapshot) -> Self {
         let mut section_outline = Vec::new();
         let mut block_count = 0u32;
         let mut word_source = String::new();
@@ -102,7 +102,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn collects_headings_and_counts_words_and_blocks() {
+    async fn collects_headings_and_counts_words_and_blocks() {
         let snapshot = MdSnapshot {
             schema: "stdio.md".into(),
             blocks: vec![
@@ -118,7 +118,7 @@ mod tests {
     }
 
     #[test]
-    fn outline_is_deterministic() {
+    async fn outline_is_deterministic() {
         let snapshot = MdSnapshot::default();
         assert_eq!(MdOutline::compute(&snapshot), MdOutline::compute(&snapshot));
     }

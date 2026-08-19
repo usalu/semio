@@ -13,20 +13,20 @@ pub struct ChangeNotes {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn change_notes(new_notes: String) -> VcsDemoMutation {
+pub async fn change_notes(new_notes: String) -> VcsDemoMutation {
     VcsDemoMutation::ChangeNotes(ChangeNotes { new_notes })
 }
 
 impl protocol::MutationKind<VcsSnapshot, VcsDemoMutation> for ChangeNotes {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "vcs", kind: "change-notes", record: "ChangedVcsNotes" };
 
-    fn diff(&self, base: &VcsSnapshot) -> protocol::MutationOutcome<VcsDiff> {
+    async fn diff(&self, base: &VcsSnapshot) -> protocol::MutationOutcome<VcsDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &VcsSnapshot) -> Vec<VcsDemoMutation> {
+    async fn inverse(&self, base: &VcsSnapshot) -> Vec<VcsDemoMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         format!("Change notes to \"{}\"", self.new_notes)
     }
 }

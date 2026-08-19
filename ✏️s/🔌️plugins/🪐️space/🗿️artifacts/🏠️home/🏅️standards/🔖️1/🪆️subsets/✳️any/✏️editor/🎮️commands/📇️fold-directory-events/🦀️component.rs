@@ -20,7 +20,7 @@ pub struct FoldDirectoryEvents {
 //#endregion 🔖️Payload
 
 //#region 🔖️Handle
-pub fn handle(payload: &FoldDirectoryEvents, _doc: &ArtifactView<'_, SHomeSnapshot>, _cfg: &ConfigView<'_, HomeConfig>) -> Result<Emit<SHomeMutation, HomeConfigMutation>, Fault> {
+pub async fn handle(payload: &FoldDirectoryEvents, _doc: &ArtifactView<'_, SHomeSnapshot>, _cfg: &ConfigView<'_, HomeConfig>) -> Result<Emit<SHomeMutation, HomeConfigMutation>, Fault> {
     let events: Vec<store::os_directory::DirectoryEvent> = serde_json::from_str(&payload.events_json).unwrap_or_default();
     let config_mutations = events
         .iter()
@@ -37,7 +37,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn one_config_mutation_per_event() {
+    async fn one_config_mutation_per_event() {
         let history = semio_framework_plugin::HistoryView::empty();
         let doc_snapshot = SHomeSnapshot::default();
         let doc = ArtifactView::new(&doc_snapshot, &history);
@@ -57,7 +57,7 @@ mod tests {
     }
 
     #[test]
-    fn malformed_events_json_yields_no_mutations() {
+    async fn malformed_events_json_yields_no_mutations() {
         let history = semio_framework_plugin::HistoryView::empty();
         let doc_snapshot = SHomeSnapshot::default();
         let doc = ArtifactView::new(&doc_snapshot, &history);

@@ -11,7 +11,7 @@ pub const MATH_PLAY_BODY_GRAPH: &str = "mathematical.play.graph";
 
 //#region 🔖️Definition
 /// 🧱️ Stitched into the app manifest by `crate::editor::mathematical::create_mathematical_app`.
-pub fn definition() -> WindowKindDefinition {
+pub async fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
         id: MATH_PLAY_WINDOW_GRAPH.into(),
         label: LocalizedLabel::native("Graph", "Graph"),
@@ -32,7 +32,7 @@ pub fn definition() -> WindowKindDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(graph: &MathematicalGraph, camera: &MathematicalCamera) -> UiNode {
+pub async fn render(graph: &MathematicalGraph, camera: &MathematicalCamera) -> UiNode {
     let (nodes, edges) = workflow_json(graph);
     let viewport = NodeGraphViewport { x: camera.x, y: camera.y, zoom: camera.zoom };
     let mut scene = empty_component_scene(MATH_PLAY_BODY_GRAPH, SurfaceKind::NodeGraph);
@@ -47,13 +47,13 @@ mod tests {
     use super::*;
 
     #[test]
-    fn renders_node_graph_scene() {
+    async fn renders_node_graph_scene() {
         let json = serde_json::to_string(&render(&MathematicalGraph::default(), &MathematicalCamera::default())).unwrap();
         assert!(json.contains("node-graph"));
     }
 
     #[test]
-    fn definition_declares_the_node_graph_surface_and_body_key() {
+    async fn definition_declares_the_node_graph_surface_and_body_key() {
         let definition = definition();
         assert_eq!(definition.body_key, MATH_PLAY_BODY_GRAPH);
         assert!(matches!(definition.surface_kind, SurfaceKind::NodeGraph));

@@ -15,7 +15,7 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 //#endregion 📖️SemioGrammar
 
 //#region 🔖️Apply
-fn apply_identified_delta<T: Clone>(
+async fn apply_identified_delta<T: Clone>(
     items: &[T],
     removed: &[String],
     added: &[T],
@@ -93,7 +93,7 @@ macro_rules! apply_delta {
 
 impl Block3dDiff {
     /// 🧬️ Applies every sparse entry (all state classes) onto a full artifact.
-    pub fn apply_to_artifact(&self, artifact: &Block3dArtifact) -> protocol::MutationApplyResult<Block3dArtifact> {
+    pub async fn apply_to_artifact(&self, artifact: &Block3dArtifact) -> protocol::MutationApplyResult<Block3dArtifact> {
         Ok({
             if let Some(replacement) = &self.artifact { return Ok((**replacement).clone()); }
             let mut next = artifact.clone();
@@ -128,7 +128,7 @@ impl Block3dDiff {
 }
 
 impl MutationDiff<Block3dSnapshot> for Block3dDiff {
-    fn apply(&self, snapshot: &Block3dSnapshot) -> protocol::MutationApplyResult<Block3dSnapshot> {
+    async fn apply(&self, snapshot: &Block3dSnapshot) -> protocol::MutationApplyResult<Block3dSnapshot> {
         Ok({
             if let Some(replacement) = &self.artifact { return Ok(replacement.to_snapshot()); }
             let mut next = snapshot.clone();
@@ -149,14 +149,14 @@ impl MutationDiff<Block3dSnapshot> for Block3dDiff {
             next
         })
     }
-    fn absorb(&mut self, other: Self) {
+    async fn absorb(&mut self, other: Self) {
         if other.artifact.is_some() { *self = other; return; }
         macro_rules! take { ($f:ident) => { if other.$f.is_some() { self.$f = other.$f; } }; }
         take!(schema); take!(object_kind); take!(authors); take!(camera3d); take!(meta);
         take!(selected_ids); take!(active_representation_id); take!(wanted_tags); take!(locale);
         take!(windows); take!(brush_vortex_kind_id); take!(brush_radius); take!(brush_flip);
         take!(brush_preview); take!(camera); take!(hovered_vortex_full_id);
-        fn absorb_col<D: Default>(target: &mut Option<D>, incoming: Option<D>, merge: impl FnOnce(&mut D, D)) {
+        async fn absorb_col<D: Default>(target: &mut Option<D>, incoming: Option<D>, merge: impl FnOnce(&mut D, D)) {
             if let Some(src) = incoming {
                 match target { Some(dst) => merge(dst, src), None => *target = Some(src) }
             }
@@ -188,11 +188,11 @@ impl Block3dHasId for Block3dVortexTemplate { fn id(&self) -> &str { &self.id } 
 impl Block3dHasId for BlockCompatibilityRule { fn id(&self) -> &str { &self.id } }
 impl Block3dHasId for BlockAttribute { fn id(&self) -> &str { &self.key } }
 
-pub(crate) fn block3d_index_of<T: Block3dHasId>(items: &[T], id: &str) -> Option<usize> {
+pub(crate) async fn block3d_index_of<T: Block3dHasId>(items: &[T], id: &str) -> Option<usize> {
     items.iter().position(|item| item.id() == id)
 }
 
-pub fn diff_set_representation(index: usize, item: BlockRepresentation, base: &Block3dSnapshot) -> Block3dDiff {
+pub async fn diff_set_representation(index: usize, item: BlockRepresentation, base: &Block3dSnapshot) -> Block3dDiff {
     let mut delta = Block3dRepresentationsDelta { added: vec![item.clone()], ..Default::default() };
     if block3d_index_of(&base.representations, &item.id).is_none() {
         let mut order: Vec<_> = base.representations.iter().map(|e| e.id.clone()).collect();
@@ -201,10 +201,10 @@ pub fn diff_set_representation(index: usize, item: BlockRepresentation, base: &B
     }
     Block3dDiff { representations: Some(delta), ..Default::default() }
 }
-pub fn diff_remove_representation(id: String) -> Block3dDiff {
+pub async fn diff_remove_representation(id: String) -> Block3dDiff {
     Block3dDiff { representations: Some(Block3dRepresentationsDelta { removed: vec![id], ..Default::default() }), ..Default::default() }
 }
-pub fn diff_set_vortex_kind(index: usize, item: Block3dVortexKind, base: &Block3dSnapshot) -> Block3dDiff {
+pub async fn diff_set_vortex_kind(index: usize, item: Block3dVortexKind, base: &Block3dSnapshot) -> Block3dDiff {
     let current = crate::artifacts::block3d::vortex_kinds_of(base);
     let mut delta = Block3dVortexKindsDelta { added: vec![item.clone()], ..Default::default() };
     if block3d_index_of(&current, &item.id).is_none() {
@@ -214,10 +214,10 @@ pub fn diff_set_vortex_kind(index: usize, item: Block3dVortexKind, base: &Block3
     }
     Block3dDiff { vortex_kinds: Some(delta), ..Default::default() }
 }
-pub fn diff_remove_vortex_kind(id: String) -> Block3dDiff {
+pub async fn diff_remove_vortex_kind(id: String) -> Block3dDiff {
     Block3dDiff { vortex_kinds: Some(Block3dVortexKindsDelta { removed: vec![id], ..Default::default() }), ..Default::default() }
 }
-pub fn diff_set_vortex(index: usize, item: Block3dVortexTemplate, base: &Block3dSnapshot) -> Block3dDiff {
+pub async fn diff_set_vortex(index: usize, item: Block3dVortexTemplate, base: &Block3dSnapshot) -> Block3dDiff {
     let mut delta = Block3dVorticesDelta { added: vec![item.clone()], ..Default::default() };
     if block3d_index_of(&base.vortices, &item.id).is_none() {
         let mut order: Vec<_> = base.vortices.iter().map(|e| e.id.clone()).collect();
@@ -226,10 +226,10 @@ pub fn diff_set_vortex(index: usize, item: Block3dVortexTemplate, base: &Block3d
     }
     Block3dDiff { vortices: Some(delta), ..Default::default() }
 }
-pub fn diff_remove_vortex(id: String) -> Block3dDiff {
+pub async fn diff_remove_vortex(id: String) -> Block3dDiff {
     Block3dDiff { vortices: Some(Block3dVorticesDelta { removed: vec![id], ..Default::default() }), ..Default::default() }
 }
-pub fn diff_set_compatibility_rule(index: usize, rule: BlockCompatibilityRule, base: &Block3dSnapshot) -> Block3dDiff {
+pub async fn diff_set_compatibility_rule(index: usize, rule: BlockCompatibilityRule, base: &Block3dSnapshot) -> Block3dDiff {
     let mut delta = Block3dCompatibilityDelta { added: vec![rule.clone()], ..Default::default() };
     if block3d_index_of(&base.compatibility, &rule.id).is_none() {
         let mut order: Vec<_> = base.compatibility.iter().map(|e| e.id.clone()).collect();
@@ -238,10 +238,10 @@ pub fn diff_set_compatibility_rule(index: usize, rule: BlockCompatibilityRule, b
     }
     Block3dDiff { compatibility: Some(delta), ..Default::default() }
 }
-pub fn diff_remove_compatibility_rule(id: String) -> Block3dDiff {
+pub async fn diff_remove_compatibility_rule(id: String) -> Block3dDiff {
     Block3dDiff { compatibility: Some(Block3dCompatibilityDelta { removed: vec![id], ..Default::default() }), ..Default::default() }
 }
-pub fn diff_set_attribute(index: usize, attribute: BlockAttribute, base: &Block3dSnapshot) -> Block3dDiff {
+pub async fn diff_set_attribute(index: usize, attribute: BlockAttribute, base: &Block3dSnapshot) -> Block3dDiff {
     let mut delta = Block3dAttributesDelta { added: vec![attribute.clone()], ..Default::default() };
     if block3d_index_of(&base.attributes, &attribute.key).is_none() {
         let mut order: Vec<_> = base.attributes.iter().map(|e| e.key.clone()).collect();
@@ -250,10 +250,10 @@ pub fn diff_set_attribute(index: usize, attribute: BlockAttribute, base: &Block3
     }
     Block3dDiff { attributes: Some(delta), ..Default::default() }
 }
-pub fn diff_remove_attribute(key: String) -> Block3dDiff {
+pub async fn diff_remove_attribute(key: String) -> Block3dDiff {
     Block3dDiff { attributes: Some(Block3dAttributesDelta { removed: vec![key], ..Default::default() }), ..Default::default() }
 }
-pub fn diff_set_snapshot(snapshot: Block3dSnapshot) -> Block3dDiff {
+pub async fn diff_set_snapshot(snapshot: Block3dSnapshot) -> Block3dDiff {
     Block3dDiff { artifact: Some(Box::new(Block3dArtifact::from_snapshot(snapshot))), ..Default::default() }
 }
 //#endregion 🔖️DiffHelpers

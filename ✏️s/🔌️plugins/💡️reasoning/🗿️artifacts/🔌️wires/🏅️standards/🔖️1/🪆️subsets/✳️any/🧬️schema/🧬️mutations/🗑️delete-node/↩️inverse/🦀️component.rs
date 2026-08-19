@@ -5,7 +5,7 @@ use crate::artifacts::wires::mutations::WiresMutation;
 use crate::artifacts::wires::WiresSnapshot;
 
 //#region 🔖️Inverse
-pub fn inverse(payload: &super::mutation::DeleteNode, base: &WiresSnapshot) -> Vec<WiresMutation> {
+pub async fn inverse(payload: &super::mutation::DeleteNode, base: &WiresSnapshot) -> Vec<WiresMutation> {
     match find_board_node(base, &payload.node_id) {
         Some(node) => vec![crate::artifacts::wires::mutations::create_node::mutation::create_node(node.clone())],
         None => Vec::new(),

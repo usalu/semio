@@ -14,16 +14,16 @@ pub struct ChangeShotFormat {
 
 impl MutationKind<ShootingSnapshot, ShootingMutation> for ChangeShotFormat {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "change", entity: "shot-format", kind: "change-shot-format", record: "ChangedShotFormat" };
-    fn diff(&self, base: &ShootingSnapshot) -> protocol::MutationOutcome<ShootingDiff> {
+    async fn diff(&self, base: &ShootingSnapshot) -> protocol::MutationOutcome<ShootingDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &ShootingSnapshot) -> Vec<ShootingMutation> {
+    async fn inverse(&self, base: &ShootingSnapshot) -> Vec<ShootingMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         format!("Change shot \"{}\" format", self.id)
     }
-    fn target(&self) -> Vec<String> {
+    async fn target(&self) -> Vec<String> {
         vec![self.id.clone()]
     }
 }

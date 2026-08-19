@@ -12,6 +12,6 @@ pub struct WorkflowEngagementInput {
     pub value: String,
 }
 
-pub fn handle(payload: &WorkflowEngagementInput, _doc: &ArtifactView<'_, WorkflowSnapshot>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
+pub async fn handle(payload: &WorkflowEngagementInput, _doc: &ArtifactView<'_, WorkflowSnapshot>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
     Ok(Emit::config(vec![SpaceConfigMutation::SetWorkflowEngagementInput { value: payload.value.clone() }]))
 }

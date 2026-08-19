@@ -6,6 +6,6 @@ use crate::artifacts::program::ProgramMutation;
 use crate::artifacts::program::ProgramSnapshot;
 
 /// ↩️ Undo a create by deleting the row it added.
-pub fn inverse(payload: &super::mutation::CreateActivity, _base: &ProgramSnapshot) -> Vec<ProgramMutation> {
+pub async fn inverse(payload: &super::mutation::CreateActivity, _base: &ProgramSnapshot) -> Vec<ProgramMutation> {
     vec![ProgramMutation::DeleteActivity(super::super::delete_activity::mutation::DeleteActivity { id: payload.activity.header.id.clone() })]
 }

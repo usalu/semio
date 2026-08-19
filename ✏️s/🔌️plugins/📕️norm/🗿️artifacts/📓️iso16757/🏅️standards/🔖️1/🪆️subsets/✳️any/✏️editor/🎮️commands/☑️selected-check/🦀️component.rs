@@ -20,7 +20,7 @@ pub struct SetSelectedCheckIndex {
 //#endregion 🔖️Payload
 
 //#region 🔖️Handler
-pub fn handle(payload: &SetSelectedCheckIndex, _doc: &ArtifactView<'_, Iso16757Snapshot>, _cfg: &ConfigView<'_, NormConfig>) -> Result<Emit<Iso16757Mutation, NormConfigMutation>, Fault> {
+pub async fn handle(payload: &SetSelectedCheckIndex, _doc: &ArtifactView<'_, Iso16757Snapshot>, _cfg: &ConfigView<'_, NormConfig>) -> Result<Emit<Iso16757Mutation, NormConfigMutation>, Fault> {
     crate::app_surface::commit_selected_check_index::<Iso16757Mutation>(payload.index)
 }
 //#endregion 🔖️Handler
@@ -32,7 +32,7 @@ mod tests {
     use semio_framework_plugin::HistoryView;
 
     #[test]
-    fn handle_emits_only_a_config_operation() {
+    async fn handle_emits_only_a_config_operation() {
         let projection = Iso16757Snapshot::default();
         let config = NormConfig::default();
         let emit = handle(&SetSelectedCheckIndex { index: Some(4) }, &ArtifactView::new(&projection, &HistoryView::empty()), &ConfigView { snapshot: &config }).expect("handle");

@@ -19,15 +19,15 @@ pub struct ChangeSchema {
 impl protocol::MutationKind<Procedural3dSnapshot, Procedural3dMutation> for ChangeSchema {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "schema", kind: "change-schema", record: "ChangedSchema" };
 
-    fn diff(&self, base: &Procedural3dSnapshot) -> protocol::MutationOutcome<Procedural3dDiff> {
+    async fn diff(&self, base: &Procedural3dSnapshot) -> protocol::MutationOutcome<Procedural3dDiff> {
         crate::artifacts::procedural3d::mutations::change_schema::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &Procedural3dSnapshot) -> Vec<Procedural3dMutation> {
+    async fn inverse(&self, base: &Procedural3dSnapshot) -> Vec<Procedural3dMutation> {
         crate::artifacts::procedural3d::mutations::change_schema::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         format!("Change schema to \"{}\"", self.new_schema)
     }
 }

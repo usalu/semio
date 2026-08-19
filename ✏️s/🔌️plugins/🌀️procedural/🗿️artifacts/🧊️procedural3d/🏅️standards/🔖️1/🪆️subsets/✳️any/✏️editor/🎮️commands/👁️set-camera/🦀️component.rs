@@ -13,6 +13,6 @@ pub struct SetCamera {
     #[dsl(block)]
     pub camera: Procedural3dPreviewCamera}
 
-pub fn handle(payload: &SetCamera, _doc: &ArtifactView<'_, Procedural3dSnapshot>, _cfg: &ConfigView<'_, Procedural3dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural3dMutation, Procedural3dConfigMutation>, Fault> {
+pub async fn handle(payload: &SetCamera, _doc: &ArtifactView<'_, Procedural3dSnapshot>, _cfg: &ConfigView<'_, Procedural3dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural3dMutation, Procedural3dConfigMutation>, Fault> {
     Ok(Emit::config(vec![Procedural3dConfigMutation::SetPreviewCamera { camera: payload.camera.clone() }]))
 }

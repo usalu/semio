@@ -5,7 +5,7 @@ use crate::artifacts::semio::standards::v1::subsets::kit::schema::diff::{SemioKi
 use crate::artifacts::semio::standards::v1::subsets::kit::schema::snapshot::SemioKitSnapshot;
 
 //#region 🔖️Diff
-pub fn diff(payload: &CreateObject, base: &SemioKitSnapshot) -> protocol::MutationOutcome<SemioKitDiff> {
+pub async fn diff(payload: &CreateObject, base: &SemioKitSnapshot) -> protocol::MutationOutcome<SemioKitDiff> {
     if base.objects.iter().any(|o| o.child_id == payload.child_id) {
         return protocol::MutationOutcome::fatal(
             "mutation.duplicate-id",

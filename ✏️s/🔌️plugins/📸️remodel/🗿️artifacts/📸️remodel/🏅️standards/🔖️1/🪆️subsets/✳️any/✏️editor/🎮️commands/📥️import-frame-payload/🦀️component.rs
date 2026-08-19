@@ -17,7 +17,7 @@ use serde::{Deserialize, Serialize};
 /// 🆔️ The stream a batch tick lands on: `index == 0` starts a new stream, `index > 0` appends to
 /// `scene.streams.last()` — the stream THIS batch's `index == 0` call just created (each call sees the
 /// prior call's already-committed mutations, since dispatches within one batch are sequential).
-fn batch_stream_id(scene: &RemodelSnapshot, index: u32) -> String {
+async fn batch_stream_id(scene: &RemodelSnapshot, index: u32) -> String {
     if index == 0 {
         next_remodel_id("stream")
     } else {
@@ -52,7 +52,7 @@ fn batch_stream_id(scene: &RemodelSnapshot, index: u32) -> String {
 /// exactly what a real `importFrames` → `RequestFileOpen.multiple` re-dispatch loop sends. Shared with
 /// `🎮️commands/🚀️run-reconstruction`'s own tests, which need real decodable frames to run a pipeline on.
 #[cfg(test)]
-pub(crate) fn testkit_import_checker_stream(app: &mut crate::editor::remodel::testkit::RemodelApp, n: u32) {
+pub(crate) async fn testkit_import_checker_stream(app: &mut crate::editor::remodel::testkit::RemodelApp, n: u32) {
     use crate::editor::remodel::testkit::dispatch;
     use crate::editor::remodel::RemodelCommand;
     for index in 0..n {
@@ -63,28 +63,28 @@ pub(crate) fn testkit_import_checker_stream(app: &mut crate::editor::remodel::te
 /// 🏁️ High-contrast `cell`-pixel checkerboard, PNG-encoded and base64-wrapped as a `requestFileOpen`
 /// `dataUrl` payload — so the real decode path is exercised, not a stub.
 #[cfg(test)]
-pub(crate) fn checker_data_url(w: u32, h: u32, cell: u32) -> String {
+pub(crate) async fn checker_data_url(w: u32, h: u32, cell: u32) -> String {
     format!("data:image/png;base64,{}", base64::engine::general_purpose::STANDARD.encode(remodel_image::encode_png(&checker_image(w, h, cell)).expect("encode checker png")))
 }
 
 /// 🏁️ The same checkerboard, real-JPEG-encoded — mirrors what a `RequestMediaFrames` host actually
 /// dispatches to `frame_action` (`payload: dataUrl(image/jpeg)`).
 #[cfg(test)]
-pub(crate) fn checker_data_url_jpeg(w: u32, h: u32, cell: u32) -> String {
+pub(crate) async fn checker_data_url_jpeg(w: u32, h: u32, cell: u32) -> String {
     format!("data:image/jpeg;base64,{}", base64::engine::general_purpose::STANDARD.encode(remodel_image::encode_jpeg(&checker_image(w, h, cell), 90)))
 }
 
 /// 🎞️ A tiny synthesized MJPEG-in-MP4 video (n frames of the same checker pattern) as a
 /// `RequestMediaFrames`-fallback-style raw base64 data URL payload.
 #[cfg(test)]
-pub(crate) fn checker_video_data_url(n: u32, w: u32, h: u32, cell: u32) -> String {
+pub(crate) async fn checker_video_data_url(n: u32, w: u32, h: u32, cell: u32) -> String {
     let jpeg = remodel_image::encode_jpeg(&checker_image(w, h, cell), 90);
     let frames: Vec<Vec<u8>> = (0..n).map(|_| jpeg.clone()).collect();
     format!("data:video/mp4;base64,{}", base64::engine::general_purpose::STANDARD.encode(remodel_video::write_mp4_mjpeg(&frames, 10.0)))
 }
 
 #[cfg(test)]
-fn checker_image(w: u32, h: u32, cell: u32) -> remodel_image::ImageRgba8 {
+async fn checker_image(w: u32, h: u32, cell: u32) -> remodel_image::ImageRgba8 {
     let mut image = remodel_image::ImageRgba8::new(w, h);
     for y in 0..h {
         for x in 0..w {
@@ -111,7 +111,7 @@ pub struct ImportFramePayload {
 
 /// 📥️ A still-image drop-zone/file-picker payload; a `video/*` mime is re-routed to the in-process
 /// video-bytes decoder.
-pub fn handle(payload: &ImportFramePayload, doc: &ArtifactView<'_, RemodelSnapshot>, cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelMutation, RemodelConfigMutation>, Fault> {
+pub async fn handle(payload: &ImportFramePayload, doc: &ArtifactView<'_, RemodelSnapshot>, cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelMutation, RemodelConfigMutation>, Fault> {
     let Some((mime, bytes)) = payload_from_data_url(&payload.payload) else { return Ok(Emit::default()) };
     if mime.starts_with("video/") {
         return import_video_bytes_payload::handle(&import_video_bytes_payload::ImportVideoBytesPayload { payload: payload.payload.clone(), name: payload.name.clone() }, doc, cfg);

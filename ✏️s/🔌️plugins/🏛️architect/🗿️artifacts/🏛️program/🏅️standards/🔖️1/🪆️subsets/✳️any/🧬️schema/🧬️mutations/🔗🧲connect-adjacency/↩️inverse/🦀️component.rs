@@ -9,7 +9,7 @@ use crate::artifacts::program::ProgramSnapshot;
 
 /// ↩️ If the pair already existed, undo restores its prior full value; if this connect added a
 /// brand-new edge, undo disconnects it by the id the connect used.
-pub fn inverse(payload: &super::mutation::ConnectAdjacency, base: &ProgramSnapshot) -> Vec<ProgramMutation> {
+pub async fn inverse(payload: &super::mutation::ConnectAdjacency, base: &ProgramSnapshot) -> Vec<ProgramMutation> {
     let (a, b) = normalize_pair(&payload.adjacency.element_a_id, &payload.adjacency.element_b_id);
     match base.adjacencies.iter().find(|row| row.element_a_id == a && row.element_b_id == b) {
         Some(existing) => vec![ProgramMutation::ConnectAdjacency(super::mutation::ConnectAdjacency { adjacency: existing.clone() })],

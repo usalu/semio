@@ -14,7 +14,7 @@ const IMPERATIVE_PLAY_SURFACE_MAIN: &str = "imperative.play.main";
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
-pub fn definition() -> WindowKindDefinition {
+pub async fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
         id: IMPERATIVE_PLAY_WINDOW_MAIN.into(),
         label: LocalizedLabel::native("Imperative", "Imperativ"),
@@ -42,14 +42,14 @@ struct TableRow {
     kind: String,
 }
 
-fn table_rows(steps: &[Step]) -> String {
+async fn table_rows(steps: &[Step]) -> String {
     let rows: Vec<TableRow> = steps.iter().enumerate().map(|(index, step)| TableRow { index: index + 1, id: step.id.clone(), kind: step.kind.clone() }).collect();
     serde_json::to_string(&rows).unwrap_or_else(|_| "[]".into())
 }
 
 /// 📤️ One table row per scope key so the full run output is legible instead of an 80-char
 /// truncated blob; falls back to the raw JSON when it isn't a plain object.
-fn run_output_rows(run_output_json: &str, offset: usize) -> Vec<TableRow> {
+async fn run_output_rows(run_output_json: &str, offset: usize) -> Vec<TableRow> {
     match serde_json::from_str::<Value>(run_output_json).ok().and_then(|value| value.as_object().cloned()) {
         Some(scope) if !scope.is_empty() => {
             scope.into_iter().enumerate().map(|(index, (key, value))| TableRow { index: offset + index + 1, id: format!("run-output.{key}"), kind: format!("{key} = {}", serde_json::to_string(&value).unwrap_or_else(|_| "null".into())) }).collect()
@@ -58,7 +58,7 @@ fn run_output_rows(run_output_json: &str, offset: usize) -> Vec<TableRow> {
     }
 }
 
-pub fn render(document: &ImperativeSnapshot, run_output_json: &str, labels: &ImperativeLabels) -> UiNode {
+pub async fn render(document: &ImperativeSnapshot, run_output_json: &str, labels: &ImperativeLabels) -> UiNode {
     let path = crate::artifacts::imperative::imperative_working_scene(document).path;
     let mut rows_json = table_rows(&path.steps);
     if !run_output_json.is_empty() {
@@ -91,14 +91,14 @@ mod tests {
     use crate::editor::imperative::ImperativeCommand;
 
     #[test]
-    fn renders_table_scene() {
+    async fn renders_table_scene() {
         let mut app = imperative_app();
         let json = render_body(&mut app, IMPERATIVE_PLAY_BODY_MAIN);
         assert!(json.contains("table"));
     }
 
     #[test]
-    fn run_command_expands_scope_into_readable_rows_without_truncation() {
+    async fn run_command_expands_scope_into_readable_rows_without_truncation() {
         use crate::editor::imperative::testkit::dispatch;
         use crate::editor::imperative::commands::run;
         let mut app = imperative_app();

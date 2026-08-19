@@ -8,7 +8,7 @@ use semio_framework_plugin::WindowMeasure;
 use serde_json::json;
 
 //#region 🔖️Measure
-pub fn measure(config: &WriterConfig, labels: &WriterPlayLabels) -> WindowMeasure {
+pub async fn measure(config: &WriterConfig, labels: &WriterPlayLabels) -> WindowMeasure {
     let settings = &config.editor_settings;
     WindowMeasure::Slider {
         id: "writer-font-size-measure".into(),
@@ -34,7 +34,7 @@ mod tests {
     use crate::editor::writer::terminology::writer_play_labels;
 
     #[test]
-    fn the_slider_range_matches_the_command_handler_clamp() {
+    async fn the_slider_range_matches_the_command_handler_clamp() {
         let config = WriterConfig::default();
         match measure(&config, writer_play_labels(&config)) {
             WindowMeasure::Slider { min, max, .. } => assert!(min == 10.0 && max == 24.0),

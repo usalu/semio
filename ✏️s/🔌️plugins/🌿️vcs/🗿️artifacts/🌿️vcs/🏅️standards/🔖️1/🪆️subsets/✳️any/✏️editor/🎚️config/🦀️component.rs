@@ -27,10 +27,10 @@ pub struct VcsDemoConfig {
 /// 📜️ Handcrafted ArtifactDsl (P6): uses this type's `__dsl_*` helpers + parse/print, not derive emission.
 impl store::ArtifactDsl for VcsDemoConfig {
     const EXTENSION: &'static str = Self::__DSL_EXTENSION;
-    fn envelope_id() -> &'static str {
+    async fn envelope_id() -> &'static str {
         Self::__DSL_ENVELOPE_ID
     }
-    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+    async fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
         let body = match store::semio_format::split_text_preamble(text) {
             Ok((_, rest)) => rest,
             Err(_) => text,
@@ -42,7 +42,7 @@ impl store::ArtifactDsl for VcsDemoConfig {
         )?;
         Self::__dsl_from_record(&record)
     }
-    fn print_dsl(&self) -> String {
+    async fn print_dsl(&self) -> String {
         let body = dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), dsl::JoinMode::Document);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
             <Self as store::ArtifactDsl>::envelope_id(),
@@ -56,7 +56,7 @@ impl store::ArtifactDsl for VcsDemoConfig {
 
 /// 📦️ Handcrafted ArtifactPack (P6): envelope-wrapped pack body via `__dsl_*` record lowering.
 impl store::ArtifactPack for VcsDemoConfig {
-    fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
+    async fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let inner = store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
             <Self as store::ArtifactDsl>::envelope_id(),
@@ -66,7 +66,7 @@ impl store::ArtifactPack for VcsDemoConfig {
         .map_err(|e| store::PackError::Schema(e.to_string()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &inner))
     }
-    fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
+    async fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
         if envelope.envelope_id() != <Self as store::ArtifactDsl>::envelope_id() {
             return Err(store::PackError::Schema(format!(
@@ -78,7 +78,7 @@ impl store::ArtifactPack for VcsDemoConfig {
         let (record, _report) = store::pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
         Self::__dsl_from_record(&record).map_err(store::text_error_to_pack_error)
     }
-    fn record_spec() -> Option<dsl::RecordSpec> {
+    async fn record_spec() -> Option<dsl::RecordSpec> {
         Some(Self::__dsl_spec())
     }
 }
@@ -87,7 +87,7 @@ impl store::ArtifactPack for VcsDemoConfig {
 
 
 impl Default for VcsDemoConfig {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self { locale: "en-US".into() }
     }
 }
@@ -113,7 +113,7 @@ pub enum VcsDemoConfigMutation {
 
 //#region 🔖️OpCodec
 impl protocol::OpText for VcsDemoConfigMutation {
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
+    async fn parse_op(line: &str) -> Result<Self, store::TextError> {
         let variants = <Self as dsl::DslVariants>::variants();
         for (keyword, spec_fn) in &variants {
             let probe = format!("{} ", keyword);
@@ -128,7 +128,7 @@ impl protocol::OpText for VcsDemoConfigMutation {
         }
         Err(dsl::__rt::field_error(format!("unknown operation line '{line}'")))
     }
-    fn print_op(&self) -> String {
+    async fn print_op(&self) -> String {
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
         let variants = <Self as dsl::DslVariants>::variants();
         let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
@@ -138,7 +138,7 @@ impl protocol::OpText for VcsDemoConfigMutation {
 
 /// 🎯️ Handcrafted OpBinary (P6).
 impl protocol::OpBinary for VcsDemoConfigMutation {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         const OP_BINARY_FORMAT: u8 = 1;
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
         let variants = <Self as dsl::DslVariants>::variants();
@@ -155,7 +155,7 @@ impl protocol::OpBinary for VcsDemoConfigMutation {
         out.extend_from_slice(&body);
         Ok(out)
     }
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         const OP_BINARY_FORMAT: u8 = 1;
         let mut reader = store::pack_rt::ByteReader::new(bytes);
         let format = reader.read_u8()?;
@@ -186,7 +186,7 @@ impl protocol::OpBinary for VcsDemoConfigMutation {
 impl Mutation<VcsDemoConfig> for VcsDemoConfigMutation {
     type Diff = VcsDemoConfig;
 
-    fn diff(&self, base: &VcsDemoConfig) -> protocol::MutationOutcome<VcsDemoConfig> {
+    async fn diff(&self, base: &VcsDemoConfig) -> protocol::MutationOutcome<VcsDemoConfig> {
         let mut next = base.clone();
         match self {
             VcsDemoConfigMutation::Snapshot { config } => {
@@ -205,7 +205,7 @@ impl Mutation<VcsDemoConfig> for VcsDemoConfigMutation {
         protocol::MutationOutcome::new(next)
     }
 
-    fn inverse(&self, base: &VcsDemoConfig) -> Vec<Self> {
+    async fn inverse(&self, base: &VcsDemoConfig) -> Vec<Self> {
         vec![VcsDemoConfigMutation::Snapshot { config: base.clone() }]
     }
 }
@@ -217,7 +217,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn vcs_demo_config_default_is_english_locale() {
+    async fn vcs_demo_config_default_is_english_locale() {
         let config = VcsDemoConfig::default();
         assert_eq!(config.locale, "en-US");
     }
@@ -225,7 +225,7 @@ mod tests {
     /// 🧮️ Round-trip law (WORKFLOWS-END-TO-END-TYPED-PORTS-REAL-SCHEMA-FLOW-CONFIG-ON-NODE): a
     /// non-default fixture must survive `ArtifactDsl`/`ArtifactPack` byte-for-byte.
     #[test]
-    fn vcs_demo_config_dsl_pack_round_trips() {
+    async fn vcs_demo_config_dsl_pack_round_trips() {
         let config = VcsDemoConfig { locale: "de-DE".into() };
         store::os_store::test_support::assert_dsl_pack_equivalence(&config);
     }
@@ -233,7 +233,7 @@ mod tests {
     /// 🧮️ Round-trip law per `VcsDemoConfigMutation` variant (WORKFLOWS-END-TO-END-TYPED-PORTS-REAL-
     /// SCHEMA-FLOW-CONFIG-ON-NODE).
     #[test]
-    fn vcs_demo_config_operation_op_text_round_trips() {
+    async fn vcs_demo_config_operation_op_text_round_trips() {
         store::os_store::test_support::assert_op_line_round_trip(&VcsDemoConfigMutation::Snapshot { config: VcsDemoConfig { locale: "de-DE".into() } });
         store::os_store::test_support::assert_op_line_round_trip(&VcsDemoConfigMutation::SetLocale { value: "de-DE".into() });
     }
@@ -241,7 +241,7 @@ mod tests {
     /// ⏪️ `backwards()` always returns a `Snapshot` of the pre-operation config, so applying it after
     /// the forward op exactly restores the original — the "whole-config-snapshot-undo" law.
     #[test]
-    fn vcs_demo_config_operation_backwards_restores_the_base_config() {
+    async fn vcs_demo_config_operation_backwards_restores_the_base_config() {
         let base = VcsDemoConfig { locale: "en-US".into() };
         let operation = VcsDemoConfigMutation::SetLocale { value: "de-DE".into() };
         let forward = operation.diff(&base).diff().clone();

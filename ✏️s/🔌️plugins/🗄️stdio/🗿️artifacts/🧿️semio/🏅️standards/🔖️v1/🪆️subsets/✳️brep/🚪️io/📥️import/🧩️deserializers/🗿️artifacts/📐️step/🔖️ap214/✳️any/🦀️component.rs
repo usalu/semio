@@ -48,38 +48,38 @@ use crate::artifacts::step::schema::snapshot::{StepEntity, StepSnapshot, StepVal
 //#region 🔖️ValueAccess
 /// 🔎️ True if `e`'s primary type OR any of its complex-instance fragments match `name`
 /// (case-insensitively, matching Part-21 keyword casing conventions).
-fn has_type(e: &StepEntity, name: &str) -> bool {
+async fn has_type(e: &StepEntity, name: &str) -> bool {
     e.name.eq_ignore_ascii_case(name) || e.complex.iter().any(|c| c.name.eq_ignore_ascii_case(name))
 }
 /// 🔎️ The argument list of the fragment named `name` on `e` (primary or complex), if present.
-fn args_for_type<'a>(e: &'a StepEntity, name: &str) -> Option<&'a [StepValue]> {
+async fn args_for_type<'a>(e: &'a StepEntity, name: &str) -> Option<&'a [StepValue]> {
     if e.name.eq_ignore_ascii_case(name) {
         return Some(&e.args);
     }
     e.complex.iter().find(|c| c.name.eq_ignore_ascii_case(name)).map(|c| c.args.as_slice())
 }
-fn as_real(v: &StepValue) -> Option<f64> {
+async fn as_real(v: &StepValue) -> Option<f64> {
     match v {
         StepValue::Real(r) => Some(*r),
         StepValue::Integer(i) => Some(*i as f64),
         _ => None,
     }
 }
-fn as_int(v: &StepValue) -> Option<i64> {
+async fn as_int(v: &StepValue) -> Option<i64> {
     match v {
         StepValue::Integer(i) => Some(*i),
         StepValue::Real(r) => Some(*r as i64),
         _ => None,
     }
 }
-fn as_ref_id(v: &StepValue) -> Option<u64> {
+async fn as_ref_id(v: &StepValue) -> Option<u64> {
     if let StepValue::Reference(id) = v {
         Some(*id)
     } else {
         None
     }
 }
-fn as_agg(v: &StepValue) -> Option<&Vec<StepValue>> {
+async fn as_agg(v: &StepValue) -> Option<&Vec<StepValue>> {
     if let StepValue::Aggregate(items) = v {
         Some(items)
     } else {
@@ -89,7 +89,7 @@ fn as_agg(v: &StepValue) -> Option<&Vec<StepValue>> {
 /// 🔁️ `(multiplicities, distinct_knots)` -> a flat knot vector, per ISO 10303-42's
 /// `b_spline_curve_with_knots`/`b_spline_surface_with_knots` convention (each distinct knot value
 /// repeated `multiplicity` times). Mirrored by `compress_knots` in the `📤️export` leaf.
-fn expand_knots(mults: &[StepValue], vals: &[StepValue]) -> Option<Vec<f64>> {
+async fn expand_knots(mults: &[StepValue], vals: &[StepValue]) -> Option<Vec<f64>> {
     if mults.len() != vals.len() {
         return None;
     }
@@ -115,13 +115,13 @@ struct Resolver<'a> {
 }
 
 impl<'a> Resolver<'a> {
-    fn new(step: &'a StepSnapshot) -> Self {
+    async fn new(step: &'a StepSnapshot) -> Self {
         Self { by_id: step.entities.iter().map(|e| (e.id, e)).collect() }
     }
-    fn get(&self, id: u64) -> Option<&'a StepEntity> {
+    async fn get(&self, id: u64) -> Option<&'a StepEntity> {
         self.by_id.get(&id).copied()
     }
-    fn point(&self, id: u64) -> Result<SemioPoint3, String> {
+    async fn point(&self, id: u64) -> Result<SemioPoint3, String> {
         let e = self.get(id).ok_or_else(|| format!("dangling CARTESIAN_POINT reference #{id}"))?;
         let args = args_for_type(e, "CARTESIAN_POINT").ok_or_else(|| format!("#{id} is not a CARTESIAN_POINT"))?;
         let coords = args.get(1).and_then(as_agg).ok_or_else(|| format!("CARTESIAN_POINT #{id}: coordinates not a list"))?;
@@ -131,7 +131,7 @@ impl<'a> Resolver<'a> {
             z: coords.get(2).and_then(as_real).unwrap_or(0.0),
         })
     }
-    fn direction(&self, id: u64) -> Result<SemioPoint3, String> {
+    async fn direction(&self, id: u64) -> Result<SemioPoint3, String> {
         let e = self.get(id).ok_or_else(|| format!("dangling DIRECTION reference #{id}"))?;
         let args = args_for_type(e, "DIRECTION").ok_or_else(|| format!("#{id} is not a DIRECTION"))?;
         let coords = args.get(1).and_then(as_agg).ok_or_else(|| format!("DIRECTION #{id}: ratios not a list"))?;
@@ -141,13 +141,13 @@ impl<'a> Resolver<'a> {
             z: coords.get(2).and_then(as_real).unwrap_or(0.0),
         })
     }
-    fn vector_direction(&self, id: u64) -> Result<SemioPoint3, String> {
+    async fn vector_direction(&self, id: u64) -> Result<SemioPoint3, String> {
         let e = self.get(id).ok_or_else(|| format!("dangling VECTOR reference #{id}"))?;
         let args = args_for_type(e, "VECTOR").ok_or_else(|| format!("#{id} is not a VECTOR"))?;
         let dir_ref = args.get(1).and_then(as_ref_id).ok_or_else(|| format!("VECTOR #{id}: orientation not a reference"))?;
         self.direction(dir_ref)
     }
-    fn axis_placement(&self, id: u64) -> Result<(SemioPoint3, SemioPoint3), String> {
+    async fn axis_placement(&self, id: u64) -> Result<(SemioPoint3, SemioPoint3), String> {
         let e = self.get(id).ok_or_else(|| format!("dangling AXIS2_PLACEMENT_3D reference #{id}"))?;
         let args = args_for_type(e, "AXIS2_PLACEMENT_3D").ok_or_else(|| format!("#{id} is not an AXIS2_PLACEMENT_3D"))?;
         let loc_ref = args.get(1).and_then(as_ref_id).ok_or_else(|| format!("AXIS2_PLACEMENT_3D #{id}: location not a reference"))?;
@@ -161,7 +161,7 @@ impl<'a> Resolver<'a> {
 
     /// 🧵️ `LINE`/`CIRCLE`/`ELLIPSE`/`B_SPLINE_CURVE_WITH_KNOTS` (+ `RATIONAL_B_SPLINE_CURVE`) ->
     /// `BrepCurve`. `Err` for any other curve entity — see module doc comment.
-    fn curve(&self, id: u64) -> Result<BrepCurve, String> {
+    async fn curve(&self, id: u64) -> Result<BrepCurve, String> {
         let e = self.get(id).ok_or_else(|| format!("dangling curve reference #{id}"))?;
         if let Some(args) = args_for_type(e, "LINE") {
             let point_ref = args.get(1).and_then(as_ref_id).ok_or_else(|| format!("LINE #{id}: pnt not a reference"))?;
@@ -207,7 +207,7 @@ impl<'a> Resolver<'a> {
     /// 🗺️ `PLANE`/`CYLINDRICAL_SURFACE`/`CONICAL_SURFACE`/`SPHERICAL_SURFACE`/
     /// `TOROIDAL_SURFACE`/`B_SPLINE_SURFACE_WITH_KNOTS` (+ `RATIONAL_B_SPLINE_SURFACE`) ->
     /// `BrepSurface`. `Err` for any other surface entity — see module doc comment.
-    fn surface(&self, id: u64) -> Result<BrepSurface, String> {
+    async fn surface(&self, id: u64) -> Result<BrepSurface, String> {
         let e = self.get(id).ok_or_else(|| format!("dangling surface reference #{id}"))?;
         if let Some(args) = args_for_type(e, "PLANE") {
             let pos_ref = args.get(1).and_then(as_ref_id).ok_or_else(|| format!("PLANE #{id}: position not a reference"))?;
@@ -286,7 +286,7 @@ impl<'a> Resolver<'a> {
 const STEP_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.step", standard: StandardId("ap214"), subset: SubsetId::ANY };
 const SEMIO_BREP_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("brep") };
 
-fn step_err(message: String) -> store::PackError {
+async fn step_err(message: String) -> store::PackError {
     store::PackError::Schema(format!("semio brep <- step: {message}"))
 }
 
@@ -407,13 +407,13 @@ mod tests {
     /// straight edges, 1 planar face, 1 shell, 1 solid), not a synthetic degenerate case.
     const FIXTURE: &str = "ISO-10303-21;\nHEADER;\nFILE_DESCRIPTION((''),'2;1');\nFILE_NAME('semio.step','2026-08-10T00:00:00',('Ueli'),('semio'),'semio','','');\nFILE_SCHEMA(('AUTOMOTIVE_DESIGN'));\nENDSEC;\nDATA;\n#1=CARTESIAN_POINT('',(0.,0.,0.));\n#2=CARTESIAN_POINT('',(10.,0.,0.));\n#3=CARTESIAN_POINT('',(10.,10.,0.));\n#4=DIRECTION('',(0.,0.,1.));\n#5=VERTEX_POINT('',#1);\n#6=VERTEX_POINT('',#2);\n#7=VERTEX_POINT('',#3);\n#8=EDGE_CURVE('',#5,#6,#20,.T.);\n#9=EDGE_CURVE('',#6,#7,#21,.T.);\n#10=EDGE_CURVE('',#7,#5,#22,.T.);\n#20=LINE('',#1,#30);\n#21=LINE('',#2,#31);\n#22=LINE('',#3,#32);\n#30=VECTOR('',#4,1.);\n#31=VECTOR('',#4,1.);\n#32=VECTOR('',#4,1.);\n#11=ORIENTED_EDGE('',*,*,#8,.T.);\n#12=ORIENTED_EDGE('',*,*,#9,.T.);\n#13=ORIENTED_EDGE('',*,*,#10,.T.);\n#14=EDGE_LOOP('',(#11,#12,#13));\n#15=FACE_OUTER_BOUND('',#14,.T.);\n#16=PLANE('',#40);\n#40=AXIS2_PLACEMENT_3D('',#1,#4,$);\n#17=ADVANCED_FACE('',(#15),#16,.T.);\n#18=CLOSED_SHELL('',(#17));\n#19=MANIFOLD_SOLID_BREP('',#18);\nENDSEC;\nEND-ISO-10303-21;\n";
 
-    fn fixture_step_snapshot() -> StepSnapshot {
+    async fn fixture_step_snapshot() -> StepSnapshot {
         let doc = crate::artifacts::step::engine::part21::parse_part21(FIXTURE).expect("parse real AP214 fixture");
         StepSnapshot::from_part21_document(doc)
     }
 
     #[test]
-    fn deserializes_real_step_fixture_into_topologically_faithful_brep() {
+    async fn deserializes_real_step_fixture_into_topologically_faithful_brep() {
         let step = fixture_step_snapshot();
         let brep = semio_framework_plugin::resolve_ready(SemioBrepFromStep::deserialize(&step)).expect("deserialize real fixture");
 
@@ -443,7 +443,7 @@ mod tests {
     }
 
     #[test]
-    fn dangling_curve_reference_errors_rather_than_fabricating() {
+    async fn dangling_curve_reference_errors_rather_than_fabricating() {
         // A LINE whose `dir` points at a nonexistent VECTOR must fail loudly, not silently
         // produce a zero direction.
         let bad = FIXTURE.replace("#20=LINE('',#1,#30);", "#20=LINE('',#1,#999);");
@@ -454,7 +454,7 @@ mod tests {
     }
 
     #[test]
-    fn unsupported_surface_kind_errors_rather_than_fabricating() {
+    async fn unsupported_surface_kind_errors_rather_than_fabricating() {
         // Swap PLANE for a surface kind outside this leaf's supported vocabulary.
         let bad = FIXTURE.replace("#16=PLANE('',#40);", "#16=SURFACE_OF_REVOLUTION('',#20,#40);");
         let doc = crate::artifacts::step::engine::part21::parse_part21(&bad).expect("parse");

@@ -26,7 +26,7 @@ pub struct SemioKitInference {
 }
 
 impl protocol::Inference<SemioKitSnapshot> for SemioKitInference {
-    fn infer(snapshot: &SemioKitSnapshot) -> Self {
+    async fn infer(snapshot: &SemioKitSnapshot) -> Self {
         Self { entries: compute_semio_kit_entries(snapshot) }
     }
 }
@@ -36,19 +36,19 @@ impl protocol::Inference<SemioKitSnapshot> for SemioKitInference {
 /// agree, but tying `Default` to `infer` keeps the law correct even if that default ever stops
 /// being all-empty (the same defensive pattern raster's `RasterInference` documents).
 impl Default for SemioKitInference {
-    fn default() -> Self {
+    async fn default() -> Self {
         <Self as protocol::Inference<SemioKitSnapshot>>::infer(&SemioKitSnapshot::default())
     }
 }
 
 impl protocol::InferenceSpec<SemioKitSnapshot> for SemioKitInference {
-    fn inference_schema_id() -> &'static str {
+    async fn inference_schema_id() -> &'static str {
         "s.stdio.semio.kit.inference"
     }
-    fn schema_version() -> u32 {
+    async fn schema_version() -> u32 {
         1
     }
-    fn fields() -> &'static [protocol::InferenceFieldSpec] {
+    async fn fields() -> &'static [protocol::InferenceFieldSpec] {
         &[protocol::InferenceFieldSpec { id: "s.stdio.semio.kit.inference.entries", reads: &["types", "designs", "objects", "models", "properties", "representations"] }]
     }
 }
@@ -67,7 +67,7 @@ impl ArtifactInferrer for crate::artifacts::semio::standards::v1::subsets::kit::
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.stdio.semio.kit.inference`'s facet leaves into the OS-wide inference catalog —
 /// call once at plugin init, alongside `semio_kit_artifact_schema_descriptor`'s registration.
-pub fn semio_kit_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
+pub async fn semio_kit_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
     schema::ArtifactInferenceDescriptor {
         id: "s.stdio.semio.kit.inference",
         inference: schema::FacetLeaves {
@@ -88,13 +88,13 @@ mod tests {
     use protocol::Inference;
 
     #[test]
-    fn inference_determinism_law() {
+    async fn inference_determinism_law() {
         let snapshot = SemioKitSnapshot::default();
         assert_eq!(SemioKitInference::infer(&snapshot), SemioKitInference::infer(&snapshot));
     }
 
     #[test]
-    fn inference_default_law() {
+    async fn inference_default_law() {
         assert_eq!(SemioKitInference::infer(&SemioKitSnapshot::default()), SemioKitInference::default());
     }
 }

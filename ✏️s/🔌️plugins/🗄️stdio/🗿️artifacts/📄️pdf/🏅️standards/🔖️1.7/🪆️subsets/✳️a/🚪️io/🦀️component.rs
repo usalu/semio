@@ -24,12 +24,12 @@ pub mod derived_composition {
         type Snapshot = PdfSnapshot;
         const WRITES: Dialect = DIALECT_A;
 
-        fn reads() -> &'static [Dialect] {
+        async fn reads() -> &'static [Dialect] {
             &[DIALECT_ANY, DIALECT_A, DEP_BINARY, DEP_DEFLATE]
         }
 
-        fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
-            let inner = PdfAnyComposer::compose(sources)?;
+        async fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+            let inner = semio_framework_plugin::resolve_ready(PdfAnyComposer::compose(sources))?;
             let checks = check_pdf_a_conformance(&inner.snapshot);
             let (hard, soft): (Vec<Diagnostic>, Vec<Diagnostic>) = checks.into_iter().partition(|d| matches!(d.severity, Severity::Error | Severity::Fatal));
             if !hard.is_empty() {
@@ -52,7 +52,7 @@ pub mod derived_composition {
     impl SubsetValidator for PdfAValidator {
         const DIALECT: Dialect = DIALECT_A;
 
-        fn validate(payload: &IoPayload) -> Vec<Diagnostic> {
+        async fn validate(payload: &IoPayload) -> Vec<Diagnostic> {
             let decoded = match payload {
                 IoPayload::Binary(bytes) => <PdfSnapshot as store::ArtifactPack>::decode_pack(bytes).ok(),
                 IoPayload::Text(text) => <PdfSnapshot as store::ArtifactDsl>::parse_dsl(text).ok(),
@@ -73,7 +73,7 @@ pub mod derived_composition {
 
     static VALIDATOR_ENTRY: OnceLock<SubsetValidatorEntry> = OnceLock::new();
 
-    fn validator_entry() -> &'static SubsetValidatorEntry {
+    async fn validator_entry() -> &'static SubsetValidatorEntry {
         VALIDATOR_ENTRY.get_or_init(subset_validator_entry_of::<PdfAValidator>)
     }
 
@@ -85,7 +85,7 @@ pub mod derived_composition {
     /// registered separately by the standard-level composer aggregator
     /// (`crate::artifacts::pdf::standards::v1_7::subsets::any::io::io_registry::entries()`),
     /// matching how `✳️any`'s own entry is registered.
-    pub fn register() {
+    pub async fn register() {
         let _ = register_subset_validator(validator_entry());
     }
     //#endregion 🔖️SubsetValidator
@@ -98,7 +98,7 @@ pub mod derived_composition {
         use semio_framework_plugin::AnalyzeSource;
         use semio_framework_plugin::ArtifactBuilder as _;
 
-        fn minimal_pdf_with_extra_object(extra_obj_body: &[u8]) -> Vec<u8> {
+        async fn minimal_pdf_with_extra_object(extra_obj_body: &[u8]) -> Vec<u8> {
             // 🩹 Mirrors the hand-built classic-xref fixtures already used by `⚙️engine`'s own test
             // module: a real one-page PDF plus one extra indirect object (referenced from
             // `/OpenAction` so it's genuinely reachable, not just incidentally present in the xref
@@ -130,12 +130,12 @@ pub mod derived_composition {
         /// hand-crafted raw PDF bytes through `Text(hex)` is how this test genuinely exercises the
         /// real `engine::decode_pdf` → full-object-graph-retention → PDF/A hard-gate pipeline
         /// end-to-end through the actual `ArtifactComposition::compose` surface.
-        fn hex_encode(bytes: &[u8]) -> String {
+        async fn hex_encode(bytes: &[u8]) -> String {
             bytes.iter().map(|b| format!("{b:02x}")).collect()
         }
 
         #[test]
-        fn conforming_builder_snapshot_composes_and_stamps_a() {
+        async fn conforming_builder_snapshot_composes_and_stamps_a() {
             let snapshot = PdfABuilder::new("sRGB IEC61966-2.1").add_page(crate::artifacts::pdf::standards::v1_7::subsets::any::schema::snapshot::PdfPage::new(100.0, 100.0)).build().unwrap();
             let bytes = <PdfSnapshot as store::ArtifactPack>::encode_pack(&snapshot);
             let sources = vec![ComposeSource { dialect: DIALECT_ANY, payload: AnalyzeSource::Binary(&bytes) }];
@@ -144,7 +144,7 @@ pub mod derived_composition {
         }
 
         #[test]
-        fn javascript_action_reachable_from_open_action_fails_compose_with_real_diagnostic() {
+        async fn javascript_action_reachable_from_open_action_fails_compose_with_real_diagnostic() {
             let bytes = minimal_pdf_with_extra_object(b"<< /S /JavaScript /JS (app.alert(1)) >>");
             let hex = hex_encode(&bytes);
             let sources = vec![ComposeSource { dialect: DIALECT_ANY, payload: AnalyzeSource::Text(&hex) }];
@@ -153,7 +153,7 @@ pub mod derived_composition {
         }
 
         #[test]
-        fn launch_action_reachable_from_open_action_fails_compose_with_real_diagnostic() {
+        async fn launch_action_reachable_from_open_action_fails_compose_with_real_diagnostic() {
             let bytes = minimal_pdf_with_extra_object(b"<< /S /Launch /F (calc.exe) >>");
             let hex = hex_encode(&bytes);
             let sources = vec![ComposeSource { dialect: DIALECT_ANY, payload: AnalyzeSource::Text(&hex) }];
@@ -162,7 +162,7 @@ pub mod derived_composition {
         }
 
         #[test]
-        fn encrypted_trailer_document_is_rejected_upstream_by_the_shared_engine() {
+        async fn encrypted_trailer_document_is_rejected_upstream_by_the_shared_engine() {
             // 🔒 `⚙️engine::decode_pdf` already refuses any file whose trailer declares /Encrypt
             // (`PdfEngineError::Unsupported`) -- composing through the ✳️any delegate surfaces that as
             // a real ComposeError before this subset's own conformance check even runs.
@@ -184,7 +184,7 @@ pub mod derived_composition {
         }
 
         #[test]
-        fn subset_validator_recheck_flags_soft_diagnostics_on_the_wire_payload() {
+        async fn subset_validator_recheck_flags_soft_diagnostics_on_the_wire_payload() {
             let snapshot = PdfABuilder::new("sRGB IEC61966-2.1").add_page(crate::artifacts::pdf::standards::v1_7::subsets::any::schema::snapshot::PdfPage::new(50.0, 50.0)).build().unwrap();
             let bytes = <PdfSnapshot as store::ArtifactPack>::encode_pack(&snapshot);
             // The registered validator, called directly (same fn the generic io hook calls): today's

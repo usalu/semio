@@ -12,7 +12,7 @@ use std::hash::{Hash, Hasher};
 /// `schema` or `catalogGeneration` changes. Std-only (`DefaultHasher`, no external hash crate):
 /// this document is two scalars, so a full merkle/blake3 chain (as `puzzle3d`'s `flat-position`
 /// uses for its per-entity graph) would be pure overhead here.
-pub fn compute_content_digest(snapshot: &SHomeSnapshot) -> String {
+pub async fn compute_content_digest(snapshot: &SHomeSnapshot) -> String {
     let mut hasher = DefaultHasher::new();
     snapshot.schema.hash(&mut hasher);
     snapshot.catalog_generation.hash(&mut hasher);
@@ -26,13 +26,13 @@ mod tests {
     use super::*;
 
     #[test]
-    fn same_snapshot_yields_same_digest() {
+    async fn same_snapshot_yields_same_digest() {
         let snapshot = SHomeSnapshot { schema: "s.home".into(), catalog_generation: 3 };
         assert_eq!(compute_content_digest(&snapshot), compute_content_digest(&snapshot));
     }
 
     #[test]
-    fn changing_generation_changes_digest() {
+    async fn changing_generation_changes_digest() {
         let a = SHomeSnapshot { schema: "s.home".into(), catalog_generation: 3 };
         let mut b = a.clone();
         b.catalog_generation = 4;

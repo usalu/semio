@@ -44,10 +44,10 @@ pub struct SequenceConfig {
 /// 📜️ Handcrafted ArtifactDsl (P6): uses this type's `__dsl_*` helpers + parse/print, not derive emission.
 impl store::ArtifactDsl for SequenceConfig {
     const EXTENSION: &'static str = Self::__DSL_EXTENSION;
-    fn envelope_id() -> &'static str {
+    async fn envelope_id() -> &'static str {
         Self::__DSL_ENVELOPE_ID
     }
-    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+    async fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
         let body = match store::semio_format::split_text_preamble(text) {
             Ok((_, rest)) => rest,
             Err(_) => text,
@@ -59,7 +59,7 @@ impl store::ArtifactDsl for SequenceConfig {
         )?;
         Self::__dsl_from_record(&record)
     }
-    fn print_dsl(&self) -> String {
+    async fn print_dsl(&self) -> String {
         let body = dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), dsl::JoinMode::Document);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
             <Self as store::ArtifactDsl>::envelope_id(),
@@ -73,7 +73,7 @@ impl store::ArtifactDsl for SequenceConfig {
 
 /// 📦️ Handcrafted ArtifactPack (P6): envelope-wrapped pack body via `__dsl_*` record lowering.
 impl store::ArtifactPack for SequenceConfig {
-    fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
+    async fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let inner = store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
             <Self as store::ArtifactDsl>::envelope_id(),
@@ -83,7 +83,7 @@ impl store::ArtifactPack for SequenceConfig {
         .map_err(|e| store::PackError::Schema(e.to_string()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &inner))
     }
-    fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
+    async fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
         if envelope.envelope_id() != <Self as store::ArtifactDsl>::envelope_id() {
             return Err(store::PackError::Schema(format!(
@@ -95,7 +95,7 @@ impl store::ArtifactPack for SequenceConfig {
         let (record, _report) = store::pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
         Self::__dsl_from_record(&record).map_err(store::text_error_to_pack_error)
     }
-    fn record_spec() -> Option<dsl::RecordSpec> {
+    async fn record_spec() -> Option<dsl::RecordSpec> {
         Some(Self::__dsl_spec())
     }
 }
@@ -104,7 +104,7 @@ impl store::ArtifactPack for SequenceConfig {
 
 
 impl Default for SequenceConfig {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self { last_run_json: String::new(), orientation: "leftRight".into(), camera: SequenceCamera::default(), locale: "en-US".into() }
     }
 }
@@ -139,7 +139,7 @@ pub enum SequenceConfigMutation {
 
 //#region 🔖️OpCodec
 impl protocol::OpText for SequenceConfigMutation {
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
+    async fn parse_op(line: &str) -> Result<Self, store::TextError> {
         let variants = <Self as dsl::DslVariants>::variants();
         for (keyword, spec_fn) in &variants {
             let probe = format!("{} ", keyword);
@@ -154,7 +154,7 @@ impl protocol::OpText for SequenceConfigMutation {
         }
         Err(dsl::__rt::field_error(format!("unknown mutation line '{line}'")))
     }
-    fn print_op(&self) -> String {
+    async fn print_op(&self) -> String {
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
         let variants = <Self as dsl::DslVariants>::variants();
         let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
@@ -164,7 +164,7 @@ impl protocol::OpText for SequenceConfigMutation {
 
 /// 🎯️ Handcrafted OpBinary (P6).
 impl protocol::OpBinary for SequenceConfigMutation {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         const OP_BINARY_FORMAT: u8 = 1;
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
         let variants = <Self as dsl::DslVariants>::variants();
@@ -181,7 +181,7 @@ impl protocol::OpBinary for SequenceConfigMutation {
         out.extend_from_slice(&body);
         Ok(out)
     }
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         const OP_BINARY_FORMAT: u8 = 1;
         let mut reader = store::pack_rt::ByteReader::new(bytes);
         let format = reader.read_u8()?;
@@ -212,7 +212,7 @@ impl protocol::OpBinary for SequenceConfigMutation {
 impl Mutation<SequenceConfig> for SequenceConfigMutation {
     type Diff = SequenceConfig;
 
-    fn diff(&self, base: &SequenceConfig) -> protocol::MutationOutcome<SequenceConfig> {
+    async fn diff(&self, base: &SequenceConfig) -> protocol::MutationOutcome<SequenceConfig> {
         let mut next = base.clone();
         match self {
             SequenceConfigMutation::Snapshot { config } => return protocol::MutationOutcome::new(config.clone()),
@@ -224,7 +224,7 @@ impl Mutation<SequenceConfig> for SequenceConfigMutation {
         protocol::MutationOutcome::new(next)
     }
 
-    fn inverse(&self, base: &SequenceConfig) -> Vec<Self> {
+    async fn inverse(&self, base: &SequenceConfig) -> Vec<Self> {
         vec![SequenceConfigMutation::Snapshot { config: base.clone() }]
     }
 }
@@ -236,7 +236,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn sequence_config_default_matches_the_existing_runtime_defaults() {
+    async fn sequence_config_default_matches_the_existing_runtime_defaults() {
         let config = SequenceConfig::default();
         assert!(config.last_run_json.is_empty());
         assert_eq!(config.orientation, "leftRight");
@@ -244,7 +244,7 @@ mod tests {
     }
 
     #[test]
-    fn sequence_config_dsl_round_trips() {
+    async fn sequence_config_dsl_round_trips() {
         let config = SequenceConfig { last_run_json: "{}".into(), orientation: "topBottom".into(), camera: SequenceCamera { x: 1.0, y: 2.0, zoom: 3.0 }, locale: "de-DE".into() };
         let text = store::ArtifactDsl::print_dsl(&config);
         let parsed = <SequenceConfig as store::ArtifactDsl>::parse_dsl(&text).expect("config dsl round trip");
@@ -252,7 +252,7 @@ mod tests {
     }
 
     #[test]
-    fn sequence_config_pack_round_trips() {
+    async fn sequence_config_pack_round_trips() {
         let config = SequenceConfig { last_run_json: "{\"ok\":true}".into(), orientation: "leftRight".into(), camera: SequenceCamera::default(), locale: "en-US".into() };
         let bytes = store::ArtifactPack::encode_pack(&config);
         let decoded = <SequenceConfig as store::ArtifactPack>::decode_pack(&bytes).expect("config pack round trip");
@@ -260,7 +260,7 @@ mod tests {
     }
 
     //#region 🔖️ConfigMutationTests
-    fn round_trip_config(config: &SequenceConfig, operation: &SequenceConfigMutation) -> SequenceConfig {
+    async fn round_trip_config(config: &SequenceConfig, operation: &SequenceConfigMutation) -> SequenceConfig {
         let forward = operation.diff(config).diff().clone();
         let backwards = operation.inverse(config);
         assert_eq!(backwards.len(), 1);
@@ -270,21 +270,21 @@ mod tests {
     }
 
     #[test]
-    fn config_set_last_run_round_trips() {
+    async fn config_set_last_run_round_trips() {
         let config = SequenceConfig::default();
         let next = round_trip_config(&config, &SequenceConfigMutation::SetLastRun { json: "{\"ok\":true}".into() });
         assert_eq!(next.last_run_json, "{\"ok\":true}");
     }
 
     #[test]
-    fn config_set_orientation_round_trips() {
+    async fn config_set_orientation_round_trips() {
         let config = SequenceConfig::default();
         let next = round_trip_config(&config, &SequenceConfigMutation::SetOrientation { value: "topBottom".into() });
         assert_eq!(next.orientation, "topBottom");
     }
 
     #[test]
-    fn config_set_camera_round_trips() {
+    async fn config_set_camera_round_trips() {
         let config = SequenceConfig::default();
         let camera = SequenceCamera { x: 5.0, y: 6.0, zoom: 2.0 };
         let next = round_trip_config(&config, &SequenceConfigMutation::SetCamera { camera: camera.clone() });
@@ -292,14 +292,14 @@ mod tests {
     }
 
     #[test]
-    fn config_set_locale_round_trips() {
+    async fn config_set_locale_round_trips() {
         let config = SequenceConfig::default();
         let next = round_trip_config(&config, &SequenceConfigMutation::SetLocale { value: "de-DE".into() });
         assert_eq!(next.locale, "de-DE");
     }
 
     #[test]
-    fn config_op_text_round_trips_every_variant() {
+    async fn config_op_text_round_trips_every_variant() {
         store::os_store::test_support::assert_op_line_round_trip(&SequenceConfigMutation::Snapshot { config: SequenceConfig::default() });
         store::os_store::test_support::assert_op_line_round_trip(&SequenceConfigMutation::SetLastRun { json: "{}".into() });
         store::os_store::test_support::assert_op_line_round_trip(&SequenceConfigMutation::SetOrientation { value: "leftRight".into() });

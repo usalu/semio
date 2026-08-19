@@ -5,7 +5,7 @@ use crate::artifacts::draw::DrawSnapshot;
 
 //#region 🔖️Diff
 /// 🔺️ One `visible` field patch — a real sparse `DrawDiff`, never apply-then-capture.
-pub fn diff(payload: &super::mutation::SetLayerVisible, base: &DrawSnapshot) -> protocol::MutationOutcome<DrawDiff> {
+pub async fn diff(payload: &super::mutation::SetLayerVisible, base: &DrawSnapshot) -> protocol::MutationOutcome<DrawDiff> {
     let Some(layer) = find_draw_layer(base, &payload.layer_id) else {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Layer \"{}\" does not exist.", payload.layer_id), [payload.layer_id.clone()]);
     };

@@ -8,7 +8,7 @@ use crate::editor::lowpoly::view::utility_params_value;
 use semio_framework_plugin::WindowMeasure;
 
 /// 🎛️ The live chrome measure for this option.
-pub fn measure(config: &LowpolyConfig, labels: &LowpolyLabels) -> WindowMeasure {
+pub async fn measure(config: &LowpolyConfig, labels: &LowpolyLabels) -> WindowMeasure {
     crate::editor::lowpoly::paint_utility_params_group("eraser", &utility_params_value(config), labels)
 }
 
@@ -18,7 +18,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn measure_is_tagged_for_the_eraser_utility() {
+    async fn measure_is_tagged_for_the_eraser_utility() {
         let m = measure(&LowpolyConfig::default(), semio_framework_plugin::resolve_labels_for_locale::<LowpolyLabels>("en-US"));
         match m {
             WindowMeasure::Group { active_utility_id, .. } => assert_eq!(active_utility_id, Some("eraser".to_string())),

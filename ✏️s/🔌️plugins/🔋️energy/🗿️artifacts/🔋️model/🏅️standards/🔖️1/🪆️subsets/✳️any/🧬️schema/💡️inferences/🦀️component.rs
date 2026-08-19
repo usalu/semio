@@ -31,7 +31,7 @@ pub struct EnergyModelInference {
 }
 
 impl protocol::Inference<EnergyModelSnapshot> for EnergyModelInference {
-    fn infer(snapshot: &EnergyModelSnapshot) -> Self {
+    async fn infer(snapshot: &EnergyModelSnapshot) -> Self {
         Self { entries: compute_energy_model_entries(snapshot) }
     }
 }
@@ -41,19 +41,19 @@ impl protocol::Inference<EnergyModelSnapshot> for EnergyModelInference {
 /// the real default, don't derive structurally" trick `AddInference` uses in
 /// `📡️spr/🎮️command/🦀️component.rs`.
 impl Default for EnergyModelInference {
-    fn default() -> Self {
+    async fn default() -> Self {
         <Self as protocol::Inference<EnergyModelSnapshot>>::infer(&EnergyModelSnapshot::default())
     }
 }
 
 impl protocol::InferenceSpec<EnergyModelSnapshot> for EnergyModelInference {
-    fn inference_schema_id() -> &'static str {
+    async fn inference_schema_id() -> &'static str {
         "s.energy.model.inference"
     }
-    fn schema_version() -> u32 {
+    async fn schema_version() -> u32 {
         1
     }
-    fn fields() -> &'static [protocol::InferenceFieldSpec] {
+    async fn fields() -> &'static [protocol::InferenceFieldSpec] {
         &[protocol::InferenceFieldSpec { id: "s.energy.model.inference.entries", reads: &["structure", "zones"] }]
     }
 }
@@ -69,7 +69,7 @@ impl ArtifactInferrer for crate::artifacts::model::standards::v1::subsets::any::
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.energy.model.inference`'s facet leaves into the OS-wide inference catalog —
 /// call once at plugin init, alongside `energy_model_artifact_schema_descriptor`'s registration.
-pub fn energy_model_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
+pub async fn energy_model_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
     schema::ArtifactInferenceDescriptor {
         id: "s.energy.model.inference",
         inference: schema::FacetLeaves {
@@ -89,7 +89,7 @@ mod tests {
     use super::*;
     use protocol::Inference;
 
-    fn populated_snapshot() -> EnergyModelSnapshot {
+    async fn populated_snapshot() -> EnergyModelSnapshot {
         crate::artifacts::model::energy_snapshot_with_state(
             "energy.model",
             crate::model::Model { name: "demo".into(), zones: Vec::new(), ..crate::model::Model::default() },
@@ -98,18 +98,18 @@ mod tests {
     }
 
     #[test]
-    fn inference_determinism_law() {
+    async fn inference_determinism_law() {
         let snapshot = populated_snapshot();
         assert_eq!(EnergyModelInference::infer(&snapshot), EnergyModelInference::infer(&snapshot));
     }
 
     #[test]
-    fn inference_default_law() {
+    async fn inference_default_law() {
         assert_eq!(EnergyModelInference::infer(&EnergyModelSnapshot::default()), EnergyModelInference::default());
     }
 
     #[test]
-    fn entries_counts_top_level_model_fields_and_bytes() {
+    async fn entries_counts_top_level_model_fields_and_bytes() {
         let snapshot = populated_snapshot();
         let inferred = EnergyModelInference::infer(&snapshot);
         let expected_json = serde_json::to_string(&crate::artifacts::model::energy_model(&snapshot)).expect("Model serializes");

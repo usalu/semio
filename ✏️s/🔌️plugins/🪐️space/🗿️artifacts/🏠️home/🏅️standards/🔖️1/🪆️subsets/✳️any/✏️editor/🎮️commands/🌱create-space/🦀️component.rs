@@ -23,7 +23,7 @@ pub struct CreateSpace {
 //#endregion 🔖️Payload
 
 //#region 🔖️Handle
-pub fn handle(payload: &CreateSpace, _doc: &ArtifactView<'_, SHomeSnapshot>, _cfg: &ConfigView<'_, HomeConfig>) -> Result<Emit<SHomeMutation, HomeConfigMutation>, Fault> {
+pub async fn handle(payload: &CreateSpace, _doc: &ArtifactView<'_, SHomeSnapshot>, _cfg: &ConfigView<'_, HomeConfig>) -> Result<Emit<SHomeMutation, HomeConfigMutation>, Fault> {
     if payload.name.trim().is_empty() {
         return Ok(Emit::effect(Effect::OpenDialog {req: semio_framework_plugin::RequestId(123),  dialog_id: "createSpace".into(), args: None }));
     }
@@ -39,12 +39,12 @@ pub fn handle(payload: &CreateSpace, _doc: &ArtifactView<'_, SHomeSnapshot>, _cf
 mod tests {
     use super::*;
 
-    fn view<'a>(history: &'a semio_framework_plugin::HistoryView, doc_snapshot: &'a SHomeSnapshot) -> ArtifactView<'a, SHomeSnapshot> {
+    async fn view<'a>(history: &'a semio_framework_plugin::HistoryView, doc_snapshot: &'a SHomeSnapshot) -> ArtifactView<'a, SHomeSnapshot> {
         ArtifactView::new(doc_snapshot, history)
     }
 
     #[test]
-    fn empty_name_opens_the_dialog_instead_of_relaying() {
+    async fn empty_name_opens_the_dialog_instead_of_relaying() {
         let history = semio_framework_plugin::HistoryView::empty();
         let doc_snapshot = SHomeSnapshot::default();
         let doc = view(&history, &doc_snapshot);
@@ -55,7 +55,7 @@ mod tests {
     }
 
     #[test]
-    fn valid_name_emits_the_replay_shell_command_with_the_right_action_id_and_args() {
+    async fn valid_name_emits_the_replay_shell_command_with_the_right_action_id_and_args() {
         let history = semio_framework_plugin::HistoryView::empty();
         let doc_snapshot = SHomeSnapshot::default();
         let doc = view(&history, &doc_snapshot);
@@ -78,7 +78,7 @@ mod tests {
     }
 
     #[test]
-    fn blank_kind_and_visibility_default_to_atelier_and_private() {
+    async fn blank_kind_and_visibility_default_to_atelier_and_private() {
         let history = semio_framework_plugin::HistoryView::empty();
         let doc_snapshot = SHomeSnapshot::default();
         let doc = view(&history, &doc_snapshot);

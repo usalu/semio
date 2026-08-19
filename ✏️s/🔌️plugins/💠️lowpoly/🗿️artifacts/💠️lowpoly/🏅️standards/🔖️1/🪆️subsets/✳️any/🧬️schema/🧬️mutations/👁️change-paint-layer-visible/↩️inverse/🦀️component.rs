@@ -4,7 +4,7 @@ use super::mutation::ChangePaintLayerVisible;
 use crate::artifacts::lowpoly::{LowpolyMutation, LowpolySnapshot};
 
 //#region 🔖️Inverse
-pub fn inverse(payload: &ChangePaintLayerVisible, base: &LowpolySnapshot) -> Vec<LowpolyMutation> {
+pub async fn inverse(payload: &ChangePaintLayerVisible, base: &LowpolySnapshot) -> Vec<LowpolyMutation> {
     let Some(layer) = base.objects.iter().find(|object| object.id == payload.object_id).and_then(|object| object.paint_layers.get(payload.index)) else {
         return Vec::new();
     };

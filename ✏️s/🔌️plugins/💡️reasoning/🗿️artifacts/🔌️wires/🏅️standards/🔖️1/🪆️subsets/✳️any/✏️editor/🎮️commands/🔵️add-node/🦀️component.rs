@@ -18,7 +18,7 @@ pub struct AddNode {
 /// 🕹️ Selection is framework-owned now (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM):
 /// the newly created node is selected via a requested `interactionSelect` effect instead of a
 /// `WiresConfigMutation::SetSelection`.
-pub fn handle(payload: &AddNode, doc: &ArtifactView<'_, WiresSnapshot>, _cfg: &ConfigView<'_, WiresConfig>) -> Result<Emit<WiresMutation, WiresConfigMutation>, Fault> {
+pub async fn handle(payload: &AddNode, doc: &ArtifactView<'_, WiresSnapshot>, _cfg: &ConfigView<'_, WiresConfig>) -> Result<Emit<WiresMutation, WiresConfigMutation>, Fault> {
     let document = doc.snapshot;
     let kind = if payload.kind.is_empty() { "identity" } else { payload.kind.as_str() };
     let id = format!("node-{}", fixture_nodes(&crate::artifacts::wires::wires_working_board(document)).len() + 1);
@@ -45,7 +45,7 @@ mod tests {
     use crate::artifacts::wires::standards::v1::subsets::any::schema::inferences::find_board_node;
 
     #[test]
-    fn add_node_appends_and_selects() {
+    async fn add_node_appends_and_selects() {
         let mut app = new_app();
         dispatch(&mut app, WiresCommand::AddNode(AddNode { kind: "identity".into() }));
         let projection = app.snapshot().expect("snapshot");

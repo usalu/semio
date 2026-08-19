@@ -9,7 +9,7 @@ use crate::artifacts::semio::standards::v1::subsets::drawing::schema::mutations:
 use crate::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::SemioDrawingSnapshot;
 
 //#region 🔖️Inverse
-pub fn inverse(payload: &UnflattenNode, _base: &SemioDrawingSnapshot) -> Vec<SemioDrawingMutation> {
+pub async fn inverse(payload: &UnflattenNode, _base: &SemioDrawingSnapshot) -> Vec<SemioDrawingMutation> {
     vec![SemioDrawingMutation::Flatten(flatten::mutation::FlattenNode { at: payload.at.clone() })]
 }
 //#endregion 🔖️Inverse

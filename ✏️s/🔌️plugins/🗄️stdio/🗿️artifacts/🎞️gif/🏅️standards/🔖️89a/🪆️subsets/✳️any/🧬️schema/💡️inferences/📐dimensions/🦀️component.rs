@@ -24,14 +24,14 @@ pub struct GifDimensions {
 
 /// 🔢️ `ceil(log2(colors.max(2)))`, clamped to `8` — GIF89a §18's "size of Global/Local Color
 /// Table" field is exactly this value (the on-disk field stores `size - 1`).
-fn color_table_bit_depth(colors_len: usize) -> u8 {
+async fn color_table_bit_depth(colors_len: usize) -> u8 {
     let n = colors_len.max(2);
     ((usize::BITS - (n - 1).leading_zeros()) as u8).min(8)
 }
 
 /// 📐️ Computes [`GifDimensions`] from a snapshot's screen descriptor + GCT + frames' GCE — pure,
 /// total, O(frames) (a single linear pass over `frames` for `transparent_index`).
-pub fn compute_gif_dimensions(snapshot: &GifSnapshot) -> GifDimensions {
+pub async fn compute_gif_dimensions(snapshot: &GifSnapshot) -> GifDimensions {
     let bit_depth = match &snapshot.gct {
         Some(table) => color_table_bit_depth(table.colors.len()),
         None => 8,
@@ -48,7 +48,7 @@ mod tests {
     use crate::artifacts::gif::standards::v89a::subsets::any::schema::snapshot::{GifColorTable, GifFrame, GifRgb};
 
     #[test]
-    fn derives_bit_depth_from_global_color_table_size() {
+    async fn derives_bit_depth_from_global_color_table_size() {
         let gct = GifColorTable { sorted: false, colors: vec![GifRgb::default(); 4] };
         let snapshot = GifSnapshot { width: 3, height: 2, gct: Some(gct), ..GifSnapshot::default() };
         let dims = compute_gif_dimensions(&snapshot);
@@ -57,7 +57,7 @@ mod tests {
     }
 
     #[test]
-    fn has_alpha_when_any_frame_declares_a_transparent_index() {
+    async fn has_alpha_when_any_frame_declares_a_transparent_index() {
         let frame = GifFrame { transparent_index: Some(0), ..GifFrame::default() };
         let snapshot = GifSnapshot { frames: vec![frame], ..GifSnapshot::default() };
         assert!(compute_gif_dimensions(&snapshot).has_alpha);

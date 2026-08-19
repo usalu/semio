@@ -26,7 +26,7 @@ pub struct PresentInference {
 }
 
 impl protocol::Inference<PresentSnapshot> for PresentInference {
-    fn infer(snapshot: &PresentSnapshot) -> Self {
+    async fn infer(snapshot: &PresentSnapshot) -> Self {
         Self { topology: compute_present_topology(snapshot) }
     }
 }
@@ -35,19 +35,19 @@ impl protocol::Inference<PresentSnapshot> for PresentInference {
 /// own `Default` ever stops being the empty tile list — see the sibling artifacts' inference
 /// families for the same trick where the default snapshot is NOT the zero value.
 impl Default for PresentInference {
-    fn default() -> Self {
+    async fn default() -> Self {
         <Self as protocol::Inference<PresentSnapshot>>::infer(&PresentSnapshot::default())
     }
 }
 
 impl protocol::InferenceSpec<PresentSnapshot> for PresentInference {
-    fn inference_schema_id() -> &'static str {
+    async fn inference_schema_id() -> &'static str {
         "s.animate.present.inference"
     }
-    fn schema_version() -> u32 {
+    async fn schema_version() -> u32 {
         1
     }
-    fn fields() -> &'static [protocol::InferenceFieldSpec] {
+    async fn fields() -> &'static [protocol::InferenceFieldSpec] {
         &[protocol::InferenceFieldSpec { id: "s.animate.present.inference.topology", reads: &["tiles"] }]
     }
 }
@@ -71,7 +71,7 @@ impl ArtifactInferrer for PresentInferrer {
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.animate.present.inference`'s facet leaves into the OS-wide inference catalog —
 /// call once at plugin init, alongside `present_artifact_schema_descriptor`'s registration.
-pub fn present_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
+pub async fn present_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
     schema::ArtifactInferenceDescriptor {
         id: "s.animate.present.inference",
         inference: schema::FacetLeaves {
@@ -93,11 +93,11 @@ mod tests {
     use protocol::Inference;
 
     //#region 🧸️Fixtures
-    fn tile(id: &str, name: &str) -> FigureTileDraft {
+    async fn tile(id: &str, name: &str) -> FigureTileDraft {
         FigureTileDraft { id: id.into(), name: name.into(), crop: FigureTileFrame { x: 0.0, y: 0.0, width: 1.0, height: 1.0 } }
     }
 
-    fn sample_snapshot() -> PresentSnapshot {
+    async fn sample_snapshot() -> PresentSnapshot {
         let (source, _) = crate::artifacts::present::present_working_scene(&PresentSnapshot::default());
         crate::artifacts::present::present_snapshot_with_tiles(&source, &[tile("tile-1", "First"), tile("tile-2", "Second"), tile("tile-3", "Third")])
     }
@@ -105,18 +105,18 @@ mod tests {
 
     //#region 🧪️InferenceLaws
     #[test]
-    fn inference_determinism_law() {
+    async fn inference_determinism_law() {
         let snapshot = sample_snapshot();
         assert_eq!(PresentInference::infer(&snapshot), PresentInference::infer(&snapshot));
     }
 
     #[test]
-    fn inference_default_law() {
+    async fn inference_default_law() {
         assert_eq!(PresentInference::infer(&PresentSnapshot::default()), PresentInference::default());
     }
 
     #[test]
-    fn topology_orders_tiles_by_persisted_position() {
+    async fn topology_orders_tiles_by_persisted_position() {
         let snapshot = sample_snapshot();
         let inferred = PresentInference::infer(&snapshot);
         assert_eq!(inferred.topology.topo_order, vec!["tile-1".to_string(), "tile-2".to_string(), "tile-3".to_string()]);

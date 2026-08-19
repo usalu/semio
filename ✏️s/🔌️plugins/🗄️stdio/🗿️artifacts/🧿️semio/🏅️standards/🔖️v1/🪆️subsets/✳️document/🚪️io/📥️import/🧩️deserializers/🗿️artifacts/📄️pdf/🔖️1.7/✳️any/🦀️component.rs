@@ -49,7 +49,7 @@ mod tests {
     use super::*;
     use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::snapshot::PdfPage;
 
-    pub(crate) fn sample_pdf() -> PdfSnapshot {
+    pub(crate) async fn sample_pdf() -> PdfSnapshot {
         let mut p1 = PdfPage::new(612.0, 792.0);
         p1.text = "Page one text.".into();
         let mut p2 = PdfPage::new(612.0, 792.0);
@@ -58,7 +58,7 @@ mod tests {
     }
 
     #[test]
-    fn each_page_becomes_a_paragraph_separated_by_pagebreak() {
+    async fn each_page_becomes_a_paragraph_separated_by_pagebreak() {
         let semio = semio_framework_plugin::resolve_ready(SemioDocumentFromPdf::deserialize(&sample_pdf())).expect("deserialize");
         assert_eq!(semio.blocks.len(), 3);
         assert!(matches!(&semio.blocks[0], DocBlock::Paragraph { runs, .. } if runs[0].text == "Page one text."));
@@ -67,7 +67,7 @@ mod tests {
     }
 
     #[test]
-    fn zero_pages_yields_zero_blocks() {
+    async fn zero_pages_yields_zero_blocks() {
         let semio = semio_framework_plugin::resolve_ready(SemioDocumentFromPdf::deserialize(&PdfSnapshot::default())).expect("deserialize");
         assert!(semio.blocks.is_empty());
     }

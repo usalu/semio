@@ -7,7 +7,7 @@ use crate::artifacts::program::ProgramDiff;
 use crate::artifacts::program::ProgramSnapshot;
 
 /// 🌱️ Fatal `mutation.duplicate-id` if the id already exists (empty diff), else `added = [payload row]`.
-pub fn diff(payload: &CreateUserProfile, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
+pub async fn diff(payload: &CreateUserProfile, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
     let id = payload.user_profile.header.id.clone();
     if base.users.iter().any(|row| row.header.id == id) {
         return protocol::MutationOutcome::fatal("mutation.duplicate-id", "An user profile already exists with this id.", [id.0.clone()]);

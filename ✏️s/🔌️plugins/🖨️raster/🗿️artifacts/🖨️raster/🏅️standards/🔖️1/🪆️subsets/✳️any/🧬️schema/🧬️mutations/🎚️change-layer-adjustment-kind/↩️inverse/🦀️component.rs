@@ -7,7 +7,7 @@ use crate::artifacts::raster::mutations::RasterMutation;
 use crate::artifacts::raster::{RasterLayerNode, RasterSnapshot};
 
 //#region 🔖️Inverse
-pub fn inverse(payload: &ChangeLayerAdjustmentKind, base: &RasterSnapshot) -> Vec<RasterMutation> {
+pub async fn inverse(payload: &ChangeLayerAdjustmentKind, base: &RasterSnapshot) -> Vec<RasterMutation> {
     match find_layer(&base.layers, &payload.layer_id) {
         Some(RasterLayerNode::Adjustment { adjustment_kind, .. }) => {
             vec![RasterMutation::ChangeLayerAdjustmentKind(ChangeLayerAdjustmentKind { layer_id: payload.layer_id.clone(), new_adjustment_kind: adjustment_kind.clone() })]

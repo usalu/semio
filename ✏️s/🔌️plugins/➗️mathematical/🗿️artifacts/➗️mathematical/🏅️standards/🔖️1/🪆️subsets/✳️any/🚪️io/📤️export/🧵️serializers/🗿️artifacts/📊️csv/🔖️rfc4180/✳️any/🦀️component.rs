@@ -18,7 +18,7 @@ pub struct MathematicalIntoCsv;
 impl Serializer<MathematicalSnapshot> for MathematicalIntoCsv {
     const INTO: Dialect = CSV_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Lossy;
-    fn serialize(from: &MathematicalSnapshot) -> IoResult<IoPayload> {
+    async fn serialize(from: &MathematicalSnapshot) -> IoResult<IoPayload> {
         let graph = mathematical_graph(from);
         let records = graph
             .nodes

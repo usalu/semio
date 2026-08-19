@@ -24,7 +24,7 @@ pub const MP4_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.mp4", standar
 
 //#region 🔖️ArtifactKind
 /// 🗂️ This artifact's `ArtifactKindSpec`.
-pub fn artifact_kind() -> ArtifactKindSpec {
+pub async fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "stdio.mp4".into(),
         name: "Mp4".into(),
@@ -53,11 +53,11 @@ pub fn artifact_kind() -> ArtifactKindSpec {
 /// call did — mp4 is a headless stdio artifact with no `ArtifactApp` to bind `.document_codec::<A>()`
 /// to.
 /// 🧩️ Binds this executable root to its sole schema-owned definition.
-pub fn assembly(definition: semio_framework_plugin::ArtifactDefinition) -> Result<crate::registry::ArtifactAssembly, semio_framework_plugin::PluginAssemblyError> {
+pub async fn assembly(definition: semio_framework_plugin::ArtifactDefinition) -> Result<crate::registry::ArtifactAssembly, semio_framework_plugin::PluginAssemblyError> {
     crate::registry::runtime_assembly("mp4", definition, declaration)
 }
 
-pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
+pub async fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
     let formats = crate::registry::format_descriptors_for("mp4")?;
     semio_framework_plugin::ArtifactDeclaration::builder(definition)
         .schema(crate::artifacts::mp4::standards::isobmff::subsets::any::schema::mp4_artifact_schema_descriptor())
@@ -76,16 +76,16 @@ pub mod io_registry {
 
     static ENTRIES: OnceLock<Vec<&'static ComposerEntry>> = OnceLock::new();
 
-    pub fn entries() -> &'static [&'static ComposerEntry] {
+    pub async fn entries() -> &'static [&'static ComposerEntry] {
         ENTRIES.get_or_init(|| std_composer::entries().iter().collect()).as_slice()
     }
 
-    pub fn compose(target: Dialect, sources: &[ErasedComposeSource]) -> Result<ComposedArtifact, ComposeError> {
+    pub async fn compose(target: Dialect, sources: &[ErasedComposeSource]) -> Result<ComposedArtifact, ComposeError> {
         let entry = entries().iter().find(|e| e.writes == target).ok_or_else(|| ComposeError { message: format!("Mp4Composer: no entry writes {:?}", target), diagnostics: Vec::new() })?;
         semio_framework_plugin::resolve_ready((entry.compose)(sources))
     }
 
-    pub fn register() {
+    pub async fn register() {
         let _ = register_composer_entries(std_composer::entries());
     }
 }

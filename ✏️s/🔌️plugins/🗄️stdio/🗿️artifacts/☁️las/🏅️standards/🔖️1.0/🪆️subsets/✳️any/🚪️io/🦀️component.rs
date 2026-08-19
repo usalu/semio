@@ -15,11 +15,11 @@ pub mod derived_composition {
         type Snapshot = LasSnapshot;
         const WRITES: Dialect = DIALECT;
 
-        fn reads() -> &'static [Dialect] {
+        async fn reads() -> &'static [Dialect] {
             &[DIALECT, DEP_BINARY]
         }
 
-        fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+        async fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
             // 🌱 Every listed read dialect's payload is raw text/bytes that this artifact's own
             // analyzer already round-trips through `store::Document{Dsl,Pack}` -- including bytes
             // claiming a dependency's dialect, since (for a single-standard DAG-adjacent dependency
@@ -59,29 +59,29 @@ use crate::artifacts::las::{LasSnapshot, STDIO_LAS_DOCUMENT_SCHEMA};
 
 //#region 🔖️ByteHelpers
 /// 🔍 Reads a null/space-padded fixed-width ASCII field, trimmed of trailing padding.
-fn read_fixed_str(bytes: &[u8]) -> String {
+async fn read_fixed_str(bytes: &[u8]) -> String {
     let end = bytes.iter().position(|&b| b == 0).unwrap_or(bytes.len());
     String::from_utf8_lossy(&bytes[..end]).trim_end().to_string()
 }
 
 /// 🏗️ Writes `s` into a fixed-width field, truncated to `buf.len()` bytes, the rest left as
 /// whatever `buf` already held (callers zero-init the output buffer up front).
-fn write_fixed_str(buf: &mut [u8], s: &str) {
+async fn write_fixed_str(buf: &mut [u8], s: &str) {
     let bytes = s.as_bytes();
     let n = bytes.len().min(buf.len());
     buf[..n].copy_from_slice(&bytes[..n]);
 }
 
-fn read_u16(bytes: &[u8], off: usize) -> Result<u16, String> {
+async fn read_u16(bytes: &[u8], off: usize) -> Result<u16, String> {
     bytes.get(off..off + 2).and_then(|s| s.try_into().ok()).map(u16::from_le_bytes).ok_or_else(|| format!("las: truncated u16 at offset {off}"))
 }
-fn read_u32(bytes: &[u8], off: usize) -> Result<u32, String> {
+async fn read_u32(bytes: &[u8], off: usize) -> Result<u32, String> {
     bytes.get(off..off + 4).and_then(|s| s.try_into().ok()).map(u32::from_le_bytes).ok_or_else(|| format!("las: truncated u32 at offset {off}"))
 }
-fn read_u64(bytes: &[u8], off: usize) -> Result<u64, String> {
+async fn read_u64(bytes: &[u8], off: usize) -> Result<u64, String> {
     bytes.get(off..off + 8).and_then(|s| s.try_into().ok()).map(u64::from_le_bytes).ok_or_else(|| format!("las: truncated u64 at offset {off}"))
 }
-fn read_f64(bytes: &[u8], off: usize) -> Result<f64, String> {
+async fn read_f64(bytes: &[u8], off: usize) -> Result<f64, String> {
     bytes.get(off..off + 8).and_then(|s| s.try_into().ok()).map(f64::from_le_bytes).ok_or_else(|| format!("las: truncated f64 at offset {off}"))
 }
 //#endregion 🔖️ByteHelpers
@@ -89,7 +89,7 @@ fn read_f64(bytes: &[u8], off: usize) -> Result<f64, String> {
 //#region 🔖️RecordLayout
 /// 📏 Fixed byte width of point data record formats 0-3 (§LAS 1.2). `0` marks an
 /// unsupported format.
-fn point_record_min_len(fmt: u8) -> usize {
+async fn point_record_min_len(fmt: u8) -> usize {
     match fmt {
         0 => 20,
         1 => 28,
@@ -148,7 +148,7 @@ mod vlr_off {
 //#region 🔖️Decode
 /// 🔍 Decodes one point record at fixed byte offsets for the given point data format,
 /// applying the header's scale/offset to reconstruct real-world `x/y/z`.
-fn decode_point(rec: &[u8], fmt: u8, scale: (f64, f64, f64), offset: (f64, f64, f64)) -> Result<LasPoint, String> {
+async fn decode_point(rec: &[u8], fmt: u8, scale: (f64, f64, f64), offset: (f64, f64, f64)) -> Result<LasPoint, String> {
     let min_len = point_record_min_len(fmt);
     if min_len == 0 {
         return Err(format!("las: unsupported point data format {fmt}"));
@@ -192,7 +192,7 @@ fn decode_point(rec: &[u8], fmt: u8, scale: (f64, f64, f64), offset: (f64, f64, 
 
 /// 🔍 Decodes `number_of_vlrs` Variable Length Records starting at `header_size`, bounded by
 /// `point_offset` (graceful truncation — never reads past either boundary or `bytes.len()`).
-fn decode_vlrs(bytes: &[u8], header_size: usize, point_offset: usize, number_of_vlrs: u32) -> Vec<LasVlr> {
+async fn decode_vlrs(bytes: &[u8], header_size: usize, point_offset: usize, number_of_vlrs: u32) -> Vec<LasVlr> {
     let mut vlrs = Vec::with_capacity((number_of_vlrs as usize).min(10_000));
     let mut pos = header_size;
     for _ in 0..number_of_vlrs {
@@ -224,7 +224,7 @@ fn decode_vlrs(bytes: &[u8], header_size: usize, point_offset: usize, number_of_
 /// 🔍 Decodes a full LAS binary buffer: header fields (trusting `offset_to_point_data` and
 /// `header_size` rather than a hardcoded 227 constant) + VLRs + all point records for whichever
 /// of formats 0-3 the header declares.
-pub fn decode_las(bytes: &[u8]) -> Result<LasSnapshot, String> {
+pub async fn decode_las(bytes: &[u8]) -> Result<LasSnapshot, String> {
     if bytes.len() < 4 || &bytes[0..4] != b"LASF" {
         return Err("las: signature missing".into());
     }
@@ -337,7 +337,7 @@ pub fn decode_las(bytes: &[u8]) -> Result<LasSnapshot, String> {
 /// and `number_of_point_records` (`== points.len()`) ALWAYS recomputed from the real `vlrs`/
 /// `points` content — never trusted verbatim from `snap.header`, since these six fields are
 /// structural. Every other header field is written verbatim from `snap.header`.
-fn choose_point_format(points: &[LasPoint]) -> u8 {
+async fn choose_point_format(points: &[LasPoint]) -> u8 {
     let has_gps = points.iter().any(|p| p.gps_time.is_some());
     let has_rgb = points.iter().any(|p| p.rgb.is_some());
     match (has_gps, has_rgb) {
@@ -350,7 +350,7 @@ fn choose_point_format(points: &[LasPoint]) -> u8 {
 
 /// 🏗️ Encodes `snap` into a real LAS binary buffer: header + VLRs + point records, point data
 /// format 0-3 chosen automatically (see `choose_point_format`).
-pub fn encode_las(snap: &LasSnapshot) -> Result<Vec<u8>, String> {
+pub async fn encode_las(snap: &LasSnapshot) -> Result<Vec<u8>, String> {
     let format = choose_point_format(&snap.points);
     let record_len = point_record_min_len(format) as u16;
     let header_size = off::FIXED_HEADER_LEN;
@@ -461,7 +461,7 @@ pub mod io_registry {
 
     static ENTRIES: OnceLock<Vec<ComposerEntry>> = OnceLock::new();
 
-    pub fn entries() -> &'static [ComposerEntry] {
+    pub async fn entries() -> &'static [ComposerEntry] {
         ENTRIES.get_or_init(|| vec![composer_entry_of::<LasRawAnyComposer>()]).as_slice()
     }
 }
@@ -474,13 +474,13 @@ mod tests {
     use crate::artifacts::las::schema::{demo_las_snapshot, empty_las_snapshot};
 
     #[test]
-    fn empty_snapshot_matches_schema() {
+    async fn empty_snapshot_matches_schema() {
         let snapshot = empty_las_snapshot();
         assert_eq!(snapshot.schema, STDIO_LAS_DOCUMENT_SCHEMA);
     }
 
     #[test]
-    fn codec_round_trip() {
+    async fn codec_round_trip() {
         let snap = empty_las_snapshot();
         let text = store::ArtifactDsl::print_dsl(&snap);
         let parsed = <LasSnapshot as store::ArtifactDsl>::parse_dsl(&text).expect("parse");
@@ -493,7 +493,7 @@ mod tests {
     //#region 🔖️Fixtures
     /// 🧪 7 points with varied per-field values (not all zero/default) so a naive stub that
     /// only reads x/y/z would fail these assertions on intensity/classification/flags/etc.
-    fn sample_points(fmt: u8) -> Vec<LasPoint> {
+    async fn sample_points(fmt: u8) -> Vec<LasPoint> {
         (0..7)
             .map(|i| {
                 let base = LasPoint {
@@ -522,14 +522,14 @@ mod tests {
             .collect()
     }
 
-    fn sample_vlrs() -> Vec<LasVlr> {
+    async fn sample_vlrs() -> Vec<LasVlr> {
         vec![
             LasVlr { user_id: "LASF_Projection".into(), record_id: 34735, description: "GeoKeyDirectoryTag".into(), data: vec![1, 0, 1, 0, 0, 0, 3, 0] },
             LasVlr { user_id: "semio".into(), record_id: 1, description: "custom metadata".into(), data: b"hello vlr".to_vec() },
         ]
     }
 
-    fn snapshot_with(fmt: u8, vlrs: Vec<LasVlr>) -> LasSnapshot {
+    async fn snapshot_with(fmt: u8, vlrs: Vec<LasVlr>) -> LasSnapshot {
         let points = sample_points(fmt);
         LasSnapshot {
             schema: STDIO_LAS_DOCUMENT_SCHEMA.into(),
@@ -556,7 +556,7 @@ mod tests {
         }
     }
 
-    fn assert_points_match(a: &LasPoint, b: &LasPoint) {
+    async fn assert_points_match(a: &LasPoint, b: &LasPoint) {
         assert!((a.x - b.x).abs() < 1e-6, "x mismatch: {} vs {}", a.x, b.x);
         assert!((a.y - b.y).abs() < 1e-6, "y mismatch: {} vs {}", a.y, b.y);
         assert!((a.z - b.z).abs() < 1e-6, "z mismatch: {} vs {}", a.z, b.z);
@@ -577,7 +577,7 @@ mod tests {
         assert_eq!(a.rgb, b.rgb);
     }
 
-    fn assert_vlrs_match(a: &LasVlr, b: &LasVlr) {
+    async fn assert_vlrs_match(a: &LasVlr, b: &LasVlr) {
         assert_eq!(a.user_id, b.user_id);
         assert_eq!(a.record_id, b.record_id);
         assert_eq!(a.description, b.description);
@@ -586,7 +586,7 @@ mod tests {
     //#endregion 🔖️Fixtures
 
     #[test]
-    fn format0_round_trip_all_fields() {
+    async fn format0_round_trip_all_fields() {
         let snap = snapshot_with(0, sample_vlrs());
         let bytes = encode_las(&snap).expect("encode fmt0");
         assert_eq!(bytes[104], 0, "point data format byte must be 0");
@@ -612,7 +612,7 @@ mod tests {
     }
 
     #[test]
-    fn format1_round_trip_gps_time() {
+    async fn format1_round_trip_gps_time() {
         let snap = snapshot_with(1, sample_vlrs());
         let bytes = encode_las(&snap).expect("encode fmt1");
         assert_eq!(bytes[104], 1, "point data format byte must be 1");
@@ -626,7 +626,7 @@ mod tests {
     }
 
     #[test]
-    fn format2_round_trip_rgb() {
+    async fn format2_round_trip_rgb() {
         let snap = snapshot_with(2, vec![]);
         let bytes = encode_las(&snap).expect("encode fmt2");
         assert_eq!(bytes[104], 2, "point data format byte must be 2");
@@ -642,7 +642,7 @@ mod tests {
     }
 
     #[test]
-    fn format3_round_trip_gps_time_and_rgb() {
+    async fn format3_round_trip_gps_time_and_rgb() {
         let snap = snapshot_with(3, sample_vlrs());
         let bytes = encode_las(&snap).expect("encode fmt3");
         assert_eq!(bytes[104], 3, "point data format byte must be 3");
@@ -656,7 +656,7 @@ mod tests {
     }
 
     #[test]
-    fn vlrs_shift_offset_to_point_data() {
+    async fn vlrs_shift_offset_to_point_data() {
         let with_vlrs = snapshot_with(0, sample_vlrs());
         let without_vlrs = snapshot_with(0, vec![]);
         let bytes_with = encode_las(&with_vlrs).expect("encode with vlrs");
@@ -671,7 +671,7 @@ mod tests {
     }
 
     #[test]
-    fn point_offset_is_trusted_not_hardcoded_to_227() {
+    async fn point_offset_is_trusted_not_hardcoded_to_227() {
         let snap = snapshot_with(0, vec![]);
         let bytes = encode_las(&snap).expect("encode");
         let old_header = 227usize;
@@ -688,7 +688,7 @@ mod tests {
     }
 
     #[test]
-    fn las_1_4_extended_point_count_fallback() {
+    async fn las_1_4_extended_point_count_fallback() {
         let snap = snapshot_with(0, vec![]);
         let bytes = encode_las(&snap).expect("encode");
         let header_size = 375usize;
@@ -712,7 +712,7 @@ mod tests {
     }
 
     #[test]
-    fn unsupported_point_format_is_rejected() {
+    async fn unsupported_point_format_is_rejected() {
         let snap = snapshot_with(0, vec![]);
         let mut bytes = encode_las(&snap).expect("encode");
         bytes[104] = 99;
@@ -721,7 +721,7 @@ mod tests {
     }
 
     #[test]
-    fn bad_signature_is_rejected() {
+    async fn bad_signature_is_rejected() {
         let mut bytes = vec![0u8; 300];
         bytes[0..4].copy_from_slice(b"NOPE");
         let err = decode_las(&bytes).unwrap_err();
@@ -729,7 +729,7 @@ mod tests {
     }
 
     #[test]
-    fn header_too_short_is_rejected() {
+    async fn header_too_short_is_rejected() {
         let mut bytes = vec![0u8; 50];
         bytes[0..4].copy_from_slice(b"LASF");
         let err = decode_las(&bytes).unwrap_err();
@@ -737,7 +737,7 @@ mod tests {
     }
 
     #[test]
-    fn demo_snapshot_round_trip() {
+    async fn demo_snapshot_round_trip() {
         let snap = demo_las_snapshot();
         let text = store::ArtifactDsl::print_dsl(&snap);
         let parsed = <LasSnapshot as store::ArtifactDsl>::parse_dsl(&text).expect("parse");
@@ -757,7 +757,7 @@ mod tests {
         use protocol::{DiffCodec, OpBinary, OpText};
 
         #[test]
-        fn committed_facet_files_parse() {
+        async fn committed_facet_files_parse() {
             for (label, text) in [("snapshot grammar", snapshot::text::COMPONENT_GRAMMAR_SEMIO), ("mutations grammar", mutations::text::COMPONENT_GRAMMAR_SEMIO), ("diff grammar", diff::text::COMPONENT_GRAMMAR_SEMIO)] {
                 let grammar = dsl::parse_grammar(text).unwrap_or_else(|e| panic!("{label}: parse_grammar failed: {e:?}"));
                 assert_eq!(grammar.dialect, dsl::SemioDialect::Grammar, "{label}: expected grammar dialect");
@@ -768,7 +768,7 @@ mod tests {
         }
 
         #[test]
-        fn grammar_conformance_law() {
+        async fn grammar_conformance_law() {
             let grammar = dsl::parse_grammar(snapshot::text::COMPONENT_GRAMMAR_SEMIO).expect("parse snapshot grammar");
             let recognizer = dsl::Recognizer::compile(&grammar);
             let text = store::ArtifactDsl::print_dsl(&demo_las_snapshot());
@@ -783,7 +783,7 @@ mod tests {
         }
 
         #[test]
-        fn ops_grammar_conformance_law() {
+        async fn ops_grammar_conformance_law() {
             let grammar = dsl::parse_grammar(mutations::text::COMPONENT_GRAMMAR_SEMIO).expect("parse mutations grammar");
             let recognizer = dsl::Recognizer::compile(&grammar);
             for mutation in mutations::demo_mutation_cases() {
@@ -793,7 +793,7 @@ mod tests {
         }
 
         #[test]
-        fn diff_grammar_conformance_law() {
+        async fn diff_grammar_conformance_law() {
             let grammar = dsl::parse_grammar(diff::text::COMPONENT_GRAMMAR_SEMIO).expect("parse diff grammar");
             let recognizer = dsl::Recognizer::compile(&grammar);
             for d in diff::demo_diff_cases() {
@@ -803,7 +803,7 @@ mod tests {
         }
 
         #[test]
-        fn protocol_walk_law() {
+        async fn protocol_walk_law() {
             let pack_spec = dsl::parse_protocol(snapshot::binary::COMPONENT_PROTOCOL_SEMIO).expect("parse snapshot protocol");
             let packed = store::ArtifactPack::encode_pack(&demo_las_snapshot());
             let (_, inner) = store::semio_format::unwrap_binary(&packed).expect("unwrap semio envelope");
@@ -826,7 +826,7 @@ mod tests {
         }
 
         #[test]
-        fn fixture_honesty_law() {
+        async fn fixture_honesty_law() {
             const FIXTURE_DSL: &str = include_str!("../📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio");
             const FIXTURE_PACK: &[u8] = include_bytes!("../📚️examples/🎬️demo/🖼️assets/🎒️example.pack.semio");
 

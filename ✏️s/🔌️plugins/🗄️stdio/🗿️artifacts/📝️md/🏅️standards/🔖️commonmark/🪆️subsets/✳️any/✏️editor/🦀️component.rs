@@ -19,10 +19,10 @@ pub enum MdEditCommand {
 }
 
 impl protocol::OpBinary for MdEditCommand {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         serde_json::to_vec(self).map_err(|error| protocol::ProtocolError::Malformed { what: "md-edit-command", offset: 0, detail: error.to_string() })
     }
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         serde_json::from_slice(bytes).map_err(|error| protocol::ProtocolError::Malformed { what: "md-edit-command", offset: 0, detail: error.to_string() })
     }
 }
@@ -48,11 +48,11 @@ impl ArtifactEditor for MdEditor {
     const DIALECT: Dialect = MD_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = STDIO_MD_DOCUMENT_SCHEMA;
 
-    fn initial_snapshot() -> Self::Snapshot {
+    async fn initial_snapshot() -> Self::Snapshot {
         MdSnapshot::default()
     }
 
-    fn handle(
+    async fn handle(
         command: &Self::Command,
         _doc: &ArtifactView<'_, Self::Snapshot>,
         _cfg: &ConfigView<'_, Self::Config>,
@@ -68,7 +68,7 @@ impl ArtifactEditor for MdEditor {
         }
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> UiNode {
+    async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> UiNode {
         match body_key {
             main::BODY_KEY => main::render(doc.snapshot),
             _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))),
@@ -78,7 +78,7 @@ impl ArtifactEditor for MdEditor {
 //#endregion 🔖️Editor
 
 //#region 🔖️Manifest
-pub fn create_md_editor() -> semio_framework_plugin::AppDefinition {
+pub async fn create_md_editor() -> semio_framework_plugin::AppDefinition {
     Editor::builder(MD_DIALECT)
         .document(["semio", "md"])
         .icon_id("file-text")
@@ -96,14 +96,14 @@ mod tests {
     use super::*;
 
     #[test]
-    fn create_editor_builds_a_definition_for_the_editor_role() {
+    async fn create_editor_builds_a_definition_for_the_editor_role() {
         let def = create_md_editor();
         assert_eq!(def.role, semio_framework::AppRole::Editor);
         assert_eq!(def.dialect, MD_DIALECT.into());
     }
 
     #[test]
-    fn editor_dialect_matches_the_artifact_coordinate() {
+    async fn editor_dialect_matches_the_artifact_coordinate() {
         assert_eq!(<MdEditor as ArtifactEditor>::DIALECT, MD_DIALECT);
     }
 }

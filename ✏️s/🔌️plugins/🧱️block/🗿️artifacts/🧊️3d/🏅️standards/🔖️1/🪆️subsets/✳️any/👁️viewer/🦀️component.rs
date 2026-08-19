@@ -26,10 +26,10 @@ pub enum Block3dViewCommand {
 }
 
 impl protocol::OpBinary for Block3dViewCommand {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         Ok(Vec::new())
     }
-    fn decode_op(_bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    async fn decode_op(_bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         Ok(Block3dViewCommand::Noop)
     }
 }
@@ -53,7 +53,7 @@ impl ArtifactViewer for Block3dViewer {
     const DIALECT: Dialect = BLOCK3D_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = BLOCK_3D_SCHEMA;
 
-    fn initial_snapshot() -> Block3dSnapshot {
+    async fn initial_snapshot() -> Block3dSnapshot {
         crate::artifacts::block3d::schema::empty_block3d_snapshot()
     }
 
@@ -61,11 +61,11 @@ impl ArtifactViewer for Block3dViewer {
     /// change, so this always returns the empty `ViewEmit` — no config mutation, no effect, no dirty
     /// scope. Kept as a real dispatch (not an `unreachable!()`) so a future view-only action (camera
     /// orbit, "jump to representation") is a pure addition here, never a signature change.
-    fn handle(_command: &Self::Command, _doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _interaction: &InteractionView<'_>, _engines: &EngineHandles) -> Result<ViewEmit<Self::ConfigMutation>, Fault> {
+    async fn handle(_command: &Self::Command, _doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _interaction: &InteractionView<'_>, _engines: &EngineHandles) -> Result<ViewEmit<Self::ConfigMutation>, Fault> {
         Ok(ViewEmit::default())
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> UiNode {
+    async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> UiNode {
         match body_key {
             world::BODY_KEY => world::render(doc.snapshot),
             _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))),
@@ -75,7 +75,7 @@ impl ArtifactViewer for Block3dViewer {
 //#endregion 🔖️Viewer
 
 //#region 🔖️Manifest
-pub fn create_block3d_viewer() -> semio_framework_plugin::AppDefinition {
+pub async fn create_block3d_viewer() -> semio_framework_plugin::AppDefinition {
     Viewer::builder(BLOCK3D_DIALECT)
         .icon_id("box")
         .mode_def(view::definition())
@@ -92,19 +92,19 @@ mod tests {
     use super::*;
 
     #[test]
-    fn create_block3d_viewer_builds_a_definition_for_the_viewer_role() {
+    async fn create_block3d_viewer_builds_a_definition_for_the_viewer_role() {
         let def = create_block3d_viewer();
         assert_eq!(def.role, semio_framework::AppRole::Viewer);
         assert_eq!(def.dialect, BLOCK3D_DIALECT.into());
     }
 
     #[test]
-    fn viewer_dialect_matches_the_artifact_coordinate() {
+    async fn viewer_dialect_matches_the_artifact_coordinate() {
         assert_eq!(<Block3dViewer as ArtifactViewer>::DIALECT, BLOCK3D_DIALECT);
     }
 
     #[test]
-    fn noop_command_round_trips_and_never_mutates() {
+    async fn noop_command_round_trips_and_never_mutates() {
         let mut app = semio_framework_plugin::testkit::new_app::<semio_framework_plugin::ViewerApp<Block3dViewer>>();
         let before = app.snapshot().expect("snapshot");
         app.dispatch_typed(Block3dViewCommand::Noop, &semio_framework_plugin::testkit::meta("local")).expect("dispatch");

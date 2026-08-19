@@ -95,7 +95,7 @@ pub struct DisplayList {
 }
 
 impl DisplayList {
-    pub fn hit_test(&self, x: f32, y: f32) -> Option<String> {
+    pub async fn hit_test(&self, x: f32, y: f32) -> Option<String> {
         for rect in self.rects.iter().rev() {
             if x >= rect.x && x <= rect.x + rect.width && y >= rect.y && y <= rect.y + rect.height {
                 return Some(rect.object_id.clone());
@@ -110,11 +110,11 @@ impl DisplayList {
     }
 }
 
-pub fn page_margin_guides(page: &Page) -> Vec<DisplayGuide> {
+pub async fn page_margin_guides(page: &Page) -> Vec<DisplayGuide> {
     vec![DisplayGuide { rect: LayoutRect { x: page.margins.left, y: page.margins.top, width: page.width - page.margins.left - page.margins.right, height: page.height - page.margins.top - page.margins.bottom }, kind: "margin".into() }]
 }
 
-pub fn bounds_to_display_rect(object_id: &str, bounds: &LayoutBounds, inherited: bool, selected: bool, hovered: bool, fill: Option<[f32; 4]>, stroke: Option<[f32; 4]>) -> DisplayRect {
+pub async fn bounds_to_display_rect(object_id: &str, bounds: &LayoutBounds, inherited: bool, selected: bool, hovered: bool, fill: Option<[f32; 4]>, stroke: Option<[f32; 4]>) -> DisplayRect {
     DisplayRect { object_id: object_id.into(), x: bounds.x as f32, y: bounds.y as f32, width: bounds.width as f32, height: bounds.height as f32, fill: fill.map(DisplayColor), stroke: stroke.map(DisplayColor), inherited, selected, hovered }
 }
 //#endregion 🖼️Display
@@ -129,17 +129,17 @@ pub struct LayoutEngine {
 }
 
 impl Default for LayoutEngine {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self::new()
     }
 }
 
 impl LayoutEngine {
-    pub fn new() -> Self {
+    pub async fn new() -> Self {
         Self { font_context: FontContext::new(), layout_context: LayoutContext::new(), fonts_ready: false }
     }
 
-    fn ensure_fonts(&mut self) {
+    async fn ensure_fonts(&mut self) {
         if self.fonts_ready {
             return;
         }
@@ -147,7 +147,7 @@ impl LayoutEngine {
         self.fonts_ready = true;
     }
 
-    pub fn layout_story(&mut self, story: &TextStory, paragraph: &ParagraphStyle, frame_width: f32, frame_height: f32) -> (Layout<[u8; 4]>, bool) {
+    pub async fn layout_story(&mut self, story: &TextStory, paragraph: &ParagraphStyle, frame_width: f32, frame_height: f32) -> (Layout<[u8; 4]>, bool) {
         self.ensure_fonts();
         let mut builder = self.layout_context.ranged_builder(&mut self.font_context, &story.content, 1.0, true);
         builder.push_default(StyleProperty::FontSize(paragraph.font_size as f32));
@@ -163,7 +163,7 @@ impl LayoutEngine {
     }
 }
 
-fn alignment_from_str(value: &str) -> Alignment {
+async fn alignment_from_str(value: &str) -> Alignment {
     match value {
         "center" | "middle" => Alignment::Middle,
         "right" => Alignment::Right,
@@ -172,15 +172,15 @@ fn alignment_from_str(value: &str) -> Alignment {
     }
 }
 
-fn default_paragraph(doc: &LayoutSnapshot) -> ParagraphStyle {
+async fn default_paragraph(doc: &LayoutSnapshot) -> ParagraphStyle {
     doc.paragraph_styles.first().cloned().unwrap_or(ParagraphStyle { id: "paragraph.body".into(), name: "Body".into(), font_family: "Layout Sans".into(), font_size: 12.0, font_weight: 400, leading: 14.4, tracking: 0.0, alignment: "left".into() })
 }
 
-pub fn layout_story_in_frame(engine: &mut LayoutEngine, story: &TextStory, paragraph: &ParagraphStyle, frame_width: f32, frame_height: f32) -> (Layout<[u8; 4]>, bool) {
+pub async fn layout_story_in_frame(engine: &mut LayoutEngine, story: &TextStory, paragraph: &ParagraphStyle, frame_width: f32, frame_height: f32) -> (Layout<[u8; 4]>, bool) {
     engine.layout_story(story, paragraph, frame_width, frame_height)
 }
 
-pub fn build_display_list_for_page(engine: &mut LayoutEngine, doc: &LayoutSnapshot, page: &Page, active_page_id: &str, selected_ids: &[String], hovered_id: Option<&str>, chrome_blueprint: bool) -> DisplayList {
+pub async fn build_display_list_for_page(engine: &mut LayoutEngine, doc: &LayoutSnapshot, page: &Page, active_page_id: &str, selected_ids: &[String], hovered_id: Option<&str>, chrome_blueprint: bool) -> DisplayList {
     let resolved = resolve_page(doc, page);
     let mut rects = Vec::new();
     let mut text_runs = Vec::new();
@@ -255,7 +255,7 @@ pub fn build_display_list_for_page(engine: &mut LayoutEngine, doc: &LayoutSnapsh
     DisplayList { page_id: page.id.clone(), page_width: page.width as f32, page_height: page.height as f32, rects, text_runs, images, guides }
 }
 
-fn color_from(c: &DisplayColor) -> Color {
+async fn color_from(c: &DisplayColor) -> Color {
     Color::new(c.0)
 }
 
@@ -270,7 +270,7 @@ pub struct LayoutDropPreview {
 const DROP_PREVIEW_WIDTH: f64 = 200.0;
 const DROP_PREVIEW_HEIGHT: f64 = 120.0;
 
-fn append_drop_preview(scene: &mut Scene, transform: Affine, preview: &LayoutDropPreview) {
+async fn append_drop_preview(scene: &mut Scene, transform: Affine, preview: &LayoutDropPreview) {
     if preview.kind == "page" {
         return;
     }
@@ -285,7 +285,7 @@ fn append_drop_preview(scene: &mut Scene, transform: Affine, preview: &LayoutDro
     scene.stroke(&Stroke::new(2.0), transform, Color::new([0.1, 0.45, 0.95, 0.85]), None, &shape);
 }
 
-pub fn display_list_to_scene(list: &DisplayList, chrome_blueprint: bool, camera: &Camera, viewport: &Viewport, drop_preview: Option<&LayoutDropPreview>) -> Scene {
+pub async fn display_list_to_scene(list: &DisplayList, chrome_blueprint: bool, camera: &Camera, viewport: &Viewport, drop_preview: Option<&LayoutDropPreview>) -> Scene {
     let mut scene = Scene::new();
     let transform = camera::camera_content_affine(camera, viewport);
     let page_bg = if chrome_blueprint { Color::new([0.97, 0.97, 0.98, 1.0]) } else { Color::new([1.0, 1.0, 1.0, 1.0]) };
@@ -368,14 +368,14 @@ pub struct SceneQuery<'a> {
     pub viewport: &'a Viewport,
 }
 
-pub fn build_scene_from_document_json(engine: &mut LayoutEngine, json: &str, query: &SceneQuery<'_>, drop_preview: Option<&LayoutDropPreview>) -> Result<Scene, LayoutError> {
+pub async fn build_scene_from_document_json(engine: &mut LayoutEngine, json: &str, query: &SceneQuery<'_>, drop_preview: Option<&LayoutDropPreview>) -> Result<Scene, LayoutError> {
     let doc = parse_layout_document(json)?;
     let page = doc.pages.iter().find(|p| p.id == query.page_id).ok_or_else(|| LayoutError::PageNotFound(query.page_id.to_string()))?;
     let list = build_display_list_for_page(engine, &doc, page, query.page_id, query.selected_ids, query.hovered_id, query.chrome_blueprint);
     Ok(display_list_to_scene(&list, query.chrome_blueprint, query.camera, query.viewport, drop_preview))
 }
 
-pub fn hit_test_document_json(engine: &mut LayoutEngine, json: &str, sx: f64, sy: f64, query: &SceneQuery<'_>) -> Result<Option<String>, LayoutError> {
+pub async fn hit_test_document_json(engine: &mut LayoutEngine, json: &str, sx: f64, sy: f64, query: &SceneQuery<'_>) -> Result<Option<String>, LayoutError> {
     let doc = parse_layout_document(json)?;
     let page = doc.pages.iter().find(|p| p.id == query.page_id).ok_or_else(|| LayoutError::PageNotFound(query.page_id.to_string()))?;
     let list = build_display_list_for_page(engine, &doc, page, query.page_id, query.selected_ids, query.hovered_id, true);
@@ -383,7 +383,7 @@ pub fn hit_test_document_json(engine: &mut LayoutEngine, json: &str, sx: f64, sy
     Ok(list.hit_test(world.x as f32, world.y as f32))
 }
 
-pub fn screen_to_world_json(camera: &Camera, viewport: &Viewport, sx: f64, sy: f64) -> String {
+pub async fn screen_to_world_json(camera: &Camera, viewport: &Viewport, sx: f64, sy: f64) -> String {
     let world = camera::screen_to_world(camera, viewport, Point::new(sx, sy));
     serde_json::json!({ "x": world.x, "y": world.y }).to_string()
 }
@@ -396,7 +396,7 @@ pub fn screen_to_world_json(camera: &Camera, viewport: &Viewport, sx: f64, sy: f
 /// `DisplayImage` (placeholder vs. resolved tint), and one small filled rect per `DisplayGlyph` —
 /// same "glyph as a small box" fidelity the previous string builder had (this engine never emits
 /// real font outlines to SVG on either path).
-fn display_list_to_semio_drawing(list: &DisplayList) -> SemioDrawingSnapshot {
+async fn display_list_to_semio_drawing(list: &DisplayList) -> SemioDrawingSnapshot {
     let mut styles = vec![DrawStyle { name: "background".into(), fill: Some(SemioRgba { r: 1.0, g: 1.0, b: 1.0, a: 1.0 }), stroke: None, stroke_width: None, opacity: None }];
     let mut children = vec![DrawNode::Path { segments: rect_path_segments(0.0, 0.0, list.page_width as f64, list.page_height as f64), style: Some("background".into()) }];
 
@@ -440,25 +440,25 @@ fn display_list_to_semio_drawing(list: &DisplayList) -> SemioDrawingSnapshot {
     }
 }
 
-fn color_to_semio_rgba(color: &DisplayColor) -> SemioRgba {
+async fn color_to_semio_rgba(color: &DisplayColor) -> SemioRgba {
     SemioRgba { r: color.0[0], g: color.0[1], b: color.0[2], a: color.0[3] }
 }
 
 /// 🌉️ Composes through stdio's real `drawing↔svg` bridge (`io_dispatch`, via
 /// `crate::artifacts::layout::io::compose_svg_from_drawing`) — no hand-rolled SVG string here anymore.
-pub fn export_display_list_svg(list: &DisplayList) -> Result<String, LayoutError> {
+pub async fn export_display_list_svg(list: &DisplayList) -> Result<String, LayoutError> {
     let drawing = display_list_to_semio_drawing(list);
     compose_svg_from_drawing(&drawing).map_err(LayoutError::Svg)
 }
 
-pub fn export_document_svg(doc: &LayoutSnapshot, page_id: &str) -> Result<String, LayoutError> {
+pub async fn export_document_svg(doc: &LayoutSnapshot, page_id: &str) -> Result<String, LayoutError> {
     let page = doc.pages.iter().find(|p| p.id == page_id).ok_or_else(|| LayoutError::PageNotFound(page_id.to_string()))?;
     let mut engine = LayoutEngine::new();
     let list = build_display_list_for_page(&mut engine, doc, page, page_id, &[], None, false);
     export_display_list_svg(&list)
 }
 
-pub fn export_document_pdf(doc: &LayoutSnapshot, page_id: &str) -> Result<Vec<u8>, LayoutError> {
+pub async fn export_document_pdf(doc: &LayoutSnapshot, page_id: &str) -> Result<Vec<u8>, LayoutError> {
     let page = doc.pages.iter().find(|p| p.id == page_id).ok_or_else(|| LayoutError::PageNotFound(page_id.to_string()))?;
     let mut engine = LayoutEngine::new();
     let list = build_display_list_for_page(&mut engine, doc, page, page_id, &[], None, false);
@@ -494,7 +494,7 @@ pub fn export_document_pdf(doc: &LayoutSnapshot, page_id: &str) -> Result<Vec<u8
     Ok(pdf.into_bytes())
 }
 
-pub fn export_document_png_cpu(doc: &LayoutSnapshot, page_id: &str) -> Result<Vec<u8>, LayoutError> {
+pub async fn export_document_png_cpu(doc: &LayoutSnapshot, page_id: &str) -> Result<Vec<u8>, LayoutError> {
     let page = doc.pages.iter().find(|p| p.id == page_id).ok_or_else(|| LayoutError::PageNotFound(page_id.to_string()))?;
     let mut engine = LayoutEngine::new();
     let list = build_display_list_for_page(&mut engine, doc, page, page_id, &[], None, false);
@@ -526,7 +526,7 @@ pub fn export_document_png_cpu(doc: &LayoutSnapshot, page_id: &str) -> Result<Ve
     Ok(bytes)
 }
 
-pub fn export_package_zip(doc_json: &str, preflight_json: &str) -> Result<Vec<u8>, LayoutError> {
+pub async fn export_package_zip(doc_json: &str, preflight_json: &str) -> Result<Vec<u8>, LayoutError> {
     let doc: LayoutSnapshot = serde_json::from_str(doc_json)?;
     let mut zip = ZipWriter::new(Cursor::new(Vec::new()));
     let options = SimpleFileOptions::default().compression_method(zip::CompressionMethod::Deflated);
@@ -561,7 +561,7 @@ pub fn export_package_zip(doc_json: &str, preflight_json: &str) -> Result<Vec<u8
     Ok(data.into_inner())
 }
 
-pub fn scene_png_from_display_list(list: &DisplayList) -> Result<Vec<u8>, LayoutError> {
+pub async fn scene_png_from_display_list(list: &DisplayList) -> Result<Vec<u8>, LayoutError> {
     let camera = Camera { x: 0.0, y: 0.0, zoom: 1.0 };
     let viewport = Viewport { width: list.page_width.max(1.0) as u32, height: list.page_height.max(1.0) as u32, dpr: 1.0 };
     let _scene = display_list_to_scene(list, false, &camera, &viewport, None);
@@ -585,12 +585,12 @@ pub fn scene_png_from_display_list(list: &DisplayList) -> Result<Vec<u8>, Layout
 mod tests {
     use super::*;
 
-    fn sample_document() -> LayoutSnapshot {
+    async fn sample_document() -> LayoutSnapshot {
         crate::artifacts::layout::dsl::parse_dsl(crate::artifacts::layout::dsl::LAYOUT_SAMPLE_TEXT).expect("sample fixture parses")
     }
 
     #[test]
-    fn builds_scene_from_empty_document() {
+    async fn builds_scene_from_empty_document() {
         let json = r#"{"schema":"layout.layout","name":"t","grid":{"baselineGrid":12,"baselineOffset":0,"snapToBaseline":true},"paragraphStyles":[{"id":"paragraph.body","name":"Body","fontFamily":"Layout Sans","fontSize":12,"fontWeight":400,"leading":14.4,"tracking":0,"alignment":"left"}],"characterStyles":[],"stories":[],"links":[],"parentPages":[],"spreads":[],"pages":[{"id":"page-1","name":"P","spreadId":"s","width":200,"height":200,"margins":{"top":0,"right":0,"bottom":0,"left":0},"columns":{"count":1,"gutter":0},"guides":[],"layerIds":[],"layers":[],"frames":[],"overrides":[]}]}"#;
         let camera = Camera { x: 0.0, y: 0.0, zoom: 1.0 };
         let viewport = Viewport { width: 400, height: 300, dpr: 1.0 };
@@ -601,7 +601,7 @@ mod tests {
     }
 
     #[test]
-    fn hit_test_respects_camera_zoom() {
+    async fn hit_test_respects_camera_zoom() {
         let json = r#"{"schema":"layout.layout","name":"t","grid":{"baselineGrid":12,"baselineOffset":0,"snapToBaseline":true},"paragraphStyles":[{"id":"paragraph.body","name":"Body","fontFamily":"Layout Sans","fontSize":12,"fontWeight":400,"leading":14.4,"tracking":0,"alignment":"left"}],"characterStyles":[],"stories":[],"links":[],"parentPages":[],"spreads":[],"pages":[{"id":"page-1","name":"P","spreadId":"s","width":400,"height":400,"margins":{"top":0,"right":0,"bottom":0,"left":0},"columns":{"count":1,"gutter":0},"guides":[],"layerIds":["layer-1"],"layers":[{"id":"layer-1","name":"Content","visible":true,"locked":false,"objectIds":["frame-1"]}],"frames":[{"id":"frame-1","layerId":"layer-1","kind":"rect","bounds":{"x":10,"y":10,"w":40,"h":40,"rotation":0},"fill":[1,1,1,1]}],"overrides":[]}]}"#;
         let camera = Camera { x: 0.0, y: 0.0, zoom: 0.5 };
         let viewport = Viewport { width: 400, height: 300, dpr: 1.0 };
@@ -612,7 +612,7 @@ mod tests {
     }
 
     #[test]
-    fn marks_hovered_frame_rect() {
+    async fn marks_hovered_frame_rect() {
         let json = r#"{"schema":"layout.layout","name":"t","grid":{"baselineGrid":12,"baselineOffset":0,"snapToBaseline":true},"paragraphStyles":[{"id":"paragraph.body","name":"Body","fontFamily":"Layout Sans","fontSize":12,"fontWeight":400,"leading":14.4,"tracking":0,"alignment":"left"}],"characterStyles":[],"stories":[],"links":[],"parentPages":[],"spreads":[],"pages":[{"id":"page-1","name":"P","spreadId":"s","width":200,"height":200,"margins":{"top":0,"right":0,"bottom":0,"left":0},"columns":{"count":1,"gutter":0},"guides":[],"layerIds":["layer-1"],"layers":[{"id":"layer-1","name":"Content","visible":true,"locked":false,"objectIds":["frame-1"]}],"frames":[{"id":"frame-1","layerId":"layer-1","kind":"rect","bounds":{"x":10,"y":10,"w":40,"h":40,"rotation":0},"fill":[1,1,1,1]}],"overrides":[]}]}"#;
         let doc = parse_layout_document(json).expect("doc");
         let page = doc.pages.first().expect("page");
@@ -623,7 +623,7 @@ mod tests {
     }
 
     #[test]
-    fn scene_and_hit_test_error_when_page_missing() {
+    async fn scene_and_hit_test_error_when_page_missing() {
         let json = r#"{"schema":"layout.layout","name":"t","grid":{"baselineGrid":12,"baselineOffset":0,"snapToBaseline":false},"paragraphStyles":[],"characterStyles":[],"stories":[],"links":[],"parentPages":[],"spreads":[],"pages":[{"id":"page-1","name":"P","spreadId":"s","width":100,"height":100,"margins":{"top":0,"right":0,"bottom":0,"left":0},"columns":{"count":1,"gutter":0},"guides":[],"layerIds":[],"layers":[],"frames":[],"overrides":[]}]}"#;
         let camera = Camera { x: 0.0, y: 0.0, zoom: 1.0 };
         let viewport = Viewport { width: 100, height: 100, dpr: 1.0 };
@@ -635,7 +635,7 @@ mod tests {
     }
 
     #[test]
-    fn hit_test_returns_none_for_empty_space() {
+    async fn hit_test_returns_none_for_empty_space() {
         let json = r#"{"schema":"layout.layout","name":"t","grid":{"baselineGrid":12,"baselineOffset":0,"snapToBaseline":false},"paragraphStyles":[],"characterStyles":[],"stories":[],"links":[],"parentPages":[],"spreads":[],"pages":[{"id":"page-1","name":"P","spreadId":"s","width":400,"height":400,"margins":{"top":0,"right":0,"bottom":0,"left":0},"columns":{"count":1,"gutter":0},"guides":[],"layerIds":["layer-1"],"layers":[{"id":"layer-1","name":"Content","visible":true,"locked":false,"objectIds":["frame-1"]}],"frames":[{"id":"frame-1","layerId":"layer-1","kind":"rect","bounds":{"x":10,"y":10,"w":40,"h":40,"rotation":0},"fill":[1,1,1,1]}],"overrides":[]}]}"#;
         let camera = Camera { x: 0.0, y: 0.0, zoom: 1.0 };
         let viewport = Viewport { width: 400, height: 400, dpr: 1.0 };
@@ -646,7 +646,7 @@ mod tests {
     }
 
     #[test]
-    fn display_list_hit_test_matches_image_bounds_and_misses_elsewhere() {
+    async fn display_list_hit_test_matches_image_bounds_and_misses_elsewhere() {
         let list = DisplayList {
             page_id: "page-1".into(),
             page_width: 100.0,
@@ -661,7 +661,7 @@ mod tests {
     }
 
     #[test]
-    fn guides_omitted_for_non_active_page_even_with_chrome_blueprint() {
+    async fn guides_omitted_for_non_active_page_even_with_chrome_blueprint() {
         let json = r#"{"schema":"layout.layout","name":"t","grid":{"baselineGrid":12,"baselineOffset":0,"snapToBaseline":true},"paragraphStyles":[],"characterStyles":[],"stories":[],"links":[],"parentPages":[],"spreads":[],"pages":[{"id":"page-1","name":"P","spreadId":"s","width":200,"height":200,"margins":{"top":10,"right":10,"bottom":10,"left":10},"columns":{"count":2,"gutter":4},"guides":[{"x":5,"y":5,"w":1,"h":1}],"layerIds":[],"layers":[],"frames":[],"overrides":[]}]}"#;
         let doc = parse_layout_document(json).expect("doc");
         let page = doc.pages.first().expect("page");
@@ -671,7 +671,7 @@ mod tests {
     }
 
     #[test]
-    fn baseline_guides_only_emitted_when_grid_snaps() {
+    async fn baseline_guides_only_emitted_when_grid_snaps() {
         let json = r#"{"schema":"layout.layout","name":"t","grid":{"baselineGrid":12,"baselineOffset":0,"snapToBaseline":false},"paragraphStyles":[],"characterStyles":[],"stories":[],"links":[],"parentPages":[],"spreads":[],"pages":[{"id":"page-1","name":"P","spreadId":"s","width":200,"height":200,"margins":{"top":0,"right":0,"bottom":0,"left":0},"columns":{"count":1,"gutter":0},"guides":[],"layerIds":[],"layers":[],"frames":[],"overrides":[]}]}"#;
         let doc = parse_layout_document(json).expect("doc");
         let page = doc.pages.first().expect("page");
@@ -681,7 +681,7 @@ mod tests {
     }
 
     #[test]
-    fn image_placeholder_reflects_link_lookup_and_state() {
+    async fn image_placeholder_reflects_link_lookup_and_state() {
         let json = r#"{"schema":"layout.layout","name":"t","grid":{"baselineGrid":12,"baselineOffset":0,"snapToBaseline":false},"paragraphStyles":[],"characterStyles":[],"stories":[],"links":[{"id":"link-missing","path":"a.png","hash":"h","width":1,"height":1,"dpi":72,"state":"missing"},{"id":"link-ready","path":"b.png","hash":"h","width":1,"height":1,"dpi":72,"state":"ready","proxyDataUrl":"data:image/png;base64,AA=="}],"parentPages":[],"spreads":[],"pages":[{"id":"page-1","name":"P","spreadId":"s","width":400,"height":400,"margins":{"top":0,"right":0,"bottom":0,"left":0},"columns":{"count":1,"gutter":0},"guides":[],"layerIds":["layer-1"],"layers":[{"id":"layer-1","name":"Content","visible":true,"locked":false,"objectIds":["img-missing","img-ready","img-unlinked"]}],"frames":[{"id":"img-missing","layerId":"layer-1","kind":"image","bounds":{"x":0,"y":0,"w":10,"h":10,"rotation":0},"linkId":"link-missing"},{"id":"img-ready","layerId":"layer-1","kind":"image","bounds":{"x":20,"y":0,"w":10,"h":10,"rotation":0},"linkId":"link-ready"},{"id":"img-unlinked","layerId":"layer-1","kind":"image","bounds":{"x":40,"y":0,"w":10,"h":10,"rotation":0},"linkId":"link-gone"}],"overrides":[]}]}"#;
         let doc = parse_layout_document(json).expect("doc");
         let page = doc.pages.first().expect("page");
@@ -694,7 +694,7 @@ mod tests {
     }
 
     #[test]
-    fn layout_story_in_frame_resolves_alignment_variants_and_detects_overset() {
+    async fn layout_story_in_frame_resolves_alignment_variants_and_detects_overset() {
         let mut engine = LayoutEngine::new();
         let story = TextStory { id: "story-1".into(), content: "Hello layout engine, this line should wrap across several lines of text.".into(), style_runs: Vec::new() };
         for alignment in ["left", "center", "middle", "right", "justify", "justified", "unrecognized"] {
@@ -709,7 +709,7 @@ mod tests {
     }
 
     #[test]
-    fn display_list_to_scene_handles_drop_preview_variants_and_rect_styles() {
+    async fn display_list_to_scene_handles_drop_preview_variants_and_rect_styles() {
         let camera = Camera { x: 0.0, y: 0.0, zoom: 1.0 };
         let viewport = Viewport { width: 200, height: 200, dpr: 1.0 };
         let list = DisplayList {
@@ -746,7 +746,7 @@ mod tests {
     }
 
     #[test]
-    fn screen_to_world_json_returns_a_point_object() {
+    async fn screen_to_world_json_returns_a_point_object() {
         let camera = Camera { x: 100.0, y: 50.0, zoom: 2.0 };
         let viewport = Viewport { width: 400, height: 300, dpr: 1.0 };
         let json = screen_to_world_json(&camera, &viewport, 210.0, 160.0);
@@ -756,21 +756,21 @@ mod tests {
     }
 
     #[test]
-    fn png_cpu_export_writes_valid_rgba_png() {
+    async fn png_cpu_export_writes_valid_rgba_png() {
         let doc = sample_document();
         let bytes = export_document_png_cpu(&doc, "page-1").expect("png export succeeds");
         assert!(bytes.starts_with(&[0x89, b'P', b'N', b'G']));
     }
 
     #[test]
-    fn pdf_export_writes_pdf_header() {
+    async fn pdf_export_writes_pdf_header() {
         let doc = sample_document();
         let bytes = export_document_pdf(&doc, "page-1").expect("pdf export succeeds");
         assert!(bytes.starts_with(b"%PDF-1.4"));
     }
 
     #[test]
-    fn package_zip_bundles_document_and_preflight() {
+    async fn package_zip_bundles_document_and_preflight() {
         let doc = sample_document();
         let json = serde_json::to_string(&doc).expect("serialize sample document to json");
         let bytes = export_package_zip(&json, "[]").expect("package export succeeds");
@@ -779,7 +779,7 @@ mod tests {
     }
 
     #[test]
-    fn svg_export_contains_path_and_wraps_a_valid_document() {
+    async fn svg_export_contains_path_and_wraps_a_valid_document() {
         crate::artifacts::layout::io::ensure_stdio_semio_drawing_registered();
         let doc = sample_document();
         let svg = export_document_svg(&doc, "page-1").expect("svg export succeeds");
@@ -792,7 +792,7 @@ mod tests {
     }
 
     #[test]
-    fn exports_error_when_page_missing() {
+    async fn exports_error_when_page_missing() {
         let doc = sample_document();
         assert!(matches!(export_document_svg(&doc, "no-such-page"), Err(LayoutError::PageNotFound(id)) if id == "no-such-page"));
         assert!(matches!(export_document_pdf(&doc, "no-such-page"), Err(LayoutError::PageNotFound(_))));
@@ -800,13 +800,13 @@ mod tests {
     }
 
     #[test]
-    fn package_zip_rejects_invalid_document_json() {
+    async fn package_zip_rejects_invalid_document_json() {
         let error = export_package_zip("not json", "[]").expect_err("invalid json must fail");
         assert!(matches!(error, LayoutError::Json(_)));
     }
 
     #[test]
-    fn scene_png_from_display_list_writes_a_valid_png() {
+    async fn scene_png_from_display_list_writes_a_valid_png() {
         let doc = sample_document();
         let page = doc.pages.iter().find(|p| p.id == "page-1").expect("page-1");
         let mut engine = LayoutEngine::new();

@@ -107,7 +107,7 @@ pub struct NoteBlockPatch {
 //#region 🔖️Apply
 impl NoteDiff {
     /// 🧬️ Applies every sparse entry (all state classes) onto a full artifact.
-    pub fn apply_to_artifact(&self, artifact: &NoteArtifact) -> protocol::MutationApplyResult<NoteArtifact> {
+    pub async fn apply_to_artifact(&self, artifact: &NoteArtifact) -> protocol::MutationApplyResult<NoteArtifact> {
         Ok({
             if let Some(replacement) = &self.artifact {
                 return Ok((**replacement).clone());
@@ -189,7 +189,7 @@ impl NoteDiff {
 /// 🧩 Applies an identified-collection delta to a block tree (adds/removes/patches/reorder) — `added`
 /// entries carry their own `parent_id`/`index` so a nested `create-block`/`move-block-to-container`
 /// places the node exactly, never a root-only push.
-pub fn apply_blocks_delta(
+pub async fn apply_blocks_delta(
     blocks: &[NoteBlockNode],
     delta: &NoteBlocksDelta,
 ) -> protocol::MutationApplyResult<Vec<NoteBlockNode>> {
@@ -382,7 +382,7 @@ pub fn apply_blocks_delta(
     Ok(next)
 }
 
-fn apply_assets_delta(
+async fn apply_assets_delta(
     assets: &mut std::collections::BTreeMap<String, crate::artifacts::note::NoteImageAsset>,
     delta: &NoteAssetsDelta,
 ) -> protocol::MutationApplyResult<()> {
@@ -411,7 +411,7 @@ fn apply_assets_delta(
 }
 
 impl MutationDiff<NoteSnapshot> for NoteDiff {
-    fn apply(&self, snapshot: &NoteSnapshot) -> protocol::MutationApplyResult<NoteSnapshot> {
+    async fn apply(&self, snapshot: &NoteSnapshot) -> protocol::MutationApplyResult<NoteSnapshot> {
         Ok({
             if let Some(replacement) = &self.artifact {
                 return Ok(replacement.to_snapshot());
@@ -464,7 +464,7 @@ impl MutationDiff<NoteSnapshot> for NoteDiff {
             next
         })
     }
-    fn absorb(&mut self, other: Self) {
+    async fn absorb(&mut self, other: Self) {
         if other.artifact.is_some() {
             *self = other;
             return;
@@ -523,7 +523,7 @@ impl MutationDiff<NoteSnapshot> for NoteDiff {
 /// 🩹 Sparse single-block whole-value patch — shared by every `change-block-*`/`rename-block`/
 /// `move-block`/`resize-block`/`edit-block-*`/table-row-column mutation leaf: each computes the
 /// updated `NoteBlockNode` value from `(payload, base)` and hands it here.
-pub fn note_block_patch_diff(id: &str, block: NoteBlockNode) -> NoteDiff {
+pub async fn note_block_patch_diff(id: &str, block: NoteBlockNode) -> NoteDiff {
     NoteDiff {
         blocks: Some(NoteBlocksDelta { patched: vec![NoteBlockPatchEntry { id: id.to_string(), patch: NoteBlockPatch { block_json: Some(serde_json::to_string(&block).expect("NoteBlockNode is always json-serializable")) } }], ..Default::default() }),
         ..Default::default()
@@ -532,7 +532,7 @@ pub fn note_block_patch_diff(id: &str, block: NoteBlockNode) -> NoteDiff {
 
 /// ➕ Sparse single-block insertion at `(parent_id, index)` — shared by `create-block`,
 /// `duplicate-block(s)`, and the added-half of `move-block-to-container`.
-pub fn note_block_added_diff(parent_id: Option<String>, index: Option<usize>, block: NoteBlockNode) -> NoteDiff {
+pub async fn note_block_added_diff(parent_id: Option<String>, index: Option<usize>, block: NoteBlockNode) -> NoteDiff {
     NoteDiff {
         blocks: Some(NoteBlocksDelta { added: vec![NoteAddedBlockEntry { parent_id, index, block }], ..Default::default() }),
         ..Default::default()
@@ -541,7 +541,7 @@ pub fn note_block_added_diff(parent_id: Option<String>, index: Option<usize>, bl
 
 /// 🗑️ Sparse single/multi-id removal — shared by `delete-block(s)` and the removed-half of
 /// `move-block-to-container`.
-pub fn note_block_removed_diff(ids: Vec<String>) -> NoteDiff {
+pub async fn note_block_removed_diff(ids: Vec<String>) -> NoteDiff {
     NoteDiff {
         blocks: Some(NoteBlocksDelta { removed: ids, ..Default::default() }),
         ..Default::default()
@@ -549,14 +549,14 @@ pub fn note_block_removed_diff(ids: Vec<String>) -> NoteDiff {
 }
 
 /// 🖼️ Sparse single-key asset upsert — shared by `create-asset`/`replace-asset-payload`.
-pub fn note_asset_upsert_diff(key: &str, asset: &crate::artifacts::note::NoteImageAsset) -> NoteDiff {
+pub async fn note_asset_upsert_diff(key: &str, asset: &crate::artifacts::note::NoteImageAsset) -> NoteDiff {
     let mut entries = std::collections::BTreeMap::new();
     entries.insert(key.to_string(), Some(asset.clone()));
     NoteDiff { assets: Some(NoteAssetsDelta { entries }), ..Default::default() }
 }
 
 /// 🗑️ Sparse single-key asset removal — shared by `delete-asset`.
-pub fn note_asset_removed_diff(key: &str) -> NoteDiff {
+pub async fn note_asset_removed_diff(key: &str) -> NoteDiff {
     let mut entries = std::collections::BTreeMap::new();
     entries.insert(key.to_string(), None);
     NoteDiff { assets: Some(NoteAssetsDelta { entries }), ..Default::default() }
@@ -568,7 +568,7 @@ mod diff_apply_tests {
     use super::*;
 
     #[test]
-    fn malformed_nested_parent_rejects_without_changing_the_base() {
+    async fn malformed_nested_parent_rejects_without_changing_the_base() {
         let base = NoteSnapshot::default();
         let diff = NoteDiff {
             blocks: Some(NoteBlocksDelta {

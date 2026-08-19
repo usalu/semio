@@ -14,12 +14,12 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 pub const LOWPOLY_EXAMPLE_TEXT: &str = include_str!("../../../📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio");
 
 /// 📖️ Parses `.lowpoly` DSL text into a `LowpolySnapshot`.
-pub fn parse_dsl(text: &str) -> Result<LowpolySnapshot, store::TextError> {
+pub async fn parse_dsl(text: &str) -> Result<LowpolySnapshot, store::TextError> {
     <LowpolySnapshot as store::ArtifactDsl>::parse_dsl(text)
 }
 
 /// 🖨️ Prints a `LowpolySnapshot` back to `.lowpoly` DSL text.
-pub fn print_dsl(document: &LowpolySnapshot) -> String {
+pub async fn print_dsl(document: &LowpolySnapshot) -> String {
     store::ArtifactDsl::print_dsl(document)
 }
 
@@ -34,7 +34,7 @@ mod tests {
     /// honest round-trip fixture: nothing needs clearing before `assert_dsl_round_trip` compares full
     /// struct equality, unlike the pre-fix version of these tests.
     #[test]
-    fn debug_dump_fixture_bytes() {
+    async fn debug_dump_fixture_bytes() {
         let mesh_workspace = crate::artifacts::lowpoly::schema::default_mesh_workspace();
         let mesh_json = mesh_workspace.get("obj-1").expect("default workspace entry");
         let mesh = crate::artifacts::lowpoly::mesh_child_handle("obj-1", mesh_json);
@@ -54,13 +54,13 @@ mod tests {
     }
 
     #[test]
-    fn dsl_round_trips_the_default_snapshot() {
+    async fn dsl_round_trips_the_default_snapshot() {
         let projection = crate::artifacts::lowpoly::schema::default_snapshot();
         semio_framework_os_kernel::os_store::test_support::assert_dsl_round_trip(&projection);
     }
 
     #[test]
-    fn dsl_round_trips_a_projection_with_a_painted_layer() {
+    async fn dsl_round_trips_a_projection_with_a_painted_layer() {
         let mut projection = crate::artifacts::lowpoly::schema::default_snapshot();
         projection.objects[0].paint_layers[0].pixels[0] = 7;
         projection.objects[0].paint_layers[0].pixels[1] = 9;
@@ -68,7 +68,7 @@ mod tests {
     }
 
     #[test]
-    fn handcrafted_example_text_uses_structural_object_codec() {
+    async fn handcrafted_example_text_uses_structural_object_codec() {
         assert!(!LOWPOLY_EXAMPLE_TEXT.contains("mesh-json"));
         let parsed = parse_dsl(LOWPOLY_EXAMPLE_TEXT).expect("handcrafted example should parse");
         assert_eq!(parsed.objects.len(), 1);
@@ -78,13 +78,13 @@ mod tests {
     }
 
     #[test]
-    fn dsl_parse_rejects_text_missing_required_schema_field() {
+    async fn dsl_parse_rejects_text_missing_required_schema_field() {
         let result = parse_dsl("objects=[]");
         assert!(result.is_err());
     }
 
     #[test]
-    fn dsl_parse_rejects_unterminated_string_literal() {
+    async fn dsl_parse_rejects_unterminated_string_literal() {
         let result = parse_dsl("schema=\"unterminated");
         assert!(result.is_err());
     }
@@ -96,7 +96,7 @@ mod tests {
     // backslash-escaped quotes, `#`-comments) and no longer exercise this parser at all.
 
     #[test]
-    fn dsl_parse_rejects_invalid_bool_value() {
+    async fn dsl_parse_rejects_invalid_bool_value() {
         use crate::artifacts::lowpoly::schema::snapshot::enc_str;
         let text = format!(
             "schema={}\nobjects=[[{},{},[0,0,0,0,0,0,1,1,1],notabool,[],[]]]",
@@ -107,7 +107,7 @@ mod tests {
     }
 
     #[test]
-    fn dsl_parse_rejects_object_missing_required_field() {
+    async fn dsl_parse_rejects_object_missing_required_field() {
         use crate::artifacts::lowpoly::schema::snapshot::enc_str;
         let text = format!("schema={}\nobjects=[[{}]]", enc_str("lowpoly.document"), enc_str("o"));
         let result = parse_dsl(&text);
@@ -115,7 +115,7 @@ mod tests {
     }
 
     #[test]
-    fn dsl_parse_rejects_malformed_value_inside_a_nested_block() {
+    async fn dsl_parse_rejects_malformed_value_inside_a_nested_block() {
         use crate::artifacts::lowpoly::schema::snapshot::enc_str;
         let text = format!(
             "schema={}\nobjects=[[{},{},[notanumber,0,0,0,0,0,1,1,1],false,[],[]]]",
@@ -129,7 +129,7 @@ mod tests {
     /// hand-rolled codecs, which have no comment support either — the old derive-based grammar's
     /// comment handling did not survive the switch). An unrecognized line is a hard parse error.
     #[test]
-    fn dsl_parse_rejects_unrecognized_lines() {
+    async fn dsl_parse_rejects_unrecognized_lines() {
         use crate::artifacts::lowpoly::schema::snapshot::enc_str;
         let text = format!("# a leading comment\nschema={}\nobjects=[]\n", enc_str("lowpoly.document"));
         let result = parse_dsl(&text);
@@ -140,7 +140,7 @@ mod tests {
     /// backslash-escape grammar: ANY string content (quotes, backslashes, newlines) round-trips
     /// with zero special-casing, because it is never interpreted as DSL syntax in the first place.
     #[test]
-    fn dsl_parse_handles_arbitrary_characters_via_hex_encoding() {
+    async fn dsl_parse_handles_arbitrary_characters_via_hex_encoding() {
         use crate::artifacts::lowpoly::schema::snapshot::enc_str;
         let tricky_name = "Quote \" and \\ and newline\ndone";
         let text = format!(

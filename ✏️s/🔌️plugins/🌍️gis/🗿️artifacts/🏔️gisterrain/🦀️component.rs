@@ -39,7 +39,7 @@ pub const GISTERRAIN_DIALECT: semio_framework_plugin::Dialect = semio_framework_
 /// `(child_id, target)` for identical `(exaggeration, imported_features_json)`, a different pair
 /// once either actually changes. Mirrors `💠️lowpoly`'s `mesh_child_handle`/`📐️cad`'s
 /// `cad_model_child_handle` (same `store::ArtifactChild::new` + `ArtifactDialect` shape).
-pub fn gis_terrain_mesh_child_handle(content_key: &str) -> store::ArtifactChild<SemioMeshSnapshot> {
+pub async fn gis_terrain_mesh_child_handle(content_key: &str) -> store::ArtifactChild<SemioMeshSnapshot> {
     use std::hash::{Hash, Hasher};
     let mut hasher = std::collections::hash_map::DefaultHasher::new();
     content_key.hash(&mut hasher);
@@ -53,7 +53,7 @@ pub fn gis_terrain_mesh_child_handle(content_key: &str) -> store::ArtifactChild<
 /// 🔑️ The single string every caller hashes into `gis_terrain_mesh_child_handle` — the exact
 /// `(exaggeration, imported_features_json)` pair that determines the mesh's content below, kept in
 /// one place so `to_snapshot`/`GisTerrainDiff::apply`/fixture construction can never drift apart.
-pub fn gis_terrain_mesh_content_key(exaggeration: f64, imported_features_json: &str) -> String {
+pub async fn gis_terrain_mesh_content_key(exaggeration: f64, imported_features_json: &str) -> String {
     format!("{exaggeration}|{imported_features_json}")
 }
 
@@ -61,7 +61,7 @@ pub fn gis_terrain_mesh_content_key(exaggeration: f64, imported_features_json: &
 /// single call every constructor/mutator/test fixture funnels through so the composed child never
 /// drifts from what it actually describes. Mirrors `crate::artifacts::gismap`'s
 /// `gis_map_snapshot_with_derived_children`.
-pub fn gis_terrain_snapshot_with_derived_mesh(mut document: GisTerrainSnapshot) -> GisTerrainSnapshot {
+pub async fn gis_terrain_snapshot_with_derived_mesh(mut document: GisTerrainSnapshot) -> GisTerrainSnapshot {
     document.mesh = Some(gis_terrain_mesh_child_handle(&gis_terrain_mesh_content_key(document.exaggeration, &document.imported_features_json)));
     document
 }
@@ -73,7 +73,7 @@ pub fn gis_terrain_snapshot_with_derived_mesh(mut document: GisTerrainSnapshot) 
 /// has no CPU-side heightmap tessellator yet"). Honest placeholder geometry, not a fake: every field
 /// is real, computed, and round-trips — the day a tessellator lands, only this function's body needs
 /// to grow real per-vertex elevation.
-pub fn gis_terrain_mesh_from_snapshot(document: &GisTerrainSnapshot) -> SemioMeshSnapshot {
+pub async fn gis_terrain_mesh_from_snapshot(document: &GisTerrainSnapshot) -> SemioMeshSnapshot {
     let bounds = crate::artifacts::gisterrain::standards::v1::subsets::any::schema::inferences::bounds::lon_lat_bounds(&crate::artifacts::gisterrain::standards::v1::subsets::any::schema::inferences::bounds::imported_lon_lat_positions(document));
     let (min_x, min_y, max_x, max_y) = bounds.map(|b| (b.lon_min, b.lat_min, b.lon_max, b.lat_max)).unwrap_or((0.0, 0.0, 1.0, 1.0));
     let (min_x, max_x) = if min_x < max_x { (min_x, max_x) } else { (min_x, min_x + 1.0) };
@@ -103,7 +103,7 @@ pub fn gis_terrain_mesh_from_snapshot(document: &GisTerrainSnapshot) -> SemioMes
 /// 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE reloc-g2): `declaration()` describes the artifact
 /// (kind, schema, io ports, ownership), which is not engine behaviour.
 /// 🧾️ Defines s.gisterrain's immutable runtime capability leaves.
-pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
+pub async fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
     use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
 
     ArtifactDefinition::new(ArtifactIdentity::parse("s.gisterrain")?)
@@ -174,7 +174,7 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
 }
 
 /// 🔖️ Assembles s.gisterrain's typed runtime declaration.
-pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
+pub async fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
     semio_framework_plugin::ArtifactDeclaration::builder(definition()?)
         .schema(crate::artifacts::gisterrain::schema::gisterrain_artifact_schema_descriptor())
         .inferences([crate::artifacts::gisterrain::standards::v1::subsets::any::schema::inferences::gisterrain_artifact_inference_descriptor()])
@@ -190,14 +190,14 @@ mod tests {
     use super::*;
 
     #[test]
-    fn the_terrain_snapshot_defaults_to_a_flat_unimported_terrain() {
+    async fn the_terrain_snapshot_defaults_to_a_flat_unimported_terrain() {
         let document = GisTerrainSnapshot::default();
         assert_eq!(document.exaggeration, 0.0);
         assert!(document.imported_features_json.is_empty());
     }
 
     #[test]
-    fn the_terrain_snapshot_composes_a_content_addressed_mesh_child() {
+    async fn the_terrain_snapshot_composes_a_content_addressed_mesh_child() {
         let document = GisTerrainSnapshot::default();
         assert!(document.mesh.is_some(), "the terrain always composes a mesh child, even when flat/unimported");
         let mesh = gis_terrain_mesh_from_snapshot(&document);

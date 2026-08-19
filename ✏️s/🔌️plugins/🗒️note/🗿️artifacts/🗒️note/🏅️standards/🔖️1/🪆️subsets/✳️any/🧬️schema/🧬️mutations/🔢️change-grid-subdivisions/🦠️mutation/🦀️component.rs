@@ -15,23 +15,23 @@ pub struct ChangeGridSubdivisions {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn change_grid_subdivisions(new_subdivisions: Option<f64>) -> NoteMutation {
+pub async fn change_grid_subdivisions(new_subdivisions: Option<f64>) -> NoteMutation {
     NoteMutation::ChangeGridSubdivisions(ChangeGridSubdivisions { new_subdivisions })
 }
 
 impl MutationKind<NoteSnapshot, NoteMutation> for ChangeGridSubdivisions {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "change", entity: "grid-subdivisions", kind: "change-grid-subdivisions", record: "ChangedGridSubdivisions" };
 
-    fn diff(&self, base: &NoteSnapshot) -> protocol::MutationOutcome<NoteDiff> {
+    async fn diff(&self, base: &NoteSnapshot) -> protocol::MutationOutcome<NoteDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &NoteSnapshot) -> Vec<NoteMutation> {
+    async fn inverse(&self, base: &NoteSnapshot) -> Vec<NoteMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         format!("Change grid subdivisions to {:?}", self.new_subdivisions)
     }
-    fn target(&self) -> Vec<String> {
+    async fn target(&self) -> Vec<String> {
         Vec::new()
     }
 }

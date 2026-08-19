@@ -16,12 +16,12 @@ pub struct Poly {
 }
 
 impl Poly {
-    pub fn new(coeffs: Vec<f64>) -> Self {
+    pub async fn new(coeffs: Vec<f64>) -> Self {
         Poly { coeffs }
     }
     /// ∿ Degree of the polynomial after trimming trailing (highest-order) exact zeros; a
     /// constant zero polynomial has degree `0`.
-    pub fn degree(&self) -> usize {
+    pub async fn degree(&self) -> usize {
         let mut d = self.coeffs.len().saturating_sub(1);
         while d > 0 && self.coeffs[d] == 0.0 {
             d -= 1;
@@ -29,12 +29,12 @@ impl Poly {
         d
     }
     /// ∿ Horner evaluation.
-    pub fn eval(&self, x: f64) -> f64 {
+    pub async fn eval(&self, x: f64) -> f64 {
         self.coeffs.iter().rev().fold(0.0, |acc, &c| acc * x + c)
     }
     /// ∿ Simultaneous Horner evaluation of the polynomial and its derivative (one pass, no
     /// separate `derivative()` allocation on the hot Newton-iteration path).
-    pub fn eval_with_derivative(&self, x: f64) -> (f64, f64) {
+    pub async fn eval_with_derivative(&self, x: f64) -> (f64, f64) {
         let mut value = 0.0;
         let mut deriv = 0.0;
         for &c in self.coeffs.iter().rev() {
@@ -43,7 +43,7 @@ impl Poly {
         }
         (value, deriv)
     }
-    pub fn derivative(&self) -> Poly {
+    pub async fn derivative(&self) -> Poly {
         if self.coeffs.len() <= 1 {
             return Poly::new(vec![0.0]);
         }
@@ -57,7 +57,7 @@ impl Poly {
 
 /// ∿ Real roots of `a·x² + b·x + c`, using the cancellation-safe form (`q = -½(b + sign(b)·√Δ)`,
 /// roots `q/a` and `c/q`) rather than the naive quadratic formula.
-pub fn solve_quadratic(a: f64, b: f64, c: f64) -> Vec<f64> {
+pub async fn solve_quadratic(a: f64, b: f64, c: f64) -> Vec<f64> {
     if a == 0.0 {
         return if b == 0.0 { vec![] } else { vec![-c / b] };
     }
@@ -78,7 +78,7 @@ pub fn solve_quadratic(a: f64, b: f64, c: f64) -> Vec<f64> {
 
 /// ∿ Real roots of `a·x³ + b·x² + c·x + d` (`a ≠ 0`) via the depressed-cubic trigonometric method
 /// for three real roots and Cardano's formula otherwise.
-pub fn solve_cubic(a: f64, b: f64, c: f64, d: f64) -> Vec<f64> {
+pub async fn solve_cubic(a: f64, b: f64, c: f64, d: f64) -> Vec<f64> {
     if a == 0.0 {
         return solve_quadratic(b, c, d);
     }
@@ -111,7 +111,7 @@ pub fn solve_cubic(a: f64, b: f64, c: f64, d: f64) -> Vec<f64> {
     roots
 }
 
-fn cbrt(x: f64) -> f64 {
+async fn cbrt(x: f64) -> f64 {
     x.signum() * x.abs().powf(1.0 / 3.0)
 }
 
@@ -129,14 +129,14 @@ pub struct Bernstein {
 }
 
 impl Bernstein {
-    pub fn new(coeffs: Vec<f64>) -> Self {
+    pub async fn new(coeffs: Vec<f64>) -> Self {
         Bernstein { coeffs }
     }
-    pub fn degree(&self) -> usize {
+    pub async fn degree(&self) -> usize {
         self.coeffs.len().saturating_sub(1)
     }
     /// ∿ De Casteljau evaluation at `t` (need not lie in `[0, 1]`; the polynomial extends).
-    pub fn eval(&self, t: f64) -> f64 {
+    pub async fn eval(&self, t: f64) -> f64 {
         let mut work = self.coeffs.clone();
         let n = work.len();
         for level in 1..n {
@@ -148,7 +148,7 @@ impl Bernstein {
     }
     /// ∿ De Casteljau subdivision at `t`: returns the control points of the restriction to
     /// `[0, t]` and to `[t, 1]`, each reparameterized back onto `[0, 1]`.
-    pub fn subdivide(&self, t: f64) -> (Bernstein, Bernstein) {
+    pub async fn subdivide(&self, t: f64) -> (Bernstein, Bernstein) {
         let n = self.coeffs.len();
         let mut table = vec![self.coeffs.clone()];
         for level in 1..n {
@@ -162,7 +162,7 @@ impl Bernstein {
     }
     /// ∿ Converts to monomial (power) basis via repeated finite differences of the control net:
     /// `coeff[k] = C(n,k) · Δ^k b_0`.
-    pub fn to_monomial(&self) -> Poly {
+    pub async fn to_monomial(&self) -> Poly {
         let n = self.degree();
         let mut diffs = self.coeffs.clone();
         let mut monomial = vec![0.0; n + 1];
@@ -178,7 +178,7 @@ impl Bernstein {
         Poly::new(monomial)
     }
     /// ∿ Converts a monomial polynomial to Bernstein form on `[0, 1]` (inverse of [`Self::to_monomial`]).
-    pub fn from_monomial(p: &Poly) -> Bernstein {
+    pub async fn from_monomial(p: &Poly) -> Bernstein {
         let n = p.degree();
         let coeffs = (0..=n).map(|i| (0..=i).map(|j| p.coeffs.get(j).copied().unwrap_or(0.0) * binomial(i, j) / binomial(n, j)).sum::<f64>()).collect();
         Bernstein::new(coeffs)
@@ -187,13 +187,13 @@ impl Bernstein {
     /// `coeffs` (ignoring exact zeros) is an upper bound on, and has the same parity as, the
     /// number of real roots in `(0, 1)`. `0` sign changes certifies *no* root; `1` certifies
     /// *exactly one*.
-    pub fn sign_variations(&self) -> usize {
+    pub async fn sign_variations(&self) -> usize {
         let nonzero: Vec<f64> = self.coeffs.iter().copied().filter(|c| *c != 0.0).collect();
         nonzero.windows(2).filter(|w| w[0].signum() != w[1].signum()).count()
     }
 }
 
-fn binomial(n: usize, k: usize) -> f64 {
+async fn binomial(n: usize, k: usize) -> f64 {
     if k > n {
         return 0.0;
     }
@@ -211,13 +211,13 @@ fn binomial(n: usize, k: usize) -> f64 {
 /// inputs — see [`crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::error`] for how callers should react if isolation is incomplete
 /// (the kernel's "never wrong, fail loud" invariant: a caller hitting `max_depth` should treat
 /// the sub-interval as unresolved rather than guess).
-pub fn isolate_roots(b: &Bernstein, max_depth: u32) -> Vec<(f64, f64)> {
+pub async fn isolate_roots(b: &Bernstein, max_depth: u32) -> Vec<(f64, f64)> {
     let mut intervals = Vec::new();
     isolate_recursive(b, 0.0, 1.0, max_depth, &mut intervals);
     intervals
 }
 
-fn isolate_recursive(b: &Bernstein, lo: f64, hi: f64, depth: u32, out: &mut Vec<(f64, f64)>) {
+async fn isolate_recursive(b: &Bernstein, lo: f64, hi: f64, depth: u32, out: &mut Vec<(f64, f64)>) {
     let variations = b.sign_variations();
     if variations == 0 {
         return;
@@ -239,7 +239,7 @@ fn isolate_recursive(b: &Bernstein, lo: f64, hi: f64, depth: u32, out: &mut Vec<
 
 /// ∿ Safeguarded Newton (bisection fallback whenever a Newton step would leave the bracket or
 /// fails to shrink it) — guaranteed to converge given a valid sign-changing bracket `[lo, hi]`.
-pub fn refine_root(p: &Poly, mut lo: f64, mut hi: f64, tol: f64, max_iters: u32) -> f64 {
+pub async fn refine_root(p: &Poly, mut lo: f64, mut hi: f64, tol: f64, max_iters: u32) -> f64 {
     let mut f_lo = p.eval(lo);
     let f_hi = p.eval(hi);
     if f_lo == 0.0 {
@@ -278,20 +278,20 @@ mod tests {
     use super::*;
 
     #[test]
-    fn poly_eval_matches_direct_computation() {
+    async fn poly_eval_matches_direct_computation() {
         let p = Poly::new(vec![1.0, -2.0, 3.0]); // 1 - 2x + 3x^2
         assert!((p.eval(2.0) - (1.0 - 4.0 + 12.0)).abs() < 1e-12);
     }
 
     #[test]
-    fn poly_derivative_matches_power_rule() {
+    async fn poly_derivative_matches_power_rule() {
         let p = Poly::new(vec![1.0, -2.0, 3.0, 4.0]); // 1 - 2x + 3x^2 + 4x^3
         let d = p.derivative();
         assert_eq!(d.coeffs, vec![-2.0, 6.0, 12.0]);
     }
 
     #[test]
-    fn eval_with_derivative_matches_separate_calls() {
+    async fn eval_with_derivative_matches_separate_calls() {
         let p = Poly::new(vec![2.0, -1.0, 0.5, 3.0]);
         let (v, dv) = p.eval_with_derivative(1.5);
         assert!((v - p.eval(1.5)).abs() < 1e-12);
@@ -299,7 +299,7 @@ mod tests {
     }
 
     #[test]
-    fn solve_quadratic_finds_known_roots() {
+    async fn solve_quadratic_finds_known_roots() {
         // (x-2)(x-3) = x^2 -5x+6
         let roots = solve_quadratic(1.0, -5.0, 6.0);
         assert_eq!(roots.len(), 2);
@@ -308,12 +308,12 @@ mod tests {
     }
 
     #[test]
-    fn solve_quadratic_handles_no_real_roots() {
+    async fn solve_quadratic_handles_no_real_roots() {
         assert!(solve_quadratic(1.0, 0.0, 1.0).is_empty());
     }
 
     #[test]
-    fn solve_quadratic_avoids_cancellation_for_large_b() {
+    async fn solve_quadratic_avoids_cancellation_for_large_b() {
         // Classic near-cancellation case: a=1, b=1e8, c=1. Naive formula loses precision.
         let roots = solve_quadratic(1.0, 1e8, 1.0);
         assert_eq!(roots.len(), 2);
@@ -324,7 +324,7 @@ mod tests {
     }
 
     #[test]
-    fn solve_cubic_finds_three_known_real_roots() {
+    async fn solve_cubic_finds_three_known_real_roots() {
         // (x-1)(x-2)(x-3) = x^3 -6x^2+11x-6
         let mut roots = solve_cubic(1.0, -6.0, 11.0, -6.0);
         roots.sort_by(|a, b| a.partial_cmp(b).unwrap());
@@ -335,7 +335,7 @@ mod tests {
     }
 
     #[test]
-    fn solve_cubic_finds_single_real_root() {
+    async fn solve_cubic_finds_single_real_root() {
         // x^3 + x + 1 has exactly one real root (~-0.6823)
         let roots = solve_cubic(1.0, 0.0, 1.0, 1.0);
         assert_eq!(roots.len(), 1);
@@ -344,7 +344,7 @@ mod tests {
     }
 
     #[test]
-    fn bernstein_eval_matches_monomial_conversion() {
+    async fn bernstein_eval_matches_monomial_conversion() {
         let p = Poly::new(vec![1.0, 2.0, -3.0, 0.5]);
         let b = Bernstein::from_monomial(&p);
         for i in 0..=10 {
@@ -354,7 +354,7 @@ mod tests {
     }
 
     #[test]
-    fn bernstein_to_monomial_round_trips_from_monomial() {
+    async fn bernstein_to_monomial_round_trips_from_monomial() {
         let p = Poly::new(vec![3.0, -1.5, 2.0, 4.0, -0.25]);
         let b = Bernstein::from_monomial(&p);
         let back = b.to_monomial();
@@ -365,7 +365,7 @@ mod tests {
     }
 
     #[test]
-    fn bernstein_subdivide_matches_original_at_shared_endpoints_and_split_point() {
+    async fn bernstein_subdivide_matches_original_at_shared_endpoints_and_split_point() {
         let b = Bernstein::new(vec![0.0, 3.0, -1.0, 2.0]);
         let t = 0.4;
         let (left, right) = b.subdivide(t);
@@ -378,19 +378,19 @@ mod tests {
     }
 
     #[test]
-    fn sign_variations_certifies_no_root_for_monotone_positive_control_polygon() {
+    async fn sign_variations_certifies_no_root_for_monotone_positive_control_polygon() {
         let b = Bernstein::new(vec![1.0, 2.0, 3.0, 4.0]);
         assert_eq!(b.sign_variations(), 0);
     }
 
     #[test]
-    fn sign_variations_detects_single_sign_change() {
+    async fn sign_variations_detects_single_sign_change() {
         let b = Bernstein::new(vec![-1.0, -0.5, 1.0, 2.0]);
         assert_eq!(b.sign_variations(), 1);
     }
 
     #[test]
-    fn isolate_roots_finds_single_root_of_linear_bernstein() {
+    async fn isolate_roots_finds_single_root_of_linear_bernstein() {
         // Line from -1 at t=0 to 1 at t=1: root at t=0.5.
         let b = Bernstein::new(vec![-1.0, 1.0]);
         let intervals = isolate_roots(&b, 20);
@@ -399,13 +399,13 @@ mod tests {
     }
 
     #[test]
-    fn isolate_roots_finds_no_intervals_for_root_free_polynomial() {
+    async fn isolate_roots_finds_no_intervals_for_root_free_polynomial() {
         let b = Bernstein::new(vec![1.0, 2.0, 3.0]);
         assert!(isolate_roots(&b, 20).is_empty());
     }
 
     #[test]
-    fn refine_root_converges_to_known_root() {
+    async fn refine_root_converges_to_known_root() {
         let p = Poly::new(vec![-6.0, 11.0, -6.0, 1.0]); // (x-1)(x-2)(x-3)
         let root = refine_root(&p, 2.5, 3.5, 1e-12, 100);
         assert!((root - 3.0).abs() < 1e-9);
@@ -416,7 +416,7 @@ mod tests {
 
         /// 🔮️ Brute-force oracle: dense sampling + bisection finds every sign-change interval,
         /// independent of the Bernstein/Descartes machinery under test.
-        fn bisection_oracle(p: &Poly, samples: usize) -> Vec<f64> {
+        async fn bisection_oracle(p: &Poly, samples: usize) -> Vec<f64> {
             let mut roots = Vec::new();
             let xs: Vec<f64> = (0..=samples).map(|i| i as f64 / samples as f64).collect();
             for w in xs.windows(2) {
@@ -432,7 +432,7 @@ mod tests {
         }
 
         #[test]
-        fn isolate_roots_plus_refine_matches_bisection_oracle_on_random_polynomials() {
+        async fn isolate_roots_plus_refine_matches_bisection_oracle_on_random_polynomials() {
             let mut rng = semio_framework_geometry::random::Rng::from_seed(23);
             for _ in 0..200 {
                 let degree = 1 + (rng.next_range(0, 4) as usize);
@@ -454,7 +454,7 @@ mod tests {
         }
 
         #[test]
-        fn bernstein_monomial_round_trip_holds_on_random_polynomials() {
+        async fn bernstein_monomial_round_trip_holds_on_random_polynomials() {
             let mut rng = semio_framework_geometry::random::Rng::from_seed(29);
             for _ in 0..200 {
                 let degree = rng.next_range(0, 6) as usize;

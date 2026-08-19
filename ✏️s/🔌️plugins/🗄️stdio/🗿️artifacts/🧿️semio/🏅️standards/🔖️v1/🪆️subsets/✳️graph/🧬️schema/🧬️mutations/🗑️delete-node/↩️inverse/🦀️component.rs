@@ -8,7 +8,7 @@ use crate::artifacts::semio::standards::v1::subsets::graph::schema::mutations::{
 use crate::artifacts::semio::standards::v1::subsets::graph::schema::snapshot::SemioGraphSnapshot;
 
 //#region 🔖️Inverse
-pub fn inverse(payload: &DeleteNode, base: &SemioGraphSnapshot) -> Vec<SemioGraphMutation> {
+pub async fn inverse(payload: &DeleteNode, base: &SemioGraphSnapshot) -> Vec<SemioGraphMutation> {
     let Some(node) = base.nodes.iter().find(|n| n.id == payload.id) else {
         return Vec::new();
     };

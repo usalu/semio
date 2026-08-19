@@ -87,7 +87,7 @@ pub enum GifMutation {
 /// `Option<T>`-of-struct-block field (`SetGlobalColorTable::gct`) — mirrors png's own
 /// `demo_mutation_cases()`.
 #[cfg(test)]
-pub(crate) fn demo_mutation_cases() -> Vec<GifMutation> {
+pub(crate) async fn demo_mutation_cases() -> Vec<GifMutation> {
     let base = crate::artifacts::gif::standards::v87a::subsets::any::schema::demo_gif_snapshot();
     let sample_image = GifImage { left: 0, top: 0, width: 2, height: 2, interlace: false, lct: Some(GifColorTable { sorted: false, colors: vec![GifRgb { r: 9, g: 9, b: 9 }; 2] }), indices: vec![0, 1, 1, 0] };
     vec![
@@ -109,7 +109,7 @@ pub(crate) fn demo_mutation_cases() -> Vec<GifMutation> {
 
 //#region 🔖️Apply
 /// ▶️ Applies `mutation` to `snapshot`. Out-of-range image indices are no-ops rather than panics.
-pub fn apply_gif_mutation(snapshot: &mut GifSnapshot, mutation: &GifMutation) -> protocol::MutationOutcome<GifDiff> {
+pub async fn apply_gif_mutation(snapshot: &mut GifSnapshot, mutation: &GifMutation) -> protocol::MutationOutcome<GifDiff> {
     let outcome = <GifMutation as Mutation<GifSnapshot>>::diff(mutation, snapshot);
     match MutationDiff::apply(outcome.diff(), snapshot) {
         Ok(next) => {
@@ -125,7 +125,7 @@ pub fn apply_gif_mutation(snapshot: &mut GifSnapshot, mutation: &GifMutation) ->
 impl Mutation<GifSnapshot> for GifMutation {
     type Diff = GifDiff;
 
-    fn diff(&self, base: &GifSnapshot) -> protocol::MutationOutcome<Self::Diff> {
+    async fn diff(&self, base: &GifSnapshot) -> protocol::MutationOutcome<Self::Diff> {
         protocol::MutationOutcome::new(match self {
             GifMutation::NoMutation => GifDiff::default(),
             GifMutation::SetSnapshot { snapshot } => diff::diff_set_snapshot(base, snapshot),
@@ -161,7 +161,7 @@ impl Mutation<GifSnapshot> for GifMutation {
 
     /// ↩️ Real, round-trippable inverses. `apply(inverse(m, base), apply(m, base)) == base` for
     /// every variant, incl. image-index ops.
-    fn inverse(&self, base: &GifSnapshot) -> Vec<Self> {
+    async fn inverse(&self, base: &GifSnapshot) -> Vec<Self> {
         match self {
             GifMutation::NoMutation => vec![GifMutation::NoMutation],
             GifMutation::SetSnapshot { .. } => vec![GifMutation::SetSnapshot { snapshot: base.clone() }],
@@ -207,7 +207,7 @@ impl Mutation<GifSnapshot> for GifMutation {
 /// 🎙️ Handcrafted `OpText` (P6: `dsl::DslOps` emits `DslVariants` only) — the same ~15-line body
 /// every `DslOps`-derived enum's `OpText` impl uses (identical to gif89a's `GifMutation` impl).
 impl OpText for GifMutation {
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
+    async fn parse_op(line: &str) -> Result<Self, store::TextError> {
         let variants = <Self as dsl::DslVariants>::variants();
         for (keyword, spec_fn) in &variants {
             let probe = format!("{} ", keyword);
@@ -218,7 +218,7 @@ impl OpText for GifMutation {
         }
         Err(dsl::__rt::field_error(format!("unknown operation line '{line}'")))
     }
-    fn print_op(&self) -> String {
+    async fn print_op(&self) -> String {
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
         let variants = <Self as dsl::DslVariants>::variants();
         let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
@@ -228,10 +228,10 @@ impl OpText for GifMutation {
 
 /// ⚡️ Handcrafted `OpBinary` (P6) — pure forward to `dsl::variants_binary`.
 impl OpBinary for GifMutation {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         dsl::variants_binary::encode_op(self)
     }
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         dsl::variants_binary::decode_op(bytes)
     }
 }
@@ -243,15 +243,15 @@ mod tests {
     use super::*;
     use crate::artifacts::gif::standards::v87a::subsets::any::schema::snapshot::GifRgb;
 
-    fn sample_image(seed: u8) -> GifImage {
+    async fn sample_image(seed: u8) -> GifImage {
         GifImage { left: 0, top: 0, width: 2, height: 2, interlace: false, lct: Some(GifColorTable { sorted: false, colors: vec![GifRgb { r: seed, g: seed, b: seed }; 2] }), indices: vec![0, 1, 1, 0] }
     }
 
-    fn base_snapshot() -> GifSnapshot {
+    async fn base_snapshot() -> GifSnapshot {
         GifSnapshot { schema: "stdio.gif".into(), width: 2, height: 2, gct: None, background_color_index: 0, pixel_aspect_ratio: 0, images: vec![sample_image(1), sample_image(2), sample_image(3)] }
     }
 
-    fn round_trips(base: &GifSnapshot, mutation: GifMutation) {
+    async fn round_trips(base: &GifSnapshot, mutation: GifMutation) {
         let diff = mutation.diff(base);
         let mutated = diff.diff().apply(base).expect("diff must apply to base");
         let inverses = mutation.inverse(base);
@@ -266,7 +266,7 @@ mod tests {
     /// 🧪️ `mutation_diff_law`: every variant's `diff()` matches what `apply_gif_mutation` returns
     /// and applying it reproduces the same mutated state.
     #[test]
-    fn mutation_diff_law() {
+    async fn mutation_diff_law() {
         let base = base_snapshot();
         for mutation in [
             GifMutation::NoMutation,
@@ -292,7 +292,7 @@ mod tests {
 
     /// 🧪️ `inverse_law` (mutation-level): every variant round-trips.
     #[test]
-    fn mutation_apply_inverse_round_trips_every_variant() {
+    async fn mutation_apply_inverse_round_trips_every_variant() {
         let base = base_snapshot();
         round_trips(&base, GifMutation::NoMutation);
         round_trips(&base, GifMutation::SetSnapshot { snapshot: GifSnapshot { background_color_index: 5, ..base.clone() } });
@@ -309,7 +309,7 @@ mod tests {
     }
 
     #[test]
-    fn remove_image_out_of_range_is_noop_not_panic() {
+    async fn remove_image_out_of_range_is_noop_not_panic() {
         let base = base_snapshot();
         let mut snap = base.clone();
         apply_gif_mutation(&mut snap, &GifMutation::RemoveImage { index: 99 });
@@ -319,7 +319,7 @@ mod tests {
     /// 🧪️ F6: `OpText`/`OpBinary` round-trip laws over the full 12-variant vocabulary (handcrafted
     /// impls over the `dsl::DslOps`-derived `DslVariants`, mirroring gif89a's `GifMutation`).
     #[test]
-    fn op_text_binary_roundtrip_law() {
+    async fn op_text_binary_roundtrip_law() {
         let base = base_snapshot();
         for mutation in [
             GifMutation::NoMutation,

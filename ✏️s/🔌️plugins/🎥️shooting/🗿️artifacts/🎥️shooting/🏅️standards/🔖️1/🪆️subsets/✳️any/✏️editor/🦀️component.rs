@@ -47,14 +47,14 @@ pub use crate::editor::shooting::commands::fixture::set_active_example::SHOOTING
 //#region 🔖️Utilities
 /// 🎯️ An `ActionDescriptor` addressed at this app — the single factory every taxonomy node's chrome
 /// (`🎚️options/*`, `📌️panels/*`) builds its `on_change`/item actions with.
-pub fn shooting_action(action: &str, args: Option<serde_json::Value>) -> ActionDescriptor {
+pub async fn shooting_action(action: &str, args: Option<serde_json::Value>) -> ActionDescriptor {
     semio_framework_plugin::ActionFactory::new(SHOOTING_PLAY_CONTROLLER_ID).action(action, args)
 }
 
 /// 🌳️ Layers an `icon_id` onto the SDK's `tree_item_with_action` skeleton — the SDK primitive's third
 /// parameter is `description`, not an icon, so the shooting-specific icon assignment stays local. Shared
 /// by the document and catalogue panels (two consumers).
-pub fn tree_item_with_icon(id: impl Into<String>, label: impl Into<Label>, icon_id: &str, action: ActionDescriptor) -> UiTreeItemNode {
+pub async fn tree_item_with_icon(id: impl Into<String>, label: impl Into<Label>, icon_id: &str, action: ActionDescriptor) -> UiTreeItemNode {
     UiTreeItemNode { icon_id: Some(icon_id.into()), menu: None, ..tree_item_with_action(id, label, None, action) }
 }
 //#endregion 🔖️Utilities
@@ -74,7 +74,7 @@ pub fn tree_item_with_icon(id: impl Into<String>, label: impl Into<Label>, icon_
 /// `document_schema`/`artifact.component_kind` are the only fields anything consumes) — so emptying
 /// them drops no live behavior. `crate::artifacts::shooting::artifact_kind()`'s `export_stdio_kinds`/
 /// `import_stdio_kinds` remain the live source of truth for this artifact's real format list.
-pub fn shooting_io() -> AppIo {
+pub async fn shooting_io() -> AppIo {
     AppIo {
         document_schema: "shooting.scene".into(),
         document_media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Raster },
@@ -89,7 +89,7 @@ pub fn shooting_io() -> AppIo {
 /// port surface; WORKFLOWS-END-TO-END-TYPED-PORTS-REAL-SCHEMA-FLOW-CONFIG-ON-NODE Wave 2 port recipe).
 /// `Many`/optional: a shooting document may carry several shots, and downstream consumers (e.g.
 /// remodel's `photos:in`) may connect before any shot exists.
-pub fn shooting_photos_out_port() -> semio_framework_plugin::MediaPortSpec {
+pub async fn shooting_photos_out_port() -> semio_framework_plugin::MediaPortSpec {
     semio_framework_plugin::MediaPortSpec {
         id: "photos:out".into(),
         label: "Photos".into(),
@@ -105,7 +105,7 @@ pub fn shooting_photos_out_port() -> semio_framework_plugin::MediaPortSpec {
 /// port — reuses the same SVG-then-rasterize pipeline (`crate::artifacts::shooting::schema::shooting_scene_svg` +
 /// `rasterize_svg_to_png_base64`) as the `exportActiveShot`/PNG shell action, so there is exactly one
 /// photo renderer.
-pub fn shooting_photo_media(snapshot: &ShootingSnapshot) -> Result<Media, MediaError> {
+pub async fn shooting_photo_media(snapshot: &ShootingSnapshot) -> Result<Media, MediaError> {
     let (svg, width, height) = crate::artifacts::shooting::schema::shooting_scene_svg(snapshot).map_err(|error| MediaError::Payload("photos:out".into(), error))?;
     let png_base64 = semio_framework_os::rasterize_svg_to_png_base64(&svg, width, height).map_err(|error| MediaError::Payload("photos:out".into(), error))?;
     Ok(Media {
@@ -214,15 +214,15 @@ impl ArtifactEditor for ShootingPlayApp {
     const DIALECT: Dialect = crate::artifacts::shooting::SHOOTING_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = SHOOTING_DOCUMENT_SCHEMA;
 
-    fn app_schema() -> Option<::schema::AppSchemaDescriptor> {
+    async fn app_schema() -> Option<::schema::AppSchemaDescriptor> {
         Some(crate::editor::shooting::config::schema::app_schema_descriptor())
     }
 
-    fn initial_snapshot() -> ShootingSnapshot {
+    async fn initial_snapshot() -> ShootingSnapshot {
         crate::artifacts::shooting::schema::default_snapshot()
     }
 
-    fn io() -> Option<AppIo> {
+    async fn io() -> Option<AppIo> {
         Some(shooting_io())
     }
 
@@ -246,7 +246,7 @@ impl ArtifactEditor for ShootingPlayApp {
     /// (the retired whole-document-replace variant) is banned outright with NO replacement mutation, so this falls back to the
     /// trait's own default (`None`); `import_media`'s `"document:in"` override below handles the
     /// real gesture via `reset_document_effect` instead.
-    fn import_media(port: &str, media: &Media, _doc: &ArtifactView<'_, ShootingSnapshot>) -> Result<Emit<ShootingMutation, ShootingConfigMutation, NoDraftMutation>, MediaError> {
+    async fn import_media(port: &str, media: &Media, _doc: &ArtifactView<'_, ShootingSnapshot>) -> Result<Emit<ShootingMutation, ShootingConfigMutation, NoDraftMutation>, MediaError> {
         if port != "document:in" {
             return Err(MediaError::NotImplemented);
         }
@@ -265,7 +265,7 @@ impl ArtifactEditor for ShootingPlayApp {
     /// `all == false`, `exportAllShots` when `all == true`) — `app_commands!`'s generated method is a
     /// static 1:1 row→literal mapping with no per-payload escape hatch, so this is the one case that
     /// needs a manual override.
-    fn command_id(command: &ShootingCommand) -> &'static str {
+    async fn command_id(command: &ShootingCommand) -> &'static str {
         match command {
             ShootingCommand::ExportShots(export_shots::ExportShots { all }) => {
                 if *all {
@@ -278,14 +278,14 @@ impl ArtifactEditor for ShootingPlayApp {
         }
     }
 
-    fn handle(command: &ShootingCommand, doc: &ArtifactView<'_, ShootingSnapshot>, cfg: &ConfigView<'_, ShootingConfig>, interaction: &InteractionView<'_>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<ShootingMutation, ShootingConfigMutation, Self::DraftMutation>, Fault> {
+    async fn handle(command: &ShootingCommand, doc: &ArtifactView<'_, ShootingSnapshot>, cfg: &ConfigView<'_, ShootingConfig>, interaction: &InteractionView<'_>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<ShootingMutation, ShootingConfigMutation, Self::DraftMutation>, Fault> {
         let mut ctx = ShootingDispatchCtx { selected_asset_ids: interaction.selection(SHOOTING_INTERACTION_DOMAIN).ids.clone() };
         command.dispatch(doc, cfg, &mut ctx)
     }
 
     /// 🧮️ This app's typed configuration spec — mirrors `ShootingConfig`'s three sticky-default fields,
     /// each grounded in an existing `.action_args` default (see that struct's doc).
-    fn config_spec() -> semio_framework_plugin::ConfigSpec {
+    async fn config_spec() -> semio_framework_plugin::ConfigSpec {
         semio_framework_plugin::ConfigSpec {
             fields: vec![
                 semio_framework_plugin::ConfigFieldSpec {
@@ -310,7 +310,7 @@ impl ArtifactEditor for ShootingPlayApp {
         }
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, ShootingSnapshot>, cfg: &ConfigView<'_, ShootingConfig>) -> UiNode {
+    async fn render(body_key: &str, doc: &ArtifactView<'_, ShootingSnapshot>, cfg: &ConfigView<'_, ShootingConfig>) -> UiNode {
         let snapshot = doc.snapshot;
         let labels = shooting_play_labels(cfg.snapshot);
         match body_key {
@@ -323,12 +323,12 @@ impl ArtifactEditor for ShootingPlayApp {
         }
     }
 
-    fn window_engagements(doc: &ArtifactView<'_, ShootingSnapshot>, cfg: &ConfigView<'_, ShootingConfig>) -> HashMap<String, WindowEngagement> {
+    async fn window_engagements(doc: &ArtifactView<'_, ShootingSnapshot>, cfg: &ConfigView<'_, ShootingConfig>) -> HashMap<String, WindowEngagement> {
         let labels = shooting_play_labels(cfg.snapshot);
         HashMap::from([(SHOOTING_PLAY_WINDOW_SCENE.into(), scene_window::engagement(doc.snapshot, cfg.snapshot, labels)), (SHOOTING_PLAY_WINDOW_ICON.into(), icon_window::engagement(doc.snapshot, labels))])
     }
 
-    fn window_measures(doc: &ArtifactView<'_, ShootingSnapshot>, cfg: &ConfigView<'_, ShootingConfig>) -> HashMap<String, Vec<WindowMeasure>> {
+    async fn window_measures(doc: &ArtifactView<'_, ShootingSnapshot>, cfg: &ConfigView<'_, ShootingConfig>) -> HashMap<String, Vec<WindowMeasure>> {
         let labels = shooting_play_labels(cfg.snapshot);
         HashMap::from([(SHOOTING_PLAY_WINDOW_SCENE.into(), scene_window::window_measures(doc.snapshot, labels)), (SHOOTING_PLAY_WINDOW_ICON.into(), icon_window::window_measures(doc.snapshot, labels))])
     }
@@ -344,7 +344,7 @@ impl ArtifactEditor for ShootingPlayApp {
 /// `"document:in"` above, `commands::fixture::{import_snapshot_json,set_active_example,reset_snapshot}`)
 /// builds this effect instead of an `Emit::mutations([...])`. The spr is a fresh, edit-free op-log
 /// for `scene` — a genesis envelope with no history to encode.
-pub fn reset_document_effect(scene: &ShootingSnapshot) -> semio_framework_plugin::Effect {
+pub async fn reset_document_effect(scene: &ShootingSnapshot) -> semio_framework_plugin::Effect {
     let pack = <ShootingSnapshot as store::ArtifactPack>::encode_pack(scene);
     let envelope = store::create_document_envelope::<ShootingSnapshot, ShootingMutation>(SHOOTING_DOCUMENT_SCHEMA, "shooting", scene.clone(), None);
     let spr = store::print_document_spr(&envelope).expect("shooting document spr encode is infallible for a fresh, edit-free envelope");
@@ -356,7 +356,7 @@ pub fn reset_document_effect(scene: &ShootingSnapshot) -> semio_framework_plugin
 /// 🧱️ The manifest stitch: one call per taxonomy node, each sourced from that node's own `definition()`.
 /// Only the leaf action/keybinding declarations (which have no dedicated `_def` passthrough) are written
 /// out inline.
-pub fn create_shooting_app() -> semio_framework_plugin::AppDefinition {
+pub async fn create_shooting_app() -> semio_framework_plugin::AppDefinition {
     Editor::builder(crate::artifacts::shooting::SHOOTING_DIALECT)
             .document(["semio", "shooting"])
             .artifact_kind(crate::artifacts::shooting::artifact_kind())
@@ -501,7 +501,7 @@ pub(crate) mod testkit {
     /// `PluginBuilder::editor::<ShootingPlayApp>` builds it.
     ///
     /// 🧪️ A bare app instance — no `AppActionRegistry`, so undeclared internal commands dispatch freely.
-    pub fn shooting_app() -> ShootingApp {
+    pub async fn shooting_app() -> ShootingApp {
         new_app::<EditorApp<ShootingPlayApp>>()
     }
 
@@ -509,28 +509,28 @@ pub(crate) mod testkit {
     /// examples }` shape `new_app_with_registry`/`assert_declared_actions_bridge_to_commands` still
     /// expect — framework testkit gap, not modifiable here (`🧰️framework/**` is outside this packet's
     /// lease).
-    pub fn shooting_app_manifest_for_testkit() -> semio_framework_plugin::App {
+    pub async fn shooting_app_manifest_for_testkit() -> semio_framework_plugin::App {
         semio_framework_plugin::App { definition: create_shooting_app(), examples: Vec::new() }
     }
 
     /// 🧪️ An app wired to the real manifest registry — enforces View/Shell kind discipline.
-    pub fn shooting_app_with_registry() -> ShootingApp {
+    pub async fn shooting_app_with_registry() -> ShootingApp {
         new_app_with_registry::<EditorApp<ShootingPlayApp>>(shooting_app_manifest_for_testkit)
     }
 
-    pub fn dispatch(app: &mut ShootingApp, command: ShootingCommand) -> InvocationResult {
+    pub async fn dispatch(app: &mut ShootingApp, command: ShootingCommand) -> InvocationResult {
         app.dispatch_typed(command, &meta("local")).expect("dispatch")
     }
 
-    pub fn render(app: &mut ShootingApp, body_key: &str) -> String {
+    pub async fn render(app: &mut ShootingApp, body_key: &str) -> String {
         serde_json::to_string(&app.render(body_key, None, &ViewModel::default()).expect("render")).expect("render json")
     }
 
-    pub fn scene_window_measures(app: &mut ShootingApp) -> Vec<WindowMeasure> {
+    pub async fn scene_window_measures(app: &mut ShootingApp) -> Vec<WindowMeasure> {
         app.window_measures().get(SHOOTING_PLAY_WINDOW_SCENE).cloned().expect("scene window measures")
     }
 
-    pub fn icon_window_measures(app: &mut ShootingApp) -> Vec<WindowMeasure> {
+    pub async fn icon_window_measures(app: &mut ShootingApp) -> Vec<WindowMeasure> {
         app.window_measures().get(SHOOTING_PLAY_WINDOW_ICON).cloned().expect("icon window measures")
     }
 }
@@ -546,7 +546,7 @@ mod tests {
     use semio_framework_plugin::{ActionKind, Effect, PluginApp, ViewModel};
     use serde_json::{json, Value};
 
-    fn default_camera(position: [f64; 3]) -> crate::artifacts::shooting::ShootingCamera {
+    async fn default_camera(position: [f64; 3]) -> crate::artifacts::shooting::ShootingCamera {
         crate::artifacts::shooting::ShootingCamera { position, target: [0.0, 0.0, 0.0], zoom: 1.0, fov: 50.0, up: None, projection: None }
     }
 
@@ -555,7 +555,7 @@ mod tests {
     /// row's wire keyword must be distinct — the cross-cutting invariant `app_commands!` is there to
     /// hold.
     #[test]
-    fn command_ids_are_unique_across_every_row() {
+    async fn command_ids_are_unique_across_every_row() {
         let app = ShootingPlayApp;
         let ids: Vec<&str> = every_command().iter().map(|command| ShootingPlayApp::command_id(command)).collect();
         let mut sorted = ids.clone();
@@ -567,14 +567,14 @@ mod tests {
 
     /// ⚖️ LAW: text and binary are two projections of the same command, for every single row.
     #[test]
-    fn every_command_round_trips_through_text_and_binary() {
+    async fn every_command_round_trips_through_text_and_binary() {
         for command in every_command() {
             store::os_store::test_support::assert_op_text_binary_equivalence(&command);
         }
     }
 
     /// 🧾️ One representative value per row, in declaration (= binary ordinal) order.
-    pub(super) fn every_command() -> Vec<ShootingCommand> {
+    pub(super) async fn every_command() -> Vec<ShootingCommand> {
         vec![
             ShootingCommand::ImportSnapshotJson(import_snapshot_json::ImportSnapshotJson { json: "{\"schema\":\"shooting.shooting\"}".into() }),
             ShootingCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: "base-icon".into() }),
@@ -620,7 +620,7 @@ mod tests {
 
     //#region 🔖️ManifestSanity
     #[test]
-    fn the_manifest_stitches_every_taxonomy_node() {
+    async fn the_manifest_stitches_every_taxonomy_node() {
         let json = serde_json::to_string(&create_shooting_app()).expect("app definition json");
         for id in [SHOOTING_PLAY_WINDOW_SCENE, SHOOTING_PLAY_WINDOW_ICON] {
             assert!(json.contains(id), "window kind {id} missing from the manifest: {json}");
@@ -632,7 +632,7 @@ mod tests {
     }
 
     #[test]
-    fn utility_registry_scopes_transform_gumball_and_actions_are_declared() {
+    async fn utility_registry_scopes_transform_gumball_and_actions_are_declared() {
         let definition = create_shooting_app();
         let utility_ids: Vec<&str> = definition.utilities.iter().map(|utility| utility.id.as_str()).collect();
         assert_eq!(utility_ids, ["move", "rotate", "scale"], "gumball utilities declared in registry order");
@@ -655,7 +655,7 @@ mod tests {
     /// framework-injected `interactionSelect` verb now (no app-declared action id), asserted here
     /// instead of a bespoke `worldPick` action.
     #[test]
-    fn interaction_select_is_reachable_as_a_framework_injected_action_under_registry_enforcement() {
+    async fn interaction_select_is_reachable_as_a_framework_injected_action_under_registry_enforcement() {
         let mut app = shooting_app_with_registry();
         let asset_id = app.snapshot().expect("snapshot").assets[0].id.clone();
         let targets = serde_json::to_string(&serde_json::json!([{ "granularity": "asset", "id": asset_id }])).unwrap();
@@ -663,7 +663,7 @@ mod tests {
     }
 
     #[test]
-    fn assets_interaction_domain_is_declared_and_scoped_to_the_scene_window() {
+    async fn assets_interaction_domain_is_declared_and_scoped_to_the_scene_window() {
         let definition = create_shooting_app();
         let domain = definition.interactions.iter().find(|interaction| interaction.id == SHOOTING_INTERACTION_DOMAIN).expect("assets interaction domain declared");
         assert_eq!(domain.granularities.len(), 1);
@@ -676,7 +676,7 @@ mod tests {
 
     //#region 🔖️Locale
     #[test]
-    fn shooting_labels_resolve_native_english_by_default() {
+    async fn shooting_labels_resolve_native_english_by_default() {
         let mut app = shooting_app();
         let document_json = crate::editor::shooting::testkit::render(&mut app, SHOOTING_PLAY_BODY_DOCUMENT);
         assert!(document_json.contains("Shots"));
@@ -691,7 +691,7 @@ mod tests {
 
     /// 🗣️ B1: locale is now `cfg.locale`, set via the typed `SetLocale` config command.
     #[test]
-    fn shooting_labels_resolve_native_german() {
+    async fn shooting_labels_resolve_native_german() {
         let mut app = shooting_app();
         dispatch(&mut app, ShootingCommand::SetLocale(set_locale::SetLocale { value: "de-DE".into() }));
         let document_json = crate::editor::shooting::testkit::render(&mut app, SHOOTING_PLAY_BODY_DOCUMENT);
@@ -705,7 +705,7 @@ mod tests {
 
     //#region 🔖️CrossCutting
     #[test]
-    fn undo_redo_round_trip_through_the_wrapper() {
+    async fn undo_redo_round_trip_through_the_wrapper() {
         let mut app = shooting_app();
         testkit::assert_undo_redo_round_trip(&mut app, ShootingCommand::AddShot(add_shot::AddShot { format: "png".into(), shape: "rectangle".into() }), |app| app.snapshot().expect("snapshot").shots.len(), 2, 3);
     }
@@ -713,7 +713,7 @@ mod tests {
     /// 🎥️ `SetCamera` is config-only — dragging the viewport camera through several ticks must never
     /// create a VCS edit/undo step on the DOCUMENT store at all.
     #[test]
-    fn camera_drag_never_creates_a_document_undo_step() {
+    async fn camera_drag_never_creates_a_document_undo_step() {
         let mut app = shooting_app();
         for position in [[1.0, 0.0, 0.0], [2.0, 0.0, 0.0], [3.0, 0.0, 0.0]] {
             dispatch(&mut app, ShootingCommand::SetCamera(set_camera::SetCamera { camera: default_camera(position) }));
@@ -733,7 +733,7 @@ mod tests {
     /// apply DISJOINT edits, and exchanging operations over a `MemoryBackbone` converges both sides to
     /// contain BOTH edits.
     #[test]
-    fn two_instances_converge_disjoint_edits_via_backbone() {
+    async fn two_instances_converge_disjoint_edits_via_backbone() {
         testkit::assert_two_instances_converge::<EditorApp<ShootingPlayApp>, (String, [f64; 3])>(
             "mem://shooting-convergence",
             ShootingCommand::SetActiveShotLabel(set_active_shot_label::SetActiveShotLabel { value: "Renamed By A".into() }),
@@ -746,14 +746,14 @@ mod tests {
     }
 
     #[test]
-    fn ingest_operations_is_idempotent_for_shooting() {
+    async fn ingest_operations_is_idempotent_for_shooting() {
         testkit::assert_ingest_idempotent::<EditorApp<ShootingPlayApp>, String>(ShootingCommand::SetActiveShotLabel(set_active_shot_label::SetActiveShotLabel { value: "Hero".into() }), |app| {
             crate::artifacts::shooting::schema::active_shot(&app.snapshot().expect("snapshot")).unwrap().label.clone()
         });
     }
 
     #[test]
-    fn an_unknown_body_key_renders_a_diagnostic_instead_of_panicking() {
+    async fn an_unknown_body_key_renders_a_diagnostic_instead_of_panicking() {
         let mut app = shooting_app();
         assert!(crate::editor::shooting::testkit::render(&mut app, "shooting.play.nope").contains("Unknown body"));
     }
@@ -761,7 +761,7 @@ mod tests {
 
     //#region 🔖️Io
     #[test]
-    fn shooting_io_mirrors_the_declared_artifact_kind() {
+    async fn shooting_io_mirrors_the_declared_artifact_kind() {
         let io = shooting_io();
         assert_eq!(io.document_schema, "shooting.scene");
         assert_eq!(io.artifact.id, "2d.shooting");
@@ -778,7 +778,7 @@ mod tests {
     /// 🔌️ WORKFLOWS-END-TO-END-TYPED-PORTS-REAL-SCHEMA-FLOW-CONFIG-ON-NODE Wave 2 port recipe:
     /// `photos:out` is declared, optional/`Many`, and pinned to the `2d.image` kind.
     #[test]
-    fn shooting_io_declares_the_photos_out_port() {
+    async fn shooting_io_declares_the_photos_out_port() {
         let io = shooting_io();
         let port = io.ports.iter().find(|port| port.id == "photos:out").expect("photos:out declared");
         assert_eq!(port.direction, semio_framework_plugin::MediaPortDirection::Out);
@@ -791,7 +791,7 @@ mod tests {
 
     /// 🖼️ `shooting_photo_media` renders the same scene as `exportActiveShot`'s PNG (base64, non-empty).
     #[test]
-    fn shooting_photo_media_exports_a_raster_2d_image() {
+    async fn shooting_photo_media_exports_a_raster_2d_image() {
         let snapshot = crate::artifacts::shooting::schema::default_snapshot();
         let media = shooting_photo_media(&snapshot).expect("photo export succeeds");
         assert_eq!(media.media_type.class, MediaClass::TwoD);
@@ -808,7 +808,7 @@ mod tests {
 
     //#region 🔖️Export
     #[test]
-    fn export_import_and_download_operations() {
+    async fn export_import_and_download_operations() {
         let mut app = shooting_app();
         let result = dispatch(&mut app, ShootingCommand::LoadRequest(load_request::LoadRequest {}));
         match &result.requested_effects[0] {

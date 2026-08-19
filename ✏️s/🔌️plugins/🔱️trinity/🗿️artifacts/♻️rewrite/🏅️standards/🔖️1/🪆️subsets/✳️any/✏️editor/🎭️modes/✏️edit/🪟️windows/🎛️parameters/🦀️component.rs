@@ -7,11 +7,11 @@ use crate::artifacts::jack::PropertyValue;
 use semio_framework_plugin::{ui_declarative_sections_to_tree, ui_text, Label, UiFieldNode, UiNode, UiPresence, UiSectionNode};
 
 trait ParameterKindLabel {
-    fn kind_label(&self) -> String;
+    async fn kind_label(&self) -> String;
 }
 
 impl ParameterKindLabel for crate::artifacts::rewrite::schema::ParameterSpec {
-    fn kind_label(&self) -> String {
+    async fn kind_label(&self) -> String {
         match self.kind {
             ParameterKind::String => "string".into(),
             ParameterKind::Number => "number".into(),
@@ -20,7 +20,7 @@ impl ParameterKindLabel for crate::artifacts::rewrite::schema::ParameterSpec {
     }
 }
 
-pub(crate) fn render(state: &RewriteSnapshot, labels: &TrinityRewriteLabels) -> UiNode {
+pub(crate) async fn render(state: &RewriteSnapshot, labels: &TrinityRewriteLabels) -> UiNode {
     let Ok(rhs) = serde_json::from_str::<Rhs>(&state.rhs_json) else {
         return ui_text(Label::data("Invalid RHS"));
     };

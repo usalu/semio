@@ -6,7 +6,7 @@ use crate::artifacts::semio::standards::v1::subsets::brep::schema::mutations::{c
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::SemioBrepSnapshot;
 
 //#region 🔖️Inverse
-pub fn inverse(payload: &DeleteEdge, base: &SemioBrepSnapshot) -> Vec<SemioBrepMutation> {
+pub async fn inverse(payload: &DeleteEdge, base: &SemioBrepSnapshot) -> Vec<SemioBrepMutation> {
     match base.edges.iter().find(|x| x.id == payload.id) {
         Some(x) => vec![SemioBrepMutation::CreateEdge(create_edge::mutation::CreateEdge { id: x.id.clone(), start_vertex: x.start_vertex.clone(), end_vertex: x.end_vertex.clone(), curve: x.curve.clone() })],
         None => Vec::new(),

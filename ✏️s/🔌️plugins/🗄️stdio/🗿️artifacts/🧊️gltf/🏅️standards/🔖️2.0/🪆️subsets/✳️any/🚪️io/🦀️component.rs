@@ -21,7 +21,7 @@ const B64_TABLE: &[u8; 64] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvw
 
 /// 🔓️ Decodes standard base64, tolerating embedded whitespace and `=` padding (real-world
 /// `data:` URIs are sometimes line-wrapped by whatever authored them).
-pub fn b64_decode(data: &str) -> Result<Vec<u8>, String> {
+pub async fn b64_decode(data: &str) -> Result<Vec<u8>, String> {
     let mut out = Vec::new();
     let mut buf = 0u32;
     let mut bits = 0u32;
@@ -39,7 +39,7 @@ pub fn b64_decode(data: &str) -> Result<Vec<u8>, String> {
 }
 
 /// 🔒️ Encodes standard base64 with `=` padding.
-pub fn b64_encode(data: &[u8]) -> String {
+pub async fn b64_encode(data: &[u8]) -> String {
     let mut out = String::new();
     for chunk in data.chunks(3) {
         let b0 = chunk[0] as u32;
@@ -59,7 +59,7 @@ pub fn b64_encode(data: &[u8]) -> String {
 /// constrain buffer media types and images legitimately vary; only the `;base64` encoding marker
 /// is required (glTF never emits non-base64 `data:` URIs in practice, and text-percent-encoded
 /// data URIs for binary buffers aren't spec-sanctioned, so that shape is a typed error).
-pub fn decode_data_uri(uri: &str) -> Result<Vec<u8>, String> {
+pub async fn decode_data_uri(uri: &str) -> Result<Vec<u8>, String> {
     let rest = uri.strip_prefix("data:").ok_or("not a data: uri")?;
     let comma = rest.find(',').ok_or("data uri missing ',' separator")?;
     let (meta, payload) = (&rest[..comma], &rest[comma + 1..]);
@@ -70,7 +70,7 @@ pub fn decode_data_uri(uri: &str) -> Result<Vec<u8>, String> {
 }
 
 /// 🌐️ Encodes `bytes` as a `data:<media_type>;base64,<payload>` URI.
-pub fn encode_data_uri(media_type: &str, bytes: &[u8]) -> String {
+pub async fn encode_data_uri(media_type: &str, bytes: &[u8]) -> String {
     format!("data:{media_type};base64,{}", b64_encode(bytes))
 }
 //#endregion 🔖️Base64
@@ -88,7 +88,7 @@ pub enum GltfComponentType {
 }
 
 impl GltfComponentType {
-    pub fn from_code(code: u64) -> Result<Self, String> {
+    pub async fn from_code(code: u64) -> Result<Self, String> {
         Ok(match code {
             5120 => Self::Byte,
             5121 => Self::UnsignedByte,
@@ -100,7 +100,7 @@ impl GltfComponentType {
         })
     }
 
-    pub fn code(self) -> u64 {
+    pub async fn code(self) -> u64 {
         match self {
             Self::Byte => 5120,
             Self::UnsignedByte => 5121,
@@ -111,7 +111,7 @@ impl GltfComponentType {
         }
     }
 
-    pub fn byte_size(self) -> usize {
+    pub async fn byte_size(self) -> usize {
         match self {
             Self::Byte | Self::UnsignedByte => 1,
             Self::Short | Self::UnsignedShort => 2,
@@ -119,7 +119,7 @@ impl GltfComponentType {
         }
     }
 
-    fn read_at(self, bytes: &[u8], offset: usize) -> Result<f64, String> {
+    async fn read_at(self, bytes: &[u8], offset: usize) -> Result<f64, String> {
         let size = self.byte_size();
         if offset + size > bytes.len() {
             return Err("accessor component read out of buffer bounds".into());
@@ -148,7 +148,7 @@ pub enum GltfAccessorType {
 }
 
 impl GltfAccessorType {
-    pub fn from_str(s: &str) -> Result<Self, String> {
+    pub async fn from_str(s: &str) -> Result<Self, String> {
         Ok(match s {
             "SCALAR" => Self::Scalar,
             "VEC2" => Self::Vec2,
@@ -161,7 +161,7 @@ impl GltfAccessorType {
         })
     }
 
-    pub fn as_str(self) -> &'static str {
+    pub async fn as_str(self) -> &'static str {
         match self {
             Self::Scalar => "SCALAR",
             Self::Vec2 => "VEC2",
@@ -173,7 +173,7 @@ impl GltfAccessorType {
         }
     }
 
-    pub fn components(self) -> usize {
+    pub async fn components(self) -> usize {
         match self {
             Self::Scalar => 1,
             Self::Vec2 => 2,
@@ -191,12 +191,12 @@ impl GltfAccessorType {
 /// [`GltfComponentType::from_code`] rather than deriving (a derive would emit the Rust variant
 /// name, not a spec-legal wire value).
 impl Serialize for GltfComponentType {
-    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+    async fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
         serializer.serialize_u64(self.code())
     }
 }
 impl<'de> Deserialize<'de> for GltfComponentType {
-    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+    async fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
         let code = u64::deserialize(deserializer)?;
         Self::from_code(code).map_err(serde::de::Error::custom)
     }
@@ -205,12 +205,12 @@ impl<'de> Deserialize<'de> for GltfComponentType {
 /// 🧵 `accessor.type` on the wire is always the spec string (`"SCALAR"`, `"VEC3"`, …) -- hand-rolled
 /// for the same reason as [`GltfComponentType`]'s impl above.
 impl Serialize for GltfAccessorType {
-    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+    async fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
         serializer.serialize_str(self.as_str())
     }
 }
 impl<'de> Deserialize<'de> for GltfAccessorType {
-    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+    async fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
         let s = String::deserialize(deserializer)?;
         Self::from_str(&s).map_err(serde::de::Error::custom)
     }
@@ -231,7 +231,7 @@ pub struct GltfDecodedAccessor {
 /// 📖️ Reads `count` `accessor_type` elements starting at `base_offset` in `bytes`, honoring an
 /// explicit `byte_stride` (bufferView.byteStride, element pitch for interleaved data) when given,
 /// defaulting to tightly packed (`component_size * num_components`) otherwise.
-fn read_elements(bytes: &[u8], base_offset: usize, component_type: GltfComponentType, accessor_type: GltfAccessorType, count: usize, byte_stride: Option<usize>) -> Result<Vec<f64>, String> {
+async fn read_elements(bytes: &[u8], base_offset: usize, component_type: GltfComponentType, accessor_type: GltfAccessorType, count: usize, byte_stride: Option<usize>) -> Result<Vec<f64>, String> {
     let nc = accessor_type.components();
     let tight = component_type.byte_size() * nc;
     let stride = byte_stride.unwrap_or(tight);
@@ -247,7 +247,7 @@ fn read_elements(bytes: &[u8], base_offset: usize, component_type: GltfComponent
 
 /// 🎚️ Applies glTF 2.0 accessor normalization after dense and sparse values have been
 /// assembled, preserving the exact signed lower-bound rule from §3.6.2.2.
-fn normalize_components(component_type: GltfComponentType, components: &mut [f64]) -> Result<(), String> {
+async fn normalize_components(component_type: GltfComponentType, components: &mut [f64]) -> Result<(), String> {
     let (scale, signed) = match component_type {
         GltfComponentType::Byte => (127.0, true),
         GltfComponentType::UnsignedByte => (255.0, false),
@@ -265,7 +265,7 @@ fn normalize_components(component_type: GltfComponentType, components: &mut [f64
 /// 🧩️ Decodes `document.accessors[accessor_index]` against `buffers` (index-aligned with
 /// `document.buffers`, see [`resolve_document_buffers`]) — dense `bufferView` read, then
 /// `accessor.sparse` substitution (base is zero-filled when there's no `bufferView`, per spec).
-pub fn decode_accessor(document: &GltfDocument, buffers: &[Vec<u8>], accessor_index: usize) -> Result<GltfDecodedAccessor, String> {
+pub async fn decode_accessor(document: &GltfDocument, buffers: &[Vec<u8>], accessor_index: usize) -> Result<GltfDecodedAccessor, String> {
     let acc = document.accessors.get(accessor_index).ok_or_else(|| format!("accessor index {accessor_index} out of range"))?;
     let component_type = acc.component_type;
     let accessor_type = acc.kind;
@@ -304,7 +304,7 @@ pub fn decode_accessor(document: &GltfDocument, buffers: &[Vec<u8>], accessor_in
 /// 📖️ Resolves `document.bufferViews[bv_idx]` against `buffers` and decodes `count` elements
 /// starting at the bufferView's own `byteOffset` plus `extra_offset` (the accessor's own
 /// `byteOffset`, or a sparse indices/values sub-offset).
-fn read_bufferview_elements(document: &GltfDocument, buffers: &[Vec<u8>], bv_idx: usize, extra_offset: usize, component_type: GltfComponentType, accessor_type: GltfAccessorType, count: usize) -> Result<Vec<f64>, String> {
+async fn read_bufferview_elements(document: &GltfDocument, buffers: &[Vec<u8>], bv_idx: usize, extra_offset: usize, component_type: GltfComponentType, accessor_type: GltfAccessorType, count: usize) -> Result<Vec<f64>, String> {
     let bv = document.buffer_views.get(bv_idx).ok_or_else(|| format!("bufferView index {bv_idx} out of range"))?;
     let bytes = buffers.get(bv.buffer).ok_or_else(|| format!("buffer index {} out of range", bv.buffer))?;
     if bytes.is_empty() {
@@ -320,7 +320,7 @@ fn read_bufferview_elements(document: &GltfDocument, buffers: &[Vec<u8>], bv_idx
 /// `String`, not `Option<String>`) -- this only rejects the empty string, since serde alone can't
 /// express "non-empty". No mesh/accessor/POSITION precondition: a document with zero meshes (a
 /// scene-only or skin-only document) is legitimately valid glTF and must parse.
-fn validate_document(document: &GltfDocument) -> Result<(), String> {
+async fn validate_document(document: &GltfDocument) -> Result<(), String> {
     if document.asset.version.trim().is_empty() {
         return Err("gltf document 'asset.version' missing or not a string".into());
     }
@@ -334,7 +334,7 @@ fn validate_document(document: &GltfDocument) -> Result<(), String> {
 /// so those bytes are simply unresolved (not fabricated); the uri string itself stays verbatim in
 /// `document`, so nothing is lost, and any attempt to `decode_accessor` through them surfaces a
 /// typed error rather than silently returning garbage.
-fn resolve_document_buffers(document: &GltfDocument, embedded_bin: Option<&[u8]>) -> Vec<Vec<u8>> {
+async fn resolve_document_buffers(document: &GltfDocument, embedded_bin: Option<&[u8]>) -> Vec<Vec<u8>> {
     document
         .buffers
         .iter()
@@ -351,7 +351,7 @@ fn resolve_document_buffers(document: &GltfDocument, embedded_bin: Option<&[u8]>
 /// precondition, only `asset.version`) via `serde_json::from_str::<GltfDocument>` -- every spec
 /// top-level field lands in its typed slot; `extras`/`extensions` decode into this module's own
 /// [`GltfJson`] (never `serde_json::Value`), so nothing real on disk is dropped.
-pub fn parse_gltf_document(bytes: &[u8]) -> Result<GltfSnapshot, String> {
+pub async fn parse_gltf_document(bytes: &[u8]) -> Result<GltfSnapshot, String> {
     let text = std::str::from_utf8(bytes).map_err(|e| format!("gltf json is not valid utf-8: {e}"))?;
     let document: GltfDocument = serde_json::from_str(text).map_err(|e| format!("gltf json parse error: {e}"))?;
     validate_document(&document)?;
@@ -364,7 +364,7 @@ pub fn parse_gltf_document(bytes: &[u8]) -> Result<GltfSnapshot, String> {
 /// `data:application/octet-stream;base64,…` uri in the emitted copy -- plain `.gltf` JSON has no
 /// binary chunk to hold it, so this is the only lossless way to carry those bytes through. Buffers
 /// that already declare a `uri` (data or external) are left untouched.
-pub fn serialize_gltf_document(snapshot: &GltfSnapshot) -> Vec<u8> {
+pub async fn serialize_gltf_document(snapshot: &GltfSnapshot) -> Vec<u8> {
     let mut document = snapshot.document.clone();
     for (i, buf) in document.buffers.iter_mut().enumerate() {
         if buf.uri.is_none() {
@@ -383,7 +383,7 @@ const GLB_VERSION: u32 = 2;
 const CHUNK_TYPE_JSON: &[u8; 4] = b"JSON";
 const CHUNK_TYPE_BIN: &[u8; 4] = b"BIN\0";
 
-fn align4(len: usize) -> usize {
+async fn align4(len: usize) -> usize {
     (len + 3) & !3
 }
 
@@ -392,7 +392,7 @@ fn align4(len: usize) -> usize {
 /// present and `document.buffers[0]` declares no `uri`, a BIN chunk (type `0x004E4942`,
 /// zero-padded `0x00`). Fixes the prior bug: the total-length header field now includes BOTH
 /// chunks' padding (it previously omitted the BIN chunk's padding bytes from the count).
-pub fn encode_glb(snapshot: &GltfSnapshot) -> Result<Vec<u8>, String> {
+pub async fn encode_glb(snapshot: &GltfSnapshot) -> Result<Vec<u8>, String> {
     validate_document(&snapshot.document)?;
     let mut document = snapshot.document.clone();
     let embed_bin = document.buffers.first().map(|b| b.uri.is_none()).unwrap_or(false);
@@ -436,7 +436,7 @@ pub fn encode_glb(snapshot: &GltfSnapshot) -> Result<Vec<u8>, String> {
 /// (already-padded) length rather than assuming exactly two chunks in a fixed order, per spec
 /// (only JSON-first is mandated; BIN is optional and, if present, must be second -- any further
 /// chunk types are simply skipped, not fabricated into anything).
-pub fn decode_glb(bytes: &[u8]) -> Result<GltfSnapshot, String> {
+pub async fn decode_glb(bytes: &[u8]) -> Result<GltfSnapshot, String> {
     if bytes.len() < 12 {
         return Err("glb: truncated 12-byte header".into());
     }
@@ -500,11 +500,11 @@ pub mod derived_composition {
         type Snapshot = GltfSnapshot;
         const WRITES: Dialect = DIALECT;
 
-        fn reads() -> &'static [Dialect] {
+        async fn reads() -> &'static [Dialect] {
             &[DIALECT, DEP_JSON, DEP_BINARY]
         }
 
-        fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+        async fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
             // 🌱 Every listed read dialect's payload is raw text/bytes that this artifact's own
             // analyzer already round-trips through `store::Document{Dsl,Pack}` -- including bytes
             // claiming a dependency's dialect, since (for a single-standard DAG-adjacent dependency
@@ -538,13 +538,13 @@ mod tests {
     use super::*;
 
     #[test]
-    fn empty_snapshot_matches_schema() {
+    async fn empty_snapshot_matches_schema() {
         let snapshot = crate::artifacts::gltf::engine::empty_gltf_snapshot();
         assert_eq!(snapshot.schema, STDIO_GLTF_DOCUMENT_SCHEMA);
     }
 
     #[test]
-    fn codec_round_trip() {
+    async fn codec_round_trip() {
         let snap = crate::artifacts::gltf::engine::empty_gltf_snapshot();
         let text = store::ArtifactDsl::print_dsl(&snap);
         let parsed = <GltfSnapshot as store::ArtifactDsl>::parse_dsl(&text).expect("parse");
@@ -564,7 +564,7 @@ mod tests {
 
     //#region 🔖️Base64Tests
     #[test]
-    fn base64_round_trips_plain_and_data_uri() {
+    async fn base64_round_trips_plain_and_data_uri() {
         for payload in [&b""[..], b"a", b"ab", b"abc", b"abcd", &[0u8, 255, 128, 1, 2, 3][..]] {
             let enc = b64_encode(payload);
             assert_eq!(b64_decode(&enc).unwrap(), payload);
@@ -577,7 +577,7 @@ mod tests {
     //#endregion 🔖️Base64Tests
 
     //#region 🔖️GlbPaddingTests
-    fn doc_with_buffer(byte_length: usize) -> GltfDocument {
+    async fn doc_with_buffer(byte_length: usize) -> GltfDocument {
         GltfDocument { buffers: if byte_length > 0 { vec![GltfBuffer { byte_length, uri: None, name: None, extensions: None, extras: None }] } else { Vec::new() }, ..GltfDocument::default() }
     }
 
@@ -585,7 +585,7 @@ mod tests {
     /// padding from the header's total-length field whenever `bin.len()` wasn't 4-byte-aligned.
     /// Sweeps json/bin lengths across every mod-4 residue to pin the fix down.
     #[test]
-    fn glb_total_length_header_matches_actual_bytes_across_alignments() {
+    async fn glb_total_length_header_matches_actual_bytes_across_alignments() {
         for json_len in [0usize, 1, 2, 3, 4, 5, 61] {
             for bin_len in [0usize, 1, 2, 3, 4, 5, 100] {
                 let mut document = doc_with_buffer(bin_len);
@@ -605,7 +605,7 @@ mod tests {
     }
 
     #[test]
-    fn glb_json_padding_is_space_and_bin_padding_is_zero() {
+    async fn glb_json_padding_is_space_and_bin_padding_is_zero() {
         let document = doc_with_buffer(3);
         let snap = GltfSnapshot { schema: STDIO_GLTF_DOCUMENT_SCHEMA.into(), document, buffers: vec![vec![1u8, 2, 3]], source_form: GltfSourceForm::Glb };
         let encoded = encode_glb(&snap).expect("encode");
@@ -628,15 +628,15 @@ mod tests {
     //#endregion 🔖️GlbPaddingTests
 
     //#region 🔖️AccessorTests
-    fn accessor(buffer_view: usize, component_type: GltfComponentType, kind: GltfAccessorType, count: usize) -> GltfAccessor {
+    async fn accessor(buffer_view: usize, component_type: GltfComponentType, kind: GltfAccessorType, count: usize) -> GltfAccessor {
         GltfAccessor { buffer_view: Some(buffer_view), byte_offset: 0, component_type, normalized: false, count, kind, max: None, min: None, sparse: None, name: None, extensions: None, extras: None }
     }
-    fn buffer_view(buffer: usize, byte_offset: usize, byte_stride: Option<usize>) -> GltfBufferView {
+    async fn buffer_view(buffer: usize, byte_offset: usize, byte_stride: Option<usize>) -> GltfBufferView {
         GltfBufferView { buffer, byte_offset, byte_length: 0, byte_stride, target: None, name: None, extensions: None, extras: None }
     }
 
     #[test]
-    fn decode_accessor_handles_byte_stride_interleaved_vec3() {
+    async fn decode_accessor_handles_byte_stride_interleaved_vec3() {
         let mut buf = Vec::new();
         let verts: [[f32; 3]; 2] = [[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]];
         let norms: [[f32; 3]; 2] = [[0.0, 0.0, 1.0], [0.0, 1.0, 0.0]];
@@ -662,7 +662,7 @@ mod tests {
     }
 
     #[test]
-    fn decode_accessor_handles_all_component_types() {
+    async fn decode_accessor_handles_all_component_types() {
         let document = GltfDocument {
             buffers: vec![GltfBuffer { byte_length: 32, uri: None, name: None, extensions: None, extras: None }],
             buffer_views: vec![buffer_view(0, 0, None)],
@@ -675,7 +675,7 @@ mod tests {
     }
 
     #[test]
-    fn decode_accessor_applies_spec_normalization_after_sparse_overlay() {
+    async fn decode_accessor_applies_spec_normalization_after_sparse_overlay() {
         let document = GltfDocument {
             buffers: vec![GltfBuffer { byte_length: 7, uri: None, name: None, extensions: None, extras: None }],
             buffer_views: vec![buffer_view(0, 0, None), buffer_view(0, 3, None)],
@@ -701,7 +701,7 @@ mod tests {
     }
 
     #[test]
-    fn accessor_normalization_covers_every_legal_integer_component_type() {
+    async fn accessor_normalization_covers_every_legal_integer_component_type() {
         let cases = [
             (GltfComponentType::Byte, vec![-128.0, 127.0], vec![-1.0, 1.0]),
             (GltfComponentType::UnsignedByte, vec![0.0, 255.0], vec![0.0, 1.0]),
@@ -717,7 +717,7 @@ mod tests {
     }
 
     #[test]
-    fn decode_accessor_applies_sparse_substitution_over_zero_base() {
+    async fn decode_accessor_applies_sparse_substitution_over_zero_base() {
         let document = GltfDocument {
             buffers: vec![GltfBuffer { byte_length: 100, uri: None, name: None, extensions: None, extras: None }],
             buffer_views: vec![buffer_view(0, 0, None), buffer_view(0, 8, None)],
@@ -752,7 +752,7 @@ mod tests {
     /// 🧪️ Ticket ARTIFACT-SYSTEM-OVERHAUL: the prior parser hard-failed any document lacking a
     /// POSITION accessor. A scene-only document (zero meshes) is legitimately valid glTF.
     #[test]
-    fn parse_gltf_document_accepts_scene_only_document_without_position() {
+    async fn parse_gltf_document_accepts_scene_only_document_without_position() {
         let text = br#"{"asset":{"version":"2.0"},"scenes":[{"nodes":[]}],"scene":0}"#;
         let snap = parse_gltf_document(text).expect("scene-only document must parse leniently");
         assert_eq!(snap.document.asset.version, "2.0");
@@ -760,7 +760,7 @@ mod tests {
     }
 
     #[test]
-    fn parse_gltf_document_preserves_morph_target_maps() {
+    async fn parse_gltf_document_preserves_morph_target_maps() {
         let text = br#"{"asset":{"version":"2.0"},"meshes":[{"primitives":[{"attributes":{"POSITION":0},"targets":[{"POSITION":1,"NORMAL":2}]}]}]}"#;
         let snap = parse_gltf_document(text).expect("morph targets are core glTF 2.0 data");
         let target = &snap.document.meshes[0].primitives[0].targets[0].0;
@@ -771,13 +771,13 @@ mod tests {
     }
 
     #[test]
-    fn parse_gltf_document_rejects_missing_asset_version() {
+    async fn parse_gltf_document_rejects_missing_asset_version() {
         let text = br#"{"scenes":[]}"#;
         assert!(parse_gltf_document(text).is_err());
     }
 
     #[test]
-    fn parse_gltf_document_preserves_unknown_top_level_fields_verbatim() {
+    async fn parse_gltf_document_preserves_unknown_top_level_fields_verbatim() {
         let text = br#"{"asset":{"version":"2.0"},"extensions":{"KHR_lights_punctual":{"lights":[{"type":"directional"}]}},"extras":{"authorNote":"kept verbatim"}}"#;
         let snap = parse_gltf_document(text).expect("parse");
         let GltfJson::Object(exts) = snap.document.extensions.clone().expect("extensions") else { panic!("expected object") };
@@ -787,7 +787,7 @@ mod tests {
     }
 
     #[test]
-    fn parse_gltf_document_decodes_data_uri_buffer() {
+    async fn parse_gltf_document_decodes_data_uri_buffer() {
         let bytes: &[u8] = &[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
         let uri = encode_data_uri("application/octet-stream", bytes);
         let text = format!(r#"{{"asset":{{"version":"2.0"}},"buffers":[{{"byteLength":{},"uri":"{uri}"}}]}}"#, bytes.len());
@@ -798,7 +798,7 @@ mod tests {
 
     //#region 🔖️DualCodecTests
     #[test]
-    fn glb_round_trip_preserves_json_and_bin_semantically() {
+    async fn glb_round_trip_preserves_json_and_bin_semantically() {
         let position_bytes: Vec<u8> = [[0.0f32, 0.0, 0.0], [1.0, 0.0, 0.0], [0.0, 1.0, 0.0]].iter().flat_map(|v| v.iter().flat_map(|c| c.to_le_bytes())).collect();
         let document = GltfDocument {
             buffers: vec![GltfBuffer { byte_length: position_bytes.len(), uri: None, name: None, extensions: None, extras: None }],
@@ -828,7 +828,7 @@ mod tests {
     /// documented normal form (spec-default numeric fields round-trip as "present" iff they carry
     /// a non-default value -- see the `is_*`/`default_*` helpers in the snapshot module).
     #[test]
-    fn codec_retention_law_glb_decode_encode_decode_is_semantically_faithful() {
+    async fn codec_retention_law_glb_decode_encode_decode_is_semantically_faithful() {
         let bytes: Vec<u8> = (0..24u8).collect();
         let document = GltfDocument {
             buffers: vec![GltfBuffer { byte_length: bytes.len(), uri: None, name: Some("payload".into()), extensions: None, extras: None }],
@@ -852,7 +852,7 @@ mod tests {
     }
 
     #[test]
-    fn gltf_json_serialize_embeds_glb_sourced_buffer_as_data_uri() {
+    async fn gltf_json_serialize_embeds_glb_sourced_buffer_as_data_uri() {
         let bytes: Vec<u8> = vec![9, 9, 9, 9];
         let document = doc_with_buffer(4);
         let snap = GltfSnapshot { schema: STDIO_GLTF_DOCUMENT_SCHEMA.into(), document, buffers: vec![bytes.clone()], source_form: GltfSourceForm::Glb };
@@ -880,12 +880,12 @@ mod tests {
         use crate::artifacts::gltf::schema::{diff, snapshot};
         use protocol::{DiffCodec, Mutation, OpBinary, OpText};
 
-        fn alpha_mode_mutation() -> GltfMutation {
+        async fn alpha_mode_mutation() -> GltfMutation {
             let payload = serde_json::to_vec(&mutation::GltfChangeMaterialAlphaModePayload { material: 0, alpha_mode: GltfAlphaMode::Mask }).expect("canonical alpha-mode payload");
             GltfMutation::new(mutation::ID, 1, payload).expect("registered alpha-mode mutation")
         }
 
-        fn material_snapshot() -> GltfSnapshot {
+        async fn material_snapshot() -> GltfSnapshot {
             let mut snapshot = GltfSnapshot::default();
             snapshot.document.materials.push(Default::default());
             snapshot
@@ -895,7 +895,7 @@ mod tests {
         /// parse under the real dialect — independent of, and cheaper than, the two `recognize`/
         /// `walk_protocol` laws below (a parse failure here fails fast with a clearer message).
         #[test]
-        fn committed_facet_files_parse() {
+        async fn committed_facet_files_parse() {
             for (label, text) in [("snapshot grammar", snapshot::text::COMPONENT_GRAMMAR_SEMIO), ("mutations grammar", mutation_transport::text::COMPONENT_GRAMMAR_SEMIO), ("diff grammar", diff::text::COMPONENT_GRAMMAR_SEMIO)] {
                 let grammar = dsl::parse_grammar(text).unwrap_or_else(|e| panic!("{label}: parse_grammar failed: {e:?}"));
                 assert_eq!(grammar.dialect, dsl::SemioDialect::Grammar, "{label}: expected grammar dialect");
@@ -910,7 +910,7 @@ mod tests {
         /// `m5_handcrafted_grammar_conformance`'s own `dsl_body_from_fixture` uses, so this is a
         /// direct proof this artifact will pass that harness once graduated, not merely an analogue.
         #[test]
-        fn grammar_conformance_law() {
+        async fn grammar_conformance_law() {
             let grammar = dsl::parse_grammar(snapshot::text::COMPONENT_GRAMMAR_SEMIO).expect("parse snapshot grammar");
             let recognizer = dsl::Recognizer::compile(&grammar);
             let text = store::ArtifactDsl::print_dsl(&crate::artifacts::gltf::engine::demo_gltf_snapshot());
@@ -922,7 +922,7 @@ mod tests {
         /// ✅️ `ops_grammar_conformance_law`: the mutations grammar recognizes the canonical generic
         /// envelope, independently of the registered command payload shape.
         #[test]
-        fn ops_grammar_conformance_law() {
+        async fn ops_grammar_conformance_law() {
             let grammar = dsl::parse_grammar(mutation_transport::text::COMPONENT_GRAMMAR_SEMIO).expect("parse mutations grammar");
             let recognizer = dsl::Recognizer::compile(&grammar);
             let forward = alpha_mode_mutation();
@@ -934,7 +934,7 @@ mod tests {
         }
 
         #[test]
-        fn generic_envelope_registry_and_transport_laws() {
+        async fn generic_envelope_registry_and_transport_laws() {
             let mutation = alpha_mode_mutation();
             assert!(registered_gltf_mutation_command_ids().expect("valid immutable mutation registry").contains(&mutation::ID));
             assert!(matches!(GltfMutation::new("s.stdio.gltf.mutation.unknown.v1", 1, Vec::new()), Err(GltfMutationRegistryError::UnknownCommand(_))));
@@ -954,7 +954,7 @@ mod tests {
         /// for every representative `GltfDiff` (`diff::demo_diff_cases()`), incl. the empty
         /// (all-`None`) diff and the fully-populated rich diff.
         #[test]
-        fn diff_grammar_conformance_law() {
+        async fn diff_grammar_conformance_law() {
             let grammar = dsl::parse_grammar(diff::text::COMPONENT_GRAMMAR_SEMIO).expect("parse diff grammar");
             let recognizer = dsl::Recognizer::compile(&grammar);
             for d in diff::demo_diff_cases() {
@@ -968,7 +968,7 @@ mod tests {
         /// `m5_handcrafted_protocol_conformance` itself feeds `walk_protocol`), a generic mutation
         /// envelope's `encode_op`, and every demo diff's `encode_diff` — asserting `consumed == bytes.len()`.
         #[test]
-        fn protocol_walk_law() {
+        async fn protocol_walk_law() {
             let pack_spec = dsl::parse_protocol(snapshot::binary::COMPONENT_PROTOCOL_SEMIO).expect("parse snapshot protocol");
             let packed = store::ArtifactPack::encode_pack(&crate::artifacts::gltf::engine::demo_gltf_snapshot());
             let (_, inner) = store::semio_format::unwrap_binary(&packed).expect("unwrap semio envelope");
@@ -998,7 +998,7 @@ mod tests {
         /// fixtures can never silently drift back to a fake (the pre-FG3 `{"hello":"stdio.gltf",
         /// "n":1}` stub this program's own recipe explicitly calls out as the wrong shape).
         #[test]
-        fn fixture_honesty_law() {
+        async fn fixture_honesty_law() {
             const FIXTURE_DSL: &str = include_str!("../📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio");
             const FIXTURE_PACK: &[u8] = include_bytes!("../📚️examples/🎬️demo/🖼️assets/🎒️example.pack.semio");
 
@@ -1033,7 +1033,7 @@ pub mod io_registry {
 
     static ENTRIES: OnceLock<Vec<ComposerEntry>> = OnceLock::new();
 
-    pub fn entries() -> &'static [ComposerEntry] {
+    pub async fn entries() -> &'static [ComposerEntry] {
         ENTRIES.get_or_init(|| vec![composer_entry_of::<GltfRawAnyComposer>()]).as_slice()
     }
 }

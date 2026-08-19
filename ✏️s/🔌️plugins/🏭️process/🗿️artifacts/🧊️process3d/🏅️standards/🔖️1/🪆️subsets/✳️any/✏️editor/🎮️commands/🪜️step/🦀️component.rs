@@ -26,7 +26,7 @@ pub mod add_step {
         pub position: Option<[f64; 3]>,
     }
 
-    pub fn handle(payload: &AddStep, doc: &ArtifactView<'_, Process3dSnapshot>, _cfg: &ConfigView<'_, Process3dConfig>, _ctx: &mut crate::editor::process3d::Process3dDispatchCtx) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
+    pub async fn handle(payload: &AddStep, doc: &ArtifactView<'_, Process3dSnapshot>, _cfg: &ConfigView<'_, Process3dConfig>, _ctx: &mut crate::editor::process3d::Process3dDispatchCtx) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
         let fixture = doc.snapshot;
         let resolved = if let (Some(machine_id), Some(capability_id)) = (payload.machine_id.as_deref(), payload.capability_id.as_deref()) {
             find_capability(&fixture.workshop, machine_id, capability_id).map(|(machine, capability)| (machine.clone(), capability.clone()))
@@ -64,7 +64,7 @@ pub mod remove_step {
         pub id: String,
     }
 
-    pub fn handle(payload: &RemoveStep, doc: &ArtifactView<'_, Process3dSnapshot>, _cfg: &ConfigView<'_, Process3dConfig>, _ctx: &mut crate::editor::process3d::Process3dDispatchCtx) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
+    pub async fn handle(payload: &RemoveStep, doc: &ArtifactView<'_, Process3dSnapshot>, _cfg: &ConfigView<'_, Process3dConfig>, _ctx: &mut crate::editor::process3d::Process3dDispatchCtx) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
         let fixture = doc.snapshot;
         match remove_step_mutations(fixture, &payload.id) {
             Some(operations) => Ok(Emit { artifact_mutations: operations, ..Default::default() }),
@@ -86,7 +86,7 @@ pub mod remove_selected_step {
     /// reads the framework-owned `"geometry"` domain selection (threaded through `ctx.interaction`
     /// by `Process3dPlayApp::handle`, since `dispatch`'s per-payload `handle` never sees
     /// `InteractionView` directly) instead of the deleted `Process3dConfig::selected_id`.
-    pub fn handle(_payload: &RemoveSelectedStep, doc: &ArtifactView<'_, Process3dSnapshot>, _cfg: &ConfigView<'_, Process3dConfig>, ctx: &mut crate::editor::process3d::Process3dDispatchCtx) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
+    pub async fn handle(_payload: &RemoveSelectedStep, doc: &ArtifactView<'_, Process3dSnapshot>, _cfg: &ConfigView<'_, Process3dConfig>, ctx: &mut crate::editor::process3d::Process3dDispatchCtx) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
         let fixture = doc.snapshot;
         match ctx.interaction.ids.first() {
             Some(id) => match remove_step_mutations(fixture, id) {
@@ -115,7 +115,7 @@ pub mod move_step {
     /// `payload.id` exists before emitting; `ReorderSteps` is itself a documented no-op regardless
     /// (see its `🔺️diff/🦀️component.rs`), so the existence check is dropped honestly rather than
     /// faked.
-    pub fn handle(payload: &MoveStep, doc: &ArtifactView<'_, Process3dSnapshot>, _cfg: &ConfigView<'_, Process3dConfig>, _ctx: &mut crate::editor::process3d::Process3dDispatchCtx) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
+    pub async fn handle(payload: &MoveStep, doc: &ArtifactView<'_, Process3dSnapshot>, _cfg: &ConfigView<'_, Process3dConfig>, _ctx: &mut crate::editor::process3d::Process3dDispatchCtx) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
         let _ = doc;
         Ok(Emit::mutations(vec![Process3dMutation::ReorderSteps(ReorderSteps { id: payload.id.clone(), to_index: payload.index })]))
     }
@@ -143,7 +143,7 @@ pub mod update_step {
     /// HANDLE now (see `ProcessWorkingScene`'s doc comment) — this can no longer read the existing
     /// step to diff against, so it always emits all four targeted mutations unconditionally
     /// (each is itself a documented no-op regardless — see their `🔺️diff/🦀️component.rs` files).
-    pub fn handle(payload: &UpdateStep, doc: &ArtifactView<'_, Process3dSnapshot>, _cfg: &ConfigView<'_, Process3dConfig>, _ctx: &mut crate::editor::process3d::Process3dDispatchCtx) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
+    pub async fn handle(payload: &UpdateStep, doc: &ArtifactView<'_, Process3dSnapshot>, _cfg: &ConfigView<'_, Process3dConfig>, _ctx: &mut crate::editor::process3d::Process3dDispatchCtx) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
         let _ = doc;
         let step: ProcessStep = serde_json::from_str(&payload.step_json).map_err(|e| Fault::from(e.to_string()))?;
         let operations = vec![
@@ -170,7 +170,7 @@ pub mod set_step_enabled {
 
     /// 🌉️ Ticket 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM wave 4: see `MoveStep::handle`'s doc
     /// comment — same composed-`steps`-handle gap, same documented-no-op mutation regardless.
-    pub fn handle(payload: &SetStepEnabled, doc: &ArtifactView<'_, Process3dSnapshot>, _cfg: &ConfigView<'_, Process3dConfig>, _ctx: &mut crate::editor::process3d::Process3dDispatchCtx) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
+    pub async fn handle(payload: &SetStepEnabled, doc: &ArtifactView<'_, Process3dSnapshot>, _cfg: &ConfigView<'_, Process3dConfig>, _ctx: &mut crate::editor::process3d::Process3dDispatchCtx) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
         let _ = doc;
         Ok(Emit::mutations(vec![Process3dMutation::ChangeStepEnabled(ChangeStepEnabled { id: payload.id.clone(), new_enabled: payload.enabled })]))
     }

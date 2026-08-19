@@ -9,21 +9,21 @@ use semio_framework_plugin::ExampleSource;
 use std::sync::OnceLock;
 
 //#region 🔖️Examples
-fn examples() -> &'static [ExampleSource] {
+async fn examples() -> &'static [ExampleSource] {
     static EXAMPLES: OnceLock<Vec<ExampleSource>> = OnceLock::new();
     EXAMPLES.get_or_init(|| vec![crate::artifacts::writer::examples::demo::source()]).as_slice()
 }
 //#endregion 🔖️Examples
 
 //#region 🔖️Inferences
-fn inference_descriptors() -> &'static [::schema::ArtifactInferenceDescriptor] {
+async fn inference_descriptors() -> &'static [::schema::ArtifactInferenceDescriptor] {
     static DESCRIPTORS: OnceLock<Vec<::schema::ArtifactInferenceDescriptor>> = OnceLock::new();
     DESCRIPTORS.get_or_init(|| vec![schema::inferences::writer_artifact_inference_descriptor()]).as_slice()
 }
 //#endregion 🔖️Inferences
 
 //#region 🔖️Subset
-pub fn subset() -> SubsetDeclaration {
+pub async fn subset() -> SubsetDeclaration {
     SubsetDeclaration {
         dialect: crate::artifacts::writer::WRITER_DIALECT,
         schema: SchemaDeclaration { descriptor: schema::writer_artifact_schema_descriptor(), inferences: inference_descriptors(), inference_services: Vec::new() },
@@ -40,12 +40,12 @@ mod tests {
     use super::*;
 
     #[test]
-    fn subset_dialect_is_the_canonical_writer_dialect() {
+    async fn subset_dialect_is_the_canonical_writer_dialect() {
         assert_eq!(subset().dialect, crate::artifacts::writer::WRITER_DIALECT);
     }
 
     #[test]
-    fn subset_declares_ten_io_entries() {
+    async fn subset_declares_ten_io_entries() {
         assert_eq!(subset().io.entries.len(), 10);
     }
 }

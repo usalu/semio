@@ -10,13 +10,13 @@ pub const REMODEL_PLAY_BODY_RESULTS: &str = "remodel.play.results";
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
-pub fn definition() -> PanelTabDefinition {
+pub async fn definition() -> PanelTabDefinition {
     PanelTabDefinition { kind: PanelTabKind::App(REMODEL_PANEL_RESULTS_ID.into()), label: LocalizedLabel::native("Results", "Ergebnisse"), group: PanelGroup::Workbench, body_key: Some(REMODEL_PLAY_BODY_RESULTS.into()), children: Vec::new() }
 }
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(scene: &RemodelSnapshot, labels: &RemodelLabels) -> UiNode {
+pub async fn render(scene: &RemodelSnapshot, labels: &RemodelLabels) -> UiNode {
     let results = &scene.results;
     // 🧩️ `results.mesh.mesh` is a composed CHILD handle now — reads real vertex/triangle counts
     // through `remodel_mesh_workspace`'s working-scene cache; a cold cache reports 0/0 rather than
@@ -39,7 +39,7 @@ mod tests {
     use crate::editor::remodel::testkit::{app, render as render_body};
 
     #[test]
-    fn a_fresh_document_reports_no_sparse_dense_trajectory_or_geo_products() {
+    async fn a_fresh_document_reports_no_sparse_dense_trajectory_or_geo_products() {
         let mut app = app();
         let body = render_body(&mut app, REMODEL_PLAY_BODY_RESULTS);
         assert_eq!(body.matches("none").count(), 4, "sparse/dense/trajectory/geo all report 'none': {body}");

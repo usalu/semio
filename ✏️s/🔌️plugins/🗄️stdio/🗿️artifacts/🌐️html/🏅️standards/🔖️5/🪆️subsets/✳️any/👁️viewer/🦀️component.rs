@@ -20,10 +20,10 @@ pub enum HtmlViewCommand {
 }
 
 impl protocol::OpBinary for HtmlViewCommand {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         Ok(Vec::new())
     }
-    fn decode_op(_bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    async fn decode_op(_bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         Ok(HtmlViewCommand::Noop)
     }
 }
@@ -47,15 +47,15 @@ impl ArtifactViewer for HtmlViewer {
     const DIALECT: Dialect = HTML_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = STDIO_HTML_DOCUMENT_SCHEMA;
 
-    fn initial_snapshot() -> Self::Snapshot {
+    async fn initial_snapshot() -> Self::Snapshot {
         HtmlSnapshot::default()
     }
 
-    fn handle(_command: &Self::Command, _doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _interaction: &semio_framework_plugin::app::InteractionView<'_>, _engines: &EngineHandles) -> Result<ViewEmit<Self::ConfigMutation>, Fault> {
+    async fn handle(_command: &Self::Command, _doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _interaction: &semio_framework_plugin::app::InteractionView<'_>, _engines: &EngineHandles) -> Result<ViewEmit<Self::ConfigMutation>, Fault> {
         Ok(ViewEmit::default())
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> UiNode {
+    async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> UiNode {
         match body_key {
             main::BODY_KEY => main::render(doc.snapshot),
             _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))),
@@ -65,7 +65,7 @@ impl ArtifactViewer for HtmlViewer {
 //#endregion 🔖️Viewer
 
 //#region 🔖️Manifest
-pub fn create_html_viewer() -> semio_framework_plugin::AppDefinition {
+pub async fn create_html_viewer() -> semio_framework_plugin::AppDefinition {
     Viewer::builder(HTML_DIALECT)
         .document(["semio", "html"])
         .icon_id("file-text")
@@ -83,14 +83,14 @@ mod tests {
     use super::*;
 
     #[test]
-    fn create_viewer_builds_a_definition_for_the_viewer_role() {
+    async fn create_viewer_builds_a_definition_for_the_viewer_role() {
         let def = create_html_viewer();
         assert_eq!(def.role, semio_framework::AppRole::Viewer);
         assert_eq!(def.dialect, HTML_DIALECT.into());
     }
 
     #[test]
-    fn viewer_dialect_matches_the_artifact_coordinate() {
+    async fn viewer_dialect_matches_the_artifact_coordinate() {
         assert_eq!(<HtmlViewer as ArtifactViewer>::DIALECT, HTML_DIALECT);
     }
 }

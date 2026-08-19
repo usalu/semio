@@ -24,19 +24,19 @@ pub struct En1996Inference {
 }
 
 impl protocol::Inference<En1996Snapshot> for En1996Inference {
-    fn infer(snapshot: &En1996Snapshot) -> Self {
+    async fn infer(snapshot: &En1996Snapshot) -> Self {
         Self { outline: En1996Outline::compute(snapshot) }
     }
 }
 
 impl protocol::InferenceSpec<En1996Snapshot> for En1996Inference {
-    fn inference_schema_id() -> &'static str {
+    async fn inference_schema_id() -> &'static str {
         "s.norm.en1996.inference"
     }
-    fn schema_version() -> u32 {
+    async fn schema_version() -> u32 {
         1
     }
-    fn fields() -> &'static [protocol::InferenceFieldSpec] {
+    async fn fields() -> &'static [protocol::InferenceFieldSpec] {
         &[protocol::InferenceFieldSpec { id: "s.norm.en1996.inference.outline", reads: &[] }]
     }
 }
@@ -52,7 +52,7 @@ impl ArtifactInferrer for crate::artifacts::en1996::standards::v1::subsets::any:
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.norm.en1996.inference`'s facet leaves into the OS-wide inference catalog — call once at
 /// plugin init, alongside `en1996_artifact_schema_descriptor`'s registration.
-pub fn en1996_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
+pub async fn en1996_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
     schema::ArtifactInferenceDescriptor {
         id: "s.norm.en1996.inference",
         inference: schema::FacetLeaves {
@@ -73,13 +73,13 @@ mod tests {
     use protocol::Inference;
 
     #[test]
-    fn inference_determinism_law() {
+    async fn inference_determinism_law() {
         let snapshot = En1996Snapshot::default();
         assert_eq!(En1996Inference::infer(&snapshot), En1996Inference::infer(&snapshot));
     }
 
     #[test]
-    fn inference_default_law() {
+    async fn inference_default_law() {
         assert_eq!(En1996Inference::infer(&En1996Snapshot::default()), En1996Inference::default());
     }
 }
@@ -93,7 +93,7 @@ use crate::artifacts::en1996::standards::v1::subsets::any::schema::{part_1_1, pa
 /// is a pure helper living in the parent `🧬️schema`.
 use crate::document::{CheckReport, DesignSituation};
 
-fn parse_masonry_unit(value: &str) -> MasonryUnit {
+async fn parse_masonry_unit(value: &str) -> MasonryUnit {
     match value.to_ascii_lowercase().as_str() {
         "calcium_silicate" | "calcium silicate" => MasonryUnit::CalciumSilicate,
         "aac" => MasonryUnit::Aac,
@@ -105,12 +105,12 @@ fn parse_masonry_unit(value: &str) -> MasonryUnit {
 /// here (from an inherent `En1996Snapshot::annex_params()` method in the pre-split monolith) because it
 /// constructs the compute-layer `AnnexParams`, which cannot be an inherent impl on the foreign
 /// `crate::artifacts::en1996::En1996Snapshot` type across the crate boundary (Rust's orphan rule).
-pub fn annex_params(document: &En1996Snapshot) -> AnnexParams {
+pub async fn annex_params(document: &En1996Snapshot) -> AnnexParams {
     AnnexParams { annex: document.annex, masonry_class: document.masonry_class, accidental: document.design_situation == DesignSituation::Accidental }
 }
 
 /// 📋️ Full EN 1996 check across flexure, compression, shear, sliding (part 1-1), fire wall (part 1-2), exposure/bed-joint (part 2), and the simplified method (part 3).
-pub fn check_full_masonry(document: &En1996Snapshot) -> CheckReport {
+pub async fn check_full_masonry(document: &En1996Snapshot) -> CheckReport {
     let g_m = annex_params(document).gamma_m();
     let f_d = part_1_1::design_strength_mpa(document.f_k_mpa, g_m);
     let f_vd = part_1_1::shear_design_strength_mpa(document.f_vk_mpa, g_m);
@@ -135,7 +135,7 @@ pub fn check_full_masonry(document: &En1996Snapshot) -> CheckReport {
 
 /// 🧮️ Headless per-document evaluation — the `NormFamily::evaluate` body for `En1996Family` (defined
 /// in the sibling `op` crate, which depends on this `engine` crate to call it).
-pub fn evaluate(document: &En1996Snapshot) -> CheckReport {
+pub async fn evaluate(document: &En1996Snapshot) -> CheckReport {
     check_full_masonry(document)
 }
 
@@ -147,13 +147,13 @@ mod compliance_report_tests {
     use super::*;
 
     #[test]
-    fn full_masonry_worked_example() {
+    async fn full_masonry_worked_example() {
         let report = check_full_masonry(&En1996Snapshot::default());
         assert_eq!(report.checks.len(), 8);
     }
 
     #[test]
-    fn evaluate_runs_all_parts() {
+    async fn evaluate_runs_all_parts() {
         let report = evaluate(&En1996Snapshot::default());
         assert_eq!(report.checks.len(), 8);
     }

@@ -26,19 +26,19 @@ pub struct RewriteInference {
 }
 
 impl protocol::Inference<RewriteSnapshot> for RewriteInference {
-    fn infer(snapshot: &RewriteSnapshot) -> Self {
+    async fn infer(snapshot: &RewriteSnapshot) -> Self {
         Self { bounds: compute_bounds(snapshot) }
     }
 }
 
 impl protocol::InferenceSpec<RewriteSnapshot> for RewriteInference {
-    fn inference_schema_id() -> &'static str {
+    async fn inference_schema_id() -> &'static str {
         "s.trinity.rewrite.inference"
     }
-    fn schema_version() -> u32 {
+    async fn schema_version() -> u32 {
         1
     }
-    fn fields() -> &'static [protocol::InferenceFieldSpec] {
+    async fn fields() -> &'static [protocol::InferenceFieldSpec] {
         &[protocol::InferenceFieldSpec { id: "s.trinity.rewrite.inference.bounds", reads: &["rule_layout"] }]
     }
 }
@@ -56,7 +56,7 @@ impl ArtifactInferrer for crate::artifacts::rewrite::standards::v1::subsets::any
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.trinity.rewrite.inference`'s facet leaves into the OS-wide inference catalog —
 /// call once at plugin init, alongside `rewrite_artifact_schema_descriptor`'s registration.
-pub fn rewrite_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
+pub async fn rewrite_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
     schema::ArtifactInferenceDescriptor {
         id: "s.trinity.rewrite.inference",
         inference: schema::FacetLeaves {
@@ -79,7 +79,7 @@ mod tests {
     use std::collections::BTreeMap;
 
     //#region 🧸️Fixtures
-    fn two_point_snapshot() -> RewriteSnapshot {
+    async fn two_point_snapshot() -> RewriteSnapshot {
         let mut rule_layout = BTreeMap::new();
         rule_layout.insert("a".to_string(), LayoutPoint { x: 0.0, y: 0.0 });
         rule_layout.insert("b".to_string(), LayoutPoint { x: -140.0, y: 80.0 });
@@ -89,18 +89,18 @@ mod tests {
 
     //#region 🧪️InferenceLaws
     #[test]
-    fn inference_determinism_law() {
+    async fn inference_determinism_law() {
         let snapshot = two_point_snapshot();
         assert_eq!(RewriteInference::infer(&snapshot), RewriteInference::infer(&snapshot));
     }
 
     #[test]
-    fn inference_default_law() {
+    async fn inference_default_law() {
         assert_eq!(RewriteInference::infer(&RewriteSnapshot::default()), RewriteInference::default());
     }
 
     #[test]
-    fn inference_bounds_matches_rule_layout_extents() {
+    async fn inference_bounds_matches_rule_layout_extents() {
         let snapshot = two_point_snapshot();
         let inferred = RewriteInference::infer(&snapshot);
         assert_eq!(inferred.bounds.node_count, 2);

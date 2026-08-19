@@ -7,7 +7,7 @@ use neural_engine::{channel_output, Atom, ChannelSpec, Dictionary, EvalError, Op
 pub struct Pack;
 
 impl Operator for Pack {
-    fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
+    async fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         Ok(channel_output("dictionary", Dictionary::with_schema("dictionary").merge(input)))
     }
 }
@@ -18,7 +18,7 @@ impl Operator for Pack {
 pub struct Unpack;
 
 impl Operator for Unpack {
-    fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
+    async fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         Ok(channel_output("dictionary", read_dict(input, "dictionary")?.clone()))
     }
 }
@@ -29,7 +29,7 @@ impl Operator for Unpack {
 pub struct Get;
 
 impl Operator for Get {
-    fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
+    async fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         let dict = read_dict(input, "dictionary")?;
         let key = read_channel_text(input, "key")?;
         match dict.get(&key).cloned().ok_or(EvalError::MissingInput(key))? {
@@ -45,7 +45,7 @@ impl Operator for Get {
 pub struct Set;
 
 impl Operator for Set {
-    fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
+    async fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         let dict = read_dict(input, "dictionary")?;
         let key = read_channel_text(input, "key")?;
         let value = input.get("value").cloned().ok_or_else(|| EvalError::MissingInput("value".into()))?;
@@ -59,7 +59,7 @@ impl Operator for Set {
 pub struct Remove;
 
 impl Operator for Remove {
-    fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
+    async fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         let dict = read_dict(input, "dictionary")?;
         let key = read_channel_text(input, "key")?;
         Ok(channel_output("dictionary", remove_key(dict, &key)))
@@ -72,7 +72,7 @@ impl Operator for Remove {
 pub struct Has;
 
 impl Operator for Has {
-    fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
+    async fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         let dict = read_dict(input, "dictionary")?;
         let key = read_channel_text(input, "key")?;
         Ok(channel_output("exists", boolean_dictionary(dict.get(&key).is_some())))
@@ -85,7 +85,7 @@ impl Operator for Has {
 pub struct Keys;
 
 impl Operator for Keys {
-    fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
+    async fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         Ok(channel_output("keys", text_dictionary(read_dict(input, "dictionary")?.keys().map(String::as_str).filter(|key| *key != "$schema").collect::<Vec<_>>().join(","))))
     }
 }
@@ -96,7 +96,7 @@ impl Operator for Keys {
 pub struct Size;
 
 impl Operator for Size {
-    fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
+    async fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         let count = read_dict(input, "dictionary")?.keys().filter(|key| key.as_str() != "$schema").count();
         Ok(channel_output("count", number_dictionary(count as f64)))
     }
@@ -108,7 +108,7 @@ impl Operator for Size {
 pub struct Merge;
 
 impl Operator for Merge {
-    fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
+    async fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         let items = read_dict(input, "items")?;
         let mut indices: Vec<usize> = items.keys().filter_map(|key| key.parse::<usize>().ok()).collect();
         indices.sort_unstable();
@@ -125,35 +125,35 @@ impl Operator for Merge {
 // #endregion 🔖️Merge
 
 // #region 🔖️Helpers
-fn read_dict<'a>(input: &'a Dictionary, key: &str) -> Result<&'a Dictionary, EvalError> {
+async fn read_dict<'a>(input: &'a Dictionary, key: &str) -> Result<&'a Dictionary, EvalError> {
     input.get(key).and_then(|v| v.as_dictionary()).ok_or_else(|| EvalError::MissingInput(key.into()))
 }
 
-fn read_channel_text(input: &Dictionary, key: &str) -> Result<String, EvalError> {
+async fn read_channel_text(input: &Dictionary, key: &str) -> Result<String, EvalError> {
     input.get(key).and_then(|v| v.as_dictionary()).and_then(|d| d.get("value")).and_then(|v| v.as_atom()).and_then(|a| a.as_str()).map(str::to_string).ok_or_else(|| EvalError::MissingInput(key.into()))
 }
 
-fn text_dictionary(value: String) -> Dictionary {
+async fn text_dictionary(value: String) -> Dictionary {
     Dictionary::with_schema("text").insert("value", Value::Atom(Atom::String(value)))
 }
 
-fn number_dictionary(value: f64) -> Dictionary {
+async fn number_dictionary(value: f64) -> Dictionary {
     Dictionary::with_schema("number").insert("value", Value::Atom(Atom::Decimal(value)))
 }
 
-fn boolean_dictionary(value: bool) -> Dictionary {
+async fn boolean_dictionary(value: bool) -> Dictionary {
     Dictionary::with_schema("boolean").insert("value", Value::Atom(Atom::Boolean(value)))
 }
 
-fn dict_channel(id: &str, operator_id: &str) -> ChannelSpec {
+async fn dict_channel(id: &str, operator_id: &str) -> ChannelSpec {
     ChannelSpec::dictionary(id, &[operator_id])
 }
 
-fn text_channel(id: &str, operator_id: &str) -> ChannelSpec {
+async fn text_channel(id: &str, operator_id: &str) -> ChannelSpec {
     ChannelSpec::text_default(id, "", &[operator_id])
 }
 
-fn remove_key(dict: &Dictionary, key: &str) -> Dictionary {
+async fn remove_key(dict: &Dictionary, key: &str) -> Dictionary {
     let mut out = Dictionary::with_schema(dict.schema().unwrap_or("dictionary"));
     for k in dict.keys() {
         if k.as_str() == key || k.as_str() == "$schema" {
@@ -166,18 +166,18 @@ fn remove_key(dict: &Dictionary, key: &str) -> Dictionary {
     out
 }
 
-fn info(id: &str, name: &str, summary: &str, inputs: Vec<ChannelSpec>, output: ChannelSpec) -> OperatorInfo {
+async fn info(id: &str, name: &str, summary: &str, inputs: Vec<ChannelSpec>, output: ChannelSpec) -> OperatorInfo {
     OperatorInfo { id: id.into(), extension: "dictionary".into(), name: name.into(), abbreviation: name.into(), icon: "emoji:📚️".into(), summary: summary.into(), inputs, outputs: vec![output], ..Default::default() }
 }
 
-fn register_simple(registry: &mut Registry, info: OperatorInfo, operation: Box<dyn Operator>, schemas: Vec<&str>, produces: &[&str]) {
+async fn register_simple(registry: &mut Registry, info: OperatorInfo, operation: Box<dyn Operator>, schemas: Vec<&str>, produces: &[&str]) {
     registry.register_operator(info, vec![OperatorImpl { schemas: schemas.into_iter().map(str::to_string).collect(), operator: operation }], produces);
 }
 
 // #endregion 🔖️Helpers
 
 /// 📦️ Registers all dictionary operators.
-pub fn register(registry: &mut Registry) {
+pub async fn register(registry: &mut Registry) {
     register_simple(registry, info("dictionary.pack", "Pack", "Wraps input as a dictionary", vec![ChannelSpec::wildcard()], ChannelSpec::named("D", "Dic", "dictionary", "PackedDictionary")), Box::new(Pack), vec![], &["dictionary"]);
     register_simple(
         registry,
@@ -248,13 +248,13 @@ pub fn register(registry: &mut Registry) {
 
 // #region 🔖️Manifest
 /// 📦️ Flow extension manifest JSON contributed to host catalogues.
-pub fn extension_manifest_json() -> String {
+pub async fn extension_manifest_json() -> String {
     use flow_extension_sdk::{build_manifest_json, FlowExtensionCommand};
     build_manifest_json("dictionary", "Dictionary", "0.1.0", &module_registry(), vec!["onStartup".into()], vec![], vec![FlowExtensionCommand { id: "dictionary.showHelp".into(), title: "Dictionary: Show Help".into() }], vec![])
 }
 
 /// 🌊️ Builds an in-process operator registry for this extension.
-pub fn module_registry() -> Registry {
+pub async fn module_registry() -> Registry {
     let mut registry = Registry::new();
     register(&mut registry);
     registry
@@ -267,12 +267,12 @@ mod tests {
     use super::*;
     use flow_extension_sdk::{build_manifest_json, evaluate_json, FlowExtensionCommand};
 
-    fn sample_dict() -> Dictionary {
+    async fn sample_dict() -> Dictionary {
         Dictionary::with_schema("dictionary").insert("number", Value::Dictionary(number_dictionary(3.0))).insert("text", Value::Dictionary(text_dictionary("hi".into())))
     }
 
     #[test]
-    fn get_reads_value() {
+    async fn get_reads_value() {
         let mut reg = Registry::new();
         register(&mut reg);
         let input = Dictionary::new().insert("dictionary", Value::Dictionary(sample_dict())).insert("key", Value::Dictionary(text_dictionary("number".into())));
@@ -282,7 +282,7 @@ mod tests {
     }
 
     #[test]
-    fn set_inserts_key() {
+    async fn set_inserts_key() {
         let mut reg = Registry::new();
         register(&mut reg);
         let input = Dictionary::new().insert("dictionary", Value::Dictionary(Dictionary::with_schema("dictionary"))).insert("key", Value::Dictionary(text_dictionary("text".into()))).insert("value", Value::Dictionary(text_dictionary("new".into())));
@@ -292,7 +292,7 @@ mod tests {
     }
 
     #[test]
-    fn merge_combines_dicts() {
+    async fn merge_combines_dicts() {
         let mut reg = Registry::new();
         register(&mut reg);
         let items = Dictionary::new()
@@ -306,13 +306,13 @@ mod tests {
     }
 
     #[test]
-    fn manifest_lists_dictionary_operators() {
+    async fn manifest_lists_dictionary_operators() {
         let json = build_manifest_json("dictionary", "Dictionary", "0.1.0", &module_registry(), vec!["onStartup".into()], vec![], vec![FlowExtensionCommand { id: "dictionary.showHelp".into(), title: "Dictionary: Show Help".into() }], vec![]);
         assert!(json.contains("dictionary.get"));
     }
 
     #[test]
-    fn evaluate_json_pack() {
+    async fn evaluate_json_pack() {
         let out_json = evaluate_json(&module_registry(), "dictionary.pack", &serde_json::to_string(&sample_dict()).unwrap());
         let out: Dictionary = serde_json::from_str(&out_json).unwrap();
         let dictionary = out.get("dictionary").and_then(|v| v.as_dictionary()).expect("dictionary channel");
@@ -343,7 +343,7 @@ mod extension_guest {
         input_json: String,
     }
 
-    fn flow_extension_contribution(app_id: &str, manifest_json: String) -> serde_json::Value {
+    async fn flow_extension_contribution(app_id: &str, manifest_json: String) -> serde_json::Value {
         let icon_id = "dictionary";
         let topic_payload = serde_json::json!({
             "appId": app_id,
@@ -355,7 +355,7 @@ mod extension_guest {
         topic_payload
     }
 
-    fn bundle() -> ExtensionBundle {
+    async fn bundle() -> ExtensionBundle {
         let manifest_json = extension_manifest_json();
         let flow_topic_payload = flow_extension_contribution(FLOW_APP_ID, manifest_json.clone());
         let procedural3d_topic_payload = flow_extension_contribution(PROCEDURAL3D_APP_ID, manifest_json);

@@ -16,7 +16,7 @@ pub const ENTRY_NODE_PREFIX: &str = "entry:";
 
 //#region 🔖️Definition
 /// 🧱️ Stitched into the viewer manifest by `crate::viewer::zip::iso21320::create_zip_iso21320_viewer`.
-pub fn definition() -> WindowKindDefinition {
+pub async fn definition() -> WindowKindDefinition {
     WindowKindDefinition { label: LocalizedLabel::native("Archive", "Archiv"), icon_id: "archive".into(), ..TreeWindowKit::window_kind() }
 }
 //#endregion 🔖️Definition
@@ -24,7 +24,7 @@ pub fn definition() -> WindowKindDefinition {
 //#region 🔖️Render
 /// 👁️ Pure `ZipSnapshot -> UiNode` read: root = the archive comment, one leaf per entry labeled
 /// `"{name} ({n} bytes)"`, no edit affordances.
-pub fn render(document: &ZipSnapshot) -> UiNode {
+pub async fn render(document: &ZipSnapshot) -> UiNode {
     let children = document.entries.iter().enumerate().map(|(index, entry)| TreeNodeView { id: format!("{ENTRY_NODE_PREFIX}{index}"), label: format!("{} ({} bytes)", entry.name, entry.data.len()), children: Vec::new() }).collect();
     let root = TreeNodeView { id: COMMENT_NODE_ID.into(), label: format!("Comment: {}", document.comment), children };
     TreeWindowKit::render(&TreeView { roots: vec![root] })
@@ -38,7 +38,7 @@ mod tests {
     use crate::artifacts::zip::schema::snapshot::ZipEntry;
 
     #[test]
-    fn definition_declares_a_read_only_tree_window() {
+    async fn definition_declares_a_read_only_tree_window() {
         let def = definition();
         assert_eq!(def.id, WINDOW_KIND_ID);
         assert_eq!(def.body_key, BODY_KEY);
@@ -46,7 +46,7 @@ mod tests {
     }
 
     #[test]
-    fn render_lists_the_comment_root_and_one_leaf_per_entry() {
+    async fn render_lists_the_comment_root_and_one_leaf_per_entry() {
         let document = ZipSnapshot { entries: vec![ZipEntry { name: "a.txt".into(), data: b"hi".to_vec() }], comment: "an archive".into(), ..ZipSnapshot::default() };
         let UiNode::Tree(node) = render(&document) else { panic!("expected Tree") };
         let root = &node.sections[0].items[0];

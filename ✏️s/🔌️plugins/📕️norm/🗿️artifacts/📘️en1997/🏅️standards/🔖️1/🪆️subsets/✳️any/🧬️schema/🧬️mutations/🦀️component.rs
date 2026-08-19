@@ -80,7 +80,7 @@ impl En1997Mutation {
     /// persistent field — the closed-vocabulary replacement for the banned whole-document-replace
     /// variant, used by `import_media`'s `"model:in"` port and the `set-snapshot` app command to
     /// bundle a bulk document replacement into a single atomic `Emit::commit`.
-    pub fn from_snapshot(snapshot: &En1997Snapshot) -> Vec<En1997Mutation> {
+    pub async fn from_snapshot(snapshot: &En1997Snapshot) -> Vec<En1997Mutation> {
         let mut mutations = Vec::with_capacity(22);
         mutations.push(En1997Mutation::ChangeVEdKn(change_v_ed_kn::mutation::ChangeVEdKn { new_v_ed_kn: snapshot.v_ed_kn.clone() }));
         mutations.push(En1997Mutation::ChangeHEdKn(change_h_ed_kn::mutation::ChangeHEdKn { new_h_ed_kn: snapshot.h_ed_kn.clone() }));
@@ -118,7 +118,7 @@ mod tests {
 
     /// ⚖️ One value per `En1997Mutation` variant — the closed set the semantics/round-trip
     /// tests iterate.
-    fn every_mutation() -> Vec<En1997Mutation> {
+    async fn every_mutation() -> Vec<En1997Mutation> {
         vec![
             En1997Mutation::ChangeVEdKn(change_v_ed_kn::mutation::ChangeVEdKn { new_v_ed_kn: 620.0 }),
             En1997Mutation::ChangeHEdKn(change_h_ed_kn::mutation::ChangeHEdKn { new_h_ed_kn: 95.0 }),
@@ -145,7 +145,7 @@ mod tests {
         ]
     }
 
-    fn round_trip(base: &En1997Snapshot, mutation: &En1997Mutation) -> En1997Snapshot {
+    async fn round_trip(base: &En1997Snapshot, mutation: &En1997Mutation) -> En1997Snapshot {
         let forward = vcs::apply_mutation(base, mutation)
             .expect("valid mutation")
             .0;
@@ -160,7 +160,7 @@ mod tests {
     }
 
     #[test]
-    fn every_variant_registers_an_approved_semantic_descriptor() {
+    async fn every_variant_registers_an_approved_semantic_descriptor() {
         for mutation in every_mutation() {
             let descriptor = protocol::SemanticMutation::semantics(&mutation);
             assert!(protocol::is_approved_verb(descriptor.verb), "unapproved verb {:?} on {mutation:?}", descriptor.verb);
@@ -169,7 +169,7 @@ mod tests {
     }
 
     #[test]
-    fn every_variant_round_trips_via_inverse() {
+    async fn every_variant_round_trips_via_inverse() {
         let base = En1997Snapshot::default();
         for mutation in every_mutation() {
             round_trip(&base, &mutation);
@@ -177,7 +177,7 @@ mod tests {
     }
 
     #[test]
-    fn from_snapshot_round_trips_via_full_document_replacement() {
+    async fn from_snapshot_round_trips_via_full_document_replacement() {
         let base = En1997Snapshot::default();
         let mut target = En1997Snapshot::default();
         let _ = &mut target;
@@ -195,7 +195,7 @@ mod tests {
     /// (reachable here as `protocol::os_spr::testkit`), exercised against three structurally distinct
     /// variants.
     #[test]
-    fn change_annex_satisfies_the_inverse_and_absorb_laws() {
+    async fn change_annex_satisfies_the_inverse_and_absorb_laws() {
         let base = En1997Snapshot::default();
         let mutation = En1997Mutation::ChangeAnnex(change_annex::mutation::ChangeAnnex { new_annex: crate::document::AnnexChoice::En });
         protocol::os_spr::testkit::assert_mutation_inverse_law(&base, &mutation);
@@ -204,7 +204,7 @@ mod tests {
         protocol::os_spr::testkit::assert_mutation_diff_absorb_law(&base, d1, d2);
     }
     #[test]
-    fn change_v_ed_kn_satisfies_the_inverse_and_absorb_laws() {
+    async fn change_v_ed_kn_satisfies_the_inverse_and_absorb_laws() {
         let base = En1997Snapshot::default();
         let mutation = En1997Mutation::ChangeVEdKn(change_v_ed_kn::mutation::ChangeVEdKn { new_v_ed_kn: 620.0 });
         protocol::os_spr::testkit::assert_mutation_inverse_law(&base, &mutation);
@@ -213,7 +213,7 @@ mod tests {
         protocol::os_spr::testkit::assert_mutation_diff_absorb_law(&base, d1, d2);
     }
     #[test]
-    fn change_design_approach_satisfies_the_inverse_and_absorb_laws() {
+    async fn change_design_approach_satisfies_the_inverse_and_absorb_laws() {
         let base = En1997Snapshot::default();
         let mutation = En1997Mutation::ChangeDesignApproach(change_design_approach::mutation::ChangeDesignApproach { new_design_approach: "da2".to_string() });
         protocol::os_spr::testkit::assert_mutation_inverse_law(&base, &mutation);

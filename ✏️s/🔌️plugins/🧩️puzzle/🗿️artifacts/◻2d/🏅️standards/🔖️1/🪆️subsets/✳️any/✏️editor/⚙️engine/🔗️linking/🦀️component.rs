@@ -15,7 +15,7 @@ mod tests {
     use serde_json::json;
 
     #[test]
-    fn board_host_node_drag_proximity_connect_overlapping_compatible_handles() {
+    async fn board_host_node_drag_proximity_connect_overlapping_compatible_handles() {
         let mut h = BoardHost::new();
         h.set_size(800, 600, 1.0);
         set_detail_lod(&mut h);
@@ -36,7 +36,7 @@ mod tests {
     }
 
     #[test]
-    fn board_host_node_drag_skips_proximity_when_moving_node_has_incident_edge() {
+    async fn board_host_node_drag_skips_proximity_when_moving_node_has_incident_edge() {
         let mut h = BoardHost::new();
         h.set_size(800, 600, 1.0);
         set_detail_lod(&mut h);
@@ -54,7 +54,7 @@ mod tests {
     }
 
     #[test]
-    fn board_host_link_drag_snap_emits_edge_create() {
+    async fn board_host_link_drag_snap_emits_edge_create() {
         let mut h = BoardHost::new();
         h.set_size(800, 600, 1.0);
         set_detail_lod(&mut h);
@@ -79,7 +79,7 @@ mod tests {
     }
 
     #[test]
-    fn board_host_link_drag_snap_micro_zoom_rectangle_compatible_handles() {
+    async fn board_host_link_drag_snap_micro_zoom_rectangle_compatible_handles() {
         let mut h = BoardHost::new();
         h.set_size(800, 600, 1.0);
         set_micro_lod(&mut h);
@@ -193,7 +193,7 @@ mod tests {
     }
 
     #[test]
-    fn board_host_link_drag_snap_proximity_connect_in_overview_lod() {
+    async fn board_host_link_drag_snap_proximity_connect_in_overview_lod() {
         let mut h = BoardHost::new();
         h.set_size(800, 600, 1.0);
         set_overview_lod(&mut h);
@@ -218,7 +218,7 @@ mod tests {
     }
 
     #[test]
-    fn board_host_parses_mindmap_fixture_without_handles() {
+    async fn board_host_parses_mindmap_fixture_without_handles() {
         let mut h = BoardHost::new_normal();
         let fixture = json!({
             "schema": "reasoning.mindmap.fixture",
@@ -243,7 +243,7 @@ mod tests {
     }
 
     #[test]
-    fn board_host_ingests_edge_and_node_kind_catalog_visual_fields() {
+    async fn board_host_ingests_edge_and_node_kind_catalog_visual_fields() {
         let mut h = BoardHost::new_normal();
         h.set_board_kind_catalogs_from_json(
             &serde_json::json!({
@@ -277,7 +277,7 @@ mod tests {
     }
 
     #[test]
-    fn board_host_sync_descriptor_normal_graph_node_id_edges() {
+    async fn board_host_sync_descriptor_normal_graph_node_id_edges() {
         let mut h = BoardHost::new_normal();
         let desc = SceneDescriptorJson {
             nodes: vec![
@@ -337,7 +337,7 @@ mod tests {
     }
 
     #[test]
-    fn board_host_hidden_handle_blocks_proximity_connect() {
+    async fn board_host_hidden_handle_blocks_proximity_connect() {
         let mut h = BoardHost::new();
         h.set_size(800, 600, 1.0);
         set_detail_lod(&mut h);
@@ -379,7 +379,7 @@ mod tests {
     }
 
     #[test]
-    fn board_host_hidden_node_blocks_indirect_connect() {
+    async fn board_host_hidden_node_blocks_indirect_connect() {
         let mut h = BoardHost::new();
         h.set_size(800, 600, 1.0);
         h.set_camera(0.0, 0.0, 1.0);
@@ -421,7 +421,7 @@ mod tests {
     }
 
     #[test]
-    fn board_host_locked_node_blocks_hit_select() {
+    async fn board_host_locked_node_blocks_hit_select() {
         let mut h = BoardHost::new();
         h.set_size(800, 600, 1.0);
         set_detail_lod(&mut h);
@@ -434,7 +434,7 @@ mod tests {
     }
 
     #[test]
-    fn board_host_locked_handle_blocks_proximity_connect() {
+    async fn board_host_locked_handle_blocks_proximity_connect() {
         let mut h = BoardHost::new();
         h.set_size(800, 600, 1.0);
         set_detail_lod(&mut h);
@@ -476,7 +476,7 @@ mod tests {
     }
 
     #[test]
-    fn board_host_overview_lod_omits_direct_handle_resolve_hit() {
+    async fn board_host_overview_lod_omits_direct_handle_resolve_hit() {
         let mut h = BoardHost::new();
         h.set_size(800, 600, 1.0);
         set_overview_lod(&mut h);
@@ -487,7 +487,7 @@ mod tests {
     }
 
     #[test]
-    fn board_host_link_rejects_incompatible_handle_kind_pairs() {
+    async fn board_host_link_rejects_incompatible_handle_kind_pairs() {
         let mut h = BoardHost::new();
         h.set_size(800, 600, 1.0);
         set_detail_lod(&mut h);
@@ -509,7 +509,7 @@ mod tests {
     }
 
     #[test]
-    fn board_host_link_accepts_matching_handle_kind_pair() {
+    async fn board_host_link_accepts_matching_handle_kind_pair() {
         let mut h = BoardHost::new();
         h.set_size(800, 600, 1.0);
         set_detail_lod(&mut h);
@@ -532,7 +532,7 @@ mod tests {
     }
 
     #[test]
-    fn board_host_normal_lod_prefers_node_at_center_and_handle_off_rim() {
+    async fn board_host_normal_lod_prefers_node_at_center_and_handle_off_rim() {
         let mut h = BoardHost::new();
         h.set_size(800, 600, 1.0);
         h.sync_descriptor(&link_test_scene_no_edge()).unwrap();
@@ -543,7 +543,7 @@ mod tests {
     }
 
     #[test]
-    fn board_host_indirect_ring_resolve_skips_connected_handles() {
+    async fn board_host_indirect_ring_resolve_skips_connected_handles() {
         let mut h = BoardHost::new();
         h.set_size(800, 600, 1.0);
         h.set_camera(0.0, 0.0, 1.0);
@@ -558,7 +558,7 @@ mod tests {
     }
 
     #[test]
-    fn board_host_indirect_sole_compatible_drop_creates_edge_immediately() {
+    async fn board_host_indirect_sole_compatible_drop_creates_edge_immediately() {
         let mut h = BoardHost::new();
         h.set_size(800, 600, 1.0);
         h.set_camera(0.0, 0.0, 1.0);
@@ -585,7 +585,7 @@ mod tests {
     }
 
     #[test]
-    fn board_host_indirect_two_compatible_child_handles_on_target_require_ring_pick() {
+    async fn board_host_indirect_two_compatible_child_handles_on_target_require_ring_pick() {
         let mut h = BoardHost::new();
         h.set_size(800, 600, 1.0);
         h.set_camera(0.0, 0.0, 1.0);
@@ -614,7 +614,7 @@ mod tests {
     }
 
     #[test]
-    fn board_host_indirect_target_click_elsewhere_stops_wire() {
+    async fn board_host_indirect_target_click_elsewhere_stops_wire() {
         let mut h = BoardHost::new();
         h.set_size(800, 600, 1.0);
         h.set_camera(0.0, 0.0, 1.0);
@@ -633,7 +633,7 @@ mod tests {
     }
 
     #[test]
-    fn board_host_indirect_ring_shown_when_node_has_two_free_handles() {
+    async fn board_host_indirect_ring_shown_when_node_has_two_free_handles() {
         let mut h = BoardHost::new();
         h.set_size(800, 600, 1.0);
         h.set_camera(0.0, 0.0, 1.0);
@@ -647,7 +647,7 @@ mod tests {
     }
 
     #[test]
-    fn board_host_indirect_ring_paints_without_rebuilding_world_cache() {
+    async fn board_host_indirect_ring_paints_without_rebuilding_world_cache() {
         let mut h = BoardHost::new();
         h.set_size(800, 600, 1.0);
         h.set_camera(0.0, 0.0, 1.0);
@@ -666,7 +666,7 @@ mod tests {
     }
 
     #[test]
-    fn board_host_link_drag_emits_compatible_nodes_and_target_ring_events() {
+    async fn board_host_link_drag_emits_compatible_nodes_and_target_ring_events() {
         let mut h = BoardHost::new();
         h.set_size(800, 600, 1.0);
         h.set_camera(0.0, 0.0, 1.0);
@@ -693,7 +693,7 @@ mod tests {
     }
 
     #[test]
-    fn board_host_indirect_ring_gap_scales_with_node_across_zoom() {
+    async fn board_host_indirect_ring_gap_scales_with_node_across_zoom() {
         let mut h = BoardHost::new();
         h.set_size(800, 600, 1.0);
         h.sync_descriptor(&link_test_scene_no_edge()).unwrap();
@@ -717,7 +717,7 @@ mod tests {
     }
 
     #[test]
-    fn board_host_indirect_handle_marker_radius_scales_with_node_extent() {
+    async fn board_host_indirect_handle_marker_radius_scales_with_node_extent() {
         let mut h = BoardHost::new();
         h.set_size(800, 600, 1.0);
         h.sync_descriptor(&link_test_scene_no_edge()).unwrap();
@@ -726,7 +726,7 @@ mod tests {
     }
 
     #[test]
-    fn board_host_handle_scale_combines_node_and_kind_scales() {
+    async fn board_host_handle_scale_combines_node_and_kind_scales() {
         let mut h = BoardHost::new();
         h.set_size(800, 600, 1.0);
         h.set_board_kind_catalogs_from_json(
@@ -749,7 +749,7 @@ mod tests {
     }
 
     #[test]
-    fn board_host_link_wire_specificity_allows_when_handle_row_absent() {
+    async fn board_host_link_wire_specificity_allows_when_handle_row_absent() {
         let mut h = BoardHost::new();
         h.set_size(800, 600, 1.0);
         set_detail_lod(&mut h);
@@ -780,7 +780,7 @@ mod tests {
     }
 
     #[test]
-    fn board_host_kind_catalog_accepts_modern_hsl_handle_colors() {
+    async fn board_host_kind_catalog_accepts_modern_hsl_handle_colors() {
         let mut h = BoardHost::new();
         h.set_board_kind_catalogs_from_json(
             &serde_json::json!({
@@ -801,14 +801,14 @@ mod tests {
     }
 
     #[test]
-    fn board_host_rejects_kind_catalog_rows_with_legacy_label() {
+    async fn board_host_rejects_kind_catalog_rows_with_legacy_label() {
         let mut h = BoardHost::new();
         let err = h.set_board_kind_catalogs_from_json(&serde_json::json!({"handleKinds":[{"id":"h","label":"legacy","color":"#112233"}]}).to_string()).unwrap_err();
         assert!(err.to_string().contains("legacy label"));
     }
 
     #[test]
-    fn board_host_link_important_pair_overrides_lower_specificity_filter() {
+    async fn board_host_link_important_pair_overrides_lower_specificity_filter() {
         let mut h = BoardHost::new();
         h.set_size(800, 600, 1.0);
         set_detail_lod(&mut h);
@@ -845,7 +845,7 @@ mod tests {
     }
 
     #[test]
-    fn board_host_link_drag_does_not_snap_when_target_handle_busy() {
+    async fn board_host_link_drag_does_not_snap_when_target_handle_busy() {
         let mut h = BoardHost::new();
         h.set_size(800, 600, 1.0);
         set_detail_lod(&mut h);
@@ -868,7 +868,7 @@ mod tests {
     }
 
     #[test]
-    fn board_host_link_does_not_start_from_busy_source_handle() {
+    async fn board_host_link_does_not_start_from_busy_source_handle() {
         let mut h = BoardHost::new();
         h.set_size(800, 600, 1.0);
         set_detail_lod(&mut h);
@@ -882,7 +882,7 @@ mod tests {
     }
 
     #[test]
-    fn board_host_indirect_does_not_commit_on_busy_target_handle() {
+    async fn board_host_indirect_does_not_commit_on_busy_target_handle() {
         let mut h = BoardHost::new();
         h.set_size(800, 600, 1.0);
         h.set_camera(0.0, 0.0, 1.0);
@@ -912,7 +912,7 @@ mod tests {
     }
 
     #[test]
-    fn board_host_link_short_drag_does_not_emit_edge_create() {
+    async fn board_host_link_short_drag_does_not_emit_edge_create() {
         let mut h = BoardHost::new();
         h.set_size(800, 600, 1.0);
         set_detail_lod(&mut h);

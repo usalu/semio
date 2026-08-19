@@ -36,7 +36,7 @@ pub const PROCEDURAL2D_PLAY_APP_ID: &str = "procedural2d-play";
 
 /// 🎯️ An `ActionDescriptor` addressed at this app — the single factory every taxonomy node's chrome
 /// (`📌️panels/*`) builds its `on_change`/item actions with.
-pub fn procedural2d_action(action: &str, args: Option<Value>) -> ActionDescriptor {
+pub async fn procedural2d_action(action: &str, args: Option<Value>) -> ActionDescriptor {
     semio_framework_plugin::ActionFactory::new(PROCEDURAL2D_PLAY_APP_ID).action(action, args)
 }
 //#endregion 🔖️Constants
@@ -46,7 +46,7 @@ pub fn procedural2d_action(action: &str, args: Option<Value>) -> ActionDescripto
 /// `.artifact_kind(...)` document schema/media type verbatim, plus two workflow ports: `params:in`
 /// (generic Data×Value parametric input) and `drawing:out` (TwoD×Vector, tagged with draw's already-
 /// registered `2d.drawing` kind id).
-pub fn procedural2d_io() -> semio_framework_plugin::AppIo {
+pub async fn procedural2d_io() -> semio_framework_plugin::AppIo {
     semio_framework_plugin::AppIo::from_document(
         "procedural.2d",
         MediaType { class: MediaClass::TwoD, form: MediaForm::Flow },
@@ -132,26 +132,26 @@ impl ArtifactEditor for Procedural2dPlayApp {
     const DIALECT: Dialect = PROCEDURAL2D_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = PROCEDURAL_2D_SCHEMA;
 
-    fn app_schema() -> Option<::schema::AppSchemaDescriptor> {
+    async fn app_schema() -> Option<::schema::AppSchemaDescriptor> {
         Some(crate::editor::procedural2d::config::schema::app_schema_descriptor())
     }
 
-    fn initial_snapshot() -> Procedural2dSnapshot {
+    async fn initial_snapshot() -> Procedural2dSnapshot {
         crate::artifacts::procedural2d::schema::default_snapshot()
     }
 
-    fn io() -> Option<semio_framework_plugin::AppIo> {
+    async fn io() -> Option<semio_framework_plugin::AppIo> {
         Some(procedural2d_io())
     }
 
-    fn command_id(command: &Procedural2dCommand) -> &'static str {
+    async fn command_id(command: &Procedural2dCommand) -> &'static str {
         command.command_id()
     }
 
     /// 🎯️ Maps host action id + JSON args onto `Procedural2dCommand` — preserved verbatim from the
     /// pre-migration hand-rolled dispatch so React/wgpu callers that still speak the stringly
     /// `{action,args}` wire (rather than `OpBinary` bytes) keep working unchanged.
-    fn command_from_action(action: &str, args: Option<&Value>) -> Result<Self::Command, Fault> {
+    async fn command_from_action(action: &str, args: Option<&Value>) -> Result<Self::Command, Fault> {
         let args = args.cloned().unwrap_or(Value::Null);
         let str_arg = |keys: &[&str]| -> Option<String> { keys.iter().find_map(|key| args.get(key).and_then(|value| value.as_str()).map(str::to_string)) };
         let f64_arg = |keys: &[&str]| -> Option<f64> { keys.iter().find_map(|key| args.get(key).and_then(|value| value.as_f64())) };
@@ -211,7 +211,7 @@ impl ArtifactEditor for Procedural2dPlayApp {
     /// `app_commands!`-generated `dispatch`, whose per-row `$module::handle(payload, doc, cfg, ctx)`
     /// signature is framework-fixed and has no `interaction` slot) — ticket
     /// 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM.
-    fn handle(command: &Procedural2dCommand, doc: &ArtifactView<'_, Procedural2dSnapshot>, cfg: &ConfigView<'_, Procedural2dConfig>, interaction: &InteractionView<'_>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<Procedural2dMutation, Procedural2dConfigMutation, Self::DraftMutation>, Fault> {
+    async fn handle(command: &Procedural2dCommand, doc: &ArtifactView<'_, Procedural2dSnapshot>, cfg: &ConfigView<'_, Procedural2dConfig>, interaction: &InteractionView<'_>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<Procedural2dMutation, Procedural2dConfigMutation, Self::DraftMutation>, Fault> {
         with_process_flow_eval_session(|session| match command {
             Procedural2dCommand::NodeGraphEdit(payload) => node_graph_edit::apply(payload, doc, cfg, interaction, session),
             _ => command.dispatch(doc, cfg, session),
@@ -223,8 +223,8 @@ impl ArtifactEditor for Procedural2dPlayApp {
     /// parented to its owning cluster's widget id — the DAG-parent-links transitive-hover source: hovering
     /// a Cluster's own tree item transitively covers every widget nested inside it). Synapses become
     /// "edge" targets, parented to nothing (edges are leaves, not containers).
-    fn interaction_topology(doc: &ArtifactView<'_, Procedural2dSnapshot>, _cfg: &ConfigView<'_, Procedural2dConfig>) -> InteractionTopology {
-        fn walk_neuron(neuron: &flow::neural::Neuron, parent: String, ordered: &mut Vec<TopologyNode>) {
+    async fn interaction_topology(doc: &ArtifactView<'_, Procedural2dSnapshot>, _cfg: &ConfigView<'_, Procedural2dConfig>) -> InteractionTopology {
+        async fn walk_neuron(neuron: &flow::neural::Neuron, parent: String, ordered: &mut Vec<TopologyNode>) {
             ordered.push(TopologyNode { id: neuron.id.clone(), granularity: "node".into(), parent: Some(parent) });
             if let Some(tree) = &neuron.tree {
                 for child in &tree.neurons {
@@ -254,7 +254,7 @@ impl ArtifactEditor for Procedural2dPlayApp {
     /// 🧵️ Arms a `flowEvalTick` chain whenever the main fixture has pending (uncomputed) nodes —
     /// covers every mutation path (edits, undo/redo, remote operations) in one place instead of each
     /// action re-checking.
-    fn pending_effects(doc: &ArtifactView<'_, Procedural2dSnapshot>, _cfg: &ConfigView<'_, Procedural2dConfig>) -> Vec<Effect> {
+    async fn pending_effects(doc: &ArtifactView<'_, Procedural2dSnapshot>, _cfg: &ConfigView<'_, Procedural2dConfig>) -> Vec<Effect> {
         with_process_flow_eval_session(|session| {
             let host = crate::artifacts::procedural2d::schema::host_from_fixture_with_session(&doc.snapshot.fixture, session);
             if session.sync(&host) {
@@ -265,7 +265,7 @@ impl ArtifactEditor for Procedural2dPlayApp {
         })
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, Procedural2dSnapshot>, cfg: &ConfigView<'_, Procedural2dConfig>) -> UiNode {
+    async fn render(body_key: &str, doc: &ArtifactView<'_, Procedural2dSnapshot>, cfg: &ConfigView<'_, Procedural2dConfig>) -> UiNode {
         let document = doc.snapshot;
         let config = cfg.snapshot;
         let labels = procedural2d_labels(config);
@@ -288,7 +288,7 @@ impl ArtifactEditor for Procedural2dPlayApp {
     /// 🕹️ `context_menu` carries no `InteractionView` either (same gap as `render` — see ticket
     /// 26/08/14's w3b-summary.md), so the selection-dependent delete row below always takes the
     /// "nothing selected" branch rather than reading a stale/wrong selection.
-    fn context_menu(request: &semio_framework_plugin::ContextMenuRequest, _doc: &ArtifactView<'_, Procedural2dSnapshot>, cfg: &ConfigView<'_, Procedural2dConfig>, registry: &semio_framework_plugin::AppActionRegistry) -> Vec<semio_framework_plugin::ContextMenuItemSpec> {
+    async fn context_menu(request: &semio_framework_plugin::ContextMenuRequest, _doc: &ArtifactView<'_, Procedural2dSnapshot>, cfg: &ConfigView<'_, Procedural2dConfig>, registry: &semio_framework_plugin::AppActionRegistry) -> Vec<semio_framework_plugin::ContextMenuItemSpec> {
         use semio_framework_plugin::{node_graph_delete_selection_spec, selection_domains_from_surface, Menu, NodeGraphDeleteDispatch};
 
         let config = cfg.snapshot;
@@ -323,7 +323,7 @@ impl ArtifactEditor for Procedural2dPlayApp {
 
     /// 🎞️ `"params:in"`: a generic Data×Value JSON object `{widgetId: number}` — patches matching
     /// `InputSlider` widgets' `value` field, leaving unmatched keys/widget kinds untouched.
-    fn import_media(port: &str, media: &semio_framework_plugin::Media, doc: &ArtifactView<'_, Procedural2dSnapshot>) -> Result<Emit<Procedural2dMutation, Procedural2dConfigMutation, Self::DraftMutation>, semio_framework_plugin::MediaError> {
+    async fn import_media(port: &str, media: &semio_framework_plugin::Media, doc: &ArtifactView<'_, Procedural2dSnapshot>) -> Result<Emit<Procedural2dMutation, Procedural2dConfigMutation, Self::DraftMutation>, semio_framework_plugin::MediaError> {
         if port != "params:in" {
             return Err(semio_framework_plugin::MediaError::NotImplemented);
         }
@@ -348,7 +348,7 @@ impl ArtifactEditor for Procedural2dPlayApp {
 //#endregion 🔖️Procedural2dPlayApp
 
 //#region 🔖️Manifest
-pub fn create_procedural2d_app() -> semio_framework_plugin::AppDefinition {
+pub async fn create_procedural2d_app() -> semio_framework_plugin::AppDefinition {
     Editor::builder(PROCEDURAL2D_DIALECT)
         .document(["semio", "procedural", "2d"])
         .command(CommandDefinition { in_palette: false, ..CommandDefinition::new_catalog("flowEvalTick", LocalizedLabel::native("Evaluate Flow Tick", "Flow-Auswertungsschritt"), "runtime", ActionKind::View) })
@@ -452,19 +452,19 @@ pub(crate) mod testkit {
 
     pub type Procedural2dApp = VcsArtifactApp<EditorApp<Procedural2dPlayApp>>;
 
-    pub fn app() -> Procedural2dApp {
+    pub async fn app() -> Procedural2dApp {
         new_app::<EditorApp<Procedural2dPlayApp>>()
     }
 
-    pub fn app_with_registry() -> Procedural2dApp {
+    pub async fn app_with_registry() -> Procedural2dApp {
         new_app_with_registry::<EditorApp<Procedural2dPlayApp>>(procedural2d_manifest_for_testkit)
     }
 
-    pub fn dispatch(app: &mut Procedural2dApp, command: Procedural2dCommand) -> InvocationResult {
+    pub async fn dispatch(app: &mut Procedural2dApp, command: Procedural2dCommand) -> InvocationResult {
         app.dispatch_typed(command, &meta("local")).expect("dispatch")
     }
 
-    pub fn render(app: &mut Procedural2dApp, body_key: &str) -> String {
+    pub async fn render(app: &mut Procedural2dApp, body_key: &str) -> String {
         serde_json::to_string(&app.render(body_key, None, &ViewModel::default()).expect("render")).expect("render json")
     }
 
@@ -472,7 +472,7 @@ pub(crate) mod testkit {
     /// definition, examples }` shape `testkit::assert_declared_actions_bridge_to_commands` still
     /// expects — framework testkit gap, not modifiable here (`🧰️framework/**` is outside this
     /// packet's lease).
-    pub fn procedural2d_manifest_for_testkit() -> App {
+    pub async fn procedural2d_manifest_for_testkit() -> App {
         App { definition: create_procedural2d_app(), examples: Vec::new() }
     }
 }
@@ -489,7 +489,7 @@ mod tests {
 
     //#region 🔖️CommandSurface
     #[test]
-    fn command_ids_are_unique_and_cover_every_row() {
+    async fn command_ids_are_unique_and_cover_every_row() {
         let commands = every_command();
         let ids: Vec<&str> = commands.iter().map(|command| command.command_id()).collect();
         let mut sorted = ids.clone();
@@ -500,7 +500,7 @@ mod tests {
     }
 
     #[test]
-    fn every_command_round_trips_through_text_and_binary() {
+    async fn every_command_round_trips_through_text_and_binary() {
         for command in every_command() {
             semio_framework_os_kernel::os_store::test_support::assert_op_text_binary_equivalence(&command);
         }
@@ -511,7 +511,7 @@ mod tests {
     /// where the two vocabularies genuinely diverge. This is what a missing `#[dsl(keyword = ..)]` on a
     /// payload struct silently breaks (the record prints with no keyword at all and fails to re-parse).
     #[test]
-    fn every_printed_op_line_starts_with_the_rows_wire_keyword() {
+    async fn every_printed_op_line_starts_with_the_rows_wire_keyword() {
         let expected_keywords = [
             "node-graph-edit",
             "move-media-node",
@@ -544,7 +544,7 @@ mod tests {
     }
 
     /// 🧾️ One representative value per row, in declaration (= binary ordinal) order.
-    pub(super) fn every_command() -> Vec<Procedural2dCommand> {
+    pub(super) async fn every_command() -> Vec<Procedural2dCommand> {
         vec![
             Procedural2dCommand::NodeGraphEdit(node_graph_edit::NodeGraphEdit { operations_json: "[]".into() }),
             Procedural2dCommand::MoveMediaNode(move_media_node::MoveMediaNode { node_id: "n1".into(), x: 1.0, y: 2.0 }),
@@ -573,7 +573,7 @@ mod tests {
 
     //#region 🔖️ManifestSanity
     #[test]
-    fn the_manifest_stitches_every_taxonomy_node() {
+    async fn the_manifest_stitches_every_taxonomy_node() {
         let json = serde_json::to_string(&create_procedural2d_app()).expect("app definition json");
         for id in [flow_window::PROCEDURAL2D_PLAY_WINDOW_MAIN, edit_preview::PROCEDURAL2D_PLAY_WINDOW_PREVIEW, generations::PROCEDURAL2D_PLAY_WINDOW_GENERATIONS, form::PROCEDURAL2D_PLAY_WINDOW_GENERATE_FORM, generate_preview::PROCEDURAL2D_PLAY_WINDOW_GENERATE_PREVIEW] {
             assert!(json.contains(id), "window kind {id} missing from the manifest: {json}");
@@ -590,12 +590,12 @@ mod tests {
 
     //#region 🔖️CrossCutting
     #[test]
-    fn declared_actions_bridge_to_commands() {
+    async fn declared_actions_bridge_to_commands() {
         semio_framework_plugin::testkit::assert_declared_actions_bridge_to_commands::<semio_framework_plugin::EditorApp<Procedural2dPlayApp>>(crate::editor::procedural2d::testkit::procedural2d_manifest_for_testkit);
     }
 
     #[test]
-    fn add_widget_materializes_declared_kind_default_into_an_operation() {
+    async fn add_widget_materializes_declared_kind_default_into_an_operation() {
         let mut app = app_with_registry();
         let before = app.snapshot().expect("snapshot").fixture.widgets.len();
         app.dispatch_typed(Procedural2dCommand::AddWidget(add_widget::AddWidget { kind: "inputSlider".into(), neuron_kind: None, x: None, y: None }), &semio_framework_plugin::testkit::meta("local")).expect("add widget");
@@ -603,14 +603,14 @@ mod tests {
     }
 
     #[test]
-    fn add_widget_undo_redo_round_trip() {
+    async fn add_widget_undo_redo_round_trip() {
         let mut app = app();
         let before = app.snapshot().expect("snapshot").fixture.widgets.len();
         assert_undo_redo_round_trip(&mut app, Procedural2dCommand::AddWidget(add_widget::AddWidget { kind: "inputNote".into(), neuron_kind: None, x: None, y: None }), |app| app.snapshot().expect("snapshot").fixture.widgets.len(), before, before + 1);
     }
 
     #[test]
-    fn two_instances_converge_disjoint_widget_moves() {
+    async fn two_instances_converge_disjoint_widget_moves() {
         let widgets: Vec<String> = app().snapshot().expect("snapshot").fixture.widgets.iter().map(|widget| crate::artifacts::procedural2d::widget_id(widget).to_string()).collect();
         assert!(widgets.len() >= 2, "default fixture needs two widgets for the test");
         let (w0, w1) = (widgets[0].clone(), widgets[1].clone());
@@ -626,7 +626,7 @@ mod tests {
     }
 
     #[test]
-    fn an_unknown_body_key_renders_a_diagnostic_instead_of_panicking() {
+    async fn an_unknown_body_key_renders_a_diagnostic_instead_of_panicking() {
         use crate::editor::procedural2d::testkit::render;
         let mut app = app();
         assert!(render(&mut app, "procedural2d.play.nope").contains("Unknown body"));
@@ -641,7 +641,7 @@ mod tests {
     /// destructive `delete-selection` row — conditioned on a real selection — never appears; this test
     /// now only pins the disclosure budget.
     #[test]
-    fn context_menu_stays_within_disclosure_budget() {
+    async fn context_menu_stays_within_disclosure_budget() {
         let mut app = app_with_registry();
         let request = semio_framework_plugin::ContextMenuRequest { menu: semio_framework_plugin::UiMenuRef { id: "nodeGraph".into(), args: None }, surface: None, window_instance_id: None, point: None };
         let items = app.context_menu(&request);
@@ -652,14 +652,14 @@ mod tests {
 
     //#region 🔖️PortTests
     #[test]
-    fn export_drawing_out_returns_vector_media() {
+    async fn export_drawing_out_returns_vector_media() {
         let mut app = app();
         let media = semio_framework_plugin::resolve_ready(app.export_media("drawing:out")).expect("export drawing:out");
         assert_eq!(media.media_type, MediaType { class: MediaClass::TwoD, form: MediaForm::Vector });
     }
 
     #[test]
-    fn export_document_out_returns_flow_media() {
+    async fn export_document_out_returns_flow_media() {
         let mut app = app();
         let media = semio_framework_plugin::resolve_ready(app.export_media("document:out")).expect("export document:out");
         assert_eq!(media.media_type, MediaType { class: MediaClass::TwoD, form: MediaForm::Flow });
@@ -667,7 +667,7 @@ mod tests {
     }
 
     #[test]
-    fn import_params_in_patches_matching_input_slider() {
+    async fn import_params_in_patches_matching_input_slider() {
         let mut app = app();
         app.dispatch_typed(Procedural2dCommand::AddWidget(add_widget::AddWidget { kind: "inputSlider".into(), neuron_kind: None, x: None, y: None }), &semio_framework_plugin::testkit::meta("local")).expect("add slider");
         let slider_id = app
@@ -691,7 +691,7 @@ mod tests {
     }
 
     #[test]
-    fn media_ports_declare_params_in_and_drawing_out() {
+    async fn media_ports_declare_params_in_and_drawing_out() {
         let ports = <Procedural2dPlayApp as ArtifactEditor>::media_ports();
         assert!(ports.iter().any(|port| port.id == "document:in"));
         assert!(ports.iter().any(|port| port.id == "document:out"));
@@ -703,7 +703,7 @@ mod tests {
     }
 
     #[test]
-    fn procedural2d_io_declares_the_params_and_drawing_ports() {
+    async fn procedural2d_io_declares_the_params_and_drawing_ports() {
         let io = procedural2d_io();
         assert_eq!(io.document_schema, "procedural.2d");
         let params = io.ports.iter().find(|port| port.id == "params:in").expect("params:in declared");

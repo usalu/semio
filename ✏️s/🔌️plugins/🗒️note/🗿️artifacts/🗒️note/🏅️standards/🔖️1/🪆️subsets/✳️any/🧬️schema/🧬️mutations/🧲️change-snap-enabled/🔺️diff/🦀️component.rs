@@ -4,7 +4,7 @@ use crate::artifacts::note::NoteDiff;
 use crate::artifacts::note::NoteSnapshot;
 
 //#region 🔖️Diff
-pub fn diff(payload: &ChangeSnapEnabled, base: &NoteSnapshot) -> protocol::MutationOutcome<NoteDiff> {
+pub async fn diff(payload: &ChangeSnapEnabled, base: &NoteSnapshot) -> protocol::MutationOutcome<NoteDiff> {
     if payload.new_enabled == base.snap_enabled {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", "Snap enabled already has this value.");
     }

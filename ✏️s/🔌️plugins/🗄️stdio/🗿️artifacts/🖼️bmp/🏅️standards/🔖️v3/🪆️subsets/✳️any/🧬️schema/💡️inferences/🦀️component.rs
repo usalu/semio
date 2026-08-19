@@ -22,7 +22,7 @@ pub struct BmpInference {
 }
 
 impl protocol::Inference<BmpSnapshot> for BmpInference {
-    fn infer(snapshot: &BmpSnapshot) -> Self {
+    async fn infer(snapshot: &BmpSnapshot) -> Self {
         Self { dimensions: compute_bmp_dimensions(snapshot) }
     }
 }
@@ -33,19 +33,19 @@ impl protocol::Inference<BmpSnapshot> for BmpInference {
 /// don't derive structurally" trick as `AddInference`'s hand-written `Default` in
 /// `📡️spr/🎮️command/🦀️component.rs`.
 impl Default for BmpInference {
-    fn default() -> Self {
+    async fn default() -> Self {
         <Self as protocol::Inference<BmpSnapshot>>::infer(&BmpSnapshot::default())
     }
 }
 
 impl protocol::InferenceSpec<BmpSnapshot> for BmpInference {
-    fn inference_schema_id() -> &'static str {
+    async fn inference_schema_id() -> &'static str {
         "s.stdio.bmp.inference"
     }
-    fn schema_version() -> u32 {
+    async fn schema_version() -> u32 {
         1
     }
-    fn fields() -> &'static [protocol::InferenceFieldSpec] {
+    async fn fields() -> &'static [protocol::InferenceFieldSpec] {
         &[protocol::InferenceFieldSpec { id: "s.stdio.bmp.inference.dimensions", reads: &["width", "height", "bitsPerPixel"] }]
     }
 }
@@ -63,7 +63,7 @@ impl semio_framework_plugin::ArtifactInferrer for crate::artifacts::bmp::standar
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.stdio.bmp.inference`'s facet leaves into the OS-wide inference catalog — call
 /// once at plugin init, alongside `bmp_artifact_schema_descriptor`'s registration.
-pub fn bmp_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
+pub async fn bmp_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
     schema::ArtifactInferenceDescriptor {
         id: "s.stdio.bmp.inference",
         inference: schema::FacetLeaves {
@@ -84,13 +84,13 @@ mod tests {
     use protocol::Inference;
 
     #[test]
-    fn inference_determinism_law() {
+    async fn inference_determinism_law() {
         let snapshot = BmpSnapshot::default();
         assert_eq!(BmpInference::infer(&snapshot), BmpInference::infer(&snapshot));
     }
 
     #[test]
-    fn inference_default_law() {
+    async fn inference_default_law() {
         assert_eq!(BmpInference::infer(&BmpSnapshot::default()), BmpInference::default());
     }
 }

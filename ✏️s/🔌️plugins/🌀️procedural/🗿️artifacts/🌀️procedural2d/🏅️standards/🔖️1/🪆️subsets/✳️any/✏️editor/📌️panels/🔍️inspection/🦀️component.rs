@@ -10,7 +10,7 @@ pub const PROCEDURAL2D_PLAY_BODY_INSPECTION: &str = "procedural2d.play.inspectio
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
-pub fn definition() -> PanelTabDefinition {
+pub async fn definition() -> PanelTabDefinition {
     PanelTabDefinition {
         kind: PanelTabKind::App(FRAMEWORK_PANEL_TAB_INSPECTION_ID.into()),
         label: LocalizedLabel::native(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, "Inspektion"),
@@ -24,7 +24,7 @@ pub fn definition() -> PanelTabDefinition {
 /// `handle`/`copy_fragment`/`cut_operations` — see ticket 26/08/14's w3b-summary.md), so the
 /// selected-widget-details view degrades to its "no selection" default until a future wave threads
 /// interaction into render. Flagged as a discovered framework gap, not worked around here.
-pub fn render(document: &Procedural2dSnapshot, config: &Procedural2dConfig, labels: &Procedural2dLabels) -> UiNode {
+pub async fn render(document: &Procedural2dSnapshot, config: &Procedural2dConfig, labels: &Procedural2dLabels) -> UiNode {
     ui_declarative_sections_to_tree(&[UiSectionNode {
         id: "procedural2d-play-inspector.empty".into(),
         label: Some(Label::data(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL)),
@@ -47,7 +47,7 @@ mod tests {
     use crate::editor::procedural2d::Procedural2dCommand;
 
     #[test]
-    fn procedural2d_labels_translate_catalogue_and_inspector_in_german() {
+    async fn procedural2d_labels_translate_catalogue_and_inspector_in_german() {
         let mut app = app();
         dispatch(&mut app, Procedural2dCommand::SetLocale(crate::editor::procedural2d::commands::set_locale::SetLocale { value: "de".into() }));
         let inspector_json = render_body(&mut app, PROCEDURAL2D_PLAY_BODY_INSPECTION);

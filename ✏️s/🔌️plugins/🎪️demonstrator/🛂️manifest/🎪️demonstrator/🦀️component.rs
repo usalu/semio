@@ -26,7 +26,7 @@ const PLUGIN_VERSION: &str = "0.1.0";
 /// 🔌️ Builds the concrete demonstrator bundle: declares its owned playground artifact, registers
 /// its own native editor+viewer surfaces over that artifact, then registers the six foreign plugins'
 /// surfaces in their preserved order (`sourcing`/`process` each contribute an editor+viewer pair).
-pub fn plugin() -> Result<Plugin, semio_framework_plugin::PluginAssemblyError> {
+pub async fn plugin() -> Result<Plugin, semio_framework_plugin::PluginAssemblyError> {
     Plugin::builder(PLUGIN_ID)
         .label(PLUGIN_LABEL)
         .version(PLUGIN_VERSION)
@@ -66,12 +66,12 @@ mod surface_tests {
     use semio_framework_plugin::testkit::{assert_editor_and_viewer_share_dialect, assert_viewer_never_mutates};
 
     #[test]
-    fn playground_viewer_never_mutates() {
+    async fn playground_viewer_never_mutates() {
         assert_viewer_never_mutates::<crate::viewer::playground::PlaygroundViewer>();
     }
 
     #[test]
-    fn playground_editor_and_viewer_share_dialect() {
+    async fn playground_editor_and_viewer_share_dialect() {
         assert_editor_and_viewer_share_dialect::<crate::editor::playground::PlaygroundEditor, crate::viewer::playground::PlaygroundViewer>();
     }
 }
@@ -82,12 +82,12 @@ mod surface_tests {
 mod tests {
     use super::*;
 
-    fn test_bundle() -> Plugin {
+    async fn test_bundle() -> Plugin {
         plugin().unwrap_or_else(|error| panic!("{error}"))
     }
 
     #[test]
-    fn bundle_keeps_its_plugin_identity() {
+    async fn bundle_keeps_its_plugin_identity() {
         let manifest = test_bundle().manifest;
         assert_eq!(manifest.plugin_id, PLUGIN_ID);
         assert_eq!(manifest.label, PLUGIN_LABEL);
@@ -103,7 +103,7 @@ mod tests {
     /// applied to them) — now `.editor::<E>()` + `.viewer::<V>()` like every other foreign plugin here,
     /// so each contributes TWO surfaces instead of one (8 foreign surfaces total, from 6 plugins).
     #[test]
-    fn bundle_registers_its_own_and_the_six_foreign_demonstrator_surfaces() {
+    async fn bundle_registers_its_own_and_the_six_foreign_demonstrator_surfaces() {
         let ids: Vec<String> = test_bundle().manifest.apps.iter().map(|app| app.id.clone()).collect();
         assert_eq!(
             ids,
@@ -123,14 +123,14 @@ mod tests {
     }
 
     #[test]
-    fn every_surface_declares_a_document_schema() {
+    async fn every_surface_declares_a_document_schema() {
         for app in test_bundle().manifest.apps {
             assert!(!app.io.document_schema.is_empty(), "app {} declares no document schema", app.id);
         }
     }
 
     #[test]
-    fn contribution_consumers_declare_the_hidden_app_command() {
+    async fn contribution_consumers_declare_the_hidden_app_command() {
         let consumers: Vec<String> = test_bundle().manifest.apps.iter().filter(|app| app.commands.iter().any(|command| command.id == "setContributions")).map(|app| app.id.clone()).collect();
         assert_eq!(consumers, vec!["s.procedural.procedural3d@1/*#editor", "s.cad.cad@1/*#editor", "s.sourcing.curate@1/*#editor", "s.process.process3d@1/*#editor"]);
         for app in test_bundle().manifest.apps {

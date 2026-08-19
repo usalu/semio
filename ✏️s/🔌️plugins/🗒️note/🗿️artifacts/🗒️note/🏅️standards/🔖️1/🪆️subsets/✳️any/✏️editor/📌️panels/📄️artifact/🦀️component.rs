@@ -12,7 +12,7 @@ pub const NOTE_PLAY_BODY_DOCUMENT: &str = "note.play.document";
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
-pub fn definition() -> PanelTabDefinition {
+pub async fn definition() -> PanelTabDefinition {
     PanelTabDefinition { kind: PanelTabKind::App(FRAMEWORK_PANEL_TAB_ARTIFACT_ID.into()), label: LocalizedLabel::native(FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL, "Dokument"), group: PanelGroup::Workbench, body_key: Some(NOTE_PLAY_BODY_DOCUMENT.into()), children: Vec::new() }
 }
 //#endregion 🔖️Definition
@@ -23,7 +23,7 @@ pub fn definition() -> PanelTabDefinition {
 /// domain — the framework stamps this tree's selection/hover presence from that domain
 /// (`.interaction_domain`) and prunes stale ids through that same topology, so no per-item click
 /// action is declared here anymore (clicks are translated into `interactionSelect` generically).
-fn block_tree_item(block: &NoteBlockNode) -> UiTreeItemNode {
+async fn block_tree_item(block: &NoteBlockNode) -> UiTreeItemNode {
     let nested = match block {
         NoteBlockNode::Group { children, .. } if !children.is_empty() => Some(children.iter().map(block_tree_item).collect()),
         _ => None,
@@ -38,7 +38,7 @@ fn block_tree_item(block: &NoteBlockNode) -> UiTreeItemNode {
     }
 }
 
-pub fn render(document: &NoteSnapshot, labels: &NotePlayLabels) -> UiNode {
+pub async fn render(document: &NoteSnapshot, labels: &NotePlayLabels) -> UiNode {
     let action_rows: Vec<UiTreeItemNode> = [("text", labels.add_text, "type"), ("table", labels.add_table, "table-2"), ("math", labels.add_math, "note-math"), ("image", labels.add_image, "image"), ("group", labels.add_group, "folder-plus")]
         .into_iter()
         .map(|(kind, label, icon)| UiTreeItemNode {
@@ -73,7 +73,7 @@ mod tests {
     /// already do: call `PluginApp::load_document_pack` directly, the same technique a real host uses
     /// when it receives the effect.
     #[test]
-    fn renders_document_tree() {
+    async fn renders_document_tree() {
         let mut app = note_app();
         let document = crate::artifacts::note::schema::semio_example_snapshot();
         let envelope = store::create_document_envelope::<crate::artifacts::note::NoteSnapshot, crate::artifacts::note::NoteMutation>(&document.schema.clone(), &document.id.clone(), document, None);
@@ -85,7 +85,7 @@ mod tests {
     }
 
     #[test]
-    fn note_labels_resolve_native_by_default() {
+    async fn note_labels_resolve_native_by_default() {
         let mut app = note_app();
         let document_json = render_body(&mut app, BODY_DOCUMENT);
         assert!(document_json.contains("Add Text"));

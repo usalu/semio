@@ -17,7 +17,7 @@ pub struct ExportPng {
     pub page_id: Option<String>,
 }
 
-pub fn handle(payload: &ExportPng, doc: &ArtifactView<'_, LayoutSnapshot>, cfg: &ConfigView<'_, LayoutConfig>) -> Result<Emit<LayoutMutation, LayoutConfigMutation>, Fault> {
+pub async fn handle(payload: &ExportPng, doc: &ArtifactView<'_, LayoutSnapshot>, cfg: &ConfigView<'_, LayoutConfig>) -> Result<Emit<LayoutMutation, LayoutConfigMutation>, Fault> {
     let page_id = payload.page_id.clone().unwrap_or_else(|| cfg.snapshot.active_page_id.clone());
     match export_document_png_cpu(doc.snapshot, &page_id) {
         Ok(bytes) => Ok(Emit::effect(Effect::DownloadMediaExport { filename: format!("{page_id}.png"), mime_type: "image/png".into(), data: base64::engine::general_purpose::STANDARD.encode(bytes), encoding: Some("base64".into()) })),
@@ -34,7 +34,7 @@ mod tests {
     use crate::editor::layout::LayoutCommand;
 
     #[test]
-    fn export_actions_wire_to_real_layout_exporters() {
+    async fn export_actions_wire_to_real_layout_exporters() {
         // 🌉️ SVG/PDF export routes through stdio's real `s.stdio.semio/v1/drawing`→svg bridge
         // (`io_dispatch`, ticket 26/08/11/SEMIO-ARTIFACT-UNIFIED-IMPORT-EXPORT-AND-MEDIA-FORMAT-RETIREMENT
         // W5b) — under `cargo nextest`'s per-test process isolation this registration must happen in
@@ -62,14 +62,14 @@ mod tests {
     }
 
     #[test]
-    fn engagement_submit_triggers_export() {
+    async fn engagement_submit_triggers_export() {
         let mut app = layout_app();
         let result = dispatch(&mut app, LayoutCommand::EngagementSubmit(engagement_submit::EngagementSubmit { value: "export png".into() }));
         assert!(matches!(result.requested_effects.first(), Some(Effect::DownloadMediaExport { mime_type, .. }) if mime_type == "image/png"));
     }
 
     #[test]
-    fn engagement_submit_triggers_export_from_normalized_shell_draft() {
+    async fn engagement_submit_triggers_export_from_normalized_shell_draft() {
         // The React shell PascalCases and strips separators from every draft before submitting it
         // (`normalizeEngagementActionText`), so "export png" arrives as "ExportPng".
         let mut app = layout_app();
@@ -78,7 +78,7 @@ mod tests {
     }
 
     #[test]
-    fn registry_backed_engagement_submit_is_shell_effect_not_operation() {
+    async fn registry_backed_engagement_submit_is_shell_effect_not_operation() {
         // 🧬️ engagementSubmit is declared `Shell`: through the real registry the kind-discipline
         // check must accept it because its handler only routes an export `Effect`, never operations.
         let mut app = crate::editor::layout::testkit::layout_app_with_registry();

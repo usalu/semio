@@ -10,7 +10,7 @@ use crate::artifacts::stl::{StlSnapshot, STDIO_STL_DOCUMENT_SCHEMA};
 /// carry a degenerate `facet normal 0 0 0` and rely on downstream tooling to recompute it — this
 /// codec doesn't silently rewrite that on decode, matching the recipe's "nothing fabricated"
 /// rule; `<StlTriangle as PartialEq>` sees whatever the file actually said).
-pub fn decode_stl_ascii(text: &str) -> Result<StlSnapshot, String> {
+pub async fn decode_stl_ascii(text: &str) -> Result<StlSnapshot, String> {
     if !text.trim_start().starts_with("solid") {
         return Err("stl ascii: missing 'solid' header".into());
     }
@@ -59,7 +59,7 @@ pub fn decode_stl_ascii(text: &str) -> Result<StlSnapshot, String> {
 
 /// 📤 Writes real ASCII STL, round-tripping each facet's persisted normal exactly (never
 /// recomputed from vertex winding — see `decode_stl_ascii`'s doc comment).
-pub fn encode_stl_ascii(snap: &StlSnapshot) -> String {
+pub async fn encode_stl_ascii(snap: &StlSnapshot) -> String {
     let mut out = format!("solid {}\n", snap.solid_name);
     for f in &snap.triangles {
         let [nx, ny, nz] = f.normal;
@@ -82,7 +82,7 @@ pub fn encode_stl_ascii(snap: &StlSnapshot) -> String {
 /// vertices [f32×3] + 2-byte attribute-byte-count [dropped: no attribute-byte-count usage is
 /// specified by the base format]). Normals/vertices widen `f32` -> `f64` (see `StlTriangle`'s
 /// doc comment on the ASCII/binary precision-normalization tradeoff).
-pub fn decode_stl_binary(bytes: &[u8]) -> Result<StlSnapshot, String> {
+pub async fn decode_stl_binary(bytes: &[u8]) -> Result<StlSnapshot, String> {
     if bytes.len() < 84 {
         return Err("stl binary: header too short".into());
     }
@@ -114,7 +114,7 @@ pub fn decode_stl_binary(bytes: &[u8]) -> Result<StlSnapshot, String> {
 /// appended after it — an 80-byte header vec here, not 84, is what makes the count land at the
 /// right offset). Each facet's persisted `f64` normal/vertices narrow to `f32` (binary STL's
 /// spec-mandated precision — a documented, lossy normalization, not fabrication).
-pub fn encode_stl_binary(snap: &StlSnapshot) -> Vec<u8> {
+pub async fn encode_stl_binary(snap: &StlSnapshot) -> Vec<u8> {
     let mut out = vec![0u8; 80];
     let name_bytes = snap.solid_name.as_bytes();
     let n = name_bytes.len().min(80);
@@ -137,7 +137,7 @@ pub fn encode_stl_binary(snap: &StlSnapshot) -> Vec<u8> {
 
 //#region 🔖️AutoDetect
 /// 🔍 Dispatches on the `solid` ASCII magic; anything else is treated as binary STL.
-pub fn decode_stl_auto(bytes: &[u8]) -> Result<StlSnapshot, String> {
+pub async fn decode_stl_auto(bytes: &[u8]) -> Result<StlSnapshot, String> {
     if bytes.len() >= 5 && &bytes[0..5] == b"solid" {
         // A binary STL's 80-byte header can coincidentally start with "solid" too;
         // disambiguate by checking whether the binary triangle-count framing actually
@@ -173,11 +173,11 @@ pub mod derived_composition {
         type Snapshot = StlSnapshot;
         const WRITES: Dialect = DIALECT;
 
-        fn reads() -> &'static [Dialect] {
+        async fn reads() -> &'static [Dialect] {
             &[DIALECT, DEP_TXT, DEP_BINARY]
         }
 
-        fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+        async fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
             // 🌱 Every listed read dialect's payload is raw text/bytes that this artifact's own
             // analyzer already round-trips through `store::Document{Dsl,Pack}` -- including bytes
             // claiming a dependency's dialect, since (for a single-standard DAG-adjacent dependency
@@ -208,13 +208,13 @@ mod tests {
     use super::*;
 
     #[test]
-    fn empty_snapshot_matches_schema() {
+    async fn empty_snapshot_matches_schema() {
         let snapshot = crate::artifacts::stl::engine::empty_stl_snapshot();
         assert_eq!(snapshot.schema, STDIO_STL_DOCUMENT_SCHEMA);
     }
 
     #[test]
-    fn codec_round_trip() {
+    async fn codec_round_trip() {
         let snap = crate::artifacts::stl::engine::empty_stl_snapshot();
         let text = store::ArtifactDsl::print_dsl(&snap);
         let parsed = <StlSnapshot as store::ArtifactDsl>::parse_dsl(&text).expect("parse");
@@ -227,7 +227,7 @@ mod tests {
     /// 🔺 A real (non-degenerate) 4-triangle tetrahedron — enough structure to catch an
     /// off-by-one in facet/vertex slot tracking that a single-triangle fixture would miss. Each
     /// facet gets a distinct, non-zero normal to exercise the persisted-normal round trip.
-    fn tetrahedron() -> StlSnapshot {
+    async fn tetrahedron() -> StlSnapshot {
         let corners = [[0.0, 0.0, 0.0], [1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]];
         let faces: [(usize, usize, usize, [f64; 3]); 4] = [(0, 1, 2, [0.0, 0.0, -1.0]), (0, 1, 3, [0.0, -1.0, 0.0]), (1, 2, 3, [1.0, 1.0, 1.0]), (0, 2, 3, [-1.0, 0.0, 0.0])];
         let triangles = faces.iter().map(|&(a, b, c, normal)| StlTriangle { normal, vertices: [corners[a], corners[b], corners[c]] }).collect();
@@ -235,7 +235,7 @@ mod tests {
     }
 
     #[test]
-    fn ascii_tetrahedron_round_trip() {
+    async fn ascii_tetrahedron_round_trip() {
         let snap = tetrahedron();
         let text = encode_stl_ascii(&snap);
         assert!(text.starts_with("solid tetrahedron"));
@@ -246,7 +246,7 @@ mod tests {
     }
 
     #[test]
-    fn binary_tetrahedron_round_trip() {
+    async fn binary_tetrahedron_round_trip() {
         let snap = tetrahedron();
         let bytes = encode_stl_binary(&snap);
         assert_eq!(bytes.len(), 84 + 4 * 50);
@@ -265,7 +265,7 @@ mod tests {
     }
 
     #[test]
-    fn auto_detect_dispatches_ascii_vs_binary() {
+    async fn auto_detect_dispatches_ascii_vs_binary() {
         let snap = tetrahedron();
         let ascii_bytes = encode_stl_ascii(&snap).into_bytes();
         let binary_bytes = encode_stl_binary(&snap);
@@ -274,7 +274,7 @@ mod tests {
     }
 
     #[test]
-    fn ascii_facet_normal_is_persisted_not_recomputed() {
+    async fn ascii_facet_normal_is_persisted_not_recomputed() {
         // A real-world "lazy writer" pattern: degenerate 0 0 0 facet normals that a naive
         // recompute-on-encode codec would silently overwrite. This codec must round-trip them
         // exactly as written.
@@ -287,7 +287,7 @@ mod tests {
     }
 
     #[test]
-    fn ascii_solid_name_round_trips_including_empty() {
+    async fn ascii_solid_name_round_trips_including_empty() {
         let text = "solid\n  facet normal 0 0 1\n    outer loop\n      vertex 0 0 0\n      vertex 1 0 0\n      vertex 0 1 0\n    endloop\n  endfacet\nendsolid\n";
         let decoded = decode_stl_ascii(text).expect("decode");
         assert_eq!(decoded.solid_name, "");
@@ -309,7 +309,7 @@ mod tests {
         /// parse under the real dialect — independent of, and cheaper than, the two `recognize`/
         /// `walk_protocol` laws below (a parse failure here fails fast with a clearer message).
         #[test]
-        fn committed_facet_files_parse() {
+        async fn committed_facet_files_parse() {
             for (label, text) in [("snapshot grammar", snapshot::text::COMPONENT_GRAMMAR_SEMIO), ("mutations grammar", mutations::text::COMPONENT_GRAMMAR_SEMIO), ("diff grammar", diff::text::COMPONENT_GRAMMAR_SEMIO)] {
                 let grammar = dsl::parse_grammar(text).unwrap_or_else(|e| panic!("{label}: parse_grammar failed: {e:?}"));
                 assert_eq!(grammar.dialect, dsl::SemioDialect::Grammar, "{label}: expected grammar dialect");
@@ -325,7 +325,7 @@ mod tests {
         /// direct proof this artifact will pass that harness once graduated, not merely an
         /// analogue.
         #[test]
-        fn grammar_conformance_law() {
+        async fn grammar_conformance_law() {
             let grammar = dsl::parse_grammar(snapshot::text::COMPONENT_GRAMMAR_SEMIO).expect("parse snapshot grammar");
             let recognizer = dsl::Recognizer::compile(&grammar);
             let text = store::ArtifactDsl::print_dsl(&crate::artifacts::stl::engine::demo_stl_snapshot());
@@ -337,7 +337,7 @@ mod tests {
         /// ✅️ `ops_grammar_conformance_law`: the mutations grammar recognizes real `print_op`
         /// output for every `StlMutation` variant (`mutations::demo_mutation_cases()`).
         #[test]
-        fn ops_grammar_conformance_law() {
+        async fn ops_grammar_conformance_law() {
             let grammar = dsl::parse_grammar(mutations::text::COMPONENT_GRAMMAR_SEMIO).expect("parse mutations grammar");
             let recognizer = dsl::Recognizer::compile(&grammar);
             for mutation in mutations::demo_mutation_cases() {
@@ -350,7 +350,7 @@ mod tests {
         /// for every representative `StlDiff` (`diff::demo_diff_cases()`), incl. the empty diff and
         /// a full removed+modified+added triple.
         #[test]
-        fn diff_grammar_conformance_law() {
+        async fn diff_grammar_conformance_law() {
             let grammar = dsl::parse_grammar(diff::text::COMPONENT_GRAMMAR_SEMIO).expect("parse diff grammar");
             let recognizer = dsl::Recognizer::compile(&grammar);
             for d in diff::demo_diff_cases() {
@@ -367,7 +367,7 @@ mod tests {
         /// bytes verbatim (no SEMIO envelope of their own — see those protocol files' own doc
         /// comments), so they're walked directly, unlike the snapshot pack facet.
         #[test]
-        fn protocol_walk_law() {
+        async fn protocol_walk_law() {
             let pack_spec = dsl::parse_protocol(snapshot::binary::COMPONENT_PROTOCOL_SEMIO).expect("parse snapshot protocol");
             let packed = store::ArtifactPack::encode_pack(&crate::artifacts::stl::engine::demo_stl_snapshot());
             let (_, inner) = store::semio_format::unwrap_binary(&packed).expect("unwrap semio envelope");
@@ -394,7 +394,7 @@ mod tests {
         /// demo()`, `print_dsl(demo()) == fixture` (byte-for-byte), and the pack twin — so the
         /// fixtures can never silently drift back to a fake again.
         #[test]
-        fn fixture_honesty_law() {
+        async fn fixture_honesty_law() {
             const FIXTURE_DSL: &str = include_str!("../📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio");
             const FIXTURE_PACK: &[u8] = include_bytes!("../📚️examples/🎬️demo/🖼️assets/🎒️example.pack.semio");
 
@@ -422,7 +422,7 @@ pub mod io_registry {
 
     static ENTRIES: OnceLock<Vec<ComposerEntry>> = OnceLock::new();
 
-    pub fn entries() -> &'static [ComposerEntry] {
+    pub async fn entries() -> &'static [ComposerEntry] {
         ENTRIES.get_or_init(|| vec![composer_entry_of::<StlRawAnyComposer>()]).as_slice()
     }
 }

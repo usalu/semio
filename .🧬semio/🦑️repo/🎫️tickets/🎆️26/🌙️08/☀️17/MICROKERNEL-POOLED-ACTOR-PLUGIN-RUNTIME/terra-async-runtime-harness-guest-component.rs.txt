@@ -1,0 +1,42 @@
+//! 🧪️ terra-async-runtime scratch harness — guest half. See `🧬️schema/📜️world.wit`'s own doc for
+//! exactly which two untested shapes this isolates.
+
+wit_bindgen::generate!({
+    path: "schema/world.wit",
+    world: "runtime-probe",
+});
+
+struct Component;
+
+impl exports::semio::runtimeprobe::runner::Guest for Component {
+    async fn run(mut events: wit_bindgen::rt::async_support::StreamReader<u32>) -> Result<u32, String> {
+        let mut total: u32 = 0;
+        while let Some(v) = events.next().await {
+            total = total.wrapping_add(v);
+        }
+        Ok(total)
+    }
+}
+
+impl exports::semio::runtimeprobe::checkpoint_async::Guest for Component {
+    async fn checkpoint() -> u32 {
+        42
+    }
+}
+
+impl Guest for Component {
+    async fn await_hang() -> u32 {
+        hang().await
+    }
+
+    async fn burn_forever() -> u32 {
+        let mut acc: u32 = 0;
+        let mut i: u32 = 0;
+        loop {
+            acc = std::hint::black_box(acc.wrapping_add(std::hint::black_box(i)));
+            i = i.wrapping_add(1);
+        }
+    }
+}
+
+export!(Component);

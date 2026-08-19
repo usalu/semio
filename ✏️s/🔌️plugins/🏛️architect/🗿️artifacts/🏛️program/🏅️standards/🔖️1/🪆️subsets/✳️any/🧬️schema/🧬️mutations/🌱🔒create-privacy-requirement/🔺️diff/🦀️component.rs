@@ -7,7 +7,7 @@ use crate::artifacts::program::ProgramDiff;
 use crate::artifacts::program::ProgramSnapshot;
 
 /// 🌱️ Fatal `mutation.duplicate-id` if the id already exists (empty diff), else `added = [payload row]`.
-pub fn diff(payload: &CreatePrivacyRequirement, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
+pub async fn diff(payload: &CreatePrivacyRequirement, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
     let id = payload.privacy_requirement.header.id.clone();
     if base.privacy.iter().any(|row| row.header.id == id) {
         return protocol::MutationOutcome::fatal("mutation.duplicate-id", "A privacy requirement already exists with this id.", [id.0.clone()]);

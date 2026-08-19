@@ -15,15 +15,15 @@ pub struct ChangeDataCenterSupplyC {
 impl protocol::MutationKind<Din16798Snapshot, Din16798Mutation> for ChangeDataCenterSupplyC {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "data-center-supply-c", kind: "change-data-center-supply-c", record: "ChangedDataCenterSupplyC" };
 
-    fn diff(&self, base: &Din16798Snapshot) -> protocol::MutationOutcome<Din16798Diff> {
+    async fn diff(&self, base: &Din16798Snapshot) -> protocol::MutationOutcome<Din16798Diff> {
         crate::artifacts::din16798::mutations::change_data_center_supply_c::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &Din16798Snapshot) -> Vec<Din16798Mutation> {
+    async fn inverse(&self, base: &Din16798Snapshot) -> Vec<Din16798Mutation> {
         crate::artifacts::din16798::mutations::change_data_center_supply_c::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         format!("Change data center supply temperature to {}", self.new_data_center_supply_c)
     }
 }

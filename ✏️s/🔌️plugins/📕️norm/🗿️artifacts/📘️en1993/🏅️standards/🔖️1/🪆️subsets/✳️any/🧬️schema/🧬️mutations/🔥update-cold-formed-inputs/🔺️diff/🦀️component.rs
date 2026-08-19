@@ -4,7 +4,7 @@ use super::mutation::UpdateColdFormedInputs;
 use crate::artifacts::en1993::{En1993Diff, En1993Snapshot};
 
 //#region 🔖️Diff
-pub fn diff(payload: &UpdateColdFormedInputs, base: &En1993Snapshot) -> protocol::MutationOutcome<En1993Diff> {
+pub async fn diff(payload: &UpdateColdFormedInputs, base: &En1993Snapshot) -> protocol::MutationOutcome<En1993Diff> {
     if !payload.new_cf_b_bar_mm.is_finite() {
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("Cf b bar mm must be a finite number, got {}.", payload.new_cf_b_bar_mm), Vec::<String>::new());
     }

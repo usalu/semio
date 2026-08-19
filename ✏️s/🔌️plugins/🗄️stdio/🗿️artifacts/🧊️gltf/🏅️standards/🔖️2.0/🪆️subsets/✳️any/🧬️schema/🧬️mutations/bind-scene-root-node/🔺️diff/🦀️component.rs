@@ -12,11 +12,11 @@ pub struct GltfBindSceneRootNodeDiff {
     pub position: usize,
     pub touched_paths: Vec<String>,
 }
-pub fn derive(payload: &GltfBindSceneRootNodePayload, base: &GltfSnapshot) -> Result<GltfBindSceneRootNodeDiff, GltfTopLevelMutationRejection> {
+pub async fn derive(payload: &GltfBindSceneRootNodePayload, base: &GltfSnapshot) -> Result<GltfBindSceneRootNodeDiff, GltfTopLevelMutationRejection> {
     validate(payload, base)?;
     Ok(GltfBindSceneRootNodeDiff { scene: payload.scene, node: payload.node, position: payload.position, touched_paths: vec![format!("document/scenes/{}/nodes/{}", payload.scene, payload.position)] })
 }
-pub fn apply(base: &GltfSnapshot, diff: &GltfBindSceneRootNodeDiff) -> Result<GltfSnapshot, GltfTopLevelMutationRejection> {
+pub async fn apply(base: &GltfSnapshot, diff: &GltfBindSceneRootNodeDiff) -> Result<GltfSnapshot, GltfTopLevelMutationRejection> {
     let path = format!("document/scenes/{}/nodes/{}", diff.scene, diff.position);
     if diff.touched_paths.len() != 1 || diff.touched_paths[0] != path {
         return Err(reject("gltf.mutation.invalid-touched-path", path, "patch touched path does not match its root coordinates"));
@@ -29,6 +29,6 @@ pub fn apply(base: &GltfSnapshot, diff: &GltfBindSceneRootNodeDiff) -> Result<Gl
     next.document.scenes[diff.scene].nodes.insert(diff.position, diff.node);
     Ok(next)
 }
-pub fn encode(diff: &GltfBindSceneRootNodeDiff) -> Result<Vec<u8>, serde_json::Error> {
+pub async fn encode(diff: &GltfBindSceneRootNodeDiff) -> Result<Vec<u8>, serde_json::Error> {
     serde_json::to_vec(diff)
 }

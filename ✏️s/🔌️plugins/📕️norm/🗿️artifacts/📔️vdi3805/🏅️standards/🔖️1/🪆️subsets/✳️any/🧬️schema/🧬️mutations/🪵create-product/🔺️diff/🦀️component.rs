@@ -8,7 +8,7 @@ use crate::artifacts::vdi3805::{Vdi3805Diff, Vdi3805Snapshot};
 //#region 🔖️Diff
 /// 🔺️ A duplicate article number is `mutation.duplicate-id`; an out-of-range explicit index
 /// clamps to the end with `mutation.clamped`.
-pub fn diff(payload: &CreateProduct, base: &Vdi3805Snapshot) -> protocol::MutationOutcome<Vdi3805Diff> {
+pub async fn diff(payload: &CreateProduct, base: &Vdi3805Snapshot) -> protocol::MutationOutcome<Vdi3805Diff> {
     if base.catalog.products.iter().any(|p| p.identity.article_number == payload.product.identity.article_number) {
         return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("A product with article number \"{}\" already exists.", payload.product.identity.article_number), [payload.product.identity.article_number.clone()]);
     }

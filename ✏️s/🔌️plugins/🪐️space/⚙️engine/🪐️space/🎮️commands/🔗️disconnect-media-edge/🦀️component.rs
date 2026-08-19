@@ -12,6 +12,6 @@ pub struct DisconnectMediaEdge {
     pub edge_id: String,
 }
 
-pub fn handle(payload: &DisconnectMediaEdge, _doc: &ArtifactView<'_, WorkflowSnapshot>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
+pub async fn handle(payload: &DisconnectMediaEdge, _doc: &ArtifactView<'_, WorkflowSnapshot>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
     Ok(Emit::mutations(vec![WorkflowMutation::DisconnectEdge { edge_id: payload.edge_id.clone() }]))
 }

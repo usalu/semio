@@ -24,13 +24,13 @@ pub struct WiresTopology {
 }
 
 impl Default for WiresTopology {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self { node_count: 0, edge_count: 0, component_count: 0, cycle_free: true }
     }
 }
 
 /// 🔍️ Union-find root lookup with no path compression (pilot-scale graphs only).
-fn find(parent: &BTreeMap<String, String>, id: &str) -> String {
+async fn find(parent: &BTreeMap<String, String>, id: &str) -> String {
     let mut root = id.to_string();
     while let Some(next) = parent.get(&root) {
         if next == &root {
@@ -45,7 +45,7 @@ fn find(parent: &BTreeMap<String, String>, id: &str) -> String {
 /// board connects node ids directly, no ports) and folds them through a union-find — an edge
 /// whose endpoints already share a root closes a cycle; `component_count` is the final number of
 /// distinct roots among every counted node.
-pub fn compute_wires_topology(board_fixture: &DslValue) -> WiresTopology {
+pub async fn compute_wires_topology(board_fixture: &DslValue) -> WiresTopology {
     let ids: BTreeSet<String> = board_fixture
         .get("nodes")
         .and_then(DslValue::as_array)
@@ -94,7 +94,7 @@ pub fn compute_wires_topology(board_fixture: &DslValue) -> WiresTopology {
 mod tests {
     use super::*;
 
-    fn board(nodes: &[&str], edges: &[(&str, &str)]) -> DslValue {
+    async fn board(nodes: &[&str], edges: &[(&str, &str)]) -> DslValue {
         DslValue::object([
             ("nodes".into(), DslValue::Array(nodes.iter().map(|id| DslValue::object([("id".into(), DslValue::String((*id).into()))])).collect())),
             ("edges".into(), DslValue::Array(edges.iter().map(|(source, target)| DslValue::object([("source".into(), DslValue::String((*source).into())), ("target".into(), DslValue::String((*target).into()))])).collect())),
@@ -102,7 +102,7 @@ mod tests {
     }
 
     #[test]
-    fn a_tree_is_cycle_free_with_one_component() {
+    async fn a_tree_is_cycle_free_with_one_component() {
         let topology = compute_wires_topology(&board(&["a", "b", "c"], &[("a", "b"), ("b", "c")]));
         assert_eq!(topology.node_count, 3);
         assert_eq!(topology.edge_count, 2);
@@ -111,14 +111,14 @@ mod tests {
     }
 
     #[test]
-    fn a_triangle_closes_a_cycle() {
+    async fn a_triangle_closes_a_cycle() {
         let topology = compute_wires_topology(&board(&["a", "b", "c"], &[("a", "b"), ("b", "c"), ("c", "a")]));
         assert!(!topology.cycle_free);
         assert_eq!(topology.component_count, 1);
     }
 
     #[test]
-    fn disconnected_nodes_count_as_separate_components() {
+    async fn disconnected_nodes_count_as_separate_components() {
         let topology = compute_wires_topology(&board(&["a", "b"], &[]));
         assert_eq!(topology.component_count, 2);
         assert_eq!(topology.edge_count, 0);

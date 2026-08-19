@@ -4,7 +4,7 @@ use crate::artifacts::jack::diff::{diff_replace_content, JackDiff};
 use crate::artifacts::jack::JackSnapshot;
 
 //#region 🔖️Diff
-pub fn diff(payload: &super::mutation::DeleteNode, base: &JackSnapshot) -> protocol::MutationOutcome<JackDiff> {
+pub async fn diff(payload: &super::mutation::DeleteNode, base: &JackSnapshot) -> protocol::MutationOutcome<JackDiff> {
     let scene = crate::artifacts::jack::jack_working_scene(base);
     if !scene.nodes.iter().any(|node| node.id == payload.id) {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Node \"{}\" does not exist.", payload.id), [payload.id.clone()]);

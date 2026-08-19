@@ -8,7 +8,7 @@ pub const BLOCK2D_EXAMPLE_RIGHT: &str = "hexagonal-cut-concrete-forest-right";
 //#region 🔖️ReplaceDocument
 /// ✏️ Emits the minimal ordered batch of semantic mutations that carries `current` to `next` — the
 /// whole-document-load replacement for a document-wide replace mutation (banned outright).
-fn replace_document_operations(current: &Block2dSnapshot, next: &Block2dSnapshot) -> Vec<Block2dMutation> {
+async fn replace_document_operations(current: &Block2dSnapshot, next: &Block2dSnapshot) -> Vec<Block2dMutation> {
     use crate::artifacts::block2d::mutations as m;
     let mut ops = Vec::new();
 
@@ -153,7 +153,7 @@ pub struct Edit {
     pub text: String,
 }
 
-pub fn handle(payload: &Edit, doc: &ArtifactView<'_, Block2dSnapshot>, _cfg: &ConfigView<'_, Block2dConfig>) -> Result<Emit<Block2dMutation, Block2dConfigMutation>, Fault> {
+pub async fn handle(payload: &Edit, doc: &ArtifactView<'_, Block2dSnapshot>, _cfg: &ConfigView<'_, Block2dConfig>) -> Result<Emit<Block2dMutation, Block2dConfigMutation>, Fault> {
     match serde_json::from_str::<Block2dSnapshot>(&payload.text) {
         Ok(document) if &document != doc.snapshot => Ok(Emit::mutations(replace_document_operations(doc.snapshot, &document))),
         _ => Ok(Emit::default()),

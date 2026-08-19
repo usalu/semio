@@ -48,30 +48,30 @@ pub const SEQUENCE_DIALECT: semio_framework_plugin::Dialect = semio_framework_pl
 pub struct StepParams(pub Dictionary);
 
 impl StepParams {
-    pub fn new() -> Self {
+    pub async fn new() -> Self {
         Self(Dictionary::new())
     }
 
-    pub fn insert(self, key: impl Into<String>, value: Value) -> Self {
+    pub async fn insert(self, key: impl Into<String>, value: Value) -> Self {
         Self(self.0.insert(key, value))
     }
 }
 
 impl std::ops::Deref for StepParams {
     type Target = Dictionary;
-    fn deref(&self) -> &Dictionary {
+    async fn deref(&self) -> &Dictionary {
         &self.0
     }
 }
 
 impl dsl::DslField for StepParams {
-    fn shape() -> dsl::Shape {
+    async fn shape() -> dsl::Shape {
         dsl::Shape::Text
     }
-    fn to_value(&self) -> dsl::FieldValue {
+    async fn to_value(&self) -> dsl::FieldValue {
         dsl::FieldValue::Text(serde_json::to_string(&self.0).unwrap_or_else(|_| "{}".into()))
     }
-    fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
+    async fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
         match value {
             dsl::FieldValue::Text(text) => serde_json::from_str(text).map(Self).map_err(|err| err.to_string()),
             other => Err(format!("expected Text, found {other:?}")),
@@ -93,7 +93,7 @@ pub struct SequenceCamera {
 }
 
 impl Default for SequenceCamera {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self { x: 0.0, y: 0.0, zoom: 1.0 }
     }
 }
@@ -144,13 +144,13 @@ pub struct SequenceEdge {
 
 //#region 🔖️Collections
 impl protocol::Identified<String> for SequenceStep {
-    fn id(&self) -> &String {
+    async fn id(&self) -> &String {
         &self.id
     }
 }
 
 impl protocol::Identified<String> for SequenceEdge {
-    fn id(&self) -> &String {
+    async fn id(&self) -> &String {
         &self.id
     }
 }
@@ -170,8 +170,8 @@ pub type SequenceContentChild = store::ArtifactChild<SemioFlowSnapshot>;
 /// into the string value, the same "honest string boundary" `SemioFlowSnapshot`'s own doc comment
 /// describes for a generic flow DAG's per-node config. Every `SequenceStep` field is covered — a
 /// real lossless mapping, not a stub.
-fn sequence_step_params(step: &SequenceStep) -> Vec<SemioFlowParam> {
-    fn p(key: &str, value: String) -> SemioFlowParam {
+async fn sequence_step_params(step: &SequenceStep) -> Vec<SemioFlowParam> {
+    async fn p(key: &str, value: String) -> SemioFlowParam {
         SemioFlowParam { key: key.into(), value }
     }
     vec![p("params", serde_json::to_string(&step.params.0).unwrap_or_default()), p("slot", serde_json::to_string(&step.slot).unwrap_or_else(|_| "null".into())), p("collapsed", step.collapsed.to_string())]
@@ -179,7 +179,7 @@ fn sequence_step_params(step: &SequenceStep) -> Vec<SemioFlowParam> {
 
 /// 🌉 Inverse of [`sequence_step_params`] — reconstructs a `SequenceStep` from a `FlowNode`'s `id`/
 /// `kind`/`position` plus its flattened params.
-fn sequence_step_from_node(node: &SemioFlowNode) -> SequenceStep {
+async fn sequence_step_from_node(node: &SemioFlowNode) -> SequenceStep {
     let params: HashMap<&str, &str> = node.params.iter().map(|param| (param.key.as_str(), param.value.as_str())).collect();
     let get = |key: &str| params.get(key).copied().unwrap_or_default();
     SequenceStep {
@@ -200,14 +200,14 @@ fn sequence_step_from_node(node: &SemioFlowNode) -> SequenceStep {
 /// `SequenceEdge` maps onto `FlowEdge` 1:1 through an empty-port `PortRef` (sequence edges are
 /// plain step-to-step flow, not port-addressed) — the constant `kind: "sequence"` tag is written on
 /// encode and discarded on decode (lossless, since `SequenceEdge` carries no `kind` of its own).
-pub fn sequence_content_snapshot_from_working(steps: &[SequenceStep], edges: &[SequenceEdge]) -> SemioFlowSnapshot {
+pub async fn sequence_content_snapshot_from_working(steps: &[SequenceStep], edges: &[SequenceEdge]) -> SemioFlowSnapshot {
     let nodes = steps.iter().map(|step| SemioFlowNode { id: step.id.clone(), kind: step.kind.clone(), label: step.kind.clone(), params: sequence_step_params(step), position: SemioPoint2 { x: step.x, y: step.y } }).collect();
     let edges = edges.iter().map(|edge| SemioFlowEdge { id: edge.id.clone(), from: SemioPortRef { node: edge.from.clone(), port: String::new() }, to: SemioPortRef { node: edge.to.clone(), port: String::new() }, kind: "sequence".into() }).collect();
     SemioFlowSnapshot { schema: STDIO_SEMIOFLOW_DOCUMENT_SCHEMA.into(), nodes, edges }
 }
 
 /// 🌉 Inverse of [`sequence_content_snapshot_from_working`].
-pub fn working_from_sequence_content_snapshot(content: &SemioFlowSnapshot) -> (Vec<SequenceStep>, Vec<SequenceEdge>) {
+pub async fn working_from_sequence_content_snapshot(content: &SemioFlowSnapshot) -> (Vec<SequenceStep>, Vec<SequenceEdge>) {
     let steps = content.nodes.iter().map(sequence_step_from_node).collect();
     let edges = content.edges.iter().map(|edge| SequenceEdge { id: edge.id.clone(), from: edge.from.node.clone(), to: edge.to.node.clone() }).collect();
     (steps, edges)
@@ -216,7 +216,7 @@ pub fn working_from_sequence_content_snapshot(content: &SemioFlowSnapshot) -> (V
 /// 🕸️ Deterministic content-addressed CHILD handle for the sequence content — same `(child_id,
 /// target)` for identical `(steps, edges)`, a different pair once the content actually changes;
 /// mirrors flow's `flow_content_child_handle`/writer's `document_child_handle`.
-pub fn sequence_content_child_handle(steps: &[SequenceStep], edges: &[SequenceEdge]) -> SequenceContentChild {
+pub async fn sequence_content_child_handle(steps: &[SequenceStep], edges: &[SequenceEdge]) -> SequenceContentChild {
     use std::hash::{Hash, Hasher};
     let snapshot = sequence_content_snapshot_from_working(steps, edges);
     let content_json = serde_json::to_string(&snapshot).unwrap_or_default();
@@ -259,20 +259,20 @@ thread_local! {
 /// 📝 Seeds the scratch cache for a handle — call whenever new steps/edges content is about to
 /// become a document's `content` field (every mutation-diff/fixture builder in this plugin does,
 /// via [`sequence_content_child_handle_and_cache`]).
-pub fn cache_sequence_content(child_id: &str, steps: Vec<SequenceStep>, edges: Vec<SequenceEdge>) {
+pub async fn cache_sequence_content(child_id: &str, steps: Vec<SequenceStep>, edges: Vec<SequenceEdge>) {
     SEQUENCE_SCRATCH.with(|cache| cache.borrow_mut().insert(child_id.to_string(), SequenceWorkingScene { steps, edges }));
 }
 
 /// 🔎 Reads the cached live scene for a content child handle — an empty scene (never a panic) when
 /// nothing has cached it yet (see this region's module doc comment for why that can happen).
-pub fn sequence_working_scene_for_handle(handle: &SequenceContentChild) -> SequenceWorkingScene {
+pub async fn sequence_working_scene_for_handle(handle: &SequenceContentChild) -> SequenceWorkingScene {
     SEQUENCE_SCRATCH.with(|cache| cache.borrow().get(&handle.child_id).cloned()).unwrap_or_default()
 }
 
 /// 🔎 Reads the current document's live steps/edges off its `content` child handle — the single
 /// read call site every mutation diff/inverse and app-layer host in this plugin uses instead of the
 /// old `snapshot.steps`/`.edges` field access.
-pub fn sequence_working_scene(snapshot: &SequenceSnapshot) -> SequenceWorkingScene {
+pub async fn sequence_working_scene(snapshot: &SequenceSnapshot) -> SequenceWorkingScene {
     sequence_working_scene_for_handle(&snapshot.content)
 }
 
@@ -280,7 +280,7 @@ pub fn sequence_working_scene(snapshot: &SequenceSnapshot) -> SequenceWorkingSce
 /// the standard way every mutation-diff/fixture builder in this plugin creates a `content` field
 /// value; never construct a handle without also caching, or [`sequence_working_scene`] will read
 /// back empty.
-pub fn sequence_content_child_handle_and_cache(steps: Vec<SequenceStep>, edges: Vec<SequenceEdge>) -> SequenceContentChild {
+pub async fn sequence_content_child_handle_and_cache(steps: Vec<SequenceStep>, edges: Vec<SequenceEdge>) -> SequenceContentChild {
     let handle = sequence_content_child_handle(&steps, &edges);
     cache_sequence_content(&handle.child_id, steps, edges);
     handle
@@ -292,7 +292,7 @@ pub fn sequence_content_child_handle_and_cache(steps: Vec<SequenceStep>, edges: 
 /// writer's `diff_set_text` established), never a structured steps/edges delta (the composed child
 /// is opaque — a parent's diff never embeds a child diff, `📓️design-full-plan.md` §1's CHILD/LINK
 /// split).
-pub fn diff_replace_content(steps: Vec<SequenceStep>, edges: Vec<SequenceEdge>) -> SequenceDiff {
+pub async fn diff_replace_content(steps: Vec<SequenceStep>, edges: Vec<SequenceEdge>) -> SequenceDiff {
     SequenceDiff { content: Some(sequence_content_child_handle_and_cache(steps, edges)), ..Default::default() }
 }
 //#endregion 🔖️WorkingScene
@@ -301,7 +301,7 @@ pub fn diff_replace_content(steps: Vec<SequenceStep>, edges: Vec<SequenceEdge>) 
 /// 🗂️ This artifact's `ArtifactKindSpec` — stitched into the app manifest by
 /// `crate::editor::sequence::create_sequence_app`'s `🔖️Manifest` region. Lifted verbatim out of the
 /// old `.artifact_kind(...)` builder call.
-pub fn artifact_kind() -> ArtifactKindSpec {
+pub async fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "computation.sequence".into(),
         name: "Sequence".into(),
@@ -325,12 +325,12 @@ mod tests {
     use super::*;
 
     #[test]
-    fn default_snapshot_has_steps() {
+    async fn default_snapshot_has_steps() {
         assert_eq!(default_snapshot().to_fixture().steps.len(), 2);
     }
 
     #[test]
-    fn step_content_round_trips_through_the_composed_child_snapshot() {
+    async fn step_content_round_trips_through_the_composed_child_snapshot() {
         let fixture = default_snapshot().to_fixture();
         let content = sequence_content_snapshot_from_working(&fixture.steps, &fixture.edges);
         let (steps, edges) = working_from_sequence_content_snapshot(&content);
@@ -339,14 +339,14 @@ mod tests {
     }
 
     #[test]
-    fn artifact_kind_keeps_the_media_schema_consistent_with_the_store_schema() {
+    async fn artifact_kind_keeps_the_media_schema_consistent_with_the_store_schema() {
         assert_eq!(artifact_kind().schema, "sequence.sequence");
         assert_eq!(SEQUENCE_DOCUMENT_SCHEMA, "sequence.sequence");
     }
 }
 //#endregion 🧪️Tests
 //#region 🔖️Declaration
-pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
+pub async fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
     use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
     ArtifactDefinition::new(ArtifactIdentity::parse("s.sequence")?)
         .capability(
@@ -400,7 +400,7 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
 /// `ArtifactCapability` rows above (kept per debt D1, deleted repo-wide only in W6); wiring them
 /// into this field too is real follow-up work, not required for the tree to register or for any
 /// law to hold (mirrors the stdio pilot's own documented deviation, `📓️w2-p-report.md`).
-pub fn artifact() -> semio_framework_plugin::app::declarations::ArtifactDeclaration {
+pub async fn artifact() -> semio_framework_plugin::app::declarations::ArtifactDeclaration {
     use semio_framework_plugin::app::declarations::ArtifactDeclaration;
     use store::os_io::ArtifactKindId;
     ArtifactDeclaration { kind: ArtifactKindId::parse("s.sequence.sequence").expect("canonical sequence.sequence kind"), localization: &[], standards: vec![crate::artifacts::sequence::standards::v1::standard()] }

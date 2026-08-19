@@ -22,7 +22,7 @@ pub struct SHomeArtifact {
 
 //#region 🔖️Conversions
 impl Default for SHomeArtifact {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self {
             schema: crate::artifacts::home::S_HOME_DOCUMENT_SCHEMA.into(),
             catalog_generation: 0,
@@ -34,7 +34,7 @@ impl Default for SHomeArtifact {
 
 impl SHomeArtifact {
     /// 📸️ Persisted subset.
-    pub fn to_snapshot(&self) -> crate::artifacts::home::SHomeSnapshot {
+    pub async fn to_snapshot(&self) -> crate::artifacts::home::SHomeSnapshot {
         crate::artifacts::home::SHomeSnapshot {
             schema: self.schema.clone(),
             catalog_generation: self.catalog_generation,
@@ -42,7 +42,7 @@ impl SHomeArtifact {
     }
 
     /// 🧬️ Builds a full artifact from a snapshot, leaving UI fields at defaults.
-    pub fn from_snapshot(snapshot: crate::artifacts::home::SHomeSnapshot) -> Self {
+    pub async fn from_snapshot(snapshot: crate::artifacts::home::SHomeSnapshot) -> Self {
         Self {
             schema: snapshot.schema,
             catalog_generation: snapshot.catalog_generation,
@@ -51,7 +51,7 @@ impl SHomeArtifact {
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
-    pub fn set_snapshot(&mut self, snapshot: crate::artifacts::home::SHomeSnapshot) {
+    pub async fn set_snapshot(&mut self, snapshot: crate::artifacts::home::SHomeSnapshot) {
         self.schema = snapshot.schema;
         self.catalog_generation = snapshot.catalog_generation;
     }
@@ -60,7 +60,7 @@ impl SHomeArtifact {
 
 //#region 🔖️Descriptor
 /// 🧬️ Descriptor for `s.space.home` — twenty handcrafted schema leaves.
-pub fn home_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
+pub async fn home_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
     schema::ArtifactSchemaDescriptor {
         id: "s.space.home",
         artifact: schema::FacetLeaves {
@@ -111,15 +111,15 @@ pub mod derived_construction {
         type Snapshot = SHomeSnapshot;
         type Mutation = SHomeMutation;
         type Diff = SHomeDiff;
-        fn empty() -> Self { Self { snapshot: SHomeSnapshot::default(), diagnostics: Vec::new() } }
-        fn from_snapshot(snapshot: Self::Snapshot) -> Self { Self { snapshot, diagnostics: Vec::new() } }
-        fn from_text(text: &str) -> Result<Self, store::TextError> {
+        async fn empty() -> Self { Self { snapshot: SHomeSnapshot::default(), diagnostics: Vec::new() } }
+        async fn from_snapshot(snapshot: Self::Snapshot) -> Self { Self { snapshot, diagnostics: Vec::new() } }
+        async fn from_text(text: &str) -> Result<Self, store::TextError> {
             Ok(Self::from_snapshot(<SHomeSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
-        fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
+        async fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
             Ok(Self::from_snapshot(<SHomeSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
         }
-        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
+        async fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let outcome = <SHomeMutation as protocol::Mutation<SHomeSnapshot>>::diff(&mutation, &self.snapshot);
             match protocol::MutationDiff::apply(outcome.diff(), &self.snapshot) {
                 Ok(snapshot) => self.snapshot = snapshot,
@@ -131,7 +131,7 @@ pub mod derived_construction {
             }
             (self, outcome)
         }
-        fn absorb(
+        async fn absorb(
             mut self,
             diff: Self::Diff,
         ) -> protocol::MutationApplyResult<Self> {
@@ -139,7 +139,7 @@ pub mod derived_construction {
             self.snapshot = snapshot;
             Ok(self)
         }
-        fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
+        async fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
             if self.diagnostics.is_empty() { Ok(self.snapshot) } else { Err(self.diagnostics) }
         }
     }
@@ -163,11 +163,11 @@ pub mod derived_analysis {
         type Parts = SHomeParts;
         const DIALECT: Dialect = Dialect { artifact_kind: "s.home", standard: StandardId("1"), subset: SubsetId("*") };
 
-        fn sniff(_source: &AnalyzeSource<'_>) -> IoConfidence {
+        async fn sniff(_source: &AnalyzeSource<'_>) -> IoConfidence {
             IoConfidence::Medium
         }
 
-        fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
+        async fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
             let mut parts = SHomeParts::default();
             let mut diagnostics = Vec::new();
             let mut confidence = IoConfidence::High;
@@ -212,13 +212,13 @@ semio_framework_plugin::derive_artifact_facets!(
 //#region 🔖️DocumentHelpers
 /// 🌱️ Relocated from `⚙️engine` (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES, rule 3:
 /// pure helpers over document types live in `🧬️schema/`).
-pub fn empty_shome_snapshot() -> crate::artifacts::home::SHomeSnapshot {
+pub async fn empty_shome_snapshot() -> crate::artifacts::home::SHomeSnapshot {
     crate::artifacts::home::SHomeSnapshot::default()
 }
 
 /// 🔎 Returns whether `s.space.home` is present in the process-local schema registry. Relocated from
 /// `⚙️engine` alongside `empty_shome_snapshot` (same rule).
-pub fn artifact_schema_registered() -> bool {
+pub async fn artifact_schema_registered() -> bool {
     ::schema::artifact_schema_descriptor_registered("s.space.home")
 }
 //#endregion 🔖️DocumentHelpers
@@ -236,7 +236,7 @@ mod tests {
     /// trait this whole ticket is repealing, not a surviving assertion. `SHomeEngine` itself had zero
     /// external references and is deleted outright per the ticket's D5a ruling.
     #[test]
-    fn empty_snapshot_uses_home_schema() {
+    async fn empty_snapshot_uses_home_schema() {
         let snapshot = empty_shome_snapshot();
         assert_eq!(snapshot.schema, crate::artifacts::home::S_HOME_DOCUMENT_SCHEMA);
     }

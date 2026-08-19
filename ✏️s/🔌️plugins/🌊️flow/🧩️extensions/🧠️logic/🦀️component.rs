@@ -7,7 +7,7 @@ use neural_engine::{channel_output, Atom, ChannelSpec, Dictionary, EvalError, Op
 pub struct Greater;
 
 impl Operator for Greater {
-    fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
+    async fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         Ok(channel_output("boolean", boolean_dictionary(read_channel_number(input, "a")? > read_channel_number(input, "b")?)))
     }
 }
@@ -18,46 +18,46 @@ impl Operator for Greater {
 pub struct Not;
 
 impl Operator for Not {
-    fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
+    async fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         Ok(channel_output("boolean", boolean_dictionary(!read_channel_bool(input, "boolean")?)))
     }
 }
 // #endregion 🔖️Not
 
 // #region 🔖️Helpers
-fn boolean_dictionary(value: bool) -> Dictionary {
+async fn boolean_dictionary(value: bool) -> Dictionary {
     Dictionary::with_schema("boolean").insert("value", Value::Atom(Atom::Boolean(value)))
 }
 
-fn read_channel_number(input: &Dictionary, key: &str) -> Result<f64, EvalError> {
+async fn read_channel_number(input: &Dictionary, key: &str) -> Result<f64, EvalError> {
     input.get(key).and_then(|v| v.as_dictionary()).and_then(|d| d.get("value")).and_then(|v| v.as_atom()).and_then(|a| a.as_f64()).ok_or_else(|| EvalError::MissingInput(key.into()))
 }
 
-fn read_channel_bool(input: &Dictionary, key: &str) -> Result<bool, EvalError> {
+async fn read_channel_bool(input: &Dictionary, key: &str) -> Result<bool, EvalError> {
     input.get(key).and_then(|v| v.as_dictionary()).and_then(|d| d.get("value")).and_then(|v| v.as_atom()).and_then(|a| a.as_bool()).ok_or_else(|| EvalError::MissingInput(key.into()))
 }
 
 #[cfg(test)]
-fn number_dictionary(value: f64) -> Dictionary {
+async fn number_dictionary(value: f64) -> Dictionary {
     Dictionary::with_schema("number").insert("value", Value::Atom(Atom::Decimal(value)))
 }
 
-fn number_channel(id: &str, operator_id: &str) -> ChannelSpec {
+async fn number_channel(id: &str, operator_id: &str) -> ChannelSpec {
     ChannelSpec::number_default(id, 0.0, &[operator_id])
 }
 
-fn boolean_channel(id: &str, operator_id: &str) -> ChannelSpec {
+async fn boolean_channel(id: &str, operator_id: &str) -> ChannelSpec {
     ChannelSpec::boolean_default(id, false, &[operator_id])
 }
 
-fn info(id: &str, name: &str, summary: &str, inputs: Vec<ChannelSpec>, output: ChannelSpec) -> OperatorInfo {
+async fn info(id: &str, name: &str, summary: &str, inputs: Vec<ChannelSpec>, output: ChannelSpec) -> OperatorInfo {
     OperatorInfo { id: id.into(), extension: "logic".into(), name: name.into(), abbreviation: name.into(), icon: "emoji:🔀️".into(), summary: summary.into(), inputs, outputs: vec![output], ..Default::default() }
 }
 
 // #endregion 🔖️Helpers
 
 /// 📦️ Registers all logic operators.
-pub fn register(registry: &mut Registry) {
+pub async fn register(registry: &mut Registry) {
     registry.register_operator(
         info("logic.greater", "Greater", "True when a > b", vec![number_channel("a", "logic.greater"), number_channel("b", "logic.greater")], ChannelSpec::named("B", "Boo", "boolean", "Greater")),
         vec![OperatorImpl { schemas: vec!["number".into(), "number".into()], operator: Box::new(Greater) }],
@@ -74,13 +74,13 @@ pub fn register(registry: &mut Registry) {
 
 // #region 🔖️Manifest
 /// 📦️ Flow extension manifest JSON contributed to host catalogues.
-pub fn extension_manifest_json() -> String {
+pub async fn extension_manifest_json() -> String {
     use flow_extension_sdk::{build_manifest_json, FlowExtensionCommand};
     build_manifest_json("logic", "Logic", "0.1.0", &module_registry(), vec!["onStartup".into()], vec![], vec![FlowExtensionCommand { id: "logic.showHelp".into(), title: "Logic: Show Help".into() }], vec![])
 }
 
 /// 🌊️ Builds an in-process operator registry for this extension.
-pub fn module_registry() -> Registry {
+pub async fn module_registry() -> Registry {
     let mut registry = Registry::new();
     register(&mut registry);
     registry
@@ -94,7 +94,7 @@ mod tests {
     use flow_extension_sdk::{build_manifest_json, evaluate_json, FlowExtensionCommand};
 
     #[test]
-    fn greater_compares_numbers() {
+    async fn greater_compares_numbers() {
         let mut reg = Registry::new();
         register(&mut reg);
         let input = Dictionary::new().insert("a", Value::Dictionary(number_dictionary(5.0))).insert("b", Value::Dictionary(number_dictionary(2.0)));
@@ -105,13 +105,13 @@ mod tests {
     }
 
     #[test]
-    fn manifest_lists_logic_operators() {
+    async fn manifest_lists_logic_operators() {
         let json = build_manifest_json("logic", "Logic", "0.1.0", &module_registry(), vec!["onStartup".into()], vec![], vec![FlowExtensionCommand { id: "logic.showHelp".into(), title: "Logic: Show Help".into() }], vec![]);
         assert!(json.contains("logic.greater"));
     }
 
     #[test]
-    fn evaluate_json_greater() {
+    async fn evaluate_json_greater() {
         let input = Dictionary::new().insert("a", Value::Dictionary(number_dictionary(5.0))).insert("b", Value::Dictionary(number_dictionary(2.0)));
         let out_json = evaluate_json(&module_registry(), "logic.greater", &serde_json::to_string(&input).unwrap());
         let out: Dictionary = serde_json::from_str(&out_json).unwrap();
@@ -143,7 +143,7 @@ mod extension_guest {
         input_json: String,
     }
 
-    fn flow_extension_contribution(app_id: &str, manifest_json: String) -> serde_json::Value {
+    async fn flow_extension_contribution(app_id: &str, manifest_json: String) -> serde_json::Value {
         let icon_id = "logic";
         let topic_payload = serde_json::json!({
             "appId": app_id,
@@ -155,7 +155,7 @@ mod extension_guest {
         topic_payload
     }
 
-    fn bundle() -> ExtensionBundle {
+    async fn bundle() -> ExtensionBundle {
         let manifest_json = extension_manifest_json();
         let flow_topic_payload = flow_extension_contribution(FLOW_APP_ID, manifest_json.clone());
         let procedural3d_topic_payload = flow_extension_contribution(PROCEDURAL3D_APP_ID, manifest_json);

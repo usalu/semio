@@ -3,7 +3,7 @@
 use crate::artifacts::assembly::diff::AssemblyDiff;
 use crate::artifacts::assembly::schema::snapshot::AssemblySnapshot;
 
-pub fn diff(payload: &super::mutation::ConnectSlots, base: &AssemblySnapshot) -> protocol::MutationOutcome<AssemblyDiff> {
+pub async fn diff(payload: &super::mutation::ConnectSlots, base: &AssemblySnapshot) -> protocol::MutationOutcome<AssemblyDiff> {
     let edge = &payload.edge;
     if base.edges.iter().any(|existing| existing.id == edge.id) {
         return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("An edge with id \"{}\" already exists.", edge.id), [edge.id.clone()]);

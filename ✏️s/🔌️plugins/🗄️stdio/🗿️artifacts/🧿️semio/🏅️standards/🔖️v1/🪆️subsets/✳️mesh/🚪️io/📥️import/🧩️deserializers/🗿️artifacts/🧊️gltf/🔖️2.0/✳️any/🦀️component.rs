@@ -33,7 +33,7 @@ const INTO_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard
 //#region 🔖️Topology
 /// 🔺️ gltf `primitive.mode` (§5.19.4, default 4/TRIANGLES when absent) -> `SemioTopology`. Mode 2
 /// (`LINE_LOOP`) is a real, honest gap — `SemioTopology` has no closed-loop line variant.
-fn gltf_mode_to_topology(mode: Option<u64>) -> Result<SemioTopology, String> {
+async fn gltf_mode_to_topology(mode: Option<u64>) -> Result<SemioTopology, String> {
     match mode.unwrap_or(4) {
         0 => Ok(SemioTopology::Points),
         1 => Ok(SemioTopology::Lines),
@@ -48,7 +48,7 @@ fn gltf_mode_to_topology(mode: Option<u64>) -> Result<SemioTopology, String> {
 //#endregion 🔖️Topology
 
 //#region 🔖️AccessorHelpers
-fn find_attr(attributes: &[(String, usize)], name: &str) -> Option<usize> {
+async fn find_attr(attributes: &[(String, usize)], name: &str) -> Option<usize> {
     attributes.iter().find(|(n, _)| n == name).map(|(_, idx)| *idx)
 }
 
@@ -56,7 +56,7 @@ fn find_attr(attributes: &[(String, usize)], name: &str) -> Option<usize> {
 /// glTF 2.0 §3.9.2 normalized-integer rule; `decode_accessor` deliberately leaves this to callers
 /// (its own doc comment: "every component already widened to `f64`... regardless of source
 /// `componentType`", no normalization applied).
-fn normalize_component(v: f64, component_type: GltfComponentType, normalized: bool) -> f64 {
+async fn normalize_component(v: f64, component_type: GltfComponentType, normalized: bool) -> f64 {
     if !normalized {
         return v;
     }
@@ -71,7 +71,7 @@ fn normalize_component(v: f64, component_type: GltfComponentType, normalized: bo
 
 /// 🖼️️ Resolves one `image`'s raw bytes: embedded `bufferView` first, then a `data:` uri; an
 /// external (file/network) uri is a documented gap (see module doc comment) -> empty bytes.
-fn resolve_image_bytes(document: &GltfDocument, buffers: &[Vec<u8>], image: &GltfImage) -> Vec<u8> {
+async fn resolve_image_bytes(document: &GltfDocument, buffers: &[Vec<u8>], image: &GltfImage) -> Vec<u8> {
     if let Some(bv_idx) = image.buffer_view {
         if let Some(bv) = document.buffer_views.get(bv_idx) {
             if let Some(buf) = buffers.get(bv.buffer) {
@@ -92,7 +92,7 @@ fn resolve_image_bytes(document: &GltfDocument, buffers: &[Vec<u8>], image: &Glt
 //#endregion 🔖️AccessorHelpers
 
 //#region 🔖️PrimitiveMapping
-fn decode_primitive(document: &GltfDocument, buffers: &[Vec<u8>], prim: &GltfPrimitive, id: String, material_id: Option<String>) -> Result<SemioPrimitive, String> {
+async fn decode_primitive(document: &GltfDocument, buffers: &[Vec<u8>], prim: &GltfPrimitive, id: String, material_id: Option<String>) -> Result<SemioPrimitive, String> {
     let topology = gltf_mode_to_topology(prim.mode)?;
 
     let pos_idx = find_attr(&prim.attributes, "POSITION").ok_or("primitive missing mandatory POSITION attribute")?;
@@ -192,7 +192,7 @@ mod tests {
 
     /// 🏗️ A real-shaped 2-triangle quad (shared POSITION/NORMAL/TEXCOORD_0/COLOR_0/indices) with
     /// one PBR material and one embedded (data-uri) texture — exercises every mapped field.
-    fn sample_gltf() -> GltfSnapshot {
+    async fn sample_gltf() -> GltfSnapshot {
         let positions: [f32; 12] = [0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0, 0.0];
         let normals: [f32; 12] = [0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0];
         let uvs: [f32; 8] = [0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0];
@@ -261,7 +261,7 @@ mod tests {
     }
 
     #[test]
-    fn deserialize_maps_geometry_material_and_topology() {
+    async fn deserialize_maps_geometry_material_and_topology() {
         let semio = semio_framework_plugin::resolve_ready(SemioMeshFromGltf::deserialize(&sample_gltf())).expect("deserialize");
         assert_eq!(semio.meshes.len(), 1);
         let mesh = &semio.meshes[0];
@@ -282,7 +282,7 @@ mod tests {
     }
 
     #[test]
-    fn line_loop_mode_is_a_hard_error_not_a_silent_downgrade() {
+    async fn line_loop_mode_is_a_hard_error_not_a_silent_downgrade() {
         let mut gltf = sample_gltf();
         gltf.document.meshes[0].primitives[0].mode = Some(2);
         let err = semio_framework_plugin::resolve_ready(SemioMeshFromGltf::deserialize(&gltf)).expect_err("LINE_LOOP must error");
@@ -290,7 +290,7 @@ mod tests {
     }
 
     #[test]
-    fn missing_position_attribute_is_a_hard_error() {
+    async fn missing_position_attribute_is_a_hard_error() {
         let mut gltf = sample_gltf();
         gltf.document.meshes[0].primitives[0].attributes.retain(|(name, _)| name != "POSITION");
         let err = semio_framework_plugin::resolve_ready(SemioMeshFromGltf::deserialize(&gltf)).expect_err("missing POSITION must error");

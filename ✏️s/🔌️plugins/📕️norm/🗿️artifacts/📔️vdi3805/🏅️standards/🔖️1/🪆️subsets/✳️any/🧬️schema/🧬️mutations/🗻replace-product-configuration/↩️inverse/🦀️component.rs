@@ -5,7 +5,7 @@ use super::mutation::ReplaceProductConfiguration;
 use crate::artifacts::vdi3805::{Vdi3805Mutation, Vdi3805Snapshot};
 
 //#region 🔖️Inverse
-pub fn inverse(payload: &ReplaceProductConfiguration, base: &Vdi3805Snapshot) -> Vec<Vdi3805Mutation> {
+pub async fn inverse(payload: &ReplaceProductConfiguration, base: &Vdi3805Snapshot) -> Vec<Vdi3805Mutation> {
     let Some(product) = base.catalog.products.iter().find(|p| p.identity.article_number == payload.id) else {
         return Vec::new();
     };

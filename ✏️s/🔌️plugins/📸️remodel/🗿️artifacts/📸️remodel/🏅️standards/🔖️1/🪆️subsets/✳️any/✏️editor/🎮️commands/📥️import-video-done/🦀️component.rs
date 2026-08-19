@@ -23,7 +23,7 @@ pub struct ImportVideoDone {
 /// stream (`scene.streams.last()` — the stream this batch's ticks just built). Uses the SAME
 /// coalesce key as every preceding `ImportVideoFramePayload` tick, so the whole import (every
 /// accepted frame plus this final metadata write) collapses into one undo step.
-pub fn handle(payload: &ImportVideoDone, doc: &ArtifactView<'_, RemodelSnapshot>, _cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelMutation, RemodelConfigMutation>, Fault> {
+pub async fn handle(payload: &ImportVideoDone, doc: &ArtifactView<'_, RemodelSnapshot>, _cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelMutation, RemodelConfigMutation>, Fault> {
     let scene = doc.snapshot;
     let Some(stream_id) = scene.streams.last().map(|stream| stream.id.clone()) else { return Ok(Emit::default()) };
     let codec_value = video_codec_from_label(&payload.codec);

@@ -76,12 +76,12 @@ semio_framework_plugin::app_labels! {
 
 //#region 🔖️Resolvers
 /// 🗣️ Resolves the active label set from the config-carried locale; unknown locales fall back to native English.
-pub fn layout_labels(cfg: &LayoutConfig) -> &'static LayoutLabels {
+pub async fn layout_labels(cfg: &LayoutConfig) -> &'static LayoutLabels {
     semio_framework_plugin::resolve_labels_for_locale::<LayoutLabels>(&cfg.locale)
 }
 
 /// 🗣️ Resolves a catalogue frame kind's display label from its stable id; unknown kinds fall back to the kind id itself.
-pub fn catalogue_kind_label(kind: &'static str, labels: &LayoutLabels) -> Label {
+pub async fn catalogue_kind_label(kind: &'static str, labels: &LayoutLabels) -> Label {
     match kind {
         "rect" => labels.kind_rect.into(),
         "text" => labels.kind_text.into(),
@@ -91,7 +91,7 @@ pub fn catalogue_kind_label(kind: &'static str, labels: &LayoutLabels) -> Label 
 }
 
 /// 🗣️ Fills a localized preflight message template's positional `{}` placeholders, in order, with the given values.
-pub fn preflight_msg(template: LabelText, args: &[&str]) -> String {
+pub async fn preflight_msg(template: LabelText, args: &[&str]) -> String {
     let mut result = template.as_str().to_string();
     for arg in args {
         result = result.replacen("{}", arg, 1);
@@ -106,20 +106,20 @@ mod tests {
     use super::*;
 
     #[test]
-    fn labels_resolve_native_english_and_german_from_the_config_locale() {
+    async fn labels_resolve_native_english_and_german_from_the_config_locale() {
         assert_eq!(layout_labels(&LayoutConfig::default()).frames.as_str(), "Frames");
         assert_eq!(layout_labels(&LayoutConfig { locale: "de-DE".into(), ..LayoutConfig::default() }).frames.as_str(), "Rahmen");
     }
 
     #[test]
-    fn catalogue_kind_label_resolves_known_kinds_and_falls_back_to_the_id() {
+    async fn catalogue_kind_label_resolves_known_kinds_and_falls_back_to_the_id() {
         let labels = layout_labels(&LayoutConfig::default());
         assert_eq!(catalogue_kind_label("rect", labels), labels.kind_rect.into());
         assert_eq!(catalogue_kind_label("bogus", labels), Label::data("bogus"));
     }
 
     #[test]
-    fn preflight_msg_fills_positional_placeholders_in_order() {
+    async fn preflight_msg_fills_positional_placeholders_in_order() {
         let labels = layout_labels(&LayoutConfig::default());
         assert_eq!(preflight_msg(labels.preflight_font_missing, &["Comic Sans", "frame-1"]), "Font Comic Sans used by frame-1 is not available");
     }

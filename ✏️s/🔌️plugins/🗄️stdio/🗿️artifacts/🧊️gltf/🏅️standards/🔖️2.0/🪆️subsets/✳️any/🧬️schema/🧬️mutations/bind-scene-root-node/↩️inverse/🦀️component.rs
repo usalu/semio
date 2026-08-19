@@ -13,7 +13,7 @@ pub struct GltfBindSceneRootNodeInverse {
     pub expected_nodes: Vec<usize>,
     pub touched_paths: Vec<String>,
 }
-pub fn derive(payload: &GltfBindSceneRootNodePayload, base: &GltfSnapshot) -> Result<GltfBindSceneRootNodeInverse, GltfTopLevelMutationRejection> {
+pub async fn derive(payload: &GltfBindSceneRootNodePayload, base: &GltfSnapshot) -> Result<GltfBindSceneRootNodeInverse, GltfTopLevelMutationRejection> {
     validate(payload, base)?;
     let after = crate::artifacts::gltf::schema::mutations::bind_scene_root_node::mutation::apply(payload, base)?;
     Ok(GltfBindSceneRootNodeInverse {
@@ -24,7 +24,7 @@ pub fn derive(payload: &GltfBindSceneRootNodePayload, base: &GltfSnapshot) -> Re
         touched_paths: vec![format!("document/scenes/{}/nodes/{}", payload.scene, payload.position)],
     })
 }
-pub fn apply(base: &GltfSnapshot, inverse: &GltfBindSceneRootNodeInverse) -> Result<GltfSnapshot, GltfTopLevelMutationRejection> {
+pub async fn apply(base: &GltfSnapshot, inverse: &GltfBindSceneRootNodeInverse) -> Result<GltfSnapshot, GltfTopLevelMutationRejection> {
     let path = format!("document/scenes/{}/nodes/{}", inverse.scene, inverse.position);
     if inverse.touched_paths.len() != 1 || inverse.touched_paths[0] != path {
         return Err(reject("gltf.mutation.invalid-touched-path", path, "inverse touched path does not match its root coordinates"));
@@ -37,6 +37,6 @@ pub fn apply(base: &GltfSnapshot, inverse: &GltfBindSceneRootNodeInverse) -> Res
     next.document.scenes[inverse.scene].nodes.remove(inverse.position);
     Ok(next)
 }
-pub fn encode(inverse: &GltfBindSceneRootNodeInverse) -> Result<Vec<u8>, serde_json::Error> {
+pub async fn encode(inverse: &GltfBindSceneRootNodeInverse) -> Result<Vec<u8>, serde_json::Error> {
     serde_json::to_vec(inverse)
 }

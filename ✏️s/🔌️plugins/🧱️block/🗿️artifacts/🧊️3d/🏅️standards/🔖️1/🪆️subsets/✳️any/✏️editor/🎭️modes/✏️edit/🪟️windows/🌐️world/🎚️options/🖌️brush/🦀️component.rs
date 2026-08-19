@@ -7,7 +7,7 @@ use crate::editor::block3d::BLOCK3D_UTILITY_SURFACE_BRUSH;
 use crate::artifacts::block3d::Block3dSnapshot;
 use semio_framework_plugin::{MeasureSelectItem, WindowMeasure};
 
-pub fn measure(definition: &Block3dSnapshot, config: &Block3dConfig, labels: &Block3dLabels) -> WindowMeasure {
+pub async fn measure(definition: &Block3dSnapshot, config: &Block3dConfig, labels: &Block3dLabels) -> WindowMeasure {
     WindowMeasure::Group {
         id: "block3d-brush-options".into(),
         label: labels.brush.as_str().to_string(),

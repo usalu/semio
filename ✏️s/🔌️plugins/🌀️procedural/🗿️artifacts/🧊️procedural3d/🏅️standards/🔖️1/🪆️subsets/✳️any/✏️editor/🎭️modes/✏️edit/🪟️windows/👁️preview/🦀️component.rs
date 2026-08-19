@@ -14,7 +14,7 @@ const PROCEDURAL_3D_PLAY_SURFACE_PREVIEW: &str = "procedural.play.preview";
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
-pub fn definition() -> WindowKindDefinition {
+pub async fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
         id: PROCEDURAL_3D_PLAY_WINDOW_PREVIEW.into(),
         label: LocalizedLabel::native("Preview", "Vorschau"),
@@ -33,7 +33,7 @@ pub fn definition() -> WindowKindDefinition {
 }
 
 /// 👁️ Preview shading mode for the world-3d window.
-pub fn show_mode_measure(show_mode: &str, procedural_action: impl Fn(&str, Option<serde_json::Value>) -> ActionDescriptor) -> WindowMeasure {
+pub async fn show_mode_measure(show_mode: &str, procedural_action: impl Fn(&str, Option<serde_json::Value>) -> ActionDescriptor) -> WindowMeasure {
     let current = if show_mode.is_empty() { "shaded" } else { show_mode };
     WindowMeasure::Select {
         id: "procedural3d-measure-show".into(),
@@ -50,14 +50,14 @@ pub fn show_mode_measure(show_mode: &str, procedural_action: impl Fn(&str, Optio
 
 /// 🎚️ Shared preview-window chrome measures (show-mode toggle + sun group) — reused by both preview
 /// windows (edit mode's 3D preview and generate mode's generation preview).
-pub fn preview_window_measures(config: &Procedural3dConfig, procedural_action: impl Fn(&str, Option<serde_json::Value>) -> ActionDescriptor + Copy) -> Vec<WindowMeasure> {
+pub async fn preview_window_measures(config: &Procedural3dConfig, procedural_action: impl Fn(&str, Option<serde_json::Value>) -> ActionDescriptor + Copy) -> Vec<WindowMeasure> {
     let sun = config.sun();
     vec![show_mode_measure(&config.show_mode, procedural_action), world3d_sun_measures("procedural3d", &sun, procedural_action)]
 }
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(document: &Procedural3dSnapshot, config: &Procedural3dConfig, session: &FlowEvalSession, active_utility: &str) -> UiNode {
+pub async fn render(document: &Procedural3dSnapshot, config: &Procedural3dConfig, session: &FlowEvalSession, active_utility: &str) -> UiNode {
     let eval_json = session.eval_json().to_string();
     let (meshes_json, instances_json) = preview_payload_from_eval_with_session(&eval_json, &document.fixture, config, Some(session));
     let preview_status = preview_status_json(&eval_json, &document.fixture);
@@ -95,7 +95,7 @@ mod tests {
     use crate::editor::procedural3d::testkit::{app, render as render_body};
 
     #[test]
-    fn renders_world_preview_scene() {
+    async fn renders_world_preview_scene() {
         // 🧵️ Rendering the preview body tessellates BRep geometry through the same process-wide cache
         // `apps::procedural3d`'s own tests serialize on — see that module's `test_support`.
         let _serial = crate::editor::procedural3d::test_support::lock();

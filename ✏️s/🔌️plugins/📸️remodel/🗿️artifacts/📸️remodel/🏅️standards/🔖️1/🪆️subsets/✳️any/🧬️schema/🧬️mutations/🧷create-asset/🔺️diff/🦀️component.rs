@@ -12,7 +12,7 @@ use crate::artifacts::remodel::diff::RemodelDiff;
 use crate::artifacts::remodel::{mint_and_stash_asset, RemodelSnapshot};
 
 //#region 🔖️Diff
-pub fn diff(payload: &super::mutation::CreateAsset, base: &RemodelSnapshot) -> protocol::MutationOutcome<RemodelDiff> {
+pub async fn diff(payload: &super::mutation::CreateAsset, base: &RemodelSnapshot) -> protocol::MutationOutcome<RemodelDiff> {
     let mut assets = base.assets.clone();
     assets.insert(payload.key.clone(), mint_and_stash_asset(&payload.key, &payload.asset));
     protocol::MutationOutcome::new(RemodelDiff { assets: Some(assets), ..Default::default() })

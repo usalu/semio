@@ -20,16 +20,16 @@ pub struct DeleteVertex {
 impl protocol::MutationKind<SemioBrepSnapshot, SemioBrepMutation> for DeleteVertex {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "delete", entity: "vertex", kind: "delete-vertex", record: "DeletedVertex" };
 
-    fn diff(&self, base: &SemioBrepSnapshot) -> protocol::MutationOutcome<<SemioBrepMutation as protocol::Mutation<SemioBrepSnapshot>>::Diff> {
+    async fn diff(&self, base: &SemioBrepSnapshot) -> protocol::MutationOutcome<<SemioBrepMutation as protocol::Mutation<SemioBrepSnapshot>>::Diff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &SemioBrepSnapshot) -> Vec<SemioBrepMutation> {
+    async fn inverse(&self, base: &SemioBrepSnapshot) -> Vec<SemioBrepMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         format!("Delete vertex \"{}\"", self.id)
     }
-    fn target(&self) -> Vec<String> {
+    async fn target(&self) -> Vec<String> {
         vec![self.id.clone()]
     }
 }

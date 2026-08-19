@@ -12,7 +12,7 @@ pub struct EngagementSubmit {
     pub value: Option<String>,
 }
 
-pub fn handle(payload: &EngagementSubmit, _doc: &ArtifactView<'_, NoteSnapshot>, cfg: &ConfigView<'_, NoteConfig>, ctx: &mut crate::editor::note::NoteDispatchCtx) -> Result<Emit<NoteMutation, NoteConfigMutation>, Fault> {
+pub async fn handle(payload: &EngagementSubmit, _doc: &ArtifactView<'_, NoteSnapshot>, cfg: &ConfigView<'_, NoteConfig>, ctx: &mut crate::editor::note::NoteDispatchCtx) -> Result<Emit<NoteMutation, NoteConfigMutation>, Fault> {
     let config = cfg.snapshot;
     let mut artifact_mutations = Vec::new();
     if ctx.selected_block_ids.len() == 1 {

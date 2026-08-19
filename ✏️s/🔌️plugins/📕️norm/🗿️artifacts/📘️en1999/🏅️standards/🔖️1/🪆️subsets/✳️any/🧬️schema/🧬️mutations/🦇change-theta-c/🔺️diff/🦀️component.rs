@@ -5,7 +5,7 @@ use crate::artifacts::en1999::mutations::change_theta_c::mutation::ChangeThetaC;
 use crate::artifacts::en1999::En1999Snapshot;
 
 //#region 🔖️Diff
-pub fn diff(payload: &ChangeThetaC, base: &En1999Snapshot) -> protocol::MutationOutcome<En1999Diff> {
+pub async fn diff(payload: &ChangeThetaC, base: &En1999Snapshot) -> protocol::MutationOutcome<En1999Diff> {
     if !payload.new_theta_c.is_finite() {
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("Fatigue detail category theta_C [MPa] must be a finite number, got {}.", payload.new_theta_c), Vec::<String>::new());
     }

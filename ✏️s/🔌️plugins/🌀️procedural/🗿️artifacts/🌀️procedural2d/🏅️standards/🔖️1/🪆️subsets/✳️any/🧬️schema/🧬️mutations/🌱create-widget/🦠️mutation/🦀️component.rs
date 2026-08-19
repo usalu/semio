@@ -19,23 +19,23 @@ pub struct CreateWidget {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn create_widget(index: usize, widget: Widget) -> Procedural2dMutation {
+pub async fn create_widget(index: usize, widget: Widget) -> Procedural2dMutation {
     Procedural2dMutation::CreateWidget(CreateWidget { index, widget })
 }
 
 impl MutationKind<Procedural2dSnapshot, Procedural2dMutation> for CreateWidget {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "create", entity: "widget", kind: "create-widget", record: "CreatedWidget" };
 
-    fn diff(&self, base: &Procedural2dSnapshot) -> protocol::MutationOutcome<Procedural2dDiff> {
+    async fn diff(&self, base: &Procedural2dSnapshot) -> protocol::MutationOutcome<Procedural2dDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &Procedural2dSnapshot) -> Vec<Procedural2dMutation> {
+    async fn inverse(&self, base: &Procedural2dSnapshot) -> Vec<Procedural2dMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         format!("Create widget \"{}\"", widget_id(&self.widget))
     }
-    fn target(&self) -> Vec<String> {
+    async fn target(&self) -> Vec<String> {
         vec![widget_id(&self.widget).to_string()]
     }
 }

@@ -7,7 +7,7 @@ use crate::editor::flow::terminology::FlowPlayLabels;
 use semio_framework_plugin::WindowMeasure;
 
 //#region 🔖️Measure
-pub fn measure(config: &FlowConfig, labels: &FlowPlayLabels) -> WindowMeasure {
+pub async fn measure(config: &FlowConfig, labels: &FlowPlayLabels) -> WindowMeasure {
     WindowMeasure::Group {
         id: "flow-play-measures.grid".into(),
         label: labels.grid.into(),
@@ -52,7 +52,7 @@ mod tests {
     /// 🔳️ The factor slider's `min`/`max` are the contract `🎮️commands/🌐️set-grid-visible`'s handler clamps to —
     /// pinned here so the two can't drift apart.
     #[test]
-    fn the_factor_slider_range_matches_the_command_handler_clamp() {
+    async fn the_factor_slider_range_matches_the_command_handler_clamp() {
         let config = FlowConfig::default();
         match measure(&config, flow_play_labels(&config)) {
             WindowMeasure::Group { children, .. } => {

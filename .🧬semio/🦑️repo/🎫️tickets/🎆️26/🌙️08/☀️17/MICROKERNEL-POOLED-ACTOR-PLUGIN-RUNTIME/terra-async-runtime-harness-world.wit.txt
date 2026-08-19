@@ -1,0 +1,36 @@
+package semio:runtimeprobe@0.1.0;
+
+/// 🧪️ terra-async-runtime scratch harness. NOT the production schema — isolates exactly the two
+/// shapes `⏳️runtime.rs` depends on that no prior spike covered:
+///   (1) an `async func` export living inside a NAMED `interface` (production's `interface runner`
+///       does; every prior asyncprobe export was a bare world-level export), called via
+///       `bindings.semio_runtimeprobe_runner().call_run(accessor, ...)`.
+///   (2) a grant-gated `StreamProducer` that PARKS EVEN WHEN ITS QUEUE IS NON-EMPTY (because the
+///       current grant's event budget is spent) — S5's `ChunkStreamProducer` only ever parked on a
+///       genuinely empty queue.
+/// Also re-proves, in this exact shape, S1c's epoch Yield-vs-Interrupt split (mission: "Yield(1)
+/// before the deadline, Interrupt past it") and adds a ROOT-TASK-drop cancellation test distinct
+/// from S2 (S2 = guest cancels its OWN sub-await; this = the HOST drops the whole `run_concurrent`
+/// future out from under a guest still parked on an import).
+interface runner {
+  run: async func(events: stream<u32>) -> result<u32, string>;
+}
+
+/// 🧪️ F: mirrors the coordinator's post-S7 finding — `checkpoint`/`jobs` become NAMED-interface
+/// `async func` exports, callable via `Accessor::spawn` WHILE `runner::run` is still mid-flight on
+/// the SAME instance (S3's shape, now against a named interface instead of a bare world export).
+interface checkpoint-async {
+  checkpoint: async func() -> u32;
+}
+
+world runtime-probe {
+  import hang: async func() -> u32;
+  import was-hang-dropped: func() -> bool;
+
+  export runner;
+  export checkpoint-async;
+  /// 🧪️ Root-task-drop cancellation: awaits `hang()` forever: never returns on its own.
+  export await-hang: async func() -> u32;
+  /// 🧪️ Epoch Interrupt: CPU-bound, no awaits, no imports — spins until preempted.
+  export burn-forever: async func() -> u32;
+}

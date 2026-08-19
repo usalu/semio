@@ -17,14 +17,14 @@ pub const BODY_KEY: &str = TableWindowKit::KIND_ID;
 
 //#region 🔖️Definition
 /// 🧱️ Stitched into the editor manifest by `create_xlsx_strict_editor` (subset root).
-pub fn definition() -> WindowKindDefinition {
+pub async fn definition() -> WindowKindDefinition {
     WindowKindDefinition { label: LocalizedLabel::native("Cells", "Zellen"), icon_id: "table-2".into(), ..TableWindowKit::editable_window_kind() }
 }
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
 /// ✏️ Real `XlsxSnapshot -> UiNode`: one row per cell, columns `sheet`/`row`/`col`/`value`.
-pub fn render(document: &XlsxSnapshot) -> UiNode {
+pub async fn render(document: &XlsxSnapshot) -> UiNode {
     let shared_strings = &document.workbook.shared_strings;
     let columns = vec!["sheet".to_string(), "row".to_string(), "col".to_string(), "value".to_string()];
     let rows = xlsx_flat_cells(document).into_iter().map(|(sheet, row, col, value)| vec![sheet, row.to_string(), col.to_string(), render_xlsx_cell_value(&value, shared_strings)]).collect();
@@ -38,14 +38,14 @@ mod tests {
     use super::*;
 
     #[test]
-    fn definition_declares_a_table_window() {
+    async fn definition_declares_a_table_window() {
         let def = definition();
         assert_eq!(def.id, WINDOW_KIND_ID);
         assert_eq!(def.body_key, BODY_KEY);
     }
 
     #[test]
-    fn render_lists_one_row_per_cell() {
+    async fn render_lists_one_row_per_cell() {
         use crate::artifacts::xlsx::standards::v_ecma_376::subsets::any::schema::snapshot::{XlsxCell, XlsxCellValue, XlsxSheet, XlsxWorkbook};
         let document = XlsxSnapshot { workbook: XlsxWorkbook { sheets: vec![XlsxSheet { name: "Sheet1".into(), cells: vec![XlsxCell { row: 1, col: 0, value: XlsxCellValue::Number(1.0) }] }], ..Default::default() }, ..XlsxSnapshot::default() };
         let UiNode::ComponentScene(node) = render(&document) else { panic!("expected ComponentScene") };

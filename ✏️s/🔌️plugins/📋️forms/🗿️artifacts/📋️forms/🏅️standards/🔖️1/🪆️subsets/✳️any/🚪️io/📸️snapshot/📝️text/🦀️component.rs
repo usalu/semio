@@ -19,40 +19,40 @@ use crate::artifacts::forms::FormsSnapshot;
 /// 🧪️ Real hex/bracket child-handle codec (mirrors `➗️mathematical`'s/`📐️cad`'s own `enc_child`/
 /// `dec_child`) — a handle is exactly two strings (`child_id`, the target's `ArtifactRef`
 /// flattened via `to_uri()`), never the child's own content.
-fn hex_encode(bytes: &[u8]) -> String {
+async fn hex_encode(bytes: &[u8]) -> String {
     bytes.iter().map(|b| format!("{b:02x}")).collect()
 }
-fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
+async fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
     if s.len() % 2 != 0 {
         return Err(format!("odd hex length: {s:?}"));
     }
     (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()
 }
-fn enc_str(s: &str) -> String {
+async fn enc_str(s: &str) -> String {
     hex_encode(s.as_bytes())
 }
-fn dec_str(s: &str) -> Result<String, String> {
+async fn dec_str(s: &str) -> Result<String, String> {
     String::from_utf8(hex_decode(s)?).map_err(|e| e.to_string())
 }
-fn enc_opt_str(s: &Option<String>) -> String {
+async fn enc_opt_str(s: &Option<String>) -> String {
     match s {
         Some(v) => enc_str(v),
         None => "-".to_string(),
     }
 }
-fn dec_opt_str(s: &str) -> Result<Option<String>, String> {
+async fn dec_opt_str(s: &str) -> Result<Option<String>, String> {
     if s == "-" { Ok(None) } else { Ok(Some(dec_str(s)?)) }
 }
-fn enc_ref(r: &store::os_io::ArtifactRef) -> String {
+async fn enc_ref(r: &store::os_io::ArtifactRef) -> String {
     enc_str(&r.to_uri())
 }
-fn dec_ref(s: &str) -> Result<store::os_io::ArtifactRef, String> {
+async fn dec_ref(s: &str) -> Result<store::os_io::ArtifactRef, String> {
     store::os_io::ArtifactRef::parse_uri(&dec_str(s)?)
 }
-fn enc_child<S>(c: &store::ArtifactChild<S>) -> String {
+async fn enc_child<S>(c: &store::ArtifactChild<S>) -> String {
     format!("[{},{}]", enc_str(&c.child_id), enc_ref(&c.target))
 }
-fn dec_child<S>(s: &str) -> Result<store::ArtifactChild<S>, String> {
+async fn dec_child<S>(s: &str) -> Result<store::ArtifactChild<S>, String> {
     let inner = s.strip_prefix('[').and_then(|s| s.strip_suffix(']')).ok_or_else(|| format!("expected [...], got {s:?}"))?;
     let parts: Vec<&str> = inner.splitn(2, ',').collect();
     let [child_id, target] = parts.as_slice() else { return Err(format!("child handle: expected 2 fields, got {}", parts.len())) };
@@ -61,10 +61,10 @@ fn dec_child<S>(s: &str) -> Result<store::ArtifactChild<S>, String> {
 //#endregion 🔖️ChildCodecPrimitives
 
 //#region 🔖️TextPrimitives
-fn print_forms_snapshot_body(s: &FormsSnapshot) -> String {
+async fn print_forms_snapshot_body(s: &FormsSnapshot) -> String {
     format!("schema={}\nid={}\nversion={}\ntitle={}\nstructure={}\nresults={}", enc_str(&s.schema), enc_str(&s.id), enc_str(&s.version), enc_opt_str(&s.title), enc_child(&s.structure), enc_child(&s.results))
 }
-fn parse_forms_snapshot_body(body: &str) -> Result<FormsSnapshot, String> {
+async fn parse_forms_snapshot_body(body: &str) -> Result<FormsSnapshot, String> {
     let mut schema = None;
     let mut id = None;
     let mut version = None;
@@ -112,17 +112,17 @@ fn parse_forms_snapshot_body(body: &str) -> Result<FormsSnapshot, String> {
 /// `✒️writer` established once their own snapshot gained a real child slot.
 impl store::ArtifactDsl for FormsSnapshot {
     const EXTENSION: &'static str = "forms";
-    fn envelope_id() -> &'static str {
+    async fn envelope_id() -> &'static str {
         crate::artifacts::forms::FORMS_DOCUMENT_SCHEMA
     }
-    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+    async fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
         let body = match store::semio_format::split_text_preamble(text) {
             Ok((_, rest)) => rest,
             Err(_) => text,
         };
         parse_forms_snapshot_body(body).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
-    fn print_dsl(&self) -> String {
+    async fn print_dsl(&self) -> String {
         let body = print_forms_snapshot_body(self);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
@@ -214,12 +214,12 @@ condition {
 /// 📖️ Parses `.forms` DSL text into a `FormsSnapshot` — `FormsSnapshot`'s OWN persisted wire
 /// format (hand-rolled directly on the composed `structure`/`results` child slots since ticket
 /// 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM; see `📸️snapshot/🧬️schema`'s `🔖️HandcraftedArtifactCodecs`).
-pub fn parse_dsl(text: &str) -> Result<FormsSnapshot, store::TextError> {
+pub async fn parse_dsl(text: &str) -> Result<FormsSnapshot, store::TextError> {
     <FormsSnapshot as store::ArtifactDsl>::parse_dsl(text)
 }
 
 /// 🖨️ Prints a `FormsSnapshot` back to `.forms` DSL text.
-pub fn print_dsl(document: &FormsSnapshot) -> String {
+pub async fn print_dsl(document: &FormsSnapshot) -> String {
     store::ArtifactDsl::print_dsl(document)
 }
 
@@ -240,7 +240,7 @@ pub fn print_dsl(document: &FormsSnapshot) -> String {
 /// instead sidesteps the gap entirely: it re-derives real step/block content from real playbook
 /// grammar text and mints+caches the children in the SAME call, so the returned snapshot's working
 /// scene is always warm.
-pub fn parse_playbook_example_dsl(text: &str) -> Result<FormsSnapshot, store::TextError> {
+pub async fn parse_playbook_example_dsl(text: &str) -> Result<FormsSnapshot, store::TextError> {
     let body = match store::semio_format::split_text_preamble(text) {
         Ok((_, rest)) => rest,
         Err(_) => text,
@@ -258,7 +258,7 @@ mod tests {
     use store::os_store::test_support::assert_dsl_round_trip;
 
     #[test]
-    fn snapshot_dsl_round_trips_with_composed_children() {
+    async fn snapshot_dsl_round_trips_with_composed_children() {
         let steps = vec![FormStep { id: "s1".into(), title: "Step".into(), description: None, blocks: Vec::new() }];
         let (structure, results) = forms_children_from_steps(&steps);
         let snapshot = FormsSnapshot { schema: FORMS_DOCUMENT_SCHEMA.into(), id: "forms".into(), version: "1".into(), title: Some("T".into()), structure, results };
@@ -275,7 +275,7 @@ mod tests {
     /// exercises `FormsSnapshot::print_dsl`/`parse_dsl` on the resulting cache-warm snapshot) holds
     /// for them too.
     #[test]
-    fn building_component_fixture_dsl_round_trips() {
+    async fn building_component_fixture_dsl_round_trips() {
         let spec = parse_playbook_example_dsl(BUILDING_COMPONENT_EXAMPLE_TEXT).expect("📋️building-component.forms parses");
         assert_eq!(spec.id, "building-component");
         assert_eq!(forms_steps(&spec).len(), 2);
@@ -283,7 +283,7 @@ mod tests {
     }
 
     #[test]
-    fn default_fixture_dsl_round_trips() {
+    async fn default_fixture_dsl_round_trips() {
         let spec = parse_playbook_example_dsl(DEFAULT_EXAMPLE_TEXT).expect("📋️default.forms parses");
         assert_eq!(spec.id, "default");
         assert_eq!(forms_steps(&spec).len(), 1);
@@ -291,7 +291,7 @@ mod tests {
     }
 
     #[test]
-    fn onboarding_fixture_dsl_round_trips() {
+    async fn onboarding_fixture_dsl_round_trips() {
         let spec = parse_playbook_example_dsl(ONBOARDING_EXAMPLE_TEXT).expect("📋️onboarding.forms parses");
         assert_eq!(spec.id, "onboarding");
         assert_eq!(forms_steps(&spec).len(), 3);

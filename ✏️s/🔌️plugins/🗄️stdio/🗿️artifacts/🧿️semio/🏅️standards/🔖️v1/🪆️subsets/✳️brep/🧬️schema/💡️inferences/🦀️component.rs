@@ -29,19 +29,19 @@ pub struct SemioBrepInference {
 }
 
 impl protocol::Inference<SemioBrepSnapshot> for SemioBrepInference {
-    fn infer(snapshot: &SemioBrepSnapshot) -> Self {
+    async fn infer(snapshot: &SemioBrepSnapshot) -> Self {
         Self { validation_report: store::infer_field::<SemioBrepSnapshot, BrepValidationReport>(snapshot, None).remove("document").unwrap_or_default() }
     }
 }
 
 impl protocol::InferenceSpec<SemioBrepSnapshot> for SemioBrepInference {
-    fn inference_schema_id() -> &'static str {
+    async fn inference_schema_id() -> &'static str {
         "s.stdio.semio.brep.inference"
     }
-    fn schema_version() -> u32 {
+    async fn schema_version() -> u32 {
         1
     }
-    fn fields() -> &'static [protocol::InferenceFieldSpec] {
+    async fn fields() -> &'static [protocol::InferenceFieldSpec] {
         &[protocol::InferenceFieldSpec { id: "s.stdio.semio.brep.inference.validationReport", reads: &["vertices", "edges", "loops", "faces", "shells", "solids"] }]
     }
 }
@@ -52,7 +52,7 @@ impl ArtifactInferrer for crate::artifacts::semio::standards::v1::subsets::brep:
     type Snapshot = SemioBrepSnapshot;
     type Inference = SemioBrepInference;
 
-    fn infer_cached(snapshot: &Self::Snapshot, cache: &mut store::InferenceCache, session: &mut store::InferenceSession) -> Self::Inference {
+    async fn infer_cached(snapshot: &Self::Snapshot, cache: &mut store::InferenceCache, session: &mut store::InferenceSession) -> Self::Inference {
         let _ = session;
         let report = store::infer_field::<SemioBrepSnapshot, BrepValidationReport>(snapshot, Some(cache)).remove("document").unwrap_or_default();
         SemioBrepInference { validation_report: report }
@@ -67,7 +67,7 @@ impl ArtifactInferrer for crate::artifacts::semio::standards::v1::subsets::brep:
 /// `register()` calls) — out of this ticket's `✳️brep/`-only edit scope, same boundary
 /// `✳️brep/🚪️io/🦀️component.rs`'s own conformance-law doc comment already notes for the composer
 /// registration. Flagged under `## sharedFileRequests` in the wave report, not wired here.
-pub fn semio_brep_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
+pub async fn semio_brep_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
     schema::ArtifactInferenceDescriptor {
         id: "s.stdio.semio.brep.inference",
         inference: schema::FacetLeaves {
@@ -88,13 +88,13 @@ mod tests {
     use protocol::Inference;
 
     #[test]
-    fn inference_determinism_law() {
+    async fn inference_determinism_law() {
         let snapshot = SemioBrepSnapshot::default();
         assert_eq!(SemioBrepInference::infer(&snapshot), SemioBrepInference::infer(&snapshot));
     }
 
     #[test]
-    fn inference_default_law() {
+    async fn inference_default_law() {
         assert_eq!(SemioBrepInference::infer(&SemioBrepSnapshot::default()), SemioBrepInference::default());
     }
 }

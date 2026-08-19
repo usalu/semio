@@ -15,7 +15,7 @@ pub struct ConnectMediaPorts {
     pub target_port_id: String,
 }
 
-pub fn handle(payload: &ConnectMediaPorts, doc: &ArtifactView<'_, WorkflowSnapshot>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
+pub async fn handle(payload: &ConnectMediaPorts, doc: &ArtifactView<'_, WorkflowSnapshot>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
     match crate::engine::space::negotiate_connect_or_notify(doc.snapshot, &payload.source_node_id, &payload.source_port_id, &payload.target_node_id, &payload.target_port_id) {
         Ok(contract) => Ok(Emit::mutations(vec![crate::engine::space::connect_edge_operation(&payload.source_node_id, &payload.source_port_id, &payload.target_node_id, &payload.target_port_id, contract)])),
         Err(effect) => Ok(Emit::effect(effect)),
@@ -32,7 +32,7 @@ mod tests {
     use semio_framework_os::{register_artifact_descriptor, ArtifactKindSpec, MediaClass, MediaForm, MediaPortDirection, MediaType, MediaWireFormat};
 
     #[test]
-    fn space_command_op_text_round_trips_every_variant() {
+    async fn space_command_op_text_round_trips_every_variant() {
         store::os_store::test_support::assert_op_line_round_trip(&SpaceCommand::ConnectMediaPorts(ConnectMediaPorts {
             source_node_id: "n1".into(),
             source_port_id: "n1:out:out".into(),
@@ -43,7 +43,7 @@ mod tests {
     }
 
     #[test]
-    fn connect_media_ports_rejects_incompatible_types_via_notice() {
+    async fn connect_media_ports_rejects_incompatible_types_via_notice() {
         register_artifact_descriptor(&ArtifactKindSpec {
             id: "test.contract.2d".into(),
             name: "Test 2D".into(),
@@ -89,7 +89,7 @@ mod tests {
     }
 
     #[test]
-    fn connect_media_ports_negotiates_a_contract_for_compatible_types() {
+    async fn connect_media_ports_negotiates_a_contract_for_compatible_types() {
         register_artifact_descriptor(&ArtifactKindSpec {
             id: "test.contract.doc-a".into(),
             name: "Test Doc A".into(),

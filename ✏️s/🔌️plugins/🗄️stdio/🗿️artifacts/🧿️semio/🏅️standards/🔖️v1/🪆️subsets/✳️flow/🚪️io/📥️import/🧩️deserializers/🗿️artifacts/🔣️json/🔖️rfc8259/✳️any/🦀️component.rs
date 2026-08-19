@@ -10,28 +10,28 @@ use crate::artifacts::semio::standards::v1::subsets::flow::schema::snapshot::{Fl
 use semio_framework_plugin::{ArtifactDeserializer, Dialect, StandardId, SubsetId};
 
 //#region 🔖️JsonAccessors
-fn get<'a>(members: &'a [JsonMember], key: &str) -> Result<&'a JsonValue, store::PackError> {
+async fn get<'a>(members: &'a [JsonMember], key: &str) -> Result<&'a JsonValue, store::PackError> {
     members.iter().find(|m| m.key == key).map(|m| &m.value).ok_or_else(|| store::PackError::Schema(format!("flow json: missing member {key:?}")))
 }
-fn as_object(v: &JsonValue) -> Result<&[JsonMember], store::PackError> {
+async fn as_object(v: &JsonValue) -> Result<&[JsonMember], store::PackError> {
     match v {
         JsonValue::Object { members } => Ok(members),
         other => Err(store::PackError::Schema(format!("flow json: expected object, got {other:?}"))),
     }
 }
-fn as_array(v: &JsonValue) -> Result<&[JsonValue], store::PackError> {
+async fn as_array(v: &JsonValue) -> Result<&[JsonValue], store::PackError> {
     match v {
         JsonValue::Array { items } => Ok(items),
         other => Err(store::PackError::Schema(format!("flow json: expected array, got {other:?}"))),
     }
 }
-fn as_string(v: &JsonValue) -> Result<String, store::PackError> {
+async fn as_string(v: &JsonValue) -> Result<String, store::PackError> {
     match v {
         JsonValue::String { value } => Ok(value.clone()),
         other => Err(store::PackError::Schema(format!("flow json: expected string, got {other:?}"))),
     }
 }
-fn as_f64(v: &JsonValue) -> Result<f64, store::PackError> {
+async fn as_f64(v: &JsonValue) -> Result<f64, store::PackError> {
     match v {
         JsonValue::Number { lexeme } => lexeme.parse::<f64>().map_err(|e| store::PackError::Schema(format!("flow json: bad number lexeme {lexeme:?}: {e}"))),
         other => Err(store::PackError::Schema(format!("flow json: expected number, got {other:?}"))),
@@ -40,22 +40,22 @@ fn as_f64(v: &JsonValue) -> Result<f64, store::PackError> {
 //#endregion 🔖️JsonAccessors
 
 //#region 🔖️FieldMapping
-fn map_point(v: &JsonValue) -> Result<SemioPoint2, store::PackError> {
+async fn map_point(v: &JsonValue) -> Result<SemioPoint2, store::PackError> {
     let m = as_object(v)?;
     Ok(SemioPoint2 { x: as_f64(get(m, "x")?)?, y: as_f64(get(m, "y")?)? })
 }
 
-fn map_param(v: &JsonValue) -> Result<FlowParam, store::PackError> {
+async fn map_param(v: &JsonValue) -> Result<FlowParam, store::PackError> {
     let m = as_object(v)?;
     Ok(FlowParam { key: as_string(get(m, "key")?)?, value: as_string(get(m, "value")?)? })
 }
 
-fn map_port_ref(v: &JsonValue) -> Result<PortRef, store::PackError> {
+async fn map_port_ref(v: &JsonValue) -> Result<PortRef, store::PackError> {
     let m = as_object(v)?;
     Ok(PortRef { node: as_string(get(m, "node")?)?, port: as_string(get(m, "port")?)? })
 }
 
-fn map_node(v: &JsonValue) -> Result<FlowNode, store::PackError> {
+async fn map_node(v: &JsonValue) -> Result<FlowNode, store::PackError> {
     let m = as_object(v)?;
     let params = match m.iter().find(|e| e.key == "params") {
         Some(e) => as_array(&e.value)?.iter().map(map_param).collect::<Result<Vec<_>, _>>()?,
@@ -64,7 +64,7 @@ fn map_node(v: &JsonValue) -> Result<FlowNode, store::PackError> {
     Ok(FlowNode { id: as_string(get(m, "id")?)?, kind: as_string(get(m, "kind")?)?, label: as_string(get(m, "label")?)?, params, position: map_point(get(m, "position")?)? })
 }
 
-fn map_edge(v: &JsonValue) -> Result<FlowEdge, store::PackError> {
+async fn map_edge(v: &JsonValue) -> Result<FlowEdge, store::PackError> {
     let m = as_object(v)?;
     Ok(FlowEdge { id: as_string(get(m, "id")?)?, from: map_port_ref(get(m, "from")?)?, to: map_port_ref(get(m, "to")?)?, kind: as_string(get(m, "kind")?)? })
 }
@@ -93,13 +93,13 @@ impl ArtifactDeserializer for SemioFlowFromJson {
 mod tests {
     use super::*;
 
-    pub(crate) fn sample_json() -> JsonSnapshot {
+    pub(crate) async fn sample_json() -> JsonSnapshot {
         let text = r#"{"nodes":[{"id":"n1","kind":"source","label":"Source","params":[{"key":"count","value":"3"}],"position":{"x":0,"y":0}},{"id":"n2","kind":"sink","label":"Sink","params":[],"position":{"x":100,"y":50}}],"edges":[{"id":"e1","from":{"node":"n1","port":"out"},"to":{"node":"n2","port":"in"},"kind":"data"}]}"#;
         JsonSnapshot { schema: crate::artifacts::json::STDIO_JSON_DOCUMENT_SCHEMA.into(), value: crate::artifacts::json::schema::snapshot::parse_json_text(text).expect("valid json fixture") }
     }
 
     #[test]
-    fn maps_nodes_and_edges() {
+    async fn maps_nodes_and_edges() {
         let semio = semio_framework_plugin::resolve_ready(SemioFlowFromJson::deserialize(&sample_json())).expect("deserialize");
         assert_eq!(semio.nodes.len(), 2);
         assert_eq!(semio.edges.len(), 1);
@@ -111,7 +111,7 @@ mod tests {
     }
 
     #[test]
-    fn missing_required_member_is_a_real_error() {
+    async fn missing_required_member_is_a_real_error() {
         let bad = JsonSnapshot { schema: crate::artifacts::json::STDIO_JSON_DOCUMENT_SCHEMA.into(), value: crate::artifacts::json::schema::snapshot::parse_json_text("{}").unwrap() };
         assert!(semio_framework_plugin::resolve_ready(SemioFlowFromJson::deserialize(&bad)).is_err());
     }

@@ -7,7 +7,7 @@ use crate::artifacts::raster::mutations::change_layer_adjustment_kind::mutation:
 use crate::artifacts::raster::{RasterLayerNode, RasterLayerPatch, RasterSnapshot};
 
 //#region 🔖️Diff
-pub fn diff(payload: &ChangeLayerAdjustmentKind, base: &RasterSnapshot) -> protocol::MutationOutcome<RasterDiff> {
+pub async fn diff(payload: &ChangeLayerAdjustmentKind, base: &RasterSnapshot) -> protocol::MutationOutcome<RasterDiff> {
     match find_layer(&base.layers, &payload.layer_id) {
         None => protocol::MutationOutcome::error("mutation.target-missing", format!("Layer \"{}\" does not exist.", payload.layer_id), [payload.layer_id.clone()]),
         Some(RasterLayerNode::Adjustment { adjustment_kind, .. }) if *adjustment_kind == payload.new_adjustment_kind => {

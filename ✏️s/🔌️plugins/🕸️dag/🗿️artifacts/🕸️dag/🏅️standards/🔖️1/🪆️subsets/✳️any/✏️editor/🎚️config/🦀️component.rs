@@ -41,10 +41,10 @@ pub struct DagConfig {
 /// 📜️ Handcrafted ArtifactDsl (P6): uses this type's `__dsl_*` helpers + parse/print, not derive emission.
 impl store::ArtifactDsl for DagConfig {
     const EXTENSION: &'static str = Self::__DSL_EXTENSION;
-    fn envelope_id() -> &'static str {
+    async fn envelope_id() -> &'static str {
         Self::__DSL_ENVELOPE_ID
     }
-    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+    async fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
         let body = match store::semio_format::split_text_preamble(text) {
             Ok((_, rest)) => rest,
             Err(_) => text,
@@ -56,7 +56,7 @@ impl store::ArtifactDsl for DagConfig {
         )?;
         Self::__dsl_from_record(&record)
     }
-    fn print_dsl(&self) -> String {
+    async fn print_dsl(&self) -> String {
         let body = dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), dsl::JoinMode::Document);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
             <Self as store::ArtifactDsl>::envelope_id(),
@@ -70,7 +70,7 @@ impl store::ArtifactDsl for DagConfig {
 
 /// 📦️ Handcrafted ArtifactPack (P6): envelope-wrapped pack body via `__dsl_*` record lowering.
 impl store::ArtifactPack for DagConfig {
-    fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
+    async fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let inner = store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
             <Self as store::ArtifactDsl>::envelope_id(),
@@ -80,7 +80,7 @@ impl store::ArtifactPack for DagConfig {
         .map_err(|e| store::PackError::Schema(e.to_string()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &inner))
     }
-    fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
+    async fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
         if envelope.envelope_id() != <Self as store::ArtifactDsl>::envelope_id() {
             return Err(store::PackError::Schema(format!(
@@ -92,7 +92,7 @@ impl store::ArtifactPack for DagConfig {
         let (record, _report) = store::pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
         Self::__dsl_from_record(&record).map_err(store::text_error_to_pack_error)
     }
-    fn record_spec() -> Option<dsl::RecordSpec> {
+    async fn record_spec() -> Option<dsl::RecordSpec> {
         Some(Self::__dsl_spec())
     }
 }
@@ -101,7 +101,7 @@ impl store::ArtifactPack for DagConfig {
 
 
 impl Default for DagConfig {
-    fn default() -> Self {
+    async fn default() -> Self {
         // 🎥️ Matches `DagCamera`'s own implicit default (`x: 0.0, y: 0.0, zoom: 1.0`, see `DagFixture`'s
         // `Default` impl in the kernel crate) without needing to parse the bundled demo document just to
         // read a trivial camera default.
@@ -113,7 +113,7 @@ store::impl_whole_record_config!(DagConfig);
 
 /// 🎥️ Reassembles the kernel's `DagCamera` from `DagConfig`'s flattened scalar fields — the seam
 /// `crate::editor::dag` uses wherever the old `DagPlayRuntime::camera` field was read.
-pub fn dag_config_camera(config: &DagConfig) -> DagCamera {
+pub async fn dag_config_camera(config: &DagConfig) -> DagCamera {
     DagCamera { x: config.camera_x, y: config.camera_y, zoom: config.camera_zoom }
 }
 //#endregion 🔖️Config
@@ -140,7 +140,7 @@ pub enum DagConfigMutation {
 
 //#region 🔖️OpCodec
 impl protocol::OpText for DagConfigMutation {
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
+    async fn parse_op(line: &str) -> Result<Self, store::TextError> {
         let variants = <Self as dsl::DslVariants>::variants();
         for (keyword, spec_fn) in &variants {
             let probe = format!("{} ", keyword);
@@ -155,7 +155,7 @@ impl protocol::OpText for DagConfigMutation {
         }
         Err(dsl::__rt::field_error(format!("unknown operation line '{line}'")))
     }
-    fn print_op(&self) -> String {
+    async fn print_op(&self) -> String {
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
         let variants = <Self as dsl::DslVariants>::variants();
         let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
@@ -165,7 +165,7 @@ impl protocol::OpText for DagConfigMutation {
 
 /// 🎯️ Handcrafted OpBinary (P6).
 impl protocol::OpBinary for DagConfigMutation {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         const OP_BINARY_FORMAT: u8 = 1;
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
         let variants = <Self as dsl::DslVariants>::variants();
@@ -182,7 +182,7 @@ impl protocol::OpBinary for DagConfigMutation {
         out.extend_from_slice(&body);
         Ok(out)
     }
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         const OP_BINARY_FORMAT: u8 = 1;
         let mut reader = store::pack_rt::ByteReader::new(bytes);
         let format = reader.read_u8()?;
@@ -213,7 +213,7 @@ impl protocol::OpBinary for DagConfigMutation {
 impl Mutation<DagConfig> for DagConfigMutation {
     type Diff = DagConfig;
 
-    fn diff(&self, base: &DagConfig) -> protocol::MutationOutcome<DagConfig> {
+    async fn diff(&self, base: &DagConfig) -> protocol::MutationOutcome<DagConfig> {
         let mut next = base.clone();
         match self {
             DagConfigMutation::Snapshot { config } => return protocol::MutationOutcome::new(config.clone()),
@@ -227,7 +227,7 @@ impl Mutation<DagConfig> for DagConfigMutation {
         protocol::MutationOutcome::new(next)
     }
 
-    fn inverse(&self, base: &DagConfig) -> Vec<Self> {
+    async fn inverse(&self, base: &DagConfig) -> Vec<Self> {
         vec![DagConfigMutation::Snapshot { config: base.clone() }]
     }
 }
@@ -239,7 +239,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn dag_config_default_matches_dag_camera_implicit_default() {
+    async fn dag_config_default_matches_dag_camera_implicit_default() {
         let config = DagConfig::default();
         assert_eq!((config.camera_x, config.camera_y, config.camera_zoom), (0.0, 0.0, 1.0));
         assert_eq!(dag_config_camera(&config), DagCamera { x: 0.0, y: 0.0, zoom: 1.0 });
@@ -248,20 +248,20 @@ mod tests {
 
     /// 🎞️ A fixture exercising every field — the dsl/pack round-trip law for `DagConfig`.
     #[test]
-    fn dag_config_dsl_pack_round_trip() {
+    async fn dag_config_dsl_pack_round_trip() {
         let config = DagConfig { camera_x: 12.5, camera_y: -3.0, camera_zoom: 2.25, locale: "de-DE".into() };
         store::os_store::test_support::assert_dsl_pack_equivalence(&config);
     }
 
     #[test]
-    fn dag_config_operation_text_binary_round_trips_every_variant() {
+    async fn dag_config_operation_text_binary_round_trips_every_variant() {
         store::os_store::test_support::assert_op_line_round_trip(&DagConfigMutation::Snapshot { config: DagConfig { camera_x: 1.0, camera_y: 2.0, camera_zoom: 3.0, locale: "de-DE".into() } });
         store::os_store::test_support::assert_op_line_round_trip(&DagConfigMutation::SetCamera { x: 12.5, y: -3.0, zoom: 2.25 });
         store::os_store::test_support::assert_op_line_round_trip(&DagConfigMutation::SetLocale { value: "de-DE".into() });
     }
 
     #[test]
-    fn dag_config_operation_backwards_restores_the_pre_operation_snapshot() {
+    async fn dag_config_operation_backwards_restores_the_pre_operation_snapshot() {
         let base = DagConfig { camera_x: 1.0, camera_y: 2.0, camera_zoom: 3.0, locale: "en-US".into() };
         let operation = DagConfigMutation::SetCamera { x: 9.0, y: 8.0, zoom: 7.0 };
         let forward = operation.diff(&base).diff().clone();

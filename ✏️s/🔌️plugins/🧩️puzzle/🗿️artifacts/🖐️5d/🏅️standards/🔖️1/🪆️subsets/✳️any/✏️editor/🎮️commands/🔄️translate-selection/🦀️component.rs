@@ -4,7 +4,7 @@ use serde_json::Value;
 use crate::editor::puzzle5d::Puzzle5dActionCtx;
 use crate::editor::puzzle5d::mesh_selection_ids;
 
-pub fn translate_selection(ctx: &mut Puzzle5dActionCtx<'_>, args: Option<&Value>) {
+pub async fn translate_selection(ctx: &mut Puzzle5dActionCtx<'_>, args: Option<&Value>) {
     let ids = mesh_selection_ids(args, &ctx.selected_part_ids());
     let dx = args.and_then(|value| value.get("dx")).and_then(|value| value.as_f64()).unwrap_or(0.0);
     let dy = args.and_then(|value| value.get("dy")).and_then(|value| value.as_f64()).unwrap_or(0.0);

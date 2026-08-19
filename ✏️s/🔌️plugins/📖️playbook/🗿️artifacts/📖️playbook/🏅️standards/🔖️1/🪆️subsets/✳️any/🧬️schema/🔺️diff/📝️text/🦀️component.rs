@@ -16,7 +16,7 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 //#region 🔖️Apply
 impl PlaybookDiff {
     /// 🧬️ Applies every sparse entry (all state classes) onto a full artifact.
-    pub fn apply_to_artifact(&self, artifact: &PlaybookArtifact) -> protocol::MutationApplyResult<PlaybookArtifact> {
+    pub async fn apply_to_artifact(&self, artifact: &PlaybookArtifact) -> protocol::MutationApplyResult<PlaybookArtifact> {
         Ok({
             if let Some(replacement) = &self.artifact {
                 return Ok((**replacement).clone());
@@ -55,7 +55,7 @@ impl PlaybookDiff {
 }
 
 impl MutationDiff<PlaybookSnapshot> for PlaybookDiff {
-    fn apply(&self, snapshot: &PlaybookSnapshot) -> protocol::MutationApplyResult<PlaybookSnapshot> {
+    async fn apply(&self, snapshot: &PlaybookSnapshot) -> protocol::MutationApplyResult<PlaybookSnapshot> {
         Ok({
             if let Some(replacement) = &self.artifact {
                 return Ok(replacement.to_snapshot());
@@ -82,7 +82,7 @@ impl MutationDiff<PlaybookSnapshot> for PlaybookDiff {
             next
         })
     }
-    fn absorb(&mut self, other: Self) {
+    async fn absorb(&mut self, other: Self) {
         if other.artifact.is_some() {
             *self = other;
             return;
@@ -109,7 +109,7 @@ impl MutationDiff<PlaybookSnapshot> for PlaybookDiff {
 
 //#region 🔖️Builders
 /// 📸️ Whole-snapshot replacement diff.
-pub fn diff_set_snapshot(snapshot: &PlaybookSnapshot) -> PlaybookDiff {
+pub async fn diff_set_snapshot(snapshot: &PlaybookSnapshot) -> PlaybookDiff {
     PlaybookDiff {
         artifact: Some(Box::new(PlaybookArtifact::from_snapshot(snapshot.clone()))),
         ..Default::default()
@@ -122,7 +122,7 @@ pub fn diff_set_snapshot(snapshot: &PlaybookSnapshot) -> PlaybookDiff {
 /// mutation triads' `🔺️diff` leaf reads the CURRENT scene off `base` (via `playbook_working_scene`),
 /// applies its own specific semantics to that scene, then calls this shared builder — mirrors
 /// writer's `diff_set_text`/flow's `diff_replace_content`.
-pub fn diff_replace_content(title: Option<&str>, steps: Vec<PlaybookStep>) -> PlaybookDiff {
+pub async fn diff_replace_content(title: Option<&str>, steps: Vec<PlaybookStep>) -> PlaybookDiff {
     let (document, flow) = crate::artifacts::playbook::playbook_content_handles_and_cache(title, steps);
     PlaybookDiff { document: Some(document), flow: Some(flow), ..Default::default() }
 }

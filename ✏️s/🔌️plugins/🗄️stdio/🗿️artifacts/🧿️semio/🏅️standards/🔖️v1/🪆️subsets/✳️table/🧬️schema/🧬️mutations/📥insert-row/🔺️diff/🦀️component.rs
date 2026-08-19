@@ -8,7 +8,7 @@ use crate::artifacts::semio::standards::v1::subsets::table::schema::diff::{Semio
 use crate::artifacts::semio::standards::v1::subsets::table::schema::snapshot::SemioTableSnapshot;
 
 //#region 🔖️Diff
-pub fn diff(payload: &InsertRow, base: &SemioTableSnapshot) -> protocol::MutationOutcome<SemioTableDiff> {
+pub async fn diff(payload: &InsertRow, base: &SemioTableSnapshot) -> protocol::MutationOutcome<SemioTableDiff> {
     let mut rows = base.rows.clone();
     let at = payload.index.min(rows.len());
     rows.insert(at, payload.row.clone());

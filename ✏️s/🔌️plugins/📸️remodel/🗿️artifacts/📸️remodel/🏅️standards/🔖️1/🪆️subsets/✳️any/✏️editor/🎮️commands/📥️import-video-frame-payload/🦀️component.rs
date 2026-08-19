@@ -27,7 +27,7 @@ const BLUR_GATE_MIN_SAMPLES: usize = 3;
 /// 🧭️ Gradient-energy sharpness proxy — a local mirror of the reconstruction engine's private
 /// `sharpness_score` (not exported by that topic file), reused here so import-time frame gating uses
 /// the identical signal.
-fn local_sharpness_score(image: &remodel_image::ImageRgba8) -> f32 {
+async fn local_sharpness_score(image: &remodel_image::ImageRgba8) -> f32 {
     let gray = remodel_image::ImageGray::from_rgba8_luma(image);
     let grad = remodel_image::scharr_gradients(&gray);
     if grad.gx.is_empty() {
@@ -37,7 +37,7 @@ fn local_sharpness_score(image: &remodel_image::ImageRgba8) -> f32 {
     sum_sq / grad.gx.len() as f32
 }
 
-fn local_rolling_median(scores: &VecDeque<f32>) -> f32 {
+async fn local_rolling_median(scores: &VecDeque<f32>) -> f32 {
     let mut v: Vec<f32> = scores.iter().copied().collect();
     v.sort_by(f32::total_cmp);
     v[v.len() / 2]
@@ -45,7 +45,7 @@ fn local_rolling_median(scores: &VecDeque<f32>) -> f32 {
 
 /// 🚦️ Whether the sample should be rejected by the relative blur gate, given `scratch`'s rolling window
 /// and `min_sharpness` (a fraction of the rolling median); also records the sample if accepted.
-fn blur_gate_reject(scratch: &mut VideoImportScratch, score: f32, min_sharpness: f32) -> bool {
+async fn blur_gate_reject(scratch: &mut VideoImportScratch, score: f32, min_sharpness: f32) -> bool {
     if scratch.rolling_scores.len() >= BLUR_GATE_MIN_SAMPLES {
         let median = local_rolling_median(&scratch.rolling_scores);
         if score < min_sharpness * median {
@@ -64,7 +64,7 @@ fn blur_gate_reject(scratch: &mut VideoImportScratch, score: f32, min_sharpness:
 /// the same order the original per-tick `RefCell` scratch would have) — the pure-trait replacement
 /// for carrying `VideoImportScratch` as hidden interior-mutable state across `ImportVideoFramePayload`
 /// ticks.
-fn rebuild_video_import_scratch(scene: &RemodelSnapshot, stream_id: &str) -> VideoImportScratch {
+async fn rebuild_video_import_scratch(scene: &RemodelSnapshot, stream_id: &str) -> VideoImportScratch {
     let mut scratch = VideoImportScratch::default();
     let Some(stream) = scene.streams.iter().find(|stream| stream.id == stream_id) else { return scratch };
     let mut recent: Vec<&FrameRef> = stream.frames.iter().rev().take(BLUR_GATE_ROLLING_WINDOW).collect();
@@ -81,7 +81,7 @@ fn rebuild_video_import_scratch(scene: &RemodelSnapshot, stream_id: &str) -> Vid
 /// 🆔️ The stream a batch tick lands on: `index == 0` starts a new stream, `index > 0` appends to
 /// `scene.streams.last()` — the stream THIS batch's `index == 0` call just created (each call sees the
 /// prior call's already-committed mutations, since dispatches within one batch are sequential).
-fn batch_stream_id(scene: &RemodelSnapshot, index: u32) -> String {
+async fn batch_stream_id(scene: &RemodelSnapshot, index: u32) -> String {
     if index == 0 {
         next_remodel_id("stream")
     } else {
@@ -116,7 +116,7 @@ fn batch_stream_id(scene: &RemodelSnapshot, index: u32) -> String {
 /// exactly what a real `importFrames` → `RequestFileOpen.multiple` re-dispatch loop sends. Shared with
 /// `🎮️commands/🚀️run-reconstruction`'s own tests, which need real decodable frames to run a pipeline on.
 #[cfg(test)]
-pub(crate) fn testkit_import_checker_stream(app: &mut crate::editor::remodel::testkit::RemodelApp, n: u32) {
+pub(crate) async fn testkit_import_checker_stream(app: &mut crate::editor::remodel::testkit::RemodelApp, n: u32) {
     use crate::editor::remodel::testkit::dispatch;
     use crate::editor::remodel::RemodelCommand;
     for index in 0..n {
@@ -127,28 +127,28 @@ pub(crate) fn testkit_import_checker_stream(app: &mut crate::editor::remodel::te
 /// 🏁️ High-contrast `cell`-pixel checkerboard, PNG-encoded and base64-wrapped as a `requestFileOpen`
 /// `dataUrl` payload — so the real decode path is exercised, not a stub.
 #[cfg(test)]
-pub(crate) fn checker_data_url(w: u32, h: u32, cell: u32) -> String {
+pub(crate) async fn checker_data_url(w: u32, h: u32, cell: u32) -> String {
     format!("data:image/png;base64,{}", base64::engine::general_purpose::STANDARD.encode(remodel_image::encode_png(&checker_image(w, h, cell)).expect("encode checker png")))
 }
 
 /// 🏁️ The same checkerboard, real-JPEG-encoded — mirrors what a `RequestMediaFrames` host actually
 /// dispatches to `frame_action` (`payload: dataUrl(image/jpeg)`).
 #[cfg(test)]
-pub(crate) fn checker_data_url_jpeg(w: u32, h: u32, cell: u32) -> String {
+pub(crate) async fn checker_data_url_jpeg(w: u32, h: u32, cell: u32) -> String {
     format!("data:image/jpeg;base64,{}", base64::engine::general_purpose::STANDARD.encode(remodel_image::encode_jpeg(&checker_image(w, h, cell), 90)))
 }
 
 /// 🎞️ A tiny synthesized MJPEG-in-MP4 video (n frames of the same checker pattern) as a
 /// `RequestMediaFrames`-fallback-style raw base64 data URL payload.
 #[cfg(test)]
-pub(crate) fn checker_video_data_url(n: u32, w: u32, h: u32, cell: u32) -> String {
+pub(crate) async fn checker_video_data_url(n: u32, w: u32, h: u32, cell: u32) -> String {
     let jpeg = remodel_image::encode_jpeg(&checker_image(w, h, cell), 90);
     let frames: Vec<Vec<u8>> = (0..n).map(|_| jpeg.clone()).collect();
     format!("data:video/mp4;base64,{}", base64::engine::general_purpose::STANDARD.encode(remodel_video::write_mp4_mjpeg(&frames, 10.0)))
 }
 
 #[cfg(test)]
-fn checker_image(w: u32, h: u32, cell: u32) -> remodel_image::ImageRgba8 {
+async fn checker_image(w: u32, h: u32, cell: u32) -> remodel_image::ImageRgba8 {
     let mut image = remodel_image::ImageRgba8::new(w, h);
     for y in 0..h {
         for x in 0..w {
@@ -178,7 +178,7 @@ pub struct ImportVideoFramePayload {
 /// 🎞️ Host-decoded video frame tick (Tier 1/2 `RequestMediaFrames` frame dispatch): decodes the
 /// sampled JPEG, runs it through the relative blur gate (rebuilt from persisted frames each tick —
 /// see `rebuild_video_import_scratch`), and amends it into the active stream.
-pub fn handle(payload: &ImportVideoFramePayload, doc: &ArtifactView<'_, RemodelSnapshot>, _cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelMutation, RemodelConfigMutation>, Fault> {
+pub async fn handle(payload: &ImportVideoFramePayload, doc: &ArtifactView<'_, RemodelSnapshot>, _cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelMutation, RemodelConfigMutation>, Fault> {
     let Some((_mime, bytes)) = payload_from_data_url(&payload.payload) else { return Ok(Emit::default()) };
     let Ok(image) = remodel_image::decode_jpeg(&bytes) else { return Ok(Emit::default()) };
     let scene = doc.snapshot;
@@ -219,7 +219,7 @@ mod tests {
     use crate::editor::remodel::RemodelCommand;
 
     #[test]
-    fn import_frame_payload_creates_a_stream_and_asset() {
+    async fn import_frame_payload_creates_a_stream_and_asset() {
         let mut app = app();
         testkit_import_checker_stream(&mut app, 3);
         let scene = app.snapshot().expect("projection");
@@ -231,7 +231,7 @@ mod tests {
     /// 🎞️ In-process video import (the `ImportVideoBytesPayload` fallback path): a tiny synthesized
     /// MJPEG mp4 must decode into a new video stream whose frame count matches what was muxed in.
     #[test]
-    fn import_video_bytes_payload_extracts_frames_in_process() {
+    async fn import_video_bytes_payload_extracts_frames_in_process() {
         let mut app = app();
         // 🎯️ `IngestParams::default().frame_sample_stride == 5`; force stride 1 so all 5 synthesized
         // frames are kept (a stride-sampling test belongs to the video engine topic file, not here).
@@ -247,7 +247,7 @@ mod tests {
     /// 🎞️ Host-decoded video import path: `ImportVideoFramePayload` ticks followed by `ImportVideoDone`
     /// must accumulate into one stream and write `VideoSource` provenance, all under one coalesce key.
     #[test]
-    fn import_video_frame_payload_then_done_writes_one_stream_with_video_source() {
+    async fn import_video_frame_payload_then_done_writes_one_stream_with_video_source() {
         let mut app = app();
         for index in 0..4u32 {
             dispatch(
@@ -264,7 +264,7 @@ mod tests {
     }
 
     #[test]
-    fn add_remove_and_sync_streams_edit_the_stream_list() {
+    async fn add_remove_and_sync_streams_edit_the_stream_list() {
         let mut app = app();
         dispatch(&mut app, RemodelCommand::AddStream(add_stream::AddStream { name: "Front".into(), kind: "video".into(), camera_id: "cam-0".into() }));
         let stream_id = app.snapshot().expect("projection").streams[0].id.clone();

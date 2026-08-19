@@ -10,7 +10,7 @@ use semio_framework_plugin::{ExecutionMode, Plugin};
 /// M6-remaining, `📓️design-abi.md` §3/§6) are this crate's migration proof, mirroring `🗒️note`'s
 /// shape: the host activates one instance whenever a `program::artifact_kind().id` artifact is
 /// opened, this plugin's actor runs `Isolated`, and it asks the broker for document write access.
-pub fn plugin() -> Result<Plugin, semio_framework_plugin::PluginAssemblyError> {
+pub async fn plugin() -> Result<Plugin, semio_framework_plugin::PluginAssemblyError> {
     Plugin::builder("architect")
         .label("Architect")
         .version("0.1.0")
@@ -35,12 +35,12 @@ mod surface_tests {
     use semio_framework_plugin::testkit::{assert_editor_and_viewer_share_dialect, assert_viewer_never_mutates};
 
     #[test]
-    fn architect_viewer_never_mutates() {
+    async fn architect_viewer_never_mutates() {
         assert_viewer_never_mutates::<crate::viewer::architect::ArchitectViewer>();
     }
 
     #[test]
-    fn architect_editor_and_viewer_share_dialect() {
+    async fn architect_editor_and_viewer_share_dialect() {
         assert_editor_and_viewer_share_dialect::<crate::editor::architect::ArchitectPlayApp, crate::viewer::architect::ArchitectViewer>();
     }
 }

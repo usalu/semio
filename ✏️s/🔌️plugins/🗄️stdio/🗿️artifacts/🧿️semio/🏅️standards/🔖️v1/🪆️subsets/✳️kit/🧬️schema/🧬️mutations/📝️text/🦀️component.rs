@@ -19,27 +19,27 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 //#endregion 📖️SemioGrammar
 
 //#region 🔖️Primitives
-fn parse_usize(s: &str) -> Result<usize, String> {
+async fn parse_usize(s: &str) -> Result<usize, String> {
     s.parse().map_err(|e: std::num::ParseIntError| e.to_string())
 }
-fn enc_pieces(pieces: &[crate::artifacts::semio::standards::v1::subsets::kit::schema::snapshot::SemioKitPiece]) -> String {
+async fn enc_pieces(pieces: &[crate::artifacts::semio::standards::v1::subsets::kit::schema::snapshot::SemioKitPiece]) -> String {
     format!("[{}]", pieces.iter().map(enc_piece).collect::<Vec<_>>().join(","))
 }
-fn dec_pieces(s: &str) -> Result<Vec<crate::artifacts::semio::standards::v1::subsets::kit::schema::snapshot::SemioKitPiece>, String> {
+async fn dec_pieces(s: &str) -> Result<Vec<crate::artifacts::semio::standards::v1::subsets::kit::schema::snapshot::SemioKitPiece>, String> {
     let inner = s.strip_prefix('[').and_then(|s| s.strip_suffix(']')).ok_or_else(|| format!("pieces: expected brackets, got {s:?}"))?;
     split_top_level(inner, ',').into_iter().filter(|s| !s.is_empty()).map(dec_piece).collect()
 }
-fn enc_connections(cs: &[crate::artifacts::semio::standards::v1::subsets::kit::schema::snapshot::SemioKitConnection]) -> String {
+async fn enc_connections(cs: &[crate::artifacts::semio::standards::v1::subsets::kit::schema::snapshot::SemioKitConnection]) -> String {
     format!("[{}]", cs.iter().map(enc_connection).collect::<Vec<_>>().join(","))
 }
-fn dec_connections(s: &str) -> Result<Vec<crate::artifacts::semio::standards::v1::subsets::kit::schema::snapshot::SemioKitConnection>, String> {
+async fn dec_connections(s: &str) -> Result<Vec<crate::artifacts::semio::standards::v1::subsets::kit::schema::snapshot::SemioKitConnection>, String> {
     let inner = s.strip_prefix('[').and_then(|s| s.strip_suffix(']')).ok_or_else(|| format!("connections: expected brackets, got {s:?}"))?;
     split_top_level(inner, ',').into_iter().filter(|s| !s.is_empty()).map(dec_connection).collect()
 }
 //#endregion 🔖️Primitives
 
 //#region 🔖️OpText
-fn print_kit_mutation(m: &SemioKitMutation) -> String {
+async fn print_kit_mutation(m: &SemioKitMutation) -> String {
     match m {
         SemioKitMutation::CreateObject(p) => format!("createObject:{},{}", enc_str(&p.child_id), enc_ref(&p.target)),
         SemioKitMutation::DeleteObject(p) => format!("deleteObject:{}", enc_str(&p.child_id)),
@@ -59,7 +59,7 @@ fn print_kit_mutation(m: &SemioKitMutation) -> String {
     }
 }
 
-fn parse_kit_mutation(line: &str) -> Result<SemioKitMutation, String> {
+async fn parse_kit_mutation(line: &str) -> Result<SemioKitMutation, String> {
     if line == "deleteProperties" {
         return Ok(SemioKitMutation::DeleteProperties(DeleteProperties {}));
     }
@@ -114,10 +114,10 @@ fn parse_kit_mutation(line: &str) -> Result<SemioKitMutation, String> {
 }
 
 impl protocol::OpText for SemioKitMutation {
-    fn print_op(&self) -> String {
+    async fn print_op(&self) -> String {
         print_kit_mutation(self)
     }
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
+    async fn parse_op(line: &str) -> Result<Self, store::TextError> {
         parse_kit_mutation(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
 }
@@ -127,7 +127,7 @@ impl protocol::OpText for SemioKitMutation {
 /// 🌱 One representative value per variant — single source of truth for
 /// `ops_grammar_conformance_law`/`protocol_walk_law` in `🚪️io/🦀️component.rs`.
 #[cfg(test)]
-pub(crate) fn demo_mutation_cases() -> Vec<SemioKitMutation> {
+pub(crate) async fn demo_mutation_cases() -> Vec<SemioKitMutation> {
     let ref_of = |subset: &str, id: &str| store::os_io::ArtifactRef { artifact_id: id.into(), dialect: store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: subset.into() } };
     vec![
         SemioKitMutation::CreateObject(CreateObject { child_id: "o1".into(), target: ref_of("object", "t1") }),
@@ -156,7 +156,7 @@ mod tests {
     use protocol::OpText;
 
     #[test]
-    fn op_text_roundtrip_law() {
+    async fn op_text_roundtrip_law() {
         for mutation in demo_mutation_cases() {
             let printed = mutation.print_op();
             assert!(!printed.contains('\n'), "print_op must be one line, got {printed:?}");

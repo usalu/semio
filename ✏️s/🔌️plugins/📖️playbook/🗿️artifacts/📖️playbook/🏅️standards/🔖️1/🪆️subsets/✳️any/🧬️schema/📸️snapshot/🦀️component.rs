@@ -35,7 +35,7 @@ pub struct PlaybookSnapshot {
 }
 
 impl Default for PlaybookSnapshot {
-    fn default() -> Self {
+    async fn default() -> Self {
         let kernel = crate::playbook::empty_playbook_snapshot();
         Self::from_kernel(crate::playbook::PlaybookSpec { schema: kernel.schema, id: kernel.id, version: kernel.version, title: kernel.title, steps: kernel.steps })
     }
@@ -44,25 +44,25 @@ impl Default for PlaybookSnapshot {
 impl PlaybookSnapshot {
     /// 🌉️ Builds a plugin snapshot from the shared kernel `PlaybookSpec`, minting/caching the
     /// composed `document`/`flow` children from its `steps`.
-    pub fn from_kernel(spec: crate::playbook::PlaybookSpec) -> Self {
+    pub async fn from_kernel(spec: crate::playbook::PlaybookSpec) -> Self {
         crate::artifacts::playbook::playbook_snapshot_with_steps(&spec.schema, &spec.id, &spec.version, spec.title, spec.steps)
     }
 
     /// 🌉️ Lowers this snapshot into the kernel `PlaybookSpec` for shared domain helpers — reads
     /// steps off the `flow` child's working-scene cache (see the artifact root's `🔖️WorkingScene`).
-    pub fn to_kernel(self) -> crate::playbook::PlaybookSpec {
+    pub async fn to_kernel(self) -> crate::playbook::PlaybookSpec {
         self.as_kernel()
     }
 
     /// 🌉️ Borrows as kernel spec without consuming `self`.
-    pub fn as_kernel(&self) -> crate::playbook::PlaybookSpec {
+    pub async fn as_kernel(&self) -> crate::playbook::PlaybookSpec {
         crate::playbook::PlaybookSpec { schema: self.schema.clone(), id: self.id.clone(), version: self.version.clone(), title: self.title.clone(), steps: crate::artifacts::playbook::playbook_steps(self) }
     }
 
     /// 🔎️ The current steps, read through the composed `flow` child's working-scene cache — the
     /// single call site every render/inference/export path in this plugin uses instead of the old
     /// `.steps` field access.
-    pub fn steps(&self) -> Vec<PlaybookStep> {
+    pub async fn steps(&self) -> Vec<PlaybookStep> {
         crate::artifacts::playbook::playbook_steps(self)
     }
 }
@@ -73,28 +73,28 @@ impl PlaybookSnapshot {
 /// a handle is exactly two strings (`child_id`, the target's `ArtifactRef` flattened via
 /// `to_uri()`), never the child's own content. Generic over the phantom `S` so one pair of helpers
 /// backs both the `document` and `flow` slots.
-fn hex_encode(bytes: &[u8]) -> String {
+async fn hex_encode(bytes: &[u8]) -> String {
     bytes.iter().map(|b| format!("{b:02x}")).collect()
 }
-fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
+async fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
     if s.len() % 2 != 0 {
         return Err(format!("odd hex length: {s:?}"));
     }
     (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()
 }
-fn enc_str(s: &str) -> String {
+async fn enc_str(s: &str) -> String {
     hex_encode(s.as_bytes())
 }
-fn dec_str(s: &str) -> Result<String, String> {
+async fn dec_str(s: &str) -> Result<String, String> {
     String::from_utf8(hex_decode(s)?).map_err(|e| e.to_string())
 }
-fn enc_opt_str(v: &Option<String>) -> String {
+async fn enc_opt_str(v: &Option<String>) -> String {
     match v {
         None => "[0]".to_string(),
         Some(s) => format!("[1,{}]", enc_str(s)),
     }
 }
-fn dec_opt_str(s: &str) -> Result<Option<String>, String> {
+async fn dec_opt_str(s: &str) -> Result<Option<String>, String> {
     let inner = s.strip_prefix('[').and_then(|s| s.strip_suffix(']')).ok_or_else(|| format!("expected [...], got {s:?}"))?;
     match inner.splitn(2, ',').collect::<Vec<_>>().as_slice() {
         ["0"] => Ok(None),
@@ -102,16 +102,16 @@ fn dec_opt_str(s: &str) -> Result<Option<String>, String> {
         other => Err(format!("option: bad shape {other:?}")),
     }
 }
-fn enc_ref(r: &store::os_io::ArtifactRef) -> String {
+async fn enc_ref(r: &store::os_io::ArtifactRef) -> String {
     enc_str(&r.to_uri())
 }
-fn dec_ref(s: &str) -> Result<store::os_io::ArtifactRef, String> {
+async fn dec_ref(s: &str) -> Result<store::os_io::ArtifactRef, String> {
     store::os_io::ArtifactRef::parse_uri(&dec_str(s)?)
 }
-fn enc_child<S>(c: &store::ArtifactChild<S>) -> String {
+async fn enc_child<S>(c: &store::ArtifactChild<S>) -> String {
     format!("[{},{}]", enc_str(&c.child_id), enc_ref(&c.target))
 }
-fn dec_child<S>(s: &str) -> Result<store::ArtifactChild<S>, String> {
+async fn dec_child<S>(s: &str) -> Result<store::ArtifactChild<S>, String> {
     let inner = s.strip_prefix('[').and_then(|s| s.strip_suffix(']')).ok_or_else(|| format!("expected [...], got {s:?}"))?;
     let parts: Vec<&str> = inner.splitn(2, ',').collect();
     let [child_id, target] = parts.as_slice() else { return Err(format!("child handle: expected 2 fields, got {}", parts.len())) };
@@ -120,7 +120,7 @@ fn dec_child<S>(s: &str) -> Result<store::ArtifactChild<S>, String> {
 //#endregion 🔖️ChildCodecPrimitives
 
 //#region 🔖️TextPrimitives
-fn print_playbook_snapshot_body(s: &PlaybookSnapshot) -> String {
+async fn print_playbook_snapshot_body(s: &PlaybookSnapshot) -> String {
     format!(
         "schema={}\nid={}\nversion={}\ntitle={}\ndocument={}\nflow={}",
         enc_str(&s.schema),
@@ -131,7 +131,7 @@ fn print_playbook_snapshot_body(s: &PlaybookSnapshot) -> String {
         enc_child(&s.flow)
     )
 }
-fn parse_playbook_snapshot_body(body: &str) -> Result<PlaybookSnapshot, String> {
+async fn parse_playbook_snapshot_body(body: &str) -> Result<PlaybookSnapshot, String> {
     let mut snapshot = PlaybookSnapshot::default();
     let mut saw_schema = false;
     for line in body.lines() {
@@ -164,21 +164,21 @@ fn parse_playbook_snapshot_body(body: &str) -> Result<PlaybookSnapshot, String> 
 //#endregion 🔖️TextPrimitives
 
 //#region 🔖️BinaryPrimitives
-fn write_bytes_lp(out: &mut Vec<u8>, bytes: &[u8]) {
+async fn write_bytes_lp(out: &mut Vec<u8>, bytes: &[u8]) {
     store::pack_rt::write_varint_u64(out, bytes.len() as u64);
     out.extend_from_slice(bytes);
 }
-fn read_bytes_lp(reader: &mut store::ByteReader<'_>) -> Result<Vec<u8>, String> {
+async fn read_bytes_lp(reader: &mut store::ByteReader<'_>) -> Result<Vec<u8>, String> {
     let len = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
     Ok(reader.read_bytes(len).map_err(|e| e.to_string())?.to_vec())
 }
-fn write_str_lp(out: &mut Vec<u8>, s: &str) {
+async fn write_str_lp(out: &mut Vec<u8>, s: &str) {
     write_bytes_lp(out, s.as_bytes());
 }
-fn read_str_lp(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
+async fn read_str_lp(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
     String::from_utf8(read_bytes_lp(reader)?).map_err(|e| e.to_string())
 }
-fn write_opt_str(out: &mut Vec<u8>, v: &Option<String>) {
+async fn write_opt_str(out: &mut Vec<u8>, v: &Option<String>) {
     match v {
         None => out.push(0),
         Some(s) => {
@@ -187,30 +187,30 @@ fn write_opt_str(out: &mut Vec<u8>, v: &Option<String>) {
         }
     }
 }
-fn read_opt_str(reader: &mut store::ByteReader<'_>) -> Result<Option<String>, String> {
+async fn read_opt_str(reader: &mut store::ByteReader<'_>) -> Result<Option<String>, String> {
     match reader.read_u8().map_err(|e| e.to_string())? {
         0 => Ok(None),
         1 => Ok(Some(read_str_lp(reader)?)),
         other => Err(format!("opt str: bad tag {other}")),
     }
 }
-fn write_ref(out: &mut Vec<u8>, r: &store::os_io::ArtifactRef) {
+async fn write_ref(out: &mut Vec<u8>, r: &store::os_io::ArtifactRef) {
     write_str_lp(out, &r.to_uri());
 }
-fn read_ref(reader: &mut store::ByteReader<'_>) -> Result<store::os_io::ArtifactRef, String> {
+async fn read_ref(reader: &mut store::ByteReader<'_>) -> Result<store::os_io::ArtifactRef, String> {
     store::os_io::ArtifactRef::parse_uri(&read_str_lp(reader)?)
 }
-fn write_child<S>(out: &mut Vec<u8>, c: &store::ArtifactChild<S>) {
+async fn write_child<S>(out: &mut Vec<u8>, c: &store::ArtifactChild<S>) {
     write_str_lp(out, &c.child_id);
     write_ref(out, &c.target);
 }
-fn read_child<S>(reader: &mut store::ByteReader<'_>) -> Result<store::ArtifactChild<S>, String> {
+async fn read_child<S>(reader: &mut store::ByteReader<'_>) -> Result<store::ArtifactChild<S>, String> {
     let child_id = read_str_lp(reader)?;
     let target = read_ref(reader)?;
     Ok(store::ArtifactChild::new(child_id, target))
 }
 
-fn encode_playbook_snapshot_binary(s: &PlaybookSnapshot) -> Vec<u8> {
+async fn encode_playbook_snapshot_binary(s: &PlaybookSnapshot) -> Vec<u8> {
     const PACK_BINARY_FORMAT: u8 = 1;
     let mut out = vec![PACK_BINARY_FORMAT];
     write_str_lp(&mut out, &s.schema);
@@ -221,7 +221,7 @@ fn encode_playbook_snapshot_binary(s: &PlaybookSnapshot) -> Vec<u8> {
     write_child(&mut out, &s.flow);
     out
 }
-fn decode_playbook_snapshot_binary(bytes: &[u8]) -> Result<PlaybookSnapshot, String> {
+async fn decode_playbook_snapshot_binary(bytes: &[u8]) -> Result<PlaybookSnapshot, String> {
     const PACK_BINARY_FORMAT: u8 = 1;
     let mut reader = store::ByteReader::new(bytes);
     let format = reader.read_u8().map_err(|e| e.to_string())?;
@@ -242,17 +242,17 @@ fn decode_playbook_snapshot_binary(bytes: &[u8]) -> Result<PlaybookSnapshot, Str
 //#region 🔖️HandcraftedArtifactCodecs
 impl store::ArtifactDsl for PlaybookSnapshot {
     const EXTENSION: &'static str = "playbook";
-    fn envelope_id() -> &'static str {
+    async fn envelope_id() -> &'static str {
         "playbook.playbook"
     }
-    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+    async fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
         let body = match store::semio_format::split_text_preamble(text) {
             Ok((_, rest)) => rest,
             Err(_) => text,
         };
         parse_playbook_snapshot_body(body).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
-    fn print_dsl(&self) -> String {
+    async fn print_dsl(&self) -> String {
         let body = print_playbook_snapshot_body(self);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
             <Self as store::ArtifactDsl>::envelope_id(),
@@ -265,7 +265,7 @@ impl store::ArtifactDsl for PlaybookSnapshot {
 }
 
 impl store::ArtifactPack for PlaybookSnapshot {
-    fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
+    async fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
         let raw = encode_playbook_snapshot_binary(self);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
@@ -276,7 +276,7 @@ impl store::ArtifactPack for PlaybookSnapshot {
         .map_err(|e| store::PackError::Schema(e.to_string()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &raw))
     }
-    fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
+    async fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let (envelope, inner) =
             store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
         if envelope.envelope_id() != <Self as store::ArtifactDsl>::envelope_id() {

@@ -18,16 +18,16 @@ pub struct CreateStorageRequirement {
 }
 impl MutationKind<ProgramSnapshot, ProgramMutation> for CreateStorageRequirement {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "create", entity: "storage-requirement", kind: "create-storage-requirement", record: "CreatedStorageRequirement" };
-    fn diff(&self, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
+    async fn diff(&self, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {
+    async fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         format!("Create storage requirement \"{}\"", self.storage_requirement.header.name)
     }
-    fn target(&self) -> Vec<String> {
+    async fn target(&self) -> Vec<String> {
         vec![self.storage_requirement.header.id.0.clone()]
     }
 }

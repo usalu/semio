@@ -12,7 +12,7 @@ pub struct Disconnect {
     pub synapse_id: String,
 }
 
-pub fn handle(payload: &Disconnect, doc: &ArtifactView<'_, FlowSnapshot>, cfg: &ConfigView<'_, FlowConfig>, session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, FlowConfigMutation>, Fault> {
+pub async fn handle(payload: &Disconnect, doc: &ArtifactView<'_, FlowSnapshot>, cfg: &ConfigView<'_, FlowConfig>, session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, FlowConfigMutation>, Fault> {
     Ok(Emit::mutations(host_operations(doc.snapshot, cfg.snapshot, session, |host| host.disconnect(&payload.synapse_id).is_ok())))
 }
 
@@ -24,7 +24,7 @@ mod tests {
     use crate::editor::flow::FlowCommand;
 
     #[test]
-    fn disconnecting_an_unknown_synapse_is_a_no_operation() {
+    async fn disconnecting_an_unknown_synapse_is_a_no_operation() {
         let mut app = flow_app();
         let result = dispatch(&mut app, FlowCommand::Disconnect(Disconnect { synapse_id: "nope".into() }));
         assert!(result.mutations.is_empty());

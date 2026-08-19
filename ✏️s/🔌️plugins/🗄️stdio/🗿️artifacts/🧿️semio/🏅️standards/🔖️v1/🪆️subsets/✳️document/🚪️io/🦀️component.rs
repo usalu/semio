@@ -27,11 +27,11 @@ pub mod derived_composition {
         type Snapshot = SemioDocumentSnapshot;
         const WRITES: Dialect = DIALECT;
 
-        fn reads() -> &'static [Dialect] {
+        async fn reads() -> &'static [Dialect] {
             &[DIALECT]
         }
 
-        fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+        async fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
             let native: Vec<AnalyzeSource<'_>> = sources
                 .iter()
                 .filter(|s| s.dialect == DIALECT)
@@ -54,12 +54,12 @@ pub mod derived_composition {
     /// 🛡️ Real cross-reference checks over a decoded snapshot: unresolved `image_id`/`style_id`
     /// references and `based_on` cycles. Recurses through `List`/`Table`/`Quote` nesting so a
     /// reference buried in a table cell or list item is caught too.
-    pub fn check_document_referential_integrity(snapshot: &SemioDocumentSnapshot) -> Vec<dsl::Diagnostic> {
+    pub async fn check_document_referential_integrity(snapshot: &SemioDocumentSnapshot) -> Vec<dsl::Diagnostic> {
         let mut diagnostics = Vec::new();
         let known_images: std::collections::HashSet<&str> = snapshot.images.iter().map(|i| i.id.as_str()).collect();
         let known_styles: std::collections::HashSet<&str> = snapshot.styles.iter().map(|s| s.id.as_str()).collect();
 
-        fn walk(blocks: &[DocBlock], known_images: &std::collections::HashSet<&str>, known_styles: &std::collections::HashSet<&str>, out: &mut Vec<dsl::Diagnostic>) {
+        async fn walk(blocks: &[DocBlock], known_images: &std::collections::HashSet<&str>, known_styles: &std::collections::HashSet<&str>, out: &mut Vec<dsl::Diagnostic>) {
             for block in blocks {
                 match block {
                     DocBlock::Paragraph { style_id: Some(id), .. } | DocBlock::Heading { style_id: Some(id), .. } if !known_styles.contains(id.as_str()) => {
@@ -120,7 +120,7 @@ pub mod derived_composition {
 
     impl SubsetValidator for SemioDocumentValidator {
         const DIALECT: Dialect = DIALECT;
-        fn validate(payload: &IoPayload) -> Vec<dsl::Diagnostic> {
+        async fn validate(payload: &IoPayload) -> Vec<dsl::Diagnostic> {
             let decoded = match payload {
                 IoPayload::Binary(bytes) => <SemioDocumentSnapshot as store::ArtifactPack>::decode_pack(bytes).ok(),
                 IoPayload::Text(text) => <SemioDocumentSnapshot as store::ArtifactDsl>::parse_dsl(text).ok(),
@@ -133,7 +133,7 @@ pub mod derived_composition {
     }
 
     static VALIDATOR_ENTRY: std::sync::OnceLock<SubsetValidatorEntry> = std::sync::OnceLock::new();
-    fn validator_entry() -> &'static SubsetValidatorEntry {
+    async fn validator_entry() -> &'static SubsetValidatorEntry {
         VALIDATOR_ENTRY.get_or_init(subset_validator_entry_of::<SemioDocumentValidator>)
     }
     //#endregion 🔖️SubsetValidator
@@ -147,7 +147,7 @@ pub mod derived_composition {
     /// these 2 rows, per `io_compose_via`'s own doc comment / `register_composer_entries`'s
     /// reads-derives-both-directions behavior.
     static IO_ENTRIES: std::sync::OnceLock<Vec<ComposerEntry>> = std::sync::OnceLock::new();
-    fn io_entries() -> &'static [ComposerEntry] {
+    async fn io_entries() -> &'static [ComposerEntry] {
         IO_ENTRIES.get_or_init(|| {
             vec![
                 deserializer_entry_of::<SemioDocumentFromDocx>(),
@@ -167,7 +167,7 @@ pub mod derived_composition {
     /// 📌️ Registers this subset's schema descriptor, document codec, SubsetValidator, and the
     /// document<->{docx,md,txt,pdf} io bridge rows. Called from this artifact's standard-level
     /// `engine::register()`.
-    pub fn register() {
+    pub async fn register() {
         ::schema::register_artifact_schema_descriptor(crate::artifacts::semio::standards::v1::subsets::document::schema::semio_document_artifact_schema_descriptor());
         let _ = store::register_document_codec(store::ArtifactCodec::of::<SemioDocumentSnapshot, crate::artifacts::semio::standards::v1::subsets::document::schema::mutations::SemioDocumentMutation>(
             crate::artifacts::semio::standards::v1::subsets::document::schema::snapshot::STDIO_SEMIODOCUMENT_DOCUMENT_SCHEMA,
@@ -180,7 +180,7 @@ pub mod derived_composition {
     /// 💡️ Registers `s.stdio.semio.document.inference`'s facet leaves into the OS-wide inference
     /// catalog — sibling to `register_artifact_schema_descriptor` above (separate registry,
     /// ticket 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING).
-    pub fn register_artifact_inferences() {
+    pub async fn register_artifact_inferences() {
         ::schema::register_artifact_inference_descriptor(crate::artifacts::semio::standards::v1::subsets::document::schema::inferences::semio_document_artifact_inference_descriptor());
     }
     //#endregion 🔖️Register
@@ -193,7 +193,7 @@ pub mod derived_composition {
         use semio_framework_plugin::{ArtifactDeserializer, ArtifactSerializer};
 
         #[test]
-        fn clean_document_validates_with_no_diagnostics() {
+        async fn clean_document_validates_with_no_diagnostics() {
             let snapshot = SemioDocumentSnapshot {
                 schema: crate::artifacts::semio::standards::v1::subsets::document::schema::snapshot::STDIO_SEMIODOCUMENT_DOCUMENT_SCHEMA.into(),
                 styles: vec![DocStyle { id: "base".into(), name: "Base".into(), based_on: None }, DocStyle { id: "child".into(), name: "Child".into(), based_on: Some("base".into()) }],
@@ -206,7 +206,7 @@ pub mod derived_composition {
         }
 
         #[test]
-        fn unresolved_image_and_style_references_are_flagged() {
+        async fn unresolved_image_and_style_references_are_flagged() {
             let snapshot = SemioDocumentSnapshot {
                 schema: crate::artifacts::semio::standards::v1::subsets::document::schema::snapshot::STDIO_SEMIODOCUMENT_DOCUMENT_SCHEMA.into(),
                 styles: Vec::new(),
@@ -220,7 +220,7 @@ pub mod derived_composition {
         }
 
         #[test]
-        fn based_on_cycle_is_flagged() {
+        async fn based_on_cycle_is_flagged() {
             let snapshot = SemioDocumentSnapshot {
                 schema: crate::artifacts::semio::standards::v1::subsets::document::schema::snapshot::STDIO_SEMIODOCUMENT_DOCUMENT_SCHEMA.into(),
                 styles: vec![DocStyle { id: "a".into(), name: "A".into(), based_on: Some("b".into()) }, DocStyle { id: "b".into(), name: "B".into(), based_on: Some("a".into()) }],
@@ -232,7 +232,7 @@ pub mod derived_composition {
         }
 
         #[test]
-        fn nested_table_cell_reference_is_checked() {
+        async fn nested_table_cell_reference_is_checked() {
             let snapshot = SemioDocumentSnapshot {
                 schema: crate::artifacts::semio::standards::v1::subsets::document::schema::snapshot::STDIO_SEMIODOCUMENT_DOCUMENT_SCHEMA.into(),
                 styles: Vec::new(),
@@ -248,7 +248,7 @@ pub mod derived_composition {
         }
 
         #[test]
-        fn composer_reads_own_dialect_pack() {
+        async fn composer_reads_own_dialect_pack() {
             let snapshot = SemioDocumentSnapshot::default();
             let bytes = store::ArtifactPack::encode_pack(&snapshot);
             let sources = vec![ComposeSource { dialect: DIALECT, payload: AnalyzeSource::Binary(&bytes) }];
@@ -264,7 +264,7 @@ pub mod derived_composition {
         // `SemioDocumentSnapshot` itself has no field for them).
 
         #[test]
-        fn docx_round_trip_is_stable() {
+        async fn docx_round_trip_is_stable() {
             use crate::artifacts::docx::schema::snapshot::{DocxBlock, DocxDocument, DocxParagraph, DocxRun, DocxStyle};
             use crate::artifacts::docx::DocxSnapshot;
             use crate::artifacts::zip::opc::OpcPackage;
@@ -283,14 +283,14 @@ pub mod derived_composition {
                     ],
                 },
             );
-            let semio1 = SemioDocumentFromDocx::deserialize(&docx1).expect("deserialize");
-            let docx2 = SemioDocumentToDocx::serialize(&semio1).expect("serialize");
-            let semio2 = SemioDocumentFromDocx::deserialize(&docx2).expect("deserialize round 2");
+            let semio1 = semio_framework_plugin::resolve_ready(SemioDocumentFromDocx::deserialize(&docx1)).expect("deserialize");
+            let docx2 = semio_framework_plugin::resolve_ready(SemioDocumentToDocx::serialize(&semio1)).expect("serialize");
+            let semio2 = semio_framework_plugin::resolve_ready(SemioDocumentFromDocx::deserialize(&docx2)).expect("deserialize round 2");
             assert_eq!(semio1, semio2);
         }
 
         #[test]
-        fn md_round_trip_is_stable() {
+        async fn md_round_trip_is_stable() {
             use crate::artifacts::md::schema::snapshot::{MdBlock, MdInline};
             use crate::artifacts::md::MdSnapshot;
 
@@ -302,26 +302,26 @@ pub mod derived_composition {
                     MdBlock::CodeBlock { info: Some("rust".into()), literal: "fn main() {}".into() },
                 ],
             };
-            let semio1 = SemioDocumentFromMd::deserialize(&md1).expect("deserialize");
-            let md2 = SemioDocumentToMd::serialize(&semio1).expect("serialize");
-            let semio2 = SemioDocumentFromMd::deserialize(&md2).expect("deserialize round 2");
+            let semio1 = semio_framework_plugin::resolve_ready(SemioDocumentFromMd::deserialize(&md1)).expect("deserialize");
+            let md2 = semio_framework_plugin::resolve_ready(SemioDocumentToMd::serialize(&semio1)).expect("serialize");
+            let semio2 = semio_framework_plugin::resolve_ready(SemioDocumentFromMd::deserialize(&md2)).expect("deserialize round 2");
             assert_eq!(semio1, semio2);
         }
 
         #[test]
-        fn txt_round_trip_is_stable() {
+        async fn txt_round_trip_is_stable() {
             use crate::artifacts::txt::schema::snapshot::LineEnding;
             use crate::artifacts::txt::TxtSnapshot;
 
             let txt1 = TxtSnapshot { schema: crate::artifacts::txt::STDIO_TXT_DOCUMENT_SCHEMA.into(), lines: vec!["First line.".into(), String::new(), "Third line.".into()], trailing_newline: true, line_ending: LineEnding::Lf };
-            let semio1 = SemioDocumentFromTxt::deserialize(&txt1).expect("deserialize");
-            let txt2 = SemioDocumentToTxt::serialize(&semio1).expect("serialize");
-            let semio2 = SemioDocumentFromTxt::deserialize(&txt2).expect("deserialize round 2");
+            let semio1 = semio_framework_plugin::resolve_ready(SemioDocumentFromTxt::deserialize(&txt1)).expect("deserialize");
+            let txt2 = semio_framework_plugin::resolve_ready(SemioDocumentToTxt::serialize(&semio1)).expect("serialize");
+            let semio2 = semio_framework_plugin::resolve_ready(SemioDocumentFromTxt::deserialize(&txt2)).expect("deserialize round 2");
             assert_eq!(semio1, semio2);
         }
 
         #[test]
-        fn pdf_round_trip_is_stable() {
+        async fn pdf_round_trip_is_stable() {
             use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::snapshot::{PdfPage, PdfSnapshot};
 
             let mut p1 = PdfPage::new(612.0, 792.0);
@@ -329,9 +329,9 @@ pub mod derived_composition {
             let mut p2 = PdfPage::new(612.0, 792.0);
             p2.text = "Page two text.".into();
             let pdf1 = PdfSnapshot { pages: vec![p1, p2], ..Default::default() };
-            let semio1 = SemioDocumentFromPdf::deserialize(&pdf1).expect("deserialize");
-            let pdf2 = SemioDocumentToPdf::serialize(&semio1).expect("serialize");
-            let semio2 = SemioDocumentFromPdf::deserialize(&pdf2).expect("deserialize round 2");
+            let semio1 = semio_framework_plugin::resolve_ready(SemioDocumentFromPdf::deserialize(&pdf1)).expect("deserialize");
+            let pdf2 = semio_framework_plugin::resolve_ready(SemioDocumentToPdf::serialize(&semio1)).expect("serialize");
+            let semio2 = semio_framework_plugin::resolve_ready(SemioDocumentFromPdf::deserialize(&pdf2)).expect("deserialize round 2");
             assert_eq!(semio1, semio2);
         }
         //#endregion 🔖️IoRoundTrips
@@ -353,7 +353,7 @@ pub mod derived_composition {
             /// parse under the real dialect — independent of, and cheaper than, the two `recognize`/
             /// `walk_protocol` laws below.
             #[test]
-            fn committed_facet_files_parse() {
+            async fn committed_facet_files_parse() {
                 for (label, text) in [("snapshot grammar", snapshot::text::COMPONENT_GRAMMAR_SEMIO), ("mutations grammar", mutations::text::COMPONENT_GRAMMAR_SEMIO), ("diff grammar", diff::text::COMPONENT_GRAMMAR_SEMIO)] {
                     let grammar = dsl::parse_grammar(text).unwrap_or_else(|e| panic!("{label}: parse_grammar failed: {e:?}"));
                     assert_eq!(grammar.dialect, dsl::SemioDialect::Grammar, "{label}: expected grammar dialect");
@@ -369,7 +369,7 @@ pub mod derived_composition {
             /// `artifact-mark` token), so this is a direct proof this facet will pass that harness once
             /// graduated.
             #[test]
-            fn grammar_conformance_law() {
+            async fn grammar_conformance_law() {
                 let grammar = dsl::parse_grammar(snapshot::text::COMPONENT_GRAMMAR_SEMIO).expect("parse snapshot grammar");
                 let recognizer = dsl::Recognizer::compile(&grammar);
                 let text = store::ArtifactDsl::print_dsl(&snapshot::demo_semio_document_snapshot());
@@ -381,7 +381,7 @@ pub mod derived_composition {
             /// ✅️ `ops_grammar_conformance_law`: the mutations grammar recognizes real `print_op` output
             /// for every `SemioDocumentMutation` variant (`mutations::demo_mutation_cases()`).
             #[test]
-            fn ops_grammar_conformance_law() {
+            async fn ops_grammar_conformance_law() {
                 let grammar = dsl::parse_grammar(mutations::text::COMPONENT_GRAMMAR_SEMIO).expect("parse mutations grammar");
                 let recognizer = dsl::Recognizer::compile(&grammar);
                 for mutation in mutations::demo_mutation_cases() {
@@ -394,7 +394,7 @@ pub mod derived_composition {
             /// for every representative `SemioDocumentDiff` (`diff::demo_diff_cases()`), incl. the
             /// empty (no-op) diff.
             #[test]
-            fn diff_grammar_conformance_law() {
+            async fn diff_grammar_conformance_law() {
                 let grammar = dsl::parse_grammar(diff::text::COMPONENT_GRAMMAR_SEMIO).expect("parse diff grammar");
                 let recognizer = dsl::Recognizer::compile(&grammar);
                 for d in diff::demo_diff_cases() {
@@ -407,7 +407,7 @@ pub mod derived_composition {
             /// snapshot pack (`encode_pack`, envelope-unwrapped first), every demo mutation's
             /// `encode_op`, and every demo diff's `encode_diff` — asserting `consumed == bytes.len()`.
             #[test]
-            fn protocol_walk_law() {
+            async fn protocol_walk_law() {
                 let pack_spec = dsl::parse_protocol(snapshot::binary::COMPONENT_PROTOCOL_SEMIO).expect("parse snapshot protocol");
                 let packed = store::ArtifactPack::encode_pack(&snapshot::demo_semio_document_snapshot());
                 let (_, inner) = store::semio_format::unwrap_binary(&packed).expect("unwrap semio envelope");
@@ -434,7 +434,7 @@ pub mod derived_composition {
             /// `parse_dsl(fixture) == demo()`, `print_dsl(demo()) == fixture` (byte-for-byte), and the
             /// pack twin — so the fixtures can never silently drift back to a fake.
             #[test]
-            fn fixture_honesty_law() {
+            async fn fixture_honesty_law() {
                 const FIXTURE_DSL: &str = include_str!("../../✳️any/📚️examples/📄️memo/🖼️assets/🗣️example.dsl.semio");
                 const FIXTURE_PACK: &[u8] = include_bytes!("../../✳️any/📚️examples/📄️memo/🖼️assets/🎒️example.pack.semio");
 

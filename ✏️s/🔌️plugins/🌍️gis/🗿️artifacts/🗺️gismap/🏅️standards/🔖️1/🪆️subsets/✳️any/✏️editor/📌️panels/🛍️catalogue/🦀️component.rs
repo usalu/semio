@@ -10,7 +10,7 @@ pub const GIS2D_PLAY_BODY_CATALOGUE: &str = "gis2d.play.catalogue";
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
-pub fn definition() -> PanelTabDefinition {
+pub async fn definition() -> PanelTabDefinition {
     PanelTabDefinition {
         kind: PanelTabKind::App(FRAMEWORK_PANEL_TAB_CATALOGUE_ID.into()),
         label: LocalizedLabel::native(FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, "Katalog"),
@@ -22,7 +22,7 @@ pub fn definition() -> PanelTabDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(labels: &Gis2dPlayLabels) -> UiNode {
+pub async fn render(labels: &Gis2dPlayLabels) -> UiNode {
     let builder = PanelTreeBuilder::new("gis2d-play-catalogue");
     let items: Vec<UiTreeItemNode> = GIS_MAP_LAYER_IDS
         .iter()
@@ -39,13 +39,13 @@ mod tests {
     use crate::editor::gis2d::testkit::{app, render as render_body};
 
     #[test]
-    fn catalogue_lists_layer_toggles() {
+    async fn catalogue_lists_layer_toggles() {
         let mut app = app();
         assert!(render_body(&mut app, GIS2D_PLAY_BODY_CATALOGUE).contains("gis2d-play-catalogue.layer.water"));
     }
 
     #[test]
-    fn the_definition_binds_the_framework_catalogue_tab_to_this_body() {
+    async fn the_definition_binds_the_framework_catalogue_tab_to_this_body() {
         assert_eq!(definition().body_key.as_deref(), Some(GIS2D_PLAY_BODY_CATALOGUE));
     }
 }

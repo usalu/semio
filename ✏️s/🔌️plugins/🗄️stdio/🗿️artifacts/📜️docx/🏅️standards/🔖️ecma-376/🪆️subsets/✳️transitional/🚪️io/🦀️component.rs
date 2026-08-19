@@ -23,12 +23,12 @@ pub mod derived_composition {
         type Snapshot = DocxSnapshot;
         const WRITES: Dialect = DIALECT_TRANSITIONAL;
 
-        fn reads() -> &'static [Dialect] {
+        async fn reads() -> &'static [Dialect] {
             &[DIALECT_ANY, DIALECT_TRANSITIONAL, DEP_ZIP, DEP_XML]
         }
 
-        fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
-            let inner = DocxAnyComposer::compose(sources)?;
+        async fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+            let inner = semio_framework_plugin::resolve_ready(DocxAnyComposer::compose(sources))?;
             let checks = check_transitional_conformance(&inner.snapshot);
             let (hard, soft): (Vec<Diagnostic>, Vec<Diagnostic>) = checks.into_iter().partition(|d| matches!(d.severity, Severity::Error | Severity::Fatal));
             if !hard.is_empty() {
@@ -51,7 +51,7 @@ pub mod derived_composition {
     impl SubsetValidator for DocxTransitionalValidator {
         const DIALECT: Dialect = DIALECT_TRANSITIONAL;
 
-        fn validate(payload: &IoPayload) -> Vec<Diagnostic> {
+        async fn validate(payload: &IoPayload) -> Vec<Diagnostic> {
             let decoded = match payload {
                 IoPayload::Binary(bytes) => <DocxSnapshot as store::ArtifactPack>::decode_pack(bytes).ok(),
                 IoPayload::Text(text) => <DocxSnapshot as store::ArtifactDsl>::parse_dsl(text).ok(),
@@ -72,7 +72,7 @@ pub mod derived_composition {
 
     static VALIDATOR_ENTRY: OnceLock<SubsetValidatorEntry> = OnceLock::new();
 
-    fn validator_entry() -> &'static SubsetValidatorEntry {
+    async fn validator_entry() -> &'static SubsetValidatorEntry {
         VALIDATOR_ENTRY.get_or_init(subset_validator_entry_of::<DocxTransitionalValidator>)
     }
 
@@ -80,7 +80,7 @@ pub mod derived_composition {
     /// validate-on-build hook). Called from the ecma-376 standard's own `⚙️engine::register()`. The
     /// `ComposerEntry` itself is aggregated separately by the standard-level composer
     /// (`crate::artifacts::docx::standards::v_ecma_376::engine::io_registry::entries()`).
-    pub fn register() {
+    pub async fn register() {
         let _ = register_subset_validator(validator_entry());
     }
     //#endregion 🔖️SubsetValidator
@@ -94,7 +94,7 @@ pub mod derived_composition {
 
         const TRANSITIONAL_MAIN_NS: &str = "http://schemas.openxmlformats.org/wordprocessingml/2006/main";
 
-        fn transitional_snapshot() -> DocxSnapshot {
+        async fn transitional_snapshot() -> DocxSnapshot {
             let mut opc = OpcPackage::empty();
             opc.content_types.set_default("rels", RELS_CONTENT_TYPE);
             opc.content_types.set_default("xml", "application/xml");
@@ -104,7 +104,7 @@ pub mod derived_composition {
         }
 
         #[test]
-        fn conforming_snapshot_composes_and_stamps_transitional() {
+        async fn conforming_snapshot_composes_and_stamps_transitional() {
             let bytes = <DocxSnapshot as store::ArtifactPack>::encode_pack(&transitional_snapshot());
             let sources = vec![ComposeSource { dialect: DIALECT_ANY, payload: AnalyzeSource::Binary(&bytes) }];
             let composed = DocxTransitionalComposerComposition::compose(&sources).expect("clean transitional document must compose");
@@ -112,7 +112,7 @@ pub mod derived_composition {
         }
 
         #[test]
-        fn strict_namespace_present_fails_compose_with_real_diagnostic() {
+        async fn strict_namespace_present_fails_compose_with_real_diagnostic() {
             let mut opc = OpcPackage::empty();
             opc.content_types.set_default("rels", RELS_CONTENT_TYPE);
             opc.content_types.set_default("xml", "application/xml");
@@ -127,7 +127,7 @@ pub mod derived_composition {
         }
 
         #[test]
-        fn subset_validator_rechecks_wire_payload() {
+        async fn subset_validator_rechecks_wire_payload() {
             let bytes = <DocxSnapshot as store::ArtifactPack>::encode_pack(&transitional_snapshot());
             let diagnostics = DocxTransitionalValidator::validate(&IoPayload::Binary(bytes));
             assert!(diagnostics.iter().all(|d| d.severity != Severity::Error), "got {diagnostics:?}");

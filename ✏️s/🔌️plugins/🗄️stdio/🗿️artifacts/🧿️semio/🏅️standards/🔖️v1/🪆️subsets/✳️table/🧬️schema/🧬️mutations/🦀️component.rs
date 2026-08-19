@@ -60,7 +60,7 @@ mod tests {
     use crate::artifacts::semio::standards::v1::subsets::value::schema::snapshot::SemioValue;
     use protocol::{Mutation, MutationDiff, SemanticMutation};
 
-    fn fixture() -> SemioTableSnapshot {
+    async fn fixture() -> SemioTableSnapshot {
         SemioTableSnapshot {
             schema: STDIO_SEMIOTABLE_DOCUMENT_SCHEMA.into(),
             columns: vec![SemioTableColumn { name: "label".into(), kind: SemioTableCellKind::Str }, SemioTableColumn { name: "score".into(), kind: SemioTableCellKind::Float }],
@@ -71,7 +71,7 @@ mod tests {
         }
     }
 
-    fn round_trip(base: &SemioTableSnapshot, operation: &SemioTableMutation) -> SemioTableSnapshot {
+    async fn round_trip(base: &SemioTableSnapshot, operation: &SemioTableMutation) -> SemioTableSnapshot {
         let forward = operation.diff(base).diff().apply(base).expect("apply must succeed for a well-formed fixture");
         let backwards = operation.inverse(base);
         let mut restored = forward.clone();
@@ -89,7 +89,7 @@ mod tests {
     /// 🧪️ CRITICAL alignment invariant: creating a column inserts a `Null` cell at the same index
     /// into EVERY row.
     #[test]
-    fn create_column_keeps_rows_aligned() {
+    async fn create_column_keeps_rows_aligned() {
         let base = fixture();
         let create = SemioTableMutation::CreateColumn(create_column::mutation::CreateColumn { name: "notes".into(), kind: SemioTableCellKind::Str, index: Some(1) });
         let after = round_trip(&base, &create);
@@ -107,7 +107,7 @@ mod tests {
     /// row, and the cascade-capturing inverse restores the exact original per-row cell values (not
     /// just `Null`).
     #[test]
-    fn delete_column_captures_full_row_cascade_for_inverse() {
+    async fn delete_column_captures_full_row_cascade_for_inverse() {
         let base = fixture();
         let delete = SemioTableMutation::DeleteColumn(delete_column::mutation::DeleteColumn { name: "label".into() });
         let after = round_trip(&base, &delete);
@@ -126,7 +126,7 @@ mod tests {
     }
 
     #[test]
-    fn delete_column_of_an_absent_name_has_an_empty_inverse() {
+    async fn delete_column_of_an_absent_name_has_an_empty_inverse() {
         let base = fixture();
         let delete = SemioTableMutation::DeleteColumn(delete_column::mutation::DeleteColumn { name: "missing".into() });
         assert!(delete.inverse(&base).is_empty());
@@ -134,7 +134,7 @@ mod tests {
     }
 
     #[test]
-    fn rename_column_round_trips() {
+    async fn rename_column_round_trips() {
         let base = fixture();
         let rename = SemioTableMutation::RenameColumn(rename_column::mutation::RenameColumn { name: "label".into(), new_name: "title".into() });
         let after = round_trip(&base, &rename);
@@ -145,7 +145,7 @@ mod tests {
     /// 🧪️ CRITICAL alignment invariant: reordering a column applies the identical remove-then-
     /// insert to every row's cells.
     #[test]
-    fn reorder_columns_keeps_rows_aligned() {
+    async fn reorder_columns_keeps_rows_aligned() {
         let base = fixture();
         let reorder = SemioTableMutation::ReorderColumns(reorder_columns::mutation::ReorderColumns { name: "score".into(), to_index: 0 });
         let after = round_trip(&base, &reorder);
@@ -158,7 +158,7 @@ mod tests {
     }
 
     #[test]
-    fn insert_remove_row_round_trips() {
+    async fn insert_remove_row_round_trips() {
         let base = fixture();
         let new_row = SemioTableRow { cells: vec![SemioValue::Str { value: "c".into() }, SemioValue::Float { lexeme: "3.000".into() }] };
 
@@ -177,7 +177,7 @@ mod tests {
     }
 
     #[test]
-    fn remove_row_of_an_out_of_range_index_has_an_empty_inverse() {
+    async fn remove_row_of_an_out_of_range_index_has_an_empty_inverse() {
         let base = fixture();
         let remove = SemioTableMutation::RemoveRow(remove_row::mutation::RemoveRow { index: 99 });
         assert!(remove.inverse(&base).is_empty(), "removing an absent index has nothing to undo");
@@ -185,7 +185,7 @@ mod tests {
     }
 
     #[test]
-    fn reorder_rows_round_trips() {
+    async fn reorder_rows_round_trips() {
         let base = fixture();
         let reorder = SemioTableMutation::ReorderRows(reorder_rows::mutation::ReorderRows { from: 0, to: 1 });
         let after = round_trip(&base, &reorder);
@@ -194,7 +194,7 @@ mod tests {
     }
 
     #[test]
-    fn edit_cell_round_trips() {
+    async fn edit_cell_round_trips() {
         let base = fixture();
         let edit = SemioTableMutation::EditCell(edit_cell::mutation::EditCell { row_index: 0, column_name: "score".into(), new_value: SemioValue::Float { lexeme: "9.000".into() } });
         let after = round_trip(&base, &edit);
@@ -206,7 +206,7 @@ mod tests {
     }
 
     #[test]
-    fn semantic_kinds_cover_every_variant() {
+    async fn semantic_kinds_cover_every_variant() {
         assert_eq!(SemioTableMutation::kinds().len(), 8);
         let mutation = SemioTableMutation::RemoveRow(remove_row::mutation::RemoveRow { index: 2 });
         assert_eq!(mutation.semantics().kind, "remove-row");

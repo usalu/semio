@@ -4,7 +4,7 @@ use crate::artifacts::note::NoteDiff;
 use crate::artifacts::note::NoteSnapshot;
 
 //#region 🔖️Diff
-pub fn diff(payload: &ChangeGridSpacing, base: &NoteSnapshot) -> protocol::MutationOutcome<NoteDiff> {
+pub async fn diff(payload: &ChangeGridSpacing, base: &NoteSnapshot) -> protocol::MutationOutcome<NoteDiff> {
     if let Some(spacing) = payload.new_spacing {
         if !spacing.is_finite() || spacing <= 0.0 {
             return protocol::MutationOutcome::fatal("mutation.invariant", format!("Grid spacing must be a positive number, got {spacing}."), Vec::<String>::new());

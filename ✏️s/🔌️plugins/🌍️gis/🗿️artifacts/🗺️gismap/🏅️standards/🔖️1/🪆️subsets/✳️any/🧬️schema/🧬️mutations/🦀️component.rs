@@ -52,7 +52,7 @@ mod tests {
     use serde_json::json;
     use store::{create_document_envelope, ArtifactCommand};
 
-    fn round_trip(document: &GisMapSnapshot, operation: &GisMapMutation) -> GisMapSnapshot {
+    async fn round_trip(document: &GisMapSnapshot, operation: &GisMapMutation) -> GisMapSnapshot {
         let (forward, _messages) =
             vcs::apply_mutation(document, operation).expect("valid mutation");
         let backwards = operation.inverse(document);
@@ -66,16 +66,16 @@ mod tests {
         forward
     }
 
-    fn dsl_of(value: &serde_json::Value) -> dsl::DslValue {
+    async fn dsl_of(value: &serde_json::Value) -> dsl::DslValue {
         dsl::to_dsl_value(value).unwrap_or(dsl::DslValue::Null)
     }
 
-    fn feature(id: &str) -> crate::artifacts::gismap::MapFeature {
+    async fn feature(id: &str) -> crate::artifacts::gismap::MapFeature {
         crate::artifacts::gismap::MapFeature { id: id.into(), data: dsl_of(&json!({ "id": id, "lon": 1.0, "lat": 2.0 })) }
     }
 
     #[test]
-    fn positions_create_replace_delete_round_trip() {
+    async fn positions_create_replace_delete_round_trip() {
         let document = GisMapSnapshot::default();
         let added = round_trip(&document, &GisMapMutation::CreatePosition(create_position::mutation::CreatePosition { index: 0, item: feature("p1") }));
         assert_eq!(added.positions.len(), 1);
@@ -89,14 +89,14 @@ mod tests {
     }
 
     #[test]
-    fn positions_reorder_round_trips() {
+    async fn positions_reorder_round_trips() {
         let document = crate::artifacts::gismap::gis_map_snapshot_with_derived_children(GisMapSnapshot { positions: vec![feature("p1"), feature("p2"), feature("p3")], ..Default::default() });
         let reordered = round_trip(&document, &GisMapMutation::ReorderPositions(reorder_positions::mutation::ReorderPositions { id: "p1".into(), to_index: 2 }));
         assert_eq!(reordered.positions.iter().map(|f| f.id.clone()).collect::<Vec<_>>(), vec!["p2", "p3", "p1"]);
     }
 
     #[test]
-    fn delete_and_replace_of_a_missing_id_invert_to_nothing() {
+    async fn delete_and_replace_of_a_missing_id_invert_to_nothing() {
         let document = GisMapSnapshot::default();
         assert!(GisMapMutation::DeletePosition(delete_position::mutation::DeletePosition { id: "gone".into() }).inverse(&document).is_empty());
         assert!(GisMapMutation::ReplacePositionData(replace_position_data::mutation::ReplacePositionData { id: "gone".into(), new_data: dsl::DslValue::Null }).inverse(&document).is_empty());
@@ -104,7 +104,7 @@ mod tests {
     }
 
     #[test]
-    fn create_position_obeys_the_inverse_and_diff_absorb_laws() {
+    async fn create_position_obeys_the_inverse_and_diff_absorb_laws() {
         let base = crate::artifacts::gismap::gis_map_snapshot_with_derived_children(GisMapSnapshot { positions: vec![feature("p1")], ..Default::default() });
         let mutation = GisMapMutation::CreatePosition(create_position::mutation::CreatePosition { index: 1, item: feature("p2") });
         protocol::testkit::assert_mutation_inverse_law(&base, &mutation);
@@ -114,14 +114,14 @@ mod tests {
     }
 
     #[test]
-    fn delete_route_obeys_the_inverse_law() {
+    async fn delete_route_obeys_the_inverse_law() {
         let base = crate::artifacts::gismap::gis_map_snapshot_with_derived_children(GisMapSnapshot { routes: vec![feature("r1")], ..Default::default() });
         let mutation = GisMapMutation::DeleteRoute(delete_route::mutation::DeleteRoute { id: "r1".into() });
         protocol::testkit::assert_mutation_inverse_law(&base, &mutation);
     }
 
     #[test]
-    fn replace_region_data_obeys_the_inverse_and_diff_absorb_laws() {
+    async fn replace_region_data_obeys_the_inverse_and_diff_absorb_laws() {
         let base = crate::artifacts::gismap::gis_map_snapshot_with_derived_children(GisMapSnapshot { regions: vec![feature("g1")], ..Default::default() });
         let mutation = GisMapMutation::ReplaceRegionData(replace_region_data::mutation::ReplaceRegionData { id: "g1".into(), new_data: dsl_of(&json!({ "kind": "boundary" })) });
         protocol::testkit::assert_mutation_inverse_law(&base, &mutation);
@@ -131,14 +131,14 @@ mod tests {
     }
 
     #[test]
-    fn reorder_routes_obeys_the_inverse_law() {
+    async fn reorder_routes_obeys_the_inverse_law() {
         let base = crate::artifacts::gismap::gis_map_snapshot_with_derived_children(GisMapSnapshot { routes: vec![feature("r1"), feature("r2")], ..Default::default() });
         let mutation = GisMapMutation::ReorderRoutes(reorder_routes::mutation::ReorderRoutes { id: "r1".into(), to_index: 1 });
         protocol::testkit::assert_mutation_inverse_law(&base, &mutation);
     }
 
     #[test]
-    fn descriptor_round_trips_through_document() {
+    async fn descriptor_round_trips_through_document() {
         let json = r#"{"positions":[{"id":"a","lon":1.0,"lat":2.0}],"routes":[{"id":"r","points":[]}],"regions":[]}"#;
         let document = gis_map_document_from_descriptor_json(json);
         assert_eq!(document.positions.len(), 1);
@@ -148,7 +148,7 @@ mod tests {
     }
 
     #[test]
-    fn gis_map_document_vcs_replays_operations() {
+    async fn gis_map_document_vcs_replays_operations() {
         let mut store = GisMapStore::new(create_document_envelope(GIS_MAP_SCHEMA, "gis", empty_gis_map_snapshot(), None));
         store
             .dispatch(ArtifactCommand::Apply { mutations: vec![GisMapMutation::CreatePosition(create_position::mutation::CreatePosition { index: 0, item: feature("p1") })], description: None })
@@ -163,28 +163,28 @@ mod tests {
     /// `📡️spr/🧪️testkit/🦀️component.rs`). `assert_outcome_policy_matrix` is not landed under that
     /// name (only the differently-shaped `assert_policy_matrix`) — see this lane's report.
     #[test]
-    fn delete_position_missing_target_is_error() {
+    async fn delete_position_missing_target_is_error() {
         let base = GisMapSnapshot::default();
         let mutation = GisMapMutation::DeletePosition(delete_position::mutation::DeletePosition { id: "gone".into() });
         protocol::testkit::assert_missing_target_is_error(&base, &mutation);
     }
 
     #[test]
-    fn reorder_positions_missing_target_is_error() {
+    async fn reorder_positions_missing_target_is_error() {
         let base = GisMapSnapshot::default();
         let mutation = GisMapMutation::ReorderPositions(reorder_positions::mutation::ReorderPositions { id: "gone".into(), to_index: 0 });
         protocol::testkit::assert_missing_target_is_error(&base, &mutation);
     }
 
     #[test]
-    fn replace_route_data_missing_target_is_error() {
+    async fn replace_route_data_missing_target_is_error() {
         let base = GisMapSnapshot::default();
         let mutation = GisMapMutation::ReplaceRouteData(replace_route_data::mutation::ReplaceRouteData { id: "gone".into(), new_data: dsl::DslValue::Null });
         protocol::testkit::assert_missing_target_is_error(&base, &mutation);
     }
 
     #[test]
-    fn create_position_duplicate_id_fatal_never_applies() {
+    async fn create_position_duplicate_id_fatal_never_applies() {
         let base = crate::artifacts::gismap::gis_map_snapshot_with_derived_children(GisMapSnapshot { positions: vec![feature("p1")], ..Default::default() });
         let mutation = GisMapMutation::CreatePosition(create_position::mutation::CreatePosition { index: 0, item: feature("p1") });
         protocol::testkit::assert_fatal_never_applies(&Mutation::diff(&mutation, &base));
@@ -193,7 +193,7 @@ mod tests {
 }
 //#endregion 🔹Tests
 
-pub fn apply_gis_map_mutation(
+pub async fn apply_gis_map_mutation(
     snapshot: &mut GisMapSnapshot,
     mutation: &GisMapMutation,
 ) -> protocol::MutationApplyResult<()> {
@@ -205,6 +205,6 @@ pub fn apply_gis_map_mutation(
     Ok(())
 }
 
-pub fn inverse_gis_map_mutation(snapshot: &GisMapSnapshot, mutation: &GisMapMutation) -> Vec<GisMapMutation> {
+pub async fn inverse_gis_map_mutation(snapshot: &GisMapSnapshot, mutation: &GisMapMutation) -> Vec<GisMapMutation> {
     mutation.inverse(snapshot)
 }

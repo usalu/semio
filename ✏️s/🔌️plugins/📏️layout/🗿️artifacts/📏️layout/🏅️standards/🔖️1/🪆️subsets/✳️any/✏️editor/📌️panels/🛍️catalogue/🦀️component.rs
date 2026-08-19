@@ -14,7 +14,7 @@ const LAYOUT_CATALOGUE_KIND_MIME_PREFIX: &str = "application/x-semio-catalogue-k
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
-pub fn definition() -> PanelTabDefinition {
+pub async fn definition() -> PanelTabDefinition {
     PanelTabDefinition {
         kind: PanelTabKind::App(FRAMEWORK_PANEL_TAB_CATALOGUE_ID.into()),
         label: LocalizedLabel::native(FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, "Katalog"),
@@ -26,7 +26,7 @@ pub fn definition() -> PanelTabDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-fn catalogue_tree_item(kind: &str, label: impl Into<Label>, icon: &str) -> UiTreeItemNode {
+async fn catalogue_tree_item(kind: &str, label: impl Into<Label>, icon: &str) -> UiTreeItemNode {
     let action = if kind == "page" { layout_action("addPage", None) } else { layout_action("addFrame", Some(json!({ "kind": kind }))) };
     let mut drag_data_entries = serde_json::Map::new();
     drag_data_entries.insert(LAYOUT_CATALOGUE_DRAG_MIME.to_string(), json!(json!({ "kind": kind }).to_string()));
@@ -37,7 +37,7 @@ fn catalogue_tree_item(kind: &str, label: impl Into<Label>, icon: &str) -> UiTre
     item
 }
 
-pub fn render(labels: &LayoutLabels) -> UiNode {
+pub async fn render(labels: &LayoutLabels) -> UiNode {
     let mut items = vec![catalogue_tree_item("page", labels.catalogue_page, "file")];
     items.extend(LAYOUT_CATALOGUE_KINDS.iter().map(|(kind, icon)| catalogue_tree_item(kind, catalogue_kind_label(kind, labels), icon)));
     PanelTreeBuilder::new("layout-catalogue").section("layout-catalogue.kinds", Some(Label::data(FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL)), true, items).build()
@@ -51,7 +51,7 @@ mod tests {
     use crate::editor::layout::testkit::{layout_app, render as render_body};
 
     #[test]
-    fn catalogue_lists_frame_kinds() {
+    async fn catalogue_lists_frame_kinds() {
         let mut app = layout_app();
         let json = render_body(&mut app, LAYOUT_PLAY_BODY_CATALOGUE);
         assert!(json.contains("layout-catalogue.rect"));
@@ -59,7 +59,7 @@ mod tests {
     }
 
     #[test]
-    fn catalogue_items_are_draggable() {
+    async fn catalogue_items_are_draggable() {
         let mut app = layout_app();
         let json = render_body(&mut app, LAYOUT_PLAY_BODY_CATALOGUE);
         assert!(json.contains(LAYOUT_CATALOGUE_DRAG_MIME));
@@ -68,7 +68,7 @@ mod tests {
     }
 
     #[test]
-    fn definition_binds_the_framework_catalogue_tab_to_this_body_key() {
+    async fn definition_binds_the_framework_catalogue_tab_to_this_body_key() {
         let definition = definition();
         assert_eq!(definition.id(), FRAMEWORK_PANEL_TAB_CATALOGUE_ID);
         assert_eq!(definition.body_key.as_deref(), Some(LAYOUT_PLAY_BODY_CATALOGUE));

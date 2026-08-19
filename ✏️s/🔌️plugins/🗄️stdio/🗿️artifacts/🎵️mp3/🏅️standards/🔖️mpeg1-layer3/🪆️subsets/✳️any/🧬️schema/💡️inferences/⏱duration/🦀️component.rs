@@ -24,7 +24,7 @@ pub struct Mp3Duration {
 /// (`version_id == 0 | 2`, the halved-rate LSF extension). `layer == 0` is the header's own
 /// reserved value — honestly contributes `0` (not fabricated), matching how a real decoder would
 /// reject the frame rather than guess a duration for it.
-fn samples_per_frame(version_id: u8, layer: u8) -> u32 {
+async fn samples_per_frame(version_id: u8, layer: u8) -> u32 {
     match layer {
         3 => 384,
         2 => 1152,
@@ -41,7 +41,7 @@ fn samples_per_frame(version_id: u8, layer: u8) -> u32 {
 /// `channelCount` reads the FIRST frame's `channel_mode` (`3` = mono ⇒ `1` channel, anything else
 /// ⇒ `2`) — `0` when there are no frames at all (an honest "unknown", never a fabricated stereo
 /// guess).
-pub fn compute_mp3_duration(snapshot: &Mp3Snapshot) -> Mp3Duration {
+pub async fn compute_mp3_duration(snapshot: &Mp3Snapshot) -> Mp3Duration {
     let duration_seconds: f64 = snapshot
         .frames
         .iter()
@@ -69,7 +69,7 @@ mod tests {
     use super::*;
     use crate::artifacts::mp3::standards::mpeg1_layer3::subsets::any::schema::snapshot::{Mp3Frame, Mp3FrameHeader};
 
-    fn frame(mpeg_version_id: u8, layer: u8, sample_rate_index: u8, channel_mode: u8) -> Mp3Frame {
+    async fn frame(mpeg_version_id: u8, layer: u8, sample_rate_index: u8, channel_mode: u8) -> Mp3Frame {
         Mp3Frame {
             header: Mp3FrameHeader { mpeg_version_id, layer, protection_bit: true, bitrate_index: 9, sample_rate_index, padding: false, private_bit: false, channel_mode, mode_extension: 0, copyright: false, original: false, emphasis: 0 },
             payload: Vec::new(),
@@ -77,7 +77,7 @@ mod tests {
     }
 
     #[test]
-    fn two_mpeg1_layer3_frames_at_44100hz_sum_to_the_real_1152_sample_duration() {
+    async fn two_mpeg1_layer3_frames_at_44100hz_sum_to_the_real_1152_sample_duration() {
         // MPEG1 (version_id=3) Layer III (layer=1), sample_rate_index=0 => 44100Hz, mono (channel_mode=3).
         let snapshot = Mp3Snapshot { frames: vec![frame(3, 1, 0, 3), frame(3, 1, 0, 3)], ..Mp3Snapshot::default() };
         let duration = compute_mp3_duration(&snapshot);
@@ -87,7 +87,7 @@ mod tests {
     }
 
     #[test]
-    fn mpeg2_layer3_frame_uses_the_halved_576_sample_count_and_stereo_channel_mode() {
+    async fn mpeg2_layer3_frame_uses_the_halved_576_sample_count_and_stereo_channel_mode() {
         // MPEG2 (version_id=2) Layer III, sample_rate_index=0 => 22050Hz, stereo (channel_mode=0).
         let snapshot = Mp3Snapshot { frames: vec![frame(2, 1, 0, 0)], ..Mp3Snapshot::default() };
         let duration = compute_mp3_duration(&snapshot);
@@ -96,20 +96,20 @@ mod tests {
     }
 
     #[test]
-    fn no_frames_yields_an_honest_zero_not_a_fabricated_channel_count() {
+    async fn no_frames_yields_an_honest_zero_not_a_fabricated_channel_count() {
         let duration = compute_mp3_duration(&Mp3Snapshot::default());
         assert_eq!(duration, Mp3Duration::default());
         assert_eq!(duration.channel_count, 0);
     }
 
     #[test]
-    fn inference_determinism_law() {
+    async fn inference_determinism_law() {
         let snapshot = Mp3Snapshot { frames: vec![frame(3, 1, 0, 3)], ..Mp3Snapshot::default() };
         assert_eq!(compute_mp3_duration(&snapshot), compute_mp3_duration(&snapshot));
     }
 
     #[test]
-    fn inference_default_law() {
+    async fn inference_default_law() {
         assert_eq!(compute_mp3_duration(&Mp3Snapshot::default()), Mp3Duration::default());
     }
 }

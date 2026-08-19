@@ -7,7 +7,7 @@ use crate::artifacts::semio::standards::v1::subsets::object::schema::diff::Semio
 use crate::artifacts::semio::standards::v1::subsets::object::schema::snapshot::SemioObjectSnapshot;
 
 //#region 🔖️Diff
-pub fn diff(_payload: &DeleteBrep, base: &SemioObjectSnapshot) -> protocol::MutationOutcome<SemioObjectDiff> {
+pub async fn diff(_payload: &DeleteBrep, base: &SemioObjectSnapshot) -> protocol::MutationOutcome<SemioObjectDiff> {
     if base.brep.is_none() {
         return protocol::MutationOutcome::error("mutation.target-missing", "The object has no brep to delete.".to_string(), ["brep".to_string()]);
     }

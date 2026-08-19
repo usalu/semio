@@ -101,7 +101,7 @@ pub struct DrawLayerPatch {
 //#region 🔖️Apply
 impl DrawDiff {
     /// 🧬️ Applies every sparse entry (all state classes) onto a full artifact.
-    pub fn apply_to_artifact(&self, artifact: &DrawArtifact) -> protocol::MutationApplyResult<DrawArtifact> {
+    pub async fn apply_to_artifact(&self, artifact: &DrawArtifact) -> protocol::MutationApplyResult<DrawArtifact> {
         Ok({
             if let Some(replacement) = &self.artifact {
                 return Ok((**replacement).clone());
@@ -157,7 +157,7 @@ impl DrawDiff {
 }
 
 /// 🧩 Applies an identified-collection delta to a layer tree (root + nested removes/patches).
-pub fn apply_layers_delta(
+pub async fn apply_layers_delta(
     layers: &[DrawLayerNode],
     delta: &DrawLayersDelta,
 ) -> protocol::MutationApplyResult<Vec<DrawLayerNode>> {
@@ -268,15 +268,15 @@ pub fn apply_layers_delta(
     Ok(next)
 }
 
-fn contains_layer(layers: &[DrawLayerNode], id: &str) -> bool {
+async fn contains_layer(layers: &[DrawLayerNode], id: &str) -> bool {
     layers.iter().any(|layer| {
         crate::artifacts::draw::schema::layer_id(layer) == id
             || matches!(layer, DrawLayerNode::Group(group) if contains_layer(&group.children, id))
     })
 }
 
-fn validate_unique_layer_ids(layers: &[DrawLayerNode]) -> protocol::MutationApplyResult<()> {
-    fn visit<'a>(
+async fn validate_unique_layer_ids(layers: &[DrawLayerNode]) -> protocol::MutationApplyResult<()> {
+    async fn visit<'a>(
         layers: &'a [DrawLayerNode],
         ids: &mut std::collections::BTreeSet<&'a str>,
     ) -> bool {
@@ -302,7 +302,7 @@ fn validate_unique_layer_ids(layers: &[DrawLayerNode]) -> protocol::MutationAppl
     Ok(())
 }
 
-fn layer_container_len(layers: &[DrawLayerNode], parent_id: Option<&str>) -> Option<usize> {
+async fn layer_container_len(layers: &[DrawLayerNode], parent_id: Option<&str>) -> Option<usize> {
     match parent_id {
         None => Some(layers.len()),
         Some(parent_id) => layers.iter().find_map(|layer| match layer {
@@ -313,7 +313,7 @@ fn layer_container_len(layers: &[DrawLayerNode], parent_id: Option<&str>) -> Opt
     }
 }
 
-fn apply_layer_patch_entry(
+async fn apply_layer_patch_entry(
     layers: &mut Vec<DrawLayerNode>,
     entry: &DrawLayerPatchEntry,
 ) -> protocol::MutationApplyResult<()> {
@@ -330,7 +330,7 @@ fn apply_layer_patch_entry(
     result
 }
 
-fn apply_layer_patch(
+async fn apply_layer_patch(
     layer: &mut DrawLayerNode,
     patch: &DrawLayerPatch,
 ) -> protocol::MutationApplyResult<()> {
@@ -428,7 +428,7 @@ fn apply_layer_patch(
 
 /// 🩹 Merges an incoming `DrawLayerPatch` into an existing one, field by field — `incoming` wins
 /// wherever it sets a field, matching `DrawDiff::absorb`'s own `take!` semantics.
-fn merge_layer_patch(dst: &mut DrawLayerPatch, mut src: DrawLayerPatch) {
+async fn merge_layer_patch(dst: &mut DrawLayerPatch, mut src: DrawLayerPatch) {
     macro_rules! take {
         ($field:ident) => {
             if src.$field.is_some() {
@@ -449,7 +449,7 @@ fn merge_layer_patch(dst: &mut DrawLayerPatch, mut src: DrawLayerPatch) {
     take!(layer_json);
 }
 
-fn apply_assets_delta(
+async fn apply_assets_delta(
     assets: &mut BTreeMap<String, DrawImageAsset>,
     delta: &DrawAssetsDelta,
 ) -> protocol::MutationApplyResult<()> {
@@ -478,7 +478,7 @@ fn apply_assets_delta(
 }
 
 impl MutationDiff<DrawSnapshot> for DrawDiff {
-    fn apply(&self, snapshot: &DrawSnapshot) -> protocol::MutationApplyResult<DrawSnapshot> {
+    async fn apply(&self, snapshot: &DrawSnapshot) -> protocol::MutationApplyResult<DrawSnapshot> {
         Ok({
             if let Some(replacement) = &self.artifact {
                 return Ok(replacement.to_snapshot());
@@ -507,7 +507,7 @@ impl MutationDiff<DrawSnapshot> for DrawDiff {
             next
         })
     }
-    fn absorb(&mut self, other: Self) {
+    async fn absorb(&mut self, other: Self) {
         if other.artifact.is_some() {
             *self = other;
             return;
@@ -568,7 +568,7 @@ impl MutationDiff<DrawSnapshot> for DrawDiff {
 
 //#region 🔖️Builders
 /// 🖼️ Whole-artifact replacement from a snapshot (UI fields defaulted).
-pub fn diff_set_snapshot(snapshot: &DrawSnapshot) -> DrawDiff {
+pub async fn diff_set_snapshot(snapshot: &DrawSnapshot) -> DrawDiff {
     DrawDiff {
         artifact: Some(Box::new(DrawArtifact::from_snapshot(snapshot.clone()))),
         ..Default::default()
@@ -576,32 +576,32 @@ pub fn diff_set_snapshot(snapshot: &DrawSnapshot) -> DrawDiff {
 }
 
 /// 🩹 Layer visibility patch.
-pub fn diff_set_layer_visible(layer_id: &str, visible: bool) -> DrawDiff {
+pub async fn diff_set_layer_visible(layer_id: &str, visible: bool) -> DrawDiff {
     layer_base_patch(layer_id, DrawLayerPatch { visible: Some(visible), ..Default::default() })
 }
 
 /// 🔒️ Layer locked patch.
-pub fn diff_set_layer_locked(layer_id: &str, locked: bool) -> DrawDiff {
+pub async fn diff_set_layer_locked(layer_id: &str, locked: bool) -> DrawDiff {
     layer_base_patch(layer_id, DrawLayerPatch { locked: Some(locked), ..Default::default() })
 }
 
 /// 🏷️ Layer name patch.
-pub fn diff_set_layer_name(layer_id: &str, name: &str) -> DrawDiff {
+pub async fn diff_set_layer_name(layer_id: &str, name: &str) -> DrawDiff {
     layer_base_patch(layer_id, DrawLayerPatch { name: Some(name.to_string()), ..Default::default() })
 }
 
 /// 🌫️ Layer opacity patch.
-pub fn diff_set_layer_opacity(layer_id: &str, opacity: f64) -> DrawDiff {
+pub async fn diff_set_layer_opacity(layer_id: &str, opacity: f64) -> DrawDiff {
     layer_base_patch(layer_id, DrawLayerPatch { opacity: Some(opacity), ..Default::default() })
 }
 
 /// 🖌️ Layer blend-mode patch.
-pub fn diff_set_layer_blend_mode(layer_id: &str, blend_mode: &str) -> DrawDiff {
+pub async fn diff_set_layer_blend_mode(layer_id: &str, blend_mode: &str) -> DrawDiff {
     layer_base_patch(layer_id, DrawLayerPatch { blend_mode: Some(blend_mode.to_string()), ..Default::default() })
 }
 
 /// ↔️ Layer transform patch.
-pub fn diff_set_layer_transform(layer_id: &str, transform: &crate::artifacts::draw::DrawTransform) -> DrawDiff {
+pub async fn diff_set_layer_transform(layer_id: &str, transform: &crate::artifacts::draw::DrawTransform) -> DrawDiff {
     layer_base_patch(
         layer_id,
         DrawLayerPatch {
@@ -612,7 +612,7 @@ pub fn diff_set_layer_transform(layer_id: &str, transform: &crate::artifacts::dr
 }
 
 /// 🎨 Layer fill patch.
-pub fn diff_set_fill(layer_id: &str, fill: &Option<FillStyle>) -> DrawDiff {
+pub async fn diff_set_fill(layer_id: &str, fill: &Option<FillStyle>) -> DrawDiff {
     layer_base_patch(
         layer_id,
         DrawLayerPatch {
@@ -623,7 +623,7 @@ pub fn diff_set_fill(layer_id: &str, fill: &Option<FillStyle>) -> DrawDiff {
 }
 
 /// ✏️ Layer stroke patch.
-pub fn diff_set_stroke(layer_id: &str, stroke: &Option<StrokeStyle>) -> DrawDiff {
+pub async fn diff_set_stroke(layer_id: &str, stroke: &Option<StrokeStyle>) -> DrawDiff {
     layer_base_patch(
         layer_id,
         DrawLayerPatch {
@@ -634,7 +634,7 @@ pub fn diff_set_stroke(layer_id: &str, stroke: &Option<StrokeStyle>) -> DrawDiff
 }
 
 /// 🔀 Boolean operation patch.
-pub fn diff_set_boolean_operation(layer_id: &str, boolean_operation: &str) -> DrawDiff {
+pub async fn diff_set_boolean_operation(layer_id: &str, boolean_operation: &str) -> DrawDiff {
     layer_base_patch(
         layer_id,
         DrawLayerPatch {
@@ -645,7 +645,7 @@ pub fn diff_set_boolean_operation(layer_id: &str, boolean_operation: &str) -> Dr
 }
 
 /// 🖼️ Trace params patch.
-pub fn diff_set_trace_params(layer_id: &str, params: &crate::artifacts::draw::DrawTraceParams) -> DrawDiff {
+pub async fn diff_set_trace_params(layer_id: &str, params: &crate::artifacts::draw::DrawTraceParams) -> DrawDiff {
     layer_base_patch(
         layer_id,
         DrawLayerPatch {
@@ -656,7 +656,7 @@ pub fn diff_set_trace_params(layer_id: &str, params: &crate::artifacts::draw::Dr
 }
 
 /// 🌱️ Layer insertion at a real (parent, index) address — root when `parent_id` is `None`.
-pub fn diff_create_layer(parent_id: Option<&str>, index: usize, layer: DrawLayerNode) -> DrawDiff {
+pub async fn diff_create_layer(parent_id: Option<&str>, index: usize, layer: DrawLayerNode) -> DrawDiff {
     DrawDiff {
         layers: Some(DrawLayersDelta {
             added: vec![DrawLayerAddition { parent_id: parent_id.map(str::to_string), index, layer }],
@@ -667,7 +667,7 @@ pub fn diff_create_layer(parent_id: Option<&str>, index: usize, layer: DrawLayer
 }
 
 /// 🔃 Move an existing layer to a new (parent, index) address — remove-then-insert, both sparse.
-pub fn diff_reorder_layer(layer_id: &str, parent_id: Option<&str>, index: usize, layer: DrawLayerNode) -> DrawDiff {
+pub async fn diff_reorder_layer(layer_id: &str, parent_id: Option<&str>, index: usize, layer: DrawLayerNode) -> DrawDiff {
     DrawDiff {
         layers: Some(DrawLayersDelta {
             removed: vec![layer_id.to_string()],
@@ -679,7 +679,7 @@ pub fn diff_reorder_layer(layer_id: &str, parent_id: Option<&str>, index: usize,
 }
 
 /// ➖️ Layer remove.
-pub fn diff_remove_layer(layer_id: &str) -> DrawDiff {
+pub async fn diff_remove_layer(layer_id: &str) -> DrawDiff {
     DrawDiff {
         layers: Some(DrawLayersDelta {
             removed: vec![layer_id.to_string()],
@@ -690,7 +690,7 @@ pub fn diff_remove_layer(layer_id: &str) -> DrawDiff {
 }
 
 /// 🔃 Root reorder by id list.
-pub fn diff_reorder_layers(order: Vec<String>) -> DrawDiff {
+pub async fn diff_reorder_layers(order: Vec<String>) -> DrawDiff {
     DrawDiff {
         layers: Some(DrawLayersDelta {
             reordered: Some(order),
@@ -700,7 +700,7 @@ pub fn diff_reorder_layers(order: Vec<String>) -> DrawDiff {
     }
 }
 
-fn layer_base_patch(layer_id: &str, patch: DrawLayerPatch) -> DrawDiff {
+async fn layer_base_patch(layer_id: &str, patch: DrawLayerPatch) -> DrawDiff {
     DrawDiff {
         layers: Some(DrawLayersDelta {
             patched: vec![DrawLayerPatchEntry {
@@ -714,12 +714,12 @@ fn layer_base_patch(layer_id: &str, patch: DrawLayerPatch) -> DrawDiff {
 }
 
 /// 🧬️ Whole-snapshot replacement when a sparse delta cannot express a tree edit.
-pub fn diff_from_snapshot(snapshot: DrawSnapshot) -> DrawDiff {
+pub async fn diff_from_snapshot(snapshot: DrawSnapshot) -> DrawDiff {
     diff_set_snapshot(&snapshot)
 }
 
 /// 📋 Selected-ids UI delta helper.
-pub fn diff_selected_ids(ids: Vec<String>) -> DrawDiff {
+pub async fn diff_selected_ids(ids: Vec<String>) -> DrawDiff {
     DrawDiff {
         selected_ids: Some(DrawStringList { values: ids }),
         ..Default::default()
@@ -727,7 +727,7 @@ pub fn diff_selected_ids(ids: Vec<String>) -> DrawDiff {
 }
 
 /// 🗂️ Assets delta helper.
-pub fn diff_assets(entries: DrawAssetsDelta) -> DrawDiff {
+pub async fn diff_assets(entries: DrawAssetsDelta) -> DrawDiff {
     DrawDiff {
         assets: Some(entries),
         ..Default::default()

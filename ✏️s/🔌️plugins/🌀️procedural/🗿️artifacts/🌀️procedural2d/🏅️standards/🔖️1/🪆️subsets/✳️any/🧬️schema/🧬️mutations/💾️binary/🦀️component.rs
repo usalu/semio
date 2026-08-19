@@ -66,7 +66,7 @@ enum Procedural2dOperationDsl {
 //#region 🔖️HandcraftedOpCodecs
 /// ⚡️ P6 handcrafted OpText/OpBinary (derive no longer emits these traits).
 impl protocol::OpText for Procedural2dOperationDsl {
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
+    async fn parse_op(line: &str) -> Result<Self, store::TextError> {
         let variants = <Self as dsl::DslVariants>::variants();
         for (keyword, spec_fn) in &variants {
             let probe = format!("{} ", keyword);
@@ -81,7 +81,7 @@ impl protocol::OpText for Procedural2dOperationDsl {
         }
         Err(dsl::__rt::field_error(format!("unknown operation '{line}'")))
     }
-    fn print_op(&self) -> String {
+    async fn print_op(&self) -> String {
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
         let variants = <Self as dsl::DslVariants>::variants();
         let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
@@ -90,10 +90,10 @@ impl protocol::OpText for Procedural2dOperationDsl {
 }
 
 impl OpBinary for Procedural2dOperationDsl {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         dsl::variants_binary::encode_op(self)
     }
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         dsl::variants_binary::decode_op(bytes)
     }
 }
@@ -102,7 +102,7 @@ impl OpBinary for Procedural2dOperationDsl {
 
 
 
-fn procedural2d_operation_to_dsl(operation: &Procedural2dMutation) -> Procedural2dOperationDsl {
+async fn procedural2d_operation_to_dsl(operation: &Procedural2dMutation) -> Procedural2dOperationDsl {
     match operation {
         Procedural2dMutation::CreateWidget(payload) => Procedural2dOperationDsl::CreateWidget { index: payload.index, widget: Box::new(widget_to_dsl(&payload.widget)) },
         Procedural2dMutation::ReplaceWidget(payload) => Procedural2dOperationDsl::ReplaceWidget { widget: Box::new(widget_to_dsl(&payload.widget)) },
@@ -123,7 +123,7 @@ fn procedural2d_operation_to_dsl(operation: &Procedural2dMutation) -> Procedural
     }
 }
 
-fn procedural2d_operation_from_dsl(operation: Procedural2dOperationDsl) -> Result<Procedural2dMutation, store::TextError> {
+async fn procedural2d_operation_from_dsl(operation: Procedural2dOperationDsl) -> Result<Procedural2dMutation, store::TextError> {
     use crate::artifacts::procedural2d::mutations::{
         change_generation_value, change_schema, clear_widget_layout, connect_synapse, create_generation, create_widget, delete_generation, delete_widget, disconnect_synapse, move_widget,
         rename_generation, replace_synapse, replace_widget, update_camera};
@@ -147,12 +147,12 @@ fn procedural2d_operation_from_dsl(operation: Procedural2dOperationDsl) -> Resul
 /// ⚡️ `Procedural2dMutation`'s compact single-line op encoding — derive-engine grammar via
 /// `Procedural2dOperationDsl` (see above); `parse_op`/`print_op` convert at the boundary.
 impl protocol::OpText for Procedural2dMutation {
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
+    async fn parse_op(line: &str) -> Result<Self, store::TextError> {
         let parsed = <Procedural2dOperationDsl as protocol::OpText>::parse_op(line)?;
         procedural2d_operation_from_dsl(parsed)
     }
 
-    fn print_op(&self) -> String {
+    async fn print_op(&self) -> String {
         <Procedural2dOperationDsl as protocol::OpText>::print_op(&procedural2d_operation_to_dsl(self))
     }
 }
@@ -160,11 +160,11 @@ impl protocol::OpText for Procedural2dMutation {
 /// ⚡️ Binary mirror of the `OpText` bridge above — `Procedural2dOperationDsl` already implements
 /// `OpBinary`, so this is a pure to/from-dsl forward.
 impl OpBinary for Procedural2dMutation {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         procedural2d_operation_to_dsl(self).encode_op()
     }
 
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         let parsed = Procedural2dOperationDsl::decode_op(bytes)?;
         procedural2d_operation_from_dsl(parsed).map_err(|error| protocol::ProtocolError::Malformed {
             what: "procedural2d mutation",
@@ -175,12 +175,12 @@ impl OpBinary for Procedural2dMutation {
 //#endregion 🔖️OpTextMirror
 
 /// 📦️ Encodes a `Procedural2dMutation` to its binary state-patch form.
-pub fn encode_op(operation: &Procedural2dMutation) -> Result<Vec<u8>, protocol::ProtocolError> {
+pub async fn encode_op(operation: &Procedural2dMutation) -> Result<Vec<u8>, protocol::ProtocolError> {
     operation.encode_op()
 }
 
 /// 📖️ Decodes a `Procedural2dMutation` from its binary state-patch form.
-pub fn decode_op(bytes: &[u8]) -> Result<Procedural2dMutation, protocol::ProtocolError> {
+pub async fn decode_op(bytes: &[u8]) -> Result<Procedural2dMutation, protocol::ProtocolError> {
     Procedural2dMutation::decode_op(bytes)
 }
 
@@ -197,27 +197,27 @@ mod tests {
 
     //#region 🔖️OpTextTests
     #[test]
-    fn op_text_round_trip_create_widget() {
+    async fn op_text_round_trip_create_widget() {
         test_support::assert_op_line_round_trip(&create_widget(2, Widget::InputNote { id: "note-9".into(), text: "hello \"world\"".into() }));
     }
 
     #[test]
-    fn op_text_round_trip_delete_widget() {
+    async fn op_text_round_trip_delete_widget() {
         test_support::assert_op_line_round_trip(&delete_widget("note-9".into()));
     }
 
     #[test]
-    fn op_text_round_trip_connect_synapse() {
+    async fn op_text_round_trip_connect_synapse() {
         test_support::assert_op_line_round_trip(&connect_synapse(1, SynapseSpec { id: "s1".into(), from: "rect".into(), to: "fill".into(), from_port: "draw.drawing".into(), to_port: String::new() }));
     }
 
     #[test]
-    fn op_text_round_trip_change_schema() {
+    async fn op_text_round_trip_change_schema() {
         test_support::assert_op_line_round_trip(&change_schema("flow.fixture".into()));
     }
 
     #[test]
-    fn op_text_round_trip_create_generation() {
+    async fn op_text_round_trip_create_generation() {
         let generation = flow::playbook::FormGeneration { id: "generation-1".into(), name: "Generation 1".into(), values: serde_json::Map::new() };
         test_support::assert_op_line_round_trip(&create_generation(generation));
     }
@@ -225,27 +225,27 @@ mod tests {
 
     //#region 🔖️OpTextErrorTests
     #[test]
-    fn op_text_parse_rejects_unknown_operation() {
+    async fn op_text_parse_rejects_unknown_operation() {
         let error = Procedural2dMutation::parse_op("bogus-op id=\"x\"").unwrap_err();
         assert!(error.message.contains("unknown operation"), "unexpected error: {}", error.message);
     }
 
     #[test]
-    fn op_text_parse_rejects_non_integer_index() {
+    async fn op_text_parse_rejects_non_integer_index() {
         let error = Procedural2dMutation::parse_op("create-widget index=abc note text=\"\" id=\"x\"").unwrap_err();
         assert!(error.message.contains("expected Int"), "unexpected error: {}", error.message);
     }
     //#endregion 🔖️OpTextErrorTests
 
     #[test]
-    fn op_binary_round_trips_via_wrapper_fns() {
+    async fn op_binary_round_trips_via_wrapper_fns() {
         let operation = change_schema("flow.fixture".into());
         let bytes = encode_op(&operation).expect("encode");
         assert_eq!(decode_op(&bytes).expect("decode"), operation);
     }
 
     #[test]
-    fn document_text_round_trip_with_operation_applied() {
+    async fn document_text_round_trip_with_operation_applied() {
         let mut store = store::ArtifactStore::<Procedural2dSnapshot, Procedural2dMutation>::new(create_document_envelope(PROCEDURAL_2D_SCHEMA, "procedural2d", Procedural2dSnapshot::default(), None)).expect("valid artifact store fixture");
         store.dispatch(ArtifactCommand::Apply { mutations: vec![create_widget(3, Widget::InputNote { id: "note-9".into(), text: String::new() })], description: None }).expect("apply");
         test_support::assert_document_text_round_trip(&store);

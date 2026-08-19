@@ -47,7 +47,7 @@ pub struct Mp4Codec {
 }
 
 impl Default for Mp4Codec {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self { sps: Vec::new(), pps: Vec::new(), nal_length_size: 4, extension: None }
     }
 }
@@ -90,7 +90,7 @@ pub struct Mp4Movie {
 }
 
 impl Default for Mp4Movie {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self { creation_time: 0, modification_time: 0, timescale: 1000, duration: 0, rate: 0x0001_0000, volume: 0x0100, matrix: [0x0001_0000, 0, 0, 0, 0x0001_0000, 0, 0, 0, 0x4000_0000], next_track_id: 1, title: None, encoder: None }
     }
 }
@@ -122,7 +122,7 @@ pub struct Mp4VisualSampleEntry {
 }
 
 impl Default for Mp4VisualSampleEntry {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self {
             data_reference_index: 1,
             version: 0,
@@ -195,7 +195,7 @@ pub struct Mp4TrackMetadata {
 }
 
 impl Default for Mp4TrackMetadata {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self {
             creation_time: 0,
             modification_time: 0,
@@ -257,7 +257,7 @@ pub struct Mp4Snapshot {
     pub tracks: Vec<Mp4Track>,
 }
 
-fn default_schema() -> String {
+async fn default_schema() -> String {
     STDIO_MP4_DOCUMENT_SCHEMA.into()
 }
 
@@ -265,7 +265,7 @@ impl Default for Mp4Snapshot {
     /// 🌱️ A minimal but real, 4-byte-brand `ftyp` — `major_brand` MUST be exactly 4 ASCII bytes
     /// for a genuinely valid box (unlike an empty string, which `⚙️engine::encode_mp4` would have
     /// to pad, breaking the empty-snapshot round trip below).
-    fn default() -> Self {
+    async fn default() -> Self {
         Self { schema: STDIO_MP4_DOCUMENT_SCHEMA.into(), ftyp: Mp4Ftyp { major_brand: "isom".into(), minor_version: 0, compatible_brands: Vec::new() }, movie: Mp4Movie::default(), tracks: Vec::new() }
     }
 }
@@ -275,11 +275,11 @@ impl Default for Mp4Snapshot {
 /// 🎙️ Snapshot-model codecs serialize only the logical ISO-BMFF model.
 impl store::ArtifactDsl for Mp4Snapshot {
     const EXTENSION: &'static str = "semio";
-    fn envelope_id() -> &'static str {
+    async fn envelope_id() -> &'static str {
         STDIO_MP4_DOCUMENT_SCHEMA
     }
 
-    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+    async fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
         let body = match store::semio_format::split_text_preamble(text) {
             Ok((_, rest)) => rest,
             Err(_) => text,
@@ -288,7 +288,7 @@ impl store::ArtifactDsl for Mp4Snapshot {
         Self::__dsl_from_record(&record)
     }
 
-    fn print_dsl(&self) -> String {
+    async fn print_dsl(&self) -> String {
         let body = dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), dsl::JoinMode::Document);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
@@ -296,13 +296,13 @@ impl store::ArtifactDsl for Mp4Snapshot {
 }
 
 impl store::ArtifactPack for Mp4Snapshot {
-    fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
+    async fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let raw = store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &raw))
     }
 
-    fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
+    async fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
         if envelope.envelope_id() != <Self as store::ArtifactDsl>::envelope_id() {
             return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.envelope_id())));
@@ -311,7 +311,7 @@ impl store::ArtifactPack for Mp4Snapshot {
         Self::__dsl_from_record(&record).map_err(store::text_error_to_pack_error)
     }
 
-    fn record_spec() -> Option<dsl::RecordSpec> {
+    async fn record_spec() -> Option<dsl::RecordSpec> {
         Some(Self::__dsl_spec())
     }
 }
@@ -322,7 +322,7 @@ impl store::ArtifactPack for Mp4Snapshot {
 mod tests {
     use super::*;
 
-    fn sample_snapshot() -> Mp4Snapshot {
+    async fn sample_snapshot() -> Mp4Snapshot {
         Mp4Snapshot {
             schema: STDIO_MP4_DOCUMENT_SCHEMA.into(),
             ftyp: Mp4Ftyp { major_brand: "isom".into(), minor_version: 512, compatible_brands: vec!["isom".into(), "iso2".into(), "avc1".into(), "mp41".into()] },
@@ -341,7 +341,7 @@ mod tests {
     }
 
     #[test]
-    fn json_pack_round_trips_via_real_mp4_bytes() {
+    async fn json_pack_round_trips_via_real_mp4_bytes() {
         let snap = sample_snapshot();
         let bytes = <Mp4Snapshot as store::ArtifactPack>::encode_pack(&snap);
         let back = <Mp4Snapshot as store::ArtifactPack>::decode_pack(&bytes).expect("decode");
@@ -349,7 +349,7 @@ mod tests {
     }
 
     #[test]
-    fn dsl_text_round_trips_via_real_mp4_bytes() {
+    async fn dsl_text_round_trips_via_real_mp4_bytes() {
         let snap = sample_snapshot();
         let text = <Mp4Snapshot as store::ArtifactDsl>::print_dsl(&snap);
         let back = <Mp4Snapshot as store::ArtifactDsl>::parse_dsl(&text).expect("parse");
@@ -357,7 +357,7 @@ mod tests {
     }
 
     #[test]
-    fn default_snapshot_round_trips_through_real_codec() {
+    async fn default_snapshot_round_trips_through_real_codec() {
         let snap = Mp4Snapshot::default();
         let bytes = <Mp4Snapshot as store::ArtifactPack>::encode_pack(&snap);
         let back = <Mp4Snapshot as store::ArtifactPack>::decode_pack(&bytes).expect("decode");
@@ -365,7 +365,7 @@ mod tests {
     }
 
     #[test]
-    fn logical_snapshot_and_facets_have_no_shadow_state() {
+    async fn logical_snapshot_and_facets_have_no_shadow_state() {
         let model = format!("{:?}", sample_snapshot());
         for forbidden in ["unknownBoxes", "physical", "sourceBytes", "nativeArchive", "\"raw\""] {
             assert!(!model.contains(forbidden), "snapshot contains forbidden shadow field {forbidden}");
@@ -400,7 +400,7 @@ mod tests {
     }
 
     #[test]
-    fn exact_fixture_survives_pack_and_dsl_codecs() {
+    async fn exact_fixture_survives_pack_and_dsl_codecs() {
         let path = concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../temp/bauen-mit-bestand.mp4");
         let bytes = std::fs::read(path).expect("read exact MP4 fixture");
         let snapshot = crate::artifacts::mp4::standards::isobmff::subsets::any::io::decode_mp4(&bytes).expect("decode exact MP4 fixture");

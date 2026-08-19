@@ -7,7 +7,7 @@ use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Shell
-fn remove_question_option(spec: &FormsSnapshot, question_id: &str, option_value: &str) -> Option<FormMutation> {
+async fn remove_question_option(spec: &FormsSnapshot, question_id: &str, option_value: &str) -> Option<FormMutation> {
     update_block_operation(spec, question_id, |question| {
         let mut options = question.options.take().unwrap_or_default();
         options.retain(|entry| entry.value != option_value);
@@ -26,7 +26,7 @@ pub struct RemoveQuestionOption {
     pub option_value: String,
 }
 
-pub fn handle(payload: &RemoveQuestionOption, doc: &ArtifactView<'_, FormsSnapshot>, _cfg: &ConfigView<'_, FormsConfig>) -> Result<Emit<FormMutation, FormsConfigMutation>, Fault> {
+pub async fn handle(payload: &RemoveQuestionOption, doc: &ArtifactView<'_, FormsSnapshot>, _cfg: &ConfigView<'_, FormsConfig>) -> Result<Emit<FormMutation, FormsConfigMutation>, Fault> {
     match remove_question_option(doc.snapshot, &payload.question_id, &payload.option_value) {
         Some(operation) => Ok(Emit::mutations(vec![operation])),
         None => Ok(Emit::default()),

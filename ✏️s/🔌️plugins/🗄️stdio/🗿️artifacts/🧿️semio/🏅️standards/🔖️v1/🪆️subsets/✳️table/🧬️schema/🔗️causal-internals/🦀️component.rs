@@ -44,7 +44,7 @@ pub enum CausalError {
 }
 
 /// 🧮️ Normalizes an unordered pair so `a <= b`, the canonical key for undirected-edge sets.
-fn norm_pair(a: usize, b: usize) -> (usize, usize) {
+async fn norm_pair(a: usize, b: usize) -> (usize, usize) {
     if a < b {
         (a, b)
     } else {
@@ -67,7 +67,7 @@ pub struct CausalDag {
 impl CausalDag {
     /// 🧭️ Builds a DAG from index edges, validating acyclicity via
     /// `semio_framework_graph::algorithms::topo_sort`.
-    pub fn new(names: Vec<String>, edges: &[(usize, usize)]) -> Result<Self, CausalError> {
+    pub async fn new(names: Vec<String>, edges: &[(usize, usize)]) -> Result<Self, CausalError> {
         let n = names.len();
         for &(a, b) in edges {
             if a >= n {
@@ -98,7 +98,7 @@ impl CausalDag {
     }
 
     /// 🧭️ Builds a DAG from named edges, resolving each name against `names`.
-    pub fn from_named_edges(names: Vec<String>, edges: &[(&str, &str)]) -> Result<Self, CausalError> {
+    pub async fn from_named_edges(names: Vec<String>, edges: &[(&str, &str)]) -> Result<Self, CausalError> {
         let index: HashMap<&str, usize> = names.iter().enumerate().map(|(i, n)| (n.as_str(), i)).collect();
         let mut resolved = Vec::with_capacity(edges.len());
         for &(a, b) in edges {
@@ -109,19 +109,19 @@ impl CausalDag {
         Self::new(names, &resolved)
     }
 
-    pub fn n(&self) -> usize {
+    pub async fn n(&self) -> usize {
         self.names.len()
     }
 
-    pub fn names(&self) -> &[String] {
+    pub async fn names(&self) -> &[String] {
         &self.names
     }
 
-    pub fn index_of(&self, name: &str) -> Option<usize> {
+    pub async fn index_of(&self, name: &str) -> Option<usize> {
         self.index.get(name).copied()
     }
 
-    pub fn edges(&self) -> Vec<(usize, usize)> {
+    pub async fn edges(&self) -> Vec<(usize, usize)> {
         let mut out = Vec::new();
         for (child, parents) in self.parents.iter().enumerate() {
             for &parent in parents {
@@ -132,16 +132,16 @@ impl CausalDag {
         out
     }
 
-    pub fn parents(&self, v: usize) -> &[usize] {
+    pub async fn parents(&self, v: usize) -> &[usize] {
         &self.parents[v]
     }
 
-    pub fn children(&self, v: usize) -> &[usize] {
+    pub async fn children(&self, v: usize) -> &[usize] {
         &self.children[v]
     }
 
     /// 🧭️ Strict ancestors of `v` (excludes `v` itself), ascending.
-    pub fn ancestors(&self, v: usize) -> Vec<usize> {
+    pub async fn ancestors(&self, v: usize) -> Vec<usize> {
         let mut visited = HashSet::new();
         let mut stack = self.parents[v].clone();
         while let Some(u) = stack.pop() {
@@ -155,7 +155,7 @@ impl CausalDag {
     }
 
     /// 🧭️ Strict descendants of `v` (excludes `v` itself), ascending.
-    pub fn descendants(&self, v: usize) -> Vec<usize> {
+    pub async fn descendants(&self, v: usize) -> Vec<usize> {
         let mut visited = HashSet::new();
         let mut stack = self.children[v].clone();
         while let Some(u) = stack.pop() {
@@ -168,12 +168,12 @@ impl CausalDag {
         out
     }
 
-    pub fn topological_order(&self) -> &[usize] {
+    pub async fn topological_order(&self) -> &[usize] {
         &self.topo
     }
 
     /// 🕸️ Undirected moral-graph edges (`a < b`): the skeleton plus edges marrying every pair of co-parents.
-    pub fn moralize(&self) -> Vec<(usize, usize)> {
+    pub async fn moralize(&self) -> Vec<(usize, usize)> {
         let mut edges: BTreeSet<(usize, usize)> = BTreeSet::new();
         for (child, parents) in self.parents.iter().enumerate() {
             for &parent in parents {
@@ -201,12 +201,12 @@ pub struct Cpdag {
 }
 
 impl Cpdag {
-    pub fn new(names: Vec<String>) -> Self {
+    pub async fn new(names: Vec<String>) -> Self {
         Self { names, directed: BTreeSet::new(), undirected: BTreeSet::new() }
     }
 
     /// 🔀️ A fully undirected complete graph — the PC algorithm's starting skeleton.
-    pub fn complete(names: Vec<String>) -> Self {
+    pub async fn complete(names: Vec<String>) -> Self {
         let n = names.len();
         let mut undirected = BTreeSet::new();
         for i in 0..n {
@@ -217,27 +217,27 @@ impl Cpdag {
         Self { names, directed: BTreeSet::new(), undirected }
     }
 
-    pub fn n(&self) -> usize {
+    pub async fn n(&self) -> usize {
         self.names.len()
     }
 
-    pub fn names(&self) -> &[String] {
+    pub async fn names(&self) -> &[String] {
         &self.names
     }
 
-    pub fn has_edge(&self, a: usize, b: usize) -> bool {
+    pub async fn has_edge(&self, a: usize, b: usize) -> bool {
         self.directed.contains(&(a, b)) || self.directed.contains(&(b, a)) || self.undirected.contains(&norm_pair(a, b))
     }
 
-    pub fn is_directed(&self, a: usize, b: usize) -> bool {
+    pub async fn is_directed(&self, a: usize, b: usize) -> bool {
         self.directed.contains(&(a, b))
     }
 
-    pub fn is_undirected(&self, a: usize, b: usize) -> bool {
+    pub async fn is_undirected(&self, a: usize, b: usize) -> bool {
         self.undirected.contains(&norm_pair(a, b))
     }
 
-    pub fn adjacent(&self, v: usize) -> Vec<usize> {
+    pub async fn adjacent(&self, v: usize) -> Vec<usize> {
         let mut out: BTreeSet<usize> = BTreeSet::new();
         for &(a, b) in &self.directed {
             if a == v {
@@ -258,29 +258,29 @@ impl Cpdag {
         out.into_iter().collect()
     }
 
-    pub fn remove_edge(&mut self, a: usize, b: usize) {
+    pub async fn remove_edge(&mut self, a: usize, b: usize) {
         self.directed.remove(&(a, b));
         self.directed.remove(&(b, a));
         self.undirected.remove(&norm_pair(a, b));
     }
 
     /// 🔀️ Resolves the undirected edge `(a, b)` to `a -> b`.
-    pub fn orient(&mut self, a: usize, b: usize) {
+    pub async fn orient(&mut self, a: usize, b: usize) {
         self.undirected.remove(&norm_pair(a, b));
         self.directed.insert((a, b));
     }
 
-    pub fn directed_edges(&self) -> Vec<(usize, usize)> {
+    pub async fn directed_edges(&self) -> Vec<(usize, usize)> {
         self.directed.iter().copied().collect()
     }
 
-    pub fn undirected_edges(&self) -> Vec<(usize, usize)> {
+    pub async fn undirected_edges(&self) -> Vec<(usize, usize)> {
         self.undirected.iter().copied().collect()
     }
 
     /// 🧭️ The CPDAG of `dag`'s Markov equivalence class: skeleton + v-structures, closed under
     /// [`apply_meek_rules`] (sound and complete for this step per Meek 1995).
-    pub fn from_dag(dag: &CausalDag) -> Cpdag {
+    pub async fn from_dag(dag: &CausalDag) -> Cpdag {
         let mut cpdag = Cpdag::new(dag.names().to_vec());
         for (a, b) in dag.edges() {
             cpdag.undirected.insert(norm_pair(a, b));
@@ -309,7 +309,7 @@ impl Cpdag {
     /// 🧭️ Extends to a consistent member DAG via the Dor–Tarsi (1992) algorithm; `None` if no
     /// consistent extension exists (not possible for a CPDAG built by [`Cpdag::from_dag`] or
     /// [`pc_stable`], but possible for a hand-built [`Cpdag`]).
-    pub fn to_dag(&self) -> Option<CausalDag> {
+    pub async fn to_dag(&self) -> Option<CausalDag> {
         let n = self.n();
         let mut directed: Vec<(usize, usize)> = self.directed.iter().copied().collect();
         let mut remaining_undirected: BTreeSet<(usize, usize)> = self.undirected.clone();
@@ -363,7 +363,7 @@ impl Cpdag {
 /// with a different orientation), which reads as a misremembered rule rather than a fixture
 /// problem — shipping an unverified R4 risked silently wrong orientations, so it is left out
 /// until it can be checked against a reference implementation.
-pub fn apply_meek_rules(cpdag: &mut Cpdag) {
+pub async fn apply_meek_rules(cpdag: &mut Cpdag) {
     let n = cpdag.n();
     loop {
         let mut changed = false;
@@ -427,7 +427,7 @@ pub struct CiStatement {
 /// 🚧️ Tests `x ⟂ y | z` in `dag` via the moralized-ancestral-graph criterion (Lauritzen et al.
 /// 1990): restrict to the ancestral set of `x ∪ y ∪ z`, moralize, delete `z`, and check whether
 /// `x` and `y` stay connected.
-pub fn d_separated(dag: &CausalDag, x: &[usize], y: &[usize], z: &[usize]) -> bool {
+pub async fn d_separated(dag: &CausalDag, x: &[usize], y: &[usize], z: &[usize]) -> bool {
     let mut relevant: HashSet<usize> = HashSet::new();
     for &v in x.iter().chain(y).chain(z) {
         relevant.insert(v);
@@ -456,7 +456,7 @@ pub fn d_separated(dag: &CausalDag, x: &[usize], y: &[usize], z: &[usize]) -> bo
 
 /// 📜️ Local-Markov implied CIs, emitted pairwise: for each `v`, `v ⟂ w | pa(v)` for every
 /// non-descendant `w` that is not a parent of `v`.
-pub fn implied_independencies(dag: &CausalDag) -> Vec<CiStatement> {
+pub async fn implied_independencies(dag: &CausalDag) -> Vec<CiStatement> {
     let n = dag.n();
     let mut out = Vec::new();
     for v in 0..n {
@@ -473,7 +473,7 @@ pub fn implied_independencies(dag: &CausalDag) -> Vec<CiStatement> {
 }
 
 /// 🔬️ Tests every implied CI against data — a graph-fit diagnostic ("model criticism").
-pub fn test_implied_independencies(
+pub async fn test_implied_independencies(
     dag: &CausalDag,
     data: &crate::artifacts::semio::standards::v1::subsets::table::schema::tabular_internals::Table,
     test: &dyn CiTest,
@@ -491,7 +491,7 @@ pub fn test_implied_independencies(
 // #region 🔖️CiTest
 /// 🔬️ A conditional-independence test on tabular data, indexed by table/DAG column.
 pub trait CiTest {
-    fn test(
+    async fn test(
         &self,
         data: &crate::artifacts::semio::standards::v1::subsets::table::schema::tabular_internals::Table,
         x: usize,
@@ -510,14 +510,14 @@ pub struct FisherZ {
 impl FisherZ {
     /// 🔬️ Precomputes the complete-case correlation matrix over `columns` (in the same order as
     /// the paired [`CausalDag`]'s variable indices).
-    pub fn for_table(data: &crate::artifacts::semio::standards::v1::subsets::table::schema::tabular_internals::Table, columns: &[usize]) -> Result<Self, CausalError> {
+    pub async fn for_table(data: &crate::artifacts::semio::standards::v1::subsets::table::schema::tabular_internals::Table, columns: &[usize]) -> Result<Self, CausalError> {
         let (corr, n) = crate::artifacts::semio::standards::v1::subsets::table::schema::statistics_internals::correlation_from_table(data, columns)?;
         Ok(Self { corr, n })
     }
 }
 
 impl CiTest for FisherZ {
-    fn test(
+    async fn test(
         &self,
         _data: &crate::artifacts::semio::standards::v1::subsets::table::schema::tabular_internals::Table,
         x: usize,
@@ -532,7 +532,7 @@ impl CiTest for FisherZ {
 pub struct GSquared;
 
 impl CiTest for GSquared {
-    fn test(
+    async fn test(
         &self,
         data: &crate::artifacts::semio::standards::v1::subsets::table::schema::tabular_internals::Table,
         x: usize,
@@ -550,7 +550,7 @@ impl CiTest for GSquared {
 // #endregion 🔖️CiTest
 
 // #region 🔖️Internal
-fn standardize(values: &[f64]) -> Vec<f64> {
+async fn standardize(values: &[f64]) -> Vec<f64> {
     let n = values.len() as f64;
     let mean = values.iter().sum::<f64>() / n;
     let var = values.iter().map(|v| (v - mean).powi(2)).sum::<f64>() / n;
@@ -558,25 +558,25 @@ fn standardize(values: &[f64]) -> Vec<f64> {
     values.iter().map(|v| (v - mean) / sd).collect()
 }
 
-fn covariance_pop(a: &[f64], b: &[f64]) -> f64 {
+async fn covariance_pop(a: &[f64], b: &[f64]) -> f64 {
     let n = a.len() as f64;
     let ma = a.iter().sum::<f64>() / n;
     let mb = b.iter().sum::<f64>() / n;
     a.iter().zip(b).map(|(x, y)| (x - ma) * (y - mb)).sum::<f64>() / n
 }
 
-fn variance_pop(a: &[f64]) -> f64 {
+async fn variance_pop(a: &[f64]) -> f64 {
     covariance_pop(a, a)
 }
 
-fn correlation_pop(a: &[f64], b: &[f64]) -> f64 {
+async fn correlation_pop(a: &[f64], b: &[f64]) -> f64 {
     let sa = variance_pop(a).sqrt().max(1e-12);
     let sb = variance_pop(b).sqrt().max(1e-12);
     covariance_pop(a, b) / (sa * sb)
 }
 
 /// 🧮️ All `k`-element subsets of `items`, in lexicographic index order.
-fn combinations(items: &[usize], k: usize) -> Vec<Vec<usize>> {
+async fn combinations(items: &[usize], k: usize) -> Vec<Vec<usize>> {
     if k == 0 {
         return vec![Vec::new()];
     }
@@ -603,7 +603,7 @@ pub struct PcOptions {
 }
 
 impl Default for PcOptions {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self { alpha: 0.05, max_cond_size: 3 }
     }
 }
@@ -618,7 +618,7 @@ pub struct PcResult {
 /// frozen at the start of each level (making the result independent of variable ordering), then
 /// v-structure orientation and Meek-rule closure.
 #[allow(clippy::needless_range_loop, reason = "x indexes both adj_snapshot and, via the inner loop, cpdag/removals by the same variable id — enumerate() over one Vec wouldn't simplify the rest")]
-pub fn pc_stable(data: &crate::artifacts::semio::standards::v1::subsets::table::schema::tabular_internals::Table, test: &dyn CiTest, opts: PcOptions) -> Result<PcResult, CausalError> {
+pub async fn pc_stable(data: &crate::artifacts::semio::standards::v1::subsets::table::schema::tabular_internals::Table, test: &dyn CiTest, opts: PcOptions) -> Result<PcResult, CausalError> {
     let n = data.n_cols();
     let mut cpdag = Cpdag::complete(data.names().to_vec());
     let mut sepsets: HashMap<(usize, usize), Vec<usize>> = HashMap::new();
@@ -655,7 +655,7 @@ pub fn pc_stable(data: &crate::artifacts::semio::standards::v1::subsets::table::
 
 /// 🧩️ Orients unshielded colliders `a -> c <- b` for every non-adjacent pair `a, b` sharing
 /// neighbor `c` where `c` is absent from `a, b`'s separating set (Spirtes, Glymour & Scheines 2000).
-pub fn orient_v_structures(cpdag: &mut Cpdag, sepsets: &HashMap<(usize, usize), Vec<usize>>) {
+pub async fn orient_v_structures(cpdag: &mut Cpdag, sepsets: &HashMap<(usize, usize), Vec<usize>>) {
     let n = cpdag.n();
     let mut to_orient = Vec::new();
     for c in 0..n {
@@ -684,7 +684,7 @@ pub fn orient_v_structures(cpdag: &mut Cpdag, sepsets: &HashMap<(usize, usize), 
 /// 📉️ Decomposable Gaussian BIC of one node given a candidate parent set (Chickering, JMLR 2002):
 /// `-n/2 * ln(sigma^2) - (|parents|+1)/2 * ln(n)`, the per-node summand a score-based search adds/removes.
 #[allow(clippy::needless_range_loop, reason = "row indexes both the MatD design matrix by (row, col) and the values slice — enumerate() would only remove the values index")]
-pub fn local_bic(data: &crate::artifacts::semio::standards::v1::subsets::table::schema::tabular_internals::Table, node: usize, parents: &[usize]) -> Result<f64, CausalError> {
+pub async fn local_bic(data: &crate::artifacts::semio::standards::v1::subsets::table::schema::tabular_internals::Table, node: usize, parents: &[usize]) -> Result<f64, CausalError> {
     let y = data.continuous(node)?;
     let n = y.len();
     let p = parents.len();
@@ -708,7 +708,7 @@ pub fn local_bic(data: &crate::artifacts::semio::standards::v1::subsets::table::
 }
 
 /// 📉️ Sum of local BICs over every node of `dag` given its own parent set.
-pub fn dag_bic(data: &crate::artifacts::semio::standards::v1::subsets::table::schema::tabular_internals::Table, dag: &CausalDag) -> Result<f64, CausalError> {
+pub async fn dag_bic(data: &crate::artifacts::semio::standards::v1::subsets::table::schema::tabular_internals::Table, dag: &CausalDag) -> Result<f64, CausalError> {
     (0..dag.n()).map(|v| local_bic(data, v, dag.parents(v))).sum()
 }
 
@@ -729,7 +729,7 @@ pub struct LingamResult {
 /// original paper's kernel-density mutual-information estimate; both exploit the same LiNGAM
 /// identifiability condition (independent, non-Gaussian noise) to detect residual dependence.
 #[allow(clippy::needless_range_loop, reason = "row indexes both the MatD design matrix by (row, col) and the columns[parent] slice — enumerate() would only remove one of the two")]
-pub fn direct_lingam(data: &crate::artifacts::semio::standards::v1::subsets::table::schema::tabular_internals::Table, prune_alpha: f64) -> Result<LingamResult, CausalError> {
+pub async fn direct_lingam(data: &crate::artifacts::semio::standards::v1::subsets::table::schema::tabular_internals::Table, prune_alpha: f64) -> Result<LingamResult, CausalError> {
     let n = data.n_cols();
     let columns: Vec<Vec<f64>> = (0..n).map(|i| data.continuous(i).map(<[f64]>::to_vec)).collect::<Result<_, _>>()?;
     let mut working: HashMap<usize, Vec<f64>> = (0..n).map(|i| (i, standardize(&columns[i]))).collect();
@@ -810,7 +810,7 @@ pub fn direct_lingam(data: &crate::artifacts::semio::standards::v1::subsets::tab
 /// structure, in the spirit of Chickering's GES (JMLR 2002) but without its formal
 /// equivalence-class insert/delete validity conditions; returns the CPDAG of the local optimum's
 /// Markov equivalence class.
-pub fn ges(data: &crate::artifacts::semio::standards::v1::subsets::table::schema::tabular_internals::Table) -> Result<Cpdag, CausalError> {
+pub async fn ges(data: &crate::artifacts::semio::standards::v1::subsets::table::schema::tabular_internals::Table) -> Result<Cpdag, CausalError> {
     let n = data.n_cols();
     let names = data.names().to_vec();
     let mut edges: Vec<(usize, usize)> = Vec::new();
@@ -868,7 +868,7 @@ pub fn ges(data: &crate::artifacts::semio::standards::v1::subsets::table::schema
 // #region 🔖️Identification
 /// 🚪️ Backdoor criterion (Pearl 2009 §3.3.1): `z` contains no descendant of `x` and blocks every
 /// backdoor path, checked as d-separation in the graph with `x`'s outgoing edges removed.
-pub fn backdoor_satisfied(dag: &CausalDag, x: usize, y: usize, z: &[usize]) -> bool {
+pub async fn backdoor_satisfied(dag: &CausalDag, x: usize, y: usize, z: &[usize]) -> bool {
     let descendants_x: HashSet<usize> = dag.descendants(x).into_iter().collect();
     if z.iter().any(|zi| descendants_x.contains(zi)) {
         return false;
@@ -883,7 +883,7 @@ pub fn backdoor_satisfied(dag: &CausalDag, x: usize, y: usize, z: &[usize]) -> b
 /// 🚪️ Every inclusion-minimal backdoor set up to `max_size`, searched over
 /// `An(x) ∪ An(y) \ ({x, y} ∪ De(x))`, smallest sets first so a superset of an already-found
 /// minimal set is never re-checked.
-pub fn minimal_backdoor_sets(dag: &CausalDag, x: usize, y: usize, max_size: usize) -> Vec<Vec<usize>> {
+pub async fn minimal_backdoor_sets(dag: &CausalDag, x: usize, y: usize, max_size: usize) -> Vec<Vec<usize>> {
     let mut candidates: BTreeSet<usize> = BTreeSet::new();
     candidates.extend(dag.ancestors(x));
     candidates.extend(dag.ancestors(y));
@@ -910,7 +910,7 @@ pub fn minimal_backdoor_sets(dag: &CausalDag, x: usize, y: usize, max_size: usiz
 /// 🚪️ Frontdoor criterion for mediator set `m` (Pearl 2009 §3.4): `m` intercepts every directed
 /// `x -> y` path, there is no unblocked backdoor path `x -> ... -> m`, and every backdoor path
 /// `m -> ... -> y` is blocked by `x`.
-pub fn frontdoor_satisfied(dag: &CausalDag, x: usize, y: usize, m: &[usize]) -> bool {
+pub async fn frontdoor_satisfied(dag: &CausalDag, x: usize, y: usize, m: &[usize]) -> bool {
     let m_set: HashSet<usize> = m.iter().copied().collect();
     if m.is_empty() || m_set.contains(&x) || m_set.contains(&y) {
         return false;
@@ -950,7 +950,7 @@ pub enum Identification {
 /// always exists, so this always succeeds; latent-confounder identification via the general
 /// Shpitser–Pearl ID algorithm needs an ADMG (bidirected-edge) graph representation that
 /// [`CausalDag`] does not model in v1, and is out of scope here.
-pub fn identify(dag: &CausalDag, x: usize, y: usize) -> Result<Identification, CausalError> {
+pub async fn identify(dag: &CausalDag, x: usize, y: usize) -> Result<Identification, CausalError> {
     if backdoor_satisfied(dag, x, y, &[]) {
         return Ok(Identification::NoConfounding);
     }
@@ -983,7 +983,7 @@ pub struct LinearGaussianScm {
 impl LinearGaussianScm {
     /// 📈️ Per-node OLS on parents (roots get their marginal mean/variance).
     #[allow(clippy::needless_range_loop, reason = "row indexes both the MatD design matrix by (row, col) and the pv slice — enumerate() would only remove one of the two")]
-    pub fn fit(dag: &CausalDag, data: &crate::artifacts::semio::standards::v1::subsets::table::schema::tabular_internals::Table) -> Result<Self, CausalError> {
+    pub async fn fit(dag: &CausalDag, data: &crate::artifacts::semio::standards::v1::subsets::table::schema::tabular_internals::Table) -> Result<Self, CausalError> {
         let n = dag.n();
         let mut weights = crate::artifacts::semio::standards::v1::subsets::value::schema::algebra_internals::MatD::zeros(n, n);
         let mut intercepts = crate::artifacts::semio::standards::v1::subsets::value::schema::algebra_internals::VecD::zeros(n);
@@ -1016,7 +1016,7 @@ impl LinearGaussianScm {
 
     /// 🎲️ Ancestral sampling in topological order.
     #[allow(clippy::needless_range_loop, reason = "row indexes a per-variable column selected by the inner topological-order loop, not a single Vec — no single iterator covers both loop levels")]
-    pub fn simulate(&self, n_samples: usize, rng: &mut semio_framework_geometry::random::Rng) -> Result<crate::artifacts::semio::standards::v1::subsets::table::schema::tabular_internals::Table, CausalError> {
+    pub async fn simulate(&self, n_samples: usize, rng: &mut semio_framework_geometry::random::Rng) -> Result<crate::artifacts::semio::standards::v1::subsets::table::schema::tabular_internals::Table, CausalError> {
         let n = self.dag.n();
         let mut columns = vec![vec![0.0f64; n_samples]; n];
         for row in 0..n_samples {
@@ -1034,7 +1034,7 @@ impl LinearGaussianScm {
     }
 
     /// ✂️ `do(v := value)` for each entry: cuts `v`'s incoming edges, fixes `intercept = value`, `noise_var = 0`.
-    pub fn intervened(&self, interventions: &[(usize, f64)]) -> Result<Self, CausalError> {
+    pub async fn intervened(&self, interventions: &[(usize, f64)]) -> Result<Self, CausalError> {
         let intervened_set: HashSet<usize> = interventions.iter().map(|&(v, _)| v).collect();
         let remaining_edges: Vec<(usize, usize)> = self.dag.edges().into_iter().filter(|&(_, child)| !intervened_set.contains(&child)).collect();
         let new_dag = CausalDag::new(self.dag.names().to_vec(), &remaining_edges)?;
@@ -1058,7 +1058,7 @@ impl LinearGaussianScm {
     }
 
     /// 🧮️ `E[v]` for every `v`, via forward substitution in topological order.
-    pub fn mean(&self) -> crate::artifacts::semio::standards::v1::subsets::value::schema::algebra_internals::VecD {
+    pub async fn mean(&self) -> crate::artifacts::semio::standards::v1::subsets::value::schema::algebra_internals::VecD {
         let mut mu = crate::artifacts::semio::standards::v1::subsets::value::schema::algebra_internals::VecD::zeros(self.dag.n());
         for &v in self.dag.topological_order() {
             let mut val = self.intercepts.get(v);
@@ -1071,7 +1071,7 @@ impl LinearGaussianScm {
     }
 
     /// 🧮️ Implied covariance `(I−B)⁻¹ D (I−B)⁻ᵀ`.
-    pub fn implied_covariance(&self) -> Result<crate::artifacts::semio::standards::v1::subsets::value::schema::algebra_internals::MatD, CausalError> {
+    pub async fn implied_covariance(&self) -> Result<crate::artifacts::semio::standards::v1::subsets::value::schema::algebra_internals::MatD, CausalError> {
         let n = self.dag.n();
         let mut i_minus_b = crate::artifacts::semio::standards::v1::subsets::value::schema::algebra_internals::MatD::identity(n);
         for v in 0..n {
@@ -1089,7 +1089,7 @@ impl LinearGaussianScm {
 
     /// 🎯️ `∂E[y]/∂(do x)`: sum over directed `x -> ... -> y` paths of the product of edge
     /// weights, via topological dynamic programming.
-    pub fn total_effect(&self, x: usize, y: usize) -> f64 {
+    pub async fn total_effect(&self, x: usize, y: usize) -> f64 {
         let mut sensitivity = vec![0.0f64; self.dag.n()];
         sensitivity[x] = 1.0;
         for &v in self.dag.topological_order() {
@@ -1107,14 +1107,14 @@ impl LinearGaussianScm {
 
     /// 🎯️ `E[y | do(x=1)] − E[y | do(x=0)]`; equals [`LinearGaussianScm::total_effect`] for a
     /// linear model, kept as a distinct name for symmetry with the potential-outcomes estimators.
-    pub fn ate(&self, x: usize, y: usize) -> f64 {
+    pub async fn ate(&self, x: usize, y: usize) -> f64 {
         self.total_effect(x, y)
     }
 
     /// 🔮️ Abduction–action–prediction (Pearl 2009 ch. 7, Thm 7.1.7): recovers every exogenous
     /// noise term from a fully observed row, applies `interventions`, and re-propagates the same
     /// noise — exact for a linear-Gaussian model.
-    pub fn counterfactual(&self, observed: &[f64], interventions: &[(usize, f64)]) -> Result<crate::artifacts::semio::standards::v1::subsets::value::schema::algebra_internals::VecD, CausalError> {
+    pub async fn counterfactual(&self, observed: &[f64], interventions: &[(usize, f64)]) -> Result<crate::artifacts::semio::standards::v1::subsets::value::schema::algebra_internals::VecD, CausalError> {
         let n = self.dag.n();
         if observed.len() != n {
             return Err(CausalError::DimensionMismatch(format!("observed row has {} entries, expected {n}", observed.len())));
@@ -1145,7 +1145,7 @@ impl LinearGaussianScm {
     }
 
     /// 🔮️ `E[target | do(interventions)]`: the mean of the intervened model at `target`.
-    pub fn interventional_mean(&self, target: usize, interventions: &[(usize, f64)]) -> Result<f64, CausalError> {
+    pub async fn interventional_mean(&self, target: usize, interventions: &[(usize, f64)]) -> Result<f64, CausalError> {
         Ok(self.intervened(interventions)?.mean().get(target))
     }
 }
@@ -1175,7 +1175,7 @@ pub struct DiscreteScm {
 
 impl DiscreteScm {
     /// 📊️ MLE CPTs from categorical columns with additive (Laplace) smoothing `pseudocount` (`0.0` = pure MLE).
-    pub fn fit(dag: &CausalDag, data: &crate::artifacts::semio::standards::v1::subsets::table::schema::tabular_internals::Table, pseudocount: f64) -> Result<Self, CausalError> {
+    pub async fn fit(dag: &CausalDag, data: &crate::artifacts::semio::standards::v1::subsets::table::schema::tabular_internals::Table, pseudocount: f64) -> Result<Self, CausalError> {
         let n = dag.n();
         let columns: Vec<&crate::artifacts::semio::standards::v1::subsets::table::schema::tabular_internals::CategoricalColumn> = (0..n).map(|i| data.categorical(i)).collect::<Result<_, _>>()?;
         let cardinalities: Vec<usize> = (0..n).map(|v| columns[v].n_levels()).collect();
@@ -1222,7 +1222,7 @@ impl DiscreteScm {
 
     /// 🎲️ Ancestral sampling in topological order.
     #[allow(clippy::needless_range_loop, reason = "row indexes a per-variable column selected by the inner topological-order loop, not a single Vec — no single iterator covers both loop levels")]
-    pub fn simulate(&self, n_samples: usize, rng: &mut semio_framework_geometry::random::Rng) -> Result<crate::artifacts::semio::standards::v1::subsets::table::schema::tabular_internals::Table, CausalError> {
+    pub async fn simulate(&self, n_samples: usize, rng: &mut semio_framework_geometry::random::Rng) -> Result<crate::artifacts::semio::standards::v1::subsets::table::schema::tabular_internals::Table, CausalError> {
         let n = self.dag.n();
         let mut codes = vec![vec![0u32; n_samples]; n];
         for row in 0..n_samples {
@@ -1254,7 +1254,7 @@ impl DiscreteScm {
     }
 
     /// ✂️ `do(v := value)` for each entry: replaces `v`'s CPT with a point mass and drops its parents.
-    pub fn intervened(&self, interventions: &[(usize, u32)]) -> Result<Self, CausalError> {
+    pub async fn intervened(&self, interventions: &[(usize, u32)]) -> Result<Self, CausalError> {
         let intervened_map: HashMap<usize, u32> = interventions.iter().copied().collect();
         let remaining_edges: Vec<(usize, usize)> = self.dag.edges().into_iter().filter(|&(_, child)| !intervened_map.contains_key(&child)).collect();
         let new_dag = CausalDag::new(self.dag.names().to_vec(), &remaining_edges)?;
@@ -1270,7 +1270,7 @@ impl DiscreteScm {
 
     /// 🔢️ `P(target | evidence)` by variable elimination (Zhang & Poole 1994) over a
     /// min-remaining-factors ordering, guarded against blow-up.
-    pub fn posterior(&self, target: usize, evidence: &[(usize, u32)]) -> Result<Vec<f64>, CausalError> {
+    pub async fn posterior(&self, target: usize, evidence: &[(usize, u32)]) -> Result<Vec<f64>, CausalError> {
         const MAX_FACTOR_ENTRIES: usize = 1_000_000;
         let n = self.dag.n();
         let evidence_map: HashMap<usize, u32> = evidence.iter().copied().collect();
@@ -1311,7 +1311,7 @@ impl DiscreteScm {
     }
 
     /// 🔮️ `P(target | do(interventions), evidence)`: posterior on the intervened network.
-    pub fn interventional_distribution(&self, target: usize, interventions: &[(usize, u32)], evidence: &[(usize, u32)]) -> Result<Vec<f64>, CausalError> {
+    pub async fn interventional_distribution(&self, target: usize, interventions: &[(usize, u32)], evidence: &[(usize, u32)]) -> Result<Vec<f64>, CausalError> {
         self.intervened(interventions)?.posterior(target, evidence)
     }
 }
@@ -1325,14 +1325,14 @@ struct Factor {
 }
 
 impl Factor {
-    fn from_cpt(cpt: &Cpt, cardinalities: &[usize]) -> Self {
+    async fn from_cpt(cpt: &Cpt, cardinalities: &[usize]) -> Self {
         let mut vars = vec![cpt.node];
         vars.extend_from_slice(&cpt.parents);
         let cards: Vec<usize> = vars.iter().map(|&v| cardinalities[v]).collect();
         Self { vars, cards, values: cpt.probs.clone() }
     }
 
-    fn encode(&self, assignment: &HashMap<usize, u32>) -> usize {
+    async fn encode(&self, assignment: &HashMap<usize, u32>) -> usize {
         let mut idx = 0usize;
         let mut stride = 1usize;
         for (i, &v) in self.vars.iter().enumerate() {
@@ -1342,7 +1342,7 @@ impl Factor {
         idx
     }
 
-    fn restrict(&self, var: usize, value: u32) -> Self {
+    async fn restrict(&self, var: usize, value: u32) -> Self {
         let Some(pos) = self.vars.iter().position(|&v| v == var) else {
             return self.clone();
         };
@@ -1358,7 +1358,7 @@ impl Factor {
         Factor { vars: new_vars, cards: new_cards, values }
     }
 
-    fn multiply(&self, other: &Factor) -> Factor {
+    async fn multiply(&self, other: &Factor) -> Factor {
         let mut vars = self.vars.clone();
         let mut cards = self.cards.clone();
         for (i, &v) in other.vars.iter().enumerate() {
@@ -1376,7 +1376,7 @@ impl Factor {
         Factor { vars, cards, values }
     }
 
-    fn marginalize(&self, var: usize) -> Factor {
+    async fn marginalize(&self, var: usize) -> Factor {
         let Some(pos) = self.vars.iter().position(|&v| v == var) else {
             return self.clone();
         };
@@ -1398,7 +1398,7 @@ impl Factor {
 }
 
 /// 🧮️ Decodes a flat mixed-radix index (`vars[0]` fastest-varying) into a var -> value assignment.
-fn decode(vars: &[usize], cards: &[usize], mut idx: usize) -> HashMap<usize, u32> {
+async fn decode(vars: &[usize], cards: &[usize], mut idx: usize) -> HashMap<usize, u32> {
     let mut out = HashMap::with_capacity(vars.len());
     for (i, &v) in vars.iter().enumerate() {
         let c = cards[i];
@@ -1432,7 +1432,7 @@ pub struct EstimationOptions {
     pub bootstrap: Option<BootstrapOptions>,
 }
 
-fn bootstrap_ci(
+async fn bootstrap_ci(
     data: &crate::artifacts::semio::standards::v1::subsets::table::schema::tabular_internals::Table,
     opts: &BootstrapOptions,
     point_fn: &dyn Fn(&crate::artifacts::semio::standards::v1::subsets::table::schema::tabular_internals::Table) -> Result<f64, CausalError>,
@@ -1458,7 +1458,7 @@ fn bootstrap_ci(
     (estimates[lo_idx], estimates[hi_idx])
 }
 
-fn wrap_estimate(
+async fn wrap_estimate(
     point: f64,
     data: &crate::artifacts::semio::standards::v1::subsets::table::schema::tabular_internals::Table,
     opts: &EstimationOptions,
@@ -1473,7 +1473,7 @@ fn wrap_estimate(
     }
 }
 
-fn naive_difference_point(data: &crate::artifacts::semio::standards::v1::subsets::table::schema::tabular_internals::Table, treatment: usize, outcome: usize) -> Result<f64, CausalError> {
+async fn naive_difference_point(data: &crate::artifacts::semio::standards::v1::subsets::table::schema::tabular_internals::Table, treatment: usize, outcome: usize) -> Result<f64, CausalError> {
     let t = data.continuous(treatment)?;
     let y = data.continuous(outcome)?;
     let (mut sum1, mut n1, mut sum0, mut n0) = (0.0, 0usize, 0.0, 0usize);
@@ -1493,13 +1493,13 @@ fn naive_difference_point(data: &crate::artifacts::semio::standards::v1::subsets
 }
 
 /// 📏️ Level-1 baseline: `E[y|t=1] − E[y|t=0]` — biased under confounding, useful as a comparison point.
-pub fn naive_difference(data: &crate::artifacts::semio::standards::v1::subsets::table::schema::tabular_internals::Table, treatment: usize, outcome: usize, opts: &EstimationOptions) -> Result<EffectEstimate, CausalError> {
+pub async fn naive_difference(data: &crate::artifacts::semio::standards::v1::subsets::table::schema::tabular_internals::Table, treatment: usize, outcome: usize, opts: &EstimationOptions) -> Result<EffectEstimate, CausalError> {
     let point = naive_difference_point(data, treatment, outcome)?;
     Ok(wrap_estimate(point, data, opts, &|d| naive_difference_point(d, treatment, outcome)))
 }
 
 #[allow(clippy::needless_range_loop, reason = "row indexes both the MatD design matrix by (row, col) and a values/t slice — enumerate() would only remove one of the two")]
-fn design_with_treatment(
+async fn design_with_treatment(
     data: &crate::artifacts::semio::standards::v1::subsets::table::schema::tabular_internals::Table,
     treatment: usize,
     covariates: &[usize],
@@ -1520,7 +1520,7 @@ fn design_with_treatment(
     Ok(design)
 }
 
-fn g_formula_point(data: &crate::artifacts::semio::standards::v1::subsets::table::schema::tabular_internals::Table, treatment: usize, outcome: usize, covariates: &[usize]) -> Result<f64, CausalError> {
+async fn g_formula_point(data: &crate::artifacts::semio::standards::v1::subsets::table::schema::tabular_internals::Table, treatment: usize, outcome: usize, covariates: &[usize]) -> Result<f64, CausalError> {
     let y = data.continuous(outcome)?;
     let design = design_with_treatment(data, treatment, covariates, None)?;
     let fit = crate::artifacts::semio::standards::v1::subsets::table::schema::statistics_internals::ols(&design, y, true)?;
@@ -1537,13 +1537,13 @@ fn g_formula_point(data: &crate::artifacts::semio::standards::v1::subsets::table
 
 /// 📏️ G-formula / regression-adjustment ATE: fit `y ~ t + covariates` by OLS, then average the
 /// model's predicted `y` at `t=1` minus at `t=0` over the empirical covariate distribution.
-pub fn g_formula_ate(data: &crate::artifacts::semio::standards::v1::subsets::table::schema::tabular_internals::Table, treatment: usize, outcome: usize, covariates: &[usize], opts: &EstimationOptions) -> Result<EffectEstimate, CausalError> {
+pub async fn g_formula_ate(data: &crate::artifacts::semio::standards::v1::subsets::table::schema::tabular_internals::Table, treatment: usize, outcome: usize, covariates: &[usize], opts: &EstimationOptions) -> Result<EffectEstimate, CausalError> {
     let point = g_formula_point(data, treatment, outcome, covariates)?;
     Ok(wrap_estimate(point, data, opts, &|d| g_formula_point(d, treatment, outcome, covariates)))
 }
 
 #[allow(clippy::needless_range_loop, reason = "row indexes both the MatD design matrix by (row, col) and the values slice — enumerate() would only remove the values index")]
-fn ipw_point(data: &crate::artifacts::semio::standards::v1::subsets::table::schema::tabular_internals::Table, treatment: usize, outcome: usize, covariates: &[usize]) -> Result<f64, CausalError> {
+async fn ipw_point(data: &crate::artifacts::semio::standards::v1::subsets::table::schema::tabular_internals::Table, treatment: usize, outcome: usize, covariates: &[usize]) -> Result<f64, CausalError> {
     const EPS: f64 = 1e-6;
     let n = data.n_rows();
     let mut design = crate::artifacts::semio::standards::v1::subsets::value::schema::algebra_internals::MatD::zeros(n, covariates.len());
@@ -1576,7 +1576,7 @@ fn ipw_point(data: &crate::artifacts::semio::standards::v1::subsets::table::sche
 
 /// 📏️ Inverse-probability weighting ATE: logistic propensity model, Hájek (normalized-weight)
 /// estimator, propensities clipped to `[1e-6, 1-1e-6]`.
-pub fn ipw_ate(data: &crate::artifacts::semio::standards::v1::subsets::table::schema::tabular_internals::Table, treatment: usize, outcome: usize, covariates: &[usize], opts: &EstimationOptions) -> Result<EffectEstimate, CausalError> {
+pub async fn ipw_ate(data: &crate::artifacts::semio::standards::v1::subsets::table::schema::tabular_internals::Table, treatment: usize, outcome: usize, covariates: &[usize], opts: &EstimationOptions) -> Result<EffectEstimate, CausalError> {
     let point = ipw_point(data, treatment, outcome, covariates)?;
     Ok(wrap_estimate(point, data, opts, &|d| ipw_point(d, treatment, outcome, covariates)))
 }
@@ -1591,16 +1591,16 @@ pub struct WhatIf {
 }
 
 impl WhatIf {
-    pub fn new() -> Self {
+    pub async fn new() -> Self {
         Self::default()
     }
 
-    pub fn do_(mut self, var: usize, value: f64) -> Self {
+    pub async fn do_(mut self, var: usize, value: f64) -> Self {
         self.interventions.push((var, value));
         self
     }
 
-    pub fn given(mut self, var: usize, value: f64) -> Self {
+    pub async fn given(mut self, var: usize, value: f64) -> Self {
         self.evidence.push((var, value));
         self
     }
@@ -1610,7 +1610,7 @@ impl LinearGaussianScm {
     /// 🔮️ Level 2 (empty evidence): interventional mean of `target`. Level 3 (evidence covering
     /// every variable): exact counterfactual via abduction–action–prediction. Partial evidence is
     /// out of scope for v1 (needs conditional-MVN abduction) and returns `InvalidQuery`.
-    pub fn query(&self, target: usize, what_if: &WhatIf) -> Result<f64, CausalError> {
+    pub async fn query(&self, target: usize, what_if: &WhatIf) -> Result<f64, CausalError> {
         if what_if.evidence.is_empty() {
             return self.interventional_mean(target, &what_if.interventions);
         }
@@ -1632,17 +1632,17 @@ mod tests {
     use super::*;
 
     // #region 🔖️Fixtures
-    fn chain3() -> CausalDag {
+    async fn chain3() -> CausalDag {
         // x -> y -> z
         CausalDag::from_named_edges(vec!["x".into(), "y".into(), "z".into()], &[("x", "y"), ("y", "z")]).unwrap()
     }
 
-    fn fork3() -> CausalDag {
+    async fn fork3() -> CausalDag {
         // x <- y -> z
         CausalDag::from_named_edges(vec!["x".into(), "y".into(), "z".into()], &[("y", "x"), ("y", "z")]).unwrap()
     }
 
-    fn collider3() -> CausalDag {
+    async fn collider3() -> CausalDag {
         // x -> z <- y
         CausalDag::from_named_edges(vec!["x".into(), "y".into(), "z".into()], &[("x", "z"), ("y", "z")]).unwrap()
     }
@@ -1650,35 +1650,35 @@ mod tests {
 
     // #region 🔖️DSeparationTests
     #[test]
-    fn chain_d_separation_pattern() {
+    async fn chain_d_separation_pattern() {
         let dag = chain3();
         assert!(d_separated(&dag, &[0], &[2], &[1]), "x _||_ z | y should hold on a chain");
         assert!(!d_separated(&dag, &[0], &[2], &[]), "x _||_ z should not hold marginally on a chain");
     }
 
     #[test]
-    fn fork_d_separation_pattern() {
+    async fn fork_d_separation_pattern() {
         let dag = fork3();
         assert!(d_separated(&dag, &[0], &[2], &[1]), "x _||_ z | y should hold on a fork");
         assert!(!d_separated(&dag, &[0], &[2], &[]), "x _||_ z should not hold marginally on a fork");
     }
 
     #[test]
-    fn collider_d_separation_pattern() {
+    async fn collider_d_separation_pattern() {
         let dag = collider3();
         assert!(d_separated(&dag, &[0], &[1], &[]), "x _||_ y should hold marginally on a collider");
         assert!(!d_separated(&dag, &[0], &[1], &[2]), "x _||_ y | z should not hold: conditioning on the collider opens the path");
     }
 
     #[test]
-    fn moralization_marries_coparents() {
+    async fn moralization_marries_coparents() {
         let dag = collider3();
         let moral = dag.moralize();
         assert!(moral.contains(&(0, 1)), "co-parents 0 and 1 of the collider should be married");
     }
 
     #[test]
-    fn implied_independencies_hold_by_d_separation() {
+    async fn implied_independencies_hold_by_d_separation() {
         let dag = chain3();
         for stmt in implied_independencies(&dag) {
             assert!(d_separated(&dag, &[stmt.x], &[stmt.y], &stmt.z), "implied statement {stmt:?} should be d-separated");
@@ -1688,7 +1688,7 @@ mod tests {
 
     // #region 🔖️CpdagTests
     #[test]
-    fn cpdag_from_chain_is_fully_undirected() {
+    async fn cpdag_from_chain_is_fully_undirected() {
         let cpdag = Cpdag::from_dag(&chain3());
         assert!(cpdag.is_undirected(0, 1));
         assert!(cpdag.is_undirected(1, 2));
@@ -1696,7 +1696,7 @@ mod tests {
     }
 
     #[test]
-    fn cpdag_from_collider_keeps_both_arrows() {
+    async fn cpdag_from_collider_keeps_both_arrows() {
         let cpdag = Cpdag::from_dag(&collider3());
         assert!(cpdag.is_directed(0, 2));
         assert!(cpdag.is_directed(1, 2));
@@ -1704,7 +1704,7 @@ mod tests {
     }
 
     #[test]
-    fn cpdag_to_dag_round_trip_preserves_skeleton_and_v_structures() {
+    async fn cpdag_to_dag_round_trip_preserves_skeleton_and_v_structures() {
         let dag = collider3();
         let cpdag = Cpdag::from_dag(&dag);
         let extended = cpdag.to_dag().expect("collider CPDAG is extendable");
@@ -1713,7 +1713,7 @@ mod tests {
     }
 
     #[test]
-    fn cpdag_to_dag_round_trip_on_chain_is_acyclic_and_same_skeleton() {
+    async fn cpdag_to_dag_round_trip_on_chain_is_acyclic_and_same_skeleton() {
         let dag = chain3();
         let cpdag = Cpdag::from_dag(&dag);
         let extended = cpdag.to_dag().expect("chain CPDAG is extendable");
@@ -1721,7 +1721,7 @@ mod tests {
     }
 
     #[test]
-    fn meek_rule1_orients_to_avoid_new_collider() {
+    async fn meek_rule1_orients_to_avoid_new_collider() {
         // a -> b, b - c undirected, a and c not adjacent => b -> c.
         let mut cpdag = Cpdag::new(vec!["a".into(), "b".into(), "c".into()]);
         cpdag.directed.insert((0, 1));
@@ -1731,7 +1731,7 @@ mod tests {
     }
 
     #[test]
-    fn meek_rule2_orients_to_avoid_cycle() {
+    async fn meek_rule2_orients_to_avoid_cycle() {
         // a -> b -> c, a - c undirected => a -> c.
         let mut cpdag = Cpdag::new(vec!["a".into(), "b".into(), "c".into()]);
         cpdag.directed.insert((0, 1));
@@ -1742,7 +1742,7 @@ mod tests {
     }
 
     #[test]
-    fn meek_rule3_orients_via_two_directed_co_parents() {
+    async fn meek_rule3_orients_via_two_directed_co_parents() {
         // a-b, a-c, a-d undirected; c->b, d->b directed; c,d not adjacent => a->b.
         let mut cpdag = Cpdag::new(vec!["a".into(), "b".into(), "c".into(), "d".into()]);
         cpdag.undirected.insert((0, 1));
@@ -1758,7 +1758,7 @@ mod tests {
 
     // #region 🔖️CiTestTests
     #[test]
-    fn fisher_z_ci_test_via_causal_dag_columns() {
+    async fn fisher_z_ci_test_via_causal_dag_columns() {
         let mut table = crate::artifacts::semio::standards::v1::subsets::table::schema::tabular_internals::Table::new();
         let n = 200;
         let mut rng = semio_framework_geometry::random::Rng::from_seed(7);
@@ -1777,7 +1777,7 @@ mod tests {
     // #endregion 🔖️CiTestTests
 
     // #region 🔖️DiscoveryTests
-    fn linear_chain_scm() -> LinearGaussianScm {
+    async fn linear_chain_scm() -> LinearGaussianScm {
         // x -> m -> y, coefficients 2.0 and 1.5.
         let dag = CausalDag::from_named_edges(vec!["x".into(), "m".into(), "y".into()], &[("x", "m"), ("m", "y")]).unwrap();
         let mut weights = crate::artifacts::semio::standards::v1::subsets::value::schema::algebra_internals::MatD::zeros(3, 3);
@@ -1792,7 +1792,7 @@ mod tests {
     }
 
     #[test]
-    fn local_bic_prefers_the_true_parent_set() {
+    async fn local_bic_prefers_the_true_parent_set() {
         let scm = linear_chain_scm();
         let mut rng = semio_framework_geometry::random::Rng::from_seed(99);
         let mut data = scm.simulate(500, &mut rng).unwrap();
@@ -1811,7 +1811,7 @@ mod tests {
 
     // #region 🔖️IdentificationTests
     #[test]
-    fn backdoor_minimal_set_on_confounder_triangle() {
+    async fn backdoor_minimal_set_on_confounder_triangle() {
         // z -> x, z -> y, x -> y.
         let dag = CausalDag::from_named_edges(vec!["x".into(), "y".into(), "z".into()], &[("z", "x"), ("z", "y"), ("x", "y")]).unwrap();
         let sets = minimal_backdoor_sets(&dag, 0, 1, 3);
@@ -1819,27 +1819,27 @@ mod tests {
     }
 
     #[test]
-    fn backdoor_m_bias_graph_allows_empty_adjustment() {
+    async fn backdoor_m_bias_graph_allows_empty_adjustment() {
         // a -> x, b -> y, a -> m, b -> m (m is a collider, not on any backdoor path): x -> y direct edge.
         let dag = CausalDag::from_named_edges(vec!["x".into(), "y".into(), "a".into(), "b".into(), "m".into()], &[("a", "x"), ("b", "y"), ("a", "m"), ("b", "m"), ("x", "y")]).unwrap();
         assert!(backdoor_satisfied(&dag, 0, 1, &[]), "no backdoor path from x to y should exist here");
     }
 
     #[test]
-    fn frontdoor_satisfied_on_classic_mediator_graph() {
+    async fn frontdoor_satisfied_on_classic_mediator_graph() {
         // u -> x, u -> y (unobserved confounder u), x -> m -> y.
         let dag = CausalDag::from_named_edges(vec!["x".into(), "y".into(), "m".into(), "u".into()], &[("u", "x"), ("u", "y"), ("x", "m"), ("m", "y")]).unwrap();
         assert!(frontdoor_satisfied(&dag, 0, 1, &[2]));
     }
 
     #[test]
-    fn identify_returns_no_confounding_for_a_direct_unconfounded_edge() {
+    async fn identify_returns_no_confounding_for_a_direct_unconfounded_edge() {
         let dag = CausalDag::from_named_edges(vec!["x".into(), "y".into()], &[("x", "y")]).unwrap();
         assert_eq!(identify(&dag, 0, 1).unwrap(), Identification::NoConfounding);
     }
 
     #[test]
-    fn identify_returns_backdoor_for_a_confounded_edge() {
+    async fn identify_returns_backdoor_for_a_confounded_edge() {
         let dag = CausalDag::from_named_edges(vec!["x".into(), "y".into(), "z".into()], &[("z", "x"), ("z", "y"), ("x", "y")]).unwrap();
         assert_eq!(identify(&dag, 0, 1).unwrap(), Identification::Backdoor { adjustment: vec![2] });
     }
@@ -1847,14 +1847,14 @@ mod tests {
 
     // #region 🔖️ScmLinearTests
     #[test]
-    fn linear_scm_total_effect_matches_analytic_path_product() {
+    async fn linear_scm_total_effect_matches_analytic_path_product() {
         let scm = linear_chain_scm();
         assert!((scm.total_effect(0, 2) - 3.0).abs() < 1e-9);
         assert!((scm.ate(0, 2) - 3.0).abs() < 1e-9);
     }
 
     #[test]
-    fn linear_scm_implied_covariance_matches_hand_computation() {
+    async fn linear_scm_implied_covariance_matches_hand_computation() {
         let scm = linear_chain_scm();
         let cov = scm.implied_covariance().unwrap();
         // Var(x) = 1.0; Var(m) = 4*1.0 + 0.25 = 4.25; Var(y) = 1.5^2*4.25 + 0.25 = 9.8125; Cov(x,y) = 2.0*1.5*Var(x) = 3.0.
@@ -1865,7 +1865,7 @@ mod tests {
     }
 
     #[test]
-    fn linear_scm_counterfactual_shifts_by_exact_path_product_preserving_noise() {
+    async fn linear_scm_counterfactual_shifts_by_exact_path_product_preserving_noise() {
         let scm = linear_chain_scm();
         let observed = [1.0, 2.5, 5.0]; // noise_m = 2.5 - 2.0*1.0 = 0.5; noise_y = 5.0 - 1.5*2.5 = 1.25
         let cf = scm.counterfactual(&observed, &[(0, 2.0)]).unwrap();
@@ -1877,7 +1877,7 @@ mod tests {
     }
 
     #[test]
-    fn what_if_query_level2_vs_level3() {
+    async fn what_if_query_level2_vs_level3() {
         let scm = linear_chain_scm();
         let interventional = scm.query(2, &WhatIf::new().do_(0, 2.0)).unwrap();
         // E[y | do(x=2)] = 1.5 * (2.0 * 2.0) = 6.0 (all intercepts are 0 in this fixture).
@@ -1890,7 +1890,7 @@ mod tests {
     // #endregion 🔖️ScmLinearTests
 
     // #region 🔖️ScmDiscreteTests
-    fn sprinkler_scm() -> DiscreteScm {
+    async fn sprinkler_scm() -> DiscreteScm {
         // Classic sprinkler net: Cloudy -> {Sprinkler, Rain} -> Wet. All variables binary (0=false, 1=true).
         let dag = CausalDag::from_named_edges(vec!["cloudy".into(), "sprinkler".into(), "rain".into(), "wet".into()], &[("cloudy", "sprinkler"), ("cloudy", "rain"), ("sprinkler", "wet"), ("rain", "wet")]).unwrap();
         let cardinalities = vec![2, 2, 2, 2];
@@ -1915,7 +1915,7 @@ mod tests {
     }
 
     #[test]
-    fn sprinkler_posterior_vs_interventional_distribution_contrast() {
+    async fn sprinkler_posterior_vs_interventional_distribution_contrast() {
         let scm = sprinkler_scm();
         let posterior_rain = scm.posterior(2, &[(3, 1)]).unwrap();
         let prior_rain = scm.posterior(2, &[]).unwrap();
@@ -1931,7 +1931,7 @@ mod tests {
     // #endregion 🔖️ScmDiscreteTests
 
     // #region 🔖️EstimationTests
-    fn confounded_dataset(true_ate: f64, n: usize, seed: u64) -> crate::artifacts::semio::standards::v1::subsets::table::schema::tabular_internals::Table {
+    async fn confounded_dataset(true_ate: f64, n: usize, seed: u64) -> crate::artifacts::semio::standards::v1::subsets::table::schema::tabular_internals::Table {
         let mut rng = semio_framework_geometry::random::Rng::from_seed(seed);
         let z: Vec<f64> = (0..n).map(|_| crate::artifacts::semio::standards::v1::subsets::table::schema::probability_internals::Normal::STANDARD.sample(&mut rng)).collect();
         let t: Vec<f64> = z.iter().map(|&zi| f64::from(u8::from(zi + crate::artifacts::semio::standards::v1::subsets::table::schema::probability_internals::Normal::STANDARD.sample(&mut rng) > 0.0))).collect();
@@ -1943,13 +1943,13 @@ mod tests {
 
     // #region 🔖️ErrorPathTests
     #[test]
-    fn cyclic_edges_are_rejected() {
+    async fn cyclic_edges_are_rejected() {
         let err = CausalDag::new(vec!["a".into(), "b".into()], &[(0, 1), (1, 0)]).unwrap_err();
         assert!(matches!(err, CausalError::NotADag(_)));
     }
 
     #[test]
-    fn wrong_column_type_errors() {
+    async fn wrong_column_type_errors() {
         let mut table = crate::artifacts::semio::standards::v1::subsets::table::schema::tabular_internals::Table::new();
         table.push_continuous("x", vec![1.0, 2.0]).unwrap();
         let err = GSquared.test(&table, 0, 0, &[]).unwrap_err();
@@ -1957,7 +1957,7 @@ mod tests {
     }
 
     #[test]
-    fn oversized_variable_elimination_is_rejected() {
+    async fn oversized_variable_elimination_is_rejected() {
         // 20 independent binary roots all feeding one "sink" child: the sink's own CPT factor
         // already has 2^21 entries (21 binary variables), well past the 1e6-entry guard, and
         // eliminating any root multiplies straight into that factor.
@@ -1985,7 +1985,7 @@ mod tests {
         use super::*;
 
         #[test]
-        fn pc_stable_recovers_known_cpdag_from_simulated_chain() {
+        async fn pc_stable_recovers_known_cpdag_from_simulated_chain() {
             let scm = linear_chain_scm();
             let mut rng = semio_framework_geometry::random::Rng::from_seed(2024);
             let data = scm.simulate(2000, &mut rng).unwrap();
@@ -1997,7 +1997,7 @@ mod tests {
         }
 
         #[test]
-        fn ges_recovers_known_cpdag_from_simulated_chain() {
+        async fn ges_recovers_known_cpdag_from_simulated_chain() {
             let scm = linear_chain_scm();
             let mut rng = semio_framework_geometry::random::Rng::from_seed(4242);
             let data = scm.simulate(2000, &mut rng).unwrap();
@@ -2008,7 +2008,7 @@ mod tests {
         }
 
         #[test]
-        fn direct_lingam_recovers_causal_order_on_uniform_noise_sem() {
+        async fn direct_lingam_recovers_causal_order_on_uniform_noise_sem() {
             // x -> y with uniform (non-Gaussian) noise.
             let n = 3000;
             let mut rng = semio_framework_geometry::random::Rng::from_seed(55);
@@ -2021,7 +2021,7 @@ mod tests {
         }
 
         #[test]
-        fn linear_scm_simulate_then_fit_recovers_coefficients() {
+        async fn linear_scm_simulate_then_fit_recovers_coefficients() {
             let scm = linear_chain_scm();
             let mut rng = semio_framework_geometry::random::Rng::from_seed(321);
             let data = scm.simulate(5000, &mut rng).unwrap();
@@ -2031,7 +2031,7 @@ mod tests {
         }
 
         #[test]
-        fn discrete_scm_fit_recovers_cpts_from_simulated_data() {
+        async fn discrete_scm_fit_recovers_cpts_from_simulated_data() {
             let scm = sprinkler_scm();
             let mut rng = semio_framework_geometry::random::Rng::from_seed(17);
             let data = scm.simulate(20_000, &mut rng).unwrap();
@@ -2041,7 +2041,7 @@ mod tests {
         }
 
         #[test]
-        fn naive_difference_is_biased_while_adjusted_estimators_recover_true_ate() {
+        async fn naive_difference_is_biased_while_adjusted_estimators_recover_true_ate() {
             let true_ate = 1.5;
             let data = confounded_dataset(true_ate, 4000, 42);
             let opts = EstimationOptions::default();
@@ -2056,7 +2056,7 @@ mod tests {
         }
 
         #[test]
-        fn bootstrap_ci_contains_true_ate() {
+        async fn bootstrap_ci_contains_true_ate() {
             let true_ate = 1.5;
             let data = confounded_dataset(true_ate, 5000, 7);
             let opts = EstimationOptions { bootstrap: Some(BootstrapOptions { replicates: 300, seed: 11, level: 0.95 }) };

@@ -17,7 +17,7 @@ use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vec
 const GL5_NODES: [f64; 5] = [-0.906_179_845_938_664, -0.538_469_310_105_683_1, 0.0, 0.538_469_310_105_683_1, 0.906_179_845_938_664];
 const GL5_WEIGHTS: [f64; 5] = [0.2369268850561891, 0.4786286704993665, 0.5688888888888889, 0.4786286704993665, 0.2369268850561891];
 
-fn gauss_legendre5(f: impl Fn(f64) -> f64, a: f64, b: f64) -> f64 {
+async fn gauss_legendre5(f: impl Fn(f64) -> f64, a: f64, b: f64) -> f64 {
     let mid = 0.5 * (a + b);
     let half = 0.5 * (b - a);
     GL5_NODES.iter().zip(GL5_WEIGHTS.iter()).map(|(&x, &w)| w * f(mid + half * x)).sum::<f64>() * half
@@ -26,11 +26,11 @@ fn gauss_legendre5(f: impl Fn(f64) -> f64, a: f64, b: f64) -> f64 {
 /// 📏️ Adaptive-quadrature arc length of `curve` over `[t0, t1]`: recursively halves the interval
 /// until the 5-point Gauss-Legendre estimate agrees with the sum of its two half-interval
 /// estimates to within `tol` (Richardson-style error control), or `max_depth` is reached.
-pub fn arc_length(curve: &Curve3, t0: f64, t1: f64, tol: f64) -> f64 {
+pub async fn arc_length(curve: &Curve3, t0: f64, t1: f64, tol: f64) -> f64 {
     arc_length_recursive(curve, t0, t1, tol, 24)
 }
 
-fn arc_length_recursive(curve: &Curve3, t0: f64, t1: f64, tol: f64, depth: u32) -> f64 {
+async fn arc_length_recursive(curve: &Curve3, t0: f64, t1: f64, tol: f64, depth: u32) -> f64 {
     let speed = |t: f64| curve.d1(t).norm();
     let whole = gauss_legendre5(speed, t0, t1);
     if depth == 0 {
@@ -48,7 +48,7 @@ fn arc_length_recursive(curve: &Curve3, t0: f64, t1: f64, tol: f64, depth: u32) 
 
 /// 📏️ Finds the parameter `t ∈ [t0, t1]` at which the arc length from `t0` equals `target_length`,
 /// via bisection on the (monotonic, since speed ≥ 0) length function.
-pub fn param_at_length(curve: &Curve3, t0: f64, t1: f64, target_length: f64, tol: f64) -> f64 {
+pub async fn param_at_length(curve: &Curve3, t0: f64, t1: f64, target_length: f64, tol: f64) -> f64 {
     let total = arc_length(curve, t0, t1, tol);
     if target_length <= 0.0 {
         return t0;
@@ -81,7 +81,7 @@ pub fn param_at_length(curve: &Curve3, t0: f64, t1: f64, target_length: f64, tol
 /// (`samples` intervals) seeds a safeguarded Newton refinement of `f(t) = (C(t)-P)·C'(t) = 0`
 /// (the standard first-order optimality condition for point-curve distance) from the best sample
 /// and its neighbors, keeping the global best result found. Returns `(t, distance)`.
-pub fn closest_point(curve: &Curve3, domain: (f64, f64), target: Pnt3, samples: usize) -> (f64, f64) {
+pub async fn closest_point(curve: &Curve3, domain: (f64, f64), target: Pnt3, samples: usize) -> (f64, f64) {
     let mut best_t = domain.0;
     let mut best_d2 = curve.eval(domain.0).distance_sq(target);
     for i in 0..=samples {
@@ -104,7 +104,7 @@ pub fn closest_point(curve: &Curve3, domain: (f64, f64), target: Pnt3, samples: 
     }
 }
 
-fn wrap_into_domain(t: f64, domain: (f64, f64), period: Option<f64>) -> f64 {
+async fn wrap_into_domain(t: f64, domain: (f64, f64), period: Option<f64>) -> f64 {
     match period {
         Some(p) => {
             let mut x = (t - domain.0) % p;
@@ -117,7 +117,7 @@ fn wrap_into_domain(t: f64, domain: (f64, f64), period: Option<f64>) -> f64 {
     }
 }
 
-fn newton_closest_point(curve: &Curve3, target: Pnt3, mut t: f64, domain: (f64, f64), period: Option<f64>) -> f64 {
+async fn newton_closest_point(curve: &Curve3, target: Pnt3, mut t: f64, domain: (f64, f64), period: Option<f64>) -> f64 {
     for _ in 0..30 {
         let c = curve.eval(t);
         let d1 = curve.d1(t);
@@ -143,7 +143,7 @@ fn newton_closest_point(curve: &Curve3, target: Pnt3, mut t: f64, domain: (f64, 
 /// maxima), found by sign changes of `f(t) = (C(t)-P)·C'(t)` across a uniform sample, each refined
 /// by the same Newton step as [`closest_point`]. Used where a caller needs every critical point,
 /// not just the global closest (e.g. offset self-intersection analysis in later phases).
-pub fn all_extrema(curve: &Curve3, domain: (f64, f64), target: Pnt3, samples: usize) -> Vec<f64> {
+pub async fn all_extrema(curve: &Curve3, domain: (f64, f64), target: Pnt3, samples: usize) -> Vec<f64> {
     let f = |t: f64| (curve.eval(t) - target).dot(curve.d1(t));
     let mut roots = Vec::new();
     let mut prev_t = domain.0;
@@ -172,7 +172,7 @@ pub fn all_extrema(curve: &Curve3, domain: (f64, f64), target: Pnt3, samples: us
 /// 📏️ Global cubic interpolation through `points` using centripetal parameterization (Lee's
 /// method) — the standard, well-conditioned choice for interpolating scattered points without
 /// the cusping chord-length parametrization can produce.
-pub fn interpolate_centripetal(points: &[Pnt3]) -> Option<NurbsCurve3> {
+pub async fn interpolate_centripetal(points: &[Pnt3]) -> Option<NurbsCurve3> {
     let n = points.len();
     if n < 2 {
         return None;
@@ -220,7 +220,7 @@ pub fn interpolate_centripetal(points: &[Pnt3]) -> Option<NurbsCurve3> {
 
 /// 📏️ Plain Gaussian elimination with partial pivoting — the interpolation matrix is small
 /// (control-point count) and banded but not worth a dedicated banded solver at this scale.
-fn solve_linear_system(a: &[Vec<f64>], rhs: &[f64]) -> Vec<f64> {
+async fn solve_linear_system(a: &[Vec<f64>], rhs: &[f64]) -> Vec<f64> {
     let n = rhs.len();
     let mut m: Vec<Vec<f64>> = a.to_vec();
     let mut b = rhs.to_vec();
@@ -252,7 +252,7 @@ fn solve_linear_system(a: &[Vec<f64>], rhs: &[f64]) -> Vec<f64> {
 
 /// 📏️ Reverses a NURBS curve's direction: reverses control points/weights and mirrors the knot
 /// vector around the domain, so `reverse(c).eval(domain.1 - (t - domain.0)) == c.eval(t)`.
-pub fn reverse_nurbs(curve: &NurbsCurve3) -> NurbsCurve3 {
+pub async fn reverse_nurbs(curve: &NurbsCurve3) -> NurbsCurve3 {
     let (lo, hi) = curve.knots.domain();
     let mut controls = curve.controls.clone();
     controls.reverse();
@@ -265,7 +265,7 @@ pub fn reverse_nurbs(curve: &NurbsCurve3) -> NurbsCurve3 {
 /// 📏️ Splits a NURBS curve at `t` into two curves, each covering one side of the original domain,
 /// via repeated knot insertion until `t` reaches full multiplicity (`degree + 1`), then slicing
 /// the (now Bezier-joined) control net at that knot.
-pub fn split_nurbs(curve: &NurbsCurve3, t: f64) -> (NurbsCurve3, NurbsCurve3) {
+pub async fn split_nurbs(curve: &NurbsCurve3, t: f64) -> (NurbsCurve3, NurbsCurve3) {
     let degree = curve.knots.degree;
     let mut knots = curve.knots.clone();
     let mut hx: Vec<f64> = curve.controls.iter().zip(&curve.weights).map(|(p, w)| p.x * w).collect();
@@ -312,14 +312,14 @@ mod tests {
     use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::Vec3;
 
     #[test]
-    fn arc_length_of_line_equals_euclidean_distance() {
+    async fn arc_length_of_line_equals_euclidean_distance() {
         let l = Curve3::Line { origin: Pnt3::new(0.0, 0.0, 0.0), dir: Vec3::new(3.0, 4.0, 0.0) };
         let len = arc_length(&l, 0.0, 1.0, 1e-9);
         assert!((len - 5.0).abs() < 1e-6);
     }
 
     #[test]
-    fn arc_length_of_quarter_circle_matches_closed_form() {
+    async fn arc_length_of_quarter_circle_matches_closed_form() {
         let frame = Frame3::from_normal(Pnt3::new(0.0, 0.0, 0.0), Vec3::Z).unwrap();
         let c = Curve3::Circle { frame, radius: 2.0 };
         let len = arc_length(&c, 0.0, std::f64::consts::FRAC_PI_2, 1e-9);
@@ -327,7 +327,7 @@ mod tests {
     }
 
     #[test]
-    fn param_at_length_round_trips_with_arc_length() {
+    async fn param_at_length_round_trips_with_arc_length() {
         let frame = Frame3::from_normal(Pnt3::new(0.0, 0.0, 0.0), Vec3::Z).unwrap();
         let c = Curve3::Circle { frame, radius: 3.0 };
         let total = arc_length(&c, 0.0, 2.0, 1e-9);
@@ -338,7 +338,7 @@ mod tests {
     }
 
     #[test]
-    fn closest_point_on_circle_matches_radial_projection() {
+    async fn closest_point_on_circle_matches_radial_projection() {
         let frame = Frame3::from_normal(Pnt3::new(0.0, 0.0, 0.0), Vec3::Z).unwrap();
         let c = Curve3::Circle { frame, radius: 2.0 };
         let target = Pnt3::new(10.0, 0.0, 0.0);
@@ -349,7 +349,7 @@ mod tests {
     }
 
     #[test]
-    fn closest_point_on_line_matches_perpendicular_foot() {
+    async fn closest_point_on_line_matches_perpendicular_foot() {
         let l = Curve3::Line { origin: Pnt3::new(0.0, 0.0, 0.0), dir: Vec3::new(1.0, 0.0, 0.0) };
         let target = Pnt3::new(5.0, 3.0, 0.0);
         let (t, dist) = closest_point(&l, (-10.0, 10.0), target, 40);
@@ -358,7 +358,7 @@ mod tests {
     }
 
     #[test]
-    fn all_extrema_finds_both_near_and_far_points_on_circle() {
+    async fn all_extrema_finds_both_near_and_far_points_on_circle() {
         let frame = Frame3::from_normal(Pnt3::new(0.0, 0.0, 0.0), Vec3::Z).unwrap();
         let c = Curve3::Circle { frame, radius: 2.0 };
         let target = Pnt3::new(10.0, 0.0, 0.0);
@@ -373,7 +373,7 @@ mod tests {
     /// each data point — an independent oracle so the test checks the actual interpolation
     /// property (curve(param[i]) == points[i]) instead of a dense-sampling proxy, which can show
     /// a spurious "gap" purely from sampling resolution near fast-moving parts of the curve.
-    fn centripetal_params(points: &[Pnt3]) -> Vec<f64> {
+    async fn centripetal_params(points: &[Pnt3]) -> Vec<f64> {
         let n = points.len();
         let mut chord_sqrt = vec![0.0; n];
         for i in 1..n {
@@ -390,7 +390,7 @@ mod tests {
     }
 
     #[test]
-    fn interpolate_centripetal_passes_through_all_points() {
+    async fn interpolate_centripetal_passes_through_all_points() {
         let points = vec![Pnt3::new(0.0, 0.0, 0.0), Pnt3::new(1.0, 2.0, 0.0), Pnt3::new(3.0, 1.0, 0.0), Pnt3::new(4.0, 3.0, 1.0)];
         let curve = interpolate_centripetal(&points).unwrap();
         let params = centripetal_params(&points);
@@ -400,7 +400,7 @@ mod tests {
         }
     }
 
-    fn de_boor_pnt(curve: &NurbsCurve3, t: f64) -> Pnt3 {
+    async fn de_boor_pnt(curve: &NurbsCurve3, t: f64) -> Pnt3 {
         let hx: Vec<f64> = curve.controls.iter().zip(&curve.weights).map(|(p, w)| p.x * w).collect();
         let hy: Vec<f64> = curve.controls.iter().zip(&curve.weights).map(|(p, w)| p.y * w).collect();
         let hz: Vec<f64> = curve.controls.iter().zip(&curve.weights).map(|(p, w)| p.z * w).collect();
@@ -409,7 +409,7 @@ mod tests {
     }
 
     #[test]
-    fn reverse_nurbs_reproduces_the_same_curve_reversed() {
+    async fn reverse_nurbs_reproduces_the_same_curve_reversed() {
         let l = Curve3::Line { origin: Pnt3::new(0.0, 0.0, 0.0), dir: Vec3::new(1.0, 1.0, 1.0) };
         let nurbs = l.to_nurbs((0.0, 4.0));
         let reversed = reverse_nurbs(&nurbs);
@@ -423,7 +423,7 @@ mod tests {
     }
 
     #[test]
-    fn split_nurbs_pieces_reproduce_the_original_curve() {
+    async fn split_nurbs_pieces_reproduce_the_original_curve() {
         let points = vec![Pnt3::new(0.0, 0.0, 0.0), Pnt3::new(1.0, 3.0, 0.0), Pnt3::new(3.0, -1.0, 1.0), Pnt3::new(5.0, 2.0, 2.0), Pnt3::new(6.0, 0.0, 0.0)];
         let curve = interpolate_centripetal(&points).unwrap();
         let (lo, hi) = curve.knots.domain();
@@ -449,7 +449,7 @@ mod tests {
         use super::*;
 
         #[test]
-        fn closest_point_matches_brute_force_dense_sampling_oracle() {
+        async fn closest_point_matches_brute_force_dense_sampling_oracle() {
             let mut rng = semio_framework_geometry::random::Rng::from_seed(61);
             for _ in 0..100 {
                 let frame =

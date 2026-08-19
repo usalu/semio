@@ -12,6 +12,6 @@ pub struct RemoveParameter {
     pub parameter_id: String,
 }
 
-pub fn handle(payload: &RemoveParameter, _doc: &ArtifactView<'_, WorkflowSnapshot>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
+pub async fn handle(payload: &RemoveParameter, _doc: &ArtifactView<'_, WorkflowSnapshot>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
     Ok(Emit::mutations(vec![WorkflowMutation::RemoveParameter { parameter_id: payload.parameter_id.clone() }]))
 }

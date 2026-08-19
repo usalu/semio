@@ -28,7 +28,7 @@ pub const SHOOTING_DIALECT: Dialect = Dialect { artifact_kind: "s.shooting.shoot
 //#region 🔖️ArtifactKind
 /// 🗂️ This artifact's `ArtifactKindSpec` — stitched into the app manifest by
 /// `crate::editor::shooting::create_shooting_app`'s `🔖️Manifest` region.
-pub fn artifact_kind() -> ArtifactKindSpec {
+pub async fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "2d.shooting".into(),
         name: "2D Shooting".into(),
@@ -51,7 +51,7 @@ pub fn artifact_kind() -> ArtifactKindSpec {
 /// and leaked to a `&'static` slice since `dsl::passthrough_hooks` isn't `const fn`, mirroring the
 /// `OnceLock`-backed `io_registry::entries()` convention already used below. Sole caller is
 /// `declaration()` below (ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE).
-fn pilot_languages() -> &'static [dsl::LanguageSpec] {
+async fn pilot_languages() -> &'static [dsl::LanguageSpec] {
     static LANGUAGES: std::sync::OnceLock<Vec<dsl::LanguageSpec>> = std::sync::OnceLock::new();
     LANGUAGES
         .get_or_init(|| {
@@ -127,7 +127,7 @@ fn pilot_languages() -> &'static [dsl::LanguageSpec] {
 /// file. Left bare it would now resolve to THIS file's own `io_registry` module below, which has a
 /// different, incompatible return type (`&'static [&'static ComposerEntry]`, wrapping the real registry's
 /// owned entries) — not the `&'static [ComposerEntry]` `.composers()` expects.
-pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
+pub async fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
     use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
 
     let rows: &[(&str, &str, &str, &[(&str, &str)], Option<(&str, &str)>)] = &[
@@ -168,7 +168,7 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
     Ok(definition)
 }
 
-pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
+pub async fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
     semio_framework_plugin::ArtifactDeclaration::builder(definition()?)
         .schema(crate::artifacts::shooting::standards::v1::subsets::any::schema::shooting_artifact_schema_descriptor())
         .inferences([crate::artifacts::shooting::standards::v1::subsets::any::schema::inferences::shooting_artifact_inference_descriptor()])
@@ -202,24 +202,24 @@ pub struct ShootingCamera {
 }
 
 impl Default for ShootingCamera {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self { position: default_camera_position(), target: default_camera_target(), zoom: 1.0, fov: default_fov(), up: None, projection: None }
     }
 }
 
-pub fn default_camera_position() -> [f64; 3] {
+pub async fn default_camera_position() -> [f64; 3] {
     [420.0, -420.0, 320.0]
 }
 
-pub fn default_camera_target() -> [f64; 3] {
+pub async fn default_camera_target() -> [f64; 3] {
     [0.0, 0.0, 40.0]
 }
 
-pub fn default_fov() -> f64 {
+pub async fn default_fov() -> f64 {
     50.0
 }
 
-fn one_f64() -> f64 {
+async fn one_f64() -> f64 {
     1.0
 }
 
@@ -255,7 +255,7 @@ pub struct ShootingAsset {
     pub scale: Option<[f64; 3]>,
 }
 
-pub fn default_glb_format() -> String {
+pub async fn default_glb_format() -> String {
     "glb".into()
 }
 
@@ -289,7 +289,7 @@ pub struct ShootingSun {
 }
 
 impl Default for ShootingSun {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self { enabled: false, azimuth: 45.0, elevation: 35.0, intensity: 2.4, color: "#ffffff".into() }
     }
 }
@@ -302,7 +302,7 @@ pub struct ShootingAmbient {
 }
 
 impl Default for ShootingAmbient {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self { intensity: 1.15, color: "#ffffff".into() }
     }
 }
@@ -316,7 +316,7 @@ pub struct ShootingShadow {
 }
 
 impl Default for ShootingShadow {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self { enabled: true, opacity: 0.35, softness: 1.0 }
     }
 }
@@ -332,7 +332,7 @@ pub struct ShootingMaterial {
 }
 
 impl Default for ShootingMaterial {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self { color: "#9aa0ab".into(), metalness: 0.0, roughness: 1.0, emissive: "#000000".into(), emissive_intensity: 0.0 }
     }
 }
@@ -356,22 +356,22 @@ pub struct ShootingSceneLighting {
     pub material: ShootingMaterial,
 }
 
-pub fn empty_shooting_snapshot() -> ShootingSnapshot {
+pub async fn empty_shooting_snapshot() -> ShootingSnapshot {
     ShootingSnapshot::default()
 }
 
 /// 🧮️ Resolves an asset's scale, defaulting an absent `scale` to identity `[1, 1, 1]`.
-pub fn shooting_asset_scale(asset: &ShootingAsset) -> [f64; 3] {
+pub async fn shooting_asset_scale(asset: &ShootingAsset) -> [f64; 3] {
     asset.scale.unwrap_or([1.0, 1.0, 1.0])
 }
 
 /// 🧭️ Quaternion (Hamilton product) multiply — `a * b`, both `[x, y, z, w]`. Shared by `op`'s
 /// `RotateAssets` diff/backwards math and any other consumer that needs to compose orientations.
-pub fn quat_mul(a: [f64; 4], b: [f64; 4]) -> [f64; 4] {
+pub async fn quat_mul(a: [f64; 4], b: [f64; 4]) -> [f64; 4] {
     [a[3] * b[0] + a[0] * b[3] + a[1] * b[2] - a[2] * b[1], a[3] * b[1] - a[0] * b[2] + a[1] * b[3] + a[2] * b[0], a[3] * b[2] + a[0] * b[1] - a[1] * b[0] + a[2] * b[3], a[3] * b[3] - a[0] * b[0] - a[1] * b[1] - a[2] * b[2]]
 }
 
-pub fn quat_from_axis_angle(ax: f64, ay: f64, az: f64, angle: f64) -> [f64; 4] {
+pub async fn quat_from_axis_angle(ax: f64, ay: f64, az: f64, angle: f64) -> [f64; 4] {
     let len = (ax * ax + ay * ay + az * az).sqrt();
     if len < 1e-8 {
         return [0.0, 0.0, 0.0, 1.0];
@@ -384,7 +384,7 @@ pub fn quat_from_axis_angle(ax: f64, ay: f64, az: f64, angle: f64) -> [f64; 4] {
 /// 🎯️ Resolves the effective camera for `shot`: the saved camera it references, or `fallback` — the
 /// app's session-only live camera (never a document field; see `ShootingConfig::camera` in the app's
 /// `🦀️config.rs`) when the shot has no saved camera of its own.
-pub fn shooting_resolve_shot_camera(snapshot: &ShootingSnapshot, shot: &ShootingShot, fallback: &ShootingCamera) -> ShootingCamera {
+pub async fn shooting_resolve_shot_camera(snapshot: &ShootingSnapshot, shot: &ShootingShot, fallback: &ShootingCamera) -> ShootingCamera {
     shot.camera_id.as_ref().and_then(|camera_id| snapshot.saved_cameras.iter().find(|entry| &entry.id == camera_id)).map_or_else(|| fallback.clone(), |entry| entry.camera.clone())
 }
 //#endregion 🔖️Domain
@@ -427,7 +427,7 @@ pub type ShootingEmblemChild = store::ArtifactChild<SemioImageSnapshot>;
 /// same `store::ArtifactChild::new`/`ArtifactDialect` shape as every other wave-4 exemplar
 /// (`process3d::brep_child_handle`, `gismap::gis_map_drawing_child_handle`). Two callers with
 /// byte-identical content mint the same handle.
-pub fn shooting_emblem_child_handle(content: &SemioImageSnapshot) -> ShootingEmblemChild {
+pub async fn shooting_emblem_child_handle(content: &SemioImageSnapshot) -> ShootingEmblemChild {
     use std::hash::{Hash, Hasher};
     let mut hasher = std::collections::hash_map::DefaultHasher::new();
     serde_json::to_string(content).unwrap_or_default().hash(&mut hasher);
@@ -447,7 +447,7 @@ pub fn shooting_emblem_child_handle(content: &SemioImageSnapshot) -> ShootingEmb
 /// exactly (byte-identical) because encode/decode never interpret the bytes as pixels, only
 /// store+retrieve them verbatim; `width`/`height`/`bit_depth` are `0` (genuinely unknown pre-decode)
 /// and one metadata entry (`encoding=opaque-bytes`) records the honest boundary for any future reader.
-pub fn shooting_emblem_image_from_bytes(bytes: Vec<u8>) -> SemioImageSnapshot {
+pub async fn shooting_emblem_image_from_bytes(bytes: Vec<u8>) -> SemioImageSnapshot {
     SemioImageSnapshot {
         schema: STDIO_SEMIOIMAGE_DOCUMENT_SCHEMA.into(),
         width: 0,
@@ -462,15 +462,15 @@ pub fn shooting_emblem_image_from_bytes(bytes: Vec<u8>) -> SemioImageSnapshot {
 
 /// 🌉️ READ direction, real: the exact inverse of `shooting_emblem_image_from_bytes` — the first
 /// (only) frame's verbatim bytes, or empty if the image carries no frame.
-pub fn shooting_emblem_bytes_from_image(image: &SemioImageSnapshot) -> Vec<u8> {
+pub async fn shooting_emblem_bytes_from_image(image: &SemioImageSnapshot) -> Vec<u8> {
     image.frames.first().map(|frame| frame.rgba8.clone()).unwrap_or_default()
 }
 
 /// 🔤️ Minimal, dependency-free base64 DECODE for the emblem's raw base64 payload — moved here from
 /// the schema module alongside the rest of the emblem's composition machinery (every leaf in this
 /// codebase hand-rolls this exact algorithm rather than pull in an external crate).
-pub fn shooting_base64_decode(data: &str) -> Option<Vec<u8>> {
-    fn val(c: u8) -> Option<u8> {
+pub async fn shooting_base64_decode(data: &str) -> Option<Vec<u8>> {
+    async fn val(c: u8) -> Option<u8> {
         match c {
             b'A'..=b'Z' => Some(c - b'A'),
             b'a'..=b'z' => Some(c - b'a' + 26),
@@ -499,7 +499,7 @@ pub fn shooting_base64_decode(data: &str) -> Option<Vec<u8>> {
 
 /// 🔤️ The ENCODE direction — standard base64 with `=` padding, the exact inverse alphabet of
 /// `shooting_base64_decode`. New this migration (the pre-migration field only ever needed decode).
-pub fn shooting_base64_encode(bytes: &[u8]) -> String {
+pub async fn shooting_base64_encode(bytes: &[u8]) -> String {
     const ALPHABET: &[u8; 64] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
     let mut out = String::with_capacity(bytes.len().div_ceil(3) * 4);
     for chunk in bytes.chunks(3) {
@@ -533,7 +533,7 @@ thread_local! {
 /// never a `data:` URI prefix — matches the pre-migration `emblem_base64` field's own callers),
 /// mints a content-addressed handle, caches the real content, and sets `snapshot.emblem`.
 /// `None`/empty input clears the slot.
-pub fn shooting_set_emblem_from_base64(snapshot: &mut ShootingSnapshot, base64: Option<&str>) {
+pub async fn shooting_set_emblem_from_base64(snapshot: &mut ShootingSnapshot, base64: Option<&str>) {
     let bytes = base64.filter(|data| !data.is_empty()).and_then(shooting_base64_decode);
     match bytes {
         None => snapshot.emblem = None,
@@ -548,7 +548,7 @@ pub fn shooting_set_emblem_from_base64(snapshot: &mut ShootingSnapshot, base64: 
 
 /// 🌉️ READ direction: real for the same-process case (checks `SHOOTING_EMBLEM_SCRATCH` first);
 /// degrades to `None` on a cache miss — see this region's own doc comment for the documented gap.
-pub fn shooting_emblem_image(snapshot: &ShootingSnapshot) -> Option<SemioImageSnapshot> {
+pub async fn shooting_emblem_image(snapshot: &ShootingSnapshot) -> Option<SemioImageSnapshot> {
     let handle = snapshot.emblem.as_ref()?;
     SHOOTING_EMBLEM_SCRATCH.with(|cache| cache.borrow().get(&handle.child_id).cloned())
 }
@@ -556,26 +556,26 @@ pub fn shooting_emblem_image(snapshot: &ShootingSnapshot) -> Option<SemioImageSn
 /// 🌉️ `shooting_emblem_image` + `shooting_emblem_bytes_from_image` in one call — the accessor
 /// `shooting_scene_to_semio_drawing` (`🧬️schema/🦀️component.rs`) funnels through instead of the old
 /// direct `snapshot.scene.emblem_base64` field read.
-pub fn shooting_emblem_bytes(snapshot: &ShootingSnapshot) -> Option<Vec<u8>> {
+pub async fn shooting_emblem_bytes(snapshot: &ShootingSnapshot) -> Option<Vec<u8>> {
     shooting_emblem_image(snapshot).map(|image| shooting_emblem_bytes_from_image(&image))
 }
 //#endregion 🔖️Composition
 
 //#region 🔖️CollectionSupport
 impl Identified<String> for ShootingAsset {
-    fn id(&self) -> &String {
+    async fn id(&self) -> &String {
         &self.id
     }
 }
 
 impl Identified<String> for ShootingShot {
-    fn id(&self) -> &String {
+    async fn id(&self) -> &String {
         &self.id
     }
 }
 
 impl Identified<String> for ShootingSavedCamera {
-    fn id(&self) -> &String {
+    async fn id(&self) -> &String {
         &self.id
     }
 }
@@ -592,7 +592,7 @@ pub struct ShootingAssetPatch {
 }
 
 impl Patchable<ShootingAssetPatch> for ShootingAsset {
-    fn apply_patch(&mut self, patch: &ShootingAssetPatch) {
+    async fn apply_patch(&mut self, patch: &ShootingAssetPatch) {
         if let Some(name) = &patch.name {
             self.name = name.clone();
         }
@@ -610,7 +610,7 @@ impl Patchable<ShootingAssetPatch> for ShootingAsset {
         }
     }
 
-    fn diff_patch(&self, other: &Self) -> Option<ShootingAssetPatch> {
+    async fn diff_patch(&self, other: &Self) -> Option<ShootingAssetPatch> {
         let patch = ShootingAssetPatch {
             name: (self.name != other.name).then(|| other.name.clone()),
             url: (self.url != other.url).then(|| other.url.clone()),
@@ -633,7 +633,7 @@ pub struct ShootingShotPatch {
 }
 
 impl Patchable<ShootingShotPatch> for ShootingShot {
-    fn apply_patch(&mut self, patch: &ShootingShotPatch) {
+    async fn apply_patch(&mut self, patch: &ShootingShotPatch) {
         if let Some(label) = &patch.label {
             self.label = label.clone();
         }
@@ -651,7 +651,7 @@ impl Patchable<ShootingShotPatch> for ShootingShot {
         }
     }
 
-    fn diff_patch(&self, other: &Self) -> Option<ShootingShotPatch> {
+    async fn diff_patch(&self, other: &Self) -> Option<ShootingShotPatch> {
         let patch = ShootingShotPatch {
             label: (self.label != other.label).then(|| other.label.clone()),
             width: (self.width != other.width).then_some(other.width),
@@ -672,7 +672,7 @@ pub struct ShootingSavedCameraPatch {
 }
 
 impl Patchable<ShootingSavedCameraPatch> for ShootingSavedCamera {
-    fn apply_patch(&mut self, patch: &ShootingSavedCameraPatch) {
+    async fn apply_patch(&mut self, patch: &ShootingSavedCameraPatch) {
         if let Some(label) = &patch.label {
             self.label = label.clone();
         }
@@ -681,7 +681,7 @@ impl Patchable<ShootingSavedCameraPatch> for ShootingSavedCamera {
         }
     }
 
-    fn diff_patch(&self, other: &Self) -> Option<ShootingSavedCameraPatch> {
+    async fn diff_patch(&self, other: &Self) -> Option<ShootingSavedCameraPatch> {
         let patch = ShootingSavedCameraPatch { label: (self.label != other.label).then(|| other.label.clone()), camera: (self.camera != other.camera).then(|| other.camera.clone()) };
         (patch != ShootingSavedCameraPatch::default()).then_some(patch)
     }
@@ -715,13 +715,13 @@ mod tests {
     /// media catalogue, the latter keys the store envelope. Pinned so a future edit can't silently
     /// merge them.
     #[test]
-    fn artifact_kind_keeps_the_media_schema_distinct_from_the_store_schema() {
+    async fn artifact_kind_keeps_the_media_schema_distinct_from_the_store_schema() {
         assert_eq!(artifact_kind().schema, "shooting.scene");
         assert_eq!(SHOOTING_DOCUMENT_SCHEMA, "shooting.shooting");
     }
 
     #[test]
-    fn empty_snapshot_has_no_entities() {
+    async fn empty_snapshot_has_no_entities() {
         let snapshot = empty_shooting_snapshot();
         assert!(snapshot.assets.is_empty() && snapshot.shots.is_empty() && snapshot.saved_cameras.is_empty());
     }

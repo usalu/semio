@@ -38,7 +38,7 @@ pub struct Vdi3805Artifact {
 //#region 🔖️Conversions
 impl Vdi3805Artifact {
     /// 📸️ Persisted subset.
-    pub fn to_snapshot(&self) -> Vdi3805Snapshot {
+    pub async fn to_snapshot(&self) -> Vdi3805Snapshot {
         Vdi3805Snapshot {
             manufacturer_file: self.manufacturer_file.clone(),
             catalog: self.catalog.clone(),
@@ -53,7 +53,7 @@ impl Vdi3805Artifact {
     }
 
     /// 🧬️ Builds a full artifact from a snapshot, leaving UI fields at defaults.
-    pub fn from_snapshot(snapshot: Vdi3805Snapshot) -> Self {
+    pub async fn from_snapshot(snapshot: Vdi3805Snapshot) -> Self {
         Self {
             manufacturer_file: snapshot.manufacturer_file,
             catalog: snapshot.catalog,
@@ -68,7 +68,7 @@ impl Vdi3805Artifact {
         }
     }
     /// 🔄 Overwrite persistent fields from a snapshot; leave shared-ui untouched.
-    pub fn set_snapshot(&mut self, snapshot: Vdi3805Snapshot) {
+    pub async fn set_snapshot(&mut self, snapshot: Vdi3805Snapshot) {
         let selected = self.selected_check_index;
         *self = Self::from_snapshot(snapshot);
         self.selected_check_index = selected;
@@ -79,7 +79,7 @@ impl Vdi3805Artifact {
 
 //#region 🔖️Descriptor
 /// 🧬️ Descriptor for `s.norm.vdi3805` — twenty handcrafted schema leaves.
-pub fn vdi3805_artifact_schema_descriptor() -> ::schema::ArtifactSchemaDescriptor {
+pub async fn vdi3805_artifact_schema_descriptor() -> ::schema::ArtifactSchemaDescriptor {
     ::schema::ArtifactSchemaDescriptor {
         id: "s.norm.vdi3805",
         artifact: ::schema::FacetLeaves {
@@ -128,19 +128,19 @@ pub mod derived_construction {
         type Snapshot = Vdi3805Snapshot;
         type Mutation = Vdi3805Mutation;
         type Diff = Vdi3805Diff;
-        fn empty() -> Self {
+        async fn empty() -> Self {
             Self { snapshot: Vdi3805Snapshot::default(), diagnostics: Vec::new() }
         }
-        fn from_snapshot(snapshot: Self::Snapshot) -> Self {
+        async fn from_snapshot(snapshot: Self::Snapshot) -> Self {
             Self { snapshot, diagnostics: Vec::new() }
         }
-        fn from_text(text: &str) -> Result<Self, store::TextError> {
+        async fn from_text(text: &str) -> Result<Self, store::TextError> {
             Ok(Self::from_snapshot(<Vdi3805Snapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
-        fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
+        async fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
             Ok(Self::from_snapshot(<Vdi3805Snapshot as store::ArtifactPack>::decode_pack(bytes)?))
         }
-        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
+        async fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let outcome = <Vdi3805Mutation as protocol::Mutation<Vdi3805Snapshot>>::diff(&mutation, &self.snapshot);
             match <Self::Diff as protocol::MutationDiff<Self::Snapshot>>::apply(outcome.diff(), &self.snapshot) {
                 Ok(snapshot) => self.snapshot = snapshot,
@@ -152,7 +152,7 @@ pub mod derived_construction {
             }
             (self, outcome)
         }
-        fn absorb(
+        async fn absorb(
             mut self,
             diff: Self::Diff,
         ) -> protocol::MutationApplyResult<Self> {
@@ -160,7 +160,7 @@ pub mod derived_construction {
             self.snapshot = snapshot;
             Ok(self)
         }
-        fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
+        async fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
             if self.diagnostics.is_empty() {
                 Ok(self.snapshot)
             } else {
@@ -188,11 +188,11 @@ pub mod derived_analysis {
         type Parts = Vdi3805Parts;
         const DIALECT: Dialect = Dialect { artifact_kind: "s.vdi3805", standard: StandardId("1"), subset: SubsetId("*") };
 
-        fn sniff(_source: &AnalyzeSource<'_>) -> IoConfidence {
+        async fn sniff(_source: &AnalyzeSource<'_>) -> IoConfidence {
             IoConfidence::Medium
         }
 
-        fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
+        async fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
             let mut parts = Vdi3805Parts::default();
             let mut diagnostics = Vec::new();
             let mut confidence = IoConfidence::High;
@@ -255,11 +255,11 @@ use ::dsl;
 const FAMILY: &str = "VDI 3805";
 pub const ANNEX: AnnexChoice = AnnexChoice::De;
 
-pub fn clause(part: &str, section: &str) -> ClauseId {
+pub async fn clause(part: &str, section: &str) -> ClauseId {
     ClauseId::new(FAMILY, part, section)
 }
 
-pub fn na_check(part: &str, section: &str, message: impl Into<String>) -> CheckResult {
+pub async fn na_check(part: &str, section: &str, message: impl Into<String>) -> CheckResult {
     CheckResult {
         clause: clause(part, section),
         status: CheckStatus::NotApplicable,
@@ -271,17 +271,17 @@ pub fn na_check(part: &str, section: &str, message: impl Into<String>) -> CheckR
     }
 }
 
-pub fn pass_check(part: &str, section: &str, message: impl Into<String>) -> CheckResult {
+pub async fn pass_check(part: &str, section: &str, message: impl Into<String>) -> CheckResult {
     CheckResult::pass(clause(part, section), Quantity::new(QuantityKind::Dimensionless, 1.0), Quantity::new(QuantityKind::Dimensionless, 1.0), 1.0, message, ANNEX)
 }
 
-pub fn fail_check(part: &str, section: &str, message: impl Into<String>) -> CheckResult {
+pub async fn fail_check(part: &str, section: &str, message: impl Into<String>) -> CheckResult {
     CheckResult::fail(clause(part, section), Quantity::new(QuantityKind::Dimensionless, 0.0), Quantity::new(QuantityKind::Dimensionless, 1.0), 2.0, message, ANNEX)
 }
 
 // #region Part1
 /// 🔤️ Parse semicolon-delimited native VDI 3805 text.
-pub fn parse_native_text(text: &str, limits: SecurityLimits) -> Result<ManufacturerCatalog, NormError> {
+pub async fn parse_native_text(text: &str, limits: SecurityLimits) -> Result<ManufacturerCatalog, NormError> {
     limits.validate_text(text)?;
     let mut lines = text.lines().filter(|l| !l.trim().is_empty());
     let header_line = lines.next().ok_or(NormError::IncompleteInput { field: "header".into() })?;
@@ -332,7 +332,7 @@ pub fn parse_native_text(text: &str, limits: SecurityLimits) -> Result<Manufactu
 }
 
 /// 🔤️ Serialize catalogue to semicolon-delimited native text.
-pub fn serialize_native_text(catalog: &ManufacturerCatalog) -> String {
+pub async fn serialize_native_text(catalog: &ManufacturerCatalog) -> String {
     let f = &catalog.file;
     let mut out = format!("{};{};{};{};{}\n", f.header_version, f.manufacturer, f.building_system_number.render(), f.created, f.record_count);
     for product in &catalog.products {
@@ -351,7 +351,7 @@ pub fn serialize_native_text(catalog: &ManufacturerCatalog) -> String {
 }
 
 /// ✅️ Structural validation of Part 1 catalogue.
-pub fn validate_structure(catalog: &ManufacturerCatalog) -> Vec<Diagnostic> {
+pub async fn validate_structure(catalog: &ManufacturerCatalog) -> Vec<Diagnostic> {
     let mut issues = Vec::new();
     if catalog.file.manufacturer.is_empty() {
         issues.push(Diagnostic::error("manufacturer", "missing manufacturer code"));
@@ -381,7 +381,7 @@ pub fn validate_structure(catalog: &ManufacturerCatalog) -> Vec<Diagnostic> {
 
 // #region Functions
 /// 🔢️ Linear map between two scalar domains.
-pub fn linear_map(x: f64, x0: f64, x1: f64, y0: f64, y1: f64) -> f64 {
+pub async fn linear_map(x: f64, x0: f64, x1: f64, y0: f64, y1: f64) -> f64 {
     if (x1 - x0).abs() < f64::EPSILON {
         return y0;
     }
@@ -390,7 +390,7 @@ pub fn linear_map(x: f64, x0: f64, x1: f64, y0: f64, y1: f64) -> f64 {
 // #endregion Functions
 
 // #region Validate
-pub fn diagnostics_to_report(diagnostics: &[Diagnostic], part: &str, section: &str) -> Vec<CheckResult> {
+pub async fn diagnostics_to_report(diagnostics: &[Diagnostic], part: &str, section: &str) -> Vec<CheckResult> {
     diagnostics
         .iter()
         .map(|d| {
@@ -420,7 +420,7 @@ mod compliance_helpers_tests {
     use super::*;
 
     #[test]
-    fn native_text_round_trip() {
+    async fn native_text_round_trip() {
         let doc = Vdi3805Snapshot::default();
         let text = serialize_native_text(&doc.catalog);
         let parsed = parse_native_text(&text, SecurityLimits::default()).expect("parse");
@@ -429,31 +429,31 @@ mod compliance_helpers_tests {
     }
 
     #[test]
-    fn parse_native_text_rejects_empty_input() {
+    async fn parse_native_text_rejects_empty_input() {
         let err = parse_native_text("", SecurityLimits::default()).unwrap_err();
         assert!(matches!(err, NormError::IncompleteInput { field } if field == "header"));
     }
 
     #[test]
-    fn parse_native_text_rejects_incomplete_header() {
+    async fn parse_native_text_rejects_incomplete_header() {
         let err = parse_native_text("3805;DEMO;420.10.1\n", SecurityLimits::default()).unwrap_err();
         assert!(matches!(err, NormError::IncompleteInput { field } if field == "header_fields"));
     }
 
     #[test]
-    fn parse_native_text_rejects_invalid_building_system_number() {
+    async fn parse_native_text_rejects_invalid_building_system_number() {
         let err = parse_native_text("3805;DEMO;bad;2026-07-22;3\n", SecurityLimits::default()).unwrap_err();
         assert!(matches!(err, NormError::InvalidValue { field, .. } if field == "building_system_number"));
     }
 
     #[test]
-    fn parse_native_text_rejects_non_numeric_record_count() {
+    async fn parse_native_text_rejects_non_numeric_record_count() {
         let err = parse_native_text("3805;DEMO;420.10.1;2026-07-22;abc\n", SecurityLimits::default()).unwrap_err();
         assert!(matches!(err, NormError::InvalidValue { field, .. } if field == "record_count"));
     }
 
     #[test]
-    fn parse_native_text_rejects_too_many_records() {
+    async fn parse_native_text_rejects_too_many_records() {
         let limits = SecurityLimits { max_records: 0, ..SecurityLimits::default() };
         let text = "3805;DEMO;420.10.1;2026-07-22;1\n200;dn;50\n";
         let err = parse_native_text(text, limits).unwrap_err();
@@ -461,7 +461,7 @@ mod compliance_helpers_tests {
     }
 
     #[test]
-    fn parse_native_text_parses_product_records() {
+    async fn parse_native_text_parses_product_records() {
         let text = "3805;DEMO;420.10.1;2026-07-22;1\n100;DEMO;HV;VLV-1;2\n200;dn;50\n";
         let parsed = parse_native_text(text, SecurityLimits::default()).expect("parse");
         assert_eq!(parsed.products.len(), 1);
@@ -470,7 +470,7 @@ mod compliance_helpers_tests {
     }
 
     #[test]
-    fn validate_structure_reports_missing_manufacturer() {
+    async fn validate_structure_reports_missing_manufacturer() {
         let mut doc = Vdi3805Snapshot::default();
         doc.catalog.file.manufacturer = String::new();
         let issues = validate_structure(&doc.catalog);
@@ -478,7 +478,7 @@ mod compliance_helpers_tests {
     }
 
     #[test]
-    fn validate_structure_reports_empty_products() {
+    async fn validate_structure_reports_empty_products() {
         let mut doc = Vdi3805Snapshot::default();
         doc.catalog.products.clear();
         let issues = validate_structure(&doc.catalog);
@@ -486,7 +486,7 @@ mod compliance_helpers_tests {
     }
 
     #[test]
-    fn validate_structure_reports_missing_article_number_and_config_id() {
+    async fn validate_structure_reports_missing_article_number_and_config_id() {
         let mut doc = Vdi3805Snapshot::default();
         doc.catalog.products[0].identity.article_number = String::new();
         doc.catalog.products[0].configuration.id = String::new();
@@ -496,7 +496,7 @@ mod compliance_helpers_tests {
     }
 
     #[test]
-    fn validate_structure_reports_unknown_record_family() {
+    async fn validate_structure_reports_unknown_record_family() {
         let mut doc = Vdi3805Snapshot::default();
         doc.catalog.products[0].records.push(NativeRecord { family: RecordFamilyId("888".into()), fields: vec!["888".into()], extensions: ExtensionBag::default() });
         let issues = validate_structure(&doc.catalog);
@@ -504,13 +504,13 @@ mod compliance_helpers_tests {
     }
 
     #[test]
-    fn linear_map_interpolates_and_handles_degenerate_domain() {
+    async fn linear_map_interpolates_and_handles_degenerate_domain() {
         assert!((linear_map(5.0, 0.0, 10.0, 0.0, 100.0) - 50.0).abs() < 1e-9);
         assert_eq!(linear_map(5.0, 3.0, 3.0, 7.0, 42.0), 7.0);
     }
 
     #[test]
-    fn diagnostic_constructors_and_report_mapping() {
+    async fn diagnostic_constructors_and_report_mapping() {
         let diags = vec![Diagnostic::error("f1", "bad"), Diagnostic::warning("f2", "meh"), Diagnostic::info("f3", "fyi")];
         let report = diagnostics_to_report(&diags, "1", "validate");
         assert_eq!(report[0].status, CheckStatus::Fail);

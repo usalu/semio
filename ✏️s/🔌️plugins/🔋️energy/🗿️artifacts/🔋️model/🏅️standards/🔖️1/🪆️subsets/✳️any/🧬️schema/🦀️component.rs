@@ -8,20 +8,20 @@ use serde::{Deserialize, Serialize};
 /// 🌱 Empty persisted snapshot. Relocated from `⚙️engine/🦀️component.rs` (ticket
 /// 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES) — a pure codec helper over the document
 /// type, not engine behaviour.
-pub fn empty_energy_model_snapshot() -> EnergyModelSnapshot {
+pub async fn empty_energy_model_snapshot() -> EnergyModelSnapshot {
     EnergyModelSnapshot::default()
 }
 
 /// 🏢️ The typed `Model` behind a snapshot's composed `structure`/`zones` children — reads through
 /// the working-scene cache (ticket 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM). Replaces the old
 /// `serde_json::from_str(&snapshot.model_json)` decode-on-demand now that `model_json` is gone.
-pub fn model_from_snapshot(snapshot: &EnergyModelSnapshot) -> Result<crate::model::Model, String> {
+pub async fn model_from_snapshot(snapshot: &EnergyModelSnapshot) -> Result<crate::model::Model, String> {
     Ok(crate::artifacts::model::energy_model(snapshot))
 }
 
 /// 📕️ Encode a typed `Model` into snapshot form — mints+caches its composed `structure`/`zones`
 /// children in one call via [`crate::artifacts::model::energy_snapshot_with_state`].
-pub fn snapshot_from_model(model: &crate::model::Model) -> Result<EnergyModelSnapshot, String> {
+pub async fn snapshot_from_model(model: &crate::model::Model) -> Result<EnergyModelSnapshot, String> {
     Ok(crate::artifacts::model::energy_snapshot_with_state(ENERGY_MODEL_DOCUMENT_SCHEMA, model.clone(), None))
 }
 //#endregion 🔖️DocumentHelpers
@@ -56,14 +56,14 @@ pub struct EnergyModelArtifact {
 
 //#region 🔖️Conversions
 impl Default for EnergyModelArtifact {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self::from_snapshot(EnergyModelSnapshot::default())
     }
 }
 
 impl EnergyModelArtifact {
     /// 📸️ Persisted subset.
-    pub fn to_snapshot(&self) -> EnergyModelSnapshot {
+    pub async fn to_snapshot(&self) -> EnergyModelSnapshot {
         EnergyModelSnapshot {
             schema: self.schema.clone(),
             structure: self.structure.clone(),
@@ -73,7 +73,7 @@ impl EnergyModelArtifact {
     }
 
     /// 🧬️ Builds a full artifact from a snapshot, leaving preview empty.
-    pub fn from_snapshot(snapshot: EnergyModelSnapshot) -> Self {
+    pub async fn from_snapshot(snapshot: EnergyModelSnapshot) -> Self {
         Self {
             schema: snapshot.schema,
             structure: snapshot.structure,
@@ -84,7 +84,7 @@ impl EnergyModelArtifact {
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
-    pub fn set_snapshot(&mut self, snapshot: EnergyModelSnapshot) {
+    pub async fn set_snapshot(&mut self, snapshot: EnergyModelSnapshot) {
         self.schema = snapshot.schema;
         self.structure = snapshot.structure;
         self.zones = snapshot.zones;
@@ -95,7 +95,7 @@ impl EnergyModelArtifact {
 
 //#region 🔖️Descriptor
 /// 🧬️ Descriptor for `s.energy.model` — twenty handcrafted schema leaves.
-pub fn energy_model_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
+pub async fn energy_model_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
     schema::ArtifactSchemaDescriptor {
         id: ENERGY_MODEL_ARTIFACT_SCHEMA_ID,
         artifact: schema::FacetLeaves {
@@ -144,15 +144,15 @@ pub mod derived_construction {
         type Snapshot = EnergyModelSnapshot;
         type Mutation = EnergyModelMutation;
         type Diff = EnergyModelDiff;
-        fn empty() -> Self { Self { snapshot: EnergyModelSnapshot::default(), diagnostics: Vec::new() } }
-        fn from_snapshot(snapshot: Self::Snapshot) -> Self { Self { snapshot, diagnostics: Vec::new() } }
-        fn from_text(text: &str) -> Result<Self, store::TextError> {
+        async fn empty() -> Self { Self { snapshot: EnergyModelSnapshot::default(), diagnostics: Vec::new() } }
+        async fn from_snapshot(snapshot: Self::Snapshot) -> Self { Self { snapshot, diagnostics: Vec::new() } }
+        async fn from_text(text: &str) -> Result<Self, store::TextError> {
             Ok(Self::from_snapshot(<EnergyModelSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
-        fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
+        async fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
             Ok(Self::from_snapshot(<EnergyModelSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
         }
-        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
+        async fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let outcome = <Self::Mutation as protocol::Mutation<Self::Snapshot>>::diff(&mutation, &self.snapshot);
             match <Self::Diff as protocol::MutationDiff<Self::Snapshot>>::apply(outcome.diff(), &self.snapshot) {
                 Ok(snapshot) => self.snapshot = snapshot,
@@ -164,7 +164,7 @@ pub mod derived_construction {
             }
             (self, outcome)
         }
-        fn absorb(
+        async fn absorb(
             mut self,
             diff: Self::Diff,
         ) -> protocol::MutationApplyResult<Self> {
@@ -172,7 +172,7 @@ pub mod derived_construction {
             self.snapshot = snapshot;
             Ok(self)
         }
-        fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
+        async fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
             if self.diagnostics.is_empty() { Ok(self.snapshot) } else { Err(self.diagnostics) }
         }
     }
@@ -196,11 +196,11 @@ pub mod derived_analysis {
         type Parts = EnergyModelParts;
         const DIALECT: Dialect = Dialect { artifact_kind: "s.model", standard: StandardId("1"), subset: SubsetId("*") };
 
-        fn sniff(_source: &AnalyzeSource<'_>) -> IoConfidence {
+        async fn sniff(_source: &AnalyzeSource<'_>) -> IoConfidence {
             IoConfidence::Medium
         }
 
-        fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
+        async fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
             let mut parts = EnergyModelParts::default();
             let mut diagnostics = Vec::new();
             let mut confidence = IoConfidence::High;
@@ -248,7 +248,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn empty_snapshot_matches_schema() {
+    async fn empty_snapshot_matches_schema() {
         let snapshot = empty_energy_model_snapshot();
         assert_eq!(snapshot.schema, ENERGY_MODEL_DOCUMENT_SCHEMA);
     }
@@ -258,7 +258,7 @@ mod tests {
     /// 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM: `model_json` is gone — asserts the composed
     /// `structure`/`zones` child handles are real (non-empty ids) instead.
     #[test]
-    fn example_fixture_parses() {
+    async fn example_fixture_parses() {
         let document = crate::artifacts::model::dsl::parse_dsl(
             crate::artifacts::model::dsl::SEMIO_ENERGY_MODEL_EXAMPLE_TEXT,
         )

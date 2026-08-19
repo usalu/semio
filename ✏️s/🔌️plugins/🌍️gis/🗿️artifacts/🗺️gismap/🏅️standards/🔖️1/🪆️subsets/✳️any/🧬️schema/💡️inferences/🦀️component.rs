@@ -30,7 +30,7 @@ pub struct GisMapInference {
 }
 
 impl protocol::Inference<GisMapSnapshot> for GisMapInference {
-    fn infer(snapshot: &GisMapSnapshot) -> Self {
+    async fn infer(snapshot: &GisMapSnapshot) -> Self {
         Self {
             position_count: snapshot.positions.len(),
             route_count: snapshot.routes.len(),
@@ -41,13 +41,13 @@ impl protocol::Inference<GisMapSnapshot> for GisMapInference {
 }
 
 impl protocol::InferenceSpec<GisMapSnapshot> for GisMapInference {
-    fn inference_schema_id() -> &'static str {
+    async fn inference_schema_id() -> &'static str {
         "s.gis.gismap.inference"
     }
-    fn schema_version() -> u32 {
+    async fn schema_version() -> u32 {
         1
     }
-    fn fields() -> &'static [protocol::InferenceFieldSpec] {
+    async fn fields() -> &'static [protocol::InferenceFieldSpec] {
         &[
             protocol::InferenceFieldSpec { id: "s.gis.gismap.inference.positionCount", reads: &["positions"] },
             protocol::InferenceFieldSpec { id: "s.gis.gismap.inference.routeCount", reads: &["routes"] },
@@ -68,7 +68,7 @@ impl semio_framework_plugin::ArtifactInferrer for crate::artifacts::gismap::stan
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.gis.gismap.inference`'s facet leaves into the OS-wide inference catalog — call
 /// once at plugin init, alongside `gismap_artifact_schema_descriptor`'s registration.
-pub fn gismap_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
+pub async fn gismap_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
     schema::ArtifactInferenceDescriptor {
         id: "s.gis.gismap.inference",
         inference: schema::FacetLeaves {
@@ -91,7 +91,7 @@ mod tests {
 
     //#region 🧪️InferenceLaws
     #[test]
-    fn inference_determinism_law() {
+    async fn inference_determinism_law() {
         let snapshot = GisMapSnapshot {
             positions: vec![MapFeature { id: "p1".into(), data: dsl::to_dsl_value(&serde_json::json!({ "lon": 1.0, "lat": 2.0 })).unwrap_or(dsl::DslValue::Null) }],
             routes: Vec::new(),
@@ -102,7 +102,7 @@ mod tests {
     }
 
     #[test]
-    fn inference_default_law() {
+    async fn inference_default_law() {
         assert_eq!(GisMapInference::infer(&GisMapSnapshot::default()), GisMapInference::default());
     }
     //#endregion 🧪️InferenceLaws

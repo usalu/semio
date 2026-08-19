@@ -44,13 +44,13 @@ pub struct MathematicalEdgeDsl {
     wire: dsl::Wire,
 }
 
-pub fn math_edge_to_dsl(edge: &MathematicalEdge, directed: bool) -> MathematicalEdgeDsl {
+pub async fn math_edge_to_dsl(edge: &MathematicalEdge, directed: bool) -> MathematicalEdgeDsl {
     let from = dsl::WireNode { id: edge.source.clone(), kind: None, port: None };
     let to = dsl::WireNode { id: edge.target.clone(), kind: None, port: None };
     MathematicalEdgeDsl { id: edge.id.clone(), wire: dsl::Wire(dsl::WireValue { from, edge: Some((directed, to)), edge_label: dsl::WireEdgeLabel::default(), properties: dsl::DslValue::Object(Vec::new()) }) }
 }
 
-pub fn math_edge_from_dsl(edge: MathematicalEdgeDsl) -> Result<MathematicalEdge, String> {
+pub async fn math_edge_from_dsl(edge: MathematicalEdgeDsl) -> Result<MathematicalEdge, String> {
     let dsl::WireValue { from, edge: link, .. } = edge.wire.0;
     let (_directed, to) = link.ok_or_else(|| "graph edge wire literal must have a target".to_string())?;
     Ok(MathematicalEdge { id: edge.id, source: from.id, target: to.id })
@@ -69,11 +69,11 @@ pub struct MathematicalGraphDsl {
     algorithm_seed: Option<String>,
 }
 
-pub fn math_graph_to_dsl(graph: &MathematicalGraph) -> MathematicalGraphDsl {
+pub async fn math_graph_to_dsl(graph: &MathematicalGraph) -> MathematicalGraphDsl {
     MathematicalGraphDsl { directed: graph.directed, nodes: graph.nodes.clone(), edges: graph.edges.iter().map(|edge| math_edge_to_dsl(edge, graph.directed)).collect(), algorithm: graph.algorithm.clone(), algorithm_seed: graph.algorithm_seed.clone() }
 }
 
-pub fn math_graph_from_dsl(graph: MathematicalGraphDsl) -> Result<MathematicalGraph, String> {
+pub async fn math_graph_from_dsl(graph: MathematicalGraphDsl) -> Result<MathematicalGraph, String> {
     Ok(MathematicalGraph { directed: graph.directed, nodes: graph.nodes, edges: graph.edges.into_iter().map(math_edge_from_dsl).collect::<Result<Vec<_>, _>>()?, algorithm: graph.algorithm, algorithm_seed: graph.algorithm_seed })
 }
 
@@ -83,13 +83,13 @@ pub fn math_graph_from_dsl(graph: MathematicalGraphDsl) -> Result<MathematicalGr
 /// JSON shape a caller would observe (were this ever actually put on a real wire) is `MathematicalGraph`'s own
 /// camelCase shape, not a `MathematicalGraphDsl`-internal one.
 impl Serialize for MathematicalGraphDsl {
-    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+    async fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
         math_graph_from_dsl(self.clone()).map_err(serde::ser::Error::custom)?.serialize(serializer)
     }
 }
 
 impl<'de> Deserialize<'de> for MathematicalGraphDsl {
-    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+    async fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
         Ok(math_graph_to_dsl(&MathematicalGraph::deserialize(deserializer)?))
     }
 }
@@ -116,31 +116,31 @@ impl<'de> Deserialize<'de> for MathematicalGraphDsl {
 /// 🧪️ Real hex/bracket child-handle codec (mirrors `📐️cad`'s/`✒️writer`'s own `enc_child`/
 /// `dec_child`) — a handle is exactly two strings (`child_id`, the target's `ArtifactRef` flattened
 /// via `to_uri()`), never the child's own content.
-fn hex_encode(bytes: &[u8]) -> String {
+async fn hex_encode(bytes: &[u8]) -> String {
     bytes.iter().map(|b| format!("{b:02x}")).collect()
 }
-fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
+async fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
     if s.len() % 2 != 0 {
         return Err(format!("odd hex length: {s:?}"));
     }
     (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()
 }
-fn enc_str(s: &str) -> String {
+async fn enc_str(s: &str) -> String {
     hex_encode(s.as_bytes())
 }
-fn dec_str(s: &str) -> Result<String, String> {
+async fn dec_str(s: &str) -> Result<String, String> {
     String::from_utf8(hex_decode(s)?).map_err(|e| e.to_string())
 }
-fn enc_ref(r: &store::os_io::ArtifactRef) -> String {
+async fn enc_ref(r: &store::os_io::ArtifactRef) -> String {
     enc_str(&r.to_uri())
 }
-fn dec_ref(s: &str) -> Result<store::os_io::ArtifactRef, String> {
+async fn dec_ref(s: &str) -> Result<store::os_io::ArtifactRef, String> {
     store::os_io::ArtifactRef::parse_uri(&dec_str(s)?)
 }
-fn enc_child<S>(c: &store::ArtifactChild<S>) -> String {
+async fn enc_child<S>(c: &store::ArtifactChild<S>) -> String {
     format!("[{},{}]", enc_str(&c.child_id), enc_ref(&c.target))
 }
-fn dec_child<S>(s: &str) -> Result<store::ArtifactChild<S>, String> {
+async fn dec_child<S>(s: &str) -> Result<store::ArtifactChild<S>, String> {
     let inner = s.strip_prefix('[').and_then(|s| s.strip_suffix(']')).ok_or_else(|| format!("expected [...], got {s:?}"))?;
     let parts: Vec<&str> = inner.splitn(2, ',').collect();
     let [child_id, target] = parts.as_slice() else { return Err(format!("child handle: expected 2 fields, got {}", parts.len())) };
@@ -152,17 +152,17 @@ fn dec_child<S>(s: &str) -> Result<store::ArtifactChild<S>, String> {
 /// 🧮️ `equation` has no handcrafted grammar of its own yet (future wave) — round-tripped as
 /// hex-encoded `serde_json`, the same "real codec, minimal grammar" trade `child` handles above
 /// already make for their own opaque payload half (the `ArtifactRef` URI).
-fn enc_equation(e: &EquationSnapshot) -> String {
+async fn enc_equation(e: &EquationSnapshot) -> String {
     enc_str(&serde_json::to_string(e).expect("EquationSnapshot serializes"))
 }
-fn dec_equation(s: &str) -> Result<EquationSnapshot, String> {
+async fn dec_equation(s: &str) -> Result<EquationSnapshot, String> {
     serde_json::from_str(&dec_str(s)?).map_err(|e| e.to_string())
 }
 
-fn print_mathematical_snapshot_body(s: &MathematicalSnapshot) -> String {
+async fn print_mathematical_snapshot_body(s: &MathematicalSnapshot) -> String {
     format!("notation={}\nresults={}\ncomputed={}\nequation={}", enc_child(&s.notation), enc_child(&s.results), enc_child(&s.computed), enc_equation(&s.equation))
 }
-fn parse_mathematical_snapshot_body(body: &str) -> Result<MathematicalSnapshot, String> {
+async fn parse_mathematical_snapshot_body(body: &str) -> Result<MathematicalSnapshot, String> {
     let mut notation = None;
     let mut results = None;
     let mut computed = None;
@@ -195,17 +195,17 @@ fn parse_mathematical_snapshot_body(body: &str) -> Result<MathematicalSnapshot, 
 
 impl store::ArtifactDsl for MathematicalSnapshot {
     const EXTENSION: &'static str = "mathematical";
-    fn envelope_id() -> &'static str {
+    async fn envelope_id() -> &'static str {
         "mathematical.mathematical"
     }
-    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+    async fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
         let body = match store::semio_format::split_text_preamble(text) {
             Ok((_, rest)) => rest,
             Err(_) => text,
         };
         parse_mathematical_snapshot_body(body).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
-    fn print_dsl(&self) -> String {
+    async fn print_dsl(&self) -> String {
         let body = print_mathematical_snapshot_body(self);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
@@ -216,12 +216,12 @@ impl store::ArtifactDsl for MathematicalSnapshot {
 
 //#region 🔖️DslText
 /// 📖️ Parses `.mathematical` DSL text into a `MathematicalSnapshot`.
-pub fn parse_dsl(text: &str) -> Result<MathematicalSnapshot, store::TextError> {
+pub async fn parse_dsl(text: &str) -> Result<MathematicalSnapshot, store::TextError> {
     <MathematicalSnapshot as ArtifactDsl>::parse_dsl(text)
 }
 
 /// 🖨️ Prints a `MathematicalSnapshot` back to `.mathematical` DSL text.
-pub fn print_dsl(projection: &MathematicalSnapshot) -> String {
+pub async fn print_dsl(projection: &MathematicalSnapshot) -> String {
     ArtifactDsl::print_dsl(projection)
 }
 //#endregion 🔖️DslText
@@ -232,19 +232,19 @@ mod tests {
     use super::*;
 
     #[test]
-    fn math_projection_dsl_round_trips_default() {
+    async fn math_projection_dsl_round_trips_default() {
         store::os_store::test_support::assert_dsl_round_trip(&MathematicalSnapshot::default());
     }
 
     #[test]
-    fn example_primary_text_round_trips() {
+    async fn example_primary_text_round_trips() {
         let text = include_str!("../../../📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio");
         let parsed = crate::artifacts::mathematical::dsl::parse_dsl(text).expect("parse example");
         store::os_store::test_support::assert_dsl_round_trip(&parsed);
     }
 
     #[test]
-    fn math_projection_dsl_round_trips_with_seed_and_empty_collections() {
+    async fn math_projection_dsl_round_trips_with_seed_and_empty_collections() {
         let mut graph = MathematicalGraph {
             algorithm: "bfs".into(),
             algorithm_seed: Some("a".into()),

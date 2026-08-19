@@ -15,7 +15,7 @@ use std::collections::BTreeMap;
 /// the generated id itself becomes real, undoable document content the moment an operation stores it).
 /// Relocated from `⚙️engine/🦀️component.rs` (26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES,
 /// #2553): a pure document-side id generator, not app or engine behaviour.
-pub fn next_remodel_id(prefix: &str) -> String {
+pub async fn next_remodel_id(prefix: &str) -> String {
     static COUNTER: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(1);
     let next = COUNTER.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
     format!("{prefix}-{next}")
@@ -25,7 +25,7 @@ pub fn next_remodel_id(prefix: &str) -> String {
 //#region 🔖️Codecs
 /// 🏷️ Display label for one `ReconstructionStage` — pure document-enum formatting, no engine
 /// dependency (relocated from `⚙️engine/🦀️component.rs`, #2553).
-pub fn stage_display(stage: ReconstructionStage) -> &'static str {
+pub async fn stage_display(stage: ReconstructionStage) -> &'static str {
     match stage {
         ReconstructionStage::Idle => "Idle",
         ReconstructionStage::Ingesting => "Ingesting",
@@ -50,7 +50,7 @@ pub fn stage_display(stage: ReconstructionStage) -> &'static str {
 
 /// 🎞️ Label → document `VideoCodec` — pure string parsing, no engine dependency (relocated from
 /// `⚙️engine/🦀️component.rs`, #2553).
-pub fn video_codec_from_label(label: &str) -> VideoCodec {
+pub async fn video_codec_from_label(label: &str) -> VideoCodec {
     match label.to_ascii_lowercase().as_str() {
         "avc" | "h264" | "h.264" => VideoCodec::Avc,
         "hevc" | "h265" | "h.265" => VideoCodec::Hevc,
@@ -98,7 +98,7 @@ pub struct RemodelUiCamera {
 }
 
 impl Default for RemodelUiCamera {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self { position: [4.0, -4.0, 3.0], target: [0.0, 0.0, 0.0], fov: 45.0 }
     }
 }
@@ -123,7 +123,7 @@ pub struct RemodelUiLayers {
 }
 
 impl Default for RemodelUiLayers {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self { mesh: true, dense: true, sparse: true, cameras: true, gcps: true }
     }
 }
@@ -139,14 +139,14 @@ pub struct RemodelUiFrameCursor {
 
 //#region 🔖️Conversions
 impl Default for RemodelArtifact {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self::from_snapshot(RemodelSnapshot::default())
     }
 }
 
 impl RemodelArtifact {
     /// 📸️ Persisted subset.
-    pub fn to_snapshot(&self) -> RemodelSnapshot {
+    pub async fn to_snapshot(&self) -> RemodelSnapshot {
         RemodelSnapshot {
             schema: self.schema.clone(),
             id: self.id.clone(),
@@ -161,7 +161,7 @@ impl RemodelArtifact {
     }
 
     /// 🧬️ Builds a full artifact from a snapshot, leaving UI fields at defaults.
-    pub fn from_snapshot(snapshot: RemodelSnapshot) -> Self {
+    pub async fn from_snapshot(snapshot: RemodelSnapshot) -> Self {
         Self {
             schema: snapshot.schema,
             id: snapshot.id,
@@ -183,7 +183,7 @@ impl RemodelArtifact {
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
-    pub fn set_snapshot(&mut self, snapshot: RemodelSnapshot) {
+    pub async fn set_snapshot(&mut self, snapshot: RemodelSnapshot) {
         self.schema = snapshot.schema;
         self.id = snapshot.id;
         self.streams = snapshot.streams;
@@ -199,7 +199,7 @@ impl RemodelArtifact {
 
 //#region 🔖️Descriptor
 /// 🧬️ Descriptor for `s.remodel.remodel` — twenty handcrafted schema leaves.
-pub fn remodel_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
+pub async fn remodel_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
     schema::ArtifactSchemaDescriptor {
         id: "s.remodel.remodel",
         artifact: schema::FacetLeaves {
@@ -250,15 +250,15 @@ pub mod derived_construction {
         type Snapshot = RemodelSnapshot;
         type Mutation = RemodelMutation;
         type Diff = RemodelDiff;
-        fn empty() -> Self { Self { snapshot: RemodelSnapshot::default(), diagnostics: Vec::new() } }
-        fn from_snapshot(snapshot: Self::Snapshot) -> Self { Self { snapshot, diagnostics: Vec::new() } }
-        fn from_text(text: &str) -> Result<Self, store::TextError> {
+        async fn empty() -> Self { Self { snapshot: RemodelSnapshot::default(), diagnostics: Vec::new() } }
+        async fn from_snapshot(snapshot: Self::Snapshot) -> Self { Self { snapshot, diagnostics: Vec::new() } }
+        async fn from_text(text: &str) -> Result<Self, store::TextError> {
             Ok(Self::from_snapshot(<RemodelSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
-        fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
+        async fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
             Ok(Self::from_snapshot(<RemodelSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
         }
-        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
+        async fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let outcome = <RemodelMutation as protocol::Mutation<RemodelSnapshot>>::diff(&mutation, &self.snapshot);
             match protocol::MutationDiff::apply(outcome.diff(), &self.snapshot) {
                 Ok(snapshot) => self.snapshot = snapshot,
@@ -270,7 +270,7 @@ pub mod derived_construction {
             }
             (self, outcome)
         }
-        fn absorb(
+        async fn absorb(
             mut self,
             diff: Self::Diff,
         ) -> protocol::MutationApplyResult<Self> {
@@ -278,7 +278,7 @@ pub mod derived_construction {
             self.snapshot = snapshot;
             Ok(self)
         }
-        fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
+        async fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
             if self.diagnostics.is_empty() { Ok(self.snapshot) } else { Err(self.diagnostics) }
         }
     }
@@ -302,11 +302,11 @@ pub mod derived_analysis {
         type Parts = RemodelParts;
         const DIALECT: Dialect = Dialect { artifact_kind: "s.remodel", standard: StandardId("1"), subset: SubsetId("*") };
 
-        fn sniff(_source: &AnalyzeSource<'_>) -> IoConfidence {
+        async fn sniff(_source: &AnalyzeSource<'_>) -> IoConfidence {
             IoConfidence::Medium
         }
 
-        fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
+        async fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
             let mut parts = RemodelParts::default();
             let mut diagnostics = Vec::new();
             let mut confidence = IoConfidence::High;
@@ -354,7 +354,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn next_remodel_id_is_monotonic_and_prefixed() {
+    async fn next_remodel_id_is_monotonic_and_prefixed() {
         let a = next_remodel_id("stream");
         let b = next_remodel_id("stream");
         assert!(a.starts_with("stream-"));
@@ -363,7 +363,7 @@ mod tests {
     }
 
     #[test]
-    fn stage_display_covers_every_stage() {
+    async fn stage_display_covers_every_stage() {
         let cases = [
             (ReconstructionStage::Idle, "Idle"),
             (ReconstructionStage::Done, "Done"),
@@ -375,7 +375,7 @@ mod tests {
     }
 
     #[test]
-    fn video_codec_from_label_recognizes_common_aliases() {
+    async fn video_codec_from_label_recognizes_common_aliases() {
         assert_eq!(video_codec_from_label("h264"), VideoCodec::Avc);
         assert_eq!(video_codec_from_label("h.265"), VideoCodec::Hevc);
         assert_eq!(video_codec_from_label("mjpg"), VideoCodec::Mjpeg);

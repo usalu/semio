@@ -3,7 +3,7 @@
 use crate::artifacts::assembly::diff::AssemblyDiff;
 use crate::artifacts::assembly::schema::snapshot::{AssemblyModuleWeight, AssemblySnapshot};
 
-pub fn diff(payload: &super::mutation::ChangeWeight, base: &AssemblySnapshot) -> protocol::MutationOutcome<AssemblyDiff> {
+pub async fn diff(payload: &super::mutation::ChangeWeight, base: &AssemblySnapshot) -> protocol::MutationOutcome<AssemblyDiff> {
     if !base.modules.iter().any(|module| module.child_id == payload.module_id) {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Module \"{}\" does not exist.", payload.module_id), [payload.module_id.clone()]);
     }

@@ -57,11 +57,11 @@ pub const DWG_ARTIFACT_SCHEMA_ID: &str = "s.stdio.dwg";
 /// `.setup(crate::artifacts::dwg::engine::register_schema_specs)` alongside this declaration's
 /// `.artifact(...)`, exactly this ticket's own W1d precedent (puzzle's B2 OS-media-bridge case).
 /// 🧩️ Binds this executable root to its sole schema-owned definition.
-pub fn assembly(definition: semio_framework_plugin::ArtifactDefinition) -> Result<crate::registry::ArtifactAssembly, semio_framework_plugin::PluginAssemblyError> {
+pub async fn assembly(definition: semio_framework_plugin::ArtifactDefinition) -> Result<crate::registry::ArtifactAssembly, semio_framework_plugin::PluginAssemblyError> {
     crate::registry::runtime_assembly("dwg", definition, declaration)
 }
 
-pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
+pub async fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
     let formats = crate::registry::format_descriptors_for("dwg")?;
     semio_framework_plugin::ArtifactDeclaration::builder(definition)
         .schema(crate::artifacts::dwg::schema::dwg_artifact_schema_descriptor())
@@ -76,7 +76,7 @@ pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Re
 /// 🎹️ `ac1018` + `ac1024` engine composer entries, re-materialized as one owned `&'static
 /// [ComposerEntry]` — see `declaration()`'s own doc for why this exists instead of a bare
 /// `.composers()` call.
-fn dwg_combined_composer_entries() -> &'static [semio_framework_plugin::ComposerEntry] {
+async fn dwg_combined_composer_entries() -> &'static [semio_framework_plugin::ComposerEntry] {
     use semio_framework_plugin::ComposerEntry;
     static ENTRIES: std::sync::OnceLock<Vec<ComposerEntry>> = std::sync::OnceLock::new();
     ENTRIES
@@ -92,7 +92,7 @@ fn dwg_combined_composer_entries() -> &'static [semio_framework_plugin::Composer
 
 /// 📌️ Handcrafted facet grammars (text) and protocols (binary) for in-process execution — built
 /// once and leaked to a `&'static` slice since `dsl::passthrough_hooks` isn't `const fn`.
-fn pilot_languages() -> &'static [dsl::LanguageSpec] {
+async fn pilot_languages() -> &'static [dsl::LanguageSpec] {
     static LANGUAGES: std::sync::OnceLock<Vec<dsl::LanguageSpec>> = std::sync::OnceLock::new();
     LANGUAGES
         .get_or_init(|| {
@@ -155,7 +155,7 @@ fn pilot_languages() -> &'static [dsl::LanguageSpec] {
 
 //#region 🔖️ArtifactKind
 /// 🗂️ This artifact's `ArtifactKindSpec`.
-pub fn artifact_kind() -> ArtifactKindSpec {
+pub async fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "stdio.dwg".into(),
         name: "Dwg".into(),
@@ -181,16 +181,16 @@ pub mod io_registry {
 
     static ENTRIES: OnceLock<Vec<&'static ComposerEntry>> = OnceLock::new();
 
-    pub fn entries() -> &'static [&'static ComposerEntry] {
+    pub async fn entries() -> &'static [&'static ComposerEntry] {
         ENTRIES.get_or_init(|| v_ac1018::entries().iter().chain(v_ac1024::entries().iter()).collect()).as_slice()
     }
 
-    pub fn compose(target: Dialect, sources: &[ErasedComposeSource]) -> Result<ComposedArtifact, ComposeError> {
+    pub async fn compose(target: Dialect, sources: &[ErasedComposeSource]) -> Result<ComposedArtifact, ComposeError> {
         let entry = entries().iter().find(|e| e.writes == target).ok_or_else(|| ComposeError { message: format!("DwgComposer: no entry writes {:?}", target), diagnostics: Vec::new() })?;
         semio_framework_plugin::resolve_ready((entry.compose)(sources))
     }
 
-    pub fn register() {
+    pub async fn register() {
         let _ = register_composer_entries(v_ac1018::entries());
         let _ = register_composer_entries(v_ac1024::entries());
     }

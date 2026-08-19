@@ -30,14 +30,14 @@ pub struct SemioFlowTopology {
 /// must equal `SemioFlowTopology::default()` (the inference-default law), so this matches that
 /// zero case (same fix jack's own `JackTopology::default()` documents).
 impl Default for SemioFlowTopology {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self { topo_order: Vec::new(), depth: BTreeMap::new(), cycle_free: true, node_count: 0 }
     }
 }
 
 /// 📐️ Computes `topology` directly from `nodes`/`edges` via Kahn's algorithm — deterministic
 /// because both the root frontier and each frontier's children are drained in node-id sort order.
-pub fn compute_semio_flow_topology(snapshot: &SemioFlowSnapshot) -> SemioFlowTopology {
+pub async fn compute_semio_flow_topology(snapshot: &SemioFlowSnapshot) -> SemioFlowTopology {
     let node_count = snapshot.nodes.len() as u32;
     let mut adjacency: BTreeMap<String, Vec<String>> = snapshot.nodes.iter().map(|node| (node.id.clone(), Vec::new())).collect();
     let mut indegree: BTreeMap<String, u32> = snapshot.nodes.iter().map(|node| (node.id.clone(), 0u32)).collect();
@@ -90,21 +90,21 @@ mod tests {
     use super::*;
     use crate::artifacts::semio::standards::v1::subsets::flow::schema::snapshot::{FlowEdge, FlowNode, PortRef, STDIO_SEMIOFLOW_DOCUMENT_SCHEMA};
 
-    fn node(id: &str) -> FlowNode {
+    async fn node(id: &str) -> FlowNode {
         FlowNode { id: id.into(), kind: "task".into(), label: id.into(), params: Vec::new(), position: Default::default() }
     }
 
-    fn edge(id: &str, from_node: &str, to_node: &str) -> FlowEdge {
+    async fn edge(id: &str, from_node: &str, to_node: &str) -> FlowEdge {
         FlowEdge { id: id.into(), from: PortRef { node: from_node.into(), port: "out".into() }, to: PortRef { node: to_node.into(), port: "in".into() }, kind: "data".into() }
     }
 
-    fn chain_snapshot() -> SemioFlowSnapshot {
+    async fn chain_snapshot() -> SemioFlowSnapshot {
         // root -e1- mid -e2- leaf: a 3-node chain.
         SemioFlowSnapshot { schema: STDIO_SEMIOFLOW_DOCUMENT_SCHEMA.into(), nodes: vec![node("root"), node("mid"), node("leaf")], edges: vec![edge("e1", "root", "mid"), edge("e2", "mid", "leaf")] }
     }
 
     #[test]
-    fn chain_is_cycle_free_with_increasing_depth() {
+    async fn chain_is_cycle_free_with_increasing_depth() {
         let topology = compute_semio_flow_topology(&chain_snapshot());
         assert!(topology.cycle_free);
         assert_eq!(topology.node_count, 3);
@@ -115,7 +115,7 @@ mod tests {
     }
 
     #[test]
-    fn a_cycle_is_reported_as_not_cycle_free() {
+    async fn a_cycle_is_reported_as_not_cycle_free() {
         let mut snapshot = chain_snapshot();
         snapshot.edges.push(edge("e3", "leaf", "root"));
         let topology = compute_semio_flow_topology(&snapshot);
@@ -124,13 +124,13 @@ mod tests {
     }
 
     #[test]
-    fn inference_determinism_law() {
+    async fn inference_determinism_law() {
         let snapshot = chain_snapshot();
         assert_eq!(compute_semio_flow_topology(&snapshot), compute_semio_flow_topology(&snapshot));
     }
 
     #[test]
-    fn inference_default_law() {
+    async fn inference_default_law() {
         assert_eq!(compute_semio_flow_topology(&SemioFlowSnapshot::default()), SemioFlowTopology::default());
     }
 }

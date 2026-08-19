@@ -23,7 +23,7 @@ pub struct CopyInviteLink {
 //#endregion 🔖️Payload
 
 //#region 🔖️Handle
-pub fn handle(payload: &CopyInviteLink, _doc: &ArtifactView<'_, SHomeSnapshot>, _cfg: &ConfigView<'_, HomeConfig>) -> Result<Emit<SHomeMutation, HomeConfigMutation>, Fault> {
+pub async fn handle(payload: &CopyInviteLink, _doc: &ArtifactView<'_, SHomeSnapshot>, _cfg: &ConfigView<'_, HomeConfig>) -> Result<Emit<SHomeMutation, HomeConfigMutation>, Fault> {
     let role = if payload.role.trim().is_empty() { "spectator".to_string() } else { payload.role.clone() };
     let ttl_secs = if payload.ttl_secs == 0 { 3600 } else { payload.ttl_secs };
     let args = dsl::to_dsl_value(&json!({ "spaceId": payload.space_id, "role": role, "ttlSecs": ttl_secs })).ok();
@@ -37,7 +37,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn copy_invite_link_relays_share_link_with_default_ttl() {
+    async fn copy_invite_link_relays_share_link_with_default_ttl() {
         let history = semio_framework_plugin::HistoryView::empty();
         let doc_snapshot = SHomeSnapshot::default();
         let doc = ArtifactView::new(&doc_snapshot, &history);
@@ -59,7 +59,7 @@ mod tests {
     }
 
     #[test]
-    fn explicit_ttl_is_respected() {
+    async fn explicit_ttl_is_respected() {
         let history = semio_framework_plugin::HistoryView::empty();
         let doc_snapshot = SHomeSnapshot::default();
         let doc = ArtifactView::new(&doc_snapshot, &history);

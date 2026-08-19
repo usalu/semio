@@ -11,13 +11,13 @@ use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 
 //#region 🔖️Topology
-fn layer_id(layer: &RasterLayerNode) -> &str {
+async fn layer_id(layer: &RasterLayerNode) -> &str {
     match layer {
         RasterLayerNode::Pixel { id, .. } | RasterLayerNode::Group { id, .. } | RasterLayerNode::Adjustment { id, .. } => id,
     }
 }
 
-fn walk(layers: &[RasterLayerNode], level: u32, topo_order: &mut Vec<String>, depth: &mut BTreeMap<String, u32>) {
+async fn walk(layers: &[RasterLayerNode], level: u32, topo_order: &mut Vec<String>, depth: &mut BTreeMap<String, u32>) {
     for layer in layers {
         let id = layer_id(layer).to_string();
         topo_order.push(id.clone());
@@ -39,7 +39,7 @@ pub struct RasterTopology {
 }
 
 /// 🧮️ Computes [`RasterTopology`] via a pre-order walk of `layers`' `Group.children` nesting.
-pub fn compute_raster_topology(snapshot: &RasterSnapshot) -> RasterTopology {
+pub async fn compute_raster_topology(snapshot: &RasterSnapshot) -> RasterTopology {
     let mut topo_order = Vec::new();
     let mut depth = BTreeMap::new();
     walk(&snapshot.layers, 0, &mut topo_order, &mut depth);
@@ -54,20 +54,20 @@ mod tests {
     use super::*;
     use crate::artifacts::raster::{RasterTransform, RASTER_DOCUMENT_SCHEMA};
 
-    fn pixel_layer(id: &str) -> RasterLayerNode {
+    async fn pixel_layer(id: &str) -> RasterLayerNode {
         RasterLayerNode::Pixel { id: id.into(), name: id.into(), visible: true, opacity: 1.0, blend_mode: "normal".into(), transform: RasterTransform::default(), mask: None, width: None, height: None, image_key: None }
     }
 
-    fn group_layer(id: &str, children: Vec<RasterLayerNode>) -> RasterLayerNode {
+    async fn group_layer(id: &str, children: Vec<RasterLayerNode>) -> RasterLayerNode {
         RasterLayerNode::Group { id: id.into(), name: id.into(), visible: true, opacity: 1.0, blend_mode: "normal".into(), transform: RasterTransform::default(), mask: None, children }
     }
 
-    fn snapshot(layers: Vec<RasterLayerNode>) -> RasterSnapshot {
+    async fn snapshot(layers: Vec<RasterLayerNode>) -> RasterSnapshot {
         RasterSnapshot { schema: RASTER_DOCUMENT_SCHEMA.into(), id: "test".into(), title: None, layers, assets: Default::default() }
     }
 
     #[test]
-    fn flat_layers_are_all_at_depth_zero() {
+    async fn flat_layers_are_all_at_depth_zero() {
         let topology = compute_raster_topology(&snapshot(vec![pixel_layer("a"), pixel_layer("b")]));
         assert_eq!(topology.topo_order, vec!["a".to_string(), "b".to_string()]);
         assert_eq!(topology.depth.get("a"), Some(&0));
@@ -77,7 +77,7 @@ mod tests {
     }
 
     #[test]
-    fn nested_group_children_get_incrementing_depth() {
+    async fn nested_group_children_get_incrementing_depth() {
         let topology = compute_raster_topology(&snapshot(vec![group_layer("g1", vec![pixel_layer("child"), group_layer("g2", vec![pixel_layer("grandchild")])])]));
         assert_eq!(topology.topo_order, vec!["g1".to_string(), "child".to_string(), "g2".to_string(), "grandchild".to_string()]);
         assert_eq!(topology.depth.get("g1"), Some(&0));
@@ -89,7 +89,7 @@ mod tests {
     }
 
     #[test]
-    fn empty_layers_produce_an_empty_topology() {
+    async fn empty_layers_produce_an_empty_topology() {
         let topology = compute_raster_topology(&snapshot(Vec::new()));
         assert!(topology.topo_order.is_empty());
         assert_eq!(topology.node_count, 0);

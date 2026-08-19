@@ -13,12 +13,12 @@ use crate::artifacts::puzzle3d::Puzzle3dSnapshot;
 use store::PackError;
 
 /// 📦️ Encodes a `Puzzle3dSnapshot` to its binary pack form.
-pub fn encode(document: &Puzzle3dSnapshot) -> Vec<u8> {
+pub async fn encode(document: &Puzzle3dSnapshot) -> Vec<u8> {
     store::ArtifactPack::encode_pack(document)
 }
 
 /// 📖️ Decodes a `Puzzle3dSnapshot` from its binary pack form.
-pub fn decode(bytes: &[u8]) -> Result<Puzzle3dSnapshot, PackError> {
+pub async fn decode(bytes: &[u8]) -> Result<Puzzle3dSnapshot, PackError> {
     <Puzzle3dSnapshot as store::ArtifactPack>::decode_pack(bytes)
 }
 
@@ -29,7 +29,7 @@ mod tests {
     use crate::artifacts::puzzle3d::dsl;
 
     #[test]
-    fn pack_round_trips_and_agrees_with_dsl() {
+    async fn pack_round_trips_and_agrees_with_dsl() {
         let document = dsl::parse_dsl(dsl::PUZZLE3D_CONCRETE_FOREST_EXAMPLE_TEXT).expect("parse concrete-forest example");
         semio_framework_os_kernel::os_store::test_support::assert_dsl_pack_equivalence(&document);
         let bytes = encode(&document);
@@ -42,7 +42,7 @@ mod tests {
     /// file's existing dsl/pack round-trip law (same pattern as `dag`'s own
     /// `command_envelope_round_trip_holds_for_an_applied_operation`).
     #[test]
-    fn command_envelope_round_trip_holds_for_an_applied_operation() {
+    async fn command_envelope_round_trip_holds_for_an_applied_operation() {
         use crate::artifacts::puzzle3d::op::Puzzle3dMutation;
         use crate::artifacts::puzzle3d::spr::Puzzle3dStore;
         use crate::artifacts::puzzle3d::{Puzzle3dObject, PUZZLE_3D_SCHEMA};

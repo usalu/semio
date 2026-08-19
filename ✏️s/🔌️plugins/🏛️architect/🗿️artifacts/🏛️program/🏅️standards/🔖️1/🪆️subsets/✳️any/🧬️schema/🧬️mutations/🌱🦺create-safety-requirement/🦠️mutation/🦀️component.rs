@@ -18,16 +18,16 @@ pub struct CreateSafetyRequirement {
 }
 impl MutationKind<ProgramSnapshot, ProgramMutation> for CreateSafetyRequirement {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "create", entity: "safety-requirement", kind: "create-safety-requirement", record: "CreatedSafetyRequirement" };
-    fn diff(&self, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
+    async fn diff(&self, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {
+    async fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         format!("Create safety requirement \"{}\"", self.safety_requirement.header.name)
     }
-    fn target(&self) -> Vec<String> {
+    async fn target(&self) -> Vec<String> {
         vec![self.safety_requirement.header.id.0.clone()]
     }
 }

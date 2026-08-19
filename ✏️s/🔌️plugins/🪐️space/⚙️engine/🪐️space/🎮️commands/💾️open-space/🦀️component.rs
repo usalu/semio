@@ -13,7 +13,7 @@ pub struct OpenSpace {
     pub space_id: String,
 }
 
-pub fn handle(payload: &OpenSpace, _doc: &ArtifactView<'_, WorkflowSnapshot>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
+pub async fn handle(payload: &OpenSpace, _doc: &ArtifactView<'_, WorkflowSnapshot>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
     let space_id = &payload.space_id;
     // 🚧️ `parse_demo_space_document()` yields a `workflow::WorkflowSnapshot`, not a
     // `space::SpaceSnapshot`-backed catalog entry — the "demo" id fallback below synthesizes a

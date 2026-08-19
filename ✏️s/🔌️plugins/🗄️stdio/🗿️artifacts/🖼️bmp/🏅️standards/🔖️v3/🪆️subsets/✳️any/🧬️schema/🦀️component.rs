@@ -49,14 +49,14 @@ pub struct BmpArtifact {
 
 //#region 🔖️Conversions
 impl Default for BmpArtifact {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self::from_snapshot(BmpSnapshot::default())
     }
 }
 
 impl BmpArtifact {
     /// 📸️ Persisted subset.
-    pub fn to_snapshot(&self) -> BmpSnapshot {
+    pub async fn to_snapshot(&self) -> BmpSnapshot {
         BmpSnapshot {
             schema: self.schema.clone(),
             header_size: self.header_size,
@@ -77,7 +77,7 @@ impl BmpArtifact {
     }
 
     /// 🧬️ Builds a full artifact from a snapshot.
-    pub fn from_snapshot(snapshot: BmpSnapshot) -> Self {
+    pub async fn from_snapshot(snapshot: BmpSnapshot) -> Self {
         Self {
             schema: snapshot.schema,
             header_size: snapshot.header_size,
@@ -98,7 +98,7 @@ impl BmpArtifact {
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
-    pub fn set_snapshot(&mut self, snapshot: BmpSnapshot) {
+    pub async fn set_snapshot(&mut self, snapshot: BmpSnapshot) {
         self.schema = snapshot.schema;
         self.header_size = snapshot.header_size;
         self.width = snapshot.width;
@@ -120,7 +120,7 @@ impl BmpArtifact {
 
 //#region 🔖️Descriptor
 /// 🧬️ Descriptor for `s.stdio.bmp`.
-pub fn bmp_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
+pub async fn bmp_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
     schema::ArtifactSchemaDescriptor {
         id: "s.stdio.bmp",
         artifact: schema::FacetLeaves {
@@ -171,27 +171,27 @@ pub mod derived_construction {
         type Snapshot = BmpSnapshot;
         type Mutation = BmpMutation;
         type Diff = BmpDiff;
-        fn empty() -> Self {
+        async fn empty() -> Self {
             Self { snapshot: BmpSnapshot::default(), diagnostics: Vec::new() }
         }
-        fn from_snapshot(snapshot: Self::Snapshot) -> Self {
+        async fn from_snapshot(snapshot: Self::Snapshot) -> Self {
             Self { snapshot, diagnostics: Vec::new() }
         }
-        fn from_text(text: &str) -> Result<Self, store::TextError> {
+        async fn from_text(text: &str) -> Result<Self, store::TextError> {
             Ok(Self::from_snapshot(<BmpSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
-        fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
+        async fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
             Ok(Self::from_snapshot(<BmpSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
         }
-        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
+        async fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let diff = crate::artifacts::bmp::schema::mutations::apply_bmp_mutation(&mut self.snapshot, &mutation);
             (self, diff)
         }
-        fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
+        async fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
             self.snapshot = <BmpDiff as protocol::MutationDiff<BmpSnapshot>>::apply(&diff, &self.snapshot)?;
             Ok(self)
         }
-        fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
+        async fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
             if self.diagnostics.is_empty() {
                 Ok(self.snapshot)
             } else {
@@ -225,7 +225,7 @@ pub mod derived_analysis {
         type Parts = BmpParts;
         const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.bmp", standard: StandardId("v3"), subset: SubsetId("*") };
 
-        fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
+        async fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
             const SIG: [u8; 2] = *b"BM";
             match source {
                 AnalyzeSource::Binary(bytes) => {
@@ -262,7 +262,7 @@ pub mod derived_analysis {
             }
         }
 
-        fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
+        async fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
             let mut parts = BmpParts::default();
             let mut diagnostics = Vec::new();
             let mut confidence = IoConfidence::High;
@@ -314,7 +314,7 @@ semio_framework_plugin::derive_artifact_facets!(
 // deliberate imperative plugin-root calls — untouched, reached via this standard's own inline
 // `engine` barrel) + `io_registry` all moved to `../🚪️io`; tests moved beside what they now test.
 /// 🌱 Empty persisted snapshot.
-pub fn empty_bmp_snapshot() -> BmpSnapshot {
+pub async fn empty_bmp_snapshot() -> BmpSnapshot {
     BmpSnapshot::default()
 }
 
@@ -329,7 +329,7 @@ pub fn empty_bmp_snapshot() -> BmpSnapshot {
 /// `EncodeScopeNote`), so this snapshot is safe against `encode_bmp`'s own canonicalization (any
 /// other value here would silently "self-correct" on the first decode and break
 /// `fixture_honesty_law`'s `parse_dsl(fixture) == demo()` identity). No palette (bpp=24 has none).
-pub fn demo_bmp_snapshot() -> BmpSnapshot {
+pub async fn demo_bmp_snapshot() -> BmpSnapshot {
     use crate::artifacts::bmp::standards::v_v3::subsets::any::io::row_bytes;
     BmpSnapshot {
         schema: crate::artifacts::bmp::STDIO_BMP_DOCUMENT_SCHEMA.into(),

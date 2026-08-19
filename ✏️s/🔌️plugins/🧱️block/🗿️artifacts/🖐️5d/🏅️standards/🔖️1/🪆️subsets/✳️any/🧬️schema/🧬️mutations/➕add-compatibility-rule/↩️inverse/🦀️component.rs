@@ -3,7 +3,7 @@ use crate::artifacts::block5d::mutations::Block5dMutation;
 use crate::artifacts::block5d::Block5dSnapshot;
 
 //#region 🔖️Inverse
-pub fn inverse(payload: &super::mutation::AddCompatibilityRule, _base: &Block5dSnapshot) -> Vec<Block5dMutation> {
+pub async fn inverse(payload: &super::mutation::AddCompatibilityRule, _base: &Block5dSnapshot) -> Vec<Block5dMutation> {
     vec![super::super::remove_compatibility_rule::mutation::remove_compatibility_rule(payload.rule.id.clone())]
 }
 //#endregion 🔖️Inverse

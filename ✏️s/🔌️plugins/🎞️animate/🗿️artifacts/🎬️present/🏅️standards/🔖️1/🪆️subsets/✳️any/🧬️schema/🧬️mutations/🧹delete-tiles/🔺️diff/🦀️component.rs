@@ -7,7 +7,7 @@ use crate::artifacts::present::PresentSnapshot;
 /// 🔺️ Reads the working-scene `(source, tiles)` off `base.presentation`, removes every addressed
 /// tile, and mints a new content-addressed `presentation` handle for the result — real handcrafted
 /// construction from `(payload, base)`, never apply-then-capture.
-pub fn diff(payload: &DeleteTiles, base: &PresentSnapshot) -> protocol::MutationOutcome<PresentDiff> {
+pub async fn diff(payload: &DeleteTiles, base: &PresentSnapshot) -> protocol::MutationOutcome<PresentDiff> {
     let (source, mut tiles) = crate::artifacts::present::present_working_scene(base);
     let targets: std::collections::HashSet<&str> = payload.ids.iter().map(String::as_str).collect();
     let existing_ids: std::collections::HashSet<&str> = tiles.iter().map(|tile| tile.id.as_str()).collect();

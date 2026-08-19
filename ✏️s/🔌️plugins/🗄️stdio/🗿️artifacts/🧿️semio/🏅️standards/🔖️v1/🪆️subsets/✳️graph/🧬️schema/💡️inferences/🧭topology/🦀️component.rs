@@ -31,14 +31,14 @@ pub struct SemioGraphTopology {
 /// zero case (same fix jack's own `JackTopology::default()` and sibling `✳️flow`'s
 /// `SemioFlowTopology::default()` document).
 impl Default for SemioGraphTopology {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self { topo_order: Vec::new(), depth: BTreeMap::new(), cycle_free: true, node_count: 0 }
     }
 }
 
 /// 📐️ Computes `topology` directly from `nodes`/`edges` via Kahn's algorithm — deterministic
 /// because both the root frontier and each frontier's children are drained in node-id sort order.
-pub fn compute_semio_graph_topology(snapshot: &SemioGraphSnapshot) -> SemioGraphTopology {
+pub async fn compute_semio_graph_topology(snapshot: &SemioGraphSnapshot) -> SemioGraphTopology {
     let node_count = snapshot.nodes.len() as u32;
     let mut adjacency: BTreeMap<String, Vec<String>> = snapshot.nodes.iter().map(|node| (node.id.value.clone(), Vec::new())).collect();
     let mut indegree: BTreeMap<String, u32> = snapshot.nodes.iter().map(|node| (node.id.value.clone(), 0u32)).collect();
@@ -91,21 +91,21 @@ mod tests {
     use super::*;
     use crate::artifacts::semio::standards::v1::subsets::graph::schema::snapshot::{GraphEdgeId, GraphNodeId, SemioGraphEdge, SemioGraphNode, STDIO_SEMIOGRAPH_DOCUMENT_SCHEMA};
 
-    fn node(id: &str) -> SemioGraphNode {
+    async fn node(id: &str) -> SemioGraphNode {
         SemioGraphNode { id: GraphNodeId::new(id), kind: "task".into(), label: id.into(), position: Default::default(), ports: Vec::new(), properties: Vec::new() }
     }
 
-    fn edge(id: &str, source: &str, target: &str) -> SemioGraphEdge {
+    async fn edge(id: &str, source: &str, target: &str) -> SemioGraphEdge {
         SemioGraphEdge { id: GraphEdgeId::new(id), source: GraphNodeId::new(source), target: GraphNodeId::new(target), kind: "flows-to".into(), label: id.into() }
     }
 
-    fn chain_snapshot() -> SemioGraphSnapshot {
+    async fn chain_snapshot() -> SemioGraphSnapshot {
         // root -e1- mid -e2- leaf: a 3-node chain.
         SemioGraphSnapshot { schema: STDIO_SEMIOGRAPH_DOCUMENT_SCHEMA.into(), nodes: vec![node("root"), node("mid"), node("leaf")], edges: vec![edge("e1", "root", "mid"), edge("e2", "mid", "leaf")] }
     }
 
     #[test]
-    fn chain_is_cycle_free_with_increasing_depth() {
+    async fn chain_is_cycle_free_with_increasing_depth() {
         let topology = compute_semio_graph_topology(&chain_snapshot());
         assert!(topology.cycle_free);
         assert_eq!(topology.node_count, 3);
@@ -116,7 +116,7 @@ mod tests {
     }
 
     #[test]
-    fn a_cycle_is_reported_as_not_cycle_free() {
+    async fn a_cycle_is_reported_as_not_cycle_free() {
         let mut snapshot = chain_snapshot();
         snapshot.edges.push(edge("e3", "leaf", "root"));
         let topology = compute_semio_graph_topology(&snapshot);
@@ -125,13 +125,13 @@ mod tests {
     }
 
     #[test]
-    fn inference_determinism_law() {
+    async fn inference_determinism_law() {
         let snapshot = chain_snapshot();
         assert_eq!(compute_semio_graph_topology(&snapshot), compute_semio_graph_topology(&snapshot));
     }
 
     #[test]
-    fn inference_default_law() {
+    async fn inference_default_law() {
         assert_eq!(compute_semio_graph_topology(&SemioGraphSnapshot::default()), SemioGraphTopology::default());
     }
 }

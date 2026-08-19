@@ -15,12 +15,12 @@ pub const PUZZLE2D_PLAY_MODE_EDIT: &str = "edit";
 
 //#region 🔖️Definition
 /// 🧱️ Stitched into the app manifest by `crate::editor::puzzle2d::create_puzzle2d_app`.
-pub fn definition() -> ModeDefinition {
+pub async fn definition() -> ModeDefinition {
     ModeDefinition { id: PUZZLE2D_PLAY_MODE_EDIT.into(), label: LocalizedLabel::native("Edit", "Bearbeiten"), icon_id: "pencil".into(), tools: vec![ToolRef::new(fill::TOOL_ID)], layout_id: None, commands: Vec::new() }
 }
 
 /// 🪟️ Triptych play layout: a wide interactive overview beside the detail and selection panes.
-pub fn layout() -> WindowLayout {
+pub async fn layout() -> WindowLayout {
     create_default_layout(
         &[overview::WINDOW_KIND_ID.into(), detail::WINDOW_KIND_ID.into(), selection::WINDOW_KIND_ID.into()],
         "row",
@@ -36,7 +36,7 @@ const PUZZLE2D_VIEWPORT_MARGIN: f64 = 0.18;
 const PUZZLE2D_VIEWPORT_FRAMING_HALF_SPAN_SCALE: f64 = 2.25;
 const PUZZLE2D_VIEWPORT_ZOOM_BOOST: f64 = 2.5;
 
-fn puzzle2d_pane_zoom_scale(pane: &str) -> f64 {
+async fn puzzle2d_pane_zoom_scale(pane: &str) -> f64 {
     match pane {
         detail::WINDOW_KIND_ID => detail::ZOOM_SCALE,
         selection::WINDOW_KIND_ID => selection::ZOOM_SCALE,
@@ -44,12 +44,12 @@ fn puzzle2d_pane_zoom_scale(pane: &str) -> f64 {
     }
 }
 
-fn puzzle2d_clamp_zoom(value: f64) -> f64 {
+async fn puzzle2d_clamp_zoom(value: f64) -> f64 {
     value.clamp(BOARD_CAMERA_ZOOM_MIN, BOARD_CAMERA_ZOOM_MAX)
 }
 
 /// 📐️ World-space center and half-span of every node's extent (circle radius or rectangle half-size), used to frame pane cameras.
-fn puzzle2d_fixture_world_bounds(fixture: &Value) -> (f64, f64, f64) {
+async fn puzzle2d_fixture_world_bounds(fixture: &Value) -> (f64, f64, f64) {
     let mut min_x = f64::INFINITY;
     let mut min_y = f64::INFINITY;
     let mut max_x = f64::NEG_INFINITY;
@@ -79,7 +79,7 @@ fn puzzle2d_fixture_world_bounds(fixture: &Value) -> (f64, f64, f64) {
 /// 📷️ Triptych camera for a pane: overview is zoomed out and centered on the fixture, detail zooms
 /// into the last-placed node, selection frames a lower-left quadrant — mirrors the pre-migration
 /// `puzzle2dPlayTriptychCameraForPane`.
-pub fn puzzle2d_pane_camera(fixture: &Value, runtime: &Puzzle2dPlayRuntime, pane: &str) -> (f64, f64, f64) {
+pub async fn puzzle2d_pane_camera(fixture: &Value, runtime: &Puzzle2dPlayRuntime, pane: &str) -> (f64, f64, f64) {
     let (camera_x, camera_y, camera_zoom) = runtime_camera(runtime);
     if pane == overview::WINDOW_KIND_ID {
         return (camera_x, camera_y, puzzle2d_clamp_zoom(camera_zoom));
@@ -107,11 +107,11 @@ pub fn puzzle2d_pane_camera(fixture: &Value, runtime: &Puzzle2dPlayRuntime, pane
 /// 🗄️ Caches the last serialized fixture keyed by an fnv1a hash of the raw `document_json` it came
 /// from, so the overview/detail/selection panes of the same `refreshUi` tick reuse one `String`
 /// instead of each re-serializing the whole fixture graph.
-fn cached_fixture_json(_document_json: &str, fixture: &Value) -> String {
+async fn cached_fixture_json(_document_json: &str, fixture: &Value) -> String {
     fixture.to_string()
 }
 
-fn puzzle2d_board_scene(document_json: &str, envelope: &Puzzle2dScene, pane: &str) -> Board2dScene {
+async fn puzzle2d_board_scene(document_json: &str, envelope: &Puzzle2dScene, pane: &str) -> Board2dScene {
     let fixture = &envelope.fixture;
     let (camera_x, camera_y, zoom) = puzzle2d_pane_camera(fixture, &envelope.runtime, pane);
     let camera_json = json!({ "x": camera_x, "y": camera_y, "zoom": zoom }).to_string();
@@ -148,14 +148,14 @@ fn puzzle2d_board_scene(document_json: &str, envelope: &Puzzle2dScene, pane: &st
 }
 
 /// 🖼️ The board-2d surface node for one pane — bound by each window's own `render()`.
-pub fn render_canvas(document_json: &str, envelope: &Puzzle2dScene, pane: &str) -> UiNode {
+pub async fn render_canvas(document_json: &str, envelope: &Puzzle2dScene, pane: &str) -> UiNode {
     build_board2d_scene(format!("{PUZZLE2D_PLAY_SURFACE_ID}.{pane}"), crate::editor::puzzle2d::PUZZLE2D_PLAY_CONTROLLER_ID, puzzle2d_board_scene(document_json, envelope, pane))
 }
 //#endregion 🔖️Canvas
 
 //#region 🔖️Engagement
 /// 🤝️ The engagement HUD for one pane: a text command line plus a node/edge/LOD status readout.
-pub fn puzzle2d_engagement(envelope: &Puzzle2dScene, host: &BoardHost, pane: &str, labels: &Puzzle2dLabels) -> WindowEngagement {
+pub async fn puzzle2d_engagement(envelope: &Puzzle2dScene, host: &BoardHost, pane: &str, labels: &Puzzle2dLabels) -> WindowEngagement {
     let overlay: Value = serde_json::from_str(&host.overlay_paint_state_json()).unwrap_or(Value::Null);
     let pane_lod_mode = envelope.runtime.lod_mode_by_pane.get(pane).map_or(PUZZLE2D_LOD_MODE_AUTOMATIC, String::as_str);
     let lod = overlay.get("lod").and_then(|value| value.as_str()).unwrap_or(if pane_lod_mode == PUZZLE2D_LOD_MODE_AUTOMATIC { "auto" } else { pane_lod_mode });

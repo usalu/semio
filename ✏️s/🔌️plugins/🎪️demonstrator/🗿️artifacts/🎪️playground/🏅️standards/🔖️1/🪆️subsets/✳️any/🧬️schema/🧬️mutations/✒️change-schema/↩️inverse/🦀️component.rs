@@ -7,7 +7,7 @@ use crate::artifacts::playground::standards::v1::subsets::any::schema::{
 };
 
 //#region 🔖️Inverse
-pub fn inverse(_payload: &ChangeSchema, base: &PlaygroundSnapshot) -> Vec<PlaygroundMutation> {
+pub async fn inverse(_payload: &ChangeSchema, base: &PlaygroundSnapshot) -> Vec<PlaygroundMutation> {
     vec![PlaygroundMutation::ChangeSchema(ChangeSchema { new_schema: base.schema.clone() })]
 }
 //#endregion 🔖️Inverse

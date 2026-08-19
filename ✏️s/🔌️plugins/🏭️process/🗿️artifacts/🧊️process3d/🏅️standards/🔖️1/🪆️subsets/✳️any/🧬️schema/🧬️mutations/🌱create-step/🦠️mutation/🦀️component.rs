@@ -23,19 +23,19 @@ pub struct CreateStep {
 impl protocol::MutationKind<Process3dSnapshot, Process3dMutation> for CreateStep {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "create", entity: "step", kind: "create-step", record: "CreatedStep" };
 
-    fn diff(&self, base: &Process3dSnapshot) -> protocol::MutationOutcome<Process3dDiff> {
+    async fn diff(&self, base: &Process3dSnapshot) -> protocol::MutationOutcome<Process3dDiff> {
         crate::artifacts::process3d::mutations::create_step::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &Process3dSnapshot) -> Vec<Process3dMutation> {
+    async fn inverse(&self, base: &Process3dSnapshot) -> Vec<Process3dMutation> {
         crate::artifacts::process3d::mutations::create_step::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         format!("Create step \"{}\"", self.step.label)
     }
 
-    fn target(&self) -> Vec<String> {
+    async fn target(&self) -> Vec<String> {
         vec![self.step.id.clone()]
     }
 }

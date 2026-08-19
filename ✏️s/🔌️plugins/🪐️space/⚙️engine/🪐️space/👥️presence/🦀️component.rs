@@ -25,7 +25,7 @@ pub struct SpacePresence {
 }
 
 impl Default for SpacePresence {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self {
             camera: BTreeMap::new(),
             active_node_id: None,
@@ -37,22 +37,22 @@ impl Default for SpacePresence {
 }
 
 impl protocol::MutationDiff<SpacePresence> for SpacePresence {
-    fn apply(&self, _base: &SpacePresence) -> protocol::MutationApplyResult<SpacePresence> {
+    async fn apply(&self, _base: &SpacePresence) -> protocol::MutationApplyResult<SpacePresence> {
         Ok({
             self.clone()
         })
     }
-    fn absorb(&mut self, other: Self) {
+    async fn absorb(&mut self, other: Self) {
         *self = other;
     }
 }
 
 impl store::ArtifactDsl for SpacePresence {
     const EXTENSION: &'static str = Self::__DSL_EXTENSION;
-    fn envelope_id() -> &'static str {
+    async fn envelope_id() -> &'static str {
         Self::__DSL_ENVELOPE_ID
     }
-    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+    async fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
         let body = match store::semio_format::split_text_preamble(text) {
             Ok((_, rest)) => rest,
             Err(_) => text,
@@ -67,7 +67,7 @@ impl store::ArtifactDsl for SpacePresence {
         )?;
         Self::__dsl_from_record(&record)
     }
-    fn print_dsl(&self) -> String {
+    async fn print_dsl(&self) -> String {
         let body = dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), dsl::JoinMode::Document);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
             <Self as store::ArtifactDsl>::envelope_id(),
@@ -80,7 +80,7 @@ impl store::ArtifactDsl for SpacePresence {
 }
 
 impl ArtifactPack for SpacePresence {
-    fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
+    async fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let inner = store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
             <Self as store::ArtifactDsl>::envelope_id(),
@@ -90,7 +90,7 @@ impl ArtifactPack for SpacePresence {
         .map_err(|e| store::PackError::Schema(e.to_string()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &inner))
     }
-    fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
+    async fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         if bytes.is_empty() {
             return Ok(Self::default());
         }
@@ -105,7 +105,7 @@ impl ArtifactPack for SpacePresence {
         let (record, _report) = store::pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
         Self::__dsl_from_record(&record).map_err(store::text_error_to_pack_error)
     }
-    fn record_spec() -> Option<dsl::RecordSpec> {
+    async fn record_spec() -> Option<dsl::RecordSpec> {
         Some(Self::__dsl_spec())
     }
 }
@@ -125,19 +125,19 @@ pub enum SpacePresenceMutation {
 impl Mutation<SpacePresence> for SpacePresenceMutation {
     type Diff = SpacePresence;
 
-    fn diff(&self, _base: &SpacePresence) -> protocol::MutationOutcome<SpacePresence> {
+    async fn diff(&self, _base: &SpacePresence) -> protocol::MutationOutcome<SpacePresence> {
         match self {
             Self::Snapshot { presence } => protocol::MutationOutcome::new(presence.clone()),
         }
     }
 
-    fn inverse(&self, base: &SpacePresence) -> Vec<Self> {
+    async fn inverse(&self, base: &SpacePresence) -> Vec<Self> {
         vec![Self::Snapshot { presence: base.clone() }]
     }
 }
 
 impl protocol::OpText for SpacePresenceMutation {
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
+    async fn parse_op(line: &str) -> Result<Self, store::TextError> {
         let variants = <Self as dsl::DslVariants>::variants();
         for (keyword, spec_fn) in &variants {
             let probe = format!("{keyword} ");
@@ -160,7 +160,7 @@ impl protocol::OpText for SpacePresenceMutation {
         }
         Err(dsl::__rt::field_error(format!("unknown operation line '{line}'")))
     }
-    fn print_op(&self) -> String {
+    async fn print_op(&self) -> String {
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
         let variants = <Self as dsl::DslVariants>::variants();
         let spec_fn = variants
@@ -178,10 +178,10 @@ impl protocol::OpText for SpacePresenceMutation {
 }
 
 impl protocol::OpBinary for SpacePresenceMutation {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         dsl::variants_binary::encode_op(self)
     }
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         dsl::variants_binary::decode_op(bytes)
     }
 }

@@ -25,7 +25,7 @@ pub mod export_shots {
         pub all: bool,
     }
 
-    pub fn handle(payload: &ExportShots, doc: &ArtifactView<'_, ShootingSnapshot>, cfg: &ConfigView<'_, ShootingConfig>, _ctx: &mut ShootingDispatchCtx) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
+    pub async fn handle(payload: &ExportShots, doc: &ArtifactView<'_, ShootingSnapshot>, cfg: &ConfigView<'_, ShootingConfig>, _ctx: &mut ShootingDispatchCtx) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
         let snapshot = doc.snapshot;
         let config = cfg.snapshot;
         if let Some(asset) = crate::artifacts::shooting::schema::active_asset(doc.snapshot) {
@@ -54,7 +54,7 @@ mod tests {
     use crate::editor::shooting::ShootingCommand;
 
     #[test]
-    fn export_active_shot_produces_one_icon_render_item() {
+    async fn export_active_shot_produces_one_icon_render_item() {
         let mut app = shooting_app();
         let result = dispatch(&mut app, ShootingCommand::ExportShots(export_shots::ExportShots { all: false }));
         assert_eq!(result.requested_effects.len(), 1);
@@ -68,7 +68,7 @@ mod tests {
     }
 
     #[test]
-    fn export_all_shots_produces_one_item_per_shot() {
+    async fn export_all_shots_produces_one_item_per_shot() {
         let mut app = shooting_app();
         let result = dispatch(&mut app, ShootingCommand::ExportShots(export_shots::ExportShots { all: true }));
         match &result.requested_effects[0] {

@@ -14,7 +14,7 @@ pub const REORGANIZE_OPTIONS_JSON: &str = r#"{"orientation":"leftRight"}"#;
 
 /// 🔄️ The reorganize document operations, extracted so the extension action can reuse them without
 /// round-tripping through the command enum.
-pub fn reorganize_operations(doc: &ArtifactView<'_, FlowSnapshot>, cfg: &ConfigView<'_, FlowConfig>, session: &mut FlowEvalSession) -> Vec<FlowMutation> {
+pub async fn reorganize_operations(doc: &ArtifactView<'_, FlowSnapshot>, cfg: &ConfigView<'_, FlowConfig>, session: &mut FlowEvalSession) -> Vec<FlowMutation> {
     host_operations(doc.snapshot, cfg.snapshot, session, |host| host.reorganize(REORGANIZE_OPTIONS_JSON).is_ok())
 }
 //#endregion 🔖️Reorganize
@@ -22,7 +22,7 @@ pub fn reorganize_operations(doc: &ArtifactView<'_, FlowSnapshot>, cfg: &ConfigV
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 pub struct Reorganize {}
 
-pub fn handle(_payload: &Reorganize, doc: &ArtifactView<'_, FlowSnapshot>, cfg: &ConfigView<'_, FlowConfig>, session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, FlowConfigMutation>, Fault> {
+pub async fn handle(_payload: &Reorganize, doc: &ArtifactView<'_, FlowSnapshot>, cfg: &ConfigView<'_, FlowConfig>, session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, FlowConfigMutation>, Fault> {
     Ok(Emit::mutations(reorganize_operations(doc, cfg, session)))
 }
 
@@ -34,7 +34,7 @@ mod tests {
     use crate::editor::flow::FlowCommand;
 
     #[test]
-    fn reorganize_keeps_every_widget() {
+    async fn reorganize_keeps_every_widget() {
         let mut app = flow_app();
         let before = app.snapshot().expect("snapshot").to_fixture().widgets.len();
         dispatch(&mut app, FlowCommand::Reorganize(Reorganize {}));

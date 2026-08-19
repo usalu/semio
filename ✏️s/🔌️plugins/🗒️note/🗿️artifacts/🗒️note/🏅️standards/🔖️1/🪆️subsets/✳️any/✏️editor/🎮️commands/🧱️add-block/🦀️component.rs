@@ -24,7 +24,7 @@ pub struct AddBlock {
 // selection here — selection is framework-owned `InteractionState` now, only ever mutated by the
 // framework's own injected `interactionSelect` handling, never by an app command's `Emit` (mirrors
 // lowpoly's `add-primitive`).
-pub fn handle(payload: &AddBlock, _doc: &ArtifactView<'_, NoteSnapshot>, _cfg: &ConfigView<'_, NoteConfig>, _ctx: &mut crate::editor::note::NoteDispatchCtx) -> Result<Emit<NoteMutation, NoteConfigMutation>, Fault> {
+pub async fn handle(payload: &AddBlock, _doc: &ArtifactView<'_, NoteSnapshot>, _cfg: &ConfigView<'_, NoteConfig>, _ctx: &mut crate::editor::note::NoteDispatchCtx) -> Result<Emit<NoteMutation, NoteConfigMutation>, Fault> {
     let block = create_block_by_kind(&payload.kind, payload.x, payload.y);
     Ok(Emit::mutations(vec![crate::artifacts::note::schema::mutations::create_block(block, None, None)]))
 }
@@ -37,7 +37,7 @@ mod tests {
     use crate::editor::note::NoteCommand;
 
     #[test]
-    fn add_block_action_emits_one_op_and_grows_projection() {
+    async fn add_block_action_emits_one_op_and_grows_projection() {
         let mut app = note_app();
         let result = dispatch(&mut app, NoteCommand::AddBlock(AddBlock { kind: "text".into(), x: 80.0, y: 80.0 }));
         assert_eq!(result.mutations.len(), 1);
@@ -47,14 +47,14 @@ mod tests {
     }
 
     #[test]
-    fn add_block_then_undo_round_trip() {
+    async fn add_block_then_undo_round_trip() {
         use semio_framework_plugin::testkit;
         let mut app = note_app();
         testkit::assert_undo_redo_round_trip(&mut app, NoteCommand::AddBlock(AddBlock { kind: "text".into(), x: 0.0, y: 0.0 }), |app| app.snapshot().expect("snapshot").blocks.len(), 0, 1);
     }
 
     #[test]
-    fn patch_blocks_table_row_and_column_ops_clamp_at_one() {
+    async fn patch_blocks_table_row_and_column_ops_clamp_at_one() {
         let mut app = note_app();
         dispatch(&mut app, NoteCommand::AddBlock(AddBlock { kind: "table".into(), x: 0.0, y: 0.0 }));
         let table_id = block_id(&app.snapshot().expect("snapshot").blocks[0]).to_string();
@@ -76,7 +76,7 @@ mod tests {
     /// the framework's injected `interactionSelect` verb now (`select_blocks`), not an app command —
     /// requires `note_app_with_registry()` (see that helper's own doc comment).
     #[test]
-    fn duplicate_selection_clones_with_offset() {
+    async fn duplicate_selection_clones_with_offset() {
         use crate::editor::note::testkit::{note_app_with_registry, select_blocks};
         let mut app = note_app_with_registry();
         dispatch(&mut app, NoteCommand::AddBlock(AddBlock { kind: "text".into(), x: 10.0, y: 10.0 }));

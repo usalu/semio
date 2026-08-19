@@ -30,10 +30,10 @@ pub struct PlaybookConfig {
 /// 📜️ Handcrafted ArtifactDsl (P6): uses this type's `__dsl_*` helpers + parse/print, not derive emission.
 impl store::ArtifactDsl for PlaybookConfig {
     const EXTENSION: &'static str = Self::__DSL_EXTENSION;
-    fn envelope_id() -> &'static str {
+    async fn envelope_id() -> &'static str {
         "playbook.config"
     }
-    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+    async fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
         let body = match store::semio_format::split_text_preamble(text) {
             Ok((_, rest)) => rest,
             Err(_) => text,
@@ -45,7 +45,7 @@ impl store::ArtifactDsl for PlaybookConfig {
         )?;
         Self::__dsl_from_record(&record)
     }
-    fn print_dsl(&self) -> String {
+    async fn print_dsl(&self) -> String {
         let body = dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), dsl::JoinMode::Document);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
             <Self as store::ArtifactDsl>::envelope_id(),
@@ -59,7 +59,7 @@ impl store::ArtifactDsl for PlaybookConfig {
 
 /// 📦️ Handcrafted ArtifactPack (P6): envelope-wrapped pack body via `__dsl_*` record lowering.
 impl store::ArtifactPack for PlaybookConfig {
-    fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
+    async fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let inner = store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
             <Self as store::ArtifactDsl>::envelope_id(),
@@ -69,7 +69,7 @@ impl store::ArtifactPack for PlaybookConfig {
         .map_err(|e| store::PackError::Schema(e.to_string()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &inner))
     }
-    fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
+    async fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
         if envelope.envelope_id() != <Self as store::ArtifactDsl>::envelope_id() {
             return Err(store::PackError::Schema(format!(
@@ -81,7 +81,7 @@ impl store::ArtifactPack for PlaybookConfig {
         let (record, _report) = store::pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
         Self::__dsl_from_record(&record).map_err(store::text_error_to_pack_error)
     }
-    fn record_spec() -> Option<dsl::RecordSpec> {
+    async fn record_spec() -> Option<dsl::RecordSpec> {
         Some(Self::__dsl_spec())
     }
 }
@@ -89,12 +89,12 @@ impl store::ArtifactPack for PlaybookConfig {
 //#endregion 🔖️ArtifactCodec
 
 
-fn default_contributions_json() -> String {
+async fn default_contributions_json() -> String {
     "[]".into()
 }
 
 impl Default for PlaybookConfig {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self { locale: "en-US".into(), contributions_json: default_contributions_json() }
     }
 }
@@ -124,7 +124,7 @@ pub enum PlaybookConfigMutation {
 
 //#region 🔖️OpCodec
 impl protocol::OpText for PlaybookConfigMutation {
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
+    async fn parse_op(line: &str) -> Result<Self, store::TextError> {
         let variants = <Self as dsl::DslVariants>::variants();
         for (keyword, spec_fn) in &variants {
             let probe = format!("{} ", keyword);
@@ -139,7 +139,7 @@ impl protocol::OpText for PlaybookConfigMutation {
         }
         Err(dsl::__rt::field_error(format!("unknown mutation line '{line}'")))
     }
-    fn print_op(&self) -> String {
+    async fn print_op(&self) -> String {
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
         let variants = <Self as dsl::DslVariants>::variants();
         let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
@@ -149,7 +149,7 @@ impl protocol::OpText for PlaybookConfigMutation {
 
 /// 🎯️ Handcrafted OpBinary (P6).
 impl protocol::OpBinary for PlaybookConfigMutation {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         const OP_BINARY_FORMAT: u8 = 1;
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
         let variants = <Self as dsl::DslVariants>::variants();
@@ -166,7 +166,7 @@ impl protocol::OpBinary for PlaybookConfigMutation {
         out.extend_from_slice(&body);
         Ok(out)
     }
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         const OP_BINARY_FORMAT: u8 = 1;
         let mut reader = store::pack_rt::ByteReader::new(bytes);
         let format = reader.read_u8()?;
@@ -197,7 +197,7 @@ impl protocol::OpBinary for PlaybookConfigMutation {
 impl Mutation<PlaybookConfig> for PlaybookConfigMutation {
     type Diff = PlaybookConfig;
 
-    fn diff(&self, base: &PlaybookConfig) -> protocol::MutationOutcome<PlaybookConfig> {
+    async fn diff(&self, base: &PlaybookConfig) -> protocol::MutationOutcome<PlaybookConfig> {
         let mut next = base.clone();
         match self {
             PlaybookConfigMutation::Snapshot { config } => return protocol::MutationOutcome::new(config.clone()),
@@ -207,7 +207,7 @@ impl Mutation<PlaybookConfig> for PlaybookConfigMutation {
         protocol::MutationOutcome::new(next)
     }
 
-    fn inverse(&self, base: &PlaybookConfig) -> Vec<Self> {
+    async fn inverse(&self, base: &PlaybookConfig) -> Vec<Self> {
         vec![PlaybookConfigMutation::Snapshot { config: base.clone() }]
     }
 }
@@ -219,27 +219,27 @@ mod tests {
     use super::*;
 
     #[test]
-    fn playbook_config_default_matches_the_existing_runtime_defaults() {
+    async fn playbook_config_default_matches_the_existing_runtime_defaults() {
         let config = PlaybookConfig::default();
         assert_eq!(config.locale, "en-US");
     }
 
     #[test]
-    fn playbook_config_dsl_round_trips_default_and_populated() {
+    async fn playbook_config_dsl_round_trips_default_and_populated() {
         store::os_store::test_support::assert_config_round_trip(&PlaybookConfig::default());
         let populated = PlaybookConfig { locale: "de-DE".into(), contributions_json: "[]".into() };
         store::os_store::test_support::assert_config_round_trip(&populated);
     }
 
     #[test]
-    fn playbook_config_pack_round_trips() {
+    async fn playbook_config_pack_round_trips() {
         let config = PlaybookConfig { locale: "de-DE".into(), contributions_json: "[]".into() };
         let bytes = store::ArtifactPack::encode_pack(&config);
         let decoded = <PlaybookConfig as store::ArtifactPack>::decode_pack(&bytes).expect("decode playbook config pack");
         assert_eq!(decoded, config);
     }
 
-    fn config_round_trip(base: &PlaybookConfig, operation: &PlaybookConfigMutation) -> PlaybookConfig {
+    async fn config_round_trip(base: &PlaybookConfig, operation: &PlaybookConfigMutation) -> PlaybookConfig {
         let forward = operation.diff(base).diff().clone();
         let backwards = operation.inverse(base);
         let mut restored = forward.clone();
@@ -251,14 +251,14 @@ mod tests {
     }
 
     #[test]
-    fn config_mutations_apply_and_restore_every_field() {
+    async fn config_mutations_apply_and_restore_every_field() {
         let base = PlaybookConfig::default();
         assert_eq!(config_round_trip(&base, &PlaybookConfigMutation::SetLocale { value: "de-DE".into() }).locale, "de-DE");
         assert_eq!(config_round_trip(&base, &PlaybookConfigMutation::SetContributions { json: "[]".into() }).contributions_json, "[]");
     }
 
     #[test]
-    fn playbook_config_operation_binary_matches_text() {
+    async fn playbook_config_operation_binary_matches_text() {
         store::os_store::test_support::assert_op_text_binary_equivalence(&PlaybookConfigMutation::SetLocale { value: "de-DE".into() });
         store::os_store::test_support::assert_op_text_binary_equivalence(&PlaybookConfigMutation::Snapshot { config: PlaybookConfig::default() });
     }

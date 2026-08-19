@@ -15,7 +15,7 @@ use flow::{
     };
 
 //#region 🔖️SharedDispatch
-fn evaluate_generation_preview(fixture: &FlowSnapshot, config: &FlowConfig, values: &serde_json::Map<String, Value>) -> String {
+async fn evaluate_generation_preview(fixture: &FlowSnapshot, config: &FlowConfig, values: &serde_json::Map<String, Value>) -> String {
     let fixture_json = serde_json::to_string(fixture).unwrap_or_default();
     let patched = apply_generation_values_to_fixture(&fixture_json, values);
     let patched_fixture = FlowHost::parse_fixture_json(&patched).unwrap_or_else(|_| fixture.to_fixture());
@@ -26,7 +26,7 @@ fn evaluate_generation_preview(fixture: &FlowSnapshot, config: &FlowConfig, valu
 
 /// 🧬️ Shared body for all five Generate-mode commands — one `playbook` CRUD call, then (for the three
 /// verbs that change which values are active) a fresh preview evaluation seeded into the eval session.
-fn handle_generation(action_id: &str, args: Option<&Value>, fixture: &FlowSnapshot, config: &FlowConfig, session: &mut FlowEvalSession) -> Emit<FlowMutation, FlowConfigMutation> {
+async fn handle_generation(action_id: &str, args: Option<&Value>, fixture: &FlowSnapshot, config: &FlowConfig, session: &mut FlowEvalSession) -> Emit<FlowMutation, FlowConfigMutation> {
     let spec = flow_fixture_to_form_spec(&fixture.to_fixture());
     let mut generation = config.generation();
     if !handle_generation_action(action_id, args, &mut generation, &spec, FLOW_PLAY_APP_ID) {
@@ -67,7 +67,7 @@ fn handle_generation(action_id: &str, args: Option<&Value>, fixture: &FlowSnapsh
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 pub struct AddGeneration {}
 
-pub fn handle(_payload: &AddGeneration, doc: &ArtifactView<'_, FlowSnapshot>, cfg: &ConfigView<'_, FlowConfig>, session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, FlowConfigMutation>, Fault> {
+pub async fn handle(_payload: &AddGeneration, doc: &ArtifactView<'_, FlowSnapshot>, cfg: &ConfigView<'_, FlowConfig>, session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, FlowConfigMutation>, Fault> {
     Ok(handle_generation("addGeneration", None, doc.snapshot, cfg.snapshot, session))
 }
 
@@ -80,7 +80,7 @@ mod tests {
     use crate::editor::flow::FlowCommand;
 
     #[test]
-    fn adding_a_generation_populates_the_form_and_emits_no_artifact_mutations() {
+    async fn adding_a_generation_populates_the_form_and_emits_no_artifact_mutations() {
         let mut app = flow_app();
         assert!(render(&mut app, form::FLOW_PLAY_BODY_GENERATE_FORM).contains("Add a generation"), "the form starts empty");
         let result = dispatch(&mut app, FlowCommand::AddGeneration(AddGeneration {}));
@@ -89,7 +89,7 @@ mod tests {
     }
 
     #[test]
-    fn removing_an_unknown_generation_is_a_no_operation() {
+    async fn removing_an_unknown_generation_is_a_no_operation() {
         let mut app = flow_app();
         let result = dispatch(&mut app, FlowCommand::RemoveGeneration(crate::editor::flow::modes::generate::commands::remove_generation::RemoveGeneration { id: "nope".into() }));
         assert!(result.mutations.is_empty());

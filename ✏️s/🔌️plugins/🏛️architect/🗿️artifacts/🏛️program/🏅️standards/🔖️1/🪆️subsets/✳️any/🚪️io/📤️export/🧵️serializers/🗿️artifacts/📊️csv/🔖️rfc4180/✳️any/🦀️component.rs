@@ -9,9 +9,9 @@ use crate::artifacts::program::schema::snapshot::ProgramSnapshot;
 use semio_s_plugin_stdio::artifacts::csv::schema::snapshot::{CsvField, CsvRecord};
 use semio_s_plugin_stdio::artifacts::csv::{CsvSnapshot, STDIO_CSV_DOCUMENT_SCHEMA};
 
-pub fn register() {}
+pub async fn register() {}
 
-pub fn serialize(snapshot: &ProgramSnapshot) -> Result<CsvSnapshot, store::TextError> {
+pub async fn serialize(snapshot: &ProgramSnapshot) -> Result<CsvSnapshot, store::TextError> {
     Ok(CsvSnapshot {
         schema: STDIO_CSV_DOCUMENT_SCHEMA.into(),
         has_header: true,
@@ -19,6 +19,6 @@ pub fn serialize(snapshot: &ProgramSnapshot) -> Result<CsvSnapshot, store::TextE
     })
 }
 
-pub fn serialize_bytes(snapshot: &ProgramSnapshot) -> Result<Vec<u8>, store::TextError> {
+pub async fn serialize_bytes(snapshot: &ProgramSnapshot) -> Result<Vec<u8>, store::TextError> {
     Ok(<CsvSnapshot as store::ArtifactPack>::encode_pack(&serialize(snapshot)?))
 }

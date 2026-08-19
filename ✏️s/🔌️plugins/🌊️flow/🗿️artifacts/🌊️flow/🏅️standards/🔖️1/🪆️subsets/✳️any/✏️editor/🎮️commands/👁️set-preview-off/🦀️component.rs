@@ -12,7 +12,7 @@ pub struct SetPreviewOff {
     pub value: bool,
 }
 
-pub fn handle(payload: &SetPreviewOff, _doc: &ArtifactView<'_, FlowSnapshot>, cfg: &ConfigView<'_, FlowConfig>, _session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, FlowConfigMutation>, Fault> {
+pub async fn handle(payload: &SetPreviewOff, _doc: &ArtifactView<'_, FlowSnapshot>, cfg: &ConfigView<'_, FlowConfig>, _session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, FlowConfigMutation>, Fault> {
     let mut next = cfg.snapshot.preview_off_node_ids.clone();
     if payload.value {
         for id in &payload.ids {

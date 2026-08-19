@@ -26,7 +26,7 @@ use serde::{Deserialize, Serialize};
 #[dsl(keyword = "add-page")]
 pub struct AddPage {}
 
-pub fn handle(_payload: &AddPage, doc: &ArtifactView<'_, LayoutSnapshot>, cfg: &ConfigView<'_, LayoutConfig>) -> Result<Emit<LayoutMutation, LayoutConfigMutation>, Fault> {
+pub async fn handle(_payload: &AddPage, doc: &ArtifactView<'_, LayoutSnapshot>, cfg: &ConfigView<'_, LayoutConfig>) -> Result<Emit<LayoutMutation, LayoutConfigMutation>, Fault> {
     let document = doc.snapshot;
     let config = cfg.snapshot;
     let template = document.pages.iter().find(|page| page.id == config.active_page_id).or_else(|| document.pages.first());

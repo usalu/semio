@@ -62,7 +62,7 @@ impl En1990Mutation {
     /// real ordered collection: every existing entry must be removed (highest index first, so
     /// indices stay valid mid-sequence) before `target`'s entries are re-inserted in order — a plain
     /// per-field decomposition can't express "replace the whole table" on its own.
-    pub fn from_snapshot(base: &En1990Snapshot, target: &En1990Snapshot) -> Vec<En1990Mutation> {
+    pub async fn from_snapshot(base: &En1990Snapshot, target: &En1990Snapshot) -> Vec<En1990Mutation> {
         let base_q_k = crate::artifacts::en1990::en1990_qk(base);
         let target_q_k = crate::artifacts::en1990::en1990_qk(target);
         let mut mutations = Vec::with_capacity(5 + base_q_k.len() + target_q_k.len());
@@ -91,7 +91,7 @@ mod tests {
 
     /// ⚖️ One value per `En1990Mutation` variant — the closed set the semantics/round-trip tests
     /// iterate, mirroring `din16798`'s own `every_mutation()` fixture.
-    fn every_mutation() -> Vec<En1990Mutation> {
+    async fn every_mutation() -> Vec<En1990Mutation> {
         vec![
             En1990Mutation::ChangeAnnex(set_snapshot::mutation::ChangeAnnex { new_annex: AnnexChoice::En }),
             En1990Mutation::ChangePermanentAction(change_permanent_action::mutation::ChangePermanentAction { new_g_k: 120.0 }),
@@ -106,7 +106,7 @@ mod tests {
         ]
     }
 
-    fn round_trip(base: &En1990Snapshot, mutation: &En1990Mutation) -> En1990Snapshot {
+    async fn round_trip(base: &En1990Snapshot, mutation: &En1990Mutation) -> En1990Snapshot {
         let (forward, _messages) =
             vcs::apply_mutation(base, mutation).expect("valid mutation");
         let mut restored = forward.clone();
@@ -120,7 +120,7 @@ mod tests {
     }
 
     #[test]
-    fn every_variant_registers_an_approved_semantic_descriptor() {
+    async fn every_variant_registers_an_approved_semantic_descriptor() {
         for mutation in every_mutation() {
             let descriptor = protocol::SemanticMutation::semantics(&mutation);
             assert!(protocol::is_approved_verb(descriptor.verb), "unapproved verb {:?} on {mutation:?}", descriptor.verb);
@@ -129,7 +129,7 @@ mod tests {
     }
 
     #[test]
-    fn every_variant_round_trips_via_inverse() {
+    async fn every_variant_round_trips_via_inverse() {
         let base = En1990Snapshot::default();
         for mutation in every_mutation() {
             round_trip(&base, &mutation);
@@ -138,12 +138,12 @@ mod tests {
 
     /// 🔎 `q_k` is a composed `s.stdio.semio.table` child slot — every assertion below reads
     /// through the `en1990_qk` working-scene accessor instead of indexing the field directly.
-    fn qk(snapshot: &En1990Snapshot) -> Vec<crate::artifacts::en1990::En1990QkEntry> {
+    async fn qk(snapshot: &En1990Snapshot) -> Vec<crate::artifacts::en1990::En1990QkEntry> {
         crate::artifacts::en1990::en1990_qk(snapshot)
     }
 
     #[test]
-    fn insert_remove_variable_action_round_trips() {
+    async fn insert_remove_variable_action_round_trips() {
         let base = En1990Snapshot::default();
 
         let insert = En1990Mutation::InsertVariableAction(insert_variable_action::mutation::InsertVariableAction { index: 1, category: "snow".into(), value: 20.0 });
@@ -161,7 +161,7 @@ mod tests {
     }
 
     #[test]
-    fn remove_variable_action_of_an_out_of_range_index_is_rejected() {
+    async fn remove_variable_action_of_an_out_of_range_index_is_rejected() {
         let base = En1990Snapshot::default();
         let remove = En1990Mutation::RemoveVariableAction(remove_variable_action::mutation::RemoveVariableAction { index: 99 });
         assert!(remove.inverse(&base).is_empty(), "removing an absent index has nothing to undo");
@@ -169,7 +169,7 @@ mod tests {
     }
 
     #[test]
-    fn reorder_variable_actions_round_trips() {
+    async fn reorder_variable_actions_round_trips() {
         let base = En1990Snapshot::default();
         assert!(qk(&base).len() >= 2, "fixture must have at least two variable actions to exercise reorder");
 
@@ -180,7 +180,7 @@ mod tests {
     }
 
     #[test]
-    fn change_variable_action_category_and_value_round_trip() {
+    async fn change_variable_action_category_and_value_round_trip() {
         let base = En1990Snapshot::default();
 
         let category = En1990Mutation::ChangeVariableActionCategory(change_variable_action_category::mutation::ChangeVariableActionCategory { index: 0, new_category: "storage".into() });
@@ -202,7 +202,7 @@ mod tests {
     /// distinct variants: the repurposed enum-typed slot (`change-annex`), a plain `f64` scalar
     /// (`change-resistance`), and an index-addressed table field (`change-variable-action-value`).
     #[test]
-    fn change_annex_satisfies_the_inverse_and_absorb_laws() {
+    async fn change_annex_satisfies_the_inverse_and_absorb_laws() {
         let base = En1990Snapshot::default();
         let mutation = En1990Mutation::ChangeAnnex(set_snapshot::mutation::ChangeAnnex { new_annex: AnnexChoice::En });
         protocol::testkit::assert_mutation_inverse_law(&base, &mutation);
@@ -211,7 +211,7 @@ mod tests {
         protocol::testkit::assert_mutation_diff_absorb_law(&base, d1, d2);
     }
     #[test]
-    fn change_resistance_satisfies_the_inverse_and_absorb_laws() {
+    async fn change_resistance_satisfies_the_inverse_and_absorb_laws() {
         let base = En1990Snapshot::default();
         let mutation = En1990Mutation::ChangeResistance(change_resistance::mutation::ChangeResistance { new_resistance_kn: 400.0 });
         protocol::testkit::assert_mutation_inverse_law(&base, &mutation);
@@ -220,7 +220,7 @@ mod tests {
         protocol::testkit::assert_mutation_diff_absorb_law(&base, d1, d2);
     }
     #[test]
-    fn change_variable_action_value_satisfies_the_inverse_and_absorb_laws() {
+    async fn change_variable_action_value_satisfies_the_inverse_and_absorb_laws() {
         let base = En1990Snapshot::default();
         let mutation = En1990Mutation::ChangeVariableActionValue(change_variable_action_value::mutation::ChangeVariableActionValue { index: 0, new_value: 65.0 });
         protocol::testkit::assert_mutation_inverse_law(&base, &mutation);
@@ -238,31 +238,31 @@ mod tests {
     /// yet (only the differently-shaped `assert_policy_matrix` exists) — flagged, not improvised
     /// around.
     #[test]
-    fn remove_variable_action_missing_target_is_error() {
+    async fn remove_variable_action_missing_target_is_error() {
         let base = En1990Snapshot::default();
         protocol::testkit::assert_missing_target_is_error(&base, &En1990Mutation::RemoveVariableAction(remove_variable_action::mutation::RemoveVariableAction { index: 99 }));
     }
 
     #[test]
-    fn reorder_variable_actions_missing_target_is_error() {
+    async fn reorder_variable_actions_missing_target_is_error() {
         let base = En1990Snapshot::default();
         protocol::testkit::assert_missing_target_is_error(&base, &En1990Mutation::ReorderVariableActions(reorder_variable_actions::mutation::ReorderVariableActions { from: 99, to: 0 }));
     }
 
     #[test]
-    fn change_variable_action_category_missing_target_is_error() {
+    async fn change_variable_action_category_missing_target_is_error() {
         let base = En1990Snapshot::default();
         protocol::testkit::assert_missing_target_is_error(&base, &En1990Mutation::ChangeVariableActionCategory(change_variable_action_category::mutation::ChangeVariableActionCategory { index: 99, new_category: "x".into() }));
     }
 
     #[test]
-    fn change_variable_action_value_missing_target_is_error() {
+    async fn change_variable_action_value_missing_target_is_error() {
         let base = En1990Snapshot::default();
         protocol::testkit::assert_missing_target_is_error(&base, &En1990Mutation::ChangeVariableActionValue(change_variable_action_value::mutation::ChangeVariableActionValue { index: 99, new_value: 1.0 }));
     }
 
     #[test]
-    fn insert_variable_action_out_of_range_index_is_clamped() {
+    async fn insert_variable_action_out_of_range_index_is_clamped() {
         let base = En1990Snapshot::default();
         let mutation = En1990Mutation::InsertVariableAction(insert_variable_action::mutation::InsertVariableAction { index: 999, category: "snow".into(), value: 10.0 });
         let outcome = mutation.diff(&base);
@@ -271,7 +271,7 @@ mod tests {
     }
 
     #[test]
-    fn change_seismic_action_non_finite_is_fatal() {
+    async fn change_seismic_action_non_finite_is_fatal() {
         let base = En1990Snapshot::default();
         let mutation = En1990Mutation::ChangeSeismicAction(change_seismic_action::mutation::ChangeSeismicAction { new_seismic_a_ed_kn: f64::NAN });
         let outcome = mutation.diff(&base);
@@ -280,7 +280,7 @@ mod tests {
     }
 
     #[test]
-    fn change_consequence_class_out_of_domain_is_fatal() {
+    async fn change_consequence_class_out_of_domain_is_fatal() {
         let base = En1990Snapshot::default();
         let mutation = En1990Mutation::ChangeConsequenceClass(change_consequence_class::mutation::ChangeConsequenceClass { new_consequence_class: 9 });
         let outcome = mutation.diff(&base);
@@ -289,7 +289,7 @@ mod tests {
     }
 
     #[test]
-    fn change_resistance_is_deterministic() {
+    async fn change_resistance_is_deterministic() {
         let base = En1990Snapshot::default();
         let mutation = En1990Mutation::ChangeResistance(change_resistance::mutation::ChangeResistance { new_resistance_kn: 400.0 });
         protocol::testkit::assert_outcome_deterministic(&base, &mutation);

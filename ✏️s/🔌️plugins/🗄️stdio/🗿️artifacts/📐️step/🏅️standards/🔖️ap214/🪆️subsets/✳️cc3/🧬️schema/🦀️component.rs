@@ -25,28 +25,28 @@ pub mod derived_construction {
         type Mutation = StepMutation;
         type Diff = StepDiff;
 
-        fn empty() -> Self {
+        async fn empty() -> Self {
             Self { snapshot: StepSnapshot::default(), diagnostics: Vec::new() }
         }
 
-        fn from_snapshot(snapshot: Self::Snapshot) -> Self {
+        async fn from_snapshot(snapshot: Self::Snapshot) -> Self {
             Self { snapshot, diagnostics: Vec::new() }
         }
 
-        fn from_text(text: &str) -> Result<Self, store::TextError> {
+        async fn from_text(text: &str) -> Result<Self, store::TextError> {
             Ok(Self::from_snapshot(<StepSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
 
-        fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
+        async fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
             Ok(Self::from_snapshot(<StepSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
         }
 
-        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
+        async fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let diff = crate::artifacts::step::schema::mutations::apply_step_mutation(&mut self.snapshot, &mutation);
             (self, diff)
         }
 
-        fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
+        async fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
             self.snapshot = <StepDiff as protocol::MutationDiff<StepSnapshot>>::apply(&diff, &self.snapshot)?;
             Ok(self)
         }
@@ -56,7 +56,7 @@ pub mod derived_construction {
         /// silently at this layer (the composer, not the builder, is the facet that surfaces them as
         /// advisory `Diagnostic`s on a successful `Composition`); the `Err` path is only taken for
         /// hard ones.
-        fn build(self) -> Result<Self::Snapshot, Vec<Diagnostic>> {
+        async fn build(self) -> Result<Self::Snapshot, Vec<Diagnostic>> {
             let Self { snapshot, mut diagnostics } = self;
             diagnostics.extend(check_cc3_conformance(&snapshot).into_iter().filter(|d| matches!(d.severity, Severity::Error | Severity::Fatal)));
             if diagnostics.is_empty() {
@@ -74,7 +74,7 @@ pub mod derived_construction {
         use crate::artifacts::step::standards::v_ap214::engine::part21::{Part21Document, Part21Header, Part21Instance, Part21Value};
         use crate::artifacts::step::standards::v_ap214::subsets::cc3::schema::CODE_LADDER;
 
-        fn conforming_snapshot() -> StepSnapshot {
+        async fn conforming_snapshot() -> StepSnapshot {
             StepSnapshot::from_part21_document(Part21Document {
                 header: Part21Header { file_schema: vec![Part21Value::List(vec![Part21Value::Str("AUTOMOTIVE_DESIGN".into())])], ..Part21Header::default() },
                 instances: vec![
@@ -86,13 +86,13 @@ pub mod derived_construction {
         }
 
         #[test]
-        fn conforming_construction_builds() {
+        async fn conforming_construction_builds() {
             let snapshot = StepCc3BuilderConstruction::from_snapshot(conforming_snapshot()).build().expect("conforming construction must build");
             assert!(crate::artifacts::step::standards::v_ap214::engine::ladder::has_product_definition_chain(&snapshot.to_part21_document()));
         }
 
         #[test]
-        fn hard_violation_injected_via_raw_mutate_still_fails_build() {
+        async fn hard_violation_injected_via_raw_mutate_still_fails_build() {
             let mut snapshot = conforming_snapshot();
             let mut doc = snapshot.to_part21_document();
             doc.instances.push(Part21Instance { id: 99, entities: vec![("ADVANCED_BREP_SHAPE_REPRESENTATION".into(), vec![])] });
@@ -126,11 +126,11 @@ pub mod derived_analysis {
     pub const CODE_PRODUCT_CHAIN: &str = "stdio.step.cc3.product-definition-chain";
     pub const CODE_LADDER: &str = "stdio.step.cc3.representation-above-rung";
 
-    fn hard(code: &'static str, message: String) -> Diagnostic {
+    async fn hard(code: &'static str, message: String) -> Diagnostic {
         Diagnostic { code: FaultCode::new(code), severity: Severity::Error, span: TextSpan::at(1, 1), message, expected: None, scope: FaultScope::default() }
     }
 
-    fn soft(code: &'static str, message: String) -> Diagnostic {
+    async fn soft(code: &'static str, message: String) -> Diagnostic {
         Diagnostic { code: FaultCode::new(code), severity: Severity::Warning, span: TextSpan::at(1, 1), message, expected: None, scope: FaultScope::default() }
     }
 
@@ -139,7 +139,7 @@ pub mod derived_analysis {
     /// authoritative), `StepCc3Builder::build` hard-gates on this too, and the registered
     /// `SubsetValidator` (from `🎹️composer::register`) re-runs it post-hoc against the wire payload
     /// for the D5 validate-on-build hook.
-    pub fn check_cc3_conformance(snapshot: &StepSnapshot) -> Vec<Diagnostic> {
+    pub async fn check_cc3_conformance(snapshot: &StepSnapshot) -> Vec<Diagnostic> {
         let doc = snapshot.to_part21_document();
         let mut out = Vec::new();
         if !file_schema_contains(&doc, "AUTOMOTIVE_DESIGN") {
@@ -167,11 +167,11 @@ pub mod derived_analysis {
         type Parts = StepParts;
         const DIALECT: Dialect = DIALECT;
 
-        fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
+        async fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
             StepAnyAnalyzer::sniff(source)
         }
 
-        fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
+        async fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
             let inner = StepAnyAnalyzer::analyze(sources);
             let mut diagnostics = inner.diagnostics.clone();
             let mut confidence = inner.confidence;
@@ -192,7 +192,7 @@ pub mod derived_analysis {
         use super::*;
         use crate::artifacts::step::standards::v_ap214::engine::part21::{Part21Document, Part21Header, Part21Instance, Part21Value};
 
-        fn base_doc() -> Part21Document {
+        async fn base_doc() -> Part21Document {
             Part21Document {
                 header: Part21Header { file_schema: vec![Part21Value::List(vec![Part21Value::Str("AUTOMOTIVE_DESIGN".into())])], ..Part21Header::default() },
                 instances: vec![
@@ -204,14 +204,14 @@ pub mod derived_analysis {
         }
 
         #[test]
-        fn conforming_document_reports_no_diagnostics() {
+        async fn conforming_document_reports_no_diagnostics() {
             let snapshot = StepSnapshot::from_part21_document(base_doc());
             let diagnostics = check_cc3_conformance(&snapshot);
             assert!(diagnostics.is_empty(), "got {diagnostics:?}");
         }
 
         #[test]
-        fn missing_file_schema_is_hard() {
+        async fn missing_file_schema_is_hard() {
             let mut doc = base_doc();
             doc.header.file_schema = vec![];
             let snapshot = StepSnapshot::from_part21_document(doc);
@@ -220,7 +220,7 @@ pub mod derived_analysis {
         }
 
         #[test]
-        fn missing_product_chain_is_soft() {
+        async fn missing_product_chain_is_soft() {
             let mut doc = base_doc();
             doc.instances.clear();
             let snapshot = StepSnapshot::from_part21_document(doc);
@@ -229,7 +229,7 @@ pub mod derived_analysis {
         }
 
         #[test]
-        fn representation_at_max_rung_is_clean() {
+        async fn representation_at_max_rung_is_clean() {
             let mut doc = base_doc();
             doc.instances.push(Part21Instance { id: 4, entities: vec![("GEOMETRICALLY_BOUNDED_SURFACE_SHAPE_REPRESENTATION".into(), vec![])] });
             let snapshot = StepSnapshot::from_part21_document(doc);
@@ -238,7 +238,7 @@ pub mod derived_analysis {
         }
 
         #[test]
-        fn representation_above_max_rung_is_hard() {
+        async fn representation_above_max_rung_is_hard() {
             let mut doc = base_doc();
             doc.instances.push(Part21Instance { id: 4, entities: vec![("MANIFOLD_SURFACE_SHAPE_REPRESENTATION".into(), vec![])] });
             let snapshot = StepSnapshot::from_part21_document(doc);

@@ -24,12 +24,12 @@ pub mod derived_composition {
         type Snapshot = XlsxSnapshot;
         const WRITES: Dialect = DIALECT_STRICT;
 
-        fn reads() -> &'static [Dialect] {
+        async fn reads() -> &'static [Dialect] {
             &[DIALECT_ANY, DIALECT_STRICT, DEP_ZIP, DEP_XML]
         }
 
-        fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
-            let inner = XlsxAnyComposer::compose(sources)?;
+        async fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+            let inner = semio_framework_plugin::resolve_ready(XlsxAnyComposer::compose(sources))?;
             let checks = check_strict_conformance(&inner.snapshot);
             let (hard, soft): (Vec<Diagnostic>, Vec<Diagnostic>) = checks.into_iter().partition(|d| matches!(d.severity, Severity::Error | Severity::Fatal));
             if !hard.is_empty() {
@@ -53,7 +53,7 @@ pub mod derived_composition {
     impl SubsetValidator for XlsxStrictValidator {
         const DIALECT: Dialect = DIALECT_STRICT;
 
-        fn validate(payload: &IoPayload) -> Vec<Diagnostic> {
+        async fn validate(payload: &IoPayload) -> Vec<Diagnostic> {
             let decoded = match payload {
                 IoPayload::Binary(bytes) => <XlsxSnapshot as store::ArtifactPack>::decode_pack(bytes).ok(),
                 IoPayload::Text(text) => <XlsxSnapshot as store::ArtifactDsl>::parse_dsl(text).ok(),
@@ -74,7 +74,7 @@ pub mod derived_composition {
 
     static VALIDATOR_ENTRY: OnceLock<SubsetValidatorEntry> = OnceLock::new();
 
-    fn validator_entry() -> &'static SubsetValidatorEntry {
+    async fn validator_entry() -> &'static SubsetValidatorEntry {
         VALIDATOR_ENTRY.get_or_init(subset_validator_entry_of::<XlsxStrictValidator>)
     }
 
@@ -84,7 +84,7 @@ pub mod derived_composition {
     /// `ComposerEntry` itself is registered separately by the standard-level composer aggregator
     /// (`crate::artifacts::xlsx::standards::v_ecma_376::engine::io_registry::entries()`), matching how `✳️any`'s
     /// own entry is registered.
-    pub fn register() {
+    pub async fn register() {
         let _ = register_subset_validator(validator_entry());
     }
     //#endregion 🔖️SubsetValidator
@@ -104,14 +104,14 @@ pub mod derived_composition {
         /// Encoding the OPC package directly (bypassing the typed-model regeneration entirely) is how
         /// this test genuinely exercises a workbook whose XML matches what the strict builder seeded —
         /// same fix as docx's sibling `✳️strict` composer test.
-        fn conforming_pack_bytes(snapshot: &XlsxSnapshot) -> Vec<u8> {
+        async fn conforming_pack_bytes(snapshot: &XlsxSnapshot) -> Vec<u8> {
             let raw = crate::artifacts::zip::opc::encode_opc(&snapshot.opc).expect("valid opc package encodes");
             let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<XlsxSnapshot as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).expect("valid envelope_id");
             store::semio_format::wrap_binary(&envelope, &raw)
         }
 
         #[test]
-        fn conforming_builder_snapshot_composes_and_stamps_strict() {
+        async fn conforming_builder_snapshot_composes_and_stamps_strict() {
             let snapshot = XlsxStrictBuilder::new(XlsxWorkbook::default()).build().expect("conforming strict construction must build");
             let bytes = conforming_pack_bytes(&snapshot);
             let sources = vec![ComposeSource { dialect: DIALECT_ANY, payload: AnalyzeSource::Binary(&bytes) }];
@@ -120,7 +120,7 @@ pub mod derived_composition {
         }
 
         #[test]
-        fn transitional_shaped_document_fails_compose_with_real_diagnostic() {
+        async fn transitional_shaped_document_fails_compose_with_real_diagnostic() {
             let snapshot = crate::artifacts::xlsx::standards::v_ecma_376::subsets::any::io::export::serializers::build_minimal_xlsx(XlsxWorkbook::default());
             let bytes = <XlsxSnapshot as store::ArtifactPack>::encode_pack(&snapshot);
             let sources = vec![ComposeSource { dialect: DIALECT_ANY, payload: AnalyzeSource::Binary(&bytes) }];
@@ -129,7 +129,7 @@ pub mod derived_composition {
         }
 
         #[test]
-        fn subset_validator_recheck_flags_hard_diagnostics_on_the_wire_payload() {
+        async fn subset_validator_recheck_flags_hard_diagnostics_on_the_wire_payload() {
             // Documented writer scope cut (module doc comment): `encode_pack` -> `encode_xlsx` ->
             // `regenerate_workbook_parts` always re-emits Transitional-shaped bytes, so a round trip
             // honestly re-reports the Strict conformance-attribute violation -- not a false positive,

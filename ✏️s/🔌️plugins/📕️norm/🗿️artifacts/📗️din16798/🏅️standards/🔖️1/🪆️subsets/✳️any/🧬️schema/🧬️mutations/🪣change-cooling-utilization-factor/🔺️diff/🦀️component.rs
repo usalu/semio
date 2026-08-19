@@ -5,7 +5,7 @@ use crate::artifacts::din16798::mutations::change_cooling_utilization_factor::mu
 use crate::artifacts::din16798::Din16798Snapshot;
 
 //#region 🔖️Diff
-pub fn diff(payload: &ChangeCoolingUtilizationFactor, base: &Din16798Snapshot) -> protocol::MutationOutcome<Din16798Diff> {
+pub async fn diff(payload: &ChangeCoolingUtilizationFactor, base: &Din16798Snapshot) -> protocol::MutationOutcome<Din16798Diff> {
     if !payload.new_cooling_utilization_factor.is_finite() {
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("Cooling gain utilization factor must be a finite number, got {}.", payload.new_cooling_utilization_factor), Vec::<String>::new());
     }

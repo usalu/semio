@@ -21,7 +21,7 @@ use semio_framework_plugin::{ExecutionMode, Plugin};
 /// (`crate::artifacts::note::artifact_kind().id`) is opened, this plugin's actor runs `Isolated`
 /// (no publisher trust assumed beyond the sandbox default), and it asks the broker for document
 /// write access to persist edits.
-pub fn plugin() -> Result<Plugin, semio_framework_plugin::PluginAssemblyError> {
+pub async fn plugin() -> Result<Plugin, semio_framework_plugin::PluginAssemblyError> {
     Plugin::builder("note")
         .label("Note")
         .version("0.1.0")
@@ -40,12 +40,12 @@ mod surface_tests {
     use semio_framework_plugin::testkit::{assert_editor_and_viewer_share_dialect, assert_viewer_never_mutates};
 
     #[test]
-    fn note_viewer_never_mutates() {
+    async fn note_viewer_never_mutates() {
         assert_viewer_never_mutates::<crate::viewer::note::NoteViewer>();
     }
 
     #[test]
-    fn note_editor_and_viewer_share_dialect() {
+    async fn note_editor_and_viewer_share_dialect() {
         assert_editor_and_viewer_share_dialect::<crate::editor::note::NotePlayApp, crate::viewer::note::NoteViewer>();
     }
 
@@ -60,7 +60,7 @@ mod surface_tests {
     /// not by re-checking the old capability row (kept, unread, debt D1): a real `Plugin` with a
     /// real (non-stub) manifest carrying at least one app and one artifact-kind row.
     #[test]
-    fn plugin_assembles_a_real_manifest_not_the_assembly_failed_stub() {
+    async fn plugin_assembles_a_real_manifest_not_the_assembly_failed_stub() {
         let plugin = super::plugin().expect("note plugin must assemble cleanly under the new declaration tree");
         assert_ne!(plugin.manifest.plugin_id, "assembly-failed", "manifest must not be the try_build()-failed stub");
         assert_eq!(plugin.manifest.plugin_id, "note");

@@ -5,7 +5,7 @@ use crate::artifacts::din16798::mutations::change_hr_cp_j_kgk::mutation::ChangeH
 use crate::artifacts::din16798::Din16798Snapshot;
 
 //#region 🔖️Diff
-pub fn diff(payload: &ChangeHrCpJKgk, base: &Din16798Snapshot) -> protocol::MutationOutcome<Din16798Diff> {
+pub async fn diff(payload: &ChangeHrCpJKgk, base: &Din16798Snapshot) -> protocol::MutationOutcome<Din16798Diff> {
     if !payload.new_hr_cp_j_kgk.is_finite() {
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("Heat recovery specific heat capacity must be a finite number, got {}.", payload.new_hr_cp_j_kgk), Vec::<String>::new());
     }

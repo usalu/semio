@@ -15,7 +15,7 @@ use flow::{
     };
 
 //#region 🔖️SharedDispatch
-fn evaluate_generation_preview(fixture: &FlowSnapshot, config: &FlowConfig, values: &serde_json::Map<String, Value>) -> String {
+async fn evaluate_generation_preview(fixture: &FlowSnapshot, config: &FlowConfig, values: &serde_json::Map<String, Value>) -> String {
     let fixture_json = serde_json::to_string(fixture).unwrap_or_default();
     let patched = apply_generation_values_to_fixture(&fixture_json, values);
     let patched_fixture = FlowHost::parse_fixture_json(&patched).unwrap_or_else(|_| fixture.to_fixture());
@@ -26,7 +26,7 @@ fn evaluate_generation_preview(fixture: &FlowSnapshot, config: &FlowConfig, valu
 
 /// 🧬️ Shared body for all five Generate-mode commands — one `playbook` CRUD call, then (for the three
 /// verbs that change which values are active) a fresh preview evaluation seeded into the eval session.
-fn handle_generation(action_id: &str, args: Option<&Value>, fixture: &FlowSnapshot, config: &FlowConfig, session: &mut FlowEvalSession) -> Emit<FlowMutation, FlowConfigMutation> {
+async fn handle_generation(action_id: &str, args: Option<&Value>, fixture: &FlowSnapshot, config: &FlowConfig, session: &mut FlowEvalSession) -> Emit<FlowMutation, FlowConfigMutation> {
     let spec = flow_fixture_to_form_spec(&fixture.to_fixture());
     let mut generation = config.generation();
     if !handle_generation_action(action_id, args, &mut generation, &spec, FLOW_PLAY_APP_ID) {
@@ -70,6 +70,6 @@ pub struct RenameGeneration {
     pub name: String,
 }
 
-pub fn handle(payload: &RenameGeneration, doc: &ArtifactView<'_, FlowSnapshot>, cfg: &ConfigView<'_, FlowConfig>, session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, FlowConfigMutation>, Fault> {
+pub async fn handle(payload: &RenameGeneration, doc: &ArtifactView<'_, FlowSnapshot>, cfg: &ConfigView<'_, FlowConfig>, session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, FlowConfigMutation>, Fault> {
     Ok(handle_generation("renameGeneration", Some(&json!({ "id": payload.id, "name": payload.name })), doc.snapshot, cfg.snapshot, session))
 }

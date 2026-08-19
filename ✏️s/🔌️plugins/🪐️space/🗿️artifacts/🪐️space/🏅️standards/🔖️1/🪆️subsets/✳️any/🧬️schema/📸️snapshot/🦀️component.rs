@@ -58,10 +58,10 @@ pub struct SSpaceSnapshot {
 /// ✉️ Handcrafted `ArtifactDsl`/`ArtifactPack` — mirrors `SHomeSnapshot`'s own handcrafted pair.
 impl store::ArtifactDsl for SSpaceSnapshot {
     const EXTENSION: &'static str = "sspace";
-    fn envelope_id() -> &'static str {
+    async fn envelope_id() -> &'static str {
         "s.space"
     }
-    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+    async fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
         let body = match store::semio_format::split_text_preamble(text) {
             Ok((_, rest)) => rest,
             Err(_) => text,
@@ -69,7 +69,7 @@ impl store::ArtifactDsl for SSpaceSnapshot {
         let record = dsl::parse(body, &Self::__dsl_spec(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Document })?;
         Self::__dsl_from_record(&record)
     }
-    fn print_dsl(&self) -> String {
+    async fn print_dsl(&self) -> String {
         let body = dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), dsl::JoinMode::Document);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
@@ -77,12 +77,12 @@ impl store::ArtifactDsl for SSpaceSnapshot {
 }
 
 impl store::ArtifactPack for SSpaceSnapshot {
-    fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
+    async fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let inner = store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &inner))
     }
-    fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
+    async fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
         if envelope.envelope_id() != <Self as store::ArtifactDsl>::envelope_id() {
             return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.envelope_id())));
@@ -90,28 +90,28 @@ impl store::ArtifactPack for SSpaceSnapshot {
         let (record, _report) = store::pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
         Self::__dsl_from_record(&record).map_err(store::text_error_to_pack_error)
     }
-    fn record_spec() -> Option<dsl::RecordSpec> {
+    async fn record_spec() -> Option<dsl::RecordSpec> {
         Some(Self::__dsl_spec())
     }
 }
 //#endregion 🔖️HandcraftedArtifactCodecs
 
 impl Default for SSpaceSnapshot {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self { schema: S_SPACE_INDEX_DOCUMENT_SCHEMA.into(), space_id: String::new(), artifacts: Vec::new() }
     }
 }
 
 //#region 🔖️DocumentHelpers
 /// 🆕️ A fresh, empty index for a newly created hub space.
-pub fn empty_space_index_snapshot(space_id: &str) -> SSpaceSnapshot {
+pub async fn empty_space_index_snapshot(space_id: &str) -> SSpaceSnapshot {
     SSpaceSnapshot { schema: S_SPACE_INDEX_DOCUMENT_SCHEMA.into(), space_id: space_id.into(), artifacts: Vec::new() }
 }
 
 /// 🆔️ Mints a fresh artifact id for `create-artifact` — `handle()` is pure/no-IO, so this derives
 /// uniqueness from the mutation's own inputs (creation instant + a collision-probed counter) rather
 /// than a random/host-global source. Unique within `existing` (one space's index).
-pub fn mint_artifact_id(existing: &[SpaceArtifactRow], now_ms: u64) -> String {
+pub async fn mint_artifact_id(existing: &[SpaceArtifactRow], now_ms: u64) -> String {
     let mut n = existing.len() as u64;
     loop {
         let candidate = format!("artifact-{now_ms}-{n}");
@@ -133,7 +133,7 @@ pub const SPACE_INDEX_TABLE_COLUMNS: [&str; 7] = ["ID", "Name", "Kind", "Subset"
 /// 📊️ One table row for `row`; `presence` is a display-ready summary (empty string when the caller
 /// has no live presence data, e.g. the viewer, which folds no `fold-directory-events`/
 /// `presence-heartbeat` commands of its own).
-pub fn space_index_table_row(row: &SpaceArtifactRow, presence: &str) -> Vec<String> {
+pub async fn space_index_table_row(row: &SpaceArtifactRow, presence: &str) -> Vec<String> {
     vec![row.id.clone(), row.name.clone(), row.kind_id.clone(), row.dialect.subset.clone(), row.updated_at_ms.to_string(), row.updated_by.clone(), presence.into()]
 }
 //#endregion 🔖️TableProjection
@@ -144,7 +144,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn empty_snapshot_uses_the_space_index_schema() {
+    async fn empty_snapshot_uses_the_space_index_schema() {
         let snapshot = empty_space_index_snapshot("space-1");
         assert_eq!(snapshot.schema, S_SPACE_INDEX_DOCUMENT_SCHEMA);
         assert_eq!(snapshot.space_id, "space-1");
@@ -152,14 +152,14 @@ mod tests {
     }
 
     #[test]
-    fn mint_artifact_id_probes_past_a_collision() {
+    async fn mint_artifact_id_probes_past_a_collision() {
         let existing = vec![SpaceArtifactRow { id: "artifact-1-0".into(), ..Default::default() }];
         assert_eq!(mint_artifact_id(&existing, 1), "artifact-1-1");
         assert_eq!(mint_artifact_id(&[], 1), "artifact-1-0");
     }
 
     #[test]
-    fn table_row_projects_the_seven_worker_brief_columns() {
+    async fn table_row_projects_the_seven_worker_brief_columns() {
         assert_eq!(SPACE_INDEX_TABLE_COLUMNS.len(), 7);
         let row = SpaceArtifactRow {
             id: "artifact-1".into(),
@@ -176,7 +176,7 @@ mod tests {
     }
 
     #[test]
-    fn dsl_round_trips_default_and_populated_documents() {
+    async fn dsl_round_trips_default_and_populated_documents() {
         store::os_store::test_support::assert_dsl_round_trip(&SSpaceSnapshot::default());
         let mut populated = empty_space_index_snapshot("space-2");
         populated.artifacts.push(SpaceArtifactRow {

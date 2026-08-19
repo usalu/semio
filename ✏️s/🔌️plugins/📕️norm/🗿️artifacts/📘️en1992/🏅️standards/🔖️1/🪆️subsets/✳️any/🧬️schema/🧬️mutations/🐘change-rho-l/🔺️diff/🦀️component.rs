@@ -5,7 +5,7 @@ use crate::artifacts::en1992::mutations::change_rho_l::mutation::ChangeRhoL;
 use crate::artifacts::en1992::En1992Snapshot;
 
 //#region 🔖️Diff
-pub fn diff(payload: &ChangeRhoL, base: &En1992Snapshot) -> protocol::MutationOutcome<En1992Diff> {
+pub async fn diff(payload: &ChangeRhoL, base: &En1992Snapshot) -> protocol::MutationOutcome<En1992Diff> {
     if !payload.new_rho_l.is_finite() {
         return protocol::MutationOutcome::fatal("mutation.invariant", "Rho l must be a finite number.", Vec::<String>::new());
     }

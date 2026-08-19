@@ -23,12 +23,12 @@ pub mod derived_composition {
         type Snapshot = SvgSnapshot;
         const WRITES: Dialect = DIALECT_TINY;
 
-        fn reads() -> &'static [Dialect] {
+        async fn reads() -> &'static [Dialect] {
             &[DIALECT_ANY, DIALECT_TINY, DEP_XML]
         }
 
-        fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
-            let inner = SvgAnyComposer::compose(sources)?;
+        async fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+            let inner = semio_framework_plugin::resolve_ready(SvgAnyComposer::compose(sources))?;
             let mut snapshot = inner.snapshot;
             if let Some(root) = snapshot.doc.root.as_mut() {
                 set_element_attr(root, "baseProfile", Some("tiny".into()));
@@ -56,7 +56,7 @@ pub mod derived_composition {
     impl SubsetValidator for SvgTinyValidator {
         const DIALECT: Dialect = DIALECT_TINY;
 
-        fn validate(payload: &IoPayload) -> Vec<Diagnostic> {
+        async fn validate(payload: &IoPayload) -> Vec<Diagnostic> {
             let decoded = match payload {
                 IoPayload::Binary(bytes) => <SvgSnapshot as store::ArtifactPack>::decode_pack(bytes).ok(),
                 IoPayload::Text(text) => <SvgSnapshot as store::ArtifactDsl>::parse_dsl(text).ok(),
@@ -77,7 +77,7 @@ pub mod derived_composition {
 
     static VALIDATOR_ENTRY: OnceLock<SubsetValidatorEntry> = OnceLock::new();
 
-    fn validator_entry() -> &'static SubsetValidatorEntry {
+    async fn validator_entry() -> &'static SubsetValidatorEntry {
         VALIDATOR_ENTRY.get_or_init(subset_validator_entry_of::<SvgTinyValidator>)
     }
 
@@ -86,7 +86,7 @@ pub mod derived_composition {
     /// `ComposerEntry` itself is registered separately by the standard-level composer aggregator
     /// (`crate::artifacts::svg::standards::v1_1::engine::io_registry::entries()`), matching how `✳️any`'s own
     /// entry is registered.
-    pub fn register() {
+    pub async fn register() {
         let _ = register_subset_validator(validator_entry());
     }
     //#endregion 🔖️SubsetValidator
@@ -100,7 +100,7 @@ pub mod derived_composition {
         use semio_framework_plugin::ArtifactBuilder as _;
 
         #[test]
-        fn conforming_document_composes_and_stamps_tiny() {
+        async fn conforming_document_composes_and_stamps_tiny() {
             let text = r#"<svg xmlns="http://www.w3.org/2000/svg"><rect x="0" y="0" width="10" height="10"/></svg>"#;
             let sources = vec![ComposeSource { dialect: DIALECT_ANY, payload: AnalyzeSource::Text(text) }];
             let composed = SvgTinyComposerComposition::compose(&sources).expect("clean document must compose to tiny");
@@ -115,7 +115,7 @@ pub mod derived_composition {
         }
 
         #[test]
-        fn blocklisted_element_fails_compose_with_real_diagnostic() {
+        async fn blocklisted_element_fails_compose_with_real_diagnostic() {
             let text = r#"<svg xmlns="http://www.w3.org/2000/svg"><linearGradient id="g1"/></svg>"#;
             let sources = vec![ComposeSource { dialect: DIALECT_ANY, payload: AnalyzeSource::Text(text) }];
             let err = SvgTinyComposerComposition::compose(&sources).expect_err("a document with a linearGradient must not stamp tiny");
@@ -123,7 +123,7 @@ pub mod derived_composition {
         }
 
         #[test]
-        fn blocklisted_attribute_fails_compose_with_real_diagnostic() {
+        async fn blocklisted_attribute_fails_compose_with_real_diagnostic() {
             let text = r#"<svg xmlns="http://www.w3.org/2000/svg"><rect x="0" y="0" width="10" height="10" filter="url(#f1)"/></svg>"#;
             let sources = vec![ComposeSource { dialect: DIALECT_ANY, payload: AnalyzeSource::Text(text) }];
             let err = SvgTinyComposerComposition::compose(&sources).expect_err("a document with a filter attribute must not stamp tiny");
@@ -131,7 +131,7 @@ pub mod derived_composition {
         }
 
         #[test]
-        fn subset_validator_recheck_flags_no_hard_issue_on_a_clean_builder_document() {
+        async fn subset_validator_recheck_flags_no_hard_issue_on_a_clean_builder_document() {
             let snapshot = SvgTinyBuilder::empty().build().expect("empty document builds clean");
             let bytes = <SvgSnapshot as store::ArtifactPack>::encode_pack(&snapshot);
             let diagnostics = SvgTinyValidator::validate(&IoPayload::Binary(bytes));

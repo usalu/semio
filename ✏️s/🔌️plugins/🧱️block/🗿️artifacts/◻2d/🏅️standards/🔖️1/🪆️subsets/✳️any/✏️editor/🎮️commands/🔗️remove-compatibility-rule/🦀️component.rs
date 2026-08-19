@@ -12,6 +12,6 @@ pub struct RemoveCompatibilityRule {
     pub id: String,
 }
 
-pub fn handle(payload: &RemoveCompatibilityRule, _doc: &ArtifactView<'_, Block2dSnapshot>, _cfg: &ConfigView<'_, Block2dConfig>) -> Result<Emit<Block2dMutation, Block2dConfigMutation>, Fault> {
+pub async fn handle(payload: &RemoveCompatibilityRule, _doc: &ArtifactView<'_, Block2dSnapshot>, _cfg: &ConfigView<'_, Block2dConfig>) -> Result<Emit<Block2dMutation, Block2dConfigMutation>, Fault> {
     Ok(Emit::mutations(vec![crate::artifacts::block2d::mutations::remove_compatibility_rule(payload.id.clone())]))
 }

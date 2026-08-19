@@ -18,7 +18,7 @@ use std::collections::{BTreeMap, HashMap};
 /// machinery this comment block's own `"composer"` rows once cross-checked against is deleted
 /// (`🚪️io/🦀️component.rs`'s `io()` replaces it); the capability rows themselves are inert now, kept
 /// only because nothing on this pass's boundary reads or removes `definition()`'s callers.
-pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
+pub async fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
     use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
     let rows: &[(&str, &str, &str, &[(&str, &str)], Option<(&str, &str)>)] = &[
         ("s.note.standard.v1", "standard", "1", &[], None),
@@ -76,7 +76,7 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
 /// en/de localized names (`"Note"`/`"Notiz"`) still live on `definition()`'s kept
 /// `ArtifactCapability` rows (debt D1) — wiring them into this field is real follow-up work, not
 /// required for this pass (`📓️recipe-subset.md` §4c, matches the stdio pilot's identical deviation).
-pub fn artifact() -> semio_framework_plugin::app::declarations::ArtifactDeclaration {
+pub async fn artifact() -> semio_framework_plugin::app::declarations::ArtifactDeclaration {
     use semio_framework_plugin::app::declarations::ArtifactDeclaration;
     use store::os_io::ArtifactKindId;
     ArtifactDeclaration { kind: ArtifactKindId::parse("s.note.note").expect("canonical note kind"), localization: &[], standards: vec![crate::artifacts::note::standards::v1::standard()] }
@@ -86,7 +86,7 @@ pub fn artifact() -> semio_framework_plugin::app::declarations::ArtifactDeclarat
 //#region 🔖️ArtifactKind
 /// 🗂️ This artifact's `ArtifactKindSpec` — stitched into the app manifest by
 /// `crate::editor::note::create_note_app`'s `🔖️Manifest` region.
-pub fn artifact_kind() -> ArtifactKindSpec {
+pub async fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "2d.note".into(),
         name: "2D Note".into(),
@@ -132,12 +132,12 @@ pub struct NoteCamera {
 }
 
 impl Default for NoteCamera {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self { x: 0.0, y: 0.0, zoom: 1.0 }
     }
 }
 
-pub fn default_zoom() -> f64 {
+pub async fn default_zoom() -> f64 {
     1.0
 }
 
@@ -272,7 +272,7 @@ pub type NoteTextChild = store::ArtifactChild<SemioTextSnapshot>;
 /// paragraph for whatever ran since the last separator, even an empty one). `NoteTextRun.underline`
 /// has no equivalent mark in stdio's closed
 /// bold/italic/code/link vocabulary and is dropped on the way in — real, honestly-lossy, not fabricated.
-pub fn text_snapshot_from_paragraphs(paragraphs: &[NoteTextParagraph]) -> SemioTextSnapshot {
+pub async fn text_snapshot_from_paragraphs(paragraphs: &[NoteTextParagraph]) -> SemioTextSnapshot {
     let mut runs = Vec::new();
     for (index, paragraph) in paragraphs.iter().enumerate() {
         if index > 0 {
@@ -298,7 +298,7 @@ pub fn text_snapshot_from_paragraphs(paragraphs: &[NoteTextParagraph]) -> SemioT
 /// 🌉 Inverse of [`text_snapshot_from_paragraphs`] — splits the flat run list back into paragraphs on
 /// every marks-free/language-free `"\n"` separator run. See that function's doc comment for the one
 /// honestly-lossy edge case (empty paragraph list vs. one paragraph with zero runs).
-pub fn paragraphs_from_text_snapshot(snapshot: &SemioTextSnapshot) -> Vec<NoteTextParagraph> {
+pub async fn paragraphs_from_text_snapshot(snapshot: &SemioTextSnapshot) -> Vec<NoteTextParagraph> {
     let mut paragraphs = Vec::new();
     let mut current = Vec::new();
     for run in &snapshot.runs {
@@ -319,7 +319,7 @@ pub fn paragraphs_from_text_snapshot(snapshot: &SemioTextSnapshot) -> Vec<NoteTe
 /// `(child_id, target)` for identical `(block_id, paragraphs)`, a different pair once either changes;
 /// mirrors writer's `document_child_handle`/cad's `cad_model_child_handle`, keyed by `block_id` (not
 /// content alone) so two distinct blocks never collide on the same child slot.
-pub fn note_text_child_handle(block_id: &str, paragraphs: &[NoteTextParagraph]) -> NoteTextChild {
+pub async fn note_text_child_handle(block_id: &str, paragraphs: &[NoteTextParagraph]) -> NoteTextChild {
     use std::hash::{Hash, Hasher};
     let content_json = serde_json::to_string(paragraphs).unwrap_or_default();
     let mut hasher = std::collections::hash_map::DefaultHasher::new();
@@ -354,13 +354,13 @@ thread_local! {
 /// 📝 Seeds the scratch cache for a handle — call whenever new paragraph content is about to become a
 /// text block's `content` field (every mutation-diff/fixture builder in this plugin does, via
 /// [`note_text_child_handle_and_cache`]).
-pub fn cache_note_block_text(child_id: &str, paragraphs: &[NoteTextParagraph]) {
+pub async fn cache_note_block_text(child_id: &str, paragraphs: &[NoteTextParagraph]) {
     NOTE_TEXT_SCRATCH.with(|cache| cache.borrow_mut().insert(child_id.to_string(), paragraphs.to_vec()));
 }
 
 /// 🔎 Reads the cached live paragraphs for a text child handle — empty `Vec` (never a panic) when
 /// nothing has cached it yet (see this region's module doc comment for why that can happen).
-pub fn note_block_text(handle: &NoteTextChild) -> Vec<NoteTextParagraph> {
+pub async fn note_block_text(handle: &NoteTextChild) -> Vec<NoteTextParagraph> {
     NOTE_TEXT_SCRATCH.with(|cache| cache.borrow().get(&handle.child_id).cloned().unwrap_or_default())
 }
 
@@ -368,7 +368,7 @@ pub fn note_block_text(handle: &NoteTextChild) -> Vec<NoteTextParagraph> {
 /// call — the standard way every mutation-diff/fixture/converter builder in this plugin creates a
 /// text block's `content` field value; never construct a handle without also caching, or
 /// [`note_block_text`] will read back empty.
-pub fn note_text_child_handle_and_cache(block_id: &str, paragraphs: &[NoteTextParagraph]) -> NoteTextChild {
+pub async fn note_text_child_handle_and_cache(block_id: &str, paragraphs: &[NoteTextParagraph]) -> NoteTextChild {
     let handle = note_text_child_handle(block_id, paragraphs);
     cache_note_block_text(&handle.child_id, paragraphs);
     handle
@@ -398,7 +398,7 @@ pub struct NoteTextParagraph {
     pub runs: Vec<NoteTextRun>,
 }
 
-pub fn default_true() -> bool {
+pub async fn default_true() -> bool {
     true
 }
 
@@ -434,7 +434,7 @@ mod tests {
     /// same string here (note has no separate "fixture" store schema, unlike shooting) — pinned so a
     /// future edit can't silently diverge them without noticing.
     #[test]
-    fn artifact_kind_schema_matches_the_store_schema() {
+    async fn artifact_kind_schema_matches_the_store_schema() {
         assert_eq!(artifact_kind().schema, NOTE_DOCUMENT_SCHEMA);
     }
 
@@ -442,7 +442,7 @@ mod tests {
     /// 🧪️ Real round trip for the paragraph <-> `SemioTextSnapshot` converter: multiple paragraphs,
     /// multiple runs, every mark (bold/italic/link) the converter maps.
     #[test]
-    fn text_bridge_round_trips_paragraphs_through_semio_text_snapshot() {
+    async fn text_bridge_round_trips_paragraphs_through_semio_text_snapshot() {
         let paragraphs = vec![
             NoteTextParagraph { runs: vec![NoteTextRun { text: "plain ".into(), bold: None, italic: None, underline: None, link: None }, NoteTextRun { text: "bold".into(), bold: Some(true), italic: None, underline: None, link: None }] },
             NoteTextParagraph { runs: vec![NoteTextRun { text: "second para".into(), bold: None, italic: Some(true), underline: None, link: Some("https://semio.tech".into()) }] },
@@ -458,7 +458,7 @@ mod tests {
     /// trailing paragraph for whatever ran since the last separator (even if that's none) — so both
     /// restore as the SAME single empty paragraph, never as an empty paragraph list.
     #[test]
-    fn text_bridge_collapses_empty_paragraph_shapes() {
+    async fn text_bridge_collapses_empty_paragraph_shapes() {
         let one_empty_paragraph = vec![NoteTextParagraph { runs: Vec::new() }];
         assert_eq!(paragraphs_from_text_snapshot(&text_snapshot_from_paragraphs(&[])), one_empty_paragraph);
         assert_eq!(paragraphs_from_text_snapshot(&text_snapshot_from_paragraphs(&one_empty_paragraph)), one_empty_paragraph);
@@ -467,7 +467,7 @@ mod tests {
     /// 🧪️ `underline` has no equivalent mark in stdio's text subset and is honestly dropped, never
     /// fabricated back on the way out.
     #[test]
-    fn text_bridge_drops_underline_honestly() {
+    async fn text_bridge_drops_underline_honestly() {
         let paragraphs = vec![NoteTextParagraph { runs: vec![NoteTextRun { text: "u".into(), bold: None, italic: None, underline: Some(true), link: None }] }];
         let restored = paragraphs_from_text_snapshot(&text_snapshot_from_paragraphs(&paragraphs));
         assert_eq!(restored[0].runs[0].underline, None);
@@ -476,7 +476,7 @@ mod tests {
     /// 🧪️ Working-scene cache: minting a handle seeds it, `note_block_text` reads it back, and two
     /// distinct block ids never collide even with identical paragraph content.
     #[test]
-    fn working_scene_caches_by_child_id_and_block_id_never_collides() {
+    async fn working_scene_caches_by_child_id_and_block_id_never_collides() {
         let paragraphs = vec![NoteTextParagraph { runs: vec![NoteTextRun { text: "hi".into(), bold: None, italic: None, underline: None, link: None }] }];
         let a = note_text_child_handle_and_cache("block-a", &paragraphs);
         let b = note_text_child_handle_and_cache("block-b", &paragraphs);
@@ -487,14 +487,14 @@ mod tests {
 
     /// 🧪️ An uncached handle fails soft (empty `Vec`), never panics — the documented staleness gap.
     #[test]
-    fn note_block_text_fails_soft_on_a_cache_miss() {
+    async fn note_block_text_fails_soft_on_a_cache_miss() {
         let handle = note_text_child_handle("never-cached", &[]);
         assert_eq!(note_block_text(&handle), Vec::<NoteTextParagraph>::new());
     }
     //#endregion 🔖️TextBridgeTests
 
     #[test]
-    fn note_document_round_trips_assets_and_grid_settings() {
+    async fn note_document_round_trips_assets_and_grid_settings() {
         let mut document = NoteSnapshot {
             schema: NOTE_DOCUMENT_SCHEMA.into(),
             id: "empty".into(),

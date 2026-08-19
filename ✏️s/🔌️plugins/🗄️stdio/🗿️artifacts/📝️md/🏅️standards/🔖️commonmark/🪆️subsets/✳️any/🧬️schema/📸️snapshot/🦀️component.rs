@@ -110,18 +110,18 @@ pub struct MdSnapshot {
 }
 
 impl Default for MdSnapshot {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self { schema: STDIO_MD_DOCUMENT_SCHEMA.into(), blocks: Vec::new() }
     }
 }
 
 impl MdSnapshot {
-    pub fn from_text(text: &str) -> Self {
+    pub async fn from_text(text: &str) -> Self {
         let blocks = crate::artifacts::md::standards::v_commonmark::subsets::any::io::import::deserializers::parse_markdown_blocks(text);
         Self { schema: STDIO_MD_DOCUMENT_SCHEMA.into(), blocks }
     }
 
-    pub fn to_text(&self) -> String {
+    pub async fn to_text(&self) -> String {
         crate::artifacts::md::standards::v_commonmark::subsets::any::io::export::serializers::render_markdown_blocks(&self.blocks)
     }
 }
@@ -130,11 +130,11 @@ impl MdSnapshot {
 //#region 🔖️HandcraftedArtifactCodecs
 impl store::ArtifactDsl for MdSnapshot {
     const EXTENSION: &'static str = "md";
-    fn envelope_id() -> &'static str {
+    async fn envelope_id() -> &'static str {
         "stdio.md"
     }
 
-    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+    async fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
         let body = match store::semio_format::split_text_preamble(text) {
             Ok((_, rest)) => rest,
             Err(_) => text,
@@ -142,7 +142,7 @@ impl store::ArtifactDsl for MdSnapshot {
         let blocks = crate::artifacts::md::standards::v_commonmark::subsets::any::io::import::deserializers::parse_markdown_blocks(body);
         Ok(Self { schema: STDIO_MD_DOCUMENT_SCHEMA.into(), blocks })
     }
-    fn print_dsl(&self) -> String {
+    async fn print_dsl(&self) -> String {
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         let body = crate::artifacts::md::standards::v_commonmark::subsets::any::io::export::serializers::render_markdown_blocks(&self.blocks);
         store::semio_format::wrap_text(&envelope, &body)
@@ -150,13 +150,13 @@ impl store::ArtifactDsl for MdSnapshot {
 }
 
 impl store::ArtifactPack for MdSnapshot {
-    fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
+    async fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
         let raw = crate::artifacts::md::standards::v_commonmark::subsets::any::io::export::serializers::render_markdown_blocks(&self.blocks);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
         Ok(store::semio_format::wrap_binary(&envelope, raw.as_bytes()))
     }
-    fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
+    async fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
         if envelope.envelope_id() != <Self as store::ArtifactDsl>::envelope_id() {
             return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.envelope_id())));

@@ -19,7 +19,7 @@ pub const BODY_KEY: &str = TextWindowKit::KIND_ID;
 
 /// 🧱️ Stitched into the viewer manifest by `crate::viewer::rewrite::create_trinity_rewrite_viewer` —
 /// the read-only variant (`TextWindowKit::window_kind`, no `replace-text` action).
-pub fn definition() -> WindowKindDefinition {
+pub async fn definition() -> WindowKindDefinition {
     TextWindowKit::window_kind()
 }
 //#endregion 🔖️Definition
@@ -29,14 +29,14 @@ pub fn definition() -> WindowKindDefinition {
 /// bindings, pretty-printed as one read-only JSON document — no rule-applied After computation (that
 /// stays the editor-only `after_fixture_json` helper's job), no rule-layout point positions (pure
 /// window-arrangement state, not rule content).
-pub fn rule_text(state: &RewriteSnapshot) -> String {
+pub async fn rule_text(state: &RewriteSnapshot) -> String {
     let lhs: serde_json::Value = serde_json::from_str(&state.lhs_json).unwrap_or_default();
     let rhs: serde_json::Value = serde_json::from_str(&state.rhs_json).unwrap_or_default();
     let document = serde_json::json!({ "lhs": lhs, "rhs": rhs, "parameterBindings": state.parameter_bindings });
     serde_json::to_string_pretty(&document).unwrap_or_default()
 }
 
-pub fn render(document: &RewriteSnapshot) -> UiNode {
+pub async fn render(document: &RewriteSnapshot) -> UiNode {
     TextWindowKit::render(&TextView { text: rule_text(document), language: Some("json".into()), read_only: true })
 }
 //#endregion 🔖️Render
@@ -47,13 +47,13 @@ mod tests {
     use super::*;
 
     #[test]
-    fn definition_declares_the_shared_text_window_kind() {
+    async fn definition_declares_the_shared_text_window_kind() {
         let def = definition();
         assert_eq!(def.id, WINDOW_KIND_ID);
     }
 
     #[test]
-    fn rule_text_embeds_lhs_and_rhs() {
+    async fn rule_text_embeds_lhs_and_rhs() {
         let state = RewriteSnapshot { before_fixture_json: "{}".into(), lhs_json: r#"{"whereClause":"a.name = 'b'"}"#.into(), rhs_json: r#"{"parameters":[]}"#.into(), parameter_bindings: Default::default(), rule_layout: Default::default() };
         let text = rule_text(&state);
         assert!(text.contains("whereClause"));

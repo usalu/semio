@@ -19,16 +19,16 @@ pub struct ReplaceOperationalRequirement {
 }
 impl MutationKind<ProgramSnapshot, ProgramMutation> for ReplaceOperationalRequirement {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "replace", entity: "operational-requirement", kind: "replace-operational-requirement", record: "ReplacedOperationalRequirement" };
-    fn diff(&self, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
+    async fn diff(&self, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {
+    async fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         format!("Replace operational requirement \"{}\"", self.operational_requirement.header.name)
     }
-    fn target(&self) -> Vec<String> {
+    async fn target(&self) -> Vec<String> {
         vec![self.operational_requirement.header.id.0.clone()]
     }
 }

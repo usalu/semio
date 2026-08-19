@@ -27,7 +27,7 @@ use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vec
 // #region 🔖️SewApi
 
 /// 🧵 Sew loose faces into one solid by merging coincident boundary edges within `tolerance`.
-pub fn sew_faces(body: &mut Body, faces: &[FaceId], tolerance: f64, rec: &mut OpRecorder) -> Result<SolidId, KernelError> {
+pub async fn sew_faces(body: &mut Body, faces: &[FaceId], tolerance: f64, rec: &mut OpRecorder) -> Result<SolidId, KernelError> {
     if faces.len() < 2 {
         return Err(KernelError::InvalidInput("sewing requires at least 2 faces".into()));
     }
@@ -74,7 +74,7 @@ struct FaceSnapshot {
     edge_endpoints: Vec<(Pnt3, Pnt3)>,
 }
 
-fn snapshot_faces(body: &Body, faces: &[FaceId]) -> Result<Vec<FaceSnapshot>, KernelError> {
+async fn snapshot_faces(body: &Body, faces: &[FaceId]) -> Result<Vec<FaceSnapshot>, KernelError> {
     let mut out = Vec::with_capacity(faces.len());
     for &fid in faces {
         let face = body.faces.get(fid).ok_or_else(|| KernelError::MissingEntity(format!("face {fid}")))?;
@@ -93,7 +93,7 @@ fn snapshot_faces(body: &Body, faces: &[FaceId]) -> Result<Vec<FaceSnapshot>, Ke
     Ok(out)
 }
 
-fn get_or_create_vertex(body: &mut Body, p: Pnt3, resolution: f64, tol: Tol, map: &mut HashMap<(i64, i64, i64), VertexId>, rec: &mut OpRecorder) -> VertexId {
+async fn get_or_create_vertex(body: &mut Body, p: Pnt3, resolution: f64, tol: Tol, map: &mut HashMap<(i64, i64, i64), VertexId>, rec: &mut OpRecorder) -> VertexId {
     let key = ((p.x * resolution).round() as i64, (p.y * resolution).round() as i64, (p.z * resolution).round() as i64);
     *map.entry(key).or_insert_with(|| make_vertex(body, p, tol, rec))
 }
@@ -114,7 +114,7 @@ pub struct HealingReport {
 }
 
 impl HealingReport {
-    pub fn total_repairs(&self) -> usize {
+    pub async fn total_repairs(&self) -> usize {
         self.vertices_merged + self.degenerate_edges_removed + self.orientations_fixed + self.wire_gaps_closed + self.small_faces_removed + self.duplicate_faces_removed
     }
 }
@@ -123,7 +123,7 @@ impl HealingReport {
 /// `rec` records every vertex this merges as modified — repositioning `body.vertices` directly
 /// (not through euler) is a pre-existing exception the docstring on [`crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::euler`] calls
 /// out as the checked editors' exclusive right; `rec` at least keeps the entity's provenance honest.
-pub fn heal_solid(body: &mut Body, solid: SolidId, tolerance: f64, rec: &mut OpRecorder) -> Result<HealingReport, KernelError> {
+pub async fn heal_solid(body: &mut Body, solid: SolidId, tolerance: f64, rec: &mut OpRecorder) -> Result<HealingReport, KernelError> {
     solid_exists(body, solid)?;
     let tol = if tolerance.is_finite() && tolerance > 0.0 { tolerance } else { 1e-6 };
     let mut report = HealingReport::default();
@@ -167,7 +167,7 @@ pub fn heal_solid(body: &mut Body, solid: SolidId, tolerance: f64, rec: &mut OpR
 }
 
 /// 🩹 Removes selected faces from the solid shell and attempts to sew coplanar neighbor pairs.
-pub fn defeature(body: &mut Body, solid: SolidId, faces_to_remove: &[FaceId], rec: &mut OpRecorder) -> Result<SolidId, KernelError> {
+pub async fn defeature(body: &mut Body, solid: SolidId, faces_to_remove: &[FaceId], rec: &mut OpRecorder) -> Result<SolidId, KernelError> {
     if faces_to_remove.is_empty() {
         return Err(KernelError::InvalidInput("must select at least one face to remove".into()));
     }
@@ -200,7 +200,7 @@ pub fn defeature(body: &mut Body, solid: SolidId, faces_to_remove: &[FaceId], re
 /// 🩹 Replaces analytic curves and planes in `solid` with NURBS where conversion exists. `rec`
 /// records every face/edge whose geometry pool entry this swaps as modified — the entities
 /// themselves keep their labels, only what they point to changes.
-pub fn convert_to_nurbs(body: &mut Body, solid: SolidId, rec: &mut OpRecorder) -> Result<usize, KernelError> {
+pub async fn convert_to_nurbs(body: &mut Body, solid: SolidId, rec: &mut OpRecorder) -> Result<usize, KernelError> {
     solid_exists(body, solid)?;
     let face_ids = body.solid_faces(solid);
     let mut converted = 0usize;
@@ -253,7 +253,7 @@ pub fn convert_to_nurbs(body: &mut Body, solid: SolidId, rec: &mut OpRecorder) -
 
 // #region 🔖️HealHelpers
 
-fn solid_exists(body: &Body, solid: SolidId) -> Result<(), KernelError> {
+async fn solid_exists(body: &Body, solid: SolidId) -> Result<(), KernelError> {
     if body.solids.get(solid).is_some() {
         Ok(())
     } else {
@@ -261,7 +261,7 @@ fn solid_exists(body: &Body, solid: SolidId) -> Result<(), KernelError> {
     }
 }
 
-fn adjacent_faces(body: &Body, face: FaceId) -> Vec<FaceId> {
+async fn adjacent_faces(body: &Body, face: FaceId) -> Vec<FaceId> {
     let mut neighbors = HashSet::new();
     for coedge_id in body.face_coedges(face) {
         let edge_id = body.coedges.get(coedge_id).expect("coedge").edge;
@@ -276,7 +276,7 @@ fn adjacent_faces(body: &Body, face: FaceId) -> Vec<FaceId> {
     neighbors.into_iter().collect()
 }
 
-fn coplanar_face_pair(body: &Body, a: FaceId, b: FaceId) -> bool {
+async fn coplanar_face_pair(body: &Body, a: FaceId, b: FaceId) -> bool {
     let sa = body.faces.get(a).expect("face").surface;
     let sb = body.faces.get(b).expect("face").surface;
     let Some(Surface::Plane { frame: fa }) = body.surfaces.get(sa) else {
@@ -288,7 +288,7 @@ fn coplanar_face_pair(body: &Body, a: FaceId, b: FaceId) -> bool {
     fa.z.dot(fb.z).abs() > 1.0 - 1e-9 && (fa.origin - fb.origin).dot(fa.z).abs() < 1e-6 && (fb.origin - fa.origin).dot(fb.z).abs() < 1e-6
 }
 
-fn analytic_surface_to_nurbs(surface: &Surface) -> Option<Surface> {
+async fn analytic_surface_to_nurbs(surface: &Surface) -> Option<Surface> {
     match surface {
         Surface::Plane { frame } => {
             let o = frame.origin;
@@ -310,7 +310,7 @@ mod tests {
     use super::*;
     use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::matrix::Frame3;
 
-    fn make_loose_quad(body: &mut Body, p0: Pnt3, p1: Pnt3, p2: Pnt3, p3: Pnt3, normal: Vec3) -> FaceId {
+    async fn make_loose_quad(body: &mut Body, p0: Pnt3, p1: Pnt3, p2: Pnt3, p3: Pnt3, normal: Vec3) -> FaceId {
         let mut rec = OpRecorder::new();
         let tol = Tol::DEFAULT;
         let frame = Frame3::from_normal(p0, normal).expect("plane frame");
@@ -334,7 +334,7 @@ mod tests {
         face
     }
 
-    fn unique_edges_on_solid(body: &Body, solid: SolidId) -> usize {
+    async fn unique_edges_on_solid(body: &Body, solid: SolidId) -> usize {
         let mut edges = HashSet::new();
         for fid in body.solid_faces(solid) {
             for cid in body.face_coedges(fid) {
@@ -346,7 +346,7 @@ mod tests {
     }
 
     #[test]
-    fn sew_two_adjacent_quads_shares_one_edge() {
+    async fn sew_two_adjacent_quads_shares_one_edge() {
         let mut body = Body::new();
         let f0 = make_loose_quad(&mut body, Pnt3::new(0.0, 0.0, 0.0), Pnt3::new(1.0, 0.0, 0.0), Pnt3::new(1.0, 1.0, 0.0), Pnt3::new(0.0, 1.0, 0.0), Vec3::Z);
         let f1 = make_loose_quad(&mut body, Pnt3::new(1.0, 0.0, 0.0), Pnt3::new(2.0, 0.0, 0.0), Pnt3::new(2.0, 1.0, 0.0), Pnt3::new(1.0, 1.0, 0.0), Vec3::Z);
@@ -357,7 +357,7 @@ mod tests {
     }
 
     #[test]
-    fn sew_six_box_faces_into_solid() {
+    async fn sew_six_box_faces_into_solid() {
         let mut body = Body::new();
         let bottom = make_loose_quad(&mut body, Pnt3::new(0.0, 0.0, 0.0), Pnt3::new(1.0, 0.0, 0.0), Pnt3::new(1.0, 1.0, 0.0), Pnt3::new(0.0, 1.0, 0.0), -Vec3::Z);
         let top = make_loose_quad(&mut body, Pnt3::new(0.0, 0.0, 1.0), Pnt3::new(1.0, 0.0, 1.0), Pnt3::new(1.0, 1.0, 1.0), Pnt3::new(0.0, 1.0, 1.0), Vec3::Z);
@@ -372,7 +372,7 @@ mod tests {
     }
 
     #[test]
-    fn sew_single_face_rejects() {
+    async fn sew_single_face_rejects() {
         let mut body = Body::new();
         let f = make_loose_quad(&mut body, Pnt3::new(0.0, 0.0, 0.0), Pnt3::new(1.0, 0.0, 0.0), Pnt3::new(1.0, 1.0, 0.0), Pnt3::new(0.0, 1.0, 0.0), Vec3::Z);
         let mut rec = OpRecorder::new();
@@ -391,7 +391,7 @@ mod heal_tests {
     use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::curve::Curve3;
 
     #[test]
-    fn heal_solid_noop_on_valid_box() {
+    async fn heal_solid_noop_on_valid_box() {
         let mut body = Body::new();
         let mut rec = OpRecorder::new();
         let solid = make_box(&mut body, 2.0, 2.0, 2.0, &mut rec).unwrap();
@@ -400,7 +400,7 @@ mod heal_tests {
     }
 
     #[test]
-    fn defeature_removes_one_box_face() {
+    async fn defeature_removes_one_box_face() {
         let mut body = Body::new();
         let mut rec = OpRecorder::new();
         let solid = make_box(&mut body, 2.0, 2.0, 2.0, &mut rec).unwrap();
@@ -411,7 +411,7 @@ mod heal_tests {
     }
 
     #[test]
-    fn defeature_rejects_empty_selection() {
+    async fn defeature_rejects_empty_selection() {
         let mut body = Body::new();
         let mut rec = OpRecorder::new();
         let solid = make_box(&mut body, 1.0, 1.0, 1.0, &mut rec).unwrap();
@@ -419,7 +419,7 @@ mod heal_tests {
     }
 
     #[test]
-    fn defeature_rejects_removing_too_many_faces() {
+    async fn defeature_rejects_removing_too_many_faces() {
         let mut body = Body::new();
         let mut rec = OpRecorder::new();
         let solid = make_box(&mut body, 1.0, 1.0, 1.0, &mut rec).unwrap();
@@ -428,7 +428,7 @@ mod heal_tests {
     }
 
     #[test]
-    fn convert_to_nurbs_upgrades_box_planes_and_edges() {
+    async fn convert_to_nurbs_upgrades_box_planes_and_edges() {
         let mut body = Body::new();
         let mut rec = OpRecorder::new();
         let solid = make_box(&mut body, 1.0, 1.0, 1.0, &mut rec).unwrap();

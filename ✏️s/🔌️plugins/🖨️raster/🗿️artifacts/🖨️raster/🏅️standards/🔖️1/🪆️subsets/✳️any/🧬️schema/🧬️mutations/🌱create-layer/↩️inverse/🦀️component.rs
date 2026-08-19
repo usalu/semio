@@ -8,7 +8,7 @@ use crate::artifacts::raster::mutations::RasterMutation;
 use crate::artifacts::raster::RasterSnapshot;
 
 //#region 🔖️Inverse
-pub fn inverse(payload: &CreateLayer, _base: &RasterSnapshot) -> Vec<RasterMutation> {
+pub async fn inverse(payload: &CreateLayer, _base: &RasterSnapshot) -> Vec<RasterMutation> {
     vec![RasterMutation::DeleteLayer(delete_layer::mutation::DeleteLayer { layer_id: layer_node_id(&payload.layer).to_string() })]
 }
 //#endregion 🔖️Inverse

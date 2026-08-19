@@ -12,12 +12,12 @@ use crate::artifacts::remodel::schema::mutations::text::RemodelMutation;
 use protocol::OpBinary;
 
 /// 📦️ Encodes a `RemodelMutation` to its binary command form.
-pub fn encode_op(operation: &RemodelMutation) -> Result<Vec<u8>, protocol::ProtocolError> {
+pub async fn encode_op(operation: &RemodelMutation) -> Result<Vec<u8>, protocol::ProtocolError> {
     operation.encode_op()
 }
 
 /// 📖️ Decodes a `RemodelMutation` from its binary command form.
-pub fn decode_op(bytes: &[u8]) -> Result<RemodelMutation, protocol::ProtocolError> {
+pub async fn decode_op(bytes: &[u8]) -> Result<RemodelMutation, protocol::ProtocolError> {
     RemodelMutation::decode_op(bytes)
 }
 
@@ -28,7 +28,7 @@ mod tests {
     use crate::artifacts::remodel::default_remodel_scene;
 
     #[test]
-    fn op_binary_round_trips_and_agrees_with_text() {
+    async fn op_binary_round_trips_and_agrees_with_text() {
         let scene = default_remodel_scene();
         let operation = crate::artifacts::remodel::mutations::update_feature_params(scene.params.feature);
         store::os_store::test_support::assert_op_text_binary_equivalence(&operation);
@@ -39,7 +39,7 @@ mod tests {
     /// 📄️ Full `print_document_text`/`parse_document_text` round trip through a live `ArtifactStore`
     /// with an applied edit, the ground-truth contract for replacing the JSON envelope with text files.
     #[test]
-    fn store_roundtrips_through_document_text() {
+    async fn store_roundtrips_through_document_text() {
         let initial = default_remodel_scene();
         let envelope = store::create_document_envelope("test/v1", "test", initial, None);
         let mut store = store::ArtifactStore::new(envelope).expect("valid artifact store fixture");

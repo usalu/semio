@@ -47,7 +47,7 @@ pub use preflight_panel::{LAYOUT_PLAY_BODY_PREFLIGHT, LAYOUT_PLAY_PREFLIGHT_TAB_
 
 /// 🎯️ An `ActionDescriptor` addressed at this app — the single factory every taxonomy node's chrome
 /// (`📌️panels/*`) builds its `on_change`/item actions with.
-pub fn layout_action(action: &str, args: Option<Value>) -> ActionDescriptor {
+pub async fn layout_action(action: &str, args: Option<Value>) -> ActionDescriptor {
     semio_framework_plugin::ActionFactory::new(LAYOUT_PLAY_APP_ID).action(action, args)
 }
 
@@ -63,13 +63,13 @@ pub const LAYOUT_GRANULARITY_ELEMENT: &str = "element";
 /// 🕹️ Builds `interactionSelect`'s JSON args for one merge over `ids` (all granularity `"element"`) —
 /// shared by the canvas pointer commands (wrapped into a `Effect::DispatchAction`) and any
 /// document-tree row whose click should select a real canvas element (wrapped into an `ActionDescriptor`).
-pub fn layout_select_action_args(ids: &[String], merge: &str) -> Value {
+pub async fn layout_select_action_args(ids: &[String], merge: &str) -> Value {
     let targets: Vec<Value> = ids.iter().map(|id| json!({ "granularity": LAYOUT_GRANULARITY_ELEMENT, "id": id })).collect();
     json!({ "domainId": LAYOUT_INTERACTION_ELEMENTS, "targets": serde_json::to_string(&targets).unwrap_or_default(), "merge": merge, "method": "pick" })
 }
 
 /// 🐁️ Builds `interactionHover`'s JSON args for the `"pointer"` channel — `id: None` clears hover.
-pub fn layout_hover_action_args(id: Option<&str>) -> Value {
+pub async fn layout_hover_action_args(id: Option<&str>) -> Value {
     let targets: Vec<Value> = id.map(|id| vec![json!({ "granularity": LAYOUT_GRANULARITY_ELEMENT, "id": id })]).unwrap_or_default();
     json!({ "domainId": LAYOUT_INTERACTION_ELEMENTS, "channel": "pointer", "targets": serde_json::to_string(&targets).unwrap_or_default() })
 }
@@ -79,24 +79,24 @@ pub fn layout_hover_action_args(id: Option<&str>) -> Value {
 /// `ArtifactApp::handle`, so a plain config mutation can no longer express a selection change; the
 /// app asks the host to redispatch `interactionSelect` instead (master doc: "surfaces do geometric
 /// hit-testing and emit one batched `interactionSelect`").
-pub fn layout_select_effect(ids: &[String], merge: &str) -> Effect {
+pub async fn layout_select_effect(ids: &[String], merge: &str) -> Effect {
     Effect::DispatchAction {req: semio_framework_plugin::RequestId(115),  action: INTERACTION_SELECT_ACTION_ID.into(), args: semio_framework::optional_json_to_dsl(Some(layout_select_action_args(ids, merge))), delay_ms: 0 }
 }
 
 /// 🐁️ Wraps [`layout_hover_action_args`] the same way, for `interactionHover`.
-pub fn layout_hover_effect(id: Option<&str>) -> Effect {
+pub async fn layout_hover_effect(id: Option<&str>) -> Effect {
     Effect::DispatchAction {req: semio_framework_plugin::RequestId(114),  action: INTERACTION_HOVER_ACTION_ID.into(), args: semio_framework::optional_json_to_dsl(Some(layout_hover_action_args(id))), delay_ms: 0 }
 }
 
 /// 🕹️ Clicking empty canvas clears every domain's selection — `clearSelection` takes no `domainId`.
-pub fn layout_clear_selection_effect() -> Effect {
+pub async fn layout_clear_selection_effect() -> Effect {
     Effect::DispatchAction {req: semio_framework_plugin::RequestId(113),  action: CLEAR_SELECTION_ACTION_ID.into(), args: None, delay_ms: 0 }
 }
 //#endregion 🔖️Interaction
 
 /// 🙈️ An internal (non-palette) action declaration — the pointer/inspector/DnD/engagement-bound
 /// vocabulary dispatched by the canvas and panels, never surfaced as a standalone palette command.
-fn layout_internal_action(id: &str, label: impl Into<LocalizedLabel>, kind: ActionKind) -> ActionDefinition {
+async fn layout_internal_action(id: &str, label: impl Into<LocalizedLabel>, kind: ActionKind) -> ActionDefinition {
     ActionDefinition { in_palette: false, ..ActionDefinition::new_catalog(id, label, kind) }
 }
 //#endregion 🔖️Constants
@@ -141,7 +141,7 @@ use crate::editor::layout::commands::{
 //#endregion 🔖️Commands
 
 //#region 🔖️WindowEngagement
-fn layout_window_engagement(config: &LayoutConfig, label: &str, labels: &LayoutLabels) -> WindowEngagement {
+async fn layout_window_engagement(config: &LayoutConfig, label: &str, labels: &LayoutLabels) -> WindowEngagement {
     WindowEngagement {
         session_active: Some(false),
         options: None,
@@ -189,24 +189,24 @@ impl ArtifactEditor for LayoutPlayApp {
     const DIALECT: Dialect = crate::artifacts::layout::LAYOUT_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = crate::artifacts::layout::LAYOUT_DOCUMENT_SCHEMA;
 
-    fn app_schema() -> Option<::schema::AppSchemaDescriptor> {
+    async fn app_schema() -> Option<::schema::AppSchemaDescriptor> {
         Some(crate::editor::layout::config::schema::app_schema_descriptor())
     }
 
-    fn initial_snapshot() -> LayoutSnapshot {
+    async fn initial_snapshot() -> LayoutSnapshot {
         crate::artifacts::layout::schema::default_document()
     }
 
-    fn io() -> Option<semio_framework_plugin::AppIo> {
+    async fn io() -> Option<semio_framework_plugin::AppIo> {
         Some(crate::editor::layout::engine::layout_io())
     }
 
     /// 🏷️ Supplied wholesale by `app_commands!`'s generated `command_id()`.
-    fn command_id(command: &LayoutCommand) -> &'static str {
+    async fn command_id(command: &LayoutCommand) -> &'static str {
         command.command_id()
     }
 
-    fn handle(command: &LayoutCommand, doc: &ArtifactView<'_, LayoutSnapshot>, cfg: &ConfigView<'_, LayoutConfig>, _interaction: &InteractionView<'_>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<LayoutMutation, LayoutConfigMutation, Self::DraftMutation>, Fault> {
+    async fn handle(command: &LayoutCommand, doc: &ArtifactView<'_, LayoutSnapshot>, cfg: &ConfigView<'_, LayoutConfig>, _interaction: &InteractionView<'_>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<LayoutMutation, LayoutConfigMutation, Self::DraftMutation>, Fault> {
         command.dispatch(doc, cfg)
     }
 
@@ -238,7 +238,7 @@ impl ArtifactEditor for LayoutPlayApp {
     /// field-binding concept for frames/stories yet, so this stores the dictionary verbatim as a new
     /// named data source (see `crate::artifacts::layout::LayoutSnapshot::data_fields_json`'s doc) rather
     /// than wiring it into rendering today.
-    fn import_media(port: &str, media: &Media, _doc: &ArtifactView<'_, LayoutSnapshot>) -> Result<Emit<LayoutMutation, LayoutConfigMutation, Self::DraftMutation>, MediaError> {
+    async fn import_media(port: &str, media: &Media, _doc: &ArtifactView<'_, LayoutSnapshot>) -> Result<Emit<LayoutMutation, LayoutConfigMutation, Self::DraftMutation>, MediaError> {
         match port {
             "fields:in" => {
                 let MediaPayload::Structured { json, .. } = &media.payload else {
@@ -251,7 +251,7 @@ impl ArtifactEditor for LayoutPlayApp {
     }
     //#endregion 🔖️Media
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, LayoutSnapshot>, cfg: &ConfigView<'_, LayoutConfig>) -> UiNode {
+    async fn render(body_key: &str, doc: &ArtifactView<'_, LayoutSnapshot>, cfg: &ConfigView<'_, LayoutConfig>) -> UiNode {
         let document = doc.snapshot;
         let config = cfg.snapshot;
         let labels = layout_labels(config);
@@ -267,7 +267,7 @@ impl ArtifactEditor for LayoutPlayApp {
         }
     }
 
-    fn window_engagements(_doc: &ArtifactView<'_, LayoutSnapshot>, cfg: &ConfigView<'_, LayoutConfig>) -> HashMap<String, WindowEngagement> {
+    async fn window_engagements(_doc: &ArtifactView<'_, LayoutSnapshot>, cfg: &ConfigView<'_, LayoutConfig>) -> HashMap<String, WindowEngagement> {
         let config = cfg.snapshot;
         let labels = layout_labels(config);
         HashMap::from([(LAYOUT_PLAY_WINDOW_BLUEPRINT.to_string(), layout_window_engagement(config, "blueprint", labels)), (LAYOUT_PLAY_WINDOW_PREVIEW.to_string(), layout_window_engagement(config, "preview", labels))])
@@ -279,7 +279,7 @@ impl ArtifactEditor for LayoutPlayApp {
 /// 🧱️ The manifest stitch: one call per taxonomy node, each sourced from that node's own `definition()`.
 /// Only the leaf action/keybinding declarations (which have no dedicated `_def` passthrough) are written
 /// out inline.
-pub fn create_layout_app() -> semio_framework_plugin::AppDefinition {
+pub async fn create_layout_app() -> semio_framework_plugin::AppDefinition {
     Editor::builder(crate::artifacts::layout::LAYOUT_DIALECT)
             .artifact_kind(ArtifactKindSpec {
                 id: "2d.layout".into(),
@@ -400,31 +400,31 @@ pub(crate) mod testkit {
     /// `PluginBuilder::editor::<LayoutPlayApp>` builds it.
 
     /// 🧪️ A bare app instance — no `AppActionRegistry`, so undeclared internal commands dispatch freely.
-    pub fn layout_app() -> LayoutApp {
+    pub async fn layout_app() -> LayoutApp {
         new_app::<EditorApp<LayoutPlayApp>>()
     }
 
     /// 🧪️ Adapts `create_layout_app`'s `AppDefinition` (contract §2.4) into the `App { definition,
     /// examples }` shape `new_app_with_registry` still expects — framework testkit gap, not
     /// modifiable here (`🧰️framework/**` is outside this packet's lease).
-    fn layout_app_manifest_for_testkit() -> App {
+    async fn layout_app_manifest_for_testkit() -> App {
         App { definition: create_layout_app(), examples: Vec::new() }
     }
 
     /// 🧪️ An app wired to the real manifest registry — enforces View/Shell kind discipline.
-    pub fn layout_app_with_registry() -> LayoutApp {
+    pub async fn layout_app_with_registry() -> LayoutApp {
         new_app_with_registry::<EditorApp<LayoutPlayApp>>(layout_app_manifest_for_testkit)
     }
 
-    pub fn dispatch(app: &mut LayoutApp, command: LayoutCommand) -> InvocationResult {
+    pub async fn dispatch(app: &mut LayoutApp, command: LayoutCommand) -> InvocationResult {
         app.dispatch_typed(command, &meta("local")).expect("dispatch")
     }
 
-    pub fn render(app: &mut LayoutApp, body_key: &str) -> String {
+    pub async fn render(app: &mut LayoutApp, body_key: &str) -> String {
         serde_json::to_string(&app.render(body_key, None, &ViewModel::default()).expect("render")).expect("render json")
     }
 
-    pub fn test_screen_point(camera_x: f64, camera_y: f64, zoom: f64, width: f64, height: f64, world_x: f64, world_y: f64) -> (f64, f64) {
+    pub async fn test_screen_point(camera_x: f64, camera_y: f64, zoom: f64, width: f64, height: f64, world_x: f64, world_y: f64) -> (f64, f64) {
         let camera = infinite_canvas::camera::Camera { x: camera_x, y: camera_y, zoom };
         let viewport = infinite_canvas::camera::Viewport { width: width as u32, height: height as u32, dpr: 1.0 };
         let screen = infinite_canvas::camera::world_to_screen(&camera, &viewport, infinite_canvas::Point::new(world_x, world_y));
@@ -445,7 +445,7 @@ mod tests {
     /// 🏷️ Every declared manifest action id must be reachable as exactly one command row, and every row's
     /// wire keyword must be distinct — the cross-cutting invariant `app_commands!` is there to hold.
     #[test]
-    fn command_ids_are_unique_and_match_the_declared_manifest_actions() {
+    async fn command_ids_are_unique_and_match_the_declared_manifest_actions() {
         let commands = every_command();
         let ids: Vec<&str> = commands.iter().map(|command| command.command_id()).collect();
         let mut sorted = ids.clone();
@@ -457,7 +457,7 @@ mod tests {
 
     /// ⚖️ LAW: text and binary are two projections of the same command, for every single row.
     #[test]
-    fn every_command_round_trips_through_text_and_binary() {
+    async fn every_command_round_trips_through_text_and_binary() {
         for command in every_command() {
             store::os_store::test_support::assert_op_text_binary_equivalence(&command);
         }
@@ -470,7 +470,7 @@ mod tests {
     /// (`setActivePage` → `active-page`, `setCamera` → `camera`, `setLocale` → `locale`) — carried
     /// forward verbatim, not a drift.
     #[test]
-    fn every_printed_op_line_starts_with_the_rows_wire_keyword() {
+    async fn every_printed_op_line_starts_with_the_rows_wire_keyword() {
         let expected_keyword = |id: &str| -> &'static str {
             match id {
                 "setActivePage" => "active-page",
@@ -509,7 +509,7 @@ mod tests {
     /// were deleted (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM), so this no longer
     /// pins exact historical bytes (greenfield: no back-compat), only text/binary equivalence.
     #[test]
-    fn optional_field_rows_round_trip_text_and_binary_either_way() {
+    async fn optional_field_rows_round_trip_text_and_binary_either_way() {
         use crate::artifacts::layout::LayoutCamera;
         let cases: [(LayoutCommand, &str); 3] = [
             (LayoutCommand::CanvasPointerMove(canvas_pointer_move::CanvasPointerMove { surface_id: None, x: 1.0, y: 2.0, width: 800.0, height: 600.0 }), "canvas-pointer-move x=1 y=2 width=800 height=600"),
@@ -526,7 +526,7 @@ mod tests {
     }
 
     /// 🧾️ One representative value per row, in declaration (= binary ordinal) order.
-    pub(super) fn every_command() -> Vec<LayoutCommand> {
+    pub(super) async fn every_command() -> Vec<LayoutCommand> {
         use crate::artifacts::layout::LayoutCamera;
         vec![
             LayoutCommand::SetActivePage(set_active_page::SetActivePage { page_id: "page-2".into() }),
@@ -555,7 +555,7 @@ mod tests {
 
     //#region 🔖️ManifestSanity
     #[test]
-    fn the_manifest_stitches_every_taxonomy_node() {
+    async fn the_manifest_stitches_every_taxonomy_node() {
         let json = serde_json::to_string(&create_layout_app()).expect("app definition json");
         for id in [LAYOUT_PLAY_WINDOW_BLUEPRINT, LAYOUT_PLAY_WINDOW_PREVIEW] {
             assert!(json.contains(id), "window kind {id} missing from the manifest: {json}");
@@ -568,7 +568,7 @@ mod tests {
     }
 
     #[test]
-    fn window_kind_actions_scope_authoring_to_blueprint_only() {
+    async fn window_kind_actions_scope_authoring_to_blueprint_only() {
         let definition = create_layout_app();
         let resolve = |window_id: &str| -> Vec<String> {
             let window = definition.window_kinds.iter().find(|window| window.id == window_id).unwrap();
@@ -588,14 +588,14 @@ mod tests {
 
     //#region 🔖️CrossCutting
     #[test]
-    fn sample_fixture_parses() {
+    async fn sample_fixture_parses() {
         let doc = crate::artifacts::layout::dsl::parse_dsl(crate::artifacts::layout::dsl::LAYOUT_SAMPLE_TEXT).expect("sample fixture");
         assert_eq!(doc.schema, crate::artifacts::layout::LAYOUT_DOCUMENT_SCHEMA);
         assert!(!doc.pages.is_empty());
     }
 
     #[test]
-    fn an_unknown_body_key_renders_a_diagnostic_instead_of_panicking() {
+    async fn an_unknown_body_key_renders_a_diagnostic_instead_of_panicking() {
         let mut app = layout_app();
         assert!(render(&mut app, "layout.play.nope").contains("Unknown body"));
     }
@@ -607,7 +607,7 @@ mod tests {
     // ticket's w3b-summary.md) — flagged, not fixed here (framework file, out of this crate's remit).
 
     #[test]
-    fn window_engagements_cover_both_windows() {
+    async fn window_engagements_cover_both_windows() {
         let mut app = layout_app();
         let engagements = app.window_engagements();
         let blueprint_engagement = engagements.get(LAYOUT_PLAY_WINDOW_BLUEPRINT).expect("blueprint engagement");
@@ -619,7 +619,7 @@ mod tests {
     }
 
     #[test]
-    fn registry_backed_add_frame_emits_operation() {
+    async fn registry_backed_add_frame_emits_operation() {
         // 🧬️ addFrame is declared `Mutation`: the registry-backed wrapper must let its operations through.
         let mut app = layout_app_with_registry();
         let result = dispatch(&mut app, LayoutCommand::AddFrame(add_frame::AddFrame { kind: "rect".into(), x: None, y: None }));
@@ -627,7 +627,7 @@ mod tests {
     }
 
     #[test]
-    fn registry_backed_pointer_move_is_view_only() {
+    async fn registry_backed_pointer_move_is_view_only() {
         // 🧬️ canvasPointerMove is declared `View`: it mutates only config hover state and must never emit
         // an operation, which the registry kind-discipline check enforces.
         let mut app = layout_app_with_registry();
@@ -639,7 +639,7 @@ mod tests {
 
     //#region 🔖️MediaPorts
     #[test]
-    fn export_media_layout_out_returns_svg_of_first_page() {
+    async fn export_media_layout_out_returns_svg_of_first_page() {
         // 🌉️ Same pre-existing per-process registration gap as `🎮️commands/🐚️export`'s
         // `export_actions_wire_to_real_layout_exporters` test — see that test's comment.
         crate::artifacts::layout::io::ensure_stdio_semio_drawing_registered();
@@ -656,7 +656,7 @@ mod tests {
     }
 
     #[test]
-    fn export_media_document_out_round_trips_through_pack() {
+    async fn export_media_document_out_round_trips_through_pack() {
         let app = layout_app();
         let document = app.snapshot().expect("projection");
         let history = semio_framework_plugin::HistoryView::empty();
@@ -671,7 +671,7 @@ mod tests {
     }
 
     #[test]
-    fn import_media_fields_in_sets_data_fields_json() {
+    async fn import_media_fields_in_sets_data_fields_json() {
         let mut app = layout_app();
         let media = Media { media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value }, payload: MediaPayload::Structured { schema: "form.dictionary".into(), json: r#"{"name":"Ada"}"#.into() } };
         app.import_media("fields:in", &media, &testkit::meta("local")).expect("import fields:in");
@@ -680,14 +680,14 @@ mod tests {
     }
 
     #[test]
-    fn layout_io_exposes_declared_ports() {
+    async fn layout_io_exposes_declared_ports() {
         let io = LayoutPlayApp::io().expect("layout declares io");
         assert!(io.ports.iter().any(|port| port.id == "fields:in"));
         assert!(io.ports.iter().any(|port| port.id == "layout:out"));
     }
 
     #[test]
-    fn layout_io_declares_fields_in_and_layout_out_ports() {
+    async fn layout_io_declares_fields_in_and_layout_out_ports() {
         let io = crate::editor::layout::engine::layout_io();
         assert_eq!(io.document_schema, "layout.layout");
         assert_eq!(io.artifact.id, "2d.layout");

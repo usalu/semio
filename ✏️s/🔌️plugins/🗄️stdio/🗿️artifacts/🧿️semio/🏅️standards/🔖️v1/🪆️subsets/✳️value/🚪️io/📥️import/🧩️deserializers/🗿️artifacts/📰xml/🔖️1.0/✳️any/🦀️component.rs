@@ -30,23 +30,23 @@ impl ArtifactDeserializer for SemioValueFromXml {
     }
 }
 
-pub fn register() {}
+pub async fn register() {}
 //#endregion 🔖️Deserializer
 
 //#region 🔖️Convert
-fn entry(key: &str, value: SemioValue) -> SemioValueEntry {
+async fn entry(key: &str, value: SemioValue) -> SemioValueEntry {
     SemioValueEntry { key: key.into(), value }
 }
 
-fn str_value(s: &str) -> SemioValue {
+async fn str_value(s: &str) -> SemioValue {
     SemioValue::Str { value: s.to_string() }
 }
 
-fn kind_tagged(kind: &str, text: &str) -> SemioValue {
+async fn kind_tagged(kind: &str, text: &str) -> SemioValue {
     SemioValue::Map { entries: vec![entry("kind", str_value(kind)), entry("text", str_value(text))] }
 }
 
-pub fn semio_value_of_node(node: &XmlNode) -> SemioValue {
+pub async fn semio_value_of_node(node: &XmlNode) -> SemioValue {
     match node {
         XmlNode::Element { name, attrs, children } => SemioValue::Map {
             entries: vec![
@@ -63,13 +63,13 @@ pub fn semio_value_of_node(node: &XmlNode) -> SemioValue {
     }
 }
 
-fn semio_value_of_declaration(d: &XmlDeclaration) -> SemioValue {
+async fn semio_value_of_declaration(d: &XmlDeclaration) -> SemioValue {
     SemioValue::Map {
         entries: vec![entry("version", str_value(&d.version)), entry("encoding", d.encoding.as_deref().map(str_value).unwrap_or(SemioValue::Null)), entry("standalone", d.standalone.map(|b| SemioValue::Bool { value: b }).unwrap_or(SemioValue::Null))],
     }
 }
 
-fn semio_value_of_doctype(doctype: &XmlDoctype) -> SemioValue {
+async fn semio_value_of_doctype(doctype: &XmlDoctype) -> SemioValue {
     let external_id = match &doctype.external_id {
         None => SemioValue::Null,
         Some(XmlExternalId::System { system_id }) => SemioValue::Map { entries: vec![entry("kind", str_value("system")), entry("systemId", str_value(system_id))] },
@@ -87,7 +87,7 @@ fn semio_value_of_doctype(doctype: &XmlDoctype) -> SemioValue {
     SemioValue::Map { entries: vec![entry("name", str_value(&doctype.name)), entry("externalId", external_id), entry("declarations", SemioValue::List { items: declarations })] }
 }
 
-pub fn semio_value_from_xml_document(doc: &XmlDocument) -> SemioValue {
+pub async fn semio_value_from_xml_document(doc: &XmlDocument) -> SemioValue {
     SemioValue::Map {
         entries: vec![
             entry("kind", str_value("document")),
@@ -107,7 +107,7 @@ mod tests {
     use crate::artifacts::xml::schema::snapshot::XmlAttr;
 
     #[test]
-    fn element_with_attrs_and_children_maps_to_a_kind_tagged_structure() {
+    async fn element_with_attrs_and_children_maps_to_a_kind_tagged_structure() {
         let doc = XmlDocument {
             root: Some(XmlNode::Element { name: "svg".into(), attrs: vec![XmlAttr { name: "viewBox".into(), value: "0 0 10 10".into() }], children: vec![XmlNode::Text { text: "hi".into() }, XmlNode::Comment { text: "note".into() }] }),
             doctype: None,
@@ -136,7 +136,7 @@ mod tests {
     }
 
     #[test]
-    fn empty_document_still_produces_a_document_shaped_map() {
+    async fn empty_document_still_produces_a_document_shaped_map() {
         let value = semio_value_from_xml_document(&XmlDocument::default());
         match value {
             SemioValue::Map { entries } => {

@@ -11,7 +11,7 @@ pub struct SetLocale {
     pub value: String,
 }
 
-pub fn handle(payload: &SetLocale, _doc: &ArtifactView<'_, PlaybookSnapshot>, _cfg: &ConfigView<'_, PlaybookConfig>) -> Result<Emit<PlaybookMutation, PlaybookConfigMutation>, Fault> {
+pub async fn handle(payload: &SetLocale, _doc: &ArtifactView<'_, PlaybookSnapshot>, _cfg: &ConfigView<'_, PlaybookConfig>) -> Result<Emit<PlaybookMutation, PlaybookConfigMutation>, Fault> {
     Ok(Emit::config(vec![PlaybookConfigMutation::SetLocale { value: payload.value.clone() }]))
 }
 
@@ -23,14 +23,14 @@ mod tests {
     use crate::editor::playbook::PlaybookCommand;
 
     #[test]
-    fn set_locale_is_a_view_command_without_operations() {
+    async fn set_locale_is_a_view_command_without_operations() {
         let mut app = playbook_app();
         let result = app.dispatch_typed(PlaybookCommand::SetLocale(SetLocale { value: "de-DE".into() }), &semio_framework_plugin::testkit::meta("local")).expect("set locale");
         assert!(result.mutations.is_empty(), "locale is host-pushed ephemeral config state, not a document operation");
     }
 
     #[test]
-    fn set_locale_changes_the_kind_arg_label_via_render() {
+    async fn set_locale_changes_the_kind_arg_label_via_render() {
         let mut app = playbook_app();
         dispatch(&mut app, PlaybookCommand::SetLocale(SetLocale { value: "de-DE".into() }));
         // 🩹️ Assert through a real command path rather than reaching for a nonexistent config accessor

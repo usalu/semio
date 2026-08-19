@@ -6,6 +6,6 @@ use crate::artifacts::program::ProgramMutation;
 use crate::artifacts::program::ProgramSnapshot;
 
 /// ↩️ Undo a create by deleting the row it added.
-pub fn inverse(payload: &super::mutation::CreateAccessibilityRequirement, _base: &ProgramSnapshot) -> Vec<ProgramMutation> {
+pub async fn inverse(payload: &super::mutation::CreateAccessibilityRequirement, _base: &ProgramSnapshot) -> Vec<ProgramMutation> {
     vec![ProgramMutation::DeleteAccessibilityRequirement(super::super::delete_accessibility_requirement::mutation::DeleteAccessibilityRequirement { id: payload.accessibility_requirement.header.id.clone() })]
 }

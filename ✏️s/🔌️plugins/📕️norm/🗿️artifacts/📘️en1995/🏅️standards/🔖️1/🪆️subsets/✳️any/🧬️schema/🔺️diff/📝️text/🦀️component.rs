@@ -13,7 +13,7 @@ use protocol::MutationDiff;
 
 //#region 🔖️Apply
 impl En1995Diff {
-    pub fn apply_to_artifact(&self, artifact: &En1995Artifact) -> protocol::MutationApplyResult<En1995Artifact> {
+    pub async fn apply_to_artifact(&self, artifact: &En1995Artifact) -> protocol::MutationApplyResult<En1995Artifact> {
         Ok({
             if let Some(replacement) = &self.artifact {
                 return Ok((**replacement).clone());
@@ -88,7 +88,7 @@ impl En1995Diff {
 }
 
 impl MutationDiff<En1995Snapshot> for En1995Diff {
-    fn apply(&self, snapshot: &En1995Snapshot) -> protocol::MutationApplyResult<En1995Snapshot> {
+    async fn apply(&self, snapshot: &En1995Snapshot) -> protocol::MutationApplyResult<En1995Snapshot> {
         Ok({
             if let Some(replacement) = &self.artifact {
                 return Ok(replacement.to_snapshot());
@@ -157,7 +157,7 @@ impl MutationDiff<En1995Snapshot> for En1995Diff {
             next
         })
     }
-    fn absorb(&mut self, other: Self) {
+    async fn absorb(&mut self, other: Self) {
         if other.artifact.is_some() {
             *self = other;
             return;
@@ -195,7 +195,7 @@ impl MutationDiff<En1995Snapshot> for En1995Diff {
 //#endregion 🔖️Apply
 
 //#region 🔖️Helpers
-pub fn diff_set_snapshot(snapshot: &En1995Snapshot) -> En1995Diff {
+pub async fn diff_set_snapshot(snapshot: &En1995Snapshot) -> En1995Diff {
     En1995Diff { artifact: Some(Box::new(En1995Artifact::from_snapshot(snapshot.clone()))), ..Default::default() }
 }
 //#endregion 🔖️Helpers
@@ -208,7 +208,7 @@ mod tests {
     use protocol::{Mutation as _, MutationDiff};
 
     #[test]
-    fn change_mutation_diff_updates_only_its_field() {
+    async fn change_mutation_diff_updates_only_its_field() {
         let base = En1995Snapshot::default();
         let mutation = En1995Mutation::ChangeMEdKnm(crate::artifacts::en1995::mutations::change_m_ed_knm::mutation::ChangeMEdKnm { new_m_ed_knm: 25.0 });
         let outcome = mutation.diff(&base);

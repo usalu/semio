@@ -27,7 +27,7 @@ pub enum WavMutation {
 impl Mutation<WavSnapshot> for WavMutation {
     type Diff = WavDiff;
 
-    fn diff(&self, base: &WavSnapshot) -> protocol::MutationOutcome<Self::Diff> {
+    async fn diff(&self, base: &WavSnapshot) -> protocol::MutationOutcome<Self::Diff> {
         protocol::MutationOutcome::new(match self {
             WavMutation::NoMutation => WavDiff::default(),
             WavMutation::SetSnapshot { snapshot } => diff_set_snapshot(base, snapshot),
@@ -37,7 +37,7 @@ impl Mutation<WavSnapshot> for WavMutation {
         })
     }
 
-    fn inverse(&self, base: &WavSnapshot) -> Vec<Self> {
+    async fn inverse(&self, base: &WavSnapshot) -> Vec<Self> {
         match self {
             WavMutation::NoMutation => vec![WavMutation::NoMutation],
             WavMutation::SetSnapshot { .. } => vec![WavMutation::SetSnapshot { snapshot: base.clone() }],
@@ -50,7 +50,7 @@ impl Mutation<WavSnapshot> for WavMutation {
 
 /// ▶️ Applies a mutation to `snapshot` in place, returning the diff (the diff is the single
 /// semantics source — never apply-and-capture).
-pub fn apply_wav_mutation(snapshot: &mut WavSnapshot, mutation: &WavMutation) -> protocol::MutationOutcome<WavDiff> {
+pub async fn apply_wav_mutation(snapshot: &mut WavSnapshot, mutation: &WavMutation) -> protocol::MutationOutcome<WavDiff> {
     let outcome = <WavMutation as Mutation<WavSnapshot>>::diff(mutation, snapshot);
     match protocol::MutationDiff::apply(outcome.diff(), snapshot) {
         Ok(next) => {
@@ -70,19 +70,19 @@ pub fn apply_wav_mutation(snapshot: &mut WavSnapshot, mutation: &WavMutation) ->
 /// a SEPARATE wire format from the subset's own `ArtifactDsl`/`ArtifactPack` envelope (which
 /// wraps real RIFF/WAVE bytes, see that file's doc comment) — an op is always plain JSON here.
 impl OpText for WavMutation {
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
+    async fn parse_op(line: &str) -> Result<Self, store::TextError> {
         serde_json::from_str(line).map_err(|e| store::TextError::new(e.to_string(), dsl::TextSpan::at(1, 1)))
     }
-    fn print_op(&self) -> String {
+    async fn print_op(&self) -> String {
         serde_json::to_string(self).unwrap_or_default()
     }
 }
 
 impl OpBinary for WavMutation {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         serde_json::to_vec(self).map_err(|e| protocol::ProtocolError::Io(e.to_string()))
     }
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         serde_json::from_slice(bytes).map_err(|e| protocol::ProtocolError::Io(e.to_string()))
     }
 }
@@ -95,11 +95,11 @@ mod tests {
     use protocol::command::DiffAlgebra;
     use protocol::MutationDiff;
 
-    fn base_snapshot() -> WavSnapshot {
+    async fn base_snapshot() -> WavSnapshot {
         WavSnapshot { data: WavData::Pcm16(vec![10, -10, 5]), ..WavSnapshot::default() }
     }
 
-    fn variants(base: &WavSnapshot) -> Vec<WavMutation> {
+    async fn variants(base: &WavSnapshot) -> Vec<WavMutation> {
         vec![
             WavMutation::NoMutation,
             WavMutation::SetSnapshot { snapshot: WavSnapshot { fmt: WavFmt { sample_rate: 48000, ..base.fmt.clone() }, ..base.clone() } },
@@ -112,7 +112,7 @@ mod tests {
     //#region mutation_diff_law
     /// 🧪️ `mutation.diff(base).diff().apply(base) == apply_wav_mutation(base, mutation)`.
     #[test]
-    fn mutation_diff_law_every_variant() {
+    async fn mutation_diff_law_every_variant() {
         let base = base_snapshot();
         for m in variants(&base) {
             let mut via_apply = base.clone();
@@ -127,7 +127,7 @@ mod tests {
     //#region inverse_law
     /// 🧪️ Applying the inverse mutation restores base, at both the mutation and diff levels.
     #[test]
-    fn inverse_law_mutation_and_diff_level() {
+    async fn inverse_law_mutation_and_diff_level() {
         let base = base_snapshot();
         for m in variants(&base) {
             let mut round = base.clone();
@@ -147,7 +147,7 @@ mod tests {
 
     //#region op_text_binary_roundtrip_law
     #[test]
-    fn op_text_binary_roundtrip_law() {
+    async fn op_text_binary_roundtrip_law() {
         let base = base_snapshot();
         for m in variants(&base) {
             let printed = m.print_op();

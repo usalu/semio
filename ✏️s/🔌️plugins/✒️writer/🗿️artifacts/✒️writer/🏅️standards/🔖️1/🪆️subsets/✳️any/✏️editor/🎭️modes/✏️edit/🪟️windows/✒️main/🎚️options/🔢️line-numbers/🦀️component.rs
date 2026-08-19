@@ -7,7 +7,7 @@ use crate::editor::writer::writer_action;
 use semio_framework_plugin::WindowMeasure;
 
 //#region 🔖️Measure
-pub fn measure(config: &WriterConfig, labels: &WriterPlayLabels) -> WindowMeasure {
+pub async fn measure(config: &WriterConfig, labels: &WriterPlayLabels) -> WindowMeasure {
     WindowMeasure::Toggle {
         id: "writer-line-numbers-measure".into(),
         icon_id: "list-ordered".into(),
@@ -26,7 +26,7 @@ mod tests {
     use crate::editor::writer::terminology::writer_play_labels;
 
     #[test]
-    fn the_toggle_reflects_the_configs_show_line_numbers_flag() {
+    async fn the_toggle_reflects_the_configs_show_line_numbers_flag() {
         let config = WriterConfig { editor_settings: crate::editor::writer::config::WriterEditorSettings { show_line_numbers: false, ..Default::default() }, ..WriterConfig::default() };
         match measure(&config, writer_play_labels(&config)) {
             WindowMeasure::Toggle { pressed, .. } => assert!(!pressed),

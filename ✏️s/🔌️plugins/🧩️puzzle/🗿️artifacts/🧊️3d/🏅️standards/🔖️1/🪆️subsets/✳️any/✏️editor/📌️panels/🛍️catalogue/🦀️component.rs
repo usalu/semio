@@ -17,7 +17,7 @@ pub const PUZZLE3D_CATALOGUE_DRAG_MIME: &str = "application/x-semio-catalogue-it
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
-pub fn definition() -> PanelTabDefinition {
+pub async fn definition() -> PanelTabDefinition {
     PanelTabDefinition {
         kind: PanelTabKind::App(FRAMEWORK_PANEL_TAB_CATALOGUE_ID.into()),
         label: LocalizedLabel::native(FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, "Katalog"),
@@ -29,11 +29,11 @@ pub fn definition() -> PanelTabDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Rows
-fn catalog_entry_label(entry: &Value) -> String {
+async fn catalog_entry_label(entry: &Value) -> String {
     entry.get("label").and_then(|value| value.as_str()).or_else(|| entry.get("name").and_then(|value| value.as_str())).or_else(|| entry.get("id").and_then(|value| value.as_str())).unwrap_or("kind").into()
 }
 
-fn object_kind_vortex_items(entry: &Value) -> Vec<UiTreeItemNode> {
+async fn object_kind_vortex_items(entry: &Value) -> Vec<UiTreeItemNode> {
     entry
         .get("vortices")
         .and_then(|value| value.as_array())
@@ -66,7 +66,7 @@ fn object_kind_vortex_items(entry: &Value) -> Vec<UiTreeItemNode> {
         .unwrap_or_default()
 }
 
-fn object_kind_item(entry: &Value) -> UiTreeItemNode {
+async fn object_kind_item(entry: &Value) -> UiTreeItemNode {
     let kind_id = entry.get("id").and_then(|value| value.as_str()).unwrap_or("kind").to_string();
     let mesh_url = entry
         .get("meshUrl")
@@ -108,7 +108,7 @@ fn object_kind_item(entry: &Value) -> UiTreeItemNode {
     }
 }
 
-fn catalog_kind_item(entry: &Value, icon_id: &str) -> UiTreeItemNode {
+async fn catalog_kind_item(entry: &Value, icon_id: &str) -> UiTreeItemNode {
     let kind_id = entry.get("id").and_then(|value| value.as_str()).unwrap_or("kind").to_string();
     UiTreeItemNode {
         presence: UiPresence::default(),
@@ -130,7 +130,7 @@ fn catalog_kind_item(entry: &Value, icon_id: &str) -> UiTreeItemNode {
 //#endregion 🔖️Rows
 
 //#region 🔖️Render
-pub fn render(envelope: &Puzzle3dScene, labels: &Puzzle3dLabels) -> UiNode {
+pub async fn render(envelope: &Puzzle3dScene, labels: &Puzzle3dLabels) -> UiNode {
     let entries = |section: &str| crate::editor::puzzle3d::puzzle3d_catalog_entries(&envelope.fixture, section);
     let object_entries = entries("objects");
     let vortex_entries = entries("vortices");
@@ -178,7 +178,7 @@ mod tests {
     use crate::editor::puzzle3d::{nakagin_fixture, Puzzle3dScene, PUZZLE3D_DEFAULT_UTILITY};
 
     #[test]
-    fn kinds_tree_object_drag_data_carries_object_kind_and_mesh_url() {
+    async fn kinds_tree_object_drag_data_carries_object_kind_and_mesh_url() {
         let envelope = Puzzle3dScene { fixture: nakagin_fixture(), runtime: Puzzle3dRuntime::default(), active_utility: PUZZLE3D_DEFAULT_UTILITY.into() };
         let labels = puzzle3d_labels(&Puzzle3dConfig::default());
         let node = render(&envelope, labels);

@@ -21,7 +21,7 @@ pub enum XlsxError {
 }
 
 impl std::fmt::Display for XlsxError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    async fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::Opc(e) => write!(f, "xlsx: {e}"),
             Self::MissingWorkbookRelationship => write!(f, "xlsx: package root has no officeDocument relationship"),
@@ -35,7 +35,7 @@ impl std::fmt::Display for XlsxError {
 impl std::error::Error for XlsxError {}
 
 impl From<crate::artifacts::zip::opc::OpcError> for XlsxError {
-    fn from(e: crate::artifacts::zip::opc::OpcError) -> Self {
+    async fn from(e: crate::artifacts::zip::opc::OpcError) -> Self {
         Self::Opc(e)
     }
 }
@@ -64,18 +64,18 @@ pub const REL_TYPE_OFFICE_DOCUMENT_STRICT: &str = "http://purl.oclc.org/ooxml/of
 /// shared-string index (the shared-strings part would never be found).
 pub const REL_TYPE_SHARED_STRINGS_STRICT: &str = "http://purl.oclc.org/ooxml/officeDocument/relationships/sharedStrings";
 
-pub fn attr(name: &str, value: &str) -> crate::artifacts::xml::schema::snapshot::XmlAttr {
+pub async fn attr(name: &str, value: &str) -> crate::artifacts::xml::schema::snapshot::XmlAttr {
     crate::artifacts::xml::schema::snapshot::XmlAttr { name: name.into(), value: value.into() }
 }
 
-pub fn attr_val<'a>(attrs: &'a [crate::artifacts::xml::schema::snapshot::XmlAttr], name: &str) -> Option<&'a str> {
+pub async fn attr_val<'a>(attrs: &'a [crate::artifacts::xml::schema::snapshot::XmlAttr], name: &str) -> Option<&'a str> {
     attrs.iter().find(|a| a.name == name).map(|a| a.value.as_str())
 }
 //#endregion 🔖️Constants
 
 //#region 🔖️ColumnLetters
 /// 🔤️ 0-indexed column number -> spreadsheet column letters (`0 -> "A"`, `25 -> "Z"`, `26 -> "AA"`).
-pub fn column_letter(mut index: u32) -> String {
+pub async fn column_letter(mut index: u32) -> String {
     let mut letters = Vec::new();
     loop {
         letters.push((b'A' + (index % 26) as u8) as char);
@@ -89,7 +89,7 @@ pub fn column_letter(mut index: u32) -> String {
 
 /// 🔤️ Inverse of `column_letter`: spreadsheet column letters -> 0-indexed column number
 /// (`"A" -> 0`, `"Z" -> 25`, `"AA" -> 26`). `None` on empty or non-alphabetic input.
-pub fn column_index(letters: &str) -> Option<u32> {
+pub async fn column_index(letters: &str) -> Option<u32> {
     if letters.is_empty() || !letters.chars().all(|c| c.is_ascii_alphabetic()) {
         return None;
     }
@@ -102,7 +102,7 @@ pub fn column_index(letters: &str) -> Option<u32> {
 
 /// 🔤️ Splits an A1-style cell reference (`"B2"`) into its column-letter prefix (`"B"`) — only the
 /// column part is needed by the decoder, since row is already known from the enclosing `<row r>`.
-pub fn column_letters_of(reference: &str) -> &str {
+pub async fn column_letters_of(reference: &str) -> &str {
     reference.trim_end_matches(|c: char| c.is_ascii_digit())
 }
 //#endregion 🔖️ColumnLetters
@@ -123,11 +123,11 @@ pub mod derived_composition {
         type Snapshot = XlsxSnapshot;
         const WRITES: Dialect = DIALECT;
 
-        fn reads() -> &'static [Dialect] {
+        async fn reads() -> &'static [Dialect] {
             &[DIALECT, DEP_ZIP, DEP_XML]
         }
 
-        fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+        async fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
             // 🌱 Every listed read dialect's payload is raw text/bytes that this artifact's own
             // analyzer already round-trips through `store::Document{Dsl,Pack}` -- including bytes
             // claiming a dependency's dialect, since (for a single-standard DAG-adjacent dependency
@@ -162,7 +162,7 @@ pub mod io_registry {
 
     static ENTRIES: OnceLock<Vec<ComposerEntry>> = OnceLock::new();
 
-    pub fn entries() -> &'static [ComposerEntry] {
+    pub async fn entries() -> &'static [ComposerEntry] {
         ENTRIES.get_or_init(|| vec![composer_entry_of::<XlsxRawAnyComposer>(), composer_entry_of::<XlsxStrictComposer>(), composer_entry_of::<XlsxTransitionalComposer>()]).as_slice()
     }
 }

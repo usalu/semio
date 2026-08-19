@@ -29,7 +29,7 @@ pub struct AddFrame {
     pub y: Option<f64>,
 }
 
-pub fn handle(payload: &AddFrame, doc: &ArtifactView<'_, LayoutSnapshot>, cfg: &ConfigView<'_, LayoutConfig>) -> Result<Emit<LayoutMutation, LayoutConfigMutation>, Fault> {
+pub async fn handle(payload: &AddFrame, doc: &ArtifactView<'_, LayoutSnapshot>, cfg: &ConfigView<'_, LayoutConfig>) -> Result<Emit<LayoutMutation, LayoutConfigMutation>, Fault> {
     let document = doc.snapshot;
     let config = cfg.snapshot;
     let page_id = config.active_page_id.clone();
@@ -89,7 +89,7 @@ mod tests {
     use crate::editor::layout::LayoutCommand;
 
     #[test]
-    fn add_frame_action_appends_rect() {
+    async fn add_frame_action_appends_rect() {
         let mut app = layout_app();
         let before = app.snapshot().expect("projection").pages[0].frames.len();
         let result = dispatch(&mut app, LayoutCommand::AddFrame(AddFrame { kind: "rect".into(), x: None, y: None }));
@@ -98,14 +98,14 @@ mod tests {
     }
 
     #[test]
-    fn undo_redo_round_trips_add_frame() {
+    async fn undo_redo_round_trips_add_frame() {
         let mut app = layout_app();
         let before = app.snapshot().expect("projection").pages[0].frames.len();
         semio_framework_plugin::testkit::assert_undo_redo_round_trip(&mut app, LayoutCommand::AddFrame(AddFrame { kind: "rect".into(), x: None, y: None }), |app| app.snapshot().expect("projection").pages[0].frames.len(), before, before + 1);
     }
 
     #[test]
-    fn patch_page_supports_margins_and_columns() {
+    async fn patch_page_supports_margins_and_columns() {
         let mut app = layout_app();
         for (field, value) in [("marginTop", 60.0), ("marginRight", 40.0), ("marginBottom", 60.0), ("marginLeft", 40.0), ("columnsGutter", 18.0)] {
             let result = dispatch(&mut app, LayoutCommand::PatchPage(patch_page::PatchPage { page_id: Some("page-1".into()), field: field.into(), value: value.to_string() }));
@@ -117,7 +117,7 @@ mod tests {
     }
 
     #[test]
-    fn patch_frame_supports_rect_fill_and_stroke() {
+    async fn patch_frame_supports_rect_fill_and_stroke() {
         let mut app = layout_app();
         let before = app.snapshot().expect("projection").pages[0].frames.len();
         dispatch(&mut app, LayoutCommand::AddFrame(AddFrame { kind: "rect".into(), x: None, y: None }));
@@ -131,7 +131,7 @@ mod tests {
     }
 
     #[test]
-    fn patch_frame_supports_text_story_content_and_wrap_mode() {
+    async fn patch_frame_supports_text_story_content_and_wrap_mode() {
         let mut app = layout_app();
         dispatch(&mut app, LayoutCommand::PatchFrame(patch_frame::PatchFrame { frame_id: "frame-text-1".into(), page_id: Some("page-1".into()), field: "storyContent".into(), value: "Edited story body.".into() }));
         let story = app.snapshot().expect("projection").stories.into_iter().find(|story| story.id == "story-1").unwrap();
@@ -145,7 +145,7 @@ mod tests {
     }
 
     #[test]
-    fn patch_frame_supports_image_link_path() {
+    async fn patch_frame_supports_image_link_path() {
         let mut app = layout_app();
         dispatch(&mut app, LayoutCommand::PatchFrame(patch_frame::PatchFrame { frame_id: "frame-image-1".into(), page_id: Some("page-1".into()), field: "linkPath".into(), value: "assets/updated.png".into() }));
         let link = app.snapshot().expect("projection").links.into_iter().find(|link| link.id == "link-missing").unwrap();

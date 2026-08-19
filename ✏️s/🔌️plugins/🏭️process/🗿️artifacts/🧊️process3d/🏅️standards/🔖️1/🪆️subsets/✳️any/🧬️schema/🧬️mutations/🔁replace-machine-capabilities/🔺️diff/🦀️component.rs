@@ -7,7 +7,7 @@ use crate::artifacts::process3d::mutations::replace_machine_capabilities::mutati
 use crate::artifacts::process3d::{Process3dSnapshot, Workshop};
 
 //#region 🔖️Diff
-pub fn diff(payload: &ReplaceMachineCapabilities, base: &Process3dSnapshot) -> protocol::MutationOutcome<Process3dDiff> {
+pub async fn diff(payload: &ReplaceMachineCapabilities, base: &Process3dSnapshot) -> protocol::MutationOutcome<Process3dDiff> {
     let Some(existing) = base.workshop.machines.iter().find(|machine| machine.id == payload.id) else {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Machine \"{}\" does not exist.", payload.id), [payload.id.clone()]);
     };

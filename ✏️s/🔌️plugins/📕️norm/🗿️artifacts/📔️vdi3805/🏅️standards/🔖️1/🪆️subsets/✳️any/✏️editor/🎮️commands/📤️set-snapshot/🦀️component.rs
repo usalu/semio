@@ -21,7 +21,7 @@ pub struct ReplaceSnapshot {
 //#endregion 🔖️Payload
 
 //#region 🔖️Handler
-pub fn handle(payload: &ReplaceSnapshot, doc: &ArtifactView<'_, Vdi3805Snapshot>, _cfg: &ConfigView<'_, NormConfig>) -> Result<Emit<Vdi3805Mutation, NormConfigMutation>, Fault> {
+pub async fn handle(payload: &ReplaceSnapshot, doc: &ArtifactView<'_, Vdi3805Snapshot>, _cfg: &ConfigView<'_, NormConfig>) -> Result<Emit<Vdi3805Mutation, NormConfigMutation>, Fault> {
     crate::app_surface::commit_snapshot_fields(Vdi3805Mutation::from_snapshot(doc.snapshot, &payload.snapshot), "setSnapshot")
 }
 //#endregion 🔖️Handler
@@ -34,7 +34,7 @@ mod tests {
     use semio_framework_plugin::HistoryView;
 
     #[test]
-    fn handle_commits_the_payload_document_under_its_action_id() {
+    async fn handle_commits_the_payload_document_under_its_action_id() {
         let projection = Vdi3805Snapshot::default();
         let config = NormConfig::default();
         let emit = handle(&ReplaceSnapshot { snapshot: Vdi3805Snapshot::default() }, &ArtifactView::new(&projection, &HistoryView::empty()), &ConfigView { snapshot: &config }).expect("handle");

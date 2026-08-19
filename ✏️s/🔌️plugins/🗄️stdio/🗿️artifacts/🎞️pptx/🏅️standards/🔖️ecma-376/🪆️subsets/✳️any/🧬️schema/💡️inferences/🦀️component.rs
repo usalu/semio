@@ -23,19 +23,19 @@ pub struct PptxInference {
 }
 
 impl protocol::Inference<PptxSnapshot> for PptxInference {
-    fn infer(snapshot: &PptxSnapshot) -> Self {
+    async fn infer(snapshot: &PptxSnapshot) -> Self {
         Self { outline: PptxOutline::compute(snapshot) }
     }
 }
 
 impl protocol::InferenceSpec<PptxSnapshot> for PptxInference {
-    fn inference_schema_id() -> &'static str {
+    async fn inference_schema_id() -> &'static str {
         "s.stdio.pptx.inference"
     }
-    fn schema_version() -> u32 {
+    async fn schema_version() -> u32 {
         1
     }
-    fn fields() -> &'static [protocol::InferenceFieldSpec] {
+    async fn fields() -> &'static [protocol::InferenceFieldSpec] {
         &[protocol::InferenceFieldSpec { id: "s.stdio.pptx.inference.outline", reads: &["presentation"] }]
     }
 }
@@ -51,7 +51,7 @@ impl ArtifactInferrer for crate::artifacts::pptx::standards::v_ecma_376::subsets
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.stdio.pptx.inference`'s facet leaves into the OS-wide inference catalog —
 /// call once at plugin init, alongside `pptx_artifact_schema_descriptor`'s registration.
-pub fn pptx_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
+pub async fn pptx_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
     schema::ArtifactInferenceDescriptor {
         id: "s.stdio.pptx.inference",
         inference: schema::FacetLeaves {
@@ -72,13 +72,13 @@ mod tests {
     use protocol::Inference;
 
     #[test]
-    fn inference_determinism_law() {
+    async fn inference_determinism_law() {
         let snapshot = PptxSnapshot::default();
         assert_eq!(PptxInference::infer(&snapshot), PptxInference::infer(&snapshot));
     }
 
     #[test]
-    fn inference_default_law() {
+    async fn inference_default_law() {
         assert_eq!(PptxInference::infer(&PptxSnapshot::default()), PptxInference::default());
     }
 }

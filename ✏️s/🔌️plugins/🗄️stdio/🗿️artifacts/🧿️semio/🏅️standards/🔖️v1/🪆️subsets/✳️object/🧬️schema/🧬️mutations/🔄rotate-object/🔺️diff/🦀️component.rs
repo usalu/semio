@@ -8,7 +8,7 @@ use crate::artifacts::semio::standards::v1::subsets::object::schema::diff::Semio
 use crate::artifacts::semio::standards::v1::subsets::object::schema::snapshot::SemioObjectSnapshot;
 
 //#region 🔖️Diff
-pub fn diff(payload: &RotateObject, base: &SemioObjectSnapshot) -> protocol::MutationOutcome<SemioObjectDiff> {
+pub async fn diff(payload: &RotateObject, base: &SemioObjectSnapshot) -> protocol::MutationOutcome<SemioObjectDiff> {
     let r = payload.rotation;
     if !r.x.is_finite() || !r.y.is_finite() || !r.z.is_finite() || !r.w.is_finite() {
         return protocol::MutationOutcome::fatal("mutation.invariant", "Object rotation has a non-finite component.".to_string(), ["transform".to_string()]);

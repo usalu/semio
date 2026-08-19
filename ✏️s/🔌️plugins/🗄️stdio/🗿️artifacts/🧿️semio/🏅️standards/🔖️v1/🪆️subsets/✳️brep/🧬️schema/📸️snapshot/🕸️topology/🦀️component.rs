@@ -111,10 +111,10 @@ pub struct Body {
 }
 
 impl Body {
-    pub fn new() -> Self {
+    pub async fn new() -> Self {
         Body::default()
     }
-    pub fn new_label(&mut self) -> PersistentLabel {
+    pub async fn new_label(&mut self) -> PersistentLabel {
         self.labels.next_label()
     }
 }
@@ -127,7 +127,7 @@ impl Body {
     /// 🧱️ Walks a loop's coedge ring starting from `Loop::first`, following `next` until it
     /// returns to the start. Panics via a debug assertion in the euler layer's invariant checks
     /// if the ring is malformed; callers here get a plain `Vec` (empty if the loop id is stale).
-    pub fn loop_coedges(&self, loop_id: LoopId) -> Vec<CoedgeId> {
+    pub async fn loop_coedges(&self, loop_id: LoopId) -> Vec<CoedgeId> {
         let Some(lp) = self.loops.get(loop_id) else { return Vec::new() };
         let mut result = Vec::new();
         let mut current = lp.first;
@@ -144,40 +144,40 @@ impl Body {
         }
         result
     }
-    pub fn face_loops(&self, face_id: FaceId) -> Vec<LoopId> {
+    pub async fn face_loops(&self, face_id: FaceId) -> Vec<LoopId> {
         let Some(face) = self.faces.get(face_id) else { return Vec::new() };
         let mut result: Vec<LoopId> = face.outer.into_iter().collect();
         result.extend(face.inners.iter().copied());
         result
     }
-    pub fn face_coedges(&self, face_id: FaceId) -> Vec<CoedgeId> {
+    pub async fn face_coedges(&self, face_id: FaceId) -> Vec<CoedgeId> {
         self.face_loops(face_id).into_iter().flat_map(|l| self.loop_coedges(l)).collect()
     }
-    pub fn shell_faces(&self, shell_id: ShellId) -> Vec<FaceId> {
+    pub async fn shell_faces(&self, shell_id: ShellId) -> Vec<FaceId> {
         self.shells.get(shell_id).map(|s| s.faces.clone()).unwrap_or_default()
     }
-    pub fn solid_shells(&self, solid_id: SolidId) -> Vec<ShellId> {
+    pub async fn solid_shells(&self, solid_id: SolidId) -> Vec<ShellId> {
         let Some(solid) = self.solids.get(solid_id) else { return Vec::new() };
         let mut result = vec![solid.outer];
         result.extend(solid.inners.iter().copied());
         result
     }
-    pub fn solid_faces(&self, solid_id: SolidId) -> Vec<FaceId> {
+    pub async fn solid_faces(&self, solid_id: SolidId) -> Vec<FaceId> {
         self.solid_shells(solid_id).into_iter().flat_map(|s| self.shell_faces(s)).collect()
     }
     /// 🧱️ The edge's endpoint vertices in `(start, end)` order as seen through `coedge`'s own
     /// orientation (i.e. respecting `forward`, not the underlying edge's raw `v0`/`v1`).
-    pub fn coedge_endpoints(&self, coedge_id: CoedgeId) -> Option<(VertexId, VertexId)> {
+    pub async fn coedge_endpoints(&self, coedge_id: CoedgeId) -> Option<(VertexId, VertexId)> {
         let coedge = self.coedges.get(coedge_id)?;
         let edge = self.edges.get(coedge.edge)?;
         Some(if coedge.forward { (edge.v0, edge.v1) } else { (edge.v1, edge.v0) })
     }
     /// 🧱️ Every vertex incident to at least one edge that references it as `v0` or `v1`.
-    pub fn vertex_edges(&self, vertex_id: VertexId) -> Vec<EdgeId> {
+    pub async fn vertex_edges(&self, vertex_id: VertexId) -> Vec<EdgeId> {
         self.edges.iter().filter(|(_, e)| e.v0 == vertex_id || e.v1 == vertex_id).map(|(id, _)| id).collect()
     }
     /// 🧱️ Every coedge that uses `edge_id` (both orientations, both faces if the edge is shared).
-    pub fn edge_coedges(&self, edge_id: EdgeId) -> Vec<CoedgeId> {
+    pub async fn edge_coedges(&self, edge_id: EdgeId) -> Vec<CoedgeId> {
         self.coedges.iter().filter(|(_, c)| c.edge == edge_id).map(|(id, _)| id).collect()
     }
 }
@@ -191,7 +191,7 @@ impl Body {
     /// with (generally) different arena indices, but *the same* [`PersistentLabel`]s — used
     /// wherever a caller needs an independent, mutable working copy without disturbing the
     /// original (e.g. undo snapshots, before the document layer's smarter delta-based history).
-    pub fn deep_copy(&self) -> Body {
+    pub async fn deep_copy(&self) -> Body {
         self.clone()
     }
 }
@@ -268,7 +268,7 @@ pub struct BrepArenaSeed {
     pub solids: Vec<SeedSolid>,
 }
 
-fn placeholder_face_for_build() -> FaceId {
+async fn placeholder_face_for_build() -> FaceId {
     ArenaId::from_raw(0, 0)
 }
 
@@ -282,7 +282,7 @@ impl EngineRep<BrepArenaSeed> for Body {
     /// here, where the whole point is restoring each entity's *existing* label from the seed;
     /// calling them would silently break the round-trip law below. `euler::make_loop` is the one
     /// euler function this DOES call, because loops carry no label to preserve or break.
-    fn build(seed: &BrepArenaSeed) -> Self {
+    async fn build(seed: &BrepArenaSeed) -> Self {
         let mut body = Body::new();
         body.labels = LabelSource::from_next(seed.next_label);
 
@@ -345,7 +345,7 @@ impl EngineRep<BrepArenaSeed> for Body {
 /// from a live `Body`. Needed by the round-trip law (`to_seed(&Body::build(&seed)) == seed`) and
 /// by a future diff constructor, which reads post-op state back out this way to translate into a
 /// `SemioBrepDiff` via the label↔snapshot-id map it owns.
-pub fn to_seed(body: &Body) -> BrepArenaSeed {
+pub async fn to_seed(body: &Body) -> BrepArenaSeed {
     let vertex_label = |id: VertexId| -> PersistentLabel { body.vertices.get(id).expect("live vertex").label };
     let edge_label = |id: EdgeId| -> PersistentLabel { body.edges.get(id).expect("live edge").label };
     let face_label = |id: FaceId| -> PersistentLabel { body.faces.get(id).expect("live face").label };
@@ -408,23 +408,23 @@ pub mod history {
     }
 
     impl LabelSource {
-        pub fn new() -> Self {
+        pub async fn new() -> Self {
             LabelSource { next: 0 }
         }
         /// 📜️ Seeds the counter at an explicit high-water mark rather than restarting at 0 — used by
         /// [`crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::Body`]'s `EngineRep::build` so a rebuild from a persisted seed carries
         /// the label numbering forward instead of colliding with the labels it is restoring.
-        pub fn from_next(next: u64) -> Self {
+        pub async fn from_next(next: u64) -> Self {
             LabelSource { next }
         }
-        pub fn next_label(&mut self) -> PersistentLabel {
+        pub async fn next_label(&mut self) -> PersistentLabel {
             let label = PersistentLabel(self.next);
             self.next += 1;
             label
         }
         /// 📜️ The next label this source would mint — the high-water mark a seed must carry forward
         /// (see [`Self::from_next`]) so a rebuilt `Body` never re-mints a label already in use.
-        pub fn next(&self) -> u64 {
+        pub async fn next(&self) -> u64 {
             self.next
         }
     }
@@ -445,10 +445,10 @@ pub mod history {
     }
 
     impl OpDelta {
-        pub fn is_empty(&self) -> bool {
+        pub async fn is_empty(&self) -> bool {
             self.generated.is_empty() && self.modified.is_empty() && self.deleted.is_empty()
         }
-        pub fn merge(&mut self, other: OpDelta) {
+        pub async fn merge(&mut self, other: OpDelta) {
             self.generated.extend(other.generated);
             self.modified.extend(other.modified);
             self.deleted.extend(other.deleted);
@@ -465,27 +465,27 @@ pub mod history {
     }
 
     impl OpRecorder {
-        pub fn new() -> Self {
+        pub async fn new() -> Self {
             OpRecorder::default()
         }
-        pub fn record_generated(&mut self, label: PersistentLabel) {
+        pub async fn record_generated(&mut self, label: PersistentLabel) {
             if !self.delta.generated.contains(&label) {
                 self.delta.generated.push(label);
             }
         }
-        pub fn record_modified(&mut self, label: PersistentLabel) {
+        pub async fn record_modified(&mut self, label: PersistentLabel) {
             if !self.delta.modified.contains(&label) && !self.delta.generated.contains(&label) {
                 self.delta.modified.push(label);
             }
         }
-        pub fn record_deleted(&mut self, label: PersistentLabel) {
+        pub async fn record_deleted(&mut self, label: PersistentLabel) {
             self.delta.generated.retain(|l| *l != label);
             self.delta.modified.retain(|l| *l != label);
             if !self.delta.deleted.contains(&label) {
                 self.delta.deleted.push(label);
             }
         }
-        pub fn into_delta(self) -> OpDelta {
+        pub async fn into_delta(self) -> OpDelta {
             self.delta
         }
     }
@@ -500,7 +500,7 @@ pub mod history {
         /// 📜️ `from_next`/`next` are the pair `Body`'s `EngineRep` impl uses to carry the label
         /// high-water-mark forward across a rebuild instead of restarting at 0 (see `crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology`).
         #[test]
-        fn from_next_seeds_the_counter_and_next_reports_it_without_advancing() {
+        async fn from_next_seeds_the_counter_and_next_reports_it_without_advancing() {
             let mut source = LabelSource::from_next(42);
             assert_eq!(source.next(), 42);
             assert_eq!(source.next(), 42, "next() must be a pure read, not itself advance the counter");
@@ -509,7 +509,7 @@ pub mod history {
         }
 
         #[test]
-        fn label_source_never_repeats() {
+        async fn label_source_never_repeats() {
             let mut source = LabelSource::new();
             let a = source.next_label();
             let b = source.next_label();
@@ -519,7 +519,7 @@ pub mod history {
         }
 
         #[test]
-        fn recorder_generated_then_deleted_cancels_out() {
+        async fn recorder_generated_then_deleted_cancels_out() {
             let mut rec = OpRecorder::new();
             let label = PersistentLabel(5);
             rec.record_generated(label);
@@ -530,7 +530,7 @@ pub mod history {
         }
 
         #[test]
-        fn recorder_generated_entity_is_not_also_reported_modified() {
+        async fn recorder_generated_entity_is_not_also_reported_modified() {
             let mut rec = OpRecorder::new();
             let label = PersistentLabel(1);
             rec.record_generated(label);
@@ -541,7 +541,7 @@ pub mod history {
         }
 
         #[test]
-        fn recorder_deduplicates_repeated_reports() {
+        async fn recorder_deduplicates_repeated_reports() {
             let mut rec = OpRecorder::new();
             let label = PersistentLabel(2);
             rec.record_modified(label);
@@ -551,7 +551,7 @@ pub mod history {
         }
 
         #[test]
-        fn op_delta_merge_concatenates_all_three_lists() {
+        async fn op_delta_merge_concatenates_all_three_lists() {
             let mut a = OpDelta { generated: vec![PersistentLabel(1)], modified: vec![PersistentLabel(2)], deleted: vec![] };
             let b = OpDelta { generated: vec![], modified: vec![], deleted: vec![PersistentLabel(3)] };
             a.merge(b);
@@ -561,7 +561,7 @@ pub mod history {
         }
 
         #[test]
-        fn empty_delta_reports_is_empty() {
+        async fn empty_delta_reports_is_empty() {
             assert!(OpDelta::default().is_empty());
             assert!(!OpDelta { generated: vec![PersistentLabel(0)], ..Default::default() }.is_empty());
         }
@@ -579,13 +579,13 @@ mod tests {
     use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::matrix::Frame3;
     use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::Vec3;
 
-    fn null_coedge() -> CoedgeId {
+    async fn null_coedge() -> CoedgeId {
         ArenaId::from_raw(0, 0)
     }
-    fn null_loop() -> LoopId {
+    async fn null_loop() -> LoopId {
         ArenaId::from_raw(0, 0)
     }
-    fn null_face() -> FaceId {
+    async fn null_face() -> FaceId {
         ArenaId::from_raw(0, 0)
     }
 
@@ -593,28 +593,28 @@ mod tests {
     // `insert(...)` call — calling `body.new_label()` inline as an argument to `body.x.insert(..)`
     // is a double mutable borrow of `body` the borrow checker rejects even though the fields are
     // disjoint (the two calls are nested, not sequential).
-    fn insert_vertex(body: &mut Body, position: Pnt3) -> VertexId {
+    async fn insert_vertex(body: &mut Body, position: Pnt3) -> VertexId {
         let label = body.new_label();
         body.vertices.insert(Vertex { position, tol: Tol::DEFAULT, label })
     }
-    fn insert_edge(body: &mut Body, curve: Curve3Id, range: (f64, f64), v0: VertexId, v1: VertexId) -> EdgeId {
+    async fn insert_edge(body: &mut Body, curve: Curve3Id, range: (f64, f64), v0: VertexId, v1: VertexId) -> EdgeId {
         let label = body.new_label();
         body.edges.insert(Edge { curve, range, v0, v1, tol: Tol::DEFAULT, label })
     }
-    fn insert_face(body: &mut Body, surface: SurfaceId) -> FaceId {
+    async fn insert_face(body: &mut Body, surface: SurfaceId) -> FaceId {
         let label = body.new_label();
         body.faces.insert(Face { surface, outer: None, inners: vec![], flipped: false, tol: Tol::DEFAULT, label })
     }
-    fn insert_shell(body: &mut Body, faces: Vec<FaceId>) -> ShellId {
+    async fn insert_shell(body: &mut Body, faces: Vec<FaceId>) -> ShellId {
         let label = body.new_label();
         body.shells.insert(Shell { faces, label })
     }
-    fn insert_solid(body: &mut Body, outer: ShellId, inners: Vec<ShellId>) -> SolidId {
+    async fn insert_solid(body: &mut Body, outer: ShellId, inners: Vec<ShellId>) -> SolidId {
         let label = body.new_label();
         body.solids.insert(Solid { outer, inners, label })
     }
 
-    fn make_triangle_loop(body: &mut Body, face: FaceId, positions: [Pnt3; 3]) -> LoopId {
+    async fn make_triangle_loop(body: &mut Body, face: FaceId, positions: [Pnt3; 3]) -> LoopId {
         let vertices: Vec<VertexId> = positions.iter().map(|&p| insert_vertex(body, p)).collect();
         let curves: Vec<Curve3Id> = (0..3)
             .map(|i| {
@@ -636,7 +636,7 @@ mod tests {
     }
 
     #[test]
-    fn loop_coedges_walks_the_full_ring_once() {
+    async fn loop_coedges_walks_the_full_ring_once() {
         let mut body = Body::new();
         let frame = Frame3::from_normal(Pnt3::new(0.0, 0.0, 0.0), Vec3::Z).unwrap();
         let surface = body.surfaces.insert(Surface::Plane { frame });
@@ -648,7 +648,7 @@ mod tests {
     }
 
     #[test]
-    fn face_loops_includes_outer_and_all_inner_loops() {
+    async fn face_loops_includes_outer_and_all_inner_loops() {
         let mut body = Body::new();
         let frame = Frame3::WORLD;
         let surface = body.surfaces.insert(Surface::Plane { frame });
@@ -665,7 +665,7 @@ mod tests {
     }
 
     #[test]
-    fn shell_and_solid_traversal_returns_all_members() {
+    async fn shell_and_solid_traversal_returns_all_members() {
         let mut body = Body::new();
         let frame = Frame3::WORLD;
         let surface = body.surfaces.insert(Surface::Plane { frame });
@@ -680,7 +680,7 @@ mod tests {
     }
 
     #[test]
-    fn coedge_endpoints_respects_orientation() {
+    async fn coedge_endpoints_respects_orientation() {
         let mut body = Body::new();
         let v0 = insert_vertex(&mut body, Pnt3::new(0.0, 0.0, 0.0));
         let v1 = insert_vertex(&mut body, Pnt3::new(1.0, 0.0, 0.0));
@@ -694,7 +694,7 @@ mod tests {
     }
 
     #[test]
-    fn vertex_edges_and_edge_coedges_find_all_incident_entries() {
+    async fn vertex_edges_and_edge_coedges_find_all_incident_entries() {
         let mut body = Body::new();
         let v0 = insert_vertex(&mut body, Pnt3::new(0.0, 0.0, 0.0));
         let v1 = insert_vertex(&mut body, Pnt3::new(1.0, 0.0, 0.0));
@@ -708,7 +708,7 @@ mod tests {
     }
 
     #[test]
-    fn serde_round_trips_a_whole_body() {
+    async fn serde_round_trips_a_whole_body() {
         let mut body = Body::new();
         let frame = Frame3::WORLD;
         let surface = body.surfaces.insert(Surface::Plane { frame });
@@ -722,7 +722,7 @@ mod tests {
     }
 
     #[test]
-    fn deep_copy_produces_an_independent_body() {
+    async fn deep_copy_produces_an_independent_body() {
         let mut body = Body::new();
         let v = insert_vertex(&mut body, Pnt3::new(0.0, 0.0, 0.0));
         let mut copy = body.deep_copy();
@@ -735,7 +735,7 @@ mod tests {
     /// hand-assembled fixture, so the seed under test has the same shape a real diff constructor's
     /// extraction would produce.
     #[test]
-    fn engine_rep_build_round_trips_a_closed_box_through_to_seed() {
+    async fn engine_rep_build_round_trips_a_closed_box_through_to_seed() {
         let mut body = Body::new();
         let mut rec = history::OpRecorder::new();
         crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::primitives::make_box(&mut body, 2.0, 3.0, 4.0, &mut rec).unwrap();
@@ -755,7 +755,7 @@ mod tests {
     /// 🌱 The same law on a simpler, loop-free-of-holes single face — guards the `outer`/`inners`
     /// index bookkeeping independently of a full closed solid's shell/solid wrapping.
     #[test]
-    fn engine_rep_build_round_trips_a_loose_planar_face() {
+    async fn engine_rep_build_round_trips_a_loose_planar_face() {
         let mut body = Body::new();
         let mut rec = history::OpRecorder::new();
         crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::primitives::make_planar_face_from_points(&mut body, &[Pnt3::new(0.0, 0.0, 0.0), Pnt3::new(1.0, 0.0, 0.0), Pnt3::new(0.0, 1.0, 0.0)], &mut rec).unwrap();
@@ -768,7 +768,7 @@ mod tests {
     /// 🌱 `LabelSource` determinism (the frozen W1 `EngineRep` contract, "build(s) equals build(s)
     /// for byte-identical s"): rebuilding the same seed twice must not re-mint or collide labels.
     #[test]
-    fn engine_rep_build_is_deterministic_for_identical_seeds() {
+    async fn engine_rep_build_is_deterministic_for_identical_seeds() {
         let mut body = Body::new();
         let mut rec = history::OpRecorder::new();
         crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::primitives::make_box(&mut body, 1.0, 1.0, 1.0, &mut rec).unwrap();
@@ -783,7 +783,7 @@ mod tests {
     /// diff-constructor calls against the same `base` mint colliding labels the instant they merge
     /// (the exact defect §2 of the design flags for a `LabelSource` that restarts at 0 every build).
     #[test]
-    fn engine_rep_build_preserves_the_label_high_water_mark() {
+    async fn engine_rep_build_preserves_the_label_high_water_mark() {
         let mut body = Body::new();
         let mut rec = history::OpRecorder::new();
         crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::primitives::make_box(&mut body, 1.0, 1.0, 1.0, &mut rec).unwrap();

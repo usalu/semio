@@ -24,7 +24,7 @@ const SHOOTING_FALLBACK_MESH_KIND: &str = "box";
 /// 🧱️ Stitched into the app manifest by `crate::editor::shooting::create_shooting_app`. `options.measures`
 /// stays empty here on purpose: shooting's measures are config-derived and rebuilt per frame by
 /// [`window_measures`], not frozen into the manifest.
-pub fn definition() -> WindowKindDefinition {
+pub async fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
         id: SHOOTING_PLAY_WINDOW_SCENE.into(),
         label: LocalizedLabel::native("Scene", "Szene"),
@@ -44,7 +44,7 @@ pub fn definition() -> WindowKindDefinition {
 }
 
 /// 🎚️ The live chrome measures for this window, collected from its `🎚️options/*` components.
-pub fn window_measures(snapshot: &ShootingSnapshot, labels: &ShootingLabels) -> Vec<WindowMeasure> {
+pub async fn window_measures(snapshot: &ShootingSnapshot, labels: &ShootingLabels) -> Vec<WindowMeasure> {
     vec![
         options::center_model::measure(labels),
         options::sun_enabled::measure(snapshot, labels),
@@ -57,7 +57,7 @@ pub fn window_measures(snapshot: &ShootingSnapshot, labels: &ShootingLabels) -> 
     ]
 }
 
-pub fn engagement(snapshot: &ShootingSnapshot, config: &ShootingConfig, labels: &ShootingLabels) -> WindowEngagement {
+pub async fn engagement(snapshot: &ShootingSnapshot, config: &ShootingConfig, labels: &ShootingLabels) -> WindowEngagement {
     WindowEngagement {
         session_active: Some(true),
         options: None,
@@ -91,7 +91,7 @@ pub fn engagement(snapshot: &ShootingSnapshot, config: &ShootingConfig, labels: 
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-fn camera_json(camera: &crate::artifacts::shooting::ShootingCamera) -> String {
+async fn camera_json(camera: &crate::artifacts::shooting::ShootingCamera) -> String {
     let mut value = json!({
         "position": camera.position,
         "target": camera.target,
@@ -105,7 +105,7 @@ fn camera_json(camera: &crate::artifacts::shooting::ShootingCamera) -> String {
     value.to_string()
 }
 
-fn resolve_asset_mesh_url(asset: &ShootingAsset) -> Option<String> {
+async fn resolve_asset_mesh_url(asset: &ShootingAsset) -> Option<String> {
     if asset.url.is_empty() {
         None
     } else {
@@ -113,7 +113,7 @@ fn resolve_asset_mesh_url(asset: &ShootingAsset) -> Option<String> {
     }
 }
 
-fn collect_mesh_urls(snapshot: &ShootingSnapshot) -> Vec<String> {
+async fn collect_mesh_urls(snapshot: &ShootingSnapshot) -> Vec<String> {
     let mut urls = HashSet::new();
     for asset in &snapshot.assets {
         if let Some(url) = resolve_asset_mesh_url(asset) {
@@ -129,7 +129,7 @@ fn collect_mesh_urls(snapshot: &ShootingSnapshot) -> Vec<String> {
 /// `cut_operations`) — `selected` only reflects `active_asset_id` (a real document field) and `hovered`
 /// is always `false`. Documented reduced-fidelity gap, matching this wave's other apps (e.g. `cad`'s
 /// `instance_is_component_hovered`/`gumball_active`).
-fn world_instances_json(snapshot: &ShootingSnapshot) -> String {
+async fn world_instances_json(snapshot: &ShootingSnapshot) -> String {
     let instances: Vec<Value> = snapshot
         .assets
         .iter()
@@ -158,7 +158,7 @@ fn world_instances_json(snapshot: &ShootingSnapshot) -> String {
     serde_json::to_string(&instances).unwrap_or_else(|_| "[]".into())
 }
 
-fn world_meshes_json(snapshot: &ShootingSnapshot) -> String {
+async fn world_meshes_json(snapshot: &ShootingSnapshot) -> String {
     world3d_meshes_json_from_kinds_and_urls(&[SHOOTING_FALLBACK_MESH_KIND.into()], &collect_mesh_urls(snapshot))
 }
 
@@ -168,7 +168,7 @@ fn world_meshes_json(snapshot: &ShootingSnapshot) -> String {
 /// `interactionSelect`/`interactionHover` directly against the `"assets"` domain declared on this
 /// window kind (client-side hit-testing against the mesh instance ids already in this payload) — it no
 /// longer needs `selectionMethod`/`selectionMode`/`targets` from this payload either.
-fn world_selection_json(snapshot: &ShootingSnapshot, cfg: &ShootingConfig) -> String {
+async fn world_selection_json(snapshot: &ShootingSnapshot, cfg: &ShootingConfig) -> String {
     let mut value: Value = serde_json::from_str(&world3d_selection_json("pick", &[], None)).unwrap_or_else(|_| json!({}));
     if let Some(object) = value.as_object_mut() {
         object.insert("transformMode".into(), json!(cfg.active_utility_id));
@@ -178,7 +178,7 @@ fn world_selection_json(snapshot: &ShootingSnapshot, cfg: &ShootingConfig) -> St
     value.to_string()
 }
 
-fn shooting_environment_json(snapshot: &ShootingSnapshot) -> String {
+async fn shooting_environment_json(snapshot: &ShootingSnapshot) -> String {
     let scene = &snapshot.scene;
     let mut value = json!({
         "ambient": { "intensity": scene.ambient.intensity, "color": scene.ambient.color },
@@ -194,15 +194,15 @@ fn shooting_environment_json(snapshot: &ShootingSnapshot) -> String {
     value.to_string()
 }
 
-fn shooting_frame_json(shot: &ShootingShot) -> String {
+async fn shooting_frame_json(shot: &ShootingShot) -> String {
     json!({ "width": shot.width, "height": shot.height, "shape": shot.shape, "badge": true }).to_string()
 }
 
-fn shooting_fit_json(cfg: &ShootingConfig) -> String {
+async fn shooting_fit_json(cfg: &ShootingConfig) -> String {
     json!({ "enabled": cfg.center_model, "revision": cfg.fit_revision, "padding": 1.25 }).to_string()
 }
 
-pub fn render(snapshot: &ShootingSnapshot, cfg: &ShootingConfig) -> UiNode {
+pub async fn render(snapshot: &ShootingSnapshot, cfg: &ShootingConfig) -> UiNode {
     build_world_3d_scene(
         SHOOTING_PLAY_SURFACE_SCENE,
         SHOOTING_PLAY_APP_ID,
@@ -225,7 +225,7 @@ mod tests {
     use semio_framework_plugin::{PluginApp, ViewModel};
 
     #[test]
-    fn renders_world_model_scene() {
+    async fn renders_world_model_scene() {
         let mut app = shooting_app();
         let node = app.render(BODY_SCENE, None, &ViewModel::default()).expect("render");
         let json = serde_json::to_string(&node).unwrap();
@@ -245,7 +245,7 @@ mod tests {
     }
 
     #[test]
-    fn model_scene_uses_asset_mesh_urls() {
+    async fn model_scene_uses_asset_mesh_urls() {
         let mut app = shooting_app();
         let node = app.render(BODY_SCENE, None, &ViewModel::default()).expect("render");
         let json = serde_json::to_string(&node).unwrap();
@@ -254,14 +254,14 @@ mod tests {
     }
 
     #[test]
-    fn window_measures_surface_eight_scene_measures() {
+    async fn window_measures_surface_eight_scene_measures() {
         let mut app = shooting_app();
         let measures = scene_window_measures(&mut app);
         assert_eq!(measures.len(), 8);
     }
 
     #[test]
-    fn definition_declares_the_world_3d_surface_and_body_key() {
+    async fn definition_declares_the_world_3d_surface_and_body_key() {
         let definition = definition();
         assert_eq!(definition.body_key, SHOOTING_PLAY_BODY_SCENE);
         assert!(matches!(definition.surface_kind, SurfaceKind::World3d));

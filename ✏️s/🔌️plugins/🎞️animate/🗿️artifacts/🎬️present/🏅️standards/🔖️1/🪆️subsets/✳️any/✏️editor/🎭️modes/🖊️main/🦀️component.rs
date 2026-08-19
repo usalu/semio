@@ -7,13 +7,13 @@ pub const PRESENT_PLAY_MODE_MAIN: &str = "main";
 
 //#region 🔖️Definition
 /// 🧱️ Stitched into the app manifest by `crate::editor::animate::create_animate_present_app`.
-pub fn definition() -> ModeDefinition {
+pub async fn definition() -> ModeDefinition {
     ModeDefinition { id: PRESENT_PLAY_MODE_MAIN.into(), label: LocalizedLabel::native("Edit", "Bearbeiten"), icon_id: "pencil".into(), tools: Vec::new(), layout_id: None, commands: Vec::new() }
 }
 
 /// 🪟️ The app's default window layout — this mode is the app's `default_mode_id`, so its layout IS the
 /// app-level `default_layout`.
-pub fn layout() -> WindowLayout {
+pub async fn layout() -> WindowLayout {
     create_default_layout(&[tile_editor::PRESENT_PLAY_WINDOW_MAIN.into()], "stack", None, Some(&["Tile editor".into()]))
 }
 //#endregion 🔖️Definition
@@ -24,7 +24,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn the_default_layout_lists_the_tile_editor_window() {
+    async fn the_default_layout_lists_the_tile_editor_window() {
         let json = serde_json::to_string(&layout()).expect("layout json");
         assert!(json.contains(tile_editor::PRESENT_PLAY_WINDOW_MAIN), "layout must reference the tile-editor window kind: {json}");
     }

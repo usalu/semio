@@ -16,7 +16,7 @@ pub struct RemoveSelection {
 /// 🗂️ Each id is looked up against every collection in a fixed precedence (nodes, elements,
 /// materials, sections, supports, load cases, regions, combinations) and removed from the first
 /// one it matches — mirrors the pre-migration `handle_action`'s exact search order.
-pub fn handle(payload: &RemoveSelection, doc: &ArtifactView<'_, Fem2dSnapshot>, _cfg: &ConfigView<'_, Fem2dConfig>) -> Result<Emit<Fem2dMutation, Fem2dConfigMutation>, Fault> {
+pub async fn handle(payload: &RemoveSelection, doc: &ArtifactView<'_, Fem2dSnapshot>, _cfg: &ConfigView<'_, Fem2dConfig>) -> Result<Emit<Fem2dMutation, Fem2dConfigMutation>, Fault> {
     let snapshot = doc.snapshot;
     let mut operations = Vec::new();
     for id in &payload.ids {
@@ -54,7 +54,7 @@ mod tests {
     use crate::editor::fem2d::Fem2dCommand;
 
     #[test]
-    fn remove_selection_covers_nodes_elements_materials_sections_supports_load_cases_2d() {
+    async fn remove_selection_covers_nodes_elements_materials_sections_supports_load_cases_2d() {
         let mut app = fem2d_app();
         dispatch(&mut app, Fem2dCommand::AddNode(add_node::AddNode { x: 0.0, y: 0.0 }));
         let node_id = app.snapshot().expect("snapshot").nodes[0].id.clone();
@@ -68,7 +68,7 @@ mod tests {
     }
 
     #[test]
-    fn remove_selection_covers_regions_2d() {
+    async fn remove_selection_covers_regions_2d() {
         let mut app = fem2d_app();
         dispatch(&mut app, Fem2dCommand::AddRegion(add_region::AddRegion { x: 0.0, y: 0.0, width: 1.0, height: 1.0, material_id: "steel".into(), thickness: None, mesh_size: None }));
         let region_id = app.snapshot().expect("snapshot").regions[0].id.clone();
@@ -78,7 +78,7 @@ mod tests {
     }
 
     #[test]
-    fn remove_selection_with_no_matching_ids_is_a_no_op_2d() {
+    async fn remove_selection_with_no_matching_ids_is_a_no_op_2d() {
         let mut app = fem2d_app();
         let result = dispatch(&mut app, Fem2dCommand::RemoveSelection(RemoveSelection { ids: vec!["missing".into()] }));
         assert!(result.mutations.is_empty());

@@ -38,12 +38,12 @@ semio_framework_plugin::app_labels! {
 
 //#region 🔖️Resolvers
 /// 🗣️ `cfg.locale`-driven counterpart to the deleted `ViewModel`-driven locale read.
-pub fn is_de_locale(cfg: &DagConfig) -> bool {
+pub async fn is_de_locale(cfg: &DagConfig) -> bool {
     cfg.locale.starts_with("de")
 }
 
 /// 🗣️ Derives the compile-time-checked `Locale` from the BCP-47 `cfg.locale` tag.
-pub fn dag_locale(cfg: &DagConfig) -> semio_framework_plugin::Locale {
+pub async fn dag_locale(cfg: &DagConfig) -> semio_framework_plugin::Locale {
     if is_de_locale(cfg) {
         semio_framework_plugin::Locale::De
     } else {
@@ -53,7 +53,7 @@ pub fn dag_locale(cfg: &DagConfig) -> semio_framework_plugin::Locale {
 
 /// 🗣️ Resolves the active label set from `cfg.locale`; this app has no terminology variant, so
 /// `Terminology` is always `Native`.
-pub fn dag_play_labels(cfg: &DagConfig) -> &'static DagPlayLabels {
+pub async fn dag_play_labels(cfg: &DagConfig) -> &'static DagPlayLabels {
     DagPlayLabels::labels(dag_locale(cfg), semio_framework_plugin::Terminology::Native)
 }
 //#endregion 🔖️Resolvers
@@ -64,13 +64,13 @@ mod tests {
     use super::*;
 
     #[test]
-    fn labels_resolve_native_english_and_german_from_the_config_locale() {
+    async fn labels_resolve_native_english_and_german_from_the_config_locale() {
         assert_eq!(dag_play_labels(&DagConfig::default()).nodes.as_str(), "Nodes");
         assert_eq!(dag_play_labels(&DagConfig { locale: "de-DE".into(), ..DagConfig::default() }).nodes.as_str(), "Knoten");
     }
 
     #[test]
-    fn is_de_locale_matches_any_de_prefixed_tag() {
+    async fn is_de_locale_matches_any_de_prefixed_tag() {
         assert!(is_de_locale(&DagConfig { locale: "de".into(), ..DagConfig::default() }));
         assert!(is_de_locale(&DagConfig { locale: "de-DE".into(), ..DagConfig::default() }));
         assert!(!is_de_locale(&DagConfig { locale: "en-US".into(), ..DagConfig::default() }));

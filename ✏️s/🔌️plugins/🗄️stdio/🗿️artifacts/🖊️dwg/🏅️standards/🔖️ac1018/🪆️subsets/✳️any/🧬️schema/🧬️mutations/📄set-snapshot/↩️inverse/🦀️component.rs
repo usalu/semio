@@ -3,6 +3,6 @@ use crate::artifacts::dwg::standards::v_ac1018::subsets::any::schema::snapshot::
 use protocol::Mutation;
 
 /// ↩️ Inverse of set-snapshot.
-pub fn inverse(base: &DwgSnapshot, mutation: &DwgMutation) -> Vec<DwgMutation> {
+pub async fn inverse(base: &DwgSnapshot, mutation: &DwgMutation) -> Vec<DwgMutation> {
     <DwgMutation as Mutation<DwgSnapshot>>::inverse(mutation, base)
 }

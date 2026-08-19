@@ -3,6 +3,6 @@ use crate::artifacts::tsv::standards::iana::subsets::any::schema::snapshot::TsvS
 use protocol::Mutation;
 
 /// ↩️ Inverse of set-snapshot.
-pub fn inverse(base: &TsvSnapshot, mutation: &TsvMutation) -> Vec<TsvMutation> {
+pub async fn inverse(base: &TsvSnapshot, mutation: &TsvMutation) -> Vec<TsvMutation> {
     <TsvMutation as Mutation<TsvSnapshot>>::inverse(mutation, base)
 }

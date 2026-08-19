@@ -12,7 +12,7 @@ pub const ARCHITECT_BODY_CATALOGUE: &str = "architect.catalogue";
 
 //#region 🔖️Definition
 /// 🏛️ Stitched into the app manifest by `crate::editor::architect::create_architect_app`.
-pub fn definition() -> PanelTabDefinition {
+pub async fn definition() -> PanelTabDefinition {
     PanelTabDefinition {
         kind: PanelTabKind::App(FRAMEWORK_PANEL_TAB_CATALOGUE_ID.into()),
         label: LocalizedLabel::native(FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, "Katalog"),
@@ -24,7 +24,7 @@ pub fn definition() -> PanelTabDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render() -> UiNode {
+pub async fn render() -> UiNode {
     let register_items: Vec<UiTreeItemNode> =
         REGISTER_IDS.iter().map(|register| tree_item_with_action(format!("architect-catalogue.register.{register}"), *register, None, architect_action("selectRegister", Some(json!({ "registerId": register }))))).collect();
     tree_node(vec![
@@ -55,14 +55,14 @@ mod tests {
     use super::*;
 
     #[test]
-    fn the_tab_is_the_framework_catalogue_tab_bound_to_this_apps_body_key() {
+    async fn the_tab_is_the_framework_catalogue_tab_bound_to_this_apps_body_key() {
         let definition = definition();
         assert_eq!(definition.body_key.as_deref(), Some(ARCHITECT_BODY_CATALOGUE));
         assert!(matches!(definition.group, PanelGroup::Workbench));
     }
 
     #[test]
-    fn every_register_id_gets_a_catalogue_row() {
+    async fn every_register_id_gets_a_catalogue_row() {
         let json = serde_json::to_string(&render()).expect("json");
         for register in REGISTER_IDS {
             assert!(json.contains(&format!("architect-catalogue.register.{register}")), "missing catalogue row for {register}");
@@ -70,7 +70,7 @@ mod tests {
     }
 
     #[test]
-    fn the_action_shortcuts_are_present() {
+    async fn the_action_shortcuts_are_present() {
         let json = serde_json::to_string(&render()).expect("json");
         for id in ["architect-catalogue.validate", "architect-catalogue.analysis", "architect-catalogue.report", "architect-catalogue.search"] {
             assert!(json.contains(id), "missing shortcut {id}");

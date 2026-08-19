@@ -17,23 +17,23 @@ pub struct DeleteWidget {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn delete_widget(id: String) -> Procedural2dMutation {
+pub async fn delete_widget(id: String) -> Procedural2dMutation {
     Procedural2dMutation::DeleteWidget(DeleteWidget { id })
 }
 
 impl MutationKind<Procedural2dSnapshot, Procedural2dMutation> for DeleteWidget {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "delete", entity: "widget", kind: "delete-widget", record: "DeletedWidget" };
 
-    fn diff(&self, base: &Procedural2dSnapshot) -> protocol::MutationOutcome<Procedural2dDiff> {
+    async fn diff(&self, base: &Procedural2dSnapshot) -> protocol::MutationOutcome<Procedural2dDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &Procedural2dSnapshot) -> Vec<Procedural2dMutation> {
+    async fn inverse(&self, base: &Procedural2dSnapshot) -> Vec<Procedural2dMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         format!("Delete widget \"{}\"", self.id)
     }
-    fn target(&self) -> Vec<String> {
+    async fn target(&self) -> Vec<String> {
         vec![self.id.clone()]
     }
 }

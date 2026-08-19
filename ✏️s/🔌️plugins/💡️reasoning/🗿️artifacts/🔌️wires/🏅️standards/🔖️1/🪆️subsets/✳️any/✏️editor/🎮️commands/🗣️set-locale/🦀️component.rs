@@ -12,7 +12,7 @@ pub struct SetLocale {
     pub value: String,
 }
 
-pub fn handle(payload: &SetLocale, _doc: &ArtifactView<'_, WiresSnapshot>, _cfg: &ConfigView<'_, WiresConfig>) -> Result<Emit<WiresMutation, WiresConfigMutation>, Fault> {
+pub async fn handle(payload: &SetLocale, _doc: &ArtifactView<'_, WiresSnapshot>, _cfg: &ConfigView<'_, WiresConfig>) -> Result<Emit<WiresMutation, WiresConfigMutation>, Fault> {
     Ok(Emit::config(vec![WiresConfigMutation::SetLocale { value: payload.value.clone() }]))
 }
 
@@ -26,7 +26,7 @@ mod tests {
     /// 🗣️ B1: locale is now `cfg.locale`, set via the typed `SetLocale` config command — no more
     /// `ViewModel.locale` threaded through `render` (the trait dropped `ViewModel` entirely).
     #[test]
-    fn wires_labels_resolve_native_in_german() {
+    async fn wires_labels_resolve_native_in_german() {
         let mut app = metabolism_app();
         dispatch(&mut app, WiresCommand::SetLocale(SetLocale { value: "de-DE".into() }));
         let json = render(&mut app, WIRES_PLAY_BODY_DOCUMENT);

@@ -101,7 +101,7 @@ pub struct AssemblySnapshot {
 }
 
 impl Default for AssemblySnapshot {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self {
             schema: ASSEMBLY_DOCUMENT_SCHEMA.into(),
             seed: 0,
@@ -116,16 +116,16 @@ impl Default for AssemblySnapshot {
 //#endregion 🔖️Snapshot
 
 //#region 🔖️Addressing
-pub fn slot_index(snapshot: &AssemblySnapshot, id: &str) -> Option<usize> {
+pub async fn slot_index(snapshot: &AssemblySnapshot, id: &str) -> Option<usize> {
     snapshot.slots.iter().position(|slot| slot.id == id)
 }
-pub fn edge_index(snapshot: &AssemblySnapshot, id: &str) -> Option<usize> {
+pub async fn edge_index(snapshot: &AssemblySnapshot, id: &str) -> Option<usize> {
     snapshot.edges.iter().position(|edge| edge.id == id)
 }
-pub fn rule_index(snapshot: &AssemblySnapshot, id: &str) -> Option<usize> {
+pub async fn rule_index(snapshot: &AssemblySnapshot, id: &str) -> Option<usize> {
     snapshot.rules.iter().position(|rule| rule.id == id)
 }
-pub fn weight_index(snapshot: &AssemblySnapshot, module_id: &str) -> Option<usize> {
+pub async fn weight_index(snapshot: &AssemblySnapshot, module_id: &str) -> Option<usize> {
     snapshot.weights.iter().position(|weight| weight.module_id == module_id)
 }
 //#endregion 🔖️Addressing
@@ -136,7 +136,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn default_snapshot_is_empty_and_zero_seeded() {
+    async fn default_snapshot_is_empty_and_zero_seeded() {
         let snapshot = AssemblySnapshot::default();
         assert_eq!(snapshot.schema, ASSEMBLY_DOCUMENT_SCHEMA);
         assert_eq!(snapshot.seed, 0);
@@ -144,7 +144,7 @@ mod tests {
     }
 
     #[test]
-    fn json_round_trips() {
+    async fn json_round_trips() {
         let mut snapshot = AssemblySnapshot::default();
         snapshot.slots.push(AssemblySlot { id: "s1".into(), x: 1.0, y: 2.0, z: 0.0, pinned_module_id: None });
         snapshot.edges.push(AssemblySlotEdge { id: "e1".into(), from_slot_id: "s1".into(), to_slot_id: "s1".into() });
@@ -156,7 +156,7 @@ mod tests {
     }
 
     #[test]
-    fn addressing_finds_existing_and_misses_unknown() {
+    async fn addressing_finds_existing_and_misses_unknown() {
         let mut snapshot = AssemblySnapshot::default();
         snapshot.slots.push(AssemblySlot { id: "s1".into(), ..Default::default() });
         assert_eq!(slot_index(&snapshot, "s1"), Some(0));

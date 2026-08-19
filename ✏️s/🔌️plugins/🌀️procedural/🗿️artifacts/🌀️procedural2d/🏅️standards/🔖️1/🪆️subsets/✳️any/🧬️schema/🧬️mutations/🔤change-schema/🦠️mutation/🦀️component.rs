@@ -15,20 +15,20 @@ pub struct ChangeSchema {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn change_schema(schema: String) -> Procedural2dMutation {
+pub async fn change_schema(schema: String) -> Procedural2dMutation {
     Procedural2dMutation::ChangeSchema(ChangeSchema { schema })
 }
 
 impl MutationKind<Procedural2dSnapshot, Procedural2dMutation> for ChangeSchema {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "change", entity: "fixture", kind: "change-schema", record: "ChangedSchema" };
 
-    fn diff(&self, base: &Procedural2dSnapshot) -> protocol::MutationOutcome<Procedural2dDiff> {
+    async fn diff(&self, base: &Procedural2dSnapshot) -> protocol::MutationOutcome<Procedural2dDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &Procedural2dSnapshot) -> Vec<Procedural2dMutation> {
+    async fn inverse(&self, base: &Procedural2dSnapshot) -> Vec<Procedural2dMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         format!("Change schema to \"{}\"", self.schema)
     }
 }

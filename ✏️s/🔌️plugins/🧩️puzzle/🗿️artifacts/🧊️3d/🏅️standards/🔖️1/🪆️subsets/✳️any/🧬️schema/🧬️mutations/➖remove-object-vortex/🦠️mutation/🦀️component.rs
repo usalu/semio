@@ -16,23 +16,23 @@ pub struct RemoveObjectVortex {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn remove_object_vortex(object_id: String, vortex_id: String) -> Puzzle3dMutation {
+pub async fn remove_object_vortex(object_id: String, vortex_id: String) -> Puzzle3dMutation {
     Puzzle3dMutation::RemoveObjectVortex(RemoveObjectVortex { object_id, vortex_id })
 }
 
 impl protocol::MutationKind<Puzzle3dSnapshot, Puzzle3dMutation> for RemoveObjectVortex {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "object-vortex", kind: "remove-object-vortex", record: "RemovedObjectVortex" };
 
-    fn diff(&self, base: &Puzzle3dSnapshot) -> protocol::MutationOutcome<Puzzle3dDiff> {
+    async fn diff(&self, base: &Puzzle3dSnapshot) -> protocol::MutationOutcome<Puzzle3dDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &Puzzle3dSnapshot) -> Vec<Puzzle3dMutation> {
+    async fn inverse(&self, base: &Puzzle3dSnapshot) -> Vec<Puzzle3dMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         format!("Remove vortex \"{}\" from object \"{}\"", self.vortex_id, self.object_id)
     }
-    fn target(&self) -> Vec<String> {
+    async fn target(&self) -> Vec<String> {
         vec![self.object_id.clone(), self.vortex_id.clone()]
     }
 }

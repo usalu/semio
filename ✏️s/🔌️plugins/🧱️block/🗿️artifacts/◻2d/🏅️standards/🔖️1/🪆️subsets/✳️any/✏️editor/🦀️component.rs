@@ -42,7 +42,7 @@ const KIT_CATALOG_ARTIFACT_ID: &str = "kit.catalog";
 
 /// 🎯️ An `ActionDescriptor` addressed at this app — the single factory every taxonomy node's chrome
 /// (`📌️panels/*`, `🎮️commands/*`) builds its `on_change`/item actions with.
-pub fn block2d_action(action: &str, args: Option<Value>) -> ActionDescriptor {
+pub async fn block2d_action(action: &str, args: Option<Value>) -> ActionDescriptor {
     semio_framework_plugin::ActionFactory::new(BLOCK2D_PLAY_APP_ID).action(action, args)
 }
 //#endregion 🔖️Constants
@@ -51,7 +51,7 @@ pub fn block2d_action(action: &str, args: Option<Value>) -> ActionDescriptor {
 /// 🔌️ `Block2dPlayApp`'s typed media I/O surface (`AppDefinition.io`) — the implicit document ports
 /// (`Kit×Type`, matching the `"2d.block"` artifact kind) plus a `"catalog:out"` port giving
 /// `puzzle2d_manifest_fragment` a real caller (see `export_media` above).
-pub fn block2d_io() -> AppIo {
+pub async fn block2d_io() -> AppIo {
     AppIo::from_document(
         BLOCK_2D_SCHEMA,
         MediaType { class: MediaClass::Kit, form: MediaForm::Type },
@@ -124,26 +124,26 @@ impl ArtifactEditor for Block2dPlayApp {
     const DIALECT: Dialect = crate::artifacts::block2d::BLOCK2D_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = BLOCK_2D_SCHEMA;
 
-    fn app_schema() -> Option<::schema::AppSchemaDescriptor> {
+    async fn app_schema() -> Option<::schema::AppSchemaDescriptor> {
         Some(crate::editor::block2d::config::schema::app_schema_descriptor())
     }
 
-    fn initial_snapshot() -> Block2dSnapshot {
+    async fn initial_snapshot() -> Block2dSnapshot {
         crate::artifacts::block2d::schema::empty_block2d_snapshot()
     }
 
-    fn io() -> Option<AppIo> {
+    async fn io() -> Option<AppIo> {
         Some(block2d_io())
     }
 
-    fn command_id(command: &Block2dCommand) -> &'static str {
+    async fn command_id(command: &Block2dCommand) -> &'static str {
         command.command_id()
     }
 
     /// 🎯️ Maps host action id + JSON args onto `Block2dCommand` — React/wgpu still speak the stringly
     /// `{action,args}` wire; this is the typed-command bridge until those call sites send `OpBinary`
     /// bytes directly.
-    fn command_from_action(action: &str, args: Option<&Value>) -> Result<Self::Command, Fault> {
+    async fn command_from_action(action: &str, args: Option<&Value>) -> Result<Self::Command, Fault> {
         let str_field = |key: &str| args.and_then(|value| value.get(key)).and_then(Value::as_str).map(str::to_string);
         match action {
             "patchNodeKind" => Ok(Block2dCommand::PatchNodeKind(patch_node_kind::PatchNodeKind { field: str_field("field").unwrap_or_default(), value: str_field("value").unwrap_or_default() })),
@@ -162,7 +162,7 @@ impl ArtifactEditor for Block2dPlayApp {
         }
     }
 
-    fn handle(command: &Block2dCommand, doc: &ArtifactView<'_, Block2dSnapshot>, cfg: &ConfigView<'_, Block2dConfig>, _interaction: &InteractionView<'_>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<Block2dMutation, Block2dConfigMutation, Self::DraftMutation>, Fault> {
+    async fn handle(command: &Block2dCommand, doc: &ArtifactView<'_, Block2dSnapshot>, cfg: &ConfigView<'_, Block2dConfig>, _interaction: &InteractionView<'_>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<Block2dMutation, Block2dConfigMutation, Self::DraftMutation>, Fault> {
         command.dispatch(doc, cfg)
     }
 
@@ -171,7 +171,7 @@ impl ArtifactEditor for Block2dPlayApp {
     /// handle nests under its own `handle_kind` (`handle` granularity), so a stale selection is
     /// pruned the moment `removeHandleKind`/`removeHandle` deletes its target, and hovering/selecting
     /// a kind can transitively reach its handles.
-    fn interaction_topology(doc: &ArtifactView<'_, Block2dSnapshot>, _cfg: &ConfigView<'_, Block2dConfig>) -> InteractionTopology {
+    async fn interaction_topology(doc: &ArtifactView<'_, Block2dSnapshot>, _cfg: &ConfigView<'_, Block2dConfig>) -> InteractionTopology {
         let mut ordered: Vec<TopologyNode> = Vec::new();
         for kind in &doc.snapshot.handle_kinds {
             ordered.push(TopologyNode { id: format!("handleKind:{}", kind.id), granularity: BLOCK2D_GRANULARITY_HANDLE_KIND.into(), parent: None });
@@ -184,7 +184,7 @@ impl ArtifactEditor for Block2dPlayApp {
         InteractionTopology { domains }
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, Block2dSnapshot>, cfg: &ConfigView<'_, Block2dConfig>) -> UiNode {
+    async fn render(body_key: &str, doc: &ArtifactView<'_, Block2dSnapshot>, cfg: &ConfigView<'_, Block2dConfig>) -> UiNode {
         let labels = block2d_labels(&cfg.snapshot.locale);
         match body_key {
             board::BLOCK2D_BODY_BOARD => board::render(doc.snapshot, labels),
@@ -219,7 +219,7 @@ impl ArtifactEditor for Block2dPlayApp {
 //#endregion 🔖️Block2dPlayApp
 
 //#region 🔖️Manifest
-pub fn create_block2d_app() -> semio_framework_plugin::AppDefinition {
+pub async fn create_block2d_app() -> semio_framework_plugin::AppDefinition {
     Editor::builder(crate::artifacts::block2d::BLOCK2D_DIALECT)
             .document(["semio", "block", "2d"])
             .artifact_kind(artifact_kind())
@@ -293,7 +293,7 @@ pub(crate) mod testkit {
 
     pub type Block2dApp = VcsArtifactApp<EditorApp<Block2dPlayApp>>;
 
-    pub fn new_app() -> Block2dApp {
+    pub async fn new_app() -> Block2dApp {
         sdk_new_app::<EditorApp<Block2dPlayApp>>()
     }
 
@@ -301,20 +301,20 @@ pub(crate) mod testkit {
     /// examples }` shape `new_app_with_registry`/`assert_declared_actions_bridge_to_commands` still
     /// expect — framework testkit gap, not modifiable here (`🧰️framework/**` is outside this
     /// packet's lease).
-    pub fn block2d_app_manifest_for_testkit() -> semio_framework_plugin::App {
+    pub async fn block2d_app_manifest_for_testkit() -> semio_framework_plugin::App {
         semio_framework_plugin::App { definition: create_block2d_app(), examples: Vec::new() }
     }
 
     /// 🧬️ A wrapper carrying the real registry so kind discipline (View-emits-operations rejection) runs.
-    pub fn app_with_registry() -> Block2dApp {
+    pub async fn app_with_registry() -> Block2dApp {
         new_app_with_registry::<EditorApp<Block2dPlayApp>>(block2d_app_manifest_for_testkit)
     }
 
-    pub fn dispatch(app: &mut Block2dApp, command: Block2dCommand) -> InvocationResult {
+    pub async fn dispatch(app: &mut Block2dApp, command: Block2dCommand) -> InvocationResult {
         app.dispatch_typed(command, &meta("local")).expect("dispatch")
     }
 
-    pub fn render(app: &mut Block2dApp, body_key: &str) -> String {
+    pub async fn render(app: &mut Block2dApp, body_key: &str) -> String {
         serde_json::to_string(&app.render(body_key, None, &ViewModel::default()).expect("render")).expect("render json")
     }
 }
@@ -328,7 +328,7 @@ mod tests {
     use semio_framework_plugin::PluginApp;
 
     //#region 🔖️CommandSurface
-    fn every_command() -> Vec<Block2dCommand> {
+    async fn every_command() -> Vec<Block2dCommand> {
         vec![
             Block2dCommand::PatchNodeKind(patch_node_kind::PatchNodeKind { field: "name".into(), value: "x".into() }),
             Block2dCommand::AddHandleKind(add_handle_kind::AddHandleKind {}),
@@ -343,7 +343,7 @@ mod tests {
     }
 
     #[test]
-    fn command_ids_are_unique_and_cover_every_row() {
+    async fn command_ids_are_unique_and_cover_every_row() {
         let commands = every_command();
         let ids: Vec<&str> = commands.iter().map(Block2dCommand::command_id).collect();
         let mut sorted = ids.clone();
@@ -354,7 +354,7 @@ mod tests {
     }
 
     #[test]
-    fn every_command_round_trips_text_and_binary_under_its_declared_wire_keyword() {
+    async fn every_command_round_trips_text_and_binary_under_its_declared_wire_keyword() {
         for command in every_command() {
             store::os_store::test_support::assert_op_text_binary_equivalence(&command);
             let printed = protocol::OpText::print_op(&command);
@@ -365,7 +365,7 @@ mod tests {
     /// 🧷️ Pins the exact pre-migration bytes for the rows the `app_commands!` decomposition could have
     /// silently rewritten — copied verbatim from the ticket's `🧪️wire-baseline-2d-before.txt`.
     #[test]
-    fn optional_field_rows_keep_their_pre_migration_bytes() {
+    async fn optional_field_rows_keep_their_pre_migration_bytes() {
         let hex = |command: &Block2dCommand| protocol::OpBinary::encode_op(command).expect("encode").iter().map(|b| format!("{b:02x}")).collect::<String>();
         assert_eq!(hex(&Block2dCommand::AddHandleKind(add_handle_kind::AddHandleKind {})), "01010000");
         assert_eq!(hex(&Block2dCommand::AddHandle(add_handle::AddHandle {})), "01030000");
@@ -374,7 +374,7 @@ mod tests {
     /// 🎯️ Every app-declared action must bridge through `command_from_action` and round-trip
     /// `command_id`.
     #[test]
-    fn command_from_action_covers_every_declared_action_and_rejects_unknown_ones() {
+    async fn command_from_action_covers_every_declared_action_and_rejects_unknown_ones() {
         semio_framework_plugin::testkit::assert_declared_actions_bridge_to_commands::<semio_framework_plugin::EditorApp<Block2dPlayApp>>(testkit::block2d_app_manifest_for_testkit);
         assert!(Block2dPlayApp::command_from_action("noSuchAction", None).is_err());
     }
@@ -382,7 +382,7 @@ mod tests {
 
     //#region 🔖️Manifest
     #[test]
-    fn the_manifest_stitches_every_taxonomy_node() {
+    async fn the_manifest_stitches_every_taxonomy_node() {
         let definition = create_block2d_app();
         assert_eq!(definition.modes.len(), 1);
         assert_eq!(definition.window_kinds.len(), 1);
@@ -395,7 +395,7 @@ mod tests {
     /// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: the `handle` domain is declared
     /// once, with both granularities, a `Topology` hierarchy, and scoped to the board window kind.
     #[test]
-    fn declares_the_handle_interaction_domain_scoped_to_the_board_window() {
+    async fn declares_the_handle_interaction_domain_scoped_to_the_board_window() {
         let definition = create_block2d_app();
         let interaction = definition.interactions.iter().find(|def| def.id == BLOCK2D_INTERACTION_HANDLE).expect("handle domain declared");
         assert_eq!(interaction.granularities.iter().map(|granularity| granularity.id.as_str()).collect::<Vec<_>>(), vec![BLOCK2D_GRANULARITY_HANDLE, BLOCK2D_GRANULARITY_HANDLE_KIND]);
@@ -407,7 +407,7 @@ mod tests {
     /// 🕹️ `interaction_topology` nests every handle under its own handle-kind, enabling both pruning
     /// (`removeHandleKind`/`removeHandle`) and transitive hover from a kind to its handles.
     #[test]
-    fn interaction_topology_nests_handles_under_their_handle_kind() {
+    async fn interaction_topology_nests_handles_under_their_handle_kind() {
         let mut app: Block2dApp = new_app();
         testkit::dispatch(&mut app, Block2dCommand::AddHandleKind(add_handle_kind::AddHandleKind {}));
         testkit::dispatch(&mut app, Block2dCommand::AddHandle(add_handle::AddHandle {}));
@@ -425,13 +425,13 @@ mod tests {
     }
 
     #[test]
-    fn block2d_io_is_wired_into_the_manifest() {
+    async fn block2d_io_is_wired_into_the_manifest() {
         let definition = create_block2d_app();
         assert!(definition.artifact_kinds.iter().any(|kind| kind.id == "kit.catalog"));
     }
 
     #[test]
-    fn block2d_io_declares_the_catalog_out_port() {
+    async fn block2d_io_declares_the_catalog_out_port() {
         let io = block2d_io();
         assert_eq!(io.document_schema, BLOCK_2D_SCHEMA);
         let ports = io.all_ports();
@@ -441,7 +441,7 @@ mod tests {
     }
 
     #[test]
-    fn an_unknown_body_key_falls_back_to_a_text_node() {
+    async fn an_unknown_body_key_falls_back_to_a_text_node() {
         let mut app = new_app();
         assert!(testkit::render(&mut app, "block2d.play.nope").contains("Unknown body"));
     }
@@ -449,7 +449,7 @@ mod tests {
 
     //#region 🔖️Behavior
     #[test]
-    fn add_handle_kind_then_add_handle_then_remove_round_trips() {
+    async fn add_handle_kind_then_add_handle_then_remove_round_trips() {
         let mut app: Block2dApp = new_app();
         testkit::dispatch(&mut app, Block2dCommand::AddHandleKind(add_handle_kind::AddHandleKind {}));
         assert_eq!(app.snapshot().expect("snapshot").handle_kinds.len(), 1);
@@ -462,14 +462,14 @@ mod tests {
     }
 
     #[test]
-    fn patch_node_kind_updates_name() {
+    async fn patch_node_kind_updates_name() {
         let mut app = new_app();
         testkit::dispatch(&mut app, Block2dCommand::PatchNodeKind(patch_node_kind::PatchNodeKind { field: "name".into(), value: "Renamed".into() }));
         assert_eq!(app.snapshot().expect("snapshot").node_kind.name, "Renamed");
     }
 
     #[test]
-    fn set_active_example_loads_left_fixture() {
+    async fn set_active_example_loads_left_fixture() {
         let mut app = new_app();
         testkit::dispatch(&mut app, Block2dCommand::SetActiveExample(set_active_example::SetActiveExample { id: set_active_example::BLOCK2D_EXAMPLE_LEFT.into() }));
         let projection = app.snapshot().expect("snapshot");
@@ -478,7 +478,7 @@ mod tests {
     }
 
     #[test]
-    fn undo_redo_round_trips_through_the_wrapper() {
+    async fn undo_redo_round_trips_through_the_wrapper() {
         let mut app = new_app();
         testkit::dispatch(&mut app, Block2dCommand::AddHandleKind(add_handle_kind::AddHandleKind {}));
         assert_eq!(app.snapshot().expect("snapshot").handle_kinds.len(), 1);
@@ -490,7 +490,7 @@ mod tests {
 
     /// 🌉️ `puzzle2d_manifest_fragment`'s new caller round-trips through the `"catalog:out"` media port.
     #[test]
-    fn export_media_catalog_out_wraps_the_puzzle2d_fragment() {
+    async fn export_media_catalog_out_wraps_the_puzzle2d_fragment() {
         let mut app = new_app();
         testkit::dispatch(&mut app, Block2dCommand::SetActiveExample(set_active_example::SetActiveExample { id: set_active_example::BLOCK2D_EXAMPLE_LEFT.into() }));
         let media = semio_framework_plugin::resolve_ready(app.export_media("catalog:out")).expect("export catalog");
@@ -506,7 +506,7 @@ mod tests {
     }
 
     #[test]
-    fn command_from_action_bridges_set_active_example() {
+    async fn command_from_action_bridges_set_active_example() {
         let _app = Block2dPlayApp;
         assert!(matches!(Block2dPlayApp::command_from_action("setActiveExample", Some(&serde_json::json!({ "exampleId": "left" }))), Ok(Block2dCommand::SetActiveExample(set_active_example::SetActiveExample { id })) if id == "left"));
     }
@@ -519,7 +519,7 @@ mod tests {
     /// `app_with_registry` still earns its keep here: a genuine `Mutation`-kind command must still
     /// emit document operations under the real, kind-discipline-enforcing registry.
     #[test]
-    fn mutation_commands_still_emit_artifact_mutations_under_the_real_registry() {
+    async fn mutation_commands_still_emit_artifact_mutations_under_the_real_registry() {
         let mut app = testkit::app_with_registry();
         let result = testkit::dispatch(&mut app, Block2dCommand::AddHandleKind(add_handle_kind::AddHandleKind {}));
         assert!(!result.mutations.is_empty(), "addHandleKind is a mutation and must reach document operations under kind discipline");

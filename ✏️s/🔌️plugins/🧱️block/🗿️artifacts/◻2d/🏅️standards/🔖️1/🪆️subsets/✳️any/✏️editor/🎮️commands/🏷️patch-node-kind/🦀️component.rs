@@ -13,7 +13,7 @@ pub struct PatchNodeKind {
     pub value: String,
 }
 
-pub fn handle(payload: &PatchNodeKind, _doc: &ArtifactView<'_, Block2dSnapshot>, _cfg: &ConfigView<'_, Block2dConfig>) -> Result<Emit<Block2dMutation, Block2dConfigMutation>, Fault> {
+pub async fn handle(payload: &PatchNodeKind, _doc: &ArtifactView<'_, Block2dSnapshot>, _cfg: &ConfigView<'_, Block2dConfig>) -> Result<Emit<Block2dMutation, Block2dConfigMutation>, Fault> {
     use crate::artifacts::block2d::mutations as m;
     let optional = |value: &str| if value.is_empty() { None } else { Some(value.to_string()) };
     let mutation = match payload.field.as_str() {

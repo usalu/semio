@@ -28,14 +28,14 @@ pub struct Block2dArtifact {
 
 //#region 🔖️Conversions
 impl Default for Block2dArtifact {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self::from_snapshot(Block2dSnapshot::default())
     }
 }
 
 impl Block2dArtifact {
     /// 📸️ Persisted subset.
-    pub fn to_snapshot(&self) -> Block2dSnapshot {
+    pub async fn to_snapshot(&self) -> Block2dSnapshot {
         Block2dSnapshot {
             schema: self.schema.clone(),
             node_kind: self.node_kind.clone(),
@@ -51,7 +51,7 @@ impl Block2dArtifact {
     }
 
     /// 🧬️ Builds a full artifact from a snapshot, leaving UI fields at defaults.
-    pub fn from_snapshot(snapshot: Block2dSnapshot) -> Self {
+    pub async fn from_snapshot(snapshot: Block2dSnapshot) -> Self {
         Self {
             schema: snapshot.schema,
             node_kind: snapshot.node_kind,
@@ -69,7 +69,7 @@ impl Block2dArtifact {
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
-    pub fn set_snapshot(&mut self, snapshot: Block2dSnapshot) {
+    pub async fn set_snapshot(&mut self, snapshot: Block2dSnapshot) {
         self.schema = snapshot.schema;
         self.node_kind = snapshot.node_kind;
         self.presentation = snapshot.presentation;
@@ -86,7 +86,7 @@ impl Block2dArtifact {
 
 //#region 🔖️Descriptor
 /// 🧬️ Descriptor for `s.block.block2d` — twenty handcrafted schema leaves.
-pub fn block2d_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
+pub async fn block2d_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
     schema::ArtifactSchemaDescriptor {
         id: "s.block.block2d",
         artifact: schema::FacetLeaves {
@@ -135,15 +135,15 @@ pub mod derived_construction {
         type Snapshot = Block2dSnapshot;
         type Mutation = Block2dMutation;
         type Diff = Block2dDiff;
-        fn empty() -> Self { Self { snapshot: Block2dSnapshot::default(), diagnostics: Vec::new() } }
-        fn from_snapshot(snapshot: Self::Snapshot) -> Self { Self { snapshot, diagnostics: Vec::new() } }
-        fn from_text(text: &str) -> Result<Self, store::TextError> {
+        async fn empty() -> Self { Self { snapshot: Block2dSnapshot::default(), diagnostics: Vec::new() } }
+        async fn from_snapshot(snapshot: Self::Snapshot) -> Self { Self { snapshot, diagnostics: Vec::new() } }
+        async fn from_text(text: &str) -> Result<Self, store::TextError> {
             Ok(Self::from_snapshot(<Block2dSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
-        fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
+        async fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
             Ok(Self::from_snapshot(<Block2dSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
         }
-        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
+        async fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let outcome = <Self::Mutation as protocol::Mutation<Self::Snapshot>>::diff(&mutation, &self.snapshot);
             match <Self::Diff as protocol::MutationDiff<Self::Snapshot>>::apply(outcome.diff(), &self.snapshot) {
                 Ok(snapshot) => self.snapshot = snapshot,
@@ -155,7 +155,7 @@ pub mod derived_construction {
             }
             (self, outcome)
         }
-        fn absorb(
+        async fn absorb(
             mut self,
             diff: Self::Diff,
         ) -> protocol::MutationApplyResult<Self> {
@@ -163,7 +163,7 @@ pub mod derived_construction {
             self.snapshot = snapshot;
             Ok(self)
         }
-        fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
+        async fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
             if self.diagnostics.is_empty() { Ok(self.snapshot) } else { Err(self.diagnostics) }
         }
     }
@@ -187,11 +187,11 @@ pub mod derived_analysis {
         type Parts = Block2dParts;
         const DIALECT: Dialect = Dialect { artifact_kind: "s.block2d", standard: StandardId("1"), subset: SubsetId("*") };
 
-        fn sniff(_source: &AnalyzeSource<'_>) -> IoConfidence {
+        async fn sniff(_source: &AnalyzeSource<'_>) -> IoConfidence {
             IoConfidence::Medium
         }
 
-        fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
+        async fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
             let mut parts = Block2dParts::default();
             let mut diagnostics = Vec::new();
             let mut confidence = IoConfidence::High;
@@ -235,12 +235,12 @@ semio_framework_plugin::derive_artifact_facets!(
 
 //#region 🔖️DocumentHelpers
 /// 📸️ A fresh, empty `Block2dSnapshot` (all fields at their `Default`).
-pub fn empty_block2d_snapshot() -> Block2dSnapshot {
+pub async fn empty_block2d_snapshot() -> Block2dSnapshot {
     Block2dSnapshot::default()
 }
 
 /// 🪪️ Finds the smallest `"{prefix}{n}"` id not already present in `existing`.
-pub fn next_id<'a>(existing: impl Iterator<Item = &'a str>, prefix: &str) -> String {
+pub async fn next_id<'a>(existing: impl Iterator<Item = &'a str>, prefix: &str) -> String {
     let ids: std::collections::HashSet<&str> = existing.collect();
     let mut i = ids.len();
     loop {
@@ -259,12 +259,12 @@ mod tests {
     use super::*;
 
     #[test]
-    fn empty_definition_matches_default() {
+    async fn empty_definition_matches_default() {
         assert_eq!(empty_block2d_snapshot(), Block2dSnapshot::default());
     }
 
     #[test]
-    fn next_id_skips_existing() {
+    async fn next_id_skips_existing() {
         let existing = ["h0", "h1"];
         assert_eq!(next_id(existing.into_iter(), "h"), "h2");
         assert_eq!(next_id(std::iter::empty(), "h"), "h0");

@@ -13,7 +13,7 @@ use semio_s_plugin_stdio::artifacts::xml::schema::snapshot::xml_document_to_text
 
 pub const SVG_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.svg", standard: StandardId("1.1"), subset: SubsetId::ANY };
 
-pub fn deserialize(from: &SvgSnapshot) -> Result<DagSnapshot, store::TextError> {
+pub async fn deserialize(from: &SvgSnapshot) -> Result<DagSnapshot, store::TextError> {
     let _ = STDIO_SVG_DOCUMENT_SCHEMA;
     let text = xml_document_to_text(&from.doc);
     <DagSnapshot as store::ArtifactDsl>::parse_dsl(&text)
@@ -24,7 +24,7 @@ pub struct SvgIntoDag;
 impl Deserializer<DagSnapshot> for SvgIntoDag {
     const FROM: Dialect = SVG_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Lossy;
-    fn deserialize(payload: &IoPayload) -> IoResult<DagSnapshot> {
+    async fn deserialize(payload: &IoPayload) -> IoResult<DagSnapshot> {
         let IoPayload::Binary(bytes) = payload else {
             return Err(IoError { message: "SvgIntoDag: expected a binary svg payload".to_string(), diagnostics: Vec::new() });
         };

@@ -24,24 +24,24 @@ pub struct CsvArtifact {
 
 //#region 🔖️Conversions
 impl Default for CsvArtifact {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self::from_snapshot(CsvSnapshot::default())
     }
 }
 
 impl CsvArtifact {
     /// 📸️ Persisted subset.
-    pub fn to_snapshot(&self) -> CsvSnapshot {
+    pub async fn to_snapshot(&self) -> CsvSnapshot {
         CsvSnapshot { schema: self.schema.clone(), has_header: self.has_header, records: self.records.clone() }
     }
 
     /// 🧬️ Builds a full artifact from a snapshot.
-    pub fn from_snapshot(snapshot: CsvSnapshot) -> Self {
+    pub async fn from_snapshot(snapshot: CsvSnapshot) -> Self {
         Self { schema: snapshot.schema, has_header: snapshot.has_header, records: snapshot.records }
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
-    pub fn set_snapshot(&mut self, snapshot: CsvSnapshot) {
+    pub async fn set_snapshot(&mut self, snapshot: CsvSnapshot) {
         self.schema = snapshot.schema;
         self.has_header = snapshot.has_header;
         self.records = snapshot.records;
@@ -51,7 +51,7 @@ impl CsvArtifact {
 
 //#region 🔖️Descriptor
 /// 🧬️ Descriptor for `s.stdio.csv`.
-pub fn csv_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
+pub async fn csv_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
     schema::ArtifactSchemaDescriptor {
         id: "s.stdio.csv",
         artifact: schema::FacetLeaves {
@@ -102,27 +102,27 @@ pub mod derived_construction {
         type Snapshot = CsvSnapshot;
         type Mutation = CsvMutation;
         type Diff = CsvDiff;
-        fn empty() -> Self {
+        async fn empty() -> Self {
             Self { snapshot: CsvSnapshot::default(), diagnostics: Vec::new() }
         }
-        fn from_snapshot(snapshot: Self::Snapshot) -> Self {
+        async fn from_snapshot(snapshot: Self::Snapshot) -> Self {
             Self { snapshot, diagnostics: Vec::new() }
         }
-        fn from_text(text: &str) -> Result<Self, store::TextError> {
+        async fn from_text(text: &str) -> Result<Self, store::TextError> {
             Ok(Self::from_snapshot(<CsvSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
-        fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
+        async fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
             Ok(Self::from_snapshot(<CsvSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
         }
-        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
+        async fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let diff = crate::artifacts::csv::schema::mutations::apply_csv_mutation(&mut self.snapshot, &mutation);
             (self, diff)
         }
-        fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
+        async fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
             self.snapshot = <CsvDiff as protocol::MutationDiff<CsvSnapshot>>::apply(&diff, &self.snapshot)?;
             Ok(self)
         }
-        fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
+        async fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
             if self.diagnostics.is_empty() {
                 Ok(self.snapshot)
             } else {
@@ -155,7 +155,7 @@ pub mod derived_analysis {
     /// 🔍 CSV has no magic bytes — sniff by checking that a real RFC4180 parse of the
     /// first few lines yields a consistent field count across records (a strong tabular
     /// signal) and that at least one delimiter/quote is actually present.
-    fn looks_like_csv(text: &str) -> IoConfidence {
+    async fn looks_like_csv(text: &str) -> IoConfidence {
         let sample: String = text.lines().take(20).collect::<Vec<_>>().join("\n");
         if sample.trim().is_empty() {
             return IoConfidence::Low;
@@ -181,7 +181,7 @@ pub mod derived_analysis {
         type Parts = CsvParts;
         const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.csv", standard: StandardId("rfc4180"), subset: SubsetId("*") };
 
-        fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
+        async fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
             match source {
                 AnalyzeSource::Text(text) => {
                     let body = match store::semio_format::split_text_preamble(text) {
@@ -203,7 +203,7 @@ pub mod derived_analysis {
             }
         }
 
-        fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
+        async fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
             let mut parts = CsvParts::default();
             let mut diagnostics = Vec::new();
             let mut confidence = IoConfidence::High;
@@ -236,13 +236,13 @@ pub mod derived_analysis {
         use super::*;
 
         #[test]
-        fn sniff_real_csv_table_is_high() {
+        async fn sniff_real_csv_table_is_high() {
             let text = "a,b,c\n1,2,3\n4,5,6\n";
             assert_eq!(CsvAnalyzerAnalysis::sniff(&AnalyzeSource::Text(text)), IoConfidence::High);
         }
 
         #[test]
-        fn sniff_unrelated_text_is_low() {
+        async fn sniff_unrelated_text_is_low() {
             assert_eq!(CsvAnalyzerAnalysis::sniff(&AnalyzeSource::Text("just a plain sentence.")), IoConfidence::Low);
         }
     }

@@ -16,20 +16,20 @@ pub struct ReplaceJob {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn replace_job(job: ReconstructionJob) -> RemodelMutation {
+pub async fn replace_job(job: ReconstructionJob) -> RemodelMutation {
     RemodelMutation::ReplaceJob(ReplaceJob { job })
 }
 
 impl protocol::MutationKind<RemodelSnapshot, RemodelMutation> for ReplaceJob {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "replace", entity: "job", kind: "replace-job", record: "ReplacedJob" };
 
-    fn diff(&self, base: &RemodelSnapshot) -> protocol::MutationOutcome<RemodelDiff> {
+    async fn diff(&self, base: &RemodelSnapshot) -> protocol::MutationOutcome<RemodelDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &RemodelSnapshot) -> Vec<RemodelMutation> {
+    async fn inverse(&self, base: &RemodelSnapshot) -> Vec<RemodelMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         "Replace reconstruction job".to_string()
     }
 }

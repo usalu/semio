@@ -70,19 +70,19 @@ pub struct En1999Artifact {
 
 //#region 🔖️Conversions
 impl Default for En1999Artifact {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self::from_snapshot(En1999Snapshot::default())
     }
 }
 
 impl From<En1999Snapshot> for En1999Artifact {
-    fn from(snapshot: En1999Snapshot) -> Self {
+    async fn from(snapshot: En1999Snapshot) -> Self {
         Self::from_snapshot(snapshot)
     }
 }
 
 impl En1999Artifact {
-    pub fn to_snapshot(&self) -> En1999Snapshot {
+    pub async fn to_snapshot(&self) -> En1999Snapshot {
         En1999Snapshot {
             n_ed_kn: self.n_ed_kn.clone(),
             m_ed_knm: self.m_ed_knm.clone(),
@@ -113,7 +113,7 @@ impl En1999Artifact {
         }
     }
 
-    pub fn from_snapshot(snapshot: En1999Snapshot) -> Self {
+    pub async fn from_snapshot(snapshot: En1999Snapshot) -> Self {
         Self {
             n_ed_kn: snapshot.n_ed_kn,
             m_ed_knm: snapshot.m_ed_knm,
@@ -145,7 +145,7 @@ impl En1999Artifact {
         }
     }
 
-    pub fn set_snapshot(&mut self, snapshot: En1999Snapshot) {
+    pub async fn set_snapshot(&mut self, snapshot: En1999Snapshot) {
         self.n_ed_kn = snapshot.n_ed_kn;
         self.m_ed_knm = snapshot.m_ed_knm;
         self.a_mm2 = snapshot.a_mm2;
@@ -177,7 +177,7 @@ impl En1999Artifact {
 //#endregion 🔖️Conversions
 
 //#region 🔖️Descriptor
-pub fn en1999_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
+pub async fn en1999_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
     schema::ArtifactSchemaDescriptor {
         id: "s.norm.en1999",
         artifact: schema::FacetLeaves {
@@ -226,19 +226,19 @@ pub mod derived_construction {
         type Snapshot = En1999Snapshot;
         type Mutation = En1999Mutation;
         type Diff = En1999Diff;
-        fn empty() -> Self {
+        async fn empty() -> Self {
             Self { snapshot: En1999Snapshot::default(), diagnostics: Vec::new() }
         }
-        fn from_snapshot(snapshot: Self::Snapshot) -> Self {
+        async fn from_snapshot(snapshot: Self::Snapshot) -> Self {
             Self { snapshot, diagnostics: Vec::new() }
         }
-        fn from_text(text: &str) -> Result<Self, store::TextError> {
+        async fn from_text(text: &str) -> Result<Self, store::TextError> {
             Ok(Self::from_snapshot(<En1999Snapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
-        fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
+        async fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
             Ok(Self::from_snapshot(<En1999Snapshot as store::ArtifactPack>::decode_pack(bytes)?))
         }
-        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
+        async fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let outcome = <En1999Mutation as protocol::Mutation<En1999Snapshot>>::diff(&mutation, &self.snapshot);
             match <Self::Diff as protocol::MutationDiff<Self::Snapshot>>::apply(outcome.diff(), &self.snapshot) {
                 Ok(snapshot) => self.snapshot = snapshot,
@@ -250,7 +250,7 @@ pub mod derived_construction {
             }
             (self, outcome)
         }
-        fn absorb(
+        async fn absorb(
             mut self,
             diff: Self::Diff,
         ) -> protocol::MutationApplyResult<Self> {
@@ -258,7 +258,7 @@ pub mod derived_construction {
             self.snapshot = snapshot;
             Ok(self)
         }
-        fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
+        async fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
             if self.diagnostics.is_empty() {
                 Ok(self.snapshot)
             } else {
@@ -286,11 +286,11 @@ pub mod derived_analysis {
         type Parts = En1999Parts;
         const DIALECT: Dialect = Dialect { artifact_kind: "s.en1999", standard: StandardId("1"), subset: SubsetId("*") };
 
-        fn sniff(_source: &AnalyzeSource<'_>) -> IoConfidence {
+        async fn sniff(_source: &AnalyzeSource<'_>) -> IoConfidence {
             IoConfidence::Medium
         }
 
-        fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
+        async fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
             let mut parts = En1999Parts::default();
             let mut diagnostics = Vec::new();
             let mut confidence = IoConfidence::High;
@@ -356,16 +356,16 @@ pub mod na_de {
     }
 
     impl AnnexParams {
-        pub fn en() -> Self {
+        pub async fn en() -> Self {
             Self { choice: AnnexChoice::En, gamma_m1: 1.1, gamma_m2: 1.25 }
         }
 
         /// 🇩️🇪️ DIN EN 1999-1-1/NA sets no NDP override for γ_M1/γ_M2 — equal to EN by design, not an oversight.
-        pub fn de() -> Self {
+        pub async fn de() -> Self {
             Self { choice: AnnexChoice::De, gamma_m1: 1.1, gamma_m2: 1.25 }
         }
 
-        pub fn for_choice(choice: AnnexChoice) -> Self {
+        pub async fn for_choice(choice: AnnexChoice) -> Self {
             match choice {
                 AnnexChoice::En => Self::en(),
                 AnnexChoice::De => Self::de(),
@@ -387,26 +387,26 @@ pub mod part_1_1 {
     }
 
     impl Alloy {
-        pub fn f_0_2_mpa(self) -> f64 {
+        pub async fn f_0_2_mpa(self) -> f64 {
             match self {
                 Self::Aw6060T6 => 190.0,
                 Self::Aw6082T6 => 260.0,
             }
         }
 
-        pub fn f_u_mpa(self) -> f64 {
+        pub async fn f_u_mpa(self) -> f64 {
             match self {
                 Self::Aw6060T6 => 215.0,
                 Self::Aw6082T6 => 310.0,
             }
         }
 
-        pub fn epsilon(self) -> f64 {
+        pub async fn epsilon(self) -> f64 {
             (250.0 / self.f_0_2_mpa()).sqrt()
         }
 
         /// 🔥️ HAZ softened strength f_o,haz [MPa], representative GMAW-welded value per EN 1999-1-1 Table 6.2.
-        pub fn f_o_haz_mpa(self) -> f64 {
+        pub async fn f_o_haz_mpa(self) -> f64 {
             match self {
                 Self::Aw6060T6 => 95.0,
                 Self::Aw6082T6 => 185.0,
@@ -423,7 +423,7 @@ pub mod part_1_1 {
         Class4,
     }
 
-    pub fn classify_flange_outstand(b_mm: f64, t_mm: f64, alloy: Alloy) -> SectionClass {
+    pub async fn classify_flange_outstand(b_mm: f64, t_mm: f64, alloy: Alloy) -> SectionClass {
         let eps = alloy.epsilon();
         let ratio = b_mm / t_mm;
         if ratio <= 3.0 * eps {
@@ -438,19 +438,19 @@ pub mod part_1_1 {
     }
 
     /// 📐️ Bending resistance M_c,Rd [kNm] per EN 1999-1-1 §6.2.5.
-    pub fn m_c_rd_knm(w_el_mm3: f64, alloy: Alloy, gamma_m: f64) -> f64 {
+    pub async fn m_c_rd_knm(w_el_mm3: f64, alloy: Alloy, gamma_m: f64) -> f64 {
         w_el_mm3 * alloy.f_0_2_mpa() / gamma_m / 1_000_000.0
     }
 
-    pub fn check_cross_section(n_ed: f64, n_rd: f64, annex: AnnexChoice) -> CheckResult {
+    pub async fn check_cross_section(n_ed: f64, n_rd: f64, annex: AnnexChoice) -> CheckResult {
         CheckResult::from_utilization(ClauseId::new("EN 1999-1-1", "§6.2", "6.2"), Quantity::force_kn(n_ed), Quantity::force_kn(n_rd), "aluminium cross-section ULS", annex)
     }
 
-    pub fn check_buckling(n_ed: f64, n_b_rd: f64, annex: AnnexChoice) -> CheckResult {
+    pub async fn check_buckling(n_ed: f64, n_b_rd: f64, annex: AnnexChoice) -> CheckResult {
         CheckResult::from_utilization(ClauseId::new("EN 1999-1-1", "§6.3", "6.3"), Quantity::force_kn(n_ed), Quantity::force_kn(n_b_rd), "aluminium buckling ULS", annex)
     }
 
-    pub fn check_bending(m_ed_knm: f64, m_rd_knm: f64, annex: AnnexChoice) -> CheckResult {
+    pub async fn check_bending(m_ed_knm: f64, m_rd_knm: f64, annex: AnnexChoice) -> CheckResult {
         CheckResult::from_utilization(
             ClauseId::new("EN 1999-1-1", "§6.2.5", "6.2.5"),
             Quantity::new(crate::document::QuantityKind::Moment, m_ed_knm * 1_000_000.0),
@@ -461,17 +461,17 @@ pub mod part_1_1 {
     }
 
     /// 🔥️ HAZ reduced strength f_o,haz [MPa] in the HAZ zone near welds.
-    pub fn haz_strength_mpa(alloy: Alloy) -> f64 {
+    pub async fn haz_strength_mpa(alloy: Alloy) -> f64 {
         alloy.f_o_haz_mpa()
     }
 
     /// 🔥️ HAZ strength reduction factor ρ_o,haz = f_o,haz / f_o per EN 1999-1-1 Table 6.2, applied within the HAZ zone near welds.
-    pub fn haz_reduction_factor(alloy: Alloy) -> f64 {
+    pub async fn haz_reduction_factor(alloy: Alloy) -> f64 {
         alloy.f_o_haz_mpa() / alloy.f_0_2_mpa()
     }
 
     /// 📐️ Torsional buckling resistance N_b,Rd [kN] with torsion constant I_t.
-    pub fn torsional_buckling_resistance_kn(a_mm2: f64, i_t_mm4: f64, l_cr_mm: f64, alloy: Alloy, gamma_m: f64, e_mpa: f64) -> f64 {
+    pub async fn torsional_buckling_resistance_kn(a_mm2: f64, i_t_mm4: f64, l_cr_mm: f64, alloy: Alloy, gamma_m: f64, e_mpa: f64) -> f64 {
         let g = e_mpa / (2.0 * (1.0 + 0.33));
         let c_t = (g * i_t_mm4 / (l_cr_mm * l_cr_mm)).sqrt();
         let lambda = (a_mm2 * alloy.f_0_2_mpa() / (c_t * gamma_m)).sqrt();
@@ -480,16 +480,16 @@ pub mod part_1_1 {
     }
 
     /// 🔗️ Directional weld throat resistance F_w,Rd [kN] per EN 1999-1-1 §8.5 (absorbed here — welds are not a dedicated EN 1999 part).
-    pub fn weld_resistance_kn(a_w_mm2: f64, f_u_mpa: f64, beta_w: f64, gamma_m2: f64) -> f64 {
+    pub async fn weld_resistance_kn(a_w_mm2: f64, f_u_mpa: f64, beta_w: f64, gamma_m2: f64) -> f64 {
         a_w_mm2 * f_u_mpa / (beta_w * gamma_m2 * 1000.0)
     }
 
     /// 🔗️ Weld throat area A_w = a · l [mm²].
-    pub fn weld_throat_area_mm2(throat_mm: f64, length_mm: f64) -> f64 {
+    pub async fn weld_throat_area_mm2(throat_mm: f64, length_mm: f64) -> f64 {
         throat_mm * length_mm
     }
 
-    pub fn check_welded_joint(v_ed_kn: f64, v_rd_kn: f64, annex: AnnexChoice) -> CheckResult {
+    pub async fn check_welded_joint(v_ed_kn: f64, v_rd_kn: f64, annex: AnnexChoice) -> CheckResult {
         CheckResult::from_utilization(ClauseId::new("EN 1999-1-1", "§8.5", "8.5"), Quantity::force_kn(v_ed_kn), Quantity::force_kn(v_rd_kn), "aluminium welded joint ULS", annex)
     }
 }
@@ -500,12 +500,12 @@ pub mod part_1_2 {
     use super::*;
 
     /// 🔥️ Critical temperature θ_cr [°C] for fire protection assessment.
-    pub fn critical_temperature_c(f_0_2_mpa: f64) -> f64 {
+    pub async fn critical_temperature_c(f_0_2_mpa: f64) -> f64 {
         170.0 + 0.4 * f_0_2_mpa
     }
 
     /// 🔥️ Strength reduction factor k_θ at elevated temperature.
-    pub fn strength_reduction_factor(theta_c: f64, theta_cr_c: f64) -> f64 {
+    pub async fn strength_reduction_factor(theta_c: f64, theta_cr_c: f64) -> f64 {
         if theta_c <= theta_cr_c {
             1.0
         } else {
@@ -513,7 +513,7 @@ pub mod part_1_2 {
         }
     }
 
-    pub fn check_fire_protection(theta_c: f64, theta_limit_c: f64, annex: AnnexChoice) -> CheckResult {
+    pub async fn check_fire_protection(theta_c: f64, theta_limit_c: f64, annex: AnnexChoice) -> CheckResult {
         CheckResult::from_utilization(
             ClauseId::new("EN 1999-1-2", "§4", "4.2"),
             Quantity::new(crate::document::QuantityKind::Temperature, theta_c),
@@ -532,7 +532,7 @@ pub mod part_1_3 {
     pub const FATIGUE_CUTOFF_CYCLES: f64 = 2_000_000.0;
 
     /// 🔄️ Fatigue strength at N cycles [MPa] per EN 1999-1-3.
-    pub fn fatigue_strength_mpa(delta_sigma_c_mpa: f64, m: f64, n_cycles: f64) -> f64 {
+    pub async fn fatigue_strength_mpa(delta_sigma_c_mpa: f64, m: f64, n_cycles: f64) -> f64 {
         if n_cycles >= FATIGUE_CUTOFF_CYCLES {
             0.0
         } else {
@@ -540,7 +540,7 @@ pub mod part_1_3 {
         }
     }
 
-    pub fn check_fatigue(delta_sigma_ed: f64, delta_sigma_rd: f64, annex: AnnexChoice) -> CheckResult {
+    pub async fn check_fatigue(delta_sigma_ed: f64, delta_sigma_rd: f64, annex: AnnexChoice) -> CheckResult {
         CheckResult::from_utilization(ClauseId::new("EN 1999-1-3", "§7", "7.1"), Quantity::stress_mpa(delta_sigma_ed), Quantity::stress_mpa(delta_sigma_rd), "aluminium fatigue ULS", annex)
     }
 }
@@ -552,13 +552,13 @@ pub mod part_1_4 {
     use super::*;
 
     /// 📄️ Plate slenderness λ_p for a cold-formed compression element per EN 1999-1-4 §5 (effective width method).
-    pub fn plate_slenderness(b_mm: f64, t_mm: f64, k_sigma: f64, alloy: Alloy) -> f64 {
+    pub async fn plate_slenderness(b_mm: f64, t_mm: f64, k_sigma: f64, alloy: Alloy) -> f64 {
         let eps = alloy.epsilon();
         (b_mm / t_mm) / (28.4 * eps * k_sigma.sqrt())
     }
 
     /// 📄️ Effective width reduction factor ρ per EN 1999-1-4 §5.4.
-    pub fn effective_width_factor(lambda_p: f64) -> f64 {
+    pub async fn effective_width_factor(lambda_p: f64) -> f64 {
         if lambda_p <= 0.673 {
             1.0
         } else {
@@ -567,11 +567,11 @@ pub mod part_1_4 {
     }
 
     /// 📄️ Effective elastic section modulus W_eff [mm³] of a class 4 cold-formed cross-section.
-    pub fn effective_section_modulus_mm3(w_el_mm3: f64, rho: f64) -> f64 {
+    pub async fn effective_section_modulus_mm3(w_el_mm3: f64, rho: f64) -> f64 {
         w_el_mm3 * rho
     }
 
-    pub fn check_cold_formed_sheeting(m_ed_knm: f64, w_eff_mm3: f64, alloy: Alloy, gamma_m1: f64, annex: AnnexChoice) -> CheckResult {
+    pub async fn check_cold_formed_sheeting(m_ed_knm: f64, w_eff_mm3: f64, alloy: Alloy, gamma_m1: f64, annex: AnnexChoice) -> CheckResult {
         let m_rd_knm = w_eff_mm3 * alloy.f_0_2_mpa() / gamma_m1 / 1_000_000.0;
         CheckResult::from_utilization(
             ClauseId::new("EN 1999-1-4", "§5.4", "5.4"),
@@ -592,17 +592,17 @@ pub mod part_1_5 {
     pub const E_ALUMINIUM_MPA: f64 = 70_000.0;
 
     /// 🛢️ Cylindrical shell axial elastic critical buckling stress σ_cr [MPa] per EN 1999-1-5 §5.
-    pub fn critical_axial_stress_mpa(t_mm: f64, r_mm: f64) -> f64 {
+    pub async fn critical_axial_stress_mpa(t_mm: f64, r_mm: f64) -> f64 {
         0.605 * E_ALUMINIUM_MPA * t_mm / r_mm
     }
 
     /// 🛢️ Relative shell slenderness λ̄ = √(f_o / σ_cr).
-    pub fn relative_slenderness(f_o_mpa: f64, sigma_cr_mpa: f64) -> f64 {
+    pub async fn relative_slenderness(f_o_mpa: f64, sigma_cr_mpa: f64) -> f64 {
         (f_o_mpa / sigma_cr_mpa).sqrt()
     }
 
     /// 🛢️ Shell buckling reduction factor χ from relative slenderness λ̄.
-    pub fn buckling_reduction_factor(lambda_bar: f64) -> f64 {
+    pub async fn buckling_reduction_factor(lambda_bar: f64) -> f64 {
         if lambda_bar <= 0.2 {
             1.0
         } else {
@@ -611,29 +611,29 @@ pub mod part_1_5 {
     }
 
     /// 🛢️ Design shell buckling resistance stress σ_Rd = χ·f_o/γ_M1 [MPa].
-    pub fn design_buckling_stress_mpa(chi: f64, f_o_mpa: f64, gamma_m1: f64) -> f64 {
+    pub async fn design_buckling_stress_mpa(chi: f64, f_o_mpa: f64, gamma_m1: f64) -> f64 {
         chi * f_o_mpa / gamma_m1
     }
 
-    pub fn check_shell_buckling(sigma_ed_mpa: f64, sigma_rd_mpa: f64, annex: AnnexChoice) -> CheckResult {
+    pub async fn check_shell_buckling(sigma_ed_mpa: f64, sigma_rd_mpa: f64, annex: AnnexChoice) -> CheckResult {
         CheckResult::from_utilization(ClauseId::new("EN 1999-1-5", "§5", "5.3"), Quantity::stress_mpa(sigma_ed_mpa), Quantity::stress_mpa(sigma_rd_mpa), "cylindrical shell axial buckling", annex)
     }
 }
 // #endregion 🔖️Part1_5
 
 /// 📐️ Aluminium bending resistance M_c,Rd [kNm].
-pub fn bending_resistance_knm(w_el_mm3: f64, f_0_2_mpa: f64, gamma_m: f64) -> f64 {
+pub async fn bending_resistance_knm(w_el_mm3: f64, f_0_2_mpa: f64, gamma_m: f64) -> f64 {
     w_el_mm3 * f_0_2_mpa / gamma_m / 1_000_000.0
 }
 
 /// 📐️ Buckling resistance with χ factor.
-pub fn buckling_resistance_kn(a_mm2: f64, f_0_2_mpa: f64, chi: f64, gamma_m: f64) -> f64 {
+pub async fn buckling_resistance_kn(a_mm2: f64, f_0_2_mpa: f64, chi: f64, gamma_m: f64) -> f64 {
     chi * a_mm2 * f_0_2_mpa / gamma_m / 1000.0
 }
 
 /// 📋️ Aluminium member check.
 #[allow(clippy::too_many_arguments, reason = "one argument per parameter the published clause formula itself names; bundling them into a struct would break the 1:1 reading against the standard")]
-pub fn check_aluminium_member(n_ed_kn: f64, m_ed_knm: f64, a_mm2: f64, w_el_mm3: f64, alloy: part_1_1::Alloy, chi: f64, i_t_mm4: f64, l_cr_mm: f64, annex: AnnexChoice) -> CheckReport {
+pub async fn check_aluminium_member(n_ed_kn: f64, m_ed_knm: f64, a_mm2: f64, w_el_mm3: f64, alloy: part_1_1::Alloy, chi: f64, i_t_mm4: f64, l_cr_mm: f64, annex: AnnexChoice) -> CheckReport {
     let gamma_m1 = na_de::AnnexParams::for_choice(annex).gamma_m1;
     let f_0_2 = alloy.f_0_2_mpa();
     let n_rd = a_mm2 * f_0_2 / gamma_m1 / 1000.0;
@@ -655,7 +655,7 @@ mod compliance_helpers_tests {
     use super::*;
 
     #[test]
-    fn alloy_6060_t6_m_c_rd() {
+    async fn alloy_6060_t6_m_c_rd() {
         let alloy = part_1_1::Alloy::Aw6060T6;
         let w_el = 24_000.0;
         let m_rd = part_1_1::m_c_rd_knm(w_el, alloy, na_de::AnnexParams::de().gamma_m1);
@@ -663,14 +663,14 @@ mod compliance_helpers_tests {
     }
 
     #[test]
-    fn section_classification_6060() {
+    async fn section_classification_6060() {
         let alloy = part_1_1::Alloy::Aw6060T6;
         let class = part_1_1::classify_flange_outstand(10.0, 3.0, alloy);
         assert_eq!(class, part_1_1::SectionClass::Class1);
     }
 
     #[test]
-    fn haz_reduced_strength() {
+    async fn haz_reduced_strength() {
         let alloy = part_1_1::Alloy::Aw6060T6;
         let f_haz = part_1_1::haz_strength_mpa(alloy);
         assert!((f_haz - 95.0).abs() < 1e-9);
@@ -678,7 +678,7 @@ mod compliance_helpers_tests {
     }
 
     #[test]
-    fn haz_reduction_factor_6082_t6_table_6_2() {
+    async fn haz_reduction_factor_6082_t6_table_6_2() {
         // 📖️ EN 1999-1-1 Table 6.2 representative GMAW HAZ value for 6082-T6: f_o,haz ≈ 185 MPa vs f_o = 260 MPa ⇒ ρ_o,haz ≈ 0.71.
         let alloy = part_1_1::Alloy::Aw6082T6;
         let rho_o_haz = part_1_1::haz_reduction_factor(alloy);
@@ -687,7 +687,7 @@ mod compliance_helpers_tests {
     }
 
     #[test]
-    fn fatigue_cutoff_at_2e6() {
+    async fn fatigue_cutoff_at_2e6() {
         let strength = part_1_3::fatigue_strength_mpa(80.0, 8.0, 2_000_000.0);
         assert!((strength - 0.0).abs() < 1e-9);
         let below = part_1_3::fatigue_strength_mpa(80.0, 8.0, 1_000_000.0);
@@ -695,14 +695,14 @@ mod compliance_helpers_tests {
     }
 
     #[test]
-    fn aluminium_member_e2e() {
+    async fn aluminium_member_e2e() {
         let alloy = part_1_1::Alloy::Aw6082T6;
         let report = check_aluminium_member(80.0, 12.0, 1200.0, 15_000.0, alloy, 0.8, 5000.0, 3000.0, AnnexChoice::De);
         assert_eq!(report.checks.len(), 3);
     }
 
     #[test]
-    fn weld_resistance_worked() {
+    async fn weld_resistance_worked() {
         let a_w = part_1_1::weld_throat_area_mm2(4.0, 120.0);
         assert!((a_w - 480.0).abs() < 1e-9);
         let gamma_m2 = na_de::AnnexParams::de().gamma_m2;
@@ -711,7 +711,7 @@ mod compliance_helpers_tests {
     }
 
     #[test]
-    fn fire_critical_temperature_6060() {
+    async fn fire_critical_temperature_6060() {
         let theta_cr = part_1_2::critical_temperature_c(190.0);
         assert!((theta_cr - 246.0).abs() < 0.1);
         let k_theta = part_1_2::strength_reduction_factor(300.0, theta_cr);
@@ -719,20 +719,20 @@ mod compliance_helpers_tests {
     }
 
     #[test]
-    fn cold_formed_effective_width_factor_worked() {
+    async fn cold_formed_effective_width_factor_worked() {
         // 📖️ EN 1999-1-4 §5.4: ρ(λ_p=1.0) = (1 − 0.22/1.0)/1.0 = 0.78.
         let rho = part_1_4::effective_width_factor(1.0);
         assert!((rho - 0.78).abs() < 1e-9);
     }
 
     #[test]
-    fn cold_formed_effective_width_factor_below_limit_is_unity() {
+    async fn cold_formed_effective_width_factor_below_limit_is_unity() {
         let rho = part_1_4::effective_width_factor(0.5);
         assert!((rho - 1.0).abs() < 1e-9);
     }
 
     #[test]
-    fn check_cold_formed_sheeting_worked() {
+    async fn check_cold_formed_sheeting_worked() {
         let alloy = part_1_1::Alloy::Aw6060T6;
         let gamma_m1 = na_de::AnnexParams::de().gamma_m1;
         let w_eff = part_1_4::effective_section_modulus_mm3(8000.0, 0.78);
@@ -742,14 +742,14 @@ mod compliance_helpers_tests {
     }
 
     #[test]
-    fn shell_critical_axial_stress_worked() {
+    async fn shell_critical_axial_stress_worked() {
         // 📖️ EN 1999-1-5 §5: σ_cr = 0.605·E·t/r = 0.605·70000·4/500 = 338.8 MPa.
         let sigma_cr = part_1_5::critical_axial_stress_mpa(4.0, 500.0);
         assert!((sigma_cr - 338.8).abs() < 1e-6);
     }
 
     #[test]
-    fn shell_buckling_pipeline_worked() {
+    async fn shell_buckling_pipeline_worked() {
         let alloy = part_1_1::Alloy::Aw6060T6;
         let gamma_m1 = na_de::AnnexParams::de().gamma_m1;
         let sigma_cr = part_1_5::critical_axial_stress_mpa(4.0, 500.0);

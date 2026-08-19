@@ -24,7 +24,7 @@ use semio_framework_plugin::{ExecutionMode, Plugin};
 /// `Isolated` (no cross-plugin extension attachment, the SDK default holds), and it asks the
 /// broker for document write access because `MathematicalPlayApp` persists graph edits back to
 /// the open document.
-pub fn plugin() -> Result<Plugin, semio_framework_plugin::PluginAssemblyError> {
+pub async fn plugin() -> Result<Plugin, semio_framework_plugin::PluginAssemblyError> {
     Plugin::builder("mathematical")
         .label("Mathematical")
         .version("0.1.0")
@@ -47,17 +47,17 @@ mod surface_tests {
     use crate::viewer::mathematical::MathematicalViewer;
 
     #[test]
-    fn mathematical_viewer_never_mutates() {
+    async fn mathematical_viewer_never_mutates() {
         semio_framework_plugin::testkit::assert_viewer_never_mutates::<MathematicalViewer>();
     }
 
     #[test]
-    fn mathematical_editor_and_viewer_share_dialect() {
+    async fn mathematical_editor_and_viewer_share_dialect() {
         semio_framework_plugin::testkit::assert_editor_and_viewer_share_dialect::<MathematicalPlayApp, MathematicalViewer>();
     }
 
     #[test]
-    fn mathematical_viewer_instantiates_through_new_viewer() {
+    async fn mathematical_viewer_instantiates_through_new_viewer() {
         let _app = semio_framework_plugin::testkit::new_viewer::<MathematicalViewer>();
     }
 }

@@ -4,7 +4,7 @@ use crate::artifacts::fem2d::diff::{Fem2dDiff, Fem2dRegionsDelta};
 use crate::artifacts::fem2d::Fem2dSnapshot;
 
 //#region 🔖️Diff
-pub fn diff(payload: &CreateRegion, base: &Fem2dSnapshot) -> protocol::MutationOutcome<Fem2dDiff> {
+pub async fn diff(payload: &CreateRegion, base: &Fem2dSnapshot) -> protocol::MutationOutcome<Fem2dDiff> {
     if base.regions.iter().any(|region| region.id == payload.region.id) {
         return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("A region with id \"{}\" already exists.", payload.region.id), [payload.region.id.clone()]);
     }

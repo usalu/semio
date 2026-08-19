@@ -6,7 +6,7 @@ use crate::artifacts::program::ProgramMutation;
 use crate::artifacts::program::ProgramSnapshot;
 
 /// ↩️ Undo a delete by recreating the captured row. Missing target ⇒ nothing to undo.
-pub fn inverse(payload: &super::mutation::DeleteActivity, base: &ProgramSnapshot) -> Vec<ProgramMutation> {
+pub async fn inverse(payload: &super::mutation::DeleteActivity, base: &ProgramSnapshot) -> Vec<ProgramMutation> {
     match base.activities.iter().find(|row| row.header.id == payload.id) {
         Some(existing) => vec![ProgramMutation::CreateActivity(super::super::create_activity::mutation::CreateActivity { activity: existing.clone() })],
         None => Vec::new(),

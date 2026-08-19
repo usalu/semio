@@ -22,7 +22,7 @@ pub struct GisMapBounds {
 }
 
 /// 🗺️ Recursively collects every `{lon, lat}` object and `[number, number]` pair inside `value`.
-pub(crate) fn scan_lon_lat_pairs(value: &dsl::DslValue, out: &mut Vec<(f64, f64)>) {
+pub(crate) async fn scan_lon_lat_pairs(value: &dsl::DslValue, out: &mut Vec<(f64, f64)>) {
     match value {
         dsl::DslValue::Object(entries) => {
             let lon = entries.iter().find(|(key, _)| key == "lon").and_then(|(_, value)| value.as_f64());
@@ -50,7 +50,7 @@ pub(crate) fn scan_lon_lat_pairs(value: &dsl::DslValue, out: &mut Vec<(f64, f64)
 }
 
 /// 📦 Bounding box across every scanned `(lon, lat)` pair, or `None` when nothing scanned.
-pub(crate) fn lon_lat_bounds(pairs: &[(f64, f64)]) -> Option<GisMapBounds> {
+pub(crate) async fn lon_lat_bounds(pairs: &[(f64, f64)]) -> Option<GisMapBounds> {
     pairs.iter().fold(None, |acc, &(lon, lat)| {
         Some(match acc {
             Some(bounds) => GisMapBounds {
@@ -65,7 +65,7 @@ pub(crate) fn lon_lat_bounds(pairs: &[(f64, f64)]) -> Option<GisMapBounds> {
 }
 
 /// 🗺️ Scans every feature across `positions`/`routes`/`regions` for coordinate pairs.
-pub(crate) fn all_lon_lat_pairs(snapshot: &GisMapSnapshot) -> Vec<(f64, f64)> {
+pub(crate) async fn all_lon_lat_pairs(snapshot: &GisMapSnapshot) -> Vec<(f64, f64)> {
     let mut pairs = Vec::new();
     for feature in snapshot.positions.iter().chain(snapshot.routes.iter()).chain(snapshot.regions.iter()) {
         scan_lon_lat_pairs(&feature.data, &mut pairs);
@@ -80,17 +80,17 @@ mod tests {
     use super::*;
     use crate::artifacts::gismap::MapFeature;
 
-    fn dsl_of(value: serde_json::Value) -> dsl::DslValue {
+    async fn dsl_of(value: serde_json::Value) -> dsl::DslValue {
         dsl::to_dsl_value(&value).unwrap_or(dsl::DslValue::Null)
     }
 
     #[test]
-    fn empty_snapshot_has_no_bounds() {
+    async fn empty_snapshot_has_no_bounds() {
         assert!(lon_lat_bounds(&all_lon_lat_pairs(&GisMapSnapshot::default())).is_none());
     }
 
     #[test]
-    fn positions_routes_and_regions_all_contribute_points() {
+    async fn positions_routes_and_regions_all_contribute_points() {
         let snapshot = GisMapSnapshot {
             positions: vec![MapFeature { id: "p1".into(), data: dsl_of(serde_json::json!({ "id": "p1", "lon": -0.1427, "lat": 51.5142 })) }],
             routes: vec![MapFeature { id: "r1".into(), data: dsl_of(serde_json::json!({ "id": "r1", "points": [[1.0, 2.0], [3.0, 4.0]] })) }],

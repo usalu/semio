@@ -14,16 +14,16 @@ pub struct ScaleObject {
 impl protocol::MutationKind<SemioObjectSnapshot, SemioObjectMutation> for ScaleObject {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "scale", entity: "object", kind: "scale-object", record: "ScaledObject" };
 
-    fn diff(&self, base: &SemioObjectSnapshot) -> protocol::MutationOutcome<<SemioObjectMutation as protocol::Mutation<SemioObjectSnapshot>>::Diff> {
+    async fn diff(&self, base: &SemioObjectSnapshot) -> protocol::MutationOutcome<<SemioObjectMutation as protocol::Mutation<SemioObjectSnapshot>>::Diff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &SemioObjectSnapshot) -> Vec<SemioObjectMutation> {
+    async fn inverse(&self, base: &SemioObjectSnapshot) -> Vec<SemioObjectMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         format!("Scale object to ({}, {}, {})", self.scale.x, self.scale.y, self.scale.z)
     }
-    fn target(&self) -> Vec<String> {
+    async fn target(&self) -> Vec<String> {
         vec!["transform".to_string()]
     }
 }

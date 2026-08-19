@@ -18,12 +18,12 @@ use crate::artifacts::en1998::En1998Snapshot;
 pub const EN1998_SEISMIC_RC_FRAME_EXAMPLE_TEXT: &str = include_str!("../../../📚️examples/📕️seismic-rc-frame/🖼️assets/🗣️seismic-rc-frame.dsl.semio");
 
 /// 📖️ Parses `.en1998` DSL text into a `En1998Snapshot`.
-pub fn parse_dsl(text: &str) -> Result<En1998Snapshot, store::TextError> {
+pub async fn parse_dsl(text: &str) -> Result<En1998Snapshot, store::TextError> {
     <En1998Snapshot as store::ArtifactDsl>::parse_dsl(text)
 }
 
 /// 🖨️ Prints a `En1998Snapshot` back to `.en1998` DSL text.
-pub fn print_dsl(document: &En1998Snapshot) -> String {
+pub async fn print_dsl(document: &En1998Snapshot) -> String {
     store::ArtifactDsl::print_dsl(document)
 }
 
@@ -33,12 +33,12 @@ mod tests {
     use super::*;
 
     #[test]
-    fn document_dsl_round_trips() {
+    async fn document_dsl_round_trips() {
         store::os_store::test_support::assert_dsl_round_trip(&En1998Snapshot::default());
     }
 
     #[test]
-    fn seismic_rc_frame_example_fixture_parses_and_round_trips() {
+    async fn seismic_rc_frame_example_fixture_parses_and_round_trips() {
         let document = parse_dsl(EN1998_SEISMIC_RC_FRAME_EXAMPLE_TEXT).expect("parse seismic rc frame example");
         assert_eq!(document.annex, "en");
         assert_eq!(document.importance_class, "cc3");

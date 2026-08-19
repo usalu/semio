@@ -16,7 +16,7 @@ pub struct SetFeatureParams {
     pub edge_threshold: f32,
 }
 
-pub fn handle(payload: &SetFeatureParams, _doc: &ArtifactView<'_, RemodelSnapshot>, _cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelMutation, RemodelConfigMutation>, Fault> {
+pub async fn handle(payload: &SetFeatureParams, _doc: &ArtifactView<'_, RemodelSnapshot>, _cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelMutation, RemodelConfigMutation>, Fault> {
     Ok(Emit::mutations(vec![update_feature_params(FeatureParams {
         detector: match payload.detector.as_str() {
             "akaze" => FeatureDetector::Akaze,

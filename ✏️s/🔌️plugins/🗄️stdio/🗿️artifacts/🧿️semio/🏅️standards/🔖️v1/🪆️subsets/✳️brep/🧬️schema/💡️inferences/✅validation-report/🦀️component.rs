@@ -63,11 +63,11 @@ impl store::InferredField<SemioBrepSnapshot> for BrepValidationReport {
     const FIELD_ID: &'static str = "s.stdio.semio.brep.inference.validationReport";
     const SCHEMA_VERSION: u32 = 1;
 
-    fn reads() -> &'static [&'static str] {
+    async fn reads() -> &'static [&'static str] {
         &["vertices", "edges", "loops", "faces", "shells", "solids"]
     }
 
-    fn plan(_snapshot: &SemioBrepSnapshot) -> Vec<store::InferenceStep<Self::Key>> {
+    async fn plan(_snapshot: &SemioBrepSnapshot) -> Vec<store::InferenceStep<Self::Key>> {
         vec![store::InferenceStep { key: "document".to_string(), parents: vec![] }]
     }
 
@@ -76,7 +76,7 @@ impl store::InferredField<SemioBrepSnapshot> for BrepValidationReport {
     /// snapshot's own already-`Serialize` collections is deterministic per snapshot value and
     /// covers every field the check touches — cheaper and less error-prone than hand-rolling a
     /// bespoke byte encoder for a root-only, single-key chain.
-    fn dep_input(snapshot: &SemioBrepSnapshot, _key: &Self::Key, _parents: &[Self::Key]) -> Vec<u8> {
+    async fn dep_input(snapshot: &SemioBrepSnapshot, _key: &Self::Key, _parents: &[Self::Key]) -> Vec<u8> {
         #[derive(Serialize)]
         struct DepInput<'a> {
             vertices: &'a [crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::BrepVertex],
@@ -89,7 +89,7 @@ impl store::InferredField<SemioBrepSnapshot> for BrepValidationReport {
         serde_json::to_vec(&DepInput { vertices: &snapshot.vertices, edges: &snapshot.edges, loops: &snapshot.loops, faces: &snapshot.faces, shells: &snapshot.shells, solids: &snapshot.solids }).unwrap_or_default()
     }
 
-    fn compute(snapshot: &SemioBrepSnapshot, _key: &Self::Key, _parents: &[Self::Value]) -> Self::Value {
+    async fn compute(snapshot: &SemioBrepSnapshot, _key: &Self::Key, _parents: &[Self::Value]) -> Self::Value {
         check_brep_referential_integrity(snapshot).into_iter().map(|d| BrepValidationDiagnostic { code: d.code.0.clone(), message: d.message.clone() }).collect()
     }
 }
@@ -101,7 +101,7 @@ use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::top
 
 // #region 🔖️Topology
 
-fn check_loop_rings(body: &Body, issues: &mut Vec<ValidationIssue>) {
+async fn check_loop_rings(body: &Body, issues: &mut Vec<ValidationIssue>) {
     for (loop_id, lp) in body.loops.iter() {
         let coedges = body.loop_coedges(loop_id);
         if coedges.is_empty() {
@@ -131,7 +131,7 @@ fn check_loop_rings(body: &Body, issues: &mut Vec<ValidationIssue>) {
 /// 🩺️ Flags edges used by more than 2 coedges — valid for future non-manifold support but worth
 /// surfacing explicitly (the boolean/sewing pipeline in later phases assumes 2-manifold input
 /// unless a caller has opted into non-manifold handling).
-fn check_edge_valence(body: &Body, issues: &mut Vec<ValidationIssue>) {
+async fn check_edge_valence(body: &Body, issues: &mut Vec<ValidationIssue>) {
     for (edge_id, _) in body.edges.iter() {
         let valence = body.edge_coedges(edge_id).len();
         if valence > 2 {
@@ -146,7 +146,7 @@ fn check_edge_valence(body: &Body, issues: &mut Vec<ValidationIssue>) {
 
 /// 🩺️ Every vertex's tolerance must fit inside every incident edge's tolerance, and every edge's
 /// inside every face whose loop uses it — the containment hierarchy from the plan's tolerance model.
-fn check_tolerance_containment(body: &Body, issues: &mut Vec<ValidationIssue>) {
+async fn check_tolerance_containment(body: &Body, issues: &mut Vec<ValidationIssue>) {
     for (edge_id, edge) in body.edges.iter() {
         for v in [edge.v0, edge.v1] {
             let Some(vertex) = body.vertices.get(v) else { continue };
@@ -173,7 +173,7 @@ fn check_tolerance_containment(body: &Body, issues: &mut Vec<ValidationIssue>) {
 /// the face's surface, evaluated at the pcurve point, agrees with the 3D curve within the edge's
 /// tolerance. Skips coedges with no pcurve (only an issue on non-planar faces, which nothing
 /// before Phase 4 produces yet, so this check is dormant until surfaces with pcurves exist).
-fn check_same_parameter(body: &Body, issues: &mut Vec<ValidationIssue>) {
+async fn check_same_parameter(body: &Body, issues: &mut Vec<ValidationIssue>) {
     const SAMPLES: usize = 5;
     for (face_id, face) in body.faces.iter() {
         let Some(surface) = body.surfaces.get(face.surface) else { continue };
@@ -207,7 +207,7 @@ fn check_same_parameter(body: &Body, issues: &mut Vec<ValidationIssue>) {
 // #region 🔖️Report
 
 /// 🩺️ Runs every structural and geometric check and returns every finding.
-pub fn validate_body(body: &Body) -> Vec<ValidationIssue> {
+pub async fn validate_body(body: &Body) -> Vec<ValidationIssue> {
     let mut issues = Vec::new();
     check_loop_rings(body, &mut issues);
     check_edge_valence(body, &mut issues);
@@ -228,7 +228,7 @@ mod tests {
     use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::{BrepCurve, BrepEdge, BrepFace, BrepLoop, BrepLoopEdge, BrepShell, BrepShellFace, BrepSolid, BrepSolidShell, BrepSurface, BrepVertex};
     use store::{InferenceCache, InferenceCacheConfig};
 
-    fn valid_snapshot() -> SemioBrepSnapshot {
+    async fn valid_snapshot() -> SemioBrepSnapshot {
         let mut s = SemioBrepSnapshot::default();
         s.vertices = vec![BrepVertex { id: "v1".into(), point: SemioPoint3 { x: 0.0, y: 0.0, z: 0.0 } }];
         s.edges = vec![BrepEdge { id: "e1".into(), start_vertex: "v1".into(), end_vertex: "v1".into(), curve: BrepCurve::Circle { center: SemioPoint3::default(), axis: SemioPoint3 { x: 0.0, y: 0.0, z: 1.0 }, radius: 1.0 } }];
@@ -241,13 +241,13 @@ mod tests {
 
     //#region 🧪️Honesty
     #[test]
-    fn valid_snapshot_has_no_findings() {
+    async fn valid_snapshot_has_no_findings() {
         let values = store::infer_field::<SemioBrepSnapshot, BrepValidationReport>(&valid_snapshot(), None);
         assert!(values["document"].is_empty());
     }
 
     #[test]
-    fn dangling_reference_is_a_real_finding_not_a_faked_one() {
+    async fn dangling_reference_is_a_real_finding_not_a_faked_one() {
         let mut broken = valid_snapshot();
         broken.edges[0].end_vertex = "v-missing".into();
         let values = store::infer_field::<SemioBrepSnapshot, BrepValidationReport>(&broken, None);
@@ -258,7 +258,7 @@ mod tests {
 
     //#region 🧪️CacheTransparencyLaw
     #[test]
-    fn disabled_cache_matches_pure_recompute() {
+    async fn disabled_cache_matches_pure_recompute() {
         let snapshot = valid_snapshot();
         let pure = store::infer_field::<SemioBrepSnapshot, BrepValidationReport>(&snapshot, None);
         let mut disabled = InferenceCache::new(InferenceCacheConfig { enabled: false, ..Default::default() });
@@ -269,7 +269,7 @@ mod tests {
 
     //#region 🧪️IncrementalityLaw
     #[test]
-    fn identical_snapshot_recompute_is_a_cache_hit() {
+    async fn identical_snapshot_recompute_is_a_cache_hit() {
         let mut cache = InferenceCache::new(InferenceCacheConfig { enabled: true, record_stats: true, ..Default::default() });
         let base = valid_snapshot();
         let _ = store::infer_field::<SemioBrepSnapshot, BrepValidationReport>(&base, Some(&mut cache));
@@ -281,7 +281,7 @@ mod tests {
     }
 
     #[test]
-    fn changing_any_collection_misses_the_cache() {
+    async fn changing_any_collection_misses_the_cache() {
         let mut cache = InferenceCache::new(InferenceCacheConfig { enabled: true, record_stats: true, ..Default::default() });
         let base = valid_snapshot();
         let _ = store::infer_field::<SemioBrepSnapshot, BrepValidationReport>(&base, Some(&mut cache));
@@ -302,7 +302,7 @@ mod tests {
     use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::matrix::Frame3;
     use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::{Pnt3, Vec3};
 
-    fn build_tetrahedron(body: &mut Body, rec: &mut OpRecorder) -> crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::arena::SolidId {
+    async fn build_tetrahedron(body: &mut Body, rec: &mut OpRecorder) -> crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::arena::SolidId {
         let positions = [Pnt3::new(0.0, 0.0, 0.0), Pnt3::new(1.0, 0.0, 0.0), Pnt3::new(0.0, 1.0, 0.0), Pnt3::new(0.0, 0.0, 1.0)];
         let vertices: Vec<_> = positions.iter().map(|&p| make_vertex(body, p, Tol::DEFAULT, rec)).collect();
         let edge_pairs = [(0, 1), (1, 2), (2, 0), (0, 3), (1, 3), (2, 3)];
@@ -338,7 +338,7 @@ mod tests {
     }
 
     #[test]
-    fn a_cleanly_built_tetrahedron_validates_with_no_issues() {
+    async fn a_cleanly_built_tetrahedron_validates_with_no_issues() {
         let mut body = Body::new();
         let mut rec = OpRecorder::new();
         build_tetrahedron(&mut body, &mut rec);
@@ -347,7 +347,7 @@ mod tests {
     }
 
     #[test]
-    fn a_broken_ring_pointer_is_detected() {
+    async fn a_broken_ring_pointer_is_detected() {
         let mut body = Body::new();
         let mut rec = OpRecorder::new();
         let solid = build_tetrahedron(&mut body, &mut rec);
@@ -362,7 +362,7 @@ mod tests {
     }
 
     #[test]
-    fn a_vertex_tolerance_exceeding_its_edge_tolerance_is_detected() {
+    async fn a_vertex_tolerance_exceeding_its_edge_tolerance_is_detected() {
         let mut body = Body::new();
         let mut rec = OpRecorder::new();
         build_tetrahedron(&mut body, &mut rec);
@@ -373,7 +373,7 @@ mod tests {
     }
 
     #[test]
-    fn a_non_manifold_edge_is_flagged() {
+    async fn a_non_manifold_edge_is_flagged() {
         // Build a free-standing edge with three coedges referencing it (impossible in a clean
         // 2-manifold build, so constructed directly).
         let mut body = Body::new();
@@ -398,7 +398,7 @@ mod tests {
     }
 
     #[test]
-    fn same_parameter_violation_is_detected_when_pcurve_disagrees_with_3d_curve() {
+    async fn same_parameter_violation_is_detected_when_pcurve_disagrees_with_3d_curve() {
         let mut body = Body::new();
         let mut rec = OpRecorder::new();
         let solid = build_tetrahedron(&mut body, &mut rec);

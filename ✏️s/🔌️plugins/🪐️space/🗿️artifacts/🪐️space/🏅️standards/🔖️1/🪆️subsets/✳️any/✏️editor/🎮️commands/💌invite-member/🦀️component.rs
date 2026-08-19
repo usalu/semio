@@ -17,7 +17,7 @@ pub struct InviteMember {
     pub role: String,
 }
 
-pub fn handle(payload: &InviteMember, doc: &ArtifactView<'_, SSpaceSnapshot>, _cfg: &ConfigView<'_, SpaceIndexConfig>) -> Result<Emit<SSpaceMutation, SpaceIndexConfigMutation>, Fault> {
+pub async fn handle(payload: &InviteMember, doc: &ArtifactView<'_, SSpaceSnapshot>, _cfg: &ConfigView<'_, SpaceIndexConfig>) -> Result<Emit<SSpaceMutation, SpaceIndexConfigMutation>, Fault> {
     Ok(Emit::effect(Effect::ReplayShellCommand { action_id: "os.directory.upsert-member".into(), args: semio_framework::optional_json_to_dsl(Some(json!({ "spaceId": doc.snapshot.space_id, "email": payload.email, "role": payload.role }))) }))
 }
 
@@ -29,7 +29,7 @@ mod tests {
     
 
     #[test]
-    fn invite_member_relays_upsert_member() {
+    async fn invite_member_relays_upsert_member() {
         let mut app = testkit::new_app();
         let result = app.dispatch_typed(SpaceIndexCommand::InviteMember(InviteMember { email: "a@example.com".into(), role: "author".into() }), &semio_framework_plugin::testkit::meta("local")).expect("invite");
         assert!(result.mutations.is_empty());

@@ -18,16 +18,16 @@ pub struct ChangeReferenceWidth {
 impl MutationKind<CadSnapshot, CadMutation> for ChangeReferenceWidth {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "change", entity: "reference", kind: "change-reference-width", record: "ChangedReferenceWidth" };
 
-    fn diff(&self, base: &CadSnapshot) -> protocol::MutationOutcome<crate::artifacts::cad::diff::CadDiff> {
+    async fn diff(&self, base: &CadSnapshot) -> protocol::MutationOutcome<crate::artifacts::cad::diff::CadDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &CadSnapshot) -> Vec<CadMutation> {
+    async fn inverse(&self, base: &CadSnapshot) -> Vec<CadMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         format!("Change width of reference \"{}\"", self.reference_id)
     }
-    fn target(&self) -> Vec<String> {
+    async fn target(&self) -> Vec<String> {
         vec![self.model_definition_id.clone(), self.reference_id.clone()]
     }
 }

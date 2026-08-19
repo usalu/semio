@@ -17,20 +17,20 @@ pub struct ReplaceTrajectory {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn replace_trajectory(trajectory: Option<CameraTrajectory>) -> RemodelMutation {
+pub async fn replace_trajectory(trajectory: Option<CameraTrajectory>) -> RemodelMutation {
     RemodelMutation::ReplaceTrajectory(ReplaceTrajectory { trajectory })
 }
 
 impl protocol::MutationKind<RemodelSnapshot, RemodelMutation> for ReplaceTrajectory {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "replace", entity: "trajectory", kind: "replace-trajectory", record: "ReplacedTrajectory" };
 
-    fn diff(&self, base: &RemodelSnapshot) -> protocol::MutationOutcome<RemodelDiff> {
+    async fn diff(&self, base: &RemodelSnapshot) -> protocol::MutationOutcome<RemodelDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &RemodelSnapshot) -> Vec<RemodelMutation> {
+    async fn inverse(&self, base: &RemodelSnapshot) -> Vec<RemodelMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         "Replace trajectory".to_string()
     }
 }

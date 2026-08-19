@@ -13,7 +13,7 @@ use protocol::{Mutation, MutationDiff};
 use semio_framework_plugin::{AnalyzeSource, ArtifactComposition, ComposeSource, Dialect, StandardId, SubsetId};
 use store::{ArtifactDsl, ArtifactPack};
 
-fn assert_fixture_bytes(actual: &[u8], label: &str) {
+async fn assert_fixture_bytes(actual: &[u8], label: &str) {
     if actual == FIXTURE_BYTES {
         return;
     }
@@ -25,19 +25,19 @@ fn assert_fixture_bytes(actual: &[u8], label: &str) {
 }
 
 #[test]
-fn fixture_is_real_ac1024_not_a_stub() {
+async fn fixture_is_real_ac1024_not_a_stub() {
     assert!(FIXTURE_BYTES.len() > 100_000, "architectural.dwg must be the real ~145KB fixture, got {} bytes", FIXTURE_BYTES.len());
     assert_eq!(&FIXTURE_BYTES[0..6], b"AC1024", "fixture must start with the AC1024 version marker");
 }
 
 #[test]
-fn source_nonempty() {
+async fn source_nonempty() {
     let _ = source();
 }
 
 /// 🧪️ The real file is projected into standard logical concepts without retaining its container.
 #[test]
-fn real_decode_projects_logical_state() {
+async fn real_decode_projects_logical_state() {
     let snap = decode_dwg(FIXTURE_BYTES).expect("real fixture must decode");
     assert_eq!(snap.version, "AC1024");
     assert_eq!(snap.schema, crate::artifacts::dwg::STDIO_DWG_DOCUMENT_SCHEMA);
@@ -105,21 +105,21 @@ fn real_decode_projects_logical_state() {
 }
 
 #[test]
-fn every_imported_object_has_a_typed_standard_body() {
+async fn every_imported_object_has_a_typed_standard_body() {
     let snap = decode_dwg(FIXTURE_BYTES).expect("real fixture must decode");
     let missing = snap.drawing.objects.iter().filter(|object| object.body.is_none()).map(|object| format!("{:#x}:{}", object.handle, object.class_name)).collect::<Vec<_>>();
     assert!(missing.is_empty(), "{} of 652 imported objects remain identity-only; first missing bodies: {:?}", missing.len(), &missing[..missing.len().min(24)]);
 }
 
 #[test]
-fn real_decode_stays_lossless_on_reencode() {
+async fn real_decode_stays_lossless_on_reencode() {
     let snap = decode_dwg(FIXTURE_BYTES).expect("real fixture must decode");
     let reencoded = encode_dwg(&snap).expect("re-encode");
     assert_fixture_bytes(&reencoded, "re-encode");
 }
 
 #[test]
-fn snapshot_pack_preserves_signed_zero_semantics() {
+async fn snapshot_pack_preserves_signed_zero_semantics() {
     let original = decode_dwg(FIXTURE_BYTES).expect("real fixture must decode");
     let restored = DwgSnapshot::decode_pack(&original.encode_pack()).expect("snapshot pack roundtrip");
     let expected = serde_json::to_string(&original.drawing).expect("original drawing JSON");
@@ -129,7 +129,7 @@ fn snapshot_pack_preserves_signed_zero_semantics() {
 }
 
 #[test]
-fn exact_fixture_roundtrips_through_snapshot_diff_mutation_and_raw_io() {
+async fn exact_fixture_roundtrips_through_snapshot_diff_mutation_and_raw_io() {
     let binary = BinarySnapshot { schema: STDIO_BINARY_DOCUMENT_SCHEMA.into(), bytes: FIXTURE_BYTES.to_vec() };
     let original = raw_import::deserialize(&binary).expect("raw DWG import");
     let exported = raw_export::serialize(&original).expect("raw DWG export").bytes;
@@ -185,7 +185,7 @@ fn exact_fixture_roundtrips_through_snapshot_diff_mutation_and_raw_io() {
 }
 
 #[test]
-fn persisted_dwg_facets_have_no_parallel_entity_projection() {
+async fn persisted_dwg_facets_have_no_parallel_entity_projection() {
     let artifact_root = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../🗿️artifacts/🖊️dwg/🏅️standards/🔖️ac1024/🪆️subsets/✳️any/🧬️schema");
     for relative in
         ["🟦️component.ts", "🔗️component.graphql", "🛰️component.proto", "🔣️component.json", "📸️snapshot/🔗️component.graphql", "📸️snapshot/🛰️component.proto", "🔺️diff/🟦️component.ts", "🔺️diff/🔗️component.graphql", "🔺️diff/🛰️component.proto"]
@@ -201,7 +201,7 @@ fn persisted_dwg_facets_have_no_parallel_entity_projection() {
 }
 
 #[test]
-fn semantic_metadata_edits_materialize_from_logical_content() {
+async fn semantic_metadata_edits_materialize_from_logical_content() {
     let original = decode_dwg(FIXTURE_BYTES).expect("decode exact fixture");
     let mut changed = original.clone();
     changed.summary.title = "Architectural Example".into();

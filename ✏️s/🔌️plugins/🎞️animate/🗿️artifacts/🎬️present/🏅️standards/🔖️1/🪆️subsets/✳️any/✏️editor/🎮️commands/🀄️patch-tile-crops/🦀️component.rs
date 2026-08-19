@@ -18,7 +18,7 @@ pub struct PatchTileCrops {
     pub value: f64,
 }
 
-pub fn handle(payload: &PatchTileCrops, doc: &ArtifactView<'_, PresentSnapshot>, _cfg: &ConfigView<'_, PresentConfig>, _ctx: &mut PresentDispatchCtx) -> Result<Emit<PresentMutation, PresentConfigMutation>, Fault> {
+pub async fn handle(payload: &PatchTileCrops, doc: &ArtifactView<'_, PresentSnapshot>, _cfg: &ConfigView<'_, PresentConfig>, _ctx: &mut PresentDispatchCtx) -> Result<Emit<PresentMutation, PresentConfigMutation>, Fault> {
     let deck = doc.snapshot;
     let (_, deck_tiles) = crate::artifacts::present::present_working_scene(deck);
     let targets: HashSet<&str> = payload.ids.iter().map(String::as_str).collect();

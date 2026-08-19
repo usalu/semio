@@ -5,7 +5,7 @@ use crate::artifacts::remodel::diff::{RemodelDiff, RemodelGcpList, RemodelMediaS
 use crate::artifacts::remodel::RemodelSnapshot;
 
 //#region 🔖️Diff
-pub fn diff(payload: &super::mutation::DeleteStream, base: &RemodelSnapshot) -> protocol::MutationOutcome<RemodelDiff> {
+pub async fn diff(payload: &super::mutation::DeleteStream, base: &RemodelSnapshot) -> protocol::MutationOutcome<RemodelDiff> {
     if !base.streams.iter().any(|stream| stream.id == payload.id) {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Stream \"{}\" does not exist.", payload.id), [payload.id.clone()]);
     }

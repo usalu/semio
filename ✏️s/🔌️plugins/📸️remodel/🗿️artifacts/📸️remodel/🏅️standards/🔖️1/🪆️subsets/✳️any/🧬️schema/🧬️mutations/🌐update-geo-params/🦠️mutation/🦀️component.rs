@@ -16,20 +16,20 @@ pub struct UpdateGeoParams {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn update_geo_params(params: GeoParams) -> RemodelMutation {
+pub async fn update_geo_params(params: GeoParams) -> RemodelMutation {
     RemodelMutation::UpdateGeoParams(UpdateGeoParams { params })
 }
 
 impl protocol::MutationKind<RemodelSnapshot, RemodelMutation> for UpdateGeoParams {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "update", entity: "geo-params", kind: "update-geo-params", record: "UpdatedGeoParams" };
 
-    fn diff(&self, base: &RemodelSnapshot) -> protocol::MutationOutcome<RemodelDiff> {
+    async fn diff(&self, base: &RemodelSnapshot) -> protocol::MutationOutcome<RemodelDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &RemodelSnapshot) -> Vec<RemodelMutation> {
+    async fn inverse(&self, base: &RemodelSnapshot) -> Vec<RemodelMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         "Update geo params".to_string()
     }
 }

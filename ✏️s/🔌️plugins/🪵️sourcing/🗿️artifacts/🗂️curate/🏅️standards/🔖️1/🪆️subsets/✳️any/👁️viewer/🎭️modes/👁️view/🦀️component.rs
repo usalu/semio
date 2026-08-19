@@ -7,12 +7,12 @@ use semio_framework_plugin::{LocalizedLabel, ModeDefinition, WindowLayout, Windo
 pub const SOURCING_VIEW_MODE_VIEW: &str = "view";
 
 //#region 🔖️Definition
-pub fn definition() -> ModeDefinition {
+pub async fn definition() -> ModeDefinition {
     ModeDefinition { id: SOURCING_VIEW_MODE_VIEW.into(), label: LocalizedLabel::native("View", "Ansicht"), icon_id: "eye".into(), tools: Vec::new(), layout_id: None, commands: Vec::new() }
 }
 
 /// 🪟️ Single full-width stack holding the pool table.
-pub fn layout() -> WindowLayout {
+pub async fn layout() -> WindowLayout {
     WindowLayout {
         root: WindowLayoutRoot::Axis(WindowLayoutAxisNode {
             kind: "row".into(),
@@ -34,7 +34,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn the_layout_references_the_pool_window() {
+    async fn the_layout_references_the_pool_window() {
         let json = serde_json::to_string(&layout()).expect("layout json");
         assert!(json.contains(pool::WINDOW_KIND_ID), "layout must reference window kind {}: {json}", pool::WINDOW_KIND_ID);
     }

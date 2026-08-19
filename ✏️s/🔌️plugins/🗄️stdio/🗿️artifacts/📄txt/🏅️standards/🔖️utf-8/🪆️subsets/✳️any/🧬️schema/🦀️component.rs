@@ -27,24 +27,24 @@ pub struct TxtArtifact {
 
 //#region 🔖️Conversions
 impl Default for TxtArtifact {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self::from_snapshot(TxtSnapshot::default())
     }
 }
 
 impl TxtArtifact {
     /// 📸️ Persisted subset.
-    pub fn to_snapshot(&self) -> TxtSnapshot {
+    pub async fn to_snapshot(&self) -> TxtSnapshot {
         TxtSnapshot { schema: self.schema.clone(), lines: self.lines.clone(), trailing_newline: self.trailing_newline, line_ending: self.line_ending }
     }
 
     /// 🧬️ Builds a full artifact from a snapshot.
-    pub fn from_snapshot(snapshot: TxtSnapshot) -> Self {
+    pub async fn from_snapshot(snapshot: TxtSnapshot) -> Self {
         Self { schema: snapshot.schema, lines: snapshot.lines, trailing_newline: snapshot.trailing_newline, line_ending: snapshot.line_ending }
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
-    pub fn set_snapshot(&mut self, snapshot: TxtSnapshot) {
+    pub async fn set_snapshot(&mut self, snapshot: TxtSnapshot) {
         self.schema = snapshot.schema;
         self.lines = snapshot.lines;
         self.trailing_newline = snapshot.trailing_newline;
@@ -55,7 +55,7 @@ impl TxtArtifact {
 
 //#region 🔖️Descriptor
 /// 🧬️ Descriptor for `s.stdio.txt`.
-pub fn txt_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
+pub async fn txt_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
     schema::ArtifactSchemaDescriptor {
         id: "s.stdio.txt",
         artifact: schema::FacetLeaves {
@@ -106,27 +106,27 @@ pub mod derived_construction {
         type Snapshot = TxtSnapshot;
         type Mutation = TxtMutation;
         type Diff = TxtDiff;
-        fn empty() -> Self {
+        async fn empty() -> Self {
             Self { snapshot: TxtSnapshot::default(), diagnostics: Vec::new() }
         }
-        fn from_snapshot(snapshot: Self::Snapshot) -> Self {
+        async fn from_snapshot(snapshot: Self::Snapshot) -> Self {
             Self { snapshot, diagnostics: Vec::new() }
         }
-        fn from_text(text: &str) -> Result<Self, store::TextError> {
+        async fn from_text(text: &str) -> Result<Self, store::TextError> {
             Ok(Self::from_snapshot(<TxtSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
-        fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
+        async fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
             Ok(Self::from_snapshot(<TxtSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
         }
-        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
+        async fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let diff = crate::artifacts::txt::schema::mutations::apply_txt_mutation(&mut self.snapshot, &mutation);
             (self, diff)
         }
-        fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
+        async fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
             self.snapshot = <TxtDiff as protocol::MutationDiff<TxtSnapshot>>::apply(&diff, &self.snapshot)?;
             Ok(self)
         }
-        fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
+        async fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
             if self.diagnostics.is_empty() {
                 Ok(self.snapshot)
             } else {
@@ -160,7 +160,7 @@ pub mod derived_analysis {
     /// trivially valid by construction (`High`); a `Binary` source is inspected for actual
     /// UTF-8 validity and the presence of NUL bytes (the standard "probably not text"
     /// signal binary sniffers use).
-    fn classify_bytes(bytes: &[u8]) -> IoConfidence {
+    async fn classify_bytes(bytes: &[u8]) -> IoConfidence {
         match std::str::from_utf8(bytes) {
             Ok(_) if !bytes.contains(&0) => IoConfidence::High,
             Ok(_) => IoConfidence::Medium,
@@ -172,7 +172,7 @@ pub mod derived_analysis {
         type Parts = TxtParts;
         const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.txt", standard: StandardId("utf-8"), subset: SubsetId("*") };
 
-        fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
+        async fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
             match source {
                 AnalyzeSource::Text(_) => IoConfidence::High,
                 AnalyzeSource::Binary(bytes) => match store::semio_format::unwrap_binary(bytes) {
@@ -182,7 +182,7 @@ pub mod derived_analysis {
             }
         }
 
-        fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
+        async fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
             let mut parts = TxtParts::default();
             let mut diagnostics = Vec::new();
             let mut confidence = IoConfidence::High;
@@ -215,18 +215,18 @@ pub mod derived_analysis {
         use super::*;
 
         #[test]
-        fn sniff_text_source_is_high() {
+        async fn sniff_text_source_is_high() {
             assert_eq!(TxtAnalyzerAnalysis::sniff(&AnalyzeSource::Text("anything at all")), IoConfidence::High);
         }
 
         #[test]
-        fn sniff_binary_with_nul_bytes_is_low_or_medium_not_high() {
+        async fn sniff_binary_with_nul_bytes_is_low_or_medium_not_high() {
             let bytes: &[u8] = b"\x00\x01\x02binary garbage\x00";
             assert_ne!(TxtAnalyzerAnalysis::sniff(&AnalyzeSource::Binary(bytes)), IoConfidence::High);
         }
 
         #[test]
-        fn sniff_invalid_utf8_binary_is_low() {
+        async fn sniff_invalid_utf8_binary_is_low() {
             let bytes: &[u8] = &[0xff, 0xfe, 0xfd];
             assert_eq!(TxtAnalyzerAnalysis::sniff(&AnalyzeSource::Binary(bytes)), IoConfidence::Low);
         }
@@ -238,14 +238,14 @@ pub use derived_analysis::*;
 
 //#region 🔖️DocumentHelpers
 /// 🌱 Empty persisted snapshot.
-pub fn empty_txt_snapshot() -> TxtSnapshot {
+pub async fn empty_txt_snapshot() -> TxtSnapshot {
     TxtSnapshot::default()
 }
 
 /// 📄️ The `demo` example, parsed once from `examples::demo::PRIMARY_TEXT` — the single source
 /// of truth `🗣️example.dsl.semio` is genuinely `print_dsl` of (P2-P3 `fixture_honesty_law`),
 /// same pattern as `note::semio_example_snapshot`/`csv::demo_csv_snapshot`.
-pub fn demo_txt_snapshot() -> TxtSnapshot {
+pub async fn demo_txt_snapshot() -> TxtSnapshot {
     <TxtSnapshot as store::ArtifactDsl>::parse_dsl(crate::artifacts::txt::examples::demo::PRIMARY_TEXT).unwrap_or_else(|_| empty_txt_snapshot())
 }
 //#endregion 🔖️DocumentHelpers
@@ -270,13 +270,13 @@ mod tests {
     use crate::artifacts::txt::{TxtDiff, TxtMutation, STDIO_TXT_DOCUMENT_SCHEMA};
 
     #[test]
-    fn empty_snapshot_matches_schema() {
+    async fn empty_snapshot_matches_schema() {
         let snapshot = empty_txt_snapshot();
         assert_eq!(snapshot.schema, STDIO_TXT_DOCUMENT_SCHEMA);
     }
 
     #[test]
-    fn codec_round_trip() {
+    async fn codec_round_trip() {
         let snap = empty_txt_snapshot();
         let text = store::ArtifactDsl::print_dsl(&snap);
         let parsed = <TxtSnapshot as store::ArtifactDsl>::parse_dsl(&text).expect("parse");
@@ -287,7 +287,7 @@ mod tests {
     }
 
     #[test]
-    fn nontrivial_multiline_unicode_round_trip() {
+    async fn nontrivial_multiline_unicode_round_trip() {
         let body = "Hello, \u{4e16}\u{754c}!\nLine two with an emoji \u{1f389}.\nTab\there.\n".to_string();
         let snap = TxtSnapshot::from_body(&body);
         assert_eq!(snap.to_body(), body);
@@ -307,7 +307,7 @@ mod tests {
     /// via `body.trim_start()`, which is documented-lossy for a body starting with its own
     /// newline -- pre-existing framework behavior, not something this diff/mutation wave owns.
     #[test]
-    fn codec_retention_law() {
+    async fn codec_retention_law() {
         for body in ["a\nb\nc\n", "a\r\nb\r\nc", "", "\n", "just one line, no newline"] {
             let snap = TxtSnapshot::from_body(body);
             assert_eq!(snap.to_body(), body, "to_body/from_body mismatch for {body:?}");
@@ -328,7 +328,7 @@ mod tests {
     /// `sweep_b` (2 lines vs. 3) — see the `field_sweep_covers_every_mutable_field` doc comment
     /// for why a flat, unkeyed `Vec<String>` collection needs an asymmetric length to exercise
     /// `removed`/`added` at all.
-    fn sweep_a() -> TxtSnapshot {
+    async fn sweep_a() -> TxtSnapshot {
         TxtSnapshot { schema: STDIO_TXT_DOCUMENT_SCHEMA.into(), lines: vec!["keep-me".into(), "modify-me".into()], trailing_newline: false, line_ending: LineEnding::Lf }
     }
 
@@ -336,7 +336,7 @@ mod tests {
     /// one modified in place (`modify-me` → `modified!`), one genuinely new tail line
     /// (`added!`) that only exists because `sweep_b` is longer than `sweep_a`;
     /// `trailing_newline`/`line_ending` both flip.
-    fn sweep_b() -> TxtSnapshot {
+    async fn sweep_b() -> TxtSnapshot {
         TxtSnapshot { schema: STDIO_TXT_DOCUMENT_SCHEMA.into(), lines: vec!["keep-me".into(), "modified!".into(), "added!".into()], trailing_newline: true, line_ending: LineEnding::CrLf }
     }
 
@@ -356,7 +356,7 @@ mod tests {
     /// change the diff type can express is proven, exactly matching what `between_roundtrip_law`
     /// already checks in both directions anyway.
     #[test]
-    fn field_sweep_covers_every_mutable_field() {
+    async fn field_sweep_covers_every_mutable_field() {
         use protocol::os_spr::command::DiffAlgebra;
         use protocol::MutationDiff;
         let a = sweep_a();
@@ -389,7 +389,7 @@ mod tests {
     /// `dsl::fixture_sweep::m5_handcrafted_grammar_conformance::dsl_body_from_fixture` feeds the
     /// Recognizer (mirrored here so this law does not depend on the framework's own harness).
     #[test]
-    fn grammar_conformance_law() {
+    async fn grammar_conformance_law() {
         let grammar_text = crate::artifacts::txt::schema::snapshot::text::COMPONENT_GRAMMAR_SEMIO;
         let grammar = dsl::parse_grammar(grammar_text).expect("parse snapshot grammar");
         assert_eq!(grammar.dialect, dsl::SemioDialect::Grammar);
@@ -410,7 +410,7 @@ mod tests {
     /// `encode_pack` call; mutations' Spr facet walks a genuine `encode_op` frame; diff's own
     /// protocol facet walks a genuine `encode_diff` frame.
     #[test]
-    fn protocol_walk_law() {
+    async fn protocol_walk_law() {
         // Pack (snapshot binary facet).
         let snap = demo_txt_snapshot();
         let pack_bytes = <TxtSnapshot as store::ArtifactPack>::encode_pack(&snap);
@@ -439,7 +439,7 @@ mod tests {
     /// genuinely `print_dsl`/`encode_pack` output of the SAME demo snapshot, round-tripping both
     /// ways (never allowed to silently drift again).
     #[test]
-    fn fixture_honesty_law() {
+    async fn fixture_honesty_law() {
         let demo = demo_txt_snapshot();
         assert_eq!(<TxtSnapshot as store::ArtifactDsl>::parse_dsl(crate::artifacts::txt::examples::demo::PRIMARY_TEXT).unwrap(), demo);
         assert_eq!(<TxtSnapshot as store::ArtifactDsl>::print_dsl(&demo), crate::artifacts::txt::examples::demo::PRIMARY_TEXT);
@@ -456,7 +456,7 @@ mod tests {
     /// `dsl::parse_grammar`/`dsl::parse_protocol` — this artifact's own early warning, independent
     /// of the eventual repo-wide policy gate.
     #[test]
-    fn committed_grammar_and_protocol_files_parse() {
+    async fn committed_grammar_and_protocol_files_parse() {
         let g1 = dsl::parse_grammar(crate::artifacts::txt::schema::snapshot::text::COMPONENT_GRAMMAR_SEMIO);
         assert!(g1.is_ok(), "snapshot grammar must parse: {g1:?}");
         let g2 = dsl::parse_grammar(crate::artifacts::txt::schema::mutations::text::COMPONENT_GRAMMAR_SEMIO);
@@ -475,7 +475,7 @@ mod tests {
     /// through `dsl::registry::full_resolver()` once `register()` has run.
     #[test]
     #[cfg(not(target_arch = "wasm32"))]
-    fn schema_spec_registration_resolves() {
+    async fn schema_spec_registration_resolves() {
         use dsl::os_pack::cli::SchemaResolver;
         crate::artifacts::txt::standards::v_utf_8::subsets::any::io::register_schema_specs();
         let resolver = dsl::registry::full_resolver();

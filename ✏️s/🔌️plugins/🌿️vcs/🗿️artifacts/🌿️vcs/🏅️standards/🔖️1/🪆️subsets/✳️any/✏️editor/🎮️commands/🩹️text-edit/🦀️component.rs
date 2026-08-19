@@ -6,7 +6,7 @@ use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Helpers
-fn vcs_demo_projection_diff_operations(current: &VcsSnapshot, next: &VcsSnapshot) -> Vec<VcsDemoMutation> {
+async fn vcs_demo_projection_diff_operations(current: &VcsSnapshot, next: &VcsSnapshot) -> Vec<VcsDemoMutation> {
     use crate::artifacts::vcs::mutations::{add_tag, change_counter, change_notes, change_status, remove_tag, rename_vcs};
     let mut operations = Vec::new();
     if next.title != current.title {
@@ -46,7 +46,7 @@ fn vcs_demo_projection_diff_operations(current: &VcsSnapshot, next: &VcsSnapshot
 
 /// 🧩️ The former `TextEdit`/`Edit` match arm body, shared by both payload modules: parses the given
 /// text as a whole `VcsSnapshot` and emits the diff against the current one.
-fn text_edit_operations(text: &str, current: &VcsSnapshot) -> Emit<VcsDemoMutation, VcsDemoConfigMutation> {
+async fn text_edit_operations(text: &str, current: &VcsSnapshot) -> Emit<VcsDemoMutation, VcsDemoConfigMutation> {
     match serde_json::from_str::<VcsSnapshot>(text) {
         Ok(next_projection) => {
             let operations = vcs_demo_projection_diff_operations(current, &next_projection);
@@ -66,6 +66,6 @@ pub struct TextEdit {
     pub text: String,
 }
 
-pub fn handle(payload: &TextEdit, doc: &ArtifactView<'_, VcsSnapshot>, _cfg: &ConfigView<'_, VcsDemoConfig>) -> Result<Emit<VcsDemoMutation, VcsDemoConfigMutation>, Fault> {
+pub async fn handle(payload: &TextEdit, doc: &ArtifactView<'_, VcsSnapshot>, _cfg: &ConfigView<'_, VcsDemoConfig>) -> Result<Emit<VcsDemoMutation, VcsDemoConfigMutation>, Fault> {
     Ok(text_edit_operations(&payload.text, doc.snapshot))
 }

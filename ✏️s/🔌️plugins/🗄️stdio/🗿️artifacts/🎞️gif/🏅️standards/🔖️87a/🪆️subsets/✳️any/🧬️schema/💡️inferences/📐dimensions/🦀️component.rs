@@ -24,13 +24,13 @@ pub struct GifDimensions {
 
 /// 🔢️ `ceil(log2(colors.max(2)))`, clamped to `8` — GIF87a §18's "size of Global/Local Color
 /// Table" field is exactly this value (the on-disk field stores `size - 1`).
-fn color_table_bit_depth(colors_len: usize) -> u8 {
+async fn color_table_bit_depth(colors_len: usize) -> u8 {
     let n = colors_len.max(2);
     ((usize::BITS - (n - 1).leading_zeros()) as u8).min(8)
 }
 
 /// 📐️ Computes [`GifDimensions`] from a snapshot's screen descriptor + GCT — pure, total, O(1).
-pub fn compute_gif_dimensions(snapshot: &GifSnapshot) -> GifDimensions {
+pub async fn compute_gif_dimensions(snapshot: &GifSnapshot) -> GifDimensions {
     let bit_depth = match &snapshot.gct {
         Some(table) => color_table_bit_depth(table.colors.len()),
         None => 8,
@@ -46,14 +46,14 @@ mod tests {
     use crate::artifacts::gif::standards::v87a::subsets::any::schema::snapshot::{GifColorTable, GifRgb};
 
     #[test]
-    fn derives_bit_depth_from_global_color_table_size() {
+    async fn derives_bit_depth_from_global_color_table_size() {
         let gct = GifColorTable { sorted: false, colors: vec![GifRgb::default(); 4] };
         let snapshot = GifSnapshot { width: 3, height: 2, gct: Some(gct), ..GifSnapshot::default() };
         assert_eq!(compute_gif_dimensions(&snapshot), GifDimensions { width: 3, height: 2, bit_depth: 2, has_alpha: false, pixel_count: 6 });
     }
 
     #[test]
-    fn never_reports_alpha() {
+    async fn never_reports_alpha() {
         assert!(!compute_gif_dimensions(&GifSnapshot::default()).has_alpha);
     }
 }

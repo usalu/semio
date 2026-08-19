@@ -30,19 +30,19 @@ pub struct Block3dInference {
 }
 
 impl protocol::Inference<Block3dSnapshot> for Block3dInference {
-    fn infer(snapshot: &Block3dSnapshot) -> Self {
+    async fn infer(snapshot: &Block3dSnapshot) -> Self {
         Self { bounds: compute_block3d_bounds(snapshot) }
     }
 }
 
 impl protocol::InferenceSpec<Block3dSnapshot> for Block3dInference {
-    fn inference_schema_id() -> &'static str {
+    async fn inference_schema_id() -> &'static str {
         "s.block.block3d.inference"
     }
-    fn schema_version() -> u32 {
+    async fn schema_version() -> u32 {
         1
     }
-    fn fields() -> &'static [protocol::InferenceFieldSpec] {
+    async fn fields() -> &'static [protocol::InferenceFieldSpec] {
         &[protocol::InferenceFieldSpec { id: "s.block.block3d.inference.bounds", reads: &["vortices"] }]
     }
 }
@@ -58,7 +58,7 @@ impl ArtifactInferrer for crate::artifacts::block3d::standards::v1::subsets::any
 //#region 🔖️PuzzleCatalogFragment
 /// 🌐️ Resolves the active representation's mesh url — the first representation whose `tags` all
 /// appear in `wanted_tags`, or the first representation overall, or `None` for an empty catalog.
-pub fn resolve_active_mesh_url<'a>(definition: &'a Block3dSnapshot, wanted_tags: &[&str]) -> Option<&'a str> {
+pub async fn resolve_active_mesh_url<'a>(definition: &'a Block3dSnapshot, wanted_tags: &[&str]) -> Option<&'a str> {
     definition
         .representations
         .iter()
@@ -71,7 +71,7 @@ pub fn resolve_active_mesh_url<'a>(definition: &'a Block3dSnapshot, wanted_tags:
 /// `vortexKinds`/`cableKinds`/`attractionKinds` — see `Puzzle3dKindCatalogs`), the seam puzzle imports
 /// through its `Kit×Type` media port. The active representation's mesh (first row, or the first
 /// matching `wanted_tags`) becomes the catalog row's `meshUrl`.
-pub fn puzzle3d_catalog_fragment(definition: &Block3dSnapshot, wanted_tags: &[&str]) -> Value {
+pub async fn puzzle3d_catalog_fragment(definition: &Block3dSnapshot, wanted_tags: &[&str]) -> Value {
     let vortices: Vec<Value> = definition.vortices.iter().map(|vortex| json!({ "id": vortex.id, "vortexKind": vortex.vortex_kind, "position": vortex.position, "direction": vortex.direction, "radius": vortex.radius })).collect();
     let object_kind = json!({
         "id": definition.object_kind.id,
@@ -96,7 +96,7 @@ pub fn puzzle3d_catalog_fragment(definition: &Block3dSnapshot, wanted_tags: &[&s
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.block.block3d.inference`'s facet leaves into the OS-wide inference catalog —
 /// call once at plugin init, alongside `block3d_artifact_schema_descriptor`'s registration.
-pub fn block3d_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
+pub async fn block3d_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
     schema::ArtifactInferenceDescriptor {
         id: "s.block.block3d.inference",
         inference: schema::FacetLeaves {
@@ -119,11 +119,11 @@ mod tests {
     use protocol::Inference;
 
     //#region 🧸️Fixtures
-    fn vortex(id: &str, position: [f64; 3], radius: f64) -> Block3dVortexTemplate {
+    async fn vortex(id: &str, position: [f64; 3], radius: f64) -> Block3dVortexTemplate {
         Block3dVortexTemplate { id: id.into(), vortex_kind: "door".into(), position, direction: [0.0, 1.0, 0.0], radius, label: None }
     }
 
-    fn snapshot_with_vortices(vortices: Vec<Block3dVortexTemplate>) -> Block3dSnapshot {
+    async fn snapshot_with_vortices(vortices: Vec<Block3dVortexTemplate>) -> Block3dSnapshot {
         Block3dSnapshot {
             object_kind: BlockKindIdentity { id: "capsule".into(), name: "capsule".into(), label: "Capsule".into(), ..Default::default() },
             vortices,
@@ -134,18 +134,18 @@ mod tests {
 
     //#region 🧪️InferenceLaws
     #[test]
-    fn inference_determinism_law() {
+    async fn inference_determinism_law() {
         let snapshot = snapshot_with_vortices(vec![vortex("v0", [1.0, 2.0, 3.0], 0.5), vortex("v1", [-1.0, 0.0, 4.0], 0.25)]);
         assert_eq!(Block3dInference::infer(&snapshot), Block3dInference::infer(&snapshot));
     }
 
     #[test]
-    fn inference_default_law() {
+    async fn inference_default_law() {
         assert_eq!(Block3dInference::infer(&Block3dSnapshot::default()), Block3dInference::default());
     }
 
     #[test]
-    fn bounds_match_vortex_positions_inflated_by_radius() {
+    async fn bounds_match_vortex_positions_inflated_by_radius() {
         let snapshot = snapshot_with_vortices(vec![vortex("v0", [1.0, 2.0, 3.0], 0.5), vortex("v1", [-1.0, 0.0, 4.0], 0.25)]);
         let inferred = Block3dInference::infer(&snapshot);
         let bounds = inferred.bounds.bounding_box.expect("non-empty vortices produce a bounding box");
@@ -157,7 +157,7 @@ mod tests {
 
     //#region 🧪️PuzzleCatalogFragment
     #[test]
-    fn resolve_active_mesh_url_prefers_matching_tags() {
+    async fn resolve_active_mesh_url_prefers_matching_tags() {
         let mut definition = Block3dSnapshot::default();
         definition.representations.push(BlockRepresentation { id: "r0".into(), name: "1:500".into(), mesh_url: Some("/mesh/low.glb".into()), tags: vec!["1to500".into()], lod: None, description: String::new(), attributes: Vec::new() });
         definition.representations.push(BlockRepresentation { id: "r1".into(), name: "full".into(), mesh_url: Some("/mesh/full.glb".into()), tags: vec!["full".into()], lod: None, description: String::new(), attributes: Vec::new() });
@@ -166,7 +166,7 @@ mod tests {
     }
 
     #[test]
-    fn puzzle3d_catalog_fragment_maps_vortices() {
+    async fn puzzle3d_catalog_fragment_maps_vortices() {
         let mut definition = Block3dSnapshot { schema: BLOCK_3D_SCHEMA.into(), object_kind: BlockKindIdentity { id: "capsule".into(), name: "capsule".into(), label: "Capsule".into(), ..Default::default() }, ..Block3dSnapshot::default() };
         definition.vortices.push(Block3dVortexTemplate { id: "v0".into(), vortex_kind: "door".into(), position: [0.0, 0.0, 0.0], direction: [0.0, 1.0, 0.0], radius: 0.3, label: None });
         let fragment = puzzle3d_catalog_fragment(&definition, &[]);

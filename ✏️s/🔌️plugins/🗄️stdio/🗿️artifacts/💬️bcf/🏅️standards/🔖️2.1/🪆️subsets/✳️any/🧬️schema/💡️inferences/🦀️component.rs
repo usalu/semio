@@ -24,7 +24,7 @@ pub struct BcfInference {
 }
 
 impl protocol::Inference<BcfSnapshot> for BcfInference {
-    fn infer(snapshot: &BcfSnapshot) -> Self {
+    async fn infer(snapshot: &BcfSnapshot) -> Self {
         Self { topic_stats: compute_bcf_topic_stats(snapshot) }
     }
 }
@@ -32,19 +32,19 @@ impl protocol::Inference<BcfSnapshot> for BcfInference {
 /// 🌱 Defined in terms of `infer` (not derived) — keeps the law correct regardless of whether
 /// `BcfSnapshot::default()`'s `topics` ever stops being empty.
 impl Default for BcfInference {
-    fn default() -> Self {
+    async fn default() -> Self {
         <Self as protocol::Inference<BcfSnapshot>>::infer(&BcfSnapshot::default())
     }
 }
 
 impl protocol::InferenceSpec<BcfSnapshot> for BcfInference {
-    fn inference_schema_id() -> &'static str {
+    async fn inference_schema_id() -> &'static str {
         "s.stdio.bcf.inference"
     }
-    fn schema_version() -> u32 {
+    async fn schema_version() -> u32 {
         1
     }
-    fn fields() -> &'static [protocol::InferenceFieldSpec] {
+    async fn fields() -> &'static [protocol::InferenceFieldSpec] {
         &[protocol::InferenceFieldSpec { id: "s.stdio.bcf.inference.topicStats", reads: &["topics"] }]
     }
 }
@@ -64,7 +64,7 @@ impl semio_framework_plugin::ArtifactInferrer for crate::artifacts::bcf::standar
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.stdio.bcf.inference`'s facet leaves into the OS-wide inference catalog — call
 /// once at plugin init, alongside `bcf_artifact_schema_descriptor`'s registration.
-pub fn bcf_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
+pub async fn bcf_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
     schema::ArtifactInferenceDescriptor {
         id: "s.stdio.bcf.inference",
         inference: schema::FacetLeaves {
@@ -85,13 +85,13 @@ mod tests {
     use protocol::Inference;
 
     #[test]
-    fn inference_determinism_law() {
+    async fn inference_determinism_law() {
         let snapshot = BcfSnapshot::default();
         assert_eq!(BcfInference::infer(&snapshot), BcfInference::infer(&snapshot));
     }
 
     #[test]
-    fn inference_default_law() {
+    async fn inference_default_law() {
         assert_eq!(BcfInference::infer(&BcfSnapshot::default()), BcfInference::default());
     }
 }

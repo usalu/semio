@@ -15,16 +15,16 @@ pub struct CreateStory {
 
 impl MutationKind<LayoutSnapshot, LayoutMutation> for CreateStory {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "create", entity: "story", kind: "create-story", record: "CreatedStory" };
-    fn diff(&self, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
+    async fn diff(&self, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
         super::diff::diff_create_story(self, base)
     }
-    fn inverse(&self, base: &LayoutSnapshot) -> Vec<LayoutMutation> {
+    async fn inverse(&self, base: &LayoutSnapshot) -> Vec<LayoutMutation> {
         super::inverse::inverse_create_story(self, base)
     }
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         format!("Create story \"{}\"", self.story.id)
     }
-    fn target(&self) -> Vec<String> {
+    async fn target(&self) -> Vec<String> {
         vec![self.story.id.clone()]
     }
 }

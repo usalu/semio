@@ -33,24 +33,24 @@ pub struct DeflateArtifact {
 
 //#region 🔖️Conversions
 impl Default for DeflateArtifact {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self::from_snapshot(DeflateSnapshot::default())
     }
 }
 
 impl DeflateArtifact {
     /// 📸️ Persisted subset.
-    pub fn to_snapshot(&self) -> DeflateSnapshot {
+    pub async fn to_snapshot(&self) -> DeflateSnapshot {
         DeflateSnapshot { schema: self.schema.clone(), compression_method: self.compression_method, window_bits: self.window_bits, compression_level_hint: self.compression_level_hint, dict_id: self.dict_id, payload: self.payload.clone() }
     }
 
     /// 🧬️ Builds a full artifact from a snapshot.
-    pub fn from_snapshot(snapshot: DeflateSnapshot) -> Self {
+    pub async fn from_snapshot(snapshot: DeflateSnapshot) -> Self {
         Self { schema: snapshot.schema, compression_method: snapshot.compression_method, window_bits: snapshot.window_bits, compression_level_hint: snapshot.compression_level_hint, dict_id: snapshot.dict_id, payload: snapshot.payload }
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
-    pub fn set_snapshot(&mut self, snapshot: DeflateSnapshot) {
+    pub async fn set_snapshot(&mut self, snapshot: DeflateSnapshot) {
         self.schema = snapshot.schema;
         self.compression_method = snapshot.compression_method;
         self.window_bits = snapshot.window_bits;
@@ -66,7 +66,7 @@ impl DeflateArtifact {
 /// MACHINES) — mirrors `png`'s own `empty_png_snapshot`/`demo_png_snapshot` placement beside the
 /// artifact struct.
 /// 🌱 Empty persisted snapshot.
-pub fn empty_deflate_snapshot() -> DeflateSnapshot {
+pub async fn empty_deflate_snapshot() -> DeflateSnapshot {
     DeflateSnapshot::default()
 }
 
@@ -77,7 +77,7 @@ pub fn empty_deflate_snapshot() -> DeflateSnapshot {
 /// `🎒️example.pack.semio` (all three are literally this snapshot's `print_dsl`/
 /// `encode_deflate_snapshot`/`encode_pack` output, asserted equal by `fixture_honesty_law` in
 /// `💡️inferences/🦀️component.rs`).
-pub fn demo_deflate_snapshot() -> DeflateSnapshot {
+pub async fn demo_deflate_snapshot() -> DeflateSnapshot {
     DeflateSnapshot {
         schema: STDIO_DEFLATE_DOCUMENT_SCHEMA.into(),
         compression_method: 8,
@@ -91,7 +91,7 @@ pub fn demo_deflate_snapshot() -> DeflateSnapshot {
 
 //#region 🔖️Descriptor
 /// 🧬️ Descriptor for `s.stdio.deflate`.
-pub fn deflate_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
+pub async fn deflate_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
     schema::ArtifactSchemaDescriptor {
         id: "s.stdio.deflate",
         artifact: schema::FacetLeaves {
@@ -142,27 +142,27 @@ pub mod derived_construction {
         type Snapshot = DeflateSnapshot;
         type Mutation = DeflateMutation;
         type Diff = DeflateDiff;
-        fn empty() -> Self {
+        async fn empty() -> Self {
             Self { snapshot: DeflateSnapshot::default(), diagnostics: Vec::new() }
         }
-        fn from_snapshot(snapshot: Self::Snapshot) -> Self {
+        async fn from_snapshot(snapshot: Self::Snapshot) -> Self {
             Self { snapshot, diagnostics: Vec::new() }
         }
-        fn from_text(text: &str) -> Result<Self, store::TextError> {
+        async fn from_text(text: &str) -> Result<Self, store::TextError> {
             Ok(Self::from_snapshot(<DeflateSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
-        fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
+        async fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
             Ok(Self::from_snapshot(<DeflateSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
         }
-        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
+        async fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let diff = crate::artifacts::deflate::schema::mutations::apply_deflate_mutation(&mut self.snapshot, &mutation);
             (self, diff)
         }
-        fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
+        async fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
             self.snapshot = <DeflateDiff as protocol::MutationDiff<DeflateSnapshot>>::apply(&diff, &self.snapshot)?;
             Ok(self)
         }
-        fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
+        async fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
             if self.diagnostics.is_empty() {
                 Ok(self.snapshot)
             } else {
@@ -196,11 +196,11 @@ pub mod derived_analysis {
         type Parts = DeflateParts;
         const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.deflate", standard: StandardId("rfc1950"), subset: SubsetId("*") };
 
-        fn sniff(_source: &AnalyzeSource<'_>) -> IoConfidence {
+        async fn sniff(_source: &AnalyzeSource<'_>) -> IoConfidence {
             IoConfidence::Medium
         }
 
-        fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
+        async fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
             let mut parts = DeflateParts::default();
             let mut diagnostics = Vec::new();
             let mut confidence = IoConfidence::High;

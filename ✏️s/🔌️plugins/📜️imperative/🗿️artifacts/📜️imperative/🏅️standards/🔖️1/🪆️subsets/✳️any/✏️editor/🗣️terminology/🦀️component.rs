@@ -29,7 +29,7 @@ semio_framework_plugin::app_labels! {
 
 //#region 🔖️Resolvers
 /// 🗣️ Resolves the active label set from `cfg.locale`; falls back to native English.
-pub fn imperative_labels(cfg: &ImperativeConfig) -> &'static ImperativeLabels {
+pub async fn imperative_labels(cfg: &ImperativeConfig) -> &'static ImperativeLabels {
     semio_framework_plugin::resolve_labels_for_locale::<ImperativeLabels>(&cfg.locale)
 }
 //#endregion 🔖️Resolvers
@@ -40,7 +40,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn labels_resolve_native_english_and_german_from_the_config_locale() {
+    async fn labels_resolve_native_english_and_german_from_the_config_locale() {
         assert_eq!(imperative_labels(&ImperativeConfig::default()).action_control_while.as_str(), "While");
         assert_eq!(imperative_labels(&ImperativeConfig { locale: "de-DE".into(), ..ImperativeConfig::default() }).action_control_while.as_str(), "Solange");
     }

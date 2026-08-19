@@ -27,31 +27,31 @@ pub mod univariate {
     }
 
     impl<C: Ring> PolyU<C> {
-        fn normalize(mut coeffs: Vec<C>) -> Self {
+        async fn normalize(mut coeffs: Vec<C>) -> Self {
             while coeffs.last().is_some_and(Ring::is_zero) {
                 coeffs.pop();
             }
             Self { coeffs }
         }
 
-        pub fn zero() -> Self {
+        pub async fn zero() -> Self {
             Self { coeffs: Vec::new() }
         }
 
-        pub fn one() -> Self {
+        pub async fn one() -> Self {
             Self { coeffs: vec![C::one()] }
         }
 
-        pub fn x() -> Self {
+        pub async fn x() -> Self {
             Self { coeffs: vec![C::zero(), C::one()] }
         }
 
-        pub fn constant(c: C) -> Self {
+        pub async fn constant(c: C) -> Self {
             Self::normalize(vec![c])
         }
 
         /// 📈️ `coeff * x^degree`.
-        pub fn monomial(coeff: C, degree: usize) -> Self {
+        pub async fn monomial(coeff: C, degree: usize) -> Self {
             if coeff.is_zero() {
                 return Self::zero();
             }
@@ -60,15 +60,15 @@ pub mod univariate {
             Self { coeffs }
         }
 
-        pub fn from_coeffs(coeffs: Vec<C>) -> Self {
+        pub async fn from_coeffs(coeffs: Vec<C>) -> Self {
             Self::normalize(coeffs)
         }
 
-        pub fn is_zero(&self) -> bool {
+        pub async fn is_zero(&self) -> bool {
             self.coeffs.is_empty()
         }
 
-        pub fn degree(&self) -> Option<usize> {
+        pub async fn degree(&self) -> Option<usize> {
             if self.coeffs.is_empty() {
                 None
             } else {
@@ -76,39 +76,39 @@ pub mod univariate {
             }
         }
 
-        pub fn leading_coeff(&self) -> Option<&C> {
+        pub async fn leading_coeff(&self) -> Option<&C> {
             self.coeffs.last()
         }
 
-        pub fn coeff(&self, i: usize) -> C {
+        pub async fn coeff(&self, i: usize) -> C {
             self.coeffs.get(i).cloned().unwrap_or_else(C::zero)
         }
 
-        pub fn coeffs(&self) -> &[C] {
+        pub async fn coeffs(&self) -> &[C] {
             &self.coeffs
         }
 
-        pub fn add(&self, rhs: &Self) -> Self {
+        pub async fn add(&self, rhs: &Self) -> Self {
             let n = self.coeffs.len().max(rhs.coeffs.len());
             Self::normalize((0..n).map(|i| self.coeff(i).add(&rhs.coeff(i))).collect())
         }
 
-        pub fn neg(&self) -> Self {
+        pub async fn neg(&self) -> Self {
             Self { coeffs: self.coeffs.iter().map(Ring::neg).collect() }
         }
 
-        pub fn sub(&self, rhs: &Self) -> Self {
+        pub async fn sub(&self, rhs: &Self) -> Self {
             self.add(&rhs.neg())
         }
 
-        pub fn mul_scalar(&self, s: &C) -> Self {
+        pub async fn mul_scalar(&self, s: &C) -> Self {
             if s.is_zero() {
                 return Self::zero();
             }
             Self::normalize(self.coeffs.iter().map(|c| c.mul(s)).collect())
         }
 
-        pub fn mul(&self, rhs: &Self) -> Self {
+        pub async fn mul(&self, rhs: &Self) -> Self {
             if self.is_zero() || rhs.is_zero() {
                 return Self::zero();
             }
@@ -124,7 +124,7 @@ pub mod univariate {
             Self::normalize(coeffs)
         }
 
-        pub fn pow(&self, exp: u64) -> Self {
+        pub async fn pow(&self, exp: u64) -> Self {
             let mut result = Self::one();
             let mut base = self.clone();
             let mut e = exp;
@@ -139,7 +139,7 @@ pub mod univariate {
         }
 
         /// ⬆️ Multiplies by `x^k` (a pure shift of the coefficient vector).
-        pub fn shift_up(&self, k: usize) -> Self {
+        pub async fn shift_up(&self, k: usize) -> Self {
             if self.is_zero() || k == 0 {
                 return self.clone();
             }
@@ -149,7 +149,7 @@ pub mod univariate {
         }
 
         /// 🎯️ Horner evaluation at `point`.
-        pub fn eval(&self, point: &C) -> C {
+        pub async fn eval(&self, point: &C) -> C {
             let mut result = C::zero();
             for c in self.coeffs.iter().rev() {
                 result = result.mul(point).add(c);
@@ -158,7 +158,7 @@ pub mod univariate {
         }
 
         /// 🔗️ Substitutes `inner` for `x`: `self(inner(t))`.
-        pub fn semio_compose_rs(&self, inner: &Self) -> Self {
+        pub async fn semio_compose_rs(&self, inner: &Self) -> Self {
             let mut result = Self::zero();
             for c in self.coeffs.iter().rev() {
                 result = result.mul(inner).add(&Self::constant(c.clone()));
@@ -167,7 +167,7 @@ pub mod univariate {
         }
 
         /// 📉️ Formal derivative: `d/dx sum c_i x^i = sum i*c_i x^(i-1)`.
-        pub fn derivative(&self) -> Self {
+        pub async fn derivative(&self) -> Self {
             if self.coeffs.len() <= 1 {
                 return Self::zero();
             }
@@ -182,7 +182,7 @@ pub mod univariate {
         /// ➗️ Pseudo-division: returns `(q, r, lc(d)^e)` such that `lc(d)^e * self == q*d + r` and
         /// `deg(r) < deg(d)`. Works over any commutative ring (no division needed — only multiplication by
         /// powers of the divisor's leading coefficient), unlike true polynomial division which needs a field.
-        pub fn pseudo_div_rem(&self, d: &Self) -> (Self, Self, C) {
+        pub async fn pseudo_div_rem(&self, d: &Self) -> (Self, Self, C) {
             let dn = d.degree().expect("pseudo_div_rem: divisor must be nonzero");
             let lc_d = d.leading_coeff().unwrap().clone();
             let mut r = self.clone();
@@ -211,7 +211,7 @@ pub mod univariate {
         /// 🧮️ Fraction-free (Bareiss) determinant of a matrix over any integral domain — duplicated here
         /// (rather than depending on `number`'s generic `MatG::det_bareiss`) to keep `crate::polynomial`
         /// free of a dependency on the linear-algebra module.
-        fn det_bareiss(mut m: Vec<Vec<C>>) -> C {
+        async fn det_bareiss(mut m: Vec<Vec<C>>) -> C {
             let n = m.len();
             if n == 0 {
                 return C::one();
@@ -240,7 +240,7 @@ pub mod univariate {
         /// 🧮️ Resultant of `self` (degree `n`) and `other` (degree `m`) via the `(n+m) x (n+m)` Sylvester
         /// matrix's fraction-free determinant — valid over any integral domain, kept as the ground-truth
         /// oracle for faster (subresultant-PRS-style) resultant computations layered on top later.
-        pub fn resultant(&self, other: &Self) -> C {
+        pub async fn resultant(&self, other: &Self) -> C {
             if self.is_zero() || other.is_zero() {
                 return C::zero();
             }
@@ -267,7 +267,7 @@ pub mod univariate {
         }
 
         /// 🧮️ Discriminant via `disc(f) = (-1)^(n(n-1)/2) * resultant(f, f') / lc(f)`.
-        pub fn discriminant(&self) -> C {
+        pub async fn discriminant(&self) -> C {
             let n = self.degree().unwrap_or(0);
             if n == 0 {
                 return C::one();
@@ -287,12 +287,12 @@ pub mod univariate {
     impl<C: GcdDomain> PolyU<C> {
         // #region 🔖️ContentGcd
         /// 🔢️ GCD of all coefficients (the polynomial's content); `zero()` for the zero polynomial.
-        pub fn content(&self) -> C {
+        pub async fn content(&self) -> C {
             self.coeffs.iter().fold(C::zero(), |acc, c| acc.gcd(c))
         }
 
         /// 📈️ `self` divided by its content, so the result's coefficient GCD is a unit.
-        pub fn primitive_part(&self) -> Self {
+        pub async fn primitive_part(&self) -> Self {
             let content = self.content();
             if content.is_zero() || content.is_one() {
                 return self.clone();
@@ -303,7 +303,7 @@ pub mod univariate {
         /// 🤝️ GCD via the primitive Euclidean PRS: strips content after every pseudo-remainder step, which
         /// avoids the coefficient-size blowup of plain pseudo-remainders (subresultant PRS is faster still
         /// and left as a documented future optimization; this is simple and correct).
-        pub fn gcd(&self, other: &Self) -> Self {
+        pub async fn gcd(&self, other: &Self) -> Self {
             if self.is_zero() {
                 return other.primitive_part();
             }
@@ -325,7 +325,7 @@ pub mod univariate {
 
     // #region 🔖️FieldOperations
     impl<C: Field> PolyU<C> {
-        pub fn make_monic(&self) -> Self {
+        pub async fn make_monic(&self) -> Self {
             let Some(lc) = self.leading_coeff().cloned() else {
                 return self.clone();
             };
@@ -337,7 +337,7 @@ pub mod univariate {
         }
 
         /// ➗️ True polynomial division: `self == q*d + r`, `deg(r) < deg(d)`. `d` must be nonzero.
-        pub fn div_rem(&self, d: &Self) -> (Self, Self) {
+        pub async fn div_rem(&self, d: &Self) -> (Self, Self) {
             let dn = d.degree().expect("div_rem: divisor must be nonzero");
             let lc_inv = d.leading_coeff().unwrap().inv().expect("nonzero leading coefficient has an inverse in a field");
             let mut r = self.clone();
@@ -357,7 +357,7 @@ pub mod univariate {
 
         /// 🤝️ Monic Euclidean GCD (faster than the content-stripping PRS above once coefficients already
         /// live in a field, since there's no content to strip).
-        pub fn gcd_monic(&self, other: &Self) -> Self {
+        pub async fn gcd_monic(&self, other: &Self) -> Self {
             let (mut a, mut b) = (self.clone(), other.clone());
             while !b.is_zero() {
                 let (_, r) = a.div_rem(&b);
@@ -369,7 +369,7 @@ pub mod univariate {
 
         /// 🤝️ Extended Euclidean algorithm: returns `(g, s, t)` with `s*self + t*other == g` and `g` the
         /// monic GCD of `self` and `other` (or zero if both are zero).
-        pub fn xgcd(&self, other: &Self) -> (Self, Self, Self) {
+        pub async fn xgcd(&self, other: &Self) -> (Self, Self, Self) {
             let (mut old_r, mut r) = (self.clone(), other.clone());
             let (mut old_s, mut s) = (Self::one(), Self::zero());
             let (mut old_t, mut t) = (Self::zero(), Self::one());
@@ -397,7 +397,7 @@ pub mod univariate {
         /// multiplicity is a multiple of `p` are not separated by this algorithm (their derivative vanishes) —
         /// documented limitation, not a silent wrong answer: the returned factorization is still a valid
         /// (coarser) decomposition, just not maximally refined in that case.
-        pub fn squarefree_decomposition(&self) -> Vec<(Self, u32)> {
+        pub async fn squarefree_decomposition(&self) -> Vec<(Self, u32)> {
             if self.is_zero() {
                 return Vec::new();
             }
@@ -426,13 +426,13 @@ pub mod univariate {
             result
         }
 
-        fn is_one_poly(&self) -> bool {
+        async fn is_one_poly(&self) -> bool {
             self.degree() == Some(0) && self.leading_coeff().is_some_and(Ring::is_one)
         }
 
         /// 🎯️ Newton divided-difference interpolation through the given `(x, y)` points (distinct `x`
         /// values required); `None` if two points share an `x`.
-        pub fn interpolate(points: &[(C, C)]) -> Option<Self> {
+        pub async fn interpolate(points: &[(C, C)]) -> Option<Self> {
             let n = points.len();
             if n == 0 {
                 return Some(Self::zero());
@@ -464,28 +464,28 @@ pub mod univariate {
 
     // #region 🔖️RingTraitImpls
     impl<C: CommutativeRing> Ring for PolyU<C> {
-        fn zero() -> Self {
+        async fn zero() -> Self {
             PolyU::zero()
         }
-        fn one() -> Self {
+        async fn one() -> Self {
             PolyU::one()
         }
-        fn add(&self, rhs: &Self) -> Self {
+        async fn add(&self, rhs: &Self) -> Self {
             PolyU::add(self, rhs)
         }
-        fn neg(&self) -> Self {
+        async fn neg(&self) -> Self {
             PolyU::neg(self)
         }
-        fn mul(&self, rhs: &Self) -> Self {
+        async fn mul(&self, rhs: &Self) -> Self {
             PolyU::mul(self, rhs)
         }
-        fn is_zero(&self) -> bool {
+        async fn is_zero(&self) -> bool {
             PolyU::is_zero(self)
         }
-        fn from_i64(value: i64) -> Self {
+        async fn from_i64(value: i64) -> Self {
             PolyU::constant(C::from_i64(value))
         }
-        fn characteristic(&self) -> u64 {
+        async fn characteristic(&self) -> u64 {
             self.coeffs.first().map_or(0, Ring::characteristic)
         }
     }
@@ -495,7 +495,7 @@ pub mod univariate {
         /// when `r == 0`, `q` is exactly `lc(rhs)^k` times the true quotient, so dividing `q`'s coefficients
         /// by that scalar recovers it — and that per-coefficient division is itself exact precisely because
         /// the true quotient (assumed to exist whenever `r == 0`) has coefficients in `C` already.
-        fn exact_div(&self, rhs: &Self) -> Option<Self> {
+        async fn exact_div(&self, rhs: &Self) -> Option<Self> {
             if rhs.is_zero() {
                 return None;
             }
@@ -514,7 +514,7 @@ pub mod univariate {
         }
     }
     impl<C: GcdDomain> GcdDomain for PolyU<C> {
-        fn gcd(&self, rhs: &Self) -> Self {
+        async fn gcd(&self, rhs: &Self) -> Self {
             PolyU::gcd(self, rhs)
         }
     }
@@ -526,16 +526,16 @@ pub mod univariate {
         use super::*;
         use number::Rational;
 
-        fn r(n: i64, d: i64) -> Rational {
+        async fn r(n: i64, d: i64) -> Rational {
             Rational::from_i64(n, d).unwrap()
         }
 
-        fn poly(coeffs: Vec<i64>) -> PolyU<Rational> {
+        async fn poly(coeffs: Vec<i64>) -> PolyU<Rational> {
             PolyU::from_coeffs(coeffs.into_iter().map(|c| r(c, 1)).collect())
         }
 
         #[test]
-        fn ring_axioms_on_small_polynomials() {
+        async fn ring_axioms_on_small_polynomials() {
             let a = poly(vec![1, 2, 3]);
             let b = poly(vec![0, 1]);
             let sum = a.add(&b);
@@ -545,7 +545,7 @@ pub mod univariate {
         }
 
         #[test]
-        fn div_rem_identity_holds() {
+        async fn div_rem_identity_holds() {
             let a = poly(vec![-1, 0, 1]); // x^2 - 1
             let b = poly(vec![-1, 1]); // x - 1
             let (q, rem) = a.div_rem(&b);
@@ -554,19 +554,19 @@ pub mod univariate {
         }
 
         #[test]
-        fn derivative_power_rule() {
+        async fn derivative_power_rule() {
             let f = poly(vec![0, 0, 0, 1]); // x^3
             assert_eq!(f.derivative(), poly(vec![0, 0, 3])); // 3x^2
         }
 
         #[test]
-        fn eval_horner_matches_direct_computation() {
+        async fn eval_horner_matches_direct_computation() {
             let f = poly(vec![1, 2, 3]); // 1 + 2x + 3x^2
             assert_eq!(f.eval(&r(2, 1)), r(1 + 4 + 12, 1));
         }
 
         #[test]
-        fn gcd_hand_case() {
+        async fn gcd_hand_case() {
             // (x^2 - 1)(x + 2) and (x^2 - 1)(x - 5) share gcd (x^2 - 1) up to a unit.
             let common = poly(vec![-1, 0, 1]);
             let a = common.mul(&poly(vec![2, 1]));
@@ -577,7 +577,7 @@ pub mod univariate {
         }
 
         #[test]
-        fn resultant_of_coprime_linear_factors_is_nonzero() {
+        async fn resultant_of_coprime_linear_factors_is_nonzero() {
             let a = poly(vec![-1, 1]); // x - 1
             let b = poly(vec![-2, 1]); // x - 2
             let res = a.resultant(&b);
@@ -585,7 +585,7 @@ pub mod univariate {
         }
 
         #[test]
-        fn resultant_of_shared_root_is_zero() {
+        async fn resultant_of_shared_root_is_zero() {
             let a = poly(vec![-1, 0, 1]); // x^2 - 1, roots +-1
             let b = poly(vec![-1, 1]); // x - 1, root 1 (shared)
             let res = a.resultant(&b);
@@ -593,7 +593,7 @@ pub mod univariate {
         }
 
         #[test]
-        fn factor_x2_minus_1_via_squarefree_and_roots() {
+        async fn factor_x2_minus_1_via_squarefree_and_roots() {
             let f = poly(vec![-1, 0, 1]);
             let decomposition = f.squarefree_decomposition();
             assert_eq!(decomposition.len(), 1);
@@ -601,7 +601,7 @@ pub mod univariate {
         }
 
         #[test]
-        fn squarefree_decomposition_of_repeated_factor() {
+        async fn squarefree_decomposition_of_repeated_factor() {
             let base = poly(vec![-1, 1]); // (x - 1)
             let f = base.mul(&base).mul(&base); // (x-1)^3
             let decomposition = f.squarefree_decomposition();
@@ -609,14 +609,14 @@ pub mod univariate {
         }
 
         #[test]
-        fn interpolate_reconstructs_quadratic() {
+        async fn interpolate_reconstructs_quadratic() {
             let points = vec![(r(0, 1), r(1, 1)), (r(1, 1), r(6, 1)), (r(2, 1), r(15, 1))]; // f(x) = 2x^2+3x+1
             let f = PolyU::interpolate(&points).unwrap();
             assert_eq!(f, poly(vec![1, 3, 2]));
         }
 
         #[test]
-        fn rational_root_via_eval_hand_case() {
+        async fn rational_root_via_eval_hand_case() {
             // 6x^2 - 5x + 1 = 0 has roots 1/2, 1/3
             let f = PolyU::from_coeffs(vec![r(1, 1), r(-5, 1), r(6, 1)]);
             assert_eq!(f.eval(&r(1, 2)), r(0, 1));
@@ -653,34 +653,34 @@ pub mod multivariate {
     }
 
     impl Monomial {
-        pub fn new(exps: Vec<u32>) -> Self {
+        pub async fn new(exps: Vec<u32>) -> Self {
             Self { exps }
         }
 
-        pub fn var(index: usize, nvars: usize) -> Self {
+        pub async fn var(index: usize, nvars: usize) -> Self {
             let mut exps = vec![0u32; nvars];
             exps[index] = 1;
             Self { exps }
         }
 
-        pub fn one(nvars: usize) -> Self {
+        pub async fn one(nvars: usize) -> Self {
             Self { exps: vec![0u32; nvars] }
         }
 
-        pub fn exps(&self) -> &[u32] {
+        pub async fn exps(&self) -> &[u32] {
             &self.exps
         }
 
-        pub fn total_degree(&self) -> u32 {
+        pub async fn total_degree(&self) -> u32 {
             self.exps.iter().sum()
         }
 
-        pub fn mul(&self, other: &Self) -> Self {
+        pub async fn mul(&self, other: &Self) -> Self {
             Self { exps: self.exps.iter().zip(other.exps.iter()).map(|(a, b)| a + b).collect() }
         }
 
         /// ➗️ `Some(self / other)` if `other`'s exponents are all `<= self`'s, else `None`.
-        pub fn try_div(&self, other: &Self) -> Option<Self> {
+        pub async fn try_div(&self, other: &Self) -> Option<Self> {
             let mut result = Vec::with_capacity(self.exps.len());
             for (a, b) in self.exps.iter().zip(other.exps.iter()) {
                 if b > a {
@@ -691,11 +691,11 @@ pub mod multivariate {
             Some(Self { exps: result })
         }
 
-        pub fn lcm(&self, other: &Self) -> Self {
+        pub async fn lcm(&self, other: &Self) -> Self {
             Self { exps: self.exps.iter().zip(other.exps.iter()).map(|(&a, &b)| a.max(b)).collect() }
         }
 
-        pub fn cmp_by(&self, other: &Self, order: MonomialOrder) -> std::cmp::Ordering {
+        pub async fn cmp_by(&self, other: &Self, order: MonomialOrder) -> std::cmp::Ordering {
             use std::cmp::Ordering;
             match order {
                 MonomialOrder::Lex => self.exps.cmp(&other.exps),
@@ -730,7 +730,7 @@ pub mod multivariate {
     }
 
     impl<C: Ring> PartialEq for PolyM<C> {
-        fn eq(&self, other: &Self) -> bool {
+        async fn eq(&self, other: &Self) -> bool {
             // Compare canonically regardless of stored order: both term lists are already order-sorted,
             // but two PolyM values with different `order` fields can still represent the same polynomial,
             // so compare as sets via a Lex-sorted clone.
@@ -741,57 +741,57 @@ pub mod multivariate {
     }
 
     impl<C: Ring> PolyM<C> {
-        fn normalize(mut terms: Vec<(Monomial, C)>, nvars: usize, order: MonomialOrder) -> Self {
+        async fn normalize(mut terms: Vec<(Monomial, C)>, nvars: usize, order: MonomialOrder) -> Self {
             terms.retain(|(_, c)| !c.is_zero());
             terms.sort_by(|a, b| b.0.cmp_by(&a.0, order));
             Self { nvars, order, terms }
         }
 
-        pub fn zero(nvars: usize, order: MonomialOrder) -> Self {
+        pub async fn zero(nvars: usize, order: MonomialOrder) -> Self {
             Self { nvars, order, terms: Vec::new() }
         }
 
-        pub fn constant(c: C, nvars: usize, order: MonomialOrder) -> Self {
+        pub async fn constant(c: C, nvars: usize, order: MonomialOrder) -> Self {
             Self::normalize(vec![(Monomial::one(nvars), c)], nvars, order)
         }
 
-        pub fn var(index: usize, nvars: usize, order: MonomialOrder) -> Self {
+        pub async fn var(index: usize, nvars: usize, order: MonomialOrder) -> Self {
             Self::normalize(vec![(Monomial::var(index, nvars), C::one())], nvars, order)
         }
 
-        pub fn from_terms(terms: Vec<(Monomial, C)>, nvars: usize, order: MonomialOrder) -> Self {
+        pub async fn from_terms(terms: Vec<(Monomial, C)>, nvars: usize, order: MonomialOrder) -> Self {
             Self::normalize(terms, nvars, order)
         }
 
-        pub fn with_order(&self, order: MonomialOrder) -> Self {
+        pub async fn with_order(&self, order: MonomialOrder) -> Self {
             Self::normalize(self.terms.clone(), self.nvars, order)
         }
 
-        pub fn is_zero(&self) -> bool {
+        pub async fn is_zero(&self) -> bool {
             self.terms.is_empty()
         }
 
-        pub fn nvars(&self) -> usize {
+        pub async fn nvars(&self) -> usize {
             self.nvars
         }
 
-        pub fn order(&self) -> MonomialOrder {
+        pub async fn order(&self) -> MonomialOrder {
             self.order
         }
 
-        pub fn terms(&self) -> &[(Monomial, C)] {
+        pub async fn terms(&self) -> &[(Monomial, C)] {
             &self.terms
         }
 
-        pub fn leading_term(&self) -> Option<&(Monomial, C)> {
+        pub async fn leading_term(&self) -> Option<&(Monomial, C)> {
             self.terms.first()
         }
 
-        pub fn total_degree(&self) -> u32 {
+        pub async fn total_degree(&self) -> u32 {
             self.terms.iter().map(|(m, _)| m.total_degree()).max().unwrap_or(0)
         }
 
-        pub fn add(&self, other: &Self) -> Self {
+        pub async fn add(&self, other: &Self) -> Self {
             assert_eq!(self.nvars, other.nvars, "PolyM::add: variable-count mismatch");
             let mut map: std::collections::BTreeMap<Vec<u32>, C> = std::collections::BTreeMap::new();
             for (m, c) in self.terms.iter().chain(other.terms.iter()) {
@@ -801,15 +801,15 @@ pub mod multivariate {
             Self::normalize(terms, self.nvars, self.order)
         }
 
-        pub fn neg(&self) -> Self {
+        pub async fn neg(&self) -> Self {
             Self { nvars: self.nvars, order: self.order, terms: self.terms.iter().map(|(m, c)| (m.clone(), c.neg())).collect() }
         }
 
-        pub fn sub(&self, other: &Self) -> Self {
+        pub async fn sub(&self, other: &Self) -> Self {
             self.add(&other.neg())
         }
 
-        pub fn mul(&self, other: &Self) -> Self {
+        pub async fn mul(&self, other: &Self) -> Self {
             assert_eq!(self.nvars, other.nvars, "PolyM::mul: variable-count mismatch");
             let mut map: std::collections::BTreeMap<Vec<u32>, C> = std::collections::BTreeMap::new();
             for (m1, c1) in &self.terms {
@@ -823,7 +823,7 @@ pub mod multivariate {
             Self::normalize(terms, self.nvars, self.order)
         }
 
-        pub fn pow(&self, exp: u64) -> Self {
+        pub async fn pow(&self, exp: u64) -> Self {
             let mut result = Self::constant(C::one(), self.nvars, self.order);
             let mut base = self.clone();
             let mut e = exp;
@@ -837,7 +837,7 @@ pub mod multivariate {
             result
         }
 
-        pub fn eval(&self, point: &[C]) -> C {
+        pub async fn eval(&self, point: &[C]) -> C {
             self.terms.iter().fold(C::zero(), |acc, (m, c)| {
                 let mut term_val = c.clone();
                 for (var_idx, &exp) in m.exps.iter().enumerate() {
@@ -849,11 +849,11 @@ pub mod multivariate {
             })
         }
 
-        pub fn mul_scalar(&self, s: &C) -> Self {
+        pub async fn mul_scalar(&self, s: &C) -> Self {
             Self::normalize(self.terms.iter().map(|(m, c)| (m.clone(), c.mul(s))).collect(), self.nvars, self.order)
         }
 
-        pub fn partial_derivative(&self, var: usize) -> Self {
+        pub async fn partial_derivative(&self, var: usize) -> Self {
             let mut terms = Vec::new();
             for (m, c) in &self.terms {
                 let e = m.exps[var];
@@ -875,7 +875,7 @@ pub mod multivariate {
         /// ➗️ Multivariate division of `self` by `divisors`: returns `(quotients, remainder)` such that
         /// `self == sum(q_i * divisors_i) + remainder` and no term of `remainder` is divisible by any
         /// divisor's leading term.
-        pub fn reduce(&self, divisors: &[Self]) -> (Vec<Self>, Self) {
+        pub async fn reduce(&self, divisors: &[Self]) -> (Vec<Self>, Self) {
             let mut quotients = vec![Self::zero(self.nvars, self.order); divisors.len()];
             let mut remainder = Self::zero(self.nvars, self.order);
             let mut p = self.clone();
@@ -901,7 +901,7 @@ pub mod multivariate {
         /// 🧮️ `S(f,g) = (lcm/LT(f)) * f - (lcm/LT(g)) * g`, where `LT` is the leading term (monomial times
         /// coefficient) — each cofactor's coefficient is the inverse of *its own* polynomial's leading
         /// coefficient, since its job is to cancel that polynomial's own leading term exactly.
-        pub fn s_polynomial(&self, other: &Self) -> Self {
+        pub async fn s_polynomial(&self, other: &Self) -> Self {
             let (lm1, lc1) = self.leading_term().expect("s_polynomial: self must be nonzero").clone();
             let (lm2, lc2) = other.leading_term().expect("s_polynomial: other must be nonzero").clone();
             let lcm = lm1.lcm(&lm2);
@@ -916,7 +916,7 @@ pub mod multivariate {
         // #region 🔖️Groebner
         /// 🧮️ Buchberger's algorithm with the coprime-leading-term criterion and pairwise interreduction,
         /// producing the unique reduced monic Groebner basis of the ideal generated by `gens`.
-        pub fn groebner_basis(gens: &[Self]) -> Vec<Self> {
+        pub async fn groebner_basis(gens: &[Self]) -> Vec<Self> {
             let mut basis: Vec<Self> = gens.iter().filter(|g| !g.is_zero()).map(Self::make_monic_lead).collect();
             let mut pairs: Vec<(usize, usize)> = (0..basis.len()).flat_map(|i| (0..i).map(move |j| (i, j))).collect();
             while let Some((i, j)) = pairs.pop() {
@@ -942,7 +942,7 @@ pub mod multivariate {
             Self::interreduce(basis)
         }
 
-        fn make_monic_lead(&self) -> Self {
+        async fn make_monic_lead(&self) -> Self {
             let Some((_, lc)) = self.leading_term() else {
                 return self.clone();
             };
@@ -952,7 +952,7 @@ pub mod multivariate {
 
         /// 🧹️ Reduces each basis element against the others and removes any that become redundant, giving
         /// the canonical reduced Groebner basis.
-        fn interreduce(basis: Vec<Self>) -> Vec<Self> {
+        async fn interreduce(basis: Vec<Self>) -> Vec<Self> {
             let mut current = basis;
             loop {
                 let mut changed = false;
@@ -980,7 +980,7 @@ pub mod multivariate {
 
         /// 🚮️ Lex Groebner basis followed by dropping generators that involve any of the first `drop_vars`
         /// variables — the elimination-ideal extraction used by polynomial-system triangularization.
-        pub fn eliminate(gens: &[Self], drop_vars: usize) -> Vec<Self> {
+        pub async fn eliminate(gens: &[Self], drop_vars: usize) -> Vec<Self> {
             let lex_gens: Vec<Self> = gens.iter().map(|g| g.with_order(MonomialOrder::Lex)).collect();
             let gb = Self::groebner_basis(&lex_gens);
             gb.into_iter().filter(|p| p.terms.iter().all(|(m, _)| m.exps()[..drop_vars].iter().all(|&e| e == 0))).collect()
@@ -995,30 +995,30 @@ pub mod multivariate {
         use super::*;
         use number::Rational;
 
-        fn r(n: i64) -> Rational {
+        async fn r(n: i64) -> Rational {
             Rational::from_i64(n, 1).unwrap()
         }
 
-        fn mono(exps: Vec<u32>) -> Monomial {
+        async fn mono(exps: Vec<u32>) -> Monomial {
             Monomial::new(exps)
         }
 
         #[test]
-        fn monomial_ordering_lex() {
+        async fn monomial_ordering_lex() {
             let a = mono(vec![2, 0]);
             let b = mono(vec![1, 5]);
             assert_eq!(a.cmp_by(&b, MonomialOrder::Lex), std::cmp::Ordering::Greater);
         }
 
         #[test]
-        fn monomial_ordering_grlex_uses_total_degree_first() {
+        async fn monomial_ordering_grlex_uses_total_degree_first() {
             let a = mono(vec![1, 0]); // degree 1
             let b = mono(vec![0, 2]); // degree 2
             assert_eq!(a.cmp_by(&b, MonomialOrder::GrLex), std::cmp::Ordering::Less);
         }
 
         #[test]
-        fn try_div_and_lcm() {
+        async fn try_div_and_lcm() {
             let a = mono(vec![2, 3]);
             let b = mono(vec![1, 1]);
             assert_eq!(a.try_div(&b), Some(mono(vec![1, 2])));
@@ -1027,7 +1027,7 @@ pub mod multivariate {
         }
 
         #[test]
-        fn ring_ops_hand_case() {
+        async fn ring_ops_hand_case() {
             // f = x + y, g = x - y ; f*g = x^2 - y^2
             let x = PolyM::<Rational>::var(0, 2, MonomialOrder::Lex);
             let y = PolyM::<Rational>::var(1, 2, MonomialOrder::Lex);
@@ -1039,7 +1039,7 @@ pub mod multivariate {
         }
 
         #[test]
-        fn eval_hand_case() {
+        async fn eval_hand_case() {
             let x = PolyM::<Rational>::var(0, 2, MonomialOrder::Lex);
             let y = PolyM::<Rational>::var(1, 2, MonomialOrder::Lex);
             let f = x.mul(&x).add(&y); // x^2 + y
@@ -1047,7 +1047,7 @@ pub mod multivariate {
         }
 
         #[test]
-        fn groebner_basis_of_line_intersection() {
+        async fn groebner_basis_of_line_intersection() {
             // {x^2 + y^2 - 1, x - y} over Q: eliminating gives a univariate relation in y.
             let x = PolyM::<Rational>::var(0, 2, MonomialOrder::Lex);
             let y = PolyM::<Rational>::var(1, 2, MonomialOrder::Lex);
@@ -1064,7 +1064,7 @@ pub mod multivariate {
         }
 
         #[test]
-        fn partial_derivative_hand_case() {
+        async fn partial_derivative_hand_case() {
             let x = PolyM::<Rational>::var(0, 2, MonomialOrder::Lex);
             let y = PolyM::<Rational>::var(1, 2, MonomialOrder::Lex);
             let f = x.mul(&x).mul(&y); // x^2 y
@@ -1087,7 +1087,7 @@ pub mod finite {
     use geometry::random::Rng;
 
     // #region 🔖️PolyModPow
-    pub fn poly_mod_pow(base: &PolyU<ModInt>, exp: u64, modulus: &PolyU<ModInt>) -> PolyU<ModInt> {
+    pub async fn poly_mod_pow(base: &PolyU<ModInt>, exp: u64, modulus: &PolyU<ModInt>) -> PolyU<ModInt> {
         let mut result = PolyU::one();
         let mut b = {
             let (_, r) = base.div_rem(modulus);
@@ -1108,7 +1108,7 @@ pub mod finite {
     // #endregion 🔖️PolyModPow
 
     // #region 🔖️Irreducibility
-    fn prime_factors_of_degree(n: usize) -> Vec<usize> {
+    async fn prime_factors_of_degree(n: usize) -> Vec<usize> {
         let mut factors = Vec::new();
         let mut n = n;
         let mut p = 2usize;
@@ -1129,7 +1129,7 @@ pub mod finite {
 
     /// 🎯️ Rabin's irreducibility test: `f` (monic, degree `n`) is irreducible over `GF(p)` iff
     /// `x^(p^n) == x (mod f)` and `gcd(x^(p^(n/q)) - x, f) == 1` for every prime `q | n`.
-    pub fn is_irreducible(f: &PolyU<ModInt>) -> bool {
+    pub async fn is_irreducible(f: &PolyU<ModInt>) -> bool {
         let Some(n) = f.degree() else { return false };
         if n == 0 {
             return false;
@@ -1152,7 +1152,7 @@ pub mod finite {
     // #region 🔖️DistinctDegree
     /// ✂️ Splits a squarefree `f` into groups of irreducible factors sharing the same degree:
     /// `[(product_of_degree_i_factors, i), ...]`.
-    pub fn distinct_degree_factor(f: &PolyU<ModInt>) -> Vec<(PolyU<ModInt>, usize)> {
+    pub async fn distinct_degree_factor(f: &PolyU<ModInt>) -> Vec<(PolyU<ModInt>, usize)> {
         let p = f.leading_coeff().expect("distinct_degree_factor: f must be nonzero").modulus();
         let mut result = Vec::new();
         let mut f_star = f.make_monic();
@@ -1187,7 +1187,7 @@ pub mod finite {
     /// 🎲️ Cantor-Zassenhaus equal-degree splitting: `f` is a product of `r` distinct monic irreducibles,
     /// each of degree `d`; returns all `r` of them. Requires odd `p` (the driver in `factor.rs` never
     /// selects `p == 2` for this reason).
-    pub fn equal_degree_factor(f: &PolyU<ModInt>, d: usize, rng: &mut Rng) -> Vec<PolyU<ModInt>> {
+    pub async fn equal_degree_factor(f: &PolyU<ModInt>, d: usize, rng: &mut Rng) -> Vec<PolyU<ModInt>> {
         let n = f.degree().unwrap_or(0);
         if n == d || n == 0 {
             return vec![f.make_monic()];
@@ -1222,7 +1222,7 @@ pub mod finite {
 
     /// 🔢️ `p^d` as a `u64`; degrees stay small in practice (factoring polys of reasonable size), so plain
     /// `u64` exponentiation with an overflow-safety fallback via saturating multiplication is sufficient.
-    fn mod_pow_u64_via_natural(p: u64, d: u64) -> u64 {
+    async fn mod_pow_u64_via_natural(p: u64, d: u64) -> u64 {
         let mut result = 1u64;
         for _ in 0..d {
             result = result.saturating_mul(p);
@@ -1233,7 +1233,7 @@ pub mod finite {
 
     // #region 🔖️FactorModP
     /// 🧮️ Full factorization of `f` over `GF(p)`: `(leading_coeff, [(irreducible_factor, multiplicity), ...])`.
-    pub fn factor_mod_p(f: &PolyU<ModInt>, rng: &mut Rng) -> (ModInt, Vec<(PolyU<ModInt>, u32)>) {
+    pub async fn factor_mod_p(f: &PolyU<ModInt>, rng: &mut Rng) -> (ModInt, Vec<(PolyU<ModInt>, u32)>) {
         let lc = *f.leading_coeff().expect("factor_mod_p: f must be nonzero");
         let monic = f.make_monic();
         let squarefree = monic.squarefree_decomposition();
@@ -1254,16 +1254,16 @@ pub mod finite {
     mod tests {
         use super::*;
 
-        fn m(v: i64, p: u64) -> ModInt {
+        async fn m(v: i64, p: u64) -> ModInt {
             ModInt::new(v.rem_euclid(p as i64) as u64, p)
         }
 
-        fn poly(coeffs: Vec<i64>, p: u64) -> PolyU<ModInt> {
+        async fn poly(coeffs: Vec<i64>, p: u64) -> PolyU<ModInt> {
             PolyU::from_coeffs(coeffs.into_iter().map(|c| m(c, p)).collect())
         }
 
         #[test]
-        fn poly_mod_pow_matches_repeated_squaring() {
+        async fn poly_mod_pow_matches_repeated_squaring() {
             let p = 7;
             let base = poly(vec![1, 1], p); // x + 1
             let modulus = poly(vec![-1, 0, 0, 1], p); // x^3 - 1
@@ -1276,7 +1276,7 @@ pub mod finite {
         }
 
         #[test]
-        fn is_irreducible_hand_cases() {
+        async fn is_irreducible_hand_cases() {
             let p = 5;
             // x^2 + 1 is irreducible mod 5? -1 is not a QR mod 5 (5 % 4 == 1, so -1 IS a QR actually).
             // Use x^2 + 2, known irreducible mod 5 (2 is a non-residue mod 5).
@@ -1287,7 +1287,7 @@ pub mod finite {
         }
 
         #[test]
-        fn distinct_degree_factor_separates_degrees() {
+        async fn distinct_degree_factor_separates_degrees() {
             let p = 5;
             let deg1 = poly(vec![-1, 1], p); // x - 1
             let deg2 = poly(vec![2, 0, 1], p); // x^2 + 2, irreducible
@@ -1298,7 +1298,7 @@ pub mod finite {
         }
 
         #[test]
-        fn equal_degree_factor_splits_product_of_two_linears() {
+        async fn equal_degree_factor_splits_product_of_two_linears() {
             let p = 7;
             let a = poly(vec![-1, 1], p); // x - 1
             let b = poly(vec![-2, 1], p); // x - 2
@@ -1311,7 +1311,7 @@ pub mod finite {
         }
 
         #[test]
-        fn factor_mod_p_reconstructs_via_multiplication() {
+        async fn factor_mod_p_reconstructs_via_multiplication() {
             let p = 11;
             let a = poly(vec![-1, 1], p); // x - 1
             let b = poly(vec![-3, 1], p); // x - 3
@@ -1340,7 +1340,7 @@ pub mod factor {
     use geometry::random::Rng;
 
     // #region 🔖️Conversions
-    fn to_modp(f: &PolyU<Integer>, p: u64) -> PolyU<ModInt> {
+    async fn to_modp(f: &PolyU<Integer>, p: u64) -> PolyU<ModInt> {
         let modulus_nat = Natural::from_u64(p);
         PolyU::from_coeffs(
             f.coeffs()
@@ -1353,12 +1353,12 @@ pub mod factor {
         )
     }
 
-    fn lift_nonneg(f_modp: &PolyU<ModInt>) -> PolyU<Integer> {
+    async fn lift_nonneg(f_modp: &PolyU<ModInt>) -> PolyU<Integer> {
         PolyU::from_coeffs(f_modp.coeffs().iter().map(|c| Integer::from_i64(c.value() as i64)).collect())
     }
 
     /// 🎯️ Re-centers coefficients currently in `[0, modulus)` into the balanced range `(-modulus/2, modulus/2]`.
-    fn center_coeffs(f: &PolyU<Integer>, modulus: &Natural) -> PolyU<Integer> {
+    async fn center_coeffs(f: &PolyU<Integer>, modulus: &Natural) -> PolyU<Integer> {
         let half = modulus.shr(1);
         let modulus_int = Integer::from_natural(modulus.clone());
         PolyU::from_coeffs(f.coeffs().iter().map(|c| if c.magnitude() > &half { c.sub(&modulus_int) } else { c.clone() }).collect())
@@ -1370,7 +1370,7 @@ pub mod factor {
     /// `GF(p)` factors whose product is `f mod p`, lifts every factor simultaneously to modulus
     /// `>= target_modulus`, one power of `p` at a time, using the classical partial-fraction (CRT)
     /// construction of the lifting coefficients `c_i` with `c_i == 1 (mod g_i)` and `f/g_i | c_i`.
-    fn hensel_lift_factors(f: &PolyU<Integer>, mod_p_factors: &[PolyU<ModInt>], p: u64, target_modulus: &Natural) -> Vec<PolyU<Integer>> {
+    async fn hensel_lift_factors(f: &PolyU<Integer>, mod_p_factors: &[PolyU<ModInt>], p: u64, target_modulus: &Natural) -> Vec<PolyU<Integer>> {
         let k = mod_p_factors.len();
         if k <= 1 {
             return vec![f.clone()];
@@ -1427,7 +1427,7 @@ pub mod factor {
     /// `f`: `binom(n, n/2) * R^n * |lc|`, where `R` is a Cauchy-style bound on the magnitude of `f`'s
     /// roots. Looser than the classical Landau-Mignotte bound costs a few extra Hensel lifting steps, never
     /// correctness.
-    fn factor_coefficient_bound(f: &PolyU<Integer>) -> Natural {
+    async fn factor_coefficient_bound(f: &PolyU<Integer>) -> Natural {
         let n = f.degree().unwrap_or(0);
         let lc = f.leading_coeff().cloned().unwrap_or_else(Integer::one).abs();
         let max_coeff = f.coeffs().iter().map(Integer::abs).fold(Natural::zero(), |acc, m| if m > acc { m } else { acc });
@@ -1447,7 +1447,7 @@ pub mod factor {
     /// (`f_hat(y) = a_n^(n-1) f(y/a_n)`, monic in `y`) with a defensive final reconstruction check —
     /// if that check fails for any reason, `f` is conservatively reported as its own single factor rather
     /// than risking a silently wrong answer.
-    pub fn factor_integer_poly(f: &PolyU<Integer>) -> (Integer, Vec<(PolyU<Integer>, u32)>) {
+    pub async fn factor_integer_poly(f: &PolyU<Integer>) -> (Integer, Vec<(PolyU<Integer>, u32)>) {
         if f.is_zero() {
             return (Integer::zero(), Vec::new());
         }
@@ -1475,7 +1475,7 @@ pub mod factor {
 
     /// 🧮️ Factors a monic primitive integer polynomial via squarefree decomposition (over Q, cleared to Z)
     /// followed by mod-p factorization, Hensel lifting, and subset recombination per squarefree part.
-    fn factor_monic_integer_poly(f: &PolyU<Integer>) -> Vec<PolyU<Integer>> {
+    async fn factor_monic_integer_poly(f: &PolyU<Integer>) -> Vec<PolyU<Integer>> {
         let f_rational = PolyU::from_coeffs(f.coeffs().iter().map(|c| Rational::from_integer(c.clone())).collect());
         let squarefree_parts = f_rational.squarefree_decomposition();
         let mut result = Vec::new();
@@ -1494,7 +1494,7 @@ pub mod factor {
         }
     }
 
-    fn clear_denominators(f: &PolyU<Rational>) -> PolyU<Integer> {
+    async fn clear_denominators(f: &PolyU<Rational>) -> PolyU<Integer> {
         let denom_lcm = f.coeffs().iter().fold(Natural::one(), |acc, c| acc.mul(c.denom()).div_rem(&acc.gcd(c.denom())).0);
         PolyU::from_coeffs(f.coeffs().iter().map(|c| c.mul(&Rational::from_integer(Integer::from_natural(denom_lcm.clone()))).trunc()).collect())
     }
@@ -1503,7 +1503,7 @@ pub mod factor {
     /// 🥇️ Best modular image found while prime-hunting: the prime and its squarefree factorization.
     type BestFactorization = (u64, Vec<(PolyU<ModInt>, u32)>);
 
-    fn factor_squarefree_monic(f: &PolyU<Integer>) -> Vec<PolyU<Integer>> {
+    async fn factor_squarefree_monic(f: &PolyU<Integer>) -> Vec<PolyU<Integer>> {
         if f.degree() == Some(0) || f.degree() == Some(1) {
             return vec![f.clone()];
         }
@@ -1552,7 +1552,7 @@ pub mod factor {
     /// cardinality first) against exact integer trial division, capping the number of modular factors
     /// considered to keep the search space bounded (`log()`-worthy cases beyond the cap fall back to
     /// reporting the un-combined lifted factors, still a correct — if potentially non-irreducible — cover).
-    fn recombine(f: &PolyU<Integer>, lifted: &[PolyU<Integer>]) -> Vec<PolyU<Integer>> {
+    async fn recombine(f: &PolyU<Integer>, lifted: &[PolyU<Integer>]) -> Vec<PolyU<Integer>> {
         const MAX_MODULAR_FACTORS: usize = 24;
         if lifted.len() > MAX_MODULAR_FACTORS {
             return lifted.to_vec();
@@ -1596,7 +1596,7 @@ pub mod factor {
         }
     }
 
-    fn combinations(n: usize, k: usize) -> Vec<Vec<usize>> {
+    async fn combinations(n: usize, k: usize) -> Vec<Vec<usize>> {
         if k == 0 {
             return vec![Vec::new()];
         }
@@ -1629,7 +1629,7 @@ pub mod factor {
     /// the monic version, un-substitutes each factor via `H_i(lc * x)`, and takes primitive parts. The
     /// product is verified against `f` (up to sign) before being trusted; on any mismatch, `f` is returned
     /// as its own single factor.
-    fn factor_nonmonic_via_substitution(f: &PolyU<Integer>, lc: &Integer) -> Vec<PolyU<Integer>> {
+    async fn factor_nonmonic_via_substitution(f: &PolyU<Integer>, lc: &Integer) -> Vec<PolyU<Integer>> {
         let n = f.degree().unwrap_or(0);
         if n == 0 {
             return vec![f.clone()];
@@ -1664,7 +1664,7 @@ pub mod factor {
     // #region 🔖️RationalRoots
     /// 🎯️ Rational roots of `f` via the rational root theorem: candidates `p/q` with `p | trailing`,
     /// `q | leading` (over the cleared-denominator integer polynomial), each verified by exact evaluation.
-    pub fn rational_roots(f: &PolyU<Rational>) -> Vec<Rational> {
+    pub async fn rational_roots(f: &PolyU<Rational>) -> Vec<Rational> {
         if f.is_zero() {
             return Vec::new();
         }
@@ -1701,16 +1701,16 @@ pub mod factor {
     mod tests {
         use super::*;
 
-        fn i(v: i64) -> Integer {
+        async fn i(v: i64) -> Integer {
             Integer::from_i64(v)
         }
 
-        fn ipoly(coeffs: Vec<i64>) -> PolyU<Integer> {
+        async fn ipoly(coeffs: Vec<i64>) -> PolyU<Integer> {
             PolyU::from_coeffs(coeffs.into_iter().map(Integer::from_i64).collect())
         }
 
         #[test]
-        fn factor_x2_minus_1() {
+        async fn factor_x2_minus_1() {
             let f = ipoly(vec![-1, 0, 1]); // x^2 - 1 = (x-1)(x+1)
             let (content, factors) = factor_integer_poly(&f);
             assert_eq!(content, i(1));
@@ -1723,7 +1723,7 @@ pub mod factor {
         }
 
         #[test]
-        fn factor_x4_minus_1() {
+        async fn factor_x4_minus_1() {
             let f = ipoly(vec![-1, 0, 0, 0, 1]); // x^4 - 1 = (x-1)(x+1)(x^2+1)
             let (_, factors) = factor_integer_poly(&f);
             let mut product = PolyU::<Integer>::one();
@@ -1735,7 +1735,7 @@ pub mod factor {
         }
 
         #[test]
-        fn factor_repeated_linear_factor() {
+        async fn factor_repeated_linear_factor() {
             let base = ipoly(vec![-1, 1]); // x - 1
             let f = base.mul(&base).mul(&base); // (x-1)^3
             let (_, factors) = factor_integer_poly(&f);
@@ -1748,7 +1748,7 @@ pub mod factor {
         }
 
         #[test]
-        fn factor_irreducible_quadratic_stays_whole() {
+        async fn factor_irreducible_quadratic_stays_whole() {
             let f = ipoly(vec![1, 0, 1]); // x^2 + 1, irreducible over Q
             let (_, factors) = factor_integer_poly(&f);
             assert_eq!(factors.len(), 1);
@@ -1756,7 +1756,7 @@ pub mod factor {
         }
 
         #[test]
-        fn factor_nonmonic_quadratic() {
+        async fn factor_nonmonic_quadratic() {
             let f = ipoly(vec![-3, -1, 2]); // 2x^2 - x - 3 = (2x - 3)(x + 1)
             let (content, factors) = factor_integer_poly(&f);
             let mut product = PolyU::constant(content);
@@ -1767,7 +1767,7 @@ pub mod factor {
         }
 
         #[test]
-        fn rational_roots_of_quadratic() {
+        async fn rational_roots_of_quadratic() {
             let f = PolyU::from_coeffs(vec![Rational::from_i64(1, 1).unwrap(), Rational::from_i64(-5, 1).unwrap(), Rational::from_i64(6, 1).unwrap()]); // 6x^2 - 5x + 1
             let roots = rational_roots(&f);
             assert_eq!(roots.len(), 2);
@@ -1777,7 +1777,7 @@ pub mod factor {
         }
 
         #[test]
-        fn rational_roots_with_zero_root() {
+        async fn rational_roots_with_zero_root() {
             let f = PolyU::from_coeffs(vec![Rational::zero(), Rational::from_i64(-1, 1).unwrap(), Rational::from_i64(1, 1).unwrap()]); // x^2 - x = x(x-1)
             let roots = rational_roots(&f);
             assert_eq!(roots.len(), 2);
@@ -1797,7 +1797,7 @@ pub mod roots {
 
     // #region 🔖️RootBounds
     /// 📏️ Cauchy's bound: every real root of `f` has absolute value `<= 1 + max(|a_i|)/|lc|`.
-    pub fn cauchy_root_bound(f: &PolyU<Integer>) -> Rational {
+    pub async fn cauchy_root_bound(f: &PolyU<Integer>) -> Rational {
         let Some(lc) = f.leading_coeff() else { return Rational::zero() };
         let lc_abs = Rational::from_integer(Integer::from_natural(lc.abs()));
         let max_other = f.coeffs()[..f.coeffs().len() - 1].iter().map(|c| Rational::from_integer(Integer::from_natural(c.abs()))).fold(Rational::zero(), |acc, v| if v > acc { v } else { acc });
@@ -1808,7 +1808,7 @@ pub mod roots {
     // #region 🔖️Sturm
     /// 🔗️ The signed polynomial-remainder sequence `f, f', -rem(f,f'), -rem(f',...), ...` (primitive-part
     /// normalized at each step to control coefficient growth), used to count real roots via sign changes.
-    pub fn sturm_sequence(f: &PolyU<Integer>) -> Vec<PolyU<Integer>> {
+    pub async fn sturm_sequence(f: &PolyU<Integer>) -> Vec<PolyU<Integer>> {
         let mut seq = vec![f.primitive_part(), f.derivative().primitive_part()];
         loop {
             let n = seq.len();
@@ -1825,7 +1825,7 @@ pub mod roots {
         seq
     }
 
-    fn sign_changes(seq: &[PolyU<Integer>], point: &Rational) -> usize {
+    async fn sign_changes(seq: &[PolyU<Integer>], point: &Rational) -> usize {
         let mut last_sign: Option<std::cmp::Ordering> = None;
         let mut changes = 0;
         for p in seq {
@@ -1844,7 +1844,7 @@ pub mod roots {
         changes
     }
 
-    fn eval_rational(f: &PolyU<Integer>, point: &Rational) -> Rational {
+    async fn eval_rational(f: &PolyU<Integer>, point: &Rational) -> Rational {
         let mut result = Rational::zero();
         for c in f.coeffs().iter().rev() {
             result = result.mul(point).add(&Rational::from_integer(c.clone()));
@@ -1853,7 +1853,7 @@ pub mod roots {
     }
 
     /// 🔢️ Number of distinct real roots of (the squarefree part of) `f` in the half-open interval `(lo, hi]`.
-    pub fn count_roots_in(seq: &[PolyU<Integer>], lo: &Rational, hi: &Rational) -> usize {
+    pub async fn count_roots_in(seq: &[PolyU<Integer>], lo: &Rational, hi: &Rational) -> usize {
         sign_changes(seq, lo).saturating_sub(sign_changes(seq, hi))
     }
 
@@ -1861,7 +1861,7 @@ pub mod roots {
     /// `(lo, hi]`, each containing exactly one root. Operates on the squarefree part (repeated roots of
     /// the original `f` collapse to one isolated interval, matching Sturm's theorem's requirement of a
     /// squarefree input).
-    pub fn isolate_real_roots(f: &PolyU<Integer>) -> Vec<(Rational, Rational)> {
+    pub async fn isolate_real_roots(f: &PolyU<Integer>) -> Vec<(Rational, Rational)> {
         if f.is_zero() || f.degree() == Some(0) {
             return Vec::new();
         }
@@ -1890,7 +1890,7 @@ pub mod roots {
         intervals
     }
 
-    fn to_squarefree_integer(f: &PolyU<Integer>) -> PolyU<Integer> {
+    async fn to_squarefree_integer(f: &PolyU<Integer>) -> PolyU<Integer> {
         let rational = PolyU::from_coeffs(f.coeffs().iter().map(|c| Rational::from_integer(c.clone())).collect());
         let parts = rational.squarefree_decomposition();
         let mut result = PolyU::<Rational>::one();
@@ -1903,7 +1903,7 @@ pub mod roots {
 
     /// 🔬️ Bisects `(lo, hi]` (assumed to isolate exactly one root of `f`) down to the given `width`,
     /// preserving the sign-change invariant at each step.
-    pub fn refine_root(f: &PolyU<Integer>, lo: &Rational, hi: &Rational, width: &Rational) -> (Rational, Rational) {
+    pub async fn refine_root(f: &PolyU<Integer>, lo: &Rational, hi: &Rational, width: &Rational) -> (Rational, Rational) {
         let seq = sturm_sequence(f);
         let mut lo = lo.clone();
         let mut hi = hi.clone();
@@ -1924,12 +1924,12 @@ pub mod roots {
     mod tests {
         use super::*;
 
-        fn ipoly(coeffs: Vec<i64>) -> PolyU<Integer> {
+        async fn ipoly(coeffs: Vec<i64>) -> PolyU<Integer> {
             PolyU::from_coeffs(coeffs.into_iter().map(Integer::from_i64).collect())
         }
 
         #[test]
-        fn isolate_roots_of_simple_quadratic() {
+        async fn isolate_roots_of_simple_quadratic() {
             let f = ipoly(vec![-2, 0, 1]); // x^2 - 2, roots +-sqrt(2)
             let intervals = isolate_real_roots(&f);
             assert_eq!(intervals.len(), 2);
@@ -1940,7 +1940,7 @@ pub mod roots {
         }
 
         #[test]
-        fn isolate_roots_matches_known_integer_roots() {
+        async fn isolate_roots_matches_known_integer_roots() {
             // (x-1)(x-3)(x+2)
             let f = ipoly(vec![6, -1, -4, 1]);
             let intervals = isolate_real_roots(&f);
@@ -1948,7 +1948,7 @@ pub mod roots {
         }
 
         #[test]
-        fn refine_root_converges_to_sqrt2() {
+        async fn refine_root_converges_to_sqrt2() {
             let f = ipoly(vec![-2, 0, 1]);
             let intervals = isolate_real_roots(&f);
             let positive = intervals.iter().find(|(lo, hi)| lo.is_zero() || (!lo.numer().is_negative() && !hi.numer().is_negative())).cloned().unwrap();
@@ -1959,14 +1959,14 @@ pub mod roots {
         }
 
         #[test]
-        fn cauchy_bound_contains_all_roots() {
+        async fn cauchy_bound_contains_all_roots() {
             let f = ipoly(vec![6, -1, -4, 1]); // roots -2, 1, 3
             let bound = cauchy_root_bound(&f);
             assert!(bound >= Rational::from_i64(3, 1).unwrap());
         }
 
         #[test]
-        fn wilkinson_like_small_case_root_count() {
+        async fn wilkinson_like_small_case_root_count() {
             // (x-1)(x-2)(x-3)(x-4)
             let f = ipoly(vec![-1, 1]).mul(&ipoly(vec![-2, 1])).mul(&ipoly(vec![-3, 1])).mul(&ipoly(vec![-4, 1]));
             let intervals = isolate_real_roots(&f);
@@ -1974,7 +1974,7 @@ pub mod roots {
         }
 
         #[test]
-        fn zero_polynomial_and_constant_have_no_roots() {
+        async fn zero_polynomial_and_constant_have_no_roots() {
             assert!(isolate_real_roots(&ipoly(vec![])).is_empty());
             assert!(isolate_real_roots(&ipoly(vec![5])).is_empty());
         }
@@ -2005,14 +2005,14 @@ pub mod algebraic {
     }
 
     impl AlgebraicReal {
-        pub fn from_rational(r: &Rational) -> Self {
+        pub async fn from_rational(r: &Rational) -> Self {
             let poly = PolyU::from_coeffs(vec![r.numer().neg(), Integer::from_natural(r.denom().clone())]);
             Self { poly, lo: r.clone(), hi: r.clone() }
         }
 
         /// 🌱️ The `index`-th real root of `f` (ascending order, `0`-based); narrows `f` down to whichever
         /// irreducible factor actually contains that root. `None` if `index` is out of range.
-        pub fn root_of(f: &PolyU<Integer>, index: usize) -> Option<Self> {
+        pub async fn root_of(f: &PolyU<Integer>, index: usize) -> Option<Self> {
             let intervals = isolate_real_roots(f);
             let (lo, hi) = intervals.get(index)?.clone();
             let (_, factors) = factor_integer_poly(f);
@@ -2030,7 +2030,7 @@ pub mod algebraic {
 
         /// √ⁿ The real `n`-th root of `r` (principal / positive root when `n` is even); `None` if `n == 0`
         /// or (`n` even and `r < 0`).
-        pub fn nth_root(r: &Rational, n: u32) -> Option<Self> {
+        pub async fn nth_root(r: &Rational, n: u32) -> Option<Self> {
             if n == 0 {
                 return None;
             }
@@ -2050,28 +2050,28 @@ pub mod algebraic {
             Self::root_of(&poly, index)
         }
 
-        pub fn interval(&self) -> (Rational, Rational) {
+        pub async fn interval(&self) -> (Rational, Rational) {
             (self.lo.clone(), self.hi.clone())
         }
 
-        pub fn minimal_poly(&self) -> &PolyU<Integer> {
+        pub async fn minimal_poly(&self) -> &PolyU<Integer> {
             &self.poly
         }
 
-        pub fn degree(&self) -> usize {
+        pub async fn degree(&self) -> usize {
             self.poly.degree().unwrap_or(0)
         }
 
-        pub fn is_rational(&self) -> bool {
+        pub async fn is_rational(&self) -> bool {
             self.lo == self.hi
         }
 
-        pub fn to_f64(&self) -> f64 {
+        pub async fn to_f64(&self) -> f64 {
             (self.lo.to_f64() + self.hi.to_f64()) / 2.0
         }
 
         /// 🔬️ Bisects the isolating interval down to (at most) `width`.
-        pub fn refine(&mut self, width: &Rational) {
+        pub async fn refine(&mut self, width: &Rational) {
             if self.is_rational() {
                 return;
             }
@@ -2080,7 +2080,7 @@ pub mod algebraic {
             self.hi = hi;
         }
 
-        fn refine_below(&mut self, width: &Rational) {
+        async fn refine_below(&mut self, width: &Rational) {
             while self.hi.sub(&self.lo) > *width && !self.is_rational() {
                 let half = self.hi.sub(&self.lo).div(&Rational::from_i64(2, 1).unwrap()).unwrap();
                 self.refine(&half);
@@ -2091,7 +2091,7 @@ pub mod algebraic {
         /// interval always separates from zero after finitely many refinements, since the true root isn't
         /// zero — even though the interval can legitimately straddle zero before separation, e.g. for a
         /// root very close to `0`).
-        pub fn sign(&self) -> Option<std::cmp::Ordering> {
+        pub async fn sign(&self) -> Option<std::cmp::Ordering> {
             if self.is_rational() {
                 return Some(self.lo.cmp(&Rational::zero()));
             }
@@ -2112,7 +2112,7 @@ pub mod algebraic {
 
         /// 🎯️ Refines until the interval no longer straddles zero (a no-operation for the exact rational `0`,
         /// which has no sign to separate); used before sign-dependent transforms like `inv`.
-        fn with_definite_sign(&self) -> Self {
+        async fn with_definite_sign(&self) -> Self {
             let mut probe = self.clone();
             if probe.lo.is_zero() && probe.hi.is_zero() {
                 return probe;
@@ -2129,7 +2129,7 @@ pub mod algebraic {
         }
 
         // #region 🔖️CheapTransforms
-        pub fn neg(&self) -> Self {
+        pub async fn neg(&self) -> Self {
             // Root of f(x) negated is a root of f(-x); reverse the sign of odd-degree coefficients.
             let coeffs = self.poly.coeffs().iter().enumerate().map(|(i, c)| if i % 2 == 1 { c.neg() } else { c.clone() }).collect();
             Self { poly: PolyU::from_coeffs(coeffs), lo: self.hi.neg(), hi: self.lo.neg() }
@@ -2137,7 +2137,7 @@ pub mod algebraic {
 
         /// ➗️ Reciprocal (`self` must be nonzero): if `alpha` is a root of `f`, `1/alpha` is a root of the
         /// coefficient-reversed polynomial.
-        pub fn inv(&self) -> Option<Self> {
+        pub async fn inv(&self) -> Option<Self> {
             if self.is_rational() && self.lo.is_zero() {
                 return None;
             }
@@ -2154,7 +2154,7 @@ pub mod algebraic {
             }
         }
 
-        pub fn scale_rational(&self, r: &Rational) -> Option<Self> {
+        pub async fn scale_rational(&self, r: &Rational) -> Option<Self> {
             if r.is_zero() {
                 return Some(Self::from_rational(&Rational::zero()));
             }
@@ -2183,12 +2183,12 @@ pub mod algebraic {
             }
         }
 
-        pub fn add_rational(&self, r: &Rational) -> Self {
+        pub async fn add_rational(&self, r: &Rational) -> Self {
             let poly = self.poly.compose_with_rational_shift(r);
             Self { poly, lo: self.lo.add(r), hi: self.hi.add(r) }
         }
 
-        fn root_of_near(poly: &PolyU<Integer>, target: f64) -> Option<Self> {
+        async fn root_of_near(poly: &PolyU<Integer>, target: f64) -> Option<Self> {
             let intervals = isolate_real_roots(poly);
             let (best_idx, _) = intervals.iter().enumerate().min_by(|(_, (a_lo, a_hi)), (_, (b_lo, b_hi))| {
                 let a_mid = (a_lo.to_f64() + a_hi.to_f64()) / 2.0;
@@ -2204,16 +2204,16 @@ pub mod algebraic {
         /// vanishes exactly at every pairwise sum of a root of `f` with a root of `g`; the correct
         /// irreducible factor and interval are selected by exact rational interval refinement (never by
         /// floating-point comparison) until the candidates are unambiguous.
-        pub fn add(&self, other: &Self) -> Self {
+        pub async fn add(&self, other: &Self) -> Self {
             Self::combine(self, other, Combine::Add)
         }
 
         /// ✖️ Product via `res_y(y^deg(f) * f(x/y), g(y))`.
-        pub fn mul(&self, other: &Self) -> Self {
+        pub async fn mul(&self, other: &Self) -> Self {
             Self::combine(self, other, Combine::Mul)
         }
 
-        fn combine(a: &Self, b: &Self, operation: Combine) -> Self {
+        async fn combine(a: &Self, b: &Self, operation: Combine) -> Self {
             if a.is_rational() {
                 return match operation {
                     Combine::Add => b.add_rational(&a.lo),
@@ -2297,7 +2297,7 @@ pub mod algebraic {
         /// arithmetic by composing with the integer linear polynomial `den*x - num` after scaling each
         /// coefficient `a_i` by `den^(n-i)` — the scaling by the positive constant `den^n` doesn't change
         /// the roots, so this is a valid (if non-primitive) defining polynomial for `alpha + r`.
-        fn compose_with_rational_shift(&self, r: &Rational) -> PolyU<Integer> {
+        async fn compose_with_rational_shift(&self, r: &Rational) -> PolyU<Integer> {
             let n = self.degree().unwrap_or(0);
             let den_i = Integer::from_natural(r.denom().clone());
             let scaled_self = PolyU::from_coeffs(self.coeffs().iter().enumerate().map(|(i, coeff)| coeff.mul(&den_i.pow((n - i) as u64))).collect());
@@ -2311,12 +2311,12 @@ pub mod algebraic {
     mod tests {
         use super::*;
 
-        fn ipoly(coeffs: Vec<i64>) -> PolyU<Integer> {
+        async fn ipoly(coeffs: Vec<i64>) -> PolyU<Integer> {
             PolyU::from_coeffs(coeffs.into_iter().map(Integer::from_i64).collect())
         }
 
         #[test]
-        fn sqrt2_plus_sqrt3_has_minimal_poly_degree_4() {
+        async fn sqrt2_plus_sqrt3_has_minimal_poly_degree_4() {
             let sqrt2 = AlgebraicReal::nth_root(&Rational::from_i64(2, 1).unwrap(), 2).unwrap();
             let sqrt3 = AlgebraicReal::nth_root(&Rational::from_i64(3, 1).unwrap(), 2).unwrap();
             let sum = sqrt2.add(&sqrt3);
@@ -2328,7 +2328,7 @@ pub mod algebraic {
         }
 
         #[test]
-        fn cbrt2_times_cbrt4_equals_2() {
+        async fn cbrt2_times_cbrt4_equals_2() {
             let cbrt2 = AlgebraicReal::nth_root(&Rational::from_i64(2, 1).unwrap(), 3).unwrap();
             let cbrt4 = AlgebraicReal::nth_root(&Rational::from_i64(4, 1).unwrap(), 3).unwrap();
             let product = cbrt2.mul(&cbrt4);
@@ -2336,7 +2336,7 @@ pub mod algebraic {
         }
 
         #[test]
-        fn from_rational_is_exact() {
+        async fn from_rational_is_exact() {
             let r = Rational::from_i64(3, 4).unwrap();
             let a = AlgebraicReal::from_rational(&r);
             assert!(a.is_rational());
@@ -2344,7 +2344,7 @@ pub mod algebraic {
         }
 
         #[test]
-        fn neg_and_inv_hand_cases() {
+        async fn neg_and_inv_hand_cases() {
             let sqrt2 = AlgebraicReal::nth_root(&Rational::from_i64(2, 1).unwrap(), 2).unwrap();
             let negated = sqrt2.neg();
             assert!((negated.to_f64() + 2f64.sqrt()).abs() < 1e-9);
@@ -2353,7 +2353,7 @@ pub mod algebraic {
         }
 
         #[test]
-        fn root_of_selects_correct_irreducible_factor() {
+        async fn root_of_selects_correct_irreducible_factor() {
             // (x-1)(x^2-2): roots are 1, -sqrt2, sqrt2 in ascending order.
             let f = ipoly(vec![-1, 1]).mul(&ipoly(vec![-2, 0, 1]));
             let root0 = AlgebraicReal::root_of(&f, 0).unwrap(); // -sqrt2

@@ -7,7 +7,7 @@ use crate::artifacts::cad::mutations::{delete_energy_model, CadMutation};
 use crate::artifacts::cad::CadSnapshot;
 
 //#region 🔖️Inverse
-pub fn inverse(_payload: &CreateEnergyModel, base: &CadSnapshot) -> Vec<CadMutation> {
+pub async fn inverse(_payload: &CreateEnergyModel, base: &CadSnapshot) -> Vec<CadMutation> {
     match &base.energy_model {
         Some(existing) => vec![CadMutation::CreateEnergyModel(CreateEnergyModel { child_id: existing.child_id.clone(), target: existing.target.to_uri() })],
         None => vec![CadMutation::DeleteEnergyModel(delete_energy_model::mutation::DeleteEnergyModel {})],

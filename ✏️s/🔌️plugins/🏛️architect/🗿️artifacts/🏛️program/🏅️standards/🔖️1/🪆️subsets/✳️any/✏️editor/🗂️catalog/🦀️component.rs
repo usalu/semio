@@ -91,7 +91,7 @@ pub const REGISTER_IDS: &[&str] = &[
     "traces",
 ];
 
-pub fn next_adjacency_kind(current: Option<&AdjacencyKind>) -> Option<AdjacencyKind> {
+pub async fn next_adjacency_kind(current: Option<&AdjacencyKind>) -> Option<AdjacencyKind> {
     match current {
         None => Some(AdjacencyKind::Required),
         Some(AdjacencyKind::Required) => Some(AdjacencyKind::Preferred),
@@ -101,12 +101,12 @@ pub fn next_adjacency_kind(current: Option<&AdjacencyKind>) -> Option<AdjacencyK
     }
 }
 
-pub fn find_adjacency<'a>(program: &'a ProgramSnapshot, a: &EntityId, b: &EntityId) -> Option<&'a Adjacency> {
+pub async fn find_adjacency<'a>(program: &'a ProgramSnapshot, a: &EntityId, b: &EntityId) -> Option<&'a Adjacency> {
     let (left, right) = normalize_pair(a, b);
     program.adjacencies.iter().find(|row| row.element_a_id == left && row.element_b_id == right)
 }
 
-pub fn default_element(name: impl Into<String>) -> ProgramElement {
+pub async fn default_element(name: impl Into<String>) -> ProgramElement {
     ProgramElement {
         header: EntityHeader::new(EntityId::new_serial("element", "element"), name),
         code: String::new(),
@@ -137,7 +137,7 @@ pub fn default_element(name: impl Into<String>) -> ProgramElement {
     }
 }
 
-pub fn new_adjacency(program: &ProgramSnapshot, a: &EntityId, b: &EntityId, kind: AdjacencyKind) -> Adjacency {
+pub async fn new_adjacency(program: &ProgramSnapshot, a: &EntityId, b: &EntityId, kind: AdjacencyKind) -> Adjacency {
     let (left, right) = normalize_pair(a, b);
     Adjacency {
         header: EntityHeader::new(EntityId::new_serial("adjacency", "adjacency"), format!("{} ↔ {}", element_label(program, &left), element_label(program, &right))),
@@ -164,15 +164,15 @@ pub fn new_adjacency(program: &ProgramSnapshot, a: &EntityId, b: &EntityId, kind
     }
 }
 
-pub fn parse_register_id(args: Option<&Value>) -> Option<String> {
+pub async fn parse_register_id(args: Option<&Value>) -> Option<String> {
     args.and_then(|value| value.get("registerId").or_else(|| value.get("register")).and_then(|v| v.as_str()).map(str::to_string))
 }
 
-pub fn parse_entity_id_from_args(args: Option<&Value>, key: &str) -> Option<EntityId> {
+pub async fn parse_entity_id_from_args(args: Option<&Value>, key: &str) -> Option<EntityId> {
     args.and_then(|value| value.get(key)).and_then(|v| v.as_str()).map(|s| EntityId(s.into()))
 }
 
-pub fn register_entities(program: &ProgramSnapshot, register: &str) -> Vec<Value> {
+pub async fn register_entities(program: &ProgramSnapshot, register: &str) -> Vec<Value> {
     // 🧩️ `benchmarks` composes stdio's `table` subset (ticket UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM
     // W4 batch Db) — its rows live behind the working-scene cache, not a direct `Vec<T>` field,
     // so it can't join the generic `program.$field.iter()` macro expansion below.
@@ -258,11 +258,11 @@ pub fn register_entities(program: &ProgramSnapshot, register: &str) -> Vec<Value
     }
 }
 
-pub fn register_len(program: &ProgramSnapshot, register: &str) -> usize {
+pub async fn register_len(program: &ProgramSnapshot, register: &str) -> usize {
     register_entities(program, register).len()
 }
 
-pub fn find_register_for_entity(program: &ProgramSnapshot, id: &EntityId) -> Option<&'static str> {
+pub async fn find_register_for_entity(program: &ProgramSnapshot, id: &EntityId) -> Option<&'static str> {
     if program.traces.iter().any(|row| row.id == *id) {
         return Some("traces");
     }
@@ -346,12 +346,12 @@ pub fn find_register_for_entity(program: &ProgramSnapshot, id: &EntityId) -> Opt
     None
 }
 
-pub fn default_entity_header(register: &str, label: &str) -> EntityHeader {
+pub async fn default_entity_header(register: &str, label: &str) -> EntityHeader {
     let prefix = register.trim_end_matches('s').trim_end_matches("_records");
     EntityHeader::new(EntityId::new_serial(prefix, prefix), label)
 }
 
-pub fn default_stakeholder(label: &str) -> Stakeholder {
+pub async fn default_stakeholder(label: &str) -> Stakeholder {
     Stakeholder {
         header: default_entity_header("stakeholders", label),
         role: String::new(),
@@ -381,7 +381,7 @@ pub fn default_stakeholder(label: &str) -> Stakeholder {
     }
 }
 
-pub fn default_requirement(label: &str) -> Requirement {
+pub async fn default_requirement(label: &str) -> Requirement {
     Requirement {
         header: default_entity_header("requirements", label),
         code: String::new(),
@@ -407,7 +407,7 @@ pub fn default_requirement(label: &str) -> Requirement {
     }
 }
 
-pub fn default_risk(label: &str) -> Risk {
+pub async fn default_risk(label: &str) -> Risk {
     Risk {
         header: default_entity_header("risks", label),
         risk_statement: TextField::plain(""),
@@ -432,7 +432,7 @@ pub fn default_risk(label: &str) -> Risk {
     }
 }
 
-pub fn default_issue(label: &str) -> Issue {
+pub async fn default_issue(label: &str) -> Issue {
     Issue {
         header: default_entity_header("issues", label),
         issue_type: String::new(),
@@ -457,7 +457,7 @@ pub fn default_issue(label: &str) -> Issue {
     }
 }
 
-pub fn default_function(label: &str) -> Function {
+pub async fn default_function(label: &str) -> Function {
     Function {
         header: default_entity_header("functions", label),
         code: String::new(),
@@ -485,7 +485,7 @@ pub fn default_function(label: &str) -> Function {
     }
 }
 
-pub fn default_user(label: &str) -> UserProfile {
+pub async fn default_user(label: &str) -> UserProfile {
     UserProfile {
         header: default_entity_header("users", label),
         category: UserCategory::Primary,
@@ -515,7 +515,7 @@ pub fn default_user(label: &str) -> UserProfile {
     }
 }
 
-pub fn default_from_json<T: DeserializeOwned>(register: &str, label: &str, extra: Value) -> Option<T> {
+pub async fn default_from_json<T: DeserializeOwned>(register: &str, label: &str, extra: Value) -> Option<T> {
     let mut value = match extra {
         Value::Object(map) => Value::Object(map),
         _ => Value::Object(serde_json::Map::new()),
@@ -527,7 +527,7 @@ pub fn default_from_json<T: DeserializeOwned>(register: &str, label: &str, extra
     serde_json::from_value(value).ok()
 }
 
-pub fn add_register_item_operation(program: &ProgramSnapshot, register: &str, label: &str) -> Option<(ProgramMutation, EntityId)> {
+pub async fn add_register_item_operation(program: &ProgramSnapshot, register: &str, label: &str) -> Option<(ProgramMutation, EntityId)> {
     macro_rules! create {
         ($variant:ident, $module:ident, $field:ident, $item:expr) => {{
             let item = $item;
@@ -599,7 +599,7 @@ pub fn add_register_item_operation(program: &ProgramSnapshot, register: &str, la
     })
 }
 
-pub fn remove_register_item_operation(register: &str, entity_id: EntityId) -> Option<ProgramMutation> {
+pub async fn remove_register_item_operation(register: &str, entity_id: EntityId) -> Option<ProgramMutation> {
     macro_rules! delete {
         ($variant:ident, $module:ident) => {
             ProgramMutation::$variant(leaves::$module::mutation::$variant { id: entity_id })
@@ -676,7 +676,7 @@ pub fn remove_register_item_operation(register: &str, entity_id: EntityId) -> Op
     })
 }
 
-fn merge_json_patch<T: Clone + Serialize + DeserializeOwned>(existing: &T, patch: &Value) -> Option<T> {
+async fn merge_json_patch<T: Clone + Serialize + DeserializeOwned>(existing: &T, patch: &Value) -> Option<T> {
     let mut value = serde_json::to_value(existing).ok()?;
     let (Value::Object(base), Value::Object(patch_map)) = (&mut value, patch) else { return None };
     for (key, entry) in patch_map {
@@ -685,7 +685,7 @@ fn merge_json_patch<T: Clone + Serialize + DeserializeOwned>(existing: &T, patch
     serde_json::from_value(value).ok()
 }
 
-pub fn patch_register_item_operation(program: &ProgramSnapshot, register: &str, entity_id: EntityId, patch: Value) -> Option<ProgramMutation> {
+pub async fn patch_register_item_operation(program: &ProgramSnapshot, register: &str, entity_id: EntityId, patch: Value) -> Option<ProgramMutation> {
     Some(match register {
         "stakeholders" => {
             let existing = program.stakeholders.iter().find(|row| row.header.id == entity_id)?;
@@ -730,7 +730,7 @@ pub fn patch_register_item_operation(program: &ProgramSnapshot, register: &str, 
         _ => return None,
     })
 }
-pub fn analysis_record_from(program: &ProgramSnapshot, kind: AnalysisKind, result: &AnalysisResult) -> AnalysisRecord {
+pub async fn analysis_record_from(program: &ProgramSnapshot, kind: AnalysisKind, result: &AnalysisResult) -> AnalysisRecord {
     AnalysisRecord {
         header: EntityHeader::new(EntityId::new_serial("analysis", "analysis"), result.title.clone()),
         kind,
@@ -754,7 +754,7 @@ pub fn analysis_record_from(program: &ProgramSnapshot, kind: AnalysisKind, resul
     }
 }
 
-pub fn report_record_from(program: &ProgramSnapshot, kind: ReportKind, report: &ProgramReport) -> ReportRecord {
+pub async fn report_record_from(program: &ProgramSnapshot, kind: ReportKind, report: &ProgramReport) -> ReportRecord {
     ReportRecord {
         header: EntityHeader::new(EntityId::new_serial("report", "report"), report.title.clone()),
         kind,
@@ -778,11 +778,11 @@ pub fn report_record_from(program: &ProgramSnapshot, kind: ReportKind, report: &
     }
 }
 
-pub fn parse_entity_id(value: Option<&Value>, key: &str) -> Option<EntityId> {
+pub async fn parse_entity_id(value: Option<&Value>, key: &str) -> Option<EntityId> {
     value.and_then(|args| args.get(key)).and_then(|v| v.as_str()).map(|s| EntityId(s.into()))
 }
 
-pub fn adjacency_kind_from_id(kind: &str) -> Option<AdjacencyKind> {
+pub async fn adjacency_kind_from_id(kind: &str) -> Option<AdjacencyKind> {
     match kind {
         "required" => Some(AdjacencyKind::Required),
         "preferred" => Some(AdjacencyKind::Preferred),
@@ -792,7 +792,7 @@ pub fn adjacency_kind_from_id(kind: &str) -> Option<AdjacencyKind> {
     }
 }
 
-pub fn analysis_kind_from_str(kind: &str) -> AnalysisKind {
+pub async fn analysis_kind_from_str(kind: &str) -> AnalysisKind {
     match kind {
         "gap" => AnalysisKind::Gap,
         "conflict" => AnalysisKind::Conflict,
@@ -818,7 +818,7 @@ pub fn analysis_kind_from_str(kind: &str) -> AnalysisKind {
     }
 }
 
-pub fn report_kind_from_str(kind: &str) -> ReportKind {
+pub async fn report_kind_from_str(kind: &str) -> ReportKind {
     match kind {
         "executiveSummary" => ReportKind::ExecutiveSummary,
         "programOverview" => ReportKind::ProgramOverview,
@@ -845,7 +845,7 @@ pub fn report_kind_from_str(kind: &str) -> ReportKind {
     }
 }
 
-pub fn analysis_kind_picker_options() -> Vec<ActionArgOption> {
+pub async fn analysis_kind_picker_options() -> Vec<ActionArgOption> {
     vec![
         ("gap", "Gap", "Lücke"),
         ("conflict", "Conflict", "Konflikt"),
@@ -873,7 +873,7 @@ pub fn analysis_kind_picker_options() -> Vec<ActionArgOption> {
     .collect()
 }
 
-pub fn report_kind_picker_options() -> Vec<ActionArgOption> {
+pub async fn report_kind_picker_options() -> Vec<ActionArgOption> {
     vec![
         ("executiveSummary", "Executive Summary", "Kurzfassung"),
         ("programOverview", "ProgramSnapshot Overview", "Programmübersicht"),

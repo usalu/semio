@@ -44,7 +44,7 @@ pub struct SemioColumnEntropy {
 /// `Int`/`Float`/`Bool`/`Str` are each counted by their own printed identity. `Bytes`/`List`/`Map`/
 /// `Ref` have no stable scalar identity and are excluded, exactly as non-numeric cells are excluded
 /// from `📊moments`.
-fn cell_symbol(cell: &SemioValue) -> Option<String> {
+async fn cell_symbol(cell: &SemioValue) -> Option<String> {
     match cell {
         SemioValue::Null => None,
         SemioValue::Bool { value } => Some(value.to_string()),
@@ -59,7 +59,7 @@ fn cell_symbol(cell: &SemioValue) -> Option<String> {
 /// order so the resulting `Vec<u64>` — and therefore `dep_input`'s serialized bytes — is deterministic
 /// across processes, never dependent on `HashMap` iteration order (a hard requirement: `DepHash`
 /// caching is only sound if `dep_input` is a deterministic function of the snapshot).
-fn column_symbol_counts(snapshot: &SemioTableSnapshot, column_name: &str) -> Vec<u64> {
+async fn column_symbol_counts(snapshot: &SemioTableSnapshot, column_name: &str) -> Vec<u64> {
     let Some(idx) = snapshot.columns.iter().position(|c| c.name == column_name) else {
         return Vec::new();
     };
@@ -82,22 +82,22 @@ impl store::InferredField<SemioTableSnapshot> for ColumnEntropy {
     const FIELD_ID: &'static str = "s.stdio.semio.table.inference.entropy";
     const SCHEMA_VERSION: u32 = 1;
 
-    fn reads() -> &'static [&'static str] {
+    async fn reads() -> &'static [&'static str] {
         &["columns", "rows"]
     }
 
-    fn plan(snapshot: &SemioTableSnapshot) -> Vec<store::InferenceStep<Self::Key>> {
+    async fn plan(snapshot: &SemioTableSnapshot) -> Vec<store::InferenceStep<Self::Key>> {
         snapshot.columns.iter().map(|c| store::InferenceStep { key: c.name.clone(), parents: Vec::new() }).collect()
     }
 
     /// 🔑 Canonical dependency-input bytes — EXACTLY this column's own symbol-occurrence counts, in
     /// deterministic sorted-symbol order, nothing else — an unrelated column's edit must still hit
     /// the cache, proven by the incrementality-law test below.
-    fn dep_input(snapshot: &SemioTableSnapshot, key: &Self::Key, _parents: &[Self::Key]) -> Vec<u8> {
+    async fn dep_input(snapshot: &SemioTableSnapshot, key: &Self::Key, _parents: &[Self::Key]) -> Vec<u8> {
         serde_json::to_vec(&column_symbol_counts(snapshot, key)).unwrap_or_default()
     }
 
-    fn compute(snapshot: &SemioTableSnapshot, key: &Self::Key, _parents: &[Self::Value]) -> Self::Value {
+    async fn compute(snapshot: &SemioTableSnapshot, key: &Self::Key, _parents: &[Self::Value]) -> Self::Value {
         let counts = column_symbol_counts(snapshot, key);
         let count = counts.iter().sum::<u64>() as u32;
         let distinct = counts.len() as u32;
@@ -114,7 +114,7 @@ mod tests {
     use crate::artifacts::semio::standards::v1::subsets::table::schema::snapshot::{SemioTableCellKind, SemioTableColumn, SemioTableRow, STDIO_SEMIOTABLE_DOCUMENT_SCHEMA};
     use store::{InferenceCache, InferenceCacheConfig};
 
-    fn two_column_snapshot() -> SemioTableSnapshot {
+    async fn two_column_snapshot() -> SemioTableSnapshot {
         SemioTableSnapshot {
             schema: STDIO_SEMIOTABLE_DOCUMENT_SCHEMA.into(),
             columns: vec![SemioTableColumn { name: "coin".into(), kind: SemioTableCellKind::Str }, SemioTableColumn { name: "always_a".into(), kind: SemioTableCellKind::Str }],
@@ -129,7 +129,7 @@ mod tests {
 
     //#region 🧪️Honesty
     #[test]
-    fn a_fair_binary_column_has_one_bit_of_entropy() {
+    async fn a_fair_binary_column_has_one_bit_of_entropy() {
         let values = store::infer_field::<SemioTableSnapshot, ColumnEntropy>(&two_column_snapshot(), None);
         let e = values.get("coin").expect("coin entropy present");
         assert_eq!(e.count, 4);
@@ -138,7 +138,7 @@ mod tests {
     }
 
     #[test]
-    fn a_constant_column_has_zero_entropy() {
+    async fn a_constant_column_has_zero_entropy() {
         let values = store::infer_field::<SemioTableSnapshot, ColumnEntropy>(&two_column_snapshot(), None);
         let e = values.get("always_a").expect("always_a entropy present");
         assert_eq!(e.distinct, 1);
@@ -146,13 +146,13 @@ mod tests {
     }
 
     #[test]
-    fn every_declared_column_appears_regardless_of_kind() {
+    async fn every_declared_column_appears_regardless_of_kind() {
         let values = store::infer_field::<SemioTableSnapshot, ColumnEntropy>(&two_column_snapshot(), None);
         assert_eq!(values.len(), 2, "entropy is defined over any symbol alphabet, unlike moments' numeric-only gate");
     }
 
     #[test]
-    fn an_all_empty_snapshot_yields_an_empty_plan() {
+    async fn an_all_empty_snapshot_yields_an_empty_plan() {
         let values = store::infer_field::<SemioTableSnapshot, ColumnEntropy>(&SemioTableSnapshot::default(), None);
         assert!(values.is_empty());
     }
@@ -160,7 +160,7 @@ mod tests {
 
     //#region 🧪️CacheTransparencyLaw
     #[test]
-    fn disabled_cache_matches_pure_recompute() {
+    async fn disabled_cache_matches_pure_recompute() {
         let snapshot = two_column_snapshot();
         let pure = store::infer_field::<SemioTableSnapshot, ColumnEntropy>(&snapshot, None);
         let mut disabled = InferenceCache::new(InferenceCacheConfig { enabled: false, ..Default::default() });
@@ -171,7 +171,7 @@ mod tests {
 
     //#region 🧪️IncrementalityLaw
     #[test]
-    fn identical_snapshot_recompute_is_a_cache_hit() {
+    async fn identical_snapshot_recompute_is_a_cache_hit() {
         let mut cache = InferenceCache::new(InferenceCacheConfig { enabled: true, record_stats: true, ..Default::default() });
         let base = two_column_snapshot();
         let _ = store::infer_field::<SemioTableSnapshot, ColumnEntropy>(&base, Some(&mut cache));
@@ -183,7 +183,7 @@ mod tests {
     }
 
     #[test]
-    fn changing_one_columns_cells_misses_only_that_columns_cache_entry() {
+    async fn changing_one_columns_cells_misses_only_that_columns_cache_entry() {
         let mut cache = InferenceCache::new(InferenceCacheConfig { enabled: true, record_stats: true, ..Default::default() });
         let base = two_column_snapshot();
         let _ = store::infer_field::<SemioTableSnapshot, ColumnEntropy>(&base, Some(&mut cache));
@@ -199,7 +199,7 @@ mod tests {
     }
 
     #[test]
-    fn changing_the_other_column_misses_only_its_own_entry() {
+    async fn changing_the_other_column_misses_only_its_own_entry() {
         // 🔁️ Unlike `📊moments` (which has a non-numeric column genuinely OFF the plan to edit for a
         // zero-miss control), `entropy` tracks EVERY declared column, so this fixture has no untracked
         // column at all — the isolation law instead is: editing `always_a` misses ONLY `always_a`'s

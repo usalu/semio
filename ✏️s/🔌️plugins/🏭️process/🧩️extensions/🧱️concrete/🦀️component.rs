@@ -6,32 +6,32 @@ use semio_s_plugin_process::artifacts::process3d::{Capability, CapabilityParamet
 //#region 🔖️Catalog
 pub struct ConcreteCatalog;
 
-fn parameter(id: &str, label: &str, value: f64) -> CapabilityParameter {
+async fn parameter(id: &str, label: &str, value: f64) -> CapabilityParameter {
     CapabilityParameter { id: id.into(), label: label.into(), value }
 }
 
-fn max_rule(quantity: StockQuantity, parameter: &str, margin: f64) -> CapabilityRule {
+async fn max_rule(quantity: StockQuantity, parameter: &str, margin: f64) -> CapabilityRule {
     CapabilityRule::Max { quantity, parameter: parameter.into(), margin }
 }
 
-fn min_rule(quantity: StockQuantity, parameter: &str, margin: f64) -> CapabilityRule {
+async fn min_rule(quantity: StockQuantity, parameter: &str, margin: f64) -> CapabilityRule {
     CapabilityRule::Min { quantity, parameter: parameter.into(), margin }
 }
 
 impl MachineCatalog for ConcreteCatalog {
-    fn catalog_id(&self) -> &'static str {
+    async fn catalog_id(&self) -> &'static str {
         "concrete"
     }
 
-    fn label(&self) -> &'static str {
+    async fn label(&self) -> &'static str {
         "Concrete"
     }
 
-    fn icon_id(&self) -> &'static str {
+    async fn icon_id(&self) -> &'static str {
         "slab"
     }
 
-    fn machines(&self) -> Vec<WorkshopMachine> {
+    async fn machines(&self) -> Vec<WorkshopMachine> {
         vec![
             WorkshopMachine {
                 id: "diamondSaw".into(),
@@ -135,7 +135,7 @@ impl MachineCatalog for ConcreteCatalog {
     }
 }
 
-pub fn catalog() -> Box<dyn MachineCatalog> {
+pub async fn catalog() -> Box<dyn MachineCatalog> {
     Box::new(ConcreteCatalog)
 }
 //#endregion 🔖️Catalog
@@ -144,7 +144,7 @@ pub fn catalog() -> Box<dyn MachineCatalog> {
 const EXTENSION_ID: &str = "process-extension-concrete";
 const HOST_APP_ID: &str = "process3d-play";
 
-fn bundle() -> ExtensionBundle {
+async fn bundle() -> ExtensionBundle {
     let catalog = ConcreteCatalog;
     ExtensionBundle::new(EXTENSION_ID, "Process Concrete Machines", "0.1.0")
         .extends("process")
@@ -170,7 +170,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn every_machine_and_capability_id_is_unique() {
+    async fn every_machine_and_capability_id_is_unique() {
         let machines = ConcreteCatalog.machines();
         let mut machine_ids: Vec<&str> = machines.iter().map(|machine| machine.id.as_str()).collect();
         machine_ids.sort_unstable();
@@ -185,7 +185,7 @@ mod tests {
     }
 
     #[test]
-    fn every_recipe_and_rule_parameter_resolves() {
+    async fn every_recipe_and_rule_parameter_resolves() {
         for machine in ConcreteCatalog.machines() {
             for capability in &machine.capabilities {
                 let ids: Vec<&str> = capability.parameters.iter().map(|parameter| parameter.id.as_str()).collect();
@@ -211,7 +211,7 @@ mod tests {
     }
 
     #[test]
-    fn machines_round_trip_json() {
+    async fn machines_round_trip_json() {
         let machines = ConcreteCatalog.machines();
         let json = serde_json::to_string(&machines).expect("serialize");
         let parsed: Vec<WorkshopMachine> = serde_json::from_str(&json).expect("deserialize");
@@ -219,7 +219,7 @@ mod tests {
     }
 
     #[test]
-    fn catalog_has_concrete_identity() {
+    async fn catalog_has_concrete_identity() {
         let catalog = ConcreteCatalog;
         assert_eq!(catalog.catalog_id(), "concrete");
         assert_eq!(catalog.label(), "Concrete");

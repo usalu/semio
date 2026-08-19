@@ -21,19 +21,19 @@ pub struct CreateTile {
 impl MutationKind<PresentSnapshot, PresentMutation> for CreateTile {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "create", entity: "tile", kind: "create-tile", record: "CreatedTile" };
 
-    fn diff(&self, base: &PresentSnapshot) -> protocol::MutationOutcome<PresentDiff> {
+    async fn diff(&self, base: &PresentSnapshot) -> protocol::MutationOutcome<PresentDiff> {
         super::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &PresentSnapshot) -> Vec<PresentMutation> {
+    async fn inverse(&self, base: &PresentSnapshot) -> Vec<PresentMutation> {
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         format!("Create tile \"{}\"", self.tile.name)
     }
 
-    fn target(&self) -> Vec<String> {
+    async fn target(&self) -> Vec<String> {
         vec!["tiles".into(), self.tile.id.clone()]
     }
 }

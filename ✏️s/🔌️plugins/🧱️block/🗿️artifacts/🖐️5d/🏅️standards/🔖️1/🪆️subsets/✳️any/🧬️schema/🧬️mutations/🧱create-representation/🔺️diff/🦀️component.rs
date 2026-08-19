@@ -4,7 +4,7 @@ use crate::artifacts::block5d::diff::{Block5dRepresentationsDelta};
 use crate::artifacts::block5d::Block5dSnapshot;
 
 //#region 🔖️Diff
-pub fn diff(payload: &super::mutation::CreateRepresentation, base: &Block5dSnapshot) -> protocol::MutationOutcome<Block5dDiff> {
+pub async fn diff(payload: &super::mutation::CreateRepresentation, base: &Block5dSnapshot) -> protocol::MutationOutcome<Block5dDiff> {
     if base.representations.iter().any(|item| item.id == payload.representation.id) {
         return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("{} \"{}\" already exists", "representation", payload.representation.id), vec![payload.representation.id.clone()]);
     }

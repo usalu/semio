@@ -20,16 +20,16 @@ pub struct CreateBlock {
 impl MutationKind<FormsSnapshot, FormMutation> for CreateBlock {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "create", entity: "block", kind: "create-block", record: "CreatedBlock" };
 
-    fn diff(&self, base: &FormsSnapshot) -> protocol::MutationOutcome<FormsDiff> {
+    async fn diff(&self, base: &FormsSnapshot) -> protocol::MutationOutcome<FormsDiff> {
         super::diff::diff_create_block(self, base)
     }
-    fn inverse(&self, base: &FormsSnapshot) -> Vec<FormMutation> {
+    async fn inverse(&self, base: &FormsSnapshot) -> Vec<FormMutation> {
         super::inverse::inverse_create_block(self, base)
     }
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         format!("Create block \"{}\"", self.block.label)
     }
-    fn target(&self) -> Vec<String> {
+    async fn target(&self) -> Vec<String> {
         vec![self.step_id.clone(), self.block.id.clone()]
     }
 }

@@ -23,7 +23,7 @@ pub struct SvgDimensions {
 
 /// 🔢️ Strips a trailing CSS length unit (`px`/`%`/`pt`/...) and parses the leading numeric run —
 /// SVG 1.1 §7.10's `<length>` grammar allows either a bare number or a number+unit pair.
-fn parse_length(s: &str) -> Option<f64> {
+async fn parse_length(s: &str) -> Option<f64> {
     let trimmed = s.trim();
     let end = trimmed.find(|c: char| !(c.is_ascii_digit() || c == '.' || c == '-' || c == '+' || c == 'e' || c == 'E')).unwrap_or(trimmed.len());
     if end == 0 {
@@ -34,7 +34,7 @@ fn parse_length(s: &str) -> Option<f64> {
 
 /// 📐️ Computes [`SvgDimensions`] from a snapshot's root element — pure, total (never panics),
 /// `SvgDimensions::default()` for a document with no root or a non-`<svg>` root.
-pub fn compute_svg_dimensions(snapshot: &SvgSnapshot) -> SvgDimensions {
+pub async fn compute_svg_dimensions(snapshot: &SvgSnapshot) -> SvgDimensions {
     let Some(root @ XmlNode::Element { .. }) = &snapshot.doc.root else {
         return SvgDimensions::default();
     };
@@ -54,24 +54,24 @@ mod tests {
     use super::*;
     use crate::artifacts::xml::schema::snapshot::{XmlAttr, XmlDocument};
 
-    fn svg_snapshot(attrs: Vec<XmlAttr>) -> SvgSnapshot {
+    async fn svg_snapshot(attrs: Vec<XmlAttr>) -> SvgSnapshot {
         SvgSnapshot { schema: crate::artifacts::svg::STDIO_SVG_DOCUMENT_SCHEMA.into(), doc: XmlDocument { root: Some(XmlNode::Element { name: "svg".into(), attrs, children: Vec::new() }), doctype: None, declaration: None, prolog: Vec::new() } }
     }
 
     #[test]
-    fn prefers_width_height_attrs_over_view_box() {
+    async fn prefers_width_height_attrs_over_view_box() {
         let snapshot = svg_snapshot(vec![XmlAttr { name: "width".into(), value: "42px".into() }, XmlAttr { name: "height".into(), value: "24".into() }, XmlAttr { name: "viewBox".into(), value: "0 0 100 100".into() }]);
         assert_eq!(compute_svg_dimensions(&snapshot), SvgDimensions { width: 42.0, height: 24.0 });
     }
 
     #[test]
-    fn falls_back_to_view_box_when_width_height_absent() {
+    async fn falls_back_to_view_box_when_width_height_absent() {
         let snapshot = svg_snapshot(vec![XmlAttr { name: "viewBox".into(), value: "0 0 100 50".into() }]);
         assert_eq!(compute_svg_dimensions(&snapshot), SvgDimensions { width: 100.0, height: 50.0 });
     }
 
     #[test]
-    fn empty_document_yields_zero_dimensions() {
+    async fn empty_document_yields_zero_dimensions() {
         assert_eq!(compute_svg_dimensions(&SvgSnapshot { schema: crate::artifacts::svg::STDIO_SVG_DOCUMENT_SCHEMA.into(), doc: XmlDocument { root: None, doctype: None, declaration: None, prolog: Vec::new() } }), SvgDimensions::default());
     }
 }

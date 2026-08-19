@@ -21,7 +21,7 @@ use semio_framework_plugin::{ExecutionMode, Plugin};
 /// back to the open document. No quota declared: draw's ~14 `Effect` call sites
 /// (`LoadDocument`/`SetActiveUtility`/`ReplayShellCommand`) are per-turn UI/document effects with
 /// no evidence of long-running computation, large held buffers, or high-frequency timers.
-pub fn plugin() -> Result<Plugin, semio_framework_plugin::PluginAssemblyError> {
+pub async fn plugin() -> Result<Plugin, semio_framework_plugin::PluginAssemblyError> {
     Plugin::builder("draw")
         .label("Draw")
         .version("0.1.0")
@@ -40,12 +40,12 @@ pub fn plugin() -> Result<Plugin, semio_framework_plugin::PluginAssemblyError> {
 #[cfg(test)]
 mod surface_tests {
     #[test]
-    fn draw_viewer_never_mutates() {
+    async fn draw_viewer_never_mutates() {
         semio_framework_plugin::testkit::assert_viewer_never_mutates::<crate::viewer::draw::DrawViewer>();
     }
 
     #[test]
-    fn draw_editor_and_viewer_share_dialect() {
+    async fn draw_editor_and_viewer_share_dialect() {
         semio_framework_plugin::testkit::assert_editor_and_viewer_share_dialect::<crate::editor::draw::DrawPlayApp, crate::viewer::draw::DrawViewer>();
     }
 }

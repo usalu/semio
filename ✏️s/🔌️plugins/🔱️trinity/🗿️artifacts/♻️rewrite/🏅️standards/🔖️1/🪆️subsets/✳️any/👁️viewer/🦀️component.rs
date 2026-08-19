@@ -23,10 +23,10 @@ pub enum TrinityRewriteViewCommand {
 }
 
 impl protocol::OpBinary for TrinityRewriteViewCommand {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         Ok(Vec::new())
     }
-    fn decode_op(_bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    async fn decode_op(_bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         Ok(TrinityRewriteViewCommand::Noop)
     }
 }
@@ -39,7 +39,7 @@ pub struct TrinityRewriteViewer;
 /// 👁️ Read-only initial rule state — the empty/default snapshot (no pattern, no bound parameters, no
 /// working fixture), distinct from the editor's `default_rule_state()` (Nakagin fixture + seeded
 /// `label-core` demo rule): a fresh viewer session has no editor-authored rule to show yet.
-fn empty_rule_state() -> RewriteSnapshot {
+async fn empty_rule_state() -> RewriteSnapshot {
     RewriteSnapshot::default()
 }
 
@@ -57,7 +57,7 @@ impl ArtifactViewer for TrinityRewriteViewer {
     const DIALECT: Dialect = TRINITY_REWRITE_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = REWRITE_RULE_SCHEMA;
 
-    fn initial_snapshot() -> RewriteSnapshot {
+    async fn initial_snapshot() -> RewriteSnapshot {
         empty_rule_state()
     }
 
@@ -65,11 +65,11 @@ impl ArtifactViewer for TrinityRewriteViewer {
     /// config change, so this always returns the empty `ViewEmit` — no config mutation, no effect, no
     /// dirty scope. Kept as a real dispatch (not an `unreachable!()`) so a future view-only action is
     /// a pure addition here, never a signature change.
-    fn handle(_command: &Self::Command, _doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _interaction: &semio_framework_plugin::app::InteractionView<'_>, _engines: &EngineHandles) -> Result<ViewEmit<Self::ConfigMutation>, Fault> {
+    async fn handle(_command: &Self::Command, _doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _interaction: &semio_framework_plugin::app::InteractionView<'_>, _engines: &EngineHandles) -> Result<ViewEmit<Self::ConfigMutation>, Fault> {
         Ok(ViewEmit::default())
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> UiNode {
+    async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> UiNode {
         match body_key {
             rule::BODY_KEY => rule::render(doc.snapshot),
             _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))),
@@ -79,7 +79,7 @@ impl ArtifactViewer for TrinityRewriteViewer {
 //#endregion 🔖️Viewer
 
 //#region 🔖️Manifest
-pub fn create_trinity_rewrite_viewer() -> semio_framework_plugin::AppDefinition {
+pub async fn create_trinity_rewrite_viewer() -> semio_framework_plugin::AppDefinition {
     Viewer::builder(TRINITY_REWRITE_DIALECT)
         .document(["semio", "trinity", "rewrite"])
         .icon_id("trinity-rewrite")
@@ -97,14 +97,14 @@ mod tests {
     use super::*;
 
     #[test]
-    fn create_trinity_rewrite_viewer_builds_a_definition_for_the_viewer_role() {
+    async fn create_trinity_rewrite_viewer_builds_a_definition_for_the_viewer_role() {
         let def = create_trinity_rewrite_viewer();
         assert_eq!(def.role, semio_framework::AppRole::Viewer);
         assert_eq!(def.dialect, TRINITY_REWRITE_DIALECT.into());
     }
 
     #[test]
-    fn viewer_dialect_matches_the_artifact_coordinate() {
+    async fn viewer_dialect_matches_the_artifact_coordinate() {
         assert_eq!(<TrinityRewriteViewer as ArtifactViewer>::DIALECT, TRINITY_REWRITE_DIALECT);
     }
 }

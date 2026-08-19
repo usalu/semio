@@ -5,7 +5,7 @@
 use crate::artifacts::procedural2d::mutations::{clear_widget_layout, move_widget, Procedural2dMutation};
 use crate::artifacts::procedural2d::Procedural2dSnapshot;
 
-pub fn inverse(payload: &super::mutation::MoveWidget, base: &Procedural2dSnapshot) -> Vec<Procedural2dMutation> {
+pub async fn inverse(payload: &super::mutation::MoveWidget, base: &Procedural2dSnapshot) -> Vec<Procedural2dMutation> {
     match base.fixture.layout.get(&payload.id) {
         Some(previous) => vec![move_widget(payload.id.clone(), previous.clone())],
         None => vec![clear_widget_layout(payload.id.clone())],

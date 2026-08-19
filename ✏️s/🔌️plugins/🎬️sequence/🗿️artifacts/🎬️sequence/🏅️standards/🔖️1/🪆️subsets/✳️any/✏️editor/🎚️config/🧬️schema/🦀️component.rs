@@ -19,7 +19,7 @@ pub struct SequenceConfig {
 
 //region 📎 App-schema descriptor
 /// 📎 `s.sequence.sequence`'s config and presence schema, owned by this leaf.
-pub fn app_schema_descriptor() -> ::schema::AppSchemaDescriptor {
+pub async fn app_schema_descriptor() -> ::schema::AppSchemaDescriptor {
     ::schema::AppSchemaDescriptor {
         id: "s.sequence.sequence",
         config: ::schema::FacetLeaves {

@@ -9,7 +9,7 @@ use semio_framework_plugin::{ExecutionMode, Plugin};
 /// `.activation(…)`/`.execution(…)`/`.requests(…)` (ticket
 /// 26/08/17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME M6-remaining, `📓️design-abi.md` §3/§6) are this
 /// crate's migration proof, mirroring `🗒️note`'s shape.
-pub fn plugin() -> Result<Plugin, semio_framework_plugin::PluginAssemblyError> {
+pub async fn plugin() -> Result<Plugin, semio_framework_plugin::PluginAssemblyError> {
     Plugin::builder("shooting")
         .label("Shooting")
         .version("0.1.0")
@@ -34,12 +34,12 @@ mod surface_tests {
     use semio_framework_plugin::testkit::{assert_editor_and_viewer_share_dialect, assert_viewer_never_mutates};
 
     #[test]
-    fn shooting_viewer_never_mutates() {
+    async fn shooting_viewer_never_mutates() {
         assert_viewer_never_mutates::<crate::viewer::shooting::ShootingViewer>();
     }
 
     #[test]
-    fn shooting_editor_and_viewer_share_dialect() {
+    async fn shooting_editor_and_viewer_share_dialect() {
         assert_editor_and_viewer_share_dialect::<crate::editor::shooting::ShootingPlayApp, crate::viewer::shooting::ShootingViewer>();
     }
 }

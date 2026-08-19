@@ -7,13 +7,13 @@ pub const PLAYBOOK_PLAY_MODE_BUILDER: &str = "builder";
 
 //#region 🔖️Definition
 /// 🧱️ Stitched into the app manifest by `crate::editor::playbook::create_playbook_play_app`.
-pub fn definition() -> ModeDefinition {
+pub async fn definition() -> ModeDefinition {
     ModeDefinition { id: PLAYBOOK_PLAY_MODE_BUILDER.into(), label: LocalizedLabel::native("Builder", "Builder"), icon_id: "clipboard-list".into(), tools: Vec::new(), layout_id: None, commands: Vec::new() }
 }
 
 /// 🪟️ The app's default window layout — this mode is the app's `default_mode_id`, so its layout IS the
 /// app-level `default_layout`.
-pub fn layout() -> WindowLayout {
+pub async fn layout() -> WindowLayout {
     create_default_layout(&[builder_window::PLAYBOOK_PLAY_WINDOW_BUILDER.into()], "row", None, None)
 }
 //#endregion 🔖️Definition
@@ -24,7 +24,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn the_default_layout_lists_the_builder_window() {
+    async fn the_default_layout_lists_the_builder_window() {
         let json = serde_json::to_string(&layout()).expect("layout json");
         assert!(json.contains(builder_window::PLAYBOOK_PLAY_WINDOW_BUILDER), "layout must reference the builder window kind: {json}");
     }

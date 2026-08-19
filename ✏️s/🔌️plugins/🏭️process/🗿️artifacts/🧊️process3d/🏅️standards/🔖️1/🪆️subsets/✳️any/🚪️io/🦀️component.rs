@@ -1,8 +1,8 @@
 //! 🚪️ IO s.process3d (1/✳️any) — the artifact declaration owns this composer table.
-pub fn import_stdio_kinds() -> &'static [&'static str] {
+pub async fn import_stdio_kinds() -> &'static [&'static str] {
     &["stdio.dwg", "stdio.gltf", "stdio.ifc", "stdio.json", "stdio.obj", "stdio.png", "stdio.step", "stdio.stl", "stdio.txt"]
 }
-pub fn export_stdio_kinds() -> &'static [&'static str] {
+pub async fn export_stdio_kinds() -> &'static [&'static str] {
     &["stdio.dwg", "stdio.gltf", "stdio.ifc", "stdio.json", "stdio.obj", "stdio.png", "stdio.step", "stdio.stl", "stdio.txt"]
 }
 //#region 🎹️DerivedComposition
@@ -28,11 +28,11 @@ pub mod derived_composition {
         type Snapshot = Process3dSnapshot;
         const WRITES: Dialect = DIALECT;
 
-        fn reads() -> &'static [Dialect] {
+        async fn reads() -> &'static [Dialect] {
             &[DIALECT, DEP_DWG, DEP_GLTF, DEP_IFC, DEP_JSON, DEP_OBJ, DEP_PNG, DEP_STEP, DEP_STL, DEP_TXT]
         }
 
-        fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+        async fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
             for source in sources {
                 if source.dialect == DIALECT {
                     let native = match &source.payload {
@@ -163,7 +163,7 @@ const PROCESS3D_TESSELLATION_TOLERANCE: f64 = 0.05;
 /// `ProcessWorkingScene`'s own doc comment in the artifact root file). Callers that only have a
 /// persisted snapshot get the honest empty scene from `process_working_scene_from_snapshot` — this
 /// export then legitimately returns `None` (no stock to replay), the same documented gap.
-pub fn export_process3d_model(scene: &ProcessWorkingScene, resolved_up_to: Option<usize>, format: &str) -> Result<Option<Process3dModelExport>, String> {
+pub async fn export_process3d_model(scene: &ProcessWorkingScene, resolved_up_to: Option<usize>, format: &str) -> Result<Option<Process3dModelExport>, String> {
     if format == "glb" {
         let Some(mesh) = crate::artifacts::process3d::schema::inferences::processed_mesh(scene, resolved_up_to) else {
             return Ok(None);
@@ -193,7 +193,7 @@ pub fn export_process3d_model(scene: &ProcessWorkingScene, resolved_up_to: Optio
 }
 
 /// 📦️ Decodes a `requestFileOpen(readAs: "dataUrl")` payload into raw bytes.
-fn process3d_bytes_from_data_url(data_url: &str) -> Option<Vec<u8>> {
+async fn process3d_bytes_from_data_url(data_url: &str) -> Option<Vec<u8>> {
     if let Some((header, encoded)) = data_url.split_once(',') {
         if header.starts_with("data:") {
             return base64::engine::general_purpose::STANDARD.decode(encoded).ok();
@@ -210,7 +210,7 @@ fn process3d_bytes_from_data_url(data_url: &str) -> Option<Vec<u8>> {
 /// kernel. Real WRITE-side construction (mints real composed children from literal content via
 /// `process_working_scene_to_snapshot` — the only place this migration can do so; see
 /// `ProcessWorkingScene`'s own doc comment).
-pub fn import_process3d_model(name: &str, data_url: &str) -> Option<Process3dSnapshot> {
+pub async fn import_process3d_model(name: &str, data_url: &str) -> Option<Process3dSnapshot> {
     let bytes = process3d_bytes_from_data_url(data_url)?;
     if name.ends_with(".glb") {
         semio_framework_plugin::GlbImporter.import(&bytes).ok()?;
@@ -256,7 +256,7 @@ pub mod io_registry {
     const PROCESS3D_DIALECT: Dialect = Dialect { artifact_kind: "s.process3d", standard: StandardId("1"), subset: SubsetId("*") };
     const PROCESS3D_JSON_BRIDGE_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.json", standard: StandardId("rfc8259"), subset: SubsetId("*") };
 
-    fn rebuild_native_snapshot(sources: &[ErasedComposeSource]) -> Result<crate::artifacts::process3d::Process3dSnapshot, ComposeError> {
+    async fn rebuild_native_snapshot(sources: &[ErasedComposeSource]) -> Result<crate::artifacts::process3d::Process3dSnapshot, ComposeError> {
         if let Some(source) = sources.iter().find(|s| s.dialect == PROCESS3D_DIALECT) {
             let builder = match &source.payload {
                 IoPayload::Text(t) => Process3dAnyBuilder::from_text(t).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?,
@@ -278,7 +278,7 @@ pub mod io_registry {
     }
 
     const EXPORT_IFC_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.ifc", standard: StandardId("4"), subset: SubsetId("*") };
-    fn compose_export_ifc(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
+    async fn compose_export_ifc(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
     Box::pin(async move {
         let snapshot = rebuild_native_snapshot(sources)?;
         let bytes = crate::artifacts::process3d::io::export::serializers::artifacts::ifc::v4::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
@@ -286,7 +286,7 @@ pub mod io_registry {
     })
 }
     const EXPORT_STEP_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.step", standard: StandardId("ap214"), subset: SubsetId("*") };
-    fn compose_export_step(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
+    async fn compose_export_step(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
     Box::pin(async move {
         let snapshot = rebuild_native_snapshot(sources)?;
         let bytes = crate::artifacts::process3d::io::export::serializers::artifacts::step::v_ap214::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
@@ -294,7 +294,7 @@ pub mod io_registry {
     })
 }
     const EXPORT_PNG_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.png", standard: StandardId("1.2"), subset: SubsetId("*") };
-    fn compose_export_png(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
+    async fn compose_export_png(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
     Box::pin(async move {
         let snapshot = rebuild_native_snapshot(sources)?;
         let bytes = crate::artifacts::process3d::io::export::serializers::artifacts::png::v1_2::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
@@ -302,7 +302,7 @@ pub mod io_registry {
     })
 }
     const EXPORT_JSON_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.json", standard: StandardId("rfc8259"), subset: SubsetId("*") };
-    fn compose_export_json(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
+    async fn compose_export_json(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
     Box::pin(async move {
         let snapshot = rebuild_native_snapshot(sources)?;
         let bytes = crate::artifacts::process3d::io::export::serializers::artifacts::json::v_rfc8259::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
@@ -310,7 +310,7 @@ pub mod io_registry {
     })
 }
     const EXPORT_DWG_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.dwg", standard: StandardId("ac1018"), subset: SubsetId("*") };
-    fn compose_export_dwg(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
+    async fn compose_export_dwg(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
     Box::pin(async move {
         let snapshot = rebuild_native_snapshot(sources)?;
         let bytes = crate::artifacts::process3d::io::export::serializers::artifacts::dwg::v_ac1018::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
@@ -318,7 +318,7 @@ pub mod io_registry {
     })
 }
     const EXPORT_STL_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.stl", standard: StandardId("ascii"), subset: SubsetId("*") };
-    fn compose_export_stl(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
+    async fn compose_export_stl(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
     Box::pin(async move {
         let snapshot = rebuild_native_snapshot(sources)?;
         let bytes = crate::artifacts::process3d::io::export::serializers::artifacts::stl::v_ascii::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
@@ -326,7 +326,7 @@ pub mod io_registry {
     })
 }
     const EXPORT_GLTF_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.gltf", standard: StandardId("2.0"), subset: SubsetId("*") };
-    fn compose_export_gltf(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
+    async fn compose_export_gltf(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
     Box::pin(async move {
         let snapshot = rebuild_native_snapshot(sources)?;
         let bytes = crate::artifacts::process3d::io::export::serializers::artifacts::gltf::v2_0::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
@@ -334,7 +334,7 @@ pub mod io_registry {
     })
 }
     const EXPORT_OBJ_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.obj", standard: StandardId("3.0"), subset: SubsetId("*") };
-    fn compose_export_obj(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
+    async fn compose_export_obj(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
     Box::pin(async move {
         let snapshot = rebuild_native_snapshot(sources)?;
         let bytes = crate::artifacts::process3d::io::export::serializers::artifacts::obj::v3_0::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
@@ -343,7 +343,7 @@ pub mod io_registry {
 }
     //#endregion 🔖️ExportEntries
 
-    pub fn entries() -> &'static [ComposerEntry] {
+    pub async fn entries() -> &'static [ComposerEntry] {
         ENTRIES
             .get_or_init(|| {
                 vec![

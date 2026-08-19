@@ -11,12 +11,12 @@ use crate::artifacts::program::schema::mutations::text::ProgramMutation;
 use protocol::OpBinary;
 
 /// 📡️ Encodes an Architect operation for transport or persistence.
-pub fn encode_op(operation: &ProgramMutation) -> Result<Vec<u8>, protocol::ProtocolError> {
+pub async fn encode_op(operation: &ProgramMutation) -> Result<Vec<u8>, protocol::ProtocolError> {
     operation.encode_op()
 }
 
 /// 📥️ Decodes an Architect operation from its transport representation.
-pub fn decode_op(bytes: &[u8]) -> Result<ProgramMutation, protocol::ProtocolError> {
+pub async fn decode_op(bytes: &[u8]) -> Result<ProgramMutation, protocol::ProtocolError> {
     ProgramMutation::decode_op(bytes)
 }
 
@@ -32,13 +32,13 @@ mod tests {
     use crate::artifacts::program::kernel::EntityId;
 
     #[test]
-    fn disconnect_adjacency_round_trips_through_the_binary_codec() {
+    async fn disconnect_adjacency_round_trips_through_the_binary_codec() {
         let operation = ProgramMutation::DisconnectAdjacency(super::super::disconnect_adjacency::mutation::DisconnectAdjacency { id: EntityId("adjacency-1".into()) });
         assert_eq!(decode_op(&encode_op(&operation).expect("encode")).expect("decode"), operation);
     }
 
     #[test]
-    fn delete_program_element_round_trips_through_the_binary_codec() {
+    async fn delete_program_element_round_trips_through_the_binary_codec() {
         let operation = ProgramMutation::DeleteProgramElement(super::super::delete_program_element::mutation::DeleteProgramElement { id: EntityId("element-1".into()) });
         assert_eq!(decode_op(&encode_op(&operation).expect("encode")).expect("decode"), operation);
     }

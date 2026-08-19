@@ -28,7 +28,7 @@ pub enum OpcError {
 }
 
 impl std::fmt::Display for OpcError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    async fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::Zip(e) => write!(f, "opc: zip layer: {e}"),
             Self::Xml { part, detail } => write!(f, "opc: xml parse of {part}: {detail}"),
@@ -54,23 +54,23 @@ const RELATIONSHIPS_NS: &str = "http://schemas.openxmlformats.org/package/2006/r
 /// (e.g. `word/document.xml`, `xl/workbook.xml`, `ppt/presentation.xml`).
 pub const REL_TYPE_OFFICE_DOCUMENT: &str = "http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument";
 
-fn xml_attr(name: &str, value: &str) -> XmlAttr {
+async fn xml_attr(name: &str, value: &str) -> XmlAttr {
     XmlAttr { name: name.into(), value: value.into() }
 }
 
-fn xml_elem(name: &str, attrs: Vec<XmlAttr>, children: Vec<XmlNode>) -> XmlNode {
+async fn xml_elem(name: &str, attrs: Vec<XmlAttr>, children: Vec<XmlNode>) -> XmlNode {
     XmlNode::Element { name: name.into(), attrs, children }
 }
 
-fn opc_escape_text(value: &str) -> String {
+async fn opc_escape_text(value: &str) -> String {
     value.replace('&', "&amp;").replace('<', "&lt;").replace('>', "&gt;")
 }
 
-fn opc_escape_attr(value: &str) -> String {
+async fn opc_escape_attr(value: &str) -> String {
     opc_escape_text(value).replace('"', "&quot;").replace('\t', "&#x9;").replace('\n', "&#xA;").replace('\r', "&#xD;")
 }
 
-fn opc_node_to_text(node: &XmlNode, out: &mut String) {
+async fn opc_node_to_text(node: &XmlNode, out: &mut String) {
     match node {
         XmlNode::Text { text } => out.push_str(&opc_escape_text(text)),
         XmlNode::CData { text } => {
@@ -118,7 +118,7 @@ fn opc_node_to_text(node: &XmlNode, out: &mut String) {
 }
 
 /// 📝️ Deterministically materializes logical OPC XML using the compact ECMA-376 convention.
-pub fn xml_document_to_opc_text(doc: &XmlDocument) -> String {
+pub async fn xml_document_to_opc_text(doc: &XmlDocument) -> String {
     if doc.doctype.is_some() {
         return xml_document_to_text(doc);
     }
@@ -177,7 +177,7 @@ impl OpcContentTypes {
     /// 🔎️ Resolves the content type for `part_path` (no leading `/`): override by exact part
     /// name first, else default by extension. `None` when neither applies — the caller decides
     /// whether that is fatal.
-    pub fn resolve(&self, part_path: &str) -> Option<&str> {
+    pub async fn resolve(&self, part_path: &str) -> Option<&str> {
         let part_name = format!("/{}", part_path.trim_start_matches('/'));
         if let Some((_, ct)) = self.overrides.iter().find(|(p, _)| *p == part_name) {
             return Some(ct);
@@ -187,7 +187,7 @@ impl OpcContentTypes {
     }
 
     /// ✍️ Inserts or replaces the `Override` entry for `part_path`.
-    pub fn set_override(&mut self, part_path: &str, content_type: &str) {
+    pub async fn set_override(&mut self, part_path: &str, content_type: &str) {
         let part_name = format!("/{}", part_path.trim_start_matches('/'));
         if let Some(existing) = self.overrides.iter_mut().find(|(p, _)| *p == part_name) {
             existing.1 = content_type.to_string();
@@ -197,7 +197,7 @@ impl OpcContentTypes {
     }
 
     /// ✍️ Inserts or replaces the `Default` entry for `extension` (case-insensitive, no dot).
-    pub fn set_default(&mut self, extension: &str, content_type: &str) {
+    pub async fn set_default(&mut self, extension: &str, content_type: &str) {
         let ext = extension.to_ascii_lowercase();
         if let Some(existing) = self.defaults.iter_mut().find(|(e, _)| *e == ext) {
             existing.1 = content_type.to_string();
@@ -206,7 +206,7 @@ impl OpcContentTypes {
         }
     }
 
-    fn to_xml(&self) -> XmlDocument {
+    async fn to_xml(&self) -> XmlDocument {
         let mut children = Vec::with_capacity(self.defaults.len() + self.overrides.len());
         for (ext, ct) in &self.defaults {
             children.push(xml_elem("Default", vec![xml_attr("Extension", ext), xml_attr("ContentType", ct)], vec![]));
@@ -222,7 +222,7 @@ impl OpcContentTypes {
         }
     }
 
-    fn from_xml(doc: &XmlDocument) -> Result<Self, OpcError> {
+    async fn from_xml(doc: &XmlDocument) -> Result<Self, OpcError> {
         let root = doc.root.as_ref().ok_or(OpcError::MissingContentTypes)?;
         let XmlNode::Element { name, children, .. } = root else {
             return Err(OpcError::MalformedContentTypes("root is not an element".into()));
@@ -251,7 +251,7 @@ impl OpcContentTypes {
     }
 }
 
-fn find_attr<'a>(attrs: &'a [XmlAttr], name: &str) -> Option<&'a str> {
+async fn find_attr<'a>(attrs: &'a [XmlAttr], name: &str) -> Option<&'a str> {
     attrs.iter().find(|a| a.name == name).map(|a| a.value.as_str())
 }
 //#endregion 🔖️ContentTypes
@@ -277,7 +277,7 @@ pub struct OpcRelationship {
 
 /// 📍 The `*.rels` part path that carries `owner`'s relationships (`""` = package root ->
 /// `_rels/.rels`; `"word/document.xml"` -> `"word/_rels/document.xml.rels"`).
-fn rels_part_path_for(owner: &str) -> String {
+async fn rels_part_path_for(owner: &str) -> String {
     if owner.is_empty() {
         "_rels/.rels".into()
     } else if let Some(slash) = owner.rfind('/') {
@@ -290,7 +290,7 @@ fn rels_part_path_for(owner: &str) -> String {
 /// 📍 Inverse of `rels_part_path_for`: recovers the owner part path from a `*.rels` part path.
 /// `None` when `path` isn't shaped like a rels part at all (should never happen for a
 /// conformant package, but never silently misattributed either).
-fn owner_for_rels_path(path: &str) -> Option<String> {
+async fn owner_for_rels_path(path: &str) -> Option<String> {
     let file = path.rsplit('/').next()?;
     let name = file.strip_suffix(".rels")?;
     let dir = &path[..path.len() - file.len()];
@@ -302,7 +302,7 @@ fn owner_for_rels_path(path: &str) -> Option<String> {
 /// 🧭️ Resolves a relationship `Target` against the directory of its owner part (OPC §9.3:
 /// relative targets are resolved relative to the *source part's* base URI, not the package
 /// root). A leading `/` is package-root-absolute.
-pub fn resolve_relationship_target(owner: &str, target: &str) -> String {
+pub async fn resolve_relationship_target(owner: &str, target: &str) -> String {
     if let Some(stripped) = target.strip_prefix('/') {
         return stripped.to_string();
     }
@@ -315,7 +315,7 @@ pub fn resolve_relationship_target(owner: &str, target: &str) -> String {
 
 /// 🧹️ Collapses `./` and `../` segments in a `/`-joined path (no filesystem access — pure
 /// string logic, since OPC part paths are always package-internal).
-fn normalize_path(path: &str) -> String {
+async fn normalize_path(path: &str) -> String {
     let mut out: Vec<&str> = Vec::new();
     for seg in path.split('/') {
         match seg {
@@ -329,7 +329,7 @@ fn normalize_path(path: &str) -> String {
     out.join("/")
 }
 
-fn relationships_to_xml(rels: &[OpcRelationship]) -> XmlDocument {
+async fn relationships_to_xml(rels: &[OpcRelationship]) -> XmlDocument {
     let children = rels
         .iter()
         .map(|r| {
@@ -348,7 +348,7 @@ fn relationships_to_xml(rels: &[OpcRelationship]) -> XmlDocument {
     }
 }
 
-fn relationships_from_xml(doc: &XmlDocument, part: &str) -> Result<Vec<OpcRelationship>, OpcError> {
+async fn relationships_from_xml(doc: &XmlDocument, part: &str) -> Result<Vec<OpcRelationship>, OpcError> {
     let malformed = |detail: String| OpcError::MalformedRelationships { part: part.into(), detail };
     let root = doc.root.as_ref().ok_or_else(|| malformed("empty document".into()))?;
     let XmlNode::Element { children, .. } = root else {
@@ -395,22 +395,22 @@ pub struct OpcPackage {
 impl OpcPackage {
     /// 🌱️ An empty package (no parts, no content types, no relationships) — callers building a
     /// fresh document from scratch start here and add parts/relationships/content-types.
-    pub fn empty() -> Self {
+    pub async fn empty() -> Self {
         Self::default()
     }
 
-    pub fn part(&self, path: &str) -> Option<&OpcPart> {
+    pub async fn part(&self, path: &str) -> Option<&OpcPart> {
         let p = path.trim_start_matches('/');
         self.parts.iter().find(|part| part.path == p)
     }
 
-    pub fn part_bytes(&self, path: &str) -> Option<&[u8]> {
+    pub async fn part_bytes(&self, path: &str) -> Option<&[u8]> {
         self.part(path).map(|p| p.bytes.as_slice())
     }
 
     /// ✍️ Inserts or replaces a content part, keeping its `[Content_Types].xml` `Override` in
     /// sync in the same call — the two can never drift apart through this API.
-    pub fn set_part(&mut self, path: &str, content_type: &str, bytes: Vec<u8>) {
+    pub async fn set_part(&mut self, path: &str, content_type: &str, bytes: Vec<u8>) {
         let p = path.trim_start_matches('/').to_string();
         self.content_types.set_override(&p, content_type);
         if let Some(existing) = self.parts.iter_mut().find(|part| part.path == p) {
@@ -421,18 +421,18 @@ impl OpcPackage {
         }
     }
 
-    pub fn relationships_for(&self, owner: &str) -> &[OpcRelationship] {
+    pub async fn relationships_for(&self, owner: &str) -> &[OpcRelationship] {
         self.relationships.get(owner).map(|v| v.as_slice()).unwrap_or(&[])
     }
 
     /// ✍️ Appends one internal relationship under `owner` (`""` = package root).
-    pub fn add_relationship(&mut self, owner: &str, id: &str, rel_type: &str, target: &str) {
+    pub async fn add_relationship(&mut self, owner: &str, id: &str, rel_type: &str, target: &str) {
         self.relationships.entry(owner.to_string()).or_default().push(OpcRelationship { id: id.into(), rel_type: rel_type.into(), target: target.into(), target_mode: OpcTargetMode::Internal });
     }
 
     /// 🔎️ Follows a single relationship of `rel_type` owned by `owner`, resolving its target to
     /// an absolute part path. `None` when no such relationship exists.
-    pub fn resolve_relationship(&self, owner: &str, rel_type: &str) -> Option<String> {
+    pub async fn resolve_relationship(&self, owner: &str, rel_type: &str) -> Option<String> {
         let rel = self.relationships_for(owner).iter().find(|r| r.rel_type == rel_type)?;
         Some(resolve_relationship_target(owner, &rel.target))
     }
@@ -441,7 +441,7 @@ impl OpcPackage {
 /// 📦️ Decode OPC container bytes (a real zip archive) into a typed, lossless `OpcPackage`.
 /// Every zip entry becomes exactly one of: the typed `content_types` table, a typed
 /// relationship list, or a verbatim content `OpcPart` — never dropped, never fabricated.
-pub fn decode_opc(data: &[u8]) -> Result<OpcPackage, OpcError> {
+pub async fn decode_opc(data: &[u8]) -> Result<OpcPackage, OpcError> {
     let zip = crate::artifacts::zip::standards::v2_0::subsets::any::io::decode_zip(data).map_err(|e| OpcError::Zip(e.to_string()))?;
 
     let ct_entry = zip.entries.iter().find(|e| e.name == CONTENT_TYPES_PART).ok_or(OpcError::MissingContentTypes)?;
@@ -477,7 +477,7 @@ pub fn decode_opc(data: &[u8]) -> Result<OpcPackage, OpcError> {
 /// codec. The generic OPC writer chooses one deterministic, path-sorted logical normal form;
 /// format serializers that define a standard-specific member sequence call the same writer with
 /// their semantic path-order policy.
-pub fn encode_opc(pkg: &OpcPackage) -> Result<Vec<u8>, OpcError> {
+pub async fn encode_opc(pkg: &OpcPackage) -> Result<Vec<u8>, OpcError> {
     encode_opc_with_path_order(pkg, |paths| {
         paths.sort();
         if let Some(index) = paths.iter().position(|path| path == CONTENT_TYPES_PART) {
@@ -491,7 +491,7 @@ pub fn encode_opc(pkg: &OpcPackage) -> Result<Vec<u8>, OpcError> {
 /// package's authoritative part order. This is the lossless OOXML path: central-directory order
 /// is preserved by `decode_opc`, and an untouched package can therefore be emitted without a
 /// semantic part-order rewrite.
-pub(crate) fn encode_opc_with_package_order(pkg: &OpcPackage) -> Result<Vec<u8>, OpcError> {
+pub(crate) async fn encode_opc_with_package_order(pkg: &OpcPackage) -> Result<Vec<u8>, OpcError> {
     encode_opc_with_path_order(pkg, |paths| {
         let mut ordered = Vec::with_capacity(paths.len());
         let mut take = |path: String| {
@@ -519,7 +519,7 @@ pub(crate) fn encode_opc_with_package_order(pkg: &OpcPackage) -> Result<Vec<u8>,
     })
 }
 
-pub(crate) fn encode_opc_with_path_order(pkg: &OpcPackage, order: impl FnOnce(&mut Vec<String>)) -> Result<Vec<u8>, OpcError> {
+pub(crate) async fn encode_opc_with_path_order(pkg: &OpcPackage, order: impl FnOnce(&mut Vec<String>)) -> Result<Vec<u8>, OpcError> {
     let mut payloads = HashMap::<String, Vec<u8>>::new();
     let ct_text = xml_document_to_opc_text(&pkg.content_types.to_xml());
     payloads.insert(CONTENT_TYPES_PART.into(), ct_text.into_bytes());
@@ -555,7 +555,7 @@ pub(crate) fn encode_opc_with_path_order(pkg: &OpcPackage, order: impl FnOnce(&m
 /// 🕵️ Structural sniff of OOXML-shaped bytes: recognizes the zip magic *and* the presence of a
 /// `[Content_Types].xml` entry — real OOXML disambiguation from a plain zip peeks part names
 /// (docx/xlsx/pptx callers inspect `word/`/`xl/`/`ppt/`-prefixed parts on top of this).
-pub fn sniff_opc_bytes(data: &[u8]) -> bool {
+pub async fn sniff_opc_bytes(data: &[u8]) -> bool {
     let Ok(zip) = crate::artifacts::zip::standards::v2_0::subsets::any::io::decode_zip(data) else { return false };
     zip.entries.iter().any(|e| e.name == CONTENT_TYPES_PART)
 }
@@ -566,7 +566,7 @@ pub fn sniff_opc_bytes(data: &[u8]) -> bool {
 mod tests {
     use super::*;
 
-    fn sample_package() -> OpcPackage {
+    async fn sample_package() -> OpcPackage {
         let mut pkg = OpcPackage::empty();
         pkg.content_types.set_default("rels", RELS_CONTENT_TYPE);
         pkg.content_types.set_default("xml", "application/xml");
@@ -576,7 +576,7 @@ mod tests {
     }
 
     #[test]
-    fn round_trip_preserves_parts_and_relationships() {
+    async fn round_trip_preserves_parts_and_relationships() {
         let pkg = sample_package();
         let bytes = encode_opc(&pkg).expect("encode");
         let decoded = decode_opc(&bytes).expect("decode");
@@ -589,7 +589,7 @@ mod tests {
     }
 
     #[test]
-    fn resolve_relationship_target_is_relative_to_owner_directory() {
+    async fn resolve_relationship_target_is_relative_to_owner_directory() {
         // A relationship owned by "word/document.xml" (rels file at
         // "word/_rels/document.xml.rels") targeting "media/image1.png" resolves against
         // "word/", not the package root — the #1 OPC relative-target gotcha.
@@ -599,7 +599,7 @@ mod tests {
     }
 
     #[test]
-    fn owner_and_rels_path_round_trip_including_root() {
+    async fn owner_and_rels_path_round_trip_including_root() {
         assert_eq!(rels_part_path_for(""), "_rels/.rels");
         assert_eq!(owner_for_rels_path("_rels/.rels"), Some(String::new()));
         assert_eq!(rels_part_path_for("word/document.xml"), "word/_rels/document.xml.rels");
@@ -609,7 +609,7 @@ mod tests {
     }
 
     #[test]
-    fn content_types_override_wins_over_default() {
+    async fn content_types_override_wins_over_default() {
         let mut ct = OpcContentTypes::default();
         ct.set_default("xml", "application/xml");
         ct.set_override("word/document.xml", "application/vnd.custom+xml");
@@ -619,7 +619,7 @@ mod tests {
     }
 
     #[test]
-    fn decode_rejects_missing_content_types() {
+    async fn decode_rejects_missing_content_types() {
         let snap = ZipSnapshot { schema: STDIO_ZIP_DOCUMENT_SCHEMA.into(), entries: vec![ZipEntry { name: "word/document.xml".into(), data: b"<x/>".to_vec(), ..Default::default() }], comment: String::new() };
         let bytes = crate::artifacts::zip::standards::v2_0::subsets::any::io::encode_zip(&snap).unwrap();
         let err = decode_opc(&bytes).expect_err("must reject a zip with no [Content_Types].xml");
@@ -627,7 +627,7 @@ mod tests {
     }
 
     #[test]
-    fn sniff_recognizes_content_types_entry() {
+    async fn sniff_recognizes_content_types_entry() {
         let pkg = sample_package();
         let bytes = encode_opc(&pkg).unwrap();
         assert!(sniff_opc_bytes(&bytes));

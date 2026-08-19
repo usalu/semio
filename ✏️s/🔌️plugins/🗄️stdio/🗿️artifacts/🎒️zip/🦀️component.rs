@@ -36,11 +36,11 @@ pub const ZIP_ARTIFACT_SCHEMA_ID: &str = "s.stdio.zip";
 /// the deleted `register_pilot_languages`' own doc comment), so this artifact converts cleanly with
 /// zero residual `.setup()` calls.
 /// 🧩️ Binds this executable root to its sole schema-owned definition.
-pub fn assembly(definition: semio_framework_plugin::ArtifactDefinition) -> Result<crate::registry::ArtifactAssembly, semio_framework_plugin::PluginAssemblyError> {
+pub async fn assembly(definition: semio_framework_plugin::ArtifactDefinition) -> Result<crate::registry::ArtifactAssembly, semio_framework_plugin::PluginAssemblyError> {
     crate::registry::runtime_assembly("zip", definition, declaration)
 }
 
-pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
+pub async fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
     let formats = crate::registry::format_descriptors_for("zip")?;
     semio_framework_plugin::ArtifactDeclaration::builder(definition)
         .schema(crate::artifacts::zip::schema::zip_artifact_schema_descriptor())
@@ -56,7 +56,7 @@ pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Re
 /// 🛡️ The `✳️iso21320` subset's `SubsetValidatorEntry`, re-derived (not moved) from the same
 /// side-effect-free `subset_validator_entry_of::<ZipIso21320Validator>()` constructor
 /// `🚪️io/🦀️component.rs`'s own (module-private) `validator_entry()` calls.
-fn zip_subset_validators() -> &'static [semio_framework_plugin::SubsetValidatorEntry] {
+async fn zip_subset_validators() -> &'static [semio_framework_plugin::SubsetValidatorEntry] {
     static ENTRIES: std::sync::OnceLock<Vec<semio_framework_plugin::SubsetValidatorEntry>> = std::sync::OnceLock::new();
     ENTRIES.get_or_init(|| vec![semio_framework_plugin::subset_validator_entry_of::<crate::artifacts::zip::standards::v2_0::subsets::iso21320::io::ZipIso21320Validator>()]).as_slice()
 }
@@ -64,7 +64,7 @@ fn zip_subset_validators() -> &'static [semio_framework_plugin::SubsetValidatorE
 /// 📌️ Handcrafted facet grammars (text) and protocols (binary), copied verbatim (five
 /// `LanguageSpec` rows) from the former `crate::artifacts::zip::engine::register_pilot_languages`'s
 /// own `dsl::register_language(...)` call bodies.
-fn pilot_languages() -> &'static [dsl::LanguageSpec] {
+async fn pilot_languages() -> &'static [dsl::LanguageSpec] {
     static LANGUAGES: std::sync::OnceLock<Vec<dsl::LanguageSpec>> = std::sync::OnceLock::new();
     LANGUAGES
         .get_or_init(|| {
@@ -127,7 +127,7 @@ fn pilot_languages() -> &'static [dsl::LanguageSpec] {
 
 //#region 🔖️ArtifactKind
 /// 🗂️ This artifact's `ArtifactKindSpec`.
-pub fn artifact_kind() -> ArtifactKindSpec {
+pub async fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "stdio.zip".into(),
         name: "Zip".into(),
@@ -152,16 +152,16 @@ pub mod io_registry {
 
     static ENTRIES: OnceLock<Vec<&'static ComposerEntry>> = OnceLock::new();
 
-    pub fn entries() -> &'static [&'static ComposerEntry] {
+    pub async fn entries() -> &'static [&'static ComposerEntry] {
         ENTRIES.get_or_init(|| v2_0::entries().iter().collect()).as_slice()
     }
 
-    pub fn compose(target: Dialect, sources: &[ErasedComposeSource]) -> Result<ComposedArtifact, ComposeError> {
+    pub async fn compose(target: Dialect, sources: &[ErasedComposeSource]) -> Result<ComposedArtifact, ComposeError> {
         let entry = entries().iter().find(|e| e.writes == target).ok_or_else(|| ComposeError { message: format!("ZipComposer: no entry writes {:?}", target), diagnostics: Vec::new() })?;
         semio_framework_plugin::resolve_ready((entry.compose)(sources))
     }
 
-    pub fn register() {
+    pub async fn register() {
         let _ = register_composer_entries(v2_0::entries());
     }
 }

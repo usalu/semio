@@ -13,7 +13,7 @@ pub mod export_registers_csv {
     #[dsl(keyword = "export-registers-csv")]
     pub struct ExportRegistersCsv {}
 
-    pub fn handle(_payload: &ExportRegistersCsv, doc: &ArtifactView<'_, ProgramSnapshot>, _cfg: &ConfigView<'_, ArchitectConfig>) -> Result<Emit<ProgramMutation, ArchitectConfigMutation>, Fault> {
+    pub async fn handle(_payload: &ExportRegistersCsv, doc: &ArtifactView<'_, ProgramSnapshot>, _cfg: &ConfigView<'_, ArchitectConfig>) -> Result<Emit<ProgramMutation, ArchitectConfigMutation>, Fault> {
         let program = doc.snapshot;
         let csv = export_registers_csv(program).unwrap_or_default();
         Ok(Emit::effect(Effect::DownloadMediaExport { filename: format!("{}.registers.csv", program.meta.document_id), mime_type: "text/csv".into(), data: csv, encoding: None }))
@@ -35,7 +35,7 @@ pub mod import_registers_csv {
         pub strategy: String,
     }
 
-    pub fn handle(payload: &ImportRegistersCsv, doc: &ArtifactView<'_, ProgramSnapshot>, _cfg: &ConfigView<'_, ArchitectConfig>) -> Result<Emit<ProgramMutation, ArchitectConfigMutation>, Fault> {
+    pub async fn handle(payload: &ImportRegistersCsv, doc: &ArtifactView<'_, ProgramSnapshot>, _cfg: &ConfigView<'_, ArchitectConfig>) -> Result<Emit<ProgramMutation, ArchitectConfigMutation>, Fault> {
         let strategy = match payload.strategy.as_str() {
             "replace" => MergeStrategy::Replace,
             "skipDuplicates" => MergeStrategy::SkipDuplicates,
@@ -60,7 +60,7 @@ pub mod export_program {
     #[dsl(keyword = "export-program")]
     pub struct ExportProgram {}
 
-    pub fn handle(_payload: &ExportProgram, doc: &ArtifactView<'_, ProgramSnapshot>, _cfg: &ConfigView<'_, ArchitectConfig>) -> Result<Emit<ProgramMutation, ArchitectConfigMutation>, Fault> {
+    pub async fn handle(_payload: &ExportProgram, doc: &ArtifactView<'_, ProgramSnapshot>, _cfg: &ConfigView<'_, ArchitectConfig>) -> Result<Emit<ProgramMutation, ArchitectConfigMutation>, Fault> {
         let program = doc.snapshot;
         let dsl_text = crate::artifacts::program::dsl::print(program);
         Ok(Emit::effect(Effect::DownloadMediaExport { filename: format!("{}.architect.dsl", program.meta.document_id), mime_type: "text/plain".into(), data: dsl_text, encoding: None }))
@@ -78,7 +78,7 @@ pub mod import_program_request {
     #[dsl(keyword = "import-program-request")]
     pub struct ImportProgramRequest {}
 
-    pub fn handle(_payload: &ImportProgramRequest, _doc: &ArtifactView<'_, ProgramSnapshot>, _cfg: &ConfigView<'_, ArchitectConfig>) -> Result<Emit<ProgramMutation, ArchitectConfigMutation>, Fault> {
+    pub async fn handle(_payload: &ImportProgramRequest, _doc: &ArtifactView<'_, ProgramSnapshot>, _cfg: &ConfigView<'_, ArchitectConfig>) -> Result<Emit<ProgramMutation, ArchitectConfigMutation>, Fault> {
         Ok(Emit::effect(Effect::RequestFileOpen {req: semio_framework_plugin::RequestId(110),  accept: ".dsl,.architect.dsl,.spk,.ops,application/octet-stream,text/plain".into(), read_as: None, import_action: "importProgram".into(), multiple: false }))
     }
 }
@@ -96,7 +96,7 @@ pub mod import_program {
         pub payload: String,
     }
 
-    pub fn handle(payload: &ImportProgram, _doc: &ArtifactView<'_, ProgramSnapshot>, _cfg: &ConfigView<'_, ArchitectConfig>) -> Result<Emit<ProgramMutation, ArchitectConfigMutation>, Fault> {
+    pub async fn handle(payload: &ImportProgram, _doc: &ArtifactView<'_, ProgramSnapshot>, _cfg: &ConfigView<'_, ArchitectConfig>) -> Result<Emit<ProgramMutation, ArchitectConfigMutation>, Fault> {
         let Ok(next_program) = crate::artifacts::program::dsl::parse(&payload.payload) else {
             return Ok(Emit::default());
         };

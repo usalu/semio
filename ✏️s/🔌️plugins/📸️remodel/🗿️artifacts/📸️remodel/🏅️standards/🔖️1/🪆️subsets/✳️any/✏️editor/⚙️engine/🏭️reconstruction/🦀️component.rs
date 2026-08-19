@@ -29,7 +29,7 @@ pub struct IngestParams {
 }
 
 impl Default for IngestParams {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self { stride: 1, max_frames: 0, min_sharpness: 0.3, rolling_window: 15 }
     }
 }
@@ -64,7 +64,7 @@ pub enum EngineError {
 }
 
 impl std::fmt::Display for EngineError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    async fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::Video(e) => write!(f, "video ingest error: {e}"),
         }
@@ -74,7 +74,7 @@ impl std::fmt::Display for EngineError {
 impl std::error::Error for EngineError {}
 
 impl From<remodel_video::VideoError> for EngineError {
-    fn from(e: remodel_video::VideoError) -> Self {
+    async fn from(e: remodel_video::VideoError) -> Self {
         Self::Video(e)
     }
 }
@@ -96,7 +96,7 @@ pub struct PushVideoReport {
 /// 🧭️ Gradient-energy sharpness proxy (mean squared Scharr gradient magnitude): high for crisp edges,
 /// collapsing toward zero for a flat/blurred frame — the signal the relative blur gate thresholds
 /// against.
-fn sharpness_score(image: &remodel_image::ImageRgba8) -> f32 {
+async fn sharpness_score(image: &remodel_image::ImageRgba8) -> f32 {
     let gray = remodel_image::ImageGray::from_rgba8_luma(image);
     let grad = remodel_image::scharr_gradients(&gray);
     if grad.gx.is_empty() {
@@ -108,7 +108,7 @@ fn sharpness_score(image: &remodel_image::ImageRgba8) -> f32 {
 
 /// 📐️ Median of a rolling score window (odd or even length both handled by taking the middle element of
 /// the sorted copy — good enough for a soft gating threshold, no need for exact even-length averaging).
-fn rolling_median(scores: &VecDeque<f32>) -> f32 {
+async fn rolling_median(scores: &VecDeque<f32>) -> f32 {
     let mut v: Vec<f32> = scores.iter().copied().collect();
     v.sort_by(f32::total_cmp);
     v[v.len() / 2]
@@ -116,7 +116,7 @@ fn rolling_median(scores: &VecDeque<f32>) -> f32 {
 
 /// 🏷️ Human-facing codec/dimension/duration summary of a [`remodel_video::VideoProbe`], regardless of
 /// container family, for [`PushVideoReport`].
-fn describe_probe(probe: &remodel_video::VideoProbe) -> (String, u32, u32, f64) {
+async fn describe_probe(probe: &remodel_video::VideoProbe) -> (String, u32, u32, f64) {
     match probe {
         remodel_video::VideoProbe::Mp4(info) => (format!("{:?}", info.codec), info.width, info.height, info.duration_ms),
         remodel_video::VideoProbe::Avi(info) => {
@@ -139,23 +139,23 @@ pub struct FrameSource {
 
 impl FrameSource {
     /// 🆕️ An empty frame source under the given ingestion policy.
-    pub fn new(ingest: IngestParams) -> Self {
+    pub async fn new(ingest: IngestParams) -> Self {
         Self { ingest, stream_id: 0, offered: 0, frames: Vec::new(), rolling_scores: VecDeque::new() }
     }
 
     /// 🔍️ Every frame accepted so far, in ingestion order.
-    pub fn frames(&self) -> &[AcceptedFrame] {
+    pub async fn frames(&self) -> &[AcceptedFrame] {
         &self.frames
     }
 
     /// 🔢️ How many frames have been accepted so far.
-    pub fn accepted_count(&self) -> usize {
+    pub async fn accepted_count(&self) -> usize {
         self.frames.len()
     }
 
     /// 📥️ Offers one directly-provided frame (e.g. an imported image sequence): applies this source's
     /// `stride`/`max_frames` sampling, then the relative blur gate.
-    pub fn push_frame(&mut self, index: u32, image: remodel_image::ImageRgba8, timestamp_ms: f64) -> FrameAcceptance {
+    pub async fn push_frame(&mut self, index: u32, image: remodel_image::ImageRgba8, timestamp_ms: f64) -> FrameAcceptance {
         self.accept(index, image, timestamp_ms, true)
     }
 
@@ -163,7 +163,7 @@ impl FrameSource {
     /// `remodel_video::extract_frames` (container-level stride/max-frames/downscale already applied per
     /// `opts`), and offers each decoded frame through the same blur gate as [`push_frame`](Self::push_frame)
     /// (without re-applying this source's own stride counter, since the container already sampled).
-    pub fn push_video(&mut self, bytes: &[u8], opts: &remodel_video::VideoIngestOptions) -> Result<PushVideoReport, EngineError> {
+    pub async fn push_video(&mut self, bytes: &[u8], opts: &remodel_video::VideoIngestOptions) -> Result<PushVideoReport, EngineError> {
         let probe = remodel_video::probe(bytes)?;
         let (codec, width, height, duration_ms) = describe_probe(&probe);
         let iter = remodel_video::extract_frames(bytes, opts)?;
@@ -182,7 +182,7 @@ impl FrameSource {
 
     /// 🚦️ Shared gate: optional stride counting, then `max_frames`, then the relative blur threshold
     /// against the rolling median of recently accepted scores.
-    fn accept(&mut self, index: u32, image: remodel_image::ImageRgba8, timestamp_ms: f64, apply_stride: bool) -> FrameAcceptance {
+    async fn accept(&mut self, index: u32, image: remodel_image::ImageRgba8, timestamp_ms: f64, apply_stride: bool) -> FrameAcceptance {
         let offered = self.offered;
         self.offered += 1;
         if apply_stride {
@@ -239,7 +239,7 @@ pub struct EngineParams {
 }
 
 impl Default for EngineParams {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self {
             ingest: IngestParams::default(),
             assumed_focal_ratio: 1.0,
@@ -266,7 +266,7 @@ impl Default for EngineParams {
 /// 📷️ Default pinhole intrinsics assumed for uncalibrated input: `fx = fy = focal_ratio *
 /// max(width, height)`, principal point at the image center, no distortion — a documented
 /// simplification standing in for the calibration stage the base plan scopes separately.
-fn default_intrinsics(width: u32, height: u32, focal_ratio: f64) -> remodel_camera::Intrinsics {
+async fn default_intrinsics(width: u32, height: u32, focal_ratio: f64) -> remodel_camera::Intrinsics {
     let f = focal_ratio * f64::from(width.max(height));
     remodel_camera::Intrinsics { fx: f, fy: f, cx: f64::from(width) / 2.0, cy: f64::from(height) / 2.0, skew: 0.0, distortion: remodel_camera::Distortion::None }
 }
@@ -302,7 +302,7 @@ pub enum EngineStatus {
 }
 
 /// 🔢️ Ordinal of a non-terminal stage in the fixed 9-stage pipeline, for [`ReconstructionEngine::progress`].
-fn stage_ordinal(stage: EngineStage) -> usize {
+async fn stage_ordinal(stage: EngineStage) -> usize {
     match stage {
         EngineStage::Idle => 0,
         EngineStage::ExtractingFeatures => 1,
@@ -321,7 +321,7 @@ fn stage_ordinal(stage: EngineStage) -> usize {
 /// 🗺️ Maps `remodel_mesh::mesh_pipeline_step`'s internal stage name to the engine-level stage it falls
 /// under, so driving the mesh pipeline (Amendment: engine delegates meshing directly to
 /// `remodel_mesh::mesh_pipeline_step`) still reports through the coarser [`EngineStage`] vocabulary.
-fn mesh_stage_to_engine_stage(name: &str) -> EngineStage {
+async fn mesh_stage_to_engine_stage(name: &str) -> EngineStage {
     match name {
         "marching_cubes" => EngineStage::ExtractingSurface,
         "unwrap" | "texture_bake" | "interchange" => EngineStage::Texturing,
@@ -332,7 +332,7 @@ fn mesh_stage_to_engine_stage(name: &str) -> EngineStage {
 /// 🏘️ Up to `k` other camera slot indices nearest to `ci` (by registration-order distance, which tracks
 /// frame order for an [`remodel_sfm::IncrementalSfm`] reconstruction), sorted ascending for determinism —
 /// the source-view selection for [`remodel_dense::patchmatch_mvs`]/TSDF fusion.
-fn neighbor_camera_indices(ci: usize, n: usize, k: usize) -> Vec<usize> {
+async fn neighbor_camera_indices(ci: usize, n: usize, k: usize) -> Vec<usize> {
     let mut idxs: Vec<usize> = (0..n).filter(|&c| c != ci).collect();
     idxs.sort_by_key(|&c| (c as i64 - ci as i64).abs());
     idxs.truncate(k);
@@ -343,7 +343,7 @@ fn neighbor_camera_indices(ci: usize, n: usize, k: usize) -> Vec<usize> {
 /// 🎞️ Evenly spaced camera-slot indices for dense stereo / fusion when a reconstruction has more
 /// registered views than [`EngineParams::max_dense_cameras`] (0 = unlimited). Full SfM cameras stay in
 /// [`Reconstruction`] for gauge alignment; only the expensive depth/TSDF work is subsampled.
-fn subsample_camera_indices(n: usize, max: usize) -> Vec<usize> {
+async fn subsample_camera_indices(n: usize, max: usize) -> Vec<usize> {
     if n == 0 {
         return Vec::new();
     }
@@ -359,7 +359,7 @@ fn subsample_camera_indices(n: usize, max: usize) -> Vec<usize> {
 /// 📦️ Voxel-index bounds covering `points` with a 20% margin plus a 2-voxel padding shell, for
 /// `remodel_mesh::MeshPipeline::new`'s `bounds_min`/`bounds_max`. Falls back to a small centered cube
 /// when there are no points yet (degenerate input).
-fn compute_voxel_bounds(points: &[[f64; 3]], voxel_size: f64) -> ([i32; 3], [i32; 3]) {
+async fn compute_voxel_bounds(points: &[[f64; 3]], voxel_size: f64) -> ([i32; 3], [i32; 3]) {
     const MAX_CELLS_PER_AXIS: i32 = 120;
     if points.is_empty() || voxel_size <= 0.0 {
         return ([-4, -4, -4], [4, 4, 4]);
@@ -394,7 +394,7 @@ fn compute_voxel_bounds(points: &[[f64; 3]], voxel_size: f64) -> ([i32; 3], [i32
 
 /// 🧵️ `(camera_slot_index, point_index, observed_pixel)` triples for `remodel_geo::build_quality_report`,
 /// derived from a finished [`remodel_sfm::Reconstruction`]'s tracks and each frame's detected keypoints.
-fn build_observations(recon: &remodel_sfm::Reconstruction, tracks: Option<&remodel_sfm::FeatureTracks>, keypoints_per_frame: &[Vec<remodel_feature::Keypoint>]) -> Vec<(usize, usize, [f64; 2])> {
+async fn build_observations(recon: &remodel_sfm::Reconstruction, tracks: Option<&remodel_sfm::FeatureTracks>, keypoints_per_frame: &[Vec<remodel_feature::Keypoint>]) -> Vec<(usize, usize, [f64; 2])> {
     let Some(tracks) = tracks else { return Vec::new() };
     let camera_index_of: std::collections::BTreeMap<usize, usize> = recon.cameras.iter().enumerate().map(|(ci, &(f, _))| (f, ci)).collect();
     let mut out = Vec::new();
@@ -454,7 +454,7 @@ impl ReconstructionEngine {
     /// 🆕️ A fresh engine in [`EngineStage::Idle`], with an internal empty [`FrameSource`] under
     /// `params.ingest`. Push frames via [`push_frame`](Self::push_frame)/[`push_video`](Self::push_video)
     /// before the first [`advance`](Self::advance) call.
-    pub fn new(params: &EngineParams) -> Self {
+    pub async fn new(params: &EngineParams) -> Self {
         Self {
             params: params.clone(),
             frame_source: FrameSource::new(params.ingest.clone()),
@@ -486,28 +486,28 @@ impl ReconstructionEngine {
     }
 
     /// 📥️ Delegates to the internal [`FrameSource::push_frame`].
-    pub fn push_frame(&mut self, index: u32, image: remodel_image::ImageRgba8, timestamp_ms: f64) -> FrameAcceptance {
+    pub async fn push_frame(&mut self, index: u32, image: remodel_image::ImageRgba8, timestamp_ms: f64) -> FrameAcceptance {
         self.frame_source.push_frame(index, image, timestamp_ms)
     }
 
     /// 🎞️ Delegates to the internal [`FrameSource::push_video`].
-    pub fn push_video(&mut self, bytes: &[u8], opts: &remodel_video::VideoIngestOptions) -> Result<PushVideoReport, EngineError> {
+    pub async fn push_video(&mut self, bytes: &[u8], opts: &remodel_video::VideoIngestOptions) -> Result<PushVideoReport, EngineError> {
         self.frame_source.push_video(bytes, opts)
     }
 
     /// 🔍️ The internal frame source, for inspecting accepted frames/counts without driving the pipeline.
-    pub fn frame_source(&self) -> &FrameSource {
+    pub async fn frame_source(&self) -> &FrameSource {
         &self.frame_source
     }
 
     /// 🚦️ Current stage.
-    pub fn stage(&self) -> EngineStage {
+    pub async fn stage(&self) -> EngineStage {
         self.stage
     }
 
     /// 📸️ Snapshots [`FrameSource::frames`] into the engine's own working set; fails if fewer than 2
     /// frames were accepted (the minimum an [`remodel_sfm::IncrementalSfm`] two-view init needs).
-    fn start(&mut self) -> Result<(), String> {
+    async fn start(&mut self) -> Result<(), String> {
         self.frames = self.frame_source.frames().to_vec();
         if self.frames.len() < 2 {
             return Err(format!("reconstruction requires at least 2 accepted frames, got {}", self.frames.len()));
@@ -517,7 +517,7 @@ impl ReconstructionEngine {
     }
 
     /// 🎯️ One frame's pyramid/detect/describe; returns whether more frames remain in this stage.
-    fn step_extracting_features(&mut self) -> bool {
+    async fn step_extracting_features(&mut self) -> bool {
         let i = self.cursor;
         if i >= self.frames.len() {
             return false;
@@ -541,7 +541,7 @@ impl ReconstructionEngine {
     /// sparse enough on real matches to starve most frames of the 6 correspondences PnP needs. Explicit
     /// anchor pairs make every registerable frame's correspondence-to-the-seed-pair direct instead of
     /// coincidental.
-    fn build_match_pairs(&mut self) {
+    async fn build_match_pairs(&mut self) {
         let n = self.frames.len();
         let window = self.params.sequential_window.max(1);
         let mut pairs: std::collections::BTreeSet<(usize, usize)> = std::collections::BTreeSet::new();
@@ -560,7 +560,7 @@ impl ReconstructionEngine {
     }
 
     /// 🤝️ Matches one pair's descriptors; returns whether more pairs remain.
-    fn step_matching_features(&mut self) -> bool {
+    async fn step_matching_features(&mut self) -> bool {
         let i = self.pair_cursor;
         if i >= self.match_pairs.len() {
             return false;
@@ -578,7 +578,7 @@ impl ReconstructionEngine {
     /// already shares triangulated tracks with the seed pair can unlock earlier starved frames.
     /// Mirrors `run_all`'s best-effort policy (a frame that fails to register is skipped for this
     /// step, not fatal) except for the initial pair, whose failure genuinely aborts the reconstruction.
-    fn step_estimating_poses(&mut self) -> Result<bool, String> {
+    async fn step_estimating_poses(&mut self) -> Result<bool, String> {
         if self.sfm.is_none() {
             let intr = default_intrinsics(self.frames[0].image.width, self.frames[0].image.height, self.params.assumed_focal_ratio);
             let tracks = self.tracks.as_ref().expect("tracks built before EstimatingPoses").clone();
@@ -634,7 +634,7 @@ impl ReconstructionEngine {
     /// of these already runs its own internal solve/pass to completion in one call, same "whole stage per
     /// call" chunking granularity `remodel_mesh::mesh_pipeline_step` uses). Returns whether more substeps
     /// remain.
-    fn step_bundle_adjusting(&mut self) -> bool {
+    async fn step_bundle_adjusting(&mut self) -> bool {
         let Some(sfm) = self.sfm.as_mut() else { return false };
         let n = self.frames.len();
         match self.ba_substep {
@@ -653,7 +653,7 @@ impl ReconstructionEngine {
 
     /// 📦️ Snapshots the finished `Reconstruction` and its observation list, and resets the dense-stereo
     /// cursor/scratch.
-    fn finalize_reconstruction(&mut self) {
+    async fn finalize_reconstruction(&mut self) {
         if let Some(sfm) = &self.sfm {
             let recon = sfm.reconstruction();
             self.observations = build_observations(&recon, self.tracks.as_ref(), &self.keypoints_per_frame);
@@ -667,7 +667,7 @@ impl ReconstructionEngine {
 
     /// 🌫️ One registered camera's `remodel_dense::patchmatch_mvs` depth map against its nearest
     /// registered neighbors; returns whether more cameras remain.
-    fn step_dense_stereo(&mut self) -> bool {
+    async fn step_dense_stereo(&mut self) -> bool {
         let n_dense = self.dense_camera_indices.len();
         if n_dense == 0 {
             return false;
@@ -701,7 +701,7 @@ impl ReconstructionEngine {
     /// 🧊️ One camera's depth map integrated into the TSDF (or, once every camera is integrated, the
     /// final `fuse_depth_maps` aggregate for the QC/geo point cloud); returns whether more work remains
     /// in this stage.
-    fn step_fusing_volume(&mut self) -> bool {
+    async fn step_fusing_volume(&mut self) -> bool {
         let n_dense = self.dense_camera_indices.len();
         // 🧊️ Always ensures a (possibly still-empty) TSDF exists once this stage starts, even when
         // `n_dense == 0` (a degenerate but legitimate outcome — every registered camera got pruned by
@@ -743,7 +743,7 @@ impl ReconstructionEngine {
 
     /// 🏗️ Builds the `remodel_mesh::MeshPipeline` from the accumulated TSDF once dense fusion is done:
     /// voxel bounds from the union of sparse+dense points, optional per-camera `TextureView`s.
-    fn begin_meshing(&mut self) {
+    async fn begin_meshing(&mut self) {
         let Some(tsdf) = self.tsdf.take() else { return };
         let mut all_points: Vec<[f64; 3]> = Vec::new();
         if let Some(r) = &self.reconstruction {
@@ -772,7 +772,7 @@ impl ReconstructionEngine {
 
     /// 🕸️ Drives `remodel_mesh::mesh_pipeline_step` one whole internal stage per call, mapping its
     /// stage name back onto [`EngineStage`].
-    fn step_meshing(&mut self) -> MeshStepOutcome {
+    async fn step_meshing(&mut self) -> MeshStepOutcome {
         let Some(pipeline) = self.mesh_pipeline.as_mut() else {
             return MeshStepOutcome::Failed("mesh pipeline not initialized".to_string());
         };
@@ -785,7 +785,7 @@ impl ReconstructionEngine {
 
     /// 📈️ Coarse `[0, 1]` progress from the current stage's ordinal alone (no intra-stage fraction — the
     /// per-stage cursors have wildly different, not-necessarily-comparable totals).
-    fn progress(&self) -> f32 {
+    async fn progress(&self) -> f32 {
         stage_ordinal(self.stage) as f32 / 10.0
     }
 
@@ -794,7 +794,7 @@ impl ReconstructionEngine {
     /// the same style `remodel_mesh::mesh_pipeline_step` uses internally. Genuinely resumable: calling
     /// this repeatedly with a small budget or once with `usize::MAX` reaches the same terminal
     /// [`EngineStatus`], only the call count differs.
-    pub fn advance(&mut self, step_budget: usize) -> EngineStatus {
+    pub async fn advance(&mut self, step_budget: usize) -> EngineStatus {
         for _ in 0..step_budget.max(1) {
             match self.stage {
                 EngineStage::Idle => {
@@ -896,7 +896,7 @@ impl ReconstructionEngine {
     /// 🔭️ Snapshots whichever reconstruction state is currently available: the finalized
     /// `Reconstruction` once bundle adjustment has run, else the in-progress `IncrementalSfm`'s own
     /// snapshot, else empty (before `EstimatingPoses` has produced anything).
-    pub fn sparse_preview(&self) -> ScenePreview {
+    pub async fn sparse_preview(&self) -> ScenePreview {
         if let Some(r) = &self.reconstruction {
             return pack_reconstruction(r);
         }
@@ -908,7 +908,7 @@ impl ReconstructionEngine {
 }
 
 /// 📦️ Packs a `Reconstruction`'s camera poses and points into a [`ScenePreview`].
-fn pack_reconstruction(r: &remodel_sfm::Reconstruction) -> ScenePreview {
+async fn pack_reconstruction(r: &remodel_sfm::Reconstruction) -> ScenePreview {
     ScenePreview { camera_poses: r.cameras.iter().map(|&(_, p)| p).collect(), packed_points: r.points.iter().flat_map(|p| p.iter().map(|&c| c as f32)).collect() }
 }
 // #endregion 🔖️Preview
@@ -923,7 +923,7 @@ pub struct GeoProducts {
 }
 
 /// 📦️ World-space `(x, y)`/`(z)` bounding box of a point cloud's positions, or `None` when empty.
-fn point_cloud_bbox(cloud: &remodel_dense::PointCloud) -> Option<([f64; 3], [f64; 3])> {
+async fn point_cloud_bbox(cloud: &remodel_dense::PointCloud) -> Option<([f64; 3], [f64; 3])> {
     let mut it = cloud.positions.iter();
     let first = *it.next()?;
     let mut lo = first;
@@ -941,7 +941,7 @@ impl ReconstructionEngine {
     /// 🕸️ The finished, watertight-guaranteed `MeshData`, once [`EngineStatus::Done`] — consumes it (a
     /// second call returns `None`), mirroring `remodel_mesh::MeshPipeline::result`'s own take-once shape
     /// at the product-extraction boundary.
-    pub fn take_mesh(&mut self) -> Option<semio_framework::MeshData> {
+    pub async fn take_mesh(&mut self) -> Option<semio_framework::MeshData> {
         self.mesh_data.take()
     }
 
@@ -949,14 +949,14 @@ impl ReconstructionEngine {
     /// uncertainty, and (once the mesh pipeline has run) the watertight report — available as soon as
     /// bundle adjustment has produced a `Reconstruction`, not only at `Done`, since it's cheap to
     /// recompute from already-finished data.
-    pub fn take_quality(&mut self) -> Option<remodel_geo::QualityReport> {
+    pub async fn take_quality(&mut self) -> Option<remodel_geo::QualityReport> {
         let recon = self.reconstruction.as_ref()?;
         Some(remodel_geo::build_quality_report(recon, &self.observations, None, None, None, self.watertight_report.clone()))
     }
 
     /// 🌍️ DSM/DTM rasters derived from the fused dense point cloud, when `EngineParams::geo_enabled`.
     /// `None` when geo products weren't requested, or there's no (or an empty) dense cloud yet.
-    pub fn take_geo_products(&mut self) -> Option<GeoProducts> {
+    pub async fn take_geo_products(&mut self) -> Option<GeoProducts> {
         if !self.params.geo_enabled {
             return None;
         }
@@ -984,7 +984,7 @@ mod tests {
     // #region 🔖️TestFixtures
     /// 🎨️ Flat mid-gray `w x h` frame with zero gradient energy — a stand-in for a heavily blurred/
     /// defocused capture, deliberately below any sensible relative-sharpness threshold.
-    fn flat_frame(w: u32, h: u32) -> remodel_image::ImageRgba8 {
+    async fn flat_frame(w: u32, h: u32) -> remodel_image::ImageRgba8 {
         let mut img = remodel_image::ImageRgba8::new(w, h);
         for px in img.data.chunks_mut(4) {
             px[0] = 128;
@@ -997,7 +997,7 @@ mod tests {
 
     /// 🏁️ High-contrast `cell`-pixel checkerboard — strong Scharr gradient energy everywhere, a stand-in
     /// for a crisp, well-focused frame.
-    fn checker_frame(w: u32, h: u32, cell: u32) -> remodel_image::ImageRgba8 {
+    async fn checker_frame(w: u32, h: u32, cell: u32) -> remodel_image::ImageRgba8 {
         let mut img = remodel_image::ImageRgba8::new(w, h);
         for y in 0..h {
             for x in 0..w {
@@ -1016,7 +1016,7 @@ mod tests {
 
     // #region 🔖️InputTests
     #[test]
-    fn push_frame_blur_gate_rejects_planted_blurred_frame() {
+    async fn push_frame_blur_gate_rejects_planted_blurred_frame() {
         let mut source = FrameSource::new(IngestParams::default());
         let mut outcomes = Vec::new();
         for i in 0..10u32 {
@@ -1033,7 +1033,7 @@ mod tests {
     }
 
     #[test]
-    fn push_frame_stride_and_max_frames_sample() {
+    async fn push_frame_stride_and_max_frames_sample() {
         let mut source = FrameSource::new(IngestParams { stride: 2, max_frames: 3, min_sharpness: 0.0, rolling_window: 15 });
         let mut accepted = 0;
         for i in 0..10u32 {
@@ -1046,7 +1046,7 @@ mod tests {
     }
 
     #[test]
-    fn push_video_blur_gate_reports_counts() {
+    async fn push_video_blur_gate_reports_counts() {
         let frames: Vec<Vec<u8>> = (0..9u32)
             .map(|i| {
                 let img = if i == 4 { flat_frame(24, 24) } else { checker_frame(24, 24, 3) };
@@ -1066,22 +1066,22 @@ mod tests {
     // #endregion 🔖️InputTests
 
     // #region 🔖️SyntheticScene
-    fn add3(a: [f64; 3], b: [f64; 3]) -> [f64; 3] {
+    async fn add3(a: [f64; 3], b: [f64; 3]) -> [f64; 3] {
         [a[0] + b[0], a[1] + b[1], a[2] + b[2]]
     }
-    fn sub3(a: [f64; 3], b: [f64; 3]) -> [f64; 3] {
+    async fn sub3(a: [f64; 3], b: [f64; 3]) -> [f64; 3] {
         [a[0] - b[0], a[1] - b[1], a[2] - b[2]]
     }
-    fn scale3(a: [f64; 3], s: f64) -> [f64; 3] {
+    async fn scale3(a: [f64; 3], s: f64) -> [f64; 3] {
         [a[0] * s, a[1] * s, a[2] * s]
     }
-    fn cross3(a: [f64; 3], b: [f64; 3]) -> [f64; 3] {
+    async fn cross3(a: [f64; 3], b: [f64; 3]) -> [f64; 3] {
         [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]]
     }
-    fn norm3(a: [f64; 3]) -> f64 {
+    async fn norm3(a: [f64; 3]) -> f64 {
         (a[0] * a[0] + a[1] * a[1] + a[2] * a[2]).sqrt()
     }
-    fn normalize3(a: [f64; 3]) -> [f64; 3] {
+    async fn normalize3(a: [f64; 3]) -> [f64; 3] {
         let n = norm3(a);
         if n < 1e-15 {
             [0.0, 0.0, 0.0]
@@ -1092,7 +1092,7 @@ mod tests {
 
     /// 🎥️ Look-at camera pose (world→camera), mirroring `remodel_mesh`'s own test helper of the same
     /// shape: right-handed, `y`-up unless looking near-vertically.
-    fn look_at_pose(eye: [f64; 3], target: [f64; 3]) -> remodel_camera::CameraPose {
+    async fn look_at_pose(eye: [f64; 3], target: [f64; 3]) -> remodel_camera::CameraPose {
         let forward = normalize3(sub3(target, eye));
         let world_up = if forward[1].abs() > 0.95 { [1.0, 0.0, 0.0] } else { [0.0, 1.0, 0.0] };
         let right = normalize3(cross3(forward, world_up));
@@ -1104,7 +1104,7 @@ mod tests {
 
     /// 📦️ Ray/axis-aligned-box slab intersection: nearest `t >= 0` hit point plus which axis (0=x, 1=y,
     /// 2=z) the hit face is perpendicular to, or `None` for a miss.
-    fn ray_box_intersect(origin: [f64; 3], dir: [f64; 3], half: f64) -> Option<([f64; 3], usize)> {
+    async fn ray_box_intersect(origin: [f64; 3], dir: [f64; 3], half: f64) -> Option<([f64; 3], usize)> {
         let mut tmin = f64::NEG_INFINITY;
         let mut tmax = f64::INFINITY;
         let mut hit_axis = 0usize;
@@ -1153,7 +1153,7 @@ mod tests {
 
     /// 🎲️ `count` random markers per cube face (6 faces, axis 0/1/2 × sign), from a fixed seed so every
     /// render call across every synthesized frame sees the identical marker layout.
-    fn generate_face_markers(seed: u64, count: usize, half: f64) -> [Vec<FaceMarker>; 6] {
+    async fn generate_face_markers(seed: u64, count: usize, half: f64) -> [Vec<FaceMarker>; 6] {
         let mut rng = geometry::random::Rng::from_seed(seed);
         std::array::from_fn(|_face| {
             (0..count)
@@ -1169,13 +1169,13 @@ mod tests {
 
     const FACE_BASE_COLORS: [[u8; 3]; 6] = [[150, 60, 60], [60, 60, 150], [60, 150, 60], [150, 150, 60], [150, 60, 150], [60, 150, 150]];
 
-    fn face_index(axis: usize, positive: bool) -> usize {
+    async fn face_index(axis: usize, positive: bool) -> usize {
         axis * 2 + usize::from(!positive)
     }
 
     /// 🎨️ A flat per-face base color, with any nearby [`FaceMarker`] drawn on top — isolated, high-contrast,
     /// locally-unique corner-rich features at fixed world positions.
-    fn cube_face_color(p: [f64; 3], axis: usize, markers: &[Vec<FaceMarker>; 6]) -> [u8; 3] {
+    async fn cube_face_color(p: [f64; 3], axis: usize, markers: &[Vec<FaceMarker>; 6]) -> [u8; 3] {
         let positive = p[axis] > 0.0;
         let (u, v) = match axis {
             0 => (p[1], p[2]),
@@ -1194,7 +1194,7 @@ mod tests {
     /// 🖼️ Renders one view of a `half`-extent axis-aligned textured cube (analytic ray/box intersection,
     /// no rasterizer needed) from `pose`/`intr` — the local minimal synthetic multi-view scene backing
     /// both the chunking-invariance test and the `mod long` end-to-end contract test.
-    fn render_cube_frame(width: u32, height: u32, intr: &remodel_camera::Intrinsics, pose: &remodel_camera::CameraPose, half: f64, markers: &[Vec<FaceMarker>; 6]) -> remodel_image::ImageRgba8 {
+    async fn render_cube_frame(width: u32, height: u32, intr: &remodel_camera::Intrinsics, pose: &remodel_camera::CameraPose, half: f64, markers: &[Vec<FaceMarker>; 6]) -> remodel_image::ImageRgba8 {
         let mut img = remodel_image::ImageRgba8::new(width, height);
         let to_world = pose.0.inverse();
         let origin_world = to_world.act([0.0, 0.0, 0.0]);
@@ -1225,7 +1225,7 @@ mod tests {
     /// against a `0.85` rendering camera produced a reconstruction ~3x too large).
     const CUBE_CAMERA_FOCAL_RATIO: f64 = 0.85;
 
-    fn orbiting_cube_frames(n: usize, size: u32, half: f64, radius: f64) -> (Vec<remodel_image::ImageRgba8>, [f64; 3], [f64; 3], Vec<[f64; 3]>) {
+    async fn orbiting_cube_frames(n: usize, size: u32, half: f64, radius: f64) -> (Vec<remodel_image::ImageRgba8>, [f64; 3], [f64; 3], Vec<[f64; 3]>) {
         let f = CUBE_CAMERA_FOCAL_RATIO * f64::from(size);
         let intr = remodel_camera::Intrinsics { fx: f, fy: f, cx: f64::from(size) / 2.0, cy: f64::from(size) / 2.0, skew: 0.0, distortion: remodel_camera::Distortion::None };
         let markers = generate_face_markers(0x5EED_CAFE, 14, half);
@@ -1243,7 +1243,7 @@ mod tests {
     // #endregion 🔖️SyntheticScene
 
     // #region 🔖️ChunkingInvariance
-    fn tiny_engine_params(half: f64, radius: f64) -> EngineParams {
+    async fn tiny_engine_params(half: f64, radius: f64) -> EngineParams {
         let mut params = EngineParams::default();
         params.ingest.min_sharpness = 0.0;
         params.assumed_focal_ratio = CUBE_CAMERA_FOCAL_RATIO;
@@ -1266,7 +1266,7 @@ mod tests {
         params
     }
 
-    fn run_to_done(engine: &mut ReconstructionEngine, budget: usize) -> semio_framework::MeshData {
+    async fn run_to_done(engine: &mut ReconstructionEngine, budget: usize) -> semio_framework::MeshData {
         loop {
             match engine.advance(budget) {
                 EngineStatus::Working { .. } => {}
@@ -1278,7 +1278,7 @@ mod tests {
     }
 
     #[test]
-    fn chunking_does_not_change_the_final_mesh() {
+    async fn chunking_does_not_change_the_final_mesh() {
         // 🎯️ This test's contract is narrower than `mod long`'s: it proves `advance`'s step-budget
         // chunking never changes the *outcome* (same triangle/vertex counts, same positions, byte-for-
         // byte), not that `remodel_sfm` reconstructs this particular fixture well. Registration uses
@@ -1312,7 +1312,7 @@ mod tests {
 
     // #region 🔖️ParamsAndPreviewTests
     #[test]
-    fn orbit_sfm_registers_enough_cameras_for_gauge() {
+    async fn orbit_sfm_registers_enough_cameras_for_gauge() {
         const N_FRAMES: usize = 16;
         const SIZE: u32 = 96;
         const HALF: f64 = 1.0;
@@ -1341,7 +1341,7 @@ mod tests {
     }
 
     #[test]
-    fn orbit_sfm_survives_jpeg_video_ingest() {
+    async fn orbit_sfm_survives_jpeg_video_ingest() {
         const N_FRAMES: usize = 16;
         const SIZE: u32 = 128;
         const HALF: f64 = 1.0;
@@ -1376,7 +1376,7 @@ mod tests {
     }
 
     #[test]
-    fn sparse_preview_is_empty_before_any_advance() {
+    async fn sparse_preview_is_empty_before_any_advance() {
         let engine = ReconstructionEngine::new(&EngineParams::default());
         let preview = engine.sparse_preview();
         assert!(preview.camera_poses.is_empty());
@@ -1384,7 +1384,7 @@ mod tests {
     }
 
     #[test]
-    fn advance_fails_with_fewer_than_two_frames() {
+    async fn advance_fails_with_fewer_than_two_frames() {
         let mut engine = ReconstructionEngine::new(&EngineParams::default());
         engine.push_frame(0, checker_frame(16, 16, 4), 0.0);
         match engine.advance(10) {
@@ -1410,7 +1410,7 @@ mod tests {
         /// before `Unwrap`/texturing legitimately duplicates vertices at UV chart seams, reports
         /// `is_watertight == true`.
         #[test]
-        fn video_in_yields_watertight_mesh_out() {
+        async fn video_in_yields_watertight_mesh_out() {
             const N_FRAMES: usize = 24;
             const SIZE: u32 = 128;
             const HALF: f64 = 1.0;

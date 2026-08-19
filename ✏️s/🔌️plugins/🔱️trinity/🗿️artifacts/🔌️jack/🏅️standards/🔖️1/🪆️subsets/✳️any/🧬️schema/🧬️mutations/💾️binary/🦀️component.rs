@@ -36,7 +36,7 @@ struct EntityRefDsl {
 }
 
 impl From<&EntityRef> for EntityRefDsl {
-    fn from(value: &EntityRef) -> Self {
+    async fn from(value: &EntityRef) -> Self {
         match value {
             EntityRef::Node(id) => EntityRefDsl { kind: EntityKindDsl::Node, id: id.clone() },
             EntityRef::Edge(id) => EntityRefDsl { kind: EntityKindDsl::Edge, id: id.clone() },
@@ -45,7 +45,7 @@ impl From<&EntityRef> for EntityRefDsl {
 }
 
 impl From<EntityRefDsl> for EntityRef {
-    fn from(value: EntityRefDsl) -> Self {
+    async fn from(value: EntityRefDsl) -> Self {
         match value.kind {
             EntityKindDsl::Node => EntityRef::Node(value.id),
             EntityKindDsl::Edge => EntityRef::Edge(value.id),
@@ -106,7 +106,7 @@ enum TrinityGraphOperationDsl {
 //#region 🔖️HandcraftedOpCodecs
 /// ⚡️ P6 handcrafted OpText/OpBinary (derive no longer emits these traits).
 impl OpText for TrinityGraphOperationDsl {
-    fn parse_op(line: &str) -> Result<Self, TextError> {
+    async fn parse_op(line: &str) -> Result<Self, TextError> {
         let variants = <Self as dsl::DslVariants>::variants();
         for (keyword, spec_fn) in &variants {
             let probe = format!("{} ", keyword);
@@ -121,7 +121,7 @@ impl OpText for TrinityGraphOperationDsl {
         }
         Err(dsl::__rt::field_error(format!("unknown mutation line '{line}'")))
     }
-    fn print_op(&self) -> String {
+    async fn print_op(&self) -> String {
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
         let variants = <Self as dsl::DslVariants>::variants();
         let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
@@ -130,10 +130,10 @@ impl OpText for TrinityGraphOperationDsl {
 }
 
 impl OpBinary for TrinityGraphOperationDsl {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         dsl::variants_binary::encode_op(self)
     }
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         dsl::variants_binary::decode_op(bytes)
     }
 }
@@ -142,7 +142,7 @@ impl OpBinary for TrinityGraphOperationDsl {
 
 
 
-fn trinity_graph_operation_to_dsl(operation: &TrinityGraphMutation) -> TrinityGraphOperationDsl {
+async fn trinity_graph_operation_to_dsl(operation: &TrinityGraphMutation) -> TrinityGraphOperationDsl {
     match operation {
         TrinityGraphMutation::CreateNode(payload) => {
             let node = &payload.node;
@@ -161,7 +161,7 @@ fn trinity_graph_operation_to_dsl(operation: &TrinityGraphMutation) -> TrinityGr
     }
 }
 
-fn trinity_graph_operation_from_dsl(operation: TrinityGraphOperationDsl) -> TrinityGraphMutation {
+async fn trinity_graph_operation_from_dsl(operation: TrinityGraphOperationDsl) -> TrinityGraphMutation {
     match operation {
         TrinityGraphOperationDsl::CreateNode { id, kind, name, x, y, width, height, ports } => {
             create_node(Node { id, kind, name, x, y, width, height, properties: crate::artifacts::jack::PropertyBag::new(), ports: ports.into_iter().map(port_dsl_to_port).collect() })
@@ -181,11 +181,11 @@ fn trinity_graph_operation_from_dsl(operation: TrinityGraphOperationDsl) -> Trin
 /// ⚡️ One-line textual notation for [`TrinityGraphMutation`] (`protocol::OpText`), delegating to the
 /// derive-generated `TrinityGraphOperationDsl` mirror.
 impl OpText for TrinityGraphMutation {
-    fn parse_op(line: &str) -> Result<Self, TextError> {
+    async fn parse_op(line: &str) -> Result<Self, TextError> {
         <TrinityGraphOperationDsl as OpText>::parse_op(line).map(trinity_graph_operation_from_dsl)
     }
 
-    fn print_op(&self) -> String {
+    async fn print_op(&self) -> String {
         <TrinityGraphOperationDsl as OpText>::print_op(&trinity_graph_operation_to_dsl(self))
     }
 }
@@ -193,23 +193,23 @@ impl OpText for TrinityGraphMutation {
 /// ⚡️ Binary mirror of the `OpText` impl above — `TrinityGraphOperationDsl` already derives
 /// `OpBinary` via `#[derive(dsl::DslEnum)]`, so this is a pure to/from-dsl forward.
 impl OpBinary for TrinityGraphMutation {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         trinity_graph_operation_to_dsl(self).encode_op()
     }
 
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         TrinityGraphOperationDsl::decode_op(bytes).map(trinity_graph_operation_from_dsl)
     }
 }
 //#endregion 🔖️OpText
 
 /// 📦️ Encodes a Trinity graph `Mutation` to its binary command form.
-pub fn encode_op(operation: &TrinityGraphMutation) -> Result<Vec<u8>, protocol::ProtocolError> {
+pub async fn encode_op(operation: &TrinityGraphMutation) -> Result<Vec<u8>, protocol::ProtocolError> {
     operation.encode_op()
 }
 
 /// 📖️ Decodes a Trinity graph `Mutation` from its binary command form.
-pub fn decode_op(bytes: &[u8]) -> Result<TrinityGraphMutation, protocol::ProtocolError> {
+pub async fn decode_op(bytes: &[u8]) -> Result<TrinityGraphMutation, protocol::ProtocolError> {
     TrinityGraphMutation::decode_op(bytes)
 }
 
@@ -220,7 +220,7 @@ mod tests {
     use crate::artifacts::jack::TRINITY_GRAPH_SCHEMA;
 
     #[test]
-    fn rename_op_binary_round_trips_and_agrees_with_text() {
+    async fn rename_op_binary_round_trips_and_agrees_with_text() {
         let operation = rename_node("node-1".into(), "Renamed".into());
         ::store::os_store::test_support::assert_op_text_binary_equivalence(&operation);
         let bytes = encode_op(&operation).expect("encode");
@@ -228,7 +228,7 @@ mod tests {
     }
 
     #[test]
-    fn nakagin_document_text_round_trips_store_with_applied_operation() {
+    async fn nakagin_document_text_round_trips_store_with_applied_operation() {
         let envelope = create_document_envelope_for_test();
         let mut doc_store = store::ArtifactStore::new(envelope).expect("valid artifact store fixture");
         doc_store.dispatch(store::ArtifactCommand::Apply { mutations: vec![rename_node("node-1".into(), "Renamed".into())], description: None }).ok();
@@ -236,18 +236,18 @@ mod tests {
         ::store::os_store::test_support::assert_document_pack_round_trip(&doc_store);
     }
 
-    fn create_document_envelope_for_test() -> store::ArtifactEnvelope<JackSnapshot, TrinityGraphMutation> {
+    async fn create_document_envelope_for_test() -> store::ArtifactEnvelope<JackSnapshot, TrinityGraphMutation> {
         create_document_envelope::<JackSnapshot, TrinityGraphMutation>(TRINITY_GRAPH_SCHEMA, "doc-text-test", crate::artifacts::jack::schema::empty_jack_document(), None)
     }
     use store::create_document_envelope;
 
     #[test]
-    fn rename_op_text_round_trips() {
+    async fn rename_op_text_round_trips() {
         ::store::os_store::test_support::assert_op_line_round_trip(&rename_node("node-1".into(), "Renamed".into()));
     }
 
     #[test]
-    fn op_text_round_trip_create_node() {
+    async fn op_text_round_trip_create_node() {
         ::store::os_store::test_support::assert_op_line_round_trip(&create_node(Node {
             id: "new".into(),
             kind: "Piece".into(),
@@ -262,12 +262,12 @@ mod tests {
     }
 
     #[test]
-    fn op_text_round_trip_delete_node() {
+    async fn op_text_round_trip_delete_node() {
         ::store::os_store::test_support::assert_op_line_round_trip(&delete_node("root".into()));
     }
 
     #[test]
-    fn op_text_round_trip_create_edge() {
+    async fn op_text_round_trip_create_edge() {
         let mut properties = crate::artifacts::jack::PropertyBag::new();
         properties.insert("u".into(), PropertyValue::Number(1.2));
         let mut nested = std::collections::BTreeMap::new();
@@ -283,38 +283,38 @@ mod tests {
     }
 
     #[test]
-    fn op_text_round_trip_delete_edge() {
+    async fn op_text_round_trip_delete_edge() {
         ::store::os_store::test_support::assert_op_line_round_trip(&delete_edge("e1".into()));
     }
 
     #[test]
-    fn op_text_round_trip_rename_node() {
+    async fn op_text_round_trip_rename_node() {
         ::store::os_store::test_support::assert_op_line_round_trip(&rename_node("root".into(), "renamed \"piece\"".into()));
     }
 
     #[test]
-    fn op_text_round_trip_move_node() {
+    async fn op_text_round_trip_move_node() {
         ::store::os_store::test_support::assert_op_line_round_trip(&move_node("root".into(), 10.0, -20.5));
     }
 
     #[test]
-    fn op_text_round_trip_change_data_property() {
+    async fn op_text_round_trip_change_data_property() {
         ::store::os_store::test_support::assert_op_line_round_trip(&change_data_property(EntityRef::Node("root".into()), "label".into(), PropertyValue::String("hi 'there'".into())));
     }
 
     #[test]
-    fn op_text_round_trip_remove_data_property() {
+    async fn op_text_round_trip_remove_data_property() {
         ::store::os_store::test_support::assert_op_line_round_trip(&remove_data_property(EntityRef::Edge("e1".into()), "u".into()));
     }
 
     #[test]
-    fn parse_op_rejects_unknown_keyword() {
+    async fn parse_op_rejects_unknown_keyword() {
         let err = TrinityGraphMutation::parse_op("bogusOp x").expect_err("unknown op");
         assert!(err.message.contains("unknown mutation line"));
     }
 
     #[test]
-    fn command_envelope_round_trip_holds_for_an_applied_operation() {
+    async fn command_envelope_round_trip_holds_for_an_applied_operation() {
         use protocol::{ArtifactId, Edit, SchemaId};
         use crate::artifacts::jack::schema::mutations::text::TrinityGraphStore;
 

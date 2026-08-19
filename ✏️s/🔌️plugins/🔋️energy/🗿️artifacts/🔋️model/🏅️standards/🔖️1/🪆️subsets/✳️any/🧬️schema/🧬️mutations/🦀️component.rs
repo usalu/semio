@@ -49,17 +49,17 @@ mod tests {
     /// collapse to the SAME default model for every payload, making round-trip/absorb assertions
     /// meaningless. `Model` derives `Default`, so every field is always present in its own
     /// `serde_json` output.
-    fn demo_model_json(name: &str) -> String {
+    async fn demo_model_json(name: &str) -> String {
         serde_json::to_string(&crate::model::Model { name: name.into(), ..crate::model::Model::default() }).expect("Model serializes")
     }
 
-    fn every_mutation() -> Vec<EnergyModelMutation> {
+    async fn every_mutation() -> Vec<EnergyModelMutation> {
         vec![EnergyModelMutation::ReplaceModel(replace_model::mutation::ReplaceModel {
             new_model_json: demo_model_json("demo"),
         })]
     }
 
-    fn round_trip(base: &EnergyModelSnapshot, mutation: &EnergyModelMutation) -> EnergyModelSnapshot {
+    async fn round_trip(base: &EnergyModelSnapshot, mutation: &EnergyModelMutation) -> EnergyModelSnapshot {
         let forward = mutation.diff(base).diff().apply(base).expect("valid mutation diff");
         let mut restored = forward.clone();
         for back in mutation.inverse(base) {
@@ -70,7 +70,7 @@ mod tests {
     }
 
     #[test]
-    fn every_variant_registers_an_approved_semantic_descriptor() {
+    async fn every_variant_registers_an_approved_semantic_descriptor() {
         for mutation in every_mutation() {
             let descriptor = protocol::SemanticMutation::semantics(&mutation);
             assert!(protocol::is_approved_verb(descriptor.verb), "unapproved verb {:?} on {mutation:?}", descriptor.verb);
@@ -79,7 +79,7 @@ mod tests {
     }
 
     #[test]
-    fn every_variant_round_trips_via_inverse() {
+    async fn every_variant_round_trips_via_inverse() {
         let base = EnergyModelSnapshot::default();
         for mutation in every_mutation() {
             round_trip(&base, &mutation);
@@ -88,7 +88,7 @@ mod tests {
 
     //#region 🧪️MutationLaws
     #[test]
-    fn replace_model_satisfies_the_inverse_and_absorb_laws() {
+    async fn replace_model_satisfies_the_inverse_and_absorb_laws() {
         let base = EnergyModelSnapshot::default();
         let mutation = EnergyModelMutation::ReplaceModel(replace_model::mutation::ReplaceModel { new_model_json: demo_model_json("a") });
         protocol::os_spr::testkit::assert_mutation_inverse_law(&base, &mutation);

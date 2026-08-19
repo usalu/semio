@@ -52,7 +52,7 @@ pub struct Meter {
 }
 
 impl Meter {
-    pub fn accumulate(&mut self, power_w: f64, dt_s: f64, hour: f64) {
+    pub async fn accumulate(&mut self, power_w: f64, dt_s: f64, hour: f64) {
         self.energy_j += power_w * dt_s;
         if power_w > self.peak_demand_w {
             self.peak_demand_w = power_w;
@@ -60,7 +60,7 @@ impl Meter {
         }
     }
 
-    pub fn energy_kwh(&self) -> f64 {
+    pub async fn energy_kwh(&self) -> f64 {
         self.energy_j / 3_600_000.0
     }
 }
@@ -72,15 +72,15 @@ pub struct MeterTable {
 }
 
 impl MeterTable {
-    pub fn get_or_create(&mut self, name: &str, fuel: FuelType, end_use: EndUse) -> &mut Meter {
+    pub async fn get_or_create(&mut self, name: &str, fuel: FuelType, end_use: EndUse) -> &mut Meter {
         self.meters.entry(name.to_string()).or_insert_with(|| Meter { name: name.to_string(), fuel, end_use, energy_j: 0.0, peak_demand_w: 0.0, peak_demand_hour: 0.0 })
     }
 
-    pub fn facility_total_kwh(&self, fuel: FuelType) -> f64 {
+    pub async fn facility_total_kwh(&self, fuel: FuelType) -> f64 {
         self.meters.values().filter(|m| m.fuel == fuel).map(|m| m.energy_kwh()).sum()
     }
 
-    pub fn end_use_breakdown(&self) -> HashMap<EndUse, f64> {
+    pub async fn end_use_breakdown(&self) -> HashMap<EndUse, f64> {
         let mut map = HashMap::new();
         for m in self.meters.values() {
             *map.entry(m.end_use).or_insert(0.0) += m.energy_kwh();
@@ -95,14 +95,14 @@ mod tests {
     use super::*;
 
     #[test]
-    fn meter_accumulates_energy() {
+    async fn meter_accumulates_energy() {
         let mut m = Meter { name: "test".into(), fuel: FuelType::Electricity, end_use: EndUse::Heating, energy_j: 0.0, peak_demand_w: 0.0, peak_demand_hour: 0.0 };
         m.accumulate(1000.0, 3600.0, 1.0);
         assert!((m.energy_kwh() - 1.0).abs() < 1e-6);
     }
 
     #[test]
-    fn meter_tracks_peak_demand_hour() {
+    async fn meter_tracks_peak_demand_hour() {
         let mut m = Meter { name: "test".into(), fuel: FuelType::Electricity, end_use: EndUse::Cooling, energy_j: 0.0, peak_demand_w: 0.0, peak_demand_hour: 0.0 };
         m.accumulate(500.0, 3600.0, 1.0);
         m.accumulate(1500.0, 3600.0, 2.0);
@@ -112,7 +112,7 @@ mod tests {
     }
 
     #[test]
-    fn store_get_or_create_is_idempotent_and_totals_by_fuel() {
+    async fn store_get_or_create_is_idempotent_and_totals_by_fuel() {
         let mut store = MeterTable::default();
         store.get_or_create("Zone1 Heating", FuelType::Electricity, EndUse::Heating).accumulate(1000.0, 3600.0, 0.0);
         store.get_or_create("Zone1 Heating", FuelType::Electricity, EndUse::Heating).accumulate(1000.0, 3600.0, 1.0);
@@ -124,7 +124,7 @@ mod tests {
     }
 
     #[test]
-    fn end_use_breakdown_aggregates_by_category() {
+    async fn end_use_breakdown_aggregates_by_category() {
         let mut store = MeterTable::default();
         store.get_or_create("Zone1 Heating", FuelType::Electricity, EndUse::Heating).accumulate(1000.0, 3600.0, 0.0);
         store.get_or_create("Zone2 Heating", FuelType::Electricity, EndUse::Heating).accumulate(1000.0, 3600.0, 0.0);

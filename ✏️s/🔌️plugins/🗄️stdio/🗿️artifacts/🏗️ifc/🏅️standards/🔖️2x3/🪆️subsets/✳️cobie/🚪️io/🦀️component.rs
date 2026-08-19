@@ -20,12 +20,12 @@ pub mod derived_composition {
         type Snapshot = Ifc2x3Snapshot;
         const WRITES: Dialect = DIALECT_COBIE;
 
-        fn reads() -> &'static [Dialect] {
+        async fn reads() -> &'static [Dialect] {
             &[DIALECT_ANY, DIALECT_COBIE, DEP_TXT]
         }
 
-        fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
-            let inner = Ifc2x3AnyComposer::compose(sources)?;
+        async fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+            let inner = semio_framework_plugin::resolve_ready(Ifc2x3AnyComposer::compose(sources))?;
             let checks = check_cobie_conformance(&inner.snapshot);
             let (hard, soft): (Vec<Diagnostic>, Vec<Diagnostic>) = checks.into_iter().partition(|d| matches!(d.severity, Severity::Error | Severity::Fatal));
             if !hard.is_empty() {
@@ -46,7 +46,7 @@ pub mod derived_composition {
     impl SubsetValidator for Ifc2x3CobieValidator {
         const DIALECT: Dialect = DIALECT_COBIE;
 
-        fn validate(payload: &IoPayload) -> Vec<Diagnostic> {
+        async fn validate(payload: &IoPayload) -> Vec<Diagnostic> {
             let decoded = match payload {
                 IoPayload::Binary(bytes) => <Ifc2x3Snapshot as store::ArtifactPack>::decode_pack(bytes).ok(),
                 IoPayload::Text(text) => <Ifc2x3Snapshot as store::ArtifactDsl>::parse_dsl(text).ok(),
@@ -67,11 +67,11 @@ pub mod derived_composition {
 
     static VALIDATOR_ENTRY: OnceLock<SubsetValidatorEntry> = OnceLock::new();
 
-    fn validator_entry() -> &'static SubsetValidatorEntry {
+    async fn validator_entry() -> &'static SubsetValidatorEntry {
         VALIDATOR_ENTRY.get_or_init(subset_validator_entry_of::<Ifc2x3CobieValidator>)
     }
 
-    pub fn register() {
+    pub async fn register() {
         let _ = register_subset_validator(validator_entry());
     }
     //#endregion 🔖️SubsetValidator
@@ -85,7 +85,7 @@ pub mod derived_composition {
         use semio_framework_plugin::ArtifactBuilder as _;
 
         #[test]
-        fn conforming_builder_snapshot_composes_and_stamps_cobie() {
+        async fn conforming_builder_snapshot_composes_and_stamps_cobie() {
             let snapshot = Ifc2x3CobieBuilder::new().build().expect("clean COBie document must build");
             let bytes = <Ifc2x3Snapshot as store::ArtifactPack>::encode_pack(&snapshot);
             let sources = vec![ComposeSource { dialect: DIALECT_ANY, payload: AnalyzeSource::Binary(&bytes) }];
@@ -94,7 +94,7 @@ pub mod derived_composition {
         }
 
         #[test]
-        fn wrong_view_definition_fails_compose_with_real_diagnostic() {
+        async fn wrong_view_definition_fails_compose_with_real_diagnostic() {
             let mut snapshot = Ifc2x3CobieBuilder::new().build().expect("build");
             snapshot.document.header.file_description[0] = crate::artifacts::step::engine::part21::Part21Value::List(vec![crate::artifacts::step::engine::part21::Part21Value::Str("ViewDefinition [CoordinationView]".into())]);
             let bytes = <Ifc2x3Snapshot as store::ArtifactPack>::encode_pack(&snapshot);

@@ -1,18 +1,18 @@
 //! 🚪️ IO s.cad (1/✳️any) — registration now flows through 🎹️composer::register
 //! (called once from ⚙️engine::register), not per-leaf register().
-pub fn import_stdio_kinds() -> &'static [&'static str] {
+pub async fn import_stdio_kinds() -> &'static [&'static str] {
     &["stdio.dwg", "stdio.gltf", "stdio.ifc", "stdio.json", "stdio.obj", "stdio.png", "stdio.step", "stdio.stl"]
 }
-pub fn export_stdio_kinds() -> &'static [&'static str] {
+pub async fn export_stdio_kinds() -> &'static [&'static str] {
     &["stdio.dwg", "stdio.gltf", "stdio.ifc", "stdio.json", "stdio.obj", "stdio.png", "stdio.step", "stdio.stl"]
 }
-pub fn cad_to_wire(from: &crate::artifacts::cad::CadSnapshot) -> Vec<u8> {
+pub async fn cad_to_wire(from: &crate::artifacts::cad::CadSnapshot) -> Vec<u8> {
     store::ArtifactPack::encode_pack(from)
 }
-pub fn cad_from_wire(bytes: &[u8]) -> Result<crate::artifacts::cad::CadSnapshot, store::PackError> {
+pub async fn cad_from_wire(bytes: &[u8]) -> Result<crate::artifacts::cad::CadSnapshot, store::PackError> {
     <crate::artifacts::cad::CadSnapshot as store::ArtifactPack>::decode_pack(bytes)
 }
-pub fn pack_err_as_text(err: store::PackError) -> store::TextError {
+pub async fn pack_err_as_text(err: store::PackError) -> store::TextError {
     store::TextError::new(err.to_string(), dsl::TextSpan::at(1, 1))
 }
 //#region 🎹️DerivedComposition
@@ -37,11 +37,11 @@ pub mod derived_composition {
         type Snapshot = CadSnapshot;
         const WRITES: Dialect = DIALECT;
 
-        fn reads() -> &'static [Dialect] {
+        async fn reads() -> &'static [Dialect] {
             &[DIALECT, DEP_DWG, DEP_GLTF, DEP_IFC, DEP_JSON, DEP_OBJ, DEP_PNG, DEP_STEP, DEP_STL]
         }
 
-        fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+        async fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
             for source in sources {
                 if source.dialect == DIALECT {
                     let native = match &source.payload {
@@ -177,7 +177,7 @@ pub mod io_registry {
     const CAD_DIALECT: Dialect = Dialect { artifact_kind: "s.cad", standard: StandardId("1"), subset: SubsetId("*") };
     const CAD_JSON_BRIDGE_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.json", standard: StandardId("rfc8259"), subset: SubsetId("*") };
 
-    fn rebuild_native_snapshot(sources: &[ErasedComposeSource]) -> Result<crate::artifacts::cad::CadSnapshot, ComposeError> {
+    async fn rebuild_native_snapshot(sources: &[ErasedComposeSource]) -> Result<crate::artifacts::cad::CadSnapshot, ComposeError> {
         if let Some(source) = sources.iter().find(|s| s.dialect == CAD_DIALECT) {
             let builder = match &source.payload {
                 IoPayload::Text(t) => CadAnyBuilder::from_text(t).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?,
@@ -199,7 +199,7 @@ pub mod io_registry {
     }
 
     const EXPORT_IFC_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.ifc", standard: StandardId("4"), subset: SubsetId("*") };
-    fn compose_export_ifc(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
+    async fn compose_export_ifc(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
     Box::pin(async move {
         let snapshot = rebuild_native_snapshot(sources)?;
         let text = crate::artifacts::cad::standards::v1::subsets::any::io::export::serializers::artifacts::ifc::v4::any::serialize_text(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
@@ -207,7 +207,7 @@ pub mod io_registry {
     })
 }
     const EXPORT_STEP_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.step", standard: StandardId("ap214"), subset: SubsetId("*") };
-    fn compose_export_step(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
+    async fn compose_export_step(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
     Box::pin(async move {
         let snapshot = rebuild_native_snapshot(sources)?;
         let text = crate::artifacts::cad::standards::v1::subsets::any::io::export::serializers::artifacts::step::v_ap214::any::serialize_text(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
@@ -215,7 +215,7 @@ pub mod io_registry {
     })
 }
     const EXPORT_PNG_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.png", standard: StandardId("1.2"), subset: SubsetId("*") };
-    fn compose_export_png(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
+    async fn compose_export_png(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
     Box::pin(async move {
         let snapshot = rebuild_native_snapshot(sources)?;
         let text = crate::artifacts::cad::standards::v1::subsets::any::io::export::serializers::artifacts::png::v1_2::any::serialize_text(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
@@ -223,7 +223,7 @@ pub mod io_registry {
     })
 }
     const EXPORT_JSON_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.json", standard: StandardId("rfc8259"), subset: SubsetId("*") };
-    fn compose_export_json(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
+    async fn compose_export_json(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
     Box::pin(async move {
         let snapshot = rebuild_native_snapshot(sources)?;
         let text = crate::artifacts::cad::standards::v1::subsets::any::io::export::serializers::artifacts::json::v_rfc8259::any::serialize_text(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
@@ -231,7 +231,7 @@ pub mod io_registry {
     })
 }
     const EXPORT_DWG_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.dwg", standard: StandardId("ac1018"), subset: SubsetId("*") };
-    fn compose_export_dwg(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
+    async fn compose_export_dwg(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
     Box::pin(async move {
         let snapshot = rebuild_native_snapshot(sources)?;
         let text = crate::artifacts::cad::standards::v1::subsets::any::io::export::serializers::artifacts::dwg::v_ac1018::any::serialize_text(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
@@ -239,7 +239,7 @@ pub mod io_registry {
     })
 }
     const EXPORT_STL_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.stl", standard: StandardId("ascii"), subset: SubsetId("*") };
-    fn compose_export_stl(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
+    async fn compose_export_stl(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
     Box::pin(async move {
         let snapshot = rebuild_native_snapshot(sources)?;
         let text = crate::artifacts::cad::standards::v1::subsets::any::io::export::serializers::artifacts::stl::v_ascii::any::serialize_text(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
@@ -247,7 +247,7 @@ pub mod io_registry {
     })
 }
     const EXPORT_GLTF_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.gltf", standard: StandardId("2.0"), subset: SubsetId("*") };
-    fn compose_export_gltf(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
+    async fn compose_export_gltf(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
     Box::pin(async move {
         let snapshot = rebuild_native_snapshot(sources)?;
         let text = crate::artifacts::cad::standards::v1::subsets::any::io::export::serializers::artifacts::gltf::v2_0::any::serialize_text(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
@@ -255,7 +255,7 @@ pub mod io_registry {
     })
 }
     const EXPORT_OBJ_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.obj", standard: StandardId("3.0"), subset: SubsetId("*") };
-    fn compose_export_obj(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
+    async fn compose_export_obj(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
     Box::pin(async move {
         let snapshot = rebuild_native_snapshot(sources)?;
         let text = crate::artifacts::cad::standards::v1::subsets::any::io::export::serializers::artifacts::obj::v3_0::any::serialize_text(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
@@ -264,7 +264,7 @@ pub mod io_registry {
 }
     //#endregion 🔖️ExportEntries
 
-    pub fn entries() -> &'static [ComposerEntry] {
+    pub async fn entries() -> &'static [ComposerEntry] {
         ENTRIES
             .get_or_init(|| {
                 vec![
@@ -325,7 +325,7 @@ pub const CAD_SOLID_EXPORT_DIALECT_STEP: &str = "s.stdio.step";
 
 /// @emoji 🧾️ File extension for a `s.stdio.<format>` dialect id, as used in `export_solids_as`'s
 /// downloaded filename.
-fn cad_solid_export_extension(dialect_id: &str) -> Option<&'static str> {
+async fn cad_solid_export_extension(dialect_id: &str) -> Option<&'static str> {
     match dialect_id {
         CAD_SOLID_EXPORT_DIALECT_OBJ => Some("obj"),
         CAD_SOLID_EXPORT_DIALECT_STL => Some("stl"),
@@ -336,7 +336,7 @@ fn cad_solid_export_extension(dialect_id: &str) -> Option<&'static str> {
 
 /// @emoji 📎️ MIME type for a `s.stdio.<format>` dialect id, kept in parity with the retired
 /// enum's mime-type values for the three formats `export_solids_as` supports.
-fn cad_solid_export_mime_type(dialect_id: &str) -> Option<&'static str> {
+async fn cad_solid_export_mime_type(dialect_id: &str) -> Option<&'static str> {
     match dialect_id {
         CAD_SOLID_EXPORT_DIALECT_OBJ => Some("model/obj"),
         CAD_SOLID_EXPORT_DIALECT_STL => Some("model/stl"),
@@ -350,7 +350,7 @@ fn cad_solid_export_mime_type(dialect_id: &str) -> Option<&'static str> {
 /// left empty (the kernel's `MeshTransfer` carries neither). Solids that fail to tessellate or
 /// tessellate to zero triangles are skipped (never a fabricated triangle); `None` only when NOT A
 /// SINGLE solid produced real geometry.
-fn semio_mesh_snapshot_from_solids(kernel: &mut dyn BrepKernel, solids: &[GeometryHandle], deflection: f64) -> Option<SemioMeshSnapshot> {
+async fn semio_mesh_snapshot_from_solids(kernel: &mut dyn BrepKernel, solids: &[GeometryHandle], deflection: f64) -> Option<SemioMeshSnapshot> {
     let mut meshes = Vec::new();
     for (index, handle) in solids.iter().enumerate() {
         let Ok(transfer) = block_on(kernel.tessellate(handle, deflection)) else { continue };
@@ -381,7 +381,7 @@ fn semio_mesh_snapshot_from_solids(kernel: &mut dyn BrepKernel, solids: &[Geomet
 /// expected: "value" }`) rather than guessing. Quote-aware (a `,)` inside a real STEP string
 /// literal, e.g. a product name, is left untouched) — repairs ONLY this exact malformed shape so
 /// cad's `semio/brep` bridge can consume the kernel's real, otherwise-correct geometry today.
-fn repair_step_trailing_comma_before_close_paren(text: &str) -> String {
+async fn repair_step_trailing_comma_before_close_paren(text: &str) -> String {
     let chars: Vec<char> = text.chars().collect();
     let mut out = String::with_capacity(text.len());
     let mut in_string = false;
@@ -410,17 +410,17 @@ fn repair_step_trailing_comma_before_close_paren(text: &str) -> String {
     out
 }
 
-fn semio_brep_snapshot_from_step_text(text: &str) -> Option<SemioBrepSnapshot> {
+async fn semio_brep_snapshot_from_step_text(text: &str) -> Option<SemioBrepSnapshot> {
     let repaired = repair_step_trailing_comma_before_close_paren(text);
     let document = parse_part21(&repaired).ok()?;
     let step_snapshot = StepSnapshot::from_part21_document(document);
-    SemioBrepFromStep::deserialize(&step_snapshot).ok()
+    semio_framework_plugin::resolve_ready(SemioBrepFromStep::deserialize(&step_snapshot)).ok()
 }
 
 /// 🌉️ Inverse of `semio_brep_snapshot_from_step_text` — real `SemioBrepToStep` serialize +
 /// stdio's own Part-21 writer.
-fn step_text_from_semio_brep_snapshot(brep: &SemioBrepSnapshot) -> Option<String> {
-    let step_snapshot = SemioBrepToStep::serialize(brep).ok()?;
+async fn step_text_from_semio_brep_snapshot(brep: &SemioBrepSnapshot) -> Option<String> {
+    let step_snapshot = semio_framework_plugin::resolve_ready(SemioBrepToStep::serialize(brep)).ok()?;
     Some(write_part21(&step_snapshot.to_part21_document()))
 }
 
@@ -435,20 +435,20 @@ fn step_text_from_semio_brep_snapshot(brep: &SemioBrepSnapshot) -> Option<String
 /// which both validates the kernel's output against stdio's AP214 entity-graph walk and produces
 /// the export from the SAME codec stdio/semio uses everywhere else. STL is base64-wrapped since it
 /// is a binary format, OBJ/STEP stay UTF-8 text.
-pub fn export_solids_as(kernel: &mut dyn BrepKernel, solids: &[GeometryHandle], format: &str, stem: &str) -> Option<CadSolidExport> {
+pub async fn export_solids_as(kernel: &mut dyn BrepKernel, solids: &[GeometryHandle], format: &str, stem: &str) -> Option<CadSolidExport> {
     let extension = cad_solid_export_extension(format)?;
     let filename = format!("{stem}.{extension}");
     let mime_type = cad_solid_export_mime_type(format)?.to_string();
     match format {
         CAD_SOLID_EXPORT_DIALECT_OBJ => {
             let mesh_snapshot = semio_mesh_snapshot_from_solids(kernel, solids, 0.1)?;
-            let obj_snapshot = SemioMeshToObj::serialize(&mesh_snapshot).ok()?;
+            let obj_snapshot = semio_framework_plugin::resolve_ready(SemioMeshToObj::serialize(&mesh_snapshot)).ok()?;
             let text = encode_obj(&obj_snapshot);
             Some(CadSolidExport { filename, data: Value::String(text), mime_type, encoding: None })
         }
         CAD_SOLID_EXPORT_DIALECT_STL => {
             let mesh_snapshot = semio_mesh_snapshot_from_solids(kernel, solids, 0.1)?;
-            let stl_snapshot = SemioMeshToStl::serialize(&mesh_snapshot).ok()?;
+            let stl_snapshot = semio_framework_plugin::resolve_ready(SemioMeshToStl::serialize(&mesh_snapshot)).ok()?;
             let bytes = encode_stl_binary(&stl_snapshot);
             let encoded = base64::engine::general_purpose::STANDARD.encode(bytes);
             Some(CadSolidExport { filename, data: Value::String(encoded), mime_type, encoding: Some("base64".into()) })
@@ -470,7 +470,7 @@ pub fn export_solids_as(kernel: &mut dyn BrepKernel, solids: &[GeometryHandle], 
 // (rule 5), not artifact-engine compute.
 /// @emoji 📦️ Decodes a `requestFileOpen` payload (a `data:` URL when `readAs: "dataUrl"` was
 /// requested, otherwise a raw string) into bytes.
-pub fn cad_file_bytes_from_payload(payload: &Value) -> Option<Vec<u8>> {
+pub async fn cad_file_bytes_from_payload(payload: &Value) -> Option<Vec<u8>> {
     let raw = payload.as_str()?;
     if raw.starts_with("data:") {
         let (_, encoded) = raw.split_once(',')?;
@@ -481,7 +481,7 @@ pub fn cad_file_bytes_from_payload(payload: &Value) -> Option<Vec<u8>> {
 }
 
 /// @emoji 📦️ Decodes a `requestFileOpen` payload into UTF-8 text; see `cad_file_bytes_from_payload`.
-pub fn cad_file_text_from_payload(payload: &Value) -> Option<String> {
+pub async fn cad_file_text_from_payload(payload: &Value) -> Option<String> {
     String::from_utf8(cad_file_bytes_from_payload(payload)?).ok()
 }
 
@@ -491,7 +491,7 @@ pub fn cad_file_text_from_payload(payload: &Value) -> Option<String> {
 /// kernel session / gets bridged to a real `SemioBrepSnapshot` on export via `export_solids_as`,
 /// never re-duplicated here). Composing the returned element into a pane's `SemioModelSnapshot`
 /// child is the caller's job (a `create`/`change` mutation dispatched against that CHILD document).
-pub fn import_step_object(text: &str) -> Option<semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::model::schema::snapshot::SemioModelElement> {
+pub async fn import_step_object(text: &str) -> Option<semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::model::schema::snapshot::SemioModelElement> {
     let mut kernel = crate::artifacts::cad::standards::v1::subsets::any::schema::inferences::cad_brep_kernel();
     let handle = block_on(kernel.import_step(text)).ok()?.into_iter().next()?;
     Some(model_element_from_solid_handle(crate::artifacts::cad::standards::v1::subsets::any::schema::inferences::next_cad_id("object-step"), handle))
@@ -499,14 +499,14 @@ pub fn import_step_object(text: &str) -> Option<semio_s_plugin_stdio::artifacts:
 
 /// @emoji 🧊️ Imports an OBJ payload into the shared kernel as a new `SemioModelElement` — see
 /// `import_step_object`'s doc comment for the returned shape's rationale.
-pub fn import_obj_object(text: &str) -> Option<semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::model::schema::snapshot::SemioModelElement> {
+pub async fn import_obj_object(text: &str) -> Option<semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::model::schema::snapshot::SemioModelElement> {
     let mut kernel = crate::artifacts::cad::standards::v1::subsets::any::schema::inferences::cad_brep_kernel();
     let handle = block_on(kernel.import_obj(text, 0.01)).ok()?;
     Some(model_element_from_solid_handle(crate::artifacts::cad::standards::v1::subsets::any::schema::inferences::next_cad_id("object-obj"), handle))
 }
 
 /// @emoji 🧊️ Imports an STL payload into the shared kernel as a new `SemioModelElement`.
-pub fn import_stl_object(bytes: &[u8]) -> Option<semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::model::schema::snapshot::SemioModelElement> {
+pub async fn import_stl_object(bytes: &[u8]) -> Option<semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::model::schema::snapshot::SemioModelElement> {
     let mut kernel = crate::artifacts::cad::standards::v1::subsets::any::schema::inferences::cad_brep_kernel();
     let handle = block_on(kernel.import_stl(bytes, 0.01)).ok()?;
     Some(model_element_from_solid_handle(crate::artifacts::cad::standards::v1::subsets::any::schema::inferences::next_cad_id("object-stl"), handle))
@@ -515,7 +515,7 @@ pub fn import_stl_object(bytes: &[u8]) -> Option<semio_s_plugin_stdio::artifacts
 /// @emoji 🧊️ Imports a GLB payload by decoding it to a tessellated mesh (via the shared
 /// `MeshImporter` codec) and re-importing that mesh into the kernel as a solid, matching the
 /// DWG-derived import path since GLB carries no exact B-Rep to preserve.
-pub fn import_glb_object(bytes: &[u8]) -> Option<semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::model::schema::snapshot::SemioModelElement> {
+pub async fn import_glb_object(bytes: &[u8]) -> Option<semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::model::schema::snapshot::SemioModelElement> {
     let mesh = semio_framework_plugin::GlbImporter.import(bytes).ok()?;
     let mut kernel = crate::artifacts::cad::standards::v1::subsets::any::schema::inferences::cad_brep_kernel();
     let handle_id = mesh_to_obj_text_for_import(&mesh).and_then(|text| block_on(kernel.import_obj(&text, 0.01)).ok())?;
@@ -524,7 +524,7 @@ pub fn import_glb_object(bytes: &[u8]) -> Option<semio_s_plugin_stdio::artifacts
 
 /// 🌉️ Builds a `SemioModelElement` from a live kernel solid handle — id, identity placement, and a
 /// `GeometryRef::Brep{brep_id}` naming the handle. Shared by every native-geometry import path.
-fn model_element_from_solid_handle(id: String, handle: GeometryHandle) -> semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::model::schema::snapshot::SemioModelElement {
+async fn model_element_from_solid_handle(id: String, handle: GeometryHandle) -> semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::model::schema::snapshot::SemioModelElement {
     use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioTransform;
     use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::model::schema::snapshot::{ElementClass, GeometryRef, SemioModelElement};
     SemioModelElement { id, class: ElementClass::Other { name: "spatial.shape.imported".into() }, placement: SemioTransform::identity(), geometry: GeometryRef::Brep { brep_id: handle.0 }, spatial_id: None, psets: Vec::new() }
@@ -533,13 +533,13 @@ fn model_element_from_solid_handle(id: String, handle: GeometryHandle) -> semio_
 /// 🌉️ Same OBJ-text bridge `cad_object_from_mesh` used before this wave's rewrite (reused, not
 /// reimplemented) — factored out so `import_glb_object` can mint a kernel handle without going
 /// through the geometry-import module's now-`pub(crate)`-only `CadObject`.
-fn mesh_to_obj_text_for_import(mesh: &semio_framework_plugin::MeshData) -> Option<String> {
+async fn mesh_to_obj_text_for_import(mesh: &semio_framework_plugin::MeshData) -> Option<String> {
     let snapshot = semio_mesh_snapshot_from_solids_placeholder(mesh)?;
-    let obj_snapshot = SemioMeshToObj::serialize(&snapshot).ok()?;
+    let obj_snapshot = semio_framework_plugin::resolve_ready(SemioMeshToObj::serialize(&snapshot)).ok()?;
     Some(encode_obj(&obj_snapshot))
 }
 
-fn semio_mesh_snapshot_from_solids_placeholder(mesh: &semio_framework_plugin::MeshData) -> Option<SemioMeshSnapshot> {
+async fn semio_mesh_snapshot_from_solids_placeholder(mesh: &semio_framework_plugin::MeshData) -> Option<SemioMeshSnapshot> {
     if mesh.indices.is_empty() || mesh.indices.len() % 3 != 0 || mesh.positions.is_empty() {
         return None;
     }
@@ -558,7 +558,7 @@ fn semio_mesh_snapshot_from_solids_placeholder(mesh: &semio_framework_plugin::Me
 /// @emoji 🗂️ Routes a `requestFileOpen` payload to the matching native-geometry import by the
 /// picked file's extension; returns `None` for anything else so the caller can fall back to the
 /// spatial-JSON document path.
-pub fn import_cad_object_by_extension(name: &str, payload: &Value) -> Option<semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::model::schema::snapshot::SemioModelElement> {
+pub async fn import_cad_object_by_extension(name: &str, payload: &Value) -> Option<semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::model::schema::snapshot::SemioModelElement> {
     if name.ends_with(".stp") || name.ends_with(".step") {
         return import_step_object(&cad_file_text_from_payload(payload)?);
     }
@@ -581,7 +581,7 @@ pub fn import_cad_object_by_extension(name: &str, payload: &Value) -> Option<sem
 // (`crate::artifacts::cad::io::{cad_document_from_dwg, cad_document_from_mesh,
 // cad_mesh_from_document}`) because two OTHER plugins import them at the artifact-level (not
 // through an app-internal engine): 🎪️demonstrator/🎪️panes/📐️koordinator and 💠️lowpoly's schema.
-pub fn unwrap_spatial_load_payload(raw: &Value) -> Option<Value> {
+pub async fn unwrap_spatial_load_payload(raw: &Value) -> Option<Value> {
     if raw.get("modelSpace").is_some() {
         return raw.get("modelSpace").cloned();
     }
@@ -604,7 +604,7 @@ pub fn unwrap_spatial_load_payload(raw: &Value) -> Option<Value> {
 /// and composed as that pane's `CadModelChild` (`crate::artifacts::cad::cad_model_child_handle`) —
 /// panes with no objects, or an id this document doesn't recognize, are left `None` rather than
 /// fabricating an empty child. Ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` wave 3.
-pub fn scene_from_spatial_payload(payload: &Value) -> Option<crate::artifacts::cad::CadSnapshot> {
+pub async fn scene_from_spatial_payload(payload: &Value) -> Option<crate::artifacts::cad::CadSnapshot> {
     use crate::artifacts::cad::standards::v1::subsets::any::io::geometry_import::{objects_from_fixture_model, parse_geometry, semio_model_snapshot_from_objects};
     use crate::artifacts::cad::standards::v1::subsets::any::schema::inferences::{cad_brep_kernel, default_document, CAD_MODEL_DEFINITION_SHAPE};
     use crate::artifacts::cad::{cad_model_child_handle, cad_pane_from_model_definition_id, CadPaneId};
@@ -653,7 +653,7 @@ pub fn scene_from_spatial_payload(payload: &Value) -> Option<crate::artifacts::c
     Some(document)
 }
 
-pub fn cad_mesh_from_document(doc: &Value) -> Result<semio_framework_plugin::MeshData, String> {
+pub async fn cad_mesh_from_document(doc: &Value) -> Result<semio_framework_plugin::MeshData, String> {
     let scene: crate::artifacts::cad::CadSnapshot = serde_json::from_value(doc.clone()).map_err(|err| err.to_string())?;
     Ok(crate::artifacts::cad::standards::v1::subsets::any::schema::inferences::export_mesh_from_scene(&scene))
 }
@@ -664,7 +664,7 @@ pub fn cad_mesh_from_document(doc: &Value) -> Result<semio_framework_plugin::Mes
 /// — the identical OBJ-text bridge every other native-geometry import path in this file already
 /// uses. A layer with no entities (or none that triangulate) contributes no object — never a
 /// fabricated placeholder.
-pub fn cad_working_scene_from_dwg(drawing: &semio_s_plugin_stdio::artifacts::dwg::DwgDrawing) -> crate::artifacts::cad::CadWorkingScene {
+pub async fn cad_working_scene_from_dwg(drawing: &semio_s_plugin_stdio::artifacts::dwg::DwgDrawing) -> crate::artifacts::cad::CadWorkingScene {
     use crate::artifacts::cad::standards::v1::subsets::any::io::geometry_import::cad_object_from_mesh;
     use crate::artifacts::cad::standards::v1::subsets::any::schema::inferences::{cad_brep_kernel, next_cad_id};
     let mut kernel = cad_brep_kernel();
@@ -696,7 +696,7 @@ pub fn cad_working_scene_from_dwg(drawing: &semio_s_plugin_stdio::artifacts::dwg
 /// pure function CAN produce. An empty drawing (no layer contributes real geometry) mints no
 /// child, matching `scene_from_spatial_payload`'s "no fabricated child" rule. Ticket
 /// `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` wave 3.
-pub fn cad_document_from_dwg(drawing: &semio_s_plugin_stdio::artifacts::dwg::DwgDrawing) -> Result<Value, String> {
+pub async fn cad_document_from_dwg(drawing: &semio_s_plugin_stdio::artifacts::dwg::DwgDrawing) -> Result<Value, String> {
     use crate::artifacts::cad::standards::v1::subsets::any::io::geometry_import::semio_model_snapshot_from_objects;
     use crate::artifacts::cad::standards::v1::subsets::any::schema::inferences::default_document;
     use crate::artifacts::cad::{cad_model_child_handle, CadPaneId};
@@ -712,7 +712,7 @@ pub fn cad_document_from_dwg(drawing: &semio_s_plugin_stdio::artifacts::dwg::Dwg
 
 /// ⚠️ See `scene_from_spatial_payload`'s doc comment — same documented gap for a `MeshImporter`
 /// (GLB) payload.
-pub fn cad_document_from_mesh(_mesh: &semio_framework_plugin::MeshData) -> Result<Value, String> {
+pub async fn cad_document_from_mesh(_mesh: &semio_framework_plugin::MeshData) -> Result<Value, String> {
     use crate::artifacts::cad::standards::v1::subsets::any::schema::inferences::default_document;
     serde_json::to_value(default_document()).map_err(|err| err.to_string())
 }
@@ -726,7 +726,7 @@ mod tests {
 
     //#region 🔖️SemioMeshBridge
     #[test]
-    fn export_solids_as_obj_uses_real_stdio_mesh_codec_not_hand_rolled_bytes() {
+    async fn export_solids_as_obj_uses_real_stdio_mesh_codec_not_hand_rolled_bytes() {
         let mut kernel = Brep::new();
         let solid = block_on(kernel.box_prim(1.0, 1.0, 1.0)).expect("box");
         let export = export_solids_as(&mut kernel, std::slice::from_ref(&solid), CAD_SOLID_EXPORT_DIALECT_OBJ, "box").expect("obj export");
@@ -740,7 +740,7 @@ mod tests {
     }
 
     #[test]
-    fn export_solids_as_stl_uses_real_stdio_mesh_codec() {
+    async fn export_solids_as_stl_uses_real_stdio_mesh_codec() {
         let mut kernel = Brep::new();
         let solid = block_on(kernel.box_prim(1.0, 1.0, 1.0)).expect("box");
         let export = export_solids_as(&mut kernel, std::slice::from_ref(&solid), CAD_SOLID_EXPORT_DIALECT_STL, "box").expect("stl export");
@@ -754,7 +754,7 @@ mod tests {
     }
 
     #[test]
-    fn export_solids_as_obj_none_for_a_solid_that_fails_to_tessellate() {
+    async fn export_solids_as_obj_none_for_a_solid_that_fails_to_tessellate() {
         let mut kernel = Brep::new();
         let solid = block_on(kernel.box_prim(1.0, 1.0, 1.0)).expect("box");
         block_on(kernel.dispose(&solid));
@@ -764,7 +764,7 @@ mod tests {
 
     //#region 🔖️SemioBrepBridge
     #[test]
-    fn export_solids_as_step_round_trips_through_real_semio_brep_bridge() {
+    async fn export_solids_as_step_round_trips_through_real_semio_brep_bridge() {
         let mut kernel = Brep::new();
         let solid = block_on(kernel.box_prim(2.0, 3.0, 4.0)).expect("box");
         let original_volume = block_on(kernel.volume(&solid)).expect("volume");
@@ -783,7 +783,7 @@ mod tests {
         assert_eq!(reimported_brep.faces.len(), original_brep.faces.len(), "face count geometry-equivalence");
         assert_eq!(reimported_brep.vertices.len(), original_brep.vertices.len(), "vertex count geometry-equivalence");
 
-        fn vertex_bounds(points: impl Iterator<Item = [f64; 3]>) -> ([f64; 3], [f64; 3]) {
+        async fn vertex_bounds(points: impl Iterator<Item = [f64; 3]>) -> ([f64; 3], [f64; 3]) {
             let mut min = [f64::INFINITY; 3];
             let mut max = [f64::NEG_INFINITY; 3];
             for p in points {
@@ -808,7 +808,7 @@ mod tests {
             assert!((mesh_max[axis] - brep_max[axis]).abs() < 1e-6, "semio/mesh vs reimported semio/brep bounding-box MAX mismatch on axis {axis}: mesh {} vs brep {}", mesh_max[axis], brep_max[axis]);
         }
 
-        let gltf = SemioMeshToGltf::serialize(&mesh_snapshot).expect("real semio/mesh -> gltf codec must succeed on a real tessellated box");
+        let gltf = semio_framework_plugin::resolve_ready(SemioMeshToGltf::serialize(&mesh_snapshot)).expect("real semio/mesh -> gltf codec must succeed on a real tessellated box");
         assert_eq!(gltf.document.meshes.len(), 1, "expected exactly one gltf mesh for one solid");
         assert_eq!(gltf.buffers.len(), 1, "expected one packed geometry buffer");
         let position_accessor = gltf.document.accessors.first().expect("POSITION accessor must exist");
@@ -826,7 +826,7 @@ mod tests {
     }
 
     #[test]
-    fn semio_brep_snapshot_from_step_text_carries_real_topology() {
+    async fn semio_brep_snapshot_from_step_text_carries_real_topology() {
         let mut kernel = Brep::new();
         let solid = block_on(kernel.box_prim(1.0, 1.0, 1.0)).expect("box");
         let step_text = block_on(kernel.export_step(std::slice::from_ref(&solid))).expect("kernel step export");
@@ -839,7 +839,7 @@ mod tests {
     }
 
     #[test]
-    fn repair_step_trailing_comma_before_close_paren_is_quote_aware() {
+    async fn repair_step_trailing_comma_before_close_paren_is_quote_aware() {
         assert_eq!(repair_step_trailing_comma_before_close_paren("(#1,)"), "(#1)");
         assert_eq!(repair_step_trailing_comma_before_close_paren("(#1, #2,)"), "(#1, #2)");
         assert_eq!(repair_step_trailing_comma_before_close_paren("()"), "()");

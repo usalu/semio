@@ -6,7 +6,7 @@ use crate::artifacts::procedural3d::mutations::{synapse_index, Procedural3dMutat
 use crate::artifacts::procedural3d::Procedural3dSnapshot;
 
 /// ↩️ Missing id in `base` ⇒ `Vec::new()`.
-pub fn inverse(payload: &UpdateSynapse, base: &Procedural3dSnapshot) -> Vec<Procedural3dMutation> {
+pub async fn inverse(payload: &UpdateSynapse, base: &Procedural3dSnapshot) -> Vec<Procedural3dMutation> {
     match synapse_index(&base.fixture, &payload.synapse.id) {
         Some(index) => vec![Procedural3dMutation::UpdateSynapse(UpdateSynapse { synapse: base.fixture.synapses[index].clone() })],
         None => Vec::new()}

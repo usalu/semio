@@ -5,7 +5,7 @@ use crate::artifacts::en1992::mutations::change_anchor_a_s_mm2::mutation::Change
 use crate::artifacts::en1992::En1992Snapshot;
 
 //#region 🔖️Diff
-pub fn diff(payload: &ChangeAnchorASMm2, base: &En1992Snapshot) -> protocol::MutationOutcome<En1992Diff> {
+pub async fn diff(payload: &ChangeAnchorASMm2, base: &En1992Snapshot) -> protocol::MutationOutcome<En1992Diff> {
     if !payload.new_anchor_a_s_mm2.is_finite() {
         return protocol::MutationOutcome::fatal("mutation.invariant", "Anchor as mm2 must be a finite number.", Vec::<String>::new());
     }

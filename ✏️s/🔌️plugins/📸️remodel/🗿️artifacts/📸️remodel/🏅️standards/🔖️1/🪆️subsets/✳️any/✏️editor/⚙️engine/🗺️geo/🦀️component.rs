@@ -33,28 +33,28 @@ const UTM_FALSE_EASTING: f64 = 500_000.0;
 const UTM_FALSE_NORTHING_SOUTH: f64 = 10_000_000.0;
 
 /// 🌐️ WGS84 first eccentricity squared `e² = f(2 - f)`.
-fn wgs84_e2() -> f64 {
+async fn wgs84_e2() -> f64 {
     WGS84_F * (2.0 - WGS84_F)
 }
 
 /// 🌐️ WGS84 first eccentricity `e`.
-fn wgs84_e() -> f64 {
+async fn wgs84_e() -> f64 {
     wgs84_e2().sqrt()
 }
 
 /// 🌐️ WGS84 semi-minor axis `b = a(1 - f)`.
-fn wgs84_b() -> f64 {
+async fn wgs84_b() -> f64 {
     WGS84_A * (1.0 - WGS84_F)
 }
 
 /// 🌐️ WGS84 third flattening `n = f / (2 - f)`, the small parameter the Krüger series is expanded in.
-fn wgs84_n() -> f64 {
+async fn wgs84_n() -> f64 {
     WGS84_F / (2.0 - WGS84_F)
 }
 
 /// 🌐️ Converts geodetic `(lat, lon, height)` (radians, radians, metres above the ellipsoid) to
 /// Earth-Centered-Earth-Fixed Cartesian coordinates via the closed-form prime-vertical-radius formula.
-pub fn geodetic_to_ecef(lat_rad: f64, lon_rad: f64, height_m: f64) -> [f64; 3] {
+pub async fn geodetic_to_ecef(lat_rad: f64, lon_rad: f64, height_m: f64) -> [f64; 3] {
     let (sin_lat, cos_lat) = (lat_rad.sin(), lat_rad.cos());
     let (sin_lon, cos_lon) = (lon_rad.sin(), lon_rad.cos());
     let prime_vertical = WGS84_A / (1.0 - wgs84_e2() * sin_lat * sin_lat).sqrt();
@@ -67,7 +67,7 @@ pub fn geodetic_to_ecef(lat_rad: f64, lon_rad: f64, height_m: f64) -> [f64; 3] {
 /// 🌐️ Converts ECEF Cartesian coordinates to geodetic `(lat, lon, height)` via the standard fixed-point
 /// iteration on the prime-vertical radius (Hofmann-Wellenhof et al., converges to double precision in a
 /// handful of iterations for Earth's eccentricity); the polar singularity (`x = y = 0`) is handled directly.
-pub fn ecef_to_geodetic(ecef: [f64; 3]) -> (f64, f64, f64) {
+pub async fn ecef_to_geodetic(ecef: [f64; 3]) -> (f64, f64, f64) {
     let [x, y, z] = ecef;
     let lon = y.atan2(x);
     let r = (x * x + y * y).sqrt();
@@ -88,14 +88,14 @@ pub fn ecef_to_geodetic(ecef: [f64; 3]) -> (f64, f64, f64) {
 }
 
 /// 🧭️ 3x3 rotation columns mapping an ECEF delta vector into East-North-Up at the given geodetic reference.
-fn enu_rotation(ref_lat: f64, ref_lon: f64) -> [[f64; 3]; 3] {
+async fn enu_rotation(ref_lat: f64, ref_lon: f64) -> [[f64; 3]; 3] {
     let (sin_lat, cos_lat) = (ref_lat.sin(), ref_lat.cos());
     let (sin_lon, cos_lon) = (ref_lon.sin(), ref_lon.cos());
     [[-sin_lon, cos_lon, 0.0], [-sin_lat * cos_lon, -sin_lat * sin_lon, cos_lat], [cos_lat * cos_lon, cos_lat * sin_lon, sin_lat]]
 }
 
 /// 🧭️ Converts an ECEF point into the local East-North-Up tangent plane centred at the given geodetic reference.
-pub fn ecef_to_enu(ecef: [f64; 3], ref_lat_rad: f64, ref_lon_rad: f64, ref_height_m: f64) -> [f64; 3] {
+pub async fn ecef_to_enu(ecef: [f64; 3], ref_lat_rad: f64, ref_lon_rad: f64, ref_height_m: f64) -> [f64; 3] {
     let origin = geodetic_to_ecef(ref_lat_rad, ref_lon_rad, ref_height_m);
     let d = vec3d_sub(ecef, origin);
     let rot = enu_rotation(ref_lat_rad, ref_lon_rad);
@@ -103,7 +103,7 @@ pub fn ecef_to_enu(ecef: [f64; 3], ref_lat_rad: f64, ref_lon_rad: f64, ref_heigh
 }
 
 /// 🧭️ Converts a local East-North-Up point back to ECEF, the inverse of [`ecef_to_enu`].
-pub fn enu_to_ecef(enu: [f64; 3], ref_lat_rad: f64, ref_lon_rad: f64, ref_height_m: f64) -> [f64; 3] {
+pub async fn enu_to_ecef(enu: [f64; 3], ref_lat_rad: f64, ref_lon_rad: f64, ref_height_m: f64) -> [f64; 3] {
     let origin = geodetic_to_ecef(ref_lat_rad, ref_lon_rad, ref_height_m);
     let rot = enu_rotation(ref_lat_rad, ref_lon_rad);
     let d: [f64; 3] = std::array::from_fn(|col| rot[0][col] * enu[0] + rot[1][col] * enu[1] + rot[2][col] * enu[2]);
@@ -111,23 +111,23 @@ pub fn enu_to_ecef(enu: [f64; 3], ref_lat_rad: f64, ref_lon_rad: f64, ref_height
 }
 
 /// 🧭️ Geodetic `(lat, lon, height)` straight to a local ENU frame, composing [`geodetic_to_ecef`] and [`ecef_to_enu`].
-pub fn geodetic_to_enu(lat_rad: f64, lon_rad: f64, height_m: f64, ref_lat_rad: f64, ref_lon_rad: f64, ref_height_m: f64) -> [f64; 3] {
+pub async fn geodetic_to_enu(lat_rad: f64, lon_rad: f64, height_m: f64, ref_lat_rad: f64, ref_lon_rad: f64, ref_height_m: f64) -> [f64; 3] {
     ecef_to_enu(geodetic_to_ecef(lat_rad, lon_rad, height_m), ref_lat_rad, ref_lon_rad, ref_height_m)
 }
 
 /// 🧭️ Local ENU straight to geodetic `(lat, lon, height)`, composing [`enu_to_ecef`] and [`ecef_to_geodetic`].
-pub fn enu_to_geodetic(enu: [f64; 3], ref_lat_rad: f64, ref_lon_rad: f64, ref_height_m: f64) -> (f64, f64, f64) {
+pub async fn enu_to_geodetic(enu: [f64; 3], ref_lat_rad: f64, ref_lon_rad: f64, ref_height_m: f64) -> (f64, f64, f64) {
     ecef_to_geodetic(enu_to_ecef(enu, ref_lat_rad, ref_lon_rad, ref_height_m))
 }
 
 /// 📐️ UTM zone number (1-60) covering a longitude, ignoring the Svalbard/Norway irregular-zone exceptions.
-pub fn utm_zone_number(lon_deg: f64) -> u32 {
+pub async fn utm_zone_number(lon_deg: f64) -> u32 {
     let z = ((lon_deg + 180.0) / 6.0).floor() as i64 + 1;
     z.clamp(1, 60) as u32
 }
 
 /// 📐️ Central meridian (degrees) of a UTM zone.
-pub fn utm_central_meridian_deg(zone: u32) -> f64 {
+pub async fn utm_central_meridian_deg(zone: u32) -> f64 {
     f64::from(zone) * 6.0 - 183.0
 }
 
@@ -142,7 +142,7 @@ pub struct UtmCoord {
 
 /// 📐️ Krüger meridional-arc scale constant `A = a/(1+n)(1 + n²/4 + n⁴/64 + n⁶/256)`.
 /// <https://en.wikipedia.org/wiki/Transverse_Mercator_projection>
-fn kruger_meridian_constant() -> f64 {
+async fn kruger_meridian_constant() -> f64 {
     let n = wgs84_n();
     let n2 = n * n;
     WGS84_A / (1.0 + n) * (1.0 + n2 / 4.0 + n2 * n2 / 64.0 + n2 * n2 * n2 / 256.0)
@@ -150,7 +150,7 @@ fn kruger_meridian_constant() -> f64 {
 
 /// 📐️ The six Krüger forward-series coefficients `alpha_1..alpha_6`, hard-coded to 6th order in `n`
 /// (Karney's "Transverse Mercator with an accuracy of a few nanometers" formulation).
-fn kruger_alpha() -> [f64; 6] {
+async fn kruger_alpha() -> [f64; 6] {
     let n = wgs84_n();
     let n2 = n * n;
     let n3 = n2 * n;
@@ -170,7 +170,7 @@ fn kruger_alpha() -> [f64; 6] {
 /// 📐️ Ellipsoidal transverse-Mercator forward projection (pre false-easting/northing, pre-`k0` origin
 /// shift already folded in) via the conformal-latitude + Krüger series construction: `(easting_local,
 /// northing_local)` relative to the given central meridian.
-fn tm_forward_raw(lat_rad: f64, lon_rad: f64, lon0_rad: f64) -> (f64, f64) {
+async fn tm_forward_raw(lat_rad: f64, lon_rad: f64, lon0_rad: f64) -> (f64, f64) {
     let e = wgs84_e();
     let sin_lat = lat_rad.sin();
     let psi = sin_lat.atanh() - e * (e * sin_lat).atanh();
@@ -193,7 +193,7 @@ fn tm_forward_raw(lat_rad: f64, lon_rad: f64, lon0_rad: f64) -> (f64, f64) {
 /// 📐️ Inverts [`tm_forward_raw`] via Newton polishing (central-difference 2x2 Jacobian) seeded from a
 /// crude spherical approximation — guarantees the round trip stays tight regardless of the forward
 /// series' truncation order, the same defensive-Newton idiom [`remodel_camera`]'s lens-undistortion uses.
-fn tm_inverse_raw(x: f64, y: f64, lon0_rad: f64) -> (f64, f64) {
+async fn tm_inverse_raw(x: f64, y: f64, lon0_rad: f64) -> (f64, f64) {
     let scale = UTM_K0 * kruger_meridian_constant();
     let mut lat = (y / scale).clamp(-1.5, 1.5);
     let mut lon = lon0_rad + x / (scale * lat.cos().max(0.05));
@@ -222,7 +222,7 @@ fn tm_inverse_raw(x: f64, y: f64, lon0_rad: f64) -> (f64, f64) {
 }
 
 /// 📐️ Projects a geodetic point (radians) to UTM, auto-selecting the zone from the longitude.
-pub fn geodetic_to_utm(lat_rad: f64, lon_rad: f64) -> UtmCoord {
+pub async fn geodetic_to_utm(lat_rad: f64, lon_rad: f64) -> UtmCoord {
     let zone = utm_zone_number(lon_rad.to_degrees());
     let lon0 = utm_central_meridian_deg(zone).to_radians();
     let (x, y) = tm_forward_raw(lat_rad, lon_rad, lon0);
@@ -232,7 +232,7 @@ pub fn geodetic_to_utm(lat_rad: f64, lon_rad: f64) -> UtmCoord {
 }
 
 /// 📐️ Inverse of [`geodetic_to_utm`]: recovers `(lat_rad, lon_rad)` from a UTM coordinate.
-pub fn utm_to_geodetic(coord: &UtmCoord) -> (f64, f64) {
+pub async fn utm_to_geodetic(coord: &UtmCoord) -> (f64, f64) {
     let lon0 = utm_central_meridian_deg(coord.zone).to_radians();
     let x = coord.easting - UTM_FALSE_EASTING;
     let y = if coord.northern { coord.northing } else { coord.northing - UTM_FALSE_NORTHING_SOUTH };
@@ -264,7 +264,7 @@ const GCP_REFINE_INNER_ITERS: usize = 6;
 /// all refined points and their known world positions. No multi-camera bundle adjustment is
 /// reimplemented here — the only per-observation math is the single-point reprojection residual/Jacobian
 /// `remodel_camera` already exposes, and the prior residual `remodel_sfm` already exposes.
-pub fn refine_gcp_scene_points(scene_points: &[[f64; 3]], gcps: &[GroundControlPoint], cameras: &[(CameraPose, Intrinsics)]) -> (Vec<[f64; 3]>, Sim3) {
+pub async fn refine_gcp_scene_points(scene_points: &[[f64; 3]], gcps: &[GroundControlPoint], cameras: &[(CameraPose, Intrinsics)]) -> (Vec<[f64; 3]>, Sim3) {
     let world: Vec<[f64; 3]> = gcps.iter().map(|g| g.world_position_enu_or_local).collect();
     let mut refined = scene_points.to_vec();
     let mut sim3 = umeyama(&refined, &world, true).unwrap_or_else(Sim3::identity);
@@ -322,14 +322,14 @@ pub fn refine_gcp_scene_points(scene_points: &[[f64; 3]], gcps: &[GroundControlP
 /// is `gcps[i]`'s initial (e.g. triangulated) position in the SfM frame. Falls back to [`Sim3::identity`]
 /// for degenerate input (fewer than three usable GCPs, or collinear/coincident positions) rather than
 /// panicking — callers should sanity-check [`gcp_checkpoint_rmse`] afterward.
-pub fn georeference(scene_points: &[[f64; 3]], gcps: &[GroundControlPoint], cameras: &[(CameraPose, Intrinsics)]) -> Sim3 {
+pub async fn georeference(scene_points: &[[f64; 3]], gcps: &[GroundControlPoint], cameras: &[(CameraPose, Intrinsics)]) -> Sim3 {
     refine_gcp_scene_points(scene_points, gcps, cameras).1
 }
 
 /// 📏️ Root-mean-square checkpoint residual of a converged georeferencing fit: for each `(refined scene
 /// point, gcp)` pair, [`apply_gcp_prior_residual`] scores `sim3.act(point) - gcp.world_position` and this
 /// aggregates the residual norms into one RMSE (metres, or whatever unit `world_position` is in).
-pub fn gcp_checkpoint_rmse(sim3: &Sim3, refined_scene_points: &[[f64; 3]], gcps: &[GroundControlPoint]) -> f64 {
+pub async fn gcp_checkpoint_rmse(sim3: &Sim3, refined_scene_points: &[[f64; 3]], gcps: &[GroundControlPoint]) -> f64 {
     let mut sum_sq = 0.0;
     let mut n = 0usize;
     for (point, gcp) in refined_scene_points.iter().zip(gcps) {
@@ -363,18 +363,18 @@ pub struct Raster {
 
 impl Raster {
     /// 🗺️ An all-invalid raster of the given shape.
-    pub fn new(width: u32, height: u32, cell_size: f64, origin: [f64; 2]) -> Self {
+    pub async fn new(width: u32, height: u32, cell_size: f64, origin: [f64; 2]) -> Self {
         let n = width as usize * height as usize;
         Self { width, height, cell_size, origin, values: vec![0.0; n], valid: vec![false; n] }
     }
 
     /// 🔢️ Row-major flat index of cell `(x, y)`.
-    pub fn index(&self, x: u32, y: u32) -> usize {
+    pub async fn index(&self, x: u32, y: u32) -> usize {
         y as usize * self.width as usize + x as usize
     }
 
     /// 🔍️ The cell's value, or `None` if out of bounds or not yet written.
-    pub fn get(&self, x: u32, y: u32) -> Option<f32> {
+    pub async fn get(&self, x: u32, y: u32) -> Option<f32> {
         if x >= self.width || y >= self.height {
             return None;
         }
@@ -383,19 +383,19 @@ impl Raster {
     }
 
     /// ✏️ Writes a cell value and marks it valid.
-    pub fn set(&mut self, x: u32, y: u32, value: f32) {
+    pub async fn set(&mut self, x: u32, y: u32, value: f32) {
         let i = self.index(x, y);
         self.values[i] = value;
         self.valid[i] = true;
     }
 
     /// 📍️ World-space `(x, y)` of a cell's center.
-    pub fn cell_center(&self, x: u32, y: u32) -> [f64; 2] {
+    pub async fn cell_center(&self, x: u32, y: u32) -> [f64; 2] {
         [self.origin[0] + (f64::from(x) + 0.5) * self.cell_size, self.origin[1] + (f64::from(y) + 0.5) * self.cell_size]
     }
 
     /// 🎯️ The integer cell containing a world-space point, or `None` if outside the raster's extent.
-    pub fn cell_of(&self, p: [f64; 2]) -> Option<(u32, u32)> {
+    pub async fn cell_of(&self, p: [f64; 2]) -> Option<(u32, u32)> {
         let fx = (p[0] - self.origin[0]) / self.cell_size;
         let fy = (p[1] - self.origin[1]) / self.cell_size;
         if fx < 0.0 || fy < 0.0 {
@@ -410,7 +410,7 @@ impl Raster {
 // #region 🔖️Dsm
 /// ⛰️ Per-cell max-elevation Digital Surface Model, binning every cloud point into the raster cell
 /// containing its `(x, y)` and keeping the highest `z` seen per cell.
-pub fn build_dsm(cloud: &PointCloud, cell_size: f64, origin: [f64; 2], width: u32, height: u32) -> Raster {
+pub async fn build_dsm(cloud: &PointCloud, cell_size: f64, origin: [f64; 2], width: u32, height: u32) -> Raster {
     let mut raster = Raster::new(width, height, cell_size, origin);
     for &p in &cloud.positions {
         if let Some((x, y)) = raster.cell_of([p[0], p[1]]) {
@@ -425,7 +425,7 @@ pub fn build_dsm(cloud: &PointCloud, cell_size: f64, origin: [f64; 2], width: u3
 
 /// 🏞️ Ground-only Digital Terrain Model: the same max-elevation binning as [`build_dsm`], restricted to
 /// points labeled [`PointClass::Ground`] (an unlabeled cloud is treated as entirely ground).
-pub fn build_dtm(cloud: &PointCloud, cell_size: f64, origin: [f64; 2], width: u32, height: u32) -> Raster {
+pub async fn build_dtm(cloud: &PointCloud, cell_size: f64, origin: [f64; 2], width: u32, height: u32) -> Raster {
     let mut raster = Raster::new(width, height, cell_size, origin);
     for (idx, &p) in cloud.positions.iter().enumerate() {
         if !cloud.classification.is_empty() && cloud.classification[idx] != PointClass::Ground {
@@ -444,7 +444,7 @@ pub fn build_dtm(cloud: &PointCloud, cell_size: f64, origin: [f64; 2], width: u3
 /// 🕳️ Fills every invalid cell via inverse-distance weighting over valid cells within `radius_cells`
 /// (grid units), searched through a [`KdTree`] over valid-cell centers rather than a linear scan; cells
 /// with no valid neighbour within radius stay invalid.
-pub fn idw_fill(raster: &Raster, radius_cells: f64, power: f64) -> Raster {
+pub async fn idw_fill(raster: &Raster, radius_cells: f64, power: f64) -> Raster {
     let mut valid_pts: Vec<[f64; 2]> = Vec::new();
     let mut valid_idx: Vec<usize> = Vec::new();
     for y in 0..raster.height {
@@ -490,7 +490,7 @@ pub fn idw_fill(raster: &Raster, radius_cells: f64, power: f64) -> Raster {
 }
 
 /// 🌄️ Per-cell density raster: number of point-cloud points binned into each cell.
-pub fn density_map(cloud: &PointCloud, cell_size: f64, origin: [f64; 2], width: u32, height: u32) -> Raster {
+pub async fn density_map(cloud: &PointCloud, cell_size: f64, origin: [f64; 2], width: u32, height: u32) -> Raster {
     let mut raster = Raster::new(width, height, cell_size, origin);
     for &p in &cloud.positions {
         if let Some((x, y)) = raster.cell_of([p[0], p[1]]) {
@@ -506,7 +506,7 @@ pub fn density_map(cloud: &PointCloud, cell_size: f64, origin: [f64; 2], width: 
 /// cos(slope) + cos(alt) sin(slope) cos(azimuth - aspect)`), values clamped to `[0, 1]`; invalid cells
 /// stay invalid and neighbouring invalid samples fall back to the center cell's own value so a hole
 /// doesn't tilt the local gradient estimate.
-pub fn hillshade(raster: &Raster, azimuth_deg: f64, altitude_deg: f64) -> Raster {
+pub async fn hillshade(raster: &Raster, azimuth_deg: f64, altitude_deg: f64) -> Raster {
     let az = azimuth_deg.to_radians();
     let alt = altitude_deg.to_radians();
     let mut out = Raster::new(raster.width, raster.height, raster.cell_size, raster.origin);
@@ -536,7 +536,7 @@ pub fn hillshade(raster: &Raster, azimuth_deg: f64, altitude_deg: f64) -> Raster
 
 // #region 🔖️Ortho
 /// 🧵️ Per-cell overlap count: how many cameras' image bounds a DSM cell's height re-projects into.
-pub fn overlap_map(dsm: &Raster, cameras: &[(CameraPose, Intrinsics)], image_size: (u32, u32)) -> Raster {
+pub async fn overlap_map(dsm: &Raster, cameras: &[(CameraPose, Intrinsics)], image_size: (u32, u32)) -> Raster {
     let mut out = Raster::new(dsm.width, dsm.height, dsm.cell_size, dsm.origin);
     for y in 0..dsm.height {
         for x in 0..dsm.width {
@@ -563,7 +563,7 @@ pub fn overlap_map(dsm: &Raster, cameras: &[(CameraPose, Intrinsics)], image_siz
 /// borders rather than cutting hard) and `nadir` is the cosine of the viewing ray's angle from vertical
 /// (favouring the most overhead camera) — and blends the weighted colors; cells with no in-bounds camera
 /// stay transparent black.
-pub fn build_orthomosaic(dsm: &Raster, cameras: &[(CameraPose, Intrinsics)], images: &[ImageRgba8]) -> ImageRgba8 {
+pub async fn build_orthomosaic(dsm: &Raster, cameras: &[(CameraPose, Intrinsics)], images: &[ImageRgba8]) -> ImageRgba8 {
     let mut out = ImageRgba8::new(dsm.width, dsm.height);
     for y in 0..dsm.height {
         for x in 0..dsm.width {
@@ -619,7 +619,7 @@ enum EdgeKey {
 }
 
 /// 📐️ Linear-interpolation fraction along an edge where the field crosses `level`.
-fn crossing_fraction(a: f32, b: f32, level: f32) -> f64 {
+async fn crossing_fraction(a: f32, b: f32, level: f32) -> f64 {
     if (b - a).abs() < 1e-12 {
         0.5
     } else {
@@ -628,7 +628,7 @@ fn crossing_fraction(a: f32, b: f32, level: f32) -> f64 {
 }
 
 /// 📍️ World-space position of an edge crossing at the given iso level.
-fn edge_position(raster: &Raster, level: f32, key: EdgeKey) -> [f64; 2] {
+async fn edge_position(raster: &Raster, level: f32, key: EdgeKey) -> [f64; 2] {
     match key {
         EdgeKey::H(x, y) => {
             let t = crossing_fraction(raster.values[raster.index(x, y)], raster.values[raster.index(x + 1, y)], level);
@@ -643,7 +643,7 @@ fn edge_position(raster: &Raster, level: f32, key: EdgeKey) -> [f64; 2] {
 
 /// 🧵️ Marching-squares segments for one cell, keyed on canonical [`EdgeKey`]s; saddle cases 5/10 resolve
 /// via the average of the four corners against `level` (Montani-style consistent disambiguation).
-fn cell_segments(bl: f32, br: f32, tr: f32, tl: f32, level: f32, x: u32, y: u32) -> Vec<(EdgeKey, EdgeKey)> {
+async fn cell_segments(bl: f32, br: f32, tr: f32, tl: f32, level: f32, x: u32, y: u32) -> Vec<(EdgeKey, EdgeKey)> {
     let bottom = EdgeKey::H(x, y);
     let right = EdgeKey::V(x + 1, y);
     let top = EdgeKey::H(x, y + 1);
@@ -679,7 +679,7 @@ fn cell_segments(bl: f32, br: f32, tr: f32, tl: f32, level: f32, x: u32, y: u32)
 /// each unused edge key with a not-yet-used incident segment extends the current chain, walking forward
 /// then backward from the seed segment until no unused neighbour remains (an open polyline, if the
 /// level set touches the raster border) or the chain closes back on its start key (a closed loop).
-fn chain_segments(segments: &[(EdgeKey, EdgeKey)], positions: &HashMap<EdgeKey, [f64; 2]>) -> Vec<Vec<[f64; 2]>> {
+async fn chain_segments(segments: &[(EdgeKey, EdgeKey)], positions: &HashMap<EdgeKey, [f64; 2]>) -> Vec<Vec<[f64; 2]>> {
     let mut adjacency: HashMap<EdgeKey, Vec<usize>> = HashMap::new();
     for (idx, &(a, b)) in segments.iter().enumerate() {
         adjacency.entry(a).or_default().push(idx);
@@ -722,7 +722,7 @@ fn chain_segments(segments: &[(EdgeKey, EdgeKey)], positions: &HashMap<EdgeKey, 
 /// 🗻️ Marching-squares isocontour extraction at each of `levels`, chaining segments into connected
 /// polylines; returns `(level, polylines)` pairs, one per input level. Cells touching an invalid raster
 /// sample are skipped (honest gaps rather than a fabricated crossing).
-pub fn extract_contours(raster: &Raster, levels: &[f32]) -> Vec<(f32, Vec<Vec<[f64; 2]>>)> {
+pub async fn extract_contours(raster: &Raster, levels: &[f32]) -> Vec<(f32, Vec<Vec<[f64; 2]>>)> {
     levels
         .iter()
         .map(|&level| {
@@ -761,7 +761,7 @@ pub struct VolumeReport {
 
 /// 📦️ Cut/fill volume between two same-shaped rasters, summing `cell_area * (after - before)` over
 /// cells valid in both — positive differences accumulate as fill, negative as cut.
-pub fn cut_fill_volume(before: &Raster, after: &Raster) -> VolumeReport {
+pub async fn cut_fill_volume(before: &Raster, after: &Raster) -> VolumeReport {
     assert_eq!(before.width, after.width, "cut_fill_volume: raster width mismatch");
     assert_eq!(before.height, after.height, "cut_fill_volume: raster height mismatch");
     let cell_area = before.cell_size * before.cell_size;
@@ -781,7 +781,7 @@ pub fn cut_fill_volume(before: &Raster, after: &Raster) -> VolumeReport {
 }
 
 /// 📦️ Cut/fill volume of a raster against a flat reference plane at `plane_z`.
-pub fn cut_fill_volume_vs_plane(raster: &Raster, plane_z: f64) -> VolumeReport {
+pub async fn cut_fill_volume_vs_plane(raster: &Raster, plane_z: f64) -> VolumeReport {
     let cell_area = raster.cell_size * raster.cell_size;
     let mut cut = 0.0;
     let mut fill = 0.0;
@@ -828,7 +828,7 @@ pub struct QualityReport {
 /// 📏️ Overall and per-camera reprojection RMS (pixels) of `observations` — `(camera_index, point_index,
 /// pixel)` triples, `camera_index`/`point_index` indexing directly into `recon.cameras`/`recon.points` —
 /// against `recon`'s current camera poses and triangulated points.
-pub fn reprojection_stats(recon: &Reconstruction, observations: &[(usize, usize, [f64; 2])]) -> (f64, Vec<f64>) {
+pub async fn reprojection_stats(recon: &Reconstruction, observations: &[(usize, usize, [f64; 2])]) -> (f64, Vec<f64>) {
     let mut per_camera_sq = vec![0.0_f64; recon.cameras.len()];
     let mut per_camera_n = vec![0usize; recon.cameras.len()];
     let mut total_sq = 0.0;
@@ -851,7 +851,7 @@ pub fn reprojection_stats(recon: &Reconstruction, observations: &[(usize, usize,
 }
 
 /// 🧵️ [`TrackStats`] derived from `observations` by grouping observation counts per `point_index`.
-pub fn track_stats_from_observations(observations: &[(usize, usize, [f64; 2])], num_points: usize) -> TrackStats {
+pub async fn track_stats_from_observations(observations: &[(usize, usize, [f64; 2])], num_points: usize) -> TrackStats {
     let mut counts = vec![0usize; num_points];
     for &(_, pi, _) in observations {
         if pi < num_points {
@@ -871,7 +871,7 @@ pub fn track_stats_from_observations(observations: &[(usize, usize, [f64; 2])], 
 /// single (already-near-optimal) iteration — the covariance-diagonal machinery `schur_lm`'s Schur
 /// complement always computes, just reused at the current solution rather than a fresh optimization.
 /// Empty when there are no cameras, points or observations to build a problem from.
-pub fn camera_covariance_diagonals(recon: &Reconstruction, observations: &[(usize, usize, [f64; 2])]) -> Vec<[f64; 36]> {
+pub async fn camera_covariance_diagonals(recon: &Reconstruction, observations: &[(usize, usize, [f64; 2])]) -> Vec<[f64; 36]> {
     if recon.cameras.is_empty() || recon.points.is_empty() || observations.is_empty() {
         return Vec::new();
     }
@@ -910,7 +910,7 @@ pub fn camera_covariance_diagonals(recon: &Reconstruction, observations: &[(usiz
 /// equations `sum(JbᵀJb)` for every observation of that point (Jacobians from
 /// [`remodel_camera::reprojection_jacobians`]), inverts via [`pseudo_inverse`], and reports
 /// `sqrt(trace(cov) / 3)`. `f64::INFINITY` marks an unobserved-or-singular (e.g. single-observation) point.
-pub fn estimate_per_point_sigma(recon: &Reconstruction, observations: &[(usize, usize, [f64; 2])]) -> Vec<f64> {
+pub async fn estimate_per_point_sigma(recon: &Reconstruction, observations: &[(usize, usize, [f64; 2])]) -> Vec<f64> {
     let mut h_blocks: Vec<MatD> = (0..recon.points.len()).map(|_| MatD::zeros(3, 3)).collect();
     for &(ci, pi, px) in observations {
         if ci >= recon.cameras.len() || pi >= recon.points.len() {
@@ -939,7 +939,7 @@ pub fn estimate_per_point_sigma(recon: &Reconstruction, observations: &[(usize, 
 /// [`estimate_per_point_sigma`] internally; the georeferencing, coverage-raster and watertight-mesh
 /// fields are supplied by the caller (they depend on inputs — GCPs, cameras+images, a closed mesh — this
 /// function doesn't otherwise need).
-pub fn build_quality_report(recon: &Reconstruction, observations: &[(usize, usize, [f64; 2])], gcp_checkpoint_rmse: Option<f64>, density_map: Option<Raster>, overlap_map: Option<Raster>, watertight: Option<WatertightReport>) -> QualityReport {
+pub async fn build_quality_report(recon: &Reconstruction, observations: &[(usize, usize, [f64; 2])], gcp_checkpoint_rmse: Option<f64>, density_map: Option<Raster>, overlap_map: Option<Raster>, watertight: Option<WatertightReport>) -> QualityReport {
     let (reprojection_rms_px, per_camera_rms_px) = reprojection_stats(recon, observations);
     QualityReport {
         reprojection_rms_px,
@@ -963,7 +963,7 @@ mod tests {
 
     // #region 🔖️GeodesyTests
     #[test]
-    fn ecef_enu_round_trip_sub_millimeter() {
+    async fn ecef_enu_round_trip_sub_millimeter() {
         let cases =
             [(0.0_f64, 0.0_f64, 100.0_f64), (89.9_f64.to_radians(), 45.0_f64.to_radians(), 10.0), (-33.9_f64.to_radians(), 151.2_f64.to_radians(), 50.0), (47.3769_f64.to_radians(), 8.5417_f64.to_radians(), 500.0), (-90.0_f64.to_radians(), 0.0, 0.0)];
         for &(lat, lon, h) in &cases {
@@ -983,7 +983,7 @@ mod tests {
     }
 
     #[test]
-    fn utm_round_trip_sub_millimeter() {
+    async fn utm_round_trip_sub_millimeter() {
         let cases = [(47.3769_f64, 8.5417_f64), (0.0001_f64, 5.9999_f64), (0.0001_f64, 6.0001_f64), (-33.9_f64, 151.2_f64), (60.0_f64, -1.0_f64), (10.0_f64, 100.0_f64)];
         for &(lat_deg, lon_deg) in &cases {
             let lat = lat_deg.to_radians();
@@ -1000,7 +1000,7 @@ mod tests {
 
     // #region 🔖️GcpTests
     #[test]
-    fn georeference_recovers_planted_similarity_under_noise() {
+    async fn georeference_recovers_planted_similarity_under_noise() {
         let mut rng = Rng::from_seed(9001);
         let scene = remodel_sfm::synthetic_scene(9001, 6, 12, false);
         let scene_obs = remodel_sfm::project_observations(&scene, 0.0, 0.0, 9001);
@@ -1027,12 +1027,12 @@ mod tests {
     // #endregion 🔖️GcpTests
 
     // #region 🔖️DsmTests
-    fn bump(x: f64, y: f64) -> f64 {
+    async fn bump(x: f64, y: f64) -> f64 {
         10.0 + 5.0 * (-(x * x + y * y) / 8.0).exp()
     }
 
     #[test]
-    fn dsm_dtm_match_known_terrain_and_idw_fills_holes() {
+    async fn dsm_dtm_match_known_terrain_and_idw_fills_holes() {
         let mut rng = Rng::from_seed(77);
         let mut positions = Vec::new();
         let mut labels = Vec::new();
@@ -1076,7 +1076,7 @@ mod tests {
 
     // #region 🔖️OrthoTests
     #[test]
-    fn orthomosaic_blends_smoothly_across_camera_overlap() {
+    async fn orthomosaic_blends_smoothly_across_camera_overlap() {
         let dsm = Raster { width: 40, height: 4, cell_size: 0.5, origin: [0.0, 0.0], values: vec![0.0; 160], valid: vec![true; 160] };
         let intr = Intrinsics { fx: 200.0, fy: 200.0, cx: 100.0, cy: 100.0, skew: 0.0, distortion: remodel_camera::Distortion::None };
         // `p_cam = p_world + t` (identity rotation): a raster point at world `(wx, wy, 0)` needs
@@ -1119,7 +1119,7 @@ mod tests {
 
     // #region 🔖️ContoursTests
     #[test]
-    fn circular_feature_extracts_closed_contour_with_expected_perimeter() {
+    async fn circular_feature_extracts_closed_contour_with_expected_perimeter() {
         let n = 61_u32;
         let cell = 0.1;
         let origin = [-3.0, -3.0];
@@ -1144,14 +1144,14 @@ mod tests {
         assert!((perimeter - expected_perimeter).abs() / expected_perimeter < 0.05, "perimeter {perimeter} vs expected {expected_perimeter}");
     }
 
-    fn dist(a: [f64; 2], b: [f64; 2]) -> f64 {
+    async fn dist(a: [f64; 2], b: [f64; 2]) -> f64 {
         ((a[0] - b[0]).powi(2) + (a[1] - b[1]).powi(2)).sqrt()
     }
     // #endregion 🔖️ContoursTests
 
     // #region 🔖️VolumeTests
     #[test]
-    fn cut_fill_matches_planted_block_volume() {
+    async fn cut_fill_matches_planted_block_volume() {
         let n = 20_u32;
         let cell = 1.0;
         let mut before = Raster::new(n, n, cell, [0.0, 0.0]);
@@ -1176,7 +1176,7 @@ mod tests {
 
     // #region 🔖️QualityTests
     #[test]
-    fn quality_report_populates_sane_fields_from_real_sfm_output() {
+    async fn quality_report_populates_sane_fields_from_real_sfm_output() {
         let scene = remodel_sfm::synthetic_scene(4242, 5, 40, false);
         let scene_obs = remodel_sfm::project_observations(&scene, 0.3, 0.0, 4242);
         let points = scene.points_world;

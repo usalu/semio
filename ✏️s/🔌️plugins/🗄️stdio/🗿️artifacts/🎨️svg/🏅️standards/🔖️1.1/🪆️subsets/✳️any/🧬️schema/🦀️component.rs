@@ -20,24 +20,24 @@ pub struct SvgArtifact {
 
 //#region 🔖️Conversions
 impl Default for SvgArtifact {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self::from_snapshot(SvgSnapshot::default())
     }
 }
 
 impl SvgArtifact {
     /// 📸️ Persisted subset.
-    pub fn to_snapshot(&self) -> SvgSnapshot {
+    pub async fn to_snapshot(&self) -> SvgSnapshot {
         SvgSnapshot { schema: self.schema.clone(), doc: self.doc.clone() }
     }
 
     /// 🧬️ Builds a full artifact from a snapshot.
-    pub fn from_snapshot(snapshot: SvgSnapshot) -> Self {
+    pub async fn from_snapshot(snapshot: SvgSnapshot) -> Self {
         Self { schema: snapshot.schema, doc: snapshot.doc }
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
-    pub fn set_snapshot(&mut self, snapshot: SvgSnapshot) {
+    pub async fn set_snapshot(&mut self, snapshot: SvgSnapshot) {
         self.schema = snapshot.schema;
         self.doc = snapshot.doc;
     }
@@ -46,7 +46,7 @@ impl SvgArtifact {
 
 //#region 🔖️Descriptor
 /// 🧬️ Descriptor for `s.stdio.svg`.
-pub fn svg_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
+pub async fn svg_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
     schema::ArtifactSchemaDescriptor {
         id: "s.stdio.svg",
         artifact: schema::FacetLeaves {
@@ -97,91 +97,91 @@ pub mod derived_construction {
     }
 
     impl PathBuilder {
-        pub fn new() -> Self {
+        pub async fn new() -> Self {
             Self::default()
         }
         /// 🧩 Seeds the builder from an already-typed command list (used to reconstruct a path
         /// programmatically, e.g. from an analyzer's output, without re-parsing/re-stringifying it).
-        pub fn from_commands(cmds: Vec<PathCommand>) -> Self {
+        pub async fn from_commands(cmds: Vec<PathCommand>) -> Self {
             Self { cmds }
         }
-        pub fn move_to(mut self, x: f64, y: f64) -> Self {
+        pub async fn move_to(mut self, x: f64, y: f64) -> Self {
             self.cmds.push(PathCommand::MoveTo { x, y, relative: false });
             self
         }
-        pub fn move_by(mut self, dx: f64, dy: f64) -> Self {
+        pub async fn move_by(mut self, dx: f64, dy: f64) -> Self {
             self.cmds.push(PathCommand::MoveTo { x: dx, y: dy, relative: true });
             self
         }
-        pub fn line_to(mut self, x: f64, y: f64) -> Self {
+        pub async fn line_to(mut self, x: f64, y: f64) -> Self {
             self.cmds.push(PathCommand::LineTo { x, y, relative: false });
             self
         }
-        pub fn line_by(mut self, dx: f64, dy: f64) -> Self {
+        pub async fn line_by(mut self, dx: f64, dy: f64) -> Self {
             self.cmds.push(PathCommand::LineTo { x: dx, y: dy, relative: true });
             self
         }
-        pub fn horizontal_to(mut self, x: f64) -> Self {
+        pub async fn horizontal_to(mut self, x: f64) -> Self {
             self.cmds.push(PathCommand::HorizontalLineTo { x, relative: false });
             self
         }
-        pub fn horizontal_by(mut self, dx: f64) -> Self {
+        pub async fn horizontal_by(mut self, dx: f64) -> Self {
             self.cmds.push(PathCommand::HorizontalLineTo { x: dx, relative: true });
             self
         }
-        pub fn vertical_to(mut self, y: f64) -> Self {
+        pub async fn vertical_to(mut self, y: f64) -> Self {
             self.cmds.push(PathCommand::VerticalLineTo { y, relative: false });
             self
         }
-        pub fn vertical_by(mut self, dy: f64) -> Self {
+        pub async fn vertical_by(mut self, dy: f64) -> Self {
             self.cmds.push(PathCommand::VerticalLineTo { y: dy, relative: true });
             self
         }
-        pub fn cubic_to(mut self, x1: f64, y1: f64, x2: f64, y2: f64, x: f64, y: f64) -> Self {
+        pub async fn cubic_to(mut self, x1: f64, y1: f64, x2: f64, y2: f64, x: f64, y: f64) -> Self {
             self.cmds.push(PathCommand::CurveTo { x1, y1, x2, y2, x, y, relative: false });
             self
         }
-        pub fn cubic_by(mut self, x1: f64, y1: f64, x2: f64, y2: f64, dx: f64, dy: f64) -> Self {
+        pub async fn cubic_by(mut self, x1: f64, y1: f64, x2: f64, y2: f64, dx: f64, dy: f64) -> Self {
             self.cmds.push(PathCommand::CurveTo { x1, y1, x2, y2, x: dx, y: dy, relative: true });
             self
         }
-        pub fn smooth_cubic_to(mut self, x2: f64, y2: f64, x: f64, y: f64) -> Self {
+        pub async fn smooth_cubic_to(mut self, x2: f64, y2: f64, x: f64, y: f64) -> Self {
             self.cmds.push(PathCommand::SmoothCurveTo { x2, y2, x, y, relative: false });
             self
         }
-        pub fn smooth_cubic_by(mut self, x2: f64, y2: f64, dx: f64, dy: f64) -> Self {
+        pub async fn smooth_cubic_by(mut self, x2: f64, y2: f64, dx: f64, dy: f64) -> Self {
             self.cmds.push(PathCommand::SmoothCurveTo { x2, y2, x: dx, y: dy, relative: true });
             self
         }
-        pub fn quadratic_to(mut self, x1: f64, y1: f64, x: f64, y: f64) -> Self {
+        pub async fn quadratic_to(mut self, x1: f64, y1: f64, x: f64, y: f64) -> Self {
             self.cmds.push(PathCommand::QuadraticCurveTo { x1, y1, x, y, relative: false });
             self
         }
-        pub fn quadratic_by(mut self, x1: f64, y1: f64, dx: f64, dy: f64) -> Self {
+        pub async fn quadratic_by(mut self, x1: f64, y1: f64, dx: f64, dy: f64) -> Self {
             self.cmds.push(PathCommand::QuadraticCurveTo { x1, y1, x: dx, y: dy, relative: true });
             self
         }
-        pub fn smooth_quadratic_to(mut self, x: f64, y: f64) -> Self {
+        pub async fn smooth_quadratic_to(mut self, x: f64, y: f64) -> Self {
             self.cmds.push(PathCommand::SmoothQuadraticCurveTo { x, y, relative: false });
             self
         }
-        pub fn smooth_quadratic_by(mut self, dx: f64, dy: f64) -> Self {
+        pub async fn smooth_quadratic_by(mut self, dx: f64, dy: f64) -> Self {
             self.cmds.push(PathCommand::SmoothQuadraticCurveTo { x: dx, y: dy, relative: true });
             self
         }
-        pub fn arc_to(mut self, rx: f64, ry: f64, x_axis_rotation: f64, large_arc: bool, sweep: bool, x: f64, y: f64) -> Self {
+        pub async fn arc_to(mut self, rx: f64, ry: f64, x_axis_rotation: f64, large_arc: bool, sweep: bool, x: f64, y: f64) -> Self {
             self.cmds.push(PathCommand::Arc { rx, ry, x_axis_rotation, large_arc, sweep, x, y, relative: false });
             self
         }
-        pub fn arc_by(mut self, rx: f64, ry: f64, x_axis_rotation: f64, large_arc: bool, sweep: bool, dx: f64, dy: f64) -> Self {
+        pub async fn arc_by(mut self, rx: f64, ry: f64, x_axis_rotation: f64, large_arc: bool, sweep: bool, dx: f64, dy: f64) -> Self {
             self.cmds.push(PathCommand::Arc { rx, ry, x_axis_rotation, large_arc, sweep, x: dx, y: dy, relative: true });
             self
         }
-        pub fn close(mut self) -> Self {
+        pub async fn close(mut self) -> Self {
             self.cmds.push(PathCommand::ClosePath);
             self
         }
-        pub fn build(self) -> Vec<PathCommand> {
+        pub async fn build(self) -> Vec<PathCommand> {
             self.cmds
         }
     }
@@ -197,18 +197,18 @@ pub mod derived_construction {
     }
 
     impl GradientStopSpec {
-        pub fn new(offset: impl Into<String>) -> Self {
+        pub async fn new(offset: impl Into<String>) -> Self {
             Self { offset: offset.into(), color: None, opacity: None }
         }
-        pub fn with_color(mut self, color: impl Into<String>) -> Self {
+        pub async fn with_color(mut self, color: impl Into<String>) -> Self {
             self.color = Some(color.into());
             self
         }
-        pub fn with_opacity(mut self, opacity: impl Into<String>) -> Self {
+        pub async fn with_opacity(mut self, opacity: impl Into<String>) -> Self {
             self.opacity = Some(opacity.into());
             self
         }
-        fn into_element(self) -> SvgElement {
+        async fn into_element(self) -> SvgElement {
             SvgElement::Stop { common: CommonAttrs::default(), offset: self.offset, stop_color: self.color, stop_opacity: self.opacity }
         }
     }
@@ -224,62 +224,62 @@ pub mod derived_construction {
     }
 
     impl ElementBuilder {
-        pub fn new() -> Self {
+        pub async fn new() -> Self {
             Self::default()
         }
 
-        pub fn add_rect(mut self, x: f64, y: f64, width: f64, height: f64, common: CommonAttrs) -> Self {
+        pub async fn add_rect(mut self, x: f64, y: f64, width: f64, height: f64, common: CommonAttrs) -> Self {
             self.children.push(SvgElement::Rect { common, x, y, width, height, rx: None, ry: None });
             self
         }
-        pub fn add_rect_rounded(mut self, x: f64, y: f64, width: f64, height: f64, rx: f64, ry: f64, common: CommonAttrs) -> Self {
+        pub async fn add_rect_rounded(mut self, x: f64, y: f64, width: f64, height: f64, rx: f64, ry: f64, common: CommonAttrs) -> Self {
             self.children.push(SvgElement::Rect { common, x, y, width, height, rx: Some(rx), ry: Some(ry) });
             self
         }
-        pub fn add_circle(mut self, cx: f64, cy: f64, r: f64, common: CommonAttrs) -> Self {
+        pub async fn add_circle(mut self, cx: f64, cy: f64, r: f64, common: CommonAttrs) -> Self {
             self.children.push(SvgElement::Circle { common, cx, cy, r });
             self
         }
-        pub fn add_ellipse(mut self, cx: f64, cy: f64, rx: f64, ry: f64, common: CommonAttrs) -> Self {
+        pub async fn add_ellipse(mut self, cx: f64, cy: f64, rx: f64, ry: f64, common: CommonAttrs) -> Self {
             self.children.push(SvgElement::Ellipse { common, cx, cy, rx, ry });
             self
         }
-        pub fn add_line(mut self, x1: f64, y1: f64, x2: f64, y2: f64, common: CommonAttrs) -> Self {
+        pub async fn add_line(mut self, x1: f64, y1: f64, x2: f64, y2: f64, common: CommonAttrs) -> Self {
             self.children.push(SvgElement::Line { common, x1, y1, x2, y2 });
             self
         }
-        pub fn add_polyline(mut self, points: Vec<(f64, f64)>, common: CommonAttrs) -> Self {
+        pub async fn add_polyline(mut self, points: Vec<(f64, f64)>, common: CommonAttrs) -> Self {
             self.children.push(SvgElement::Polyline { common, points });
             self
         }
-        pub fn add_polygon(mut self, points: Vec<(f64, f64)>, common: CommonAttrs) -> Self {
+        pub async fn add_polygon(mut self, points: Vec<(f64, f64)>, common: CommonAttrs) -> Self {
             self.children.push(SvgElement::Polygon { common, points });
             self
         }
-        pub fn add_path(mut self, path: PathBuilder, common: CommonAttrs) -> Self {
+        pub async fn add_path(mut self, path: PathBuilder, common: CommonAttrs) -> Self {
             self.children.push(SvgElement::Path { common, d: path.build() });
             self
         }
         /// 🧬 Nests a `<g>` group: `build` receives a fresh `ElementBuilder` scoped to the group.
-        pub fn add_group(mut self, common: CommonAttrs, build: impl FnOnce(ElementBuilder) -> ElementBuilder) -> Self {
+        pub async fn add_group(mut self, common: CommonAttrs, build: impl FnOnce(ElementBuilder) -> ElementBuilder) -> Self {
             let inner = build(ElementBuilder::new());
             self.children.push(SvgElement::Group { common, children: inner.children });
             self
         }
-        pub fn add_defs(mut self, common: CommonAttrs, build: impl FnOnce(ElementBuilder) -> ElementBuilder) -> Self {
+        pub async fn add_defs(mut self, common: CommonAttrs, build: impl FnOnce(ElementBuilder) -> ElementBuilder) -> Self {
             let inner = build(ElementBuilder::new());
             self.children.push(SvgElement::Defs { common, children: inner.children });
             self
         }
-        pub fn add_text(mut self, x: Option<f64>, y: Option<f64>, text: impl Into<String>, common: CommonAttrs) -> Self {
+        pub async fn add_text(mut self, x: Option<f64>, y: Option<f64>, text: impl Into<String>, common: CommonAttrs) -> Self {
             self.children.push(SvgElement::Text { common, x, y, children: vec![SvgElement::TextNode(text.into())] });
             self
         }
-        pub fn add_use(mut self, href: impl Into<String>, x: Option<f64>, y: Option<f64>, width: Option<f64>, height: Option<f64>, common: CommonAttrs) -> Self {
+        pub async fn add_use(mut self, href: impl Into<String>, x: Option<f64>, y: Option<f64>, width: Option<f64>, height: Option<f64>, common: CommonAttrs) -> Self {
             self.children.push(SvgElement::Use { common, href: href.into(), x, y, width, height });
             self
         }
-        pub fn define_linear_gradient(mut self, id: impl Into<String>, x1: Option<f64>, y1: Option<f64>, x2: Option<f64>, y2: Option<f64>, stops: Vec<GradientStopSpec>) -> Self {
+        pub async fn define_linear_gradient(mut self, id: impl Into<String>, x1: Option<f64>, y1: Option<f64>, x2: Option<f64>, y2: Option<f64>, stops: Vec<GradientStopSpec>) -> Self {
             self.children.push(SvgElement::LinearGradient {
                 common: CommonAttrs::default(),
                 id: Some(id.into()),
@@ -291,7 +291,7 @@ pub mod derived_construction {
             });
             self
         }
-        pub fn define_radial_gradient(mut self, id: impl Into<String>, cx: Option<f64>, cy: Option<f64>, r: Option<f64>, fx: Option<f64>, fy: Option<f64>, stops: Vec<GradientStopSpec>) -> Self {
+        pub async fn define_radial_gradient(mut self, id: impl Into<String>, cx: Option<f64>, cy: Option<f64>, r: Option<f64>, fx: Option<f64>, fy: Option<f64>, stops: Vec<GradientStopSpec>) -> Self {
             self.children.push(SvgElement::RadialGradient {
                 common: CommonAttrs::default(),
                 id: Some(id.into()),
@@ -304,7 +304,7 @@ pub mod derived_construction {
             });
             self
         }
-        pub fn build(self) -> Vec<SvgElement> {
+        pub async fn build(self) -> Vec<SvgElement> {
             self.children
         }
     }
@@ -328,72 +328,72 @@ pub mod derived_construction {
 
     impl SvgBuilderConstruction {
         //#region TypedConstructors
-        pub fn set_view_box(mut self, min_x: f64, min_y: f64, width: f64, height: f64) -> Self {
+        pub async fn set_view_box(mut self, min_x: f64, min_y: f64, width: f64, height: f64) -> Self {
             self.view_box = Some(ViewBox { min_x, min_y, width, height });
             self
         }
-        pub fn set_dimensions(mut self, width: impl Into<String>, height: impl Into<String>) -> Self {
+        pub async fn set_dimensions(mut self, width: impl Into<String>, height: impl Into<String>) -> Self {
             self.width = Some(width.into());
             self.height = Some(height.into());
             self
         }
-        pub fn set_xmlns(mut self, xmlns: impl Into<String>) -> Self {
+        pub async fn set_xmlns(mut self, xmlns: impl Into<String>) -> Self {
             self.xmlns = Some(xmlns.into());
             self
         }
-        pub fn add_rect(mut self, x: f64, y: f64, width: f64, height: f64, common: CommonAttrs) -> Self {
+        pub async fn add_rect(mut self, x: f64, y: f64, width: f64, height: f64, common: CommonAttrs) -> Self {
             self.elements = self.elements.add_rect(x, y, width, height, common);
             self
         }
-        pub fn add_rect_rounded(mut self, x: f64, y: f64, width: f64, height: f64, rx: f64, ry: f64, common: CommonAttrs) -> Self {
+        pub async fn add_rect_rounded(mut self, x: f64, y: f64, width: f64, height: f64, rx: f64, ry: f64, common: CommonAttrs) -> Self {
             self.elements = self.elements.add_rect_rounded(x, y, width, height, rx, ry, common);
             self
         }
-        pub fn add_circle(mut self, cx: f64, cy: f64, r: f64, common: CommonAttrs) -> Self {
+        pub async fn add_circle(mut self, cx: f64, cy: f64, r: f64, common: CommonAttrs) -> Self {
             self.elements = self.elements.add_circle(cx, cy, r, common);
             self
         }
-        pub fn add_ellipse(mut self, cx: f64, cy: f64, rx: f64, ry: f64, common: CommonAttrs) -> Self {
+        pub async fn add_ellipse(mut self, cx: f64, cy: f64, rx: f64, ry: f64, common: CommonAttrs) -> Self {
             self.elements = self.elements.add_ellipse(cx, cy, rx, ry, common);
             self
         }
-        pub fn add_line(mut self, x1: f64, y1: f64, x2: f64, y2: f64, common: CommonAttrs) -> Self {
+        pub async fn add_line(mut self, x1: f64, y1: f64, x2: f64, y2: f64, common: CommonAttrs) -> Self {
             self.elements = self.elements.add_line(x1, y1, x2, y2, common);
             self
         }
-        pub fn add_polyline(mut self, points: Vec<(f64, f64)>, common: CommonAttrs) -> Self {
+        pub async fn add_polyline(mut self, points: Vec<(f64, f64)>, common: CommonAttrs) -> Self {
             self.elements = self.elements.add_polyline(points, common);
             self
         }
-        pub fn add_polygon(mut self, points: Vec<(f64, f64)>, common: CommonAttrs) -> Self {
+        pub async fn add_polygon(mut self, points: Vec<(f64, f64)>, common: CommonAttrs) -> Self {
             self.elements = self.elements.add_polygon(points, common);
             self
         }
-        pub fn add_path(mut self, path: PathBuilder, common: CommonAttrs) -> Self {
+        pub async fn add_path(mut self, path: PathBuilder, common: CommonAttrs) -> Self {
             self.elements = self.elements.add_path(path, common);
             self
         }
-        pub fn add_group(mut self, common: CommonAttrs, build: impl FnOnce(ElementBuilder) -> ElementBuilder) -> Self {
+        pub async fn add_group(mut self, common: CommonAttrs, build: impl FnOnce(ElementBuilder) -> ElementBuilder) -> Self {
             self.elements = self.elements.add_group(common, build);
             self
         }
-        pub fn add_defs(mut self, common: CommonAttrs, build: impl FnOnce(ElementBuilder) -> ElementBuilder) -> Self {
+        pub async fn add_defs(mut self, common: CommonAttrs, build: impl FnOnce(ElementBuilder) -> ElementBuilder) -> Self {
             self.elements = self.elements.add_defs(common, build);
             self
         }
-        pub fn add_text(mut self, x: Option<f64>, y: Option<f64>, text: impl Into<String>, common: CommonAttrs) -> Self {
+        pub async fn add_text(mut self, x: Option<f64>, y: Option<f64>, text: impl Into<String>, common: CommonAttrs) -> Self {
             self.elements = self.elements.add_text(x, y, text, common);
             self
         }
-        pub fn add_use(mut self, href: impl Into<String>, x: Option<f64>, y: Option<f64>, width: Option<f64>, height: Option<f64>, common: CommonAttrs) -> Self {
+        pub async fn add_use(mut self, href: impl Into<String>, x: Option<f64>, y: Option<f64>, width: Option<f64>, height: Option<f64>, common: CommonAttrs) -> Self {
             self.elements = self.elements.add_use(href, x, y, width, height, common);
             self
         }
-        pub fn define_linear_gradient(mut self, id: impl Into<String>, x1: Option<f64>, y1: Option<f64>, x2: Option<f64>, y2: Option<f64>, stops: Vec<GradientStopSpec>) -> Self {
+        pub async fn define_linear_gradient(mut self, id: impl Into<String>, x1: Option<f64>, y1: Option<f64>, x2: Option<f64>, y2: Option<f64>, stops: Vec<GradientStopSpec>) -> Self {
             self.elements = self.elements.define_linear_gradient(id, x1, y1, x2, y2, stops);
             self
         }
-        pub fn define_radial_gradient(mut self, id: impl Into<String>, cx: Option<f64>, cy: Option<f64>, r: Option<f64>, fx: Option<f64>, fy: Option<f64>, stops: Vec<GradientStopSpec>) -> Self {
+        pub async fn define_radial_gradient(mut self, id: impl Into<String>, cx: Option<f64>, cy: Option<f64>, r: Option<f64>, fx: Option<f64>, fy: Option<f64>, stops: Vec<GradientStopSpec>) -> Self {
             self.elements = self.elements.define_radial_gradient(id, cx, cy, r, fx, fy, stops);
             self
         }
@@ -404,30 +404,30 @@ pub mod derived_construction {
         type Snapshot = SvgSnapshot;
         type Mutation = SvgMutation;
         type Diff = SvgDiff;
-        fn empty() -> Self {
+        async fn empty() -> Self {
             Self { snapshot: SvgSnapshot::default(), diagnostics: Vec::new(), elements: ElementBuilder::new(), view_box: None, width: None, height: None, xmlns: None }
         }
-        fn from_snapshot(snapshot: Self::Snapshot) -> Self {
+        async fn from_snapshot(snapshot: Self::Snapshot) -> Self {
             Self { snapshot, diagnostics: Vec::new(), elements: ElementBuilder::new(), view_box: None, width: None, height: None, xmlns: None }
         }
-        fn from_text(text: &str) -> Result<Self, store::TextError> {
+        async fn from_text(text: &str) -> Result<Self, store::TextError> {
             Ok(Self::from_snapshot(<SvgSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
-        fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
+        async fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
             Ok(Self::from_snapshot(<SvgSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
         }
-        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
+        async fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let diff = crate::artifacts::svg::schema::mutations::apply_svg_mutation(&mut self.snapshot, &mutation);
             (self, diff)
         }
-        fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
+        async fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
             self.snapshot = <SvgDiff as protocol::MutationDiff<SvgSnapshot>>::apply(&diff, &self.snapshot)?;
             Ok(self)
         }
         /// 🏗️ Lowers any pending typed constructor calls into `snapshot.doc`'s root `<svg>` children
         /// before returning -- this is what lets `SvgBuilderConstruction::empty().set_view_box(...).add_rect(...)`
         /// produce a complete, valid SVG 1.1 document purely from typed calls.
-        fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
+        async fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
             let mut snapshot = self.snapshot;
             let pending = self.elements.build();
             if !pending.is_empty() || self.view_box.is_some() || self.width.is_some() || self.height.is_some() || self.xmlns.is_some() {
@@ -494,7 +494,7 @@ pub mod derived_analysis {
         /// 🕵️ Real sniff: parses the (possibly DOCTYPE/prolog-prefixed) XML and checks the root
         /// element's LOCAL name is `svg` (namespace-prefixed roots like `ns:svg` count too) -- not a
         /// constant. Binary sources aren't XML text, so they're never claimed here.
-        fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
+        async fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
             match source {
                 AnalyzeSource::Text(text) => match xml_document_from_text(text) {
                     Ok(doc) => match &doc.root {
@@ -510,7 +510,7 @@ pub mod derived_analysis {
             }
         }
 
-        fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
+        async fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
             let mut parts = SvgParts::default();
             let mut diagnostics = Vec::new();
             let mut confidence = IoConfidence::High;
@@ -562,7 +562,7 @@ pub mod derived_analysis {
         use semio_framework_plugin::ArtifactBuilder;
 
         #[test]
-        fn sniff_recognizes_real_svg_and_rejects_non_svg() {
+        async fn sniff_recognizes_real_svg_and_rejects_non_svg() {
             let svg = r#"<?xml version="1.0"?><svg xmlns="http://www.w3.org/2000/svg"><rect x="0" y="0" width="1" height="1"/></svg>"#;
             assert_eq!(SvgAnalyzerAnalysis::sniff(&AnalyzeSource::Text(svg)), IoConfidence::High);
             let not_svg = r#"<note><to>Tove</to></note>"#;
@@ -570,7 +570,7 @@ pub mod derived_analysis {
         }
 
         #[test]
-        fn builder_constructs_a_complete_document_from_scratch() {
+        async fn builder_constructs_a_complete_document_from_scratch() {
             let stops = vec![GradientStopSpec::new("0%").with_color("#ffffff"), GradientStopSpec::new("100%").with_color("#000000")];
             let snapshot = SvgBuilder::empty()
                 .set_view_box(0.0, 0.0, 200.0, 100.0)
@@ -614,7 +614,7 @@ pub mod derived_analysis {
         /// elsewhere, not by builder reconstruction, since `Unknown` is deliberately not
         /// builder-constructible: it exists purely as a lossless parse escape hatch).
         #[test]
-        fn analyzer_to_builder_round_trip() {
+        async fn analyzer_to_builder_round_trip() {
             // 🚧️ `r##"..."##`: the fixture's `stop-color="#ff0000"` contains the literal sequence
             // `"#`, which would otherwise close a single-hash raw string early.
             let source_text = r##"<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
@@ -637,14 +637,14 @@ pub mod derived_analysis {
 
             // 🧵 The fixture is pretty-printed, so raw children include whitespace-only text nodes
             // between elements (preserved losslessly by design) -- filter those before indexing.
-            fn elements_only(v: &[SvgElement]) -> Vec<SvgElement> {
+            async fn elements_only(v: &[SvgElement]) -> Vec<SvgElement> {
                 v.iter().filter(|c| !matches!(c, SvgElement::TextNode(_))).cloned().collect()
             }
             /// 🧹 Strips whitespace-only text nodes recursively, so structural comparison between a
             /// parsed (pretty-printed, whitespace-bearing) document and a builder-reconstructed one
             /// (which never emits layout whitespace) is apples-to-apples.
-            fn strip_whitespace(el: &SvgElement) -> SvgElement {
-                fn strip_all(children: &[SvgElement]) -> Vec<SvgElement> {
+            async fn strip_whitespace(el: &SvgElement) -> SvgElement {
+                async fn strip_all(children: &[SvgElement]) -> Vec<SvgElement> {
                     elements_only(children).iter().map(strip_whitespace).collect()
                 }
                 match el.clone() {
@@ -721,7 +721,7 @@ pub mod derived_analysis {
 
         /// 🔁 Drives ONE typed builder call per typed element, recursing into containers. Used only by
         /// `analyzer_to_builder_round_trip` above.
-        fn rebuild_one(eb: ElementBuilder, el: &SvgElement) -> ElementBuilder {
+        async fn rebuild_one(eb: ElementBuilder, el: &SvgElement) -> ElementBuilder {
             match el {
                 SvgElement::Rect { common, x, y, width, height, rx, ry } => match (rx, ry) {
                     (Some(rx), Some(ry)) => eb.add_rect_rounded(*x, *y, *width, *height, *rx, *ry, common.clone()),
@@ -771,7 +771,7 @@ semio_framework_plugin::derive_artifact_facets!(
 // codecs/`io_registry` moved to `../🚪️io`; tests moved beside what they now test (see that
 // file's own `mod tests`).
 /// 🌱 Empty persisted snapshot.
-pub fn empty_svg_snapshot() -> SvgSnapshot {
+pub async fn empty_svg_snapshot() -> SvgSnapshot {
     SvgSnapshot::default()
 }
 
@@ -784,7 +784,7 @@ pub fn empty_svg_snapshot() -> SvgSnapshot {
 /// single source of truth for `📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio`/
 /// `🎒️example.pack.semio` (both are literally this snapshot's `print_dsl`/`encode_pack` output,
 /// asserted equal by `fixture_honesty_law` in `../🚪️io`'s own tests).
-pub fn demo_svg_snapshot() -> SvgSnapshot {
+pub async fn demo_svg_snapshot() -> SvgSnapshot {
     use crate::artifacts::xml::schema::snapshot::{XmlAttr, XmlDeclaration, XmlDocument, XmlNode};
     let root = XmlNode::Element {
         name: "svg".into(),

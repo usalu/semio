@@ -12,7 +12,7 @@ pub struct RemoveStep {
     pub step_id: String,
 }
 
-pub fn handle(payload: &RemoveStep, _doc: &ArtifactView<'_, PlaybookSnapshot>, _cfg: &ConfigView<'_, PlaybookConfig>) -> Result<Emit<PlaybookMutation, PlaybookConfigMutation>, Fault> {
+pub async fn handle(payload: &RemoveStep, _doc: &ArtifactView<'_, PlaybookSnapshot>, _cfg: &ConfigView<'_, PlaybookConfig>) -> Result<Emit<PlaybookMutation, PlaybookConfigMutation>, Fault> {
     if payload.step_id.is_empty() {
         return Ok(Emit::default());
     }

@@ -15,12 +15,12 @@ use crate::artifacts::lowpoly::schema::mutations::text::LowpolyMutation;
 use protocol::OpBinary;
 
 /// 📦️ Encodes a `LowpolyMutation` to its binary command form.
-pub fn encode_op(operation: &LowpolyMutation) -> Result<Vec<u8>, protocol::ProtocolError> {
+pub async fn encode_op(operation: &LowpolyMutation) -> Result<Vec<u8>, protocol::ProtocolError> {
     operation.encode_op()
 }
 
 /// 📖️ Decodes a `LowpolyMutation` from its binary command form.
-pub fn decode_op(bytes: &[u8]) -> Result<LowpolyMutation, protocol::ProtocolError> {
+pub async fn decode_op(bytes: &[u8]) -> Result<LowpolyMutation, protocol::ProtocolError> {
     LowpolyMutation::decode_op(bytes)
 }
 
@@ -33,7 +33,7 @@ mod tests {
     use crate::artifacts::lowpoly::LOWPOLY_DOCUMENT_SCHEMA;
 
     #[test]
-    fn op_binary_round_trips_and_agrees_with_text() {
+    async fn op_binary_round_trips_and_agrees_with_text() {
         let projection = default_snapshot();
         let object_id = projection.objects[0].id.clone();
         let operation = LowpolyMutation::RenameObject(rename_object::mutation::RenameObject { id: object_id, new_name: "Renamed".into() });
@@ -43,7 +43,7 @@ mod tests {
     }
 
     #[test]
-    fn document_text_round_trip_after_applying_an_operation() {
+    async fn document_text_round_trip_after_applying_an_operation() {
         let projection = default_snapshot();
         let object_id = projection.objects[0].id.clone();
         let envelope = store::create_document_envelope::<crate::artifacts::lowpoly::LowpolySnapshot, LowpolyMutation>(LOWPOLY_DOCUMENT_SCHEMA, "test-doc", projection, None);

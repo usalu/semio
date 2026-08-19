@@ -21,7 +21,7 @@ use crate::wfc_engine::topology::Topology;
 /// one deterministic per-chunk seed. Same world seed + same chunk coordinate + same model always
 /// derives the same seed, regardless of what order chunks are visited in or what else has been
 /// solved so far.
-pub(crate) fn chunk_seed(world_seed: u64, chunk_x: i64, chunk_y: i64, model_fingerprint: u64) -> u64 {
+pub(crate) async fn chunk_seed(world_seed: u64, chunk_x: i64, chunk_y: i64, model_fingerprint: u64) -> u64 {
     let mut z = world_seed;
     for part in [chunk_x as u64, chunk_y as u64, model_fingerprint] {
         z ^= part.wrapping_add(0x9E37_79B9_7F4A_7C15).wrapping_add(z << 6).wrapping_add(z >> 2);
@@ -39,7 +39,7 @@ pub(crate) fn chunk_seed(world_seed: u64, chunk_x: i64, chunk_y: i64, model_fing
 /// model — the caller (e.g. via `crate::wfc_engine::repair`) may need to widen the halo, regenerate the
 /// offending neighbor, or otherwise back off, not treat it as a hard failure.
 #[allow(clippy::too_many_arguments)]
-pub(crate) fn solve_chunk<T: Topology>(model: &CompiledModel, topo: &T, config: &SearchConfig, world_seed: u64, chunk_x: i64, chunk_y: i64, init_domains: Option<&[PatternSet]>, seam_fixed: &[(NodeId, PatternId)]) -> SolveOutcome {
+pub(crate) async fn solve_chunk<T: Topology>(model: &CompiledModel, topo: &T, config: &SearchConfig, world_seed: u64, chunk_x: i64, chunk_y: i64, init_domains: Option<&[PatternSet]>, seam_fixed: &[(NodeId, PatternId)]) -> SolveOutcome {
     let seed = chunk_seed(world_seed, chunk_x, chunk_y, model.fingerprint());
     search::solve(model, topo, config, seed, init_domains, seam_fixed)
 }
@@ -53,7 +53,7 @@ mod tests {
     use crate::wfc_engine::oracle;
     use crate::wfc_engine::topology::GraphTopologyBuilder;
 
-    fn checkerboard(n: usize) -> (CompiledModel, crate::wfc_engine::topology::GraphTopology, Vec<oracle::ArcSpec>) {
+    async fn checkerboard(n: usize) -> (CompiledModel, crate::wfc_engine::topology::GraphTopology, Vec<oracle::ArcSpec>) {
         let mut b = ModelBuilder::new();
         let black = b.add_pattern(1.0);
         let white = b.add_pattern(1.0);
@@ -72,7 +72,7 @@ mod tests {
     }
 
     #[test]
-    fn chunk_seed_is_deterministic_and_varies_by_coordinate_and_model() {
+    async fn chunk_seed_is_deterministic_and_varies_by_coordinate_and_model() {
         assert_eq!(chunk_seed(1, 3, 4, 99), chunk_seed(1, 3, 4, 99));
         assert_ne!(chunk_seed(1, 3, 4, 99), chunk_seed(1, 3, 5, 99));
         assert_ne!(chunk_seed(1, 3, 4, 99), chunk_seed(1, 4, 4, 99));
@@ -84,7 +84,7 @@ mod tests {
     }
 
     #[test]
-    fn solve_chunk_reproduces_identical_content_on_repeated_calls() {
+    async fn solve_chunk_reproduces_identical_content_on_repeated_calls() {
         let (model, topo, arcs) = checkerboard(10);
         let config = SearchConfig::default();
         let a = solve_chunk(&model, &topo, &config, 42, 2, -1, None, &[]);
@@ -99,7 +99,7 @@ mod tests {
     }
 
     #[test]
-    fn solve_chunk_respects_seam_pins_from_a_committed_neighbor() {
+    async fn solve_chunk_respects_seam_pins_from_a_committed_neighbor() {
         let (model, topo, _arcs) = checkerboard(6);
         let config = SearchConfig::default();
         // Simulates a neighboring chunk having already committed node 0 to white.
@@ -111,7 +111,7 @@ mod tests {
     }
 
     #[test]
-    fn different_chunk_coordinates_can_yield_different_content_for_an_underconstrained_model() {
+    async fn different_chunk_coordinates_can_yield_different_content_for_an_underconstrained_model() {
         // A single isolated node with two equally-likely patterns and no seam pins: different
         // chunk coordinates should be free to (though aren't guaranteed to) land on different
         // values — what matters is they're each internally deterministic, checked here by

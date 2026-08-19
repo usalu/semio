@@ -28,7 +28,7 @@ pub struct SemioKitEntries {
 
 /// 🗃️ Computes [`SemioKitEntries`] — pure, total, O(types + designs + pieces + connections +
 /// objects + models + representations).
-pub fn compute_semio_kit_entries(snapshot: &SemioKitSnapshot) -> SemioKitEntries {
+pub async fn compute_semio_kit_entries(snapshot: &SemioKitSnapshot) -> SemioKitEntries {
     let piece_count = snapshot.designs.iter().map(|d| d.pieces.len() as u32).sum();
     let connection_count = snapshot.designs.iter().map(|d| d.connections.len() as u32).sum();
     SemioKitEntries {
@@ -54,7 +54,7 @@ mod tests {
     /// 🌱 A hand-built, non-empty catalog: 2 types, 2 designs (one with 2 pieces + 1 connection,
     /// one empty), no children/representations — exercises the real fold without depending on the
     /// composite subset's own child-handle demo fixture.
-    fn populated() -> SemioKitSnapshot {
+    async fn populated() -> SemioKitSnapshot {
         SemioKitSnapshot {
             schema: STDIO_SEMIOKIT_DOCUMENT_SCHEMA.into(),
             types: vec![SemioKitType { id: "chair".into(), name: "Chair".into(), category: "furniture".into() }, SemioKitType { id: "table".into(), name: "Table".into(), category: "furniture".into() }],
@@ -75,7 +75,7 @@ mod tests {
     }
 
     #[test]
-    fn folds_pieces_and_connections_across_every_design() {
+    async fn folds_pieces_and_connections_across_every_design() {
         let entries = compute_semio_kit_entries(&populated());
         assert_eq!(entries.type_count, 2);
         assert_eq!(entries.design_count, 2);
@@ -88,13 +88,13 @@ mod tests {
     }
 
     #[test]
-    fn inference_determinism_law() {
+    async fn inference_determinism_law() {
         let snapshot = populated();
         assert_eq!(compute_semio_kit_entries(&snapshot), compute_semio_kit_entries(&snapshot));
     }
 
     #[test]
-    fn inference_default_law() {
+    async fn inference_default_law() {
         assert_eq!(compute_semio_kit_entries(&SemioKitSnapshot::default()), SemioKitEntries::default());
     }
 }

@@ -15,7 +15,7 @@ pub struct SpawnApp {
     pub y: f64,
 }
 
-pub fn handle(payload: &SpawnApp, _doc: &ArtifactView<'_, WorkflowSnapshot>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
+pub async fn handle(payload: &SpawnApp, _doc: &ArtifactView<'_, WorkflowSnapshot>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
     match crate::engine::space::engine::add_workflow_node_operation(&payload.plugin_id, &payload.app_id, None, payload.x, payload.y) {
         Some((operation, node_id)) => Ok(Emit { artifact_mutations: vec![operation], config_mutations: vec![SpaceConfigMutation::SetActiveNode { node_id: Some(node_id) }], ..Default::default() }),
         None => Ok(Emit::default()),
@@ -32,7 +32,7 @@ mod tests {
     use std::collections::HashSet;
 
     #[test]
-    fn space_command_op_text_round_trips_every_variant() {
+    async fn space_command_op_text_round_trips_every_variant() {
         store::os_store::test_support::assert_op_line_round_trip(&SpaceCommand::SpawnApp(SpawnApp { plugin_id: "draw".into(), app_id: "draw".into(), x: 80.0, y: 80.0 }));
         store::os_store::test_support::assert_op_line_round_trip(&SpaceCommand::MoveMediaNode(crate::engine::space::commands::move_media_node::MoveMediaNode { node_id: "n1".into(), x: 1.0, y: 2.0 }));
         store::os_store::test_support::assert_op_line_round_trip(&SpaceCommand::RemoveAppInstance(crate::engine::space::commands::remove_app_instance::RemoveAppInstance { node_id: Some("n1".into()) }));
@@ -57,7 +57,7 @@ mod tests {
     }
 
     #[test]
-    fn move_media_node_emits_coalesced_move_operation() {
+    async fn move_media_node_emits_coalesced_move_operation() {
         let projection = demo_space_projection();
         let config = SpaceConfig::default();
         let node_id = projection.graph.nodes.first().expect("node").id.clone();
@@ -69,7 +69,7 @@ mod tests {
     }
 
     #[test]
-    fn spawns_draw_app_instance() {
+    async fn spawns_draw_app_instance() {
         seed_draw_plugin();
         let projection = demo_space_projection();
         let config = SpaceConfig::default();
@@ -82,7 +82,7 @@ mod tests {
     }
 
     #[test]
-    fn spawns_draw_app_instance_at_drop_position() {
+    async fn spawns_draw_app_instance_at_drop_position() {
         seed_draw_plugin();
         let projection = demo_space_projection();
         let config = SpaceConfig::default();
@@ -95,7 +95,7 @@ mod tests {
     }
 
     #[test]
-    fn patch_app_instances_updates_labels() {
+    async fn patch_app_instances_updates_labels() {
         let projection = demo_space_projection();
         let config = SpaceConfig::default();
         let ids: Vec<String> = projection.graph.nodes.iter().take(2).map(|node| node.id.clone()).collect();
@@ -107,7 +107,7 @@ mod tests {
     }
 
     #[test]
-    fn spawns_puzzle5d_and_shooting_with_multi_port_registrations() {
+    async fn spawns_puzzle5d_and_shooting_with_multi_port_registrations() {
         seed_multi_port_plugins();
         let mut projection = demo_space_projection();
         let config = SpaceConfig::default();
@@ -122,7 +122,7 @@ mod tests {
     }
 
     #[test]
-    fn undo_redo_round_trip_on_spawn() {
+    async fn undo_redo_round_trip_on_spawn() {
         use semio_framework_plugin::{testkit, VcsArtifactApp};
         seed_draw_plugin();
         let mut app = VcsArtifactApp::new(crate::engine::space::SpaceApp::default());

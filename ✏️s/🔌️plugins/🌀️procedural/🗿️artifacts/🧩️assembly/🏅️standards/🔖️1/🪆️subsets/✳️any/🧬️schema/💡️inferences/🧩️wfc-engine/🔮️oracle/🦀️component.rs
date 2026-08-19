@@ -38,7 +38,7 @@ const DEFAULT_STEP_BUDGET: u64 = 5_000_000;
 /// `arcs`, via chronological DFS over nodes `0..node_count` with only-check-against-assigned-neighbors
 /// pruning (no propagation). Intended for tiny instances only; `limit` bounds collected solutions,
 /// an internal step budget bounds worst-case runtime regardless of `limit`.
-pub fn enumerate(model: &CompiledModel, node_count: usize, arcs: &[ArcSpec], init_domains: &[PatternSet], limit: usize) -> OracleResult {
+pub async fn enumerate(model: &CompiledModel, node_count: usize, arcs: &[ArcSpec], init_domains: &[PatternSet], limit: usize) -> OracleResult {
     debug_assert_eq!(init_domains.len(), node_count);
     let mut incoming: Vec<Vec<(NodeId, RelationId)>> = vec![Vec::new(); node_count];
     let mut outgoing: Vec<Vec<(NodeId, RelationId)>> = vec![Vec::new(); node_count];
@@ -55,7 +55,7 @@ pub fn enumerate(model: &CompiledModel, node_count: usize, arcs: &[ArcSpec], ini
 }
 
 #[allow(clippy::too_many_arguments)]
-fn search(
+async fn search(
     model: &CompiledModel,
     node_count: usize,
     outgoing: &[Vec<(NodeId, RelationId)>],
@@ -116,7 +116,7 @@ fn search(
 }
 
 /// 🔮️ Checks a complete assignment against every arc, independent of [`enumerate`]'s search code.
-pub fn check_assignment(model: &CompiledModel, assignment: &[PatternId], arcs: &[ArcSpec]) -> Result<(), Violation> {
+pub async fn check_assignment(model: &CompiledModel, assignment: &[PatternId], arcs: &[ArcSpec]) -> Result<(), Violation> {
     for a in arcs {
         let src_p = assignment[a.from.index()];
         let dst_p = assignment[a.to.index()];
@@ -150,7 +150,7 @@ pub(crate) mod testgen {
 
     /// 🧪️ Two patterns (black/white) that must differ across every edge of a path graph
     /// `0 - 1 - ... - (n-1)`. Always satisfiable (paths are bipartite).
-    pub fn checkerboard_path(n: usize) -> Fixture {
+    pub async fn checkerboard_path(n: usize) -> Fixture {
         let mut b = ModelBuilder::new();
         let black = b.add_pattern(1.0);
         let white = b.add_pattern(1.0);
@@ -168,7 +168,7 @@ pub(crate) mod testgen {
 
     /// 🧪️ Two patterns that must differ across every edge of an odd cycle `0-1-...-(n-1)-0` with
     /// `n` odd — unsatisfiable, since odd cycles are not bipartite. `n` must be odd and >= 3.
-    pub fn unsat_odd_cycle(n: usize) -> Fixture {
+    pub async fn unsat_odd_cycle(n: usize) -> Fixture {
         assert!(n >= 3 && n % 2 == 1, "unsat_odd_cycle requires an odd n >= 3");
         let mut fx = checkerboard_path(n);
         let adj = RelationId(0);
@@ -179,7 +179,7 @@ pub(crate) mod testgen {
 
     /// 🧪️ A complete graph `K_n` over `k` patterns that must all differ pairwise — a proper
     /// `k`-coloring of `K_n`, satisfiable iff `k >= n`.
-    pub fn complete_graph_coloring(n: usize, k: usize) -> Fixture {
+    pub async fn complete_graph_coloring(n: usize, k: usize) -> Fixture {
         let mut b = ModelBuilder::new();
         let patterns: Vec<_> = (0..k).map(|_| b.add_pattern(1.0)).collect();
         let ne = b.add_relation("not_equal");
@@ -205,7 +205,7 @@ pub(crate) mod testgen {
     /// 🧪️ A uniformly-random tiny compiled model: `pattern_count` patterns each with a random
     /// weight in `[1, 5]`, one relation whose compatibility pairs are each independently kept with
     /// probability `density`.
-    pub fn random_model(rng: &mut geometry::random::Rng, pattern_count: usize, density: f64) -> (CompiledModel, RelationId) {
+    pub async fn random_model(rng: &mut geometry::random::Rng, pattern_count: usize, density: f64) -> (CompiledModel, RelationId) {
         let mut b = ModelBuilder::new();
         let patterns: Vec<_> = (0..pattern_count).map(|_| b.add_pattern(1.0 + rng.next_range(0, 5) as f64)).collect();
         let r = b.add_relation("r");
@@ -222,7 +222,7 @@ pub(crate) mod testgen {
 
     /// 🧪️ A random small connected graph over `node_count` nodes (a random spanning tree plus a
     /// few extra random edges), with both directions registered under `relation`.
-    pub fn random_arcs(rng: &mut geometry::random::Rng, node_count: usize, relation: RelationId) -> Vec<ArcSpec> {
+    pub async fn random_arcs(rng: &mut geometry::random::Rng, node_count: usize, relation: RelationId) -> Vec<ArcSpec> {
         let mut arcs = Vec::new();
         for i in 1..node_count {
             let j = rng.next_range(0, i as u64) as usize;
@@ -245,12 +245,12 @@ pub(crate) mod testgen {
     }
 
     #[allow(dead_code)]
-    pub fn full_domains(model: &CompiledModel, node_count: usize) -> Vec<PatternSet> {
+    pub async fn full_domains(model: &CompiledModel, node_count: usize) -> Vec<PatternSet> {
         vec![model.full_domain(); node_count]
     }
 
     #[allow(dead_code)]
-    pub fn weight_table_of(model: &CompiledModel) -> &WeightTable {
+    pub async fn weight_table_of(model: &CompiledModel) -> &WeightTable {
         model.weights()
     }
 }
@@ -263,7 +263,7 @@ mod tests {
     use testgen::*;
 
     #[test]
-    fn checkerboard_path_is_satisfiable_and_alternates() {
+    async fn checkerboard_path_is_satisfiable_and_alternates() {
         let fx = checkerboard_path(4);
         let result = enumerate(&fx.model, fx.node_count, &fx.arcs, &fx.init_domains, 100);
         assert!(result.complete);
@@ -279,7 +279,7 @@ mod tests {
     }
 
     #[test]
-    fn unsat_odd_cycle_has_no_solutions() {
+    async fn unsat_odd_cycle_has_no_solutions() {
         let fx = unsat_odd_cycle(5);
         let result = enumerate(&fx.model, fx.node_count, &fx.arcs, &fx.init_domains, 100);
         assert!(result.complete);
@@ -287,7 +287,7 @@ mod tests {
     }
 
     #[test]
-    fn even_cycle_is_satisfiable() {
+    async fn even_cycle_is_satisfiable() {
         let mut fx = checkerboard_path(6);
         let adj = RelationId(0);
         fx.arcs.push(ArcSpec { from: NodeId::from_index(5), to: NodeId::from_index(0), relation: adj });
@@ -298,7 +298,7 @@ mod tests {
     }
 
     #[test]
-    fn complete_graph_coloring_matches_chromatic_condition() {
+    async fn complete_graph_coloring_matches_chromatic_condition() {
         let sat = complete_graph_coloring(4, 4);
         let r1 = enumerate(&sat.model, sat.node_count, &sat.arcs, &sat.init_domains, 1000);
         assert!(r1.complete);
@@ -312,7 +312,7 @@ mod tests {
     }
 
     #[test]
-    fn check_assignment_detects_violation() {
+    async fn check_assignment_detects_violation() {
         let fx = checkerboard_path(3);
         let bad = vec![PatternId(0), PatternId(0), PatternId(1)];
         assert!(check_assignment(&fx.model, &bad, &fx.arcs).is_err());
@@ -321,7 +321,7 @@ mod tests {
     }
 
     #[test]
-    fn limit_caps_collected_solutions() {
+    async fn limit_caps_collected_solutions() {
         let fx = complete_graph_coloring(4, 4);
         let result = enumerate(&fx.model, fx.node_count, &fx.arcs, &fx.init_domains, 5);
         assert_eq!(result.solutions.len(), 5);
@@ -331,7 +331,7 @@ mod tests {
         use super::*;
 
         #[test]
-        fn random_instances_every_solution_passes_check_assignment() {
+        async fn random_instances_every_solution_passes_check_assignment() {
             let mut rng = geometry::random::Rng::from_seed(2024);
             for _ in 0..200 {
                 let pattern_count = 1 + rng.next_range(0, 4) as usize;

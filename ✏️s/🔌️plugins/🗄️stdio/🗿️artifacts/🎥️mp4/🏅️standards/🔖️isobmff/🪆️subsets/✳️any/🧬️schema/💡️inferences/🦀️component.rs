@@ -24,7 +24,7 @@ pub struct Mp4Inference {
 }
 
 impl protocol::Inference<Mp4Snapshot> for Mp4Inference {
-    fn infer(snapshot: &Mp4Snapshot) -> Self {
+    async fn infer(snapshot: &Mp4Snapshot) -> Self {
         Self { duration: compute_mp4_duration(snapshot) }
     }
 }
@@ -33,19 +33,19 @@ impl protocol::Inference<Mp4Snapshot> for Mp4Inference {
 /// `Mp4Snapshot::default()`'s `tracks` ever stop being empty (its own hand-rolled `Default`
 /// already picks a real minimal `ftyp`, not a zeroed struct).
 impl Default for Mp4Inference {
-    fn default() -> Self {
+    async fn default() -> Self {
         <Self as protocol::Inference<Mp4Snapshot>>::infer(&Mp4Snapshot::default())
     }
 }
 
 impl protocol::InferenceSpec<Mp4Snapshot> for Mp4Inference {
-    fn inference_schema_id() -> &'static str {
+    async fn inference_schema_id() -> &'static str {
         "s.stdio.mp4.inference"
     }
-    fn schema_version() -> u32 {
+    async fn schema_version() -> u32 {
         1
     }
-    fn fields() -> &'static [protocol::InferenceFieldSpec] {
+    async fn fields() -> &'static [protocol::InferenceFieldSpec] {
         &[protocol::InferenceFieldSpec { id: "s.stdio.mp4.inference.duration", reads: &["tracks"] }]
     }
 }
@@ -65,7 +65,7 @@ impl ArtifactInferrer for crate::artifacts::mp4::standards::isobmff::subsets::an
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.stdio.mp4.inference`'s facet leaves into the OS-wide inference catalog — call
 /// once at plugin init, alongside `mp4_artifact_schema_descriptor`'s registration.
-pub fn mp4_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
+pub async fn mp4_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
     schema::ArtifactInferenceDescriptor {
         id: "s.stdio.mp4.inference",
         inference: schema::FacetLeaves {
@@ -86,13 +86,13 @@ mod tests {
     use protocol::Inference;
 
     #[test]
-    fn inference_determinism_law() {
+    async fn inference_determinism_law() {
         let snapshot = Mp4Snapshot::default();
         assert_eq!(Mp4Inference::infer(&snapshot), Mp4Inference::infer(&snapshot));
     }
 
     #[test]
-    fn inference_default_law() {
+    async fn inference_default_law() {
         assert_eq!(Mp4Inference::infer(&Mp4Snapshot::default()), Mp4Inference::default());
     }
 }

@@ -21,7 +21,7 @@ pub const S_HOME_VIEW_BODY: &str = TableWindowKit::KIND_ID;
 
 //#region 🔖️Definition
 /// 🧱️ Stitched into the viewer manifest by `crate::viewer::home::create_home_viewer`.
-pub fn definition() -> WindowKindDefinition {
+pub async fn definition() -> WindowKindDefinition {
     let mut def = TableWindowKit::window_kind();
     def.id = S_HOME_VIEW_WINDOW.into();
     def.label = LocalizedLabel::native("Studios", "Studios");
@@ -36,7 +36,7 @@ pub fn definition() -> WindowKindDefinition {
 /// test in this crate's test binary — a `DirectoryReadModel::default()` alone is NOT enough to reach an
 /// empty row list, since the local catalog half is unconditionally unioned in and never guaranteed
 /// empty once any other test has created a studio).
-fn render_rows(rows: &[crate::HomeSpaceRow], labels: &HomeTableLabels) -> UiNode {
+async fn render_rows(rows: &[crate::HomeSpaceRow], labels: &HomeTableLabels) -> UiNode {
     if rows.is_empty() {
         return semio_framework_plugin::ui_text(semio_framework_plugin::Label::data(labels.empty_message.as_str().to_string()));
     }
@@ -65,7 +65,7 @@ fn render_rows(rows: &[crate::HomeSpaceRow], labels: &HomeTableLabels) -> UiNode
 /// 👁️ No `SHomeSnapshot` argument: exactly like the editor's own main-window render, Home's table rows
 /// are derived entirely from `HomeConfig.directory` + the live studio catalog, never from the artifact
 /// document itself — see `HomeApp::handle`'s doc comment in the editor for the same observation.
-pub fn render(directory: &store::os_directory::DirectoryReadModel, locale: &str) -> UiNode {
+pub async fn render(directory: &store::os_directory::DirectoryReadModel, locale: &str) -> UiNode {
     let labels = semio_framework_plugin::resolve_labels_for_locale::<HomeTableLabels>(locale);
     render_rows(&crate::home_space_rows(directory), labels)
 }
@@ -76,25 +76,25 @@ pub fn render(directory: &store::os_directory::DirectoryReadModel, locale: &str)
 mod tests {
     use super::*;
 
-    fn one_hub_row() -> crate::HomeSpaceRow {
+    async fn one_hub_row() -> crate::HomeSpaceRow {
         crate::HomeSpaceRow { id: "sp-1".into(), name: "Fabrication".into(), kind: "studio".into(), visibility: "public".into(), members: "2".into(), updated: "1000".into(), origin: "hub" }
     }
 
     #[test]
-    fn definition_declares_the_table_surface_and_body_key() {
+    async fn definition_declares_the_table_surface_and_body_key() {
         let definition = definition();
         assert_eq!(definition.body_key, S_HOME_VIEW_BODY);
     }
 
     #[test]
-    fn empty_rows_render_the_empty_message_not_a_zero_row_table() {
+    async fn empty_rows_render_the_empty_message_not_a_zero_row_table() {
         let json = serde_json::to_string(&render_rows(&[], &HomeTableLabels::NATIVE_EN)).expect("render json");
         assert!(json.contains("No studios yet."));
         assert!(!json.contains("framework.window.table"), "empty rows must not render the table scene at all: {json}");
     }
 
     #[test]
-    fn a_row_renders_without_the_actions_column() {
+    async fn a_row_renders_without_the_actions_column() {
         let json = serde_json::to_string(&render_rows(&[one_hub_row()], &HomeTableLabels::NATIVE_EN)).expect("render json");
         assert!(json.contains("Fabrication"));
         assert!(json.contains("hub"));
@@ -105,7 +105,7 @@ mod tests {
     /// 🆔️ Contract §C0: even the read-only viewer's rows must carry `data-row-id="space:<id>"` — a
     /// viewer just never attaches row-scoped action buttons to it.
     #[test]
-    fn a_row_stamps_the_space_row_id() {
+    async fn a_row_stamps_the_space_row_id() {
         let UiNode::ComponentScene(node) = render_rows(&[one_hub_row()], &HomeTableLabels::NATIVE_EN) else { panic!("expected ComponentScene") };
         let scene = node.table.expect("table scene");
         let rows: Vec<serde_json::Value> = serde_json::from_str(&scene.rows_json).expect("rows_json parses");
@@ -114,14 +114,14 @@ mod tests {
     }
 
     #[test]
-    fn german_locale_labels_resolve() {
+    async fn german_locale_labels_resolve() {
         let json = serde_json::to_string(&render_rows(&[one_hub_row()], &HomeTableLabels::NATIVE_DE)).expect("render json");
         assert!(json.contains("Aktualisiert"));
         assert!(json.contains("Herkunft"));
     }
 
     #[test]
-    fn render_with_a_folded_space_renders_a_table_row() {
+    async fn render_with_a_folded_space_renders_a_table_row() {
         let event = store::os_directory::DirectoryEvent {
             seq: 1,
             id: "evt-1".into(),

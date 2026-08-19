@@ -17,7 +17,7 @@ pub struct CanvasPointerDown {
 /// landed on); the resulting selection is applied through the framework's `interactionSelect` verb,
 /// never a `PresentConfigMutation`, now that selection is framework-owned state (ticket
 /// 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM).
-pub fn handle(payload: &CanvasPointerDown, doc: &ArtifactView<'_, PresentSnapshot>, _cfg: &ConfigView<'_, PresentConfig>, _ctx: &mut PresentDispatchCtx) -> Result<Emit<PresentMutation, PresentConfigMutation>, Fault> {
+pub async fn handle(payload: &CanvasPointerDown, doc: &ArtifactView<'_, PresentSnapshot>, _cfg: &ConfigView<'_, PresentConfig>, _ctx: &mut PresentDispatchCtx) -> Result<Emit<PresentMutation, PresentConfigMutation>, Fault> {
     let deck = doc.snapshot;
     let (_, deck_tiles) = crate::artifacts::present::present_working_scene(deck);
     let ids: Vec<String> = match &payload.layer_id {
@@ -36,7 +36,7 @@ mod tests {
     use semio_framework_plugin::Effect;
 
     #[test]
-    fn canvas_pointer_down_emits_interaction_select_for_a_hit_and_clears_on_miss() {
+    async fn canvas_pointer_down_emits_interaction_select_for_a_hit_and_clears_on_miss() {
         let mut app = present_app_with_registry();
         dispatch(&mut app, PresentCommand::AddTile(add_tile::AddTile { crop: None }));
         let tile_id = crate::artifacts::present::present_working_scene(&app.snapshot().expect("projection")).1[0].id.clone();

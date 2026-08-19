@@ -36,7 +36,7 @@ pub const GIS3D_PLAY_APP_ID: &str = "gis3d-play";
 /// `GisTerrainSnapshot::imported_features_json`) and `scene:out` (this terrain as `3d.mesh`).
 /// `document_media_type` is Data×Value (the document is a scalar "exaggeration + imported overlay"
 /// record, not itself mesh geometry — `scene:out` is the actual renderable mesh/terrain surface).
-pub fn gis3d_io() -> AppIo {
+pub async fn gis3d_io() -> AppIo {
     AppIo {
         document_schema: GIS_3D_TERRAIN_SCHEMA.into(),
         document_media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value },
@@ -50,7 +50,7 @@ pub fn gis3d_io() -> AppIo {
 /// 🔌️ `map:in` — a `2d.map` producer (gis2d's `map:out`) feeding an overlay pin layer into this
 /// terrain (see `GisTerrainSnapshot::imported_features_json`). `One`/optional: exactly one map may
 /// be draped onto a terrain at a time, and a terrain with no upstream edge is valid.
-pub fn gis3d_map_in_port() -> semio_framework_plugin::MediaPortSpec {
+pub async fn gis3d_map_in_port() -> semio_framework_plugin::MediaPortSpec {
     semio_framework_plugin::MediaPortSpec {
         id: "map:in".into(),
         label: "Map".into(),
@@ -65,7 +65,7 @@ pub fn gis3d_map_in_port() -> semio_framework_plugin::MediaPortSpec {
 /// 🔌️ `scene:out` — this terrain as `3d.mesh` (kind already registered by lowpoly; reused verbatim,
 /// not redeclared — WORKFLOWS-END-TO-END-TYPED-PORTS Wave 2 port recipe). `Many`/optional: several
 /// downstream consumers may fan out from one terrain, and a terrain with no downstream edge is valid.
-pub fn gis3d_scene_out_port() -> semio_framework_plugin::MediaPortSpec {
+pub async fn gis3d_scene_out_port() -> semio_framework_plugin::MediaPortSpec {
     semio_framework_plugin::MediaPortSpec {
         id: "scene:out".into(),
         label: "Scene".into(),
@@ -82,7 +82,7 @@ pub fn gis3d_scene_out_port() -> semio_framework_plugin::MediaPortSpec {
 /// 🏔️terrain window's `render`/`build_terrain_scene_json`), so this exports the same terrain descriptor
 /// fields (exaggeration + imported overlay) as a structured `3d.mesh` payload rather than a real
 /// triangulated mesh — an honest placeholder for the day a tessellator lands, not a silent fake.
-pub fn gis3d_scene_media(document: &GisTerrainSnapshot) -> Media {
+pub async fn gis3d_scene_media(document: &GisTerrainSnapshot) -> Media {
     Media {
         media_type: MediaType { class: MediaClass::ThreeD, form: MediaForm::Mesh },
         payload: MediaPayload::Structured {
@@ -138,17 +138,17 @@ impl ArtifactEditor for Gis3dPlayApp {
     const DIALECT: Dialect = crate::artifacts::gisterrain::GISTERRAIN_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = GIS_3D_TERRAIN_SCHEMA;
 
-    fn app_schema() -> Option<::schema::AppSchemaDescriptor> {
+    async fn app_schema() -> Option<::schema::AppSchemaDescriptor> {
         Some(crate::editor::gis3d::config::schema::app_schema_descriptor())
     }
 
-    fn initial_snapshot() -> GisTerrainSnapshot {
+    async fn initial_snapshot() -> GisTerrainSnapshot {
         default_terrain_document()
     }
 
     /// 🔌️ `map:in`/`scene:out` (WORKFLOWS-END-TO-END-TYPED-PORTS Wave 2 port recipe) plus the implicit
     /// document ports.
-    fn io() -> Option<AppIo> {
+    async fn io() -> Option<AppIo> {
         Some(gis3d_io())
     }
 
@@ -173,7 +173,7 @@ impl ArtifactEditor for Gis3dPlayApp {
     /// deliberately unimplemented — per the semantic-mutations taxonomy, whole-document replace has
     /// no in-history mutation; it goes through `ArtifactStore::reset` (file-open/import/load-example),
     /// entirely outside this method.
-    fn import_media(port: &str, media: &Media, _doc: &ArtifactView<'_, GisTerrainSnapshot>) -> Result<Emit<GisTerrainMutation, Gis3dConfigMutation, Self::DraftMutation>, MediaError> {
+    async fn import_media(port: &str, media: &Media, _doc: &ArtifactView<'_, GisTerrainSnapshot>) -> Result<Emit<GisTerrainMutation, Gis3dConfigMutation, Self::DraftMutation>, MediaError> {
         match port {
             "map:in" => {
                 let MediaPayload::Structured { json, .. } = &media.payload else {
@@ -186,7 +186,7 @@ impl ArtifactEditor for Gis3dPlayApp {
         }
     }
 
-    fn command_id(command: &Gis3dCommand) -> &'static str {
+    async fn command_id(command: &Gis3dCommand) -> &'static str {
         command.command_id()
     }
 
@@ -194,7 +194,7 @@ impl ArtifactEditor for Gis3dPlayApp {
     /// `{action,args}` wire; this is the typed-command bridge until those call sites send `OpBinary`
     /// bytes directly. Mirrors `crate::editor::gis2d`'s arg-key tolerance (camelCase + snake_case + the
     /// nested `camera` object form).
-    fn command_from_action(action: &str, args: Option<&Value>) -> Result<Self::Command, Fault> {
+    async fn command_from_action(action: &str, args: Option<&Value>) -> Result<Self::Command, Fault> {
         let args = args.cloned().unwrap_or(Value::Null);
         let str_arg = |keys: &[&str]| -> Option<String> { keys.iter().find_map(|key| args.get(key).and_then(|value| value.as_str()).map(str::to_string)) };
         match action {
@@ -215,17 +215,17 @@ impl ArtifactEditor for Gis3dPlayApp {
         }
     }
 
-    fn handle(command: &Gis3dCommand, doc: &ArtifactView<'_, GisTerrainSnapshot>, cfg: &ConfigView<'_, Gis3dConfig>, _interaction: &InteractionView<'_>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<GisTerrainMutation, Gis3dConfigMutation, Self::DraftMutation>, Fault> {
+    async fn handle(command: &Gis3dCommand, doc: &ArtifactView<'_, GisTerrainSnapshot>, cfg: &ConfigView<'_, Gis3dConfig>, _interaction: &InteractionView<'_>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<GisTerrainMutation, Gis3dConfigMutation, Self::DraftMutation>, Fault> {
         command.dispatch(doc, cfg)
     }
 
     /// 🧮️ Empty — gis3d's `Config` is session view state (camera), not a user-facing settings
     /// record; `ConfigSpec::empty()` (the trait default) is correct as-is.
-    fn config_spec() -> semio_framework_plugin::ConfigSpec {
+    async fn config_spec() -> semio_framework_plugin::ConfigSpec {
         semio_framework_plugin::ConfigSpec::empty()
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, GisTerrainSnapshot>, cfg: &ConfigView<'_, Gis3dConfig>) -> UiNode {
+    async fn render(body_key: &str, doc: &ArtifactView<'_, GisTerrainSnapshot>, cfg: &ConfigView<'_, Gis3dConfig>) -> UiNode {
         match body_key {
             terrain::GIS3D_PLAY_BODY_COMPOSITE => terrain::render(doc.snapshot, cfg.snapshot),
             _ => ui_text(Label::data(format!("Unknown body: {body_key}"))),
@@ -235,7 +235,7 @@ impl ArtifactEditor for Gis3dPlayApp {
 //#endregion 🔖️Gis3dPlayApp
 
 //#region 🔖️Manifest
-pub fn create_gis3d_app() -> semio_framework_plugin::AppDefinition {
+pub async fn create_gis3d_app() -> semio_framework_plugin::AppDefinition {
     Editor::builder(crate::artifacts::gisterrain::GISTERRAIN_DIALECT)
             .document(["semio", "gis", "3d"])
             // 🔌️ Declared for clarity on both sides of the `map:in` edge (WORKFLOWS-END-TO-END-TYPED-PORTS
@@ -295,27 +295,27 @@ pub(crate) mod testkit {
 
     pub type Gis3dApp = VcsArtifactApp<EditorApp<Gis3dPlayApp>>;
 
-    pub fn app() -> Gis3dApp {
+    pub async fn app() -> Gis3dApp {
         new_app::<EditorApp<Gis3dPlayApp>>()
     }
 
     /// ✏️ Adapts `create_gis3d_app`'s `AppDefinition` (contract §2.4) into the `App { definition,
     /// examples }` shape `testkit::assert_declared_actions_bridge_to_commands` still expects —
     /// framework testkit gap, not modifiable here.
-    pub fn gis3d_app_manifest_for_testkit() -> semio_framework_plugin::App {
+    pub async fn gis3d_app_manifest_for_testkit() -> semio_framework_plugin::App {
         semio_framework_plugin::App { definition: create_gis3d_app(), examples: Vec::new() }
     }
 
     /// 🧬️ A wrapper carrying the real registry so kind discipline (View/Shell-emits-operations rejection) runs.
-    pub fn app_with_registry() -> Gis3dApp {
+    pub async fn app_with_registry() -> Gis3dApp {
         new_app_with_registry::<EditorApp<Gis3dPlayApp>>(gis3d_app_manifest_for_testkit)
     }
 
-    pub fn dispatch(app: &mut Gis3dApp, command: Gis3dCommand) -> InvocationResult {
+    pub async fn dispatch(app: &mut Gis3dApp, command: Gis3dCommand) -> InvocationResult {
         app.dispatch_typed(command, &meta("local")).expect("dispatch")
     }
 
-    pub fn render(app: &mut Gis3dApp, body_key: &str) -> String {
+    pub async fn render(app: &mut Gis3dApp, body_key: &str) -> String {
         serde_json::to_string(&app.render(body_key, None, &ViewModel::default()).expect("render")).expect("render json")
     }
 }
@@ -331,7 +331,7 @@ mod tests {
 
     //#region 🔖️CommandSurface
     /// 🎯️ One value per `app_commands!` row, in row order.
-    fn every_command() -> Vec<Gis3dCommand> {
+    async fn every_command() -> Vec<Gis3dCommand> {
         vec![
             Gis3dCommand::SetExaggeration(set_exaggeration::SetExaggeration { exaggeration: 2.5 }),
             Gis3dCommand::SetCamera(set_camera::SetCamera { camera_json: r#"{"position":[1.0,2.0,3.0]}"#.into() }),
@@ -344,7 +344,7 @@ mod tests {
     const WIRE_KEYWORDS: &[&str] = &["exaggeration", "camera", "locale"];
 
     #[test]
-    fn command_ids_are_unique_and_cover_every_row() {
+    async fn command_ids_are_unique_and_cover_every_row() {
         let commands = every_command();
         let ids: Vec<&str> = commands.iter().map(Gis3dCommand::command_id).collect();
         let mut sorted = ids.clone();
@@ -355,7 +355,7 @@ mod tests {
     }
 
     #[test]
-    fn every_command_round_trips_text_and_binary_under_its_declared_wire_keyword() {
+    async fn every_command_round_trips_text_and_binary_under_its_declared_wire_keyword() {
         assert_eq!(every_command().len(), WIRE_KEYWORDS.len());
         for (command, keyword) in every_command().iter().zip(WIRE_KEYWORDS) {
             store::os_store::test_support::assert_op_text_binary_equivalence(command);
@@ -376,13 +376,13 @@ mod tests {
     /// `command_from_action` override, so every declared action fell through to the trait default's
     /// hard error and the whole `{action,args}` host wire was dead.
     #[test]
-    fn command_from_action_covers_every_declared_action_and_rejects_unknown_ones() {
+    async fn command_from_action_covers_every_declared_action_and_rejects_unknown_ones() {
         semio_framework_plugin::testkit::assert_declared_actions_bridge_to_commands::<EditorApp<Gis3dPlayApp>>(gis3d_app_manifest_for_testkit);
         assert!(Gis3dPlayApp::command_from_action("noSuchAction", None).is_err());
     }
 
     #[test]
-    fn command_from_action_reads_the_nested_camera_object() {
+    async fn command_from_action_reads_the_nested_camera_object() {
         let app = Gis3dPlayApp;
         let camera = Gis3dPlayApp::command_from_action("setCamera", Some(&json!({ "camera": { "position": [1.0, 2.0, 3.0] } }))).expect("setCamera");
         assert!(matches!(camera, Gis3dCommand::SetCamera(ref payload) if payload.camera_json.contains("position")));
@@ -391,7 +391,7 @@ mod tests {
 
     //#region 🔖️Manifest
     #[test]
-    fn the_manifest_stitches_every_taxonomy_node() {
+    async fn the_manifest_stitches_every_taxonomy_node() {
         let definition = create_gis3d_app().definition;
         assert_eq!(definition.modes.len(), 1);
         assert_eq!(definition.window_kinds.len(), 1);
@@ -407,13 +407,13 @@ mod tests {
     }
 
     #[test]
-    fn an_unknown_body_key_falls_back_to_a_text_node() {
+    async fn an_unknown_body_key_falls_back_to_a_text_node() {
         let mut app = app();
         assert!(render(&mut app, "gis3d.play.nope").contains("Unknown body"));
     }
 
     #[test]
-    fn view_actions_emit_no_ops_under_registry_kind_discipline() {
+    async fn view_actions_emit_no_ops_under_registry_kind_discipline() {
         let mut app = app_with_registry();
         assert!(dispatch(&mut app, Gis3dCommand::SetCamera(set_camera::SetCamera { camera_json: "{}".into() })).mutations.is_empty());
         assert_eq!(dispatch(&mut app, Gis3dCommand::SetExaggeration(set_exaggeration::SetExaggeration { exaggeration: 2.0 })).mutations.len(), 1);
@@ -422,7 +422,7 @@ mod tests {
 
     //#region 🔖️Media
     #[test]
-    fn export_media_scene_out_produces_a_3d_mesh_structured_payload() {
+    async fn export_media_scene_out_produces_a_3d_mesh_structured_payload() {
         let app = app();
         let document = app.snapshot().expect("projection");
         let history = semio_framework_plugin::HistoryView::empty();
@@ -434,7 +434,7 @@ mod tests {
     }
 
     #[test]
-    fn import_media_map_in_writes_the_imported_features_operation() {
+    async fn import_media_map_in_writes_the_imported_features_operation() {
         let app = app();
         let document = app.snapshot().expect("projection");
         let history = semio_framework_plugin::HistoryView::empty();
@@ -447,7 +447,7 @@ mod tests {
     }
 
     #[test]
-    fn media_ports_declare_map_in_and_scene_out() {
+    async fn media_ports_declare_map_in_and_scene_out() {
         let app = Gis3dPlayApp;
         let ports = Gis3dPlayApp::media_ports();
         assert!(ports.iter().any(|port| port.id == "map:in"));
@@ -457,7 +457,7 @@ mod tests {
     /// 🧭️ Relocated from the artifact's `⚙️engine` tests (ticket
     /// 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES) alongside `gis3d_io`/`gis3d_scene_media`.
     #[test]
-    fn gis3d_io_declares_the_map_in_and_scene_out_ports() {
+    async fn gis3d_io_declares_the_map_in_and_scene_out_ports() {
         let io = gis3d_io();
         assert_eq!(io.document_schema, GIS_3D_TERRAIN_SCHEMA);
         let ports = io.all_ports();
@@ -470,7 +470,7 @@ mod tests {
     }
 
     #[test]
-    fn gis3d_scene_media_exports_the_terrain_descriptor() {
+    async fn gis3d_scene_media_exports_the_terrain_descriptor() {
         let document = default_terrain_document();
         let media = gis3d_scene_media(&document);
         let semio_framework_plugin::MediaPayload::Structured { schema, json } = media.payload else {

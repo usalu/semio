@@ -12,13 +12,13 @@ pub const RASTER_PLAY_MASKS_TAB_ID: &str = "raster.panel.masks";
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
-pub fn definition() -> PanelTabDefinition {
+pub async fn definition() -> PanelTabDefinition {
     PanelTabDefinition { kind: PanelTabKind::App(RASTER_PLAY_MASKS_TAB_ID.into()), label: LocalizedLabel::native("Masks", "Masken"), group: PanelGroup::Workbench, body_key: Some(RASTER_PLAY_BODY_MASKS.into()), children: Vec::new() }
 }
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-fn collect_masks(layer: &RasterLayerNode, items: &mut Vec<UiTreeItemNode>, labels: &RasterPlayLabels) {
+async fn collect_masks(layer: &RasterLayerNode, items: &mut Vec<UiTreeItemNode>, labels: &RasterPlayLabels) {
     if let RasterLayerNode::Pixel { id, name, mask, .. } | RasterLayerNode::Group { id, name, mask, .. } = layer {
         if mask.as_ref().is_some_and(|mask| mask.enabled) {
             items.push(UiTreeItemNode {
@@ -40,7 +40,7 @@ fn collect_masks(layer: &RasterLayerNode, items: &mut Vec<UiTreeItemNode>, label
 /// document/layers tree's (`layer_row_id`), so the two trees cannot both mirror the same domain
 /// without id collisions — dropped rather than shown stale (matches the acceptance-bar precedent in
 /// lowpoly's inspection panel).
-pub fn render(document: &RasterDocument, _runtime: &RasterConfig, labels: &RasterPlayLabels) -> UiNode {
+pub async fn render(document: &RasterDocument, _runtime: &RasterConfig, labels: &RasterPlayLabels) -> UiNode {
     let mut items = Vec::new();
     for layer in &document.layers {
         collect_masks(layer, &mut items, labels);

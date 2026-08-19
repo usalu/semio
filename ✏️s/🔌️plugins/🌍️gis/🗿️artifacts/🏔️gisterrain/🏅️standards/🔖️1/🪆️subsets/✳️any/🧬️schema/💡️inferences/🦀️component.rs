@@ -26,20 +26,20 @@ pub struct GisTerrainInference {
 }
 
 impl protocol::Inference<GisTerrainSnapshot> for GisTerrainInference {
-    fn infer(snapshot: &GisTerrainSnapshot) -> Self {
+    async fn infer(snapshot: &GisTerrainSnapshot) -> Self {
         let positions = imported_lon_lat_positions(snapshot);
         Self { position_count: positions.len(), bounds: lon_lat_bounds(&positions) }
     }
 }
 
 impl protocol::InferenceSpec<GisTerrainSnapshot> for GisTerrainInference {
-    fn inference_schema_id() -> &'static str {
+    async fn inference_schema_id() -> &'static str {
         "s.gis.gisterrain.inference"
     }
-    fn schema_version() -> u32 {
+    async fn schema_version() -> u32 {
         1
     }
-    fn fields() -> &'static [protocol::InferenceFieldSpec] {
+    async fn fields() -> &'static [protocol::InferenceFieldSpec] {
         &[
             protocol::InferenceFieldSpec { id: "s.gis.gisterrain.inference.positionCount", reads: &["importedFeaturesJson"] },
             protocol::InferenceFieldSpec { id: "s.gis.gisterrain.inference.bounds", reads: &["importedFeaturesJson"] },
@@ -81,7 +81,7 @@ mod terrain_fixture_text {
     /// 🔤️ Splits one line into whitespace-separated tokens, treating a `"..."` quoted run (escapes
     /// `\\`, `\"`, `\n`) as part of the token it's glued to — so `label="Institut de Botanique"`
     /// lexes as one `label=Institut de Botanique` token even though the value contains spaces.
-    fn line_tokens(line: &str) -> Vec<String> {
+    async fn line_tokens(line: &str) -> Vec<String> {
         let mut tokens = Vec::new();
         let mut chars = line.chars().peekable();
         while let Some(&c) = chars.peek() {
@@ -125,15 +125,15 @@ mod terrain_fixture_text {
         tokens
     }
 
-    fn kv_lookup<'a>(tokens: &'a [String], key: &str) -> Option<&'a str> {
+    async fn kv_lookup<'a>(tokens: &'a [String], key: &str) -> Option<&'a str> {
         tokens.iter().find_map(|token| token.strip_prefix(&format!("{key}=")))
     }
 
-    fn parse_project_origin(tokens: &[String]) -> Option<TerrainProjectOrigin> {
+    async fn parse_project_origin(tokens: &[String]) -> Option<TerrainProjectOrigin> {
         Some(TerrainProjectOrigin { lon: kv_lookup(tokens, "lon")?.parse().ok()?, lat: kv_lookup(tokens, "lat")?.parse().ok()? })
     }
 
-    fn parse_position(tokens: &[String]) -> Option<TerrainPositionData> {
+    async fn parse_position(tokens: &[String]) -> Option<TerrainPositionData> {
         Some(TerrainPositionData {
             id: kv_lookup(tokens, "id")?.to_string(),
             lon: kv_lookup(tokens, "lon")?.parse().ok()?,
@@ -146,7 +146,7 @@ mod terrain_fixture_text {
     /// 📥️ Parses every `origin`/`position` line of the fixture text (its `gisterrain exaggeration=...`
     /// header is parsed separately, see module docs); malformed or missing lines simply contribute
     /// nothing, so a truncated/empty fixture yields the world origin with no positions rather than an error.
-    pub(super) fn parse_descriptor(text: &str, schema: &str, exaggeration: f64) -> TerrainDescriptorJson {
+    pub(super) async fn parse_descriptor(text: &str, schema: &str, exaggeration: f64) -> TerrainDescriptorJson {
         let mut project_origin = TerrainProjectOrigin { lon: 0.0, lat: 0.0 };
         let mut positions = Vec::new();
         for line in text.lines() {
@@ -172,7 +172,7 @@ mod terrain_fixture_text {
 /// 🔌️ `map:in`'s overlay pin layer (see `GisTerrainSnapshot::imported_features_json`), decoded from
 /// its `{positions:[{id,lon,lat,label?,icon?}]}` descriptor JSON — malformed/empty JSON (including the
 /// default empty string) simply contributes no extra pins.
-fn imported_positions(document: &GisTerrainSnapshot) -> Vec<TerrainPositionData> {
+async fn imported_positions(document: &GisTerrainSnapshot) -> Vec<TerrainPositionData> {
     let Ok(value) = serde_json::from_str::<serde_json::Value>(&document.imported_features_json) else {
         return Vec::new();
     };
@@ -197,7 +197,7 @@ fn imported_positions(document: &GisTerrainSnapshot) -> Vec<TerrainPositionData>
 /// exaggeration) for the given document — `exaggeration` always mirrors the LIVE document, and the
 /// bundled fixture's own `gisterrain exaggeration=...` header only ever seeds it once via
 /// `crate::artifacts::gisterrain::schema::default_terrain_document`.
-pub fn parse_descriptor(document: &GisTerrainSnapshot) -> TerrainDescriptorJson {
+pub async fn parse_descriptor(document: &GisTerrainSnapshot) -> TerrainDescriptorJson {
     let mut descriptor = terrain_fixture_text::parse_descriptor(
         crate::artifacts::gisterrain::dsl::REUSE_TERRAIN_EXAMPLE_TEXT,
         crate::artifacts::gisterrain::GIS_3D_TERRAIN_SCHEMA,
@@ -211,7 +211,7 @@ pub fn parse_descriptor(document: &GisTerrainSnapshot) -> TerrainDescriptorJson 
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.gis.gisterrain.inference`'s facet leaves into the OS-wide inference catalog —
 /// call once at plugin init, alongside `gisterrain_artifact_schema_descriptor`'s registration.
-pub fn gisterrain_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
+pub async fn gisterrain_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
     schema::ArtifactInferenceDescriptor {
         id: "s.gis.gisterrain.inference",
         inference: schema::FacetLeaves {
@@ -233,7 +233,7 @@ mod tests {
 
     //#region 🧪️InferenceLaws
     #[test]
-    fn inference_determinism_law() {
+    async fn inference_determinism_law() {
         let snapshot = GisTerrainSnapshot {
             exaggeration: 1.5,
             imported_features_json: serde_json::json!({ "positions": [{ "id": "p1", "lon": 5.58, "lat": 50.60 }] }).to_string(),
@@ -243,7 +243,7 @@ mod tests {
     }
 
     #[test]
-    fn inference_default_law() {
+    async fn inference_default_law() {
         assert_eq!(GisTerrainInference::infer(&GisTerrainSnapshot::default()), GisTerrainInference::default());
     }
     //#endregion 🧪️InferenceLaws
@@ -257,7 +257,7 @@ mod tests {
     /// scenery-data reader (`terrain_fixture_text`) still recovers the bundled fixture's pins/origin
     /// after the document-only conversion — i.e. converting the fixture to the DSL didn't lose data.
     #[test]
-    fn terrain_fixture_text_recovers_bundled_scenery_data() {
+    async fn terrain_fixture_text_recovers_bundled_scenery_data() {
         let descriptor = parse_descriptor(&GisTerrainSnapshot { exaggeration: 1.5, imported_features_json: String::new(), ..Default::default() });
         assert_eq!(descriptor.project_origin.lon, 5.5818);
         assert_eq!(descriptor.project_origin.lat, 50.603);
@@ -267,7 +267,7 @@ mod tests {
 
     /// 🔌️ `map:in`'s overlay layer renders as extra pins alongside the fixture's own two.
     #[test]
-    fn imported_map_features_render_as_extra_pins() {
+    async fn imported_map_features_render_as_extra_pins() {
         let document = GisTerrainSnapshot { exaggeration: 1.5, imported_features_json: serde_json::json!({ "positions": [{ "id": "imported-1", "lon": 5.58, "lat": 50.60 }] }).to_string(), ..Default::default() };
         let descriptor = parse_descriptor(&document);
         assert_eq!(descriptor.positions.len(), 3, "2 fixture pins + 1 imported pin");

@@ -23,76 +23,76 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 //#endregion 📖️SemioGrammar
 
 //#region 🔖️Primitives
-fn hex_encode(bytes: &[u8]) -> String {
+async fn hex_encode(bytes: &[u8]) -> String {
     bytes.iter().map(|b| format!("{b:02x}")).collect()
 }
-fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
+async fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
     if s.len() % 2 != 0 {
         return Err(format!("odd hex length: {s:?}"));
     }
     (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()
 }
-fn enc_str(s: &str) -> String {
+async fn enc_str(s: &str) -> String {
     hex_encode(s.as_bytes())
 }
-fn dec_str(s: &str) -> Result<String, String> {
+async fn dec_str(s: &str) -> Result<String, String> {
     String::from_utf8(hex_decode(s)?).map_err(|e| e.to_string())
 }
-fn parse_usize(s: &str) -> Result<usize, String> {
+async fn parse_usize(s: &str) -> Result<usize, String> {
     s.parse().map_err(|e: std::num::ParseIntError| e.to_string())
 }
 
-fn enc_node_id(id: &GraphNodeId) -> String {
+async fn enc_node_id(id: &GraphNodeId) -> String {
     enc_str(&id.value)
 }
-fn dec_node_id(s: &str) -> Result<GraphNodeId, String> {
+async fn dec_node_id(s: &str) -> Result<GraphNodeId, String> {
     Ok(GraphNodeId::new(dec_str(s)?))
 }
-fn enc_edge_id(id: &GraphEdgeId) -> String {
+async fn enc_edge_id(id: &GraphEdgeId) -> String {
     enc_str(&id.value)
 }
-fn dec_edge_id(s: &str) -> Result<GraphEdgeId, String> {
+async fn dec_edge_id(s: &str) -> Result<GraphEdgeId, String> {
     Ok(GraphEdgeId::new(dec_str(s)?))
 }
 
-fn enc_point2_fields(p: &SemioPoint2) -> String {
+async fn enc_point2_fields(p: &SemioPoint2) -> String {
     format!("{},{}", enc_str(&p.x.to_string()), enc_str(&p.y.to_string()))
 }
-fn dec_f64_hex(s: &str) -> Result<f64, String> {
+async fn dec_f64_hex(s: &str) -> Result<f64, String> {
     dec_str(s)?.parse::<f64>().map_err(|e| e.to_string())
 }
 
-fn enc_port_kind(k: SemioGraphPortKind) -> char {
+async fn enc_port_kind(k: SemioGraphPortKind) -> char {
     crate::artifacts::semio::standards::v1::subsets::graph::schema::snapshot::enc_port_kind(k)
 }
-fn dec_port_kind(s: &str) -> Result<SemioGraphPortKind, String> {
+async fn dec_port_kind(s: &str) -> Result<SemioGraphPortKind, String> {
     crate::artifacts::semio::standards::v1::subsets::graph::schema::snapshot::dec_port_kind(s)
 }
-fn enc_port(p: &SemioGraphPort) -> String {
+async fn enc_port(p: &SemioGraphPort) -> String {
     format!("[{},{}]", enc_str(&p.name), enc_port_kind(p.kind))
 }
-fn dec_port(s: &str) -> Result<SemioGraphPort, String> {
+async fn dec_port(s: &str) -> Result<SemioGraphPort, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [name, kind] = parts.as_slice() else { return Err(format!("port: expected 2 fields, got {}", parts.len())) };
     Ok(SemioGraphPort { name: dec_str(name)?, kind: dec_port_kind(kind)? })
 }
-fn enc_property(p: &SemioValueEntry) -> String {
+async fn enc_property(p: &SemioValueEntry) -> String {
     enc_semio_value_entry(p)
 }
-fn dec_property(s: &str) -> Result<SemioValueEntry, String> {
+async fn dec_property(s: &str) -> Result<SemioValueEntry, String> {
     dec_semio_value_entry(s)
 }
 
-fn dec_ports(s: &str) -> Result<Vec<SemioGraphPort>, String> {
+async fn dec_ports(s: &str) -> Result<Vec<SemioGraphPort>, String> {
     split_top_level(strip_brackets(s)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_port).collect()
 }
-fn dec_properties(s: &str) -> Result<Vec<SemioValueEntry>, String> {
+async fn dec_properties(s: &str) -> Result<Vec<SemioValueEntry>, String> {
     split_top_level(strip_brackets(s)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_property).collect()
 }
 //#endregion 🔖️Primitives
 
 //#region 🔖️OpText
-fn print_graph_mutation(m: &SemioGraphMutation) -> String {
+async fn print_graph_mutation(m: &SemioGraphMutation) -> String {
     match m {
         SemioGraphMutation::CreateNode(p) => format!(
             "createNode:{},{},{},{},[{}],[{}]",
@@ -116,7 +116,7 @@ fn print_graph_mutation(m: &SemioGraphMutation) -> String {
     }
 }
 
-fn parse_graph_mutation(line: &str) -> Result<SemioGraphMutation, String> {
+async fn parse_graph_mutation(line: &str) -> Result<SemioGraphMutation, String> {
     let (tag, rest) = line.split_once(':').ok_or_else(|| format!("graph mutation: missing ':' in {line:?}"))?;
     match tag {
         "createNode" => {
@@ -176,10 +176,10 @@ fn parse_graph_mutation(line: &str) -> Result<SemioGraphMutation, String> {
 }
 
 impl protocol::OpText for SemioGraphMutation {
-    fn print_op(&self) -> String {
+    async fn print_op(&self) -> String {
         print_graph_mutation(self)
     }
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
+    async fn parse_op(line: &str) -> Result<Self, store::TextError> {
         parse_graph_mutation(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
 }
@@ -189,7 +189,7 @@ impl protocol::OpText for SemioGraphMutation {
 /// 🌱 One representative value per variant — single source of truth for `ops_grammar_conformance_
 /// law`/`protocol_walk_law` in `🚪️io/🦀️component.rs` and this file's own round-trip test.
 #[cfg(test)]
-pub(crate) fn demo_mutation_cases() -> Vec<SemioGraphMutation> {
+pub(crate) async fn demo_mutation_cases() -> Vec<SemioGraphMutation> {
     vec![
         SemioGraphMutation::CreateNode(CreateNode {
             id: GraphNodeId::new("n1"),
@@ -224,7 +224,7 @@ mod tests {
     use protocol::OpText;
 
     #[test]
-    fn op_text_roundtrip_law() {
+    async fn op_text_roundtrip_law() {
         for mutation in demo_mutation_cases() {
             let printed = mutation.print_op();
             assert!(!printed.contains('\n'), "print_op must be one line, got {printed:?}");

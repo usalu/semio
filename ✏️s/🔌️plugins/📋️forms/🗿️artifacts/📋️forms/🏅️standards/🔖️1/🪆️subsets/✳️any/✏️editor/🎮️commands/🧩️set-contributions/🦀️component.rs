@@ -11,7 +11,7 @@ pub struct SetContributions {
     pub json: String,
 }
 
-pub fn handle(payload: &SetContributions, _doc: &ArtifactView<'_, FormsSnapshot>, _cfg: &ConfigView<'_, FormsConfig>) -> Result<Emit<FormMutation, FormsConfigMutation>, Fault> {
+pub async fn handle(payload: &SetContributions, _doc: &ArtifactView<'_, FormsSnapshot>, _cfg: &ConfigView<'_, FormsConfig>) -> Result<Emit<FormMutation, FormsConfigMutation>, Fault> {
     Ok(Emit::config(vec![FormsConfigMutation::SetContributions { json: payload.json.clone() }]))
 }
 
@@ -23,7 +23,7 @@ mod tests {
     use crate::editor::forms::{FormsCommand, FORMS_PLAY_BODY_CATALOGUE};
 
     #[test]
-    fn set_contributions_extends_the_catalogue_with_the_contributed_kind() {
+    async fn set_contributions_extends_the_catalogue_with_the_contributed_kind() {
         let mut app = forms_app();
         let before = render(&mut app, FORMS_PLAY_BODY_CATALOGUE);
         assert!(!before.contains("forms-play-catalogue.buildingComponent"), "catalogue should start without the contributed kind: {before}");

@@ -23,7 +23,7 @@ pub mod set_locale {
         pub value: String,
     }
 
-    pub fn handle(payload: &SetLocale, _doc: &ArtifactView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx<'_>) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
+    pub async fn handle(payload: &SetLocale, _doc: &ArtifactView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx<'_>) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
         let mut config = cad_config_from_runtime(&runtime_of(cfg), cfg.snapshot);
         config.locale = payload.value.clone();
         Ok(Emit::config(vec![CadConfigMutation::Snapshot { config }]))
@@ -41,7 +41,7 @@ pub mod set_terminology {
         pub value: String,
     }
 
-    pub fn handle(payload: &SetTerminology, _doc: &ArtifactView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx<'_>) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
+    pub async fn handle(payload: &SetTerminology, _doc: &ArtifactView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx<'_>) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
         let mut config = cad_config_from_runtime(&runtime_of(cfg), cfg.snapshot);
         config.terminology = payload.value.clone();
         Ok(Emit::config(vec![CadConfigMutation::Snapshot { config }]))

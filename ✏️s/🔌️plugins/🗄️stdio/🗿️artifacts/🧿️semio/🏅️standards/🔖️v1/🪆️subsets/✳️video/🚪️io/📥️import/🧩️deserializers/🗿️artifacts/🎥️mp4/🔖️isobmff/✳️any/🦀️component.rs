@@ -58,7 +58,7 @@ mod tests {
     use super::*;
     use crate::artifacts::mp4::standards::isobmff::subsets::any::schema::snapshot::{Mp4Codec, Mp4Ftyp, Mp4Sample, Mp4Track};
 
-    fn real_world_mp4() -> Mp4Snapshot {
+    async fn real_world_mp4() -> Mp4Snapshot {
         Mp4Snapshot {
             schema: "stdio.mp4".into(),
             ftyp: Mp4Ftyp { major_brand: "isom".into(), minor_version: 0, compatible_brands: vec!["isom".into(), "mp41".into()] },
@@ -81,7 +81,7 @@ mod tests {
     }
 
     #[test]
-    fn deserialize_maps_real_track_metadata_and_derives_pts_from_duration_plus_cts_offset() {
+    async fn deserialize_maps_real_track_metadata_and_derives_pts_from_duration_plus_cts_offset() {
         let video = semio_framework_plugin::resolve_ready(SemioVideoFromMp4::deserialize(&real_world_mp4())).expect("deserialize");
         assert_eq!(video.streams.len(), 1);
         let stream = &video.streams[0];
@@ -101,7 +101,7 @@ mod tests {
     }
 
     #[test]
-    fn deserialize_of_track_with_no_samples_falls_back_to_unit_rate_denominator() {
+    async fn deserialize_of_track_with_no_samples_falls_back_to_unit_rate_denominator() {
         let mut mp4 = real_world_mp4();
         mp4.tracks[0].samples.clear();
         let video = semio_framework_plugin::resolve_ready(SemioVideoFromMp4::deserialize(&mp4)).expect("deserialize");

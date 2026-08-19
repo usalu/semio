@@ -14,33 +14,33 @@ use crate::artifacts::puzzle3d::schema::{Quat, Vec3, WorldVolumeProps};
 pub(crate) struct Vec3d(nalgebra::Vector3<f32>);
 
 impl Vec3d {
-    pub(crate) fn new(x: f32, y: f32, z: f32) -> Self {
+    pub(crate) async fn new(x: f32, y: f32, z: f32) -> Self {
         Self(nalgebra::Vector3::new(x, y, z))
     }
-    pub(crate) fn x(&self) -> f32 {
+    pub(crate) async fn x(&self) -> f32 {
         self.0.x
     }
-    pub(crate) fn y(&self) -> f32 {
+    pub(crate) async fn y(&self) -> f32 {
         self.0.y
     }
-    pub(crate) fn z(&self) -> f32 {
+    pub(crate) async fn z(&self) -> f32 {
         self.0.z
     }
-    pub(crate) fn amax(&self) -> f32 {
+    pub(crate) async fn amax(&self) -> f32 {
         self.0.amax()
     }
 }
 
 impl std::ops::Add for Vec3d {
     type Output = Vec3d;
-    fn add(self, rhs: Self) -> Self {
+    async fn add(self, rhs: Self) -> Self {
         Vec3d(self.0 + rhs.0)
     }
 }
 
 impl std::ops::Mul<f32> for Vec3d {
     type Output = Vec3d;
-    fn mul(self, rhs: f32) -> Self {
+    async fn mul(self, rhs: f32) -> Self {
         Vec3d(self.0 * rhs)
     }
 }
@@ -49,35 +49,35 @@ impl std::ops::Mul<f32> for Vec3d {
 pub(crate) struct Point3d(nalgebra::Point3<f32>);
 
 impl Point3d {
-    pub(crate) fn new(x: f32, y: f32, z: f32) -> Self {
+    pub(crate) async fn new(x: f32, y: f32, z: f32) -> Self {
         Self(nalgebra::Point3::new(x, y, z))
     }
-    pub(crate) fn x(&self) -> f32 {
+    pub(crate) async fn x(&self) -> f32 {
         self.0.x
     }
-    pub(crate) fn y(&self) -> f32 {
+    pub(crate) async fn y(&self) -> f32 {
         self.0.y
     }
-    pub(crate) fn z(&self) -> f32 {
+    pub(crate) async fn z(&self) -> f32 {
         self.0.z
     }
-    pub(crate) fn inf(&self, other: &Self) -> Self {
+    pub(crate) async fn inf(&self, other: &Self) -> Self {
         Self(self.0.inf(&other.0))
     }
-    pub(crate) fn sup(&self, other: &Self) -> Self {
+    pub(crate) async fn sup(&self, other: &Self) -> Self {
         Self(self.0.sup(&other.0))
     }
-    pub(crate) fn coords(&self) -> Vec3d {
+    pub(crate) async fn coords(&self) -> Vec3d {
         Vec3d(self.0.coords)
     }
-    pub(crate) fn from_coords(v: Vec3d) -> Self {
+    pub(crate) async fn from_coords(v: Vec3d) -> Self {
         Self(nalgebra::Point3::from(v.0))
     }
 }
 
 impl std::ops::Sub for Point3d {
     type Output = Vec3d;
-    fn sub(self, rhs: Self) -> Vec3d {
+    async fn sub(self, rhs: Self) -> Vec3d {
         Vec3d(self.0 - rhs.0)
     }
 }
@@ -86,21 +86,21 @@ impl std::ops::Sub for Point3d {
 pub(crate) struct Rotation3d(nalgebra::UnitQuaternion<f32>);
 
 impl Rotation3d {
-    pub(crate) fn identity() -> Self {
+    pub(crate) async fn identity() -> Self {
         Self(nalgebra::UnitQuaternion::identity())
     }
     /// 🔓️ Builds from CAD's `[i, j, k, w]` quaternion convention.
-    pub(crate) fn from_ijkw(i: f32, j: f32, k: f32, w: f32) -> Self {
+    pub(crate) async fn from_ijkw(i: f32, j: f32, k: f32, w: f32) -> Self {
         Self(nalgebra::UnitQuaternion::from_quaternion(nalgebra::Quaternion::new(w, i, j, k)))
     }
-    pub(crate) fn to_ijkw(self) -> (f32, f32, f32, f32) {
+    pub(crate) async fn to_ijkw(self) -> (f32, f32, f32, f32) {
         let q = self.0.quaternion();
         (q.i, q.j, q.k, q.w)
     }
-    pub(crate) fn rotation_between(from: Vec3d, to: Vec3d) -> Option<Self> {
+    pub(crate) async fn rotation_between(from: Vec3d, to: Vec3d) -> Option<Self> {
         nalgebra::UnitQuaternion::rotation_between(&from.0, &to.0).map(Self)
     }
-    pub(crate) fn apply(&self, v: Vec3d) -> Vec3d {
+    pub(crate) async fn apply(&self, v: Vec3d) -> Vec3d {
         Vec3d(self.0 * v.0)
     }
 }
@@ -109,19 +109,19 @@ impl Rotation3d {
 pub(crate) struct Pose3d(nalgebra::Isometry3<f32>);
 
 impl Pose3d {
-    pub(crate) fn identity() -> Self {
+    pub(crate) async fn identity() -> Self {
         Self(nalgebra::Isometry3::identity())
     }
-    pub(crate) fn from_parts(translation: Vec3d, rotation: Rotation3d) -> Self {
+    pub(crate) async fn from_parts(translation: Vec3d, rotation: Rotation3d) -> Self {
         Self(nalgebra::Isometry3::from_parts(translation.0.into(), rotation.0))
     }
-    pub(crate) fn inverse(&self) -> Self {
+    pub(crate) async fn inverse(&self) -> Self {
         Self(self.0.inverse())
     }
-    pub(crate) fn transform_point(&self, point: &Point3d) -> Point3d {
+    pub(crate) async fn transform_point(&self, point: &Point3d) -> Point3d {
         Point3d(self.0 * point.0)
     }
-    pub(crate) fn semio_compose_rs(&self, other: &Self) -> Self {
+    pub(crate) async fn semio_compose_rs(&self, other: &Self) -> Self {
         Self(self.0 * other.0)
     }
 }
@@ -129,17 +129,17 @@ impl Pose3d {
 pub(crate) struct CollisionShape(parry3d::shape::SharedShape);
 
 impl CollisionShape {
-    pub(crate) fn from_triangle_mesh(vertices: &[Point3d], indices: Vec<[u32; 3]>) -> Self {
+    pub(crate) async fn from_triangle_mesh(vertices: &[Point3d], indices: Vec<[u32; 3]>) -> Self {
         let verts: Vec<nalgebra::Point3<f32>> = vertices.iter().map(|p| p.0).collect();
         let mesh = parry3d::shape::TriMesh::with_flags(verts, indices, parry3d::shape::TriMeshFlags::ORIENTED | parry3d::shape::TriMeshFlags::MERGE_DUPLICATE_VERTICES);
         Self(parry3d::shape::SharedShape::new(mesh))
     }
-    pub(crate) fn contains_point(&self, pose: &Pose3d, point: &Point3d) -> bool {
+    pub(crate) async fn contains_point(&self, pose: &Pose3d, point: &Point3d) -> bool {
         self.0.contains_point(&pose.0, &point.0)
     }
 }
 
-fn shapes_intersect(pose_a: &Pose3d, a: &CollisionShape, pose_b: &Pose3d, b: &CollisionShape) -> bool {
+async fn shapes_intersect(pose_a: &Pose3d, a: &CollisionShape, pose_b: &Pose3d, b: &CollisionShape) -> bool {
     parry3d::query::intersection_test(&pose_a.0, &*a.0, &pose_b.0, &*b.0).unwrap_or(false)
 }
 //#endregion 🔒️GeometryAdapter
@@ -151,7 +151,7 @@ pub(crate) const BRUSH_PLACEMENT_PARALLEL_TOLERANCE: f64 = 1e-6;
 //#endregion 🔖️Constants
 
 //#region 🔖️Vectors
-pub(crate) fn normalize_vec3(v: Vec3) -> Vec3 {
+pub(crate) async fn normalize_vec3(v: Vec3) -> Vec3 {
     let len = (v[0] * v[0] + v[1] * v[1] + v[2] * v[2]).sqrt();
     if len < 1e-9 {
         return [0.0, 0.0, -1.0];
@@ -159,27 +159,27 @@ pub(crate) fn normalize_vec3(v: Vec3) -> Vec3 {
     [v[0] / len, v[1] / len, v[2] / len]
 }
 
-pub(crate) fn vec3_dot(a: Vec3, b: Vec3) -> f64 {
+pub(crate) async fn vec3_dot(a: Vec3, b: Vec3) -> f64 {
     a[0] * b[0] + a[1] * b[1] + a[2] * b[2]
 }
 
-pub(crate) fn vec3_cross(a: Vec3, b: Vec3) -> Vec3 {
+pub(crate) async fn vec3_cross(a: Vec3, b: Vec3) -> Vec3 {
     [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]]
 }
 
-pub(crate) fn vec3_add(a: Vec3, b: Vec3) -> Vec3 {
+pub(crate) async fn vec3_add(a: Vec3, b: Vec3) -> Vec3 {
     [a[0] + b[0], a[1] + b[1], a[2] + b[2]]
 }
 
-pub(crate) fn vec3_sub(a: Vec3, b: Vec3) -> Vec3 {
+pub(crate) async fn vec3_sub(a: Vec3, b: Vec3) -> Vec3 {
     [a[0] - b[0], a[1] - b[1], a[2] - b[2]]
 }
 
-pub(crate) fn negate_vec3(v: Vec3) -> Vec3 {
+pub(crate) async fn negate_vec3(v: Vec3) -> Vec3 {
     [-v[0], -v[1], -v[2]]
 }
 
-pub(crate) fn vec3_scale(v: Vec3, scale: &Option<dsl::DslValue>) -> Vec3 {
+pub(crate) async fn vec3_scale(v: Vec3, scale: &Option<dsl::DslValue>) -> Vec3 {
     match scale {
         None => v,
         Some(dsl::DslValue::Number(n)) => {
@@ -196,22 +196,22 @@ pub(crate) fn vec3_scale(v: Vec3, scale: &Option<dsl::DslValue>) -> Vec3 {
     }
 }
 
-pub(crate) fn unit_quat_from_cad(q: Quat) -> Rotation3d {
+pub(crate) async fn unit_quat_from_cad(q: Quat) -> Rotation3d {
     Rotation3d::from_ijkw(q[0] as f32, q[1] as f32, q[2] as f32, q[3] as f32)
 }
 
-pub(crate) fn quat_rotate_vec(q: Quat, v: Vec3) -> Vec3 {
+pub(crate) async fn quat_rotate_vec(q: Quat, v: Vec3) -> Vec3 {
     let uq = unit_quat_from_cad(q);
     let rotated = uq.apply(Vec3d::new(v[0] as f32, v[1] as f32, v[2] as f32));
     [rotated.x() as f64, rotated.y() as f64, rotated.z() as f64]
 }
 
-pub(crate) fn quaternion_from_180_degree_axis(axis: Vec3) -> Quat {
+pub(crate) async fn quaternion_from_180_degree_axis(axis: Vec3) -> Quat {
     let unit = normalize_vec3(axis);
     [unit[0], unit[1], unit[2], 0.0]
 }
 
-pub(crate) fn anti_parallel_brush_orientation(target_dir: Vec3) -> Quat {
+pub(crate) async fn anti_parallel_brush_orientation(target_dir: Vec3) -> Quat {
     let z_axis: Vec3 = [0.0, 0.0, 1.0];
     if target_dir[2].abs() < BRUSH_PLACEMENT_PARALLEL_TOLERANCE {
         return quaternion_from_180_degree_axis(z_axis);
@@ -223,13 +223,13 @@ pub(crate) fn anti_parallel_brush_orientation(target_dir: Vec3) -> Quat {
     quaternion_from_180_degree_axis(axis)
 }
 
-pub(crate) fn pose_isometry(origin: Vec3, orientation: Quat, _scale: &Option<dsl::DslValue>) -> Pose3d {
+pub(crate) async fn pose_isometry(origin: Vec3, orientation: Quat, _scale: &Option<dsl::DslValue>) -> Pose3d {
     let q = unit_quat_from_cad(orientation);
     let t = Vec3d::new(origin[0] as f32, origin[1] as f32, origin[2] as f32);
     Pose3d::from_parts(t, q)
 }
 
-pub(crate) fn compute_brush_placement_pose(
+pub(crate) async fn compute_brush_placement_pose(
     source_local_position: Vec3,
     source_local_direction: Vec3,
     scale: &Option<dsl::DslValue>,
@@ -277,7 +277,7 @@ pub(crate) struct CollisionBody {
     pub(crate) local_bounds_max: Point3d,
 }
 
-pub(crate) fn collision_body_from_buffers(positions: &[f32], indices: &[u32]) -> Option<CollisionBody> {
+pub(crate) async fn collision_body_from_buffers(positions: &[f32], indices: &[u32]) -> Option<CollisionBody> {
     if positions.len() < 9 || indices.len() < 3 {
         return None;
     }
@@ -302,7 +302,7 @@ pub(crate) fn collision_body_from_buffers(positions: &[f32], indices: &[u32]) ->
     Some(CollisionBody { parts: vec![CollisionMeshPart { shape, local_pose: Pose3d::identity() }], local_bounds_min: min, local_bounds_max: max })
 }
 
-pub(crate) fn world_bounds(body: &CollisionBody, world: &Pose3d) -> (Point3d, Point3d) {
+pub(crate) async fn world_bounds(body: &CollisionBody, world: &Pose3d) -> (Point3d, Point3d) {
     let corners = [
         Point3d::new(body.local_bounds_min.x(), body.local_bounds_min.y(), body.local_bounds_min.z()),
         Point3d::new(body.local_bounds_max.x(), body.local_bounds_min.y(), body.local_bounds_min.z()),
@@ -323,7 +323,7 @@ pub(crate) fn world_bounds(body: &CollisionBody, world: &Pose3d) -> (Point3d, Po
     (min, max)
 }
 
-pub(crate) fn volume_scale_vec(scale: &Option<dsl::DslValue>) -> [f32; 3] {
+pub(crate) async fn volume_scale_vec(scale: &Option<dsl::DslValue>) -> [f32; 3] {
     match scale {
         Some(dsl::DslValue::Number(n)) => {
             let s = *n as f32;
@@ -337,7 +337,7 @@ pub(crate) fn volume_scale_vec(scale: &Option<dsl::DslValue>) -> [f32; 3] {
     }
 }
 
-pub(crate) fn world_volumes_contain_aabb(volumes: &[WorldVolumeProps], min: Point3d, max: Point3d) -> bool {
+pub(crate) async fn world_volumes_contain_aabb(volumes: &[WorldVolumeProps], min: Point3d, max: Point3d) -> bool {
     if volumes.is_empty() {
         return true;
     }
@@ -374,7 +374,7 @@ pub(crate) fn world_volumes_contain_aabb(volumes: &[WorldVolumeProps], min: Poin
     false
 }
 
-pub(crate) fn point_inside_body(body: &CollisionBody, world: &Pose3d, point: Point3d) -> bool {
+pub(crate) async fn point_inside_body(body: &CollisionBody, world: &Pose3d, point: Point3d) -> bool {
     let local = world.inverse().transform_point(&point);
     for part in &body.parts {
         let part_local = part.local_pose.inverse().transform_point(&local);
@@ -385,7 +385,7 @@ pub(crate) fn point_inside_body(body: &CollisionBody, world: &Pose3d, point: Poi
     false
 }
 
-pub(crate) fn bodies_intersect(a: &CollisionBody, world_a: &Pose3d, b: &CollisionBody, world_b: &Pose3d) -> bool {
+pub(crate) async fn bodies_intersect(a: &CollisionBody, world_a: &Pose3d, b: &CollisionBody, world_b: &Pose3d) -> bool {
     let (amin, amax) = world_bounds(a, world_a);
     let (bmin, bmax) = world_bounds(b, world_b);
     if amax.x() < bmin.x() || bmax.x() < amin.x() || amax.y() < bmin.y() || bmax.y() < amin.y() || amax.z() < bmin.z() || bmax.z() < amin.z() {
@@ -404,7 +404,7 @@ pub(crate) fn bodies_intersect(a: &CollisionBody, world_a: &Pose3d, b: &Collisio
     point_inside_body(a, world_a, center) && point_inside_body(b, world_b, center)
 }
 
-pub(crate) fn solid_overlap_volume(a: &CollisionBody, world_a: &Pose3d, b: &CollisionBody, world_b: &Pose3d, sample_count: usize, overlap_budget: f64) -> f64 {
+pub(crate) async fn solid_overlap_volume(a: &CollisionBody, world_a: &Pose3d, b: &CollisionBody, world_b: &Pose3d, sample_count: usize, overlap_budget: f64) -> f64 {
     let (amin, amax) = world_bounds(a, world_a);
     let (bmin, bmax) = world_bounds(b, world_b);
     let imin = Point3d::new(amin.x().max(bmin.x()), amin.y().max(bmin.y()), amin.z().max(bmin.z()));
@@ -448,7 +448,7 @@ mod tests {
     use crate::artifacts::puzzle3d::schema::testkit::*;
 
     #[test]
-    fn world_volumes_contain_aabb_respects_oriented_box() {
+    async fn world_volumes_contain_aabb_respects_oriented_box() {
         let volumes = vec![WorldVolumeProps { id: "v1".to_string(), origin: [0.0, 0.0, 0.0], orientation: None, scale: Some(dsl::DslValue::Array(vec![dsl::DslValue::Number(4.0), dsl::DslValue::Number(4.0), dsl::DslValue::Number(4.0)])) }];
         let min = Point3d::new(-1.0, -1.0, -1.0);
         let max = Point3d::new(1.0, 1.0, 1.0);
@@ -459,7 +459,7 @@ mod tests {
     }
 
     #[test]
-    fn vec3d_and_point3d_basic_ops() {
+    async fn vec3d_and_point3d_basic_ops() {
         let a = Vec3d::new(1.0, 2.0, 3.0);
         let b = Vec3d::new(4.0, -1.0, 0.5);
         let sum = a + b;
@@ -481,7 +481,7 @@ mod tests {
     }
 
     #[test]
-    fn rotation3d_identity_ijkw_roundtrip_and_apply() {
+    async fn rotation3d_identity_ijkw_roundtrip_and_apply() {
         let identity = Rotation3d::identity();
         assert_eq!(identity.to_ijkw(), (0.0, 0.0, 0.0, 1.0));
         let q = Rotation3d::from_ijkw(0.0, 0.0, 0.0, 1.0);
@@ -491,7 +491,7 @@ mod tests {
     }
 
     #[test]
-    fn rotation3d_rotation_between_none_for_antiparallel() {
+    async fn rotation3d_rotation_between_none_for_antiparallel() {
         let from = Vec3d::new(1.0, 0.0, 0.0);
         let to = Vec3d::new(-1.0, 0.0, 0.0);
         assert!(Rotation3d::rotation_between(from, to).is_none(), "opposite vectors have no unique rotation axis");
@@ -500,7 +500,7 @@ mod tests {
     }
 
     #[test]
-    fn pose3d_compose_inverse_transform_point() {
+    async fn pose3d_compose_inverse_transform_point() {
         let rotation = Rotation3d::from_ijkw(0.0, 0.0, 0.0, 1.0);
         let translation = Vec3d::new(1.0, 2.0, 3.0);
         let pose = Pose3d::from_parts(translation, rotation);
@@ -515,14 +515,14 @@ mod tests {
     }
 
     #[test]
-    fn normalize_vec3_handles_zero_length() {
+    async fn normalize_vec3_handles_zero_length() {
         assert_eq!(normalize_vec3([0.0, 0.0, 0.0]), [0.0, 0.0, -1.0]);
         let n = normalize_vec3([3.0, 0.0, 4.0]);
         assert!((n[0] - 0.6).abs() < 1e-9 && (n[2] - 0.8).abs() < 1e-9);
     }
 
     #[test]
-    fn vec3_math_helpers() {
+    async fn vec3_math_helpers() {
         assert_eq!(vec3_dot([1.0, 2.0, 3.0], [4.0, 5.0, 6.0]), 32.0);
         assert_eq!(vec3_cross([1.0, 0.0, 0.0], [0.0, 1.0, 0.0]), [0.0, 0.0, 1.0]);
         assert_eq!(vec3_add([1.0, 2.0, 3.0], [1.0, 1.0, 1.0]), [2.0, 3.0, 4.0]);
@@ -531,7 +531,7 @@ mod tests {
     }
 
     #[test]
-    fn vec3_scale_variants() {
+    async fn vec3_scale_variants() {
         assert_eq!(vec3_scale([1.0, 2.0, 3.0], &None), [1.0, 2.0, 3.0]);
         assert_eq!(vec3_scale([1.0, 2.0, 3.0], &Some(dsl::DslValue::Number(2.0))), [2.0, 4.0, 6.0]);
         assert_eq!(vec3_scale([1.0, 2.0, 3.0], &Some(dsl::DslValue::Array(vec![dsl::DslValue::Number(2.0), dsl::DslValue::Number(3.0), dsl::DslValue::Number(4.0)]))), [2.0, 6.0, 12.0]);
@@ -539,7 +539,7 @@ mod tests {
     }
 
     #[test]
-    fn quat_rotate_vec_and_180_degree_axis() {
+    async fn quat_rotate_vec_and_180_degree_axis() {
         let identity: Quat = [0.0, 0.0, 0.0, 1.0];
         let rotated = quat_rotate_vec(identity, [1.0, 2.0, 3.0]);
         assert!((rotated[0] - 1.0).abs() < 1e-9 && (rotated[1] - 2.0).abs() < 1e-9 && (rotated[2] - 3.0).abs() < 1e-9);
@@ -548,7 +548,7 @@ mod tests {
     }
 
     #[test]
-    fn anti_parallel_brush_orientation_branches() {
+    async fn anti_parallel_brush_orientation_branches() {
         let in_plane = anti_parallel_brush_orientation([1.0, 0.0, 0.0]);
         assert_eq!(in_plane, quaternion_from_180_degree_axis([0.0, 0.0, 1.0]), "near-planar target direction falls back to the z axis");
         let along_z = anti_parallel_brush_orientation([0.0, 0.0, 1.0]);
@@ -558,7 +558,7 @@ mod tests {
     }
 
     #[test]
-    fn compute_brush_placement_pose_host_orientation_branch() {
+    async fn compute_brush_placement_pose_host_orientation_branch() {
         let host_orientation: Quat = [0.0, 0.0, 0.0, 1.0];
         let (origin, orientation) = compute_brush_placement_pose([1.0, 0.0, 0.0], [0.0, 0.0, -1.0], &None, [10.0, 0.0, 0.0], [0.0, 0.0, 1.0], Some(host_orientation), true);
         assert_eq!(orientation, host_orientation, "an antiparallel host-source direction keeps the host's own orientation");
@@ -566,14 +566,14 @@ mod tests {
     }
 
     #[test]
-    fn compute_brush_placement_pose_falls_back_without_reference_orientation() {
+    async fn compute_brush_placement_pose_falls_back_without_reference_orientation() {
         let (_, orientation) = compute_brush_placement_pose([0.0, 0.0, 0.0], [0.0, 0.0, -1.0], &None, [0.0, 0.0, 0.0], [0.0, 0.0, -1.0], None, true);
         let anti = anti_parallel_brush_orientation([0.0, 0.0, -1.0]);
         assert_eq!(orientation, anti, "use_host_orientation with no reference orientation must fall through to the general path");
     }
 
     #[test]
-    fn compute_brush_placement_pose_general_rotation_between() {
+    async fn compute_brush_placement_pose_general_rotation_between() {
         let (origin, orientation) = compute_brush_placement_pose([0.0, 0.0, 0.0], [0.0, 0.0, -1.0], &None, [5.0, 0.0, 0.0], [1.0, 0.0, 0.0], None, false);
         let rotated = quat_rotate_vec(orientation, [0.0, 0.0, -1.0]);
         assert!((rotated[0] + 1.0).abs() < 1e-4, "local dir must rotate onto the desired world dir: {rotated:?}");
@@ -581,7 +581,7 @@ mod tests {
     }
 
     #[test]
-    fn collision_body_from_buffers_rejects_too_few_or_degenerate() {
+    async fn collision_body_from_buffers_rejects_too_few_or_degenerate() {
         assert!(collision_body_from_buffers(&[0.0; 6], &[0, 1, 2]).is_none(), "fewer than 3 vertices must be rejected");
         assert!(collision_body_from_buffers(&[0.0; 9], &[0, 1]).is_none(), "fewer than one triangle's worth of indices must be rejected");
         let tiny_positions: Vec<f32> = vec![0.0, 0.0, 0.0, 0.1, 0.0, 0.0, 0.0, 0.1, 0.0];
@@ -589,7 +589,7 @@ mod tests {
     }
 
     #[test]
-    fn collision_body_from_buffers_accepts_valid_mesh() {
+    async fn collision_body_from_buffers_accepts_valid_mesh() {
         let (positions, indices) = unit_cube_mesh_buffers();
         let scaled: Vec<f32> = positions.iter().map(|c| c * 4.0).collect();
         let body = collision_body_from_buffers(&scaled, &indices).expect("valid mesh should build a body");
@@ -598,7 +598,7 @@ mod tests {
     }
 
     #[test]
-    fn world_bounds_transforms_local_aabb_corners() {
+    async fn world_bounds_transforms_local_aabb_corners() {
         let (positions, indices) = unit_cube_mesh_buffers();
         let body = collision_body_from_buffers(&positions, &indices).expect("body");
         let pose = Pose3d::from_parts(Vec3d::new(10.0, 0.0, 0.0), Rotation3d::identity());
@@ -607,14 +607,14 @@ mod tests {
     }
 
     #[test]
-    fn world_volumes_contain_aabb_empty_and_multi_volume() {
+    async fn world_volumes_contain_aabb_empty_and_multi_volume() {
         assert!(world_volumes_contain_aabb(&[], Point3d::new(-1.0, -1.0, -1.0), Point3d::new(1.0, 1.0, 1.0)), "no target volumes means unconstrained");
         let volumes = vec![WorldVolumeProps { id: "far".into(), origin: [100.0, 0.0, 0.0], orientation: None, scale: None }, WorldVolumeProps { id: "near".into(), origin: [0.0, 0.0, 0.0], orientation: None, scale: Some(dsl::DslValue::Number(4.0)) }];
         assert!(world_volumes_contain_aabb(&volumes, Point3d::new(-1.0, -1.0, -1.0), Point3d::new(1.0, 1.0, 1.0)), "any single containing volume is enough");
     }
 
     #[test]
-    fn bodies_intersect_and_solid_overlap_volume_reject_disjoint_aabbs() {
+    async fn bodies_intersect_and_solid_overlap_volume_reject_disjoint_aabbs() {
         let (positions, indices) = unit_cube_mesh_buffers();
         let body = collision_body_from_buffers(&positions, &indices).expect("body");
         let pose_a = Pose3d::identity();
@@ -624,7 +624,7 @@ mod tests {
     }
 
     #[test]
-    fn solid_overlap_volume_reports_positive_overlap_for_coincident_bodies() {
+    async fn solid_overlap_volume_reports_positive_overlap_for_coincident_bodies() {
         let (positions, indices) = outward_wound_unit_cube_mesh_buffers();
         let scaled: Vec<f32> = positions.iter().map(|c| c * 4.0).collect();
         let body = collision_body_from_buffers(&scaled, &indices).expect("body");

@@ -105,7 +105,7 @@ pub use super::scale_target_volume::mutation::{scale_target_volume, ScaleTargetV
 //#region 🔖️SnapshotDelta
 /// 🔀️ Diffs two typed snapshots into a minimal semantic mutation set — the single source of truth
 /// both the VCS layer and the `serde_json::Value` scene bridge below replay through.
-pub fn puzzle3d_snapshot_mutations(before: &Puzzle3dSnapshot, after: &Puzzle3dSnapshot) -> Vec<Puzzle3dMutation> {
+pub async fn puzzle3d_snapshot_mutations(before: &Puzzle3dSnapshot, after: &Puzzle3dSnapshot) -> Vec<Puzzle3dMutation> {
     let mut mutations = Vec::new();
     for object in &before.objects {
         if !after.objects.iter().any(|entry| entry.id == object.id) {
@@ -263,14 +263,14 @@ pub fn puzzle3d_snapshot_mutations(before: &Puzzle3dSnapshot, after: &Puzzle3dSn
 //#endregion 🔖️SnapshotDelta
 
 /// ▶️ Applies `mutation` via its diff.
-pub fn apply_puzzle3d_mutation(projection: &mut Puzzle3dSnapshot, mutation: &Puzzle3dMutation) -> protocol::MutationApplyResult<()> {
+pub async fn apply_puzzle3d_mutation(projection: &mut Puzzle3dSnapshot, mutation: &Puzzle3dMutation) -> protocol::MutationApplyResult<()> {
     let (next, _) = vcs::apply_mutation(projection, mutation)?;
 
     *projection = next;
     Ok(())
 }
 
-pub fn inverse_puzzle3d_mutation(projection: &Puzzle3dSnapshot, mutation: &Puzzle3dMutation) -> Vec<Puzzle3dMutation> {
+pub async fn inverse_puzzle3d_mutation(projection: &Puzzle3dSnapshot, mutation: &Puzzle3dMutation) -> Vec<Puzzle3dMutation> {
     mutation.inverse(projection)
 }
 
@@ -280,7 +280,7 @@ pub fn inverse_puzzle3d_mutation(projection: &Puzzle3dSnapshot, mutation: &Puzzl
 // boundary round-trips through the typed `Puzzle3dSnapshot` (`serde_json::from_value`/`to_value`)
 // rather than hand-splicing JSON per mutation kind — mirrors `puzzle2d`/`puzzle5d`'s bridge exactly.
 impl MutationDiff<Value> for Puzzle3dDiff {
-    fn apply(&self, projection: &Value) -> protocol::MutationApplyResult<Value> {
+    async fn apply(&self, projection: &Value) -> protocol::MutationApplyResult<Value> {
         let base: Puzzle3dSnapshot = serde_json::from_value(projection.clone()).map_err(|error| {
             protocol::MutationApplyError::new("mutation.apply.invalid-base", error.to_string()).at(["document"])
         })?;
@@ -289,7 +289,7 @@ impl MutationDiff<Value> for Puzzle3dDiff {
             protocol::MutationApplyError::new("mutation.apply.invalid-result", error.to_string()).at(["document"])
         })
     }
-    fn absorb(&mut self, other: Self) {
+    async fn absorb(&mut self, other: Self) {
         MutationDiff::<Puzzle3dSnapshot>::absorb(self, other);
     }
 }
@@ -297,12 +297,12 @@ impl MutationDiff<Value> for Puzzle3dDiff {
 impl Mutation<Value> for Puzzle3dMutation {
     type Diff = Puzzle3dDiff;
 
-    fn diff(&self, projection: &Value) -> protocol::MutationOutcome<Puzzle3dDiff> {
+    async fn diff(&self, projection: &Value) -> protocol::MutationOutcome<Puzzle3dDiff> {
         let base: Puzzle3dSnapshot = serde_json::from_value(projection.clone()).unwrap_or_default();
         Mutation::<Puzzle3dSnapshot>::diff(self, &base)
     }
 
-    fn inverse(&self, projection: &Value) -> Vec<Self> {
+    async fn inverse(&self, projection: &Value) -> Vec<Self> {
         let base: Puzzle3dSnapshot = serde_json::from_value(projection.clone()).unwrap_or_default();
         Mutation::<Puzzle3dSnapshot>::inverse(self, &base)
     }
@@ -311,7 +311,7 @@ impl Mutation<Value> for Puzzle3dMutation {
 /// 🧮️ Computes the exact typed semantic mutation sequence turning `before` into `after` (both the
 /// bare document JSON the play app mutates), by round-tripping through the typed
 /// `Puzzle3dSnapshot` and delegating to [`puzzle3d_snapshot_mutations`].
-pub fn puzzle3d_document_delta_operations(before: &Value, after: &Value) -> Vec<Puzzle3dMutation> {
+pub async fn puzzle3d_document_delta_operations(before: &Value, after: &Value) -> Vec<Puzzle3dMutation> {
     let before_snapshot: Puzzle3dSnapshot = serde_json::from_value(before.clone()).unwrap_or_default();
     let after_snapshot: Puzzle3dSnapshot = serde_json::from_value(after.clone()).unwrap_or_default();
     if before_snapshot == after_snapshot {
@@ -333,7 +333,7 @@ pub fn puzzle3d_document_delta_operations(before: &Value, after: &Value) -> Vec<
 pub struct Puzzle3dPlaySnapshot(pub Value);
 
 impl PartialEq for Puzzle3dPlaySnapshot {
-    fn eq(&self, other: &Self) -> bool {
+    async fn eq(&self, other: &Self) -> bool {
         store::pack_rt::json_values_equal(&self.0, &other.0)
     }
 }
@@ -341,32 +341,32 @@ impl PartialEq for Puzzle3dPlaySnapshot {
 impl store::ArtifactDsl for Puzzle3dPlaySnapshot {
     const EXTENSION: &'static str = "puzzle3d-play";
 
-    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+    async fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
         serde_json::from_str(text).map(Puzzle3dPlaySnapshot).map_err(|error| store::TextError::new(error.to_string(), store::TextSpan::at(1, 1)))
     }
 
-    fn print_dsl(&self) -> String {
+    async fn print_dsl(&self) -> String {
         serde_json::to_string_pretty(&self.0).unwrap_or_default()
     }
 }
 
 impl store::ArtifactPack for Puzzle3dPlaySnapshot {
-    fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
+    async fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         dsl::to_dsl_value(&self.0).map_err(store::PackError::Schema)?.encode_pack_with(options)
     }
 
-    fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
+    async fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let value = dsl::DslValue::decode_pack_with(bytes, options)?;
         dsl::from_dsl_value(value).map(Puzzle3dPlaySnapshot).map_err(store::PackError::Schema)
     }
 }
 
 impl MutationDiff<Puzzle3dPlaySnapshot> for Puzzle3dDiff {
-    fn apply(&self, projection: &Puzzle3dPlaySnapshot) -> protocol::MutationApplyResult<Puzzle3dPlaySnapshot> {
+    async fn apply(&self, projection: &Puzzle3dPlaySnapshot) -> protocol::MutationApplyResult<Puzzle3dPlaySnapshot> {
         MutationDiff::<Value>::apply(self, &projection.0)
             .map(Puzzle3dPlaySnapshot)
     }
-    fn absorb(&mut self, other: Self) {
+    async fn absorb(&mut self, other: Self) {
         MutationDiff::<Puzzle3dSnapshot>::absorb(self, other);
     }
 }
@@ -374,11 +374,11 @@ impl MutationDiff<Puzzle3dPlaySnapshot> for Puzzle3dDiff {
 impl Mutation<Puzzle3dPlaySnapshot> for Puzzle3dMutation {
     type Diff = Puzzle3dDiff;
 
-    fn diff(&self, projection: &Puzzle3dPlaySnapshot) -> protocol::MutationOutcome<Puzzle3dDiff> {
+    async fn diff(&self, projection: &Puzzle3dPlaySnapshot) -> protocol::MutationOutcome<Puzzle3dDiff> {
         Mutation::<Value>::diff(self, &projection.0)
     }
 
-    fn inverse(&self, projection: &Puzzle3dPlaySnapshot) -> Vec<Puzzle3dMutation> {
+    async fn inverse(&self, projection: &Puzzle3dPlaySnapshot) -> Vec<Puzzle3dMutation> {
         Mutation::<Value>::inverse(self, &projection.0)
     }
 }
@@ -390,16 +390,16 @@ impl Mutation<Puzzle3dPlaySnapshot> for Puzzle3dMutation {
 /// immediately above, needed so `.editor_mutation_roster::<Puzzle3dPlayApp>()` can register this
 /// dialect's real semantic vocabulary against the play app's own `Snapshot` type.
 impl protocol::SemanticMutation<Puzzle3dPlaySnapshot> for Puzzle3dMutation {
-    fn kinds() -> &'static [protocol::SemanticDescriptor] {
+    async fn kinds() -> &'static [protocol::SemanticDescriptor] {
         <Self as protocol::SemanticMutation<Puzzle3dSnapshot>>::kinds()
     }
-    fn semantics(&self) -> &'static protocol::SemanticDescriptor {
+    async fn semantics(&self) -> &'static protocol::SemanticDescriptor {
         <Self as protocol::SemanticMutation<Puzzle3dSnapshot>>::semantics(self)
     }
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         <Self as protocol::SemanticMutation<Puzzle3dSnapshot>>::label(self)
     }
-    fn target(&self) -> Vec<String> {
+    async fn target(&self) -> Vec<String> {
         <Self as protocol::SemanticMutation<Puzzle3dSnapshot>>::target(self)
     }
 }
@@ -411,7 +411,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn puzzle3d_delta_ops_round_trip_and_stay_granular() {
+    async fn puzzle3d_delta_ops_round_trip_and_stay_granular() {
         let before = serde_json::json!({
             "schema": crate::artifacts::puzzle3d::PUZZLE_3D_SCHEMA, "domain": "architecture",
             "meta": {},
@@ -453,7 +453,7 @@ mod tests {
     use protocol::SemanticMutation;
 
     #[test]
-    fn move_object_diff_absorb_law() {
+    async fn move_object_diff_absorb_law() {
         use crate::artifacts::puzzle3d::Puzzle3dObject;
         let base = empty();
         let object = Puzzle3dObject { id: "o1".into(), label: None, object_kind: None, anchor: Default::default(), origin: [0.0, 0.0, 0.0], orientation: None, scale: None, mesh_url: None, vortices: Vec::new(), hidden: false, locked: false };
@@ -464,12 +464,12 @@ mod tests {
         assert_mutation_diff_absorb_law(&with_object, d1, d2);
     }
 
-    fn empty() -> Puzzle3dSnapshot {
+    async fn empty() -> Puzzle3dSnapshot {
         Puzzle3dSnapshot::default()
     }
 
     #[test]
-    fn create_delete_object_inverse_law() {
+    async fn create_delete_object_inverse_law() {
         use crate::artifacts::puzzle3d::Puzzle3dObject;
         let base = empty();
         let object = Puzzle3dObject { id: "o1".into(), label: None, object_kind: None, anchor: Default::default(), origin: [0.0, 0.0, 0.0], orientation: None, scale: None, mesh_url: None, vortices: Vec::new(), hidden: false, locked: false };
@@ -479,7 +479,7 @@ mod tests {
     }
 
     #[test]
-    fn object_field_mutations_inverse_law() {
+    async fn object_field_mutations_inverse_law() {
         use crate::artifacts::puzzle3d::{Puzzle3dObject, Puzzle3dObjectAnchor, Puzzle3dScale, Puzzle3dVortex};
         let base = empty();
         let object = Puzzle3dObject {
@@ -503,7 +503,7 @@ mod tests {
     }
 
     #[test]
-    fn connect_disconnect_vortices_inverse_law_and_cascade() {
+    async fn connect_disconnect_vortices_inverse_law_and_cascade() {
         use crate::artifacts::puzzle3d::{Puzzle3dObject, Puzzle3dVortex};
         let base = empty();
         let object_a = Puzzle3dObject { id: "a".into(), label: None, object_kind: None, anchor: Default::default(), origin: [0.0, 0.0, 0.0], orientation: None, scale: None, mesh_url: None, vortices: vec![Puzzle3dVortex { id: "va".into(), vortex_kind: None, label: None, position: [0.0, 0.0, 0.0], direction: None, radius: None, hidden: false, locked: false }], hidden: false, locked: false };
@@ -522,7 +522,7 @@ mod tests {
     }
 
     #[test]
-    fn target_volume_and_reference_inverse_law() {
+    async fn target_volume_and_reference_inverse_law() {
         use crate::artifacts::puzzle3d::{Puzzle3dReference, Puzzle3dReferenceSource, Puzzle3dTargetVolume};
         let base = empty();
         let volume = Puzzle3dTargetVolume { id: "tv1".into(), origin: [0.0, 0.0, 0.0], orientation: None, scale: None, hidden: false, locked: false };
@@ -547,7 +547,7 @@ mod tests {
     }
 
     #[test]
-    fn document_scalar_mutations_inverse_law() {
+    async fn document_scalar_mutations_inverse_law() {
         use crate::artifacts::puzzle3d::{Puzzle3dCompatSpecificity, Puzzle3dKindCatalogs};
         let base = empty();
         assert_mutation_inverse_law(&base, &change_domain("mechanical".into()));
@@ -558,7 +558,7 @@ mod tests {
     }
 
     #[test]
-    fn dispatch_registers_semantic_descriptors() {
+    async fn dispatch_registers_semantic_descriptors() {
         register_puzzle3d_mutation_descriptors();
         for kind in Puzzle3dMutation::kinds() {
             assert!(protocol::is_approved_verb(kind.verb), "verb '{}' must be in APPROVED_VERBS", kind.verb);
@@ -573,7 +573,7 @@ mod tests {
     use protocol::testkit::{assert_fatal_never_applies, assert_missing_target_is_error};
 
     #[test]
-    fn missing_target_is_error_per_verb_family() {
+    async fn missing_target_is_error_per_verb_family() {
         let base = empty();
         assert_missing_target_is_error(&base, &delete_object("missing".into())); // delete
         assert_missing_target_is_error(&base, &remove_object_vortex("missing".into(), "v0".into())); // remove
@@ -584,7 +584,7 @@ mod tests {
     }
 
     #[test]
-    fn create_duplicate_id_is_fatal_and_never_applies() {
+    async fn create_duplicate_id_is_fatal_and_never_applies() {
         use crate::artifacts::puzzle3d::Puzzle3dObject;
         let mut base = empty();
         let object = Puzzle3dObject { id: "o0".into(), label: None, object_kind: None, anchor: Default::default(), origin: [0.0, 0.0, 0.0], orientation: None, scale: None, mesh_url: None, vortices: Vec::new(), hidden: false, locked: false };

@@ -7,7 +7,7 @@ use protocol::Mutation;
 /// `from` (source) or `to` (destination) is `mutation.target-missing` (Error, empty diff, checked
 /// before `from == to` so a genuinely absent index is never misreported as a no-op); `from == to`
 /// is `mutation.no-op` (Warning, empty diff).
-pub fn diff(base: &SemioImageSnapshot, from: usize, to: usize) -> protocol::MutationOutcome<SemioImageDiff> {
+pub async fn diff(base: &SemioImageSnapshot, from: usize, to: usize) -> protocol::MutationOutcome<SemioImageDiff> {
     if from >= base.frames.len() {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Frame index {from} does not exist."), [from.to_string()]);
     }

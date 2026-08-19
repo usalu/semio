@@ -7,7 +7,7 @@ use serde::{Deserialize, Serialize};
 /// 🌱️ The artifact's empty/default snapshot — used as `VcsPlayApp::initial_snapshot()` and by every
 /// test fixture that needs a base document (was: `⚙️engine::empty_vcs_snapshot()`, dissolved per ticket
 /// 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES).
-pub fn empty_vcs_snapshot() -> crate::artifacts::vcs::VcsSnapshot {
+pub async fn empty_vcs_snapshot() -> crate::artifacts::vcs::VcsSnapshot {
     crate::artifacts::vcs::VcsSnapshot::default()
 }
 //#endregion 🔖️DocumentHelpers
@@ -41,7 +41,7 @@ pub struct VcsArtifact {
 
 //#region 🔖️Conversions
 impl Default for VcsArtifact {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self {
             schema: crate::artifacts::vcs::VCS_DOCUMENT_SCHEMA.into(),
             title: "VCS Demo".into(),
@@ -57,7 +57,7 @@ impl Default for VcsArtifact {
 
 impl VcsArtifact {
     /// 📸️ Persisted subset.
-    pub fn to_snapshot(&self) -> crate::artifacts::vcs::VcsSnapshot {
+    pub async fn to_snapshot(&self) -> crate::artifacts::vcs::VcsSnapshot {
         crate::artifacts::vcs::VcsSnapshot {
             schema: self.schema.clone(),
             title: self.title.clone(),
@@ -69,7 +69,7 @@ impl VcsArtifact {
     }
 
     /// 🧬️ Builds a full artifact from a snapshot, leaving UI fields at defaults.
-    pub fn from_snapshot(snapshot: crate::artifacts::vcs::VcsSnapshot) -> Self {
+    pub async fn from_snapshot(snapshot: crate::artifacts::vcs::VcsSnapshot) -> Self {
         Self {
             schema: snapshot.schema,
             title: snapshot.title,
@@ -82,7 +82,7 @@ impl VcsArtifact {
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
-    pub fn set_snapshot(&mut self, snapshot: crate::artifacts::vcs::VcsSnapshot) {
+    pub async fn set_snapshot(&mut self, snapshot: crate::artifacts::vcs::VcsSnapshot) {
         self.schema = snapshot.schema;
         self.title = snapshot.title;
         self.counter = snapshot.counter;
@@ -95,7 +95,7 @@ impl VcsArtifact {
 
 //#region 🔖️Descriptor
 /// 🧬️ Descriptor for `s.vcs.vcs` — twenty handcrafted schema leaves.
-pub fn vcs_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
+pub async fn vcs_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
     schema::ArtifactSchemaDescriptor {
         id: "s.vcs.vcs",
         artifact: schema::FacetLeaves {
@@ -144,7 +144,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn empty_snapshot_matches_schema() {
+    async fn empty_snapshot_matches_schema() {
         let snapshot = empty_vcs_snapshot();
         assert_eq!(snapshot.schema, crate::artifacts::vcs::VCS_DOCUMENT_SCHEMA);
         assert_eq!(snapshot.status, "new");

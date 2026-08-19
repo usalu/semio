@@ -17,12 +17,12 @@ pub const PUZZLE2D_CONCRETE_FOREST_EXAMPLE_TEXT: &str = include_str!("../../../�
 pub const PUZZLE2D_NAKAGIN_EXAMPLE_TEXT: &str = include_str!("../../../📚️examples/🏗️nakagin-capsule-tower/🖼️assets/🗣️tower.dsl.semio");
 
 /// 📖️ Parses `.puzzle2d` DSL text into a `Puzzle2dSnapshot`.
-pub fn parse_dsl(text: &str) -> Result<Puzzle2dSnapshot, store::TextError> {
+pub async fn parse_dsl(text: &str) -> Result<Puzzle2dSnapshot, store::TextError> {
     <Puzzle2dSnapshot as store::ArtifactDsl>::parse_dsl(text)
 }
 
 /// 🖨️ Prints a `Puzzle2dSnapshot` back to `.puzzle2d` DSL text.
-pub fn print_dsl(document: &Puzzle2dSnapshot) -> String {
+pub async fn print_dsl(document: &Puzzle2dSnapshot) -> String {
     store::ArtifactDsl::print_dsl(document)
 }
 
@@ -36,7 +36,7 @@ mod tests {
     /// 🎫️convertpuzzle2d3d5dtotypeddslderiveengine) parse as `.puzzle2d` DSL text and round-trip
     /// through `print_dsl`/`parse_dsl` exactly.
     #[test]
-    fn puzzle2d_example_fixtures_parse_and_round_trip_as_dsl() {
+    async fn puzzle2d_example_fixtures_parse_and_round_trip_as_dsl() {
         for dsl_text in [PUZZLE2D_CONCRETE_FOREST_EXAMPLE_TEXT, PUZZLE2D_NAKAGIN_EXAMPLE_TEXT] {
             let projection = parse_dsl(dsl_text).expect("example fixture parses as dsl");
             semio_framework_os_kernel::os_store::test_support::assert_dsl_round_trip(&projection);
@@ -45,7 +45,7 @@ mod tests {
     }
 
     #[test]
-    fn puzzle2d_projection_dsl_round_trips() {
+    async fn puzzle2d_projection_dsl_round_trips() {
         let empty = Puzzle2dSnapshot::default();
         semio_framework_os_kernel::os_store::test_support::assert_dsl_round_trip(&empty);
         semio_framework_os_kernel::os_store::test_support::assert_dsl_pack_equivalence(&empty);
@@ -102,7 +102,7 @@ mod tests {
     /// file's existing dsl/pack round-trip laws (same pattern as `dag`'s own
     /// `command_envelope_round_trip_holds_for_an_applied_operation`).
     #[test]
-    fn command_envelope_round_trip_holds_for_an_applied_operation() {
+    async fn command_envelope_round_trip_holds_for_an_applied_operation() {
         use crate::artifacts::puzzle2d::op::Puzzle2dMutation;
         use crate::artifacts::puzzle2d::spr::Puzzle2dStore;
         use crate::artifacts::puzzle2d::PUZZLE_2D_SCHEMA;
@@ -118,7 +118,7 @@ mod tests {
     //#endregion 🔖️CommandEnvelopeTests
 
     #[test]
-    fn puzzle2d_dsl_parses_edge_with_all_connection_params() {
+    async fn puzzle2d_dsl_parses_edge_with_all_connection_params() {
         use crate::artifacts::puzzle2d::{Puzzle2dEdge, Puzzle2dNode, Puzzle2dSnapshot};
         let snapshot = Puzzle2dSnapshot {
             nodes: vec![

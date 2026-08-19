@@ -5,7 +5,7 @@ use crate::artifacts::en1996::mutations::change_unit::mutation::ChangeUnit;
 use crate::artifacts::en1996::En1996Snapshot;
 
 //#region 🔖️Diff
-pub fn diff(payload: &ChangeUnit, base: &En1996Snapshot) -> protocol::MutationOutcome<En1996Diff> {
+pub async fn diff(payload: &ChangeUnit, base: &En1996Snapshot) -> protocol::MutationOutcome<En1996Diff> {
     if base.unit == payload.new_unit {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", "Unit already has this value.");
     }

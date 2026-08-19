@@ -1,0 +1,25 @@
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/⏳️runtime.rs:326:
+ pub enum AsyncActorCommand {
+     Checkpoint(tokio::sync::oneshot::Sender<Result<Vec<u8>, String>>),
+     Restore(Vec<u8>, tokio::sync::oneshot::Sender<Result<(), String>>),
+-    StartJob { job: u64, kind: String, input: Vec<u8>, reply: tokio::sync::oneshot::Sender<Result<(), String>> },
+-    StepJob { job: u64, budget: JobBudgetArg, reply: tokio::sync::oneshot::Sender<Result<JobStepResult, String>> },
+-    CancelJob { job: u64 },
++    StartJob {
++        job: u64,
++        kind: String,
++        input: Vec<u8>,
++        reply: tokio::sync::oneshot::Sender<Result<(), String>>,
++    },
++    StepJob {
++        job: u64,
++        budget: JobBudgetArg,
++        reply: tokio::sync::oneshot::Sender<Result<JobStepResult, String>>,
++    },
++    CancelJob {
++        job: u64,
++    },
+     /// 🛑️ Ends the root task's control loop without waiting for `call_run` to return on its own —
+     /// the caller is expected to follow this with [`AsyncActorTask::cancel`] if `call_run` does not
+     /// resolve promptly on its own (e.g. it is genuinely parked forever on a host import).
+exit: 1

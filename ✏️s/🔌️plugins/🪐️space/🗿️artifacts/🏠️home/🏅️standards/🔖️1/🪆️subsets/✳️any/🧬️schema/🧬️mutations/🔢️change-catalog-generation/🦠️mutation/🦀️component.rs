@@ -16,7 +16,7 @@ pub struct ChangeCatalogGeneration {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn change_catalog_generation(new_catalog_generation: u64) -> SHomeMutation {
+pub async fn change_catalog_generation(new_catalog_generation: u64) -> SHomeMutation {
     SHomeMutation::ChangeCatalogGeneration(ChangeCatalogGeneration { new_catalog_generation })
 }
 
@@ -24,13 +24,13 @@ impl protocol::MutationKind<SHomeSnapshot, SHomeMutation> for ChangeCatalogGener
     const SEMANTICS: protocol::SemanticDescriptor =
         protocol::SemanticDescriptor { verb: "change", entity: "catalog-generation", kind: "change-catalog-generation", record: "ChangedCatalogGeneration" };
 
-    fn diff(&self, base: &SHomeSnapshot) -> protocol::MutationOutcome<SHomeDiff> {
+    async fn diff(&self, base: &SHomeSnapshot) -> protocol::MutationOutcome<SHomeDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &SHomeSnapshot) -> Vec<SHomeMutation> {
+    async fn inverse(&self, base: &SHomeSnapshot) -> Vec<SHomeMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         format!("Change catalog generation to {}", self.new_catalog_generation)
     }
 }

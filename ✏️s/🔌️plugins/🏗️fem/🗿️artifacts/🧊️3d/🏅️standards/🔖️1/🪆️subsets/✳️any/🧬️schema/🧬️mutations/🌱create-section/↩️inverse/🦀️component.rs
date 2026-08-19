@@ -4,7 +4,7 @@ use crate::artifacts::fem3d::mutations::{delete_section, Fem3dMutation};
 use crate::artifacts::fem3d::Fem3dSnapshot;
 
 //#region 🔖️Inverse
-pub fn inverse(payload: &CreateSection, _base: &Fem3dSnapshot) -> Vec<Fem3dMutation> {
+pub async fn inverse(payload: &CreateSection, _base: &Fem3dSnapshot) -> Vec<Fem3dMutation> {
     vec![Fem3dMutation::DeleteSection(delete_section::mutation::DeleteSection { id: payload.section.id.clone() })]
 }
 //#endregion 🔖️Inverse

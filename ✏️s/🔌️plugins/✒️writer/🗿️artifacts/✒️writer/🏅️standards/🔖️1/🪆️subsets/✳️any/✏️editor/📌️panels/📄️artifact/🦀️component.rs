@@ -18,7 +18,7 @@ const WRITER_PANEL_TAB_ARTIFACT_OUTLINE_ID: &str = "framework.panel.document.out
 
 //#region 🔖️Definition
 /// 🌳️ Nested children of the document tab — demonstrates the recursive panel-tab tree (stacked tab rows).
-pub fn definition() -> PanelTabDefinition {
+pub async fn definition() -> PanelTabDefinition {
     PanelTabDefinition {
         kind: PanelTabKind::App(FRAMEWORK_PANEL_TAB_ARTIFACT_ID.into()),
         label: LocalizedLabel::native(FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL, "Dokument"),
@@ -38,7 +38,7 @@ pub fn definition() -> PanelTabDefinition {
 /// `.interaction_domain("ast")` below, so the framework auto-injects `interactionSelect`/
 /// `interactionHover` for every row (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM —
 /// never declare those actions yourself).
-fn jack_ast_to_tree_item(node: &JackAstNode) -> UiTreeItemNode {
+async fn jack_ast_to_tree_item(node: &JackAstNode) -> UiTreeItemNode {
     let children: Vec<UiTreeItemNode> = node.children.iter().map(jack_ast_to_tree_item).collect();
     UiTreeItemNode {
         id: node.id.clone(),
@@ -60,7 +60,7 @@ fn jack_ast_to_tree_item(node: &JackAstNode) -> UiTreeItemNode {
     }
 }
 
-pub fn render(document: &WriterSnapshot, _config: &WriterConfig, labels: &WriterPlayLabels) -> UiNode {
+pub async fn render(document: &WriterSnapshot, _config: &WriterConfig, labels: &WriterPlayLabels) -> UiNode {
     if document.language_id != "jack" {
         return ui_declarative_sections_to_tree(&[UiSectionNode {
             id: "writer-document".into(),
@@ -91,7 +91,7 @@ mod tests {
     use crate::editor::writer::testkit::{app_with_jack, new_app, render as render_body};
 
     #[test]
-    fn renders_document_tree_for_jack() {
+    async fn renders_document_tree_for_jack() {
         use semio_framework_plugin::PluginApp;
         let mut app = new_app();
         let node = app.render(WRITER_PLAY_BODY_ARTIFACT, Some(&crate::artifacts::writer::dsl::jack_example_json()), &semio_framework_plugin::ViewModel::default()).expect("render");
@@ -101,7 +101,7 @@ mod tests {
     }
 
     #[test]
-    fn definition_binds_the_framework_document_tab_and_its_children_to_this_body_key() {
+    async fn definition_binds_the_framework_document_tab_and_its_children_to_this_body_key() {
         let definition = definition();
         assert_eq!(definition.id(), FRAMEWORK_PANEL_TAB_ARTIFACT_ID);
         assert_eq!(definition.children.len(), 2);
@@ -111,7 +111,7 @@ mod tests {
     /// 🌳️ The AST section only appears for `jack`-language documents (see `render`'s early return for
     /// any other language) — load the jack fixture first.
     #[test]
-    fn document_lists_the_ast_section_for_jack_documents() {
+    async fn document_lists_the_ast_section_for_jack_documents() {
         let mut app = app_with_jack();
         assert!(render_body(&mut app, WRITER_PLAY_BODY_ARTIFACT).contains("writer-play-document.ast"));
     }
@@ -119,7 +119,7 @@ mod tests {
     /// 📄️ A non-jack (default/plaintext) document renders the plain id/language fallback section
     /// instead of the AST tree.
     #[test]
-    fn document_falls_back_to_a_plain_section_for_non_jack_documents() {
+    async fn document_falls_back_to_a_plain_section_for_non_jack_documents() {
         let mut app = new_app();
         assert!(render_body(&mut app, WRITER_PLAY_BODY_ARTIFACT).contains("writer-document"));
     }

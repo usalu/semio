@@ -18,7 +18,7 @@ pub struct PresentConfig {
 
 //region 📎 App-schema descriptor
 /// 📎 `s.animate.present`'s config and presence schema, owned by this leaf.
-pub fn app_schema_descriptor() -> ::schema::AppSchemaDescriptor {
+pub async fn app_schema_descriptor() -> ::schema::AppSchemaDescriptor {
     ::schema::AppSchemaDescriptor {
         id: "s.animate.present",
         config: ::schema::FacetLeaves {

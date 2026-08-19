@@ -13,7 +13,7 @@ pub struct SetDirected {
     pub directed: bool,
 }
 
-pub fn handle(payload: &SetDirected, doc: &ArtifactView<'_, MathematicalSnapshot>, _cfg: &ConfigView<'_, MathematicalConfig>) -> Result<Emit<MathematicalMutation, MathematicalConfigMutation>, Fault> {
+pub async fn handle(payload: &SetDirected, doc: &ArtifactView<'_, MathematicalSnapshot>, _cfg: &ConfigView<'_, MathematicalConfig>) -> Result<Emit<MathematicalMutation, MathematicalConfigMutation>, Fault> {
     let mut graph = crate::artifacts::mathematical::mathematical_graph(doc.snapshot);
     graph.directed = payload.directed;
     Ok(Emit::mutations(vec![MathematicalMutation::ReplaceGraph(ReplaceGraph { graph })]))

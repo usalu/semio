@@ -11,7 +11,7 @@ pub mod geometry {
     use geometry::{append_shape_to_path, Arc, BezPath, Circle, Line, Point, Rect, RoundedRect, RoundedRectRadii, Vec2};
     use std::f64::consts::PI;
 
-    fn styled_path(path: BezPath, fill: Color, stroke: Option<Color>, stroke_width: f64) -> VSobject {
+    async fn styled_path(path: BezPath, fill: Color, stroke: Option<Color>, stroke_width: f64) -> VSobject {
         let mut v = VSobject::from_path(path);
         v.style.fill = Some(fill);
         v.style.stroke = stroke;
@@ -20,22 +20,22 @@ pub mod geometry {
     }
 
     /// · Point marker.
-    pub fn point(at: Point, radius: f64, color: Color) -> VSobject {
+    pub async fn point(at: Point, radius: f64, color: Color) -> VSobject {
         styled_path(circle_path(at, radius), color, None, 0.0)
     }
 
     /// ●️ Dot (small filled circle).
-    pub fn dot(at: Point, radius: f64, color: Color) -> VSobject {
+    pub async fn dot(at: Point, radius: f64, color: Color) -> VSobject {
         point(at, radius, color)
     }
 
     /// ─️ Line segment.
-    pub fn line(start: Point, end: Point, color: Color, width: f64) -> VSobject {
+    pub async fn line(start: Point, end: Point, color: Color, width: f64) -> VSobject {
         styled_path(line_path(start, end), Color::TRANSPARENT, Some(color), width)
     }
 
     /// ➡️ Arrow from start to end.
-    pub fn arrow(start: Point, end: Point, color: Color, width: f64, tip_len: f64) -> VSobject {
+    pub async fn arrow(start: Point, end: Point, color: Color, width: f64, tip_len: f64) -> VSobject {
         let mut path = line_path(start, end);
         let dir = end - start;
         let len = dir.hypot().max(1e-9);
@@ -50,12 +50,12 @@ pub mod geometry {
     }
 
     /// ○️ Circle outline or fill.
-    pub fn circle(center: Point, radius: f64, fill: Color, stroke: Option<Color>, stroke_width: f64) -> VSobject {
+    pub async fn circle(center: Point, radius: f64, fill: Color, stroke: Option<Color>, stroke_width: f64) -> VSobject {
         styled_path(circle_path(center, radius), fill, stroke, stroke_width)
     }
 
     /// ◠️ Circular arc.
-    pub fn arc(center: Point, radius: f64, start_angle: f64, sweep: f64, color: Color, width: f64) -> VSobject {
+    pub async fn arc(center: Point, radius: f64, start_angle: f64, sweep: f64, color: Color, width: f64) -> VSobject {
         let a = Arc::new(center, (radius, radius), start_angle, sweep, 0.0);
         let mut path = BezPath::new();
         append_shape_to_path(&mut path, &a, 0.01);
@@ -63,12 +63,12 @@ pub mod geometry {
     }
 
     /// ■️ Axis-aligned square.
-    pub fn square(side: f64, center: Point, fill: Color, stroke: Option<Color>, stroke_width: f64) -> VSobject {
+    pub async fn square(side: f64, center: Point, fill: Color, stroke: Option<Color>, stroke_width: f64) -> VSobject {
         rectangle(side, side, center, fill, stroke, stroke_width)
     }
 
     /// ▭️ Rectangle.
-    pub fn rectangle(width: f64, height: f64, center: Point, fill: Color, stroke: Option<Color>, stroke_width: f64) -> VSobject {
+    pub async fn rectangle(width: f64, height: f64, center: Point, fill: Color, stroke: Option<Color>, stroke_width: f64) -> VSobject {
         let r = Rect::new(center.x() - width / 2.0, center.y() - height / 2.0, center.x() + width / 2.0, center.y() + height / 2.0);
         let mut path = BezPath::new();
         append_shape_to_path(&mut path, &r, 0.01);
@@ -76,7 +76,7 @@ pub mod geometry {
     }
 
     /// ▢️ Rounded rectangle.
-    pub fn rounded_rectangle(width: f64, height: f64, radius: f64, center: Point, fill: Color, stroke: Option<Color>, stroke_width: f64) -> VSobject {
+    pub async fn rounded_rectangle(width: f64, height: f64, radius: f64, center: Point, fill: Color, stroke: Option<Color>, stroke_width: f64) -> VSobject {
         let rect = Rect::new(center.x() - width / 2.0, center.y() - height / 2.0, center.x() + width / 2.0, center.y() + height / 2.0);
         let r = RoundedRect::new(rect, RoundedRectRadii::new(radius, radius, radius, radius));
         let mut path = BezPath::new();
@@ -85,7 +85,7 @@ pub mod geometry {
     }
 
     /// ⬠️ Regular polygon.
-    pub fn polygon(vertices: &[Point], fill: Color, stroke: Option<Color>, stroke_width: f64) -> VSobject {
+    pub async fn polygon(vertices: &[Point], fill: Color, stroke: Option<Color>, stroke_width: f64) -> VSobject {
         let mut path = BezPath::new();
         if let Some(first) = vertices.first() {
             path.move_to(*first);
@@ -98,14 +98,14 @@ pub mod geometry {
     }
 
     /// △️ Equilateral triangle.
-    pub fn triangle(side: f64, center: Point, fill: Color, stroke: Option<Color>, stroke_width: f64) -> VSobject {
+    pub async fn triangle(side: f64, center: Point, fill: Color, stroke: Option<Color>, stroke_width: f64) -> VSobject {
         let h = side * 3.0_f64.sqrt() / 2.0;
         let verts = [Point::new(center.x(), center.y() + 2.0 * h / 3.0), Point::new(center.x() - side / 2.0, center.y() - h / 3.0), Point::new(center.x() + side / 2.0, center.y() - h / 3.0)];
         polygon(&verts, fill, stroke, stroke_width)
     }
 
     /// ★️ Star polygon.
-    pub fn star(points: u32, outer: f64, inner: f64, center: Point, fill: Color, stroke: Option<Color>, stroke_width: f64) -> VSobject {
+    pub async fn star(points: u32, outer: f64, inner: f64, center: Point, fill: Color, stroke: Option<Color>, stroke_width: f64) -> VSobject {
         let n = points.max(3) as usize;
         let mut verts = Vec::with_capacity(n * 2);
         for i in 0..(n * 2) {
@@ -117,7 +117,7 @@ pub mod geometry {
     }
 
     /// ◎️ Annulus (ring).
-    pub fn annulus(center: Point, inner: f64, outer: f64, fill: Color, stroke: Option<Color>, stroke_width: f64) -> VSobject {
+    pub async fn annulus(center: Point, inner: f64, outer: f64, fill: Color, stroke: Option<Color>, stroke_width: f64) -> VSobject {
         let mut path = circle_path(center, outer);
         let hole = circle_path(center, inner);
         for el in hole.elements() {
@@ -127,7 +127,7 @@ pub mod geometry {
     }
 
     /// ◔️ Circular sector.
-    pub fn sector(center: Point, radius: f64, start_angle: f64, sweep: f64, fill: Color, stroke: Option<Color>, stroke_width: f64) -> VSobject {
+    pub async fn sector(center: Point, radius: f64, start_angle: f64, sweep: f64, fill: Color, stroke: Option<Color>, stroke_width: f64) -> VSobject {
         let mut path = BezPath::new();
         path.move_to(center);
         let steps = 64;
@@ -140,7 +140,7 @@ pub mod geometry {
     }
 
     /// { } Brace under content.
-    pub fn brace(start: Point, end: Point, direction: Vec2, color: Color, width: f64) -> VSobject {
+    pub async fn brace(start: Point, end: Point, direction: Vec2, color: Color, width: f64) -> VSobject {
         let mid = Point::new((start.x() + end.x()) / 2.0, (start.y() + end.y()) / 2.0);
         let dir = if direction.hypot() < 1e-9 { Vec2::new(0.0, -1.0) } else { direction / direction.hypot() };
         let depth = (end - start).hypot() * 0.15;
@@ -152,7 +152,7 @@ pub mod geometry {
     }
 
     /// ∠ Angle arc between two rays from vertex.
-    pub fn angle(vertex: Point, ray_a: Point, ray_b: Point, radius: f64, color: Color, width: f64) -> VSobject {
+    pub async fn angle(vertex: Point, ray_a: Point, ray_b: Point, radius: f64, color: Color, width: f64) -> VSobject {
         let va = ray_a - vertex;
         let vb = ray_b - vertex;
         let a1 = va.y().atan2(va.x());
@@ -167,13 +167,13 @@ pub mod geometry {
         arc(vertex, radius, a1, sweep, color, width)
     }
 
-    fn circle_path(center: Point, radius: f64) -> BezPath {
+    async fn circle_path(center: Point, radius: f64) -> BezPath {
         let mut path = BezPath::new();
         append_shape_to_path(&mut path, &Circle::new(center, radius), 0.01);
         path
     }
 
-    fn line_path(start: Point, end: Point) -> BezPath {
+    async fn line_path(start: Point, end: Point) -> BezPath {
         let mut path = BezPath::new();
         append_shape_to_path(&mut path, &Line::new(start, end), 0.01);
         path
@@ -186,7 +186,7 @@ pub mod geometry {
     }
 
     impl DashedVSobject {
-        pub fn from_segments(paths: Vec<BezPath>, color: Color, width: f64) -> Self {
+        pub async fn from_segments(paths: Vec<BezPath>, color: Color, width: f64) -> Self {
             let mut inner = VSobject::new();
             inner.set_paths(paths);
             inner.style.fill = None;
@@ -195,13 +195,13 @@ pub mod geometry {
             Self { inner }
         }
 
-        pub fn as_vobject(&self) -> &VSobject {
+        pub async fn as_vobject(&self) -> &VSobject {
             &self.inner
         }
     }
 
     /// ╌️ Dashed line via repeated stroke segments.
-    pub fn dashed_line(start: Point, end: Point, color: Color, width: f64, dash_len: f64, gap_len: f64) -> VSobject {
+    pub async fn dashed_line(start: Point, end: Point, color: Color, width: f64, dash_len: f64, gap_len: f64) -> VSobject {
         let dir = end - start;
         let total = dir.hypot();
         if total < 1e-9 {
@@ -224,7 +224,7 @@ pub mod geometry {
     }
 
     /// ⬭️ Axis-aligned ellipse.
-    pub fn ellipse(center: Point, width: f64, height: f64, fill: Color, stroke: Option<Color>, stroke_width: f64) -> VSobject {
+    pub async fn ellipse(center: Point, width: f64, height: f64, fill: Color, stroke: Option<Color>, stroke_width: f64) -> VSobject {
         let rx = width / 2.0;
         let ry = height / 2.0;
         let steps = 64;
@@ -243,7 +243,7 @@ pub mod geometry {
     }
 
     /// ⬡️ Regular polygon with `n` sides inscribed in a circle.
-    pub fn regular_polygon(n: u32, radius: f64, center: Point, fill: Color, stroke: Option<Color>, stroke_width: f64) -> VSobject {
+    pub async fn regular_polygon(n: u32, radius: f64, center: Point, fill: Color, stroke: Option<Color>, stroke_width: f64) -> VSobject {
         let sides = n.max(3) as usize;
         let verts: Vec<Point> = (0..sides)
             .map(|i| {
@@ -255,13 +255,13 @@ pub mod geometry {
     }
 
     /// ▢️ Rectangle around an Sobject's bounds.
-    pub fn surrounding_rectangle(mobject: &dyn Sobject, buff: f64, fill: Color, stroke: Option<Color>, stroke_width: f64) -> VSobject {
+    pub async fn surrounding_rectangle(mobject: &dyn Sobject, buff: f64, fill: Color, stroke: Option<Color>, stroke_width: f64) -> VSobject {
         let b = mobject.bounds();
         rectangle(b.width() + buff * 2.0, b.height() + buff * 2.0, b.center(), fill, stroke, stroke_width)
     }
 
     /// ⊎ Simple path union by concatenating subpaths.
-    pub fn boolean_union(a: &VSobject, b: &VSobject, fill: Color, stroke: Option<Color>, stroke_width: f64) -> VSobject {
+    pub async fn boolean_union(a: &VSobject, b: &VSobject, fill: Color, stroke: Option<Color>, stroke_width: f64) -> VSobject {
         let mut paths = a.paths.clone();
         paths.extend(b.paths.clone());
         let mut v = VSobject::new();
@@ -273,7 +273,7 @@ pub mod geometry {
     }
 
     /// ⊖ Simple path difference via compound path (outer + hole subpaths).
-    pub fn boolean_difference(a: &VSobject, b: &VSobject, fill: Color, stroke: Option<Color>, stroke_width: f64) -> VSobject {
+    pub async fn boolean_difference(a: &VSobject, b: &VSobject, fill: Color, stroke: Option<Color>, stroke_width: f64) -> VSobject {
         let mut paths = a.paths.clone();
         paths.extend(b.paths.clone());
         let mut v = VSobject::new();
@@ -285,7 +285,7 @@ pub mod geometry {
     }
 
     /// ➡️ Grid of small arrows sampling a vector field.
-    pub fn arrow_vector_field<F>(x_range: (f64, f64), y_range: (f64, f64), cols: u32, rows: u32, field: F, color: Color, arrow_scale: f64) -> Group
+    pub async fn arrow_vector_field<F>(x_range: (f64, f64), y_range: (f64, f64), cols: u32, rows: u32, field: F, color: Color, arrow_scale: f64) -> Group
     where
         F: Fn(f64, f64) -> Vec2,
     {
@@ -313,7 +313,7 @@ pub mod geometry {
     }
 
     /// 〰 Stream lines traced through a vector field from seed points.
-    pub fn stream_lines<F>(seeds: &[(f64, f64)], field: F, color: Color, steps: u32, step_size: f64) -> Group
+    pub async fn stream_lines<F>(seeds: &[(f64, f64)], field: F, color: Color, steps: u32, step_size: f64) -> Group
     where
         F: Fn(f64, f64) -> Vec2,
     {
@@ -349,7 +349,7 @@ pub mod geometry {
         use super::*;
 
         #[test]
-        fn shapes_produce_paths() {
+        async fn shapes_produce_paths() {
             let c = circle(Point::ZERO, 1.0, Color::BLUE, None, 0.0);
             assert!(!c.paths.is_empty());
             let a = arrow(Point::ZERO, Point::new(2.0, 0.0), Color::RED, 2.0, 0.3);
@@ -357,13 +357,13 @@ pub mod geometry {
         }
 
         #[test]
-        fn star_has_vertices() {
+        async fn star_has_vertices() {
             let s = star(5, 1.0, 0.4, Point::ZERO, Color::YELLOW, None, 0.0);
             assert!(s.paths[0].elements().len() > 4);
         }
 
         #[test]
-        fn ellipse_and_regular_polygon_build() {
+        async fn ellipse_and_regular_polygon_build() {
             let e = ellipse(Point::ZERO, 2.0, 1.0, Color::BLUE, None, 0.0);
             assert!(!e.paths.is_empty());
             let p = regular_polygon(6, 1.0, Point::ZERO, Color::GREEN, None, 0.0);
@@ -371,13 +371,13 @@ pub mod geometry {
         }
 
         #[test]
-        fn dashed_line_has_multiple_segments() {
+        async fn dashed_line_has_multiple_segments() {
             let d = dashed_line(Point::ZERO, Point::new(4.0, 0.0), Color::WHITE, 2.0, 0.3, 0.2);
             assert!(d.paths.len() > 1);
         }
 
         #[test]
-        fn boolean_ops_combine_paths() {
+        async fn boolean_ops_combine_paths() {
             let a = circle(Point::ZERO, 1.0, Color::BLUE, None, 0.0);
             let b = circle(Point::new(0.5, 0.0), 1.0, Color::RED, None, 0.0);
             let u = boolean_union(&a, &b, Color::PURPLE, None, 0.0);
@@ -387,7 +387,7 @@ pub mod geometry {
         }
 
         #[test]
-        fn vector_field_helpers_build() {
+        async fn vector_field_helpers_build() {
             let vf = arrow_vector_field((-1.0, 1.0), (-1.0, 1.0), 3, 3, |x, _| Vec2::new(x, 1.0), Color::TEAL, 0.2);
             assert!(!vf.children.is_empty());
             let sl = stream_lines(&[(0.0, 0.0)], |_, y| Vec2::new(1.0, y), Color::WHITE, 8, 0.1);
@@ -395,19 +395,19 @@ pub mod geometry {
         }
 
         #[test]
-        fn vector_field_skips_zero_length_vectors() {
+        async fn vector_field_skips_zero_length_vectors() {
             let vf = arrow_vector_field((-1.0, 1.0), (-1.0, 1.0), 2, 2, |_, _| Vec2::new(0.0, 0.0), Color::TEAL, 0.2);
             assert!(vf.children.is_empty());
         }
 
         #[test]
-        fn stream_lines_stops_on_zero_length_field() {
+        async fn stream_lines_stops_on_zero_length_field() {
             let sl = stream_lines(&[(0.0, 0.0)], |_, _| Vec2::new(0.0, 0.0), Color::WHITE, 8, 0.1);
             assert_eq!(sl.children.len(), 1);
         }
 
         #[test]
-        fn point_dot_and_line_build_paths() {
+        async fn point_dot_and_line_build_paths() {
             let p = point(Point::ZERO, 0.1, Color::RED);
             assert!(!p.paths.is_empty());
             let d = dot(Point::ZERO, 0.1, Color::RED);
@@ -417,7 +417,7 @@ pub mod geometry {
         }
 
         #[test]
-        fn square_triangle_and_polygon_build() {
+        async fn square_triangle_and_polygon_build() {
             let sq = square(2.0, Point::ZERO, Color::RED, None, 0.0);
             assert!(!sq.paths.is_empty());
             let tri = triangle(2.0, Point::ZERO, Color::GREEN, None, 0.0);
@@ -427,7 +427,7 @@ pub mod geometry {
         }
 
         #[test]
-        fn annulus_and_sector_build() {
+        async fn annulus_and_sector_build() {
             let a = annulus(Point::ZERO, 0.5, 1.0, Color::BLUE, None, 0.0);
             assert!(!a.paths.is_empty());
             let s = sector(Point::ZERO, 1.0, 0.0, PI / 2.0, Color::YELLOW, None, 0.0);
@@ -435,7 +435,7 @@ pub mod geometry {
         }
 
         #[test]
-        fn brace_and_angle_build() {
+        async fn brace_and_angle_build() {
             let b = brace(Point::new(-1.0, 0.0), Point::new(1.0, 0.0), Vec2::new(0.0, -1.0), Color::WHITE, 1.0);
             assert!(!b.paths.is_empty());
             let b_default_dir = brace(Point::new(-1.0, 0.0), Point::new(1.0, 0.0), Vec2::new(0.0, 0.0), Color::WHITE, 1.0);
@@ -445,14 +445,14 @@ pub mod geometry {
         }
 
         #[test]
-        fn surrounding_rectangle_pads_bounds() {
+        async fn surrounding_rectangle_pads_bounds() {
             let c = circle(Point::ZERO, 1.0, Color::BLUE, None, 0.0);
             let r = surrounding_rectangle(&c, 0.5, Color::TRANSPARENT, Some(Color::WHITE), 1.0);
             assert!(!r.paths.is_empty());
         }
 
         #[test]
-        fn dashed_line_degenerate_endpoints_falls_back_to_line() {
+        async fn dashed_line_degenerate_endpoints_falls_back_to_line() {
             let d = dashed_line(Point::new(1.0, 1.0), Point::new(1.0, 1.0), Color::WHITE, 2.0, 0.3, 0.2);
             assert_eq!(d.paths.len(), 1);
         }
@@ -478,11 +478,11 @@ pub mod three_d {
     }
 
     impl ThreeDVSobject {
-        pub fn new(inner: VSobject) -> Self {
+        pub async fn new(inner: VSobject) -> Self {
             Self { inner, yaw: 0.0, pitch: 0.0, depth: 0.0 }
         }
 
-        pub fn project_point(&self, p: (f64, f64, f64)) -> Point {
+        pub async fn project_point(&self, p: (f64, f64, f64)) -> Point {
             let (x, y, z) = p;
             let cy = self.yaw.cos();
             let sy = self.yaw.sin();
@@ -498,91 +498,91 @@ pub mod three_d {
     }
 
     impl Sobject for ThreeDVSobject {
-        fn id(&self) -> u64 {
+        async fn id(&self) -> u64 {
             self.inner.id()
         }
-        fn name(&self) -> &str {
+        async fn name(&self) -> &str {
             self.inner.name()
         }
-        fn set_name(&mut self, name: String) {
+        async fn set_name(&mut self, name: String) {
             self.inner.set_name(name);
         }
-        fn style(&self) -> &Style {
+        async fn style(&self) -> &Style {
             self.inner.style()
         }
-        fn style_mut(&mut self) -> &mut Style {
+        async fn style_mut(&mut self) -> &mut Style {
             self.inner.style_mut()
         }
-        fn opacity(&self) -> f64 {
+        async fn opacity(&self) -> f64 {
             self.inner.opacity()
         }
-        fn set_opacity(&mut self, opacity: f64) {
+        async fn set_opacity(&mut self, opacity: f64) {
             self.inner.set_opacity(opacity);
         }
-        fn effective_opacity(&self) -> f64 {
+        async fn effective_opacity(&self) -> f64 {
             self.inner.effective_opacity()
         }
-        fn set_parent_opacity(&mut self, parent: f64) {
+        async fn set_parent_opacity(&mut self, parent: f64) {
             self.inner.set_parent_opacity(parent);
         }
-        fn transform(&self) -> Affine {
+        async fn transform(&self) -> Affine {
             self.inner.transform()
         }
-        fn transform_mut(&mut self) -> &mut Affine {
+        async fn transform_mut(&mut self) -> &mut Affine {
             self.inner.transform_mut()
         }
-        fn bounds(&self) -> Bounds {
+        async fn bounds(&self) -> Bounds {
             self.inner.bounds()
         }
-        fn paths(&self) -> Vec<BezPath> {
+        async fn paths(&self) -> Vec<BezPath> {
             self.inner.paths()
         }
-        fn children(&self) -> Vec<&dyn Sobject> {
+        async fn children(&self) -> Vec<&dyn Sobject> {
             self.inner.children()
         }
-        fn visit_children_mut(&mut self, f: &mut dyn FnMut(&mut dyn Sobject)) {
+        async fn visit_children_mut(&mut self, f: &mut dyn FnMut(&mut dyn Sobject)) {
             self.inner.visit_children_mut(f);
         }
-        fn add_child(&mut self, child: Box<dyn Sobject>) {
+        async fn add_child(&mut self, child: Box<dyn Sobject>) {
             self.inner.add_child(child);
         }
-        fn updaters(&self) -> &[Updater] {
+        async fn updaters(&self) -> &[Updater] {
             self.inner.updaters()
         }
-        fn updaters_mut(&mut self) -> &mut Vec<Updater> {
+        async fn updaters_mut(&mut self) -> &mut Vec<Updater> {
             self.inner.updaters_mut()
         }
-        fn save_state(&mut self) {
+        async fn save_state(&mut self) {
             self.inner.save_state();
         }
-        fn restore(&mut self) {
+        async fn restore(&mut self) {
             self.inner.restore();
         }
-        fn generate_target(&mut self) {
+        async fn generate_target(&mut self) {
             self.inner.generate_target();
         }
-        fn has_target(&self) -> bool {
+        async fn has_target(&self) -> bool {
             self.inner.has_target()
         }
-        fn apply_target(&mut self) {
+        async fn apply_target(&mut self) {
             self.inner.apply_target();
         }
-        fn clone_box(&self) -> Box<dyn Sobject> {
+        async fn clone_box(&self) -> Box<dyn Sobject> {
             Box::new(self.clone())
         }
-        fn as_any(&self) -> &dyn std::any::Any {
+        async fn as_any(&self) -> &dyn std::any::Any {
             self
         }
-        fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
+        async fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
             self
         }
-        fn z_order(&self) -> i64 {
+        async fn z_order(&self) -> i64 {
             self.inner.z_order()
         }
-        fn set_z_order(&mut self, z: i64) {
+        async fn set_z_order(&mut self, z: i64) {
             self.inner.set_z_order(z);
         }
-        fn point_ratio(&self) -> f64 {
+        async fn point_ratio(&self) -> f64 {
             self.inner.point_ratio()
         }
     }
@@ -594,7 +594,7 @@ pub mod three_d {
     }
 
     impl Surface {
-        pub fn paraboloid(radius: f64, color: Color) -> Self {
+        pub async fn paraboloid(radius: f64, color: Color) -> Self {
             let steps = 12;
             let mut children: Vec<Box<dyn Sobject>> = Vec::new();
             for i in 0..steps {
@@ -618,7 +618,7 @@ pub mod three_d {
     }
 
     /// ⚪️ Sphere wireframe.
-    pub fn sphere(radius: f64, center: (f64, f64, f64), color: Color) -> Group {
+    pub async fn sphere(radius: f64, center: (f64, f64, f64), color: Color) -> Group {
         let steps = 16;
         let mut children: Vec<Box<dyn Sobject>> = Vec::new();
         let td = ThreeDVSobject::new(VSobject::new());
@@ -641,7 +641,7 @@ pub mod three_d {
     }
 
     /// 🧊️ Cube wireframe.
-    pub fn cube(side: f64, center: (f64, f64, f64), color: Color) -> Group {
+    pub async fn cube(side: f64, center: (f64, f64, f64), color: Color) -> Group {
         let h = side / 2.0;
         let corners = [(-h, -h, -h), (h, -h, -h), (h, h, -h), (-h, h, -h), (-h, -h, h), (h, -h, h), (h, h, h), (-h, h, h)];
         let td = ThreeDVSobject::new(VSobject::new());
@@ -652,7 +652,7 @@ pub mod three_d {
     }
 
     /// 🟦️ Solid cube with filled projected faces.
-    pub fn solid_cube(side: f64, center: (f64, f64, f64), fill: Color, stroke: Option<Color>, stroke_width: f64) -> Group {
+    pub async fn solid_cube(side: f64, center: (f64, f64, f64), fill: Color, stroke: Option<Color>, stroke_width: f64) -> Group {
         let h = side / 2.0;
         let corners = [(-h, -h, -h), (h, -h, -h), (h, h, -h), (-h, h, -h), (-h, -h, h), (h, -h, h), (h, h, h), (-h, h, h)];
         let td = ThreeDVSobject::new(VSobject::new());
@@ -671,12 +671,12 @@ pub mod three_d {
     }
 
     /// 🟦️ Filled face proxy for 3D objects (projected rectangle).
-    pub fn face(width: f64, height: f64, center: Point, fill: Color) -> VSobject {
+    pub async fn face(width: f64, height: f64, center: Point, fill: Color) -> VSobject {
         rectangle(width, height, center, fill, None, 0.0)
     }
 
     /// 🔮️ Disc cross-section helper.
-    pub fn disc(radius: f64, center: Point, fill: Color) -> VSobject {
+    pub async fn disc(radius: f64, center: Point, fill: Color) -> VSobject {
         circle(center, radius, fill, None, 0.0)
     }
 
@@ -685,38 +685,38 @@ pub mod three_d {
         use super::*;
 
         #[test]
-        fn cube_has_twelve_edges() {
+        async fn cube_has_twelve_edges() {
             let g = cube(2.0, (0.0, 0.0, 0.0), Color::WHITE);
             assert_eq!(g.children.len(), 12);
         }
 
         #[test]
-        fn projection_moves_points() {
+        async fn projection_moves_points() {
             let td = ThreeDVSobject::new(VSobject::new());
             let p = td.project_point((1.0, 0.0, 0.0));
             assert!(p.x().is_finite());
         }
 
         #[test]
-        fn three_d_vobject_is_sobject() {
+        async fn three_d_vobject_is_sobject() {
             let td = ThreeDVSobject::new(VSobject::new());
             assert_eq!(td.opacity(), 1.0);
         }
 
         #[test]
-        fn solid_cube_has_faces() {
+        async fn solid_cube_has_faces() {
             let g = solid_cube(2.0, (0.0, 0.0, 0.0), Color::BLUE, Some(Color::WHITE), 1.0);
             assert!(g.children.len() >= 6);
         }
 
         #[test]
-        fn sphere_builds_wireframe_lines() {
+        async fn sphere_builds_wireframe_lines() {
             let g = sphere(1.0, (0.0, 0.0, 0.0), Color::WHITE);
             assert!(!g.children.is_empty());
         }
 
         #[test]
-        fn face_and_disc_build_projected_shapes() {
+        async fn face_and_disc_build_projected_shapes() {
             let f = face(2.0, 1.0, Point::ZERO, Color::RED);
             assert!(!f.paths.is_empty());
             let d = disc(1.0, Point::ZERO, Color::BLUE);
@@ -743,14 +743,14 @@ pub mod axes {
     }
 
     impl Axes {
-        pub fn new(x_length: f64, y_length: f64, origin: Point, color: Color) -> Self {
+        pub async fn new(x_length: f64, y_length: f64, origin: Point, color: Color) -> Self {
             let x_axis = arrow(origin, Point::new(origin.x() + x_length, origin.y()), color, 3.0, 0.2);
             let y_axis = arrow(origin, Point::new(origin.x(), origin.y() + y_length), color, 3.0, 0.2);
             let group = Group::new(vec![Box::new(x_axis), Box::new(y_axis)]);
             Self { group, x_length, y_length, origin }
         }
 
-        pub fn with_tick_labels(mut self, x_ticks: &[f64], y_ticks: &[f64], color: Color) -> Self {
+        pub async fn with_tick_labels(mut self, x_ticks: &[f64], y_ticks: &[f64], color: Color) -> Self {
             for &x in x_ticks {
                 let p = self.coords_to_point(x, 0.0);
                 let mut label = Text::new(format!("{x:.1}"), color);
@@ -768,11 +768,11 @@ pub mod axes {
             self
         }
 
-        pub fn coords_to_point(&self, x: f64, y: f64) -> Point {
+        pub async fn coords_to_point(&self, x: f64, y: f64) -> Point {
             Point::new(self.origin.x() + x, self.origin.y() + y)
         }
 
-        pub fn as_group(&self) -> &Group {
+        pub async fn as_group(&self) -> &Group {
             &self.group
         }
     }
@@ -783,7 +783,7 @@ pub mod axes {
     }
 
     impl FunctionGraph {
-        pub fn new<F>(x_range: (f64, f64), axes: &Axes, f: F, samples: u32, color: Color, width: f64) -> Self
+        pub async fn new<F>(x_range: (f64, f64), axes: &Axes, f: F, samples: u32, color: Color, width: f64) -> Self
         where
             F: Fn(f64) -> f64,
         {
@@ -814,7 +814,7 @@ pub mod axes {
     }
 
     impl ParametricFunction {
-        pub fn new<F>(t_range: (f64, f64), axes: &Axes, f: F, samples: u32, color: Color, width: f64) -> Self
+        pub async fn new<F>(t_range: (f64, f64), axes: &Axes, f: F, samples: u32, color: Color, width: f64) -> Self
         where
             F: Fn(f64) -> (f64, f64),
         {
@@ -846,7 +846,7 @@ pub mod axes {
     }
 
     impl NumberPlane {
-        pub fn new(x_range: (f64, f64), y_range: (f64, f64), unit_size: f64, color: Color) -> Self {
+        pub async fn new(x_range: (f64, f64), y_range: (f64, f64), unit_size: f64, color: Color) -> Self {
             let origin = Point::new(-x_range.0 * unit_size, -y_range.0 * unit_size);
             let x_len = (x_range.1 - x_range.0) * unit_size;
             let y_len = (y_range.1 - y_range.0) * unit_size;
@@ -876,7 +876,7 @@ pub mod axes {
     }
 
     impl NumberLine {
-        pub fn new(start: Point, length: f64, color: Color) -> Self {
+        pub async fn new(start: Point, length: f64, color: Color) -> Self {
             let axis = line(start, Point::new(start.x() + length, start.y()), color, 3.0);
             let tick_count = 10;
             let mut children: Vec<Box<dyn Sobject>> = vec![Box::new(axis)];
@@ -887,7 +887,7 @@ pub mod axes {
             Self { group: Group::new(children), start, length }
         }
 
-        pub fn number_to_point(&self, n: f64) -> Point {
+        pub async fn number_to_point(&self, n: f64) -> Point {
             Point::new(self.start.x() + n, self.start.y())
         }
     }
@@ -902,7 +902,7 @@ pub mod axes {
     }
 
     impl IntegerLine {
-        pub fn new(start: Point, min: i32, max: i32, unit_size: f64, color: Color) -> Self {
+        pub async fn new(start: Point, min: i32, max: i32, unit_size: f64, color: Color) -> Self {
             let span = (max - min).max(1) as f64;
             let length = span * unit_size;
             let axis = line(start, Point::new(start.x() + length, start.y()), color, 3.0);
@@ -917,7 +917,7 @@ pub mod axes {
             Self { group: Group::new(children), start, unit_size, min, max }
         }
 
-        pub fn integer_to_point(&self, n: i32) -> Point {
+        pub async fn integer_to_point(&self, n: i32) -> Point {
             Point::new(self.start.x() + (n - self.min) as f64 * self.unit_size, self.start.y())
         }
     }
@@ -928,16 +928,16 @@ pub mod axes {
     }
 
     impl ComplexPlane {
-        pub fn new(range: f64, unit_size: f64, color: Color) -> Self {
+        pub async fn new(range: f64, unit_size: f64, color: Color) -> Self {
             let plane = NumberPlane::new((-range, range), (-range, range), unit_size, color);
             Self { plane }
         }
 
-        pub fn complex_to_point(&self, re: f64, im: f64) -> Point {
+        pub async fn complex_to_point(&self, re: f64, im: f64) -> Point {
             self.plane.axes.coords_to_point(re * self.plane.unit_size, im * self.plane.unit_size)
         }
 
-        pub fn plot_point(&self, re: f64, im: f64, color: Color) -> VSobject {
+        pub async fn plot_point(&self, re: f64, im: f64, color: Color) -> VSobject {
             dot(self.complex_to_point(re, im), 0.06, color)
         }
     }
@@ -947,7 +947,7 @@ pub mod axes {
         use super::*;
 
         #[test]
-        fn axes_map_coordinates() {
+        async fn axes_map_coordinates() {
             let axes = Axes::new(4.0, 3.0, Point::ZERO, Color::WHITE);
             let p = axes.coords_to_point(1.0, 2.0);
             assert!((p.x() - 1.0).abs() < 1e-9);
@@ -955,19 +955,19 @@ pub mod axes {
         }
 
         #[test]
-        fn number_line_maps_values() {
+        async fn number_line_maps_values() {
             let nl = NumberLine::new(Point::ZERO, 10.0, Color::WHITE);
             assert!((nl.number_to_point(5.0).x() - 5.0).abs() < 1e-9);
         }
 
         #[test]
-        fn integer_line_maps_values() {
+        async fn integer_line_maps_values() {
             let il = IntegerLine::new(Point::ZERO, 0, 10, 1.0, Color::WHITE);
             assert!((il.integer_to_point(5).x() - 5.0).abs() < 1e-9);
         }
 
         #[test]
-        fn axes_tick_labels_and_graphs() {
+        async fn axes_tick_labels_and_graphs() {
             let axes = Axes::new(4.0, 3.0, Point::ZERO, Color::WHITE).with_tick_labels(&[1.0, 2.0], &[1.0], Color::WHITE);
             assert!(axes.group.children.len() > 2);
             let fg = FunctionGraph::new((0.0, 2.0), &axes, |x| x * x, 16, Color::YELLOW, 2.0);

@@ -14,7 +14,7 @@ use serde::{Deserialize, Serialize};
 /// deleted ids out of `graph`'s selection via `DagPlayApp::interaction_topology`
 /// (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM). `remove_node::RemoveNode` deliberately
 /// does NOT use this helper: it only ever removes the one node it names.
-pub(crate) fn delete_selection_result(document: &DagSnapshot, node_ids: &[String]) -> Option<Vec<DagMutation>> {
+pub(crate) async fn delete_selection_result(document: &DagSnapshot, node_ids: &[String]) -> Option<Vec<DagMutation>> {
     let removes = crate::artifacts::dag::schema::remove_nodes_operations(document, node_ids);
     if removes.is_empty() {
         None
@@ -33,16 +33,16 @@ pub struct DeleteSelection {}
 /// through that macro-generated path (`DagPlayApp::handle` always routes this command through `apply`
 /// below instead), so it degrades to treating the selection as empty, matching `space`'s identical
 /// `delete_selection` split.
-pub fn handle(payload: &DeleteSelection, doc: &ArtifactView<'_, DagSnapshot>, cfg: &ConfigView<'_, DagConfig>) -> Result<Emit<DagMutation, DagConfigMutation>, Fault> {
+pub async fn handle(payload: &DeleteSelection, doc: &ArtifactView<'_, DagSnapshot>, cfg: &ConfigView<'_, DagConfig>) -> Result<Emit<DagMutation, DagConfigMutation>, Fault> {
     let _ = cfg;
     apply_to(payload, doc, &[])
 }
 
-pub fn apply(payload: &DeleteSelection, doc: &ArtifactView<'_, DagSnapshot>, _cfg: &ConfigView<'_, DagConfig>, interaction: &InteractionView<'_>) -> Result<Emit<DagMutation, DagConfigMutation>, Fault> {
+pub async fn apply(payload: &DeleteSelection, doc: &ArtifactView<'_, DagSnapshot>, _cfg: &ConfigView<'_, DagConfig>, interaction: &InteractionView<'_>) -> Result<Emit<DagMutation, DagConfigMutation>, Fault> {
     apply_to(payload, doc, &interaction.selection("graph").ids)
 }
 
-fn apply_to(_payload: &DeleteSelection, doc: &ArtifactView<'_, DagSnapshot>, selected: &[String]) -> Result<Emit<DagMutation, DagConfigMutation>, Fault> {
+async fn apply_to(_payload: &DeleteSelection, doc: &ArtifactView<'_, DagSnapshot>, selected: &[String]) -> Result<Emit<DagMutation, DagConfigMutation>, Fault> {
     match delete_selection_result(doc.snapshot, selected) {
         Some(removes) => Ok(Emit::mutations(removes)),
         None => Ok(Emit::default()),

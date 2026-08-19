@@ -11,7 +11,7 @@ use serde_json::json;
 
 /// 🌞️ Reuses the framework's shared sun toggle/slider logic (`apply_world3d_sun_action`), threading it
 /// through `LowpolyConfig`'s flattened sun fields and returning the resulting `SetSun` config op.
-fn apply_sun_command(config: &LowpolyConfig, action_id: &str, value: Option<f64>) -> LowpolyConfigMutation {
+async fn apply_sun_command(config: &LowpolyConfig, action_id: &str, value: Option<f64>) -> LowpolyConfigMutation {
     let mut sun = lowpoly_sun_config(config);
     let args = value.map(|value| json!({ "value": value }));
     apply_world3d_sun_action(&mut sun, action_id, args.as_ref());
@@ -26,7 +26,7 @@ pub mod toggle_sun {
     #[dsl(keyword = "toggle-sun")]
     pub struct ToggleSun {}
 
-    pub fn handle(_payload: &ToggleSun, _doc: &ArtifactView<'_, LowpolySnapshot>, cfg: &ConfigView<'_, LowpolyConfig>, _ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
+    pub async fn handle(_payload: &ToggleSun, _doc: &ArtifactView<'_, LowpolySnapshot>, cfg: &ConfigView<'_, LowpolyConfig>, _ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
         Ok(Emit::config(vec![apply_sun_command(cfg.snapshot, "toggleSun", None)]))
     }
 }
@@ -42,7 +42,7 @@ pub mod set_sun_azimuth {
         pub value: f64,
     }
 
-    pub fn handle(payload: &SetSunAzimuth, _doc: &ArtifactView<'_, LowpolySnapshot>, cfg: &ConfigView<'_, LowpolyConfig>, _ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
+    pub async fn handle(payload: &SetSunAzimuth, _doc: &ArtifactView<'_, LowpolySnapshot>, cfg: &ConfigView<'_, LowpolyConfig>, _ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
         Ok(Emit::config(vec![apply_sun_command(cfg.snapshot, "setSunAzimuth", Some(payload.value))]))
     }
 }
@@ -58,7 +58,7 @@ pub mod set_sun_elevation {
         pub value: f64,
     }
 
-    pub fn handle(payload: &SetSunElevation, _doc: &ArtifactView<'_, LowpolySnapshot>, cfg: &ConfigView<'_, LowpolyConfig>, _ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
+    pub async fn handle(payload: &SetSunElevation, _doc: &ArtifactView<'_, LowpolySnapshot>, cfg: &ConfigView<'_, LowpolyConfig>, _ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
         Ok(Emit::config(vec![apply_sun_command(cfg.snapshot, "setSunElevation", Some(payload.value))]))
     }
 }
@@ -74,7 +74,7 @@ pub mod set_sun_intensity {
         pub value: f64,
     }
 
-    pub fn handle(payload: &SetSunIntensity, _doc: &ArtifactView<'_, LowpolySnapshot>, cfg: &ConfigView<'_, LowpolyConfig>, _ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
+    pub async fn handle(payload: &SetSunIntensity, _doc: &ArtifactView<'_, LowpolySnapshot>, cfg: &ConfigView<'_, LowpolyConfig>, _ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
         Ok(Emit::config(vec![apply_sun_command(cfg.snapshot, "setSunIntensity", Some(payload.value))]))
     }
 }
@@ -88,7 +88,7 @@ mod tests {
     use semio_framework_plugin::PluginApp;
 
     #[test]
-    fn toggle_sun_flips_enabled() {
+    async fn toggle_sun_flips_enabled() {
         let mut a = app();
         dispatch(&mut a, LowpolyCommand::ToggleSun(super::toggle_sun::ToggleSun {}));
         // 🎯️ Config isn't directly readable off `VcsArtifactApp`; assert through window measures instead

@@ -46,7 +46,7 @@ pub struct IndexedTripleDiff<D, T> {
 }
 
 impl<D, T> Default for IndexedTripleDiff<D, T> {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self { removed: Vec::new(), modified: Vec::new(), added: Vec::new() }
     }
 }
@@ -79,7 +79,7 @@ pub struct NamedTripleDiff<K, D, T> {
 }
 
 impl<K, D, T> Default for NamedTripleDiff<K, D, T> {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self { removed: Vec::new(), modified: Vec::new(), added: Vec::new() }
     }
 }
@@ -244,7 +244,7 @@ pub struct PptxDiff {
 //#region 🔖️GenericIndexedEngine
 /// 🧮️ Between (positional, per the recipe's index-keyed matching rule): pairwise-compares
 /// `0..min(base,other)` as `modified`, base tail as `removed`, other tail as `added`.
-fn between_indexed<T, D>(base: &[T], other: &[T], diff_item: impl Fn(&T, &T) -> Option<D>) -> Option<IndexedTripleDiff<D, T>>
+async fn between_indexed<T, D>(base: &[T], other: &[T], diff_item: impl Fn(&T, &T) -> Option<D>) -> Option<IndexedTripleDiff<D, T>>
 where
     T: Clone + PartialEq,
 {
@@ -266,7 +266,7 @@ where
     }
 }
 
-fn apply_indexed<T, D>(items: &mut Vec<T>, diff: &IndexedTripleDiff<D, T>, apply_item: impl Fn(&mut T, &D) -> MutationApplyResult<()>) -> MutationApplyResult<()>
+async fn apply_indexed<T, D>(items: &mut Vec<T>, diff: &IndexedTripleDiff<D, T>, apply_item: impl Fn(&mut T, &D) -> MutationApplyResult<()>) -> MutationApplyResult<()>
 where
     T: Clone,
 {
@@ -317,7 +317,7 @@ where
     Ok(())
 }
 
-fn inverse_indexed<T, D>(base_items: &[T], diff: &IndexedTripleDiff<D, T>, inverse_item: impl Fn(&T, &D) -> D) -> IndexedTripleDiff<D, T>
+async fn inverse_indexed<T, D>(base_items: &[T], diff: &IndexedTripleDiff<D, T>, inverse_item: impl Fn(&T, &D) -> D) -> IndexedTripleDiff<D, T>
 where
     T: Clone,
 {
@@ -341,7 +341,7 @@ where
 
 /// 🧮️ Maps a base-side index through a diff's OWN removed/added to the position it ends up at
 /// once that diff has been applied (svg `SvgDiff`'s `transform_index`, generalized).
-fn transform_index<T>(idx: usize, removed: &[usize], added: &[IndexAdded<T>]) -> usize {
+async fn transform_index<T>(idx: usize, removed: &[usize], added: &[IndexAdded<T>]) -> usize {
     let removed_before = removed.iter().filter(|&&r| r < idx).count();
     let pos = idx - removed_before;
     let mut order: Vec<usize> = added.iter().map(|a| a.index).collect();
@@ -362,7 +362,7 @@ enum ItemOrigin {
     Added(usize),
 }
 
-fn simulate_mid_origins<T>(base_len: usize, removed: &[usize], added: &[IndexAdded<T>]) -> Vec<ItemOrigin> {
+async fn simulate_mid_origins<T>(base_len: usize, removed: &[usize], added: &[IndexAdded<T>]) -> Vec<ItemOrigin> {
     let mut mid: Vec<ItemOrigin> = (0..base_len).filter(|i| !removed.contains(i)).map(ItemOrigin::Base).collect();
     let mut order: Vec<(usize, usize)> = added.iter().enumerate().map(|(k, a)| (a.index, k)).collect();
     order.sort_by_key(|(idx, _)| *idx);
@@ -377,7 +377,7 @@ fn simulate_mid_origins<T>(base_len: usize, removed: &[usize], added: &[IndexAdd
 /// `absorb_item` recursively absorbs two per-field diffs of the SAME item; `apply_item` patches a
 /// `D` onto a `T` (needed when `d2` modifies an item `d1` just added).
 #[allow(clippy::too_many_arguments)]
-fn absorb_indexed<T, D>(d1: IndexedTripleDiff<D, T>, d2: IndexedTripleDiff<D, T>, absorb_item: impl Fn(D, D) -> D, apply_item: impl Fn(&T, &D) -> T) -> IndexedTripleDiff<D, T>
+async fn absorb_indexed<T, D>(d1: IndexedTripleDiff<D, T>, d2: IndexedTripleDiff<D, T>, absorb_item: impl Fn(D, D) -> D, apply_item: impl Fn(&T, &D) -> T) -> IndexedTripleDiff<D, T>
 where
     T: Clone,
     D: Clone,
@@ -456,7 +456,7 @@ where
 //#endregion 🔖️GenericIndexedEngine
 
 //#region 🔖️GenericNamedEngine
-fn between_named<K, T, D>(base: &[T], other: &[T], key_of: impl Fn(&T) -> K, diff_item: impl Fn(&T, &T) -> Option<D>) -> Option<NamedTripleDiff<K, D, T>>
+async fn between_named<K, T, D>(base: &[T], other: &[T], key_of: impl Fn(&T) -> K, diff_item: impl Fn(&T, &T) -> Option<D>) -> Option<NamedTripleDiff<K, D, T>>
 where
     K: PartialEq + Clone,
     T: Clone + PartialEq,
@@ -489,7 +489,7 @@ where
     }
 }
 
-fn apply_named<K, T, D>(items: &mut Vec<T>, diff: &NamedTripleDiff<K, D, T>, key_of: impl Fn(&T) -> K, apply_item: impl Fn(&mut T, &D) -> MutationApplyResult<()>) -> MutationApplyResult<()>
+async fn apply_named<K, T, D>(items: &mut Vec<T>, diff: &NamedTripleDiff<K, D, T>, key_of: impl Fn(&T) -> K, apply_item: impl Fn(&mut T, &D) -> MutationApplyResult<()>) -> MutationApplyResult<()>
 where
     K: PartialEq + Clone,
     T: Clone,
@@ -531,7 +531,7 @@ where
     Ok(())
 }
 
-fn inverse_named<K, T, D>(base_items: &[T], diff: &NamedTripleDiff<K, D, T>, key_of: impl Fn(&T) -> K, inverse_item: impl Fn(&T, &D) -> D) -> NamedTripleDiff<K, D, T>
+async fn inverse_named<K, T, D>(base_items: &[T], diff: &NamedTripleDiff<K, D, T>, key_of: impl Fn(&T) -> K, inverse_item: impl Fn(&T, &D) -> D) -> NamedTripleDiff<K, D, T>
 where
     K: PartialEq + Clone,
     T: Clone,
@@ -555,7 +555,7 @@ where
 /// 🧮️ Name-keyed absorb -- identity is the KEY (not position), so no index transport is needed:
 /// a `d2`-removal of a `d1`-added key annihilates the add; a `d2`-modify of a `d1`-added key
 /// patches into the carried payload; everything else composes directly on the shared key space.
-fn absorb_named<K, T, D>(d1: NamedTripleDiff<K, D, T>, d2: NamedTripleDiff<K, D, T>, key_of: impl Fn(&T) -> K, absorb_item: impl Fn(D, D) -> D, apply_item: impl Fn(&mut T, &D)) -> NamedTripleDiff<K, D, T>
+async fn absorb_named<K, T, D>(d1: NamedTripleDiff<K, D, T>, d2: NamedTripleDiff<K, D, T>, key_of: impl Fn(&T) -> K, absorb_item: impl Fn(D, D) -> D, apply_item: impl Fn(&mut T, &D)) -> NamedTripleDiff<K, D, T>
 where
     K: PartialEq + Clone,
     T: Clone,
@@ -598,7 +598,7 @@ where
 //#endregion 🔖️GenericNamedEngine
 
 //#region 🔖️PresentationDiffLogic
-fn diff_run(old: &PptxRun, new: &PptxRun) -> Option<PptxRunDiff> {
+async fn diff_run(old: &PptxRun, new: &PptxRun) -> Option<PptxRunDiff> {
     if old == new {
         return None;
     }
@@ -610,7 +610,7 @@ fn diff_run(old: &PptxRun, new: &PptxRun) -> Option<PptxRunDiff> {
     })
 }
 
-fn apply_run(run: &mut PptxRun, diff: &PptxRunDiff) -> MutationApplyResult<()> {
+async fn apply_run(run: &mut PptxRun, diff: &PptxRunDiff) -> MutationApplyResult<()> {
     if let Some(v) = &diff.text {
         run.text = v.clone();
     }
@@ -626,21 +626,21 @@ fn apply_run(run: &mut PptxRun, diff: &PptxRunDiff) -> MutationApplyResult<()> {
     Ok(())
 }
 
-fn inverse_run(base: &PptxRun, diff: &PptxRunDiff) -> PptxRunDiff {
+async fn inverse_run(base: &PptxRun, diff: &PptxRunDiff) -> PptxRunDiff {
     PptxRunDiff { text: diff.text.as_ref().map(|_| base.text.clone()), bold: diff.bold.map(|_| base.bold), italic: diff.italic.map(|_| base.italic), font_size: diff.font_size.map(|_| base.font_size) }
 }
 
-fn absorb_run_diff(a: PptxRunDiff, b: PptxRunDiff) -> PptxRunDiff {
+async fn absorb_run_diff(a: PptxRunDiff, b: PptxRunDiff) -> PptxRunDiff {
     PptxRunDiff { text: b.text.or(a.text), bold: b.bold.or(a.bold), italic: b.italic.or(a.italic), font_size: b.font_size.or(a.font_size) }
 }
 
-fn run_with_diff_applied(run: &PptxRun, diff: &PptxRunDiff) -> PptxRun {
+async fn run_with_diff_applied(run: &PptxRun, diff: &PptxRunDiff) -> PptxRun {
     let mut out = run.clone();
     apply_run_for_absorb(&mut out, diff);
     out
 }
 
-fn apply_run_for_absorb(run: &mut PptxRun, diff: &PptxRunDiff) {
+async fn apply_run_for_absorb(run: &mut PptxRun, diff: &PptxRunDiff) {
     if let Some(value) = &diff.text {
         run.text = value.clone();
     }
@@ -655,7 +655,7 @@ fn apply_run_for_absorb(run: &mut PptxRun, diff: &PptxRunDiff) {
     }
 }
 
-fn diff_paragraph(old: &PptxParagraph, new: &PptxParagraph) -> Option<PptxParagraphDiff> {
+async fn diff_paragraph(old: &PptxParagraph, new: &PptxParagraph) -> Option<PptxParagraphDiff> {
     let runs = between_indexed(&old.runs, &new.runs, diff_run);
     if runs.is_none() {
         None
@@ -664,18 +664,18 @@ fn diff_paragraph(old: &PptxParagraph, new: &PptxParagraph) -> Option<PptxParagr
     }
 }
 
-fn apply_paragraph(p: &mut PptxParagraph, diff: &PptxParagraphDiff) -> MutationApplyResult<()> {
+async fn apply_paragraph(p: &mut PptxParagraph, diff: &PptxParagraphDiff) -> MutationApplyResult<()> {
     if let Some(rd) = &diff.runs {
         apply_indexed(&mut p.runs, rd, apply_run).map_err(|error| error.under(["runs"]))?;
     }
     Ok(())
 }
 
-fn inverse_paragraph(base: &PptxParagraph, diff: &PptxParagraphDiff) -> PptxParagraphDiff {
+async fn inverse_paragraph(base: &PptxParagraph, diff: &PptxParagraphDiff) -> PptxParagraphDiff {
     PptxParagraphDiff { runs: diff.runs.as_ref().map(|rd| inverse_indexed(&base.runs, rd, inverse_run)) }
 }
 
-fn absorb_paragraph_diff(mut a: PptxParagraphDiff, b: PptxParagraphDiff) -> PptxParagraphDiff {
+async fn absorb_paragraph_diff(mut a: PptxParagraphDiff, b: PptxParagraphDiff) -> PptxParagraphDiff {
     a.runs = match (a.runs.take(), b.runs) {
         (None, x) => x,
         (x, None) => x,
@@ -684,19 +684,19 @@ fn absorb_paragraph_diff(mut a: PptxParagraphDiff, b: PptxParagraphDiff) -> Pptx
     a
 }
 
-fn paragraph_with_diff_applied(p: &PptxParagraph, diff: &PptxParagraphDiff) -> PptxParagraph {
+async fn paragraph_with_diff_applied(p: &PptxParagraph, diff: &PptxParagraphDiff) -> PptxParagraph {
     let mut out = p.clone();
     apply_paragraph_for_absorb(&mut out, diff);
     out
 }
 
-fn apply_paragraph_for_absorb(paragraph: &mut PptxParagraph, diff: &PptxParagraphDiff) {
+async fn apply_paragraph_for_absorb(paragraph: &mut PptxParagraph, diff: &PptxParagraphDiff) {
     if let Some(runs) = &diff.runs {
         apply_indexed_for_absorb(&mut paragraph.runs, runs, apply_run_for_absorb);
     }
 }
 
-fn diff_shape(old: &PptxShape, new: &PptxShape) -> Option<PptxShapeDiff> {
+async fn diff_shape(old: &PptxShape, new: &PptxShape) -> Option<PptxShapeDiff> {
     if old == new {
         return None;
     }
@@ -733,7 +733,7 @@ fn diff_shape(old: &PptxShape, new: &PptxShape) -> Option<PptxShapeDiff> {
     }
 }
 
-fn apply_shape(shape: &mut PptxShape, diff: &PptxShapeDiff) -> MutationApplyResult<()> {
+async fn apply_shape(shape: &mut PptxShape, diff: &PptxShapeDiff) -> MutationApplyResult<()> {
     match diff {
         PptxShapeDiff::Replace { shape: new } => *shape = new.clone(),
         PptxShapeDiff::TextBox(td) => {
@@ -776,13 +776,13 @@ fn apply_shape(shape: &mut PptxShape, diff: &PptxShapeDiff) -> MutationApplyResu
     Ok(())
 }
 
-fn shape_with_diff_applied(shape: &PptxShape, diff: &PptxShapeDiff) -> PptxShape {
+async fn shape_with_diff_applied(shape: &PptxShape, diff: &PptxShapeDiff) -> PptxShape {
     let mut out = shape.clone();
     apply_shape_for_absorb(&mut out, diff);
     out
 }
 
-fn apply_shape_for_absorb(shape: &mut PptxShape, diff: &PptxShapeDiff) {
+async fn apply_shape_for_absorb(shape: &mut PptxShape, diff: &PptxShapeDiff) {
     match diff {
         PptxShapeDiff::Replace { shape: new } => *shape = new.clone(),
         PptxShapeDiff::TextBox(change) => {
@@ -821,7 +821,7 @@ fn apply_shape_for_absorb(shape: &mut PptxShape, diff: &PptxShapeDiff) {
     }
 }
 
-fn inverse_shape(base: &PptxShape, diff: &PptxShapeDiff) -> PptxShapeDiff {
+async fn inverse_shape(base: &PptxShape, diff: &PptxShapeDiff) -> PptxShapeDiff {
     match diff {
         PptxShapeDiff::Replace { .. } => PptxShapeDiff::Replace { shape: base.clone() },
         PptxShapeDiff::TextBox(td) => {
@@ -843,7 +843,7 @@ fn inverse_shape(base: &PptxShape, diff: &PptxShapeDiff) -> PptxShapeDiff {
     }
 }
 
-fn absorb_shape_diff(a: PptxShapeDiff, b: PptxShapeDiff) -> PptxShapeDiff {
+async fn absorb_shape_diff(a: PptxShapeDiff, b: PptxShapeDiff) -> PptxShapeDiff {
     match (a, b) {
         (_, PptxShapeDiff::Replace { shape }) => PptxShapeDiff::Replace { shape },
         (PptxShapeDiff::Replace { shape }, b) => PptxShapeDiff::Replace { shape: shape_with_diff_applied(&shape, &b) },
@@ -854,7 +854,7 @@ fn absorb_shape_diff(a: PptxShapeDiff, b: PptxShapeDiff) -> PptxShapeDiff {
     }
 }
 
-fn absorb_text_box_diff(mut a: PptxTextBoxDiff, b: PptxTextBoxDiff) -> PptxTextBoxDiff {
+async fn absorb_text_box_diff(mut a: PptxTextBoxDiff, b: PptxTextBoxDiff) -> PptxTextBoxDiff {
     if b.position.is_some() {
         a.position = b.position;
     }
@@ -866,7 +866,7 @@ fn absorb_text_box_diff(mut a: PptxTextBoxDiff, b: PptxTextBoxDiff) -> PptxTextB
     a
 }
 
-fn absorb_picture_diff(mut a: PptxPictureDiff, b: PptxPictureDiff) -> PptxPictureDiff {
+async fn absorb_picture_diff(mut a: PptxPictureDiff, b: PptxPictureDiff) -> PptxPictureDiff {
     if b.blip_rel_id.is_some() {
         a.blip_rel_id = b.blip_rel_id;
     }
@@ -876,7 +876,7 @@ fn absorb_picture_diff(mut a: PptxPictureDiff, b: PptxPictureDiff) -> PptxPictur
     a
 }
 
-fn absorb_placeholder_diff(mut a: PptxPlaceholderDiff, b: PptxPlaceholderDiff) -> PptxPlaceholderDiff {
+async fn absorb_placeholder_diff(mut a: PptxPlaceholderDiff, b: PptxPlaceholderDiff) -> PptxPlaceholderDiff {
     if b.kind.is_some() {
         a.kind = b.kind;
     }
@@ -891,7 +891,7 @@ fn absorb_placeholder_diff(mut a: PptxPlaceholderDiff, b: PptxPlaceholderDiff) -
     a
 }
 
-fn diff_slide(old: &PptxSlide, new: &PptxSlide) -> Option<PptxSlideDiff> {
+async fn diff_slide(old: &PptxSlide, new: &PptxSlide) -> Option<PptxSlideDiff> {
     let shapes = between_indexed(&old.shapes, &new.shapes, diff_shape);
     if shapes.is_none() {
         None
@@ -900,26 +900,26 @@ fn diff_slide(old: &PptxSlide, new: &PptxSlide) -> Option<PptxSlideDiff> {
     }
 }
 
-fn apply_slide(slide: &mut PptxSlide, diff: &PptxSlideDiff) -> MutationApplyResult<()> {
+async fn apply_slide(slide: &mut PptxSlide, diff: &PptxSlideDiff) -> MutationApplyResult<()> {
     if let Some(sd) = &diff.shapes {
         apply_indexed(&mut slide.shapes, sd, apply_shape).map_err(|error| error.under(["shapes"]))?;
     }
     Ok(())
 }
 
-fn slide_with_diff_applied(slide: &PptxSlide, diff: &PptxSlideDiff) -> PptxSlide {
+async fn slide_with_diff_applied(slide: &PptxSlide, diff: &PptxSlideDiff) -> PptxSlide {
     let mut out = slide.clone();
     apply_slide_for_absorb(&mut out, diff);
     out
 }
 
-fn apply_slide_for_absorb(slide: &mut PptxSlide, diff: &PptxSlideDiff) {
+async fn apply_slide_for_absorb(slide: &mut PptxSlide, diff: &PptxSlideDiff) {
     if let Some(shapes) = &diff.shapes {
         apply_indexed_for_absorb(&mut slide.shapes, shapes, apply_shape_for_absorb);
     }
 }
 
-fn apply_indexed_for_absorb<T, D>(items: &mut Vec<T>, diff: &IndexedTripleDiff<D, T>, apply_item: impl Fn(&mut T, &D))
+async fn apply_indexed_for_absorb<T, D>(items: &mut Vec<T>, diff: &IndexedTripleDiff<D, T>, apply_item: impl Fn(&mut T, &D))
 where
     T: Clone,
 {
@@ -938,11 +938,11 @@ where
     }
 }
 
-fn inverse_slide(base: &PptxSlide, diff: &PptxSlideDiff) -> PptxSlideDiff {
+async fn inverse_slide(base: &PptxSlide, diff: &PptxSlideDiff) -> PptxSlideDiff {
     PptxSlideDiff { shapes: diff.shapes.as_ref().map(|sd| inverse_indexed(&base.shapes, sd, inverse_shape)) }
 }
 
-fn absorb_slide_diff(mut a: PptxSlideDiff, b: PptxSlideDiff) -> PptxSlideDiff {
+async fn absorb_slide_diff(mut a: PptxSlideDiff, b: PptxSlideDiff) -> PptxSlideDiff {
     a.shapes = match (a.shapes.take(), b.shapes) {
         (None, x) => x,
         (x, None) => x,
@@ -951,7 +951,7 @@ fn absorb_slide_diff(mut a: PptxSlideDiff, b: PptxSlideDiff) -> PptxSlideDiff {
     a
 }
 
-fn diff_presentation(base: &PptxPresentation, other: &PptxPresentation) -> Option<PptxPresentationDiff> {
+async fn diff_presentation(base: &PptxPresentation, other: &PptxPresentation) -> Option<PptxPresentationDiff> {
     let slides = between_indexed(&base.slides, &other.slides, diff_slide);
     if slides.is_none() {
         None
@@ -960,18 +960,18 @@ fn diff_presentation(base: &PptxPresentation, other: &PptxPresentation) -> Optio
     }
 }
 
-fn apply_presentation_diff(presentation: &mut PptxPresentation, diff: &PptxPresentationDiff) -> MutationApplyResult<()> {
+async fn apply_presentation_diff(presentation: &mut PptxPresentation, diff: &PptxPresentationDiff) -> MutationApplyResult<()> {
     if let Some(sd) = &diff.slides {
         apply_indexed(&mut presentation.slides, sd, apply_slide).map_err(|error| error.under(["slides"]))?;
     }
     Ok(())
 }
 
-fn inverse_presentation_diff(base: &PptxPresentation, diff: &PptxPresentationDiff) -> PptxPresentationDiff {
+async fn inverse_presentation_diff(base: &PptxPresentation, diff: &PptxPresentationDiff) -> PptxPresentationDiff {
     PptxPresentationDiff { slides: diff.slides.as_ref().map(|sd| inverse_indexed(&base.slides, sd, inverse_slide)) }
 }
 
-fn absorb_presentation_diff(a: PptxPresentationDiff, b: PptxPresentationDiff) -> PptxPresentationDiff {
+async fn absorb_presentation_diff(a: PptxPresentationDiff, b: PptxPresentationDiff) -> PptxPresentationDiff {
     PptxPresentationDiff {
         slides: match (a.slides, b.slides) {
             (None, x) => x,
@@ -983,11 +983,11 @@ fn absorb_presentation_diff(a: PptxPresentationDiff, b: PptxPresentationDiff) ->
 //#endregion 🔖️PresentationDiffLogic
 
 //#region 🔖️OpcDiffLogic
-fn diff_ct_entries(old: &[(String, String)], new: &[(String, String)]) -> Option<PptxOpcCtEntriesDiff> {
+async fn diff_ct_entries(old: &[(String, String)], new: &[(String, String)]) -> Option<PptxOpcCtEntriesDiff> {
     between_named(old, new, |(k, _)| k.clone(), |(_, ov), (_, nv)| (ov != nv).then(|| nv.clone()))
 }
 
-fn apply_ct_entries(entries: &mut Vec<(String, String)>, diff: &PptxOpcCtEntriesDiff) -> MutationApplyResult<()> {
+async fn apply_ct_entries(entries: &mut Vec<(String, String)>, diff: &PptxOpcCtEntriesDiff) -> MutationApplyResult<()> {
     apply_named(
         entries,
         diff,
@@ -999,17 +999,17 @@ fn apply_ct_entries(entries: &mut Vec<(String, String)>, diff: &PptxOpcCtEntries
     )
 }
 
-fn inverse_ct_entries(base: &[(String, String)], diff: &PptxOpcCtEntriesDiff) -> PptxOpcCtEntriesDiff {
+async fn inverse_ct_entries(base: &[(String, String)], diff: &PptxOpcCtEntriesDiff) -> PptxOpcCtEntriesDiff {
     inverse_named(base, diff, |(k, _)| k.clone(), |(_, v), _| v.clone())
 }
 
-fn absorb_ct_entries(a: PptxOpcCtEntriesDiff, b: PptxOpcCtEntriesDiff) -> PptxOpcCtEntriesDiff {
+async fn absorb_ct_entries(a: PptxOpcCtEntriesDiff, b: PptxOpcCtEntriesDiff) -> PptxOpcCtEntriesDiff {
     // 🏷️ `D = String` here is already a whole-value replace (LWW) -- absorbing two such diffs on
     // the SAME key is just "the later one wins", i.e. `b`.
     absorb_named(a, b, |(k, _)| k.clone(), |_av, bv| bv, |(_, v), nv| *v = nv.clone())
 }
 
-fn diff_content_types(old: &OpcContentTypes, new: &OpcContentTypes) -> Option<PptxOpcContentTypesDiff> {
+async fn diff_content_types(old: &OpcContentTypes, new: &OpcContentTypes) -> Option<PptxOpcContentTypesDiff> {
     let defaults = diff_ct_entries(&old.defaults, &new.defaults);
     let overrides = diff_ct_entries(&old.overrides, &new.overrides);
     if defaults.is_none() && overrides.is_none() {
@@ -1019,14 +1019,14 @@ fn diff_content_types(old: &OpcContentTypes, new: &OpcContentTypes) -> Option<Pp
     }
 }
 
-fn diff_part(old: &OpcPart, new: &OpcPart) -> Option<PptxOpcPartDiff> {
+async fn diff_part(old: &OpcPart, new: &OpcPart) -> Option<PptxOpcPartDiff> {
     if old == new {
         return None;
     }
     Some(PptxOpcPartDiff { content_type: (old.content_type != new.content_type).then(|| new.content_type.clone()), bytes: (old.bytes != new.bytes).then(|| new.bytes.clone()) })
 }
 
-fn apply_part(part: &mut OpcPart, diff: &PptxOpcPartDiff) {
+async fn apply_part(part: &mut OpcPart, diff: &PptxOpcPartDiff) {
     if let Some(v) = &diff.content_type {
         part.content_type = v.clone();
     }
@@ -1035,17 +1035,17 @@ fn apply_part(part: &mut OpcPart, diff: &PptxOpcPartDiff) {
     }
 }
 
-fn part_with_diff_applied(part: &OpcPart, diff: &PptxOpcPartDiff) -> OpcPart {
+async fn part_with_diff_applied(part: &OpcPart, diff: &PptxOpcPartDiff) -> OpcPart {
     let mut out = part.clone();
     apply_part(&mut out, diff);
     out
 }
 
-fn inverse_part(base: &OpcPart, diff: &PptxOpcPartDiff) -> PptxOpcPartDiff {
+async fn inverse_part(base: &OpcPart, diff: &PptxOpcPartDiff) -> PptxOpcPartDiff {
     PptxOpcPartDiff { content_type: diff.content_type.as_ref().map(|_| base.content_type.clone()), bytes: diff.bytes.as_ref().map(|_| base.bytes.clone()) }
 }
 
-fn absorb_part_diff(mut a: PptxOpcPartDiff, b: PptxOpcPartDiff) -> PptxOpcPartDiff {
+async fn absorb_part_diff(mut a: PptxOpcPartDiff, b: PptxOpcPartDiff) -> PptxOpcPartDiff {
     if b.content_type.is_some() {
         a.content_type = b.content_type;
     }
@@ -1055,18 +1055,18 @@ fn absorb_part_diff(mut a: PptxOpcPartDiff, b: PptxOpcPartDiff) -> PptxOpcPartDi
     a
 }
 
-fn diff_parts(old: &[OpcPart], new: &[OpcPart]) -> Option<PptxOpcPartsDiff> {
+async fn diff_parts(old: &[OpcPart], new: &[OpcPart]) -> Option<PptxOpcPartsDiff> {
     between_named(old, new, |p| p.path.clone(), diff_part)
 }
 
-fn diff_rel(old: &OpcRelationship, new: &OpcRelationship) -> Option<PptxOpcRelDiff> {
+async fn diff_rel(old: &OpcRelationship, new: &OpcRelationship) -> Option<PptxOpcRelDiff> {
     if old == new {
         return None;
     }
     Some(PptxOpcRelDiff { rel_type: (old.rel_type != new.rel_type).then(|| new.rel_type.clone()), target: (old.target != new.target).then(|| new.target.clone()), target_mode: (old.target_mode != new.target_mode).then_some(new.target_mode) })
 }
 
-fn apply_rel(rel: &mut OpcRelationship, diff: &PptxOpcRelDiff) {
+async fn apply_rel(rel: &mut OpcRelationship, diff: &PptxOpcRelDiff) {
     if let Some(v) = &diff.rel_type {
         rel.rel_type = v.clone();
     }
@@ -1078,11 +1078,11 @@ fn apply_rel(rel: &mut OpcRelationship, diff: &PptxOpcRelDiff) {
     }
 }
 
-fn inverse_rel(base: &OpcRelationship, diff: &PptxOpcRelDiff) -> PptxOpcRelDiff {
+async fn inverse_rel(base: &OpcRelationship, diff: &PptxOpcRelDiff) -> PptxOpcRelDiff {
     PptxOpcRelDiff { rel_type: diff.rel_type.as_ref().map(|_| base.rel_type.clone()), target: diff.target.as_ref().map(|_| base.target.clone()), target_mode: diff.target_mode.map(|_| base.target_mode) }
 }
 
-fn absorb_rel_diff(mut a: PptxOpcRelDiff, b: PptxOpcRelDiff) -> PptxOpcRelDiff {
+async fn absorb_rel_diff(mut a: PptxOpcRelDiff, b: PptxOpcRelDiff) -> PptxOpcRelDiff {
     if b.rel_type.is_some() {
         a.rel_type = b.rel_type;
     }
@@ -1095,11 +1095,11 @@ fn absorb_rel_diff(mut a: PptxOpcRelDiff, b: PptxOpcRelDiff) -> PptxOpcRelDiff {
     a
 }
 
-fn diff_rel_list(old: &[OpcRelationship], new: &[OpcRelationship]) -> Option<PptxOpcRelListDiff> {
+async fn diff_rel_list(old: &[OpcRelationship], new: &[OpcRelationship]) -> Option<PptxOpcRelListDiff> {
     between_named(old, new, |r| r.id.clone(), diff_rel)
 }
 
-fn apply_rel_list(list: &mut Vec<OpcRelationship>, diff: &PptxOpcRelListDiff) -> MutationApplyResult<()> {
+async fn apply_rel_list(list: &mut Vec<OpcRelationship>, diff: &PptxOpcRelListDiff) -> MutationApplyResult<()> {
     apply_named(
         list,
         diff,
@@ -1111,7 +1111,7 @@ fn apply_rel_list(list: &mut Vec<OpcRelationship>, diff: &PptxOpcRelListDiff) ->
     )
 }
 
-fn rel_list_with_diff_applied(list: &[OpcRelationship], diff: &PptxOpcRelListDiff) -> Vec<OpcRelationship> {
+async fn rel_list_with_diff_applied(list: &[OpcRelationship], diff: &PptxOpcRelListDiff) -> Vec<OpcRelationship> {
     let mut out = list.to_vec();
     out.retain(|relationship| !diff.removed.contains(&relationship.id));
     for modified in &diff.modified {
@@ -1123,15 +1123,15 @@ fn rel_list_with_diff_applied(list: &[OpcRelationship], diff: &PptxOpcRelListDif
     out
 }
 
-fn inverse_rel_list(base: &[OpcRelationship], diff: &PptxOpcRelListDiff) -> PptxOpcRelListDiff {
+async fn inverse_rel_list(base: &[OpcRelationship], diff: &PptxOpcRelListDiff) -> PptxOpcRelListDiff {
     inverse_named(base, diff, |r| r.id.clone(), inverse_rel)
 }
 
-fn absorb_rel_list_diff(a: PptxOpcRelListDiff, b: PptxOpcRelListDiff) -> PptxOpcRelListDiff {
+async fn absorb_rel_list_diff(a: PptxOpcRelListDiff, b: PptxOpcRelListDiff) -> PptxOpcRelListDiff {
     absorb_named(a, b, |r| r.id.clone(), absorb_rel_diff, apply_rel)
 }
 
-fn diff_relationships(old: &HashMap<String, Vec<OpcRelationship>>, new: &HashMap<String, Vec<OpcRelationship>>) -> Option<PptxOpcRelationshipsDiff> {
+async fn diff_relationships(old: &HashMap<String, Vec<OpcRelationship>>, new: &HashMap<String, Vec<OpcRelationship>>) -> Option<PptxOpcRelationshipsDiff> {
     let mut removed = Vec::new();
     let mut modified = Vec::new();
     for (owner, list) in old {
@@ -1157,7 +1157,7 @@ fn diff_relationships(old: &HashMap<String, Vec<OpcRelationship>>, new: &HashMap
     }
 }
 
-fn apply_relationships(rels: &mut HashMap<String, Vec<OpcRelationship>>, diff: &PptxOpcRelationshipsDiff) -> MutationApplyResult<()> {
+async fn apply_relationships(rels: &mut HashMap<String, Vec<OpcRelationship>>, diff: &PptxOpcRelationshipsDiff) -> MutationApplyResult<()> {
     for (position, owner) in diff.removed.iter().enumerate() {
         if !rels.contains_key(owner) {
             return Err(MutationApplyError::new("mutation.apply.missing-target", "relationship owner does not exist"));
@@ -1198,7 +1198,7 @@ fn apply_relationships(rels: &mut HashMap<String, Vec<OpcRelationship>>, diff: &
     Ok(())
 }
 
-fn inverse_relationships(base: &HashMap<String, Vec<OpcRelationship>>, diff: &PptxOpcRelationshipsDiff) -> PptxOpcRelationshipsDiff {
+async fn inverse_relationships(base: &HashMap<String, Vec<OpcRelationship>>, diff: &PptxOpcRelationshipsDiff) -> PptxOpcRelationshipsDiff {
     let removed: Vec<String> = diff.added.iter().map(|(owner, _)| owner.clone()).collect();
     let mut modified = Vec::new();
     for m in &diff.modified {
@@ -1215,11 +1215,11 @@ fn inverse_relationships(base: &HashMap<String, Vec<OpcRelationship>>, diff: &Pp
     PptxOpcRelationshipsDiff { removed, modified, added }
 }
 
-fn absorb_relationships(d1: PptxOpcRelationshipsDiff, d2: PptxOpcRelationshipsDiff) -> PptxOpcRelationshipsDiff {
+async fn absorb_relationships(d1: PptxOpcRelationshipsDiff, d2: PptxOpcRelationshipsDiff) -> PptxOpcRelationshipsDiff {
     absorb_named(d1, d2, |(owner, _)| owner.clone(), absorb_rel_list_diff, |(_, list), diff| *list = rel_list_with_diff_applied(list, diff))
 }
 
-fn diff_opc(base: &OpcPackage, other: &OpcPackage) -> Option<PptxOpcDiff> {
+async fn diff_opc(base: &OpcPackage, other: &OpcPackage) -> Option<PptxOpcDiff> {
     let content_types = diff_content_types(&base.content_types, &other.content_types);
     let parts = diff_parts(&base.parts, &other.parts);
     let relationships = diff_relationships(&base.relationships, &other.relationships);
@@ -1230,7 +1230,7 @@ fn diff_opc(base: &OpcPackage, other: &OpcPackage) -> Option<PptxOpcDiff> {
     }
 }
 
-fn apply_opc_diff(opc: &mut OpcPackage, diff: &PptxOpcDiff) -> MutationApplyResult<()> {
+async fn apply_opc_diff(opc: &mut OpcPackage, diff: &PptxOpcDiff) -> MutationApplyResult<()> {
     if let Some(d) = &diff.content_types {
         if let Some(dd) = &d.defaults {
             apply_ct_entries(&mut opc.content_types.defaults, dd).map_err(|error| error.under(["contentTypes", "defaults"]))?;
@@ -1257,7 +1257,7 @@ fn apply_opc_diff(opc: &mut OpcPackage, diff: &PptxOpcDiff) -> MutationApplyResu
     Ok(())
 }
 
-fn inverse_opc_diff(base: &OpcPackage, diff: &PptxOpcDiff) -> PptxOpcDiff {
+async fn inverse_opc_diff(base: &OpcPackage, diff: &PptxOpcDiff) -> PptxOpcDiff {
     PptxOpcDiff {
         content_types: diff
             .content_types
@@ -1268,7 +1268,7 @@ fn inverse_opc_diff(base: &OpcPackage, diff: &PptxOpcDiff) -> PptxOpcDiff {
     }
 }
 
-fn absorb_opc_diff(a: PptxOpcDiff, b: PptxOpcDiff) -> PptxOpcDiff {
+async fn absorb_opc_diff(a: PptxOpcDiff, b: PptxOpcDiff) -> PptxOpcDiff {
     PptxOpcDiff {
         content_types: match (a.content_types, b.content_types) {
             (None, x) => x,
@@ -1302,7 +1302,7 @@ fn absorb_opc_diff(a: PptxOpcDiff, b: PptxOpcDiff) -> PptxOpcDiff {
 
 //#region 🔖️Apply
 impl MutationDiff<PptxSnapshot> for PptxDiff {
-    fn apply(&self, base: &PptxSnapshot) -> MutationApplyResult<PptxSnapshot> {
+    async fn apply(&self, base: &PptxSnapshot) -> MutationApplyResult<PptxSnapshot> {
         let mut next = base.clone();
         if let Some(d) = &self.opc {
             apply_opc_diff(&mut next.opc, d).map_err(|error| error.under(["opc"]))?;
@@ -1317,7 +1317,7 @@ impl MutationDiff<PptxSnapshot> for PptxDiff {
         Ok(next)
     }
 
-    fn absorb(&mut self, other: Self) {
+    async fn absorb(&mut self, other: Self) {
         self.opc = match (self.opc.take(), other.opc) {
             (None, x) => x,
             (x, None) => x,
@@ -1337,7 +1337,7 @@ impl MutationDiff<PptxSnapshot> for PptxDiff {
 
 //#region 🔖️DiffAlgebra
 impl DiffAlgebra<PptxSnapshot> for PptxDiff {
-    fn inverse(&self, base: &PptxSnapshot) -> Self {
+    async fn inverse(&self, base: &PptxSnapshot) -> Self {
         PptxDiff {
             opc: self.opc.as_ref().map(|d| inverse_opc_diff(&base.opc, d)),
             presentation: self.presentation.as_ref().map(|d| inverse_presentation_diff(&base.presentation, d)),
@@ -1345,11 +1345,11 @@ impl DiffAlgebra<PptxSnapshot> for PptxDiff {
         }
     }
 
-    fn between(base: &PptxSnapshot, other: &PptxSnapshot) -> Self {
+    async fn between(base: &PptxSnapshot, other: &PptxSnapshot) -> Self {
         PptxDiff { opc: diff_opc(&base.opc, &other.opc), presentation: diff_presentation(&base.presentation, &other.presentation), xml_parts: (base.xml_parts != other.xml_parts).then(|| other.xml_parts.clone()) }
     }
 
-    fn is_empty(&self) -> bool {
+    async fn is_empty(&self) -> bool {
         self.opc.is_none() && self.presentation.is_none() && self.xml_parts.is_none()
     }
 }
@@ -1358,18 +1358,18 @@ impl DiffAlgebra<PptxSnapshot> for PptxDiff {
 //#region 🔖️SetSnapshot
 /// 🧩 Builds the sparse field-by-field diff for a `SetSnapshot` mutation. No `snapshot:
 /// Option<PptxSnapshot>` full-replace slot -- this IS `PptxDiff::between`.
-pub fn diff_set_snapshot(base: &PptxSnapshot, next: &PptxSnapshot) -> PptxDiff {
+pub async fn diff_set_snapshot(base: &PptxSnapshot, next: &PptxSnapshot) -> PptxDiff {
     PptxDiff::between(base, next)
 }
 
 /// 🧩 Builds the diff for inserting `slide` at `index` (FINAL state).
-pub fn diff_insert_slide(index: usize, slide: PptxSlide) -> PptxDiff {
+pub async fn diff_insert_slide(index: usize, slide: PptxSlide) -> PptxDiff {
     let slides = PptxSlidesDiff { added: vec![IndexAdded { index, item: slide }], ..Default::default() };
     PptxDiff { opc: None, presentation: Some(PptxPresentationDiff { slides: Some(slides) }), xml_parts: None }
 }
 
 /// 🧩 Builds the diff for removing the slide at `index` (BASE-state index).
-pub fn diff_remove_slide(index: usize) -> PptxDiff {
+pub async fn diff_remove_slide(index: usize) -> PptxDiff {
     let slides = PptxSlidesDiff { removed: vec![index], ..Default::default() };
     PptxDiff { opc: None, presentation: Some(PptxPresentationDiff { slides: Some(slides) }), xml_parts: None }
 }
@@ -1378,7 +1378,7 @@ pub fn diff_remove_slide(index: usize) -> PptxDiff {
 /// -- represented as a plain removed+added pair (the collection triple has no separate "moved"
 /// concept; `apply_indexed`'s own remove-then-insert semantics already reconstruct a move
 /// correctly from that pair, same as any other index-keyed collection in this recipe).
-pub fn diff_move_slide(presentation: &PptxPresentation, from: usize, to: usize) -> PptxDiff {
+pub async fn diff_move_slide(presentation: &PptxPresentation, from: usize, to: usize) -> PptxDiff {
     let Some(slide) = presentation.slides.get(from) else { return PptxDiff::default() };
     if from == to {
         return PptxDiff::default();
@@ -1387,21 +1387,21 @@ pub fn diff_move_slide(presentation: &PptxPresentation, from: usize, to: usize) 
     PptxDiff { opc: None, presentation: Some(PptxPresentationDiff { slides: Some(slides) }), xml_parts: None }
 }
 
-fn wrap_slide_diff(slide_index: usize, slide_diff: PptxSlideDiff) -> PptxDiff {
+async fn wrap_slide_diff(slide_index: usize, slide_diff: PptxSlideDiff) -> PptxDiff {
     let slides = PptxSlidesDiff { modified: vec![IndexModified { index: slide_index, diff: slide_diff }], ..Default::default() };
     PptxDiff { opc: None, presentation: Some(PptxPresentationDiff { slides: Some(slides) }), xml_parts: None }
 }
 
 /// 🧩 Builds the diff for inserting `shape` at `shape_index` (FINAL state) on the slide at
 /// `slide_index` (BASE-state index -- slides are not reindexed by this mutation).
-pub fn diff_insert_shape(slide_index: usize, shape_index: usize, shape: PptxShape) -> PptxDiff {
+pub async fn diff_insert_shape(slide_index: usize, shape_index: usize, shape: PptxShape) -> PptxDiff {
     let shapes = PptxShapesDiff { added: vec![IndexAdded { index: shape_index, item: shape }], ..Default::default() };
     wrap_slide_diff(slide_index, PptxSlideDiff { shapes: Some(shapes) })
 }
 
 /// 🧩 Builds the diff for removing the shape at `shape_index` (BASE-state index) on the slide at
 /// `slide_index`.
-pub fn diff_remove_shape(slide_index: usize, shape_index: usize) -> PptxDiff {
+pub async fn diff_remove_shape(slide_index: usize, shape_index: usize) -> PptxDiff {
     let shapes = PptxShapesDiff { removed: vec![shape_index], ..Default::default() };
     wrap_slide_diff(slide_index, PptxSlideDiff { shapes: Some(shapes) })
 }
@@ -1409,7 +1409,7 @@ pub fn diff_remove_shape(slide_index: usize, shape_index: usize) -> PptxDiff {
 /// 🧩 Builds the diff for replacing a `TextBox`/`Placeholder` shape's `text_frame`. A no-op
 /// (`PptxDiff::default()`) if the shape doesn't exist or doesn't carry a text frame (`Picture`,
 /// `Other`).
-pub fn diff_set_shape_text(presentation: &PptxPresentation, slide_index: usize, shape_index: usize, text_frame: Vec<PptxParagraph>) -> PptxDiff {
+pub async fn diff_set_shape_text(presentation: &PptxPresentation, slide_index: usize, shape_index: usize, text_frame: Vec<PptxParagraph>) -> PptxDiff {
     let Some(slide) = presentation.slides.get(slide_index) else { return PptxDiff::default() };
     let Some(shape) = slide.shapes.get(shape_index) else { return PptxDiff::default() };
     let shape_diff = match shape {
@@ -1430,7 +1430,7 @@ pub fn diff_set_shape_text(presentation: &PptxPresentation, slide_index: usize, 
 /// 🧩 Builds the diff for setting a shape's `position`. A no-op if the shape doesn't exist or
 /// already has that position (`Other` never carries a typed position -- its raw `xml` is never
 /// touched by this mutation).
-pub fn diff_set_shape_position(presentation: &PptxPresentation, slide_index: usize, shape_index: usize, position: PptxTransform) -> PptxDiff {
+pub async fn diff_set_shape_position(presentation: &PptxPresentation, slide_index: usize, shape_index: usize, position: PptxTransform) -> PptxDiff {
     let Some(slide) = presentation.slides.get(slide_index) else { return PptxDiff::default() };
     let Some(shape) = slide.shapes.get(shape_index) else { return PptxDiff::default() };
     let shape_diff = match shape {
@@ -1567,20 +1567,20 @@ struct PptxDiffRecord {
 }
 
 impl protocol::DiffCodec for PptxDiff {
-    fn print_diff(&self) -> String {
+    async fn print_diff(&self) -> String {
         let record = PptxDiffRecord { value: dsl::to_dsl_value(self).expect("serializable logical pptx diff") };
         dsl::print(&record.__dsl_to_record(), &PptxDiffRecord::__dsl_spec(), dsl::JoinMode::Inline)
     }
-    fn parse_diff(line: &str) -> Result<Self, store::TextError> {
+    async fn parse_diff(line: &str) -> Result<Self, store::TextError> {
         let record = dsl::parse(line, &PptxDiffRecord::__dsl_spec(), &dsl::ParseOptions { limits: dsl::Limits { max_bytes: 64 * 1024 * 1024, ..dsl::Limits::default() }, mode: dsl::SourceMode::Inline })?;
         let model = PptxDiffRecord::__dsl_from_record(&record)?;
         dsl::from_dsl_value(model.value).map_err(|error| store::TextError::new(error, dsl::TextSpan::at(1, 1)))
     }
-    fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    async fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         let value = dsl::to_dsl_value(self).map_err(|detail| protocol::ProtocolError::Malformed { what: "pptx diff", offset: 0, detail })?;
         Ok(store::pack_rt::encode_wire_value(&value))
     }
-    fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    async fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         let value = store::pack_rt::decode_wire_value(bytes).map_err(|error| protocol::ProtocolError::Malformed { what: "pptx diff", offset: 0, detail: error.to_string() })?;
         dsl::from_dsl_value(value).map_err(|detail| protocol::ProtocolError::Malformed { what: "pptx diff", offset: 0, detail })
     }
@@ -1595,7 +1595,7 @@ impl protocol::DiffCodec for PptxDiff {
 /// `diff_grammar_conformance_law`/`protocol_walk_law` conformance tests, same shape
 /// `📜️docx/…/🔺️diff/🦀️component.rs`'s own `demo_diff_cases()` establishes.
 #[cfg(test)]
-pub(crate) fn demo_snapshot_a() -> PptxSnapshot {
+pub(crate) async fn demo_snapshot_a() -> PptxSnapshot {
     let mut opc = OpcPackage::empty();
     opc.content_types.set_default("rels", crate::artifacts::zip::opc::RELS_CONTENT_TYPE);
     opc.content_types.set_default("xml", "application/xml");
@@ -1622,7 +1622,7 @@ pub(crate) fn demo_snapshot_a() -> PptxSnapshot {
 }
 
 #[cfg(test)]
-pub(crate) fn demo_snapshot_b() -> PptxSnapshot {
+pub(crate) async fn demo_snapshot_b() -> PptxSnapshot {
     let mut opc = OpcPackage::empty();
     opc.content_types.set_default("rels", crate::artifacts::zip::opc::RELS_CONTENT_TYPE);
     opc.content_types.set_default("xml", "application/xml");
@@ -1649,7 +1649,7 @@ pub(crate) fn demo_snapshot_b() -> PptxSnapshot {
 /// 🧪️ The demo cases proper — `default()` (empty diff) plus every real `between()` shape (both
 /// directions, and the trivially-empty self-diff).
 #[cfg(test)]
-pub(crate) fn demo_diff_cases() -> Vec<PptxDiff> {
+pub(crate) async fn demo_diff_cases() -> Vec<PptxDiff> {
     let a = demo_snapshot_a();
     let b = demo_snapshot_b();
     vec![PptxDiff::default(), PptxDiff::between(&a, &b), PptxDiff::between(&b, &a), PptxDiff::between(&a, &a)]
@@ -1663,7 +1663,7 @@ mod handcrafted_diff_codec_tests {
     use crate::artifacts::zip::opc::{OpcPackage, RELS_CONTENT_TYPE, REL_TYPE_OFFICE_DOCUMENT};
     use protocol::DiffCodec;
 
-    fn elem_snapshot(slides: Vec<PptxSlide>) -> PptxSnapshot {
+    async fn elem_snapshot(slides: Vec<PptxSlide>) -> PptxSnapshot {
         let mut opc = OpcPackage::empty();
         opc.content_types.set_default("rels", RELS_CONTENT_TYPE);
         opc.set_part("ppt/presentation.xml", "application/vnd.openxmlformats-officedocument.presentationml.presentation.main+xml", b"<p:presentation/>".to_vec());
@@ -1677,7 +1677,7 @@ mod handcrafted_diff_codec_tests {
     /// (slides/shapes/paragraphs/runs) AND `NamedTripleDiff` collections (content types/parts/
     /// relationships, incl. the doubly-nested relationships-by-owner triple).
     #[test]
-    fn diff_codec_text_binary_roundtrip_law() {
+    async fn diff_codec_text_binary_roundtrip_law() {
         let a = elem_snapshot(vec![PptxSlide {
             shapes: vec![
                 PptxShape::TextBox { text_frame: vec![PptxParagraph { runs: vec![PptxRun { text: "old".into(), bold: false, italic: false, font_size: Some(10) }] }], position: PptxTransform { x: 1, y: 1, cx: 1, cy: 1 } },
@@ -1711,7 +1711,7 @@ mod handcrafted_diff_codec_tests {
     }
 
     #[test]
-    fn logical_xml_parts_diff_apply_inverse_absorb_between_and_codecs() {
+    async fn logical_xml_parts_diff_apply_inverse_absorb_between_and_codecs() {
         let base = elem_snapshot(Vec::new());
         let mut sourced = base.clone();
         sourced.xml_parts = vec![PptxXmlPart { path: "docProps/core.xml".into(), content_type: "application/vnd.openxmlformats-package.core-properties+xml".into(), document: crate::artifacts::xml::schema::snapshot::XmlDocument::default() }];
@@ -1740,7 +1740,7 @@ mod result_apply_tests {
     use super::*;
 
     #[test]
-    fn rejects_missing_slide_target_without_mutating_base() {
+    async fn rejects_missing_slide_target_without_mutating_base() {
         let base = PptxSnapshot::default();
         let diff =
             PptxDiff { presentation: Some(PptxPresentationDiff { slides: Some(PptxSlidesDiff { modified: vec![IndexModified { index: 0, diff: PptxSlideDiff::default() }], ..Default::default() }), ..Default::default() }), ..Default::default() };

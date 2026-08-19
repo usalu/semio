@@ -4,7 +4,7 @@ use super::mutation::UpdateBoltInputs;
 use crate::artifacts::en1993::{En1993Mutation, En1993Snapshot};
 
 //#region 🔖️Inverse
-pub fn inverse(_payload: &UpdateBoltInputs, base: &En1993Snapshot) -> Vec<En1993Mutation> {
+pub async fn inverse(_payload: &UpdateBoltInputs, base: &En1993Snapshot) -> Vec<En1993Mutation> {
     vec![En1993Mutation::UpdateBoltInputs(UpdateBoltInputs {
         new_bolt_f_ed_kn: base.bolt_f_ed_kn,
         new_bolt_n_bolts: base.bolt_n_bolts,

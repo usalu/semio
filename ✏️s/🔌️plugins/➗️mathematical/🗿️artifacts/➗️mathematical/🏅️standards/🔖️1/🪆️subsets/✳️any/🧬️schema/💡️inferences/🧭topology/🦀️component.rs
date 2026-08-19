@@ -23,7 +23,7 @@ pub struct MathematicalTopology {
 //#region 🔖️Compute
 /// 🧭️ Builds the node/edge graph from the playground's own `source`/`target` edges and
 /// topologically sorts it.
-pub fn compute_mathematical_topology(graph: &MathematicalGraph) -> MathematicalTopology {
+pub async fn compute_mathematical_topology(graph: &MathematicalGraph) -> MathematicalTopology {
     let nodes: Vec<String> = graph.nodes.iter().map(|node| node.id.clone()).collect();
     let edges: Vec<(String, String)> = graph.edges.iter().map(|edge| (edge.source.clone(), edge.target.clone())).collect();
     topological_sort(nodes, edges)
@@ -32,7 +32,7 @@ pub fn compute_mathematical_topology(graph: &MathematicalGraph) -> MathematicalT
 /// 🧮️ Kahn's algorithm: a stable (declaration-order-first) topological sort that also yields each
 /// node's longest-path depth from a root, and reports `cycleFree = false` when the queue drains
 /// before every node is visited (the unvisited remainder is exactly the cyclic subgraph).
-fn topological_sort(nodes: Vec<String>, edges: Vec<(String, String)>) -> MathematicalTopology {
+async fn topological_sort(nodes: Vec<String>, edges: Vec<(String, String)>) -> MathematicalTopology {
     let node_count = nodes.len() as u32;
     let mut indegree: HashMap<String, u32> = nodes.iter().map(|id| (id.clone(), 0)).collect();
     let mut adjacency: HashMap<String, Vec<String>> = HashMap::new();
@@ -87,28 +87,28 @@ mod tests {
     use super::*;
     use crate::artifacts::mathematical::{MathematicalEdge, MathematicalNode};
 
-    fn node(id: &str) -> MathematicalNode {
+    async fn node(id: &str) -> MathematicalNode {
         MathematicalNode { id: id.into(), label: id.into(), x: 0.0, y: 0.0 }
     }
 
-    fn edge(id: &str, source: &str, target: &str) -> MathematicalEdge {
+    async fn edge(id: &str, source: &str, target: &str) -> MathematicalEdge {
         MathematicalEdge { id: id.into(), source: source.into(), target: target.into() }
     }
 
-    fn graph(nodes: Vec<MathematicalNode>, edges: Vec<MathematicalEdge>) -> MathematicalGraph {
+    async fn graph(nodes: Vec<MathematicalNode>, edges: Vec<MathematicalEdge>) -> MathematicalGraph {
         MathematicalGraph { directed: true, nodes, edges, algorithm: "topo".into(), algorithm_seed: None }
     }
 
     //#region 🧪️TopologyLaws
     #[test]
-    fn a_direct_cycle_between_two_nodes_is_reported() {
+    async fn a_direct_cycle_between_two_nodes_is_reported() {
         let g = graph(vec![node("a"), node("b")], vec![edge("e1", "a", "b"), edge("e2", "b", "a")]);
         let topology = compute_mathematical_topology(&g);
         assert!(!topology.cycle_free, "a->b->a is a genuine cycle");
     }
 
     #[test]
-    fn an_edge_to_a_missing_node_is_dropped_not_a_cycle() {
+    async fn an_edge_to_a_missing_node_is_dropped_not_a_cycle() {
         let g = graph(vec![node("a")], vec![edge("e1", "a", "missing")]);
         let topology = compute_mathematical_topology(&g);
         assert!(topology.cycle_free);
@@ -116,7 +116,7 @@ mod tests {
     }
 
     #[test]
-    fn an_undirected_display_flag_still_uses_the_edge_data_source_target() {
+    async fn an_undirected_display_flag_still_uses_the_edge_data_source_target() {
         let mut g = graph(vec![node("a"), node("b")], vec![edge("e1", "a", "b")]);
         g.directed = false;
         let topology = compute_mathematical_topology(&g);

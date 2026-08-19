@@ -17,20 +17,20 @@ pub struct ReplaceQc {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn replace_qc(qc: Option<QcReportSnapshot>) -> RemodelMutation {
+pub async fn replace_qc(qc: Option<QcReportSnapshot>) -> RemodelMutation {
     RemodelMutation::ReplaceQc(ReplaceQc { qc })
 }
 
 impl protocol::MutationKind<RemodelSnapshot, RemodelMutation> for ReplaceQc {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "replace", entity: "qc", kind: "replace-qc", record: "ReplacedQc" };
 
-    fn diff(&self, base: &RemodelSnapshot) -> protocol::MutationOutcome<RemodelDiff> {
+    async fn diff(&self, base: &RemodelSnapshot) -> protocol::MutationOutcome<RemodelDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &RemodelSnapshot) -> Vec<RemodelMutation> {
+    async fn inverse(&self, base: &RemodelSnapshot) -> Vec<RemodelMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         "Replace qc".to_string()
     }
 }

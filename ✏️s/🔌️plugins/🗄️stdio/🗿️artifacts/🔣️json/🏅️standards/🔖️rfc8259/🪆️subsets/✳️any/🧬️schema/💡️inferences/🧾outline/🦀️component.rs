@@ -18,7 +18,7 @@ pub struct JsonOutline {
     pub root_kind: String,
 }
 
-fn root_kind_name(value: &JsonValue) -> &'static str {
+async fn root_kind_name(value: &JsonValue) -> &'static str {
     match value {
         JsonValue::Null => "null",
         JsonValue::Bool { .. } => "bool",
@@ -31,7 +31,7 @@ fn root_kind_name(value: &JsonValue) -> &'static str {
 
 /// 🌳️ Recursively walks `value`, returning `(node_count, max_depth)` — `depth` is the caller's
 /// own nesting level (the root call passes `1`).
-fn walk(value: &JsonValue, depth: u32) -> (u32, u32) {
+async fn walk(value: &JsonValue, depth: u32) -> (u32, u32) {
     match value {
         JsonValue::Array { items } => {
             let mut count = 1u32;
@@ -58,7 +58,7 @@ fn walk(value: &JsonValue, depth: u32) -> (u32, u32) {
 }
 
 impl JsonOutline {
-    pub fn compute(snapshot: &JsonSnapshot) -> Self {
+    pub async fn compute(snapshot: &JsonSnapshot) -> Self {
         let (node_count, max_depth) = walk(&snapshot.value, 1);
         Self { node_count, max_depth, root_kind: root_kind_name(&snapshot.value).to_string() }
     }
@@ -72,7 +72,7 @@ mod tests {
     use crate::artifacts::json::schema::snapshot::JsonMember;
 
     #[test]
-    fn counts_nodes_and_depth_over_nested_structure() {
+    async fn counts_nodes_and_depth_over_nested_structure() {
         let snapshot = JsonSnapshot {
             schema: "stdio.json".into(),
             value: JsonValue::Object { members: vec![JsonMember { key: "a".into(), value: JsonValue::Array { items: vec![JsonValue::Number { lexeme: "1".into() }, JsonValue::Number { lexeme: "2".into() }] } }] },
@@ -85,7 +85,7 @@ mod tests {
     }
 
     #[test]
-    fn scalar_root_has_depth_one() {
+    async fn scalar_root_has_depth_one() {
         let snapshot = JsonSnapshot { schema: "stdio.json".into(), value: JsonValue::Null };
         let outline = JsonOutline::compute(&snapshot);
         assert_eq!(outline.node_count, 1);
@@ -94,7 +94,7 @@ mod tests {
     }
 
     #[test]
-    fn outline_is_deterministic() {
+    async fn outline_is_deterministic() {
         let snapshot = JsonSnapshot::default();
         assert_eq!(JsonOutline::compute(&snapshot), JsonOutline::compute(&snapshot));
     }

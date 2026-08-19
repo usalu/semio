@@ -10,7 +10,7 @@ use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::SemioBr
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::SemioBrepSnapshot;
 
 //#region 🔖️Diff
-pub fn diff(payload: &DeleteSolid, base: &SemioBrepSnapshot) -> protocol::MutationOutcome<SemioBrepDiff> {
+pub async fn diff(payload: &DeleteSolid, base: &SemioBrepSnapshot) -> protocol::MutationOutcome<SemioBrepDiff> {
     if !base.solids.iter().any(|x| x.id == payload.id) {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Solid \"{}\" does not exist.", payload.id), [payload.id.clone()]);
     }

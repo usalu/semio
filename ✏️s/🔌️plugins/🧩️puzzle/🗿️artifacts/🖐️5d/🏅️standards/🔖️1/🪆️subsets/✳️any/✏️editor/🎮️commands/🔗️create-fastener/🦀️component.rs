@@ -3,10 +3,10 @@
 use crate::editor::puzzle5d::{find_part_by_grip_full_id, next_fastener_id, Puzzle5dActionCtx, Puzzle5dDocument, Puzzle5dFastener};
 use serde_json::Value;
 
-fn arg_str<'a>(args: Option<&'a Value>, key: &str) -> Option<&'a str> {
+async fn arg_str<'a>(args: Option<&'a Value>, key: &str) -> Option<&'a str> {
     args.and_then(|value| value.get(key)).and_then(Value::as_str).filter(|text| !text.is_empty())
 }
-fn resolve_grip_kind(document: &Puzzle5dDocument, full_id: &str) -> Option<String> {
+async fn resolve_grip_kind(document: &Puzzle5dDocument, full_id: &str) -> Option<String> {
     let (_part, grip) = find_part_by_grip_full_id(document, full_id)?;
     let kind = if grip.grip_kind.is_empty() { grip.grip_2d.grip_kind.clone() } else { grip.grip_kind.clone() };
     if kind.is_empty() {
@@ -17,7 +17,7 @@ fn resolve_grip_kind(document: &Puzzle5dDocument, full_id: &str) -> Option<Strin
 }
 /// 🧲️ Permissive when the document declares no `kindCompatibility` rules — otherwise requires an
 /// explicit (or bidirectional) entry, matching puzzle3d's attraction gate.
-fn puzzle5d_kinds_compatible(document: &Puzzle5dDocument, source_kind: &str, target_kind: &str) -> bool {
+async fn puzzle5d_kinds_compatible(document: &Puzzle5dDocument, source_kind: &str, target_kind: &str) -> bool {
     let Some(entries) = document.kind_compatibility.as_ref().and_then(Value::as_array) else {
         return true;
     };
@@ -31,10 +31,10 @@ fn puzzle5d_kinds_compatible(document: &Puzzle5dDocument, source_kind: &str, tar
         (source == source_kind && target == target_kind) || (bidirectional && source == target_kind && target == source_kind)
     })
 }
-fn fasteners_already_connected(document: &Puzzle5dDocument, source: &str, target: &str) -> bool {
+async fn fasteners_already_connected(document: &Puzzle5dDocument, source: &str, target: &str) -> bool {
     document.fasteners.iter().any(|fastener| (fastener.source == source && fastener.target == target) || (fastener.source == target && fastener.target == source))
 }
-fn fastener_from_args(id: String, source: String, target: String, args: Option<&Value>) -> Puzzle5dFastener {
+async fn fastener_from_args(id: String, source: String, target: String, args: Option<&Value>) -> Puzzle5dFastener {
     Puzzle5dFastener {
         id,
         source,
@@ -50,14 +50,14 @@ fn fastener_from_args(id: String, source: String, target: String, args: Option<&
         y: arg_f64(args, "y").unwrap_or(0.0),
     }
 }
-fn arg_f64(args: Option<&Value>, key: &str) -> Option<f64> {
+async fn arg_f64(args: Option<&Value>, key: &str) -> Option<f64> {
     args.and_then(|value| value.get(key)).and_then(Value::as_f64)
 }
 
 /// 🆕 Creates a fastener between two grip full-ids. No-ops when endpoints collide, already connect, or
 /// fail the kind-compatibility gate. Optional numeric args seed the eight parameters (default `0.0`) so
 /// a create can land with compose-accurate offsets without a follow-up edit.
-pub fn create_fastener(ctx: &mut Puzzle5dActionCtx<'_>, args: Option<&Value>) {
+pub async fn create_fastener(ctx: &mut Puzzle5dActionCtx<'_>, args: Option<&Value>) {
     let source = arg_str(args, "source").or_else(|| arg_str(args, "attracting")).unwrap_or("").to_string();
     let target = arg_str(args, "target").or_else(|| arg_str(args, "attracted")).unwrap_or("").to_string();
     if source.is_empty() || target.is_empty() || source == target {

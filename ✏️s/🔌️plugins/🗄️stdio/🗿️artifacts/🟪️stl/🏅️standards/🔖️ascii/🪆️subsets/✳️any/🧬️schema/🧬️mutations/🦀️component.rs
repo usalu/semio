@@ -63,7 +63,7 @@ pub enum StlMutation {
 //#region 🔖️Apply
 /// ▶️ Applies `mutation` to `snapshot`, returning a typed error outcome without changing the
 /// snapshot when an index target is missing or out of range.
-pub fn apply_stl_mutation(snapshot: &mut StlSnapshot, mutation: &StlMutation) -> protocol::MutationOutcome<StlDiff> {
+pub async fn apply_stl_mutation(snapshot: &mut StlSnapshot, mutation: &StlMutation) -> protocol::MutationOutcome<StlDiff> {
     let outcome = <StlMutation as Mutation<StlSnapshot>>::diff(mutation, snapshot);
     match protocol::MutationDiff::apply(outcome.diff(), snapshot) {
         Ok(next) => {
@@ -79,7 +79,7 @@ pub fn apply_stl_mutation(snapshot: &mut StlSnapshot, mutation: &StlMutation) ->
 impl Mutation<StlSnapshot> for StlMutation {
     type Diff = StlDiff;
 
-    fn diff(&self, base: &StlSnapshot) -> protocol::MutationOutcome<Self::Diff> {
+    async fn diff(&self, base: &StlSnapshot) -> protocol::MutationOutcome<Self::Diff> {
         protocol::MutationOutcome::new(match self {
             StlMutation::NoMutation => StlDiff::default(),
             StlMutation::SetSnapshot { snapshot } => diff::diff_set_snapshot(base, snapshot),
@@ -94,7 +94,7 @@ impl Mutation<StlSnapshot> for StlMutation {
     /// ↩️ Handcrafted, index-aware mutation-level inverses. Index-targeted variants look the
     /// prior value up in `base`; a stale/out-of-range index inverts to `NoMutation` (nothing to
     /// undo).
-    fn inverse(&self, base: &StlSnapshot) -> Vec<Self> {
+    async fn inverse(&self, base: &StlSnapshot) -> Vec<Self> {
         match self {
             StlMutation::NoMutation => vec![StlMutation::NoMutation],
             StlMutation::SetSnapshot { .. } => vec![StlMutation::SetSnapshot { snapshot: base.clone() }],
@@ -130,10 +130,10 @@ impl Mutation<StlSnapshot> for StlMutation {
 /// `snapshot` reuse `🔺️diff::component`'s `pub(crate)` value codecs verbatim (`enc_vec3`,
 /// `enc_vertices`, `enc_triangle`) plus this file's own `enc_snapshot` (the one type `🔺️diff`
 /// doesn't need — only `SetSnapshot`'s payload does).
-fn enc_snapshot(s: &StlSnapshot) -> String {
+async fn enc_snapshot(s: &StlSnapshot) -> String {
     format!("[{},{},[{}]]", diff::hex_encode_str(&s.schema), diff::hex_encode_str(&s.solid_name), s.triangles.iter().map(diff::enc_triangle).collect::<Vec<_>>().join(","),)
 }
-fn dec_snapshot(s: &str) -> Result<StlSnapshot, String> {
+async fn dec_snapshot(s: &str) -> Result<StlSnapshot, String> {
     let parts = diff::split_top_level(diff::strip_brackets(s)?, ',');
     let [schema, solid_name, triangles] = parts.as_slice() else {
         return Err(format!("snapshot: expected 3 fields, got {}", parts.len()));
@@ -142,7 +142,7 @@ fn dec_snapshot(s: &str) -> Result<StlSnapshot, String> {
     Ok(StlSnapshot { schema: diff::hex_decode_str(schema)?, solid_name: diff::hex_decode_str(solid_name)?, triangles })
 }
 
-fn print_stl_op(m: &StlMutation) -> String {
+async fn print_stl_op(m: &StlMutation) -> String {
     match m {
         StlMutation::NoMutation => "no-mutation".to_string(),
         StlMutation::SetSnapshot { snapshot } => format!("set-snapshot snapshot={}", enc_snapshot(snapshot)),
@@ -153,7 +153,7 @@ fn print_stl_op(m: &StlMutation) -> String {
         StlMutation::SetTriangleVertices { index, vertices } => format!("set-triangle-vertices index={index} vertices={}", diff::enc_vertices(vertices)),
     }
 }
-fn parse_stl_op(line: &str) -> Result<StlMutation, String> {
+async fn parse_stl_op(line: &str) -> Result<StlMutation, String> {
     if line == "no-mutation" {
         return Ok(StlMutation::NoMutation);
     }
@@ -176,10 +176,10 @@ fn parse_stl_op(line: &str) -> Result<StlMutation, String> {
 }
 
 impl OpText for StlMutation {
-    fn print_op(&self) -> String {
+    async fn print_op(&self) -> String {
         print_stl_op(self)
     }
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
+    async fn parse_op(line: &str) -> Result<Self, store::TextError> {
         parse_stl_op(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
 }
@@ -190,7 +190,7 @@ impl OpText for StlMutation {
 /// varint-framed binary all the way down, reusing `diff`'s `pub(crate)` binary value codecs
 /// (`enc_triangle_bin`/`dec_triangle_bin`) rather than duplicating them — same intra-artifact
 /// reuse pattern this file's own text `enc_snapshot` already establishes over `diff::enc_triangle`.
-fn enc_snapshot_bin(s: &StlSnapshot, out: &mut Vec<u8>) {
+async fn enc_snapshot_bin(s: &StlSnapshot, out: &mut Vec<u8>) {
     diff::write_str_bin(out, &s.schema);
     diff::write_str_bin(out, &s.solid_name);
     store::pack_rt::write_varint_u64(out, s.triangles.len() as u64);
@@ -198,7 +198,7 @@ fn enc_snapshot_bin(s: &StlSnapshot, out: &mut Vec<u8>) {
         diff::enc_triangle_bin(t, out);
     }
 }
-fn dec_snapshot_bin(reader: &mut store::ByteReader<'_>) -> Result<StlSnapshot, String> {
+async fn dec_snapshot_bin(reader: &mut store::ByteReader<'_>) -> Result<StlSnapshot, String> {
     let schema = diff::read_str_bin(reader)?;
     let solid_name = diff::read_str_bin(reader)?;
     let count = reader.read_varint_u64().map_err(|e| e.to_string())?;
@@ -221,7 +221,7 @@ fn dec_snapshot_bin(reader: &mut store::ByteReader<'_>) -> Result<StlSnapshot, S
 /// (`SetSnapshot`'s `Vec<StlTriangle>` is a variable-length vector-of-records, the same
 /// `protocol-array-of-records` `walk_protocol` gap the sibling diff protocol file documents).
 impl OpBinary for StlMutation {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         let mut out = vec![store::pack_rt::OP_BINARY_FORMAT, 0u8];
         let tag: u8 = match self {
             StlMutation::NoMutation => 0,
@@ -256,7 +256,7 @@ impl OpBinary for StlMutation {
         out[1] = tag;
         Ok(out)
     }
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         let mut reader = store::ByteReader::new(bytes);
         let _format = reader.read_u8().map_err(|e| protocol::ProtocolError::Malformed { what: "op format", offset: 0, detail: e.to_string() })?;
         let tag = reader.read_u8().map_err(|e| protocol::ProtocolError::Malformed { what: "op tag", offset: 1, detail: e.to_string() })?;
@@ -304,7 +304,7 @@ impl OpBinary for StlMutation {
 /// conformance_law`/`protocol_walk_law` (same reuse pattern `binary`'s own `demo_mutation_cases`
 /// establishes).
 #[cfg(test)]
-pub(crate) fn demo_mutation_cases() -> Vec<StlMutation> {
+pub(crate) async fn demo_mutation_cases() -> Vec<StlMutation> {
     let base = StlSnapshot { schema: crate::artifacts::stl::STDIO_STL_DOCUMENT_SCHEMA.into(), solid_name: "mesh".into(), triangles: vec![StlTriangle { normal: [0.0, 0.0, 1.0], vertices: [[0.0, 0.0, 0.0], [1.0, 0.0, 0.0], [0.0, 1.0, 0.0]] }] };
     vec![
         StlMutation::NoMutation,
@@ -327,17 +327,17 @@ mod tests {
     use protocol::{DiffCodec, MutationDiff};
 
     //#region Fixtures
-    fn tri(nx: f64, ny: f64, nz: f64, seed: f64) -> StlTriangle {
+    async fn tri(nx: f64, ny: f64, nz: f64, seed: f64) -> StlTriangle {
         StlTriangle { normal: [nx, ny, nz], vertices: [[seed, 0.0, 0.0], [seed + 1.0, 0.0, 0.0], [seed, 1.0, 0.0]] }
     }
 
-    fn base_snapshot() -> StlSnapshot {
+    async fn base_snapshot() -> StlSnapshot {
         StlSnapshot { schema: "stdio.stl".into(), solid_name: "mesh".into(), triangles: vec![tri(0.0, 0.0, 1.0, 0.0), tri(0.0, 0.0, 1.0, 10.0), tri(0.0, 0.0, 1.0, 20.0)] }
     }
     //#endregion Fixtures
 
     //#region 🔖️mutation_diff_law
-    fn assert_mutation_diff_law(base: &StlSnapshot, mutation: StlMutation) {
+    async fn assert_mutation_diff_law(base: &StlSnapshot, mutation: StlMutation) {
         let expected_diff = mutation.diff(base);
         let mut applied_snapshot = base.clone();
         let returned_diff = apply_stl_mutation(&mut applied_snapshot, &mutation);
@@ -346,7 +346,7 @@ mod tests {
     }
 
     #[test]
-    fn mutation_diff_law() {
+    async fn mutation_diff_law() {
         let base = base_snapshot();
         assert_mutation_diff_law(&base, StlMutation::NoMutation);
         let mut alt = base.clone();
@@ -362,7 +362,7 @@ mod tests {
 
     //#region 🔖️inverse_law
     #[test]
-    fn inverse_law() {
+    async fn inverse_law() {
         let base = base_snapshot();
         let variants = vec![
             StlMutation::NoMutation,
@@ -391,7 +391,7 @@ mod tests {
     //#endregion 🔖️inverse_law
 
     //#region 🔖️absorb_law
-    fn assert_absorb_law(base: &StlSnapshot, m1: StlMutation, m2: StlMutation) {
+    async fn assert_absorb_law(base: &StlSnapshot, m1: StlMutation, m2: StlMutation) {
         let d1 = m1.diff(base);
         let mid = d1.diff().apply(base).expect("valid first diff");
         let d2 = m2.diff(&mid);
@@ -403,7 +403,7 @@ mod tests {
     }
 
     #[test]
-    fn absorb_law() {
+    async fn absorb_law() {
         let base = base_snapshot();
 
         // Insert+Remove-before: added triangle lands correctly once an earlier-positioned base
@@ -430,7 +430,7 @@ mod tests {
     }
 
     #[test]
-    fn absorb_law_associativity() {
+    async fn absorb_law_associativity() {
         let base = base_snapshot();
         let d1 = StlMutation::SetSolidName { name: "one".into() }.diff(&base);
         let mid1 = d1.diff().apply(&base).expect("valid first diff");
@@ -456,7 +456,7 @@ mod tests {
 
     //#region 🔖️between_roundtrip_law
     #[test]
-    fn between_roundtrip_law() {
+    async fn between_roundtrip_law() {
         let a = base_snapshot();
         let mut b = base_snapshot();
         b.solid_name = "changed solid name".into();
@@ -474,7 +474,7 @@ mod tests {
 
     //#region 🔖️codec_retention_law
     #[test]
-    fn codec_retention_law() {
+    async fn codec_retention_law() {
         let bytes = std::fs::read(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🗿️artifacts/🟪️stl/📚️examples/🎬️demo/🖼️assets/🟪️example.stl"));
         let decoded = bytes
             .ok()
@@ -498,11 +498,11 @@ mod tests {
     /// single `between()` call, never both; asymmetric lengths + asserting across BOTH
     /// directions is the correct way to exercise every triple-kind, matching `txt`'s field_sweep
     /// fix for the identical structural issue).
-    fn sweep_a() -> StlSnapshot {
+    async fn sweep_a() -> StlSnapshot {
         StlSnapshot { schema: "stdio.stl".into(), solid_name: "before".into(), triangles: vec![tri(1.0, 0.0, 0.0, 0.0), tri(0.0, 1.0, 0.0, 10.0)] }
     }
 
-    fn sweep_b() -> StlSnapshot {
+    async fn sweep_b() -> StlSnapshot {
         StlSnapshot {
             schema: "stdio.stl".into(),
             solid_name: "after".into(),
@@ -515,7 +515,7 @@ mod tests {
     }
 
     #[test]
-    fn field_sweep_covers_every_mutable_field() {
+    async fn field_sweep_covers_every_mutable_field() {
         let a = sweep_a();
         let b = sweep_b();
 
@@ -555,7 +555,7 @@ mod tests {
     /// `assert_absorb_law`'s apply-equivalence) — `Insert(2)+Remove(0)` and
     /// `Insert(2,f)+Insert(2,g)`.
     #[test]
-    fn insert_then_remove_before_matches_canonical_shape() {
+    async fn insert_then_remove_before_matches_canonical_shape() {
         let d1 = StlDiff { solid_name: None, triangles: Some(StlTrianglesDiff { removed: vec![], modified: vec![], added: vec![StlTriangleAdded { index: 2, triangle: tri(1.0, 0.0, 0.0, 1.0) }] }) };
         let d2 = StlDiff { solid_name: None, triangles: Some(StlTrianglesDiff { removed: vec![0], modified: vec![], added: vec![] }) };
         let mut merged = d1.clone();
@@ -574,7 +574,7 @@ mod tests {
     }
 
     #[test]
-    fn insert_insert_same_index_both_survive() {
+    async fn insert_insert_same_index_both_survive() {
         let d1 = StlDiff { solid_name: None, triangles: Some(StlTrianglesDiff { removed: vec![], modified: vec![], added: vec![StlTriangleAdded { index: 2, triangle: tri(1.0, 0.0, 0.0, 1.0) }] }) };
         let d2 = StlDiff { solid_name: None, triangles: Some(StlTrianglesDiff { removed: vec![], modified: vec![], added: vec![StlTriangleAdded { index: 2, triangle: tri(0.0, 1.0, 0.0, 2.0) }] }) };
         let mut merged = d1.clone();
@@ -589,7 +589,7 @@ mod tests {
     }
 
     #[test]
-    fn add_then_set_field_patches_into_added() {
+    async fn add_then_set_field_patches_into_added() {
         let d1 = StlDiff { solid_name: None, triangles: Some(StlTrianglesDiff { removed: vec![], modified: vec![], added: vec![StlTriangleAdded { index: 1, triangle: tri(1.0, 0.0, 0.0, 1.0) }] }) };
         let d2 = StlDiff { solid_name: None, triangles: Some(StlTrianglesDiff { removed: vec![], modified: vec![StlTriangleModified { index: 1, diff: StlTriangleDiff { normal: Some([0.0, 1.0, 0.0]), vertices: None } }], added: vec![] }) };
         let mut merged = d1.clone();
@@ -609,7 +609,7 @@ mod tests {
     //#endregion 🔖️CanonicalCases
 
     #[test]
-    fn out_of_range_triangle_mutation_is_rejected_without_mutating() {
+    async fn out_of_range_triangle_mutation_is_rejected_without_mutating() {
         let base = base_snapshot();
         let mut snap = base.clone();
         let outcome = apply_stl_mutation(&mut snap, &StlMutation::SetTriangleNormal { index: 999, normal: [1.0, 1.0, 1.0] });
@@ -627,7 +627,7 @@ mod tests {
     /// `SetTriangleVertices`) that carry the doubly-nested `[[f64; 3]; 3]` the `dsl`-derive bug
     /// blocks.
     #[test]
-    fn op_text_binary_roundtrip_law() {
+    async fn op_text_binary_roundtrip_law() {
         // FG1: reuses `demo_mutation_cases()` (this file's own `DemoCases` region, above), the
         // single source of truth also exercised by `⚙️engine::conformance_laws`'s `ops_grammar_
         // conformance_law`/`protocol_walk_law` — same reuse pattern `binary`'s own pilot precedent.
@@ -648,7 +648,7 @@ mod tests {
     /// (`removed`/`modified`/`added`), incl. the doubly-nested `vertices` field, simultaneously via
     /// real `between()` results in both directions.
     #[test]
-    fn diff_codec_text_binary_roundtrip_law() {
+    async fn diff_codec_text_binary_roundtrip_law() {
         // FG1: reuses `diff::demo_diff_cases()` (this artifact's `🔺️diff::component`'s own
         // `DemoCases` region), the single source of truth also exercised by `⚙️engine::
         // conformance_laws`'s `diff_grammar_conformance_law`/`protocol_walk_law`.

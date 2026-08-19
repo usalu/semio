@@ -13,37 +13,37 @@ use std::collections::{BTreeMap, BinaryHeap, HashMap, HashSet, VecDeque};
 
 // #region 🔖️TriMesh
 /// ➕️ Adds two 3-vectors.
-fn add3(a: [f64; 3], b: [f64; 3]) -> [f64; 3] {
+async fn add3(a: [f64; 3], b: [f64; 3]) -> [f64; 3] {
     [a[0] + b[0], a[1] + b[1], a[2] + b[2]]
 }
 
 /// ➖️ Subtracts two 3-vectors.
-fn sub3(a: [f64; 3], b: [f64; 3]) -> [f64; 3] {
+async fn sub3(a: [f64; 3], b: [f64; 3]) -> [f64; 3] {
     [a[0] - b[0], a[1] - b[1], a[2] - b[2]]
 }
 
 /// ✖️ Scales a 3-vector.
-fn scale3(a: [f64; 3], s: f64) -> [f64; 3] {
+async fn scale3(a: [f64; 3], s: f64) -> [f64; 3] {
     [a[0] * s, a[1] * s, a[2] * s]
 }
 
 /// 🔀️ Cross product of two 3-vectors.
-fn cross3(a: [f64; 3], b: [f64; 3]) -> [f64; 3] {
+async fn cross3(a: [f64; 3], b: [f64; 3]) -> [f64; 3] {
     [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]]
 }
 
 /// 🔵️ Dot product of two 3-vectors.
-fn dot3(a: [f64; 3], b: [f64; 3]) -> f64 {
+async fn dot3(a: [f64; 3], b: [f64; 3]) -> f64 {
     a[0] * b[0] + a[1] * b[1] + a[2] * b[2]
 }
 
 /// 📏️ Euclidean norm of a 3-vector.
-fn norm3(a: [f64; 3]) -> f64 {
+async fn norm3(a: [f64; 3]) -> f64 {
     dot3(a, a).sqrt()
 }
 
 /// 🧭️ Unit-length copy of `a`, or `[0,0,0]` when `a` is (numerically) the zero vector.
-fn normalize3(a: [f64; 3]) -> [f64; 3] {
+async fn normalize3(a: [f64; 3]) -> [f64; 3] {
     let n = norm3(a);
     if n < 1e-15 {
         [0.0, 0.0, 0.0]
@@ -53,13 +53,13 @@ fn normalize3(a: [f64; 3]) -> [f64; 3] {
 }
 
 /// 🎯️ Linear interpolation between two 3-points.
-fn lerp3(a: [f64; 3], b: [f64; 3], t: f64) -> [f64; 3] {
+async fn lerp3(a: [f64; 3], b: [f64; 3], t: f64) -> [f64; 3] {
     add3(a, scale3(sub3(b, a), t))
 }
 
 /// 🧮️ Builds a dense `MatD` from row-major `f64` rows (`MatD` itself only exposes `zeros`/`set`,
 /// unlike the generic `MatG<T>::from_rows`).
-fn matd_from_rows(rows: &[Vec<f64>]) -> crate::algebra::MatD {
+async fn matd_from_rows(rows: &[Vec<f64>]) -> crate::algebra::MatD {
     let r = rows.len();
     let c = rows.first().map_or(0, Vec::len);
     let mut m = crate::algebra::MatD::zeros(r, c);
@@ -85,7 +85,7 @@ pub struct TriMesh {
 pub type EdgeMap = BTreeMap<(u32, u32), Vec<u32>>;
 
 /// 🔗️ Canonical (sorted) undirected edge key for a vertex pair.
-fn sorted_edge(a: u32, b: u32) -> (u32, u32) {
+async fn sorted_edge(a: u32, b: u32) -> (u32, u32) {
     if a <= b {
         (a, b)
     } else {
@@ -94,20 +94,20 @@ fn sorted_edge(a: u32, b: u32) -> (u32, u32) {
 }
 
 impl TriMesh {
-    pub fn new() -> Self {
+    pub async fn new() -> Self {
         Self { positions: Vec::new(), triangles: Vec::new() }
     }
 
-    pub fn vertex_count(&self) -> usize {
+    pub async fn vertex_count(&self) -> usize {
         self.positions.len()
     }
 
-    pub fn triangle_count(&self) -> usize {
+    pub async fn triangle_count(&self) -> usize {
         self.triangles.len()
     }
 
     /// 🗺️ Builds the sorted-edge → incident-face-indices map from `triangles`.
-    pub fn edge_map(&self) -> EdgeMap {
+    pub async fn edge_map(&self) -> EdgeMap {
         let mut map: EdgeMap = BTreeMap::new();
         for (f, tri) in self.triangles.iter().enumerate() {
             for k in 0..3 {
@@ -119,27 +119,27 @@ impl TriMesh {
     }
 
     /// 🔽️ Unnormalized area-weighted normal of triangle `f` (`|result| == 2 * area`).
-    pub fn face_normal_unnormalized(&self, f: usize) -> [f64; 3] {
+    pub async fn face_normal_unnormalized(&self, f: usize) -> [f64; 3] {
         let tri = self.triangles[f];
         let (a, b, c) = (self.positions[tri[0] as usize], self.positions[tri[1] as usize], self.positions[tri[2] as usize]);
         cross3(sub3(b, a), sub3(c, a))
     }
 
-    pub fn face_normal(&self, f: usize) -> [f64; 3] {
+    pub async fn face_normal(&self, f: usize) -> [f64; 3] {
         normalize3(self.face_normal_unnormalized(f))
     }
 
-    pub fn face_area(&self, f: usize) -> f64 {
+    pub async fn face_area(&self, f: usize) -> f64 {
         norm3(self.face_normal_unnormalized(f)) * 0.5
     }
 
-    pub fn face_centroid(&self, f: usize) -> [f64; 3] {
+    pub async fn face_centroid(&self, f: usize) -> [f64; 3] {
         let tri = self.triangles[f];
         let (a, b, c) = (self.positions[tri[0] as usize], self.positions[tri[1] as usize], self.positions[tri[2] as usize]);
         scale3(add3(add3(a, b), c), 1.0 / 3.0)
     }
 
-    pub fn bbox(&self) -> ([f64; 3], [f64; 3]) {
+    pub async fn bbox(&self) -> ([f64; 3], [f64; 3]) {
         let mut lo = [f64::INFINITY; 3];
         let mut hi = [f64::NEG_INFINITY; 3];
         for p in &self.positions {
@@ -155,14 +155,14 @@ impl TriMesh {
         (lo, hi)
     }
 
-    pub fn bbox_diagonal(&self) -> f64 {
+    pub async fn bbox_diagonal(&self) -> f64 {
         let (lo, hi) = self.bbox();
         norm3(sub3(hi, lo))
     }
 
     /// 🧮️ Signed volume via the divergence theorem, summing signed tetrahedron volumes from the
     /// origin over every triangle; positive for a consistently outward-wound closed mesh.
-    pub fn signed_volume(&self) -> f64 {
+    pub async fn signed_volume(&self) -> f64 {
         let mut total = 0.0;
         for tri in &self.triangles {
             let (a, b, c) = (self.positions[tri[0] as usize], self.positions[tri[1] as usize], self.positions[tri[2] as usize]);
@@ -173,7 +173,7 @@ impl TriMesh {
 
     /// 🧭️ Area-weighted per-vertex normals, accumulated from face normals over each vertex's
     /// incident triangles.
-    pub fn compute_vertex_normals(&self) -> Vec<[f64; 3]> {
+    pub async fn compute_vertex_normals(&self) -> Vec<[f64; 3]> {
         let mut normals = vec![[0.0; 3]; self.positions.len()];
         for (f, tri) in self.triangles.iter().enumerate() {
             let n = self.face_normal_unnormalized(f);
@@ -196,11 +196,11 @@ struct DisjointSet {
 }
 
 impl DisjointSet {
-    fn new(n: usize) -> Self {
+    async fn new(n: usize) -> Self {
         Self { parent: (0..n as u32).collect(), size: vec![1; n] }
     }
 
-    fn find(&mut self, x: u32) -> u32 {
+    async fn find(&mut self, x: u32) -> u32 {
         let mut root = x;
         while self.parent[root as usize] != root {
             root = self.parent[root as usize];
@@ -214,7 +214,7 @@ impl DisjointSet {
         root
     }
 
-    fn union(&mut self, a: u32, b: u32) {
+    async fn union(&mut self, a: u32, b: u32) {
         let (ra, rb) = (self.find(a), self.find(b));
         if ra == rb {
             return;
@@ -238,7 +238,7 @@ pub enum TopologyError {
 }
 
 impl std::fmt::Display for TopologyError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    async fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::NonManifoldEdge { a, b, face_count } => write!(f, "edge ({a},{b}) has {face_count} incident faces"),
             Self::InconsistentOrientation { a, b } => write!(f, "edge ({a},{b}) is traversed the same direction by two faces"),
@@ -268,7 +268,7 @@ impl HalfedgeTopology {
     /// 🏗️ Builds halfedge adjacency, rejecting anything that isn't already an oriented 2-manifold:
     /// every edge has at most 2 incident faces, each directed edge appears at most once, and every
     /// vertex's incident faces form a single fan (no pinch points).
-    pub fn build(mesh: &TriMesh) -> Result<Self, TopologyError> {
+    pub async fn build(mesh: &TriMesh) -> Result<Self, TopologyError> {
         for (idx, tri) in mesh.triangles.iter().enumerate() {
             if tri[0] == tri[1] || tri[1] == tri[2] || tri[0] == tri[2] {
                 return Err(TopologyError::DegenerateTriangle(idx));
@@ -309,13 +309,13 @@ impl HalfedgeTopology {
         Ok(topology)
     }
 
-    fn destination(&self, he: u32) -> u32 {
+    async fn destination(&self, he: u32) -> u32 {
         self.halfedges[self.halfedges[he as usize].next as usize].origin
     }
 
     /// 🌀️ Rejects pinch vertices: walks the fan around every vertex (via `twin`/`next`) from each
     /// outgoing halfedge and confirms every halfedge originating there is reached by a single walk.
-    fn check_vertex_fans(&self, vertex_count: usize) -> Result<(), TopologyError> {
+    async fn check_vertex_fans(&self, vertex_count: usize) -> Result<(), TopologyError> {
         let mut outgoing: Vec<Vec<u32>> = vec![Vec::new(); vertex_count];
         for (id, he) in self.halfedges.iter().enumerate() {
             outgoing[he.origin as usize].push(id as u32);
@@ -342,7 +342,7 @@ impl HalfedgeTopology {
         Ok(())
     }
 
-    fn prev(&self, he: u32) -> u32 {
+    async fn prev(&self, he: u32) -> u32 {
         let mut cur = he;
         loop {
             let next = self.halfedges[cur as usize].next;
@@ -355,7 +355,7 @@ impl HalfedgeTopology {
 
     /// 🔁️ Every boundary loop (halfedges with no twin), each as an ordered vertex cycle; empty
     /// when the mesh is already closed.
-    pub fn boundary_loops(&self) -> Vec<Vec<u32>> {
+    pub async fn boundary_loops(&self) -> Vec<Vec<u32>> {
         let mut boundary_out: BTreeMap<u32, u32> = BTreeMap::new();
         for (id, he) in self.halfedges.iter().enumerate() {
             if he.twin.is_none() {
@@ -399,7 +399,7 @@ type Lattice = (i32, i32, i32);
 struct EdgeKey(Lattice, Lattice);
 
 impl EdgeKey {
-    fn new(a: Lattice, b: Lattice) -> Self {
+    async fn new(a: Lattice, b: Lattice) -> Self {
         if a <= b {
             Self(a, b)
         } else {
@@ -416,7 +416,7 @@ struct Corner {
     val: f64,
 }
 
-fn lattice_add(c: Lattice, d: (i32, i32, i32)) -> Lattice {
+async fn lattice_add(c: Lattice, d: (i32, i32, i32)) -> Lattice {
     (c.0 + d.0, c.1 + d.1, c.2 + d.2)
 }
 
@@ -425,7 +425,7 @@ fn lattice_add(c: Lattice, d: (i32, i32, i32)) -> Lattice {
 /// cubes sharing a face always assign identical global vertices to identical relative corner
 /// slots on that shared face — which is exactly what makes the face-diagonal split agree between
 /// neighbors and keeps extraction crack-free without any per-face ambiguity test.
-fn cube_tets(corners: &[Corner; 8]) -> [[Corner; 4]; 6] {
+async fn cube_tets(corners: &[Corner; 8]) -> [[Corner; 4]; 6] {
     let (c0, c1, c2, c3, c4, c5, c6, c7) = (corners[0], corners[1], corners[2], corners[3], corners[4], corners[5], corners[6], corners[7]);
     [[c0, c1, c2, c6], [c0, c2, c3, c6], [c0, c3, c7, c6], [c0, c7, c4, c6], [c0, c4, c5, c6], [c0, c5, c1, c6]]
 }
@@ -433,7 +433,7 @@ fn cube_tets(corners: &[Corner; 8]) -> [[Corner; 4]; 6] {
 /// 🎯️ Weight of the requested triangle normal orientation relative to `odd`: `+1.0` when the lone
 /// differing vertex is inside the surface (normal should point away from it), `-1.0` when it's
 /// outside (normal should point toward it) — see `march_tet`'s doc for the full derivation.
-fn orient_triangle(positions: &[[f64; 3]], tri: &mut [u32; 3], odd_pos: [f64; 3], desired_sign: f64) {
+async fn orient_triangle(positions: &[[f64; 3]], tri: &mut [u32; 3], odd_pos: [f64; 3], desired_sign: f64) {
     let (a, b, c) = (positions[tri[0] as usize], positions[tri[1] as usize], positions[tri[2] as usize]);
     let normal = cross3(sub3(b, a), sub3(c, a));
     let centroid = scale3(add3(add3(a, b), c), 1.0 / 3.0);
@@ -445,7 +445,7 @@ fn orient_triangle(positions: &[[f64; 3]], tri: &mut [u32; 3], odd_pos: [f64; 3]
 /// 🪚️ Weld helper: returns the (possibly newly created) global vertex index for the isosurface
 /// crossing point between two corners, canonicalizing argument order first so both directions of
 /// traversal hash to the same key and interpolate to the bit-identical position.
-fn weld_edge(weld: &mut HashMap<EdgeKey, u32>, positions: &mut Vec<[f64; 3]>, a: Corner, b: Corner, iso: f64) -> u32 {
+async fn weld_edge(weld: &mut HashMap<EdgeKey, u32>, positions: &mut Vec<[f64; 3]>, a: Corner, b: Corner, iso: f64) -> u32 {
     let (lo, hi) = if a.key <= b.key { (a, b) } else { (b, a) };
     let key = EdgeKey::new(lo.key, hi.key);
     if let Some(&idx) = weld.get(&key) {
@@ -466,7 +466,7 @@ fn weld_edge(weld: &mut HashMap<EdgeKey, u32>, positions: &mut Vec<[f64; 3]>, a:
 /// vertex's side toward the other side), which independently reproduces the same globally
 /// consistent orientation on every tet, so two triangles sharing a welded edge always end up
 /// wound oppositely along it without any extra bookkeeping.
-fn march_tet(corners: [Corner; 4], iso: f64, weld: &mut HashMap<EdgeKey, u32>, positions: &mut Vec<[f64; 3]>, tris: &mut Vec<[u32; 3]>) {
+async fn march_tet(corners: [Corner; 4], iso: f64, weld: &mut HashMap<EdgeKey, u32>, positions: &mut Vec<[f64; 3]>, tris: &mut Vec<[u32; 3]>) {
     let inside: [bool; 4] = std::array::from_fn(|i| corners[i].val < iso);
     let inside_count = inside.iter().filter(|&&b| b).count();
     if inside_count == 0 || inside_count == 4 {
@@ -513,7 +513,7 @@ fn march_tet(corners: [Corner; 4], iso: f64, weld: &mut HashMap<EdgeKey, u32>, p
 /// block enumeration, so the caller (who performed the integration and knows the reconstruction
 /// volume's extent) supplies the search domain explicitly; this is the one deliberate signature
 /// deviation from the plan's parameterless `extract_tsdf(vol, iso)`.
-pub fn extract_tsdf(vol: &remodel_dense::TsdfVolume, iso: f64, bounds_min: [i32; 3], bounds_max: [i32; 3]) -> TriMesh {
+pub async fn extract_tsdf(vol: &remodel_dense::TsdfVolume, iso: f64, bounds_min: [i32; 3], bounds_max: [i32; 3]) -> TriMesh {
     let sample = |c: Lattice| -> Option<Corner> {
         let (sdf, _weight) = vol.sample(c.0, c.1, c.2)?;
         let p = [(c.0 as f64 + 0.5) * vol.voxel_size, (c.1 as f64 + 0.5) * vol.voxel_size, (c.2 as f64 + 0.5) * vol.voxel_size];
@@ -563,28 +563,28 @@ pub struct DenseField {
 }
 
 impl DenseField {
-    pub fn new(nx: usize, ny: usize, nz: usize, origin: [f64; 3], voxel: f64, fill: f64) -> Self {
+    pub async fn new(nx: usize, ny: usize, nz: usize, origin: [f64; 3], voxel: f64, fill: f64) -> Self {
         Self { nx, ny, nz, origin, voxel, values: vec![fill; nx * ny * nz] }
     }
 
-    fn index(&self, i: i32, j: i32, k: i32) -> Option<usize> {
+    async fn index(&self, i: i32, j: i32, k: i32) -> Option<usize> {
         if i < 0 || j < 0 || k < 0 || i as usize >= self.nx || j as usize >= self.ny || k as usize >= self.nz {
             return None;
         }
         Some((k as usize * self.ny + j as usize) * self.nx + i as usize)
     }
 
-    pub fn get(&self, i: i32, j: i32, k: i32) -> Option<f64> {
+    pub async fn get(&self, i: i32, j: i32, k: i32) -> Option<f64> {
         self.index(i, j, k).map(|idx| self.values[idx])
     }
 
-    pub fn set(&mut self, i: i32, j: i32, k: i32, value: f64) {
+    pub async fn set(&mut self, i: i32, j: i32, k: i32, value: f64) {
         if let Some(idx) = self.index(i, j, k) {
             self.values[idx] = value;
         }
     }
 
-    pub fn world_corner(&self, i: i32, j: i32, k: i32) -> [f64; 3] {
+    pub async fn world_corner(&self, i: i32, j: i32, k: i32) -> [f64; 3] {
         add3(self.origin, scale3([i as f64, j as f64, k as f64], self.voxel))
     }
 }
@@ -593,7 +593,7 @@ impl DenseField {
 /// unknown-corner skipping is needed) — same crack-free tetrahedral kernel as [`extract_tsdf`],
 /// reused verbatim rather than re-implemented, so the [`close_voxel`] fallback's correctness rests
 /// on the identical, already-tested welding and orientation logic.
-pub fn extract_dense_grid(field: &DenseField, iso: f64) -> TriMesh {
+pub async fn extract_dense_grid(field: &DenseField, iso: f64) -> TriMesh {
     let mut weld: HashMap<EdgeKey, u32> = HashMap::new();
     let mut positions: Vec<[f64; 3]> = Vec::new();
     let mut triangles: Vec<[u32; 3]> = Vec::new();
@@ -631,7 +631,7 @@ pub struct CleanStats {
 /// `min_component_bbox_fraction` of the mesh's bounding-box diagonal (a component only drops when
 /// both are true, so a single huge thin sliver-heavy component never gets removed by face count
 /// alone).
-pub fn clean_mesh(mesh: &mut TriMesh, min_component_faces: usize, min_component_bbox_fraction: f64) -> CleanStats {
+pub async fn clean_mesh(mesh: &mut TriMesh, min_component_faces: usize, min_component_bbox_fraction: f64) -> CleanStats {
     let vertices_welded = weld_duplicate_vertices(mesh);
     let mut degenerate_triangles_removed = remove_degenerate_and_duplicate_triangles(mesh);
     let zero_length_edges_collapsed = collapse_zero_length_edges(mesh);
@@ -640,7 +640,7 @@ pub fn clean_mesh(mesh: &mut TriMesh, min_component_faces: usize, min_component_
     CleanStats { vertices_welded, degenerate_triangles_removed, zero_length_edges_collapsed, small_components_removed }
 }
 
-fn weld_duplicate_vertices(mesh: &mut TriMesh) -> usize {
+async fn weld_duplicate_vertices(mesh: &mut TriMesh) -> usize {
     let mut first_index: HashMap<[u64; 3], u32> = HashMap::new();
     let mut remap = vec![0u32; mesh.positions.len()];
     let mut new_positions = Vec::with_capacity(mesh.positions.len());
@@ -669,7 +669,7 @@ fn weld_duplicate_vertices(mesh: &mut TriMesh) -> usize {
     welded
 }
 
-fn remove_degenerate_and_duplicate_triangles(mesh: &mut TriMesh) -> usize {
+async fn remove_degenerate_and_duplicate_triangles(mesh: &mut TriMesh) -> usize {
     let mut seen: HashSet<(u32, u32, u32)> = HashSet::new();
     let before = mesh.triangles.len();
     let mut kept = Vec::with_capacity(mesh.triangles.len());
@@ -691,7 +691,7 @@ fn remove_degenerate_and_duplicate_triangles(mesh: &mut TriMesh) -> usize {
     before - mesh.triangles.len()
 }
 
-fn collapse_zero_length_edges(mesh: &mut TriMesh) -> usize {
+async fn collapse_zero_length_edges(mesh: &mut TriMesh) -> usize {
     let mut dsu = DisjointSet::new(mesh.positions.len());
     let mut collapsed = 0usize;
     for tri in &mesh.triangles {
@@ -728,7 +728,7 @@ fn collapse_zero_length_edges(mesh: &mut TriMesh) -> usize {
     collapsed
 }
 
-fn remove_small_components(mesh: &mut TriMesh, min_faces: usize, min_bbox_fraction: f64) -> usize {
+async fn remove_small_components(mesh: &mut TriMesh, min_faces: usize, min_bbox_fraction: f64) -> usize {
     if mesh.triangles.is_empty() {
         return 0;
     }
@@ -775,7 +775,7 @@ fn remove_small_components(mesh: &mut TriMesh, min_faces: usize, min_bbox_fracti
 /// iteration, which — unlike plain Laplacian smoothing — does not shrink the mesh over many
 /// iterations. Boundary vertices are smoothed too (no boundary pinning): callers that need crisp
 /// boundaries should smooth before hole-filling.
-pub fn taubin_smooth(mesh: &mut TriMesh, lambda: f64, mu: f64, iterations: usize) {
+pub async fn taubin_smooth(mesh: &mut TriMesh, lambda: f64, mu: f64, iterations: usize) {
     if mesh.positions.is_empty() {
         return;
     }
@@ -830,7 +830,7 @@ pub struct RepairStats {
 /// would leave that neighbor pointing at the old vertex, orphaning the edge between them (a bug an
 /// earlier version of this function had — verified by
 /// `repair_splits_bowtie_edge_into_two_components`, which plants exactly this shape).
-fn group_faces_by_manifold_connectivity(mesh: &TriMesh, seed_faces: &[u32], edges: &EdgeMap, a: u32, b: u32) -> Vec<Vec<u32>> {
+async fn group_faces_by_manifold_connectivity(mesh: &TriMesh, seed_faces: &[u32], edges: &EdgeMap, a: u32, b: u32) -> Vec<Vec<u32>> {
     let mut dsu = DisjointSet::new(mesh.triangles.len());
     for face_list in edges.values() {
         if face_list.len() == 2 {
@@ -849,7 +849,7 @@ fn group_faces_by_manifold_connectivity(mesh: &TriMesh, seed_faces: &[u32], edge
 /// pinch vertices (duplicating per excess fan), each via
 /// [`group_faces_by_manifold_connectivity`], until every edge has at most 2 incident faces and
 /// every vertex's incident faces form a single fan.
-pub fn repair_non_manifold(mesh: &mut TriMesh) -> RepairStats {
+pub async fn repair_non_manifold(mesh: &mut TriMesh) -> RepairStats {
     let mut stats = RepairStats::default();
     loop {
         let edges = mesh.edge_map();
@@ -944,7 +944,7 @@ pub enum OrientError {
 }
 
 impl std::fmt::Display for OrientError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    async fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "could not consistently orient mesh after retry")
     }
 }
@@ -953,7 +953,7 @@ impl std::error::Error for OrientError {}
 
 /// 🌊️ One iterative (non-recursive) BFS winding flood: returns the set of edges where the flood
 /// found two already-visited faces disagreeing on direction.
-fn orient_flood(mesh: &mut TriMesh, edges: &EdgeMap) -> Vec<(u32, u32)> {
+async fn orient_flood(mesh: &mut TriMesh, edges: &EdgeMap) -> Vec<(u32, u32)> {
     let n = mesh.triangles.len();
     let mut visited = vec![false; n];
     let mut conflicts = Vec::new();
@@ -996,7 +996,7 @@ fn orient_flood(mesh: &mut TriMesh, edges: &EdgeMap) -> Vec<(u32, u32)> {
 
 /// 🩹️ Duplicates the shared vertices of each listed edge for one of its two faces, turning it into
 /// two boundary edges (a legitimate cut, left for [`fill_holes`] or [`close_voxel`] to resolve).
-fn split_edges_as_boundary(mesh: &mut TriMesh, conflict_edges: &[(u32, u32)]) {
+async fn split_edges_as_boundary(mesh: &mut TriMesh, conflict_edges: &[(u32, u32)]) {
     let edges = mesh.edge_map();
     for &(a, b) in conflict_edges {
         let Some(faces) = edges.get(&(a, b)) else { continue };
@@ -1019,7 +1019,7 @@ fn split_edges_as_boundary(mesh: &mut TriMesh, conflict_edges: &[(u32, u32)]) {
 /// flipping disagreeing faces; on an unresolvable conflict (only possible across a non-orientable
 /// loop) it cuts those edges once and retries, and only reports [`OrientError`] if the retry also
 /// fails — signaling the caller to fall back to [`close_voxel`].
-pub fn orient_consistently(mesh: &mut TriMesh) -> Result<(), OrientError> {
+pub async fn orient_consistently(mesh: &mut TriMesh) -> Result<(), OrientError> {
     for attempt in 0..2 {
         let edges = mesh.edge_map();
         let conflicts = orient_flood(mesh, &edges);
@@ -1036,7 +1036,7 @@ pub fn orient_consistently(mesh: &mut TriMesh) -> Result<(), OrientError> {
 
 /// 🧭️ Global outward-normal flip via [`TriMesh::signed_volume`] — only meaningful once the mesh is
 /// closed, since an open mesh's signed volume is not a reliable inside/outside signal.
-pub fn orient_outward(mesh: &mut TriMesh) {
+pub async fn orient_outward(mesh: &mut TriMesh) {
     if mesh.signed_volume() < 0.0 {
         for tri in &mut mesh.triangles {
             tri.swap(1, 2);
@@ -1052,7 +1052,7 @@ pub struct HoleFillParams {
 }
 
 impl Default for HoleFillParams {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self { max_boundary_verts: 512 }
     }
 }
@@ -1068,7 +1068,7 @@ pub struct HoleFillStats {
     pub advancing_front_capped: usize,
 }
 
-fn interior_angle(prev: [f64; 3], cur: [f64; 3], next: [f64; 3]) -> f64 {
+async fn interior_angle(prev: [f64; 3], cur: [f64; 3], next: [f64; 3]) -> f64 {
     let a = normalize3(sub3(prev, cur));
     let b = normalize3(sub3(next, cur));
     dot3(a, b).clamp(-1.0, 1.0).acos()
@@ -1076,7 +1076,7 @@ fn interior_angle(prev: [f64; 3], cur: [f64; 3], next: [f64; 3]) -> f64 {
 
 /// 📐️ Local planar basis for a (roughly planar) boundary loop via Newell's method, used to project
 /// the loop to 2D for ear-clipping's point-in-triangle containment tests.
-fn loop_basis(positions: &[[f64; 3]]) -> ([f64; 3], [f64; 3], [f64; 3]) {
+async fn loop_basis(positions: &[[f64; 3]]) -> ([f64; 3], [f64; 3], [f64; 3]) {
     let mut normal = [0.0; 3];
     let n = positions.len();
     for i in 0..n {
@@ -1093,12 +1093,12 @@ fn loop_basis(positions: &[[f64; 3]]) -> ([f64; 3], [f64; 3], [f64; 3]) {
     (ex, ey, normal)
 }
 
-fn to_2d(p: [f64; 3], origin: [f64; 3], ex: [f64; 3], ey: [f64; 3]) -> [f64; 2] {
+async fn to_2d(p: [f64; 3], origin: [f64; 3], ex: [f64; 3], ey: [f64; 3]) -> [f64; 2] {
     let d = sub3(p, origin);
     [dot3(d, ex), dot3(d, ey)]
 }
 
-fn point_in_triangle_2d(p: [f64; 2], a: [f64; 2], b: [f64; 2], c: [f64; 2]) -> bool {
+async fn point_in_triangle_2d(p: [f64; 2], a: [f64; 2], b: [f64; 2], c: [f64; 2]) -> bool {
     let sign = |p1: [f64; 2], p2: [f64; 2], p3: [f64; 2]| (p1[0] - p3[0]) * (p2[1] - p3[1]) - (p2[0] - p3[0]) * (p1[1] - p3[1]);
     let d1 = sign(p, a, b);
     let d2 = sign(p, b, c);
@@ -1110,7 +1110,7 @@ fn point_in_triangle_2d(p: [f64; 2], a: [f64; 2], b: [f64; 2], c: [f64; 2]) -> b
 
 /// ✂️ Standard 2D ear-clipping: repeatedly clips the valid convex ear with the smallest interior
 /// angle until 3 vertices remain.
-fn ear_clip(mut ring: Vec<usize>, pts2d: &[[f64; 2]]) -> Vec<[usize; 3]> {
+async fn ear_clip(mut ring: Vec<usize>, pts2d: &[[f64; 2]]) -> Vec<[usize; 3]> {
     let mut tris = Vec::new();
     while ring.len() > 3 {
         let n = ring.len();
@@ -1157,23 +1157,23 @@ struct DpWeight {
 impl DpWeight {
     const ZERO: Self = Self { max_dihedral: 0.0, area: 0.0 };
 
-    fn combine(a: Self, b: Self, this_dihedral: f64, this_area: f64) -> Self {
+    async fn combine(a: Self, b: Self, this_dihedral: f64, this_area: f64) -> Self {
         Self { max_dihedral: a.max_dihedral.max(b.max_dihedral).max(this_dihedral), area: a.area + b.area + this_area }
     }
 
-    fn better_than(&self, other: &Self) -> bool {
+    async fn better_than(&self, other: &Self) -> bool {
         (self.max_dihedral, self.area) < (other.max_dihedral, other.area)
     }
 }
 
-fn triangle_normal(a: [f64; 3], b: [f64; 3], c: [f64; 3]) -> [f64; 3] {
+async fn triangle_normal(a: [f64; 3], b: [f64; 3], c: [f64; 3]) -> [f64; 3] {
     normalize3(cross3(sub3(b, a), sub3(c, a)))
 }
 
 /// 📐️ Klincsek/Barequet–Sharir O(n³) minimum-weight triangulation of a simple polygon (given as a
 /// boundary ring in 3D), Liepa-weighted: primarily minimizes the worst dihedral angle any new
 /// diagonal introduces relative to its two sub-triangulations, tie-broken by total area.
-fn min_weight_triangulation(ring: &[usize], positions: &[[f64; 3]]) -> Vec<[usize; 3]> {
+async fn min_weight_triangulation(ring: &[usize], positions: &[[f64; 3]]) -> Vec<[usize; 3]> {
     let n = ring.len();
     if n < 3 {
         return Vec::new();
@@ -1223,7 +1223,7 @@ fn min_weight_triangulation(ring: &[usize], positions: &[[f64; 3]]) -> Vec<[usiz
 /// averaged-position vertex instead to keep triangles from becoming slivers. Hard-capped at
 /// `max_iterations` so it can never hang — capping out is a legitimate, expected outcome that
 /// signals the caller to fall back to [`close_voxel`], not a bug.
-fn advancing_front_triangulate(loop_verts: &[u32], positions: &mut Vec<[f64; 3]>, max_iterations: usize) -> (Vec<[u32; 3]>, bool) {
+async fn advancing_front_triangulate(loop_verts: &[u32], positions: &mut Vec<[f64; 3]>, max_iterations: usize) -> (Vec<[u32; 3]>, bool) {
     let initial_positions: Vec<[f64; 3]> = loop_verts.iter().map(|&v| positions[v as usize]).collect();
     let (ex, ey, _) = loop_basis(&initial_positions);
     let origin = initial_positions[0];
@@ -1280,7 +1280,7 @@ fn advancing_front_triangulate(loop_verts: &[u32], positions: &mut Vec<[f64; 3]>
 
 /// 🪢️ Uniform-Laplacian fairing of newly introduced interior vertices (fixed boundary/original
 /// vertices), solved per axis via `CsrMatrix` + `conjugate_gradient` over the local patch only.
-fn fair_new_vertices(mesh: &mut TriMesh, patch_faces: &[u32], new_vertices: &HashSet<u32>) {
+async fn fair_new_vertices(mesh: &mut TriMesh, patch_faces: &[u32], new_vertices: &HashSet<u32>) {
     if new_vertices.is_empty() {
         return;
     }
@@ -1328,7 +1328,7 @@ fn fair_new_vertices(mesh: &mut TriMesh, patch_faces: &[u32], new_vertices: &Has
 /// the patch to traverse that same edge in the opposite direction — the standard "shared edges
 /// wind oppositely" consistency rule, checked here against real mesh data rather than assumed
 /// from `boundary_loops`' walk direction alone.
-fn fix_patch_orientation(mesh: &TriMesh, loop_verts: &[u32], new_tris: &mut [[u32; 3]]) {
+async fn fix_patch_orientation(mesh: &TriMesh, loop_verts: &[u32], new_tris: &mut [[u32; 3]]) {
     let (a, b) = (loop_verts[0], loop_verts[1]);
     let edges = mesh.edge_map();
     let Some(faces) = edges.get(&sorted_edge(a, b)) else { return };
@@ -1362,7 +1362,7 @@ fn fix_patch_orientation(mesh: &TriMesh, loop_verts: &[u32], new_tris: &mut [[u3
 /// strictly safer than committing a self-intersecting or non-manifold triangulation; verified by
 /// `planted_holes_fill_and_trigger_all_three_strategies`, which caught exactly this failure mode
 /// in an earlier version of [`advancing_front_triangulate`].
-fn patch_is_valid(mesh: &TriMesh, loop_verts: &[u32], new_tris: &[[u32; 3]]) -> bool {
+async fn patch_is_valid(mesh: &TriMesh, loop_verts: &[u32], new_tris: &[[u32; 3]]) -> bool {
     if new_tris.is_empty() {
         return false;
     }
@@ -1399,7 +1399,7 @@ fn patch_is_valid(mesh: &TriMesh, loop_verts: &[u32], new_tris: &[[u32; 3]]) -> 
 /// deterministic trigger for the [`close_voxel`] guarantee rather than an organic algorithm
 /// failure. Every candidate patch is also checked via [`patch_is_valid`] before being committed;
 /// an invalid patch is discarded (loop left open) rather than risking mesh corruption.
-pub fn fill_holes(mesh: &mut TriMesh, params: &HoleFillParams) -> HoleFillStats {
+pub async fn fill_holes(mesh: &mut TriMesh, params: &HoleFillParams) -> HoleFillStats {
     let mut stats = HoleFillStats::default();
     let Ok(topology) = HalfedgeTopology::build(mesh) else { return stats };
     let mut loops = topology.boundary_loops();
@@ -1470,7 +1470,7 @@ pub fn fill_holes(mesh: &mut TriMesh, params: &HoleFillParams) -> HoleFillStats 
 /// axes — 13 candidate separating axes total, each tested by the same generic projection-interval
 /// check. Conservative by construction (a triangle merely touching the box counts as overlapping),
 /// which is exactly the property [`close_voxel`]'s guarantee depends on.
-fn tri_box_overlap(box_center: [f64; 3], box_half: [f64; 3], tri: [[f64; 3]; 3]) -> bool {
+async fn tri_box_overlap(box_center: [f64; 3], box_half: [f64; 3], tri: [[f64; 3]; 3]) -> bool {
     let v = [sub3(tri[0], box_center), sub3(tri[1], box_center), sub3(tri[2], box_center)];
     let e = [sub3(v[1], v[0]), sub3(v[2], v[1]), sub3(v[0], v[2])];
     let separates = |axis: [f64; 3]| -> bool {
@@ -1512,7 +1512,7 @@ fn tri_box_overlap(box_center: [f64; 3], box_half: [f64; 3], tri: [[f64; 3]; 3])
 /// construction rather than by luck. The requested `voxel` is floored at `bbox_diagonal / 64` so
 /// this guaranteed-termination fallback can never be handed a voxel size fine enough to make its
 /// own grid intractable — the "always watertight" contract should never be a performance landmine.
-pub fn close_voxel(mesh: &TriMesh, voxel: f64) -> TriMesh {
+pub async fn close_voxel(mesh: &TriMesh, voxel: f64) -> TriMesh {
     if mesh.triangles.is_empty() || voxel <= 0.0 {
         return TriMesh::new();
     }
@@ -1625,7 +1625,7 @@ pub struct WatertightReport {
     pub is_watertight: bool,
 }
 
-fn count_non_manifold_vertices(mesh: &TriMesh, edges: &EdgeMap) -> usize {
+async fn count_non_manifold_vertices(mesh: &TriMesh, edges: &EdgeMap) -> usize {
     let mut incident: Vec<Vec<u32>> = vec![Vec::new(); mesh.positions.len()];
     for (f, tri) in mesh.triangles.iter().enumerate() {
         for &v in tri {
@@ -1651,7 +1651,7 @@ fn count_non_manifold_vertices(mesh: &TriMesh, edges: &EdgeMap) -> usize {
     count
 }
 
-fn count_boundary_loops(edges: &EdgeMap, vertex_count: usize) -> usize {
+async fn count_boundary_loops(edges: &EdgeMap, vertex_count: usize) -> usize {
     let boundary_edges: Vec<(u32, u32)> = edges.iter().filter(|(_, f)| f.len() == 1).map(|(&k, _)| k).collect();
     if boundary_edges.is_empty() {
         return 0;
@@ -1664,7 +1664,7 @@ fn count_boundary_loops(edges: &EdgeMap, vertex_count: usize) -> usize {
     roots.len()
 }
 
-fn check_consistently_oriented(mesh: &TriMesh, edges: &EdgeMap) -> bool {
+async fn check_consistently_oriented(mesh: &TriMesh, edges: &EdgeMap) -> bool {
     for faces in edges.values() {
         if faces.len() != 2 {
             continue;
@@ -1682,7 +1682,7 @@ fn check_consistently_oriented(mesh: &TriMesh, edges: &EdgeMap) -> bool {
 /// ⚔️ Möller's fast triangle-triangle intersection test (1997): computes each triangle's signed
 /// distances to the other's plane, rejects when both are strictly same-signed, otherwise reduces
 /// to a 1D interval overlap test along the two planes' intersection line.
-fn triangles_intersect(a: [[f64; 3]; 3], b: [[f64; 3]; 3]) -> bool {
+async fn triangles_intersect(a: [[f64; 3]; 3], b: [[f64; 3]; 3]) -> bool {
     let plane = |t: [[f64; 3]; 3]| -> ([f64; 3], f64) {
         let n = cross3(sub3(t[1], t[0]), sub3(t[2], t[0]));
         (n, -dot3(n, t[0]))
@@ -1728,7 +1728,7 @@ fn triangles_intersect(a: [[f64; 3]; 3], b: [[f64; 3]; 3]) -> bool {
     a_lo <= b_hi + 1e-9 && b_lo <= a_hi + 1e-9
 }
 
-fn count_self_intersections(mesh: &TriMesh) -> usize {
+async fn count_self_intersections(mesh: &TriMesh) -> usize {
     if mesh.triangles.is_empty() {
         return 0;
     }
@@ -1772,7 +1772,7 @@ fn count_self_intersections(mesh: &TriMesh) -> usize {
 /// 🔍️ The single source of truth for "is this mesh watertight": closed (no boundary), a true
 /// 2-manifold (no over-used edges or pinch vertices), and consistently oriented. `genus` is only
 /// reported for a single-component closed 2-manifold, where `χ = 2 - 2g` is well-defined.
-pub fn validate_watertight(mesh: &TriMesh, check_self_intersections: bool) -> WatertightReport {
+pub async fn validate_watertight(mesh: &TriMesh, check_self_intersections: bool) -> WatertightReport {
     let edges = mesh.edge_map();
     let boundary_edge_count = edges.values().filter(|f| f.len() == 1).count();
     let non_manifold_edge_count = edges.values().filter(|f| f.len() > 2).count();
@@ -1826,7 +1826,7 @@ pub struct SimplifyParams {
 }
 
 impl Default for SimplifyParams {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self { max_error: f64::INFINITY }
     }
 }
@@ -1837,11 +1837,11 @@ impl Default for SimplifyParams {
 struct Quadric([f64; 10]);
 
 impl Quadric {
-    fn from_plane(a: f64, b: f64, c: f64, d: f64) -> Self {
+    async fn from_plane(a: f64, b: f64, c: f64, d: f64) -> Self {
         Self([a * a, a * b, a * c, a * d, b * b, b * c, b * d, c * c, c * d, d * d])
     }
 
-    fn add(&self, other: &Self) -> Self {
+    async fn add(&self, other: &Self) -> Self {
         let mut out = [0.0; 10];
         for (i, slot) in out.iter_mut().enumerate() {
             *slot = self.0[i] + other.0[i];
@@ -1849,13 +1849,13 @@ impl Quadric {
         Self(out)
     }
 
-    fn error_at(&self, p: [f64; 3]) -> f64 {
+    async fn error_at(&self, p: [f64; 3]) -> f64 {
         let [a, b, c] = p;
         let q = self.0;
         q[0] * a * a + 2.0 * q[1] * a * b + 2.0 * q[2] * a * c + 2.0 * q[3] * a + q[4] * b * b + 2.0 * q[5] * b * c + 2.0 * q[6] * b + q[7] * c * c + 2.0 * q[8] * c + q[9]
     }
 
-    fn optimal_point(&self, fallback_a: [f64; 3], fallback_b: [f64; 3]) -> [f64; 3] {
+    async fn optimal_point(&self, fallback_a: [f64; 3], fallback_b: [f64; 3]) -> [f64; 3] {
         let q = self.0;
         let m = matd_from_rows(&[vec![q[0], q[1], q[2]], vec![q[1], q[4], q[5]], vec![q[2], q[5], q[7]]]);
         let rhs = crate::algebra::VecD::from_vec(vec![-q[3], -q[6], -q[8]]);
@@ -1873,7 +1873,7 @@ impl Quadric {
 /// vertex adjacent to both `u` and `v` is also a shared face's opposite vertex — i.e. `link(u) ∩
 /// link(v) == link(edge(u,v))`. Any extra shared neighbor means the two vertices are connected
 /// through some other path too, and collapsing would pinch unrelated mesh sheets together.
-fn link_condition_holds(vertex_faces: &[HashSet<u32>], triangles: &[[u32; 3]], u: u32, v: u32) -> bool {
+async fn link_condition_holds(vertex_faces: &[HashSet<u32>], triangles: &[[u32; 3]], u: u32, v: u32) -> bool {
     let neighbors_of = |x: u32| -> HashSet<u32> {
         let mut set = HashSet::new();
         for &f in &vertex_faces[x as usize] {
@@ -1913,13 +1913,13 @@ struct HeapEntry {
 impl Eq for HeapEntry {}
 
 impl Ord for HeapEntry {
-    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+    async fn cmp(&self, other: &Self) -> std::cmp::Ordering {
         other.cost.partial_cmp(&self.cost).unwrap_or(std::cmp::Ordering::Equal)
     }
 }
 
 impl PartialOrd for HeapEntry {
-    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+    async fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
         Some(self.cmp(other))
     }
 }
@@ -1927,7 +1927,7 @@ impl PartialOrd for HeapEntry {
 /// 🪚️ Garland-Heckbert quadric-error-metric edge collapse down to `target_triangles`, guarded by
 /// [`link_condition_holds`] on every candidate collapse — so simplifying an already-watertight
 /// mesh is provably guaranteed to keep it watertight (proven in `mod tests`, not just asserted).
-pub fn simplify_qem(mesh: &mut TriMesh, target_triangles: usize, params: &SimplifyParams) -> SimplifyStats {
+pub async fn simplify_qem(mesh: &mut TriMesh, target_triangles: usize, params: &SimplifyParams) -> SimplifyStats {
     let mut stats = SimplifyStats::default();
     if mesh.triangles.len() <= target_triangles {
         return stats;
@@ -2037,7 +2037,7 @@ pub fn simplify_qem(mesh: &mut TriMesh, target_triangles: usize, params: &Simpli
     stats
 }
 
-fn compact_unused_vertices(mesh: &mut TriMesh) {
+async fn compact_unused_vertices(mesh: &mut TriMesh) {
     let used: HashSet<u32> = mesh.triangles.iter().flatten().copied().collect();
     let mut remap = vec![u32::MAX; mesh.positions.len()];
     let mut new_positions = Vec::with_capacity(used.len());
@@ -2067,7 +2067,7 @@ pub struct Chart {
 /// 🧭️ Normal-clustering chart segmentation: greedily flood-fills faces (via face adjacency) into
 /// the current chart while its normal stays within `max_angle` of the chart's running average
 /// normal, cutting a new chart boundary whenever growth stalls.
-pub fn segment_charts(mesh: &TriMesh, max_angle_deg: f64) -> Vec<Chart> {
+pub async fn segment_charts(mesh: &TriMesh, max_angle_deg: f64) -> Vec<Chart> {
     let edges = mesh.edge_map();
     let mut adjacency: Vec<Vec<u32>> = vec![Vec::new(); mesh.triangles.len()];
     for faces in edges.values() {
@@ -2108,7 +2108,7 @@ pub fn segment_charts(mesh: &TriMesh, max_angle_deg: f64) -> Vec<Chart> {
 }
 
 /// 🧭️ Isometric local 2D frame for a triangle: vertex 1 at the origin, vertex 2 on the +x axis.
-fn local_triangle_frame(a: [f64; 3], b: [f64; 3], c: [f64; 3]) -> (f64, f64, f64) {
+async fn local_triangle_frame(a: [f64; 3], b: [f64; 3], c: [f64; 3]) -> (f64, f64, f64) {
     let ex = normalize3(sub3(b, a));
     let x2 = norm3(sub3(b, a));
     let ac = sub3(c, a);
@@ -2124,7 +2124,7 @@ fn local_triangle_frame(a: [f64; 3], b: [f64; 3], c: [f64; 3]) -> (f64, f64, f64
 /// triangle to its already-placed shared edge. Always bijective for small disk-topology charts
 /// (each triangle keeps its true edge lengths and never folds back on an immediate neighbor),
 /// though — unlike LSCM — it is not globally angle-optimal.
-fn fallback_unwrap_chart(mesh: &TriMesh, chart: &Chart) -> HashMap<u32, [f64; 2]> {
+async fn fallback_unwrap_chart(mesh: &TriMesh, chart: &Chart) -> HashMap<u32, [f64; 2]> {
     let mut uv: HashMap<u32, [f64; 2]> = HashMap::new();
     let mut placed_edge: HashMap<(u32, u32), ()> = HashMap::new();
     let mut queue = VecDeque::new();
@@ -2195,7 +2195,7 @@ fn fallback_unwrap_chart(mesh: &TriMesh, chart: &Chart) -> HashMap<u32, [f64; 2]
 /// boundary vertices are pinned to known UV values to remove the conformal gauge freedom
 /// (translation, rotation, scale). Falls back to [`fallback_unwrap_chart`] for charts too small to
 /// meaningfully constrain the system or when the solve fails.
-fn lscm_chart(mesh: &TriMesh, chart: &Chart) -> HashMap<u32, [f64; 2]> {
+async fn lscm_chart(mesh: &TriMesh, chart: &Chart) -> HashMap<u32, [f64; 2]> {
     if chart.faces.len() < 4 {
         return fallback_unwrap_chart(mesh, chart);
     }
@@ -2300,7 +2300,7 @@ fn lscm_chart(mesh: &TriMesh, chart: &Chart) -> HashMap<u32, [f64; 2]> {
 /// shape via `segment_charts` on a real simplified sphere). `charts` is returned with its face
 /// lists unchanged (chart membership is per-face) but the mesh's `triangles` now reference the
 /// per-chart duplicates.
-fn split_chart_seam_vertices(mesh: &mut TriMesh, charts: &[Chart]) {
+async fn split_chart_seam_vertices(mesh: &mut TriMesh, charts: &[Chart]) {
     let mut vertex_chart_owner: HashMap<u32, usize> = HashMap::new();
     let mut duplicate_of: HashMap<(u32, usize), u32> = HashMap::new();
     for (chart_idx, chart) in charts.iter().enumerate() {
@@ -2335,7 +2335,7 @@ fn split_chart_seam_vertices(mesh: &mut TriMesh, charts: &[Chart]) {
 /// `0..1` UV atlas (charts scaled uniformly, packed in decreasing-height rows). Splits chart-seam
 /// vertices first via [`split_chart_seam_vertices`] so the returned per-vertex UV array (sized to
 /// the mesh's — now possibly larger — vertex count) is unambiguous.
-pub fn unwrap_mesh(mesh: &mut TriMesh, charts: &[Chart]) -> Vec<[f32; 2]> {
+pub async fn unwrap_mesh(mesh: &mut TriMesh, charts: &[Chart]) -> Vec<[f32; 2]> {
     split_chart_seam_vertices(mesh, charts);
     let mut placed: Vec<(f64, f64, HashMap<u32, [f64; 2]>)> = Vec::new();
     for chart in charts {
@@ -2385,14 +2385,14 @@ pub struct TextureView {
     pub image: remodel_image::ImageRgba8,
 }
 
-fn image_gradient_magnitude(img: &remodel_image::ImageRgba8, x: f32, y: f32) -> f32 {
+async fn image_gradient_magnitude(img: &remodel_image::ImageRgba8, x: f32, y: f32) -> f32 {
     let step = 1.0;
     let gx = img.sample_rgb(x + step, y)[0] - img.sample_rgb(x - step, y)[0];
     let gy = img.sample_rgb(x, y + step)[0] - img.sample_rgb(x, y - step)[0];
     (gx * gx + gy * gy).sqrt()
 }
 
-fn face_projected_area(mesh: &TriMesh, f: usize, intr: &remodel_camera::Intrinsics, pose: &remodel_camera::CameraPose) -> Option<f64> {
+async fn face_projected_area(mesh: &TriMesh, f: usize, intr: &remodel_camera::Intrinsics, pose: &remodel_camera::CameraPose) -> Option<f64> {
     let tri = mesh.triangles[f];
     let mut px = [[0.0; 2]; 3];
     for k in 0..3 {
@@ -2406,7 +2406,7 @@ fn face_projected_area(mesh: &TriMesh, f: usize, intr: &remodel_camera::Intrinsi
 /// projects on-screen and no *other* face's centroid projects closer to the camera at
 /// (approximately) the same pixel — a coarse centroid-based z-buffer, adequate for view-selection
 /// data costs without a full per-pixel rasterizer.
-fn visible_views(mesh: &TriMesh, views: &[TextureView]) -> Vec<Vec<usize>> {
+async fn visible_views(mesh: &TriMesh, views: &[TextureView]) -> Vec<Vec<usize>> {
     let mut visible = vec![Vec::new(); mesh.triangles.len()];
     for (vi, view) in views.iter().enumerate() {
         let mut depth_buffer: HashMap<(i32, i32), (f64, usize)> = HashMap::new();
@@ -2446,7 +2446,7 @@ fn visible_views(mesh: &TriMesh, views: &[TextureView]) -> Vec<Vec<usize>> {
 /// projected area, strong image gradient and cross-view color agreement; Potts smoothness
 /// penalizes adjacent faces disagreeing on their view label. Cycles through candidate labels,
 /// expanding each via one min-cut, until a full pass makes no change or the iteration cap fires.
-fn graph_cut_view_labels(mesh: &TriMesh, views: &[TextureView], visible: &[Vec<usize>]) -> Vec<Option<usize>> {
+async fn graph_cut_view_labels(mesh: &TriMesh, views: &[TextureView], visible: &[Vec<usize>]) -> Vec<Option<usize>> {
     let n = mesh.triangles.len();
     let mut data_cost: Vec<HashMap<usize, f64>> = vec![HashMap::new(); n];
     for f in 0..n {
@@ -2534,7 +2534,7 @@ fn graph_cut_view_labels(mesh: &TriMesh, views: &[TextureView], visible: &[Vec<u
 /// 🎨️ Per-chart-pair radiometric leveling at UV seams: samples a 2px gutter of already-baked color
 /// on each side of a seam and solves a per-channel `gain * a + offset ≈ b` least-squares fit via
 /// `solve_llsq`, then rescales the second chart's baked pixels to match the first.
-fn level_seam(a_samples: &[[f32; 3]], b_samples: &[[f32; 3]]) -> [(f64, f64); 3] {
+async fn level_seam(a_samples: &[[f32; 3]], b_samples: &[[f32; 3]]) -> [(f64, f64); 3] {
     let n = a_samples.len().min(b_samples.len());
     let mut out = [(1.0, 0.0); 3];
     if n < 2 {
@@ -2559,7 +2559,7 @@ fn level_seam(a_samples: &[[f32; 3]], b_samples: &[[f32; 3]]) -> [(f64, f64); 3]
 /// reference` per view via `solve_llsq`, where `reference` is the per-sample-point median
 /// intensity across every view that also observed it (a self-contained stand-in for track-median
 /// intensities, since SfM tracks are outside this crate's scope).
-fn view_exposure_compensation(mesh: &TriMesh, views: &[TextureView], visible: &[Vec<usize>]) -> Vec<(f64, f64)> {
+async fn view_exposure_compensation(mesh: &TriMesh, views: &[TextureView], visible: &[Vec<usize>]) -> Vec<(f64, f64)> {
     let mut per_view_samples: Vec<Vec<(f64, f64)>> = vec![Vec::new(); views.len()];
     for (f, vis) in visible.iter().enumerate() {
         if vis.len() < 2 {
@@ -2601,7 +2601,7 @@ fn view_exposure_compensation(mesh: &TriMesh, views: &[TextureView], visible: &[
 /// 🖼️ Bakes a UV-space texture atlas: for every face, samples its assigned view (from
 /// [`graph_cut_view_labels`]) via barycentric-in-UV rasterization, applies that view's exposure
 /// compensation, and levels per-chart seams via [`level_seam`] before writing the final atlas.
-pub fn bake_texture(mesh: &TriMesh, uvs: &[[f32; 2]], atlas_size: u32, views: &[TextureView]) -> remodel_image::ImageRgba8 {
+pub async fn bake_texture(mesh: &TriMesh, uvs: &[[f32; 2]], atlas_size: u32, views: &[TextureView]) -> remodel_image::ImageRgba8 {
     let mut atlas = remodel_image::ImageRgba8::new(atlas_size, atlas_size);
     if views.is_empty() {
         return atlas;
@@ -2656,7 +2656,7 @@ pub fn bake_texture(mesh: &TriMesh, uvs: &[[f32; 2]], atlas_size: u32, views: &[
 /// [`semio_framework::MeshData`]: `f64` positions/normals cast to `f32` (normals computed
 /// from face windings), UVs passed through, and a texture PNG-encoded then base64-embedded into
 /// `paint_texture_base64`.
-pub fn to_mesh_data(mesh: &TriMesh, uvs: Option<&[[f32; 2]]>, texture: Option<&remodel_image::ImageRgba8>) -> semio_framework::MeshData {
+pub async fn to_mesh_data(mesh: &TriMesh, uvs: Option<&[[f32; 2]]>, texture: Option<&remodel_image::ImageRgba8>) -> semio_framework::MeshData {
     use base64::Engine as _;
     let normals = mesh.compute_vertex_normals();
     let positions: Vec<f32> = mesh.positions.iter().flat_map(|p| p.iter().map(|&c| c as f32)).collect();
@@ -2685,7 +2685,7 @@ pub struct MeshParams {
 }
 
 impl Default for MeshParams {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self {
             guarantee_watertight: true,
             hole_fill_max_boundary_verts: 512,
@@ -2766,29 +2766,29 @@ pub struct MeshPipeline {
 }
 
 impl MeshPipeline {
-    pub fn new(vol: &remodel_dense::TsdfVolume, iso: f64, bounds_min: [i32; 3], bounds_max: [i32; 3], params: MeshParams) -> Self {
+    pub async fn new(vol: &remodel_dense::TsdfVolume, iso: f64, bounds_min: [i32; 3], bounds_max: [i32; 3], params: MeshParams) -> Self {
         let mesh = extract_tsdf(vol, iso, bounds_min, bounds_max);
         Self { mesh, params, stage_index: 0, close_used: false, tsdf_voxel_size: Some(vol.voxel_size), report: None, failed: None, uvs: None, texture: None, views: Vec::new(), result: None }
     }
 
-    pub fn from_mesh(mesh: TriMesh, params: MeshParams) -> Self {
+    pub async fn from_mesh(mesh: TriMesh, params: MeshParams) -> Self {
         Self { mesh, params, stage_index: 1, close_used: false, tsdf_voxel_size: None, report: None, failed: None, uvs: None, texture: None, views: Vec::new(), result: None }
     }
 
-    pub fn with_views(mut self, views: Vec<TextureView>) -> Self {
+    pub async fn with_views(mut self, views: Vec<TextureView>) -> Self {
         self.views = views;
         self
     }
 
-    pub fn report(&self) -> Option<&WatertightReport> {
+    pub async fn report(&self) -> Option<&WatertightReport> {
         self.report.as_ref()
     }
 
-    pub fn result(&self) -> Option<&semio_framework::MeshData> {
+    pub async fn result(&self) -> Option<&semio_framework::MeshData> {
         self.result.as_ref()
     }
 
-    pub fn mesh(&self) -> &TriMesh {
+    pub async fn mesh(&self) -> &TriMesh {
         &self.mesh
     }
 }
@@ -2801,14 +2801,14 @@ impl MeshPipeline {
 /// closed, 2-manifold, consistently oriented, and yet still just a swarm of sealed confetti
 /// rather than the one coherent solid this pipeline promises. `connected_components > 1` is the
 /// fragmentation signal `is_watertight` can't see on its own, so it gates the guarantee here too.
-fn needs_close_fallback(report: &WatertightReport) -> bool {
+async fn needs_close_fallback(report: &WatertightReport) -> bool {
     !report.is_watertight || report.connected_components > 1
 }
 
 /// ⚙️ Advances the pipeline through at most `budget` stages (each stage runs to completion
 /// internally — none of these algorithms are individually interruptible mid-computation, so
 /// `budget` governs how many whole stages this call performs rather than finer-grained progress).
-pub fn mesh_pipeline_step(state: &mut MeshPipeline, budget: usize) -> MeshPipelineStatus {
+pub async fn mesh_pipeline_step(state: &mut MeshPipeline, budget: usize) -> MeshPipelineStatus {
     for _ in 0..budget.max(1) {
         if state.stage_index >= STAGE_ORDER.len() {
             return MeshPipelineStatus::Done;
@@ -2904,7 +2904,7 @@ pub fn mesh_pipeline_step(state: &mut MeshPipeline, budget: usize) -> MeshPipeli
     MeshPipelineStatus::Working { stage: stage_name(STAGE_ORDER[state.stage_index]), progress }
 }
 
-fn stage_name(stage: Stage) -> &'static str {
+async fn stage_name(stage: Stage) -> &'static str {
     match stage {
         Stage::Mc => "marching_cubes",
         Stage::Clean => "clean",
@@ -2931,16 +2931,16 @@ fn stage_name(stage: Stage) -> &'static str {
 mod tests {
     use super::*;
 
-    fn lcg_next(state: &mut u64) -> f64 {
+    async fn lcg_next(state: &mut u64) -> f64 {
         *state = state.wrapping_mul(6_364_136_223_846_793_005).wrapping_add(1_442_695_040_888_963_407);
         (*state >> 11) as f64 / (1u64 << 53) as f64
     }
 
-    fn intrinsics_for(width: u32, height: u32) -> remodel_camera::Intrinsics {
+    async fn intrinsics_for(width: u32, height: u32) -> remodel_camera::Intrinsics {
         remodel_camera::Intrinsics { fx: 0.55 * f64::from(width), fy: 0.55 * f64::from(width), cx: f64::from(width) / 2.0, cy: f64::from(height) / 2.0, skew: 0.0, distortion: remodel_camera::Distortion::None }
     }
 
-    fn look_at_pose(eye: [f64; 3], target: [f64; 3]) -> remodel_camera::CameraPose {
+    async fn look_at_pose(eye: [f64; 3], target: [f64; 3]) -> remodel_camera::CameraPose {
         let forward = normalize3(sub3(target, eye));
         let world_up = if forward[1].abs() > 0.95 { [1.0, 0.0, 0.0] } else { [0.0, 1.0, 0.0] };
         let right = normalize3(cross3(forward, world_up));
@@ -2950,7 +2950,7 @@ mod tests {
         remodel_camera::CameraPose(crate::lie::Se3 { r: crate::lie::So3(rotation), t: translation })
     }
 
-    fn checkerboard_image(width: u32, height: u32, cell: u32) -> remodel_image::ImageRgba8 {
+    async fn checkerboard_image(width: u32, height: u32, cell: u32) -> remodel_image::ImageRgba8 {
         let mut img = remodel_image::ImageRgba8::new(width, height);
         for y in 0..height {
             for x in 0..width {
@@ -2966,7 +2966,7 @@ mod tests {
         img
     }
 
-    fn vertical_edge_image(width: u32, height: u32) -> remodel_image::ImageRgba8 {
+    async fn vertical_edge_image(width: u32, height: u32) -> remodel_image::ImageRgba8 {
         let mut img = remodel_image::ImageRgba8::new(width, height);
         for y in 0..height {
             for x in 0..width {
@@ -2981,7 +2981,7 @@ mod tests {
         img
     }
 
-    fn solid_color_image(width: u32, height: u32, value: u8) -> remodel_image::ImageRgba8 {
+    async fn solid_color_image(width: u32, height: u32, value: u8) -> remodel_image::ImageRgba8 {
         let mut img = remodel_image::ImageRgba8::new(width, height);
         for px in img.data.chunks_mut(4) {
             px[0] = value;
@@ -2992,7 +2992,7 @@ mod tests {
         img
     }
 
-    fn sphere_trace(origin: [f64; 3], dir: [f64; 3], sdf: impl Fn([f64; 3]) -> f64, max_t: f64) -> Option<f64> {
+    async fn sphere_trace(origin: [f64; 3], dir: [f64; 3], sdf: impl Fn([f64; 3]) -> f64, max_t: f64) -> Option<f64> {
         let mut t = 0.0;
         for _ in 0..128 {
             let p = add3(origin, scale3(dir, t));
@@ -3008,7 +3008,7 @@ mod tests {
         None
     }
 
-    fn render_sdf_depth_map(width: u32, height: u32, intr: &remodel_camera::Intrinsics, pose: &remodel_camera::CameraPose, sdf: impl Fn([f64; 3]) -> f64 + Copy) -> remodel_dense::DepthMap {
+    async fn render_sdf_depth_map(width: u32, height: u32, intr: &remodel_camera::Intrinsics, pose: &remodel_camera::CameraPose, sdf: impl Fn([f64; 3]) -> f64 + Copy) -> remodel_dense::DepthMap {
         let mut dm = remodel_dense::DepthMap::new(width, height);
         let to_world = pose.0.inverse();
         let origin_world = to_world.act([0.0, 0.0, 0.0]);
@@ -3033,7 +3033,7 @@ mod tests {
     /// 🌐️ Fibonacci-sphere view directions: far denser and more uniform coverage than a handful of
     /// axis-aligned/equatorial views, which otherwise leave thin uncovered strips between views
     /// wide enough to show up as spurious TSDF boundary defects.
-    fn orbit_views(radius: f64) -> Vec<remodel_camera::CameraPose> {
+    async fn orbit_views(radius: f64) -> Vec<remodel_camera::CameraPose> {
         let n = 40;
         let golden_angle = std::f64::consts::PI * (3.0 - 5f64.sqrt());
         (0..n)
@@ -3047,7 +3047,7 @@ mod tests {
             .collect()
     }
 
-    fn build_tsdf_from_sdf(voxel: f64, truncation: f64, radius: f64, sdf: impl Fn([f64; 3]) -> f64 + Copy) -> remodel_dense::TsdfVolume {
+    async fn build_tsdf_from_sdf(voxel: f64, truncation: f64, radius: f64, sdf: impl Fn([f64; 3]) -> f64 + Copy) -> remodel_dense::TsdfVolume {
         let mut vol = remodel_dense::TsdfVolume::new(voxel, truncation);
         let intr = intrinsics_for(96, 96);
         for pose in orbit_views(radius * 2.5) {
@@ -3057,11 +3057,11 @@ mod tests {
         vol
     }
 
-    fn sphere_sdf(radius: f64) -> impl Fn([f64; 3]) -> f64 + Copy {
+    async fn sphere_sdf(radius: f64) -> impl Fn([f64; 3]) -> f64 + Copy {
         move |p: [f64; 3]| norm3(p) - radius
     }
 
-    fn torus_sdf(major: f64, minor: f64) -> impl Fn([f64; 3]) -> f64 + Copy {
+    async fn torus_sdf(major: f64, minor: f64) -> impl Fn([f64; 3]) -> f64 + Copy {
         move |p: [f64; 3]| {
             let q = ((p[0] * p[0] + p[2] * p[2]).sqrt() - major, p[1]);
             (q.0 * q.0 + q.1 * q.1).sqrt() - minor
@@ -3074,7 +3074,7 @@ mod tests {
     /// an isolated coincident-position vertex rather than a shared edge, producing hundreds of
     /// spurious boundary edges). Winding is auto-corrected via [`TriMesh::signed_volume`] so this
     /// helper never depends on getting the hand-derived winding right by inspection.
-    fn make_uv_sphere(radius: f64, stacks: usize, slices: usize) -> TriMesh {
+    async fn make_uv_sphere(radius: f64, stacks: usize, slices: usize) -> TriMesh {
         let mut positions = vec![[0.0, radius, 0.0]];
         for i in 1..stacks {
             let phi = std::f64::consts::PI * i as f64 / stacks as f64;
@@ -3109,7 +3109,7 @@ mod tests {
 
     // #region 🔖️TriMeshTests
     #[test]
-    fn edge_map_counts_faces_per_edge() {
+    async fn edge_map_counts_faces_per_edge() {
         let mesh = TriMesh { positions: vec![[0.0, 0.0, 0.0], [1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [1.0, 1.0, 0.0]], triangles: vec![[0, 1, 2], [1, 3, 2]] };
         let edges = mesh.edge_map();
         assert_eq!(edges.get(&(1, 2)).map(Vec::len), Some(2));
@@ -3117,7 +3117,7 @@ mod tests {
     }
 
     #[test]
-    fn signed_volume_positive_for_outward_sphere() {
+    async fn signed_volume_positive_for_outward_sphere() {
         let mesh = make_uv_sphere(1.0, 12, 16);
         assert!(mesh.signed_volume() > 0.0, "expected outward-wound sphere to have positive signed volume");
     }
@@ -3125,7 +3125,7 @@ mod tests {
 
     // #region 🔖️TopologyTests
     #[test]
-    fn topology_error_display_messages() {
+    async fn topology_error_display_messages() {
         assert_eq!(TopologyError::NonManifoldEdge { a: 1, b: 2, face_count: 3 }.to_string(), "edge (1,2) has 3 incident faces");
         assert_eq!(TopologyError::InconsistentOrientation { a: 1, b: 2 }.to_string(), "edge (1,2) is traversed the same direction by two faces");
         assert_eq!(TopologyError::NonManifoldVertex(5).to_string(), "vertex 5 has more than one incident fan");
@@ -3133,32 +3133,32 @@ mod tests {
     }
 
     #[test]
-    fn orient_error_display_message() {
+    async fn orient_error_display_message() {
         assert_eq!(OrientError::UnresolvableConflict.to_string(), "could not consistently orient mesh after retry");
     }
 
     #[test]
-    fn halfedge_topology_build_rejects_degenerate_triangle() {
+    async fn halfedge_topology_build_rejects_degenerate_triangle() {
         let mesh = TriMesh { positions: vec![[0.0, 0.0, 0.0], [1.0, 0.0, 0.0], [0.0, 1.0, 0.0]], triangles: vec![[0, 0, 1]] };
         assert_eq!(HalfedgeTopology::build(&mesh).err().expect("degenerate triangle must be rejected"), TopologyError::DegenerateTriangle(0));
     }
 
     #[test]
-    fn halfedge_topology_build_rejects_non_manifold_edge() {
+    async fn halfedge_topology_build_rejects_non_manifold_edge() {
         let mesh = TriMesh { positions: vec![[0.0, 0.0, 0.0], [1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, -1.0, 0.0], [0.0, 0.0, 1.0]], triangles: vec![[0, 1, 2], [0, 1, 3], [0, 1, 4]] };
         let err = HalfedgeTopology::build(&mesh).err().expect("edge shared by 3 faces must be rejected");
         assert!(matches!(err, TopologyError::NonManifoldEdge { a: 0, b: 1, face_count: 3 }), "unexpected error: {err:?}");
     }
 
     #[test]
-    fn halfedge_topology_build_rejects_inconsistent_orientation() {
+    async fn halfedge_topology_build_rejects_inconsistent_orientation() {
         let mesh = TriMesh { positions: vec![[0.0, 0.0, 0.0], [1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, -1.0, 0.0]], triangles: vec![[0, 1, 2], [0, 1, 3]] };
         let err = HalfedgeTopology::build(&mesh).err().expect("same-direction shared edge must be rejected");
         assert!(matches!(err, TopologyError::InconsistentOrientation { a: 0, b: 1 }), "unexpected error: {err:?}");
     }
 
     #[test]
-    fn halfedge_topology_build_rejects_non_manifold_vertex() {
+    async fn halfedge_topology_build_rejects_non_manifold_vertex() {
         let mesh = two_spheres_sharing_vertex();
         let err = HalfedgeTopology::build(&mesh).err().expect("pinch vertex must be rejected");
         assert!(matches!(err, TopologyError::NonManifoldVertex(_)), "unexpected error: {err:?}");
@@ -3167,7 +3167,7 @@ mod tests {
 
     // #region 🔖️CloseUnitTest
     #[test]
-    fn close_voxel_alone_is_always_closed_and_manifold() {
+    async fn close_voxel_alone_is_always_closed_and_manifold() {
         let mut state = 42u64;
         let mut positions = Vec::new();
         for _ in 0..40 {
@@ -3192,7 +3192,7 @@ mod tests {
 
     // #region 🔖️DenseFieldTests
     #[test]
-    fn dense_field_get_set_out_of_range_are_noops() {
+    async fn dense_field_get_set_out_of_range_are_noops() {
         let mut field = DenseField::new(2, 2, 2, [0.0; 3], 1.0, 0.0);
         assert_eq!(field.get(-1, 0, 0), None);
         assert_eq!(field.get(5, 0, 0), None);
@@ -3205,7 +3205,7 @@ mod tests {
 
     // #region 🔖️WatertightSuite
     #[test]
-    fn tsdf_sphere_across_blocks_is_watertight_and_correct() {
+    async fn tsdf_sphere_across_blocks_is_watertight_and_correct() {
         let voxel = 0.05;
         let radius = 0.6;
         let vol = build_tsdf_from_sdf(voxel, voxel * 3.0, radius, sphere_sdf(radius));
@@ -3222,7 +3222,7 @@ mod tests {
     }
 
     #[test]
-    fn tsdf_torus_across_blocks_has_genus_one() {
+    async fn tsdf_torus_across_blocks_has_genus_one() {
         let voxel = 0.05;
         let (major, minor) = (0.5, 0.2);
         let vol = build_tsdf_from_sdf(voxel, voxel * 3.0, major + minor, torus_sdf(major, minor));
@@ -3235,7 +3235,7 @@ mod tests {
         assert_eq!(report.genus, Some(1), "torus genus report: {report:?}");
     }
 
-    fn delete_patch(mesh: &mut TriMesh, center_face: usize, target_boundary_verts: usize) {
+    async fn delete_patch(mesh: &mut TriMesh, center_face: usize, target_boundary_verts: usize) {
         let edges = mesh.edge_map();
         let mut face_adjacency: Vec<Vec<u32>> = vec![Vec::new(); mesh.triangles.len()];
         for faces in edges.values() {
@@ -3278,7 +3278,7 @@ mod tests {
     }
 
     #[test]
-    fn planted_holes_fill_and_trigger_all_three_strategies() {
+    async fn planted_holes_fill_and_trigger_all_three_strategies() {
         let mut mesh = make_uv_sphere(1.0, 100, 150);
         let original_volume = mesh.signed_volume().abs();
         delete_patch(&mut mesh, 2850, 6);
@@ -3300,7 +3300,7 @@ mod tests {
 
     // #region 🔖️HoleFillStatsTests
     #[test]
-    fn fill_holes_skips_loops_larger_than_max_boundary_verts() {
+    async fn fill_holes_skips_loops_larger_than_max_boundary_verts() {
         let mut mesh = make_uv_sphere(1.0, 30, 40);
         delete_patch(&mut mesh, 0, 50);
         clean_mesh(&mut mesh, 0, 0.0);
@@ -3313,7 +3313,7 @@ mod tests {
     // #endregion 🔖️HoleFillStatsTests
 
     // #region 🔖️RepairTests
-    fn two_spheres_sharing_edge() -> TriMesh {
+    async fn two_spheres_sharing_edge() -> TriMesh {
         let a = make_uv_sphere(1.0, 10, 10);
         let mut b = make_uv_sphere(1.0, 10, 10);
         for p in &mut b.positions {
@@ -3344,7 +3344,7 @@ mod tests {
         mesh
     }
 
-    fn two_spheres_sharing_vertex() -> TriMesh {
+    async fn two_spheres_sharing_vertex() -> TriMesh {
         let a = make_uv_sphere(1.0, 10, 10);
         let mut b = make_uv_sphere(1.0, 10, 10);
         for p in &mut b.positions {
@@ -3372,7 +3372,7 @@ mod tests {
     }
 
     #[test]
-    fn repair_splits_bowtie_edge_into_two_components() {
+    async fn repair_splits_bowtie_edge_into_two_components() {
         let mut mesh = two_spheres_sharing_edge();
         let stats = repair_non_manifold(&mut mesh);
         assert!(stats.non_manifold_edges_split >= 1, "expected at least one non-manifold edge split, stats={stats:?}");
@@ -3383,7 +3383,7 @@ mod tests {
     }
 
     #[test]
-    fn repair_splits_pinch_vertex_into_two_components() {
+    async fn repair_splits_pinch_vertex_into_two_components() {
         let mut mesh = two_spheres_sharing_vertex();
         let stats = repair_non_manifold(&mut mesh);
         assert!(stats.non_manifold_vertices_split >= 1, "expected at least one pinch vertex split, stats={stats:?}");
@@ -3394,7 +3394,7 @@ mod tests {
     }
 
     #[test]
-    fn orient_consistently_recovers_from_flipped_windings() {
+    async fn orient_consistently_recovers_from_flipped_windings() {
         let mut mesh = make_uv_sphere(1.0, 20, 30);
         let mut state = 7u64;
         for tri in &mut mesh.triangles {
@@ -3412,7 +3412,7 @@ mod tests {
 
     // #region 🔖️CleanTests
     #[test]
-    fn clean_mesh_welds_duplicate_vertices() {
+    async fn clean_mesh_welds_duplicate_vertices() {
         let mut mesh = TriMesh { positions: vec![[0.0, 0.0, 0.0], [1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 0.0]], triangles: vec![[0, 1, 2], [3, 1, 2]] };
         let stats = clean_mesh(&mut mesh, 0, 0.0);
         assert_eq!(stats.vertices_welded, 1, "stats={stats:?}");
@@ -3420,7 +3420,7 @@ mod tests {
     }
 
     #[test]
-    fn clean_mesh_removes_degenerate_triangles() {
+    async fn clean_mesh_removes_degenerate_triangles() {
         let mut mesh = TriMesh { positions: vec![[0.0, 0.0, 0.0], [1.0, 0.0, 0.0], [2.0, 0.0, 0.0], [0.0, 1.0, 0.0]], triangles: vec![[0, 1, 2], [0, 1, 3]] };
         let stats = clean_mesh(&mut mesh, 0, 0.0);
         assert_eq!(stats.degenerate_triangles_removed, 1, "stats={stats:?}");
@@ -3428,14 +3428,14 @@ mod tests {
     }
 
     #[test]
-    fn clean_mesh_collapses_near_zero_length_edges() {
+    async fn clean_mesh_collapses_near_zero_length_edges() {
         let mut mesh = TriMesh { positions: vec![[0.0, 0.0, 0.0], [1e-13, 0.0, 0.0], [1.0, 0.0, 0.0], [0.0, 1.0, 0.0]], triangles: vec![[0, 1, 3], [1, 2, 3]] };
         let stats = clean_mesh(&mut mesh, 0, 0.0);
         assert!(stats.zero_length_edges_collapsed >= 1, "stats={stats:?}");
     }
 
     #[test]
-    fn clean_mesh_removes_small_disconnected_components() {
+    async fn clean_mesh_removes_small_disconnected_components() {
         let mut mesh = make_uv_sphere(1.0, 10, 10);
         let shift = mesh.positions.len() as u32;
         mesh.positions.extend([[100.0, 100.0, 100.0], [100.01, 100.0, 100.0], [100.0, 100.01, 100.0]]);
@@ -3447,14 +3447,14 @@ mod tests {
 
     // #region 🔖️TaubinTests
     #[test]
-    fn taubin_smooth_noop_on_empty_mesh() {
+    async fn taubin_smooth_noop_on_empty_mesh() {
         let mut mesh = TriMesh::new();
         taubin_smooth(&mut mesh, 0.5, -0.53, 5);
         assert!(mesh.positions.is_empty());
     }
 
     #[test]
-    fn taubin_smooth_reduces_vertex_noise_amplitude() {
+    async fn taubin_smooth_reduces_vertex_noise_amplitude() {
         let mut state = 99u64;
         let mut mesh = make_uv_sphere(1.0, 20, 30);
         for p in &mut mesh.positions {
@@ -3475,7 +3475,7 @@ mod tests {
 
     // #region 🔖️SimplifyTests
     #[test]
-    fn qem_simplification_preserves_watertight_invariant() {
+    async fn qem_simplification_preserves_watertight_invariant() {
         let mut mesh = make_uv_sphere(1.0, 30, 45);
         let before = validate_watertight(&mesh, false);
         assert!(before.is_watertight, "sanity: uv sphere must start watertight, report: {before:?}");
@@ -3487,14 +3487,14 @@ mod tests {
     }
 
     #[test]
-    fn simplify_qem_rejects_collapses_that_violate_link_condition() {
+    async fn simplify_qem_rejects_collapses_that_violate_link_condition() {
         let mut mesh = two_spheres_sharing_edge();
         let stats = simplify_qem(&mut mesh, 4, &SimplifyParams::default());
         assert!(stats.collapses_rejected_by_link_condition > 0, "expected the shared bowtie edge to force at least one link-condition rejection, stats={stats:?}");
     }
 
     #[test]
-    fn simplify_qem_stops_when_error_exceeds_max_error() {
+    async fn simplify_qem_stops_when_error_exceeds_max_error() {
         let mut mesh = make_uv_sphere(1.0, 20, 30);
         let total_before = mesh.triangle_count();
         let stats = simplify_qem(&mut mesh, 0, &SimplifyParams { max_error: 1e-6 });
@@ -3506,7 +3506,7 @@ mod tests {
 
     // #region 🔖️SegmentChartsTests
     #[test]
-    fn segment_charts_keeps_coplanar_faces_in_one_chart() {
+    async fn segment_charts_keeps_coplanar_faces_in_one_chart() {
         let mesh = TriMesh { positions: vec![[0.0, 0.0, 0.0], [1.0, 0.0, 0.0], [1.0, 1.0, 0.0], [0.0, 1.0, 0.0]], triangles: vec![[0, 1, 2], [0, 2, 3]] };
         let charts = segment_charts(&mesh, 10.0);
         assert_eq!(charts.len(), 1, "coplanar faces within threshold should stay in one chart");
@@ -3514,7 +3514,7 @@ mod tests {
     }
 
     #[test]
-    fn segment_charts_cuts_at_sharp_dihedral_angle() {
+    async fn segment_charts_cuts_at_sharp_dihedral_angle() {
         let mesh = TriMesh { positions: vec![[0.0, 0.0, 0.0], [1.0, 0.0, 0.0], [1.0, 1.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0], [0.0, 1.0, 1.0]], triangles: vec![[0, 1, 2], [0, 2, 3], [0, 3, 5], [0, 5, 4]] };
         let charts = segment_charts(&mesh, 45.0);
         assert_eq!(charts.len(), 2, "a 90-degree fold above a 45-degree threshold should split into two charts");
@@ -3526,7 +3526,7 @@ mod tests {
 
     // #region 🔖️UnwrapTests
     #[test]
-    fn lscm_unwrap_is_bijective_per_chart() {
+    async fn lscm_unwrap_is_bijective_per_chart() {
         let mut mesh = make_uv_sphere(1.0, 12, 18);
         let target = (mesh.triangles.len() as f64 * 0.5) as usize;
         simplify_qem(&mut mesh, target, &SimplifyParams::default());
@@ -3555,14 +3555,14 @@ mod tests {
 
     // #region 🔖️SelfIntersectionTests
     #[test]
-    fn validate_watertight_detects_self_intersections_when_requested() {
+    async fn validate_watertight_detects_self_intersections_when_requested() {
         let mesh = TriMesh { positions: vec![[-1.0, 0.0, -1.0], [1.0, 0.0, -1.0], [0.0, 0.0, 2.0], [0.0, -1.0, -0.5], [0.0, 1.0, -0.5], [0.0, 0.0, 1.0]], triangles: vec![[0, 1, 2], [3, 4, 5]] };
         let report = validate_watertight(&mesh, true);
         assert_eq!(report.self_intersection_pairs, Some(1), "report: {report:?}");
     }
 
     #[test]
-    fn validate_watertight_reports_no_self_intersections_for_disjoint_triangles() {
+    async fn validate_watertight_reports_no_self_intersections_for_disjoint_triangles() {
         let mesh = TriMesh { positions: vec![[0.0, 0.0, 0.0], [1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [10.0, 10.0, 10.0], [11.0, 10.0, 10.0], [10.0, 11.0, 10.0]], triangles: vec![[0, 1, 2], [3, 4, 5]] };
         let report = validate_watertight(&mesh, true);
         assert_eq!(report.self_intersection_pairs, Some(0), "report: {report:?}");
@@ -3571,7 +3571,7 @@ mod tests {
 
     // #region 🔖️ContractTest
     #[test]
-    fn pipeline_falls_back_to_close_on_pathological_input() {
+    async fn pipeline_falls_back_to_close_on_pathological_input() {
         let mut mesh = make_uv_sphere(1.0, 40, 60);
         delete_patch(&mut mesh, 0, 60);
         let mut overlapping = make_uv_sphere(1.0, 8, 8);
@@ -3601,7 +3601,7 @@ mod tests {
     /// 🪸️ A tiny UV-sphere island with one small planted hole (an ear-fannable, individually
     /// closable defect on its own), positioned far from the origin so it shares no vertices or
     /// bounding volume with any other island.
-    fn make_tiny_holed_island(index: usize) -> TriMesh {
+    async fn make_tiny_holed_island(index: usize) -> TriMesh {
         let mut island = make_uv_sphere(0.05, 6, 6);
         delete_patch(&mut island, 0, 6);
         let offset = [(index % 12) as f64 * 0.6, ((index / 12) % 12) as f64 * 0.6, (index / 144) as f64 * 0.6];
@@ -3616,7 +3616,7 @@ mod tests {
     /// well-formed islands — the real-world failure mode a fresh 48-frame orbiting-cube end-to-end
     /// diagnostic actually produced (34280 vertices / 44244 triangles / 1321 components / 22234
     /// boundary edges going into this pipeline).
-    fn make_scattered_fragment_soup(count: usize) -> TriMesh {
+    async fn make_scattered_fragment_soup(count: usize) -> TriMesh {
         let mut mesh = TriMesh::new();
         for i in 0..count {
             let island = make_tiny_holed_island(i);
@@ -3630,7 +3630,7 @@ mod tests {
     }
 
     #[test]
-    fn pipeline_falls_back_to_close_on_catastrophically_fragmented_reconstruction() {
+    async fn pipeline_falls_back_to_close_on_catastrophically_fragmented_reconstruction() {
         let mesh = make_scattered_fragment_soup(300);
         let raw_report = validate_watertight(&mesh, false);
         assert!(raw_report.connected_components >= 250, "expected the fragment soup to actually be badly fragmented, report: {raw_report:?}");
@@ -3657,13 +3657,13 @@ mod tests {
 
     // #region 🔖️TextureTests
     #[test]
-    fn image_gradient_magnitude_zero_on_flat_image() {
+    async fn image_gradient_magnitude_zero_on_flat_image() {
         let img = solid_color_image(32, 32, 100);
         assert_eq!(image_gradient_magnitude(&img, 16.0, 16.0), 0.0);
     }
 
     #[test]
-    fn image_gradient_magnitude_detects_vertical_edge() {
+    async fn image_gradient_magnitude_detects_vertical_edge() {
         let img = vertical_edge_image(32, 32);
         let at_edge = image_gradient_magnitude(&img, 16.0, 16.0);
         let away_from_edge = image_gradient_magnitude(&img, 4.0, 16.0);
@@ -3672,7 +3672,7 @@ mod tests {
     }
 
     #[test]
-    fn face_projected_area_none_behind_camera_some_in_front() {
+    async fn face_projected_area_none_behind_camera_some_in_front() {
         let intr = intrinsics_for(64, 64);
         let identity_pose = remodel_camera::CameraPose(crate::lie::Se3 { r: crate::lie::So3(crate::algebra::Mat3d::IDENTITY), t: [0.0, 0.0, 0.0] });
         let behind = TriMesh { positions: vec![[-0.1, -0.1, -1.0], [0.1, -0.1, -1.0], [0.0, 0.1, -1.0]], triangles: vec![[0, 1, 2]] };
@@ -3683,7 +3683,7 @@ mod tests {
     }
 
     #[test]
-    fn level_seam_solves_gain_and_offset() {
+    async fn level_seam_solves_gain_and_offset() {
         let a: Vec<[f32; 3]> = (0..5).map(|i| [f64::from(i) as f32 * 10.0; 3]).collect();
         let b: Vec<[f32; 3]> = a.iter().map(|p| [p[0] * 2.0 + 5.0, p[1] * 2.0 + 5.0, p[2] * 2.0 + 5.0]).collect();
         let fit = level_seam(&a, &b);
@@ -3694,12 +3694,12 @@ mod tests {
     }
 
     #[test]
-    fn level_seam_returns_identity_for_insufficient_samples() {
+    async fn level_seam_returns_identity_for_insufficient_samples() {
         assert_eq!(level_seam(&[[1.0, 2.0, 3.0]], &[[4.0, 5.0, 6.0]]), [(1.0, 0.0); 3]);
     }
 
     #[test]
-    fn bake_texture_paints_atlas_from_multiple_views() {
+    async fn bake_texture_paints_atlas_from_multiple_views() {
         let mut mesh = make_uv_sphere(0.4, 10, 14);
         let target = (mesh.triangle_count() as f64 * 0.3) as usize;
         simplify_qem(&mut mesh, target, &SimplifyParams::default());
@@ -3713,7 +3713,7 @@ mod tests {
     }
 
     #[test]
-    fn bake_texture_is_empty_with_no_views() {
+    async fn bake_texture_is_empty_with_no_views() {
         let mut mesh = make_uv_sphere(0.4, 6, 8);
         let charts = segment_charts(&mesh, 60.0);
         let uvs = unwrap_mesh(&mut mesh, &charts);
@@ -3726,7 +3726,7 @@ mod tests {
         use super::*;
 
         #[test]
-        fn full_pipeline_from_tsdf_sphere_is_watertight() {
+        async fn full_pipeline_from_tsdf_sphere_is_watertight() {
             let voxel = 0.05;
             let radius = 0.6;
             let vol = build_tsdf_from_sdf(voxel, voxel * 3.0, radius, sphere_sdf(radius));
@@ -3749,7 +3749,7 @@ mod tests {
         }
 
         #[test]
-        fn full_pipeline_with_views_bakes_and_encodes_texture() {
+        async fn full_pipeline_with_views_bakes_and_encodes_texture() {
             let mesh = make_uv_sphere(0.4, 10, 14);
             let intr = intrinsics_for(48, 48);
             let views: Vec<TextureView> = orbit_views(1.5).into_iter().take(6).map(|pose| TextureView { pose, intrinsics: intr, image: checkerboard_image(48, 48, 6) }).collect();

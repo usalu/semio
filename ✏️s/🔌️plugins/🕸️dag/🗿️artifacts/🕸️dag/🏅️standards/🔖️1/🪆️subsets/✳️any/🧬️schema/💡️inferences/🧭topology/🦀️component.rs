@@ -20,7 +20,7 @@ pub struct DagTopology {
 }
 
 impl Default for DagTopology {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self { topo_order: Vec::new(), depth: BTreeMap::new(), cycle_free: true, node_count: 0 }
     }
 }
@@ -28,7 +28,7 @@ impl Default for DagTopology {
 /// 🧭 Kahn's algorithm over `nodes`/`edges`, deterministic via `BTreeMap`/sorted-adjacency
 /// iteration order; nodes left over after the queue drains (a cycle) are appended in id order so
 /// `topo_order` always stays a total permutation of every node id.
-pub fn compute_dag_topology(nodes: &[DagNodeSpec], edges: &[DagFixtureEdge]) -> DagTopology {
+pub async fn compute_dag_topology(nodes: &[DagNodeSpec], edges: &[DagFixtureEdge]) -> DagTopology {
     let ids: BTreeSet<String> = nodes.iter().map(|node| node.id.clone()).collect();
     let mut indegree: BTreeMap<String, u32> = ids.iter().cloned().map(|id| (id, 0)).collect();
     let mut adjacency: BTreeMap<String, Vec<String>> = ids.iter().cloned().map(|id| (id, Vec::new())).collect();
@@ -85,16 +85,16 @@ pub fn compute_dag_topology(nodes: &[DagNodeSpec], edges: &[DagFixtureEdge]) -> 
 mod tests {
     use super::*;
 
-    fn node(id: &str) -> DagNodeSpec {
+    async fn node(id: &str) -> DagNodeSpec {
         DagNodeSpec { id: id.into(), ..Default::default() }
     }
 
-    fn edge(id: &str, source: &str, target: &str) -> DagFixtureEdge {
+    async fn edge(id: &str, source: &str, target: &str) -> DagFixtureEdge {
         DagFixtureEdge { id: id.into(), source: source.into(), target: target.into(), ..Default::default() }
     }
 
     #[test]
-    fn linear_chain_orders_roots_before_leaves_with_increasing_depth() {
+    async fn linear_chain_orders_roots_before_leaves_with_increasing_depth() {
         let nodes = vec![node("a"), node("b"), node("c")];
         let edges = vec![edge("e1", "a", "b"), edge("e2", "b", "c")];
         let topology = compute_dag_topology(&nodes, &edges);
@@ -107,7 +107,7 @@ mod tests {
     }
 
     #[test]
-    fn a_cycle_is_reported_as_not_cycle_free_but_still_totals_every_node() {
+    async fn a_cycle_is_reported_as_not_cycle_free_but_still_totals_every_node() {
         let nodes = vec![node("a"), node("b")];
         let edges = vec![edge("e1", "a", "b"), edge("e2", "b", "a")];
         let topology = compute_dag_topology(&nodes, &edges);
@@ -117,7 +117,7 @@ mod tests {
     }
 
     #[test]
-    fn dangling_edge_endpoints_are_ignored() {
+    async fn dangling_edge_endpoints_are_ignored() {
         let nodes = vec![node("a")];
         let edges = vec![edge("e1", "a", "missing")];
         let topology = compute_dag_topology(&nodes, &edges);

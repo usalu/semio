@@ -13,7 +13,7 @@ pub const SEQUENCE_PLAY_BODY_CATALOGUE: &str = "sequence.play.catalogue";
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
-pub fn definition() -> PanelTabDefinition {
+pub async fn definition() -> PanelTabDefinition {
     PanelTabDefinition {
         kind: PanelTabKind::App(FRAMEWORK_PANEL_TAB_CATALOGUE_ID.into()),
         label: LocalizedLabel::native(FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, "Katalog"),
@@ -25,7 +25,7 @@ pub fn definition() -> PanelTabDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(fixture: &SequenceFixture, labels: &SequenceLabels) -> UiNode {
+pub async fn render(fixture: &SequenceFixture, labels: &SequenceLabels) -> UiNode {
     let actions = [("state.set", labels.action_set_state), ("log.print", labels.action_log_print), ("control.if", labels.action_if), ("control.while", labels.action_while), ("math.add", labels.action_add)];
     let mut items: Vec<UiTreeItemNode> = actions.iter().map(|(kind, label)| tree_item_with_action(format!("sequence-play-catalogue.action.{kind}"), *label, Some((*kind).into()), sequence_action("addStep", Some(json!({ "kind": kind }))))).collect();
     for owner in fixture.steps.iter().filter(|step| is_control_kind(&step.kind)) {
@@ -56,7 +56,7 @@ mod tests {
     use crate::editor::sequence::testkit::{new_app, render as render_body};
 
     #[test]
-    fn catalogue_lists_step_kind_actions() {
+    async fn catalogue_lists_step_kind_actions() {
         let mut app = new_app();
         assert!(render_body(&mut app, SEQUENCE_PLAY_BODY_CATALOGUE).contains("sequence-play-catalogue.action.log.print"));
     }

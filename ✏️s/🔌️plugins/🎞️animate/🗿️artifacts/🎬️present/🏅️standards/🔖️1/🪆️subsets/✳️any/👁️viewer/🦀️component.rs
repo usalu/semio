@@ -23,10 +23,10 @@ pub enum AnimateViewCommand {
 }
 
 impl protocol::OpBinary for AnimateViewCommand {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         Ok(Vec::new())
     }
-    fn decode_op(_bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    async fn decode_op(_bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         Ok(AnimateViewCommand::Noop)
     }
 }
@@ -50,7 +50,7 @@ impl ArtifactViewer for AnimatePresentViewer {
     const DIALECT: Dialect = ANIMATE_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = PRESENT_DOCUMENT_SCHEMA;
 
-    fn initial_snapshot() -> PresentSnapshot {
+    async fn initial_snapshot() -> PresentSnapshot {
         default_present_snapshot()
     }
 
@@ -58,11 +58,11 @@ impl ArtifactViewer for AnimatePresentViewer {
     /// change, so this always returns the empty `ViewEmit` — no config mutation, no effect, no dirty
     /// scope. Kept as a real dispatch (not an `unreachable!()`) so a future view-only action (e.g.
     /// scrub the deck's active example) is a pure addition here, never a signature change.
-    fn handle(_command: &Self::Command, _doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _interaction: &InteractionView<'_>, _engines: &EngineHandles) -> Result<ViewEmit<Self::ConfigMutation>, Fault> {
+    async fn handle(_command: &Self::Command, _doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _interaction: &InteractionView<'_>, _engines: &EngineHandles) -> Result<ViewEmit<Self::ConfigMutation>, Fault> {
         Ok(ViewEmit::default())
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> UiNode {
+    async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> UiNode {
         match body_key {
             tile_editor::BODY_KEY => tile_editor::render(doc.snapshot),
             _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))),
@@ -72,7 +72,7 @@ impl ArtifactViewer for AnimatePresentViewer {
 //#endregion 🔖️Viewer
 
 //#region 🔖️Manifest
-pub fn create_animate_present_viewer() -> semio_framework_plugin::AppDefinition {
+pub async fn create_animate_present_viewer() -> semio_framework_plugin::AppDefinition {
     Viewer::builder(ANIMATE_DIALECT)
         .document(["semio", "animate"])
         .icon_id("animate")
@@ -90,14 +90,14 @@ mod tests {
     use super::*;
 
     #[test]
-    fn create_animate_present_viewer_builds_a_definition_for_the_viewer_role() {
+    async fn create_animate_present_viewer_builds_a_definition_for_the_viewer_role() {
         let def = create_animate_present_viewer();
         assert_eq!(def.role, semio_framework::AppRole::Viewer);
         assert_eq!(def.dialect, ANIMATE_DIALECT.into());
     }
 
     #[test]
-    fn viewer_dialect_matches_the_artifact_coordinate() {
+    async fn viewer_dialect_matches_the_artifact_coordinate() {
         assert_eq!(<AnimatePresentViewer as ArtifactViewer>::DIALECT, ANIMATE_DIALECT);
     }
 }

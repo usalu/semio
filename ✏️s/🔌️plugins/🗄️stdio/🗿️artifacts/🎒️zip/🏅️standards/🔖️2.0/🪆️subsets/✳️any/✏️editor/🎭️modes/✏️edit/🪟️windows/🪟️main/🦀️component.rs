@@ -23,7 +23,7 @@ pub const ENTRY_NODE_PREFIX: &str = "entry:";
 
 //#region 🔖️Definition
 /// 🧱️ Stitched into the editor manifest by `crate::editor::zip::any::create_zip_any_editor`.
-pub fn definition() -> WindowKindDefinition {
+pub async fn definition() -> WindowKindDefinition {
     WindowKindDefinition { label: LocalizedLabel::native("Archive", "Archiv"), icon_id: "archive".into(), ..TreeWindowKit::editable_window_kind() }
 }
 //#endregion 🔖️Definition
@@ -32,7 +32,7 @@ pub fn definition() -> WindowKindDefinition {
 /// ✏️ Real `ZipSnapshot -> UiNode`: root = the archive comment (a real `set-node` edit target), one
 /// leaf per entry labeled `"{name} ({n} bytes)"` (the leaf's NAME is a real `set-node` edit target
 /// via `ENTRY_NODE_PREFIX`; the byte count is a read-only label, not addressable).
-pub fn render(document: &ZipSnapshot) -> UiNode {
+pub async fn render(document: &ZipSnapshot) -> UiNode {
     let children = document.entries.iter().enumerate().map(|(index, entry)| TreeNodeView { id: format!("{ENTRY_NODE_PREFIX}{index}"), label: format!("{} ({} bytes)", entry.name, entry.data.len()), children: Vec::new() }).collect();
     let root = TreeNodeView { id: COMMENT_NODE_ID.into(), label: format!("Comment: {}", document.comment), children };
     TreeWindowKit::render(&TreeView { roots: vec![root] })
@@ -46,14 +46,14 @@ mod tests {
     use crate::artifacts::zip::schema::snapshot::ZipEntry;
 
     #[test]
-    fn definition_declares_a_tree_window() {
+    async fn definition_declares_a_tree_window() {
         let def = definition();
         assert_eq!(def.id, WINDOW_KIND_ID);
         assert_eq!(def.body_key, BODY_KEY);
     }
 
     #[test]
-    fn render_lists_the_comment_root_and_one_leaf_per_entry() {
+    async fn render_lists_the_comment_root_and_one_leaf_per_entry() {
         let document = ZipSnapshot { entries: vec![ZipEntry { name: "a.txt".into(), data: b"hi".to_vec() }], comment: "an archive".into(), ..ZipSnapshot::default() };
         let UiNode::Tree(node) = render(&document) else { panic!("expected Tree") };
         let root = &node.sections[0].items[0];

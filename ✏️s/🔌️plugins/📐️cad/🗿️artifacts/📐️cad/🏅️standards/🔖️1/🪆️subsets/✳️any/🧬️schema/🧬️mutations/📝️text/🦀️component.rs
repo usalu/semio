@@ -14,7 +14,7 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 //#region 🔖️HandcraftedOpCodecs
 /// ⚡️ P6 handcrafted OpText/OpBinary (derive no longer emits these traits).
 impl protocol::OpText for CadMutation {
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
+    async fn parse_op(line: &str) -> Result<Self, store::TextError> {
         let variants = <Self as dsl::DslVariants>::variants();
         for (keyword, spec_fn) in &variants {
             let probe = format!("{} ", keyword);
@@ -29,7 +29,7 @@ impl protocol::OpText for CadMutation {
         }
         Err(dsl::__rt::field_error(format!("unknown mutation line '{line}'")))
     }
-    fn print_op(&self) -> String {
+    async fn print_op(&self) -> String {
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
         let variants = <Self as dsl::DslVariants>::variants();
         let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
@@ -38,10 +38,10 @@ impl protocol::OpText for CadMutation {
 }
 
 impl protocol::OpBinary for CadMutation {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         dsl::variants_binary::encode_op(self)
     }
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         dsl::variants_binary::decode_op(bytes)
     }
 }
@@ -57,7 +57,7 @@ mod tests {
     /// greenfield, no backward compat — so round-tripping every current variant (below) is the law
     /// that matters now, not byte-for-byte parity with a vocabulary that no longer exists.
     #[test]
-    fn cad_mutation_print_op_round_trips_every_variant_as_one_line() {
+    async fn cad_mutation_print_op_round_trips_every_variant_as_one_line() {
         for op in every_mutation() {
             store::os_store::test_support::assert_op_line_round_trip(&op);
             store::os_store::test_support::assert_op_text_binary_equivalence(&op);

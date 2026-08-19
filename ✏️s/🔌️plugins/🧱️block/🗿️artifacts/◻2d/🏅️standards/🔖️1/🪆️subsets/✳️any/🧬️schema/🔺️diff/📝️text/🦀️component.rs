@@ -15,7 +15,7 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 //#endregion 📖️SemioGrammar
 
 //#region 🔖️Apply
-fn apply_identified_delta<T: Clone>(
+async fn apply_identified_delta<T: Clone>(
     items: &[T],
     removed: &[String],
     added: &[T],
@@ -84,29 +84,29 @@ fn apply_identified_delta<T: Clone>(
     Ok(next)
 }
 
-fn apply_handle_kinds_delta(items: &[Block2dHandleKind], delta: &Block2dHandleKindsDelta) -> protocol::MutationApplyResult<Vec<Block2dHandleKind>> {
+async fn apply_handle_kinds_delta(items: &[Block2dHandleKind], delta: &Block2dHandleKindsDelta) -> protocol::MutationApplyResult<Vec<Block2dHandleKind>> {
     let patched: Vec<_> = delta.patched.iter().map(|e| (e.id.clone(), e.patch.replacement.clone())).collect();
     apply_identified_delta(items, &delta.removed, &delta.added, &patched, &delta.reordered, |item| item.id.as_str())
 }
 
-fn apply_handles_delta(items: &[Block2dHandleTemplate], delta: &Block2dHandlesDelta) -> protocol::MutationApplyResult<Vec<Block2dHandleTemplate>> {
+async fn apply_handles_delta(items: &[Block2dHandleTemplate], delta: &Block2dHandlesDelta) -> protocol::MutationApplyResult<Vec<Block2dHandleTemplate>> {
     let patched: Vec<_> = delta.patched.iter().map(|e| (e.id.clone(), e.patch.replacement.clone())).collect();
     apply_identified_delta(items, &delta.removed, &delta.added, &patched, &delta.reordered, |item| item.id.as_str())
 }
 
-fn apply_compatibility_delta(items: &[BlockCompatibilityRule], delta: &Block2dCompatibilityDelta) -> protocol::MutationApplyResult<Vec<BlockCompatibilityRule>> {
+async fn apply_compatibility_delta(items: &[BlockCompatibilityRule], delta: &Block2dCompatibilityDelta) -> protocol::MutationApplyResult<Vec<BlockCompatibilityRule>> {
     let patched: Vec<_> = delta.patched.iter().map(|e| (e.id.clone(), e.patch.replacement.clone())).collect();
     apply_identified_delta(items, &delta.removed, &delta.added, &patched, &delta.reordered, |item| item.id.as_str())
 }
 
-fn apply_attributes_delta(items: &[BlockAttribute], delta: &Block2dAttributesDelta) -> protocol::MutationApplyResult<Vec<BlockAttribute>> {
+async fn apply_attributes_delta(items: &[BlockAttribute], delta: &Block2dAttributesDelta) -> protocol::MutationApplyResult<Vec<BlockAttribute>> {
     let patched: Vec<_> = delta.patched.iter().map(|e| (e.id.clone(), e.patch.replacement.clone())).collect();
     apply_identified_delta(items, &delta.removed, &delta.added, &patched, &delta.reordered, |item| item.key.as_str())
 }
 
 impl Block2dDiff {
     /// 🧬️ Applies every sparse entry (all state classes) onto a full artifact.
-    pub fn apply_to_artifact(&self, artifact: &Block2dArtifact) -> protocol::MutationApplyResult<Block2dArtifact> {
+    pub async fn apply_to_artifact(&self, artifact: &Block2dArtifact) -> protocol::MutationApplyResult<Block2dArtifact> {
         Ok({
             if let Some(replacement) = &self.artifact {
                 return Ok((**replacement).clone());
@@ -130,7 +130,7 @@ impl Block2dDiff {
 }
 
 impl MutationDiff<Block2dSnapshot> for Block2dDiff {
-    fn apply(&self, snapshot: &Block2dSnapshot) -> protocol::MutationApplyResult<Block2dSnapshot> {
+    async fn apply(&self, snapshot: &Block2dSnapshot) -> protocol::MutationApplyResult<Block2dSnapshot> {
         Ok({
             if let Some(replacement) = &self.artifact {
                 return Ok(replacement.to_snapshot());
@@ -149,7 +149,7 @@ impl MutationDiff<Block2dSnapshot> for Block2dDiff {
             next
         })
     }
-    fn absorb(&mut self, other: Self) {
+    async fn absorb(&mut self, other: Self) {
         if other.artifact.is_some() {
             *self = other;
             return;
@@ -169,7 +169,7 @@ impl MutationDiff<Block2dSnapshot> for Block2dDiff {
         take!(meta);
         take!(selected_ids);
         take!(locale);
-        fn absorb_delta<D, F>(target: &mut Option<D>, incoming: Option<D>, merge: F)
+        async fn absorb_delta<D, F>(target: &mut Option<D>, incoming: Option<D>, merge: F)
         where
             F: FnOnce(&mut D, D),
         {
@@ -210,7 +210,7 @@ impl MutationDiff<Block2dSnapshot> for Block2dDiff {
 
 //#region 🔖️DiffHelpers
 pub(crate) trait Block2dHasId {
-    fn id(&self) -> &str;
+    async fn id(&self) -> &str;
 }
 impl Block2dHasId for Block2dHandleKind { fn id(&self) -> &str { &self.id } }
 impl Block2dHasId for Block2dHandleTemplate { fn id(&self) -> &str { &self.id } }
@@ -218,12 +218,12 @@ impl Block2dHasId for BlockCompatibilityRule { fn id(&self) -> &str { &self.id }
 impl Block2dHasId for BlockAttribute { fn id(&self) -> &str { &self.key } }
 
 /// 🔍️ Index of an id-keyed row.
-pub(crate) fn block2d_index_of<T: Block2dHasId>(items: &[T], id: &str) -> Option<usize> {
+pub(crate) async fn block2d_index_of<T: Block2dHasId>(items: &[T], id: &str) -> Option<usize> {
     items.iter().position(|item| item.id() == id)
 }
 
 /// 📍 Builds a handle-kinds set delta, preserving insert index via `reordered` when the id is new.
-pub fn diff_set_handle_kind(index: usize, handle_kind: Block2dHandleKind, base: &Block2dSnapshot) -> Block2dDiff {
+pub async fn diff_set_handle_kind(index: usize, handle_kind: Block2dHandleKind, base: &Block2dSnapshot) -> Block2dDiff {
     let mut delta = Block2dHandleKindsDelta { added: vec![handle_kind.clone()], ..Default::default() };
     if block2d_index_of(&base.handle_kinds, &handle_kind.id).is_none() {
         let mut order: Vec<String> = base.handle_kinds.iter().map(|e| e.id.clone()).collect();
@@ -235,12 +235,12 @@ pub fn diff_set_handle_kind(index: usize, handle_kind: Block2dHandleKind, base: 
 }
 
 /// ➖ Builds a handle-kinds remove delta.
-pub fn diff_remove_handle_kind(id: String) -> Block2dDiff {
+pub async fn diff_remove_handle_kind(id: String) -> Block2dDiff {
     Block2dDiff { handle_kinds: Some(Block2dHandleKindsDelta { removed: vec![id], ..Default::default() }), ..Default::default() }
 }
 
 /// 📍 Builds a handles set delta.
-pub fn diff_set_handle(index: usize, handle: Block2dHandleTemplate, base: &Block2dSnapshot) -> Block2dDiff {
+pub async fn diff_set_handle(index: usize, handle: Block2dHandleTemplate, base: &Block2dSnapshot) -> Block2dDiff {
     let mut delta = Block2dHandlesDelta { added: vec![handle.clone()], ..Default::default() };
     if block2d_index_of(&base.handles, &handle.id).is_none() {
         let mut order: Vec<String> = base.handles.iter().map(|e| e.id.clone()).collect();
@@ -252,12 +252,12 @@ pub fn diff_set_handle(index: usize, handle: Block2dHandleTemplate, base: &Block
 }
 
 /// ➖ Builds a handles remove delta.
-pub fn diff_remove_handle(id: String) -> Block2dDiff {
+pub async fn diff_remove_handle(id: String) -> Block2dDiff {
     Block2dDiff { handles: Some(Block2dHandlesDelta { removed: vec![id], ..Default::default() }), ..Default::default() }
 }
 
 /// 📍 Builds a compatibility set delta.
-pub fn diff_set_compatibility_rule(index: usize, rule: BlockCompatibilityRule, base: &Block2dSnapshot) -> Block2dDiff {
+pub async fn diff_set_compatibility_rule(index: usize, rule: BlockCompatibilityRule, base: &Block2dSnapshot) -> Block2dDiff {
     let mut delta = Block2dCompatibilityDelta { added: vec![rule.clone()], ..Default::default() };
     if block2d_index_of(&base.compatibility, &rule.id).is_none() {
         let mut order: Vec<String> = base.compatibility.iter().map(|e| e.id.clone()).collect();
@@ -269,12 +269,12 @@ pub fn diff_set_compatibility_rule(index: usize, rule: BlockCompatibilityRule, b
 }
 
 /// ➖ Builds a compatibility remove delta.
-pub fn diff_remove_compatibility_rule(id: String) -> Block2dDiff {
+pub async fn diff_remove_compatibility_rule(id: String) -> Block2dDiff {
     Block2dDiff { compatibility: Some(Block2dCompatibilityDelta { removed: vec![id], ..Default::default() }), ..Default::default() }
 }
 
 /// 📍 Builds an attributes set delta.
-pub fn diff_set_attribute(index: usize, attribute: BlockAttribute, base: &Block2dSnapshot) -> Block2dDiff {
+pub async fn diff_set_attribute(index: usize, attribute: BlockAttribute, base: &Block2dSnapshot) -> Block2dDiff {
     let mut delta = Block2dAttributesDelta { added: vec![attribute.clone()], ..Default::default() };
     if block2d_index_of(&base.attributes, &attribute.key).is_none() {
         let mut order: Vec<String> = base.attributes.iter().map(|e| e.key.clone()).collect();
@@ -286,12 +286,12 @@ pub fn diff_set_attribute(index: usize, attribute: BlockAttribute, base: &Block2
 }
 
 /// ➖ Builds an attributes remove delta.
-pub fn diff_remove_attribute(key: String) -> Block2dDiff {
+pub async fn diff_remove_attribute(key: String) -> Block2dDiff {
     Block2dDiff { attributes: Some(Block2dAttributesDelta { removed: vec![key], ..Default::default() }), ..Default::default() }
 }
 
 /// 🌍️ Builds a whole-artifact replacement delta from a snapshot.
-pub fn diff_set_snapshot(snapshot: Block2dSnapshot) -> Block2dDiff {
+pub async fn diff_set_snapshot(snapshot: Block2dSnapshot) -> Block2dDiff {
     Block2dDiff {
         artifact: Some(Box::new(Block2dArtifact::from_snapshot(snapshot))),
         ..Default::default()

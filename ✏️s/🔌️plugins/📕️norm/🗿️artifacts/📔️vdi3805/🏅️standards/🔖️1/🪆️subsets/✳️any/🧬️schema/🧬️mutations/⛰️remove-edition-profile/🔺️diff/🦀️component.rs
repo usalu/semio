@@ -4,7 +4,7 @@ use super::mutation::RemoveEditionProfile;
 use crate::artifacts::vdi3805::{Vdi3805Diff, Vdi3805Snapshot};
 
 //#region 🔖️Diff
-pub fn diff(payload: &RemoveEditionProfile, base: &Vdi3805Snapshot) -> protocol::MutationOutcome<Vdi3805Diff> {
+pub async fn diff(payload: &RemoveEditionProfile, base: &Vdi3805Snapshot) -> protocol::MutationOutcome<Vdi3805Diff> {
     if !base.edition_profile.contains_key(&payload.sheet) {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Sheet {} has no edition profile override.", payload.sheet), [payload.sheet.clone()]);
     }

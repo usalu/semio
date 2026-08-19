@@ -46,13 +46,13 @@ pub struct SemioTableDiff {
 }
 
 impl SemioTableDiff {
-    pub fn is_empty_diff(&self) -> bool {
+    pub async fn is_empty_diff(&self) -> bool {
         self.columns.is_none() && self.rows.is_none()
     }
 }
 
 impl MutationDiff<SemioTableSnapshot> for SemioTableDiff {
-    fn apply(&self, base: &SemioTableSnapshot) -> protocol::MutationApplyResult<SemioTableSnapshot> {
+    async fn apply(&self, base: &SemioTableSnapshot) -> protocol::MutationApplyResult<SemioTableSnapshot> {
         let mut next = base.clone();
         if let Some(list) = &self.columns {
             next.columns = list.values.clone();
@@ -63,7 +63,7 @@ impl MutationDiff<SemioTableSnapshot> for SemioTableDiff {
         Ok(next)
     }
 
-    fn absorb(&mut self, other: Self) {
+    async fn absorb(&mut self, other: Self) {
         if other.columns.is_some() {
             self.columns = other.columns;
         }
@@ -79,13 +79,13 @@ impl MutationDiff<SemioTableSnapshot> for SemioTableDiff {
 /// described by "the new/old `columns`/`rows` value", same shape every mutation triad's own
 /// `🔺️diff` leaf already produces.
 impl protocol::command::DiffAlgebra<SemioTableSnapshot> for SemioTableDiff {
-    fn between(base: &SemioTableSnapshot, other: &SemioTableSnapshot) -> Self {
+    async fn between(base: &SemioTableSnapshot, other: &SemioTableSnapshot) -> Self {
         SemioTableDiff { columns: (base.columns != other.columns).then(|| SemioTableColumnList { values: other.columns.clone() }), rows: (base.rows != other.rows).then(|| SemioTableRowList { values: other.rows.clone() }) }
     }
-    fn inverse(&self, base: &SemioTableSnapshot) -> Self {
+    async fn inverse(&self, base: &SemioTableSnapshot) -> Self {
         SemioTableDiff { columns: self.columns.as_ref().map(|_| SemioTableColumnList { values: base.columns.clone() }), rows: self.rows.as_ref().map(|_| SemioTableRowList { values: base.rows.clone() }) }
     }
-    fn is_empty(&self) -> bool {
+    async fn is_empty(&self) -> bool {
         self.is_empty_diff()
     }
 }
@@ -100,24 +100,24 @@ impl protocol::command::DiffAlgebra<SemioTableSnapshot> for SemioTableDiff {
 /// purely a top-level field separator).
 use crate::artifacts::semio::standards::v1::subsets::table::schema::snapshot::{dec_column, dec_row, enc_column, enc_row};
 
-fn enc_columns(list: &SemioTableColumnList) -> String {
+async fn enc_columns(list: &SemioTableColumnList) -> String {
     format!("[{}]", list.values.iter().map(enc_column).collect::<Vec<_>>().join(","))
 }
-fn dec_columns(s: &str) -> Result<SemioTableColumnList, String> {
+async fn dec_columns(s: &str) -> Result<SemioTableColumnList, String> {
     use crate::artifacts::semio::standards::v1::subsets::any::schema::triples::strip_brackets;
     let values = split_top_level(strip_brackets(s)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_column).collect::<Result<Vec<_>, String>>()?;
     Ok(SemioTableColumnList { values })
 }
-fn enc_rows(list: &SemioTableRowList) -> String {
+async fn enc_rows(list: &SemioTableRowList) -> String {
     format!("[{}]", list.values.iter().map(enc_row).collect::<Vec<_>>().join(","))
 }
-fn dec_rows(s: &str) -> Result<SemioTableRowList, String> {
+async fn dec_rows(s: &str) -> Result<SemioTableRowList, String> {
     use crate::artifacts::semio::standards::v1::subsets::any::schema::triples::strip_brackets;
     let values = split_top_level(strip_brackets(s)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_row).collect::<Result<Vec<_>, String>>()?;
     Ok(SemioTableRowList { values })
 }
 
-fn print_table_diff(d: &SemioTableDiff) -> String {
+async fn print_table_diff(d: &SemioTableDiff) -> String {
     let mut parts = Vec::new();
     if let Some(list) = &d.columns {
         parts.push(format!("columns={}", enc_columns(list)));
@@ -127,7 +127,7 @@ fn print_table_diff(d: &SemioTableDiff) -> String {
     }
     parts.join(";")
 }
-fn parse_table_diff(line: &str) -> Result<SemioTableDiff, String> {
+async fn parse_table_diff(line: &str) -> Result<SemioTableDiff, String> {
     if line.is_empty() {
         return Ok(SemioTableDiff::default());
     }
@@ -146,10 +146,10 @@ fn parse_table_diff(line: &str) -> Result<SemioTableDiff, String> {
 }
 
 impl protocol::DiffCodec for SemioTableDiff {
-    fn print_diff(&self) -> String {
+    async fn print_diff(&self) -> String {
         print_table_diff(self)
     }
-    fn parse_diff(line: &str) -> Result<Self, store::TextError> {
+    async fn parse_diff(line: &str) -> Result<Self, store::TextError> {
         parse_table_diff(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
 
@@ -157,7 +157,7 @@ impl protocol::DiffCodec for SemioTableDiff {
     /// two REAL fixed fields; each present section follows as a real varint count + per-item
     /// binary encoding (reusing the snapshot facet's own `write_column`/`read_column` and the
     /// value subset's own `enc_semio_value_bin`/`dec_semio_value_bin` for row cells).
-    fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    async fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         const DIFF_BINARY_FORMAT: u8 = 1;
         use crate::artifacts::semio::standards::v1::subsets::table::schema::snapshot::write_column;
         use crate::artifacts::semio::standards::v1::subsets::value::schema::diff::enc_semio_value_bin;
@@ -180,7 +180,7 @@ impl protocol::DiffCodec for SemioTableDiff {
         }
         Ok(out)
     }
-    fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    async fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         const DIFF_BINARY_FORMAT: u8 = 1;
         use crate::artifacts::semio::standards::v1::subsets::table::schema::snapshot::{read_column, SemioTableRow};
         use crate::artifacts::semio::standards::v1::subsets::value::schema::diff::dec_semio_value_bin;
@@ -227,7 +227,7 @@ impl protocol::DiffCodec for SemioTableDiff {
 /// law`/`protocol_walk_law` in `🚪️io/🦀️component.rs`. Covers: empty, columns-only, rows-only, and
 /// both-present (the two-optional-field `;`-joined `print_diff` shape).
 #[cfg(test)]
-pub(crate) fn demo_diff_cases() -> Vec<SemioTableDiff> {
+pub(crate) async fn demo_diff_cases() -> Vec<SemioTableDiff> {
     use crate::artifacts::semio::standards::v1::subsets::table::schema::snapshot::{demo_table_snapshot, SemioTableCellKind, SemioTableColumn, SemioTableRow};
     use crate::artifacts::semio::standards::v1::subsets::value::schema::snapshot::SemioValue;
     vec![
@@ -250,12 +250,12 @@ mod tests {
     use crate::artifacts::semio::standards::v1::subsets::value::schema::snapshot::SemioValue;
     use protocol::DiffCodec;
 
-    fn one_col_row(name: &str, kind: SemioTableCellKind, value: SemioValue) -> SemioTableSnapshot {
+    async fn one_col_row(name: &str, kind: SemioTableCellKind, value: SemioValue) -> SemioTableSnapshot {
         SemioTableSnapshot { schema: STDIO_SEMIOTABLE_DOCUMENT_SCHEMA.into(), columns: vec![SemioTableColumn { name: name.into(), kind }], rows: vec![SemioTableRow { cells: vec![value] }] }
     }
 
     #[test]
-    fn apply_replaces_columns_and_rows_wholesale() {
+    async fn apply_replaces_columns_and_rows_wholesale() {
         let base = one_col_row("a", SemioTableCellKind::Str, SemioValue::Str { value: "x".into() });
         let diff = SemioTableDiff {
             columns: Some(SemioTableColumnList { values: vec![SemioTableColumn { name: "b".into(), kind: SemioTableCellKind::Int }] }),
@@ -267,7 +267,7 @@ mod tests {
     }
 
     #[test]
-    fn absorb_last_write_wins() {
+    async fn absorb_last_write_wins() {
         let mut d1 = SemioTableDiff { columns: None, rows: Some(SemioTableRowList { values: vec![SemioTableRow { cells: vec![SemioValue::Str { value: "a".into() }] }] }) };
         let d2 = SemioTableDiff { columns: None, rows: Some(SemioTableRowList { values: vec![SemioTableRow { cells: vec![SemioValue::Str { value: "b".into() }] }] }) };
         d1.absorb(d2.clone());
@@ -275,7 +275,7 @@ mod tests {
     }
 
     #[test]
-    fn diff_codec_text_binary_roundtrip_law() {
+    async fn diff_codec_text_binary_roundtrip_law() {
         for d in demo_diff_cases() {
             let printed = d.print_diff();
             assert!(!printed.contains('\n'), "print_diff must be one line, got {printed:?}");
@@ -289,7 +289,7 @@ mod tests {
     }
 
     #[test]
-    fn print_diff_joins_both_fields_with_semicolon_on_one_line() {
+    async fn print_diff_joins_both_fields_with_semicolon_on_one_line() {
         let d = &demo_diff_cases()[3];
         let printed = d.print_diff();
         assert!(printed.contains(';'), "expected both-present diff to join with ';', got {printed:?}");

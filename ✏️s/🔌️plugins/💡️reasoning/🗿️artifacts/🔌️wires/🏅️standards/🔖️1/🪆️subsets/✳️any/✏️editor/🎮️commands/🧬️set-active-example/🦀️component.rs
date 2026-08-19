@@ -24,7 +24,7 @@ pub struct SetActiveExample {
 /// outright — see `📓️taxonomy.md`'s forbidden vocabulary), so loading a named example builds
 /// `editor::wires::reset_wires_document_effect` (a `Effect::LoadDocument`, outside undo history)
 /// instead of an `artifact_mutations` entry.
-pub fn handle(payload: &SetActiveExample, _doc: &ArtifactView<'_, crate::artifacts::wires::WiresSnapshot>, _cfg: &ConfigView<'_, WiresConfig>) -> Result<Emit<WiresMutation, WiresConfigMutation>, Fault> {
+pub async fn handle(payload: &SetActiveExample, _doc: &ArtifactView<'_, crate::artifacts::wires::WiresSnapshot>, _cfg: &ConfigView<'_, WiresConfig>) -> Result<Emit<WiresMutation, WiresConfigMutation>, Fault> {
     let next = if payload.example_id.as_str() == WIRES_PLAY_EXAMPLE_METABOLISM_ID {
         metabolism_wires_example_snapshot().map_err(|error| {
             let message = if error.target.is_empty() {
@@ -62,7 +62,7 @@ mod tests {
     /// in-process harness never applies `effects` to its own store, so this asserts on the emitted
     /// effect directly (mirrors `🎮️commands/📚️example`-style facets elsewhere in this ticket).
     #[test]
-    fn set_active_example_metabolism_loads_seven_nodes() {
+    async fn set_active_example_metabolism_loads_seven_nodes() {
         use semio_framework_plugin::Effect;
         let mut app = new_app();
         let result = dispatch(&mut app, WiresCommand::SetActiveExample(SetActiveExample { example_id: WIRES_PLAY_EXAMPLE_METABOLISM_ID.into() }));
@@ -75,7 +75,7 @@ mod tests {
     }
 
     #[test]
-    fn set_active_example_unknown_id_loads_empty_document() {
+    async fn set_active_example_unknown_id_loads_empty_document() {
         use semio_framework_plugin::Effect;
         let mut app = metabolism_app();
         let result = dispatch(&mut app, WiresCommand::SetActiveExample(SetActiveExample { example_id: "nope".into() }));

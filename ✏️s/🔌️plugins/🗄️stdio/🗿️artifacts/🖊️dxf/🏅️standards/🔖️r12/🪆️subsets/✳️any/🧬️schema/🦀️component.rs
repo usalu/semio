@@ -34,24 +34,24 @@ pub struct DxfArtifact {
 
 //#region 🔖️Conversions
 impl Default for DxfArtifact {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self::from_snapshot(DxfSnapshot::default())
     }
 }
 
 impl DxfArtifact {
     /// 📸️ Persisted subset.
-    pub fn to_snapshot(&self) -> DxfSnapshot {
+    pub async fn to_snapshot(&self) -> DxfSnapshot {
         DxfSnapshot { schema: self.schema.clone(), header_vars: self.header_vars.clone(), tables: self.tables.clone(), other_tables: self.other_tables.clone(), blocks: self.blocks.clone(), entities: self.entities.clone() }
     }
 
     /// 🧬️ Builds a full artifact from a snapshot.
-    pub fn from_snapshot(snapshot: DxfSnapshot) -> Self {
+    pub async fn from_snapshot(snapshot: DxfSnapshot) -> Self {
         Self { schema: snapshot.schema, header_vars: snapshot.header_vars, tables: snapshot.tables, other_tables: snapshot.other_tables, blocks: snapshot.blocks, entities: snapshot.entities }
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
-    pub fn set_snapshot(&mut self, snapshot: DxfSnapshot) {
+    pub async fn set_snapshot(&mut self, snapshot: DxfSnapshot) {
         self.schema = snapshot.schema;
         self.header_vars = snapshot.header_vars;
         self.tables = snapshot.tables;
@@ -64,7 +64,7 @@ impl DxfArtifact {
 
 //#region 🔖️Descriptor
 /// 🧬️ Descriptor for `s.stdio.dxf`.
-pub fn dxf_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
+pub async fn dxf_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
     schema::ArtifactSchemaDescriptor {
         id: "s.stdio.dxf",
         artifact: schema::FacetLeaves {
@@ -115,27 +115,27 @@ pub mod derived_construction {
         type Snapshot = DxfSnapshot;
         type Mutation = DxfMutation;
         type Diff = DxfDiff;
-        fn empty() -> Self {
+        async fn empty() -> Self {
             Self { snapshot: DxfSnapshot::default(), diagnostics: Vec::new() }
         }
-        fn from_snapshot(snapshot: Self::Snapshot) -> Self {
+        async fn from_snapshot(snapshot: Self::Snapshot) -> Self {
             Self { snapshot, diagnostics: Vec::new() }
         }
-        fn from_text(text: &str) -> Result<Self, store::TextError> {
+        async fn from_text(text: &str) -> Result<Self, store::TextError> {
             Ok(Self::from_snapshot(<DxfSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
-        fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
+        async fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
             Ok(Self::from_snapshot(<DxfSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
         }
-        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
+        async fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let diff = crate::artifacts::dxf::schema::mutations::apply_dxf_mutation(&mut self.snapshot, &mutation);
             (self, diff)
         }
-        fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
+        async fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
             self.snapshot = <DxfDiff as protocol::MutationDiff<DxfSnapshot>>::apply(&diff, &self.snapshot)?;
             Ok(self)
         }
-        fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
+        async fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
             if self.diagnostics.is_empty() {
                 Ok(self.snapshot)
             } else {
@@ -173,7 +173,7 @@ pub mod derived_analysis {
         /// heuristic rather than an exact match: the first non-blank line must trim to a valid
         /// integer group code, and one of the DXF section/version markers (`SECTION`, `HEADER`,
         /// `ENTITIES`, or an `AC10xx`-style version string) must appear among the first tags.
-        fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
+        async fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
             let text = match source {
                 AnalyzeSource::Text(text) => Some(*text),
                 AnalyzeSource::Binary(_) => None,
@@ -196,7 +196,7 @@ pub mod derived_analysis {
             }
         }
 
-        fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
+        async fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
             let mut parts = DxfParts::default();
             let mut diagnostics = Vec::new();
             let mut confidence = IoConfidence::High;
@@ -243,14 +243,14 @@ semio_framework_plugin::derive_artifact_facets!(
 use crate::artifacts::dxf::STDIO_DXF_DOCUMENT_SCHEMA;
 
 /// 🌱 Empty persisted snapshot.
-pub fn empty_dxf_snapshot() -> DxfSnapshot {
+pub async fn empty_dxf_snapshot() -> DxfSnapshot {
     DxfSnapshot::default()
 }
 
 /// 🧬️ Genuinely 2-level-nested (a `BLOCK` with a nested entity), every-section demo snapshot —
 /// the single source of truth for `fixture_honesty_law`'s shipped `🗣️example.dsl.semio`/
 /// `🎒️example.pack.semio` fixtures AND `grammar_conformance_law`/`protocol_walk_law`.
-pub fn demo_dxf_snapshot() -> DxfSnapshot {
+pub async fn demo_dxf_snapshot() -> DxfSnapshot {
     use crate::artifacts::dxf::schema::snapshot::{DxfBlock, DxfEntity, DxfHeaderVar, DxfLayer, DxfLinetype, DxfOtherTable, DxfStyle, DxfTables, DxfTag, DxfValue};
     DxfSnapshot {
         schema: STDIO_DXF_DOCUMENT_SCHEMA.into(),
@@ -280,13 +280,13 @@ mod tests {
     use super::*;
 
     #[test]
-    fn empty_snapshot_matches_schema() {
+    async fn empty_snapshot_matches_schema() {
         let snapshot = empty_dxf_snapshot();
         assert_eq!(snapshot.schema, STDIO_DXF_DOCUMENT_SCHEMA);
     }
 
     #[test]
-    fn codec_round_trip() {
+    async fn codec_round_trip() {
         let snap = empty_dxf_snapshot();
         let text = store::ArtifactDsl::print_dsl(&snap);
         let parsed = <DxfSnapshot as store::ArtifactDsl>::parse_dsl(&text).expect("parse");
@@ -300,7 +300,7 @@ mod tests {
     /// 🔁️ decode→encode retains every field across every section — documented NORMAL FORM: from
     /// the SECOND generation onward decode/encode is a true fixed point.
     #[test]
-    fn codec_retention_law() {
+    async fn codec_retention_law() {
         use crate::artifacts::dxf::schema::snapshot::{parse_dxf_document, print_dxf_document, DxfEntity, DxfHeaderVar, DxfLayer, DxfLinetype, DxfOtherTable, DxfStyle, DxfTables, DxfTag, DxfValue};
         let snap1 = DxfSnapshot {
             schema: STDIO_DXF_DOCUMENT_SCHEMA.into(),
@@ -345,7 +345,7 @@ mod tests {
         use protocol::{DiffCodec, OpBinary, OpText};
 
         #[test]
-        fn committed_facet_files_parse() {
+        async fn committed_facet_files_parse() {
             for (label, text) in [("snapshot grammar", snapshot::text::COMPONENT_GRAMMAR_SEMIO), ("mutations grammar", mutations::text::COMPONENT_GRAMMAR_SEMIO), ("diff grammar", diff::text::COMPONENT_GRAMMAR_SEMIO)] {
                 let grammar = dsl::parse_grammar(text).unwrap_or_else(|e| panic!("{label}: parse_grammar failed: {e:?}"));
                 assert_eq!(grammar.dialect, dsl::SemioDialect::Grammar, "{label}: expected grammar dialect");
@@ -356,7 +356,7 @@ mod tests {
         }
 
         #[test]
-        fn grammar_conformance_law() {
+        async fn grammar_conformance_law() {
             let grammar = dsl::parse_grammar(snapshot::text::COMPONENT_GRAMMAR_SEMIO).expect("parse snapshot grammar");
             let recognizer = dsl::Recognizer::compile(&grammar);
             let text = store::ArtifactDsl::print_dsl(&demo_dxf_snapshot());
@@ -366,7 +366,7 @@ mod tests {
         }
 
         #[test]
-        fn ops_grammar_conformance_law() {
+        async fn ops_grammar_conformance_law() {
             let grammar = dsl::parse_grammar(mutations::text::COMPONENT_GRAMMAR_SEMIO).expect("parse mutations grammar");
             let recognizer = dsl::Recognizer::compile(&grammar);
             for mutation in mutations::demo_mutation_cases() {
@@ -376,7 +376,7 @@ mod tests {
         }
 
         #[test]
-        fn diff_grammar_conformance_law() {
+        async fn diff_grammar_conformance_law() {
             let grammar = dsl::parse_grammar(diff::text::COMPONENT_GRAMMAR_SEMIO).expect("parse diff grammar");
             let recognizer = dsl::Recognizer::compile(&grammar);
             for d in diff::demo_diff_cases() {
@@ -386,7 +386,7 @@ mod tests {
         }
 
         #[test]
-        fn protocol_walk_law() {
+        async fn protocol_walk_law() {
             let pack_spec = dsl::parse_protocol(snapshot::binary::COMPONENT_PROTOCOL_SEMIO).expect("parse snapshot protocol");
             let packed = store::ArtifactPack::encode_pack(&demo_dxf_snapshot());
             let (_, inner) = store::semio_format::unwrap_binary(&packed).expect("unwrap semio envelope");
@@ -409,7 +409,7 @@ mod tests {
         }
 
         #[test]
-        fn fixture_honesty_law() {
+        async fn fixture_honesty_law() {
             const FIXTURE_DSL: &str = include_str!("../📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio");
             const FIXTURE_PACK: &[u8] = include_bytes!("../📚️examples/🎬️demo/🖼️assets/🎒️example.pack.semio");
 

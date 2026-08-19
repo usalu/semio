@@ -29,7 +29,7 @@ pub mod set_shot_selection {
         pub shot_ids: Vec<String>,
     }
 
-    pub fn handle(payload: &SetShotSelection, _doc: &ArtifactView<'_, ShootingSnapshot>, _cfg: &ConfigView<'_, ShootingConfig>, _ctx: &mut ShootingDispatchCtx) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
+    pub async fn handle(payload: &SetShotSelection, _doc: &ArtifactView<'_, ShootingSnapshot>, _cfg: &ConfigView<'_, ShootingConfig>, _ctx: &mut ShootingDispatchCtx) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
         Ok(Emit::config(vec![ShootingConfigMutation::SetShotSelection { shot_ids: payload.shot_ids.clone() }]))
     }
 }
@@ -43,7 +43,7 @@ pub mod world_pointer_down {
     #[dsl(keyword = "world-pointer-down")]
     pub struct WorldPointerDown {}
 
-    pub fn handle(_payload: &WorldPointerDown, _doc: &ArtifactView<'_, ShootingSnapshot>, _cfg: &ConfigView<'_, ShootingConfig>, _ctx: &mut ShootingDispatchCtx) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
+    pub async fn handle(_payload: &WorldPointerDown, _doc: &ArtifactView<'_, ShootingSnapshot>, _cfg: &ConfigView<'_, ShootingConfig>, _ctx: &mut ShootingDispatchCtx) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
         Ok(Emit::default())
     }
 }
@@ -57,7 +57,7 @@ pub mod world_pointer_move {
     #[dsl(keyword = "world-pointer-move")]
     pub struct WorldPointerMove {}
 
-    pub fn handle(_payload: &WorldPointerMove, _doc: &ArtifactView<'_, ShootingSnapshot>, _cfg: &ConfigView<'_, ShootingConfig>, _ctx: &mut ShootingDispatchCtx) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
+    pub async fn handle(_payload: &WorldPointerMove, _doc: &ArtifactView<'_, ShootingSnapshot>, _cfg: &ConfigView<'_, ShootingConfig>, _ctx: &mut ShootingDispatchCtx) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
         Ok(Emit::default())
     }
 }
@@ -73,7 +73,7 @@ pub mod set_center_model {
         pub pressed: Option<bool>,
     }
 
-    pub fn handle(payload: &SetCenterModel, _doc: &ArtifactView<'_, ShootingSnapshot>, cfg: &ConfigView<'_, ShootingConfig>, _ctx: &mut ShootingDispatchCtx) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
+    pub async fn handle(payload: &SetCenterModel, _doc: &ArtifactView<'_, ShootingSnapshot>, cfg: &ConfigView<'_, ShootingConfig>, _ctx: &mut ShootingDispatchCtx) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
         let config = cfg.snapshot;
         let next = payload.pressed.unwrap_or(!config.center_model);
         let mut config_mutations = vec![ShootingConfigMutation::SetCenterModel { value: next }];
@@ -99,7 +99,7 @@ pub mod set_active_utility {
     /// `Emit` has no channel into `InteractionState` any more (only the framework's own injected
     /// `interactionHover` dispatch writes it), so switching the transform utility no longer clears
     /// hover. Documented behavior change, matching this wave's other apps (e.g. `raster`'s `add-layer`).
-    pub fn handle(payload: &SetActiveUtility, _doc: &ArtifactView<'_, ShootingSnapshot>, _cfg: &ConfigView<'_, ShootingConfig>, _ctx: &mut ShootingDispatchCtx) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
+    pub async fn handle(payload: &SetActiveUtility, _doc: &ArtifactView<'_, ShootingSnapshot>, _cfg: &ConfigView<'_, ShootingConfig>, _ctx: &mut ShootingDispatchCtx) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
         Ok(Emit::config(vec![ShootingConfigMutation::SetActiveUtility { utility_id: payload.utility_id.clone() }]))
     }
 }
@@ -113,7 +113,7 @@ mod tests {
     use crate::editor::shooting::ShootingCommand;
 
     #[test]
-    fn set_shot_selection_is_config_only_and_selects_the_shot_in_the_inspector() {
+    async fn set_shot_selection_is_config_only_and_selects_the_shot_in_the_inspector() {
         use crate::editor::shooting::testkit::render;
         use crate::editor::shooting::SHOOTING_PLAY_BODY_INSPECTION;
 
@@ -125,14 +125,14 @@ mod tests {
     }
 
     #[test]
-    fn set_active_utility_emits_no_artifact_mutations() {
+    async fn set_active_utility_emits_no_artifact_mutations() {
         let mut app = shooting_app();
         let result = dispatch(&mut app, ShootingCommand::SetActiveUtility(set_active_utility::SetActiveUtility { utility_id: "rotate".into() }));
         assert!(result.mutations.is_empty(), "utility switching never emits document operations");
     }
 
     #[test]
-    fn center_model_toggle_bumps_fit_revision_only_on_the_off_to_on_edge() {
+    async fn center_model_toggle_bumps_fit_revision_only_on_the_off_to_on_edge() {
         let mut app = shooting_app();
         dispatch(&mut app, ShootingCommand::SetCenterModel(set_center_model::SetCenterModel { pressed: Some(false) }));
         dispatch(&mut app, ShootingCommand::SetCenterModel(set_center_model::SetCenterModel { pressed: Some(true) }));

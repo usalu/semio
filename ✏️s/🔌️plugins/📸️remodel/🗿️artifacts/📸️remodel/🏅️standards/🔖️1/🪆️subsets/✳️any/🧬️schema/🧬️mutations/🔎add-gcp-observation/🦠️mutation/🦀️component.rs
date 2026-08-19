@@ -16,23 +16,23 @@ pub struct AddGcpObservation {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn add_gcp_observation(id: String, observation: GcpObservation) -> RemodelMutation {
+pub async fn add_gcp_observation(id: String, observation: GcpObservation) -> RemodelMutation {
     RemodelMutation::AddGcpObservation(AddGcpObservation { id, observation })
 }
 
 impl protocol::MutationKind<RemodelSnapshot, RemodelMutation> for AddGcpObservation {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "add", entity: "gcp", kind: "add-gcp-observation", record: "AddedGcpObservation" };
 
-    fn diff(&self, base: &RemodelSnapshot) -> protocol::MutationOutcome<RemodelDiff> {
+    async fn diff(&self, base: &RemodelSnapshot) -> protocol::MutationOutcome<RemodelDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &RemodelSnapshot) -> Vec<RemodelMutation> {
+    async fn inverse(&self, base: &RemodelSnapshot) -> Vec<RemodelMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         format!("Add observation to GCP \"{}\"", self.id)
     }
-    fn target(&self) -> Vec<String> {
+    async fn target(&self) -> Vec<String> {
         vec![self.id.clone()]
     }
 }

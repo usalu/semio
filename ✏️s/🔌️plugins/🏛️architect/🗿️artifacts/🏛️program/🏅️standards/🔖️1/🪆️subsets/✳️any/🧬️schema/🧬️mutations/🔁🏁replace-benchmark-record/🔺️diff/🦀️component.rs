@@ -8,7 +8,7 @@ use crate::artifacts::program::ProgramSnapshot;
 /// 🔁️ Whole-value swap of one row's non-identity content within the working-scene cache, then
 /// re-mint a fresh content-addressed `table` child handle. Error `mutation.target-missing` if
 /// absent, Warning `mutation.no-op` if the value is unchanged (both empty diff).
-pub fn diff(payload: &ReplaceBenchmarkRecord, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
+pub async fn diff(payload: &ReplaceBenchmarkRecord, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
     let mut records = crate::artifacts::program::program_benchmarks(base);
     let Some(existing) = records.iter_mut().find(|row| row.header.id == payload.benchmark_record.header.id) else {
         return protocol::MutationOutcome::error("mutation.target-missing", "No benchmark record exists with this id.", [payload.benchmark_record.header.id.0.clone()]);

@@ -23,7 +23,7 @@ pub struct DeleteSpace {
 //#endregion 🔖️Payload
 
 //#region 🔖️Handle
-pub fn handle(payload: &DeleteSpace, _doc: &ArtifactView<'_, SHomeSnapshot>, _cfg: &ConfigView<'_, HomeConfig>) -> Result<Emit<SHomeMutation, HomeConfigMutation>, Fault> {
+pub async fn handle(payload: &DeleteSpace, _doc: &ArtifactView<'_, SHomeSnapshot>, _cfg: &ConfigView<'_, HomeConfig>) -> Result<Emit<SHomeMutation, HomeConfigMutation>, Fault> {
     if !payload.confirmed {
         let args = dsl::to_dsl_value(&json!({ "spaceId": payload.space_id, "confirmed": true })).ok();
         return Ok(Emit::effect(Effect::OpenDialog {req: semio_framework_plugin::RequestId(127),  dialog_id: "deleteSpace".into(), args }));
@@ -38,7 +38,7 @@ pub fn handle(payload: &DeleteSpace, _doc: &ArtifactView<'_, SHomeSnapshot>, _cf
 mod tests {
     use super::*;
 
-    fn dispatch(payload: DeleteSpace) -> Emit<SHomeMutation, HomeConfigMutation> {
+    async fn dispatch(payload: DeleteSpace) -> Emit<SHomeMutation, HomeConfigMutation> {
         let history = semio_framework_plugin::HistoryView::empty();
         let doc_snapshot = SHomeSnapshot::default();
         let doc = ArtifactView::new(&doc_snapshot, &history);
@@ -48,7 +48,7 @@ mod tests {
     }
 
     #[test]
-    fn unconfirmed_delete_emits_the_confirm_dialog_and_never_the_command() {
+    async fn unconfirmed_delete_emits_the_confirm_dialog_and_never_the_command() {
         let emit = dispatch(DeleteSpace { space_id: "sp-1".into(), confirmed: false });
         assert_eq!(emit.effects.len(), 1);
         let (dialog_id, args) = match &emit.effects[0] {
@@ -63,7 +63,7 @@ mod tests {
     }
 
     #[test]
-    fn confirmed_delete_emits_the_replay_shell_command() {
+    async fn confirmed_delete_emits_the_replay_shell_command() {
         let emit = dispatch(DeleteSpace { space_id: "sp-1".into(), confirmed: true });
         let (action_id, args) = emit
             .effects

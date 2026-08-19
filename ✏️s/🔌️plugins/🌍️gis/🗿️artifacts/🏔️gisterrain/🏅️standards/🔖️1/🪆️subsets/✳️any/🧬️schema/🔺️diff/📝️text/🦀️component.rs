@@ -14,7 +14,7 @@ use protocol::MutationDiff;
 //#region 🔹Apply
 impl GisTerrainDiff {
     /// 🧬️ Applies every sparse entry (all state classes) onto a full artifact.
-    pub fn apply_to_artifact(&self, artifact: &GisTerrainArtifact) -> protocol::MutationApplyResult<GisTerrainArtifact> {
+    pub async fn apply_to_artifact(&self, artifact: &GisTerrainArtifact) -> protocol::MutationApplyResult<GisTerrainArtifact> {
         Ok({
             if let Some(replacement) = &self.artifact {
                 return Ok((**replacement).clone());
@@ -38,7 +38,7 @@ impl GisTerrainDiff {
 }
 
 impl MutationDiff<GisTerrainSnapshot> for GisTerrainDiff {
-    fn apply(&self, snapshot: &GisTerrainSnapshot) -> protocol::MutationApplyResult<GisTerrainSnapshot> {
+    async fn apply(&self, snapshot: &GisTerrainSnapshot) -> protocol::MutationApplyResult<GisTerrainSnapshot> {
         Ok({
             if let Some(replacement) = &self.artifact {
                 return Ok(replacement.to_snapshot());
@@ -56,7 +56,7 @@ impl MutationDiff<GisTerrainSnapshot> for GisTerrainDiff {
             next
         })
     }
-    fn absorb(&mut self, other: Self) {
+    async fn absorb(&mut self, other: Self) {
         if other.artifact.is_some() {
             *self = other;
             return;
@@ -78,15 +78,15 @@ impl MutationDiff<GisTerrainSnapshot> for GisTerrainDiff {
 
 //#region 🔹Helpers
 /// ⚡️ Diff helpers used by mutations.
-pub fn diff_exaggeration(exaggeration: f64) -> GisTerrainDiff {
+pub async fn diff_exaggeration(exaggeration: f64) -> GisTerrainDiff {
     GisTerrainDiff { exaggeration: Some(exaggeration), ..Default::default() }
 }
 
-pub fn diff_imported_features_json(features_json: String) -> GisTerrainDiff {
+pub async fn diff_imported_features_json(features_json: String) -> GisTerrainDiff {
     GisTerrainDiff { imported_features_json: Some(features_json), ..Default::default() }
 }
 
-pub fn diff_set_snapshot(snapshot: &GisTerrainSnapshot) -> GisTerrainDiff {
+pub async fn diff_set_snapshot(snapshot: &GisTerrainSnapshot) -> GisTerrainDiff {
     GisTerrainDiff {
         artifact: Some(Box::new(GisTerrainArtifact::from_snapshot(snapshot.clone()))),
         ..Default::default()
@@ -100,7 +100,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn field_diffs_absorb_last_writer_wins_and_apply_onto_the_snapshot() {
+    async fn field_diffs_absorb_last_writer_wins_and_apply_onto_the_snapshot() {
         let base = GisTerrainSnapshot { exaggeration: 1.0, imported_features_json: String::new(), ..Default::default() };
         let mut diff = GisTerrainDiff { exaggeration: Some(2.0), ..Default::default() };
         diff.absorb(GisTerrainDiff { exaggeration: Some(3.0), imported_features_json: Some("null".into()), ..Default::default() });
@@ -110,7 +110,7 @@ mod tests {
     }
 
     #[test]
-    fn a_whole_artifact_diff_wins_over_every_field_diff() {
+    async fn a_whole_artifact_diff_wins_over_every_field_diff() {
         let base = GisTerrainSnapshot { exaggeration: 1.0, imported_features_json: String::new(), ..Default::default() };
         let replacement_exaggeration = 9.0;
         let replacement_imported_features_json = "{}".to_string();

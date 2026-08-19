@@ -10,6 +10,6 @@ use serde::{Deserialize, Serialize};
 #[dsl(keyword = "close-focused-instance")]
 pub struct CloseFocusedInstance {}
 
-pub fn handle(_payload: &CloseFocusedInstance, _doc: &ArtifactView<'_, WorkflowSnapshot>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
+pub async fn handle(_payload: &CloseFocusedInstance, _doc: &ArtifactView<'_, WorkflowSnapshot>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
     Ok(Emit::config(vec![SpaceConfigMutation::SetFocusedNode { node_id: None }]))
 }

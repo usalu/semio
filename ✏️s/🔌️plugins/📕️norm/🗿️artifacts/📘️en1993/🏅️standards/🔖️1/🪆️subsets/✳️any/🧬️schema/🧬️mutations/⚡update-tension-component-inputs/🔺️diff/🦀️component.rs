@@ -4,7 +4,7 @@ use super::mutation::UpdateTensionComponentInputs;
 use crate::artifacts::en1993::{En1993Diff, En1993Snapshot};
 
 //#region 🔖️Diff
-pub fn diff(payload: &UpdateTensionComponentInputs, base: &En1993Snapshot) -> protocol::MutationOutcome<En1993Diff> {
+pub async fn diff(payload: &UpdateTensionComponentInputs, base: &En1993Snapshot) -> protocol::MutationOutcome<En1993Diff> {
     if !payload.new_tension_component_f_uk_kn.is_finite() {
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("Tension component f uk kn must be a finite number, got {}.", payload.new_tension_component_f_uk_kn), Vec::<String>::new());
     }

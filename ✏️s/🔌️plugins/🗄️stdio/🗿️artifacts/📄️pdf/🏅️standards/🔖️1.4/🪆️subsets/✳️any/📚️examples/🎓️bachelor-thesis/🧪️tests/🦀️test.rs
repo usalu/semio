@@ -35,26 +35,26 @@ use protocol::{DiffCodec, Inference, Mutation, MutationDiff, OpBinary};
 use semio_framework_plugin::ArtifactBuilder;
 use store::{ArtifactDsl, ArtifactPack};
 
-fn assert_logical_cos_retained(snapshot: &PdfSnapshot) {
+async fn assert_logical_cos_retained(snapshot: &PdfSnapshot) {
     assert!(snapshot.objects.len() > 1_000, "native PDF import must retain the logical COS object graph");
     assert!(snapshot.objects.iter().any(|object| matches!(object.value, crate::artifacts::pdf::standards::v1_7::subsets::any::schema::snapshot::PdfObject::Stream { ref data, .. } if !data.is_empty())));
     assert!(snapshot.trailer.iter().any(|entry| entry.key == "Root"));
 }
 
 #[test]
-fn fixture_is_real_pdf_not_a_stub() {
+async fn fixture_is_real_pdf_not_a_stub() {
     assert!(FIXTURE_BYTES.len() > 1_000_000, "bachelor-thesis.pdf must be the real ~6.3MB fixture, got {} bytes", FIXTURE_BYTES.len());
     assert_eq!(&FIXTURE_BYTES[0..5], b"%PDF-", "fixture must start with the PDF magic header");
 }
 
 #[test]
-fn source_nonempty() {
+async fn source_nonempty() {
     let _ = source();
 }
 
 //#region (a) RealDecodeNonTrivialInvariants
 #[test]
-fn real_decode_has_many_pages_and_real_extracted_text() {
+async fn real_decode_has_many_pages_and_real_extracted_text() {
     let snap = decode_pdf(FIXTURE_BYTES).expect("real 1.7 engine must decode the real fixture");
     assert_eq!(snap.declared_version, "1.5", "1.7's lenient reader must report the fixture's own declared version, not overwrite it");
     assert!(snap.pages.len() > 1, "bachelor-thesis.pdf must decode to more than one page, got {}", snap.pages.len());
@@ -81,7 +81,7 @@ fn real_decode_has_many_pages_and_real_extracted_text() {
 /// 🧪️ `codec_retention_law` (real-fixture instance, per the ticket's test-law naming
 /// convention): decode→writer reconstruction reaches a deterministic logical fixed point.
 #[test]
-fn codec_retention_law_bachelor_thesis_decode_encode_decode() {
+async fn codec_retention_law_bachelor_thesis_decode_encode_decode() {
     let original = decode_pdf(FIXTURE_BYTES).expect("decode");
     let rewritten_bytes = encode_pdf(&original).expect("encode");
     assert_eq!(encode_pdf(&decode_pdf(&rewritten_bytes).expect("re-decode canonical output")).expect("re-encode canonical output"), rewritten_bytes);
@@ -95,7 +95,7 @@ fn codec_retention_law_bachelor_thesis_decode_encode_decode() {
 }
 
 #[test]
-fn lossless_structural_flow_law_bachelor_thesis_snapshot_mutation_diff_io_and_inverse() {
+async fn lossless_structural_flow_law_bachelor_thesis_snapshot_mutation_diff_io_and_inverse() {
     let original = decode_pdf(FIXTURE_BYTES).expect("decode exact fixture");
     assert_logical_cos_retained(&original);
     let canonical = encode_pdf(&original).expect("logical writer export");
@@ -154,7 +154,7 @@ fn lossless_structural_flow_law_bachelor_thesis_snapshot_mutation_diff_io_and_in
 }
 
 #[test]
-fn decode_encode_decode_is_structurally_equal_at_page_level() {
+async fn decode_encode_decode_is_structurally_equal_at_page_level() {
     // 📏 The logical writer deterministically materializes a fresh PDF serialization.
     let original = decode_pdf(FIXTURE_BYTES).expect("decode");
     let rewritten_bytes = encode_pdf(&original).expect("encode");
@@ -174,7 +174,7 @@ fn decode_encode_decode_is_structurally_equal_at_page_level() {
 
 //#region (c) AnalyzerBuilderRoundTrip
 #[test]
-fn analyzer_to_builder_round_trip_reproduces_equivalent_pages() {
+async fn analyzer_to_builder_round_trip_reproduces_equivalent_pages() {
     // 🎯 The project's core acceptance test: walk the real decode's page-tree view, reconstruct
     // an equivalent document using ONLY typed builder calls (`PdfBuilder::add_page`,
     // requirement #8), then compare the two documents' *analyzer output* (a fresh real decode of
@@ -204,7 +204,7 @@ fn analyzer_to_builder_round_trip_reproduces_equivalent_pages() {
 /// snapshot produce byte-equal results. Ticket
 /// 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING.
 #[test]
-fn inference_determinism_law() {
+async fn inference_determinism_law() {
     let snapshot = decode_pdf(FIXTURE_BYTES).expect("decode real fixture");
     assert_eq!(Pdf17Inference::infer(&snapshot), Pdf17Inference::infer(&snapshot));
 }
@@ -212,14 +212,14 @@ fn inference_determinism_law() {
 /// 🧪️ (e) `infer(&PdfSnapshot::default())` matches `Pdf17Inference::default()` — the hand-written
 /// `Default` impl (`💡️inferences/🦀️component.rs`) must stay in lockstep with `infer` itself.
 #[test]
-fn inference_default_law() {
+async fn inference_default_law() {
     assert_eq!(Pdf17Inference::infer(&PdfSnapshot::default()), Pdf17Inference::default());
 }
 
 /// 🧪️ `outline` on the real fixture matches the independently-verified page count/text volume
 /// `real_decode_has_many_pages_and_real_extracted_text` above already asserts.
 #[test]
-fn outline_matches_real_fixture_page_count() {
+async fn outline_matches_real_fixture_page_count() {
     let snapshot = decode_pdf(FIXTURE_BYTES).expect("decode real fixture");
     let inferred = Pdf17Inference::infer(&snapshot);
     assert_eq!(inferred.outline.page_count, 65);

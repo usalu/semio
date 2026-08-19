@@ -25,7 +25,7 @@ pub enum H264Error {
 }
 
 impl std::fmt::Display for H264Error {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    async fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::Truncated => write!(f, "h264: truncated bitstream"),
             Self::Malformed(m) => write!(f, "h264: malformed: {m}"),
@@ -46,11 +46,11 @@ pub struct BitReader<'a> {
 }
 
 impl<'a> BitReader<'a> {
-    pub fn new(data: &'a [u8]) -> Self {
+    pub async fn new(data: &'a [u8]) -> Self {
         Self { data, byte_pos: 0, bit_pos: 0 }
     }
 
-    pub fn u1(&mut self) -> Result<u32, H264Error> {
+    pub async fn u1(&mut self) -> Result<u32, H264Error> {
         let &byte = self.data.get(self.byte_pos).ok_or(H264Error::Truncated)?;
         let bit = (byte >> (7 - self.bit_pos)) & 1;
         self.bit_pos += 1;
@@ -61,7 +61,7 @@ impl<'a> BitReader<'a> {
         Ok(u32::from(bit))
     }
 
-    pub fn u(&mut self, n: u8) -> Result<u32, H264Error> {
+    pub async fn u(&mut self, n: u8) -> Result<u32, H264Error> {
         let mut v = 0u32;
         for _ in 0..n {
             v = (v << 1) | self.u1()?;
@@ -70,7 +70,7 @@ impl<'a> BitReader<'a> {
     }
 
     /// 🧮️ Exp-Golomb unsigned code (`ue(v)`, clause 9.1).
-    pub fn ue(&mut self) -> Result<u32, H264Error> {
+    pub async fn ue(&mut self) -> Result<u32, H264Error> {
         let mut leading_zero_bits = 0u32;
         while self.u1()? == 0 {
             leading_zero_bits += 1;
@@ -90,7 +90,7 @@ impl<'a> BitReader<'a> {
 //#region 🔖️Rbsp
 /// 🧹️ Removes `emulation_prevention_three_byte`s (`00 00 03` → `00 00`), moved verbatim from
 /// remodel's `strip_emulation_prevention`. <https://www.itu.int/rec/T-REC-H.264> (clause 7.4.1.1)
-pub fn strip_emulation_prevention(ebsp: &[u8]) -> Vec<u8> {
+pub async fn strip_emulation_prevention(ebsp: &[u8]) -> Vec<u8> {
     let mut out = Vec::with_capacity(ebsp.len());
     let mut i = 0;
     while i < ebsp.len() {
@@ -112,7 +112,7 @@ pub struct NalUnit {
     pub rbsp: Vec<u8>,
 }
 
-pub fn parse_nal(nal_bytes: &[u8]) -> Result<NalUnit, H264Error> {
+pub async fn parse_nal(nal_bytes: &[u8]) -> Result<NalUnit, H264Error> {
     let &header = nal_bytes.first().ok_or(H264Error::Truncated)?;
     if header & 0x80 != 0 {
         return Err(H264Error::Malformed("nal forbidden_zero_bit is set"));
@@ -122,7 +122,7 @@ pub fn parse_nal(nal_bytes: &[u8]) -> Result<NalUnit, H264Error> {
 }
 
 /// ✂️ Splits one AVCC length-prefixed access unit into NAL byte ranges (moved from `split_avcc_nals`).
-pub fn split_avcc_nals(data: &[u8], length_size: u8) -> Result<Vec<&[u8]>, H264Error> {
+pub async fn split_avcc_nals(data: &[u8], length_size: u8) -> Result<Vec<&[u8]>, H264Error> {
     let n = length_size as usize;
     if !(1..=4).contains(&n) || n == 3 {
         return Err(H264Error::Unsupported("nal length size other than 1, 2 or 4 bytes"));
@@ -151,7 +151,7 @@ pub struct SpsDimensions {
     pub height_px: u32,
 }
 
-pub fn parse_sps_dimensions(rbsp: &[u8]) -> Result<SpsDimensions, H264Error> {
+pub async fn parse_sps_dimensions(rbsp: &[u8]) -> Result<SpsDimensions, H264Error> {
     let mut b = BitReader::new(rbsp);
     let profile_idc = b.u(8)?;
     b.u(8)?;
@@ -199,12 +199,12 @@ pub fn parse_sps_dimensions(rbsp: &[u8]) -> Result<SpsDimensions, H264Error> {
 /// flattens SPS/PPS into one `(u16 len, NAL)*` buffer — this artifact's `Mp4Codec` schema
 /// wants them as separate lists, so the adaptation only changes the output container shape, not
 /// the parse logic). <https://www.iso.org/standard/74428.html> (ISO/IEC 14496-15)
-pub fn parse_avcc(avcc: &[u8]) -> Result<(Vec<Vec<u8>>, Vec<Vec<u8>>, u8), H264Error> {
+pub async fn parse_avcc(avcc: &[u8]) -> Result<(Vec<Vec<u8>>, Vec<Vec<u8>>, u8), H264Error> {
     let (sps, pps, nal_length_size, _) = parse_avcc_extended(avcc)?;
     Ok((sps, pps, nal_length_size))
 }
 
-pub fn parse_avcc_extended(avcc: &[u8]) -> Result<(Vec<Vec<u8>>, Vec<Vec<u8>>, u8, Option<crate::artifacts::mp4::standards::isobmff::subsets::any::schema::snapshot::Mp4AvcExtension>), H264Error> {
+pub async fn parse_avcc_extended(avcc: &[u8]) -> Result<(Vec<Vec<u8>>, Vec<Vec<u8>>, u8, Option<crate::artifacts::mp4::standards::isobmff::subsets::any::schema::snapshot::Mp4AvcExtension>), H264Error> {
     let mut pos = 4usize;
     let length_size_byte = *avcc.get(pos).ok_or(H264Error::Truncated)?;
     pos += 1;
@@ -253,11 +253,11 @@ pub fn parse_avcc_extended(avcc: &[u8]) -> Result<(Vec<Vec<u8>>, Vec<Vec<u8>>, u
 /// `compat`/`level` are read back out of the first SPS when present (bytes 1..4 of the RBSP,
 /// clause 7.3.2.1.1's `profile_idc`/`constraint flags`/`level_idc`) so a round-tripped file
 /// reports the same AVC profile it was decoded from, instead of a fixed placeholder.
-pub fn build_avcc(sps_list: &[Vec<u8>], pps_list: &[Vec<u8>], nal_length_size: u8) -> Vec<u8> {
+pub async fn build_avcc(sps_list: &[Vec<u8>], pps_list: &[Vec<u8>], nal_length_size: u8) -> Vec<u8> {
     build_avcc_extended(sps_list, pps_list, nal_length_size, None)
 }
 
-pub fn build_avcc_extended(sps_list: &[Vec<u8>], pps_list: &[Vec<u8>], nal_length_size: u8, extension: Option<&crate::artifacts::mp4::standards::isobmff::subsets::any::schema::snapshot::Mp4AvcExtension>) -> Vec<u8> {
+pub async fn build_avcc_extended(sps_list: &[Vec<u8>], pps_list: &[Vec<u8>], nal_length_size: u8, extension: Option<&crate::artifacts::mp4::standards::isobmff::subsets::any::schema::snapshot::Mp4AvcExtension>) -> Vec<u8> {
     let (profile, compat, level) = sps_list.first().and_then(|s| s.get(1..4)).map_or((66, 0, 30), |b| (b[0], b[1], b[2]));
     let mut out = vec![1, profile, compat, level, 0xFC | (nal_length_size.saturating_sub(1) & 0x03), 0xE0 | (sps_list.len() as u8 & 0x1F)];
     for nal in sps_list {
@@ -288,7 +288,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn avcc_round_trips_sps_pps_lists() {
+    async fn avcc_round_trips_sps_pps_lists() {
         // 🧪️ A tiny, structurally valid baseline SPS RBSP (profile_idc=66) — enough to exercise
         // parse_sps_dimensions and the avcC list round trip without depending on a real fixture.
         let sps: Vec<u8> = vec![0x67, 0x42, 0x00, 0x1E, 0x8C, 0x8D, 0x40];
@@ -303,7 +303,7 @@ mod tests {
     }
 
     #[test]
-    fn strip_emulation_prevention_removes_three_byte() {
+    async fn strip_emulation_prevention_removes_three_byte() {
         let ebsp = [0x00, 0x00, 0x03, 0x01, 0x00, 0x00, 0x03, 0x02];
         assert_eq!(strip_emulation_prevention(&ebsp), vec![0x00, 0x00, 0x01, 0x00, 0x00, 0x02]);
     }

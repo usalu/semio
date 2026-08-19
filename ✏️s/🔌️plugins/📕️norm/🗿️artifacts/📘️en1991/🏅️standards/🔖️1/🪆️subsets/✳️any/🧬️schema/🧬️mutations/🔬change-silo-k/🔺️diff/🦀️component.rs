@@ -4,7 +4,7 @@ use super::mutation::ChangeSiloK;
 use crate::artifacts::en1991::{En1991Diff, En1991Snapshot};
 
 //#region 🔖️Diff
-pub fn diff(payload: &ChangeSiloK, base: &En1991Snapshot) -> protocol::MutationOutcome<En1991Diff> {
+pub async fn diff(payload: &ChangeSiloK, base: &En1991Snapshot) -> protocol::MutationOutcome<En1991Diff> {
     if !payload.new_silo_k.is_finite() {
         return protocol::MutationOutcome::fatal("mutation.invariant", "Silo k must be a finite number.", Vec::<String>::new());
     }

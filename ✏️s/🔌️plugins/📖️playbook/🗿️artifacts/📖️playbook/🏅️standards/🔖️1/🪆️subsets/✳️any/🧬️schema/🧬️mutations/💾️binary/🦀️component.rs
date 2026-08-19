@@ -21,12 +21,12 @@ use crate::artifacts::playbook::op::PlaybookMutation;
 use protocol::OpBinary;
 
 /// 📦️ Encodes a `PlaybookMutation` to its binary state-patch form.
-pub fn encode_op(operation: &PlaybookMutation) -> Result<Vec<u8>, protocol::ProtocolError> {
+pub async fn encode_op(operation: &PlaybookMutation) -> Result<Vec<u8>, protocol::ProtocolError> {
     operation.encode_op()
 }
 
 /// 📖️ Decodes a `PlaybookMutation` from its binary state-patch form.
-pub fn decode_op(bytes: &[u8]) -> Result<PlaybookMutation, protocol::ProtocolError> {
+pub async fn decode_op(bytes: &[u8]) -> Result<PlaybookMutation, protocol::ProtocolError> {
     PlaybookMutation::decode_op(bytes)
 }
 
@@ -37,7 +37,7 @@ mod tests {
     use crate::artifacts::playbook::op::change_title_operation;
 
     #[test]
-    fn op_binary_round_trips_and_agrees_with_text() {
+    async fn op_binary_round_trips_and_agrees_with_text() {
         let operation = change_title_operation(Some("Renamed".into()));
         store::os_store::test_support::assert_op_text_binary_equivalence(&operation);
         let bytes = encode_op(&operation).expect("encode");

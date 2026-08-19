@@ -54,13 +54,13 @@ impl ArtifactDeserializer for SemioModelFromBcf {
     }
 }
 
-pub fn register() {}
+pub async fn register() {}
 //#endregion 🔖️Deserializer
 
 //#region 🔖️Convert
 /// 🕸️ Every guid referenced by `components`, first-seen order, deduped across
 /// selection/visibility-exceptions/coloring (per-list distinction flattened — see module doc).
-fn referenced_guids(components: &BcfComponents, out: &mut Vec<String>) {
+async fn referenced_guids(components: &BcfComponents, out: &mut Vec<String>) {
     for guid in &components.selection {
         if !out.contains(guid) {
             out.push(guid.clone());
@@ -80,7 +80,7 @@ fn referenced_guids(components: &BcfComponents, out: &mut Vec<String>) {
     }
 }
 
-fn topic_pset(topic: &BcfTopic) -> PropertySet {
+async fn topic_pset(topic: &BcfTopic) -> PropertySet {
     let mut properties = vec![Property { key: "title".into(), value: PsetValue::Text { value: topic.title.clone() } }, Property { key: "status".into(), value: PsetValue::Text { value: topic.status.clone() } }];
     if !topic.priority.is_empty() {
         properties.push(Property { key: "priority".into(), value: PsetValue::Text { value: topic.priority.clone() } });
@@ -100,7 +100,7 @@ fn topic_pset(topic: &BcfTopic) -> PropertySet {
     PropertySet { name: "Pset_BcfTopic".into(), properties }
 }
 
-fn comments_pset(topic: &BcfTopic) -> Option<PropertySet> {
+async fn comments_pset(topic: &BcfTopic) -> Option<PropertySet> {
     if topic.comments.is_empty() {
         return None;
     }
@@ -119,7 +119,7 @@ fn comments_pset(topic: &BcfTopic) -> Option<PropertySet> {
 //#endregion 🔖️Convert
 
 //#region 🔖️Entry
-pub fn model_from_bcf(from: &BcfSnapshot) -> SemioModelSnapshot {
+pub async fn model_from_bcf(from: &BcfSnapshot) -> SemioModelSnapshot {
     let mut elements: Vec<SemioModelElement> = Vec::new();
     let mut relations: Vec<ModelRelation> = Vec::new();
     let mut known_component_ids: Vec<String> = Vec::new();
@@ -156,7 +156,7 @@ mod tests {
     use super::*;
     use crate::artifacts::bcf::schema::snapshot::{BcfComment, BcfComponents as BcfComponentsT, BcfViewpoint, BcfVisibility};
 
-    fn fixture() -> BcfSnapshot {
+    async fn fixture() -> BcfSnapshot {
         BcfSnapshot {
             schema: crate::artifacts::bcf::STDIO_BCF_DOCUMENT_SCHEMA.into(),
             version: "2.1".into(),
@@ -182,7 +182,7 @@ mod tests {
     }
 
     #[test]
-    fn topic_becomes_element_with_two_psets_and_reference_relations() {
+    async fn topic_becomes_element_with_two_psets_and_reference_relations() {
         let model = model_from_bcf(&fixture());
         assert!(model.spatial.is_empty());
         let topic_el = model.elements.iter().find(|e| e.id == "topic-1").expect("topic element");

@@ -13,7 +13,7 @@ pub struct SetCamera {
     pub camera: RemodelWorldCamera,
 }
 
-pub fn handle(payload: &SetCamera, _doc: &ArtifactView<'_, RemodelSnapshot>, _cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelMutation, RemodelConfigMutation>, Fault> {
+pub async fn handle(payload: &SetCamera, _doc: &ArtifactView<'_, RemodelSnapshot>, _cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelMutation, RemodelConfigMutation>, Fault> {
     Ok(Emit::config(vec![RemodelConfigMutation::SetCamera { camera: payload.camera.clone() }]))
 }
 
@@ -30,7 +30,7 @@ mod tests {
     /// framework-owned "assets" interaction domain, not app config — this asserts the surviving
     /// View-kind commands still emit config-only mutations.
     #[test]
-    fn view_actions_emit_config_mutations_not_artifact_mutations() {
+    async fn view_actions_emit_config_mutations_not_artifact_mutations() {
         let mut app = app();
         let result = dispatch(&mut app, RemodelCommand::SetCamera(SetCamera { camera: RemodelWorldCamera { position: [1.0, 2.0, 3.0], target: [0.0, 0.0, 0.0], fov: 60.0 } }));
         assert!(result.mutations.is_empty());
@@ -43,7 +43,7 @@ mod tests {
     }
 
     #[test]
-    fn set_active_utility_switches_host_view_state_without_ops_or_history() {
+    async fn set_active_utility_switches_host_view_state_without_ops_or_history() {
         let mut app = app();
         let result = dispatch(&mut app, RemodelCommand::SetActiveUtility(set_active_utility::SetActiveUtility { utility_id: "measure".into() }));
         assert!(result.mutations.is_empty(), "utility switch is host-owned config state, never a document operation");
@@ -52,7 +52,7 @@ mod tests {
     /// 🗣️ `setLocale` rewrites the config's locale tag, which is what every panel's label resolution
     /// reads — asserted through rendered output, since `VcsArtifactApp` exposes no config accessor.
     #[test]
-    fn set_locale_switches_the_rendered_label_language() {
+    async fn set_locale_switches_the_rendered_label_language() {
         let mut app = app();
         assert!(render(&mut app, crate::editor::remodel::panels::quality::REMODEL_PLAY_BODY_QC).contains("No quality report yet"));
         dispatch(&mut app, RemodelCommand::SetLocale(set_locale::SetLocale { value: "de-DE".into() }));

@@ -43,16 +43,16 @@ use serde::{Deserialize, Serialize};
 /// is that item's own PUBLIC sparse-patch type (`ObjVertexDiff`, …).
 trait ObjIndexElem: Clone + PartialEq {
     type Diff: Clone + PartialEq;
-    fn diff_is_empty(d: &Self::Diff) -> bool;
-    fn diff_between(a: &Self, b: &Self) -> Self::Diff;
-    fn diff_apply(d: &Self::Diff, item: &mut Self);
-    fn diff_absorb(base: &mut Self::Diff, other: Self::Diff);
+    async fn diff_is_empty(d: &Self::Diff) -> bool;
+    async fn diff_between(a: &Self, b: &Self) -> Self::Diff;
+    async fn diff_apply(d: &Self::Diff, item: &mut Self);
+    async fn diff_absorb(base: &mut Self::Diff, other: Self::Diff);
 }
 
 /// ▶️ Applies a `(removed, modified, added)` triple to a base array — modified on BASE
 /// positions first, then removed descending, then added ascending clamped to `min(index,len)`
 /// (recipe's normative apply order).
-fn generic_apply<T: ObjIndexElem>(base: &[T], removed: &[usize], modified: &[(usize, T::Diff)], added: &[(usize, T)]) -> Vec<T> {
+async fn generic_apply<T: ObjIndexElem>(base: &[T], removed: &[usize], modified: &[(usize, T::Diff)], added: &[(usize, T)]) -> Vec<T> {
     let mut items = base.to_vec();
     for (idx, d) in modified {
         T::diff_apply(d, &mut items[*idx]);
@@ -72,7 +72,7 @@ fn generic_apply<T: ObjIndexElem>(base: &[T], removed: &[usize], modified: &[(us
 
 /// 🧭️ Pairwise-by-position state delta: `modified` over `0..min(len)`, base tail `removed`,
 /// other tail `added` (recipe's "index keys pairwise by position" `between` rule).
-fn generic_between<T: ObjIndexElem>(base: &[T], other: &[T]) -> (Vec<usize>, Vec<(usize, T::Diff)>, Vec<(usize, T)>) {
+async fn generic_between<T: ObjIndexElem>(base: &[T], other: &[T]) -> (Vec<usize>, Vec<(usize, T::Diff)>, Vec<(usize, T)>) {
     let min_len = base.len().min(other.len());
     let mut modified = Vec::new();
     for i in 0..min_len {
@@ -96,7 +96,7 @@ enum Lbl {
     Added2(usize),
 }
 
-fn simulate_labels(labels: Vec<Lbl>, removed: &[usize], added: &[(usize, Lbl)]) -> Vec<Lbl> {
+async fn simulate_labels(labels: Vec<Lbl>, removed: &[usize], added: &[(usize, Lbl)]) -> Vec<Lbl> {
     let removed_set: HashSet<usize> = removed.iter().copied().collect();
     let mut survivors: Vec<Lbl> = labels.into_iter().enumerate().filter(|(i, _)| !removed_set.contains(i)).map(|(_, l)| l).collect();
     let mut added_sorted = added.to_vec();
@@ -112,7 +112,7 @@ fn simulate_labels(labels: Vec<Lbl>, removed: &[usize], added: &[(usize, Lbl)]) 
 /// `stdio.txt`'s `absorb_pair` doc comment for the full label-walk rationale — this is the same
 /// algorithm, generic over `T: ObjIndexElem` instead of `String`.
 #[allow(clippy::type_complexity)]
-fn generic_absorb_pair<T: ObjIndexElem>(
+async fn generic_absorb_pair<T: ObjIndexElem>(
     d1_removed: &[usize],
     d1_modified: &[(usize, T::Diff)],
     d1_added: &[(usize, T)],
@@ -218,13 +218,13 @@ pub struct ObjVertexDiff {
 
 impl ObjIndexElem for ObjVertex {
     type Diff = ObjVertexDiff;
-    fn diff_is_empty(d: &ObjVertexDiff) -> bool {
+    async fn diff_is_empty(d: &ObjVertexDiff) -> bool {
         d == &ObjVertexDiff::default()
     }
-    fn diff_between(a: &ObjVertex, b: &ObjVertex) -> ObjVertexDiff {
+    async fn diff_between(a: &ObjVertex, b: &ObjVertex) -> ObjVertexDiff {
         ObjVertexDiff { x: (a.x != b.x).then_some(b.x), y: (a.y != b.y).then_some(b.y), z: (a.z != b.z).then_some(b.z), w: (a.w != b.w).then_some(b.w) }
     }
-    fn diff_apply(d: &ObjVertexDiff, item: &mut ObjVertex) {
+    async fn diff_apply(d: &ObjVertexDiff, item: &mut ObjVertex) {
         if let Some(v) = d.x {
             item.x = v;
         }
@@ -238,7 +238,7 @@ impl ObjIndexElem for ObjVertex {
             item.w = v;
         }
     }
-    fn diff_absorb(base: &mut ObjVertexDiff, other: ObjVertexDiff) {
+    async fn diff_absorb(base: &mut ObjVertexDiff, other: ObjVertexDiff) {
         if other.x.is_some() {
             base.x = other.x;
         }
@@ -278,15 +278,15 @@ pub struct ObjVerticesDiff {
     pub added: Vec<ObjVertexAdded>,
 }
 impl ObjVerticesDiff {
-    pub fn is_empty(&self) -> bool {
+    pub async fn is_empty(&self) -> bool {
         self.removed.is_empty() && self.modified.is_empty() && self.added.is_empty()
     }
-    fn apply(&self, base: &[ObjVertex]) -> Vec<ObjVertex> {
+    async fn apply(&self, base: &[ObjVertex]) -> Vec<ObjVertex> {
         let modified: Vec<(usize, ObjVertexDiff)> = self.modified.iter().map(|m| (m.index, m.diff.clone())).collect();
         let added: Vec<(usize, ObjVertex)> = self.added.iter().map(|a| (a.index, a.vertex.clone())).collect();
         generic_apply(base, &self.removed, &modified, &added)
     }
-    fn between(base: &[ObjVertex], other: &[ObjVertex]) -> Option<Self> {
+    async fn between(base: &[ObjVertex], other: &[ObjVertex]) -> Option<Self> {
         let (removed, modified, added) = generic_between(base, other);
         let d = Self { removed, modified: modified.into_iter().map(|(index, diff)| ObjVertexModified { index, diff }).collect(), added: added.into_iter().map(|(index, vertex)| ObjVertexAdded { index, vertex }).collect() };
         if d.is_empty() {
@@ -295,7 +295,7 @@ impl ObjVerticesDiff {
             Some(d)
         }
     }
-    fn absorb(d1: Self, d2: Self) -> Option<Self> {
+    async fn absorb(d1: Self, d2: Self) -> Option<Self> {
         let d1m: Vec<(usize, ObjVertexDiff)> = d1.modified.into_iter().map(|m| (m.index, m.diff)).collect();
         let d1a: Vec<(usize, ObjVertex)> = d1.added.into_iter().map(|a| (a.index, a.vertex)).collect();
         let d2m: Vec<(usize, ObjVertexDiff)> = d2.modified.into_iter().map(|m| (m.index, m.diff)).collect();
@@ -324,13 +324,13 @@ pub struct ObjTexCoordDiff {
 }
 impl ObjIndexElem for ObjTexCoord {
     type Diff = ObjTexCoordDiff;
-    fn diff_is_empty(d: &ObjTexCoordDiff) -> bool {
+    async fn diff_is_empty(d: &ObjTexCoordDiff) -> bool {
         d == &ObjTexCoordDiff::default()
     }
-    fn diff_between(a: &ObjTexCoord, b: &ObjTexCoord) -> ObjTexCoordDiff {
+    async fn diff_between(a: &ObjTexCoord, b: &ObjTexCoord) -> ObjTexCoordDiff {
         ObjTexCoordDiff { u: (a.u != b.u).then_some(b.u), v: (a.v != b.v).then_some(b.v), w: (a.w != b.w).then_some(b.w) }
     }
-    fn diff_apply(d: &ObjTexCoordDiff, item: &mut ObjTexCoord) {
+    async fn diff_apply(d: &ObjTexCoordDiff, item: &mut ObjTexCoord) {
         if let Some(v) = d.u {
             item.u = v;
         }
@@ -341,7 +341,7 @@ impl ObjIndexElem for ObjTexCoord {
             item.w = v;
         }
     }
-    fn diff_absorb(base: &mut ObjTexCoordDiff, other: ObjTexCoordDiff) {
+    async fn diff_absorb(base: &mut ObjTexCoordDiff, other: ObjTexCoordDiff) {
         if other.u.is_some() {
             base.u = other.u;
         }
@@ -376,15 +376,15 @@ pub struct ObjTexCoordsDiff {
     pub added: Vec<ObjTexCoordAdded>,
 }
 impl ObjTexCoordsDiff {
-    pub fn is_empty(&self) -> bool {
+    pub async fn is_empty(&self) -> bool {
         self.removed.is_empty() && self.modified.is_empty() && self.added.is_empty()
     }
-    fn apply(&self, base: &[ObjTexCoord]) -> Vec<ObjTexCoord> {
+    async fn apply(&self, base: &[ObjTexCoord]) -> Vec<ObjTexCoord> {
         let modified: Vec<(usize, ObjTexCoordDiff)> = self.modified.iter().map(|m| (m.index, m.diff.clone())).collect();
         let added: Vec<(usize, ObjTexCoord)> = self.added.iter().map(|a| (a.index, a.texcoord.clone())).collect();
         generic_apply(base, &self.removed, &modified, &added)
     }
-    fn between(base: &[ObjTexCoord], other: &[ObjTexCoord]) -> Option<Self> {
+    async fn between(base: &[ObjTexCoord], other: &[ObjTexCoord]) -> Option<Self> {
         let (removed, modified, added) = generic_between(base, other);
         let d = Self { removed, modified: modified.into_iter().map(|(index, diff)| ObjTexCoordModified { index, diff }).collect(), added: added.into_iter().map(|(index, texcoord)| ObjTexCoordAdded { index, texcoord }).collect() };
         if d.is_empty() {
@@ -393,7 +393,7 @@ impl ObjTexCoordsDiff {
             Some(d)
         }
     }
-    fn absorb(d1: Self, d2: Self) -> Option<Self> {
+    async fn absorb(d1: Self, d2: Self) -> Option<Self> {
         let d1m: Vec<(usize, ObjTexCoordDiff)> = d1.modified.into_iter().map(|m| (m.index, m.diff)).collect();
         let d1a: Vec<(usize, ObjTexCoord)> = d1.added.into_iter().map(|a| (a.index, a.texcoord)).collect();
         let d2m: Vec<(usize, ObjTexCoordDiff)> = d2.modified.into_iter().map(|m| (m.index, m.diff)).collect();
@@ -422,13 +422,13 @@ pub struct ObjNormalDiff {
 }
 impl ObjIndexElem for ObjNormal {
     type Diff = ObjNormalDiff;
-    fn diff_is_empty(d: &ObjNormalDiff) -> bool {
+    async fn diff_is_empty(d: &ObjNormalDiff) -> bool {
         d == &ObjNormalDiff::default()
     }
-    fn diff_between(a: &ObjNormal, b: &ObjNormal) -> ObjNormalDiff {
+    async fn diff_between(a: &ObjNormal, b: &ObjNormal) -> ObjNormalDiff {
         ObjNormalDiff { x: (a.x != b.x).then_some(b.x), y: (a.y != b.y).then_some(b.y), z: (a.z != b.z).then_some(b.z) }
     }
-    fn diff_apply(d: &ObjNormalDiff, item: &mut ObjNormal) {
+    async fn diff_apply(d: &ObjNormalDiff, item: &mut ObjNormal) {
         if let Some(v) = d.x {
             item.x = v;
         }
@@ -439,7 +439,7 @@ impl ObjIndexElem for ObjNormal {
             item.z = v;
         }
     }
-    fn diff_absorb(base: &mut ObjNormalDiff, other: ObjNormalDiff) {
+    async fn diff_absorb(base: &mut ObjNormalDiff, other: ObjNormalDiff) {
         if other.x.is_some() {
             base.x = other.x;
         }
@@ -474,15 +474,15 @@ pub struct ObjNormalsDiff {
     pub added: Vec<ObjNormalAdded>,
 }
 impl ObjNormalsDiff {
-    pub fn is_empty(&self) -> bool {
+    pub async fn is_empty(&self) -> bool {
         self.removed.is_empty() && self.modified.is_empty() && self.added.is_empty()
     }
-    fn apply(&self, base: &[ObjNormal]) -> Vec<ObjNormal> {
+    async fn apply(&self, base: &[ObjNormal]) -> Vec<ObjNormal> {
         let modified: Vec<(usize, ObjNormalDiff)> = self.modified.iter().map(|m| (m.index, m.diff.clone())).collect();
         let added: Vec<(usize, ObjNormal)> = self.added.iter().map(|a| (a.index, a.normal.clone())).collect();
         generic_apply(base, &self.removed, &modified, &added)
     }
-    fn between(base: &[ObjNormal], other: &[ObjNormal]) -> Option<Self> {
+    async fn between(base: &[ObjNormal], other: &[ObjNormal]) -> Option<Self> {
         let (removed, modified, added) = generic_between(base, other);
         let d = Self { removed, modified: modified.into_iter().map(|(index, diff)| ObjNormalModified { index, diff }).collect(), added: added.into_iter().map(|(index, normal)| ObjNormalAdded { index, normal }).collect() };
         if d.is_empty() {
@@ -491,7 +491,7 @@ impl ObjNormalsDiff {
             Some(d)
         }
     }
-    fn absorb(d1: Self, d2: Self) -> Option<Self> {
+    async fn absorb(d1: Self, d2: Self) -> Option<Self> {
         let d1m: Vec<(usize, ObjNormalDiff)> = d1.modified.into_iter().map(|m| (m.index, m.diff)).collect();
         let d1a: Vec<(usize, ObjNormal)> = d1.added.into_iter().map(|a| (a.index, a.normal)).collect();
         let d2m: Vec<(usize, ObjNormalDiff)> = d2.modified.into_iter().map(|m| (m.index, m.diff)).collect();
@@ -519,18 +519,18 @@ pub struct ObjFaceDiff {
 }
 impl ObjIndexElem for ObjFace {
     type Diff = ObjFaceDiff;
-    fn diff_is_empty(d: &ObjFaceDiff) -> bool {
+    async fn diff_is_empty(d: &ObjFaceDiff) -> bool {
         d == &ObjFaceDiff::default()
     }
-    fn diff_between(a: &ObjFace, b: &ObjFace) -> ObjFaceDiff {
+    async fn diff_between(a: &ObjFace, b: &ObjFace) -> ObjFaceDiff {
         ObjFaceDiff { vertices: (a.vertices != b.vertices).then(|| b.vertices.clone()) }
     }
-    fn diff_apply(d: &ObjFaceDiff, item: &mut ObjFace) {
+    async fn diff_apply(d: &ObjFaceDiff, item: &mut ObjFace) {
         if let Some(v) = &d.vertices {
             item.vertices = v.clone();
         }
     }
-    fn diff_absorb(base: &mut ObjFaceDiff, other: ObjFaceDiff) {
+    async fn diff_absorb(base: &mut ObjFaceDiff, other: ObjFaceDiff) {
         if other.vertices.is_some() {
             base.vertices = other.vertices;
         }
@@ -559,15 +559,15 @@ pub struct ObjFacesDiff {
     pub added: Vec<ObjFaceAdded>,
 }
 impl ObjFacesDiff {
-    pub fn is_empty(&self) -> bool {
+    pub async fn is_empty(&self) -> bool {
         self.removed.is_empty() && self.modified.is_empty() && self.added.is_empty()
     }
-    fn apply(&self, base: &[ObjFace]) -> Vec<ObjFace> {
+    async fn apply(&self, base: &[ObjFace]) -> Vec<ObjFace> {
         let modified: Vec<(usize, ObjFaceDiff)> = self.modified.iter().map(|m| (m.index, m.diff.clone())).collect();
         let added: Vec<(usize, ObjFace)> = self.added.iter().map(|a| (a.index, a.face.clone())).collect();
         generic_apply(base, &self.removed, &modified, &added)
     }
-    fn between(base: &[ObjFace], other: &[ObjFace]) -> Option<Self> {
+    async fn between(base: &[ObjFace], other: &[ObjFace]) -> Option<Self> {
         let (removed, modified, added) = generic_between(base, other);
         let d = Self { removed, modified: modified.into_iter().map(|(index, diff)| ObjFaceModified { index, diff }).collect(), added: added.into_iter().map(|(index, face)| ObjFaceAdded { index, face }).collect() };
         if d.is_empty() {
@@ -576,7 +576,7 @@ impl ObjFacesDiff {
             Some(d)
         }
     }
-    fn absorb(d1: Self, d2: Self) -> Option<Self> {
+    async fn absorb(d1: Self, d2: Self) -> Option<Self> {
         let d1m: Vec<(usize, ObjFaceDiff)> = d1.modified.into_iter().map(|m| (m.index, m.diff)).collect();
         let d1a: Vec<(usize, ObjFace)> = d1.added.into_iter().map(|a| (a.index, a.face)).collect();
         let d2m: Vec<(usize, ObjFaceDiff)> = d2.modified.into_iter().map(|m| (m.index, m.diff)).collect();
@@ -601,7 +601,7 @@ pub struct ObjGroupDiff {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub faces: Option<Vec<usize>>,
 }
-fn group_diff_is_empty(d: &ObjGroupDiff) -> bool {
+async fn group_diff_is_empty(d: &ObjGroupDiff) -> bool {
     d == &ObjGroupDiff::default()
 }
 
@@ -609,28 +609,28 @@ fn group_diff_is_empty(d: &ObjGroupDiff) -> bool {
 /// types per the recipe — this tiny local trait lets `apply_group_diff`/membership helpers work
 /// over either without merging the two public types back into one shared type.
 trait HasFaces {
-    fn faces_mut(&mut self) -> &mut Vec<usize>;
+    async fn faces_mut(&mut self) -> &mut Vec<usize>;
 }
 impl HasFaces for ObjGroup {
-    fn faces_mut(&mut self) -> &mut Vec<usize> {
+    async fn faces_mut(&mut self) -> &mut Vec<usize> {
         &mut self.faces
     }
 }
 impl HasFaces for ObjObject {
-    fn faces_mut(&mut self) -> &mut Vec<usize> {
+    async fn faces_mut(&mut self) -> &mut Vec<usize> {
         &mut self.faces
     }
 }
 
-fn group_between(a_faces: &[usize], b_faces: &[usize]) -> ObjGroupDiff {
+async fn group_between(a_faces: &[usize], b_faces: &[usize]) -> ObjGroupDiff {
     ObjGroupDiff { faces: (a_faces != b_faces).then(|| b_faces.to_vec()) }
 }
-fn apply_group_diff<T: HasFaces>(item: &mut T, d: &ObjGroupDiff) {
+async fn apply_group_diff<T: HasFaces>(item: &mut T, d: &ObjGroupDiff) {
     if let Some(f) = &d.faces {
         *item.faces_mut() = f.clone();
     }
 }
-fn absorb_group_diff(base: &mut ObjGroupDiff, other: ObjGroupDiff) {
+async fn absorb_group_diff(base: &mut ObjGroupDiff, other: ObjGroupDiff) {
     if other.faces.is_some() {
         base.faces = other.faces;
     }
@@ -662,7 +662,7 @@ pub struct ObjGroupsDiff {
     pub added: Vec<ObjGroupAdded>,
 }
 impl ObjGroupsDiff {
-    pub fn is_empty(&self) -> bool {
+    pub async fn is_empty(&self) -> bool {
         self.removed.is_empty() && self.modified.is_empty() && self.added.is_empty()
     }
 }
@@ -670,7 +670,7 @@ impl ObjGroupsDiff {
 /// ▶️ Applies a name-keyed groups/objects triple in place (shared shape; parameterized over the
 /// `name`/`faces` accessor pair since `ObjGroup`/`ObjObject` are structurally identical but
 /// distinct named types per the recipe).
-fn apply_named_membership<T: Clone>(base: &[T], removed: &[String], modified: &[(String, ObjGroupDiff)], added: &[(usize, T)], name_of: impl Fn(&T) -> &str, patch: impl Fn(&mut T, &ObjGroupDiff)) -> Vec<T> {
+async fn apply_named_membership<T: Clone>(base: &[T], removed: &[String], modified: &[(String, ObjGroupDiff)], added: &[(usize, T)], name_of: impl Fn(&T) -> &str, patch: impl Fn(&mut T, &ObjGroupDiff)) -> Vec<T> {
     let mut items = base.to_vec();
     for (name, d) in modified {
         for item in &mut items {
@@ -692,7 +692,7 @@ fn apply_named_membership<T: Clone>(base: &[T], removed: &[String], modified: &[
 /// ➕️ Structural, total, base-free absorb for a name-keyed groups/objects triple — same
 /// algorithm as `stdio.zip`'s `absorb_entries` minus rename tracking (φ is the identity on
 /// names here since nothing renames a group/object in place).
-fn absorb_named_membership<T: Clone>(
+async fn absorb_named_membership<T: Clone>(
     d1: ObjGroupsDiff,
     d2: ObjGroupsDiff,
     name_of: impl Fn(&T) -> &str,
@@ -767,7 +767,7 @@ pub struct ObjObjectsDiff {
     pub added: Vec<ObjObjectAdded>,
 }
 impl ObjObjectsDiff {
-    pub fn is_empty(&self) -> bool {
+    pub async fn is_empty(&self) -> bool {
         self.removed.is_empty() && self.modified.is_empty() && self.added.is_empty()
     }
 }
@@ -811,7 +811,7 @@ pub struct ObjDiff {
     pub unknown_statements: Option<Vec<ObjUnknownStatement>>,
 }
 
-fn validate_indexed_targets(base_len: usize, removed_indices: &[usize], modified_indices: impl IntoIterator<Item = usize>, added_indices: impl IntoIterator<Item = usize>, target: &str) -> MutationApplyResult<()> {
+async fn validate_indexed_targets(base_len: usize, removed_indices: &[usize], modified_indices: impl IntoIterator<Item = usize>, added_indices: impl IntoIterator<Item = usize>, target: &str) -> MutationApplyResult<()> {
     let mut removed = BTreeSet::new();
     for &index in removed_indices {
         if index >= base_len || !removed.insert(index) {
@@ -838,7 +838,7 @@ fn validate_indexed_targets(base_len: usize, removed_indices: &[usize], modified
     Ok(())
 }
 
-fn validate_named_targets<'a>(
+async fn validate_named_targets<'a>(
     base_names: impl IntoIterator<Item = &'a str>,
     removed_names: impl IntoIterator<Item = &'a str>,
     modified_names: impl IntoIterator<Item = &'a str>,
@@ -878,7 +878,7 @@ fn validate_named_targets<'a>(
     Ok(())
 }
 
-fn validate_obj_diff(diff: &ObjDiff, base: &ObjSnapshot) -> MutationApplyResult<()> {
+async fn validate_obj_diff(diff: &ObjDiff, base: &ObjSnapshot) -> MutationApplyResult<()> {
     if let Some(value) = &diff.vertices {
         validate_indexed_targets(base.vertices.len(), &value.removed, value.modified.iter().map(|entry| entry.index), value.added.iter().map(|entry| entry.index), "vertices")?;
     }
@@ -912,7 +912,7 @@ fn validate_obj_diff(diff: &ObjDiff, base: &ObjSnapshot) -> MutationApplyResult<
     Ok(())
 }
 
-fn apply_obj_diff_unchecked(diff: &ObjDiff, base: &ObjSnapshot) -> ObjSnapshot {
+async fn apply_obj_diff_unchecked(diff: &ObjDiff, base: &ObjSnapshot) -> ObjSnapshot {
     ObjSnapshot {
         schema: base.schema.clone(),
         vertices: match &diff.vertices {
@@ -955,7 +955,7 @@ fn apply_obj_diff_unchecked(diff: &ObjDiff, base: &ObjSnapshot) -> ObjSnapshot {
 }
 
 impl MutationDiff<ObjSnapshot> for ObjDiff {
-    fn apply(&self, base: &ObjSnapshot) -> MutationApplyResult<ObjSnapshot> {
+    async fn apply(&self, base: &ObjSnapshot) -> MutationApplyResult<ObjSnapshot> {
         validate_obj_diff(self, base)?;
         Ok(apply_obj_diff_unchecked(self, base))
     }
@@ -963,7 +963,7 @@ impl MutationDiff<ObjSnapshot> for ObjDiff {
     /// ➕️ Structural, total, base-free sequential-coalesce (`## Absorb` contract). Index-keyed
     /// collections use the label-simulation transport (`generic_absorb_pair`); name-keyed
     /// collections use `absorb_named_membership`; every other field is LWW.
-    fn absorb(&mut self, other: Self) {
+    async fn absorb(&mut self, other: Self) {
         self.vertices = match (self.vertices.take(), other.vertices) {
             (None, None) => None,
             (Some(a), None) => Some(a),
@@ -1025,12 +1025,12 @@ impl MutationDiff<ObjSnapshot> for ObjDiff {
 
 impl DiffAlgebra<ObjSnapshot> for ObjDiff {
     /// 🔁️ Diff-level undo, derived generically (correct by construction) via `apply` + `between`.
-    fn inverse(&self, base: &ObjSnapshot) -> Self {
+    async fn inverse(&self, base: &ObjSnapshot) -> Self {
         let mutated = apply_obj_diff_unchecked(self, base);
         Self::between(&mutated, base)
     }
 
-    fn between(base: &ObjSnapshot, other: &ObjSnapshot) -> Self {
+    async fn between(base: &ObjSnapshot, other: &ObjSnapshot) -> Self {
         let vertices = ObjVerticesDiff::between(&base.vertices, &other.vertices);
         let texcoords = ObjTexCoordsDiff::between(&base.texcoords, &other.texcoords);
         let normals = ObjNormalsDiff::between(&base.normals, &other.normals);
@@ -1094,7 +1094,7 @@ impl DiffAlgebra<ObjSnapshot> for ObjDiff {
         }
     }
 
-    fn is_empty(&self) -> bool {
+    async fn is_empty(&self) -> bool {
         self.vertices.as_ref().map_or(true, ObjVerticesDiff::is_empty)
             && self.texcoords.as_ref().map_or(true, ObjTexCoordsDiff::is_empty)
             && self.normals.as_ref().map_or(true, ObjNormalsDiff::is_empty)
@@ -1110,7 +1110,7 @@ impl DiffAlgebra<ObjSnapshot> for ObjDiff {
 
 /// 🧩 `SetSnapshot`'s diff is the sparse field-by-field `between(base, next)` — no full-replace
 /// slot exists on `ObjDiff` to short-circuit into.
-pub fn diff_set_snapshot(base: &ObjSnapshot, next: &ObjSnapshot) -> ObjDiff {
+pub async fn diff_set_snapshot(base: &ObjSnapshot, next: &ObjSnapshot) -> ObjDiff {
     ObjDiff::between(base, next)
 }
 //#endregion 🔖️Diff
@@ -1131,37 +1131,37 @@ pub fn diff_set_snapshot(base: &ObjSnapshot, next: &ObjSnapshot) -> ObjDiff {
 /// `ObjGroupDiff`) print as single-uppercase-letter `TAG:value` pairs inside their own `[...]`,
 /// same convention as gif89a's `GifFrameDiff`.
 //#region 🔖️Primitives
-fn hex_encode(bytes: &[u8]) -> String {
+async fn hex_encode(bytes: &[u8]) -> String {
     bytes.iter().map(|b| format!("{b:02x}")).collect()
 }
-fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
+async fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
     if s.len() % 2 != 0 {
         return Err(format!("odd hex length: {s:?}"));
     }
     (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()
 }
-fn hex_encode_str(s: &str) -> String {
+async fn hex_encode_str(s: &str) -> String {
     hex_encode(s.as_bytes())
 }
-fn hex_decode_str(s: &str) -> Result<String, String> {
+async fn hex_decode_str(s: &str) -> Result<String, String> {
     String::from_utf8(hex_decode(s)?).map_err(|e| e.to_string())
 }
-fn fmt_f64(v: f64) -> String {
+async fn fmt_f64(v: f64) -> String {
     v.to_string()
 }
-fn parse_f64(s: &str) -> Result<f64, String> {
+async fn parse_f64(s: &str) -> Result<f64, String> {
     s.parse().map_err(|e: std::num::ParseFloatError| e.to_string())
 }
-fn parse_u32(s: &str) -> Result<u32, String> {
+async fn parse_u32(s: &str) -> Result<u32, String> {
     s.parse().map_err(|e: std::num::ParseIntError| e.to_string())
 }
-fn parse_usize(s: &str) -> Result<usize, String> {
+async fn parse_usize(s: &str) -> Result<usize, String> {
     s.parse().map_err(|e: std::num::ParseIntError| e.to_string())
 }
 
 /// 🧭️ Bracket-depth-aware split (tracks `[`/`]` only): a top-level `sep` inside nested brackets is
 /// never mistaken for a field separator — the whole hand-rolled grammar's parsing primitive.
-fn split_top_level(s: &str, sep: char) -> Vec<&str> {
+async fn split_top_level(s: &str, sep: char) -> Vec<&str> {
     if s.is_empty() {
         return Vec::new();
     }
@@ -1182,16 +1182,16 @@ fn split_top_level(s: &str, sep: char) -> Vec<&str> {
     out.push(&s[start..]);
     out
 }
-fn strip_brackets(s: &str) -> Result<&str, String> {
+async fn strip_brackets(s: &str) -> Result<&str, String> {
     s.strip_prefix('[').and_then(|s| s.strip_suffix(']')).ok_or_else(|| format!("expected [...], got {s:?}"))
 }
-fn encode_option<T>(opt: &Option<T>, enc: impl Fn(&T) -> String) -> String {
+async fn encode_option<T>(opt: &Option<T>, enc: impl Fn(&T) -> String) -> String {
     match opt {
         None => "[0]".to_string(),
         Some(v) => format!("[1,{}]", enc(v)),
     }
 }
-fn decode_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Option<T>, String> {
+async fn decode_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Option<T>, String> {
     let inner = strip_brackets(s)?;
     match split_top_level(inner, ',').as_slice() {
         ["0"] => Ok(None),
@@ -1202,84 +1202,84 @@ fn decode_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<
 //#endregion 🔖️Primitives
 
 //#region 🔖️ValueCodecs
-fn enc_vertex(v: &ObjVertex) -> String {
+async fn enc_vertex(v: &ObjVertex) -> String {
     format!("[{},{},{},{}]", fmt_f64(v.x), fmt_f64(v.y), fmt_f64(v.z), encode_option(&v.w, |w| fmt_f64(*w)))
 }
-fn dec_vertex(s: &str) -> Result<ObjVertex, String> {
+async fn dec_vertex(s: &str) -> Result<ObjVertex, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [x, y, z, w] = parts.as_slice() else { return Err(format!("vertex: expected 4 fields, got {}", parts.len())) };
     Ok(ObjVertex { x: parse_f64(x)?, y: parse_f64(y)?, z: parse_f64(z)?, w: decode_option(w, parse_f64)? })
 }
-fn enc_texcoord(t: &ObjTexCoord) -> String {
+async fn enc_texcoord(t: &ObjTexCoord) -> String {
     format!("[{},{},{}]", fmt_f64(t.u), fmt_f64(t.v), encode_option(&t.w, |w| fmt_f64(*w)))
 }
-fn dec_texcoord(s: &str) -> Result<ObjTexCoord, String> {
+async fn dec_texcoord(s: &str) -> Result<ObjTexCoord, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [u, v, w] = parts.as_slice() else { return Err(format!("texcoord: expected 3 fields, got {}", parts.len())) };
     Ok(ObjTexCoord { u: parse_f64(u)?, v: parse_f64(v)?, w: decode_option(w, parse_f64)? })
 }
-fn enc_normal(n: &ObjNormal) -> String {
+async fn enc_normal(n: &ObjNormal) -> String {
     format!("[{},{},{}]", fmt_f64(n.x), fmt_f64(n.y), fmt_f64(n.z))
 }
-fn dec_normal(s: &str) -> Result<ObjNormal, String> {
+async fn dec_normal(s: &str) -> Result<ObjNormal, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [x, y, z] = parts.as_slice() else { return Err(format!("normal: expected 3 fields, got {}", parts.len())) };
     Ok(ObjNormal { x: parse_f64(x)?, y: parse_f64(y)?, z: parse_f64(z)? })
 }
-fn enc_face_vertex(fv: &ObjFaceVertex) -> String {
+async fn enc_face_vertex(fv: &ObjFaceVertex) -> String {
     format!("[{},{},{}]", fv.vertex, encode_option(&fv.texcoord, |v| v.to_string()), encode_option(&fv.normal, |v| v.to_string()))
 }
-fn dec_face_vertex(s: &str) -> Result<ObjFaceVertex, String> {
+async fn dec_face_vertex(s: &str) -> Result<ObjFaceVertex, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [vertex, texcoord, normal] = parts.as_slice() else { return Err(format!("face vertex: expected 3 fields, got {}", parts.len())) };
     Ok(ObjFaceVertex { vertex: parse_u32(vertex)?, texcoord: decode_option(texcoord, parse_u32)?, normal: decode_option(normal, parse_u32)? })
 }
-fn enc_face(f: &ObjFace) -> String {
+async fn enc_face(f: &ObjFace) -> String {
     format!("[{}]", f.vertices.iter().map(enc_face_vertex).collect::<Vec<_>>().join(","))
 }
-fn dec_face(s: &str) -> Result<ObjFace, String> {
+async fn dec_face(s: &str) -> Result<ObjFace, String> {
     let inner = strip_brackets(s)?;
     let vertices = split_top_level(inner, ',').into_iter().filter(|s| !s.is_empty()).map(dec_face_vertex).collect::<Result<Vec<_>, String>>()?;
     Ok(ObjFace { vertices })
 }
-fn enc_group(g: &ObjGroup) -> String {
+async fn enc_group(g: &ObjGroup) -> String {
     format!("[{},[{}]]", hex_encode_str(&g.name), g.faces.iter().map(|f| f.to_string()).collect::<Vec<_>>().join(","))
 }
-fn dec_group(s: &str) -> Result<ObjGroup, String> {
+async fn dec_group(s: &str) -> Result<ObjGroup, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [name_hex, faces_s] = parts.as_slice() else { return Err(format!("group: expected 2 fields, got {}", parts.len())) };
     let faces = split_top_level(strip_brackets(faces_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(parse_usize).collect::<Result<Vec<_>, String>>()?;
     Ok(ObjGroup { name: hex_decode_str(name_hex)?, faces })
 }
-fn enc_object(o: &ObjObject) -> String {
+async fn enc_object(o: &ObjObject) -> String {
     format!("[{},[{}]]", hex_encode_str(&o.name), o.faces.iter().map(|f| f.to_string()).collect::<Vec<_>>().join(","))
 }
-fn dec_object(s: &str) -> Result<ObjObject, String> {
+async fn dec_object(s: &str) -> Result<ObjObject, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [name_hex, faces_s] = parts.as_slice() else { return Err(format!("object: expected 2 fields, got {}", parts.len())) };
     let faces = split_top_level(strip_brackets(faces_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(parse_usize).collect::<Result<Vec<_>, String>>()?;
     Ok(ObjObject { name: hex_decode_str(name_hex)?, faces })
 }
-fn enc_usemtl(u: &ObjUsemtlRange) -> String {
+async fn enc_usemtl(u: &ObjUsemtlRange) -> String {
     format!("[{},{}]", u.face_index_from, hex_encode_str(&u.material))
 }
-fn dec_usemtl(s: &str) -> Result<ObjUsemtlRange, String> {
+async fn dec_usemtl(s: &str) -> Result<ObjUsemtlRange, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [idx, mat] = parts.as_slice() else { return Err(format!("usemtl: expected 2 fields, got {}", parts.len())) };
     Ok(ObjUsemtlRange { face_index_from: parse_usize(idx)?, material: hex_decode_str(mat)? })
 }
-fn enc_smoothing(sg: &ObjSmoothingRange) -> String {
+async fn enc_smoothing(sg: &ObjSmoothingRange) -> String {
     format!("[{},{}]", sg.face_index_from, encode_option(&sg.group, |g| g.to_string()))
 }
-fn dec_smoothing(s: &str) -> Result<ObjSmoothingRange, String> {
+async fn dec_smoothing(s: &str) -> Result<ObjSmoothingRange, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [idx, grp] = parts.as_slice() else { return Err(format!("smoothing: expected 2 fields, got {}", parts.len())) };
     Ok(ObjSmoothingRange { face_index_from: parse_usize(idx)?, group: decode_option(grp, parse_u32)? })
 }
-fn enc_unknown(u: &ObjUnknownStatement) -> String {
+async fn enc_unknown(u: &ObjUnknownStatement) -> String {
     format!("[{},{}]", u.line_index, hex_encode_str(&u.raw))
 }
-fn dec_unknown(s: &str) -> Result<ObjUnknownStatement, String> {
+async fn dec_unknown(s: &str) -> Result<ObjUnknownStatement, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [idx, raw] = parts.as_slice() else { return Err(format!("unknown: expected 2 fields, got {}", parts.len())) };
     Ok(ObjUnknownStatement { line_index: parse_usize(idx)?, raw: hex_decode_str(raw)? })
@@ -1287,7 +1287,7 @@ fn dec_unknown(s: &str) -> Result<ObjUnknownStatement, String> {
 //#endregion 🔖️ValueCodecs
 
 //#region 🔖️DiffValueCodecs
-fn enc_vertex_diff(d: &ObjVertexDiff) -> String {
+async fn enc_vertex_diff(d: &ObjVertexDiff) -> String {
     let mut parts = Vec::new();
     if let Some(v) = d.x {
         parts.push(format!("X:{}", fmt_f64(v)));
@@ -1303,7 +1303,7 @@ fn enc_vertex_diff(d: &ObjVertexDiff) -> String {
     }
     format!("[{}]", parts.join(","))
 }
-fn dec_vertex_diff(s: &str) -> Result<ObjVertexDiff, String> {
+async fn dec_vertex_diff(s: &str) -> Result<ObjVertexDiff, String> {
     let inner = strip_brackets(s)?;
     let mut d = ObjVertexDiff::default();
     for entry in split_top_level(inner, ',') {
@@ -1321,7 +1321,7 @@ fn dec_vertex_diff(s: &str) -> Result<ObjVertexDiff, String> {
     }
     Ok(d)
 }
-fn enc_texcoord_diff(d: &ObjTexCoordDiff) -> String {
+async fn enc_texcoord_diff(d: &ObjTexCoordDiff) -> String {
     let mut parts = Vec::new();
     if let Some(v) = d.u {
         parts.push(format!("U:{}", fmt_f64(v)));
@@ -1334,7 +1334,7 @@ fn enc_texcoord_diff(d: &ObjTexCoordDiff) -> String {
     }
     format!("[{}]", parts.join(","))
 }
-fn dec_texcoord_diff(s: &str) -> Result<ObjTexCoordDiff, String> {
+async fn dec_texcoord_diff(s: &str) -> Result<ObjTexCoordDiff, String> {
     let inner = strip_brackets(s)?;
     let mut d = ObjTexCoordDiff::default();
     for entry in split_top_level(inner, ',') {
@@ -1351,7 +1351,7 @@ fn dec_texcoord_diff(s: &str) -> Result<ObjTexCoordDiff, String> {
     }
     Ok(d)
 }
-fn enc_normal_diff(d: &ObjNormalDiff) -> String {
+async fn enc_normal_diff(d: &ObjNormalDiff) -> String {
     let mut parts = Vec::new();
     if let Some(v) = d.x {
         parts.push(format!("X:{}", fmt_f64(v)));
@@ -1364,7 +1364,7 @@ fn enc_normal_diff(d: &ObjNormalDiff) -> String {
     }
     format!("[{}]", parts.join(","))
 }
-fn dec_normal_diff(s: &str) -> Result<ObjNormalDiff, String> {
+async fn dec_normal_diff(s: &str) -> Result<ObjNormalDiff, String> {
     let inner = strip_brackets(s)?;
     let mut d = ObjNormalDiff::default();
     for entry in split_top_level(inner, ',') {
@@ -1381,14 +1381,14 @@ fn dec_normal_diff(s: &str) -> Result<ObjNormalDiff, String> {
     }
     Ok(d)
 }
-fn enc_face_diff(d: &ObjFaceDiff) -> String {
+async fn enc_face_diff(d: &ObjFaceDiff) -> String {
     let mut parts = Vec::new();
     if let Some(v) = &d.vertices {
         parts.push(format!("V:[{}]", v.iter().map(enc_face_vertex).collect::<Vec<_>>().join(",")));
     }
     format!("[{}]", parts.join(","))
 }
-fn dec_face_diff(s: &str) -> Result<ObjFaceDiff, String> {
+async fn dec_face_diff(s: &str) -> Result<ObjFaceDiff, String> {
     let inner = strip_brackets(s)?;
     let mut d = ObjFaceDiff::default();
     for entry in split_top_level(inner, ',') {
@@ -1406,14 +1406,14 @@ fn dec_face_diff(s: &str) -> Result<ObjFaceDiff, String> {
     }
     Ok(d)
 }
-fn enc_group_diff(d: &ObjGroupDiff) -> String {
+async fn enc_group_diff(d: &ObjGroupDiff) -> String {
     let mut parts = Vec::new();
     if let Some(v) = &d.faces {
         parts.push(format!("F:[{}]", v.iter().map(|f| f.to_string()).collect::<Vec<_>>().join(",")));
     }
     format!("[{}]", parts.join(","))
 }
-fn dec_group_diff(s: &str) -> Result<ObjGroupDiff, String> {
+async fn dec_group_diff(s: &str) -> Result<ObjGroupDiff, String> {
     let inner = strip_brackets(s)?;
     let mut d = ObjGroupDiff::default();
     for entry in split_top_level(inner, ',') {
@@ -1437,13 +1437,13 @@ fn dec_group_diff(s: &str) -> Result<ObjGroupDiff, String> {
 /// 🧭️ Generic-shaped 3-section `[removed];[modified];[added]` index-keyed collection-triple
 /// printer/parser (mirrors gif89a's `enc_collection_triple`/`dec_collection_triple`), hand-
 /// instantiated per item type below.
-fn enc_index_triple(name: &str, removed: &[usize], modified: &[(usize, String)], added: &[(usize, String)]) -> String {
+async fn enc_index_triple(name: &str, removed: &[usize], modified: &[(usize, String)], added: &[(usize, String)]) -> String {
     let removed = removed.iter().map(|i| i.to_string()).collect::<Vec<_>>().join(",");
     let modified = modified.iter().map(|(i, v)| format!("{i}:{v}")).collect::<Vec<_>>().join(",");
     let added = added.iter().map(|(i, v)| format!("{i}:{v}")).collect::<Vec<_>>().join(",");
     format!("{name}{{[{removed}];[{modified}];[{added}]}}")
 }
-fn dec_index_triple(body: &str) -> Result<(Vec<usize>, Vec<(usize, String)>, Vec<(usize, String)>), String> {
+async fn dec_index_triple(body: &str) -> Result<(Vec<usize>, Vec<(usize, String)>, Vec<(usize, String)>), String> {
     let three = split_top_level(body, ';');
     let [removed_s, modified_s, added_s] = three.as_slice() else { return Err(format!("collection: expected 3 sections, got {}", three.len())) };
     let removed = split_top_level(strip_brackets(removed_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(parse_usize).collect::<Result<Vec<_>, String>>()?;
@@ -1461,13 +1461,13 @@ fn dec_index_triple(body: &str) -> Result<(Vec<usize>, Vec<(usize, String)>, Vec
 }
 
 /// 🧭️ Same shape, name-keyed (`removed: Vec<String>`) — for `groups`/`objects`.
-fn enc_named_triple(name: &str, removed: &[String], modified: &[(String, String)], added: &[(usize, String)]) -> String {
+async fn enc_named_triple(name: &str, removed: &[String], modified: &[(String, String)], added: &[(usize, String)]) -> String {
     let removed = removed.iter().map(|n| hex_encode_str(n)).collect::<Vec<_>>().join(",");
     let modified = modified.iter().map(|(n, v)| format!("{}:{v}", hex_encode_str(n))).collect::<Vec<_>>().join(",");
     let added = added.iter().map(|(i, v)| format!("{i}:{v}")).collect::<Vec<_>>().join(",");
     format!("{name}{{[{removed}];[{modified}];[{added}]}}")
 }
-fn dec_named_triple(body: &str) -> Result<(Vec<String>, Vec<(String, String)>, Vec<(usize, String)>), String> {
+async fn dec_named_triple(body: &str) -> Result<(Vec<String>, Vec<(String, String)>, Vec<(usize, String)>), String> {
     let three = split_top_level(body, ';');
     let [removed_s, modified_s, added_s] = three.as_slice() else { return Err(format!("named collection: expected 3 sections, got {}", three.len())) };
     let removed = split_top_level(strip_brackets(removed_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(hex_decode_str).collect::<Result<Vec<_>, String>>()?;
@@ -1490,10 +1490,10 @@ fn dec_named_triple(body: &str) -> Result<(Vec<String>, Vec<(String, String)>, V
     Ok((removed, modified, added))
 }
 
-fn enc_vertices_diff(d: &ObjVerticesDiff) -> String {
+async fn enc_vertices_diff(d: &ObjVerticesDiff) -> String {
     enc_index_triple("vertices", &d.removed, &d.modified.iter().map(|m| (m.index, enc_vertex_diff(&m.diff))).collect::<Vec<_>>(), &d.added.iter().map(|a| (a.index, enc_vertex(&a.vertex))).collect::<Vec<_>>())
 }
-fn dec_vertices_diff(body: &str) -> Result<ObjVerticesDiff, String> {
+async fn dec_vertices_diff(body: &str) -> Result<ObjVerticesDiff, String> {
     let (removed, modified, added) = dec_index_triple(body)?;
     Ok(ObjVerticesDiff {
         removed,
@@ -1501,10 +1501,10 @@ fn dec_vertices_diff(body: &str) -> Result<ObjVerticesDiff, String> {
         added: added.into_iter().map(|(index, enc)| Ok(ObjVertexAdded { index, vertex: dec_vertex(&enc)? })).collect::<Result<Vec<_>, String>>()?,
     })
 }
-fn enc_texcoords_diff(d: &ObjTexCoordsDiff) -> String {
+async fn enc_texcoords_diff(d: &ObjTexCoordsDiff) -> String {
     enc_index_triple("texcoords", &d.removed, &d.modified.iter().map(|m| (m.index, enc_texcoord_diff(&m.diff))).collect::<Vec<_>>(), &d.added.iter().map(|a| (a.index, enc_texcoord(&a.texcoord))).collect::<Vec<_>>())
 }
-fn dec_texcoords_diff(body: &str) -> Result<ObjTexCoordsDiff, String> {
+async fn dec_texcoords_diff(body: &str) -> Result<ObjTexCoordsDiff, String> {
     let (removed, modified, added) = dec_index_triple(body)?;
     Ok(ObjTexCoordsDiff {
         removed,
@@ -1512,10 +1512,10 @@ fn dec_texcoords_diff(body: &str) -> Result<ObjTexCoordsDiff, String> {
         added: added.into_iter().map(|(index, enc)| Ok(ObjTexCoordAdded { index, texcoord: dec_texcoord(&enc)? })).collect::<Result<Vec<_>, String>>()?,
     })
 }
-fn enc_normals_diff(d: &ObjNormalsDiff) -> String {
+async fn enc_normals_diff(d: &ObjNormalsDiff) -> String {
     enc_index_triple("normals", &d.removed, &d.modified.iter().map(|m| (m.index, enc_normal_diff(&m.diff))).collect::<Vec<_>>(), &d.added.iter().map(|a| (a.index, enc_normal(&a.normal))).collect::<Vec<_>>())
 }
-fn dec_normals_diff(body: &str) -> Result<ObjNormalsDiff, String> {
+async fn dec_normals_diff(body: &str) -> Result<ObjNormalsDiff, String> {
     let (removed, modified, added) = dec_index_triple(body)?;
     Ok(ObjNormalsDiff {
         removed,
@@ -1523,10 +1523,10 @@ fn dec_normals_diff(body: &str) -> Result<ObjNormalsDiff, String> {
         added: added.into_iter().map(|(index, enc)| Ok(ObjNormalAdded { index, normal: dec_normal(&enc)? })).collect::<Result<Vec<_>, String>>()?,
     })
 }
-fn enc_faces_diff(d: &ObjFacesDiff) -> String {
+async fn enc_faces_diff(d: &ObjFacesDiff) -> String {
     enc_index_triple("faces", &d.removed, &d.modified.iter().map(|m| (m.index, enc_face_diff(&m.diff))).collect::<Vec<_>>(), &d.added.iter().map(|a| (a.index, enc_face(&a.face))).collect::<Vec<_>>())
 }
-fn dec_faces_diff(body: &str) -> Result<ObjFacesDiff, String> {
+async fn dec_faces_diff(body: &str) -> Result<ObjFacesDiff, String> {
     let (removed, modified, added) = dec_index_triple(body)?;
     Ok(ObjFacesDiff {
         removed,
@@ -1534,10 +1534,10 @@ fn dec_faces_diff(body: &str) -> Result<ObjFacesDiff, String> {
         added: added.into_iter().map(|(index, enc)| Ok(ObjFaceAdded { index, face: dec_face(&enc)? })).collect::<Result<Vec<_>, String>>()?,
     })
 }
-fn enc_groups_diff(d: &ObjGroupsDiff) -> String {
+async fn enc_groups_diff(d: &ObjGroupsDiff) -> String {
     enc_named_triple("groups", &d.removed, &d.modified.iter().map(|m| (m.name.clone(), enc_group_diff(&m.diff))).collect::<Vec<_>>(), &d.added.iter().map(|a| (a.index, enc_group(&a.group))).collect::<Vec<_>>())
 }
-fn dec_groups_diff(body: &str) -> Result<ObjGroupsDiff, String> {
+async fn dec_groups_diff(body: &str) -> Result<ObjGroupsDiff, String> {
     let (removed, modified, added) = dec_named_triple(body)?;
     Ok(ObjGroupsDiff {
         removed,
@@ -1545,10 +1545,10 @@ fn dec_groups_diff(body: &str) -> Result<ObjGroupsDiff, String> {
         added: added.into_iter().map(|(index, enc)| Ok(ObjGroupAdded { index, group: dec_group(&enc)? })).collect::<Result<Vec<_>, String>>()?,
     })
 }
-fn enc_objects_diff(d: &ObjObjectsDiff) -> String {
+async fn enc_objects_diff(d: &ObjObjectsDiff) -> String {
     enc_named_triple("objects", &d.removed, &d.modified.iter().map(|m| (m.name.clone(), enc_group_diff(&m.diff))).collect::<Vec<_>>(), &d.added.iter().map(|a| (a.index, enc_object(&a.object))).collect::<Vec<_>>())
 }
-fn dec_objects_diff(body: &str) -> Result<ObjObjectsDiff, String> {
+async fn dec_objects_diff(body: &str) -> Result<ObjObjectsDiff, String> {
     let (removed, modified, added) = dec_named_triple(body)?;
     Ok(ObjObjectsDiff {
         removed,
@@ -1568,33 +1568,33 @@ fn dec_objects_diff(body: &str) -> Result<ObjObjectsDiff, String> {
 /// `Prim::Ref`-recursion gap applies to any SINGLE value here, only to the collection-triple SHAPE
 /// itself (see the `.protocol.semio` sibling's comment), so every value below gets a full,
 /// genuinely field-by-field binary frame, never an opaque byte-chain.
-fn write_f64_bin(out: &mut Vec<u8>, v: f64) {
+async fn write_f64_bin(out: &mut Vec<u8>, v: f64) {
     out.extend_from_slice(&v.to_le_bytes());
 }
-fn read_f64_bin(reader: &mut store::ByteReader<'_>) -> Result<f64, String> {
+async fn read_f64_bin(reader: &mut store::ByteReader<'_>) -> Result<f64, String> {
     reader.read_f64_le().map_err(|e| e.to_string())
 }
-fn write_str_bin(out: &mut Vec<u8>, s: &str) {
+async fn write_str_bin(out: &mut Vec<u8>, s: &str) {
     store::pack_rt::write_varint_u64(out, s.len() as u64);
     out.extend_from_slice(s.as_bytes());
 }
-fn read_str_bin(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
+async fn read_str_bin(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
     let len = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
     String::from_utf8(reader.read_bytes(len).map_err(|e| e.to_string())?.to_vec()).map_err(|e| e.to_string())
 }
-fn write_u32_bin(out: &mut Vec<u8>, v: u32) {
+async fn write_u32_bin(out: &mut Vec<u8>, v: u32) {
     store::pack_rt::write_varint_u64(out, v as u64);
 }
-fn read_u32_bin(reader: &mut store::ByteReader<'_>) -> Result<u32, String> {
+async fn read_u32_bin(reader: &mut store::ByteReader<'_>) -> Result<u32, String> {
     Ok(reader.read_varint_u64().map_err(|e| e.to_string())? as u32)
 }
-fn write_usize_bin(out: &mut Vec<u8>, v: usize) {
+async fn write_usize_bin(out: &mut Vec<u8>, v: usize) {
     store::pack_rt::write_varint_u64(out, v as u64);
 }
-fn read_usize_bin(reader: &mut store::ByteReader<'_>) -> Result<usize, String> {
+async fn read_usize_bin(reader: &mut store::ByteReader<'_>) -> Result<usize, String> {
     Ok(reader.read_varint_u64().map_err(|e| e.to_string())? as usize)
 }
-fn write_option_bin<T>(out: &mut Vec<u8>, opt: &Option<T>, enc: impl Fn(&T, &mut Vec<u8>)) {
+async fn write_option_bin<T>(out: &mut Vec<u8>, opt: &Option<T>, enc: impl Fn(&T, &mut Vec<u8>)) {
     match opt {
         None => out.push(0),
         Some(v) => {
@@ -1603,7 +1603,7 @@ fn write_option_bin<T>(out: &mut Vec<u8>, opt: &Option<T>, enc: impl Fn(&T, &mut
         }
     }
 }
-fn read_option_bin<T>(reader: &mut store::ByteReader<'_>, dec: impl Fn(&mut store::ByteReader<'_>) -> Result<T, String>) -> Result<Option<T>, String> {
+async fn read_option_bin<T>(reader: &mut store::ByteReader<'_>, dec: impl Fn(&mut store::ByteReader<'_>) -> Result<T, String>) -> Result<Option<T>, String> {
     match reader.read_u8().map_err(|e| e.to_string())? {
         0 => Ok(None),
         1 => Ok(Some(dec(reader)?)),
@@ -1615,7 +1615,7 @@ fn read_option_bin<T>(reader: &mut store::ByteReader<'_>, dec: impl Fn(&mut stor
 /// carried by `encode_diff`'s presence flags, so its payload only needs [`write_option_bin`] over
 /// the remaining `Option<String>`) — `0`=unchanged (`None`), `1`=cleared (`Some(None)`),
 /// `2`=set (`Some(Some(v))`).
-fn write_tristate_bin<T>(out: &mut Vec<u8>, opt: &Option<Option<T>>, enc: impl Fn(&T, &mut Vec<u8>)) {
+async fn write_tristate_bin<T>(out: &mut Vec<u8>, opt: &Option<Option<T>>, enc: impl Fn(&T, &mut Vec<u8>)) {
     match opt {
         None => out.push(0),
         Some(None) => out.push(1),
@@ -1625,7 +1625,7 @@ fn write_tristate_bin<T>(out: &mut Vec<u8>, opt: &Option<Option<T>>, enc: impl F
         }
     }
 }
-fn read_tristate_bin<T>(reader: &mut store::ByteReader<'_>, dec: impl Fn(&mut store::ByteReader<'_>) -> Result<T, String>) -> Result<Option<Option<T>>, String> {
+async fn read_tristate_bin<T>(reader: &mut store::ByteReader<'_>, dec: impl Fn(&mut store::ByteReader<'_>) -> Result<T, String>) -> Result<Option<Option<T>>, String> {
     match reader.read_u8().map_err(|e| e.to_string())? {
         0 => Ok(None),
         1 => Ok(Some(None)),
@@ -1633,13 +1633,13 @@ fn read_tristate_bin<T>(reader: &mut store::ByteReader<'_>, dec: impl Fn(&mut st
         other => Err(format!("tristate binary: unknown tag {other}")),
     }
 }
-fn write_vec_bin<T>(out: &mut Vec<u8>, items: &[T], enc: impl Fn(&T, &mut Vec<u8>)) {
+async fn write_vec_bin<T>(out: &mut Vec<u8>, items: &[T], enc: impl Fn(&T, &mut Vec<u8>)) {
     store::pack_rt::write_varint_u64(out, items.len() as u64);
     for item in items {
         enc(item, out);
     }
 }
-fn read_vec_bin<T>(reader: &mut store::ByteReader<'_>, dec: impl Fn(&mut store::ByteReader<'_>) -> Result<T, String>) -> Result<Vec<T>, String> {
+async fn read_vec_bin<T>(reader: &mut store::ByteReader<'_>, dec: impl Fn(&mut store::ByteReader<'_>) -> Result<T, String>) -> Result<Vec<T>, String> {
     let count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut out = Vec::with_capacity(count as usize);
     for _ in 0..count {
@@ -1651,99 +1651,99 @@ fn read_vec_bin<T>(reader: &mut store::ByteReader<'_>, dec: impl Fn(&mut store::
 
 //#region 🔖️ValueBinaryCodecs
 /// 🧪️ P2-FG1: real field-by-field binary twins of `#region 🔖️ValueCodecs` above.
-fn enc_vertex_bin(v: &ObjVertex, out: &mut Vec<u8>) {
+async fn enc_vertex_bin(v: &ObjVertex, out: &mut Vec<u8>) {
     write_f64_bin(out, v.x);
     write_f64_bin(out, v.y);
     write_f64_bin(out, v.z);
     write_option_bin(out, &v.w, |w, o| write_f64_bin(o, *w));
 }
-fn dec_vertex_bin(reader: &mut store::ByteReader<'_>) -> Result<ObjVertex, String> {
+async fn dec_vertex_bin(reader: &mut store::ByteReader<'_>) -> Result<ObjVertex, String> {
     let x = read_f64_bin(reader)?;
     let y = read_f64_bin(reader)?;
     let z = read_f64_bin(reader)?;
     let w = read_option_bin(reader, read_f64_bin)?;
     Ok(ObjVertex { x, y, z, w })
 }
-fn enc_texcoord_bin(t: &ObjTexCoord, out: &mut Vec<u8>) {
+async fn enc_texcoord_bin(t: &ObjTexCoord, out: &mut Vec<u8>) {
     write_f64_bin(out, t.u);
     write_f64_bin(out, t.v);
     write_option_bin(out, &t.w, |w, o| write_f64_bin(o, *w));
 }
-fn dec_texcoord_bin(reader: &mut store::ByteReader<'_>) -> Result<ObjTexCoord, String> {
+async fn dec_texcoord_bin(reader: &mut store::ByteReader<'_>) -> Result<ObjTexCoord, String> {
     let u = read_f64_bin(reader)?;
     let v = read_f64_bin(reader)?;
     let w = read_option_bin(reader, read_f64_bin)?;
     Ok(ObjTexCoord { u, v, w })
 }
-fn enc_normal_bin(n: &ObjNormal, out: &mut Vec<u8>) {
+async fn enc_normal_bin(n: &ObjNormal, out: &mut Vec<u8>) {
     write_f64_bin(out, n.x);
     write_f64_bin(out, n.y);
     write_f64_bin(out, n.z);
 }
-fn dec_normal_bin(reader: &mut store::ByteReader<'_>) -> Result<ObjNormal, String> {
+async fn dec_normal_bin(reader: &mut store::ByteReader<'_>) -> Result<ObjNormal, String> {
     let x = read_f64_bin(reader)?;
     let y = read_f64_bin(reader)?;
     let z = read_f64_bin(reader)?;
     Ok(ObjNormal { x, y, z })
 }
-fn enc_face_vertex_bin(fv: &ObjFaceVertex, out: &mut Vec<u8>) {
+async fn enc_face_vertex_bin(fv: &ObjFaceVertex, out: &mut Vec<u8>) {
     write_u32_bin(out, fv.vertex);
     write_option_bin(out, &fv.texcoord, |v, o| write_u32_bin(o, *v));
     write_option_bin(out, &fv.normal, |v, o| write_u32_bin(o, *v));
 }
-fn dec_face_vertex_bin(reader: &mut store::ByteReader<'_>) -> Result<ObjFaceVertex, String> {
+async fn dec_face_vertex_bin(reader: &mut store::ByteReader<'_>) -> Result<ObjFaceVertex, String> {
     let vertex = read_u32_bin(reader)?;
     let texcoord = read_option_bin(reader, read_u32_bin)?;
     let normal = read_option_bin(reader, read_u32_bin)?;
     Ok(ObjFaceVertex { vertex, texcoord, normal })
 }
-fn enc_face_bin(f: &ObjFace, out: &mut Vec<u8>) {
+async fn enc_face_bin(f: &ObjFace, out: &mut Vec<u8>) {
     write_vec_bin(out, &f.vertices, enc_face_vertex_bin);
 }
-fn dec_face_bin(reader: &mut store::ByteReader<'_>) -> Result<ObjFace, String> {
+async fn dec_face_bin(reader: &mut store::ByteReader<'_>) -> Result<ObjFace, String> {
     Ok(ObjFace { vertices: read_vec_bin(reader, dec_face_vertex_bin)? })
 }
-fn enc_group_bin(g: &ObjGroup, out: &mut Vec<u8>) {
+async fn enc_group_bin(g: &ObjGroup, out: &mut Vec<u8>) {
     write_str_bin(out, &g.name);
     write_vec_bin(out, &g.faces, |f, o| write_usize_bin(o, *f));
 }
-fn dec_group_bin(reader: &mut store::ByteReader<'_>) -> Result<ObjGroup, String> {
+async fn dec_group_bin(reader: &mut store::ByteReader<'_>) -> Result<ObjGroup, String> {
     let name = read_str_bin(reader)?;
     let faces = read_vec_bin(reader, read_usize_bin)?;
     Ok(ObjGroup { name, faces })
 }
-fn enc_object_bin(o: &ObjObject, out: &mut Vec<u8>) {
+async fn enc_object_bin(o: &ObjObject, out: &mut Vec<u8>) {
     write_str_bin(out, &o.name);
     write_vec_bin(out, &o.faces, |f, out| write_usize_bin(out, *f));
 }
-fn dec_object_bin(reader: &mut store::ByteReader<'_>) -> Result<ObjObject, String> {
+async fn dec_object_bin(reader: &mut store::ByteReader<'_>) -> Result<ObjObject, String> {
     let name = read_str_bin(reader)?;
     let faces = read_vec_bin(reader, read_usize_bin)?;
     Ok(ObjObject { name, faces })
 }
-fn enc_usemtl_bin(u: &ObjUsemtlRange, out: &mut Vec<u8>) {
+async fn enc_usemtl_bin(u: &ObjUsemtlRange, out: &mut Vec<u8>) {
     write_usize_bin(out, u.face_index_from);
     write_str_bin(out, &u.material);
 }
-fn dec_usemtl_bin(reader: &mut store::ByteReader<'_>) -> Result<ObjUsemtlRange, String> {
+async fn dec_usemtl_bin(reader: &mut store::ByteReader<'_>) -> Result<ObjUsemtlRange, String> {
     let face_index_from = read_usize_bin(reader)?;
     let material = read_str_bin(reader)?;
     Ok(ObjUsemtlRange { face_index_from, material })
 }
-fn enc_smoothing_bin(sg: &ObjSmoothingRange, out: &mut Vec<u8>) {
+async fn enc_smoothing_bin(sg: &ObjSmoothingRange, out: &mut Vec<u8>) {
     write_usize_bin(out, sg.face_index_from);
     write_option_bin(out, &sg.group, |g, o| write_u32_bin(o, *g));
 }
-fn dec_smoothing_bin(reader: &mut store::ByteReader<'_>) -> Result<ObjSmoothingRange, String> {
+async fn dec_smoothing_bin(reader: &mut store::ByteReader<'_>) -> Result<ObjSmoothingRange, String> {
     let face_index_from = read_usize_bin(reader)?;
     let group = read_option_bin(reader, read_u32_bin)?;
     Ok(ObjSmoothingRange { face_index_from, group })
 }
-fn enc_unknown_bin(u: &ObjUnknownStatement, out: &mut Vec<u8>) {
+async fn enc_unknown_bin(u: &ObjUnknownStatement, out: &mut Vec<u8>) {
     write_usize_bin(out, u.line_index);
     write_str_bin(out, &u.raw);
 }
-fn dec_unknown_bin(reader: &mut store::ByteReader<'_>) -> Result<ObjUnknownStatement, String> {
+async fn dec_unknown_bin(reader: &mut store::ByteReader<'_>) -> Result<ObjUnknownStatement, String> {
     let line_index = read_usize_bin(reader)?;
     let raw = read_str_bin(reader)?;
     Ok(ObjUnknownStatement { line_index, raw })
@@ -1756,52 +1756,52 @@ fn dec_unknown_bin(reader: &mut store::ByteReader<'_>) -> Result<ObjUnknownState
 /// [`write_option_bin`]/[`write_tristate_bin`] (no tag byte needed per field, unlike an enum
 /// variant: the field ORDER itself is the schema, exactly [`enc_vertex_diff_bin`]'s shape
 /// mirroring md's own `MdBlockDiff::Heading` arm).
-fn enc_vertex_diff_bin(d: &ObjVertexDiff, out: &mut Vec<u8>) {
+async fn enc_vertex_diff_bin(d: &ObjVertexDiff, out: &mut Vec<u8>) {
     write_option_bin(out, &d.x, |v, o| write_f64_bin(o, *v));
     write_option_bin(out, &d.y, |v, o| write_f64_bin(o, *v));
     write_option_bin(out, &d.z, |v, o| write_f64_bin(o, *v));
     write_tristate_bin(out, &d.w, |v, o| write_f64_bin(o, *v));
 }
-fn dec_vertex_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<ObjVertexDiff, String> {
+async fn dec_vertex_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<ObjVertexDiff, String> {
     let x = read_option_bin(reader, read_f64_bin)?;
     let y = read_option_bin(reader, read_f64_bin)?;
     let z = read_option_bin(reader, read_f64_bin)?;
     let w = read_tristate_bin(reader, read_f64_bin)?;
     Ok(ObjVertexDiff { x, y, z, w })
 }
-fn enc_texcoord_diff_bin(d: &ObjTexCoordDiff, out: &mut Vec<u8>) {
+async fn enc_texcoord_diff_bin(d: &ObjTexCoordDiff, out: &mut Vec<u8>) {
     write_option_bin(out, &d.u, |v, o| write_f64_bin(o, *v));
     write_option_bin(out, &d.v, |v, o| write_f64_bin(o, *v));
     write_tristate_bin(out, &d.w, |v, o| write_f64_bin(o, *v));
 }
-fn dec_texcoord_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<ObjTexCoordDiff, String> {
+async fn dec_texcoord_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<ObjTexCoordDiff, String> {
     let u = read_option_bin(reader, read_f64_bin)?;
     let v = read_option_bin(reader, read_f64_bin)?;
     let w = read_tristate_bin(reader, read_f64_bin)?;
     Ok(ObjTexCoordDiff { u, v, w })
 }
-fn enc_normal_diff_bin(d: &ObjNormalDiff, out: &mut Vec<u8>) {
+async fn enc_normal_diff_bin(d: &ObjNormalDiff, out: &mut Vec<u8>) {
     write_option_bin(out, &d.x, |v, o| write_f64_bin(o, *v));
     write_option_bin(out, &d.y, |v, o| write_f64_bin(o, *v));
     write_option_bin(out, &d.z, |v, o| write_f64_bin(o, *v));
 }
-fn dec_normal_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<ObjNormalDiff, String> {
+async fn dec_normal_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<ObjNormalDiff, String> {
     let x = read_option_bin(reader, read_f64_bin)?;
     let y = read_option_bin(reader, read_f64_bin)?;
     let z = read_option_bin(reader, read_f64_bin)?;
     Ok(ObjNormalDiff { x, y, z })
 }
-fn enc_face_diff_bin(d: &ObjFaceDiff, out: &mut Vec<u8>) {
+async fn enc_face_diff_bin(d: &ObjFaceDiff, out: &mut Vec<u8>) {
     write_option_bin(out, &d.vertices, |v, o| write_vec_bin(o, v, enc_face_vertex_bin));
 }
-fn dec_face_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<ObjFaceDiff, String> {
+async fn dec_face_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<ObjFaceDiff, String> {
     let vertices = read_option_bin(reader, |r| read_vec_bin(r, dec_face_vertex_bin))?;
     Ok(ObjFaceDiff { vertices })
 }
-fn enc_group_diff_bin(d: &ObjGroupDiff, out: &mut Vec<u8>) {
+async fn enc_group_diff_bin(d: &ObjGroupDiff, out: &mut Vec<u8>) {
     write_option_bin(out, &d.faces, |v, o| write_vec_bin(o, v, |f, oo| write_usize_bin(oo, *f)));
 }
-fn dec_group_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<ObjGroupDiff, String> {
+async fn dec_group_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<ObjGroupDiff, String> {
     let faces = read_option_bin(reader, |r| read_vec_bin(r, read_usize_bin))?;
     Ok(ObjGroupDiff { faces })
 }
@@ -1811,7 +1811,7 @@ fn dec_group_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<ObjGroupDiff
 /// 🧭️ Generic-shaped 3-section index-keyed/name-keyed collection-triple binary
 /// encoder/decoder (mirrors dxf's own `enc_index_triple_bin`/`enc_name_triple_bin`), hand-
 /// instantiated per collection below.
-fn enc_index_triple_bin<T, D>(removed: &[usize], modified: &[(usize, D)], added: &[(usize, T)], out: &mut Vec<u8>, enc_diff: impl Fn(&D, &mut Vec<u8>), enc_item: impl Fn(&T, &mut Vec<u8>)) {
+async fn enc_index_triple_bin<T, D>(removed: &[usize], modified: &[(usize, D)], added: &[(usize, T)], out: &mut Vec<u8>, enc_diff: impl Fn(&D, &mut Vec<u8>), enc_item: impl Fn(&T, &mut Vec<u8>)) {
     write_vec_bin(out, removed, |idx, o| write_usize_bin(o, *idx));
     store::pack_rt::write_varint_u64(out, modified.len() as u64);
     for (idx, d) in modified {
@@ -1824,7 +1824,7 @@ fn enc_index_triple_bin<T, D>(removed: &[usize], modified: &[(usize, D)], added:
         enc_item(item, out);
     }
 }
-fn dec_index_triple_bin<T, D>(
+async fn dec_index_triple_bin<T, D>(
     reader: &mut store::ByteReader<'_>,
     dec_diff: impl Fn(&mut store::ByteReader<'_>) -> Result<D, String>,
     dec_item: impl Fn(&mut store::ByteReader<'_>) -> Result<T, String>,
@@ -1846,7 +1846,7 @@ fn dec_index_triple_bin<T, D>(
     }
     Ok((removed, modified, added))
 }
-fn enc_named_triple_bin<T, D>(removed: &[String], modified: &[(String, D)], added: &[(usize, T)], out: &mut Vec<u8>, enc_diff: impl Fn(&D, &mut Vec<u8>), enc_item: impl Fn(&T, &mut Vec<u8>)) {
+async fn enc_named_triple_bin<T, D>(removed: &[String], modified: &[(String, D)], added: &[(usize, T)], out: &mut Vec<u8>, enc_diff: impl Fn(&D, &mut Vec<u8>), enc_item: impl Fn(&T, &mut Vec<u8>)) {
     write_vec_bin(out, removed, |name, o| write_str_bin(o, name));
     store::pack_rt::write_varint_u64(out, modified.len() as u64);
     for (name, d) in modified {
@@ -1859,7 +1859,7 @@ fn enc_named_triple_bin<T, D>(removed: &[String], modified: &[(String, D)], adde
         enc_item(item, out);
     }
 }
-fn dec_named_triple_bin<T, D>(
+async fn dec_named_triple_bin<T, D>(
     reader: &mut store::ByteReader<'_>,
     dec_diff: impl Fn(&mut store::ByteReader<'_>) -> Result<D, String>,
     dec_item: impl Fn(&mut store::ByteReader<'_>) -> Result<T, String>,
@@ -1882,64 +1882,64 @@ fn dec_named_triple_bin<T, D>(
     Ok((removed, modified, added))
 }
 
-fn enc_vertices_diff_bin(d: &ObjVerticesDiff, out: &mut Vec<u8>) {
+async fn enc_vertices_diff_bin(d: &ObjVerticesDiff, out: &mut Vec<u8>) {
     let modified: Vec<(usize, ObjVertexDiff)> = d.modified.iter().map(|m| (m.index, m.diff.clone())).collect();
     let added: Vec<(usize, ObjVertex)> = d.added.iter().map(|a| (a.index, a.vertex.clone())).collect();
     enc_index_triple_bin(&d.removed, &modified, &added, out, enc_vertex_diff_bin, enc_vertex_bin);
 }
-fn dec_vertices_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<ObjVerticesDiff, String> {
+async fn dec_vertices_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<ObjVerticesDiff, String> {
     let (removed, modified, added) = dec_index_triple_bin(reader, dec_vertex_diff_bin, dec_vertex_bin)?;
     Ok(ObjVerticesDiff { removed, modified: modified.into_iter().map(|(index, diff)| ObjVertexModified { index, diff }).collect(), added: added.into_iter().map(|(index, vertex)| ObjVertexAdded { index, vertex }).collect() })
 }
-fn enc_texcoords_diff_bin(d: &ObjTexCoordsDiff, out: &mut Vec<u8>) {
+async fn enc_texcoords_diff_bin(d: &ObjTexCoordsDiff, out: &mut Vec<u8>) {
     let modified: Vec<(usize, ObjTexCoordDiff)> = d.modified.iter().map(|m| (m.index, m.diff.clone())).collect();
     let added: Vec<(usize, ObjTexCoord)> = d.added.iter().map(|a| (a.index, a.texcoord.clone())).collect();
     enc_index_triple_bin(&d.removed, &modified, &added, out, enc_texcoord_diff_bin, enc_texcoord_bin);
 }
-fn dec_texcoords_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<ObjTexCoordsDiff, String> {
+async fn dec_texcoords_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<ObjTexCoordsDiff, String> {
     let (removed, modified, added) = dec_index_triple_bin(reader, dec_texcoord_diff_bin, dec_texcoord_bin)?;
     Ok(ObjTexCoordsDiff { removed, modified: modified.into_iter().map(|(index, diff)| ObjTexCoordModified { index, diff }).collect(), added: added.into_iter().map(|(index, texcoord)| ObjTexCoordAdded { index, texcoord }).collect() })
 }
-fn enc_normals_diff_bin(d: &ObjNormalsDiff, out: &mut Vec<u8>) {
+async fn enc_normals_diff_bin(d: &ObjNormalsDiff, out: &mut Vec<u8>) {
     let modified: Vec<(usize, ObjNormalDiff)> = d.modified.iter().map(|m| (m.index, m.diff.clone())).collect();
     let added: Vec<(usize, ObjNormal)> = d.added.iter().map(|a| (a.index, a.normal.clone())).collect();
     enc_index_triple_bin(&d.removed, &modified, &added, out, enc_normal_diff_bin, enc_normal_bin);
 }
-fn dec_normals_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<ObjNormalsDiff, String> {
+async fn dec_normals_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<ObjNormalsDiff, String> {
     let (removed, modified, added) = dec_index_triple_bin(reader, dec_normal_diff_bin, dec_normal_bin)?;
     Ok(ObjNormalsDiff { removed, modified: modified.into_iter().map(|(index, diff)| ObjNormalModified { index, diff }).collect(), added: added.into_iter().map(|(index, normal)| ObjNormalAdded { index, normal }).collect() })
 }
-fn enc_faces_diff_bin(d: &ObjFacesDiff, out: &mut Vec<u8>) {
+async fn enc_faces_diff_bin(d: &ObjFacesDiff, out: &mut Vec<u8>) {
     let modified: Vec<(usize, ObjFaceDiff)> = d.modified.iter().map(|m| (m.index, m.diff.clone())).collect();
     let added: Vec<(usize, ObjFace)> = d.added.iter().map(|a| (a.index, a.face.clone())).collect();
     enc_index_triple_bin(&d.removed, &modified, &added, out, enc_face_diff_bin, enc_face_bin);
 }
-fn dec_faces_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<ObjFacesDiff, String> {
+async fn dec_faces_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<ObjFacesDiff, String> {
     let (removed, modified, added) = dec_index_triple_bin(reader, dec_face_diff_bin, dec_face_bin)?;
     Ok(ObjFacesDiff { removed, modified: modified.into_iter().map(|(index, diff)| ObjFaceModified { index, diff }).collect(), added: added.into_iter().map(|(index, face)| ObjFaceAdded { index, face }).collect() })
 }
-fn enc_groups_diff_bin(d: &ObjGroupsDiff, out: &mut Vec<u8>) {
+async fn enc_groups_diff_bin(d: &ObjGroupsDiff, out: &mut Vec<u8>) {
     let modified: Vec<(String, ObjGroupDiff)> = d.modified.iter().map(|m| (m.name.clone(), m.diff.clone())).collect();
     let added: Vec<(usize, ObjGroup)> = d.added.iter().map(|a| (a.index, a.group.clone())).collect();
     enc_named_triple_bin(&d.removed, &modified, &added, out, enc_group_diff_bin, enc_group_bin);
 }
-fn dec_groups_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<ObjGroupsDiff, String> {
+async fn dec_groups_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<ObjGroupsDiff, String> {
     let (removed, modified, added) = dec_named_triple_bin(reader, dec_group_diff_bin, dec_group_bin)?;
     Ok(ObjGroupsDiff { removed, modified: modified.into_iter().map(|(name, diff)| ObjGroupModified { name, diff }).collect(), added: added.into_iter().map(|(index, group)| ObjGroupAdded { index, group }).collect() })
 }
-fn enc_objects_diff_bin(d: &ObjObjectsDiff, out: &mut Vec<u8>) {
+async fn enc_objects_diff_bin(d: &ObjObjectsDiff, out: &mut Vec<u8>) {
     let modified: Vec<(String, ObjGroupDiff)> = d.modified.iter().map(|m| (m.name.clone(), m.diff.clone())).collect();
     let added: Vec<(usize, ObjObject)> = d.added.iter().map(|a| (a.index, a.object.clone())).collect();
     enc_named_triple_bin(&d.removed, &modified, &added, out, enc_group_diff_bin, enc_object_bin);
 }
-fn dec_objects_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<ObjObjectsDiff, String> {
+async fn dec_objects_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<ObjObjectsDiff, String> {
     let (removed, modified, added) = dec_named_triple_bin(reader, dec_group_diff_bin, dec_object_bin)?;
     Ok(ObjObjectsDiff { removed, modified: modified.into_iter().map(|(name, diff)| ObjGroupModified { name, diff }).collect(), added: added.into_iter().map(|(index, object)| ObjObjectAdded { index, object }).collect() })
 }
 //#endregion 🔖️CollectionBinaryCodecs
 
 //#region 🔖️TopLevel
-fn print_obj_diff(d: &ObjDiff) -> String {
+async fn print_obj_diff(d: &ObjDiff) -> String {
     let mut tokens: Vec<String> = Vec::new();
     if let Some(v) = &d.vertices {
         tokens.push(enc_vertices_diff(v));
@@ -1973,7 +1973,7 @@ fn print_obj_diff(d: &ObjDiff) -> String {
     }
     tokens.join(" ")
 }
-fn parse_obj_diff(line: &str) -> Result<ObjDiff, String> {
+async fn parse_obj_diff(line: &str) -> Result<ObjDiff, String> {
     let mut d = ObjDiff::default();
     if line.is_empty() {
         return Ok(d);
@@ -2007,10 +2007,10 @@ fn parse_obj_diff(line: &str) -> Result<ObjDiff, String> {
 }
 
 impl DiffCodec for ObjDiff {
-    fn print_diff(&self) -> String {
+    async fn print_diff(&self) -> String {
         print_obj_diff(self)
     }
-    fn parse_diff(line: &str) -> Result<Self, store::TextError> {
+    async fn parse_diff(line: &str) -> Result<Self, store::TextError> {
         parse_obj_diff(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
     /// 🧪️ P2-FG1: REAL binary frame (`format u8 | flags_lo u8 | flags_hi u8 | per-present-field
@@ -2032,7 +2032,7 @@ impl DiffCodec for ObjDiff {
     /// collection-triple SHAPE itself (`Prim::Ref` cannot express a `Vec<Modified{index,diff}>`
     /// record-array in the protocol grammar — the same wall every collection-triple diff in this
     /// wave hit, documented in that file), never any individual scalar/struct value.
-    fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    async fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         let mut flags_lo: u8 = 0;
         let mut flags_hi: u8 = 0;
         if self.vertices.is_some() {
@@ -2098,7 +2098,7 @@ impl DiffCodec for ObjDiff {
         }
         Ok(out)
     }
-    fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    async fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         let mut reader = store::ByteReader::new(bytes);
         let malformed = |what: &'static str, offset: usize, detail: String| protocol::ProtocolError::Malformed { what, offset: offset as u64, detail };
         let _format = reader.read_u8().map_err(|e| malformed("diff format", 0, e.to_string()))?;
@@ -2124,85 +2124,85 @@ impl DiffCodec for ObjDiff {
 // 🧮 Item-level `between` wrappers, exposed to `🧬️mutations` so `SetVertex`/`SetTexCoord`/
 // `SetNormal`/`SetFace`'s `diff()` can compute a sparse per-field patch without the private
 // `ObjIndexElem` trait itself leaving this module.
-pub fn vertex_diff_between(a: &ObjVertex, b: &ObjVertex) -> ObjVertexDiff {
+pub async fn vertex_diff_between(a: &ObjVertex, b: &ObjVertex) -> ObjVertexDiff {
     <ObjVertex as ObjIndexElem>::diff_between(a, b)
 }
-pub fn texcoord_diff_between(a: &ObjTexCoord, b: &ObjTexCoord) -> ObjTexCoordDiff {
+pub async fn texcoord_diff_between(a: &ObjTexCoord, b: &ObjTexCoord) -> ObjTexCoordDiff {
     <ObjTexCoord as ObjIndexElem>::diff_between(a, b)
 }
-pub fn normal_diff_between(a: &ObjNormal, b: &ObjNormal) -> ObjNormalDiff {
+pub async fn normal_diff_between(a: &ObjNormal, b: &ObjNormal) -> ObjNormalDiff {
     <ObjNormal as ObjIndexElem>::diff_between(a, b)
 }
-pub fn face_diff_between(a: &ObjFace, b: &ObjFace) -> ObjFaceDiff {
+pub async fn face_diff_between(a: &ObjFace, b: &ObjFace) -> ObjFaceDiff {
     <ObjFace as ObjIndexElem>::diff_between(a, b)
 }
 
-pub fn diff_insert_vertex(index: usize, vertex: ObjVertex) -> ObjDiff {
+pub async fn diff_insert_vertex(index: usize, vertex: ObjVertex) -> ObjDiff {
     ObjDiff { vertices: Some(ObjVerticesDiff { removed: vec![], modified: vec![], added: vec![ObjVertexAdded { index, vertex }] }), ..Default::default() }
 }
-pub fn diff_remove_vertex(index: usize) -> ObjDiff {
+pub async fn diff_remove_vertex(index: usize) -> ObjDiff {
     ObjDiff { vertices: Some(ObjVerticesDiff { removed: vec![index], modified: vec![], added: vec![] }), ..Default::default() }
 }
-pub fn diff_set_vertex(index: usize, diff: ObjVertexDiff) -> ObjDiff {
+pub async fn diff_set_vertex(index: usize, diff: ObjVertexDiff) -> ObjDiff {
     ObjDiff { vertices: Some(ObjVerticesDiff { removed: vec![], modified: vec![ObjVertexModified { index, diff }], added: vec![] }), ..Default::default() }
 }
-pub fn diff_insert_texcoord(index: usize, texcoord: ObjTexCoord) -> ObjDiff {
+pub async fn diff_insert_texcoord(index: usize, texcoord: ObjTexCoord) -> ObjDiff {
     ObjDiff { texcoords: Some(ObjTexCoordsDiff { removed: vec![], modified: vec![], added: vec![ObjTexCoordAdded { index, texcoord }] }), ..Default::default() }
 }
-pub fn diff_remove_texcoord(index: usize) -> ObjDiff {
+pub async fn diff_remove_texcoord(index: usize) -> ObjDiff {
     ObjDiff { texcoords: Some(ObjTexCoordsDiff { removed: vec![index], modified: vec![], added: vec![] }), ..Default::default() }
 }
-pub fn diff_set_texcoord(index: usize, diff: ObjTexCoordDiff) -> ObjDiff {
+pub async fn diff_set_texcoord(index: usize, diff: ObjTexCoordDiff) -> ObjDiff {
     ObjDiff { texcoords: Some(ObjTexCoordsDiff { removed: vec![], modified: vec![ObjTexCoordModified { index, diff }], added: vec![] }), ..Default::default() }
 }
-pub fn diff_insert_normal(index: usize, normal: ObjNormal) -> ObjDiff {
+pub async fn diff_insert_normal(index: usize, normal: ObjNormal) -> ObjDiff {
     ObjDiff { normals: Some(ObjNormalsDiff { removed: vec![], modified: vec![], added: vec![ObjNormalAdded { index, normal }] }), ..Default::default() }
 }
-pub fn diff_remove_normal(index: usize) -> ObjDiff {
+pub async fn diff_remove_normal(index: usize) -> ObjDiff {
     ObjDiff { normals: Some(ObjNormalsDiff { removed: vec![index], modified: vec![], added: vec![] }), ..Default::default() }
 }
-pub fn diff_set_normal(index: usize, diff: ObjNormalDiff) -> ObjDiff {
+pub async fn diff_set_normal(index: usize, diff: ObjNormalDiff) -> ObjDiff {
     ObjDiff { normals: Some(ObjNormalsDiff { removed: vec![], modified: vec![ObjNormalModified { index, diff }], added: vec![] }), ..Default::default() }
 }
-pub fn diff_insert_face(index: usize, face: ObjFace) -> ObjDiff {
+pub async fn diff_insert_face(index: usize, face: ObjFace) -> ObjDiff {
     ObjDiff { faces: Some(ObjFacesDiff { removed: vec![], modified: vec![], added: vec![ObjFaceAdded { index, face }] }), ..Default::default() }
 }
-pub fn diff_remove_face(index: usize) -> ObjDiff {
+pub async fn diff_remove_face(index: usize) -> ObjDiff {
     ObjDiff { faces: Some(ObjFacesDiff { removed: vec![index], modified: vec![], added: vec![] }), ..Default::default() }
 }
-pub fn diff_set_face(index: usize, diff: ObjFaceDiff) -> ObjDiff {
+pub async fn diff_set_face(index: usize, diff: ObjFaceDiff) -> ObjDiff {
     ObjDiff { faces: Some(ObjFacesDiff { removed: vec![], modified: vec![ObjFaceModified { index, diff }], added: vec![] }), ..Default::default() }
 }
-pub fn diff_set_group(index: usize, name: &str, faces: Vec<usize>, existed: bool) -> ObjDiff {
+pub async fn diff_set_group(index: usize, name: &str, faces: Vec<usize>, existed: bool) -> ObjDiff {
     if existed {
         ObjDiff { groups: Some(ObjGroupsDiff { removed: vec![], modified: vec![ObjGroupModified { name: name.to_string(), diff: ObjGroupDiff { faces: Some(faces) } }], added: vec![] }), ..Default::default() }
     } else {
         ObjDiff { groups: Some(ObjGroupsDiff { removed: vec![], modified: vec![], added: vec![ObjGroupAdded { index, group: ObjGroup { name: name.to_string(), faces } }] }), ..Default::default() }
     }
 }
-pub fn diff_remove_group(name: &str) -> ObjDiff {
+pub async fn diff_remove_group(name: &str) -> ObjDiff {
     ObjDiff { groups: Some(ObjGroupsDiff { removed: vec![name.to_string()], modified: vec![], added: vec![] }), ..Default::default() }
 }
-pub fn diff_set_object(index: usize, name: &str, faces: Vec<usize>, existed: bool) -> ObjDiff {
+pub async fn diff_set_object(index: usize, name: &str, faces: Vec<usize>, existed: bool) -> ObjDiff {
     if existed {
         ObjDiff { objects: Some(ObjObjectsDiff { removed: vec![], modified: vec![ObjGroupModified { name: name.to_string(), diff: ObjGroupDiff { faces: Some(faces) } }], added: vec![] }), ..Default::default() }
     } else {
         ObjDiff { objects: Some(ObjObjectsDiff { removed: vec![], modified: vec![], added: vec![ObjObjectAdded { index, object: ObjObject { name: name.to_string(), faces } }] }), ..Default::default() }
     }
 }
-pub fn diff_remove_object(name: &str) -> ObjDiff {
+pub async fn diff_remove_object(name: &str) -> ObjDiff {
     ObjDiff { objects: Some(ObjObjectsDiff { removed: vec![name.to_string()], modified: vec![], added: vec![] }), ..Default::default() }
 }
-pub fn diff_set_mtllib(mtllib: Option<String>) -> ObjDiff {
+pub async fn diff_set_mtllib(mtllib: Option<String>) -> ObjDiff {
     ObjDiff { mtllib: Some(mtllib), ..Default::default() }
 }
-pub fn diff_set_usemtl(usemtl: Vec<ObjUsemtlRange>) -> ObjDiff {
+pub async fn diff_set_usemtl(usemtl: Vec<ObjUsemtlRange>) -> ObjDiff {
     ObjDiff { usemtl: Some(usemtl), ..Default::default() }
 }
-pub fn diff_set_smoothing_groups(smoothing_groups: Vec<ObjSmoothingRange>) -> ObjDiff {
+pub async fn diff_set_smoothing_groups(smoothing_groups: Vec<ObjSmoothingRange>) -> ObjDiff {
     ObjDiff { smoothing_groups: Some(smoothing_groups), ..Default::default() }
 }
-pub fn diff_set_unknown_statements(unknown_statements: Vec<ObjUnknownStatement>) -> ObjDiff {
+pub async fn diff_set_unknown_statements(unknown_statements: Vec<ObjUnknownStatement>) -> ObjDiff {
     ObjDiff { unknown_statements: Some(unknown_statements), ..Default::default() }
 }
 //#endregion 🔖️MutationDiffBuilders
@@ -2214,7 +2214,7 @@ pub fn diff_set_unknown_statements(unknown_statements: Vec<ObjUnknownStatement>)
 /// Mirrors `🧬️mutations`' own `sweep_a`/`sweep_b` fixtures (kept local to this file, same
 /// per-file-independent-fixture convention `stdio.zip`'s own diff/mutations pair uses).
 #[cfg(test)]
-pub(crate) fn sweep_a() -> ObjSnapshot {
+pub(crate) async fn sweep_a() -> ObjSnapshot {
     ObjSnapshot {
         schema: "stdio.obj".into(),
         vertices: vec![ObjVertex { x: 0.0, y: 0.0, z: 0.0, w: None }, ObjVertex { x: 1.0, y: 1.0, z: 1.0, w: None }],
@@ -2235,7 +2235,7 @@ pub(crate) fn sweep_a() -> ObjSnapshot {
 /// brand-new item at index 2. Name-keyed `groups`/`objects` show removed+modified+added
 /// simultaneously from ONE `between(a,b)` call. `mtllib` exercises `Some->None` tri-state.
 #[cfg(test)]
-pub(crate) fn sweep_b() -> ObjSnapshot {
+pub(crate) async fn sweep_b() -> ObjSnapshot {
     ObjSnapshot {
         schema: "stdio.obj".into(),
         vertices: vec![ObjVertex { x: 0.0, y: 0.0, z: 0.0, w: None }, ObjVertex { x: 9.0, y: 9.0, z: 9.0, w: Some(0.5) }, ObjVertex { x: 5.0, y: 5.0, z: 5.0, w: Some(1.0) }],
@@ -2263,7 +2263,7 @@ pub(crate) fn sweep_b() -> ObjSnapshot {
 /// `../../⚙️engine/🦀️component.rs`'s `diff_grammar_conformance_law`/`protocol_walk_law`
 /// conformance tests, same convention P2-P1's json/zip pilots established.
 #[cfg(test)]
-pub(crate) fn demo_diff_cases() -> Vec<ObjDiff> {
+pub(crate) async fn demo_diff_cases() -> Vec<ObjDiff> {
     let a = sweep_a();
     let b = sweep_b();
     vec![ObjDiff::default(), <ObjDiff as DiffAlgebra<ObjSnapshot>>::between(&a, &b), <ObjDiff as DiffAlgebra<ObjSnapshot>>::between(&b, &a)]
@@ -2276,7 +2276,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn invalid_collection_targets_are_rejected_before_mutation() {
+    async fn invalid_collection_targets_are_rejected_before_mutation() {
         let base = ObjSnapshot::default();
         let diff = ObjDiff { vertices: Some(ObjVerticesDiff { removed: vec![0], ..Default::default() }), ..Default::default() };
         let error = diff.apply(&base).expect_err("missing vertex target must be rejected");
@@ -2291,7 +2291,7 @@ mod tests {
     /// (`vertices`/`texcoords`/`normals`/`faces`) AND name-keyed (`groups`/`objects`) — via a real
     /// `between()` result in both directions.
     #[test]
-    fn diff_codec_text_binary_roundtrip_law() {
+    async fn diff_codec_text_binary_roundtrip_law() {
         let a = sweep_a();
         let b = sweep_b();
         let ab = <ObjDiff as DiffAlgebra<ObjSnapshot>>::between(&a, &b);

@@ -12,29 +12,29 @@ pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️comp
 //#endregion 📡️SemioProtocol
 
 //#region 🔖️BinaryPrimitives
-fn write_bytes_lp(out: &mut Vec<u8>, bytes: &[u8]) {
+async fn write_bytes_lp(out: &mut Vec<u8>, bytes: &[u8]) {
     store::pack_rt::write_varint_u64(out, bytes.len() as u64);
     out.extend_from_slice(bytes);
 }
-fn read_bytes_lp(reader: &mut store::ByteReader<'_>) -> Result<Vec<u8>, String> {
+async fn read_bytes_lp(reader: &mut store::ByteReader<'_>) -> Result<Vec<u8>, String> {
     let len = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
     Ok(reader.read_bytes(len).map_err(|e| e.to_string())?.to_vec())
 }
-fn write_str_lp(out: &mut Vec<u8>, s: &str) { write_bytes_lp(out, s.as_bytes()); }
-fn read_str_lp(reader: &mut store::ByteReader<'_>) -> Result<String, String> { String::from_utf8(read_bytes_lp(reader)?).map_err(|e| e.to_string()) }
-fn write_ref(out: &mut Vec<u8>, r: &store::os_io::ArtifactRef) { write_str_lp(out, &r.to_uri()); }
-fn read_ref(reader: &mut store::ByteReader<'_>) -> Result<store::os_io::ArtifactRef, String> { store::os_io::ArtifactRef::parse_uri(&read_str_lp(reader)?) }
-fn write_child(out: &mut Vec<u8>, c: &WriterDocumentChild) {
+async fn write_str_lp(out: &mut Vec<u8>, s: &str) { write_bytes_lp(out, s.as_bytes()); }
+async fn read_str_lp(reader: &mut store::ByteReader<'_>) -> Result<String, String> { String::from_utf8(read_bytes_lp(reader)?).map_err(|e| e.to_string()) }
+async fn write_ref(out: &mut Vec<u8>, r: &store::os_io::ArtifactRef) { write_str_lp(out, &r.to_uri()); }
+async fn read_ref(reader: &mut store::ByteReader<'_>) -> Result<store::os_io::ArtifactRef, String> { store::os_io::ArtifactRef::parse_uri(&read_str_lp(reader)?) }
+async fn write_child(out: &mut Vec<u8>, c: &WriterDocumentChild) {
     write_str_lp(out, &c.child_id);
     write_ref(out, &c.target);
 }
-fn read_child(reader: &mut store::ByteReader<'_>) -> Result<WriterDocumentChild, String> {
+async fn read_child(reader: &mut store::ByteReader<'_>) -> Result<WriterDocumentChild, String> {
     let child_id = read_str_lp(reader)?;
     let target = read_ref(reader)?;
     Ok(store::ArtifactChild::new(child_id, target))
 }
 
-fn encode_writer_snapshot_binary(s: &WriterSnapshot) -> Vec<u8> {
+async fn encode_writer_snapshot_binary(s: &WriterSnapshot) -> Vec<u8> {
     const PACK_BINARY_FORMAT: u8 = 1;
     let mut out = vec![PACK_BINARY_FORMAT];
     write_str_lp(&mut out, &s.schema);
@@ -44,7 +44,7 @@ fn encode_writer_snapshot_binary(s: &WriterSnapshot) -> Vec<u8> {
     write_child(&mut out, &s.document);
     out
 }
-fn decode_writer_snapshot_binary(bytes: &[u8]) -> Result<WriterSnapshot, String> {
+async fn decode_writer_snapshot_binary(bytes: &[u8]) -> Result<WriterSnapshot, String> {
     const PACK_BINARY_FORMAT: u8 = 1;
     let mut reader = store::ByteReader::new(bytes);
     let format = reader.read_u8().map_err(|e| e.to_string())?;
@@ -61,7 +61,7 @@ fn decode_writer_snapshot_binary(bytes: &[u8]) -> Result<WriterSnapshot, String>
 
 //#region 🔖️HandcraftedArtifactPack
 impl store::ArtifactPack for WriterSnapshot {
-    fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, PackError> {
+    async fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, PackError> {
         let _ = options;
         let raw = encode_writer_snapshot_binary(self);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
@@ -72,7 +72,7 @@ impl store::ArtifactPack for WriterSnapshot {
         .map_err(|e| PackError::Schema(e.to_string()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &raw))
     }
-    fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, PackError> {
+    async fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, PackError> {
         let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| PackError::Schema(e.to_string()))?;
         if envelope.envelope_id() != <Self as store::ArtifactDsl>::envelope_id() {
             return Err(PackError::Schema(format!(
@@ -88,12 +88,12 @@ impl store::ArtifactPack for WriterSnapshot {
 //#endregion 🔖️HandcraftedArtifactPack
 
 /// 📦️ Encodes a `WriterSnapshot` to its binary pack form.
-pub fn encode(projection: &WriterSnapshot) -> Vec<u8> {
+pub async fn encode(projection: &WriterSnapshot) -> Vec<u8> {
     store::ArtifactPack::encode_pack(projection)
 }
 
 /// 📖️ Decodes a `WriterSnapshot` from its binary pack form.
-pub fn decode(bytes: &[u8]) -> Result<WriterSnapshot, PackError> {
+pub async fn decode(bytes: &[u8]) -> Result<WriterSnapshot, PackError> {
     <WriterSnapshot as store::ArtifactPack>::decode_pack(bytes)
 }
 
@@ -104,7 +104,7 @@ mod tests {
     use crate::artifacts::writer::schema;
 
     /// ✍️ Hand-built representative document — used across the artifact's own component tests.
-    fn jack_snapshot() -> WriterSnapshot {
+    async fn jack_snapshot() -> WriterSnapshot {
         crate::artifacts::writer::writer_snapshot_with_text(
             "writer.document",
             "jack",
@@ -115,7 +115,7 @@ mod tests {
     }
 
     #[test]
-    fn writer_projection_dsl_pack_equivalence() {
+    async fn writer_projection_dsl_pack_equivalence() {
         let empty = schema::empty_writer_snapshot();
         store::os_store::test_support::assert_dsl_pack_equivalence(&empty);
         let bytes = encode(&empty);
@@ -132,7 +132,7 @@ mod tests {
     /// `WriterMutation`'s `Edit` round-trips through `protocol::MutationEnvelope`s beside this file's
     /// existing dsl/pack round-trip law.
     #[test]
-    fn command_envelope_round_trip_holds_for_an_applied_operation() {
+    async fn command_envelope_round_trip_holds_for_an_applied_operation() {
         use crate::artifacts::writer::op::WriterMutation;
         use protocol::{ArtifactId, Edit, SchemaId};
         use store::{create_document_envelope, ArtifactCommand, ArtifactStore};
@@ -151,7 +151,7 @@ mod semio_protocol_conformance {
     use super::*;
 
     #[test]
-    fn component_protocol_semio_is_protocol_dialect() {
+    async fn component_protocol_semio_is_protocol_dialect() {
         let g = ::dsl::parse_grammar(COMPONENT_PROTOCOL_SEMIO).expect("parse protocol.semio");
         assert_eq!(g.dialect, ::dsl::SemioDialect::Protocol);
         assert!(!COMPONENT_PROTOCOL_SEMIO.is_empty());
@@ -159,7 +159,7 @@ mod semio_protocol_conformance {
     }
 
     #[test]
-    fn verify_protocol_bytes_against_encoded_pack() {
+    async fn verify_protocol_bytes_against_encoded_pack() {
         let document = crate::artifacts::writer::schema::empty_writer_snapshot();
         let bytes = encode(&document);
         let g = ::dsl::parse_grammar(COMPONENT_PROTOCOL_SEMIO).expect("parse protocol");

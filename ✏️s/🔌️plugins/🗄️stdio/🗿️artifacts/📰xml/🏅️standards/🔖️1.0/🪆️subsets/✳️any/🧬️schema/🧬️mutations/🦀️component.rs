@@ -19,14 +19,14 @@ pub struct XmlNodePath(pub Vec<usize>);
 
 impl XmlNodePath {
     /// 🌳 The empty path -- addresses the document root.
-    pub fn root() -> Self {
+    pub async fn root() -> Self {
         Self(Vec::new())
     }
 
     /// 🔎️ Walks `self` from `root`, returning the addressed node if it exists and every
     /// intermediate segment is itself an `Element` (any other shape or an out-of-range index is a
     /// graceful `None`, never a panic).
-    pub fn resolve<'a>(&self, root: Option<&'a XmlNode>) -> Option<&'a XmlNode> {
+    pub async fn resolve<'a>(&self, root: Option<&'a XmlNode>) -> Option<&'a XmlNode> {
         let mut current = root?;
         for &index in &self.0 {
             let XmlNode::Element { children, .. } = current else { return None };
@@ -95,7 +95,7 @@ pub enum XmlMutation {
 //#region 🔖️Apply
 /// ▶️ Applies `mutation` to `snapshot`: `let d = mutation.diff(&*snapshot); *snapshot = d.apply(snapshot); d`
 /// -- the diff is the single semantics source, never a separate imperative apply path.
-pub fn apply_xml_mutation(snapshot: &mut XmlSnapshot, mutation: &XmlMutation) -> protocol::MutationOutcome<XmlDiff> {
+pub async fn apply_xml_mutation(snapshot: &mut XmlSnapshot, mutation: &XmlMutation) -> protocol::MutationOutcome<XmlDiff> {
     let outcome = Mutation::diff(mutation, snapshot);
     match protocol::MutationDiff::apply(outcome.diff(), snapshot) {
         Ok(next) => {
@@ -111,7 +111,7 @@ pub fn apply_xml_mutation(snapshot: &mut XmlSnapshot, mutation: &XmlMutation) ->
 impl Mutation<XmlSnapshot> for XmlMutation {
     type Diff = XmlDiff;
 
-    fn diff(&self, base: &XmlSnapshot) -> protocol::MutationOutcome<Self::Diff> {
+    async fn diff(&self, base: &XmlSnapshot) -> protocol::MutationOutcome<Self::Diff> {
         protocol::MutationOutcome::new(match self {
             XmlMutation::NoMutation => XmlDiff::default(),
             XmlMutation::SetSnapshot { snapshot } => diff_set_snapshot(base, snapshot),
@@ -148,7 +148,7 @@ impl Mutation<XmlSnapshot> for XmlMutation {
         })
     }
 
-    fn inverse(&self, base: &XmlSnapshot) -> Vec<Self> {
+    async fn inverse(&self, base: &XmlSnapshot) -> Vec<Self> {
         match self {
             XmlMutation::NoMutation => vec![XmlMutation::NoMutation],
             XmlMutation::SetSnapshot { .. } => vec![XmlMutation::SetSnapshot { snapshot: base.clone() }],
@@ -191,7 +191,7 @@ impl Mutation<XmlSnapshot> for XmlMutation {
 
 /// 🧭️ `path`-addressing convenience over `crate::artifacts::xml::schema::diff::diff_at_path`
 /// (which takes a bare `&[usize]` so the diff module never needs to depend on this one).
-fn diff_at_path(path: &[usize], leaf: XmlNodeDiff) -> XmlDiff {
+async fn diff_at_path(path: &[usize], leaf: XmlNodeDiff) -> XmlDiff {
     crate::artifacts::xml::schema::diff::diff_at_path(path, leaf)
 }
 //#endregion 🔖️MutationTrait
@@ -206,16 +206,16 @@ fn diff_at_path(path: &[usize], leaf: XmlNodeDiff) -> XmlDiff {
 /// (no `DslVariants` scaffolding available since nothing here derives it). Replaces the previous
 /// `serde_json`-based placeholder, which satisfied the trait's LAWS but was not a genuine
 /// handcrafted grammar (the recon report explicitly warns against copying `WriterDiff`'s shortcut).
-fn enc_node_path(p: &XmlNodePath) -> String {
+async fn enc_node_path(p: &XmlNodePath) -> String {
     format!("[{}]", p.0.iter().map(|i| i.to_string()).collect::<Vec<_>>().join(","))
 }
-fn dec_node_path(s: &str) -> Result<XmlNodePath, String> {
+async fn dec_node_path(s: &str) -> Result<XmlNodePath, String> {
     split_top_level(strip_brackets(s)?, ',').into_iter().filter(|s| !s.is_empty()).map(|s| s.parse().map_err(|e: std::num::ParseIntError| e.to_string())).collect::<Result<Vec<usize>, String>>().map(XmlNodePath)
 }
-pub(crate) fn enc_xml_snapshot(s: &XmlSnapshot) -> String {
+pub(crate) async fn enc_xml_snapshot(s: &XmlSnapshot) -> String {
     format!("[{},{},{},{},{}]", enc_str(&s.schema), encode_option(&s.doc.root, enc_xml_node), encode_option(&s.doc.doctype, enc_doctype), encode_option(&s.doc.declaration, enc_declaration), enc_prolog(&s.doc.prolog),)
 }
-pub(crate) fn dec_xml_snapshot(s: &str) -> Result<XmlSnapshot, String> {
+pub(crate) async fn dec_xml_snapshot(s: &str) -> Result<XmlSnapshot, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [schema, root, doctype, declaration, prolog] = parts.as_slice() else { return Err(format!("xml snapshot: expected 5 fields, got {}", parts.len())) };
     Ok(XmlSnapshot {
@@ -224,7 +224,7 @@ pub(crate) fn dec_xml_snapshot(s: &str) -> Result<XmlSnapshot, String> {
     })
 }
 
-fn print_xml_mutation(m: &XmlMutation) -> String {
+async fn print_xml_mutation(m: &XmlMutation) -> String {
     match m {
         XmlMutation::NoMutation => "no-mutation".to_string(),
         XmlMutation::SetSnapshot { snapshot } => format!("set-snapshot snapshot={}", enc_xml_snapshot(snapshot)),
@@ -236,7 +236,7 @@ fn print_xml_mutation(m: &XmlMutation) -> String {
         XmlMutation::SetText { path, text } => format!("set-text path={} text={}", enc_node_path(path), enc_str(text)),
     }
 }
-fn parse_xml_mutation(line: &str) -> Result<XmlMutation, String> {
+async fn parse_xml_mutation(line: &str) -> Result<XmlMutation, String> {
     if line == "no-mutation" {
         return Ok(XmlMutation::NoMutation);
     }
@@ -257,10 +257,10 @@ fn parse_xml_mutation(line: &str) -> Result<XmlMutation, String> {
 }
 
 impl OpText for XmlMutation {
-    fn print_op(&self) -> String {
+    async fn print_op(&self) -> String {
         print_xml_mutation(self)
     }
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
+    async fn parse_op(line: &str) -> Result<Self, store::TextError> {
         parse_xml_mutation(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
 }
@@ -274,13 +274,13 @@ impl OpText for XmlMutation {
 /// `pub(crate)` to this artifact).
 use crate::artifacts::xml::schema::diff::{dec_declaration_bin, dec_prolog_bin, dec_xml_node_bin, enc_declaration_bin, enc_prolog_bin, enc_xml_node_bin, read_str_lp, write_str_lp};
 
-fn enc_node_path_bin(p: &XmlNodePath, out: &mut Vec<u8>) {
+async fn enc_node_path_bin(p: &XmlNodePath, out: &mut Vec<u8>) {
     store::pack_rt::write_varint_u64(out, p.0.len() as u64);
     for index in &p.0 {
         store::pack_rt::write_varint_u64(out, *index as u64);
     }
 }
-fn dec_node_path_bin(reader: &mut store::ByteReader<'_>) -> Result<XmlNodePath, String> {
+async fn dec_node_path_bin(reader: &mut store::ByteReader<'_>) -> Result<XmlNodePath, String> {
     let count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut path = Vec::with_capacity(count as usize);
     for _ in 0..count {
@@ -288,7 +288,7 @@ fn dec_node_path_bin(reader: &mut store::ByteReader<'_>) -> Result<XmlNodePath, 
     }
     Ok(XmlNodePath(path))
 }
-pub(crate) fn enc_xml_snapshot_bin(s: &XmlSnapshot, out: &mut Vec<u8>) {
+pub(crate) async fn enc_xml_snapshot_bin(s: &XmlSnapshot, out: &mut Vec<u8>) {
     write_str_lp(out, &s.schema);
     out.push(if s.doc.root.is_some() { 1 } else { 0 });
     if let Some(root) = &s.doc.root {
@@ -304,7 +304,7 @@ pub(crate) fn enc_xml_snapshot_bin(s: &XmlSnapshot, out: &mut Vec<u8>) {
     }
     enc_prolog_bin(&s.doc.prolog, out);
 }
-pub(crate) fn dec_xml_snapshot_bin(reader: &mut store::ByteReader<'_>) -> Result<XmlSnapshot, String> {
+pub(crate) async fn dec_xml_snapshot_bin(reader: &mut store::ByteReader<'_>) -> Result<XmlSnapshot, String> {
     let schema = read_str_lp(reader)?;
     let root = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(dec_xml_node_bin(reader)?) } else { None };
     let doctype = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(dec_doctype_bin(reader)?) } else { None };
@@ -319,7 +319,7 @@ pub(crate) fn dec_xml_snapshot_bin(reader: &mut store::ByteReader<'_>) -> Result
 /// upgraded from F6's `print_op().into_bytes()` text-as-binary shortcut. `tag` is the `XmlMutation`
 /// variant ordinal, in the same 0-7 order `print_xml_mutation`'s own keyword match uses.
 impl protocol::OpBinary for XmlMutation {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         let tag: u8 = match self {
             XmlMutation::NoMutation => 0,
             XmlMutation::SetSnapshot { .. } => 1,
@@ -371,7 +371,7 @@ impl protocol::OpBinary for XmlMutation {
         Ok(out)
     }
 
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         let mut reader = store::ByteReader::new(bytes);
         let malformed = |what: &'static str, offset: usize, detail: String| protocol::ProtocolError::Malformed { what, offset: offset as u64, detail };
         let _format = reader.read_u8().map_err(|e| malformed("op format", 0, e.to_string()))?;
@@ -428,7 +428,7 @@ impl protocol::OpBinary for XmlMutation {
 /// `ops_grammar_conformance_law`/`protocol_walk_law` conformance tests, so a new variant only needs
 /// adding here once.
 #[cfg(test)]
-pub(crate) fn demo_mutation_cases() -> Vec<XmlMutation> {
+pub(crate) async fn demo_mutation_cases() -> Vec<XmlMutation> {
     use crate::artifacts::xml::schema::snapshot::XmlAttr;
 
     let base = <XmlSnapshot as store::ArtifactDsl>::parse_dsl(r#"<root a="1"><child x="0"/></root>"#).unwrap();
@@ -460,7 +460,7 @@ mod op_codec_tests {
     /// `demo_mutation_cases()` (the single source of truth also consumed by
     /// `⚙️engine/🦀️component.rs`'s `ops_grammar_conformance_law`/`protocol_walk_law`).
     #[test]
-    fn op_text_binary_roundtrip_law() {
+    async fn op_text_binary_roundtrip_law() {
         for mutation in demo_mutation_cases() {
             let printed = mutation.print_op();
             assert!(!printed.contains('\n'), "print_op must be one line, got {printed:?}");

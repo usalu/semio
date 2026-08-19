@@ -15,12 +15,12 @@ use crate::artifacts::wires::schema::mutations::WiresMutation;
 use protocol::OpBinary;
 
 /// 📦️ Encodes a `WiresMutation` to its binary command form.
-pub fn encode_op(operation: &WiresMutation) -> Result<Vec<u8>, protocol::ProtocolError> {
+pub async fn encode_op(operation: &WiresMutation) -> Result<Vec<u8>, protocol::ProtocolError> {
     operation.encode_op()
 }
 
 /// 📖️ Decodes a `WiresMutation` from its binary command form.
-pub fn decode_op(bytes: &[u8]) -> Result<WiresMutation, protocol::ProtocolError> {
+pub async fn decode_op(bytes: &[u8]) -> Result<WiresMutation, protocol::ProtocolError> {
     WiresMutation::decode_op(bytes)
 }
 
@@ -38,7 +38,7 @@ mod tests {
     type MindmapWiresStore = store::ArtifactStore<WiresSnapshot, WiresMutation>;
 
     #[test]
-    fn op_binary_round_trips_and_agrees_with_text() {
+    async fn op_binary_round_trips_and_agrees_with_text() {
         let node = dsl::to_dsl_value(&json!({ "id": "node-1", "nodeKind": "identity", "shape": "circle", "x": 0.0, "y": 0.0, "radius": 24.0, "text": "Alpha", "handles": [] })).expect("node serializes");
         let operation = create_node(node);
         store::os_store::test_support::assert_op_text_binary_equivalence(&operation);
@@ -47,7 +47,7 @@ mod tests {
     }
 
     #[test]
-    fn store_applies_node_add() {
+    async fn store_applies_node_add() {
         let mut store = MindmapWiresStore::new(store::create_document_envelope(crate::artifacts::wires::MINDMAP_WIRES_SCHEMA, "mindmap-wires", crate::artifacts::wires::empty_wires_snapshot(), None)).expect("valid artifact store fixture");
         let node = dsl::to_dsl_value(&json!({ "id": "node-1", "nodeKind": "identity", "shape": "circle", "x": 0.0, "y": 0.0, "radius": 24.0, "text": "Alpha", "handles": [] })).expect("node serializes");
         store.dispatch(store::ArtifactCommand::Apply { mutations: vec![create_node(node)], description: None }).expect("apply");
@@ -55,7 +55,7 @@ mod tests {
     }
 
     #[test]
-    fn document_text_round_trip_with_operation_applied() {
+    async fn document_text_round_trip_with_operation_applied() {
         let mut store = MindmapWiresStore::new(store::create_document_envelope(crate::artifacts::wires::MINDMAP_WIRES_SCHEMA, "mindmap-wires", crate::artifacts::wires::empty_wires_snapshot(), None)).expect("valid artifact store fixture");
         let node = dsl::to_dsl_value(&json!({ "id": "node-1", "nodeKind": "identity", "shape": "circle", "x": 0.0, "y": 0.0, "radius": 24.0, "text": "Alpha", "handles": [] })).expect("node serializes");
         store.dispatch(store::ArtifactCommand::Apply { mutations: vec![create_node(node)], description: None }).expect("apply");
@@ -71,7 +71,7 @@ mod tests {
     /// deliberately, not a whole-document replace — a whole-snapshot variant is banned vocabulary
     /// and no longer exists on `WiresMutation` (see `📓️taxonomy.md`).
     #[test]
-    fn command_envelope_round_trip_holds_for_an_applied_operation() {
+    async fn command_envelope_round_trip_holds_for_an_applied_operation() {
         use protocol::{ArtifactId, Edit, SchemaId};
 
         let mut store = MindmapWiresStore::new(store::create_document_envelope(crate::artifacts::wires::MINDMAP_WIRES_SCHEMA, "mindmap-wires", crate::artifacts::wires::empty_wires_snapshot(), None)).expect("valid artifact store fixture");

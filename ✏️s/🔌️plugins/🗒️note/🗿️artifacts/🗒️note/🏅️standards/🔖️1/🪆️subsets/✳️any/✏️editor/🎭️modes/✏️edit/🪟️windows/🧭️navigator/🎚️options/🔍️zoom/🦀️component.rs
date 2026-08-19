@@ -6,7 +6,7 @@ use crate::artifacts::note::NoteCamera;
 use semio_framework_plugin::WindowMeasure;
 
 //#region 🔖️Measure
-pub fn measure(camera: &NoteCamera, labels: &NotePlayLabels) -> WindowMeasure {
+pub async fn measure(camera: &NoteCamera, labels: &NotePlayLabels) -> WindowMeasure {
     WindowMeasure::Slider {
         id: "note-navigator-measures.zoom".into(),
         label: Some(labels.measure_zoom.into()),

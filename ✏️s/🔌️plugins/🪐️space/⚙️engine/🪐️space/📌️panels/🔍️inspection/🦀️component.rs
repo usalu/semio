@@ -14,13 +14,13 @@ use semio_framework_plugin::{
 use serde_json::json;
 
 //#region 🔖️Manifest
-pub fn definition() -> PanelTabDefinition {
+pub async fn definition() -> PanelTabDefinition {
     PanelTabDefinition { kind: PanelTabKind::App(S_PLAY_INSPECTOR_TAB_ID.into()), label: LocalizedLabel::native(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, "Inspektion"), group: PanelGroup::Details, body_key: Some(S_PLAY_INSPECTOR_BODY_KEY.into()), children: Vec::new() }
 }
 //#endregion 🔖️Manifest
 
 //#region 🔖️Render
-pub fn render(projection: &WorkflowSnapshot, selected_node_ids: &[String], term_labels: &SStudioLabels) -> UiNode {
+pub async fn render(projection: &WorkflowSnapshot, selected_node_ids: &[String], term_labels: &SStudioLabels) -> UiNode {
     let mut children = vec![UiSectionNode {
         id: "s-play-inspector.header".into(),
         label: Some(Label::data(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL)),
@@ -220,7 +220,7 @@ mod tests {
     use semio_framework_plugin::UiControlNode;
 
     #[test]
-    fn inspector_tree_exposes_label_field() {
+    async fn inspector_tree_exposes_label_field() {
         let projection = demo_space_projection();
         let ids: Vec<String> = projection.graph.nodes.iter().take(2).map(|node| node.id.clone()).collect();
         let config = SpaceConfig::default();

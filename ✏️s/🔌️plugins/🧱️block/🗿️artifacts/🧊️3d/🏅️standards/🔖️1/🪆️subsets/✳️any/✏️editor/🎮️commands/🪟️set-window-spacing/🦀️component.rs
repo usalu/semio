@@ -13,6 +13,6 @@ pub struct SetWindowSpacing {
     pub spacing: f64,
 }
 
-pub fn handle(payload: &SetWindowSpacing, _doc: &ArtifactView<'_, Block3dSnapshot>, _cfg: &ConfigView<'_, Block3dConfig>) -> Result<Emit<Block3dMutation, Block3dConfigMutation>, Fault> {
+pub async fn handle(payload: &SetWindowSpacing, _doc: &ArtifactView<'_, Block3dSnapshot>, _cfg: &ConfigView<'_, Block3dConfig>) -> Result<Emit<Block3dMutation, Block3dConfigMutation>, Fault> {
     Ok(Emit::config(vec![Block3dConfigMutation::SetWindowSpacing { window_id: payload.window_id.clone(), spacing: payload.spacing }]))
 }

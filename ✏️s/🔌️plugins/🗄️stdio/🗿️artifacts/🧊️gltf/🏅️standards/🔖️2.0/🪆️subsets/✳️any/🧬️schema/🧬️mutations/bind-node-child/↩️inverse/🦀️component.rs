@@ -13,7 +13,7 @@ pub struct GltfBindNodeChildInverse {
     pub expected_children: Vec<usize>,
     pub touched_paths: Vec<String>,
 }
-pub fn derive(payload: &GltfBindNodeChildPayload, base: &GltfSnapshot) -> Result<GltfBindNodeChildInverse, GltfTopLevelMutationRejection> {
+pub async fn derive(payload: &GltfBindNodeChildPayload, base: &GltfSnapshot) -> Result<GltfBindNodeChildInverse, GltfTopLevelMutationRejection> {
     validate(payload, base)?;
     let after = crate::artifacts::gltf::schema::mutations::bind_node_child::mutation::apply(payload, base)?;
     Ok(GltfBindNodeChildInverse {
@@ -24,7 +24,7 @@ pub fn derive(payload: &GltfBindNodeChildPayload, base: &GltfSnapshot) -> Result
         touched_paths: vec![format!("document/nodes/{}/children/{}", payload.parent, payload.position)],
     })
 }
-pub fn apply(base: &GltfSnapshot, inverse: &GltfBindNodeChildInverse) -> Result<GltfSnapshot, GltfTopLevelMutationRejection> {
+pub async fn apply(base: &GltfSnapshot, inverse: &GltfBindNodeChildInverse) -> Result<GltfSnapshot, GltfTopLevelMutationRejection> {
     let path = format!("document/nodes/{}/children/{}", inverse.parent, inverse.position);
     if inverse.touched_paths.len() != 1 || inverse.touched_paths[0] != path {
         return Err(reject("gltf.mutation.invalid-touched-path", path, "inverse touched path does not match its edge coordinates"));
@@ -37,6 +37,6 @@ pub fn apply(base: &GltfSnapshot, inverse: &GltfBindNodeChildInverse) -> Result<
     next.document.nodes[inverse.parent].children.remove(inverse.position);
     Ok(next)
 }
-pub fn encode(inverse: &GltfBindNodeChildInverse) -> Result<Vec<u8>, serde_json::Error> {
+pub async fn encode(inverse: &GltfBindNodeChildInverse) -> Result<Vec<u8>, serde_json::Error> {
     serde_json::to_vec(inverse)
 }

@@ -31,13 +31,13 @@ pub const MODE_VIEW: &str = "view";
 //#region 🔖️ViewerManifest
 /// ✏️ The `view` mode definition — identical for all fifteen viewers, the read-only counterpart of
 /// `edit_mode_definition`.
-pub fn view_mode_definition() -> ModeDefinition {
+pub async fn view_mode_definition() -> ModeDefinition {
     ModeDefinition { id: MODE_VIEW.into(), label: LocalizedLabel::native("View", "Ansicht"), icon_id: "eye".into(), tools: Vec::new(), layout_id: None, commands: Vec::new() }
 }
 
 /// 🪟️ Single full-pane window layout — every norm viewer has exactly one window (the compliance
 /// report table), so there is no quadrant/split layout to allocate.
-pub fn single_window_layout(window_kind_id: &str, title: &str) -> WindowLayout {
+pub async fn single_window_layout(window_kind_id: &str, title: &str) -> WindowLayout {
     WindowLayout {
         root: WindowLayoutRoot::Stack(WindowLayoutStackNode {
             kind: "stack".into(),
@@ -50,20 +50,20 @@ pub fn single_window_layout(window_kind_id: &str, title: &str) -> WindowLayout {
 
 /// 📊️ `TableWindowKit` column headers for a norm `CheckReport` — shared by all fifteen viewers'
 /// report windows so the table shape is declared exactly once.
-pub fn report_table_columns() -> Vec<String> {
+pub async fn report_table_columns() -> Vec<String> {
     vec!["Clause".into(), "Status".into(), "Utilization".into(), "Message".into()]
 }
 
 /// 📊️ `TableWindowKit` rows for a norm `CheckReport` — one row per computed check, columns matching
 /// `report_table_columns`.
-pub fn report_table_rows(report: &CheckReport) -> Vec<Vec<String>> {
+pub async fn report_table_rows(report: &CheckReport) -> Vec<Vec<String>> {
     report.checks.iter().map(|check| vec![check.clause.to_string(), format!("{:?}", check.status), format!("{:.2}", check.utilization), check.message.clone()]).collect()
 }
 //#endregion 🔖️ViewerManifest
 
 //#region 🔖️Render
 /// 📑️ Renders a whole `CheckReport` as one line per computed check.
-pub fn render_report(report: &CheckReport) -> UiNode {
+pub async fn render_report(report: &CheckReport) -> UiNode {
     if report.checks.is_empty() {
         return ui_text(Label::data("No checks computed."));
     }
@@ -72,25 +72,25 @@ pub fn render_report(report: &CheckReport) -> UiNode {
 }
 
 /// 📄️ Renders a document as pretty-printed JSON — the inputs window's surface.
-pub fn render_document_json<D: Serialize>(document: &D) -> UiNode {
+pub async fn render_document_json<D: Serialize>(document: &D) -> UiNode {
     let json = serde_json::to_string_pretty(document).unwrap_or_else(|_| "{}".into());
     ui_text(Label::data(json))
 }
 
 /// 🧾️ Renders a one-line headline for a family's current session — the document panel's surface.
-pub fn render_summary<F: NormFamily>(host: &NormHost<F>) -> UiNode {
+pub async fn render_summary<F: NormFamily>(host: &NormHost<F>) -> UiNode {
     let report = host.report();
     ui_text(Label::data(format!("{} — {} checks, worst u={:.2}, all pass={}", F::family_id().label(), report.checks.len(), report.worst_utilization(), report.all_pass())))
 }
 
 /// 📚️ Renders the catalogue panel's placeholder headline for a family.
-pub fn render_catalogue(label: &str) -> UiNode {
+pub async fn render_catalogue(label: &str) -> UiNode {
     ui_text(Label::data(format!("{label} catalogue")))
 }
 
 /// 🔍️ Renders the inspection panel — the `selected_check_index` row of the report, falling back to the
 /// first check when the index is unset or out of range (and to a placeholder when there are no checks).
-pub fn render_inspection(report: &CheckReport, selected_check_index: Option<u32>) -> UiNode {
+pub async fn render_inspection(report: &CheckReport, selected_check_index: Option<u32>) -> UiNode {
     let checks = &report.checks;
     let index = selected_check_index.map(|value| value as usize).filter(|index| *index < checks.len()).unwrap_or(0);
     match checks.get(index) {
@@ -100,20 +100,20 @@ pub fn render_inspection(report: &CheckReport, selected_check_index: Option<u32>
 }
 
 /// ❓️ The unknown-body-key fallback every norm app's `render` ends with.
-pub fn render_unknown_body(body_key: &str) -> UiNode {
+pub async fn render_unknown_body(body_key: &str) -> UiNode {
     ui_text(Label::data(format!("Unknown body: {body_key}")))
 }
 //#endregion 🔖️Render
 
 //#region 🔖️Manifest
 /// ✏️ The `edit` mode definition — identical for all fifteen apps.
-pub fn edit_mode_definition() -> ModeDefinition {
+pub async fn edit_mode_definition() -> ModeDefinition {
     ModeDefinition { id: MODE_EDIT.into(), label: LocalizedLabel::native("Edit", "Bearbeiten"), icon_id: "pencil".into(), tools: Vec::new(), layout_id: None, commands: Vec::new() }
 }
 
 /// 🪟️ A norm window kind — both windows of every app are plain `Canvas2d` surfaces with no measures,
 /// engagement, actions or utilities, so only id/label/body/icon vary.
-pub fn window_definition(id: &str, label: LocalizedLabel, body_key: &str, icon_id: &str) -> WindowKindDefinition {
+pub async fn window_definition(id: &str, label: LocalizedLabel, body_key: &str, icon_id: &str) -> WindowKindDefinition {
     WindowKindDefinition {
         id: id.into(),
         label,
@@ -135,12 +135,12 @@ pub fn window_definition(id: &str, label: LocalizedLabel, body_key: &str, icon_i
 /// 📌️ A norm panel tab — every one is a framework-predefined leaf id bound to this app's body key.
 /// Byte-identical to the `AppBuilder::panel_tab(id, label, group, body_key)` scalar call it replaces
 /// (`PanelTabSpec::leaf` builds exactly this shape).
-pub fn panel_definition(id: &str, label: LocalizedLabel, group: PanelGroup, body_key: &str) -> PanelTabDefinition {
+pub async fn panel_definition(id: &str, label: LocalizedLabel, group: PanelGroup, body_key: &str) -> PanelTabDefinition {
     PanelTabDefinition { kind: PanelTabKind::App(id.into()), label, group, body_key: Some(body_key.into()), children: Vec::new() }
 }
 
 /// 🗿️ A norm artifact kind — Data × Value document per owner-table (IO coverage lattice).
-pub fn artifact_kind_spec(variant: &str, label: &str) -> ArtifactKindSpec {
+pub async fn artifact_kind_spec(variant: &str, label: &str) -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: artifact_kind_id(variant),
         name: label.into(),
@@ -158,7 +158,7 @@ pub fn artifact_kind_spec(variant: &str, label: &str) -> ArtifactKindSpec {
 }
 
 /// 🆔️ `computation.norm.<variant>` — the artifact kind id `report:out` pins itself to.
-pub fn artifact_kind_id(variant: &str) -> String {
+pub async fn artifact_kind_id(variant: &str) -> String {
     format!("computation.norm.{variant}")
 }
 
@@ -169,7 +169,7 @@ pub fn artifact_kind_id(variant: &str) -> String {
 /// pinned to this family's own already-declared `computation.norm.{variant}` artifact kind via
 /// `kind_id`). One function serves both the builder's `.io(...)` declaration and each app's
 /// `ArtifactApp::io` override, so the two never drift apart.
-pub fn norm_io(variant: &str, document_schema: &str) -> AppIo {
+pub async fn norm_io(variant: &str, document_schema: &str) -> AppIo {
     let artifact_kind_id = artifact_kind_id(variant);
     AppIo {
         document_schema: document_schema.into(),
@@ -205,7 +205,7 @@ pub fn norm_io(variant: &str, document_schema: &str) -> AppIo {
 /// 🎞️ `"report:out"` dumps the currently computed `CheckReport`, pinned to this family's declared
 /// artifact kind; `"document:out"` replicates the SDK default (whole-document pack) since overriding
 /// `export_media` shadows it entirely. Any other port is `NotImplemented`.
-pub fn export_media<F>(port: &str, variant: &str, document_schema: &str, document: &F::Document) -> Result<Media, MediaError>
+pub async fn export_media<F>(port: &str, variant: &str, document_schema: &str, document: &F::Document) -> Result<Media, MediaError>
 where
     F: NormFamily,
     F::Document: store::ArtifactPack,
@@ -231,7 +231,7 @@ where
 /// single-mutation commit's history shape. Anything that doesn't decode is accepted but inert (no norm
 /// family document has a generic "raw model" field to stash a foreign shape into yet). `"document:in"`
 /// replicates the SDK default (decodes the base64 pack).
-pub fn import_media<D, M, F>(port: &str, media: &Media, wrap: F) -> Result<Emit<M, crate::config::NormConfigMutation>, MediaError>
+pub async fn import_media<D, M, F>(port: &str, media: &Media, wrap: F) -> Result<Emit<M, crate::config::NormConfigMutation>, MediaError>
 where
     D: Clone + Default + PartialEq + Serialize + DeserializeOwned + store::ArtifactPack,
     F: Fn(D) -> Vec<M>,
@@ -263,7 +263,7 @@ where
 /// 📤️ Commit a typed document mutation (kept for the norm sub-lane's not-yet-migrated sibling facets;
 /// migrated facets use `commit_snapshot_fields` below instead, since the whole-document-replace
 /// variant this helper used to construct is banned with no 1:1 replacement).
-pub fn commit_snapshot<M>(mutation: M, description: &str) -> Result<Emit<M, crate::config::NormConfigMutation>, Fault> {
+pub async fn commit_snapshot<M>(mutation: M, description: &str) -> Result<Emit<M, crate::config::NormConfigMutation>, Fault> {
     Ok(Emit::commit(vec![mutation], description))
 }
 
@@ -271,35 +271,35 @@ pub fn commit_snapshot<M>(mutation: M, description: &str) -> Result<Emit<M, crat
 /// replacement for `commit_snapshot`'s old single whole-document-replace commit: a `set-snapshot`
 /// command payload (or a re-evaluation re-commit) decomposes into one `change-<field>` mutation per
 /// persistent field via `XMutation::from_snapshot`, bundled here into a single undo entry.
-pub fn commit_snapshot_fields<M>(mutations: Vec<M>, description: &str) -> Result<Emit<M, crate::config::NormConfigMutation>, Fault> {
+pub async fn commit_snapshot_fields<M>(mutations: Vec<M>, description: &str) -> Result<Emit<M, crate::config::NormConfigMutation>, Fault> {
     Ok(Emit::commit(mutations, description))
 }
 
-pub fn commit_document<D>(document: D, description: &str) -> Result<Emit<crate::document::SetArtifactMutation<D>, crate::config::NormConfigMutation>, Fault> {
+pub async fn commit_document<D>(document: D, description: &str) -> Result<Emit<crate::document::SetArtifactMutation<D>, crate::config::NormConfigMutation>, Fault> {
     Ok(Emit::commit(vec![crate::document::SetArtifactMutation::SetArtifact { document }], description))
 }
 
 /// ☑️ The one config-only edit every app's `selected-check` command emits.
-pub fn commit_selected_check_index<M>(index: Option<u32>) -> Result<Emit<M, crate::config::NormConfigMutation>, Fault> {
+pub async fn commit_selected_check_index<M>(index: Option<u32>) -> Result<Emit<M, crate::config::NormConfigMutation>, Fault> {
     Ok(Emit::config(vec![crate::config::NormConfigMutation::SetSelectedCheckIndex { index }]))
 }
 
 /// 🎯️ Builds the args-side of an app's `command_from_action` bridge for `selected-check` — the shells
 /// still speak `{action,args}` for chrome actions.
-pub fn selected_check_index_arg(args: Option<&serde_json::Value>) -> Option<u32> {
+pub async fn selected_check_index_arg(args: Option<&serde_json::Value>) -> Option<u32> {
     args.and_then(|value| value.get("index")).and_then(serde_json::Value::as_u64).map(|value| value as u32)
 }
 //#endregion 🔖️Commands
 
 //#region 🔖️Views
 /// 👁️ Reads the config's selected check index out of a `ConfigView` — the one field norm apps read.
-pub fn selected_check_index(cfg: &ConfigView<'_, crate::config::NormConfig>) -> Option<u32> {
+pub async fn selected_check_index(cfg: &ConfigView<'_, crate::config::NormConfig>) -> Option<u32> {
     cfg.snapshot.selected_check_index
 }
 
 /// 📄️ Reads the document out of a `ArtifactView` — spelled once so every app's `render`/`handle` reads
 /// it the same way.
-pub fn snapshot<'a, D>(doc: &'a ArtifactView<'_, D>) -> &'a D {
+pub async fn snapshot<'a, D>(doc: &'a ArtifactView<'_, D>) -> &'a D {
     doc.snapshot
 }
 //#endregion 🔖️Views
@@ -311,14 +311,14 @@ mod tests {
     use super::*;
 
     #[test]
-    fn the_edit_mode_is_the_same_for_every_app() {
+    async fn the_edit_mode_is_the_same_for_every_app() {
         let mode = edit_mode_definition();
         assert_eq!(mode.id, MODE_EDIT);
         assert!(mode.tools.is_empty() && mode.commands.is_empty() && mode.layout_id.is_none());
     }
 
     #[test]
-    fn a_window_definition_is_a_plain_canvas2d_surface() {
+    async fn a_window_definition_is_a_plain_canvas2d_surface() {
         let window = window_definition("norm-x-inputs", LocalizedLabel::native("Inputs", "Eingaben"), "norm.x.play.inputs", "download");
         assert_eq!(window.body_key, "norm.x.play.inputs");
         assert!(matches!(window.surface_kind, SurfaceKind::Canvas2d));
@@ -329,7 +329,7 @@ mod tests {
     /// `App`-kind leaf carrying the body key) — the property that keeps the manifest byte-identical
     /// after the panel declarations moved into `📌️panels/*` nodes.
     #[test]
-    fn a_panel_definition_is_an_app_kind_leaf_carrying_its_body_key() {
+    async fn a_panel_definition_is_an_app_kind_leaf_carrying_its_body_key() {
         let panel = panel_definition("document", LocalizedLabel::native("Document", "Dokument"), PanelGroup::Workbench, "norm.x.play.document");
         assert!(matches!(&panel.kind, PanelTabKind::App(id) if id == "document"));
         assert_eq!(panel.body_key.as_deref(), Some("norm.x.play.document"));
@@ -337,7 +337,7 @@ mod tests {
     }
 
     #[test]
-    fn norm_io_declares_model_in_and_report_out_beside_the_implicit_document_ports() {
+    async fn norm_io_declares_model_in_and_report_out_beside_the_implicit_document_ports() {
         let io = norm_io("din4108", "semio.norm.din4108/v1");
         assert!(io.ports.iter().any(|port| port.id == "model:in" && port.direction == MediaPortDirection::In));
         let report_out = io.ports.iter().find(|port| port.id == "report:out").expect("report:out declared");
@@ -347,7 +347,7 @@ mod tests {
     }
 
     #[test]
-    fn the_artifact_kind_spec_is_a_data_value_document() {
+    async fn the_artifact_kind_spec_is_a_data_value_document() {
         let spec = artifact_kind_spec("en1990", "EN 1990");
         assert_eq!(spec.id, "computation.norm.en1990");
         assert_eq!(spec.source_format, "norm.en1990.document");
@@ -358,13 +358,13 @@ mod tests {
     }
 
     #[test]
-    fn render_report_falls_back_to_a_placeholder_when_nothing_was_computed() {
+    async fn render_report_falls_back_to_a_placeholder_when_nothing_was_computed() {
         let json = serde_json::to_string(&render_report(&CheckReport::default())).expect("json");
         assert!(json.contains("No checks computed."), "{json}");
     }
 
     #[test]
-    fn render_inspection_falls_back_to_the_first_check_for_an_out_of_range_index() {
+    async fn render_inspection_falls_back_to_the_first_check_for_an_out_of_range_index() {
         let mut report = CheckReport::default();
         report.push(crate::document::CheckResult::from_utilization(
             crate::document::ClauseId::new("demo", "§1", "1.1"),
@@ -380,14 +380,14 @@ mod tests {
     }
 
     #[test]
-    fn the_view_mode_is_the_same_for_every_viewer() {
+    async fn the_view_mode_is_the_same_for_every_viewer() {
         let mode = view_mode_definition();
         assert_eq!(mode.id, MODE_VIEW);
         assert!(mode.tools.is_empty() && mode.commands.is_empty() && mode.layout_id.is_none());
     }
 
     #[test]
-    fn single_window_layout_stacks_exactly_one_window() {
+    async fn single_window_layout_stacks_exactly_one_window() {
         let layout = single_window_layout("framework.window.table", "Report");
         let WindowLayoutRoot::Stack(stack) = layout.root else { panic!("expected a stack root") };
         assert_eq!(stack.children.len(), 1);
@@ -395,7 +395,7 @@ mod tests {
     }
 
     #[test]
-    fn report_table_columns_and_rows_line_up_with_the_check_report() {
+    async fn report_table_columns_and_rows_line_up_with_the_check_report() {
         let mut report = CheckReport::default();
         report.push(crate::document::CheckResult::from_utilization(
             crate::document::ClauseId::new("demo", "§1", "1.1"),
@@ -412,7 +412,7 @@ mod tests {
     }
 
     #[test]
-    fn selected_check_index_arg_reads_the_shell_wire_shape() {
+    async fn selected_check_index_arg_reads_the_shell_wire_shape() {
         assert_eq!(selected_check_index_arg(Some(&serde_json::json!({ "index": 3 }))), Some(3));
         assert_eq!(selected_check_index_arg(Some(&serde_json::json!({}))), None);
         assert_eq!(selected_check_index_arg(None), None);

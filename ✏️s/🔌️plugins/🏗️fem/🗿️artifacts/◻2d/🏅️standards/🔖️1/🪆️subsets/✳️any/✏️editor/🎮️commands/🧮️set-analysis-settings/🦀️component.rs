@@ -20,7 +20,7 @@ pub struct SetAnalysisSettings {
     pub deformation_scale: Option<f64>,
 }
 
-pub fn handle(payload: &SetAnalysisSettings, doc: &ArtifactView<'_, Fem2dSnapshot>, _cfg: &ConfigView<'_, Fem2dConfig>) -> Result<Emit<Fem2dMutation, Fem2dConfigMutation>, Fault> {
+pub async fn handle(payload: &SetAnalysisSettings, doc: &ArtifactView<'_, Fem2dSnapshot>, _cfg: &ConfigView<'_, Fem2dConfig>) -> Result<Emit<Fem2dMutation, Fem2dConfigMutation>, Fault> {
     let current = &doc.snapshot.analysis;
     let settings = FemAnalysisSettings {
         modal_count: payload.modal_count.map(|value| value as usize).unwrap_or(current.modal_count),
@@ -38,7 +38,7 @@ mod tests {
     use crate::editor::fem2d::Fem2dCommand;
 
     #[test]
-    fn set_analysis_settings_partial_args_keep_current_2d() {
+    async fn set_analysis_settings_partial_args_keep_current_2d() {
         let mut app = fem2d_app();
         dispatch(
             &mut app,

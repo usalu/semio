@@ -41,11 +41,11 @@ pub struct OutputRegistry {
 }
 
 impl OutputRegistry {
-    pub fn register(&mut self, var: OutputVariable) {
+    pub async fn register(&mut self, var: OutputVariable) {
         self.variables.push(var);
     }
 
-    pub fn matches_wildcard(&self, pattern: &str) -> Vec<&OutputVariable> {
+    pub async fn matches_wildcard(&self, pattern: &str) -> Vec<&OutputVariable> {
         if pattern.contains('*') {
             let prefix = pattern.split('*').next().unwrap_or("");
             self.variables.iter().filter(|v| v.key.starts_with(prefix)).collect()
@@ -67,23 +67,23 @@ pub struct TimeSeries {
 }
 
 impl TimeSeries {
-    pub fn push(&mut self, t_hours: f64, value: f64) {
+    pub async fn push(&mut self, t_hours: f64, value: f64) {
         self.timestamps_hours.push(t_hours);
         self.values.push(value);
     }
 
-    pub fn average(&self) -> f64 {
+    pub async fn average(&self) -> f64 {
         if self.values.is_empty() {
             return 0.0;
         }
         self.values.iter().sum::<f64>() / self.values.len() as f64
     }
 
-    pub fn sum(&self) -> f64 {
+    pub async fn sum(&self) -> f64 {
         self.values.iter().sum()
     }
 
-    pub fn min_max(&self) -> (f64, f64) {
+    pub async fn min_max(&self) -> (f64, f64) {
         let min = self.values.iter().copied().fold(f64::INFINITY, f64::min);
         let max = self.values.iter().copied().fold(f64::NEG_INFINITY, f64::max);
         (min, max)
@@ -97,17 +97,17 @@ pub struct TimeSeriesTable {
 }
 
 impl TimeSeriesTable {
-    pub fn record(&mut self, key: impl Into<String>, t_hours: f64, value: f64, unit: crate::units::Unit) {
+    pub async fn record(&mut self, key: impl Into<String>, t_hours: f64, value: f64, unit: crate::units::Unit) {
         let key = key.into();
         let entry = self.series.entry(key.clone()).or_insert_with(|| TimeSeries { key, timestamps_hours: Vec::new(), values: Vec::new(), unit });
         entry.push(t_hours, value);
     }
 
-    pub fn get(&self, key: &str) -> Option<&TimeSeries> {
+    pub async fn get(&self, key: &str) -> Option<&TimeSeries> {
         self.series.get(key)
     }
 
-    pub fn to_csv(&self, key: &str) -> Option<String> {
+    pub async fn to_csv(&self, key: &str) -> Option<String> {
         let ts = self.series.get(key)?;
         let mut out = String::from("hours,value\n");
         for (t, v) in ts.timestamps_hours.iter().zip(ts.values.iter()) {
@@ -123,7 +123,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn time_series_average() {
+    async fn time_series_average() {
         let mut ts = TimeSeries { key: "t".into(), timestamps_hours: Vec::new(), values: Vec::new(), unit: crate::units::Unit::Celsius };
         ts.push(0.0, 10.0);
         ts.push(1.0, 20.0);
@@ -131,7 +131,7 @@ mod tests {
     }
 
     #[test]
-    fn time_series_sum_and_min_max() {
+    async fn time_series_sum_and_min_max() {
         let mut ts = TimeSeries { key: "t".into(), timestamps_hours: Vec::new(), values: Vec::new(), unit: crate::units::Unit::Watts };
         ts.push(0.0, 5.0);
         ts.push(1.0, -3.0);
@@ -143,13 +143,13 @@ mod tests {
     }
 
     #[test]
-    fn time_series_average_of_empty_is_zero() {
+    async fn time_series_average_of_empty_is_zero() {
         let ts = TimeSeries { key: "t".into(), timestamps_hours: Vec::new(), values: Vec::new(), unit: crate::units::Unit::Watts };
         assert_eq!(ts.average(), 0.0);
     }
 
     #[test]
-    fn registry_matches_exact_and_wildcard() {
+    async fn registry_matches_exact_and_wildcard() {
         let mut reg = OutputRegistry::default();
         reg.register(OutputVariable { key: "Zone1 Temp".into(), unit: crate::units::Unit::Celsius, frequency: ReportingFrequency::Hourly, aggregation: Aggregation::Average });
         reg.register(OutputVariable { key: "Zone2 Temp".into(), unit: crate::units::Unit::Celsius, frequency: ReportingFrequency::Hourly, aggregation: Aggregation::Average });
@@ -159,7 +159,7 @@ mod tests {
     }
 
     #[test]
-    fn store_record_get_and_csv() {
+    async fn store_record_get_and_csv() {
         let mut store = TimeSeriesTable::default();
         store.record("Zone1 Temp", 0.0, 21.0, crate::units::Unit::Celsius);
         store.record("Zone1 Temp", 1.0, 22.0, crate::units::Unit::Celsius);

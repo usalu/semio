@@ -12,12 +12,12 @@ use crate::artifacts::procedural3d::Procedural3dSnapshot;
 use store::PackError;
 
 /// 📦️ Encodes a `Procedural3dSnapshot` to its binary pack form.
-pub fn encode(document: &Procedural3dSnapshot) -> Vec<u8> {
+pub async fn encode(document: &Procedural3dSnapshot) -> Vec<u8> {
     store::ArtifactPack::encode_pack(document)
 }
 
 /// 📖️ Decodes a `Procedural3dSnapshot` from its binary pack form.
-pub fn decode(bytes: &[u8]) -> Result<Procedural3dSnapshot, PackError> {
+pub async fn decode(bytes: &[u8]) -> Result<Procedural3dSnapshot, PackError> {
     <Procedural3dSnapshot as store::ArtifactPack>::decode_pack(bytes)
 }
 
@@ -29,12 +29,12 @@ mod tests {
     use semio_framework_os_kernel::os_store::test_support;
 
     #[test]
-    fn dsl_pack_equivalence_empty_projection() {
+    async fn dsl_pack_equivalence_empty_projection() {
         test_support::assert_dsl_pack_equivalence(&Procedural3dSnapshot::default());
     }
 
     #[test]
-    fn pack_round_trips_the_hex_column_example() {
+    async fn pack_round_trips_the_hex_column_example() {
         let projection = dsl::parse_dsl(dsl::PROCEDURAL3D_EXAMPLE_HEX_COLUMN_TEXT).expect("parse fixture");
         let bytes = encode(&projection);
         assert_eq!(decode(&bytes).expect("decode"), projection);

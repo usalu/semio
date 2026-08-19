@@ -18,7 +18,7 @@ pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️comp
 /// agree (see `committed_facet_files_parse`/`ops_grammar_conformance_law` in `🚪️io/🦀️component.rs`).
 const OP_KEYWORDS: [&str; 7] = ["insertRun", "removeRun", "editRun", "changeRunLanguage", "reorderRuns", "addMark", "removeMark"];
 
-fn variant_ordinal(m: &SemioTextMutation) -> u8 {
+async fn variant_ordinal(m: &SemioTextMutation) -> u8 {
     match m {
         SemioTextMutation::InsertRun(_) => 0,
         SemioTextMutation::RemoveRun(_) => 1,
@@ -32,7 +32,7 @@ fn variant_ordinal(m: &SemioTextMutation) -> u8 {
 
 /// ✂️ Just the argument tail of `print_op` — the binary frame's `tag` byte already carries the
 /// keyword, so the text keyword itself (and its `:` separator) is redundant in the binary payload.
-fn print_op_args(m: &SemioTextMutation) -> String {
+async fn print_op_args(m: &SemioTextMutation) -> String {
     use protocol::OpText;
     match m.print_op().split_once(':') {
         Some((_, rest)) => rest.to_string(),
@@ -41,13 +41,13 @@ fn print_op_args(m: &SemioTextMutation) -> String {
 }
 
 impl protocol::OpBinary for SemioTextMutation {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         const OP_BINARY_FORMAT: u8 = 1;
         let mut out = vec![OP_BINARY_FORMAT, variant_ordinal(self)];
         out.extend_from_slice(print_op_args(self).as_bytes());
         Ok(out)
     }
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         use protocol::OpText;
         const OP_BINARY_FORMAT: u8 = 1;
         if bytes.len() < 2 {
@@ -73,7 +73,7 @@ mod tests {
     use protocol::OpBinary;
 
     #[test]
-    fn op_binary_roundtrip_law() {
+    async fn op_binary_roundtrip_law() {
         for m in demo_mutation_cases() {
             let encoded = m.encode_op().unwrap_or_else(|e| panic!("encode_op({m:?}) failed: {e}"));
             let decoded = SemioTextMutation::decode_op(&encoded).unwrap_or_else(|e| panic!("decode_op failed: {e}"));

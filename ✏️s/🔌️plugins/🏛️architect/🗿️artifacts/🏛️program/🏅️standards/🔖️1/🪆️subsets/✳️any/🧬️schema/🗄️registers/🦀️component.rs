@@ -17,30 +17,30 @@ use serde::{Deserialize, Serialize};
 /// `None` (a pre-existing representation limit of this macro, unchanged from `vcs::Patchable`'s
 /// same `Option<T>`-typed patch fields).
 trait PatchRow<T: Clone> {
-    fn apply_row(&mut self, patch: &Option<T>);
-    fn diff_row(&self, other: &Self, out: &mut Option<T>);
+    async fn apply_row(&mut self, patch: &Option<T>);
+    async fn diff_row(&self, other: &Self, out: &mut Option<T>);
 }
 
 impl<T: Clone> PatchRow<T> for T {
-    fn apply_row(&mut self, patch: &Option<T>) {
+    async fn apply_row(&mut self, patch: &Option<T>) {
         if let Some(value) = patch {
             *self = value.clone();
         }
     }
 
-    fn diff_row(&self, other: &Self, out: &mut Option<T>) {
+    async fn diff_row(&self, other: &Self, out: &mut Option<T>) {
         *out = Some(other.clone());
     }
 }
 
 impl<T: Clone> PatchRow<T> for Option<T> {
-    fn apply_row(&mut self, patch: &Option<T>) {
+    async fn apply_row(&mut self, patch: &Option<T>) {
         if let Some(value) = patch {
             *self = Some(value.clone());
         }
     }
 
-    fn diff_row(&self, other: &Self, out: &mut Option<T>) {
+    async fn diff_row(&self, other: &Self, out: &mut Option<T>) {
         *out = other.clone();
     }
 }
@@ -48,7 +48,7 @@ impl<T: Clone> PatchRow<T> for Option<T> {
 macro_rules! impl_identified_header {
     ($ty:ty) => {
         impl Identified<EntityId> for $ty {
-            fn id(&self) -> &EntityId {
+            async fn id(&self) -> &EntityId {
                 &self.header.id
             }
         }
@@ -58,11 +58,11 @@ macro_rules! impl_identified_header {
 macro_rules! impl_patchable {
     ($entity:ty, $patch:ty, { $( [ $($path:ident).+ ] => $f:ident ),+ $(,)? }) => {
         impl Patchable<$patch> for $entity {
-            fn apply_patch(&mut self, patch: &$patch) {
+            async fn apply_patch(&mut self, patch: &$patch) {
                 $( PatchRow::apply_row(&mut self$(.$path)+, &patch.$f); )+
             }
 
-            fn diff_patch(&self, other: &Self) -> Option<$patch> {
+            async fn diff_patch(&self, other: &Self) -> Option<$patch> {
                 let mut patch = <$patch>::default();
                 $( PatchRow::diff_row(&self$(.$path)+, &other$(.$path)+, &mut patch.$f); )+
                 Some(patch)
@@ -526,7 +526,7 @@ pub struct ProgramMetaPatch {
 }
 
 impl Patchable<ProgramMetaPatch> for ProgramMeta {
-    fn apply_patch(&mut self, patch: &ProgramMetaPatch) {
+    async fn apply_patch(&mut self, patch: &ProgramMetaPatch) {
         PatchRow::apply_row(&mut self.schema, &patch.schema);
         PatchRow::apply_row(&mut self.document_id, &patch.document_id);
         PatchRow::apply_row(&mut self.title, &patch.title);
@@ -544,7 +544,7 @@ impl Patchable<ProgramMetaPatch> for ProgramMeta {
         PatchRow::apply_row(&mut self.timestamps, &patch.timestamps);
     }
 
-    fn diff_patch(&self, other: &Self) -> Option<ProgramMetaPatch> {
+    async fn diff_patch(&self, other: &Self) -> Option<ProgramMetaPatch> {
         let mut patch = ProgramMetaPatch::default();
         PatchRow::diff_row(&self.schema, &other.schema, &mut patch.schema);
         PatchRow::diff_row(&self.document_id, &other.document_id, &mut patch.document_id);
@@ -632,7 +632,7 @@ pub struct ProjectDefinitionPatch {
 }
 
 impl Identified<EntityId> for ProjectDefinition {
-    fn id(&self) -> &EntityId {
+    async fn id(&self) -> &EntityId {
         &self.id
     }
 }
@@ -7194,7 +7194,7 @@ pub struct GovernancePatch {
 }
 
 impl Identified<EntityId> for Governance {
-    fn id(&self) -> &EntityId {
+    async fn id(&self) -> &EntityId {
         &self.id
     }
 }
@@ -7238,7 +7238,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn stakeholder_patch_round_trips() {
+    async fn stakeholder_patch_round_trips() {
         let mut item = Stakeholder {
             header: EntityHeader { description: Some(TextField::plain("base-desc")), ..EntityHeader::new(EntityId::new_serial("stakeholder", "Base Stakeholder"), "Base Stakeholder") },
             role: String::new(),
@@ -7310,7 +7310,7 @@ mod tests {
     }
 
     #[test]
-    fn user_profile_patch_round_trips() {
+    async fn user_profile_patch_round_trips() {
         let mut item = UserProfile {
             header: EntityHeader { description: Some(TextField::plain("base-desc")), ..EntityHeader::new(EntityId::new_serial("userprofile", "Base UserProfile"), "Base UserProfile") },
             category: UserCategory::Primary,
@@ -7382,7 +7382,7 @@ mod tests {
     }
 
     #[test]
-    fn activity_patch_round_trips() {
+    async fn activity_patch_round_trips() {
         let mut item = Activity {
             header: EntityHeader { description: Some(TextField::plain("base-desc")), ..EntityHeader::new(EntityId::new_serial("activity", "Base Activity"), "Base Activity") },
             code: String::new(),
@@ -7454,7 +7454,7 @@ mod tests {
     }
 
     #[test]
-    fn function_patch_round_trips() {
+    async fn function_patch_round_trips() {
         let mut item = Function {
             header: EntityHeader { description: Some(TextField::plain("base-desc")), ..EntityHeader::new(EntityId::new_serial("function", "Base Function"), "Base Function") },
             code: String::new(),
@@ -7522,7 +7522,7 @@ mod tests {
     }
 
     #[test]
-    fn program_element_patch_round_trips() {
+    async fn program_element_patch_round_trips() {
         let mut item = ProgramElement {
             header: EntityHeader { description: Some(TextField::plain("base-desc")), ..EntityHeader::new(EntityId::new_serial("programelement", "Base ProgramElement"), "Base ProgramElement") },
             code: String::new(),
@@ -7596,7 +7596,7 @@ mod tests {
     }
 
     #[test]
-    fn quantity_requirement_patch_round_trips() {
+    async fn quantity_requirement_patch_round_trips() {
         let mut item = QuantityRequirement {
             header: EntityHeader { description: Some(TextField::plain("base-desc")), ..EntityHeader::new(EntityId::new_serial("quantityrequirement", "Base QuantityRequirement"), "Base QuantityRequirement") },
             target_element_id: EntityId::new_serial("base5", "base5"),
@@ -7660,7 +7660,7 @@ mod tests {
     }
 
     #[test]
-    fn relationship_patch_round_trips() {
+    async fn relationship_patch_round_trips() {
         let mut item = Relationship {
             header: EntityHeader { description: Some(TextField::plain("base-desc")), ..EntityHeader::new(EntityId::new_serial("relationship", "Base Relationship"), "Base Relationship") },
             source_id: EntityId::new_serial("base6", "base6"),
@@ -7732,7 +7732,7 @@ mod tests {
     }
 
     #[test]
-    fn adjacency_patch_round_trips() {
+    async fn adjacency_patch_round_trips() {
         let mut item = Adjacency {
             header: EntityHeader { description: Some(TextField::plain("base-desc")), ..EntityHeader::new(EntityId::new_serial("adjacency", "Base Adjacency"), "Base Adjacency") },
             element_a_id: EntityId::new_serial("base7", "base7"),
@@ -7796,7 +7796,7 @@ mod tests {
     }
 
     #[test]
-    fn process_patch_round_trips() {
+    async fn process_patch_round_trips() {
         let mut item = Process {
             header: EntityHeader { description: Some(TextField::plain("base-desc")), ..EntityHeader::new(EntityId::new_serial("process", "Base Process"), "Base Process") },
             code: String::new(),
@@ -7866,7 +7866,7 @@ mod tests {
     }
 
     #[test]
-    fn flow_requirement_patch_round_trips() {
+    async fn flow_requirement_patch_round_trips() {
         let mut item = FlowRequirement {
             header: EntityHeader { description: Some(TextField::plain("base-desc")), ..EntityHeader::new(EntityId::new_serial("flowrequirement", "Base FlowRequirement"), "Base FlowRequirement") },
             from_element_id: EntityId::new_serial("base9", "base9"),
@@ -7932,7 +7932,7 @@ mod tests {
     }
 
     #[test]
-    fn access_rule_patch_round_trips() {
+    async fn access_rule_patch_round_trips() {
         let mut item = AccessRule {
             header: EntityHeader { description: Some(TextField::plain("base-desc")), ..EntityHeader::new(EntityId::new_serial("accessrule", "Base AccessRule"), "Base AccessRule") },
             subject_ids: Vec::new(),
@@ -7996,7 +7996,7 @@ mod tests {
     }
 
     #[test]
-    fn operational_requirement_patch_round_trips() {
+    async fn operational_requirement_patch_round_trips() {
         let mut item = OperationalRequirement {
             header: EntityHeader { description: Some(TextField::plain("base-desc")), ..EntityHeader::new(EntityId::new_serial("operationalrequirement", "Base OperationalRequirement"), "Base OperationalRequirement") },
             operation: String::new(),
@@ -8068,7 +8068,7 @@ mod tests {
     }
 
     #[test]
-    fn equipment_patch_round_trips() {
+    async fn equipment_patch_round_trips() {
         let mut item = Equipment {
             header: EntityHeader { description: Some(TextField::plain("base-desc")), ..EntityHeader::new(EntityId::new_serial("equipment", "Base Equipment"), "Base Equipment") },
             code: String::new(),
@@ -8140,7 +8140,7 @@ mod tests {
     }
 
     #[test]
-    fn resource_patch_round_trips() {
+    async fn resource_patch_round_trips() {
         let mut item = Resource {
             header: EntityHeader { description: Some(TextField::plain("base-desc")), ..EntityHeader::new(EntityId::new_serial("resource", "Base Resource"), "Base Resource") },
             code: String::new(),
@@ -8210,7 +8210,7 @@ mod tests {
     }
 
     #[test]
-    fn storage_requirement_patch_round_trips() {
+    async fn storage_requirement_patch_round_trips() {
         let mut item = StorageRequirement {
             header: EntityHeader { description: Some(TextField::plain("base-desc")), ..EntityHeader::new(EntityId::new_serial("storagerequirement", "Base StorageRequirement"), "Base StorageRequirement") },
             stored_item: String::new(),
@@ -8274,7 +8274,7 @@ mod tests {
     }
 
     #[test]
-    fn environmental_requirement_patch_round_trips() {
+    async fn environmental_requirement_patch_round_trips() {
         let mut item = EnvironmentalRequirement {
             header: EntityHeader { description: Some(TextField::plain("base-desc")), ..EntityHeader::new(EntityId::new_serial("environmentalrequirement", "Base EnvironmentalRequirement"), "Base EnvironmentalRequirement") },
             parameter_kind: EnvironmentalParameter::Temperature,
@@ -8340,7 +8340,7 @@ mod tests {
     }
 
     #[test]
-    fn human_factor_requirement_patch_round_trips() {
+    async fn human_factor_requirement_patch_round_trips() {
         let mut item = HumanFactorRequirement {
             header: EntityHeader { description: Some(TextField::plain("base-desc")), ..EntityHeader::new(EntityId::new_serial("humanfactorrequirement", "Base HumanFactorRequirement"), "Base HumanFactorRequirement") },
             aspect: HumanFactorAspect::Ergonomics,
@@ -8406,7 +8406,7 @@ mod tests {
     }
 
     #[test]
-    fn accessibility_requirement_patch_round_trips() {
+    async fn accessibility_requirement_patch_round_trips() {
         let mut item = AccessibilityRequirement {
             header: EntityHeader { description: Some(TextField::plain("base-desc")), ..EntityHeader::new(EntityId::new_serial("accessibilityrequirement", "Base AccessibilityRequirement"), "Base AccessibilityRequirement") },
             standard: String::new(),
@@ -8474,7 +8474,7 @@ mod tests {
     }
 
     #[test]
-    fn privacy_requirement_patch_round_trips() {
+    async fn privacy_requirement_patch_round_trips() {
         let mut item = PrivacyRequirement {
             header: EntityHeader { description: Some(TextField::plain("base-desc")), ..EntityHeader::new(EntityId::new_serial("privacyrequirement", "Base PrivacyRequirement"), "Base PrivacyRequirement") },
             privacy_kind: PrivacyKind::Public,
@@ -8538,7 +8538,7 @@ mod tests {
     }
 
     #[test]
-    fn safety_requirement_patch_round_trips() {
+    async fn safety_requirement_patch_round_trips() {
         let mut item = SafetyRequirement {
             header: EntityHeader { description: Some(TextField::plain("base-desc")), ..EntityHeader::new(EntityId::new_serial("safetyrequirement", "Base SafetyRequirement"), "Base SafetyRequirement") },
             safety_domain: SafetyDomain::LifeSafety,
@@ -8602,7 +8602,7 @@ mod tests {
     }
 
     #[test]
-    fn security_requirement_patch_round_trips() {
+    async fn security_requirement_patch_round_trips() {
         let mut item = SecurityRequirement {
             header: EntityHeader { description: Some(TextField::plain("base-desc")), ..EntityHeader::new(EntityId::new_serial("securityrequirement", "Base SecurityRequirement"), "Base SecurityRequirement") },
             control_kind: SecurityControlKind::AccessControl,
@@ -8666,7 +8666,7 @@ mod tests {
     }
 
     #[test]
-    fn regulatory_requirement_patch_round_trips() {
+    async fn regulatory_requirement_patch_round_trips() {
         let mut item = RegulatoryRequirement {
             header: EntityHeader { description: Some(TextField::plain("base-desc")), ..EntityHeader::new(EntityId::new_serial("regulatoryrequirement", "Base RegulatoryRequirement"), "Base RegulatoryRequirement") },
             jurisdiction: String::new(),
@@ -8728,7 +8728,7 @@ mod tests {
     }
 
     #[test]
-    fn site_context_patch_round_trips() {
+    async fn site_context_patch_round_trips() {
         let mut item = SiteContext {
             header: EntityHeader { description: Some(TextField::plain("base-desc")), ..EntityHeader::new(EntityId::new_serial("sitecontext", "Base SiteContext"), "Base SiteContext") },
             site_name: String::new(),
@@ -8792,7 +8792,7 @@ mod tests {
     }
 
     #[test]
-    fn organizational_requirement_patch_round_trips() {
+    async fn organizational_requirement_patch_round_trips() {
         let mut item = OrganizationalRequirement {
             header: EntityHeader { description: Some(TextField::plain("base-desc")), ..EntityHeader::new(EntityId::new_serial("organizationalrequirement", "Base OrganizationalRequirement"), "Base OrganizationalRequirement") },
             department: String::new(),
@@ -8854,7 +8854,7 @@ mod tests {
     }
 
     #[test]
-    fn service_requirement_patch_round_trips() {
+    async fn service_requirement_patch_round_trips() {
         let mut item = ServiceRequirement {
             header: EntityHeader { description: Some(TextField::plain("base-desc")), ..EntityHeader::new(EntityId::new_serial("servicerequirement", "Base ServiceRequirement"), "Base ServiceRequirement") },
             service_name: String::new(),
@@ -8916,7 +8916,7 @@ mod tests {
     }
 
     #[test]
-    fn infrastructure_requirement_patch_round_trips() {
+    async fn infrastructure_requirement_patch_round_trips() {
         let mut item = InfrastructureRequirement {
             header: EntityHeader { description: Some(TextField::plain("base-desc")), ..EntityHeader::new(EntityId::new_serial("infrastructurerequirement", "Base InfrastructureRequirement"), "Base InfrastructureRequirement") },
             system: String::new(),
@@ -8978,7 +8978,7 @@ mod tests {
     }
 
     #[test]
-    fn information_requirement_patch_round_trips() {
+    async fn information_requirement_patch_round_trips() {
         let mut item = InformationRequirement {
             header: EntityHeader { description: Some(TextField::plain("base-desc")), ..EntityHeader::new(EntityId::new_serial("informationrequirement", "Base InformationRequirement"), "Base InformationRequirement") },
             information_type: String::new(),
@@ -9040,7 +9040,7 @@ mod tests {
     }
 
     #[test]
-    fn communication_requirement_patch_round_trips() {
+    async fn communication_requirement_patch_round_trips() {
         let mut item = CommunicationRequirement {
             header: EntityHeader { description: Some(TextField::plain("base-desc")), ..EntityHeader::new(EntityId::new_serial("communicationrequirement", "Base CommunicationRequirement"), "Base CommunicationRequirement") },
             channel: String::new(),
@@ -9102,7 +9102,7 @@ mod tests {
     }
 
     #[test]
-    fn wayfinding_requirement_patch_round_trips() {
+    async fn wayfinding_requirement_patch_round_trips() {
         let mut item = WayfindingRequirement {
             header: EntityHeader { description: Some(TextField::plain("base-desc")), ..EntityHeader::new(EntityId::new_serial("wayfindingrequirement", "Base WayfindingRequirement"), "Base WayfindingRequirement") },
             user_profile_ids: Vec::new(),
@@ -9164,7 +9164,7 @@ mod tests {
     }
 
     #[test]
-    fn schedule_requirement_patch_round_trips() {
+    async fn schedule_requirement_patch_round_trips() {
         let mut item = ScheduleRequirement {
             header: EntityHeader { description: Some(TextField::plain("base-desc")), ..EntityHeader::new(EntityId::new_serial("schedulerequirement", "Base ScheduleRequirement"), "Base ScheduleRequirement") },
             milestone: String::new(),
@@ -9228,7 +9228,7 @@ mod tests {
     }
 
     #[test]
-    fn flexibility_requirement_patch_round_trips() {
+    async fn flexibility_requirement_patch_round_trips() {
         let mut item = FlexibilityRequirement {
             header: EntityHeader { description: Some(TextField::plain("base-desc")), ..EntityHeader::new(EntityId::new_serial("flexibilityrequirement", "Base FlexibilityRequirement"), "Base FlexibilityRequirement") },
             flexibility_type: String::new(),
@@ -9288,7 +9288,7 @@ mod tests {
     }
 
     #[test]
-    fn growth_plan_patch_round_trips() {
+    async fn growth_plan_patch_round_trips() {
         let mut item = GrowthPlan {
             header: EntityHeader { description: Some(TextField::plain("base-desc")), ..EntityHeader::new(EntityId::new_serial("growthplan", "Base GrowthPlan"), "Base GrowthPlan") },
             horizon_years: 0,
@@ -9350,7 +9350,7 @@ mod tests {
     }
 
     #[test]
-    fn sustainability_requirement_patch_round_trips() {
+    async fn sustainability_requirement_patch_round_trips() {
         let mut item = SustainabilityRequirement {
             header: EntityHeader { description: Some(TextField::plain("base-desc")), ..EntityHeader::new(EntityId::new_serial("sustainabilityrequirement", "Base SustainabilityRequirement"), "Base SustainabilityRequirement") },
             topic: String::new(),
@@ -9414,7 +9414,7 @@ mod tests {
     }
 
     #[test]
-    fn resilience_requirement_patch_round_trips() {
+    async fn resilience_requirement_patch_round_trips() {
         let mut item = ResilienceRequirement {
             header: EntityHeader { description: Some(TextField::plain("base-desc")), ..EntityHeader::new(EntityId::new_serial("resiliencerequirement", "Base ResilienceRequirement"), "Base ResilienceRequirement") },
             hazard: String::new(),
@@ -9476,7 +9476,7 @@ mod tests {
     }
 
     #[test]
-    fn cost_requirement_patch_round_trips() {
+    async fn cost_requirement_patch_round_trips() {
         let mut item = CostRequirement {
             header: EntityHeader { description: Some(TextField::plain("base-desc")), ..EntityHeader::new(EntityId::new_serial("costrequirement", "Base CostRequirement"), "Base CostRequirement") },
             cost_item: String::new(),
@@ -9538,7 +9538,7 @@ mod tests {
     }
 
     #[test]
-    fn delivery_constraint_patch_round_trips() {
+    async fn delivery_constraint_patch_round_trips() {
         let mut item = DeliveryConstraint {
             header: EntityHeader { description: Some(TextField::plain("base-desc")), ..EntityHeader::new(EntityId::new_serial("deliveryconstraint", "Base DeliveryConstraint"), "Base DeliveryConstraint") },
             constraint_type: String::new(),
@@ -9602,7 +9602,7 @@ mod tests {
     }
 
     #[test]
-    fn risk_patch_round_trips() {
+    async fn risk_patch_round_trips() {
         let mut item = Risk {
             header: EntityHeader { description: Some(TextField::plain("base-desc")), ..EntityHeader::new(EntityId::new_serial("risk", "Base Risk"), "Base Risk") },
             risk_statement: TextField::default(),
@@ -9664,7 +9664,7 @@ mod tests {
     }
 
     #[test]
-    fn conflict_patch_round_trips() {
+    async fn conflict_patch_round_trips() {
         let mut item = Conflict {
             header: EntityHeader { description: Some(TextField::plain("base-desc")), ..EntityHeader::new(EntityId::new_serial("conflict", "Base Conflict"), "Base Conflict") },
             kind: ConflictKind::Adjacency,
@@ -9726,7 +9726,7 @@ mod tests {
     }
 
     #[test]
-    fn requirement_patch_round_trips() {
+    async fn requirement_patch_round_trips() {
         let mut item = Requirement {
             header: EntityHeader { description: Some(TextField::plain("base-desc")), ..EntityHeader::new(EntityId::new_serial("requirement", "Base Requirement"), "Base Requirement") },
             code: String::new(),
@@ -9790,7 +9790,7 @@ mod tests {
     }
 
     #[test]
-    fn priority_record_patch_round_trips() {
+    async fn priority_record_patch_round_trips() {
         let mut item = PriorityRecord {
             header: EntityHeader { description: Some(TextField::plain("base-desc")), ..EntityHeader::new(EntityId::new_serial("priorityrecord", "Base PriorityRecord"), "Base PriorityRecord") },
             subject_id: EntityId::new_serial("base39", "base39"),
@@ -9852,7 +9852,7 @@ mod tests {
     }
 
     #[test]
-    fn scenario_patch_round_trips() {
+    async fn scenario_patch_round_trips() {
         let mut item = Scenario {
             header: EntityHeader { description: Some(TextField::plain("base-desc")), ..EntityHeader::new(EntityId::new_serial("scenario", "Base Scenario"), "Base Scenario") },
             code: String::new(),
@@ -9914,7 +9914,7 @@ mod tests {
     }
 
     #[test]
-    fn option_evaluation_patch_round_trips() {
+    async fn option_evaluation_patch_round_trips() {
         let mut item = OptionEvaluation {
             header: EntityHeader { description: Some(TextField::plain("base-desc")), ..EntityHeader::new(EntityId::new_serial("optionevaluation", "Base OptionEvaluation"), "Base OptionEvaluation") },
             option_name: String::new(),
@@ -9976,7 +9976,7 @@ mod tests {
     }
 
     #[test]
-    fn decision_patch_round_trips() {
+    async fn decision_patch_round_trips() {
         let mut item = Decision {
             header: EntityHeader { description: Some(TextField::plain("base-desc")), ..EntityHeader::new(EntityId::new_serial("decision", "Base Decision"), "Base Decision") },
             decision_statement: TextField::default(),
@@ -10038,7 +10038,7 @@ mod tests {
     }
 
     #[test]
-    fn validation_record_patch_round_trips() {
+    async fn validation_record_patch_round_trips() {
         let mut item = ValidationRecord {
             header: EntityHeader { description: Some(TextField::plain("base-desc")), ..EntityHeader::new(EntityId::new_serial("validationrecord", "Base ValidationRecord"), "Base ValidationRecord") },
             subject_id: EntityId::new_serial("base43", "base43"),
@@ -10100,7 +10100,7 @@ mod tests {
     }
 
     #[test]
-    fn performance_criterion_patch_round_trips() {
+    async fn performance_criterion_patch_round_trips() {
         let mut item = PerformanceCriterion {
             header: EntityHeader { description: Some(TextField::plain("base-desc")), ..EntityHeader::new(EntityId::new_serial("performancecriterion", "Base PerformanceCriterion"), "Base PerformanceCriterion") },
             criterion: String::new(),
@@ -10162,7 +10162,7 @@ mod tests {
     }
 
     #[test]
-    fn quality_record_patch_round_trips() {
+    async fn quality_record_patch_round_trips() {
         let mut item = QualityRecord {
             header: EntityHeader { description: Some(TextField::plain("base-desc")), ..EntityHeader::new(EntityId::new_serial("qualityrecord", "Base QualityRecord"), "Base QualityRecord") },
             quality_topic: String::new(),
@@ -10224,7 +10224,7 @@ mod tests {
     }
 
     #[test]
-    fn document_record_patch_round_trips() {
+    async fn document_record_patch_round_trips() {
         let mut item = ArtifactRecord {
             header: EntityHeader { description: Some(TextField::plain("base-desc")), ..EntityHeader::new(EntityId::new_serial("documentrecord", "Base ArtifactRecord"), "Base ArtifactRecord") },
             document_type: String::new(),
@@ -10286,7 +10286,7 @@ mod tests {
     }
 
     #[test]
-    fn change_record_patch_round_trips() {
+    async fn change_record_patch_round_trips() {
         let mut item = ChangeRecord {
             header: EntityHeader { description: Some(TextField::plain("base-desc")), ..EntityHeader::new(EntityId::new_serial("changerecord", "Base ChangeRecord"), "Base ChangeRecord") },
             change_type: String::new(),
@@ -10348,7 +10348,7 @@ mod tests {
     }
 
     #[test]
-    fn collaboration_record_patch_round_trips() {
+    async fn collaboration_record_patch_round_trips() {
         let mut item = CollaborationRecord {
             header: EntityHeader { description: Some(TextField::plain("base-desc")), ..EntityHeader::new(EntityId::new_serial("collaborationrecord", "Base CollaborationRecord"), "Base CollaborationRecord") },
             session_type: String::new(),
@@ -10408,7 +10408,7 @@ mod tests {
     }
 
     #[test]
-    fn analysis_record_patch_round_trips() {
+    async fn analysis_record_patch_round_trips() {
         let mut item = AnalysisRecord {
             header: EntityHeader { description: Some(TextField::plain("base-desc")), ..EntityHeader::new(EntityId::new_serial("analysisrecord", "Base AnalysisRecord"), "Base AnalysisRecord") },
             kind: AnalysisKind::Gap,
@@ -10468,7 +10468,7 @@ mod tests {
     }
 
     #[test]
-    fn report_record_patch_round_trips() {
+    async fn report_record_patch_round_trips() {
         let mut item = ReportRecord {
             header: EntityHeader { description: Some(TextField::plain("base-desc")), ..EntityHeader::new(EntityId::new_serial("reportrecord", "Base ReportRecord"), "Base ReportRecord") },
             kind: ReportKind::ExecutiveSummary,
@@ -10528,7 +10528,7 @@ mod tests {
     }
 
     #[test]
-    fn search_filter_patch_round_trips() {
+    async fn search_filter_patch_round_trips() {
         let mut item = SearchFilter {
             header: EntityHeader { description: Some(TextField::plain("base-desc")), ..EntityHeader::new(EntityId::new_serial("searchfilter", "Base SearchFilter"), "Base SearchFilter") },
             filter_name: String::new(),
@@ -10590,7 +10590,7 @@ mod tests {
     }
 
     #[test]
-    fn status_record_patch_round_trips() {
+    async fn status_record_patch_round_trips() {
         let mut item = StatusRecord {
             header: EntityHeader { description: Some(TextField::plain("base-desc")), ..EntityHeader::new(EntityId::new_serial("statusrecord", "Base StatusRecord"), "Base StatusRecord") },
             subject_id: EntityId::new_serial("base52", "base52"),
@@ -10650,7 +10650,7 @@ mod tests {
     }
 
     #[test]
-    fn workshop_patch_round_trips() {
+    async fn workshop_patch_round_trips() {
         let mut item = Workshop {
             header: EntityHeader { description: Some(TextField::plain("base-desc")), ..EntityHeader::new(EntityId::new_serial("workshop", "Base Workshop"), "Base Workshop") },
             workshop_type: String::new(),
@@ -10712,7 +10712,7 @@ mod tests {
     }
 
     #[test]
-    fn survey_patch_round_trips() {
+    async fn survey_patch_round_trips() {
         let mut item = Survey {
             header: EntityHeader { description: Some(TextField::plain("base-desc")), ..EntityHeader::new(EntityId::new_serial("survey", "Base Survey"), "Base Survey") },
             survey_type: String::new(),
@@ -10774,7 +10774,7 @@ mod tests {
     }
 
     #[test]
-    fn issue_patch_round_trips() {
+    async fn issue_patch_round_trips() {
         let mut item = Issue {
             header: EntityHeader { description: Some(TextField::plain("base-desc")), ..EntityHeader::new(EntityId::new_serial("issue", "Base Issue"), "Base Issue") },
             issue_type: String::new(),
@@ -10836,7 +10836,7 @@ mod tests {
     }
 
     #[test]
-    fn audit_event_patch_round_trips() {
+    async fn audit_event_patch_round_trips() {
         let mut item = AuditEvent {
             header: EntityHeader { description: Some(TextField::plain("base-desc")), ..EntityHeader::new(EntityId::new_serial("auditevent", "Base AuditEvent"), "Base AuditEvent") },
             action: AuditAction::Created,
@@ -10896,7 +10896,7 @@ mod tests {
     }
 
     #[test]
-    fn template_record_patch_round_trips() {
+    async fn template_record_patch_round_trips() {
         let mut item = TemplateRecord {
             header: EntityHeader { description: Some(TextField::plain("base-desc")), ..EntityHeader::new(EntityId::new_serial("templaterecord", "Base TemplateRecord"), "Base TemplateRecord") },
             template_type: String::new(),
@@ -10958,7 +10958,7 @@ mod tests {
     }
 
     #[test]
-    fn knowledge_record_patch_round_trips() {
+    async fn knowledge_record_patch_round_trips() {
         let mut item = KnowledgeRecord {
             header: EntityHeader { description: Some(TextField::plain("base-desc")), ..EntityHeader::new(EntityId::new_serial("knowledgerecord", "Base KnowledgeRecord"), "Base KnowledgeRecord") },
             topic: String::new(),
@@ -11018,7 +11018,7 @@ mod tests {
     }
 
     #[test]
-    fn benchmark_record_patch_round_trips() {
+    async fn benchmark_record_patch_round_trips() {
         let mut item = BenchmarkRecord {
             header: EntityHeader { description: Some(TextField::plain("base-desc")), ..EntityHeader::new(EntityId::new_serial("benchmarkrecord", "Base BenchmarkRecord"), "Base BenchmarkRecord") },
             benchmark_name: String::new(),
@@ -11080,7 +11080,7 @@ mod tests {
     }
 
     #[test]
-    fn assumption_patch_round_trips() {
+    async fn assumption_patch_round_trips() {
         let mut item = Assumption {
             header: EntityHeader { description: Some(TextField::plain("base-desc")), ..EntityHeader::new(EntityId::new_serial("assumption", "Base Assumption"), "Base Assumption") },
             statement: TextField::default(),
@@ -11142,7 +11142,7 @@ mod tests {
     }
 
     #[test]
-    fn constraint_record_patch_round_trips() {
+    async fn constraint_record_patch_round_trips() {
         let mut item = ConstraintRecord {
             header: EntityHeader { description: Some(TextField::plain("base-desc")), ..EntityHeader::new(EntityId::new_serial("constraintrecord", "Base ConstraintRecord"), "Base ConstraintRecord") },
             constraint_type: String::new(),
@@ -11208,7 +11208,7 @@ mod tests {
     }
 
     #[test]
-    fn compliance_record_patch_round_trips() {
+    async fn compliance_record_patch_round_trips() {
         let mut item = ComplianceRecord {
             header: EntityHeader { description: Some(TextField::plain("base-desc")), ..EntityHeader::new(EntityId::new_serial("compliancerecord", "Base ComplianceRecord"), "Base ComplianceRecord") },
             standard_ref: String::new(),
@@ -11274,7 +11274,7 @@ mod tests {
     }
 
     #[test]
-    fn approval_record_patch_round_trips() {
+    async fn approval_record_patch_round_trips() {
         let mut item = ApprovalRecord {
             header: EntityHeader { description: Some(TextField::plain("base-desc")), ..EntityHeader::new(EntityId::new_serial("approvalrecord", "Base ApprovalRecord"), "Base ApprovalRecord") },
             approval_type: String::new(),
@@ -11336,7 +11336,7 @@ mod tests {
     }
 
     #[test]
-    fn meeting_record_patch_round_trips() {
+    async fn meeting_record_patch_round_trips() {
         let mut item = MeetingRecord {
             header: EntityHeader { description: Some(TextField::plain("base-desc")), ..EntityHeader::new(EntityId::new_serial("meetingrecord", "Base MeetingRecord"), "Base MeetingRecord") },
             meeting_type: String::new(),

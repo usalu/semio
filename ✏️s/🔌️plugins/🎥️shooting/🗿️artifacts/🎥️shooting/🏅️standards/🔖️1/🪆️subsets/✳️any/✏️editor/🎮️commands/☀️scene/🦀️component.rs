@@ -18,7 +18,7 @@ pub mod set_sun_azimuth {
         pub value: f64,
     }
 
-    pub fn handle(payload: &SetSunAzimuth, _doc: &ArtifactView<'_, ShootingSnapshot>, _cfg: &ConfigView<'_, ShootingConfig>, _ctx: &mut ShootingDispatchCtx) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
+    pub async fn handle(payload: &SetSunAzimuth, _doc: &ArtifactView<'_, ShootingSnapshot>, _cfg: &ConfigView<'_, ShootingConfig>, _ctx: &mut ShootingDispatchCtx) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
         Ok(Emit::mutations(vec![ShootingMutation::ChangeSceneSunAzimuth(crate::artifacts::shooting::mutations::change_scene_sun_azimuth::mutation::ChangeSceneSunAzimuth { new_azimuth: payload.value })]))
     }
 }
@@ -34,7 +34,7 @@ pub mod set_sun_elevation {
         pub value: f64,
     }
 
-    pub fn handle(payload: &SetSunElevation, _doc: &ArtifactView<'_, ShootingSnapshot>, _cfg: &ConfigView<'_, ShootingConfig>, _ctx: &mut ShootingDispatchCtx) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
+    pub async fn handle(payload: &SetSunElevation, _doc: &ArtifactView<'_, ShootingSnapshot>, _cfg: &ConfigView<'_, ShootingConfig>, _ctx: &mut ShootingDispatchCtx) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
         Ok(Emit::mutations(vec![ShootingMutation::ChangeSceneSunElevation(crate::artifacts::shooting::mutations::change_scene_sun_elevation::mutation::ChangeSceneSunElevation { new_elevation: payload.value })]))
     }
 }
@@ -50,7 +50,7 @@ pub mod set_sun_intensity {
         pub value: f64,
     }
 
-    pub fn handle(payload: &SetSunIntensity, _doc: &ArtifactView<'_, ShootingSnapshot>, _cfg: &ConfigView<'_, ShootingConfig>, _ctx: &mut ShootingDispatchCtx) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
+    pub async fn handle(payload: &SetSunIntensity, _doc: &ArtifactView<'_, ShootingSnapshot>, _cfg: &ConfigView<'_, ShootingConfig>, _ctx: &mut ShootingDispatchCtx) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
         Ok(Emit::mutations(vec![ShootingMutation::ChangeSceneSunIntensity(crate::artifacts::shooting::mutations::change_scene_sun_intensity::mutation::ChangeSceneSunIntensity { new_intensity: payload.value })]))
     }
 }
@@ -66,7 +66,7 @@ pub mod set_ambient_intensity {
         pub value: f64,
     }
 
-    pub fn handle(payload: &SetAmbientIntensity, _doc: &ArtifactView<'_, ShootingSnapshot>, _cfg: &ConfigView<'_, ShootingConfig>, _ctx: &mut ShootingDispatchCtx) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
+    pub async fn handle(payload: &SetAmbientIntensity, _doc: &ArtifactView<'_, ShootingSnapshot>, _cfg: &ConfigView<'_, ShootingConfig>, _ctx: &mut ShootingDispatchCtx) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
         Ok(Emit::mutations(vec![ShootingMutation::ChangeSceneAmbientIntensity(crate::artifacts::shooting::mutations::change_scene_ambient_intensity::mutation::ChangeSceneAmbientIntensity { new_intensity: payload.value })]))
     }
 }
@@ -82,7 +82,7 @@ pub mod set_material_roughness {
         pub value: f64,
     }
 
-    pub fn handle(payload: &SetMaterialRoughness, _doc: &ArtifactView<'_, ShootingSnapshot>, _cfg: &ConfigView<'_, ShootingConfig>, _ctx: &mut ShootingDispatchCtx) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
+    pub async fn handle(payload: &SetMaterialRoughness, _doc: &ArtifactView<'_, ShootingSnapshot>, _cfg: &ConfigView<'_, ShootingConfig>, _ctx: &mut ShootingDispatchCtx) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
         Ok(Emit::mutations(vec![ShootingMutation::ChangeSceneMaterialRoughness(crate::artifacts::shooting::mutations::change_scene_material_roughness::mutation::ChangeSceneMaterialRoughness { new_roughness: payload.value })]))
     }
 }
@@ -98,7 +98,7 @@ pub mod set_shadow_enabled {
         pub value: bool,
     }
 
-    pub fn handle(payload: &SetShadowEnabled, _doc: &ArtifactView<'_, ShootingSnapshot>, _cfg: &ConfigView<'_, ShootingConfig>, _ctx: &mut ShootingDispatchCtx) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
+    pub async fn handle(payload: &SetShadowEnabled, _doc: &ArtifactView<'_, ShootingSnapshot>, _cfg: &ConfigView<'_, ShootingConfig>, _ctx: &mut ShootingDispatchCtx) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
         Ok(Emit::mutations(vec![ShootingMutation::ChangeSceneShadowEnabled(crate::artifacts::shooting::mutations::change_scene_shadow_enabled::mutation::ChangeSceneShadowEnabled { new_enabled: payload.value })]))
     }
 }
@@ -114,7 +114,7 @@ pub mod toggle_sun {
         pub value: bool,
     }
 
-    pub fn handle(payload: &ToggleSun, _doc: &ArtifactView<'_, ShootingSnapshot>, _cfg: &ConfigView<'_, ShootingConfig>, _ctx: &mut ShootingDispatchCtx) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
+    pub async fn handle(payload: &ToggleSun, _doc: &ArtifactView<'_, ShootingSnapshot>, _cfg: &ConfigView<'_, ShootingConfig>, _ctx: &mut ShootingDispatchCtx) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
         Ok(Emit::mutations(vec![ShootingMutation::ChangeSceneSunEnabled(crate::artifacts::shooting::mutations::change_scene_sun_enabled::mutation::ChangeSceneSunEnabled { new_enabled: payload.value })]))
     }
 }
@@ -128,7 +128,7 @@ mod tests {
     use crate::editor::shooting::ShootingCommand;
 
     #[test]
-    fn scene_setters_mutate_lighting() {
+    async fn scene_setters_mutate_lighting() {
         let mut app = shooting_app();
         dispatch(&mut app, ShootingCommand::SetSunAzimuth(set_sun_azimuth::SetSunAzimuth { value: 90.0 }));
         dispatch(&mut app, ShootingCommand::SetShadowEnabled(set_shadow_enabled::SetShadowEnabled { value: false }));
@@ -138,7 +138,7 @@ mod tests {
     }
 
     #[test]
-    fn toggle_sun_round_trips_through_ops_and_defaults_off() {
+    async fn toggle_sun_round_trips_through_ops_and_defaults_off() {
         let mut app = shooting_app();
         assert!(!app.snapshot().expect("snapshot").scene.sun.enabled);
         dispatch(&mut app, ShootingCommand::ToggleSun(toggle_sun::ToggleSun { value: true }));

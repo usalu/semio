@@ -15,15 +15,15 @@ pub struct ChangeVWeldEdKn {
 impl protocol::MutationKind<En1999Snapshot, En1999Mutation> for ChangeVWeldEdKn {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "v-weld-ed-kn", kind: "change-v-weld-ed-kn", record: "ChangedVWeldEdKn" };
 
-    fn diff(&self, base: &En1999Snapshot) -> protocol::MutationOutcome<En1999Diff> {
+    async fn diff(&self, base: &En1999Snapshot) -> protocol::MutationOutcome<En1999Diff> {
         crate::artifacts::en1999::mutations::change_v_weld_ed_kn::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &En1999Snapshot) -> Vec<En1999Mutation> {
+    async fn inverse(&self, base: &En1999Snapshot) -> Vec<En1999Mutation> {
         crate::artifacts::en1999::mutations::change_v_weld_ed_kn::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         format!("Change design weld shear force V_Ed [kN] to {}", self.new_v_weld_ed_kn)
     }
 }

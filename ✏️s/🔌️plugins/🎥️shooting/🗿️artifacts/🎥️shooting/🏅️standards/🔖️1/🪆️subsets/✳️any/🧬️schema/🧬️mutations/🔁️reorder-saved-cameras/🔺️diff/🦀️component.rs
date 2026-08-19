@@ -5,7 +5,7 @@ use super::mutation::ReorderSavedCameras;
 use crate::artifacts::shooting::ShootingSnapshot;
 use crate::artifacts::shooting::diff::{ShootingSavedCamerasDelta, ShootingDiff};
 
-pub fn diff(payload: &ReorderSavedCameras, base: &ShootingSnapshot) -> protocol::MutationOutcome<ShootingDiff> {
+pub async fn diff(payload: &ReorderSavedCameras, base: &ShootingSnapshot) -> protocol::MutationOutcome<ShootingDiff> {
     if !base.saved_cameras.iter().any(|entry| entry.id == payload.id) {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Saved camera \"{}\" does not exist.", payload.id), [payload.id.clone()]);
     }

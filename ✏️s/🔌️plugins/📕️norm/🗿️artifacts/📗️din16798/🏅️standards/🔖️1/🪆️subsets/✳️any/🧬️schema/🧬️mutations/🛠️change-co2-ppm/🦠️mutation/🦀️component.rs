@@ -15,15 +15,15 @@ pub struct ChangeCo2Ppm {
 impl protocol::MutationKind<Din16798Snapshot, Din16798Mutation> for ChangeCo2Ppm {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "co2-ppm", kind: "change-co2-ppm", record: "ChangedCo2Ppm" };
 
-    fn diff(&self, base: &Din16798Snapshot) -> protocol::MutationOutcome<Din16798Diff> {
+    async fn diff(&self, base: &Din16798Snapshot) -> protocol::MutationOutcome<Din16798Diff> {
         crate::artifacts::din16798::mutations::change_co2_ppm::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &Din16798Snapshot) -> Vec<Din16798Mutation> {
+    async fn inverse(&self, base: &Din16798Snapshot) -> Vec<Din16798Mutation> {
         crate::artifacts::din16798::mutations::change_co2_ppm::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         format!("Change CO2 concentration to {}", self.new_co2_ppm)
     }
 }

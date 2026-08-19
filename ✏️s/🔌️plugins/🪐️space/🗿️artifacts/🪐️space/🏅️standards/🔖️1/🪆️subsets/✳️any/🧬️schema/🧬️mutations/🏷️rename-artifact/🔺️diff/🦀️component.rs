@@ -4,7 +4,7 @@ use crate::artifacts::space::standards::v1::subsets::any::schema::diff::SSpaceDi
 use crate::artifacts::space::standards::v1::subsets::any::schema::snapshot::SSpaceSnapshot;
 
 //#region 🔖️Diff
-pub fn diff(payload: &super::mutation::RenameArtifact, base: &SSpaceSnapshot) -> protocol::MutationOutcome<SSpaceDiff> {
+pub async fn diff(payload: &super::mutation::RenameArtifact, base: &SSpaceSnapshot) -> protocol::MutationOutcome<SSpaceDiff> {
     let Some(existing) = base.artifacts.iter().find(|row| row.id == payload.id) else {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Artifact \"{}\" does not exist.", payload.id), [payload.id.clone()]);
     };

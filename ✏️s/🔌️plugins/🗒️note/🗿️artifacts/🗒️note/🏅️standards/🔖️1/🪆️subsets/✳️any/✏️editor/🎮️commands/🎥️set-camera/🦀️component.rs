@@ -15,7 +15,7 @@ pub struct SetCamera {
     pub camera: NoteCamera,
 }
 
-pub fn handle(payload: &SetCamera, _doc: &ArtifactView<'_, NoteSnapshot>, _cfg: &ConfigView<'_, NoteConfig>, _ctx: &mut crate::editor::note::NoteDispatchCtx) -> Result<Emit<NoteMutation, NoteConfigMutation>, Fault> {
+pub async fn handle(payload: &SetCamera, _doc: &ArtifactView<'_, NoteSnapshot>, _cfg: &ConfigView<'_, NoteConfig>, _ctx: &mut crate::editor::note::NoteDispatchCtx) -> Result<Emit<NoteMutation, NoteConfigMutation>, Fault> {
     Ok(Emit::config(vec![NoteConfigMutation::SetCamera { camera: payload.camera.clone() }]))
 }
 
@@ -32,7 +32,7 @@ mod tests {
     /// edit, no undo entry on the document store) and instead write into `cfg.camera`, which the
     /// composite scene's `documentJson.camera` then reflects.
     #[test]
-    fn set_camera_writes_config_and_emits_no_artifact_mutations() {
+    async fn set_camera_writes_config_and_emits_no_artifact_mutations() {
         let mut app = note_app();
         let before = app.snapshot().expect("snapshot");
         let result = dispatch(&mut app, NoteCommand::SetCamera(SetCamera { camera: NoteCamera { x: 4.0, y: 5.0, zoom: 2.0 } }));
@@ -44,7 +44,7 @@ mod tests {
     }
 
     #[test]
-    fn set_camera_zoom_updates_zoom_and_keeps_pan_via_config() {
+    async fn set_camera_zoom_updates_zoom_and_keeps_pan_via_config() {
         let mut app = note_app();
         dispatch(&mut app, NoteCommand::SetCamera(SetCamera { camera: NoteCamera { x: 4.0, y: 5.0, zoom: 1.0 } }));
         let result = dispatch(&mut app, NoteCommand::SetCameraZoom(set_camera_zoom::SetCameraZoom { value: 3.0 }));
@@ -57,7 +57,7 @@ mod tests {
     /// 🎥️ Dragging the viewport camera through several ticks must never create a VCS edit/undo step on
     /// the DOCUMENT store at all.
     #[test]
-    fn camera_drag_never_creates_a_document_undo_step() {
+    async fn camera_drag_never_creates_a_document_undo_step() {
         use semio_framework_plugin::PluginApp;
 
         let mut app = note_app();

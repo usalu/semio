@@ -54,7 +54,7 @@ pub struct Process3dInference {
 }
 
 impl Inference<Process3dSnapshot> for Process3dInference {
-    fn infer(snapshot: &Process3dSnapshot) -> Self {
+    async fn infer(snapshot: &Process3dSnapshot) -> Self {
         Self { stock_bounds: BoundingBox { min: snapshot.stock_pose.position, max: snapshot.stock_pose.position }, step_count: 0 }
     }
 }
@@ -63,19 +63,19 @@ impl Inference<Process3dSnapshot> for Process3dInference {
 /// all-zero box, which disagrees with `infer(&Process3dSnapshot::default())`. Defining default as
 /// "infer the default snapshot" makes the two definitionally equal.
 impl Default for Process3dInference {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self::infer(&Process3dSnapshot::default())
     }
 }
 
 impl protocol::InferenceSpec<Process3dSnapshot> for Process3dInference {
-    fn inference_schema_id() -> &'static str {
+    async fn inference_schema_id() -> &'static str {
         "s.process.process3d.inference"
     }
-    fn schema_version() -> u32 {
+    async fn schema_version() -> u32 {
         1
     }
-    fn fields() -> &'static [protocol::InferenceFieldSpec] {
+    async fn fields() -> &'static [protocol::InferenceFieldSpec] {
         &[
             protocol::InferenceFieldSpec { id: "s.process.process3d.inference.bounds.stockBounds", reads: &["stockPose"] },
             protocol::InferenceFieldSpec { id: "s.process.process3d.inference.bounds.stepCount", reads: &["steps"] },
@@ -92,7 +92,7 @@ impl ArtifactInferrer for crate::artifacts::process3d::standards::v1::subsets::a
     /// 🎯️ Whole-snapshot scalars — nothing here is per-entity, so the cache/session are unused
     /// (same "plain `Inference`" shape the family doc calls out as correct for `dimensions`/
     /// `outline`/`bounds`-style facets).
-    fn infer_cached(snapshot: &Self::Snapshot, cache: &mut store::InferenceCache, session: &mut store::InferenceSession) -> Self::Inference {
+    async fn infer_cached(snapshot: &Self::Snapshot, cache: &mut store::InferenceCache, session: &mut store::InferenceSession) -> Self::Inference {
         let _ = (cache, session);
         <Process3dInference as Inference<Process3dSnapshot>>::infer(snapshot)
     }
@@ -100,7 +100,7 @@ impl ArtifactInferrer for crate::artifacts::process3d::standards::v1::subsets::a
 //#endregion 🔖️ArtifactInferrer
 
 //#region 🔖️KernelReplay
-fn hash_value<T: Serialize>(value: &T) -> u64 {
+async fn hash_value<T: Serialize>(value: &T) -> u64 {
     let mut hasher = DefaultHasher::new();
     if let Ok(json) = serde_json::to_string(value) {
         json.hash(&mut hasher);
@@ -133,7 +133,7 @@ struct ProcessKernelMemo {
 }
 
 impl ProcessKernelReplay {
-    pub fn new() -> Self {
+    pub async fn new() -> Self {
         Self {
             kernel: Brep::new(),
             tables: ProcessKernelMemo { memo: HashMap::new() },
@@ -142,17 +142,17 @@ impl ProcessKernelReplay {
     }
 
     /// 🔩 Immutable kernel access — `tessellate`/`volume`/`kind` take `&self`.
-    pub fn kernel(&self) -> &Brep {
+    pub async fn kernel(&self) -> &Brep {
         &self.kernel
     }
 
     /// 🔩 Mutable kernel access — every CSG-producing `BrepKernel` method takes `&mut self`.
-    pub fn kernel_mut(&mut self) -> &mut Brep {
+    pub async fn kernel_mut(&mut self) -> &mut Brep {
         &mut self.kernel
     }
 }
 
-fn prefix_signature(stock_signature: u64, steps: &[&ProcessStep]) -> u64 {
+async fn prefix_signature(stock_signature: u64, steps: &[&ProcessStep]) -> u64 {
     let mut hasher = DefaultHasher::new();
     stock_signature.hash(&mut hasher);
     if let Ok(json) = serde_json::to_string(steps) {
@@ -162,7 +162,7 @@ fn prefix_signature(stock_signature: u64, steps: &[&ProcessStep]) -> u64 {
 }
 
 /// 📦️ Builds a posed kernel solid for a spec via `*_prim_sync` → `rotate_sync` → `translate_sync`.
-fn solid_for_spec(kernel: &mut dyn BrepKernel, spec: &WorkingSolid, pose: &Pose) -> Option<GeometryHandle> {
+async fn solid_for_spec(kernel: &mut dyn BrepKernel, spec: &WorkingSolid, pose: &Pose) -> Option<GeometryHandle> {
     let base = match spec {
         WorkingSolid::Box { width, depth, height } => semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::block_on(kernel.box_prim(*width, *depth, *height)).ok()?,
         WorkingSolid::Cylinder { radius, height } => semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::block_on(kernel.cylinder_prim(*radius, *height)).ok()?,
@@ -184,7 +184,7 @@ fn solid_for_spec(kernel: &mut dyn BrepKernel, spec: &WorkingSolid, pose: &Pose)
     }
 }
 
-fn tool_solid_for_measure(kernel: &mut dyn BrepKernel, measure: &ProcessMeasure) -> Option<GeometryHandle> {
+async fn tool_solid_for_measure(kernel: &mut dyn BrepKernel, measure: &ProcessMeasure) -> Option<GeometryHandle> {
     match measure {
         ProcessMeasure::Cut { tool, pose } => solid_for_spec(kernel, tool, pose),
         ProcessMeasure::Drill { radius, depth, pose } => solid_for_spec(kernel, &WorkingSolid::Cylinder { radius: *radius, height: *depth }, pose),
@@ -194,7 +194,7 @@ fn tool_solid_for_measure(kernel: &mut dyn BrepKernel, measure: &ProcessMeasure)
 
 /// 🧠️ Replays enabled steps up to the cursor, reusing the longest memoized prefix. Reads a real,
 /// literal `ProcessWorkingScene` (never a bare `Process3dSnapshot` — see file doc comment).
-pub fn replay_process(session: &mut ProcessKernelReplay, scene: &ProcessWorkingScene, resolved_up_to: Option<usize>) -> Option<GeometryHandle> {
+pub async fn replay_process(session: &mut ProcessKernelReplay, scene: &ProcessWorkingScene, resolved_up_to: Option<usize>) -> Option<GeometryHandle> {
     let stock_signature = hash_value(&scene.stock);
     if stock_signature != session.stock_signature {
         session.tables.memo.clear();
@@ -239,7 +239,7 @@ pub fn replay_process(session: &mut ProcessKernelReplay, scene: &ProcessWorkingS
     Some(handle)
 }
 
-pub fn processed_mesh(scene: &ProcessWorkingScene, resolved_up_to: Option<usize>) -> Option<semio_framework_plugin::MeshData> {
+pub async fn processed_mesh(scene: &ProcessWorkingScene, resolved_up_to: Option<usize>) -> Option<semio_framework_plugin::MeshData> {
     let mut session = ProcessKernelReplay::new();
     let handle = replay_process(&mut session, scene, resolved_up_to)?;
     let mesh = semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::block_on(session.kernel().tessellate(&handle, PROCESS3D_TESSELLATION_TOLERANCE)).ok()?;
@@ -247,7 +247,7 @@ pub fn processed_mesh(scene: &ProcessWorkingScene, resolved_up_to: Option<usize>
     Some(semio_framework_plugin::mesh_from_indexed_with_face_groups(&mesh.position, &mesh.normal, &mesh.index, &face_groups))
 }
 
-pub fn processed_volume(scene: &ProcessWorkingScene, resolved_up_to: Option<usize>) -> Option<f64> {
+pub async fn processed_volume(scene: &ProcessWorkingScene, resolved_up_to: Option<usize>) -> Option<f64> {
     let mut session = ProcessKernelReplay::new();
     let handle = replay_process(&mut session, scene, resolved_up_to)?;
     semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::block_on(session.kernel().volume(&handle)).ok()
@@ -255,11 +255,11 @@ pub fn processed_volume(scene: &ProcessWorkingScene, resolved_up_to: Option<usiz
 //#endregion 🔖️KernelReplay
 
 //#region 🔖️CapabilityValidation
-fn parameter_value(capability: &Capability, parameter_id: &str) -> Option<f64> {
+async fn parameter_value(capability: &Capability, parameter_id: &str) -> Option<f64> {
     capability.parameters.iter().find(|parameter| parameter.id == parameter_id).map(|parameter| parameter.value)
 }
 
-fn quantity_value(ctx: &ValidationContext, quantity: StockQuantity) -> f64 {
+async fn quantity_value(ctx: &ValidationContext, quantity: StockQuantity) -> f64 {
     match quantity {
         StockQuantity::Width => ctx.stock_width,
         StockQuantity::Depth => ctx.stock_depth,
@@ -269,7 +269,7 @@ fn quantity_value(ctx: &ValidationContext, quantity: StockQuantity) -> f64 {
     }
 }
 
-fn quantity_label(quantity: StockQuantity) -> &'static str {
+async fn quantity_label(quantity: StockQuantity) -> &'static str {
     match quantity {
         StockQuantity::Width => "width",
         StockQuantity::Depth => "depth",
@@ -282,7 +282,7 @@ fn quantity_label(quantity: StockQuantity) -> &'static str {
 /// 🔎️ First workshop capability producing `kind` — the routing target for the utility bar,
 /// click/drag placement, and machine-less `addStep` callers. Falls back to a fresh generic machine if
 /// the workshop's generics were removed, so click-to-place utilities never dead-end.
-pub fn capability_for_measure_kind(workshop: &Workshop, kind: MeasureKind) -> (WorkshopMachine, Capability) {
+pub async fn capability_for_measure_kind(workshop: &Workshop, kind: MeasureKind) -> (WorkshopMachine, Capability) {
     for machine in &workshop.machines {
         for capability in &machine.capabilities {
             if capability.recipe.measure_kind() == kind {
@@ -302,7 +302,7 @@ pub fn capability_for_measure_kind(workshop: &Workshop, kind: MeasureKind) -> (W
 
 /// 🔎️ One workshop machine's capability, by id — the resolution target for `AddStep`'s
 /// `(machine_id, capability_id)` and for re-validating a step's `StepOrigin` provenance.
-pub fn find_capability<'a>(workshop: &'a Workshop, machine_id: &str, capability_id: &str) -> Option<(&'a WorkshopMachine, &'a Capability)> {
+pub async fn find_capability<'a>(workshop: &'a Workshop, machine_id: &str, capability_id: &str) -> Option<(&'a WorkshopMachine, &'a Capability)> {
     let machine = workshop.machines.iter().find(|machine| machine.id == machine_id)?;
     let capability = machine.capabilities.iter().find(|capability| capability.id == capability_id)?;
     Some((machine, capability))
@@ -327,7 +327,7 @@ pub struct ValidationFailure {
 
 /// ✅️ Checks a capability's rules against the current stock — a rule whose parameter is missing from
 /// the capability is skipped (lenient, matches the pre-workshop behavior), never a hard error.
-pub fn validate_capability(capability: &Capability, ctx: &ValidationContext) -> Vec<ValidationFailure> {
+pub async fn validate_capability(capability: &Capability, ctx: &ValidationContext) -> Vec<ValidationFailure> {
     capability
         .rules
         .iter()
@@ -349,7 +349,7 @@ pub fn validate_capability(capability: &Capability, ctx: &ValidationContext) -> 
         .collect()
 }
 
-pub fn validation_reason(failures: &[ValidationFailure]) -> String {
+pub async fn validation_reason(failures: &[ValidationFailure]) -> String {
     failures
         .iter()
         .map(|failure| {
@@ -362,7 +362,7 @@ pub fn validation_reason(failures: &[ValidationFailure]) -> String {
 
 /// 📐️ Imported specs carry no persisted bounding box, so validation falls back to a 1m³ approximation
 /// until the kernel is consulted (matches `cad`'s extent-less fallback for handle-only objects).
-pub fn stock_extent(solid: &WorkingSolid) -> [f64; 3] {
+pub async fn stock_extent(solid: &WorkingSolid) -> [f64; 3] {
     match solid {
         WorkingSolid::Box { width, depth, height } => [*width, *depth, *height],
         WorkingSolid::Cylinder { radius, height } => [*radius * 2.0, *radius * 2.0, *height],
@@ -371,14 +371,14 @@ pub fn stock_extent(solid: &WorkingSolid) -> [f64; 3] {
     }
 }
 
-pub fn validation_context_for_stock(stock: &Stock) -> ValidationContext {
+pub async fn validation_context_for_stock(stock: &Stock) -> ValidationContext {
     let [width, depth, height] = stock_extent(&stock.solid);
     ValidationContext { stock_width: width, stock_depth: depth, stock_height: height }
 }
 
 /// 🪚️ Builds the `ProcessMeasure` a capability's recipe produces, sized from the capability's own
 /// parameters (a missing parameter resolves to `0.0`, matching `validate_capability`'s lenient lookup).
-pub fn measure_for_capability(capability: &Capability, position: Option<[f64; 3]>) -> ProcessMeasure {
+pub async fn measure_for_capability(capability: &Capability, position: Option<[f64; 3]>) -> ProcessMeasure {
     let value = |id: &str| parameter_value(capability, id).unwrap_or(0.0);
     let mut measure = match &capability.recipe {
         MeasureRecipe::DiscCut { diameter, kerf } => ProcessMeasure::Cut { tool: WorkingSolid::Cylinder { radius: value(diameter) / 2.0, height: value(kerf) }, pose: Pose::default() },
@@ -404,7 +404,7 @@ pub fn measure_for_capability(capability: &Capability, position: Option<[f64; 3]
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.process.process3d.inference`'s facet leaves into the OS-wide inference catalog
 /// — call once at plugin init, alongside `process3d_artifact_schema_descriptor`'s registration.
-pub fn process3d_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
+pub async fn process3d_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
     schema::ArtifactInferenceDescriptor {
         id: "s.process.process3d.inference",
         inference: schema::FacetLeaves {
@@ -426,37 +426,37 @@ mod tests {
 
     //#region 🧪️InferenceLaws
     #[test]
-    fn inference_determinism_law() {
+    async fn inference_determinism_law() {
         let snapshot = Process3dSnapshot::default();
         assert_eq!(Process3dInference::infer(&snapshot), Process3dInference::infer(&snapshot));
     }
 
     #[test]
-    fn inference_default_law() {
+    async fn inference_default_law() {
         assert_eq!(Process3dInference::infer(&Process3dSnapshot::default()), Process3dInference::default());
     }
 
     /// 🌉️ Documented gap (see file doc comment): a plain snapshot can't see its composed `steps`
     /// child's content, so `step_count` is always 0 regardless of the working scene's real steps.
     #[test]
-    fn step_count_is_zero_pending_a_resolver() {
+    async fn step_count_is_zero_pending_a_resolver() {
         let snapshot = Process3dSnapshot::default();
         assert_eq!(Process3dInference::infer(&snapshot).step_count, 0);
     }
     //#endregion 🧪️InferenceLaws
 
     //#region 🧪️KernelReplay
-    fn drill_step(id: &str, radius: f64, depth: f64, pose: Pose) -> ProcessStep {
+    async fn drill_step(id: &str, radius: f64, depth: f64, pose: Pose) -> ProcessStep {
         ProcessStep { id: id.into(), label: "Drill".into(), enabled: true, origin: Some(StepOrigin { machine_id: "drill".into(), capability_id: "drill".into() }), measure: ProcessMeasure::Drill { radius, depth, pose } }
     }
 
-    fn session_volume(session: &mut ProcessKernelReplay, scene: &ProcessWorkingScene, resolved_up_to: Option<usize>) -> f64 {
+    async fn session_volume(session: &mut ProcessKernelReplay, scene: &ProcessWorkingScene, resolved_up_to: Option<usize>) -> f64 {
         let handle = replay_process(session, scene, resolved_up_to).expect("replayed handle");
         semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::block_on(session.kernel().volume(&handle)).expect("replayed volume")
     }
 
     #[test]
-    fn drill_reduces_volume_below_stock() {
+    async fn drill_reduces_volume_below_stock() {
         let mut scene = ProcessWorkingScene { stock: Stock { id: "stock".into(), label: "Stock".into(), solid: WorkingSolid::Box { width: 1.0, depth: 1.0, height: 1.0 }, pose: Pose::default() }, steps: Vec::new() };
         let stock_volume = processed_volume(&scene, None).expect("stock volume");
         scene.steps.push(ProcessStep {
@@ -471,7 +471,7 @@ mod tests {
     }
 
     #[test]
-    fn attach_increases_volume_above_stock() {
+    async fn attach_increases_volume_above_stock() {
         for _ in 0..32 {
             let mut scene = ProcessWorkingScene { stock: Stock { id: "stock".into(), label: "Stock".into(), solid: WorkingSolid::Box { width: 1.0, depth: 1.0, height: 1.0 }, pose: Pose::default() }, steps: Vec::new() };
             let stock_volume = processed_volume(&scene, None).expect("stock volume");
@@ -488,7 +488,7 @@ mod tests {
     }
 
     #[test]
-    fn disabled_step_is_skipped_on_replay() {
+    async fn disabled_step_is_skipped_on_replay() {
         let mut session = ProcessKernelReplay::new();
         let mut scene = ProcessWorkingScene { stock: Stock { id: "stock".into(), label: "Stock".into(), solid: WorkingSolid::Box { width: 1.0, depth: 1.0, height: 1.0 }, pose: Pose::default() }, steps: Vec::new() };
         let stock_volume = session_volume(&mut session, &scene, None);
@@ -498,7 +498,7 @@ mod tests {
     }
 
     #[test]
-    fn cursor_zero_yields_stock_volume() {
+    async fn cursor_zero_yields_stock_volume() {
         let mut session = ProcessKernelReplay::new();
         let mut scene = ProcessWorkingScene { stock: Stock { id: "stock".into(), label: "Stock".into(), solid: WorkingSolid::Box { width: 1.0, depth: 1.0, height: 1.0 }, pose: Pose::default() }, steps: Vec::new() };
         let stock_volume = session_volume(&mut session, &scene, None);
@@ -508,7 +508,7 @@ mod tests {
     }
 
     #[test]
-    fn box_primitive_spans_from_local_origin_corner() {
+    async fn box_primitive_spans_from_local_origin_corner() {
         let mut kernel = Brep::new();
         let handle = semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::block_on(kernel.box_prim(2.0, 3.0, 4.0)).expect("box prim");
         let mesh = semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::block_on(kernel.tessellate(&handle, 0.1)).expect("tessellate");

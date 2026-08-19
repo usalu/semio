@@ -17,7 +17,7 @@ pub struct DagConfig {
 /// (ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE W1c) hands it to `register_document_app` for
 /// registration, mirroring the same construction the framework's closed catalog previously hardcoded
 /// for `s.dag.dag`.
-pub fn app_schema_descriptor() -> ::schema::AppSchemaDescriptor {
+pub async fn app_schema_descriptor() -> ::schema::AppSchemaDescriptor {
     ::schema::AppSchemaDescriptor {
         id: "s.dag.dag",
         config: ::schema::FacetLeaves {

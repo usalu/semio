@@ -31,7 +31,7 @@ pub type JsonPath = Vec<JsonPathSegment>;
 
 /// 🔎️ Read-only navigation of `path` from `root`, `None` on the first unresolvable segment
 /// (missing key, out-of-range index, or a segment applied to the wrong node kind).
-fn resolve<'a>(root: &'a JsonValue, path: &[JsonPathSegment]) -> Option<&'a JsonValue> {
+async fn resolve<'a>(root: &'a JsonValue, path: &[JsonPathSegment]) -> Option<&'a JsonValue> {
     let mut node = root;
     for segment in path {
         node = match (segment, node) {
@@ -93,7 +93,7 @@ pub enum JsonMutation {
 }
 
 impl Default for JsonMutation {
-    fn default() -> Self {
+    async fn default() -> Self {
         JsonMutation::NoMutation
     }
 }
@@ -103,11 +103,11 @@ impl Default for JsonMutation {
 /// 🧩 Lowers a leaf [`JsonValueDiff`] (addressing the node found at `path`) into the nested
 /// modified-chain matching the recipe's tree-nesting rule — no path addressing inside diffs
 /// themselves, only at the mutation level.
-fn diff_at_path(path: &[JsonPathSegment], leaf: Option<JsonValueDiff>) -> JsonDiff {
+async fn diff_at_path(path: &[JsonPathSegment], leaf: Option<JsonValueDiff>) -> JsonDiff {
     JsonDiff { value: leaf.map(|leaf| wrap_at_path(path, leaf)) }
 }
 
-fn wrap_at_path(path: &[JsonPathSegment], leaf: JsonValueDiff) -> JsonValueDiff {
+async fn wrap_at_path(path: &[JsonPathSegment], leaf: JsonValueDiff) -> JsonValueDiff {
     match path.split_first() {
         None => leaf,
         Some((JsonPathSegment::Key(key), rest)) => JsonValueDiff::Object { diff: JsonObjectDiff { removed: Vec::new(), added: Vec::new(), modified: vec![JsonObjectModified { key: key.clone(), diff: wrap_at_path(rest, leaf) }] } },
@@ -119,7 +119,7 @@ fn wrap_at_path(path: &[JsonPathSegment], leaf: JsonValueDiff) -> JsonValueDiff 
 //#region 🔖️Apply
 /// ▶️ Applies `mutation` to `snapshot`. The diff is the single semantics source: it's computed
 /// once from the pre-mutation state, applied to produce the new state, and returned.
-pub fn apply_json_mutation(snapshot: &mut JsonSnapshot, mutation: &JsonMutation) -> protocol::MutationOutcome<JsonDiff> {
+pub async fn apply_json_mutation(snapshot: &mut JsonSnapshot, mutation: &JsonMutation) -> protocol::MutationOutcome<JsonDiff> {
     let outcome = <JsonMutation as Mutation<JsonSnapshot>>::diff(mutation, snapshot);
     match MutationDiff::apply(outcome.diff(), snapshot) {
         Ok(next) => {
@@ -135,7 +135,7 @@ pub fn apply_json_mutation(snapshot: &mut JsonSnapshot, mutation: &JsonMutation)
 impl Mutation<JsonSnapshot> for JsonMutation {
     type Diff = JsonDiff;
 
-    fn diff(&self, base: &JsonSnapshot) -> protocol::MutationOutcome<Self::Diff> {
+    async fn diff(&self, base: &JsonSnapshot) -> protocol::MutationOutcome<Self::Diff> {
         protocol::MutationOutcome::new(match self {
             JsonMutation::NoMutation => JsonDiff::default(),
             JsonMutation::SetSnapshot { snapshot } => diff_set_snapshot(base, snapshot),
@@ -178,7 +178,7 @@ impl Mutation<JsonSnapshot> for JsonMutation {
     /// ↩️ Handcrafted mutation-level inverse, key/index-aware — reads the pre-mutation `base`
     /// state to recover the exact undo (e.g. `SetMember` on an existing key inverts to a
     /// `SetMember` restoring the OLD value; on a fresh key it inverts to `RemoveMember`).
-    fn inverse(&self, base: &JsonSnapshot) -> Vec<Self> {
+    async fn inverse(&self, base: &JsonSnapshot) -> Vec<Self> {
         match self {
             JsonMutation::NoMutation => vec![JsonMutation::NoMutation],
             JsonMutation::SetSnapshot { .. } => vec![JsonMutation::SetSnapshot { snapshot: base.clone() }],
@@ -240,13 +240,13 @@ impl Mutation<JsonSnapshot> for JsonMutation {
 /// (`hex_encode`/`enc_json_value`/`split_top_level`/...) rather than duplicating them a second
 /// time in this file. Grammar: `keyword arg=value ...` (space-separated, same shape the derive's
 /// own handcrafted-wrapper convention uses, `f6-recon-report.md` §2), one match arm per variant.
-fn enc_json_path_segment(seg: &JsonPathSegment) -> String {
+async fn enc_json_path_segment(seg: &JsonPathSegment) -> String {
     match seg {
         JsonPathSegment::Key(key) => format!("K[{}]", enc_str(key)),
         JsonPathSegment::Index(index) => format!("I[{index}]"),
     }
 }
-fn dec_json_path_segment(s: &str) -> Result<JsonPathSegment, String> {
+async fn dec_json_path_segment(s: &str) -> Result<JsonPathSegment, String> {
     let (tag, rest) = s.split_at(1);
     match tag {
         "K" => Ok(JsonPathSegment::Key(dec_str(strip_brackets(rest)?)?)),
@@ -254,22 +254,22 @@ fn dec_json_path_segment(s: &str) -> Result<JsonPathSegment, String> {
         other => Err(format!("json path segment: unknown tag {other:?}")),
     }
 }
-fn enc_json_path(p: &JsonPath) -> String {
+async fn enc_json_path(p: &JsonPath) -> String {
     format!("[{}]", p.iter().map(enc_json_path_segment).collect::<Vec<_>>().join(","))
 }
-fn dec_json_path(s: &str) -> Result<JsonPath, String> {
+async fn dec_json_path(s: &str) -> Result<JsonPath, String> {
     split_top_level(strip_brackets(s)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_json_path_segment).collect()
 }
-fn enc_json_snapshot(s: &JsonSnapshot) -> String {
+async fn enc_json_snapshot(s: &JsonSnapshot) -> String {
     format!("[{},{}]", enc_str(&s.schema), enc_json_value(&s.value))
 }
-fn dec_json_snapshot(s: &str) -> Result<JsonSnapshot, String> {
+async fn dec_json_snapshot(s: &str) -> Result<JsonSnapshot, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [schema, value] = parts.as_slice() else { return Err(format!("json snapshot: expected 2 fields, got {}", parts.len())) };
     Ok(JsonSnapshot { schema: dec_str(schema)?, value: dec_json_value(value)? })
 }
 
-fn print_json_mutation(m: &JsonMutation) -> String {
+async fn print_json_mutation(m: &JsonMutation) -> String {
     match m {
         JsonMutation::NoMutation => "no-mutation".to_string(),
         JsonMutation::SetSnapshot { snapshot } => format!("set-snapshot snapshot={}", enc_json_snapshot(snapshot)),
@@ -284,7 +284,7 @@ fn print_json_mutation(m: &JsonMutation) -> String {
         JsonMutation::SetScalar { path, value } => format!("set-scalar path={} value={}", enc_json_path(path), enc_json_value(value)),
     }
 }
-fn parse_json_mutation(line: &str) -> Result<JsonMutation, String> {
+async fn parse_json_mutation(line: &str) -> Result<JsonMutation, String> {
     if line == "no-mutation" {
         return Ok(JsonMutation::NoMutation);
     }
@@ -304,10 +304,10 @@ fn parse_json_mutation(line: &str) -> Result<JsonMutation, String> {
 }
 
 impl OpText for JsonMutation {
-    fn print_op(&self) -> String {
+    async fn print_op(&self) -> String {
         print_json_mutation(self)
     }
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
+    async fn parse_op(line: &str) -> Result<Self, store::TextError> {
         parse_json_mutation(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
 }
@@ -317,7 +317,7 @@ impl OpText for JsonMutation {
 /// [`enc_json_snapshot`]/[`dec_json_snapshot`] above, reusing `JsonDiff`'s `enc_json_value_bin`/
 /// `dec_json_value_bin`/`write_str_lp`/`read_str_lp` (see `../🔺️diff/🦀️component.rs`) — backs the
 /// upgraded `OpBinary` impl below. `JsonPathSegment` gets its own 1-byte tag (`0`=Key,`1`=Index).
-fn enc_json_path_bin(path: &[JsonPathSegment], out: &mut Vec<u8>) {
+async fn enc_json_path_bin(path: &[JsonPathSegment], out: &mut Vec<u8>) {
     store::pack_rt::write_varint_u64(out, path.len() as u64);
     for segment in path {
         match segment {
@@ -332,7 +332,7 @@ fn enc_json_path_bin(path: &[JsonPathSegment], out: &mut Vec<u8>) {
         }
     }
 }
-fn dec_json_path_bin(reader: &mut store::ByteReader<'_>) -> Result<JsonPath, String> {
+async fn dec_json_path_bin(reader: &mut store::ByteReader<'_>) -> Result<JsonPath, String> {
     let count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut path = Vec::with_capacity(count as usize);
     for _ in 0..count {
@@ -345,11 +345,11 @@ fn dec_json_path_bin(reader: &mut store::ByteReader<'_>) -> Result<JsonPath, Str
     }
     Ok(path)
 }
-fn enc_json_snapshot_bin(snapshot: &JsonSnapshot, out: &mut Vec<u8>) {
+async fn enc_json_snapshot_bin(snapshot: &JsonSnapshot, out: &mut Vec<u8>) {
     write_str_lp(out, &snapshot.schema);
     enc_json_value_bin(&snapshot.value, out);
 }
-fn dec_json_snapshot_bin(reader: &mut store::ByteReader<'_>) -> Result<JsonSnapshot, String> {
+async fn dec_json_snapshot_bin(reader: &mut store::ByteReader<'_>) -> Result<JsonSnapshot, String> {
     let schema = read_str_lp(reader)?;
     let value = dec_json_value_bin(reader)?;
     Ok(JsonSnapshot { schema, value })
@@ -362,7 +362,7 @@ fn dec_json_snapshot_bin(reader: &mut store::ByteReader<'_>) -> Result<JsonSnaps
 /// impls were still on that shortcut per the P2-W0 census). `tag` is the `JsonMutation` variant
 /// ordinal, in the same 0-6 order `print_json_mutation`'s own keyword match uses.
 impl protocol::OpBinary for JsonMutation {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         let tag: u8 = match self {
             JsonMutation::NoMutation => 0,
             JsonMutation::SetSnapshot { .. } => 1,
@@ -402,7 +402,7 @@ impl protocol::OpBinary for JsonMutation {
         Ok(out)
     }
 
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         let mut reader = store::ByteReader::new(bytes);
         let malformed = |what: &'static str, offset: usize, detail: String| protocol::ProtocolError::Malformed { what, offset: offset as u64, detail };
         let _format = reader.read_u8().map_err(|e| malformed("op format", 0, e.to_string()))?;
@@ -453,20 +453,20 @@ impl protocol::OpBinary for JsonMutation {
 /// `ops_grammar_conformance_law`/`protocol_walk_law` conformance tests, so a new variant only needs
 /// adding here once.
 #[cfg(test)]
-pub(crate) fn demo_mutation_cases() -> Vec<JsonMutation> {
+pub(crate) async fn demo_mutation_cases() -> Vec<JsonMutation> {
     use crate::artifacts::json::schema::snapshot::{JsonMember, JsonValue};
     use crate::artifacts::json::STDIO_JSON_DOCUMENT_SCHEMA;
 
-    fn objv(pairs: Vec<(&str, JsonValue)>) -> JsonValue {
+    async fn objv(pairs: Vec<(&str, JsonValue)>) -> JsonValue {
         JsonValue::Object { members: pairs.into_iter().map(|(k, v)| JsonMember { key: k.into(), value: v }).collect() }
     }
-    fn arr(items: Vec<JsonValue>) -> JsonValue {
+    async fn arr(items: Vec<JsonValue>) -> JsonValue {
         JsonValue::Array { items }
     }
-    fn str_(s: &str) -> JsonValue {
+    async fn str_(s: &str) -> JsonValue {
         JsonValue::String { value: s.into() }
     }
-    fn num(lexeme: &str) -> JsonValue {
+    async fn num(lexeme: &str) -> JsonValue {
         JsonValue::Number { lexeme: lexeme.into() }
     }
 
@@ -490,27 +490,27 @@ mod tests {
     use super::*;
     use crate::artifacts::json::STDIO_JSON_DOCUMENT_SCHEMA;
 
-    fn snap(value: JsonValue) -> JsonSnapshot {
+    async fn snap(value: JsonValue) -> JsonSnapshot {
         JsonSnapshot { schema: STDIO_JSON_DOCUMENT_SCHEMA.into(), value }
     }
 
-    fn objv(pairs: Vec<(&str, JsonValue)>) -> JsonValue {
+    async fn objv(pairs: Vec<(&str, JsonValue)>) -> JsonValue {
         JsonValue::Object { members: pairs.into_iter().map(|(k, v)| JsonMember { key: k.into(), value: v }).collect() }
     }
 
-    fn arr(items: Vec<JsonValue>) -> JsonValue {
+    async fn arr(items: Vec<JsonValue>) -> JsonValue {
         JsonValue::Array { items }
     }
 
-    fn num(lexeme: &str) -> JsonValue {
+    async fn num(lexeme: &str) -> JsonValue {
         JsonValue::Number { lexeme: lexeme.into() }
     }
 
-    fn str_(s: &str) -> JsonValue {
+    async fn str_(s: &str) -> JsonValue {
         JsonValue::String { value: s.into() }
     }
 
-    fn apply_and_check(base: &JsonSnapshot, mutation: JsonMutation) -> (JsonSnapshot, protocol::MutationOutcome<JsonDiff>) {
+    async fn apply_and_check(base: &JsonSnapshot, mutation: JsonMutation) -> (JsonSnapshot, protocol::MutationOutcome<JsonDiff>) {
         let mut via_apply = base.clone();
         let returned = apply_json_mutation(&mut via_apply, &mutation);
         let expected_diff = mutation.diff(base);
@@ -522,7 +522,7 @@ mod tests {
 
     //#region mutation_diff_law
     #[test]
-    fn mutation_diff_law_all_variants() {
+    async fn mutation_diff_law_all_variants() {
         let base = snap(objv(vec![("a", num("1")), ("list", arr(vec![num("1"), num("2")]))]));
 
         apply_and_check(&base, JsonMutation::NoMutation);
@@ -536,14 +536,14 @@ mod tests {
     }
 
     #[test]
-    fn set_member_on_missing_key_adds_at_end() {
+    async fn set_member_on_missing_key_adds_at_end() {
         let base = snap(objv(vec![("a", num("1"))]));
         let (result, _) = apply_and_check(&base, JsonMutation::SetMember { path: vec![], key: "b".into(), value: num("2") });
         assert_eq!(result.value, objv(vec![("a", num("1")), ("b", num("2"))]));
     }
 
     #[test]
-    fn remove_member_missing_key_is_noop() {
+    async fn remove_member_missing_key_is_noop() {
         let base = snap(objv(vec![("a", num("1"))]));
         let (result, diff) = apply_and_check(&base, JsonMutation::RemoveMember { path: vec![], key: "missing".into() });
         assert_eq!(result, base);
@@ -551,7 +551,7 @@ mod tests {
     }
 
     #[test]
-    fn nested_path_targets_inner_member() {
+    async fn nested_path_targets_inner_member() {
         let base = snap(objv(vec![("outer", objv(vec![("inner", num("1"))]))]));
         let (result, _) = apply_and_check(&base, JsonMutation::SetMember { path: vec![JsonPathSegment::Key("outer".into())], key: "inner".into(), value: num("42") });
         assert_eq!(result.value, objv(vec![("outer", objv(vec![("inner", num("42"))]))]));
@@ -560,7 +560,7 @@ mod tests {
 
     //#region inverse_law
     #[test]
-    fn inverse_law_mutation_level_round_trips() {
+    async fn inverse_law_mutation_level_round_trips() {
         let base = snap(objv(vec![("a", num("1")), ("list", arr(vec![num("1"), num("2")]))]));
         let mutations = vec![
             JsonMutation::SetMember { path: vec![], key: "a".into(), value: num("2") },
@@ -581,7 +581,7 @@ mod tests {
     }
 
     #[test]
-    fn inverse_law_diff_level_matches_mutation_diff() {
+    async fn inverse_law_diff_level_matches_mutation_diff() {
         let base = snap(objv(vec![("a", num("1"))]));
         let mutation = JsonMutation::SetMember { path: vec![], key: "a".into(), value: num("2") };
         let diff = mutation.diff(&base);
@@ -596,7 +596,7 @@ mod tests {
     /// exercises every variant, incl. nested/array/object payload values and a multi-segment
     /// `JsonPath` (mixing both `Key`/`Index` segment kinds).
     #[test]
-    fn op_text_binary_roundtrip_law() {
+    async fn op_text_binary_roundtrip_law() {
         use protocol::{OpBinary, OpText};
 
         for m in demo_mutation_cases() {

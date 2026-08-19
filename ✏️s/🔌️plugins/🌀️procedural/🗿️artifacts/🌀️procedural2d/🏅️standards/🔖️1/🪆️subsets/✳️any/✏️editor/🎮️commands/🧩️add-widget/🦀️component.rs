@@ -19,7 +19,7 @@ pub struct AddWidget {
 
 /// 🕹️ No longer auto-selects the newly-added widget — no `Emit` channel writes `graph`'s selection
 /// directly anymore (the framework owns it exclusively; ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM).
-pub fn handle(payload: &AddWidget, doc: &ArtifactView<'_, Procedural2dSnapshot>, _cfg: &ConfigView<'_, Procedural2dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural2dMutation, Procedural2dConfigMutation>, Fault> {
+pub async fn handle(payload: &AddWidget, doc: &ArtifactView<'_, Procedural2dSnapshot>, _cfg: &ConfigView<'_, Procedural2dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural2dMutation, Procedural2dConfigMutation>, Fault> {
     let fixture = &doc.snapshot.fixture;
     let descriptor = match payload.kind.as_str() {
         "neuron" => json!({ "kind": "neuron", "neuronKind": payload.neuron_kind.clone().unwrap_or_else(|| "math.add".into()) }).to_string(),
@@ -40,7 +40,7 @@ mod tests {
     use crate::editor::procedural2d::Procedural2dCommand;
 
     #[test]
-    fn add_widget_emits_op_and_grows_document() {
+    async fn add_widget_emits_op_and_grows_document() {
         let mut app = app();
         let before = app.snapshot().expect("snapshot").fixture.widgets.len();
         dispatch(&mut app, Procedural2dCommand::AddWidget(AddWidget { kind: "inputNote".into(), neuron_kind: None, x: None, y: None }));

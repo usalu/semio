@@ -20,7 +20,7 @@ struct CadComputersManifest {
     transformation_appliers: Vec<&'static str>,
 }
 
-fn computers_manifest() -> CadComputersManifest {
+async fn computers_manifest() -> CadComputersManifest {
     CadComputersManifest {
         model_definition_ids: vec!["spatial.shape"],
         stat_computers: vec!["spatial.shape.geometry"],
@@ -30,7 +30,7 @@ fn computers_manifest() -> CadComputersManifest {
     }
 }
 
-fn bundle() -> ExtensionBundle {
+async fn bundle() -> ExtensionBundle {
     ExtensionBundle::new(EXTENSION_ID, "CAD Spatial Shape", "0.1.0")
         .extends("cad")
         // 🚦️ `📓️design-abi.md` §5 — zero `.handler(…)`, never instantiated as an actor: this
@@ -57,7 +57,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn bundle_contributes_spatial_shape_for_cad_play() {
+    async fn bundle_contributes_spatial_shape_for_cad_play() {
         let manifest = bundle().manifest;
         assert_eq!(manifest.extends, "cad");
         assert_eq!(manifest.topic_contributions.len(), 1);

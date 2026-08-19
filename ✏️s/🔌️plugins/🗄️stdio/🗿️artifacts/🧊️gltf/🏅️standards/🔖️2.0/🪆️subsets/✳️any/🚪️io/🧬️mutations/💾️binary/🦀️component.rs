@@ -7,12 +7,12 @@ use crate::artifacts::gltf::schema::modules::mutation_dispatch::{validate_gltf_m
 
 const BINARY_MARKER: u8 = 0x47;
 
-fn malformed(offset: u64, detail: impl Into<String>) -> protocol::ProtocolError {
+async fn malformed(offset: u64, detail: impl Into<String>) -> protocol::ProtocolError {
     protocol::ProtocolError::Malformed { what: "GLTF mutation envelope", offset, detail: detail.into() }
 }
 
 impl protocol::OpBinary for GltfMutation {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         let envelope = self.envelope();
         validate_gltf_mutation_envelope(envelope).map_err(|error| malformed(0, error.to_string()))?;
         let mut writer = dsl::ByteWriter::new();
@@ -27,7 +27,7 @@ impl protocol::OpBinary for GltfMutation {
         Ok(writer.into_bytes())
     }
 
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         let mut reader = dsl::ByteReader::new(bytes);
         let format = reader.read_u8().map_err(|error| malformed(0, error.to_string()))?;
         if format != store::pack_rt::OP_BINARY_FORMAT {

@@ -24,12 +24,12 @@ pub mod derived_composition {
         type Snapshot = XlsxSnapshot;
         const WRITES: Dialect = DIALECT_TRANSITIONAL;
 
-        fn reads() -> &'static [Dialect] {
+        async fn reads() -> &'static [Dialect] {
             &[DIALECT_ANY, DIALECT_TRANSITIONAL, DEP_ZIP, DEP_XML]
         }
 
-        fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
-            let inner = XlsxAnyComposer::compose(sources)?;
+        async fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+            let inner = semio_framework_plugin::resolve_ready(XlsxAnyComposer::compose(sources))?;
             let checks = check_transitional_conformance(&inner.snapshot);
             let (hard, soft): (Vec<Diagnostic>, Vec<Diagnostic>) = checks.into_iter().partition(|d| matches!(d.severity, Severity::Error | Severity::Fatal));
             if !hard.is_empty() {
@@ -50,7 +50,7 @@ pub mod derived_composition {
     impl SubsetValidator for XlsxTransitionalValidator {
         const DIALECT: Dialect = DIALECT_TRANSITIONAL;
 
-        fn validate(payload: &IoPayload) -> Vec<Diagnostic> {
+        async fn validate(payload: &IoPayload) -> Vec<Diagnostic> {
             let decoded = match payload {
                 IoPayload::Binary(bytes) => <XlsxSnapshot as store::ArtifactPack>::decode_pack(bytes).ok(),
                 IoPayload::Text(text) => <XlsxSnapshot as store::ArtifactDsl>::parse_dsl(text).ok(),
@@ -71,7 +71,7 @@ pub mod derived_composition {
 
     static VALIDATOR_ENTRY: OnceLock<SubsetValidatorEntry> = OnceLock::new();
 
-    fn validator_entry() -> &'static SubsetValidatorEntry {
+    async fn validator_entry() -> &'static SubsetValidatorEntry {
         VALIDATOR_ENTRY.get_or_init(subset_validator_entry_of::<XlsxTransitionalValidator>)
     }
 
@@ -79,7 +79,7 @@ pub mod derived_composition {
     /// ecma-376 standard's own `⚙️engine::register()`. The `ComposerEntry` itself is registered
     /// separately by the standard-level composer aggregator
     /// (`crate::artifacts::xlsx::standards::v_ecma_376::engine::io_registry::entries()`).
-    pub fn register() {
+    pub async fn register() {
         let _ = register_subset_validator(validator_entry());
     }
     //#endregion 🔖️SubsetValidator
@@ -93,7 +93,7 @@ pub mod derived_composition {
         use semio_framework_plugin::{AnalyzeSource, ArtifactBuilder as _};
 
         #[test]
-        fn conforming_builder_snapshot_composes_and_stamps_transitional() {
+        async fn conforming_builder_snapshot_composes_and_stamps_transitional() {
             let snapshot = XlsxTransitionalBuilder::new(XlsxWorkbook::default()).build().expect("conforming transitional construction must build");
             let bytes = <XlsxSnapshot as store::ArtifactPack>::encode_pack(&snapshot);
             let sources = vec![ComposeSource { dialect: DIALECT_ANY, payload: AnalyzeSource::Binary(&bytes) }];
@@ -102,7 +102,7 @@ pub mod derived_composition {
         }
 
         #[test]
-        fn strict_shaped_document_fails_compose_with_real_diagnostic() {
+        async fn strict_shaped_document_fails_compose_with_real_diagnostic() {
             // ⚠️ `ArtifactPack::encode_pack` (-> `⚙️engine::encode_xlsx`) regenerates workbook.xml as
             // Transitional-shaped on every call (documented writer scope cut, see ✳️strict's composer
             // module doc comment) -- so to genuinely exercise a Strict-shaped payload here, feed the

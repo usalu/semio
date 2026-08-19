@@ -3,6 +3,6 @@ use crate::artifacts::ply::PlySnapshot;
 use protocol::Mutation;
 
 /// ↩️ Inverse of set-snapshot.
-pub fn inverse(base: &PlySnapshot, mutation: &PlyMutation) -> Vec<PlyMutation> {
+pub async fn inverse(base: &PlySnapshot, mutation: &PlyMutation) -> Vec<PlyMutation> {
     <PlyMutation as Mutation<PlySnapshot>>::inverse(mutation, base)
 }

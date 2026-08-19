@@ -20,7 +20,7 @@ const DANCING_GIF_BYTES: &[u8] = include_bytes!("../🖼️assets/🖼️dancing
 /// extension (confirmed via independent byte-level inspection: `Some(0)`, infinite loop), and at
 /// least one frame has a non-zero delay.
 #[test]
-fn decodes_real_fixture_with_nontrivial_invariants() {
+async fn decodes_real_fixture_with_nontrivial_invariants() {
     let snapshot = decode_gif(DANCING_GIF_BYTES).expect("dancing.gif must decode via the real 89a codec");
     assert!(snapshot.frames.len() > 1, "dancing.gif is animated, must decode to more than one frame");
     assert_eq!(snapshot.width, 800);
@@ -36,7 +36,7 @@ fn decodes_real_fixture_with_nontrivial_invariants() {
 /// 🧪️ (b) decode→encode→decode snapshot equality — the fixtures-section acceptance bar (model
 /// equality after a second round trip, not necessarily byte-identical GIF output).
 #[test]
-fn decode_encode_decode_round_trip_is_stable() {
+async fn decode_encode_decode_round_trip_is_stable() {
     let once = decode_gif(DANCING_GIF_BYTES).expect("first decode");
     let reencoded = encode_gif(&once).expect("re-encode decoded snapshot");
     let twice = decode_gif(&reencoded).expect("second decode");
@@ -48,7 +48,7 @@ fn decode_encode_decode_round_trip_is_stable() {
 /// document -- never `from_snapshot`/`SetSnapshot` as a shortcut -- then the two REAL
 /// `GifAnalyzer::analyze` outputs (original fixture vs. rebuilt-then-re-encoded) must match.
 #[test]
-fn analyzer_builder_round_trip_matches() {
+async fn analyzer_builder_round_trip_matches() {
     let original = decode_gif(DANCING_GIF_BYTES).expect("decode real fixture");
     let packed_original = <GifSnapshot as store::ArtifactPack>::encode_pack(&original);
     let analysis_a = GifAnalyzer::analyze(&[AnalyzeSource::Binary(&packed_original)]);
@@ -78,7 +78,7 @@ fn analyzer_builder_round_trip_matches() {
 /// 🧪️ (d) `infer` on the real animated fixture is deterministic — two calls over the same
 /// decoded snapshot produce byte-equal results.
 #[test]
-fn inference_determinism_law() {
+async fn inference_determinism_law() {
     let snapshot = decode_gif(DANCING_GIF_BYTES).expect("decode real fixture");
     assert_eq!(GifInference::infer(&snapshot), GifInference::infer(&snapshot));
 }
@@ -86,7 +86,7 @@ fn inference_determinism_law() {
 /// 🧪️ (e) `infer(&GifSnapshot::default())` matches `GifInference::default()` — the hand-written
 /// `Default` impl (`💡️inferences/🦀️component.rs`) must stay in lockstep with `infer` itself.
 #[test]
-fn inference_default_law() {
+async fn inference_default_law() {
     assert_eq!(GifInference::infer(&GifSnapshot::default()), GifInference::default());
 }
 
@@ -94,7 +94,7 @@ fn inference_default_law() {
 /// geometry `decodes_real_fixture_with_nontrivial_invariants` above already asserts, plus
 /// `hasAlpha` agreeing exactly with a direct scan of every frame's `transparent_index`.
 #[test]
-fn dimensions_matches_real_fixture_geometry() {
+async fn dimensions_matches_real_fixture_geometry() {
     let snapshot = decode_gif(DANCING_GIF_BYTES).expect("decode real fixture");
     let inferred = GifInference::infer(&snapshot);
     assert_eq!(inferred.dimensions.width, 800);

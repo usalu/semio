@@ -28,7 +28,7 @@ const INTO_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.dwg", standard: 
 const DWG_CODEC_VERSION: &str = "AC1015";
 
 //#region 🔖️SegmentMap
-fn path_segment_to_dwg(segment: &PathSegment) -> DwgPathSegment {
+async fn path_segment_to_dwg(segment: &PathSegment) -> DwgPathSegment {
     match *segment {
         PathSegment::MoveTo { to } => DwgPathSegment::Move { to: [to.x, to.y] },
         PathSegment::LineTo { to } => DwgPathSegment::Line { to: [to.x, to.y] },
@@ -41,7 +41,7 @@ fn path_segment_to_dwg(segment: &PathSegment) -> DwgPathSegment {
 //#endregion 🔖️SegmentMap
 
 //#region 🔖️Walk
-fn collect_node(node: &DrawNode, paths: &mut Vec<Vec<DwgPathSegment>>, texts: &mut Vec<(SemioPoint2, String)>) {
+async fn collect_node(node: &DrawNode, paths: &mut Vec<Vec<DwgPathSegment>>, texts: &mut Vec<(SemioPoint2, String)>) {
     match node {
         DrawNode::Group { children, .. } => {
             for child in children {
@@ -103,7 +103,7 @@ mod tests {
     use crate::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::DrawLayer;
     use semio_framework_plugin::ArtifactDeserializer;
 
-    fn sample_drawing() -> SemioDrawingSnapshot {
+    async fn sample_drawing() -> SemioDrawingSnapshot {
         SemioDrawingSnapshot {
             layers: vec![DrawLayer {
                 id: "0".into(),
@@ -122,11 +122,11 @@ mod tests {
     }
 
     #[test]
-    fn real_round_trip_through_relocated_dwg_codec() {
+    async fn real_round_trip_through_relocated_dwg_codec() {
         let drawing = sample_drawing();
         let dwg = semio_framework_plugin::resolve_ready(SemioDrawingToDwg::serialize(&drawing)).expect("serialize");
         assert_eq!(dwg.version, DWG_CODEC_VERSION);
-        let round_tripped = SemioDrawingFromDwg::deserialize(&dwg).expect("deserialize");
+        let round_tripped = semio_framework_plugin::resolve_ready(SemioDrawingFromDwg::deserialize(&dwg)).expect("deserialize");
         assert_eq!(round_tripped.layers.len(), 1);
         match &round_tripped.layers[0].root {
             DrawNode::Group { children, .. } => {

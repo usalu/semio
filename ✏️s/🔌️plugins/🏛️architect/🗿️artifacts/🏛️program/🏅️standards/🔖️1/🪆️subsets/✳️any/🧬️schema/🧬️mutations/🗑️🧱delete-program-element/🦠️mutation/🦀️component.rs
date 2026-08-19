@@ -18,16 +18,16 @@ pub struct DeleteProgramElement {
 }
 impl MutationKind<ProgramSnapshot, ProgramMutation> for DeleteProgramElement {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "delete", entity: "program-element", kind: "delete-program-element", record: "DeletedProgramElement" };
-    fn diff(&self, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
+    async fn diff(&self, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {
+    async fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         format!("Delete program element \"{}\"", self.id.0)
     }
-    fn target(&self) -> Vec<String> {
+    async fn target(&self) -> Vec<String> {
         vec![self.id.0.clone()]
     }
 }

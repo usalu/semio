@@ -18,16 +18,16 @@ pub struct CreateResilienceRequirement {
 }
 impl MutationKind<ProgramSnapshot, ProgramMutation> for CreateResilienceRequirement {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "create", entity: "resilience-requirement", kind: "create-resilience-requirement", record: "CreatedResilienceRequirement" };
-    fn diff(&self, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
+    async fn diff(&self, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {
+    async fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         format!("Create resilience requirement \"{}\"", self.resilience_requirement.header.name)
     }
-    fn target(&self) -> Vec<String> {
+    async fn target(&self) -> Vec<String> {
         vec![self.resilience_requirement.header.id.0.clone()]
     }
 }

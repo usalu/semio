@@ -15,12 +15,12 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 use crate::artifacts::remodel::RemodelSnapshot;
 
 /// 📖️ Parses `.remodel` DSL text into a `RemodelSnapshot`.
-pub fn parse_dsl(text: &str) -> Result<RemodelSnapshot, store::TextError> {
+pub async fn parse_dsl(text: &str) -> Result<RemodelSnapshot, store::TextError> {
     <RemodelSnapshot as store::ArtifactDsl>::parse_dsl(text)
 }
 
 /// 🖨️ Prints a `RemodelSnapshot` back to `.remodel` DSL text.
-pub fn print_dsl(scene: &RemodelSnapshot) -> String {
+pub async fn print_dsl(scene: &RemodelSnapshot) -> String {
     store::ArtifactDsl::print_dsl(scene)
 }
 
@@ -35,7 +35,7 @@ mod tests {
 
     /// 🏗️ Verbatim duplicate of the `rs` crate's own private test-only fixture builder — see that
     /// crate's `populated_scene_fixture` doc comment for why this is copied rather than shared.
-    fn populated_scene_fixture() -> RemodelSnapshot {
+    async fn populated_scene_fixture() -> RemodelSnapshot {
         let mut scene = default_remodel_scene();
         scene.streams.push(MediaStream {
             id: "stream-1".into(),
@@ -119,12 +119,12 @@ mod tests {
     }
 
     #[test]
-    fn default_scene_roundtrips_through_dsl() {
+    async fn default_scene_roundtrips_through_dsl() {
         store::os_store::test_support::assert_dsl_round_trip(&default_remodel_scene());
     }
 
     #[test]
-    fn populated_scene_roundtrips_through_dsl() {
+    async fn populated_scene_roundtrips_through_dsl() {
         store::os_store::test_support::assert_dsl_round_trip(&populated_scene_fixture());
     }
 }

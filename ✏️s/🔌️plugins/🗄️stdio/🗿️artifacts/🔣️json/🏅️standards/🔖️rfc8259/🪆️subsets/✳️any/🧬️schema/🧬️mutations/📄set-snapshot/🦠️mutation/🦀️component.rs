@@ -2,6 +2,6 @@ use crate::artifacts::json::schema::mutations::{apply_json_mutation, JsonMutatio
 use crate::artifacts::json::JsonSnapshot;
 
 /// ▶️ Applies a set-snapshot mutation.
-pub fn apply(projection: &mut JsonSnapshot, mutation: &JsonMutation) {
+pub async fn apply(projection: &mut JsonSnapshot, mutation: &JsonMutation) {
     apply_json_mutation(projection, mutation);
 }

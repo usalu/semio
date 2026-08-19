@@ -18,7 +18,7 @@ pub const BLOCK3D_BODY_WORLD: &str = "block3d.play.world";
 /// 🧱️ Stitched into the app manifest by `crate::editor::block3d::create_block3d_app`. `options.measures`
 /// stays empty here on purpose: block3d's measures are config-derived and rebuilt per frame by
 /// [`window_measures`], not frozen into the manifest.
-pub fn definition() -> WindowKindDefinition {
+pub async fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
         id: BLOCK3D_WINDOW_WORLD.into(),
         label: LocalizedLabel::native("Object Kind", "Objektart"),
@@ -38,7 +38,7 @@ pub fn definition() -> WindowKindDefinition {
 }
 
 /// 🎚️ The live chrome measures for this window, collected from its `🎚️options/*` components.
-pub fn window_measures(definition: &Block3dSnapshot, config: &Block3dConfig, window_id: &str, labels: &Block3dLabels) -> Vec<WindowMeasure> {
+pub async fn window_measures(definition: &Block3dSnapshot, config: &Block3dConfig, window_id: &str, labels: &Block3dLabels) -> Vec<WindowMeasure> {
     vec![
         representations::measure(definition, config, window_id, labels),
         quick_representation::measure(definition, config, window_id, labels),
@@ -50,7 +50,7 @@ pub fn window_measures(definition: &Block3dSnapshot, config: &Block3dConfig, win
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(definition: &Block3dSnapshot, config: &Block3dConfig, window_id: &str) -> UiNode {
+pub async fn render(definition: &Block3dSnapshot, config: &Block3dConfig, window_id: &str) -> UiNode {
     let view = block3d_window_view(config, window_id);
     let visible = visible_representations(definition, &view);
     let scene = world3d_scene_extended(
@@ -90,7 +90,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn definition_declares_the_world_surface_and_body_key() {
+    async fn definition_declares_the_world_surface_and_body_key() {
         let definition = definition();
         assert_eq!(definition.body_key, BLOCK3D_BODY_WORLD);
         assert!(matches!(definition.surface_kind, SurfaceKind::World3d));

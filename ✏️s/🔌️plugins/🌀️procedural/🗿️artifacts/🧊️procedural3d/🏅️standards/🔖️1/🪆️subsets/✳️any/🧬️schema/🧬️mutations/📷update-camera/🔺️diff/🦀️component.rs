@@ -7,7 +7,7 @@ use crate::artifacts::procedural3d::Procedural3dSnapshot;
 
 /// 🏗️ Builds the sparse fixture delta touching only the camera field. Whole-artifact scope — there
 /// is exactly one camera, so no missing-target case exists here.
-pub fn diff(payload: &UpdateCamera, base: &Procedural3dSnapshot) -> protocol::MutationOutcome<Procedural3dDiff> {
+pub async fn diff(payload: &UpdateCamera, base: &Procedural3dSnapshot) -> protocol::MutationOutcome<Procedural3dDiff> {
     if !payload.camera.x.is_finite() || !payload.camera.y.is_finite() || !payload.camera.zoom.is_finite() {
         return protocol::MutationOutcome::fatal("mutation.invariant", "Camera position or zoom is not finite.", Vec::<String>::new());
     }

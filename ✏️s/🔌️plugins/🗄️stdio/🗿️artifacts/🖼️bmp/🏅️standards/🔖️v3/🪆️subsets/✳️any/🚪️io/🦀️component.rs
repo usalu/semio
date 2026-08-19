@@ -15,11 +15,11 @@ pub mod derived_composition {
         type Snapshot = BmpSnapshot;
         const WRITES: Dialect = DIALECT;
 
-        fn reads() -> &'static [Dialect] {
+        async fn reads() -> &'static [Dialect] {
             &[DIALECT, DEP_BINARY]
         }
 
-        fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+        async fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
             // 🌱 Every listed read dialect's payload is raw text/bytes that this artifact's own
             // analyzer already round-trips through `store::Document{Dsl,Pack}` -- including bytes
             // claiming a dependency's dialect, since (for a single-standard DAG-adjacent dependency
@@ -68,13 +68,13 @@ use crate::artifacts::bmp::{BmpMutation, BmpSnapshot, STDIO_BMP_DOCUMENT_SCHEMA}
 //#region ByteIo
 const BMP_MAGIC: [u8; 2] = *b"BM";
 
-fn read_u16(b: &[u8], pos: usize) -> Result<u16, String> {
+async fn read_u16(b: &[u8], pos: usize) -> Result<u16, String> {
     b.get(pos..pos + 2).map(|s| u16::from_le_bytes([s[0], s[1]])).ok_or_else(|| "bmp: truncated (u16)".into())
 }
-fn read_u32(b: &[u8], pos: usize) -> Result<u32, String> {
+async fn read_u32(b: &[u8], pos: usize) -> Result<u32, String> {
     b.get(pos..pos + 4).map(|s| u32::from_le_bytes([s[0], s[1], s[2], s[3]])).ok_or_else(|| "bmp: truncated (u32)".into())
 }
-fn read_i32(b: &[u8], pos: usize) -> Result<i32, String> {
+async fn read_i32(b: &[u8], pos: usize) -> Result<i32, String> {
     b.get(pos..pos + 4).map(|s| i32::from_le_bytes([s[0], s[1], s[2], s[3]])).ok_or_else(|| "bmp: truncated (i32)".into())
 }
 //#endregion ByteIo
@@ -82,14 +82,14 @@ fn read_i32(b: &[u8], pos: usize) -> Result<i32, String> {
 //#region RowGeometry
 /// 📏 BMP scanlines are padded to a 4-byte boundary: `((width*bpp + 31) / 32) * 4`. `pub(crate)`
 /// so `../🧬️schema`'s own `demo_bmp_snapshot()` can compute a real `image_size`.
-pub(crate) fn row_bytes(width: u32, bpp: u16) -> usize {
+pub(crate) async fn row_bytes(width: u32, bpp: u16) -> usize {
     (((width as usize * bpp as usize) + 31) / 32) * 4
 }
 //#endregion RowGeometry
 
 //#region Bitfields
 /// 🧮 `(shift, bit-width)` of a contiguous bitfield mask, used to extract+normalize a channel.
-fn mask_shift_width(mask: u32) -> (u32, u32) {
+async fn mask_shift_width(mask: u32) -> (u32, u32) {
     if mask == 0 {
         return (0, 0);
     }
@@ -98,7 +98,7 @@ fn mask_shift_width(mask: u32) -> (u32, u32) {
     (shift, width)
 }
 
-fn extract_channel(raw: u32, mask: u32) -> u8 {
+async fn extract_channel(raw: u32, mask: u32) -> u8 {
     let (shift, width) = mask_shift_width(mask);
     if width == 0 {
         return 0;
@@ -114,7 +114,7 @@ fn extract_channel(raw: u32, mask: u32) -> u8 {
 //#endregion Bitfields
 
 //#region IndexUnpack
-fn unpack_index(row: &[u8], x: usize, bpp: u16) -> usize {
+async fn unpack_index(row: &[u8], x: usize, bpp: u16) -> usize {
     match bpp {
         8 => row[x] as usize,
         4 => {
@@ -136,7 +136,7 @@ fn unpack_index(row: &[u8], x: usize, bpp: u16) -> usize {
 //#endregion IndexUnpack
 
 //#region Codec
-pub fn decode_bmp(bytes: &[u8]) -> Result<BmpSnapshot, String> {
+pub async fn decode_bmp(bytes: &[u8]) -> Result<BmpSnapshot, String> {
     if bytes.len() < 14 || bytes[0..2] != BMP_MAGIC {
         return Err("bmp: bad signature".into());
     }
@@ -332,7 +332,7 @@ pub fn decode_bmp(bytes: &[u8]) -> Result<BmpSnapshot, String> {
 /// metadata simply doesn't apply to this encode target). A real implementation could reasonably
 /// restrict *encode* to 24/32-bit only while *decode* covers every depth, which is exactly the
 /// scope cut made here.
-pub fn encode_bmp(snap: &BmpSnapshot) -> Result<Vec<u8>, String> {
+pub async fn encode_bmp(snap: &BmpSnapshot) -> Result<Vec<u8>, String> {
     let (w, h) = (snap.width, snap.height);
     let expected = w as usize * h as usize * 4;
     if snap.pixels.len() != expected {
@@ -383,7 +383,7 @@ pub fn encode_bmp(snap: &BmpSnapshot) -> Result<Vec<u8>, String> {
 
 //#region 🔖️Register
 /// 🗂️ Registers codecs and the artifact schema descriptor.
-pub fn register() {
+pub async fn register() {
     crate::artifacts::bmp::io_registry::register();
     register_artifact_schema();
     register_artifact_inferences();
@@ -404,18 +404,18 @@ pub fn register() {
 /// (`dsl::DslOps` gives per-variant specs via `DslVariants`, no single canonical id to register
 /// under — `register-schema-spec-one-spec-per-artifact`, this ticket's own recipe §5).
 #[cfg(not(target_arch = "wasm32"))]
-pub fn register_schema_specs() {
+pub async fn register_schema_specs() {
     dsl::registry::register_schema_spec("stdio.bmp", BmpSnapshot::__dsl_spec);
     dsl::registry::register_schema_spec("stdio.bmp#diff", crate::artifacts::bmp::schema::diff::BmpDiff::__dsl_diff_spec);
 }
 
 #[cfg(target_arch = "wasm32")]
-pub fn register_schema_specs() {}
+pub async fn register_schema_specs() {}
 
 /// 📌️ Registers the full 5-role `LanguageSpec` set (Document/Ops/Diff/Pack/Spr — this ticket's
 /// own recipe §4 checklist item, json's own exemplar shape) for handcrafted facet grammars
 /// (text) and protocols (binary) — was a single Document-only registration before this wave.
-pub fn register_pilot_languages() {
+pub async fn register_pilot_languages() {
     dsl::register_language(dsl::LanguageSpec {
         id: "stdio.bmp",
         extension: Some("bmp"),
@@ -473,14 +473,14 @@ pub fn register_pilot_languages() {
 }
 
 /// 📌️ Registers schema leaves for `s.stdio.bmp`.
-pub fn register_artifact_schema() {
+pub async fn register_artifact_schema() {
     ::schema::register_artifact_schema_descriptor(crate::artifacts::bmp::schema::bmp_artifact_schema_descriptor());
 }
 
 /// 💡️ Registers `s.stdio.bmp.inference`'s facet leaves into the OS-wide inference catalog —
 /// sibling to `register_artifact_schema()` above (separate registry, ticket
 /// 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING).
-pub fn register_artifact_inferences() {
+pub async fn register_artifact_inferences() {
     ::schema::register_artifact_inference_descriptor(crate::artifacts::bmp::standards::v_v3::subsets::any::schema::inferences::bmp_artifact_inference_descriptor());
 }
 //#endregion 🔖️Register
@@ -491,7 +491,7 @@ mod tests {
     use super::*;
     use crate::artifacts::bmp::schema::{demo_bmp_snapshot, empty_bmp_snapshot};
 
-    fn gradient_checkerboard_rgba(w: u32, h: u32) -> Vec<u8> {
+    async fn gradient_checkerboard_rgba(w: u32, h: u32) -> Vec<u8> {
         let mut out = Vec::with_capacity((w * h * 4) as usize);
         for y in 0..h {
             for x in 0..w {
@@ -503,13 +503,13 @@ mod tests {
     }
 
     #[test]
-    fn empty_snapshot_matches_schema() {
+    async fn empty_snapshot_matches_schema() {
         let snapshot = empty_bmp_snapshot();
         assert_eq!(snapshot.schema, STDIO_BMP_DOCUMENT_SCHEMA);
     }
 
     #[test]
-    fn codec_round_trip() {
+    async fn codec_round_trip() {
         let snap = empty_bmp_snapshot();
         let text = store::ArtifactDsl::print_dsl(&snap);
         let parsed = <BmpSnapshot as store::ArtifactDsl>::parse_dsl(&text).expect("parse");
@@ -523,7 +523,7 @@ mod tests {
     /// 🔬 width=5 at 24bpp is 15 raw bytes/row, padded to 16 — a width that divides evenly would
     /// not catch a broken padding formula.
     #[test]
-    fn row_bytes_padding_is_exact() {
+    async fn row_bytes_padding_is_exact() {
         assert_eq!(row_bytes(5, 24), 16);
         assert_eq!(row_bytes(4, 24), 12);
         assert_eq!(row_bytes(1, 1), 4);
@@ -539,7 +539,7 @@ mod tests {
     /// BI_RGB encode+decode, width chosen so raw row bytes (18) is NOT a multiple of 4 —
     /// exercises row padding on both the encode and decode sides.
     #[test]
-    fn gradient_checkerboard_24bit_round_trip() {
+    async fn gradient_checkerboard_24bit_round_trip() {
         let (w, h) = (6u32, 4u32);
         let pixels = gradient_checkerboard_rgba(w, h);
         let snap = BmpSnapshot { width: w, height: h, pixels: pixels.clone(), ..BmpSnapshot::default() };
@@ -557,7 +557,7 @@ mod tests {
     /// 🧪 Hand-encodes a 4-bit indexed (16-color-capable, 4 used) BMP with a non-trivial
     /// checkerboard-ish index pattern and asserts `decode_bmp` reconstructs the exact palette
     /// colors — proves palette lookup + sub-byte (nibble) unpacking + bottom-up row order.
-    fn hand_encode_indexed(width: u32, height: u32, bpp: u16, palette: &[[u8; 4]], indices: &[Vec<usize>]) -> Vec<u8> {
+    async fn hand_encode_indexed(width: u32, height: u32, bpp: u16, palette: &[[u8; 4]], indices: &[Vec<usize>]) -> Vec<u8> {
         let rb = row_bytes(width, bpp);
         let palette_bytes = palette.len() * 4;
         let data_offset = 14 + 40 + palette_bytes;
@@ -611,7 +611,7 @@ mod tests {
     }
 
     #[test]
-    fn indexed_4bit_palette_round_trip() {
+    async fn indexed_4bit_palette_round_trip() {
         // 5x3 image (row_bytes(5,4) = 4, NOT equal to raw 5*4bits/8=2.5->3 bytes — exercises padding),
         // palette of 4 colors, non-trivial (non-solid) index pattern.
         let palette = [
@@ -654,7 +654,7 @@ mod tests {
     /// 🧪 Hand-encodes a 16-bit `BI_BITFIELDS` (5-5-5) BMP and checks the classic "count
     /// trailing zeros then scale by mask bit-width" extraction is exact for known values.
     #[test]
-    fn bitfields_16bit_555_round_trip() {
+    async fn bitfields_16bit_555_round_trip() {
         let (w, h) = (4u32, 2u32);
         // masks: R=0x7C00 G=0x03E0 B=0x001F, no alpha
         let r_mask = 0x7C00u32;
@@ -708,7 +708,7 @@ mod tests {
     //#endregion BitfieldsFixture
 
     #[test]
-    fn sniff_rejects_non_bmp_bytes() {
+    async fn sniff_rejects_non_bmp_bytes() {
         let err = decode_bmp(b"not a bmp at all").unwrap_err();
         assert!(err.contains("signature"));
     }
@@ -720,7 +720,7 @@ mod tests {
     /// EncodeScopeNote normalization (`header_size`→40, `planes`→1, `bits_per_pixel`→24,
     /// `compression`→0) is asserted explicitly rather than silently ignored.
     #[test]
-    fn codec_retention_law() {
+    async fn codec_retention_law() {
         let (w, h) = (6u32, 4u32);
         let pixels = gradient_checkerboard_rgba(w, h);
 
@@ -773,7 +773,7 @@ mod tests {
         /// `recognize`/`walk_protocol` laws below (a parse failure here fails fast with a
         /// clearer message).
         #[test]
-        fn committed_facet_files_parse() {
+        async fn committed_facet_files_parse() {
             for (label, text) in [("snapshot grammar", snapshot::text::COMPONENT_GRAMMAR_SEMIO), ("mutations grammar", mutations::text::COMPONENT_GRAMMAR_SEMIO), ("diff grammar", diff::text::COMPONENT_GRAMMAR_SEMIO)] {
                 let grammar = dsl::parse_grammar(text).unwrap_or_else(|e| panic!("{label}: parse_grammar failed: {e:?}"));
                 assert_eq!(grammar.dialect, dsl::SemioDialect::Grammar, "{label}: expected grammar dialect");
@@ -790,7 +790,7 @@ mod tests {
         /// uses, so this is a direct proof this artifact will pass that harness once
         /// graduated, not merely an analogue.
         #[test]
-        fn grammar_conformance_law() {
+        async fn grammar_conformance_law() {
             let grammar = dsl::parse_grammar(snapshot::text::COMPONENT_GRAMMAR_SEMIO).expect("parse snapshot grammar");
             let recognizer = dsl::Recognizer::compile(&grammar);
             let text = store::ArtifactDsl::print_dsl(&demo_bmp_snapshot());
@@ -802,7 +802,7 @@ mod tests {
         /// ✅️ `ops_grammar_conformance_law`: the mutations grammar recognizes real `print_op`
         /// output for every `BmpMutation` variant (`mutations::demo_mutation_cases()`).
         #[test]
-        fn ops_grammar_conformance_law() {
+        async fn ops_grammar_conformance_law() {
             let grammar = dsl::parse_grammar(mutations::text::COMPONENT_GRAMMAR_SEMIO).expect("parse mutations grammar");
             let recognizer = dsl::Recognizer::compile(&grammar);
             for mutation in mutations::demo_mutation_cases() {
@@ -815,7 +815,7 @@ mod tests {
         /// output for every representative `BmpDiff` (`diff::demo_diff_cases()`), incl. the
         /// empty diff and every collection-triple shape.
         #[test]
-        fn diff_grammar_conformance_law() {
+        async fn diff_grammar_conformance_law() {
             let grammar = dsl::parse_grammar(diff::text::COMPONENT_GRAMMAR_SEMIO).expect("parse diff grammar");
             let recognizer = dsl::Recognizer::compile(&grammar);
             for d in diff::demo_diff_cases() {
@@ -830,7 +830,7 @@ mod tests {
         /// mutation's `encode_op`, and every demo diff's `encode_diff` — asserting `consumed
         /// == bytes.len()`.
         #[test]
-        fn protocol_walk_law() {
+        async fn protocol_walk_law() {
             let pack_spec = dsl::parse_protocol(snapshot::binary::COMPONENT_PROTOCOL_SEMIO).expect("parse snapshot protocol");
             let packed = store::ArtifactPack::encode_pack(&demo_bmp_snapshot());
             let (_, inner) = store::semio_format::unwrap_binary(&packed).expect("unwrap semio envelope");
@@ -859,7 +859,7 @@ mod tests {
         /// pre-this-wave committed fixture WAS a fake "hello" placeholder — see
         /// `demo_bmp_snapshot`'s own doc comment).
         #[test]
-        fn fixture_honesty_law() {
+        async fn fixture_honesty_law() {
             const FIXTURE_DSL: &str = include_str!("../📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio");
             const FIXTURE_PACK: &[u8] = include_bytes!("../📚️examples/🎬️demo/🖼️assets/🎒️example.pack.semio");
 
@@ -879,7 +879,7 @@ mod tests {
         /// called (real `BmpSnapshot::__dsl_spec`/`BmpDiff::__dsl_diff_spec`, not fabricated).
         #[test]
         #[cfg(not(target_arch = "wasm32"))]
-        fn schema_spec_registration_resolves() {
+        async fn schema_spec_registration_resolves() {
             use dsl::os_pack::cli::SchemaResolver;
             register_schema_specs();
             let resolver = dsl::registry::full_resolver();
@@ -899,7 +899,7 @@ pub mod io_registry {
 
     static ENTRIES: OnceLock<Vec<ComposerEntry>> = OnceLock::new();
 
-    pub fn entries() -> &'static [ComposerEntry] {
+    pub async fn entries() -> &'static [ComposerEntry] {
         ENTRIES.get_or_init(|| vec![composer_entry_of::<BmpRawAnyComposer>()]).as_slice()
     }
 }

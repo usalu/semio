@@ -55,7 +55,7 @@ enum En1999MutationDsl {
 //#region 🔖️HandcraftedOpCodecs
 /// ⚡️ P6 handcrafted OpText/OpBinary (derive no longer emits these traits).
 impl OpText for En1999MutationDsl {
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
+    async fn parse_op(line: &str) -> Result<Self, store::TextError> {
         let variants = <Self as dsl::DslVariants>::variants();
         for (keyword, spec_fn) in &variants {
             let probe = format!("{} ", keyword);
@@ -66,7 +66,7 @@ impl OpText for En1999MutationDsl {
         }
         Err(dsl::__rt::field_error(format!("unknown mutation line '{line}'")))
     }
-    fn print_op(&self) -> String {
+    async fn print_op(&self) -> String {
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
         let variants = <Self as dsl::DslVariants>::variants();
         let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
@@ -75,16 +75,16 @@ impl OpText for En1999MutationDsl {
 }
 
 impl protocol::OpBinary for En1999MutationDsl {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         dsl::variants_binary::encode_op(self)
     }
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         dsl::variants_binary::decode_op(bytes)
     }
 }
 //#endregion 🔖️HandcraftedOpCodecs
 
-fn en1999_mutation_to_dsl(mutation: &En1999Mutation) -> En1999MutationDsl {
+async fn en1999_mutation_to_dsl(mutation: &En1999Mutation) -> En1999MutationDsl {
     match mutation {
         En1999Mutation::ChangeNEdKn(payload) => En1999MutationDsl::ChangeNEdKn { new_n_ed_kn: payload.new_n_ed_kn.clone() },
         En1999Mutation::ChangeMEdKnm(payload) => En1999MutationDsl::ChangeMEdKnm { new_m_ed_knm: payload.new_m_ed_knm.clone() },
@@ -115,7 +115,7 @@ fn en1999_mutation_to_dsl(mutation: &En1999Mutation) -> En1999MutationDsl {
     }
 }
 
-fn en1999_mutation_from_dsl(mutation: En1999MutationDsl) -> En1999Mutation {
+async fn en1999_mutation_from_dsl(mutation: En1999MutationDsl) -> En1999Mutation {
     match mutation {
         En1999MutationDsl::ChangeNEdKn { new_n_ed_kn } => En1999Mutation::ChangeNEdKn(change_n_ed_kn::mutation::ChangeNEdKn { new_n_ed_kn }),
         En1999MutationDsl::ChangeMEdKnm { new_m_ed_knm } => En1999Mutation::ChangeMEdKnm(change_m_ed_knm::mutation::ChangeMEdKnm { new_m_ed_knm }),
@@ -147,11 +147,11 @@ fn en1999_mutation_from_dsl(mutation: En1999MutationDsl) -> En1999Mutation {
 }
 
 impl OpText for En1999Mutation {
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
+    async fn parse_op(line: &str) -> Result<Self, store::TextError> {
         Ok(en1999_mutation_from_dsl(<En1999MutationDsl as OpText>::parse_op(line)?))
     }
 
-    fn print_op(&self) -> String {
+    async fn print_op(&self) -> String {
         <En1999MutationDsl as OpText>::print_op(&en1999_mutation_to_dsl(self))
     }
 }
@@ -159,11 +159,11 @@ impl OpText for En1999Mutation {
 /// ⚡️ Binary mirror of the `OpText` bridge above — `En1999MutationDsl` already derives
 /// `OpBinary` via `#[derive(dsl::DslEnum)]`, so this is a pure to/from-dsl forward.
 impl protocol::OpBinary for En1999Mutation {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         en1999_mutation_to_dsl(self).encode_op()
     }
 
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         Ok(en1999_mutation_from_dsl(En1999MutationDsl::decode_op(bytes)?))
     }
 }
@@ -175,30 +175,30 @@ mod tests {
     use super::*;
 
     #[test]
-    fn op_text_round_trips_change_n_ed_kn() {
+    async fn op_text_round_trips_change_n_ed_kn() {
         store::os_store::test_support::assert_op_line_round_trip(&En1999Mutation::ChangeNEdKn(change_n_ed_kn::mutation::ChangeNEdKn { new_n_ed_kn: 95.0 }));
     }
 
     #[test]
-    fn op_text_round_trips_change_annex() {
+    async fn op_text_round_trips_change_annex() {
         store::os_store::test_support::assert_op_line_round_trip(&En1999Mutation::ChangeAnnex(change_annex::mutation::ChangeAnnex { new_annex: crate::document::AnnexChoice::En }));
     }
 
     #[test]
-    fn op_text_round_trips_change_alloy() {
+    async fn op_text_round_trips_change_alloy() {
         store::os_store::test_support::assert_op_line_round_trip(&En1999Mutation::ChangeAlloy(change_alloy::mutation::ChangeAlloy { new_alloy: "aw6082t6".to_string() }));
     }
 
     /// ⚖️ Every variant, not just the hand-picked ones above — full-coverage `OpText` round trip
     /// over the closed vocabulary, one sample value per field.
     #[test]
-    fn every_variant_op_text_round_trips() {
+    async fn every_variant_op_text_round_trips() {
         for mutation in every_mutation() {
             store::os_store::test_support::assert_op_line_round_trip(&mutation);
         }
     }
 
-    fn every_mutation() -> Vec<En1999Mutation> {
+    async fn every_mutation() -> Vec<En1999Mutation> {
         vec![
             En1999Mutation::ChangeNEdKn(change_n_ed_kn::mutation::ChangeNEdKn { new_n_ed_kn: 95.0 }),
             En1999Mutation::ChangeMEdKnm(change_m_ed_knm::mutation::ChangeMEdKnm { new_m_ed_knm: 5.0 }),

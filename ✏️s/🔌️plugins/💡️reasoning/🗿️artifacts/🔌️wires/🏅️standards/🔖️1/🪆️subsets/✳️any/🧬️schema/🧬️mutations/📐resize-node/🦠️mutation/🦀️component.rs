@@ -22,23 +22,23 @@ pub struct ResizeNode {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn resize_node(node_id: String, new_radius: Option<f64>, new_width: Option<f64>, new_height: Option<f64>) -> WiresMutation {
+pub async fn resize_node(node_id: String, new_radius: Option<f64>, new_width: Option<f64>, new_height: Option<f64>) -> WiresMutation {
     WiresMutation::ResizeNode(ResizeNode { node_id, new_radius, new_width, new_height })
 }
 
 impl protocol::MutationKind<WiresSnapshot, WiresMutation> for ResizeNode {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "resize", entity: "node", kind: "resize-node", record: "ResizedNode" };
 
-    fn diff(&self, base: &WiresSnapshot) -> protocol::MutationOutcome<WiresDiff> {
+    async fn diff(&self, base: &WiresSnapshot) -> protocol::MutationOutcome<WiresDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &WiresSnapshot) -> Vec<WiresMutation> {
+    async fn inverse(&self, base: &WiresSnapshot) -> Vec<WiresMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         format!("Resize node \"{}\"", self.node_id)
     }
-    fn target(&self) -> Vec<String> {
+    async fn target(&self) -> Vec<String> {
         vec![self.node_id.clone()]
     }
 }

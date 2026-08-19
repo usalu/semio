@@ -18,7 +18,7 @@ semio_framework_plugin::app_labels! {
 
 //#region 🔖️Resolvers
 /// 🗣️ Resolves the active label set from `cfg.locale`; falls back to native English.
-pub fn playbook_play_labels(cfg: &PlaybookConfig) -> &'static PlaybookPlayLabels {
+pub async fn playbook_play_labels(cfg: &PlaybookConfig) -> &'static PlaybookPlayLabels {
     semio_framework_plugin::resolve_labels_for_locale::<PlaybookPlayLabels>(&cfg.locale)
 }
 //#endregion 🔖️Resolvers
@@ -29,7 +29,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn labels_resolve_native_english_and_german_from_the_config_locale() {
+    async fn labels_resolve_native_english_and_german_from_the_config_locale() {
         assert_eq!(playbook_play_labels(&PlaybookConfig::default()).kind_arg.as_str(), "Kind");
         assert_eq!(playbook_play_labels(&PlaybookConfig { locale: "de-DE".into(), ..PlaybookConfig::default() }).kind_arg.as_str(), "Art");
     }

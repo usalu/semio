@@ -5,7 +5,7 @@ use crate::artifacts::note::NoteSnapshot;
 use crate::artifacts::note::schema::diff::note_block_removed_diff;
 
 //#region 🔖️Diff
-pub fn diff(payload: &DeleteBlock, base: &NoteSnapshot) -> protocol::MutationOutcome<NoteDiff> {
+pub async fn diff(payload: &DeleteBlock, base: &NoteSnapshot) -> protocol::MutationOutcome<NoteDiff> {
     if crate::artifacts::note::schema::find_block(&base.blocks, &payload.id).is_none() {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Block \"{}\" does not exist.", payload.id), [payload.id.clone()]);
     }

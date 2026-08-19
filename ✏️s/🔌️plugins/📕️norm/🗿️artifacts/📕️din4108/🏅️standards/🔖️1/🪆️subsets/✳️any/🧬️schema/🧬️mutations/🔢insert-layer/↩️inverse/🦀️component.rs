@@ -6,7 +6,7 @@ use crate::artifacts::din4108::mutations::remove_layer;
 use crate::artifacts::din4108::{Din4108Mutation, Din4108Snapshot};
 
 //#region 🔖️Inverse
-pub fn inverse(payload: &InsertLayer, base: &Din4108Snapshot) -> Vec<Din4108Mutation> {
+pub async fn inverse(payload: &InsertLayer, base: &Din4108Snapshot) -> Vec<Din4108Mutation> {
     let at = payload.index.min(base.layers.len());
     vec![Din4108Mutation::RemoveLayer(remove_layer::mutation::RemoveLayer { index: at })]
 }

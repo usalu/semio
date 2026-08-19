@@ -14,7 +14,7 @@ pub struct SetArtifactJson {
 }
 
 /// 🛠️ Dev-only whole-document import — kept out of the command palette.
-pub fn handle(payload: &SetArtifactJson, _doc: &ArtifactView<'_, CurateSnapshot>, _cfg: &ConfigView<'_, SourcingCurateConfig>) -> Result<Emit<SourcingMutation, SourcingCurateConfigMutation>, Fault> {
+pub async fn handle(payload: &SetArtifactJson, _doc: &ArtifactView<'_, CurateSnapshot>, _cfg: &ConfigView<'_, SourcingCurateConfig>) -> Result<Emit<SourcingMutation, SourcingCurateConfigMutation>, Fault> {
     match serde_json::from_str::<CurateSnapshot>(&payload.json) {
         Ok(document) => Ok(Emit { effects: vec![reset_document_effect(&document)], ..Default::default() }),
         Err(_) => Ok(Emit::default()),
@@ -33,13 +33,13 @@ mod tests {
     use semio_framework::kernel::Effect;
     use semio_framework_plugin::{HistoryView, PluginApp};
 
-    fn empty_view() -> (CurateSnapshot, HistoryView) {
+    async fn empty_view() -> (CurateSnapshot, HistoryView) {
         (CurateSnapshot::default(), HistoryView::empty())
     }
 
     /// 🧬️ Decodes the `Effect::LoadDocument` an `Emit` carries — every command in this file
     /// replaces the whole document outside undo history, so this is the shared assertion helper.
-    fn load_document_pack(emit: &Emit<SourcingMutation, SourcingCurateConfigMutation>) -> CurateSnapshot {
+    async fn load_document_pack(emit: &Emit<SourcingMutation, SourcingCurateConfigMutation>) -> CurateSnapshot {
         let Effect::LoadDocument { pack, .. } = emit.effects.first().expect("expected a LoadDocument effect") else {
             panic!("expected a LoadDocument effect");
         };
@@ -52,7 +52,7 @@ mod tests {
     /// in-process `VcsArtifactApp` never applies `effects` to its own store (that's the real host's
     /// job), so this asserts on `requested_effects` rather than through `app.snapshot()`.
     #[test]
-    fn curate_and_example_actions_survive_registry_enforcement() {
+    async fn curate_and_example_actions_survive_registry_enforcement() {
         let mut app = crate::editor::sourcing::testkit::new_app_with_registry();
         let result = app
             .dispatch_typed(SourcingCurateCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: DEMO_STOCK_EXAMPLE_ID.into() }), &semio_framework_plugin::testkit::meta("local"))
@@ -71,14 +71,14 @@ mod tests {
     }
 
     #[test]
-    fn initial_document_has_populated_demo_stock() {
+    async fn initial_document_has_populated_demo_stock() {
         let app = new_app();
         let document = app.snapshot().expect("snapshot");
         assert!(!document.stock_extra.is_empty());
     }
 
     #[test]
-    fn set_active_example_loads_the_demo_stock_or_empty_curation_fixture() {
+    async fn set_active_example_loads_the_demo_stock_or_empty_curation_fixture() {
         let (snapshot, history) = empty_view();
         let doc = ArtifactView::new(&snapshot, &history);
         let cfg_snapshot = SourcingCurateConfig::default();
@@ -90,7 +90,7 @@ mod tests {
     }
 
     #[test]
-    fn set_artifact_json_emits_a_load_document_effect_for_the_parsed_snapshot() {
+    async fn set_artifact_json_emits_a_load_document_effect_for_the_parsed_snapshot() {
         let (snapshot, history) = empty_view();
         let doc = ArtifactView::new(&snapshot, &history);
         let cfg_snapshot = SourcingCurateConfig::default();
@@ -101,7 +101,7 @@ mod tests {
     }
 
     #[test]
-    fn stock_from_catalogue_merges_built_in_kinds_without_duplicating() {
+    async fn stock_from_catalogue_merges_built_in_kinds_without_duplicating() {
         let (empty, history) = (empty_document(), HistoryView::empty());
         let doc = ArtifactView::new(&empty, &history);
         let cfg_snapshot = SourcingCurateConfig::default();

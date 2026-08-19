@@ -10,12 +10,12 @@ pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️comp
 //#endregion 📡️SemioProtocol
 
 /// 📦️ Encodes an `EnergyModelSnapshot` to its binary pack form.
-pub fn encode(document: &EnergyModelSnapshot) -> Vec<u8> {
+pub async fn encode(document: &EnergyModelSnapshot) -> Vec<u8> {
     store::ArtifactPack::encode_pack(document)
 }
 
 /// 📖️ Decodes an `EnergyModelSnapshot` from its binary pack form.
-pub fn decode(bytes: &[u8]) -> Result<EnergyModelSnapshot, PackError> {
+pub async fn decode(bytes: &[u8]) -> Result<EnergyModelSnapshot, PackError> {
     <EnergyModelSnapshot as store::ArtifactPack>::decode_pack(bytes)
 }
 
@@ -25,7 +25,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn pack_round_trips_and_agrees_with_dsl() {
+    async fn pack_round_trips_and_agrees_with_dsl() {
         let document = crate::artifacts::model::dsl::parse_dsl(
             crate::artifacts::model::dsl::SEMIO_ENERGY_MODEL_EXAMPLE_TEXT,
         )

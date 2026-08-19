@@ -17,12 +17,12 @@ pub const BLOCK5D_CONCRETE_FOREST_LEFT_EXAMPLE_TEXT: &str = include_str!("../../
 pub const BLOCK5D_NAKAGIN_CAPSULE_EXAMPLE_TEXT: &str = include_str!("../../../📚️examples/🎬️nakagin-capsule/🖼️assets/🗣️nakagin-capsule.dsl.semio");
 
 /// 📖️ Parses `.block5d` DSL text into a `Block5dSnapshot`.
-pub fn parse_dsl(text: &str) -> Result<Block5dSnapshot, store::TextError> {
+pub async fn parse_dsl(text: &str) -> Result<Block5dSnapshot, store::TextError> {
     <Block5dSnapshot as store::ArtifactDsl>::parse_dsl(text)
 }
 
 /// 🖨️ Prints a `Block5dSnapshot` back to `.block5d` DSL text.
-pub fn print_dsl(document: &Block5dSnapshot) -> String {
+pub async fn print_dsl(document: &Block5dSnapshot) -> String {
     store::ArtifactDsl::print_dsl(document)
 }
 
@@ -33,7 +33,7 @@ mod tests {
     use crate::artifacts::block5d::{Block5dGripKind, Block5dGripTemplate, Block5dPart2d, Block5dPart3d};
     use crate::{BlockCamera2d, BlockCamera3d, BlockKindIdentity, BlockRepresentation};
 
-    pub fn hexagonal_cut_concrete_forest_left() -> Block5dSnapshot {
+    pub async fn hexagonal_cut_concrete_forest_left() -> Block5dSnapshot {
         let mut definition = Block5dSnapshot {
             part_kind: BlockKindIdentity { id: "Hexagonal Cut Concrete Forest Left".into(), name: "Hexagonal Cut Concrete Forest Left".into(), label: "Hexagonal Cut Concrete Forest Left".into(), ..Default::default() },
             part_2d: Block5dPart2d { shape: Some("circle".into()), radius: Some(20.0), ..Default::default() },
@@ -57,7 +57,7 @@ mod tests {
     }
 
     #[test]
-    fn block5d_definition_dsl_round_trips() {
+    async fn block5d_definition_dsl_round_trips() {
         let empty = Block5dSnapshot::default();
         store::os_store::test_support::assert_dsl_round_trip(&empty);
         store::os_store::test_support::assert_dsl_pack_equivalence(&empty);
@@ -67,7 +67,7 @@ mod tests {
     }
 
     #[test]
-    fn block5d_example_fixtures_parse_and_round_trip_as_dsl() {
+    async fn block5d_example_fixtures_parse_and_round_trip_as_dsl() {
         for dsl_text in [BLOCK5D_CONCRETE_FOREST_LEFT_EXAMPLE_TEXT, BLOCK5D_NAKAGIN_CAPSULE_EXAMPLE_TEXT] {
             let definition = parse_dsl(dsl_text).expect("example fixture parses as dsl");
             store::os_store::test_support::assert_dsl_round_trip(&definition);

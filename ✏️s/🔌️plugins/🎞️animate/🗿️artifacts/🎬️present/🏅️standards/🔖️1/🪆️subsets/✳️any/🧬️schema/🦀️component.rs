@@ -29,7 +29,7 @@ pub struct PresentArtifact {
 
 //#region 🔖️Conversions
 impl Default for PresentArtifact {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self {
             schema: PRESENT_DOCUMENT_SCHEMA.into(),
             presentation: crate::artifacts::present::presentation_child_handle_and_cache(&crate::artifacts::present::default_figure_tile_source(), &[]),
@@ -43,17 +43,17 @@ impl Default for PresentArtifact {
 
 impl PresentArtifact {
     /// 📸️ Persisted subset.
-    pub fn to_snapshot(&self) -> crate::artifacts::present::PresentSnapshot {
+    pub async fn to_snapshot(&self) -> crate::artifacts::present::PresentSnapshot {
         crate::artifacts::present::PresentSnapshot { schema: self.schema.clone(), presentation: self.presentation.clone(), animation: self.animation.clone() }
     }
 
     /// 🧬️ Builds a full artifact from a snapshot, leaving UI fields at defaults.
-    pub fn from_snapshot(snapshot: crate::artifacts::present::PresentSnapshot) -> Self {
+    pub async fn from_snapshot(snapshot: crate::artifacts::present::PresentSnapshot) -> Self {
         Self { schema: snapshot.schema, presentation: snapshot.presentation, animation: snapshot.animation, ..Self::default() }
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
-    pub fn set_snapshot(&mut self, snapshot: crate::artifacts::present::PresentSnapshot) {
+    pub async fn set_snapshot(&mut self, snapshot: crate::artifacts::present::PresentSnapshot) {
         self.schema = snapshot.schema;
         self.presentation = snapshot.presentation;
         self.animation = snapshot.animation;
@@ -63,7 +63,7 @@ impl PresentArtifact {
 
 //#region 🔖️Descriptor
 /// 🧬️ Descriptor for `s.animate.present` — twenty handcrafted schema leaves.
-pub fn present_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
+pub async fn present_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
     schema::ArtifactSchemaDescriptor {
         id: "s.animate.present",
         artifact: schema::FacetLeaves {
@@ -128,7 +128,7 @@ pub enum PresentError {
 
 //#region 🔖️DocumentHelpers
 /// 📄️ Empty presentation deck — the wasm VCS bridge's default projection for a fresh envelope.
-pub fn empty_present_snapshot() -> crate::artifacts::present::PresentSnapshot {
+pub async fn empty_present_snapshot() -> crate::artifacts::present::PresentSnapshot {
     crate::artifacts::present::present_snapshot_with_tiles(&crate::artifacts::present::default_figure_tile_source(), &[])
 }
 
@@ -163,11 +163,11 @@ pub struct FigureTileGridSeedSpec<'a> {
     pub key_prefix: &'a str,
 }
 
-pub fn clamp_normalized_fraction(value: f64) -> f64 {
+pub async fn clamp_normalized_fraction(value: f64) -> f64 {
     value.clamp(0.0, 1.0)
 }
 
-pub fn clamp_tile_crop(crop: &crate::artifacts::present::FigureTileFrame) -> crate::artifacts::present::FigureTileFrame {
+pub async fn clamp_tile_crop(crop: &crate::artifacts::present::FigureTileFrame) -> crate::artifacts::present::FigureTileFrame {
     let width = crop.width.max(NORMALIZED_RECT_MIN_FRACTION);
     let height = crop.height.max(NORMALIZED_RECT_MIN_FRACTION);
     let x = clamp_normalized_fraction(crop.x.min(1.0 - width));
@@ -175,7 +175,7 @@ pub fn clamp_tile_crop(crop: &crate::artifacts::present::FigureTileFrame) -> cra
     crate::artifacts::present::FigureTileFrame { x, y, width, height }
 }
 
-pub fn parse_grid_engagement(text: &str) -> Option<(u32, u32)> {
+pub async fn parse_grid_engagement(text: &str) -> Option<(u32, u32)> {
     let trimmed = text.trim();
     let lower = trimmed.to_lowercase();
     let normalized = lower.replace('×', "x");
@@ -191,7 +191,7 @@ pub fn parse_grid_engagement(text: &str) -> Option<(u32, u32)> {
     Some((rows, columns))
 }
 
-pub fn split_figure_grid(spec: SplitFigureGridSpec<'_>) -> Vec<SplitGridCell> {
+pub async fn split_figure_grid(spec: SplitFigureGridSpec<'_>) -> Vec<SplitGridCell> {
     let rows = spec.rows.max(1);
     let columns = spec.columns.max(1);
     let gap = spec.gap;
@@ -210,15 +210,15 @@ pub fn split_figure_grid(spec: SplitFigureGridSpec<'_>) -> Vec<SplitGridCell> {
     cells
 }
 
-pub fn populate_tile_drafts_from_grid(spec: FigureTileGridSeedSpec<'_>) -> Vec<crate::artifacts::present::FigureTileDraft> {
+pub async fn populate_tile_drafts_from_grid(spec: FigureTileGridSeedSpec<'_>) -> Vec<crate::artifacts::present::FigureTileDraft> {
     split_figure_grid(SplitFigureGridSpec { rows: spec.rows, columns: spec.columns, frame: &spec.source.frame, gap: spec.gap, key_prefix: spec.key_prefix })
         .into_iter()
         .map(|cell| crate::artifacts::present::FigureTileDraft { id: cell.key.clone(), name: cell.key, crop: cell.crop })
         .collect()
 }
 
-pub fn build_tile_morph_prompt(source: &crate::artifacts::present::FigureTileSource, drafts: &[crate::artifacts::present::FigureTileDraft]) -> String {
-    fn format_frame(frame: &crate::artifacts::present::FigureTileFrame) -> String {
+pub async fn build_tile_morph_prompt(source: &crate::artifacts::present::FigureTileSource, drafts: &[crate::artifacts::present::FigureTileDraft]) -> String {
+    async fn format_frame(frame: &crate::artifacts::present::FigureTileFrame) -> String {
         format!("{{ x: {:.6}, y: {:.6}, width: {:.6}, height: {:.6} }}", frame.x, frame.y, frame.width, frame.height)
     }
     let kind = if source.kind.is_empty() { "figure" } else { source.kind.as_str() };
@@ -264,7 +264,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn grid_seed_produces_tiles() {
+    async fn grid_seed_produces_tiles() {
         let source = crate::artifacts::present::default_figure_tile_source();
         let tiles = populate_tile_drafts_from_grid(FigureTileGridSeedSpec { source: &source, rows: 3, columns: 5, gap: 0.0, key_prefix: "tile" });
         assert_eq!(tiles.len(), 15);
@@ -272,13 +272,13 @@ mod tests {
     }
 
     #[test]
-    fn parse_grid_engagement_accepts_cross() {
+    async fn parse_grid_engagement_accepts_cross() {
         assert_eq!(parse_grid_engagement("3×5"), Some((3, 5)));
         assert_eq!(parse_grid_engagement("2x2"), Some((2, 2)));
     }
 
     #[test]
-    fn morph_prompt_lists_tiles() {
+    async fn morph_prompt_lists_tiles() {
         let source = crate::artifacts::present::default_figure_tile_source();
         let tiles = vec![crate::artifacts::present::FigureTileDraft { id: "t1".into(), name: "t1".into(), crop: crate::artifacts::present::FigureTileFrame { x: 0.1, y: 0.1, width: 0.2, height: 0.2 } }];
         let prompt = build_tile_morph_prompt(&source, &tiles);

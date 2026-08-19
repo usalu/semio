@@ -12,12 +12,12 @@ pub const PUZZLE2D_FILL_COUNT_MAX: u32 = 1000;
 
 //#region 🔖️Definition
 /// 🧱️ Stitched into the app manifest by `crate::editor::puzzle2d::create_puzzle2d_app`.
-pub fn definition(label: LocalizedLabel) -> ToolDefinition {
+pub async fn definition(label: LocalizedLabel) -> ToolDefinition {
     ToolDefinition::new(TOOL_ID, label, "paint-bucket")
 }
 
 /// 🎚️ The fill-count slider, surfaced in the mode-level tool panel while the fill tool is active.
-pub fn measures(envelope: &Puzzle2dScene, labels: &Puzzle2dLabels) -> WindowMeasure {
+pub async fn measures(envelope: &Puzzle2dScene, labels: &Puzzle2dLabels) -> WindowMeasure {
     WindowMeasure::Group {
         id: "puzzle2d-tool-options-fill".into(),
         label: labels.fill.into(),
@@ -64,7 +64,7 @@ mod tests {
 
     /// 🛠️ Fill's count slider is a tool measure keyed by the fill tool id, not a window utility-options group.
     #[test]
-    fn fill_count_slider_is_a_tool_measure() {
+    async fn fill_count_slider_is_a_tool_measure() {
         let labels = puzzle2d_labels(&Puzzle2dConfig::default());
         let host = puzzle_board_host();
         let fill_runtime = Puzzle2dPlayRuntime { fill_count: 3, ..Puzzle2dPlayRuntime::default() };

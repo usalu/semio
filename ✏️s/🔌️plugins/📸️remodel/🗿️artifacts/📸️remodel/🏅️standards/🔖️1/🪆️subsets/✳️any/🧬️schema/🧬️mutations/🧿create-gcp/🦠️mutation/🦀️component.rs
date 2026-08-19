@@ -16,23 +16,23 @@ pub struct CreateGcp {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn create_gcp(gcp: GroundControlPoint) -> RemodelMutation {
+pub async fn create_gcp(gcp: GroundControlPoint) -> RemodelMutation {
     RemodelMutation::CreateGcp(CreateGcp { gcp })
 }
 
 impl protocol::MutationKind<RemodelSnapshot, RemodelMutation> for CreateGcp {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "create", entity: "gcp", kind: "create-gcp", record: "CreatedGcp" };
 
-    fn diff(&self, base: &RemodelSnapshot) -> protocol::MutationOutcome<RemodelDiff> {
+    async fn diff(&self, base: &RemodelSnapshot) -> protocol::MutationOutcome<RemodelDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &RemodelSnapshot) -> Vec<RemodelMutation> {
+    async fn inverse(&self, base: &RemodelSnapshot) -> Vec<RemodelMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         format!("Create GCP \"{}\"", self.gcp.id)
     }
-    fn target(&self) -> Vec<String> {
+    async fn target(&self) -> Vec<String> {
         vec![self.gcp.id.clone()]
     }
 }

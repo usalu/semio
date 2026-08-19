@@ -2,6 +2,6 @@ use crate::artifacts::tiff::schema::mutations::{apply_tiff_mutation, TiffMutatio
 use crate::artifacts::tiff::TiffSnapshot;
 
 /// ▶️ Applies a set-snapshot mutation.
-pub fn apply(projection: &mut TiffSnapshot, mutation: &TiffMutation) {
+pub async fn apply(projection: &mut TiffSnapshot, mutation: &TiffMutation) {
     apply_tiff_mutation(projection, mutation);
 }

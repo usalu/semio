@@ -27,10 +27,10 @@ pub enum VcsViewCommand {
 }
 
 impl protocol::OpBinary for VcsViewCommand {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         Ok(Vec::new())
     }
-    fn decode_op(_bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    async fn decode_op(_bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         Ok(VcsViewCommand::Noop)
     }
 }
@@ -57,7 +57,7 @@ impl ArtifactViewer for VcsViewer {
     const DIALECT: Dialect = VCS_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = VCS_DOCUMENT_SCHEMA;
 
-    fn initial_snapshot() -> VcsSnapshot {
+    async fn initial_snapshot() -> VcsSnapshot {
         crate::artifacts::vcs::standards::v1::subsets::any::schema::empty_vcs_snapshot()
     }
 
@@ -65,11 +65,11 @@ impl ArtifactViewer for VcsViewer {
     /// change, so this always returns the empty `ViewEmit` — no config mutation, no effect, no dirty
     /// scope. Kept as a real dispatch (not an `unreachable!()`) so a future view-only action (e.g. a
     /// checkpoint-tree hover/expand toggle) is a pure addition here, never a signature change.
-    fn handle(_command: &Self::Command, _doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _interaction: &InteractionView<'_>, _engines: &EngineHandles) -> Result<ViewEmit<Self::ConfigMutation>, Fault> {
+    async fn handle(_command: &Self::Command, _doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _interaction: &InteractionView<'_>, _engines: &EngineHandles) -> Result<ViewEmit<Self::ConfigMutation>, Fault> {
         Ok(ViewEmit::default())
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> UiNode {
+    async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> UiNode {
         match body_key {
             history::BODY_KEY => history::render(doc.history),
             _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))),
@@ -79,7 +79,7 @@ impl ArtifactViewer for VcsViewer {
 //#endregion 🔖️Viewer
 
 //#region 🔖️Manifest
-pub fn create_vcs_viewer() -> semio_framework_plugin::AppDefinition {
+pub async fn create_vcs_viewer() -> semio_framework_plugin::AppDefinition {
     Viewer::builder(VCS_DIALECT)
         .document(["semio", "vcs"])
         .icon_id("git-branch")
@@ -97,14 +97,14 @@ mod tests {
     use super::*;
 
     #[test]
-    fn create_vcs_viewer_builds_a_definition_for_the_viewer_role() {
+    async fn create_vcs_viewer_builds_a_definition_for_the_viewer_role() {
         let def = create_vcs_viewer();
         assert_eq!(def.role, semio_framework_plugin::AppRole::Viewer);
         assert_eq!(def.dialect, VCS_DIALECT.into());
     }
 
     #[test]
-    fn viewer_dialect_matches_the_artifact_coordinate() {
+    async fn viewer_dialect_matches_the_artifact_coordinate() {
         assert_eq!(<VcsViewer as ArtifactViewer>::DIALECT, VCS_DIALECT);
     }
 }

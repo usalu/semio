@@ -19,7 +19,7 @@ use base64::Engine as _;
 /// iteration cap; `GeoParams::origin_*` — no georeferencing-origin knob exists on the engine side;
 /// `EngineParams::assumed_focal_ratio` — no document field feeds it, calibration is not yet a wired
 /// stage) are documented simplifications, not oversights.
-pub fn build_engine_params(params: &ReconstructionParams) -> remodel_engine::EngineParams {
+pub async fn build_engine_params(params: &ReconstructionParams) -> remodel_engine::EngineParams {
     let mut engine_params = remodel_engine::EngineParams::default();
     engine_params.ingest.stride = params.ingest.frame_sample_stride.max(1);
     engine_params.ingest.max_frames = params.ingest.max_frames;
@@ -58,7 +58,7 @@ pub fn build_engine_params(params: &ReconstructionParams) -> remodel_engine::Eng
     engine_params
 }
 
-pub fn map_engine_stage(stage: remodel_engine::EngineStage) -> ReconstructionStage {
+pub async fn map_engine_stage(stage: remodel_engine::EngineStage) -> ReconstructionStage {
     match stage {
         remodel_engine::EngineStage::Idle => ReconstructionStage::Idle,
         remodel_engine::EngineStage::ExtractingFeatures => ReconstructionStage::ExtractingFeatures,
@@ -76,7 +76,7 @@ pub fn map_engine_stage(stage: remodel_engine::EngineStage) -> ReconstructionSta
 }
 
 /// 📍️ World-space camera center: `inverse().t` of the world→camera `Se3` (i.e. `-R⁻¹·t`).
-fn camera_world_position(pose: &remodel_camera::CameraPose) -> [f32; 3] {
+async fn camera_world_position(pose: &remodel_camera::CameraPose) -> [f32; 3] {
     let center = pose.0.inverse().t;
     [center[0] as f32, center[1] as f32, center[2] as f32]
 }
@@ -84,13 +84,13 @@ fn camera_world_position(pose: &remodel_camera::CameraPose) -> [f32; 3] {
 /// 🔭️ A `CameraPosePreview` snapshot of one registration-order camera pose. `camera_id` isn't
 /// recoverable from `ReconstructionEngine::sparse_preview` (it only exposes poses by registration
 /// order, not by originating stream/frame/calibration id) — a documented simplification.
-pub fn camera_pose_preview(index: u32, pose: &remodel_camera::CameraPose) -> CameraPosePreview {
+pub async fn camera_pose_preview(index: u32, pose: &remodel_camera::CameraPose) -> CameraPosePreview {
     let translation = camera_world_position(pose);
     let quat = pose.0.inverse().r.to_quat();
     CameraPosePreview { camera_id: format!("cam-{index}"), rotation_wxyz: [quat.w as f32, quat.x as f32, quat.y as f32, quat.z as f32], translation }
 }
 
-pub fn watertight_snapshot(report: &remodel_mesh::WatertightReport) -> WatertightReportSnapshot {
+pub async fn watertight_snapshot(report: &remodel_mesh::WatertightReport) -> WatertightReportSnapshot {
     WatertightReportSnapshot {
         vertex_count: report.vertex_count as u32,
         triangle_count: report.triangle_count as u32,
@@ -115,7 +115,7 @@ pub fn watertight_snapshot(report: &remodel_mesh::WatertightReport) -> Watertigh
 /// registered frames, whether any GCPs exist) onto the document's `QcReportSnapshot`.
 /// `dense_coverage_ratio` stays `0.0`: the engine doesn't compute a density/overlap raster today —
 /// a documented gap.
-pub fn build_qc_snapshot(quality: &remodel_geo::QualityReport, registered_count: usize, accepted_count: usize, gcp_count: usize) -> QcReportSnapshot {
+pub async fn build_qc_snapshot(quality: &remodel_geo::QualityReport, registered_count: usize, accepted_count: usize, gcp_count: usize) -> QcReportSnapshot {
     let mut warnings = Vec::new();
     if let Some(watertight) = &quality.watertight {
         if !watertight.is_watertight {
@@ -139,7 +139,7 @@ pub fn build_qc_snapshot(quality: &remodel_geo::QualityReport, registered_count:
 /// 🗺️ Normalizes a `remodel_geo::Raster`'s valid cells to a 16-bit grayscale PNG `ImageAsset` (invalid
 /// cells encode as `0`) — `remodel_image::encode_png_gray16` is the shared 16-bit writer every other
 /// raster-shaped asset in this codebase uses.
-pub fn raster_to_png_asset(raster: &remodel_geo::Raster) -> ImageAsset {
+pub async fn raster_to_png_asset(raster: &remodel_geo::Raster) -> ImageAsset {
     let mut min = f32::INFINITY;
     let mut max = f32::NEG_INFINITY;
     for (index, &value) in raster.values.iter().enumerate() {
@@ -158,7 +158,7 @@ pub fn raster_to_png_asset(raster: &remodel_geo::Raster) -> ImageAsset {
     ImageAsset { mime: "image/png".into(), data: base64::engine::general_purpose::STANDARD.encode(bytes), width: raster.width, height: raster.height }
 }
 
-pub fn video_codec_to_artifact(codec: remodel_video::VideoCodec) -> DocumentVideoCodec {
+pub async fn video_codec_to_artifact(codec: remodel_video::VideoCodec) -> DocumentVideoCodec {
     match codec {
         remodel_video::VideoCodec::Avc => DocumentVideoCodec::Avc,
         remodel_video::VideoCodec::Hevc => DocumentVideoCodec::Hevc,
@@ -170,7 +170,7 @@ pub fn video_codec_to_artifact(codec: remodel_video::VideoCodec) -> DocumentVide
 }
 
 /// 🏷️ `(codec, width, height, duration_ms, container)` from either container family's probe.
-pub fn describe_video_probe(probe: &remodel_video::VideoProbe) -> (remodel_video::VideoCodec, u32, u32, f64, &'static str) {
+pub async fn describe_video_probe(probe: &remodel_video::VideoProbe) -> (remodel_video::VideoCodec, u32, u32, f64, &'static str) {
     match probe {
         remodel_video::VideoProbe::Mp4(info) => (info.codec, info.width, info.height, info.duration_ms, "mp4"),
         remodel_video::VideoProbe::Avi(info) => {
@@ -187,7 +187,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn raster_to_png_asset_normalizes_valid_cells_only() {
+    async fn raster_to_png_asset_normalizes_valid_cells_only() {
         let mut raster = remodel_geo::Raster::new(2, 2, 1.0, [0.0, 0.0]);
         raster.set(0, 0, 0.0);
         raster.set(1, 1, 10.0);

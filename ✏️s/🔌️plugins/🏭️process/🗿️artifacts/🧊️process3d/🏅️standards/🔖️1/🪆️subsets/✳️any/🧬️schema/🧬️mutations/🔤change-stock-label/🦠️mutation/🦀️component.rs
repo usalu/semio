@@ -16,15 +16,15 @@ pub struct ChangeStockLabel {
 impl protocol::MutationKind<Process3dSnapshot, Process3dMutation> for ChangeStockLabel {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "stock", kind: "change-stock-label", record: "ChangedStockLabel" };
 
-    fn diff(&self, base: &Process3dSnapshot) -> protocol::MutationOutcome<Process3dDiff> {
+    async fn diff(&self, base: &Process3dSnapshot) -> protocol::MutationOutcome<Process3dDiff> {
         crate::artifacts::process3d::mutations::change_stock_label::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &Process3dSnapshot) -> Vec<Process3dMutation> {
+    async fn inverse(&self, base: &Process3dSnapshot) -> Vec<Process3dMutation> {
         crate::artifacts::process3d::mutations::change_stock_label::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         format!("Rename stock to \"{}\"", self.new_label)
     }
 }

@@ -20,7 +20,7 @@ pub const BODY_KEY: &str = "fem2d.play.results";
 /// 🌡️ A filled-triangle Canvas2d path layer (`segments` + `fill`, evenodd) for a contour cell —
 /// see `framework/renderer/react/components/canvas-2d-host.tsx`'s `buildScenePath`/`drawSceneNode`
 /// for the exact JSON shape this mirrors.
-fn filled_triangle_layer(id: String, p0: (f64, f64), p1: (f64, f64), p2: (f64, f64), color: &str, alpha: f64) -> Value {
+async fn filled_triangle_layer(id: String, p0: (f64, f64), p1: (f64, f64), p2: (f64, f64), color: &str, alpha: f64) -> Value {
     let (r, g, b) = hex_to_rgb01(color);
     json!({
         "id": id,
@@ -38,7 +38,7 @@ fn filled_triangle_layer(id: String, p0: (f64, f64), p1: (f64, f64), p2: (f64, f
 /// 🌡️ A filled polygon Canvas2d path layer (arbitrary vertex count) — the marching-triangle contour
 /// bands need this (a clipped triangle can come out as a quad), unlike `filled_triangle_layer`'s
 /// fixed 3-point shape.
-fn filled_polygon_layer(id: String, points: &[(f64, f64)], color: &str, alpha: f64) -> Value {
+async fn filled_polygon_layer(id: String, points: &[(f64, f64)], color: &str, alpha: f64) -> Value {
     let (r, g, b) = hex_to_rgb01(color);
     let mut segments = Vec::with_capacity(points.len() + 1);
     for (i, &(x, y)) in points.iter().enumerate() {
@@ -58,7 +58,7 @@ fn filled_polygon_layer(id: String, points: &[(f64, f64)], color: &str, alpha: f
 type ValuedPoint = ((f64, f64), f64);
 
 /// ✂️ Interpolates the crossing point where the segment `a->b`'s value equals `threshold`.
-fn interpolate_at_value(a: ValuedPoint, b: ValuedPoint, threshold: f64) -> ValuedPoint {
+async fn interpolate_at_value(a: ValuedPoint, b: ValuedPoint, threshold: f64) -> ValuedPoint {
     let t = if (b.1 - a.1).abs() < 1e-12 { 0.5 } else { (threshold - a.1) / (b.1 - a.1) };
     ((a.0 .0 + (b.0 .0 - a.0 .0) * t, a.0 .1 + (b.0 .1 - a.0 .1) * t), threshold)
 }
@@ -67,7 +67,7 @@ fn interpolate_at_value(a: ValuedPoint, b: ValuedPoint, threshold: f64) -> Value
 /// keeps the portion where `value >= threshold` (`keep_above`) or `value <= threshold` (else),
 /// inserting an interpolated vertex at every edge crossing. The core of marching-triangle contour
 /// banding: clipping a triangle's linear value field against 2 thresholds bands it into one polygon.
-fn clip_by_value(poly: &[ValuedPoint], threshold: f64, keep_above: bool) -> Vec<ValuedPoint> {
+async fn clip_by_value(poly: &[ValuedPoint], threshold: f64, keep_above: bool) -> Vec<ValuedPoint> {
     if poly.is_empty() {
         return Vec::new();
     }
@@ -92,7 +92,7 @@ fn clip_by_value(poly: &[ValuedPoint], threshold: f64, keep_above: bool) -> Vec<
 
 /// 🌡️ A stress-contour legend: a small vertical stack of `VON_MISES_BANDS` swatches plus min/max text
 /// labels, anchored near the canvas origin.
-fn von_mises_legend_layers(min: f64, max: f64) -> Vec<Value> {
+async fn von_mises_legend_layers(min: f64, max: f64) -> Vec<Value> {
     let mut layers = Vec::with_capacity(VON_MISES_BANDS.len() + 2);
     for (i, color) in VON_MISES_BANDS.iter().enumerate() {
         let y = 20.0 + i as f64 * 14.0;
@@ -115,7 +115,7 @@ fn von_mises_legend_layers(min: f64, max: f64) -> Vec<Value> {
 
 //#region 🔖️Render
 /// 📊️ Results window dispatcher — picks the static/modal/buckling render based on `display`.
-pub fn render(doc: &Fem2dSnapshot, display: &ResultDisplay, camera: &FemCamera) -> UiNode {
+pub async fn render(doc: &Fem2dSnapshot, display: &ResultDisplay, camera: &FemCamera) -> UiNode {
     match display.mode {
         DisplayMode::Static => render_static(doc, display.source_id.as_deref(), camera),
         DisplayMode::Modal(mode_index) => render_modal(doc, mode_index, camera),
@@ -128,7 +128,7 @@ pub fn render(doc: &Fem2dSnapshot, display: &ResultDisplay, camera: &FemCamera) 
 /// nodal-averaged, marching-triangle-banded von-Mises stress contour with a color-swatch legend.
 /// `source_id` selects a `fem2d_solve_all` case/combination id, falling back to the first load case
 /// when `None`/unknown (preserves v0's default behavior).
-fn render_static(doc: &Fem2dSnapshot, source_id: Option<&str>, camera: &FemCamera) -> UiNode {
+async fn render_static(doc: &Fem2dSnapshot, source_id: Option<&str>, camera: &FemCamera) -> UiNode {
     let results = match crate::fem2d_engine::fem2d_solve_all(doc) {
         Ok(results) => results,
         Err(e) => return ui_text(Label::data(format!("Analysis error: {e}"))),
@@ -231,7 +231,7 @@ fn render_static(doc: &Fem2dSnapshot, source_id: Option<&str>, camera: &FemCamer
 /// 📊️ Modal mode-shape overlay: undeformed structure faintly plus the selected mode's deformed-shape
 /// polyline (normalized to unit peak, then scaled to `MODE_SHAPE_AMPLITUDE_RATIO` of the model's own
 /// extent — see `normalize_mode_shape`) and a frequency caption.
-fn render_modal(doc: &Fem2dSnapshot, mode_index: usize, camera: &FemCamera) -> UiNode {
+async fn render_modal(doc: &Fem2dSnapshot, mode_index: usize, camera: &FemCamera) -> UiNode {
     let (freq_hz, mut disp_map) = match crate::fem2d_engine::modal_buckling::fem2d_modal_mode_values(doc, mode_index) {
         Ok(values) => values,
         Err(e) => return ui_text(Label::data(format!("Modal analysis error: {e}"))),
@@ -252,7 +252,7 @@ fn render_modal(doc: &Fem2dSnapshot, mode_index: usize, camera: &FemCamera) -> U
 /// polyline (normalized to unit peak, then scaled to `MODE_SHAPE_AMPLITUDE_RATIO` of the model's own
 /// extent — see `normalize_mode_shape`) and a load-factor caption. `source_id` selects the reference
 /// load case, falling back to the first load case when `None`.
-fn render_buckling(doc: &Fem2dSnapshot, source_id: Option<&str>, mode_index: usize, camera: &FemCamera) -> UiNode {
+async fn render_buckling(doc: &Fem2dSnapshot, source_id: Option<&str>, mode_index: usize, camera: &FemCamera) -> UiNode {
     let Some(case_id) = source_id.map(str::to_string).or_else(|| doc.load_cases.first().map(|c| c.id.clone())) else {
         return ui_text(Label::data("No load case defined"));
     };
@@ -280,25 +280,25 @@ mod tests {
     use crate::editor::fem2d::testkit::{dispatch, fem2d_app, render as render_body};
     use crate::editor::fem2d::Fem2dCommand;
 
-    fn load_default_example(app: &mut crate::editor::fem2d::testkit::Fem2dApp) {
+    async fn load_default_example(app: &mut crate::editor::fem2d::testkit::Fem2dApp) {
         dispatch(app, Fem2dCommand::SetActiveExample(crate::editor::fem2d::commands::set_active_example::SetActiveExample { example_id: "default".into() }));
     }
 
     #[test]
-    fn renders_fem2d_results_scene() {
+    async fn renders_fem2d_results_scene() {
         let mut app = fem2d_app();
         load_default_example(&mut app);
         assert!(render_body(&mut app, BODY_KEY).contains("canvas-2d"));
     }
 
     #[test]
-    fn results_window_surfaces_solver_error_without_panicking_2d() {
+    async fn results_window_surfaces_solver_error_without_panicking_2d() {
         let mut app = fem2d_app();
         let _ = render_body(&mut app, BODY_KEY);
     }
 
     #[test]
-    fn results_window_buckling_with_no_load_case_shows_placeholder_2d() {
+    async fn results_window_buckling_with_no_load_case_shows_placeholder_2d() {
         let doc = crate::artifacts::fem2d::schema::empty_fem2d_snapshot();
         let display = ResultDisplay { source_id: None, mode: DisplayMode::Buckling(0) };
         let camera = FemCamera::default();
@@ -307,7 +307,7 @@ mod tests {
     }
 
     #[test]
-    fn results_window_renders_contour_for_region() {
+    async fn results_window_renders_contour_for_region() {
         let mut app = fem2d_app();
         load_default_example(&mut app);
         dispatch(&mut app, Fem2dCommand::SetResultDisplay(crate::editor::fem2d::commands::set_result_display::SetResultDisplay { source_id: Some("dead".into()), mode: "static".into(), mode_index: 0 }));
@@ -319,7 +319,7 @@ mod tests {
     }
 
     #[test]
-    fn results_window_renders_reaction_labels_2d() {
+    async fn results_window_renders_reaction_labels_2d() {
         let mut app = fem2d_app();
         load_default_example(&mut app);
         dispatch(&mut app, Fem2dCommand::SetResultDisplay(crate::editor::fem2d::commands::set_result_display::SetResultDisplay { source_id: Some("dead".into()), mode: "static".into(), mode_index: 0 }));
@@ -328,7 +328,7 @@ mod tests {
     }
 
     #[test]
-    fn results_window_renders_modal_mode_shape_2d() {
+    async fn results_window_renders_modal_mode_shape_2d() {
         let mut app = fem2d_app();
         load_default_example(&mut app);
         dispatch(&mut app, Fem2dCommand::SetResultDisplay(crate::editor::fem2d::commands::set_result_display::SetResultDisplay { source_id: None, mode: "modal".into(), mode_index: 0 }));
@@ -338,7 +338,7 @@ mod tests {
     }
 
     #[test]
-    fn results_window_renders_buckling_mode_shape_2d() {
+    async fn results_window_renders_buckling_mode_shape_2d() {
         let mut app = fem2d_app();
         load_default_example(&mut app);
         dispatch(&mut app, Fem2dCommand::SetResultDisplay(crate::editor::fem2d::commands::set_result_display::SetResultDisplay { source_id: Some("dead".into()), mode: "buckling".into(), mode_index: 0 }));
@@ -348,19 +348,19 @@ mod tests {
     }
 
     #[test]
-    fn interpolate_at_value_falls_back_to_midpoint_when_values_equal() {
+    async fn interpolate_at_value_falls_back_to_midpoint_when_values_equal() {
         let (point, value) = interpolate_at_value(((0.0, 0.0), 5.0), ((10.0, 20.0), 5.0), 5.0);
         assert_eq!(point, (5.0, 10.0));
         assert_eq!(value, 5.0);
     }
 
     #[test]
-    fn clip_by_value_empty_polygon_returns_empty() {
+    async fn clip_by_value_empty_polygon_returns_empty() {
         assert!(clip_by_value(&[], 0.0, true).is_empty());
     }
 
     #[test]
-    fn clip_by_value_keeps_only_the_requested_half_plane() {
+    async fn clip_by_value_keeps_only_the_requested_half_plane() {
         let poly: Vec<ValuedPoint> = vec![((0.0, 0.0), 0.0), ((10.0, 0.0), 10.0), ((0.0, 10.0), 0.0)];
         let above = clip_by_value(&poly, 5.0, true);
         assert!(above.len() >= 3 && above.iter().all(|(_, v)| *v >= 5.0 - 1e-9));

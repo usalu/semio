@@ -28,7 +28,7 @@ pub struct Block3dBounds {
 /// 📦️ Computes `bounds` from a block3d snapshot — each rim vortex template contributes its
 /// `position` inflated by its own `radius` (the rim placement's physical footprint) to the
 /// running min/max; an empty vortex catalog yields `Block3dBounds::default()`.
-pub fn compute_block3d_bounds(snapshot: &Block3dSnapshot) -> Block3dBounds {
+pub async fn compute_block3d_bounds(snapshot: &Block3dSnapshot) -> Block3dBounds {
     let Some(first) = snapshot.vortices.first() else {
         return Block3dBounds::default();
     };
@@ -50,18 +50,18 @@ mod tests {
     use super::*;
     use crate::artifacts::block3d::Block3dVortexTemplate;
 
-    fn vortex(id: &str, position: [f64; 3], radius: f64) -> Block3dVortexTemplate {
+    async fn vortex(id: &str, position: [f64; 3], radius: f64) -> Block3dVortexTemplate {
         Block3dVortexTemplate { id: id.into(), vortex_kind: "door".into(), position, direction: [0.0, 1.0, 0.0], radius, label: None }
     }
 
     #[test]
-    fn empty_catalog_yields_default_bounds() {
+    async fn empty_catalog_yields_default_bounds() {
         let snapshot = Block3dSnapshot::default();
         assert_eq!(compute_block3d_bounds(&snapshot), Block3dBounds::default());
     }
 
     #[test]
-    fn single_vortex_bounds_equal_its_own_inflated_footprint() {
+    async fn single_vortex_bounds_equal_its_own_inflated_footprint() {
         let mut snapshot = Block3dSnapshot::default();
         snapshot.vortices.push(vortex("v0", [1.0, 1.0, 1.0], 0.5));
         let bounds = compute_block3d_bounds(&snapshot);
@@ -70,7 +70,7 @@ mod tests {
     }
 
     #[test]
-    fn multiple_vortices_union_their_footprints() {
+    async fn multiple_vortices_union_their_footprints() {
         let mut snapshot = Block3dSnapshot::default();
         snapshot.vortices.push(vortex("v0", [1.0, 2.0, 3.0], 0.5));
         snapshot.vortices.push(vortex("v1", [-1.0, 0.0, 4.0], 0.25));

@@ -4,7 +4,7 @@ use crate::artifacts::block3d::Block3dSnapshot;
 use crate::{BlockCamera3d};
 
 //#region 🔖️Diff
-pub fn diff(payload: &super::mutation::MoveCamera3d, base: &Block3dSnapshot) -> protocol::MutationOutcome<Block3dDiff> {
+pub async fn diff(payload: &super::mutation::MoveCamera3d, base: &Block3dSnapshot) -> protocol::MutationOutcome<Block3dDiff> {
     if payload.new_position.iter().any(|c| !c.is_finite()) || payload.new_target.iter().any(|c| !c.is_finite()) {
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("Camera position {:?} / target {:?} is not finite.", payload.new_position, payload.new_target), ["camera3d"]);
     }

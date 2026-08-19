@@ -14,7 +14,7 @@ pub mod apply {
         pub template_id: String,
     }
 
-    pub fn handle(payload: &ApplyTemplate, doc: &ArtifactView<'_, ProgramSnapshot>, _cfg: &ConfigView<'_, ArchitectConfig>) -> Result<Emit<ProgramMutation, ArchitectConfigMutation>, Fault> {
+    pub async fn handle(payload: &ApplyTemplate, doc: &ArtifactView<'_, ProgramSnapshot>, _cfg: &ConfigView<'_, ArchitectConfig>) -> Result<Emit<ProgramMutation, ArchitectConfigMutation>, Fault> {
         let program = doc.snapshot;
         let template_id = EntityId(payload.template_id.clone());
         let Some(template) = program.templates.iter().find(|row| row.header.id == template_id).cloned() else {

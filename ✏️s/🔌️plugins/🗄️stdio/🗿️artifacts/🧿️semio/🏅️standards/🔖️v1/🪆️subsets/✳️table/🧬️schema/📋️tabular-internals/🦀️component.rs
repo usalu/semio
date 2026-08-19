@@ -39,7 +39,7 @@ pub struct CategoricalColumn {
 impl CategoricalColumn {
     /// 🏷️ Builds a column from string labels; `""` encodes a missing value, other labels are assigned
     /// levels in first-seen order.
-    pub fn from_labels(labels: &[&str]) -> Self {
+    pub async fn from_labels(labels: &[&str]) -> Self {
         let mut levels: Vec<String> = Vec::new();
         let mut index: std::collections::HashMap<&str, u32> = std::collections::HashMap::new();
         let mut codes = Vec::with_capacity(labels.len());
@@ -58,7 +58,7 @@ impl CategoricalColumn {
     }
 
     /// 🏷️ Builds a column from already-encoded parts, validating every non-missing code is in range.
-    pub fn from_parts(levels: Vec<String>, codes: Vec<u32>) -> Result<Self, TabularError> {
+    pub async fn from_parts(levels: Vec<String>, codes: Vec<u32>) -> Result<Self, TabularError> {
         for &code in &codes {
             if code != MISSING_CODE && code as usize >= levels.len() {
                 return Err(TabularError::IndexOutOfBounds(code as usize));
@@ -67,36 +67,36 @@ impl CategoricalColumn {
         Ok(Self { levels, codes })
     }
 
-    pub fn len(&self) -> usize {
+    pub async fn len(&self) -> usize {
         self.codes.len()
     }
 
-    pub fn is_empty(&self) -> bool {
+    pub async fn is_empty(&self) -> bool {
         self.codes.is_empty()
     }
 
-    pub fn n_levels(&self) -> usize {
+    pub async fn n_levels(&self) -> usize {
         self.levels.len()
     }
 
-    pub fn codes(&self) -> &[u32] {
+    pub async fn codes(&self) -> &[u32] {
         &self.codes
     }
 
-    pub fn levels(&self) -> &[String] {
+    pub async fn levels(&self) -> &[String] {
         &self.levels
     }
 
-    pub fn level(&self, code: u32) -> Option<&str> {
+    pub async fn level(&self, code: u32) -> Option<&str> {
         self.levels.get(code as usize).map(String::as_str)
     }
 
-    pub fn code_of(&self, label: &str) -> Option<u32> {
+    pub async fn code_of(&self, label: &str) -> Option<u32> {
         self.levels.iter().position(|l| l == label).map(|i| i as u32)
     }
 
     /// 🔢️ Per-level occurrence counts, missing values excluded.
-    pub fn counts(&self) -> Vec<usize> {
+    pub async fn counts(&self) -> Vec<usize> {
         let mut counts = vec![0usize; self.levels.len()];
         for &code in &self.codes {
             if code != MISSING_CODE {
@@ -108,7 +108,7 @@ impl CategoricalColumn {
 
     /// 🔢️ One-hot encoding, one `Vec<f64>` per row; a missing row is filled with `NaN` indicators.
     /// When `drop_first`, level `0`'s indicator column is omitted (the usual reference-level encoding).
-    pub fn one_hot(&self, drop_first: bool) -> Vec<Vec<f64>> {
+    pub async fn one_hot(&self, drop_first: bool) -> Vec<Vec<f64>> {
         let skip = usize::from(drop_first);
         let width = self.levels.len().saturating_sub(skip);
         self.codes
@@ -139,18 +139,18 @@ pub enum Column {
 }
 
 impl Column {
-    pub fn len(&self) -> usize {
+    pub async fn len(&self) -> usize {
         match self {
             Self::Continuous(values) => values.len(),
             Self::Categorical(column) => column.len(),
         }
     }
 
-    pub fn is_empty(&self) -> bool {
+    pub async fn is_empty(&self) -> bool {
         self.len() == 0
     }
 
-    pub fn is_missing_at(&self, row: usize) -> bool {
+    pub async fn is_missing_at(&self, row: usize) -> bool {
         match self {
             Self::Continuous(values) => values[row].is_nan(),
             Self::Categorical(column) => column.codes[row] == MISSING_CODE,
@@ -169,25 +169,25 @@ pub struct Table {
 }
 
 impl Table {
-    pub fn new() -> Self {
+    pub async fn new() -> Self {
         Self::default()
     }
 
-    pub fn n_rows(&self) -> usize {
+    pub async fn n_rows(&self) -> usize {
         self.rows
     }
 
-    pub fn n_cols(&self) -> usize {
+    pub async fn n_cols(&self) -> usize {
         self.columns.len()
     }
 
-    pub fn names(&self) -> &[String] {
+    pub async fn names(&self) -> &[String] {
         &self.names
     }
 
     /// 🗃️ Appends a column, returning its new index. The first pushed column fixes the table's row
     /// count; every later column must match it.
-    pub fn push_column(&mut self, name: &str, column: Column) -> Result<usize, TabularError> {
+    pub async fn push_column(&mut self, name: &str, column: Column) -> Result<usize, TabularError> {
         if self.names.iter().any(|existing| existing == name) {
             return Err(TabularError::DuplicateName(name.to_string()));
         }
@@ -201,35 +201,35 @@ impl Table {
         Ok(self.columns.len() - 1)
     }
 
-    pub fn push_continuous(&mut self, name: &str, values: Vec<f64>) -> Result<usize, TabularError> {
+    pub async fn push_continuous(&mut self, name: &str, values: Vec<f64>) -> Result<usize, TabularError> {
         self.push_column(name, Column::Continuous(values))
     }
 
-    pub fn push_categorical(&mut self, name: &str, labels: &[&str]) -> Result<usize, TabularError> {
+    pub async fn push_categorical(&mut self, name: &str, labels: &[&str]) -> Result<usize, TabularError> {
         self.push_column(name, Column::Categorical(CategoricalColumn::from_labels(labels)))
     }
 
-    pub fn column_index(&self, name: &str) -> Result<usize, TabularError> {
+    pub async fn column_index(&self, name: &str) -> Result<usize, TabularError> {
         self.names.iter().position(|n| n == name).ok_or_else(|| TabularError::UnknownColumn(name.to_string()))
     }
 
     /// 🔎️ Infallible variant of [`Table::column_index`].
-    pub fn index_of(&self, name: &str) -> Option<usize> {
+    pub async fn index_of(&self, name: &str) -> Option<usize> {
         self.names.iter().position(|n| n == name)
     }
 
-    pub fn column(&self, index: usize) -> Result<&Column, TabularError> {
+    pub async fn column(&self, index: usize) -> Result<&Column, TabularError> {
         self.columns.get(index).ok_or(TabularError::IndexOutOfBounds(index))
     }
 
-    pub fn continuous(&self, index: usize) -> Result<&[f64], TabularError> {
+    pub async fn continuous(&self, index: usize) -> Result<&[f64], TabularError> {
         match self.column(index)? {
             Column::Continuous(values) => Ok(values),
             Column::Categorical(_) => Err(TabularError::NotContinuous(self.names[index].clone())),
         }
     }
 
-    pub fn categorical(&self, index: usize) -> Result<&CategoricalColumn, TabularError> {
+    pub async fn categorical(&self, index: usize) -> Result<&CategoricalColumn, TabularError> {
         match self.column(index)? {
             Column::Categorical(column) => Ok(column),
             Column::Continuous(_) => Err(TabularError::NotCategorical(self.names[index].clone())),
@@ -237,7 +237,7 @@ impl Table {
     }
 
     /// 🔀️ Projects the table to the given columns (order preserved, repeats allowed).
-    pub fn select_columns(&self, indices: &[usize]) -> Result<Table, TabularError> {
+    pub async fn select_columns(&self, indices: &[usize]) -> Result<Table, TabularError> {
         let mut out = Table::new();
         for &index in indices {
             let column = self.column(index)?.clone();
@@ -247,7 +247,7 @@ impl Table {
     }
 
     /// 🔀️ Gathers rows by index (repeats allowed — needed for bootstrap resampling).
-    pub fn select_rows(&self, indices: &[usize]) -> Result<Table, TabularError> {
+    pub async fn select_rows(&self, indices: &[usize]) -> Result<Table, TabularError> {
         for &row in indices {
             if row >= self.rows {
                 return Err(TabularError::IndexOutOfBounds(row));
@@ -265,7 +265,7 @@ impl Table {
     }
 
     /// ✅️ Row indices, ascending, where none of the given columns is missing.
-    pub fn complete_rows(&self, columns: &[usize]) -> Result<Vec<usize>, TabularError> {
+    pub async fn complete_rows(&self, columns: &[usize]) -> Result<Vec<usize>, TabularError> {
         for &index in columns {
             if index >= self.columns.len() {
                 return Err(TabularError::IndexOutOfBounds(index));
@@ -275,13 +275,13 @@ impl Table {
     }
 
     /// ✅️ `select_rows(complete_rows(columns))` — the complete-case sub-table.
-    pub fn drop_missing(&self, columns: &[usize]) -> Result<Table, TabularError> {
+    pub async fn drop_missing(&self, columns: &[usize]) -> Result<Table, TabularError> {
         let rows = self.complete_rows(columns)?;
         self.select_rows(&rows)
     }
 
     /// 🏗️ Builds a table from parallel-named `f64` column vectors.
-    pub fn from_f64_columns(names: Vec<String>, columns: Vec<Vec<f64>>) -> Result<Table, TabularError> {
+    pub async fn from_f64_columns(names: Vec<String>, columns: Vec<Vec<f64>>) -> Result<Table, TabularError> {
         let mut out = Table::new();
         for (name, values) in names.into_iter().zip(columns) {
             out.push_continuous(&name, values)?;
@@ -290,7 +290,7 @@ impl Table {
     }
 
     /// 🏗️ Builds a table from parallel-named `(codes, level_names)` categorical column pairs.
-    pub fn from_categorical_columns(names: Vec<String>, columns: Vec<(Vec<u32>, Vec<String>)>) -> Result<Table, TabularError> {
+    pub async fn from_categorical_columns(names: Vec<String>, columns: Vec<(Vec<u32>, Vec<String>)>) -> Result<Table, TabularError> {
         let mut out = Table::new();
         for (name, (codes, levels)) in names.into_iter().zip(columns) {
             let column = CategoricalColumn::from_parts(levels, codes)?;
@@ -310,14 +310,14 @@ pub struct CsvOptions {
 }
 
 impl Default for CsvOptions {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self { delimiter: ',', has_header: true }
     }
 }
 
 /// 📄️ Splits `text` into rows of raw string fields via a single-pass RFC-4180-subset state machine:
 /// quoted fields, doubled-quote escaping, delimiters/newlines inside quotes, and CRLF/LF line endings.
-fn split_csv_fields(text: &str, delimiter: char) -> Vec<Vec<String>> {
+async fn split_csv_fields(text: &str, delimiter: char) -> Vec<Vec<String>> {
     let mut rows = Vec::new();
     let mut row: Vec<String> = Vec::new();
     let mut field = String::new();
@@ -362,11 +362,11 @@ fn split_csv_fields(text: &str, delimiter: char) -> Vec<Vec<String>> {
     rows
 }
 
-fn is_missing_token(field: &str) -> bool {
+async fn is_missing_token(field: &str) -> bool {
     field.is_empty() || field.eq_ignore_ascii_case("na") || field.eq_ignore_ascii_case("nan")
 }
 
-fn quote_csv_field(field: &str, delimiter: char) -> String {
+async fn quote_csv_field(field: &str, delimiter: char) -> String {
     if field.contains(delimiter) || field.contains('"') || field.contains('\n') {
         format!("\"{}\"", field.replace('"', "\"\""))
     } else {
@@ -378,7 +378,7 @@ impl Table {
     /// 📄️ Parses CSV text, inferring each column's type: `Continuous` if every non-missing field
     /// parses as `f64`, `Categorical` otherwise. Missing tokens are empty fields, `NA`, and `NaN`
     /// (case-insensitive).
-    pub fn parse_csv(text: &str, options: CsvOptions) -> Result<Table, TabularError> {
+    pub async fn parse_csv(text: &str, options: CsvOptions) -> Result<Table, TabularError> {
         let rows = split_csv_fields(text, options.delimiter);
         let mut rows = rows.into_iter();
         let first = rows.next();
@@ -423,7 +423,7 @@ impl Table {
 
     /// 📄️ Serializes to CSV text: missing values become empty fields, floats use Rust's shortest
     /// round-trip `Display`, and fields containing the delimiter/quote/newline are quoted.
-    pub fn to_csv(&self, options: CsvOptions) -> String {
+    pub async fn to_csv(&self, options: CsvOptions) -> String {
         let mut out = String::new();
         if options.has_header {
             let header: Vec<String> = self.names.iter().map(|name| quote_csv_field(name, options.delimiter)).collect();
@@ -458,26 +458,26 @@ impl Table {
 mod tests {
     use super::*;
 
-    fn nan_aware_eq(a: &[f64], b: &[f64]) -> bool {
+    async fn nan_aware_eq(a: &[f64], b: &[f64]) -> bool {
         a.len() == b.len() && a.iter().zip(b).all(|(x, y)| (x.is_nan() && y.is_nan()) || (x - y).abs() < 1e-12)
     }
 
     // #region 🔖️CategoricalTests
     #[test]
-    fn categorical_from_labels_assigns_first_seen_order() {
+    async fn categorical_from_labels_assigns_first_seen_order() {
         let col = CategoricalColumn::from_labels(&["b", "a", "b", "", "c"]);
         assert_eq!(col.levels(), &["b".to_string(), "a".to_string(), "c".to_string()]);
         assert_eq!(col.codes(), &[0, 1, 0, MISSING_CODE, 2]);
     }
 
     #[test]
-    fn categorical_counts_exclude_missing() {
+    async fn categorical_counts_exclude_missing() {
         let col = CategoricalColumn::from_labels(&["a", "b", "a", ""]);
         assert_eq!(col.counts(), vec![2, 1]);
     }
 
     #[test]
-    fn categorical_one_hot_matches_hand_matrix() {
+    async fn categorical_one_hot_matches_hand_matrix() {
         let col = CategoricalColumn::from_labels(&["a", "b", "c", ""]);
         let full = col.one_hot(false);
         assert_eq!(full[0], vec![1.0, 0.0, 0.0]);
@@ -493,14 +493,14 @@ mod tests {
     }
 
     #[test]
-    fn categorical_from_parts_rejects_out_of_range_code() {
+    async fn categorical_from_parts_rejects_out_of_range_code() {
         assert!(CategoricalColumn::from_parts(vec!["a".to_string()], vec![5]).is_err());
     }
     // #endregion 🔖️CategoricalTests
 
     // #region 🔖️TableTests
     #[test]
-    fn push_column_length_mismatch_errors() {
+    async fn push_column_length_mismatch_errors() {
         let mut table = Table::new();
         table.push_continuous("x", vec![1.0, 2.0, 3.0]).unwrap();
         let err = table.push_continuous("y", vec![1.0, 2.0]).unwrap_err();
@@ -508,20 +508,20 @@ mod tests {
     }
 
     #[test]
-    fn push_column_duplicate_name_errors() {
+    async fn push_column_duplicate_name_errors() {
         let mut table = Table::new();
         table.push_continuous("x", vec![1.0]).unwrap();
         assert!(matches!(table.push_continuous("x", vec![2.0]), Err(TabularError::DuplicateName(_))));
     }
 
     #[test]
-    fn column_index_unknown_errors() {
+    async fn column_index_unknown_errors() {
         let table = Table::new();
         assert!(matches!(table.column_index("missing"), Err(TabularError::UnknownColumn(_))));
     }
 
     #[test]
-    fn continuous_and_categorical_type_errors() {
+    async fn continuous_and_categorical_type_errors() {
         let mut table = Table::new();
         table.push_continuous("x", vec![1.0]).unwrap();
         table.push_categorical("y", &["a"]).unwrap();
@@ -530,7 +530,7 @@ mod tests {
     }
 
     #[test]
-    fn complete_rows_and_drop_missing() {
+    async fn complete_rows_and_drop_missing() {
         let mut table = Table::new();
         table.push_continuous("x", vec![1.0, f64::NAN, 3.0, 4.0, f64::NAN]).unwrap();
         table.push_categorical("y", &["a", "b", "", "c", "d"]).unwrap();
@@ -542,7 +542,7 @@ mod tests {
     }
 
     #[test]
-    fn select_rows_allows_repetition_for_bootstrap() {
+    async fn select_rows_allows_repetition_for_bootstrap() {
         let mut table = Table::new();
         table.push_continuous("x", vec![10.0, 20.0, 30.0]).unwrap();
         let resampled = table.select_rows(&[2, 2, 0]).unwrap();
@@ -550,7 +550,7 @@ mod tests {
     }
 
     #[test]
-    fn select_columns_projects_subset() {
+    async fn select_columns_projects_subset() {
         let mut table = Table::new();
         table.push_continuous("x", vec![1.0, 2.0]).unwrap();
         table.push_continuous("y", vec![3.0, 4.0]).unwrap();
@@ -562,7 +562,7 @@ mod tests {
 
     // #region 🔖️CsvTests
     #[test]
-    fn csv_round_trip_with_missing_values() {
+    async fn csv_round_trip_with_missing_values() {
         let mut table = Table::new();
         table.push_continuous("x", vec![1.5, f64::NAN, 3.0]).unwrap();
         table.push_categorical("y", &["a", "b", ""]).unwrap();
@@ -574,7 +574,7 @@ mod tests {
     }
 
     #[test]
-    fn csv_parses_quoted_field_with_embedded_delimiter_and_escaped_quote() {
+    async fn csv_parses_quoted_field_with_embedded_delimiter_and_escaped_quote() {
         let text = "name,note\na,\"x, \"\"y\"\"\"\n";
         let table = Table::parse_csv(text, CsvOptions::default()).unwrap();
         let note = table.categorical(1).unwrap();
@@ -582,7 +582,7 @@ mod tests {
     }
 
     #[test]
-    fn csv_type_inference_continuous_with_blank_is_nan() {
+    async fn csv_type_inference_continuous_with_blank_is_nan() {
         let text = "x\n1\n2\n\n4\n";
         let table = Table::parse_csv(text, CsvOptions::default()).unwrap();
         let values = table.continuous(0).unwrap();
@@ -590,14 +590,14 @@ mod tests {
     }
 
     #[test]
-    fn csv_type_inference_any_nonnumeric_is_categorical() {
+    async fn csv_type_inference_any_nonnumeric_is_categorical() {
         let text = "x\n1\nfoo\n3\n";
         let table = Table::parse_csv(text, CsvOptions::default()).unwrap();
         assert!(table.categorical(0).is_ok());
     }
 
     #[test]
-    fn csv_headerless_synthesizes_names() {
+    async fn csv_headerless_synthesizes_names() {
         let text = "1,a\n2,b\n";
         let table = Table::parse_csv(text, CsvOptions { has_header: false, ..Default::default() }).unwrap();
         assert_eq!(table.names(), &["c0".to_string(), "c1".to_string()]);
@@ -606,7 +606,7 @@ mod tests {
 
     // #region 🔖️SerdeTests
     #[test]
-    fn table_json_round_trip() {
+    async fn table_json_round_trip() {
         // No NaN in the continuous column here: serde_json has no JSON representation for NaN
         // (it serializes to `null`, which `f64`'s Deserialize then rejects), so JSON round-tripping
         // is a documented non-goal for missing continuous values — categorical missingness (an

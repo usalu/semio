@@ -98,7 +98,7 @@ enum Process3dMutationDsl {
 //#region 🔖️HandcraftedOpCodecs
 /// ⚡️ P6 handcrafted OpText/OpBinary (derive no longer emits these traits).
 impl OpText for Process3dMutationDsl {
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
+    async fn parse_op(line: &str) -> Result<Self, store::TextError> {
         let variants = <Self as dsl::DslVariants>::variants();
         for (keyword, spec_fn) in &variants {
             let probe = format!("{} ", keyword);
@@ -113,7 +113,7 @@ impl OpText for Process3dMutationDsl {
         }
         Err(dsl::__rt::field_error(format!("unknown mutation line '{line}'")))
     }
-    fn print_op(&self) -> String {
+    async fn print_op(&self) -> String {
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
         let variants = <Self as dsl::DslVariants>::variants();
         let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
@@ -122,16 +122,16 @@ impl OpText for Process3dMutationDsl {
 }
 
 impl protocol::OpBinary for Process3dMutationDsl {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         dsl::variants_binary::encode_op(self)
     }
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         dsl::variants_binary::decode_op(bytes)
     }
 }
 //#endregion 🔖️HandcraftedOpCodecs
 
-fn process3d_mutation_to_dsl(mutation: &Process3dMutation) -> Process3dMutationDsl {
+async fn process3d_mutation_to_dsl(mutation: &Process3dMutation) -> Process3dMutationDsl {
     match mutation {
         Process3dMutation::CreateStep(payload) => Process3dMutationDsl::CreateStep { index: payload.index, step_json: serde_json::to_string(&payload.step).expect("ProcessStep is always JSON-serializable") },
         Process3dMutation::DeleteStep(payload) => Process3dMutationDsl::DeleteStep { id: payload.id.clone() },
@@ -152,7 +152,7 @@ fn process3d_mutation_to_dsl(mutation: &Process3dMutation) -> Process3dMutationD
     }
 }
 
-fn process3d_mutation_from_dsl(mutation: Process3dMutationDsl) -> Process3dMutation {
+async fn process3d_mutation_from_dsl(mutation: Process3dMutationDsl) -> Process3dMutation {
     match mutation {
         Process3dMutationDsl::CreateStep { index, step_json } => Process3dMutation::CreateStep(create_step::mutation::CreateStep { index, step: serde_json::from_str(&step_json).expect("valid ProcessStep json") }),
         Process3dMutationDsl::DeleteStep { id } => Process3dMutation::DeleteStep(delete_step::mutation::DeleteStep { id }),
@@ -174,11 +174,11 @@ fn process3d_mutation_from_dsl(mutation: Process3dMutationDsl) -> Process3dMutat
 }
 
 impl OpText for Process3dMutation {
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
+    async fn parse_op(line: &str) -> Result<Self, store::TextError> {
         Ok(process3d_mutation_from_dsl(<Process3dMutationDsl as OpText>::parse_op(line)?))
     }
 
-    fn print_op(&self) -> String {
+    async fn print_op(&self) -> String {
         <Process3dMutationDsl as OpText>::print_op(&process3d_mutation_to_dsl(self))
     }
 }
@@ -186,11 +186,11 @@ impl OpText for Process3dMutation {
 /// ⚡️ Binary mirror of the `OpText` bridge above — `Process3dMutationDsl` already derives
 /// `OpBinary` via `#[derive(dsl::DslEnum)]`, so this is a pure to/from-dsl forward.
 impl protocol::OpBinary for Process3dMutation {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         process3d_mutation_to_dsl(self).encode_op()
     }
 
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         Ok(process3d_mutation_from_dsl(Process3dMutationDsl::decode_op(bytes)?))
     }
 }
@@ -204,11 +204,11 @@ mod tests {
     use crate::artifacts::process3d::{brep_child_handle, brep_snapshot_for_working_solid, empty_process3d_snapshot, Pose, Process3dSnapshot, WorkingSolid};
     use protocol::Mutation;
 
-    fn cut_step(id: &str) -> ProcessStep {
+    async fn cut_step(id: &str) -> ProcessStep {
         ProcessStep { id: id.into(), label: "Cut".into(), enabled: true, origin: None, measure: ProcessMeasure::Cut { tool: WorkingSolid::Box { width: 0.1, depth: 0.1, height: 0.1 }, pose: Pose::default() } }
     }
 
-    fn circular_saw_machine() -> WorkshopMachine {
+    async fn circular_saw_machine() -> WorkshopMachine {
         use crate::artifacts::process3d::{CapabilityParameter, CapabilityRule, MeasureRecipe, StockQuantity};
         WorkshopMachine {
             id: "circularSaw".into(),
@@ -227,100 +227,100 @@ mod tests {
     }
 
     #[test]
-    fn process3d_op_text_round_trips_create_step() {
+    async fn process3d_op_text_round_trips_create_step() {
         store::os_store::test_support::assert_op_line_round_trip(&Process3dMutation::CreateStep(create_step::mutation::CreateStep { index: 0, step: cut_step("cut-1") }));
     }
 
     #[test]
-    fn process3d_op_text_round_trips_delete_step() {
+    async fn process3d_op_text_round_trips_delete_step() {
         store::os_store::test_support::assert_op_line_round_trip(&Process3dMutation::DeleteStep(delete_step::mutation::DeleteStep { id: "cut-1".into() }));
     }
 
     #[test]
-    fn process3d_op_text_round_trips_rename_step() {
+    async fn process3d_op_text_round_trips_rename_step() {
         store::os_store::test_support::assert_op_line_round_trip(&Process3dMutation::RenameStep(rename_step::mutation::RenameStep { id: "cut-1".into(), new_label: "Renamed".into() }));
     }
 
     #[test]
-    fn process3d_op_text_round_trips_change_step_enabled() {
+    async fn process3d_op_text_round_trips_change_step_enabled() {
         store::os_store::test_support::assert_op_line_round_trip(&Process3dMutation::ChangeStepEnabled(change_step_enabled::mutation::ChangeStepEnabled { id: "cut-1".into(), new_enabled: false }));
     }
 
     #[test]
-    fn process3d_op_text_round_trips_change_step_origin_set() {
+    async fn process3d_op_text_round_trips_change_step_origin_set() {
         let new_origin = Some(StepOrigin { machine_id: "tableSaw".into(), capability_id: "crosscut".into() });
         store::os_store::test_support::assert_op_line_round_trip(&Process3dMutation::ChangeStepOrigin(change_step_origin::mutation::ChangeStepOrigin { id: "cut-1".into(), new_origin }));
     }
 
     #[test]
-    fn process3d_op_text_round_trips_change_step_origin_clear() {
+    async fn process3d_op_text_round_trips_change_step_origin_clear() {
         store::os_store::test_support::assert_op_line_round_trip(&Process3dMutation::ChangeStepOrigin(change_step_origin::mutation::ChangeStepOrigin { id: "cut-1".into(), new_origin: None }));
     }
 
     #[test]
-    fn process3d_op_text_round_trips_replace_step_measure() {
+    async fn process3d_op_text_round_trips_replace_step_measure() {
         let new_measure = ProcessMeasure::Drill { radius: 0.03, depth: 0.4, pose: Pose { position: [1.0, 2.0, 3.0], axis: [0.0, 1.0, 0.0], angle: 0.7 } };
         store::os_store::test_support::assert_op_line_round_trip(&Process3dMutation::ReplaceStepMeasure(replace_step_measure::mutation::ReplaceStepMeasure { id: "cut-1".into(), new_measure }));
     }
 
     #[test]
-    fn process3d_op_text_round_trips_reorder_steps() {
+    async fn process3d_op_text_round_trips_reorder_steps() {
         store::os_store::test_support::assert_op_line_round_trip(&Process3dMutation::ReorderSteps(reorder_steps::mutation::ReorderSteps { id: "cut-1".into(), to_index: 2 }));
     }
 
     #[test]
-    fn process3d_op_text_round_trips_create_machine() {
+    async fn process3d_op_text_round_trips_create_machine() {
         store::os_store::test_support::assert_op_line_round_trip(&Process3dMutation::CreateMachine(create_machine::mutation::CreateMachine { index: 0, machine: circular_saw_machine() }));
     }
 
     #[test]
-    fn process3d_op_text_round_trips_delete_machine() {
+    async fn process3d_op_text_round_trips_delete_machine() {
         store::os_store::test_support::assert_op_line_round_trip(&Process3dMutation::DeleteMachine(delete_machine::mutation::DeleteMachine { id: "circularSaw".into() }));
     }
 
     #[test]
-    fn process3d_op_text_round_trips_rename_machine() {
+    async fn process3d_op_text_round_trips_rename_machine() {
         store::os_store::test_support::assert_op_line_round_trip(&Process3dMutation::RenameMachine(rename_machine::mutation::RenameMachine { id: "circularSaw".into(), new_label: "Big Saw".into() }));
     }
 
     #[test]
-    fn process3d_op_text_round_trips_change_machine_icon() {
+    async fn process3d_op_text_round_trips_change_machine_icon() {
         store::os_store::test_support::assert_op_line_round_trip(&Process3dMutation::ChangeMachineIcon(change_machine_icon::mutation::ChangeMachineIcon { id: "circularSaw".into(), new_icon_id: "drill".into() }));
     }
 
     #[test]
-    fn process3d_op_text_round_trips_replace_machine_capabilities_full() {
+    async fn process3d_op_text_round_trips_replace_machine_capabilities_full() {
         store::os_store::test_support::assert_op_line_round_trip(&Process3dMutation::ReplaceMachineCapabilities(replace_machine_capabilities::mutation::ReplaceMachineCapabilities { id: "circularSaw".into(), new_capabilities: circular_saw_machine().capabilities }));
     }
 
     #[test]
-    fn process3d_op_text_round_trips_replace_machine_capabilities_empty() {
+    async fn process3d_op_text_round_trips_replace_machine_capabilities_empty() {
         store::os_store::test_support::assert_op_line_round_trip(&Process3dMutation::ReplaceMachineCapabilities(replace_machine_capabilities::mutation::ReplaceMachineCapabilities { id: "circularSaw".into(), new_capabilities: vec![] }));
     }
 
     #[test]
-    fn process3d_op_text_round_trips_move_stock() {
+    async fn process3d_op_text_round_trips_move_stock() {
         store::os_store::test_support::assert_op_line_round_trip(&Process3dMutation::MoveStock(move_stock::mutation::MoveStock { new_pose: Pose { position: [1.0, 2.0, 3.0], axis: [0.0, 1.0, 0.0], angle: 0.7 } }));
     }
 
     #[test]
-    fn process3d_op_text_round_trips_change_stock_label() {
+    async fn process3d_op_text_round_trips_change_stock_label() {
         store::os_store::test_support::assert_op_line_round_trip(&Process3dMutation::ChangeStockLabel(change_stock_label::mutation::ChangeStockLabel { new_label: "Timber Beam".into() }));
     }
 
     #[test]
-    fn process3d_op_text_round_trips_replace_stock_solid() {
+    async fn process3d_op_text_round_trips_replace_stock_solid() {
         let new_solid = brep_child_handle("stock", &brep_snapshot_for_working_solid(&WorkingSolid::ImportedMesh { mesh_url: "data:model/gltf-binary;base64,AAAA".into() }));
         store::os_store::test_support::assert_op_line_round_trip(&Process3dMutation::ReplaceStockSolid(replace_stock_solid::mutation::ReplaceStockSolid { new_solid }));
     }
 
     #[test]
-    fn process3d_op_text_round_trips_change_cursor_some() {
+    async fn process3d_op_text_round_trips_change_cursor_some() {
         store::os_store::test_support::assert_op_line_round_trip(&Process3dMutation::ChangeCursor(change_cursor::mutation::ChangeCursor { new_resolved_up_to: Some(3) }));
     }
 
     #[test]
-    fn process3d_op_text_round_trips_change_cursor_none() {
+    async fn process3d_op_text_round_trips_change_cursor_none() {
         store::os_store::test_support::assert_op_line_round_trip(&Process3dMutation::ChangeCursor(change_cursor::mutation::ChangeCursor { new_resolved_up_to: None }));
     }
 
@@ -329,14 +329,14 @@ mod tests {
     /// `ProcessWorkingScene`'s doc comment), so per the sanctioned `MutationKind::inverse` contract
     /// ("a mutation with nothing to undo returns `Vec::new()`"), there is nothing to invert.
     #[test]
-    fn inverse_of_create_step_is_empty_since_it_is_a_documented_no_op() {
+    async fn inverse_of_create_step_is_empty_since_it_is_a_documented_no_op() {
         let snapshot = empty_process3d_snapshot();
         let mutation = Process3dMutation::CreateStep(create_step::mutation::CreateStep { index: 0, step: cut_step("a") });
         assert!(mutation.inverse(&snapshot).is_empty());
     }
 
     #[test]
-    fn inverse_of_create_machine_is_delete_machine() {
+    async fn inverse_of_create_machine_is_delete_machine() {
         let snapshot = empty_process3d_snapshot();
         let mutation = Process3dMutation::CreateMachine(create_machine::mutation::CreateMachine { index: 0, machine: circular_saw_machine() });
         let inverse = mutation.inverse(&snapshot);
@@ -350,7 +350,7 @@ mod tests {
     /// 📸️ Sanity: the stock fields (unrelated to the mutation vocabulary) still round-trip through
     /// the artifact's DSL document codec.
     #[test]
-    fn imported_mesh_stock_round_trips_document_dsl() {
+    async fn imported_mesh_stock_round_trips_document_dsl() {
         let stock_solid = brep_child_handle("stock", &brep_snapshot_for_working_solid(&WorkingSolid::ImportedMesh { mesh_url: "data:model/gltf-binary;base64,AAAA".into() }));
         let snapshot = Process3dSnapshot { stock_id: "stock".into(), stock_label: "Imported GLB".into(), stock_pose: Pose::default(), stock_solid, ..empty_process3d_snapshot() };
         store::os_store::test_support::assert_dsl_round_trip(&snapshot);

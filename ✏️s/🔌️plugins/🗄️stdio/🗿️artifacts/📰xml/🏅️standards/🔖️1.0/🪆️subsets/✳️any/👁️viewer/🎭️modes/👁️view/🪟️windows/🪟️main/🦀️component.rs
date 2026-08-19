@@ -14,14 +14,14 @@ pub const BODY_KEY: &str = TreeWindowKit::KIND_ID;
 
 //#region 🔖️Definition
 /// 🧱️ Stitched into the viewer manifest by `crate::viewer::xml_any::create_xml_viewer`.
-pub fn definition() -> WindowKindDefinition {
+pub async fn definition() -> WindowKindDefinition {
     WindowKindDefinition { label: LocalizedLabel::native("Tree", "Baum"), icon_id: "list-tree".into(), ..TreeWindowKit::window_kind() }
 }
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
 /// 👁️ Pure `XmlSnapshot -> UiNode` read: same shape as the editor's own render, no mutation.
-pub fn render(document: &XmlSnapshot) -> UiNode {
+pub async fn render(document: &XmlSnapshot) -> UiNode {
     let root = match &document.doc.root {
         Some(node) => node_view(Vec::new(), node),
         None => TreeNodeView { id: String::new(), label: "(empty document)".to_string(), children: Vec::new() },
@@ -29,7 +29,7 @@ pub fn render(document: &XmlSnapshot) -> UiNode {
     TreeWindowKit::render(&TreeView { roots: vec![root] })
 }
 
-fn node_view(path: Vec<usize>, node: &XmlNode) -> TreeNodeView {
+async fn node_view(path: Vec<usize>, node: &XmlNode) -> TreeNodeView {
     let id = path.iter().map(|index| index.to_string()).collect::<Vec<_>>().join("/");
     match node {
         XmlNode::Element { name, attrs, children } => {
@@ -58,14 +58,14 @@ mod tests {
     use super::*;
 
     #[test]
-    fn definition_declares_a_tree_window() {
+    async fn definition_declares_a_tree_window() {
         let def = definition();
         assert_eq!(def.id, WINDOW_KIND_ID);
         assert_eq!(def.body_key, BODY_KEY);
     }
 
     #[test]
-    fn render_walks_element_children() {
+    async fn render_walks_element_children() {
         let document = XmlSnapshot { schema: "stdio.xml".into(), doc: crate::artifacts::xml::schema::snapshot::XmlDocument { root: Some(XmlNode::Element { name: "root".into(), attrs: Vec::new(), children: Vec::new() }), doctype: None, declaration: None, prolog: Vec::new() } };
         let UiNode::Tree(node) = render(&document) else { panic!("expected Tree") };
         let root = &node.sections[0].items[0];

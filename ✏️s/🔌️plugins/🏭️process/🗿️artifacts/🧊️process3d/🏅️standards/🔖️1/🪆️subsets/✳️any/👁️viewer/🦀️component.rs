@@ -21,10 +21,10 @@ pub enum Process3dViewCommand {
 }
 
 impl protocol::OpBinary for Process3dViewCommand {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         Ok(Vec::new())
     }
-    fn decode_op(_bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    async fn decode_op(_bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         Ok(Process3dViewCommand::Noop)
     }
 }
@@ -48,7 +48,7 @@ impl ArtifactViewer for Process3dViewer {
     const DIALECT: Dialect = PROCESS3D_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = PROCESS_3D_SCHEMA;
 
-    fn initial_snapshot() -> Process3dSnapshot {
+    async fn initial_snapshot() -> Process3dSnapshot {
         crate::artifacts::process3d::schema::default_document()
     }
 
@@ -56,11 +56,11 @@ impl ArtifactViewer for Process3dViewer {
     /// config change, so this always returns the empty `ViewEmit` — no config mutation, no effect,
     /// no dirty scope. Kept as a real dispatch (not an `unreachable!()`) so a future view-only
     /// action (camera orbit, "jump to step") is a pure addition here, never a signature change.
-    fn handle(_command: &Self::Command, _doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _interaction: &InteractionView<'_>, _engines: &EngineHandles) -> Result<ViewEmit<Self::ConfigMutation>, Fault> {
+    async fn handle(_command: &Self::Command, _doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _interaction: &InteractionView<'_>, _engines: &EngineHandles) -> Result<ViewEmit<Self::ConfigMutation>, Fault> {
         Ok(ViewEmit::default())
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> UiNode {
+    async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> UiNode {
         match body_key {
             workpiece::PROCESS3D_VIEW_BODY_MAIN => workpiece::render(doc.snapshot),
             _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))),
@@ -70,7 +70,7 @@ impl ArtifactViewer for Process3dViewer {
 //#endregion 🔖️Viewer
 
 //#region 🔖️Manifest
-pub fn create_process3d_viewer() -> semio_framework_plugin::AppDefinition {
+pub async fn create_process3d_viewer() -> semio_framework_plugin::AppDefinition {
     Viewer::builder(PROCESS3D_DIALECT)
         .document(["semio", "process", "3d"])
         .icon_id("hammer")
@@ -88,14 +88,14 @@ mod tests {
     use super::*;
 
     #[test]
-    fn create_process3d_viewer_builds_a_definition_for_the_viewer_role() {
+    async fn create_process3d_viewer_builds_a_definition_for_the_viewer_role() {
         let def = create_process3d_viewer();
         assert_eq!(def.role, semio_framework::AppRole::Viewer);
         assert_eq!(def.dialect, PROCESS3D_DIALECT.into());
     }
 
     #[test]
-    fn viewer_dialect_matches_the_artifact_coordinate() {
+    async fn viewer_dialect_matches_the_artifact_coordinate() {
         assert_eq!(<Process3dViewer as ArtifactViewer>::DIALECT, PROCESS3D_DIALECT);
     }
 }

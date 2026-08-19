@@ -23,19 +23,19 @@ pub struct DocxInference {
 }
 
 impl protocol::Inference<DocxSnapshot> for DocxInference {
-    fn infer(snapshot: &DocxSnapshot) -> Self {
+    async fn infer(snapshot: &DocxSnapshot) -> Self {
         Self { outline: DocxOutline::compute(snapshot) }
     }
 }
 
 impl protocol::InferenceSpec<DocxSnapshot> for DocxInference {
-    fn inference_schema_id() -> &'static str {
+    async fn inference_schema_id() -> &'static str {
         "s.stdio.docx.inference"
     }
-    fn schema_version() -> u32 {
+    async fn schema_version() -> u32 {
         1
     }
-    fn fields() -> &'static [protocol::InferenceFieldSpec] {
+    async fn fields() -> &'static [protocol::InferenceFieldSpec] {
         &[protocol::InferenceFieldSpec { id: "s.stdio.docx.inference.outline", reads: &["document"] }]
     }
 }
@@ -51,7 +51,7 @@ impl ArtifactInferrer for crate::artifacts::docx::standards::v_ecma_376::subsets
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.stdio.docx.inference`'s facet leaves into the OS-wide inference catalog —
 /// call once at plugin init, alongside `docx_artifact_schema_descriptor`'s registration.
-pub fn docx_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
+pub async fn docx_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
     schema::ArtifactInferenceDescriptor {
         id: "s.stdio.docx.inference",
         inference: schema::FacetLeaves {
@@ -72,13 +72,13 @@ mod tests {
     use protocol::Inference;
 
     #[test]
-    fn inference_determinism_law() {
+    async fn inference_determinism_law() {
         let snapshot = DocxSnapshot::default();
         assert_eq!(DocxInference::infer(&snapshot), DocxInference::infer(&snapshot));
     }
 
     #[test]
-    fn inference_default_law() {
+    async fn inference_default_law() {
         assert_eq!(DocxInference::infer(&DocxSnapshot::default()), DocxInference::default());
     }
 }

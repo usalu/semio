@@ -21,14 +21,14 @@ pub struct GltfDeleteSceneInverse {
     pub default_scene_before: Option<usize>,
     pub expected_default_scene_after: Option<usize>,
 }
-fn paths(before: Option<usize>, after: Option<usize>, index: usize) -> Vec<String> {
+async fn paths(before: Option<usize>, after: Option<usize>, index: usize) -> Vec<String> {
     let mut paths = vec![format!("document/scenes/{}", index)];
     if before != after {
         paths.push("document/scene".into());
     }
     paths
 }
-pub fn validate(inverse: &GltfDeleteSceneInverse, after: &GltfSnapshot) -> Result<(), GltfTopLevelMutationRejection> {
+pub async fn validate(inverse: &GltfDeleteSceneInverse, after: &GltfSnapshot) -> Result<(), GltfTopLevelMutationRejection> {
     if inverse.id != ID || inverse.version != 1 || inverse.phase != GltfDeleteSceneInversePhase::Inverse {
         return Err(reject("gltf.mutation.invalid-inverse-envelope", "inverse", "canonical identity or phase does not match"));
     }
@@ -49,7 +49,7 @@ pub fn validate(inverse: &GltfDeleteSceneInverse, after: &GltfSnapshot) -> Resul
     }
     Ok(())
 }
-pub fn apply(inverse: &GltfDeleteSceneInverse, after: &GltfSnapshot) -> Result<GltfSnapshot, GltfTopLevelMutationRejection> {
+pub async fn apply(inverse: &GltfDeleteSceneInverse, after: &GltfSnapshot) -> Result<GltfSnapshot, GltfTopLevelMutationRejection> {
     validate(inverse, after)?;
     let mut next = after.clone();
     repair(&mut next.document, GltfTopLevelFamily::Scenes, &Change::Insert(inverse.index))?;
@@ -57,10 +57,10 @@ pub fn apply(inverse: &GltfDeleteSceneInverse, after: &GltfSnapshot) -> Result<G
     next.document.scene = inverse.default_scene_before;
     Ok(next)
 }
-pub fn encode(inverse: &GltfDeleteSceneInverse) -> Result<Vec<u8>, GltfTopLevelMutationRejection> {
+pub async fn encode(inverse: &GltfDeleteSceneInverse) -> Result<Vec<u8>, GltfTopLevelMutationRejection> {
     serde_json::to_vec(inverse).map_err(|error| reject("gltf.mutation.encode-failed", "inverse", error.to_string()))
 }
-pub fn derive(base: &GltfSnapshot, index: usize) -> Result<GltfDeleteSceneInverse, GltfTopLevelMutationRejection> {
+pub async fn derive(base: &GltfSnapshot, index: usize) -> Result<GltfDeleteSceneInverse, GltfTopLevelMutationRejection> {
     if index >= base.document.scenes.len() {
         return Err(reject("gltf.mutation.index-out-of-range", "document/scenes", "index must address a scene"));
     }

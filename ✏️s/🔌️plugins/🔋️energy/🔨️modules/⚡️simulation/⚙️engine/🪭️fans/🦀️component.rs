@@ -36,20 +36,20 @@ pub struct FanOperatingPoint {
 
 // #region 🔖️FanLaws
 /// 📐️ Fan law scaling: Q ∝ N, ΔP ∝ N², Power ∝ N³.
-pub fn fan_law_flow(base_flow_m3_s: f64, speed_ratio: f64) -> f64 {
+pub async fn fan_law_flow(base_flow_m3_s: f64, speed_ratio: f64) -> f64 {
     base_flow_m3_s * speed_ratio
 }
 
-pub fn fan_law_pressure(base_pressure_pa: f64, speed_ratio: f64) -> f64 {
+pub async fn fan_law_pressure(base_pressure_pa: f64, speed_ratio: f64) -> f64 {
     base_pressure_pa * speed_ratio * speed_ratio
 }
 
-pub fn fan_law_power(base_power_w: f64, speed_ratio: f64) -> f64 {
+pub async fn fan_law_power(base_power_w: f64, speed_ratio: f64) -> f64 {
     base_power_w * speed_ratio.powi(3)
 }
 
 /// ⚡️ Fan shaft/electrical power [W] from flow, pressure rise, and efficiency.
-pub fn fan_power_w(fan: &Fan, operating: &FanOperatingPoint) -> f64 {
+pub async fn fan_power_w(fan: &Fan, operating: &FanOperatingPoint) -> f64 {
     if operating.volume_flow_m3_s.abs() < 1e-9 {
         return 0.0;
     }
@@ -71,7 +71,7 @@ pub fn fan_power_w(fan: &Fan, operating: &FanOperatingPoint) -> f64 {
 }
 
 /// 📊️ Compute fan operating point from requested flow and system pressure.
-pub fn fan_operating_point(fan: &Fan, requested_flow_m3_s: f64, system_pressure_pa: f64) -> FanOperatingPoint {
+pub async fn fan_operating_point(fan: &Fan, requested_flow_m3_s: f64, system_pressure_pa: f64) -> FanOperatingPoint {
     let plr = (requested_flow_m3_s / fan.max_flow_m3_s.max(1e-6)).clamp(0.0, 1.2);
     let speed = plr.sqrt().clamp(0.0, 1.0);
     let dp_curve = fan.max_pressure_rise_pa * fan.pressure_curve.evaluate(plr);
@@ -79,7 +79,7 @@ pub fn fan_operating_point(fan: &Fan, requested_flow_m3_s: f64, system_pressure_
 }
 
 /// 🌬️ Mass flow from volumetric flow and air density.
-pub fn fan_mass_flow_kg_s(volume_flow_m3_s: f64, density_kg_m3: f64) -> f64 {
+pub async fn fan_mass_flow_kg_s(volume_flow_m3_s: f64, density_kg_m3: f64) -> f64 {
     volume_flow_m3_s * density_kg_m3.max(0.5)
 }
 // #endregion 🔖️FanLaws
@@ -89,7 +89,7 @@ mod tests {
     use super::*;
     use crate::units::RHO_AIR_REF;
 
-    fn test_fan() -> Fan {
+    async fn test_fan() -> Fan {
         Fan {
             fan_type: FanType::VariableVolume,
             max_flow_m3_s: 2.0,
@@ -102,19 +102,19 @@ mod tests {
     }
 
     #[test]
-    fn fan_laws_cubic_power() {
+    async fn fan_laws_cubic_power() {
         assert!((fan_law_power(1000.0, 0.5) - 125.0).abs() < 1e-6);
     }
 
     #[test]
-    fn zero_flow_zero_power() {
+    async fn zero_flow_zero_power() {
         let fan = test_fan();
         let operating_point = FanOperatingPoint { volume_flow_m3_s: 0.0, pressure_rise_pa: 0.0, part_load_ratio: 0.0, speed_ratio: 0.0 };
         assert_eq!(fan_power_w(&fan, &operating_point), 0.0);
     }
 
     #[test]
-    fn full_load_positive_power() {
+    async fn full_load_positive_power() {
         let fan = test_fan();
         let operating_point = fan_operating_point(&fan, 2.0, 600.0);
         let p = fan_power_w(&fan, &operating_point);

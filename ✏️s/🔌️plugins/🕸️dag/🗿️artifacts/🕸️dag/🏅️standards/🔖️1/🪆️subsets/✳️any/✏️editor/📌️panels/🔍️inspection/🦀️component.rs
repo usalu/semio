@@ -15,13 +15,13 @@ pub const DAG_PLAY_BODY_INSPECTOR: &str = "dag.play.inspection";
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
-pub fn definition() -> PanelTabDefinition {
+pub async fn definition() -> PanelTabDefinition {
     PanelTabDefinition { kind: PanelTabKind::App(FRAMEWORK_PANEL_TAB_INSPECTION_ID.into()), label: LocalizedLabel::native(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, "Inspektion"), group: PanelGroup::Details, body_key: Some(DAG_PLAY_BODY_INSPECTOR.into()), children: Vec::new() }
 }
 //#endregion 🔖️Definition
 
 //#region 🔖️Fields
-fn inspector_number_field(node_ids: &[String], field_id: &str, label: impl Into<Label>, values: &[f64], field: &str) -> UiNode {
+async fn inspector_number_field(node_ids: &[String], field_id: &str, label: impl Into<Label>, values: &[f64], field: &str) -> UiNode {
     let mixed = ui_inspector_mixed_number(values);
     UiNode::Field(UiFieldNode {
         presence: UiPresence::default(),
@@ -48,7 +48,7 @@ fn inspector_number_field(node_ids: &[String], field_id: &str, label: impl Into<
     })
 }
 
-fn inspector_text_field(node_ids: &[String], field_id: &str, label: impl Into<Label>, values: &[String], field: &str) -> UiNode {
+async fn inspector_text_field(node_ids: &[String], field_id: &str, label: impl Into<Label>, values: &[String], field: &str) -> UiNode {
     let mixed = ui_inspector_mixed_text(values);
     UiNode::Field(UiFieldNode {
         presence: UiPresence::default(),
@@ -77,7 +77,7 @@ fn inspector_text_field(node_ids: &[String], field_id: &str, label: impl Into<La
 //#endregion 🔖️Fields
 
 //#region 🔖️Render
-pub fn render(document: &DagSnapshot, selected: &[String], labels: &DagPlayLabels) -> UiNode {
+pub async fn render(document: &DagSnapshot, selected: &[String], labels: &DagPlayLabels) -> UiNode {
     if selected.is_empty() {
         return ui_declarative_sections_to_tree(&[semio_framework_plugin::UiSectionNode {
             id: "dag-play-inspector.empty".into(),
@@ -201,14 +201,14 @@ mod tests {
     use crate::editor::dag::testkit::{new_app, render as render_body};
 
     #[test]
-    fn definition_binds_the_framework_inspection_tab_to_this_body_key() {
+    async fn definition_binds_the_framework_inspection_tab_to_this_body_key() {
         let definition = definition();
         assert_eq!(definition.id(), FRAMEWORK_PANEL_TAB_INSPECTION_ID);
         assert_eq!(definition.body_key.as_deref(), Some(DAG_PLAY_BODY_INSPECTOR));
     }
 
     #[test]
-    fn renders_the_select_a_node_placeholder_when_nothing_is_selected() {
+    async fn renders_the_select_a_node_placeholder_when_nothing_is_selected() {
         let mut app = new_app();
         assert!(render_body(&mut app, DAG_PLAY_BODY_INSPECTOR).contains("Select a node"));
     }
@@ -219,7 +219,7 @@ mod tests {
     /// with an explicit selection, the way `space`'s inspector test does, rather than driving it
     /// end-to-end through a (now selection-blind) app dispatch.
     #[test]
-    fn renders_id_name_and_kind_fields_for_a_single_selected_node() {
+    async fn renders_id_name_and_kind_fields_for_a_single_selected_node() {
         let document = crate::artifacts::dag::default_snapshot();
         let node_id = document.nodes().first().map(|node| node.id.clone()).expect("node");
         let labels = crate::editor::dag::terminology::dag_play_labels(&crate::editor::dag::config::DagConfig::default());

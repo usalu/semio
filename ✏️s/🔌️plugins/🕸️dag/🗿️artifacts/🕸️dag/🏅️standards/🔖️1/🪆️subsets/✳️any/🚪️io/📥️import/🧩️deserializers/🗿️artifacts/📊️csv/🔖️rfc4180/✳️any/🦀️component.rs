@@ -12,7 +12,7 @@ use semio_s_plugin_stdio::artifacts::csv::{CsvSnapshot, STDIO_CSV_DOCUMENT_SCHEM
 
 pub const CSV_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.csv", standard: StandardId("rfc4180"), subset: SubsetId::ANY };
 
-pub fn deserialize(from: &CsvSnapshot) -> Result<DagSnapshot, store::TextError> {
+pub async fn deserialize(from: &CsvSnapshot) -> Result<DagSnapshot, store::TextError> {
     let _ = STDIO_CSV_DOCUMENT_SCHEMA;
     let value = serde_json::to_value(from).map_err(|e| store::TextError::new(e.to_string(), dsl::TextSpan::at(1, 1)))?;
     serde_json::from_value(value).map_err(|e| store::TextError::new(format!("dag<-csv: {e}"), dsl::TextSpan::at(1, 1)))
@@ -23,7 +23,7 @@ pub struct CsvIntoDag;
 impl Deserializer<DagSnapshot> for CsvIntoDag {
     const FROM: Dialect = CSV_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Lossy;
-    fn deserialize(payload: &IoPayload) -> IoResult<DagSnapshot> {
+    async fn deserialize(payload: &IoPayload) -> IoResult<DagSnapshot> {
         let IoPayload::Binary(bytes) = payload else {
             return Err(IoError { message: "CsvIntoDag: expected a binary csv payload".to_string(), diagnostics: Vec::new() });
         };

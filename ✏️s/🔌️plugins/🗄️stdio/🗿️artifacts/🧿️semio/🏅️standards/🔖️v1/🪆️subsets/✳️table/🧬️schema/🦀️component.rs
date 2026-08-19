@@ -20,26 +20,26 @@ pub struct SemioTableArtifact {
 }
 
 impl Default for SemioTableArtifact {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self::from_snapshot(SemioTableSnapshot::default())
     }
 }
 
 impl SemioTableArtifact {
-    pub fn to_snapshot(&self) -> SemioTableSnapshot {
+    pub async fn to_snapshot(&self) -> SemioTableSnapshot {
         SemioTableSnapshot { schema: self.schema.clone(), columns: self.columns.clone(), rows: self.rows.clone() }
     }
-    pub fn from_snapshot(snapshot: SemioTableSnapshot) -> Self {
+    pub async fn from_snapshot(snapshot: SemioTableSnapshot) -> Self {
         Self { schema: snapshot.schema, columns: snapshot.columns, rows: snapshot.rows }
     }
-    pub fn set_snapshot(&mut self, snapshot: SemioTableSnapshot) {
+    pub async fn set_snapshot(&mut self, snapshot: SemioTableSnapshot) {
         self.schema = snapshot.schema;
         self.columns = snapshot.columns;
         self.rows = snapshot.rows;
     }
 }
 
-pub fn semio_table_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
+pub async fn semio_table_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
     schema::ArtifactSchemaDescriptor {
         id: "s.stdio.semio.table",
         artifact: schema::FacetLeaves {
@@ -87,16 +87,16 @@ pub mod derived_construction {
     //#region 🔖️TypedConstructors
     impl SemioTableBuilderConstruction {
         /// 🏗️ Starts a fresh, empty table document.
-        pub fn new() -> Self {
+        pub async fn new() -> Self {
             Self { snapshot: SemioTableSnapshot::default() }
         }
         /// 🏗️ Appends one column, in order.
-        pub fn add_column(mut self, name: impl Into<String>, kind: SemioTableCellKind) -> Self {
+        pub async fn add_column(mut self, name: impl Into<String>, kind: SemioTableCellKind) -> Self {
             self.snapshot.columns.push(SemioTableColumn { name: name.into(), kind });
             self
         }
         /// 🏗️ Appends one row, in order.
-        pub fn add_row(mut self, row: SemioTableRow) -> Self {
+        pub async fn add_row(mut self, row: SemioTableRow) -> Self {
             self.snapshot.rows.push(row);
             self
         }
@@ -107,28 +107,28 @@ pub mod derived_construction {
         type Snapshot = SemioTableSnapshot;
         type Mutation = SemioTableMutation;
         type Diff = SemioTableDiff;
-        fn empty() -> Self {
+        async fn empty() -> Self {
             Self { snapshot: SemioTableSnapshot::default() }
         }
-        fn from_snapshot(snapshot: Self::Snapshot) -> Self {
+        async fn from_snapshot(snapshot: Self::Snapshot) -> Self {
             Self { snapshot }
         }
-        fn from_text(text: &str) -> Result<Self, store::TextError> {
+        async fn from_text(text: &str) -> Result<Self, store::TextError> {
             Ok(Self::from_snapshot(<SemioTableSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
-        fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
+        async fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
             Ok(Self::from_snapshot(<SemioTableSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
         }
-        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
+        async fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let diff = <Self::Mutation as protocol::Mutation<SemioTableSnapshot>>::diff(&mutation, &self.snapshot);
             let diff = diff.apply_to(&mut self.snapshot);
             (self, diff)
         }
-        fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
+        async fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
             self.snapshot = <SemioTableDiff as protocol::MutationDiff<SemioTableSnapshot>>::apply(&diff, &self.snapshot)?;
             Ok(self)
         }
-        fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
+        async fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
             Ok(self.snapshot)
         }
     }
@@ -140,7 +140,7 @@ pub mod derived_construction {
         use crate::artifacts::semio::standards::v1::subsets::value::schema::snapshot::SemioValue;
 
         #[test]
-        fn typed_constructors_build_a_populated_snapshot() {
+        async fn typed_constructors_build_a_populated_snapshot() {
             let snapshot = SemioTableBuilderConstruction::new().add_column("label", SemioTableCellKind::Str).add_row(SemioTableRow { cells: vec![SemioValue::Str { value: "hello".into() }] }).build().expect("build");
             assert_eq!(snapshot.columns.len(), 1);
             assert_eq!(snapshot.rows[0].cells.len(), 1);
@@ -167,7 +167,7 @@ pub mod derived_analysis {
         type Parts = SemioTableParts;
         const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("table") };
 
-        fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
+        async fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
             match source {
                 AnalyzeSource::Binary(bytes) => {
                     let marker = STDIO_SEMIOTABLE_DOCUMENT_SCHEMA.as_bytes();
@@ -187,7 +187,7 @@ pub mod derived_analysis {
             }
         }
 
-        fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
+        async fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
             let mut parts = SemioTableParts::default();
             let mut diagnostics = Vec::new();
             let mut confidence = IoConfidence::High;

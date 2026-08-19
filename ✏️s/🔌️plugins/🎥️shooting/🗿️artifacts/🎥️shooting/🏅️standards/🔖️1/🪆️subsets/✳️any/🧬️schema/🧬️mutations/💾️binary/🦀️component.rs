@@ -21,12 +21,12 @@ use crate::artifacts::shooting::schema::mutations::text::ShootingMutation;
 use protocol::OpBinary;
 
 /// 📦️ Encodes a `ShootingMutation` to its binary state-patch form.
-pub fn encode_op(operation: &ShootingMutation) -> Result<Vec<u8>, protocol::ProtocolError> {
+pub async fn encode_op(operation: &ShootingMutation) -> Result<Vec<u8>, protocol::ProtocolError> {
     operation.encode_op()
 }
 
 /// 📖️ Decodes a `ShootingMutation` from its binary state-patch form.
-pub fn decode_op(bytes: &[u8]) -> Result<ShootingMutation, protocol::ProtocolError> {
+pub async fn decode_op(bytes: &[u8]) -> Result<ShootingMutation, protocol::ProtocolError> {
     ShootingMutation::decode_op(bytes)
 }
 
@@ -37,7 +37,7 @@ mod tests {
     use crate::artifacts::shooting::ShootingSnapshot;
 
     #[test]
-    fn op_binary_round_trips_and_agrees_with_text() {
+    async fn op_binary_round_trips_and_agrees_with_text() {
         let operation = ShootingMutation::SetActiveShot(crate::artifacts::shooting::schema::mutations::set_active_shot::mutation::SetActiveShot { shot_id: Some("s1".into()) });
         store::os_store::test_support::assert_op_text_binary_equivalence(&operation);
         let bytes = encode_op(&operation).expect("encode");
@@ -45,7 +45,7 @@ mod tests {
     }
 
     #[test]
-    fn shooting_document_text_round_trips_store_with_applied_operation() {
+    async fn shooting_document_text_round_trips_store_with_applied_operation() {
         use store::ArtifactCommand;
 
         let mut store = store::ArtifactStore::<ShootingSnapshot, ShootingMutation>::new(store::create_document_envelope(crate::artifacts::shooting::SHOOTING_DOCUMENT_SCHEMA, "shooting", crate::artifacts::shooting::empty_shooting_snapshot(), None)).expect("valid artifact store fixture");

@@ -14,7 +14,7 @@ use semio_framework_plugin::{AnalyzeSource, ArtifactBuilder};
 
 //#region 🔖️(a) RealDecode
 #[test]
-fn base_glb_decodes_with_real_non_trivial_invariants() {
+async fn base_glb_decodes_with_real_non_trivial_invariants() {
     let snap = decoded_snapshot();
     let doc = &snap.document;
 
@@ -74,7 +74,7 @@ fn base_glb_decodes_with_real_non_trivial_invariants() {
 
 //#region 🔖️(b) DecodeEncodeDecode
 #[test]
-fn base_glb_decode_encode_decode_is_semantically_equal() {
+async fn base_glb_decode_encode_decode_is_semantically_equal() {
     let original = decode_glb(BASE_GLB_BYTES).expect("decode base.glb");
     let reencoded = encode_glb(&original).expect("re-encode");
     assert_eq!(&reencoded[0..4], b"glTF");
@@ -105,7 +105,7 @@ fn base_glb_decode_encode_decode_is_semantically_equal() {
 /// equivalent document using ONLY typed builder calls (no direct snapshot/document
 /// construction), then prove the rebuilt document decodes to the same real data as the original.
 #[test]
-fn analyzer_builder_round_trip_reconstructs_equivalent_document() {
+async fn analyzer_builder_round_trip_reconstructs_equivalent_document() {
     let analysis = GltfAnalyzer::analyze(&[AnalyzeSource::Binary(BASE_GLB_BYTES)]);
     let original = analysis.parts.snapshot.expect("analyzer decodes base.glb");
     let doc = &original.document;

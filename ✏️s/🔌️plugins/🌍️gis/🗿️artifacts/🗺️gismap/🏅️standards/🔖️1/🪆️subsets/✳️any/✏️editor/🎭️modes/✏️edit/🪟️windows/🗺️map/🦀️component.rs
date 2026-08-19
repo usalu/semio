@@ -16,7 +16,7 @@ const GIS2D_PLAY_SURFACE: &str = "gis2d.play.composite";
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
-pub fn definition() -> WindowKindDefinition {
+pub async fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
         id: GIS2D_PLAY_WINDOW_MAIN.into(),
         label: LocalizedLabel::native("Map", "Karte"),
@@ -38,7 +38,7 @@ pub fn definition() -> WindowKindDefinition {
 /// 🎚️ Collects this window's chrome from its own `🎚️options/*` nodes rather than re-listing them —
 /// measures are config-derived per frame by `ArtifactEditor::window_measures`, never frozen into the
 /// manifest.
-pub fn window_measures(cfg: &Gis2dConfig, labels: &Gis2dPlayLabels) -> Vec<WindowMeasure> {
+pub async fn window_measures(cfg: &Gis2dConfig, labels: &Gis2dPlayLabels) -> Vec<WindowMeasure> {
     use crate::editor::gis2d::modes::edit::windows::map::options;
     vec![
         options::render_mode::measure(cfg, labels),
@@ -51,11 +51,11 @@ pub fn window_measures(cfg: &Gis2dConfig, labels: &Gis2dPlayLabels) -> Vec<Windo
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-fn default_layer_visibility() -> HashMap<String, bool> {
+async fn default_layer_visibility() -> HashMap<String, bool> {
     GIS_MAP_LAYER_IDS.iter().map(|(id, _, _)| ((*id).into(), true)).collect()
 }
 
-fn layer_visibility_json(cfg: &Gis2dConfig) -> String {
+async fn layer_visibility_json(cfg: &Gis2dConfig) -> String {
     let mut map = default_layer_visibility();
     for (id, visible) in &cfg.layer_visibility {
         map.insert(id.clone(), *visible);
@@ -63,7 +63,7 @@ fn layer_visibility_json(cfg: &Gis2dConfig) -> String {
     serde_json::to_string(&map).unwrap_or_else(|_| "{}".into())
 }
 
-fn layer_stroke_scale_json(cfg: &Gis2dConfig) -> String {
+async fn layer_stroke_scale_json(cfg: &Gis2dConfig) -> String {
     let mut map: HashMap<String, f64> = GIS_MAP_LAYER_IDS.iter().map(|(id, _, _)| ((*id).into(), 1.0)).collect();
     for (id, weight) in &cfg.layer_stroke_scale {
         map.insert(id.clone(), clamp_map_layer_weight(*weight));
@@ -73,7 +73,7 @@ fn layer_stroke_scale_json(cfg: &Gis2dConfig) -> String {
 
 /// 🌐️ Rewrites the tile templates to absolute URLs when the host publishes an asset base (the
 /// `/osm` + `/vt` tile-proxy routes this plugin declares in its Cargo metadata).
-fn apply_gis_map_tile_base_url(scene: &mut TiledMapScene) {
+async fn apply_gis_map_tile_base_url(scene: &mut TiledMapScene) {
     let Ok(base) = std::env::var("SEMIO_ASSET_BASE_URL") else {
         return;
     };
@@ -82,7 +82,7 @@ fn apply_gis_map_tile_base_url(scene: &mut TiledMapScene) {
     scene.vector_tile_url_template = format!("{base}/vt/{{z}}/{{x}}/{{y}}.pbf");
 }
 
-pub fn render(document: &GisMapSnapshot, cfg: &Gis2dConfig) -> UiNode {
+pub async fn render(document: &GisMapSnapshot, cfg: &Gis2dConfig) -> UiNode {
     let mut scene = TiledMapScene::base(gis_map_descriptor_json(document), cfg.camera_json.clone());
     scene.render_mode = cfg.render_mode.clone();
     scene.vector_style = cfg.vector_style.clone();
@@ -107,13 +107,13 @@ mod tests {
     use crate::editor::gis2d::testkit::{app, main_window_measures, render as render_body};
 
     #[test]
-    fn renders_gis_map_scene() {
+    async fn renders_gis_map_scene() {
         let mut app = app();
         assert!(render_body(&mut app, GIS2D_PLAY_BODY_COMPOSITE).contains("tiled-map"));
     }
 
     #[test]
-    fn render_canvas_uses_absolute_tile_urls_when_env_set() {
+    async fn render_canvas_uses_absolute_tile_urls_when_env_set() {
         unsafe { std::env::set_var("SEMIO_ASSET_BASE_URL", "http://127.0.0.1:6141") };
         let mut app = app();
         let json = render_body(&mut app, GIS2D_PLAY_BODY_COMPOSITE);
@@ -123,7 +123,7 @@ mod tests {
     }
 
     #[test]
-    fn the_window_collects_every_option_node_exactly_once() {
+    async fn the_window_collects_every_option_node_exactly_once() {
         let config = Gis2dConfig::default();
         let measures = window_measures(&config, gis2d_labels(&config));
         assert_eq!(measures.len(), 5, "3 selects + the layers and layer-weights groups");
@@ -132,7 +132,7 @@ mod tests {
     }
 
     #[test]
-    fn the_definition_binds_the_tiled_map_surface_to_the_composite_body() {
+    async fn the_definition_binds_the_tiled_map_surface_to_the_composite_body() {
         let definition = definition();
         assert_eq!(definition.id, GIS2D_PLAY_WINDOW_MAIN);
         assert_eq!(definition.body_key, GIS2D_PLAY_BODY_COMPOSITE);

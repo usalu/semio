@@ -17,7 +17,7 @@ const FROM_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard
 const INTO_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.dxf", standard: StandardId("r12"), subset: SubsetId::ANY };
 
 //#region 🔖️OtherGroupCodes
-fn ellipse_to_other(center: &SemioPoint2, major_axis_end: &SemioPoint2, ratio: f64, start_param: f64, end_param: f64) -> DxfEntity {
+async fn ellipse_to_other(center: &SemioPoint2, major_axis_end: &SemioPoint2, ratio: f64, start_param: f64, end_param: f64) -> DxfEntity {
     DxfEntity::Other {
         kind: "ELLIPSE".into(),
         group_codes: vec![
@@ -31,7 +31,7 @@ fn ellipse_to_other(center: &SemioPoint2, major_axis_end: &SemioPoint2, ratio: f
         ],
     }
 }
-fn dimension_to_other(def_point: &SemioPoint2, text_position: &SemioPoint2, measurement: f64, text: &str) -> DxfEntity {
+async fn dimension_to_other(def_point: &SemioPoint2, text_position: &SemioPoint2, measurement: f64, text: &str) -> DxfEntity {
     DxfEntity::Other {
         kind: "DIMENSION".into(),
         group_codes: vec![
@@ -47,7 +47,7 @@ fn dimension_to_other(def_point: &SemioPoint2, text_position: &SemioPoint2, meas
 //#endregion 🔖️OtherGroupCodes
 
 //#region 🔖️EntityMap
-fn dxf_entity_from_cad(rec: &CadEntityRecord) -> DxfEntity {
+async fn dxf_entity_from_cad(rec: &CadEntityRecord) -> DxfEntity {
     let layer = rec.layer.clone();
     match &rec.entity {
         CadEntity::Line { a, b } => DxfEntity::Line { start: [a.x, a.y, 0.0], end: [b.x, b.y, 0.0], layer, unknown_group_codes: vec![] },
@@ -71,10 +71,10 @@ fn dxf_entity_from_cad(rec: &CadEntityRecord) -> DxfEntity {
 //#endregion 🔖️EntityMap
 
 //#region 🔖️LayerBlockMap
-fn dxf_layer_from_cad(l: &crate::artifacts::semio::standards::v1::subsets::cad::schema::snapshot::CadLayer) -> DxfLayer {
+async fn dxf_layer_from_cad(l: &crate::artifacts::semio::standards::v1::subsets::cad::schema::snapshot::CadLayer) -> DxfLayer {
     DxfLayer { name: l.name.clone(), color: l.color_index, linetype: l.line_type.clone(), flags: if l.visible { 0 } else { 1 }, unknown_group_codes: vec![] }
 }
-fn dxf_block_from_cad(b: &CadBlock) -> DxfBlock {
+async fn dxf_block_from_cad(b: &CadBlock) -> DxfBlock {
     DxfBlock { name: b.name.clone(), base_point: [b.base_point.x, b.base_point.y, 0.0], entities: b.entities.iter().map(dxf_entity_from_cad).collect(), unknown_group_codes: vec![] }
 }
 //#endregion 🔖️LayerBlockMap
@@ -107,7 +107,7 @@ mod tests {
     use super::*;
     use crate::artifacts::semio::standards::v1::subsets::cad::schema::snapshot::CadLayer;
 
-    fn sample_cad() -> SemioCadSnapshot {
+    async fn sample_cad() -> SemioCadSnapshot {
         SemioCadSnapshot {
             layers: vec![CadLayer { name: "0".into(), color_index: 7, line_type: "CONTINUOUS".into(), visible: true }],
             blocks: vec![CadBlock {
@@ -126,7 +126,7 @@ mod tests {
     /// 🧪️ Real round trip through dxf's own real Part-21-style ASCII writer/reader
     /// (`print_dxf_document`/`parse_dxf_document`) AND the sibling import leaf's mapping.
     #[test]
-    fn real_text_round_trip_through_dxf_codec() {
+    async fn real_text_round_trip_through_dxf_codec() {
         let cad = sample_cad();
         let dxf = semio_framework_plugin::resolve_ready(SemioCadToDxf::serialize(&cad)).expect("serialize");
         assert_eq!(dxf.tables.layers.len(), 1);

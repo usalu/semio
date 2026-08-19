@@ -17,12 +17,12 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 //#endregion 📖️SemioGrammar
 
 /// 📖️ Parses `.en1992` DSL text into a `Document`.
-pub fn parse_dsl(text: &str) -> Result<En1992Snapshot, store::TextError> {
+pub async fn parse_dsl(text: &str) -> Result<En1992Snapshot, store::TextError> {
     <En1992Snapshot as store::ArtifactDsl>::parse_dsl(text)
 }
 
 /// 🖨️ Prints a `Document` back to `.en1992` DSL text.
-pub fn print_dsl(document: &En1992Snapshot) -> String {
+pub async fn print_dsl(document: &En1992Snapshot) -> String {
     store::ArtifactDsl::print_dsl(document)
 }
 
@@ -31,19 +31,19 @@ mod tests {
     use super::*;
 
     #[test]
-    fn document_dsl_round_trips() {
+    async fn document_dsl_round_trips() {
         store::os_store::test_support::assert_dsl_round_trip(&En1992Snapshot::default());
     }
 
     #[test]
-    fn dsl_round_trip_agrees_with_print_parse_wrappers() {
+    async fn dsl_round_trip_agrees_with_print_parse_wrappers() {
         let document = En1992Snapshot::default();
         let printed = print_dsl(&document);
         assert_eq!(parse_dsl(&printed).expect("parse printed document"), document);
     }
 
     #[test]
-    fn document_dsl_parse_error_reports_the_real_line_of_the_bad_field() {
+    async fn document_dsl_parse_error_reports_the_real_line_of_the_bad_field() {
         // The engine's per-token spans are a concrete improvement over the old `dsl_kv` printer,
         // whose errors always reported `TextSpan::at(1, 1)` regardless of which line actually
         // failed. `fire-rating` (kebab-cased from `fire_rating`) is the 16th `key value` line in
@@ -59,7 +59,7 @@ mod tests {
     }
 
     #[test]
-    fn liquid_retaining_fem_anchor_example_fixture_parses_and_round_trips() {
+    async fn liquid_retaining_fem_anchor_example_fixture_parses_and_round_trips() {
         use crate::artifacts::en1992::part_1_2::FireRating;
         use crate::artifacts::en1992::part_3::TightnessClass;
         use crate::document::AnnexChoice;
@@ -78,7 +78,7 @@ mod semio_grammar_conformance {
     use super::*;
 
     #[test]
-    fn component_grammar_semio_is_grammar_dialect() {
+    async fn component_grammar_semio_is_grammar_dialect() {
         let g = ::dsl::parse_grammar(COMPONENT_GRAMMAR_SEMIO).expect("parse grammar.semio");
         assert_eq!(g.dialect, ::dsl::SemioDialect::Grammar);
         assert!(!COMPONENT_GRAMMAR_SEMIO.is_empty());

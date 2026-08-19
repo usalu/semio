@@ -13,7 +13,7 @@ pub const S_PLAY_SURFACE_COMPILED_DAG: &str = "s.play.compiled-dag";
 //#endregion 🔖️Constants
 
 //#region 🔖️Manifest
-fn compiled_dag_engagement(projection: &WorkflowSnapshot) -> WindowEngagement {
+async fn compiled_dag_engagement(projection: &WorkflowSnapshot) -> WindowEngagement {
     let wire = compiled_dag_wire_literal(projection);
     WindowEngagement {
         session_active: Some(false),
@@ -26,7 +26,7 @@ fn compiled_dag_engagement(projection: &WorkflowSnapshot) -> WindowEngagement {
     }
 }
 
-pub fn definition() -> WindowKindDefinition {
+pub async fn definition() -> WindowKindDefinition {
     let engagement = compiled_dag_engagement(&demo_space_projection());
     WindowKindDefinition {
         id: S_PLAY_WINDOW_COMPILED_DAG.into(),
@@ -50,7 +50,7 @@ pub fn definition() -> WindowKindDefinition {
 //#endregion 🔖️Manifest
 
 //#region 🔖️Render
-pub fn render(projection: &WorkflowSnapshot) -> UiNode {
+pub async fn render(projection: &WorkflowSnapshot) -> UiNode {
     let wire = compiled_dag_wire_literal(projection);
     build_text_editor_scene(S_PLAY_SURFACE_COMPILED_DAG, crate::engine::space::S_PLAY_CONTROLLER_ID, TextEditorScene::base(wire, Some("wire".into()), None))
 }
@@ -62,7 +62,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn renders_compiled_dag_editor() {
+    async fn renders_compiled_dag_editor() {
         use semio_framework_plugin::{PluginApp, ViewModel, VcsArtifactApp};
         let mut app = VcsArtifactApp::new(crate::engine::space::SpaceApp::default());
         let node = app.render(S_PLAY_BODY_COMPILED_DAG, None, &ViewModel::default()).expect("render");

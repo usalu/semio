@@ -23,7 +23,7 @@ const PROCESS3D_FALLBACK_MESH_KIND: &str = "box";
 /// 🧱️ Stitched into the app manifest by `crate::editor::process3d::create_process3d_app`. `options.measures`
 /// stays empty here on purpose: this window's measures are config-derived and rebuilt per frame by
 /// `window_measures`, never frozen into the manifest.
-pub fn definition() -> WindowKindDefinition {
+pub async fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
         id: PROCESS_3D_PLAY_WINDOW_MAIN.into(),
         label: LocalizedLabel::native("Workpiece", "Werkstück"),
@@ -43,7 +43,7 @@ pub fn definition() -> WindowKindDefinition {
 }
 
 /// 🎚️ The live chrome measures for this window, collected from its `🎚️options/*` components.
-pub fn window_measures(config: &Process3dConfig) -> Vec<WindowMeasure> {
+pub async fn window_measures(config: &Process3dConfig) -> Vec<WindowMeasure> {
     vec![options::sun::measure(&config_sun(config))]
 }
 //#endregion 🔖️Definition
@@ -52,7 +52,7 @@ pub fn window_measures(config: &Process3dConfig) -> Vec<WindowMeasure> {
 /// 🌞️ Reconstructs the shared framework `WorldSunConfig` shape from `Process3dConfig`'s flattened sun
 /// fields — `world3d_scene`/`world3d_sun_measures` are shared SDK primitives that still take the
 /// nested struct.
-pub fn config_sun(cfg: &Process3dConfig) -> WorldSunConfig {
+pub async fn config_sun(cfg: &Process3dConfig) -> WorldSunConfig {
     WorldSunConfig { enabled: cfg.sun_enabled, azimuth: cfg.sun_azimuth, elevation: cfg.sun_elevation, intensity: cfg.sun_intensity, color: cfg.sun_color.clone() }
 }
 //#endregion 🔖️Sun
@@ -68,7 +68,7 @@ pub fn config_sun(cfg: &Process3dConfig) -> WorldSunConfig {
 /// `selectionMode`/`targets`/`componentIds` are no longer emitted here, matching every other
 /// migrated world3d call site's empty-selection `world3d_selection_json` call (e.g. `📐️cad`'s
 /// `world_selection_json`).
-fn process3d_selection_json(active_utility: &str) -> String {
+async fn process3d_selection_json(active_utility: &str) -> String {
     let mut value: serde_json::Value = serde_json::from_str(&world3d_selection_json("rectangle", &[], None)).unwrap_or_else(|_| json!({}));
     if let Some(object) = value.as_object_mut() {
         object.insert("engagementSessionActive".into(), json!(active_utility != "select"));
@@ -85,7 +85,7 @@ fn process3d_selection_json(active_utility: &str) -> String {
 /// mesh-url fast path (which needed to inspect the resolved solid kind) can no longer trigger, and
 /// `processed_mesh` degrades to the empty working scene (falls back to
 /// `PROCESS3D_FALLBACK_MESH_KIND`), a documented gap.
-fn evaluated_preview_payload(fixture: &Process3dSnapshot) -> (String, String) {
+async fn evaluated_preview_payload(fixture: &Process3dSnapshot) -> (String, String) {
     let scene = crate::artifacts::process3d::process_working_scene_from_snapshot(fixture);
     let mesh = processed_mesh(&scene, fixture.resolved_up_to).unwrap_or_else(|| mesh_from_kind(PROCESS3D_FALLBACK_MESH_KIND));
     let meshes = json!([{ "id": "processed", "data": mesh }]);
@@ -102,13 +102,13 @@ fn evaluated_preview_payload(fixture: &Process3dSnapshot) -> (String, String) {
     (meshes.to_string(), instances.to_string())
 }
 
-fn preview_payload_cached(fixture: &Process3dSnapshot) -> (String, String) {
+async fn preview_payload_cached(fixture: &Process3dSnapshot) -> (String, String) {
     evaluated_preview_payload(fixture)
 }
 //#endregion 🔖️PreviewCache
 
 //#region 🔖️Render
-pub fn render(fixture: &Process3dSnapshot, config: &Process3dConfig) -> UiNode {
+pub async fn render(fixture: &Process3dSnapshot, config: &Process3dConfig) -> UiNode {
     let (meshes_json, instances_json) = preview_payload_cached(fixture);
     build_world_3d_scene(
         PROCESS_3D_PLAY_SURFACE_MAIN,
@@ -125,7 +125,7 @@ pub fn render(fixture: &Process3dSnapshot, config: &Process3dConfig) -> UiNode {
 //#endregion 🔖️Render
 
 //#region 🔖️Engagement
-pub fn engagement(fixture: &Process3dSnapshot, config: &Process3dConfig, labels: &crate::editor::process3d::terminology::Process3dLabels) -> WindowEngagement {
+pub async fn engagement(fixture: &Process3dSnapshot, config: &Process3dConfig, labels: &crate::editor::process3d::terminology::Process3dLabels) -> WindowEngagement {
     let active_utility = config.active_utility();
     // 🌉️ Ticket 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM wave 4: `steps` is a composed CHILD
     // HANDLE now (no `.len()` — see `ProcessWorkingScene`'s doc comment), so the stepper's `max`
@@ -175,7 +175,7 @@ mod tests {
     use crate::editor::process3d::testkit;
 
     #[test]
-    fn definition_declares_the_world3d_surface_and_body_key() {
+    async fn definition_declares_the_world3d_surface_and_body_key() {
         let definition = definition();
         assert_eq!(definition.body_key, PROCESS_3D_PLAY_BODY_MAIN);
         assert!(matches!(definition.surface_kind, SurfaceKind::World3d));
@@ -183,14 +183,14 @@ mod tests {
     }
 
     #[test]
-    fn engagement_exposes_no_utility_switch_options() {
+    async fn engagement_exposes_no_utility_switch_options() {
         let doc = Process3dSnapshot::default();
         let engagement = engagement(&doc, &Process3dConfig::default(), &crate::editor::process3d::terminology::Process3dLabels::NATIVE_EN);
         assert!(engagement.options.is_none(), "select/cut/drill/attach switching lives only on the framework utility bar; the engagement must not duplicate it as options");
     }
 
     #[test]
-    fn render_world_scene_contains_processed_mesh() {
+    async fn render_world_scene_contains_processed_mesh() {
         let mut app = testkit::app();
         let node = testkit::render(&mut app, PROCESS_3D_PLAY_BODY_MAIN);
         assert!(node.contains("processed"), "expected the processed mesh id in scene json: {node}");

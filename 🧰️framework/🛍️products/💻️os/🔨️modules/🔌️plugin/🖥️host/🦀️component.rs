@@ -3023,6 +3023,21 @@ impl ArtifactMutationRouter {
     /// exact 4-argument shape (`plugin_id, dependencies, handle, roster_wire_bytes`).
     pub fn register_plugin(&self, plugin_id: &str, dependencies: &[semio_framework::PluginDependency], handle: Arc<PluginInstanceHandle>, roster_wire_bytes: &[u8]) -> Result<(), PluginHostError> {
         let roster: Vec<HostMutationRosterEntry> = decode_wire_dsl(roster_wire_bytes)?;
+        self.register_roster_with_runtime(plugin_id, dependencies, handle, roster)
+    }
+
+    /// 🔌️ The PRODUCTION registration entry point: typed roster rows plus the instance handle that
+    /// `plan()` will dispatch through. `🏃️run` builds `HostMutationRosterEntry` values directly off
+    /// the descriptor and never holds the wire bytes `register_plugin` decodes, so routing it
+    /// through that method would mean encoding typed rows to JSON purely to decode them again.
+    ///
+    /// 🧪️ Kept SEPARATE from the pure `register_roster` below rather than folded into it: that
+    /// function is deliberately wasm-free so 15 routing tests can exercise the contract §4 gating
+    /// rules without constructing a `PluginInstanceHandle`, and requiring a handle would destroy
+    /// that. Registering the runtime is therefore a wrapper around the pure core, never a second
+    /// call a caller could forget — which is exactly how `runtimes` sat empty in production while
+    /// every routing test passed.
+    pub fn register_roster_with_runtime(&self, plugin_id: &str, dependencies: &[semio_framework::PluginDependency], handle: Arc<PluginInstanceHandle>, roster: Vec<HostMutationRosterEntry>) -> Result<(), PluginHostError> {
         self.register_roster(plugin_id, dependencies, roster)?;
         self.runtimes.lock().map_err(|_| PluginHostError::LockPoisoned("mutation router runtimes"))?.insert(plugin_id.to_string(), handle);
         Ok(())

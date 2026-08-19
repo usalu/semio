@@ -65,13 +65,13 @@ pub struct Ifc2x3Snapshot {
 }
 
 impl Default for Ifc2x3Snapshot {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self { schema: STDIO_IFC2X3_DOCUMENT_SCHEMA.into(), document: Part21Document::default(), edm_preamble: None }
     }
 }
 
 /// ✅ Validates the logical IFC2X3 document without materializing native Part-21 text.
-pub fn validate_ifc2x3_snapshot(snapshot: &Ifc2x3Snapshot) -> Result<(), String> {
+pub async fn validate_ifc2x3_snapshot(snapshot: &Ifc2x3Snapshot) -> Result<(), String> {
     if snapshot.schema != STDIO_IFC2X3_DOCUMENT_SCHEMA {
         return Err(format!("ifc2x3: unsupported snapshot schema {:?}", snapshot.schema));
     }
@@ -95,11 +95,11 @@ pub fn validate_ifc2x3_snapshot(snapshot: &Ifc2x3Snapshot) -> Result<(), String>
 //#region 🔖️Codec
 impl store::ArtifactDsl for Ifc2x3Snapshot {
     const EXTENSION: &'static str = "ifc";
-    fn envelope_id() -> &'static str {
+    async fn envelope_id() -> &'static str {
         STDIO_IFC2X3_DOCUMENT_SCHEMA
     }
 
-    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+    async fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
         let body = match store::semio_format::split_text_preamble(text) {
             Ok((_, rest)) => rest,
             Err(_) => text,
@@ -107,7 +107,7 @@ impl store::ArtifactDsl for Ifc2x3Snapshot {
         parse_snapshot(body.trim()).map_err(|error| store::TextError::new(error, dsl::TextSpan::at(1, 1)))
     }
 
-    fn print_dsl(&self) -> String {
+    async fn print_dsl(&self) -> String {
         let mut body = String::with_capacity(self.document.instances.len().saturating_mul(64));
         body.push_str("schema=");
         body.push_str(&enc_str(&self.schema));
@@ -123,7 +123,7 @@ impl store::ArtifactDsl for Ifc2x3Snapshot {
 }
 
 impl store::ArtifactPack for Ifc2x3Snapshot {
-    fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
+    async fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
         let mut raw = vec![store::pack_rt::OP_BINARY_FORMAT];
         write_str_bin(&mut raw, &self.schema);
@@ -140,7 +140,7 @@ impl store::ArtifactPack for Ifc2x3Snapshot {
         Ok(store::semio_format::wrap_binary(&envelope, &raw))
     }
 
-    fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
+    async fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
         if envelope.envelope_id() != <Self as store::ArtifactDsl>::envelope_id() {
             return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.envelope_id())));
@@ -166,7 +166,7 @@ impl store::ArtifactPack for Ifc2x3Snapshot {
     }
 }
 
-fn parse_snapshot(body: &str) -> Result<Ifc2x3Snapshot, String> {
+async fn parse_snapshot(body: &str) -> Result<Ifc2x3Snapshot, String> {
     let mut schema = None;
     let mut header = None;
     let mut instances = None;

@@ -21,24 +21,24 @@ pub struct JsonArtifact {
 
 //#region 🔖️Conversions
 impl Default for JsonArtifact {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self::from_snapshot(JsonSnapshot::default())
     }
 }
 
 impl JsonArtifact {
     /// 📸️ Persisted subset.
-    pub fn to_snapshot(&self) -> JsonSnapshot {
+    pub async fn to_snapshot(&self) -> JsonSnapshot {
         JsonSnapshot { schema: self.schema.clone(), value: self.value.clone() }
     }
 
     /// 🧬️ Builds a full artifact from a snapshot.
-    pub fn from_snapshot(snapshot: JsonSnapshot) -> Self {
+    pub async fn from_snapshot(snapshot: JsonSnapshot) -> Self {
         Self { schema: snapshot.schema, value: snapshot.value }
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
-    pub fn set_snapshot(&mut self, snapshot: JsonSnapshot) {
+    pub async fn set_snapshot(&mut self, snapshot: JsonSnapshot) {
         self.schema = snapshot.schema;
         self.value = snapshot.value;
     }
@@ -47,7 +47,7 @@ impl JsonArtifact {
 
 //#region 🔖️Descriptor
 /// 🧬️ Descriptor for `s.stdio.json`.
-pub fn json_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
+pub async fn json_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
     schema::ArtifactSchemaDescriptor {
         id: "s.stdio.json",
         artifact: schema::FacetLeaves {
@@ -98,27 +98,27 @@ pub mod derived_construction {
         type Snapshot = JsonSnapshot;
         type Mutation = JsonMutation;
         type Diff = JsonDiff;
-        fn empty() -> Self {
+        async fn empty() -> Self {
             Self { snapshot: JsonSnapshot::default(), diagnostics: Vec::new() }
         }
-        fn from_snapshot(snapshot: Self::Snapshot) -> Self {
+        async fn from_snapshot(snapshot: Self::Snapshot) -> Self {
             Self { snapshot, diagnostics: Vec::new() }
         }
-        fn from_text(text: &str) -> Result<Self, store::TextError> {
+        async fn from_text(text: &str) -> Result<Self, store::TextError> {
             Ok(Self::from_snapshot(<JsonSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
-        fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
+        async fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
             Ok(Self::from_snapshot(<JsonSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
         }
-        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
+        async fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let diff = crate::artifacts::json::schema::mutations::apply_json_mutation(&mut self.snapshot, &mutation);
             (self, diff)
         }
-        fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
+        async fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
             self.snapshot = <JsonDiff as protocol::MutationDiff<JsonSnapshot>>::apply(&diff, &self.snapshot)?;
             Ok(self)
         }
-        fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
+        async fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
             if self.diagnostics.is_empty() {
                 Ok(self.snapshot)
             } else {
@@ -151,7 +151,7 @@ pub mod derived_analysis {
     /// 🔍 JSON has no magic bytes — a real parse attempt with our own rfc8259 recursive-descent
     /// parser is the strongest available signal (cheap for realistic file sizes); fall back to a
     /// first-non-whitespace-character heuristic when the bytes aren't valid UTF-8 text at all.
-    fn looks_like_json(text: &str) -> IoConfidence {
+    async fn looks_like_json(text: &str) -> IoConfidence {
         if crate::artifacts::json::schema::snapshot::parse_json_text(text.trim()).is_ok() {
             return IoConfidence::High;
         }
@@ -165,7 +165,7 @@ pub mod derived_analysis {
         type Parts = JsonParts;
         const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.json", standard: StandardId("rfc8259"), subset: SubsetId("*") };
 
-        fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
+        async fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
             match source {
                 AnalyzeSource::Text(text) => {
                     let body = match store::semio_format::split_text_preamble(text) {
@@ -187,7 +187,7 @@ pub mod derived_analysis {
             }
         }
 
-        fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
+        async fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
             let mut parts = JsonParts::default();
             let mut diagnostics = Vec::new();
             let mut confidence = IoConfidence::High;
@@ -220,19 +220,19 @@ pub mod derived_analysis {
         use super::*;
 
         #[test]
-        fn sniff_real_json_object_is_high() {
+        async fn sniff_real_json_object_is_high() {
             let text = "{\"a\": 1, \"b\": [1, 2, 3]}";
             assert_eq!(JsonAnalyzerAnalysis::sniff(&AnalyzeSource::Text(text)), IoConfidence::High);
         }
 
         #[test]
-        fn sniff_malformed_json_is_not_high() {
+        async fn sniff_malformed_json_is_not_high() {
             let text = "{\"a\": 1, \"b\": [1, 2, 3]";
             assert_ne!(JsonAnalyzerAnalysis::sniff(&AnalyzeSource::Text(text)), IoConfidence::High);
         }
 
         #[test]
-        fn sniff_unrelated_text_is_low() {
+        async fn sniff_unrelated_text_is_low() {
             assert_eq!(JsonAnalyzerAnalysis::sniff(&AnalyzeSource::Text("just a plain sentence.")), IoConfidence::Low);
         }
     }

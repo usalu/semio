@@ -3,7 +3,7 @@ use crate::artifacts::puzzle2d::diff::{Puzzle2dDiff, Puzzle2dEdgePatch, Puzzle2d
 use crate::artifacts::puzzle2d::Puzzle2dSnapshot;
 
 //#region 🔖️Diff
-pub fn diff(payload: &super::mutation::ChangeEdgeKind, base: &Puzzle2dSnapshot) -> protocol::MutationOutcome<Puzzle2dDiff> {
+pub async fn diff(payload: &super::mutation::ChangeEdgeKind, base: &Puzzle2dSnapshot) -> protocol::MutationOutcome<Puzzle2dDiff> {
     let Some(edge) = base.edges.iter().find(|entry| entry.id == payload.id) else {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("{} \"{}\" not found", "edge", payload.id), vec![payload.id.clone()]);
     };

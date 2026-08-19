@@ -17,23 +17,23 @@ pub struct DuplicateLayer {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn duplicate_layer(layer_id: String) -> DrawMutation {
+pub async fn duplicate_layer(layer_id: String) -> DrawMutation {
     DrawMutation::DuplicateLayer(DuplicateLayer { layer_id })
 }
 
 impl protocol::MutationKind<DrawSnapshot, DrawMutation> for DuplicateLayer {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "duplicate", entity: "layer", kind: "duplicate-layer", record: "DuplicatedLayer" };
 
-    fn diff(&self, base: &DrawSnapshot) -> protocol::MutationOutcome<DrawDiff> {
+    async fn diff(&self, base: &DrawSnapshot) -> protocol::MutationOutcome<DrawDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &DrawSnapshot) -> Vec<DrawMutation> {
+    async fn inverse(&self, base: &DrawSnapshot) -> Vec<DrawMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         format!("Duplicate layer \"{}\"", self.layer_id)
     }
-    fn target(&self) -> Vec<String> {
+    async fn target(&self) -> Vec<String> {
         vec![self.layer_id.clone()]
     }
 }

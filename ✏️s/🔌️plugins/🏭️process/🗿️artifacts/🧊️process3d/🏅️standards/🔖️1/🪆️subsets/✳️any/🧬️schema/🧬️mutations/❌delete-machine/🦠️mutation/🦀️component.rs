@@ -16,19 +16,19 @@ pub struct DeleteMachine {
 impl protocol::MutationKind<Process3dSnapshot, Process3dMutation> for DeleteMachine {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "delete", entity: "machine", kind: "delete-machine", record: "DeletedMachine" };
 
-    fn diff(&self, base: &Process3dSnapshot) -> protocol::MutationOutcome<Process3dDiff> {
+    async fn diff(&self, base: &Process3dSnapshot) -> protocol::MutationOutcome<Process3dDiff> {
         crate::artifacts::process3d::mutations::delete_machine::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &Process3dSnapshot) -> Vec<Process3dMutation> {
+    async fn inverse(&self, base: &Process3dSnapshot) -> Vec<Process3dMutation> {
         crate::artifacts::process3d::mutations::delete_machine::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         format!("Delete machine \"{}\"", self.id)
     }
 
-    fn target(&self) -> Vec<String> {
+    async fn target(&self) -> Vec<String> {
         vec![self.id.clone()]
     }
 }

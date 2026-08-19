@@ -12,9 +12,9 @@
 
 /// 🗄️ The (index, generation) pair every typed id newtype wraps. Implemented by [`define_id!`].
 pub trait ArenaId: Copy + Eq + std::hash::Hash + std::fmt::Debug {
-    fn from_raw(index: u32, generation: u32) -> Self;
-    fn raw_index(self) -> u32;
-    fn raw_generation(self) -> u32;
+    async fn from_raw(index: u32, generation: u32) -> Self;
+    async fn raw_index(self) -> u32;
+    async fn raw_generation(self) -> u32;
 }
 
 /// 🗄️ Declares a `Copy + Eq + Hash + Ord + Serialize` newtype id backed by `(u32, u32)`, with a
@@ -29,18 +29,18 @@ macro_rules! define_id {
             generation: u32,
         }
         impl $crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::arena::ArenaId for $name {
-            fn from_raw(index: u32, generation: u32) -> Self {
+            async fn from_raw(index: u32, generation: u32) -> Self {
                 $name { index, generation }
             }
-            fn raw_index(self) -> u32 {
+            async fn raw_index(self) -> u32 {
                 self.index
             }
-            fn raw_generation(self) -> u32 {
+            async fn raw_generation(self) -> u32 {
                 self.generation
             }
         }
         impl std::fmt::Display for $name {
-            fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+            async fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
                 write!(f, "{}-{}-{}", $tag, self.index, self.generation)
             }
         }
@@ -82,16 +82,16 @@ pub struct Store<T, Id> {
 }
 
 impl<T, Id: ArenaId> Default for Store<T, Id> {
-    fn default() -> Self {
+    async fn default() -> Self {
         Store::new()
     }
 }
 
 impl<T, Id: ArenaId> Store<T, Id> {
-    pub fn new() -> Self {
+    pub async fn new() -> Self {
         Store { slots: Vec::new(), free: Vec::new(), _marker: std::marker::PhantomData }
     }
-    pub fn insert(&mut self, value: T) -> Id {
+    pub async fn insert(&mut self, value: T) -> Id {
         if let Some(index) = self.free.pop() {
             let slot = &mut self.slots[index as usize];
             slot.value = Some(value);
@@ -102,7 +102,7 @@ impl<T, Id: ArenaId> Store<T, Id> {
             Id::from_raw(index, 0)
         }
     }
-    pub fn get(&self, id: Id) -> Option<&T> {
+    pub async fn get(&self, id: Id) -> Option<&T> {
         let slot = self.slots.get(id.raw_index() as usize)?;
         if slot.generation == id.raw_generation() {
             slot.value.as_ref()
@@ -110,7 +110,7 @@ impl<T, Id: ArenaId> Store<T, Id> {
             None
         }
     }
-    pub fn get_mut(&mut self, id: Id) -> Option<&mut T> {
+    pub async fn get_mut(&mut self, id: Id) -> Option<&mut T> {
         let slot = self.slots.get_mut(id.raw_index() as usize)?;
         if slot.generation == id.raw_generation() {
             slot.value.as_mut()
@@ -118,10 +118,10 @@ impl<T, Id: ArenaId> Store<T, Id> {
             None
         }
     }
-    pub fn contains(&self, id: Id) -> bool {
+    pub async fn contains(&self, id: Id) -> bool {
         self.get(id).is_some()
     }
-    pub fn remove(&mut self, id: Id) -> Option<T> {
+    pub async fn remove(&mut self, id: Id) -> Option<T> {
         let slot = self.slots.get_mut(id.raw_index() as usize)?;
         if slot.generation != id.raw_generation() {
             return None;
@@ -131,23 +131,23 @@ impl<T, Id: ArenaId> Store<T, Id> {
         self.free.push(id.raw_index());
         Some(value)
     }
-    pub fn len(&self) -> usize {
+    pub async fn len(&self) -> usize {
         self.slots.iter().filter(|s| s.value.is_some()).count()
     }
-    pub fn is_empty(&self) -> bool {
+    pub async fn is_empty(&self) -> bool {
         self.len() == 0
     }
     /// 🗄️ Deterministic index-order iteration over live entries.
-    pub fn iter(&self) -> impl Iterator<Item = (Id, &T)> {
+    pub async fn iter(&self) -> impl Iterator<Item = (Id, &T)> {
         self.slots.iter().enumerate().filter_map(|(i, slot)| slot.value.as_ref().map(|v| (Id::from_raw(i as u32, slot.generation), v)))
     }
-    pub fn iter_mut(&mut self) -> impl Iterator<Item = (Id, &mut T)> {
+    pub async fn iter_mut(&mut self) -> impl Iterator<Item = (Id, &mut T)> {
         self.slots.iter_mut().enumerate().filter_map(|(i, slot)| {
             let gen = slot.generation;
             slot.value.as_mut().map(|v| (Id::from_raw(i as u32, gen), v))
         })
     }
-    pub fn ids(&self) -> impl Iterator<Item = Id> + '_ {
+    pub async fn ids(&self) -> impl Iterator<Item = Id> + '_ {
         self.iter().map(|(id, _)| id)
     }
 }
@@ -162,14 +162,14 @@ mod tests {
     define_id!(TestId, "test");
 
     #[test]
-    fn insert_and_get_round_trips() {
+    async fn insert_and_get_round_trips() {
         let mut store: Store<i32, TestId> = Store::new();
         let id = store.insert(42);
         assert_eq!(store.get(id), Some(&42));
     }
 
     #[test]
-    fn remove_then_get_returns_none() {
+    async fn remove_then_get_returns_none() {
         let mut store: Store<i32, TestId> = Store::new();
         let id = store.insert(1);
         assert_eq!(store.remove(id), Some(1));
@@ -177,7 +177,7 @@ mod tests {
     }
 
     #[test]
-    fn stale_handle_after_reuse_returns_none() {
+    async fn stale_handle_after_reuse_returns_none() {
         let mut store: Store<i32, TestId> = Store::new();
         let a = store.insert(1);
         store.remove(a);
@@ -189,7 +189,7 @@ mod tests {
     }
 
     #[test]
-    fn iteration_is_index_ordered_and_skips_removed_slots() {
+    async fn iteration_is_index_ordered_and_skips_removed_slots() {
         let mut store: Store<i32, TestId> = Store::new();
         let a = store.insert(10);
         let _b = store.insert(20);
@@ -203,7 +203,7 @@ mod tests {
     }
 
     #[test]
-    fn len_reflects_only_live_entries() {
+    async fn len_reflects_only_live_entries() {
         let mut store: Store<i32, TestId> = Store::new();
         let a = store.insert(1);
         store.insert(2);
@@ -214,14 +214,14 @@ mod tests {
     }
 
     #[test]
-    fn display_uses_readable_tag_index_generation_format() {
+    async fn display_uses_readable_tag_index_generation_format() {
         let mut store: Store<i32, TestId> = Store::new();
         let id = store.insert(1);
         assert_eq!(id.to_string(), format!("test-{}-{}", id.raw_index(), id.raw_generation()));
     }
 
     #[test]
-    fn serde_round_trips_an_id() {
+    async fn serde_round_trips_an_id() {
         let mut store: Store<i32, TestId> = Store::new();
         let id = store.insert(1);
         let json = serde_json::to_string(&id).unwrap();
@@ -233,7 +233,7 @@ mod tests {
         use super::*;
 
         #[test]
-        fn random_insert_remove_sequence_never_aliases_a_removed_id() {
+        async fn random_insert_remove_sequence_never_aliases_a_removed_id() {
             let mut rng = semio_framework_geometry::random::Rng::from_seed(83);
             let mut store: Store<u64, TestId> = Store::new();
             let mut live: Vec<(TestId, u64)> = Vec::new();

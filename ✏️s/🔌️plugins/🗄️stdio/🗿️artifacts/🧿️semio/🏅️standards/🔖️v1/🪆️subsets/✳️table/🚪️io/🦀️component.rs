@@ -24,11 +24,11 @@ pub mod derived_composition {
         type Snapshot = SemioTableSnapshot;
         const WRITES: Dialect = DIALECT;
 
-        fn reads() -> &'static [Dialect] {
+        async fn reads() -> &'static [Dialect] {
             &[DIALECT]
         }
 
-        fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+        async fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
             let native: Vec<AnalyzeSource<'_>> = sources
                 .iter()
                 .filter(|s| s.dialect == DIALECT)
@@ -55,7 +55,7 @@ pub mod derived_composition {
 
     impl SubsetValidator for SemioTableValidator {
         const DIALECT: Dialect = DIALECT;
-        fn validate(payload: &IoPayload) -> Vec<dsl::Diagnostic> {
+        async fn validate(payload: &IoPayload) -> Vec<dsl::Diagnostic> {
             let decoded = match payload {
                 IoPayload::Binary(bytes) => <SemioTableSnapshot as store::ArtifactPack>::decode_pack(bytes).ok(),
                 IoPayload::Text(text) => <SemioTableSnapshot as store::ArtifactDsl>::parse_dsl(text).ok(),
@@ -68,14 +68,14 @@ pub mod derived_composition {
     }
 
     static VALIDATOR_ENTRY: std::sync::OnceLock<SubsetValidatorEntry> = std::sync::OnceLock::new();
-    fn validator_entry() -> &'static SubsetValidatorEntry {
+    async fn validator_entry() -> &'static SubsetValidatorEntry {
         VALIDATOR_ENTRY.get_or_init(subset_validator_entry_of::<SemioTableValidator>)
     }
     //#endregion 🔖️SubsetValidator
 
     //#region 🔖️IoEntries
     /// 🚪️ Empty — no csv/tsv/xlsx format bridges in this wave (see module doc comment).
-    fn io_entries() -> &'static [ComposerEntry] {
+    async fn io_entries() -> &'static [ComposerEntry] {
         &[]
     }
     //#endregion 🔖️IoEntries
@@ -83,7 +83,7 @@ pub mod derived_composition {
     //#region 🔖️Register
     /// 📌️ Registers this subset's schema descriptor, document codec, and SubsetValidator. Called
     /// from this artifact's standard-level `engine::register()`.
-    pub fn register() {
+    pub async fn register() {
         ::schema::register_artifact_schema_descriptor(crate::artifacts::semio::standards::v1::subsets::table::schema::semio_table_artifact_schema_descriptor());
         let _ = store::register_document_codec(store::ArtifactCodec::of::<SemioTableSnapshot, crate::artifacts::semio::standards::v1::subsets::table::schema::mutations::SemioTableMutation>(
             crate::artifacts::semio::standards::v1::subsets::table::schema::snapshot::STDIO_SEMIOTABLE_DOCUMENT_SCHEMA,
@@ -96,7 +96,7 @@ pub mod derived_composition {
     /// 💡️ Registers `s.stdio.semio.table.inference`'s facet leaves into the OS-wide inference
     /// catalog — sibling to `register_artifact_schema_descriptor` above (separate registry,
     /// ticket 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING).
-    pub fn register_artifact_inferences() {
+    pub async fn register_artifact_inferences() {
         ::schema::register_artifact_inference_descriptor(crate::artifacts::semio::standards::v1::subsets::table::schema::inferences::semio_table_artifact_inference_descriptor());
     }
     //#endregion 🔖️Register
@@ -115,7 +115,7 @@ pub mod derived_composition {
             /// ✅️ "committed files parse": all 6 handcrafted `.grammar.semio`/`.protocol.semio`
             /// files parse under the real dialect.
             #[test]
-            fn committed_facet_files_parse() {
+            async fn committed_facet_files_parse() {
                 for (label, text) in [("snapshot grammar", snapshot::text::COMPONENT_GRAMMAR_SEMIO), ("mutations grammar", mutations::text::COMPONENT_GRAMMAR_SEMIO), ("diff grammar", diff::text::COMPONENT_GRAMMAR_SEMIO)] {
                     let grammar = dsl::parse_grammar(text).unwrap_or_else(|e| panic!("{label}: parse_grammar failed: {e:?}"));
                     assert_eq!(grammar.dialect, dsl::SemioDialect::Grammar, "{label}: expected grammar dialect");
@@ -128,7 +128,7 @@ pub mod derived_composition {
             /// ✅️ `grammar_conformance_law`: the snapshot grammar recognizes real `print_dsl`
             /// output for the demo snapshot.
             #[test]
-            fn grammar_conformance_law() {
+            async fn grammar_conformance_law() {
                 let grammar = dsl::parse_grammar(snapshot::text::COMPONENT_GRAMMAR_SEMIO).expect("parse snapshot grammar");
                 let recognizer = dsl::Recognizer::compile(&grammar);
                 let text = store::ArtifactDsl::print_dsl(&snapshot::demo_table_snapshot());
@@ -140,7 +140,7 @@ pub mod derived_composition {
             /// ✅️ `ops_grammar_conformance_law`: the mutations grammar recognizes real `print_op`
             /// output for every `SemioTableMutation` variant (`mutations::text::demo_mutation_cases()`).
             #[test]
-            fn ops_grammar_conformance_law() {
+            async fn ops_grammar_conformance_law() {
                 let grammar = dsl::parse_grammar(mutations::text::COMPONENT_GRAMMAR_SEMIO).expect("parse mutations grammar");
                 let recognizer = dsl::Recognizer::compile(&grammar);
                 for mutation in mutations::text::demo_mutation_cases() {
@@ -153,7 +153,7 @@ pub mod derived_composition {
             /// output for every representative `SemioTableDiff` (`diff::demo_diff_cases()`), incl.
             /// the empty (no-op) diff.
             #[test]
-            fn diff_grammar_conformance_law() {
+            async fn diff_grammar_conformance_law() {
                 let grammar = dsl::parse_grammar(diff::text::COMPONENT_GRAMMAR_SEMIO).expect("parse diff grammar");
                 let recognizer = dsl::Recognizer::compile(&grammar);
                 for d in diff::demo_diff_cases() {
@@ -166,7 +166,7 @@ pub mod derived_composition {
             /// snapshot pack (envelope-unwrapped first), every demo mutation's `encode_op`, and
             /// every demo diff's `encode_diff` — asserting `consumed == bytes.len()`.
             #[test]
-            fn protocol_walk_law() {
+            async fn protocol_walk_law() {
                 let pack_spec = dsl::parse_protocol(snapshot::binary::COMPONENT_PROTOCOL_SEMIO).expect("parse snapshot protocol");
                 let packed = store::ArtifactPack::encode_pack(&snapshot::demo_table_snapshot());
                 let (_, inner) = store::semio_format::unwrap_binary(&packed).expect("unwrap semio envelope");
@@ -197,7 +197,7 @@ pub mod derived_composition {
             /// need real regeneration (see this facet's own `📚️examples/📃️sheet/🦀️component.rs`
             /// doc comment) — this test is EXPECTED TO FAIL until that happens.
             #[test]
-            fn fixture_honesty_law() {
+            async fn fixture_honesty_law() {
                 const FIXTURE_DSL: &str = include_str!("../📚️examples/📃️sheet/🖼️assets/🗣️example.dsl.semio");
                 const FIXTURE_PACK: &[u8] = include_bytes!("../📚️examples/📃️sheet/🖼️assets/🎒️example.pack.semio");
 

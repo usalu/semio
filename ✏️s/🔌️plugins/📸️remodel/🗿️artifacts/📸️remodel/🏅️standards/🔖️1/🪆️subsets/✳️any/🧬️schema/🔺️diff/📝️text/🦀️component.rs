@@ -16,7 +16,7 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 //#region 🔖️Apply
 impl RemodelDiff {
     /// 🧬️ Applies every sparse entry (all state classes) onto a full artifact.
-    pub fn apply_to_artifact(&self, artifact: &RemodelArtifact) -> protocol::MutationApplyResult<RemodelArtifact> {
+    pub async fn apply_to_artifact(&self, artifact: &RemodelArtifact) -> protocol::MutationApplyResult<RemodelArtifact> {
         Ok({
             if let Some(replacement) = &self.artifact {
                 return Ok((**replacement).clone());
@@ -76,7 +76,7 @@ impl RemodelDiff {
 }
 
 impl MutationDiff<RemodelSnapshot> for RemodelDiff {
-    fn apply(&self, snapshot: &RemodelSnapshot) -> protocol::MutationApplyResult<RemodelSnapshot> {
+    async fn apply(&self, snapshot: &RemodelSnapshot) -> protocol::MutationApplyResult<RemodelSnapshot> {
         Ok({
             if let Some(replacement) = &self.artifact {
                 return Ok(replacement.to_snapshot());
@@ -112,7 +112,7 @@ impl MutationDiff<RemodelSnapshot> for RemodelDiff {
             next
         })
     }
-    fn absorb(&mut self, other: Self) {
+    async fn absorb(&mut self, other: Self) {
         if other.artifact.is_some() {
             *self = other;
             return;
@@ -151,7 +151,7 @@ mod tests {
     use crate::artifacts::remodel::default_remodel_scene;
 
     #[test]
-    fn empty_diff_is_identity_and_absorb_is_fieldwise_last_writer() {
+    async fn empty_diff_is_identity_and_absorb_is_fieldwise_last_writer() {
         let scene = default_remodel_scene();
         assert_eq!(
             RemodelDiff::default()

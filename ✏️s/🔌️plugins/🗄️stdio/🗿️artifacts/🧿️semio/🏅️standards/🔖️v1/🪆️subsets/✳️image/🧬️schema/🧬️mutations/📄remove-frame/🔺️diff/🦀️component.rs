@@ -5,7 +5,7 @@ use protocol::Mutation;
 
 /// 🔺️ Diff helper for remove-frame — an absent BASE frame `index` is `mutation.target-missing`
 /// (Error, empty diff).
-pub fn diff(base: &SemioImageSnapshot, index: usize) -> protocol::MutationOutcome<SemioImageDiff> {
+pub async fn diff(base: &SemioImageSnapshot, index: usize) -> protocol::MutationOutcome<SemioImageDiff> {
     if index >= base.frames.len() {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Frame index {index} does not exist."), [index.to_string()]);
     }

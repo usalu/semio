@@ -19,16 +19,16 @@ pub struct UpdateAnalysisSettings {
 impl MutationKind<Fem2dSnapshot, Fem2dMutation> for UpdateAnalysisSettings {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "update", entity: "analysis-settings", kind: "update-analysis-settings", record: "UpdatedAnalysisSettings" };
 
-    fn diff(&self, base: &Fem2dSnapshot) -> protocol::MutationOutcome<crate::artifacts::fem2d::diff::Fem2dDiff> {
+    async fn diff(&self, base: &Fem2dSnapshot) -> protocol::MutationOutcome<crate::artifacts::fem2d::diff::Fem2dDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &Fem2dSnapshot) -> Vec<Fem2dMutation> {
+    async fn inverse(&self, base: &Fem2dSnapshot) -> Vec<Fem2dMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         "Update analysis settings".to_string()
     }
-    fn target(&self) -> Vec<String> {
+    async fn target(&self) -> Vec<String> {
         Vec::new()
     }
 }

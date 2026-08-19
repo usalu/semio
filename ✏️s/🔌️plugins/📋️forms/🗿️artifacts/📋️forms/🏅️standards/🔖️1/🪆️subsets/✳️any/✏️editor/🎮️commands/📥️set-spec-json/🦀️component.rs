@@ -15,7 +15,7 @@ use serde::{Deserialize, Serialize};
 /// `FormMutation` vocabulary (ticket 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM: `CreateStep`/
 /// `DeleteStep`/`ChangeFormTitle`, reading through `forms_steps` now that `FormsSnapshot` no longer
 /// carries a bare `steps` field) so it still records a true inverse.
-fn replace_spec_operations(current: &FormsSnapshot, next: &FormsSnapshot) -> Vec<FormMutation> {
+async fn replace_spec_operations(current: &FormsSnapshot, next: &FormsSnapshot) -> Vec<FormMutation> {
     use crate::artifacts::forms::mutations::{change_form_title, create_step, delete_step};
     let mut operations: Vec<FormMutation> = forms_steps(current).iter().map(|step| FormMutation::DeleteStep(delete_step::mutation::DeleteStep { id: step.id.clone() })).collect();
     if next.title != current.title {
@@ -36,7 +36,7 @@ pub struct SetSpecJson {
     pub json: String,
 }
 
-pub fn handle(payload: &SetSpecJson, doc: &ArtifactView<'_, FormsSnapshot>, _cfg: &ConfigView<'_, FormsConfig>) -> Result<Emit<FormMutation, FormsConfigMutation>, Fault> {
+pub async fn handle(payload: &SetSpecJson, doc: &ArtifactView<'_, FormsSnapshot>, _cfg: &ConfigView<'_, FormsConfig>) -> Result<Emit<FormMutation, FormsConfigMutation>, Fault> {
     // 🩹️ `FormsSnapshot` composes `structure`/`results` handles (ticket
     // 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM) so it no longer deserializes raw step/block
     // JSON directly; `flow::playbook::PlaybookSpec` is the SAME `{schema,id,version,title,steps}`
@@ -62,7 +62,7 @@ mod tests {
     use SetSpecJson;
 
     #[test]
-    fn set_active_example_switches_to_the_onboarding_fixture() {
+    async fn set_active_example_switches_to_the_onboarding_fixture() {
         // 🩹️ `replace_spec_operations` deliberately never touches `id` (only title/steps — `id` is the
         // document's own stable identity, not part of the "example" content it swaps) — assert on the
         // steps/title it does replace, not on `id`.
@@ -74,7 +74,7 @@ mod tests {
     }
 
     #[test]
-    fn set_active_example_with_blank_id_clears_the_document() {
+    async fn set_active_example_with_blank_id_clears_the_document() {
         let mut app = forms_app();
         dispatch(&mut app, FormsCommand::SetActiveExample(SetActiveExample { example_id: "".into() }));
         let spec = app.snapshot().expect("projection");
@@ -82,7 +82,7 @@ mod tests {
     }
 
     #[test]
-    fn set_spec_json_replaces_the_document() {
+    async fn set_spec_json_replaces_the_document() {
         // 🩹️ `SetSpecJson`'s payload is raw `flow::playbook::PlaybookSpec`-shaped JSON (see
         // `handle`'s own doc comment, ticket 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM)
         // — `onboarding_example_spec()` itself now serializes as `FormsSnapshot`'s OWN composed
@@ -105,7 +105,7 @@ mod tests {
     }
 
     #[test]
-    fn set_spec_json_with_invalid_json_is_a_no_operation() {
+    async fn set_spec_json_with_invalid_json_is_a_no_operation() {
         let mut app = forms_app();
         let before = app.snapshot().expect("projection");
         dispatch(&mut app, FormsCommand::SetSpecJson(SetSpecJson { json: "not json".into() }));

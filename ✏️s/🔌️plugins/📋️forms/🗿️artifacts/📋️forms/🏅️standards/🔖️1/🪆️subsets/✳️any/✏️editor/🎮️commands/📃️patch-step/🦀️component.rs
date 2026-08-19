@@ -18,7 +18,7 @@ pub struct PatchStep {
 /// variant (the old `UpdateStep{step}` is banned `SetSnapshot`-shaped vocabulary at the
 /// per-collection scale) — emits the granular `RenameStep`/`ChangeStepDescription` verb the field
 /// actually maps onto instead of building a whole replacement `FormStep`.
-pub fn handle(payload: &PatchStep, doc: &ArtifactView<'_, FormsSnapshot>, _cfg: &ConfigView<'_, FormsConfig>) -> Result<Emit<FormMutation, FormsConfigMutation>, Fault> {
+pub async fn handle(payload: &PatchStep, doc: &ArtifactView<'_, FormsSnapshot>, _cfg: &ConfigView<'_, FormsConfig>) -> Result<Emit<FormMutation, FormsConfigMutation>, Fault> {
     let spec = doc.snapshot;
     if !forms_steps(spec).iter().any(|step| step.id == payload.step_id) {
         return Ok(Emit::default());

@@ -12,14 +12,14 @@ use crate::artifacts::remodel::RemodelSnapshot;
 use semio_s_plugin_stdio::artifacts::json::{JsonSnapshot, STDIO_JSON_DOCUMENT_SCHEMA};
 use semio_s_plugin_stdio::artifacts::json::schema::snapshot::write_json_pretty;
 
-pub fn register() {}
+pub async fn register() {}
 
-pub fn serialize(snapshot: &RemodelSnapshot) -> Result<JsonSnapshot, store::TextError> {
+pub async fn serialize(snapshot: &RemodelSnapshot) -> Result<JsonSnapshot, store::TextError> {
     let _ = STDIO_JSON_DOCUMENT_SCHEMA;
     let value = serde_json::to_value(snapshot).map_err(|e| store::TextError::new(e.to_string(), dsl::TextSpan::at(1, 1)))?;
     Ok(JsonSnapshot::from_value(value))
 }
 
-pub fn serialize_bytes(snapshot: &RemodelSnapshot) -> Result<Vec<u8>, store::TextError> {
+pub async fn serialize_bytes(snapshot: &RemodelSnapshot) -> Result<Vec<u8>, store::TextError> {
     Ok(write_json_pretty(&serialize(snapshot)?.value).into_bytes())
 }

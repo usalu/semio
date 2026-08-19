@@ -4,7 +4,7 @@
 use crate::artifacts::procedural2d::diff::{diff_fixture_from_helpers, LayoutDiff, Procedural2dDiff, SynapsesDiff, WidgetsDiff};
 use crate::artifacts::procedural2d::{widget_id, Procedural2dSnapshot};
 
-pub fn diff(payload: &super::mutation::ConnectSynapse, base: &Procedural2dSnapshot) -> protocol::MutationOutcome<Procedural2dDiff> {
+pub async fn diff(payload: &super::mutation::ConnectSynapse, base: &Procedural2dSnapshot) -> protocol::MutationOutcome<Procedural2dDiff> {
     let synapse = &payload.synapse;
     if base.fixture.synapses.iter().any(|entry| entry.id == synapse.id) {
         return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("A synapse with id \"{}\" already exists.", synapse.id), [synapse.id.clone()]);

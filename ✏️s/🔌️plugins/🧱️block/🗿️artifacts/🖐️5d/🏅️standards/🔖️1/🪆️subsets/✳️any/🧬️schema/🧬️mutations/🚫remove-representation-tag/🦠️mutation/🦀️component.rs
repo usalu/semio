@@ -15,23 +15,23 @@ pub struct RemoveRepresentationTag {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn remove_representation_tag(id: String, tag: String) -> Block5dMutation {
+pub async fn remove_representation_tag(id: String, tag: String) -> Block5dMutation {
     Block5dMutation::RemoveRepresentationTag(RemoveRepresentationTag { id, tag })
 }
 
 impl protocol::MutationKind<Block5dSnapshot, Block5dMutation> for RemoveRepresentationTag {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "representation-tag", kind: "remove-representation-tag", record: "RemovedRepresentationTag" };
 
-    fn diff(&self, base: &Block5dSnapshot) -> protocol::MutationOutcome<Block5dDiff> {
+    async fn diff(&self, base: &Block5dSnapshot) -> protocol::MutationOutcome<Block5dDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &Block5dSnapshot) -> Vec<Block5dMutation> {
+    async fn inverse(&self, base: &Block5dSnapshot) -> Vec<Block5dMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         format!("Remove tag \"{}\" from representation \"{}\"", self.tag, self.id)
     }
-    fn target(&self) -> Vec<String> {
+    async fn target(&self) -> Vec<String> {
         vec![self.id.clone()]
     }
 }

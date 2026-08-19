@@ -14,12 +14,12 @@ pub const LOWPOLY_PLAY_LAYOUT_PAINT: &str = "lowpoly-paint";
 /// `.mode_layout("paint", "lowpoly-paint")` post-hoc call — `ModeDefinition::layout_id` already carries
 /// the same information through `mode_definition_to_spec`, so setting it here needs no separate
 /// passthrough).
-pub fn definition() -> ModeDefinition {
+pub async fn definition() -> ModeDefinition {
     ModeDefinition { id: LOWPOLY_PLAY_MODE_PAINT.into(), label: LocalizedLabel::native("Paint", "Malen"), icon_id: "paintbrush".into(), tools: Vec::new(), layout_id: Some(LOWPOLY_PLAY_LAYOUT_PAINT.into()), commands: Vec::new() }
 }
 
 /// 🪟️ The two-window paint layout (Model 60% / UV 40%), registered as an app-level named layout.
-pub fn layout() -> NamedLayout {
+pub async fn layout() -> NamedLayout {
     create_named_layout(
         LOWPOLY_PLAY_LAYOUT_PAINT,
         "Paint",
@@ -37,13 +37,13 @@ mod tests {
     use super::*;
 
     #[test]
-    fn the_named_layout_lists_both_paint_windows() {
+    async fn the_named_layout_lists_both_paint_windows() {
         let json = serde_json::to_string(&layout()).expect("layout json");
         assert!(json.contains(model::LOWPOLY_PLAY_WINDOW_MAIN) && json.contains(uv::LOWPOLY_PLAY_WINDOW_UV), "layout must reference both window kinds: {json}");
     }
 
     #[test]
-    fn the_mode_binds_directly_to_its_named_layout() {
+    async fn the_mode_binds_directly_to_its_named_layout() {
         assert_eq!(definition().layout_id.as_deref(), Some(LOWPOLY_PLAY_LAYOUT_PAINT));
     }
 }

@@ -13,7 +13,7 @@ use serde::{Deserialize, Serialize};
 #[dsl(keyword = "request-invite-member")]
 pub struct RequestInviteMember {}
 
-pub fn handle(_payload: &RequestInviteMember, _doc: &ArtifactView<'_, SSpaceSnapshot>, _cfg: &ConfigView<'_, SpaceIndexConfig>) -> Result<Emit<SSpaceMutation, SpaceIndexConfigMutation>, Fault> {
+pub async fn handle(_payload: &RequestInviteMember, _doc: &ArtifactView<'_, SSpaceSnapshot>, _cfg: &ConfigView<'_, SpaceIndexConfig>) -> Result<Emit<SSpaceMutation, SpaceIndexConfigMutation>, Fault> {
     Ok(Emit::effect(Effect::OpenDialog {req: semio_framework_plugin::RequestId(129),  dialog_id: "inviteMember".into(), args: None }))
 }
 
@@ -25,7 +25,7 @@ mod tests {
     
 
     #[test]
-    fn request_invite_member_opens_the_dialog() {
+    async fn request_invite_member_opens_the_dialog() {
         let mut app = testkit::new_app();
         let result = app.dispatch_typed(SpaceIndexCommand::RequestInviteMember(RequestInviteMember {}), &semio_framework_plugin::testkit::meta("local")).expect("request invite");
         assert!(result.mutations.is_empty());

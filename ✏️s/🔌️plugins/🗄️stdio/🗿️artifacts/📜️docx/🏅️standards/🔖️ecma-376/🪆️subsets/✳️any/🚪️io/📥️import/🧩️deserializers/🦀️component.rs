@@ -10,11 +10,11 @@ use crate::artifacts::xml::schema::snapshot::{xml_document_from_text, XmlAttr, X
 use crate::artifacts::zip::opc::{self, REL_TYPE_OFFICE_DOCUMENT};
 
 //#region 🔖️XmlHelpers
-fn find_attr<'a>(attrs: &'a [XmlAttr], name: &str) -> Option<&'a str> {
+async fn find_attr<'a>(attrs: &'a [XmlAttr], name: &str) -> Option<&'a str> {
     attrs.iter().find(|a| a.name == name).map(|a| a.value.as_str())
 }
 
-fn child_elements<'a>(node: &'a XmlNode) -> &'a [XmlNode] {
+async fn child_elements<'a>(node: &'a XmlNode) -> &'a [XmlNode] {
     match node {
         XmlNode::Element { children, .. } => children.as_slice(),
         _ => &[],
@@ -23,7 +23,7 @@ fn child_elements<'a>(node: &'a XmlNode) -> &'a [XmlNode] {
 //#endregion 🔖️XmlHelpers
 
 //#region 🔖️RunMapping
-fn run_from_xml(node: &XmlNode) -> DocxRun {
+async fn run_from_xml(node: &XmlNode) -> DocxRun {
     let mut run = DocxRun::default();
     for child in child_elements(node) {
         let XmlNode::Element { name, children: inner, .. } = child else { continue };
@@ -54,7 +54,7 @@ fn run_from_xml(node: &XmlNode) -> DocxRun {
 //#endregion 🔖️RunMapping
 
 //#region 🔖️ParagraphMapping
-fn paragraph_from_xml(node: &XmlNode) -> DocxParagraph {
+async fn paragraph_from_xml(node: &XmlNode) -> DocxParagraph {
     let mut paragraph = DocxParagraph::default();
     for child in child_elements(node) {
         let XmlNode::Element { name, children: inner, attrs, .. } = child else { continue };
@@ -80,7 +80,7 @@ fn paragraph_from_xml(node: &XmlNode) -> DocxParagraph {
 //#endregion 🔖️ParagraphMapping
 
 //#region 🔖️TableMapping
-fn cell_from_xml(node: &XmlNode) -> DocxTableCell {
+async fn cell_from_xml(node: &XmlNode) -> DocxTableCell {
     let mut cell = DocxTableCell::default();
     for child in child_elements(node) {
         let XmlNode::Element { name, children: inner, .. } = child else { continue };
@@ -94,7 +94,7 @@ fn cell_from_xml(node: &XmlNode) -> DocxTableCell {
     cell
 }
 
-fn row_from_xml(node: &XmlNode) -> DocxTableRow {
+async fn row_from_xml(node: &XmlNode) -> DocxTableRow {
     let mut row = DocxTableRow::default();
     for child in child_elements(node) {
         let XmlNode::Element { name, children: inner, .. } = child else { continue };
@@ -107,7 +107,7 @@ fn row_from_xml(node: &XmlNode) -> DocxTableRow {
     row
 }
 
-fn table_from_xml(node: &XmlNode) -> DocxTable {
+async fn table_from_xml(node: &XmlNode) -> DocxTable {
     let mut table = DocxTable::default();
     for child in child_elements(node) {
         let XmlNode::Element { name, children: inner, .. } = child else { continue };
@@ -122,7 +122,7 @@ fn table_from_xml(node: &XmlNode) -> DocxTable {
 //#endregion 🔖️TableMapping
 
 //#region 🔖️DocumentMapping
-pub fn document_from_xml(doc: &XmlDocument) -> Result<Vec<DocxBlock>, DocxError> {
+pub async fn document_from_xml(doc: &XmlDocument) -> Result<Vec<DocxBlock>, DocxError> {
     let bad = |detail: &str| DocxError::Xml { part: MAIN_DOCUMENT_PART.into(), detail: detail.into() };
     let root = doc.root.as_ref().ok_or_else(|| bad("empty document"))?;
     let XmlNode::Element { name, children, .. } = root else { return Err(bad("root is not an element")) };
@@ -151,7 +151,7 @@ pub fn document_from_xml(doc: &XmlDocument) -> Result<Vec<DocxBlock>, DocxError>
 //#endregion 🔖️DocumentMapping
 
 //#region 🔖️StylesMapping
-fn styles_from_xml(doc: &XmlDocument) -> Result<Vec<DocxStyle>, DocxError> {
+async fn styles_from_xml(doc: &XmlDocument) -> Result<Vec<DocxStyle>, DocxError> {
     let bad = |detail: &str| DocxError::Xml { part: STYLES_PART.into(), detail: detail.into() };
     let Some(root) = doc.root.as_ref() else { return Ok(Vec::new()) };
     let XmlNode::Element { name, children, .. } = root else { return Err(bad("root is not an element")) };
@@ -182,7 +182,7 @@ fn styles_from_xml(doc: &XmlDocument) -> Result<Vec<DocxStyle>, DocxError> {
 //#endregion 🔖️StylesMapping
 
 //#region 🔖️Codec
-pub fn decode_docx(data: &[u8]) -> Result<DocxSnapshot, DocxError> {
+pub async fn decode_docx(data: &[u8]) -> Result<DocxSnapshot, DocxError> {
     let opc = opc::decode_opc(data)?;
     let main_path = opc.resolve_relationship("", REL_TYPE_OFFICE_DOCUMENT).or_else(|| opc.resolve_relationship("", STRICT_REL_TYPE_OFFICE_DOCUMENT)).ok_or(DocxError::MissingMainDocumentRelationship)?;
     let bytes = opc.part_bytes(&main_path).ok_or_else(|| DocxError::MissingPart(main_path.clone()))?;
@@ -207,7 +207,7 @@ pub fn decode_docx(data: &[u8]) -> Result<DocxSnapshot, DocxError> {
 /// 🕵️ Real docx sniff: OPC-shaped (real `[Content_Types].xml`) *and* the root officeDocument
 /// relationship resolves to a part under `word/` — disambiguates from xlsx/pptx, which share the
 /// same zip magic and OPC shape but point at `xl/`/`ppt/` instead.
-pub fn sniff_docx_bytes(data: &[u8]) -> bool {
+pub async fn sniff_docx_bytes(data: &[u8]) -> bool {
     let Ok(opc) = opc::decode_opc(data) else { return false };
     match opc.resolve_relationship("", REL_TYPE_OFFICE_DOCUMENT) {
         Some(path) => path.starts_with("word/"),

@@ -15,7 +15,7 @@ pub struct PngIntoDraw;
 impl Deserializer<DrawSnapshot> for PngIntoDraw {
     const FROM: Dialect = PNG_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Lossy;
-    fn deserialize(_payload: &IoPayload) -> IoResult<DrawSnapshot> {
+    async fn deserialize(_payload: &IoPayload) -> IoResult<DrawSnapshot> {
         let mut snap = empty_draw_snapshot();
         snap.id = create_draw_id("png-import", b"png");
         snap.title = Some("Imported png".into());

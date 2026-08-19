@@ -14,7 +14,7 @@ const FLOW_PLAY_SURFACE_COMPILED: &str = "flow.play.compiled-dag";
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
-pub fn definition() -> WindowKindDefinition {
+pub async fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
         id: FLOW_PLAY_WINDOW_COMPILED.into(),
         label: LocalizedLabel::native("DSL", "DSL"),
@@ -35,7 +35,7 @@ pub fn definition() -> WindowKindDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(fixture: &FlowSnapshot, config: &FlowConfig, session: &FlowEvalSession) -> UiNode {
+pub async fn render(fixture: &FlowSnapshot, config: &FlowConfig, session: &FlowEvalSession) -> UiNode {
     let host = host_from_snapshot(fixture, config, session);
     build_text_editor_scene(FLOW_PLAY_SURFACE_COMPILED, FLOW_PLAY_APP_ID, TextEditorScene::base(host.compiled_wire_literal(), Some("wire".into()), None))
 }
@@ -48,7 +48,7 @@ mod tests {
     use crate::editor::flow::testkit::{flow_app, render as render_body};
 
     #[test]
-    fn renders_compiled_wire_editor() {
+    async fn renders_compiled_wire_editor() {
         let mut app = flow_app();
         assert!(render_body(&mut app, FLOW_PLAY_BODY_COMPILED).contains("text-editor"));
     }

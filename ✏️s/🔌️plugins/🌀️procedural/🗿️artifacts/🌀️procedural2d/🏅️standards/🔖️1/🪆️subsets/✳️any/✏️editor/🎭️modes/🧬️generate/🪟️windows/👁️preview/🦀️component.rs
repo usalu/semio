@@ -14,7 +14,7 @@ const PROCEDURAL2D_PLAY_SURFACE_GENERATE_PREVIEW: &str = "procedural2d.play.gene
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
-pub fn definition() -> WindowKindDefinition {
+pub async fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
         id: PROCEDURAL2D_PLAY_WINDOW_GENERATE_PREVIEW.into(),
         label: LocalizedLabel::native("Preview", "Vorschau"),
@@ -34,7 +34,7 @@ pub fn definition() -> WindowKindDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(config: &Procedural2dConfig, labels: &Procedural2dLabels) -> UiNode {
+pub async fn render(config: &Procedural2dConfig, labels: &Procedural2dLabels) -> UiNode {
     let eval_json = config.generation_preview_text.as_deref().filter(|value| !value.is_empty()).unwrap_or("");
     if eval_json.is_empty() {
         return semio_framework_plugin::ui_text(labels.preview_hint);
@@ -54,7 +54,7 @@ mod tests {
     use crate::editor::procedural2d::testkit::{app, render as render_body};
 
     #[test]
-    fn generate_preview_hints_without_evaluated_output() {
+    async fn generate_preview_hints_without_evaluated_output() {
         let mut app = app();
         assert!(render_body(&mut app, PROCEDURAL2D_PLAY_BODY_GENERATE_PREVIEW).contains("evaluate a generation"));
     }

@@ -24,7 +24,7 @@ pub struct IndexedDiff<T, D> {
 }
 
 impl<T, D> IndexedDiff<T, D> {
-    pub fn is_empty(&self) -> bool {
+    pub async fn is_empty(&self) -> bool {
         self.removed.is_empty() && self.modified.is_empty() && self.added.is_empty()
     }
 }
@@ -43,7 +43,7 @@ pub struct IndexedAdded<T> {
     pub item: T,
 }
 
-pub fn apply_indexed<T: Clone, D>(base: &[T], diff: &IndexedDiff<T, D>, apply_item: impl Fn(&T, &D) -> T) -> Vec<T> {
+pub async fn apply_indexed<T: Clone, D>(base: &[T], diff: &IndexedDiff<T, D>, apply_item: impl Fn(&T, &D) -> T) -> Vec<T> {
     let mut kept: Vec<(usize, T)> = base.iter().enumerate().filter(|(i, _)| !diff.removed.contains(i)).map(|(i, t)| (i, t.clone())).collect();
     for m in &diff.modified {
         if let Some(entry) = kept.iter_mut().find(|(i, _)| *i == m.index) {
@@ -60,7 +60,7 @@ pub fn apply_indexed<T: Clone, D>(base: &[T], diff: &IndexedDiff<T, D>, apply_it
     result
 }
 
-fn validate_indexed<T, D>(base: &[T], diff: &IndexedDiff<T, D>, validate_item: impl Fn(&T, &D) -> MutationApplyResult<()>) -> MutationApplyResult<()> {
+async fn validate_indexed<T, D>(base: &[T], diff: &IndexedDiff<T, D>, validate_item: impl Fn(&T, &D) -> MutationApplyResult<()>) -> MutationApplyResult<()> {
     let mut removed = std::collections::HashSet::new();
     for &index in &diff.removed {
         if index >= base.len() {
@@ -96,7 +96,7 @@ fn validate_indexed<T, D>(base: &[T], diff: &IndexedDiff<T, D>, validate_item: i
     Ok(())
 }
 
-pub fn between_indexed<T: Clone + PartialEq, D>(base: &[T], other: &[T], between_item: impl Fn(&T, &T) -> D, item_is_empty: impl Fn(&D) -> bool) -> IndexedDiff<T, D> {
+pub async fn between_indexed<T: Clone + PartialEq, D>(base: &[T], other: &[T], between_item: impl Fn(&T, &T) -> D, item_is_empty: impl Fn(&D) -> bool) -> IndexedDiff<T, D> {
     let min_len = base.len().min(other.len());
     let mut modified = Vec::new();
     for i in 0..min_len {
@@ -112,13 +112,13 @@ pub fn between_indexed<T: Clone + PartialEq, D>(base: &[T], other: &[T], between
     IndexedDiff { removed, modified, added }
 }
 
-fn count_le(sorted: &[usize], x: usize) -> usize {
+async fn count_le(sorted: &[usize], x: usize) -> usize {
     sorted.partition_point(|&v| v <= x)
 }
-fn rank_excluding(pos: usize, excluded_sorted: &[usize]) -> usize {
+async fn rank_excluding(pos: usize, excluded_sorted: &[usize]) -> usize {
     pos - count_le(excluded_sorted, pos)
 }
-fn unrank_excluding(rank: usize, excluded_sorted: &[usize]) -> usize {
+async fn unrank_excluding(rank: usize, excluded_sorted: &[usize]) -> usize {
     let mut candidate = rank;
     loop {
         let next = rank + count_le(excluded_sorted, candidate);
@@ -131,7 +131,7 @@ fn unrank_excluding(rank: usize, excluded_sorted: &[usize]) -> usize {
 
 /// ➕️ Structural, total, base-free absorb — see mp4's `absorb_indexed` for the full derivation
 /// (identical algorithm, adapted from gif 89a's `absorb_indexed_collection`).
-pub fn absorb_indexed<T: Clone, D: Clone>(d1: &mut IndexedDiff<T, D>, d2: IndexedDiff<T, D>, absorb_item: impl Fn(&mut D, D), apply_item_diff: impl Fn(&mut T, &D)) {
+pub async fn absorb_indexed<T: Clone, D: Clone>(d1: &mut IndexedDiff<T, D>, d2: IndexedDiff<T, D>, absorb_item: impl Fn(&mut D, D), apply_item_diff: impl Fn(&mut T, &D)) {
     let mut removed1_sorted = d1.removed.clone();
     removed1_sorted.sort_unstable();
     let mut added1_index_sorted: Vec<usize> = d1.added.iter().map(|a| a.index).collect();
@@ -216,19 +216,19 @@ pub struct AviChunkDiff {
     pub keyframe: Option<bool>,
 }
 
-fn apply_chunk_diff(base: &AviChunk, d: &AviChunkDiff) -> AviChunk {
+async fn apply_chunk_diff(base: &AviChunk, d: &AviChunkDiff) -> AviChunk {
     AviChunk { fourcc: base.fourcc.clone(), data: d.data.clone().unwrap_or_else(|| base.data.clone()), keyframe: d.keyframe.unwrap_or(base.keyframe) }
 }
-fn apply_chunk_diff_mut(item: &mut AviChunk, d: &AviChunkDiff) {
+async fn apply_chunk_diff_mut(item: &mut AviChunk, d: &AviChunkDiff) {
     *item = apply_chunk_diff(item, d);
 }
-fn between_chunk(a: &AviChunk, b: &AviChunk) -> AviChunkDiff {
+async fn between_chunk(a: &AviChunk, b: &AviChunk) -> AviChunkDiff {
     AviChunkDiff { data: (a.data != b.data).then(|| b.data.clone()), keyframe: (a.keyframe != b.keyframe).then_some(b.keyframe) }
 }
-fn chunk_diff_is_empty(d: &AviChunkDiff) -> bool {
+async fn chunk_diff_is_empty(d: &AviChunkDiff) -> bool {
     d.data.is_none() && d.keyframe.is_none()
 }
-fn absorb_chunk_diff(a: &mut AviChunkDiff, b: AviChunkDiff) {
+async fn absorb_chunk_diff(a: &mut AviChunkDiff, b: AviChunkDiff) {
     if b.data.is_some() {
         a.data = b.data;
     }
@@ -252,25 +252,25 @@ pub struct AviStreamDiff {
     pub chunks: Option<AviChunksDiff>,
 }
 
-fn apply_stream_diff(base: &AviStream, d: &AviStreamDiff) -> AviStream {
+async fn apply_stream_diff(base: &AviStream, d: &AviStreamDiff) -> AviStream {
     AviStream {
         strh: d.strh.clone().unwrap_or_else(|| base.strh.clone()),
         strf: d.strf.clone().unwrap_or_else(|| base.strf.clone()),
         chunks: d.chunks.as_ref().map_or_else(|| base.chunks.clone(), |cd| apply_indexed(&base.chunks, cd, apply_chunk_diff)),
     }
 }
-fn apply_stream_diff_mut(item: &mut AviStream, d: &AviStreamDiff) {
+async fn apply_stream_diff_mut(item: &mut AviStream, d: &AviStreamDiff) {
     *item = apply_stream_diff(item, d);
 }
 
-fn between_stream(a: &AviStream, b: &AviStream) -> AviStreamDiff {
+async fn between_stream(a: &AviStream, b: &AviStream) -> AviStreamDiff {
     let chunks_diff = between_indexed(&a.chunks, &b.chunks, between_chunk, chunk_diff_is_empty);
     AviStreamDiff { strh: (a.strh != b.strh).then(|| b.strh.clone()), strf: (a.strf != b.strf).then(|| b.strf.clone()), chunks: (!chunks_diff.is_empty()).then_some(chunks_diff) }
 }
-fn stream_diff_is_empty(d: &AviStreamDiff) -> bool {
+async fn stream_diff_is_empty(d: &AviStreamDiff) -> bool {
     d.strh.is_none() && d.strf.is_none() && d.chunks.is_none()
 }
-fn absorb_stream_diff(a: &mut AviStreamDiff, b: AviStreamDiff) {
+async fn absorb_stream_diff(a: &mut AviStreamDiff, b: AviStreamDiff) {
     if b.strh.is_some() {
         a.strh = b.strh;
     }
@@ -302,23 +302,23 @@ pub struct AviDiff {
     pub unknown_chunks: Option<AviUnknownChunksDiff>,
 }
 
-fn apply_riff_diff(base: &RiffChunk, d: &RiffChunk) -> RiffChunk {
+async fn apply_riff_diff(base: &RiffChunk, d: &RiffChunk) -> RiffChunk {
     let _ = base;
     d.clone()
 }
-fn apply_riff_diff_mut(item: &mut RiffChunk, d: &RiffChunk) {
+async fn apply_riff_diff_mut(item: &mut RiffChunk, d: &RiffChunk) {
     *item = d.clone();
 }
-fn between_riff(a: &RiffChunk, b: &RiffChunk) -> RiffChunk {
+async fn between_riff(a: &RiffChunk, b: &RiffChunk) -> RiffChunk {
     let _ = a;
     b.clone()
 }
-fn riff_diff_is_empty(_d: &RiffChunk) -> bool {
+async fn riff_diff_is_empty(_d: &RiffChunk) -> bool {
     false
 }
 
 impl MutationDiff<AviSnapshot> for AviDiff {
-    fn apply(&self, base: &AviSnapshot) -> MutationApplyResult<AviSnapshot> {
+    async fn apply(&self, base: &AviSnapshot) -> MutationApplyResult<AviSnapshot> {
         if let Some(diff) = &self.streams {
             validate_indexed(&base.streams, diff, validate_stream_diff)?;
         }
@@ -334,7 +334,7 @@ impl MutationDiff<AviSnapshot> for AviDiff {
         })
     }
 
-    fn absorb(&mut self, other: Self) {
+    async fn absorb(&mut self, other: Self) {
         if other.main_header.is_some() {
             self.main_header = other.main_header;
         }
@@ -354,7 +354,7 @@ impl MutationDiff<AviSnapshot> for AviDiff {
     }
 }
 
-fn validate_stream_diff(base: &AviStream, diff: &AviStreamDiff) -> MutationApplyResult<()> {
+async fn validate_stream_diff(base: &AviStream, diff: &AviStreamDiff) -> MutationApplyResult<()> {
     if let Some(chunks) = &diff.chunks {
         validate_indexed(&base.chunks, chunks, |_, _| Ok(()))?;
     }
@@ -362,7 +362,7 @@ fn validate_stream_diff(base: &AviStream, diff: &AviStreamDiff) -> MutationApply
 }
 
 impl DiffAlgebra<AviSnapshot> for AviDiff {
-    fn between(base: &AviSnapshot, other: &AviSnapshot) -> Self {
+    async fn between(base: &AviSnapshot, other: &AviSnapshot) -> Self {
         let streams_diff = between_indexed(&base.streams, &other.streams, between_stream, stream_diff_is_empty);
         let chunks_diff = between_indexed(&base.unknown_chunks, &other.unknown_chunks, between_riff, riff_diff_is_empty);
         Self {
@@ -372,7 +372,7 @@ impl DiffAlgebra<AviSnapshot> for AviDiff {
             unknown_chunks: (!chunks_diff.is_empty()).then_some(chunks_diff),
         }
     }
-    fn inverse(&self, base: &AviSnapshot) -> Self {
+    async fn inverse(&self, base: &AviSnapshot) -> Self {
         // 🔁️ Correct-by-construction (identical reasoning to mp4's `Mp4Diff::inverse`).
         let mut after = base.clone();
         if let Some(v) = &self.main_header {
@@ -389,13 +389,13 @@ impl DiffAlgebra<AviSnapshot> for AviDiff {
         }
         Self::between(&after, base)
     }
-    fn is_empty(&self) -> bool {
+    async fn is_empty(&self) -> bool {
         self.main_header.is_none() && self.streams.is_none() && self.idx1_present.is_none() && self.unknown_chunks.is_none()
     }
 }
 
 /// 🧩 Set-snapshot diff helper — used by the `📸️set-snapshot/🔺️diff` leaf.
-pub fn diff_set_snapshot(base: &AviSnapshot, snapshot: &AviSnapshot) -> AviDiff {
+pub async fn diff_set_snapshot(base: &AviSnapshot, snapshot: &AviSnapshot) -> AviDiff {
     <AviDiff as DiffAlgebra<AviSnapshot>>::between(base, snapshot)
 }
 //#endregion 🔖️Diff
@@ -406,11 +406,11 @@ mod tests {
     use super::*;
     use crate::artifacts::avi::standards::v1_0::subsets::any::schema::snapshot::STDIO_AVI_DOCUMENT_SCHEMA;
 
-    fn chunk(n: u8) -> AviChunk {
+    async fn chunk(n: u8) -> AviChunk {
         AviChunk { fourcc: "00dc".into(), data: vec![n], keyframe: n % 2 == 0 }
     }
 
-    fn stream(chunks: Vec<AviChunk>) -> AviStream {
+    async fn stream(chunks: Vec<AviChunk>) -> AviStream {
         AviStream {
             strh: AviStreamHeader {
                 fcc_type: "vids".into(),
@@ -436,7 +436,7 @@ mod tests {
         }
     }
 
-    fn snap(streams: Vec<AviStream>) -> AviSnapshot {
+    async fn snap(streams: Vec<AviStream>) -> AviSnapshot {
         AviSnapshot {
             schema: STDIO_AVI_DOCUMENT_SCHEMA.into(),
             main_header: AviMainHeader {
@@ -459,7 +459,7 @@ mod tests {
     }
 
     #[test]
-    fn field_sweep_covers_every_mutable_field() {
+    async fn field_sweep_covers_every_mutable_field() {
         let a = snap(vec![stream(vec![chunk(1), chunk(2)]), stream(vec![chunk(3)])]);
         let mut b = a.clone();
         b.main_header.width = 32;
@@ -481,7 +481,7 @@ mod tests {
     }
 
     #[test]
-    fn inverse_law_round_trips_through_apply() {
+    async fn inverse_law_round_trips_through_apply() {
         let a = snap(vec![stream(vec![chunk(1), chunk(2)])]);
         let mut b = a.clone();
         b.streams[0].chunks[0].keyframe = !b.streams[0].chunks[0].keyframe;
@@ -492,7 +492,7 @@ mod tests {
     }
 
     #[test]
-    fn absorb_insert_then_remove_before_matches_sequential() {
+    async fn absorb_insert_then_remove_before_matches_sequential() {
         let base: Vec<AviChunk> = vec![chunk(1), chunk(2)];
         let f = AviChunk { fourcc: "00dc".into(), data: vec![0xAA], keyframe: true };
         let mut d1: AviChunksDiff = IndexedDiff { removed: vec![], modified: vec![], added: vec![IndexedAdded { index: 2, item: f.clone() }] };
@@ -505,7 +505,7 @@ mod tests {
     }
 
     #[test]
-    fn absorb_insert_insert_same_index_both_survive() {
+    async fn absorb_insert_insert_same_index_both_survive() {
         let base: Vec<AviChunk> = vec![chunk(1)];
         let f = AviChunk { fourcc: "00dc".into(), data: vec![0xAA], keyframe: true };
         let g = AviChunk { fourcc: "00dc".into(), data: vec![0xBB], keyframe: false };
@@ -521,7 +521,7 @@ mod tests {
     }
 
     #[test]
-    fn absorb_associativity_over_three_diffs() {
+    async fn absorb_associativity_over_three_diffs() {
         let a = snap(vec![stream(vec![chunk(1), chunk(2)])]);
         let mut mid1 = a.clone();
         mid1.streams[0].chunks[0].keyframe = false;

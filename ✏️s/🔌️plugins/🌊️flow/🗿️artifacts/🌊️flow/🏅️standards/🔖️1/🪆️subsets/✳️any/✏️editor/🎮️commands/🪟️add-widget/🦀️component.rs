@@ -20,7 +20,7 @@ pub struct AddWidget {
 /// selection here — selection is framework-owned `InteractionState` now, only ever mutated by the
 /// framework's own injected `interactionSelect` handling, never by an app command's `Emit` (mirrors
 /// note's `add-block`).
-pub fn handle(payload: &AddWidget, doc: &ArtifactView<'_, FlowSnapshot>, cfg: &ConfigView<'_, FlowConfig>, session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, FlowConfigMutation>, Fault> {
+pub async fn handle(payload: &AddWidget, doc: &ArtifactView<'_, FlowSnapshot>, cfg: &ConfigView<'_, FlowConfig>, session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, FlowConfigMutation>, Fault> {
     let descriptor = match payload.kind.as_str() {
         "neuron" => json!({ "kind": "neuron", "neuronKind": payload.neuron_kind.as_deref().unwrap_or("math.add") }).to_string(),
         other => json!({ "kind": other }).to_string(),
@@ -39,7 +39,7 @@ mod tests {
     use crate::editor::flow::FlowCommand;
 
     #[test]
-    fn add_widget_emits_operations_and_grows_the_widget_count() {
+    async fn add_widget_emits_operations_and_grows_the_widget_count() {
         let mut app = flow_app();
         let before = app.snapshot().expect("snapshot").to_fixture().widgets.len();
         let result = dispatch(&mut app, FlowCommand::AddWidget(AddWidget { kind: "inputNote".into(), neuron_kind: None, x: Some(40.0), y: Some(40.0) }));
@@ -48,7 +48,7 @@ mod tests {
     }
 
     #[test]
-    fn rename_rejects_blank_unchanged_and_taken_ids() {
+    async fn rename_rejects_blank_unchanged_and_taken_ids() {
         let mut app = flow_app();
         for value in ["", " ", "slider"] {
             let result = dispatch(&mut app, FlowCommand::RenameFlowWidget(crate::editor::flow::commands::rename_flow_widget::RenameFlowWidget { old_id: "slider".into(), value: value.into() }));
@@ -57,7 +57,7 @@ mod tests {
     }
 
     #[test]
-    fn patch_flow_widgets_parses_the_raw_value_string_into_the_slider() {
+    async fn patch_flow_widgets_parses_the_raw_value_string_into_the_slider() {
         let mut app = flow_app();
         dispatch(&mut app, FlowCommand::PatchFlowWidgets(crate::editor::flow::commands::patch_flow_widgets::PatchFlowWidgets { widget_ids: vec!["slider".into()], field: "value".into(), value: "7.5".into() }));
         let patched = app.snapshot().expect("snapshot");

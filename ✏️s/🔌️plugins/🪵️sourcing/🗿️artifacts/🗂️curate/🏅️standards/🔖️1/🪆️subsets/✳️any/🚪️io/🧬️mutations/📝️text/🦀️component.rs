@@ -34,7 +34,7 @@ enum SourcingMutationDsl {
 //#region 🔖️HandcraftedOpCodecs
 /// ⚡️ P6 handcrafted OpText/OpBinary (derive no longer emits these traits).
 impl OpText for SourcingMutationDsl {
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
+    async fn parse_op(line: &str) -> Result<Self, store::TextError> {
         let variants = <Self as dsl::DslVariants>::variants();
         for (keyword, spec_fn) in &variants {
             let probe = format!("{} ", keyword);
@@ -49,7 +49,7 @@ impl OpText for SourcingMutationDsl {
         }
         Err(dsl::__rt::field_error(format!("unknown mutation line '{line}'")))
     }
-    fn print_op(&self) -> String {
+    async fn print_op(&self) -> String {
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
         let variants = <Self as dsl::DslVariants>::variants();
         let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
@@ -58,16 +58,16 @@ impl OpText for SourcingMutationDsl {
 }
 
 impl protocol::OpBinary for SourcingMutationDsl {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         dsl::variants_binary::encode_op(self)
     }
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         dsl::variants_binary::decode_op(bytes)
     }
 }
 //#endregion 🔖️HandcraftedOpCodecs
 
-fn sourcing_mutation_to_dsl(mutation: &SourcingMutation) -> SourcingMutationDsl {
+async fn sourcing_mutation_to_dsl(mutation: &SourcingMutation) -> SourcingMutationDsl {
     match mutation {
         SourcingMutation::CreateCuratedItem(payload) => SourcingMutationDsl::CreateCuratedItem { item: payload.item.clone() },
         SourcingMutation::DeleteCuratedItem(payload) => SourcingMutationDsl::DeleteCuratedItem { object_id: payload.object_id.clone() },
@@ -75,7 +75,7 @@ fn sourcing_mutation_to_dsl(mutation: &SourcingMutation) -> SourcingMutationDsl 
     }
 }
 
-fn sourcing_mutation_from_dsl(mutation: SourcingMutationDsl) -> SourcingMutation {
+async fn sourcing_mutation_from_dsl(mutation: SourcingMutationDsl) -> SourcingMutation {
     match mutation {
         SourcingMutationDsl::CreateCuratedItem { item } => SourcingMutation::CreateCuratedItem(create_curated_item::mutation::CreateCuratedItem { item }),
         SourcingMutationDsl::DeleteCuratedItem { object_id } => SourcingMutation::DeleteCuratedItem(delete_curated_item::mutation::DeleteCuratedItem { object_id }),
@@ -86,11 +86,11 @@ fn sourcing_mutation_from_dsl(mutation: SourcingMutationDsl) -> SourcingMutation
 }
 
 impl OpText for SourcingMutation {
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
+    async fn parse_op(line: &str) -> Result<Self, store::TextError> {
         Ok(sourcing_mutation_from_dsl(<SourcingMutationDsl as OpText>::parse_op(line)?))
     }
 
-    fn print_op(&self) -> String {
+    async fn print_op(&self) -> String {
         <SourcingMutationDsl as OpText>::print_op(&sourcing_mutation_to_dsl(self))
     }
 }
@@ -98,11 +98,11 @@ impl OpText for SourcingMutation {
 /// ⚡️ Binary mirror of the `OpText` bridge above — `SourcingMutationDsl` already derives
 /// `OpBinary` via `#[derive(dsl::DslEnum)]`, so this is a pure to/from-dsl forward.
 impl protocol::OpBinary for SourcingMutation {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         sourcing_mutation_to_dsl(self).encode_op()
     }
 
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         Ok(sourcing_mutation_from_dsl(SourcingMutationDsl::decode_op(bytes)?))
     }
 }
@@ -113,7 +113,7 @@ impl protocol::OpBinary for SourcingMutation {
 mod tests {
     use super::*;
 
-    fn every_mutation() -> Vec<SourcingMutation> {
+    async fn every_mutation() -> Vec<SourcingMutation> {
         vec![
             SourcingMutation::CreateCuratedItem(create_curated_item::mutation::CreateCuratedItem { item: CuratedItem { object_id: "beam-glulam-gl24h".into(), count: 3 } }),
             SourcingMutation::DeleteCuratedItem(delete_curated_item::mutation::DeleteCuratedItem { object_id: "beam-glulam-gl24h".into() }),
@@ -122,24 +122,24 @@ mod tests {
     }
 
     #[test]
-    fn op_text_round_trips_create_curated_item() {
+    async fn op_text_round_trips_create_curated_item() {
         store::os_store::test_support::assert_op_line_round_trip(&SourcingMutation::CreateCuratedItem(create_curated_item::mutation::CreateCuratedItem { item: CuratedItem { object_id: "beam-glulam-gl24h".into(), count: 3 } }));
     }
 
     #[test]
-    fn op_text_round_trips_delete_curated_item() {
+    async fn op_text_round_trips_delete_curated_item() {
         store::os_store::test_support::assert_op_line_round_trip(&SourcingMutation::DeleteCuratedItem(delete_curated_item::mutation::DeleteCuratedItem { object_id: "beam-glulam-gl24h".into() }));
     }
 
     #[test]
-    fn op_text_round_trips_change_curated_item_count() {
+    async fn op_text_round_trips_change_curated_item_count() {
         store::os_store::test_support::assert_op_line_round_trip(&SourcingMutation::ChangeCuratedItemCount(change_curated_item_count::mutation::ChangeCuratedItemCount { object_id: "beam-glulam-gl24h".into(), new_count: 5 }));
     }
 
     /// ⚖️ Every variant, not just the three hand-picked above — full-coverage `OpText` round trip
     /// over the closed vocabulary, one sample value per field.
     #[test]
-    fn every_variant_op_text_round_trips() {
+    async fn every_variant_op_text_round_trips() {
         for mutation in every_mutation() {
             store::os_store::test_support::assert_op_line_round_trip(&mutation);
         }

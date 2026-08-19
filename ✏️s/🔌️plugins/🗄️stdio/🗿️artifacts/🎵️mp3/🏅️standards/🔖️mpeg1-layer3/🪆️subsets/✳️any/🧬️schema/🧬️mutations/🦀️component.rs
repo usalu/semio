@@ -26,7 +26,7 @@ pub enum Mp3Mutation {
 impl Mutation<Mp3Snapshot> for Mp3Mutation {
     type Diff = Mp3Diff;
 
-    fn diff(&self, base: &Mp3Snapshot) -> protocol::MutationOutcome<Self::Diff> {
+    async fn diff(&self, base: &Mp3Snapshot) -> protocol::MutationOutcome<Self::Diff> {
         protocol::MutationOutcome::new(match self {
             Mp3Mutation::NoMutation => Mp3Diff::default(),
             Mp3Mutation::SetSnapshot { snapshot } => diff_set_snapshot(base, snapshot),
@@ -36,7 +36,7 @@ impl Mutation<Mp3Snapshot> for Mp3Mutation {
         })
     }
 
-    fn inverse(&self, base: &Mp3Snapshot) -> Vec<Self> {
+    async fn inverse(&self, base: &Mp3Snapshot) -> Vec<Self> {
         match self {
             Mp3Mutation::NoMutation => vec![Mp3Mutation::NoMutation],
             Mp3Mutation::SetSnapshot { .. } => vec![Mp3Mutation::SetSnapshot { snapshot: base.clone() }],
@@ -49,7 +49,7 @@ impl Mutation<Mp3Snapshot> for Mp3Mutation {
 
 /// ▶️ Applies a mutation to `snapshot` in place, returning the diff (the diff is the single
 /// semantics source — never apply-and-capture).
-pub fn apply_mp3_mutation(snapshot: &mut Mp3Snapshot, mutation: &Mp3Mutation) -> protocol::MutationOutcome<Mp3Diff> {
+pub async fn apply_mp3_mutation(snapshot: &mut Mp3Snapshot, mutation: &Mp3Mutation) -> protocol::MutationOutcome<Mp3Diff> {
     let outcome = <Mp3Mutation as Mutation<Mp3Snapshot>>::diff(mutation, snapshot);
     match protocol::MutationDiff::apply(outcome.diff(), snapshot) {
         Ok(next) => {
@@ -69,19 +69,19 @@ pub fn apply_mp3_mutation(snapshot: &mut Mp3Snapshot, mutation: &Mp3Mutation) ->
 /// `ArtifactDsl`/`ArtifactPack` envelope (which wraps real MP3 bytes, see that file's doc
 /// comment) — an op is always plain JSON here.
 impl OpText for Mp3Mutation {
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
+    async fn parse_op(line: &str) -> Result<Self, store::TextError> {
         serde_json::from_str(line).map_err(|e| store::TextError::new(e.to_string(), dsl::TextSpan::at(1, 1)))
     }
-    fn print_op(&self) -> String {
+    async fn print_op(&self) -> String {
         serde_json::to_string(self).unwrap_or_default()
     }
 }
 
 impl OpBinary for Mp3Mutation {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         serde_json::to_vec(self).map_err(|e| protocol::ProtocolError::Io(e.to_string()))
     }
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         serde_json::from_slice(bytes).map_err(|e| protocol::ProtocolError::Io(e.to_string()))
     }
 }
@@ -95,18 +95,18 @@ mod tests {
     use protocol::command::DiffAlgebra;
     use protocol::MutationDiff;
 
-    fn frame() -> Mp3Frame {
+    async fn frame() -> Mp3Frame {
         Mp3Frame {
             header: Mp3FrameHeader { mpeg_version_id: 3, layer: 1, protection_bit: true, bitrate_index: 9, sample_rate_index: 0, padding: false, private_bit: false, channel_mode: 3, mode_extension: 0, copyright: false, original: true, emphasis: 0 },
             payload: vec![0u8; 4],
         }
     }
 
-    fn base_snapshot() -> Mp3Snapshot {
+    async fn base_snapshot() -> Mp3Snapshot {
         Mp3Snapshot { frames: vec![frame()], ..Mp3Snapshot::default() }
     }
 
-    fn variants(base: &Mp3Snapshot) -> Vec<Mp3Mutation> {
+    async fn variants(base: &Mp3Snapshot) -> Vec<Mp3Mutation> {
         vec![
             Mp3Mutation::NoMutation,
             Mp3Mutation::SetSnapshot { snapshot: Mp3Snapshot { frames: vec![frame(), frame()], ..base.clone() } },
@@ -120,7 +120,7 @@ mod tests {
 
     //#region mutation_diff_law
     #[test]
-    fn mutation_diff_law_every_variant() {
+    async fn mutation_diff_law_every_variant() {
         let base = base_snapshot();
         for m in variants(&base) {
             let mut via_apply = base.clone();
@@ -134,7 +134,7 @@ mod tests {
 
     //#region inverse_law
     #[test]
-    fn inverse_law_mutation_and_diff_level() {
+    async fn inverse_law_mutation_and_diff_level() {
         let base = base_snapshot();
         for m in variants(&base) {
             let mut round = base.clone();
@@ -154,7 +154,7 @@ mod tests {
 
     //#region op_text_binary_roundtrip_law
     #[test]
-    fn op_text_binary_roundtrip_law() {
+    async fn op_text_binary_roundtrip_law() {
         let base = base_snapshot();
         for m in variants(&base) {
             let printed = m.print_op();

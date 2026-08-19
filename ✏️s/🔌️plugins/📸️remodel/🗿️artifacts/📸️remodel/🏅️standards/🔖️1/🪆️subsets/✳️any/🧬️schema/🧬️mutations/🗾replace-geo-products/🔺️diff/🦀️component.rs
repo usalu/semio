@@ -4,7 +4,7 @@ use crate::artifacts::remodel::diff::RemodelDiff;
 use crate::artifacts::remodel::RemodelSnapshot;
 
 //#region 🔖️Diff
-pub fn diff(payload: &super::mutation::ReplaceGeoProducts, base: &RemodelSnapshot) -> protocol::MutationOutcome<RemodelDiff> {
+pub async fn diff(payload: &super::mutation::ReplaceGeoProducts, base: &RemodelSnapshot) -> protocol::MutationOutcome<RemodelDiff> {
     if payload.geo.is_none() && base.results.geo.is_none() {
         return protocol::MutationOutcome::error("mutation.target-missing", "There are no geo products to clear.".to_string(), [base.id.clone()]);
     }

@@ -11,7 +11,7 @@ pub struct SetGridVisible {
     pub pressed: Option<bool>,
 }
 
-pub fn handle(payload: &SetGridVisible, _doc: &ArtifactView<'_, FlowSnapshot>, cfg: &ConfigView<'_, FlowConfig>, _session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, FlowConfigMutation>, Fault> {
+pub async fn handle(payload: &SetGridVisible, _doc: &ArtifactView<'_, FlowSnapshot>, cfg: &ConfigView<'_, FlowConfig>, _session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, FlowConfigMutation>, Fault> {
     Ok(Emit::config(vec![FlowConfigMutation::SetGridVisible { value: payload.pressed.unwrap_or(!cfg.snapshot.grid_visible) }]))
 }
 
@@ -23,7 +23,7 @@ mod tests {
     use crate::editor::flow::FlowCommand;
     use semio_framework_plugin::WindowMeasure;
 
-    fn grid_children(app: &mut FlowApp) -> Vec<WindowMeasure> {
+    async fn grid_children(app: &mut FlowApp) -> Vec<WindowMeasure> {
         main_window_measures(app)
             .into_iter()
             .find_map(|measure| match measure {
@@ -33,11 +33,11 @@ mod tests {
             .expect("grid measure group")
     }
 
-    fn grid_visible(app: &mut FlowApp) -> bool {
+    async fn grid_visible(app: &mut FlowApp) -> bool {
         grid_children(app).iter().any(|child| matches!(child, WindowMeasure::Toggle { id, pressed, .. } if id == "flow-play-measures.grid-visible" && *pressed))
     }
 
-    fn grid_factor(app: &mut FlowApp) -> f64 {
+    async fn grid_factor(app: &mut FlowApp) -> f64 {
         grid_children(app)
             .iter()
             .find_map(|child| match child {
@@ -49,7 +49,7 @@ mod tests {
 
     /// 🔁️ `pressed: None` must flip the live config value, not force it to a constant.
     #[test]
-    fn a_bare_toggle_flips_the_current_value() {
+    async fn a_bare_toggle_flips_the_current_value() {
         let mut app = flow_app();
         assert!(grid_visible(&mut app), "grid starts visible");
         dispatch(&mut app, FlowCommand::SetGridVisible(SetGridVisible { pressed: None }));
@@ -59,7 +59,7 @@ mod tests {
     }
 
     #[test]
-    fn grid_factor_clamps_to_the_slider_range() {
+    async fn grid_factor_clamps_to_the_slider_range() {
         let mut app = flow_app();
         dispatch(&mut app, FlowCommand::SetGridFactor(crate::editor::flow::commands::set_grid_factor::SetGridFactor { value: 1000.0 }));
         assert_eq!(grid_factor(&mut app), 50.0);

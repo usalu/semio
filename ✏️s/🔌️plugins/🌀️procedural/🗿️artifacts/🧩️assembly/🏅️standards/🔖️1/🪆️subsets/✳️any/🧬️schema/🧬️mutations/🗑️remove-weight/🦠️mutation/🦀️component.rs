@@ -16,23 +16,23 @@ pub struct RemoveWeight {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn remove_weight(module_id: String) -> AssemblyMutation {
+pub async fn remove_weight(module_id: String) -> AssemblyMutation {
     AssemblyMutation::RemoveWeight(RemoveWeight { module_id })
 }
 
 impl MutationKind<AssemblySnapshot, AssemblyMutation> for RemoveWeight {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "remove", entity: "weight", kind: "remove-weight", record: "RemovedWeight" };
 
-    fn diff(&self, base: &AssemblySnapshot) -> protocol::MutationOutcome<AssemblyDiff> {
+    async fn diff(&self, base: &AssemblySnapshot) -> protocol::MutationOutcome<AssemblyDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &AssemblySnapshot) -> Vec<AssemblyMutation> {
+    async fn inverse(&self, base: &AssemblySnapshot) -> Vec<AssemblyMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         format!("Remove weight override for module \"{}\"", self.module_id)
     }
-    fn target(&self) -> Vec<String> {
+    async fn target(&self) -> Vec<String> {
         vec![self.module_id.clone()]
     }
 }

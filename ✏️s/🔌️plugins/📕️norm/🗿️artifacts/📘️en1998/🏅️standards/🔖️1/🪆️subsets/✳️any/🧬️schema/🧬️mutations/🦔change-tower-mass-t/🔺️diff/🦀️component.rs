@@ -5,7 +5,7 @@ use crate::artifacts::en1998::mutations::change_tower_mass_t::mutation::ChangeTo
 use crate::artifacts::en1998::En1998Snapshot;
 
 //#region 🔖️Diff
-pub fn diff(payload: &ChangeTowerMassT, base: &En1998Snapshot) -> protocol::MutationOutcome<En1998Diff> {
+pub async fn diff(payload: &ChangeTowerMassT, base: &En1998Snapshot) -> protocol::MutationOutcome<En1998Diff> {
     if !payload.new_tower_mass_t.is_finite() {
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("Tower mass [t] must be a finite number, got {}.", payload.new_tower_mass_t), Vec::<String>::new());
     }

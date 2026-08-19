@@ -21,7 +21,7 @@ pub enum PptxError {
 }
 
 impl std::fmt::Display for PptxError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    async fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::Opc(e) => write!(f, "pptx: {e}"),
             Self::Zip(e) => write!(f, "pptx: {e}"),
@@ -36,12 +36,12 @@ impl std::fmt::Display for PptxError {
 impl std::error::Error for PptxError {}
 
 impl From<crate::artifacts::zip::opc::OpcError> for PptxError {
-    fn from(e: crate::artifacts::zip::opc::OpcError) -> Self {
+    async fn from(e: crate::artifacts::zip::opc::OpcError) -> Self {
         Self::Opc(e)
     }
 }
 impl From<crate::artifacts::zip::standards::v2_0::subsets::any::io::ZipError> for PptxError {
-    fn from(e: crate::artifacts::zip::standards::v2_0::subsets::any::io::ZipError) -> Self {
+    async fn from(e: crate::artifacts::zip::standards::v2_0::subsets::any::io::ZipError) -> Self {
         Self::Zip(e)
     }
 }
@@ -79,23 +79,23 @@ pub const REL_TYPE_OFFICE_DOCUMENT_STRICT: &str = "http://purl.oclc.org/ooxml/of
 /// 🧭️ Resolves the package root's officeDocument relationship regardless of whether it was
 /// authored under the Transitional or the Strict relationship-type namespace -- see
 /// `REL_TYPE_OFFICE_DOCUMENT_STRICT`.
-pub fn resolve_office_document_relationship(opc: &crate::artifacts::zip::opc::OpcPackage) -> Option<String> {
+pub async fn resolve_office_document_relationship(opc: &crate::artifacts::zip::opc::OpcPackage) -> Option<String> {
     opc.resolve_relationship("", crate::artifacts::zip::opc::REL_TYPE_OFFICE_DOCUMENT).or_else(|| opc.resolve_relationship("", REL_TYPE_OFFICE_DOCUMENT_STRICT))
 }
 
-pub fn attr(name: &str, value: &str) -> crate::artifacts::xml::schema::snapshot::XmlAttr {
+pub async fn attr(name: &str, value: &str) -> crate::artifacts::xml::schema::snapshot::XmlAttr {
     crate::artifacts::xml::schema::snapshot::XmlAttr { name: name.into(), value: value.into() }
 }
 
-pub fn attr_val<'a>(attrs: &'a [crate::artifacts::xml::schema::snapshot::XmlAttr], name: &str) -> Option<&'a str> {
+pub async fn attr_val<'a>(attrs: &'a [crate::artifacts::xml::schema::snapshot::XmlAttr], name: &str) -> Option<&'a str> {
     attrs.iter().find(|a| a.name == name).map(|a| a.value.as_str())
 }
 
-pub fn find_child<'a>(children: &'a [crate::artifacts::xml::schema::snapshot::XmlNode], name: &str) -> Option<&'a crate::artifacts::xml::schema::snapshot::XmlNode> {
+pub async fn find_child<'a>(children: &'a [crate::artifacts::xml::schema::snapshot::XmlNode], name: &str) -> Option<&'a crate::artifacts::xml::schema::snapshot::XmlNode> {
     children.iter().find(|c| matches!(c, crate::artifacts::xml::schema::snapshot::XmlNode::Element { name: n, .. } if n == name))
 }
 
-pub fn element_children(node: &crate::artifacts::xml::schema::snapshot::XmlNode) -> &[crate::artifacts::xml::schema::snapshot::XmlNode] {
+pub async fn element_children(node: &crate::artifacts::xml::schema::snapshot::XmlNode) -> &[crate::artifacts::xml::schema::snapshot::XmlNode] {
     match node {
         crate::artifacts::xml::schema::snapshot::XmlNode::Element { children, .. } => children,
         _ => &[],
@@ -170,11 +170,11 @@ pub mod derived_composition {
         type Snapshot = PptxSnapshot;
         const WRITES: Dialect = DIALECT;
 
-        fn reads() -> &'static [Dialect] {
+        async fn reads() -> &'static [Dialect] {
             &[DIALECT, DEP_ZIP, DEP_XML]
         }
 
-        fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+        async fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
             // 🌱 Every listed read dialect's payload is raw text/bytes that this artifact's own
             // analyzer already round-trips through `store::Document{Dsl,Pack}` -- including bytes
             // claiming a dependency's dialect, since (for a single-standard DAG-adjacent dependency
@@ -209,7 +209,7 @@ pub mod io_registry {
 
     static ENTRIES: OnceLock<Vec<ComposerEntry>> = OnceLock::new();
 
-    pub fn entries() -> &'static [ComposerEntry] {
+    pub async fn entries() -> &'static [ComposerEntry] {
         ENTRIES.get_or_init(|| vec![composer_entry_of::<PptxRawAnyComposer>(), composer_entry_of::<PptxStrictComposer>(), composer_entry_of::<PptxTransitionalComposer>()]).as_slice()
     }
 }

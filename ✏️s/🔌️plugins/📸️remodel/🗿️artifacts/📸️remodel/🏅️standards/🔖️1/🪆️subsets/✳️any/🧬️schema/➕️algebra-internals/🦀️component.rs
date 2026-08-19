@@ -11,33 +11,33 @@ pub struct Mat2 {
 impl Mat2 {
     pub const IDENTITY: Self = Self { cols: [[1.0, 0.0], [0.0, 1.0]] };
 
-    pub fn new(a: f64, b: f64, c: f64, d: f64) -> Self {
+    pub async fn new(a: f64, b: f64, c: f64, d: f64) -> Self {
         Self { cols: [[a, c], [b, d]] }
     }
 
     #[allow(clippy::should_implement_trait, reason = "value-semantics mul used pervasively as a plain method (not operator overload) by dependent crates outside this campaign wave's scope; renaming is a breaking API change")]
-    pub fn mul(self, other: Self) -> Self {
+    pub async fn mul(self, other: Self) -> Self {
         let entry = |row: usize, col: usize| self.cols[0][row] * other.cols[col][0] + self.cols[1][row] * other.cols[col][1];
         Self { cols: [[entry(0, 0), entry(1, 0)], [entry(0, 1), entry(1, 1)]] }
     }
 
-    pub fn apply(self, v: (f64, f64)) -> (f64, f64) {
+    pub async fn apply(self, v: (f64, f64)) -> (f64, f64) {
         (self.cols[0][0] * v.0 + self.cols[1][0] * v.1, self.cols[0][1] * v.0 + self.cols[1][1] * v.1)
     }
 
-    pub fn det(self) -> f64 {
+    pub async fn det(self) -> f64 {
         self.cols[0][0] * self.cols[1][1] - self.cols[1][0] * self.cols[0][1]
     }
 
-    pub fn trace(self) -> f64 {
+    pub async fn trace(self) -> f64 {
         self.cols[0][0] + self.cols[1][1]
     }
 
-    pub fn transpose(self) -> Self {
+    pub async fn transpose(self) -> Self {
         Self::new(self.cols[0][0], self.cols[0][1], self.cols[1][0], self.cols[1][1])
     }
 
-    pub fn inverse(self) -> Option<Self> {
+    pub async fn inverse(self) -> Option<Self> {
         let d = self.det();
         if d.abs() < 1e-12 {
             return None;
@@ -47,7 +47,7 @@ impl Mat2 {
     }
 
     /// 🧮️ Real eigenvalues (if any) of a 2x2 matrix via the characteristic polynomial `λ² - tr·λ + det = 0`.
-    pub fn eigenvalues(self) -> Option<(f64, f64)> {
+    pub async fn eigenvalues(self) -> Option<(f64, f64)> {
         let t = self.trace();
         let d = self.det();
         let disc = t * t - 4.0 * d;
@@ -66,55 +66,55 @@ impl Mat2 {
 pub struct VecD(pub Vec<f64>);
 
 impl VecD {
-    pub fn zeros(n: usize) -> Self {
+    pub async fn zeros(n: usize) -> Self {
         Self(vec![0.0; n])
     }
 
-    pub fn from_vec(data: Vec<f64>) -> Self {
+    pub async fn from_vec(data: Vec<f64>) -> Self {
         Self(data)
     }
 
-    pub fn len(&self) -> usize {
+    pub async fn len(&self) -> usize {
         self.0.len()
     }
 
-    pub fn is_empty(&self) -> bool {
+    pub async fn is_empty(&self) -> bool {
         self.0.is_empty()
     }
 
-    pub fn get(&self, i: usize) -> f64 {
+    pub async fn get(&self, i: usize) -> f64 {
         self.0[i]
     }
 
-    pub fn set(&mut self, i: usize, value: f64) {
+    pub async fn set(&mut self, i: usize, value: f64) {
         self.0[i] = value;
     }
 
-    pub fn add_at(&mut self, i: usize, value: f64) {
+    pub async fn add_at(&mut self, i: usize, value: f64) {
         self.0[i] += value;
     }
 
-    pub fn dot(&self, other: &Self) -> f64 {
+    pub async fn dot(&self, other: &Self) -> f64 {
         self.0.iter().zip(other.0.iter()).map(|(a, b)| a * b).sum()
     }
 
-    pub fn scale(&self, s: f64) -> Self {
+    pub async fn scale(&self, s: f64) -> Self {
         Self(self.0.iter().map(|v| v * s).collect())
     }
 
-    pub fn add(&self, other: &Self) -> Self {
+    pub async fn add(&self, other: &Self) -> Self {
         Self(self.0.iter().zip(other.0.iter()).map(|(a, b)| a + b).collect())
     }
 
-    pub fn sub(&self, other: &Self) -> Self {
+    pub async fn sub(&self, other: &Self) -> Self {
         Self(self.0.iter().zip(other.0.iter()).map(|(a, b)| a - b).collect())
     }
 
-    pub fn norm2(&self) -> f64 {
+    pub async fn norm2(&self) -> f64 {
         self.dot(self).sqrt()
     }
 
-    pub fn norm_inf(&self) -> f64 {
+    pub async fn norm_inf(&self) -> f64 {
         self.0.iter().fold(0.0_f64, |acc, v| acc.max(v.abs()))
     }
 }
@@ -130,11 +130,11 @@ pub struct MatD {
 }
 
 impl MatD {
-    pub fn zeros(rows: usize, cols: usize) -> Self {
+    pub async fn zeros(rows: usize, cols: usize) -> Self {
         Self { rows, cols, data: vec![0.0; rows * cols] }
     }
 
-    pub fn identity(n: usize) -> Self {
+    pub async fn identity(n: usize) -> Self {
         let mut m = Self::zeros(n, n);
         for i in 0..n {
             m.set(i, i, 1.0);
@@ -142,19 +142,19 @@ impl MatD {
         m
     }
 
-    pub fn get(&self, row: usize, col: usize) -> f64 {
+    pub async fn get(&self, row: usize, col: usize) -> f64 {
         self.data[row * self.cols + col]
     }
 
-    pub fn set(&mut self, row: usize, col: usize, value: f64) {
+    pub async fn set(&mut self, row: usize, col: usize, value: f64) {
         self.data[row * self.cols + col] = value;
     }
 
-    pub fn add_at(&mut self, row: usize, col: usize, value: f64) {
+    pub async fn add_at(&mut self, row: usize, col: usize, value: f64) {
         self.data[row * self.cols + col] += value;
     }
 
-    pub fn transpose(&self) -> Self {
+    pub async fn transpose(&self) -> Self {
         let mut out = Self::zeros(self.cols, self.rows);
         for row in 0..self.rows {
             for col in 0..self.cols {
@@ -164,7 +164,7 @@ impl MatD {
         out
     }
 
-    pub fn matmul(&self, other: &Self) -> Self {
+    pub async fn matmul(&self, other: &Self) -> Self {
         assert_eq!(self.cols, other.rows, "matmul dimension mismatch");
         let mut out = Self::zeros(self.rows, other.cols);
         for row in 0..self.rows {
@@ -181,7 +181,7 @@ impl MatD {
         out
     }
 
-    pub fn mul_vec(&self, x: &VecD) -> VecD {
+    pub async fn mul_vec(&self, x: &VecD) -> VecD {
         assert_eq!(self.cols, x.len(), "mul_vec dimension mismatch");
         let mut out = VecD::zeros(self.rows);
         for row in 0..self.rows {
@@ -195,7 +195,7 @@ impl MatD {
     }
 
     /// 🧮️ `Bᵀ D B` scaled by `weight`, accumulated into `self` — the element-stiffness Gauss-point kernel.
-    pub fn add_triple_product(&mut self, b: &MatD, d: &MatD, weight: f64) {
+    pub async fn add_triple_product(&mut self, b: &MatD, d: &MatD, weight: f64) {
         let btdb = b.transpose().matmul(d).matmul(b);
         for i in 0..self.data.len() {
             self.data[i] += weight * btdb.data[i];
@@ -203,7 +203,7 @@ impl MatD {
     }
 
     /// 🧮️ Solves `Ax = b` via Gaussian elimination with partial pivoting; `None` if `A` is singular.
-    pub fn lu_solve(&self, b: &VecD) -> Option<VecD> {
+    pub async fn lu_solve(&self, b: &VecD) -> Option<VecD> {
         assert_eq!(self.rows, self.cols, "lu_solve requires a square matrix");
         assert_eq!(self.rows, b.len(), "lu_solve dimension mismatch");
         let n = self.rows;
@@ -262,34 +262,34 @@ impl Mat3d {
     pub const IDENTITY: Self = Self { cols: [[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]] };
 
     /// 🧭️ Rotation matrix from an orthonormal local basis, columns `(x, y, z)` expressed in global coordinates.
-    pub fn from_axes(x: [f64; 3], y: [f64; 3], z: [f64; 3]) -> Self {
+    pub async fn from_axes(x: [f64; 3], y: [f64; 3], z: [f64; 3]) -> Self {
         Self { cols: [x, y, z] }
     }
 
-    pub fn transpose(self) -> Self {
+    pub async fn transpose(self) -> Self {
         Self { cols: [[self.cols[0][0], self.cols[1][0], self.cols[2][0]], [self.cols[0][1], self.cols[1][1], self.cols[2][1]], [self.cols[0][2], self.cols[1][2], self.cols[2][2]]] }
     }
 
     #[allow(clippy::should_implement_trait, reason = "value-semantics mul used pervasively as a plain method (not operator overload) by dependent crates outside this campaign wave's scope; renaming is a breaking API change")]
-    pub fn mul(self, other: Self) -> Self {
+    pub async fn mul(self, other: Self) -> Self {
         let entry = |row: usize, col: usize| self.cols[0][row] * other.cols[col][0] + self.cols[1][row] * other.cols[col][1] + self.cols[2][row] * other.cols[col][2];
         Self { cols: [[entry(0, 0), entry(1, 0), entry(2, 0)], [entry(0, 1), entry(1, 1), entry(2, 1)], [entry(0, 2), entry(1, 2), entry(2, 2)]] }
     }
 
-    pub fn mul_vec3(self, v: [f64; 3]) -> [f64; 3] {
+    pub async fn mul_vec3(self, v: [f64; 3]) -> [f64; 3] {
         [self.cols[0][0] * v[0] + self.cols[1][0] * v[1] + self.cols[2][0] * v[2], self.cols[0][1] * v[0] + self.cols[1][1] * v[1] + self.cols[2][1] * v[2], self.cols[0][2] * v[0] + self.cols[1][2] * v[1] + self.cols[2][2] * v[2]]
     }
 }
 
-pub fn vec3d_sub(a: [f64; 3], b: [f64; 3]) -> [f64; 3] {
+pub async fn vec3d_sub(a: [f64; 3], b: [f64; 3]) -> [f64; 3] {
     [a[0] - b[0], a[1] - b[1], a[2] - b[2]]
 }
 
-pub fn vec3d_length(v: [f64; 3]) -> f64 {
+pub async fn vec3d_length(v: [f64; 3]) -> f64 {
     (v[0] * v[0] + v[1] * v[1] + v[2] * v[2]).sqrt()
 }
 
-pub fn vec3d_normalize(v: [f64; 3]) -> [f64; 3] {
+pub async fn vec3d_normalize(v: [f64; 3]) -> [f64; 3] {
     let len = vec3d_length(v);
     if len < 1e-12 {
         return [0.0, 0.0, 0.0];
@@ -297,7 +297,7 @@ pub fn vec3d_normalize(v: [f64; 3]) -> [f64; 3] {
     [v[0] / len, v[1] / len, v[2] / len]
 }
 
-pub fn vec3d_cross(a: [f64; 3], b: [f64; 3]) -> [f64; 3] {
+pub async fn vec3d_cross(a: [f64; 3], b: [f64; 3]) -> [f64; 3] {
     [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]]
 }
 // #endregion 🔖️Mat3d
@@ -307,7 +307,7 @@ pub fn vec3d_cross(a: [f64; 3], b: [f64; 3]) -> [f64; 3] {
 /// rational arithmetic. Powers integer-relation detection (e.g. recovering `x^2 - 2` from rational
 /// approximations of `sqrt(2)`) and keeps polynomial-factor recombination upgrades (van Hoeij) open as
 /// future work without needing a new dependency.
-pub fn lll_reduce(basis: &[number::VecG<number::Rational>]) -> Vec<number::VecG<number::Rational>> {
+pub async fn lll_reduce(basis: &[number::VecG<number::Rational>]) -> Vec<number::VecG<number::Rational>> {
     use number::{Rational, VecG};
     let delta = Rational::from_i64(3, 4).unwrap();
     let n = basis.len();
@@ -369,7 +369,7 @@ pub struct CsrMatrix {
 
 impl CsrMatrix {
     /// 🕸️ Builds a CSR matrix from `(row, col, value)` triplets, summing duplicate `(row, col)` entries and sorting column indices within each row for deterministic iteration.
-    pub fn from_triplets(rows: usize, cols: usize, triplets: &[(usize, usize, f64)]) -> Self {
+    pub async fn from_triplets(rows: usize, cols: usize, triplets: &[(usize, usize, f64)]) -> Self {
         let mut by_row: Vec<Vec<(usize, f64)>> = vec![Vec::new(); rows];
         for &(row, col, value) in triplets {
             by_row[row].push((col, value));
@@ -396,18 +396,18 @@ impl CsrMatrix {
         Self { rows, cols, row_ptr, col_idx, values }
     }
 
-    pub fn nnz(&self) -> usize {
+    pub async fn nnz(&self) -> usize {
         self.values.len()
     }
 
-    pub fn row(&self, r: usize) -> impl Iterator<Item = (usize, f64)> + '_ {
+    pub async fn row(&self, r: usize) -> impl Iterator<Item = (usize, f64)> + '_ {
         let start = self.row_ptr[r];
         let end = self.row_ptr[r + 1];
         self.col_idx[start..end].iter().copied().zip(self.values[start..end].iter().copied())
     }
 
     /// 🕸️ Sparse matrix-vector product `A x`.
-    pub fn spmv(&self, x: &VecD) -> VecD {
+    pub async fn spmv(&self, x: &VecD) -> VecD {
         assert_eq!(self.cols, x.len(), "spmv dimension mismatch");
         let mut out = VecD::zeros(self.rows);
         for row in 0..self.rows {
@@ -420,7 +420,7 @@ impl CsrMatrix {
         out
     }
 
-    pub fn transpose(&self) -> Self {
+    pub async fn transpose(&self) -> Self {
         let mut triplets = Vec::with_capacity(self.nnz());
         for row in 0..self.rows {
             for (col, value) in self.row(row) {
@@ -430,7 +430,7 @@ impl CsrMatrix {
         Self::from_triplets(self.cols, self.rows, &triplets)
     }
 
-    pub fn to_dense(&self) -> MatD {
+    pub async fn to_dense(&self) -> MatD {
         let mut out = MatD::zeros(self.rows, self.cols);
         for row in 0..self.rows {
             for (col, value) in self.row(row) {
@@ -454,7 +454,7 @@ pub enum AlgebraError {
 }
 
 impl std::fmt::Display for AlgebraError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    async fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::NotPositiveDefinite => write!(f, "matrix is not positive definite"),
             Self::Singular => write!(f, "matrix is singular"),
@@ -470,7 +470,7 @@ impl std::error::Error for AlgebraError {}
 
 // #region 🔖️Cholesky
 /// 🧮️ Dense Cholesky decomposition `A = L Lᵀ` of a symmetric positive-definite matrix via the standard column-by-column algorithm; returns `AlgebraError::NotPositiveDefinite` the moment a diagonal pivot goes non-positive.
-pub fn cholesky(a: &MatD) -> Result<MatD, AlgebraError> {
+pub async fn cholesky(a: &MatD) -> Result<MatD, AlgebraError> {
     if a.rows != a.cols {
         return Err(AlgebraError::DimensionMismatch { expected: (a.rows, a.rows), got: (a.rows, a.cols) });
     }
@@ -498,7 +498,7 @@ pub fn cholesky(a: &MatD) -> Result<MatD, AlgebraError> {
 }
 
 /// 🧮️ Solves `A x = b` given the Cholesky factor `L` of `A` (`A = L Lᵀ`), via forward substitution `L y = b` then back substitution `Lᵀ x = y`.
-pub fn cholesky_solve(l: &MatD, b: &VecD) -> VecD {
+pub async fn cholesky_solve(l: &MatD, b: &VecD) -> VecD {
     let n = l.rows;
     let mut y = vec![0.0; n];
     #[allow(clippy::needless_range_loop, reason = "k indexes both the 2D matrix `l` and the 1D `y`; an iterator rewrite would need to zip two unrelated index spaces and reads worse than the loop")]
@@ -524,7 +524,7 @@ pub fn cholesky_solve(l: &MatD, b: &VecD) -> VecD {
 
 // #region 🔖️QrHouseholder
 /// 🪞️ Dense QR decomposition via Householder reflections; works for any `rows >= cols` matrix, returning orthogonal `Q` (rows x rows) and upper-triangular `R` (rows x cols) with `Q * R == A` up to float tolerance.
-pub fn qr_householder(a: &MatD) -> (MatD, MatD) {
+pub async fn qr_householder(a: &MatD) -> (MatD, MatD) {
     let m = a.rows;
     let n = a.cols;
     let mut r = a.clone();
@@ -576,7 +576,7 @@ pub fn qr_householder(a: &MatD) -> (MatD, MatD) {
 
 // #region 🔖️JacobiEigenSymmetric
 /// 🔄️ Full eigendecomposition of a small-to-medium dense symmetric matrix via the classical cyclic Jacobi rotation method (O(n³) per sweep — realistic ceiling is a few thousand rows; use `lanczos_extreme_eigen` for large sparse matrices instead). Eigenvalues are returned ascending; eigenvectors are the columns of the returned matrix, matched by index.
-pub fn jacobi_eigen_symmetric(a: &MatD, max_sweeps: usize) -> Result<(Vec<f64>, MatD), AlgebraError> {
+pub async fn jacobi_eigen_symmetric(a: &MatD, max_sweeps: usize) -> Result<(Vec<f64>, MatD), AlgebraError> {
     if a.rows != a.cols {
         return Err(AlgebraError::DimensionMismatch { expected: (a.rows, a.rows), got: (a.rows, a.cols) });
     }
@@ -660,7 +660,7 @@ pub fn jacobi_eigen_symmetric(a: &MatD, max_sweeps: usize) -> Result<(Vec<f64>, 
 
 // #region 🔖️LanczosExtremeEigen
 /// 🕸️ Extreme eigenpairs of a large sparse symmetric matrix via Lanczos iteration with full reorthogonalization: builds a small tridiagonal Krylov-subspace matrix, diagonalizes it with `jacobi_eigen_symmetric`, and lifts the Ritz vectors back to the original space. Feeds algebraic-connectivity / Fiedler-vector algorithms in later NetworkX-parity waves. `largest` selects by eigenvalue magnitude, not sign.
-pub fn lanczos_extreme_eigen(a: &CsrMatrix, k: usize, largest: bool, max_iter: usize, seed: u64) -> Result<(Vec<f64>, Vec<VecD>), AlgebraError> {
+pub async fn lanczos_extreme_eigen(a: &CsrMatrix, k: usize, largest: bool, max_iter: usize, seed: u64) -> Result<(Vec<f64>, Vec<VecD>), AlgebraError> {
     if a.rows != a.cols {
         return Err(AlgebraError::DimensionMismatch { expected: (a.rows, a.rows), got: (a.rows, a.cols) });
     }
@@ -735,7 +735,7 @@ pub fn lanczos_extreme_eigen(a: &CsrMatrix, k: usize, largest: bool, max_iter: u
 
 // #region 🔖️PowerIteration
 /// 🔁️ Dominant eigenpair of a large sparse symmetric matrix via power iteration; convergence is measured via the residual `‖A x - λ x‖`. To recover further eigenpairs, deflate by rebuilding `a`'s triplets with `λ v vᵀ` subtracted and re-call — this returns a single eigenpair by design so callers control the deflation loop.
-pub fn power_iteration(a: &CsrMatrix, max_iter: usize, tol: f64, seed: u64) -> Result<(f64, VecD), AlgebraError> {
+pub async fn power_iteration(a: &CsrMatrix, max_iter: usize, tol: f64, seed: u64) -> Result<(f64, VecD), AlgebraError> {
     if a.rows != a.cols {
         return Err(AlgebraError::DimensionMismatch { expected: (a.rows, a.rows), got: (a.rows, a.cols) });
     }
@@ -771,7 +771,7 @@ pub fn power_iteration(a: &CsrMatrix, max_iter: usize, tol: f64, seed: u64) -> R
 
 // #region 🔖️ConjugateGradient
 /// 🧮️ Conjugate-gradient solver for sparse symmetric positive-definite systems `A x = b`; feeds Laplacian-style solves (current-flow centrality, resistance distance) in later NetworkX-parity waves. Reuses `AlgebraError::PowerIterationFailedConvergence` for the non-convergence case (same "iterative solver ran out of iterations" semantic as power iteration and Jacobi).
-pub fn conjugate_gradient(a: &CsrMatrix, b: &VecD, tol: f64, max_iter: usize) -> Result<VecD, AlgebraError> {
+pub async fn conjugate_gradient(a: &CsrMatrix, b: &VecD, tol: f64, max_iter: usize) -> Result<VecD, AlgebraError> {
     if a.rows != a.cols {
         return Err(AlgebraError::DimensionMismatch { expected: (a.rows, a.rows), got: (a.rows, a.cols) });
     }
@@ -807,7 +807,7 @@ pub fn conjugate_gradient(a: &CsrMatrix, b: &VecD, tol: f64, max_iter: usize) ->
 
 // #region 🔖️ExpmPade
 /// 🧮️ Dense matrix exponential via scaling-and-squaring with an order-6 diagonal Padé approximant (coefficients from the closed-form `(2m-j)! m! / ((2m)! j! (m-j)!)` formula, m=6). O(n³) cost — fine for graphs up to a few hundred nodes; callers on bigger graphs should prefer eigen-based communicability once that's built in a later wave.
-pub fn expm_pade(a: &MatD) -> MatD {
+pub async fn expm_pade(a: &MatD) -> MatD {
     assert_eq!(a.rows, a.cols, "expm_pade requires a square matrix");
     let n = a.rows;
     if n == 0 {
@@ -870,7 +870,7 @@ pub fn expm_pade(a: &MatD) -> MatD {
 
 // #region 🔖️Svd
 /// 🌀️ Thin singular value decomposition `A = U Σ Vᵀ` via one-sided Jacobi (Hestenes) rotations: column pairs of a working copy are orthogonalized until every normalized inner product drops below 1e-12 (max 60 sweeps). Returns `(U, σ, V)` with singular values sorted descending; for a tall `m x n` input `U` is `m x n` and `V` is `n x n`, wide inputs are handled by transposing internally and swapping `U`/`V`.
-pub fn svd(a: &MatD) -> Result<(MatD, Vec<f64>, MatD), AlgebraError> {
+pub async fn svd(a: &MatD) -> Result<(MatD, Vec<f64>, MatD), AlgebraError> {
     if a.rows < a.cols {
         let (u_t, sigma, v_t) = svd(&a.transpose())?;
         return Ok((v_t, sigma, u_t));
@@ -958,7 +958,7 @@ pub fn svd(a: &MatD) -> Result<(MatD, Vec<f64>, MatD), AlgebraError> {
 }
 
 /// 🌀️ Right-singular vector for the smallest singular value of `A` — the homogeneous least-squares (DLT) minimizer of `‖A x‖` over unit vectors `x`.
-pub fn svd_nullvector(a: &MatD) -> Result<VecD, AlgebraError> {
+pub async fn svd_nullvector(a: &MatD) -> Result<VecD, AlgebraError> {
     let (_, _, v) = svd(a)?;
     if v.cols == 0 {
         return Err(AlgebraError::DimensionMismatch { expected: (a.rows, 1), got: (a.rows, a.cols) });
@@ -970,7 +970,7 @@ pub fn svd_nullvector(a: &MatD) -> Result<VecD, AlgebraError> {
 
 // #region 🔖️LeastSquares
 /// 📐️ Linear least-squares solution of an overdetermined `A x ≈ b` (`rows >= cols`) via Householder QR: back-substitutes the top `n x n` block of `R x = Qᵀ b`; returns `AlgebraError::Singular` when `A` is rank-deficient.
-pub fn solve_llsq(a: &MatD, b: &VecD) -> Result<VecD, AlgebraError> {
+pub async fn solve_llsq(a: &MatD, b: &VecD) -> Result<VecD, AlgebraError> {
     if a.rows < a.cols {
         return Err(AlgebraError::DimensionMismatch { expected: (a.cols, a.cols), got: (a.rows, a.cols) });
     }
@@ -996,7 +996,7 @@ pub fn solve_llsq(a: &MatD, b: &VecD) -> Result<VecD, AlgebraError> {
 }
 
 /// 📐️ Moore-Penrose pseudo-inverse `A⁺ = V Σ⁺ Uᵀ` via `svd`, zeroing the reciprocal of every singular value at or below `tol · σ_max`.
-pub fn pseudo_inverse(a: &MatD, tol: f64) -> Result<MatD, AlgebraError> {
+pub async fn pseudo_inverse(a: &MatD, tol: f64) -> Result<MatD, AlgebraError> {
     let (u, sigma, v) = svd(a)?;
     let sigma_max = sigma.first().copied().unwrap_or(0.0);
     let k = sigma.len();
@@ -1010,7 +1010,7 @@ pub fn pseudo_inverse(a: &MatD, tol: f64) -> Result<MatD, AlgebraError> {
 }
 
 /// 📐️ Assembles the weighted normal equations `(AᵀWA, AᵀWb)` for a diagonal weight vector `w` — the per-iteration system of IRLS solvers.
-pub fn weighted_normal_equations(a: &MatD, b: &VecD, w: &[f64]) -> (MatD, VecD) {
+pub async fn weighted_normal_equations(a: &MatD, b: &VecD, w: &[f64]) -> (MatD, VecD) {
     assert_eq!(a.rows, b.len(), "weighted_normal_equations dimension mismatch");
     assert_eq!(a.rows, w.len(), "weighted_normal_equations weight length mismatch");
     let n = a.cols;
@@ -1034,7 +1034,7 @@ pub fn weighted_normal_equations(a: &MatD, b: &VecD, w: &[f64]) -> (MatD, VecD) 
 
 // #region 🔖️Hessenberg
 /// 🪜️ Reduces a general real square matrix to upper Hessenberg form via Householder reflectors applied column-by-column below the first subdiagonal (Golub & Van Loan, Algorithm 7.4.2). Returns `(H, Q)` with `Q` orthogonal and `A = Q H Qᵀ`; `H` is zero below its first subdiagonal. This is the stable first stage of [`real_schur`]'s Francis double-shift QR iteration.
-pub fn hessenberg(a: &MatD) -> (MatD, MatD) {
+pub async fn hessenberg(a: &MatD) -> (MatD, MatD) {
     assert_eq!(a.rows, a.cols, "hessenberg requires a square matrix");
     let n = a.rows;
     let mut h = a.clone();
@@ -1100,7 +1100,7 @@ pub fn hessenberg(a: &MatD) -> (MatD, MatD) {
 
 // #region 🔖️RealSchur
 /// ⚙️ One Francis implicit-double-shift QR sweep on the unreduced Hessenberg window `h[l..=m, l..=m]`: forms the real quadratic `M = Hˢᵘᵇ² - trace·Hˢᵘᵇ + det·I` from the trailing 2x2's (possibly complex-conjugate) shifts, QR-factorizes `M` via [`qr_householder`], and applies the resulting orthogonal factor as a similarity transform. By the implicit-Q theorem this recovers exactly the bulge-chased Francis step's result without hand-rolled bulge chasing, at the cost of dense O(p³) work per sweep instead of exploiting the Hessenberg band — a fine trade at this crate's small (SfM-scale) matrix sizes. Also right-multiplies the accumulated `q` by the same factor over columns `l..=m`.
-fn francis_double_shift_step(h: &mut MatD, q: &mut MatD, l: usize, m: usize) {
+async fn francis_double_shift_step(h: &mut MatD, q: &mut MatD, l: usize, m: usize) {
     let n = h.rows;
     let p = m - l + 1;
     let shift_trace = h.get(m - 1, m - 1) + h.get(m, m);
@@ -1162,7 +1162,7 @@ fn francis_double_shift_step(h: &mut MatD, q: &mut MatD, l: usize, m: usize) {
 }
 
 /// 🎭️ Real Schur decomposition `A = Q T Qᵀ` via Hessenberg reduction followed by Francis implicit-double-shift QR iteration with deflation: `Q` is orthogonal, `T` is quasi-upper-triangular (1x1 diagonal blocks for real eigenvalues, 2x2 blocks for complex-conjugate pairs). A subdiagonal entry deflates once it drops below `1e-13` relative to its neighboring diagonal magnitudes. Caps iterations at `30 * n` per deflation window before giving up with `AlgebraError::PowerIterationFailedConvergence` — the same "iterative solver ran out of iterations" semantic already reused by `conjugate_gradient`/`jacobi_eigen_symmetric`/`svd`, rather than adding a near-duplicate variant.
-pub fn real_schur(a: &MatD) -> Result<(MatD, MatD), AlgebraError> {
+pub async fn real_schur(a: &MatD) -> Result<(MatD, MatD), AlgebraError> {
     if a.rows != a.cols {
         return Err(AlgebraError::DimensionMismatch { expected: (a.rows, a.rows), got: (a.rows, a.cols) });
     }
@@ -1208,7 +1208,7 @@ pub fn real_schur(a: &MatD) -> Result<(MatD, MatD), AlgebraError> {
 }
 
 /// 🔍️ Real eigenvalues of `a`, read off [`real_schur`]'s quasi-triangular `T`: each 1x1 diagonal block yields `(value, 0.0)`; each 2x2 block yields a conjugate pair `(re, ±im)` solved directly from the block's characteristic quadratic `λ² - trace·λ + det = 0` (mirrors [`Mat2::eigenvalues`] but does not discard the complex case). Order matches `T`'s diagonal, not sorted.
-pub fn real_eigenvalues(a: &MatD) -> Result<Vec<(f64, f64)>, AlgebraError> {
+pub async fn real_eigenvalues(a: &MatD) -> Result<Vec<(f64, f64)>, AlgebraError> {
     let (t, _) = real_schur(a)?;
     let n = t.rows;
     let mut out = Vec::with_capacity(n);
@@ -1244,7 +1244,7 @@ pub fn real_eigenvalues(a: &MatD) -> Result<Vec<(f64, f64)>, AlgebraError> {
 
 // #region 🔖️CompanionRoots
 /// 🌱️ Real (possibly complex-conjugate) roots of the polynomial `coeffs[0] + coeffs[1] x + ... + coeffs[n] xⁿ` via the Frobenius companion matrix's eigenvalues (through [`real_eigenvalues`]). `coeffs` is ascending-degree; the leading coefficient `coeffs[n]` must be nonzero, else `AlgebraError::Singular` — reused rather than adding a new variant, since a zero leading coefficient leaves the companion matrix without a well-defined monic normalization (the same "degenerate, no solution" semantic `Singular` already carries for `lu_solve`/`solve_llsq`). Feeds the 5-point essential-matrix action-matrix polynomial and P3P's quartic.
-pub fn poly_roots_companion(coeffs: &[f64]) -> Result<Vec<(f64, f64)>, AlgebraError> {
+pub async fn poly_roots_companion(coeffs: &[f64]) -> Result<Vec<(f64, f64)>, AlgebraError> {
     if coeffs.len() < 2 {
         return Err(AlgebraError::Singular);
     }
@@ -1270,24 +1270,24 @@ mod tests {
     use super::*;
 
     #[test]
-    fn mat2_identity_apply_is_noop() {
+    async fn mat2_identity_apply_is_noop() {
         assert_eq!(Mat2::IDENTITY.apply((3.0, -4.0)), (3.0, -4.0));
     }
 
     #[test]
-    fn mat2_apply_matches_matrix_vector_multiply() {
+    async fn mat2_apply_matches_matrix_vector_multiply() {
         let m = Mat2::new(2.0, 0.0, 0.0, 3.0);
         assert_eq!(m.apply((1.0, 1.0)), (2.0, 3.0));
     }
 
     #[test]
-    fn mat2_det_of_scale_matrix() {
+    async fn mat2_det_of_scale_matrix() {
         let m = Mat2::new(2.0, 0.0, 0.0, 3.0);
         assert!((m.det() - 6.0).abs() < 1e-9);
     }
 
     #[test]
-    fn mat2_inverse_round_trips() {
+    async fn mat2_inverse_round_trips() {
         let m = Mat2::new(2.0, 1.0, 1.0, 3.0);
         let inv = m.inverse().expect("invertible");
         let round = m.mul(inv);
@@ -1298,13 +1298,13 @@ mod tests {
     }
 
     #[test]
-    fn mat2_singular_matrix_has_no_inverse() {
+    async fn mat2_singular_matrix_has_no_inverse() {
         let m = Mat2::new(1.0, 2.0, 2.0, 4.0);
         assert!(m.inverse().is_none());
     }
 
     #[test]
-    fn mat2_transpose_swaps_off_diagonal() {
+    async fn mat2_transpose_swaps_off_diagonal() {
         let m = Mat2::new(1.0, 2.0, 3.0, 4.0);
         let t = m.transpose();
         assert_eq!(t.apply((1.0, 0.0)), (1.0, 2.0));
@@ -1312,7 +1312,7 @@ mod tests {
     }
 
     #[test]
-    fn mat2_eigenvalues_of_diagonal_matrix_are_the_diagonal() {
+    async fn mat2_eigenvalues_of_diagonal_matrix_are_the_diagonal() {
         let m = Mat2::new(2.0, 0.0, 0.0, 5.0);
         let (l1, l2) = m.eigenvalues().expect("real eigenvalues");
         let mut vals = [l1, l2];
@@ -1322,13 +1322,13 @@ mod tests {
     }
 
     #[test]
-    fn mat2_rotation_like_matrix_has_complex_eigenvalues() {
+    async fn mat2_rotation_like_matrix_has_complex_eigenvalues() {
         let m = Mat2::new(0.0, -1.0, 1.0, 0.0);
         assert!(m.eigenvalues().is_none());
     }
 
     #[test]
-    fn vecd_dot_and_norm() {
+    async fn vecd_dot_and_norm() {
         let a = VecD::from_vec(vec![3.0, 4.0]);
         let b = VecD::from_vec(vec![1.0, 0.0]);
         assert!((a.dot(&b) - 3.0).abs() < 1e-12);
@@ -1337,7 +1337,7 @@ mod tests {
     }
 
     #[test]
-    fn vecd_add_sub_scale_round_trip() {
+    async fn vecd_add_sub_scale_round_trip() {
         let a = VecD::from_vec(vec![1.0, 2.0, 3.0]);
         let b = VecD::from_vec(vec![0.5, 0.5, 0.5]);
         let sum = a.add(&b);
@@ -1349,7 +1349,7 @@ mod tests {
     }
 
     #[test]
-    fn matd_matmul_identity_is_noop() {
+    async fn matd_matmul_identity_is_noop() {
         let mut m = MatD::zeros(2, 2);
         m.set(0, 0, 1.0);
         m.set(0, 1, 2.0);
@@ -1361,7 +1361,7 @@ mod tests {
     }
 
     #[test]
-    fn matd_transpose_round_trips() {
+    async fn matd_transpose_round_trips() {
         let mut m = MatD::zeros(2, 3);
         for row in 0..2 {
             for col in 0..3 {
@@ -1372,7 +1372,7 @@ mod tests {
     }
 
     #[test]
-    fn matd_mul_vec_matches_matrix_vector_multiply() {
+    async fn matd_mul_vec_matches_matrix_vector_multiply() {
         let mut m = MatD::zeros(2, 2);
         m.set(0, 0, 2.0);
         m.set(0, 1, 0.0);
@@ -1385,7 +1385,7 @@ mod tests {
     }
 
     #[test]
-    fn matd_lu_solve_matches_hand_solved_system() {
+    async fn matd_lu_solve_matches_hand_solved_system() {
         // 2x + y = 5, x + 3y = 10  =>  x = 1, y = 3
         let mut a = MatD::zeros(2, 2);
         a.set(0, 0, 2.0);
@@ -1399,7 +1399,7 @@ mod tests {
     }
 
     #[test]
-    fn matd_lu_solve_detects_singular_matrix() {
+    async fn matd_lu_solve_detects_singular_matrix() {
         let mut a = MatD::zeros(2, 2);
         a.set(0, 0, 1.0);
         a.set(0, 1, 2.0);
@@ -1410,7 +1410,7 @@ mod tests {
     }
 
     #[test]
-    fn matd_add_triple_product_matches_btdb() {
+    async fn matd_add_triple_product_matches_btdb() {
         let mut b = MatD::zeros(1, 2);
         b.set(0, 0, 1.0);
         b.set(0, 1, 2.0);
@@ -1425,13 +1425,13 @@ mod tests {
     }
 
     #[test]
-    fn mat3d_identity_axes_is_identity() {
+    async fn mat3d_identity_axes_is_identity() {
         let m = Mat3d::from_axes([1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]);
         assert_eq!(m, Mat3d::IDENTITY);
     }
 
     #[test]
-    fn mat3d_transpose_is_inverse_for_orthonormal_basis() {
+    async fn mat3d_transpose_is_inverse_for_orthonormal_basis() {
         let x = vec3d_normalize([1.0, 1.0, 0.0]);
         let z = [0.0, 0.0, 1.0];
         let y = vec3d_cross(z, x);
@@ -1446,7 +1446,7 @@ mod tests {
     }
 
     #[test]
-    fn mat3d_mul_vec3_transforms_basis_vector() {
+    async fn mat3d_mul_vec3_transforms_basis_vector() {
         let m = Mat3d::from_axes([0.0, 1.0, 0.0], [-1.0, 0.0, 0.0], [0.0, 0.0, 1.0]);
         let out = m.mul_vec3([1.0, 0.0, 0.0]);
         assert!((out[0] - 0.0).abs() < 1e-12);
@@ -1455,7 +1455,7 @@ mod tests {
     }
 
     #[test]
-    fn vec3d_cross_is_perpendicular_to_inputs() {
+    async fn vec3d_cross_is_perpendicular_to_inputs() {
         let a = [1.0, 0.0, 0.0];
         let b = [0.0, 1.0, 0.0];
         let c = vec3d_cross(a, b);
@@ -1463,7 +1463,7 @@ mod tests {
     }
 
     #[test]
-    fn csr_from_triplets_dedupes_and_sorts() {
+    async fn csr_from_triplets_dedupes_and_sorts() {
         let triplets = [(0, 1, 2.0), (0, 1, 3.0), (0, 0, 1.0), (1, 0, 4.0)];
         let m = CsrMatrix::from_triplets(2, 2, &triplets);
         assert_eq!(m.nnz(), 3);
@@ -1472,7 +1472,7 @@ mod tests {
     }
 
     #[test]
-    fn csr_spmv_matches_dense_mul_vec() {
+    async fn csr_spmv_matches_dense_mul_vec() {
         let triplets = [(0, 0, 2.0), (0, 1, 1.0), (1, 1, 3.0)];
         let m = CsrMatrix::from_triplets(2, 2, &triplets);
         let x = VecD::from_vec(vec![1.0, 2.0]);
@@ -1482,7 +1482,7 @@ mod tests {
     }
 
     #[test]
-    fn csr_transpose_swaps_rows_and_cols() {
+    async fn csr_transpose_swaps_rows_and_cols() {
         let triplets = [(0, 1, 5.0)];
         let m = CsrMatrix::from_triplets(2, 3, &triplets);
         let t = m.transpose();
@@ -1492,13 +1492,13 @@ mod tests {
     }
 
     #[test]
-    fn algebra_error_display_is_human_readable() {
+    async fn algebra_error_display_is_human_readable() {
         assert_eq!(AlgebraError::Singular.to_string(), "matrix is singular");
         assert_eq!(AlgebraError::NotSymmetric.to_string(), "matrix is not symmetric");
     }
 
     #[test]
-    fn cholesky_matches_hand_solved_spd_system() {
+    async fn cholesky_matches_hand_solved_spd_system() {
         let mut a = MatD::zeros(2, 2);
         a.set(0, 0, 4.0);
         a.set(0, 1, 2.0);
@@ -1520,7 +1520,7 @@ mod tests {
     }
 
     #[test]
-    fn cholesky_rejects_non_positive_definite() {
+    async fn cholesky_rejects_non_positive_definite() {
         let mut a = MatD::zeros(2, 2);
         a.set(0, 0, 1.0);
         a.set(0, 1, 2.0);
@@ -1530,7 +1530,7 @@ mod tests {
     }
 
     #[test]
-    fn qr_householder_reconstructs_and_is_orthogonal() {
+    async fn qr_householder_reconstructs_and_is_orthogonal() {
         let mut a = MatD::zeros(3, 2);
         a.set(0, 0, 1.0);
         a.set(0, 1, 0.0);
@@ -1558,7 +1558,7 @@ mod tests {
     }
 
     #[test]
-    fn jacobi_eigen_diagonal_matrix_returns_sorted_diagonal() {
+    async fn jacobi_eigen_diagonal_matrix_returns_sorted_diagonal() {
         let mut a = MatD::zeros(3, 3);
         a.set(0, 0, 5.0);
         a.set(1, 1, 1.0);
@@ -1577,7 +1577,7 @@ mod tests {
     }
 
     #[test]
-    fn jacobi_eigen_matches_characteristic_polynomial_roots() {
+    async fn jacobi_eigen_matches_characteristic_polynomial_roots() {
         let mut a = MatD::zeros(2, 2);
         a.set(0, 0, 2.0);
         a.set(0, 1, 1.0);
@@ -1589,7 +1589,7 @@ mod tests {
     }
 
     #[test]
-    fn jacobi_eigen_rejects_asymmetric_matrix() {
+    async fn jacobi_eigen_rejects_asymmetric_matrix() {
         let mut a = MatD::zeros(2, 2);
         a.set(0, 0, 1.0);
         a.set(0, 1, 2.0);
@@ -1599,7 +1599,7 @@ mod tests {
     }
 
     #[test]
-    fn jacobi_eigen_reports_non_convergence_with_zero_sweeps() {
+    async fn jacobi_eigen_reports_non_convergence_with_zero_sweeps() {
         let mut a = MatD::zeros(2, 2);
         a.set(0, 0, 2.0);
         a.set(0, 1, 1.0);
@@ -1609,7 +1609,7 @@ mod tests {
     }
 
     #[test]
-    fn power_iteration_finds_dominant_eigenpair() {
+    async fn power_iteration_finds_dominant_eigenpair() {
         let triplets = [(0, 0, 1.0), (1, 1, 5.0), (2, 2, 2.0)];
         let a = CsrMatrix::from_triplets(3, 3, &triplets);
         let (lambda, v) = power_iteration(&a, 200, 1e-10, 7).expect("converges");
@@ -1618,13 +1618,13 @@ mod tests {
     }
 
     #[test]
-    fn power_iteration_rejects_non_square() {
+    async fn power_iteration_rejects_non_square() {
         let a = CsrMatrix::from_triplets(2, 3, &[]);
         assert!(matches!(power_iteration(&a, 10, 1e-6, 1), Err(AlgebraError::DimensionMismatch { .. })));
     }
 
     #[test]
-    fn conjugate_gradient_matches_hand_solved_system() {
+    async fn conjugate_gradient_matches_hand_solved_system() {
         let triplets = [(0, 0, 2.0), (0, 1, 1.0), (1, 0, 1.0), (1, 1, 3.0)];
         let a = CsrMatrix::from_triplets(2, 2, &triplets);
         let b = VecD::from_vec(vec![5.0, 10.0]);
@@ -1634,7 +1634,7 @@ mod tests {
     }
 
     #[test]
-    fn conjugate_gradient_reports_non_convergence_with_zero_iterations() {
+    async fn conjugate_gradient_reports_non_convergence_with_zero_iterations() {
         let triplets = [(0, 0, 2.0), (1, 1, 2.0)];
         let a = CsrMatrix::from_triplets(2, 2, &triplets);
         let b = VecD::from_vec(vec![1.0, 1.0]);
@@ -1642,7 +1642,7 @@ mod tests {
     }
 
     #[test]
-    fn lanczos_extreme_eigen_finds_largest_on_diagonal_matrix() {
+    async fn lanczos_extreme_eigen_finds_largest_on_diagonal_matrix() {
         let triplets = [(0, 0, 1.0), (1, 1, 4.0), (2, 2, 2.0), (3, 3, 3.0)];
         let a = CsrMatrix::from_triplets(4, 4, &triplets);
         let (vals, _) = lanczos_extreme_eigen(&a, 2, true, 4, 11).expect("converges");
@@ -1653,7 +1653,7 @@ mod tests {
     }
 
     #[test]
-    fn lanczos_extreme_eigen_finds_smallest_on_diagonal_matrix() {
+    async fn lanczos_extreme_eigen_finds_smallest_on_diagonal_matrix() {
         let triplets = [(0, 0, 1.0), (1, 1, 4.0), (2, 2, 2.0), (3, 3, 3.0)];
         let a = CsrMatrix::from_triplets(4, 4, &triplets);
         let (vals, _) = lanczos_extreme_eigen(&a, 2, false, 4, 11).expect("converges");
@@ -1664,20 +1664,20 @@ mod tests {
     }
 
     #[test]
-    fn lanczos_extreme_eigen_rejects_non_square() {
+    async fn lanczos_extreme_eigen_rejects_non_square() {
         let a = CsrMatrix::from_triplets(2, 3, &[]);
         assert!(matches!(lanczos_extreme_eigen(&a, 1, true, 5, 1), Err(AlgebraError::DimensionMismatch { .. })));
     }
 
     #[test]
-    fn expm_pade_of_zero_matrix_is_identity() {
+    async fn expm_pade_of_zero_matrix_is_identity() {
         let z = MatD::zeros(3, 3);
         let e = expm_pade(&z);
         assert_eq!(e, MatD::identity(3));
     }
 
     #[test]
-    fn expm_pade_of_diagonal_matrix_is_elementwise_exp() {
+    async fn expm_pade_of_diagonal_matrix_is_elementwise_exp() {
         let mut a = MatD::zeros(2, 2);
         a.set(0, 0, 1.0);
         a.set(1, 1, 2.0);
@@ -1688,7 +1688,7 @@ mod tests {
         assert!(e.get(1, 0).abs() < 1e-12);
     }
 
-    fn seeded_mat(rows: usize, cols: usize, seed: u64) -> MatD {
+    async fn seeded_mat(rows: usize, cols: usize, seed: u64) -> MatD {
         let mut state = seed;
         let mut m = MatD::zeros(rows, cols);
         for value in m.data.iter_mut() {
@@ -1698,7 +1698,7 @@ mod tests {
         m
     }
 
-    fn planted_rank_deficient() -> MatD {
+    async fn planted_rank_deficient() -> MatD {
         let base = seeded_mat(6, 3, 77);
         let mut a = MatD::zeros(6, 4);
         for row in 0..6 {
@@ -1710,7 +1710,7 @@ mod tests {
         a
     }
 
-    fn assert_svd_round_trips(a: &MatD, u: &MatD, sigma: &[f64], v: &MatD) {
+    async fn assert_svd_round_trips(a: &MatD, u: &MatD, sigma: &[f64], v: &MatD) {
         let k = sigma.len();
         let mut s_mat = MatD::zeros(k, k);
         for (i, &s) in sigma.iter().enumerate() {
@@ -1724,7 +1724,7 @@ mod tests {
         }
     }
 
-    fn assert_orthonormal_columns(m: &MatD) {
+    async fn assert_orthonormal_columns(m: &MatD) {
         let gram = m.transpose().matmul(m);
         for i in 0..gram.rows {
             for j in 0..gram.cols {
@@ -1735,7 +1735,7 @@ mod tests {
     }
 
     #[test]
-    fn svd_reconstructs_tall_random_matrix() {
+    async fn svd_reconstructs_tall_random_matrix() {
         let a = seeded_mat(8, 5, 20_260_719);
         let (u, sigma, v) = svd(&a).expect("converges");
         assert_eq!((u.rows, u.cols), (8, 5));
@@ -1749,7 +1749,7 @@ mod tests {
     }
 
     #[test]
-    fn svd_reconstructs_wide_random_matrix() {
+    async fn svd_reconstructs_wide_random_matrix() {
         let a = seeded_mat(5, 8, 31);
         let (u, sigma, v) = svd(&a).expect("converges");
         assert_eq!((u.rows, u.cols), (5, 5));
@@ -1762,7 +1762,7 @@ mod tests {
     }
 
     #[test]
-    fn svd_nullvector_finds_planted_kernel() {
+    async fn svd_nullvector_finds_planted_kernel() {
         let a = planted_rank_deficient();
         let v = svd_nullvector(&a).expect("converges");
         assert!((v.norm2() - 1.0).abs() < 1e-9);
@@ -1770,7 +1770,7 @@ mod tests {
     }
 
     #[test]
-    fn solve_llsq_matches_normal_equations() {
+    async fn solve_llsq_matches_normal_equations() {
         let a = seeded_mat(9, 3, 5);
         let b = VecD::from_vec((0..9).map(|i| (i as f64) * 0.5 - 2.0).collect());
         let x = solve_llsq(&a, &b).expect("full rank");
@@ -1782,7 +1782,7 @@ mod tests {
     }
 
     #[test]
-    fn pseudo_inverse_satisfies_penrose_identity() {
+    async fn pseudo_inverse_satisfies_penrose_identity() {
         let a = planted_rank_deficient();
         let pinv = pseudo_inverse(&a, 1e-10).expect("converges");
         let round = a.matmul(&pinv).matmul(&a);
@@ -1794,7 +1794,7 @@ mod tests {
     }
 
     #[test]
-    fn weighted_normal_equations_match_hand_assembly() {
+    async fn weighted_normal_equations_match_hand_assembly() {
         let mut a = MatD::zeros(3, 2);
         a.set(0, 0, 1.0);
         a.set(0, 1, 2.0);
@@ -1812,7 +1812,7 @@ mod tests {
         assert!((atb.get(1) - 66.0).abs() < 1e-12);
     }
 
-    fn planted_diagonal_conjugated(planted: &[f64], seed: u64) -> MatD {
+    async fn planted_diagonal_conjugated(planted: &[f64], seed: u64) -> MatD {
         let n = planted.len();
         let (_, q) = hessenberg(&seeded_mat(n, n, seed));
         let mut d = MatD::zeros(n, n);
@@ -1823,7 +1823,7 @@ mod tests {
     }
 
     #[test]
-    fn hessenberg_similarity_orthogonality_and_shape() {
+    async fn hessenberg_similarity_orthogonality_and_shape() {
         for (n, seed) in [(4, 101), (4, 202), (5, 303), (5, 404), (6, 505)] {
             let a = seeded_mat(n, n, seed);
             let (h, q) = hessenberg(&a);
@@ -1844,13 +1844,13 @@ mod tests {
 
     #[test]
     #[should_panic(expected = "hessenberg requires a square matrix")]
-    fn hessenberg_rejects_non_square() {
+    async fn hessenberg_rejects_non_square() {
         let a = MatD::zeros(2, 3);
         hessenberg(&a);
     }
 
     #[test]
-    fn real_schur_recovers_planted_real_spectrum() {
+    async fn real_schur_recovers_planted_real_spectrum() {
         let planted = [1.0, -2.0, 3.5, 0.25, -7.0];
         let a = planted_diagonal_conjugated(&planted, 909);
         let mut eigs = real_eigenvalues(&a).expect("converges");
@@ -1864,7 +1864,7 @@ mod tests {
     }
 
     #[test]
-    fn real_schur_recovers_planted_complex_conjugate_pairs() {
+    async fn real_schur_recovers_planted_complex_conjugate_pairs() {
         let blocks = [(2.0, 3.0), (-1.0, 5.0)];
         let n = blocks.len() * 2;
         let (_, q) = hessenberg(&seeded_mat(n, n, 1717));
@@ -1889,13 +1889,13 @@ mod tests {
     }
 
     #[test]
-    fn real_schur_rejects_non_square() {
+    async fn real_schur_rejects_non_square() {
         let a = MatD::zeros(2, 3);
         assert!(matches!(real_schur(&a), Err(AlgebraError::DimensionMismatch { .. })));
     }
 
     #[test]
-    fn poly_roots_companion_matches_known_real_quartic_roots() {
+    async fn poly_roots_companion_matches_known_real_quartic_roots() {
         let coeffs = [24.0, -50.0, 35.0, -10.0, 1.0];
         let mut roots = poly_roots_companion(&coeffs).expect("converges");
         roots.sort_by(|x, y| x.0.partial_cmp(&y.0).unwrap());
@@ -1907,7 +1907,7 @@ mod tests {
     }
 
     #[test]
-    fn poly_roots_companion_matches_known_complex_conjugate_pairs() {
+    async fn poly_roots_companion_matches_known_complex_conjugate_pairs() {
         let coeffs = [4.0, 0.0, 5.0, 0.0, 1.0];
         let roots = poly_roots_companion(&coeffs).expect("converges");
         let mut mags: Vec<f64> = roots
@@ -1925,32 +1925,32 @@ mod tests {
     }
 
     #[test]
-    fn poly_roots_companion_rejects_zero_leading_coefficient() {
+    async fn poly_roots_companion_rejects_zero_leading_coefficient() {
         let coeffs = [1.0, 2.0, 0.0];
         assert_eq!(poly_roots_companion(&coeffs), Err(AlgebraError::Singular));
     }
 
     #[test]
-    fn poly_roots_companion_rejects_too_short_input() {
+    async fn poly_roots_companion_rejects_too_short_input() {
         assert_eq!(poly_roots_companion(&[5.0]), Err(AlgebraError::Singular));
     }
 
     #[test]
-    fn vec3d_sub_and_length_match_hand_computation() {
+    async fn vec3d_sub_and_length_match_hand_computation() {
         let diff = vec3d_sub([3.0, 4.0, 0.0], [1.0, 1.0, 0.0]);
         assert_eq!(diff, [2.0, 3.0, 0.0]);
         assert!((vec3d_length([3.0, 4.0, 0.0]) - 5.0).abs() < 1e-12);
     }
 
     #[test]
-    fn algebra_error_display_covers_remaining_variants() {
+    async fn algebra_error_display_covers_remaining_variants() {
         assert_eq!(AlgebraError::NotPositiveDefinite.to_string(), "matrix is not positive definite");
         assert_eq!(AlgebraError::DimensionMismatch { expected: (2, 2), got: (3, 3) }.to_string(), "dimension mismatch: expected (2, 2), got (3, 3)");
         assert_eq!(AlgebraError::PowerIterationFailedConvergence { iterations: 42 }.to_string(), "iterative solver failed to converge after 42 iterations");
     }
 
     #[test]
-    fn matd_matmul_skips_zero_entries_and_still_correct() {
+    async fn matd_matmul_skips_zero_entries_and_still_correct() {
         let mut m = MatD::zeros(2, 2);
         m.set(0, 0, 0.0);
         m.set(0, 1, 2.0);
@@ -1961,7 +1961,7 @@ mod tests {
     }
 
     #[test]
-    fn weighted_normal_equations_skips_zero_entries_in_a() {
+    async fn weighted_normal_equations_skips_zero_entries_in_a() {
         let mut a = MatD::zeros(2, 2);
         a.set(0, 0, 0.0);
         a.set(0, 1, 1.0);
@@ -1977,7 +1977,7 @@ mod tests {
     }
 
     #[test]
-    fn hessenberg_skips_already_zero_subdiagonal_column() {
+    async fn hessenberg_skips_already_zero_subdiagonal_column() {
         let mut a = MatD::zeros(4, 4);
         for i in 0..4 {
             a.set(i, i, (i + 1) as f64);
@@ -1988,7 +1988,7 @@ mod tests {
     }
 
     #[test]
-    fn qr_householder_skips_already_zero_column_segment() {
+    async fn qr_householder_skips_already_zero_column_segment() {
         let mut a = MatD::zeros(3, 3);
         a.set(0, 0, 1.0);
         a.set(0, 1, 5.0);
@@ -2005,19 +2005,19 @@ mod tests {
     }
 
     #[test]
-    fn svd_nullvector_rejects_matrix_with_zero_columns() {
+    async fn svd_nullvector_rejects_matrix_with_zero_columns() {
         let a = MatD::zeros(2, 0);
         assert!(matches!(svd_nullvector(&a), Err(AlgebraError::DimensionMismatch { .. })));
     }
 
     #[test]
-    fn solve_llsq_detects_rank_deficient_system() {
+    async fn solve_llsq_detects_rank_deficient_system() {
         let a = planted_rank_deficient();
         let b = VecD::from_vec((0..6).map(|i| i as f64).collect());
         assert!(matches!(solve_llsq(&a, &b), Err(AlgebraError::Singular)));
     }
 
-    fn tridiagonal_spd(n: usize) -> CsrMatrix {
+    async fn tridiagonal_spd(n: usize) -> CsrMatrix {
         let mut triplets = Vec::new();
         for i in 0..n {
             triplets.push((i, i, 2.0));
@@ -2033,7 +2033,7 @@ mod tests {
         use super::*;
 
         #[test]
-        fn conjugate_gradient_converges_on_tridiagonal_system() {
+        async fn conjugate_gradient_converges_on_tridiagonal_system() {
             let n = 40;
             let a = tridiagonal_spd(n);
             let x_true = VecD::from_vec((0..n).map(|i| (i as f64) + 1.0).collect());
@@ -2045,7 +2045,7 @@ mod tests {
         }
 
         #[test]
-        fn lanczos_matches_dense_jacobi_on_tridiagonal() {
+        async fn lanczos_matches_dense_jacobi_on_tridiagonal() {
             let n = 16;
             let a_sparse = tridiagonal_spd(n);
             let a_dense = a_sparse.to_dense();
@@ -2072,12 +2072,12 @@ mod exact_tests {
     use super::*;
     use number::{Rational, VecG};
 
-    fn rat(n: i64, d: i64) -> Rational {
+    async fn rat(n: i64, d: i64) -> Rational {
         Rational::from_i64(n, d).unwrap()
     }
 
     #[test]
-    fn lll_recovers_a_short_relation() {
+    async fn lll_recovers_a_short_relation() {
         // Basis containing an obviously-reducible long vector alongside a short one; LLL should surface
         // vectors no longer than the original shortest, and preserve the lattice (verified via a
         // determinant/volume proxy: the reduced basis still spans the same rank).

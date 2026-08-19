@@ -26,19 +26,19 @@ use semio_framework_plugin::{ArtifactDeserializer, Dialect, StandardId, SubsetId
 /// ✍️ `DocxRun` -> `DocRun`: text + the 3 boolean flags both models share. `size`/`font`/`color`/
 /// `link` have no `DocxRun` source field (docx keeps them, if present, inside
 /// `extra_run_properties` raw XML) so they stay `None`.
-pub(crate) fn map_run(run: &DocxRun) -> DocRun {
+pub(crate) async fn map_run(run: &DocxRun) -> DocRun {
     DocRun { text: run.text.clone(), style: RunStyle { bold: run.bold, italic: run.italic, underline: run.underline, size: None, font: None, color: None, link: None } }
 }
 
-fn map_paragraph(p: &DocxParagraph) -> DocBlock {
+async fn map_paragraph(p: &DocxParagraph) -> DocBlock {
     DocBlock::Paragraph { style_id: p.style.clone(), runs: p.runs.iter().map(map_run).collect() }
 }
 
-fn map_table(t: &DocxTable) -> DocBlock {
+async fn map_table(t: &DocxTable) -> DocBlock {
     DocBlock::Table { rows: t.rows.iter().map(|row| DocTableRow { cells: row.cells.iter().map(|cell| DocTableCell { blocks: cell.blocks.iter().map(map_block).collect() }).collect() }).collect() }
 }
 
-fn map_block(block: &DocxBlock) -> DocBlock {
+async fn map_block(block: &DocxBlock) -> DocBlock {
     match block {
         DocxBlock::Paragraph(p) => map_paragraph(p),
         DocxBlock::Table(t) => map_table(t),
@@ -73,7 +73,7 @@ mod tests {
     use crate::artifacts::docx::schema::snapshot::{DocxDocument, DocxStyle, DocxTableCell, DocxTableRow};
     use crate::artifacts::zip::opc::OpcPackage;
 
-    pub(crate) fn sample_docx() -> DocxSnapshot {
+    pub(crate) async fn sample_docx() -> DocxSnapshot {
         DocxSnapshot::from_parts(
             OpcPackage::default(),
             DocxDocument {
@@ -99,7 +99,7 @@ mod tests {
     }
 
     #[test]
-    fn maps_styles_paragraphs_and_tables() {
+    async fn maps_styles_paragraphs_and_tables() {
         let semio = semio_framework_plugin::resolve_ready(SemioDocumentFromDocx::deserialize(&sample_docx())).expect("deserialize");
         assert_eq!(semio.styles.len(), 2);
         assert_eq!(semio.styles[1].based_on.as_deref(), Some("Heading1"));

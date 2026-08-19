@@ -13,17 +13,17 @@ pub const PRESENT_PLAY_BODY_CATALOGUE: &str = "animate.present.play.catalogue";
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
-pub fn definition() -> PanelTabDefinition {
+pub async fn definition() -> PanelTabDefinition {
     PanelTabDefinition { kind: PanelTabKind::App(FRAMEWORK_PANEL_TAB_CATALOGUE_ID.into()), label: LocalizedLabel::native(FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, "Katalog"), group: PanelGroup::Workbench, body_key: Some(PRESENT_PLAY_BODY_CATALOGUE.into()), children: Vec::new() }
 }
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-fn catalogue_button(id: &str, label: impl Into<Label>, action: &str, args: Option<Value>) -> UiNode {
+async fn catalogue_button(id: &str, label: impl Into<Label>, action: &str, args: Option<Value>) -> UiNode {
     UiNode::Button(UiButtonNode { id: Some(id.into()), icon_id: "plus".into(), label: label.into(), action: animate_present_action(action, args), style: None, presence: UiPresence::default(), menu: None })
 }
 
-pub fn render(deck: &PresentSnapshot, labels: &AnimatePresentLabels) -> UiNode {
+pub async fn render(deck: &PresentSnapshot, labels: &AnimatePresentLabels) -> UiNode {
     let (source, _) = crate::artifacts::present::present_working_scene(deck);
     ui_declarative_sections_to_tree(&[
         UiSectionNode {
@@ -85,14 +85,14 @@ mod tests {
     use crate::editor::animate::testkit::{present_app, render as render_body};
 
     #[test]
-    fn definition_binds_the_framework_catalogue_tab_to_this_body_key() {
+    async fn definition_binds_the_framework_catalogue_tab_to_this_body_key() {
         let definition = definition();
         assert_eq!(definition.id(), FRAMEWORK_PANEL_TAB_CATALOGUE_ID);
         assert_eq!(definition.body_key.as_deref(), Some(PRESENT_PLAY_BODY_CATALOGUE));
     }
 
     #[test]
-    fn catalogue_lists_templates() {
+    async fn catalogue_lists_templates() {
         let mut app = present_app();
         assert!(render_body(&mut app, PRESENT_PLAY_BODY_CATALOGUE).contains("animate.present.play.catalogue.templates"));
     }

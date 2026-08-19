@@ -65,15 +65,15 @@ mod tests {
     use protocol::{Mutation, MutationDiff};
     use protocol::testkit::{assert_fatal_never_applies, assert_missing_target_is_error};
 
-    fn sample_asset(id: &str) -> ShootingAsset {
+    async fn sample_asset(id: &str) -> ShootingAsset {
         ShootingAsset { id: id.into(), name: format!("Asset {id}"), url: format!("/mesh/{id}.glb"), format: "glb".into(), origin: [0.0, 0.0, 0.0], orientation: Some([0.0, 0.0, 0.0, 1.0]), scale: None }
     }
 
-    fn sample_shot(id: &str) -> ShootingShot {
+    async fn sample_shot(id: &str) -> ShootingShot {
         ShootingShot { id: id.into(), label: format!("Shot {id}"), width: 256, height: 256, format: "png".into(), shape: "rectangle".into(), background: None, camera_id: None }
     }
 
-    fn round_trip(snapshot: &ShootingSnapshot, operation: &ShootingMutation) -> ShootingSnapshot {
+    async fn round_trip(snapshot: &ShootingSnapshot, operation: &ShootingMutation) -> ShootingSnapshot {
         let forward = vcs::apply_mutation(snapshot, operation)
             .expect("valid mutation")
             .0;
@@ -92,7 +92,7 @@ mod tests {
     /// crates' worth of tests (each is its own compilation unit, so a shared cross-crate test-only
     /// helper isn't worth a dependency).
     #[allow(clippy::approx_constant, reason = "0.7071 is deliberately an approximate quaternion component in this snapshot, not the FRAC_1_SQRT_2 constant")]
-    fn representative_snapshot() -> ShootingSnapshot {
+    async fn representative_snapshot() -> ShootingSnapshot {
         ShootingSnapshot {
             schema: SHOOTING_DOCUMENT_SCHEMA.into(),
             assets: vec![
@@ -119,7 +119,7 @@ mod tests {
 
     //#region 📦assets
     #[test]
-    fn assets_create_rename_change_url_delete_round_trip() {
+    async fn assets_create_rename_change_url_delete_round_trip() {
         let snapshot = crate::artifacts::shooting::empty_shooting_snapshot();
         let create = ShootingMutation::CreateAsset(super::super::create_asset::mutation::CreateAsset { asset: sample_asset("a1"), index: Some(0) });
         let with_asset = round_trip(&snapshot, &create);
@@ -139,7 +139,7 @@ mod tests {
     }
 
     #[test]
-    fn reorder_assets_round_trips() {
+    async fn reorder_assets_round_trips() {
         let mut snapshot = crate::artifacts::shooting::empty_shooting_snapshot();
         snapshot.assets = vec![sample_asset("a1"), sample_asset("a2"), sample_asset("a3")];
         let reorder = ShootingMutation::ReorderAssets(super::super::reorder_assets::mutation::ReorderAssets { id: "a1".into(), to_index: 2 });
@@ -148,7 +148,7 @@ mod tests {
     }
 
     #[test]
-    fn delete_asset_of_a_missing_id_has_an_empty_inverse() {
+    async fn delete_asset_of_a_missing_id_has_an_empty_inverse() {
         let snapshot = crate::artifacts::shooting::empty_shooting_snapshot();
         let delete = ShootingMutation::DeleteAsset(super::super::delete_asset::mutation::DeleteAsset { id: "nope".into() });
         assert!(delete.inverse(&snapshot).is_empty(), "deleting an absent id has nothing to undo");
@@ -157,7 +157,7 @@ mod tests {
 
     //#region ↔️🔄↕️transforms
     #[test]
-    fn drag_rotate_scale_assets_round_trip() {
+    async fn drag_rotate_scale_assets_round_trip() {
         let mut snapshot = crate::artifacts::shooting::empty_shooting_snapshot();
         let mut asset = sample_asset("a1");
         // `ScaleAssets` always writes an explicit `Some([..])` scale, so backwards() restoring an
@@ -182,7 +182,7 @@ mod tests {
 
     //#region 📸shots
     #[test]
-    fn shots_create_rename_resize_reformat_reshape_delete_round_trip() {
+    async fn shots_create_rename_resize_reformat_reshape_delete_round_trip() {
         let snapshot = crate::artifacts::shooting::empty_shooting_snapshot();
         let create = ShootingMutation::CreateShot(super::super::create_shot::mutation::CreateShot { shot: sample_shot("s1"), index: Some(0) });
         let with_shot = round_trip(&snapshot, &create);
@@ -214,7 +214,7 @@ mod tests {
     }
 
     #[test]
-    fn reorder_shots_round_trips() {
+    async fn reorder_shots_round_trips() {
         let mut snapshot = crate::artifacts::shooting::empty_shooting_snapshot();
         snapshot.shots = vec![sample_shot("s1"), sample_shot("s2")];
         let reorder = ShootingMutation::ReorderShots(super::super::reorder_shots::mutation::ReorderShots { id: "s2".into(), to_index: 0 });
@@ -225,7 +225,7 @@ mod tests {
 
     //#region 🎥saved-cameras / 📷shot-camera
     #[test]
-    fn saved_cameras_create_rename_replace_view_reorder_delete_round_trip() {
+    async fn saved_cameras_create_rename_replace_view_reorder_delete_round_trip() {
         let snapshot = crate::artifacts::shooting::empty_shooting_snapshot();
         let create = ShootingMutation::CreateSavedCamera(super::super::create_saved_camera::mutation::CreateSavedCamera { saved_camera: ShootingSavedCamera { id: "cam1".into(), label: "Hero".into(), camera: ShootingCamera::default() }, index: Some(0) });
         let with_camera = round_trip(&snapshot, &create);
@@ -245,7 +245,7 @@ mod tests {
     }
 
     #[test]
-    fn replace_shot_camera_is_a_no_op_when_shot_has_no_saved_camera() {
+    async fn replace_shot_camera_is_a_no_op_when_shot_has_no_saved_camera() {
         // 🎥️ The free/live viewport camera is session-only runtime state now (never a document
         // field) — `ReplaceShotCamera` against a shot with no saved-camera reference has nothing to patch.
         let mut snapshot = crate::artifacts::shooting::empty_shooting_snapshot();
@@ -257,7 +257,7 @@ mod tests {
     }
 
     #[test]
-    fn replace_shot_camera_patches_the_saved_camera_it_references() {
+    async fn replace_shot_camera_patches_the_saved_camera_it_references() {
         let mut snapshot = crate::artifacts::shooting::empty_shooting_snapshot();
         snapshot.saved_cameras.push(ShootingSavedCamera { id: "cam1".into(), label: "A".into(), camera: ShootingCamera::default() });
         let mut shot = sample_shot("s1");
@@ -273,7 +273,7 @@ mod tests {
 
     //#region 🎯📌active-selection
     #[test]
-    fn set_active_shot_and_asset_round_trip() {
+    async fn set_active_shot_and_asset_round_trip() {
         let mut snapshot = crate::artifacts::shooting::empty_shooting_snapshot();
         snapshot.shots.push(sample_shot("s1"));
         snapshot.assets.push(sample_asset("a1"));
@@ -288,7 +288,7 @@ mod tests {
 
     //#region ☀️scene
     #[test]
-    fn scene_field_mutations_round_trip() {
+    async fn scene_field_mutations_round_trip() {
         let snapshot = crate::artifacts::shooting::empty_shooting_snapshot();
         let next = round_trip(&snapshot, &ShootingMutation::ChangeSceneSunEnabled(super::super::change_scene_sun_enabled::mutation::ChangeSceneSunEnabled { new_enabled: true }));
         assert!(next.scene.sun.enabled);
@@ -309,7 +309,7 @@ mod tests {
 
     //#region 🗣️OpText
     #[test]
-    fn shooting_op_text_round_trips_every_variant() {
+    async fn shooting_op_text_round_trips_every_variant() {
         let asset = sample_asset("a1");
         store::os_store::test_support::assert_op_line_round_trip(&ShootingMutation::CreateAsset(super::super::create_asset::mutation::CreateAsset { asset: asset.clone(), index: Some(0) }));
         store::os_store::test_support::assert_op_line_round_trip(&ShootingMutation::DeleteAsset(super::super::delete_asset::mutation::DeleteAsset { id: "a1".into() }));
@@ -359,7 +359,7 @@ mod tests {
     /// an id-keyed collection create/delete pair, a bulk bulk-bulk transform, and a document-root
     /// scalar setter.
     #[test]
-    fn create_asset_obeys_the_inverse_and_absorb_laws() {
+    async fn create_asset_obeys_the_inverse_and_absorb_laws() {
         let base = representative_snapshot();
         let create = ShootingMutation::CreateAsset(super::super::create_asset::mutation::CreateAsset { asset: sample_asset("a9"), index: None });
         protocol::os_spr::testkit::assert_mutation_inverse_law(&base, &create);
@@ -370,14 +370,14 @@ mod tests {
     }
 
     #[test]
-    fn drag_assets_obeys_the_inverse_law() {
+    async fn drag_assets_obeys_the_inverse_law() {
         let base = representative_snapshot();
         let drag = ShootingMutation::DragAssets(super::super::drag_assets::mutation::DragAssets { asset_ids: vec!["a1".into()], dx: 4.0, dy: -1.0, dz: 0.5 });
         protocol::os_spr::testkit::assert_mutation_inverse_law(&base, &drag);
     }
 
     #[test]
-    fn set_active_shot_obeys_the_inverse_law() {
+    async fn set_active_shot_obeys_the_inverse_law() {
         let base = representative_snapshot();
         let set = ShootingMutation::SetActiveShot(super::super::set_active_shot::mutation::SetActiveShot { shot_id: Some("s2".into()) });
         protocol::os_spr::testkit::assert_mutation_inverse_law(&base, &set);
@@ -389,7 +389,7 @@ mod tests {
     /// one `assert_missing_target_is_error`/Fatal check per verb family this facet implements
     /// (create/delete/rename/change/reorder/drag-rotate-scale/replace/set).
     #[test]
-    fn create_asset_duplicate_id_is_fatal() {
+    async fn create_asset_duplicate_id_is_fatal() {
         let base = representative_snapshot();
         let outcome = ShootingMutation::CreateAsset(super::super::create_asset::mutation::CreateAsset { asset: sample_asset("a1"), index: None }).diff(&base);
         assert_fatal_never_applies(&outcome);
@@ -397,37 +397,37 @@ mod tests {
     }
 
     #[test]
-    fn delete_asset_missing_target_is_error() {
+    async fn delete_asset_missing_target_is_error() {
         let base = representative_snapshot();
         assert_missing_target_is_error(&base, &ShootingMutation::DeleteAsset(super::super::delete_asset::mutation::DeleteAsset { id: "ghost".into() }));
     }
 
     #[test]
-    fn rename_asset_missing_target_is_error() {
+    async fn rename_asset_missing_target_is_error() {
         let base = representative_snapshot();
         assert_missing_target_is_error(&base, &ShootingMutation::RenameAsset(super::super::rename_asset::mutation::RenameAsset { id: "ghost".into(), new_name: "x".into() }));
     }
 
     #[test]
-    fn change_asset_url_missing_target_is_error() {
+    async fn change_asset_url_missing_target_is_error() {
         let base = representative_snapshot();
         assert_missing_target_is_error(&base, &ShootingMutation::ChangeAssetUrl(super::super::change_asset_url::mutation::ChangeAssetUrl { id: "ghost".into(), new_url: "/x.glb".into() }));
     }
 
     #[test]
-    fn reorder_assets_missing_target_is_error() {
+    async fn reorder_assets_missing_target_is_error() {
         let base = representative_snapshot();
         assert_missing_target_is_error(&base, &ShootingMutation::ReorderAssets(super::super::reorder_assets::mutation::ReorderAssets { id: "ghost".into(), to_index: 0 }));
     }
 
     #[test]
-    fn drag_assets_missing_target_is_error() {
+    async fn drag_assets_missing_target_is_error() {
         let base = representative_snapshot();
         assert_missing_target_is_error(&base, &ShootingMutation::DragAssets(super::super::drag_assets::mutation::DragAssets { asset_ids: vec!["ghost".into()], dx: 1.0, dy: 1.0, dz: 1.0 }));
     }
 
     #[test]
-    fn scale_assets_non_finite_is_fatal() {
+    async fn scale_assets_non_finite_is_fatal() {
         let base = representative_snapshot();
         let outcome = ShootingMutation::ScaleAssets(super::super::scale_assets::mutation::ScaleAssets { asset_ids: vec!["a1".into()], sx: f64::NAN, sy: 1.0, sz: 1.0 }).diff(&base);
         assert_fatal_never_applies(&outcome);
@@ -435,7 +435,7 @@ mod tests {
     }
 
     #[test]
-    fn rotate_assets_non_finite_is_fatal() {
+    async fn rotate_assets_non_finite_is_fatal() {
         let base = representative_snapshot();
         let outcome = ShootingMutation::RotateAssets(super::super::rotate_assets::mutation::RotateAssets { asset_ids: vec!["a1".into()], ax: f64::NAN, ay: 0.0, az: 1.0, angle: 1.0 }).diff(&base);
         assert_fatal_never_applies(&outcome);
@@ -443,19 +443,19 @@ mod tests {
     }
 
     #[test]
-    fn replace_saved_camera_view_missing_target_is_error() {
+    async fn replace_saved_camera_view_missing_target_is_error() {
         let base = representative_snapshot();
         assert_missing_target_is_error(&base, &ShootingMutation::ReplaceSavedCameraView(super::super::replace_saved_camera_view::mutation::ReplaceSavedCameraView { id: "ghost".into(), new_camera: ShootingCamera::default() }));
     }
 
     #[test]
-    fn set_active_shot_missing_target_is_error() {
+    async fn set_active_shot_missing_target_is_error() {
         let base = representative_snapshot();
         assert_missing_target_is_error(&base, &ShootingMutation::SetActiveShot(super::super::set_active_shot::mutation::SetActiveShot { shot_id: Some("ghost".into()) }));
     }
 
     #[test]
-    fn create_shot_duplicate_id_is_fatal() {
+    async fn create_shot_duplicate_id_is_fatal() {
         let base = representative_snapshot();
         let outcome = ShootingMutation::CreateShot(super::super::create_shot::mutation::CreateShot { shot: sample_shot("s1"), index: None }).diff(&base);
         assert_fatal_never_applies(&outcome);
@@ -463,13 +463,13 @@ mod tests {
     }
 
     #[test]
-    fn delete_shot_missing_target_is_error() {
+    async fn delete_shot_missing_target_is_error() {
         let base = representative_snapshot();
         assert_missing_target_is_error(&base, &ShootingMutation::DeleteShot(super::super::delete_shot::mutation::DeleteShot { id: "ghost".into() }));
     }
 
     #[test]
-    fn change_shot_width_missing_target_is_error() {
+    async fn change_shot_width_missing_target_is_error() {
         let base = representative_snapshot();
         assert_missing_target_is_error(&base, &ShootingMutation::ChangeShotWidth(super::super::change_shot_width::mutation::ChangeShotWidth { id: "ghost".into(), new_width: 100 }));
     }

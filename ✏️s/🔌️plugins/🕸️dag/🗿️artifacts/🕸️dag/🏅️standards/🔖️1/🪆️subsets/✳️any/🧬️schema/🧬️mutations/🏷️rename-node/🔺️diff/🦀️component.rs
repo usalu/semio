@@ -8,7 +8,7 @@ use infinite_board_port_directed_dag::DagEdgePatch;
 use protocol::Patchable;
 
 //#region 🔖️Diff
-pub fn diff(payload: &super::mutation::RenameNode, base: &DagSnapshot) -> protocol::MutationOutcome<DagDiff> {
+pub async fn diff(payload: &super::mutation::RenameNode, base: &DagSnapshot) -> protocol::MutationOutcome<DagDiff> {
     let scene = dag_working_scene(base);
     if !scene.nodes.iter().any(|node| node.id == payload.id) {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Node \"{}\" does not exist.", payload.id), [payload.id.clone()]);

@@ -31,10 +31,10 @@ pub enum DwgAc1024ViewCommand {
 }
 
 impl protocol::OpBinary for DwgAc1024ViewCommand {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         Ok(Vec::new())
     }
-    fn decode_op(_bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    async fn decode_op(_bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         Ok(DwgAc1024ViewCommand::Noop)
     }
 }
@@ -58,16 +58,16 @@ impl ArtifactViewer for DwgAc1024Viewer {
     const DIALECT: Dialect = DWG_AC1024_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = DWG_AC1024_DOCUMENT_SCHEMA;
 
-    fn initial_snapshot() -> DwgSnapshot {
+    async fn initial_snapshot() -> DwgSnapshot {
         DwgSnapshot::default()
     }
 
     /// 👁️ Structurally read-only: the sole `Noop` variant never carries a config change.
-    fn handle(_command: &Self::Command, _doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _interaction: &InteractionView<'_>, _engines: &EngineHandles) -> Result<ViewEmit<Self::ConfigMutation>, Fault> {
+    async fn handle(_command: &Self::Command, _doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _interaction: &InteractionView<'_>, _engines: &EngineHandles) -> Result<ViewEmit<Self::ConfigMutation>, Fault> {
         Ok(ViewEmit::default())
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> UiNode {
+    async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> UiNode {
         match body_key {
             main::BODY_KEY => main::render(doc.snapshot),
             _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))),
@@ -77,7 +77,7 @@ impl ArtifactViewer for DwgAc1024Viewer {
 //#endregion 🔖️Viewer
 
 //#region 🔖️Manifest
-pub fn create_dwg_ac1024_viewer() -> semio_framework_plugin::AppDefinition {
+pub async fn create_dwg_ac1024_viewer() -> semio_framework_plugin::AppDefinition {
     Viewer::builder(DWG_AC1024_DIALECT)
         .document(["stdio", "dwgac1024"])
         .icon_id("box")
@@ -95,19 +95,19 @@ mod tests {
     use super::*;
 
     #[test]
-    fn create_viewer_builds_a_definition_for_the_viewer_role() {
+    async fn create_viewer_builds_a_definition_for_the_viewer_role() {
         let def = create_dwg_ac1024_viewer();
         assert_eq!(def.role, semio_framework_plugin::AppRole::Viewer);
         assert_eq!(def.dialect, DWG_AC1024_DIALECT.into());
     }
 
     #[test]
-    fn viewer_dialect_matches_the_artifact_coordinate() {
+    async fn viewer_dialect_matches_the_artifact_coordinate() {
         assert_eq!(<DwgAc1024Viewer as ArtifactViewer>::DIALECT, DWG_AC1024_DIALECT);
     }
 
     #[test]
-    fn viewer_never_mutates_the_document_or_draft_store() {
+    async fn viewer_never_mutates_the_document_or_draft_store() {
         semio_framework_plugin::testkit::assert_viewer_never_mutates::<DwgAc1024Viewer>();
     }
 }

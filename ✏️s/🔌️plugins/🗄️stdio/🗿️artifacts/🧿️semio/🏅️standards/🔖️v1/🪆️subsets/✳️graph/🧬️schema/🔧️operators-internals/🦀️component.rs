@@ -7,7 +7,7 @@ use std::collections::{BTreeMap, BTreeSet};
 // 🧰️ Shared copy/remap plumbing reused by every set operator, `reverse`, and the contraction family. `NodeId`/`HandleId` are both plain `u64` aliases in the frozen core, so `P::Endpoint: From<NodeId>` is satisfiable for both `Normal` (`Endpoint = NodeId`) and `Ported` (`Endpoint = HandleId`) via std's reflexive `impl<T> From<T> for T`; the `Ported` branch never actually exercises that conversion (its endpoints always resolve through `endpoint_as_handle`), so this is purely a compile-time bridge, never a semantic shortcut.
 
 /// 🔁️ Resolves an old typed endpoint to its counterpart in a freshly built storage, using `node_map`/`handle_map` recorded while copying nodes/handles. Panics if the endpoint's underlying node or handle wasn't copied first — every call site copies nodes (and their handles) before touching edges.
-fn translate_endpoint<P: PortModel>(endpoint: P::Endpoint, node_map: &BTreeMap<NodeId, NodeId>, handle_map: &BTreeMap<HandleId, HandleId>) -> P::Endpoint
+async fn translate_endpoint<P: PortModel>(endpoint: P::Endpoint, node_map: &BTreeMap<NodeId, NodeId>, handle_map: &BTreeMap<HandleId, HandleId>) -> P::Endpoint
 where
     P::Endpoint: From<NodeId>,
 {
@@ -25,7 +25,7 @@ where
 }
 
 /// 📋️ Copies one edge of `src` into `dst`, translating its endpoints through `node_map`/`handle_map`; no-operation if the edge id vanished between enumeration and lookup.
-fn copy_edge<P: PortModel, D: Directedness>(dst: &mut Storage<P, D>, src: &Storage<P, D>, edge_id: EdgeId, node_map: &BTreeMap<NodeId, NodeId>, handle_map: &BTreeMap<HandleId, HandleId>)
+async fn copy_edge<P: PortModel, D: Directedness>(dst: &mut Storage<P, D>, src: &Storage<P, D>, edge_id: EdgeId, node_map: &BTreeMap<NodeId, NodeId>, handle_map: &BTreeMap<HandleId, HandleId>)
 where
     P::Endpoint: From<NodeId>,
 {
@@ -37,7 +37,7 @@ where
 }
 
 /// 🏗️ Copies exactly the given node ids (and, for ported storages, every handle anchored on them) from `src` into `dst`, preserving `NodeId` values via `add_node_with_id`. Returns the (here, identity-ish but explicit) old→new node and handle maps that `copy_edge`/`translate_endpoint` need.
-fn copy_nodes_from<P: PortModel, D: Directedness>(dst: &mut Storage<P, D>, src: &Storage<P, D>, ids: impl IntoIterator<Item = NodeId>) -> (BTreeMap<NodeId, NodeId>, BTreeMap<HandleId, HandleId>) {
+async fn copy_nodes_from<P: PortModel, D: Directedness>(dst: &mut Storage<P, D>, src: &Storage<P, D>, ids: impl IntoIterator<Item = NodeId>) -> (BTreeMap<NodeId, NodeId>, BTreeMap<HandleId, HandleId>) {
     let mut node_map = BTreeMap::new();
     let mut handle_map = BTreeMap::new();
     for id in ids {
@@ -56,7 +56,7 @@ fn copy_nodes_from<P: PortModel, D: Directedness>(dst: &mut Storage<P, D>, src: 
 }
 
 /// 🆕️ Copies the whole of `src` into `dst` under a **fresh** id space (`add_node_with` instead of `add_node_with_id`) — the `disjoint_union` building block.
-fn copy_all_fresh<P: PortModel, D: Directedness>(dst: &mut Storage<P, D>, src: &Storage<P, D>)
+async fn copy_all_fresh<P: PortModel, D: Directedness>(dst: &mut Storage<P, D>, src: &Storage<P, D>)
 where
     P::Endpoint: From<NodeId>,
 {
@@ -82,7 +82,7 @@ where
 
 // #region 🔖️SetOperators
 /// 🤝️ NetworkX `union`: `g` and `h` must have disjoint node id sets — returns `GraphError::AmbiguousSolution` otherwise (a runtime check standing in for what NetworkX enforces at call time). On success, every node/edge of both graphs is copied into a fresh storage, ids unchanged.
-pub fn union<P: PortModel, D: Directedness>(g: &Storage<P, D>, h: &Storage<P, D>) -> Result<Storage<P, D>, GraphError>
+pub async fn union<P: PortModel, D: Directedness>(g: &Storage<P, D>, h: &Storage<P, D>) -> Result<Storage<P, D>, GraphError>
 where
     P::Endpoint: From<NodeId>,
 {
@@ -103,7 +103,7 @@ where
 }
 
 /// 🆕️ NetworkX `disjoint_union`: always succeeds by relabelling both inputs into a fresh, non-overlapping id space — `g`'s nodes first (in `NodeId` order), then `h`'s.
-pub fn disjoint_union<P: PortModel, D: Directedness>(g: &Storage<P, D>, h: &Storage<P, D>) -> Storage<P, D>
+pub async fn disjoint_union<P: PortModel, D: Directedness>(g: &Storage<P, D>, h: &Storage<P, D>) -> Storage<P, D>
 where
     P::Endpoint: From<NodeId>,
 {
@@ -114,7 +114,7 @@ where
 }
 
 /// 🧩️ NetworkX `semio_compose_rs`: union of node/edge sets in the *shared* id space; wherever both graphs define the same node or (for non-multi storages) the same edge, `h`'s attributes overwrite `g`'s matching keys (via `PropertyBag::extend`), non-conflicting keys from both survive. For ported (multi-edge) storages there is no "same edge" identity beyond a fresh parallel edge, so both graphs' edges simply accumulate.
-pub fn semio_compose_rs<P: PortModel, D: Directedness>(g: &Storage<P, D>, h: &Storage<P, D>) -> Storage<P, D>
+pub async fn semio_compose_rs<P: PortModel, D: Directedness>(g: &Storage<P, D>, h: &Storage<P, D>) -> Storage<P, D>
 where
     P::Endpoint: From<NodeId>,
 {
@@ -131,7 +131,7 @@ where
 }
 
 /// ∩ NetworkX-style `intersection`: nodes present in both `g` and `h` (by `NodeId`), edges present in both (by `(u, v)` pair) — attributes copied from `g`.
-pub fn intersection<P: PortModel, D: Directedness>(g: &Storage<P, D>, h: &Storage<P, D>) -> Storage<P, D>
+pub async fn intersection<P: PortModel, D: Directedness>(g: &Storage<P, D>, h: &Storage<P, D>) -> Storage<P, D>
 where
     P::Endpoint: From<NodeId>,
 {
@@ -152,7 +152,7 @@ where
 }
 
 /// ➖️ NetworkX `difference`: every node of `g`, but only the edges of `g` that have no counterpart `(u, v)` in `h`.
-pub fn difference<P: PortModel, D: Directedness>(g: &Storage<P, D>, h: &Storage<P, D>) -> Storage<P, D>
+pub async fn difference<P: PortModel, D: Directedness>(g: &Storage<P, D>, h: &Storage<P, D>) -> Storage<P, D>
 where
     P::Endpoint: From<NodeId>,
 {
@@ -168,7 +168,7 @@ where
 }
 
 /// ⊕ NetworkX `symmetric_difference`: nodes of both `g` and `h`; edges present in exactly one of the two (by `(u, v)` pair). Node attrs prefer `g`'s when a node exists in both.
-pub fn symmetric_difference<P: PortModel, D: Directedness>(g: &Storage<P, D>, h: &Storage<P, D>) -> Storage<P, D>
+pub async fn symmetric_difference<P: PortModel, D: Directedness>(g: &Storage<P, D>, h: &Storage<P, D>) -> Storage<P, D>
 where
     P::Endpoint: From<NodeId>,
 {
@@ -216,7 +216,7 @@ where
 
 // #region 🔖️Complement
 /// 🌓️ NetworkX `complement`: same nodes as `g`, an edge between `u ≠ v` iff `g` has none there. The result collapses to `Normal` port model — a complement graph has no natural handle/port structure to inherit from an arbitrary `P`. Directed inputs complement every ordered pair; undirected inputs complement every unordered pair once (relying on `Storage`'s symmetric undirected adjacency).
-pub fn complement<P: PortModel, D: Directedness>(g: &Storage<P, D>) -> Storage<Normal, D> {
+pub async fn complement<P: PortModel, D: Directedness>(g: &Storage<P, D>) -> Storage<Normal, D> {
     let mut dst: Storage<Normal, D> = Storage::new();
     let nodes: Vec<NodeId> = g.nodes().collect();
     for &n in &nodes {
@@ -244,7 +244,7 @@ pub fn complement<P: PortModel, D: Directedness>(g: &Storage<P, D>) -> Storage<N
 }
 
 /// ↩️ NetworkX `reverse`: swaps every edge's source/target, preserving node/edge attributes and `NodeId`s (and, for ported storages, a fresh handle per original handle). Only meaningful for directed graphs — an undirected overload is deliberately not provided since reversing an undirected edge is a no-operation by definition, and offering one would just invite dead call sites.
-pub fn reverse<P: PortModel>(g: &Storage<P, Directed>) -> Storage<P, Directed>
+pub async fn reverse<P: PortModel>(g: &Storage<P, Directed>) -> Storage<P, Directed>
 where
     P::Endpoint: From<NodeId>,
 {
@@ -263,12 +263,12 @@ where
 
 // #region 🔖️Products
 /// 🔗️ True iff `g` has an edge between `a` and `b` (order-sensitive for directed `g`; `Storage`'s undirected adjacency is already symmetric, so order doesn't matter there).
-fn adjacent<D: Directedness>(g: &Storage<Normal, D>, a: NodeId, b: NodeId) -> bool {
+async fn adjacent<D: Directedness>(g: &Storage<Normal, D>, a: NodeId, b: NodeId) -> bool {
     g.edges_between(a, b).next().is_some()
 }
 
 /// 🏗️ Builds the product's node set — one fresh node per `(u, v) ∈ nodes(g) × nodes(h)` — and the interning map every product function needs. Iteration is over `g.nodes()` then `h.nodes()`, both already `BTreeMap`-sorted, so id assignment is deterministic.
-fn product_skeleton<D: Directedness>(g: &Storage<Normal, D>, h: &Storage<Normal, D>) -> (Storage<Normal, D>, BTreeMap<(NodeId, NodeId), NodeId>) {
+async fn product_skeleton<D: Directedness>(g: &Storage<Normal, D>, h: &Storage<Normal, D>) -> (Storage<Normal, D>, BTreeMap<(NodeId, NodeId), NodeId>) {
     let mut dst: Storage<Normal, D> = Storage::new();
     let mut map = BTreeMap::new();
     for u in g.nodes() {
@@ -280,7 +280,7 @@ fn product_skeleton<D: Directedness>(g: &Storage<Normal, D>, h: &Storage<Normal,
 }
 
 /// 🔗️ Shared quadruple-loop edge builder for the four products below: wires `(u1, v1)-(u2, v2)` whenever `include` says so. Deliberately not optimized past `O(|Vg|² · |Vh|²)` — products are meant for small graphs here (see module docs).
-fn build_product_edges<D: Directedness>(g: &Storage<Normal, D>, h: &Storage<Normal, D>, dst: &mut Storage<Normal, D>, map: &BTreeMap<(NodeId, NodeId), NodeId>, mut include: impl FnMut(NodeId, NodeId, NodeId, NodeId) -> bool) {
+async fn build_product_edges<D: Directedness>(g: &Storage<Normal, D>, h: &Storage<Normal, D>, dst: &mut Storage<Normal, D>, map: &BTreeMap<(NodeId, NodeId), NodeId>, mut include: impl FnMut(NodeId, NodeId, NodeId, NodeId) -> bool) {
     let g_nodes: Vec<NodeId> = g.nodes().collect();
     let h_nodes: Vec<NodeId> = h.nodes().collect();
     for &u1 in &g_nodes {
@@ -297,28 +297,28 @@ fn build_product_edges<D: Directedness>(g: &Storage<Normal, D>, h: &Storage<Norm
 }
 
 /// ⊞ NetworkX `cartesian_product`: `(u1,v1)-(u2,v2)` iff (`u1==u2` and `v1~v2` in `h`) or (`v1==v2` and `u1~u2` in `g`).
-pub fn cartesian_product<D: Directedness>(g: &Storage<Normal, D>, h: &Storage<Normal, D>) -> (Storage<Normal, D>, BTreeMap<(NodeId, NodeId), NodeId>) {
+pub async fn cartesian_product<D: Directedness>(g: &Storage<Normal, D>, h: &Storage<Normal, D>) -> (Storage<Normal, D>, BTreeMap<(NodeId, NodeId), NodeId>) {
     let (mut dst, map) = product_skeleton(g, h);
     build_product_edges(g, h, &mut dst, &map, |u1, v1, u2, v2| (u1 == u2 && adjacent(h, v1, v2)) || (v1 == v2 && adjacent(g, u1, u2)));
     (dst, map)
 }
 
 /// ⊗ NetworkX `tensor_product` (categorical product): `(u1,v1)-(u2,v2)` iff `u1~u2` in `g` AND `v1~v2` in `h`.
-pub fn tensor_product<D: Directedness>(g: &Storage<Normal, D>, h: &Storage<Normal, D>) -> (Storage<Normal, D>, BTreeMap<(NodeId, NodeId), NodeId>) {
+pub async fn tensor_product<D: Directedness>(g: &Storage<Normal, D>, h: &Storage<Normal, D>) -> (Storage<Normal, D>, BTreeMap<(NodeId, NodeId), NodeId>) {
     let (mut dst, map) = product_skeleton(g, h);
     build_product_edges(g, h, &mut dst, &map, |u1, v1, u2, v2| adjacent(g, u1, u2) && adjacent(h, v1, v2));
     (dst, map)
 }
 
 /// ⊠ NetworkX `strong_product`: union of the cartesian and tensor edge sets.
-pub fn strong_product<D: Directedness>(g: &Storage<Normal, D>, h: &Storage<Normal, D>) -> (Storage<Normal, D>, BTreeMap<(NodeId, NodeId), NodeId>) {
+pub async fn strong_product<D: Directedness>(g: &Storage<Normal, D>, h: &Storage<Normal, D>) -> (Storage<Normal, D>, BTreeMap<(NodeId, NodeId), NodeId>) {
     let (mut dst, map) = product_skeleton(g, h);
     build_product_edges(g, h, &mut dst, &map, |u1, v1, u2, v2| (u1 == u2 && adjacent(h, v1, v2)) || (v1 == v2 && adjacent(g, u1, u2)) || (adjacent(g, u1, u2) && adjacent(h, v1, v2)));
     (dst, map)
 }
 
 /// 📖️ NetworkX `lexicographic_product`: `(u1,v1)-(u2,v2)` iff `u1~u2` in `g`, OR (`u1==u2` and `v1~v2` in `h`).
-pub fn lexicographic_product<D: Directedness>(g: &Storage<Normal, D>, h: &Storage<Normal, D>) -> (Storage<Normal, D>, BTreeMap<(NodeId, NodeId), NodeId>) {
+pub async fn lexicographic_product<D: Directedness>(g: &Storage<Normal, D>, h: &Storage<Normal, D>) -> (Storage<Normal, D>, BTreeMap<(NodeId, NodeId), NodeId>) {
     let (mut dst, map) = product_skeleton(g, h);
     build_product_edges(g, h, &mut dst, &map, |u1, v1, u2, v2| adjacent(g, u1, u2) || (u1 == u2 && adjacent(h, v1, v2)));
     (dst, map)
@@ -327,7 +327,7 @@ pub fn lexicographic_product<D: Directedness>(g: &Storage<Normal, D>, h: &Storag
 
 // #region 🔖️Power
 /// 🧭️ Tiny local BFS (not a public API): nodes reachable from `src` within `k` hops via `out_neighbors`, keyed by `NodeId` for determinism.
-fn bfs_within<D: Directedness>(g: &Storage<Normal, D>, src: NodeId, k: usize) -> BTreeSet<NodeId> {
+async fn bfs_within<D: Directedness>(g: &Storage<Normal, D>, src: NodeId, k: usize) -> BTreeSet<NodeId> {
     let mut seen: BTreeSet<NodeId> = BTreeSet::from([src]);
     let mut frontier = vec![src];
     for _ in 0..k {
@@ -348,7 +348,7 @@ fn bfs_within<D: Directedness>(g: &Storage<Normal, D>, src: NodeId, k: usize) ->
 }
 
 /// 🔋️ NetworkX `power`: edge `u-v` (`u ≠ v`) iff the shortest-path distance from `u` to `v` is at most `k` hops. Requires `k ≥ 1`, matching NetworkX's own precondition.
-pub fn power<D: Directedness>(g: &Storage<Normal, D>, k: usize) -> Storage<Normal, D> {
+pub async fn power<D: Directedness>(g: &Storage<Normal, D>, k: usize) -> Storage<Normal, D> {
     assert!(k >= 1, "power requires k >= 1");
     let mut dst: Storage<Normal, D> = Storage::new();
     let nodes: Vec<NodeId> = g.nodes().collect();
@@ -369,7 +369,7 @@ pub fn power<D: Directedness>(g: &Storage<Normal, D>, k: usize) -> Storage<Norma
 
 // #region 🔖️Contraction
 /// 🫂️ NetworkX `contracted_nodes`: merges `v` into `u` — `v` is removed, its attrs merged onto `u` (`u`'s keys win on conflict, matching `PropertyBag::extend` order), and every edge that touched `v` is redirected to `u`. An edge that becomes a `u-u` self-loop *because of* the merge (i.e. it originally touched `v`) is dropped unless `self_loops` is true; a self-loop that already existed on `u` before the merge is always kept. Always returns a fresh copy — mirrors NetworkX's non-mutating default (`copy=True`).
-pub fn contracted_nodes<P: PortModel, D: Directedness>(g: &Storage<P, D>, u: NodeId, v: NodeId, self_loops: bool) -> Storage<P, D>
+pub async fn contracted_nodes<P: PortModel, D: Directedness>(g: &Storage<P, D>, u: NodeId, v: NodeId, self_loops: bool) -> Storage<P, D>
 where
     P::Endpoint: From<NodeId>,
 {
@@ -420,7 +420,7 @@ where
 }
 
 /// 🔗️ NetworkX `contracted_edge`: contracts the two endpoints of `edge`; `GraphError::EdgeNotFound` if it doesn't exist.
-pub fn contracted_edge<P: PortModel, D: Directedness>(g: &Storage<P, D>, edge: EdgeId, self_loops: bool) -> Result<Storage<P, D>, GraphError>
+pub async fn contracted_edge<P: PortModel, D: Directedness>(g: &Storage<P, D>, edge: EdgeId, self_loops: bool) -> Result<Storage<P, D>, GraphError>
 where
     P::Endpoint: From<NodeId>,
 {
@@ -431,7 +431,7 @@ where
 }
 
 /// 🧱️ NetworkX `quotient_graph`: one node per partition block, edge between (or, thoroughly, within — see below) blocks iff some original edge crosses there. Choice: an edge entirely inside one block produces a self-loop on that block's node, mirroring NetworkX's default `quotient_graph` relation (`∃ u∈B, v∈C : u~v` in `g`, which includes `B==C`) rather than silently dropping intra-block structure. Returns the quotient graph (always `Normal`, since blocks have no port structure) plus the original-node→block-node map.
-pub fn quotient_graph<P: PortModel, D: Directedness>(g: &Storage<P, D>, partition: &[Vec<NodeId>]) -> (Storage<Normal, D>, BTreeMap<NodeId, NodeId>) {
+pub async fn quotient_graph<P: PortModel, D: Directedness>(g: &Storage<P, D>, partition: &[Vec<NodeId>]) -> (Storage<Normal, D>, BTreeMap<NodeId, NodeId>) {
     let mut dst: Storage<Normal, D> = Storage::new();
     let mut block_of: BTreeMap<NodeId, NodeId> = BTreeMap::new();
     for block in partition {
@@ -450,7 +450,7 @@ pub fn quotient_graph<P: PortModel, D: Directedness>(g: &Storage<P, D>, partitio
 
 // #region 🔖️LineGraph
 /// 🪢️ NetworkX `line_graph`: one node per edge of `g`. Undirected `g`: two line-graph nodes connect iff their original edges share an endpoint. Directed `g`: connects `e1 -> e2` iff `e1`'s target is `e2`'s source (NetworkX's directed line graph). The result stays `Storage<Normal, D>` — same directedness as the input — branching internally on `D::DIRECTED` rather than hardcoding `Undirected`.
-pub fn line_graph<D: Directedness>(g: &Storage<Normal, D>) -> (Storage<Normal, D>, BTreeMap<EdgeId, NodeId>) {
+pub async fn line_graph<D: Directedness>(g: &Storage<Normal, D>) -> (Storage<Normal, D>, BTreeMap<EdgeId, NodeId>) {
     let mut dst: Storage<Normal, D> = Storage::new();
     let mut node_of_edge: BTreeMap<EdgeId, NodeId> = BTreeMap::new();
     let edges: Vec<_> = g.edges().collect();
@@ -481,7 +481,7 @@ pub fn line_graph<D: Directedness>(g: &Storage<Normal, D>) -> (Storage<Normal, D
 
 // #region 🔖️Mycielski
 /// 🕸️ Mycielski construction: for every node `v`, adds a shadow node `v'`; for every edge `u-v`, adds `u-v'` and `v-u'` (alongside the original `u-v`); adds one apex node `z` connected to every shadow node. Self-loops in `g` are skipped for shadow wiring (undefined for this construction) but their original endpoint is still present as a node.
-pub fn mycielskian<D: Directedness>(g: &Storage<Normal, D>) -> Storage<Normal, D> {
+pub async fn mycielskian<D: Directedness>(g: &Storage<Normal, D>) -> Storage<Normal, D> {
     let mut dst: Storage<Normal, D> = Storage::new();
     let nodes: Vec<NodeId> = g.nodes().collect();
     let mut original_id = BTreeMap::new();
@@ -515,7 +515,7 @@ mod tests {
     use super::*;
     use graph_core::Undirected;
 
-    fn und_edge(a: NodeId, b: NodeId) -> Storage<Normal, Undirected> {
+    async fn und_edge(a: NodeId, b: NodeId) -> Storage<Normal, Undirected> {
         let mut g: Storage<Normal, Undirected> = Storage::new();
         g.add_node_with_id(a, PropertyBag::new());
         g.add_node_with_id(b, PropertyBag::new());
@@ -523,7 +523,7 @@ mod tests {
         g
     }
 
-    fn attrs_of(pairs: &[(&str, &str)]) -> PropertyBag {
+    async fn attrs_of(pairs: &[(&str, &str)]) -> PropertyBag {
         let mut bag = PropertyBag::new();
         for (k, v) in pairs {
             bag.insert(k.to_string(), graph_core::PropertyValue::String(v.to_string()));
@@ -533,7 +533,7 @@ mod tests {
 
     // #subregion SetOperators
     #[test]
-    fn union_of_disjoint_graphs_merges_everything() {
+    async fn union_of_disjoint_graphs_merges_everything() {
         let g = und_edge(0, 1);
         let mut h: Storage<Normal, Undirected> = Storage::new();
         h.add_node_with_id(10, PropertyBag::new());
@@ -548,7 +548,7 @@ mod tests {
     }
 
     #[test]
-    fn union_errors_on_overlapping_node_ids() {
+    async fn union_errors_on_overlapping_node_ids() {
         let g = und_edge(0, 1);
         let h = und_edge(1, 2);
         let err = union(&g, &h).expect_err("shared node id 1 must be rejected");
@@ -556,7 +556,7 @@ mod tests {
     }
 
     #[test]
-    fn compose_lets_h_overwrite_shared_node_and_edge_attrs() {
+    async fn compose_lets_h_overwrite_shared_node_and_edge_attrs() {
         let mut g: Storage<Normal, Undirected> = Storage::new();
         g.add_node_with_id(0, attrs_of(&[("color", "red")]));
         g.add_node_with_id(1, PropertyBag::new());
@@ -576,7 +576,7 @@ mod tests {
     }
 
     #[test]
-    fn disjoint_union_relabels_both_graphs_into_fresh_ids() {
+    async fn disjoint_union_relabels_both_graphs_into_fresh_ids() {
         let g = und_edge(0, 1);
         let h = und_edge(0, 1);
         let merged = disjoint_union(&g, &h);
@@ -585,7 +585,7 @@ mod tests {
     }
 
     #[test]
-    fn intersection_keeps_only_shared_nodes_and_edges() {
+    async fn intersection_keeps_only_shared_nodes_and_edges() {
         let mut g: Storage<Normal, Undirected> = Storage::new();
         for id in [0, 1, 2] {
             g.add_node_with_id(id, PropertyBag::new());
@@ -606,7 +606,7 @@ mod tests {
     }
 
     #[test]
-    fn difference_keeps_gs_nodes_and_only_gs_own_edges() {
+    async fn difference_keeps_gs_nodes_and_only_gs_own_edges() {
         let mut g: Storage<Normal, Undirected> = Storage::new();
         for id in [0, 1, 2] {
             g.add_node_with_id(id, PropertyBag::new());
@@ -628,7 +628,7 @@ mod tests {
     }
 
     #[test]
-    fn symmetric_difference_keeps_edges_unique_to_either_side() {
+    async fn symmetric_difference_keeps_edges_unique_to_either_side() {
         let g = und_edge(0, 1);
         let mut h: Storage<Normal, Undirected> = Storage::new();
         h.add_node_with_id(0, PropertyBag::new());
@@ -647,7 +647,7 @@ mod tests {
 
     // #subregion Complement
     #[test]
-    fn complement_of_a_path_matches_a_hand_count() {
+    async fn complement_of_a_path_matches_a_hand_count() {
         // 🔺️ Path 0-1-2 (undirected, 3 nodes, 2 edges) has C(3,2)-2 = 1 missing pair: 0-2.
         let mut g: Storage<Normal, Undirected> = Storage::new();
         for id in [0, 1, 2] {
@@ -663,7 +663,7 @@ mod tests {
     }
 
     #[test]
-    fn reverse_round_trips_the_edge_set() {
+    async fn reverse_round_trips_the_edge_set() {
         let mut g: Storage<Normal, Directed> = Storage::new();
         for id in [0, 1, 2] {
             g.add_node_with_id(id, PropertyBag::new());
@@ -684,7 +684,7 @@ mod tests {
 
     // #subregion Products
     #[test]
-    fn cartesian_product_of_two_2node_paths_is_a_4cycle() {
+    async fn cartesian_product_of_two_2node_paths_is_a_4cycle() {
         let g = und_edge(0, 1);
         let h = und_edge(0, 1);
         let (prod, map) = cartesian_product(&g, &h);
@@ -696,7 +696,7 @@ mod tests {
     }
 
     #[test]
-    fn tensor_product_requires_adjacency_on_both_sides() {
+    async fn tensor_product_requires_adjacency_on_both_sides() {
         let g = und_edge(0, 1);
         let h = und_edge(0, 1);
         let (prod, _map) = tensor_product(&g, &h);
@@ -706,7 +706,7 @@ mod tests {
     }
 
     #[test]
-    fn strong_product_is_the_union_of_cartesian_and_tensor() {
+    async fn strong_product_is_the_union_of_cartesian_and_tensor() {
         let g = und_edge(0, 1);
         let h = und_edge(0, 1);
         let (cart, _) = cartesian_product(&g, &h);
@@ -717,7 +717,7 @@ mod tests {
     }
 
     #[test]
-    fn lexicographic_product_includes_cross_block_edges() {
+    async fn lexicographic_product_includes_cross_block_edges() {
         let g = und_edge(0, 1);
         let h = und_edge(0, 1);
         let (lex, _map) = lexicographic_product(&g, &h);
@@ -729,7 +729,7 @@ mod tests {
 
     // #subregion Power
     #[test]
-    fn power_connects_nodes_within_k_hops() {
+    async fn power_connects_nodes_within_k_hops() {
         let mut g: Storage<Normal, Undirected> = Storage::new();
         for id in [0, 1, 2, 3] {
             g.add_node_with_id(id, PropertyBag::new());
@@ -749,7 +749,7 @@ mod tests {
 
     // #subregion Contraction
     #[test]
-    fn contracted_nodes_merges_v_into_u_and_respects_self_loops_flag() {
+    async fn contracted_nodes_merges_v_into_u_and_respects_self_loops_flag() {
         let mut g: Storage<Normal, Undirected> = Storage::new();
         for id in [0, 1, 2] {
             g.add_node_with_id(id, PropertyBag::new());
@@ -769,7 +769,7 @@ mod tests {
     }
 
     #[test]
-    fn contracted_edge_contracts_its_own_endpoints() {
+    async fn contracted_edge_contracts_its_own_endpoints() {
         let mut g: Storage<Normal, Undirected> = Storage::new();
         for id in [0, 1, 2] {
             g.add_node_with_id(id, PropertyBag::new());
@@ -785,7 +785,7 @@ mod tests {
     }
 
     #[test]
-    fn quotient_graph_connects_blocks_that_have_a_crossing_edge() {
+    async fn quotient_graph_connects_blocks_that_have_a_crossing_edge() {
         let mut g: Storage<Normal, Undirected> = Storage::new();
         for id in [0, 1, 2, 3] {
             g.add_node_with_id(id, PropertyBag::new());
@@ -803,7 +803,7 @@ mod tests {
 
     // #subregion LineGraph
     #[test]
-    fn line_graph_of_a_triangle_is_itself_a_triangle() {
+    async fn line_graph_of_a_triangle_is_itself_a_triangle() {
         let mut g: Storage<Normal, Undirected> = Storage::new();
         for id in [0, 1, 2] {
             g.add_node_with_id(id, PropertyBag::new());
@@ -823,7 +823,7 @@ mod tests {
 
     // #subregion Mycielski
     #[test]
-    fn mycielskian_of_a_single_edge_is_the_5cycle() {
+    async fn mycielskian_of_a_single_edge_is_the_5cycle() {
         let g = und_edge(0, 1);
         let myc = mycielskian(&g);
         assert_eq!(myc.node_count(), 5);

@@ -12,7 +12,7 @@ pub struct SetActivePanelTab {
     pub tab_id: String,
 }
 
-pub fn handle(payload: &SetActivePanelTab, _doc: &ArtifactView<'_, WorkflowSnapshot>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
+pub async fn handle(payload: &SetActivePanelTab, _doc: &ArtifactView<'_, WorkflowSnapshot>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
     Ok(Emit::config(vec![SpaceConfigMutation::SetActivePanelTab { tab_id: payload.tab_id.clone() }]))
 }
 
@@ -22,7 +22,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn space_command_op_text_round_trips_every_variant() {
+    async fn space_command_op_text_round_trips_every_variant() {
         use crate::engine::space::SpaceCommand;
         store::os_store::test_support::assert_op_line_round_trip(&SpaceCommand::SetActivePanelTab(SetActivePanelTab { tab_id: "s-play-catalogue".into() }));
         store::os_store::test_support::assert_op_line_round_trip(&SpaceCommand::GoHome(crate::engine::space::commands::go_home::GoHome {}));
@@ -34,7 +34,7 @@ mod tests {
     /// breadcrumb purely through this command, then asserts the registry, `workflow_palette()`, and
     /// `build_catalogue_tree` all pick it up.
     #[test]
-    fn set_app_registrations_command_registers_app_and_surfaces_empty_document_apps_in_catalogue() {
+    async fn set_app_registrations_command_registers_app_and_surfaces_empty_document_apps_in_catalogue() {
         use crate::engine::space::testkit::studio_emit;
         use crate::engine::space::SpaceCommand;
         use semio_framework_os::{empty_workflow_snapshot, os_app_registration, workflow_palette, ArtifactPresentation, MediaClass, MediaForm, MediaType};

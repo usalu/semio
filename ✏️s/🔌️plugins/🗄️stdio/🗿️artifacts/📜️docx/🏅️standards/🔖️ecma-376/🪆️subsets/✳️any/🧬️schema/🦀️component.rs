@@ -25,24 +25,24 @@ pub struct DocxArtifact {
 
 //#region Conversions
 impl Default for DocxArtifact {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self::from_snapshot(DocxSnapshot::default())
     }
 }
 
 impl DocxArtifact {
     /// 📸️ Persisted subset.
-    pub fn to_snapshot(&self) -> DocxSnapshot {
+    pub async fn to_snapshot(&self) -> DocxSnapshot {
         DocxSnapshot { schema: self.schema.clone(), opc: self.opc.clone(), document: self.document.clone() }
     }
 
     /// 🧬️ Builds a full artifact from a snapshot.
-    pub fn from_snapshot(snapshot: DocxSnapshot) -> Self {
+    pub async fn from_snapshot(snapshot: DocxSnapshot) -> Self {
         Self { schema: snapshot.schema, opc: snapshot.opc, document: snapshot.document }
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
-    pub fn set_snapshot(&mut self, snapshot: DocxSnapshot) {
+    pub async fn set_snapshot(&mut self, snapshot: DocxSnapshot) {
         self.schema = snapshot.schema;
         self.opc = snapshot.opc;
         self.document = snapshot.document;
@@ -52,7 +52,7 @@ impl DocxArtifact {
 
 //#region Descriptor
 /// 🧬️ Descriptor for `s.stdio.docx`.
-pub fn docx_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
+pub async fn docx_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
     schema::ArtifactSchemaDescriptor {
         id: "s.stdio.docx",
         artifact: schema::FacetLeaves {
@@ -104,27 +104,27 @@ pub mod derived_construction {
         type Snapshot = DocxSnapshot;
         type Mutation = DocxMutation;
         type Diff = DocxDiff;
-        fn empty() -> Self {
+        async fn empty() -> Self {
             Self { snapshot: DocxSnapshot::default(), diagnostics: Vec::new() }
         }
-        fn from_snapshot(snapshot: Self::Snapshot) -> Self {
+        async fn from_snapshot(snapshot: Self::Snapshot) -> Self {
             Self { snapshot, diagnostics: Vec::new() }
         }
-        fn from_text(text: &str) -> Result<Self, store::TextError> {
+        async fn from_text(text: &str) -> Result<Self, store::TextError> {
             Ok(Self::from_snapshot(<DocxSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
-        fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
+        async fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
             Ok(Self::from_snapshot(<DocxSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
         }
-        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
+        async fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let diff = crate::artifacts::docx::schema::mutations::apply_docx_mutation(&mut self.snapshot, &mutation);
             (self, diff)
         }
-        fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
+        async fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
             self.snapshot = <DocxDiff as protocol::MutationDiff<DocxSnapshot>>::apply(&diff, &self.snapshot)?;
             Ok(self)
         }
-        fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
+        async fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
             if self.diagnostics.is_empty() {
                 Ok(self.snapshot)
             } else {
@@ -142,31 +142,31 @@ pub mod derived_construction {
     /// the first time a paragraph is added to an otherwise-empty builder.
     impl DocxBuilderConstruction {
         /// ➕️ Appends a paragraph.
-        pub fn add_paragraph(mut self, paragraph: DocxParagraph) -> Self {
+        pub async fn add_paragraph(mut self, paragraph: DocxParagraph) -> Self {
             self.snapshot.document.body.push(DocxBlock::Paragraph(paragraph));
             self.snapshot = crate::artifacts::docx::standards::v_ecma_376::subsets::any::io::export::serializers::build_minimal_docx(self.snapshot.document);
             self
         }
 
         /// ➕️ Appends a single-run plain-text paragraph.
-        pub fn add_text_paragraph(self, text: impl Into<String>) -> Self {
+        pub async fn add_text_paragraph(self, text: impl Into<String>) -> Self {
             self.add_paragraph(DocxParagraph::text(text.into()))
         }
 
         /// ➕️ Appends a paragraph made of the given runs (basic bold/italic/underline formatting).
-        pub fn add_runs(self, runs: Vec<DocxRun>) -> Self {
+        pub async fn add_runs(self, runs: Vec<DocxRun>) -> Self {
             self.add_paragraph(DocxParagraph { runs, style: None, extra_paragraph_properties: Vec::new() })
         }
 
         /// ➕️ Appends a table.
-        pub fn add_table(mut self, table: DocxTable) -> Self {
+        pub async fn add_table(mut self, table: DocxTable) -> Self {
             self.snapshot.document.body.push(DocxBlock::Table(table));
             self.snapshot = crate::artifacts::docx::standards::v_ecma_376::subsets::any::io::export::serializers::build_minimal_docx(self.snapshot.document);
             self
         }
 
         /// ➕️ Appends (or replaces, by `id`) a named style.
-        pub fn add_style(mut self, style: DocxStyle) -> Self {
+        pub async fn add_style(mut self, style: DocxStyle) -> Self {
             if let Some(existing) = self.snapshot.document.styles.iter_mut().find(|s| s.id == style.id) {
                 *existing = style;
             } else {
@@ -202,7 +202,7 @@ pub mod derived_analysis {
         type Parts = DocxParts;
         const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.docx", standard: StandardId("ecma-376"), subset: SubsetId("*") };
 
-        fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
+        async fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
             // 🕵️ Real sniff: OPC-shaped bytes (real `[Content_Types].xml`) whose root officeDocument
             // relationship resolves under `word/` — disambiguates from xlsx/pptx, which share the
             // same zip magic and OPC shape but resolve under `xl/`/`ppt/` instead.
@@ -212,7 +212,7 @@ pub mod derived_analysis {
             }
         }
 
-        fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
+        async fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
             let mut parts = DocxParts::default();
             let mut diagnostics = Vec::new();
             let mut confidence = IoConfidence::High;
@@ -243,7 +243,7 @@ pub use derived_analysis::*;
 //#endregion 🧐️DerivedAnalysis
 
 //#region 🔖️DocumentHelpers
-pub fn empty_docx_snapshot() -> DocxSnapshot {
+pub async fn empty_docx_snapshot() -> DocxSnapshot {
     DocxSnapshot::default()
 }
 
@@ -255,7 +255,7 @@ pub fn empty_docx_snapshot() -> DocxSnapshot {
 /// literally this snapshot's `print_dsl`/`encode_pack` output, asserted equal by
 /// `fixture_honesty_law` below) — same shape `📷️png/…/⚙️engine/🦀️component.rs`'s own
 /// `demo_png_snapshot()` establishes.
-pub fn demo_docx_snapshot() -> DocxSnapshot {
+pub async fn demo_docx_snapshot() -> DocxSnapshot {
     use crate::artifacts::docx::schema::snapshot::{DocxBlock, DocxParagraph, DocxRun, DocxStyle, DocxTable, DocxTableCell, DocxTableRow};
     let document = DocxDocument {
         body: vec![
@@ -305,7 +305,7 @@ mod tests {
     use crate::artifacts::xml::schema::snapshot::{xml_document_to_text, XmlAttr, XmlNode};
     use crate::artifacts::zip::opc::{OpcPackage, RELS_CONTENT_TYPE};
 
-    fn sample_document() -> DocxDocument {
+    async fn sample_document() -> DocxDocument {
         DocxDocument {
             body: vec![
                 DocxBlock::Paragraph(DocxParagraph {
@@ -319,7 +319,7 @@ mod tests {
         }
     }
 
-    fn sample_document_with_table_and_styles() -> DocxDocument {
+    async fn sample_document_with_table_and_styles() -> DocxDocument {
         DocxDocument {
             body: vec![
                 DocxBlock::Paragraph(DocxParagraph { style: Some("Heading1".into()), ..DocxParagraph::text("Title") }),
@@ -336,7 +336,7 @@ mod tests {
     }
 
     #[test]
-    fn builder_produces_minimal_valid_package_that_decodes_back() {
+    async fn builder_produces_minimal_valid_package_that_decodes_back() {
         let snap = build_minimal_docx(sample_document());
         let bytes = encode_docx(&snap).expect("encode minimal package");
         assert!(crate::artifacts::zip::opc::sniff_opc_bytes(&bytes));
@@ -346,7 +346,7 @@ mod tests {
     }
 
     #[test]
-    fn tables_and_styles_round_trip() {
+    async fn tables_and_styles_round_trip() {
         let snap = build_minimal_docx(sample_document_with_table_and_styles());
         let bytes = encode_docx(&snap).expect("encode");
         let decoded = decode_docx(&bytes).expect("decode");
@@ -356,7 +356,7 @@ mod tests {
     }
 
     #[test]
-    fn decode_resolves_real_hand_built_package_with_formatting() {
+    async fn decode_resolves_real_hand_built_package_with_formatting() {
         // Hand-built OOXML: correct Content_Types/.rels/part structure, not just "a zip with xml".
         let mut opc = OpcPackage::empty();
         opc.content_types.set_default("rels", RELS_CONTENT_TYPE);
@@ -388,7 +388,7 @@ mod tests {
     }
 
     #[test]
-    fn unmodeled_parts_survive_decode_encode_verbatim() {
+    async fn unmodeled_parts_survive_decode_encode_verbatim() {
         const MAIN_DOCUMENT_PART: &str = "word/document.xml";
         const MAIN_DOCUMENT_CONTENT_TYPE: &str = "application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml";
         const REL_TYPE_OFFICE_DOCUMENT: &str = "http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument";
@@ -409,7 +409,7 @@ mod tests {
     }
 
     #[test]
-    fn unmodeled_run_properties_survive_round_trip() {
+    async fn unmodeled_run_properties_survive_round_trip() {
         let mut run = DocxRun { text: "colored".into(), ..Default::default() };
         run.extra_run_properties.push(XmlNode::Element { name: "w:color".into(), attrs: vec![XmlAttr { name: "w:val".into(), value: "FF0000".into() }], children: vec![] });
         let doc = DocxDocument { body: vec![DocxBlock::Paragraph(DocxParagraph { runs: vec![run], style: None, extra_paragraph_properties: Vec::new() })], styles: Vec::new() };
@@ -420,7 +420,7 @@ mod tests {
     }
 
     #[test]
-    fn decode_rejects_missing_main_document_relationship() {
+    async fn decode_rejects_missing_main_document_relationship() {
         let mut opc = OpcPackage::empty();
         opc.content_types.set_default("rels", RELS_CONTENT_TYPE);
         let bytes = crate::artifacts::zip::opc::encode_opc(&opc).expect("encode");
@@ -429,7 +429,7 @@ mod tests {
     }
 
     #[test]
-    fn analyzer_builder_round_trip() {
+    async fn analyzer_builder_round_trip() {
         let original = build_minimal_docx(sample_document_with_table_and_styles());
         // Analyzer: real decode of the encoded bytes.
         let bytes = encode_docx(&original).expect("encode");
@@ -459,7 +459,7 @@ mod tests {
         /// `recognize`/`walk_protocol` laws below (a parse failure here fails fast with a clearer
         /// message).
         #[test]
-        fn committed_facet_files_parse() {
+        async fn committed_facet_files_parse() {
             for (label, text) in [("snapshot grammar", snapshot::text::COMPONENT_GRAMMAR_SEMIO), ("mutations grammar", mutations::text::COMPONENT_GRAMMAR_SEMIO), ("diff grammar", diff::text::COMPONENT_GRAMMAR_SEMIO)] {
                 let grammar = dsl::parse_grammar(text).unwrap_or_else(|e| panic!("{label}: parse_grammar failed: {e:?}"));
                 assert_eq!(grammar.dialect, dsl::SemioDialect::Grammar, "{label}: expected grammar dialect");
@@ -482,7 +482,7 @@ mod tests {
         /// direct proof the grammar matches this artifact's own real per-part XML bytes, not an
         /// invented approximation.
         #[test]
-        fn grammar_conformance_law() {
+        async fn grammar_conformance_law() {
             let grammar = dsl::parse_grammar(snapshot::text::COMPONENT_GRAMMAR_SEMIO).expect("parse snapshot grammar");
             let recognizer = dsl::Recognizer::compile(&grammar);
 
@@ -506,7 +506,7 @@ mod tests {
         /// ✅️ `ops_grammar_conformance_law`: the mutations grammar recognizes real `print_op`
         /// output for every `DocxMutation` variant (`mutations::demo_mutation_cases()`).
         #[test]
-        fn ops_grammar_conformance_law() {
+        async fn ops_grammar_conformance_law() {
             let grammar = dsl::parse_grammar(mutations::text::COMPONENT_GRAMMAR_SEMIO).expect("parse mutations grammar");
             let recognizer = dsl::Recognizer::compile(&grammar);
             for mutation in mutations::demo_mutation_cases() {
@@ -518,7 +518,7 @@ mod tests {
         /// ✅️ `diff_grammar_conformance_law`: the diff grammar recognizes real `print_diff` output
         /// for every representative `DocxDiff` (`diff::demo_diff_cases()`).
         #[test]
-        fn diff_grammar_conformance_law() {
+        async fn diff_grammar_conformance_law() {
             let grammar = dsl::parse_grammar(diff::text::COMPONENT_GRAMMAR_SEMIO).expect("parse diff grammar");
             let recognizer = dsl::Recognizer::compile(&grammar);
             for d in diff::demo_diff_cases() {
@@ -537,7 +537,7 @@ mod tests {
         /// instead, same as zip's own `protocol_walk_law` does; the op/diff protocols have no such
         /// exception and must consume every byte.
         #[test]
-        fn protocol_walk_law() {
+        async fn protocol_walk_law() {
             let pack_spec = dsl::parse_protocol(snapshot::binary::COMPONENT_PROTOCOL_SEMIO).expect("parse snapshot protocol");
             let demo = demo_docx_snapshot();
             let packed = store::ArtifactPack::encode_pack(&demo);
@@ -566,7 +566,7 @@ mod tests {
         /// fixtures can never silently drift back to a fake `"68656c6c6f"`-style placeholder again
         /// (see this ticket's own recon note on the pre-FG-wave state of these two files).
         #[test]
-        fn fixture_honesty_law() {
+        async fn fixture_honesty_law() {
             const FIXTURE_DSL: &str = include_str!("../📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio");
             const FIXTURE_PACK: &[u8] = include_bytes!("../📚️examples/🎬️demo/🖼️assets/🎒️example.pack.semio");
 
@@ -586,7 +586,7 @@ mod tests {
 
         #[test]
         #[ignore]
-        fn zzz_write_native_docx_fixture() {
+        async fn zzz_write_native_docx_fixture() {
             let demo = demo_docx_snapshot();
             let native = encode_docx(&demo).expect("encode");
             let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/📜️example.docx");

@@ -2,6 +2,6 @@ use crate::artifacts::deflate::schema::mutations::{apply_deflate_mutation, Defla
 use crate::artifacts::deflate::DeflateSnapshot;
 
 /// ▶️ Applies a set-snapshot mutation.
-pub fn apply(projection: &mut DeflateSnapshot, mutation: &DeflateMutation) {
+pub async fn apply(projection: &mut DeflateSnapshot, mutation: &DeflateMutation) {
     apply_deflate_mutation(projection, mutation);
 }

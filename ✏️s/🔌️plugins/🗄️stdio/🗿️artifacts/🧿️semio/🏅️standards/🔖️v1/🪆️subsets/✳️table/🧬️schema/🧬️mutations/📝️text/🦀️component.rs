@@ -24,16 +24,16 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 //#endregion 📖️SemioGrammar
 
 //#region 🔖️Primitives
-fn parse_usize(s: &str) -> Result<usize, String> {
+async fn parse_usize(s: &str) -> Result<usize, String> {
     s.parse().map_err(|e: std::num::ParseIntError| e.to_string())
 }
-fn enc_opt_usize(v: Option<usize>) -> String {
+async fn enc_opt_usize(v: Option<usize>) -> String {
     match v {
         Some(n) => n.to_string(),
         None => String::new(),
     }
 }
-fn dec_opt_usize(s: &str) -> Result<Option<usize>, String> {
+async fn dec_opt_usize(s: &str) -> Result<Option<usize>, String> {
     if s.is_empty() {
         Ok(None)
     } else {
@@ -43,7 +43,7 @@ fn dec_opt_usize(s: &str) -> Result<Option<usize>, String> {
 //#endregion 🔖️Primitives
 
 //#region 🔖️OpText
-fn print_table_mutation(m: &SemioTableMutation) -> String {
+async fn print_table_mutation(m: &SemioTableMutation) -> String {
     match m {
         SemioTableMutation::CreateColumn(p) => format!("createColumn:{},{},{}", enc_str(&p.name), enc_cell_kind(p.kind), enc_opt_usize(p.index)),
         SemioTableMutation::DeleteColumn(p) => format!("deleteColumn:{}", enc_str(&p.name)),
@@ -56,7 +56,7 @@ fn print_table_mutation(m: &SemioTableMutation) -> String {
     }
 }
 
-fn parse_table_mutation(line: &str) -> Result<SemioTableMutation, String> {
+async fn parse_table_mutation(line: &str) -> Result<SemioTableMutation, String> {
     let (tag, rest) = line.split_once(':').ok_or_else(|| format!("table mutation: missing ':' in {line:?}"))?;
     match tag {
         "createColumn" => {
@@ -95,10 +95,10 @@ fn parse_table_mutation(line: &str) -> Result<SemioTableMutation, String> {
 }
 
 impl protocol::OpText for SemioTableMutation {
-    fn print_op(&self) -> String {
+    async fn print_op(&self) -> String {
         print_table_mutation(self)
     }
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
+    async fn parse_op(line: &str) -> Result<Self, store::TextError> {
         parse_table_mutation(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
 }
@@ -108,7 +108,7 @@ impl protocol::OpText for SemioTableMutation {
 /// 🌱 One representative value per variant — single source of truth for `ops_grammar_conformance_
 /// law`/`protocol_walk_law` in `🚪️io/🦀️component.rs` and this file's own round-trip test.
 #[cfg(test)]
-pub(crate) fn demo_mutation_cases() -> Vec<SemioTableMutation> {
+pub(crate) async fn demo_mutation_cases() -> Vec<SemioTableMutation> {
     use crate::artifacts::semio::standards::v1::subsets::table::schema::snapshot::{SemioTableCellKind, SemioTableRow};
     use crate::artifacts::semio::standards::v1::subsets::value::schema::snapshot::SemioValue;
     vec![
@@ -132,7 +132,7 @@ mod tests {
     use protocol::OpText;
 
     #[test]
-    fn op_text_roundtrip_law() {
+    async fn op_text_roundtrip_law() {
         for mutation in demo_mutation_cases() {
             let printed = mutation.print_op();
             assert!(!printed.contains('\n'), "print_op must be one line, got {printed:?}");

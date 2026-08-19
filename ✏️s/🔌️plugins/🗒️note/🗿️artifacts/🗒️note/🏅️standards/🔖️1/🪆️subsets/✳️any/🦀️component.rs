@@ -9,17 +9,17 @@ use crate::viewer::note as viewer;
 use semio_framework_plugin::app::declarations::{editor_surface, viewer_surface, SchemaDeclaration, SubsetDeclaration};
 use semio_framework_plugin::ExampleSource;
 
-fn examples() -> &'static [ExampleSource] {
+async fn examples() -> &'static [ExampleSource] {
     static EXAMPLES: std::sync::OnceLock<Vec<ExampleSource>> = std::sync::OnceLock::new();
     EXAMPLES.get_or_init(|| vec![crate::artifacts::note::standards::v1::subsets::any::examples::demo::source()]).as_slice()
 }
 
-fn inference_descriptors() -> &'static [::semio_framework_schema::ArtifactInferenceDescriptor] {
+async fn inference_descriptors() -> &'static [::semio_framework_schema::ArtifactInferenceDescriptor] {
     static DESCRIPTORS: std::sync::OnceLock<Vec<::semio_framework_schema::ArtifactInferenceDescriptor>> = std::sync::OnceLock::new();
     DESCRIPTORS.get_or_init(|| vec![schema::inferences::note_artifact_inference_descriptor()]).as_slice()
 }
 
-pub fn subset() -> SubsetDeclaration {
+pub async fn subset() -> SubsetDeclaration {
     SubsetDeclaration {
         dialect: crate::artifacts::note::NOTE_DIALECT,
         schema: SchemaDeclaration { descriptor: schema::note_artifact_schema_descriptor(), inferences: inference_descriptors(), inference_services: Vec::new() },

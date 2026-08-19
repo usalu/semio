@@ -16,22 +16,22 @@ pub struct ChangeUri {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn change_uri(new_uri: String) -> WriterMutation {
+pub async fn change_uri(new_uri: String) -> WriterMutation {
     WriterMutation::ChangeUri(ChangeUri { new_uri })
 }
 
 impl MutationKind<WriterSnapshot, WriterMutation> for ChangeUri {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "change", entity: "uri", kind: "change-uri", record: "ChangedUri" };
 
-    fn diff(&self, base: &WriterSnapshot) -> protocol::MutationOutcome<WriterDiff> {
+    async fn diff(&self, base: &WriterSnapshot) -> protocol::MutationOutcome<WriterDiff> {
         super::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &WriterSnapshot) -> Vec<WriterMutation> {
+    async fn inverse(&self, base: &WriterSnapshot) -> Vec<WriterMutation> {
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         format!("Change document URI to \"{}\"", self.new_uri)
     }
 }

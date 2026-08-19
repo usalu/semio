@@ -24,7 +24,7 @@ pub enum JfifDensityUnits {
 }
 
 impl JfifDensityUnits {
-    pub fn from_u8(v: u8) -> Result<Self, String> {
+    pub async fn from_u8(v: u8) -> Result<Self, String> {
         match v {
             0 => Ok(JfifDensityUnits::Aspect),
             1 => Ok(JfifDensityUnits::PixelsPerInch),
@@ -32,7 +32,7 @@ impl JfifDensityUnits {
             _ => Err(format!("jfif: unsupported density unit {v}")),
         }
     }
-    pub fn to_u8(self) -> u8 {
+    pub async fn to_u8(self) -> u8 {
         match self {
             JfifDensityUnits::Aspect => 0,
             JfifDensityUnits::PixelsPerInch => 1,
@@ -107,10 +107,10 @@ pub struct JpgQuantTable {
 /// (`## Rules`: no external libraries for runtime purposes).
 pub mod quant_values {
     use serde::{Deserialize, Deserializer, Serialize, Serializer};
-    pub fn serialize<S: Serializer>(v: &[u16; 64], s: S) -> Result<S::Ok, S::Error> {
+    pub async fn serialize<S: Serializer>(v: &[u16; 64], s: S) -> Result<S::Ok, S::Error> {
         v.as_slice().serialize(s)
     }
-    pub fn deserialize<'de, D: Deserializer<'de>>(d: D) -> Result<[u16; 64], D::Error> {
+    pub async fn deserialize<'de, D: Deserializer<'de>>(d: D) -> Result<[u16; 64], D::Error> {
         let v = <Vec<u16>>::deserialize(d)?;
         <[u16; 64]>::try_from(v).map_err(|v: Vec<u16>| serde::de::Error::custom(format!("expected 64 values, got {}", v.len())))
     }
@@ -126,14 +126,14 @@ pub enum JpgHuffmanClass {
 }
 
 impl JpgHuffmanClass {
-    pub fn from_u8(v: u8) -> Result<Self, String> {
+    pub async fn from_u8(v: u8) -> Result<Self, String> {
         match v {
             0 => Ok(JpgHuffmanClass::Dc),
             1 => Ok(JpgHuffmanClass::Ac),
             _ => Err(format!("jpg: unsupported huffman class {v}")),
         }
     }
-    pub fn to_u8(self) -> u8 {
+    pub async fn to_u8(self) -> u8 {
         match self {
             JpgHuffmanClass::Dc => 0,
             JpgHuffmanClass::Ac => 1,
@@ -256,7 +256,7 @@ pub struct JpgSnapshot {
 }
 
 impl Default for JpgSnapshot {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self {
             schema: STDIO_JPG_DOCUMENT_SCHEMA.into(),
             width: 0,
@@ -283,11 +283,11 @@ impl Default for JpgSnapshot {
 //#region HandcraftedArtifactCodecs
 impl store::ArtifactDsl for JpgSnapshot {
     const EXTENSION: &'static str = "jpg";
-    fn envelope_id() -> &'static str {
+    async fn envelope_id() -> &'static str {
         "stdio.jpg"
     }
 
-    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+    async fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
         let body = match store::semio_format::split_text_preamble(text) {
             Ok((_, rest)) => rest,
             Err(_) => text,
@@ -306,7 +306,7 @@ impl store::ArtifactDsl for JpgSnapshot {
         crate::artifacts::jpg::engine::decode_jpg(&bytes).map_err(|e| store::TextError::new(e.to_string(), dsl::TextSpan::at(1, 1)))
     }
 
-    fn print_dsl(&self) -> String {
+    async fn print_dsl(&self) -> String {
         let bytes = crate::artifacts::jpg::engine::encode_jpg(self).unwrap_or_default();
         let body: String = bytes.iter().map(|b| format!("{b:02x}")).collect();
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
@@ -315,14 +315,14 @@ impl store::ArtifactDsl for JpgSnapshot {
 }
 
 impl store::ArtifactPack for JpgSnapshot {
-    fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
+    async fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
         let raw = crate::artifacts::jpg::engine::encode_jpg(self).map_err(|e| store::PackError::Schema(e.to_string()))?;
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &raw))
     }
 
-    fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
+    async fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
         if envelope.envelope_id() != <Self as store::ArtifactDsl>::envelope_id() {
             return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.envelope_id())));

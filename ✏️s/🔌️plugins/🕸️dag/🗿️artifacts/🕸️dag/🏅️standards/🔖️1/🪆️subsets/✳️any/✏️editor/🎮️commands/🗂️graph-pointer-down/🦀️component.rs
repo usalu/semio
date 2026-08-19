@@ -15,6 +15,6 @@ pub struct GraphPointerDown {}
 /// pointer-down on empty canvas now dispatches the framework's own `clearSelection` action instead;
 /// this row survives as a genuine no-op purely for wire/dispatch compatibility with the surface's
 /// existing pointer-down event, mirroring `procedural3d`'s identical `graph-pointer-down` stub.
-pub fn handle(_payload: &GraphPointerDown, _doc: &ArtifactView<'_, DagSnapshot>, _cfg: &ConfigView<'_, DagConfig>) -> Result<Emit<DagMutation, DagConfigMutation>, Fault> {
+pub async fn handle(_payload: &GraphPointerDown, _doc: &ArtifactView<'_, DagSnapshot>, _cfg: &ConfigView<'_, DagConfig>) -> Result<Emit<DagMutation, DagConfigMutation>, Fault> {
     Ok(Emit::default())
 }

@@ -16,23 +16,23 @@ pub struct CreateRigExtrinsic {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn create_rig_extrinsic(extrinsic: RigExtrinsic) -> RemodelMutation {
+pub async fn create_rig_extrinsic(extrinsic: RigExtrinsic) -> RemodelMutation {
     RemodelMutation::CreateRigExtrinsic(CreateRigExtrinsic { extrinsic })
 }
 
 impl protocol::MutationKind<RemodelSnapshot, RemodelMutation> for CreateRigExtrinsic {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "create", entity: "rig-extrinsic", kind: "create-rig-extrinsic", record: "CreatedRigExtrinsic" };
 
-    fn diff(&self, base: &RemodelSnapshot) -> protocol::MutationOutcome<RemodelDiff> {
+    async fn diff(&self, base: &RemodelSnapshot) -> protocol::MutationOutcome<RemodelDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &RemodelSnapshot) -> Vec<RemodelMutation> {
+    async fn inverse(&self, base: &RemodelSnapshot) -> Vec<RemodelMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         format!("Create rig extrinsic \"{}\"", self.extrinsic.camera_id)
     }
-    fn target(&self) -> Vec<String> {
+    async fn target(&self) -> Vec<String> {
         vec![self.extrinsic.camera_id.clone()]
     }
 }

@@ -23,7 +23,7 @@ const FROM_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard
 const INTO_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.svg", standard: StandardId("1.1"), subset: SubsetId::ANY };
 
 //#region 🔖️PathBuild
-fn segments_to_commands(segs: &[PathSegment]) -> Vec<PathCommand> {
+async fn segments_to_commands(segs: &[PathSegment]) -> Vec<PathCommand> {
     segs.iter()
         .map(|s| match *s {
             PathSegment::MoveTo { to } => PathCommand::MoveTo { x: to.x, y: to.y, relative: false },
@@ -38,7 +38,7 @@ fn segments_to_commands(segs: &[PathSegment]) -> Vec<PathCommand> {
 //#endregion 🔖️PathBuild
 
 //#region 🔖️TransformCompose
-fn semio_transform_to_matrix(t: &SemioTransform) -> Matrix2D {
+async fn semio_transform_to_matrix(t: &SemioTransform) -> Matrix2D {
     let theta = 2.0 * t.rotation.z.atan2(t.rotation.w);
     let (sin, cos) = theta.sin_cos();
     Matrix2D { a: cos * t.scale.x, b: sin * t.scale.x, c: -sin * t.scale.y, d: cos * t.scale.y, e: t.translation.x, f: t.translation.y }
@@ -46,11 +46,11 @@ fn semio_transform_to_matrix(t: &SemioTransform) -> Matrix2D {
 //#endregion 🔖️TransformCompose
 
 //#region 🔖️Style
-fn color_to_css(c: &SemioRgba) -> String {
+async fn color_to_css(c: &SemioRgba) -> String {
     format!("rgba({},{},{},{})", (c.r * 255.0).round(), (c.g * 255.0).round(), (c.b * 255.0).round(), c.a)
 }
 
-fn style_to_common(style_name: Option<&str>, styles: &[DrawStyle]) -> CommonAttrs {
+async fn style_to_common(style_name: Option<&str>, styles: &[DrawStyle]) -> CommonAttrs {
     let mut common = CommonAttrs::default();
     if let Some(name) = style_name {
         if let Some(s) = styles.iter().find(|s| s.name == name) {
@@ -79,7 +79,7 @@ const IMAGE_DATA_URI_ALPHABET: &[u8] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklm
 
 /// 🔤️ Minimal, dependency-free base64 encoder (mirror of the import leaf's decoder) — same
 /// no-external-libraries rule.
-fn base64_encode(bytes: &[u8]) -> String {
+async fn base64_encode(bytes: &[u8]) -> String {
     let mut out = String::with_capacity((bytes.len() + 2) / 3 * 4);
     for chunk in bytes.chunks(3) {
         let b0 = chunk[0];
@@ -94,7 +94,7 @@ fn base64_encode(bytes: &[u8]) -> String {
     out
 }
 
-fn svg_element_from_draw_node(node: &DrawNode, styles: &[DrawStyle]) -> SvgElement {
+async fn svg_element_from_draw_node(node: &DrawNode, styles: &[DrawStyle]) -> SvgElement {
     match node {
         DrawNode::Path { segments, style } => SvgElement::Path { common: style_to_common(style.as_deref(), styles), d: segments_to_commands(segments) },
         DrawNode::Text { value, at, style } => SvgElement::Text { common: style_to_common(style.as_deref(), styles), x: Some(at.x), y: Some(at.y), children: vec![SvgElement::TextNode(value.clone())] },
@@ -161,7 +161,7 @@ mod tests {
     use crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioPoint2;
     use crate::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::{DrawCanvas, DrawLayer};
 
-    fn sample_drawing() -> SemioDrawingSnapshot {
+    async fn sample_drawing() -> SemioDrawingSnapshot {
         SemioDrawingSnapshot {
             canvas: DrawCanvas { width: 100.0, height: 50.0, background: None },
             styles: vec![DrawStyle { name: "s0".into(), fill: Some(SemioRgba { r: 1.0, g: 0.0, b: 0.0, a: 1.0 }), stroke: None, stroke_width: None, opacity: None }],
@@ -183,7 +183,7 @@ mod tests {
 
     /// 🧪️ Real round trip through svg's own real XML text codec.
     #[test]
-    fn real_text_round_trip_through_svg_codec() {
+    async fn real_text_round_trip_through_svg_codec() {
         let drawing = sample_drawing();
         let svg = semio_framework_plugin::resolve_ready(SemioDrawingToSvg::serialize(&drawing)).expect("serialize");
         let text = <SvgSnapshot as store::ArtifactDsl>::print_dsl(&svg);
@@ -196,7 +196,7 @@ mod tests {
     }
 
     #[test]
-    fn image_node_round_trips_through_data_uri_convention() {
+    async fn image_node_round_trips_through_data_uri_convention() {
         let drawing = sample_drawing();
         let svg = semio_framework_plugin::resolve_ready(SemioDrawingToSvg::serialize(&drawing)).expect("serialize");
         let root = crate::artifacts::svg::schema::snapshot::svg_element_from_xml_node(svg.doc.root.as_ref().unwrap()).expect("typed view");

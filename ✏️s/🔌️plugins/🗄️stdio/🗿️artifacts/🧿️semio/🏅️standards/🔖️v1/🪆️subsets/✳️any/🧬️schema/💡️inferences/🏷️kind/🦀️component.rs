@@ -23,14 +23,14 @@ pub struct SemioKind {
 /// explicit rather than relying on `subset_tag`/`subset_ordinal`'s enum-declaration-order
 /// happening to put `Brep` first.
 impl Default for SemioKind {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self { tag: "brep".into(), ordinal: 0 }
     }
 }
 
 /// 🏷️ Computes [`SemioKind`] via the envelope's own `subset_tag`/`subset_ordinal` dispatch —
 /// pure, total, O(1).
-pub fn compute_semio_kind(snapshot: &SemioSnapshot) -> SemioKind {
+pub async fn compute_semio_kind(snapshot: &SemioSnapshot) -> SemioKind {
     SemioKind { tag: subset_tag(&snapshot.subset).to_string(), ordinal: subset_ordinal(&snapshot.subset) as u32 }
 }
 //#endregion 🔖️Kind
@@ -42,24 +42,24 @@ mod tests {
     use crate::artifacts::semio::standards::v1::subsets::any::schema::snapshot::{SemioSubsetSnapshot, STDIO_SEMIO_DOCUMENT_SCHEMA};
     use crate::artifacts::semio::standards::v1::subsets::image::schema::snapshot::SemioImageSnapshot;
 
-    fn snapshot(subset: SemioSubsetSnapshot) -> SemioSnapshot {
+    async fn snapshot(subset: SemioSubsetSnapshot) -> SemioSnapshot {
         SemioSnapshot { schema: STDIO_SEMIO_DOCUMENT_SCHEMA.into(), subset }
     }
 
     #[test]
-    fn image_dispatches_to_its_own_tag_and_ordinal() {
+    async fn image_dispatches_to_its_own_tag_and_ordinal() {
         let kind = compute_semio_kind(&snapshot(SemioSubsetSnapshot::Image(SemioImageSnapshot::default())));
         assert_eq!(kind, SemioKind { tag: "image".into(), ordinal: 7 });
     }
 
     #[test]
-    fn inference_determinism_law() {
+    async fn inference_determinism_law() {
         let snap = snapshot(SemioSubsetSnapshot::Image(SemioImageSnapshot::default()));
         assert_eq!(compute_semio_kind(&snap), compute_semio_kind(&snap));
     }
 
     #[test]
-    fn inference_default_law() {
+    async fn inference_default_law() {
         assert_eq!(compute_semio_kind(&SemioSnapshot::default()), SemioKind::default());
     }
 }

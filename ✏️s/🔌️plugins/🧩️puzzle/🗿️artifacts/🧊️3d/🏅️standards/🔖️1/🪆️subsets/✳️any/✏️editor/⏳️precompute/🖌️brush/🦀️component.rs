@@ -32,7 +32,7 @@ pub(crate) struct BrushFillVortexTarget {
 //#endregion 🔖️VortexContext
 
 //#region 🔖️Compatibility
-pub(crate) fn puzzle3d_vortex_port_shape(vortex_kind: &str) -> Option<&'static str> {
+pub(crate) async fn puzzle3d_vortex_port_shape(vortex_kind: &str) -> Option<&'static str> {
     if vortex_kind.contains(" circular ") {
         Some("circular")
     } else if vortex_kind.contains(" rectangular ") {
@@ -42,14 +42,14 @@ pub(crate) fn puzzle3d_vortex_port_shape(vortex_kind: &str) -> Option<&'static s
     }
 }
 
-pub(crate) fn puzzle3d_vortex_port_shapes_compatible(source: &str, target: &str) -> bool {
+pub(crate) async fn puzzle3d_vortex_port_shapes_compatible(source: &str, target: &str) -> bool {
     match (puzzle3d_vortex_port_shape(source), puzzle3d_vortex_port_shape(target)) {
         (None, _) | (_, None) => true,
         (Some(a), Some(b)) => a == b,
     }
 }
 
-pub(crate) fn puzzle3d_single_letter_port_family(vortex_kind: &str) -> Option<char> {
+pub(crate) async fn puzzle3d_single_letter_port_family(vortex_kind: &str) -> Option<char> {
     let head = vortex_kind.split('-').next()?;
     if head.len() == 1 {
         let ch = head.chars().next()?;
@@ -60,34 +60,34 @@ pub(crate) fn puzzle3d_single_letter_port_family(vortex_kind: &str) -> Option<ch
     None
 }
 
-pub(crate) fn puzzle3d_single_letter_port_families_compatible(source: &str, target: &str) -> bool {
+pub(crate) async fn puzzle3d_single_letter_port_families_compatible(source: &str, target: &str) -> bool {
     match (puzzle3d_single_letter_port_family(source), puzzle3d_single_letter_port_family(target)) {
         (None, _) | (_, None) => true,
         (Some(a), Some(b)) => a == b,
     }
 }
 
-fn catalog_vortex_by_id<'a>(catalogs: &'a KindCatalogBundle, vortex_kind: &str) -> Option<&'a VortexKindCatalog> {
+async fn catalog_vortex_by_id<'a>(catalogs: &'a KindCatalogBundle, vortex_kind: &str) -> Option<&'a VortexKindCatalog> {
     catalogs.vortices.iter().find(|v| v.id == vortex_kind)
 }
 
-fn catalog_cable_by_id<'a>(catalogs: &'a KindCatalogBundle, cable_kind: &str) -> Option<&'a CableKindCatalog> {
+async fn catalog_cable_by_id<'a>(catalogs: &'a KindCatalogBundle, cable_kind: &str) -> Option<&'a CableKindCatalog> {
     catalogs.cables.iter().find(|w| w.id == cable_kind)
 }
 
-pub(crate) fn resolve_cable_kind_for_vortex(vortex_kind: &str, catalogs: &KindCatalogBundle) -> String {
+pub(crate) async fn resolve_cable_kind_for_vortex(vortex_kind: &str, catalogs: &KindCatalogBundle) -> String {
     catalog_vortex_by_id(catalogs, vortex_kind).and_then(|v| v.default_cable_kind.as_ref()).map(|s| s.trim().to_string()).filter(|s| !s.is_empty()).unwrap_or_else(|| DEFAULT_CABLE_KIND_ID.to_string())
 }
 
-pub(crate) fn resolve_attraction_kind_for_cable(cable_kind: &str, catalogs: &KindCatalogBundle) -> String {
+pub(crate) async fn resolve_attraction_kind_for_cable(cable_kind: &str, catalogs: &KindCatalogBundle) -> String {
     catalog_cable_by_id(catalogs, cable_kind).and_then(|c| c.default_attraction_kind.as_ref()).map(|s| s.trim().to_string()).filter(|s| !s.is_empty()).unwrap_or_default()
 }
 
-pub(crate) fn compat_pair_matches(rule: &KindCompatEntry, a: &str, b: &str) -> bool {
+pub(crate) async fn compat_pair_matches(rule: &KindCompatEntry, a: &str, b: &str) -> bool {
     (rule.source == a && rule.target == b) || (rule.bidirectional && rule.source == b && rule.target == a)
 }
 
-pub(crate) fn specificity_rank(spec: Option<&str>) -> i32 {
+pub(crate) async fn specificity_rank(spec: Option<&str>) -> i32 {
     match spec {
         Some("general") => 0,
         Some("object") => 1,
@@ -98,7 +98,7 @@ pub(crate) fn specificity_rank(spec: Option<&str>) -> i32 {
     }
 }
 
-pub(crate) fn attraction_gesture_rule_applies(rule: &KindCompatEntry, attracting: &AttractionVortexContext, attracted: &AttractionVortexContext, catalogs: &KindCatalogBundle) -> bool {
+pub(crate) async fn attraction_gesture_rule_applies(rule: &KindCompatEntry, attracting: &AttractionVortexContext, attracted: &AttractionVortexContext, catalogs: &KindCatalogBundle) -> bool {
     let cable_src = resolve_cable_kind_for_vortex(attracting.vortex_kind.as_deref().unwrap_or(""), catalogs);
     let cable_tgt = resolve_cable_kind_for_vortex(attracted.vortex_kind.as_deref().unwrap_or(""), catalogs);
     let attraction_src = resolve_attraction_kind_for_cable(&cable_src, catalogs);
@@ -117,7 +117,7 @@ pub(crate) fn attraction_gesture_rule_applies(rule: &KindCompatEntry, attracting
     }
 }
 
-pub(crate) fn vortices_attraction_compatible_for_drag(attracting: &AttractionVortexContext, attracted: &AttractionVortexContext, rules: &[KindCompatEntry], catalogs: &KindCatalogBundle) -> bool {
+pub(crate) async fn vortices_attraction_compatible_for_drag(attracting: &AttractionVortexContext, attracted: &AttractionVortexContext, rules: &[KindCompatEntry], catalogs: &KindCatalogBundle) -> bool {
     let sv = attracting.vortex_kind.as_deref().unwrap_or("");
     let tv = attracted.vortex_kind.as_deref().unwrap_or("");
     if !puzzle3d_vortex_port_shapes_compatible(sv, tv) {
@@ -144,7 +144,7 @@ pub(crate) fn vortices_attraction_compatible_for_drag(attracting: &AttractionVor
 //#endregion 🔖️Compatibility
 
 //#region 🔖️StackPairs
-pub(crate) fn brush_stack_vortex_base(vortex_kind: &str) -> Option<&str> {
+pub(crate) async fn brush_stack_vortex_base(vortex_kind: &str) -> Option<&str> {
     if let Some(base) = vortex_kind.strip_suffix(" bottom") {
         Some(base)
     } else if let Some(base) = vortex_kind.strip_suffix(" top") {
@@ -154,21 +154,21 @@ pub(crate) fn brush_stack_vortex_base(vortex_kind: &str) -> Option<&str> {
     }
 }
 
-pub(crate) fn brush_stack_bottom_top_pair(source: &str, target: &str) -> bool {
+pub(crate) async fn brush_stack_bottom_top_pair(source: &str, target: &str) -> bool {
     let (Some(sb), Some(tb)) = (brush_stack_vortex_base(source), brush_stack_vortex_base(target)) else {
         return false;
     };
     source.ends_with(" bottom") && target.ends_with(" top") && sb == tb
 }
 
-pub(crate) fn brush_stack_top_bottom_pair(source: &str, target: &str) -> bool {
+pub(crate) async fn brush_stack_top_bottom_pair(source: &str, target: &str) -> bool {
     let (Some(sb), Some(tb)) = (brush_stack_vortex_base(source), brush_stack_vortex_base(target)) else {
         return false;
     };
     source.ends_with(" top") && target.ends_with(" bottom") && sb == tb
 }
 
-pub(crate) fn brush_stack_mate_pair(source: &str, target: &str) -> bool {
+pub(crate) async fn brush_stack_mate_pair(source: &str, target: &str) -> bool {
     if !puzzle3d_vortex_port_shapes_compatible(source, target) {
         return false;
     }
@@ -177,7 +177,7 @@ pub(crate) fn brush_stack_mate_pair(source: &str, target: &str) -> bool {
 //#endregion 🔖️StackPairs
 
 //#region 🔖️Candidates
-pub(crate) fn brush_candidate_rank(candidate: &BrushCompatibleCandidate, template: &ObjectKindVortexTemplate, target: &AttractionVortexContext) -> i64 {
+pub(crate) async fn brush_candidate_rank(candidate: &BrushCompatibleCandidate, template: &ObjectKindVortexTemplate, target: &AttractionVortexContext) -> i64 {
     let mut score: i64 = 0;
     let target_kind = target.vortex_kind.as_deref().unwrap_or("");
     let source_kind = template.vortex_kind.as_deref().unwrap_or("");
@@ -214,7 +214,7 @@ pub(crate) fn brush_candidate_rank(candidate: &BrushCompatibleCandidate, templat
     score
 }
 
-pub(crate) fn host_accepts_candidate(rules: &BrushHostRules, target: &AttractionVortexContext, candidate: &BrushCompatibleCandidate, template: &ObjectKindVortexTemplate) -> bool {
+pub(crate) async fn host_accepts_candidate(rules: &BrushHostRules, target: &AttractionVortexContext, candidate: &BrushCompatibleCandidate, template: &ObjectKindVortexTemplate) -> bool {
     let target_vk = target.vortex_kind.as_deref().unwrap_or("");
     if rules.reject_capital_on_tambour && (target_vk.contains("tambour circular") || target_vk.contains("tambour rectangular")) && candidate.object_kind_id.contains("Capital") {
         return false;
@@ -239,7 +239,7 @@ pub(crate) fn host_accepts_candidate(rules: &BrushHostRules, target: &Attraction
     x >= rules.door_capsule_min_abs_x && y < rules.door_capsule_max_abs_y
 }
 
-pub(crate) fn brush_placement_uses_host_orientation(target: &AttractionVortexContext, source_vk: &str, candidate_kind: &str) -> bool {
+pub(crate) async fn brush_placement_uses_host_orientation(target: &AttractionVortexContext, source_vk: &str, candidate_kind: &str) -> bool {
     let target_vk = target.vortex_kind.as_deref().unwrap_or("");
     if brush_stack_mate_pair(source_vk, target_vk) {
         return false;
@@ -250,11 +250,11 @@ pub(crate) fn brush_placement_uses_host_orientation(target: &AttractionVortexCon
     candidate_kind == target.object_kind.as_deref().unwrap_or("")
 }
 
-pub(crate) fn catalog_object_kind_by_id<'a>(catalogs: &'a KindCatalogBundle, id: &str) -> Option<&'a ObjectKind> {
+pub(crate) async fn catalog_object_kind_by_id<'a>(catalogs: &'a KindCatalogBundle, id: &str) -> Option<&'a ObjectKind> {
     catalogs.objects.iter().find(|k| k.id == id)
 }
 
-pub(crate) fn resolve_object_kind_mesh_url(kind_id: &str, catalogs: &KindCatalogBundle, fixture: &Fixture) -> Option<String> {
+pub(crate) async fn resolve_object_kind_mesh_url(kind_id: &str, catalogs: &KindCatalogBundle, fixture: &Fixture) -> Option<String> {
     if let Some(kind) = catalog_object_kind_by_id(catalogs, kind_id) {
         if let Some(url) = kind.representations.iter().map(|r| r.url.trim()).find(|u| !u.is_empty()) {
             return Some(url.to_string());
@@ -263,7 +263,7 @@ pub(crate) fn resolve_object_kind_mesh_url(kind_id: &str, catalogs: &KindCatalog
     fixture.objects.iter().find(|o| o.object_kind.as_deref() == Some(kind_id)).and_then(|o| o.mesh_url.clone())
 }
 
-pub(crate) fn brush_compatible_candidates(target: &AttractionVortexContext, catalogs: &KindCatalogBundle, rules: &[KindCompatEntry], host_rules: &BrushHostRules) -> Vec<BrushCompatibleCandidate> {
+pub(crate) async fn brush_compatible_candidates(target: &AttractionVortexContext, catalogs: &KindCatalogBundle, rules: &[KindCompatEntry], host_rules: &BrushHostRules) -> Vec<BrushCompatibleCandidate> {
     let target_vk = target.vortex_kind.as_deref().unwrap_or("");
     let stack_top_target = target_vk.ends_with(" top");
     let stack_bottom_target = target_vk.ends_with(" bottom");
@@ -301,7 +301,7 @@ pub(crate) fn brush_compatible_candidates(target: &AttractionVortexContext, cata
     scored.into_iter().map(|(c, _)| c).collect()
 }
 
-pub(crate) fn blocked_vortex_full_ids(attractions: &[AttractionProps]) -> std::collections::HashSet<String> {
+pub(crate) async fn blocked_vortex_full_ids(attractions: &[AttractionProps]) -> std::collections::HashSet<String> {
     let mut s = std::collections::HashSet::new();
     for a in attractions {
         s.insert(a.attracting.clone());
@@ -310,7 +310,7 @@ pub(crate) fn blocked_vortex_full_ids(attractions: &[AttractionProps]) -> std::c
     s
 }
 
-pub(crate) fn vortex_world_from_object(obj: &FixtureObject, vortex_index: usize) -> Option<(Vec3, Vec3)> {
+pub(crate) async fn vortex_world_from_object(obj: &FixtureObject, vortex_index: usize) -> Option<(Vec3, Vec3)> {
     let vortex = obj.vortices.get(vortex_index)?;
     let orientation = obj.orientation.unwrap_or([0.0, 0.0, 0.0, 1.0]);
     let position = vec3_add(obj.origin, quat_rotate_vec(orientation, vortex.position));
@@ -318,7 +318,7 @@ pub(crate) fn vortex_world_from_object(obj: &FixtureObject, vortex_index: usize)
     Some((position, direction))
 }
 
-pub(crate) fn enumerate_brush_fill_vortex_targets(fixture: &Fixture) -> Vec<BrushFillVortexTarget> {
+pub(crate) async fn enumerate_brush_fill_vortex_targets(fixture: &Fixture) -> Vec<BrushFillVortexTarget> {
     let blocked = blocked_vortex_full_ids(&fixture.attractions);
     let mut out = Vec::new();
     for obj in &fixture.objects {
@@ -334,24 +334,24 @@ pub(crate) fn enumerate_brush_fill_vortex_targets(fixture: &Fixture) -> Vec<Brus
 //#endregion 🔖️Candidates
 
 //#region 🔖️Weights
-pub(crate) fn brush_kind_weight_value(weights: &std::collections::BTreeMap<String, f64>, id: &str) -> f64 {
+pub(crate) async fn brush_kind_weight_value(weights: &std::collections::BTreeMap<String, f64>, id: &str) -> f64 {
     weights.get(id).copied().unwrap_or(1.0)
 }
 
-pub(crate) fn brush_candidate_suggestion_weight(candidate: &BrushCompatibleCandidate, weights: &BrushKindWeights, catalogs: &KindCatalogBundle) -> f64 {
+pub(crate) async fn brush_candidate_suggestion_weight(candidate: &BrushCompatibleCandidate, weights: &BrushKindWeights, catalogs: &KindCatalogBundle) -> f64 {
     let vortex_kind = catalog_object_kind_by_id(catalogs, &candidate.object_kind_id).and_then(|kind| kind.vortices.get(candidate.source_vortex_index)).and_then(|template| template.vortex_kind.as_deref()).unwrap_or("");
     brush_kind_weight_value(&weights.object_weights, &candidate.object_kind_id) * brush_kind_weight_value(&weights.vortex_weights, vortex_kind)
 }
 
-pub(crate) fn brush_target_vortex_allows_suggestion(vortex_kind: Option<&str>, weights: &BrushKindWeights) -> bool {
+pub(crate) async fn brush_target_vortex_allows_suggestion(vortex_kind: Option<&str>, weights: &BrushKindWeights) -> bool {
     brush_kind_weight_value(&weights.vortex_weights, vortex_kind.unwrap_or("")) > 0.0
 }
 
-pub(crate) fn fill_vortex_target_weight(target: &BrushFillVortexTarget, weights: &BrushKindWeights) -> f64 {
+pub(crate) async fn fill_vortex_target_weight(target: &BrushFillVortexTarget, weights: &BrushKindWeights) -> f64 {
     brush_kind_weight_value(&weights.vortex_weights, target.vortex_kind.as_deref().unwrap_or(""))
 }
 
-pub(crate) fn weighted_sample_without_replacement<T, F>(items: &[T], weight_of: F, rng_state: &mut u32) -> Vec<T>
+pub(crate) async fn weighted_sample_without_replacement<T, F>(items: &[T], weight_of: F, rng_state: &mut u32) -> Vec<T>
 where
     T: Clone,
     F: Fn(&T) -> f64,
@@ -383,27 +383,27 @@ where
     out
 }
 
-pub(crate) fn fill_rng(rng_state: &mut u32) -> f64 {
+pub(crate) async fn fill_rng(rng_state: &mut u32) -> f64 {
     *rng_state = rng_state.wrapping_mul(1664525).wrapping_add(1013904223);
     *rng_state as f64 / 4_294_967_296.0
 }
 
-pub(crate) fn weighted_order_fill_vortex_targets(targets: &[BrushFillVortexTarget], weights: &BrushKindWeights, rng_state: &mut u32) -> Vec<BrushFillVortexTarget> {
+pub(crate) async fn weighted_order_fill_vortex_targets(targets: &[BrushFillVortexTarget], weights: &BrushKindWeights, rng_state: &mut u32) -> Vec<BrushFillVortexTarget> {
     weighted_sample_without_replacement(targets, |target| fill_vortex_target_weight(target, weights), rng_state)
 }
 
-pub(crate) fn weighted_order_brush_compatible_candidates(candidates: &[BrushCompatibleCandidate], weights: &BrushKindWeights, catalogs: &KindCatalogBundle, rng_state: &mut u32) -> Vec<BrushCompatibleCandidate> {
+pub(crate) async fn weighted_order_brush_compatible_candidates(candidates: &[BrushCompatibleCandidate], weights: &BrushKindWeights, catalogs: &KindCatalogBundle, rng_state: &mut u32) -> Vec<BrushCompatibleCandidate> {
     weighted_sample_without_replacement(candidates, |candidate| brush_candidate_suggestion_weight(candidate, weights, catalogs), rng_state)
 }
 
-pub(crate) fn fill_candidate_diversity_score(candidate: &BrushCompatibleCandidate, target_vortex_index: usize, target_object_kind: Option<&str>) -> i64 {
+pub(crate) async fn fill_candidate_diversity_score(candidate: &BrushCompatibleCandidate, target_vortex_index: usize, target_object_kind: Option<&str>) -> i64 {
     if target_object_kind != Some(candidate.object_kind_id.as_str()) {
         return 0;
     }
     1000 + (candidate.source_vortex_index as i64 - target_vortex_index as i64).unsigned_abs() as i64 * 100
 }
 
-pub(crate) fn order_brush_fill_compatible_candidates(
+pub(crate) async fn order_brush_fill_compatible_candidates(
     candidates: &[BrushCompatibleCandidate],
     target_vortex_kind: Option<&str>,
     target_vortex_index: usize,
@@ -446,7 +446,7 @@ pub(crate) struct TargetVortexWorld {
     pub(crate) reference_orientation: Option<Quat>,
 }
 
-pub(crate) fn brush_preview_from_candidate(target_full_id: &str, candidate: &BrushCompatibleCandidate, target: &AttractionVortexContext, world: TargetVortexWorld, catalogs: &KindCatalogBundle, fixture: &Fixture) -> Option<BrushPreviewState> {
+pub(crate) async fn brush_preview_from_candidate(target_full_id: &str, candidate: &BrushCompatibleCandidate, target: &AttractionVortexContext, world: TargetVortexWorld, catalogs: &KindCatalogBundle, fixture: &Fixture) -> Option<BrushPreviewState> {
     let kind = catalog_object_kind_by_id(catalogs, &candidate.object_kind_id)?;
     let template = kind.vortices.get(candidate.source_vortex_index)?;
     let mesh_url = resolve_object_kind_mesh_url(&candidate.object_kind_id, catalogs, fixture)?;
@@ -459,7 +459,7 @@ pub(crate) fn brush_preview_from_candidate(target_full_id: &str, candidate: &Bru
 /// 🧱️ Splices one accepted brush placement (the new object plus the attraction docking it onto the
 /// pre-existing target vortex) into `fixture`; returns `fixture` unchanged when the kind/template/
 /// mesh cannot be resolved or the target vortex is already attracting something.
-pub fn apply_brush_placement_to_fixture(fixture: &Fixture, payload: &BrushPlacePayload, catalogs: &KindCatalogBundle) -> Fixture {
+pub async fn apply_brush_placement_to_fixture(fixture: &Fixture, payload: &BrushPlacePayload, catalogs: &KindCatalogBundle) -> Fixture {
     let Some(kind) = catalog_object_kind_by_id(catalogs, &payload.object_kind_id) else {
         return fixture.clone();
     };
@@ -498,7 +498,7 @@ pub fn apply_brush_placement_to_fixture(fixture: &Fixture, payload: &BrushPlaceP
 }
 
 /// 🪪️ Content-addressed brush object id — keyed by fixture size and placement payload (no global counter).
-fn brush_object_id(fixture: &Fixture, payload: &BrushPlacePayload) -> String {
+async fn brush_object_id(fixture: &Fixture, payload: &BrushPlacePayload) -> String {
     use std::collections::hash_map::DefaultHasher;
     use std::hash::{Hash, Hasher};
     let mut hasher = DefaultHasher::new();
@@ -525,7 +525,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn fill_distribution_excludes_zero_weight_vortices() {
+    async fn fill_distribution_excludes_zero_weight_vortices() {
         let catalogs = KindCatalogBundle {
             objects: vec![ObjectKind {
                 id: "Placed".to_string(),
@@ -559,7 +559,7 @@ mod tests {
     }
 
     #[test]
-    fn brush_placement_emits_attraction_with_id_and_directed_root() {
+    async fn brush_placement_emits_attraction_with_id_and_directed_root() {
         let fixture = Fixture { attractions: vec![], objects: vec![], target_volumes: vec![] };
         let catalogs = KindCatalogBundle {
             objects: vec![ObjectKind {
@@ -584,7 +584,7 @@ mod tests {
 
     /// 🪪️ Regression: successive brush placements must mint distinct object ids when the fixture grows.
     #[test]
-    fn successive_brush_placements_never_collide_on_object_id() {
+    async fn successive_brush_placements_never_collide_on_object_id() {
         let catalogs = KindCatalogBundle {
             objects: vec![ObjectKind {
                 id: "Placed".to_string(),
@@ -609,7 +609,7 @@ mod tests {
     }
 
     #[test]
-    fn vortex_port_shape_and_compatibility() {
+    async fn vortex_port_shape_and_compatibility() {
         assert_eq!(puzzle3d_vortex_port_shape("foo circular bar"), Some("circular"));
         assert_eq!(puzzle3d_vortex_port_shape("foo rectangular bar"), Some("rectangular"));
         assert_eq!(puzzle3d_vortex_port_shape("plain"), None);
@@ -619,7 +619,7 @@ mod tests {
     }
 
     #[test]
-    fn single_letter_port_family_and_compatibility() {
+    async fn single_letter_port_family_and_compatibility() {
         assert_eq!(puzzle3d_single_letter_port_family("a-socket"), Some('a'));
         assert_eq!(puzzle3d_single_letter_port_family("ab-socket"), None);
         assert_eq!(puzzle3d_single_letter_port_family("A-socket"), None);
@@ -630,7 +630,7 @@ mod tests {
     }
 
     #[test]
-    fn resolve_cable_and_attraction_kind_defaults_and_lookup() {
+    async fn resolve_cable_and_attraction_kind_defaults_and_lookup() {
         let catalogs = KindCatalogBundle {
             objects: vec![],
             vortices: vec![VortexKindCatalog { id: "vk".into(), default_cable_kind: Some("  cable.custom  ".into()) , ..Default::default() }, VortexKindCatalog { id: "vk-empty".into(), default_cable_kind: Some("   ".into()) , ..Default::default() }],
@@ -644,7 +644,7 @@ mod tests {
     }
 
     #[test]
-    fn compat_pair_matches_and_specificity_rank() {
+    async fn compat_pair_matches_and_specificity_rank() {
         let rule = KindCompatEntry { source: "a".into(), target: "b".into(), bidirectional: false, important: false, specificity: None };
         assert!(compat_pair_matches(&rule, "a", "b"));
         assert!(!compat_pair_matches(&rule, "b", "a"));
@@ -660,7 +660,7 @@ mod tests {
     }
 
     #[test]
-    fn attraction_gesture_rule_applies_specificity_branches() {
+    async fn attraction_gesture_rule_applies_specificity_branches() {
         let catalogs = KindCatalogBundle {
             objects: vec![],
             vortices: vec![VortexKindCatalog { id: "sv".into(), default_cable_kind: Some("cable.a".into()) , ..Default::default() }, VortexKindCatalog { id: "tv".into(), default_cable_kind: Some("cable.b".into()) , ..Default::default() }],
@@ -679,7 +679,7 @@ mod tests {
     }
 
     #[test]
-    fn vortices_attraction_compatible_for_drag_branches() {
+    async fn vortices_attraction_compatible_for_drag_branches() {
         let catalogs = KindCatalogBundle { objects: vec![], vortices: vec![], cables: vec![] };
         let a_circ = AttractionVortexContext { object_kind: None, vortex_kind: Some("x circular y".into()) };
         let a_rect = AttractionVortexContext { object_kind: None, vortex_kind: Some("x rectangular y".into()) };
@@ -702,7 +702,7 @@ mod tests {
     }
 
     #[test]
-    fn brush_stack_pair_helpers() {
+    async fn brush_stack_pair_helpers() {
         assert_eq!(brush_stack_vortex_base("column bottom"), Some("column"));
         assert_eq!(brush_stack_vortex_base("column top"), Some("column"));
         assert_eq!(brush_stack_vortex_base("column"), None);
@@ -717,7 +717,7 @@ mod tests {
     }
 
     #[test]
-    fn brush_candidate_rank_scores_kind_match_and_stack_and_tambour_rules() {
+    async fn brush_candidate_rank_scores_kind_match_and_stack_and_tambour_rules() {
         let target = AttractionVortexContext { object_kind: Some("Host".into()), vortex_kind: Some("column top".into()) };
         let template = ObjectKindVortexTemplate { vortex_kind: Some("column bottom".into()), point: [0.0, 0.0, 0.0], direction: None , ..Default::default() };
         let same_kind = BrushCompatibleCandidate { object_kind_id: "Host".into(), source_vortex_index: 0 };
@@ -734,7 +734,7 @@ mod tests {
     }
 
     #[test]
-    fn host_accepts_candidate_rule_branches() {
+    async fn host_accepts_candidate_rule_branches() {
         let rules = BrushHostRules::default();
         let target = AttractionVortexContext { object_kind: Some("Tambour".into()), vortex_kind: Some("door tambour circular".into()) };
         let door_capsule_template = ObjectKindVortexTemplate { vortex_kind: Some("door capsule".into()), point: [1.0, 0.0, 0.0], direction: None , ..Default::default() };
@@ -759,7 +759,7 @@ mod tests {
     }
 
     #[test]
-    fn brush_placement_uses_host_orientation_branches() {
+    async fn brush_placement_uses_host_orientation_branches() {
         let target = AttractionVortexContext { object_kind: Some("Host".into()), vortex_kind: Some("column top".into()) };
         assert!(!brush_placement_uses_host_orientation(&target, "column bottom", "Host"), "stack mate pairs never use host orientation");
         assert!(!brush_placement_uses_host_orientation(&target, "other", "Host"), "different vortex kinds never use host orientation");
@@ -768,7 +768,7 @@ mod tests {
     }
 
     #[test]
-    fn resolve_object_kind_mesh_url_prefers_catalog_then_falls_back_to_fixture() {
+    async fn resolve_object_kind_mesh_url_prefers_catalog_then_falls_back_to_fixture() {
         let catalogs = KindCatalogBundle { objects: vec![ObjectKind { id: "Kind".into(), representations: vec![ObjectKindRepresentation { id: "r0".into(), name: String::new(), url: "/catalog.glb".into(), mime: String::new(), tags: vec![], lod: None, description: String::new() }], scale: None, vortices: vec![] }], vortices: vec![], cables: vec![] };
         let fixture = Fixture { attractions: vec![], target_volumes: vec![], objects: vec![] };
         assert_eq!(resolve_object_kind_mesh_url("Kind", &catalogs, &fixture), Some("/catalog.glb".to_string()));
@@ -784,7 +784,7 @@ mod tests {
     }
 
     #[test]
-    fn brush_compatible_candidates_filters_and_sorts() {
+    async fn brush_compatible_candidates_filters_and_sorts() {
         let catalogs = KindCatalogBundle {
             objects: vec![
                 ObjectKind { id: "NoMesh".into(), representations: vec![], scale: None, vortices: vec![ObjectKindVortexTemplate { vortex_kind: Some("sv".into()), point: [0.0, 0.0, 0.0], direction: None , ..Default::default() }] },
@@ -801,7 +801,7 @@ mod tests {
     }
 
     #[test]
-    fn brush_compatible_candidates_stack_target_only_matches_mates() {
+    async fn brush_compatible_candidates_stack_target_only_matches_mates() {
         let catalogs = KindCatalogBundle {
             objects: vec![
                 ObjectKind { id: "Mate".into(), representations: vec![ObjectKindRepresentation { id: "r0".into(), name: String::new(), url: "/a.glb".into(), mime: String::new(), tags: vec![], lod: None, description: String::new() }], scale: None, vortices: vec![ObjectKindVortexTemplate { vortex_kind: Some("column bottom".into()), point: [0.0, 0.0, 0.0], direction: None , ..Default::default() }] },
@@ -817,7 +817,7 @@ mod tests {
     }
 
     #[test]
-    fn blocked_vortex_full_ids_and_enumeration_excludes_them() {
+    async fn blocked_vortex_full_ids_and_enumeration_excludes_them() {
         let attractions = vec![AttractionProps { id: "a1".into(), attracting: "host:v0".into(), attracted: "guest:v0".into(), gap: 0.0, shift: 0.0, rise: 0.0, rotation: 0.0, turn: 0.0, tilt: 0.0 , x: 0.0, y: 0.0}];
         let blocked = blocked_vortex_full_ids(&attractions);
         assert!(blocked.contains("host:v0") && blocked.contains("guest:v0"));
@@ -856,13 +856,13 @@ mod tests {
     }
 
     #[test]
-    fn vortex_world_from_object_none_for_missing_index() {
+    async fn vortex_world_from_object_none_for_missing_index() {
         let object = FixtureObject { id: "o".into(), object_kind: None, anchor: Default::default(), mesh_url: None, origin: [1.0, 2.0, 3.0], orientation: None, scale: None, vortices: vec![], reveal_index: None };
         assert!(vortex_world_from_object(&object, 0).is_none());
     }
 
     #[test]
-    fn weight_lookup_helpers_default_to_one_or_gate_on_zero() {
+    async fn weight_lookup_helpers_default_to_one_or_gate_on_zero() {
         let mut weights = BrushKindWeights::default();
         weights.object_weights.insert("A".into(), 2.0);
         weights.vortex_weights.insert("v".into(), 0.0);
@@ -877,7 +877,7 @@ mod tests {
     }
 
     #[test]
-    fn weighted_sample_without_replacement_edge_cases() {
+    async fn weighted_sample_without_replacement_edge_cases() {
         let items = vec![1, 2, 3];
         let mut rng = 42u32;
         let single: Vec<i32> = weighted_sample_without_replacement(&[1], |_| 1.0, &mut rng);
@@ -891,7 +891,7 @@ mod tests {
     }
 
     #[test]
-    fn fill_rng_is_deterministic_for_a_given_seed() {
+    async fn fill_rng_is_deterministic_for_a_given_seed() {
         let mut a = 123u32;
         let mut b = 123u32;
         for _ in 0..5 {
@@ -901,7 +901,7 @@ mod tests {
     }
 
     #[test]
-    fn fill_candidate_diversity_score_rewards_distance_within_same_kind() {
+    async fn fill_candidate_diversity_score_rewards_distance_within_same_kind() {
         let candidate = BrushCompatibleCandidate { object_kind_id: "Kind".into(), source_vortex_index: 3 };
         assert_eq!(fill_candidate_diversity_score(&candidate, 0, Some("Other")), 0, "a different target object kind never scores");
         assert_eq!(fill_candidate_diversity_score(&candidate, 0, Some("Kind")), 1000 + 300);
@@ -909,7 +909,7 @@ mod tests {
     }
 
     #[test]
-    fn brush_preview_from_candidate_none_branches() {
+    async fn brush_preview_from_candidate_none_branches() {
         let catalogs = KindCatalogBundle {
             objects: vec![ObjectKind { id: "Kind".into(), representations: vec![ObjectKindRepresentation { id: "r0".into(), name: String::new(), url: "/mesh.glb".into(), mime: String::new(), tags: vec![], lod: None, description: String::new() }], scale: None, vortices: vec![ObjectKindVortexTemplate { vortex_kind: Some("sv".into()), point: [0.0, 0.0, 0.0], direction: None , ..Default::default() }] }],
             vortices: vec![],
@@ -939,7 +939,7 @@ mod tests {
     }
 
     #[test]
-    fn apply_brush_placement_to_fixture_rejects_missing_kind_template_or_mesh() {
+    async fn apply_brush_placement_to_fixture_rejects_missing_kind_template_or_mesh() {
         let fixture = Fixture { attractions: vec![], objects: vec![], target_volumes: vec![] };
         let catalogs = KindCatalogBundle {
             objects: vec![ObjectKind { id: "Kind".into(), representations: vec![], scale: None, vortices: vec![ObjectKindVortexTemplate { vortex_kind: Some("sv".into()), point: [0.0, 0.0, 0.0], direction: None , ..Default::default() }] }],
@@ -958,7 +958,7 @@ mod tests {
     }
 
     #[test]
-    fn apply_brush_placement_to_fixture_rejects_duplicate_attraction_target() {
+    async fn apply_brush_placement_to_fixture_rejects_duplicate_attraction_target() {
         let catalogs = KindCatalogBundle {
             objects: vec![ObjectKind { id: "Kind".into(), representations: vec![ObjectKindRepresentation { id: "r0".into(), name: String::new(), url: "/mesh.glb".into(), mime: String::new(), tags: vec![], lod: None, description: String::new() }], scale: None, vortices: vec![ObjectKindVortexTemplate { vortex_kind: Some("sv".into()), point: [0.0, 0.0, 0.0], direction: None , ..Default::default() }] }],
             vortices: vec![],

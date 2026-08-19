@@ -16,23 +16,23 @@ pub struct DeleteAsset {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn delete_asset(key: String) -> RemodelMutation {
+pub async fn delete_asset(key: String) -> RemodelMutation {
     RemodelMutation::DeleteAsset(DeleteAsset { key })
 }
 
 impl protocol::MutationKind<RemodelSnapshot, RemodelMutation> for DeleteAsset {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "delete", entity: "asset", kind: "delete-asset", record: "DeletedAsset" };
 
-    fn diff(&self, base: &RemodelSnapshot) -> protocol::MutationOutcome<RemodelDiff> {
+    async fn diff(&self, base: &RemodelSnapshot) -> protocol::MutationOutcome<RemodelDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &RemodelSnapshot) -> Vec<RemodelMutation> {
+    async fn inverse(&self, base: &RemodelSnapshot) -> Vec<RemodelMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         format!("Delete asset \"{}\"", self.key)
     }
-    fn target(&self) -> Vec<String> {
+    async fn target(&self) -> Vec<String> {
         vec![self.key.clone()]
     }
 }

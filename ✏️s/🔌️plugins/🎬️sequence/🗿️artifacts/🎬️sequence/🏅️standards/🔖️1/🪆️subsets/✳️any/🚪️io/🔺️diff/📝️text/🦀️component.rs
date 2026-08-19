@@ -16,7 +16,7 @@ use crate::artifacts::sequence::schema::diff::*;
 //#region 🔖️Apply
 impl SequenceDiff {
     /// 🧬️ Applies every sparse entry (all state classes) onto a full artifact.
-    pub fn apply_to_artifact(&self, artifact: &SequenceArtifact) -> protocol::MutationApplyResult<SequenceArtifact> {
+    pub async fn apply_to_artifact(&self, artifact: &SequenceArtifact) -> protocol::MutationApplyResult<SequenceArtifact> {
         Ok({
             if let Some(replacement) = &self.artifact {
                 return Ok((**replacement).clone());
@@ -46,7 +46,7 @@ impl SequenceDiff {
 }
 
 impl MutationDiff<SequenceSnapshot> for SequenceDiff {
-    fn apply(&self, snapshot: &SequenceSnapshot) -> protocol::MutationApplyResult<SequenceSnapshot> {
+    async fn apply(&self, snapshot: &SequenceSnapshot) -> protocol::MutationApplyResult<SequenceSnapshot> {
         Ok({
             if let Some(replacement) = &self.artifact {
                 return Ok(replacement.to_snapshot());
@@ -61,7 +61,7 @@ impl MutationDiff<SequenceSnapshot> for SequenceDiff {
             next
         })
     }
-    fn absorb(&mut self, other: Self) {
+    async fn absorb(&mut self, other: Self) {
         if other.artifact.is_some() {
             *self = other;
             return;
@@ -92,7 +92,7 @@ mod tests {
     use protocol::Mutation;
 
     #[test]
-    fn create_step_diff_applies_onto_the_base_snapshot() {
+    async fn create_step_diff_applies_onto_the_base_snapshot() {
         let base = default_snapshot();
         let step = SequenceStep { id: "step-99".into(), kind: "log.print".into(), params: StepParams::new(), x: 5.0, y: 6.0, slot: None, collapsed: false };
         let operation = crate::artifacts::sequence::mutations::create_step::mutation::create_step(step);

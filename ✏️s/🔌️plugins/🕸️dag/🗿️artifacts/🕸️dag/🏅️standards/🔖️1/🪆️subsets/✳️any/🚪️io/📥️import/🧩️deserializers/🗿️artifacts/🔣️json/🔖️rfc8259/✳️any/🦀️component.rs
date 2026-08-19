@@ -15,7 +15,7 @@ use semio_s_plugin_stdio::artifacts::json::{JsonSnapshot, STDIO_JSON_DOCUMENT_SC
 pub const JSON_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.json", standard: StandardId("rfc8259"), subset: SubsetId::ANY };
 
 /// 📖️ Typed decode of a `JsonSnapshot`'s free-form `value` into `DagSnapshot`'s own field shape.
-pub fn deserialize(from: &JsonSnapshot) -> Result<DagSnapshot, store::TextError> {
+pub async fn deserialize(from: &JsonSnapshot) -> Result<DagSnapshot, store::TextError> {
     let _ = STDIO_JSON_DOCUMENT_SCHEMA;
     serde_json::from_value(from.to_serde_value()).map_err(|e| store::TextError::new(format!("dag<-json: {e}"), dsl::TextSpan::at(1, 1)))
 }
@@ -25,7 +25,7 @@ pub struct JsonIntoDag;
 impl Deserializer<DagSnapshot> for JsonIntoDag {
     const FROM: Dialect = JSON_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Exact;
-    fn deserialize(payload: &IoPayload) -> IoResult<DagSnapshot> {
+    async fn deserialize(payload: &IoPayload) -> IoResult<DagSnapshot> {
         let IoPayload::Binary(bytes) = payload else {
             return Err(IoError { message: "JsonIntoDag: expected a binary json payload".to_string(), diagnostics: Vec::new() });
         };

@@ -6,12 +6,12 @@ use std::f64::consts::PI;
 
 // #region 🔖️Fft
 /// 🔢️ Smallest power of two `>= n`; returns `1` for `n == 0`.
-pub fn next_pow2(n: usize) -> usize {
+pub async fn next_pow2(n: usize) -> usize {
     n.max(1).next_power_of_two()
 }
 
 /// 🌀️ In-place iterative radix-2 Cooley-Tukey DFT with bit-reversal permutation; asserts equal power-of-two lengths.
-pub fn fft(re: &mut [f64], im: &mut [f64]) {
+pub async fn fft(re: &mut [f64], im: &mut [f64]) {
     assert_eq!(re.len(), im.len(), "fft length mismatch");
     let n = re.len();
     assert!(n.is_power_of_two(), "fft requires a power-of-two length");
@@ -53,7 +53,7 @@ pub fn fft(re: &mut [f64], im: &mut [f64]) {
 }
 
 /// 🔄️ In-place inverse DFT via the conjugate trick with `1/N` scaling; asserts equal power-of-two lengths.
-pub fn ifft(re: &mut [f64], im: &mut [f64]) {
+pub async fn ifft(re: &mut [f64], im: &mut [f64]) {
     let n = re.len();
     for v in im.iter_mut() {
         *v = -*v;
@@ -69,7 +69,7 @@ pub fn ifft(re: &mut [f64], im: &mut [f64]) {
 }
 
 /// 🗺️ In-place 2D DFT of a row-major `w * h` grid: row passes then column passes through a scratch column buffer.
-pub fn fft2(re: &mut [f64], im: &mut [f64], w: usize, h: usize) {
+pub async fn fft2(re: &mut [f64], im: &mut [f64], w: usize, h: usize) {
     assert_eq!(re.len(), w * h, "fft2 size mismatch");
     assert_eq!(im.len(), w * h, "fft2 size mismatch");
     for row in 0..h {
@@ -91,7 +91,7 @@ pub fn fft2(re: &mut [f64], im: &mut [f64], w: usize, h: usize) {
 }
 
 /// 🔄️ In-place 2D inverse DFT of a row-major `w * h` grid via the conjugate trick with `1/(w*h)` scaling.
-pub fn ifft2(re: &mut [f64], im: &mut [f64], w: usize, h: usize) {
+pub async fn ifft2(re: &mut [f64], im: &mut [f64], w: usize, h: usize) {
     for v in im.iter_mut() {
         *v = -*v;
     }
@@ -108,21 +108,21 @@ pub fn ifft2(re: &mut [f64], im: &mut [f64], w: usize, h: usize) {
 
 // #region 🔖️Window
 /// 🪟️ Symmetric Hann window of length `n`.
-pub fn hann(n: usize) -> Vec<f64> {
+pub async fn hann(n: usize) -> Vec<f64> {
     cosine_window(n, &[0.5, -0.5, 0.0])
 }
 
 /// 🪟️ Symmetric Hamming window of length `n`.
-pub fn hamming(n: usize) -> Vec<f64> {
+pub async fn hamming(n: usize) -> Vec<f64> {
     cosine_window(n, &[0.54, -0.46, 0.0])
 }
 
 /// 🪟️ Symmetric Blackman window of length `n`.
-pub fn blackman(n: usize) -> Vec<f64> {
+pub async fn blackman(n: usize) -> Vec<f64> {
     cosine_window(n, &[0.42, -0.5, 0.08])
 }
 
-fn cosine_window(n: usize, coeffs: &[f64; 3]) -> Vec<f64> {
+async fn cosine_window(n: usize, coeffs: &[f64; 3]) -> Vec<f64> {
     if n <= 1 {
         return vec![1.0; n];
     }
@@ -137,7 +137,7 @@ fn cosine_window(n: usize, coeffs: &[f64; 3]) -> Vec<f64> {
 
 // #region 🔖️Spectrum
 /// 📊️ Welch one-sided power spectral density: Hann-windowed segments with fractional `overlap`, zero-padded to a power of two, averaged periodograms with window-power normalization; bin `k` maps to frequency `k * fs / next_pow2(seg_len)`.
-pub fn welch_psd(x: &[f64], seg_len: usize, overlap: f64) -> Vec<f64> {
+pub async fn welch_psd(x: &[f64], seg_len: usize, overlap: f64) -> Vec<f64> {
     let spectra = averaged_segment_spectra(&[x, x], seg_len, overlap);
     let nfft = next_pow2(seg_len);
     let bins = nfft / 2 + 1;
@@ -150,7 +150,7 @@ pub fn welch_psd(x: &[f64], seg_len: usize, overlap: f64) -> Vec<f64> {
 }
 
 /// 🔀️ Averaged one-sided cross-spectral density `S_ab = conj(A) * B` over Hann-windowed overlapping segments, returned as `(magnitude, phase)`; a delay of `d` samples in `b` shows as phase `-2 * PI * k * d / next_pow2(seg_len)` at bin `k`.
-pub fn cross_spectrum(a: &[f64], b: &[f64], seg_len: usize, overlap: f64) -> (Vec<f64>, Vec<f64>) {
+pub async fn cross_spectrum(a: &[f64], b: &[f64], seg_len: usize, overlap: f64) -> (Vec<f64>, Vec<f64>) {
     let spectra = averaged_segment_spectra(&[a, b], seg_len, overlap);
     let nfft = next_pow2(seg_len);
     let bins = nfft / 2 + 1;
@@ -163,7 +163,7 @@ pub fn cross_spectrum(a: &[f64], b: &[f64], seg_len: usize, overlap: f64) -> (Ve
     (magnitude, phase)
 }
 
-fn averaged_segment_spectra(signals: &[&[f64]; 2], seg_len: usize, overlap: f64) -> Vec<(f64, f64)> {
+async fn averaged_segment_spectra(signals: &[&[f64]; 2], seg_len: usize, overlap: f64) -> Vec<(f64, f64)> {
     let (a, b) = (signals[0], signals[1]);
     assert!(!a.is_empty() && !b.is_empty(), "spectrum requires non-empty signals");
     assert!(seg_len >= 2, "spectrum requires seg_len >= 2");
@@ -206,7 +206,7 @@ fn averaged_segment_spectra(signals: &[&[f64]; 2], seg_len: usize, overlap: f64)
 
 // #region 🔖️Correlate
 /// 🔗️ Mean-removed, unit-energy normalized cross-correlation for lags `-max_lag..=max_lag`, computed via FFT with zero-padding to `next_pow2(len_a + len_b)`; a delay of `d` samples in `b` peaks at output index `max_lag + d`.
-pub fn xcorr_normalized(a: &[f64], b: &[f64], max_lag: usize) -> Vec<f64> {
+pub async fn xcorr_normalized(a: &[f64], b: &[f64], max_lag: usize) -> Vec<f64> {
     assert!(!a.is_empty() && !b.is_empty(), "xcorr requires non-empty signals");
     let mean_a = a.iter().sum::<f64>() / a.len() as f64;
     let mean_b = b.iter().sum::<f64>() / b.len() as f64;
@@ -244,7 +244,7 @@ pub fn xcorr_normalized(a: &[f64], b: &[f64], max_lag: usize) -> Vec<f64> {
 }
 
 /// 🎯️ Index of the maximum refined by parabolic 3-point interpolation; `None` when `c` is empty or the peak sits on an edge.
-pub fn subsample_peak(c: &[f64]) -> Option<f64> {
+pub async fn subsample_peak(c: &[f64]) -> Option<f64> {
     if c.is_empty() {
         return None;
     }
@@ -266,7 +266,7 @@ pub fn subsample_peak(c: &[f64]) -> Option<f64> {
 
 // #region 🔖️Smooth
 /// 📉️ Savitzky-Golay filter with mirror-padded edges: least-squares polynomial of `order` on an odd `window`, returning the `deriv`-th derivative (0..=2) scaled by `deriv! / dt^deriv`; coefficients come from the Vandermonde normal equations solved once via `MatD::lu_solve`.
-pub fn savitzky_golay(x: &[f64], window: usize, order: usize, deriv: usize, dt: f64) -> Vec<f64> {
+pub async fn savitzky_golay(x: &[f64], window: usize, order: usize, deriv: usize, dt: f64) -> Vec<f64> {
     assert!(window % 2 == 1 && window >= 3, "savitzky_golay requires an odd window >= 3");
     assert!(order < window, "savitzky_golay requires order < window");
     assert!(deriv <= order && deriv <= 2, "savitzky_golay requires deriv <= min(order, 2)");
@@ -304,7 +304,7 @@ pub fn savitzky_golay(x: &[f64], window: usize, order: usize, deriv: usize, dt: 
 }
 
 /// 🌫️ Gaussian smoothing with a normalized kernel of radius `3 * sigma` and mirror-padded edges; returns the input unchanged for `sigma <= 0`.
-pub fn gaussian_smooth_1d(x: &[f64], sigma: f64) -> Vec<f64> {
+pub async fn gaussian_smooth_1d(x: &[f64], sigma: f64) -> Vec<f64> {
     if sigma <= 0.0 || x.is_empty() {
         return x.to_vec();
     }
@@ -323,7 +323,7 @@ pub fn gaussian_smooth_1d(x: &[f64], sigma: f64) -> Vec<f64> {
 }
 
 /// 📏️ Centered moving average over `window` samples with mirror-padded edges.
-pub fn moving_average(x: &[f64], window: usize) -> Vec<f64> {
+pub async fn moving_average(x: &[f64], window: usize) -> Vec<f64> {
     assert!(window >= 1, "moving_average requires window >= 1");
     if x.is_empty() {
         return Vec::new();
@@ -332,7 +332,7 @@ pub fn moving_average(x: &[f64], window: usize) -> Vec<f64> {
     convolve_mirrored(x, &kernel, window / 2)
 }
 
-fn convolve_mirrored(x: &[f64], kernel: &[f64], center: usize) -> Vec<f64> {
+async fn convolve_mirrored(x: &[f64], kernel: &[f64], center: usize) -> Vec<f64> {
     let n = x.len();
     (0..n)
         .map(|t| {
@@ -346,7 +346,7 @@ fn convolve_mirrored(x: &[f64], kernel: &[f64], center: usize) -> Vec<f64> {
         .collect()
 }
 
-fn mirror_index(offset: isize, n: usize) -> usize {
+async fn mirror_index(offset: isize, n: usize) -> usize {
     if n == 1 {
         return 0;
     }
@@ -369,7 +369,7 @@ pub struct PeakInfo {
 }
 
 /// 🏔️ Strict local maxima with prominence measured to the lowest saddle toward higher terrain on each side (signal edge when no higher terrain exists), filtered by `min_prominence`.
-pub fn find_peaks(x: &[f64], min_prominence: f64) -> Vec<PeakInfo> {
+pub async fn find_peaks(x: &[f64], min_prominence: f64) -> Vec<PeakInfo> {
     let mut peaks = Vec::new();
     if x.len() < 3 {
         return peaks;
@@ -410,7 +410,7 @@ pub fn find_peaks(x: &[f64], min_prominence: f64) -> Vec<PeakInfo> {
 mod tests {
     use super::*;
 
-    fn seeded_noise(n: usize, seed: u64) -> Vec<f64> {
+    async fn seeded_noise(n: usize, seed: u64) -> Vec<f64> {
         let mut state = seed;
         (0..n)
             .map(|_| {
@@ -421,7 +421,7 @@ mod tests {
     }
 
     #[test]
-    fn fft_ifft_round_trips() {
+    async fn fft_ifft_round_trips() {
         let n = 256;
         let original_re = seeded_noise(n, 7);
         let original_im = seeded_noise(n, 13);
@@ -436,7 +436,7 @@ mod tests {
     }
 
     #[test]
-    fn fft_satisfies_parseval() {
+    async fn fft_satisfies_parseval() {
         let n = 256;
         let time_re = seeded_noise(n, 21);
         let time_im = seeded_noise(n, 42);
@@ -449,7 +449,7 @@ mod tests {
     }
 
     #[test]
-    fn fft2_ifft2_round_trips() {
+    async fn fft2_ifft2_round_trips() {
         let (w, h) = (8, 4);
         let original = seeded_noise(w * h, 3);
         let mut re = original.clone();
@@ -463,7 +463,7 @@ mod tests {
     }
 
     #[test]
-    fn windows_have_expected_shape() {
+    async fn windows_have_expected_shape() {
         for window in [hann(64), hamming(64), blackman(64)] {
             assert_eq!(window.len(), 64);
             let peak = window.iter().fold(0.0f64, |acc, v| acc.max(*v));
@@ -474,7 +474,7 @@ mod tests {
     }
 
     #[test]
-    fn welch_psd_finds_planted_sinusoid() {
+    async fn welch_psd_finds_planted_sinusoid() {
         let fs = 100.0;
         let x: Vec<f64> = (0..1000).map(|t| (2.0 * PI * 7.0 * t as f64 / fs).sin()).collect();
         let psd = welch_psd(&x, 256, 0.5);
@@ -490,7 +490,7 @@ mod tests {
     }
 
     #[test]
-    fn cross_spectrum_phase_encodes_lag() {
+    async fn cross_spectrum_phase_encodes_lag() {
         let cycles = 16.0;
         let delay = 3.0;
         let a: Vec<f64> = (0..600).map(|t| (2.0 * PI * cycles * t as f64 / 256.0).sin()).collect();
@@ -508,7 +508,7 @@ mod tests {
     }
 
     #[test]
-    fn xcorr_peaks_at_known_shift() {
+    async fn xcorr_peaks_at_known_shift() {
         let base = gaussian_smooth_1d(&seeded_noise(200, 99), 2.0);
         let mut shifted = vec![0.0; 200];
         shifted[5..200].copy_from_slice(&base[0..195]);
@@ -525,7 +525,7 @@ mod tests {
     }
 
     #[test]
-    fn subsample_peak_recovers_fractional_lag() {
+    async fn subsample_peak_recovers_fractional_lag() {
         let pulse = |center: f64| -> Vec<f64> { (0..128).map(|t| (-((t as f64 - center) * (t as f64 - center)) / (2.0 * 16.0)).exp()).collect() };
         let a = pulse(50.0);
         let b = pulse(53.37);
@@ -537,7 +537,7 @@ mod tests {
     }
 
     #[test]
-    fn savitzky_golay_differentiates_cubic() {
+    async fn savitzky_golay_differentiates_cubic() {
         let dt = 0.1;
         let x: Vec<f64> = (0..50).map(|i| (i as f64 * dt).powi(3)).collect();
         let d1 = savitzky_golay(&x, 7, 3, 1, dt);
@@ -548,7 +548,7 @@ mod tests {
     }
 
     #[test]
-    fn savitzky_golay_preserves_low_order_polynomials() {
+    async fn savitzky_golay_preserves_low_order_polynomials() {
         let x: Vec<f64> = (0..40).map(|i| 2.0 + 0.5 * i as f64 + 0.03 * (i * i) as f64).collect();
         let smoothed = savitzky_golay(&x, 5, 2, 0, 1.0);
         for i in 2..38 {
@@ -557,7 +557,7 @@ mod tests {
     }
 
     #[test]
-    fn smoothing_preserves_constant_signals() {
+    async fn smoothing_preserves_constant_signals() {
         let x = vec![4.2; 30];
         for out in [gaussian_smooth_1d(&x, 1.5), moving_average(&x, 5), savitzky_golay(&x, 7, 2, 0, 1.0)] {
             for v in out {
@@ -567,7 +567,7 @@ mod tests {
     }
 
     #[test]
-    fn find_peaks_ranks_two_bumps_by_prominence() {
+    async fn find_peaks_ranks_two_bumps_by_prominence() {
         let x: Vec<f64> = (0..100)
             .map(|t| {
                 let bump = |center: f64, height: f64| height * (-((t as f64 - center) * (t as f64 - center)) / 18.0).exp();

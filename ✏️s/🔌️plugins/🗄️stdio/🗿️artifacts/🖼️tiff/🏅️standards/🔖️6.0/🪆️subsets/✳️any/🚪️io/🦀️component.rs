@@ -15,11 +15,11 @@ pub mod derived_composition {
         type Snapshot = TiffSnapshot;
         const WRITES: Dialect = DIALECT;
 
-        fn reads() -> &'static [Dialect] {
+        async fn reads() -> &'static [Dialect] {
             &[DIALECT, DEP_BINARY]
         }
 
-        fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+        async fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
             // 🌱 Every listed read dialect's payload is raw text/bytes that this artifact's own
             // analyzer already round-trips through `store::Document{Dsl,Pack}` -- including bytes
             // claiming a dependency's dialect, since (for a single-standard DAG-adjacent dependency
@@ -81,19 +81,19 @@ enum Endian {
 }
 
 impl Endian {
-    fn u16(self, b: &[u8]) -> u16 {
+    async fn u16(self, b: &[u8]) -> u16 {
         match self {
             Endian::Little => u16::from_le_bytes([b[0], b[1]]),
             Endian::Big => u16::from_be_bytes([b[0], b[1]]),
         }
     }
-    fn u32(self, b: &[u8]) -> u32 {
+    async fn u32(self, b: &[u8]) -> u32 {
         match self {
             Endian::Little => u32::from_le_bytes([b[0], b[1], b[2], b[3]]),
             Endian::Big => u32::from_be_bytes([b[0], b[1], b[2], b[3]]),
         }
     }
-    fn u64(self, b: &[u8]) -> u64 {
+    async fn u64(self, b: &[u8]) -> u64 {
         match self {
             Endian::Little => u64::from_le_bytes(b.try_into().expect("8 bytes")),
             Endian::Big => u64::from_be_bytes(b.try_into().expect("8 bytes")),
@@ -101,26 +101,26 @@ impl Endian {
     }
 }
 
-fn read_u16(data: &[u8], pos: usize, e: Endian) -> Result<u16, String> {
+async fn read_u16(data: &[u8], pos: usize, e: Endian) -> Result<u16, String> {
     data.get(pos..pos + 2).map(|s| e.u16(s)).ok_or_else(|| "tiff: truncated (u16)".into())
 }
-fn read_u32(data: &[u8], pos: usize, e: Endian) -> Result<u32, String> {
+async fn read_u32(data: &[u8], pos: usize, e: Endian) -> Result<u32, String> {
     data.get(pos..pos + 4).map(|s| e.u32(s)).ok_or_else(|| "tiff: truncated (u32)".into())
 }
 
-fn write_u16(out: &mut Vec<u8>, v: u16, bo: TiffByteOrder) {
+async fn write_u16(out: &mut Vec<u8>, v: u16, bo: TiffByteOrder) {
     match bo {
         TiffByteOrder::LittleEndian => out.extend_from_slice(&v.to_le_bytes()),
         TiffByteOrder::BigEndian => out.extend_from_slice(&v.to_be_bytes()),
     }
 }
-fn write_u32(out: &mut Vec<u8>, v: u32, bo: TiffByteOrder) {
+async fn write_u32(out: &mut Vec<u8>, v: u32, bo: TiffByteOrder) {
     match bo {
         TiffByteOrder::LittleEndian => out.extend_from_slice(&v.to_le_bytes()),
         TiffByteOrder::BigEndian => out.extend_from_slice(&v.to_be_bytes()),
     }
 }
-fn write_u64(out: &mut Vec<u8>, v: u64, bo: TiffByteOrder) {
+async fn write_u64(out: &mut Vec<u8>, v: u64, bo: TiffByteOrder) {
     match bo {
         TiffByteOrder::LittleEndian => out.extend_from_slice(&v.to_le_bytes()),
         TiffByteOrder::BigEndian => out.extend_from_slice(&v.to_be_bytes()),
@@ -142,7 +142,7 @@ struct RawIfd {
 }
 
 /// 📖️ Walks one IFD: 2-byte entry count, N x 12-byte entries, 4-byte offset to the next IFD.
-fn read_ifd_raw(data: &[u8], ifd_off: usize, e: Endian) -> Result<RawIfd, String> {
+async fn read_ifd_raw(data: &[u8], ifd_off: usize, e: Endian) -> Result<RawIfd, String> {
     let count = read_u16(data, ifd_off, e)? as usize;
     let mut entries = Vec::with_capacity(count);
     let mut pos = ifd_off + 2;
@@ -164,7 +164,7 @@ fn read_ifd_raw(data: &[u8], ifd_off: usize, e: Endian) -> Result<RawIfd, String
 
 /// 🔗️ Walks the WHOLE `next IFD offset` chain starting at `first_off` (0 = none). Cycle-
 /// guarded so a malformed/adversarial chain errors instead of looping forever.
-fn read_ifd_chain(data: &[u8], first_off: usize, e: Endian) -> Result<Vec<RawIfd>, String> {
+async fn read_ifd_chain(data: &[u8], first_off: usize, e: Endian) -> Result<Vec<RawIfd>, String> {
     let mut out = Vec::new();
     let mut off = first_off;
     let mut seen = std::collections::HashSet::new();
@@ -183,7 +183,7 @@ fn read_ifd_chain(data: &[u8], first_off: usize, e: Endian) -> Result<Vec<RawIfd
 /// 🔢️ Reads one entry's real typed value, resolving the inline-vs-offset rule (TIFF6 §2: the
 /// value is stored inline in the 4-byte field if `element_size * count <= 4`, else the field
 /// holds a file offset to the values) GENERICALLY for all 12 field types.
-fn read_tag_values(data: &[u8], entry: &RawEntry, e: Endian, kind: TiffFieldType) -> Result<TiffValues, String> {
+async fn read_tag_values(data: &[u8], entry: &RawEntry, e: Endian, kind: TiffFieldType) -> Result<TiffValues, String> {
     let elem = kind.element_size();
     let count = entry.count as usize;
     let total = elem * count;
@@ -216,17 +216,17 @@ fn read_tag_values(data: &[u8], entry: &RawEntry, e: Endian, kind: TiffFieldType
 //#endregion IfdRead
 
 //#region TagLookup
-fn tag_values<'a>(ifd: &'a TiffIfd, tag: u16) -> Option<&'a TiffValues> {
+async fn tag_values<'a>(ifd: &'a TiffIfd, tag: u16) -> Option<&'a TiffValues> {
     ifd.entries.iter().find(|t| t.tag == tag).map(|t| &t.values)
 }
-fn tag_u32_list(ifd: &TiffIfd, tag: u16) -> Vec<u32> {
+async fn tag_u32_list(ifd: &TiffIfd, tag: u16) -> Vec<u32> {
     match tag_values(ifd, tag) {
         Some(TiffValues::Short(v)) => v.iter().map(|&x| x as u32).collect(),
         Some(TiffValues::Long(v)) => v.clone(),
         _ => Vec::new(),
     }
 }
-fn tag_u32(ifd: &TiffIfd, tag: u16) -> Option<u32> {
+async fn tag_u32(ifd: &TiffIfd, tag: u16) -> Option<u32> {
     tag_u32_list(ifd, tag).first().copied()
 }
 //#endregion TagLookup
@@ -235,7 +235,7 @@ fn tag_u32(ifd: &TiffIfd, tag: u16) -> Option<u32> {
 /// 📦 PackBits (TIFF compression scheme 32773, TIFF6 §9): signed control byte `n` — `n >= 0`
 /// copies the next `n+1` literal bytes; `n < 0` (and `n != -128`) repeats the next byte
 /// `1-n` times; `n == -128` is a no-op.
-fn packbits_decode(data: &[u8], expected_len: usize) -> Result<Vec<u8>, String> {
+async fn packbits_decode(data: &[u8], expected_len: usize) -> Result<Vec<u8>, String> {
     let mut out = Vec::with_capacity(expected_len);
     let mut i = 0usize;
     while i < data.len() && out.len() < expected_len {
@@ -265,7 +265,7 @@ fn packbits_decode(data: &[u8], expected_len: usize) -> Result<Vec<u8>, String> 
     Ok(out)
 }
 
-fn packbits_encode(data: &[u8]) -> Vec<u8> {
+async fn packbits_encode(data: &[u8]) -> Vec<u8> {
     let mut out = Vec::new();
     let mut i = 0usize;
     let n = data.len();
@@ -300,7 +300,7 @@ fn packbits_encode(data: &[u8]) -> Vec<u8> {
 //#region Decode
 /// 🚫 CompressionScopeNote: only uncompressed(1)/PackBits(32773) are decoded for real —
 /// LZW(5)/Deflate(8)/CCITT(2/3/4)/others deliberately fail rather than fabricate pixels.
-fn decode_pixels_from_ifd(data: &[u8], ifd: &TiffIfd) -> Result<Vec<u8>, String> {
+async fn decode_pixels_from_ifd(data: &[u8], ifd: &TiffIfd) -> Result<Vec<u8>, String> {
     let width = tag_u32(ifd, TAG_IMAGE_WIDTH).ok_or("tiff: missing ImageWidth")?;
     let height = tag_u32(ifd, TAG_IMAGE_LENGTH).ok_or("tiff: missing ImageLength")?;
     if width == 0 || height == 0 {
@@ -376,7 +376,7 @@ fn decode_pixels_from_ifd(data: &[u8], ifd: &TiffIfd) -> Result<Vec<u8>, String>
     Ok(rgba)
 }
 
-pub fn decode_tiff(data: &[u8]) -> Result<TiffSnapshot, String> {
+pub async fn decode_tiff(data: &[u8]) -> Result<TiffSnapshot, String> {
     if data.len() < 8 {
         return Err("tiff: truncated header".into());
     }
@@ -414,7 +414,7 @@ pub fn decode_tiff(data: &[u8]) -> Result<TiffSnapshot, String> {
 //#endregion Decode
 
 //#region Encode
-fn rgba_to_rgb(pixels: &[u8], width: u32, height: u32) -> Result<Vec<u8>, String> {
+async fn rgba_to_rgb(pixels: &[u8], width: u32, height: u32) -> Result<Vec<u8>, String> {
     let n = width as usize * height as usize;
     if pixels.len() != n * 4 {
         return Err(format!("tiff: pixels length mismatch (got {}, expected {} for {width}x{height} RGBA)", pixels.len(), n * 4));
@@ -426,7 +426,7 @@ fn rgba_to_rgb(pixels: &[u8], width: u32, height: u32) -> Result<Vec<u8>, String
     Ok(rgb)
 }
 
-fn value_bytes(values: &TiffValues, bo: TiffByteOrder) -> Vec<u8> {
+async fn value_bytes(values: &TiffValues, bo: TiffByteOrder) -> Vec<u8> {
     let mut out = Vec::new();
     match values {
         TiffValues::Byte(v) | TiffValues::Undefined(v) => out.extend_from_slice(v),
@@ -455,10 +455,10 @@ fn value_bytes(values: &TiffValues, bo: TiffByteOrder) -> Vec<u8> {
 
 const CORE_STRIP_TAGS: [u16; 9] = [TAG_IMAGE_WIDTH, TAG_IMAGE_LENGTH, TAG_BITS_PER_SAMPLE, TAG_COMPRESSION, TAG_PHOTOMETRIC, TAG_STRIP_OFFSETS, TAG_SAMPLES_PER_PIXEL, TAG_ROWS_PER_STRIP, TAG_STRIP_BYTE_COUNTS];
 
-fn dir_size(n: usize) -> usize {
+async fn dir_size(n: usize) -> usize {
     2 + 12 * n + 4
 }
-fn out_of_line_size(entries: &[TiffTag], bo: TiffByteOrder) -> usize {
+async fn out_of_line_size(entries: &[TiffTag], bo: TiffByteOrder) -> usize {
     entries
         .iter()
         .map(|t| {
@@ -476,7 +476,7 @@ fn out_of_line_size(entries: &[TiffTag], bo: TiffByteOrder) -> usize {
 /// recomputed fresh from `pixels`, every OTHER `ifds[0]` tag carried over verbatim so
 /// `SetTag`-set metadata round-trips. `byte_order` is honored (real round-trip, unlike the
 /// pre-migration engine which always emitted little-endian).
-fn encode_tiff_with(snap: &TiffSnapshot, packbits: bool) -> Result<Vec<u8>, String> {
+async fn encode_tiff_with(snap: &TiffSnapshot, packbits: bool) -> Result<Vec<u8>, String> {
     let width = snap.width().ok_or("tiff: encode requires an ImageWidth tag in ifds[0] (e.g. via SetTag)")?;
     let height = snap.height().ok_or("tiff: encode requires an ImageLength tag in ifds[0] (e.g. via SetTag)")?;
     if width == 0 || height == 0 {
@@ -547,12 +547,12 @@ fn encode_tiff_with(snap: &TiffSnapshot, packbits: bool) -> Result<Vec<u8>, Stri
 /// 🚫 EncodeScopeNote: see `encode_tiff_with`. Uncompressed (`Compression` 1) variant — the
 /// historical default kept so `print_dsl`/`encode_pack_with` and the io export serializer
 /// (which both call this exact function) are unaffected.
-pub fn encode_tiff(snap: &TiffSnapshot) -> Result<Vec<u8>, String> {
+pub async fn encode_tiff(snap: &TiffSnapshot) -> Result<Vec<u8>, String> {
     encode_tiff_with(snap, false)
 }
 
 /// 📦 Same shape as `encode_tiff` but real-PackBits-compresses the strip (`Compression` 32773).
-pub fn encode_tiff_packbits(snap: &TiffSnapshot) -> Result<Vec<u8>, String> {
+pub async fn encode_tiff_packbits(snap: &TiffSnapshot) -> Result<Vec<u8>, String> {
     encode_tiff_with(snap, true)
 }
 //#endregion Encode
@@ -564,7 +564,7 @@ mod tests {
     use crate::artifacts::tiff::schema::demo_tiff_snapshot;
     use crate::artifacts::tiff::schema::snapshot::{TiffFieldType, TiffValues};
 
-    fn gradient_checkerboard_rgba(w: u32, h: u32) -> Vec<u8> {
+    async fn gradient_checkerboard_rgba(w: u32, h: u32) -> Vec<u8> {
         let mut out = Vec::with_capacity((w * h * 4) as usize);
         for y in 0..h {
             for x in 0..w {
@@ -575,14 +575,14 @@ mod tests {
         out
     }
 
-    fn ifd0_snapshot(width: u32, height: u32) -> TiffIfd {
+    async fn ifd0_snapshot(width: u32, height: u32) -> TiffIfd {
         TiffIfd { entries: vec![TiffTag { tag: TAG_IMAGE_WIDTH, kind: TiffFieldType::Long, values: TiffValues::Long(vec![width]) }, TiffTag { tag: TAG_IMAGE_LENGTH, kind: TiffFieldType::Long, values: TiffValues::Long(vec![height]) }] }
     }
 
     /// 🔬 Load-bearing regression: non-solid 9x5 checkerboard/gradient round-tripped through the
     /// real uncompressed IFD codec.
     #[test]
-    fn gradient_checkerboard_uncompressed_round_trip() {
+    async fn gradient_checkerboard_uncompressed_round_trip() {
         let (w, h) = (9u32, 5u32);
         let rgba = gradient_checkerboard_rgba(w, h);
         let snap = TiffSnapshot { schema: STDIO_TIFF_DOCUMENT_SCHEMA.into(), byte_order: TiffByteOrder::LittleEndian, ifds: vec![ifd0_snapshot(w, h)], pixels: rgba.clone() };
@@ -597,7 +597,7 @@ mod tests {
     /// actually exercised (not just pass-through), by asserting the compressed strip is smaller
     /// than the raw RGB and that decode reconstructs the exact original pixels.
     #[test]
-    fn gradient_checkerboard_packbits_round_trip() {
+    async fn gradient_checkerboard_packbits_round_trip() {
         let (w, h) = (9u32, 5u32);
         let rgba = gradient_checkerboard_rgba(w, h);
         let snap = TiffSnapshot { schema: STDIO_TIFF_DOCUMENT_SCHEMA.into(), byte_order: TiffByteOrder::LittleEndian, ifds: vec![ifd0_snapshot(w, h)], pixels: rgba.clone() };
@@ -611,7 +611,7 @@ mod tests {
     /// 🔬 PackBits actually runs real repeat/literal RLE, not a pass-through: a solid-color strip
     /// (long repeat runs) must compress to fewer bytes than the raw RGB.
     #[test]
-    fn packbits_compresses_repetitive_data() {
+    async fn packbits_compresses_repetitive_data() {
         let (w, h) = (20u32, 10u32);
         let rgba: Vec<u8> = (0..w * h).flat_map(|_| [128u8, 128, 128, 255]).collect();
         let snap = TiffSnapshot { schema: STDIO_TIFF_DOCUMENT_SCHEMA.into(), byte_order: TiffByteOrder::LittleEndian, ifds: vec![ifd0_snapshot(w, h)], pixels: rgba.clone() };
@@ -623,7 +623,7 @@ mod tests {
     }
 
     #[test]
-    fn packbits_hand_decode_control_bytes() {
+    async fn packbits_hand_decode_control_bytes() {
         // literal run of 3 (10,20,30), then repeat run of 5x99, then literal run of 2 (1,2)
         let encoded: [u8; 9] = [2, 10, 20, 30, 0xFC, 99, 1, 1, 2];
         let expected: Vec<u8> = vec![10, 20, 30, 99, 99, 99, 99, 99, 1, 2];
@@ -637,7 +637,7 @@ mod tests {
     /// 🔬 Big-endian (`MM`) byte order must decode correctly too, AND encode must round-trip
     /// `byte_order` itself (real round-trip, not always-little-endian).
     #[test]
-    fn big_endian_round_trip() {
+    async fn big_endian_round_trip() {
         let (w, h) = (2u32, 1u32);
         let rgba = vec![10u8, 20, 30, 255, 40, 50, 60, 255];
         let snap = TiffSnapshot { schema: STDIO_TIFF_DOCUMENT_SCHEMA.into(), byte_order: TiffByteOrder::BigEndian, ifds: vec![ifd0_snapshot(w, h)], pixels: rgba.clone() };
@@ -654,7 +654,7 @@ mod tests {
     /// `ifds[0]` must survive an encode/decode round trip verbatim — proves the generic
     /// tag/type/value model, not just the hardcoded strip-geometry tags.
     #[test]
-    fn carried_ascii_tag_round_trips() {
+    async fn carried_ascii_tag_round_trips() {
         let (w, h) = (2u32, 2u32);
         let rgba = vec![1u8; (w * h * 4) as usize];
         let mut ifd = ifd0_snapshot(w, h);
@@ -668,7 +668,7 @@ mod tests {
 
     /// 🔬 A short (inline) non-core numeric tag also survives.
     #[test]
-    fn carried_short_tag_round_trips() {
+    async fn carried_short_tag_round_trips() {
         let (w, h) = (2u32, 2u32);
         let rgba = vec![1u8; (w * h * 4) as usize];
         let mut ifd = ifd0_snapshot(w, h);
@@ -680,13 +680,13 @@ mod tests {
     }
 
     #[test]
-    fn sniff_rejects_non_tiff_bytes() {
+    async fn sniff_rejects_non_tiff_bytes() {
         let err = decode_tiff(b"not a tiff at all").unwrap_err();
         assert!(err.contains("byte-order"));
     }
 
     #[test]
-    fn unsupported_compression_is_a_typed_error() {
+    async fn unsupported_compression_is_a_typed_error() {
         let (w, h) = (2u32, 2u32);
         let mut ifd = ifd0_snapshot(w, h);
         ifd.entries.push(TiffTag { tag: TAG_BITS_PER_SAMPLE, kind: TiffFieldType::Short, values: TiffValues::Short(vec![8]) });
@@ -736,7 +736,7 @@ mod tests {
         /// `recognize`/`walk_protocol` laws below (a parse failure here fails fast with a
         /// clearer message).
         #[test]
-        fn committed_facet_files_parse() {
+        async fn committed_facet_files_parse() {
             for (label, text) in [("snapshot grammar", snapshot::text::COMPONENT_GRAMMAR_SEMIO), ("mutations grammar", mutations::text::COMPONENT_GRAMMAR_SEMIO), ("diff grammar", diff::text::COMPONENT_GRAMMAR_SEMIO)] {
                 let grammar = dsl::parse_grammar(text).unwrap_or_else(|e| panic!("{label}: parse_grammar failed: {e:?}"));
                 assert_eq!(grammar.dialect, dsl::SemioDialect::Grammar, "{label}: expected grammar dialect");
@@ -753,7 +753,7 @@ mod tests {
         /// uses, so this is a direct proof this artifact will pass that harness once graduated,
         /// not merely an analogue.
         #[test]
-        fn grammar_conformance_law() {
+        async fn grammar_conformance_law() {
             let grammar = dsl::parse_grammar(snapshot::text::COMPONENT_GRAMMAR_SEMIO).expect("parse snapshot grammar");
             let recognizer = dsl::Recognizer::compile(&grammar);
             let text = store::ArtifactDsl::print_dsl(&demo_tiff_snapshot());
@@ -765,7 +765,7 @@ mod tests {
         /// ✅️ `ops_grammar_conformance_law`: the mutations grammar recognizes real `print_op`
         /// output for every `TiffMutation` variant (`mutations::demo_mutation_cases()`).
         #[test]
-        fn ops_grammar_conformance_law() {
+        async fn ops_grammar_conformance_law() {
             let grammar = dsl::parse_grammar(mutations::text::COMPONENT_GRAMMAR_SEMIO).expect("parse mutations grammar");
             let recognizer = dsl::Recognizer::compile(&grammar);
             for mutation in mutations::demo_mutation_cases() {
@@ -779,7 +779,7 @@ mod tests {
         /// empty diff, every IFD-level/tag-level collection-triple shape, and every
         /// `TiffValues` field-type family.
         #[test]
-        fn diff_grammar_conformance_law() {
+        async fn diff_grammar_conformance_law() {
             let grammar = dsl::parse_grammar(diff::text::COMPONENT_GRAMMAR_SEMIO).expect("parse diff grammar");
             let recognizer = dsl::Recognizer::compile(&grammar);
             for d in diff::demo_diff_cases() {
@@ -798,7 +798,7 @@ mod tests {
         /// trailing `chain rest bytes` consumes everything past that point — so `consumed ==
         /// bytes.len()` still holds exactly for every facet, same as the op/diff protocols.
         #[test]
-        fn protocol_walk_law() {
+        async fn protocol_walk_law() {
             let pack_spec = dsl::parse_protocol(snapshot::binary::COMPONENT_PROTOCOL_SEMIO).expect("parse snapshot protocol");
             let packed = store::ArtifactPack::encode_pack(&demo_tiff_snapshot());
             let (_, inner) = store::semio_format::unwrap_binary(&packed).expect("unwrap semio envelope");
@@ -825,7 +825,7 @@ mod tests {
         /// `parse_dsl(fixture) == demo()`, `print_dsl(demo()) == fixture` (byte-for-byte), and
         /// the pack twin — so the fixtures can never silently drift back to a fake again.
         #[test]
-        fn fixture_honesty_law() {
+        async fn fixture_honesty_law() {
             const FIXTURE_DSL: &str = include_str!("../📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio");
             const FIXTURE_PACK: &[u8] = include_bytes!("../📚️examples/🎬️demo/🖼️assets/🎒️example.pack.semio");
 
@@ -845,7 +845,7 @@ mod tests {
 
         #[test]
         #[ignore]
-        fn zzz_write_native_tiff_fixture() {
+        async fn zzz_write_native_tiff_fixture() {
             let demo = demo_tiff_snapshot();
             let native = encode_tiff(&demo).expect("encode");
             let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🖼️example.tiff");
@@ -865,7 +865,7 @@ pub mod io_registry {
 
     static ENTRIES: OnceLock<Vec<ComposerEntry>> = OnceLock::new();
 
-    pub fn entries() -> &'static [ComposerEntry] {
+    pub async fn entries() -> &'static [ComposerEntry] {
         ENTRIES.get_or_init(|| vec![composer_entry_of::<TiffRawAnyComposer>(), composer_entry_of::<TiffBaselineComposer>()]).as_slice()
     }
 }

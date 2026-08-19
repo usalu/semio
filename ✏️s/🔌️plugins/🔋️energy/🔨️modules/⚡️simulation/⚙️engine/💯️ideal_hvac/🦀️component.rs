@@ -17,7 +17,7 @@ pub struct IdealLoadsConfig {
 }
 
 impl Default for IdealLoadsConfig {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self { max_heating_supply_air_temp_c: 50.0, min_cooling_supply_air_temp_c: 13.0, max_heating_capacity_w: None, max_cooling_capacity_w: None, outdoor_air_per_person_m3_s: 0.009_44, outdoor_air_per_area_m3_s_m2: 0.0 }
     }
 }
@@ -85,12 +85,12 @@ pub struct IdealLoadsOutput {
 /// 🎯️ Deliver ideal heating/cooling to meet zone setpoints and demands.
 ///
 /// Argument order matches the simulation kernel: `(input, system)`.
-pub fn ideal_loads_deliver(input: &IdealLoadsInput, system: &IdealLoadsConfig) -> IdealLoadsOutput {
+pub async fn ideal_loads_deliver(input: &IdealLoadsInput, system: &IdealLoadsConfig) -> IdealLoadsOutput {
     ideal_loads_deliver_with_controls(input, system, EconomizerControl::None, HumidityControl::None)
 }
 
 /// 🎯️ Ideal loads with explicit economizer and humidity controls.
-pub fn ideal_loads_deliver_with_controls(input: &IdealLoadsInput, system: &IdealLoadsConfig, economizer: EconomizerControl, humidity_control: HumidityControl) -> IdealLoadsOutput {
+pub async fn ideal_loads_deliver_with_controls(input: &IdealLoadsInput, system: &IdealLoadsConfig, economizer: EconomizerControl, humidity_control: HumidityControl) -> IdealLoadsOutput {
     let oa_vol = system.outdoor_air_per_person_m3_s * input.occupancy + system.outdoor_air_per_area_m3_s_m2 * input.floor_area_m2;
     let economizer_active = economizer_allows_oa(economizer, input);
     let oa_m_dot = oa_vol.max(0.0) * RHO_AIR_REF;
@@ -155,14 +155,14 @@ pub fn ideal_loads_deliver_with_controls(input: &IdealLoadsInput, system: &Ideal
     }
 }
 
-fn apply_capacity(load: f64, cap: Option<f64>) -> f64 {
+async fn apply_capacity(load: f64, cap: Option<f64>) -> f64 {
     match cap {
         Some(c) => load.min(c),
         None => load,
     }
 }
 
-fn economizer_allows_oa(economizer: EconomizerControl, input: &IdealLoadsInput) -> bool {
+async fn economizer_allows_oa(economizer: EconomizerControl, input: &IdealLoadsInput) -> bool {
     match economizer {
         EconomizerControl::None => false,
         EconomizerControl::DifferentialDryBulb => input.outdoor_temp_c < input.zone_temp_c,
@@ -180,12 +180,12 @@ fn economizer_allows_oa(economizer: EconomizerControl, input: &IdealLoadsInput) 
 mod tests {
     use super::*;
 
-    fn unlimited_system() -> IdealLoadsConfig {
+    async fn unlimited_system() -> IdealLoadsConfig {
         IdealLoadsConfig { max_heating_supply_air_temp_c: 50.0, min_cooling_supply_air_temp_c: 13.0, max_heating_capacity_w: None, max_cooling_capacity_w: None, outdoor_air_per_person_m3_s: 0.01, outdoor_air_per_area_m3_s_m2: 0.0 }
     }
 
     #[test]
-    fn heating_meets_demand() {
+    async fn heating_meets_demand() {
         let system = unlimited_system();
         let input = IdealLoadsInput {
             zone_temp_c: 18.0,
@@ -206,7 +206,7 @@ mod tests {
     }
 
     #[test]
-    fn capacity_limits_cooling() {
+    async fn capacity_limits_cooling() {
         let system = IdealLoadsConfig { max_cooling_capacity_w: Some(1000.0), ..unlimited_system() };
         let input = IdealLoadsInput {
             zone_temp_c: 30.0,
@@ -226,7 +226,7 @@ mod tests {
     }
 
     #[test]
-    fn economizer_active_when_oa_cooler() {
+    async fn economizer_active_when_oa_cooler() {
         let system = unlimited_system();
         let input = IdealLoadsInput {
             zone_temp_c: 25.0,

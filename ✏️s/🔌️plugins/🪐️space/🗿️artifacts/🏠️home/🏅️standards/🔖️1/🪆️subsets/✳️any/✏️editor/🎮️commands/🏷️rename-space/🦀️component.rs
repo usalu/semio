@@ -20,7 +20,7 @@ pub struct RenameSpace {
 //#endregion 🔖️Payload
 
 //#region 🔖️Handle
-pub fn handle(payload: &RenameSpace, _doc: &ArtifactView<'_, SHomeSnapshot>, cfg: &ConfigView<'_, HomeConfig>) -> Result<Emit<SHomeMutation, HomeConfigMutation>, Fault> {
+pub async fn handle(payload: &RenameSpace, _doc: &ArtifactView<'_, SHomeSnapshot>, cfg: &ConfigView<'_, HomeConfig>) -> Result<Emit<SHomeMutation, HomeConfigMutation>, Fault> {
     if payload.name.trim().is_empty() {
         let current_name = cfg.snapshot.directory().spaces.get(&payload.space_id).map(|space| space.view.name.clone()).unwrap_or_default();
         let args = dsl::to_dsl_value(&json!({ "spaceId": payload.space_id, "name": current_name })).ok();
@@ -36,7 +36,7 @@ pub fn handle(payload: &RenameSpace, _doc: &ArtifactView<'_, SHomeSnapshot>, cfg
 mod tests {
     use super::*;
 
-    fn dispatch(payload: RenameSpace, config: &HomeConfig) -> Emit<SHomeMutation, HomeConfigMutation> {
+    async fn dispatch(payload: RenameSpace, config: &HomeConfig) -> Emit<SHomeMutation, HomeConfigMutation> {
         let history = semio_framework_plugin::HistoryView::empty();
         let doc_snapshot = SHomeSnapshot::default();
         let doc = ArtifactView::new(&doc_snapshot, &history);
@@ -45,7 +45,7 @@ mod tests {
     }
 
     #[test]
-    fn empty_name_opens_the_dialog_preseeded_with_the_current_name() {
+    async fn empty_name_opens_the_dialog_preseeded_with_the_current_name() {
         let event_json = serde_json::json!({
             "seq": 1, "id": "evt-1", "hlc": {"physicalMs": 0, "logical": 0}, "actor": {"kind": "user", "id": "u"}, "spaceId": "sp-1",
             "body": {"kind": "space.created", "spaceId": "sp-1", "name": "Old Name", "spaceKind": "atelier", "visibility": "private", "ownerUserId": "u1"},
@@ -63,7 +63,7 @@ mod tests {
     }
 
     #[test]
-    fn non_empty_name_relays_the_rename() {
+    async fn non_empty_name_relays_the_rename() {
         let emit = dispatch(RenameSpace { space_id: "sp-1".into(), name: "New Name".into() }, &HomeConfig::default());
         let (action_id, args) = emit
             .effects

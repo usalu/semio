@@ -17,13 +17,13 @@ pub const WRITER_VIEW_BODY_MAIN: &str = TextWindowKit::KIND_ID;
 /// 🧱️ Stitched into the viewer manifest by `crate::viewer::writer::create_writer_viewer` — the
 /// framework kit's own read-only `window_kind()` variant (never `editable_window_kind()`: a viewer
 /// declares no mutating actions).
-pub fn definition() -> WindowKindDefinition {
+pub async fn definition() -> WindowKindDefinition {
     TextWindowKit::window_kind()
 }
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(document: &WriterSnapshot) -> UiNode {
+pub async fn render(document: &WriterSnapshot) -> UiNode {
     TextWindowKit::render(&TextView { text: writer_text(document), language: Some(document.language_id.clone()), read_only: true })
 }
 //#endregion 🔖️Render
@@ -34,19 +34,19 @@ mod tests {
     use super::*;
 
     #[test]
-    fn definition_uses_the_framework_text_window_kits_frozen_kind_id() {
+    async fn definition_uses_the_framework_text_window_kits_frozen_kind_id() {
         let def = definition();
         assert_eq!(def.id, "framework.window.text");
         assert_eq!(def.id, WRITER_VIEW_WINDOW_KIND);
     }
 
     #[test]
-    fn definition_declares_no_mutating_actions() {
+    async fn definition_declares_no_mutating_actions() {
         assert!(definition().actions.is_empty(), "a viewer window kind must declare no mutating actions");
     }
 
     #[test]
-    fn render_carries_the_documents_own_text_and_language_read_only() {
+    async fn render_carries_the_documents_own_text_and_language_read_only() {
         let document = crate::artifacts::writer::schema::empty_writer_snapshot();
         let node = render(&document);
         let json = serde_json::to_string(&node).unwrap();

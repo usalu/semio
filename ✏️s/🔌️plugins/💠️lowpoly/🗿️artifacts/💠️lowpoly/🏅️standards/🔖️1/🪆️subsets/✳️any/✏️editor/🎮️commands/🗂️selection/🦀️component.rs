@@ -24,7 +24,7 @@ pub mod set_active_object {
         pub object_id: String,
     }
 
-    pub fn handle(payload: &SetActiveObject, doc: &ArtifactView<'_, LowpolySnapshot>, _cfg: &ConfigView<'_, LowpolyConfig>, _ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
+    pub async fn handle(payload: &SetActiveObject, doc: &ArtifactView<'_, LowpolySnapshot>, _cfg: &ConfigView<'_, LowpolyConfig>, _ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
         if doc.snapshot.objects.iter().any(|object| object.id == payload.object_id) {
             Ok(Emit::config(vec![LowpolyConfigMutation::SetActiveObject { object_id: payload.object_id.clone() }]))
         } else {
@@ -44,7 +44,7 @@ pub mod set_active_paint_layer {
         pub layer_index: u32,
     }
 
-    pub fn handle(payload: &SetActivePaintLayer, _doc: &ArtifactView<'_, LowpolySnapshot>, _cfg: &ConfigView<'_, LowpolyConfig>, _ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
+    pub async fn handle(payload: &SetActivePaintLayer, _doc: &ArtifactView<'_, LowpolySnapshot>, _cfg: &ConfigView<'_, LowpolyConfig>, _ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
         Ok(Emit::config(vec![LowpolyConfigMutation::SetActivePaintLayer { value: payload.layer_index }]))
     }
 }
@@ -58,7 +58,7 @@ mod tests {
     use semio_framework_plugin::PluginApp;
 
     #[test]
-    fn set_active_object_is_view_state_and_emits_no_operations() {
+    async fn set_active_object_is_view_state_and_emits_no_operations() {
         let mut a = app();
         let object_id = a.snapshot().expect("projection").objects[0].id.clone();
         let result = dispatch(&mut a, LowpolyCommand::SetActiveObject(super::set_active_object::SetActiveObject { object_id }));
@@ -66,7 +66,7 @@ mod tests {
     }
 
     #[test]
-    fn set_active_paint_layer_is_view_state_and_emits_no_operations() {
+    async fn set_active_paint_layer_is_view_state_and_emits_no_operations() {
         let mut a = app();
         let result = dispatch(&mut a, LowpolyCommand::SetActivePaintLayer(super::set_active_paint_layer::SetActivePaintLayer { layer_index: 0 }));
         assert!(result.mutations.is_empty());

@@ -32,7 +32,7 @@ pub struct RasterArtifact {
 
 //#region 🔖️Conversions
 impl Default for RasterArtifact {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self {
             schema: RASTER_DOCUMENT_SCHEMA.into(),
             id: String::new(),
@@ -55,7 +55,7 @@ impl Default for RasterArtifact {
 
 impl RasterArtifact {
     /// 📸️ Persisted subset.
-    pub fn to_snapshot(&self) -> RasterSnapshot {
+    pub async fn to_snapshot(&self) -> RasterSnapshot {
         RasterSnapshot {
             schema: self.schema.clone(),
             id: self.id.clone(),
@@ -66,7 +66,7 @@ impl RasterArtifact {
     }
 
     /// 🧬️ Builds a full artifact from a snapshot, leaving UI fields at defaults.
-    pub fn from_snapshot(snapshot: RasterSnapshot) -> Self {
+    pub async fn from_snapshot(snapshot: RasterSnapshot) -> Self {
         Self {
             schema: snapshot.schema,
             id: snapshot.id,
@@ -78,7 +78,7 @@ impl RasterArtifact {
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
-    pub fn set_snapshot(&mut self, snapshot: RasterSnapshot) {
+    pub async fn set_snapshot(&mut self, snapshot: RasterSnapshot) {
         self.schema = snapshot.schema;
         self.id = snapshot.id;
         self.title = snapshot.title;
@@ -90,7 +90,7 @@ impl RasterArtifact {
 
 //#region 🔖️Descriptor
 /// 🧬️ Descriptor for `s.raster.raster` — twenty handcrafted schema leaves.
-pub fn raster_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
+pub async fn raster_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
     schema::ArtifactSchemaDescriptor {
         id: "s.raster.raster",
         artifact: schema::FacetLeaves {
@@ -139,15 +139,15 @@ pub mod derived_construction {
         type Snapshot = RasterSnapshot;
         type Mutation = RasterMutation;
         type Diff = RasterDiff;
-        fn empty() -> Self { Self { snapshot: RasterSnapshot::default(), diagnostics: Vec::new() } }
-        fn from_snapshot(snapshot: Self::Snapshot) -> Self { Self { snapshot, diagnostics: Vec::new() } }
-        fn from_text(text: &str) -> Result<Self, store::TextError> {
+        async fn empty() -> Self { Self { snapshot: RasterSnapshot::default(), diagnostics: Vec::new() } }
+        async fn from_snapshot(snapshot: Self::Snapshot) -> Self { Self { snapshot, diagnostics: Vec::new() } }
+        async fn from_text(text: &str) -> Result<Self, store::TextError> {
             Ok(Self::from_snapshot(<RasterSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
-        fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
+        async fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
             Ok(Self::from_snapshot(<RasterSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
         }
-        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
+        async fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let outcome = <Self::Mutation as protocol::Mutation<Self::Snapshot>>::diff(&mutation, &self.snapshot);
             match <Self::Diff as protocol::MutationDiff<Self::Snapshot>>::apply(outcome.diff(), &self.snapshot) {
                 Ok(snapshot) => self.snapshot = snapshot,
@@ -159,7 +159,7 @@ pub mod derived_construction {
             }
             (self, outcome)
         }
-        fn absorb(
+        async fn absorb(
             mut self,
             diff: Self::Diff,
         ) -> protocol::MutationApplyResult<Self> {
@@ -167,7 +167,7 @@ pub mod derived_construction {
             self.snapshot = snapshot;
             Ok(self)
         }
-        fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
+        async fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
             if self.diagnostics.is_empty() { Ok(self.snapshot) } else { Err(self.diagnostics) }
         }
     }
@@ -191,11 +191,11 @@ pub mod derived_analysis {
         type Parts = RasterParts;
         const DIALECT: Dialect = Dialect { artifact_kind: "s.raster", standard: StandardId("1"), subset: SubsetId("*") };
 
-        fn sniff(_source: &AnalyzeSource<'_>) -> IoConfidence {
+        async fn sniff(_source: &AnalyzeSource<'_>) -> IoConfidence {
             IoConfidence::Medium
         }
 
-        fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
+        async fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
             let mut parts = RasterParts::default();
             let mut diagnostics = Vec::new();
             let mut confidence = IoConfidence::High;
@@ -244,7 +244,7 @@ semio_framework_plugin::derive_artifact_facets!(
 /// use super::standards::v1::subsets::any::schema::*; }` shim keeps that path resolving).
 use crate::artifacts::raster::{RasterSnapshot, RasterTransform};
 
-pub fn create_raster_id(prefix: &str) -> String {
+pub async fn create_raster_id(prefix: &str) -> String {
     let next = {
         let hex = blake3::hash(concat!(file!(), line!()).as_bytes()).to_hex();
         u64::from_str_radix(&hex[..8], 16).unwrap_or(1)
@@ -252,48 +252,48 @@ pub fn create_raster_id(prefix: &str) -> String {
     format!("{prefix}-{next}")
 }
 
-pub fn empty_raster_snapshot() -> RasterSnapshot {
+pub async fn empty_raster_snapshot() -> RasterSnapshot {
     RasterSnapshot { schema: RASTER_DOCUMENT_SCHEMA.into(), id: "raster".into(), title: Some("Untitled".into()), layers: Vec::new(), assets: BTreeMap::new() }
 }
 
 //#region 🔖️Tree
-pub fn layer_node_id(layer: &RasterLayerNode) -> &str {
+pub async fn layer_node_id(layer: &RasterLayerNode) -> &str {
     match layer {
         RasterLayerNode::Pixel { id, .. } | RasterLayerNode::Group { id, .. } | RasterLayerNode::Adjustment { id, .. } => id,
     }
 }
 
-pub fn layer_name(layer: &RasterLayerNode) -> &str {
+pub async fn layer_name(layer: &RasterLayerNode) -> &str {
     match layer {
         RasterLayerNode::Pixel { name, .. } | RasterLayerNode::Group { name, .. } | RasterLayerNode::Adjustment { name, .. } => name,
     }
 }
 
-pub fn layer_visible(layer: &RasterLayerNode) -> bool {
+pub async fn layer_visible(layer: &RasterLayerNode) -> bool {
     match layer {
         RasterLayerNode::Pixel { visible, .. } | RasterLayerNode::Group { visible, .. } | RasterLayerNode::Adjustment { visible, .. } => *visible,
     }
 }
 
-pub fn layer_opacity(layer: &RasterLayerNode) -> f32 {
+pub async fn layer_opacity(layer: &RasterLayerNode) -> f32 {
     match layer {
         RasterLayerNode::Pixel { opacity, .. } | RasterLayerNode::Group { opacity, .. } | RasterLayerNode::Adjustment { opacity, .. } => *opacity,
     }
 }
 
-pub fn layer_blend_mode(layer: &RasterLayerNode) -> &str {
+pub async fn layer_blend_mode(layer: &RasterLayerNode) -> &str {
     match layer {
         RasterLayerNode::Pixel { blend_mode, .. } | RasterLayerNode::Group { blend_mode, .. } | RasterLayerNode::Adjustment { blend_mode, .. } => blend_mode,
     }
 }
 
-pub fn layer_transform(layer: &RasterLayerNode) -> &RasterTransform {
+pub async fn layer_transform(layer: &RasterLayerNode) -> &RasterTransform {
     match layer {
         RasterLayerNode::Pixel { transform, .. } | RasterLayerNode::Group { transform, .. } | RasterLayerNode::Adjustment { transform, .. } => transform,
     }
 }
 
-pub fn find_layer<'a>(layers: &'a [RasterLayerNode], target_id: &str) -> Option<&'a RasterLayerNode> {
+pub async fn find_layer<'a>(layers: &'a [RasterLayerNode], target_id: &str) -> Option<&'a RasterLayerNode> {
     for layer in layers {
         if layer_node_id(layer) == target_id {
             return Some(layer);
@@ -308,8 +308,8 @@ pub fn find_layer<'a>(layers: &'a [RasterLayerNode], target_id: &str) -> Option<
 }
 
 /// 🧭️ Finds a layer's parent-group id (`None` at the root) and its index among its siblings.
-pub fn locate_layer(layers: &[RasterLayerNode], target_id: &str) -> Option<(Option<String>, usize)> {
-    fn walk(layers: &[RasterLayerNode], parent: Option<&str>, target_id: &str) -> Option<(Option<String>, usize)> {
+pub async fn locate_layer(layers: &[RasterLayerNode], target_id: &str) -> Option<(Option<String>, usize)> {
+    async fn walk(layers: &[RasterLayerNode], parent: Option<&str>, target_id: &str) -> Option<(Option<String>, usize)> {
         for (index, layer) in layers.iter().enumerate() {
             if layer_node_id(layer) == target_id {
                 return Some((parent.map(str::to_string), index));
@@ -325,9 +325,9 @@ pub fn locate_layer(layers: &[RasterLayerNode], target_id: &str) -> Option<(Opti
     walk(layers, None, target_id)
 }
 
-pub fn flatten_raster_layers(layers: &[RasterLayerNode]) -> Vec<&RasterLayerNode> {
+pub async fn flatten_raster_layers(layers: &[RasterLayerNode]) -> Vec<&RasterLayerNode> {
     let mut out = Vec::new();
-    fn visit<'a>(layers: &'a [RasterLayerNode], out: &mut Vec<&'a RasterLayerNode>) {
+    async fn visit<'a>(layers: &'a [RasterLayerNode], out: &mut Vec<&'a RasterLayerNode>) {
         for layer in layers {
             out.push(layer);
             if let RasterLayerNode::Group { children, .. } = layer {
@@ -344,15 +344,15 @@ pub fn flatten_raster_layers(layers: &[RasterLayerNode]) -> Vec<&RasterLayerNode
 /// cross-module from `🚪️io/🦀️component.rs`'s `MediaImport` region (`raster_document_json_from_dwg`,
 /// `raster_image_layer_and_asset`), which need a specific name/width/height rather than
 /// `create_layer_of_kind`'s generic defaults.
-pub fn create_pixel_layer(name: &str, width: u32, height: u32) -> RasterLayerNode {
+pub async fn create_pixel_layer(name: &str, width: u32, height: u32) -> RasterLayerNode {
     RasterLayerNode::Pixel { id: create_raster_id("layer"), name: name.into(), visible: true, opacity: 1.0, blend_mode: "normal".into(), transform: RasterTransform::default(), mask: None, width: Some(width), height: Some(height), image_key: None }
 }
 
-fn create_group_layer() -> RasterLayerNode {
+async fn create_group_layer() -> RasterLayerNode {
     RasterLayerNode::Group { id: create_raster_id("group"), name: "Group".into(), visible: true, opacity: 1.0, blend_mode: "normal".into(), transform: RasterTransform::default(), mask: None, children: Vec::new() }
 }
 
-fn create_adjustment_layer() -> RasterLayerNode {
+async fn create_adjustment_layer() -> RasterLayerNode {
     RasterLayerNode::Adjustment {
         id: create_raster_id("adjust"),
         name: "Adjustment".into(),
@@ -365,7 +365,7 @@ fn create_adjustment_layer() -> RasterLayerNode {
     }
 }
 
-pub fn create_layer_of_kind(kind: &str) -> RasterLayerNode {
+pub async fn create_layer_of_kind(kind: &str) -> RasterLayerNode {
     match kind {
         "group" => create_group_layer(),
         "adjustment" => create_adjustment_layer(),
@@ -373,14 +373,14 @@ pub fn create_layer_of_kind(kind: &str) -> RasterLayerNode {
     }
 }
 
-pub fn empty_raster_document() -> RasterSnapshot {
+pub async fn empty_raster_document() -> RasterSnapshot {
     let mut document = empty_raster_snapshot();
     document.id = "empty".into();
     document.layers = vec![create_pixel_layer("Background", 512, 512)];
     document
 }
 
-pub fn semio_fixture_snapshot() -> RasterSnapshot {
+pub async fn semio_fixture_snapshot() -> RasterSnapshot {
     let mut assets = BTreeMap::new();
     // 🖼️ A real, decodable 2x2 RGBA PNG (not merely the PNG magic-number bytes the pre-migration
     // fixture embedded verbatim with no decode validation) — this migration routes every asset
@@ -430,19 +430,19 @@ pub fn semio_fixture_snapshot() -> RasterSnapshot {
 }
 
 /// 📄️ The `semio` example document used by the app manifest and tests.
-pub fn semio_example_document() -> RasterSnapshot {
+pub async fn semio_example_document() -> RasterSnapshot {
     semio_fixture_snapshot()
 }
 
 /// 📄️ JSON re-serialization of {@link semio_example_document}, for the framework-generic call sites that
 /// contractually require JSON text (`App::example`'s manifest `document_json`) — out of scope to change,
 /// since it is defined in `framework/plugin`.
-pub fn semio_example_json() -> String {
+pub async fn semio_example_json() -> String {
     serde_json::to_string(&semio_example_document()).expect("serialize semio example document")
 }
 
 /// 📄️ Duplicates a layer subtree with freshly minted ids (a new document node, not an operation inverse).
-pub fn clone_layer(layer: &RasterLayerNode) -> RasterLayerNode {
+pub async fn clone_layer(layer: &RasterLayerNode) -> RasterLayerNode {
     match layer {
         RasterLayerNode::Pixel { name, visible, opacity, blend_mode, transform, mask, width, height, image_key, .. } => RasterLayerNode::Pixel {
             id: create_raster_id("layer"),
@@ -486,7 +486,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn imports_dwg_polyline_into_raster_document() {
+    async fn imports_dwg_polyline_into_raster_document() {
         let mut drawing = semio_s_plugin_stdio::artifacts::dwg::DwgDrawing::default();
         let layer = drawing.ensure_layer("0");
         drawing.entities.push(semio_s_plugin_stdio::artifacts::dwg::DwgEntity {
@@ -510,7 +510,7 @@ mod tests {
     }
 
     #[test]
-    fn imports_empty_dwg_into_blank_raster_document() {
+    async fn imports_empty_dwg_into_blank_raster_document() {
         let drawing = semio_s_plugin_stdio::artifacts::dwg::DwgDrawing::default();
         let value = crate::artifacts::raster::io::raster_document_json_from_dwg(&drawing).expect("empty dwg import");
         let document: RasterSnapshot = serde_json::from_value(value).expect("valid raster document");

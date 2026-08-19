@@ -7,5 +7,5 @@ pub const TOUCHED_PATHS: &[&str] = &["document/scene"];
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct GltfUnbindDefaultScenePayload {  }
-pub fn validate(payload: &GltfUnbindDefaultScenePayload, base: &GltfSnapshot) -> Result<(), GltfTopLevelMutationRejection> { if base.document.scene.is_none() { return Err(reject("gltf.mutation.relation-absent", "document/scene", "no default scene is bound")); } Ok(()) }
-pub fn apply(payload: &GltfUnbindDefaultScenePayload, base: &GltfSnapshot) -> Result<GltfSnapshot, GltfTopLevelMutationRejection> { validate(payload, base)?; let mut next = base.clone(); next.document.scene = None; Ok(next) }
+pub async fn validate(payload: &GltfUnbindDefaultScenePayload, base: &GltfSnapshot) -> Result<(), GltfTopLevelMutationRejection> { if base.document.scene.is_none() { return Err(reject("gltf.mutation.relation-absent", "document/scene", "no default scene is bound")); } Ok(()) }
+pub async fn apply(payload: &GltfUnbindDefaultScenePayload, base: &GltfSnapshot) -> Result<GltfSnapshot, GltfTopLevelMutationRejection> { validate(payload, base)?; let mut next = base.clone(); next.document.scene = None; Ok(next) }

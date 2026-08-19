@@ -12,7 +12,7 @@ pub struct WorkflowEngagementSubmit {
     pub value: Option<String>,
 }
 
-pub fn handle(payload: &WorkflowEngagementSubmit, _doc: &ArtifactView<'_, WorkflowSnapshot>, cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
+pub async fn handle(payload: &WorkflowEngagementSubmit, _doc: &ArtifactView<'_, WorkflowSnapshot>, cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
     let raw = payload.value.clone().unwrap_or_else(|| cfg.snapshot.workflow_engagement_input.clone());
     let mut parts = raw.split_whitespace();
     match (parts.next(), parts.next()) {
@@ -30,7 +30,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn space_command_op_text_round_trips_every_variant() {
+    async fn space_command_op_text_round_trips_every_variant() {
         use crate::engine::space::SpaceCommand;
         store::os_store::test_support::assert_op_line_round_trip(&SpaceCommand::WorkflowEngagementSubmit(WorkflowEngagementSubmit { value: Some("draw draw".into()) }));
         store::os_store::test_support::assert_op_line_round_trip(&SpaceCommand::CompiledDagEngagementSubmit(crate::engine::space::commands::compiled_dag_engagement_submit::CompiledDagEngagementSubmit {}));

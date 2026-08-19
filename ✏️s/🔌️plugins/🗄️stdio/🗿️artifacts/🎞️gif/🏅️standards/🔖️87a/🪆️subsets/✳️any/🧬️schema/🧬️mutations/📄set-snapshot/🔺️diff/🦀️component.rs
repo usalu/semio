@@ -5,7 +5,7 @@ use crate::artifacts::gif::standards::v87a::subsets::any::schema::snapshot::GifS
 
 /// 🔺️ Diff helper for set-snapshot — sparse field-by-field `between(base, snapshot)`, never a
 /// full-replace slot.
-pub fn diff(base: &GifSnapshot, snapshot: &GifSnapshot) -> protocol::MutationOutcome<GifDiff> {
+pub async fn diff(base: &GifSnapshot, snapshot: &GifSnapshot) -> protocol::MutationOutcome<GifDiff> {
     if base == snapshot {
         return protocol::MutationOutcome::new(GifDiff::default()).warn("mutation.no-op", "set-snapshot: new snapshot is identical to the current one");
     }

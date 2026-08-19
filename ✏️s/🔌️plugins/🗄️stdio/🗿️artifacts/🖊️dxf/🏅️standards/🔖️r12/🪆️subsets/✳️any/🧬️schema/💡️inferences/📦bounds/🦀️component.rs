@@ -28,12 +28,12 @@ pub struct DxfBounds {
 /// `compute` returns for zero entities (the fold's identity value), keeping the inference-default
 /// law correct.
 impl Default for DxfBounds {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self { min: [0.0, 0.0, 0.0], max: [0.0, 0.0, 0.0], entity_count: 0 }
     }
 }
 
-fn expand(min: &mut [f64; 3], max: &mut [f64; 3], seen: &mut bool, p: [f64; 3]) {
+async fn expand(min: &mut [f64; 3], max: &mut [f64; 3], seen: &mut bool, p: [f64; 3]) {
     if !*seen {
         *min = p;
         *max = p;
@@ -46,14 +46,14 @@ fn expand(min: &mut [f64; 3], max: &mut [f64; 3], seen: &mut bool, p: [f64; 3]) 
     }
 }
 
-fn expand_sphere(min: &mut [f64; 3], max: &mut [f64; 3], seen: &mut bool, center: [f64; 3], radius: f64) {
+async fn expand_sphere(min: &mut [f64; 3], max: &mut [f64; 3], seen: &mut bool, center: [f64; 3], radius: f64) {
     let lo = [center[0] - radius, center[1] - radius, center[2] - radius];
     let hi = [center[0] + radius, center[1] + radius, center[2] + radius];
     expand(min, max, seen, lo);
     expand(min, max, seen, hi);
 }
 
-fn expand_entity(min: &mut [f64; 3], max: &mut [f64; 3], seen: &mut bool, entity: &DxfEntity) {
+async fn expand_entity(min: &mut [f64; 3], max: &mut [f64; 3], seen: &mut bool, entity: &DxfEntity) {
     match entity {
         DxfEntity::Line { start, end, .. } => {
             expand(min, max, seen, *start);
@@ -80,7 +80,7 @@ fn expand_entity(min: &mut [f64; 3], max: &mut [f64; 3], seen: &mut bool, entity
 
 /// 📦️ Computes [`DxfBounds`] over every top-level `entities` record plus every block's own
 /// nested `entities` — see module doc comment for the per-variant bounding rule.
-pub fn compute_dxf_bounds(snapshot: &DxfSnapshot) -> DxfBounds {
+pub async fn compute_dxf_bounds(snapshot: &DxfSnapshot) -> DxfBounds {
     let mut min = [0.0, 0.0, 0.0];
     let mut max = [0.0, 0.0, 0.0];
     let mut seen = false;
@@ -103,7 +103,7 @@ mod tests {
     use crate::artifacts::dxf::schema::snapshot::DxfBlock;
 
     #[test]
-    fn bounds_matches_hand_built_entity_extent() {
+    async fn bounds_matches_hand_built_entity_extent() {
         let snapshot = DxfSnapshot {
             schema: "s.stdio.dxf".into(),
             header_vars: Vec::new(),
@@ -119,7 +119,7 @@ mod tests {
     }
 
     #[test]
-    fn inference_determinism_law() {
+    async fn inference_determinism_law() {
         let snapshot = DxfSnapshot {
             schema: "s.stdio.dxf".into(),
             header_vars: Vec::new(),
@@ -132,7 +132,7 @@ mod tests {
     }
 
     #[test]
-    fn inference_default_law() {
+    async fn inference_default_law() {
         assert_eq!(compute_dxf_bounds(&DxfSnapshot::default()), DxfBounds::default());
     }
 }

@@ -58,12 +58,12 @@ pub struct TxtLinesDiff {
 
 impl TxtLinesDiff {
     /// 🕳️ No removed/modified/added entries.
-    pub fn is_empty(&self) -> bool {
+    pub async fn is_empty(&self) -> bool {
         self.removed.is_empty() && self.modified.is_empty() && self.added.is_empty()
     }
 
     /// ▶️ Applies this triple to a base line array. See module docs for apply order.
-    pub fn apply(&self, base: &[String]) -> Vec<String> {
+    pub async fn apply(&self, base: &[String]) -> Vec<String> {
         let mut items: Vec<Option<String>> = base.iter().cloned().map(Some).collect();
         for m in &self.modified {
             if let Some(slot) = items.get_mut(m.index) {
@@ -84,7 +84,7 @@ impl TxtLinesDiff {
     /// 🧭️ State delta between two line arrays: pairwise-by-position over `0..min(len)`
     /// (`modified`), base tail (`removed`), other tail (`added`) -- the recipe's "index keys
     /// pairwise by position" `between` rule.
-    pub fn between(base: &[String], next: &[String]) -> Self {
+    pub async fn between(base: &[String], next: &[String]) -> Self {
         let min_len = base.len().min(next.len());
         let mut modified = Vec::new();
         for i in 0..min_len {
@@ -115,7 +115,7 @@ enum Lbl {
 /// array: remove the given indices, then insert `added` labels ascending at
 /// `min(index, current_len)`. Mirrors `apply`'s exact algorithm but carries labels, not text, so
 /// it can run without any real snapshot.
-fn simulate_labels(labels: Vec<Lbl>, removed: &[usize], added: &[(usize, Lbl)]) -> Vec<Lbl> {
+async fn simulate_labels(labels: Vec<Lbl>, removed: &[usize], added: &[(usize, Lbl)]) -> Vec<Lbl> {
     let removed_set: HashSet<usize> = removed.iter().copied().collect();
     let mut survivors: Vec<Lbl> = labels.into_iter().enumerate().filter(|(i, _)| !removed_set.contains(i)).map(|(_, l)| l).collect();
     let mut added_sorted = added.to_vec();
@@ -136,7 +136,7 @@ fn simulate_labels(labels: Vec<Lbl>, removed: &[usize], added: &[(usize, Lbl)]) 
 /// which base indices survived (present ⇒ kept, absent ⇒ `r1 ∪ φ⁻¹(r2)`), which `Added1`
 /// entries survived `d2` (a `d2`-removal of a `d1`-added item "annihilates the add" -- it's
 /// simply absent from the walk, never re-emitted), and each survivor's final position.
-fn absorb_pair(d1: &TxtLinesDiff, d2: &TxtLinesDiff) -> TxtLinesDiff {
+async fn absorb_pair(d1: &TxtLinesDiff, d2: &TxtLinesDiff) -> TxtLinesDiff {
     // 🧭️ `l1` (the virtual base's assumed size) must cover every index EITHER diff references,
     // not just `d1`'s -- a `d1` that's empty/a no-op must not collapse the virtual base to zero
     // elements when `d2` still references real base positions `d1` never touched (a real bug
@@ -237,7 +237,7 @@ pub struct TxtDiff {
 }
 
 impl MutationDiff<TxtSnapshot> for TxtDiff {
-    fn apply(&self, base: &TxtSnapshot) -> MutationApplyResult<TxtSnapshot> {
+    async fn apply(&self, base: &TxtSnapshot) -> MutationApplyResult<TxtSnapshot> {
         if let Some(lines) = &self.lines {
             validate_txt_lines(base.lines.len(), lines)?;
         }
@@ -254,7 +254,7 @@ impl MutationDiff<TxtSnapshot> for TxtDiff {
 
     /// ➕️ Sequential-coalesce only (see trait docs): `self` is base→mid, `other` is mid→after.
     /// Scalars are LWW; `lines` composes via [`absorb_pair`]'s structural index-transport.
-    fn absorb(&mut self, other: Self) {
+    async fn absorb(&mut self, other: Self) {
         if let Some(tn) = other.trailing_newline {
             self.trailing_newline = Some(tn);
         }
@@ -277,7 +277,7 @@ impl MutationDiff<TxtSnapshot> for TxtDiff {
     }
 }
 
-fn validate_txt_lines(base_len: usize, diff: &TxtLinesDiff) -> MutationApplyResult<()> {
+async fn validate_txt_lines(base_len: usize, diff: &TxtLinesDiff) -> MutationApplyResult<()> {
     let mut removed = HashSet::new();
     for &index in &diff.removed {
         if index >= base_len {
@@ -310,12 +310,12 @@ impl DiffAlgebra<TxtSnapshot> for TxtDiff {
     /// 🔁️ `self`'s pre-image undo, expressed via `apply`+`between` (both already proven
     /// correct against `TxtSnapshot`): `next = self.apply(base)`, so `between(next, base)` is
     /// by definition the diff that restores `base` from `next`.
-    fn inverse(&self, base: &TxtSnapshot) -> Self {
+    async fn inverse(&self, base: &TxtSnapshot) -> Self {
         let next = self.apply(base).unwrap();
         Self::between(&next, base)
     }
 
-    fn between(base: &TxtSnapshot, other: &TxtSnapshot) -> Self {
+    async fn between(base: &TxtSnapshot, other: &TxtSnapshot) -> Self {
         let trailing_newline = if base.trailing_newline != other.trailing_newline { Some(other.trailing_newline) } else { None };
         let line_ending = if base.line_ending != other.line_ending { Some(other.line_ending) } else { None };
         let lines_diff = TxtLinesDiff::between(&base.lines, &other.lines);
@@ -323,14 +323,14 @@ impl DiffAlgebra<TxtSnapshot> for TxtDiff {
         TxtDiff { trailing_newline, line_ending, lines }
     }
 
-    fn is_empty(&self) -> bool {
+    async fn is_empty(&self) -> bool {
         self.trailing_newline.is_none() && self.line_ending.is_none() && self.lines.as_ref().map_or(true, TxtLinesDiff::is_empty)
     }
 }
 
 /// 🧩 Builds the sparse field-by-field diff for a `SetSnapshot` mutation -- no full-replace
 /// slot, same `between` machinery every other mutation's diff ultimately composes from.
-pub fn diff_set_snapshot(base: &TxtSnapshot, snapshot: &TxtSnapshot) -> TxtDiff {
+pub async fn diff_set_snapshot(base: &TxtSnapshot, snapshot: &TxtSnapshot) -> TxtDiff {
     TxtDiff::between(base, snapshot)
 }
 //#endregion 🔖️Diff
@@ -340,12 +340,12 @@ pub fn diff_set_snapshot(base: &TxtSnapshot, snapshot: &TxtSnapshot) -> TxtDiff 
 mod tests {
     use super::*;
 
-    fn lines(v: &[&str]) -> Vec<String> {
+    async fn lines(v: &[&str]) -> Vec<String> {
         v.iter().map(|s| s.to_string()).collect()
     }
 
     #[test]
-    fn insert_then_remove_before_matches_canonical_shape() {
+    async fn insert_then_remove_before_matches_canonical_shape() {
         // Insert("f") at 2, then Remove(0) — canonical case: {removed:[0], added:[(1,f)]}.
         let d1 = TxtDiff { lines: Some(TxtLinesDiff { removed: vec![], modified: vec![], added: vec![TxtLineAdded { index: 2, text: "f".into() }] }), ..Default::default() };
         let d2 = TxtDiff { lines: Some(TxtLinesDiff { removed: vec![0], modified: vec![], added: vec![] }), ..Default::default() };
@@ -365,7 +365,7 @@ mod tests {
     }
 
     #[test]
-    fn insert_insert_same_index_both_survive() {
+    async fn insert_insert_same_index_both_survive() {
         let d1 = TxtDiff { lines: Some(TxtLinesDiff { removed: vec![], modified: vec![], added: vec![TxtLineAdded { index: 2, text: "f".into() }] }), ..Default::default() };
         let d2 = TxtDiff { lines: Some(TxtLinesDiff { removed: vec![], modified: vec![], added: vec![TxtLineAdded { index: 2, text: "g".into() }] }), ..Default::default() };
         let mut merged = d1.clone();
@@ -380,7 +380,7 @@ mod tests {
     }
 
     #[test]
-    fn add_then_set_field_patches_into_added() {
+    async fn add_then_set_field_patches_into_added() {
         let d1 = TxtDiff { lines: Some(TxtLinesDiff { removed: vec![], modified: vec![], added: vec![TxtLineAdded { index: 1, text: "f".into() }] }), ..Default::default() };
         let d2 = TxtDiff { lines: Some(TxtLinesDiff { removed: vec![], modified: vec![TxtLineModified { index: 1, text: "v".into() }], added: vec![] }), ..Default::default() };
         let mut merged = d1.clone();
@@ -398,7 +398,7 @@ mod tests {
     }
 
     #[test]
-    fn modify_then_remove_drops_the_modify() {
+    async fn modify_then_remove_drops_the_modify() {
         let d1 = TxtDiff { lines: Some(TxtLinesDiff { removed: vec![], modified: vec![TxtLineModified { index: 0, text: "m".into() }], added: vec![] }), ..Default::default() };
         let d2 = TxtDiff { lines: Some(TxtLinesDiff { removed: vec![0], modified: vec![], added: vec![] }), ..Default::default() };
         let mut merged = d1.clone();
@@ -416,7 +416,7 @@ mod tests {
     }
 
     #[test]
-    fn absorb_associative_over_a_triple() {
+    async fn absorb_associative_over_a_triple() {
         let base = TxtSnapshot { lines: lines(&["a", "b", "c"]), ..Default::default() };
         let d1 = TxtDiff { lines: Some(TxtLinesDiff { removed: vec![1], modified: vec![], added: vec![] }), ..Default::default() };
         let d2 = TxtDiff { lines: Some(TxtLinesDiff { removed: vec![], modified: vec![], added: vec![TxtLineAdded { index: 0, text: "x".into() }] }), ..Default::default() };
@@ -441,7 +441,7 @@ mod tests {
     }
 
     #[test]
-    fn between_roundtrip_synthetic() {
+    async fn between_roundtrip_synthetic() {
         let a = TxtSnapshot { lines: lines(&["a", "b", "c"]), trailing_newline: true, line_ending: LineEnding::Lf, ..Default::default() };
         let b = TxtSnapshot { lines: lines(&["a", "x", "c", "d"]), trailing_newline: false, line_ending: LineEnding::CrLf, ..Default::default() };
         assert_eq!(TxtDiff::between(&a, &b).apply(&a).unwrap(), b);
@@ -450,7 +450,7 @@ mod tests {
     }
 
     #[test]
-    fn inverse_diff_level_roundtrip() {
+    async fn inverse_diff_level_roundtrip() {
         let base = TxtSnapshot { lines: lines(&["a", "b"]), trailing_newline: false, line_ending: LineEnding::Lf, ..Default::default() };
         let d = TxtDiff { lines: Some(TxtLinesDiff { removed: vec![0], modified: vec![], added: vec![TxtLineAdded { index: 0, text: "z".into() }] }), trailing_newline: Some(true), line_ending: Some(LineEnding::CrLf) };
         let next = d.apply(&base).unwrap();
@@ -465,7 +465,7 @@ mod tests {
     /// other-tail algorithm above -- so this test also directly constructs one diff exercising
     /// all three sections at once, plus a genuine `between()` result for good measure).
     #[test]
-    fn diff_codec_text_binary_roundtrip_law() {
+    async fn diff_codec_text_binary_roundtrip_law() {
         use protocol::DiffCodec;
         let a = TxtSnapshot { lines: lines(&["a", "b", "c"]), trailing_newline: true, line_ending: LineEnding::Lf, ..Default::default() };
         let b = TxtSnapshot { lines: lines(&["a", "x", "c", "d"]), trailing_newline: false, line_ending: LineEnding::CrLf, ..Default::default() };
@@ -505,7 +505,7 @@ mod tests {
     /// `between()` result for good measure -- same case list `diff_codec_text_binary_roundtrip_law`
     /// already uses).
     #[test]
-    fn diff_grammar_conformance_law() {
+    async fn diff_grammar_conformance_law() {
         use protocol::DiffCodec;
         let grammar_text = crate::artifacts::txt::schema::diff::text::COMPONENT_GRAMMAR_SEMIO;
         let grammar = dsl::parse_grammar(grammar_text).expect("parse diff grammar");

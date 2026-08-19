@@ -11,7 +11,7 @@ pub struct SetCatalogueSections {
     pub sections_json: String,
 }
 
-pub fn handle(payload: &SetCatalogueSections, _doc: &ArtifactView<'_, FlowSnapshot>, _cfg: &ConfigView<'_, FlowConfig>, _session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, FlowConfigMutation>, Fault> {
+pub async fn handle(payload: &SetCatalogueSections, _doc: &ArtifactView<'_, FlowSnapshot>, _cfg: &ConfigView<'_, FlowConfig>, _session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, FlowConfigMutation>, Fault> {
     Ok(Emit::config(vec![FlowConfigMutation::SetCatalogueSections { sections_json: payload.sections_json.clone() }]))
 }
 
@@ -23,7 +23,7 @@ mod tests {
     use crate::editor::flow::FlowCommand;
 
     #[test]
-    fn setting_catalogue_sections_emits_no_artifact_mutations() {
+    async fn setting_catalogue_sections_emits_no_artifact_mutations() {
         let mut app = flow_app();
         let result = dispatch(&mut app, FlowCommand::SetCatalogueSections(SetCatalogueSections { sections_json: "[]".into() }));
         assert!(result.mutations.is_empty());

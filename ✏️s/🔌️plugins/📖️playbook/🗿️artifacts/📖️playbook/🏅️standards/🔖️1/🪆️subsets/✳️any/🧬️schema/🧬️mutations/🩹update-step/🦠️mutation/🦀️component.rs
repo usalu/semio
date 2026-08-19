@@ -21,23 +21,23 @@ pub struct UpdateStep {
 }
 
 /// 🏗️ Builder.
-pub fn update_step_operation(step_id: &str, title: String, description: Option<String>) -> PlaybookMutation {
+pub async fn update_step_operation(step_id: &str, title: String, description: Option<String>) -> PlaybookMutation {
     PlaybookMutation::UpdateStep(UpdateStep { step_id: step_id.into(), title, description })
 }
 
 impl protocol::MutationKind<PlaybookSnapshot, PlaybookMutation> for UpdateStep {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "update", entity: "step", kind: "update-step", record: "UpdatedStep" };
 
-    fn diff(&self, base: &PlaybookSnapshot) -> protocol::MutationOutcome<crate::artifacts::playbook::PlaybookDiff> {
+    async fn diff(&self, base: &PlaybookSnapshot) -> protocol::MutationOutcome<crate::artifacts::playbook::PlaybookDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &PlaybookSnapshot) -> Vec<PlaybookMutation> {
+    async fn inverse(&self, base: &PlaybookSnapshot) -> Vec<PlaybookMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         format!("Update step \"{}\"", self.title)
     }
-    fn target(&self) -> Vec<String> {
+    async fn target(&self) -> Vec<String> {
         vec![self.step_id.clone()]
     }
 }

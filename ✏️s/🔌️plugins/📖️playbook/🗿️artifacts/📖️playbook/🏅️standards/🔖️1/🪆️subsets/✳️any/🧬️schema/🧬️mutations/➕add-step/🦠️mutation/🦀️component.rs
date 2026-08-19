@@ -17,7 +17,7 @@ pub struct AddStep {
 
 /// 🏗️ Builder — names the new step by its position in `spec` (the app's own step-add gesture never
 /// prompts for a title up front).
-pub fn add_step_operation(spec: &PlaybookSnapshot, step_id: String) -> PlaybookMutation {
+pub async fn add_step_operation(spec: &PlaybookSnapshot, step_id: String) -> PlaybookMutation {
     let step_count = crate::artifacts::playbook::playbook_working_scene(spec).steps.len();
     PlaybookMutation::AddStep(AddStep { step: PlaybookStep { id: step_id, title: format!("Step {}", step_count + 1), description: None, blocks: Vec::new() }, index: None })
 }
@@ -25,16 +25,16 @@ pub fn add_step_operation(spec: &PlaybookSnapshot, step_id: String) -> PlaybookM
 impl protocol::MutationKind<PlaybookSnapshot, PlaybookMutation> for AddStep {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "add", entity: "step", kind: "add-step", record: "AddedStep" };
 
-    fn diff(&self, base: &PlaybookSnapshot) -> protocol::MutationOutcome<crate::artifacts::playbook::PlaybookDiff> {
+    async fn diff(&self, base: &PlaybookSnapshot) -> protocol::MutationOutcome<crate::artifacts::playbook::PlaybookDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &PlaybookSnapshot) -> Vec<PlaybookMutation> {
+    async fn inverse(&self, base: &PlaybookSnapshot) -> Vec<PlaybookMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         format!("Add step \"{}\"", self.step.title)
     }
-    fn target(&self) -> Vec<String> {
+    async fn target(&self) -> Vec<String> {
         vec![self.step.id.clone()]
     }
 }

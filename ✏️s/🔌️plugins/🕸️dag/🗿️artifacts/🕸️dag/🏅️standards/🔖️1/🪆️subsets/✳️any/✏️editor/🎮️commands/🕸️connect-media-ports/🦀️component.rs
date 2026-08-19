@@ -16,7 +16,7 @@ pub struct ConnectMediaPorts {
     pub target_port_id: String,
 }
 
-pub fn handle(payload: &ConnectMediaPorts, doc: &ArtifactView<'_, DagSnapshot>, _cfg: &ConfigView<'_, DagConfig>) -> Result<Emit<DagMutation, DagConfigMutation>, Fault> {
+pub async fn handle(payload: &ConnectMediaPorts, doc: &ArtifactView<'_, DagSnapshot>, _cfg: &ConfigView<'_, DagConfig>) -> Result<Emit<DagMutation, DagConfigMutation>, Fault> {
     let document = doc.snapshot;
     match crate::artifacts::dag::schema::connect_edge(document, &payload.source_node_id, &payload.source_port_id, &payload.target_node_id, &payload.target_port_id) {
         Ok(edge) => Ok(Emit::mutations(vec![connect_nodes(edge.id, edge.source, edge.target, edge.route_style, edge.properties)])),

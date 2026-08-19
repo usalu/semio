@@ -72,7 +72,7 @@ pub enum DrawNode {
 }
 
 impl Default for DrawNode {
-    fn default() -> Self {
+    async fn default() -> Self {
         DrawNode::Group { transform: SemioTransform::identity(), children: Vec::new() }
     }
 }
@@ -127,7 +127,7 @@ pub struct DrawCanvas {
 }
 
 impl Default for DrawCanvas {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self { width: 0.0, height: 0.0, background: None }
     }
 }
@@ -155,7 +155,7 @@ pub struct SemioDrawingSnapshot {
 }
 
 impl Default for SemioDrawingSnapshot {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self { schema: STDIO_SEMIODRAWING_DOCUMENT_SCHEMA.into(), canvas: DrawCanvas::default(), styles: Vec::new(), layers: Vec::new() }
     }
 }
@@ -175,56 +175,56 @@ impl Default for SemioDrawingSnapshot {
 /// exists. Hand-rolled instead, single-letter tag prefix per variant (same convention brep's
 /// `enc_curve`/`enc_surface` established), reused verbatim by the sibling `🔺️diff`/`🧬️mutations`
 /// facets (`pub(crate)` below) rather than re-derived three times.
-pub(crate) fn hex_encode(bytes: &[u8]) -> String {
+pub(crate) async fn hex_encode(bytes: &[u8]) -> String {
     bytes.iter().map(|b| format!("{b:02x}")).collect()
 }
-pub(crate) fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
+pub(crate) async fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
     if s.len() % 2 != 0 {
         return Err(format!("odd hex length: {s:?}"));
     }
     (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()
 }
-pub(crate) fn enc_str(s: &str) -> String {
+pub(crate) async fn enc_str(s: &str) -> String {
     hex_encode(s.as_bytes())
 }
-pub(crate) fn dec_str(s: &str) -> Result<String, String> {
+pub(crate) async fn dec_str(s: &str) -> Result<String, String> {
     String::from_utf8(hex_decode(s)?).map_err(|e| e.to_string())
 }
-pub(crate) fn parse_f64(s: &str) -> Result<f64, String> {
+pub(crate) async fn parse_f64(s: &str) -> Result<f64, String> {
     s.parse().map_err(|e: std::num::ParseFloatError| e.to_string())
 }
-pub(crate) fn parse_f32(s: &str) -> Result<f32, String> {
+pub(crate) async fn parse_f32(s: &str) -> Result<f32, String> {
     s.parse().map_err(|e: std::num::ParseFloatError| e.to_string())
 }
-pub(crate) fn enc_bool(b: bool) -> &'static str {
+pub(crate) async fn enc_bool(b: bool) -> &'static str {
     if b {
         "1"
     } else {
         "0"
     }
 }
-pub(crate) fn parse_bool(s: &str) -> Result<bool, String> {
+pub(crate) async fn parse_bool(s: &str) -> Result<bool, String> {
     match s {
         "1" => Ok(true),
         "0" => Ok(false),
         other => Err(format!("bad bool {other:?}")),
     }
 }
-pub(crate) fn enc_list<T>(items: &[T], enc: impl Fn(&T) -> String) -> String {
+pub(crate) async fn enc_list<T>(items: &[T], enc: impl Fn(&T) -> String) -> String {
     format!("[{}]", items.iter().map(|it| enc(it)).collect::<Vec<_>>().join(","))
 }
-pub(crate) fn dec_list<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Vec<T>, String> {
+pub(crate) async fn dec_list<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Vec<T>, String> {
     split_top_level(strip_brackets(s)?, ',').into_iter().filter(|s| !s.is_empty()).map(|entry| dec(entry)).collect()
 }
 /// 🏳️ Single-state option: `[0]` = `None`, `[1,<value>]` = `Some(value)` — used by snapshot-level
 /// `Option<T>` fields (never tri-state; tri-state `Option<Option<T>>` is a `🔺️diff`-only concept).
-pub(crate) fn encode_option<T>(opt: &Option<T>, enc: impl Fn(&T) -> String) -> String {
+pub(crate) async fn encode_option<T>(opt: &Option<T>, enc: impl Fn(&T) -> String) -> String {
     match opt {
         None => "[0]".to_string(),
         Some(v) => format!("[1,{}]", enc(v)),
     }
 }
-pub(crate) fn decode_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Option<T>, String> {
+pub(crate) async fn decode_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Option<T>, String> {
     let inner = strip_brackets(s)?;
     match split_top_level(inner, ',').as_slice() {
         ["0"] => Ok(None),
@@ -233,42 +233,42 @@ pub(crate) fn decode_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>)
     }
 }
 
-pub(crate) fn enc_point2(p: &SemioPoint2) -> String {
+pub(crate) async fn enc_point2(p: &SemioPoint2) -> String {
     format!("[{},{}]", p.x, p.y)
 }
-pub(crate) fn dec_point2(s: &str) -> Result<SemioPoint2, String> {
+pub(crate) async fn dec_point2(s: &str) -> Result<SemioPoint2, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [x, y] = parts.as_slice() else { return Err(format!("point2: expected 2 fields, got {}", parts.len())) };
     Ok(SemioPoint2 { x: parse_f64(x)?, y: parse_f64(y)? })
 }
-pub(crate) fn enc_point3(p: &SemioPoint3) -> String {
+pub(crate) async fn enc_point3(p: &SemioPoint3) -> String {
     format!("[{},{},{}]", p.x, p.y, p.z)
 }
-pub(crate) fn dec_point3(s: &str) -> Result<SemioPoint3, String> {
+pub(crate) async fn dec_point3(s: &str) -> Result<SemioPoint3, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [x, y, z] = parts.as_slice() else { return Err(format!("point3: expected 3 fields, got {}", parts.len())) };
     Ok(SemioPoint3 { x: parse_f64(x)?, y: parse_f64(y)?, z: parse_f64(z)? })
 }
-pub(crate) fn enc_quaternion(q: &SemioQuaternion) -> String {
+pub(crate) async fn enc_quaternion(q: &SemioQuaternion) -> String {
     format!("[{},{},{},{}]", q.x, q.y, q.z, q.w)
 }
-pub(crate) fn dec_quaternion(s: &str) -> Result<SemioQuaternion, String> {
+pub(crate) async fn dec_quaternion(s: &str) -> Result<SemioQuaternion, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [x, y, z, w] = parts.as_slice() else { return Err(format!("quaternion: expected 4 fields, got {}", parts.len())) };
     Ok(SemioQuaternion { x: parse_f64(x)?, y: parse_f64(y)?, z: parse_f64(z)?, w: parse_f64(w)? })
 }
-pub(crate) fn enc_transform(t: &SemioTransform) -> String {
+pub(crate) async fn enc_transform(t: &SemioTransform) -> String {
     format!("[{},{},{}]", enc_point3(&t.translation), enc_quaternion(&t.rotation), enc_point3(&t.scale))
 }
-pub(crate) fn dec_transform(s: &str) -> Result<SemioTransform, String> {
+pub(crate) async fn dec_transform(s: &str) -> Result<SemioTransform, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [translation, rotation, scale] = parts.as_slice() else { return Err(format!("transform: expected 3 fields, got {}", parts.len())) };
     Ok(SemioTransform { translation: dec_point3(translation)?, rotation: dec_quaternion(rotation)?, scale: dec_point3(scale)? })
 }
-pub(crate) fn enc_rgba(c: &SemioRgba) -> String {
+pub(crate) async fn enc_rgba(c: &SemioRgba) -> String {
     format!("[{},{},{},{}]", c.r, c.g, c.b, c.a)
 }
-pub(crate) fn dec_rgba(s: &str) -> Result<SemioRgba, String> {
+pub(crate) async fn dec_rgba(s: &str) -> Result<SemioRgba, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [r, g, b, a] = parts.as_slice() else { return Err(format!("rgba: expected 4 fields, got {}", parts.len())) };
     Ok(SemioRgba { r: parse_f32(r)?, g: parse_f32(g)?, b: parse_f32(b)?, a: parse_f32(a)? })
@@ -276,7 +276,7 @@ pub(crate) fn dec_rgba(s: &str) -> Result<SemioRgba, String> {
 
 /// 📐️ `M[to]` (MoveTo) / `L[to]` (LineTo) / `C[c1,c2,to]` (CubicTo) / `Q[c,to]` (QuadTo) /
 /// `A[rx,ry,xRotation,largeArc,sweep,to]` (ArcTo) / `Z` (Close, no payload).
-pub(crate) fn enc_path_segment(seg: &PathSegment) -> String {
+pub(crate) async fn enc_path_segment(seg: &PathSegment) -> String {
     match seg {
         PathSegment::MoveTo { to } => format!("M[{}]", enc_point2(to)),
         PathSegment::LineTo { to } => format!("L[{}]", enc_point2(to)),
@@ -288,7 +288,7 @@ pub(crate) fn enc_path_segment(seg: &PathSegment) -> String {
         PathSegment::Close => "Z".to_string(),
     }
 }
-pub(crate) fn dec_path_segment(s: &str) -> Result<PathSegment, String> {
+pub(crate) async fn dec_path_segment(s: &str) -> Result<PathSegment, String> {
     if s == "Z" {
         return Ok(PathSegment::Close);
     }
@@ -322,7 +322,7 @@ pub(crate) fn dec_path_segment(s: &str) -> Result<PathSegment, String> {
 
 /// 🌳️ `P[segments,style]` (Path) / `T[value,at,style]` (Text) / `G[transform,children]` (Group,
 /// `children` genuinely RECURSIVE) / `I[at,width,height,mime,bytes]` (Image, `bytes` hex-encoded).
-pub(crate) fn enc_node(n: &DrawNode) -> String {
+pub(crate) async fn enc_node(n: &DrawNode) -> String {
     match n {
         DrawNode::Path { segments, style } => format!("P[{},{}]", enc_list(segments, enc_path_segment), encode_option(style, |s| enc_str(s))),
         DrawNode::Text { value, at, style } => format!("T[{},{},{}]", enc_str(value), enc_point2(at), encode_option(style, |s| enc_str(s))),
@@ -330,7 +330,7 @@ pub(crate) fn enc_node(n: &DrawNode) -> String {
         DrawNode::Image { at, width, height, mime, bytes } => format!("I[{},{},{},{},{}]", enc_point2(at), width, height, enc_str(mime), hex_encode(bytes)),
     }
 }
-pub(crate) fn dec_node(s: &str) -> Result<DrawNode, String> {
+pub(crate) async fn dec_node(s: &str) -> Result<DrawNode, String> {
     let (tag, rest) = s.split_at(1);
     let inner = strip_brackets(rest)?;
     match tag {
@@ -358,28 +358,28 @@ pub(crate) fn dec_node(s: &str) -> Result<DrawNode, String> {
     }
 }
 
-pub(crate) fn enc_style(s: &DrawStyle) -> String {
+pub(crate) async fn enc_style(s: &DrawStyle) -> String {
     format!("[{},{},{},{},{}]", enc_str(&s.name), encode_option(&s.fill, enc_rgba), encode_option(&s.stroke, enc_rgba), encode_option(&s.stroke_width, |v: &f64| v.to_string()), encode_option(&s.opacity, |v: &f32| v.to_string()),)
 }
-pub(crate) fn dec_style(s: &str) -> Result<DrawStyle, String> {
+pub(crate) async fn dec_style(s: &str) -> Result<DrawStyle, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [name, fill, stroke, stroke_width, opacity] = parts.as_slice() else { return Err(format!("style: expected 5 fields, got {}", parts.len())) };
     Ok(DrawStyle { name: dec_str(name)?, fill: decode_option(fill, dec_rgba)?, stroke: decode_option(stroke, dec_rgba)?, stroke_width: decode_option(stroke_width, parse_f64)?, opacity: decode_option(opacity, parse_f32)? })
 }
 
-pub(crate) fn enc_layer(l: &DrawLayer) -> String {
+pub(crate) async fn enc_layer(l: &DrawLayer) -> String {
     format!("[{},{},{},{}]", enc_str(&l.id), enc_str(&l.name), enc_bool(l.visible), enc_node(&l.root))
 }
-pub(crate) fn dec_layer(s: &str) -> Result<DrawLayer, String> {
+pub(crate) async fn dec_layer(s: &str) -> Result<DrawLayer, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [id, name, visible, root] = parts.as_slice() else { return Err(format!("layer: expected 4 fields, got {}", parts.len())) };
     Ok(DrawLayer { id: dec_str(id)?, name: dec_str(name)?, visible: parse_bool(visible)?, root: dec_node(root)? })
 }
 
-pub(crate) fn enc_canvas(c: &DrawCanvas) -> String {
+pub(crate) async fn enc_canvas(c: &DrawCanvas) -> String {
     format!("[{},{},{}]", c.width, c.height, encode_option(&c.background, enc_rgba))
 }
-pub(crate) fn dec_canvas(s: &str) -> Result<DrawCanvas, String> {
+pub(crate) async fn dec_canvas(s: &str) -> Result<DrawCanvas, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [width, height, background] = parts.as_slice() else { return Err(format!("canvas: expected 3 fields, got {}", parts.len())) };
     Ok(DrawCanvas { width: parse_f64(width)?, height: parse_f64(height)?, background: decode_option(background, dec_rgba)? })
@@ -389,10 +389,10 @@ pub(crate) fn dec_canvas(s: &str) -> Result<DrawCanvas, String> {
 /// `styles=[...]`, `layers=[...]` — matching the grammar's `document = artifact-mark schema-line
 /// canvas-line styles-line layers-line`. Newlines are pure lexer trivia in the shared dialect, so
 /// this is genuinely recognizable by `dsl::Recognizer`, not merely readable.
-fn print_drawing_snapshot_body(s: &SemioDrawingSnapshot) -> String {
+async fn print_drawing_snapshot_body(s: &SemioDrawingSnapshot) -> String {
     format!("schema={}\ncanvas={}\nstyles=[{}]\nlayers=[{}]", enc_str(&s.schema), enc_canvas(&s.canvas), s.styles.iter().map(enc_style).collect::<Vec<_>>().join(","), s.layers.iter().map(enc_layer).collect::<Vec<_>>().join(","),)
 }
-fn parse_drawing_snapshot_body(body: &str) -> Result<SemioDrawingSnapshot, String> {
+async fn parse_drawing_snapshot_body(body: &str) -> Result<SemioDrawingSnapshot, String> {
     let mut schema = None;
     let mut canvas = None;
     let mut styles = Vec::new();
@@ -425,74 +425,74 @@ fn parse_drawing_snapshot_body(body: &str) -> Result<SemioDrawingSnapshot, Strin
 /// `store::ByteReader`, same helpers `stdio.semio.flow`'s/`stdio.semio.brep`'s upgraded
 /// `ArtifactPack` reuse) backing the real `ArtifactPack` below — replaces the old
 /// `serde_json::to_vec`-in-envelope shortcut.
-fn write_bytes_lp(out: &mut Vec<u8>, bytes: &[u8]) {
+async fn write_bytes_lp(out: &mut Vec<u8>, bytes: &[u8]) {
     store::pack_rt::write_varint_u64(out, bytes.len() as u64);
     out.extend_from_slice(bytes);
 }
-fn read_bytes_lp(reader: &mut store::ByteReader<'_>) -> Result<Vec<u8>, String> {
+async fn read_bytes_lp(reader: &mut store::ByteReader<'_>) -> Result<Vec<u8>, String> {
     let len = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
     Ok(reader.read_bytes(len).map_err(|e| e.to_string())?.to_vec())
 }
-fn write_str_lp(out: &mut Vec<u8>, s: &str) {
+async fn write_str_lp(out: &mut Vec<u8>, s: &str) {
     write_bytes_lp(out, s.as_bytes());
 }
-fn read_str_lp(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
+async fn read_str_lp(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
     String::from_utf8(read_bytes_lp(reader)?).map_err(|e| e.to_string())
 }
-fn write_point2(out: &mut Vec<u8>, p: &SemioPoint2) {
+async fn write_point2(out: &mut Vec<u8>, p: &SemioPoint2) {
     out.extend_from_slice(&p.x.to_le_bytes());
     out.extend_from_slice(&p.y.to_le_bytes());
 }
-fn read_point2(reader: &mut store::ByteReader<'_>) -> Result<SemioPoint2, String> {
+async fn read_point2(reader: &mut store::ByteReader<'_>) -> Result<SemioPoint2, String> {
     Ok(SemioPoint2 { x: reader.read_f64_le().map_err(|e| e.to_string())?, y: reader.read_f64_le().map_err(|e| e.to_string())? })
 }
-fn write_point3(out: &mut Vec<u8>, p: &SemioPoint3) {
+async fn write_point3(out: &mut Vec<u8>, p: &SemioPoint3) {
     out.extend_from_slice(&p.x.to_le_bytes());
     out.extend_from_slice(&p.y.to_le_bytes());
     out.extend_from_slice(&p.z.to_le_bytes());
 }
-fn read_point3(reader: &mut store::ByteReader<'_>) -> Result<SemioPoint3, String> {
+async fn read_point3(reader: &mut store::ByteReader<'_>) -> Result<SemioPoint3, String> {
     Ok(SemioPoint3 { x: reader.read_f64_le().map_err(|e| e.to_string())?, y: reader.read_f64_le().map_err(|e| e.to_string())?, z: reader.read_f64_le().map_err(|e| e.to_string())? })
 }
-fn write_quaternion(out: &mut Vec<u8>, q: &SemioQuaternion) {
+async fn write_quaternion(out: &mut Vec<u8>, q: &SemioQuaternion) {
     out.extend_from_slice(&q.x.to_le_bytes());
     out.extend_from_slice(&q.y.to_le_bytes());
     out.extend_from_slice(&q.z.to_le_bytes());
     out.extend_from_slice(&q.w.to_le_bytes());
 }
-fn read_quaternion(reader: &mut store::ByteReader<'_>) -> Result<SemioQuaternion, String> {
+async fn read_quaternion(reader: &mut store::ByteReader<'_>) -> Result<SemioQuaternion, String> {
     Ok(SemioQuaternion { x: reader.read_f64_le().map_err(|e| e.to_string())?, y: reader.read_f64_le().map_err(|e| e.to_string())?, z: reader.read_f64_le().map_err(|e| e.to_string())?, w: reader.read_f64_le().map_err(|e| e.to_string())? })
 }
-fn write_transform(out: &mut Vec<u8>, t: &SemioTransform) {
+async fn write_transform(out: &mut Vec<u8>, t: &SemioTransform) {
     write_point3(out, &t.translation);
     write_quaternion(out, &t.rotation);
     write_point3(out, &t.scale);
 }
-fn read_transform(reader: &mut store::ByteReader<'_>) -> Result<SemioTransform, String> {
+async fn read_transform(reader: &mut store::ByteReader<'_>) -> Result<SemioTransform, String> {
     Ok(SemioTransform { translation: read_point3(reader)?, rotation: read_quaternion(reader)?, scale: read_point3(reader)? })
 }
 /// 🩹️ `store::ByteReader` has no native `f32` reader (only `f64_le`) — read 4 raw bytes instead.
-fn read_f32_le(reader: &mut store::ByteReader<'_>) -> Result<f32, String> {
+async fn read_f32_le(reader: &mut store::ByteReader<'_>) -> Result<f32, String> {
     let bytes = reader.read_bytes(4).map_err(|e| e.to_string())?;
     let arr: [u8; 4] = bytes.try_into().map_err(|_| "f32 read: truncated".to_string())?;
     Ok(f32::from_le_bytes(arr))
 }
-fn write_rgba(out: &mut Vec<u8>, c: &SemioRgba) {
+async fn write_rgba(out: &mut Vec<u8>, c: &SemioRgba) {
     out.extend_from_slice(&c.r.to_le_bytes());
     out.extend_from_slice(&c.g.to_le_bytes());
     out.extend_from_slice(&c.b.to_le_bytes());
     out.extend_from_slice(&c.a.to_le_bytes());
 }
-fn read_rgba(reader: &mut store::ByteReader<'_>) -> Result<SemioRgba, String> {
+async fn read_rgba(reader: &mut store::ByteReader<'_>) -> Result<SemioRgba, String> {
     Ok(SemioRgba { r: read_f32_le(reader)?, g: read_f32_le(reader)?, b: read_f32_le(reader)?, a: read_f32_le(reader)? })
 }
-fn write_bool(out: &mut Vec<u8>, b: bool) {
+async fn write_bool(out: &mut Vec<u8>, b: bool) {
     out.push(if b { 1 } else { 0 });
 }
-fn read_bool(reader: &mut store::ByteReader<'_>) -> Result<bool, String> {
+async fn read_bool(reader: &mut store::ByteReader<'_>) -> Result<bool, String> {
     Ok(reader.read_u8().map_err(|e| e.to_string())? != 0)
 }
-fn write_option<T>(out: &mut Vec<u8>, opt: &Option<T>, write: impl Fn(&mut Vec<u8>, &T)) {
+async fn write_option<T>(out: &mut Vec<u8>, opt: &Option<T>, write: impl Fn(&mut Vec<u8>, &T)) {
     match opt {
         None => out.push(0),
         Some(v) => {
@@ -501,7 +501,7 @@ fn write_option<T>(out: &mut Vec<u8>, opt: &Option<T>, write: impl Fn(&mut Vec<u
         }
     }
 }
-fn read_option<T>(reader: &mut store::ByteReader<'_>, read: impl Fn(&mut store::ByteReader<'_>) -> Result<T, String>) -> Result<Option<T>, String> {
+async fn read_option<T>(reader: &mut store::ByteReader<'_>, read: impl Fn(&mut store::ByteReader<'_>) -> Result<T, String>) -> Result<Option<T>, String> {
     match reader.read_u8().map_err(|e| e.to_string())? {
         0 => Ok(None),
         1 => Ok(Some(read(reader)?)),
@@ -510,7 +510,7 @@ fn read_option<T>(reader: &mut store::ByteReader<'_>, read: impl Fn(&mut store::
 }
 
 /// 🏷️ `PathSegment` variant tags — 0=MoveTo, 1=LineTo, 2=CubicTo, 3=QuadTo, 4=ArcTo, 5=Close.
-fn write_path_segment(out: &mut Vec<u8>, seg: &PathSegment) {
+async fn write_path_segment(out: &mut Vec<u8>, seg: &PathSegment) {
     match seg {
         PathSegment::MoveTo { to } => {
             out.push(0);
@@ -543,7 +543,7 @@ fn write_path_segment(out: &mut Vec<u8>, seg: &PathSegment) {
         PathSegment::Close => out.push(5),
     }
 }
-fn read_path_segment(reader: &mut store::ByteReader<'_>) -> Result<PathSegment, String> {
+async fn read_path_segment(reader: &mut store::ByteReader<'_>) -> Result<PathSegment, String> {
     let tag = reader.read_u8().map_err(|e| e.to_string())?;
     match tag {
         0 => Ok(PathSegment::MoveTo { to: read_point2(reader)? }),
@@ -564,7 +564,7 @@ fn read_path_segment(reader: &mut store::ByteReader<'_>) -> Result<PathSegment, 
 }
 
 /// 🏷️ `DrawNode` variant tags — 0=Path, 1=Text, 2=Group (RECURSIVE `children`), 3=Image.
-fn write_node(out: &mut Vec<u8>, n: &DrawNode) {
+async fn write_node(out: &mut Vec<u8>, n: &DrawNode) {
     match n {
         DrawNode::Path { segments, style } => {
             out.push(0);
@@ -598,7 +598,7 @@ fn write_node(out: &mut Vec<u8>, n: &DrawNode) {
         }
     }
 }
-fn read_node(reader: &mut store::ByteReader<'_>) -> Result<DrawNode, String> {
+async fn read_node(reader: &mut store::ByteReader<'_>) -> Result<DrawNode, String> {
     let tag = reader.read_u8().map_err(|e| e.to_string())?;
     match tag {
         0 => {
@@ -637,14 +637,14 @@ fn read_node(reader: &mut store::ByteReader<'_>) -> Result<DrawNode, String> {
     }
 }
 
-fn write_style(out: &mut Vec<u8>, s: &DrawStyle) {
+async fn write_style(out: &mut Vec<u8>, s: &DrawStyle) {
     write_str_lp(out, &s.name);
     write_option(out, &s.fill, write_rgba);
     write_option(out, &s.stroke, write_rgba);
     write_option(out, &s.stroke_width, |out, v| out.extend_from_slice(&v.to_le_bytes()));
     write_option(out, &s.opacity, |out, v| out.extend_from_slice(&v.to_le_bytes()));
 }
-fn read_style(reader: &mut store::ByteReader<'_>) -> Result<DrawStyle, String> {
+async fn read_style(reader: &mut store::ByteReader<'_>) -> Result<DrawStyle, String> {
     let name = read_str_lp(reader)?;
     let fill = read_option(reader, read_rgba)?;
     let stroke = read_option(reader, read_rgba)?;
@@ -653,29 +653,29 @@ fn read_style(reader: &mut store::ByteReader<'_>) -> Result<DrawStyle, String> {
     Ok(DrawStyle { name, fill, stroke, stroke_width, opacity })
 }
 
-fn write_layer(out: &mut Vec<u8>, l: &DrawLayer) {
+async fn write_layer(out: &mut Vec<u8>, l: &DrawLayer) {
     write_str_lp(out, &l.id);
     write_str_lp(out, &l.name);
     write_bool(out, l.visible);
     write_node(out, &l.root);
 }
-fn read_layer(reader: &mut store::ByteReader<'_>) -> Result<DrawLayer, String> {
+async fn read_layer(reader: &mut store::ByteReader<'_>) -> Result<DrawLayer, String> {
     Ok(DrawLayer { id: read_str_lp(reader)?, name: read_str_lp(reader)?, visible: read_bool(reader)?, root: read_node(reader)? })
 }
 
-fn write_canvas(out: &mut Vec<u8>, c: &DrawCanvas) {
+async fn write_canvas(out: &mut Vec<u8>, c: &DrawCanvas) {
     out.extend_from_slice(&c.width.to_le_bytes());
     out.extend_from_slice(&c.height.to_le_bytes());
     write_option(out, &c.background, write_rgba);
 }
-fn read_canvas(reader: &mut store::ByteReader<'_>) -> Result<DrawCanvas, String> {
+async fn read_canvas(reader: &mut store::ByteReader<'_>) -> Result<DrawCanvas, String> {
     let width = reader.read_f64_le().map_err(|e| e.to_string())?;
     let height = reader.read_f64_le().map_err(|e| e.to_string())?;
     let background = read_option(reader, read_rgba)?;
     Ok(DrawCanvas { width, height, background })
 }
 
-fn encode_drawing_snapshot_binary(s: &SemioDrawingSnapshot) -> Vec<u8> {
+async fn encode_drawing_snapshot_binary(s: &SemioDrawingSnapshot) -> Vec<u8> {
     const PACK_BINARY_FORMAT: u8 = 1;
     let mut out = Vec::new();
     out.push(PACK_BINARY_FORMAT);
@@ -691,7 +691,7 @@ fn encode_drawing_snapshot_binary(s: &SemioDrawingSnapshot) -> Vec<u8> {
     }
     out
 }
-fn decode_drawing_snapshot_binary(bytes: &[u8]) -> Result<SemioDrawingSnapshot, String> {
+async fn decode_drawing_snapshot_binary(bytes: &[u8]) -> Result<SemioDrawingSnapshot, String> {
     const PACK_BINARY_FORMAT: u8 = 1;
     let mut reader = store::ByteReader::new(bytes);
     let format = reader.read_u8().map_err(|e| e.to_string())?;
@@ -720,11 +720,11 @@ fn decode_drawing_snapshot_binary(bytes: &[u8]) -> Result<SemioDrawingSnapshot, 
 /// `store::semio_format` envelope, unchanged.
 impl store::ArtifactDsl for SemioDrawingSnapshot {
     const EXTENSION: &'static str = "semio";
-    fn envelope_id() -> &'static str {
+    async fn envelope_id() -> &'static str {
         STDIO_SEMIODRAWING_DOCUMENT_SCHEMA
     }
 
-    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+    async fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
         let body = match store::semio_format::split_text_preamble(text) {
             Ok((_, rest)) => rest,
             Err(_) => text,
@@ -732,7 +732,7 @@ impl store::ArtifactDsl for SemioDrawingSnapshot {
         parse_drawing_snapshot_body(body).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
 
-    fn print_dsl(&self) -> String {
+    async fn print_dsl(&self) -> String {
         let body = print_drawing_snapshot_body(self);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
@@ -740,14 +740,14 @@ impl store::ArtifactDsl for SemioDrawingSnapshot {
 }
 
 impl store::ArtifactPack for SemioDrawingSnapshot {
-    fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
+    async fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
         let raw = encode_drawing_snapshot_binary(self);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &raw))
     }
 
-    fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
+    async fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
         if envelope.envelope_id() != <Self as store::ArtifactDsl>::envelope_id() {
             return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.envelope_id())));
@@ -764,7 +764,7 @@ impl store::ArtifactPack for SemioDrawingSnapshot {
 /// Single source of truth for `📚️examples/🖍️sketch/🖼️assets/🗣️example.dsl.semio`/`🎒️example.pack.semio`
 /// and for the conformance-law tests in `🎹️composer/🦀️component.rs`.
 #[cfg(test)]
-pub(crate) fn demo_drawing_snapshot() -> SemioDrawingSnapshot {
+pub(crate) async fn demo_drawing_snapshot() -> SemioDrawingSnapshot {
     SemioDrawingSnapshot {
         schema: STDIO_SEMIODRAWING_DOCUMENT_SCHEMA.into(),
         canvas: DrawCanvas { width: 100.0, height: 50.0, background: Some(SemioRgba { r: 1.0, g: 1.0, b: 1.0, a: 1.0 }) },
@@ -802,7 +802,7 @@ pub(crate) fn demo_drawing_snapshot() -> SemioDrawingSnapshot {
 mod tests {
     use super::*;
 
-    fn sample() -> SemioDrawingSnapshot {
+    async fn sample() -> SemioDrawingSnapshot {
         SemioDrawingSnapshot {
             schema: STDIO_SEMIODRAWING_DOCUMENT_SCHEMA.into(),
             canvas: DrawCanvas { width: 100.0, height: 50.0, background: Some(SemioRgba { r: 1.0, g: 1.0, b: 1.0, a: 1.0 }) },
@@ -824,7 +824,7 @@ mod tests {
     }
 
     #[test]
-    fn json_pack_round_trips() {
+    async fn json_pack_round_trips() {
         let snap = sample();
         let bytes = <SemioDrawingSnapshot as store::ArtifactPack>::encode_pack(&snap);
         let back = <SemioDrawingSnapshot as store::ArtifactPack>::decode_pack(&bytes).expect("decode");
@@ -832,7 +832,7 @@ mod tests {
     }
 
     #[test]
-    fn dsl_text_round_trips() {
+    async fn dsl_text_round_trips() {
         let snap = sample();
         let text = <SemioDrawingSnapshot as store::ArtifactDsl>::print_dsl(&snap);
         let back = <SemioDrawingSnapshot as store::ArtifactDsl>::parse_dsl(&text).expect("parse");
@@ -840,7 +840,7 @@ mod tests {
     }
 
     #[test]
-    fn default_snapshot_round_trips() {
+    async fn default_snapshot_round_trips() {
         let snap = SemioDrawingSnapshot::default();
         let bytes = <SemioDrawingSnapshot as store::ArtifactPack>::encode_pack(&snap);
         let back = <SemioDrawingSnapshot as store::ArtifactPack>::decode_pack(&bytes).expect("decode");
@@ -851,7 +851,7 @@ mod tests {
     /// trips through both the pack binary and the dsl text codec — the demo fixture used by the
     /// fixture-honesty conformance law.
     #[test]
-    fn demo_snapshot_round_trips_pack_and_dsl() {
+    async fn demo_snapshot_round_trips_pack_and_dsl() {
         let demo = demo_drawing_snapshot();
         let packed = <SemioDrawingSnapshot as store::ArtifactPack>::encode_pack(&demo);
         assert_eq!(<SemioDrawingSnapshot as store::ArtifactPack>::decode_pack(&packed).expect("decode"), demo);

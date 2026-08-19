@@ -12,7 +12,7 @@ use crate::artifacts::md::schema::snapshot::{MdBlock, MdInline};
 /// tightness/marker style is normalized, and no attempt is made at byte-identical round-trip --
 /// `decode(encode(x)) == x` at the SNAPSHOT level (semantic fixed point) is the contract, not
 /// byte preservation of arbitrary source text (`codec_retention_law`).
-pub fn render_markdown_blocks(blocks: &[MdBlock]) -> String {
+pub async fn render_markdown_blocks(blocks: &[MdBlock]) -> String {
     let mut out = String::new();
     render_blocks(blocks, &mut out);
     while out.ends_with('\n') {
@@ -21,13 +21,13 @@ pub fn render_markdown_blocks(blocks: &[MdBlock]) -> String {
     out
 }
 
-fn render_blocks(blocks: &[MdBlock], out: &mut String) {
+async fn render_blocks(blocks: &[MdBlock], out: &mut String) {
     for block in blocks {
         render_block(block, out);
     }
 }
 
-fn render_block(block: &MdBlock, out: &mut String) {
+async fn render_block(block: &MdBlock, out: &mut String) {
     match block {
         MdBlock::Heading { level, inlines } => {
             out.push_str(&"#".repeat((*level).clamp(1, 6) as usize));
@@ -80,7 +80,7 @@ fn render_block(block: &MdBlock, out: &mut String) {
     }
 }
 
-fn render_list_item(marker: &str, blocks: &[MdBlock], tight: bool, out: &mut String) {
+async fn render_list_item(marker: &str, blocks: &[MdBlock], tight: bool, out: &mut String) {
     let indent = " ".repeat(marker.chars().count());
     let mut first_line = true;
     for block in blocks {
@@ -107,7 +107,7 @@ fn render_list_item(marker: &str, blocks: &[MdBlock], tight: bool, out: &mut Str
 //#endregion 🔖️BlockRenderer
 
 //#region 🔖️InlineRenderer
-fn render_inlines(inlines: &[MdInline]) -> String {
+async fn render_inlines(inlines: &[MdInline]) -> String {
     let mut out = String::new();
     for inline in inlines {
         render_inline(inline, &mut out);
@@ -115,7 +115,7 @@ fn render_inlines(inlines: &[MdInline]) -> String {
     out
 }
 
-fn render_inline(inline: &MdInline, out: &mut String) {
+async fn render_inline(inline: &MdInline, out: &mut String) {
     match inline {
         MdInline::Text { text } => out.push_str(text),
         MdInline::Emphasis { inlines } => {

@@ -11,7 +11,7 @@ mod tests {
     struct Contract { vectors: Vec<Vector> }
 
     #[test]
-    fn canonical_vector_plans_applies_replays_undoes_and_rejects_forged_paths() {
+    async fn canonical_vector_plans_applies_replays_undoes_and_rejects_forged_paths() {
         let contract: Contract = serde_json::from_str(include_str!("🔣️component.json")).unwrap();
         let vector = &contract.vectors[0];
         let planned = diff::derive(&vector.mutation, &vector.base).unwrap();

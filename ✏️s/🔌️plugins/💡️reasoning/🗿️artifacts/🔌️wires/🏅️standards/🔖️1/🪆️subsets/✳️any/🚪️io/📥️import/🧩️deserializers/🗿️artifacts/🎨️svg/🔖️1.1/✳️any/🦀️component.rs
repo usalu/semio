@@ -21,7 +21,7 @@ pub struct SvgIntoWires;
 impl Deserializer<WiresSnapshot> for SvgIntoWires {
     const FROM: Dialect = SVG_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Lossy;
-    fn deserialize(_payload: &IoPayload) -> IoResult<WiresSnapshot> {
+    async fn deserialize(_payload: &IoPayload) -> IoResult<WiresSnapshot> {
         Err(IoError { message: "svg import not yet implemented".to_string(), diagnostics: Vec::new() })
     }
 }

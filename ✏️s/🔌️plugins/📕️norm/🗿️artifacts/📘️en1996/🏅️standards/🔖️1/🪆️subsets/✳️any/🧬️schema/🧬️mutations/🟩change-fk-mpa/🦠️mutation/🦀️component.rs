@@ -15,15 +15,15 @@ pub struct ChangeFKMpa {
 impl protocol::MutationKind<En1996Snapshot, En1996Mutation> for ChangeFKMpa {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "fk-mpa", kind: "change-fk-mpa", record: "ChangedFKMpa" };
 
-    fn diff(&self, base: &En1996Snapshot) -> protocol::MutationOutcome<En1996Diff> {
+    async fn diff(&self, base: &En1996Snapshot) -> protocol::MutationOutcome<En1996Diff> {
         crate::artifacts::en1996::mutations::change_f_k_mpa::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &En1996Snapshot) -> Vec<En1996Mutation> {
+    async fn inverse(&self, base: &En1996Snapshot) -> Vec<En1996Mutation> {
         crate::artifacts::en1996::mutations::change_f_k_mpa::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         format!("Change characteristic compressive strength f_k [MPa] to {}", self.new_f_k_mpa)
     }
 }

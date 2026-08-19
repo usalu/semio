@@ -42,7 +42,7 @@ pub use super::remove_rule_layout_point::mutation::{remove_rule_layout_point, Re
 pub type RewriteRuleEnvelope = ArtifactEnvelope<RewriteSnapshot, RewriteRuleMutation>;
 pub type RewriteRuleStore = ArtifactStore<RewriteSnapshot, RewriteRuleMutation>;
 
-pub fn create_rewrite_rule_envelope(id: &str, state: RewriteSnapshot) -> RewriteRuleEnvelope {
+pub async fn create_rewrite_rule_envelope(id: &str, state: RewriteSnapshot) -> RewriteRuleEnvelope {
     create_document_envelope(REWRITE_RULE_SCHEMA, id, state, None)
 }
 //#endregion 🔖️Store
@@ -51,7 +51,7 @@ pub fn create_rewrite_rule_envelope(id: &str, state: RewriteSnapshot) -> Rewrite
 /// 🔀️ Diffs two snapshots into a minimal typed semantic mutation set — the seam every command that
 /// still computes a whole `next: RewriteSnapshot` (convenient for JSON-body clause editing) uses to
 /// emit granular mutations instead of a whole-document replace.
-pub fn rewrite_snapshot_mutations(before: &RewriteSnapshot, after: &RewriteSnapshot) -> Vec<RewriteRuleMutation> {
+pub async fn rewrite_snapshot_mutations(before: &RewriteSnapshot, after: &RewriteSnapshot) -> Vec<RewriteRuleMutation> {
     let mut mutations = Vec::new();
     if before.before_fixture_json != after.before_fixture_json {
         mutations.push(edit_before_fixture(after.before_fixture_json.clone()));
@@ -87,7 +87,7 @@ pub fn rewrite_snapshot_mutations(before: &RewriteSnapshot, after: &RewriteSnaps
 //#endregion 🔖️SnapshotDiffHelper
 
 //#region 🔖️BatchHelpers
-pub fn apply_rewrite_rule_mutation(
+pub async fn apply_rewrite_rule_mutation(
     snapshot: &mut RewriteSnapshot,
     mutation: &RewriteRuleMutation,
 ) -> protocol::MutationApplyResult<()> {
@@ -97,13 +97,13 @@ pub fn apply_rewrite_rule_mutation(
     Ok(())
 }
 
-pub fn inverse_rewrite_rule_mutation(snapshot: &RewriteSnapshot, mutation: &RewriteRuleMutation) -> Vec<RewriteRuleMutation> {
+pub async fn inverse_rewrite_rule_mutation(snapshot: &RewriteSnapshot, mutation: &RewriteRuleMutation) -> Vec<RewriteRuleMutation> {
     protocol::Mutation::inverse(mutation, snapshot)
 }
 
 /// ▶️ Dispatches a batch of granular mutations (typically from `rewrite_snapshot_mutations`) as one
 /// VCS edit.
-pub fn dispatch_rewrite_rule_mutations(store: &mut RewriteRuleStore, mutations: Vec<RewriteRuleMutation>) -> Result<(), TrinityRewriteError> {
+pub async fn dispatch_rewrite_rule_mutations(store: &mut RewriteRuleStore, mutations: Vec<RewriteRuleMutation>) -> Result<(), TrinityRewriteError> {
     if mutations.is_empty() {
         return Ok(());
     }
@@ -122,7 +122,7 @@ mod tests {
     use ::store::os_store::test_support::{assert_document_pack_round_trip, assert_document_text_round_trip, assert_op_line_round_trip};
     use protocol::testkit::{assert_mutation_diff_absorb_law, assert_mutation_inverse_law};
 
-    fn sample_rule_state() -> RewriteSnapshot {
+    async fn sample_rule_state() -> RewriteSnapshot {
         let mut parameter_bindings = BTreeMap::new();
         parameter_bindings.insert("label".to_string(), PropertyValue::String("nakagin-core".into()));
         parameter_bindings.insert("count".to_string(), PropertyValue::Number(3.0));
@@ -138,22 +138,22 @@ mod tests {
     }
 
     #[test]
-    fn op_text_round_trip_edit_lhs() {
+    async fn op_text_round_trip_edit_lhs() {
         assert_op_line_round_trip(&edit_lhs("{}".into()));
     }
 
     #[test]
-    fn op_text_round_trip_change_parameter_binding() {
+    async fn op_text_round_trip_change_parameter_binding() {
         assert_op_line_round_trip(&change_parameter_binding("count".into(), PropertyValue::Number(4.0)));
     }
 
     #[test]
-    fn op_text_round_trip_remove_rule_layout_point() {
+    async fn op_text_round_trip_remove_rule_layout_point() {
         assert_op_line_round_trip(&remove_rule_layout_point("a".into()));
     }
 
     #[test]
-    fn document_text_round_trip_rewrite_rule_store() {
+    async fn document_text_round_trip_rewrite_rule_store() {
         let base = sample_rule_state();
         let mut store = RewriteRuleStore::new(create_rewrite_rule_envelope("test", base.clone()));
         let mut next = base.clone();
@@ -164,7 +164,7 @@ mod tests {
     }
 
     #[test]
-    fn op_text_parse_op_errors_on_unknown_keyword() {
+    async fn op_text_parse_op_errors_on_unknown_keyword() {
         let err = <RewriteRuleMutation as protocol::OpText>::parse_op("bogus xyz").unwrap_err();
         assert!(err.message.contains("unknown mutation line"));
     }
@@ -172,7 +172,7 @@ mod tests {
     /// 🎫️ CW7 command-envelope law: proves `RewriteRuleMutation`'s `Edit` round-trips through
     /// `protocol::MutationEnvelope`s.
     #[test]
-    fn command_envelope_round_trip_holds_for_an_applied_operation() {
+    async fn command_envelope_round_trip_holds_for_an_applied_operation() {
         use protocol::{ArtifactId, Edit, SchemaId};
 
         let base = sample_rule_state();
@@ -184,7 +184,7 @@ mod tests {
 
     //#region 🔖️MutationLaws
     #[test]
-    fn edit_mutations_inverse_law() {
+    async fn edit_mutations_inverse_law() {
         let base = sample_rule_state();
         assert_mutation_inverse_law(&base, &edit_before_fixture("{}".into()));
         assert_mutation_inverse_law(&base, &edit_lhs("{}".into()));
@@ -192,7 +192,7 @@ mod tests {
     }
 
     #[test]
-    fn parameter_binding_mutations_inverse_law() {
+    async fn parameter_binding_mutations_inverse_law() {
         let base = sample_rule_state();
         assert_mutation_inverse_law(&base, &change_parameter_binding("count".into(), PropertyValue::Number(9.0)));
         assert_mutation_inverse_law(&base, &change_parameter_binding("brandNew".into(), PropertyValue::Bool(true)));
@@ -201,7 +201,7 @@ mod tests {
     }
 
     #[test]
-    fn rule_layout_point_mutations_inverse_law() {
+    async fn rule_layout_point_mutations_inverse_law() {
         let base = sample_rule_state();
         assert_mutation_inverse_law(&base, &change_rule_layout_point("a".into(), LayoutPoint::from((1.0, 2.0))));
         assert_mutation_inverse_law(&base, &change_rule_layout_point("brandNew".into(), LayoutPoint::from((0.0, 0.0))));
@@ -210,7 +210,7 @@ mod tests {
     }
 
     #[test]
-    fn edit_lhs_diff_absorb_law() {
+    async fn edit_lhs_diff_absorb_law() {
         let base = sample_rule_state();
         let d1 = protocol::Mutation::diff(&edit_lhs("{\"a\":1}".into()), &base).diff().clone();
         let mid = protocol::MutationDiff::apply(&d1, &base).expect("valid mutation diff");
@@ -219,7 +219,7 @@ mod tests {
     }
 
     #[test]
-    fn dispatch_registers_semantic_descriptors() {
+    async fn dispatch_registers_semantic_descriptors() {
         register_rewrite_rule_mutation_descriptors();
         for kind in <RewriteRuleMutation as protocol::SemanticMutation<RewriteSnapshot>>::kinds() {
             assert!(protocol::is_approved_verb(kind.verb), "verb '{}' must be in APPROVED_VERBS", kind.verb);

@@ -11,7 +11,7 @@ use serde::{Deserialize, Serialize};
 /// 🎯️ Falls back to the current `"assets"` interaction-domain selection (read once per dispatch into
 /// `ShootingDispatchCtx::selected_asset_ids` — see that struct's doc comment) when the command carries
 /// no explicit ids.
-fn mesh_selection_ids_typed(ids: &[String], fallback: &[String]) -> Vec<String> {
+async fn mesh_selection_ids_typed(ids: &[String], fallback: &[String]) -> Vec<String> {
     if ids.is_empty() {
         fallback.to_vec()
     } else {
@@ -32,7 +32,7 @@ pub mod translate_selection {
         pub dz: f64,
     }
 
-    pub fn handle(payload: &TranslateSelection, _doc: &ArtifactView<'_, ShootingSnapshot>, _cfg: &ConfigView<'_, ShootingConfig>, ctx: &mut ShootingDispatchCtx) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
+    pub async fn handle(payload: &TranslateSelection, _doc: &ArtifactView<'_, ShootingSnapshot>, _cfg: &ConfigView<'_, ShootingConfig>, ctx: &mut ShootingDispatchCtx) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
         let ids = mesh_selection_ids_typed(&payload.asset_ids, &ctx.selected_asset_ids);
         if ids.is_empty() {
             Ok(Emit::default())
@@ -57,7 +57,7 @@ pub mod rotate_selection {
         pub angle: f64,
     }
 
-    pub fn handle(payload: &RotateSelection, _doc: &ArtifactView<'_, ShootingSnapshot>, _cfg: &ConfigView<'_, ShootingConfig>, ctx: &mut ShootingDispatchCtx) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
+    pub async fn handle(payload: &RotateSelection, _doc: &ArtifactView<'_, ShootingSnapshot>, _cfg: &ConfigView<'_, ShootingConfig>, ctx: &mut ShootingDispatchCtx) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
         let ids = mesh_selection_ids_typed(&payload.asset_ids, &ctx.selected_asset_ids);
         if ids.is_empty() {
             Ok(Emit::default())
@@ -81,7 +81,7 @@ pub mod scale_selection {
         pub sz: f64,
     }
 
-    pub fn handle(payload: &ScaleSelection, _doc: &ArtifactView<'_, ShootingSnapshot>, _cfg: &ConfigView<'_, ShootingConfig>, ctx: &mut ShootingDispatchCtx) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
+    pub async fn handle(payload: &ScaleSelection, _doc: &ArtifactView<'_, ShootingSnapshot>, _cfg: &ConfigView<'_, ShootingConfig>, ctx: &mut ShootingDispatchCtx) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
         let ids = mesh_selection_ids_typed(&payload.asset_ids, &ctx.selected_asset_ids);
         if ids.is_empty() {
             Ok(Emit::default())
@@ -101,7 +101,7 @@ mod tests {
     use semio_framework_plugin::PluginApp;
 
     #[test]
-    fn gumball_transform_drag_coalesces_into_one_edit() {
+    async fn gumball_transform_drag_coalesces_into_one_edit() {
         let mut app = shooting_app();
         let asset_id = app.snapshot().expect("snapshot").assets[0].id.clone();
         for dx in [1.0, 2.0, 3.0] {
@@ -114,7 +114,7 @@ mod tests {
     }
 
     #[test]
-    fn empty_selection_is_a_no_operation() {
+    async fn empty_selection_is_a_no_operation() {
         let mut app = shooting_app();
         // No explicit ids and an empty config selection: nothing to transform.
         let result = dispatch(&mut app, ShootingCommand::RotateSelection(rotate_selection::RotateSelection { asset_ids: Vec::new(), ax: 0.0, ay: 0.0, az: 1.0, angle: 1.0 }));

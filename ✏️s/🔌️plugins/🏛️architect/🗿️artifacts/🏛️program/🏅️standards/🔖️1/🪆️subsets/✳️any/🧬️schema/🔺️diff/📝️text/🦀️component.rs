@@ -16,7 +16,7 @@ use protocol::{Identified, MutationDiff, Patchable};
 //#region 🔖️Apply
 impl ProgramDiff {
     /// 🧬️ Apply every field entry onto a full artifact.
-    pub fn apply_to_artifact(&self, artifact: &ProgramArtifact) -> protocol::MutationApplyResult<ProgramArtifact> {
+    pub async fn apply_to_artifact(&self, artifact: &ProgramArtifact) -> protocol::MutationApplyResult<ProgramArtifact> {
         Ok({
             if let Some(replacement) = &self.artifact {
                 return Ok((**replacement).clone());
@@ -272,12 +272,12 @@ impl ProgramDiff {
 }
 
 impl MutationDiff<ProgramSnapshot> for ProgramDiff {
-    fn apply(&self, base: &ProgramSnapshot) -> protocol::MutationApplyResult<ProgramSnapshot> {
+    async fn apply(&self, base: &ProgramSnapshot) -> protocol::MutationApplyResult<ProgramSnapshot> {
         self.apply_to_artifact(&ProgramArtifact::from_snapshot(base.clone()))
             .map(|artifact| artifact.to_snapshot())
             .map_err(|error| error.under(["artifact"]))
     }
-    fn absorb(&mut self, other: Self) {
+    async fn absorb(&mut self, other: Self) {
         if other.artifact.is_some() {
             *self = other;
             return;
@@ -1146,7 +1146,7 @@ impl MutationDiff<ProgramSnapshot> for ProgramDiff {
     }
 }
 
-fn apply_collection_delta<T, P>(
+async fn apply_collection_delta<T, P>(
     items: &mut Vec<T>,
     added: &[T],
     removed: &[String],
@@ -1287,7 +1287,7 @@ mod tests {
     /// vocabulary final sweep. `apply_to_artifact` (the one real, still-live function in this file)
     /// keeps its own coverage here instead.
     #[test]
-    fn apply_to_artifact_applies_a_scalar_field() {
+    async fn apply_to_artifact_applies_a_scalar_field() {
         let artifact = ProgramArtifact::default();
         let mut renamed_meta = artifact.meta.clone();
         renamed_meta.title = "Renamed".into();
@@ -1299,7 +1299,7 @@ mod tests {
     }
 
     #[test]
-    fn apply_to_artifact_full_replacement_wins_over_field_entries() {
+    async fn apply_to_artifact_full_replacement_wins_over_field_entries() {
         let artifact = ProgramArtifact::default();
         let mut replacement = artifact.clone();
         replacement.schema = "s.architect.program@2".into();

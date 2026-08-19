@@ -23,7 +23,7 @@ pub struct DagInference {
 }
 
 impl protocol::Inference<DagSnapshot> for DagInference {
-    fn infer(snapshot: &DagSnapshot) -> Self {
+    async fn infer(snapshot: &DagSnapshot) -> Self {
         let scene = crate::artifacts::dag::dag_working_scene(snapshot);
         Self { topology: compute_dag_topology(&scene.nodes, &scene.edges) }
     }
@@ -34,19 +34,19 @@ impl protocol::Inference<DagSnapshot> for DagInference {
 /// (non-empty), the same "match `infer` of the real default, don't derive structurally" trick as
 /// `AddInference`'s hand-written `Default` in `📡️spr/🎮️command/🦀️component.rs`.
 impl Default for DagInference {
-    fn default() -> Self {
+    async fn default() -> Self {
         <Self as protocol::Inference<DagSnapshot>>::infer(&DagSnapshot::default())
     }
 }
 
 impl protocol::InferenceSpec<DagSnapshot> for DagInference {
-    fn inference_schema_id() -> &'static str {
+    async fn inference_schema_id() -> &'static str {
         "s.dag.dag.inference"
     }
-    fn schema_version() -> u32 {
+    async fn schema_version() -> u32 {
         1
     }
-    fn fields() -> &'static [protocol::InferenceFieldSpec] {
+    async fn fields() -> &'static [protocol::InferenceFieldSpec] {
         &[protocol::InferenceFieldSpec { id: "s.dag.dag.inference.topology", reads: &["content"] }]
     }
 }
@@ -70,7 +70,7 @@ impl ArtifactInferrer for DagInferrer {
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.dag.dag.inference`'s facet leaves into the OS-wide inference catalog — call
 /// once at plugin init, alongside `dag_artifact_schema_descriptor`'s registration.
-pub fn dag_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
+pub async fn dag_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
     schema::ArtifactInferenceDescriptor {
         id: "s.dag.dag.inference",
         inference: schema::FacetLeaves {
@@ -91,7 +91,7 @@ mod tests {
     use crate::artifacts::dag::{DagFixtureEdge, DagNodeSpec};
     use protocol::Inference;
 
-    fn chain_snapshot() -> DagSnapshot {
+    async fn chain_snapshot() -> DagSnapshot {
         let a = DagNodeSpec { id: "a".into(), ..Default::default() };
         let b = DagNodeSpec { id: "b".into(), ..Default::default() };
         let edges = vec![DagFixtureEdge { id: "e1".into(), source: "a".into(), target: "b".into(), ..Default::default() }];
@@ -100,18 +100,18 @@ mod tests {
     }
 
     #[test]
-    fn inference_determinism_law() {
+    async fn inference_determinism_law() {
         let snapshot = chain_snapshot();
         assert_eq!(DagInference::infer(&snapshot), DagInference::infer(&snapshot));
     }
 
     #[test]
-    fn inference_default_law() {
+    async fn inference_default_law() {
         assert_eq!(DagInference::infer(&DagSnapshot::default()), DagInference::default());
     }
 
     #[test]
-    fn topology_counts_every_node_exactly_once() {
+    async fn topology_counts_every_node_exactly_once() {
         let snapshot = chain_snapshot();
         let inferred = DagInference::infer(&snapshot);
         let node_count = snapshot.nodes().len();

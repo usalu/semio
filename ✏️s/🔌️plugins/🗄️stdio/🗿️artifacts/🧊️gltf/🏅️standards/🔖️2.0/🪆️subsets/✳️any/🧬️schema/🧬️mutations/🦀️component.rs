@@ -14,7 +14,7 @@ pub struct GltfMutationLeafError {
 }
 
 impl std::fmt::Display for GltfMutationLeafError {
-    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    async fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(formatter, "{} at {}: {}", self.code, self.path, self.detail)
     }
 }
@@ -46,7 +46,7 @@ pub struct GltfMutationLeafDescriptor {
 //#region 🔖️Assembly
 pub const GLTF_MUTATION_LEAF_DESCRIPTORS: &[GltfMutationLeafDescriptor] = &[CHANGE_MATERIAL_ALPHA_MODE_DESCRIPTOR, CHANGE_MATERIAL_DOUBLE_SIDED_DESCRIPTOR, CREATE_SCENE_DESCRIPTOR];
 
-pub fn gltf_mutation_leaf_descriptors() -> &'static [GltfMutationLeafDescriptor] {
+pub async fn gltf_mutation_leaf_descriptors() -> &'static [GltfMutationLeafDescriptor] {
     GLTF_MUTATION_LEAF_DESCRIPTORS
 }
 //#endregion 🔖️Assembly

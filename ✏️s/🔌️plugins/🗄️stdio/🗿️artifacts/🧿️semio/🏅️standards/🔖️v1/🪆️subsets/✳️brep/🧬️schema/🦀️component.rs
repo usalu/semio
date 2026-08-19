@@ -32,24 +32,24 @@ pub struct SemioBrepArtifact {
 }
 
 impl Default for SemioBrepArtifact {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self::from_snapshot(SemioBrepSnapshot::default())
     }
 }
 
 impl SemioBrepArtifact {
-    pub fn to_snapshot(&self) -> SemioBrepSnapshot {
+    pub async fn to_snapshot(&self) -> SemioBrepSnapshot {
         SemioBrepSnapshot { schema: self.schema.clone(), vertices: self.vertices.clone(), edges: self.edges.clone(), loops: self.loops.clone(), faces: self.faces.clone(), shells: self.shells.clone(), solids: self.solids.clone() }
     }
-    pub fn from_snapshot(snapshot: SemioBrepSnapshot) -> Self {
+    pub async fn from_snapshot(snapshot: SemioBrepSnapshot) -> Self {
         Self { schema: snapshot.schema, vertices: snapshot.vertices, edges: snapshot.edges, loops: snapshot.loops, faces: snapshot.faces, shells: snapshot.shells, solids: snapshot.solids }
     }
-    pub fn set_snapshot(&mut self, snapshot: SemioBrepSnapshot) {
+    pub async fn set_snapshot(&mut self, snapshot: SemioBrepSnapshot) {
         *self = Self::from_snapshot(snapshot);
     }
 }
 
-pub fn semio_brep_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
+pub async fn semio_brep_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
     schema::ArtifactSchemaDescriptor {
         id: "s.stdio.semio.brep",
         artifact: schema::FacetLeaves {
@@ -98,28 +98,28 @@ pub mod derived_construction {
         type Snapshot = SemioBrepSnapshot;
         type Mutation = SemioBrepMutation;
         type Diff = SemioBrepDiff;
-        fn empty() -> Self {
+        async fn empty() -> Self {
             Self { snapshot: SemioBrepSnapshot::default() }
         }
-        fn from_snapshot(snapshot: Self::Snapshot) -> Self {
+        async fn from_snapshot(snapshot: Self::Snapshot) -> Self {
             Self { snapshot }
         }
-        fn from_text(text: &str) -> Result<Self, store::TextError> {
+        async fn from_text(text: &str) -> Result<Self, store::TextError> {
             Ok(Self::from_snapshot(<SemioBrepSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
-        fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
+        async fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
             Ok(Self::from_snapshot(<SemioBrepSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
         }
-        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
+        async fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let diff = <Self::Mutation as protocol::Mutation<SemioBrepSnapshot>>::diff(&mutation, &self.snapshot);
             let diff = diff.apply_to(&mut self.snapshot);
             (self, diff)
         }
-        fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
+        async fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
             self.snapshot = <SemioBrepDiff as protocol::MutationDiff<SemioBrepSnapshot>>::apply(&diff, &self.snapshot)?;
             Ok(self)
         }
-        fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
+        async fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
             Ok(self.snapshot)
         }
     }
@@ -143,7 +143,7 @@ pub mod derived_analysis {
         type Parts = SemioBrepParts;
         const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("brep") };
 
-        fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
+        async fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
             match source {
                 AnalyzeSource::Binary(bytes) => {
                     let marker = STDIO_SEMIOBREP_DOCUMENT_SCHEMA.as_bytes();
@@ -163,7 +163,7 @@ pub mod derived_analysis {
             }
         }
 
-        fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
+        async fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
             let mut parts = SemioBrepParts::default();
             let mut diagnostics = Vec::new();
             let mut confidence = IoConfidence::High;

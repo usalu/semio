@@ -14,7 +14,7 @@ use semio_framework_plugin::{ExecutionMode, Plugin};
 /// `.execution(…)`/`.requests(…)` (ticket 26/08/17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME
 /// M6-remaining, `📓️design-abi.md` §3/§6) are this crate's migration proof, mirroring `🗒️note`'s
 /// shape.
-pub fn plugin() -> Result<Plugin, semio_framework_plugin::PluginAssemblyError> {
+pub async fn plugin() -> Result<Plugin, semio_framework_plugin::PluginAssemblyError> {
     Plugin::builder("sequence")
         .label("Sequence")
         .version("0.1.0")
@@ -33,12 +33,12 @@ pub fn plugin() -> Result<Plugin, semio_framework_plugin::PluginAssemblyError> {
 #[cfg(test)]
 mod surface_tests {
     #[test]
-    fn sequence_viewer_never_mutates() {
+    async fn sequence_viewer_never_mutates() {
         semio_framework_plugin::testkit::assert_viewer_never_mutates::<crate::viewer::sequence::SequenceViewer>();
     }
 
     #[test]
-    fn sequence_editor_and_viewer_share_dialect() {
+    async fn sequence_editor_and_viewer_share_dialect() {
         semio_framework_plugin::testkit::assert_editor_and_viewer_share_dialect::<crate::editor::sequence::SequencePlayApp, crate::viewer::sequence::SequenceViewer>();
     }
 }

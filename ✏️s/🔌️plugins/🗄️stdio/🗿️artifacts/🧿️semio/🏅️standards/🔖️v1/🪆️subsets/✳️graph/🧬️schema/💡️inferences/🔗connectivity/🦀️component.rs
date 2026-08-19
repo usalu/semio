@@ -41,7 +41,7 @@ pub struct SemioGraphNodeConnectivity {
 /// 🏗️ Builds an `UndirectedGraph` from the snapshot's `nodes`/`edges`, plus the id-value → `NodeId`
 /// lookup needed to translate back. Node ids are assigned in `nodes` array order — deterministic
 /// because that order is itself the persisted snapshot order, never a `HashMap` iteration order.
-fn build_undirected(snapshot: &SemioGraphSnapshot) -> (UndirectedGraph, BTreeMap<String, NodeId>) {
+async fn build_undirected(snapshot: &SemioGraphSnapshot) -> (UndirectedGraph, BTreeMap<String, NodeId>) {
     let mut graph = UndirectedGraph::new();
     let mut id_of: BTreeMap<String, NodeId> = BTreeMap::new();
     for (index, node) in snapshot.nodes.iter().enumerate() {
@@ -61,7 +61,7 @@ fn build_undirected(snapshot: &SemioGraphSnapshot) -> (UndirectedGraph, BTreeMap
 /// `dfs_preorder_nodes` seeded from the lowest-numbered unvisited node — deterministic because
 /// `graph.nodes()` order follows insertion order (== `nodes` array order) and the seed scan always
 /// picks the smallest remaining `NodeId`.
-fn component_of(graph: &UndirectedGraph) -> BTreeMap<NodeId, u32> {
+async fn component_of(graph: &UndirectedGraph) -> BTreeMap<NodeId, u32> {
     let mut component: BTreeMap<NodeId, u32> = BTreeMap::new();
     let mut next_component: u32 = 0;
     let mut all_ids: Vec<NodeId> = graph.nodes().collect();
@@ -88,11 +88,11 @@ impl store::InferredField<SemioGraphSnapshot> for NodeConnectivity {
     const FIELD_ID: &'static str = "s.stdio.semio.graph.inference.connectivity";
     const SCHEMA_VERSION: u32 = 1;
 
-    fn reads() -> &'static [&'static str] {
+    async fn reads() -> &'static [&'static str] {
         &["nodes", "edges"]
     }
 
-    fn plan(snapshot: &SemioGraphSnapshot) -> Vec<store::InferenceStep<Self::Key>> {
+    async fn plan(snapshot: &SemioGraphSnapshot) -> Vec<store::InferenceStep<Self::Key>> {
         snapshot.nodes.iter().map(|n| store::InferenceStep { key: n.id.value.clone(), parents: Vec::new() }).collect()
     }
 
@@ -105,7 +105,7 @@ impl store::InferredField<SemioGraphSnapshot> for NodeConnectivity {
     /// node's value back for another. Keying every entry with its own `key` up front is therefore
     /// load-bearing correctness, not a style choice; `changing_the_key_alone_produces_a_different_hash`
     /// below is the regression test for exactly this trap.
-    fn dep_input(snapshot: &SemioGraphSnapshot, key: &Self::Key, _parents: &[Self::Key]) -> Vec<u8> {
+    async fn dep_input(snapshot: &SemioGraphSnapshot, key: &Self::Key, _parents: &[Self::Key]) -> Vec<u8> {
         let mut node_ids: Vec<&str> = snapshot.nodes.iter().map(|n| n.id.value.as_str()).collect();
         node_ids.sort_unstable();
         let mut edge_pairs: Vec<(&str, &str)> = snapshot.edges.iter().map(|e| (e.source.value.as_str(), e.target.value.as_str())).collect();
@@ -113,7 +113,7 @@ impl store::InferredField<SemioGraphSnapshot> for NodeConnectivity {
         serde_json::to_vec(&(key.as_str(), node_ids, edge_pairs)).unwrap_or_default()
     }
 
-    fn compute(snapshot: &SemioGraphSnapshot, key: &Self::Key, _parents: &[Self::Value]) -> Self::Value {
+    async fn compute(snapshot: &SemioGraphSnapshot, key: &Self::Key, _parents: &[Self::Value]) -> Self::Value {
         let (graph, id_of) = build_undirected(snapshot);
         let Some(&id) = id_of.get(key.as_str()) else {
             return SemioGraphNodeConnectivity::default();
@@ -132,22 +132,22 @@ mod tests {
     use crate::artifacts::semio::standards::v1::subsets::graph::schema::snapshot::{GraphEdgeId, GraphNodeId, SemioGraphEdge, SemioGraphNode, STDIO_SEMIOGRAPH_DOCUMENT_SCHEMA};
     use store::{InferenceCache, InferenceCacheConfig};
 
-    fn node(id: &str) -> SemioGraphNode {
+    async fn node(id: &str) -> SemioGraphNode {
         SemioGraphNode { id: GraphNodeId::new(id), kind: "task".into(), label: id.into(), position: Default::default(), ports: Vec::new(), properties: Vec::new() }
     }
 
-    fn edge(id: &str, source: &str, target: &str) -> SemioGraphEdge {
+    async fn edge(id: &str, source: &str, target: &str) -> SemioGraphEdge {
         SemioGraphEdge { id: GraphEdgeId::new(id), source: GraphNodeId::new(source), target: GraphNodeId::new(target), kind: "flows-to".into(), label: id.into() }
     }
 
     /// 🔀️ Two disjoint components: `a-b` (2 nodes, 1 edge each) and `c` (isolated).
-    fn two_component_snapshot() -> SemioGraphSnapshot {
+    async fn two_component_snapshot() -> SemioGraphSnapshot {
         SemioGraphSnapshot { schema: STDIO_SEMIOGRAPH_DOCUMENT_SCHEMA.into(), nodes: vec![node("a"), node("b"), node("c")], edges: vec![edge("e1", "a", "b")] }
     }
 
     //#region 🧪️Honesty
     #[test]
-    fn connected_nodes_share_a_component_and_isolated_node_gets_its_own() {
+    async fn connected_nodes_share_a_component_and_isolated_node_gets_its_own() {
         let values = store::infer_field::<SemioGraphSnapshot, NodeConnectivity>(&two_component_snapshot(), None);
         let a = values.get("a").expect("a present");
         let b = values.get("b").expect("b present");
@@ -160,7 +160,7 @@ mod tests {
     }
 
     #[test]
-    fn a_self_loop_counts_degree_twice() {
+    async fn a_self_loop_counts_degree_twice() {
         let mut snapshot = two_component_snapshot();
         snapshot.edges.push(edge("e2", "c", "c"));
         let values = store::infer_field::<SemioGraphSnapshot, NodeConnectivity>(&snapshot, None);
@@ -168,7 +168,7 @@ mod tests {
     }
 
     #[test]
-    fn an_all_empty_snapshot_yields_an_empty_plan() {
+    async fn an_all_empty_snapshot_yields_an_empty_plan() {
         let values = store::infer_field::<SemioGraphSnapshot, NodeConnectivity>(&SemioGraphSnapshot::default(), None);
         assert!(values.is_empty());
     }
@@ -176,7 +176,7 @@ mod tests {
 
     //#region 🧪️CacheTransparencyLaw
     #[test]
-    fn disabled_cache_matches_pure_recompute() {
+    async fn disabled_cache_matches_pure_recompute() {
         let snapshot = two_component_snapshot();
         let pure = store::infer_field::<SemioGraphSnapshot, NodeConnectivity>(&snapshot, None);
         let mut disabled = InferenceCache::new(InferenceCacheConfig { enabled: false, ..Default::default() });
@@ -187,7 +187,7 @@ mod tests {
 
     //#region 🧪️IncrementalityLaw
     #[test]
-    fn identical_snapshot_recompute_is_a_cache_hit() {
+    async fn identical_snapshot_recompute_is_a_cache_hit() {
         let mut cache = InferenceCache::new(InferenceCacheConfig { enabled: true, record_stats: true, ..Default::default() });
         let base = two_component_snapshot();
         let _ = store::infer_field::<SemioGraphSnapshot, NodeConnectivity>(&base, Some(&mut cache));
@@ -203,7 +203,7 @@ mod tests {
     /// still misses `a`/`b`'s entries too, because `dep_input` folds in the entire edge/node set
     /// for every key (plus `key` itself — see that method's own doc comment for why).
     #[test]
-    fn editing_any_edge_misses_every_entry_because_connectivity_is_whole_graph() {
+    async fn editing_any_edge_misses_every_entry_because_connectivity_is_whole_graph() {
         let mut cache = InferenceCache::new(InferenceCacheConfig { enabled: true, record_stats: true, ..Default::default() });
         let base = two_component_snapshot();
         let _ = store::infer_field::<SemioGraphSnapshot, NodeConnectivity>(&base, Some(&mut cache));
@@ -226,7 +226,7 @@ mod tests {
     /// `SemioGraphNodeConnectivity` verbatim. Proven by asserting every cached value matches its
     /// own uncached recompute AND that two structurally-different nodes stay distinct.
     #[test]
-    fn distinct_keys_never_collide_in_the_cache() {
+    async fn distinct_keys_never_collide_in_the_cache() {
         let mut cache = InferenceCache::new(InferenceCacheConfig { enabled: true, record_stats: true, ..Default::default() });
         let base = two_component_snapshot();
         let cached = store::infer_field::<SemioGraphSnapshot, NodeConnectivity>(&base, Some(&mut cache));

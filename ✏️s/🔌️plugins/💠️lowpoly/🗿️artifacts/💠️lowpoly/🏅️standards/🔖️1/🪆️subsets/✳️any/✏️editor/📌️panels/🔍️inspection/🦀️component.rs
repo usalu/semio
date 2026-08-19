@@ -16,7 +16,7 @@ pub const LOWPOLY_PLAY_BODY_INSPECTION: &str = "lowpoly.play.inspection";
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
-pub fn definition() -> PanelTabDefinition {
+pub async fn definition() -> PanelTabDefinition {
     PanelTabDefinition {
         kind: PanelTabKind::App(FRAMEWORK_PANEL_TAB_INSPECTION_ID.into()),
         label: LocalizedLabel::native(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, "Inspektion"),
@@ -28,7 +28,7 @@ pub fn definition() -> PanelTabDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-fn inspector_utility_param_field(id: &str, label: semio_framework_plugin::LabelText, key: &str, value: &Value) -> UiNode {
+async fn inspector_utility_param_field(id: &str, label: semio_framework_plugin::LabelText, key: &str, value: &Value) -> UiNode {
     UiNode::Field(UiFieldNode {
         presence: UiPresence::default(),
         id: format!("lowpoly-play-inspector.{id}"),
@@ -54,7 +54,7 @@ fn inspector_utility_param_field(id: &str, label: semio_framework_plugin::LabelT
     })
 }
 
-pub fn render(view: LowpolyView<'_>, active_utility: &str, labels: &LowpolyLabels) -> UiNode {
+pub async fn render(view: LowpolyView<'_>, active_utility: &str, labels: &LowpolyLabels) -> UiNode {
     let Some(object) = active_object(view) else {
         return ui_stack_vertical(vec![ui_text(Label::data(format!("Schema: {LOWPOLY_DOCUMENT_SCHEMA}"))), ui_text(Label::data("No active object"))]);
     };

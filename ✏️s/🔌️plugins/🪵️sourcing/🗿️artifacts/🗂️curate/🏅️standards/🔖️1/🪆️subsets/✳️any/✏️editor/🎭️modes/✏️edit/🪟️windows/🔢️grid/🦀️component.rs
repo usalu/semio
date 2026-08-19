@@ -16,7 +16,7 @@ const SOURCING_CURATE_GRID_CELL: f64 = 2.0;
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
-pub fn definition() -> WindowKindDefinition {
+pub async fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
         id: SOURCING_CURATE_WINDOW_GRID.into(),
         label: LocalizedLabel::native("Grid", "Raster"),
@@ -37,7 +37,7 @@ pub fn definition() -> WindowKindDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(document: &CurateSnapshot, cfg: &SourcingCurateConfig) -> UiNode {
+pub async fn render(document: &CurateSnapshot, cfg: &SourcingCurateConfig) -> UiNode {
     let filtered = filtered_stock(document, &cfg.filters);
     let mut seen_mesh_ids = HashSet::new();
     let mut meshes = Vec::new();
@@ -67,7 +67,7 @@ mod tests {
     use crate::artifacts::curate::Filters;
 
     #[test]
-    fn grid_instance_count_matches_filtered_stock_and_normalizes_scale() {
+    async fn grid_instance_count_matches_filtered_stock_and_normalizes_scale() {
         let document = crate::artifacts::curate::schema::default_document();
         let cfg = SourcingCurateConfig { filters: Filters { module_ids: vec!["slabs".into()], ..Default::default() }, ..Default::default() };
         let node = render(&document, &cfg);
@@ -82,14 +82,14 @@ mod tests {
     }
 
     #[test]
-    fn definition_declares_the_world3d_surface_and_body_key() {
+    async fn definition_declares_the_world3d_surface_and_body_key() {
         let def = definition();
         assert_eq!(def.body_key, SOURCING_CURATE_BODY_GRID);
         assert!(matches!(def.surface_kind, SurfaceKind::World3d));
     }
 
     #[test]
-    fn renders_via_the_app() {
+    async fn renders_via_the_app() {
         let mut app = new_app();
         assert!(render_body(&mut app, SOURCING_CURATE_BODY_GRID).contains("world3d"));
     }

@@ -9,7 +9,7 @@ use crate::artifacts::semio::standards::v1::subsets::drawing::schema::diff::{Dra
 use crate::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::SemioDrawingSnapshot;
 
 //#region 🔖️Diff
-pub fn diff(payload: &ReplaceFill, base: &SemioDrawingSnapshot) -> protocol::MutationOutcome<SemioDrawingDiff> {
+pub async fn diff(payload: &ReplaceFill, base: &SemioDrawingSnapshot) -> protocol::MutationOutcome<SemioDrawingDiff> {
     let Some(old) = base.styles.iter().find(|s| s.name == payload.style_name) else {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Style \"{}\" does not exist.", payload.style_name), [payload.style_name.clone()]);
     };

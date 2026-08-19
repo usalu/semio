@@ -13,12 +13,12 @@ use crate::artifacts::draw::op::DrawMutation;
 use protocol::OpBinary;
 
 /// 📦️ Encodes a `DrawMutation` to its binary command form.
-pub fn encode_op(operation: &DrawMutation) -> Result<Vec<u8>, protocol::ProtocolError> {
+pub async fn encode_op(operation: &DrawMutation) -> Result<Vec<u8>, protocol::ProtocolError> {
     operation.encode_op()
 }
 
 /// 📖️ Decodes a `DrawMutation` from its binary command form.
-pub fn decode_op(bytes: &[u8]) -> Result<DrawMutation, protocol::ProtocolError> {
+pub async fn decode_op(bytes: &[u8]) -> Result<DrawMutation, protocol::ProtocolError> {
     DrawMutation::decode_op(bytes)
 }
 
@@ -30,7 +30,7 @@ mod tests {
     use crate::artifacts::draw::{DrawSnapshot, DRAW_DOCUMENT_SCHEMA};
 
     #[test]
-    fn op_binary_round_trips_and_agrees_with_text() {
+    async fn op_binary_round_trips_and_agrees_with_text() {
         let document = default_draw_document("doc-text-test", None);
         let operation = crate::artifacts::draw::mutations::create_layer(None, Some(document.layers.len()), create_draw_shape_layer_rect("Op Binary Test"));
         store::os_store::test_support::assert_op_text_binary_equivalence(&operation);
@@ -39,7 +39,7 @@ mod tests {
     }
 
     #[test]
-    fn document_text_round_trips_a_store_with_an_applied_operation() {
+    async fn document_text_round_trips_a_store_with_an_applied_operation() {
         let initial = default_draw_document("doc-text-test", None);
         let envelope = store::create_document_envelope::<DrawSnapshot, DrawMutation>(DRAW_DOCUMENT_SCHEMA, "doc-text-test", initial, None);
         let mut doc_store = store::ArtifactStore::new(envelope).expect("valid artifact store fixture");
@@ -57,7 +57,7 @@ mod tests {
     /// `DrawMutation`'s `Edit` round-trips through `protocol::MutationEnvelope`s beside this file's
     /// existing pack round-trip law.
     #[test]
-    fn command_envelope_round_trip_holds_for_an_applied_operation() {
+    async fn command_envelope_round_trip_holds_for_an_applied_operation() {
         use protocol::{ArtifactId, Edit, SchemaId};
 
         let initial = default_draw_document("doc-text-test", None);

@@ -3,4 +3,4 @@ use crate::artifacts::gltf::GltfSnapshot;
 use crate::artifacts::gltf::schema::diff::{GltfDiff, GltfMeshesDiff};
 use crate::artifacts::gltf::schema::mutations::move_primitive_attribute::mutation::{apply, GltfMovePrimitiveAttributePayload};
 use crate::artifacts::gltf::schema::mutations::top_level_private::GltfTopLevelMutationRejection;
-pub fn derive(payload: &GltfMovePrimitiveAttributePayload, base: &GltfSnapshot) -> Result<GltfDiff, GltfTopLevelMutationRejection> { let next = apply(payload, base)?; Ok(GltfDiff { meshes: Some(GltfMeshesDiff::between(&base.document.meshes, &next.document.meshes)), ..Default::default() }) }
+pub async fn derive(payload: &GltfMovePrimitiveAttributePayload, base: &GltfSnapshot) -> Result<GltfDiff, GltfTopLevelMutationRejection> { let next = apply(payload, base)?; Ok(GltfDiff { meshes: Some(GltfMeshesDiff::between(&base.document.meshes, &next.document.meshes)), ..Default::default() }) }

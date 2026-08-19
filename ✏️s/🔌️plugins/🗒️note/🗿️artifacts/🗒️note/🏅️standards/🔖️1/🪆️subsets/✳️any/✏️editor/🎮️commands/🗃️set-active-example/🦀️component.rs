@@ -14,7 +14,7 @@ pub struct SetActiveExample {
     pub example_id: String,
 }
 
-pub fn handle(payload: &SetActiveExample, _doc: &ArtifactView<'_, NoteSnapshot>, _cfg: &ConfigView<'_, NoteConfig>, _ctx: &mut crate::editor::note::NoteDispatchCtx) -> Result<Emit<NoteMutation, NoteConfigMutation>, Fault> {
+pub async fn handle(payload: &SetActiveExample, _doc: &ArtifactView<'_, NoteSnapshot>, _cfg: &ConfigView<'_, NoteConfig>, _ctx: &mut crate::editor::note::NoteDispatchCtx) -> Result<Emit<NoteMutation, NoteConfigMutation>, Fault> {
     let next_document = if payload.example_id == "semio" { semio_example_snapshot() } else { empty_note_snapshot() };
     Ok(Emit { effects: vec![crate::editor::note::reset_document_effect(&next_document)], ..Default::default() })
 }
@@ -30,12 +30,12 @@ mod tests {
     /// never applies `effects` to its own store — that's the real host's job): asserts on the `Emit`
     /// itself, mirroring `fem2d`'s `set_active_example` test of the same `Effect::LoadDocument`
     /// reroute (whole-document replace is banned from the `Mutation` enum outright).
-    fn empty_view() -> (NoteSnapshot, semio_framework_plugin::HistoryView) {
+    async fn empty_view() -> (NoteSnapshot, semio_framework_plugin::HistoryView) {
         (empty_note_snapshot(), semio_framework_plugin::HistoryView::empty())
     }
 
     #[test]
-    fn set_fixture_json_replaces_document() {
+    async fn set_fixture_json_replaces_document() {
         let (snapshot, history) = empty_view();
         let doc = ArtifactView::new(&snapshot, &history);
         let cfg_snapshot = NoteConfig::default();
@@ -51,7 +51,7 @@ mod tests {
     }
 
     #[test]
-    fn set_active_example_loads_semio_blocks() {
+    async fn set_active_example_loads_semio_blocks() {
         let (snapshot, history) = empty_view();
         let doc = ArtifactView::new(&snapshot, &history);
         let cfg_snapshot = NoteConfig::default();

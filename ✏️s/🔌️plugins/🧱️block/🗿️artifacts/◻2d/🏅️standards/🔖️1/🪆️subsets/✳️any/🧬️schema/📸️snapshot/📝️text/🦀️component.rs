@@ -17,12 +17,12 @@ pub const BLOCK2D_CONCRETE_FOREST_LEFT_EXAMPLE_TEXT: &str = include_str!("../../
 pub const BLOCK2D_CONCRETE_FOREST_RIGHT_EXAMPLE_TEXT: &str = include_str!("../../../📚️examples/🎬️hexagonal-cut-concrete-forest-right/🖼️assets/🗣️hexagonal-cut-concrete-forest-right.dsl.semio");
 
 /// 📖️ Parses `.block2d` DSL text into a `Block2dSnapshot`.
-pub fn parse_dsl(text: &str) -> Result<Block2dSnapshot, store::TextError> {
+pub async fn parse_dsl(text: &str) -> Result<Block2dSnapshot, store::TextError> {
     <Block2dSnapshot as store::ArtifactDsl>::parse_dsl(text)
 }
 
 /// 🖨️ Prints a `Block2dSnapshot` back to `.block2d` DSL text.
-pub fn print_dsl(document: &Block2dSnapshot) -> String {
+pub async fn print_dsl(document: &Block2dSnapshot) -> String {
     store::ArtifactDsl::print_dsl(document)
 }
 
@@ -39,7 +39,7 @@ mod tests {
     // against `f64::consts::FRAC_PI_2` — these are handcrafted fixture values copied verbatim from the
     // real puzzle example file, not meant to reference the named constant.
     #[allow(clippy::approx_constant)]
-    pub fn hexagonal_cut_concrete_forest_left() -> Block2dSnapshot {
+    pub async fn hexagonal_cut_concrete_forest_left() -> Block2dSnapshot {
         let mut definition = Block2dSnapshot {
             node_kind: BlockKindIdentity { id: "Hexagonal Cut Concrete Forest Left".into(), name: "Hexagonal Cut Concrete Forest Left".into(), label: "Hexagonal Cut Concrete Forest Left".into(), ..Default::default() },
             camera2d: BlockCamera2d { x: 230.7, y: 93.5, zoom: 2.0 },
@@ -71,7 +71,7 @@ mod tests {
     }
 
     #[test]
-    fn block2d_definition_dsl_round_trips() {
+    async fn block2d_definition_dsl_round_trips() {
         let empty = Block2dSnapshot::default();
         store::os_store::test_support::assert_dsl_round_trip(&empty);
         store::os_store::test_support::assert_dsl_pack_equivalence(&empty);
@@ -81,7 +81,7 @@ mod tests {
     }
 
     #[test]
-    fn block2d_example_fixtures_parse_and_round_trip_as_dsl() {
+    async fn block2d_example_fixtures_parse_and_round_trip_as_dsl() {
         for dsl_text in [BLOCK2D_CONCRETE_FOREST_LEFT_EXAMPLE_TEXT, BLOCK2D_CONCRETE_FOREST_RIGHT_EXAMPLE_TEXT] {
             let definition = parse_dsl(dsl_text).expect("example fixture parses as dsl");
             store::os_store::test_support::assert_dsl_round_trip(&definition);

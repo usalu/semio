@@ -10,7 +10,7 @@ pub const PROCEDURAL2D_PLAY_BODY_GENERATIONS: &str = "procedural2d.play.generati
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
-pub fn definition() -> WindowKindDefinition {
+pub async fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
         id: PROCEDURAL2D_PLAY_WINDOW_GENERATIONS.into(),
         label: LocalizedLabel::native("Generations", "Generationen"),
@@ -30,7 +30,7 @@ pub fn definition() -> WindowKindDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(generation: &GenerationPlayState, locale: Locale, terminology: Terminology) -> UiNode {
+pub async fn render(generation: &GenerationPlayState, locale: Locale, terminology: Terminology) -> UiNode {
     render_generations_tree(PROCEDURAL2D_PLAY_APP_ID, "procedural2d-play-generate", &generation.generations, generation.selected_generation_id.as_deref(), locale, terminology)
 }
 //#endregion 🔖️Render
@@ -42,7 +42,7 @@ mod tests {
     use crate::editor::procedural2d::testkit::{app, render as render_body};
 
     #[test]
-    fn generate_mode_renders_surfaces() {
+    async fn generate_mode_renders_surfaces() {
         let mut app = app();
         assert!(render_body(&mut app, PROCEDURAL2D_PLAY_BODY_GENERATIONS).contains("addGeneration"));
     }

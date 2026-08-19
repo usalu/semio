@@ -25,19 +25,19 @@ pub struct LowpolyInference {
 }
 
 impl protocol::Inference<LowpolySnapshot> for LowpolyInference {
-    fn infer(snapshot: &LowpolySnapshot) -> Self {
+    async fn infer(snapshot: &LowpolySnapshot) -> Self {
         Self { object_count: snapshot.objects.len(), bounds: scene_bounds(snapshot) }
     }
 }
 
 impl protocol::InferenceSpec<LowpolySnapshot> for LowpolyInference {
-    fn inference_schema_id() -> &'static str {
+    async fn inference_schema_id() -> &'static str {
         "s.lowpoly.lowpoly.inference"
     }
-    fn schema_version() -> u32 {
+    async fn schema_version() -> u32 {
         1
     }
-    fn fields() -> &'static [protocol::InferenceFieldSpec] {
+    async fn fields() -> &'static [protocol::InferenceFieldSpec] {
         &[
             protocol::InferenceFieldSpec { id: "s.lowpoly.lowpoly.inference.objectCount", reads: &["objects"] },
             protocol::InferenceFieldSpec { id: "s.lowpoly.lowpoly.inference.bounds", reads: &["objects"] },
@@ -56,7 +56,7 @@ impl semio_framework_plugin::ArtifactInferrer for crate::artifacts::lowpoly::sta
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.lowpoly.lowpoly.inference`'s facet leaves into the OS-wide inference catalog —
 /// call once at plugin init, alongside `lowpoly_artifact_schema_descriptor`'s registration.
-pub fn lowpoly_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
+pub async fn lowpoly_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
     schema::ArtifactInferenceDescriptor {
         id: "s.lowpoly.lowpoly.inference",
         inference: schema::FacetLeaves {
@@ -78,13 +78,13 @@ mod tests {
 
     //#region 🧪️InferenceLaws
     #[test]
-    fn inference_determinism_law() {
+    async fn inference_determinism_law() {
         let snapshot = crate::artifacts::lowpoly::snapshot_from_mesh_json("{}", "o1", "Object 1");
         assert_eq!(LowpolyInference::infer(&snapshot), LowpolyInference::infer(&snapshot));
     }
 
     #[test]
-    fn inference_default_law() {
+    async fn inference_default_law() {
         assert_eq!(LowpolyInference::infer(&LowpolySnapshot::default()), LowpolyInference::default());
     }
     //#endregion 🧪️InferenceLaws

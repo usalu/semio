@@ -35,7 +35,7 @@ pub enum ZipEditorCommand {
 /// 🎯️ Handcrafted (P6: `#[derive(dsl::DslOps)]` emits `DslVariants` only — `OpText`/`OpBinary` are
 /// handcrafted per artifact). Same shape as `energy`'s `EnergyModelEditorCommand`.
 impl protocol::OpText for ZipEditorCommand {
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
+    async fn parse_op(line: &str) -> Result<Self, store::TextError> {
         let variants = <Self as dsl::DslVariants>::variants();
         for (keyword, spec_fn) in &variants {
             let probe = format!("{} ", keyword);
@@ -46,7 +46,7 @@ impl protocol::OpText for ZipEditorCommand {
         }
         Err(dsl::__rt::field_error(format!("unknown operation line '{line}'")))
     }
-    fn print_op(&self) -> String {
+    async fn print_op(&self) -> String {
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
         let variants = <Self as dsl::DslVariants>::variants();
         let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
@@ -55,7 +55,7 @@ impl protocol::OpText for ZipEditorCommand {
 }
 
 impl protocol::OpBinary for ZipEditorCommand {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         const OP_BINARY_FORMAT: u8 = 1;
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
         let variants = <Self as dsl::DslVariants>::variants();
@@ -68,7 +68,7 @@ impl protocol::OpBinary for ZipEditorCommand {
         out.extend_from_slice(&body);
         Ok(out)
     }
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         const OP_BINARY_FORMAT: u8 = 1;
         let mut reader = store::pack_rt::ByteReader::new(bytes);
         let format = reader.read_u8()?;
@@ -107,14 +107,14 @@ impl ArtifactEditor for ZipAnyEditor {
     const DIALECT: Dialect = ZIP_ANY_EDITOR_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = STDIO_ZIP_DOCUMENT_SCHEMA;
 
-    fn initial_snapshot() -> ZipSnapshot {
+    async fn initial_snapshot() -> ZipSnapshot {
         ZipSnapshot::default()
     }
 
     /// ✏️ `node_id == "comment"` renames the archive comment; `"entry:{index}"` renames that entry's
     /// name. An unknown node id or out-of-range entry index is a documented no-op (`Emit::default()`),
     /// never a panic.
-    fn handle(command: &Self::Command, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _interaction: &semio_framework_plugin::app::InteractionView<'_>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<Self::Mutation>, Fault> {
+    async fn handle(command: &Self::Command, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _interaction: &semio_framework_plugin::app::InteractionView<'_>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<Self::Mutation>, Fault> {
         let ZipEditorCommand::SetNode { node_id, value } = command;
         if node_id == main::COMMENT_NODE_ID {
             return Ok(Emit { artifact_mutations: vec![ZipMutation::SetArchiveComment { comment: value.clone() }], description: Some("Set comment".into()), ..Default::default() });
@@ -125,7 +125,7 @@ impl ArtifactEditor for ZipAnyEditor {
         Ok(Emit { artifact_mutations: vec![ZipMutation::RenameEntry { name: entry.name.clone(), new_name: value.clone() }], description: Some("Rename entry".into()), ..Default::default() })
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> UiNode {
+    async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> UiNode {
         match body_key {
             main::BODY_KEY => main::render(doc.snapshot),
             _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))),
@@ -135,7 +135,7 @@ impl ArtifactEditor for ZipAnyEditor {
 //#endregion 🔖️Editor
 
 //#region 🔖️Manifest
-pub fn create_zip_any_editor() -> semio_framework_plugin::AppDefinition {
+pub async fn create_zip_any_editor() -> semio_framework_plugin::AppDefinition {
     Editor::builder(ZIP_ANY_EDITOR_DIALECT)
         .document(["stdio", "zip", "any"])
         .icon_id("archive")
@@ -153,19 +153,19 @@ mod tests {
     use super::*;
 
     #[test]
-    fn create_zip_any_editor_builds_a_definition_for_the_editor_role() {
+    async fn create_zip_any_editor_builds_a_definition_for_the_editor_role() {
         let def = create_zip_any_editor();
         assert_eq!(def.role, semio_framework_plugin::AppRole::Editor);
         assert_eq!(def.dialect, ZIP_ANY_EDITOR_DIALECT.into());
     }
 
     #[test]
-    fn editor_dialect_matches_the_artifact_coordinate() {
+    async fn editor_dialect_matches_the_artifact_coordinate() {
         assert_eq!(<ZipAnyEditor as ArtifactEditor>::DIALECT, ZIP_ANY_EDITOR_DIALECT);
     }
 
     #[test]
-    fn editor_declares_the_main_window() {
+    async fn editor_declares_the_main_window() {
         let def = create_zip_any_editor();
         assert!(def.window_kinds.iter().any(|window| window.id == main::WINDOW_KIND_ID));
     }

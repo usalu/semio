@@ -30,7 +30,7 @@ pub enum PdfMutation {
 
 //#region 🔖️Apply
 /// ▶️ Applies `mutation` to `snapshot`.
-pub fn apply_pdf_mutation(snapshot: &mut PdfSnapshot, mutation: &PdfMutation) -> protocol::MutationOutcome<PdfDiff> {
+pub async fn apply_pdf_mutation(snapshot: &mut PdfSnapshot, mutation: &PdfMutation) -> protocol::MutationOutcome<PdfDiff> {
     let outcome = <PdfMutation as Mutation<PdfSnapshot>>::diff(mutation, snapshot);
     match protocol::MutationDiff::apply(outcome.diff(), snapshot) {
         Ok(next) => {
@@ -46,14 +46,14 @@ pub fn apply_pdf_mutation(snapshot: &mut PdfSnapshot, mutation: &PdfMutation) ->
 impl Mutation<PdfSnapshot> for PdfMutation {
     type Diff = PdfDiff;
 
-    fn diff(&self, base: &PdfSnapshot) -> protocol::MutationOutcome<Self::Diff> {
+    async fn diff(&self, base: &PdfSnapshot) -> protocol::MutationOutcome<Self::Diff> {
         protocol::MutationOutcome::new(match self {
             PdfMutation::NoMutation => PdfDiff::default(),
             PdfMutation::SetSnapshot { snapshot } => diff_set_snapshot(base, snapshot),
         })
     }
 
-    fn inverse(&self, base: &PdfSnapshot) -> Vec<Self> {
+    async fn inverse(&self, base: &PdfSnapshot) -> Vec<Self> {
         match self {
             PdfMutation::NoMutation => vec![PdfMutation::NoMutation],
             PdfMutation::SetSnapshot { .. } => vec![PdfMutation::SetSnapshot { snapshot: base.clone() }],
@@ -70,7 +70,7 @@ impl Mutation<PdfSnapshot> for PdfMutation {
 /// boilerplate wrapper from f6-recon-report.md §2 (verbatim shape as `BinaryMutation`/
 /// `GifMutation`), replacing the prior `serde_json`-based stubs.
 impl protocol::OpText for PdfMutation {
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
+    async fn parse_op(line: &str) -> Result<Self, store::TextError> {
         let variants = <Self as dsl::DslVariants>::variants();
         for (keyword, spec_fn) in &variants {
             let probe = format!("{} ", keyword);
@@ -81,7 +81,7 @@ impl protocol::OpText for PdfMutation {
         }
         Err(dsl::__rt::field_error(format!("unknown operation line '{line}'")))
     }
-    fn print_op(&self) -> String {
+    async fn print_op(&self) -> String {
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
         let variants = <Self as dsl::DslVariants>::variants();
         let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
@@ -90,10 +90,10 @@ impl protocol::OpText for PdfMutation {
 }
 
 impl protocol::OpBinary for PdfMutation {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         dsl::variants_binary::encode_op(self)
     }
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         dsl::variants_binary::decode_op(bytes)
     }
 }
@@ -107,13 +107,13 @@ mod tests {
     use crate::artifacts::pdf::STDIO_PDF_DOCUMENT_SCHEMA;
     use protocol::MutationDiff;
 
-    fn snap(width: f64, height: f64, text: &str) -> PdfSnapshot {
+    async fn snap(width: f64, height: f64, text: &str) -> PdfSnapshot {
         PdfSnapshot { schema: STDIO_PDF_DOCUMENT_SCHEMA.into(), page: PageDoc { width, height, text: text.into() } }
     }
 
     //#region mutation_diff_law
     #[test]
-    fn mutation_diff_law_matches_apply_pdf_mutation() {
+    async fn mutation_diff_law_matches_apply_pdf_mutation() {
         let base = snap(612.0, 792.0, "base");
         let cases = vec![PdfMutation::NoMutation, PdfMutation::SetSnapshot { snapshot: snap(300.0, 400.0, "next") }];
         for m in cases {
@@ -128,7 +128,7 @@ mod tests {
 
     //#region inverse_law
     #[test]
-    fn mutation_apply_inverse_round_trips_every_variant() {
+    async fn mutation_apply_inverse_round_trips_every_variant() {
         let base = snap(612.0, 792.0, "base");
         for m in [PdfMutation::NoMutation, PdfMutation::SetSnapshot { snapshot: snap(300.0, 400.0, "next") }] {
             let diff = m.diff(&base);
@@ -148,7 +148,7 @@ mod tests {
     /// nested-struct payload -- both text (`print_op`/`parse_op`) and binary
     /// (`encode_op`/`decode_op`) sides.
     #[test]
-    fn op_text_binary_roundtrip_law() {
+    async fn op_text_binary_roundtrip_law() {
         use protocol::{OpBinary, OpText};
         let cases = vec![PdfMutation::NoMutation, PdfMutation::SetSnapshot { snapshot: snap(300.5, 400.25, "hello world") }];
         for m in cases {

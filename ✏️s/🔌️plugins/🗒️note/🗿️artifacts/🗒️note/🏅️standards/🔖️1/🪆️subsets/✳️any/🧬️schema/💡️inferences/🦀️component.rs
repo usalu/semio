@@ -25,7 +25,7 @@ pub struct NoteInference {
 }
 
 impl protocol::Inference<NoteSnapshot> for NoteInference {
-    fn infer(snapshot: &NoteSnapshot) -> Self {
+    async fn infer(snapshot: &NoteSnapshot) -> Self {
         Self { outline: NoteOutline::compute(snapshot) }
     }
 }
@@ -33,19 +33,19 @@ impl protocol::Inference<NoteSnapshot> for NoteInference {
 /// 🌱 Defined in terms of `infer` (not derived) — keeps the law correct regardless of whether
 /// `NoteSnapshot::default()`'s `blocks` field ever stops being empty.
 impl Default for NoteInference {
-    fn default() -> Self {
+    async fn default() -> Self {
         <Self as protocol::Inference<NoteSnapshot>>::infer(&NoteSnapshot::default())
     }
 }
 
 impl protocol::InferenceSpec<NoteSnapshot> for NoteInference {
-    fn inference_schema_id() -> &'static str {
+    async fn inference_schema_id() -> &'static str {
         "s.note.note.inference"
     }
-    fn schema_version() -> u32 {
+    async fn schema_version() -> u32 {
         1
     }
-    fn fields() -> &'static [protocol::InferenceFieldSpec] {
+    async fn fields() -> &'static [protocol::InferenceFieldSpec] {
         &[protocol::InferenceFieldSpec { id: "s.note.note.inference.outline", reads: &["blocks"] }]
     }
 }
@@ -68,7 +68,7 @@ impl ArtifactInferrer for NoteInferrer {
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.note.note.inference`'s facet leaves into the OS-wide inference catalog — call
 /// once at plugin init, alongside `note_artifact_schema_descriptor`'s registration.
-pub fn note_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
+pub async fn note_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
     schema::ArtifactInferenceDescriptor {
         id: "s.note.note.inference",
         inference: schema::FacetLeaves {
@@ -89,13 +89,13 @@ mod tests {
     use protocol::Inference;
 
     #[test]
-    fn inference_determinism_law() {
+    async fn inference_determinism_law() {
         let snapshot = NoteSnapshot::default();
         assert_eq!(NoteInference::infer(&snapshot), NoteInference::infer(&snapshot));
     }
 
     #[test]
-    fn inference_default_law() {
+    async fn inference_default_law() {
         assert_eq!(NoteInference::infer(&NoteSnapshot::default()), NoteInference::default());
     }
 }

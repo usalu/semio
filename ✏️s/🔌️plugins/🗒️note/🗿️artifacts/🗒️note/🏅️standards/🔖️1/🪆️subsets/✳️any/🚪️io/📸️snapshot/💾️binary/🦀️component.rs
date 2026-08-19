@@ -11,12 +11,12 @@ pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️comp
 
 
 /// 📦️ Encodes a `NoteSnapshot` to its binary pack form.
-pub fn encode(document: &NoteSnapshot) -> Vec<u8> {
+pub async fn encode(document: &NoteSnapshot) -> Vec<u8> {
     store::ArtifactPack::encode_pack(document)
 }
 
 /// 📖️ Decodes a `NoteSnapshot` from its binary pack form.
-pub fn decode(bytes: &[u8]) -> Result<NoteSnapshot, PackError> {
+pub async fn decode(bytes: &[u8]) -> Result<NoteSnapshot, PackError> {
     <NoteSnapshot as store::ArtifactPack>::decode_pack(bytes)
 }
 
@@ -28,7 +28,7 @@ mod tests {
     use std::collections::BTreeMap;
 
     #[test]
-    fn pack_round_trips_and_agrees_with_dsl() {
+    async fn pack_round_trips_and_agrees_with_dsl() {
         let document = crate::artifacts::note::standards::v1::subsets::any::io::snapshot::text::parse_dsl(crate::artifacts::note::standards::v1::subsets::any::io::snapshot::text::SEMIO_NOTE_EXAMPLE_TEXT).expect("parse semio example");
         store::os_store::test_support::assert_dsl_pack_equivalence(&document);
         let bytes = encode(&document);
@@ -36,7 +36,7 @@ mod tests {
     }
 
     #[test]
-    fn pack_round_trips_representative_document() {
+    async fn pack_round_trips_representative_document() {
         let mut assets = BTreeMap::new();
         assets.insert("asset-1".into(), NoteImageAsset { mime: "image/png".into(), data: "data:image/png;base64,abc==".into(), width: Some(10.0), height: Some(20.0) });
         let document = NoteSnapshot {
@@ -96,7 +96,7 @@ mod tests {
     /// existing pack round-trip laws (same pattern as `mathematical_pack`'s own
     /// `command_envelope_round_trip_holds_for_an_applied_operation`).
     #[test]
-    fn command_envelope_round_trip_holds_for_an_applied_operation() {
+    async fn command_envelope_round_trip_holds_for_an_applied_operation() {
         use crate::artifacts::note::standards::v1::subsets::any::io::mutations::text::NoteMutation;
         use protocol::{ArtifactId, Edit, SchemaId};
         use store::{create_document_envelope, ArtifactCommand, ArtifactStore};
@@ -117,7 +117,7 @@ mod semio_protocol_conformance {
     use super::*;
 
     #[test]
-    fn component_protocol_semio_is_protocol_dialect() {
+    async fn component_protocol_semio_is_protocol_dialect() {
         let g = ::dsl::parse_grammar(COMPONENT_PROTOCOL_SEMIO).expect("parse protocol.semio");
         assert_eq!(g.dialect, ::dsl::SemioDialect::Protocol);
         assert!(!COMPONENT_PROTOCOL_SEMIO.is_empty());
@@ -125,7 +125,7 @@ mod semio_protocol_conformance {
     }
 
     #[test]
-    fn verify_protocol_bytes_against_encoded_pack() {
+    async fn verify_protocol_bytes_against_encoded_pack() {
         let document = crate::artifacts::note::standards::v1::subsets::any::io::snapshot::text::parse_dsl(crate::artifacts::note::standards::v1::subsets::any::io::snapshot::text::SEMIO_NOTE_EXAMPLE_TEXT).expect("parse fixture");
         let bytes = encode(&document);
         let g = ::dsl::parse_grammar(COMPONENT_PROTOCOL_SEMIO).expect("parse protocol");

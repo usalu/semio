@@ -25,7 +25,7 @@ pub mod set_camera {
         pub camera: CadCamera,
     }
 
-    pub fn handle(payload: &SetCamera, _doc: &ArtifactView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx<'_>) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
+    pub async fn handle(payload: &SetCamera, _doc: &ArtifactView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx<'_>) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
         // 🎥️ `pane` carries the FULL `surfaceId` (`"cad.play.scene3d/building"`), not a bare
         // pane suffix — mirrors the pre-B1 `args.get("surfaceId")` resolution exactly.
         let mut runtime = runtime_of(cfg);
@@ -50,7 +50,7 @@ pub mod set_projection {
         pub param: Option<String>,
     }
 
-    pub fn handle(payload: &SetProjection, _doc: &ArtifactView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx<'_>) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
+    pub async fn handle(payload: &SetProjection, _doc: &ArtifactView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx<'_>) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
         // 🎥️ `pane` carries the full `surfaceId` — see `SetCamera`'s doc comment.
         let mut runtime = runtime_of(cfg);
         let pane_id = payload.pane.as_deref().map_or(CadPaneId::Shape, cad_pane_id_from_surface_id);
@@ -85,7 +85,7 @@ pub mod set_projection_param {
         pub param: Option<String>,
     }
 
-    pub fn handle(payload: &SetProjectionParam, _doc: &ArtifactView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx<'_>) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
+    pub async fn handle(payload: &SetProjectionParam, _doc: &ArtifactView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx<'_>) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
         // 🎥️ `pane` carries the full `surfaceId` — see `SetCamera`'s doc comment.
         let mut runtime = runtime_of(cfg);
         let pane_id = payload.pane.as_deref().map_or(CadPaneId::Shape, cad_pane_id_from_surface_id);

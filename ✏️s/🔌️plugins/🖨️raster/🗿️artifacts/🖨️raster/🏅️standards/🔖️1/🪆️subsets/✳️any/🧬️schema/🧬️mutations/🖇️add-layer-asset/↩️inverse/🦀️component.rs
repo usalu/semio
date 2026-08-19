@@ -14,7 +14,7 @@ use crate::artifacts::raster::RasterSnapshot;
 /// is in-process only) is distinguished from a genuinely-new key by checking handle presence FIRST —
 /// a present-handle-but-cold-cache fails soft to a no-op inverse (never the destructive
 /// `RemoveLayerAsset` a naive "content missing ⇒ treat as new" read would wrongly emit).
-pub fn inverse(payload: &AddLayerAsset, base: &RasterSnapshot) -> Vec<RasterMutation> {
+pub async fn inverse(payload: &AddLayerAsset, base: &RasterSnapshot) -> Vec<RasterMutation> {
     if base.assets.get(&payload.asset_id).is_none() {
         return vec![RasterMutation::RemoveLayerAsset(remove_layer_asset::mutation::RemoveLayerAsset { asset_id: payload.asset_id.clone() })];
     }

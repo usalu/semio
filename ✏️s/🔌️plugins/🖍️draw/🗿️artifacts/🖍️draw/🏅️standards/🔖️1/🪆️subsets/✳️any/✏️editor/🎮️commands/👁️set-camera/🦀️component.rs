@@ -15,6 +15,6 @@ pub struct SetCamera {
 }
 
 /// 📷️ Camera — session-only runtime pose, never a document operation.
-pub fn handle(payload: &SetCamera, _doc: &ArtifactView<'_, DrawSnapshot>, _cfg: &ConfigView<'_, DrawConfig>, _session: &mut DrawSession) -> Result<Emit<DrawMutation, DrawConfigMutation>, Fault> {
+pub async fn handle(payload: &SetCamera, _doc: &ArtifactView<'_, DrawSnapshot>, _cfg: &ConfigView<'_, DrawConfig>, _session: &mut DrawSession) -> Result<Emit<DrawMutation, DrawConfigMutation>, Fault> {
     Ok(Emit::config(vec![DrawConfigMutation::SetCamera { camera: payload.camera.clone() }]))
 }

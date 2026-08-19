@@ -13,7 +13,7 @@ pub const PROCEDURAL2D_PLAY_BODY_GENERATE_FORM: &str = "procedural2d.play.genera
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
-pub fn definition() -> WindowKindDefinition {
+pub async fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
         id: PROCEDURAL2D_PLAY_WINDOW_GENERATE_FORM.into(),
         label: LocalizedLabel::native("Form", "Formular"),
@@ -33,7 +33,7 @@ pub fn definition() -> WindowKindDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(document: &Procedural2dSnapshot, generation: &GenerationPlayState, labels: &Procedural2dLabels) -> UiNode {
+pub async fn render(document: &Procedural2dSnapshot, generation: &GenerationPlayState, labels: &Procedural2dLabels) -> UiNode {
     let spec = flow_fixture_to_form_spec(&document.fixture);
     let Some(current) = selected_generation(generation) else {
         return ui_text(labels.generate_hint);
@@ -49,7 +49,7 @@ mod tests {
     use crate::editor::procedural2d::testkit::{app, render as render_body};
 
     #[test]
-    fn generate_form_hints_without_a_selected_generation() {
+    async fn generate_form_hints_without_a_selected_generation() {
         let mut app = app();
         assert!(render_body(&mut app, PROCEDURAL2D_PLAY_BODY_GENERATE_FORM).contains("Add a generation"));
     }

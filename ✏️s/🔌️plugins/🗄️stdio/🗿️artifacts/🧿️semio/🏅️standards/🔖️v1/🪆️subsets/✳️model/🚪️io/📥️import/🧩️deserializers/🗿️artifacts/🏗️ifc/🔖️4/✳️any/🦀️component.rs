@@ -49,11 +49,11 @@ impl ArtifactDeserializer for SemioModelFromIfc {
 /// 📌️ No standalone registration — this leaf is wired into the registry through `model`'s own
 /// `🎹️composer::register()` via `deserializer_entry_of::<SemioModelFromIfc>()` (matches the
 /// repo-wide io-leaf convention, e.g. gltf's own `register() {}` stub next to its json bridge).
-pub fn register() {}
+pub async fn register() {}
 //#endregion 🔖️Deserializer
 
 //#region 🔖️Classify
-fn spatial_kind_of(ifc_type: &str) -> Option<SpatialKind> {
+async fn spatial_kind_of(ifc_type: &str) -> Option<SpatialKind> {
     match ifc_type.to_ascii_uppercase().as_str() {
         "IFCSITE" => Some(SpatialKind::Site),
         "IFCBUILDING" => Some(SpatialKind::Building),
@@ -63,7 +63,7 @@ fn spatial_kind_of(ifc_type: &str) -> Option<SpatialKind> {
     }
 }
 
-fn element_class_from_ifc_type(ifc_type: &str) -> ElementClass {
+async fn element_class_from_ifc_type(ifc_type: &str) -> ElementClass {
     match ifc_type.to_ascii_uppercase().as_str() {
         "IFCWALL" | "IFCWALLSTANDARDCASE" => ElementClass::Wall,
         "IFCSLAB" => ElementClass::Slab,
@@ -83,7 +83,7 @@ fn element_class_from_ifc_type(ifc_type: &str) -> ElementClass {
 /// 🧭️ `Mat4`'s rotation columns (`m[i][0]`=x-axis, `m[i][1]`=y-axis, `m[i][2]`=z-axis, per
 /// `build_axis2placement`'s own layout) -> a quaternion, via the standard trace-based (Shepperd)
 /// method. Scale is always unit — this analyzer's placements never carry non-uniform scale.
-fn quat_from_rotation_columns(m: &Mat4) -> SemioQuaternion {
+async fn quat_from_rotation_columns(m: &Mat4) -> SemioQuaternion {
     let r = &m.0;
     let trace = r[0][0] + r[1][1] + r[2][2];
     if trace > 0.0 {
@@ -101,7 +101,7 @@ fn quat_from_rotation_columns(m: &Mat4) -> SemioQuaternion {
     }
 }
 
-fn transform_from_mat4(m: &Mat4) -> SemioTransform {
+async fn transform_from_mat4(m: &Mat4) -> SemioTransform {
     SemioTransform { translation: SemioPoint3 { x: m.0[0][3], y: m.0[1][3], z: m.0[2][3] }, rotation: quat_from_rotation_columns(m), scale: SemioPoint3 { x: 1.0, y: 1.0, z: 1.0 } }
 }
 //#endregion 🔖️Geometry
@@ -111,7 +111,7 @@ fn transform_from_mat4(m: &Mat4) -> SemioTransform {
 /// `IFCBOOLEAN(.T.)`/`IFCREAL(3000.)`/`IFCTEXT('x')` defined-type wrapper shape) before matching a
 /// scalar. `List`/`Ref`/`Unset`/`Derived` (incl. a `Typed` wrapper around one of those) have no
 /// `PsetValue` counterpart — `None`, never fabricated.
-fn pset_value_from_part21(v: &Part21Value) -> Option<PsetValue> {
+async fn pset_value_from_part21(v: &Part21Value) -> Option<PsetValue> {
     match v {
         Part21Value::Str(s) => Some(PsetValue::Text { value: s.clone() }),
         Part21Value::Real(r) => Some(PsetValue::Number { value: r.to_f64()? }),
@@ -126,13 +126,13 @@ fn pset_value_from_part21(v: &Part21Value) -> Option<PsetValue> {
     }
 }
 
-fn convert_pset(ps: &IfcPropertySet) -> PropertySet {
+async fn convert_pset(ps: &IfcPropertySet) -> PropertySet {
     PropertySet { name: ps.name.clone(), properties: ps.properties.iter().filter_map(|p| pset_value_from_part21(&p.value).map(|value| Property { key: p.name.clone(), value })).collect() }
 }
 //#endregion 🔖️PropertyValue
 
 //#region 🔖️Walk
-fn guid_of(doc: &Part21Document, id: u64) -> String {
+async fn guid_of(doc: &Part21Document, id: u64) -> String {
     doc.instance(id).and_then(|i| i.primary()).and_then(|(_, args)| args.first()).and_then(Part21Value::as_str).map(str::to_string).unwrap_or_else(|| format!("ifc-{id}"))
 }
 
@@ -140,7 +140,7 @@ fn guid_of(doc: &Part21Document, id: u64) -> String {
 /// rows, tracking the nearest spatial ancestor's already-converted `model` id (`None` at the
 /// project root). See the module doc comment for every documented gap this walk introduces.
 #[allow(clippy::too_many_arguments)]
-fn walk(doc: &Part21Document, node: &IfcSpatialNode, parent_spatial_id: Option<String>, analysis: &SpatialAnalysis, out_spatial: &mut Vec<SpatialNode>, out_elements: &mut Vec<SemioModelElement>, out_relations: &mut Vec<ModelRelation>) {
+async fn walk(doc: &Part21Document, node: &IfcSpatialNode, parent_spatial_id: Option<String>, analysis: &SpatialAnalysis, out_spatial: &mut Vec<SpatialNode>, out_elements: &mut Vec<SemioModelElement>, out_relations: &mut Vec<ModelRelation>) {
     let placement = node.object_placement.and_then(|pid| analysis.placements.get(&pid)).map(transform_from_mat4).unwrap_or_else(SemioTransform::identity);
 
     if let Some(kind) = spatial_kind_of(&node.ifc_type) {
@@ -174,7 +174,7 @@ fn walk(doc: &Part21Document, node: &IfcSpatialNode, parent_spatial_id: Option<S
 //#endregion 🔖️Walk
 
 //#region 🔖️Entry
-pub fn model_from_ifc(from: &IfcSnapshot) -> SemioModelSnapshot {
+pub async fn model_from_ifc(from: &IfcSnapshot) -> SemioModelSnapshot {
     let doc = crate::artifacts::ifc::schema::snapshot::to_part21_document(from);
     let analysis = analyze_spatial(&doc);
     let mut spatial = Vec::new();
@@ -196,13 +196,13 @@ mod tests {
     /// own `engine::spatial` test module — a real, non-trivial IFC4 document.
     const FIXTURE: &str = "ISO-10303-21;\nHEADER;\nFILE_DESCRIPTION((''),'2;1');\nFILE_NAME('semio.ifc','2026-08-10T00:00:00',('Ueli'),('semio'),'semio','','');\nFILE_SCHEMA(('IFC4'));\nENDSEC;\nDATA;\n#1=IFCPROJECT('gid-project',#2,'Demo Project',$,$,$,$,(#10),#11);\n#2=IFCOWNERHISTORY($,$,$,$,$,$,$,0);\n#10=IFCGEOMETRICREPRESENTATIONCONTEXT($,'Model',3,1.E-05,#40,$);\n#40=IFCAXIS2PLACEMENT3D(#42,$,$);\n#42=IFCCARTESIANPOINT((0.,0.,0.));\n#11=IFCUNITASSIGNMENT((#41));\n#41=IFCSIUNIT(*,.LENGTHUNIT.,$,.METRE.);\n#3=IFCSITE('gid-site',#2,'Demo Site',$,$,#50,$,$,.ELEMENT.,$,$,$,$,$);\n#50=IFCLOCALPLACEMENT($,#51);\n#51=IFCAXIS2PLACEMENT3D(#42,$,$);\n#4=IFCBUILDING('gid-building',#2,'Demo Building',$,$,#60,$,$,.ELEMENT.,$,$,$);\n#60=IFCLOCALPLACEMENT(#50,#61);\n#61=IFCAXIS2PLACEMENT3D(#62,$,$);\n#62=IFCCARTESIANPOINT((0.,0.,10.));\n#5=IFCBUILDINGSTOREY('gid-storey',#2,'Ground Floor',$,$,#70,$,$,.ELEMENT.,3.);\n#70=IFCLOCALPLACEMENT(#60,#71);\n#71=IFCAXIS2PLACEMENT3D(#72,$,$);\n#72=IFCCARTESIANPOINT((0.,0.,0.));\n#6=IFCWALL('gid-wall',#2,'Wall-01',$,$,#80,$,$,$);\n#80=IFCLOCALPLACEMENT(#70,#81);\n#81=IFCAXIS2PLACEMENT3D(#82,$,$);\n#82=IFCCARTESIANPOINT((1.,2.,0.));\n#100=IFCRELAGGREGATES('agg-1',#2,$,$,#1,(#3));\n#101=IFCRELAGGREGATES('agg-2',#2,$,$,#3,(#4));\n#102=IFCRELAGGREGATES('agg-3',#2,$,$,#4,(#5));\n#103=IFCRELCONTAINEDINSPATIALSTRUCTURE('cont-1',#2,$,$,(#6),#5);\n#200=IFCPROPERTYSET('pset-1',#2,'Pset_WallCommon',$,(#201));\n#201=IFCPROPERTYSINGLEVALUE('IsExternal',$,IFCBOOLEAN(.T.),$);\n#202=IFCRELDEFINESBYPROPERTIES('rel-1',#2,$,$,(#6),#200);\nENDSEC;\nEND-ISO-10303-21;\n";
 
-    fn fixture_snapshot() -> IfcSnapshot {
+    async fn fixture_snapshot() -> IfcSnapshot {
         let doc = crate::artifacts::step::engine::part21::parse_part21(FIXTURE).expect("parse fixture");
         crate::artifacts::ifc::schema::snapshot::from_part21_document(crate::artifacts::ifc::STDIO_IFC_DOCUMENT_SCHEMA, &doc)
     }
 
     #[test]
-    fn spatial_tree_and_element_map_from_a_real_ifc4_document() {
+    async fn spatial_tree_and_element_map_from_a_real_ifc4_document() {
         let model = model_from_ifc(&fixture_snapshot());
         assert_eq!(model.spatial.len(), 3, "site/building/storey, project dropped");
         let site = model.spatial.iter().find(|n| n.kind == SpatialKind::Site).expect("site");
@@ -229,7 +229,7 @@ mod tests {
     }
 
     #[test]
-    fn unscalar_property_values_are_skipped_not_fabricated() {
+    async fn unscalar_property_values_are_skipped_not_fabricated() {
         assert_eq!(pset_value_from_part21(&Part21Value::Unset), None);
         assert_eq!(pset_value_from_part21(&Part21Value::List(vec![])), None);
         assert_eq!(pset_value_from_part21(&Part21Value::Ref(1)), None);

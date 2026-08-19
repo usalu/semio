@@ -24,7 +24,7 @@ pub struct GifInference {
 }
 
 impl protocol::Inference<GifSnapshot> for GifInference {
-    fn infer(snapshot: &GifSnapshot) -> Self {
+    async fn infer(snapshot: &GifSnapshot) -> Self {
         Self { dimensions: compute_gif_dimensions(snapshot) }
     }
 }
@@ -35,19 +35,19 @@ impl protocol::Inference<GifSnapshot> for GifInference {
 /// structurally" trick as `AddInference`'s hand-written `Default` in
 /// `📡️spr/🎮️command/🦀️component.rs`.
 impl Default for GifInference {
-    fn default() -> Self {
+    async fn default() -> Self {
         <Self as protocol::Inference<GifSnapshot>>::infer(&GifSnapshot::default())
     }
 }
 
 impl protocol::InferenceSpec<GifSnapshot> for GifInference {
-    fn inference_schema_id() -> &'static str {
+    async fn inference_schema_id() -> &'static str {
         "s.stdio.gif.89a.inference"
     }
-    fn schema_version() -> u32 {
+    async fn schema_version() -> u32 {
         1
     }
-    fn fields() -> &'static [protocol::InferenceFieldSpec] {
+    async fn fields() -> &'static [protocol::InferenceFieldSpec] {
         &[protocol::InferenceFieldSpec { id: "s.stdio.gif.89a.inference.dimensions", reads: &["width", "height", "gct", "frames"] }]
     }
 }
@@ -65,7 +65,7 @@ impl semio_framework_plugin::ArtifactInferrer for crate::artifacts::gif::standar
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.stdio.gif.89a.inference`'s facet leaves into the OS-wide inference catalog —
 /// call once at plugin init, alongside 89a's own artifact schema descriptor registration.
-pub fn gif89a_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
+pub async fn gif89a_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
     schema::ArtifactInferenceDescriptor {
         id: "s.stdio.gif.89a.inference",
         inference: schema::FacetLeaves {
@@ -86,13 +86,13 @@ mod tests {
     use protocol::Inference;
 
     #[test]
-    fn inference_determinism_law() {
+    async fn inference_determinism_law() {
         let snapshot = GifSnapshot::default();
         assert_eq!(GifInference::infer(&snapshot), GifInference::infer(&snapshot));
     }
 
     #[test]
-    fn inference_default_law() {
+    async fn inference_default_law() {
         assert_eq!(GifInference::infer(&GifSnapshot::default()), GifInference::default());
     }
 }

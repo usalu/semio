@@ -6,7 +6,7 @@ use crate::artifacts::forms::mutations::delete_step;
 use crate::artifacts::forms::{forms_steps, FormMutation, FormsSnapshot};
 
 //#region 🔖️Inverse
-pub fn inverse_create_step(payload: &CreateStep, base: &FormsSnapshot) -> Vec<FormMutation> {
+pub async fn inverse_create_step(payload: &CreateStep, base: &FormsSnapshot) -> Vec<FormMutation> {
     if forms_steps(base).iter().any(|step| step.id == payload.step.id) {
         return Vec::new();
     }

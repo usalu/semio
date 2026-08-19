@@ -5,7 +5,7 @@ use crate::artifacts::en1997::mutations::change_pile_n_profiles::mutation::Chang
 use crate::artifacts::en1997::En1997Snapshot;
 
 //#region 🔖️Diff
-pub fn diff(payload: &ChangePileNProfiles, base: &En1997Snapshot) -> protocol::MutationOutcome<En1997Diff> {
+pub async fn diff(payload: &ChangePileNProfiles, base: &En1997Snapshot) -> protocol::MutationOutcome<En1997Diff> {
     if base.pile_n_profiles == payload.new_pile_n_profiles {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Number of investigated pile profiles is already {}.", payload.new_pile_n_profiles));
     }

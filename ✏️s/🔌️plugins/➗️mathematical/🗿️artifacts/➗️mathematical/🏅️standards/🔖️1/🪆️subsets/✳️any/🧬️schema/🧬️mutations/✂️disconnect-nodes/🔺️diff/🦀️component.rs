@@ -4,7 +4,7 @@ use super::mutation::DisconnectNodes;
 use crate::artifacts::mathematical::{mathematical_children_from_state, mathematical_geometry, mathematical_graph, MathematicalDiff, MathematicalSnapshot};
 
 //#region 🔖️Diff
-pub fn diff(payload: &DisconnectNodes, base: &MathematicalSnapshot) -> protocol::MutationOutcome<MathematicalDiff> {
+pub async fn diff(payload: &DisconnectNodes, base: &MathematicalSnapshot) -> protocol::MutationOutcome<MathematicalDiff> {
     let mut graph = mathematical_graph(base);
     if !graph.edges.iter().any(|edge| edge.id == payload.id) {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Edge \"{}\" does not exist.", payload.id), [payload.id.clone()]);

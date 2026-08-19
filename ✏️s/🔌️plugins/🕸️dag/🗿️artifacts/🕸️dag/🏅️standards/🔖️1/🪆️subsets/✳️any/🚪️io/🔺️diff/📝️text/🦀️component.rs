@@ -23,7 +23,7 @@ pub use crate::artifacts::dag::schema::diff::*;
 /// via `crate::artifacts::dag::dag_working_scene`, apply its own specific semantics to a clone of
 /// that scene, then mint+cache a whole new content handle here — the "mint+cache whole handle, never
 /// apply-then-capture" pattern flow's `diff_replace_content`/writer's `diff_set_text` established.
-pub fn diff_replace_content(nodes: Vec<DagNodeSpec>, edges: Vec<DagFixtureEdge>) -> DagDiff {
+pub async fn diff_replace_content(nodes: Vec<DagNodeSpec>, edges: Vec<DagFixtureEdge>) -> DagDiff {
     DagDiff { content: Some(crate::artifacts::dag::dag_content_child_handle_and_cache(nodes, edges)), ..Default::default() }
 }
 //#endregion 🔖️ReplaceContent
@@ -31,7 +31,7 @@ pub fn diff_replace_content(nodes: Vec<DagNodeSpec>, edges: Vec<DagFixtureEdge>)
 //#region 🔖️Apply
 impl DagDiff {
     /// 🧬️ Applies every sparse entry (all state classes) onto a full artifact.
-    pub fn apply_to_artifact(&self, artifact: &DagArtifact) -> protocol::MutationApplyResult<DagArtifact> {
+    pub async fn apply_to_artifact(&self, artifact: &DagArtifact) -> protocol::MutationApplyResult<DagArtifact> {
         Ok({
             let mut next = artifact.clone();
             if let Some(schema) = &self.schema {
@@ -55,7 +55,7 @@ impl DagDiff {
 }
 
 impl MutationDiff<DagSnapshot> for DagDiff {
-    fn apply(&self, snapshot: &DagSnapshot) -> protocol::MutationApplyResult<DagSnapshot> {
+    async fn apply(&self, snapshot: &DagSnapshot) -> protocol::MutationApplyResult<DagSnapshot> {
         Ok({
             let mut next = snapshot.clone();
             if let Some(schema) = &self.schema {
@@ -67,7 +67,7 @@ impl MutationDiff<DagSnapshot> for DagDiff {
             next
         })
     }
-    fn absorb(&mut self, other: Self) {
+    async fn absorb(&mut self, other: Self) {
         macro_rules! take {
             ($field:ident) => {
                 if other.$field.is_some() {
@@ -93,13 +93,13 @@ mod tests {
     use protocol::Mutation;
 
     #[test]
-    fn dag_diff_default_has_no_pending_writes() {
+    async fn dag_diff_default_has_no_pending_writes() {
         let diff = DagDiff::default();
         assert!(diff.content.is_none());
     }
 
     #[test]
-    fn delete_node_diff_removes_the_node() {
+    async fn delete_node_diff_removes_the_node() {
         let base = default_snapshot();
         let id = base.nodes().first().expect("fixture has a node").id.clone();
         let mutation = delete_node(id.clone());
@@ -114,7 +114,7 @@ mod semio_grammar_conformance {
     use super::*;
 
     #[test]
-    fn component_grammar_semio_is_grammar_dialect() {
+    async fn component_grammar_semio_is_grammar_dialect() {
         let g = ::dsl::parse_grammar(COMPONENT_GRAMMAR_SEMIO).expect("parse grammar.semio");
         assert_eq!(g.dialect, ::dsl::SemioDialect::Grammar);
         assert!(!COMPONENT_GRAMMAR_SEMIO.is_empty());

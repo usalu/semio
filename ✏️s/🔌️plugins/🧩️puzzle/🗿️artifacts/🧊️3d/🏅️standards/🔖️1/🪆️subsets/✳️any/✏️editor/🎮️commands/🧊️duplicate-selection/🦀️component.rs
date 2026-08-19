@@ -9,7 +9,7 @@ use crate::editor::puzzle3d::Puzzle3dObject;
 /// new duplicates afterward — selection is framework-owned and `handle` has no channel to write it
 /// (see `select-same-kind`'s doc comment for the same limitation). The document-side duplicate itself
 /// is unaffected.
-pub fn duplicate_selection(ctx: &mut Puzzle3dActionCtx<'_>) {
+pub async fn duplicate_selection(ctx: &mut Puzzle3dActionCtx<'_>) {
     let ids = ctx.selected_object_ids();
     let clones: Vec<Puzzle3dObject> = ctx
         .scene

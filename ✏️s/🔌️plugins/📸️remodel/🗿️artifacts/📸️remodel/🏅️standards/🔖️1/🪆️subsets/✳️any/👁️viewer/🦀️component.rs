@@ -22,10 +22,10 @@ pub enum RemodelViewCommand {
 }
 
 impl protocol::OpBinary for RemodelViewCommand {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         Ok(Vec::new())
     }
-    fn decode_op(_bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    async fn decode_op(_bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         Ok(RemodelViewCommand::Noop)
     }
 }
@@ -49,7 +49,7 @@ impl ArtifactViewer for RemodelViewer {
     const DIALECT: Dialect = REMODEL_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = REMODEL_DOCUMENT_SCHEMA;
 
-    fn initial_snapshot() -> RemodelSnapshot {
+    async fn initial_snapshot() -> RemodelSnapshot {
         default_remodel_scene()
     }
 
@@ -57,11 +57,11 @@ impl ArtifactViewer for RemodelViewer {
     /// change, so this always returns the empty `ViewEmit` — no config mutation, no effect, no dirty
     /// scope. Kept as a real dispatch (not an `unreachable!()`) so a future view-only action (camera
     /// orbit, "jump to frame") is a pure addition here, never a signature change.
-    fn handle(_command: &Self::Command, _doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _interaction: &InteractionView<'_>, _engines: &EngineHandles) -> Result<ViewEmit<Self::ConfigMutation>, Fault> {
+    async fn handle(_command: &Self::Command, _doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _interaction: &InteractionView<'_>, _engines: &EngineHandles) -> Result<ViewEmit<Self::ConfigMutation>, Fault> {
         Ok(ViewEmit::default())
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> UiNode {
+    async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> UiNode {
         match body_key {
             model::BODY_KEY => model::render(doc.snapshot),
             _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))),
@@ -71,7 +71,7 @@ impl ArtifactViewer for RemodelViewer {
 //#endregion 🔖️Viewer
 
 //#region 🔖️Manifest
-pub fn create_remodel_viewer() -> semio_framework_plugin::AppDefinition {
+pub async fn create_remodel_viewer() -> semio_framework_plugin::AppDefinition {
     Viewer::builder(REMODEL_DIALECT)
         .document(["semio", "remodel"])
         .icon_id("remodel-app")
@@ -89,19 +89,19 @@ mod tests {
     use super::*;
 
     #[test]
-    fn create_remodel_viewer_builds_a_definition_for_the_viewer_role() {
+    async fn create_remodel_viewer_builds_a_definition_for_the_viewer_role() {
         let def = create_remodel_viewer();
         assert_eq!(def.role, semio_framework::AppRole::Viewer);
         assert_eq!(def.dialect, REMODEL_DIALECT.into());
     }
 
     #[test]
-    fn viewer_dialect_matches_the_artifact_coordinate() {
+    async fn viewer_dialect_matches_the_artifact_coordinate() {
         assert_eq!(<RemodelViewer as ArtifactViewer>::DIALECT, REMODEL_DIALECT);
     }
 
     #[test]
-    fn render_renders_the_model_window_body_and_falls_back_by_name_otherwise() {
+    async fn render_renders_the_model_window_body_and_falls_back_by_name_otherwise() {
         let scene = default_remodel_scene();
         let history = semio_framework_plugin::HistoryView::empty();
         let doc = ArtifactView::new(&scene, &history);

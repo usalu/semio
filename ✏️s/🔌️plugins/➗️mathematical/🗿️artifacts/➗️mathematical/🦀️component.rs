@@ -54,7 +54,7 @@ pub struct MathematicalCamera {
 }
 
 impl Default for MathematicalCamera {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self { x: 0.0, y: 0.0, zoom: 1.0 }
     }
 }
@@ -72,7 +72,7 @@ pub struct MathematicalGraph {
 }
 
 impl Default for MathematicalGraph {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self {
             directed: true,
             nodes: vec![
@@ -100,13 +100,13 @@ pub struct MathematicalPoint {
 }
 
 impl From<(f64, f64)> for MathematicalPoint {
-    fn from((x, y): (f64, f64)) -> Self {
+    async fn from((x, y): (f64, f64)) -> Self {
         Self { x, y }
     }
 }
 
 impl From<MathematicalPoint> for (f64, f64) {
-    fn from(point: MathematicalPoint) -> Self {
+    async fn from(point: MathematicalPoint) -> Self {
         (point.x, point.y)
     }
 }
@@ -119,7 +119,7 @@ pub struct MathematicalGeometry {
 }
 
 impl Default for MathematicalGeometry {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self { points: vec![(40.0, 220.0), (260.0, 40.0), (360.0, 140.0), (300.0, 260.0), (140.0, 300.0), (180.0, 160.0)].into_iter().map(MathematicalPoint::from).collect() }
     }
 }
@@ -149,14 +149,14 @@ pub type MathematicalComputedChild = store::ArtifactChild<SemioValueSnapshot>;
 //#region 🔖️Converters
 /// 🌉 REAL bidirectional converter: node labels (prose/notation) <-> `text` runs, one run per node
 /// in `graph.nodes` order.
-pub fn mathematical_notation_from_graph(graph: &MathematicalGraph) -> SemioTextSnapshot {
+pub async fn mathematical_notation_from_graph(graph: &MathematicalGraph) -> SemioTextSnapshot {
     SemioTextSnapshot { schema: STDIO_SEMIOTEXT_DOCUMENT_SCHEMA.into(), runs: graph.nodes.iter().map(|node| SemioTextRun { language: String::new(), content: node.label.clone(), marks: Vec::new() }).collect() }
 }
 
 /// 🌉 REAL bidirectional converter: node `id`/`x`/`y` (tabulated results) <-> `table` rows, one row
 /// per node in `graph.nodes` order — positionally aligned with `mathematical_notation_from_graph`'s
 /// runs (see this region's own doc comment).
-pub fn mathematical_results_from_graph(graph: &MathematicalGraph) -> SemioTableSnapshot {
+pub async fn mathematical_results_from_graph(graph: &MathematicalGraph) -> SemioTableSnapshot {
     SemioTableSnapshot {
         schema: STDIO_SEMIOTABLE_DOCUMENT_SCHEMA.into(),
         columns: vec![SemioTableColumn { name: "id".into(), kind: SemioTableCellKind::Str }, SemioTableColumn { name: "x".into(), kind: SemioTableCellKind::Float }, SemioTableColumn { name: "y".into(), kind: SemioTableCellKind::Float }],
@@ -167,7 +167,7 @@ pub fn mathematical_results_from_graph(graph: &MathematicalGraph) -> SemioTableS
 /// 🌉 REAL bidirectional converter: graph direction/algorithm/seed, edges, and the geometry point
 /// cloud <-> one structured `value` Map — "scalar/structured computed values" per the migration
 /// brief. Honestly a derived/computed structure, not independently-authored prose or a table.
-pub fn mathematical_computed_from_state(graph: &MathematicalGraph, geometry: &MathematicalGeometry) -> SemioValueSnapshot {
+pub async fn mathematical_computed_from_state(graph: &MathematicalGraph, geometry: &MathematicalGeometry) -> SemioValueSnapshot {
     let edges = SemioValue::List {
         items: graph
             .edges
@@ -215,14 +215,14 @@ pub fn mathematical_computed_from_state(graph: &MathematicalGraph, geometry: &Ma
 /// are expected to have the same length/order (always true for any triple this plugin itself
 /// minted); a short/missing row or run degrades honestly (empty id/label, `0.0` coordinate) rather
 /// than panicking, since an externally-composed mismatch is possible in principle.
-pub fn mathematical_graph_geometry_from_children(notation: &SemioTextSnapshot, results: &SemioTableSnapshot, computed: &SemioValueSnapshot) -> (MathematicalGraph, MathematicalGeometry) {
-    fn cell_str(row: &SemioTableRow, index: usize) -> String {
+pub async fn mathematical_graph_geometry_from_children(notation: &SemioTextSnapshot, results: &SemioTableSnapshot, computed: &SemioValueSnapshot) -> (MathematicalGraph, MathematicalGeometry) {
+    async fn cell_str(row: &SemioTableRow, index: usize) -> String {
         match row.cells.get(index) {
             Some(SemioValue::Str { value }) => value.clone(),
             _ => String::new(),
         }
     }
-    fn cell_f64(row: &SemioTableRow, index: usize) -> f64 {
+    async fn cell_f64(row: &SemioTableRow, index: usize) -> f64 {
         match row.cells.get(index) {
             Some(SemioValue::Float { lexeme }) | Some(SemioValue::Int { lexeme }) => lexeme.parse().unwrap_or(0.0),
             _ => 0.0,
@@ -231,16 +231,16 @@ pub fn mathematical_graph_geometry_from_children(notation: &SemioTextSnapshot, r
     let nodes: Vec<MathematicalNode> =
         results.rows.iter().enumerate().map(|(i, row)| MathematicalNode { id: cell_str(row, 0), label: notation.runs.get(i).map(|run| run.content.clone()).unwrap_or_default(), x: cell_f64(row, 1), y: cell_f64(row, 2) }).collect();
 
-    fn map_entries(value: &SemioValue) -> &[SemioValueEntry] {
+    async fn map_entries(value: &SemioValue) -> &[SemioValueEntry] {
         match value {
             SemioValue::Map { entries } => entries.as_slice(),
             _ => &[],
         }
     }
-    fn find_entry<'v>(entries: &'v [SemioValueEntry], key: &str) -> Option<&'v SemioValue> {
+    async fn find_entry<'v>(entries: &'v [SemioValueEntry], key: &str) -> Option<&'v SemioValue> {
         entries.iter().find(|entry| entry.key == key).map(|entry| &entry.value)
     }
-    fn value_f64(value: Option<&SemioValue>) -> f64 {
+    async fn value_f64(value: Option<&SemioValue>) -> f64 {
         match value {
             Some(SemioValue::Float { lexeme }) | Some(SemioValue::Int { lexeme }) => lexeme.parse().unwrap_or(0.0),
             _ => 0.0,
@@ -318,7 +318,7 @@ thread_local! {
     static MATH_SCRATCH: RefCell<HashMap<String, MathematicalWorkingScene>> = RefCell::new(HashMap::new());
 }
 
-fn mathematical_scene_id(graph: &MathematicalGraph, geometry: &MathematicalGeometry) -> String {
+async fn mathematical_scene_id(graph: &MathematicalGraph, geometry: &MathematicalGeometry) -> String {
     use std::hash::{Hash, Hasher};
     let content_json = serde_json::to_string(&(graph, geometry)).unwrap_or_default();
     let mut hasher = std::collections::hash_map::DefaultHasher::new();
@@ -330,7 +330,7 @@ fn mathematical_scene_id(graph: &MathematicalGraph, geometry: &MathematicalGeome
 /// cache in one call — the standard way every mutation-diff/fixture builder in this plugin creates
 /// `notation`/`results`/`computed` field values; never construct these handles without also
 /// caching, or `mathematical_graph`/`mathematical_geometry` will read back empty.
-pub fn mathematical_children_from_state(graph: &MathematicalGraph, geometry: &MathematicalGeometry) -> (MathematicalNotationChild, MathematicalResultsChild, MathematicalComputedChild) {
+pub async fn mathematical_children_from_state(graph: &MathematicalGraph, geometry: &MathematicalGeometry) -> (MathematicalNotationChild, MathematicalResultsChild, MathematicalComputedChild) {
     let scene_id = mathematical_scene_id(graph, geometry);
     MATH_SCRATCH.with(|cache| {
         cache.borrow_mut().insert(scene_id.clone(), MathematicalWorkingScene { graph: graph.clone(), geometry: geometry.clone() });
@@ -342,7 +342,7 @@ pub fn mathematical_children_from_state(graph: &MathematicalGraph, geometry: &Ma
 
 /// 🔎 Reads the cached working scene behind a snapshot's composed children — an empty graph/
 /// geometry (never a panic) on a cache miss, per this region's own doc comment.
-pub fn mathematical_scene(snapshot: &MathematicalSnapshot) -> MathematicalWorkingScene {
+pub async fn mathematical_scene(snapshot: &MathematicalSnapshot) -> MathematicalWorkingScene {
     MATH_SCRATCH
         .with(|cache| cache.borrow().get(&snapshot.results.child_id).map(|scene| MathematicalWorkingScene { graph: scene.graph.clone(), geometry: scene.geometry.clone() }))
         .unwrap_or_else(|| MathematicalWorkingScene { graph: MathematicalGraph { directed: true, nodes: Vec::new(), edges: Vec::new(), algorithm: String::new(), algorithm_seed: None }, geometry: MathematicalGeometry { points: Vec::new() } })
@@ -350,19 +350,19 @@ pub fn mathematical_scene(snapshot: &MathematicalSnapshot) -> MathematicalWorkin
 
 /// 🔎 The live graph behind a snapshot's composed children — the single read call site every
 /// render/inference/export/command path in this plugin now uses instead of the old `.graph` field.
-pub fn mathematical_graph(snapshot: &MathematicalSnapshot) -> MathematicalGraph {
+pub async fn mathematical_graph(snapshot: &MathematicalSnapshot) -> MathematicalGraph {
     mathematical_scene(snapshot).graph
 }
 
 /// 🔎 The live geometry behind a snapshot's composed children — twin of [`mathematical_graph`].
-pub fn mathematical_geometry(snapshot: &MathematicalSnapshot) -> MathematicalGeometry {
+pub async fn mathematical_geometry(snapshot: &MathematicalSnapshot) -> MathematicalGeometry {
     mathematical_scene(snapshot).geometry
 }
 
 /// 🏗️ Builds a full `MathematicalSnapshot` from a literal `(graph, geometry)` pair — the standard
 /// fixture/import constructor replacing the old 2-field struct literal now that `notation`/
 /// `results`/`computed` are composed child handles, not plain fields.
-pub fn mathematical_snapshot_with_state(graph: MathematicalGraph, geometry: MathematicalGeometry) -> MathematicalSnapshot {
+pub async fn mathematical_snapshot_with_state(graph: MathematicalGraph, geometry: MathematicalGeometry) -> MathematicalSnapshot {
     let (notation, results, computed) = mathematical_children_from_state(&graph, &geometry);
     MathematicalSnapshot { notation, results, computed, equation: crate::artifacts::mathematical::standards::v1::subsets::any::schema::snapshot::EquationSnapshot::default() }
 }
@@ -372,7 +372,7 @@ pub fn mathematical_snapshot_with_state(graph: MathematicalGraph, geometry: Math
 //#region 🔖️ArtifactKind
 /// 🗂️ This artifact's `ArtifactKindSpec` — stitched into the app manifest by
 /// `crate::editor::mathematical::create_mathematical_app`'s `🔖️Manifest` region.
-pub fn artifact_kind() -> ArtifactKindSpec {
+pub async fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "computation.mathematical".into(),
         name: "Mathematical".into(),
@@ -401,7 +401,7 @@ pub fn artifact_kind() -> ArtifactKindSpec {
 /// execution — built once and leaked to a `&'static` slice since `dsl::passthrough_hooks` isn't
 /// `const fn`, mirroring note's `pilot_languages()` convention.
 #[allow(dead_code)]
-fn pilot_languages() -> &'static [dsl::LanguageSpec] {
+async fn pilot_languages() -> &'static [dsl::LanguageSpec] {
     static LANGUAGES: std::sync::OnceLock<Vec<dsl::LanguageSpec>> = std::sync::OnceLock::new();
     LANGUAGES
         .get_or_init(|| {
@@ -468,7 +468,7 @@ fn pilot_languages() -> &'static [dsl::LanguageSpec] {
 /// from this file's own `.setup()`: it registers the `MathematicalPlayApp` CONFIG/PRESENCE schema, an
 /// app-scope concern `ArtifactDeclaration` deliberately has no field for (see that struct's own doc) —
 /// `register_app_schema_descriptor` is not in the §6 artifact-scoped set.
-pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
+pub async fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
     use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
     let rows: &[(&str, &str, &str, &[(&str, &str)], Option<(&str, &str)>)] = &[
         ("s.mathematical.standard.v1", "standard", "1", &[], None),
@@ -519,7 +519,7 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
 /// deleted repo-wide only in W6); wiring them into this field too is real follow-up work, not
 /// required for the tree to register or for any law to hold (mirrors `🎬️sequence`'s and the stdio
 /// pilot's own documented deviation).
-pub fn artifact() -> semio_framework_plugin::app::declarations::ArtifactDeclaration {
+pub async fn artifact() -> semio_framework_plugin::app::declarations::ArtifactDeclaration {
     use semio_framework_plugin::app::declarations::ArtifactDeclaration;
     use store::os_io::ArtifactKindId;
     ArtifactDeclaration {
@@ -536,20 +536,20 @@ mod tests {
     use super::*;
 
     #[test]
-    fn artifact_kind_keeps_the_media_schema_distinct_from_the_store_schema() {
+    async fn artifact_kind_keeps_the_media_schema_distinct_from_the_store_schema() {
         assert_eq!(artifact_kind().schema, "computation.mathematical");
         assert_eq!(MATH_DOCUMENT_SCHEMA, "semio.mathematical/v1");
     }
 
     #[test]
-    fn default_graph_has_nodes_and_edges() {
+    async fn default_graph_has_nodes_and_edges() {
         let graph = MathematicalGraph::default();
         assert!(!graph.nodes.is_empty());
         assert!(!graph.edges.is_empty());
     }
 
     #[test]
-    fn default_geometry_has_points() {
+    async fn default_geometry_has_points() {
         assert!(!MathematicalGeometry::default().points.is_empty());
     }
 }

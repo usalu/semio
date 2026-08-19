@@ -14,17 +14,17 @@ mod host {
     /// hosts own their own tasks/timers and report completion back as ordinary events.
     pub trait Host<M: Machine> {
         /// 🎇️ Executes a consumer-defined effect requested by a running actor.
-        fn execute_effect(&mut self, actor: ActorId, effect: M::Effect);
+        async fn execute_effect(&mut self, actor: ActorId, effect: M::Effect);
         /// ⏱️ Schedules a delayed-transition timer for the given actor.
-        fn schedule(&mut self, actor: ActorId, timer: TimerId, delay_ms: u64);
+        async fn schedule(&mut self, actor: ActorId, timer: TimerId, delay_ms: u64);
         /// ⏱️ Cancels a previously scheduled timer (invoked when its owning state exits).
-        fn cancel_timer(&mut self, actor: ActorId, timer: TimerId);
+        async fn cancel_timer(&mut self, actor: ActorId, timer: TimerId);
         /// 🚀️ Starts the task/actor backing an `invoke` declaration.
-        fn start_task(&mut self, actor: ActorId, invoke: InvokeId);
+        async fn start_task(&mut self, actor: ActorId, invoke: InvokeId);
         /// 🛑️ Stops a previously started task (invoked when its owning state exits).
-        fn cancel_task(&mut self, actor: ActorId, invoke: InvokeId);
+        async fn cancel_task(&mut self, actor: ActorId, invoke: InvokeId);
         /// 🕰️ The host's current clock reading, in milliseconds.
-        fn now_ms(&self) -> u64;
+        async fn now_ms(&self) -> u64;
     }
 
     //#endregion 🔖️Host
@@ -45,27 +45,27 @@ mod host {
 
     impl<M: Machine> NativeHost<M> {
         /// 🖥️ A fresh host whose clock starts at zero.
-        pub fn new() -> Self {
+        pub async fn new() -> Self {
             Self { start: std::time::Instant::now(), effects: Vec::new(), pending_timers: Vec::new(), started_tasks: Vec::new(), cancelled_tasks: Vec::new() }
         }
 
         /// 🎇️ Effects recorded so far, in emission order.
-        pub fn effects(&self) -> &[(ActorId, M::Effect)] {
+        pub async fn effects(&self) -> &[(ActorId, M::Effect)] {
             &self.effects
         }
 
         /// 🎇️ Drains and returns every recorded effect.
-        pub fn drain_effects(&mut self) -> Vec<(ActorId, M::Effect)> {
+        pub async fn drain_effects(&mut self) -> Vec<(ActorId, M::Effect)> {
             core::mem::take(&mut self.effects)
         }
 
         /// 🚀️ Tasks started via `invoke`, still pending cancellation.
-        pub fn started_tasks(&self) -> &[(ActorId, InvokeId)] {
+        pub async fn started_tasks(&self) -> &[(ActorId, InvokeId)] {
             &self.started_tasks
         }
 
         /// ⏱️ Removes and returns every timer whose deadline has passed.
-        pub fn due_timers(&mut self) -> Vec<(ActorId, TimerId)> {
+        pub async fn due_timers(&mut self) -> Vec<(ActorId, TimerId)> {
             let now = self.now_ms();
             let mut due = Vec::new();
             self.pending_timers.retain(|(actor, timer, at)| {
@@ -81,35 +81,35 @@ mod host {
     }
 
     impl<M: Machine> Default for NativeHost<M> {
-        fn default() -> Self {
+        async fn default() -> Self {
             Self::new()
         }
     }
 
     impl<M: Machine> Host<M> for NativeHost<M> {
-        fn execute_effect(&mut self, actor: ActorId, effect: M::Effect) {
+        async fn execute_effect(&mut self, actor: ActorId, effect: M::Effect) {
             self.effects.push((actor, effect));
         }
 
-        fn schedule(&mut self, actor: ActorId, timer: TimerId, delay_ms: u64) {
+        async fn schedule(&mut self, actor: ActorId, timer: TimerId, delay_ms: u64) {
             let at = self.now_ms() + delay_ms;
             self.pending_timers.push((actor, timer, at));
         }
 
-        fn cancel_timer(&mut self, actor: ActorId, timer: TimerId) {
+        async fn cancel_timer(&mut self, actor: ActorId, timer: TimerId) {
             self.pending_timers.retain(|(a, t, _)| !(*a == actor && *t == timer));
         }
 
-        fn start_task(&mut self, actor: ActorId, invoke: InvokeId) {
+        async fn start_task(&mut self, actor: ActorId, invoke: InvokeId) {
             self.started_tasks.push((actor, invoke));
         }
 
-        fn cancel_task(&mut self, actor: ActorId, invoke: InvokeId) {
+        async fn cancel_task(&mut self, actor: ActorId, invoke: InvokeId) {
             self.started_tasks.retain(|(a, i)| !(*a == actor && *i == invoke));
             self.cancelled_tasks.push((actor, invoke));
         }
 
-        fn now_ms(&self) -> u64 {
+        async fn now_ms(&self) -> u64 {
             self.start.elapsed().as_millis() as u64
         }
     }
@@ -129,27 +129,27 @@ mod host {
 
     impl<M: Machine> TestHost<M> {
         /// 🧪️ A fresh simulated host whose clock starts at zero.
-        pub fn new() -> Self {
+        pub async fn new() -> Self {
             Self { clock_ms: 0, effects: Vec::new(), pending_timers: Vec::new(), started_tasks: Vec::new(), cancelled_tasks: Vec::new() }
         }
 
         /// 🎇️ Effects recorded so far, in emission order.
-        pub fn effects(&self) -> &[(ActorId, M::Effect)] {
+        pub async fn effects(&self) -> &[(ActorId, M::Effect)] {
             &self.effects
         }
 
         /// 🚀️ Tasks currently started (not yet cancelled), for invoke-lifecycle assertions.
-        pub fn started_tasks(&self) -> &[(ActorId, InvokeId)] {
+        pub async fn started_tasks(&self) -> &[(ActorId, InvokeId)] {
             &self.started_tasks
         }
 
         /// 🛑️ Tasks that have been cancelled, for invoke-lifecycle assertions.
-        pub fn cancelled_tasks(&self) -> &[(ActorId, InvokeId)] {
+        pub async fn cancelled_tasks(&self) -> &[(ActorId, InvokeId)] {
             &self.cancelled_tasks
         }
 
         /// ⏱️ Advances the simulated clock and returns timers that became due, removing them.
-        pub fn advance(&mut self, delay_ms: u64) -> Vec<(ActorId, TimerId)> {
+        pub async fn advance(&mut self, delay_ms: u64) -> Vec<(ActorId, TimerId)> {
             self.clock_ms += delay_ms;
             let now = self.clock_ms;
             let mut due = Vec::new();
@@ -166,34 +166,34 @@ mod host {
     }
 
     impl<M: Machine> Default for TestHost<M> {
-        fn default() -> Self {
+        async fn default() -> Self {
             Self::new()
         }
     }
 
     impl<M: Machine> Host<M> for TestHost<M> {
-        fn execute_effect(&mut self, actor: ActorId, effect: M::Effect) {
+        async fn execute_effect(&mut self, actor: ActorId, effect: M::Effect) {
             self.effects.push((actor, effect));
         }
 
-        fn schedule(&mut self, actor: ActorId, timer: TimerId, delay_ms: u64) {
+        async fn schedule(&mut self, actor: ActorId, timer: TimerId, delay_ms: u64) {
             self.pending_timers.push((actor, timer, self.clock_ms + delay_ms));
         }
 
-        fn cancel_timer(&mut self, actor: ActorId, timer: TimerId) {
+        async fn cancel_timer(&mut self, actor: ActorId, timer: TimerId) {
             self.pending_timers.retain(|(a, t, _)| !(*a == actor && *t == timer));
         }
 
-        fn start_task(&mut self, actor: ActorId, invoke: InvokeId) {
+        async fn start_task(&mut self, actor: ActorId, invoke: InvokeId) {
             self.started_tasks.push((actor, invoke));
         }
 
-        fn cancel_task(&mut self, actor: ActorId, invoke: InvokeId) {
+        async fn cancel_task(&mut self, actor: ActorId, invoke: InvokeId) {
             self.started_tasks.retain(|(a, i)| !(*a == actor && *i == invoke));
             self.cancelled_tasks.push((actor, invoke));
         }
 
-        fn now_ms(&self) -> u64 {
+        async fn now_ms(&self) -> u64 {
             self.clock_ms
         }
     }
@@ -214,13 +214,13 @@ mod host {
             type Output = ();
             type Effect = &'static str;
             type Config = crate::BitSet<1>;
-            fn definition() -> &'static super::super::kernel::MachineDefinition<Self> {
+            async fn definition() -> &'static super::super::kernel::MachineDefinition<Self> {
                 unimplemented!("host tests never step a machine")
             }
         }
 
         #[test]
-        fn test_host_advance_fires_due_timers_only() {
+        async fn test_host_advance_fires_due_timers_only() {
             let mut host = TestHost::<DummyMachine>::new();
             host.schedule(ActorId(0), TimerId(0), 100);
             host.schedule(ActorId(0), TimerId(1), 300);
@@ -231,7 +231,7 @@ mod host {
         }
 
         #[test]
-        fn test_host_cancel_timer_removes_pending() {
+        async fn test_host_cancel_timer_removes_pending() {
             let mut host = TestHost::<DummyMachine>::new();
             host.schedule(ActorId(0), TimerId(0), 100);
             host.cancel_timer(ActorId(0), TimerId(0));
@@ -239,7 +239,7 @@ mod host {
         }
 
         #[test]
-        fn test_host_records_effects_and_task_lifecycle() {
+        async fn test_host_records_effects_and_task_lifecycle() {
             let mut host = TestHost::<DummyMachine>::new();
             host.execute_effect(ActorId(0), "audit");
             assert_eq!(host.effects(), &[(ActorId(0), "audit")]);
@@ -276,14 +276,14 @@ mod inspect {
     /// 🔎️ Observer of [`InspectionEvent`]s — implemented by hosts/tooling that need microstep visibility.
     pub trait Inspector<M: Machine> {
         /// 👀️ Called once per [`InspectionEvent`] in emission order.
-        fn observe(&mut self, event: InspectionEvent<'_, M>);
+        async fn observe(&mut self, event: InspectionEvent<'_, M>);
     }
 
     /// 🔎️ An [`Inspector`] that discards every event — the default for callers that don't need tracing.
     pub struct NullInspector;
 
     impl<M: Machine> Inspector<M> for NullInspector {
-        fn observe(&mut self, _event: InspectionEvent<'_, M>) {}
+        async fn observe(&mut self, _event: InspectionEvent<'_, M>) {}
     }
 
     /// 🔎️ One recorded microstep — the exited/entered node sets, in kernel-execution order.
@@ -300,13 +300,13 @@ mod inspect {
     }
 
     impl<M: Machine> Default for TraceInspector<M> {
-        fn default() -> Self {
+        async fn default() -> Self {
             Self { entries: Vec::new(), _marker: core::marker::PhantomData }
         }
     }
 
     impl<M: Machine> Inspector<M> for TraceInspector<M> {
-        fn observe(&mut self, event: InspectionEvent<'_, M>) {
+        async fn observe(&mut self, event: InspectionEvent<'_, M>) {
             if let InspectionEvent::Microstep { exited, entered } = event {
                 self.entries.push(MicrostepTrace { exited: exited.to_vec(), entered: entered.to_vec() });
             }
@@ -322,14 +322,14 @@ mod inspect {
         use super::*;
 
         #[test]
-        fn null_inspector_observes_nothing_observable() {
+        async fn null_inspector_observes_nothing_observable() {
             // Compile-only smoke test: NullInspector must be constructible and callable
             // without a concrete Machine — exercised indirectly by kernel tests.
             let _inspector = NullInspector;
         }
 
         #[test]
-        fn trace_inspector_records_one_microstep_per_transition() {
+        async fn trace_inspector_records_one_microstep_per_transition() {
             use super::super::kernel::{init, macrostep};
             use super::super::testing::support::{UnitToggleEvent, UnitToggleMachine};
 
@@ -455,7 +455,7 @@ mod kernel {
 
     //#region 🔖️Configuration
 
-    fn is_descendant(nodes: &[NodeDef], a: NodeId, ancestor: NodeId) -> bool {
+    async fn is_descendant(nodes: &[NodeDef], a: NodeId, ancestor: NodeId) -> bool {
         if a == ancestor {
             return false;
         }
@@ -469,11 +469,11 @@ mod kernel {
         false
     }
 
-    fn is_descendant_or_self(nodes: &[NodeDef], a: NodeId, ancestor: NodeId) -> bool {
+    async fn is_descendant_or_self(nodes: &[NodeDef], a: NodeId, ancestor: NodeId) -> bool {
         a == ancestor || is_descendant(nodes, a, ancestor)
     }
 
-    fn depth_of(nodes: &[NodeDef], id: NodeId) -> u32 {
+    async fn depth_of(nodes: &[NodeDef], id: NodeId) -> u32 {
         let mut depth = 0;
         let mut cur = nodes[id.0 as usize].parent;
         while let Some(p) = cur {
@@ -483,17 +483,17 @@ mod kernel {
         depth
     }
 
-    fn is_compound_or_parallel(nodes: &[NodeDef], id: NodeId) -> bool {
+    async fn is_compound_or_parallel(nodes: &[NodeDef], id: NodeId) -> bool {
         matches!(nodes[id.0 as usize].kind, NodeKind::Compound | NodeKind::Parallel)
     }
 
-    fn is_leafish(nodes: &[NodeDef], id: NodeId) -> bool {
+    async fn is_leafish(nodes: &[NodeDef], id: NodeId) -> bool {
         matches!(nodes[id.0 as usize].kind, NodeKind::Atomic | NodeKind::Final)
     }
 
     /// 🌳️ The transition domain per SCXML `getTransitionDomain` — the innermost compound/parallel
     /// ancestor whose descendants fully cover source+targets. Always terminates at [`ROOT`].
-    fn compute_domain(nodes: &[NodeDef], source: NodeId, targets: &[NodeId], kind: TransitionKind) -> NodeId {
+    async fn compute_domain(nodes: &[NodeDef], source: NodeId, targets: &[NodeId], kind: TransitionKind) -> NodeId {
         if targets.is_empty() {
             return source;
         }
@@ -510,7 +510,7 @@ mod kernel {
         ROOT
     }
 
-    fn set_history(history: &mut Vec<(NodeId, Vec<NodeId>)>, key: NodeId, value: Vec<NodeId>) {
+    async fn set_history(history: &mut Vec<(NodeId, Vec<NodeId>)>, key: NodeId, value: Vec<NodeId>) {
         if let Some(entry) = history.iter_mut().find(|(k, _)| *k == key) {
             entry.1 = value;
         } else {
@@ -518,7 +518,7 @@ mod kernel {
         }
     }
 
-    fn resolve_effective_targets(nodes: &[NodeDef], targets: &[NodeId], history: &[(NodeId, Vec<NodeId>)]) -> Vec<NodeId> {
+    async fn resolve_effective_targets(nodes: &[NodeDef], targets: &[NodeId], history: &[(NodeId, Vec<NodeId>)]) -> Vec<NodeId> {
         let mut out = Vec::new();
         for &t in targets {
             match nodes[t.0 as usize].kind {
@@ -545,7 +545,7 @@ mod kernel {
         out
     }
 
-    fn add_descendant_states_to_enter(nodes: &[NodeDef], state: NodeId, history: &[(NodeId, Vec<NodeId>)], out: &mut Vec<NodeId>) {
+    async fn add_descendant_states_to_enter(nodes: &[NodeDef], state: NodeId, history: &[(NodeId, Vec<NodeId>)], out: &mut Vec<NodeId>) {
         if matches!(nodes[state.0 as usize].kind, NodeKind::HistoryShallow | NodeKind::HistoryDeep) {
             for r in resolve_effective_targets(nodes, core::slice::from_ref(&state), history) {
                 add_descendant_states_to_enter(nodes, r, history, out);
@@ -573,7 +573,7 @@ mod kernel {
         }
     }
 
-    fn add_ancestor_states_to_enter(nodes: &[NodeDef], state: NodeId, stop_at: NodeId, history: &[(NodeId, Vec<NodeId>)], out: &mut Vec<NodeId>) {
+    async fn add_ancestor_states_to_enter(nodes: &[NodeDef], state: NodeId, stop_at: NodeId, history: &[(NodeId, Vec<NodeId>)], out: &mut Vec<NodeId>) {
         let mut anc = nodes[state.0 as usize].parent;
         while let Some(a) = anc {
             if a == stop_at {
@@ -593,7 +593,7 @@ mod kernel {
         }
     }
 
-    fn state_done(nodes: &[NodeDef], config: &impl Configuration, node: NodeId) -> bool {
+    async fn state_done(nodes: &[NodeDef], config: &impl Configuration, node: NodeId) -> bool {
         match nodes[node.0 as usize].kind {
             NodeKind::Final => true,
             NodeKind::Compound => {
@@ -609,7 +609,7 @@ mod kernel {
         }
     }
 
-    fn compute_done_nodes<M: Machine>(def: &MachineDefinition<M>, config: &M::Config) -> Vec<NodeId> {
+    async fn compute_done_nodes<M: Machine>(def: &MachineDefinition<M>, config: &M::Config) -> Vec<NodeId> {
         let mut out = Vec::new();
         for id in config.iter_ones() {
             if is_compound_or_parallel(def.nodes, id) && state_done(def.nodes, config, id) {
@@ -637,11 +637,11 @@ mod kernel {
 
     /// 🎇️ Where a running machine pushes the [`Command`]s it produces.
     pub trait CommandSink<M: Machine> {
-        fn push(&mut self, command: Command<M>);
+        async fn push(&mut self, command: Command<M>);
     }
 
     impl<M: Machine> CommandSink<M> for Vec<Command<M>> {
-        fn push(&mut self, command: Command<M>) {
+        async fn push(&mut self, command: Command<M>) {
             Vec::push(self, command);
         }
     }
@@ -668,16 +668,16 @@ mod kernel {
     }
 
     impl<M: Machine> Snapshot<M> {
-        pub(crate) fn from_parts(configuration: M::Config, context: M::Context, status: Status<M::Output>, history: Vec<(NodeId, Vec<NodeId>)>) -> Self {
+        pub(crate) async fn from_parts(configuration: M::Config, context: M::Context, status: Status<M::Output>, history: Vec<(NodeId, Vec<NodeId>)>) -> Self {
             Self { configuration, context, status, history }
         }
 
-        pub(crate) fn history_entries(&self) -> &[(NodeId, Vec<NodeId>)] {
+        pub(crate) async fn history_entries(&self) -> &[(NodeId, Vec<NodeId>)] {
             &self.history
         }
 
         /// 🔎️ Whether the state with this stable id is part of the active configuration.
-        pub fn matches(&self, stable_id: &str) -> bool {
+        pub async fn matches(&self, stable_id: &str) -> bool {
             let def = M::definition();
             self.configuration.iter_ones().any(|id| def.nodes[id.0 as usize].stable_id == stable_id)
         }
@@ -715,7 +715,7 @@ mod kernel {
         Timer(TimerId),
     }
 
-    fn candidates_for<M: Machine>(def: &MachineDefinition<M>, config: &M::Config, context: &M::Context, event: Option<&M::Event>, selector: Selector, done: &[NodeId]) -> Vec<usize> {
+    async fn candidates_for<M: Machine>(def: &MachineDefinition<M>, config: &M::Config, context: &M::Context, event: Option<&M::Event>, selector: Selector, done: &[NodeId]) -> Vec<usize> {
         let mut out = Vec::new();
         for (i, t) in def.transitions.iter().enumerate() {
             if !config.contains(t.source) {
@@ -744,7 +744,7 @@ mod kernel {
 
     /// 🥊️ Keeps the deepest-source transition when two candidates' exit domains overlap
     /// (child preemption); ties keep document order.
-    fn resolve_conflicts(nodes: &[NodeDef], transitions: &[TransitionDef], mut candidates: Vec<usize>) -> Vec<usize> {
+    async fn resolve_conflicts(nodes: &[NodeDef], transitions: &[TransitionDef], mut candidates: Vec<usize>) -> Vec<usize> {
         candidates.sort_by_key(|&i| transitions[i].doc_index);
         let mut selected: Vec<usize> = Vec::new();
         'outer: for cand in candidates {
@@ -771,7 +771,7 @@ mod kernel {
         selected
     }
 
-    fn apply_transitions<M: Machine>(def: &MachineDefinition<M>, snapshot: &mut Snapshot<M>, transitions_idx: &[usize], event: Option<&M::Event>, sink: &mut impl CommandSink<M>, inspector: &mut impl Inspector<M>) {
+    async fn apply_transitions<M: Machine>(def: &MachineDefinition<M>, snapshot: &mut Snapshot<M>, transitions_idx: &[usize], event: Option<&M::Event>, sink: &mut impl CommandSink<M>, inspector: &mut impl Inspector<M>) {
         let nodes = def.nodes;
 
         let mut exit_ids: Vec<NodeId> = Vec::new();
@@ -857,7 +857,7 @@ mod kernel {
 
     //#region 🔖️Macrostep
 
-    fn finalize_status<M: Machine>(def: &MachineDefinition<M>, snapshot: &mut Snapshot<M>) {
+    async fn finalize_status<M: Machine>(def: &MachineDefinition<M>, snapshot: &mut Snapshot<M>) {
         if matches!(snapshot.status, Status::Done(_)) {
             return;
         }
@@ -868,7 +868,7 @@ mod kernel {
         }
     }
 
-    fn run_to_completion<M: Machine>(snapshot: &mut Snapshot<M>, seed: Option<ActiveTrigger<M>>, sink: &mut impl CommandSink<M>, inspector: &mut impl Inspector<M>) -> StepReport {
+    async fn run_to_completion<M: Machine>(snapshot: &mut Snapshot<M>, seed: Option<ActiveTrigger<M>>, sink: &mut impl CommandSink<M>, inspector: &mut impl Inspector<M>) -> StepReport {
         let def = M::definition();
         inspector.observe(InspectionEvent::MacrostepStart);
         let mut queue: VecDeque<ActiveTrigger<M>> = VecDeque::new();
@@ -918,7 +918,7 @@ mod kernel {
 
     /// 🚀️ Builds a fresh [`Snapshot`] from `input`, entering the root's default descendant chain
     /// and settling any eventless/done transitions enabled immediately on init.
-    pub fn init<M: Machine>(input: M::Input, sink: &mut impl CommandSink<M>) -> Snapshot<M> {
+    pub async fn init<M: Machine>(input: M::Input, sink: &mut impl CommandSink<M>) -> Snapshot<M> {
         let def = M::definition();
         let mut snapshot = Snapshot { configuration: <M::Config as Default>::default(), context: (def.context_from_input)(input), status: Status::Running, history: Vec::new() };
         let mut entry_ids: Vec<NodeId> = Vec::new();
@@ -943,14 +943,14 @@ mod kernel {
 
     /// 🏃️ Runs one external event to completion (a "macrostep"): the triggered microstep,
     /// then every enabled eventless/`on_done` microstep, until the configuration settles.
-    pub fn macrostep<M: Machine>(snapshot: &mut Snapshot<M>, event: M::Event, sink: &mut impl CommandSink<M>, inspector: &mut impl Inspector<M>) -> StepReport {
+    pub async fn macrostep<M: Machine>(snapshot: &mut Snapshot<M>, event: M::Event, sink: &mut impl CommandSink<M>, inspector: &mut impl Inspector<M>) -> StepReport {
         let seed = ActiveTrigger { selector: RaisedSelector::Event(event.event_id()), event: Some(event) };
         run_to_completion(snapshot, Some(seed), sink, inspector)
     }
 
     /// ⏱️ Runs an `after`-timer firing to completion — the runtime's entry point when a
     /// [`crate::Host`] reports a scheduled [`TimerId`] elapsed.
-    pub fn timer_elapsed<M: Machine>(snapshot: &mut Snapshot<M>, timer: TimerId, sink: &mut impl CommandSink<M>, inspector: &mut impl Inspector<M>) -> StepReport {
+    pub async fn timer_elapsed<M: Machine>(snapshot: &mut Snapshot<M>, timer: TimerId, sink: &mut impl CommandSink<M>, inspector: &mut impl Inspector<M>) -> StepReport {
         let seed = ActiveTrigger { selector: RaisedSelector::Timer(timer), event: None };
         run_to_completion(snapshot, Some(seed), sink, inspector)
     }
@@ -974,10 +974,10 @@ mod kernel {
 
         impl StatechartEvent for ToggleEvent {
             const EVENT_COUNT: u16 = 1;
-            fn event_id(&self) -> EventId {
+            async fn event_id(&self) -> EventId {
                 EventId(0)
             }
-            fn event_name(id: EventId) -> &'static str {
+            async fn event_name(id: EventId) -> &'static str {
                 match id.0 {
                     0 => "Flip",
                     _ => "?",
@@ -991,11 +991,11 @@ mod kernel {
             allow: bool,
         }
 
-        fn toggle_inc(ctx: &mut ToggleContext, _event: Option<&ToggleEvent>, _sink: &mut dyn CommandSink<ToggleMachine>) {
+        async fn toggle_inc(ctx: &mut ToggleContext, _event: Option<&ToggleEvent>, _sink: &mut dyn CommandSink<ToggleMachine>) {
             ctx.count += 1;
         }
 
-        fn toggle_allowed(ctx: &ToggleContext, _event: Option<&ToggleEvent>) -> bool {
+        async fn toggle_allowed(ctx: &ToggleContext, _event: Option<&ToggleEvent>) -> bool {
             ctx.allow
         }
 
@@ -1018,7 +1018,7 @@ mod kernel {
             type Output = ();
             type Effect = ();
             type Config = BitSet<1>;
-            fn definition() -> &'static MachineDefinition<Self> {
+            async fn definition() -> &'static MachineDefinition<Self> {
                 static DEF: MachineDefinition<ToggleMachine> = MachineDefinition {
                     id: "toggle",
                     nodes: TOGGLE_NODES,
@@ -1035,7 +1035,7 @@ mod kernel {
         }
 
         #[test]
-        fn flat_machine_toggles_and_counts() {
+        async fn flat_machine_toggles_and_counts() {
             let mut sink: Vec<Command<ToggleMachine>> = Vec::new();
             let mut snapshot = init::<ToggleMachine>(true, &mut sink);
             assert!(snapshot.matches("off"));
@@ -1049,7 +1049,7 @@ mod kernel {
         }
 
         #[test]
-        fn guard_blocks_transition_when_false() {
+        async fn guard_blocks_transition_when_false() {
             let mut sink: Vec<Command<ToggleMachine>> = Vec::new();
             let mut snapshot = init::<ToggleMachine>(false, &mut sink);
             let mut inspector = NullInspector;
@@ -1076,7 +1076,7 @@ mod kernel {
 
         impl StatechartEvent for PlayerEvent {
             const EVENT_COUNT: u16 = 5;
-            fn event_id(&self) -> EventId {
+            async fn event_id(&self) -> EventId {
                 match self {
                     PlayerEvent::Open => EventId(0),
                     PlayerEvent::Pause => EventId(1),
@@ -1085,7 +1085,7 @@ mod kernel {
                     PlayerEvent::Resume => EventId(4),
                 }
             }
-            fn event_name(id: EventId) -> &'static str {
+            async fn event_name(id: EventId) -> &'static str {
                 match id.0 {
                     0 => "Open",
                     1 => "Pause",
@@ -1125,7 +1125,7 @@ mod kernel {
             type Output = ();
             type Effect = ();
             type Config = BitSet<1>;
-            fn definition() -> &'static MachineDefinition<Self> {
+            async fn definition() -> &'static MachineDefinition<Self> {
                 static DEF: MachineDefinition<PlayerMachine> =
                     MachineDefinition { id: "player", nodes: PLAYER_NODES, transitions: PLAYER_TRANSITIONS, context_from_input: |_| PlayerContext, make_output: None, guards: &[], actions: &[], fingerprint: 2, manifest_json: "{}" };
                 &DEF
@@ -1133,7 +1133,7 @@ mod kernel {
         }
 
         #[test]
-        fn hierarchical_machine_enters_default_descendant() {
+        async fn hierarchical_machine_enters_default_descendant() {
             let mut sink: Vec<Command<PlayerMachine>> = Vec::new();
             let snapshot = init::<PlayerMachine>((), &mut sink);
             assert!(snapshot.matches("closed"));
@@ -1141,7 +1141,7 @@ mod kernel {
         }
 
         #[test]
-        fn hierarchical_machine_transitions_into_compound_default() {
+        async fn hierarchical_machine_transitions_into_compound_default() {
             let mut sink: Vec<Command<PlayerMachine>> = Vec::new();
             let mut snapshot = init::<PlayerMachine>((), &mut sink);
             let mut inspector = NullInspector;
@@ -1151,7 +1151,7 @@ mod kernel {
         }
 
         #[test]
-        fn shallow_history_restores_last_active_child() {
+        async fn shallow_history_restores_last_active_child() {
             let mut sink: Vec<Command<PlayerMachine>> = Vec::new();
             let mut snapshot = init::<PlayerMachine>((), &mut sink);
             let mut inspector = NullInspector;
@@ -1183,14 +1183,14 @@ mod kernel {
 
         impl StatechartEvent for RecorderEvent {
             const EVENT_COUNT: u16 = 3;
-            fn event_id(&self) -> EventId {
+            async fn event_id(&self) -> EventId {
                 match self {
                     RecorderEvent::Start => EventId(0),
                     RecorderEvent::AudioStop => EventId(1),
                     RecorderEvent::VideoStop => EventId(2),
                 }
             }
-            fn event_name(id: EventId) -> &'static str {
+            async fn event_name(id: EventId) -> &'static str {
                 match id.0 {
                     0 => "Start",
                     1 => "AudioStop",
@@ -1230,7 +1230,7 @@ mod kernel {
             type Output = ();
             type Effect = ();
             type Config = BitSet<1>;
-            fn definition() -> &'static MachineDefinition<Self> {
+            async fn definition() -> &'static MachineDefinition<Self> {
                 static DEF: MachineDefinition<RecorderMachine> =
                     MachineDefinition { id: "recorder", nodes: RECORDER_NODES, transitions: RECORDER_TRANSITIONS, context_from_input: |_| RecorderContext, make_output: None, guards: &[], actions: &[], fingerprint: 3, manifest_json: "{}" };
                 &DEF
@@ -1238,7 +1238,7 @@ mod kernel {
         }
 
         #[test]
-        fn parallel_regions_enter_together() {
+        async fn parallel_regions_enter_together() {
             let mut sink: Vec<Command<RecorderMachine>> = Vec::new();
             let mut snapshot = init::<RecorderMachine>((), &mut sink);
             let mut inspector = NullInspector;
@@ -1249,7 +1249,7 @@ mod kernel {
         }
 
         #[test]
-        fn parallel_done_bubbles_only_once_every_region_finishes() {
+        async fn parallel_done_bubbles_only_once_every_region_finishes() {
             let mut sink: Vec<Command<RecorderMachine>> = Vec::new();
             let mut snapshot = init::<RecorderMachine>((), &mut sink);
             let mut inspector = NullInspector;
@@ -1302,20 +1302,20 @@ mod persist {
     /// 💾️ Migrates a [`PersistedSnapshot`] captured under an older machine fingerprint.
     pub trait Migration {
         /// The fingerprint this migration accepts as input.
-        fn source_fingerprint(&self) -> u64;
+        async fn source_fingerprint(&self) -> u64;
         /// Produces a [`PersistedSnapshot`] valid under a newer fingerprint.
-        fn migrate(&self, snapshot: PersistedSnapshot) -> PersistedSnapshot;
+        async fn migrate(&self, snapshot: PersistedSnapshot) -> PersistedSnapshot;
     }
 
     /// 💾️ Captures a running [`Snapshot`] as a portable, stable-id-addressed value.
-    pub fn persist<M: Machine>(snapshot: &Snapshot<M>) -> PersistedSnapshot {
+    pub async fn persist<M: Machine>(snapshot: &Snapshot<M>) -> PersistedSnapshot {
         let def = M::definition();
         let states = snapshot.configuration.iter_ones().map(|id| def.nodes[id.0 as usize].stable_id.to_string()).collect();
         let history = snapshot.history_entries().iter().map(|(owner, ids)| (def.nodes[owner.0 as usize].stable_id.to_string(), ids.iter().map(|id| def.nodes[id.0 as usize].stable_id.to_string()).collect())).collect();
         PersistedSnapshot { version: 1, fingerprint: def.fingerprint, states, history, done: matches!(snapshot.status, Status::Done(_)) }
     }
 
-    fn stable_id_to_node(def_nodes: &[super::kernel::NodeDef], stable_id: &str) -> Result<NodeId, RestoreError> {
+    async fn stable_id_to_node(def_nodes: &[super::kernel::NodeDef], stable_id: &str) -> Result<NodeId, RestoreError> {
         def_nodes.iter().position(|n| n.stable_id == stable_id).map(|idx| NodeId(idx as u16)).ok_or_else(|| RestoreError::UnknownStableId(stable_id.to_string()))
     }
 
@@ -1323,7 +1323,7 @@ mod persist {
     /// sequence until the fingerprint matches the current machine, then re-resolving
     /// stable ids back to dense [`NodeId`]s. `context` is supplied by the caller since
     /// the consumer's `Context` may itself need domain-specific deserialization.
-    pub fn restore<M: Machine>(persisted: &PersistedSnapshot, context: M::Context, migrations: &[&dyn Migration]) -> Result<Snapshot<M>, RestoreError> {
+    pub async fn restore<M: Machine>(persisted: &PersistedSnapshot, context: M::Context, migrations: &[&dyn Migration]) -> Result<Snapshot<M>, RestoreError> {
         let def = M::definition();
         let mut current = persisted.clone();
         while current.fingerprint != def.fingerprint {
@@ -1361,7 +1361,7 @@ mod persist {
         use super::super::testing::support::{unit_toggle_definition, UnitToggleContext, UnitToggleEvent, UnitToggleMachine};
 
         #[test]
-        fn persist_then_restore_round_trips_active_state() {
+        async fn persist_then_restore_round_trips_active_state() {
             let _ = unit_toggle_definition();
             let mut sink = Vec::new();
             let mut snapshot = init::<UnitToggleMachine>((), &mut sink);
@@ -1378,7 +1378,7 @@ mod persist {
         }
 
         #[test]
-        fn restore_rejects_fingerprint_mismatch_without_migration() {
+        async fn restore_rejects_fingerprint_mismatch_without_migration() {
             let mut sink = Vec::new();
             let snapshot = init::<UnitToggleMachine>((), &mut sink);
             let mut persisted = persist(&snapshot);
@@ -1389,17 +1389,17 @@ mod persist {
 
         struct BumpFingerprint;
         impl Migration for BumpFingerprint {
-            fn source_fingerprint(&self) -> u64 {
+            async fn source_fingerprint(&self) -> u64 {
                 9999
             }
-            fn migrate(&self, mut snapshot: PersistedSnapshot) -> PersistedSnapshot {
+            async fn migrate(&self, mut snapshot: PersistedSnapshot) -> PersistedSnapshot {
                 snapshot.fingerprint = UnitToggleMachine::definition().fingerprint;
                 snapshot
             }
         }
 
         #[test]
-        fn restore_applies_migration_chain_until_fingerprint_matches() {
+        async fn restore_applies_migration_chain_until_fingerprint_matches() {
             let mut sink = Vec::new();
             let snapshot = init::<UnitToggleMachine>((), &mut sink);
             let mut persisted = persist(&snapshot);
@@ -1469,12 +1469,12 @@ mod runtime {
 
     impl<M: Machine, H: Host<M>> ActorSystem<M, H> {
         /// 🎬️ A fresh system with no actors yet, owning `host`.
-        pub fn new(host: H) -> Self {
+        pub async fn new(host: H) -> Self {
             Self { host, actors: Vec::new(), next_id: 0 }
         }
 
         /// 🎬️ Initializes and registers a root actor, routing its initial commands immediately.
-        pub fn spawn_root(&mut self, input: M::Input) -> ActorId {
+        pub async fn spawn_root(&mut self, input: M::Input) -> ActorId {
             let id = ActorId(self.next_id);
             self.next_id += 1;
             let mut buffer: Vec<Command<M>> = Vec::new();
@@ -1485,12 +1485,12 @@ mod runtime {
         }
 
         /// 🎬️ The current [`Snapshot`] of an actor, if it exists.
-        pub fn snapshot(&self, id: ActorId) -> Option<&Snapshot<M>> {
+        pub async fn snapshot(&self, id: ActorId) -> Option<&Snapshot<M>> {
             self.actors.iter().find(|a| a.id == id).map(|a| &a.snapshot)
         }
 
         /// 🎬️ Enqueues an event for delivery on the next [`ActorSystem::drain`].
-        pub fn send(&mut self, to: ActorId, event: M::Event) {
+        pub async fn send(&mut self, to: ActorId, event: M::Event) {
             if let Some(actor) = self.actors.iter_mut().find(|a| a.id == to) {
                 actor.mailbox.push_back(event);
             }
@@ -1498,7 +1498,7 @@ mod runtime {
 
         /// 🎬️ Delivers a [`TimerId`](crate::TimerId) elapsed notification straight to `macrostep`'s
         /// timer entry point for `to`.
-        pub fn timer_elapsed(&mut self, to: ActorId, timer: crate::TimerId) -> Option<StepReport> {
+        pub async fn timer_elapsed(&mut self, to: ActorId, timer: crate::TimerId) -> Option<StepReport> {
             let idx = self.actors.iter().position(|a| a.id == to)?;
             let mut buffer: Vec<Command<M>> = Vec::new();
             let mut inspector = NullInspector;
@@ -1508,7 +1508,7 @@ mod runtime {
         }
 
         /// 🎬️ Drains every actor's mailbox to quiescence, running one macrostep per delivered event.
-        pub fn drain(&mut self) -> Vec<StepReport> {
+        pub async fn drain(&mut self) -> Vec<StepReport> {
             let mut reports = Vec::new();
             loop {
                 let mut progressed = false;
@@ -1531,7 +1531,7 @@ mod runtime {
             reports
         }
 
-        fn route_commands(&mut self, actor: ActorId, commands: Vec<Command<M>>) {
+        async fn route_commands(&mut self, actor: ActorId, commands: Vec<Command<M>>) {
             let mut sends = Vec::new();
             if let Some(idx) = self.actors.iter().position(|a| a.id == actor) {
                 for command in commands {
@@ -1549,7 +1549,7 @@ mod runtime {
     /// 🎬️ Applies one [`Command`] to `host`/`snapshot`; returns a `Send` command's
     /// `(to, event)` pair for the caller to route on, since a lone [`Host`]+[`Snapshot`]
     /// pair (e.g. a single `export_wasm_machine!` instance) has no other actor to deliver it to.
-    pub fn route_command<M: Machine>(host: &mut impl Host<M>, snapshot: &mut Snapshot<M>, actor: ActorId, command: Command<M>) -> Option<(ActorId, M::Event)> {
+    pub async fn route_command<M: Machine>(host: &mut impl Host<M>, snapshot: &mut Snapshot<M>, actor: ActorId, command: Command<M>) -> Option<(ActorId, M::Event)> {
         match command {
             Command::Effect(effect) => {
                 host.execute_effect(actor, effect);
@@ -1595,7 +1595,7 @@ mod runtime {
         use super::super::testing::support::{UnitToggleContext, UnitToggleEvent, UnitToggleMachine};
 
         #[test]
-        fn actor_system_drains_sent_events_through_one_macrostep_each() {
+        async fn actor_system_drains_sent_events_through_one_macrostep_each() {
             let mut system: ActorSystem<UnitToggleMachine, TestHost<UnitToggleMachine>> = ActorSystem::new(TestHost::new());
             let root = system.spawn_root(());
             assert!(system.snapshot(root).unwrap().matches("off"));
@@ -1633,7 +1633,7 @@ mod testing {
 
     impl<M: Machine> Model<M> {
         /// 🧭️ A model that explores with exactly these representative events.
-        pub fn new(events: Vec<M::Event>) -> Self {
+        pub async fn new(events: Vec<M::Event>) -> Self {
             Self { events }
         }
     }
@@ -1642,7 +1642,7 @@ mod testing {
 
     //#region 🔖️Paths
 
-    fn active_stable_ids<M: Machine>(snapshot: &Snapshot<M>) -> Vec<&'static str> {
+    async fn active_stable_ids<M: Machine>(snapshot: &Snapshot<M>) -> Vec<&'static str> {
         let def = M::definition();
         snapshot.configuration.iter_ones().map(|id| def.nodes[id.0 as usize].stable_id).collect()
     }
@@ -1662,7 +1662,7 @@ mod testing {
     /// 🧭️ Breadth-first walk over reachable configurations, trying every event in
     /// `model` from each newly-discovered configuration. Approximates reachability by
     /// configuration only — guard outcomes that depend on context may under-approximate.
-    pub fn explore<M: Machine>(model: &Model<M>, input: M::Input) -> Coverage
+    pub async fn explore<M: Machine>(model: &Model<M>, input: M::Input) -> Coverage
     where
         M::Context: Clone,
     {
@@ -1718,7 +1718,7 @@ mod testing {
     }
 
     /// 🧭️ Runs every invariant against `snapshot`, returning one formatted message per violation.
-    pub fn check_invariants<M: Machine>(snapshot: &Snapshot<M>, invariants: &[Invariant<M>]) -> Vec<String> {
+    pub async fn check_invariants<M: Machine>(snapshot: &Snapshot<M>, invariants: &[Invariant<M>]) -> Vec<String> {
         invariants.iter().filter_map(|inv| (inv.check)(snapshot).err().map(|reason| format!("{}: {}", inv.name, reason))).collect()
     }
 
@@ -1735,7 +1735,7 @@ mod testing {
 
     /// 🧭️ Runs `steps` against a freshly-initialized machine, failing fast with a
     /// descriptive message naming the offending step and the actual active configuration.
-    pub fn run_conformance<M: Machine>(input: M::Input, steps: &[ConformanceStep<M>]) -> Result<(), FsmError> {
+    pub async fn run_conformance<M: Machine>(input: M::Input, steps: &[ConformanceStep<M>]) -> Result<(), FsmError> {
         let mut sink: Vec<Command<M>> = Vec::new();
         let mut snapshot = init::<M>(input, &mut sink);
         for (index, step) in steps.iter().enumerate() {
@@ -1764,10 +1764,10 @@ mod testing {
 
         impl StatechartEvent for UnitEvent {
             const EVENT_COUNT: u16 = 1;
-            fn event_id(&self) -> EventId {
+            async fn event_id(&self) -> EventId {
                 EventId(0)
             }
-            fn event_name(_id: EventId) -> &'static str {
+            async fn event_name(_id: EventId) -> &'static str {
                 "Unit"
             }
         }
@@ -1779,10 +1779,10 @@ mod testing {
 
         impl StatechartEvent for UnitToggleEvent {
             const EVENT_COUNT: u16 = 1;
-            fn event_id(&self) -> EventId {
+            async fn event_id(&self) -> EventId {
                 EventId(0)
             }
-            fn event_name(_id: EventId) -> &'static str {
+            async fn event_name(_id: EventId) -> &'static str {
                 "Flip"
             }
         }
@@ -1812,14 +1812,14 @@ mod testing {
             type Output = ();
             type Effect = ();
             type Config = BitSet<1>;
-            fn definition() -> &'static MachineDefinition<Self> {
+            async fn definition() -> &'static MachineDefinition<Self> {
                 static DEF: MachineDefinition<UnitToggleMachine> =
                     MachineDefinition { id: "unit_toggle", nodes: NODES, transitions: TRANSITIONS, context_from_input: |_| UnitToggleContext::default(), make_output: None, guards: &[], actions: &[], fingerprint: 42, manifest_json: "{}" };
                 &DEF
             }
         }
 
-        pub fn unit_toggle_definition() -> &'static MachineDefinition<UnitToggleMachine> {
+        pub async fn unit_toggle_definition() -> &'static MachineDefinition<UnitToggleMachine> {
             UnitToggleMachine::definition()
         }
     }
@@ -1834,7 +1834,7 @@ mod testing {
         use super::super::testing::support::{UnitToggleEvent, UnitToggleMachine};
 
         #[test]
-        fn explore_reaches_both_toggle_states() {
+        async fn explore_reaches_both_toggle_states() {
             let model = Model::<UnitToggleMachine>::new(vec![UnitToggleEvent::Flip]);
             let coverage = explore(&model, ());
             assert!(coverage.reached_stable_ids.contains(&"off"));
@@ -1843,13 +1843,13 @@ mod testing {
         }
 
         #[test]
-        fn conformance_fixture_passes_for_matching_sequence() {
+        async fn conformance_fixture_passes_for_matching_sequence() {
             let steps = [ConformanceStep { event: UnitToggleEvent::Flip, expect_active: &["on"] }, ConformanceStep { event: UnitToggleEvent::Flip, expect_active: &["off"] }];
             assert!(run_conformance::<UnitToggleMachine>((), &steps).is_ok());
         }
 
         #[test]
-        fn conformance_fixture_fails_with_descriptive_message() {
+        async fn conformance_fixture_fails_with_descriptive_message() {
             let steps = [ConformanceStep { event: UnitToggleEvent::Flip, expect_active: &["off"] }];
             let err = run_conformance::<UnitToggleMachine>((), &steps).unwrap_err().to_string();
             assert!(err.contains("step 0"));
@@ -1857,7 +1857,7 @@ mod testing {
         }
 
         #[test]
-        fn invariant_reports_violation_by_name() {
+        async fn invariant_reports_violation_by_name() {
             let mut sink: Vec<Command<UnitToggleMachine>> = Vec::new();
             let snapshot = init::<UnitToggleMachine>((), &mut sink);
             let invariants = [Invariant { name: "never off", check: |s: &Snapshot<UnitToggleMachine>| if s.matches("off") { Err(FsmError::Violation("was off".to_string())) } else { Ok(()) } }];
@@ -1914,13 +1914,13 @@ pub struct BitSet<const W: usize> {
 
 impl<const W: usize> BitSet<W> {
     /// 🧮️ An empty bitset with no bits set.
-    pub const fn empty() -> Self {
+    pub async fn empty() -> Self {
         Self { words: [0u64; W] }
     }
 }
 
 impl<const W: usize> Default for BitSet<W> {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self::empty()
     }
 }
@@ -1932,17 +1932,17 @@ impl<const W: usize> Default for BitSet<W> {
 /// simultaneously-active states.
 pub trait Configuration: Clone + PartialEq + Default {
     /// ➕️ Marks `id` as part of the active configuration.
-    fn set(&mut self, id: NodeId);
+    async fn set(&mut self, id: NodeId);
     /// ➖️ Removes `id` from the active configuration.
-    fn clear(&mut self, id: NodeId);
+    async fn clear(&mut self, id: NodeId);
     /// ❓️ Whether `id` is part of the active configuration.
-    fn contains(&self, id: NodeId) -> bool;
+    async fn contains(&self, id: NodeId) -> bool;
     /// 🔁️ Iterates active `NodeId`s in ascending order.
-    fn iter_ones(&self) -> ConfigurationIter<'_, Self>;
+    async fn iter_ones(&self) -> ConfigurationIter<'_, Self>;
     /// 🧹️ Clears every bit.
-    fn clear_all(&mut self);
+    async fn clear_all(&mut self);
     /// ❓️ Whether no bit is set.
-    fn is_empty(&self) -> bool;
+    async fn is_empty(&self) -> bool;
 }
 
 /// 🔁️ Iterator over the active `NodeId`s of a [`Configuration`].
@@ -1956,7 +1956,7 @@ pub struct ConfigurationIter<'a, C: Configuration> {
 impl<'a, C: Configuration> Iterator for ConfigurationIter<'a, C> {
     type Item = NodeId;
 
-    fn next(&mut self) -> Option<NodeId> {
+    async fn next(&mut self) -> Option<NodeId> {
         loop {
             if self.current != 0 {
                 let bit = self.current.trailing_zeros();
@@ -1970,30 +1970,30 @@ impl<'a, C: Configuration> Iterator for ConfigurationIter<'a, C> {
 }
 
 impl<const W: usize> Configuration for BitSet<W> {
-    fn set(&mut self, id: NodeId) {
+    async fn set(&mut self, id: NodeId) {
         let (word, bit) = (id.0 as usize / 64, id.0 as usize % 64);
         self.words[word] |= 1u64 << bit;
     }
 
-    fn clear(&mut self, id: NodeId) {
+    async fn clear(&mut self, id: NodeId) {
         let (word, bit) = (id.0 as usize / 64, id.0 as usize % 64);
         self.words[word] &= !(1u64 << bit);
     }
 
-    fn contains(&self, id: NodeId) -> bool {
+    async fn contains(&self, id: NodeId) -> bool {
         let (word, bit) = (id.0 as usize / 64, id.0 as usize % 64);
         self.words[word] & (1u64 << bit) != 0
     }
 
-    fn iter_ones(&self) -> ConfigurationIter<'_, Self> {
+    async fn iter_ones(&self) -> ConfigurationIter<'_, Self> {
         ConfigurationIter { words: &self.words, word_index: 0, current: 0, _marker: core::marker::PhantomData }
     }
 
-    fn clear_all(&mut self) {
+    async fn clear_all(&mut self) {
         self.words = [0u64; W];
     }
 
-    fn is_empty(&self) -> bool {
+    async fn is_empty(&self) -> bool {
         self.words.iter().all(|w| *w == 0)
     }
 }
@@ -2009,9 +2009,9 @@ pub trait StatechartEvent: Clone {
     /// 🔢️ Number of distinct event variants.
     const EVENT_COUNT: u16;
     /// 🔢️ The dense id of this event's variant.
-    fn event_id(&self) -> EventId;
+    async fn event_id(&self) -> EventId;
     /// 🏷️ The variant's declared name, for diagnostics/inspection/manifest.
-    fn event_name(id: EventId) -> &'static str;
+    async fn event_name(id: EventId) -> &'static str;
 }
 
 /// 🎭️ A compiled statechart: consumer-owned types bound to a static [`MachineDefinition`].
@@ -2032,7 +2032,7 @@ pub trait Machine: Sized + 'static {
     type Config: Configuration;
 
     /// 📐️ The compiled static definition backing this machine.
-    fn definition() -> &'static MachineDefinition<Self>;
+    async fn definition() -> &'static MachineDefinition<Self>;
 }
 
 /// 🏷️ Struct-level field name/type metadata, embedded as JSON — feeds TypeScript
@@ -2085,22 +2085,22 @@ mod wasm_bridge {
 
     impl<M: Machine> WasmHost<M> {
         /// 🌐️ A fresh host with no effect callback registered yet.
-        pub fn new() -> Self {
+        pub async fn new() -> Self {
             Self { effect_callback: None, pending_timers: Vec::new(), started_tasks: Vec::new(), _marker: core::marker::PhantomData }
         }
 
         /// 🌐️ Registers the JS function invoked as `(actorId: number, effectJson: string) => void`.
-        pub fn set_effect_callback(&mut self, callback: js_sys::Function) {
+        pub async fn set_effect_callback(&mut self, callback: js_sys::Function) {
             self.effect_callback = Some(callback);
         }
 
         /// 🚀️ Tasks started via `invoke`, still pending cancellation.
-        pub fn started_tasks(&self) -> &[(ActorId, InvokeId)] {
+        pub async fn started_tasks(&self) -> &[(ActorId, InvokeId)] {
             &self.started_tasks
         }
 
         /// ⏱️ Removes and returns every timer whose deadline has passed, per `js_sys::Date::now()`.
-        pub fn due_timers(&mut self) -> Vec<(ActorId, TimerId)> {
+        pub async fn due_timers(&mut self) -> Vec<(ActorId, TimerId)> {
             let now = js_sys::Date::now();
             let mut due = Vec::new();
             self.pending_timers.retain(|(actor, timer, at)| {
@@ -2116,7 +2116,7 @@ mod wasm_bridge {
     }
 
     impl<M: Machine> Default for WasmHost<M> {
-        fn default() -> Self {
+        async fn default() -> Self {
             Self::new()
         }
     }
@@ -2125,7 +2125,7 @@ mod wasm_bridge {
     where
         M::Effect: serde::Serialize,
     {
-        fn execute_effect(&mut self, actor: ActorId, effect: M::Effect) {
+        async fn execute_effect(&mut self, actor: ActorId, effect: M::Effect) {
             if let Some(callback) = &self.effect_callback {
                 if let Ok(json) = serde_json::to_string(&effect) {
                     let _ = callback.call2(&wasm_bindgen::JsValue::NULL, &wasm_bindgen::JsValue::from_f64(actor.0 as f64), &wasm_bindgen::JsValue::from_str(&json));
@@ -2133,23 +2133,23 @@ mod wasm_bridge {
             }
         }
 
-        fn schedule(&mut self, actor: ActorId, timer: TimerId, delay_ms: u64) {
+        async fn schedule(&mut self, actor: ActorId, timer: TimerId, delay_ms: u64) {
             self.pending_timers.push((actor, timer, js_sys::Date::now() + delay_ms as f64));
         }
 
-        fn cancel_timer(&mut self, actor: ActorId, timer: TimerId) {
+        async fn cancel_timer(&mut self, actor: ActorId, timer: TimerId) {
             self.pending_timers.retain(|(a, t, _)| !(*a == actor && *t == timer));
         }
 
-        fn start_task(&mut self, actor: ActorId, invoke: InvokeId) {
+        async fn start_task(&mut self, actor: ActorId, invoke: InvokeId) {
             self.started_tasks.push((actor, invoke));
         }
 
-        fn cancel_task(&mut self, actor: ActorId, invoke: InvokeId) {
+        async fn cancel_task(&mut self, actor: ActorId, invoke: InvokeId) {
             self.started_tasks.retain(|(a, i)| !(*a == actor && *i == invoke));
         }
 
-        fn now_ms(&self) -> u64 {
+        async fn now_ms(&self) -> u64 {
             js_sys::Date::now() as u64
         }
     }
@@ -2166,7 +2166,7 @@ mod wasm_smoke {
     #[derive(Clone, Debug, Default, serde::Serialize, serde::Deserialize)]
     pub struct ToggleContext;
 
-    fn build_context(_input: ()) -> ToggleContext {
+    async fn build_context(_input: ()) -> ToggleContext {
         ToggleContext
     }
 
@@ -2200,7 +2200,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn bitset_set_clear_contains() {
+    async fn bitset_set_clear_contains() {
         let mut bits = BitSet::<1>::empty();
         assert!(!bits.contains(NodeId(3)));
         bits.set(NodeId(3));
@@ -2210,7 +2210,7 @@ mod tests {
     }
 
     #[test]
-    fn bitset_iter_ones_spans_words() {
+    async fn bitset_iter_ones_spans_words() {
         let mut bits = BitSet::<2>::empty();
         bits.set(NodeId(0));
         bits.set(NodeId(63));
@@ -2221,7 +2221,7 @@ mod tests {
     }
 
     #[test]
-    fn bitset_clear_all_and_is_empty() {
+    async fn bitset_clear_all_and_is_empty() {
         let mut bits = BitSet::<1>::empty();
         assert!(bits.is_empty());
         bits.set(NodeId(5));
@@ -2249,23 +2249,23 @@ mod checkout_integration {
         pub attempts: u32,
     }
 
-    fn build_context(_input: ()) -> CheckoutContext {
+    async fn build_context(_input: ()) -> CheckoutContext {
         CheckoutContext::default()
     }
 
-    fn allow_select(ctx: &CheckoutContext, _event: Option<&checkout::Event>) -> bool {
+    async fn allow_select(ctx: &CheckoutContext, _event: Option<&checkout::Event>) -> bool {
         ctx.attempts < 3
     }
 
-    fn set_method(ctx: &mut CheckoutContext, _event: Option<&checkout::Event>, _sink: &mut dyn CommandSink<checkout::Checkout>) {
+    async fn set_method(ctx: &mut CheckoutContext, _event: Option<&checkout::Event>, _sink: &mut dyn CommandSink<checkout::Checkout>) {
         ctx.method_set = true;
     }
 
-    fn note_timeout(ctx: &mut CheckoutContext, _event: Option<&checkout::Event>, _sink: &mut dyn CommandSink<checkout::Checkout>) {
+    async fn note_timeout(ctx: &mut CheckoutContext, _event: Option<&checkout::Event>, _sink: &mut dyn CommandSink<checkout::Checkout>) {
         ctx.attempts += 1;
     }
 
-    fn make_receipt(ctx: &CheckoutContext) -> Receipt {
+    async fn make_receipt(ctx: &CheckoutContext) -> Receipt {
         Receipt { attempts: ctx.attempts }
     }
 
@@ -2319,7 +2319,7 @@ mod checkout_integration {
     }
 
     #[test]
-    fn dsl_machine_walks_cart_to_receipt() {
+    async fn dsl_machine_walks_cart_to_receipt() {
         let mut system: ActorSystem<checkout::Checkout, TestHost<checkout::Checkout>> = ActorSystem::new(TestHost::new());
         let root = system.spawn_root(());
         assert!(system.snapshot(root).unwrap().matches("cart"));
@@ -2354,7 +2354,7 @@ mod checkout_integration {
     }
 
     #[test]
-    fn dsl_machine_cancel_resume_round_trips_via_shallow_history() {
+    async fn dsl_machine_cancel_resume_round_trips_via_shallow_history() {
         let mut sink: Vec<crate::Command<checkout::Checkout>> = Vec::new();
         let mut snapshot = crate::init::<checkout::Checkout>((), &mut sink);
         let mut inspector = TraceInspector::<checkout::Checkout>::default();
@@ -2390,7 +2390,7 @@ mod checkout_integration {
     }
 
     #[test]
-    fn dsl_machine_coverage_reaches_every_declared_state() {
+    async fn dsl_machine_coverage_reaches_every_declared_state() {
         let model = crate::Model::<checkout::Checkout>::new(vec![
             checkout::Event::Confirm,
             checkout::Event::SelectMethod,

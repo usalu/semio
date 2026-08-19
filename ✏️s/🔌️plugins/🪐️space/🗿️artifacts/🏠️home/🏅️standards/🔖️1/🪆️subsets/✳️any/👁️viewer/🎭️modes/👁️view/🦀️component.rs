@@ -10,12 +10,12 @@ pub const S_HOME_VIEW_MODE: &str = "view";
 
 //#region 🔖️Definition
 /// 🧱️ Stitched into the viewer manifest by `crate::viewer::home::create_home_viewer`.
-pub fn definition() -> ModeDefinition {
+pub async fn definition() -> ModeDefinition {
     ModeDefinition { id: S_HOME_VIEW_MODE.into(), label: LocalizedLabel::native("View", "Ansicht"), icon_id: "eye".into(), tools: Vec::new(), layout_id: None, commands: Vec::new() }
 }
 
 /// 🪟️ Single full-pane VFS window — the read-only viewer has no split layout to allocate.
-pub fn layout() -> WindowLayout {
+pub async fn layout() -> WindowLayout {
     WindowLayout {
         root: WindowLayoutRoot::Stack(WindowLayoutStackNode {
             kind: "stack".into(),
@@ -33,7 +33,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn the_view_layout_lists_the_main_window() {
+    async fn the_view_layout_lists_the_main_window() {
         let json = serde_json::to_string(&layout()).expect("layout json");
         assert!(json.contains(main::S_HOME_VIEW_WINDOW), "layout must reference the main window kind: {json}");
     }

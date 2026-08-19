@@ -25,7 +25,7 @@ pub struct PresentTopology {
 /// 🧮️ Computes [`PresentTopology`] from a present snapshot's persisted tile order (read through the
 /// working-scene accessor off the `presentation` child handle — see
 /// `crate::artifacts::present::present_working_scene`).
-pub fn compute_present_topology(snapshot: &PresentSnapshot) -> PresentTopology {
+pub async fn compute_present_topology(snapshot: &PresentSnapshot) -> PresentTopology {
     let (_, tiles) = crate::artifacts::present::present_working_scene(snapshot);
     let topo_order: Vec<String> = tiles.iter().map(|tile| tile.id.clone()).collect();
     let depth = topo_order.iter().enumerate().map(|(index, id)| (id.clone(), index as u32)).collect();
@@ -39,12 +39,12 @@ mod tests {
     use super::*;
     use crate::artifacts::present::{FigureTileDraft, FigureTileFrame};
 
-    fn tile(id: &str) -> FigureTileDraft {
+    async fn tile(id: &str) -> FigureTileDraft {
         FigureTileDraft { id: id.into(), name: id.into(), crop: FigureTileFrame { x: 0.0, y: 0.0, width: 1.0, height: 1.0 } }
     }
 
     #[test]
-    fn empty_tiles_is_the_vacuous_topology() {
+    async fn empty_tiles_is_the_vacuous_topology() {
         let snapshot = PresentSnapshot::default();
         let topology = compute_present_topology(&snapshot);
         assert!(topology.topo_order.is_empty());
@@ -54,7 +54,7 @@ mod tests {
     }
 
     #[test]
-    fn depth_matches_persisted_index() {
+    async fn depth_matches_persisted_index() {
         let (source, _) = crate::artifacts::present::present_working_scene(&PresentSnapshot::default());
         let snapshot = crate::artifacts::present::present_snapshot_with_tiles(&source, &[tile("a"), tile("b")]);
         let topology = compute_present_topology(&snapshot);

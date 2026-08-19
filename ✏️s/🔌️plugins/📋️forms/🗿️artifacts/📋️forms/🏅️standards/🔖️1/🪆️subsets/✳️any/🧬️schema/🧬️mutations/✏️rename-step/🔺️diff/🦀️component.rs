@@ -6,7 +6,7 @@ use crate::artifacts::forms::diff::text::forms_diff_from_delta;
 use crate::artifacts::forms::{forms_steps, FormsDiff, FormsSnapshot};
 
 //#region 🔖️Diff
-pub fn diff(payload: &RenameStep, base: &FormsSnapshot) -> protocol::MutationOutcome<FormsDiff> {
+pub async fn diff(payload: &RenameStep, base: &FormsSnapshot) -> protocol::MutationOutcome<FormsDiff> {
     let steps = forms_steps(base);
     let Some(existing) = steps.iter().find(|step| step.id == payload.id) else {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Step \"{}\" does not exist.", payload.id), [payload.id.clone()]);

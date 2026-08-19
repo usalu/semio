@@ -13,7 +13,7 @@ pub struct RenameArtifact {
     pub new_name: String,
 }
 
-pub fn handle(payload: &RenameArtifact, _doc: &ArtifactView<'_, SSpaceSnapshot>, _cfg: &ConfigView<'_, SpaceIndexConfig>) -> Result<Emit<SSpaceMutation, SpaceIndexConfigMutation>, Fault> {
+pub async fn handle(payload: &RenameArtifact, _doc: &ArtifactView<'_, SSpaceSnapshot>, _cfg: &ConfigView<'_, SpaceIndexConfig>) -> Result<Emit<SSpaceMutation, SpaceIndexConfigMutation>, Fault> {
     Ok(Emit::mutations(vec![rename_artifact(payload.id.clone(), payload.new_name.clone())]))
 }
 
@@ -26,7 +26,7 @@ mod tests {
     
 
     #[test]
-    fn rename_artifact_updates_the_name() {
+    async fn rename_artifact_updates_the_name() {
         let mut app = testkit::new_app();
         app.dispatch_typed(SpaceIndexCommand::CreateArtifact(create_artifact::CreateArtifact { name: "First".into(), kind_id: "draw".into(), now_ms: 1, actor: "user:1".into() }), &semio_framework_plugin::testkit::meta("local")).expect("create artifact");
         let id = app.snapshot().unwrap().artifacts[0].id.clone();

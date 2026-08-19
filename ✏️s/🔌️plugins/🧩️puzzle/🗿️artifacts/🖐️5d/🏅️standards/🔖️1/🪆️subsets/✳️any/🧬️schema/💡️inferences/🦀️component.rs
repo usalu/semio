@@ -33,19 +33,19 @@ pub struct Puzzle5dInference {
 }
 
 impl protocol::Inference<Puzzle5dSnapshot> for Puzzle5dInference {
-    fn infer(snapshot: &Puzzle5dSnapshot) -> Self {
+    async fn infer(snapshot: &Puzzle5dSnapshot) -> Self {
         Self { flat_positions: flatten_snapshot(snapshot).into_iter().collect() }
     }
 }
 
 impl protocol::InferenceSpec<Puzzle5dSnapshot> for Puzzle5dInference {
-    fn inference_schema_id() -> &'static str {
+    async fn inference_schema_id() -> &'static str {
         "s.puzzle.puzzle5d.inference"
     }
-    fn schema_version() -> u32 {
+    async fn schema_version() -> u32 {
         1
     }
-    fn fields() -> &'static [protocol::InferenceFieldSpec] {
+    async fn fields() -> &'static [protocol::InferenceFieldSpec] {
         &[protocol::InferenceFieldSpec { id: "s.puzzle.puzzle5d.inference.flatPosition", reads: &["parts", "fasteners"] }]
     }
 }
@@ -64,7 +64,7 @@ impl ArtifactInferrer for crate::artifacts::puzzle5d::standards::v1::subsets::an
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.puzzle.puzzle5d.inference`'s facet leaves into the OS-wide inference catalog —
 /// call once at plugin init, alongside `puzzle5d_artifact_schema_descriptor`'s registration.
-pub fn puzzle5d_artifact_inference_descriptor() -> artifact_schema::ArtifactInferenceDescriptor {
+pub async fn puzzle5d_artifact_inference_descriptor() -> artifact_schema::ArtifactInferenceDescriptor {
     artifact_schema::ArtifactInferenceDescriptor {
         id: "s.puzzle.puzzle5d.inference",
         inference: artifact_schema::FacetLeaves {
@@ -86,7 +86,7 @@ mod tests {
     use protocol::Inference;
 
     //#region 🧸️Fixtures
-    fn chain_snapshot() -> Puzzle5dSnapshot {
+    async fn chain_snapshot() -> Puzzle5dSnapshot {
         // p -f- c: a 2-part chain — same shape as puzzle3d's own inference fixture, kept
         // independent per-file per this repo's inline-fixture convention.
         let parent = Puzzle5dPart {
@@ -112,18 +112,18 @@ mod tests {
 
     //#region 🧪️InferenceLaws
     #[test]
-    fn inference_determinism_law() {
+    async fn inference_determinism_law() {
         let snapshot = chain_snapshot();
         assert_eq!(Puzzle5dInference::infer(&snapshot), Puzzle5dInference::infer(&snapshot));
     }
 
     #[test]
-    fn inference_default_law() {
+    async fn inference_default_law() {
         assert_eq!(Puzzle5dInference::infer(&Puzzle5dSnapshot::default()), Puzzle5dInference::default());
     }
 
     #[test]
-    fn inference_matches_flatten_snapshot_directly() {
+    async fn inference_matches_flatten_snapshot_directly() {
         let snapshot = chain_snapshot();
         let inferred = Puzzle5dInference::infer(&snapshot);
         let direct = flatten_snapshot(&snapshot);

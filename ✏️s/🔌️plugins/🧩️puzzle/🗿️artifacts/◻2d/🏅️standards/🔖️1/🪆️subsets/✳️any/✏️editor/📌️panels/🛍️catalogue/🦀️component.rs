@@ -18,7 +18,7 @@ const PUZZLE2D_CATALOGUE_DRAG_MIME: &str = "application/x-semio-catalogue-item";
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
-pub fn definition() -> PanelTabDefinition {
+pub async fn definition() -> PanelTabDefinition {
     PanelTabDefinition {
         kind: PanelTabKind::App(FRAMEWORK_PANEL_TAB_CATALOGUE_ID.into()),
         label: LocalizedLabel::native(FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, "Katalog"),
@@ -30,11 +30,11 @@ pub fn definition() -> PanelTabDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-fn catalog_kind_label(entry: &Value) -> String {
+async fn catalog_kind_label(entry: &Value) -> String {
     entry.get("name").and_then(|value| value.as_str()).filter(|value| !value.is_empty()).or_else(|| entry.get("id").and_then(|value| value.as_str())).unwrap_or("kind").into()
 }
 
-fn puzzle2d_catalog_item_drag_data(slice: &str, kind_id: &str, entry: &Value) -> HashMap<String, String> {
+async fn puzzle2d_catalog_item_drag_data(slice: &str, kind_id: &str, entry: &Value) -> HashMap<String, String> {
     let mut payload = json!({ "kindId": kind_id, "catalogSlice": slice });
     if let Some(obj) = payload.as_object_mut() {
         if let Some(shape) = entry.get("shape") {
@@ -56,7 +56,7 @@ fn puzzle2d_catalog_item_drag_data(slice: &str, kind_id: &str, entry: &Value) ->
     HashMap::from([(PUZZLE2D_CATALOGUE_DRAG_MIME.to_string(), payload.to_string())])
 }
 
-fn kind_catalog_section(section_id: &str, slice: &str, label: impl Into<Label>, entries: &[Value], labels: &Puzzle2dLabels) -> UiTreeSectionNode {
+async fn kind_catalog_section(section_id: &str, slice: &str, label: impl Into<Label>, entries: &[Value], labels: &Puzzle2dLabels) -> UiTreeSectionNode {
     let items: Vec<UiTreeItemNode> = entries
         .iter()
         .enumerate()
@@ -84,7 +84,7 @@ fn kind_catalog_section(section_id: &str, slice: &str, label: impl Into<Label>, 
     UiTreeSectionNode { presence: UiPresence::default(), id: section_id.into(), label: Some(label.into()), default_open: Some(true), items: if items.is_empty() { vec![tree_item(format!("{section_id}.empty"), labels.none)] } else { items } }
 }
 
-pub fn render(fixture: &Value, labels: &Puzzle2dLabels) -> UiNode {
+pub async fn render(fixture: &Value, labels: &Puzzle2dLabels) -> UiNode {
     let inferred_nodes = inferred_kind_entries(fixture, "nodes");
     let inferred_handles = inferred_kind_entries(fixture, "handles");
     let inferred_edges = inferred_kind_entries(fixture, "edges");

@@ -16,11 +16,11 @@ pub mod derived_composition {
         type Snapshot = ZipSnapshot;
         const WRITES: Dialect = DIALECT;
 
-        fn reads() -> &'static [Dialect] {
+        async fn reads() -> &'static [Dialect] {
             &[DIALECT, DEP_BINARY, DEP_DEFLATE]
         }
 
-        fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+        async fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
             // 🌱 Every listed read dialect's payload is raw text/bytes that this artifact's own
             // analyzer already round-trips through `store::Document{Dsl,Pack}` -- including bytes
             // claiming a dependency's dialect, since (for a single-standard DAG-adjacent dependency
@@ -64,7 +64,7 @@ enum NativeCompressionMethod {
 }
 
 impl NativeCompressionMethod {
-    fn from_code(code: u16) -> Option<Self> {
+    async fn from_code(code: u16) -> Option<Self> {
         match code {
             0 => Some(Self::Stored),
             8 => Some(Self::Deflate),
@@ -74,7 +74,7 @@ impl NativeCompressionMethod {
 }
 
 //#region CRC32
-fn crc32_table() -> [u32; 256] {
+async fn crc32_table() -> [u32; 256] {
     let mut table = [0u32; 256];
     for i in 0..256u32 {
         let mut c = i;
@@ -91,7 +91,7 @@ fn crc32_table() -> [u32; 256] {
 }
 
 /// 🧮 CRC-32 (ISO-HDLC / ZIP).
-pub fn crc32(data: &[u8]) -> u32 {
+pub async fn crc32(data: &[u8]) -> u32 {
     let table = crc32_table();
     let mut c = 0xFFFFFFFFu32;
     for &b in data {
@@ -121,7 +121,7 @@ pub enum ZipError {
 }
 
 impl std::fmt::Display for ZipError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    async fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::Truncated(what) => write!(f, "zip: truncated ({what})"),
             Self::BadSignature { what, at } => write!(f, "zip: bad {what} signature at offset {at}"),
@@ -146,30 +146,30 @@ impl std::error::Error for ZipError {}
 //#endregion Error
 
 //#region ByteReaders
-fn u16_le(n: u16) -> [u8; 2] {
+async fn u16_le(n: u16) -> [u8; 2] {
     n.to_le_bytes()
 }
-fn u32_le(n: u32) -> [u8; 4] {
+async fn u32_le(n: u32) -> [u8; 4] {
     n.to_le_bytes()
 }
 #[cfg(test)]
-fn u64_le(n: u64) -> [u8; 8] {
+async fn u64_le(n: u64) -> [u8; 8] {
     n.to_le_bytes()
 }
 
-fn read_u16(data: &[u8], off: usize) -> Result<u16, ZipError> {
+async fn read_u16(data: &[u8], off: usize) -> Result<u16, ZipError> {
     if off + 2 > data.len() {
         return Err(ZipError::Truncated("u16 field"));
     }
     Ok(u16::from_le_bytes([data[off], data[off + 1]]))
 }
-fn read_u32(data: &[u8], off: usize) -> Result<u32, ZipError> {
+async fn read_u32(data: &[u8], off: usize) -> Result<u32, ZipError> {
     if off + 4 > data.len() {
         return Err(ZipError::Truncated("u32 field"));
     }
     Ok(u32::from_le_bytes([data[off], data[off + 1], data[off + 2], data[off + 3]]))
 }
-fn read_u64(data: &[u8], off: usize) -> Result<u64, ZipError> {
+async fn read_u64(data: &[u8], off: usize) -> Result<u64, ZipError> {
     if off + 8 > data.len() {
         return Err(ZipError::Truncated("u64 field"));
     }
@@ -189,12 +189,12 @@ const CP437_HIGH: [char; 128] = [
     'Γ', 'π', 'Σ', 'σ', 'µ', 'τ', 'Φ', 'Θ', 'Ω', 'δ', '∞', 'φ', 'ε', '∩', '≡', '±', '≥', '≤', '⌠', '⌡', '÷', '≈', '°', '∙', '·', '√', 'ⁿ', '²', '■', '\u{00a0}',
 ];
 
-fn cp437_decode(bytes: &[u8]) -> String {
+async fn cp437_decode(bytes: &[u8]) -> String {
     bytes.iter().map(|&b| if b < 0x80 { b as char } else { CP437_HIGH[(b - 0x80) as usize] }).collect()
 }
 
 /// 🔤️ Decodes a filename/comment field per general-purpose bit 11: UTF-8 when set, CP437 otherwise.
-fn decode_zip_text(bytes: &[u8], utf8: bool, what: &'static str) -> Result<String, ZipError> {
+async fn decode_zip_text(bytes: &[u8], utf8: bool, what: &'static str) -> Result<String, ZipError> {
     if utf8 {
         String::from_utf8(bytes.to_vec()).map_err(|_| ZipError::Utf8 { what, name_hint: cp437_decode(bytes) })
     } else {
@@ -204,7 +204,7 @@ fn decode_zip_text(bytes: &[u8], utf8: bool, what: &'static str) -> Result<Strin
 
 /// 🔤️ Best-effort archive-comment decode (EOCD comment has no per-record encoding flag):
 /// valid UTF-8 first, CP437 fallback otherwise.
-fn decode_best_effort_text(bytes: &[u8]) -> String {
+async fn decode_best_effort_text(bytes: &[u8]) -> String {
     String::from_utf8(bytes.to_vec()).unwrap_or_else(|_| cp437_decode(bytes))
 }
 
@@ -220,7 +220,7 @@ struct ParsedExtraField {
     payload: Vec<u8>,
 }
 
-fn parse_extra_fields(bytes: &[u8]) -> Result<Vec<ParsedExtraField>, ZipError> {
+async fn parse_extra_fields(bytes: &[u8]) -> Result<Vec<ParsedExtraField>, ZipError> {
     let mut out = Vec::new();
     let mut i = 0usize;
     while i + 4 <= bytes.len() {
@@ -240,7 +240,7 @@ fn parse_extra_fields(bytes: &[u8]) -> Result<Vec<ParsedExtraField>, ZipError> {
     Ok(out)
 }
 
-fn canonical_local_extra(entry: &ZipEntry) -> Vec<u8> {
+async fn canonical_local_extra(entry: &ZipEntry) -> Vec<u8> {
     let (size, discriminator) = match entry.name.as_str() {
         "[Content_Types].xml" | "_rels/.rels" => (516usize, 2u8),
         "ppt/_rels/presentation.xml.rels" | "docProps/core.xml" | "docProps/app.xml" => (260usize, 1u8),
@@ -255,7 +255,7 @@ fn canonical_local_extra(entry: &ZipEntry) -> Vec<u8> {
     out
 }
 
-fn canonical_compression_method(entry: &ZipEntry) -> NativeCompressionMethod {
+async fn canonical_compression_method(entry: &ZipEntry) -> NativeCompressionMethod {
     let lower = entry.name.to_ascii_lowercase();
     if [".png", ".jpg", ".jpeg"].iter().any(|extension| lower.ends_with(extension)) {
         NativeCompressionMethod::Stored
@@ -274,7 +274,7 @@ struct Zip64Fields {
     disk_start: Option<u32>,
 }
 
-fn parse_zip64_extra(fields: &[ParsedExtraField], need_uncomp: bool, need_comp: bool, need_offset: bool, need_disk: bool) -> Result<Zip64Fields, ZipError> {
+async fn parse_zip64_extra(fields: &[ParsedExtraField], need_uncomp: bool, need_comp: bool, need_offset: bool, need_disk: bool) -> Result<Zip64Fields, ZipError> {
     if !(need_uncomp || need_comp || need_offset || need_disk) {
         return Ok(Zip64Fields { uncomp_size: None, comp_size: None, local_offset: None, disk_start: None });
     }
@@ -313,7 +313,7 @@ pub struct ZipCentralEntryHeader {
 /// 🔎 Walks the central directory and returns per-entry general-purpose flags and version-needed
 /// values. Does not decompress payloads — only enough structure to validate ISO/IEC 21320-1 header
 /// policy against wire bytes.
-pub fn inspect_zip_central_entry_headers(data: &[u8]) -> Result<Vec<ZipCentralEntryHeader>, ZipError> {
+pub async fn inspect_zip_central_entry_headers(data: &[u8]) -> Result<Vec<ZipCentralEntryHeader>, ZipError> {
     let eocd = find_eocd(data)?;
     let loc = resolve_central_directory(data, eocd)?;
     if loc.cd_offset + loc.cd_size > data.len() {
@@ -355,7 +355,7 @@ const SIG_EOCD64_LOCATOR: u32 = 0x0706_4b50;
 const SIG_EOCD64_RECORD: u32 = 0x0606_4b50;
 const SIG_DATA_DESCRIPTOR: u32 = 0x0807_4b50;
 
-fn find_eocd(data: &[u8]) -> Result<usize, ZipError> {
+async fn find_eocd(data: &[u8]) -> Result<usize, ZipError> {
     if data.len() < 22 {
         return Err(ZipError::Truncated("archive shorter than a bare EOCD record"));
     }
@@ -378,7 +378,7 @@ struct CentralDirLocation {
     comment: String,
 }
 
-fn resolve_central_directory(data: &[u8], eocd: usize) -> Result<CentralDirLocation, ZipError> {
+async fn resolve_central_directory(data: &[u8], eocd: usize) -> Result<CentralDirLocation, ZipError> {
     let count16 = read_u16(data, eocd + 10)?;
     let cd_size32 = read_u32(data, eocd + 12)?;
     let cd_offset32 = read_u32(data, eocd + 16)?;
@@ -413,7 +413,7 @@ fn resolve_central_directory(data: &[u8], eocd: usize) -> Result<CentralDirLocat
 
 //#region Decode
 /// 🎒️ Decode ZIP container bytes into a name-keyed logical `ZipSnapshot`.
-pub fn decode_zip(data: &[u8]) -> Result<ZipSnapshot, ZipError> {
+pub async fn decode_zip(data: &[u8]) -> Result<ZipSnapshot, ZipError> {
     let eocd = find_eocd(data)?;
     let loc = resolve_central_directory(data, eocd)?;
     if loc.cd_offset + loc.cd_size > data.len() {
@@ -547,13 +547,13 @@ pub fn decode_zip(data: &[u8]) -> Result<ZipSnapshot, ZipError> {
 /// 🎒️ Deterministically materializes logical members as local headers, central directory, and EOCD.
 /// Compression, flags, timestamps, versions, attributes, member order, and growth hints are fixed
 /// writer policy rather than imported snapshot state. ZIP64 overflow is rejected explicitly.
-pub fn encode_zip(snapshot: &ZipSnapshot) -> Result<Vec<u8>, ZipError> {
+pub async fn encode_zip(snapshot: &ZipSnapshot) -> Result<Vec<u8>, ZipError> {
     let mut ordered: Vec<&ZipEntry> = snapshot.entries.iter().collect();
     ordered.sort_by(|left, right| left.name.cmp(&right.name));
     encode_zip_ordered(snapshot, ordered)
 }
 
-pub(crate) fn encode_zip_with_entry_names(snapshot: &ZipSnapshot, names: &[String]) -> Result<Vec<u8>, ZipError> {
+pub(crate) async fn encode_zip_with_entry_names(snapshot: &ZipSnapshot, names: &[String]) -> Result<Vec<u8>, ZipError> {
     if names.len() != snapshot.entries.len() {
         return Err(ZipError::Malformed("derived entry order does not cover every logical member".into()));
     }
@@ -569,7 +569,7 @@ pub(crate) fn encode_zip_with_entry_names(snapshot: &ZipSnapshot, names: &[Strin
     encode_zip_ordered(snapshot, ordered)
 }
 
-fn encode_zip_ordered(snapshot: &ZipSnapshot, ordered: Vec<&ZipEntry>) -> Result<Vec<u8>, ZipError> {
+async fn encode_zip_ordered(snapshot: &ZipSnapshot, ordered: Vec<&ZipEntry>) -> Result<Vec<u8>, ZipError> {
     if snapshot.entries.len() > 0xFFFF {
         return Err(ZipError::UnsupportedZip64Write);
     }
@@ -700,7 +700,7 @@ pub enum SniffConfidence {
 /// 🕵️ Structural sniff: recognizes ZIP local-file-header (`PK\x03\x04`), empty-archive EOCD
 /// (`PK\x05\x06`), and spanned-archive (`PK\x07\x08`) magics, corroborated by actually finding
 /// a well-formed EOCD record — never a constant, always a function of `data`.
-pub fn sniff_zip_bytes(data: &[u8]) -> SniffConfidence {
+pub async fn sniff_zip_bytes(data: &[u8]) -> SniffConfidence {
     if data.len() < 4 {
         return SniffConfidence::Low;
     }
@@ -738,7 +738,7 @@ mod codec_tests {
         force_zip64_sentinel: bool,
     }
 
-    fn build_raw_zip(entries: Vec<RawZipEntry>, archive_comment: &[u8]) -> Vec<u8> {
+    async fn build_raw_zip(entries: Vec<RawZipEntry>, archive_comment: &[u8]) -> Vec<u8> {
         let mut locals = Vec::new();
         let mut central = Vec::new();
         for e in &entries {
@@ -839,13 +839,13 @@ mod codec_tests {
     //#endregion Fixtures
 
     #[test]
-    fn crc32_known_vector() {
+    async fn crc32_known_vector() {
         // CRC of "123456789" is 0xCBF43926
         assert_eq!(crc32(b"123456789"), 0xCBF4_3926);
     }
 
     #[test]
-    fn zip_store_round_trip() {
+    async fn zip_store_round_trip() {
         let snap = ZipSnapshot {
             schema: STDIO_ZIP_DOCUMENT_SCHEMA.into(),
             entries: vec![ZipEntry { name: "a.txt".into(), data: b"hello".to_vec(), ..Default::default() }, ZipEntry { name: "b/bin.dat".into(), data: vec![0, 1, 2, 3, 255], ..Default::default() }],
@@ -860,7 +860,7 @@ mod codec_tests {
     }
 
     #[test]
-    fn zip_deflate_round_trip() {
+    async fn zip_deflate_round_trip() {
         let snap = ZipSnapshot { schema: STDIO_ZIP_DOCUMENT_SCHEMA.into(), entries: vec![ZipEntry { name: "poem.txt".into(), data: b"deflate inside zip via stdio.deflate raw".to_vec() }], comment: String::new() };
         let bytes = encode_zip(&snap).expect("encode deflate");
         let decoded = decode_zip(&bytes).expect("decode deflate");
@@ -868,7 +868,7 @@ mod codec_tests {
     }
 
     #[test]
-    fn codec_round_trip() {
+    async fn codec_round_trip() {
         let snap = ZipSnapshot { schema: STDIO_ZIP_DOCUMENT_SCHEMA.into(), entries: vec![ZipEntry { name: "x".into(), data: b"y".to_vec(), ..Default::default() }], comment: String::new() };
         let pack = store::ArtifactPack::encode_pack(&snap);
         let decoded = <ZipSnapshot as store::ArtifactPack>::decode_pack(&pack).expect("decode");
@@ -884,7 +884,7 @@ mod codec_tests {
     /// data-descriptor entry, a ZIP64-sentineled entry, an unrecognized extra field kept
     /// verbatim, per-entry + archive comments. Exercises every D2 zip requirement at once.
     #[test]
-    fn decode_rich_synthetic_archive() {
+    async fn decode_rich_synthetic_archive() {
         let raw = build_raw_zip(
             vec![
                 RawZipEntry {
@@ -968,7 +968,7 @@ mod codec_tests {
     }
 
     #[test]
-    fn decode_rejects_unsupported_method() {
+    async fn decode_rejects_unsupported_method() {
         let raw = build_raw_zip(
             vec![RawZipEntry {
                 name: b"bzip2.bin".to_vec(),
@@ -993,7 +993,7 @@ mod codec_tests {
     }
 
     #[test]
-    fn decode_rejects_crc_mismatch() {
+    async fn decode_rejects_crc_mismatch() {
         let mut raw = build_raw_zip(vec![RawZipEntry { name: b"a.txt".to_vec(), data: b"original".to_vec(), method: 0, flags: 0x0800, extra: Vec::new(), comment: Vec::new(), use_descriptor: false, force_zip64_sentinel: false }], b"");
         // Corrupt the stored payload byte in place (after the 30-byte local header + name).
         let payload_offset = 30 + "a.txt".len();
@@ -1003,7 +1003,7 @@ mod codec_tests {
     }
 
     #[test]
-    fn deterministic_logical_round_trip() {
+    async fn deterministic_logical_round_trip() {
         use crate::artifacts::zip::{ZipDiff, ZipMutation};
         use protocol::{DiffAlgebra, DiffCodec, MutationDiff, OpBinary, OpText};
         use semio_framework_plugin::{AnalyzeSource, ArtifactAnalysis, ArtifactComposition, ComposeSource};
@@ -1061,7 +1061,7 @@ mod codec_tests {
     }
 
     #[test]
-    fn encode_rejects_would_be_zip64_entry_size() {
+    async fn encode_rejects_would_be_zip64_entry_size() {
         // Rather than allocate a real 4GiB buffer, exercise the guard directly: an entry whose
         // *compressed* size would exceed u32::MAX must be rejected, never silently truncated.
         // We simulate this cheaply by checking the guard logic's boundary via a crafted deflate
@@ -1078,7 +1078,7 @@ mod codec_tests {
     }
 
     #[test]
-    fn sniff_recognizes_real_magic_and_rejects_garbage() {
+    async fn sniff_recognizes_real_magic_and_rejects_garbage() {
         let snap = ZipSnapshot { schema: STDIO_ZIP_DOCUMENT_SCHEMA.into(), entries: vec![ZipEntry { name: "a".into(), data: b"b".to_vec(), ..Default::default() }], comment: String::new() };
         let real = encode_zip(&snap).expect("encode");
         assert_eq!(sniff_zip_bytes(&real), SniffConfidence::High);
@@ -1109,7 +1109,7 @@ pub mod io_registry {
 
     static ENTRIES: OnceLock<Vec<ComposerEntry>> = OnceLock::new();
 
-    pub fn entries() -> &'static [ComposerEntry] {
+    pub async fn entries() -> &'static [ComposerEntry] {
         ENTRIES.get_or_init(|| vec![composer_entry_of::<ZipRawAnyComposer>(), composer_entry_of::<ZipIso21320Composer>()]).as_slice()
     }
 }

@@ -57,7 +57,7 @@ mod tests {
     use super::*;
     use crate::artifacts::mp4::standards::isobmff::subsets::any::schema::snapshot::{Mp4Codec, Mp4Ftyp, Mp4Sample, Mp4Track};
 
-    fn real_world_mp4() -> Mp4Snapshot {
+    async fn real_world_mp4() -> Mp4Snapshot {
         Mp4Snapshot {
             schema: "stdio.mp4".into(),
             ftyp: Mp4Ftyp { major_brand: "isom".into(), minor_version: 0, compatible_brands: vec![] },
@@ -76,7 +76,7 @@ mod tests {
     }
 
     #[test]
-    fn deserialize_exposes_real_sample_timing_as_a_step_scalar_channel() {
+    async fn deserialize_exposes_real_sample_timing_as_a_step_scalar_channel() {
         let anim = semio_framework_plugin::resolve_ready(SemioAnimationFromMp4::deserialize(&real_world_mp4())).expect("deserialize");
         assert_eq!(anim.timelines.len(), 1);
         assert_eq!(anim.timelines[0].name.as_deref(), Some("track-1"));

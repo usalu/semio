@@ -9,17 +9,17 @@ impl GltfInferenceLeaf for GltfAxisAlignedBoundsInference {
     const DESCRIPTOR: GltfInferenceLeafDescriptor =
         GltfInferenceLeafDescriptor { id: "s.stdio.gltf.inference.axis-aligned-bounds.v1", algorithm_version: 1, cache_key: "s.stdio.gltf.inference.axis-aligned-bounds.v1:geometry-v2", reads: GLTF_GEOMETRY_READS };
 }
-pub fn descriptor() -> GltfInferenceLeafDescriptor {
+pub async fn descriptor() -> GltfInferenceLeafDescriptor {
     GltfAxisAlignedBoundsInference::DESCRIPTOR
 }
-pub(crate) fn infer(context: &GltfGeometryContext<'_>) -> GltfMeasure<GltfBounds3> {
+pub(crate) async fn infer(context: &GltfGeometryContext<'_>) -> GltfMeasure<GltfBounds3> {
     exact(context.bounds.clone(), GltfUnit::Metre, context.sample_count, Some(context.topology))
 }
-pub fn unavailable_measure(ids: &[String]) -> GltfMeasure<GltfBounds3> {
+pub async fn unavailable_measure(ids: &[String]) -> GltfMeasure<GltfBounds3> {
     unavailable(GltfUnit::Metre, GltfAvailability::Unavailable, ids.to_vec(), 0, None)
 }
 
-pub fn encode_result(indicators: &GltfEntityIndicators) -> Result<serde_json::Value, serde_json::Error> {
+pub async fn encode_result(indicators: &GltfEntityIndicators) -> Result<serde_json::Value, serde_json::Error> {
     serde_json::to_value(&indicators.size.axis_aligned_bounds)
 }
 #[cfg(test)]
@@ -40,7 +40,7 @@ mod canonical_vectors {
         vectors: Vec<Vector>,
     }
     #[test]
-    fn shared_analytic_unavailable_and_deterministic_bounds_vectors_are_typed() {
+    async fn shared_analytic_unavailable_and_deterministic_bounds_vectors_are_typed() {
         let contract: Contract = serde_json::from_str(include_str!("🧪️contract/🔣️component.json")).unwrap();
         assert_eq!(contract.vectors[0].value.as_ref().unwrap().dimensions, [3.0, 4.0, 5.0]);
         assert_eq!(contract.vectors[0].value.as_ref().unwrap().min, [1.0, 2.0, 3.0]);

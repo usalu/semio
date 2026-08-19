@@ -15,7 +15,7 @@ pub use crate::artifacts::mathematical::schema::diff::*;
 //#region 🔖️Apply
 impl MathematicalDiff {
     /// 🧬️ Applies every sparse entry (all state classes) onto a full artifact.
-    pub fn apply_to_artifact(&self, artifact: &MathematicalArtifact) -> protocol::MutationApplyResult<MathematicalArtifact> {
+    pub async fn apply_to_artifact(&self, artifact: &MathematicalArtifact) -> protocol::MutationApplyResult<MathematicalArtifact> {
         Ok({
             let mut next = artifact.clone();
             if let Some(notation) = &self.notation {
@@ -48,7 +48,7 @@ impl MathematicalDiff {
 }
 
 impl MutationDiff<MathematicalSnapshot> for MathematicalDiff {
-    fn apply(&self, snapshot: &MathematicalSnapshot) -> protocol::MutationApplyResult<MathematicalSnapshot> {
+    async fn apply(&self, snapshot: &MathematicalSnapshot) -> protocol::MutationApplyResult<MathematicalSnapshot> {
         Ok({
             let mut next = snapshot.clone();
             if let Some(notation) = &self.notation {
@@ -66,7 +66,7 @@ impl MutationDiff<MathematicalSnapshot> for MathematicalDiff {
             next
         })
     }
-    fn absorb(&mut self, other: Self) {
+    async fn absorb(&mut self, other: Self) {
         if other.notation.is_some() {
             self.notation = other.notation;
         }
@@ -103,7 +103,7 @@ impl MutationDiff<MathematicalSnapshot> for MathematicalDiff {
 /// geometry-scoped mutation always regenerates all three co-derived children together (text/table/
 /// value are three projections of the SAME `(graph, geometry)` state, not independently-editable
 /// slots).
-pub fn diff_from_state(graph: MathematicalGraph, geometry: MathematicalGeometry) -> MathematicalDiff {
+pub async fn diff_from_state(graph: MathematicalGraph, geometry: MathematicalGeometry) -> MathematicalDiff {
     let (notation, results, computed) = mathematical_children_from_state(&graph, &geometry);
     MathematicalDiff { notation: Some(notation), results: Some(results), computed: Some(computed), ..Default::default() }
 }
@@ -115,7 +115,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn diff_from_state_round_trips_through_apply() {
+    async fn diff_from_state_round_trips_through_apply() {
         // 🔎️ `notation`/`results`/`computed` are three co-derived projections of the SAME
         // `(graph, geometry)` pair — a graph-scoped change regenerates all three handles, unlike the
         // old per-slot ("graph slot only") isolation this test named before the migration.
@@ -130,7 +130,7 @@ mod tests {
     }
 
     #[test]
-    fn absorb_prefers_the_incoming_slots_when_present() {
+    async fn absorb_prefers_the_incoming_slots_when_present() {
         let (notation_a, _, _) = mathematical_children_from_state(&MathematicalGraph::default(), &MathematicalGeometry::default());
         let mut first = MathematicalDiff { notation: Some(notation_a), ..Default::default() };
         let (_, results_b, _) = mathematical_children_from_state(&MathematicalGraph::default(), &MathematicalGeometry { points: Vec::new() });

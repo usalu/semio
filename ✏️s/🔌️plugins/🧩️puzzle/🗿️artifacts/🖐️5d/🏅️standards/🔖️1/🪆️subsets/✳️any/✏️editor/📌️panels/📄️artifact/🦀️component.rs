@@ -12,7 +12,7 @@ pub const BODY_KEY: &str = "puzzle.5d.play.document";
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
-pub fn definition() -> PanelTabDefinition {
+pub async fn definition() -> PanelTabDefinition {
     PanelTabDefinition {
         kind: PanelTabKind::App(FRAMEWORK_PANEL_TAB_ARTIFACT_ID.into()),
         label: LocalizedLabel::native(FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL, "Dokument"),
@@ -25,14 +25,14 @@ pub fn definition() -> PanelTabDefinition {
 
 //#region 🔖️Rows
 /// 🏷️ A part's display label: its flat text, else its volume label, else its kind.
-pub fn part_label(part: &Puzzle5dPart) -> String {
+pub async fn part_label(part: &Puzzle5dPart) -> String {
     if !part.part_2d.text.is_empty() {
         return part.part_2d.text.clone();
     }
     part.part_3d.label.clone().unwrap_or_else(|| part.part_kind.clone())
 }
 
-fn fastener_label(document: &Puzzle5dDocument, fastener: &Puzzle5dFastener) -> String {
+async fn fastener_label(document: &Puzzle5dDocument, fastener: &Puzzle5dFastener) -> String {
     let side = |full_id: &str| find_part_by_grip_full_id(document, full_id).map_or_else(|| full_id.to_string(), |(part, _)| part_label(part));
     format!("{} → {}", side(&fastener.source), side(&fastener.target))
 }
@@ -40,7 +40,7 @@ fn fastener_label(document: &Puzzle5dDocument, fastener: &Puzzle5dFastener) -> S
 //#endregion 🔖️Rows
 
 //#region 🔖️Render
-pub fn render(envelope: &Puzzle5dScene, labels: &Puzzle5dLabels) -> UiNode {
+pub async fn render(envelope: &Puzzle5dScene, labels: &Puzzle5dLabels) -> UiNode {
     let part_items: Vec<UiTreeItemNode> = envelope
         .document
         .parts
@@ -95,7 +95,7 @@ mod tests {
     use crate::editor::puzzle5d::testkit::*;
 
     #[test]
-    fn document_tree_lists_the_seeded_parts_section() {
+    async fn document_tree_lists_the_seeded_parts_section() {
         let mut app = app();
         assert!(render_body(&mut app, BODY_KEY).contains("puzzle5d-play-document.parts"));
     }

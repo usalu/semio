@@ -58,7 +58,7 @@ pub enum SemioAudioMutation {
 //#region 🔖️Apply
 /// ▶️ Applies `mutation` to `snapshot`. Out-of-range channel/tag indices are no-ops rather than
 /// panics — a stale index (e.g. from a concurrent edit) degrades gracefully.
-pub fn apply_semio_audio_mutation(snapshot: &mut SemioAudioSnapshot, mutation: &SemioAudioMutation) -> protocol::MutationOutcome<SemioAudioDiff> {
+pub async fn apply_semio_audio_mutation(snapshot: &mut SemioAudioSnapshot, mutation: &SemioAudioMutation) -> protocol::MutationOutcome<SemioAudioDiff> {
     let outcome = <SemioAudioMutation as Mutation<SemioAudioSnapshot>>::diff(mutation, snapshot);
     outcome.apply_to(snapshot)
 }
@@ -68,7 +68,7 @@ pub fn apply_semio_audio_mutation(snapshot: &mut SemioAudioSnapshot, mutation: &
 impl Mutation<SemioAudioSnapshot> for SemioAudioMutation {
     type Diff = SemioAudioDiff;
 
-    fn diff(&self, base: &SemioAudioSnapshot) -> protocol::MutationOutcome<Self::Diff> {
+    async fn diff(&self, base: &SemioAudioSnapshot) -> protocol::MutationOutcome<Self::Diff> {
         protocol::MutationOutcome::new(match self {
             SemioAudioMutation::NoMutation => SemioAudioDiff::default(),
             SemioAudioMutation::SetSnapshot { snapshot } => diff::diff_set_snapshot(base, snapshot),
@@ -93,7 +93,7 @@ impl Mutation<SemioAudioSnapshot> for SemioAudioMutation {
 
     /// ↩️ Real, round-trippable inverses: `apply(inverse(m, base), apply(m, base)) == base` for
     /// every variant, including the channel/tag-index ops.
-    fn inverse(&self, base: &SemioAudioSnapshot) -> Vec<Self> {
+    async fn inverse(&self, base: &SemioAudioSnapshot) -> Vec<Self> {
         match self {
             SemioAudioMutation::NoMutation => vec![SemioAudioMutation::NoMutation],
             SemioAudioMutation::SetSnapshot { .. } => vec![SemioAudioMutation::SetSnapshot { snapshot: base.clone() }],
@@ -129,7 +129,7 @@ impl Mutation<SemioAudioSnapshot> for SemioAudioMutation {
 /// (e.g. `SetSnapshot`'s whole snapshot, `InsertChannel`'s channel) prints identically to how the
 /// same value would print inside a diff's `added` triple. Binary = the text bytes verbatim, same
 /// simplification `SemioAudioDiff::encode_diff`/gif 89a's `GifDiff::encode_diff` both use.
-fn print_audio_mutation(m: &SemioAudioMutation) -> String {
+async fn print_audio_mutation(m: &SemioAudioMutation) -> String {
     match m {
         SemioAudioMutation::NoMutation => "no-mutation".to_string(),
         SemioAudioMutation::SetSnapshot { snapshot } => format!("set-snapshot {}", enc_snapshot(snapshot)),
@@ -144,7 +144,7 @@ fn print_audio_mutation(m: &SemioAudioMutation) -> String {
     }
 }
 
-fn parse_audio_mutation(line: &str) -> Result<SemioAudioMutation, String> {
+async fn parse_audio_mutation(line: &str) -> Result<SemioAudioMutation, String> {
     if line == "no-mutation" {
         return Ok(SemioAudioMutation::NoMutation);
     }
@@ -176,10 +176,10 @@ fn parse_audio_mutation(line: &str) -> Result<SemioAudioMutation, String> {
 }
 
 impl OpText for SemioAudioMutation {
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
+    async fn parse_op(line: &str) -> Result<Self, store::TextError> {
         parse_audio_mutation(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
-    fn print_op(&self) -> String {
+    async fn print_op(&self) -> String {
         print_audio_mutation(self)
     }
 }
@@ -189,7 +189,7 @@ impl OpText for SemioAudioMutation {
 /// agree (see `committed_facet_files_parse`/`ops_grammar_conformance_law` in
 /// `🎹️composer/🦀️component.rs`).
 const OP_KEYWORDS: [&str; 10] = ["no-mutation", "set-snapshot", "set-sample-rate", "set-format", "insert-channel", "remove-channel", "set-channel-samples", "insert-tag", "remove-tag", "set-tag-value"];
-fn variant_ordinal(m: &SemioAudioMutation) -> u8 {
+async fn variant_ordinal(m: &SemioAudioMutation) -> u8 {
     match m {
         SemioAudioMutation::NoMutation => 0,
         SemioAudioMutation::SetSnapshot { .. } => 1,
@@ -206,7 +206,7 @@ fn variant_ordinal(m: &SemioAudioMutation) -> u8 {
 /// ✂️ Just the argument tail of `print_audio_mutation` (empty for `no-mutation`) — the binary
 /// frame's `tag` byte already carries the keyword, so the text keyword itself (and its separating
 /// space) is redundant in the binary payload.
-fn print_audio_mutation_args(m: &SemioAudioMutation) -> String {
+async fn print_audio_mutation_args(m: &SemioAudioMutation) -> String {
     match print_audio_mutation(m).split_once(' ') {
         Some((_, rest)) => rest.to_string(),
         None => String::new(),
@@ -219,13 +219,13 @@ fn print_audio_mutation_args(m: &SemioAudioMutation) -> String {
 /// opaque trailing `bytes` chain — reuses the already-real, already-tested `print_audio_mutation`/
 /// `parse_audio_mutation` text codec rather than re-deriving a second independent encoding.
 impl OpBinary for SemioAudioMutation {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         const OP_BINARY_FORMAT: u8 = 1;
         let mut out = vec![OP_BINARY_FORMAT, variant_ordinal(self)];
         out.extend_from_slice(print_audio_mutation_args(self).as_bytes());
         Ok(out)
     }
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         const OP_BINARY_FORMAT: u8 = 1;
         if bytes.len() < 2 {
             return Err(protocol::ProtocolError::Malformed { what: "op header", offset: 0, detail: "truncated (need format+tag)".to_string() });
@@ -247,11 +247,11 @@ impl OpBinary for SemioAudioMutation {
 /// `ops_grammar_conformance_law`/`protocol_walk_law` in `🎹️composer/🦀️component.rs` and this
 /// file's own `op_text_binary_roundtrip_law`.
 #[cfg(test)]
-pub(crate) fn demo_mutation_cases() -> Vec<SemioAudioMutation> {
-    fn channel(seed: f32) -> SemioAudioChannel {
+pub(crate) async fn demo_mutation_cases() -> Vec<SemioAudioMutation> {
+    async fn channel(seed: f32) -> SemioAudioChannel {
         SemioAudioChannel { samples: vec![seed, seed + 1.0, seed + 2.0] }
     }
-    fn fixture() -> SemioAudioSnapshot {
+    async fn fixture() -> SemioAudioSnapshot {
         SemioAudioSnapshot { sample_rate: 44_100, format: SemioAudioFormat::Pcm16, channels: vec![channel(1.0), channel(2.0), channel(3.0)], tags: vec![SemioAudioTag { key: "title".into(), value: "t0".into() }], ..SemioAudioSnapshot::default() }
     }
     vec![
@@ -274,11 +274,11 @@ pub(crate) fn demo_mutation_cases() -> Vec<SemioAudioMutation> {
 mod tests {
     use super::*;
 
-    fn sample_channel(seed: f32) -> SemioAudioChannel {
+    async fn sample_channel(seed: f32) -> SemioAudioChannel {
         SemioAudioChannel { samples: vec![seed, seed + 1.0, seed + 2.0] }
     }
 
-    fn base_snapshot() -> SemioAudioSnapshot {
+    async fn base_snapshot() -> SemioAudioSnapshot {
         SemioAudioSnapshot {
             sample_rate: 44_100,
             format: SemioAudioFormat::Pcm16,
@@ -288,7 +288,7 @@ mod tests {
         }
     }
 
-    fn round_trips(base: &SemioAudioSnapshot, mutation: SemioAudioMutation) {
+    async fn round_trips(base: &SemioAudioSnapshot, mutation: SemioAudioMutation) {
         let diff = mutation.diff(base);
         let mutated = <SemioAudioDiff as protocol::MutationDiff<SemioAudioSnapshot>>::apply(diff.diff(), base).expect("apply must succeed for a well-formed fixture");
         let inverses = mutation.inverse(base);
@@ -300,7 +300,7 @@ mod tests {
         assert_eq!(&restored, base, "apply(inverse(m), apply(m, base)) must recover base for {mutation:?}");
     }
 
-    fn all_variants(base: &SemioAudioSnapshot) -> Vec<SemioAudioMutation> {
+    async fn all_variants(base: &SemioAudioSnapshot) -> Vec<SemioAudioMutation> {
         vec![
             SemioAudioMutation::NoMutation,
             SemioAudioMutation::SetSnapshot { snapshot: SemioAudioSnapshot { sample_rate: 9_000, ..base.clone() } },
@@ -318,7 +318,7 @@ mod tests {
     /// 🧪️ `mutation_diff_law`: every variant's `diff()` matches what `apply_semio_audio_mutation`
     /// returns.
     #[test]
-    fn mutation_diff_law() {
+    async fn mutation_diff_law() {
         let base = base_snapshot();
         for mutation in all_variants(&base) {
             let mut snap = base.clone();
@@ -331,7 +331,7 @@ mod tests {
 
     /// 🧪️ `inverse_law` (mutation-level): every variant round-trips.
     #[test]
-    fn mutation_apply_inverse_round_trips_every_variant() {
+    async fn mutation_apply_inverse_round_trips_every_variant() {
         let base = base_snapshot();
         for mutation in all_variants(&base) {
             round_trips(&base, mutation);
@@ -339,7 +339,7 @@ mod tests {
     }
 
     #[test]
-    fn remove_channel_out_of_range_is_noop_not_panic() {
+    async fn remove_channel_out_of_range_is_noop_not_panic() {
         let base = base_snapshot();
         let mut snap = base.clone();
         apply_semio_audio_mutation(&mut snap, &SemioAudioMutation::RemoveChannel { index: 99 });
@@ -349,7 +349,7 @@ mod tests {
     /// 🧪️ `op_text_binary_roundtrip_law`: hand-rolled `OpText`/`OpBinary` round-trip over the
     /// full variant vocabulary.
     #[test]
-    fn op_text_binary_roundtrip_law() {
+    async fn op_text_binary_roundtrip_law() {
         let base = base_snapshot();
         for mutation in all_variants(&base) {
             let printed = mutation.print_op();

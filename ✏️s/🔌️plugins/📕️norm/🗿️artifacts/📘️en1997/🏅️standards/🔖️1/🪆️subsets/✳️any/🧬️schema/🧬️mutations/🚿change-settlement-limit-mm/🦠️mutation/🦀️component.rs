@@ -15,15 +15,15 @@ pub struct ChangeSettlementLimitMm {
 impl protocol::MutationKind<En1997Snapshot, En1997Mutation> for ChangeSettlementLimitMm {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "settlement-limit-mm", kind: "change-settlement-limit-mm", record: "ChangedSettlementLimitMm" };
 
-    fn diff(&self, base: &En1997Snapshot) -> protocol::MutationOutcome<En1997Diff> {
+    async fn diff(&self, base: &En1997Snapshot) -> protocol::MutationOutcome<En1997Diff> {
         crate::artifacts::en1997::mutations::change_settlement_limit_mm::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &En1997Snapshot) -> Vec<En1997Mutation> {
+    async fn inverse(&self, base: &En1997Snapshot) -> Vec<En1997Mutation> {
         crate::artifacts::en1997::mutations::change_settlement_limit_mm::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         format!("Change settlement limit [mm] to {}", self.new_settlement_limit_mm)
     }
 }

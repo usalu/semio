@@ -7,7 +7,7 @@ use crate::artifacts::cad::mutations::{delete_structure_classic_model, CadMutati
 use crate::artifacts::cad::CadSnapshot;
 
 //#region 🔖️Inverse
-pub fn inverse(_payload: &CreateStructureClassicModel, base: &CadSnapshot) -> Vec<CadMutation> {
+pub async fn inverse(_payload: &CreateStructureClassicModel, base: &CadSnapshot) -> Vec<CadMutation> {
     match &base.structure_classic_model {
         Some(existing) => vec![CadMutation::CreateStructureClassicModel(CreateStructureClassicModel { child_id: existing.child_id.clone(), target: existing.target.to_uri() })],
         None => vec![CadMutation::DeleteStructureClassicModel(delete_structure_classic_model::mutation::DeleteStructureClassicModel {})],

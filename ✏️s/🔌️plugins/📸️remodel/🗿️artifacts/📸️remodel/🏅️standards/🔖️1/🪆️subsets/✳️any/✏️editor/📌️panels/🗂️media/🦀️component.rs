@@ -13,13 +13,13 @@ pub const REMODEL_PLAY_BODY_MEDIA: &str = "remodel.play.media";
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
-pub fn definition() -> PanelTabDefinition {
+pub async fn definition() -> PanelTabDefinition {
     PanelTabDefinition { kind: PanelTabKind::App(REMODEL_PANEL_MEDIA_ID.into()), label: LocalizedLabel::native("Media", "Medien"), group: PanelGroup::Workbench, body_key: Some(REMODEL_PLAY_BODY_MEDIA.into()), children: Vec::new() }
 }
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(scene: &RemodelSnapshot, labels: &RemodelLabels) -> UiNode {
+pub async fn render(scene: &RemodelSnapshot, labels: &RemodelLabels) -> UiNode {
     let mut lines = vec![
         ui_import_drop_zone("remodel-media-drop", labels.panel_media.into(), labels.no_streams.into(), Some(REMODEL_MEDIA_ACCEPT), remodel_action("importFramePayload", None)),
         ui_text(Label::data(format!("{}: {} - {}: {}", labels.streams.as_str(), scene.streams.len(), labels.assets.as_str(), scene.assets.len()))),
@@ -46,7 +46,7 @@ mod tests {
     use crate::editor::remodel::testkit::{app, render as render_body};
 
     #[test]
-    fn the_media_panel_lists_every_imported_stream() {
+    async fn the_media_panel_lists_every_imported_stream() {
         let mut app = app();
         testkit_import_checker_stream(&mut app, 2);
         let body = render_body(&mut app, REMODEL_PLAY_BODY_MEDIA);

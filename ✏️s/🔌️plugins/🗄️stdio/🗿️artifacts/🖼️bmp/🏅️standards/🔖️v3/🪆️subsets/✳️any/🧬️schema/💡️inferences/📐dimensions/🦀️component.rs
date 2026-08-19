@@ -23,7 +23,7 @@ pub struct BmpDimensions {
 }
 
 /// 📐️ Computes [`BmpDimensions`] from a snapshot's header fields — pure, total, O(1).
-pub fn compute_bmp_dimensions(snapshot: &BmpSnapshot) -> BmpDimensions {
+pub async fn compute_bmp_dimensions(snapshot: &BmpSnapshot) -> BmpDimensions {
     BmpDimensions { width: snapshot.width, height: snapshot.height, bit_depth: snapshot.bits_per_pixel, has_alpha: snapshot.bits_per_pixel == 32, pixel_count: snapshot.width as u64 * snapshot.height as u64 }
 }
 //#endregion 🔖️Dimensions
@@ -34,13 +34,13 @@ mod tests {
     use super::*;
 
     #[test]
-    fn derives_from_header_fields() {
+    async fn derives_from_header_fields() {
         let snapshot = BmpSnapshot { width: 5, height: 2, bits_per_pixel: 24, ..BmpSnapshot::default() };
         assert_eq!(compute_bmp_dimensions(&snapshot), BmpDimensions { width: 5, height: 2, bit_depth: 24, has_alpha: false, pixel_count: 10 });
     }
 
     #[test]
-    fn thirty_two_bpp_is_treated_as_alpha_capable() {
+    async fn thirty_two_bpp_is_treated_as_alpha_capable() {
         let snapshot = BmpSnapshot { width: 1, height: 1, bits_per_pixel: 32, ..BmpSnapshot::default() };
         assert!(compute_bmp_dimensions(&snapshot).has_alpha);
     }

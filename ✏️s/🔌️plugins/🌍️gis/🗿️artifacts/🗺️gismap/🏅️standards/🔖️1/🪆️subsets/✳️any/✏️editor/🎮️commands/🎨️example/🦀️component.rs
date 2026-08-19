@@ -23,7 +23,7 @@ pub mod set_active_example {
         pub example_id: String,
     }
 
-    pub fn handle(payload: &SetActiveExample, doc: &ArtifactView<'_, GisMapSnapshot>, cfg: &ConfigView<'_, Gis2dConfig>) -> Result<Emit<GisMapMutation, Gis2dConfigMutation>, Fault> {
+    pub async fn handle(payload: &SetActiveExample, doc: &ArtifactView<'_, GisMapSnapshot>, cfg: &ConfigView<'_, Gis2dConfig>) -> Result<Emit<GisMapMutation, Gis2dConfigMutation>, Fault> {
         let next = if payload.example_id.is_empty() { GisMapSnapshot::default() } else { default_document() };
         // 🕹️ The pre-migration layer/feature selection clear that used to live here (`SetSelection {
         // ids: Vec::new() }`) is gone — selection is framework-owned config now, and `Emit` has no
@@ -55,7 +55,7 @@ mod tests {
     use semio_framework_plugin::PluginApp;
 
     #[test]
-    fn set_active_example_empty_then_reuse_round_trips_document() {
+    async fn set_active_example_empty_then_reuse_round_trips_document() {
         let mut app = app();
         assert!(!app.snapshot().expect("projection").positions.is_empty());
         dispatch(&mut app, Gis2dCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: String::new() }));
@@ -71,7 +71,7 @@ mod tests {
     /// emits-operations guard rejects a mis-declaration; this proves the corrected declaration lets
     /// the document-replacing edit flow through without erroring.
     #[test]
-    fn set_active_example_is_operation_under_registry_kind_discipline() {
+    async fn set_active_example_is_operation_under_registry_kind_discipline() {
         let definition = crate::editor::gis2d::create_gis2d_app().definition;
         let action = definition.window_kinds.iter().flat_map(|window| window.actions.iter()).find(|action| action.id == "setActiveExample").expect("setActiveExample declared");
         assert!(matches!(action.kind, semio_framework_plugin::ActionKind::Mutation), "loading an example emits document-mutating operations, so it is a Mutation");

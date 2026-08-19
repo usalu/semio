@@ -12,7 +12,7 @@ use protocol::Identified;
 
 use super::mutation::DeleteWidget;
 
-pub fn inverse(payload: &DeleteWidget, base: &FlowSnapshot) -> Vec<FlowMutation> {
+pub async fn inverse(payload: &DeleteWidget, base: &FlowSnapshot) -> Vec<FlowMutation> {
     let scene = flow_working_scene(base);
     let Some(index) = scene.widgets.iter().position(|widget| widget.id() == &payload.id) else {
         return Vec::new();

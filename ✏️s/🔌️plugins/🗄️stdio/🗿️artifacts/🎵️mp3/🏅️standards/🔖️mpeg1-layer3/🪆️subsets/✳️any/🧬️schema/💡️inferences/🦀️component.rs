@@ -24,7 +24,7 @@ pub struct Mp3Inference {
 }
 
 impl protocol::Inference<Mp3Snapshot> for Mp3Inference {
-    fn infer(snapshot: &Mp3Snapshot) -> Self {
+    async fn infer(snapshot: &Mp3Snapshot) -> Self {
         Self { duration: compute_mp3_duration(snapshot) }
     }
 }
@@ -32,19 +32,19 @@ impl protocol::Inference<Mp3Snapshot> for Mp3Inference {
 /// 🌱 Defined in terms of `infer` (not derived) — keeps the law correct regardless of whether
 /// `Mp3Snapshot::default()`'s `frames` ever stop being empty.
 impl Default for Mp3Inference {
-    fn default() -> Self {
+    async fn default() -> Self {
         <Self as protocol::Inference<Mp3Snapshot>>::infer(&Mp3Snapshot::default())
     }
 }
 
 impl protocol::InferenceSpec<Mp3Snapshot> for Mp3Inference {
-    fn inference_schema_id() -> &'static str {
+    async fn inference_schema_id() -> &'static str {
         "s.stdio.mp3.inference"
     }
-    fn schema_version() -> u32 {
+    async fn schema_version() -> u32 {
         1
     }
-    fn fields() -> &'static [protocol::InferenceFieldSpec] {
+    async fn fields() -> &'static [protocol::InferenceFieldSpec] {
         &[protocol::InferenceFieldSpec { id: "s.stdio.mp3.inference.duration", reads: &["frames"] }]
     }
 }
@@ -64,7 +64,7 @@ impl ArtifactInferrer for crate::artifacts::mp3::standards::mpeg1_layer3::subset
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.stdio.mp3.inference`'s facet leaves into the OS-wide inference catalog — call
 /// once at plugin init, alongside `mp3_artifact_schema_descriptor`'s registration.
-pub fn mp3_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
+pub async fn mp3_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
     schema::ArtifactInferenceDescriptor {
         id: "s.stdio.mp3.inference",
         inference: schema::FacetLeaves {
@@ -85,13 +85,13 @@ mod tests {
     use protocol::Inference;
 
     #[test]
-    fn inference_determinism_law() {
+    async fn inference_determinism_law() {
         let snapshot = Mp3Snapshot::default();
         assert_eq!(Mp3Inference::infer(&snapshot), Mp3Inference::infer(&snapshot));
     }
 
     #[test]
-    fn inference_default_law() {
+    async fn inference_default_law() {
         assert_eq!(Mp3Inference::infer(&Mp3Snapshot::default()), Mp3Inference::default());
     }
 }

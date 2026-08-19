@@ -14,7 +14,7 @@ const WIRES_PLAY_CATALOGUE_TAB_ID: &str = "framework.panel.catalogue";
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
-pub fn definition() -> PanelTabDefinition {
+pub async fn definition() -> PanelTabDefinition {
     PanelTabDefinition {
         kind: PanelTabKind::App(WIRES_PLAY_CATALOGUE_TAB_ID.into()),
         label: LocalizedLabel::native(FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, "Katalog"),
@@ -26,7 +26,7 @@ pub fn definition() -> PanelTabDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-fn wires_kind_catalog_entries(wires: &DslValue, key: &str) -> Vec<DslValue> {
+async fn wires_kind_catalog_entries(wires: &DslValue, key: &str) -> Vec<DslValue> {
     wires
         .get("kindCatalogs")
         .and_then(|value| value.get(key))
@@ -36,11 +36,11 @@ fn wires_kind_catalog_entries(wires: &DslValue, key: &str) -> Vec<DslValue> {
         .unwrap_or_default()
 }
 
-fn catalog_kind_label(entry: &DslValue) -> String {
+async fn catalog_kind_label(entry: &DslValue) -> String {
     entry.get("name").and_then(|value| value.as_str()).filter(|value| !value.is_empty()).or_else(|| entry.get("id").and_then(|value| value.as_str())).unwrap_or("kind").into()
 }
 
-fn kind_catalog_items(namespace: &PanelTreeBuilder, kind: &str, entries: &[DslValue]) -> Vec<UiTreeItemNode> {
+async fn kind_catalog_items(namespace: &PanelTreeBuilder, kind: &str, entries: &[DslValue]) -> Vec<UiTreeItemNode> {
     entries
         .iter()
         .enumerate()
@@ -56,7 +56,7 @@ fn kind_catalog_items(namespace: &PanelTreeBuilder, kind: &str, entries: &[DslVa
         .collect()
 }
 
-pub fn render(wires: &DslValue, labels: &WiresLabels) -> UiNode {
+pub async fn render(wires: &DslValue, labels: &WiresLabels) -> UiNode {
     let namespace = PanelTreeBuilder::new("wires-play-kinds");
     let identity_entries = wires_kind_catalog_entries(wires, "identityKinds");
     let relationship_entries = wires_kind_catalog_entries(wires, "relationshipKinds");
@@ -76,7 +76,7 @@ mod tests {
     use crate::editor::wires::testkit::{metabolism_app, render as render_body};
 
     #[test]
-    fn catalogue_lists_identity_and_relationship_kinds() {
+    async fn catalogue_lists_identity_and_relationship_kinds() {
         let mut app = metabolism_app();
         let json = render_body(&mut app, WIRES_PLAY_BODY_CATALOGUE);
         assert!(json.contains("Identity kinds"));
@@ -84,7 +84,7 @@ mod tests {
     }
 
     #[test]
-    fn definition_binds_the_catalogue_tab_to_this_body_key() {
+    async fn definition_binds_the_catalogue_tab_to_this_body_key() {
         let definition = definition();
         assert_eq!(definition.body_key.as_deref(), Some(WIRES_PLAY_BODY_CATALOGUE));
     }

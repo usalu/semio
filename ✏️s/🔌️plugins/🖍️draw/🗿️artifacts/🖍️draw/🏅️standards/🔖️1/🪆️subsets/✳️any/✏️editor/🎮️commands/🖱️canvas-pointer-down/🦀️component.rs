@@ -34,18 +34,18 @@ pub enum GestureEffect {
     PickPoint { world: [f64; 2], shift: bool, ctrl: bool, meta: bool },
 }
 
-fn gesture_context_from_input(_input: ()) -> GestureContext {
+async fn gesture_context_from_input(_input: ()) -> GestureContext {
     GestureContext::default()
 }
 //#endregion 🔖️GestureContext
 
 //#region 🔖️DocumentHelpers
-pub(crate) fn canvas_point_to_world(camera: &DrawCamera, x: f64, y: f64, viewport_w: f64, viewport_h: f64) -> (f64, f64) {
+pub(crate) async fn canvas_point_to_world(camera: &DrawCamera, x: f64, y: f64, viewport_w: f64, viewport_h: f64) -> (f64, f64) {
     let zoom = camera.zoom.max(0.01);
     ((x - viewport_w * 0.5) / zoom + camera.x, (y - viewport_h * 0.5) / zoom + camera.y)
 }
 
-fn matrix_transform_point(matrix: [f64; 6], point: [f64; 2]) -> [f64; 2] {
+async fn matrix_transform_point(matrix: [f64; 6], point: [f64; 2]) -> [f64; 2] {
     let [a, b, c, d, e, f] = matrix;
     [a * point[0] + c * point[1] + e, b * point[0] + d * point[1] + f]
 }
@@ -54,7 +54,7 @@ fn matrix_transform_point(matrix: [f64; 6], point: [f64; 2]) -> [f64; 2] {
 /// `@semio-tech/ui-react`'s `marqueeModeFromModifiers`) — the actual set algebra now runs inside
 /// the framework's `next_selection` machine (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM),
 /// not here; this crate only ever computes WHICH ids were hit and asks the framework to apply them.
-pub(crate) fn selection_merge_mode(shift: bool, ctrl: bool, meta: bool) -> &'static str {
+pub(crate) async fn selection_merge_mode(shift: bool, ctrl: bool, meta: bool) -> &'static str {
     let ctrl_or_meta = ctrl || meta;
     if shift && ctrl_or_meta {
         "invertive"
@@ -70,7 +70,7 @@ pub(crate) fn selection_merge_mode(shift: bool, ctrl: bool, meta: bool) -> &'sta
 /// 🕹️ JSON-encodes `ids` as the `Vec<InteractionTarget>` string the framework's `interactionSelect`/
 /// `interactionHover` actions require in their `targets` arg — every hit id shares the domain's one
 /// granularity.
-fn interaction_targets_json(ids: &[String]) -> String {
+async fn interaction_targets_json(ids: &[String]) -> String {
     serde_json::to_string(&ids.iter().map(|id| serde_json::json!({ "granularity": DRAW_INTERACTION_GRANULARITY, "id": id })).collect::<Vec<_>>()).unwrap_or_else(|_| "[]".into())
 }
 
@@ -78,18 +78,18 @@ fn interaction_targets_json(ids: &[String]) -> String {
 /// `interactionHover`) through its normal action funnel — the only way an `ArtifactApp::handle`
 /// (or its gesture machine) can drive selection/hover now that both are framework-owned state,
 /// never a `DrawConfigMutation` (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM).
-pub(crate) fn request_interaction_action(action_id: &str, args: serde_json::Value) -> Effect {
+pub(crate) async fn request_interaction_action(action_id: &str, args: serde_json::Value) -> Effect {
     Effect::ReplayShellCommand { action_id: action_id.into(), args: semio_framework::optional_json_to_dsl(Some(args)) }
 }
 
-pub(crate) fn interaction_select_effect(ids: &[String], merge: &str) -> Effect {
+pub(crate) async fn interaction_select_effect(ids: &[String], merge: &str) -> Effect {
     request_interaction_action(
         semio_framework::INTERACTION_SELECT_ACTION_ID,
         serde_json::json!({ "domainId": DRAW_INTERACTION_DOMAIN, "targets": interaction_targets_json(ids), "merge": merge, "method": "pick" }),
     )
 }
 
-pub(crate) fn interaction_hover_effect(ids: &[String]) -> Effect {
+pub(crate) async fn interaction_hover_effect(ids: &[String]) -> Effect {
     request_interaction_action(semio_framework::INTERACTION_HOVER_ACTION_ID, serde_json::json!({ "domainId": DRAW_INTERACTION_DOMAIN, "channel": "pointer", "targets": interaction_targets_json(ids) }))
 }
 
@@ -101,7 +101,7 @@ pub(crate) struct DrawPickTarget {
     layer_id: String,
 }
 
-fn draw_pick_generality(layer: &DrawLayerNode) -> i32 {
+async fn draw_pick_generality(layer: &DrawLayerNode) -> i32 {
     match layer {
         DrawLayerNode::Group(_) => 0,
         DrawLayerNode::Boolean(_) | DrawLayerNode::Trace(_) => 1,
@@ -109,8 +109,8 @@ fn draw_pick_generality(layer: &DrawLayerNode) -> i32 {
     }
 }
 
-fn ancestor_group_ids(doc: &DrawSnapshot, target_id: &str) -> Vec<String> {
-    fn walk(layers: &[DrawLayerNode], target_id: &str, ancestors: &mut Vec<String>) -> bool {
+async fn ancestor_group_ids(doc: &DrawSnapshot, target_id: &str) -> Vec<String> {
+    async fn walk(layers: &[DrawLayerNode], target_id: &str, ancestors: &mut Vec<String>) -> bool {
         for layer in layers {
             if layer_id(layer) == target_id {
                 return true;
@@ -130,7 +130,7 @@ fn ancestor_group_ids(doc: &DrawSnapshot, target_id: &str) -> Vec<String> {
     ancestors
 }
 
-fn segment_control_points(segment: &PathSegment) -> Vec<[f64; 2]> {
+async fn segment_control_points(segment: &PathSegment) -> Vec<[f64; 2]> {
     match segment {
         PathSegment::Move { to } | PathSegment::Line { to } => vec![*to],
         PathSegment::Quad { ctrl, to } => vec![*ctrl, *to],
@@ -141,7 +141,7 @@ fn segment_control_points(segment: &PathSegment) -> Vec<[f64; 2]> {
 }
 
 /// 🎯️ All pick targets under a world point (groups win by default, control points win over everything when enabled).
-pub(crate) fn resolve_pick_targets_at(doc: &DrawSnapshot, world: [f64; 2], tolerance_world: f64, include_control_points: bool) -> Vec<DrawPickTarget> {
+pub(crate) async fn resolve_pick_targets_at(doc: &DrawSnapshot, world: [f64; 2], tolerance_world: f64, include_control_points: bool) -> Vec<DrawPickTarget> {
     let mut hits = Vec::new();
     for layer in flatten_draw_layers(&doc.layers).into_iter().rev() {
         let base = layer_base(layer);
@@ -179,20 +179,20 @@ pub(crate) fn resolve_pick_targets_at(doc: &DrawSnapshot, world: [f64; 2], toler
     hits
 }
 
-pub(crate) fn best_pick_layer_id(targets: &[DrawPickTarget]) -> Option<String> {
+pub(crate) async fn best_pick_layer_id(targets: &[DrawPickTarget]) -> Option<String> {
     targets.iter().max_by_key(|target| target.generality).map(|target| target.layer_id.clone())
 }
 
 /// 🎯️ Resolves the single best pick target under `world`, camera-zoom-scaled tolerance — a pure
 /// query now (selection itself is framework-owned; the caller turns the result into an
 /// `interactionSelect` request).
-pub(crate) fn resolve_point_pick(doc: &DrawSnapshot, camera: &DrawCamera, world: [f64; 2], include_control_points: bool) -> Option<String> {
+pub(crate) async fn resolve_point_pick(doc: &DrawSnapshot, camera: &DrawCamera, world: [f64; 2], include_control_points: bool) -> Option<String> {
     let tolerance = DRAW_PICK_TOLERANCE_PX / camera.zoom.max(1e-6);
     best_pick_layer_id(&resolve_pick_targets_at(doc, world, tolerance, include_control_points))
 }
 
 /// ⬚️ Marquee/lasso layer hits — reduces the lasso gesture to its bounding box, matching the premigration behaviour.
-pub(crate) fn marquee_layer_hits(doc: &DrawSnapshot, start: [f64; 2], end: [f64; 2], crossing: bool) -> Vec<String> {
+pub(crate) async fn marquee_layer_hits(doc: &DrawSnapshot, start: [f64; 2], end: [f64; 2], crossing: bool) -> Vec<String> {
     let rect_x = start[0].min(end[0]);
     let rect_y = start[1].min(end[1]);
     let rect_w = (end[0] - start[0]).abs();
@@ -213,7 +213,7 @@ pub(crate) fn marquee_layer_hits(doc: &DrawSnapshot, start: [f64; 2], end: [f64;
     hits
 }
 
-pub(crate) fn shape_preview_segments(utility: &str, start: [f64; 2], end: [f64; 2]) -> Vec<PathSegment> {
+pub(crate) async fn shape_preview_segments(utility: &str, start: [f64; 2], end: [f64; 2]) -> Vec<PathSegment> {
     if utility == "shapeLine" {
         return vec![PathSegment::Move { to: start }, PathSegment::Line { to: end }];
     }
@@ -239,7 +239,7 @@ pub(crate) fn shape_preview_segments(utility: &str, start: [f64; 2], end: [f64; 
     ]
 }
 
-pub(crate) fn draft_preview_segments(utility: &str, points: &[[f64; 2]], cursor: [f64; 2]) -> Vec<PathSegment> {
+pub(crate) async fn draft_preview_segments(utility: &str, points: &[[f64; 2]], cursor: [f64; 2]) -> Vec<PathSegment> {
     if points.is_empty() {
         return Vec::new();
     }
@@ -256,7 +256,7 @@ pub(crate) fn draft_preview_segments(utility: &str, points: &[[f64; 2]], cursor:
 
 /// 🔷️ Emits the operations that commit a shape drag (add the shape layer + return to direct-select);
 /// empty when the drag is too small to commit.
-fn commit_shape_drag(doc: &DrawSnapshot, utility: &str, start: [f64; 2], end: [f64; 2]) -> Vec<DrawMutation> {
+async fn commit_shape_drag(doc: &DrawSnapshot, utility: &str, start: [f64; 2], end: [f64; 2]) -> Vec<DrawMutation> {
     let x = start[0].min(end[0]);
     let y = start[1].min(end[1]);
     let width = (end[0] - start[0]).abs();
@@ -287,7 +287,7 @@ fn commit_shape_drag(doc: &DrawSnapshot, utility: &str, start: [f64; 2], end: [f
 
 /// ✒️ Emits the operations that commit a freehand/polygon draft into a path or polygon layer; empty
 /// when the draft has too few points to form a shape.
-fn commit_draft(doc: &DrawSnapshot, utility: &str, points: &[[f64; 2]]) -> Vec<DrawMutation> {
+async fn commit_draft(doc: &DrawSnapshot, utility: &str, points: &[[f64; 2]]) -> Vec<DrawMutation> {
     if points.len() < 2 {
         return Vec::new();
     }
@@ -313,7 +313,7 @@ fn commit_draft(doc: &DrawSnapshot, utility: &str, points: &[[f64; 2]]) -> Vec<D
 
 /// 🖍️ Emits the operations that add a trace layer over the picked image (or first asset); empty
 /// when no bitmap source is available.
-fn commit_trace_at(doc: &DrawSnapshot, camera: &DrawCamera, world: [f64; 2]) -> Vec<DrawMutation> {
+async fn commit_trace_at(doc: &DrawSnapshot, camera: &DrawCamera, world: [f64; 2]) -> Vec<DrawMutation> {
     let hit_layer_id = resolve_point_pick(doc, camera, world, false);
     let source_key = hit_layer_id
         .and_then(|id| find_draw_layer(doc, &id).cloned())
@@ -329,7 +329,7 @@ fn commit_trace_at(doc: &DrawSnapshot, camera: &DrawCamera, world: [f64; 2]) -> 
 
 /// 🧰️ Wraps a committed gesture's `operations` as a single described edit plus the host effect that returns
 /// the canvas to the default select utility (the active utility is host-owned, never a document operation).
-fn commit_with_utility_reset(operations: Vec<DrawMutation>, description: &str) -> Emit<DrawMutation, DrawConfigMutation> {
+async fn commit_with_utility_reset(operations: Vec<DrawMutation>, description: &str) -> Emit<DrawMutation, DrawConfigMutation> {
     if operations.is_empty() {
         return Emit::default();
     }
@@ -341,39 +341,39 @@ fn commit_with_utility_reset(operations: Vec<DrawMutation>, description: &str) -
 //#endregion 🔖️DocumentHelpers
 
 //#region 🔖️GestureGuards
-fn utility_is_marquee(_ctx: &GestureContext, event: Option<&draw_gesture::Event>) -> bool {
+async fn utility_is_marquee(_ctx: &GestureContext, event: Option<&draw_gesture::Event>) -> bool {
     matches!(event, Some(draw_gesture::Event::PointerDown { utility, .. }) if utility == "selectMarquee" || utility == "selectLasso")
 }
 
-fn utility_is_shape(_ctx: &GestureContext, event: Option<&draw_gesture::Event>) -> bool {
+async fn utility_is_shape(_ctx: &GestureContext, event: Option<&draw_gesture::Event>) -> bool {
     matches!(event, Some(draw_gesture::Event::PointerDown { utility, .. }) if matches!(utility.as_str(), "shapeRect" | "shapeEllipse" | "shapeLine"))
 }
 
-fn utility_is_draft(_ctx: &GestureContext, event: Option<&draw_gesture::Event>) -> bool {
+async fn utility_is_draft(_ctx: &GestureContext, event: Option<&draw_gesture::Event>) -> bool {
     matches!(event, Some(draw_gesture::Event::PointerDown { utility, .. }) if utility == "pen" || utility == "shapePolygon")
 }
 
-fn utility_is_trace(_ctx: &GestureContext, event: Option<&draw_gesture::Event>) -> bool {
+async fn utility_is_trace(_ctx: &GestureContext, event: Option<&draw_gesture::Event>) -> bool {
     matches!(event, Some(draw_gesture::Event::PointerDown { utility, .. }) if utility == "trace")
 }
 
 /// 🖊️ Drafting self-loop: the same pen/polygon utility is still active, so the pointer-down appends a point.
-fn utility_is_draft_same(ctx: &GestureContext, event: Option<&draw_gesture::Event>) -> bool {
+async fn utility_is_draft_same(ctx: &GestureContext, event: Option<&draw_gesture::Event>) -> bool {
     matches!(event, Some(draw_gesture::Event::PointerDown { utility, .. }) if (utility == "pen" || utility == "shapePolygon") && utility == &ctx.utility)
 }
 
 /// 🖊️ Drafting restart: a different pen/polygon utility switched in without going through `UtilityChanged` first.
-fn utility_is_draft_different(ctx: &GestureContext, event: Option<&draw_gesture::Event>) -> bool {
+async fn utility_is_draft_different(ctx: &GestureContext, event: Option<&draw_gesture::Event>) -> bool {
     matches!(event, Some(draw_gesture::Event::PointerDown { utility, .. }) if (utility == "pen" || utility == "shapePolygon") && utility != &ctx.utility)
 }
 
-fn utility_is_select_direct(_ctx: &GestureContext, event: Option<&draw_gesture::Event>) -> bool {
+async fn utility_is_select_direct(_ctx: &GestureContext, event: Option<&draw_gesture::Event>) -> bool {
     matches!(event, Some(draw_gesture::Event::PointerUp { utility, .. }) if utility == "selectDirect")
 }
 //#endregion 🔖️GestureGuards
 
 //#region 🔖️GestureActions
-fn gesture_start_marquee(ctx: &mut GestureContext, event: Option<&draw_gesture::Event>, _sink: &mut dyn fsm::CommandSink<draw_gesture::DrawGesture>) {
+async fn gesture_start_marquee(ctx: &mut GestureContext, event: Option<&draw_gesture::Event>, _sink: &mut dyn fsm::CommandSink<draw_gesture::DrawGesture>) {
     if let Some(draw_gesture::Event::PointerDown { utility, world, shift, ctrl, meta }) = event {
         ctx.method = if utility == "selectLasso" { "lasso".into() } else { "rectangle".into() };
         ctx.start = *world;
@@ -383,7 +383,7 @@ fn gesture_start_marquee(ctx: &mut GestureContext, event: Option<&draw_gesture::
     }
 }
 
-fn gesture_start_shape(ctx: &mut GestureContext, event: Option<&draw_gesture::Event>, _sink: &mut dyn fsm::CommandSink<draw_gesture::DrawGesture>) {
+async fn gesture_start_shape(ctx: &mut GestureContext, event: Option<&draw_gesture::Event>, _sink: &mut dyn fsm::CommandSink<draw_gesture::DrawGesture>) {
     if let Some(draw_gesture::Event::PointerDown { utility, world, .. }) = event {
         ctx.utility = utility.clone();
         ctx.start = *world;
@@ -391,7 +391,7 @@ fn gesture_start_shape(ctx: &mut GestureContext, event: Option<&draw_gesture::Ev
     }
 }
 
-fn gesture_start_draft(ctx: &mut GestureContext, event: Option<&draw_gesture::Event>, _sink: &mut dyn fsm::CommandSink<draw_gesture::DrawGesture>) {
+async fn gesture_start_draft(ctx: &mut GestureContext, event: Option<&draw_gesture::Event>, _sink: &mut dyn fsm::CommandSink<draw_gesture::DrawGesture>) {
     if let Some(draw_gesture::Event::PointerDown { utility, world, .. }) = event {
         ctx.utility = utility.clone();
         ctx.points = vec![*world];
@@ -399,14 +399,14 @@ fn gesture_start_draft(ctx: &mut GestureContext, event: Option<&draw_gesture::Ev
     }
 }
 
-fn gesture_append_draft_point(ctx: &mut GestureContext, event: Option<&draw_gesture::Event>, _sink: &mut dyn fsm::CommandSink<draw_gesture::DrawGesture>) {
+async fn gesture_append_draft_point(ctx: &mut GestureContext, event: Option<&draw_gesture::Event>, _sink: &mut dyn fsm::CommandSink<draw_gesture::DrawGesture>) {
     if let Some(draw_gesture::Event::PointerDown { world, .. }) = event {
         ctx.points.push(*world);
         ctx.cursor = *world;
     }
 }
 
-fn gesture_update_marquee_cursor(ctx: &mut GestureContext, event: Option<&draw_gesture::Event>, _sink: &mut dyn fsm::CommandSink<draw_gesture::DrawGesture>) {
+async fn gesture_update_marquee_cursor(ctx: &mut GestureContext, event: Option<&draw_gesture::Event>, _sink: &mut dyn fsm::CommandSink<draw_gesture::DrawGesture>) {
     if let Some(draw_gesture::Event::PointerMove { world, marquee_threshold_world }) = event {
         let distance = ((world[0] - ctx.start[0]).powi(2) + (world[1] - ctx.start[1]).powi(2)).sqrt();
         ctx.active = ctx.active || distance >= *marquee_threshold_world;
@@ -414,41 +414,41 @@ fn gesture_update_marquee_cursor(ctx: &mut GestureContext, event: Option<&draw_g
     }
 }
 
-fn gesture_update_shape_cursor(ctx: &mut GestureContext, event: Option<&draw_gesture::Event>, _sink: &mut dyn fsm::CommandSink<draw_gesture::DrawGesture>) {
+async fn gesture_update_shape_cursor(ctx: &mut GestureContext, event: Option<&draw_gesture::Event>, _sink: &mut dyn fsm::CommandSink<draw_gesture::DrawGesture>) {
     if let Some(draw_gesture::Event::PointerMove { world, .. }) = event {
         ctx.cursor = *world;
     }
 }
 
-fn gesture_update_draft_cursor(ctx: &mut GestureContext, event: Option<&draw_gesture::Event>, _sink: &mut dyn fsm::CommandSink<draw_gesture::DrawGesture>) {
+async fn gesture_update_draft_cursor(ctx: &mut GestureContext, event: Option<&draw_gesture::Event>, _sink: &mut dyn fsm::CommandSink<draw_gesture::DrawGesture>) {
     if let Some(draw_gesture::Event::PointerMove { world, .. }) = event {
         ctx.cursor = *world;
     }
 }
 
-fn gesture_commit_marquee(ctx: &mut GestureContext, event: Option<&draw_gesture::Event>, sink: &mut dyn fsm::CommandSink<draw_gesture::DrawGesture>) {
+async fn gesture_commit_marquee(ctx: &mut GestureContext, event: Option<&draw_gesture::Event>, sink: &mut dyn fsm::CommandSink<draw_gesture::DrawGesture>) {
     if let Some(draw_gesture::Event::PointerUp { world, shift, ctrl, meta, .. }) = event {
         sink.push(fsm::Command::Effect(GestureEffect::CommitMarquee { start: ctx.start, end: *world, active: ctx.active, merge: ctx.merge.clone(), shift: *shift, ctrl: *ctrl, meta: *meta }));
     }
 }
 
-fn gesture_commit_shape(ctx: &mut GestureContext, event: Option<&draw_gesture::Event>, sink: &mut dyn fsm::CommandSink<draw_gesture::DrawGesture>) {
+async fn gesture_commit_shape(ctx: &mut GestureContext, event: Option<&draw_gesture::Event>, sink: &mut dyn fsm::CommandSink<draw_gesture::DrawGesture>) {
     if let Some(draw_gesture::Event::PointerUp { world, .. }) = event {
         sink.push(fsm::Command::Effect(GestureEffect::CommitShape { utility: ctx.utility.clone(), start: ctx.start, end: *world }));
     }
 }
 
-fn gesture_commit_draft(ctx: &mut GestureContext, _event: Option<&draw_gesture::Event>, sink: &mut dyn fsm::CommandSink<draw_gesture::DrawGesture>) {
+async fn gesture_commit_draft(ctx: &mut GestureContext, _event: Option<&draw_gesture::Event>, sink: &mut dyn fsm::CommandSink<draw_gesture::DrawGesture>) {
     sink.push(fsm::Command::Effect(GestureEffect::CommitDraft { utility: ctx.utility.clone(), points: ctx.points.clone() }));
 }
 
-fn gesture_commit_trace(_ctx: &mut GestureContext, event: Option<&draw_gesture::Event>, sink: &mut dyn fsm::CommandSink<draw_gesture::DrawGesture>) {
+async fn gesture_commit_trace(_ctx: &mut GestureContext, event: Option<&draw_gesture::Event>, sink: &mut dyn fsm::CommandSink<draw_gesture::DrawGesture>) {
     if let Some(draw_gesture::Event::PointerDown { world, .. }) = event {
         sink.push(fsm::Command::Effect(GestureEffect::CommitTrace { world: *world }));
     }
 }
 
-fn gesture_pick_point(_ctx: &mut GestureContext, event: Option<&draw_gesture::Event>, sink: &mut dyn fsm::CommandSink<draw_gesture::DrawGesture>) {
+async fn gesture_pick_point(_ctx: &mut GestureContext, event: Option<&draw_gesture::Event>, sink: &mut dyn fsm::CommandSink<draw_gesture::DrawGesture>) {
     if let Some(draw_gesture::Event::PointerUp { world, shift, ctrl, meta, .. }) = event {
         sink.push(fsm::Command::Effect(GestureEffect::PickPoint { world: *world, shift: *shift, ctrl: *ctrl, meta: *meta }));
     }
@@ -544,7 +544,7 @@ pub struct DrawSession {
 }
 
 impl Default for DrawSession {
-    fn default() -> Self {
+    async fn default() -> Self {
         let mut sink: Vec<fsm::Command<draw_gesture::DrawGesture>> = Vec::new();
         Self { gesture: fsm::init::<draw_gesture::DrawGesture>((), &mut sink), preview_seq: 0, interaction: DrawInteractionSnapshot::default() }
     }
@@ -557,7 +557,7 @@ impl DrawSession {
     /// zoom for hit-test tolerance); a pick/marquee hit becomes an `interactionSelect` request riding
     /// as a `Effect` on the returned `Emit` — selection itself is framework-owned now, never
     /// written back into `config`.
-    pub(crate) fn step_gesture(&mut self, event: draw_gesture::Event, document: &DrawSnapshot, config: &DrawConfig) -> Emit<DrawMutation, DrawConfigMutation> {
+    pub(crate) async fn step_gesture(&mut self, event: draw_gesture::Event, document: &DrawSnapshot, config: &DrawConfig) -> Emit<DrawMutation, DrawConfigMutation> {
         let mut sink: Vec<fsm::Command<draw_gesture::DrawGesture>> = Vec::new();
         fsm::macrostep(&mut self.gesture, event, &mut sink, &mut fsm::NullInspector);
         self.preview_seq = self.preview_seq.wrapping_add(1);
@@ -608,7 +608,7 @@ impl DrawSession {
     /// argument list once a host bridge can carry it out of this sandboxed plugin. `#[allow(dead_code)]`:
     /// no caller exists inside this crate today; exercised by `🧪️Tests` only until that bridge lands.
     #[allow(dead_code)]
-    pub(crate) fn gesture_preview(&self) -> Option<(&'static str, u64, Vec<u8>)> {
+    pub(crate) async fn gesture_preview(&self) -> Option<(&'static str, u64, Vec<u8>)> {
         let payload = draw_gesture_preview_payload(&self.gesture.context, self.gesture.matches("idle"))?;
         Some(("gesture", self.preview_seq, serde_json::to_vec(&payload).ok()?))
     }
@@ -618,7 +618,7 @@ impl DrawSession {
 /// snapshot of the gesture machine's live, uncommitted scratch geometry. `None` while `draw_gesture`
 /// is `idle` (no live gesture to preview); this function only ever reads `GestureContext`, never
 /// `DrawSnapshot`/`DrawMutation` — a preview can never become persistent state.
-fn draw_gesture_preview_payload(ctx: &GestureContext, is_idle: bool) -> Option<serde_json::Value> {
+async fn draw_gesture_preview_payload(ctx: &GestureContext, is_idle: bool) -> Option<serde_json::Value> {
     if is_idle {
         return None;
     }
@@ -653,7 +653,7 @@ pub struct CanvasPointerDown {
     pub meta: bool,
 }
 
-pub fn handle(payload: &CanvasPointerDown, doc: &ArtifactView<'_, DrawSnapshot>, cfg: &ConfigView<'_, DrawConfig>, session: &mut DrawSession) -> Result<Emit<DrawMutation, DrawConfigMutation>, Fault> {
+pub async fn handle(payload: &CanvasPointerDown, doc: &ArtifactView<'_, DrawSnapshot>, cfg: &ConfigView<'_, DrawConfig>, session: &mut DrawSession) -> Result<Emit<DrawMutation, DrawConfigMutation>, Fault> {
     let document = doc.snapshot;
     let config = cfg.snapshot;
     let (world_x, world_y) = canvas_point_to_world(&config.camera, payload.x, payload.y, payload.width, payload.height);

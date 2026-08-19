@@ -23,11 +23,11 @@ pub struct GltfAdjacencyIndicators {
 pub struct GltfAdjacencyInference;
 
 impl GltfAdjacencyInference {
-    pub(crate) fn infer_pair(pair: &GltfPairGeometry) -> GltfMeasure<bool> {
+    pub(crate) async fn infer_pair(pair: &GltfPairGeometry) -> GltfMeasure<bool> {
         number_of_contacts::infer_pair(pair)
     }
 
-    pub(crate) fn infer_assembly(indicators: &mut GltfAdjacencyIndicators, part_count: usize, contacts: u64, sample_count: usize, topology: Topology) {
+    pub(crate) async fn infer_assembly(indicators: &mut GltfAdjacencyIndicators, part_count: usize, contacts: u64, sample_count: usize, topology: Topology) {
         indicators.number_of_contacts = number_of_contacts::from_assembly(part_count, contacts, sample_count, topology);
         indicators.contact_graph_degree = contact_graph_degree::from_assembly(part_count, contacts, sample_count, topology);
     }
@@ -36,11 +36,11 @@ impl GltfAdjacencyInference {
 impl GltfInferenceStage<GltfGeometryContext<'_>> for GltfAdjacencyInference {
     type Output = GltfAdjacencyIndicators;
 
-    fn infer(context: &GltfGeometryContext<'_>) -> Self::Output {
+    async fn infer(context: &GltfGeometryContext<'_>) -> Self::Output {
         Self::Output { number_of_contacts: number_of_contacts::infer(context), contact_graph_degree: contact_graph_degree::infer(context), connected_components: connected_components::infer(context) }
     }
 
-    fn unavailable(diagnostic_ids: &[String]) -> Self::Output {
+    async fn unavailable(diagnostic_ids: &[String]) -> Self::Output {
         Self::Output {
             number_of_contacts: number_of_contacts::unavailable_measure(diagnostic_ids),
             contact_graph_degree: contact_graph_degree::unavailable_measure(diagnostic_ids),

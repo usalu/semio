@@ -16,7 +16,7 @@ pub const BODY_KEY: &str = "puzzle.3d.play.document";
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
-pub fn definition() -> PanelTabDefinition {
+pub async fn definition() -> PanelTabDefinition {
     PanelTabDefinition {
         kind: PanelTabKind::App(FRAMEWORK_PANEL_TAB_ARTIFACT_ID.into()),
         label: LocalizedLabel::native(FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL, "Dokument"),
@@ -28,7 +28,7 @@ pub fn definition() -> PanelTabDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Rows
-fn tree_item_with_action(id: impl Into<String>, label: impl Into<String>, icon_id: Option<&str>, action: ActionDescriptor) -> UiTreeItemNode {
+async fn tree_item_with_action(id: impl Into<String>, label: impl Into<String>, icon_id: Option<&str>, action: ActionDescriptor) -> UiTreeItemNode {
     UiTreeItemNode {
         presence: UiPresence::default(),
         id: id.into(),
@@ -47,7 +47,7 @@ fn tree_item_with_action(id: impl Into<String>, label: impl Into<String>, icon_i
     }
 }
 
-fn hide_lock_actions(hidden: bool, locked: bool, labels: &Puzzle3dLabels, flag_args: impl Fn(&str) -> Value) -> Vec<UiTreeItemAction> {
+async fn hide_lock_actions(hidden: bool, locked: bool, labels: &Puzzle3dLabels, flag_args: impl Fn(&str) -> Value) -> Vec<UiTreeItemAction> {
     vec![
         UiTreeItemAction {
             icon_id: if hidden { "eye-off".into() } else { "eye".into() },
@@ -67,7 +67,7 @@ fn hide_lock_actions(hidden: bool, locked: bool, labels: &Puzzle3dLabels, flag_a
 
 //#region 🔖️Render
 /// 🌳️ The four document sections, memoized by the app against the fixture's geometry fingerprint.
-pub fn sections(fixture: &Puzzle3dFixture, labels: &Puzzle3dLabels) -> Vec<UiTreeSectionNode> {
+pub async fn sections(fixture: &Puzzle3dFixture, labels: &Puzzle3dLabels) -> Vec<UiTreeSectionNode> {
     let object_items: Vec<UiTreeItemNode> = fixture
         .objects
         .iter()
@@ -183,7 +183,7 @@ pub fn sections(fixture: &Puzzle3dFixture, labels: &Puzzle3dLabels) -> Vec<UiTre
 /// interaction domain (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM), so the framework
 /// stamps every row's `selected`/`hovered` presence from `InteractionState` after render, replacing
 /// the deleted `selected_ids`/`highlighted_ids`/`selection_change` wire surface.
-pub fn render(sections: Vec<UiTreeSectionNode>) -> UiNode {
+pub async fn render(sections: Vec<UiTreeSectionNode>) -> UiNode {
     UiNode::Tree(UiTreeNode { sections, presence: UiPresence::default(), drop_action: None, menu: None, interaction_domain: Some(PUZZLE3D_INTERACTION_DOMAIN.into()) })
 }
 //#endregion 🔖️Render

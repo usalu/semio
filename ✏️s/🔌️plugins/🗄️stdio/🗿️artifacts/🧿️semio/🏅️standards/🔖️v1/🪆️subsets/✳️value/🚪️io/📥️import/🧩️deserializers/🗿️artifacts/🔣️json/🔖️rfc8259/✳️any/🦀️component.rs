@@ -30,16 +30,16 @@ impl ArtifactDeserializer for SemioValueFromJson {
     }
 }
 
-pub fn register() {}
+pub async fn register() {}
 //#endregion 🔖️Deserializer
 
 //#region 🔖️Convert
 /// 🔢️ RFC8259 §6: `int frac? exp?` — a lexeme with no `.`/`e`/`E` is a bare `int`.
-fn is_float_lexeme(lexeme: &str) -> bool {
+async fn is_float_lexeme(lexeme: &str) -> bool {
     lexeme.contains('.') || lexeme.contains('e') || lexeme.contains('E')
 }
 
-pub fn semio_value_from_json(v: &JsonValue) -> SemioValue {
+pub async fn semio_value_from_json(v: &JsonValue) -> SemioValue {
     match v {
         JsonValue::Null => SemioValue::Null,
         JsonValue::Bool { value } => SemioValue::Bool { value: *value },
@@ -64,7 +64,7 @@ mod tests {
     use crate::artifacts::json::schema::snapshot::JsonMember;
 
     #[test]
-    fn number_lexeme_splits_into_int_or_float_by_grammar_shape() {
+    async fn number_lexeme_splits_into_int_or_float_by_grammar_shape() {
         assert_eq!(semio_value_from_json(&JsonValue::Number { lexeme: "42".into() }), SemioValue::Int { lexeme: "42".into() });
         assert_eq!(semio_value_from_json(&JsonValue::Number { lexeme: "-7".into() }), SemioValue::Int { lexeme: "-7".into() });
         assert_eq!(semio_value_from_json(&JsonValue::Number { lexeme: "3.500".into() }), SemioValue::Float { lexeme: "3.500".into() });
@@ -73,7 +73,7 @@ mod tests {
     }
 
     #[test]
-    fn nested_structure_maps_directly() {
+    async fn nested_structure_maps_directly() {
         let json = JsonValue::Object {
             members: vec![JsonMember { key: "name".into(), value: JsonValue::String { value: "semio".into() } }, JsonMember { key: "tags".into(), value: JsonValue::Array { items: vec![JsonValue::Bool { value: true }, JsonValue::Null] } }],
         };

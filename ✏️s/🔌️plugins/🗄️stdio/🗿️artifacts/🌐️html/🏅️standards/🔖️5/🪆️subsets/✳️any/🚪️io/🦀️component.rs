@@ -17,11 +17,11 @@ pub mod derived_composition {
         type Snapshot = HtmlSnapshot;
         const WRITES: Dialect = DIALECT;
 
-        fn reads() -> &'static [Dialect] {
+        async fn reads() -> &'static [Dialect] {
             &[DIALECT]
         }
 
-        fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+        async fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
             let native: Vec<AnalyzeSource<'_>> = sources
                 .iter()
                 .filter(|s| s.dialect == DIALECT)
@@ -43,7 +43,7 @@ pub mod derived_composition {
     //#region 🔖️Register
     /// 📌️ Registers this subset's schema descriptor, document codec. Called from
     /// this artifact's standard-level `engine::register()`.
-    pub fn register() {
+    pub async fn register() {
         ::schema::register_artifact_schema_descriptor(crate::artifacts::html::standards::v5::subsets::any::schema::html_artifact_schema_descriptor());
         register_artifact_inferences();
         let _ = store::register_document_codec(store::ArtifactCodec::of::<HtmlSnapshot, crate::artifacts::html::standards::v5::subsets::any::schema::mutations::HtmlMutation>(
@@ -54,7 +54,7 @@ pub mod derived_composition {
     /// 💡️ Registers `s.stdio.html.inference`'s facet leaves into the OS-wide inference catalog —
     /// sibling to the artifact schema descriptor above (separate registry, ticket
     /// 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING).
-    pub fn register_artifact_inferences() {
+    pub async fn register_artifact_inferences() {
         ::schema::register_artifact_inference_descriptor(crate::artifacts::html::standards::v5::subsets::any::schema::inferences::html_artifact_inference_descriptor());
     }
     //#endregion 🔖️Register
@@ -69,7 +69,7 @@ pub use derived_composition::*;
 /// in W3.
 pub mod import {
     pub mod deserializers {
-        pub fn sniff_real_bytes(bytes: &[u8]) -> bool {
+        pub async fn sniff_real_bytes(bytes: &[u8]) -> bool {
             let text = String::from_utf8_lossy(bytes);
             text.trim_start().to_ascii_lowercase().starts_with("<!doctype html")
         }
@@ -79,13 +79,13 @@ pub mod import {
             use super::*;
 
             #[test]
-            fn sniffs_a_real_doctype_case_insensitively() {
+            async fn sniffs_a_real_doctype_case_insensitively() {
                 assert!(sniff_real_bytes(b"<!DOCTYPE html>\n<html></html>"));
                 assert!(sniff_real_bytes(b"  \n<!doctype HTML>"));
             }
 
             #[test]
-            fn rejects_non_html() {
+            async fn rejects_non_html() {
                 assert!(!sniff_real_bytes(b"just some text"));
             }
         }
@@ -101,7 +101,7 @@ pub mod io_registry {
 
     static ENTRIES: OnceLock<Vec<ComposerEntry>> = OnceLock::new();
 
-    pub fn entries() -> &'static [ComposerEntry] {
+    pub async fn entries() -> &'static [ComposerEntry] {
         ENTRIES.get_or_init(|| vec![composer_entry_of::<HtmlRawAnyComposer>()]).as_slice()
     }
 }

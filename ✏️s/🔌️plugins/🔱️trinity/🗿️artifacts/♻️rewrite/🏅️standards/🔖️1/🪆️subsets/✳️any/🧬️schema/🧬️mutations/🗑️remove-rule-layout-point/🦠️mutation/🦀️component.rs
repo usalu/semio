@@ -14,23 +14,23 @@ pub struct RemoveRuleLayoutPoint {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn remove_rule_layout_point(key: String) -> RewriteRuleMutation {
+pub async fn remove_rule_layout_point(key: String) -> RewriteRuleMutation {
     RewriteRuleMutation::RemoveRuleLayoutPoint(RemoveRuleLayoutPoint { key })
 }
 
 impl protocol::MutationKind<RewriteSnapshot, RewriteRuleMutation> for RemoveRuleLayoutPoint {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "rule-layout-point", kind: "remove-rule-layout-point", record: "RemovedRuleLayoutPoint" };
 
-    fn diff(&self, base: &RewriteSnapshot) -> protocol::MutationOutcome<RewriteDiff> {
+    async fn diff(&self, base: &RewriteSnapshot) -> protocol::MutationOutcome<RewriteDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &RewriteSnapshot) -> Vec<RewriteRuleMutation> {
+    async fn inverse(&self, base: &RewriteSnapshot) -> Vec<RewriteRuleMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         format!("Remove rule layout point \"{}\"", self.key)
     }
-    fn target(&self) -> Vec<String> {
+    async fn target(&self) -> Vec<String> {
         vec![self.key.clone()]
     }
 }

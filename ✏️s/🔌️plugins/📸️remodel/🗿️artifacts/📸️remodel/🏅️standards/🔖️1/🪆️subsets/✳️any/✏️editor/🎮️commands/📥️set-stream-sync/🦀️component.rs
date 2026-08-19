@@ -14,7 +14,7 @@ pub struct SetStreamSync {
     pub sync_offset_ms: f64,
 }
 
-pub fn handle(payload: &SetStreamSync, doc: &ArtifactView<'_, RemodelSnapshot>, _cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelMutation, RemodelConfigMutation>, Fault> {
+pub async fn handle(payload: &SetStreamSync, doc: &ArtifactView<'_, RemodelSnapshot>, _cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelMutation, RemodelConfigMutation>, Fault> {
     if !doc.snapshot.streams.iter().any(|stream| stream.id == payload.stream_id) {
         return Ok(Emit::default());
     }

@@ -4,13 +4,13 @@
 
 use crate::editor::puzzle2d::engine::{apply_normal_undirected_redraw_layout_to_fixture_v1_json, apply_ported_redraw_layout_to_fixture_v1_json};
 
-fn is_undirected_fixture_schema(schema: &str) -> bool {
+async fn is_undirected_fixture_schema(schema: &str) -> bool {
     matches!(schema, "reasoning.mindmap.fixture" | "reasoning.wires.fixture")
 }
 
 /// 🔀️ Picks the undirected-force-graph vs. ported-redraw layout path for a fixture — pure compute,
 /// called by the `framework/surface/board-2d` wasm session's `boardRedrawLayoutFixtureJson` export.
-pub fn redraw_layout_fixture_json(fixture_json: &str, options_json: &str) -> Result<String, String> {
+pub async fn redraw_layout_fixture_json(fixture_json: &str, options_json: &str) -> Result<String, String> {
     let fixture: serde_json::Value = serde_json::from_str(fixture_json).map_err(|e| e.to_string())?;
     let schema = fixture.get("schema").and_then(|v| v.as_str()).unwrap_or("");
     let opts: serde_json::Value = serde_json::from_str(options_json).map_err(|e| e.to_string())?;
@@ -33,7 +33,7 @@ mod tests {
     use std::collections::HashMap;
 
     #[test]
-    fn force_graph_spreads_two_linked_circles_along_x() {
+    async fn force_graph_spreads_two_linked_circles_along_x() {
         let fixture = json!({
             "schema": "puzzle.2d.fixture",
             "camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 },
@@ -72,7 +72,7 @@ mod tests {
     }
 
     #[test]
-    fn force_graph_pins_locked_node_positions() {
+    async fn force_graph_pins_locked_node_positions() {
         let fixture = json!({
             "schema": "puzzle.2d.fixture",
             "camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 },
@@ -114,7 +114,7 @@ mod tests {
     }
 
     #[test]
-    fn redraw_force_graph_top_level_locked_node_ids_pins() {
+    async fn redraw_force_graph_top_level_locked_node_ids_pins() {
         let fixture = json!({
             "schema": "puzzle.2d.fixture",
             "camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 },
@@ -157,7 +157,7 @@ mod tests {
     }
 
     #[test]
-    fn redraw_force_graph_mindmap_schema_uses_undirected_layout() {
+    async fn redraw_force_graph_mindmap_schema_uses_undirected_layout() {
         let fixture = json!({
             "schema": "reasoning.mindmap.fixture",
             "camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 },
@@ -187,7 +187,7 @@ mod tests {
     }
 
     #[test]
-    fn force_graph_normal_mode_node_id_edges_apply_spring_forces() {
+    async fn force_graph_normal_mode_node_id_edges_apply_spring_forces() {
         let fixture = json!({
             "schema": "puzzle.2d.fixture",
             "camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 },
@@ -214,13 +214,13 @@ mod tests {
     }
 
     #[test]
-    fn force_graph_rejects_bad_schema() {
+    async fn force_graph_rejects_bad_schema() {
         let err = apply_force_graph_layout_to_fixture_v1_json(r#"{"schema":"x","nodes":[],"edges":[]}"#, "{}").unwrap_err();
         assert!(err.contains("schema"));
     }
 
     #[test]
-    fn force_graph_barnes_hut_many_bodies_yields_finite_coordinates() {
+    async fn force_graph_barnes_hut_many_bodies_yields_finite_coordinates() {
         let mut nodes = Vec::new();
         let mut edges = Vec::new();
         for k in 0..64 {
@@ -272,7 +272,7 @@ mod tests {
     }
 
     #[test]
-    fn force_graph_bh_layout_is_deterministic_for_fixed_seed() {
+    async fn force_graph_bh_layout_is_deterministic_for_fixed_seed() {
         let mut nodes = Vec::new();
         let mut edges = Vec::new();
         for k in 0..36 {
@@ -317,7 +317,7 @@ mod tests {
     }
 
     #[test]
-    fn force_graph_pairwise_layout_is_deterministic_for_fixed_seed() {
+    async fn force_graph_pairwise_layout_is_deterministic_for_fixed_seed() {
         let fixture = json!({
             "schema": "puzzle.2d.fixture",
             "camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 },
@@ -348,7 +348,7 @@ mod tests {
     }
 
     #[test]
-    fn force_graph_clamped_barnes_hut_theta_runs_without_error() {
+    async fn force_graph_clamped_barnes_hut_theta_runs_without_error() {
         let fixture = json!({
             "schema": "puzzle.2d.fixture",
             "camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 },
@@ -381,7 +381,7 @@ mod tests {
     }
 
     #[test]
-    fn redraw_force_graph_wraps_flat_options() {
+    async fn redraw_force_graph_wraps_flat_options() {
         let fixture = json!({
             "schema": "puzzle.2d.fixture",
             "camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 },
@@ -423,7 +423,7 @@ mod tests {
     }
 
     #[test]
-    fn edge_handle_snap_sets_circle_handle_angles_on_center_line() {
+    async fn edge_handle_snap_sets_circle_handle_angles_on_center_line() {
         let fixture = json!({
             "schema": "puzzle.2d.fixture",
             "camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 },
@@ -455,7 +455,7 @@ mod tests {
     }
 
     #[test]
-    fn redraw_force_graph_with_snap_sets_handle_angles() {
+    async fn redraw_force_graph_with_snap_sets_handle_angles() {
         let fixture = json!({
             "schema": "puzzle.2d.fixture",
             "camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 },
@@ -512,7 +512,7 @@ mod tests {
     }
 
     #[test]
-    fn force_graph_accepts_logical_nodes_without_xy() {
+    async fn force_graph_accepts_logical_nodes_without_xy() {
         let fixture = json!({
             "schema": "puzzle.2d.fixture",
             "camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 },
@@ -546,7 +546,7 @@ mod tests {
     }
 
     #[test]
-    fn hierarchical_tree_normal_mode_node_id_edges_stacks_by_depth() {
+    async fn hierarchical_tree_normal_mode_node_id_edges_stacks_by_depth() {
         let fixture = json!({
             "schema": "puzzle.2d.fixture",
             "camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 },
@@ -582,7 +582,7 @@ mod tests {
     }
 
     #[test]
-    fn hierarchical_tree_stacks_by_depth() {
+    async fn hierarchical_tree_stacks_by_depth() {
         let fixture = json!({
             "schema": "puzzle.2d.fixture",
             "camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 },
@@ -631,7 +631,7 @@ mod tests {
     }
 
     #[test]
-    fn hierarchical_tree_pins_locked_root_coordinates() {
+    async fn hierarchical_tree_pins_locked_root_coordinates() {
         let fixture = json!({
             "schema": "puzzle.2d.fixture",
             "camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 },
@@ -687,7 +687,7 @@ mod tests {
     }
 
     #[test]
-    fn redraw_hierarchical_tree_nested_locked_node_ids_pins() {
+    async fn redraw_hierarchical_tree_nested_locked_node_ids_pins() {
         let fixture = json!({
             "schema": "puzzle.2d.fixture",
             "camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 },
@@ -733,7 +733,7 @@ mod tests {
     }
 
     #[test]
-    fn hierarchical_tree_right_places_children_larger_x_than_root() {
+    async fn hierarchical_tree_right_places_children_larger_x_than_root() {
         let fixture = json!({
             "schema": "puzzle.2d.fixture",
             "camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 },
@@ -771,7 +771,7 @@ mod tests {
     }
 
     #[test]
-    fn hierarchical_tree_upwards_places_children_smaller_y_than_root() {
+    async fn hierarchical_tree_upwards_places_children_smaller_y_than_root() {
         let fixture = json!({
             "schema": "puzzle.2d.fixture",
             "camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 },
@@ -809,7 +809,7 @@ mod tests {
     }
 
     #[test]
-    fn hierarchical_tree_rejects_unknown_direction() {
+    async fn hierarchical_tree_rejects_unknown_direction() {
         let fixture = json!({
             "schema": "puzzle.2d.fixture",
             "camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 },
@@ -832,7 +832,7 @@ mod tests {
     }
 
     #[test]
-    fn redraw_rejects_unknown_mode() {
+    async fn redraw_rejects_unknown_mode() {
         let fixture = json!({
             "schema": "puzzle.2d.fixture",
             "camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 },

@@ -38,11 +38,11 @@ pub struct GltfAreaVolumeIndicators {
 pub struct GltfAreaVolumeInference;
 
 impl GltfAreaVolumeInference {
-    pub(crate) fn infer_pair_contact(pair: &GltfPairGeometry) -> GltfMeasure<f64> {
+    pub(crate) async fn infer_pair_contact(pair: &GltfPairGeometry) -> GltfMeasure<f64> {
         contact_area::infer_pair(pair)
     }
 
-    pub(crate) fn infer_assembly(indicators: &mut GltfAreaVolumeIndicators, part_count: usize, contact_area: f64, contact_area_complete: bool, sample_count: usize, topology: Topology) {
+    pub(crate) async fn infer_assembly(indicators: &mut GltfAreaVolumeIndicators, part_count: usize, contact_area: f64, contact_area_complete: bool, sample_count: usize, topology: Topology) {
         indicators.contact_area = contact_area::from_assembly(part_count, contact_area, contact_area_complete, sample_count, topology);
         indicators.exposed_area = exposed_area::from_assembly(&indicators.surface_area, part_count, contact_area, contact_area_complete, sample_count, topology);
     }
@@ -51,7 +51,7 @@ impl GltfAreaVolumeInference {
 impl GltfInferenceStage<GltfGeometryContext<'_>> for GltfAreaVolumeInference {
     type Output = GltfAreaVolumeIndicators;
 
-    fn infer(context: &GltfGeometryContext<'_>) -> Self::Output {
+    async fn infer(context: &GltfGeometryContext<'_>) -> Self::Output {
         Self::Output {
             surface_area: surface_area::infer(context),
             total_area: total_area::infer(context),
@@ -64,7 +64,7 @@ impl GltfInferenceStage<GltfGeometryContext<'_>> for GltfAreaVolumeInference {
         }
     }
 
-    fn unavailable(diagnostic_ids: &[String]) -> Self::Output {
+    async fn unavailable(diagnostic_ids: &[String]) -> Self::Output {
         Self::Output {
             surface_area: surface_area::unavailable_measure(diagnostic_ids),
             total_area: total_area::unavailable_measure(diagnostic_ids),

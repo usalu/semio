@@ -24,12 +24,12 @@ pub mod derived_composition {
         type Snapshot = PptxSnapshot;
         const WRITES: Dialect = DIALECT_TRANSITIONAL;
 
-        fn reads() -> &'static [Dialect] {
+        async fn reads() -> &'static [Dialect] {
             &[DIALECT_ANY, DIALECT_TRANSITIONAL, DEP_ZIP, DEP_XML]
         }
 
-        fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
-            let inner = PptxAnyComposer::compose(sources)?;
+        async fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+            let inner = semio_framework_plugin::resolve_ready(PptxAnyComposer::compose(sources))?;
             let checks = check_transitional_conformance(&inner.snapshot);
             let (hard, soft): (Vec<Diagnostic>, Vec<Diagnostic>) = checks.into_iter().partition(|d| matches!(d.severity, Severity::Error | Severity::Fatal));
             if !hard.is_empty() {
@@ -50,7 +50,7 @@ pub mod derived_composition {
     impl SubsetValidator for PptxTransitionalValidator {
         const DIALECT: Dialect = DIALECT_TRANSITIONAL;
 
-        fn validate(payload: &IoPayload) -> Vec<Diagnostic> {
+        async fn validate(payload: &IoPayload) -> Vec<Diagnostic> {
             let decoded = match payload {
                 IoPayload::Binary(bytes) => <PptxSnapshot as store::ArtifactPack>::decode_pack(bytes).ok(),
                 IoPayload::Text(text) => <PptxSnapshot as store::ArtifactDsl>::parse_dsl(text).ok(),
@@ -71,7 +71,7 @@ pub mod derived_composition {
 
     static VALIDATOR_ENTRY: OnceLock<SubsetValidatorEntry> = OnceLock::new();
 
-    fn validator_entry() -> &'static SubsetValidatorEntry {
+    async fn validator_entry() -> &'static SubsetValidatorEntry {
         VALIDATOR_ENTRY.get_or_init(subset_validator_entry_of::<PptxTransitionalValidator>)
     }
 
@@ -80,7 +80,7 @@ pub mod derived_composition {
     /// itself is registered separately by the standard-level composer aggregator
     /// (`crate::artifacts::pptx::standards::v_ecma_376::engine::io_registry::entries()`), matching how `✳️any`'s
     /// own entry is registered.
-    pub fn register() {
+    pub async fn register() {
         let _ = register_subset_validator(validator_entry());
     }
     //#endregion 🔖️SubsetValidator
@@ -98,14 +98,14 @@ pub mod derived_composition {
             "</p:presentation>",
         );
 
-        fn hex_encode(bytes: &[u8]) -> String {
+        async fn hex_encode(bytes: &[u8]) -> String {
             bytes.iter().map(|b| format!("{b:02x}")).collect()
         }
 
         /// 🩹 Real OPC zip bytes via `opc::encode_opc` directly -- never `PptxSnapshot::encode_pack`
         /// (which round-trips through `⚙️engine::encode_pptx`'s Transitional-hardcoded
         /// `regenerate_presentation_parts` rewrite). Same technique as `✳️strict`'s composer tests.
-        fn transitional_package_hex() -> String {
+        async fn transitional_package_hex() -> String {
             let mut opc = OpcPackage::empty();
             opc.content_types.set_default("rels", RELS_CONTENT_TYPE);
             opc.content_types.set_default("xml", "application/xml");
@@ -118,7 +118,7 @@ pub mod derived_composition {
         }
 
         #[test]
-        fn conforming_transitional_package_composes_and_stamps_transitional() {
+        async fn conforming_transitional_package_composes_and_stamps_transitional() {
             let hex = transitional_package_hex();
             let sources = vec![ComposeSource { dialect: DIALECT_ANY, payload: AnalyzeSource::Text(&hex) }];
             let composed = PptxTransitionalComposerComposition::compose(&sources).expect("clean Transitional document must compose to transitional");
@@ -126,7 +126,7 @@ pub mod derived_composition {
         }
 
         #[test]
-        fn strict_document_fails_compose_with_real_diagnostic() {
+        async fn strict_document_fails_compose_with_real_diagnostic() {
             let mut opc = OpcPackage::empty();
             opc.content_types.set_default("rels", RELS_CONTENT_TYPE);
             opc.content_types.set_default("xml", "application/xml");
@@ -148,7 +148,7 @@ pub mod derived_composition {
         }
 
         #[test]
-        fn subset_validator_recheck_flags_clean_document_as_clean() {
+        async fn subset_validator_recheck_flags_clean_document_as_clean() {
             let hex = transitional_package_hex();
             let diagnostics = PptxTransitionalValidator::validate(&IoPayload::Text(hex));
             assert!(diagnostics.iter().all(|d| d.severity != Severity::Error), "wire recheck must never report a hard violation for a clean Transitional document: {diagnostics:?}");

@@ -4,7 +4,7 @@ use crate::artifacts::block3d::diff::{Block3dAuthorList};
 use crate::artifacts::block3d::Block3dSnapshot;
 
 //#region 🔖️Diff
-pub fn diff(payload: &super::mutation::AddAuthor, base: &Block3dSnapshot) -> protocol::MutationOutcome<Block3dDiff> {
+pub async fn diff(payload: &super::mutation::AddAuthor, base: &Block3dSnapshot) -> protocol::MutationOutcome<Block3dDiff> {
     if base.authors.iter().any(|item| item.id == payload.author.id) {
         return protocol::MutationOutcome::new(Block3dDiff::default()).absorb_messages([protocol::MutationMessage::warn("mutation.no-op", format!("{} \"{}\" already present", "author", payload.author.id)).at(vec![payload.author.id.clone()])]);
     }

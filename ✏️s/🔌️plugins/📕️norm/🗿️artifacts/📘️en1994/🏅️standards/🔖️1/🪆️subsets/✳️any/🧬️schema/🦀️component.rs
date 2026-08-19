@@ -61,7 +61,7 @@ pub struct En1994Artifact {
 //#region 🔖️Conversions
 impl En1994Artifact {
     /// 📸️ Persisted subset.
-    pub fn to_snapshot(&self) -> crate::artifacts::en1994::En1994Snapshot {
+    pub async fn to_snapshot(&self) -> crate::artifacts::en1994::En1994Snapshot {
         crate::artifacts::en1994::En1994Snapshot {
             annex: self.annex,
             m_ed_knm: self.m_ed_knm,
@@ -89,7 +89,7 @@ impl En1994Artifact {
     }
 
     /// 🧬️ Builds a full artifact from a snapshot, leaving UI fields at defaults.
-    pub fn from_snapshot(snapshot: crate::artifacts::en1994::En1994Snapshot) -> Self {
+    pub async fn from_snapshot(snapshot: crate::artifacts::en1994::En1994Snapshot) -> Self {
         Self {
             annex: snapshot.annex,
             m_ed_knm: snapshot.m_ed_knm,
@@ -117,7 +117,7 @@ impl En1994Artifact {
         }
     }
     /// 🔄 Overwrite persistent fields from a snapshot; leave shared-ui untouched.
-    pub fn set_snapshot(&mut self, snapshot: crate::artifacts::en1994::En1994Snapshot) {
+    pub async fn set_snapshot(&mut self, snapshot: crate::artifacts::en1994::En1994Snapshot) {
         let selected = self.selected_check_index;
         *self = Self::from_snapshot(snapshot);
         self.selected_check_index = selected;
@@ -128,7 +128,7 @@ impl En1994Artifact {
 
 //#region 🔖️Descriptor
 /// 🧬️ Descriptor for `s.norm.en1994` — twenty handcrafted schema leaves.
-pub fn en1994_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
+pub async fn en1994_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
     schema::ArtifactSchemaDescriptor {
         id: "s.norm.en1994",
         artifact: schema::FacetLeaves {
@@ -177,19 +177,19 @@ pub mod derived_construction {
         type Snapshot = En1994Snapshot;
         type Mutation = En1994Mutation;
         type Diff = En1994Diff;
-        fn empty() -> Self {
+        async fn empty() -> Self {
             Self { snapshot: En1994Snapshot::default(), diagnostics: Vec::new() }
         }
-        fn from_snapshot(snapshot: Self::Snapshot) -> Self {
+        async fn from_snapshot(snapshot: Self::Snapshot) -> Self {
             Self { snapshot, diagnostics: Vec::new() }
         }
-        fn from_text(text: &str) -> Result<Self, store::TextError> {
+        async fn from_text(text: &str) -> Result<Self, store::TextError> {
             Ok(Self::from_snapshot(<En1994Snapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
-        fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
+        async fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
             Ok(Self::from_snapshot(<En1994Snapshot as store::ArtifactPack>::decode_pack(bytes)?))
         }
-        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
+        async fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let outcome = <En1994Mutation as protocol::Mutation<En1994Snapshot>>::diff(&mutation, &self.snapshot);
             match <Self::Diff as protocol::MutationDiff<Self::Snapshot>>::apply(outcome.diff(), &self.snapshot) {
                 Ok(snapshot) => self.snapshot = snapshot,
@@ -201,7 +201,7 @@ pub mod derived_construction {
             }
             (self, outcome)
         }
-        fn absorb(
+        async fn absorb(
             mut self,
             diff: Self::Diff,
         ) -> protocol::MutationApplyResult<Self> {
@@ -209,7 +209,7 @@ pub mod derived_construction {
             self.snapshot = snapshot;
             Ok(self)
         }
-        fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
+        async fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
             if self.diagnostics.is_empty() {
                 Ok(self.snapshot)
             } else {
@@ -237,11 +237,11 @@ pub mod derived_analysis {
         type Parts = En1994Parts;
         const DIALECT: Dialect = Dialect { artifact_kind: "s.en1994", standard: StandardId("1"), subset: SubsetId("*") };
 
-        fn sniff(_source: &AnalyzeSource<'_>) -> IoConfidence {
+        async fn sniff(_source: &AnalyzeSource<'_>) -> IoConfidence {
             IoConfidence::Medium
         }
 
-        fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
+        async fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
             let mut parts = En1994Parts::default();
             let mut diagnostics = Vec::new();
             let mut confidence = IoConfidence::High;
@@ -302,16 +302,16 @@ pub struct AnnexParams {
 
 impl AnnexParams {
     /// 📖️ EN-recommended NDPs per EN 1994-1-1 §2.4.1.2.
-    pub fn en() -> Self {
+    pub async fn en() -> Self {
         Self { choice: AnnexChoice::En, gamma_v: 1.25, gamma_c: 1.5, gamma_s: 1.15 }
     }
 
     /// 🇩️🇪️ DIN EN 1994-1-1/NA does not amend γ_V, γ_C, or γ_S — intentionally equal to EN.
-    pub fn de() -> Self {
+    pub async fn de() -> Self {
         Self { choice: AnnexChoice::De, gamma_v: 1.25, gamma_c: 1.5, gamma_s: 1.15 }
     }
 
-    pub fn for_annex(annex: AnnexChoice) -> Self {
+    pub async fn for_annex(annex: AnnexChoice) -> Self {
         match annex {
             AnnexChoice::En => Self::en(),
             AnnexChoice::De => Self::de(),
@@ -325,34 +325,34 @@ pub mod part_1_1 {
     use super::*;
 
     /// 📐️ Full plastic moment M_pl,Rd [kNm] (steel + concrete).
-    pub fn full_plastic_moment_knm(m_pla_knm: f64, m_plc_knm: f64) -> f64 {
+    pub async fn full_plastic_moment_knm(m_pla_knm: f64, m_plc_knm: f64) -> f64 {
         m_pla_knm + m_plc_knm
     }
 
     /// 📐️ Partial shear connection degree η = n_f / n_f,req.
-    pub fn shear_connection_degree(n_f: u32, n_f_req: u32) -> f64 {
+    pub async fn shear_connection_degree(n_f: u32, n_f_req: u32) -> f64 {
         n_f as f64 / n_f_req as f64
     }
 
     /// 📐️ Composite plastic moment with partial shear connection per EN 1994-1-1 §6.2.1(8).
-    pub fn plastic_moment_partial_knm(m_pla_knm: f64, m_pl_rd_knm: f64, eta: f64) -> f64 {
+    pub async fn plastic_moment_partial_knm(m_pla_knm: f64, m_pl_rd_knm: f64, eta: f64) -> f64 {
         m_pla_knm + eta * (m_pl_rd_knm - m_pla_knm)
     }
 
     /// 📐️ Effective width b_eff [mm] per EN 1994-1-1 §5.4.1.2.
-    pub fn effective_width_mm(span_mm: f64, b_0_mm: f64, beam_spacing_mm: f64) -> f64 {
+    pub async fn effective_width_mm(span_mm: f64, b_0_mm: f64, beam_spacing_mm: f64) -> f64 {
         let be1 = span_mm / 8.0 + b_0_mm;
         let be2 = beam_spacing_mm / 2.0;
         (2.0 * be1).min(2.0 * be2)
     }
 
     /// 📐️ Longitudinal shear V_L [kN] per EN 1994-1-1 §6.6.2.
-    pub fn longitudinal_shear_kn(delta_n_kn: f64, connector_spacing_mm: f64) -> f64 {
+    pub async fn longitudinal_shear_kn(delta_n_kn: f64, connector_spacing_mm: f64) -> f64 {
         delta_n_kn * 1000.0 / connector_spacing_mm
     }
 
     /// 📐️ Stud height-to-diameter reduction factor α per EN 1994-1-1 §6.6.3.1(1).
-    pub fn stud_alpha(h_sc_mm: f64, d_mm: f64) -> f64 {
+    pub async fn stud_alpha(h_sc_mm: f64, d_mm: f64) -> f64 {
         let ratio = h_sc_mm / d_mm;
         if ratio > 4.0 {
             1.0
@@ -362,7 +362,7 @@ pub mod part_1_1 {
     }
 
     /// 📐️ Shear connector resistance P_Rd [kN] per EN 1994-1-1 §6.6.3.1, Eq. 6.18/6.19 — governing branch is the lesser of stud shank shear-off and concrete/dowel crushing.
-    pub fn connector_resistance_kn(d_mm: f64, h_sc_mm: f64, f_ck_mpa: f64, f_u_mpa: f64, e_cm_mpa: f64, annex: AnnexChoice) -> f64 {
+    pub async fn connector_resistance_kn(d_mm: f64, h_sc_mm: f64, f_ck_mpa: f64, f_u_mpa: f64, e_cm_mpa: f64, annex: AnnexChoice) -> f64 {
         let params = AnnexParams::for_annex(annex);
         let alpha = stud_alpha(h_sc_mm, d_mm);
         let p_pl = 0.8 * f_u_mpa * std::f64::consts::PI * d_mm * d_mm / 4.0;
@@ -371,25 +371,25 @@ pub mod part_1_1 {
     }
 
     /// 📐️ Minimum degree of shear connection η_min per EN 1994-1-1 §6.6.1.2 (equal-flange rolled/welded sections, f_y ≤ 355 MPa).
-    pub fn min_shear_connection_degree(span_m: f64, f_y_mpa: f64) -> f64 {
+    pub async fn min_shear_connection_degree(span_m: f64, f_y_mpa: f64) -> f64 {
         let eta_min = if span_m <= 25.0 { 1.0 - (355.0 / f_y_mpa) * (0.75 - 0.03 * span_m) } else { 1.0 - (355.0 / f_y_mpa) * 0.30 };
         eta_min.max(0.4)
     }
 
-    pub fn check_composite_bending(m_ed: f64, m_rd: f64, annex: AnnexChoice) -> CheckResult {
+    pub async fn check_composite_bending(m_ed: f64, m_rd: f64, annex: AnnexChoice) -> CheckResult {
         CheckResult::from_utilization(ClauseId::new("EN 1994-1-1", "§6.2", "6.2"), Quantity::new(QuantityKind::Moment, m_ed * 1_000_000.0), Quantity::new(QuantityKind::Moment, m_rd * 1_000_000.0), "composite bending ULS", annex)
     }
 
-    pub fn check_longitudinal_shear(v_ed_kn: f64, v_l_rd_kn: f64, annex: AnnexChoice) -> CheckResult {
+    pub async fn check_longitudinal_shear(v_ed_kn: f64, v_l_rd_kn: f64, annex: AnnexChoice) -> CheckResult {
         CheckResult::from_utilization(ClauseId::new("EN 1994-1-1", "§6.6", "6.6"), Quantity::force_kn(v_ed_kn), Quantity::force_kn(v_l_rd_kn), "longitudinal shear", annex)
     }
 
-    pub fn check_stud_resistance(v_ed_per_stud_kn: f64, d_mm: f64, h_sc_mm: f64, f_ck_mpa: f64, f_u_mpa: f64, e_cm_mpa: f64, annex: AnnexChoice) -> CheckResult {
+    pub async fn check_stud_resistance(v_ed_per_stud_kn: f64, d_mm: f64, h_sc_mm: f64, f_ck_mpa: f64, f_u_mpa: f64, e_cm_mpa: f64, annex: AnnexChoice) -> CheckResult {
         let p_rd = connector_resistance_kn(d_mm, h_sc_mm, f_ck_mpa, f_u_mpa, e_cm_mpa, annex);
         CheckResult::from_utilization(ClauseId::new("EN 1994-1-1", "§6.6.3.1", "6.6.3.1"), Quantity::force_kn(v_ed_per_stud_kn), Quantity::force_kn(p_rd), "shear stud resistance", annex)
     }
 
-    pub fn check_shear_connection_degree(eta: f64, span_m: f64, f_y_mpa: f64, annex: AnnexChoice) -> CheckResult {
+    pub async fn check_shear_connection_degree(eta: f64, span_m: f64, f_y_mpa: f64, annex: AnnexChoice) -> CheckResult {
         let eta_min = min_shear_connection_degree(span_m, f_y_mpa);
         CheckResult::from_minimum(ClauseId::new("EN 1994-1-1", "§6.6.1.2", "6.6.1.2"), Quantity::new(QuantityKind::Dimensionless, eta), Quantity::new(QuantityKind::Dimensionless, eta_min), "minimum degree of shear connection", annex)
     }
@@ -410,7 +410,7 @@ pub mod part_1_2 {
     }
 
     /// 🔥️ Composite deck insulation thickness [mm] per EN 1994-1-2 Table 4.2.
-    pub fn insulation_thickness_mm(rating: FireRating, deck_type: &str) -> f64 {
+    pub async fn insulation_thickness_mm(rating: FireRating, deck_type: &str) -> f64 {
         let base = match rating {
             FireRating::R30 => 10.0,
             FireRating::R60 => 18.0,
@@ -424,7 +424,7 @@ pub mod part_1_2 {
         }
     }
 
-    pub fn check_fire_composite(thickness_mm: f64, rating: FireRating, deck_type: &str) -> CheckResult {
+    pub async fn check_fire_composite(thickness_mm: f64, rating: FireRating, deck_type: &str) -> CheckResult {
         let required = insulation_thickness_mm(rating, deck_type);
         CheckResult::from_utilization(ClauseId::new("EN 1994-1-2", "§4.2", "4.2"), Quantity::length_m(required / 1000.0), Quantity::length_m(thickness_mm / 1000.0), "composite fire insulation", AnnexChoice::De)
     }
@@ -436,7 +436,7 @@ pub mod part_2 {
     use super::*;
 
     /// 🌉️ Bridge composite fatigue detail category per EN 1994-2 §8.
-    pub fn bridge_fatigue_category(detail: &str) -> u8 {
+    pub async fn bridge_fatigue_category(detail: &str) -> u8 {
         match detail {
             "stud_welded" => 80,
             "shear_connector" => 71,
@@ -454,18 +454,18 @@ pub mod part_2 {
     pub const STUD_FATIGUE_SLOPE_M: f64 = 8.0;
 
     /// 📐️ Stud fatigue shear-stress resistance Δτ_c(N) [MPa] from the S-N curve per EN 1994-2 §6.8.3, Eq. 6.24.
-    pub fn stud_fatigue_resistance_mpa(n_cycles: f64) -> f64 {
+    pub async fn stud_fatigue_resistance_mpa(n_cycles: f64) -> f64 {
         STUD_DELTA_TAU_C_MPA * (STUD_N_REF / n_cycles).powf(1.0 / STUD_FATIGUE_SLOPE_M)
     }
 
     /// 🌉️ Stud fatigue check Δτ ≤ Δτ_c(N) / γ_Mf,s per EN 1994-2 §6.8.3.
-    pub fn check_stud_fatigue(delta_tau_mpa: f64, n_cycles: f64) -> CheckResult {
+    pub async fn check_stud_fatigue(delta_tau_mpa: f64, n_cycles: f64) -> CheckResult {
         let limit = stud_fatigue_resistance_mpa(n_cycles) / GAMMA_MF_S;
         CheckResult::from_utilization(ClauseId::new("EN 1994-2", "§6.8.3", "6.8.3"), Quantity::stress_mpa(delta_tau_mpa), Quantity::stress_mpa(limit), "stud fatigue shear stress range", AnnexChoice::En)
     }
 
     /// 🌉️ Bridge composite bending + fatigue check.
-    pub fn check_bridge_composite(m_ed_knm: f64, m_rd_knm: f64, delta_sigma_mpa: f64, detail: &str) -> CheckReport {
+    pub async fn check_bridge_composite(m_ed_knm: f64, m_rd_knm: f64, delta_sigma_mpa: f64, detail: &str) -> CheckReport {
         let mut report = CheckReport::default();
         report.push(part_1_1::check_composite_bending(m_ed_knm, m_rd_knm, AnnexChoice::En));
         let category = bridge_fatigue_category(detail);
@@ -477,7 +477,7 @@ pub mod part_2 {
 // #endregion 🔖️Part2
 
 /// 📋️ Composite slab beam check.
-pub fn check_composite_beam(m_ed_knm: f64, v_ed_kn: f64, m_pla: f64, m_pl_rd: f64, eta: f64, v_l_rd: f64, annex: AnnexChoice) -> CheckReport {
+pub async fn check_composite_beam(m_ed_knm: f64, v_ed_kn: f64, m_pla: f64, m_pl_rd: f64, eta: f64, v_l_rd: f64, annex: AnnexChoice) -> CheckReport {
     let m_rd = part_1_1::plastic_moment_partial_knm(m_pla, m_pl_rd, eta);
     let mut report = CheckReport::default();
     report.push(part_1_1::check_composite_bending(m_ed_knm, m_rd, annex));
@@ -493,7 +493,7 @@ mod compliance_helpers_tests {
     use super::*;
 
     #[test]
-    fn composite_beam_e2e() {
+    async fn composite_beam_e2e() {
         let report = check_composite_beam(200.0, 120.0, 80.0, 250.0, 0.75, 150.0, AnnexChoice::De);
         assert!(!report.checks.is_empty());
         let m_rd: f64 = 80.0 + 0.75 * (250.0 - 80.0);
@@ -501,13 +501,13 @@ mod compliance_helpers_tests {
     }
 
     #[test]
-    fn effective_width_8m_span() {
+    async fn effective_width_8m_span() {
         let beff = part_1_1::effective_width_mm(8000.0, 80.0, 3000.0);
         assert!((beff - 2160.0).abs() < 1.0);
     }
 
     #[test]
-    fn partial_shear_connection_eta() {
+    async fn partial_shear_connection_eta() {
         let eta = part_1_1::shear_connection_degree(15, 20);
         assert!((eta - 0.75).abs() < 0.01);
         let m_rd = part_1_1::plastic_moment_partial_knm(100.0, 300.0, eta);
@@ -515,13 +515,13 @@ mod compliance_helpers_tests {
     }
 
     #[test]
-    fn longitudinal_shear_vl() {
+    async fn longitudinal_shear_vl() {
         let v_l = part_1_1::longitudinal_shear_kn(500.0, 200.0);
         assert!((v_l - 2500.0).abs() < 1.0);
     }
 
     #[test]
-    fn stud_connector_resistance_worked_example() {
+    async fn stud_connector_resistance_worked_example() {
         let d = 19.0_f64;
         let h_sc = 5.0 * d;
         let f_u: f64 = 450.0;
@@ -539,31 +539,31 @@ mod compliance_helpers_tests {
     }
 
     #[test]
-    fn min_shear_connection_degree_span_8m() {
+    async fn min_shear_connection_degree_span_8m() {
         let eta_min = part_1_1::min_shear_connection_degree(8.0, 355.0);
         assert!((eta_min - 0.49).abs() < 1e-6);
     }
 
     #[test]
-    fn fire_insulation_r60() {
+    async fn fire_insulation_r60() {
         let t = part_1_2::insulation_thickness_mm(part_1_2::FireRating::R60, "trapezoidal");
         assert!((t - 18.0).abs() < 0.1);
     }
 
     #[test]
-    fn bridge_composite_fatigue() {
+    async fn bridge_composite_fatigue() {
         let report = part_2::check_bridge_composite(180.0, 250.0, 65.0, "stud_welded");
         assert_eq!(report.checks.len(), 2);
     }
 
     #[test]
-    fn stud_fatigue_resistance_at_reference_cycles() {
+    async fn stud_fatigue_resistance_at_reference_cycles() {
         let delta_tau_c = part_2::stud_fatigue_resistance_mpa(part_2::STUD_N_REF);
         assert!((delta_tau_c - 90.0).abs() < 1e-9);
     }
 
     #[test]
-    fn annex_params_document_equality() {
+    async fn annex_params_document_equality() {
         let en = AnnexParams::en();
         let de = AnnexParams::de();
         assert!((en.gamma_v - de.gamma_v).abs() < 1e-9);

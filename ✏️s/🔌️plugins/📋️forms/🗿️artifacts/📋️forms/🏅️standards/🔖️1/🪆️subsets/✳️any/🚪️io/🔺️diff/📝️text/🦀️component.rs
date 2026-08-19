@@ -20,7 +20,7 @@ pub type FormDiff = FormsDiff;
 /// `FormsStepsDelta` exactly as before and applies it here; only the CALLER now sources `items`
 /// from the working-scene accessor (`forms_steps`/`forms_artifact_steps`) instead of a snapshot
 /// field, and wraps the result into composed children via [`forms_diff_from_delta`] below.
-pub fn apply_steps_delta(items: &[FormStep], delta: &FormsStepsDelta) -> Vec<FormStep> {
+pub async fn apply_steps_delta(items: &[FormStep], delta: &FormsStepsDelta) -> Vec<FormStep> {
     let mut next = items.to_vec();
     for id in &delta.removed {
         next.retain(|item| item.id != *id);
@@ -59,7 +59,7 @@ pub fn apply_steps_delta(items: &[FormStep], delta: &FormsStepsDelta) -> Vec<For
 /// `FormsStepsDelta` applied against `base`'s working-scene steps — the standard way every
 /// mutation triad's `diff_*` function produces its result (replaces the old
 /// `FormsDiff{steps: Some(delta), ..}` literal).
-pub fn forms_diff_from_delta(delta: FormsStepsDelta, base: &FormsSnapshot) -> FormsDiff {
+pub async fn forms_diff_from_delta(delta: FormsStepsDelta, base: &FormsSnapshot) -> FormsDiff {
     let next_steps = apply_steps_delta(&forms_steps(base), &delta);
     let (structure, results) = forms_children_from_steps(&next_steps);
     FormsDiff { structure: Some(structure), results: Some(results), ..Default::default() }
@@ -67,7 +67,7 @@ pub fn forms_diff_from_delta(delta: FormsStepsDelta, base: &FormsSnapshot) -> Fo
 
 impl FormsDiff {
     /// 🧬️ Applies every sparse entry (all state classes) onto a full artifact.
-    pub fn apply_to_artifact(&self, artifact: &FormsArtifact) -> protocol::MutationApplyResult<FormsArtifact> {
+    pub async fn apply_to_artifact(&self, artifact: &FormsArtifact) -> protocol::MutationApplyResult<FormsArtifact> {
         Ok({
             let mut next = artifact.clone();
             if let Some(schema) = &self.schema {
@@ -109,7 +109,7 @@ impl FormsDiff {
 }
 
 impl MutationDiff<FormsSnapshot> for FormsDiff {
-    fn apply(&self, snapshot: &FormsSnapshot) -> protocol::MutationApplyResult<FormsSnapshot> {
+    async fn apply(&self, snapshot: &FormsSnapshot) -> protocol::MutationApplyResult<FormsSnapshot> {
         Ok({
             let mut next = snapshot.clone();
             if let Some(schema) = &self.schema {
@@ -133,7 +133,7 @@ impl MutationDiff<FormsSnapshot> for FormsDiff {
             next
         })
     }
-    fn absorb(&mut self, other: Self) {
+    async fn absorb(&mut self, other: Self) {
         macro_rules! take {
             ($field:ident) => {
                 if other.$field.is_some() {
@@ -160,7 +160,7 @@ impl MutationDiff<FormsSnapshot> for FormsDiff {
 /// 🔎️ Sparse diff between two full snapshots, expressed via the SAME granular
 /// `FormsStepsDelta` every mutation triad builds — never a whole-document replace (that vocabulary
 /// is banned; see `FormsDiff`'s own doc comment for the composition-era shape).
-pub fn sparse_diff_between(before: &FormsSnapshot, after: &FormsSnapshot) -> FormsDiff {
+pub async fn sparse_diff_between(before: &FormsSnapshot, after: &FormsSnapshot) -> FormsDiff {
     if before == after {
         return FormsDiff::default();
     }
@@ -191,7 +191,7 @@ pub fn sparse_diff_between(before: &FormsSnapshot, after: &FormsSnapshot) -> For
 /// the sparse delta itself (e.g. a future real `ArtifactView::with_children` seam, or diagnostics),
 /// kept alongside [`sparse_diff_between`] though the latter no longer stores it on `FormsDiff`
 /// (composed children are whole-slot-replace at the wire level; see this file's `apply`/`absorb`).
-pub fn steps_collection_delta(before: &[FormStep], after: &[FormStep]) -> FormsStepsDelta {
+pub async fn steps_collection_delta(before: &[FormStep], after: &[FormStep]) -> FormsStepsDelta {
     let before_ids: std::collections::BTreeSet<_> = before.iter().map(|s| s.id.as_str()).collect();
     let after_ids: std::collections::BTreeSet<_> = after.iter().map(|s| s.id.as_str()).collect();
     let removed: Vec<String> = before_ids.difference(&after_ids).map(|id| (*id).to_string()).collect();
@@ -228,14 +228,14 @@ mod tests {
     use protocol::Mutation;
 
     #[test]
-    fn empty_diff_is_a_no_operation() {
+    async fn empty_diff_is_a_no_operation() {
         let base = FormsSnapshot::default();
         let diff = FormsDiff::default();
         assert_eq!(diff.apply(&base).expect("valid mutation diff"), base);
     }
 
     #[test]
-    fn create_step_diff_applies_onto_the_base_snapshot() {
+    async fn create_step_diff_applies_onto_the_base_snapshot() {
         let base = crate::artifacts::forms::forms_snapshot_with_state(FORMS_DOCUMENT_SCHEMA.into(), "forms".into(), "1".into(), None, Vec::new());
         let step = FormStep { id: "s".into(), title: "Inputs".into(), description: None, blocks: Vec::new() };
         let operation = FormMutation::CreateStep(create_step::mutation::CreateStep { step, index: None });

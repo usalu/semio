@@ -8,5 +8,5 @@ pub const ID: &str = "s.stdio.gltf.mutation.change-mesh-name.v1";
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct GltfChangeMeshNamePayload { pub mesh: usize, pub value: Option<String> }
-pub fn validate(payload: &GltfChangeMeshNamePayload, base: &GltfSnapshot) -> Result<(), GltfTopLevelMutationRejection> { checked_index(payload.mesh, base.document.meshes.len(), "document/meshes")?; Ok(()) }
-pub fn apply(payload: &GltfChangeMeshNamePayload, base: &GltfSnapshot) -> Result<GltfSnapshot, GltfTopLevelMutationRejection> { validate(payload, base)?; let mut next = base.clone(); next.document.meshes[payload.mesh].name = payload.value.clone(); Ok(next) }
+pub async fn validate(payload: &GltfChangeMeshNamePayload, base: &GltfSnapshot) -> Result<(), GltfTopLevelMutationRejection> { checked_index(payload.mesh, base.document.meshes.len(), "document/meshes")?; Ok(()) }
+pub async fn apply(payload: &GltfChangeMeshNamePayload, base: &GltfSnapshot) -> Result<GltfSnapshot, GltfTopLevelMutationRejection> { validate(payload, base)?; let mut next = base.clone(); next.document.meshes[payload.mesh].name = payload.value.clone(); Ok(next) }

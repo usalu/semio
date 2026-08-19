@@ -22,11 +22,11 @@ pub mod derived_composition {
         type Snapshot = SemioPresentationSnapshot;
         const WRITES: Dialect = DIALECT;
 
-        fn reads() -> &'static [Dialect] {
+        async fn reads() -> &'static [Dialect] {
             &[DIALECT]
         }
 
-        fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+        async fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
             let native: Vec<AnalyzeSource<'_>> = sources
                 .iter()
                 .filter(|s| s.dialect == DIALECT)
@@ -51,7 +51,7 @@ pub mod derived_composition {
     /// must resolve to a real `layouts` entry, and `masters`/`layouts` ids must each be unique (both
     /// collections are name-keyed in the diff facet — a duplicate id would silently corrupt any future
     /// `between()`/`apply()` on this snapshot). Real structural checks, not a decode-only stub.
-    pub fn check_presentation_referential_integrity(snapshot: &SemioPresentationSnapshot) -> Vec<Diagnostic> {
+    pub async fn check_presentation_referential_integrity(snapshot: &SemioPresentationSnapshot) -> Vec<Diagnostic> {
         let mut diagnostics = Vec::new();
 
         let mut seen_master_ids = std::collections::HashSet::new();
@@ -83,7 +83,7 @@ pub mod derived_composition {
 
     impl SubsetValidator for SemioPresentationValidator {
         const DIALECT: Dialect = DIALECT;
-        fn validate(payload: &IoPayload) -> Vec<Diagnostic> {
+        async fn validate(payload: &IoPayload) -> Vec<Diagnostic> {
             let decoded = match payload {
                 IoPayload::Binary(bytes) => <SemioPresentationSnapshot as store::ArtifactPack>::decode_pack(bytes).ok(),
                 IoPayload::Text(text) => <SemioPresentationSnapshot as store::ArtifactDsl>::parse_dsl(text).ok(),
@@ -96,7 +96,7 @@ pub mod derived_composition {
     }
 
     static VALIDATOR_ENTRY: std::sync::OnceLock<SubsetValidatorEntry> = std::sync::OnceLock::new();
-    fn validator_entry() -> &'static SubsetValidatorEntry {
+    async fn validator_entry() -> &'static SubsetValidatorEntry {
         VALIDATOR_ENTRY.get_or_init(subset_validator_entry_of::<SemioPresentationValidator>)
     }
     //#endregion 🔖️SubsetValidator
@@ -106,7 +106,7 @@ pub mod derived_composition {
     /// one `serializer_entry_of` (semio -> pptx); `register_composer_entries` derives all 4 `IoKey`s
     /// from these 2 rows (see `document`'s own composer for the fuller doc comment on this mechanism).
     static IO_ENTRIES: std::sync::OnceLock<Vec<ComposerEntry>> = std::sync::OnceLock::new();
-    fn io_entries() -> &'static [ComposerEntry] {
+    async fn io_entries() -> &'static [ComposerEntry] {
         IO_ENTRIES.get_or_init(|| vec![deserializer_entry_of::<SemioPresentationFromPptx>(), serializer_entry_of::<SemioPresentationToPptx>()])
     }
     //#endregion 🔖️IoEntries
@@ -114,7 +114,7 @@ pub mod derived_composition {
     //#region 🔖️Register
     /// 📌️ Registers this subset's schema descriptor, document codec, SubsetValidator, and the
     /// presentation<->pptx io bridge row. Called from this artifact's standard-level `engine::register()`.
-    pub fn register() {
+    pub async fn register() {
         ::schema::register_artifact_schema_descriptor(crate::artifacts::semio::standards::v1::subsets::presentation::schema::semio_presentation_artifact_schema_descriptor());
         let _ = store::register_document_codec(store::ArtifactCodec::of::<SemioPresentationSnapshot, crate::artifacts::semio::standards::v1::subsets::presentation::schema::mutations::SemioPresentationMutation>(
             crate::artifacts::semio::standards::v1::subsets::presentation::schema::snapshot::STDIO_SEMIOPRESENTATION_DOCUMENT_SCHEMA,
@@ -127,7 +127,7 @@ pub mod derived_composition {
     /// 💡️ Registers `s.stdio.semio.presentation.inference`'s facet leaves into the OS-wide
     /// inference catalog — sibling to `register_artifact_schema_descriptor` above (separate
     /// registry, ticket 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING).
-    pub fn register_artifact_inferences() {
+    pub async fn register_artifact_inferences() {
         ::schema::register_artifact_inference_descriptor(crate::artifacts::semio::standards::v1::subsets::presentation::schema::inferences::semio_presentation_artifact_inference_descriptor());
     }
     //#endregion 🔖️Register
@@ -139,7 +139,7 @@ pub mod derived_composition {
         use crate::artifacts::semio::standards::v1::subsets::presentation::schema::snapshot::{Slide, SlideLayout, SlideMaster};
         use semio_framework_plugin::{ArtifactDeserializer, ArtifactSerializer};
 
-        fn clean_snapshot() -> SemioPresentationSnapshot {
+        async fn clean_snapshot() -> SemioPresentationSnapshot {
             SemioPresentationSnapshot {
                 schema: "s.stdio.semio.presentation".into(),
                 masters: vec![SlideMaster { id: "m1".into(), shapes: Vec::new() }],
@@ -149,12 +149,12 @@ pub mod derived_composition {
         }
 
         #[test]
-        fn clean_snapshot_has_no_diagnostics() {
+        async fn clean_snapshot_has_no_diagnostics() {
             assert!(check_presentation_referential_integrity(&clean_snapshot()).is_empty());
         }
 
         #[test]
-        fn dangling_layout_master_is_flagged() {
+        async fn dangling_layout_master_is_flagged() {
             let mut snap = clean_snapshot();
             snap.layouts[0].master_id = "missing".into();
             let diagnostics = check_presentation_referential_integrity(&snap);
@@ -162,7 +162,7 @@ pub mod derived_composition {
         }
 
         #[test]
-        fn dangling_slide_layout_is_flagged() {
+        async fn dangling_slide_layout_is_flagged() {
             let mut snap = clean_snapshot();
             snap.slides[0].layout_id = Some("missing".into());
             let diagnostics = check_presentation_referential_integrity(&snap);
@@ -170,7 +170,7 @@ pub mod derived_composition {
         }
 
         #[test]
-        fn duplicate_master_id_is_flagged() {
+        async fn duplicate_master_id_is_flagged() {
             let mut snap = clean_snapshot();
             snap.masters.push(SlideMaster { id: "m1".into(), shapes: Vec::new() });
             let diagnostics = check_presentation_referential_integrity(&snap);
@@ -178,14 +178,14 @@ pub mod derived_composition {
         }
 
         #[test]
-        fn slide_with_no_layout_is_never_flagged() {
+        async fn slide_with_no_layout_is_never_flagged() {
             let mut snap = clean_snapshot();
             snap.slides[0].layout_id = None;
             assert!(check_presentation_referential_integrity(&snap).is_empty());
         }
 
         #[test]
-        fn validator_roundtrips_through_pack_payload() {
+        async fn validator_roundtrips_through_pack_payload() {
             let bytes = <SemioPresentationSnapshot as store::ArtifactPack>::encode_pack(&clean_snapshot());
             let diagnostics = SemioPresentationValidator::validate(&IoPayload::Binary(bytes));
             assert!(diagnostics.is_empty(), "got {diagnostics:?}");
@@ -196,7 +196,7 @@ pub mod derived_composition {
         /// shapes are the documented lossy fields — this fixture avoids them by construction, so the
         /// comparison exercises TextBox/Picture/Placeholder shape fidelity end to end).
         #[test]
-        fn pptx_round_trip_is_stable() {
+        async fn pptx_round_trip_is_stable() {
             use crate::artifacts::pptx::schema::snapshot::{PptxParagraph, PptxPresentation, PptxRun, PptxShape, PptxSlide, PptxTransform};
             use crate::artifacts::pptx::PptxSnapshot;
             use crate::artifacts::zip::opc::OpcPackage;
@@ -214,9 +214,9 @@ pub mod derived_composition {
                     }],
                 },
             );
-            let semio1 = SemioPresentationFromPptx::deserialize(&pptx1).expect("deserialize");
-            let pptx2 = SemioPresentationToPptx::serialize(&semio1).expect("serialize");
-            let semio2 = SemioPresentationFromPptx::deserialize(&pptx2).expect("deserialize round 2");
+            let semio1 = semio_framework_plugin::resolve_ready(SemioPresentationFromPptx::deserialize(&pptx1)).expect("deserialize");
+            let pptx2 = semio_framework_plugin::resolve_ready(SemioPresentationToPptx::serialize(&semio1)).expect("serialize");
+            let semio2 = semio_framework_plugin::resolve_ready(SemioPresentationFromPptx::deserialize(&pptx2)).expect("deserialize round 2");
             assert_eq!(semio1, semio2);
         }
 
@@ -238,7 +238,7 @@ pub mod derived_composition {
             /// parse under the real dialect — independent of, and cheaper than, the two `recognize`/
             /// `walk_protocol` laws below.
             #[test]
-            fn committed_facet_files_parse() {
+            async fn committed_facet_files_parse() {
                 for (label, text) in [("snapshot grammar", snapshot::text::COMPONENT_GRAMMAR_SEMIO), ("mutations grammar", mutations::text::COMPONENT_GRAMMAR_SEMIO), ("diff grammar", diff::text::COMPONENT_GRAMMAR_SEMIO)] {
                     let grammar = dsl::parse_grammar(text).unwrap_or_else(|e| panic!("{label}: parse_grammar failed: {e:?}"));
                     assert_eq!(grammar.dialect, dsl::SemioDialect::Grammar, "{label}: expected grammar dialect");
@@ -254,7 +254,7 @@ pub mod derived_composition {
             /// `artifact-mark` token), so this is a direct proof this facet will pass that harness once
             /// graduated.
             #[test]
-            fn grammar_conformance_law() {
+            async fn grammar_conformance_law() {
                 let grammar = dsl::parse_grammar(snapshot::text::COMPONENT_GRAMMAR_SEMIO).expect("parse snapshot grammar");
                 let recognizer = dsl::Recognizer::compile(&grammar);
                 let text = store::ArtifactDsl::print_dsl(&snapshot::demo_semio_presentation_snapshot());
@@ -266,7 +266,7 @@ pub mod derived_composition {
             /// ✅️ `ops_grammar_conformance_law`: the mutations grammar recognizes real `print_op` output
             /// for every `SemioPresentationMutation` variant (`mutations::demo_mutation_cases()`).
             #[test]
-            fn ops_grammar_conformance_law() {
+            async fn ops_grammar_conformance_law() {
                 let grammar = dsl::parse_grammar(mutations::text::COMPONENT_GRAMMAR_SEMIO).expect("parse mutations grammar");
                 let recognizer = dsl::Recognizer::compile(&grammar);
                 for mutation in mutations::demo_mutation_cases() {
@@ -279,7 +279,7 @@ pub mod derived_composition {
             /// for every representative `SemioPresentationDiff` (`diff::demo_diff_cases()`), incl. the
             /// empty (no-op) diff.
             #[test]
-            fn diff_grammar_conformance_law() {
+            async fn diff_grammar_conformance_law() {
                 let grammar = dsl::parse_grammar(diff::text::COMPONENT_GRAMMAR_SEMIO).expect("parse diff grammar");
                 let recognizer = dsl::Recognizer::compile(&grammar);
                 for d in diff::demo_diff_cases() {
@@ -292,7 +292,7 @@ pub mod derived_composition {
             /// snapshot pack (`encode_pack`, envelope-unwrapped first), every demo mutation's
             /// `encode_op`, and every demo diff's `encode_diff` — asserting `consumed == bytes.len()`.
             #[test]
-            fn protocol_walk_law() {
+            async fn protocol_walk_law() {
                 let pack_spec = dsl::parse_protocol(snapshot::binary::COMPONENT_PROTOCOL_SEMIO).expect("parse snapshot protocol");
                 let packed = store::ArtifactPack::encode_pack(&snapshot::demo_semio_presentation_snapshot());
                 let (_, inner) = store::semio_format::unwrap_binary(&packed).expect("unwrap semio envelope");
@@ -319,7 +319,7 @@ pub mod derived_composition {
             /// `parse_dsl(fixture) == demo()`, `print_dsl(demo()) == fixture` (byte-for-byte), and the
             /// pack twin — so the fixtures can never silently drift back to a fake.
             #[test]
-            fn fixture_honesty_law() {
+            async fn fixture_honesty_law() {
                 const FIXTURE_DSL: &str = include_str!("../../✳️any/📚️examples/📽️deck/🖼️assets/🗣️example.dsl.semio");
                 const FIXTURE_PACK: &[u8] = include_bytes!("../../✳️any/📚️examples/📽️deck/🖼️assets/🎒️example.pack.semio");
 

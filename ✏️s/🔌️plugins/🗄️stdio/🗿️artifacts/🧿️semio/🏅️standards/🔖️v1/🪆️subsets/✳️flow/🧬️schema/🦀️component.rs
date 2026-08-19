@@ -20,26 +20,26 @@ pub struct SemioFlowArtifact {
 }
 
 impl Default for SemioFlowArtifact {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self::from_snapshot(SemioFlowSnapshot::default())
     }
 }
 
 impl SemioFlowArtifact {
-    pub fn to_snapshot(&self) -> SemioFlowSnapshot {
+    pub async fn to_snapshot(&self) -> SemioFlowSnapshot {
         SemioFlowSnapshot { schema: self.schema.clone(), nodes: self.nodes.clone(), edges: self.edges.clone() }
     }
-    pub fn from_snapshot(snapshot: SemioFlowSnapshot) -> Self {
+    pub async fn from_snapshot(snapshot: SemioFlowSnapshot) -> Self {
         Self { schema: snapshot.schema, nodes: snapshot.nodes, edges: snapshot.edges }
     }
-    pub fn set_snapshot(&mut self, snapshot: SemioFlowSnapshot) {
+    pub async fn set_snapshot(&mut self, snapshot: SemioFlowSnapshot) {
         self.schema = snapshot.schema;
         self.nodes = snapshot.nodes;
         self.edges = snapshot.edges;
     }
 }
 
-pub fn semio_flow_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
+pub async fn semio_flow_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
     schema::ArtifactSchemaDescriptor {
         id: "s.stdio.semio.flow",
         artifact: schema::FacetLeaves {
@@ -88,27 +88,27 @@ pub mod derived_construction {
         type Snapshot = SemioFlowSnapshot;
         type Mutation = SemioFlowMutation;
         type Diff = SemioFlowDiff;
-        fn empty() -> Self {
+        async fn empty() -> Self {
             Self { snapshot: SemioFlowSnapshot::default() }
         }
-        fn from_snapshot(snapshot: Self::Snapshot) -> Self {
+        async fn from_snapshot(snapshot: Self::Snapshot) -> Self {
             Self { snapshot }
         }
-        fn from_text(text: &str) -> Result<Self, store::TextError> {
+        async fn from_text(text: &str) -> Result<Self, store::TextError> {
             Ok(Self::from_snapshot(<SemioFlowSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
-        fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
+        async fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
             Ok(Self::from_snapshot(<SemioFlowSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
         }
-        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
+        async fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let diff = apply_semio_flow_mutation(&mut self.snapshot, &mutation);
             (self, diff)
         }
-        fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
+        async fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
             self.snapshot = <SemioFlowDiff as protocol::MutationDiff<SemioFlowSnapshot>>::apply(&diff, &self.snapshot)?;
             Ok(self)
         }
-        fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
+        async fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
             Ok(self.snapshot)
         }
     }
@@ -132,7 +132,7 @@ pub mod derived_analysis {
         type Parts = SemioFlowParts;
         const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("flow") };
 
-        fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
+        async fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
             match source {
                 AnalyzeSource::Binary(bytes) => {
                     let marker = STDIO_SEMIOFLOW_DOCUMENT_SCHEMA.as_bytes();
@@ -152,7 +152,7 @@ pub mod derived_analysis {
             }
         }
 
-        fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
+        async fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
             let mut parts = SemioFlowParts::default();
             let mut diagnostics = Vec::new();
             let mut confidence = IoConfidence::High;

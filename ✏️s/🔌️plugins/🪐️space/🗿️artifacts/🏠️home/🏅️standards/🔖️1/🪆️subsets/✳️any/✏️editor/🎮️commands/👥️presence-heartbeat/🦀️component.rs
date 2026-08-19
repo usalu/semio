@@ -18,7 +18,7 @@ pub struct PresenceHeartbeat {}
 //#endregion 🔖️Payload
 
 //#region 🔖️Handle
-pub fn handle(_payload: &PresenceHeartbeat, _doc: &ArtifactView<'_, SHomeSnapshot>, _cfg: &ConfigView<'_, HomeConfig>) -> Result<Emit<SHomeMutation, HomeConfigMutation>, Fault> {
+pub async fn handle(_payload: &PresenceHeartbeat, _doc: &ArtifactView<'_, SHomeSnapshot>, _cfg: &ConfigView<'_, HomeConfig>) -> Result<Emit<SHomeMutation, HomeConfigMutation>, Fault> {
     Ok(Emit::default())
 }
 //#endregion 🔖️Handle
@@ -29,7 +29,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn heartbeat_is_dispatchable_and_emits_nothing() {
+    async fn heartbeat_is_dispatchable_and_emits_nothing() {
         let history = semio_framework_plugin::HistoryView::empty();
         let doc_snapshot = SHomeSnapshot::default();
         let doc = ArtifactView::new(&doc_snapshot, &history);

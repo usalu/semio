@@ -14,16 +14,16 @@ pub struct DeleteWidget {
 impl MutationKind<FlowSnapshot, FlowMutation> for DeleteWidget {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "delete", entity: "widget", kind: "delete-widget", record: "DeletedWidget" };
 
-    fn diff(&self, base: &FlowSnapshot) -> protocol::MutationOutcome<FlowDiff> {
+    async fn diff(&self, base: &FlowSnapshot) -> protocol::MutationOutcome<FlowDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &FlowSnapshot) -> Vec<FlowMutation> {
+    async fn inverse(&self, base: &FlowSnapshot) -> Vec<FlowMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         format!("Delete widget \"{}\"", self.id)
     }
-    fn target(&self) -> Vec<String> {
+    async fn target(&self) -> Vec<String> {
         vec![self.id.clone()]
     }
 }

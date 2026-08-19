@@ -6,7 +6,7 @@ use semio_framework_os::WorkflowNode;
 use semio_framework_plugin::{MeasureSelectItem, WindowMeasure};
 
 //#region 🔖️Measure
-pub fn measure(config: &SpaceConfig, nodes: &[WorkflowNode], labels: &SStudioLabels) -> WindowMeasure {
+pub async fn measure(config: &SpaceConfig, nodes: &[WorkflowNode], labels: &SStudioLabels) -> WindowMeasure {
     let value = config.active_node_id.clone().unwrap_or_default();
     WindowMeasure::Select {
         id: "s-media-active-instance".into(),

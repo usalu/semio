@@ -13,23 +13,23 @@ pub struct ChangeNodeIcon {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn change_node_icon(id: String, new_icon: String) -> DagMutation {
+pub async fn change_node_icon(id: String, new_icon: String) -> DagMutation {
     DagMutation::ChangeNodeIcon(ChangeNodeIcon { id, new_icon })
 }
 
 impl protocol::MutationKind<DagSnapshot, DagMutation> for ChangeNodeIcon {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "node", kind: "change-node-icon", record: "ChangedNodeIcon" };
 
-    fn diff(&self, base: &DagSnapshot) -> protocol::MutationOutcome<DagDiff> {
+    async fn diff(&self, base: &DagSnapshot) -> protocol::MutationOutcome<DagDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &DagSnapshot) -> Vec<DagMutation> {
+    async fn inverse(&self, base: &DagSnapshot) -> Vec<DagMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         format!("Change node \"{}\" icon to \"{}\"", self.id, self.new_icon)
     }
-    fn target(&self) -> Vec<String> {
+    async fn target(&self) -> Vec<String> {
         vec![self.id.clone()]
     }
 }

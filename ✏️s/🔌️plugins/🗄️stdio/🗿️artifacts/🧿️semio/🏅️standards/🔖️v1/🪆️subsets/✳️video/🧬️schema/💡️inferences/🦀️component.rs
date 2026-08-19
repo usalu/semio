@@ -26,7 +26,7 @@ pub struct SemioVideoInference {
 }
 
 impl protocol::Inference<SemioVideoSnapshot> for SemioVideoInference {
-    fn infer(snapshot: &SemioVideoSnapshot) -> Self {
+    async fn infer(snapshot: &SemioVideoSnapshot) -> Self {
         Self { duration: compute_semio_video_duration(snapshot) }
     }
 }
@@ -36,19 +36,19 @@ impl protocol::Inference<SemioVideoSnapshot> for SemioVideoInference {
 /// `infer` keeps the law correct even if that default ever stops being all-empty (the same
 /// defensive pattern raster's `RasterInference` documents).
 impl Default for SemioVideoInference {
-    fn default() -> Self {
+    async fn default() -> Self {
         <Self as protocol::Inference<SemioVideoSnapshot>>::infer(&SemioVideoSnapshot::default())
     }
 }
 
 impl protocol::InferenceSpec<SemioVideoSnapshot> for SemioVideoInference {
-    fn inference_schema_id() -> &'static str {
+    async fn inference_schema_id() -> &'static str {
         "s.stdio.semio.video.inference"
     }
-    fn schema_version() -> u32 {
+    async fn schema_version() -> u32 {
         1
     }
-    fn fields() -> &'static [protocol::InferenceFieldSpec] {
+    async fn fields() -> &'static [protocol::InferenceFieldSpec] {
         &[protocol::InferenceFieldSpec { id: "s.stdio.semio.video.inference.duration", reads: &["streams"] }]
     }
 }
@@ -67,7 +67,7 @@ impl ArtifactInferrer for crate::artifacts::semio::standards::v1::subsets::video
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.stdio.semio.video.inference`'s facet leaves into the OS-wide inference catalog
 /// — call once at plugin init, alongside `semio_video_artifact_schema_descriptor`'s registration.
-pub fn semio_video_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
+pub async fn semio_video_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
     schema::ArtifactInferenceDescriptor {
         id: "s.stdio.semio.video.inference",
         inference: schema::FacetLeaves {
@@ -88,13 +88,13 @@ mod tests {
     use protocol::Inference;
 
     #[test]
-    fn inference_determinism_law() {
+    async fn inference_determinism_law() {
         let snapshot = SemioVideoSnapshot::default();
         assert_eq!(SemioVideoInference::infer(&snapshot), SemioVideoInference::infer(&snapshot));
     }
 
     #[test]
-    fn inference_default_law() {
+    async fn inference_default_law() {
         assert_eq!(SemioVideoInference::infer(&SemioVideoSnapshot::default()), SemioVideoInference::default());
     }
 }

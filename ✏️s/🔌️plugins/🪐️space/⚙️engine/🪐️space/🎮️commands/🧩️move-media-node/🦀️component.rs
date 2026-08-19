@@ -14,6 +14,6 @@ pub struct MoveMediaNode {
     pub y: f64,
 }
 
-pub fn handle(payload: &MoveMediaNode, _doc: &ArtifactView<'_, WorkflowSnapshot>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
+pub async fn handle(payload: &MoveMediaNode, _doc: &ArtifactView<'_, WorkflowSnapshot>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
     Ok(Emit::amend(vec![WorkflowMutation::MoveNode { node_id: payload.node_id.clone(), x: payload.x, y: payload.y }], format!("moveMediaNode:{}", payload.node_id)))
 }

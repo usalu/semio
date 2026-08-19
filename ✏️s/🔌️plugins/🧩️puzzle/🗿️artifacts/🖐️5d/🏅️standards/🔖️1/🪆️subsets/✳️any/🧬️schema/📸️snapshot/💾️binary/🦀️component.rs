@@ -13,12 +13,12 @@ use crate::artifacts::puzzle5d::Puzzle5dSnapshot;
 use store::PackError;
 
 /// 📦️ Encodes a `Puzzle5dSnapshot` to its binary pack form.
-pub fn encode(document: &Puzzle5dSnapshot) -> Vec<u8> {
+pub async fn encode(document: &Puzzle5dSnapshot) -> Vec<u8> {
     store::ArtifactPack::encode_pack(document)
 }
 
 /// 📖️ Decodes a `Puzzle5dSnapshot` from its binary pack form.
-pub fn decode(bytes: &[u8]) -> Result<Puzzle5dSnapshot, PackError> {
+pub async fn decode(bytes: &[u8]) -> Result<Puzzle5dSnapshot, PackError> {
     <Puzzle5dSnapshot as store::ArtifactPack>::decode_pack(bytes)
 }
 
@@ -28,7 +28,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn pack_round_trips_representative_document() {
+    async fn pack_round_trips_representative_document() {
         let document = Puzzle5dSnapshot::default();
         semio_framework_os_kernel::os_store::test_support::assert_dsl_pack_equivalence(&document);
         let bytes = encode(&document);
@@ -41,7 +41,7 @@ mod tests {
     /// file's existing dsl/pack round-trip law (same pattern as `dag`'s own
     /// `command_envelope_round_trip_holds_for_an_applied_operation`).
     #[test]
-    fn command_envelope_round_trip_holds_for_an_applied_operation() {
+    async fn command_envelope_round_trip_holds_for_an_applied_operation() {
         use crate::artifacts::puzzle5d::op::Puzzle5dMutation;
         use crate::artifacts::puzzle5d::spr::Puzzle5dStore;
         use crate::artifacts::puzzle5d::{Puzzle5dPart, Puzzle5dPart2d, Puzzle5dPart3d, Puzzle5dPartAnchor};

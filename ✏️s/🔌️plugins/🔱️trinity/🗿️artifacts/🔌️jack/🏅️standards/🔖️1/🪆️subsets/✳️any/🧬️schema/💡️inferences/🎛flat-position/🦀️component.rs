@@ -33,7 +33,7 @@ pub struct JackFlatPosition {
 /// 📐️ Computes `flat-position` directly from `nodes`/`edges`/`root_node_id` — deterministic because
 /// both the remaining-node seed pick and each seed's BFS walk are always drawn from `BTreeMap`/
 /// `BTreeSet` id order, never from `edges`'/`nodes`' own fixture order.
-pub fn compute_flat_position(snapshot: &JackSnapshot) -> JackFlatPosition {
+pub async fn compute_flat_position(snapshot: &JackSnapshot) -> JackFlatPosition {
     let scene = crate::artifacts::jack::jack_working_scene(snapshot);
     if scene.nodes.is_empty() {
         return JackFlatPosition::default();
@@ -56,7 +56,7 @@ pub fn compute_flat_position(snapshot: &JackSnapshot) -> JackFlatPosition {
     JackFlatPosition { positions }
 }
 
-fn has_incoming_from_remaining(edges: &BTreeMap<String, &Edge>, node_id: &str, remaining: &BTreeSet<String>) -> bool {
+async fn has_incoming_from_remaining(edges: &BTreeMap<String, &Edge>, node_id: &str, remaining: &BTreeSet<String>) -> bool {
     edges.values().any(|edge| {
         let Some(target_node) = port_node_id(&edge.target) else {
             return false;
@@ -68,7 +68,7 @@ fn has_incoming_from_remaining(edges: &BTreeMap<String, &Edge>, node_id: &str, r
     })
 }
 
-fn extend_from_seed(edges: &BTreeMap<String, &Edge>, flat: &mut BTreeMap<String, (f64, f64)>, seed_id: String) {
+async fn extend_from_seed(edges: &BTreeMap<String, &Edge>, flat: &mut BTreeMap<String, (f64, f64)>, seed_id: String) {
     if flat.contains_key(&seed_id) {
         return;
     }
@@ -106,7 +106,7 @@ mod tests {
     use crate::artifacts::jack::{Camera, Manifest, Port, PortDirection, PropertyBag};
 
     //#region 🧸️Fixtures
-    fn mini_fixture() -> JackSnapshot {
+    async fn mini_fixture() -> JackSnapshot {
         JackSnapshot::with_content(
             JackSnapshot::SCHEMA.into(),
             "mini".into(),
@@ -136,14 +136,14 @@ mod tests {
 
     //#region 🧪️FlatPositionLaws
     #[test]
-    fn flat_position_bfs_walks_from_root() {
+    async fn flat_position_bfs_walks_from_root() {
         let flat = compute_flat_position(&mini_fixture());
         assert_eq!(flat.positions.get("root"), Some(&JackFlatPositionUv { u: 0.0, v: 0.0 }));
         assert_eq!(flat.positions.get("child"), Some(&JackFlatPositionUv { u: 1.2, v: -0.6 }));
     }
 
     #[test]
-    fn flat_position_covers_disconnected_components() {
+    async fn flat_position_covers_disconnected_components() {
         let fixture = JackSnapshot::with_content(
             JackSnapshot::SCHEMA.into(),
             "disconnected".into(),
@@ -168,7 +168,7 @@ mod tests {
     }
 
     #[test]
-    fn flat_position_handles_cycles_without_looping() {
+    async fn flat_position_handles_cycles_without_looping() {
         let fixture = JackSnapshot::with_content(
             JackSnapshot::SCHEMA.into(),
             "cycle".into(),
@@ -191,7 +191,7 @@ mod tests {
     }
 
     #[test]
-    fn flat_position_empty_snapshot_yields_default() {
+    async fn flat_position_empty_snapshot_yields_default() {
         assert_eq!(compute_flat_position(&JackSnapshot::default()), JackFlatPosition::default());
     }
     //#endregion 🧪️FlatPositionLaws

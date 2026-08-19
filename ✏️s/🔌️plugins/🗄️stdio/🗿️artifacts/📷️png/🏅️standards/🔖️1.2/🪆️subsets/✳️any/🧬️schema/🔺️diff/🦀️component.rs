@@ -83,10 +83,10 @@ pub struct PngTextChunkDiff {
 }
 
 impl PngTextChunkDiff {
-    fn is_empty(&self) -> bool {
+    async fn is_empty(&self) -> bool {
         self == &Self::default()
     }
-    fn apply(&self, base: &PngTextChunk) -> PngTextChunk {
+    async fn apply(&self, base: &PngTextChunk) -> PngTextChunk {
         PngTextChunk {
             keyword: self.keyword.clone().unwrap_or_else(|| base.keyword.clone()),
             value: self.value.clone().unwrap_or_else(|| base.value.clone()),
@@ -96,7 +96,7 @@ impl PngTextChunkDiff {
             translated_keyword: self.translated_keyword.clone().unwrap_or_else(|| base.translated_keyword.clone()),
         }
     }
-    fn between(a: &PngTextChunk, b: &PngTextChunk) -> Self {
+    async fn between(a: &PngTextChunk, b: &PngTextChunk) -> Self {
         Self {
             keyword: (a.keyword != b.keyword).then(|| b.keyword.clone()),
             value: (a.value != b.value).then(|| b.value.clone()),
@@ -107,7 +107,7 @@ impl PngTextChunkDiff {
         }
     }
     /// ➕️ LWW field-by-field absorb.
-    fn absorb(&mut self, other: Self) {
+    async fn absorb(&mut self, other: Self) {
         if other.keyword.is_some() {
             self.keyword = other.keyword;
         }
@@ -225,7 +225,7 @@ enum Slot {
     Added(usize),
 }
 
-fn simulate_slots(len: usize, removed: &[usize], added_indices: &[usize]) -> Vec<Slot> {
+async fn simulate_slots(len: usize, removed: &[usize], added_indices: &[usize]) -> Vec<Slot> {
     let mut slots: Vec<Slot> = (0..len).map(Slot::Base).collect();
     let mut removed_desc = removed.to_vec();
     removed_desc.sort_unstable_by(|a, b| b.cmp(a));
@@ -244,7 +244,7 @@ fn simulate_slots(len: usize, removed: &[usize], added_indices: &[usize]) -> Vec
     slots
 }
 
-fn base_len_hint(removed: &[usize], modified_indices: impl Iterator<Item = usize>, added_indices: impl Iterator<Item = usize>) -> usize {
+async fn base_len_hint(removed: &[usize], modified_indices: impl Iterator<Item = usize>, added_indices: impl Iterator<Item = usize>) -> usize {
     removed.iter().copied().chain(modified_indices).chain(added_indices).max().map(|m| m + 1).unwrap_or(0)
 }
 
@@ -252,7 +252,7 @@ fn base_len_hint(removed: &[usize], modified_indices: impl Iterator<Item = usize
 /// `modified` payload is the new value itself, not a nested diff — a doubly-modified position
 /// is plain LWW). Shared by `plte`/`unknown_chunks`/`chunk_order` (`text_chunks` needs its own
 /// field-aware variant, see `absorb_text_chunks`, since its modified payload IS a nested diff).
-fn absorb_weak_index_triple<T: Clone>(
+async fn absorb_weak_index_triple<T: Clone>(
     d1_removed: Vec<usize>,
     d1_modified: Vec<(usize, T)>,
     d1_added: Vec<(usize, T)>,
@@ -345,7 +345,7 @@ fn absorb_weak_index_triple<T: Clone>(
 
 /// ➕️ Field-aware absorb for `text_chunks` (mirrors csv's `absorb_records` exactly, retargeted
 /// to `PngTextChunk`/`PngTextChunkDiff`).
-fn absorb_text_chunks(d1: PngTextChunksDiff, d2: PngTextChunksDiff) -> PngTextChunksDiff {
+async fn absorb_text_chunks(d1: PngTextChunksDiff, d2: PngTextChunksDiff) -> PngTextChunksDiff {
     let d1_added_indices: Vec<usize> = d1.added.iter().map(|a| a.index).collect();
     let removed_count = {
         let mut r = d1.removed.clone();
@@ -432,7 +432,7 @@ fn absorb_text_chunks(d1: PngTextChunksDiff, d2: PngTextChunksDiff) -> PngTextCh
 //#endregion 🔖️IndexTransport
 
 //#region 🔖️CollectionApplyBetween
-fn apply_plte(base: &Option<Vec<PngRgb>>, d: &Option<PngPlteDiff>) -> Option<Vec<PngRgb>> {
+async fn apply_plte(base: &Option<Vec<PngRgb>>, d: &Option<PngPlteDiff>) -> Option<Vec<PngRgb>> {
     match d {
         None => None,
         Some(triple) => {
@@ -461,7 +461,7 @@ fn apply_plte(base: &Option<Vec<PngRgb>>, d: &Option<PngPlteDiff>) -> Option<Vec
     }
 }
 
-fn between_plte(a: &Option<Vec<PngRgb>>, b: &Option<Vec<PngRgb>>) -> Option<Option<PngPlteDiff>> {
+async fn between_plte(a: &Option<Vec<PngRgb>>, b: &Option<Vec<PngRgb>>) -> Option<Option<PngPlteDiff>> {
     if a == b {
         return None;
     }
@@ -483,7 +483,7 @@ fn between_plte(a: &Option<Vec<PngRgb>>, b: &Option<Vec<PngRgb>>) -> Option<Opti
     }
 }
 
-fn absorb_plte(base: &mut Option<Option<PngPlteDiff>>, other: Option<Option<PngPlteDiff>>) {
+async fn absorb_plte(base: &mut Option<Option<PngPlteDiff>>, other: Option<Option<PngPlteDiff>>) {
     let Some(other) = other else { return };
     match other {
         None => {
@@ -508,7 +508,7 @@ fn absorb_plte(base: &mut Option<Option<PngPlteDiff>>, other: Option<Option<PngP
     }
 }
 
-fn apply_text_chunks(base: &[PngTextChunk], d: &PngTextChunksDiff) -> Vec<PngTextChunk> {
+async fn apply_text_chunks(base: &[PngTextChunk], d: &PngTextChunksDiff) -> Vec<PngTextChunk> {
     let mut items = base.to_vec();
     for m in &d.modified {
         if let Some(it) = items.get_mut(m.index) {
@@ -532,7 +532,7 @@ fn apply_text_chunks(base: &[PngTextChunk], d: &PngTextChunksDiff) -> Vec<PngTex
     items
 }
 
-fn between_text_chunks(a: &[PngTextChunk], b: &[PngTextChunk]) -> Option<PngTextChunksDiff> {
+async fn between_text_chunks(a: &[PngTextChunk], b: &[PngTextChunk]) -> Option<PngTextChunksDiff> {
     let min = a.len().min(b.len());
     let mut modified = Vec::new();
     for i in 0..min {
@@ -552,7 +552,7 @@ fn between_text_chunks(a: &[PngTextChunk], b: &[PngTextChunk]) -> Option<PngText
     }
 }
 
-fn apply_unknown_chunks(base: &[PngChunk], d: &PngUnknownChunksDiff) -> Vec<PngChunk> {
+async fn apply_unknown_chunks(base: &[PngChunk], d: &PngUnknownChunksDiff) -> Vec<PngChunk> {
     let mut items = base.to_vec();
     for m in &d.modified {
         if let Some(it) = items.get_mut(m.index) {
@@ -576,7 +576,7 @@ fn apply_unknown_chunks(base: &[PngChunk], d: &PngUnknownChunksDiff) -> Vec<PngC
     items
 }
 
-fn between_unknown_chunks(a: &[PngChunk], b: &[PngChunk]) -> Option<PngUnknownChunksDiff> {
+async fn between_unknown_chunks(a: &[PngChunk], b: &[PngChunk]) -> Option<PngUnknownChunksDiff> {
     let min = a.len().min(b.len());
     let mut modified = Vec::new();
     for i in 0..min {
@@ -593,7 +593,7 @@ fn between_unknown_chunks(a: &[PngChunk], b: &[PngChunk]) -> Option<PngUnknownCh
     }
 }
 
-fn apply_chunk_order(base: &[PngChunkMarker], d: &PngChunkOrderDiff) -> Vec<PngChunkMarker> {
+async fn apply_chunk_order(base: &[PngChunkMarker], d: &PngChunkOrderDiff) -> Vec<PngChunkMarker> {
     let mut items = base.to_vec();
     for m in &d.modified {
         if let Some(it) = items.get_mut(m.index) {
@@ -617,7 +617,7 @@ fn apply_chunk_order(base: &[PngChunkMarker], d: &PngChunkOrderDiff) -> Vec<PngC
     items
 }
 
-fn between_chunk_order(a: &[PngChunkMarker], b: &[PngChunkMarker]) -> Option<PngChunkOrderDiff> {
+async fn between_chunk_order(a: &[PngChunkMarker], b: &[PngChunkMarker]) -> Option<PngChunkOrderDiff> {
     let min = a.len().min(b.len());
     let mut modified = Vec::new();
     for i in 0..min {
@@ -634,7 +634,7 @@ fn between_chunk_order(a: &[PngChunkMarker], b: &[PngChunkMarker]) -> Option<Png
     }
 }
 
-fn absorb_text_chunks_opt(base: &mut Option<PngTextChunksDiff>, other: Option<PngTextChunksDiff>) {
+async fn absorb_text_chunks_opt(base: &mut Option<PngTextChunksDiff>, other: Option<PngTextChunksDiff>) {
     match (base.take(), other) {
         (None, o) => *base = o,
         (Some(b), None) => *base = Some(b),
@@ -642,7 +642,7 @@ fn absorb_text_chunks_opt(base: &mut Option<PngTextChunksDiff>, other: Option<Pn
     }
 }
 
-fn absorb_unknown_chunks_opt(base: &mut Option<PngUnknownChunksDiff>, other: Option<PngUnknownChunksDiff>) {
+async fn absorb_unknown_chunks_opt(base: &mut Option<PngUnknownChunksDiff>, other: Option<PngUnknownChunksDiff>) {
     match (base.take(), other) {
         (None, o) => *base = o,
         (Some(b), None) => *base = Some(b),
@@ -664,7 +664,7 @@ fn absorb_unknown_chunks_opt(base: &mut Option<PngUnknownChunksDiff>, other: Opt
     }
 }
 
-fn absorb_chunk_order_opt(base: &mut Option<PngChunkOrderDiff>, other: Option<PngChunkOrderDiff>) {
+async fn absorb_chunk_order_opt(base: &mut Option<PngChunkOrderDiff>, other: Option<PngChunkOrderDiff>) {
     match (base.take(), other) {
         (None, o) => *base = o,
         (Some(b), None) => *base = Some(b),
@@ -697,13 +697,13 @@ fn absorb_chunk_order_opt(base: &mut Option<PngChunkOrderDiff>, other: Option<Pn
 /// 📍 Where a freshly created marker lands — always just before `Iend` (or at the very end if
 /// there is none). Documented normalization: only a DECODED file's `chunk_order` carries the
 /// real original position; anything created via mutation gets this deterministic default.
-pub fn chunk_order_insert_pos(order: &[PngChunkMarker]) -> usize {
+pub async fn chunk_order_insert_pos(order: &[PngChunkMarker]) -> usize {
     order.iter().position(|m| matches!(m, PngChunkMarker::Iend)).unwrap_or(order.len())
 }
 
 /// 🔀 Diff for a scalar ancillary field's marker toggling presence (`None` if presence didn't
 /// change — e.g. a value-only change to an already-present field).
-pub fn chunk_order_presence_diff(order: &[PngChunkMarker], is_marker: fn(&PngChunkMarker) -> bool, marker: PngChunkMarker, was_present: bool, want_present: bool) -> Option<PngChunkOrderDiff> {
+pub async fn chunk_order_presence_diff(order: &[PngChunkMarker], is_marker: fn(&PngChunkMarker) -> bool, marker: PngChunkMarker, was_present: bool, want_present: bool) -> Option<PngChunkOrderDiff> {
     if was_present == want_present {
         return None;
     }
@@ -718,7 +718,7 @@ pub fn chunk_order_presence_diff(order: &[PngChunkMarker], is_marker: fn(&PngChu
 /// ➕️ Diff for inserting a new `Text{index: at}` marker: renumbers every existing `Text`
 /// marker whose embedded index is `>= at` (`modified`, same `chunk_order` position, bumped
 /// payload) and appends the new marker just before `Iend` (`added`).
-pub fn chunk_order_insert_text_diff(order: &[PngChunkMarker], at: usize) -> PngChunkOrderDiff {
+pub async fn chunk_order_insert_text_diff(order: &[PngChunkMarker], at: usize) -> PngChunkOrderDiff {
     let modified = order
         .iter()
         .enumerate()
@@ -733,7 +733,7 @@ pub fn chunk_order_insert_text_diff(order: &[PngChunkMarker], at: usize) -> PngC
 
 /// ➖️ Diff for removing the `Text{index: at}` marker: drops it (`removed`) and renumbers every
 /// `Text` marker with a HIGHER embedded index down by one (`modified`).
-pub fn chunk_order_remove_text_diff(order: &[PngChunkMarker], at: usize) -> PngChunkOrderDiff {
+pub async fn chunk_order_remove_text_diff(order: &[PngChunkMarker], at: usize) -> PngChunkOrderDiff {
     let removed: Vec<usize> = order.iter().position(|m| matches!(m, PngChunkMarker::Text { index } if *index == at)).into_iter().collect();
     let modified = order
         .iter()
@@ -747,7 +747,7 @@ pub fn chunk_order_remove_text_diff(order: &[PngChunkMarker], at: usize) -> PngC
 }
 
 /// ➕️ `Unknown{index}` analogue of [`chunk_order_insert_text_diff`].
-pub fn chunk_order_insert_unknown_diff(order: &[PngChunkMarker], at: usize) -> PngChunkOrderDiff {
+pub async fn chunk_order_insert_unknown_diff(order: &[PngChunkMarker], at: usize) -> PngChunkOrderDiff {
     let modified = order
         .iter()
         .enumerate()
@@ -761,7 +761,7 @@ pub fn chunk_order_insert_unknown_diff(order: &[PngChunkMarker], at: usize) -> P
 }
 
 /// ➖️ `Unknown{index}` analogue of [`chunk_order_remove_text_diff`].
-pub fn chunk_order_remove_unknown_diff(order: &[PngChunkMarker], at: usize) -> PngChunkOrderDiff {
+pub async fn chunk_order_remove_unknown_diff(order: &[PngChunkMarker], at: usize) -> PngChunkOrderDiff {
     let removed: Vec<usize> = order.iter().position(|m| matches!(m, PngChunkMarker::Unknown { index } if *index == at)).into_iter().collect();
     let modified = order
         .iter()
@@ -836,7 +836,7 @@ pub struct PngDiff {
 }
 
 impl MutationDiff<PngSnapshot> for PngDiff {
-    fn apply(&self, base: &PngSnapshot) -> MutationApplyResult<PngSnapshot> {
+    async fn apply(&self, base: &PngSnapshot) -> MutationApplyResult<PngSnapshot> {
         if let Some(Some(plte)) = &self.plte {
             validate_png_triple(base.plte.as_ref().map_or(0, Vec::len), &plte.removed, plte.modified.iter().map(|entry| entry.index), plte.added.iter().map(|entry| entry.index), ["plte"])?;
         }
@@ -908,7 +908,7 @@ impl MutationDiff<PngSnapshot> for PngDiff {
     /// (incl. every tri-state, `plte` excepted): LWW. Collections: index-transported merge —
     /// `plte`/`unknown_chunks`/`chunk_order` via the shared weak-value transport,
     /// `text_chunks` via its own field-aware variant.
-    fn absorb(&mut self, other: Self) {
+    async fn absorb(&mut self, other: Self) {
         if other.width.is_some() {
             self.width = other.width;
         }
@@ -955,7 +955,7 @@ impl MutationDiff<PngSnapshot> for PngDiff {
     }
 }
 
-fn validate_png_triple<I, J, K>(base_len: usize, removed: &[usize], modified: I, added: J, path: K) -> MutationApplyResult<()>
+async fn validate_png_triple<I, J, K>(base_len: usize, removed: &[usize], modified: I, added: J, path: K) -> MutationApplyResult<()>
 where
     I: IntoIterator<Item = usize>,
     J: IntoIterator<Item = usize>,
@@ -989,14 +989,14 @@ where
 impl DiffAlgebra<PngSnapshot> for PngDiff {
     /// 🔁️ Diff-level undo, derived generically (correct by construction) exactly like zip's:
     /// the state delta from `self.apply(base)` back to `base`.
-    fn inverse(&self, base: &PngSnapshot) -> Self {
+    async fn inverse(&self, base: &PngSnapshot) -> Self {
         let mutated = self.apply(base).unwrap();
         Self::between(&mutated, base)
     }
 
     /// 🧭️ State delta (compose `GetXDiff`): index-keyed pairwise `0..min(len)` matching for
     /// every collection, tri-state comparison for every optional scalar/nested triple.
-    fn between(base: &PngSnapshot, other: &PngSnapshot) -> Self {
+    async fn between(base: &PngSnapshot, other: &PngSnapshot) -> Self {
         Self {
             width: (base.width != other.width).then_some(other.width),
             height: (base.height != other.height).then_some(other.height),
@@ -1018,7 +1018,7 @@ impl DiffAlgebra<PngSnapshot> for PngDiff {
         }
     }
 
-    fn is_empty(&self) -> bool {
+    async fn is_empty(&self) -> bool {
         self.width.is_none()
             && self.height.is_none()
             && self.bit_depth.is_none()
@@ -1040,7 +1040,7 @@ impl DiffAlgebra<PngSnapshot> for PngDiff {
 }
 
 /// 🧩 Builds a set-snapshot diff (sparse field-by-field delta, never a full-replace slot).
-pub fn diff_set_snapshot(base: &PngSnapshot, next: &PngSnapshot) -> PngDiff {
+pub async fn diff_set_snapshot(base: &PngSnapshot, next: &PngSnapshot) -> PngDiff {
     PngDiff::between(base, next)
 }
 //#endregion 🔖️Diff
@@ -1050,7 +1050,7 @@ pub fn diff_set_snapshot(base: &PngSnapshot, next: &PngSnapshot) -> PngDiff {
 // `NoMutation`/`SetSnapshot`, covered above) — each constructs the sparse `PngDiff` directly,
 // including the matching `chunk_order` delta where the mutation changes chunk presence/order.
 
-pub fn diff_set_header(base: &PngSnapshot, width: u32, height: u32, bit_depth: u8, color_type: PngColorType, interlace: bool) -> PngDiff {
+pub async fn diff_set_header(base: &PngSnapshot, width: u32, height: u32, bit_depth: u8, color_type: PngColorType, interlace: bool) -> PngDiff {
     PngDiff {
         width: (base.width != width).then_some(width),
         height: (base.height != height).then_some(height),
@@ -1061,51 +1061,51 @@ pub fn diff_set_header(base: &PngSnapshot, width: u32, height: u32, bit_depth: u
     }
 }
 
-pub fn diff_set_palette(base: &PngSnapshot, plte: &Option<Vec<PngRgb>>) -> PngDiff {
+pub async fn diff_set_palette(base: &PngSnapshot, plte: &Option<Vec<PngRgb>>) -> PngDiff {
     PngDiff { plte: between_plte(&base.plte, plte), chunk_order: chunk_order_presence_diff(&base.chunk_order, |m| matches!(m, PngChunkMarker::Plte), PngChunkMarker::Plte, base.plte.is_some(), plte.is_some()), ..Default::default() }
 }
 
-pub fn diff_set_transparency(base: &PngSnapshot, trns: &Option<PngTransparency>) -> PngDiff {
+pub async fn diff_set_transparency(base: &PngSnapshot, trns: &Option<PngTransparency>) -> PngDiff {
     PngDiff { trns: (base.trns != *trns).then(|| trns.clone()), chunk_order: chunk_order_presence_diff(&base.chunk_order, |m| matches!(m, PngChunkMarker::Trns), PngChunkMarker::Trns, base.trns.is_some(), trns.is_some()), ..Default::default() }
 }
 
-pub fn diff_set_gamma(base: &PngSnapshot, gama: Option<u32>) -> PngDiff {
+pub async fn diff_set_gamma(base: &PngSnapshot, gama: Option<u32>) -> PngDiff {
     PngDiff { gama: (base.gama != gama).then_some(gama), chunk_order: chunk_order_presence_diff(&base.chunk_order, |m| matches!(m, PngChunkMarker::Gama), PngChunkMarker::Gama, base.gama.is_some(), gama.is_some()), ..Default::default() }
 }
 
-pub fn diff_set_chromaticities(base: &PngSnapshot, chrm: Option<PngChromaticities>) -> PngDiff {
+pub async fn diff_set_chromaticities(base: &PngSnapshot, chrm: Option<PngChromaticities>) -> PngDiff {
     PngDiff { chrm: (base.chrm != chrm).then_some(chrm), chunk_order: chunk_order_presence_diff(&base.chunk_order, |m| matches!(m, PngChunkMarker::Chrm), PngChunkMarker::Chrm, base.chrm.is_some(), chrm.is_some()), ..Default::default() }
 }
 
-pub fn diff_set_srgb_intent(base: &PngSnapshot, srgb: Option<PngSrgbIntent>) -> PngDiff {
+pub async fn diff_set_srgb_intent(base: &PngSnapshot, srgb: Option<PngSrgbIntent>) -> PngDiff {
     PngDiff { srgb: (base.srgb != srgb).then_some(srgb), chunk_order: chunk_order_presence_diff(&base.chunk_order, |m| matches!(m, PngChunkMarker::Srgb), PngChunkMarker::Srgb, base.srgb.is_some(), srgb.is_some()), ..Default::default() }
 }
 
-pub fn diff_set_physical_dims(base: &PngSnapshot, phys: Option<PngPhysicalDims>) -> PngDiff {
+pub async fn diff_set_physical_dims(base: &PngSnapshot, phys: Option<PngPhysicalDims>) -> PngDiff {
     PngDiff { phys: (base.phys != phys).then_some(phys), chunk_order: chunk_order_presence_diff(&base.chunk_order, |m| matches!(m, PngChunkMarker::Phys), PngChunkMarker::Phys, base.phys.is_some(), phys.is_some()), ..Default::default() }
 }
 
-pub fn diff_set_timestamp(base: &PngSnapshot, time: Option<PngTimestamp>) -> PngDiff {
+pub async fn diff_set_timestamp(base: &PngSnapshot, time: Option<PngTimestamp>) -> PngDiff {
     PngDiff { time: (base.time != time).then_some(time), chunk_order: chunk_order_presence_diff(&base.chunk_order, |m| matches!(m, PngChunkMarker::Time), PngChunkMarker::Time, base.time.is_some(), time.is_some()), ..Default::default() }
 }
 
-pub fn diff_set_background(base: &PngSnapshot, bkgd: &Option<PngBackground>) -> PngDiff {
+pub async fn diff_set_background(base: &PngSnapshot, bkgd: &Option<PngBackground>) -> PngDiff {
     PngDiff { bkgd: (base.bkgd != *bkgd).then(|| bkgd.clone()), chunk_order: chunk_order_presence_diff(&base.chunk_order, |m| matches!(m, PngChunkMarker::Bkgd), PngChunkMarker::Bkgd, base.bkgd.is_some(), bkgd.is_some()), ..Default::default() }
 }
 
-pub fn diff_insert_text_chunk(base: &PngSnapshot, index: usize, chunk: PngTextChunk) -> PngDiff {
+pub async fn diff_insert_text_chunk(base: &PngSnapshot, index: usize, chunk: PngTextChunk) -> PngDiff {
     let at = index.min(base.text_chunks.len());
     PngDiff { text_chunks: Some(PngTextChunksDiff { removed: vec![], modified: vec![], added: vec![PngTextChunkAdded { index: at, chunk }] }), chunk_order: Some(chunk_order_insert_text_diff(&base.chunk_order, at)), ..Default::default() }
 }
 
-pub fn diff_remove_text_chunk(base: &PngSnapshot, index: usize) -> PngDiff {
+pub async fn diff_remove_text_chunk(base: &PngSnapshot, index: usize) -> PngDiff {
     if index >= base.text_chunks.len() {
         return PngDiff::default();
     }
     PngDiff { text_chunks: Some(PngTextChunksDiff { removed: vec![index], modified: vec![], added: vec![] }), chunk_order: Some(chunk_order_remove_text_diff(&base.chunk_order, index)), ..Default::default() }
 }
 
-pub fn diff_set_text_chunk(base: &PngSnapshot, index: usize, chunk: PngTextChunk) -> PngDiff {
+pub async fn diff_set_text_chunk(base: &PngSnapshot, index: usize, chunk: PngTextChunk) -> PngDiff {
     let existing = match base.text_chunks.get(index) {
         Some(c) => c,
         None => return PngDiff::default(),
@@ -1117,16 +1117,16 @@ pub fn diff_set_text_chunk(base: &PngSnapshot, index: usize, chunk: PngTextChunk
     PngDiff { text_chunks: Some(PngTextChunksDiff { removed: vec![], modified: vec![PngTextChunkModified { index, diff: d }], added: vec![] }), ..Default::default() }
 }
 
-pub fn diff_set_pixels(base: &PngSnapshot, pixels: Vec<u8>) -> PngDiff {
+pub async fn diff_set_pixels(base: &PngSnapshot, pixels: Vec<u8>) -> PngDiff {
     PngDiff { pixels: (base.pixels != pixels).then_some(pixels), ..Default::default() }
 }
 
-pub fn diff_insert_unknown_chunk(base: &PngSnapshot, index: usize, chunk: PngChunk) -> PngDiff {
+pub async fn diff_insert_unknown_chunk(base: &PngSnapshot, index: usize, chunk: PngChunk) -> PngDiff {
     let at = index.min(base.unknown_chunks.len());
     PngDiff { unknown_chunks: Some(PngUnknownChunksDiff { removed: vec![], modified: vec![], added: vec![PngUnknownChunkAdded { index: at, chunk }] }), chunk_order: Some(chunk_order_insert_unknown_diff(&base.chunk_order, at)), ..Default::default() }
 }
 
-pub fn diff_remove_unknown_chunk(base: &PngSnapshot, index: usize) -> PngDiff {
+pub async fn diff_remove_unknown_chunk(base: &PngSnapshot, index: usize) -> PngDiff {
     if index >= base.unknown_chunks.len() {
         return PngDiff::default();
     }
@@ -1156,36 +1156,36 @@ pub fn diff_remove_unknown_chunk(base: &PngSnapshot, index: usize) -> PngDiff {
 /// `PngMutation`'s own hand-rolled `OpText`/`OpBinary` (`🧬️mutations/🦀️component.rs`) reuses them
 /// instead of duplicating (same intra-artifact reuse pattern svg's diff/mutations pair uses).
 //#region 🔖️Primitives
-pub(crate) fn hex_encode(bytes: &[u8]) -> String {
+pub(crate) async fn hex_encode(bytes: &[u8]) -> String {
     bytes.iter().map(|b| format!("{b:02x}")).collect()
 }
-pub(crate) fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
+pub(crate) async fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
     if s.len() % 2 != 0 {
         return Err(format!("odd hex length: {s:?}"));
     }
     (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()
 }
-pub(crate) fn enc_str(s: &str) -> String {
+pub(crate) async fn enc_str(s: &str) -> String {
     hex_encode(s.as_bytes())
 }
-pub(crate) fn dec_str(s: &str) -> Result<String, String> {
+pub(crate) async fn dec_str(s: &str) -> Result<String, String> {
     String::from_utf8(hex_decode(s)?).map_err(|e| e.to_string())
 }
-pub(crate) fn parse_u8(s: &str) -> Result<u8, String> {
+pub(crate) async fn parse_u8(s: &str) -> Result<u8, String> {
     s.parse().map_err(|e: std::num::ParseIntError| e.to_string())
 }
-pub(crate) fn parse_u16(s: &str) -> Result<u16, String> {
+pub(crate) async fn parse_u16(s: &str) -> Result<u16, String> {
     s.parse().map_err(|e: std::num::ParseIntError| e.to_string())
 }
-pub(crate) fn parse_u32(s: &str) -> Result<u32, String> {
+pub(crate) async fn parse_u32(s: &str) -> Result<u32, String> {
     s.parse().map_err(|e: std::num::ParseIntError| e.to_string())
 }
-pub(crate) fn parse_usize(s: &str) -> Result<usize, String> {
+pub(crate) async fn parse_usize(s: &str) -> Result<usize, String> {
     s.parse().map_err(|e: std::num::ParseIntError| e.to_string())
 }
 
 /// 🧭️ Bracket-depth-aware split (tracks `[`/`]` only) — the whole grammar's parsing primitive.
-pub(crate) fn split_top_level(s: &str, sep: char) -> Vec<&str> {
+pub(crate) async fn split_top_level(s: &str, sep: char) -> Vec<&str> {
     if s.is_empty() {
         return Vec::new();
     }
@@ -1206,16 +1206,16 @@ pub(crate) fn split_top_level(s: &str, sep: char) -> Vec<&str> {
     out.push(&s[start..]);
     out
 }
-pub(crate) fn strip_brackets(s: &str) -> Result<&str, String> {
+pub(crate) async fn strip_brackets(s: &str) -> Result<&str, String> {
     s.strip_prefix('[').and_then(|s| s.strip_suffix(']')).ok_or_else(|| format!("expected [...], got {s:?}"))
 }
-pub(crate) fn encode_option<T>(opt: &Option<T>, enc: impl Fn(&T) -> String) -> String {
+pub(crate) async fn encode_option<T>(opt: &Option<T>, enc: impl Fn(&T) -> String) -> String {
     match opt {
         None => "[0]".to_string(),
         Some(v) => format!("[1,{}]", enc(v)),
     }
 }
-pub(crate) fn decode_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Option<T>, String> {
+pub(crate) async fn decode_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Option<T>, String> {
     let inner = strip_brackets(s)?;
     match split_top_level(inner, ',').as_slice() {
         ["0"] => Ok(None),
@@ -1223,38 +1223,38 @@ pub(crate) fn decode_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>)
         other => Err(format!("option decode: bad shape {other:?}")),
     }
 }
-pub(crate) fn enc_list<T>(items: &[T], enc: impl Fn(&T) -> String) -> String {
+pub(crate) async fn enc_list<T>(items: &[T], enc: impl Fn(&T) -> String) -> String {
     format!("[{}]", items.iter().map(|i| enc(i)).collect::<Vec<_>>().join(","))
 }
-pub(crate) fn dec_list<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Vec<T>, String> {
+pub(crate) async fn dec_list<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Vec<T>, String> {
     split_top_level(strip_brackets(s)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec).collect()
 }
 //#endregion 🔖️Primitives
 
 //#region 🔖️ValueCodecs
-pub(crate) fn enc_color_type(c: PngColorType) -> String {
+pub(crate) async fn enc_color_type(c: PngColorType) -> String {
     c.to_u8().to_string()
 }
-pub(crate) fn dec_color_type(s: &str) -> Result<PngColorType, String> {
+pub(crate) async fn dec_color_type(s: &str) -> Result<PngColorType, String> {
     PngColorType::from_u8(parse_u8(s)?)
 }
-pub(crate) fn enc_rgb(c: &PngRgb) -> String {
+pub(crate) async fn enc_rgb(c: &PngRgb) -> String {
     format!("[{},{},{}]", c.r, c.g, c.b)
 }
-pub(crate) fn dec_rgb(s: &str) -> Result<PngRgb, String> {
+pub(crate) async fn dec_rgb(s: &str) -> Result<PngRgb, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [r, g, b] = parts.as_slice() else { return Err(format!("rgb: expected 3 fields, got {}", parts.len())) };
     Ok(PngRgb { r: parse_u8(r)?, g: parse_u8(g)?, b: parse_u8(b)? })
 }
 /// 👁️ `I[<hex alpha bytes>]` (Indexed) / `G[<gray>]` (Grayscale) / `R[<r>,<g>,<b>]` (Rgb).
-pub(crate) fn enc_transparency(t: &PngTransparency) -> String {
+pub(crate) async fn enc_transparency(t: &PngTransparency) -> String {
     match t {
         PngTransparency::Indexed { alpha } => format!("I[{}]", hex_encode(alpha)),
         PngTransparency::Grayscale { gray } => format!("G[{gray}]"),
         PngTransparency::Rgb { r, g, b } => format!("R[{r},{g},{b}]"),
     }
 }
-pub(crate) fn dec_transparency(s: &str) -> Result<PngTransparency, String> {
+pub(crate) async fn dec_transparency(s: &str) -> Result<PngTransparency, String> {
     let (tag, rest) = s.split_at(1);
     let inner = strip_brackets(rest)?;
     match tag {
@@ -1268,45 +1268,45 @@ pub(crate) fn dec_transparency(s: &str) -> Result<PngTransparency, String> {
         other => Err(format!("transparency: unknown tag {other:?}")),
     }
 }
-pub(crate) fn enc_chromaticities(c: &PngChromaticities) -> String {
+pub(crate) async fn enc_chromaticities(c: &PngChromaticities) -> String {
     format!("[{},{},{},{},{},{},{},{}]", c.white_x, c.white_y, c.red_x, c.red_y, c.green_x, c.green_y, c.blue_x, c.blue_y)
 }
-pub(crate) fn dec_chromaticities(s: &str) -> Result<PngChromaticities, String> {
+pub(crate) async fn dec_chromaticities(s: &str) -> Result<PngChromaticities, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [wx, wy, rx, ry, gx, gy, bx, by] = parts.as_slice() else { return Err(format!("chromaticities: expected 8 fields, got {}", parts.len())) };
     Ok(PngChromaticities { white_x: parse_u32(wx)?, white_y: parse_u32(wy)?, red_x: parse_u32(rx)?, red_y: parse_u32(ry)?, green_x: parse_u32(gx)?, green_y: parse_u32(gy)?, blue_x: parse_u32(bx)?, blue_y: parse_u32(by)? })
 }
-pub(crate) fn enc_srgb_intent(s: PngSrgbIntent) -> String {
+pub(crate) async fn enc_srgb_intent(s: PngSrgbIntent) -> String {
     s.to_u8().to_string()
 }
-pub(crate) fn dec_srgb_intent(s: &str) -> Result<PngSrgbIntent, String> {
+pub(crate) async fn dec_srgb_intent(s: &str) -> Result<PngSrgbIntent, String> {
     PngSrgbIntent::from_u8(parse_u8(s)?)
 }
-pub(crate) fn enc_physical_dims(p: &PngPhysicalDims) -> String {
+pub(crate) async fn enc_physical_dims(p: &PngPhysicalDims) -> String {
     format!("[{},{},{}]", p.ppu_x, p.ppu_y, if p.unit_is_meter { 1 } else { 0 })
 }
-pub(crate) fn dec_physical_dims(s: &str) -> Result<PngPhysicalDims, String> {
+pub(crate) async fn dec_physical_dims(s: &str) -> Result<PngPhysicalDims, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [ppu_x, ppu_y, unit] = parts.as_slice() else { return Err(format!("physical dims: expected 3 fields, got {}", parts.len())) };
     Ok(PngPhysicalDims { ppu_x: parse_u32(ppu_x)?, ppu_y: parse_u32(ppu_y)?, unit_is_meter: *unit == "1" })
 }
-pub(crate) fn enc_timestamp(t: &PngTimestamp) -> String {
+pub(crate) async fn enc_timestamp(t: &PngTimestamp) -> String {
     format!("[{},{},{},{},{},{}]", t.year, t.month, t.day, t.hour, t.minute, t.second)
 }
-pub(crate) fn dec_timestamp(s: &str) -> Result<PngTimestamp, String> {
+pub(crate) async fn dec_timestamp(s: &str) -> Result<PngTimestamp, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [year, month, day, hour, minute, second] = parts.as_slice() else { return Err(format!("timestamp: expected 6 fields, got {}", parts.len())) };
     Ok(PngTimestamp { year: parse_u16(year)?, month: parse_u8(month)?, day: parse_u8(day)?, hour: parse_u8(hour)?, minute: parse_u8(minute)?, second: parse_u8(second)? })
 }
 /// 🖼️ `G[<gray>]` (Grayscale) / `R[<r>,<g>,<b>]` (Rgb) / `I[<index>]` (Indexed).
-pub(crate) fn enc_background(b: &PngBackground) -> String {
+pub(crate) async fn enc_background(b: &PngBackground) -> String {
     match b {
         PngBackground::Grayscale { gray } => format!("G[{gray}]"),
         PngBackground::Rgb { r, g, b } => format!("R[{r},{g},{b}]"),
         PngBackground::Indexed { index } => format!("I[{index}]"),
     }
 }
-pub(crate) fn dec_background(s: &str) -> Result<PngBackground, String> {
+pub(crate) async fn dec_background(s: &str) -> Result<PngBackground, String> {
     let (tag, rest) = s.split_at(1);
     let inner = strip_brackets(rest)?;
     match tag {
@@ -1320,14 +1320,14 @@ pub(crate) fn dec_background(s: &str) -> Result<PngBackground, String> {
         other => Err(format!("background: unknown tag {other:?}")),
     }
 }
-pub(crate) fn enc_text_kind(k: PngTextKind) -> String {
+pub(crate) async fn enc_text_kind(k: PngTextKind) -> String {
     match k {
         PngTextKind::Text => "0".to_string(),
         PngTextKind::ZText => "1".to_string(),
         PngTextKind::IText => "2".to_string(),
     }
 }
-pub(crate) fn dec_text_kind(s: &str) -> Result<PngTextKind, String> {
+pub(crate) async fn dec_text_kind(s: &str) -> Result<PngTextKind, String> {
     match s {
         "0" => Ok(PngTextKind::Text),
         "1" => Ok(PngTextKind::ZText),
@@ -1335,20 +1335,20 @@ pub(crate) fn dec_text_kind(s: &str) -> Result<PngTextKind, String> {
         other => Err(format!("text kind: unknown tag {other:?}")),
     }
 }
-pub(crate) fn enc_text_chunk(c: &PngTextChunk) -> String {
+pub(crate) async fn enc_text_chunk(c: &PngTextChunk) -> String {
     format!("[{},{},{},{},{},{}]", enc_str(&c.keyword), enc_str(&c.value), if c.compressed { 1 } else { 0 }, enc_text_kind(c.kind), enc_str(&c.language_tag), enc_str(&c.translated_keyword),)
 }
-pub(crate) fn dec_text_chunk(s: &str) -> Result<PngTextChunk, String> {
+pub(crate) async fn dec_text_chunk(s: &str) -> Result<PngTextChunk, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [keyword, value, compressed, kind, language_tag, translated_keyword] = parts.as_slice() else {
         return Err(format!("text chunk: expected 6 fields, got {}", parts.len()));
     };
     Ok(PngTextChunk { keyword: dec_str(keyword)?, value: dec_str(value)?, compressed: *compressed == "1", kind: dec_text_kind(kind)?, language_tag: dec_str(language_tag)?, translated_keyword: dec_str(translated_keyword)? })
 }
-pub(crate) fn enc_chunk(c: &PngChunk) -> String {
+pub(crate) async fn enc_chunk(c: &PngChunk) -> String {
     format!("[{},{}]", hex_encode(&c.kind), hex_encode(&c.data))
 }
-pub(crate) fn dec_chunk(s: &str) -> Result<PngChunk, String> {
+pub(crate) async fn dec_chunk(s: &str) -> Result<PngChunk, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [kind, data] = parts.as_slice() else { return Err(format!("chunk: expected 2 fields, got {}", parts.len())) };
     let kind_bytes = hex_decode(kind)?;
@@ -1356,7 +1356,7 @@ pub(crate) fn dec_chunk(s: &str) -> Result<PngChunk, String> {
     Ok(PngChunk { kind, data: hex_decode(data)? })
 }
 /// 🧭️ Unit markers print as their bare literal chunk-name tag; `Text`/`Unknown` as `TAG[index]`.
-pub(crate) fn enc_chunk_marker(m: &PngChunkMarker) -> String {
+pub(crate) async fn enc_chunk_marker(m: &PngChunkMarker) -> String {
     match m {
         PngChunkMarker::Ihdr => "IHDR".to_string(),
         PngChunkMarker::Plte => "PLTE".to_string(),
@@ -1373,7 +1373,7 @@ pub(crate) fn enc_chunk_marker(m: &PngChunkMarker) -> String {
         PngChunkMarker::Unknown { index } => format!("UNKN[{index}]"),
     }
 }
-pub(crate) fn dec_chunk_marker(s: &str) -> Result<PngChunkMarker, String> {
+pub(crate) async fn dec_chunk_marker(s: &str) -> Result<PngChunkMarker, String> {
     match s {
         "IHDR" => Ok(PngChunkMarker::Ihdr),
         "PLTE" => Ok(PngChunkMarker::Plte),
@@ -1402,13 +1402,13 @@ pub(crate) fn dec_chunk_marker(s: &str) -> Result<PngChunkMarker, String> {
 //#endregion 🔖️ValueCodecs
 
 //#region 🔖️DiffValueCodecs
-fn enc_triple_body(removed: &[usize], modified: &[(usize, String)], added: &[(usize, String)]) -> String {
+async fn enc_triple_body(removed: &[usize], modified: &[(usize, String)], added: &[(usize, String)]) -> String {
     let removed = removed.iter().map(|i| i.to_string()).collect::<Vec<_>>().join(",");
     let modified = modified.iter().map(|(i, v)| format!("{i}:{v}")).collect::<Vec<_>>().join(",");
     let added = added.iter().map(|(i, v)| format!("{i}:{v}")).collect::<Vec<_>>().join(",");
     format!("[{removed}];[{modified}];[{added}]")
 }
-fn dec_triple_body(body: &str) -> Result<(Vec<usize>, Vec<(usize, String)>, Vec<(usize, String)>), String> {
+async fn dec_triple_body(body: &str) -> Result<(Vec<usize>, Vec<(usize, String)>, Vec<(usize, String)>), String> {
     let three = split_top_level(body, ';');
     let [removed_s, modified_s, added_s] = three.as_slice() else { return Err(format!("triple: expected 3 sections, got {}", three.len())) };
     let removed = split_top_level(strip_brackets(removed_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(parse_usize).collect::<Result<Vec<_>, String>>()?;
@@ -1425,10 +1425,10 @@ fn dec_triple_body(body: &str) -> Result<(Vec<usize>, Vec<(usize, String)>, Vec<
     Ok((removed, parse_entries(modified_s)?, parse_entries(added_s)?))
 }
 
-fn enc_plte_body(d: &PngPlteDiff) -> String {
+async fn enc_plte_body(d: &PngPlteDiff) -> String {
     enc_triple_body(&d.removed, &d.modified.iter().map(|m| (m.index, enc_rgb(&m.rgb))).collect::<Vec<_>>(), &d.added.iter().map(|a| (a.index, enc_rgb(&a.rgb))).collect::<Vec<_>>())
 }
-fn dec_plte_body(body: &str) -> Result<PngPlteDiff, String> {
+async fn dec_plte_body(body: &str) -> Result<PngPlteDiff, String> {
     let (removed, modified, added) = dec_triple_body(body)?;
     Ok(PngPlteDiff {
         removed,
@@ -1437,7 +1437,7 @@ fn dec_plte_body(body: &str) -> Result<PngPlteDiff, String> {
     })
 }
 
-fn enc_text_chunk_diff(d: &PngTextChunkDiff) -> String {
+async fn enc_text_chunk_diff(d: &PngTextChunkDiff) -> String {
     format!(
         "[{},{},{},{},{},{}]",
         encode_option(&d.keyword, |v| enc_str(v)),
@@ -1448,7 +1448,7 @@ fn enc_text_chunk_diff(d: &PngTextChunkDiff) -> String {
         encode_option(&d.translated_keyword, |v| enc_str(v)),
     )
 }
-fn dec_text_chunk_diff(s: &str) -> Result<PngTextChunkDiff, String> {
+async fn dec_text_chunk_diff(s: &str) -> Result<PngTextChunkDiff, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [keyword, value, compressed, kind, language_tag, translated_keyword] = parts.as_slice() else {
         return Err(format!("text chunk diff: expected 6 fields, got {}", parts.len()));
@@ -1462,10 +1462,10 @@ fn dec_text_chunk_diff(s: &str) -> Result<PngTextChunkDiff, String> {
         translated_keyword: decode_option(translated_keyword, dec_str)?,
     })
 }
-fn enc_text_chunks_diff(d: &PngTextChunksDiff) -> String {
+async fn enc_text_chunks_diff(d: &PngTextChunksDiff) -> String {
     format!("text-chunks{{{}}}", enc_triple_body(&d.removed, &d.modified.iter().map(|m| (m.index, enc_text_chunk_diff(&m.diff))).collect::<Vec<_>>(), &d.added.iter().map(|a| (a.index, enc_text_chunk(&a.chunk))).collect::<Vec<_>>(),))
 }
-fn dec_text_chunks_diff(body: &str) -> Result<PngTextChunksDiff, String> {
+async fn dec_text_chunks_diff(body: &str) -> Result<PngTextChunksDiff, String> {
     let (removed, modified, added) = dec_triple_body(body)?;
     Ok(PngTextChunksDiff {
         removed,
@@ -1474,10 +1474,10 @@ fn dec_text_chunks_diff(body: &str) -> Result<PngTextChunksDiff, String> {
     })
 }
 
-fn enc_chunk_order_diff(d: &PngChunkOrderDiff) -> String {
+async fn enc_chunk_order_diff(d: &PngChunkOrderDiff) -> String {
     format!("chunk-order{{{}}}", enc_triple_body(&d.removed, &d.modified.iter().map(|m| (m.index, enc_chunk_marker(&m.marker))).collect::<Vec<_>>(), &d.added.iter().map(|a| (a.index, enc_chunk_marker(&a.marker))).collect::<Vec<_>>(),))
 }
-fn dec_chunk_order_diff(body: &str) -> Result<PngChunkOrderDiff, String> {
+async fn dec_chunk_order_diff(body: &str) -> Result<PngChunkOrderDiff, String> {
     let (removed, modified, added) = dec_triple_body(body)?;
     Ok(PngChunkOrderDiff {
         removed,
@@ -1486,10 +1486,10 @@ fn dec_chunk_order_diff(body: &str) -> Result<PngChunkOrderDiff, String> {
     })
 }
 
-fn enc_unknown_chunks_diff(d: &PngUnknownChunksDiff) -> String {
+async fn enc_unknown_chunks_diff(d: &PngUnknownChunksDiff) -> String {
     format!("unknown-chunks{{{}}}", enc_triple_body(&d.removed, &d.modified.iter().map(|m| (m.index, enc_chunk(&m.chunk))).collect::<Vec<_>>(), &d.added.iter().map(|a| (a.index, enc_chunk(&a.chunk))).collect::<Vec<_>>(),))
 }
-fn dec_unknown_chunks_diff(body: &str) -> Result<PngUnknownChunksDiff, String> {
+async fn dec_unknown_chunks_diff(body: &str) -> Result<PngUnknownChunksDiff, String> {
     let (removed, modified, added) = dec_triple_body(body)?;
     Ok(PngUnknownChunksDiff {
         removed,
@@ -1507,33 +1507,33 @@ fn dec_unknown_chunks_diff(body: &str) -> Result<PngUnknownChunksDiff, String> {
 // precedent — `dsl`/`store`/`protocol` all alias the same kernel crate root). `pub(crate)` so
 // `🧬️mutations/🦀️component.rs`'s own `OpBinary` impl reuses these instead of duplicating (same
 // intra-artifact reuse direction the text codecs above already establish).
-pub(crate) fn write_bin_str(w: &mut dsl::ByteWriter, s: &str) {
+pub(crate) async fn write_bin_str(w: &mut dsl::ByteWriter, s: &str) {
     let bytes = s.as_bytes();
     w.write_varint_u64(bytes.len() as u64);
     w.write_bytes(bytes);
 }
-pub(crate) fn read_bin_str(r: &mut dsl::ByteReader<'_>) -> Result<String, dsl::PackError> {
+pub(crate) async fn read_bin_str(r: &mut dsl::ByteReader<'_>) -> Result<String, dsl::PackError> {
     let len = r.read_varint_u64()? as usize;
     let bytes = r.read_bytes(len)?;
     String::from_utf8(bytes.to_vec()).map_err(|e| dsl::PackError::Malformed { what: "png binary utf8 string", offset: 0, detail: e.to_string() })
 }
-pub(crate) fn write_bin_blob(w: &mut dsl::ByteWriter, bytes: &[u8]) {
+pub(crate) async fn write_bin_blob(w: &mut dsl::ByteWriter, bytes: &[u8]) {
     w.write_varint_u64(bytes.len() as u64);
     w.write_bytes(bytes);
 }
-pub(crate) fn read_bin_blob(r: &mut dsl::ByteReader<'_>) -> Result<Vec<u8>, dsl::PackError> {
+pub(crate) async fn read_bin_blob(r: &mut dsl::ByteReader<'_>) -> Result<Vec<u8>, dsl::PackError> {
     let len = r.read_varint_u64()? as usize;
     Ok(r.read_bytes(len)?.to_vec())
 }
-pub(crate) fn write_bin_rgb(w: &mut dsl::ByteWriter, c: &PngRgb) {
+pub(crate) async fn write_bin_rgb(w: &mut dsl::ByteWriter, c: &PngRgb) {
     w.write_u8(c.r);
     w.write_u8(c.g);
     w.write_u8(c.b);
 }
-pub(crate) fn read_bin_rgb(r: &mut dsl::ByteReader<'_>) -> Result<PngRgb, dsl::PackError> {
+pub(crate) async fn read_bin_rgb(r: &mut dsl::ByteReader<'_>) -> Result<PngRgb, dsl::PackError> {
     Ok(PngRgb { r: r.read_u8()?, g: r.read_u8()?, b: r.read_u8()? })
 }
-pub(crate) fn write_bin_transparency(w: &mut dsl::ByteWriter, t: &PngTransparency) {
+pub(crate) async fn write_bin_transparency(w: &mut dsl::ByteWriter, t: &PngTransparency) {
     match t {
         PngTransparency::Indexed { alpha } => {
             w.write_u8(0);
@@ -1551,7 +1551,7 @@ pub(crate) fn write_bin_transparency(w: &mut dsl::ByteWriter, t: &PngTransparenc
         }
     }
 }
-pub(crate) fn read_bin_transparency(r: &mut dsl::ByteReader<'_>) -> Result<PngTransparency, dsl::PackError> {
+pub(crate) async fn read_bin_transparency(r: &mut dsl::ByteReader<'_>) -> Result<PngTransparency, dsl::PackError> {
     match r.read_u8()? {
         0 => Ok(PngTransparency::Indexed { alpha: read_bin_blob(r)? }),
         1 => Ok(PngTransparency::Grayscale { gray: r.read_u16_le()? }),
@@ -1564,23 +1564,23 @@ pub(crate) fn read_bin_transparency(r: &mut dsl::ByteReader<'_>) -> Result<PngTr
         other => Err(dsl::PackError::Malformed { what: "png transparency tag", offset: 0, detail: format!("unknown tag {other}") }),
     }
 }
-pub(crate) fn write_bin_chromaticities(w: &mut dsl::ByteWriter, c: &PngChromaticities) {
+pub(crate) async fn write_bin_chromaticities(w: &mut dsl::ByteWriter, c: &PngChromaticities) {
     for v in [c.white_x, c.white_y, c.red_x, c.red_y, c.green_x, c.green_y, c.blue_x, c.blue_y] {
         w.write_u32_le(v);
     }
 }
-pub(crate) fn read_bin_chromaticities(r: &mut dsl::ByteReader<'_>) -> Result<PngChromaticities, dsl::PackError> {
+pub(crate) async fn read_bin_chromaticities(r: &mut dsl::ByteReader<'_>) -> Result<PngChromaticities, dsl::PackError> {
     Ok(PngChromaticities { white_x: r.read_u32_le()?, white_y: r.read_u32_le()?, red_x: r.read_u32_le()?, red_y: r.read_u32_le()?, green_x: r.read_u32_le()?, green_y: r.read_u32_le()?, blue_x: r.read_u32_le()?, blue_y: r.read_u32_le()? })
 }
-pub(crate) fn write_bin_physical_dims(w: &mut dsl::ByteWriter, p: &PngPhysicalDims) {
+pub(crate) async fn write_bin_physical_dims(w: &mut dsl::ByteWriter, p: &PngPhysicalDims) {
     w.write_u32_le(p.ppu_x);
     w.write_u32_le(p.ppu_y);
     w.write_u8(if p.unit_is_meter { 1 } else { 0 });
 }
-pub(crate) fn read_bin_physical_dims(r: &mut dsl::ByteReader<'_>) -> Result<PngPhysicalDims, dsl::PackError> {
+pub(crate) async fn read_bin_physical_dims(r: &mut dsl::ByteReader<'_>) -> Result<PngPhysicalDims, dsl::PackError> {
     Ok(PngPhysicalDims { ppu_x: r.read_u32_le()?, ppu_y: r.read_u32_le()?, unit_is_meter: r.read_u8()? != 0 })
 }
-pub(crate) fn write_bin_timestamp(w: &mut dsl::ByteWriter, t: &PngTimestamp) {
+pub(crate) async fn write_bin_timestamp(w: &mut dsl::ByteWriter, t: &PngTimestamp) {
     w.write_u16_le(t.year);
     w.write_u8(t.month);
     w.write_u8(t.day);
@@ -1588,10 +1588,10 @@ pub(crate) fn write_bin_timestamp(w: &mut dsl::ByteWriter, t: &PngTimestamp) {
     w.write_u8(t.minute);
     w.write_u8(t.second);
 }
-pub(crate) fn read_bin_timestamp(r: &mut dsl::ByteReader<'_>) -> Result<PngTimestamp, dsl::PackError> {
+pub(crate) async fn read_bin_timestamp(r: &mut dsl::ByteReader<'_>) -> Result<PngTimestamp, dsl::PackError> {
     Ok(PngTimestamp { year: r.read_u16_le()?, month: r.read_u8()?, day: r.read_u8()?, hour: r.read_u8()?, minute: r.read_u8()?, second: r.read_u8()? })
 }
-pub(crate) fn write_bin_background(w: &mut dsl::ByteWriter, b: &PngBackground) {
+pub(crate) async fn write_bin_background(w: &mut dsl::ByteWriter, b: &PngBackground) {
     match b {
         PngBackground::Grayscale { gray } => {
             w.write_u8(0);
@@ -1609,7 +1609,7 @@ pub(crate) fn write_bin_background(w: &mut dsl::ByteWriter, b: &PngBackground) {
         }
     }
 }
-pub(crate) fn read_bin_background(r: &mut dsl::ByteReader<'_>) -> Result<PngBackground, dsl::PackError> {
+pub(crate) async fn read_bin_background(r: &mut dsl::ByteReader<'_>) -> Result<PngBackground, dsl::PackError> {
     match r.read_u8()? {
         0 => Ok(PngBackground::Grayscale { gray: r.read_u16_le()? }),
         1 => {
@@ -1622,14 +1622,14 @@ pub(crate) fn read_bin_background(r: &mut dsl::ByteReader<'_>) -> Result<PngBack
         other => Err(dsl::PackError::Malformed { what: "png background tag", offset: 0, detail: format!("unknown tag {other}") }),
     }
 }
-fn enc_text_kind_u8(k: PngTextKind) -> u8 {
+async fn enc_text_kind_u8(k: PngTextKind) -> u8 {
     match k {
         PngTextKind::Text => 0,
         PngTextKind::ZText => 1,
         PngTextKind::IText => 2,
     }
 }
-fn dec_text_kind_u8(v: u8) -> Result<PngTextKind, dsl::PackError> {
+async fn dec_text_kind_u8(v: u8) -> Result<PngTextKind, dsl::PackError> {
     match v {
         0 => Ok(PngTextKind::Text),
         1 => Ok(PngTextKind::ZText),
@@ -1637,7 +1637,7 @@ fn dec_text_kind_u8(v: u8) -> Result<PngTextKind, dsl::PackError> {
         other => Err(dsl::PackError::Malformed { what: "png text kind tag", offset: 0, detail: format!("unknown tag {other}") }),
     }
 }
-pub(crate) fn write_bin_text_chunk(w: &mut dsl::ByteWriter, c: &PngTextChunk) {
+pub(crate) async fn write_bin_text_chunk(w: &mut dsl::ByteWriter, c: &PngTextChunk) {
     write_bin_str(w, &c.keyword);
     write_bin_str(w, &c.value);
     w.write_u8(if c.compressed { 1 } else { 0 });
@@ -1645,19 +1645,19 @@ pub(crate) fn write_bin_text_chunk(w: &mut dsl::ByteWriter, c: &PngTextChunk) {
     write_bin_str(w, &c.language_tag);
     write_bin_str(w, &c.translated_keyword);
 }
-pub(crate) fn read_bin_text_chunk(r: &mut dsl::ByteReader<'_>) -> Result<PngTextChunk, dsl::PackError> {
+pub(crate) async fn read_bin_text_chunk(r: &mut dsl::ByteReader<'_>) -> Result<PngTextChunk, dsl::PackError> {
     Ok(PngTextChunk { keyword: read_bin_str(r)?, value: read_bin_str(r)?, compressed: r.read_u8()? != 0, kind: dec_text_kind_u8(r.read_u8()?)?, language_tag: read_bin_str(r)?, translated_keyword: read_bin_str(r)? })
 }
-pub(crate) fn write_bin_chunk(w: &mut dsl::ByteWriter, c: &PngChunk) {
+pub(crate) async fn write_bin_chunk(w: &mut dsl::ByteWriter, c: &PngChunk) {
     w.write_bytes(&c.kind);
     write_bin_blob(w, &c.data);
 }
-pub(crate) fn read_bin_chunk(r: &mut dsl::ByteReader<'_>) -> Result<PngChunk, dsl::PackError> {
+pub(crate) async fn read_bin_chunk(r: &mut dsl::ByteReader<'_>) -> Result<PngChunk, dsl::PackError> {
     let kind_bytes = r.read_bytes(4)?;
     let kind: [u8; 4] = kind_bytes.try_into().map_err(|_| dsl::PackError::Malformed { what: "png chunk kind", offset: 0, detail: "expected 4 bytes".into() })?;
     Ok(PngChunk { kind, data: read_bin_blob(r)? })
 }
-pub(crate) fn write_bin_chunk_marker(w: &mut dsl::ByteWriter, m: &PngChunkMarker) {
+pub(crate) async fn write_bin_chunk_marker(w: &mut dsl::ByteWriter, m: &PngChunkMarker) {
     match m {
         PngChunkMarker::Ihdr => w.write_u8(0),
         PngChunkMarker::Plte => w.write_u8(1),
@@ -1680,7 +1680,7 @@ pub(crate) fn write_bin_chunk_marker(w: &mut dsl::ByteWriter, m: &PngChunkMarker
         }
     }
 }
-pub(crate) fn read_bin_chunk_marker(r: &mut dsl::ByteReader<'_>) -> Result<PngChunkMarker, dsl::PackError> {
+pub(crate) async fn read_bin_chunk_marker(r: &mut dsl::ByteReader<'_>) -> Result<PngChunkMarker, dsl::PackError> {
     match r.read_u8()? {
         0 => Ok(PngChunkMarker::Ihdr),
         1 => Ok(PngChunkMarker::Plte),
@@ -1699,7 +1699,7 @@ pub(crate) fn read_bin_chunk_marker(r: &mut dsl::ByteReader<'_>) -> Result<PngCh
     }
 }
 /// 🧩 2-way presence flag (`0`=None, `1`=Some) — shared by every plain `Option<T>` field.
-pub(crate) fn write_bin_option<T>(w: &mut dsl::ByteWriter, v: &Option<T>, write_value: impl FnOnce(&mut dsl::ByteWriter, &T)) {
+pub(crate) async fn write_bin_option<T>(w: &mut dsl::ByteWriter, v: &Option<T>, write_value: impl FnOnce(&mut dsl::ByteWriter, &T)) {
     match v {
         None => w.write_u8(0),
         Some(val) => {
@@ -1708,20 +1708,20 @@ pub(crate) fn write_bin_option<T>(w: &mut dsl::ByteWriter, v: &Option<T>, write_
         }
     }
 }
-pub(crate) fn read_bin_option<T>(r: &mut dsl::ByteReader<'_>, read_value: impl FnOnce(&mut dsl::ByteReader<'_>) -> Result<T, dsl::PackError>) -> Result<Option<T>, dsl::PackError> {
+pub(crate) async fn read_bin_option<T>(r: &mut dsl::ByteReader<'_>, read_value: impl FnOnce(&mut dsl::ByteReader<'_>) -> Result<T, dsl::PackError>) -> Result<Option<T>, dsl::PackError> {
     match r.read_u8()? {
         0 => Ok(None),
         1 => Ok(Some(read_value(r)?)),
         other => Err(dsl::PackError::Malformed { what: "png binary option tag", offset: 0, detail: format!("unknown tag {other}") }),
     }
 }
-pub(crate) fn write_bin_vec<T>(w: &mut dsl::ByteWriter, items: &[T], write_item: impl Fn(&mut dsl::ByteWriter, &T)) {
+pub(crate) async fn write_bin_vec<T>(w: &mut dsl::ByteWriter, items: &[T], write_item: impl Fn(&mut dsl::ByteWriter, &T)) {
     w.write_varint_u64(items.len() as u64);
     for item in items {
         write_item(w, item);
     }
 }
-pub(crate) fn read_bin_vec<T>(r: &mut dsl::ByteReader<'_>, mut read_item: impl FnMut(&mut dsl::ByteReader<'_>) -> Result<T, dsl::PackError>) -> Result<Vec<T>, dsl::PackError> {
+pub(crate) async fn read_bin_vec<T>(r: &mut dsl::ByteReader<'_>, mut read_item: impl FnMut(&mut dsl::ByteReader<'_>) -> Result<T, dsl::PackError>) -> Result<Vec<T>, dsl::PackError> {
     let n = r.read_varint_u64()? as usize;
     let mut out = Vec::with_capacity(n);
     for _ in 0..n {
@@ -1732,7 +1732,7 @@ pub(crate) fn read_bin_vec<T>(r: &mut dsl::ByteReader<'_>, mut read_item: impl F
 /// 🧩 Whole-`PngSnapshot` real binary encoding — reused by `PngMutation::SetSnapshot`'s own
 /// binary op arm (`🧬️mutations/🦀️component.rs`) so a full snapshot payload isn't hand-encoded
 /// a second time.
-pub(crate) fn write_bin_snapshot(w: &mut dsl::ByteWriter, s: &PngSnapshot) {
+pub(crate) async fn write_bin_snapshot(w: &mut dsl::ByteWriter, s: &PngSnapshot) {
     write_bin_str(w, &s.schema);
     w.write_u32_le(s.width);
     w.write_u32_le(s.height);
@@ -1752,7 +1752,7 @@ pub(crate) fn write_bin_snapshot(w: &mut dsl::ByteWriter, s: &PngSnapshot) {
     write_bin_vec(w, &s.chunk_order, write_bin_chunk_marker);
     write_bin_vec(w, &s.unknown_chunks, write_bin_chunk);
 }
-pub(crate) fn read_bin_snapshot(r: &mut dsl::ByteReader<'_>) -> Result<PngSnapshot, dsl::PackError> {
+pub(crate) async fn read_bin_snapshot(r: &mut dsl::ByteReader<'_>) -> Result<PngSnapshot, dsl::PackError> {
     Ok(PngSnapshot {
         schema: read_bin_str(r)?,
         width: r.read_u32_le()?,
@@ -1782,7 +1782,7 @@ pub(crate) fn read_bin_snapshot(r: &mut dsl::ByteReader<'_>) -> Result<PngSnapsh
 // produces one opaque `Vec<u8>` blob matching `../💾️binary/📡️component.protocol.semio`'s
 // `Array(u8, Field(<name>_len))` fields exactly (the blob's OWN internal removed/modified/
 // added shape isn't further protocol-walkable, see that file's own doc comment).
-fn enc_plte_diff_bin(d: &PngPlteDiff) -> Vec<u8> {
+async fn enc_plte_diff_bin(d: &PngPlteDiff) -> Vec<u8> {
     let mut w = dsl::ByteWriter::new();
     write_bin_vec(&mut w, &d.removed, |w, v: &usize| w.write_varint_u64(*v as u64));
     write_bin_vec(&mut w, &d.modified, |w, m: &PngPlteEntryModified| {
@@ -1795,7 +1795,7 @@ fn enc_plte_diff_bin(d: &PngPlteDiff) -> Vec<u8> {
     });
     w.into_bytes()
 }
-fn dec_plte_diff_bin(bytes: &[u8]) -> Result<PngPlteDiff, dsl::PackError> {
+async fn dec_plte_diff_bin(bytes: &[u8]) -> Result<PngPlteDiff, dsl::PackError> {
     let mut r = dsl::ByteReader::new(bytes);
     let removed = read_bin_vec(&mut r, |r| Ok(r.read_varint_u64()? as usize))?;
     let modified = read_bin_vec(&mut r, |r| {
@@ -1810,7 +1810,7 @@ fn dec_plte_diff_bin(bytes: &[u8]) -> Result<PngPlteDiff, dsl::PackError> {
     })?;
     Ok(PngPlteDiff { removed, modified, added })
 }
-fn write_bin_text_chunk_diff(w: &mut dsl::ByteWriter, d: &PngTextChunkDiff) {
+async fn write_bin_text_chunk_diff(w: &mut dsl::ByteWriter, d: &PngTextChunkDiff) {
     write_bin_option(w, &d.keyword, |w, v: &String| write_bin_str(w, v));
     write_bin_option(w, &d.value, |w, v: &String| write_bin_str(w, v));
     write_bin_option(w, &d.compressed, |w, v: &bool| w.write_u8(if *v { 1 } else { 0 }));
@@ -1818,7 +1818,7 @@ fn write_bin_text_chunk_diff(w: &mut dsl::ByteWriter, d: &PngTextChunkDiff) {
     write_bin_option(w, &d.language_tag, |w, v: &String| write_bin_str(w, v));
     write_bin_option(w, &d.translated_keyword, |w, v: &String| write_bin_str(w, v));
 }
-fn read_bin_text_chunk_diff(r: &mut dsl::ByteReader<'_>) -> Result<PngTextChunkDiff, dsl::PackError> {
+async fn read_bin_text_chunk_diff(r: &mut dsl::ByteReader<'_>) -> Result<PngTextChunkDiff, dsl::PackError> {
     Ok(PngTextChunkDiff {
         keyword: read_bin_option(r, read_bin_str)?,
         value: read_bin_option(r, read_bin_str)?,
@@ -1828,7 +1828,7 @@ fn read_bin_text_chunk_diff(r: &mut dsl::ByteReader<'_>) -> Result<PngTextChunkD
         translated_keyword: read_bin_option(r, read_bin_str)?,
     })
 }
-fn enc_text_chunks_diff_bin(d: &PngTextChunksDiff) -> Vec<u8> {
+async fn enc_text_chunks_diff_bin(d: &PngTextChunksDiff) -> Vec<u8> {
     let mut w = dsl::ByteWriter::new();
     write_bin_vec(&mut w, &d.removed, |w, v: &usize| w.write_varint_u64(*v as u64));
     write_bin_vec(&mut w, &d.modified, |w, m: &PngTextChunkModified| {
@@ -1841,7 +1841,7 @@ fn enc_text_chunks_diff_bin(d: &PngTextChunksDiff) -> Vec<u8> {
     });
     w.into_bytes()
 }
-fn dec_text_chunks_diff_bin(bytes: &[u8]) -> Result<PngTextChunksDiff, dsl::PackError> {
+async fn dec_text_chunks_diff_bin(bytes: &[u8]) -> Result<PngTextChunksDiff, dsl::PackError> {
     let mut r = dsl::ByteReader::new(bytes);
     let removed = read_bin_vec(&mut r, |r| Ok(r.read_varint_u64()? as usize))?;
     let modified = read_bin_vec(&mut r, |r| {
@@ -1856,7 +1856,7 @@ fn dec_text_chunks_diff_bin(bytes: &[u8]) -> Result<PngTextChunksDiff, dsl::Pack
     })?;
     Ok(PngTextChunksDiff { removed, modified, added })
 }
-fn enc_chunk_order_diff_bin(d: &PngChunkOrderDiff) -> Vec<u8> {
+async fn enc_chunk_order_diff_bin(d: &PngChunkOrderDiff) -> Vec<u8> {
     let mut w = dsl::ByteWriter::new();
     write_bin_vec(&mut w, &d.removed, |w, v: &usize| w.write_varint_u64(*v as u64));
     write_bin_vec(&mut w, &d.modified, |w, m: &PngChunkOrderModified| {
@@ -1869,7 +1869,7 @@ fn enc_chunk_order_diff_bin(d: &PngChunkOrderDiff) -> Vec<u8> {
     });
     w.into_bytes()
 }
-fn dec_chunk_order_diff_bin(bytes: &[u8]) -> Result<PngChunkOrderDiff, dsl::PackError> {
+async fn dec_chunk_order_diff_bin(bytes: &[u8]) -> Result<PngChunkOrderDiff, dsl::PackError> {
     let mut r = dsl::ByteReader::new(bytes);
     let removed = read_bin_vec(&mut r, |r| Ok(r.read_varint_u64()? as usize))?;
     let modified = read_bin_vec(&mut r, |r| {
@@ -1884,7 +1884,7 @@ fn dec_chunk_order_diff_bin(bytes: &[u8]) -> Result<PngChunkOrderDiff, dsl::Pack
     })?;
     Ok(PngChunkOrderDiff { removed, modified, added })
 }
-fn enc_unknown_chunks_diff_bin(d: &PngUnknownChunksDiff) -> Vec<u8> {
+async fn enc_unknown_chunks_diff_bin(d: &PngUnknownChunksDiff) -> Vec<u8> {
     let mut w = dsl::ByteWriter::new();
     write_bin_vec(&mut w, &d.removed, |w, v: &usize| w.write_varint_u64(*v as u64));
     write_bin_vec(&mut w, &d.modified, |w, m: &PngUnknownChunkModified| {
@@ -1897,7 +1897,7 @@ fn enc_unknown_chunks_diff_bin(d: &PngUnknownChunksDiff) -> Vec<u8> {
     });
     w.into_bytes()
 }
-fn dec_unknown_chunks_diff_bin(bytes: &[u8]) -> Result<PngUnknownChunksDiff, dsl::PackError> {
+async fn dec_unknown_chunks_diff_bin(bytes: &[u8]) -> Result<PngUnknownChunksDiff, dsl::PackError> {
     let mut r = dsl::ByteReader::new(bytes);
     let removed = read_bin_vec(&mut r, |r| Ok(r.read_varint_u64()? as usize))?;
     let modified = read_bin_vec(&mut r, |r| {
@@ -1916,7 +1916,7 @@ fn dec_unknown_chunks_diff_bin(bytes: &[u8]) -> Result<PngUnknownChunksDiff, dsl
 /// TRI-STATE `Option<Option<T>>` field — see the protocol file's own doc comment for why this
 /// avoids chaining two `if`-guarded conditional fields (`Cond::eval` errors on a field that
 /// was itself only conditionally decoded).
-fn write_bin_tri_flag<T>(w: &mut dsl::ByteWriter, v: &Option<Option<T>>, write_value: impl FnOnce(&mut dsl::ByteWriter, &T)) {
+async fn write_bin_tri_flag<T>(w: &mut dsl::ByteWriter, v: &Option<Option<T>>, write_value: impl FnOnce(&mut dsl::ByteWriter, &T)) {
     match v {
         None => w.write_u8(0),
         Some(None) => w.write_u8(1),
@@ -1926,7 +1926,7 @@ fn write_bin_tri_flag<T>(w: &mut dsl::ByteWriter, v: &Option<Option<T>>, write_v
         }
     }
 }
-fn read_bin_tri_flag<T>(r: &mut dsl::ByteReader<'_>, read_value: impl FnOnce(&mut dsl::ByteReader<'_>) -> Result<T, dsl::PackError>) -> Result<Option<Option<T>>, dsl::PackError> {
+async fn read_bin_tri_flag<T>(r: &mut dsl::ByteReader<'_>, read_value: impl FnOnce(&mut dsl::ByteReader<'_>) -> Result<T, dsl::PackError>) -> Result<Option<Option<T>>, dsl::PackError> {
     match r.read_u8()? {
         0 => Ok(None),
         1 => Ok(Some(None)),
@@ -1934,13 +1934,13 @@ fn read_bin_tri_flag<T>(r: &mut dsl::ByteReader<'_>, read_value: impl FnOnce(&mu
         other => Err(dsl::PackError::Malformed { what: "png diff tri-flag", offset: 0, detail: format!("unknown flag {other}") }),
     }
 }
-fn diff_pack_err(e: dsl::PackError) -> protocol::ProtocolError {
+async fn diff_pack_err(e: dsl::PackError) -> protocol::ProtocolError {
     protocol::ProtocolError::Malformed { what: "png diff binary", offset: 0, detail: e.to_string() }
 }
 //#endregion 🔖️RealBinaryDiffFrame
 
 //#region 🔖️TopLevel
-fn print_png_diff(d: &PngDiff) -> String {
+async fn print_png_diff(d: &PngDiff) -> String {
     let mut tokens: Vec<String> = Vec::new();
     if let Some(v) = d.width {
         tokens.push(format!("width={v}"));
@@ -1995,7 +1995,7 @@ fn print_png_diff(d: &PngDiff) -> String {
     }
     tokens.join(" ")
 }
-fn parse_png_diff(line: &str) -> Result<PngDiff, String> {
+async fn parse_png_diff(line: &str) -> Result<PngDiff, String> {
     let mut d = PngDiff::default();
     if line.is_empty() {
         return Ok(d);
@@ -2043,10 +2043,10 @@ fn parse_png_diff(line: &str) -> Result<PngDiff, String> {
 }
 
 impl protocol::DiffCodec for PngDiff {
-    fn print_diff(&self) -> String {
+    async fn print_diff(&self) -> String {
         print_png_diff(self)
     }
-    fn parse_diff(line: &str) -> Result<Self, store::TextError> {
+    async fn parse_diff(line: &str) -> Result<Self, store::TextError> {
         parse_png_diff(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
 
@@ -2054,7 +2054,7 @@ impl protocol::DiffCodec for PngDiff {
     /// text-as-binary shortcut. Matches `../💾️binary/📡️component.protocol.semio`'s real
     /// flag-per-field layout exactly, field for field, in struct order (see that file's own
     /// doc comment for the 2-way/3-way flag design).
-    fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    async fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         let mut w = dsl::ByteWriter::new();
         write_bin_option(&mut w, &self.width, |w, v| w.write_u32_le(*v));
         write_bin_option(&mut w, &self.height, |w, v| w.write_u32_le(*v));
@@ -2086,7 +2086,7 @@ impl protocol::DiffCodec for PngDiff {
 
         Ok(w.into_bytes())
     }
-    fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    async fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         let mut r = dsl::ByteReader::new(bytes);
         let width = read_bin_option(&mut r, |r| r.read_u32_le()).map_err(diff_pack_err)?;
         let height = read_bin_option(&mut r, |r| r.read_u32_le()).map_err(diff_pack_err)?;
@@ -2130,7 +2130,7 @@ impl protocol::DiffCodec for PngDiff {
 /// duplicating the literal case list; `handcrafted_diff_codec_tests::diff_codec_text_binary_
 /// roundtrip_law` below now calls it too (single source of truth, per CLAUDE.md).
 #[cfg(test)]
-pub(crate) fn demo_snap_a() -> PngSnapshot {
+pub(crate) async fn demo_snap_a() -> PngSnapshot {
     PngSnapshot {
         schema: "stdio.png".into(),
         width: 10,
@@ -2156,7 +2156,7 @@ pub(crate) fn demo_snap_a() -> PngSnapshot {
     }
 }
 #[cfg(test)]
-pub(crate) fn demo_snap_b() -> PngSnapshot {
+pub(crate) async fn demo_snap_b() -> PngSnapshot {
     PngSnapshot {
         schema: "stdio.png".into(),
         width: 11,
@@ -2179,7 +2179,7 @@ pub(crate) fn demo_snap_b() -> PngSnapshot {
     }
 }
 #[cfg(test)]
-pub(crate) fn demo_empty_snap() -> PngSnapshot {
+pub(crate) async fn demo_empty_snap() -> PngSnapshot {
     PngSnapshot { schema: "stdio.png".into(), ..Default::default() }
 }
 /// ✅️ Representative `PngDiff` cases, incl. the empty (`None`) diff and the `Replace`-shaped
@@ -2187,7 +2187,7 @@ pub(crate) fn demo_empty_snap() -> PngSnapshot {
 /// (both `Some(Some) -> Some(None)` and `None -> Some(Some)`), and every collection triple's
 /// removed/modified/added arms.
 #[cfg(test)]
-pub(crate) fn demo_diff_cases() -> Vec<PngDiff> {
+pub(crate) async fn demo_diff_cases() -> Vec<PngDiff> {
     let a = demo_snap_a();
     let b = demo_snap_b();
     let c = demo_empty_snap();
@@ -2207,7 +2207,7 @@ mod handcrafted_diff_codec_tests {
     /// tri-state `Some(None)`/`Some(Some(_))` transition (incl. `plte`'s tri-state-wrapping-a-
     /// triple shape), and every collection triple's removed/modified/added arms.
     #[test]
-    fn diff_codec_text_binary_roundtrip_law() {
+    async fn diff_codec_text_binary_roundtrip_law() {
         for d in demo_diff_cases() {
             let printed = d.print_diff();
             assert!(!printed.contains('\n'), "print_diff must be one line, got {printed:?}");

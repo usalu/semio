@@ -4,7 +4,7 @@ use crate::artifacts::fem3d::mutations::{delete_combination, Fem3dMutation};
 use crate::artifacts::fem3d::Fem3dSnapshot;
 
 //#region 🔖️Inverse
-pub fn inverse(payload: &CreateCombination, _base: &Fem3dSnapshot) -> Vec<Fem3dMutation> {
+pub async fn inverse(payload: &CreateCombination, _base: &Fem3dSnapshot) -> Vec<Fem3dMutation> {
     vec![Fem3dMutation::DeleteCombination(delete_combination::mutation::DeleteCombination { id: payload.combination.id.clone() })]
 }
 //#endregion 🔖️Inverse

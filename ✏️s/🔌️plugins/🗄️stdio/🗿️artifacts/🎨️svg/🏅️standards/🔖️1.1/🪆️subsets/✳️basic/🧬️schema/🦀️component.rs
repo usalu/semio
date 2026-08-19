@@ -25,28 +25,28 @@ pub mod derived_construction {
         type Mutation = SvgMutation;
         type Diff = SvgDiff;
 
-        fn empty() -> Self {
+        async fn empty() -> Self {
             Self::default()
         }
 
-        fn from_snapshot(snapshot: Self::Snapshot) -> Self {
+        async fn from_snapshot(snapshot: Self::Snapshot) -> Self {
             Self { snapshot }
         }
 
-        fn from_text(text: &str) -> Result<Self, store::TextError> {
+        async fn from_text(text: &str) -> Result<Self, store::TextError> {
             Ok(Self::from_snapshot(<SvgSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
 
-        fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
+        async fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
             Ok(Self::from_snapshot(<SvgSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
         }
 
-        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
+        async fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let diff = crate::artifacts::svg::schema::mutations::apply_svg_mutation(&mut self.snapshot, &mutation);
             (self, diff)
         }
 
-        fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
+        async fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
             self.snapshot = <SvgDiff as protocol::MutationDiff<SvgSnapshot>>::apply(&diff, &self.snapshot)?;
             Ok(self)
         }
@@ -54,7 +54,7 @@ pub mod derived_construction {
         /// 🛡️ The real construction gate: injects the profile metadata, then a hard Basic 1.1
         /// violation (however `self.snapshot` got here) fails `build()` -- soft diagnostics (nested
         /// `<svg>`) pass through silently here, matching the `✳️tiny`/PDF/A pilots' own `build()` shape.
-        fn build(mut self) -> Result<Self::Snapshot, Vec<Diagnostic>> {
+        async fn build(mut self) -> Result<Self::Snapshot, Vec<Diagnostic>> {
             if let Some(root) = self.snapshot.doc.root.as_mut() {
                 set_element_attr(root, "baseProfile", Some("basic".into()));
                 set_element_attr(root, "version", Some("1.1".into()));
@@ -76,7 +76,7 @@ pub mod derived_construction {
         use crate::artifacts::xml::schema::snapshot::{XmlAttr, XmlNode};
 
         #[test]
-        fn empty_builder_injects_profile_and_builds_clean() {
+        async fn empty_builder_injects_profile_and_builds_clean() {
             let snapshot = SvgBasicBuilderConstruction::empty().build().expect("empty document builds clean");
             match &snapshot.doc.root {
                 Some(XmlNode::Element { attrs, .. }) => {
@@ -88,7 +88,7 @@ pub mod derived_construction {
         }
 
         #[test]
-        fn hard_violation_injected_via_raw_mutate_still_fails_build() {
+        async fn hard_violation_injected_via_raw_mutate_still_fails_build() {
             let mut snapshot = SvgBasicBuilderConstruction::empty().build().unwrap();
             if let Some(XmlNode::Element { children, .. }) = snapshot.doc.root.as_mut() {
                 children.push(XmlNode::Element { name: "filter".into(), attrs: vec![XmlAttr { name: "id".into(), value: "f1".into() }], children: vec![XmlNode::Element { name: "feMorphology".into(), attrs: vec![], children: vec![] }] });
@@ -99,7 +99,7 @@ pub mod derived_construction {
         }
 
         #[test]
-        fn from_text_round_trips_through_basic_build() {
+        async fn from_text_round_trips_through_basic_build() {
             let text = r#"<svg xmlns="http://www.w3.org/2000/svg"><circle cx="5" cy="5" r="5"/></svg>"#;
             let built = SvgBasicBuilderConstruction::from_text(text).expect("parses").build().expect("conforming document builds");
             assert!(matches!(built.doc.root, Some(XmlNode::Element { .. })));
@@ -129,18 +129,18 @@ pub mod derived_analysis {
 
     const TEXT_ELEMENTS: &[&str] = &["text", "tspan", "tref", "textPath"];
 
-    fn local_name(name: &str) -> &str {
+    async fn local_name(name: &str) -> &str {
         name.rsplit(':').next().unwrap_or(name)
     }
 
-    fn attr_val<'a>(attrs: &'a [XmlAttr], name: &str) -> Option<&'a str> {
+    async fn attr_val<'a>(attrs: &'a [XmlAttr], name: &str) -> Option<&'a str> {
         attrs.iter().find(|a| local_name(&a.name) == name).map(|a| a.value.as_str())
     }
 
     /// 🔗 Extracts the fragment id from a `clip-path="url(#id)"`-shaped value (bare or quoted) --
     /// `None` for anything else (a non-`url()`/non-fragment value isn't resolvable against this
     /// document, so isn't scanned).
-    fn clip_path_ref_id(value: &str) -> Option<&str> {
+    async fn clip_path_ref_id(value: &str) -> Option<&str> {
         let inner = value.trim().strip_prefix("url(")?.strip_suffix(')')?;
         inner.trim().trim_matches(|c| c == '\'' || c == '"').strip_prefix('#')
     }
@@ -152,16 +152,16 @@ pub mod derived_analysis {
     pub const CODE_BASE_PROFILE: &str = "stdio.svg.basic.base-profile";
     pub const CODE_NESTED_SVG: &str = "stdio.svg.basic.nested-svg";
 
-    fn hard(code: &'static str, message: String) -> Diagnostic {
+    async fn hard(code: &'static str, message: String) -> Diagnostic {
         Diagnostic { code: FaultCode::new(code), severity: Severity::Error, span: TextSpan::at(1, 1), message, expected: None, scope: dsl::FaultScope::default() }
     }
 
-    fn soft(code: &'static str, message: String) -> Diagnostic {
+    async fn soft(code: &'static str, message: String) -> Diagnostic {
         Diagnostic { code: FaultCode::new(code), severity: Severity::Warning, span: TextSpan::at(1, 1), message, expected: None, scope: dsl::FaultScope::default() }
     }
 
     /// 🌳 Recursively collects every element node's `(name, attrs, children)` triple, depth-first.
-    fn collect_elements<'a>(node: &'a XmlNode, out: &mut Vec<(&'a str, &'a [XmlAttr], &'a [XmlNode])>) {
+    async fn collect_elements<'a>(node: &'a XmlNode, out: &mut Vec<(&'a str, &'a [XmlAttr], &'a [XmlNode])>) {
         if let XmlNode::Element { name, attrs, children } = node {
             out.push((name.as_str(), attrs.as_slice(), children.as_slice()));
             for c in children {
@@ -171,7 +171,7 @@ pub mod derived_analysis {
     }
 
     /// 🔍️ `true` if any (possibly-nested) descendant is one of the SVG text element kinds.
-    fn has_text_descendant(children: &[XmlNode]) -> bool {
+    async fn has_text_descendant(children: &[XmlNode]) -> bool {
         children.iter().any(|c| match c {
             XmlNode::Element { name, children, .. } => TEXT_ELEMENTS.contains(&local_name(name)) || has_text_descendant(children),
             _ => false,
@@ -181,11 +181,11 @@ pub mod derived_analysis {
     /// 🗺️ Builds an `id -> children` map for every retained `<clipPath id="...">` element, so a
     /// `clip-path="url(#id)"` reference can resolve to the REAL clipPath's descendants rather than a
     /// guess.
-    fn clip_path_children_by_id<'a>(elements: &[(&'a str, &'a [XmlAttr], &'a [XmlNode])]) -> HashMap<&'a str, &'a [XmlNode]> {
+    async fn clip_path_children_by_id<'a>(elements: &[(&'a str, &'a [XmlAttr], &'a [XmlNode])]) -> HashMap<&'a str, &'a [XmlNode]> {
         elements.iter().filter(|(name, ..)| local_name(name) == "clipPath").filter_map(|(_, attrs, children)| attr_val(attrs, "id").map(|id| (id, *children))).collect()
     }
 
-    fn find_nested_svg(children: &[XmlNode], out: &mut Vec<String>) {
+    async fn find_nested_svg(children: &[XmlNode], out: &mut Vec<String>) {
         for n in children {
             if let XmlNode::Element { name, children, .. } = n {
                 if local_name(name) == "svg" {
@@ -201,7 +201,7 @@ pub mod derived_analysis {
     /// authoritative), `SvgBasicBuilder::build` hard-gates on this too, and the registered
     /// `SubsetValidator` (`🎹️composer::register`) re-runs it post-hoc against the wire payload for
     /// the D5 validate-on-build hook.
-    pub fn check_svg_basic_conformance(snapshot: &SvgSnapshot) -> Vec<Diagnostic> {
+    pub async fn check_svg_basic_conformance(snapshot: &SvgSnapshot) -> Vec<Diagnostic> {
         let mut out = Vec::new();
         let Some(root) = &snapshot.doc.root else { return out };
 
@@ -253,11 +253,11 @@ pub mod derived_analysis {
         type Parts = SvgParts;
         const DIALECT: Dialect = DIALECT;
 
-        fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
+        async fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
             SvgAnyAnalyzer::sniff(source)
         }
 
-        fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
+        async fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
             let inner = SvgAnyAnalyzer::analyze(sources);
             let mut diagnostics = inner.diagnostics.clone();
             let mut confidence = inner.confidence;
@@ -277,68 +277,68 @@ pub mod derived_analysis {
     mod tests {
         use super::*;
 
-        fn svg_root(attrs: Vec<XmlAttr>, children: Vec<XmlNode>) -> SvgSnapshot {
+        async fn svg_root(attrs: Vec<XmlAttr>, children: Vec<XmlNode>) -> SvgSnapshot {
             let mut snapshot = SvgSnapshot::default();
             snapshot.doc.root = Some(XmlNode::Element { name: "svg".into(), attrs, children });
             snapshot
         }
 
-        fn attr(name: &str, value: &str) -> XmlAttr {
+        async fn attr(name: &str, value: &str) -> XmlAttr {
             XmlAttr { name: name.into(), value: value.into() }
         }
 
-        fn elem(name: &str, attrs: Vec<XmlAttr>, children: Vec<XmlNode>) -> XmlNode {
+        async fn elem(name: &str, attrs: Vec<XmlAttr>, children: Vec<XmlNode>) -> XmlNode {
             XmlNode::Element { name: name.into(), attrs, children }
         }
 
-        fn base_attrs() -> Vec<XmlAttr> {
+        async fn base_attrs() -> Vec<XmlAttr> {
             vec![attr("baseProfile", "basic"), attr("version", "1.1")]
         }
 
         #[test]
-        fn fully_conforming_document_reports_no_diagnostics() {
+        async fn fully_conforming_document_reports_no_diagnostics() {
             let snapshot = svg_root(base_attrs(), vec![elem("rect", vec![attr("x", "0"), attr("y", "0"), attr("width", "10"), attr("height", "10")], vec![])]);
             let diagnostics = check_svg_basic_conformance(&snapshot);
             assert!(diagnostics.is_empty(), "got {diagnostics:?}");
         }
 
         #[test]
-        fn blocklisted_filter_primitive_is_hard() {
+        async fn blocklisted_filter_primitive_is_hard() {
             let snapshot = svg_root(base_attrs(), vec![elem("filter", vec![attr("id", "f1")], vec![elem("feTurbulence", vec![], vec![])])]);
             let diagnostics = check_svg_basic_conformance(&snapshot);
             assert!(diagnostics.iter().any(|d| d.code.0 == CODE_FILTER_PRIMITIVE && d.severity == Severity::Error), "got {diagnostics:?}");
         }
 
         #[test]
-        fn lighting_child_primitive_is_hard() {
+        async fn lighting_child_primitive_is_hard() {
             let snapshot = svg_root(base_attrs(), vec![elem("filter", vec![attr("id", "f1")], vec![elem("feDiffuseLighting", vec![], vec![elem("feDistantLight", vec![], vec![])])])]);
             let diagnostics = check_svg_basic_conformance(&snapshot);
             assert_eq!(diagnostics.iter().filter(|d| d.code.0 == CODE_FILTER_PRIMITIVE).count(), 2, "expected both feDiffuseLighting and feDistantLight flagged: {diagnostics:?}");
         }
 
         #[test]
-        fn clip_path_referencing_text_is_hard() {
+        async fn clip_path_referencing_text_is_hard() {
             let snapshot = svg_root(base_attrs(), vec![elem("clipPath", vec![attr("id", "c1")], vec![elem("text", vec![], vec![XmlNode::Text { text: "hi".into() }])]), elem("rect", vec![attr("clip-path", "url(#c1)")], vec![])]);
             let diagnostics = check_svg_basic_conformance(&snapshot);
             assert!(diagnostics.iter().any(|d| d.code.0 == CODE_CLIP_PATH_TEXT && d.severity == Severity::Error), "got {diagnostics:?}");
         }
 
         #[test]
-        fn clip_path_referencing_shapes_only_is_clean() {
+        async fn clip_path_referencing_shapes_only_is_clean() {
             let snapshot = svg_root(base_attrs(), vec![elem("clipPath", vec![attr("id", "c1")], vec![elem("circle", vec![attr("cx", "5"), attr("cy", "5"), attr("r", "5")], vec![])]), elem("rect", vec![attr("clip-path", "url(#c1)")], vec![])]);
             let diagnostics = check_svg_basic_conformance(&snapshot);
             assert!(diagnostics.iter().all(|d| d.code.0 != CODE_CLIP_PATH_TEXT), "got {diagnostics:?}");
         }
 
         #[test]
-        fn nested_svg_is_soft() {
+        async fn nested_svg_is_soft() {
             let snapshot = svg_root(base_attrs(), vec![elem("svg", vec![attr("width", "5"), attr("height", "5")], vec![])]);
             let diagnostics = check_svg_basic_conformance(&snapshot);
             assert!(diagnostics.iter().any(|d| d.code.0 == CODE_NESTED_SVG && d.severity == Severity::Warning), "got {diagnostics:?}");
         }
 
         #[test]
-        fn missing_base_profile_is_soft() {
+        async fn missing_base_profile_is_soft() {
             let snapshot = svg_root(vec![], vec![]);
             let diagnostics = check_svg_basic_conformance(&snapshot);
             assert_eq!(diagnostics.len(), 1);

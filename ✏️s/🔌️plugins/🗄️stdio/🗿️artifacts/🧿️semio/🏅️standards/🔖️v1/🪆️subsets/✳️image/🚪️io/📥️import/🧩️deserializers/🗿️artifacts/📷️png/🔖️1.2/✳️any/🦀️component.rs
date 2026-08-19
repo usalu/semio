@@ -27,7 +27,7 @@ const FROM_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.png", standard: 
 const INTO_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("image") };
 
 //#region 🔖️ColorspaceMap
-fn colorspace_from_png(c: PngColorType) -> SemioColorspace {
+async fn colorspace_from_png(c: PngColorType) -> SemioColorspace {
     match c {
         PngColorType::Grayscale => SemioColorspace::Grayscale,
         PngColorType::Rgb => SemioColorspace::Rgb,
@@ -72,7 +72,7 @@ mod tests {
     use super::*;
     use crate::artifacts::png::schema::snapshot::PngRgb;
 
-    fn sample_png() -> PngSnapshot {
+    async fn sample_png() -> PngSnapshot {
         PngSnapshot {
             width: 2,
             height: 1,
@@ -87,7 +87,7 @@ mod tests {
     }
 
     #[test]
-    fn maps_pixels_and_metadata() {
+    async fn maps_pixels_and_metadata() {
         let semio = semio_framework_plugin::resolve_ready(SemioImageFromPng::deserialize(&sample_png())).expect("deserialize");
         assert_eq!(semio.width, 2);
         assert_eq!(semio.height, 1);
@@ -101,7 +101,7 @@ mod tests {
     }
 
     #[test]
-    fn rejects_pixel_length_mismatch() {
+    async fn rejects_pixel_length_mismatch() {
         let mut bad = sample_png();
         bad.pixels.pop();
         assert!(semio_framework_plugin::resolve_ready(SemioImageFromPng::deserialize(&bad)).is_err());

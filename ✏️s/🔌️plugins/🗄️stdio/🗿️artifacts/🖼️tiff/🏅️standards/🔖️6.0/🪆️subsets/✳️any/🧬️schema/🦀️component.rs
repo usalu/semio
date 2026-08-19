@@ -23,24 +23,24 @@ pub struct TiffArtifact {
 }
 
 impl Default for TiffArtifact {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self::from_snapshot(TiffSnapshot::default())
     }
 }
 
 impl TiffArtifact {
-    pub fn to_snapshot(&self) -> TiffSnapshot {
+    pub async fn to_snapshot(&self) -> TiffSnapshot {
         TiffSnapshot { schema: self.schema.clone(), byte_order: self.byte_order, ifds: self.ifds.clone(), pixels: self.pixels.clone() }
     }
-    pub fn from_snapshot(snapshot: TiffSnapshot) -> Self {
+    pub async fn from_snapshot(snapshot: TiffSnapshot) -> Self {
         Self { schema: snapshot.schema, byte_order: snapshot.byte_order, ifds: snapshot.ifds, pixels: snapshot.pixels }
     }
-    pub fn set_snapshot(&mut self, snapshot: TiffSnapshot) {
+    pub async fn set_snapshot(&mut self, snapshot: TiffSnapshot) {
         *self = Self::from_snapshot(snapshot);
     }
 }
 
-pub fn tiff_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
+pub async fn tiff_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
     schema::ArtifactSchemaDescriptor {
         id: "s.stdio.tiff",
         artifact: schema::FacetLeaves {
@@ -90,27 +90,27 @@ pub mod derived_construction {
         type Snapshot = TiffSnapshot;
         type Mutation = TiffMutation;
         type Diff = TiffDiff;
-        fn empty() -> Self {
+        async fn empty() -> Self {
             Self { snapshot: TiffSnapshot::default(), diagnostics: Vec::new() }
         }
-        fn from_snapshot(snapshot: Self::Snapshot) -> Self {
+        async fn from_snapshot(snapshot: Self::Snapshot) -> Self {
             Self { snapshot, diagnostics: Vec::new() }
         }
-        fn from_text(text: &str) -> Result<Self, store::TextError> {
+        async fn from_text(text: &str) -> Result<Self, store::TextError> {
             Ok(Self::from_snapshot(<TiffSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
-        fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
+        async fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
             Ok(Self::from_snapshot(<TiffSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
         }
-        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
+        async fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let diff = crate::artifacts::tiff::schema::mutations::apply_tiff_mutation(&mut self.snapshot, &mutation);
             (self, diff)
         }
-        fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
+        async fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
             self.snapshot = <TiffDiff as protocol::MutationDiff<TiffSnapshot>>::apply(&diff, &self.snapshot)?;
             Ok(self)
         }
-        fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
+        async fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
             if self.diagnostics.is_empty() {
                 Ok(self.snapshot)
             } else {
@@ -144,7 +144,7 @@ pub mod derived_analysis {
         type Parts = TiffParts;
         const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.tiff", standard: StandardId("6.0"), subset: SubsetId("*") };
 
-        fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
+        async fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
             const SIG_LE: [u8; 4] = [0x49, 0x49, 0x2A, 0x00]; // "II*\0" little-endian
             const SIG_BE: [u8; 4] = [0x4D, 0x4D, 0x00, 0x2A]; // "MM\0*" big-endian
             match source {
@@ -182,7 +182,7 @@ pub mod derived_analysis {
             }
         }
 
-        fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
+        async fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
             let mut parts = TiffParts::default();
             let mut diagnostics = Vec::new();
             let mut confidence = IoConfidence::High;
@@ -233,7 +233,7 @@ semio_framework_plugin::derive_artifact_facets!(
 // `declaration()` in the artifact root, zero real callers) deleted outright; the real codec
 // (`encode_tiff`/`encode_tiff_packbits`/`decode_tiff` + every pure format algorithm) and
 // `io_registry` moved to `../🚪️io`; tests moved beside what they now test.
-pub fn empty_tiff_snapshot() -> TiffSnapshot {
+pub async fn empty_tiff_snapshot() -> TiffSnapshot {
     TiffSnapshot::default()
 }
 
@@ -251,7 +251,7 @@ pub fn empty_tiff_snapshot() -> TiffSnapshot {
 /// demo()` identity (same class of trap `png`'s own `demo_png_snapshot()` doc comment documents
 /// for its IHDR fields) — running the real codec once here guarantees `demo()` is ALREADY in
 /// exactly the canonical shape a second `encode_tiff`/`decode_tiff` pass reproduces byte-for-byte.
-pub fn demo_tiff_snapshot() -> TiffSnapshot {
+pub async fn demo_tiff_snapshot() -> TiffSnapshot {
     use crate::artifacts::tiff::standards::v6_0::subsets::any::io::{decode_tiff, encode_tiff};
     use crate::artifacts::tiff::standards::v6_0::subsets::any::schema::snapshot::{TiffByteOrder, TiffFieldType, TiffIfd, TiffTag, TiffValues};
     use crate::artifacts::tiff::standards::v6_0::subsets::any::schema::snapshot::{TAG_IMAGE_LENGTH, TAG_IMAGE_WIDTH};

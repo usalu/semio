@@ -20,7 +20,7 @@ pub struct Iso16757Outline {
 }
 
 impl Iso16757Outline {
-    pub fn compute(snapshot: &Iso16757Snapshot) -> Self {
+    pub async fn compute(snapshot: &Iso16757Snapshot) -> Self {
         let section_outline: Vec<String> = SECTION_FIELDS.iter().map(|s| s.to_string()).collect();
         let field_count = section_outline.len() as u32;
         let entry_count = snapshot.part_number_inputs.len() as u32;
@@ -29,7 +29,7 @@ impl Iso16757Outline {
 }
 
 impl Default for Iso16757Outline {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self::compute(&Iso16757Snapshot::default())
     }
 }
@@ -41,13 +41,13 @@ mod tests {
     use super::*;
 
     #[test]
-    fn outline_field_count_matches_section_outline_length() {
+    async fn outline_field_count_matches_section_outline_length() {
         let outline = Iso16757Outline::compute(&Iso16757Snapshot::default());
         assert_eq!(outline.field_count as usize, outline.section_outline.len());
     }
 
     #[test]
-    fn outline_is_deterministic() {
+    async fn outline_is_deterministic() {
         let snapshot = Iso16757Snapshot::default();
         assert_eq!(Iso16757Outline::compute(&snapshot), Iso16757Outline::compute(&snapshot));
     }

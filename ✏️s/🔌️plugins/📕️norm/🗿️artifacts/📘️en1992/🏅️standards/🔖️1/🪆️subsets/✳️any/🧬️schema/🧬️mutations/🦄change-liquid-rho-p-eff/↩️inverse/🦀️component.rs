@@ -6,7 +6,7 @@ use crate::artifacts::en1992::mutations::En1992Mutation;
 use crate::artifacts::en1992::En1992Snapshot;
 
 //#region 🔖️Inverse
-pub fn inverse(_payload: &ChangeLiquidRhoPEff, base: &En1992Snapshot) -> Vec<En1992Mutation> {
+pub async fn inverse(_payload: &ChangeLiquidRhoPEff, base: &En1992Snapshot) -> Vec<En1992Mutation> {
     vec![En1992Mutation::ChangeLiquidRhoPEff(ChangeLiquidRhoPEff { new_liquid_rho_p_eff: base.liquid_rho_p_eff.clone() })]
 }
 //#endregion 🔖️Inverse

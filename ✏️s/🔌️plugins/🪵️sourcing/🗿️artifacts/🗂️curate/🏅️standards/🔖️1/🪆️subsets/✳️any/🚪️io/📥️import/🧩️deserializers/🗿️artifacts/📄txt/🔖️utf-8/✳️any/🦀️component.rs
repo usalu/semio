@@ -14,10 +14,10 @@ use semio_framework_plugin::{StandardId, SubsetId};
 
 pub const TXT_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.txt", standard: StandardId("utf-8"), subset: SubsetId::ANY };
 
-pub fn deserialize(_from: &semio_s_plugin_stdio::artifacts::txt::TxtSnapshot) -> Result<CurateSnapshot, String> {
+pub async fn deserialize(_from: &semio_s_plugin_stdio::artifacts::txt::TxtSnapshot) -> Result<CurateSnapshot, String> {
     Err("txt import not yet implemented".into())
 }
-pub fn deserialize_bytes(_bytes: &[u8]) -> Result<CurateSnapshot, String> {
+pub async fn deserialize_bytes(_bytes: &[u8]) -> Result<CurateSnapshot, String> {
     Err("txt import not yet implemented".into())
 }
 
@@ -26,7 +26,7 @@ pub struct TxtIntoCurate;
 impl Deserializer<CurateSnapshot> for TxtIntoCurate {
     const FROM: Dialect = TXT_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Lossy;
-    fn deserialize(payload: &IoPayload) -> IoResult<CurateSnapshot> {
+    async fn deserialize(payload: &IoPayload) -> IoResult<CurateSnapshot> {
         let IoPayload::Text(text) = payload else {
             return Err(IoError { message: "TxtIntoCurate: expected a text txt payload".to_string(), diagnostics: Vec::new() });
         };

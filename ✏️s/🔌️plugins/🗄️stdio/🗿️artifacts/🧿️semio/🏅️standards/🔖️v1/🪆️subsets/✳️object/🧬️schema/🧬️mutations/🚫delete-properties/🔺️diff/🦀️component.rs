@@ -6,7 +6,7 @@ use crate::artifacts::semio::standards::v1::subsets::object::schema::diff::Semio
 use crate::artifacts::semio::standards::v1::subsets::object::schema::snapshot::SemioObjectSnapshot;
 
 //#region 🔖️Diff
-pub fn diff(_payload: &DeleteProperties, base: &SemioObjectSnapshot) -> protocol::MutationOutcome<SemioObjectDiff> {
+pub async fn diff(_payload: &DeleteProperties, base: &SemioObjectSnapshot) -> protocol::MutationOutcome<SemioObjectDiff> {
     if base.properties.is_none() {
         return protocol::MutationOutcome::error("mutation.target-missing", "The object has no properties to delete.".to_string(), ["properties".to_string()]);
     }

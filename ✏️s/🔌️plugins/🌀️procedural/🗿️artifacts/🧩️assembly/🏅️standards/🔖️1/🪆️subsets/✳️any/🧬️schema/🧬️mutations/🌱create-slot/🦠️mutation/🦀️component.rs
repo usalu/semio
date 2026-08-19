@@ -15,23 +15,23 @@ pub struct CreateSlot {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn create_slot(index: usize, slot: AssemblySlot) -> AssemblyMutation {
+pub async fn create_slot(index: usize, slot: AssemblySlot) -> AssemblyMutation {
     AssemblyMutation::CreateSlot(CreateSlot { index, slot })
 }
 
 impl MutationKind<AssemblySnapshot, AssemblyMutation> for CreateSlot {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "create", entity: "slot", kind: "create-slot", record: "CreatedSlot" };
 
-    fn diff(&self, base: &AssemblySnapshot) -> protocol::MutationOutcome<AssemblyDiff> {
+    async fn diff(&self, base: &AssemblySnapshot) -> protocol::MutationOutcome<AssemblyDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &AssemblySnapshot) -> Vec<AssemblyMutation> {
+    async fn inverse(&self, base: &AssemblySnapshot) -> Vec<AssemblyMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         format!("Create slot \"{}\"", self.slot.id)
     }
-    fn target(&self) -> Vec<String> {
+    async fn target(&self) -> Vec<String> {
         vec![self.slot.id.clone()]
     }
 }

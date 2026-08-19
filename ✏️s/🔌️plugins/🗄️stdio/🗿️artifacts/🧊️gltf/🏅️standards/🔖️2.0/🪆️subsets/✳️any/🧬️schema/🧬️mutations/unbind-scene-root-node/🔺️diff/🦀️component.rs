@@ -14,14 +14,14 @@ pub struct GltfUnbindSceneRootNodeDiff {
     pub touched_paths: Vec<String>,
 }
 
-pub fn derive(payload: &GltfUnbindSceneRootNodePayload, base: &GltfSnapshot) -> Result<GltfUnbindSceneRootNodeDiff, GltfTopLevelMutationRejection> {
+pub async fn derive(payload: &GltfUnbindSceneRootNodePayload, base: &GltfSnapshot) -> Result<GltfUnbindSceneRootNodeDiff, GltfTopLevelMutationRejection> {
     validate(payload, base)?;
     let position =
         base.document.scenes[payload.scene].nodes.iter().position(|node| *node == payload.node).ok_or_else(|| reject("gltf.mutation.relation-absent", format!("document/scenes/{}/nodes", payload.scene), "node is not a root of this scene"))?;
     Ok(GltfUnbindSceneRootNodeDiff { scene: payload.scene, node: payload.node, position, touched_paths: vec![format!("document/scenes/{}/nodes/{}", payload.scene, position)] })
 }
 
-pub fn apply(base: &GltfSnapshot, diff: &GltfUnbindSceneRootNodeDiff) -> Result<GltfSnapshot, GltfTopLevelMutationRejection> {
+pub async fn apply(base: &GltfSnapshot, diff: &GltfUnbindSceneRootNodeDiff) -> Result<GltfSnapshot, GltfTopLevelMutationRejection> {
     let path = format!("document/scenes/{}/nodes/{}", diff.scene, diff.position);
     if diff.touched_paths.len() != 1 || diff.touched_paths[0] != path {
         return Err(reject("gltf.mutation.invalid-touched-path", path, "patch touched path does not match its root coordinates"));
@@ -35,6 +35,6 @@ pub fn apply(base: &GltfSnapshot, diff: &GltfUnbindSceneRootNodeDiff) -> Result<
     Ok(next)
 }
 
-pub fn encode(diff: &GltfUnbindSceneRootNodeDiff) -> Result<Vec<u8>, serde_json::Error> {
+pub async fn encode(diff: &GltfUnbindSceneRootNodeDiff) -> Result<Vec<u8>, serde_json::Error> {
     serde_json::to_vec(diff)
 }

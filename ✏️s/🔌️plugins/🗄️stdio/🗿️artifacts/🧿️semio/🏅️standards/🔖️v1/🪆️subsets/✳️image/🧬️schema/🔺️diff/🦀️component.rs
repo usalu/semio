@@ -35,13 +35,13 @@ pub struct SemioImageFrameDiff {
 }
 
 impl SemioImageFrameDiff {
-    pub fn is_empty(&self) -> bool {
+    pub async fn is_empty(&self) -> bool {
         self.delay_ms.is_none() && self.rgba8.is_none()
     }
-    pub fn between(base: &SemioImageFrame, other: &SemioImageFrame) -> Self {
+    pub async fn between(base: &SemioImageFrame, other: &SemioImageFrame) -> Self {
         Self { delay_ms: (base.delay_ms != other.delay_ms).then_some(other.delay_ms), rgba8: (base.rgba8 != other.rgba8).then_some(other.rgba8.clone()) }
     }
-    pub fn apply(&self, base: &SemioImageFrame) -> SemioImageFrame {
+    pub async fn apply(&self, base: &SemioImageFrame) -> SemioImageFrame {
         let mut next = base.clone();
         if let Some(v) = self.delay_ms {
             next.delay_ms = v;
@@ -51,10 +51,10 @@ impl SemioImageFrameDiff {
         }
         next
     }
-    pub fn inverse(&self, base: &SemioImageFrame) -> Self {
+    pub async fn inverse(&self, base: &SemioImageFrame) -> Self {
         Self { delay_ms: self.delay_ms.map(|_| base.delay_ms), rgba8: self.rgba8.as_ref().map(|_| base.rgba8.clone()) }
     }
-    pub fn absorb(&mut self, other: Self) {
+    pub async fn absorb(&mut self, other: Self) {
         if other.delay_ms.is_some() {
             self.delay_ms = other.delay_ms;
         }
@@ -74,7 +74,7 @@ pub type SemioImageMetadataDiff = NamedTripleDiff<String, String, SemioImageMeta
 //#region 🔖️GenericIndexedAlgebra
 /// 🧮️ Between (positional, per the recipe's index-keyed matching rule): pairwise-compares
 /// `0..min(base,other)` as `modified`, base tail as `removed`, other tail as `added`.
-fn between_indexed<T: Clone + PartialEq, D>(base: &[T], other: &[T], diff_item: impl Fn(&T, &T) -> Option<D>) -> Option<IndexedTripleDiff<D, T>> {
+async fn between_indexed<T: Clone + PartialEq, D>(base: &[T], other: &[T], diff_item: impl Fn(&T, &T) -> Option<D>) -> Option<IndexedTripleDiff<D, T>> {
     let min_len = base.len().min(other.len());
     let mut modified = Vec::new();
     for i in 0..min_len {
@@ -93,7 +93,7 @@ fn between_indexed<T: Clone + PartialEq, D>(base: &[T], other: &[T], diff_item: 
     }
 }
 
-fn apply_indexed<T: Clone, D>(items: &mut Vec<T>, diff: &IndexedTripleDiff<D, T>, apply_item: impl Fn(&T, &D) -> T) {
+async fn apply_indexed<T: Clone, D>(items: &mut Vec<T>, diff: &IndexedTripleDiff<D, T>, apply_item: impl Fn(&T, &D) -> T) {
     for m in &diff.modified {
         if let Some(item) = items.get_mut(m.index) {
             *item = apply_item(item, &m.diff);
@@ -116,7 +116,7 @@ fn apply_indexed<T: Clone, D>(items: &mut Vec<T>, diff: &IndexedTripleDiff<D, T>
 }
 
 /// 🧮️ Maps a base-side index through a diff's own removed/added to its position once applied.
-fn transform_index<T>(idx: usize, removed: &[usize], added: &[IndexAdded<T>]) -> usize {
+async fn transform_index<T>(idx: usize, removed: &[usize], added: &[IndexAdded<T>]) -> usize {
     let removed_before = removed.iter().filter(|&&r| r < idx).count();
     let pos = idx - removed_before;
     let mut order: Vec<usize> = added.iter().map(|a| a.index).collect();
@@ -132,7 +132,7 @@ fn transform_index<T>(idx: usize, removed: &[usize], added: &[IndexAdded<T>]) ->
     pos + shift
 }
 
-fn inverse_indexed<T: Clone, D>(base_items: &[T], diff: &IndexedTripleDiff<D, T>, inverse_item: impl Fn(&T, &D) -> D) -> IndexedTripleDiff<D, T> {
+async fn inverse_indexed<T: Clone, D>(base_items: &[T], diff: &IndexedTripleDiff<D, T>, inverse_item: impl Fn(&T, &D) -> D) -> IndexedTripleDiff<D, T> {
     let removed: Vec<usize> = diff.added.iter().map(|a| a.index).collect();
     let mut modified = Vec::new();
     for m in &diff.modified {
@@ -156,7 +156,7 @@ enum ItemOrigin {
     Added(usize),
 }
 
-fn simulate_mid_origins<T>(base_len: usize, removed: &[usize], added: &[IndexAdded<T>]) -> Vec<ItemOrigin> {
+async fn simulate_mid_origins<T>(base_len: usize, removed: &[usize], added: &[IndexAdded<T>]) -> Vec<ItemOrigin> {
     let mut mid: Vec<ItemOrigin> = (0..base_len).filter(|i| !removed.contains(i)).map(ItemOrigin::Base).collect();
     let mut order: Vec<(usize, usize)> = added.iter().enumerate().map(|(k, a)| (a.index, k)).collect();
     order.sort_by_key(|(idx, _)| *idx);
@@ -168,7 +168,7 @@ fn simulate_mid_origins<T>(base_len: usize, removed: &[usize], added: &[IndexAdd
 }
 
 /// 🧮️ Sequential-coalesce absorb per the recipe's normative algorithm (gif/docx precedent).
-fn absorb_indexed<T: Clone, D: Clone>(d1: IndexedTripleDiff<D, T>, d2: IndexedTripleDiff<D, T>, absorb_item: impl Fn(D, D) -> D, apply_item: impl Fn(&T, &D) -> T) -> IndexedTripleDiff<D, T> {
+async fn absorb_indexed<T: Clone, D: Clone>(d1: IndexedTripleDiff<D, T>, d2: IndexedTripleDiff<D, T>, absorb_item: impl Fn(D, D) -> D, apply_item: impl Fn(&T, &D) -> T) -> IndexedTripleDiff<D, T> {
     let d1_ref_max = d1.removed.iter().copied().chain(d1.modified.iter().map(|m| m.index)).max();
     let mut base_len = d1_ref_max.map(|m| m + 1).unwrap_or(0);
     let mid_len_needed_by_d1 = d1.added.iter().map(|a| a.index + 1).max().unwrap_or(0);
@@ -243,7 +243,7 @@ fn absorb_indexed<T: Clone, D: Clone>(d1: IndexedTripleDiff<D, T>, d2: IndexedTr
 //#endregion 🔖️GenericIndexedAlgebra
 
 //#region 🔖️GenericNamedAlgebra
-fn between_named<K: PartialEq + Clone, T: Clone + PartialEq, D>(base: &[T], other: &[T], key_of: impl Fn(&T) -> K, diff_item: impl Fn(&T, &T) -> Option<D>) -> Option<NamedTripleDiff<K, D, T>> {
+async fn between_named<K: PartialEq + Clone, T: Clone + PartialEq, D>(base: &[T], other: &[T], key_of: impl Fn(&T) -> K, diff_item: impl Fn(&T, &T) -> Option<D>) -> Option<NamedTripleDiff<K, D, T>> {
     let mut removed = Vec::new();
     let mut modified = Vec::new();
     for b in base {
@@ -272,7 +272,7 @@ fn between_named<K: PartialEq + Clone, T: Clone + PartialEq, D>(base: &[T], othe
     }
 }
 
-fn apply_named<K: PartialEq + Clone, T: Clone, D>(items: &mut Vec<T>, diff: &NamedTripleDiff<K, D, T>, key_of: impl Fn(&T) -> K, apply_item: impl Fn(&mut T, &D)) {
+async fn apply_named<K: PartialEq + Clone, T: Clone, D>(items: &mut Vec<T>, diff: &NamedTripleDiff<K, D, T>, key_of: impl Fn(&T) -> K, apply_item: impl Fn(&mut T, &D)) {
     items.retain(|i| !diff.removed.contains(&key_of(i)));
     for m in &diff.modified {
         if let Some(item) = items.iter_mut().find(|i| key_of(i) == m.key) {
@@ -284,7 +284,7 @@ fn apply_named<K: PartialEq + Clone, T: Clone, D>(items: &mut Vec<T>, diff: &Nam
     }
 }
 
-fn inverse_named<K: PartialEq + Clone, T: Clone, D>(base_items: &[T], diff: &NamedTripleDiff<K, D, T>, key_of: impl Fn(&T) -> K, inverse_item: impl Fn(&T, &D) -> D) -> NamedTripleDiff<K, D, T> {
+async fn inverse_named<K: PartialEq + Clone, T: Clone, D>(base_items: &[T], diff: &NamedTripleDiff<K, D, T>, key_of: impl Fn(&T) -> K, inverse_item: impl Fn(&T, &D) -> D) -> NamedTripleDiff<K, D, T> {
     let removed: Vec<K> = diff.added.iter().map(&key_of).collect();
     let mut modified = Vec::new();
     for m in &diff.modified {
@@ -302,7 +302,7 @@ fn inverse_named<K: PartialEq + Clone, T: Clone, D>(base_items: &[T], diff: &Nam
 }
 
 /// 🧮️ Name-keyed absorb — identity is the KEY, so no index transport is needed.
-fn absorb_named<K: PartialEq + Clone, T: Clone, D: Clone>(d1: NamedTripleDiff<K, D, T>, d2: NamedTripleDiff<K, D, T>, key_of: impl Fn(&T) -> K, absorb_item: impl Fn(D, D) -> D, apply_item: impl Fn(&mut T, &D)) -> NamedTripleDiff<K, D, T> {
+async fn absorb_named<K: PartialEq + Clone, T: Clone, D: Clone>(d1: NamedTripleDiff<K, D, T>, d2: NamedTripleDiff<K, D, T>, key_of: impl Fn(&T) -> K, absorb_item: impl Fn(D, D) -> D, apply_item: impl Fn(&mut T, &D)) -> NamedTripleDiff<K, D, T> {
     let d1_added_keys: Vec<K> = d1.added.iter().map(&key_of).collect();
     let mut removed = d1.removed.clone();
     let mut annihilated: Vec<K> = Vec::new();
@@ -340,19 +340,19 @@ fn absorb_named<K: PartialEq + Clone, T: Clone, D: Clone>(d1: NamedTripleDiff<K,
 //#endregion 🔖️GenericNamedAlgebra
 
 //#region 🔖️CollectionWrappers
-fn frames_between(base: &[SemioImageFrame], other: &[SemioImageFrame]) -> Option<SemioImageFramesDiff> {
+async fn frames_between(base: &[SemioImageFrame], other: &[SemioImageFrame]) -> Option<SemioImageFramesDiff> {
     between_indexed(base, other, |a, b| {
         let d = SemioImageFrameDiff::between(a, b);
         (!d.is_empty()).then_some(d)
     })
 }
-fn frames_apply(items: &mut Vec<SemioImageFrame>, diff: &SemioImageFramesDiff) {
+async fn frames_apply(items: &mut Vec<SemioImageFrame>, diff: &SemioImageFramesDiff) {
     apply_indexed(items, diff, |item, d| d.apply(item));
 }
-fn frames_inverse(base: &[SemioImageFrame], diff: &SemioImageFramesDiff) -> SemioImageFramesDiff {
+async fn frames_inverse(base: &[SemioImageFrame], diff: &SemioImageFramesDiff) -> SemioImageFramesDiff {
     inverse_indexed(base, diff, |item, d| d.inverse(item))
 }
-fn frames_absorb(d1: SemioImageFramesDiff, d2: SemioImageFramesDiff) -> SemioImageFramesDiff {
+async fn frames_absorb(d1: SemioImageFramesDiff, d2: SemioImageFramesDiff) -> SemioImageFramesDiff {
     absorb_indexed(
         d1,
         d2,
@@ -364,19 +364,19 @@ fn frames_absorb(d1: SemioImageFramesDiff, d2: SemioImageFramesDiff) -> SemioIma
     )
 }
 
-fn metadata_key(e: &SemioImageMetadataEntry) -> String {
+async fn metadata_key(e: &SemioImageMetadataEntry) -> String {
     e.key.clone()
 }
-fn metadata_between(base: &[SemioImageMetadataEntry], other: &[SemioImageMetadataEntry]) -> Option<SemioImageMetadataDiff> {
+async fn metadata_between(base: &[SemioImageMetadataEntry], other: &[SemioImageMetadataEntry]) -> Option<SemioImageMetadataDiff> {
     between_named(base, other, metadata_key, |a, b| (a.value != b.value).then(|| b.value.clone()))
 }
-fn metadata_apply(items: &mut Vec<SemioImageMetadataEntry>, diff: &SemioImageMetadataDiff) {
+async fn metadata_apply(items: &mut Vec<SemioImageMetadataEntry>, diff: &SemioImageMetadataDiff) {
     apply_named(items, diff, metadata_key, |item, d| item.value = d.clone());
 }
-fn metadata_inverse(base: &[SemioImageMetadataEntry], diff: &SemioImageMetadataDiff) -> SemioImageMetadataDiff {
+async fn metadata_inverse(base: &[SemioImageMetadataEntry], diff: &SemioImageMetadataDiff) -> SemioImageMetadataDiff {
     inverse_named(base, diff, metadata_key, |item, _d| item.value.clone())
 }
-fn metadata_absorb(d1: SemioImageMetadataDiff, d2: SemioImageMetadataDiff) -> SemioImageMetadataDiff {
+async fn metadata_absorb(d1: SemioImageMetadataDiff, d2: SemioImageMetadataDiff) -> SemioImageMetadataDiff {
     absorb_named(d1, d2, metadata_key, |_old, new| new, |item, d| item.value = d.clone())
 }
 //#endregion 🔖️CollectionWrappers
@@ -411,13 +411,13 @@ pub struct SemioImageDiff {
 }
 
 impl SemioImageDiff {
-    pub fn is_empty_diff(&self) -> bool {
+    pub async fn is_empty_diff(&self) -> bool {
         self.width.is_none() && self.height.is_none() && self.colorspace.is_none() && self.bit_depth.is_none() && self.icc.is_none() && self.frames.is_none() && self.metadata.is_none()
     }
 }
 
 impl MutationDiff<SemioImageSnapshot> for SemioImageDiff {
-    fn apply(&self, base: &SemioImageSnapshot) -> protocol::MutationApplyResult<SemioImageSnapshot> {
+    async fn apply(&self, base: &SemioImageSnapshot) -> protocol::MutationApplyResult<SemioImageSnapshot> {
         let mut next = base.clone();
         if let Some(v) = self.width {
             next.width = v;
@@ -445,7 +445,7 @@ impl MutationDiff<SemioImageSnapshot> for SemioImageDiff {
         Ok(next)
     }
 
-    fn absorb(&mut self, other: Self) {
+    async fn absorb(&mut self, other: Self) {
         if other.width.is_some() {
             self.width = other.width;
         }
@@ -473,7 +473,7 @@ impl MutationDiff<SemioImageSnapshot> for SemioImageDiff {
 }
 
 impl DiffAlgebra<SemioImageSnapshot> for SemioImageDiff {
-    fn inverse(&self, base: &SemioImageSnapshot) -> Self {
+    async fn inverse(&self, base: &SemioImageSnapshot) -> Self {
         Self {
             width: self.width.map(|_| base.width),
             height: self.height.map(|_| base.height),
@@ -485,7 +485,7 @@ impl DiffAlgebra<SemioImageSnapshot> for SemioImageDiff {
         }
     }
 
-    fn between(base: &SemioImageSnapshot, other: &SemioImageSnapshot) -> Self {
+    async fn between(base: &SemioImageSnapshot, other: &SemioImageSnapshot) -> Self {
         Self {
             width: (base.width != other.width).then_some(other.width),
             height: (base.height != other.height).then_some(other.height),
@@ -497,13 +497,13 @@ impl DiffAlgebra<SemioImageSnapshot> for SemioImageDiff {
         }
     }
 
-    fn is_empty(&self) -> bool {
+    async fn is_empty(&self) -> bool {
         self.is_empty_diff()
     }
 }
 
 /// 🧩 Builds a set-snapshot diff — sparse field-by-field, never a full-replace slot.
-pub fn diff_set_snapshot(base: &SemioImageSnapshot, snapshot: &SemioImageSnapshot) -> SemioImageDiff {
+pub async fn diff_set_snapshot(base: &SemioImageSnapshot, snapshot: &SemioImageSnapshot) -> SemioImageDiff {
     <SemioImageDiff as DiffAlgebra<SemioImageSnapshot>>::between(base, snapshot)
 }
 //#endregion 🔖️Diff
@@ -518,47 +518,47 @@ pub fn diff_set_snapshot(base: &SemioImageSnapshot, snapshot: &SemioImageSnapsho
 /// lowercase hex — no external base64 dep, no escaping needed. `Option<T>` uses a uniform
 /// `[0]`=None / `[1,<T>]`=Some(T) tag.
 //#region 🔖️Primitives
-fn hex_encode(bytes: &[u8]) -> String {
+async fn hex_encode(bytes: &[u8]) -> String {
     bytes.iter().map(|b| format!("{b:02x}")).collect()
 }
-fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
+async fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
     if s.len() % 2 != 0 {
         return Err(format!("odd hex length: {s:?}"));
     }
     (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()
 }
-fn hex_encode_str(s: &str) -> String {
+async fn hex_encode_str(s: &str) -> String {
     hex_encode(s.as_bytes())
 }
-fn hex_decode_str(s: &str) -> Result<String, String> {
+async fn hex_decode_str(s: &str) -> Result<String, String> {
     String::from_utf8(hex_decode(s)?).map_err(|e| e.to_string())
 }
-fn parse_u8(s: &str) -> Result<u8, String> {
+async fn parse_u8(s: &str) -> Result<u8, String> {
     s.parse().map_err(|e: std::num::ParseIntError| e.to_string())
 }
-fn parse_u32(s: &str) -> Result<u32, String> {
+async fn parse_u32(s: &str) -> Result<u32, String> {
     s.parse().map_err(|e: std::num::ParseIntError| e.to_string())
 }
 /// 🧪️ Real LEB128-varint-length-prefixed binary primitives (`store::pack_rt::write_varint_u64` /
 /// `store::ByteReader`, same helpers this subset's own `📸️snapshot` facet's `ArtifactPack` uses)
 /// backing the real `DiffCodec::encode_diff`/`decode_diff` below.
-fn write_str_lp(out: &mut Vec<u8>, s: &str) {
+async fn write_str_lp(out: &mut Vec<u8>, s: &str) {
     store::pack_rt::write_varint_u64(out, s.len() as u64);
     out.extend_from_slice(s.as_bytes());
 }
-fn read_str_lp(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
+async fn read_str_lp(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
     let len = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
     let bytes = reader.read_bytes(len).map_err(|e| e.to_string())?.to_vec();
     String::from_utf8(bytes).map_err(|e| e.to_string())
 }
 
-pub(crate) fn encode_option<T>(opt: &Option<T>, enc: impl Fn(&T) -> String) -> String {
+pub(crate) async fn encode_option<T>(opt: &Option<T>, enc: impl Fn(&T) -> String) -> String {
     match opt {
         None => "[0]".to_string(),
         Some(v) => format!("[1,{}]", enc(v)),
     }
 }
-pub(crate) fn decode_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Option<T>, String> {
+pub(crate) async fn decode_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Option<T>, String> {
     let inner = strip_brackets(s)?;
     match split_top_level(inner, ',').as_slice() {
         ["0"] => Ok(None),
@@ -569,7 +569,7 @@ pub(crate) fn decode_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>)
 //#endregion 🔖️Primitives
 
 //#region 🔖️ValueCodecs
-pub(crate) fn enc_colorspace(c: SemioColorspace) -> char {
+pub(crate) async fn enc_colorspace(c: SemioColorspace) -> char {
     match c {
         SemioColorspace::Rgb => 'r',
         SemioColorspace::Rgba => 'a',
@@ -578,7 +578,7 @@ pub(crate) fn enc_colorspace(c: SemioColorspace) -> char {
         SemioColorspace::Indexed => 'i',
     }
 }
-pub(crate) fn dec_colorspace(s: &str) -> Result<SemioColorspace, String> {
+pub(crate) async fn dec_colorspace(s: &str) -> Result<SemioColorspace, String> {
     match s {
         "r" => Ok(SemioColorspace::Rgb),
         "a" => Ok(SemioColorspace::Rgba),
@@ -588,15 +588,15 @@ pub(crate) fn dec_colorspace(s: &str) -> Result<SemioColorspace, String> {
         other => Err(format!("bad colorspace {other:?}")),
     }
 }
-pub(crate) fn enc_frame(f: &SemioImageFrame) -> String {
+pub(crate) async fn enc_frame(f: &SemioImageFrame) -> String {
     format!("[{},{}]", f.delay_ms, hex_encode(&f.rgba8))
 }
-pub(crate) fn dec_frame(s: &str) -> Result<SemioImageFrame, String> {
+pub(crate) async fn dec_frame(s: &str) -> Result<SemioImageFrame, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [delay, rgba] = parts.as_slice() else { return Err(format!("frame: expected 2 fields, got {}", parts.len())) };
     Ok(SemioImageFrame { delay_ms: parse_u32(delay)?, rgba8: hex_decode(rgba)? })
 }
-fn enc_frame_diff(d: &SemioImageFrameDiff) -> String {
+async fn enc_frame_diff(d: &SemioImageFrameDiff) -> String {
     let mut parts = Vec::new();
     if let Some(v) = d.delay_ms {
         parts.push(format!("D:{v}"));
@@ -606,7 +606,7 @@ fn enc_frame_diff(d: &SemioImageFrameDiff) -> String {
     }
     format!("[{}]", parts.join(","))
 }
-fn dec_frame_diff(s: &str) -> Result<SemioImageFrameDiff, String> {
+async fn dec_frame_diff(s: &str) -> Result<SemioImageFrameDiff, String> {
     let inner = strip_brackets(s)?;
     let mut d = SemioImageFrameDiff::default();
     for entry in split_top_level(inner, ',') {
@@ -622,10 +622,10 @@ fn dec_frame_diff(s: &str) -> Result<SemioImageFrameDiff, String> {
     }
     Ok(d)
 }
-pub(crate) fn enc_metadata_entry(e: &SemioImageMetadataEntry) -> String {
+pub(crate) async fn enc_metadata_entry(e: &SemioImageMetadataEntry) -> String {
     format!("[{},{}]", hex_encode_str(&e.key), hex_encode_str(&e.value))
 }
-pub(crate) fn dec_metadata_entry(s: &str) -> Result<SemioImageMetadataEntry, String> {
+pub(crate) async fn dec_metadata_entry(s: &str) -> Result<SemioImageMetadataEntry, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [key, value] = parts.as_slice() else { return Err(format!("metadata entry: expected 2 fields, got {}", parts.len())) };
     Ok(SemioImageMetadataEntry { key: hex_decode_str(key)?, value: hex_decode_str(value)? })
@@ -633,22 +633,22 @@ pub(crate) fn dec_metadata_entry(s: &str) -> Result<SemioImageMetadataEntry, Str
 //#endregion 🔖️ValueCodecs
 
 //#region 🔖️CollectionCodecs
-fn enc_frames_diff(d: &SemioImageFramesDiff) -> String {
+async fn enc_frames_diff(d: &SemioImageFramesDiff) -> String {
     enc_indexed_triple(d, enc_frame_diff, enc_frame)
 }
-fn dec_frames_diff(s: &str) -> Result<SemioImageFramesDiff, String> {
+async fn dec_frames_diff(s: &str) -> Result<SemioImageFramesDiff, String> {
     dec_indexed_triple(s, dec_frame_diff, dec_frame)
 }
-fn enc_metadata_diff(d: &SemioImageMetadataDiff) -> String {
+async fn enc_metadata_diff(d: &SemioImageMetadataDiff) -> String {
     enc_named_triple(d, |k: &String| hex_encode_str(k), |v: &String| hex_encode_str(v), enc_metadata_entry)
 }
-fn dec_metadata_diff(s: &str) -> Result<SemioImageMetadataDiff, String> {
+async fn dec_metadata_diff(s: &str) -> Result<SemioImageMetadataDiff, String> {
     dec_named_triple(s, hex_decode_str, hex_decode_str, dec_metadata_entry)
 }
 //#endregion 🔖️CollectionCodecs
 
 //#region 🔖️TopLevel
-fn print_image_diff(d: &SemioImageDiff) -> String {
+async fn print_image_diff(d: &SemioImageDiff) -> String {
     let mut tokens: Vec<String> = Vec::new();
     if let Some(v) = d.width {
         tokens.push(format!("width={v}"));
@@ -673,7 +673,7 @@ fn print_image_diff(d: &SemioImageDiff) -> String {
     }
     tokens.join(" ")
 }
-fn parse_image_diff(line: &str) -> Result<SemioImageDiff, String> {
+async fn parse_image_diff(line: &str) -> Result<SemioImageDiff, String> {
     let mut d = SemioImageDiff::default();
     if line.is_empty() {
         return Ok(d);
@@ -701,10 +701,10 @@ fn parse_image_diff(line: &str) -> Result<SemioImageDiff, String> {
 }
 
 impl DiffCodec for SemioImageDiff {
-    fn print_diff(&self) -> String {
+    async fn print_diff(&self) -> String {
         print_image_diff(self)
     }
-    fn parse_diff(line: &str) -> Result<Self, store::TextError> {
+    async fn parse_diff(line: &str) -> Result<Self, store::TextError> {
         parse_image_diff(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
     /// ⚡️ Real binary diff frame, replacing the old `print_diff().into_bytes()` text-as-binary
@@ -716,7 +716,7 @@ impl DiffCodec for SemioImageDiff {
     /// be 0-7 of them (chaining a `Cond` per-segment hits the `protocol-cond-cannot-chain` gap: a
     /// second `if`-guard on a field that was itself only conditionally decoded hard-errors
     /// `eval_cond` — see `✳️flow`'s/`✳️mesh`'s pilot reports).
-    fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    async fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         const DIFF_BINARY_FORMAT: u8 = 1;
         let mut presence = 0u8;
         if self.width.is_some() {
@@ -764,7 +764,7 @@ impl DiffCodec for SemioImageDiff {
         }
         Ok(out)
     }
-    fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    async fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         const DIFF_BINARY_FORMAT: u8 = 1;
         if bytes.len() < 2 {
             return Err(protocol::ProtocolError::Malformed { what: "diff header", offset: 0, detail: "truncated (need format+presence)".to_string() });
@@ -827,8 +827,8 @@ impl DiffCodec for SemioImageDiff {
 /// the `icc` tri-state and both collection triples, a bare frame/metadata insert) — single source
 /// of truth for `diff_grammar_conformance_law`/`protocol_walk_law` in `🎹️composer/🦀️component.rs`.
 #[cfg(test)]
-pub(crate) fn demo_diff_cases() -> Vec<SemioImageDiff> {
-    fn frame(seed: u8, len: usize) -> SemioImageFrame {
+pub(crate) async fn demo_diff_cases() -> Vec<SemioImageDiff> {
+    async fn frame(seed: u8, len: usize) -> SemioImageFrame {
         SemioImageFrame { delay_ms: 100, rgba8: vec![seed; len] }
     }
     let a = SemioImageSnapshot {
@@ -868,14 +868,14 @@ mod tests {
     use super::*;
     use crate::artifacts::semio::standards::v1::subsets::image::schema::snapshot::STDIO_SEMIOIMAGE_DOCUMENT_SCHEMA;
 
-    fn frame(seed: u8, len: usize) -> SemioImageFrame {
+    async fn frame(seed: u8, len: usize) -> SemioImageFrame {
         SemioImageFrame { delay_ms: 100, rgba8: vec![seed; len] }
     }
 
     /// 🧪️ Canonical absorb case 1: `InsertFrame(2,f)` then `RemoveFrame(0)` → `{removed:[0],
     /// added:[(1,f)]}`.
     #[test]
-    fn absorb_insert_then_remove_before_shifts_index() {
+    async fn absorb_insert_then_remove_before_shifts_index() {
         let f = frame(9, 4);
         let d1 = SemioImageFramesDiff { added: vec![IndexAdded { index: 2, item: f.clone() }], ..Default::default() };
         let d2 = SemioImageFramesDiff { removed: vec![0], ..Default::default() };
@@ -887,7 +887,7 @@ mod tests {
 
     /// 🧪️ Canonical absorb case 2: `InsertFrame(2,f)` then `InsertFrame(2,g)` → both survive.
     #[test]
-    fn absorb_insert_insert_same_index_both_survive() {
+    async fn absorb_insert_insert_same_index_both_survive() {
         let f = frame(1, 4);
         let g = frame(2, 4);
         let d1 = SemioImageFramesDiff { added: vec![IndexAdded { index: 2, item: f.clone() }], ..Default::default() };
@@ -899,7 +899,7 @@ mod tests {
     /// 🧪️ Canonical absorb case 3: `InsertFrame(1,f)` then `SetFrameDelay(1,42)` patches INTO the
     /// added payload.
     #[test]
-    fn absorb_insert_then_set_field_patches_into_added() {
+    async fn absorb_insert_then_set_field_patches_into_added() {
         let f = frame(1, 4);
         let d1 = SemioImageFramesDiff { added: vec![IndexAdded { index: 1, item: f.clone() }], ..Default::default() };
         let d2 = SemioImageFramesDiff { modified: vec![IndexModified { index: 1, diff: SemioImageFrameDiff { delay_ms: Some(42), rgba8: None } }], ..Default::default() };
@@ -912,7 +912,7 @@ mod tests {
 
     /// 🧪️ Canonical absorb case 4: Modify+Remove annihilates the modify.
     #[test]
-    fn absorb_modify_then_remove_drops_modify() {
+    async fn absorb_modify_then_remove_drops_modify() {
         let base = SemioImageSnapshot { frames: vec![frame(1, 4), frame(2, 4)], ..SemioImageSnapshot::default() };
         let mid = {
             let mut s = base.clone();
@@ -932,7 +932,7 @@ mod tests {
     }
 
     #[test]
-    fn absorb_law_holds_over_curated_ops() {
+    async fn absorb_law_holds_over_curated_ops() {
         let base = SemioImageSnapshot { frames: vec![frame(1, 4), frame(2, 4), frame(3, 4)], metadata: vec![SemioImageMetadataEntry { key: "a".into(), value: "1".into() }], ..SemioImageSnapshot::default() };
         let mid = {
             let mut s = base.clone();
@@ -955,7 +955,7 @@ mod tests {
     }
 
     #[test]
-    fn between_roundtrip_law() {
+    async fn between_roundtrip_law() {
         let a = SemioImageSnapshot { width: 4, height: 4, frames: vec![frame(1, 16)], ..SemioImageSnapshot::default() };
         let b = SemioImageSnapshot { width: 4, height: 4, frames: vec![frame(1, 16), frame(2, 4)], colorspace: SemioColorspace::Grayscale, ..SemioImageSnapshot::default() };
         let ab = <SemioImageDiff as DiffAlgebra<SemioImageSnapshot>>::between(&a, &b);
@@ -966,7 +966,7 @@ mod tests {
     }
 
     #[test]
-    fn inverse_law() {
+    async fn inverse_law() {
         let base = SemioImageSnapshot { frames: vec![frame(1, 4), frame(2, 4)], icc: Some(vec![1, 2]), ..SemioImageSnapshot::default() };
         let next = {
             let mut s = base.clone();
@@ -988,7 +988,7 @@ mod tests {
     /// asymmetric collection lengths (a single same-direction `between()` shows removed XOR
     /// added, never both — split across both directions).
     #[test]
-    fn field_sweep() {
+    async fn field_sweep() {
         let sweep_a = SemioImageSnapshot {
             schema: STDIO_SEMIOIMAGE_DOCUMENT_SCHEMA.into(),
             width: 10,
@@ -1047,7 +1047,7 @@ mod tests {
     /// scalars, the `icc` tri-state, and both collection triples simultaneously via a real
     /// `between()` result.
     #[test]
-    fn diff_codec_text_binary_roundtrip_law() {
+    async fn diff_codec_text_binary_roundtrip_law() {
         // 🌱 Reuses `demo_diff_cases()` (single source of truth, also feeds
         // `diff_grammar_conformance_law`/`protocol_walk_law` in `🎹️composer/🦀️component.rs`)
         // rather than an independent copy of the same base/other fixture pair.

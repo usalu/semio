@@ -15,15 +15,15 @@ pub struct ChangeRetrofitRKKn {
 impl protocol::MutationKind<En1998Snapshot, En1998Mutation> for ChangeRetrofitRKKn {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "retrofit-rk-kn", kind: "change-retrofit-rk-kn", record: "ChangedRetrofitRKKn" };
 
-    fn diff(&self, base: &En1998Snapshot) -> protocol::MutationOutcome<En1998Diff> {
+    async fn diff(&self, base: &En1998Snapshot) -> protocol::MutationOutcome<En1998Diff> {
         crate::artifacts::en1998::mutations::change_retrofit_r_k_kn::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &En1998Snapshot) -> Vec<En1998Mutation> {
+    async fn inverse(&self, base: &En1998Snapshot) -> Vec<En1998Mutation> {
         crate::artifacts::en1998::mutations::change_retrofit_r_k_kn::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         format!("Change retrofit capacity R_k [kN] to {}", self.new_retrofit_r_k_kn)
     }
 }

@@ -18,7 +18,7 @@ pub const S_PLAY_SURFACE_WORKFLOW: &str = "s.play.workflow";
 //#endregion 🔖️Constants
 
 //#region 🔖️Manifest
-fn workflow_engagement(config: &SpaceConfig, node_count: usize) -> WindowEngagement {
+async fn workflow_engagement(config: &SpaceConfig, node_count: usize) -> WindowEngagement {
     WindowEngagement {
         session_active: Some(false),
         options: None,
@@ -39,7 +39,7 @@ fn workflow_engagement(config: &SpaceConfig, node_count: usize) -> WindowEngagem
     }
 }
 
-pub fn definition() -> WindowKindDefinition {
+pub async fn definition() -> WindowKindDefinition {
     let projection = demo_space_projection();
     let config = SpaceConfig::default();
     let engagement = workflow_engagement(&config, projection.graph.nodes.len());
@@ -76,28 +76,28 @@ pub fn definition() -> WindowKindDefinition {
 // typed. These shims JSON-decode the existing wire shape into the new typed records so this one call
 // site compiles without doing the real space producer cutover. Delete once the space producer is
 // flipped to build the typed records directly.
-fn json_array_to_node_graph_nodes(json: &str) -> Vec<NodeGraphNodeRecord> {
+async fn json_array_to_node_graph_nodes(json: &str) -> Vec<NodeGraphNodeRecord> {
     serde_json::from_str(json).unwrap_or_default()
 }
 
-fn json_array_to_node_graph_edges(json: &str) -> Vec<NodeGraphEdgeRecord> {
+async fn json_array_to_node_graph_edges(json: &str) -> Vec<NodeGraphEdgeRecord> {
     serde_json::from_str(json).unwrap_or_default()
 }
 
-fn json_array_to_node_graph_find_items(json: &str) -> Vec<NodeGraphFindItem> {
+async fn json_array_to_node_graph_find_items(json: &str) -> Vec<NodeGraphFindItem> {
     serde_json::from_str(json).unwrap_or_default()
 }
 
-fn json_array_to_node_graph_operators<T: Serialize>(operators: &[T]) -> Vec<NodeGraphOperatorRecord> {
+async fn json_array_to_node_graph_operators<T: Serialize>(operators: &[T]) -> Vec<NodeGraphOperatorRecord> {
     serde_json::to_string(operators).ok().and_then(|json| serde_json::from_str(&json).ok()).unwrap_or_default()
 }
 // TEMP(Wave 3) end
 
-fn workflow_camera(config: &SpaceConfig) -> OsWorkflowCamera {
+async fn workflow_camera(config: &SpaceConfig) -> OsWorkflowCamera {
     config.camera.get(S_PLAY_WINDOW_WORKFLOW).copied().map(Into::into).unwrap_or_default()
 }
 
-pub fn render(app: &crate::engine::space::SpaceApp, projection: &WorkflowSnapshot, config: &SpaceConfig) -> UiNode {
+pub async fn render(app: &crate::engine::space::SpaceApp, projection: &WorkflowSnapshot, config: &SpaceConfig) -> UiNode {
     let graph_payload = os_workflow_to_node_graph_payload(&projection.graph);
     let camera = workflow_camera(config);
     let fixture = os_workflow_to_flow_fixture(&projection.graph, &camera);
@@ -126,7 +126,7 @@ pub fn render(app: &crate::engine::space::SpaceApp, projection: &WorkflowSnapsho
 //#endregion 🔖️Render
 
 //#region 🔖️Measures
-pub fn window_measures(config: &SpaceConfig, nodes: &[semio_framework_os::WorkflowNode]) -> Vec<semio_framework_plugin::WindowMeasure> {
+pub async fn window_measures(config: &SpaceConfig, nodes: &[semio_framework_os::WorkflowNode]) -> Vec<semio_framework_plugin::WindowMeasure> {
     let labels = resolve_labels_for_locale::<SStudioLabels>(&config.locale);
     vec![crate::engine::space::modes::main::windows::workflow::options::active_instance::measure(config, nodes, labels)]
 }
@@ -138,7 +138,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn renders_workflow_scene() {
+    async fn renders_workflow_scene() {
         use semio_framework_plugin::{PluginApp, ViewModel, VcsArtifactApp};
         let mut app = VcsArtifactApp::new(crate::engine::space::SpaceApp::default());
         let node = app.render(S_PLAY_BODY_WORKFLOW, None, &ViewModel::default()).expect("render");
@@ -146,7 +146,7 @@ mod tests {
     }
 
     #[test]
-    fn workflow_scene_uses_flow_engine_with_fixture() {
+    async fn workflow_scene_uses_flow_engine_with_fixture() {
         use semio_framework_plugin::{PluginApp, ViewModel, VcsArtifactApp};
         let mut app = VcsArtifactApp::new(crate::engine::space::SpaceApp::default());
         let node = app.render(S_PLAY_BODY_WORKFLOW, None, &ViewModel::default()).expect("render");

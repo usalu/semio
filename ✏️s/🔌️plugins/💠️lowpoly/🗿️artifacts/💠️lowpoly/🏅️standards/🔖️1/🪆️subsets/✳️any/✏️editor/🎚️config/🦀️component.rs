@@ -60,10 +60,10 @@ pub struct LowpolyConfig {
 /// 📜️ Handcrafted ArtifactDsl (P6): uses this type's `__dsl_*` helpers + parse/print, not derive emission.
 impl store::ArtifactDsl for LowpolyConfig {
     const EXTENSION: &'static str = Self::__DSL_EXTENSION;
-    fn envelope_id() -> &'static str {
+    async fn envelope_id() -> &'static str {
         Self::__DSL_ENVELOPE_ID
     }
-    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+    async fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
         let body = match store::semio_format::split_text_preamble(text) {
             Ok((_, rest)) => rest,
             Err(_) => text,
@@ -75,7 +75,7 @@ impl store::ArtifactDsl for LowpolyConfig {
         )?;
         Self::__dsl_from_record(&record)
     }
-    fn print_dsl(&self) -> String {
+    async fn print_dsl(&self) -> String {
         let body = dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), dsl::JoinMode::Document);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
             <Self as store::ArtifactDsl>::envelope_id(),
@@ -89,7 +89,7 @@ impl store::ArtifactDsl for LowpolyConfig {
 
 /// 📦️ Handcrafted ArtifactPack (P6): envelope-wrapped pack body via `__dsl_*` record lowering.
 impl store::ArtifactPack for LowpolyConfig {
-    fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
+    async fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let inner = store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
             <Self as store::ArtifactDsl>::envelope_id(),
@@ -99,7 +99,7 @@ impl store::ArtifactPack for LowpolyConfig {
         .map_err(|e| store::PackError::Schema(e.to_string()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &inner))
     }
-    fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
+    async fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
         if envelope.envelope_id() != <Self as store::ArtifactDsl>::envelope_id() {
             return Err(store::PackError::Schema(format!(
@@ -111,7 +111,7 @@ impl store::ArtifactPack for LowpolyConfig {
         let (record, _report) = store::pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
         Self::__dsl_from_record(&record).map_err(store::text_error_to_pack_error)
     }
-    fn record_spec() -> Option<dsl::RecordSpec> {
+    async fn record_spec() -> Option<dsl::RecordSpec> {
         Some(Self::__dsl_spec())
     }
 }
@@ -120,7 +120,7 @@ impl store::ArtifactPack for LowpolyConfig {
 
 
 impl Default for LowpolyConfig {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self {
             active_object_id: String::new(),
             paint_utility: "brush".into(),
@@ -148,7 +148,7 @@ impl Default for LowpolyConfig {
 
 /// 🧰️ `LowpolyConfig::default`'s `utility_params_json` — mirrors the pre-B1
 /// `LowpolyPlayRuntime::utility_params`'s default JSON object verbatim.
-pub fn default_utility_params_json() -> String {
+pub async fn default_utility_params_json() -> String {
     serde_json::json!({
         "extrudeDistance": 0.25,
         "insetAmount": 0.1,
@@ -169,7 +169,7 @@ store::impl_whole_record_config!(LowpolyConfig);
 
 /// 🌞️ Reads `LowpolyConfig`'s flattened sun fields back into a `WorldSunConfig` — the boundary where
 /// the framework's shared sun toggle/slider helper (`apply_world3d_sun_action`) can operate on it.
-pub fn lowpoly_sun_config(config: &LowpolyConfig) -> WorldSunConfig {
+pub async fn lowpoly_sun_config(config: &LowpolyConfig) -> WorldSunConfig {
     WorldSunConfig { enabled: config.sun_enabled, azimuth: config.sun_azimuth, elevation: config.sun_elevation, intensity: config.sun_intensity, color: config.sun_color.clone() }
 }
 //#endregion 🔖️Config
@@ -220,7 +220,7 @@ pub enum LowpolyConfigMutation {
 
 //#region 🔖️OpCodec
 impl protocol::OpText for LowpolyConfigMutation {
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
+    async fn parse_op(line: &str) -> Result<Self, store::TextError> {
         let variants = <Self as dsl::DslVariants>::variants();
         for (keyword, spec_fn) in &variants {
             let probe = format!("{} ", keyword);
@@ -235,7 +235,7 @@ impl protocol::OpText for LowpolyConfigMutation {
         }
         Err(dsl::__rt::field_error(format!("unknown mutation line '{line}'")))
     }
-    fn print_op(&self) -> String {
+    async fn print_op(&self) -> String {
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
         let variants = <Self as dsl::DslVariants>::variants();
         let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
@@ -245,7 +245,7 @@ impl protocol::OpText for LowpolyConfigMutation {
 
 /// 🎯️ Handcrafted OpBinary (P6).
 impl protocol::OpBinary for LowpolyConfigMutation {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         const OP_BINARY_FORMAT: u8 = 1;
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
         let variants = <Self as dsl::DslVariants>::variants();
@@ -262,7 +262,7 @@ impl protocol::OpBinary for LowpolyConfigMutation {
         out.extend_from_slice(&body);
         Ok(out)
     }
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         const OP_BINARY_FORMAT: u8 = 1;
         let mut reader = store::pack_rt::ByteReader::new(bytes);
         let format = reader.read_u8()?;
@@ -296,7 +296,7 @@ impl Mutation<LowpolyConfig> for LowpolyConfigMutation {
     /// 📦️ Whole-config field-setter/snapshot — every variant addresses the single always-present
     /// `LowpolyConfig` by value, so there is no target to be missing; message-free outcome per the
     /// contract's root-scoped shrink-only allowlist.
-    fn diff(&self, base: &LowpolyConfig) -> protocol::MutationOutcome<LowpolyConfig> {
+    async fn diff(&self, base: &LowpolyConfig) -> protocol::MutationOutcome<LowpolyConfig> {
         let mut next = base.clone();
         match self {
             LowpolyConfigMutation::Snapshot { config } => return protocol::MutationOutcome::new(config.clone()),
@@ -330,7 +330,7 @@ impl Mutation<LowpolyConfig> for LowpolyConfigMutation {
         protocol::MutationOutcome::new(next)
     }
 
-    fn inverse(&self, base: &LowpolyConfig) -> Vec<Self> {
+    async fn inverse(&self, base: &LowpolyConfig) -> Vec<Self> {
         vec![LowpolyConfigMutation::Snapshot { config: base.clone() }]
     }
 }
@@ -343,18 +343,18 @@ mod tests {
     use store::ArtifactPack;
 
     #[test]
-    fn lowpoly_config_dsl_round_trips_default() {
+    async fn lowpoly_config_dsl_round_trips_default() {
         semio_framework_os_kernel::os_store::test_support::assert_dsl_round_trip(&LowpolyConfig::default());
     }
 
     #[test]
-    fn lowpoly_config_dsl_round_trips_non_default() {
+    async fn lowpoly_config_dsl_round_trips_non_default() {
         let config = LowpolyConfig { active_object_id: "obj-2".into(), locale: "de-DE".into(), ..LowpolyConfig::default() };
         semio_framework_os_kernel::os_store::test_support::assert_dsl_round_trip(&config);
     }
 
     #[test]
-    fn lowpoly_config_pack_round_trips() {
+    async fn lowpoly_config_pack_round_trips() {
         let config = LowpolyConfig { active_object_id: "obj-9".into(), sun_enabled: true, ..LowpolyConfig::default() };
         let bytes = config.encode_pack();
         let restored = LowpolyConfig::decode_pack(&bytes).expect("decode");
@@ -362,7 +362,7 @@ mod tests {
     }
 
     #[test]
-    fn config_op_backwards_always_snapshots_prior_state() {
+    async fn config_op_backwards_always_snapshots_prior_state() {
         let base = LowpolyConfig { active_object_id: "obj-1".into(), ..LowpolyConfig::default() };
         let operation = LowpolyConfigMutation::SetActiveObject { object_id: "obj-2".into() };
         let after = operation.diff(&base).into_parts().0;
@@ -373,22 +373,22 @@ mod tests {
     }
 
     #[test]
-    fn config_op_text_round_trip_set_active_object() {
+    async fn config_op_text_round_trip_set_active_object() {
         semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&LowpolyConfigMutation::SetActiveObject { object_id: "obj-2".into() });
     }
 
     #[test]
-    fn config_op_text_round_trip_world_camera() {
+    async fn config_op_text_round_trip_world_camera() {
         semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&LowpolyConfigMutation::SetWorldCamera { position: [1.0, 2.0, 3.0], target: [0.0, 0.0, 0.0], fov: 45.0 });
     }
 
     #[test]
-    fn config_op_text_round_trip_snapshot() {
+    async fn config_op_text_round_trip_snapshot() {
         semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&LowpolyConfigMutation::Snapshot { config: LowpolyConfig::default() });
     }
 
     #[test]
-    fn config_op_binary_round_trips_and_agrees_with_text() {
+    async fn config_op_binary_round_trips_and_agrees_with_text() {
         let operation = LowpolyConfigMutation::SetActivePaintLayer { value: 3 };
         semio_framework_os_kernel::os_store::test_support::assert_op_text_binary_equivalence(&operation);
     }

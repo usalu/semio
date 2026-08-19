@@ -7,7 +7,7 @@
 
 use crate::artifacts::remodel::{ImageAsset, RemodelSnapshot};
 use base64::Engine as _;
-use semio_framework::{io_dispatch, Dialect, ErasedComposeSource, IoDirection, IoKey, IoPayload, StandardId, SubsetId};
+use semio_framework::{io_dispatch, resolve_ready, Dialect, ErasedComposeSource, IoDirection, IoKey, IoPayload, StandardId, SubsetId};
 use semio_framework_plugin::{ArtifactSerializer, MeshData};
 use semio_s_plugin_stdio::artifacts::{
     las::standards::v1_0::engine as las_engine,
@@ -24,8 +24,8 @@ use semio_s_plugin_stdio::artifacts::{
 };
 use serde_json::Value;
 
-pub fn import_stdio_kinds() -> &'static [&'static str] { &["stdio.dwg", "stdio.gltf", "stdio.json", "stdio.las", "stdio.obj", "stdio.ply", "stdio.png", "stdio.stl", "stdio.txt"] }
-pub fn export_stdio_kinds() -> &'static [&'static str] { &["stdio.dwg", "stdio.gltf", "stdio.json", "stdio.las", "stdio.obj", "stdio.ply", "stdio.png", "stdio.stl", "stdio.txt"] }
+pub async fn import_stdio_kinds() -> &'static [&'static str] { &["stdio.dwg", "stdio.gltf", "stdio.json", "stdio.las", "stdio.obj", "stdio.ply", "stdio.png", "stdio.stl", "stdio.txt"] }
+pub async fn export_stdio_kinds() -> &'static [&'static str] { &["stdio.dwg", "stdio.gltf", "stdio.json", "stdio.las", "stdio.obj", "stdio.ply", "stdio.png", "stdio.stl", "stdio.txt"] }
 
 //#region 🔖️Exporters
 /// 🧬️ Builds a real `semio/mesh` snapshot (one mesh, one primitive) from this engine's flat
@@ -35,7 +35,7 @@ pub fn export_stdio_kinds() -> &'static [&'static str] { &["stdio.dwg", "stdio.g
 /// `Triangles` whenever an explicit triangle index list is present (or the flat position count is
 /// itself a multiple of 3, mirroring this engine's own pre-extraction always-triangulate
 /// assumption), else `Points` — the only two topologies `SemioMeshToPly` accepts.
-pub(crate) fn mesh_data_to_semio_mesh(mesh: &MeshData) -> SemioMeshSnapshot {
+pub(crate) async fn mesh_data_to_semio_mesh(mesh: &MeshData) -> SemioMeshSnapshot {
     let positions: Vec<SemioPoint3> = mesh.positions.chunks(3).map(|p| SemioPoint3 { x: f64::from(p[0]), y: f64::from(p[1]), z: f64::from(p[2]) }).collect();
     let normals: Vec<SemioPoint3> = mesh.normals.chunks(3).map(|n| SemioPoint3 { x: f64::from(n[0]), y: f64::from(n[1]), z: f64::from(n[2]) }).collect();
     let colors: Vec<SemioRgba> = if mesh.colors.len() == mesh.positions.len() {
@@ -61,7 +61,7 @@ pub(crate) fn mesh_data_to_semio_mesh(mesh: &MeshData) -> SemioMeshSnapshot {
 /// `remodel_mesh_workspace`'s doc comment) and only the canonical-but-partial `SemioMeshSnapshot`
 /// content is available.
 #[cfg(test)]
-pub(crate) fn semio_mesh_to_mesh_data(semio: &SemioMeshSnapshot) -> MeshData {
+pub(crate) async fn semio_mesh_to_mesh_data(semio: &SemioMeshSnapshot) -> MeshData {
     let Some(primitive) = semio.meshes.first().and_then(|mesh| mesh.primitives.first()) else {
         return MeshData::default();
     };
@@ -75,9 +75,9 @@ pub(crate) fn semio_mesh_to_mesh_data(semio: &SemioMeshSnapshot) -> MeshData {
 /// 🌐️ Encodes a mesh as an ASCII Stanford PLY file via stdio's real `SemioMeshToPly` serializer +
 /// `ply::engine::encode_ply` — real codec reuse, not a re-implementation (replaces this file's
 /// former hand-rolled `PlyExporter`/`mesh_to_ply`).
-pub fn mesh_to_ply_bytes(mesh: &MeshData) -> Result<Vec<u8>, String> {
+pub async fn mesh_to_ply_bytes(mesh: &MeshData) -> Result<Vec<u8>, String> {
     let semio = mesh_data_to_semio_mesh(mesh);
-    let ply = SemioMeshToPly::serialize(&semio).map_err(|error| error.to_string())?;
+    let ply = semio_framework_plugin::resolve_ready(SemioMeshToPly::serialize(&semio)).map_err(|error| error.to_string())?;
     ply_engine::encode_ply(&ply)
 }
 
@@ -86,9 +86,9 @@ pub fn mesh_to_ply_bytes(mesh: &MeshData) -> Result<Vec<u8>, String> {
 /// — real codec reuse, not a re-implementation (replaces this file's former hand-rolled
 /// `LasExporter`/`mesh_to_las`; a mesh's face/index connectivity is honestly dropped, matching LAS's
 /// own "point cloud, no topology" semantics — see `SemioMeshToLas`'s own doc comment).
-pub fn mesh_to_las_bytes(mesh: &MeshData) -> Result<Vec<u8>, String> {
+pub async fn mesh_to_las_bytes(mesh: &MeshData) -> Result<Vec<u8>, String> {
     let semio = mesh_data_to_semio_mesh(mesh);
-    let las = SemioMeshToLas::serialize(&semio).map_err(|error| error.to_string())?;
+    let las = semio_framework_plugin::resolve_ready(SemioMeshToLas::serialize(&semio)).map_err(|error| error.to_string())?;
     las_engine::encode_las(&las)
 }
 
@@ -100,7 +100,7 @@ pub fn mesh_to_las_bytes(mesh: &MeshData) -> Result<Vec<u8>, String> {
 /// process-wide `thread_local!` cache every other real call site funnels through — honestly `Err` on a
 /// cold cache (documented staleness gap, matches `raster`/`lowpoly`'s precedent), never a fabricated
 /// empty mesh.
-pub fn remodel_mesh_from_document(doc: &Value) -> Result<MeshData, String> {
+pub async fn remodel_mesh_from_document(doc: &Value) -> Result<MeshData, String> {
     let scene: RemodelSnapshot = serde_json::from_value(doc.clone()).map_err(|error| error.to_string())?;
     crate::artifacts::remodel::remodel_mesh_workspace(&scene.results.mesh.mesh)
         .ok_or_else(|| "remodel_mesh_from_document: composed mesh content not resolvable (cold working-scene cache)".to_string())
@@ -110,7 +110,7 @@ pub fn remodel_mesh_from_document(doc: &Value) -> Result<MeshData, String> {
 /// texture) — `scene.assets` now holds composed `s.stdio.semio.image` child handles, so this reads
 /// the real bytes back through `crate::artifacts::remodel::remodel_asset` (working-scene cache), then
 /// re-encodes through the real png bridge below (never a raw pass-through of possibly-stale bytes).
-pub fn remodel_png_export(doc: &Value) -> Result<semio_framework_os::OsMediaExportResult, String> {
+pub async fn remodel_png_export(doc: &Value) -> Result<semio_framework_os::OsMediaExportResult, String> {
     let scene: RemodelSnapshot = serde_json::from_value(doc.clone()).map_err(|error| error.to_string())?;
     let asset_id = scene
         .results
@@ -134,7 +134,7 @@ pub fn remodel_png_export(doc: &Value) -> Result<semio_framework_os::OsMediaExpo
 const SEMIO_IMAGE_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("image") };
 const PNG_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.png", standard: StandardId("1.2"), subset: SubsetId::ANY };
 
-fn semio_io_key(owner: &Dialect, direction: IoDirection, counterpart: &Dialect) -> IoKey {
+async fn semio_io_key(owner: &Dialect, direction: IoDirection, counterpart: &Dialect) -> IoKey {
     IoKey {
         artifact_kind: owner.artifact_kind.into(),
         standard: owner.standard.0.into(),
@@ -150,7 +150,7 @@ fn semio_io_key(owner: &Dialect, direction: IoDirection, counterpart: &Dialect) 
 /// `io` registry exactly once, so `io_dispatch` below resolves regardless of host-boot ordering — a
 /// bare `cargo test` process never runs the plugin-host boot path that would normally call this
 /// (matches raster's `ensure_stdio_semio_and_png_registered`).
-fn ensure_stdio_semio_and_png_registered() {
+async fn ensure_stdio_semio_and_png_registered() {
     static ONCE: std::sync::Once = std::sync::Once::new();
     ONCE.call_once(|| {
         semio_s_plugin_stdio::artifacts::semio::register();
@@ -158,21 +158,21 @@ fn ensure_stdio_semio_and_png_registered() {
     });
 }
 
-pub(crate) fn semio_image_from_png_bytes(raw_png_bytes: &[u8]) -> Result<SemioImageSnapshot, String> {
+pub(crate) async fn semio_image_from_png_bytes(raw_png_bytes: &[u8]) -> Result<SemioImageSnapshot, String> {
     ensure_stdio_semio_and_png_registered();
     let png_snapshot = semio_s_plugin_stdio::artifacts::png::io::decode_png(raw_png_bytes)?;
     let payload = IoPayload::Binary(<PngSnapshot as store::ArtifactPack>::encode_pack(&png_snapshot));
     let key = semio_io_key(&SEMIO_IMAGE_DIALECT, IoDirection::Import, &PNG_DIALECT);
-    let composed = io_dispatch(&key, &[ErasedComposeSource { dialect: PNG_DIALECT, payload }]).map_err(|error| error.message)?;
+    let composed = resolve_ready(io_dispatch(&key, &[ErasedComposeSource { dialect: PNG_DIALECT, payload }])).map_err(|error| error.message)?;
     let IoPayload::Binary(bytes) = composed.payload else { return Err("s.stdio.semio image composer returned a non-binary payload".into()) };
     <SemioImageSnapshot as store::ArtifactPack>::decode_pack(&bytes).map_err(|error| format!("{error:?}"))
 }
 
-pub(crate) fn png_bytes_from_semio_image(image: &SemioImageSnapshot) -> Result<Vec<u8>, String> {
+pub(crate) async fn png_bytes_from_semio_image(image: &SemioImageSnapshot) -> Result<Vec<u8>, String> {
     ensure_stdio_semio_and_png_registered();
     let payload = IoPayload::Binary(<SemioImageSnapshot as store::ArtifactPack>::encode_pack(image));
     let key = semio_io_key(&SEMIO_IMAGE_DIALECT, IoDirection::Export, &PNG_DIALECT);
-    let composed = io_dispatch(&key, &[ErasedComposeSource { dialect: SEMIO_IMAGE_DIALECT, payload }]).map_err(|error| error.message)?;
+    let composed = resolve_ready(io_dispatch(&key, &[ErasedComposeSource { dialect: SEMIO_IMAGE_DIALECT, payload }])).map_err(|error| error.message)?;
     let IoPayload::Binary(bytes) = composed.payload else { return Err("s.stdio.png composer returned a non-binary payload".into()) };
     let png_snapshot = <PngSnapshot as store::ArtifactPack>::decode_pack(&bytes).map_err(|error| format!("{error:?}"))?;
     semio_s_plugin_stdio::artifacts::png::io::encode_png(&png_snapshot)
@@ -185,7 +185,7 @@ pub(crate) fn png_bytes_from_semio_image(image: &SemioImageSnapshot) -> Result<V
 /// frames, `MediaStream.frames`) is honestly reported as unsupported rather than silently coerced or
 /// dropped; wiring stdio's real `jpg` codec through this same bridge is a scoped, concrete follow-up
 /// (see this ticket's `remodel-report.md`), not attempted here.
-pub fn semio_image_snapshot_from_image_asset(asset: &ImageAsset) -> Result<SemioImageSnapshot, String> {
+pub async fn semio_image_snapshot_from_image_asset(asset: &ImageAsset) -> Result<SemioImageSnapshot, String> {
     if asset.mime != "image/png" {
         return Err(format!("semio_image_snapshot_from_image_asset: unsupported mime {:?} (only image/png round-trips today)", asset.mime));
     }
@@ -193,7 +193,7 @@ pub fn semio_image_snapshot_from_image_asset(asset: &ImageAsset) -> Result<Semio
     semio_image_from_png_bytes(&bytes)
 }
 
-pub fn image_asset_from_semio_image_snapshot(image: &SemioImageSnapshot) -> Result<ImageAsset, String> {
+pub async fn image_asset_from_semio_image_snapshot(image: &SemioImageSnapshot) -> Result<ImageAsset, String> {
     let (width, height) = (image.width, image.height);
     let bytes = png_bytes_from_semio_image(image)?;
     Ok(ImageAsset { mime: "image/png".into(), data: base64::engine::general_purpose::STANDARD.encode(bytes), width, height })
@@ -208,7 +208,7 @@ mod exporters_tests {
     use semio_framework_plugin::mesh_from_kind;
 
     #[test]
-    fn mesh_to_ply_bytes_writes_a_well_formed_ascii_file_via_stdio() {
+    async fn mesh_to_ply_bytes_writes_a_well_formed_ascii_file_via_stdio() {
         let mesh = mesh_from_kind("box");
         let bytes = mesh_to_ply_bytes(&mesh).expect("ply export");
         let text = String::from_utf8(bytes).expect("ply is ascii");
@@ -219,7 +219,7 @@ mod exporters_tests {
     }
 
     #[test]
-    fn mesh_to_las_bytes_writes_a_227_byte_header_plus_20_bytes_per_point_via_stdio() {
+    async fn mesh_to_las_bytes_writes_a_227_byte_header_plus_20_bytes_per_point_via_stdio() {
         // 🧪️ `mesh_from_kind("box")` carries no vertex colors, so `SemioMeshToLas` + stdio's
         // `choose_point_format` land on point-data format 0 (no RGB/GPS) — 20 bytes/point, same
         // shape this file's former hand-rolled LAS 1.2 writer always produced.
@@ -240,7 +240,7 @@ mod exporters_tests {
     /// `face_ids`/`vertex_ids`/`edge_*`/`paint_texture_base64` are honestly NOT recovered (empty/`None`
     /// — documented on the function itself) since that shape has no slot for them.
     #[test]
-    fn semio_mesh_to_mesh_data_recovers_the_representable_buffers() {
+    async fn semio_mesh_to_mesh_data_recovers_the_representable_buffers() {
         let mesh = mesh_from_kind("box");
         let semio = mesh_data_to_semio_mesh(&mesh);
         let recovered = semio_mesh_to_mesh_data(&semio);
@@ -257,7 +257,7 @@ mod exporters_tests {
     }
 
     #[test]
-    fn png_export_round_trips_a_stored_texture_asset() {
+    async fn png_export_round_trips_a_stored_texture_asset() {
         // 🧪️ `remodel_png_export` now reads real composed `s.stdio.semio/v1/image` content back
         // through `remodel_asset`'s working-scene cache (ticket
         // `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM`), so this test seeds a REAL 4x4 RGBA8
@@ -308,11 +308,11 @@ pub mod derived_composition {
         type Snapshot = RemodelSnapshot;
         const WRITES: Dialect = DIALECT;
 
-        fn reads() -> &'static [Dialect] {
+        async fn reads() -> &'static [Dialect] {
             &[DIALECT, DEP_DWG, DEP_GLTF, DEP_JSON, DEP_LAS, DEP_OBJ, DEP_PLY, DEP_PNG, DEP_STL, DEP_TXT]
         }
 
-        fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+        async fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
             for source in sources {
                 if source.dialect == DIALECT {
                     let native = match &source.payload {
@@ -437,7 +437,7 @@ pub mod io_registry {
     const REMODEL_DIALECT: Dialect = Dialect { artifact_kind: "s.remodel", standard: StandardId("1"), subset: SubsetId("*") };
     const REMODEL_JSON_BRIDGE_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.json", standard: StandardId("rfc8259"), subset: SubsetId("*") };
 
-    fn rebuild_native_snapshot(sources: &[ErasedComposeSource]) -> Result<crate::artifacts::remodel::RemodelSnapshot, ComposeError> {
+    async fn rebuild_native_snapshot(sources: &[ErasedComposeSource]) -> Result<crate::artifacts::remodel::RemodelSnapshot, ComposeError> {
         if let Some(source) = sources.iter().find(|s| s.dialect == REMODEL_DIALECT) {
             let builder = match &source.payload {
                 IoPayload::Text(t) => RemodelAnyBuilder::from_text(t).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?,
@@ -459,7 +459,7 @@ pub mod io_registry {
     }
 
     const EXPORT_LAS_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.las", standard: StandardId("1.0"), subset: SubsetId("*") };
-    fn compose_export_las(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
+    async fn compose_export_las(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
     Box::pin(async move {
         let snapshot = rebuild_native_snapshot(sources)?;
         let bytes = crate::artifacts::remodel::io::export::serializers::artifacts::las::v1_0::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
@@ -467,7 +467,7 @@ pub mod io_registry {
     })
 }
     const EXPORT_PLY_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.ply", standard: StandardId("1.0"), subset: SubsetId("*") };
-    fn compose_export_ply(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
+    async fn compose_export_ply(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
     Box::pin(async move {
         let snapshot = rebuild_native_snapshot(sources)?;
         let bytes = crate::artifacts::remodel::io::export::serializers::artifacts::ply::v1_0::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
@@ -475,7 +475,7 @@ pub mod io_registry {
     })
 }
     const EXPORT_PNG_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.png", standard: StandardId("1.2"), subset: SubsetId("*") };
-    fn compose_export_png(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
+    async fn compose_export_png(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
     Box::pin(async move {
         let snapshot = rebuild_native_snapshot(sources)?;
         let bytes = crate::artifacts::remodel::io::export::serializers::artifacts::png::v1_2::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
@@ -483,7 +483,7 @@ pub mod io_registry {
     })
 }
     const EXPORT_JSON_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.json", standard: StandardId("rfc8259"), subset: SubsetId("*") };
-    fn compose_export_json(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
+    async fn compose_export_json(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
     Box::pin(async move {
         let snapshot = rebuild_native_snapshot(sources)?;
         let bytes = crate::artifacts::remodel::io::export::serializers::artifacts::json::v_rfc8259::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
@@ -491,7 +491,7 @@ pub mod io_registry {
     })
 }
     const EXPORT_DWG_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.dwg", standard: StandardId("ac1018"), subset: SubsetId("*") };
-    fn compose_export_dwg(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
+    async fn compose_export_dwg(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
     Box::pin(async move {
         let snapshot = rebuild_native_snapshot(sources)?;
         let bytes = crate::artifacts::remodel::io::export::serializers::artifacts::dwg::v_ac1018::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
@@ -499,7 +499,7 @@ pub mod io_registry {
     })
 }
     const EXPORT_STL_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.stl", standard: StandardId("ascii"), subset: SubsetId("*") };
-    fn compose_export_stl(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
+    async fn compose_export_stl(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
     Box::pin(async move {
         let snapshot = rebuild_native_snapshot(sources)?;
         let bytes = crate::artifacts::remodel::io::export::serializers::artifacts::stl::v_ascii::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
@@ -507,7 +507,7 @@ pub mod io_registry {
     })
 }
     const EXPORT_GLTF_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.gltf", standard: StandardId("2.0"), subset: SubsetId("*") };
-    fn compose_export_gltf(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
+    async fn compose_export_gltf(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
     Box::pin(async move {
         let snapshot = rebuild_native_snapshot(sources)?;
         let bytes = crate::artifacts::remodel::io::export::serializers::artifacts::gltf::v2_0::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
@@ -515,7 +515,7 @@ pub mod io_registry {
     })
 }
     const EXPORT_OBJ_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.obj", standard: StandardId("3.0"), subset: SubsetId("*") };
-    fn compose_export_obj(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
+    async fn compose_export_obj(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
     Box::pin(async move {
         let snapshot = rebuild_native_snapshot(sources)?;
         let bytes = crate::artifacts::remodel::io::export::serializers::artifacts::obj::v3_0::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
@@ -525,7 +525,7 @@ pub mod io_registry {
     //#endregion 🔖️ExportEntries
 
 
-    pub fn entries() -> &'static [ComposerEntry] {
+    pub async fn entries() -> &'static [ComposerEntry] {
         ENTRIES.get_or_init(|| vec![
             composer_entry_of::<RemodelAnyComposer>(),
             ComposerEntry { writes: EXPORT_LAS_DIALECT, reads: &[REMODEL_DIALECT], compose: compose_export_las },

@@ -23,10 +23,10 @@ pub enum SpaceIndexViewCommand {
 }
 
 impl protocol::OpBinary for SpaceIndexViewCommand {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         Ok(Vec::new())
     }
-    fn decode_op(_bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    async fn decode_op(_bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         Ok(SpaceIndexViewCommand::Noop)
     }
 }
@@ -50,17 +50,17 @@ impl ArtifactViewer for SpaceIndexViewer {
     const DIALECT: Dialect = SPACE_INDEX_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = crate::artifacts::space::S_SPACE_INDEX_DOCUMENT_SCHEMA;
 
-    fn initial_snapshot() -> SSpaceSnapshot {
+    async fn initial_snapshot() -> SSpaceSnapshot {
         SSpaceSnapshot::default()
     }
 
     /// 👁️ Structurally read-only: the sole `SpaceIndexViewCommand::Noop` variant never carries a config
     /// change, so this always returns the empty `ViewEmit`.
-    fn handle(_command: &Self::Command, _doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _interaction: &InteractionView<'_>, _engines: &EngineHandles) -> Result<ViewEmit<Self::ConfigMutation>, Fault> {
+    async fn handle(_command: &Self::Command, _doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _interaction: &InteractionView<'_>, _engines: &EngineHandles) -> Result<ViewEmit<Self::ConfigMutation>, Fault> {
         Ok(ViewEmit::default())
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> UiNode {
+    async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> UiNode {
         match body_key {
             main::BODY_KEY => main::render(doc.snapshot),
             _ => semio_framework_plugin::ui_text(semio_framework_plugin::Label::data(format!("Unknown body: {body_key}"))),
@@ -70,7 +70,7 @@ impl ArtifactViewer for SpaceIndexViewer {
 //#endregion 🔖️Viewer
 
 //#region 🔖️Manifest
-pub fn create_space_index_viewer() -> semio_framework_plugin::AppDefinition {
+pub async fn create_space_index_viewer() -> semio_framework_plugin::AppDefinition {
     Viewer::builder(SPACE_INDEX_DIALECT)
         .document(["semio", "s", "space", "index"])
         .icon_id("layout-grid")
@@ -88,18 +88,18 @@ mod tests {
     use super::*;
 
     #[test]
-    fn create_space_index_viewer_builds_a_definition_for_this_dialect() {
+    async fn create_space_index_viewer_builds_a_definition_for_this_dialect() {
         let def = create_space_index_viewer();
         assert_eq!(def.dialect, SPACE_INDEX_DIALECT.into());
     }
 
     #[test]
-    fn viewer_dialect_matches_the_artifact_coordinate() {
+    async fn viewer_dialect_matches_the_artifact_coordinate() {
         assert_eq!(<SpaceIndexViewer as ArtifactViewer>::DIALECT, SPACE_INDEX_DIALECT);
     }
 
     #[test]
-    fn an_unknown_body_key_falls_back_to_a_text_node() {
+    async fn an_unknown_body_key_falls_back_to_a_text_node() {
         let snapshot = SSpaceSnapshot::default();
         let history = semio_framework_plugin::HistoryView::empty();
         let doc = ArtifactView::new(&snapshot, &history);

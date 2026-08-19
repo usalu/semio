@@ -72,7 +72,7 @@ pub enum PlyMutation {
 //#region 🔖️Apply
 /// ▶️ Applies `mutation` to `snapshot`: the diff is the single semantics source
 /// (`let d = mutation.diff(&*snapshot); *snapshot = d.apply(snapshot); d`).
-pub fn apply_ply_mutation(snapshot: &mut PlySnapshot, mutation: &PlyMutation) -> protocol::MutationOutcome<PlyDiff> {
+pub async fn apply_ply_mutation(snapshot: &mut PlySnapshot, mutation: &PlyMutation) -> protocol::MutationOutcome<PlyDiff> {
     let outcome = <PlyMutation as Mutation<PlySnapshot>>::diff(mutation, snapshot);
     match protocol::MutationDiff::apply(outcome.diff(), snapshot) {
         Ok(next) => {
@@ -89,7 +89,7 @@ impl Mutation<PlySnapshot> for PlyMutation {
     type Diff = PlyDiff;
 
     /// 🔺️ Every variant handcrafted directly — never apply-and-capture.
-    fn diff(&self, base: &PlySnapshot) -> protocol::MutationOutcome<Self::Diff> {
+    async fn diff(&self, base: &PlySnapshot) -> protocol::MutationOutcome<Self::Diff> {
         protocol::MutationOutcome::new(match self {
             PlyMutation::NoMutation => PlyDiff::default(),
             PlyMutation::SetSnapshot { snapshot } => diff_set_snapshot(base, snapshot),
@@ -117,7 +117,7 @@ impl Mutation<PlySnapshot> for PlyMutation {
 
     /// ↩️ Handcrafted per-variant undo, key/index-aware (resolves against `base` so e.g. a
     /// clamped insert position or a to-be-removed payload is recovered exactly).
-    fn inverse(&self, base: &PlySnapshot) -> Vec<Self> {
+    async fn inverse(&self, base: &PlySnapshot) -> Vec<Self> {
         match self {
             PlyMutation::NoMutation => vec![PlyMutation::NoMutation],
             PlyMutation::SetSnapshot { .. } => vec![PlyMutation::SetSnapshot { snapshot: base.clone() }],
@@ -166,10 +166,10 @@ impl Mutation<PlySnapshot> for PlyMutation {
 /// (space-separated, same shape the derive's own handcrafted-wrapper convention uses, and the
 /// same shape svg's hand-rolled `OpText` uses), one match arm per variant (no `DslVariants`
 /// scaffolding available since nothing here derives it).
-fn enc_snapshot(s: &PlySnapshot) -> String {
+async fn enc_snapshot(s: &PlySnapshot) -> String {
     format!("[{},{},[{}],[{}]]", enc_str(&s.schema), enc_format(s.format), s.comments.iter().map(|c| enc_str(c)).collect::<Vec<_>>().join(","), s.elements.iter().map(enc_element).collect::<Vec<_>>().join(","),)
 }
-fn dec_snapshot(s: &str) -> Result<PlySnapshot, String> {
+async fn dec_snapshot(s: &str) -> Result<PlySnapshot, String> {
     let inner = strip_brackets(s)?;
     let parts = split_top_level(inner, ',');
     let [schema, format, comments, elements] = parts.as_slice() else { return Err(format!("ply snapshot: expected 4 fields, got {}", parts.len())) };
@@ -181,7 +181,7 @@ fn dec_snapshot(s: &str) -> Result<PlySnapshot, String> {
     })
 }
 
-fn print_ply_mutation(m: &PlyMutation) -> String {
+async fn print_ply_mutation(m: &PlyMutation) -> String {
     match m {
         PlyMutation::NoMutation => "no-mutation".to_string(),
         PlyMutation::SetSnapshot { snapshot } => format!("set-snapshot snapshot={}", enc_snapshot(snapshot)),
@@ -195,7 +195,7 @@ fn print_ply_mutation(m: &PlyMutation) -> String {
         PlyMutation::SetRowProperty { element_name, row_index, property_name, value } => format!("set-row-property element-name={} row-index={row_index} property-name={} value={}", enc_str(element_name), enc_str(property_name), enc_value(value),),
     }
 }
-fn parse_ply_mutation(line: &str) -> Result<PlyMutation, String> {
+async fn parse_ply_mutation(line: &str) -> Result<PlyMutation, String> {
     if line == "no-mutation" {
         return Ok(PlyMutation::NoMutation);
     }
@@ -218,10 +218,10 @@ fn parse_ply_mutation(line: &str) -> Result<PlyMutation, String> {
 }
 
 impl OpText for PlyMutation {
-    fn print_op(&self) -> String {
+    async fn print_op(&self) -> String {
         print_ply_mutation(self)
     }
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
+    async fn parse_op(line: &str) -> Result<Self, store::TextError> {
         parse_ply_mutation(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
 }
@@ -235,7 +235,7 @@ impl OpText for PlyMutation {
 /// (reusing `PlyDiff`'s `pub(crate)` binary primitives — `write_bin_element`/`write_bin_row`/
 /// `write_bin_snapshot`/`write_bin_str`/`write_bin_value` — the same way this file's `OpText`
 /// already reuses the text-codec primitives).
-fn op_tag(m: &PlyMutation) -> u8 {
+async fn op_tag(m: &PlyMutation) -> u8 {
     match m {
         PlyMutation::NoMutation => 0,
         PlyMutation::SetSnapshot { .. } => 1,
@@ -249,12 +249,12 @@ fn op_tag(m: &PlyMutation) -> u8 {
         PlyMutation::SetRowProperty { .. } => 9,
     }
 }
-fn op_pack_err(e: dsl::PackError) -> protocol::ProtocolError {
+async fn op_pack_err(e: dsl::PackError) -> protocol::ProtocolError {
     protocol::ProtocolError::Malformed { what: "ply op binary", offset: 0, detail: e.to_string() }
 }
 
 impl OpBinary for PlyMutation {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         let mut w = dsl::ByteWriter::new();
         w.write_u8(store::pack_rt::OP_BINARY_FORMAT);
         w.write_u8(op_tag(self));
@@ -293,7 +293,7 @@ impl OpBinary for PlyMutation {
         Ok(w.into_bytes())
     }
 
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         let mut r = dsl::ByteReader::new(bytes);
         let _format = r.read_u8().map_err(op_pack_err)?;
         let tag = r.read_u8().map_err(op_pack_err)?;
@@ -346,7 +346,7 @@ impl OpBinary for PlyMutation {
 /// `InsertRow`'s `PlyRow` payload, and `SetRowProperty`'s bare `PlyValue` payload (incl. the
 /// recursive `List` variant).
 #[cfg(test)]
-fn demo_base_snapshot() -> PlySnapshot {
+async fn demo_base_snapshot() -> PlySnapshot {
     use crate::artifacts::ply::schema::snapshot::{PlyProperty, PlyScalarType};
     PlySnapshot {
         schema: crate::artifacts::ply::STDIO_PLY_DOCUMENT_SCHEMA.into(),
@@ -357,7 +357,7 @@ fn demo_base_snapshot() -> PlySnapshot {
 }
 
 #[cfg(test)]
-pub(crate) fn demo_mutation_cases() -> Vec<PlyMutation> {
+pub(crate) async fn demo_mutation_cases() -> Vec<PlyMutation> {
     use crate::artifacts::ply::schema::snapshot::{PlyProperty, PlyScalarType};
     let snapshot = demo_base_snapshot();
     vec![
@@ -392,7 +392,7 @@ mod codec_tests {
     /// 🧪️ F6/P2-FG3: `OpText`/`OpBinary` round-trip laws for the hand-rolled `PlyMutation`
     /// grammar — `OpBinary` is now a REAL binary frame, no longer text-as-bytes.
     #[test]
-    fn op_text_binary_roundtrip_law() {
+    async fn op_text_binary_roundtrip_law() {
         for mutation in demo_mutation_cases() {
             let printed = mutation.print_op();
             assert!(!printed.contains('\n'), "print_op must be one line, got {printed:?}");

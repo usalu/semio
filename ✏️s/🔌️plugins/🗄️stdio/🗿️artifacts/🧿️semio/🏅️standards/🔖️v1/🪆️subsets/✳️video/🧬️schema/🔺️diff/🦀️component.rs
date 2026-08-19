@@ -75,7 +75,7 @@ pub struct SemioVideoDiff {
 /// engine, this subset's own instance since no shared generic ALGORITHM exists yet (only the
 /// shared struct does). Reused twice below: once for `streams`, once (nested, inside a modified
 /// stream) for `samples`.
-fn between_indexed<T, D>(base: &[T], other: &[T], diff_item: impl Fn(&T, &T) -> Option<D>) -> Option<IndexedTripleDiff<D, T>>
+async fn between_indexed<T, D>(base: &[T], other: &[T], diff_item: impl Fn(&T, &T) -> Option<D>) -> Option<IndexedTripleDiff<D, T>>
 where
     T: Clone + PartialEq,
 {
@@ -97,7 +97,7 @@ where
     }
 }
 
-fn apply_indexed<T, D>(items: &mut Vec<T>, diff: &IndexedTripleDiff<D, T>, apply_item: impl Fn(&mut T, &D))
+async fn apply_indexed<T, D>(items: &mut Vec<T>, diff: &IndexedTripleDiff<D, T>, apply_item: impl Fn(&mut T, &D))
 where
     T: Clone,
 {
@@ -122,7 +122,7 @@ where
     }
 }
 
-fn inverse_indexed<T, D>(base_items: &[T], diff: &IndexedTripleDiff<D, T>, inverse_item: impl Fn(&T, &D) -> D) -> IndexedTripleDiff<D, T>
+async fn inverse_indexed<T, D>(base_items: &[T], diff: &IndexedTripleDiff<D, T>, inverse_item: impl Fn(&T, &D) -> D) -> IndexedTripleDiff<D, T>
 where
     T: Clone,
 {
@@ -146,7 +146,7 @@ where
 
 /// 🧮️ Maps a base-side index through a diff's OWN removed/added to the position it ends up at once
 /// that diff has been applied (svg `SvgDiff`'s `transform_index` precedent, generalized).
-fn transform_index<T>(idx: usize, removed: &[usize], added: &[IndexAdded<T>]) -> usize {
+async fn transform_index<T>(idx: usize, removed: &[usize], added: &[IndexAdded<T>]) -> usize {
     let removed_before = removed.iter().filter(|&&r| r < idx).count();
     let pos = idx - removed_before;
     let mut order: Vec<usize> = added.iter().map(|a| a.index).collect();
@@ -167,7 +167,7 @@ enum ItemOrigin {
     Added(usize),
 }
 
-fn simulate_mid_origins<T>(base_len: usize, removed: &[usize], added: &[IndexAdded<T>]) -> Vec<ItemOrigin> {
+async fn simulate_mid_origins<T>(base_len: usize, removed: &[usize], added: &[IndexAdded<T>]) -> Vec<ItemOrigin> {
     let mut mid: Vec<ItemOrigin> = (0..base_len).filter(|i| !removed.contains(i)).map(ItemOrigin::Base).collect();
     let mut order: Vec<(usize, usize)> = added.iter().enumerate().map(|(k, a)| (a.index, k)).collect();
     order.sort_by_key(|(idx, _)| *idx);
@@ -182,7 +182,7 @@ fn simulate_mid_origins<T>(base_len: usize, removed: &[usize], added: &[IndexAdd
 /// absorbs two per-field diffs of the SAME item; `apply_item` patches a `D` onto a `T` (needed
 /// when `d2` modifies an item `d1` just added).
 #[allow(clippy::too_many_arguments)]
-fn absorb_indexed<T, D>(d1: IndexedTripleDiff<D, T>, d2: IndexedTripleDiff<D, T>, absorb_item: impl Fn(D, D) -> D, apply_item: impl Fn(&T, &D) -> T) -> IndexedTripleDiff<D, T>
+async fn absorb_indexed<T, D>(d1: IndexedTripleDiff<D, T>, d2: IndexedTripleDiff<D, T>, absorb_item: impl Fn(D, D) -> D, apply_item: impl Fn(&T, &D) -> T) -> IndexedTripleDiff<D, T>
 where
     T: Clone,
     D: Clone,
@@ -261,14 +261,14 @@ where
 //#endregion 🔖️GenericIndexedEngine
 
 //#region 🔖️VideoDiffLogic
-fn diff_sample(old: &SemioVideoSample, new: &SemioVideoSample) -> Option<SemioVideoSampleDiff> {
+async fn diff_sample(old: &SemioVideoSample, new: &SemioVideoSample) -> Option<SemioVideoSampleDiff> {
     if old == new {
         return None;
     }
     Some(SemioVideoSampleDiff { pts: (old.pts != new.pts).then_some(new.pts), key: (old.key != new.key).then_some(new.key), data: (old.data != new.data).then(|| new.data.clone()) })
 }
 
-fn diff_stream(old: &SemioVideoStream, new: &SemioVideoStream) -> Option<SemioVideoStreamDiff> {
+async fn diff_stream(old: &SemioVideoStream, new: &SemioVideoStream) -> Option<SemioVideoStreamDiff> {
     if old == new {
         return None;
     }
@@ -283,11 +283,11 @@ fn diff_stream(old: &SemioVideoStream, new: &SemioVideoStream) -> Option<SemioVi
     })
 }
 
-fn diff_video(base: &SemioVideoSnapshot, other: &SemioVideoSnapshot) -> SemioVideoDiff {
+async fn diff_video(base: &SemioVideoSnapshot, other: &SemioVideoSnapshot) -> SemioVideoDiff {
     SemioVideoDiff { streams: between_indexed(&base.streams, &other.streams, diff_stream) }
 }
 
-fn apply_sample(sample: &mut SemioVideoSample, diff: &SemioVideoSampleDiff) {
+async fn apply_sample(sample: &mut SemioVideoSample, diff: &SemioVideoSampleDiff) {
     if let Some(v) = diff.pts {
         sample.pts = v;
     }
@@ -299,7 +299,7 @@ fn apply_sample(sample: &mut SemioVideoSample, diff: &SemioVideoSampleDiff) {
     }
 }
 
-fn apply_stream(stream: &mut SemioVideoStream, diff: &SemioVideoStreamDiff) {
+async fn apply_stream(stream: &mut SemioVideoStream, diff: &SemioVideoStreamDiff) {
     if let Some(v) = diff.kind {
         stream.kind = v;
     }
@@ -320,23 +320,23 @@ fn apply_stream(stream: &mut SemioVideoStream, diff: &SemioVideoStreamDiff) {
     }
 }
 
-fn sample_with_diff_applied(sample: &SemioVideoSample, diff: &SemioVideoSampleDiff) -> SemioVideoSample {
+async fn sample_with_diff_applied(sample: &SemioVideoSample, diff: &SemioVideoSampleDiff) -> SemioVideoSample {
     let mut out = sample.clone();
     apply_sample(&mut out, diff);
     out
 }
 
-fn stream_with_diff_applied(stream: &SemioVideoStream, diff: &SemioVideoStreamDiff) -> SemioVideoStream {
+async fn stream_with_diff_applied(stream: &SemioVideoStream, diff: &SemioVideoStreamDiff) -> SemioVideoStream {
     let mut out = stream.clone();
     apply_stream(&mut out, diff);
     out
 }
 
-fn inverse_sample(base: &SemioVideoSample, diff: &SemioVideoSampleDiff) -> SemioVideoSampleDiff {
+async fn inverse_sample(base: &SemioVideoSample, diff: &SemioVideoSampleDiff) -> SemioVideoSampleDiff {
     SemioVideoSampleDiff { pts: diff.pts.map(|_| base.pts), key: diff.key.map(|_| base.key), data: diff.data.as_ref().map(|_| base.data.clone()) }
 }
 
-fn inverse_stream(base: &SemioVideoStream, diff: &SemioVideoStreamDiff) -> SemioVideoStreamDiff {
+async fn inverse_stream(base: &SemioVideoStream, diff: &SemioVideoStreamDiff) -> SemioVideoStreamDiff {
     SemioVideoStreamDiff {
         kind: diff.kind.map(|_| base.kind),
         codec: diff.codec.as_ref().map(|_| base.codec.clone()),
@@ -347,7 +347,7 @@ fn inverse_stream(base: &SemioVideoStream, diff: &SemioVideoStreamDiff) -> Semio
     }
 }
 
-fn absorb_sample_diff(mut a: SemioVideoSampleDiff, b: SemioVideoSampleDiff) -> SemioVideoSampleDiff {
+async fn absorb_sample_diff(mut a: SemioVideoSampleDiff, b: SemioVideoSampleDiff) -> SemioVideoSampleDiff {
     if b.pts.is_some() {
         a.pts = b.pts;
     }
@@ -360,7 +360,7 @@ fn absorb_sample_diff(mut a: SemioVideoSampleDiff, b: SemioVideoSampleDiff) -> S
     a
 }
 
-fn absorb_stream_diff(mut a: SemioVideoStreamDiff, b: SemioVideoStreamDiff) -> SemioVideoStreamDiff {
+async fn absorb_stream_diff(mut a: SemioVideoStreamDiff, b: SemioVideoStreamDiff) -> SemioVideoStreamDiff {
     if b.kind.is_some() {
         a.kind = b.kind;
     }
@@ -387,7 +387,7 @@ fn absorb_stream_diff(mut a: SemioVideoStreamDiff, b: SemioVideoStreamDiff) -> S
 
 //#region 🔖️Apply
 impl MutationDiff<SemioVideoSnapshot> for SemioVideoDiff {
-    fn apply(&self, base: &SemioVideoSnapshot) -> protocol::MutationApplyResult<SemioVideoSnapshot> {
+    async fn apply(&self, base: &SemioVideoSnapshot) -> protocol::MutationApplyResult<SemioVideoSnapshot> {
         let mut next = base.clone();
         if let Some(d) = &self.streams {
             crate::artifacts::semio::standards::v1::subsets::any::schema::triples::validate_indexed_triple(d, next.streams.len(), ["streams"])?;
@@ -396,7 +396,7 @@ impl MutationDiff<SemioVideoSnapshot> for SemioVideoDiff {
         Ok(next)
     }
 
-    fn absorb(&mut self, other: Self) {
+    async fn absorb(&mut self, other: Self) {
         self.streams = match (self.streams.take(), other.streams) {
             (None, x) => x,
             (x, None) => x,
@@ -408,15 +408,15 @@ impl MutationDiff<SemioVideoSnapshot> for SemioVideoDiff {
 
 //#region 🔖️DiffAlgebra
 impl DiffAlgebra<SemioVideoSnapshot> for SemioVideoDiff {
-    fn inverse(&self, base: &SemioVideoSnapshot) -> Self {
+    async fn inverse(&self, base: &SemioVideoSnapshot) -> Self {
         SemioVideoDiff { streams: self.streams.as_ref().map(|d| inverse_indexed(&base.streams, d, inverse_stream)) }
     }
 
-    fn between(base: &SemioVideoSnapshot, other: &SemioVideoSnapshot) -> Self {
+    async fn between(base: &SemioVideoSnapshot, other: &SemioVideoSnapshot) -> Self {
         diff_video(base, other)
     }
 
-    fn is_empty(&self) -> bool {
+    async fn is_empty(&self) -> bool {
         self.streams.is_none()
     }
 }
@@ -425,23 +425,23 @@ impl DiffAlgebra<SemioVideoSnapshot> for SemioVideoDiff {
 //#region 🔖️SetSnapshot
 /// 🧩 Builds the sparse field-by-field diff for a `SetSnapshot` mutation. No `snapshot:
 /// Option<SemioVideoSnapshot>` full-replace slot -- this IS `SemioVideoDiff::between`.
-pub fn diff_set_snapshot(base: &SemioVideoSnapshot, next: &SemioVideoSnapshot) -> SemioVideoDiff {
+pub async fn diff_set_snapshot(base: &SemioVideoSnapshot, next: &SemioVideoSnapshot) -> SemioVideoDiff {
     SemioVideoDiff::between(base, next)
 }
 
 /// 🧩 Builds the diff for inserting `stream` at `index` (FINAL state).
-pub fn diff_insert_stream(index: usize, stream: SemioVideoStream) -> SemioVideoDiff {
+pub async fn diff_insert_stream(index: usize, stream: SemioVideoStream) -> SemioVideoDiff {
     SemioVideoDiff { streams: Some(SemioVideoStreamsDiff { added: vec![IndexAdded { index, item: stream }], ..Default::default() }) }
 }
 
 /// 🧩 Builds the diff for removing the stream at `index` (BASE-state index).
-pub fn diff_remove_stream(index: usize) -> SemioVideoDiff {
+pub async fn diff_remove_stream(index: usize) -> SemioVideoDiff {
     SemioVideoDiff { streams: Some(SemioVideoStreamsDiff { removed: vec![index], ..Default::default() }) }
 }
 
 /// 🧩 Builds the diff for setting a stream's container-level metadata, via a real field-by-field
 /// comparison against `old` (never full-replace).
-pub fn diff_set_stream_meta(old: &SemioVideoStream, index: usize, kind: SemioVideoStreamKind, codec: &str, width: u32, height: u32, rate: SemioRational) -> SemioVideoDiff {
+pub async fn diff_set_stream_meta(old: &SemioVideoStream, index: usize, kind: SemioVideoStreamKind, codec: &str, width: u32, height: u32, rate: SemioRational) -> SemioVideoDiff {
     let sd = SemioVideoStreamDiff {
         kind: (old.kind != kind).then_some(kind),
         codec: (old.codec != codec).then(|| codec.to_string()),
@@ -457,19 +457,19 @@ pub fn diff_set_stream_meta(old: &SemioVideoStream, index: usize, kind: SemioVid
 }
 
 /// 🧩 Builds the diff for inserting `sample` at `index` within stream `stream_index` (FINAL state).
-pub fn diff_insert_sample(stream_index: usize, index: usize, sample: SemioVideoSample) -> SemioVideoDiff {
+pub async fn diff_insert_sample(stream_index: usize, index: usize, sample: SemioVideoSample) -> SemioVideoDiff {
     let samples = SemioVideoSamplesDiff { added: vec![IndexAdded { index, item: sample }], ..Default::default() };
     wrap_stream_diff(stream_index, SemioVideoStreamDiff { samples: Some(samples), ..Default::default() })
 }
 
 /// 🧩 Builds the diff for removing the sample at `index` (BASE-state index) within `stream_index`.
-pub fn diff_remove_sample(stream_index: usize, index: usize) -> SemioVideoDiff {
+pub async fn diff_remove_sample(stream_index: usize, index: usize) -> SemioVideoDiff {
     let samples = SemioVideoSamplesDiff { removed: vec![index], ..Default::default() };
     wrap_stream_diff(stream_index, SemioVideoStreamDiff { samples: Some(samples), ..Default::default() })
 }
 
 /// 🧩 Builds the diff for replacing one sample's opaque `data` payload.
-pub fn diff_set_sample_data(old: &SemioVideoSample, stream_index: usize, index: usize, data: Vec<u8>) -> SemioVideoDiff {
+pub async fn diff_set_sample_data(old: &SemioVideoSample, stream_index: usize, index: usize, data: Vec<u8>) -> SemioVideoDiff {
     if old.data == data {
         return SemioVideoDiff::default();
     }
@@ -479,7 +479,7 @@ pub fn diff_set_sample_data(old: &SemioVideoSample, stream_index: usize, index: 
 }
 
 /// 🧩 Builds the diff for setting a sample's `pts`/`key` flags.
-pub fn diff_set_sample_flags(old: &SemioVideoSample, stream_index: usize, index: usize, pts: u64, key: bool) -> SemioVideoDiff {
+pub async fn diff_set_sample_flags(old: &SemioVideoSample, stream_index: usize, index: usize, pts: u64, key: bool) -> SemioVideoDiff {
     let sample_diff = SemioVideoSampleDiff { pts: (old.pts != pts).then_some(pts), key: (old.key != key).then_some(key), data: None };
     if sample_diff.pts.is_none() && sample_diff.key.is_none() {
         return SemioVideoDiff::default();
@@ -490,7 +490,7 @@ pub fn diff_set_sample_flags(old: &SemioVideoSample, stream_index: usize, index:
 
 /// 🧭️ Wraps a single stream-level diff into a full `SemioVideoDiff`, addressing it as `modified`
 /// at `stream_index`.
-fn wrap_stream_diff(stream_index: usize, diff: SemioVideoStreamDiff) -> SemioVideoDiff {
+async fn wrap_stream_diff(stream_index: usize, diff: SemioVideoStreamDiff) -> SemioVideoDiff {
     SemioVideoDiff { streams: Some(SemioVideoStreamsDiff { modified: vec![IndexModified { index: stream_index, diff }], ..Default::default() }) }
 }
 //#endregion 🔖️SetSnapshot
@@ -503,45 +503,45 @@ fn wrap_stream_diff(stream_index: usize, diff: SemioVideoStreamDiff) -> SemioVid
 /// over BOTH nesting levels (`streams`, and within a modified stream, `samples`) — one generic
 /// pair, reused twice, instead of two bespoke per-collection encoders.
 //#region 🔖️Primitives
-pub(crate) fn hex_encode(bytes: &[u8]) -> String {
+pub(crate) async fn hex_encode(bytes: &[u8]) -> String {
     bytes.iter().map(|b| format!("{b:02x}")).collect()
 }
-pub(crate) fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
+pub(crate) async fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
     if s.len() % 2 != 0 {
         return Err(format!("odd hex length: {s:?}"));
     }
     (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()
 }
-pub(crate) fn enc_str(s: &str) -> String {
+pub(crate) async fn enc_str(s: &str) -> String {
     hex_encode(s.as_bytes())
 }
-pub(crate) fn dec_str(s: &str) -> Result<String, String> {
+pub(crate) async fn dec_str(s: &str) -> Result<String, String> {
     String::from_utf8(hex_decode(s)?).map_err(|e| e.to_string())
 }
-pub(crate) fn enc_bool(b: &bool) -> String {
+pub(crate) async fn enc_bool(b: &bool) -> String {
     if *b {
         "1".to_string()
     } else {
         "0".to_string()
     }
 }
-pub(crate) fn dec_bool(s: &str) -> Result<bool, String> {
+pub(crate) async fn dec_bool(s: &str) -> Result<bool, String> {
     match s {
         "1" => Ok(true),
         "0" => Ok(false),
         other => Err(format!("bool: bad value {other:?}")),
     }
 }
-pub(crate) fn parse_usize(s: &str) -> Result<usize, String> {
+pub(crate) async fn parse_usize(s: &str) -> Result<usize, String> {
     s.parse().map_err(|e: std::num::ParseIntError| e.to_string())
 }
-pub(crate) fn encode_option<T>(opt: &Option<T>, enc: impl Fn(&T) -> String) -> String {
+pub(crate) async fn encode_option<T>(opt: &Option<T>, enc: impl Fn(&T) -> String) -> String {
     match opt {
         None => "[0]".to_string(),
         Some(v) => format!("[1,{}]", enc(v)),
     }
 }
-pub(crate) fn decode_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Option<T>, String> {
+pub(crate) async fn decode_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Option<T>, String> {
     let inner = strip_brackets(s)?;
     match split_top_level(inner, ',').as_slice() {
         ["0"] => Ok(None),
@@ -549,16 +549,16 @@ pub(crate) fn decode_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>)
         other => Err(format!("option decode: bad shape {other:?}")),
     }
 }
-pub(crate) fn enc_list<T>(items: &[T], enc: impl Fn(&T) -> String) -> String {
+pub(crate) async fn enc_list<T>(items: &[T], enc: impl Fn(&T) -> String) -> String {
     format!("[{}]", items.iter().map(|i| enc(i)).collect::<Vec<_>>().join(","))
 }
-pub(crate) fn dec_list<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Vec<T>, String> {
+pub(crate) async fn dec_list<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Vec<T>, String> {
     split_top_level(strip_brackets(s)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec).collect()
 }
 //#endregion 🔖️Primitives
 
 //#region 🔖️ValueCodecs
-pub(crate) fn enc_kind(k: &SemioVideoStreamKind) -> String {
+pub(crate) async fn enc_kind(k: &SemioVideoStreamKind) -> String {
     match k {
         SemioVideoStreamKind::Video => "V",
         SemioVideoStreamKind::Audio => "A",
@@ -566,7 +566,7 @@ pub(crate) fn enc_kind(k: &SemioVideoStreamKind) -> String {
     }
     .to_string()
 }
-pub(crate) fn dec_kind(s: &str) -> Result<SemioVideoStreamKind, String> {
+pub(crate) async fn dec_kind(s: &str) -> Result<SemioVideoStreamKind, String> {
     match s {
         "V" => Ok(SemioVideoStreamKind::Video),
         "A" => Ok(SemioVideoStreamKind::Audio),
@@ -575,30 +575,30 @@ pub(crate) fn dec_kind(s: &str) -> Result<SemioVideoStreamKind, String> {
     }
 }
 
-pub(crate) fn enc_rational(r: &SemioRational) -> String {
+pub(crate) async fn enc_rational(r: &SemioRational) -> String {
     format!("[{},{}]", r.num, r.den)
 }
-pub(crate) fn dec_rational(s: &str) -> Result<SemioRational, String> {
+pub(crate) async fn dec_rational(s: &str) -> Result<SemioRational, String> {
     let inner = strip_brackets(s)?;
     let parts = split_top_level(inner, ',');
     let [num, den] = parts.as_slice() else { return Err(format!("rational: expected 2 fields, got {}", parts.len())) };
     Ok(SemioRational { num: num.parse().map_err(|e: std::num::ParseIntError| e.to_string())?, den: den.parse().map_err(|e: std::num::ParseIntError| e.to_string())? })
 }
 
-pub(crate) fn enc_sample(s: &SemioVideoSample) -> String {
+pub(crate) async fn enc_sample(s: &SemioVideoSample) -> String {
     format!("[{},{},{}]", s.pts, enc_bool(&s.key), hex_encode(&s.data))
 }
-pub(crate) fn dec_sample(s: &str) -> Result<SemioVideoSample, String> {
+pub(crate) async fn dec_sample(s: &str) -> Result<SemioVideoSample, String> {
     let inner = strip_brackets(s)?;
     let parts = split_top_level(inner, ',');
     let [pts, key, data] = parts.as_slice() else { return Err(format!("sample: expected 3 fields, got {}", parts.len())) };
     Ok(SemioVideoSample { pts: pts.parse().map_err(|e: std::num::ParseIntError| e.to_string())?, key: dec_bool(key)?, data: hex_decode(data)? })
 }
 
-pub(crate) fn enc_stream(s: &SemioVideoStream) -> String {
+pub(crate) async fn enc_stream(s: &SemioVideoStream) -> String {
     format!("[{},{},{},{},{},{}]", enc_kind(&s.kind), enc_str(&s.codec), s.width, s.height, enc_rational(&s.rate), enc_list(&s.samples, enc_sample))
 }
-pub(crate) fn dec_stream(s: &str) -> Result<SemioVideoStream, String> {
+pub(crate) async fn dec_stream(s: &str) -> Result<SemioVideoStream, String> {
     let inner = strip_brackets(s)?;
     let parts = split_top_level(inner, ',');
     let [kind, codec, width, height, rate, samples] = parts.as_slice() else { return Err(format!("stream: expected 6 fields, got {}", parts.len())) };
@@ -614,24 +614,24 @@ pub(crate) fn dec_stream(s: &str) -> Result<SemioVideoStream, String> {
 //#endregion 🔖️ValueCodecs
 
 //#region 🔖️DiffValueCodecs
-fn enc_sample_diff(d: &SemioVideoSampleDiff) -> String {
+async fn enc_sample_diff(d: &SemioVideoSampleDiff) -> String {
     format!("[{},{},{}]", encode_option(&d.pts, |v| v.to_string()), encode_option(&d.key, |v| enc_bool(v)), encode_option(&d.data, |v| hex_encode(v)))
 }
-fn dec_sample_diff(s: &str) -> Result<SemioVideoSampleDiff, String> {
+async fn dec_sample_diff(s: &str) -> Result<SemioVideoSampleDiff, String> {
     let inner = strip_brackets(s)?;
     let parts = split_top_level(inner, ',');
     let [pts, key, data] = parts.as_slice() else { return Err(format!("sample diff: expected 3 fields, got {}", parts.len())) };
     Ok(SemioVideoSampleDiff { pts: decode_option(pts, |v| v.parse().map_err(|e: std::num::ParseIntError| e.to_string()))?, key: decode_option(key, dec_bool)?, data: decode_option(data, hex_decode)? })
 }
 
-pub(crate) fn enc_samples_diff(d: &SemioVideoSamplesDiff) -> String {
+pub(crate) async fn enc_samples_diff(d: &SemioVideoSamplesDiff) -> String {
     enc_indexed_triple(d, enc_sample_diff, enc_sample)
 }
-pub(crate) fn dec_samples_diff(s: &str) -> Result<SemioVideoSamplesDiff, String> {
+pub(crate) async fn dec_samples_diff(s: &str) -> Result<SemioVideoSamplesDiff, String> {
     dec_indexed_triple(s, dec_sample_diff, dec_sample)
 }
 
-fn enc_stream_diff(d: &SemioVideoStreamDiff) -> String {
+async fn enc_stream_diff(d: &SemioVideoStreamDiff) -> String {
     format!(
         "[{},{},{},{},{},{}]",
         encode_option(&d.kind, |v| enc_kind(v)),
@@ -642,7 +642,7 @@ fn enc_stream_diff(d: &SemioVideoStreamDiff) -> String {
         encode_option(&d.samples, |v| enc_samples_diff(v)),
     )
 }
-fn dec_stream_diff(s: &str) -> Result<SemioVideoStreamDiff, String> {
+async fn dec_stream_diff(s: &str) -> Result<SemioVideoStreamDiff, String> {
     let inner = strip_brackets(s)?;
     let parts = split_top_level(inner, ',');
     let [kind, codec, width, height, rate, samples] = parts.as_slice() else { return Err(format!("stream diff: expected 6 fields, got {}", parts.len())) };
@@ -656,22 +656,22 @@ fn dec_stream_diff(s: &str) -> Result<SemioVideoStreamDiff, String> {
     })
 }
 
-pub(crate) fn enc_streams_diff(d: &SemioVideoStreamsDiff) -> String {
+pub(crate) async fn enc_streams_diff(d: &SemioVideoStreamsDiff) -> String {
     enc_indexed_triple(d, enc_stream_diff, enc_stream)
 }
-pub(crate) fn dec_streams_diff(s: &str) -> Result<SemioVideoStreamsDiff, String> {
+pub(crate) async fn dec_streams_diff(s: &str) -> Result<SemioVideoStreamsDiff, String> {
     dec_indexed_triple(s, dec_stream_diff, dec_stream)
 }
 //#endregion 🔖️DiffValueCodecs
 
 //#region 🔖️TopLevel
-fn print_semio_video_diff(d: &SemioVideoDiff) -> String {
+async fn print_semio_video_diff(d: &SemioVideoDiff) -> String {
     match &d.streams {
         Some(v) => format!("streams={}", enc_streams_diff(v)),
         None => String::new(),
     }
 }
-fn parse_semio_video_diff(line: &str) -> Result<SemioVideoDiff, String> {
+async fn parse_semio_video_diff(line: &str) -> Result<SemioVideoDiff, String> {
     if line.is_empty() {
         return Ok(SemioVideoDiff::default());
     }
@@ -682,20 +682,20 @@ fn parse_semio_video_diff(line: &str) -> Result<SemioVideoDiff, String> {
 /// 🧪️ Real LEB128-varint-length-prefixed binary primitives (`store::pack_rt::write_varint_u64` /
 /// `store::ByteReader`, same helpers flow's/mesh's upgraded diff facets reuse) backing the
 /// real `DiffCodec::encode_diff`/`decode_diff` below.
-fn write_str_lp(out: &mut Vec<u8>, s: &str) {
+async fn write_str_lp(out: &mut Vec<u8>, s: &str) {
     store::pack_rt::write_varint_u64(out, s.len() as u64);
     out.extend_from_slice(s.as_bytes());
 }
-fn read_str_lp(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
+async fn read_str_lp(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
     let len = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
     String::from_utf8(reader.read_bytes(len).map_err(|e| e.to_string())?.to_vec()).map_err(|e| e.to_string())
 }
 
 impl protocol::DiffCodec for SemioVideoDiff {
-    fn print_diff(&self) -> String {
+    async fn print_diff(&self) -> String {
         print_semio_video_diff(self)
     }
-    fn parse_diff(line: &str) -> Result<Self, store::TextError> {
+    async fn parse_diff(line: &str) -> Result<Self, store::TextError> {
         parse_semio_video_diff(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
     /// ⚡️ Real binary diff frame, replacing the old `print_diff().into_bytes()` text-as-binary
@@ -706,7 +706,7 @@ impl protocol::DiffCodec for SemioVideoDiff {
     /// `bytes` chain so the shape stays uniform with flow's/mesh's multi-field diff frames
     /// (`protocol-cond-cannot-chain`: a second `if`-guard on a field that's itself only
     /// conditionally decoded hard-errors `eval_cond` — see this wave's report).
-    fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    async fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         const DIFF_BINARY_FORMAT: u8 = 1;
         let presence: u8 = if self.streams.is_some() { 0b01 } else { 0b00 };
         let mut out = vec![DIFF_BINARY_FORMAT, presence];
@@ -715,7 +715,7 @@ impl protocol::DiffCodec for SemioVideoDiff {
         }
         Ok(out)
     }
-    fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    async fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         const DIFF_BINARY_FORMAT: u8 = 1;
         if bytes.len() < 2 {
             return Err(protocol::ProtocolError::Malformed { what: "diff header", offset: 0, detail: "truncated (need format+presence)".to_string() });
@@ -742,7 +742,7 @@ impl protocol::DiffCodec for SemioVideoDiff {
 /// `pub(crate)` module-scope so `🎹️composer/🦀️component.rs`'s conformance-law tests can reuse it —
 /// same convention flow's/mesh's own `demo_diff_cases()` use.
 #[cfg(test)]
-pub(crate) fn demo_diff_cases() -> Vec<SemioVideoDiff> {
+pub(crate) async fn demo_diff_cases() -> Vec<SemioVideoDiff> {
     let a = handcrafted_diff_codec_tests::snapshot_a();
     let b = handcrafted_diff_codec_tests::snapshot_b();
     vec![SemioVideoDiff::default(), SemioVideoDiff::between(&a, &b), SemioVideoDiff::between(&b, &a)]
@@ -757,7 +757,7 @@ mod handcrafted_diff_codec_tests {
     use super::*;
     use protocol::DiffCodec;
 
-    pub(crate) fn snapshot_a() -> SemioVideoSnapshot {
+    pub(crate) async fn snapshot_a() -> SemioVideoSnapshot {
         SemioVideoSnapshot {
             schema: crate::artifacts::semio::standards::v1::subsets::video::schema::snapshot::STDIO_SEMIOVIDEO_DOCUMENT_SCHEMA.into(),
             streams: vec![
@@ -775,7 +775,7 @@ mod handcrafted_diff_codec_tests {
         }
     }
 
-    pub(crate) fn snapshot_b() -> SemioVideoSnapshot {
+    pub(crate) async fn snapshot_b() -> SemioVideoSnapshot {
         SemioVideoSnapshot {
             schema: crate::artifacts::semio::standards::v1::subsets::video::schema::snapshot::STDIO_SEMIOVIDEO_DOCUMENT_SCHEMA.into(),
             streams: vec![
@@ -798,7 +798,7 @@ mod handcrafted_diff_codec_tests {
     /// direction additionally exercises nested `samples.added`), a `SemioVideoStreamKind` enum
     /// change, and every stream-level scalar field.
     #[test]
-    fn diff_codec_text_binary_roundtrip_law() {
+    async fn diff_codec_text_binary_roundtrip_law() {
         let a = snapshot_a();
         let b = snapshot_b();
         let cases = vec![SemioVideoDiff::default(), SemioVideoDiff::between(&a, &b), SemioVideoDiff::between(&b, &a), SemioVideoDiff::between(&a, &a)];

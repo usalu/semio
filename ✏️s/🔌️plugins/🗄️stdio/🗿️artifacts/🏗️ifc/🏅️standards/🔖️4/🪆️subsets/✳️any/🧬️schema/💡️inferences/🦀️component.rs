@@ -26,7 +26,7 @@ pub struct IfcInference {
 }
 
 impl protocol::Inference<IfcSnapshot> for IfcInference {
-    fn infer(snapshot: &IfcSnapshot) -> Self {
+    async fn infer(snapshot: &IfcSnapshot) -> Self {
         Self { bounds: compute_ifc_bounds(snapshot) }
     }
 }
@@ -34,19 +34,19 @@ impl protocol::Inference<IfcSnapshot> for IfcInference {
 /// 🌱 Defined in terms of `infer` (not derived) — keeps the law correct regardless of whether
 /// `IfcSnapshot::default()`'s `entities` ever stops being empty.
 impl Default for IfcInference {
-    fn default() -> Self {
+    async fn default() -> Self {
         <Self as protocol::Inference<IfcSnapshot>>::infer(&IfcSnapshot::default())
     }
 }
 
 impl protocol::InferenceSpec<IfcSnapshot> for IfcInference {
-    fn inference_schema_id() -> &'static str {
+    async fn inference_schema_id() -> &'static str {
         "s.stdio.ifc.inference"
     }
-    fn schema_version() -> u32 {
+    async fn schema_version() -> u32 {
         1
     }
-    fn fields() -> &'static [protocol::InferenceFieldSpec] {
+    async fn fields() -> &'static [protocol::InferenceFieldSpec] {
         &[protocol::InferenceFieldSpec { id: "s.stdio.ifc.inference.bounds", reads: &["entities"] }]
     }
 }
@@ -66,7 +66,7 @@ impl ArtifactInferrer for crate::artifacts::ifc::standards::v4::subsets::any::sc
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.stdio.ifc.inference`'s facet leaves into the OS-wide inference catalog — call
 /// once at plugin init, alongside `ifc_artifact_schema_descriptor`'s registration.
-pub fn ifc_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
+pub async fn ifc_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
     schema::ArtifactInferenceDescriptor {
         id: "s.stdio.ifc.inference",
         inference: schema::FacetLeaves {
@@ -87,13 +87,13 @@ mod tests {
     use protocol::Inference;
 
     #[test]
-    fn inference_determinism_law() {
+    async fn inference_determinism_law() {
         let snapshot = IfcSnapshot::default();
         assert_eq!(IfcInference::infer(&snapshot), IfcInference::infer(&snapshot));
     }
 
     #[test]
-    fn inference_default_law() {
+    async fn inference_default_law() {
         assert_eq!(IfcInference::infer(&IfcSnapshot::default()), IfcInference::default());
     }
 }

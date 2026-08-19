@@ -12,12 +12,12 @@ use crate::artifacts::home::schema::mutations::text::SHomeMutation;
 use protocol::OpBinary;
 
 /// 📦️ Encodes an `SHomeMutation` to its binary command form.
-pub fn encode_op(operation: &SHomeMutation) -> Result<Vec<u8>, protocol::ProtocolError> {
+pub async fn encode_op(operation: &SHomeMutation) -> Result<Vec<u8>, protocol::ProtocolError> {
     operation.encode_op()
 }
 
 /// 📖️ Decodes an `SHomeMutation` from its binary command form.
-pub fn decode_op(bytes: &[u8]) -> Result<SHomeMutation, protocol::ProtocolError> {
+pub async fn decode_op(bytes: &[u8]) -> Result<SHomeMutation, protocol::ProtocolError> {
     SHomeMutation::decode_op(bytes)
 }
 
@@ -28,7 +28,7 @@ mod tests {
     use crate::artifacts::home::mutations::change_catalog_generation;
 
     #[test]
-    fn op_binary_round_trips_and_agrees_with_text() {
+    async fn op_binary_round_trips_and_agrees_with_text() {
         let operation = change_catalog_generation(7);
         store::os_store::test_support::assert_op_text_binary_equivalence(&operation);
         let bytes = encode_op(&operation).expect("encode");
@@ -36,7 +36,7 @@ mod tests {
     }
 
     #[test]
-    fn home_document_text_round_trips_through_the_store() {
+    async fn home_document_text_round_trips_through_the_store() {
         use crate::artifacts::home::SHomeSnapshot;
         let projection = SHomeSnapshot { schema: "s.home".into(), catalog_generation: 0 };
         let envelope = store::create_document_envelope::<SHomeSnapshot, SHomeMutation>("s.home", "home", projection, None);

@@ -40,7 +40,7 @@ const REMODEL_WORKFLOW_PHOTOS_STREAM_ID: &str = "workflow-photos";
 
 /// 🎯️ An `ActionDescriptor` addressed at this app — the single factory every taxonomy node's chrome
 /// (`📌️panels/*`, `🎚️options/*`) builds its `on_change`/item actions with.
-pub fn remodel_action(action: &str, args: Option<Value>) -> ActionDescriptor {
+pub async fn remodel_action(action: &str, args: Option<Value>) -> ActionDescriptor {
     semio_framework_plugin::ActionFactory::new(REMODEL_PLAY_APP_ID).action(action, args)
 }
 //#endregion 🔖️Constants
@@ -61,7 +61,7 @@ pub fn remodel_action(action: &str, args: Option<Value>) -> ActionDescriptor {
 /// 🧭️ Relocated from the artifact's `⚙️engine/🦀️component.rs` (26/08/12/ENGINELESS-ARTIFACTS-AND-APP-
 /// STATE-MACHINES, #2553): it returns `AppIo` — app-owned by construction — so it never belonged on
 /// the artifact side.
-pub fn remodel_io() -> AppIo {
+pub async fn remodel_io() -> AppIo {
     AppIo {
         document_schema: "remodel.scene".into(),
         document_media_type: MediaType { class: MediaClass::ThreeD, form: MediaForm::Mesh },
@@ -75,7 +75,7 @@ pub fn remodel_io() -> AppIo {
 /// 🔌️ `photos:in` — incoming photos to insert as source images for reconstruction; pinned to the
 /// `2d.image` kind (declared by `shooting`'s manifest — identical-shape duplicates are harmless, so this
 /// app does not redeclare it).
-pub fn remodel_photos_in_port() -> MediaPortSpec {
+pub async fn remodel_photos_in_port() -> MediaPortSpec {
     MediaPortSpec {
         id: "photos:in".into(),
         label: "Photos".into(),
@@ -89,7 +89,7 @@ pub fn remodel_photos_in_port() -> MediaPortSpec {
 
 /// 🔌️ `mesh:out` — the current reconstructed mesh; pinned to the `3d.mesh` kind (declared by `lowpoly`'s
 /// manifest — reused rather than redeclared, per the port recipe).
-pub fn remodel_mesh_out_port() -> MediaPortSpec {
+pub async fn remodel_mesh_out_port() -> MediaPortSpec {
     MediaPortSpec {
         id: "mesh:out".into(),
         label: "Mesh".into(),
@@ -106,7 +106,7 @@ pub fn remodel_mesh_out_port() -> MediaPortSpec {
 /// 📦️ Decodes a `requestFileOpen(readAs: "dataUrl")`/`RequestMediaFrames` payload into `(mime, bytes)`.
 /// Relocated from the artifact's `⚙️engine/🦀️component.rs` (#2553): its only three consumers are all
 /// app-side (`🎮️commands/📥️import-frame-payload`, `🎮️commands/🚀️run-reconstruction`, this app's own `import_media`).
-pub fn payload_from_data_url(data_url: &str) -> Option<(String, Vec<u8>)> {
+pub async fn payload_from_data_url(data_url: &str) -> Option<(String, Vec<u8>)> {
     let (header, encoded) = data_url.split_once(',')?;
     let mime = header.strip_prefix("data:")?.split(';').next().unwrap_or("application/octet-stream").to_string();
     let bytes = base64::engine::general_purpose::STANDARD.decode(encoded).ok()?;
@@ -116,7 +116,7 @@ pub fn payload_from_data_url(data_url: &str) -> Option<(String, Vec<u8>)> {
 /// 🖼️ Decodes a still-image payload by mime — three consumers (`🎮️commands/📥️import-frame-payload`,
 /// `🎮️commands/🚀️run-reconstruction`, this app's own `import_media`), and it takes no artifact-schema
 /// type, so it stays app-side (relocated from `⚙️engine/🦀️component.rs`, #2553).
-pub fn decode_still_image(mime: &str, bytes: &[u8]) -> Result<remodel_image::ImageRgba8, remodel_image::ImageError> {
+pub async fn decode_still_image(mime: &str, bytes: &[u8]) -> Result<remodel_image::ImageRgba8, remodel_image::ImageError> {
     if mime.contains("jpeg") || mime.contains("jpg") {
         remodel_image::decode_jpeg(bytes)
     } else {
@@ -202,13 +202,13 @@ use crate::editor::remodel::commands::{set_active_utility, set_camera, set_frame
 mod args_bridge {
     use super::*;
 
-    fn field<'a>(args: Option<&'a Value>, key: &str) -> Option<&'a Value> {
+    async fn field<'a>(args: Option<&'a Value>, key: &str) -> Option<&'a Value> {
         args?.get(key)
     }
 
     /// 🔤️ A string arg — also accepts a number, so a select whose option ids are numeric (`textureSize`)
     /// reads the same whether the host sends `"2048"` or `2048`.
-    fn text(args: Option<&Value>, key: &str) -> Option<String> {
+    async fn text(args: Option<&Value>, key: &str) -> Option<String> {
         match field(args, key)? {
             Value::String(value) => Some(value.clone()),
             Value::Number(value) => Some(value.to_string()),
@@ -217,7 +217,7 @@ mod args_bridge {
     }
 
     /// 🔢️ A numeric arg — also accepts a numeric string, which is how select-sourced numbers arrive.
-    fn number(args: Option<&Value>, key: &str) -> Option<f64> {
+    async fn number(args: Option<&Value>, key: &str) -> Option<f64> {
         match field(args, key)? {
             Value::Number(value) => value.as_f64(),
             Value::String(value) => value.parse().ok(),
@@ -225,7 +225,7 @@ mod args_bridge {
         }
     }
 
-    fn flag(args: Option<&Value>, key: &str) -> Option<bool> {
+    async fn flag(args: Option<&Value>, key: &str) -> Option<bool> {
         match field(args, key)? {
             Value::Bool(value) => Some(*value),
             Value::String(value) => value.parse().ok(),
@@ -233,17 +233,17 @@ mod args_bridge {
         }
     }
 
-    fn vec3(args: Option<&Value>, key: &str) -> Option<[f64; 3]> {
+    async fn vec3(args: Option<&Value>, key: &str) -> Option<[f64; 3]> {
         let items = field(args, key)?.as_array()?;
         Some([items.first()?.as_f64()?, items.get(1)?.as_f64()?, items.get(2)?.as_f64()?])
     }
 
-    fn unknown(action: &str) -> Fault {
+    async fn unknown(action: &str) -> Fault {
         Fault::new(FaultOrigin::App, FaultCode::new("app.command.unsupported"), format!("remodel has no command for action '{action}'"))
     }
 
     #[allow(clippy::too_many_lines)]
-    pub fn command_from_action(action: &str, args: Option<&Value>) -> Result<RemodelCommand, Fault> {
+    pub async fn command_from_action(action: &str, args: Option<&Value>) -> Result<RemodelCommand, Fault> {
         let text_or = |key: &str, fallback: &str| text(args, key).unwrap_or_else(|| fallback.to_string());
         let f64_or = |key: &str, fallback: f64| number(args, key).unwrap_or(fallback);
         let f32_or = |key: &str, fallback: f32| number(args, key).map_or(fallback, |value| value as f32);
@@ -417,15 +417,15 @@ impl ArtifactEditor for RemodelPlayApp {
     const DIALECT: Dialect = crate::artifacts::remodel::REMODEL_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = REMODEL_DOCUMENT_SCHEMA;
 
-    fn app_schema() -> Option<::schema::AppSchemaDescriptor> {
+    async fn app_schema() -> Option<::schema::AppSchemaDescriptor> {
         Some(crate::editor::remodel::config::schema::app_schema_descriptor())
     }
 
-    fn initial_snapshot() -> RemodelSnapshot {
+    async fn initial_snapshot() -> RemodelSnapshot {
         default_remodel_scene()
     }
 
-    fn io() -> Option<AppIo> {
+    async fn io() -> Option<AppIo> {
         Some(remodel_io())
     }
 
@@ -459,7 +459,7 @@ impl ArtifactEditor for RemodelPlayApp {
     /// `document:in` stays `MediaError::NotImplemented`, unchanged from the inherited default: remodel
     /// has no whole-document-replace `Mutation` variant to satisfy `whole_document_mutation`
     /// (`RemodelMutation` is deliberately field-granular — see that enum's doc comment).
-    fn import_media(port: &str, media: &Media, doc: &ArtifactView<'_, RemodelSnapshot>) -> Result<Emit<RemodelMutation, RemodelConfigMutation, Self::DraftMutation>, MediaError> {
+    async fn import_media(port: &str, media: &Media, doc: &ArtifactView<'_, RemodelSnapshot>) -> Result<Emit<RemodelMutation, RemodelConfigMutation, Self::DraftMutation>, MediaError> {
         match port {
             "photos:in" => {
                 let MediaPayload::Structured { json, .. } = &media.payload else {
@@ -498,7 +498,7 @@ impl ArtifactEditor for RemodelPlayApp {
 
     /// 🏷️ The manifest action id each command was declared under — supplied wholesale by
     /// `app_commands!`'s generated `command_id()`.
-    fn command_id(command: &RemodelCommand) -> &'static str {
+    async fn command_id(command: &RemodelCommand) -> &'static str {
         command.command_id()
     }
 
@@ -509,15 +509,15 @@ impl ArtifactEditor for RemodelPlayApp {
     /// i.e. the whole manifest surface was dead from the host's side. Arg keys are the camelCase ids
     /// declared in `🔖️Manifest`; each is read leniently (missing → the manifest's own default) because
     /// `effective_action_args` stages defaults before dispatch and select-typed args arrive as strings.
-    fn command_from_action(action: &str, args: Option<&Value>) -> Result<RemodelCommand, Fault> {
+    async fn command_from_action(action: &str, args: Option<&Value>) -> Result<RemodelCommand, Fault> {
         args_bridge::command_from_action(action, args)
     }
 
-    fn handle(command: &RemodelCommand, doc: &ArtifactView<'_, RemodelSnapshot>, cfg: &ConfigView<'_, RemodelConfig>, _interaction: &InteractionView<'_>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<RemodelMutation, RemodelConfigMutation, Self::DraftMutation>, Fault> {
+    async fn handle(command: &RemodelCommand, doc: &ArtifactView<'_, RemodelSnapshot>, cfg: &ConfigView<'_, RemodelConfig>, _interaction: &InteractionView<'_>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<RemodelMutation, RemodelConfigMutation, Self::DraftMutation>, Fault> {
         command.dispatch(doc, cfg)
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, RemodelSnapshot>, cfg: &ConfigView<'_, RemodelConfig>) -> UiNode {
+    async fn render(body_key: &str, doc: &ArtifactView<'_, RemodelSnapshot>, cfg: &ConfigView<'_, RemodelConfig>) -> UiNode {
         let scene = doc.snapshot;
         let config = cfg.snapshot;
         let labels = remodel_labels(config);
@@ -538,7 +538,7 @@ impl ArtifactEditor for RemodelPlayApp {
 
     /// 👁️ Dynamic per-render window measures — the Model window's layer toggles must reflect the LIVE
     /// config, so they are supplied here rather than frozen into the manifest.
-    fn window_measures(_doc: &ArtifactView<'_, RemodelSnapshot>, cfg: &ConfigView<'_, RemodelConfig>) -> HashMap<String, Vec<WindowMeasure>> {
+    async fn window_measures(_doc: &ArtifactView<'_, RemodelSnapshot>, cfg: &ConfigView<'_, RemodelConfig>) -> HashMap<String, Vec<WindowMeasure>> {
         HashMap::from([(model::windows::model::REMODEL_PLAY_WINDOW_MAIN.to_string(), model::windows::model::window_measures(cfg.snapshot, remodel_labels(cfg.snapshot)))])
     }
 }
@@ -548,7 +548,7 @@ impl ArtifactEditor for RemodelPlayApp {
 /// 🧱️ The manifest stitch: one call per taxonomy node, each sourced from that node's own `definition()`.
 /// Only the leaf action/utility declarations (which have no dedicated `_def` passthrough) are written
 /// out inline.
-pub fn create_remodel_app() -> AppDefinition {
+pub async fn create_remodel_app() -> AppDefinition {
     Editor::builder(crate::artifacts::remodel::REMODEL_DIALECT)
             .document(["semio", "remodel"])
             .artifact_kind(crate::artifacts::remodel::artifact_kind())
@@ -795,25 +795,25 @@ pub(crate) mod testkit {
     /// examples }` shape `testkit::assert_declared_actions_bridge_to_commands`/
     /// `testkit::new_app_with_registry` still expect — framework testkit gap, not modifiable here
     /// (`🧰️framework/**` is outside this packet's lease).
-    pub fn remodel_app_manifest_for_testkit() -> App {
+    pub async fn remodel_app_manifest_for_testkit() -> App {
         App { definition: create_remodel_app(), examples: Vec::new() }
     }
 
     /// 🧪️ A bare app instance — no `AppActionRegistry`, so undeclared internal commands dispatch freely.
-    pub fn app() -> RemodelApp {
+    pub async fn app() -> RemodelApp {
         new_app::<EditorApp<RemodelPlayApp>>()
     }
 
     /// 🧪️ An app wired to the real manifest registry — enforces View/Shell kind discipline.
-    pub fn app_with_registry() -> RemodelApp {
+    pub async fn app_with_registry() -> RemodelApp {
         new_app_with_registry::<EditorApp<RemodelPlayApp>>(remodel_app_manifest_for_testkit)
     }
 
-    pub fn dispatch(app: &mut RemodelApp, command: RemodelCommand) -> InvocationResult {
+    pub async fn dispatch(app: &mut RemodelApp, command: RemodelCommand) -> InvocationResult {
         app.dispatch_typed(command, &meta("local")).expect("dispatch")
     }
 
-    pub fn render(app: &mut RemodelApp, body_key: &str) -> String {
+    pub async fn render(app: &mut RemodelApp, body_key: &str) -> String {
         serde_json::to_string(&app.render(body_key, None, &ViewModel::default()).expect("render")).expect("render json")
     }
 }
@@ -832,7 +832,7 @@ mod tests {
     /// ⚡️ One representative value per `RemodelCommand` row, in declaration (= binary ordinal) order —
     /// the permanent wire guard's fixture, carried over verbatim from the pre-migration
     /// `remodel_protocol` baseline (see this ticket's `🧪️wire-baseline-before.txt`).
-    fn every_command() -> Vec<RemodelCommand> {
+    async fn every_command() -> Vec<RemodelCommand> {
         vec![
             RemodelCommand::RunReconstruction(run_reconstruction::RunReconstruction {}),
             RemodelCommand::RetryStage(retry_stage::RetryStage { stage: "extracting-features".into() }),
@@ -906,7 +906,7 @@ mod tests {
     /// wire keyword — the guard that catches a missing `#[dsl(keyword = ..)]` on a payload struct, which
     /// no round-trip law alone would notice.
     #[test]
-    fn every_command_variant_roundtrips_and_prints_its_wire_keyword() {
+    async fn every_command_variant_roundtrips_and_prints_its_wire_keyword() {
         let keywords: Vec<&str> = vec![
             "run-reconstruction",
             "retry-stage",
@@ -963,7 +963,7 @@ mod tests {
     /// a legitimate wire break on this greenfield repo, not a bug. A reordered row or a changed field
     /// order breaks these immediately.
     #[test]
-    fn optional_field_rows_keep_their_pre_migration_bytes() {
+    async fn optional_field_rows_keep_their_pre_migration_bytes() {
         let hex = |command: &RemodelCommand| command.encode_op().expect("encode").iter().map(|byte| format!("{byte:02x}")).collect::<String>();
         assert_eq!(hex(&RemodelCommand::RunReconstruction(run_reconstruction::RunReconstruction {})), "01000000", "fieldless row 0");
         assert_eq!(hex(&RemodelCommand::ClearResult(clear_result::ClearResult {})), "011d0000", "fieldless row 29");
@@ -980,7 +980,7 @@ mod tests {
     /// `app_commands!` exists to keep true (the fixture lists `setFrameCursor` twice on purpose, so the
     /// row count, not the fixture length, is what must dedupe cleanly).
     #[test]
-    fn command_ids_and_wire_keywords_are_unique_per_row() {
+    async fn command_ids_and_wire_keywords_are_unique_per_row() {
         let mut ids: Vec<&str> = every_command().iter().map(RemodelCommand::command_id).collect();
         ids.sort_unstable();
         ids.dedup();
@@ -994,7 +994,7 @@ mod tests {
     /// 🌉️ The action bridge covers every action the manifest declares (framework-injected ones aside)
     /// and rejects anything else — the gap this migration closed (see `command_from_action`'s doc).
     #[test]
-    fn command_from_action_covers_every_declared_action_and_rejects_unknown_ones() {
+    async fn command_from_action_covers_every_declared_action_and_rejects_unknown_ones() {
         testkit::assert_declared_actions_bridge_to_commands::<EditorApp<RemodelPlayApp>>(remodel_app_manifest_for_testkit);
         assert!(RemodelPlayApp::command_from_action("nonsense", None).is_err());
     }
@@ -1002,7 +1002,7 @@ mod tests {
     /// 🌉️ Select-typed args arrive as strings; numeric-option selects (`textureSize`) must still land in
     /// a `u32` field, and a `setCamera` payload is accepted both flat and `{camera:{…}}`-nested.
     #[test]
-    fn the_action_bridge_coerces_select_strings_and_both_camera_arg_shapes() {
+    async fn the_action_bridge_coerces_select_strings_and_both_camera_arg_shapes() {
         let mesh = RemodelPlayApp::command_from_action("setMeshParams", Some(&serde_json::json!({ "textureSize": "4096" }))).expect("bridge");
         let RemodelCommand::SetMeshParams(payload) = mesh else { panic!("expected SetMeshParams") };
         assert_eq!(payload.texture_size, 4096);
@@ -1016,7 +1016,7 @@ mod tests {
 
     /// 🖼️ Render smoke test: every window/panel body key this app declares must render without panicking.
     #[test]
-    fn render_does_not_panic_for_known_body_keys() {
+    async fn render_does_not_panic_for_known_body_keys() {
         let mut app = app();
         for body_key in [
             model::windows::model::REMODEL_PLAY_BODY_MAIN,
@@ -1035,14 +1035,14 @@ mod tests {
     }
 
     #[test]
-    fn render_unknown_body_key_reports_it_by_name() {
+    async fn render_unknown_body_key_reports_it_by_name() {
         let mut app = app();
         assert!(render(&mut app, "remodel.play.nope").contains("Unknown body: remodel.play.nope"));
     }
 
     //#region 🔖️ManifestSanity
     #[test]
-    fn the_manifest_declares_three_modes_three_windows_and_this_apps_panel_tabs() {
+    async fn the_manifest_declares_three_modes_three_windows_and_this_apps_panel_tabs() {
         let definition = create_remodel_app().definition;
         assert_eq!(definition.modes.len(), 3);
         assert_eq!(definition.window_kinds.len(), 3);
@@ -1052,7 +1052,7 @@ mod tests {
     }
 
     #[test]
-    fn remodel_io_declares_photos_in_and_mesh_out_on_the_manifest() {
+    async fn remodel_io_declares_photos_in_and_mesh_out_on_the_manifest() {
         let app = create_remodel_app();
         assert!(app.definition.media_inputs.iter().any(|port| port.id == "photos:in"));
         assert!(app.definition.media_outputs.iter().any(|port| port.id == "mesh:out"));
@@ -1061,7 +1061,7 @@ mod tests {
     /// 🧰️ The registry-backed app enforces View/Shell kind discipline — a view row must not slip
     /// through as an operation.
     #[test]
-    fn view_rows_dispatch_cleanly_against_the_real_registry() {
+    async fn view_rows_dispatch_cleanly_against_the_real_registry() {
         let mut app = app_with_registry();
         let result = testkit::meta("local");
         app.dispatch_typed(RemodelCommand::SetReportTable(set_report_table::SetReportTable { table: "tracks".into() }), &result).expect("view dispatch");
@@ -1073,7 +1073,7 @@ mod tests {
     /// over a `MemoryBackbone` converges both sides to contain BOTH edits — impossible under a
     /// whole-document `setDocument` snapshot, where one side's write would clobber the other's.
     #[test]
-    fn two_instances_converge_disjoint_edits_via_backbone() {
+    async fn two_instances_converge_disjoint_edits_via_backbone() {
         testkit::assert_two_instances_converge::<EditorApp<RemodelPlayApp>, _>(
             "mem://remodel-convergence",
             RemodelCommand::SetFeatureParams(set_feature_params::SetFeatureParams { detector: "akaze".into(), target_count: 1000, octaves: 4, edge_threshold: 10.0 }),
@@ -1089,7 +1089,7 @@ mod tests {
     /// 🔌️ `photos:in` inserts an incoming photo as one new frame on the well-known workflow-photos
     /// stream, creating it on the first import and appending on subsequent ones.
     #[test]
-    fn import_media_photos_in_creates_and_appends_to_the_workflow_stream() {
+    async fn import_media_photos_in_creates_and_appends_to_the_workflow_stream() {
         let app = app();
         let projection = app.snapshot().expect("projection");
         let history = HistoryView::empty();
@@ -1125,7 +1125,7 @@ mod tests {
 
     /// 🔌️ `mesh:out` exports the current reconstructed mesh as a GLB-encoded `3d.mesh` `Media`.
     #[test]
-    fn export_media_mesh_out_exports_a_structured_3d_mesh() {
+    async fn export_media_mesh_out_exports_a_structured_3d_mesh() {
         let app = app();
         let projection = app.snapshot().expect("projection");
         let history = HistoryView::empty();
@@ -1147,7 +1147,7 @@ mod tests {
     /// 🧪️ Relocated from the artifact's `⚙️engine/🦀️component.rs` (#2553): `remodel_io()` returns
     /// `AppIo` and lives app-side now, so its own declaration test travels with it.
     #[test]
-    fn remodel_io_declares_photos_in_and_mesh_out() {
+    async fn remodel_io_declares_photos_in_and_mesh_out() {
         let io = remodel_io();
         assert_eq!(io.document_schema, "remodel.scene");
         assert_eq!(io.artifact.id, "3d.remodel");

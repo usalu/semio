@@ -93,7 +93,7 @@ enum RasterMutationDsl {
 //#region 🔖️HandcraftedOpCodecs
 /// ⚡️ P6 handcrafted OpText/OpBinary (derive no longer emits these traits).
 impl OpText for RasterMutationDsl {
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
+    async fn parse_op(line: &str) -> Result<Self, store::TextError> {
         let variants = <Self as dsl::DslVariants>::variants();
         for (keyword, spec_fn) in &variants {
             let probe = format!("{} ", keyword);
@@ -108,7 +108,7 @@ impl OpText for RasterMutationDsl {
         }
         Err(dsl::__rt::field_error(format!("unknown mutation line '{line}'")))
     }
-    fn print_op(&self) -> String {
+    async fn print_op(&self) -> String {
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
         let variants = <Self as dsl::DslVariants>::variants();
         let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
@@ -117,16 +117,16 @@ impl OpText for RasterMutationDsl {
 }
 
 impl protocol::OpBinary for RasterMutationDsl {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         dsl::variants_binary::encode_op(self)
     }
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         dsl::variants_binary::decode_op(bytes)
     }
 }
 //#endregion 🔖️HandcraftedOpCodecs
 
-fn raster_mutation_to_dsl(mutation: &RasterMutation) -> RasterMutationDsl {
+async fn raster_mutation_to_dsl(mutation: &RasterMutation) -> RasterMutationDsl {
     match mutation {
         RasterMutation::CreateLayer(payload) => RasterMutationDsl::CreateLayer { parent_id: payload.parent_id.clone(), index: payload.index, layer: payload.layer.clone() },
         RasterMutation::DeleteLayer(payload) => RasterMutationDsl::DeleteLayer { layer_id: payload.layer_id.clone() },
@@ -143,7 +143,7 @@ fn raster_mutation_to_dsl(mutation: &RasterMutation) -> RasterMutationDsl {
     }
 }
 
-fn raster_mutation_from_dsl(mutation: RasterMutationDsl) -> RasterMutation {
+async fn raster_mutation_from_dsl(mutation: RasterMutationDsl) -> RasterMutation {
     match mutation {
         RasterMutationDsl::CreateLayer { parent_id, index, layer } => RasterMutation::CreateLayer(create_layer::mutation::CreateLayer { parent_id, index, layer }),
         RasterMutationDsl::DeleteLayer { layer_id } => RasterMutation::DeleteLayer(delete_layer::mutation::DeleteLayer { layer_id }),
@@ -161,11 +161,11 @@ fn raster_mutation_from_dsl(mutation: RasterMutationDsl) -> RasterMutation {
 }
 
 impl OpText for RasterMutation {
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
+    async fn parse_op(line: &str) -> Result<Self, store::TextError> {
         Ok(raster_mutation_from_dsl(<RasterMutationDsl as OpText>::parse_op(line)?))
     }
 
-    fn print_op(&self) -> String {
+    async fn print_op(&self) -> String {
         <RasterMutationDsl as OpText>::print_op(&raster_mutation_to_dsl(self))
     }
 }
@@ -173,11 +173,11 @@ impl OpText for RasterMutation {
 /// ⚡️ Binary mirror of the `OpText` bridge above — `RasterMutationDsl` already derives `OpBinary` via
 /// `#[derive(dsl::DslEnum)]`, so this is a pure to/from-dsl forward.
 impl protocol::OpBinary for RasterMutation {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         raster_mutation_to_dsl(self).encode_op()
     }
 
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         Ok(raster_mutation_from_dsl(RasterMutationDsl::decode_op(bytes)?))
     }
 }

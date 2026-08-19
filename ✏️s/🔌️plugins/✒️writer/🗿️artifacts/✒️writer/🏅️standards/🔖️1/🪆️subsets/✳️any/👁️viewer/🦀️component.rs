@@ -23,10 +23,10 @@ pub enum WriterViewCommand {
 }
 
 impl protocol::OpBinary for WriterViewCommand {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         Ok(Vec::new())
     }
-    fn decode_op(_bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    async fn decode_op(_bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         Ok(WriterViewCommand::Noop)
     }
 }
@@ -50,7 +50,7 @@ impl ArtifactViewer for WriterViewer {
     const DIALECT: Dialect = WRITER_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = WRITER_DOCUMENT_SCHEMA;
 
-    fn initial_snapshot() -> WriterSnapshot {
+    async fn initial_snapshot() -> WriterSnapshot {
         crate::artifacts::writer::schema::empty_writer_snapshot()
     }
 
@@ -58,11 +58,11 @@ impl ArtifactViewer for WriterViewer {
     /// change, so this always returns the empty `ViewEmit` — no config mutation, no effect, no dirty
     /// scope. Kept as a real dispatch (not an `unreachable!()`) so a future view-only action (e.g. a
     /// read-only outline toggle) is a pure addition here, never a signature change.
-    fn handle(_command: &Self::Command, _doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _interaction: &semio_framework_plugin::app::InteractionView<'_>, _engines: &EngineHandles) -> Result<ViewEmit<Self::ConfigMutation>, Fault> {
+    async fn handle(_command: &Self::Command, _doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _interaction: &semio_framework_plugin::app::InteractionView<'_>, _engines: &EngineHandles) -> Result<ViewEmit<Self::ConfigMutation>, Fault> {
         Ok(ViewEmit::default())
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> UiNode {
+    async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> UiNode {
         match body_key {
             main::WRITER_VIEW_BODY_MAIN => main::render(doc.snapshot),
             _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))),
@@ -72,7 +72,7 @@ impl ArtifactViewer for WriterViewer {
 //#endregion 🔖️Viewer
 
 //#region 🔖️Manifest
-pub fn create_writer_viewer() -> semio_framework_plugin::AppDefinition {
+pub async fn create_writer_viewer() -> semio_framework_plugin::AppDefinition {
     Viewer::builder(WRITER_DIALECT)
         .document(["semio", "writer"])
         .icon_id("writer")
@@ -90,19 +90,19 @@ mod tests {
     use super::*;
 
     #[test]
-    fn create_writer_viewer_builds_a_definition_for_the_viewer_role() {
+    async fn create_writer_viewer_builds_a_definition_for_the_viewer_role() {
         let def = create_writer_viewer();
         assert_eq!(def.role, semio_framework::AppRole::Viewer);
         assert_eq!(def.dialect, WRITER_DIALECT.into());
     }
 
     #[test]
-    fn viewer_dialect_matches_the_artifact_coordinate() {
+    async fn viewer_dialect_matches_the_artifact_coordinate() {
         assert_eq!(<WriterViewer as ArtifactViewer>::DIALECT, WRITER_DIALECT);
     }
 
     #[test]
-    fn unknown_body_key_renders_a_diagnostic_instead_of_panicking() {
+    async fn unknown_body_key_renders_a_diagnostic_instead_of_panicking() {
         let document = crate::artifacts::writer::schema::empty_writer_snapshot();
         let history = semio_framework_plugin::HistoryView::empty();
         let doc = ArtifactView::new(&document, &history);

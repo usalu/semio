@@ -5,7 +5,7 @@
 
 //#region 🔖️IoRegistry
 /// 📭️ No composer entries registered this wave.
-pub fn io_registry_entries() -> &'static [semio_framework_plugin::ComposerEntry] {
+pub async fn io_registry_entries() -> &'static [semio_framework_plugin::ComposerEntry] {
     &[]
 }
 //#endregion 🔖️IoRegistry

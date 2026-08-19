@@ -28,7 +28,7 @@ const BLOCK3D_VIEW_CONTROLLER_ID: &str = "block3d-view";
 //#region 🔖️Definition
 /// 🧱️ Stitched into the viewer manifest by `crate::viewer::block3d::create_block3d_viewer` — the
 /// shared, read-only `MeshWindowKit` window kind (contract §2.6).
-pub fn definition() -> WindowKindDefinition {
+pub async fn definition() -> WindowKindDefinition {
     MeshWindowKit::window_kind()
 }
 //#endregion 🔖️Definition
@@ -37,7 +37,7 @@ pub fn definition() -> WindowKindDefinition {
 /// 👁️ Pure `Block3dSnapshot -> UiNode` read: real representations become meshes/instances (zero
 /// arrangement offset — a viewer has no persisted per-session window view, `Config = NoConfig`), real
 /// rim-vortex templates render at their document position/color, no brush preview, no selection.
-pub fn render(document: &Block3dSnapshot) -> semio_framework_plugin::UiNode {
+pub async fn render(document: &Block3dSnapshot) -> semio_framework_plugin::UiNode {
     let camera = &document.camera3d;
     let camera_json = world3d_camera_projection_json(camera.position, camera.target, None, camera.zoom, &WorldProjectionConfig::default());
     let meshes_json = meshes_json(&document.representations);
@@ -76,11 +76,11 @@ pub fn render(document: &Block3dSnapshot) -> semio_framework_plugin::UiNode {
 /// 👁️ Read-only twin of the editor `🌍️world` facet's `representation_mesh_id` — duplicated on purpose
 /// rather than imported through the sibling editor module, which `policyViewerPurityBreaches` forbids
 /// outright.
-fn representation_mesh_id(representation: &BlockRepresentation) -> String {
+async fn representation_mesh_id(representation: &BlockRepresentation) -> String {
     representation.mesh_url.as_deref().map_or_else(|| format!("block3d-rep-{}", representation.id), world3d_mesh_id_from_url)
 }
 
-fn meshes_json(representations: &[BlockRepresentation]) -> String {
+async fn meshes_json(representations: &[BlockRepresentation]) -> String {
     let meshes: Vec<serde_json::Value> = representations
         .iter()
         .filter_map(|representation| {
@@ -91,7 +91,7 @@ fn meshes_json(representations: &[BlockRepresentation]) -> String {
     serde_json::to_string(&meshes).unwrap_or_else(|_| "[]".into())
 }
 
-fn instances_json(document: &Block3dSnapshot, representations: &[BlockRepresentation]) -> String {
+async fn instances_json(document: &Block3dSnapshot, representations: &[BlockRepresentation]) -> String {
     let label = if document.object_kind.label.is_empty() { document.object_kind.name.clone() } else { document.object_kind.label.clone() };
     let instances: Vec<serde_json::Value> = representations
         .iter()
@@ -110,11 +110,11 @@ fn instances_json(document: &Block3dSnapshot, representations: &[BlockRepresenta
     serde_json::to_string(&instances).unwrap_or_else(|_| "[]".into())
 }
 
-fn vortex_kind_color(document: &Block3dSnapshot, vortex_kind_id: &str) -> String {
+async fn vortex_kind_color(document: &Block3dSnapshot, vortex_kind_id: &str) -> String {
     vortex_kinds_of(document).iter().find(|kind| kind.id == vortex_kind_id).map_or_else(|| "#888888".into(), |kind| kind.color.clone())
 }
 
-fn vortices_json(document: &Block3dSnapshot) -> String {
+async fn vortices_json(document: &Block3dSnapshot) -> String {
     let records: Vec<serde_json::Value> = document
         .vortices
         .iter()
@@ -140,14 +140,14 @@ mod tests {
     use super::*;
 
     #[test]
-    fn definition_declares_the_shared_mesh_window_kind() {
+    async fn definition_declares_the_shared_mesh_window_kind() {
         let def = definition();
         assert_eq!(def.id, "framework.window.mesh");
         assert_eq!(def.body_key, "framework.window.mesh");
     }
 
     #[test]
-    fn render_produces_a_scene_node_for_the_empty_document() {
+    async fn render_produces_a_scene_node_for_the_empty_document() {
         let document = crate::artifacts::block3d::schema::empty_block3d_snapshot();
         let _node = render(&document);
     }

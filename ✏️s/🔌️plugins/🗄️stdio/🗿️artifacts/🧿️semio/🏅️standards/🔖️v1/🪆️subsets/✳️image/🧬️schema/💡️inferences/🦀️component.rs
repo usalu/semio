@@ -24,7 +24,7 @@ pub struct SemioImageInference {
 }
 
 impl protocol::Inference<SemioImageSnapshot> for SemioImageInference {
-    fn infer(snapshot: &SemioImageSnapshot) -> Self {
+    async fn infer(snapshot: &SemioImageSnapshot) -> Self {
         Self { dimensions: compute_semio_image_dimensions(snapshot) }
     }
 }
@@ -34,19 +34,19 @@ impl protocol::Inference<SemioImageSnapshot> for SemioImageInference {
 /// today, but tying `Default` to `infer` keeps the law correct even if that default ever stops
 /// being all-zero (the same defensive pattern raster's `RasterInference` documents).
 impl Default for SemioImageInference {
-    fn default() -> Self {
+    async fn default() -> Self {
         <Self as protocol::Inference<SemioImageSnapshot>>::infer(&SemioImageSnapshot::default())
     }
 }
 
 impl protocol::InferenceSpec<SemioImageSnapshot> for SemioImageInference {
-    fn inference_schema_id() -> &'static str {
+    async fn inference_schema_id() -> &'static str {
         "s.stdio.semio.image.inference"
     }
-    fn schema_version() -> u32 {
+    async fn schema_version() -> u32 {
         1
     }
-    fn fields() -> &'static [protocol::InferenceFieldSpec] {
+    async fn fields() -> &'static [protocol::InferenceFieldSpec] {
         &[protocol::InferenceFieldSpec { id: "s.stdio.semio.image.inference.dimensions", reads: &["width", "height", "colorspace", "bitDepth", "frames"] }]
     }
 }
@@ -65,7 +65,7 @@ impl ArtifactInferrer for crate::artifacts::semio::standards::v1::subsets::image
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.stdio.semio.image.inference`'s facet leaves into the OS-wide inference catalog
 /// — call once at plugin init, alongside `semio_image_artifact_schema_descriptor`'s registration.
-pub fn semio_image_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
+pub async fn semio_image_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
     schema::ArtifactInferenceDescriptor {
         id: "s.stdio.semio.image.inference",
         inference: schema::FacetLeaves {
@@ -86,13 +86,13 @@ mod tests {
     use protocol::Inference;
 
     #[test]
-    fn inference_determinism_law() {
+    async fn inference_determinism_law() {
         let snapshot = SemioImageSnapshot::default();
         assert_eq!(SemioImageInference::infer(&snapshot), SemioImageInference::infer(&snapshot));
     }
 
     #[test]
-    fn inference_default_law() {
+    async fn inference_default_law() {
         assert_eq!(SemioImageInference::infer(&SemioImageSnapshot::default()), SemioImageInference::default());
     }
 }

@@ -16,7 +16,7 @@ pub struct RenameFlowWidget {
 /// ✏️ Renames a widget id (rewiring synapses and layout) purely in the fixture; `None` if the target
 /// id is blank, unchanged, or already taken. Operates on the live `flow::FlowFixture` (via
 /// `to_fixture`/`from_fixture`) rather than `FlowSnapshot`'s own composed `content` handle.
-fn renamed_fixture(snapshot: &FlowSnapshot, old_id: &str, new_id: &str) -> Option<FlowSnapshot> {
+async fn renamed_fixture(snapshot: &FlowSnapshot, old_id: &str, new_id: &str) -> Option<FlowSnapshot> {
     let trimmed = new_id.trim();
     let mut fixture = snapshot.to_fixture();
     if trimmed.is_empty() || trimmed == old_id || fixture.widgets.iter().any(|widget| widget_id(widget) == trimmed) {
@@ -57,7 +57,7 @@ fn renamed_fixture(snapshot: &FlowSnapshot, old_id: &str, new_id: &str) -> Optio
 /// selected widget's id leaves that id stale in `graph`'s selection (pruned by `interaction_topology` on
 /// the next dispatch, same as any other deleted-then-recreated id), an accepted UX regression for this
 /// wave (mirrors note's `add-block`/`rename-flow-widget` no longer being able to steer selection).
-pub fn handle(payload: &RenameFlowWidget, doc: &ArtifactView<'_, FlowSnapshot>, _cfg: &ConfigView<'_, FlowConfig>, _session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, FlowConfigMutation>, Fault> {
+pub async fn handle(payload: &RenameFlowWidget, doc: &ArtifactView<'_, FlowSnapshot>, _cfg: &ConfigView<'_, FlowConfig>, _session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, FlowConfigMutation>, Fault> {
     let fixture = doc.snapshot;
     match renamed_fixture(fixture, &payload.old_id, &payload.value) {
         Some(next) => Ok(Emit::mutations(crate::artifacts::flow::schema::mutations::snapshot_operations(fixture, &next))),

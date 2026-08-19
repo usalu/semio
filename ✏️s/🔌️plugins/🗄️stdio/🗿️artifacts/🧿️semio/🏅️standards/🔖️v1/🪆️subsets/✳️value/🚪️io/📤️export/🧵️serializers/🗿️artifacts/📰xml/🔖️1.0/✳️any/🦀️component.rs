@@ -39,15 +39,15 @@ impl ArtifactSerializer for SemioValueToXml {
     }
 }
 
-pub fn register() {}
+pub async fn register() {}
 //#endregion 🔖️Serializer
 
 //#region 🔖️Resolve
-fn err(msg: impl Into<String>) -> store::PackError {
+async fn err(msg: impl Into<String>) -> store::PackError {
     store::PackError::Schema(msg.into())
 }
 
-fn resolve(v: &SemioValue, nodes: &HashMap<&ValueId, &SemioValue>, visiting: &mut HashSet<ValueId>) -> Result<SemioValue, store::PackError> {
+async fn resolve(v: &SemioValue, nodes: &HashMap<&ValueId, &SemioValue>, visiting: &mut HashSet<ValueId>) -> Result<SemioValue, store::PackError> {
     match v {
         SemioValue::Ref { id } => {
             if !visiting.insert(id.clone()) {
@@ -62,32 +62,32 @@ fn resolve(v: &SemioValue, nodes: &HashMap<&ValueId, &SemioValue>, visiting: &mu
     }
 }
 
-fn expect_entries(v: &SemioValue) -> Result<Vec<SemioValueEntry>, store::PackError> {
+async fn expect_entries(v: &SemioValue) -> Result<Vec<SemioValueEntry>, store::PackError> {
     match v {
         SemioValue::Map { entries } => Ok(entries.clone()),
         other => Err(err(format!("value->xml: expected a Map, got {other:?}"))),
     }
 }
 
-fn find(entries: &[SemioValueEntry], key: &str) -> Option<SemioValue> {
+async fn find(entries: &[SemioValueEntry], key: &str) -> Option<SemioValue> {
     entries.iter().find(|e| e.key == key).map(|e| e.value.clone())
 }
 
-fn expect_str(v: &SemioValue) -> Result<String, store::PackError> {
+async fn expect_str(v: &SemioValue) -> Result<String, store::PackError> {
     match v {
         SemioValue::Str { value } => Ok(value.clone()),
         other => Err(err(format!("value->xml: expected a Str, got {other:?}"))),
     }
 }
 
-fn expect_kind(entries: &[SemioValueEntry], nodes: &HashMap<&ValueId, &SemioValue>, visiting: &mut HashSet<ValueId>) -> Result<String, store::PackError> {
+async fn expect_kind(entries: &[SemioValueEntry], nodes: &HashMap<&ValueId, &SemioValue>, visiting: &mut HashSet<ValueId>) -> Result<String, store::PackError> {
     let raw = find(entries, "kind").ok_or_else(|| err("value->xml: missing required \"kind\" entry"))?;
     expect_str(&resolve(&raw, nodes, visiting)?)
 }
 //#endregion 🔖️Resolve
 
 //#region 🔖️Convert
-fn xml_node_from_semio(v: &SemioValue, nodes: &HashMap<&ValueId, &SemioValue>, visiting: &mut HashSet<ValueId>) -> Result<XmlNode, store::PackError> {
+async fn xml_node_from_semio(v: &SemioValue, nodes: &HashMap<&ValueId, &SemioValue>, visiting: &mut HashSet<ValueId>) -> Result<XmlNode, store::PackError> {
     let resolved = resolve(v, nodes, visiting)?;
     let entries = expect_entries(&resolved)?;
     let kind = expect_kind(&entries, nodes, visiting)?;
@@ -119,7 +119,7 @@ fn xml_node_from_semio(v: &SemioValue, nodes: &HashMap<&ValueId, &SemioValue>, v
     }
 }
 
-fn xml_declaration_from_semio(v: &SemioValue, nodes: &HashMap<&ValueId, &SemioValue>, visiting: &mut HashSet<ValueId>) -> Result<XmlDeclaration, store::PackError> {
+async fn xml_declaration_from_semio(v: &SemioValue, nodes: &HashMap<&ValueId, &SemioValue>, visiting: &mut HashSet<ValueId>) -> Result<XmlDeclaration, store::PackError> {
     let entries = expect_entries(v)?;
     let version = expect_str(&resolve(&find(&entries, "version").ok_or_else(|| err("value->xml: declaration missing \"version\""))?, nodes, visiting)?)?;
     let encoding = match find(&entries, "encoding") {
@@ -141,7 +141,7 @@ fn xml_declaration_from_semio(v: &SemioValue, nodes: &HashMap<&ValueId, &SemioVa
     Ok(XmlDeclaration { version, encoding, standalone })
 }
 
-fn xml_doctype_from_semio(v: &SemioValue, nodes: &HashMap<&ValueId, &SemioValue>, visiting: &mut HashSet<ValueId>) -> Result<XmlDoctype, store::PackError> {
+async fn xml_doctype_from_semio(v: &SemioValue, nodes: &HashMap<&ValueId, &SemioValue>, visiting: &mut HashSet<ValueId>) -> Result<XmlDoctype, store::PackError> {
     let entries = expect_entries(v)?;
     let name = expect_str(&resolve(&find(&entries, "name").ok_or_else(|| err("value->xml: doctype missing name"))?, nodes, visiting)?)?;
     let external_id = match find(&entries, "externalId") {
@@ -186,7 +186,7 @@ fn xml_doctype_from_semio(v: &SemioValue, nodes: &HashMap<&ValueId, &SemioValue>
     Ok(XmlDoctype { name, external_id, declarations })
 }
 
-pub fn xml_document_from_semio(v: &SemioValue, nodes: &HashMap<&ValueId, &SemioValue>, visiting: &mut HashSet<ValueId>) -> Result<XmlDocument, store::PackError> {
+pub async fn xml_document_from_semio(v: &SemioValue, nodes: &HashMap<&ValueId, &SemioValue>, visiting: &mut HashSet<ValueId>) -> Result<XmlDocument, store::PackError> {
     let resolved = resolve(v, nodes, visiting)?;
     let entries = expect_entries(&resolved)?;
     let kind = expect_kind(&entries, nodes, visiting)?;
@@ -233,7 +233,7 @@ mod tests {
     use super::*;
     use crate::artifacts::semio::standards::v1::subsets::value::io::import::deserializers::artifacts::xml::v1_0::any::semio_value_from_xml_document;
 
-    fn round_trip(doc: XmlDocument) -> XmlDocument {
+    async fn round_trip(doc: XmlDocument) -> XmlDocument {
         let value = semio_value_from_xml_document(&doc);
         let nodes = HashMap::new();
         let mut visiting = HashSet::new();
@@ -244,7 +244,7 @@ mod tests {
     /// value subset can represent (the whole document, structurally — nothing is lossy in THIS
     /// direction since the fixture already conforms to the tagged-map convention).
     #[test]
-    fn xml_to_value_to_xml_round_trips_structurally() {
+    async fn xml_to_value_to_xml_round_trips_structurally() {
         let doc = XmlDocument {
             root: Some(XmlNode::Element {
                 name: "svg".into(),
@@ -264,12 +264,12 @@ mod tests {
     }
 
     #[test]
-    fn empty_document_round_trips() {
+    async fn empty_document_round_trips() {
         assert_eq!(round_trip(XmlDocument::default()), XmlDocument::default());
     }
 
     #[test]
-    fn non_conforming_shape_is_a_hard_error_not_a_silent_default() {
+    async fn non_conforming_shape_is_a_hard_error_not_a_silent_default() {
         let nodes = HashMap::new();
         let mut visiting = HashSet::new();
         let bogus = SemioValue::Int { lexeme: "1".into() };
@@ -277,7 +277,7 @@ mod tests {
     }
 
     #[test]
-    fn ref_is_dereferenced_and_cycles_error() {
+    async fn ref_is_dereferenced_and_cycles_error() {
         let id = ValueId::new("self");
         let cyclic = SemioValue::Ref { id: id.clone() };
         let mut nodes_owned: HashMap<&ValueId, &SemioValue> = HashMap::new();

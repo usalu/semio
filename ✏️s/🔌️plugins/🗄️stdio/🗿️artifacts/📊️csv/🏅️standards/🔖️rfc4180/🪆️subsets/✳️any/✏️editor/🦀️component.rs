@@ -28,11 +28,11 @@ pub enum CsvEditorCommand {
 }
 
 impl protocol::OpText for CsvEditorCommand {
-    fn print_op(&self) -> String {
+    async fn print_op(&self) -> String {
         let CsvEditorCommand::SetCell { row, column, value } = self;
         format!("set-cell row={row} column={column} value={}", value.replace('\\', "\\\\").replace(' ', "\\s"))
     }
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
+    async fn parse_op(line: &str) -> Result<Self, store::TextError> {
         let rest = line.strip_prefix("set-cell ").ok_or_else(|| store::TextError::new(format!("csv editor command: unknown line {line:?}"), dsl::TextSpan::at(1, 1)))?;
         let mut row = None;
         let mut column = None;
@@ -53,10 +53,10 @@ impl protocol::OpText for CsvEditorCommand {
 }
 
 impl protocol::OpBinary for CsvEditorCommand {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         Ok(<Self as protocol::OpText>::print_op(self).into_bytes())
     }
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         let line = String::from_utf8(bytes.to_vec()).map_err(|error| protocol::ProtocolError::Malformed { what: "csv editor command utf8", offset: 0, detail: error.to_string() })?;
         <Self as protocol::OpText>::parse_op(&line).map_err(|error| protocol::ProtocolError::Malformed { what: "csv editor command", offset: 0, detail: error.to_string() })
     }
@@ -66,7 +66,7 @@ impl protocol::OpBinary for CsvEditorCommand {
 //#region 🔖️GridMapping
 /// 🧮️ Pure row-offset math, kept standalone so it is directly unit-testable without constructing
 /// a full `ArtifactView`.
-fn grid_row_to_record_index(has_header: bool, row: u32) -> usize {
+async fn grid_row_to_record_index(has_header: bool, row: u32) -> usize {
     if has_header {
         row as usize + 1
     } else {
@@ -95,14 +95,14 @@ impl ArtifactEditor for CsvEditor {
     const DIALECT: Dialect = CSV_EDITOR_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = STDIO_CSV_DOCUMENT_SCHEMA;
 
-    fn initial_snapshot() -> CsvSnapshot {
+    async fn initial_snapshot() -> CsvSnapshot {
         CsvSnapshot::default()
     }
 
     /// ✏️ Maps the rendered grid's `row` back to `CsvSnapshot.records`' real index — `+1` when
     /// `has_header` (row 0 in the grid is `records[1]`), unchanged otherwise. Out-of-range is a
     /// documented no-op (`Emit::default()`), never a panic.
-    fn handle(
+    async fn handle(
         command: &Self::Command,
         doc: &ArtifactView<'_, Self::Snapshot>,
         _cfg: &ConfigView<'_, Self::Config>,
@@ -117,7 +117,7 @@ impl ArtifactEditor for CsvEditor {
         Ok(Emit { artifact_mutations: vec![CsvMutation::SetField { record_index, field_index: *column as usize, value: value.clone(), quoted }], description: Some(format!("Set cell {row},{column}")), ..Default::default() })
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> UiNode {
+    async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> UiNode {
         match body_key {
             main::BODY_KEY => main::render(doc.snapshot),
             _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))),
@@ -127,7 +127,7 @@ impl ArtifactEditor for CsvEditor {
 //#endregion 🔖️Editor
 
 //#region 🔖️Manifest
-pub fn create_csv_editor() -> semio_framework_plugin::AppDefinition {
+pub async fn create_csv_editor() -> semio_framework_plugin::AppDefinition {
     Editor::builder(CSV_EDITOR_DIALECT)
         .document(["semio", "stdio", "csv"])
         .icon_id("table-2")
@@ -145,32 +145,32 @@ mod tests {
     use super::*;
 
     #[test]
-    fn create_csv_editor_builds_a_definition_for_the_editor_role() {
+    async fn create_csv_editor_builds_a_definition_for_the_editor_role() {
         let def = create_csv_editor();
         assert_eq!(def.role, semio_framework_plugin::AppRole::Editor);
         assert_eq!(def.dialect, CSV_EDITOR_DIALECT.into());
     }
 
     #[test]
-    fn editor_dialect_matches_the_artifact_coordinate() {
+    async fn editor_dialect_matches_the_artifact_coordinate() {
         assert_eq!(<CsvEditor as ArtifactEditor>::DIALECT, CSV_EDITOR_DIALECT);
     }
 
     #[test]
-    fn editor_declares_the_table_window() {
+    async fn editor_declares_the_table_window() {
         let def = create_csv_editor();
         assert!(def.window_kinds.iter().any(|window| window.id == main::WINDOW_KIND_ID));
     }
 
     #[test]
-    fn grid_row_offsets_by_one_when_has_header() {
+    async fn grid_row_offsets_by_one_when_has_header() {
         assert_eq!(grid_row_to_record_index(true, 0), 1);
         assert_eq!(grid_row_to_record_index(false, 0), 0);
         assert_eq!(grid_row_to_record_index(true, 3), 4);
     }
 
     #[test]
-    fn op_text_roundtrip() {
+    async fn op_text_roundtrip() {
         let command = CsvEditorCommand::SetCell { row: 2, column: 5, value: "a value".into() };
         let printed = <CsvEditorCommand as protocol::OpText>::print_op(&command);
         let parsed = <CsvEditorCommand as protocol::OpText>::parse_op(&printed).expect("parse ok");

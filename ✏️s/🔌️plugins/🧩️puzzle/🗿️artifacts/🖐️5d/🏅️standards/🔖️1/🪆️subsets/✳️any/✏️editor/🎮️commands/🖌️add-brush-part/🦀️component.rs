@@ -6,7 +6,7 @@ use crate::editor::puzzle5d::puzzle5d_brush_target_grip;
 
 /// 🧱️ `addBrushPart`/`addBrushObject`: tries the engine's collision-free placement for the explicit
 /// payload first, then always runs the paired board placement so both projections land in one part.
-pub fn add_brush_part(ctx: &mut Puzzle5dActionCtx<'_>, args: Option<&Value>) {
+pub async fn add_brush_part(ctx: &mut Puzzle5dActionCtx<'_>, args: Option<&Value>) {
     ctx.app.drive_precompute(ctx.scene);
     if let Some(payload_value) = args {
         let mut payload = payload_value.clone();

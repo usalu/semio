@@ -4,7 +4,7 @@ use super::mutation::UpdateFatigueInputs;
 use crate::artifacts::en1993::{En1993Diff, En1993Snapshot};
 
 //#region 🔖️Diff
-pub fn diff(payload: &UpdateFatigueInputs, base: &En1993Snapshot) -> protocol::MutationOutcome<En1993Diff> {
+pub async fn diff(payload: &UpdateFatigueInputs, base: &En1993Snapshot) -> protocol::MutationOutcome<En1993Diff> {
     if !payload.new_delta_sigma_mpa.is_finite() {
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("Delta sigma mpa must be a finite number, got {}.", payload.new_delta_sigma_mpa), Vec::<String>::new());
     }

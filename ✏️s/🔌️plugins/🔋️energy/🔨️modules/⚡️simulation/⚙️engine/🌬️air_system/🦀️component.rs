@@ -57,7 +57,7 @@ pub struct AirSystemOutput {
 
 // #region 🔖️Simulate
 /// 🏭️ Simulate central air system including OA mixing, coils, fans, and terminals.
-pub fn simulate_air_system(system: &AirSystem, request: &AirSystemRequest) -> AirSystemOutput {
+pub async fn simulate_air_system(system: &AirSystem, request: &AirSystemRequest) -> AirSystemOutput {
     let oa_frac = request.oa_fraction.clamp(0.0, 1.0);
     let economizer_active = economizer_active(request);
     let effective_oa_frac = if economizer_active { oa_frac.max(0.2) } else { oa_frac };
@@ -230,14 +230,14 @@ struct CoilRunResult {
     compressor_w: f64,
 }
 
-fn run_coils(cooling: &CoolingCoil, heating: Option<&HeatingCoil>, mixed_t: f64, mixed_w: f64, m_dot: f64, request: &AirSystemRequest, pressure_pa: f64) -> CoilRunResult {
+async fn run_coils(cooling: &CoolingCoil, heating: Option<&HeatingCoil>, mixed_t: f64, mixed_w: f64, m_dot: f64, request: &AirSystemRequest, pressure_pa: f64) -> CoilRunResult {
     let inlet = CoilAirState { temperature_c: mixed_t, humidity_ratio: mixed_w, mass_flow_kg_s: m_dot, pressure_pa };
     let cool = cooling_coil_output_w(cooling, &inlet, request.total_cooling_load_w, 0.08);
     let heat = heating.map_or(crate::coils::HeatingCoilOutput { outlet: cool.outlet, total_heating_w: 0.0, gas_consumption_w: 0.0, water_heat_removal_w: 0.0 }, |h| heating_coil_output_w(h, &cool.outlet, request.total_heating_load_w));
     CoilRunResult { outlet: heat.outlet, cooling_w: cool.total_cooling_w, heating_w: heat.total_heating_w, compressor_w: cool.compressor_power_w }
 }
 
-fn simulate_terminals(terminals: &[(AirTerminal, TerminalRequest)], supply_t: f64, supply_w: f64) -> Vec<crate::terminal::TerminalOutput> {
+async fn simulate_terminals(terminals: &[(AirTerminal, TerminalRequest)], supply_t: f64, supply_w: f64) -> Vec<crate::terminal::TerminalOutput> {
     terminals
         .iter()
         .map(|(term, req)| {
@@ -249,7 +249,7 @@ fn simulate_terminals(terminals: &[(AirTerminal, TerminalRequest)], supply_t: f6
         .collect()
 }
 
-fn economizer_active(request: &AirSystemRequest) -> bool {
+async fn economizer_active(request: &AirSystemRequest) -> bool {
     match request.economizer {
         EconomizerControl::None => false,
         EconomizerControl::DifferentialDryBulb => request.outdoor_temperature_c < request.return_temperature_c,
@@ -271,11 +271,11 @@ mod tests {
     use crate::props::humidity_ratio_from_rh;
     use crate::units::P_STD;
 
-    fn test_cooling() -> CoolingCoil {
+    async fn test_cooling() -> CoolingCoil {
         CoolingCoil::DxSingleSpeed { rated_capacity_w: 50_000.0, rated_shr: 0.75, cop_curve: PerformanceCurve::Constant(1.0) }
     }
 
-    fn test_fan() -> Fan {
+    async fn test_fan() -> Fan {
         Fan {
             fan_type: FanType::VariableVolume,
             max_flow_m3_s: 5.0,
@@ -288,7 +288,7 @@ mod tests {
     }
 
     #[test]
-    fn vav_system_cools_mixed_air() {
+    async fn vav_system_cools_mixed_air() {
         let system = AirSystem::Vav { supply_fan: test_fan(), return_fan: None, cooling: test_cooling(), heating: None, min_flow_m3_s: 1.0, max_flow_m3_s: 4.0 };
         let req = AirSystemRequest {
             outdoor_temperature_c: 32.0,
@@ -310,7 +310,7 @@ mod tests {
     }
 
     #[test]
-    fn economizer_detected_when_oa_cooler() {
+    async fn economizer_detected_when_oa_cooler() {
         let system = AirSystem::Cav { supply_fan: test_fan(), return_fan: None, cooling: test_cooling(), heating: None, design_flow_m3_s: 2.0 };
         let req = AirSystemRequest {
             outdoor_temperature_c: 15.0,
@@ -330,7 +330,7 @@ mod tests {
     }
 
     #[test]
-    fn doas_conditions_outdoor_air() {
+    async fn doas_conditions_outdoor_air() {
         let system = AirSystem::Doas { supply_fan: test_fan(), cooling: test_cooling(), heating: Some(HeatingCoil::Electric { capacity_w: 10_000.0, efficiency: 1.0 }), erv_effectiveness: 0.7, design_oa_m3_s: 0.5 };
         let req = AirSystemRequest {
             outdoor_temperature_c: 30.0,

@@ -16,7 +16,7 @@ pub struct NodeGraphEdit {
     pub operations_json: String,
 }
 
-fn edit_with_selection(payload: &NodeGraphEdit, projection: &WorkflowSnapshot, selected: &[String]) -> Emit<WorkflowMutation, SpaceConfigMutation> {
+async fn edit_with_selection(payload: &NodeGraphEdit, projection: &WorkflowSnapshot, selected: &[String]) -> Emit<WorkflowMutation, SpaceConfigMutation> {
     let edit_operations = serde_json::from_str::<Value>(&payload.operations_json).ok().and_then(|value| value.get("operations").and_then(Value::as_array).cloned()).unwrap_or_default();
     let mut artifact_mutations = Vec::new();
     let mut config_mutations = Vec::new();
@@ -62,11 +62,11 @@ fn edit_with_selection(payload: &NodeGraphEdit, projection: &WorkflowSnapshot, s
 /// only through that macro-generated path (`SpaceApp::handle` always routes this command through
 /// `apply` below instead), so its `"deleteSelection"` sub-operation degrades to treating the selection
 /// as empty; every other sub-operation (`setFixture`/`move`/`connect`) is unaffected.
-pub fn handle(payload: &NodeGraphEdit, doc: &ArtifactView<'_, WorkflowSnapshot>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
+pub async fn handle(payload: &NodeGraphEdit, doc: &ArtifactView<'_, WorkflowSnapshot>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
     Ok(edit_with_selection(payload, doc.snapshot, &[]))
 }
 
-pub fn apply(payload: &NodeGraphEdit, doc: &ArtifactView<'_, WorkflowSnapshot>, _cfg: &ConfigView<'_, SpaceConfig>, interaction: &InteractionView<'_>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
+pub async fn apply(payload: &NodeGraphEdit, doc: &ArtifactView<'_, WorkflowSnapshot>, _cfg: &ConfigView<'_, SpaceConfig>, interaction: &InteractionView<'_>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
     Ok(edit_with_selection(payload, doc.snapshot, &interaction.selection("graph").ids))
 }
 
@@ -76,13 +76,13 @@ mod tests {
     use super::*;
 
     #[test]
-    fn space_command_op_text_round_trips_every_variant() {
+    async fn space_command_op_text_round_trips_every_variant() {
         use crate::engine::space::SpaceCommand;
         store::os_store::test_support::assert_op_line_round_trip(&SpaceCommand::NodeGraphEdit(NodeGraphEdit { operations_json: "[]".into() }));
     }
 
     #[test]
-    fn node_graph_edit_set_fixture_moves_node_and_persists_camera() {
+    async fn node_graph_edit_set_fixture_moves_node_and_persists_camera() {
         use crate::engine::space::testkit::{apply_mutations, studio_emit};
         use crate::engine::space::SpaceCommand;
         use crate::demo_space_projection;

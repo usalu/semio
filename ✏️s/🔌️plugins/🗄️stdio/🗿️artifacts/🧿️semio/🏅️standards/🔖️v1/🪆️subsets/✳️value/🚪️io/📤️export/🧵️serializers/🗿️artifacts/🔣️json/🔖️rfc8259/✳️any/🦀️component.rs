@@ -38,13 +38,13 @@ impl ArtifactSerializer for SemioValueToJson {
     }
 }
 
-pub fn register() {}
+pub async fn register() {}
 //#endregion 🔖️Serializer
 
 //#region 🔖️Base64
 const B64_TABLE: &[u8; 64] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
-fn base64_encode(bytes: &[u8]) -> String {
+async fn base64_encode(bytes: &[u8]) -> String {
     let mut out = String::with_capacity((bytes.len() + 2) / 3 * 4);
     for chunk in bytes.chunks(3) {
         let b0 = chunk[0];
@@ -60,7 +60,7 @@ fn base64_encode(bytes: &[u8]) -> String {
 //#endregion 🔖️Base64
 
 //#region 🔖️Convert
-fn json_value_from_semio(v: &SemioValue, nodes: &HashMap<&ValueId, &SemioValue>, visiting: &mut HashSet<ValueId>) -> Result<JsonValue, store::PackError> {
+async fn json_value_from_semio(v: &SemioValue, nodes: &HashMap<&ValueId, &SemioValue>, visiting: &mut HashSet<ValueId>) -> Result<JsonValue, store::PackError> {
     match v {
         SemioValue::Null => Ok(JsonValue::Null),
         SemioValue::Bool { value } => Ok(JsonValue::Bool { value: *value }),
@@ -96,7 +96,7 @@ mod tests {
     use crate::artifacts::semio::standards::v1::subsets::value::schema::snapshot::{SemioValueEntry, SemioValueNode};
 
     #[test]
-    fn int_and_float_lexemes_reemit_as_a_plain_number_verbatim() {
+    async fn int_and_float_lexemes_reemit_as_a_plain_number_verbatim() {
         let nodes = HashMap::new();
         let mut visiting = HashSet::new();
         assert_eq!(json_value_from_semio(&SemioValue::Int { lexeme: "9007199254740993".into() }, &nodes, &mut visiting).unwrap(), JsonValue::Number { lexeme: "9007199254740993".into() });
@@ -104,7 +104,7 @@ mod tests {
     }
 
     #[test]
-    fn bytes_become_a_base64_string() {
+    async fn bytes_become_a_base64_string() {
         let nodes = HashMap::new();
         let mut visiting = HashSet::new();
         let out = json_value_from_semio(&SemioValue::Bytes { value: vec![0, 1, 2, 255] }, &nodes, &mut visiting).unwrap();
@@ -112,7 +112,7 @@ mod tests {
     }
 
     #[test]
-    fn ref_is_dereferenced_inline() {
+    async fn ref_is_dereferenced_inline() {
         let target_id = ValueId::new("n1");
         let target_value = SemioValue::Str { value: "leaf".into() };
         let mut nodes_owned: HashMap<&ValueId, &SemioValue> = HashMap::new();
@@ -123,7 +123,7 @@ mod tests {
     }
 
     #[test]
-    fn dangling_ref_is_a_hard_error() {
+    async fn dangling_ref_is_a_hard_error() {
         let nodes: HashMap<&ValueId, &SemioValue> = HashMap::new();
         let mut visiting = HashSet::new();
         let err = json_value_from_semio(&SemioValue::Ref { id: ValueId::new("missing") }, &nodes, &mut visiting);
@@ -131,7 +131,7 @@ mod tests {
     }
 
     #[test]
-    fn self_cycle_is_a_hard_error() {
+    async fn self_cycle_is_a_hard_error() {
         let id = ValueId::new("n1");
         let value = SemioValue::Ref { id: id.clone() };
         let mut nodes_owned: HashMap<&ValueId, &SemioValue> = HashMap::new();
@@ -145,7 +145,7 @@ mod tests {
     /// value subset can represent (Bytes/Ref excepted — documented one-directional gaps, proven
     /// separately above).
     #[test]
-    fn json_to_value_to_json_to_value_round_trips() {
+    async fn json_to_value_to_json_to_value_round_trips() {
         let json = JsonValue::Object {
             members: vec![
                 JsonMember { key: "name".into(), value: JsonValue::String { value: "semio".into() } },
@@ -162,7 +162,7 @@ mod tests {
     }
 
     #[test]
-    fn nodes_graph_round_trips_through_dereferenced_json() {
+    async fn nodes_graph_round_trips_through_dereferenced_json() {
         let s1 = SemioValueSnapshot {
             schema: crate::artifacts::semio::standards::v1::subsets::value::schema::snapshot::STDIO_SEMIOVALUE_DOCUMENT_SCHEMA.into(),
             root: SemioValue::Map { entries: vec![SemioValueEntry { key: "linked".into(), value: SemioValue::Ref { id: ValueId::new("n1") } }] },

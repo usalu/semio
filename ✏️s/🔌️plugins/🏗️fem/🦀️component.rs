@@ -15,7 +15,7 @@ use semio_framework_plugin::{ExecutionMode, Plugin};
 /// `🗄️stdio`'s own shape: one `OnArtifactKind` event per owned kind, read live from each subset's own
 /// `computation_artifact_kind().id` (never hardcoded), `Isolated` execution (nothing here justifies a
 /// publisher-trusted mode), and one `documents.write` ask covering both editors' persisted mutations.
-pub fn plugin() -> Result<Plugin, semio_framework_plugin::PluginAssemblyError> {
+pub async fn plugin() -> Result<Plugin, semio_framework_plugin::PluginAssemblyError> {
     Plugin::builder("fem")
         .label("FEM")
         .version("0.1.0")
@@ -45,22 +45,22 @@ mod surface_tests {
     use semio_framework_plugin::testkit::{assert_editor_and_viewer_share_dialect, assert_viewer_never_mutates};
 
     #[test]
-    fn fem2d_viewer_never_mutates() {
+    async fn fem2d_viewer_never_mutates() {
         assert_viewer_never_mutates::<crate::viewer::fem2d::Fem2dViewer>();
     }
 
     #[test]
-    fn fem2d_editor_and_viewer_share_dialect() {
+    async fn fem2d_editor_and_viewer_share_dialect() {
         assert_editor_and_viewer_share_dialect::<crate::editor::fem2d::Fem2dPlayApp, crate::viewer::fem2d::Fem2dViewer>();
     }
 
     #[test]
-    fn fem3d_viewer_never_mutates() {
+    async fn fem3d_viewer_never_mutates() {
         assert_viewer_never_mutates::<crate::viewer::fem3d::Fem3dViewer>();
     }
 
     #[test]
-    fn fem3d_editor_and_viewer_share_dialect() {
+    async fn fem3d_editor_and_viewer_share_dialect() {
         assert_editor_and_viewer_share_dialect::<crate::editor::fem3d::Fem3dPlayApp, crate::viewer::fem3d::Fem3dViewer>();
     }
 }

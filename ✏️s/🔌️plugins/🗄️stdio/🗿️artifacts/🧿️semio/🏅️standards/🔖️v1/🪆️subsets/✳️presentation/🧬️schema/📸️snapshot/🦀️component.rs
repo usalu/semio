@@ -167,7 +167,7 @@ pub struct SemioPresentationSnapshot {
 }
 
 impl Default for SemioPresentationSnapshot {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self { schema: STDIO_SEMIOPRESENTATION_DOCUMENT_SCHEMA.into(), masters: Vec::new(), layouts: Vec::new(), slides: Vec::new() }
     }
 }
@@ -181,7 +181,7 @@ impl Default for SemioPresentationSnapshot {
 /// `enc_str`/`enc_master`/`enc_layout`/`enc_slide` value codecs (which themselves reuse document's
 /// real `enc_block` for every `blocks`/`notes` leaf) rather than duplicating a third independent
 /// copy. Replaces the old hex-of-`serde_json` passthrough.
-fn print_presentation_snapshot_body(s: &SemioPresentationSnapshot) -> String {
+async fn print_presentation_snapshot_body(s: &SemioPresentationSnapshot) -> String {
     format!(
         "schema={}\nmasters=[{}]\nlayouts=[{}]\nslides=[{}]",
         enc_str(&s.schema),
@@ -190,7 +190,7 @@ fn print_presentation_snapshot_body(s: &SemioPresentationSnapshot) -> String {
         s.slides.iter().map(enc_slide).collect::<Vec<_>>().join(",")
     )
 }
-fn parse_presentation_snapshot_body(body: &str) -> Result<SemioPresentationSnapshot, String> {
+async fn parse_presentation_snapshot_body(body: &str) -> Result<SemioPresentationSnapshot, String> {
     let mut schema = None;
     let mut masters = Vec::new();
     let mut layouts = Vec::new();
@@ -224,27 +224,27 @@ fn parse_presentation_snapshot_body(body: &str) -> Result<SemioPresentationSnaps
 /// 🧪️ Real LEB128-varint-length-prefixed binary primitives (`store::pack_rt::write_varint_u64` /
 /// `store::ByteReader`, same helpers every other semio wave's `ArtifactPack` reuses) backing
 /// `encode_presentation_snapshot_binary`/`decode_presentation_snapshot_binary` below.
-fn write_bytes_lp(out: &mut Vec<u8>, bytes: &[u8]) {
+async fn write_bytes_lp(out: &mut Vec<u8>, bytes: &[u8]) {
     store::pack_rt::write_varint_u64(out, bytes.len() as u64);
     out.extend_from_slice(bytes);
 }
-fn read_bytes_lp(reader: &mut store::ByteReader<'_>) -> Result<Vec<u8>, String> {
+async fn read_bytes_lp(reader: &mut store::ByteReader<'_>) -> Result<Vec<u8>, String> {
     let len = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
     Ok(reader.read_bytes(len).map_err(|e| e.to_string())?.to_vec())
 }
-fn write_str_lp(out: &mut Vec<u8>, s: &str) {
+async fn write_str_lp(out: &mut Vec<u8>, s: &str) {
     write_bytes_lp(out, s.as_bytes());
 }
-fn read_str_lp(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
+async fn read_str_lp(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
     String::from_utf8(read_bytes_lp(reader)?).map_err(|e| e.to_string())
 }
-fn write_f64(out: &mut Vec<u8>, v: f64) {
+async fn write_f64(out: &mut Vec<u8>, v: f64) {
     out.extend_from_slice(&v.to_le_bytes());
 }
-fn read_f64(reader: &mut store::ByteReader<'_>) -> Result<f64, String> {
+async fn read_f64(reader: &mut store::ByteReader<'_>) -> Result<f64, String> {
     reader.read_f64_le().map_err(|e| e.to_string())
 }
-fn write_opt_str(out: &mut Vec<u8>, v: &Option<String>) {
+async fn write_opt_str(out: &mut Vec<u8>, v: &Option<String>) {
     match v {
         None => out.push(0),
         Some(s) => {
@@ -253,7 +253,7 @@ fn write_opt_str(out: &mut Vec<u8>, v: &Option<String>) {
         }
     }
 }
-fn read_opt_str(reader: &mut store::ByteReader<'_>) -> Result<Option<String>, String> {
+async fn read_opt_str(reader: &mut store::ByteReader<'_>) -> Result<Option<String>, String> {
     match reader.read_u8().map_err(|e| e.to_string())? {
         0 => Ok(None),
         1 => Ok(Some(read_str_lp(reader)?)),
@@ -261,32 +261,32 @@ fn read_opt_str(reader: &mut store::ByteReader<'_>) -> Result<Option<String>, St
     }
 }
 
-fn write_point2(out: &mut Vec<u8>, p: &SemioPoint2) {
+async fn write_point2(out: &mut Vec<u8>, p: &SemioPoint2) {
     write_f64(out, p.x);
     write_f64(out, p.y);
 }
-fn read_point2(reader: &mut store::ByteReader<'_>) -> Result<SemioPoint2, String> {
+async fn read_point2(reader: &mut store::ByteReader<'_>) -> Result<SemioPoint2, String> {
     Ok(SemioPoint2 { x: read_f64(reader)?, y: read_f64(reader)? })
 }
-fn write_frame(out: &mut Vec<u8>, f: &SlideFrame) {
+async fn write_frame(out: &mut Vec<u8>, f: &SlideFrame) {
     write_point2(out, &f.origin);
     write_f64(out, f.width);
     write_f64(out, f.height);
 }
-fn read_frame(reader: &mut store::ByteReader<'_>) -> Result<SlideFrame, String> {
+async fn read_frame(reader: &mut store::ByteReader<'_>) -> Result<SlideFrame, String> {
     Ok(SlideFrame { origin: read_point2(reader)?, width: read_f64(reader)?, height: read_f64(reader)? })
 }
-fn write_image(out: &mut Vec<u8>, img: &SlidePictureImage) {
+async fn write_image(out: &mut Vec<u8>, img: &SlidePictureImage) {
     write_str_lp(out, &img.asset_id);
     write_str_lp(out, &img.mime);
     write_bytes_lp(out, &img.bytes);
 }
-fn read_image(reader: &mut store::ByteReader<'_>) -> Result<SlidePictureImage, String> {
+async fn read_image(reader: &mut store::ByteReader<'_>) -> Result<SlidePictureImage, String> {
     Ok(SlidePictureImage { asset_id: read_str_lp(reader)?, mime: read_str_lp(reader)?, bytes: read_bytes_lp(reader)? })
 }
 /// 🌳️ Real per-variant tag byte (0=Title 1=Subtitle 2=Body 3=Footer 4=SlideNumber 5=DateTime
 /// 6=Other) + fields.
-fn write_placeholder_kind(out: &mut Vec<u8>, k: &PlaceholderKind) {
+async fn write_placeholder_kind(out: &mut Vec<u8>, k: &PlaceholderKind) {
     match k {
         PlaceholderKind::Title => out.push(0),
         PlaceholderKind::Subtitle => out.push(1),
@@ -300,7 +300,7 @@ fn write_placeholder_kind(out: &mut Vec<u8>, k: &PlaceholderKind) {
         }
     }
 }
-fn read_placeholder_kind(reader: &mut store::ByteReader<'_>) -> Result<PlaceholderKind, String> {
+async fn read_placeholder_kind(reader: &mut store::ByteReader<'_>) -> Result<PlaceholderKind, String> {
     match reader.read_u8().map_err(|e| e.to_string())? {
         0 => Ok(PlaceholderKind::Title),
         1 => Ok(PlaceholderKind::Subtitle),
@@ -318,13 +318,13 @@ fn read_placeholder_kind(reader: &mut store::ByteReader<'_>) -> Result<Placehold
 /// `document`'s snapshot facet) — this is the honest boundary the grammar recipe's own
 /// `protocol-array-of-records`/`protocol-prim-ref-recursion` gaps describe, applied at the Rust
 /// level too: reuse the real encoder, don't duplicate it.
-fn write_blocks(out: &mut Vec<u8>, blocks: &[DocBlock]) {
+async fn write_blocks(out: &mut Vec<u8>, blocks: &[DocBlock]) {
     store::pack_rt::write_varint_u64(out, blocks.len() as u64);
     for b in blocks {
         write_str_lp(out, &enc_block(b));
     }
 }
-fn read_blocks(reader: &mut store::ByteReader<'_>) -> Result<Vec<DocBlock>, String> {
+async fn read_blocks(reader: &mut store::ByteReader<'_>) -> Result<Vec<DocBlock>, String> {
     let n = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut out = Vec::with_capacity(n as usize);
     for _ in 0..n {
@@ -332,19 +332,19 @@ fn read_blocks(reader: &mut store::ByteReader<'_>) -> Result<Vec<DocBlock>, Stri
     }
     Ok(out)
 }
-fn write_table_cell(out: &mut Vec<u8>, c: &SlideTableCell) {
+async fn write_table_cell(out: &mut Vec<u8>, c: &SlideTableCell) {
     write_blocks(out, &c.blocks);
 }
-fn read_table_cell(reader: &mut store::ByteReader<'_>) -> Result<SlideTableCell, String> {
+async fn read_table_cell(reader: &mut store::ByteReader<'_>) -> Result<SlideTableCell, String> {
     Ok(SlideTableCell { blocks: read_blocks(reader)? })
 }
-fn write_table_row(out: &mut Vec<u8>, r: &SlideTableRow) {
+async fn write_table_row(out: &mut Vec<u8>, r: &SlideTableRow) {
     store::pack_rt::write_varint_u64(out, r.cells.len() as u64);
     for c in &r.cells {
         write_table_cell(out, c);
     }
 }
-fn read_table_row(reader: &mut store::ByteReader<'_>) -> Result<SlideTableRow, String> {
+async fn read_table_row(reader: &mut store::ByteReader<'_>) -> Result<SlideTableRow, String> {
     let n = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut cells = Vec::with_capacity(n as usize);
     for _ in 0..n {
@@ -353,7 +353,7 @@ fn read_table_row(reader: &mut store::ByteReader<'_>) -> Result<SlideTableRow, S
     Ok(SlideTableRow { cells })
 }
 /// 🌳️ Real per-variant tag byte (0=TextBox 1=Picture 2=Table 3=Placeholder) + `frame` + fields.
-fn write_shape(out: &mut Vec<u8>, shape: &SlideShape) {
+async fn write_shape(out: &mut Vec<u8>, shape: &SlideShape) {
     match shape {
         SlideShape::TextBox { frame, blocks } => {
             out.push(0);
@@ -380,7 +380,7 @@ fn write_shape(out: &mut Vec<u8>, shape: &SlideShape) {
         }
     }
 }
-fn read_shape(reader: &mut store::ByteReader<'_>) -> Result<SlideShape, String> {
+async fn read_shape(reader: &mut store::ByteReader<'_>) -> Result<SlideShape, String> {
     let tag = reader.read_u8().map_err(|e| e.to_string())?;
     match tag {
         0 => Ok(SlideShape::TextBox { frame: read_frame(reader)?, blocks: read_blocks(reader)? }),
@@ -398,13 +398,13 @@ fn read_shape(reader: &mut store::ByteReader<'_>) -> Result<SlideShape, String> 
         other => Err(format!("shape: bad tag {other}")),
     }
 }
-fn write_shapes(out: &mut Vec<u8>, shapes: &[SlideShape]) {
+async fn write_shapes(out: &mut Vec<u8>, shapes: &[SlideShape]) {
     store::pack_rt::write_varint_u64(out, shapes.len() as u64);
     for s in shapes {
         write_shape(out, s);
     }
 }
-fn read_shapes(reader: &mut store::ByteReader<'_>) -> Result<Vec<SlideShape>, String> {
+async fn read_shapes(reader: &mut store::ByteReader<'_>) -> Result<Vec<SlideShape>, String> {
     let n = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut out = Vec::with_capacity(n as usize);
     for _ in 0..n {
@@ -412,32 +412,32 @@ fn read_shapes(reader: &mut store::ByteReader<'_>) -> Result<Vec<SlideShape>, St
     }
     Ok(out)
 }
-fn write_master(out: &mut Vec<u8>, m: &SlideMaster) {
+async fn write_master(out: &mut Vec<u8>, m: &SlideMaster) {
     write_str_lp(out, &m.id);
     write_shapes(out, &m.shapes);
 }
-fn read_master(reader: &mut store::ByteReader<'_>) -> Result<SlideMaster, String> {
+async fn read_master(reader: &mut store::ByteReader<'_>) -> Result<SlideMaster, String> {
     Ok(SlideMaster { id: read_str_lp(reader)?, shapes: read_shapes(reader)? })
 }
-fn write_layout(out: &mut Vec<u8>, l: &SlideLayout) {
+async fn write_layout(out: &mut Vec<u8>, l: &SlideLayout) {
     write_str_lp(out, &l.id);
     write_str_lp(out, &l.master_id);
     write_shapes(out, &l.shapes);
 }
-fn read_layout(reader: &mut store::ByteReader<'_>) -> Result<SlideLayout, String> {
+async fn read_layout(reader: &mut store::ByteReader<'_>) -> Result<SlideLayout, String> {
     Ok(SlideLayout { id: read_str_lp(reader)?, master_id: read_str_lp(reader)?, shapes: read_shapes(reader)? })
 }
-fn write_slide(out: &mut Vec<u8>, s: &Slide) {
+async fn write_slide(out: &mut Vec<u8>, s: &Slide) {
     write_str_lp(out, &s.id);
     write_opt_str(out, &s.layout_id);
     write_shapes(out, &s.shapes);
     write_blocks(out, &s.notes);
 }
-fn read_slide(reader: &mut store::ByteReader<'_>) -> Result<Slide, String> {
+async fn read_slide(reader: &mut store::ByteReader<'_>) -> Result<Slide, String> {
     Ok(Slide { id: read_str_lp(reader)?, layout_id: read_opt_str(reader)?, shapes: read_shapes(reader)?, notes: read_blocks(reader)? })
 }
 
-fn encode_presentation_snapshot_binary(s: &SemioPresentationSnapshot) -> Vec<u8> {
+async fn encode_presentation_snapshot_binary(s: &SemioPresentationSnapshot) -> Vec<u8> {
     const PACK_BINARY_FORMAT: u8 = 1;
     let mut out = Vec::new();
     out.push(PACK_BINARY_FORMAT);
@@ -456,7 +456,7 @@ fn encode_presentation_snapshot_binary(s: &SemioPresentationSnapshot) -> Vec<u8>
     }
     out
 }
-fn decode_presentation_snapshot_binary(bytes: &[u8]) -> Result<SemioPresentationSnapshot, String> {
+async fn decode_presentation_snapshot_binary(bytes: &[u8]) -> Result<SemioPresentationSnapshot, String> {
     const PACK_BINARY_FORMAT: u8 = 1;
     let mut reader = store::ByteReader::new(bytes);
     let format = reader.read_u8().map_err(|e| e.to_string())?;
@@ -495,11 +495,11 @@ fn decode_presentation_snapshot_binary(bytes: &[u8]) -> Result<SemioPresentation
 /// matching `🔺️diff`'s already-hand-rolled convention.
 impl store::ArtifactDsl for SemioPresentationSnapshot {
     const EXTENSION: &'static str = "semio";
-    fn envelope_id() -> &'static str {
+    async fn envelope_id() -> &'static str {
         STDIO_SEMIOPRESENTATION_DOCUMENT_SCHEMA
     }
 
-    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+    async fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
         let body = match store::semio_format::split_text_preamble(text) {
             Ok((_, rest)) => rest,
             Err(_) => text,
@@ -507,7 +507,7 @@ impl store::ArtifactDsl for SemioPresentationSnapshot {
         parse_presentation_snapshot_body(body).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
 
-    fn print_dsl(&self) -> String {
+    async fn print_dsl(&self) -> String {
         let body = print_presentation_snapshot_body(self);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
@@ -515,14 +515,14 @@ impl store::ArtifactDsl for SemioPresentationSnapshot {
 }
 
 impl store::ArtifactPack for SemioPresentationSnapshot {
-    fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
+    async fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
         let raw = encode_presentation_snapshot_binary(self);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &raw))
     }
 
-    fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
+    async fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
         if envelope.envelope_id() != <Self as store::ArtifactDsl>::envelope_id() {
             return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.envelope_id())));
@@ -540,7 +540,7 @@ impl store::ArtifactPack for SemioPresentationSnapshot {
 /// `Slide.notes`. Single source of truth for `📚️examples/…/🖼️assets/🗣️example.dsl.semio`/
 /// `🎒️example.pack.semio` and for the conformance-law tests in `🎹️composer/🦀️component.rs`.
 #[cfg(test)]
-pub(crate) fn demo_semio_presentation_snapshot() -> SemioPresentationSnapshot {
+pub(crate) async fn demo_semio_presentation_snapshot() -> SemioPresentationSnapshot {
     let frame = SlideFrame { origin: SemioPoint2 { x: 1.0, y: 2.0 }, width: 50.0, height: 10.0 };
     SemioPresentationSnapshot {
         schema: STDIO_SEMIOPRESENTATION_DOCUMENT_SCHEMA.into(),
@@ -571,7 +571,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn pack_round_trips() {
+    async fn pack_round_trips() {
         let snap = SemioPresentationSnapshot::default();
         let bytes = <SemioPresentationSnapshot as store::ArtifactPack>::encode_pack(&snap);
         let back = <SemioPresentationSnapshot as store::ArtifactPack>::decode_pack(&bytes).expect("decode");
@@ -579,7 +579,7 @@ mod tests {
     }
 
     #[test]
-    fn dsl_text_round_trips() {
+    async fn dsl_text_round_trips() {
         let snap = SemioPresentationSnapshot::default();
         let text = <SemioPresentationSnapshot as store::ArtifactDsl>::print_dsl(&snap);
         let back = <SemioPresentationSnapshot as store::ArtifactDsl>::parse_dsl(&text).expect("parse");
@@ -587,7 +587,7 @@ mod tests {
     }
 
     #[test]
-    fn demo_snapshot_pack_and_dsl_round_trip() {
+    async fn demo_snapshot_pack_and_dsl_round_trip() {
         let snap = demo_semio_presentation_snapshot();
         let bytes = <SemioPresentationSnapshot as store::ArtifactPack>::encode_pack(&snap);
         let back = <SemioPresentationSnapshot as store::ArtifactPack>::decode_pack(&bytes).expect("decode");
@@ -601,7 +601,7 @@ mod tests {
     /// 🧪️ Non-empty structural round trip: masters/layouts/slides all populated, exercising every
     /// shape kind + the document-block reuse.
     #[test]
-    fn pack_round_trips_populated_structure() {
+    async fn pack_round_trips_populated_structure() {
         let snap = SemioPresentationSnapshot {
             schema: STDIO_SEMIOPRESENTATION_DOCUMENT_SCHEMA.into(),
             masters: vec![SlideMaster { id: "master1".into(), shapes: vec![SlideShape::Placeholder { frame: SlideFrame { origin: SemioPoint2 { x: 0.0, y: 0.0 }, width: 100.0, height: 20.0 }, kind: PlaceholderKind::Title }] }],

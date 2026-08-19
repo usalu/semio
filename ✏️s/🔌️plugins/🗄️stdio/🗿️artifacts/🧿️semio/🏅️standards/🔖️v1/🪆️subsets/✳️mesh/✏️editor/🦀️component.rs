@@ -40,12 +40,12 @@ pub enum SemioMeshEditCommand {
 }
 
 impl protocol::OpBinary for SemioMeshEditCommand {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         let SemioMeshEditCommand::SetVertex(args) = self;
         let payload = serde_json::json!({ "meshIndex": args.mesh_index, "primitiveIndex": args.primitive_index, "vertexIndex": args.vertex_index, "point": args.point });
         Ok(serde_json::to_vec(&payload).unwrap_or_default())
     }
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         let value: serde_json::Value = serde_json::from_slice(bytes).map_err(|error| protocol::ProtocolError::Malformed { what: "set-vertex op", offset: 0, detail: error.to_string() })?;
         let mesh_index = value.get("meshIndex").and_then(|v| v.as_u64()).unwrap_or(0) as usize;
         let primitive_index = value.get("primitiveIndex").and_then(|v| v.as_u64()).unwrap_or(0) as usize;
@@ -79,11 +79,11 @@ impl ArtifactEditor for SemioMeshEditor {
     const DIALECT: Dialect = SEMIO_MESH_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = SEMIO_MESH_DOCUMENT_SCHEMA;
 
-    fn initial_snapshot() -> SemioMeshSnapshot {
+    async fn initial_snapshot() -> SemioMeshSnapshot {
         SemioMeshSnapshot::default()
     }
 
-    fn handle(command: &Self::Command, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _interaction: &InteractionView<'_>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
+    async fn handle(command: &Self::Command, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _interaction: &InteractionView<'_>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
         let SemioMeshEditCommand::SetVertex(args) = command;
         let Some(mesh) = doc.snapshot.meshes.get(args.mesh_index) else { return Ok(Emit::default()); };
         let Some(primitive) = mesh.primitives.get(args.primitive_index) else { return Ok(Emit::default()); };
@@ -100,14 +100,14 @@ impl ArtifactEditor for SemioMeshEditor {
         Ok(Emit::mutations(vec![mutation]))
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> UiNode {
+    async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> UiNode {
         match body_key {
             main::BODY_KEY => main::render(doc.snapshot),
             _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))),
         }
     }
 
-    fn command_from_action(action: &str, args: Option<&serde_json::Value>) -> Result<Self::Command, Fault> {
+    async fn command_from_action(action: &str, args: Option<&serde_json::Value>) -> Result<Self::Command, Fault> {
         if action != "set-vertex" {
             return Err(Fault::new(
                 semio_framework_plugin::FaultOrigin::App,
@@ -129,7 +129,7 @@ impl ArtifactEditor for SemioMeshEditor {
 //#endregion 🔖️Editor
 
 //#region 🔖️Manifest
-pub fn create_semio_mesh_editor() -> semio_framework_plugin::AppDefinition {
+pub async fn create_semio_mesh_editor() -> semio_framework_plugin::AppDefinition {
     Editor::builder(SEMIO_MESH_DIALECT)
         .document(["stdio", "semio"])
         .icon_id("box")
@@ -147,19 +147,19 @@ mod tests {
     use super::*;
 
     #[test]
-    fn create_editor_builds_a_definition_for_the_editor_role() {
+    async fn create_editor_builds_a_definition_for_the_editor_role() {
         let def = create_semio_mesh_editor();
         assert_eq!(def.role, semio_framework_plugin::AppRole::Editor);
         assert_eq!(def.dialect, SEMIO_MESH_DIALECT.into());
     }
 
     #[test]
-    fn editor_dialect_matches_the_artifact_coordinate() {
+    async fn editor_dialect_matches_the_artifact_coordinate() {
         assert_eq!(<SemioMeshEditor as ArtifactEditor>::DIALECT, SEMIO_MESH_DIALECT);
     }
 
     #[test]
-    fn editor_and_viewer_share_one_dialect() {
+    async fn editor_and_viewer_share_one_dialect() {
         semio_framework_plugin::testkit::assert_editor_and_viewer_share_dialect::<SemioMeshEditor, crate::viewer::semio_mesh::SemioMeshViewer>();
     }
 }

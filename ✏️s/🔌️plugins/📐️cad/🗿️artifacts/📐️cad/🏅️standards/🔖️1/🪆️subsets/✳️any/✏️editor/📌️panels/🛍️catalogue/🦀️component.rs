@@ -10,7 +10,7 @@ pub const CAD_PLAY_BODY_CATALOGUE: &str = "cad.play.catalogue";
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
-pub fn definition() -> PanelTabDefinition {
+pub async fn definition() -> PanelTabDefinition {
     PanelTabDefinition {
         kind: PanelTabKind::App(FRAMEWORK_PANEL_TAB_CATALOGUE_ID.into()),
         label: LocalizedLabel::native(FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, "Katalog"),
@@ -22,7 +22,7 @@ pub fn definition() -> PanelTabDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn build_catalogue_tree(labels: &CadLabels) -> UiNode {
+pub async fn build_catalogue_tree(labels: &CadLabels) -> UiNode {
     let items: Vec<UiTreeItemNode> = TYPOLOGY_CATALOG
         .iter()
         .map(|entry| {
@@ -49,7 +49,7 @@ mod tests {
     use semio_framework_plugin::ArtifactView;
 
     #[test]
-    fn cad_labels_translate_catalogue_typologies_in_german() {
+    async fn cad_labels_translate_catalogue_typologies_in_german() {
         let app = CadPlayApp::default();
         let scene = default_document();
         let history = empty_history();

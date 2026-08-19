@@ -18,16 +18,16 @@ pub struct CreateSearchFilter {
 }
 impl MutationKind<ProgramSnapshot, ProgramMutation> for CreateSearchFilter {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "create", entity: "search-filter", kind: "create-search-filter", record: "CreatedSearchFilter" };
-    fn diff(&self, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
+    async fn diff(&self, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {
+    async fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         format!("Create search filter \"{}\"", self.search_filter.header.name)
     }
-    fn target(&self) -> Vec<String> {
+    async fn target(&self) -> Vec<String> {
         vec![self.search_filter.header.id.0.clone()]
     }
 }

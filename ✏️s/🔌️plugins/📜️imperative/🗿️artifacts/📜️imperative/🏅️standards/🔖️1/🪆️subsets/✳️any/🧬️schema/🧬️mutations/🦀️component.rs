@@ -41,12 +41,12 @@ pub use super::reorder_steps::mutation::{reorder_steps, ReorderSteps};
 /// `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM`); a not-yet-materialized nested slot reads as
 /// empty. Owned `Vec` (not a borrow) since the working scene is a cache lookup, not a live borrow of
 /// `snapshot` itself. Shared by every triad's `🔺️diff`/`↩️inverse` leaf so base-state lookups agree.
-pub fn resolve_steps(snapshot: &ImperativeSnapshot, path_ref: &PathRef) -> Vec<Step> {
+pub async fn resolve_steps(snapshot: &ImperativeSnapshot, path_ref: &PathRef) -> Vec<Step> {
     let path = crate::artifacts::imperative::imperative_working_scene(snapshot).path;
     resolve_steps_in_path(&path, path_ref)
 }
 
-fn resolve_steps_in_path(path: &Path, path_ref: &PathRef) -> Vec<Step> {
+async fn resolve_steps_in_path(path: &Path, path_ref: &PathRef) -> Vec<Step> {
     if path_ref.owner.is_none() && path_ref.slot.is_none() {
         return path.steps.clone();
     }
@@ -60,7 +60,7 @@ fn resolve_steps_in_path(path: &Path, path_ref: &PathRef) -> Vec<Step> {
 /// full copy of the current path before re-minting a whole `flow` handle (composed children are
 /// opaque; a diff never edits a sub-slice, only mints a whole replacement — see
 /// `crate::artifacts::imperative::diff_replace_flow`).
-pub fn resolve_path_mut<'a>(path: &'a mut Path, path_ref: &PathRef) -> Option<&'a mut Vec<Step>> {
+pub async fn resolve_path_mut<'a>(path: &'a mut Path, path_ref: &PathRef) -> Option<&'a mut Vec<Step>> {
     if path_ref.owner.is_none() && path_ref.slot.is_none() {
         return Some(&mut path.steps);
     }
@@ -72,7 +72,7 @@ pub fn resolve_path_mut<'a>(path: &'a mut Path, path_ref: &PathRef) -> Option<&'
 
 /// 🧹 Removes a now-empty nested body slot after a delete — mirrors the pre-migration snapshot-
 /// level `prune_empty_slot` this same helper set used to own.
-pub fn prune_empty_slot(path: &mut Path, path_ref: &PathRef) {
+pub async fn prune_empty_slot(path: &mut Path, path_ref: &PathRef) {
     let (Some(owner), Some(slot)) = (&path_ref.owner, &path_ref.slot) else { return };
     if let Some(owner_step) = path.steps.iter_mut().find(|step| &step.id == owner) {
         if owner_step.bodies.get(slot).is_some_and(|body| body.steps.is_empty()) {
@@ -92,63 +92,63 @@ mod tests {
     use protocol::SemanticMutation;
     use std::collections::BTreeMap;
 
-    fn step(id: &str, kind: &str) -> Step {
+    async fn step(id: &str, kind: &str) -> Step {
         Step { id: id.into(), kind: kind.into(), params: Dictionary::new(), bodies: BTreeMap::new() }
     }
 
     //#region 🔖️MutationLaws
     #[test]
-    fn create_step_inverse_law() {
+    async fn create_step_inverse_law() {
         let base = default_snapshot();
         assert_mutation_inverse_law(&base, &create_step(PathRef::default(), step("step-99", "log.print")));
     }
 
     #[test]
-    fn delete_step_inverse_law() {
+    async fn delete_step_inverse_law() {
         let base = default_snapshot();
         assert_mutation_inverse_law(&base, &delete_step(PathRef::default(), "step-1".into()));
     }
 
     #[test]
-    fn delete_step_missing_target_is_error() {
+    async fn delete_step_missing_target_is_error() {
         let base = default_snapshot();
         protocol::testkit::assert_missing_target_is_error(&base, &delete_step(PathRef::default(), "step-missing".into()));
     }
 
     #[test]
-    fn reorder_steps_inverse_law() {
+    async fn reorder_steps_inverse_law() {
         let base = default_snapshot();
         assert_mutation_inverse_law(&base, &reorder_steps(PathRef::default(), "step-2".into(), 0));
     }
 
     #[test]
-    fn reorder_steps_missing_target_is_error() {
+    async fn reorder_steps_missing_target_is_error() {
         let base = default_snapshot();
         protocol::testkit::assert_missing_target_is_error(&base, &reorder_steps(PathRef::default(), "step-missing".into(), 0));
     }
 
     #[test]
-    fn edit_step_params_inverse_law() {
+    async fn edit_step_params_inverse_law() {
         let base = default_snapshot();
         let params = Dictionary::new().insert("message", Value::Atom(Atom::String("hi".into())));
         assert_mutation_inverse_law(&base, &edit_step_params(PathRef::default(), "step-2".into(), params));
     }
 
     #[test]
-    fn edit_step_params_missing_target_is_error() {
+    async fn edit_step_params_missing_target_is_error() {
         let base = default_snapshot();
         protocol::testkit::assert_missing_target_is_error(&base, &edit_step_params(PathRef::default(), "step-missing".into(), Dictionary::new()));
     }
 
     #[test]
-    fn create_step_duplicate_id_fatal_never_applies() {
+    async fn create_step_duplicate_id_fatal_never_applies() {
         let base = default_snapshot();
         let mutation = create_step(PathRef::default(), step("step-1", "log.print"));
         protocol::testkit::assert_fatal_never_applies(&protocol::Mutation::diff(&mutation, &base));
     }
 
     #[test]
-    fn create_step_diff_absorb_law() {
+    async fn create_step_diff_absorb_law() {
         use protocol::Mutation;
         let base = default_snapshot();
         let d1 = create_step(PathRef::default(), step("step-97", "log.print")).diff(&base).into_parts().0;
@@ -158,7 +158,7 @@ mod tests {
     }
 
     #[test]
-    fn dispatch_registers_semantic_descriptors() {
+    async fn dispatch_registers_semantic_descriptors() {
         register_imperative_mutation_descriptors();
         for kind in ImperativeMutation::kinds() {
             assert!(protocol::is_approved_verb(kind.verb), "verb '{}' must be in APPROVED_VERBS", kind.verb);

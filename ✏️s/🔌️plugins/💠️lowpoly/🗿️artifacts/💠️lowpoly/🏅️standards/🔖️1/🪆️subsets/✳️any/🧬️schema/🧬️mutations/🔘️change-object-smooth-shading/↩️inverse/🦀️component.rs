@@ -4,7 +4,7 @@ use super::mutation::ChangeObjectSmoothShading;
 use crate::artifacts::lowpoly::{LowpolyMutation, LowpolySnapshot};
 
 //#region 🔖️Inverse
-pub fn inverse(payload: &ChangeObjectSmoothShading, base: &LowpolySnapshot) -> Vec<LowpolyMutation> {
+pub async fn inverse(payload: &ChangeObjectSmoothShading, base: &LowpolySnapshot) -> Vec<LowpolyMutation> {
     let Some(object) = base.objects.iter().find(|object| object.id == payload.id) else {
         return Vec::new();
     };

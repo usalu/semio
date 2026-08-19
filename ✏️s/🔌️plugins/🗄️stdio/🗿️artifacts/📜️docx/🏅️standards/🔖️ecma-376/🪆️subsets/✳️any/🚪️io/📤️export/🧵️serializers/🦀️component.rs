@@ -12,17 +12,17 @@ use crate::artifacts::xml::schema::snapshot::{xml_document_to_text, XmlAttr, Xml
 use crate::artifacts::zip::opc::{self, OpcPackage, RELS_CONTENT_TYPE, REL_TYPE_OFFICE_DOCUMENT};
 
 //#region 🔖️XmlHelpers
-fn elem(name: &str, attrs: Vec<XmlAttr>, children: Vec<XmlNode>) -> XmlNode {
+async fn elem(name: &str, attrs: Vec<XmlAttr>, children: Vec<XmlNode>) -> XmlNode {
     XmlNode::Element { name: name.into(), attrs, children }
 }
 
-fn attr(name: &str, value: &str) -> XmlAttr {
+async fn attr(name: &str, value: &str) -> XmlAttr {
     XmlAttr { name: name.into(), value: value.into() }
 }
 //#endregion 🔖️XmlHelpers
 
 //#region 🔖️RunMapping
-fn run_to_xml(r: &DocxRun) -> XmlNode {
+async fn run_to_xml(r: &DocxRun) -> XmlNode {
     let mut rc = Vec::new();
     if r.bold || r.italic || r.underline || !r.extra_run_properties.is_empty() {
         let mut rpr = Vec::new();
@@ -44,7 +44,7 @@ fn run_to_xml(r: &DocxRun) -> XmlNode {
 //#endregion 🔖️RunMapping
 
 //#region 🔖️ParagraphMapping
-fn paragraph_to_xml(p: &DocxParagraph) -> XmlNode {
+async fn paragraph_to_xml(p: &DocxParagraph) -> XmlNode {
     let mut children = Vec::new();
     if p.style.is_some() || !p.extra_paragraph_properties.is_empty() {
         let mut ppr = Vec::new();
@@ -60,7 +60,7 @@ fn paragraph_to_xml(p: &DocxParagraph) -> XmlNode {
 //#endregion 🔖️ParagraphMapping
 
 //#region 🔖️TableMapping
-fn cell_to_xml(c: &DocxTableCell) -> XmlNode {
+async fn cell_to_xml(c: &DocxTableCell) -> XmlNode {
     let mut children = Vec::new();
     if !c.extra_cell_properties.is_empty() {
         children.push(elem("w:tcPr", vec![], c.extra_cell_properties.clone()));
@@ -69,7 +69,7 @@ fn cell_to_xml(c: &DocxTableCell) -> XmlNode {
     elem("w:tc", vec![], children)
 }
 
-fn row_to_xml(r: &DocxTableRow) -> XmlNode {
+async fn row_to_xml(r: &DocxTableRow) -> XmlNode {
     let mut children = Vec::new();
     if !r.extra_row_properties.is_empty() {
         children.push(elem("w:trPr", vec![], r.extra_row_properties.clone()));
@@ -78,7 +78,7 @@ fn row_to_xml(r: &DocxTableRow) -> XmlNode {
     elem("w:tr", vec![], children)
 }
 
-fn table_to_xml(t: &DocxTable) -> XmlNode {
+async fn table_to_xml(t: &DocxTable) -> XmlNode {
     let mut children = Vec::new();
     if !t.extra_table_properties.is_empty() {
         children.push(elem("w:tblPr", vec![], t.extra_table_properties.clone()));
@@ -89,7 +89,7 @@ fn table_to_xml(t: &DocxTable) -> XmlNode {
 //#endregion 🔖️TableMapping
 
 //#region 🔖️BlockMapping
-fn block_to_xml(b: &DocxBlock) -> XmlNode {
+async fn block_to_xml(b: &DocxBlock) -> XmlNode {
     match b {
         DocxBlock::Paragraph(p) => paragraph_to_xml(p),
         DocxBlock::Table(t) => table_to_xml(t),
@@ -98,7 +98,7 @@ fn block_to_xml(b: &DocxBlock) -> XmlNode {
 //#endregion 🔖️BlockMapping
 
 //#region 🔖️DocumentMapping
-pub fn document_to_xml(doc: &DocxDocument) -> XmlDocument {
+pub async fn document_to_xml(doc: &DocxDocument) -> XmlDocument {
     let body_children = doc.body.iter().map(block_to_xml).collect();
     XmlDocument { root: Some(elem("w:document", vec![attr("xmlns:w", W_NS)], vec![elem("w:body", vec![], body_children)])), doctype: None, declaration: None, prolog: Vec::new() }
 }
@@ -107,7 +107,7 @@ pub fn document_to_xml(doc: &DocxDocument) -> XmlDocument {
 //#region 🔖️StylesMapping
 const STYLES_NS: &str = "http://schemas.openxmlformats.org/wordprocessingml/2006/main";
 
-fn styles_to_xml(styles: &[DocxStyle]) -> XmlDocument {
+async fn styles_to_xml(styles: &[DocxStyle]) -> XmlDocument {
     let children = styles
         .iter()
         .map(|s| {
@@ -127,7 +127,7 @@ fn styles_to_xml(styles: &[DocxStyle]) -> XmlDocument {
 /// `[Content_Types].xml`, a root `_rels/.rels` pointing at `word/document.xml`, and the
 /// serialized parts themselves (`word/styles.xml` too, when `document.styles` is non-empty). Real
 /// Office/LibreOffice-shaped readers accept this container.
-pub fn build_minimal_docx(document: DocxDocument) -> DocxSnapshot {
+pub async fn build_minimal_docx(document: DocxDocument) -> DocxSnapshot {
     let mut opc = OpcPackage::empty();
     opc.content_types.set_default("rels", RELS_CONTENT_TYPE);
     opc.content_types.set_default("xml", "application/xml");
@@ -148,7 +148,7 @@ pub fn build_minimal_docx(document: DocxDocument) -> DocxSnapshot {
 /// BEFORE running a subset's conformance check on the still-in-memory snapshot (a check like
 /// `✳️transitional`'s needs a materialized main part to find at all — see its own builder's doc
 /// comment for why).
-pub fn sync_main_part(snap: &mut DocxSnapshot) {
+pub async fn sync_main_part(snap: &mut DocxSnapshot) {
     let bytes = xml_document_to_text(&document_to_xml(&snap.document)).into_bytes();
     let content_type = snap.opc.content_types.resolve(MAIN_DOCUMENT_PART).map(str::to_string).unwrap_or_else(|| MAIN_DOCUMENT_CONTENT_TYPE.into());
     snap.opc.set_part(MAIN_DOCUMENT_PART, &content_type, bytes);
@@ -167,7 +167,7 @@ pub fn sync_main_part(snap: &mut DocxSnapshot) {
     }
 }
 
-pub fn encode_docx(snap: &DocxSnapshot) -> Result<Vec<u8>, DocxError> {
+pub async fn encode_docx(snap: &DocxSnapshot) -> Result<Vec<u8>, DocxError> {
     let mut synced = snap.clone();
     sync_main_part(&mut synced);
     Ok(opc::encode_opc_with_package_order(&synced.opc)?)

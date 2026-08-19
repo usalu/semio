@@ -41,7 +41,7 @@ pub struct DeflateDiff {
 }
 
 impl MutationDiff<DeflateSnapshot> for DeflateDiff {
-    fn apply(&self, base: &DeflateSnapshot) -> protocol::MutationApplyResult<DeflateSnapshot> {
+    async fn apply(&self, base: &DeflateSnapshot) -> protocol::MutationApplyResult<DeflateSnapshot> {
         let mut next = base.clone();
         if let Some(v) = self.compression_method {
             next.compression_method = v;
@@ -61,7 +61,7 @@ impl MutationDiff<DeflateSnapshot> for DeflateDiff {
         Ok(next)
     }
 
-    fn absorb(&mut self, other: Self) {
+    async fn absorb(&mut self, other: Self) {
         if other.compression_method.is_some() {
             self.compression_method = other.compression_method;
         }
@@ -81,7 +81,7 @@ impl MutationDiff<DeflateSnapshot> for DeflateDiff {
 }
 
 impl DiffAlgebra<DeflateSnapshot> for DeflateDiff {
-    fn inverse(&self, base: &DeflateSnapshot) -> Self {
+    async fn inverse(&self, base: &DeflateSnapshot) -> Self {
         DeflateDiff {
             compression_method: self.compression_method.map(|_| base.compression_method),
             window_bits: self.window_bits.map(|_| base.window_bits),
@@ -91,7 +91,7 @@ impl DiffAlgebra<DeflateSnapshot> for DeflateDiff {
         }
     }
 
-    fn between(base: &DeflateSnapshot, other: &DeflateSnapshot) -> Self {
+    async fn between(base: &DeflateSnapshot, other: &DeflateSnapshot) -> Self {
         DeflateDiff {
             compression_method: (base.compression_method != other.compression_method).then_some(other.compression_method),
             window_bits: (base.window_bits != other.window_bits).then_some(other.window_bits),
@@ -101,25 +101,25 @@ impl DiffAlgebra<DeflateSnapshot> for DeflateDiff {
         }
     }
 
-    fn is_empty(&self) -> bool {
+    async fn is_empty(&self) -> bool {
         self.compression_method.is_none() && self.window_bits.is_none() && self.compression_level_hint.is_none() && self.dict_id.is_none() && self.payload.is_none()
     }
 }
 
 /// 🧩 Builds a set-snapshot diff: the sparse field-by-field delta, never a full-replace slot.
-pub fn diff_set_snapshot(base: &DeflateSnapshot, snapshot: &DeflateSnapshot) -> DeflateDiff {
+pub async fn diff_set_snapshot(base: &DeflateSnapshot, snapshot: &DeflateSnapshot) -> DeflateDiff {
     DeflateDiff::between(base, snapshot)
 }
 /// 🧩 Builds a set-compression-params diff.
-pub fn diff_set_compression_params(method: u8, window_bits: u8, level_hint: DeflateLevelHint) -> DeflateDiff {
+pub async fn diff_set_compression_params(method: u8, window_bits: u8, level_hint: DeflateLevelHint) -> DeflateDiff {
     DeflateDiff { compression_method: Some(method), window_bits: Some(window_bits), compression_level_hint: Some(level_hint), ..Default::default() }
 }
 /// 🧩 Builds a set-preset-dictionary diff.
-pub fn diff_set_preset_dictionary(dict_id: Option<u32>) -> DeflateDiff {
+pub async fn diff_set_preset_dictionary(dict_id: Option<u32>) -> DeflateDiff {
     DeflateDiff { dict_id: Some(dict_id), ..Default::default() }
 }
 /// 🧩 Builds a set-payload diff.
-pub fn diff_set_payload(payload: Vec<u8>) -> DeflateDiff {
+pub async fn diff_set_payload(payload: Vec<u8>) -> DeflateDiff {
     DeflateDiff { payload: Some(payload), ..Default::default() }
 }
 //#endregion 🔖️Diff
@@ -131,7 +131,7 @@ pub fn diff_set_payload(payload: Vec<u8>) -> DeflateDiff {
 /// `⚙️engine/🦀️component.rs`'s `diff_grammar_conformance_law`/`protocol_walk_law` conformance
 /// tests.
 #[cfg(test)]
-pub(crate) fn demo_diff_cases() -> Vec<DeflateDiff> {
+pub(crate) async fn demo_diff_cases() -> Vec<DeflateDiff> {
     use crate::artifacts::deflate::STDIO_DEFLATE_DOCUMENT_SCHEMA;
 
     let a = DeflateSnapshot { schema: STDIO_DEFLATE_DOCUMENT_SCHEMA.into(), compression_method: 8, window_bits: 7, compression_level_hint: DeflateLevelHint::Fastest, dict_id: None, payload: b"demo-cases-a-payload".to_vec() };
@@ -180,19 +180,19 @@ pub(crate) fn demo_diff_cases() -> Vec<DeflateDiff> {
 /// Worked example: `compression-method=9 window-bits=6 level=m dict-id=[1,3735928559] payload=` (empty
 /// payload prints as a zero-length hex string after `=`).
 //#region 🔖️Primitives
-fn hex_encode(bytes: &[u8]) -> String {
+async fn hex_encode(bytes: &[u8]) -> String {
     bytes.iter().map(|b| format!("{b:02x}")).collect()
 }
-fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
+async fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
     if s.len() % 2 != 0 {
         return Err(format!("odd hex length: {s:?}"));
     }
     (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()
 }
-fn parse_u8(s: &str) -> Result<u8, String> {
+async fn parse_u8(s: &str) -> Result<u8, String> {
     s.parse().map_err(|e: std::num::ParseIntError| e.to_string())
 }
-fn parse_u32(s: &str) -> Result<u32, String> {
+async fn parse_u32(s: &str) -> Result<u32, String> {
     s.parse().map_err(|e: std::num::ParseIntError| e.to_string())
 }
 
@@ -200,7 +200,7 @@ fn parse_u32(s: &str) -> Result<u32, String> {
 /// because `decode_option`'s own `[0]`/`[1,<v>]` payload can itself contain a `,` (none here
 /// today, but the primitive is the shared grammar contract every hand-rolled codec in this repo
 /// uses, per `f6-recon-report.md` §5 -- kept verbatim rather than hand-simplified).
-fn split_top_level(s: &str, sep: char) -> Vec<&str> {
+async fn split_top_level(s: &str, sep: char) -> Vec<&str> {
     if s.is_empty() {
         return Vec::new();
     }
@@ -221,16 +221,16 @@ fn split_top_level(s: &str, sep: char) -> Vec<&str> {
     out.push(&s[start..]);
     out
 }
-fn strip_brackets(s: &str) -> Result<&str, String> {
+async fn strip_brackets(s: &str) -> Result<&str, String> {
     s.strip_prefix('[').and_then(|s| s.strip_suffix(']')).ok_or_else(|| format!("expected [...], got {s:?}"))
 }
-fn encode_option<T>(opt: &Option<T>, enc: impl Fn(&T) -> String) -> String {
+async fn encode_option<T>(opt: &Option<T>, enc: impl Fn(&T) -> String) -> String {
     match opt {
         None => "[0]".to_string(),
         Some(v) => format!("[1,{}]", enc(v)),
     }
 }
-fn decode_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Option<T>, String> {
+async fn decode_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Option<T>, String> {
     let inner = strip_brackets(s)?;
     match split_top_level(inner, ',').as_slice() {
         ["0"] => Ok(None),
@@ -241,7 +241,7 @@ fn decode_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<
 //#endregion 🔖️Primitives
 
 //#region 🔖️ValueCodecs
-fn enc_level_hint(h: DeflateLevelHint) -> char {
+async fn enc_level_hint(h: DeflateLevelHint) -> char {
     match h {
         DeflateLevelHint::Fastest => 'f',
         DeflateLevelHint::Fast => 'a',
@@ -249,7 +249,7 @@ fn enc_level_hint(h: DeflateLevelHint) -> char {
         DeflateLevelHint::Maximum => 'm',
     }
 }
-fn dec_level_hint(s: &str) -> Result<DeflateLevelHint, String> {
+async fn dec_level_hint(s: &str) -> Result<DeflateLevelHint, String> {
     match s {
         "f" => Ok(DeflateLevelHint::Fastest),
         "a" => Ok(DeflateLevelHint::Fast),
@@ -261,7 +261,7 @@ fn dec_level_hint(s: &str) -> Result<DeflateLevelHint, String> {
 //#endregion 🔖️ValueCodecs
 
 //#region 🔖️TopLevel
-fn print_deflate_diff(d: &DeflateDiff) -> String {
+async fn print_deflate_diff(d: &DeflateDiff) -> String {
     let mut tokens: Vec<String> = Vec::new();
     if let Some(v) = d.compression_method {
         tokens.push(format!("compression-method={v}"));
@@ -280,7 +280,7 @@ fn print_deflate_diff(d: &DeflateDiff) -> String {
     }
     tokens.join(" ")
 }
-fn parse_deflate_diff(line: &str) -> Result<DeflateDiff, String> {
+async fn parse_deflate_diff(line: &str) -> Result<DeflateDiff, String> {
     let mut d = DeflateDiff::default();
     if line.is_empty() {
         return Ok(d);
@@ -304,10 +304,10 @@ fn parse_deflate_diff(line: &str) -> Result<DeflateDiff, String> {
 }
 
 impl protocol::DiffCodec for DeflateDiff {
-    fn print_diff(&self) -> String {
+    async fn print_diff(&self) -> String {
         print_deflate_diff(self)
     }
-    fn parse_diff(line: &str) -> Result<Self, store::TextError> {
+    async fn parse_diff(line: &str) -> Result<Self, store::TextError> {
         parse_deflate_diff(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
     /// 🧪️ P2-FG2: REAL binary frame (`format u8 | flags u8 | [compression_method][window_bits]
@@ -319,7 +319,7 @@ impl protocol::DiffCodec for DeflateDiff {
     /// presence in that fixed order; each present field's own (possibly tri-state) payload
     /// follows in the same order, `payload` last so it can be bare "rest of buffer" bytes with
     /// no length prefix (it is the only opaque, unbounded field in the frame).
-    fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    async fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         let mut flags: u8 = 0;
         if self.compression_method.is_some() {
             flags |= 0b0_0001;
@@ -357,7 +357,7 @@ impl protocol::DiffCodec for DeflateDiff {
         }
         Ok(out)
     }
-    fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    async fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         let mut reader = store::ByteReader::new(bytes);
         let malformed = |what: &'static str, offset: usize, detail: String| protocol::ProtocolError::Malformed { what, offset: offset as u64, detail };
         let _format = reader.read_u8().map_err(|e| malformed("diff format", 0, e.to_string()))?;
@@ -412,10 +412,10 @@ mod tests {
         0xf9,
     ];
 
-    fn sweep_a() -> DeflateSnapshot {
+    async fn sweep_a() -> DeflateSnapshot {
         DeflateSnapshot { schema: STDIO_DEFLATE_DOCUMENT_SCHEMA.into(), compression_method: 8, window_bits: 7, compression_level_hint: DeflateLevelHint::Fastest, dict_id: None, payload: b"sweep-a-payload".to_vec() }
     }
-    fn sweep_b() -> DeflateSnapshot {
+    async fn sweep_b() -> DeflateSnapshot {
         DeflateSnapshot { schema: STDIO_DEFLATE_DOCUMENT_SCHEMA.into(), compression_method: 9, window_bits: 6, compression_level_hint: DeflateLevelHint::Maximum, dict_id: Some(0xDEAD_BEEF), payload: b"sweep-b-different-longer-payload".to_vec() }
     }
     //#endregion Fixtures
@@ -424,7 +424,7 @@ mod tests {
     /// 🧪️ THE acceptance criterion: `sweep_a`/`sweep_b` differ in EVERY mutable field (incl. the
     /// tri-state `dict_id` exercising `Some(None)` in the b→a direction).
     #[test]
-    fn field_sweep_between_covers_every_field() {
+    async fn field_sweep_between_covers_every_field() {
         let a = sweep_a();
         let b = sweep_b();
 
@@ -453,7 +453,7 @@ mod tests {
 
     //#region mutation_diff_law
     #[test]
-    fn mutation_diff_law_every_variant() {
+    async fn mutation_diff_law_every_variant() {
         let base = sweep_a();
         let variants = vec![
             DeflateMutation::NoMutation,
@@ -474,7 +474,7 @@ mod tests {
 
     //#region inverse_law
     #[test]
-    fn inverse_law_mutation_and_diff_level() {
+    async fn inverse_law_mutation_and_diff_level() {
         let base = sweep_a();
         let variants = vec![
             DeflateMutation::NoMutation,
@@ -506,7 +506,7 @@ mod tests {
     /// "Scalars: LWW" rule -- these cases cover disjoint-field composition, same-field LWW
     /// override, and associativity over a triple.
     #[test]
-    fn absorb_law_scalar_lww_and_associativity() {
+    async fn absorb_law_scalar_lww_and_associativity() {
         let base = sweep_a();
 
         // Disjoint fields: both survive.
@@ -548,7 +548,7 @@ mod tests {
 
     //#region between_roundtrip_law
     #[test]
-    fn between_roundtrip_law_synthetic_and_real_fixture() {
+    async fn between_roundtrip_law_synthetic_and_real_fixture() {
         let a = sweep_a();
         let b = sweep_b();
         assert_eq!(DeflateDiff::between(&a, &b).apply(&a).unwrap(), b);
@@ -568,7 +568,7 @@ mod tests {
 
     //#region codec_retention_law
     #[test]
-    fn codec_retention_law_self_round_trip_is_byte_exact() {
+    async fn codec_retention_law_self_round_trip_is_byte_exact() {
         // 🔁️ Encoding with OUR OWN encoder and decoding back must be exactly byte- and
         // field-preserving (both directions use the same codec, so there is no cross-encoder
         // Huffman-strategy mismatch to normalize away).
@@ -586,7 +586,7 @@ mod tests {
     /// same raw DEFLATE bytes. What must be preserved exactly is the typed header fields and the
     /// decompressed PAYLOAD across a decode -> re-encode -> re-decode cycle.
     #[test]
-    fn codec_retention_law_real_fixture_normal_form() {
+    async fn codec_retention_law_real_fixture_normal_form() {
         let decoded = decode_deflate_snapshot(REAL_FIXTURE_ZLIB).expect("decode real fixture");
         let re_encoded = encode_deflate_snapshot(&decoded);
         let re_decoded = decode_deflate_snapshot(&re_encoded).expect("decode re-encoded stream");
@@ -603,7 +603,7 @@ mod tests {
     /// exercises real `between()` results covering every field AND both `dict_id` tri-state
     /// transitions (`Some(None)` = cleared, `Some(Some(_))` = set/changed), plus the empty diff.
     #[test]
-    fn diff_codec_text_binary_roundtrip_law() {
+    async fn diff_codec_text_binary_roundtrip_law() {
         let a = sweep_a();
         let b = sweep_b();
         // 🪆️ `a.dict_id` is `None`, `b.dict_id` is `Some(_)` -- `between(a,b)` exercises the

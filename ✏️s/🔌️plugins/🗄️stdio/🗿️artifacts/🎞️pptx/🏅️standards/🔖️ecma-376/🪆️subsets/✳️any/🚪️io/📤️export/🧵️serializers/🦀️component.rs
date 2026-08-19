@@ -18,7 +18,7 @@ use crate::artifacts::xml::schema::snapshot::{xml_document_to_text, XmlDocument,
 use crate::artifacts::zip::opc::{OpcPackage, OpcRelationship, OpcTargetMode, REL_TYPE_OFFICE_DOCUMENT};
 
 //#region 🔖️TextXml
-fn run_to_xml(run: &PptxRun) -> XmlNode {
+async fn run_to_xml(run: &PptxRun) -> XmlNode {
     let mut children = Vec::new();
     if run.bold || run.italic || run.font_size.is_some() {
         let mut attrs = Vec::new();
@@ -37,11 +37,11 @@ fn run_to_xml(run: &PptxRun) -> XmlNode {
     XmlNode::Element { name: "a:r".into(), attrs: vec![], children }
 }
 
-fn paragraph_to_xml(p: &PptxParagraph) -> XmlNode {
+async fn paragraph_to_xml(p: &PptxParagraph) -> XmlNode {
     XmlNode::Element { name: "a:p".into(), attrs: vec![], children: p.runs.iter().map(run_to_xml).collect() }
 }
 
-fn text_frame_to_xml(paragraphs: &[PptxParagraph]) -> Vec<XmlNode> {
+async fn text_frame_to_xml(paragraphs: &[PptxParagraph]) -> Vec<XmlNode> {
     let mut children = vec![XmlNode::Element { name: "a:bodyPr".into(), attrs: vec![], children: vec![] }];
     children.extend(paragraphs.iter().map(paragraph_to_xml));
     children
@@ -49,7 +49,7 @@ fn text_frame_to_xml(paragraphs: &[PptxParagraph]) -> Vec<XmlNode> {
 //#endregion 🔖️TextXml
 
 //#region 🔖️ShapeXml
-fn xfrm_node(position: &PptxTransform) -> XmlNode {
+async fn xfrm_node(position: &PptxTransform) -> XmlNode {
     XmlNode::Element {
         name: "a:xfrm".into(),
         attrs: vec![],
@@ -63,7 +63,7 @@ fn xfrm_node(position: &PptxTransform) -> XmlNode {
 /// 🏗️ Serializes one `PptxShape` as its `p:spTree`-child XML node. `id` is a synthesized
 /// `p:cNvPr@id` (this layer doesn't model shape ids -- any positive, unique-within-the-slide
 /// value satisfies the schema).
-fn shape_to_xml(shape: &PptxShape, id: u32) -> XmlNode {
+async fn shape_to_xml(shape: &PptxShape, id: u32) -> XmlNode {
     match shape {
         PptxShape::TextBox { text_frame, position } => XmlNode::Element {
             name: "p:sp".into(),
@@ -133,7 +133,7 @@ fn shape_to_xml(shape: &PptxShape, id: u32) -> XmlNode {
 //#endregion 🔖️ShapeXml
 
 //#region 🔖️SlideXml
-fn slide_to_xml(slide: &PptxSlide) -> XmlDocument {
+async fn slide_to_xml(slide: &PptxSlide) -> XmlDocument {
     let mut sp_tree_children = vec![
         XmlNode::Element {
             name: "p:nvGrpSpPr".into(),
@@ -165,7 +165,7 @@ fn slide_to_xml(slide: &PptxSlide) -> XmlDocument {
 //#endregion 🔖️SlideXml
 
 //#region 🔖️PresentationXml
-fn presentation_to_xml(master_rid: &str, sld_id_entries: &[(u32, String)]) -> XmlDocument {
+async fn presentation_to_xml(master_rid: &str, sld_id_entries: &[(u32, String)]) -> XmlDocument {
     let sld_ids = sld_id_entries.iter().map(|(id, rid)| XmlNode::Element { name: "p:sldId".into(), attrs: vec![attr("id", &id.to_string()), attr("r:id", rid)], children: vec![] }).collect();
     XmlDocument {
         prolog: Vec::new(),
@@ -188,7 +188,7 @@ fn presentation_to_xml(master_rid: &str, sld_id_entries: &[(u32, String)]) -> Xm
 /// and its relationships) from `presentation`, discarding stale slide parts a shrinking slide
 /// list would otherwise leave orphaned. Synthesizes the slideMaster/slideLayout/theme boilerplate
 /// chain only when entirely absent — an already-decoded package's real ones are left untouched.
-fn regenerate_presentation_parts(opc: &mut OpcPackage, presentation: &PptxPresentation) {
+async fn regenerate_presentation_parts(opc: &mut OpcPackage, presentation: &PptxPresentation) {
     // 🩹 `ppt/presentation.xml` is retained-away HERE TOO (not just the slide parts) so its
     // `opc.parts` position is FRESHLY appended (after the slide loop, below) on EVERY call, not
     // just the first one. Without this, a SECOND regenerate on an already-built package (e.g.
@@ -250,13 +250,13 @@ fn regenerate_presentation_parts(opc: &mut OpcPackage, presentation: &PptxPresen
 /// 🏗️ Assembles a brand-new, minimal-but-valid OPC package around `presentation` — correct
 /// `[Content_Types].xml`, root `_rels/.rels`, `ppt/presentation.xml` + its relationships, every
 /// slide, and a synthesized slideMaster/slideLayout/theme chain real readers expect to exist.
-pub fn build_minimal_pptx(presentation: PptxPresentation) -> PptxSnapshot {
+pub async fn build_minimal_pptx(presentation: PptxPresentation) -> PptxSnapshot {
     let draft = PptxSnapshot::from_parts(OpcPackage::empty(), Vec::new(), presentation);
     let bytes = encode_pptx(&draft).expect("minimal logical pptx materialization");
     crate::artifacts::pptx::standards::v_ecma_376::subsets::any::io::import::deserializers::decode_pptx(&bytes).expect("minimal logical pptx decode")
 }
 
-fn xml_document_to_pptx_text(path: &str, document: &XmlDocument) -> String {
+async fn xml_document_to_pptx_text(path: &str, document: &XmlDocument) -> String {
     let mut text = crate::artifacts::zip::opc::xml_document_to_opc_text(document);
     if path == "docProps/app.xml" {
         text = text.replace("<Template/>", "<Template></Template>");
@@ -280,13 +280,13 @@ fn xml_document_to_pptx_text(path: &str, document: &XmlDocument) -> String {
     text
 }
 
-fn order_pptx_paths(paths: &mut Vec<String>) {
-    fn take(remaining: &mut std::collections::BTreeSet<String>, ordered: &mut Vec<String>, path: &str) {
+async fn order_pptx_paths(paths: &mut Vec<String>) {
+    async fn take(remaining: &mut std::collections::BTreeSet<String>, ordered: &mut Vec<String>, path: &str) {
         if let Some(path) = remaining.take(path) {
             ordered.push(path);
         }
     }
-    fn take_media(remaining: &mut std::collections::BTreeSet<String>, ordered: &mut Vec<String>, number: u32) {
+    async fn take_media(remaining: &mut std::collections::BTreeSet<String>, ordered: &mut Vec<String>, number: u32) {
         let prefix = format!("ppt/media/image{number}.");
         if let Some(path) = remaining.iter().find(|path| path.to_ascii_lowercase().starts_with(&prefix)).cloned() {
             remaining.remove(&path);
@@ -368,7 +368,7 @@ fn order_pptx_paths(paths: &mut Vec<String>) {
     *paths = ordered;
 }
 
-pub fn encode_pptx(snap: &PptxSnapshot) -> Result<Vec<u8>, PptxError> {
+pub async fn encode_pptx(snap: &PptxSnapshot) -> Result<Vec<u8>, PptxError> {
     let mut opc = snap.opc.clone();
     let mut xml_paths = std::collections::HashSet::new();
     for part in &snap.xml_parts {

@@ -11,6 +11,6 @@ use serde::{Deserialize, Serialize};
 #[dsl(keyword = "clear-dense")]
 pub struct ClearDense {}
 
-pub fn handle(_payload: &ClearDense, _doc: &ArtifactView<'_, RemodelSnapshot>, _cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelMutation, RemodelConfigMutation>, Fault> {
+pub async fn handle(_payload: &ClearDense, _doc: &ArtifactView<'_, RemodelSnapshot>, _cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelMutation, RemodelConfigMutation>, Fault> {
     Ok(Emit::mutations(vec![replace_dense(None)]))
 }

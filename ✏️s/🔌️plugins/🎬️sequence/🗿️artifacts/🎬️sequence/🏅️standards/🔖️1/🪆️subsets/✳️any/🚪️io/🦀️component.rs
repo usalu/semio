@@ -15,7 +15,7 @@
 //! underlying codec impls these would point at are unchanged and independently tested either way.
 
 //#region 🔖️IoDeclaration
-pub fn io() -> semio_framework_plugin::app::declarations::IoDeclaration {
+pub async fn io() -> semio_framework_plugin::app::declarations::IoDeclaration {
     use crate::artifacts::sequence::standards::v1::subsets::any::io::export::serializers::artifacts as export;
     use crate::artifacts::sequence::standards::v1::subsets::any::io::import::deserializers::artifacts as import;
     use crate::artifacts::sequence::{SequenceMutation, SequenceSnapshot, SEQUENCE_DIALECT, SEQUENCE_DOCUMENT_SCHEMA};
@@ -23,7 +23,7 @@ pub fn io() -> semio_framework_plugin::app::declarations::IoDeclaration {
     use semio_framework_plugin::app::declarations::{IoDeclaration, LanguagePair, NativeCodecs};
     use std::sync::OnceLock;
 
-    fn entries() -> &'static [IoEntry] {
+    async fn entries() -> &'static [IoEntry] {
         static ENTRIES: OnceLock<Vec<IoEntry>> = OnceLock::new();
         ENTRIES
             .get_or_init(|| {

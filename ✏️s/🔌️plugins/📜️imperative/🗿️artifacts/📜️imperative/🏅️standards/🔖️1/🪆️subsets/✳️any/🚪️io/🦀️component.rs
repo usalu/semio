@@ -1,7 +1,7 @@
 //! 🚪️ IO s.imperative (1/✳️any) — registration now flows through 🎹️composer::register
 //! (called once from the artifact root's `declaration()`), not per-leaf register().
-pub fn import_stdio_kinds() -> &'static [&'static str] { &["stdio.csv", "stdio.json", "stdio.md", "stdio.txt"] }
-pub fn export_stdio_kinds() -> &'static [&'static str] { &["stdio.csv", "stdio.json", "stdio.md", "stdio.txt"] }
+pub async fn import_stdio_kinds() -> &'static [&'static str] { &["stdio.csv", "stdio.json", "stdio.md", "stdio.txt"] }
+pub async fn export_stdio_kinds() -> &'static [&'static str] { &["stdio.csv", "stdio.json", "stdio.md", "stdio.txt"] }
 
 //#region 🔖️Bootstrap
 /// 🧩️ Relocated from the deleted `⚙️engine` (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES).
@@ -10,7 +10,7 @@ pub fn export_stdio_kinds() -> &'static [&'static str] { &["stdio.csv", "stdio.j
 /// building composers/inferences), the app's `🎚️config` (`crate::artifacts::imperative::io::default_imperative_contributions_json`),
 /// and the app engine's `ImperativeHost::from_snapshot`. An artifact must not depend on its app, so this
 /// stays artifact-side where both the root and the app can reach it by qualified path.
-pub fn default_imperative_contributions_json() -> String {
+pub async fn default_imperative_contributions_json() -> String {
     static ENTRIES: std::sync::OnceLock<String> = std::sync::OnceLock::new();
     ENTRIES
         .get_or_init(|| {
@@ -30,7 +30,7 @@ pub fn default_imperative_contributions_json() -> String {
 /// doc for why this lives here rather than the artifact root or the app. Widened to `pub` (was
 /// `pub(crate)` while confined to the artifact crate) because the app engine's `ImperativeHost` is now
 /// its second caller.
-pub fn bootstrap_imperative_runtime() {
+pub async fn bootstrap_imperative_runtime() {
     static ONCE: std::sync::Once = std::sync::Once::new();
     ONCE.call_once(|| {
         imperative_engine::register_native_imperative_module("imperative-extension-core", crate::extensions::effect::register);
@@ -62,11 +62,11 @@ pub mod derived_composition {
         type Snapshot = ImperativeSnapshot;
         const WRITES: Dialect = DIALECT;
 
-        fn reads() -> &'static [Dialect] {
+        async fn reads() -> &'static [Dialect] {
             &[DIALECT, DEP_CSV, DEP_JSON, DEP_MD, DEP_TXT]
         }
 
-        fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+        async fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
             for source in sources {
                 if source.dialect == DIALECT {
                     let native = match &source.payload {
@@ -150,7 +150,7 @@ pub mod io_registry {
     const IMPERATIVE_DIALECT: Dialect = Dialect { artifact_kind: "s.imperative", standard: StandardId("1"), subset: SubsetId("*") };
     const IMPERATIVE_JSON_BRIDGE_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.json", standard: StandardId("rfc8259"), subset: SubsetId("*") };
 
-    fn rebuild_native_snapshot(sources: &[ErasedComposeSource]) -> Result<crate::artifacts::imperative::ImperativeSnapshot, ComposeError> {
+    async fn rebuild_native_snapshot(sources: &[ErasedComposeSource]) -> Result<crate::artifacts::imperative::ImperativeSnapshot, ComposeError> {
         if let Some(source) = sources.iter().find(|s| s.dialect == IMPERATIVE_DIALECT) {
             let builder = match &source.payload {
                 IoPayload::Text(t) => ImperativeAnyBuilder::from_text(t).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?,
@@ -172,7 +172,7 @@ pub mod io_registry {
     }
 
     const EXPORT_CSV_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.csv", standard: StandardId("rfc4180"), subset: SubsetId("*") };
-    fn compose_export_csv(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
+    async fn compose_export_csv(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
     Box::pin(async move {
         let snapshot = rebuild_native_snapshot(sources)?;
         let bytes = crate::artifacts::imperative::io::export::serializers::artifacts::csv::v_rfc4180::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
@@ -180,7 +180,7 @@ pub mod io_registry {
     })
 }
     const EXPORT_MD_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.md", standard: StandardId("commonmark"), subset: SubsetId("*") };
-    fn compose_export_md(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
+    async fn compose_export_md(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
     Box::pin(async move {
         let snapshot = rebuild_native_snapshot(sources)?;
         let bytes = crate::artifacts::imperative::io::export::serializers::artifacts::md::v_commonmark::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
@@ -188,7 +188,7 @@ pub mod io_registry {
     })
 }
     const EXPORT_JSON_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.json", standard: StandardId("rfc8259"), subset: SubsetId("*") };
-    fn compose_export_json(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
+    async fn compose_export_json(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
     Box::pin(async move {
         let snapshot = rebuild_native_snapshot(sources)?;
         let bytes = crate::artifacts::imperative::io::export::serializers::artifacts::json::v_rfc8259::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
@@ -197,7 +197,7 @@ pub mod io_registry {
 }
     //#endregion 🔖️ExportEntries
 
-    pub fn entries() -> &'static [ComposerEntry] {
+    pub async fn entries() -> &'static [ComposerEntry] {
         ENTRIES.get_or_init(|| vec![
             composer_entry_of::<ImperativeAnyComposer>(),
             ComposerEntry { writes: EXPORT_CSV_DIALECT, reads: &[IMPERATIVE_DIALECT], compose: compose_export_csv },

@@ -5,16 +5,16 @@ use crate::artifacts::zip::ZipSnapshot;
 
 //#region Codec
 /// Register serializer hooks.
-pub fn register() {}
+pub async fn register() {}
 
 /// 🎒️ Encode ZipSnapshot as ZIP container bytes.
-pub fn serialize(from: &ZipSnapshot) -> Result<BinarySnapshot, store::PackError> {
+pub async fn serialize(from: &ZipSnapshot) -> Result<BinarySnapshot, store::PackError> {
     let bytes = crate::artifacts::zip::standards::v2_0::subsets::any::io::encode_zip(from).map_err(|e| store::PackError::Schema(e.to_string()))?;
     Ok(BinarySnapshot { schema: STDIO_BINARY_DOCUMENT_SCHEMA.into(), bytes })
 }
 
 /// Encode ZIP then wrap as binary pack bytes.
-pub fn serialize_bytes(from: &ZipSnapshot) -> Result<Vec<u8>, store::PackError> {
+pub async fn serialize_bytes(from: &ZipSnapshot) -> Result<Vec<u8>, store::PackError> {
     store::ArtifactPack::encode_pack_with(&serialize(from)?, &store::PackEncodeOptions::default())
 }
 //#endregion Codec

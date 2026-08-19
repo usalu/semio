@@ -16,20 +16,20 @@ pub struct UpdateDenseParams {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn update_dense_params(params: DenseParams) -> RemodelMutation {
+pub async fn update_dense_params(params: DenseParams) -> RemodelMutation {
     RemodelMutation::UpdateDenseParams(UpdateDenseParams { params })
 }
 
 impl protocol::MutationKind<RemodelSnapshot, RemodelMutation> for UpdateDenseParams {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "update", entity: "dense-params", kind: "update-dense-params", record: "UpdatedDenseParams" };
 
-    fn diff(&self, base: &RemodelSnapshot) -> protocol::MutationOutcome<RemodelDiff> {
+    async fn diff(&self, base: &RemodelSnapshot) -> protocol::MutationOutcome<RemodelDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &RemodelSnapshot) -> Vec<RemodelMutation> {
+    async fn inverse(&self, base: &RemodelSnapshot) -> Vec<RemodelMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         "Update dense params".to_string()
     }
 }

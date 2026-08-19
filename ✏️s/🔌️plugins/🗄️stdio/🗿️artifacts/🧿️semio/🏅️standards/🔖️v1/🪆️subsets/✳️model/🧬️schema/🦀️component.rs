@@ -23,19 +23,19 @@ pub struct SemioModelArtifact {
 }
 
 impl Default for SemioModelArtifact {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self::from_snapshot(SemioModelSnapshot::default())
     }
 }
 
 impl SemioModelArtifact {
-    pub fn to_snapshot(&self) -> SemioModelSnapshot {
+    pub async fn to_snapshot(&self) -> SemioModelSnapshot {
         SemioModelSnapshot { schema: self.schema.clone(), spatial: self.spatial.clone(), elements: self.elements.clone(), relations: self.relations.clone() }
     }
-    pub fn from_snapshot(snapshot: SemioModelSnapshot) -> Self {
+    pub async fn from_snapshot(snapshot: SemioModelSnapshot) -> Self {
         Self { schema: snapshot.schema, spatial: snapshot.spatial, elements: snapshot.elements, relations: snapshot.relations }
     }
-    pub fn set_snapshot(&mut self, snapshot: SemioModelSnapshot) {
+    pub async fn set_snapshot(&mut self, snapshot: SemioModelSnapshot) {
         self.schema = snapshot.schema;
         self.spatial = snapshot.spatial;
         self.elements = snapshot.elements;
@@ -43,7 +43,7 @@ impl SemioModelArtifact {
     }
 }
 
-pub fn semio_model_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
+pub async fn semio_model_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
     schema::ArtifactSchemaDescriptor {
         id: "s.stdio.semio.model",
         artifact: schema::FacetLeaves {
@@ -92,27 +92,27 @@ pub mod derived_construction {
         type Snapshot = SemioModelSnapshot;
         type Mutation = SemioModelMutation;
         type Diff = SemioModelDiff;
-        fn empty() -> Self {
+        async fn empty() -> Self {
             Self { snapshot: SemioModelSnapshot::default() }
         }
-        fn from_snapshot(snapshot: Self::Snapshot) -> Self {
+        async fn from_snapshot(snapshot: Self::Snapshot) -> Self {
             Self { snapshot }
         }
-        fn from_text(text: &str) -> Result<Self, store::TextError> {
+        async fn from_text(text: &str) -> Result<Self, store::TextError> {
             Ok(Self::from_snapshot(<SemioModelSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
-        fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
+        async fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
             Ok(Self::from_snapshot(<SemioModelSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
         }
-        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
+        async fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let diff = apply_semio_model_mutation(&mut self.snapshot, &mutation);
             (self, diff)
         }
-        fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
+        async fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
             self.snapshot = <SemioModelDiff as protocol::MutationDiff<SemioModelSnapshot>>::apply(&diff, &self.snapshot)?;
             Ok(self)
         }
-        fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
+        async fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
             Ok(self.snapshot)
         }
     }
@@ -136,7 +136,7 @@ pub mod derived_analysis {
         type Parts = SemioModelParts;
         const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("model") };
 
-        fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
+        async fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
             match source {
                 AnalyzeSource::Binary(bytes) => {
                     let marker = STDIO_SEMIOMODEL_DOCUMENT_SCHEMA.as_bytes();
@@ -156,7 +156,7 @@ pub mod derived_analysis {
             }
         }
 
-        fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
+        async fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
             let mut parts = SemioModelParts::default();
             let mut diagnostics = Vec::new();
             let mut confidence = IoConfidence::High;

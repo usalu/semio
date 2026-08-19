@@ -19,7 +19,7 @@ const TRINITY_JACK_VIEW_CONTROLLER_ID: &str = "trinity-jack-view";
 
 //#region 🔖️Definition
 /// 🧱️ Stitched into the viewer manifest by `crate::viewer::jack::create_trinity_jack_viewer`.
-pub fn definition() -> WindowKindDefinition {
+pub async fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
         id: WINDOW_KIND_ID.into(),
         label: LocalizedLabel::native("Nakagin Graph", "Nakagin-Graph"),
@@ -42,11 +42,11 @@ pub fn definition() -> WindowKindDefinition {
 //#region 🔖️Render
 /// 🩹 Read-only twin of the editor's `split_endpoint` — duplicated on purpose rather than imported
 /// through the sibling `✏️editor` module, which `policyViewerPurityBreaches` forbids outright.
-fn split_endpoint(endpoint: &str) -> (String, String) {
+async fn split_endpoint(endpoint: &str) -> (String, String) {
     crate::artifacts::jack::parse_port_key(endpoint).map_or_else(|| (endpoint.to_string(), "in".into()), |(n, p)| (n.to_string(), p.to_string()))
 }
 
-fn node_to_record(node: &Node) -> NodeGraphNodeRecord {
+async fn node_to_record(node: &Node) -> NodeGraphNodeRecord {
     let width = if node.width > 0.0 { node.width } else { 96.0 };
     let height = if node.height > 0.0 { node.height } else { 48.0 };
     NodeGraphNodeRecord {
@@ -64,7 +64,7 @@ fn node_to_record(node: &Node) -> NodeGraphNodeRecord {
 
 /// 👁️ Pure `JackSnapshot -> UiNode` read: no selection, no LOD, no query text — the viewer renders
 /// the live fixture graph exactly as it stands.
-pub fn render(document: &JackSnapshot) -> UiNode {
+pub async fn render(document: &JackSnapshot) -> UiNode {
     let nodes: Vec<NodeGraphNodeRecord> = document.nodes().iter().map(node_to_record).collect();
     let edges: Vec<NodeGraphEdgeRecord> = document
         .edges()
@@ -86,14 +86,14 @@ mod tests {
     use super::*;
 
     #[test]
-    fn definition_declares_a_node_graph_window() {
+    async fn definition_declares_a_node_graph_window() {
         let def = definition();
         assert_eq!(def.id, WINDOW_KIND_ID);
         assert_eq!(def.surface_kind, SurfaceKind::NodeGraph);
     }
 
     #[test]
-    fn render_produces_a_scene_node_for_the_default_document() {
+    async fn render_produces_a_scene_node_for_the_default_document() {
         let document = crate::artifacts::jack::empty_trinity_graph_fixture();
         let node = render(&document);
         assert!(serde_json::to_string(&node).unwrap().contains("node-graph"));

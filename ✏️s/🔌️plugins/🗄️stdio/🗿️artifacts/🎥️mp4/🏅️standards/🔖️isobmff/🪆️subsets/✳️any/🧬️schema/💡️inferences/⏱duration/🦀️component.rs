@@ -23,7 +23,7 @@ pub struct Mp4Duration {
 /// timescale` (`0.0` for a `timescale` of `0`, an honest degenerate case, not a panic);
 /// `durationSeconds` reports the MAXIMUM across tracks (the container plays until its longest
 /// track ends). `sampleCount` sums every track's sample count.
-pub fn compute_mp4_duration(snapshot: &Mp4Snapshot) -> Mp4Duration {
+pub async fn compute_mp4_duration(snapshot: &Mp4Snapshot) -> Mp4Duration {
     let duration_seconds = snapshot
         .tracks
         .iter()
@@ -47,12 +47,12 @@ mod tests {
     use super::*;
     use crate::artifacts::mp4::standards::isobmff::subsets::any::schema::snapshot::{Mp4Sample, Mp4Track};
 
-    fn track(timescale: u32, sample_durations: &[u32]) -> Mp4Track {
+    async fn track(timescale: u32, sample_durations: &[u32]) -> Mp4Track {
         Mp4Track { timescale, samples: sample_durations.iter().map(|&d| Mp4Sample { duration: d, ..Mp4Sample::default() }).collect(), ..Mp4Track::default() }
     }
 
     #[test]
-    fn container_duration_is_bounded_by_the_slowest_ending_track() {
+    async fn container_duration_is_bounded_by_the_slowest_ending_track() {
         let snapshot = Mp4Snapshot {
             tracks: vec![
                 track(1000, &[33, 33]),         // 0.066s
@@ -67,7 +67,7 @@ mod tests {
     }
 
     #[test]
-    fn zero_timescale_track_contributes_zero_not_a_panic() {
+    async fn zero_timescale_track_contributes_zero_not_a_panic() {
         let snapshot = Mp4Snapshot { tracks: vec![track(0, &[10, 10])], ..Mp4Snapshot::default() };
         let duration = compute_mp4_duration(&snapshot);
         assert_eq!(duration.duration_seconds, 0.0);
@@ -75,13 +75,13 @@ mod tests {
     }
 
     #[test]
-    fn inference_determinism_law() {
+    async fn inference_determinism_law() {
         let snapshot = Mp4Snapshot { tracks: vec![track(600, &[600])], ..Mp4Snapshot::default() };
         assert_eq!(compute_mp4_duration(&snapshot), compute_mp4_duration(&snapshot));
     }
 
     #[test]
-    fn inference_default_law() {
+    async fn inference_default_law() {
         assert_eq!(compute_mp4_duration(&Mp4Snapshot::default()), Mp4Duration::default());
     }
 }

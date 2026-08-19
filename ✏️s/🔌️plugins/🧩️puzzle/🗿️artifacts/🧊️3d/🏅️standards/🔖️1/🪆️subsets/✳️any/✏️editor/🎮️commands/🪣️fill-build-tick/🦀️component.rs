@@ -11,7 +11,7 @@ use crate::editor::puzzle3d::puzzle3d_fill_tool_active;
 /// `applied_count` — a slider can only request what `render`'s reveal-tagged instances already show.
 /// Ticks purely advance background planning, and only claim a UI refresh when they actually produced
 /// something new.
-pub fn fill_build_tick(ctx: &mut Puzzle3dActionCtx<'_>) {
+pub async fn fill_build_tick(ctx: &mut Puzzle3dActionCtx<'_>) {
     if !puzzle3d_fill_tool_active(ctx.config) {
         *ctx.ui_scope = UiDirtyScope::None;
         return;

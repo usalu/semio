@@ -38,7 +38,7 @@ mod tests {
     }
 
     #[test]
-    fn canonical_vector_enforces_forward_inverse_reference_stale_and_wire_laws() {
+    async fn canonical_vector_enforces_forward_inverse_reference_stale_and_wire_laws() {
         let contract: Contract = serde_json::from_str(include_str!("🔣️component.json")).unwrap();
         let vector = &contract.vectors[0];
         assert_eq!(serde_json::to_string(&vector.mutation).unwrap(), vector.wire.mutation);

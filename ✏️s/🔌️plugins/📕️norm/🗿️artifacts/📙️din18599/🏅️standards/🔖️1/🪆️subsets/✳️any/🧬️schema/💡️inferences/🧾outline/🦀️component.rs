@@ -20,7 +20,7 @@ pub struct Din18599Outline {
 }
 
 impl Din18599Outline {
-    pub fn compute(_snapshot: &Din18599Snapshot) -> Self {
+    pub async fn compute(_snapshot: &Din18599Snapshot) -> Self {
         let section_outline: Vec<String> = SECTION_FIELDS.iter().map(|s| s.to_string()).collect();
         let field_count = section_outline.len() as u32;
         let entry_count = 0;
@@ -29,7 +29,7 @@ impl Din18599Outline {
 }
 
 impl Default for Din18599Outline {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self::compute(&Din18599Snapshot::default())
     }
 }
@@ -41,13 +41,13 @@ mod tests {
     use super::*;
 
     #[test]
-    fn outline_field_count_matches_section_outline_length() {
+    async fn outline_field_count_matches_section_outline_length() {
         let outline = Din18599Outline::compute(&Din18599Snapshot::default());
         assert_eq!(outline.field_count as usize, outline.section_outline.len());
     }
 
     #[test]
-    fn outline_is_deterministic() {
+    async fn outline_is_deterministic() {
         let snapshot = Din18599Snapshot::default();
         assert_eq!(Din18599Outline::compute(&snapshot), Din18599Outline::compute(&snapshot));
     }

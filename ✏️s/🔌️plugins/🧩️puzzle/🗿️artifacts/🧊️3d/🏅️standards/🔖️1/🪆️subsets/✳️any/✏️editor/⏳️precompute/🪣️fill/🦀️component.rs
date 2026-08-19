@@ -37,7 +37,7 @@ pub(crate) struct FillBuilder {
 }
 
 impl FillBuilder {
-    pub(crate) fn new(base: Fixture, seed: u32, meshes: &HashMap<String, CollisionBody>, catalogs: &KindCatalogBundle) -> Self {
+    pub(crate) async fn new(base: Fixture, seed: u32, meshes: &HashMap<String, CollisionBody>, catalogs: &KindCatalogBundle) -> Self {
         let seed_object_ids: std::collections::HashSet<String> = base.objects.iter().map(|o| o.id.clone()).collect();
         let mut placed = Vec::new();
         for obj in &base.objects {
@@ -63,7 +63,7 @@ impl FillBuilder {
         }
     }
 
-    pub(crate) fn progress(&self) -> FillBuildProgress {
+    pub(crate) async fn progress(&self) -> FillBuildProgress {
         FillBuildProgress {
             count: self.sequence.len(),
             applied_count: self.applied_count,

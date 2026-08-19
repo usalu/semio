@@ -21,7 +21,7 @@ pub struct GisTerrainBounds {
 
 /// 🗺️ Decodes `imported_features_json`'s `positions` overlay into raw `(lon, lat)` pairs —
 /// malformed/empty JSON (including the default empty string) contributes no positions.
-pub(crate) fn imported_lon_lat_positions(snapshot: &GisTerrainSnapshot) -> Vec<(f64, f64)> {
+pub(crate) async fn imported_lon_lat_positions(snapshot: &GisTerrainSnapshot) -> Vec<(f64, f64)> {
     let Ok(value) = serde_json::from_str::<serde_json::Value>(&snapshot.imported_features_json) else {
         return Vec::new();
     };
@@ -32,7 +32,7 @@ pub(crate) fn imported_lon_lat_positions(snapshot: &GisTerrainSnapshot) -> Vec<(
 }
 
 /// 📦 Bounding box across every decoded `(lon, lat)` pair, or `None` for an empty overlay.
-pub(crate) fn lon_lat_bounds(positions: &[(f64, f64)]) -> Option<GisTerrainBounds> {
+pub(crate) async fn lon_lat_bounds(positions: &[(f64, f64)]) -> Option<GisTerrainBounds> {
     positions.iter().fold(None, |acc, &(lon, lat)| {
         Some(match acc {
             Some(bounds) => GisTerrainBounds {
@@ -53,19 +53,19 @@ mod tests {
     use super::*;
 
     #[test]
-    fn empty_overlay_has_no_bounds() {
+    async fn empty_overlay_has_no_bounds() {
         let snapshot = GisTerrainSnapshot::default();
         assert!(lon_lat_bounds(&imported_lon_lat_positions(&snapshot)).is_none());
     }
 
     #[test]
-    fn malformed_overlay_json_contributes_no_positions() {
+    async fn malformed_overlay_json_contributes_no_positions() {
         let snapshot = GisTerrainSnapshot { exaggeration: 0.0, imported_features_json: "not json".into(), ..Default::default() };
         assert!(imported_lon_lat_positions(&snapshot).is_empty());
     }
 
     #[test]
-    fn two_positions_produce_their_enclosing_box() {
+    async fn two_positions_produce_their_enclosing_box() {
         let snapshot = GisTerrainSnapshot {
             exaggeration: 1.0,
             imported_features_json: serde_json::json!({ "positions": [

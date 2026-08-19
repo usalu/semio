@@ -16,16 +16,16 @@ pub struct DeleteEnergyModel {}
 impl MutationKind<CadSnapshot, CadMutation> for DeleteEnergyModel {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "delete", entity: "energy-model", kind: "delete-energy-model", record: "DeletedEnergyModel" };
 
-    fn diff(&self, base: &CadSnapshot) -> protocol::MutationOutcome<crate::artifacts::cad::diff::CadDiff> {
+    async fn diff(&self, base: &CadSnapshot) -> protocol::MutationOutcome<crate::artifacts::cad::diff::CadDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &CadSnapshot) -> Vec<CadMutation> {
+    async fn inverse(&self, base: &CadSnapshot) -> Vec<CadMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         "Delete energy-model child".to_string()
     }
-    fn target(&self) -> Vec<String> {
+    async fn target(&self) -> Vec<String> {
         vec!["energy_model".to_string()]
     }
 }

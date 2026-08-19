@@ -12,7 +12,7 @@ use serde::{Deserialize, Serialize};
 #[dsl(keyword = "reorganize")]
 pub struct Reorganize {}
 
-pub fn handle(_payload: &Reorganize, doc: &ArtifactView<'_, Procedural2dSnapshot>, _cfg: &ConfigView<'_, Procedural2dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural2dMutation, Procedural2dConfigMutation>, Fault> {
+pub async fn handle(_payload: &Reorganize, doc: &ArtifactView<'_, Procedural2dSnapshot>, _cfg: &ConfigView<'_, Procedural2dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural2dMutation, Procedural2dConfigMutation>, Fault> {
     let fixture = &doc.snapshot.fixture;
     Ok(Emit::mutations(host_operations(fixture, |host| {
         let _ = host.reorganize(r#"{"orientation":"leftRight"}"#);
@@ -28,7 +28,7 @@ mod tests {
     use crate::editor::procedural2d::commands::node_graph_viewport;
 
     #[test]
-    fn reorganize_emits_operations() {
+    async fn reorganize_emits_operations() {
         let mut app = app();
         let before = app.snapshot().expect("snapshot").fixture;
         dispatch(&mut app, Procedural2dCommand::Reorganize(Reorganize {}));
@@ -37,7 +37,7 @@ mod tests {
     }
 
     #[test]
-    fn node_graph_viewport_sets_camera() {
+    async fn node_graph_viewport_sets_camera() {
         let mut app = app();
         dispatch(&mut app, Procedural2dCommand::NodeGraphViewport(node_graph_viewport::NodeGraphViewport { viewport_json: serde_json::to_string(&CameraJson { x: 1.0, y: 2.0, zoom: 3.0 }).unwrap() }));
     }

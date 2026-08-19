@@ -3,14 +3,14 @@
 use semio_framework_plugin::{ExampleSource, LocalizedLabel};
 
 pub const ID: &str = "demo";
-pub fn label() -> LocalizedLabel {
+pub async fn label() -> LocalizedLabel {
     LocalizedLabel::native("Demo", "Demo")
 }
 pub const ICON: &str = "file";
 pub const PRIMARY_TEXT: &str = include_str!("🖼️assets/🗣️example.dsl.semio");
 /// 📄️ Genuine RFC 4180 bytes for the demo snapshot (`encode_csv(demo_csv_snapshot())`).
 pub const NATIVE_BYTES: &[u8] = include_str!("🖼️assets/📊️example.csv").as_bytes();
-pub fn source() -> ExampleSource {
+pub async fn source() -> ExampleSource {
     ExampleSource::new(ID, label(), PRIMARY_TEXT, ICON)
 }
 
@@ -32,7 +32,7 @@ mod tests {
     use store::os_store::test_support::{self, ExampleAsset, IoFidelityClass, SubsetRoundtripSpec};
 
     #[test]
-    fn demo_source_nonempty() {
+    async fn demo_source_nonempty() {
         assert!(!PRIMARY_TEXT.is_empty());
         let _ = source();
     }
@@ -44,51 +44,51 @@ mod tests {
         type Mutation = CsvMutation;
         type Inference = CsvInference;
 
-        fn dialect() -> store::os_io::ArtifactDialect {
+        async fn dialect() -> store::os_io::ArtifactDialect {
             store::os_io::ArtifactDialect { artifact_kind: "s.stdio.csv".into(), standard: "rfc4180".into(), subset: "*".into() }
         }
 
-        fn fidelity() -> IoFidelityClass {
+        async fn fidelity() -> IoFidelityClass {
             IoFidelityClass::Exact
         }
 
-        fn drops() -> &'static [&'static str] {
+        async fn drops() -> &'static [&'static str] {
             &[]
         }
 
-        fn parse_native(asset: &ExampleAsset<'_>) -> Result<Self::Snapshot, String> {
+        async fn parse_native(asset: &ExampleAsset<'_>) -> Result<Self::Snapshot, String> {
             let text = std::str::from_utf8(asset.bytes).map_err(|e| e.to_string())?;
             Ok(crate::artifacts::csv::schema::snapshot::decode_csv_with(text, true))
         }
 
-        fn export_native(snapshot: &Self::Snapshot) -> Result<Vec<u8>, String> {
+        async fn export_native(snapshot: &Self::Snapshot) -> Result<Vec<u8>, String> {
             Ok(crate::artifacts::csv::schema::snapshot::encode_csv(snapshot).into_bytes())
         }
 
-        fn reimport_native(bytes: &[u8]) -> Result<Self::Snapshot, String> {
+        async fn reimport_native(bytes: &[u8]) -> Result<Self::Snapshot, String> {
             let text = std::str::from_utf8(bytes).map_err(|e| e.to_string())?;
             Ok(crate::artifacts::csv::schema::snapshot::decode_csv_with(text, true))
         }
 
-        fn infer(snapshot: &Self::Snapshot) -> Self::Inference {
+        async fn infer(snapshot: &Self::Snapshot) -> Self::Inference {
             CsvInference::infer(snapshot)
         }
 
-        fn sample_mutations(snapshot: &Self::Snapshot) -> Vec<Self::Mutation> {
+        async fn sample_mutations(snapshot: &Self::Snapshot) -> Vec<Self::Mutation> {
             vec![CsvMutation::InsertRecord { index: snapshot.records.len(), record: CsvRecord { fields: vec![CsvField { value: "roundtrip".into(), quoted: false }] } }]
         }
 
-        fn validate_payload(bytes: &[u8]) -> Result<(), Vec<String>> {
+        async fn validate_payload(bytes: &[u8]) -> Result<(), Vec<String>> {
             std::str::from_utf8(bytes).map_err(|e| vec![e.to_string()]).and_then(|text| crate::artifacts::csv::schema::snapshot::decode_csv(text).map_err(|e| vec![e])).map(|_| ())
         }
 
-        fn validate_negative(_bytes: &[u8]) -> Result<Vec<String>, String> {
+        async fn validate_negative(_bytes: &[u8]) -> Result<Vec<String>, String> {
             Err("SKIP:owning subset has no negative fixture".into())
         }
     }
 
     #[test]
-    fn demo_subset_integrated_roundtrip() {
+    async fn demo_subset_integrated_roundtrip() {
         let asset = ExampleAsset { bytes: NATIVE_BYTES, text: Some(std::str::from_utf8(NATIVE_BYTES).expect("utf-8 csv")), provenance: "✳️any/📚️examples/🎬️demo/🖼️assets/📊️example.csv" };
         test_support::assert_subset_roundtrip::<CsvAnyRoundtrip>(&asset, None);
     }

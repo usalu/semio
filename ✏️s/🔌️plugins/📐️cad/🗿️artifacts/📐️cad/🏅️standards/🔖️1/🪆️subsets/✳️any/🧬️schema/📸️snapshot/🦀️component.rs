@@ -52,7 +52,7 @@ pub struct CadSnapshot {
     pub active_model_definition_id: String,
 }
 
-fn default_model_definition_id() -> String {
+async fn default_model_definition_id() -> String {
     "spatial.shape".into()
 }
 
@@ -60,23 +60,23 @@ fn default_model_definition_id() -> String {
 /// 🧪️ Real hex/bracket child-handle codec (mirrors `✳️object`/`✳️kit`'s own — the working reference
 /// for a composite subset's `enc_child`/`dec_child` helpers) — a handle is exactly two strings
 /// (`child_id`, the target's `ArtifactRef` flattened via `to_uri()`), never the child's own content.
-fn hex_encode(bytes: &[u8]) -> String { bytes.iter().map(|b| format!("{b:02x}")).collect() }
-fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
+async fn hex_encode(bytes: &[u8]) -> String { bytes.iter().map(|b| format!("{b:02x}")).collect() }
+async fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
     if s.len() % 2 != 0 { return Err(format!("odd hex length: {s:?}")); }
     (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()
 }
-pub(crate) fn enc_str(s: &str) -> String { hex_encode(s.as_bytes()) }
-pub(crate) fn dec_str(s: &str) -> Result<String, String> { String::from_utf8(hex_decode(s)?).map_err(|e| e.to_string()) }
-pub(crate) fn enc_ref(r: &store::os_io::ArtifactRef) -> String { enc_str(&r.to_uri()) }
-pub(crate) fn dec_ref(s: &str) -> Result<store::os_io::ArtifactRef, String> { store::os_io::ArtifactRef::parse_uri(&dec_str(s)?) }
+pub(crate) async fn enc_str(s: &str) -> String { hex_encode(s.as_bytes()) }
+pub(crate) async fn dec_str(s: &str) -> Result<String, String> { String::from_utf8(hex_decode(s)?).map_err(|e| e.to_string()) }
+pub(crate) async fn enc_ref(r: &store::os_io::ArtifactRef) -> String { enc_str(&r.to_uri()) }
+pub(crate) async fn dec_ref(s: &str) -> Result<store::os_io::ArtifactRef, String> { store::os_io::ArtifactRef::parse_uri(&dec_str(s)?) }
 
 /// 🔧️ Local `split_top_level`/`strip_brackets` (bracket-depth-aware split, `[...]` unwrap) — same
 /// shape as stdio's own `engine::triples` helpers, duplicated rather than imported since that
 /// module is private to the stdio crate.
-fn strip_brackets(s: &str) -> Result<&str, String> {
+async fn strip_brackets(s: &str) -> Result<&str, String> {
     s.strip_prefix('[').and_then(|s| s.strip_suffix(']')).ok_or_else(|| format!("expected [...], got {s:?}"))
 }
-fn split_top_level(s: &str, sep: char) -> Vec<&str> {
+async fn split_top_level(s: &str, sep: char) -> Vec<&str> {
     if s.is_empty() { return Vec::new(); }
     let mut out = Vec::new();
     let mut depth = 0i32;
@@ -93,25 +93,25 @@ fn split_top_level(s: &str, sep: char) -> Vec<&str> {
     out
 }
 
-pub(crate) fn enc_child<S>(c: &store::ArtifactChild<S>) -> String {
+pub(crate) async fn enc_child<S>(c: &store::ArtifactChild<S>) -> String {
     format!("[{},{}]", enc_str(&c.child_id), enc_ref(&c.target))
 }
-pub(crate) fn dec_child<S>(s: &str) -> Result<store::ArtifactChild<S>, String> {
+pub(crate) async fn dec_child<S>(s: &str) -> Result<store::ArtifactChild<S>, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [child_id, target] = parts.as_slice() else { return Err(format!("child handle: expected 2 fields, got {}", parts.len())) };
     Ok(store::ArtifactChild::new(dec_str(child_id)?, dec_ref(target)?))
 }
-pub(crate) fn enc_child_opt<S>(c: &Option<store::ArtifactChild<S>>) -> String {
+pub(crate) async fn enc_child_opt<S>(c: &Option<store::ArtifactChild<S>>) -> String {
     match c { Some(c) => enc_child(c), None => "[]".to_string() }
 }
-pub(crate) fn dec_child_opt<S>(s: &str) -> Result<Option<store::ArtifactChild<S>>, String> {
+pub(crate) async fn dec_child_opt<S>(s: &str) -> Result<Option<store::ArtifactChild<S>>, String> {
     if s == "[]" { return Ok(None); }
     Ok(Some(dec_child(s)?))
 }
-pub(crate) fn enc_child_list<S>(items: &[store::ArtifactChild<S>]) -> String {
+pub(crate) async fn enc_child_list<S>(items: &[store::ArtifactChild<S>]) -> String {
     format!("[{}]", items.iter().map(enc_child).collect::<Vec<_>>().join(","))
 }
-pub(crate) fn dec_child_list<S>(s: &str) -> Result<Vec<store::ArtifactChild<S>>, String> {
+pub(crate) async fn dec_child_list<S>(s: &str) -> Result<Vec<store::ArtifactChild<S>>, String> {
     split_top_level(strip_brackets(s)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_child).collect()
 }
 //#endregion 🔖️ChildCodecPrimitives
@@ -125,16 +125,16 @@ pub(crate) fn dec_child_list<S>(s: &str) -> Result<Vec<store::ArtifactChild<S>>,
 /// dropped every reload), not a hypothetical gap. Fixed the same way `enc_str`/`dec_str` already
 /// hex-encode every other text field in this file: serialize to JSON, then hex-encode the JSON
 /// bytes — one more line-oriented field, no new wire primitive.
-fn enc_json<T: Serialize>(value: &T) -> String {
+async fn enc_json<T: Serialize>(value: &T) -> String {
     enc_str(&serde_json::to_string(value).expect("CadSnapshot structured fields are always JSON-serializable"))
 }
-fn dec_json<T: serde::de::DeserializeOwned>(s: &str) -> Result<T, String> {
+async fn dec_json<T: serde::de::DeserializeOwned>(s: &str) -> Result<T, String> {
     serde_json::from_str(&dec_str(s)?).map_err(|e| e.to_string())
 }
 //#endregion 🔖️JsonFieldPrimitives
 
 //#region 🔖️TextPrimitives
-fn print_cad_snapshot_body(s: &CadSnapshot) -> String {
+async fn print_cad_snapshot_body(s: &CadSnapshot) -> String {
     format!(
         "schema={}\nid={}\nshapeModel={}\nbuildingModel={}\nenergyModel={}\nstructureClassicModel={}\ndrawings={}\nreferencesByModelDefinitionId={}\nnodes={}\nactiveModelDefinitionId={}",
         enc_str(&s.schema), enc_str(&s.id),
@@ -145,7 +145,7 @@ fn print_cad_snapshot_body(s: &CadSnapshot) -> String {
         enc_str(&s.active_model_definition_id),
     )
 }
-fn parse_cad_snapshot_body(body: &str) -> Result<CadSnapshot, String> {
+async fn parse_cad_snapshot_body(body: &str) -> Result<CadSnapshot, String> {
     let mut snapshot = empty_cad_snapshot();
     let mut saw_schema = false;
     for line in body.lines() {
@@ -169,48 +169,48 @@ fn parse_cad_snapshot_body(body: &str) -> Result<CadSnapshot, String> {
 //#endregion 🔖️TextPrimitives
 
 //#region 🔖️BinaryPrimitives
-fn write_bytes_lp(out: &mut Vec<u8>, bytes: &[u8]) {
+async fn write_bytes_lp(out: &mut Vec<u8>, bytes: &[u8]) {
     store::pack_rt::write_varint_u64(out, bytes.len() as u64);
     out.extend_from_slice(bytes);
 }
-fn read_bytes_lp(reader: &mut store::ByteReader<'_>) -> Result<Vec<u8>, String> {
+async fn read_bytes_lp(reader: &mut store::ByteReader<'_>) -> Result<Vec<u8>, String> {
     let len = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
     Ok(reader.read_bytes(len).map_err(|e| e.to_string())?.to_vec())
 }
-fn write_str_lp(out: &mut Vec<u8>, s: &str) { write_bytes_lp(out, s.as_bytes()); }
-fn read_str_lp(reader: &mut store::ByteReader<'_>) -> Result<String, String> { String::from_utf8(read_bytes_lp(reader)?).map_err(|e| e.to_string()) }
-fn write_ref(out: &mut Vec<u8>, r: &store::os_io::ArtifactRef) { write_str_lp(out, &r.to_uri()); }
-fn read_ref(reader: &mut store::ByteReader<'_>) -> Result<store::os_io::ArtifactRef, String> { store::os_io::ArtifactRef::parse_uri(&read_str_lp(reader)?) }
-fn write_child<S>(out: &mut Vec<u8>, c: &store::ArtifactChild<S>) {
+async fn write_str_lp(out: &mut Vec<u8>, s: &str) { write_bytes_lp(out, s.as_bytes()); }
+async fn read_str_lp(reader: &mut store::ByteReader<'_>) -> Result<String, String> { String::from_utf8(read_bytes_lp(reader)?).map_err(|e| e.to_string()) }
+async fn write_ref(out: &mut Vec<u8>, r: &store::os_io::ArtifactRef) { write_str_lp(out, &r.to_uri()); }
+async fn read_ref(reader: &mut store::ByteReader<'_>) -> Result<store::os_io::ArtifactRef, String> { store::os_io::ArtifactRef::parse_uri(&read_str_lp(reader)?) }
+async fn write_child<S>(out: &mut Vec<u8>, c: &store::ArtifactChild<S>) {
     write_str_lp(out, &c.child_id);
     write_ref(out, &c.target);
 }
-fn read_child<S>(reader: &mut store::ByteReader<'_>) -> Result<store::ArtifactChild<S>, String> {
+async fn read_child<S>(reader: &mut store::ByteReader<'_>) -> Result<store::ArtifactChild<S>, String> {
     let child_id = read_str_lp(reader)?;
     let target = read_ref(reader)?;
     Ok(store::ArtifactChild::new(child_id, target))
 }
-fn write_child_opt<S>(out: &mut Vec<u8>, c: &Option<store::ArtifactChild<S>>) {
+async fn write_child_opt<S>(out: &mut Vec<u8>, c: &Option<store::ArtifactChild<S>>) {
     match c {
         Some(c) => { out.push(1); write_child(out, c); }
         None => out.push(0),
     }
 }
-fn read_child_opt<S>(reader: &mut store::ByteReader<'_>) -> Result<Option<store::ArtifactChild<S>>, String> {
+async fn read_child_opt<S>(reader: &mut store::ByteReader<'_>) -> Result<Option<store::ArtifactChild<S>>, String> {
     match reader.read_u8().map_err(|e| e.to_string())? { 0 => Ok(None), _ => Ok(Some(read_child(reader)?)) }
 }
-fn write_child_list<S>(out: &mut Vec<u8>, items: &[store::ArtifactChild<S>]) {
+async fn write_child_list<S>(out: &mut Vec<u8>, items: &[store::ArtifactChild<S>]) {
     store::pack_rt::write_varint_u64(out, items.len() as u64);
     for item in items { write_child(out, item); }
 }
-fn read_child_list<S>(reader: &mut store::ByteReader<'_>) -> Result<Vec<store::ArtifactChild<S>>, String> {
+async fn read_child_list<S>(reader: &mut store::ByteReader<'_>) -> Result<Vec<store::ArtifactChild<S>>, String> {
     let count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut items = Vec::with_capacity(count as usize);
     for _ in 0..count { items.push(read_child(reader)?); }
     Ok(items)
 }
 
-fn encode_cad_snapshot_binary(s: &CadSnapshot) -> Vec<u8> {
+async fn encode_cad_snapshot_binary(s: &CadSnapshot) -> Vec<u8> {
     const PACK_BINARY_FORMAT: u8 = 1;
     let mut out = vec![PACK_BINARY_FORMAT];
     write_str_lp(&mut out, &s.schema);
@@ -225,7 +225,7 @@ fn encode_cad_snapshot_binary(s: &CadSnapshot) -> Vec<u8> {
     write_str_lp(&mut out, &s.active_model_definition_id);
     out
 }
-fn decode_cad_snapshot_binary(bytes: &[u8]) -> Result<CadSnapshot, String> {
+async fn decode_cad_snapshot_binary(bytes: &[u8]) -> Result<CadSnapshot, String> {
     const PACK_BINARY_FORMAT: u8 = 1;
     let mut reader = store::ByteReader::new(bytes);
     let format = reader.read_u8().map_err(|e| e.to_string())?;
@@ -252,15 +252,15 @@ fn decode_cad_snapshot_binary(bytes: &[u8]) -> Result<CadSnapshot, String> {
 /// which has no `dsl::DslField` impl reachable from this crate).
 impl store::ArtifactDsl for CadSnapshot {
     const EXTENSION: &'static str = "cad";
-    fn envelope_id() -> &'static str { "cad.cad" }
-    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+    async fn envelope_id() -> &'static str { "cad.cad" }
+    async fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
         let body = match store::semio_format::split_text_preamble(text) {
             Ok((_, rest)) => rest,
             Err(_) => text,
         };
         parse_cad_snapshot_body(body).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
-    fn print_dsl(&self) -> String {
+    async fn print_dsl(&self) -> String {
         let body = print_cad_snapshot_body(self);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
             <Self as store::ArtifactDsl>::envelope_id(),
@@ -272,7 +272,7 @@ impl store::ArtifactDsl for CadSnapshot {
 }
 
 impl store::ArtifactPack for CadSnapshot {
-    fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
+    async fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
         let raw = encode_cad_snapshot_binary(self);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
@@ -282,7 +282,7 @@ impl store::ArtifactPack for CadSnapshot {
         ).map_err(|e| store::PackError::Schema(e.to_string()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &raw))
     }
-    fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
+    async fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let (envelope, inner) = store::semio_format::unwrap_binary(bytes)
             .map_err(|e| store::PackError::Schema(e.to_string()))?;
         if envelope.envelope_id() != <Self as store::ArtifactDsl>::envelope_id() {

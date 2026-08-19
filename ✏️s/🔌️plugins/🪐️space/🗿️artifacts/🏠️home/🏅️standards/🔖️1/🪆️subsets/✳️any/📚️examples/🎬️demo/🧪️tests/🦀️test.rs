@@ -1,5 +1,5 @@
 #[test]
-fn primary_asset_is_nonempty() {
+async fn primary_asset_is_nonempty() {
     let text = include_str!("../🖼️assets/🗣️example.dsl.semio");
     assert!(text.len() > 8);
 }
@@ -10,13 +10,13 @@ use crate::artifacts::home::standards::v1::subsets::any::schema::inferences::SHo
 use protocol::Inference;
 
 #[test]
-fn inference_determinism_law() {
+async fn inference_determinism_law() {
     let snapshot = SHomeSnapshot { schema: "s.home".into(), catalog_generation: 42 };
     assert_eq!(SHomeInference::infer(&snapshot), SHomeInference::infer(&snapshot));
 }
 
 #[test]
-fn inference_default_law() {
+async fn inference_default_law() {
     assert_eq!(SHomeInference::infer(&SHomeSnapshot::default()), SHomeInference::default());
 }
 //#endregion 🧪️InferenceLaws

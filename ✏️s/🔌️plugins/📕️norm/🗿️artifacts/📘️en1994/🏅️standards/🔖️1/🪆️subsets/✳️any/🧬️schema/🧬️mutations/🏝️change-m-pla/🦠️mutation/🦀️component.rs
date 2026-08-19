@@ -12,13 +12,13 @@ pub struct ChangeMPla {
 impl protocol::MutationKind<En1994Snapshot, En1994Mutation> for ChangeMPla {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "m-pla", kind: "change-m-pla", record: "ChangedMPla" };
 
-    fn diff(&self, base: &En1994Snapshot) -> protocol::MutationOutcome<<En1994Mutation as protocol::Mutation<En1994Snapshot>>::Diff> {
+    async fn diff(&self, base: &En1994Snapshot) -> protocol::MutationOutcome<<En1994Mutation as protocol::Mutation<En1994Snapshot>>::Diff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &En1994Snapshot) -> Vec<En1994Mutation> {
+    async fn inverse(&self, base: &En1994Snapshot) -> Vec<En1994Mutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         format!("Change steel plastic moment M_pl,a to {}", self.new_m_pla)
     }
 }

@@ -108,7 +108,7 @@ pub enum DocxMutation {
 /// ▶️ Applies `mutation` to `snapshot`: `let d = mutation.diff(&*snapshot); *snapshot =
 /// d.apply(snapshot); d` -- the diff is the single semantics source, never a separate imperative
 /// apply path (apply-and-capture is banned).
-pub fn apply_docx_mutation(snapshot: &mut DocxSnapshot, mutation: &DocxMutation) -> protocol::MutationOutcome<DocxDiff> {
+pub async fn apply_docx_mutation(snapshot: &mut DocxSnapshot, mutation: &DocxMutation) -> protocol::MutationOutcome<DocxDiff> {
     let outcome = Mutation::diff(mutation, snapshot);
     match protocol::MutationDiff::apply(outcome.diff(), snapshot) {
         Ok(next) => {
@@ -121,15 +121,15 @@ pub fn apply_docx_mutation(snapshot: &mut DocxSnapshot, mutation: &DocxMutation)
 //#endregion 🔖️Apply
 
 //#region 🔖️Helpers
-fn block_at<'a>(base: &'a DocxSnapshot, path: &DocxBlockPath) -> Option<&'a DocxBlock> {
+async fn block_at<'a>(base: &'a DocxSnapshot, path: &DocxBlockPath) -> Option<&'a DocxBlock> {
     resolve_blocks(&base.document.body, &path.segments)?.get(path.index)
 }
 
-fn style_at<'a>(base: &'a DocxSnapshot, id: &str) -> Option<&'a DocxStyle> {
+async fn style_at<'a>(base: &'a DocxSnapshot, id: &str) -> Option<&'a DocxStyle> {
     base.document.styles.iter().find(|s| s.id == id)
 }
 
-fn part_at<'a>(base: &'a DocxSnapshot, path: &str) -> Option<&'a crate::artifacts::zip::opc::OpcPart> {
+async fn part_at<'a>(base: &'a DocxSnapshot, path: &str) -> Option<&'a crate::artifacts::zip::opc::OpcPart> {
     let p = path.trim_start_matches('/');
     base.opc.parts.iter().find(|part| part.path == p)
 }
@@ -139,7 +139,7 @@ fn part_at<'a>(base: &'a DocxSnapshot, path: &str) -> Option<&'a crate::artifact
 impl Mutation<DocxSnapshot> for DocxMutation {
     type Diff = DocxDiff;
 
-    fn diff(&self, base: &DocxSnapshot) -> protocol::MutationOutcome<Self::Diff> {
+    async fn diff(&self, base: &DocxSnapshot) -> protocol::MutationOutcome<Self::Diff> {
         protocol::MutationOutcome::new(match self {
             DocxMutation::NoMutation => DocxDiff::default(),
             DocxMutation::SetSnapshot { snapshot } => diff_set_snapshot(base, snapshot),
@@ -160,7 +160,7 @@ impl Mutation<DocxSnapshot> for DocxMutation {
         })
     }
 
-    fn inverse(&self, base: &DocxSnapshot) -> Vec<Self> {
+    async fn inverse(&self, base: &DocxSnapshot) -> Vec<Self> {
         match self {
             DocxMutation::NoMutation => vec![DocxMutation::NoMutation],
             DocxMutation::SetSnapshot { .. } => vec![DocxMutation::SetSnapshot { snapshot: base.clone() }],
@@ -228,35 +228,35 @@ impl Mutation<DocxSnapshot> for DocxMutation {
 /// (`hex_encode`/`enc_block`/`enc_style`/`enc_opc_part`/`split_top_level`/...) rather than
 /// duplicating them a second time in this file. Grammar: `keyword arg=value ...`
 /// (space-separated), same shape the derive's own handcrafted-wrapper convention uses.
-fn enc_path_segment(seg: &DocxPathSegment) -> String {
+async fn enc_path_segment(seg: &DocxPathSegment) -> String {
     format!("[{},{},{}]", seg.block_index, seg.row, seg.cell)
 }
-fn dec_path_segment(s: &str) -> Result<DocxPathSegment, String> {
+async fn dec_path_segment(s: &str) -> Result<DocxPathSegment, String> {
     let inner = strip_brackets(s)?;
     let parts = split_top_level(inner, ',');
     let [block_index, row, cell] = parts.as_slice() else { return Err(format!("path segment: expected 3 fields, got {}", parts.len())) };
     Ok(DocxPathSegment { block_index: parse_usize(block_index)?, row: parse_usize(row)?, cell: parse_usize(cell)? })
 }
-fn enc_block_path(p: &DocxBlockPath) -> String {
+async fn enc_block_path(p: &DocxBlockPath) -> String {
     format!("[{},{}]", enc_list(&p.segments, enc_path_segment), p.index)
 }
-fn dec_block_path(s: &str) -> Result<DocxBlockPath, String> {
+async fn dec_block_path(s: &str) -> Result<DocxBlockPath, String> {
     let inner = strip_brackets(s)?;
     let parts = split_top_level(inner, ',');
     let [segments, index] = parts.as_slice() else { return Err(format!("block path: expected 2 fields, got {}", parts.len())) };
     Ok(DocxBlockPath { segments: dec_list_segments(segments)?, index: parse_usize(index)? })
 }
-fn dec_list_segments(s: &str) -> Result<Vec<DocxPathSegment>, String> {
+async fn dec_list_segments(s: &str) -> Result<Vec<DocxPathSegment>, String> {
     split_top_level(strip_brackets(s)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_path_segment).collect()
 }
 
 /// 🌱 Full (non-diff) `OpcContentTypes`/`OpcPackage`/`DocxDocument`/`DocxSnapshot` codecs — only
 /// `SetSnapshot`'s whole-payload encoding needs these, so (unlike `DocxDiff`'s value codecs) they
 /// live here rather than in the diff file.
-fn enc_opc_content_types(ct: &OpcContentTypes) -> String {
+async fn enc_opc_content_types(ct: &OpcContentTypes) -> String {
     format!("[{},{}]", enc_list(&ct.defaults, enc_ct_entry), enc_list(&ct.overrides, enc_ct_entry))
 }
-fn dec_opc_content_types(s: &str) -> Result<OpcContentTypes, String> {
+async fn dec_opc_content_types(s: &str) -> Result<OpcContentTypes, String> {
     let inner = strip_brackets(s)?;
     let parts = split_top_level(inner, ',');
     let [defaults, overrides] = parts.as_slice() else { return Err(format!("content types: expected 2 fields, got {}", parts.len())) };
@@ -268,13 +268,13 @@ fn dec_opc_content_types(s: &str) -> Result<OpcContentTypes, String> {
 /// 🗺️ `relationships: HashMap<String, Vec<OpcRelationship>>` -- owners sorted for a deterministic
 /// encoding (`DiffCodec`/`OpText` LAWS both require determinism; `HashMap` iteration order does not
 /// guarantee it).
-fn enc_opc_package(pkg: &OpcPackage) -> String {
+async fn enc_opc_package(pkg: &OpcPackage) -> String {
     let mut owners: Vec<&String> = pkg.relationships.keys().collect();
     owners.sort();
     let rel_entries: Vec<(String, Vec<OpcRelationship>)> = owners.into_iter().map(|o| (o.clone(), pkg.relationships[o].clone())).collect();
     format!("[{},{},{}]", enc_list(&pkg.parts, enc_opc_part), enc_opc_content_types(&pkg.content_types), enc_list(&rel_entries, enc_rel_owner_entry))
 }
-fn dec_opc_package(s: &str) -> Result<OpcPackage, String> {
+async fn dec_opc_package(s: &str) -> Result<OpcPackage, String> {
     let inner = strip_brackets(s)?;
     let parts = split_top_level(inner, ',');
     let [p, ct, rels] = parts.as_slice() else { return Err(format!("opc package: expected 3 fields, got {}", parts.len())) };
@@ -282,10 +282,10 @@ fn dec_opc_package(s: &str) -> Result<OpcPackage, String> {
     let rel_entries = split_top_level(strip_brackets(rels)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_rel_owner_entry).collect::<Result<Vec<_>, String>>()?;
     Ok(OpcPackage { parts: parts_list, content_types: dec_opc_content_types(ct)?, relationships: rel_entries.into_iter().collect::<HashMap<_, _>>(), ..Default::default() })
 }
-fn enc_docx_document(doc: &DocxDocument) -> String {
+async fn enc_docx_document(doc: &DocxDocument) -> String {
     format!("[{},{}]", enc_list(&doc.body, enc_block), enc_list(&doc.styles, enc_style))
 }
-fn dec_docx_document(s: &str) -> Result<DocxDocument, String> {
+async fn dec_docx_document(s: &str) -> Result<DocxDocument, String> {
     let inner = strip_brackets(s)?;
     let parts = split_top_level(inner, ',');
     let [body, styles] = parts.as_slice() else { return Err(format!("document: expected 2 fields, got {}", parts.len())) };
@@ -294,17 +294,17 @@ fn dec_docx_document(s: &str) -> Result<DocxDocument, String> {
         styles: split_top_level(strip_brackets(styles)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_style).collect::<Result<Vec<_>, String>>()?,
     })
 }
-fn enc_docx_snapshot(s: &DocxSnapshot) -> String {
+async fn enc_docx_snapshot(s: &DocxSnapshot) -> String {
     format!("[{},{},{}]", enc_str(&s.schema), enc_opc_package(&s.opc), enc_docx_document(&s.document))
 }
-fn dec_docx_snapshot(s: &str) -> Result<DocxSnapshot, String> {
+async fn dec_docx_snapshot(s: &str) -> Result<DocxSnapshot, String> {
     let inner = strip_brackets(s)?;
     let parts = split_top_level(inner, ',');
     let [schema, opc, document] = parts.as_slice() else { return Err(format!("snapshot: expected 3 fields, got {}", parts.len())) };
     Ok(DocxSnapshot { schema: dec_str(schema)?, opc: dec_opc_package(opc)?, document: dec_docx_document(document)? })
 }
 
-fn print_docx_mutation(m: &DocxMutation) -> String {
+async fn print_docx_mutation(m: &DocxMutation) -> String {
     match m {
         DocxMutation::NoMutation => "no-mutation".to_string(),
         DocxMutation::SetSnapshot { snapshot } => format!("set-snapshot snapshot={}", enc_docx_snapshot(snapshot)),
@@ -323,7 +323,7 @@ fn print_docx_mutation(m: &DocxMutation) -> String {
         DocxMutation::RemovePart { path } => format!("remove-part path={}", enc_str(path)),
     }
 }
-fn parse_docx_mutation(line: &str) -> Result<DocxMutation, String> {
+async fn parse_docx_mutation(line: &str) -> Result<DocxMutation, String> {
     if line == "no-mutation" {
         return Ok(DocxMutation::NoMutation);
     }
@@ -349,10 +349,10 @@ fn parse_docx_mutation(line: &str) -> Result<DocxMutation, String> {
 }
 
 impl OpText for DocxMutation {
-    fn print_op(&self) -> String {
+    async fn print_op(&self) -> String {
         print_docx_mutation(self)
     }
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
+    async fn parse_op(line: &str) -> Result<Self, store::TextError> {
         parse_docx_mutation(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
 }
@@ -366,25 +366,25 @@ impl OpText for DocxMutation {
 /// `dec_rel_bin` (`../🔺️diff/🦀️component.rs`, `pub(crate)` to this artifact).
 use crate::artifacts::docx::schema::diff::{dec_block_bin, dec_opc_part_bin, dec_rel_bin, dec_style_bin, enc_block_bin, enc_opc_part_bin, enc_rel_bin, enc_style_bin, read_bytes_lp, read_str_lp, write_bytes_lp, write_str_lp};
 
-fn enc_path_segment_bin(seg: &DocxPathSegment, out: &mut Vec<u8>) {
+async fn enc_path_segment_bin(seg: &DocxPathSegment, out: &mut Vec<u8>) {
     store::pack_rt::write_varint_u64(out, seg.block_index as u64);
     store::pack_rt::write_varint_u64(out, seg.row as u64);
     store::pack_rt::write_varint_u64(out, seg.cell as u64);
 }
-fn dec_path_segment_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxPathSegment, String> {
+async fn dec_path_segment_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxPathSegment, String> {
     let block_index = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
     let row = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
     let cell = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
     Ok(DocxPathSegment { block_index, row, cell })
 }
-fn enc_block_path_bin(p: &DocxBlockPath, out: &mut Vec<u8>) {
+async fn enc_block_path_bin(p: &DocxBlockPath, out: &mut Vec<u8>) {
     store::pack_rt::write_varint_u64(out, p.segments.len() as u64);
     for seg in &p.segments {
         enc_path_segment_bin(seg, out);
     }
     store::pack_rt::write_varint_u64(out, p.index as u64);
 }
-fn dec_block_path_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxBlockPath, String> {
+async fn dec_block_path_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxBlockPath, String> {
     let count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut segments = Vec::with_capacity(count as usize);
     for _ in 0..count {
@@ -399,7 +399,7 @@ fn dec_block_path_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxBlockPat
 /// `enc_opc_content_types`/`enc_opc_package`/`enc_docx_document`/`enc_docx_snapshot` text forms
 /// above. Owners sorted for a deterministic encoding, same `HashMap`-iteration-order caveat those
 /// text forms document.
-fn enc_opc_content_types_bin(ct: &OpcContentTypes, out: &mut Vec<u8>) {
+async fn enc_opc_content_types_bin(ct: &OpcContentTypes, out: &mut Vec<u8>) {
     store::pack_rt::write_varint_u64(out, ct.defaults.len() as u64);
     for e in &ct.defaults {
         write_str_lp(out, &e.0);
@@ -411,7 +411,7 @@ fn enc_opc_content_types_bin(ct: &OpcContentTypes, out: &mut Vec<u8>) {
         write_str_lp(out, &e.1);
     }
 }
-fn dec_opc_content_types_bin(reader: &mut store::ByteReader<'_>) -> Result<OpcContentTypes, String> {
+async fn dec_opc_content_types_bin(reader: &mut store::ByteReader<'_>) -> Result<OpcContentTypes, String> {
     let default_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut defaults = Vec::with_capacity(default_count as usize);
     for _ in 0..default_count {
@@ -424,7 +424,7 @@ fn dec_opc_content_types_bin(reader: &mut store::ByteReader<'_>) -> Result<OpcCo
     }
     Ok(OpcContentTypes { defaults, overrides })
 }
-fn enc_opc_package_bin(pkg: &OpcPackage, out: &mut Vec<u8>) {
+async fn enc_opc_package_bin(pkg: &OpcPackage, out: &mut Vec<u8>) {
     store::pack_rt::write_varint_u64(out, pkg.parts.len() as u64);
     for p in &pkg.parts {
         enc_opc_part_bin(p, out);
@@ -442,7 +442,7 @@ fn enc_opc_package_bin(pkg: &OpcPackage, out: &mut Vec<u8>) {
         }
     }
 }
-fn dec_opc_package_bin(reader: &mut store::ByteReader<'_>) -> Result<OpcPackage, String> {
+async fn dec_opc_package_bin(reader: &mut store::ByteReader<'_>) -> Result<OpcPackage, String> {
     let part_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut parts = Vec::with_capacity(part_count as usize);
     for _ in 0..part_count {
@@ -462,7 +462,7 @@ fn dec_opc_package_bin(reader: &mut store::ByteReader<'_>) -> Result<OpcPackage,
     }
     Ok(OpcPackage { parts, content_types, relationships, ..Default::default() })
 }
-fn enc_docx_document_bin(doc: &DocxDocument, out: &mut Vec<u8>) {
+async fn enc_docx_document_bin(doc: &DocxDocument, out: &mut Vec<u8>) {
     store::pack_rt::write_varint_u64(out, doc.body.len() as u64);
     for b in &doc.body {
         enc_block_bin(b, out);
@@ -472,7 +472,7 @@ fn enc_docx_document_bin(doc: &DocxDocument, out: &mut Vec<u8>) {
         enc_style_bin(s, out);
     }
 }
-fn dec_docx_document_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxDocument, String> {
+async fn dec_docx_document_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxDocument, String> {
     let body_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut body = Vec::with_capacity(body_count as usize);
     for _ in 0..body_count {
@@ -485,12 +485,12 @@ fn dec_docx_document_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxDocum
     }
     Ok(DocxDocument { body, styles })
 }
-fn enc_docx_snapshot_bin(s: &DocxSnapshot, out: &mut Vec<u8>) {
+async fn enc_docx_snapshot_bin(s: &DocxSnapshot, out: &mut Vec<u8>) {
     write_str_lp(out, &s.schema);
     enc_opc_package_bin(&s.opc, out);
     enc_docx_document_bin(&s.document, out);
 }
-fn dec_docx_snapshot_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxSnapshot, String> {
+async fn dec_docx_snapshot_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxSnapshot, String> {
     let schema = read_str_lp(reader)?;
     let opc = dec_opc_package_bin(reader)?;
     let document = dec_docx_document_bin(reader)?;
@@ -504,7 +504,7 @@ fn dec_docx_snapshot_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxSnaps
 /// `DocxMutation` variant ordinal, in the same 0-12 order `print_docx_mutation`'s own keyword
 /// match uses.
 impl OpBinary for DocxMutation {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         let tag: u8 = match self {
             DocxMutation::NoMutation => 0,
             DocxMutation::SetSnapshot { .. } => 1,
@@ -568,7 +568,7 @@ impl OpBinary for DocxMutation {
         Ok(out)
     }
 
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         let mut reader = store::ByteReader::new(bytes);
         let malformed = |what: &'static str, offset: usize, detail: String| protocol::ProtocolError::Malformed { what, offset: offset as u64, detail };
         let _format = reader.read_u8().map_err(|e| malformed("op format", 0, e.to_string()))?;
@@ -649,12 +649,12 @@ impl OpBinary for DocxMutation {
 /// conformance tests, same shape `📷️png/…/🧬️mutations/🦀️component.rs`'s own
 /// `demo_mutation_cases()` establishes.
 #[cfg(test)]
-fn fixture() -> DocxSnapshot {
+async fn fixture() -> DocxSnapshot {
     crate::artifacts::docx::engine::build_minimal_docx(DocxDocument { body: vec![DocxBlock::paragraph("first"), DocxBlock::paragraph("second")], styles: vec![DocxStyle { id: "Normal".into(), name: "Normal".into(), based_on: None }] })
 }
 
 #[cfg(test)]
-fn table_path(block_index: usize, row: usize, cell: usize, index: usize) -> DocxBlockPath {
+async fn table_path(block_index: usize, row: usize, cell: usize, index: usize) -> DocxBlockPath {
     DocxBlockPath { segments: vec![DocxPathSegment { block_index, row, cell }], index }
 }
 
@@ -667,7 +667,7 @@ fn table_path(block_index: usize, row: usize, cell: usize, index: usize) -> Docx
 /// name-keyed collection, order-independent) get one removed, one modified-in-every-field, one
 /// added. OPC content_types/parts/relationships each get one removed, one modified, one added.
 #[cfg(test)]
-fn sweep_a() -> DocxSnapshot {
+async fn sweep_a() -> DocxSnapshot {
     let mut opc = OpcPackage::empty();
     opc.content_types.set_default("rels", RELS_CONTENT_TYPE);
     opc.content_types.set_default("xml", "application/xml");
@@ -697,7 +697,7 @@ fn sweep_a() -> DocxSnapshot {
 }
 
 #[cfg(test)]
-fn sweep_b() -> DocxSnapshot {
+async fn sweep_b() -> DocxSnapshot {
     let mut opc = OpcPackage::empty();
     opc.content_types.set_default("rels", RELS_CONTENT_TYPE);
     opc.content_types.set_default("xml", "application/xml");
@@ -749,7 +749,7 @@ fn sweep_b() -> DocxSnapshot {
 
 /// 🧪️ The demo cases proper -- one representative `DocxMutation` per variant.
 #[cfg(test)]
-pub(crate) fn demo_mutation_cases() -> Vec<DocxMutation> {
+pub(crate) async fn demo_mutation_cases() -> Vec<DocxMutation> {
     vec![
         DocxMutation::NoMutation,
         DocxMutation::SetSnapshot { snapshot: sweep_b() },
@@ -786,7 +786,7 @@ mod tests {
     use protocol::MutationDiff;
 
     #[test]
-    fn insert_then_remove_block_apply_and_inverse() {
+    async fn insert_then_remove_block_apply_and_inverse() {
         let base = fixture();
         let insert = DocxMutation::InsertBlock { path: DocxBlockPath { segments: vec![], index: 1 }, block: DocxBlock::paragraph("inserted") };
         let mut after = base.clone();
@@ -803,7 +803,7 @@ mod tests {
     }
 
     #[test]
-    fn remove_block_inverse_restores_removed_block() {
+    async fn remove_block_inverse_restores_removed_block() {
         let base = fixture();
         let remove = DocxMutation::RemoveBlock { path: DocxBlockPath { segments: vec![], index: 0 } };
         let mut after = base.clone();
@@ -816,7 +816,7 @@ mod tests {
     }
 
     #[test]
-    fn set_run_text_and_formatting_apply_and_inverse() {
+    async fn set_run_text_and_formatting_apply_and_inverse() {
         let base = fixture();
         let mutation = DocxMutation::SetRunText { path: DocxBlockPath { segments: vec![], index: 0 }, run_index: 0, text: "changed".into() };
         let mut after = base.clone();
@@ -840,7 +840,7 @@ mod tests {
     }
 
     #[test]
-    fn table_path_addressing_sets_nested_cell_content() {
+    async fn table_path_addressing_sets_nested_cell_content() {
         let mut base = fixture();
         base.document.body.push(DocxBlock::Table(DocxTable { rows: vec![DocxTableRow { cells: vec![DocxTableCell { blocks: vec![DocxBlock::paragraph("cell")], ..Default::default() }], ..Default::default() }], ..Default::default() }));
         let path = table_path(2, 0, 0, 0);
@@ -857,7 +857,7 @@ mod tests {
     }
 
     #[test]
-    fn style_mutations_apply_and_inverse() {
+    async fn style_mutations_apply_and_inverse() {
         let base = fixture();
         let insert = DocxMutation::InsertStyle { style: DocxStyle { id: "Heading1".into(), name: "heading 1".into(), based_on: Some("Normal".into()) } };
         let mut after = base.clone();
@@ -888,7 +888,7 @@ mod tests {
     }
 
     #[test]
-    fn opc_part_mutations_apply_and_inverse() {
+    async fn opc_part_mutations_apply_and_inverse() {
         let base = fixture();
         let set = DocxMutation::SetPart { path: "word/numbering.xml".into(), content_type: "application/xml".into(), bytes: b"<w:numbering/>".to_vec() };
         let mut after = base.clone();
@@ -913,7 +913,7 @@ mod tests {
 
     //#region 🔖️MutationDiffLaw
     #[test]
-    fn mutation_diff_law() {
+    async fn mutation_diff_law() {
         for mutation in demo_mutation_cases() {
             let base = fixture();
             let diff_direct = Mutation::diff(&mutation, &base);
@@ -930,7 +930,7 @@ mod tests {
 
     //#region 🔖️InverseLaw
     #[test]
-    fn inverse_law() {
+    async fn inverse_law() {
         for mutation in demo_mutation_cases() {
             let base = fixture();
 
@@ -951,7 +951,7 @@ mod tests {
     //#endregion 🔖️InverseLaw
 
     //#region 🔖️AbsorbLaw
-    fn assert_absorb_matches_sequential(base: &DocxSnapshot, d1: &DocxDiff, d2: &DocxDiff) -> DocxDiff {
+    async fn assert_absorb_matches_sequential(base: &DocxSnapshot, d1: &DocxDiff, d2: &DocxDiff) -> DocxDiff {
         let sequential = MutationDiff::apply(d2, &MutationDiff::apply(d1, base).unwrap()).unwrap();
         let mut absorbed = d1.clone();
         MutationDiff::absorb(&mut absorbed, d2.clone());
@@ -959,12 +959,12 @@ mod tests {
         absorbed
     }
 
-    fn body_diff(diff: &DocxDiff) -> &crate::artifacts::docx::schema::diff::DocxBlocksDiff {
+    async fn body_diff(diff: &DocxDiff) -> &crate::artifacts::docx::schema::diff::DocxBlocksDiff {
         diff.document.as_ref().expect("document diff present").body.as_ref().expect("body diff present")
     }
 
     #[test]
-    fn absorb_law() {
+    async fn absorb_law() {
         // Canonical: Insert(2)+Remove(0) -> {removed:[0], added:[(1,f)]}.
         {
             let base = fixture();
@@ -1044,7 +1044,7 @@ mod tests {
 
     //#region 🔖️BetweenRoundtripLaw
     #[test]
-    fn between_roundtrip_law() {
+    async fn between_roundtrip_law() {
         let a = sweep_a();
         let b = sweep_b();
         assert_eq!(MutationDiff::apply(&<DocxDiff as DiffAlgebra<DocxSnapshot>>::between(&a, &b), &a).unwrap(), b);
@@ -1068,7 +1068,7 @@ mod tests {
 
     //#region 🔖️CodecRetentionLaw
     #[test]
-    fn codec_retention_law() {
+    async fn codec_retention_law() {
         let snap = crate::artifacts::docx::engine::build_minimal_docx(DocxDocument {
             body: vec![DocxBlock::Paragraph(DocxParagraph {
                 runs: vec![DocxRun { text: "Hello".into(), bold: true, italic: true, underline: true, extra_run_properties: Vec::new() }],
@@ -1090,7 +1090,7 @@ mod tests {
     /// for why the two snapshots use different-length body lists rather than a single same-length
     /// pairwise collection).
     #[test]
-    fn field_sweep() {
+    async fn field_sweep() {
         let a = sweep_a();
         let b = sweep_b();
 
@@ -1162,7 +1162,7 @@ mod tests {
     /// parts/content-types/relationships-by-owner plus the typed document/styles), and the
     /// `Option<String>` tri-state on `SetStyleBasedOn`.
     #[test]
-    fn op_text_binary_roundtrip_law() {
+    async fn op_text_binary_roundtrip_law() {
         let table_block = DocxBlock::Table(DocxTable { rows: vec![DocxTableRow { cells: vec![DocxTableCell { blocks: vec![DocxBlock::paragraph("cell")], ..Default::default() }], ..Default::default() }], ..Default::default() });
         let mutations = vec![
             DocxMutation::NoMutation,

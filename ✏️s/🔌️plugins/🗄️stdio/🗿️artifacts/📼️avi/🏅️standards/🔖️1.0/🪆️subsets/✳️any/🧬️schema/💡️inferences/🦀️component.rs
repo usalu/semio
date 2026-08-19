@@ -24,7 +24,7 @@ pub struct AviInference {
 }
 
 impl protocol::Inference<AviSnapshot> for AviInference {
-    fn infer(snapshot: &AviSnapshot) -> Self {
+    async fn infer(snapshot: &AviSnapshot) -> Self {
         Self { duration: compute_avi_duration(snapshot) }
     }
 }
@@ -34,19 +34,19 @@ impl protocol::Inference<AviSnapshot> for AviInference {
 /// necessity here, but keeps the same hand-rolled convention every sibling family uses (safer
 /// against a future `AviMainHeader` default that stops being all-zero).
 impl Default for AviInference {
-    fn default() -> Self {
+    async fn default() -> Self {
         <Self as protocol::Inference<AviSnapshot>>::infer(&AviSnapshot::default())
     }
 }
 
 impl protocol::InferenceSpec<AviSnapshot> for AviInference {
-    fn inference_schema_id() -> &'static str {
+    async fn inference_schema_id() -> &'static str {
         "s.stdio.avi.inference"
     }
-    fn schema_version() -> u32 {
+    async fn schema_version() -> u32 {
         1
     }
-    fn fields() -> &'static [protocol::InferenceFieldSpec] {
+    async fn fields() -> &'static [protocol::InferenceFieldSpec] {
         &[protocol::InferenceFieldSpec { id: "s.stdio.avi.inference.duration", reads: &["mainHeader", "streams"] }]
     }
 }
@@ -65,7 +65,7 @@ impl ArtifactInferrer for crate::artifacts::avi::standards::v1_0::subsets::any::
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.stdio.avi.inference`'s facet leaves into the OS-wide inference catalog — call
 /// once at plugin init, alongside `avi_artifact_schema_descriptor`'s registration.
-pub fn avi_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
+pub async fn avi_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
     schema::ArtifactInferenceDescriptor {
         id: "s.stdio.avi.inference",
         inference: schema::FacetLeaves {
@@ -86,13 +86,13 @@ mod tests {
     use protocol::Inference;
 
     #[test]
-    fn inference_determinism_law() {
+    async fn inference_determinism_law() {
         let snapshot = AviSnapshot::default();
         assert_eq!(AviInference::infer(&snapshot), AviInference::infer(&snapshot));
     }
 
     #[test]
-    fn inference_default_law() {
+    async fn inference_default_law() {
         assert_eq!(AviInference::infer(&AviSnapshot::default()), AviInference::default());
     }
 }

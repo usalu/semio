@@ -22,7 +22,7 @@ pub struct MoveBlock {
 
 /// 🚚 Reparents `block_id` into `target_row_id`'s container at the drop-appropriate index —
 /// dispatches `move-block-to-container` (hierarchy move), never a whole-`blocks` vec swap.
-pub fn handle(payload: &MoveBlock, doc: &ArtifactView<'_, NoteSnapshot>, _cfg: &ConfigView<'_, NoteConfig>, _ctx: &mut crate::editor::note::NoteDispatchCtx) -> Result<Emit<NoteMutation, NoteConfigMutation>, Fault> {
+pub async fn handle(payload: &MoveBlock, doc: &ArtifactView<'_, NoteSnapshot>, _cfg: &ConfigView<'_, NoteConfig>, _ctx: &mut crate::editor::note::NoteDispatchCtx) -> Result<Emit<NoteMutation, NoteConfigMutation>, Fault> {
     let document = doc.snapshot;
     if find_block(&document.blocks, &payload.block_id).is_none() {
         return Ok(Emit::default());

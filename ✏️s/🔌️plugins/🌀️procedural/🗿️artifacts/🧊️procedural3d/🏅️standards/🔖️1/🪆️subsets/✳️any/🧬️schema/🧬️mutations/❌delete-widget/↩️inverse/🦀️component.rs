@@ -7,7 +7,7 @@ use crate::artifacts::procedural3d::mutations::{widget_index, Procedural3dMutati
 use crate::artifacts::procedural3d::Procedural3dSnapshot;
 
 /// ↩️ Missing id in `base` ⇒ `Vec::new()` (nothing to undo).
-pub fn inverse(payload: &DeleteWidget, base: &Procedural3dSnapshot) -> Vec<Procedural3dMutation> {
+pub async fn inverse(payload: &DeleteWidget, base: &Procedural3dSnapshot) -> Vec<Procedural3dMutation> {
     match widget_index(&base.fixture, &payload.id) {
         Some(index) => vec![Procedural3dMutation::CreateWidget(CreateWidget { index, widget: base.fixture.widgets[index].clone() })],
         None => Vec::new()}

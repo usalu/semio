@@ -6,7 +6,7 @@ use crate::artifacts::din18599::mutations::Din18599Mutation;
 use crate::artifacts::din18599::Din18599Snapshot;
 
 //#region 🔖️Inverse
-pub fn inverse(_payload: &ChangeEnergyCarrier, base: &Din18599Snapshot) -> Vec<Din18599Mutation> {
+pub async fn inverse(_payload: &ChangeEnergyCarrier, base: &Din18599Snapshot) -> Vec<Din18599Mutation> {
     vec![Din18599Mutation::ChangeEnergyCarrier(ChangeEnergyCarrier { new_energy_carrier: base.energy_carrier.clone() })]
 }
 //#endregion 🔖️Inverse

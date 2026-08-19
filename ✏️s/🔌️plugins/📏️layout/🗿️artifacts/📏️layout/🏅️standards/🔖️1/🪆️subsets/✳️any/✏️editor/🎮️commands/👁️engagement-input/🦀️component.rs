@@ -11,6 +11,6 @@ pub struct EngagementInput {
     pub value: String,
 }
 
-pub fn handle(payload: &EngagementInput, _doc: &ArtifactView<'_, LayoutSnapshot>, _cfg: &ConfigView<'_, LayoutConfig>) -> Result<Emit<LayoutMutation, LayoutConfigMutation>, Fault> {
+pub async fn handle(payload: &EngagementInput, _doc: &ArtifactView<'_, LayoutSnapshot>, _cfg: &ConfigView<'_, LayoutConfig>) -> Result<Emit<LayoutMutation, LayoutConfigMutation>, Fault> {
     Ok(Emit::config(vec![LayoutConfigMutation::SetEngagementInput { value: payload.value.clone() }]))
 }

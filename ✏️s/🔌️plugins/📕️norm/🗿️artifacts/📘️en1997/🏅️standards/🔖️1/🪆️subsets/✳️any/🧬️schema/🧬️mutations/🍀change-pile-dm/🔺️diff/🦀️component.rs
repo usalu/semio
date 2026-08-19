@@ -5,7 +5,7 @@ use crate::artifacts::en1997::mutations::change_pile_d_m::mutation::ChangePileDM
 use crate::artifacts::en1997::En1997Snapshot;
 
 //#region 🔖️Diff
-pub fn diff(payload: &ChangePileDM, base: &En1997Snapshot) -> protocol::MutationOutcome<En1997Diff> {
+pub async fn diff(payload: &ChangePileDM, base: &En1997Snapshot) -> protocol::MutationOutcome<En1997Diff> {
     if !payload.new_pile_d_m.is_finite() {
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("Pile diameter [m] must be a finite number, got {}.", payload.new_pile_d_m), Vec::<String>::new());
     }

@@ -21,10 +21,10 @@ pub enum EnergyModelViewCommand {
 }
 
 impl protocol::OpBinary for EnergyModelViewCommand {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         Ok(Vec::new())
     }
-    fn decode_op(_bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    async fn decode_op(_bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         Ok(EnergyModelViewCommand::Noop)
     }
 }
@@ -48,14 +48,14 @@ impl ArtifactViewer for EnergyModelViewer {
     const DIALECT: Dialect = MODEL_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = ENERGY_MODEL_DOCUMENT_SCHEMA;
 
-    fn initial_snapshot() -> EnergyModelSnapshot {
+    async fn initial_snapshot() -> EnergyModelSnapshot {
         EnergyModelSnapshot::default()
     }
 
     /// 👁️ Structurally read-only: the sole `EnergyModelViewCommand::Noop` variant never carries a
     /// config change, so this always returns the empty `ViewEmit`. Kept as a real dispatch (not
     /// `unreachable!()`) so a future view-only action is a pure addition, never a signature change.
-    fn handle(
+    async fn handle(
         _command: &Self::Command,
         _doc: &ArtifactView<'_, Self::Snapshot>,
         _cfg: &ConfigView<'_, Self::Config>,
@@ -65,7 +65,7 @@ impl ArtifactViewer for EnergyModelViewer {
         Ok(ViewEmit::default())
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> UiNode {
+    async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> UiNode {
         match body_key {
             structure::BODY_KEY => structure::render(doc.snapshot),
             zones::BODY_KEY => zones::render(doc.snapshot),
@@ -76,7 +76,7 @@ impl ArtifactViewer for EnergyModelViewer {
 //#endregion 🔖️Viewer
 
 //#region 🔖️Manifest
-pub fn create_energy_model_viewer() -> semio_framework_plugin::AppDefinition {
+pub async fn create_energy_model_viewer() -> semio_framework_plugin::AppDefinition {
     Viewer::builder(MODEL_DIALECT)
         .document(["semio", "energy", "model"])
         .icon_id("battery")
@@ -95,19 +95,19 @@ mod tests {
     use super::*;
 
     #[test]
-    fn create_energy_model_viewer_builds_a_definition_for_the_viewer_role() {
+    async fn create_energy_model_viewer_builds_a_definition_for_the_viewer_role() {
         let def = create_energy_model_viewer();
         assert_eq!(def.role, semio_framework_plugin::AppRole::Viewer);
         assert_eq!(def.dialect, MODEL_DIALECT.into());
     }
 
     #[test]
-    fn viewer_dialect_matches_the_artifact_coordinate() {
+    async fn viewer_dialect_matches_the_artifact_coordinate() {
         assert_eq!(<EnergyModelViewer as ArtifactViewer>::DIALECT, MODEL_DIALECT);
     }
 
     #[test]
-    fn viewer_declares_both_windows() {
+    async fn viewer_declares_both_windows() {
         let def = create_energy_model_viewer();
         assert!(def.window_kinds.iter().any(|w| w.id == structure::WINDOW_KIND_ID));
         assert!(def.window_kinds.iter().any(|w| w.id == zones::WINDOW_KIND_ID));

@@ -15,7 +15,7 @@ pub struct JsonIntoMathematical;
 impl Deserializer<MathematicalSnapshot> for JsonIntoMathematical {
     const FROM: Dialect = JSON_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Exact;
-    fn deserialize(payload: &IoPayload) -> IoResult<MathematicalSnapshot> {
+    async fn deserialize(payload: &IoPayload) -> IoResult<MathematicalSnapshot> {
         let IoPayload::Binary(bytes) = payload else {
             return Err(IoError { message: "JsonIntoMathematical: expected a binary json payload".to_string(), diagnostics: Vec::new() });
         };

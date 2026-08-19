@@ -16,16 +16,16 @@ pub struct ChangeActiveModelDefinition {
 impl MutationKind<CadSnapshot, CadMutation> for ChangeActiveModelDefinition {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "change", entity: "active-model-definition", kind: "change-active-model-definition", record: "ChangedActiveModelDefinition" };
 
-    fn diff(&self, base: &CadSnapshot) -> protocol::MutationOutcome<crate::artifacts::cad::diff::CadDiff> {
+    async fn diff(&self, base: &CadSnapshot) -> protocol::MutationOutcome<crate::artifacts::cad::diff::CadDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &CadSnapshot) -> Vec<CadMutation> {
+    async fn inverse(&self, base: &CadSnapshot) -> Vec<CadMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         format!("Switch active model definition to \"{}\"", self.new_model_definition_id)
     }
-    fn target(&self) -> Vec<String> {
+    async fn target(&self) -> Vec<String> {
         Vec::new()
     }
 }

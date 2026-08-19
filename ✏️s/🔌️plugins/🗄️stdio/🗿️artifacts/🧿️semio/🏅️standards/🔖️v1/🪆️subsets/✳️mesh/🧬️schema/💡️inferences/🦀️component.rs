@@ -36,19 +36,19 @@ pub struct SemioMeshInference {
 }
 
 impl protocol::Inference<SemioMeshSnapshot> for SemioMeshInference {
-    fn infer(snapshot: &SemioMeshSnapshot) -> Self {
+    async fn infer(snapshot: &SemioMeshSnapshot) -> Self {
         Self { aabb: store::infer_field::<SemioMeshSnapshot, super::aabb::MeshAabb>(snapshot, None) }
     }
 }
 
 impl protocol::InferenceSpec<SemioMeshSnapshot> for SemioMeshInference {
-    fn inference_schema_id() -> &'static str {
+    async fn inference_schema_id() -> &'static str {
         "s.stdio.semio.mesh.inference"
     }
-    fn schema_version() -> u32 {
+    async fn schema_version() -> u32 {
         1
     }
-    fn fields() -> &'static [protocol::InferenceFieldSpec] {
+    async fn fields() -> &'static [protocol::InferenceFieldSpec] {
         &[protocol::InferenceFieldSpec { id: "s.stdio.semio.mesh.inference.aabb", reads: &["meshes"] }]
     }
 }
@@ -59,7 +59,7 @@ impl ArtifactInferrer for crate::artifacts::semio::standards::v1::subsets::mesh:
     type Snapshot = SemioMeshSnapshot;
     type Inference = SemioMeshInference;
 
-    fn infer_cached(snapshot: &Self::Snapshot, cache: &mut store::InferenceCache, session: &mut store::InferenceSession) -> Self::Inference {
+    async fn infer_cached(snapshot: &Self::Snapshot, cache: &mut store::InferenceCache, session: &mut store::InferenceSession) -> Self::Inference {
         let _ = session;
         SemioMeshInference { aabb: store::infer_field::<SemioMeshSnapshot, super::aabb::MeshAabb>(snapshot, Some(cache)) }
     }
@@ -72,7 +72,7 @@ impl ArtifactInferrer for crate::artifacts::semio::standards::v1::subsets::mesh:
 /// `🏅️standards/🔖️v1/⚙️engine/🦀️component.rs` (aggregates all 14 `s.stdio.semio.*` subsets'
 /// `register()` calls) — out of this ticket's `✳️mesh/`-only edit scope, same boundary brep's own
 /// wave already flagged. Flagged under `## sharedFileRequests` in the wave report, not wired here.
-pub fn semio_mesh_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
+pub async fn semio_mesh_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
     schema::ArtifactInferenceDescriptor {
         id: "s.stdio.semio.mesh.inference",
         inference: schema::FacetLeaves {
@@ -93,18 +93,18 @@ mod tests {
     use protocol::Inference;
 
     #[test]
-    fn inference_determinism_law() {
+    async fn inference_determinism_law() {
         let snapshot = SemioMeshSnapshot::default();
         assert_eq!(SemioMeshInference::infer(&snapshot), SemioMeshInference::infer(&snapshot));
     }
 
     #[test]
-    fn inference_default_law() {
+    async fn inference_default_law() {
         assert_eq!(SemioMeshInference::infer(&SemioMeshSnapshot::default()), SemioMeshInference::default());
     }
 
     #[test]
-    fn inference_covers_every_primitive_by_composite_key() {
+    async fn inference_covers_every_primitive_by_composite_key() {
         use crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioPoint3;
         use crate::artifacts::semio::standards::v1::subsets::mesh::schema::snapshot::{SemioMesh, SemioPrimitive};
         let snapshot = SemioMeshSnapshot { meshes: vec![SemioMesh { id: "m1".into(), primitives: vec![SemioPrimitive { id: "p1".into(), positions: vec![SemioPoint3 { x: 1.0, y: 1.0, z: 1.0 }], ..Default::default() }] }], ..Default::default() };

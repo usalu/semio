@@ -19,23 +19,23 @@ pub struct AddStreamFrame {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn add_stream_frame(id: String, frame: FrameRef, kind: MediaKind) -> RemodelMutation {
+pub async fn add_stream_frame(id: String, frame: FrameRef, kind: MediaKind) -> RemodelMutation {
     RemodelMutation::AddStreamFrame(AddStreamFrame { id, frame, kind })
 }
 
 impl protocol::MutationKind<RemodelSnapshot, RemodelMutation> for AddStreamFrame {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "add", entity: "stream", kind: "add-stream-frame", record: "AddedStreamFrame" };
 
-    fn diff(&self, base: &RemodelSnapshot) -> protocol::MutationOutcome<RemodelDiff> {
+    async fn diff(&self, base: &RemodelSnapshot) -> protocol::MutationOutcome<RemodelDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &RemodelSnapshot) -> Vec<RemodelMutation> {
+    async fn inverse(&self, base: &RemodelSnapshot) -> Vec<RemodelMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         format!("Add frame {} to stream \"{}\"", self.frame.index, self.id)
     }
-    fn target(&self) -> Vec<String> {
+    async fn target(&self) -> Vec<String> {
         vec![self.id.clone()]
     }
 }

@@ -43,11 +43,11 @@ impl ArtifactSerializer for SemioModelToIfc {
     }
 }
 
-pub fn register() {}
+pub async fn register() {}
 //#endregion 🔖️Serializer
 
 //#region 🔖️Classify
-fn ifc_type_of_spatial_kind(kind: SpatialKind) -> &'static str {
+async fn ifc_type_of_spatial_kind(kind: SpatialKind) -> &'static str {
     match kind {
         SpatialKind::Site => "IFCSITE",
         SpatialKind::Building => "IFCBUILDING",
@@ -56,7 +56,7 @@ fn ifc_type_of_spatial_kind(kind: SpatialKind) -> &'static str {
     }
 }
 
-fn ifc_type_of_element_class(class: &ElementClass) -> String {
+async fn ifc_type_of_element_class(class: &ElementClass) -> String {
     match class {
         ElementClass::Wall => "IFCWALL".into(),
         ElementClass::Slab => "IFCSLAB".into(),
@@ -75,7 +75,7 @@ fn ifc_type_of_element_class(class: &ElementClass) -> String {
 //#region 🔖️Geometry
 /// 🧭️ Inverse of the deserializer's `quat_from_rotation_columns` — standard quaternion -> 3x3
 /// rotation matrix, columns = x/y/z basis vectors (matches `Mat4`'s own layout).
-fn quat_to_rotation_columns(q: &SemioQuaternion) -> [[f64; 3]; 3] {
+async fn quat_to_rotation_columns(q: &SemioQuaternion) -> [[f64; 3]; 3] {
     let (x, y, z, w) = (q.x, q.y, q.z, q.w);
     [[1.0 - 2.0 * (y * y + z * z), 2.0 * (x * y - z * w), 2.0 * (x * z + y * w)], [2.0 * (x * y + z * w), 1.0 - 2.0 * (x * x + z * z), 2.0 * (y * z - x * w)], [2.0 * (x * z - y * w), 2.0 * (y * z + x * w), 1.0 - 2.0 * (x * x + y * y)]]
 }
@@ -84,7 +84,7 @@ fn quat_to_rotation_columns(q: &SemioQuaternion) -> [[f64; 3]; 3] {
 //#region 🔖️IdAlloc
 struct IdAlloc(u64);
 impl IdAlloc {
-    fn next(&mut self) -> u64 {
+    async fn next(&mut self) -> u64 {
         self.0 += 1;
         self.0
     }
@@ -92,11 +92,11 @@ impl IdAlloc {
 //#endregion 🔖️IdAlloc
 
 //#region 🔖️Builders
-fn owner_history_instance(id: u64) -> Part21Instance {
+async fn owner_history_instance(id: u64) -> Part21Instance {
     Part21Instance { id, entities: vec![("IFCOWNERHISTORY".into(), vec![Part21Value::Unset, Part21Value::Unset, Part21Value::Unset, Part21Value::Unset, Part21Value::Unset, Part21Value::Unset, Part21Value::Unset, Part21Value::Int(0)])] }
 }
 
-fn project_instance(id: u64, owner_id: u64) -> Part21Instance {
+async fn project_instance(id: u64, owner_id: u64) -> Part21Instance {
     Part21Instance {
         id,
         entities: vec![(
@@ -108,7 +108,7 @@ fn project_instance(id: u64, owner_id: u64) -> Part21Instance {
 
 /// 📍️ Builds `IfcCartesianPoint`/`IfcDirection`×2/`IfcAxis2Placement3D`/`IfcLocalPlacement`
 /// (absolute — `PlacementRelTo` unset) for `transform`, returns the `IfcLocalPlacement` id.
-fn build_placement(instances: &mut Vec<Part21Instance>, alloc: &mut IdAlloc, transform: &SemioTransform) -> u64 {
+async fn build_placement(instances: &mut Vec<Part21Instance>, alloc: &mut IdAlloc, transform: &SemioTransform) -> u64 {
     let r = quat_to_rotation_columns(&transform.rotation);
     let loc_id = alloc.next();
     instances.push(Part21Instance {
@@ -126,7 +126,7 @@ fn build_placement(instances: &mut Vec<Part21Instance>, alloc: &mut IdAlloc, tra
     local_id
 }
 
-fn spatial_instance(id: u64, ifc_type: &str, guid: &str, owner_id: u64, name: &str, placement_id: u64) -> Part21Instance {
+async fn spatial_instance(id: u64, ifc_type: &str, guid: &str, owner_id: u64, name: &str, placement_id: u64) -> Part21Instance {
     Part21Instance {
         id,
         entities: vec![(
@@ -146,7 +146,7 @@ fn spatial_instance(id: u64, ifc_type: &str, guid: &str, owner_id: u64, name: &s
     }
 }
 
-fn element_instance(id: u64, ifc_type: &str, guid: &str, owner_id: u64, placement_id: u64) -> Part21Instance {
+async fn element_instance(id: u64, ifc_type: &str, guid: &str, owner_id: u64, placement_id: u64) -> Part21Instance {
     Part21Instance {
         id,
         entities: vec![(
@@ -167,7 +167,7 @@ fn element_instance(id: u64, ifc_type: &str, guid: &str, owner_id: u64, placemen
     }
 }
 
-fn rel_aggregates_instance(id: u64, owner_id: u64, parent_id: u64, children: &[u64]) -> Part21Instance {
+async fn rel_aggregates_instance(id: u64, owner_id: u64, parent_id: u64, children: &[u64]) -> Part21Instance {
     Part21Instance {
         id,
         entities: vec![(
@@ -177,7 +177,7 @@ fn rel_aggregates_instance(id: u64, owner_id: u64, parent_id: u64, children: &[u
     }
 }
 
-fn rel_contained_instance(id: u64, owner_id: u64, spatial_id: u64, elements: &[u64]) -> Part21Instance {
+async fn rel_contained_instance(id: u64, owner_id: u64, spatial_id: u64, elements: &[u64]) -> Part21Instance {
     Part21Instance {
         id,
         entities: vec![(
@@ -187,7 +187,7 @@ fn rel_contained_instance(id: u64, owner_id: u64, spatial_id: u64, elements: &[u
     }
 }
 
-fn part21_value_of_pset_value(v: &PsetValue) -> Part21Value {
+async fn part21_value_of_pset_value(v: &PsetValue) -> Part21Value {
     match v {
         PsetValue::Text { value } => Part21Value::Typed("IFCTEXT".into(), vec![Part21Value::Str(value.clone())]),
         PsetValue::Number { value } => Part21Value::Typed("IFCREAL".into(), vec![Part21Value::Real((*value).into())]),
@@ -195,7 +195,7 @@ fn part21_value_of_pset_value(v: &PsetValue) -> Part21Value {
     }
 }
 
-fn build_pset(instances: &mut Vec<Part21Instance>, alloc: &mut IdAlloc, owner_id: u64, element_id: u64, pset: &crate::artifacts::semio::standards::v1::subsets::model::schema::snapshot::PropertySet) {
+async fn build_pset(instances: &mut Vec<Part21Instance>, alloc: &mut IdAlloc, owner_id: u64, element_id: u64, pset: &crate::artifacts::semio::standards::v1::subsets::model::schema::snapshot::PropertySet) {
     let mut prop_ids = Vec::new();
     for prop in &pset.properties {
         let pid = alloc.next();
@@ -222,7 +222,7 @@ fn build_pset(instances: &mut Vec<Part21Instance>, alloc: &mut IdAlloc, owner_id
 //#endregion 🔖️Builders
 
 //#region 🔖️Entry
-pub fn ifc_from_model(from: &SemioModelSnapshot) -> IfcSnapshot {
+pub async fn ifc_from_model(from: &SemioModelSnapshot) -> IfcSnapshot {
     let mut instances: Vec<Part21Instance> = Vec::new();
     let mut alloc = IdAlloc(0);
     let owner_id = alloc.next();
@@ -306,7 +306,7 @@ mod tests {
     use crate::artifacts::semio::standards::v1::subsets::model::io::import::deserializers::artifacts::ifc::v4::any::model_from_ifc;
     use crate::artifacts::semio::standards::v1::subsets::model::schema::snapshot::{GeometryRef, ModelRelation, Property, PropertySet, RelationKind, SemioModelElement, SpatialNode};
 
-    fn rich_model() -> SemioModelSnapshot {
+    async fn rich_model() -> SemioModelSnapshot {
         SemioModelSnapshot {
             schema: crate::artifacts::semio::standards::v1::subsets::model::schema::snapshot::STDIO_SEMIOMODEL_DOCUMENT_SCHEMA.into(),
             spatial: vec![
@@ -342,7 +342,7 @@ mod tests {
     /// represent (documented lossy fields excepted — none of which this fixture exercises: no
     /// element name, unit scale throughout).
     #[test]
-    fn model_to_ifc_to_model_round_trips() {
+    async fn model_to_ifc_to_model_round_trips() {
         let s1 = rich_model();
         let ifc = ifc_from_model(&s1);
         let s2 = model_from_ifc(&ifc);
@@ -373,7 +373,7 @@ mod tests {
     }
 
     #[test]
-    fn non_unit_rotation_round_trips_through_the_quaternion_matrix_conversion() {
+    async fn non_unit_rotation_round_trips_through_the_quaternion_matrix_conversion() {
         // 45 degree rotation about Z: (0, 0, sin(22.5deg), cos(22.5deg)).
         let half = std::f64::consts::FRAC_PI_8;
         let rotation = SemioQuaternion { x: 0.0, y: 0.0, z: half.sin(), w: half.cos() };

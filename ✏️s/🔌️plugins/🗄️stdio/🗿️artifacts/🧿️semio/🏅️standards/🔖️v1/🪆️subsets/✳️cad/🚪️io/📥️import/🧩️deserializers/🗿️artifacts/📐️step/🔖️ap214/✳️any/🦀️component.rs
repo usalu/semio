@@ -30,20 +30,20 @@ const FROM_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.step", standard:
 const INTO_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("cad") };
 
 //#region 🔖️GraphResolve
-fn real_of(v: &StepValue) -> Option<f64> {
+async fn real_of(v: &StepValue) -> Option<f64> {
     match v {
         StepValue::Real(r) => Some(*r),
         StepValue::Integer(i) => Some(*i as f64),
         _ => None,
     }
 }
-fn reference_of(v: &StepValue) -> Option<u64> {
+async fn reference_of(v: &StepValue) -> Option<u64> {
     match v {
         StepValue::Reference(id) => Some(*id),
         _ => None,
     }
 }
-fn xy_of_aggregate(v: &StepValue) -> Option<(f64, f64)> {
+async fn xy_of_aggregate(v: &StepValue) -> Option<(f64, f64)> {
     match v {
         StepValue::Aggregate(items) if items.len() >= 2 => Some((real_of(&items[0])?, real_of(&items[1])?)),
         _ => None,
@@ -51,7 +51,7 @@ fn xy_of_aggregate(v: &StepValue) -> Option<(f64, f64)> {
 }
 
 /// 🔎️ `CARTESIAN_POINT` directly, or one hop through `AXIS2_PLACEMENT_2D`/`_3D`'s `location` ref.
-fn resolve_point(id: u64, idx: &HashMap<u64, &StepEntity>) -> Option<(f64, f64)> {
+async fn resolve_point(id: u64, idx: &HashMap<u64, &StepEntity>) -> Option<(f64, f64)> {
     let e = idx.get(&id)?;
     match e.name.as_str() {
         "CARTESIAN_POINT" => xy_of_aggregate(e.args.get(1)?),
@@ -60,7 +60,7 @@ fn resolve_point(id: u64, idx: &HashMap<u64, &StepEntity>) -> Option<(f64, f64)>
     }
 }
 
-fn resolve_line(e: &StepEntity, idx: &HashMap<u64, &StepEntity>) -> Option<CadEntity> {
+async fn resolve_line(e: &StepEntity, idx: &HashMap<u64, &StepEntity>) -> Option<CadEntity> {
     let start = resolve_point(reference_of(e.args.get(1)?)?, idx)?;
     let vector = idx.get(&reference_of(e.args.get(2)?)?)?;
     if vector.name != "VECTOR" {
@@ -80,7 +80,7 @@ fn resolve_line(e: &StepEntity, idx: &HashMap<u64, &StepEntity>) -> Option<CadEn
     Some(CadEntity::Line { a: SemioPoint2 { x: start.0, y: start.1 }, b: SemioPoint2 { x: end.0, y: end.1 } })
 }
 
-fn resolve_circle(e: &StepEntity, idx: &HashMap<u64, &StepEntity>) -> Option<CadEntity> {
+async fn resolve_circle(e: &StepEntity, idx: &HashMap<u64, &StepEntity>) -> Option<CadEntity> {
     let center = resolve_point(reference_of(e.args.get(1)?)?, idx)?;
     let radius = real_of(e.args.get(2)?)?;
     Some(CadEntity::Circle { center: SemioPoint2 { x: center.0, y: center.1 }, radius })
@@ -135,7 +135,7 @@ mod tests {
     );
 
     #[test]
-    fn resolves_line_and_circle_through_the_real_entity_graph() {
+    async fn resolves_line_and_circle_through_the_real_entity_graph() {
         let step = <StepSnapshot as store::ArtifactDsl>::parse_dsl(FIXTURE).expect("parse real step text");
         let cad = semio_framework_plugin::resolve_ready(SemioCadFromStep::deserialize(&step)).expect("deserialize");
         assert_eq!(cad.entities.len(), 2);

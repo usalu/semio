@@ -13,7 +13,7 @@ const PRESENT_PLAY_SURFACE_MAIN: &str = "animate.present.play";
 
 //#region 🔖️Definition
 /// 🧱️ Stitched into the app manifest by `crate::editor::animate::create_animate_present_app`.
-pub fn definition() -> WindowKindDefinition {
+pub async fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
         id: PRESENT_PLAY_WINDOW_MAIN.into(),
         label: LocalizedLabel::native("Tile editor", "Kacheleditor"),
@@ -49,7 +49,7 @@ struct TileCanvasLayer {
     data_url: Option<String>,
 }
 
-fn frame_to_canvas(frame: &FigureTileFrame, scale: f64) -> (f64, f64, f64, f64) {
+async fn frame_to_canvas(frame: &FigureTileFrame, scale: f64) -> (f64, f64, f64, f64) {
     (frame.x * scale, frame.y * scale, frame.width * scale, frame.height * scale)
 }
 
@@ -59,7 +59,7 @@ fn frame_to_canvas(frame: &FigureTileFrame, scale: f64) -> (f64, f64, f64, f64) 
 /// `InteractionView`) — the selection overlay this used to bake into every tile's `kind` is gone; the
 /// client renders that highlight itself from the framework's own interaction state now (matches
 /// `🖍️draw`'s canvas render, same reason).
-fn deck_to_canvas_layers(deck: &PresentSnapshot) -> String {
+async fn deck_to_canvas_layers(deck: &PresentSnapshot) -> String {
     const SCALE: f64 = 1000.0;
     let (source, tiles) = crate::artifacts::present::present_working_scene(deck);
     let mut layers = Vec::new();
@@ -84,7 +84,7 @@ fn deck_to_canvas_layers(deck: &PresentSnapshot) -> String {
 //#endregion 🔖️CanvasLayers
 
 //#region 🔖️Render
-pub fn render(deck: &PresentSnapshot) -> UiNode {
+pub async fn render(deck: &PresentSnapshot) -> UiNode {
     build_canvas_2d_scene(PRESENT_PLAY_SURFACE_MAIN, PRESENT_PLAY_APP_ID, Canvas2dScene { camera_x: 0.0, camera_y: 0.0, zoom: 1.0, layers_json: deck_to_canvas_layers(deck) })
 }
 //#endregion 🔖️Render
@@ -99,13 +99,13 @@ mod tests {
     use serde_json::Value;
 
     #[test]
-    fn renders_canvas_2d_scene() {
+    async fn renders_canvas_2d_scene() {
         let mut app = present_app();
         assert!(render_body(&mut app, PRESENT_PLAY_BODY_MAIN).contains("canvas-2d") || render_body(&mut app, PRESENT_PLAY_BODY_MAIN).contains("Canvas2d"));
     }
 
     #[test]
-    fn definition_declares_the_canvas_2d_surface_and_body_key() {
+    async fn definition_declares_the_canvas_2d_surface_and_body_key() {
         let definition = definition();
         assert_eq!(definition.body_key, PRESENT_PLAY_BODY_MAIN);
         assert!(matches!(definition.surface_kind, SurfaceKind::Canvas2d));
@@ -113,7 +113,7 @@ mod tests {
     }
 
     #[test]
-    fn source_frame_renders_as_actual_image_layer_behind_tiles() {
+    async fn source_frame_renders_as_actual_image_layer_behind_tiles() {
         let mut app = present_app();
         app.dispatch_typed(PresentCommand::SeedGrid(crate::editor::animate::commands::seed_grid::SeedGrid { rows: 1, columns: 2 }), &meta("local")).expect("seed grid");
         let deck = app.snapshot().expect("projection");
@@ -132,7 +132,7 @@ mod tests {
     }
 
     #[test]
-    fn deck_to_canvas_layers_omits_data_url_when_source_has_no_image() {
+    async fn deck_to_canvas_layers_omits_data_url_when_source_has_no_image() {
         let base = crate::artifacts::present::default_present_snapshot();
         let (mut source, tiles) = crate::artifacts::present::present_working_scene(&base);
         source.src = String::new();
@@ -145,7 +145,7 @@ mod tests {
     }
 
     #[test]
-    fn deck_to_canvas_layers_treats_pdf_kind_as_non_image() {
+    async fn deck_to_canvas_layers_treats_pdf_kind_as_non_image() {
         let base = crate::artifacts::present::default_present_snapshot();
         let (mut source, tiles) = crate::artifacts::present::present_working_scene(&base);
         source.kind = "pdf".into();

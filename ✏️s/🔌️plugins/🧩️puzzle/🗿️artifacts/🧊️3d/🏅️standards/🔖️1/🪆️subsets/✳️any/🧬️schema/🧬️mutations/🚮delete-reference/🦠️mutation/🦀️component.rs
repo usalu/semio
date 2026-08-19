@@ -14,23 +14,23 @@ pub struct DeleteReference {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn delete_reference(id: String) -> Puzzle3dMutation {
+pub async fn delete_reference(id: String) -> Puzzle3dMutation {
     Puzzle3dMutation::DeleteReference(DeleteReference { id })
 }
 
 impl protocol::MutationKind<Puzzle3dSnapshot, Puzzle3dMutation> for DeleteReference {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "delete", entity: "reference", kind: "delete-reference", record: "DeletedReference" };
 
-    fn diff(&self, base: &Puzzle3dSnapshot) -> protocol::MutationOutcome<Puzzle3dDiff> {
+    async fn diff(&self, base: &Puzzle3dSnapshot) -> protocol::MutationOutcome<Puzzle3dDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &Puzzle3dSnapshot) -> Vec<Puzzle3dMutation> {
+    async fn inverse(&self, base: &Puzzle3dSnapshot) -> Vec<Puzzle3dMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         format!("Delete reference \"{}\"", self.id)
     }
-    fn target(&self) -> Vec<String> {
+    async fn target(&self) -> Vec<String> {
         vec![self.id.clone()]
     }
 }

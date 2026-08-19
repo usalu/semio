@@ -4,6 +4,6 @@ use crate::artifacts::procedural3d::mutations::change_schema::mutation::ChangeSc
 use crate::artifacts::procedural3d::mutations::Procedural3dMutation;
 use crate::artifacts::procedural3d::Procedural3dSnapshot;
 
-pub fn inverse(_payload: &ChangeSchema, base: &Procedural3dSnapshot) -> Vec<Procedural3dMutation> {
+pub async fn inverse(_payload: &ChangeSchema, base: &Procedural3dSnapshot) -> Vec<Procedural3dMutation> {
     vec![Procedural3dMutation::ChangeSchema(ChangeSchema { new_schema: base.fixture.schema.clone() })]
 }

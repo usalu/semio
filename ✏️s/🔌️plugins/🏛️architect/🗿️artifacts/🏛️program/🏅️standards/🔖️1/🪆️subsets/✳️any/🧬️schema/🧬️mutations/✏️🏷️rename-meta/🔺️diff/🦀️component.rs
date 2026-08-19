@@ -7,7 +7,7 @@ use crate::artifacts::program::ProgramSnapshot;
 
 /// ✏️ New `ProgramMeta` with only `title` changed. Root-scoped singleton — always present, so
 /// Warning `mutation.no-op` (empty diff) covers the only degenerate case: the title is unchanged.
-pub fn diff(payload: &RenameMeta, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
+pub async fn diff(payload: &RenameMeta, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
     if base.meta.title == payload.new_title {
         return protocol::MutationOutcome::empty().absorb_messages([protocol::MutationMessage::warn("mutation.no-op", "Document metadata already has this title.").at([base.meta.document_id.clone()])]);
     }

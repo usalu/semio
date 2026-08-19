@@ -19,26 +19,26 @@ pub struct HtmlArtifact {
 }
 
 impl Default for HtmlArtifact {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self::from_snapshot(HtmlSnapshot::default())
     }
 }
 
 impl HtmlArtifact {
-    pub fn to_snapshot(&self) -> HtmlSnapshot {
+    pub async fn to_snapshot(&self) -> HtmlSnapshot {
         HtmlSnapshot { schema: self.schema.clone(), doctype: self.doctype.clone(), root: self.root.clone() }
     }
-    pub fn from_snapshot(snapshot: HtmlSnapshot) -> Self {
+    pub async fn from_snapshot(snapshot: HtmlSnapshot) -> Self {
         Self { schema: snapshot.schema, doctype: snapshot.doctype, root: snapshot.root }
     }
-    pub fn set_snapshot(&mut self, snapshot: HtmlSnapshot) {
+    pub async fn set_snapshot(&mut self, snapshot: HtmlSnapshot) {
         self.schema = snapshot.schema;
         self.doctype = snapshot.doctype;
         self.root = snapshot.root;
     }
 }
 
-pub fn html_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
+pub async fn html_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
     schema::ArtifactSchemaDescriptor {
         id: "s.stdio.html",
         artifact: schema::FacetLeaves {
@@ -87,27 +87,27 @@ pub mod derived_construction {
         type Snapshot = HtmlSnapshot;
         type Mutation = HtmlMutation;
         type Diff = HtmlDiff;
-        fn empty() -> Self {
+        async fn empty() -> Self {
             Self { snapshot: HtmlSnapshot::default() }
         }
-        fn from_snapshot(snapshot: Self::Snapshot) -> Self {
+        async fn from_snapshot(snapshot: Self::Snapshot) -> Self {
             Self { snapshot }
         }
-        fn from_text(text: &str) -> Result<Self, store::TextError> {
+        async fn from_text(text: &str) -> Result<Self, store::TextError> {
             Ok(Self::from_snapshot(<HtmlSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
-        fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
+        async fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
             Ok(Self::from_snapshot(<HtmlSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
         }
-        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
+        async fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let diff = apply_html_mutation(&mut self.snapshot, &mutation);
             (self, diff)
         }
-        fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
+        async fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
             self.snapshot = <HtmlDiff as protocol::MutationDiff<HtmlSnapshot>>::apply(&diff, &self.snapshot)?;
             Ok(self)
         }
-        fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
+        async fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
             Ok(self.snapshot)
         }
     }
@@ -132,7 +132,7 @@ pub mod derived_analysis {
         type Parts = HtmlParts;
         const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.html", standard: StandardId("5"), subset: SubsetId("*") };
 
-        fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
+        async fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
             match source {
                 AnalyzeSource::Binary(bytes) => {
                     if engine::sniff_real_bytes(bytes) {
@@ -155,7 +155,7 @@ pub mod derived_analysis {
             }
         }
 
-        fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
+        async fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
             let mut parts = HtmlParts::default();
             let mut diagnostics = Vec::new();
             let mut confidence = IoConfidence::High;

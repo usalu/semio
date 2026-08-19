@@ -21,7 +21,7 @@ impl Serializer<WriterSnapshot> for WriterIntoMd {
     /// 🪧️ Lossy: only the document's content text survives — `schema`/`id`/`uri`/`language_id` have
     /// no home in a markdown file.
     const FIDELITY: IoFidelity = IoFidelity::Lossy;
-    fn serialize(from: &WriterSnapshot) -> IoResult<IoPayload> {
+    async fn serialize(from: &WriterSnapshot) -> IoResult<IoPayload> {
         let md = MdSnapshot::from_text(&writer_text(from));
         Ok(IoOutcome { value: IoPayload::Text(store::ArtifactDsl::print_dsl(&md)), diagnostics: Vec::new() })
     }
@@ -33,7 +33,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn writer_into_md_carries_the_document_text() {
+    async fn writer_into_md_carries_the_document_text() {
         let snapshot = crate::artifacts::writer::writer_snapshot_with_text("writer.document", "id", "plain", "writer://id", "hello world");
         let outcome = WriterIntoMd::serialize(&snapshot).expect("serialize");
         let IoPayload::Text(text) = outcome.value else { panic!("expected text payload") };

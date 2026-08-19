@@ -7,7 +7,7 @@ use neural_engine::{channel_output, Atom, Cardinality, ChannelSpec, Dictionary, 
 pub struct Empty;
 
 impl Operator for Empty {
-    fn evaluate(&self, _input: &Dictionary) -> Result<Dictionary, EvalError> {
+    async fn evaluate(&self, _input: &Dictionary) -> Result<Dictionary, EvalError> {
         Ok(channel_output("list", Dictionary::with_schema("list")))
     }
 }
@@ -18,7 +18,7 @@ impl Operator for Empty {
 pub struct Pack;
 
 impl Operator for Pack {
-    fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
+    async fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         let mut out = Dictionary::with_schema("list");
         if let Some(value) = input.get("*") {
             out = out.insert("0", value.clone());
@@ -39,7 +39,7 @@ impl Operator for Pack {
 pub struct Get;
 
 impl Operator for Get {
-    fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
+    async fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         let list = read_list(input, "list")?;
         let index = read_number(input, "index")? as usize;
         let wrap = read_bool(input, "wrap").unwrap_or(false);
@@ -68,7 +68,7 @@ impl Operator for Get {
 pub struct Set;
 
 impl Operator for Set {
-    fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
+    async fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         let list = read_list(input, "list")?;
         let index = read_number(input, "index")? as usize;
         let value = input.get("value").cloned().ok_or_else(|| EvalError::MissingInput("value".into()))?;
@@ -82,7 +82,7 @@ impl Operator for Set {
 pub struct Append;
 
 impl Operator for Append {
-    fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
+    async fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         let list = read_list(input, "list")?;
         let value = input.get("value").cloned().ok_or_else(|| EvalError::MissingInput("value".into()))?;
         let next = list_indices(&list).len();
@@ -96,7 +96,7 @@ impl Operator for Append {
 pub struct Size;
 
 impl Operator for Size {
-    fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
+    async fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         let list = read_list(input, "list")?;
         Ok(channel_output("count", number_dictionary(list_indices(&list).len() as f64)))
     }
@@ -108,7 +108,7 @@ impl Operator for Size {
 pub struct Remove;
 
 impl Operator for Remove {
-    fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
+    async fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         let list = read_list(input, "list")?;
         let index = read_number(input, "index")? as usize;
         Ok(channel_output("list", remove_list_index(&list, index)))
@@ -121,7 +121,7 @@ impl Operator for Remove {
 pub struct Range;
 
 impl Operator for Range {
-    fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
+    async fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         let start = read_number(input, "start")?;
         let step = read_number(input, "step").unwrap_or(1.0);
         let count = read_number(input, "count").unwrap_or(1.0).max(0.0) as usize;
@@ -139,7 +139,7 @@ impl Operator for Range {
 pub struct Reverse;
 
 impl Operator for Reverse {
-    fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
+    async fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         let list = read_list(input, "list")?;
         let indices = list_indices(&list);
         let mut out = Dictionary::with_schema("list");
@@ -154,29 +154,29 @@ impl Operator for Reverse {
 // #endregion 🔖️Reverse
 
 // #region 🔖️Helpers
-fn number_dictionary(value: f64) -> Dictionary {
+async fn number_dictionary(value: f64) -> Dictionary {
     Dictionary::with_schema("number").insert("value", Value::Atom(Atom::Decimal(value)))
 }
 
-fn read_list(input: &Dictionary, key: &str) -> Result<Dictionary, EvalError> {
+async fn read_list(input: &Dictionary, key: &str) -> Result<Dictionary, EvalError> {
     input.get(key).and_then(|value| value.as_dictionary()).filter(|dict| dict.schema() == Some("list")).cloned().ok_or_else(|| EvalError::MissingInput(key.into()))
 }
 
-fn read_number(input: &Dictionary, key: &str) -> Result<f64, EvalError> {
+async fn read_number(input: &Dictionary, key: &str) -> Result<f64, EvalError> {
     input.get(key).and_then(|value| value.as_dictionary()).and_then(|dict| dict.get("value")).and_then(|value| value.as_atom()).and_then(|atom| atom.as_f64()).ok_or_else(|| EvalError::MissingInput(key.into()))
 }
 
-fn read_bool(input: &Dictionary, key: &str) -> Result<bool, EvalError> {
+async fn read_bool(input: &Dictionary, key: &str) -> Result<bool, EvalError> {
     input.get(key).and_then(|value| value.as_dictionary()).and_then(|dict| dict.get("value")).and_then(|value| value.as_atom()).and_then(|atom| atom.as_bool()).ok_or_else(|| EvalError::MissingInput(key.into()))
 }
 
-fn list_indices(list: &Dictionary) -> Vec<usize> {
+async fn list_indices(list: &Dictionary) -> Vec<usize> {
     let mut indices: Vec<usize> = list.keys().filter_map(|key| key.parse::<usize>().ok()).collect();
     indices.sort_unstable();
     indices
 }
 
-fn remove_list_index(list: &Dictionary, remove_at: usize) -> Dictionary {
+async fn remove_list_index(list: &Dictionary, remove_at: usize) -> Dictionary {
     let mut out = Dictionary::with_schema("list");
     let mut next = 0usize;
     for index in list_indices(list) {
@@ -191,30 +191,30 @@ fn remove_list_index(list: &Dictionary, remove_at: usize) -> Dictionary {
     out
 }
 
-fn list_channel(id: &str, operator_id: &str) -> ChannelSpec {
+async fn list_channel(id: &str, operator_id: &str) -> ChannelSpec {
     ChannelSpec::list(id, &[operator_id])
 }
 
-fn list_output_channel(code: &str, abbreviation: &str, name: &str, full_name: &str) -> ChannelSpec {
+async fn list_output_channel(code: &str, abbreviation: &str, name: &str, full_name: &str) -> ChannelSpec {
     ChannelSpec::named(code, abbreviation, name, full_name).with_cardinality(Cardinality::ZeroOrMore)
 }
 
-fn number_channel(id: &str, operator_id: &str) -> ChannelSpec {
+async fn number_channel(id: &str, operator_id: &str) -> ChannelSpec {
     ChannelSpec::number_default(id, 0.0, &[operator_id])
 }
 
-fn info(id: &str, name: &str, summary: &str, inputs: Vec<ChannelSpec>, output: ChannelSpec) -> OperatorInfo {
+async fn info(id: &str, name: &str, summary: &str, inputs: Vec<ChannelSpec>, output: ChannelSpec) -> OperatorInfo {
     OperatorInfo { id: id.into(), extension: "list".into(), name: name.into(), abbreviation: name.into(), icon: "emoji:📋️".into(), summary: summary.into(), inputs, outputs: vec![output], ..Default::default() }
 }
 
-fn register_simple(registry: &mut Registry, info: OperatorInfo, operation: Box<dyn Operator>, schemas: Vec<&str>, produces: &[&str]) {
+async fn register_simple(registry: &mut Registry, info: OperatorInfo, operation: Box<dyn Operator>, schemas: Vec<&str>, produces: &[&str]) {
     registry.register_operator(info, vec![OperatorImpl { schemas: schemas.into_iter().map(str::to_string).collect(), operator: operation }], produces);
 }
 
 // #endregion 🔖️Helpers
 
 /// 📦️ Registers all list operators.
-pub fn register(registry: &mut Registry) {
+pub async fn register(registry: &mut Registry) {
     register_simple(registry, info("list.empty", "Empty", "Creates an empty list", vec![], list_output_channel("L", "Lst", "list", "EmptyList")), Box::new(Empty), vec![], &["list"]);
     register_simple(registry, info("list.pack", "Pack", "Wraps input as a list dictionary", vec![ChannelSpec::wildcard()], list_output_channel("L", "Lst", "list", "PackedList")), Box::new(Pack), vec![], &["list"]);
     registry.register_operator(
@@ -273,13 +273,13 @@ pub fn register(registry: &mut Registry) {
 
 // #region 🔖️Manifest
 /// 📦️ Flow extension manifest JSON contributed to host catalogues.
-pub fn extension_manifest_json() -> String {
+pub async fn extension_manifest_json() -> String {
     use flow_extension_sdk::{build_manifest_json, FlowExtensionCommand};
     build_manifest_json("list", "List", "0.1.0", &module_registry(), vec!["onStartup".into()], vec![], vec![FlowExtensionCommand { id: "list.test".into(), title: "Test".into() }], vec![])
 }
 
 /// 🌊️ Builds an in-process operator registry for this extension.
-pub fn module_registry() -> Registry {
+pub async fn module_registry() -> Registry {
     let mut registry = Registry::new();
     register(&mut registry);
     registry
@@ -292,12 +292,12 @@ mod tests {
     use super::*;
     use flow_extension_sdk::{build_manifest_json, evaluate_json, FlowExtensionCommand};
 
-    fn sample_list() -> Dictionary {
+    async fn sample_list() -> Dictionary {
         Dictionary::with_schema("list").insert("0", Value::Dictionary(number_dictionary(1.0))).insert("1", Value::Dictionary(number_dictionary(2.0))).insert("2", Value::Dictionary(number_dictionary(3.0)))
     }
 
     #[test]
-    fn empty_creates_list() {
+    async fn empty_creates_list() {
         let mut reg = Registry::new();
         register(&mut reg);
         let out = reg.dispatch("list.empty", &Dictionary::new()).unwrap();
@@ -306,7 +306,7 @@ mod tests {
     }
 
     #[test]
-    fn get_reads_index() {
+    async fn get_reads_index() {
         let mut reg = Registry::new();
         register(&mut reg);
         let input = Dictionary::new()
@@ -319,7 +319,7 @@ mod tests {
     }
 
     #[test]
-    fn get_reads_consecutive_outputs() {
+    async fn get_reads_consecutive_outputs() {
         let mut reg = Registry::new();
         register(&mut reg);
         let input = Dictionary::new()
@@ -335,7 +335,7 @@ mod tests {
     }
 
     #[test]
-    fn get_wraps_consecutive_outputs() {
+    async fn get_wraps_consecutive_outputs() {
         let mut reg = Registry::new();
         register(&mut reg);
         let input = Dictionary::new()
@@ -351,7 +351,7 @@ mod tests {
     }
 
     #[test]
-    fn append_adds_next_index() {
+    async fn append_adds_next_index() {
         let mut reg = Registry::new();
         register(&mut reg);
         let input = Dictionary::new().insert("list", Value::Dictionary(sample_list())).insert("value", Value::Dictionary(number_dictionary(4.0)));
@@ -361,7 +361,7 @@ mod tests {
     }
 
     #[test]
-    fn heterogeneous_list_input_rejected_at_evaluate() {
+    async fn heterogeneous_list_input_rejected_at_evaluate() {
         let mut reg = Registry::new();
         register(&mut reg);
         let input = Dictionary::new().insert(
@@ -373,7 +373,7 @@ mod tests {
     }
 
     #[test]
-    fn manifest_lists_operators() {
+    async fn manifest_lists_operators() {
         let mut reg = Registry::new();
         register(&mut reg);
         let json = build_manifest_json("list", "List", "0.1.0", &reg, vec!["onStartup".into()], vec![], vec![FlowExtensionCommand { id: "list.test".into(), title: "Test".into() }], vec![]);
@@ -382,7 +382,7 @@ mod tests {
     }
 
     #[test]
-    fn evaluate_json_round_trips() {
+    async fn evaluate_json_round_trips() {
         let reg = module_registry();
         let input = Dictionary::new().insert("list", Value::Dictionary(sample_list()));
         let out_json = evaluate_json(&reg, "list.size", &serde_json::to_string(&input).unwrap());
@@ -414,7 +414,7 @@ mod extension_guest {
         input_json: String,
     }
 
-    fn flow_extension_contribution(app_id: &str, manifest_json: String) -> serde_json::Value {
+    async fn flow_extension_contribution(app_id: &str, manifest_json: String) -> serde_json::Value {
         let icon_id = "list";
         let topic_payload = serde_json::json!({
             "appId": app_id,
@@ -426,7 +426,7 @@ mod extension_guest {
         topic_payload
     }
 
-    fn bundle() -> ExtensionBundle {
+    async fn bundle() -> ExtensionBundle {
         let manifest_json = extension_manifest_json();
         let flow_topic_payload = flow_extension_contribution(FLOW_APP_ID, manifest_json.clone());
         let procedural3d_topic_payload = flow_extension_contribution(PROCEDURAL3D_APP_ID, manifest_json);

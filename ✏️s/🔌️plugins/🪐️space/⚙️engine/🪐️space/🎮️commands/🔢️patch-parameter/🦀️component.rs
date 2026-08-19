@@ -16,7 +16,7 @@ pub struct PatchParameter {
     pub value: String,
 }
 
-pub fn handle(payload: &PatchParameter, doc: &ArtifactView<'_, WorkflowSnapshot>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
+pub async fn handle(payload: &PatchParameter, doc: &ArtifactView<'_, WorkflowSnapshot>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
     let projection = doc.snapshot;
     let value_json: Value = serde_json::from_str(&payload.value).unwrap_or_else(|_| Value::String(payload.value.clone()));
     let patch = if payload.field == "addOption" {
@@ -62,7 +62,7 @@ mod tests {
     use semio_framework_plugin::HistoryView;
 
     #[test]
-    fn space_command_op_text_round_trips_every_variant() {
+    async fn space_command_op_text_round_trips_every_variant() {
         use crate::engine::space::SpaceCommand;
         store::os_store::test_support::assert_op_line_round_trip(&SpaceCommand::PatchParameter(PatchParameter { parameter_id: "p1".into(), field: "value".into(), value: "48".into() }));
         store::os_store::test_support::assert_op_line_round_trip(&SpaceCommand::AddParameter(crate::engine::space::commands::add_parameter::AddParameter { name: "Parameter".into(), kind: "numeric".into() }));
@@ -76,7 +76,7 @@ mod tests {
     }
 
     #[test]
-    fn patch_parameter_action_updates_value() {
+    async fn patch_parameter_action_updates_value() {
         let projection = demo_space_projection();
         let history = HistoryView::empty();
         let doc = ArtifactView::new(&projection, &history);
@@ -93,7 +93,7 @@ mod tests {
     }
 
     #[test]
-    fn unbind_parameter_field_removes_binding() {
+    async fn unbind_parameter_field_removes_binding() {
         let mut projection = demo_space_projection();
         let config = SpaceConfig::default();
         let node = projection.graph.nodes.first().expect("node").clone();

@@ -60,7 +60,7 @@ pub struct SemioQuaternion {
 }
 
 impl Default for SemioQuaternion {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self { x: 0.0, y: 0.0, z: 0.0, w: 1.0 }
     }
 }
@@ -74,14 +74,14 @@ pub struct SemioTransform {
 }
 
 impl Default for SemioTransform {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self::identity()
     }
 }
 
 impl SemioTransform {
     /// 🧭️ Identity transform: zero translation, identity rotation, unit scale.
-    pub fn identity() -> Self {
+    pub async fn identity() -> Self {
         Self { translation: SemioPoint3::default(), rotation: SemioQuaternion::default(), scale: SemioPoint3 { x: 1.0, y: 1.0, z: 1.0 } }
     }
 }
@@ -93,7 +93,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn identity_transform_round_trips_through_json() {
+    async fn identity_transform_round_trips_through_json() {
         let t = SemioTransform::identity();
         let json = serde_json::to_string(&t).expect("serialize");
         let back: SemioTransform = serde_json::from_str(&json).expect("deserialize");
@@ -103,13 +103,13 @@ mod tests {
     }
 
     #[test]
-    fn rgba_and_uv_default_to_zero() {
+    async fn rgba_and_uv_default_to_zero() {
         assert_eq!(SemioRgba::default(), SemioRgba { r: 0.0, g: 0.0, b: 0.0, a: 0.0 });
         assert_eq!(SemioUv::default(), SemioUv { u: 0.0, v: 0.0 });
     }
 
     #[test]
-    fn point3_and_point2_are_plain_structs_not_tuples() {
+    async fn point3_and_point2_are_plain_structs_not_tuples() {
         // 🧪️ Structural proof against the f6 §4.3 bare-tuple `DslField` gap: field ACCESS by
         // name, not `.0`/`.1` positional tuple indexing.
         let p3 = SemioPoint3 { x: 1.0, y: 2.0, z: 3.0 };

@@ -4,7 +4,7 @@ use super::mutation::DeleteNodes;
 use crate::artifacts::mathematical::{mathematical_children_from_state, mathematical_geometry, mathematical_graph, MathematicalDiff, MathematicalSnapshot};
 
 //#region 🔖️Diff
-pub fn diff(payload: &DeleteNodes, base: &MathematicalSnapshot) -> protocol::MutationOutcome<MathematicalDiff> {
+pub async fn diff(payload: &DeleteNodes, base: &MathematicalSnapshot) -> protocol::MutationOutcome<MathematicalDiff> {
     let mut graph = mathematical_graph(base);
     let existing: Vec<String> = payload.ids.iter().filter(|id| graph.nodes.iter().any(|node| &node.id == *id)).cloned().collect();
     if existing.is_empty() {

@@ -26,7 +26,7 @@ pub struct UtilityTariff {
 }
 
 impl UtilityTariff {
-    pub fn energy_cost(&self, energy_kwh: f64, hour: u8, month: u8) -> f64 {
+    pub async fn energy_cost(&self, energy_kwh: f64, hour: u8, month: u8) -> f64 {
         let rate = self.periods.iter().find(|p| p.months.contains(&month) && hour >= p.start_hour && hour < p.end_hour).map_or(0.1, |p| p.energy_rate_per_kwh);
         energy_kwh * rate
     }
@@ -56,7 +56,7 @@ pub struct LccaResult {
 }
 
 /// 💰️ Compute present value of annual cost over study period.
-pub fn present_value(annual_cost: f64, discount_rate: f64, years: u32) -> f64 {
+pub async fn present_value(annual_cost: f64, discount_rate: f64, years: u32) -> f64 {
     let mut pv = 0.0;
     for y in 1..=years {
         pv += annual_cost / (1.0 + discount_rate).powi(y as i32);
@@ -65,7 +65,7 @@ pub fn present_value(annual_cost: f64, discount_rate: f64, years: u32) -> f64 {
 }
 
 /// 💰️ Run LCCA from annual energy cost and parameters.
-pub fn compute_lcca(annual_energy_cost: f64, params: &LccaParameters) -> LccaResult {
+pub async fn compute_lcca(annual_energy_cost: f64, params: &LccaParameters) -> LccaResult {
     let pv_energy = present_value(annual_energy_cost, params.discount_rate, params.study_period_years);
     let pv_maint = present_value(params.annual_maintenance, params.discount_rate, params.study_period_years);
     let pv_total = params.initial_cost + pv_energy + pv_maint;
@@ -84,7 +84,7 @@ pub struct EconomicsResult {
 }
 
 /// 💰️ Apply tariffs to meter store (annual run).
-pub fn apply_tariffs(meters: &MeterTable, tariffs: &[UtilityTariff]) -> EconomicsResult {
+pub async fn apply_tariffs(meters: &MeterTable, tariffs: &[UtilityTariff]) -> EconomicsResult {
     let mut annual_energy_cost = 0.0;
     let mut annual_demand_cost = 0.0;
     for meter in meters.meters.values() {
@@ -105,13 +105,13 @@ mod tests {
     use super::*;
 
     #[test]
-    fn present_value_positive() {
+    async fn present_value_positive() {
         let pv = present_value(1000.0, 0.05, 10);
         assert!(pv > 0.0 && pv < 10_000.0);
     }
 
     #[test]
-    fn lcca_computes_payback() {
+    async fn lcca_computes_payback() {
         let params = LccaParameters { study_period_years: 20, discount_rate: 0.03, inflation_rate: 0.02, initial_cost: 10_000.0, annual_maintenance: 500.0, replacement_cost: 0.0, replacement_interval_years: 0 };
         let lcca = compute_lcca(2000.0, &params);
         assert!((lcca.simple_payback_years - 5.0).abs() < 1e-6);

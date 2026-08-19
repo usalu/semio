@@ -22,16 +22,16 @@ pub struct CreateShapeModel {
 impl MutationKind<CadSnapshot, CadMutation> for CreateShapeModel {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "create", entity: "shape-model", kind: "create-shape-model", record: "CreatedShapeModel" };
 
-    fn diff(&self, base: &CadSnapshot) -> protocol::MutationOutcome<crate::artifacts::cad::diff::CadDiff> {
+    async fn diff(&self, base: &CadSnapshot) -> protocol::MutationOutcome<crate::artifacts::cad::diff::CadDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &CadSnapshot) -> Vec<CadMutation> {
+    async fn inverse(&self, base: &CadSnapshot) -> Vec<CadMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         format!("Create shape-model child {}", self.child_id)
     }
-    fn target(&self) -> Vec<String> {
+    async fn target(&self) -> Vec<String> {
         vec!["shape_model".to_string()]
     }
 }

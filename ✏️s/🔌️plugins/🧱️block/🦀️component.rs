@@ -95,7 +95,7 @@ pub struct BlockCamera2d {
 }
 
 impl Default for BlockCamera2d {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self { x: 0.0, y: 0.0, zoom: 1.0 }
     }
 }
@@ -114,12 +114,12 @@ pub struct BlockCamera3d {
 }
 
 impl Default for BlockCamera3d {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self { position: [0.0, 0.0, 0.0], target: [0.0, 0.0, 0.0], zoom: 1.0 }
     }
 }
 
-fn block_one_f64() -> f64 {
+async fn block_one_f64() -> f64 {
     1.0
 }
 //#endregion 🔖️Cameras
@@ -148,7 +148,7 @@ pub struct BlockMeta {
 /// crate's migration proof: one `OnArtifactKind` event per owned kind, read live from each
 /// dimension's own `artifact_kind().id`, `Isolated` execution, one `documents.write` ask covering
 /// all three editors' persisted mutations.
-pub fn plugin() -> Result<Plugin, semio_framework_plugin::PluginAssemblyError> {
+pub async fn plugin() -> Result<Plugin, semio_framework_plugin::PluginAssemblyError> {
     Plugin::builder("block")
         .label("Block")
         .version("0.1.0")
@@ -183,32 +183,32 @@ pub fn plugin() -> Result<Plugin, semio_framework_plugin::PluginAssemblyError> {
 #[cfg(test)]
 mod surface_tests {
     #[test]
-    fn block2d_viewer_never_mutates() {
+    async fn block2d_viewer_never_mutates() {
         semio_framework_plugin::testkit::assert_viewer_never_mutates::<crate::viewer::block2d::Block2dViewer>();
     }
 
     #[test]
-    fn block2d_editor_and_viewer_share_dialect() {
+    async fn block2d_editor_and_viewer_share_dialect() {
         semio_framework_plugin::testkit::assert_editor_and_viewer_share_dialect::<crate::editor::block2d::Block2dPlayApp, crate::viewer::block2d::Block2dViewer>();
     }
 
     #[test]
-    fn block3d_viewer_never_mutates() {
+    async fn block3d_viewer_never_mutates() {
         semio_framework_plugin::testkit::assert_viewer_never_mutates::<crate::viewer::block3d::Block3dViewer>();
     }
 
     #[test]
-    fn block3d_editor_and_viewer_share_dialect() {
+    async fn block3d_editor_and_viewer_share_dialect() {
         semio_framework_plugin::testkit::assert_editor_and_viewer_share_dialect::<crate::editor::block3d::Block3dPlayApp, crate::viewer::block3d::Block3dViewer>();
     }
 
     #[test]
-    fn block5d_viewer_never_mutates() {
+    async fn block5d_viewer_never_mutates() {
         semio_framework_plugin::testkit::assert_viewer_never_mutates::<crate::viewer::block5d::Block5dViewer>();
     }
 
     #[test]
-    fn block5d_editor_and_viewer_share_dialect() {
+    async fn block5d_editor_and_viewer_share_dialect() {
         semio_framework_plugin::testkit::assert_editor_and_viewer_share_dialect::<crate::editor::block5d::Block5dPlayApp, crate::viewer::block5d::Block5dViewer>();
     }
 }

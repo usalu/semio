@@ -10,14 +10,14 @@ pub const PROCEDURAL_3D_PLAY_BODY_DOCUMENT: &str = "procedural.play.document";
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
-pub fn definition() -> PanelTabDefinition {
+pub async fn definition() -> PanelTabDefinition {
     PanelTabDefinition { kind: PanelTabKind::App(FRAMEWORK_PANEL_TAB_ARTIFACT_ID.into()), label: LocalizedLabel::native(FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL, "Dokument"), group: PanelGroup::Workbench, body_key: Some(PROCEDURAL_3D_PLAY_BODY_DOCUMENT.into()), children: Vec::new() }
 }
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
 /// 🌳️ `tree_item` plus an icon id — this app's document tree carries icons per item.
-fn tree_item_with_icon(id: impl Into<String>, label: impl Into<Label>, icon_id: Option<&str>) -> UiTreeItemNode {
+async fn tree_item_with_icon(id: impl Into<String>, label: impl Into<Label>, icon_id: Option<&str>) -> UiTreeItemNode {
     UiTreeItemNode { icon_id: icon_id.map(Into::into), menu: None, ..tree_item(id, label) }
 }
 
@@ -26,7 +26,7 @@ fn tree_item_with_icon(id: impl Into<String>, label: impl Into<Label>, icon_id: 
 /// (`ui_tree_stamp_presence`) can match them by plain string membership (ticket
 /// 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM). Clicks/selection are the framework's now — no
 /// per-item action needed.
-pub fn render(fixture: &FlowFixture, labels: &Procedural3dLabels) -> UiNode {
+pub async fn render(fixture: &FlowFixture, labels: &Procedural3dLabels) -> UiNode {
     let items: Vec<UiTreeItemNode> = fixture.widgets.iter().map(|widget| tree_item_with_icon(widget_id(widget).to_string(), Label::data(widget_id(widget).to_string()), Some("cpu"))).collect();
     PanelTreeBuilder::new("procedural-play-document").section("procedural-play-document.widgets", Some(labels.widgets.into()), true, items).interaction_domain("graph").build()
 }
@@ -40,7 +40,7 @@ mod tests {
     use semio_framework_plugin::PluginApp;
 
     #[test]
-    fn document_lists_widgets() {
+    async fn document_lists_widgets() {
         let _serial = crate::editor::procedural3d::test_support::lock();
         let mut app = app();
         let rendered = render_body(&mut app, PROCEDURAL_3D_PLAY_BODY_DOCUMENT);

@@ -24,7 +24,7 @@ pub const FEM3D_BODY_RESULTS: &str = "fem3d.play.results";
 /// 👁️ B1: `cfg`-driven counterpart of the deleted `ResultDisplay` `RefCell` — converts the flat
 /// `Fem3dConfig` result-display fields back into `crate::app_surface::ResultDisplay`/`DisplayMode` so
 /// the render pipeline below (built around those shared types) needs no changes.
-pub fn config_result_display(cfg: &Fem3dConfig) -> ResultDisplay {
+pub async fn config_result_display(cfg: &Fem3dConfig) -> ResultDisplay {
     let mode = match cfg.result_mode.as_str() {
         "modal" => DisplayMode::Modal(cfg.result_mode_index as usize),
         "buckling" => DisplayMode::Buckling(cfg.result_mode_index as usize),
@@ -38,7 +38,7 @@ pub fn config_result_display(cfg: &Fem3dConfig) -> ResultDisplay {
 /// 📐️ Bounding-box diagonal (in model meters) over every node plus every solid's footprint/height —
 /// drives mode-shape amplitude (see `crate::app_surface::MODE_SHAPE_AMPLITUDE_RATIO`'s doc). Falls
 /// back to `1.0` for a degenerate model.
-fn fem3d_model_extent(doc: &Fem3dSnapshot) -> f64 {
+async fn fem3d_model_extent(doc: &Fem3dSnapshot) -> f64 {
     let mut min = [f64::INFINITY; 3];
     let mut max = [f64::NEG_INFINITY; 3];
     let mut expand = |x: f64, y: f64, z: f64| {
@@ -69,12 +69,12 @@ fn fem3d_model_extent(doc: &Fem3dSnapshot) -> f64 {
 /// field, so a vertical `UiNode` stack (already how the shell composes surfaces) is the idiomatic way to
 /// show a frequency/load-factor/case caption in-scene. `caption` is genuine runtime data (a case id,
 /// mode index, frequency, …), so it is wrapped via `Label::data` rather than any `LocalizedLabel`.
-fn with_caption(scene: UiNode, caption: String) -> UiNode {
+async fn with_caption(scene: UiNode, caption: String) -> UiNode {
     ui_stack_vertical(vec![ui_text(Label::data(caption)), scene])
 }
 
 /// 📊️ Results window dispatcher — picks the static/modal/buckling render based on `display`.
-pub fn render(doc: &Fem3dSnapshot, cfg: &Fem3dConfig) -> UiNode {
+pub async fn render(doc: &Fem3dSnapshot, cfg: &Fem3dConfig) -> UiNode {
     let display = config_result_display(cfg);
     let camera = &cfg.camera;
     match display.mode {
@@ -89,7 +89,7 @@ pub fn render(doc: &Fem3dSnapshot, cfg: &Fem3dConfig) -> UiNode {
 /// additionally colored by nodal-averaged von Mises stress. `source_id` selects a `fem3d_solve_all`
 /// case/combination id, falling back to the first load case when `None`/unknown. Caption names the
 /// active case.
-fn render_static(doc: &Fem3dSnapshot, source_id: Option<&str>, camera: &FemCamera) -> UiNode {
+async fn render_static(doc: &Fem3dSnapshot, source_id: Option<&str>, camera: &FemCamera) -> UiNode {
     use crate::editor::fem3d::{fem3d_camera_json, fem3d_scene_parts};
     use crate::fem3d_engine::fem3d_solve_all;
 
@@ -120,7 +120,7 @@ fn render_static(doc: &Fem3dSnapshot, source_id: Option<&str>, camera: &FemCamer
 
 /// 📊️ Modal mode-shape overlay: instances offset by the selected mode's shape, normalized to unit peak
 /// then scaled to `MODE_SHAPE_AMPLITUDE_RATIO` of the model's own extent, with a frequency caption.
-fn render_modal(doc: &Fem3dSnapshot, mode_index: usize, camera: &FemCamera) -> UiNode {
+async fn render_modal(doc: &Fem3dSnapshot, mode_index: usize, camera: &FemCamera) -> UiNode {
     use crate::editor::fem3d::{fem3d_camera_json, fem3d_scene_parts};
     use crate::fem3d_engine::modal_buckling::fem3d_modal_mode_values;
     use crate::app_surface::{normalize_mode_shape, MODE_SHAPE_AMPLITUDE_RATIO};
@@ -143,7 +143,7 @@ fn render_modal(doc: &Fem3dSnapshot, mode_index: usize, camera: &FemCamera) -> U
 /// peak then scaled to `MODE_SHAPE_AMPLITUDE_RATIO` of the model's own extent. `source_id` selects the
 /// reference load case, falling back to the first load case when `None`. Caption names the mode and its
 /// load factor.
-fn render_buckling(doc: &Fem3dSnapshot, source_id: Option<&str>, mode_index: usize, camera: &FemCamera) -> UiNode {
+async fn render_buckling(doc: &Fem3dSnapshot, source_id: Option<&str>, mode_index: usize, camera: &FemCamera) -> UiNode {
     use crate::editor::fem3d::{fem3d_camera_json, fem3d_scene_parts};
     use crate::fem3d_engine::modal_buckling::fem3d_buckling_mode_values;
     use crate::app_surface::{normalize_mode_shape, MODE_SHAPE_AMPLITUDE_RATIO};
@@ -173,27 +173,27 @@ mod tests {
     use crate::editor::fem3d::testkit::{dispatch, fem3d_app, render as render_body, Fem3dApp};
     use crate::editor::fem3d::Fem3dCommand;
 
-    fn app_with_example() -> Fem3dApp {
+    async fn app_with_example() -> Fem3dApp {
         let mut app = fem3d_app();
         dispatch(&mut app, Fem3dCommand::SetActiveExample(crate::editor::fem3d::commands::set_active_example::SetActiveExample { example_id: "default".into() }));
         app
     }
 
     #[test]
-    fn renders_fem3d_results_scene() {
+    async fn renders_fem3d_results_scene() {
         let mut app = app_with_example();
         let json = render_body(&mut app, FEM3D_BODY_RESULTS);
         assert!(json.contains("world-3d"));
     }
 
     #[test]
-    fn results_window_surfaces_solver_error_without_panicking_3d() {
+    async fn results_window_surfaces_solver_error_without_panicking_3d() {
         let mut app = fem3d_app();
         let _ = render_body(&mut app, FEM3D_BODY_RESULTS);
     }
 
     #[test]
-    fn results_window_renders_modal_mode_shape_3d() {
+    async fn results_window_renders_modal_mode_shape_3d() {
         let mut app = app_with_example();
         dispatch(&mut app, Fem3dCommand::SetResultDisplay(crate::editor::fem3d::commands::set_result_display::SetResultDisplay { source_id: None, mode: "modal".into(), mode_index: 0 }));
         let json = render_body(&mut app, FEM3D_BODY_RESULTS);
@@ -202,7 +202,7 @@ mod tests {
     }
 
     #[test]
-    fn results_window_renders_buckling_mode_shape_3d() {
+    async fn results_window_renders_buckling_mode_shape_3d() {
         let mut app = app_with_example();
         dispatch(&mut app, Fem3dCommand::SetResultDisplay(crate::editor::fem3d::commands::set_result_display::SetResultDisplay { source_id: Some("dead".into()), mode: "buckling".into(), mode_index: 0 }));
         let json = render_body(&mut app, FEM3D_BODY_RESULTS);
@@ -211,7 +211,7 @@ mod tests {
     }
 
     #[test]
-    fn results_scene_includes_solid_vertex_colors_3d() {
+    async fn results_scene_includes_solid_vertex_colors_3d() {
         let mut app = app_with_example();
         dispatch(&mut app, Fem3dCommand::SetResultDisplay(crate::editor::fem3d::commands::set_result_display::SetResultDisplay { source_id: Some("dead".into()), mode: "static".into(), mode_index: 0 }));
         let json = render_body(&mut app, FEM3D_BODY_RESULTS);
@@ -221,7 +221,7 @@ mod tests {
     }
 
     #[test]
-    fn results_scene_captions_name_mode_and_factor_3d() {
+    async fn results_scene_captions_name_mode_and_factor_3d() {
         let mut app = app_with_example();
         dispatch(&mut app, Fem3dCommand::SetResultDisplay(crate::editor::fem3d::commands::set_result_display::SetResultDisplay { source_id: None, mode: "modal".into(), mode_index: 0 }));
         let json_modal = render_body(&mut app, FEM3D_BODY_RESULTS);
@@ -233,7 +233,7 @@ mod tests {
     }
 
     #[test]
-    fn fem3d_model_extent_degenerate_model_returns_one() {
+    async fn fem3d_model_extent_degenerate_model_returns_one() {
         assert_eq!(fem3d_model_extent(&Fem3dSnapshot::default()), 1.0);
     }
 }

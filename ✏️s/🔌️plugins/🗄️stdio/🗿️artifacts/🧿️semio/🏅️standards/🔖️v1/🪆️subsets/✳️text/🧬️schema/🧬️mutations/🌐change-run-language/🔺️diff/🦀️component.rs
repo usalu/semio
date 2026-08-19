@@ -6,7 +6,7 @@ use crate::artifacts::semio::standards::v1::subsets::text::schema::diff::{SemioT
 use crate::artifacts::semio::standards::v1::subsets::text::schema::snapshot::SemioTextSnapshot;
 
 //#region 🔖️Diff
-pub fn diff(payload: &ChangeRunLanguage, base: &SemioTextSnapshot) -> protocol::MutationOutcome<SemioTextDiff> {
+pub async fn diff(payload: &ChangeRunLanguage, base: &SemioTextSnapshot) -> protocol::MutationOutcome<SemioTextDiff> {
     let Some(existing) = base.runs.get(payload.index) else {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Run #{} does not exist.", payload.index), [payload.index.to_string()]);
     };

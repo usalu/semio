@@ -17,23 +17,23 @@ pub struct DisconnectSynapse {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn disconnect_synapse(id: String) -> Procedural2dMutation {
+pub async fn disconnect_synapse(id: String) -> Procedural2dMutation {
     Procedural2dMutation::DisconnectSynapse(DisconnectSynapse { id })
 }
 
 impl MutationKind<Procedural2dSnapshot, Procedural2dMutation> for DisconnectSynapse {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "disconnect", entity: "synapse", kind: "disconnect-synapse", record: "DisconnectedSynapse" };
 
-    fn diff(&self, base: &Procedural2dSnapshot) -> protocol::MutationOutcome<Procedural2dDiff> {
+    async fn diff(&self, base: &Procedural2dSnapshot) -> protocol::MutationOutcome<Procedural2dDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &Procedural2dSnapshot) -> Vec<Procedural2dMutation> {
+    async fn inverse(&self, base: &Procedural2dSnapshot) -> Vec<Procedural2dMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         format!("Disconnect synapse \"{}\"", self.id)
     }
-    fn target(&self) -> Vec<String> {
+    async fn target(&self) -> Vec<String> {
         vec![self.id.clone()]
     }
 }

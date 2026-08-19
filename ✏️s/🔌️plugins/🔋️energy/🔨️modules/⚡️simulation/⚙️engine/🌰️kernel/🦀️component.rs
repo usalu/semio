@@ -47,7 +47,7 @@ pub struct ConvergenceTolerances {
 }
 
 impl Default for ConvergenceTolerances {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self { temperature_k: 0.01, humidity_ratio: 1e-5, mass_flow: 1e-4, energy_w: 1.0, max_iterations: 20 }
     }
 }
@@ -69,7 +69,7 @@ pub struct SimulationConfig {
 }
 
 impl Default for SimulationConfig {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self {
             environment: SimulationEnvironment::WeatherRunPeriod,
             zone_timestep_minutes: 60,
@@ -106,7 +106,7 @@ pub struct DeliveredEnergy {
 }
 
 impl DeliveredEnergy {
-    pub fn total_electric_w(&self) -> f64 {
+    pub async fn total_electric_w(&self) -> f64 {
         self.heating_w + self.cooling_w + self.fan_w + self.pump_w + self.compressor_w + self.shw_electric_w + self.refrigeration_w + self.water_pump_w - self.pv_generation_w + self.battery_charge_w
     }
 }
@@ -125,7 +125,7 @@ pub struct ZoneState {
 }
 
 impl ZoneState {
-    fn empty() -> Self {
+    async fn empty() -> Self {
         Self { air: ZoneAirState::new(20.0, 0.01), heating_demand_w: 0.0, cooling_demand_w: 0.0, unmet_heating_w: 0.0, unmet_cooling_w: 0.0, delivered: DeliveredEnergy::default() }
     }
 }
@@ -153,7 +153,7 @@ pub struct SimulationModel {
 }
 
 impl Default for SimulationModel {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self { zones: HashMap::new(), surfaces: HashMap::new(), warmup_complete: false, hour: 0, delivered_total: DeliveredEnergy::default(), battery_soc: 0.5, plant_supply_c: 55.0 }
     }
 }
@@ -165,7 +165,7 @@ pub struct SimulationKernel;
 
 impl SimulationKernel {
     /// 🔄️ Initialize state from model and precomputed data.
-    pub fn initialize(model: &Model, pre: &PrecomputedModel, weather: &WeatherRecord) -> SimulationModel {
+    pub async fn initialize(model: &Model, pre: &PrecomputedModel, weather: &WeatherRecord) -> SimulationModel {
         let mut state = SimulationModel::default();
         for zone in &model.zones {
             state.zones.insert(zone.id, ZoneState { air: ZoneAirState::new(weather.dry_bulb_c, weather.humidity_ratio()), ..ZoneState::empty() });
@@ -177,7 +177,7 @@ impl SimulationKernel {
     }
 
     /// 🔄️ Run warmup until temperature and load convergence.
-    pub fn warmup(model: &Model, config: &SimulationConfig, pre: &PrecomputedModel, state: &mut SimulationModel, weather_records: &[WeatherRecord]) -> Result<(), Error> {
+    pub async fn warmup(model: &Model, config: &SimulationConfig, pre: &PrecomputedModel, state: &mut SimulationModel, weather_records: &[WeatherRecord]) -> Result<(), Error> {
         let warmup_hours = config.warmup_days * 24;
         let dt_s = pre.zone_timestep_s;
         let mut prev_temps: HashMap<EntityId, f64> = HashMap::new();
@@ -211,7 +211,7 @@ impl SimulationKernel {
     }
 
     /// 🔄️ Advance one zone timestep with predictor-corrector HVAC coupling.
-    pub fn advance_timestep(model: &Model, config: &SimulationConfig, pre: &PrecomputedModel, state: &mut SimulationModel, weather: &WeatherRecord, date: &SimDate, hour: f64, dt_s: f64) -> Result<(), Error> {
+    pub async fn advance_timestep(model: &Model, config: &SimulationConfig, pre: &PrecomputedModel, state: &mut SimulationModel, weather: &WeatherRecord, date: &SimDate, hour: f64, dt_s: f64) -> Result<(), Error> {
         let ctx = ScheduleContext { year: date.year, month: date.month, day: date.day, hour: weather.hour, day_of_week: date.day_of_week(), timestep_index: hour as u32, is_dst: false };
 
         let day_of_year = date.day_of_year();
@@ -519,7 +519,7 @@ impl SimulationKernel {
         Ok(())
     }
 
-    fn simulate_secondary(model: &Model, config: &SimulationConfig, _pre: &PrecomputedModel, state: &mut SimulationModel, weather: &WeatherRecord, ctx: &ScheduleContext, sun_alt: f64, sun_az: f64, dt_s: f64) {
+    async fn simulate_secondary(model: &Model, config: &SimulationConfig, _pre: &PrecomputedModel, state: &mut SimulationModel, weather: &WeatherRecord, ctx: &ScheduleContext, sun_alt: f64, sun_az: f64, dt_s: f64) {
         for plant in &model.plant_loops {
             let total_load: f64 = state.zones.values().map(|z| z.heating_demand_w + z.cooling_demand_w).sum();
             let dispatcher = Dispatcher::new(DispatchScheme::Sequential, plant.equipment_ids.iter().map(|id| EquipmentPriority { equipment_id: id.0, priority: 1, min_runtime_hours: 0.0, capacity_w: 100_000.0 }).collect());
@@ -578,18 +578,18 @@ impl SimulationKernel {
     }
 
     /// 🔄️ Check energy balance for diagnostics.
-    pub fn energy_balance_check(input_w: f64, stored_w: f64, output_w: f64) -> f64 {
+    pub async fn energy_balance_check(input_w: f64, stored_w: f64, output_w: f64) -> f64 {
         (input_w - stored_w - output_w).abs()
     }
 
     /// 📅️ Build run period from config.
-    pub fn run_period(config: &SimulationConfig) -> RunPeriod {
+    pub async fn run_period(config: &SimulationConfig) -> RunPeriod {
         RunPeriod { start_month: config.run_period_start_month, start_day: config.run_period_start_day, end_month: config.run_period_end_month, end_day: config.run_period_end_day, year: 2026 }
     }
 }
 // #endregion 🔖️Kernel
 
-fn accumulate_delivered(total: &DeliveredEnergy, step: &DeliveredEnergy) -> DeliveredEnergy {
+async fn accumulate_delivered(total: &DeliveredEnergy, step: &DeliveredEnergy) -> DeliveredEnergy {
     DeliveredEnergy {
         heating_w: total.heating_w + step.heating_w,
         cooling_w: total.cooling_w + step.cooling_w,
@@ -606,7 +606,7 @@ fn accumulate_delivered(total: &DeliveredEnergy, step: &DeliveredEnergy) -> Deli
     }
 }
 
-fn relative_humidity_from_w(w: f64, t_c: f64, p_atm: f64) -> f64 {
+async fn relative_humidity_from_w(w: f64, t_c: f64, p_atm: f64) -> f64 {
     let p_ws = saturation_pressure_pa(t_c);
     if p_ws <= 0.0 {
         return 0.5;
@@ -615,7 +615,7 @@ fn relative_humidity_from_w(w: f64, t_c: f64, p_atm: f64) -> f64 {
     (p_w / p_ws).clamp(0.0, 1.0)
 }
 
-fn default_weather(hour: u32) -> WeatherRecord {
+async fn default_weather(hour: u32) -> WeatherRecord {
     WeatherRecord {
         year: 2026,
         month: 1,
@@ -642,7 +642,7 @@ mod tests {
     use crate::precompute::PrecomputedModel;
 
     #[test]
-    fn initialize_creates_zone_states() {
+    async fn initialize_creates_zone_states() {
         let model = crate::sim::test_model_single_zone();
         let pre = PrecomputedModel::build(&model, 60, 60);
         let weather = default_weather(0);
@@ -651,19 +651,19 @@ mod tests {
     }
 
     #[test]
-    fn energy_balance_near_zero_for_steady_state() {
+    async fn energy_balance_near_zero_for_steady_state() {
         let residual = SimulationKernel::energy_balance_check(1000.0, 200.0, 800.0);
         assert!(residual < 1e-6);
     }
 
     #[test]
-    fn run_period_from_config() {
+    async fn run_period_from_config() {
         let config = SimulationConfig { run_period_start_month: 1, run_period_start_day: 1, run_period_end_month: 1, run_period_end_day: 7, ..Default::default() };
         assert_eq!(SimulationKernel::run_period(&config).total_hours(), 168);
     }
 
     #[test]
-    fn advance_timestep_with_mechanical_ventilation_and_fan_coil_zone_equipment() {
+    async fn advance_timestep_with_mechanical_ventilation_and_fan_coil_zone_equipment() {
         use crate::model::*;
         let mut model = crate::sim::test_model_single_zone();
         model.mechanical_ventilations.push(MechanicalVentilation { id: EntityId(90), zone_id: EntityId(1), schedule_id: ScheduleId(0), design_flow_m3_s: 0.05, fan_total_efficiency: 0.6, fan_delta_pressure_pa: 500.0 });
@@ -679,7 +679,7 @@ mod tests {
     }
 
     #[test]
-    fn advance_timestep_with_baseboard_zone_equipment_and_humidistat() {
+    async fn advance_timestep_with_baseboard_zone_equipment_and_humidistat() {
         use crate::model::*;
         let mut model = crate::sim::test_model_single_zone();
         model.zone_equipment.push(ZoneEquipmentAssignment { id: EntityId(92), zone_id: EntityId(1), equipment_type: ZoneEquipmentType::Baseboard, priority: 1, heating_capacity_w: 2000.0, cooling_capacity_w: 0.0 });
@@ -703,7 +703,7 @@ mod tests {
     }
 
     #[test]
-    fn advance_timestep_handles_ground_and_adiabatic_surfaces() {
+    async fn advance_timestep_handles_ground_and_adiabatic_surfaces() {
         use crate::model::*;
         let mut model = crate::sim::test_model_single_zone();
         model.surfaces[0].outside_boundary_condition = OutsideBoundary::Ground;
@@ -729,7 +729,7 @@ mod tests {
     }
 
     #[test]
-    fn advance_timestep_with_airflow_network() {
+    async fn advance_timestep_with_airflow_network() {
         use crate::model::*;
         let mut model = crate::sim::test_model_single_zone();
         model.airflow_network = Some(AirflowNetworkDefinition { zone_node_ids: vec![(EntityId(1), 1)], outdoor_node_id: 0, link_ids: vec![] });
@@ -743,7 +743,7 @@ mod tests {
     }
 
     #[test]
-    fn advance_timestep_applies_fault_severity_to_ideal_loads() {
+    async fn advance_timestep_applies_fault_severity_to_ideal_loads() {
         use crate::model::*;
         let mut model = crate::sim::test_model_single_zone();
         model.faults.push(FaultDefinition { id: EntityId(94), target_equipment_id: EntityId(40), fault_type: FaultType::CoilFouling, severity: 0.3, start_schedule_id: ScheduleId(0) });

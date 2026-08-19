@@ -25,7 +25,7 @@ pub mod derived_construction {
     /// 🌱️ Seeds a fresh snapshot with a real `/Root /OutputIntents` → `OutputIntent` object pair
     /// (`/S /GTS_PDFA1`, ISO 19005-2/-3's own conformance marker) -- a genuine, well-formed PDF/A
     /// OutputIntent, not a placeholder value that merely satisfies string equality.
-    fn seeded_snapshot(output_intent_condition: String) -> PdfSnapshot {
+    async fn seeded_snapshot(output_intent_condition: String) -> PdfSnapshot {
         let objects = vec![
             PdfIndirectObject {
                 id: ObjRef { num: 1, gen: 0 },
@@ -53,17 +53,17 @@ pub mod derived_construction {
     impl PdfABuilderConstruction {
         /// ➕ The recommended entry point: REQUIRES an OutputIntent condition identifier
         /// (e.g. `"sRGB IEC61966-2.1"`) up front -- there is no variant of `new` that omits it.
-        pub fn new(output_intent_condition: impl Into<String>) -> Self {
+        pub async fn new(output_intent_condition: impl Into<String>) -> Self {
             Self { snapshot: seeded_snapshot(output_intent_condition.into()) }
         }
 
-        pub fn add_page(mut self, page: PdfPage) -> Self {
+        pub async fn add_page(mut self, page: PdfPage) -> Self {
             let index = self.snapshot.pages.len();
             apply_pdf_mutation(&mut self.snapshot, &PdfMutation::InsertPage { index, page });
             self
         }
 
-        pub fn set_info(mut self, info: PdfInfo) -> Self {
+        pub async fn set_info(mut self, info: PdfInfo) -> Self {
             apply_pdf_mutation(&mut self.snapshot, &PdfMutation::SetInfo { info });
             self
         }
@@ -79,28 +79,28 @@ pub mod derived_construction {
         /// rather than omitting the OutputIntent entirely, since `build()` requires one to pass clean
         /// regardless. Prefer `PdfABuilderConstruction::new(condition)` directly wherever the real condition is
         /// known.
-        fn empty() -> Self {
+        async fn empty() -> Self {
             Self::new("sRGB IEC61966-2.1")
         }
 
-        fn from_snapshot(snapshot: Self::Snapshot) -> Self {
+        async fn from_snapshot(snapshot: Self::Snapshot) -> Self {
             Self { snapshot }
         }
 
-        fn from_text(text: &str) -> Result<Self, store::TextError> {
+        async fn from_text(text: &str) -> Result<Self, store::TextError> {
             Ok(Self::from_snapshot(<PdfSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
 
-        fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
+        async fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
             Ok(Self::from_snapshot(<PdfSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
         }
 
-        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
+        async fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let diff = apply_pdf_mutation(&mut self.snapshot, &mutation);
             (self, diff)
         }
 
-        fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
+        async fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
             self.snapshot = <PdfDiff as protocol::MutationDiff<PdfSnapshot>>::apply(&diff, &self.snapshot)?;
             Ok(self)
         }
@@ -110,7 +110,7 @@ pub mod derived_construction {
         /// `build()` -- soft/info diagnostics (missing OutputIntent, non-embedded font, the detected
         /// level) pass through as advisory `Diagnostic`s; the `Err` path is NOT taken for those, only
         /// hard ones block.
-        fn build(self) -> Result<Self::Snapshot, Vec<Diagnostic>> {
+        async fn build(self) -> Result<Self::Snapshot, Vec<Diagnostic>> {
             let hard: Vec<Diagnostic> = check_pdf_a_conformance(&self.snapshot).into_iter().filter(|d| matches!(d.severity, Severity::Error | Severity::Fatal)).collect();
             if hard.is_empty() {
                 Ok(self.snapshot)
@@ -126,14 +126,14 @@ pub mod derived_construction {
         use super::*;
 
         #[test]
-        fn new_requires_output_intent_and_builds_clean() {
+        async fn new_requires_output_intent_and_builds_clean() {
             let snapshot = PdfABuilderConstruction::new("sRGB IEC61966-2.1").add_page(PdfPage::new(200.0, 200.0)).set_info(PdfInfo { title: Some("A Test".into()), ..PdfInfo::default() }).build().expect("conforming construction must build");
             assert_eq!(snapshot.pages.len(), 1);
             assert_eq!(snapshot.info.title.as_deref(), Some("A Test"));
         }
 
         #[test]
-        fn hard_violation_injected_via_raw_mutate_still_fails_build() {
+        async fn hard_violation_injected_via_raw_mutate_still_fails_build() {
             let violating = PdfIndirectObject { id: ObjRef { num: 99, gen: 0 }, value: PdfObject::Dict(vec![PdfDictEntry { key: "S".into(), value: PdfObject::Name("Launch".into()) }]) };
             let mut snapshot = PdfABuilderConstruction::new("sRGB IEC61966-2.1").add_page(PdfPage::new(100.0, 100.0)).build().unwrap();
             snapshot.objects.push(violating);
@@ -170,7 +170,7 @@ pub mod derived_analysis {
     }
 
     impl PdfALevel {
-        pub fn as_str(self) -> &'static str {
+        pub async fn as_str(self) -> &'static str {
             match self {
                 PdfALevel::L2b => "2b",
                 PdfALevel::L2u => "2u",
@@ -192,7 +192,7 @@ pub mod derived_analysis {
     ///   doesn't retain a basis for. Rather than guess, this always defaults to `b`.
     /// Returns `None` when the document doesn't even carry a `GTS_PDFA1` OutputIntent -- there is no
     /// honest basis for reporting *any* PDF/A level on a document that doesn't claim to be one.
-    pub fn detect_pdfa_level(snapshot: &PdfSnapshot) -> Option<PdfALevel> {
+    pub async fn detect_pdfa_level(snapshot: &PdfSnapshot) -> Option<PdfALevel> {
         let objects = &snapshot.objects;
         if !has_pdfa_output_intent(objects) {
             return None;
@@ -214,24 +214,24 @@ pub mod derived_analysis {
     pub const CODE_EMBEDDED_FILE_AFRELATIONSHIP: &str = "stdio.pdf.a.embedded-file-missing-afrelationship";
     pub const CODE_LEVEL: &str = "stdio.pdf.a.level";
 
-    fn resolve_ref<'a>(objects: &'a [PdfIndirectObject], r: ObjRef) -> Option<&'a PdfObject> {
+    async fn resolve_ref<'a>(objects: &'a [PdfIndirectObject], r: ObjRef) -> Option<&'a PdfObject> {
         objects.iter().find(|o| o.id == r).map(|o| &o.value)
     }
 
-    fn resolve_item<'a>(objects: &'a [PdfIndirectObject], item: &'a PdfObject) -> Option<&'a PdfObject> {
+    async fn resolve_item<'a>(objects: &'a [PdfIndirectObject], item: &'a PdfObject) -> Option<&'a PdfObject> {
         match item {
             PdfObject::Ref(r) => resolve_ref(objects, *r),
             other => Some(other),
         }
     }
 
-    fn dict_name<'a>(dict: &'a [crate::artifacts::pdf::standards::v1_7::subsets::any::schema::snapshot::PdfDictEntry], key: &str) -> Option<&'a str> {
+    async fn dict_name<'a>(dict: &'a [crate::artifacts::pdf::standards::v1_7::subsets::any::schema::snapshot::PdfDictEntry], key: &str) -> Option<&'a str> {
         dict.iter().find(|e| e.key == key).and_then(|e| e.value.as_name())
     }
 
     /// 🔒️ Real, independent-of-decode scan: does any retained object look like a Standard Security
     /// Handler encryption dictionary (`/Filter /Standard` + `/V`/`/R`/`/O`/`/U`)?
-    fn scan_encryption(objects: &[PdfIndirectObject]) -> Vec<ObjRef> {
+    async fn scan_encryption(objects: &[PdfIndirectObject]) -> Vec<ObjRef> {
         objects
             .iter()
             .filter(|o| {
@@ -243,29 +243,29 @@ pub mod derived_analysis {
     }
 
     /// 📜️ Real scan for `/S /<subtype>` action dictionaries anywhere in the retained object graph.
-    fn scan_action_subtype(objects: &[PdfIndirectObject], subtype: &str) -> Vec<ObjRef> {
+    async fn scan_action_subtype(objects: &[PdfIndirectObject], subtype: &str) -> Vec<ObjRef> {
         objects.iter().filter(|o| o.value.as_dict().map(|d| dict_name(d, "S") == Some(subtype)).unwrap_or(false)).map(|o| o.id).collect()
     }
 
     /// 📜️ Real scan for a bare `/JS` key not already caught by `/S /JavaScript` (some JS action
     /// dicts carry `/JS` without a matching `/S` when malformed/hand-authored -- PDF/A forbids the
     /// key itself, not just the well-formed `/S /JavaScript` shape).
-    fn scan_js_key_only(objects: &[PdfIndirectObject], already: &[ObjRef]) -> Vec<ObjRef> {
+    async fn scan_js_key_only(objects: &[PdfIndirectObject], already: &[ObjRef]) -> Vec<ObjRef> {
         objects.iter().filter(|o| !already.contains(&o.id) && o.value.as_dict().map(|d| d.iter().any(|e| e.key == "JS")).unwrap_or(false)).map(|o| o.id).collect()
     }
 
-    fn find_catalog(objects: &[PdfIndirectObject]) -> Option<&PdfObject> {
+    async fn find_catalog(objects: &[PdfIndirectObject]) -> Option<&PdfObject> {
         objects.iter().find(|o| o.value.as_dict().map(|d| dict_name(d, "Type") == Some("Catalog")).unwrap_or(false)).map(|o| &o.value)
     }
 
     /// 🏳️ Real check: `/Root`'s `/OutputIntents` array contains an intent with `/S /GTS_PDFA1`.
-    fn has_pdfa_output_intent(objects: &[PdfIndirectObject]) -> bool {
+    async fn has_pdfa_output_intent(objects: &[PdfIndirectObject]) -> bool {
         let Some(catalog) = find_catalog(objects) else { return false };
         let Some(intents) = catalog.dict_get("OutputIntents").and_then(|v| v.as_array()) else { return false };
         intents.iter().any(|item| resolve_item(objects, item).and_then(|o| o.as_dict()).map(|d| dict_name(d, "S") == Some("GTS_PDFA1")).unwrap_or(false))
     }
 
-    fn descriptor_has_embedded_file(objects: &[PdfIndirectObject], desc_ref: ObjRef) -> bool {
+    async fn descriptor_has_embedded_file(objects: &[PdfIndirectObject], desc_ref: ObjRef) -> bool {
         resolve_ref(objects, desc_ref).and_then(|o| o.as_dict()).map(|d| d.iter().any(|e| e.key == "FontFile" || e.key == "FontFile2" || e.key == "FontFile3")).unwrap_or(false)
     }
 
@@ -273,7 +273,7 @@ pub mod derived_analysis {
     /// to a `/FontDescriptor` carrying an embedded font program. Real because `objects` retains the
     /// full logical indirect-object graph -- font dicts are genuinely present
     /// here, this is not fabricated against a field the engine doesn't parse.
-    fn non_embedded_fonts(objects: &[PdfIndirectObject]) -> Vec<ObjRef> {
+    async fn non_embedded_fonts(objects: &[PdfIndirectObject]) -> Vec<ObjRef> {
         let mut out = Vec::new();
         for o in objects {
             let Some(d) = o.value.as_dict() else { continue };
@@ -301,7 +301,7 @@ pub mod derived_analysis {
     /// 📎️ Real scan: `/Type /Filespec` objects that carry an `/EF` entry (an actual attached file
     /// stream dict, as opposed to a bare external-file reference) AND a non-empty `/AFRelationship`
     /// name. This is the A-3-only, genuinely-inspectable signal `detect_pdfa_level` keys off of.
-    fn embedded_files_with_afrelationship(objects: &[PdfIndirectObject]) -> Vec<ObjRef> {
+    async fn embedded_files_with_afrelationship(objects: &[PdfIndirectObject]) -> Vec<ObjRef> {
         objects
             .iter()
             .filter(|o| {
@@ -318,7 +318,7 @@ pub mod derived_analysis {
     /// shape is non-conformant regardless of which part the rest of the document targets -- a real,
     /// level-independent hard check rather than one gated on `detect_pdfa_level`'s (necessarily
     /// incomplete) part guess.
-    fn embedded_files_missing_afrelationship(objects: &[PdfIndirectObject]) -> Vec<ObjRef> {
+    async fn embedded_files_missing_afrelationship(objects: &[PdfIndirectObject]) -> Vec<ObjRef> {
         objects
             .iter()
             .filter(|o| {
@@ -329,17 +329,17 @@ pub mod derived_analysis {
             .collect()
     }
 
-    fn hard(code: &'static str, message: String) -> Diagnostic {
+    async fn hard(code: &'static str, message: String) -> Diagnostic {
         Diagnostic { code: FaultCode::new(code), severity: Severity::Error, span: TextSpan::at(1, 1), message, expected: None, scope: FaultScope::default() }
     }
 
-    fn soft(code: &'static str, message: String) -> Diagnostic {
+    async fn soft(code: &'static str, message: String) -> Diagnostic {
         Diagnostic { code: FaultCode::new(code), severity: Severity::Warning, span: TextSpan::at(1, 1), message, expected: None, scope: FaultScope::default() }
     }
 
     /// ℹ️ Informational-only diagnostic (`detect_pdfa_level`'s report) -- `Severity::Info`,
     /// the softest severity this fault model has.
-    fn info(code: &'static str, message: String) -> Diagnostic {
+    async fn info(code: &'static str, message: String) -> Diagnostic {
         Diagnostic { code: FaultCode::new(code), severity: Severity::Info, span: TextSpan::at(1, 1), message, expected: None, scope: FaultScope::default() }
     }
 
@@ -348,7 +348,7 @@ pub mod derived_analysis {
     /// (pre-serialization, authoritative), `PdfABuilder::build` hard-gates on this too, and the
     /// generic `SubsetValidator` (registered from `🎹️composer::register`) re-runs it post-hoc against
     /// the wire payload for the D5 validate-on-build hook.
-    pub fn check_pdf_a_conformance(snapshot: &PdfSnapshot) -> Vec<Diagnostic> {
+    pub async fn check_pdf_a_conformance(snapshot: &PdfSnapshot) -> Vec<Diagnostic> {
         let objects = &snapshot.objects;
         let mut out = Vec::new();
         for r in scan_encryption(objects) {
@@ -403,11 +403,11 @@ pub mod derived_analysis {
         type Parts = PdfParts;
         const DIALECT: Dialect = DIALECT;
 
-        fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
+        async fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
             PdfAnyAnalyzer::sniff(source)
         }
 
-        fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
+        async fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
             let inner = PdfAnyAnalyzer::analyze(sources);
             let mut diagnostics = inner.diagnostics.clone();
             let mut confidence = inner.confidence;
@@ -428,7 +428,7 @@ pub mod derived_analysis {
         use super::*;
         use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::snapshot::PdfDictEntry;
 
-        fn output_intent_objects(condition: &str) -> Vec<PdfIndirectObject> {
+        async fn output_intent_objects(condition: &str) -> Vec<PdfIndirectObject> {
             vec![
                 PdfIndirectObject {
                     id: ObjRef { num: 1, gen: 0 },
@@ -446,7 +446,7 @@ pub mod derived_analysis {
         }
 
         #[test]
-        fn conforming_snapshot_with_output_intent_reports_only_level_info() {
+        async fn conforming_snapshot_with_output_intent_reports_only_level_info() {
             let snapshot = PdfSnapshot { objects: output_intent_objects("sRGB IEC61966-2.1"), ..PdfSnapshot::default() };
             let diagnostics = check_pdf_a_conformance(&snapshot);
             assert_eq!(diagnostics.len(), 1, "expected exactly the level-detection Info diagnostic, got {diagnostics:?}");
@@ -455,7 +455,7 @@ pub mod derived_analysis {
         }
 
         #[test]
-        fn missing_output_intent_is_soft_and_reports_no_level() {
+        async fn missing_output_intent_is_soft_and_reports_no_level() {
             let snapshot = PdfSnapshot::default();
             let diagnostics = check_pdf_a_conformance(&snapshot);
             assert_eq!(diagnostics.len(), 1);
@@ -465,7 +465,7 @@ pub mod derived_analysis {
         }
 
         #[test]
-        fn encryption_dict_shape_is_hard() {
+        async fn encryption_dict_shape_is_hard() {
             let mut objects = output_intent_objects("sRGB IEC61966-2.1");
             objects.push(PdfIndirectObject {
                 id: ObjRef { num: 3, gen: 0 },
@@ -483,7 +483,7 @@ pub mod derived_analysis {
         }
 
         #[test]
-        fn javascript_action_is_hard() {
+        async fn javascript_action_is_hard() {
             let mut objects = output_intent_objects("sRGB IEC61966-2.1");
             objects.push(PdfIndirectObject {
                 id: ObjRef { num: 3, gen: 0 },
@@ -496,7 +496,7 @@ pub mod derived_analysis {
         }
 
         #[test]
-        fn launch_action_is_hard() {
+        async fn launch_action_is_hard() {
             let mut objects = output_intent_objects("sRGB IEC61966-2.1");
             objects.push(PdfIndirectObject {
                 id: ObjRef { num: 3, gen: 0 },
@@ -508,7 +508,7 @@ pub mod derived_analysis {
         }
 
         #[test]
-        fn non_embedded_font_is_soft() {
+        async fn non_embedded_font_is_soft() {
             let mut objects = output_intent_objects("sRGB IEC61966-2.1");
             objects.push(PdfIndirectObject {
                 id: ObjRef { num: 3, gen: 0 },
@@ -524,7 +524,7 @@ pub mod derived_analysis {
         }
 
         #[test]
-        fn embedded_font_via_descriptor_has_no_diagnostic() {
+        async fn embedded_font_via_descriptor_has_no_diagnostic() {
             let mut objects = output_intent_objects("sRGB IEC61966-2.1");
             objects.push(PdfIndirectObject {
                 id: ObjRef { num: 3, gen: 0 },
@@ -544,7 +544,7 @@ pub mod derived_analysis {
         }
 
         #[test]
-        fn embedded_file_missing_afrelationship_is_hard() {
+        async fn embedded_file_missing_afrelationship_is_hard() {
             let mut objects = output_intent_objects("sRGB IEC61966-2.1");
             objects.push(PdfIndirectObject {
                 id: ObjRef { num: 3, gen: 0 },
@@ -559,7 +559,7 @@ pub mod derived_analysis {
         }
 
         #[test]
-        fn embedded_file_with_afrelationship_detects_level_3b_and_is_clean() {
+        async fn embedded_file_with_afrelationship_detects_level_3b_and_is_clean() {
             let mut objects = output_intent_objects("sRGB IEC61966-2.1");
             objects.push(PdfIndirectObject {
                 id: ObjRef { num: 3, gen: 0 },

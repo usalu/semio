@@ -15,7 +15,7 @@ use crate::editor::puzzle3d::resolve_puzzle3d_attractions;
 /// post-accept "select the placed vortex" step is gone — selection is framework-owned now and this
 /// command has no channel to write it (see `puzzle3d_brush_target_vortex`'s doc comment); the caller
 /// must still hold (or re-pick) the target via an explicit `fullId`.
-pub fn accept_suggestion(ctx: &mut Puzzle3dActionCtx<'_>, args: Option<&Value>) {
+pub async fn accept_suggestion(ctx: &mut Puzzle3dActionCtx<'_>, args: Option<&Value>) {
     drive_precompute(&mut ctx.app.precompute.borrow_mut(), ctx.scene);
     let index = args.and_then(|value| value.get("index")).and_then(|value| value.as_u64()).unwrap_or(ctx.scene.runtime.brush_candidate_index as u64) as usize;
     let vortex_id = args

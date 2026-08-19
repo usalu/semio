@@ -8,14 +8,14 @@ pub const ARCHITECT_VIEW_MODE_VIEW: &str = "view";
 
 //#region 🔖️Definition
 /// 🏛️ Stitched into the viewer manifest by `crate::viewer::architect::create_architect_viewer`.
-pub fn definition() -> ModeDefinition {
+pub async fn definition() -> ModeDefinition {
     ModeDefinition { id: ARCHITECT_VIEW_MODE_VIEW.into(), label: LocalizedLabel::native("View", "Ansicht"), icon_id: "eye".into(), tools: Vec::new(), layout_id: None, commands: Vec::new() }
 }
 
 /// 🪟️ Single full-pane Register Overview window — the read-only viewer has no side-by-side five-window
 /// authoring layout to allocate (the editor's own Adjacency/Graph/Register/Report/Trace windows are
 /// editor-only).
-pub fn layout() -> WindowLayout {
+pub async fn layout() -> WindowLayout {
     WindowLayout {
         root: WindowLayoutRoot::Stack(WindowLayoutStackNode {
             kind: "stack".into(),

@@ -35,7 +35,7 @@ pub mod curve_curve {
 
     /// ✂️ Intersect two 3D curves within `tol`. Analytic for line/line and line/circle; general
     /// NURBS otherwise via Bézier control-hull clipping plus Newton refinement.
-    pub fn intersect_curve_curve(a: &Curve3, b: &Curve3, tol: f64) -> Result<Vec<CurveCurveHit>, IntersectError> {
+    pub async fn intersect_curve_curve(a: &Curve3, b: &Curve3, tol: f64) -> Result<Vec<CurveCurveHit>, IntersectError> {
         if !(tol.is_finite() && tol > 0.0) {
             return Err(IntersectError::Degenerate("tolerance must be positive and finite".into()));
         }
@@ -52,7 +52,7 @@ pub mod curve_curve {
 
     // #region 🔖️Analytic
 
-    fn intersect_line_line(o1: Pnt3, d1: Vec3, o2: Pnt3, d2: Vec3, tol: f64) -> Result<Vec<CurveCurveHit>, IntersectError> {
+    async fn intersect_line_line(o1: Pnt3, d1: Vec3, o2: Pnt3, d2: Vec3, tol: f64) -> Result<Vec<CurveCurveHit>, IntersectError> {
         let n1 = d1.norm();
         let n2 = d2.norm();
         if n1 <= tol || n2 <= tol {
@@ -82,7 +82,7 @@ pub mod curve_curve {
         Ok(vec![CurveCurveHit { point: Pnt3::new((p_a.x + p_b.x) * 0.5, (p_a.y + p_b.y) * 0.5, (p_a.z + p_b.z) * 0.5), t_a, t_b }])
     }
 
-    fn intersect_line_circle(origin: Pnt3, dir: Vec3, frame: &Frame3, radius: f64, tol: f64, swap: bool) -> Result<Vec<CurveCurveHit>, IntersectError> {
+    async fn intersect_line_circle(origin: Pnt3, dir: Vec3, frame: &Frame3, radius: f64, tol: f64, swap: bool) -> Result<Vec<CurveCurveHit>, IntersectError> {
         if radius <= tol || dir.norm() <= tol {
             return Err(IntersectError::Degenerate("degenerate line or circle".into()));
         }
@@ -109,7 +109,7 @@ pub mod curve_curve {
         intersect_line2_circle(o.x, o.y, d.x, d.y, radius, origin, dir, frame, tol, swap)
     }
 
-    fn intersect_line2_circle(ox: f64, oy: f64, dx: f64, dy: f64, radius: f64, origin: Pnt3, dir: Vec3, frame: &Frame3, tol: f64, swap: bool) -> Result<Vec<CurveCurveHit>, IntersectError> {
+    async fn intersect_line2_circle(ox: f64, oy: f64, dx: f64, dy: f64, radius: f64, origin: Pnt3, dir: Vec3, frame: &Frame3, tol: f64, swap: bool) -> Result<Vec<CurveCurveHit>, IntersectError> {
         let a = dx * dx + dy * dy;
         if a <= tol * tol {
             return Err(IntersectError::Degenerate("line direction parallel to circle normal with zero in-plane speed".into()));
@@ -139,7 +139,7 @@ pub mod curve_curve {
         Ok(hits)
     }
 
-    fn pack_hit(point: Pnt3, t_line: f64, t_circle: f64, swap: bool) -> CurveCurveHit {
+    async fn pack_hit(point: Pnt3, t_line: f64, t_circle: f64, swap: bool) -> CurveCurveHit {
         if swap {
             CurveCurveHit { point, t_a: t_circle, t_b: t_line }
         } else {
@@ -147,7 +147,7 @@ pub mod curve_curve {
         }
     }
 
-    fn intersect_circle_circle(f1: &Frame3, r1: f64, f2: &Frame3, r2: f64, tol: f64) -> Result<Vec<CurveCurveHit>, IntersectError> {
+    async fn intersect_circle_circle(f1: &Frame3, r1: f64, f2: &Frame3, r2: f64, tol: f64) -> Result<Vec<CurveCurveHit>, IntersectError> {
         if r1 <= tol || r2 <= tol {
             return Err(IntersectError::Degenerate("non-positive circle radius".into()));
         }
@@ -194,7 +194,7 @@ pub mod curve_curve {
 
     // #region 🔖️General
 
-    fn intersect_general(a: &Curve3, b: &Curve3, tol: f64) -> Result<Vec<CurveCurveHit>, IntersectError> {
+    async fn intersect_general(a: &Curve3, b: &Curve3, tol: f64) -> Result<Vec<CurveCurveHit>, IntersectError> {
         let (dom_a, nurbs_a) = curve_as_nurbs(a, b, tol)?;
         let (dom_b, nurbs_b) = curve_as_nurbs(b, a, tol)?;
         let segs_a = nurbs_to_bezier_segments(&nurbs_a)?;
@@ -212,7 +212,7 @@ pub mod curve_curve {
         Ok(hits)
     }
 
-    fn curve_as_nurbs(curve: &Curve3, other: &Curve3, tol: f64) -> Result<((f64, f64), NurbsCurve3), IntersectError> {
+    async fn curve_as_nurbs(curve: &Curve3, other: &Curve3, tol: f64) -> Result<((f64, f64), NurbsCurve3), IntersectError> {
         let domain = match curve {
             Curve3::Line { origin, dir } => line_domain_against(origin, dir, other, tol)?,
             Curve3::Circle { .. } | Curve3::Ellipse { .. } => curve.domain(),
@@ -224,7 +224,7 @@ pub mod curve_curve {
         Ok((domain, curve.to_nurbs(domain)))
     }
 
-    fn line_domain_against(origin: &Pnt3, dir: &Vec3, other: &Curve3, tol: f64) -> Result<(f64, f64), IntersectError> {
+    async fn line_domain_against(origin: &Pnt3, dir: &Vec3, other: &Curve3, tol: f64) -> Result<(f64, f64), IntersectError> {
         let n = dir.norm();
         if n <= tol {
             return Err(IntersectError::Degenerate("zero-length line direction".into()));
@@ -254,7 +254,7 @@ pub mod curve_curve {
         Ok((lo / n, hi / n))
     }
 
-    fn nurbs_to_bezier_segments(nurbs: &NurbsCurve3) -> Result<Vec<(RationalBezier3, f64, f64)>, IntersectError> {
+    async fn nurbs_to_bezier_segments(nurbs: &NurbsCurve3) -> Result<Vec<(RationalBezier3, f64, f64)>, IntersectError> {
         let mut knots = nurbs.knots.clone();
         let mut hx: Vec<f64> = nurbs.controls.iter().zip(&nurbs.weights).map(|(p, w)| p.x * w).collect();
         let mut hy: Vec<f64> = nurbs.controls.iter().zip(&nurbs.weights).map(|(p, w)| p.y * w).collect();
@@ -312,11 +312,11 @@ pub mod curve_curve {
         Ok(spans)
     }
 
-    fn boxes_overlap3(a: (Pnt3, Pnt3), b: (Pnt3, Pnt3), tol: f64) -> bool {
+    async fn boxes_overlap3(a: (Pnt3, Pnt3), b: (Pnt3, Pnt3), tol: f64) -> bool {
         a.0.x - tol <= b.1.x && b.0.x - tol <= a.1.x && a.0.y - tol <= b.1.y && b.0.y - tol <= a.1.y && a.0.z - tol <= b.1.z && b.0.z - tol <= a.1.z
     }
 
-    fn clip_pair(bez_a: &RationalBezier3, a0: f64, a1: f64, bez_b: &RationalBezier3, b0: f64, b1: f64, curve_a: &Curve3, curve_b: &Curve3, tol: f64, depth: u32, hits: &mut Vec<CurveCurveHit>) -> Result<(), IntersectError> {
+    async fn clip_pair(bez_a: &RationalBezier3, a0: f64, a1: f64, bez_b: &RationalBezier3, b0: f64, b1: f64, curve_a: &Curve3, curve_b: &Curve3, tol: f64, depth: u32, hits: &mut Vec<CurveCurveHit>) -> Result<(), IntersectError> {
         if !boxes_overlap3(bez_a.control_hull_box(), bez_b.control_hull_box(), tol) {
             return Ok(());
         }
@@ -348,7 +348,7 @@ pub mod curve_curve {
         Ok(())
     }
 
-    fn sample_newton(a: &Curve3, dom_a: (f64, f64), b: &Curve3, dom_b: (f64, f64), tol: f64, hits: &mut Vec<CurveCurveHit>) {
+    async fn sample_newton(a: &Curve3, dom_a: (f64, f64), b: &Curve3, dom_b: (f64, f64), tol: f64, hits: &mut Vec<CurveCurveHit>) {
         const N: usize = 24;
         for i in 0..=N {
             let t_a = dom_a.0 + (dom_a.1 - dom_a.0) * (i as f64 / N as f64);
@@ -373,7 +373,7 @@ pub mod curve_curve {
         }
     }
 
-    fn newton_refine(a: &Curve3, b: &Curve3, mut t_a: f64, mut t_b: f64, tol: f64) -> Option<CurveCurveHit> {
+    async fn newton_refine(a: &Curve3, b: &Curve3, mut t_a: f64, mut t_b: f64, tol: f64) -> Option<CurveCurveHit> {
         for _ in 0..12 {
             let pa = a.eval(t_a);
             let pb = b.eval(t_b);
@@ -406,7 +406,7 @@ pub mod curve_curve {
         }
     }
 
-    fn merge_hits(hits: &mut Vec<CurveCurveHit>, tol: f64) {
+    async fn merge_hits(hits: &mut Vec<CurveCurveHit>, tol: f64) {
         hits.sort_by(|x, y| x.t_a.partial_cmp(&y.t_a).unwrap_or(std::cmp::Ordering::Equal));
         let mut out = Vec::new();
         for hit in hits.drain(..) {
@@ -425,7 +425,7 @@ pub mod curve_curve {
         use super::*;
 
         #[test]
-        fn perpendicular_lines_meet_at_origin() {
+        async fn perpendicular_lines_meet_at_origin() {
             let a = Curve3::Line { origin: Pnt3::new(-1.0, 0.0, 0.0), dir: Vec3::new(1.0, 0.0, 0.0) };
             let b = Curve3::Line { origin: Pnt3::new(0.0, -1.0, 0.0), dir: Vec3::new(0.0, 1.0, 0.0) };
             let hits = intersect_curve_curve(&a, &b, 1e-9).unwrap();
@@ -436,7 +436,7 @@ pub mod curve_curve {
         }
 
         #[test]
-        fn unit_circle_with_diameter_line() {
+        async fn unit_circle_with_diameter_line() {
             let circle = Curve3::Circle { frame: Frame3::WORLD, radius: 1.0 };
             let line = Curve3::Line { origin: Pnt3::new(0.0, 0.0, 0.0), dir: Vec3::new(1.0, 0.0, 0.0) };
             let hits = intersect_curve_curve(&circle, &line, 1e-9).unwrap();
@@ -453,7 +453,7 @@ pub mod curve_curve {
         }
 
         #[test]
-        fn line_circle_order_preserves_parameters() {
+        async fn line_circle_order_preserves_parameters() {
             let circle = Curve3::Circle { frame: Frame3::WORLD, radius: 1.0 };
             let line = Curve3::Line { origin: Pnt3::new(-2.0, 0.0, 0.0), dir: Vec3::new(1.0, 0.0, 0.0) };
             let hits = intersect_curve_curve(&line, &circle, 1e-9).unwrap();
@@ -470,7 +470,7 @@ pub mod curve_curve {
             use super::*;
 
             #[test]
-            fn skew_lines_do_not_intersect() {
+            async fn skew_lines_do_not_intersect() {
                 let a = Curve3::Line { origin: Pnt3::new(0.0, 0.0, 0.0), dir: Vec3::X };
                 let b = Curve3::Line { origin: Pnt3::new(0.0, 1.0, 1.0), dir: Vec3::Y };
                 let hits = intersect_curve_curve(&a, &b, 1e-9).unwrap();
@@ -510,7 +510,7 @@ pub mod curve_surface {
 
     /// ✂️ Intersect a 3D curve with a parametric surface within `tol`. Analytic for line/plane,
     /// line/sphere, and line/cylinder; general otherwise via sample seeds plus Newton refinement.
-    pub fn intersect_curve_surface(curve: &Curve3, surface: &Surface, tol: f64) -> Result<Vec<CurveSurfaceHit>, IntersectError> {
+    pub async fn intersect_curve_surface(curve: &Curve3, surface: &Surface, tol: f64) -> Result<Vec<CurveSurfaceHit>, IntersectError> {
         if !(tol.is_finite() && tol > 0.0) {
             return Err(IntersectError::Degenerate("tolerance must be positive and finite".into()));
         }
@@ -526,7 +526,7 @@ pub mod curve_surface {
 
     // #region 🔖️Analytic
 
-    fn intersect_line_plane(origin: Pnt3, dir: Vec3, frame: &Frame3, tol: f64) -> Result<Vec<CurveSurfaceHit>, IntersectError> {
+    async fn intersect_line_plane(origin: Pnt3, dir: Vec3, frame: &Frame3, tol: f64) -> Result<Vec<CurveSurfaceHit>, IntersectError> {
         let n = dir.norm();
         if n <= tol {
             return Err(IntersectError::Degenerate("zero-length line direction".into()));
@@ -546,7 +546,7 @@ pub mod curve_surface {
         Ok(vec![CurveSurfaceHit { point, t, u: uv.x, v: uv.y }])
     }
 
-    fn intersect_line_sphere(origin: Pnt3, dir: Vec3, frame: &Frame3, radius: f64, tol: f64) -> Result<Vec<CurveSurfaceHit>, IntersectError> {
+    async fn intersect_line_sphere(origin: Pnt3, dir: Vec3, frame: &Frame3, radius: f64, tol: f64) -> Result<Vec<CurveSurfaceHit>, IntersectError> {
         if radius <= tol || dir.norm() <= tol {
             return Err(IntersectError::Degenerate("degenerate line or sphere".into()));
         }
@@ -579,7 +579,7 @@ pub mod curve_surface {
         Ok(hits)
     }
 
-    fn intersect_line_cylinder(origin: Pnt3, dir: Vec3, frame: &Frame3, radius: f64, tol: f64) -> Result<Vec<CurveSurfaceHit>, IntersectError> {
+    async fn intersect_line_cylinder(origin: Pnt3, dir: Vec3, frame: &Frame3, radius: f64, tol: f64) -> Result<Vec<CurveSurfaceHit>, IntersectError> {
         if radius <= tol || dir.norm() <= tol {
             return Err(IntersectError::Degenerate("degenerate line or cylinder".into()));
         }
@@ -620,7 +620,7 @@ pub mod curve_surface {
 
     // #region 🔖️General
 
-    fn intersect_general(curve: &Curve3, surface: &Surface, tol: f64) -> Result<Vec<CurveSurfaceHit>, IntersectError> {
+    async fn intersect_general(curve: &Curve3, surface: &Surface, tol: f64) -> Result<Vec<CurveSurfaceHit>, IntersectError> {
         let domain_t = curve_sample_domain(curve, surface, tol)?;
         let surf_domain = finite_surface_domain(surface);
         let n_samples = 32usize;
@@ -639,7 +639,7 @@ pub mod curve_surface {
         Ok(hits)
     }
 
-    fn curve_sample_domain(curve: &Curve3, surface: &Surface, tol: f64) -> Result<(f64, f64), IntersectError> {
+    async fn curve_sample_domain(curve: &Curve3, surface: &Surface, tol: f64) -> Result<(f64, f64), IntersectError> {
         match curve {
             Curve3::Line { origin, dir } => line_domain_against_surface(origin, dir, surface, tol),
             Curve3::Circle { .. } | Curve3::Ellipse { .. } => Ok(curve.domain()),
@@ -653,7 +653,7 @@ pub mod curve_surface {
         }
     }
 
-    fn line_domain_against_surface(origin: &Pnt3, dir: &Vec3, surface: &Surface, tol: f64) -> Result<(f64, f64), IntersectError> {
+    async fn line_domain_against_surface(origin: &Pnt3, dir: &Vec3, surface: &Surface, tol: f64) -> Result<(f64, f64), IntersectError> {
         let n = dir.norm();
         if n <= tol {
             return Err(IntersectError::Degenerate("zero-length line direction".into()));
@@ -679,7 +679,7 @@ pub mod curve_surface {
         Ok(((lo - pad) / n, (hi + pad) / n))
     }
 
-    fn finite_surface_domain(surface: &Surface) -> ((f64, f64), (f64, f64)) {
+    async fn finite_surface_domain(surface: &Surface) -> ((f64, f64), (f64, f64)) {
         let ((u0, u1), (v0, v1)) = surface.domain();
         let u_hi = if u1.is_finite() { u1 } else { u0 + std::f64::consts::TAU };
         let u_lo = if u0.is_finite() { u0 } else { u_hi - std::f64::consts::TAU };
@@ -688,7 +688,7 @@ pub mod curve_surface {
         ((u_lo, u_hi), (v_lo, v_hi))
     }
 
-    fn wrap_or_clamp(x: f64, lo: f64, hi: f64, periodic: bool) -> f64 {
+    async fn wrap_or_clamp(x: f64, lo: f64, hi: f64, periodic: bool) -> f64 {
         if periodic {
             let period = hi - lo;
             if period.abs() <= f64::EPSILON {
@@ -706,7 +706,7 @@ pub mod curve_surface {
         }
     }
 
-    fn newton_refine(curve: &Curve3, surface: &Surface, mut t: f64, mut u: f64, mut v: f64, domain_t: (f64, f64), surf_domain: ((f64, f64), (f64, f64)), tol: f64) -> Option<CurveSurfaceHit> {
+    async fn newton_refine(curve: &Curve3, surface: &Surface, mut t: f64, mut u: f64, mut v: f64, domain_t: (f64, f64), surf_domain: ((f64, f64), (f64, f64)), tol: f64) -> Option<CurveSurfaceHit> {
         let ((u_lo, u_hi), (v_lo, v_hi)) = surf_domain;
         let u_periodic = surface.is_u_periodic();
         let v_periodic = surface.is_v_periodic();
@@ -755,7 +755,7 @@ pub mod curve_surface {
         }
     }
 
-    fn solve_3x3(a: &[[f64; 3]; 3], b: &[f64; 3]) -> Option<(f64, f64, f64)> {
+    async fn solve_3x3(a: &[[f64; 3]; 3], b: &[f64; 3]) -> Option<(f64, f64, f64)> {
         let det = a[0][0] * (a[1][1] * a[2][2] - a[1][2] * a[2][1]) - a[0][1] * (a[1][0] * a[2][2] - a[1][2] * a[2][0]) + a[0][2] * (a[1][0] * a[2][1] - a[1][1] * a[2][0]);
         if det.abs() < 1e-30 {
             return None;
@@ -767,7 +767,7 @@ pub mod curve_surface {
         Some((x, y, z))
     }
 
-    fn push_unique(hits: &mut Vec<CurveSurfaceHit>, hit: CurveSurfaceHit, tol: f64) {
+    async fn push_unique(hits: &mut Vec<CurveSurfaceHit>, hit: CurveSurfaceHit, tol: f64) {
         let dedup = tol.max(1e-6) * 10.0;
         if hits.iter().all(|h| h.point.distance(hit.point) > dedup) {
             hits.push(hit);
@@ -783,7 +783,7 @@ pub mod curve_surface {
         use super::*;
 
         #[test]
-        fn line_pierces_plane_z0() {
+        async fn line_pierces_plane_z0() {
             let curve = Curve3::Line { origin: Pnt3::new(0.0, 0.0, -1.0), dir: Vec3::new(0.0, 0.0, 1.0) };
             let surface = Surface::Plane { frame: Frame3::WORLD };
             let hits = intersect_curve_surface(&curve, &surface, 1e-9).unwrap();
@@ -795,7 +795,7 @@ pub mod curve_surface {
         }
 
         #[test]
-        fn line_through_sphere() {
+        async fn line_through_sphere() {
             let curve = Curve3::Line { origin: Pnt3::new(-2.0, 0.0, 0.0), dir: Vec3::new(1.0, 0.0, 0.0) };
             let surface = Surface::Sphere { frame: Frame3::WORLD, radius: 1.0 };
             let hits = intersect_curve_surface(&curve, &surface, 1e-9).unwrap();
@@ -816,7 +816,7 @@ pub mod curve_surface {
         }
 
         #[test]
-        fn line_through_cylinder() {
+        async fn line_through_cylinder() {
             let curve = Curve3::Line { origin: Pnt3::new(-2.0, 0.0, 1.0), dir: Vec3::new(1.0, 0.0, 0.0) };
             let surface = Surface::Cylinder { frame: Frame3::WORLD, radius: 1.0 };
             let hits = intersect_curve_surface(&curve, &surface, 1e-9).unwrap();
@@ -832,7 +832,7 @@ pub mod curve_surface {
             use super::*;
 
             #[test]
-            fn parallel_line_misses_plane() {
+            async fn parallel_line_misses_plane() {
                 let curve = Curve3::Line { origin: Pnt3::new(0.0, 0.0, 1.0), dir: Vec3::X };
                 let surface = Surface::Plane { frame: Frame3::WORLD };
                 let hits = intersect_curve_surface(&curve, &surface, 1e-9).unwrap();
@@ -840,7 +840,7 @@ pub mod curve_surface {
             }
 
             #[test]
-            fn circle_plane_equator() {
+            async fn circle_plane_equator() {
                 let curve = Curve3::Circle { frame: Frame3::WORLD, radius: 2.0 };
                 let surface = Surface::Plane { frame: Frame3::WORLD };
                 let hits = intersect_curve_surface(&curve, &surface, 1e-6).unwrap();
@@ -879,7 +879,7 @@ pub mod surface_surface {
     }
 
     /// ✂️ Intersect two parametric surfaces within `tol`.
-    pub fn intersect_surface_surface(a: &Surface, b: &Surface, tol: f64) -> Result<Vec<IntCurve>, IntersectError> {
+    pub async fn intersect_surface_surface(a: &Surface, b: &Surface, tol: f64) -> Result<Vec<IntCurve>, IntersectError> {
         if !(tol.is_finite() && tol > 0.0) {
             return Err(IntersectError::Degenerate("tolerance must be positive and finite".into()));
         }
@@ -894,7 +894,7 @@ pub mod surface_surface {
         }
     }
 
-    fn intersect_plane_sphere(plane: &Frame3, sphere: &Frame3, radius: f64, tol: f64) -> Result<Vec<IntCurve>, IntersectError> {
+    async fn intersect_plane_sphere(plane: &Frame3, sphere: &Frame3, radius: f64, tol: f64) -> Result<Vec<IntCurve>, IntersectError> {
         if !(radius.is_finite() && radius > tol) {
             return Err(IntersectError::Degenerate("sphere radius must be positive".into()));
         }
@@ -918,7 +918,7 @@ pub mod surface_surface {
         Ok(vec![IntCurve { curve3: Curve3::Circle { frame: Frame3 { origin: center, x, y, z: n_u }, radius: r.max(tol * 0.5) } }])
     }
 
-    fn intersect_sphere_sphere(fa: &Frame3, ra: f64, fb: &Frame3, rb: f64, tol: f64) -> Result<Vec<IntCurve>, IntersectError> {
+    async fn intersect_sphere_sphere(fa: &Frame3, ra: f64, fb: &Frame3, rb: f64, tol: f64) -> Result<Vec<IntCurve>, IntersectError> {
         if !(ra.is_finite() && rb.is_finite() && ra > tol && rb > tol) {
             return Err(IntersectError::Degenerate("sphere radii must be positive".into()));
         }
@@ -941,7 +941,7 @@ pub mod surface_surface {
     }
 
     /// ✂️ Dense UV sampling fallback: keep samples of `a` near `b`, then emit a polyline.
-    fn intersect_surfaces_sampled(a: &Surface, b: &Surface, tol: f64) -> Result<Vec<IntCurve>, IntersectError> {
+    async fn intersect_surfaces_sampled(a: &Surface, b: &Surface, tol: f64) -> Result<Vec<IntCurve>, IntersectError> {
         let nu = 24usize;
         let nv = 24usize;
         let mut pts = Vec::new();
@@ -990,7 +990,7 @@ pub mod surface_surface {
         Ok(vec![IntCurve { curve3: Curve3::Nurbs { knots, controls, weights } }])
     }
 
-    fn project_point_to_surface(surface: &Surface, point: Pnt3, tol: f64) -> Option<Pnt3> {
+    async fn project_point_to_surface(surface: &Surface, point: Pnt3, tol: f64) -> Option<Pnt3> {
         match surface {
             Surface::Plane { frame } => {
                 let n = frame.z;
@@ -1051,7 +1051,7 @@ pub mod surface_surface {
 
     // #region 🔖️Analytic
 
-    fn intersect_plane_plane(fa: &Frame3, fb: &Frame3, tol: f64) -> Result<Vec<IntCurve>, IntersectError> {
+    async fn intersect_plane_plane(fa: &Frame3, fb: &Frame3, tol: f64) -> Result<Vec<IntCurve>, IntersectError> {
         let n1 = fa.z;
         let n2 = fb.z;
         let dir = n1.cross(n2);
@@ -1071,7 +1071,7 @@ pub mod surface_surface {
         Ok(vec![IntCurve { curve3: Curve3::Line { origin, dir: unit } }])
     }
 
-    fn intersect_plane_cylinder(plane: &Frame3, cyl: &Frame3, radius: f64, tol: f64) -> Result<Vec<IntCurve>, IntersectError> {
+    async fn intersect_plane_cylinder(plane: &Frame3, cyl: &Frame3, radius: f64, tol: f64) -> Result<Vec<IntCurve>, IntersectError> {
         if radius <= tol {
             return Err(IntersectError::Degenerate("non-positive cylinder radius".into()));
         }
@@ -1095,7 +1095,7 @@ pub mod surface_surface {
         Ok(vec![IntCurve { curve3: Curve3::Ellipse { frame, major_radius: major, minor_radius: minor } }])
     }
 
-    fn plane_cylinder_parallel(plane: &Frame3, cyl: &Frame3, radius: f64, n: Vec3, axis: Vec3, tol: f64) -> Result<Vec<IntCurve>, IntersectError> {
+    async fn plane_cylinder_parallel(plane: &Frame3, cyl: &Frame3, radius: f64, n: Vec3, axis: Vec3, tol: f64) -> Result<Vec<IntCurve>, IntersectError> {
         let signed = n.dot(cyl.origin - plane.origin);
         let dist = signed.abs();
         if dist > radius + tol {
@@ -1123,7 +1123,7 @@ pub mod surface_surface {
         use super::*;
 
         #[test]
-        fn orthogonal_planes_intersect_in_line() {
+        async fn orthogonal_planes_intersect_in_line() {
             let xy = Surface::Plane { frame: Frame3::WORLD };
             let xz = Surface::Plane { frame: Frame3::from_normal(Pnt3::new(0.0, 0.0, 0.0), Vec3::Y).unwrap() };
             let curves = intersect_surface_surface(&xy, &xz, 1e-8).expect("planes intersect");
@@ -1144,7 +1144,7 @@ pub mod surface_surface {
         }
 
         #[test]
-        fn parallel_planes_empty_or_tangent() {
+        async fn parallel_planes_empty_or_tangent() {
             let a = Surface::Plane { frame: Frame3::WORLD };
             let b = Surface::Plane { frame: Frame3 { origin: Pnt3::new(0.0, 0.0, 2.0), ..Frame3::WORLD } };
             assert!(intersect_surface_surface(&a, &b, 1e-8).unwrap().is_empty());
@@ -1153,7 +1153,7 @@ pub mod surface_surface {
         }
 
         #[test]
-        fn plane_cylinder_perpendicular_is_circle() {
+        async fn plane_cylinder_perpendicular_is_circle() {
             let plane = Surface::Plane { frame: Frame3 { origin: Pnt3::new(0.0, 0.0, 3.0), ..Frame3::WORLD } };
             let cyl = Surface::Cylinder { frame: Frame3::WORLD, radius: 2.0 };
             let curves = intersect_surface_surface(&plane, &cyl, 1e-8).expect("plane/cyl");
@@ -1175,7 +1175,7 @@ pub mod surface_surface {
         }
 
         #[test]
-        fn plane_cylinder_parallel_two_lines() {
+        async fn plane_cylinder_parallel_two_lines() {
             let plane = Surface::Plane { frame: Frame3::from_x_z(Pnt3::new(0.0, 0.0, 0.0), Vec3::Y, Vec3::X).unwrap() };
             let cyl = Surface::Cylinder { frame: Frame3::WORLD, radius: 2.0 };
             let curves = intersect_surface_surface(&plane, &cyl, 1e-8).expect("parallel plane/cyl");

@@ -16,35 +16,35 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 //#endregion 📖️SemioGrammar
 
 //#region 🔖️Primitives
-fn hex_encode(bytes: &[u8]) -> String {
+async fn hex_encode(bytes: &[u8]) -> String {
     bytes.iter().map(|b| format!("{b:02x}")).collect()
 }
-fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
+async fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
     if s.len() % 2 != 0 {
         return Err(format!("odd hex length: {s:?}"));
     }
     (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()
 }
-fn enc_str(s: &str) -> String {
+async fn enc_str(s: &str) -> String {
     hex_encode(s.as_bytes())
 }
-fn dec_str(s: &str) -> Result<String, String> {
+async fn dec_str(s: &str) -> Result<String, String> {
     String::from_utf8(hex_decode(s)?).map_err(|e| e.to_string())
 }
-fn parse_f64(s: &str) -> Result<f64, String> {
+async fn parse_f64(s: &str) -> Result<f64, String> {
     s.trim().parse::<f64>().map_err(|e| e.to_string())
 }
 
-fn enc_ref(r: &store::os_io::ArtifactRef) -> String {
+async fn enc_ref(r: &store::os_io::ArtifactRef) -> String {
     enc_str(&r.to_uri())
 }
-fn dec_ref(s: &str) -> Result<store::os_io::ArtifactRef, String> {
+async fn dec_ref(s: &str) -> Result<store::os_io::ArtifactRef, String> {
     store::os_io::ArtifactRef::parse_uri(&dec_str(s)?)
 }
 //#endregion 🔖️Primitives
 
 //#region 🔖️OpText
-fn print_object_mutation(m: &SemioObjectMutation) -> String {
+async fn print_object_mutation(m: &SemioObjectMutation) -> String {
     match m {
         SemioObjectMutation::MoveObject(p) => format!("moveObject:{},{},{}", p.translation.x, p.translation.y, p.translation.z),
         SemioObjectMutation::RotateObject(p) => format!("rotateObject:{},{},{},{}", p.rotation.x, p.rotation.y, p.rotation.z, p.rotation.w),
@@ -58,7 +58,7 @@ fn print_object_mutation(m: &SemioObjectMutation) -> String {
     }
 }
 
-fn parse_object_mutation(line: &str) -> Result<SemioObjectMutation, String> {
+async fn parse_object_mutation(line: &str) -> Result<SemioObjectMutation, String> {
     if line == "deleteBrep" {
         return Ok(SemioObjectMutation::DeleteBrep(DeleteBrep {}));
     }
@@ -102,10 +102,10 @@ fn parse_object_mutation(line: &str) -> Result<SemioObjectMutation, String> {
 }
 
 impl protocol::OpText for SemioObjectMutation {
-    fn print_op(&self) -> String {
+    async fn print_op(&self) -> String {
         print_object_mutation(self)
     }
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
+    async fn parse_op(line: &str) -> Result<Self, store::TextError> {
         parse_object_mutation(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
 }
@@ -115,7 +115,7 @@ impl protocol::OpText for SemioObjectMutation {
 /// 🌱 One representative value per variant — single source of truth for
 /// `ops_grammar_conformance_law`/`protocol_walk_law` in `🚪️io/🦀️component.rs`.
 #[cfg(test)]
-pub(crate) fn demo_mutation_cases() -> Vec<SemioObjectMutation> {
+pub(crate) async fn demo_mutation_cases() -> Vec<SemioObjectMutation> {
     let ref_of = |subset: &str, id: &str| store::os_io::ArtifactRef { artifact_id: id.into(), dialect: store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: subset.into() } };
     vec![
         SemioObjectMutation::MoveObject(MoveObject { translation: SemioPoint3 { x: 1.0, y: 2.0, z: 3.0 } }),
@@ -138,7 +138,7 @@ mod tests {
     use protocol::OpText;
 
     #[test]
-    fn op_text_roundtrip_law() {
+    async fn op_text_roundtrip_law() {
         for mutation in demo_mutation_cases() {
             let printed = mutation.print_op();
             assert!(!printed.contains('\n'), "print_op must be one line, got {printed:?}");

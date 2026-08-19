@@ -28,12 +28,12 @@ resolvedUpTo=32";
 
 
 /// 📖️ Parses `.process3d` DSL text into a `Process3dSnapshot`.
-pub fn parse_dsl(text: &str) -> Result<Process3dSnapshot, store::TextError> {
+pub async fn parse_dsl(text: &str) -> Result<Process3dSnapshot, store::TextError> {
     <Process3dSnapshot as store::ArtifactDsl>::parse_dsl(text)
 }
 
 /// 🖨️ Prints a `Process3dSnapshot` back to `.process3d` DSL text.
-pub fn print_dsl(document: &Process3dSnapshot) -> String {
+pub async fn print_dsl(document: &Process3dSnapshot) -> String {
     store::ArtifactDsl::print_dsl(document)
 }
 
@@ -49,11 +49,11 @@ mod tests {
 
     use crate::artifacts::process3d::{empty_process3d_snapshot, process_working_scene_to_snapshot, Capability, CapabilityParameter, CapabilityRule, MeasureRecipe, Pose, ProcessMeasure, ProcessStep, ProcessWorkingScene, StepOrigin, Stock, StockQuantity, WorkingSolid, Workshop, WorkshopMachine};
 
-    fn cut_step(id: &str) -> ProcessStep {
+    async fn cut_step(id: &str) -> ProcessStep {
         ProcessStep { id: id.into(), label: "Cut".into(), enabled: true, origin: None, measure: ProcessMeasure::Cut { tool: WorkingSolid::Box { width: 0.1, depth: 0.1, height: 0.1 }, pose: Pose::default() } }
     }
 
-    fn drill_step(id: &str) -> ProcessStep {
+    async fn drill_step(id: &str) -> ProcessStep {
         ProcessStep {
             id: id.into(),
             label: "Drill".into(),
@@ -63,7 +63,7 @@ mod tests {
         }
     }
 
-    fn attach_step(id: &str) -> ProcessStep {
+    async fn attach_step(id: &str) -> ProcessStep {
         ProcessStep {
             id: id.into(),
             label: "Attach".into(),
@@ -73,11 +73,11 @@ mod tests {
         }
     }
 
-    fn imported_mesh_stock() -> Stock {
+    async fn imported_mesh_stock() -> Stock {
         Stock { id: "stock".into(), label: "Imported GLB".into(), solid: WorkingSolid::ImportedMesh { mesh_url: "data:model/gltf-binary;base64,AAAA".into() }, pose: Pose::default() }
     }
 
-    fn circular_saw_machine() -> WorkshopMachine {
+    async fn circular_saw_machine() -> WorkshopMachine {
         WorkshopMachine {
             id: "circularSaw".into(),
             label: "Circular Saw".into(),
@@ -98,7 +98,7 @@ mod tests {
     /// and a non-default workshop machine (3-deep nesting), so the DSL round trip covers the full
     /// grammar. Real composed children minted from a literal `ProcessWorkingScene`
     /// (`process_working_scene_to_snapshot`), never a bare/hand-built handle.
-    fn sample_document() -> Process3dSnapshot {
+    async fn sample_document() -> Process3dSnapshot {
         let scene = ProcessWorkingScene {
             stock: Stock { id: "beam".into(), label: "Timber Beam".into(), solid: WorkingSolid::Box { width: 2.4, depth: 0.12, height: 0.24 }, pose: Pose { position: [0.0, 0.0, 0.12], axis: [0.0, 0.0, 1.0], angle: 0.0 } },
             steps: vec![cut_step("cut-1"), drill_step("drill-1"), attach_step("attach-1")],
@@ -107,13 +107,13 @@ mod tests {
     }
 
     #[test]
-    fn process3d_dsl_round_trips() {
+    async fn process3d_dsl_round_trips() {
         store::os_store::test_support::assert_dsl_round_trip(&sample_document());
         store::os_store::test_support::assert_dsl_round_trip(&empty_process3d_snapshot());
     }
 
     #[test]
-    fn process3d_dsl_round_trips_imported_solid_shapes() {
+    async fn process3d_dsl_round_trips_imported_solid_shapes() {
         let scene = ProcessWorkingScene {
             stock: imported_mesh_stock(),
             steps: vec![
@@ -128,20 +128,20 @@ mod tests {
     }
 
     #[test]
-    fn process3d_dsl_round_trips_with_no_resolved_cursor() {
+    async fn process3d_dsl_round_trips_with_no_resolved_cursor() {
         let mut document = sample_document();
         document.resolved_up_to = None;
         store::os_store::test_support::assert_dsl_round_trip(&document);
     }
 
     #[test]
-    fn timber_example_fixture_parses_and_round_trips() {
+    async fn timber_example_fixture_parses_and_round_trips() {
         let document = parse_dsl(PROCESS_3D_TIMBER_EXAMPLE_TEXT).expect("parse timber example");
         store::os_store::test_support::assert_dsl_round_trip(&document);
     }
 
     #[test]
-    fn drilled_plate_example_fixture_parses_and_round_trips() {
+    async fn drilled_plate_example_fixture_parses_and_round_trips() {
         let document = parse_dsl(PROCESS_3D_PLATE_EXAMPLE_TEXT).expect("parse drilled plate example");
         assert_eq!(document.resolved_up_to, Some(2));
         store::os_store::test_support::assert_dsl_round_trip(&document);

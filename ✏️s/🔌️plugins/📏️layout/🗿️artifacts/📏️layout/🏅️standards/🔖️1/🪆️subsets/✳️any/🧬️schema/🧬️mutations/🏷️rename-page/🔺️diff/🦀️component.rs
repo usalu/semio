@@ -5,7 +5,7 @@ use crate::artifacts::layout::schema::diff::{LayoutPagePatchEntry, LayoutPagesDe
 use crate::artifacts::layout::{LayoutDiff, LayoutSnapshot, PagePatch};
 
 //#region 🏷️RenamePage
-pub fn diff_rename_page(payload: &RenamePage, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
+pub async fn diff_rename_page(payload: &RenamePage, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
     let Some(page) = base.pages.iter().find(|page| page.id == payload.id) else {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Page \"{}\" does not exist.", payload.id), [payload.id.clone()]);
     };

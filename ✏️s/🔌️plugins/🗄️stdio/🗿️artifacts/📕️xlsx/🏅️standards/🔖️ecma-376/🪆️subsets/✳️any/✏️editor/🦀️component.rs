@@ -37,7 +37,7 @@ pub const XLSX_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.xlsx", stand
 /// `workbook.sheets` storage order, then each sheet's own `cells` storage order (sparse, never
 /// re-sorted) — the SAME order `XlsxEditorCommand::SetCell`'s `row` indexes into, so a `set-cell`
 /// edit always addresses the row this fn emitted at that position.
-pub(crate) fn xlsx_flat_cells(document: &XlsxSnapshot) -> Vec<(String, u32, u32, XlsxCellValue)> {
+pub(crate) async fn xlsx_flat_cells(document: &XlsxSnapshot) -> Vec<(String, u32, u32, XlsxCellValue)> {
     document.workbook.sheets.iter().flat_map(|sheet| sheet.cells.iter().map(move |cell| (sheet.name.clone(), cell.row, cell.col, cell.value.clone()))).collect()
 }
 
@@ -46,7 +46,7 @@ pub(crate) fn xlsx_flat_cells(document: &XlsxSnapshot) -> Vec<(String, u32, u32,
 /// XML, see the snapshot module's own doc comment on why the two must stay distinct); an
 /// out-of-range index degrades to `"#<index>"` rather than panicking. `Formula` shows `=expr`, plus
 /// its cached value in parens when present.
-pub(crate) fn render_xlsx_cell_value(value: &XlsxCellValue, shared_strings: &[String]) -> String {
+pub(crate) async fn render_xlsx_cell_value(value: &XlsxCellValue, shared_strings: &[String]) -> String {
     match value {
         XlsxCellValue::Number(n) => format!("{n}"),
         XlsxCellValue::SharedString(index) => shared_strings.get(*index).cloned().unwrap_or_else(|| format!("#{index}")),
@@ -66,7 +66,7 @@ pub(crate) fn render_xlsx_cell_value(value: &XlsxCellValue, shared_strings: &[St
 /// display text (that would be a guess, not a decode) — editing a formula or shared-string cell
 /// through this window turns it into a literal string cell, the same "type a value over a formula"
 /// behavior every spreadsheet editor has; documented narrowing, not a silent loss.
-pub(crate) fn parse_xlsx_cell_value(text: &str) -> XlsxCellValue {
+pub(crate) async fn parse_xlsx_cell_value(text: &str) -> XlsxCellValue {
     match text {
         "true" => XlsxCellValue::Boolean(true),
         "false" => XlsxCellValue::Boolean(false),
@@ -92,7 +92,7 @@ pub enum XlsxEditorCommand {
 /// the framework trait's own `type Command: ::protocol::OpBinary + Send`); `OpText` is not required
 /// and, with a single variant of two plain fields, would be pure ceremony here.
 impl protocol::OpBinary for XlsxEditorCommand {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         let XlsxEditorCommand::SetCell { row, value } = self;
         let mut out = vec![store::pack_rt::OP_BINARY_FORMAT];
         store::pack_rt::write_varint_u64(&mut out, *row as u64);
@@ -101,7 +101,7 @@ impl protocol::OpBinary for XlsxEditorCommand {
         out.extend_from_slice(bytes);
         Ok(out)
     }
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         let mut reader = store::ByteReader::new(bytes);
         let malformed = |what: &'static str, offset: usize, detail: String| protocol::ProtocolError::Malformed { what, offset: offset as u64, detail };
         let _format = reader.read_u8().map_err(|e| malformed("op format", 0, e.to_string()))?;
@@ -135,7 +135,7 @@ impl ArtifactEditor for XlsxEditor {
     const DIALECT: Dialect = XLSX_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = STDIO_XLSX_DOCUMENT_SCHEMA;
 
-    fn initial_snapshot() -> XlsxSnapshot {
+    async fn initial_snapshot() -> XlsxSnapshot {
         XlsxSnapshot::default()
     }
 
@@ -143,7 +143,7 @@ impl ArtifactEditor for XlsxEditor {
     /// the exact cell the table rendered at that position), parses the edited text through
     /// `parse_xlsx_cell_value`, then dispatches a single `XlsxMutation::SetCell`. An out-of-range
     /// row is a documented no-op (`Emit::default()`), never a panic.
-    fn handle(
+    async fn handle(
         command: &Self::Command,
         doc: &ArtifactView<'_, Self::Snapshot>,
         _cfg: &ConfigView<'_, Self::Config>,
@@ -158,7 +158,7 @@ impl ArtifactEditor for XlsxEditor {
         Ok(Emit { artifact_mutations: vec![XlsxMutation::SetCell { sheet_name, row: cell_row, col: cell_col, value: parsed }], description: Some(description), ..Default::default() })
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> UiNode {
+    async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> UiNode {
         match body_key {
             main::BODY_KEY => main::render(doc.snapshot),
             _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))),
@@ -168,7 +168,7 @@ impl ArtifactEditor for XlsxEditor {
 //#endregion 🔖️Editor
 
 //#region 🔖️Manifest
-pub fn create_xlsx_editor() -> semio_framework_plugin::AppDefinition {
+pub async fn create_xlsx_editor() -> semio_framework_plugin::AppDefinition {
     Editor::builder(XLSX_DIALECT)
         .document(["stdio", "xlsx"])
         .icon_id("table")
@@ -186,25 +186,25 @@ mod tests {
     use super::*;
 
     #[test]
-    fn create_xlsx_editor_builds_a_definition_for_the_editor_role() {
+    async fn create_xlsx_editor_builds_a_definition_for_the_editor_role() {
         let def = create_xlsx_editor();
         assert_eq!(def.role, semio_framework_plugin::AppRole::Editor);
         assert_eq!(def.dialect, XLSX_DIALECT.into());
     }
 
     #[test]
-    fn editor_dialect_matches_the_artifact_coordinate() {
+    async fn editor_dialect_matches_the_artifact_coordinate() {
         assert_eq!(<XlsxEditor as ArtifactEditor>::DIALECT, XLSX_DIALECT);
     }
 
     #[test]
-    fn editor_declares_the_main_window() {
+    async fn editor_declares_the_main_window() {
         let def = create_xlsx_editor();
         assert!(def.window_kinds.iter().any(|w| w.id == main::WINDOW_KIND_ID));
     }
 
     #[test]
-    fn flat_cells_orders_by_sheet_then_cell_storage_order() {
+    async fn flat_cells_orders_by_sheet_then_cell_storage_order() {
         use crate::artifacts::xlsx::standards::v_ecma_376::subsets::any::schema::snapshot::{XlsxCell, XlsxSheet, XlsxWorkbook};
         let document = XlsxSnapshot {
             workbook: XlsxWorkbook {
@@ -218,7 +218,7 @@ mod tests {
     }
 
     #[test]
-    fn render_value_resolves_shared_strings_and_shows_formula_cache() {
+    async fn render_value_resolves_shared_strings_and_shows_formula_cache() {
         let strings = vec!["hello".to_string()];
         assert_eq!(render_xlsx_cell_value(&XlsxCellValue::SharedString(0), &strings), "hello");
         assert_eq!(render_xlsx_cell_value(&XlsxCellValue::SharedString(9), &strings), "#9");
@@ -227,7 +227,7 @@ mod tests {
     }
 
     #[test]
-    fn parse_cell_value_detects_bool_and_number_before_falling_back_to_inline_string() {
+    async fn parse_cell_value_detects_bool_and_number_before_falling_back_to_inline_string() {
         assert_eq!(parse_xlsx_cell_value("true"), XlsxCellValue::Boolean(true));
         assert_eq!(parse_xlsx_cell_value("false"), XlsxCellValue::Boolean(false));
         assert_eq!(parse_xlsx_cell_value("3.5"), XlsxCellValue::Number(3.5));

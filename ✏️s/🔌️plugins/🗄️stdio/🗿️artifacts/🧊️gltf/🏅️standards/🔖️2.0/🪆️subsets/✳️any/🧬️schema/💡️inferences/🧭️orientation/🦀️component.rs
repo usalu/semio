@@ -23,11 +23,11 @@ pub struct GltfOrientationIndicators {
 pub struct GltfOrientationInference;
 
 impl GltfOrientationInference {
-    pub(crate) fn infer_pair(pair: &GltfPairGeometry) -> GltfMeasure<f64> {
+    pub(crate) async fn infer_pair(pair: &GltfPairGeometry) -> GltfMeasure<f64> {
         orientation_consistency::infer_pair(pair)
     }
 
-    pub(crate) fn infer_assembly(indicators: &mut GltfOrientationIndicators, part_count: usize, sample_count: usize, topology: Topology) {
+    pub(crate) async fn infer_assembly(indicators: &mut GltfOrientationIndicators, part_count: usize, sample_count: usize, topology: Topology) {
         if part_count > 1 {
             indicators.orientation_consistency = orientation_consistency::unavailable_for_assembly(sample_count, topology);
         }
@@ -37,11 +37,11 @@ impl GltfOrientationInference {
 impl GltfInferenceStage<GltfGeometryContext<'_>> for GltfOrientationInference {
     type Output = GltfOrientationIndicators;
 
-    fn infer(context: &GltfGeometryContext<'_>) -> Self::Output {
+    async fn infer(context: &GltfGeometryContext<'_>) -> Self::Output {
         Self::Output { main_axis_direction: main_axis_direction::infer(context), face_normal_distribution: face_normal_distribution::infer(context), orientation_consistency: orientation_consistency::infer(context) }
     }
 
-    fn unavailable(diagnostic_ids: &[String]) -> Self::Output {
+    async fn unavailable(diagnostic_ids: &[String]) -> Self::Output {
         Self::Output {
             main_axis_direction: main_axis_direction::unavailable_measure(diagnostic_ids),
             face_normal_distribution: face_normal_distribution::unavailable_measure(diagnostic_ids),

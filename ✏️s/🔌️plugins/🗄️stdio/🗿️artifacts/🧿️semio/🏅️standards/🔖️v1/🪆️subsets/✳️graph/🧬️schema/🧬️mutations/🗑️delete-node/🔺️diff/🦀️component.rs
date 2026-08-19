@@ -8,7 +8,7 @@ use crate::artifacts::semio::standards::v1::subsets::graph::schema::diff::{Semio
 use crate::artifacts::semio::standards::v1::subsets::graph::schema::snapshot::SemioGraphSnapshot;
 
 //#region 🔖️Diff
-pub fn diff(payload: &DeleteNode, base: &SemioGraphSnapshot) -> protocol::MutationOutcome<SemioGraphDiff> {
+pub async fn diff(payload: &DeleteNode, base: &SemioGraphSnapshot) -> protocol::MutationOutcome<SemioGraphDiff> {
     if !base.nodes.iter().any(|n| n.id == payload.id) {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Node \"{}\" does not exist.", payload.id.value), [payload.id.value.clone()]);
     }

@@ -4,7 +4,7 @@ use crate::artifacts::dag::mutations::DagMutation;
 use crate::artifacts::dag::DagSnapshot;
 
 //#region 🔖️Inverse
-pub fn inverse(payload: &super::mutation::CreateNode, _base: &DagSnapshot) -> Vec<DagMutation> {
+pub async fn inverse(payload: &super::mutation::CreateNode, _base: &DagSnapshot) -> Vec<DagMutation> {
     vec![crate::artifacts::dag::mutations::delete_node::mutation::delete_node(payload.node.id.clone())]
 }
 //#endregion 🔖️Inverse

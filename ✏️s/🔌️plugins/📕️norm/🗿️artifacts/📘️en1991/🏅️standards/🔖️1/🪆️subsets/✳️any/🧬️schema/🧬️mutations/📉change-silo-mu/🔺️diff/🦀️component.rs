@@ -4,7 +4,7 @@ use super::mutation::ChangeSiloMu;
 use crate::artifacts::en1991::{En1991Diff, En1991Snapshot};
 
 //#region 🔖️Diff
-pub fn diff(payload: &ChangeSiloMu, base: &En1991Snapshot) -> protocol::MutationOutcome<En1991Diff> {
+pub async fn diff(payload: &ChangeSiloMu, base: &En1991Snapshot) -> protocol::MutationOutcome<En1991Diff> {
     if !payload.new_silo_mu.is_finite() {
         return protocol::MutationOutcome::fatal("mutation.invariant", "Silo mu must be a finite number.", Vec::<String>::new());
     }

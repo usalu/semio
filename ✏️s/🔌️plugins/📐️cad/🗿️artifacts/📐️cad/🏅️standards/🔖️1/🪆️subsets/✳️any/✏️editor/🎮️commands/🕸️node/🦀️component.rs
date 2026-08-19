@@ -23,7 +23,7 @@ pub mod add_node {
         pub kind: String,
     }
 
-    pub fn handle(payload: &AddNode, doc: &ArtifactView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx<'_>) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
+    pub async fn handle(payload: &AddNode, doc: &ArtifactView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx<'_>) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
         let document = doc.snapshot;
         let mut runtime = runtime_of(cfg);
         let id = next_cad_id("node");
@@ -48,7 +48,7 @@ pub mod rename_node {
         pub value: String,
     }
 
-    pub fn handle(payload: &RenameNode, _doc: &ArtifactView<'_, CadSnapshot>, _cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx<'_>) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
+    pub async fn handle(payload: &RenameNode, _doc: &ArtifactView<'_, CadSnapshot>, _cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx<'_>) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
         if payload.node_id.is_empty() || payload.value.is_empty() {
             return Ok(Emit::default());
         }
@@ -70,7 +70,7 @@ pub mod set_node_selection {
         pub node_ids: Vec<String>,
     }
 
-    pub fn handle(payload: &SetNodeSelection, _doc: &ArtifactView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx<'_>) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
+    pub async fn handle(payload: &SetNodeSelection, _doc: &ArtifactView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx<'_>) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
         let mut runtime = runtime_of(cfg);
         runtime.selected_node_ids = payload.node_ids.clone();
         Ok(Emit::config(vec![snapshot_of(&runtime, cfg.snapshot)]))

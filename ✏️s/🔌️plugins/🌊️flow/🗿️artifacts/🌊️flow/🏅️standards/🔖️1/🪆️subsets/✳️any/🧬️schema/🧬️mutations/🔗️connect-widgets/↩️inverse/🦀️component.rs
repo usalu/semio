@@ -5,6 +5,6 @@ use crate::artifacts::flow::FlowSnapshot;
 
 use super::mutation::ConnectWidgets;
 
-pub fn inverse(payload: &ConnectWidgets, _base: &FlowSnapshot) -> Vec<FlowMutation> {
+pub async fn inverse(payload: &ConnectWidgets, _base: &FlowSnapshot) -> Vec<FlowMutation> {
     vec![FlowMutation::DisconnectWidgets(DisconnectWidgets { id: payload.id.clone() })]
 }

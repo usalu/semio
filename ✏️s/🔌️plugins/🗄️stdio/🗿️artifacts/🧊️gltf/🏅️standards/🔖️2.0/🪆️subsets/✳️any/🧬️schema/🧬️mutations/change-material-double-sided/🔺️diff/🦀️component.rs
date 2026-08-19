@@ -11,10 +11,10 @@ pub struct GltfChangeMaterialDoubleSidedDiff {
     pub touched_paths: Vec<String>,
 }
 impl GltfChangeMaterialDoubleSidedDiff {
-    pub fn expected_touched_paths(&self) -> Vec<String> {
+    pub async fn expected_touched_paths(&self) -> Vec<String> {
         vec![format!("document/materials/{}/doubleSided", self.material)]
     }
-    pub fn apply(&self, snapshot: &mut GltfSnapshot) -> Result<(), GltfChangeMaterialDoubleSidedRejection> {
+    pub async fn apply(&self, snapshot: &mut GltfSnapshot) -> Result<(), GltfChangeMaterialDoubleSidedRejection> {
         if self.touched_paths != self.expected_touched_paths() {
             return Err(GltfChangeMaterialDoubleSidedRejection { code: "gltf.mutation.invalid-touched-paths".into(), path: "diff/touchedPaths".into(), detail: "touched paths must equal the concrete material double-sided path".into() });
         }
@@ -34,7 +34,7 @@ impl GltfChangeMaterialDoubleSidedDiff {
         Ok(())
     }
 }
-pub fn derive(payload: &GltfChangeMaterialDoubleSidedPayload, base: &GltfSnapshot) -> Result<GltfChangeMaterialDoubleSidedDiff, GltfChangeMaterialDoubleSidedRejection> {
+pub async fn derive(payload: &GltfChangeMaterialDoubleSidedPayload, base: &GltfSnapshot) -> Result<GltfChangeMaterialDoubleSidedDiff, GltfChangeMaterialDoubleSidedRejection> {
     validate(payload, base)?;
     Ok(GltfChangeMaterialDoubleSidedDiff {
         material: payload.material,
@@ -47,7 +47,7 @@ pub fn derive(payload: &GltfChangeMaterialDoubleSidedPayload, base: &GltfSnapsho
 mod tests {
     use super::*;
     #[test]
-    fn direct_diff_applies_and_rejects_stale_state() {
+    async fn direct_diff_applies_and_rejects_stale_state() {
         let mut snapshot = GltfSnapshot::default();
         snapshot.document.materials.push(Default::default());
         let payload = GltfChangeMaterialDoubleSidedPayload { material: 0, double_sided: true };

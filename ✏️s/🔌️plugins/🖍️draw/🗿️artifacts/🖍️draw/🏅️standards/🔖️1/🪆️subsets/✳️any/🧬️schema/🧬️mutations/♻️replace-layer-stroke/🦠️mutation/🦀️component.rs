@@ -18,23 +18,23 @@ pub struct ReplaceLayerStroke {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn replace_layer_stroke(layer_id: String, stroke: Option<StrokeStyle>) -> DrawMutation {
+pub async fn replace_layer_stroke(layer_id: String, stroke: Option<StrokeStyle>) -> DrawMutation {
     DrawMutation::ReplaceLayerStroke(ReplaceLayerStroke { layer_id, stroke })
 }
 
 impl protocol::MutationKind<DrawSnapshot, DrawMutation> for ReplaceLayerStroke {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "replace", entity: "layer", kind: "replace-layer-stroke", record: "ReplacedLayerStroke" };
 
-    fn diff(&self, base: &DrawSnapshot) -> protocol::MutationOutcome<DrawDiff> {
+    async fn diff(&self, base: &DrawSnapshot) -> protocol::MutationOutcome<DrawDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &DrawSnapshot) -> Vec<DrawMutation> {
+    async fn inverse(&self, base: &DrawSnapshot) -> Vec<DrawMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         format!("Replace layer \"{}\" stroke", self.layer_id)
     }
-    fn target(&self) -> Vec<String> {
+    async fn target(&self) -> Vec<String> {
         vec![self.layer_id.clone()]
     }
 }

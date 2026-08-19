@@ -7,7 +7,7 @@ use crate::artifacts::imperative::ImperativeSnapshot;
 //#region 🔖️Diff
 /// 🔺️ Error `target-missing` when the id is absent from the payload's `path_ref` target list;
 /// Warning `no-op` when the resulting order is unchanged.
-pub fn diff(payload: &super::mutation::ReorderSteps, base: &ImperativeSnapshot) -> protocol::MutationOutcome<ImperativeDiff> {
+pub async fn diff(payload: &super::mutation::ReorderSteps, base: &ImperativeSnapshot) -> protocol::MutationOutcome<ImperativeDiff> {
     let steps = crate::artifacts::imperative::mutations::resolve_steps(base, &payload.path_ref);
     let original: Vec<String> = steps.iter().map(|step| step.id.clone()).collect();
     let Some(from) = original.iter().position(|id| id == &payload.id) else {

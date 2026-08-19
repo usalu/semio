@@ -23,7 +23,7 @@ pub struct SemioImageDimensions {
 
 /// 📐️ Computes [`SemioImageDimensions`] from a snapshot's header fields — pure, total,
 /// O(frames) only for the length read.
-pub fn compute_semio_image_dimensions(snapshot: &SemioImageSnapshot) -> SemioImageDimensions {
+pub async fn compute_semio_image_dimensions(snapshot: &SemioImageSnapshot) -> SemioImageDimensions {
     SemioImageDimensions {
         width: snapshot.width,
         height: snapshot.height,
@@ -41,7 +41,7 @@ mod tests {
     use super::*;
     use crate::artifacts::semio::standards::v1::subsets::image::schema::snapshot::{SemioImageFrame, STDIO_SEMIOIMAGE_DOCUMENT_SCHEMA};
 
-    fn snapshot(width: u32, height: u32, colorspace: SemioColorspace, bit_depth: u8, frame_count: usize) -> SemioImageSnapshot {
+    async fn snapshot(width: u32, height: u32, colorspace: SemioColorspace, bit_depth: u8, frame_count: usize) -> SemioImageSnapshot {
         SemioImageSnapshot {
             schema: STDIO_SEMIOIMAGE_DOCUMENT_SCHEMA.into(),
             width,
@@ -55,25 +55,25 @@ mod tests {
     }
 
     #[test]
-    fn derives_from_header_fields() {
+    async fn derives_from_header_fields() {
         let dimensions = compute_semio_image_dimensions(&snapshot(4, 3, SemioColorspace::Rgba, 8, 2));
         assert_eq!(dimensions, SemioImageDimensions { width: 4, height: 3, bit_depth: 8, has_alpha: true, pixel_count: 12, frame_count: 2 });
     }
 
     #[test]
-    fn rgb_has_no_alpha() {
+    async fn rgb_has_no_alpha() {
         let dimensions = compute_semio_image_dimensions(&snapshot(2, 2, SemioColorspace::Rgb, 8, 1));
         assert!(!dimensions.has_alpha);
     }
 
     #[test]
-    fn inference_determinism_law() {
+    async fn inference_determinism_law() {
         let snapshot = snapshot(5, 5, SemioColorspace::Grayscale, 8, 3);
         assert_eq!(compute_semio_image_dimensions(&snapshot), compute_semio_image_dimensions(&snapshot));
     }
 
     #[test]
-    fn inference_default_law() {
+    async fn inference_default_law() {
         assert_eq!(compute_semio_image_dimensions(&SemioImageSnapshot::default()), SemioImageDimensions::default());
     }
 }

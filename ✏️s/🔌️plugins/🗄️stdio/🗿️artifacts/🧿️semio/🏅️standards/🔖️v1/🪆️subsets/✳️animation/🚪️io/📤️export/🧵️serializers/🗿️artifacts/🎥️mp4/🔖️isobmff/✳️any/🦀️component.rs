@@ -60,7 +60,7 @@ mod tests {
     use super::*;
     use crate::artifacts::semio::standards::v1::subsets::animation::schema::snapshot::{AnimChannel, AnimInterpolation, AnimKeyframe, AnimTarget, AnimTargetProperty, AnimTimeline, AnimValue, STDIO_SEMIOANIMATION_DOCUMENT_SCHEMA};
 
-    fn real_world_animation() -> SemioAnimationSnapshot {
+    async fn real_world_animation() -> SemioAnimationSnapshot {
         SemioAnimationSnapshot {
             schema: STDIO_SEMIOANIMATION_DOCUMENT_SCHEMA.into(),
             timelines: vec![AnimTimeline {
@@ -75,7 +75,7 @@ mod tests {
     }
 
     #[test]
-    fn serialize_builds_one_synthetic_track_with_real_derived_durations() {
+    async fn serialize_builds_one_synthetic_track_with_real_derived_durations() {
         let mp4 = semio_framework_plugin::resolve_ready(SemioAnimationToMp4::serialize(&real_world_animation())).expect("serialize");
         assert_eq!(mp4.tracks.len(), 1);
         assert_eq!(mp4.tracks[0].timescale, SYNTHETIC_TIMESCALE);
@@ -86,7 +86,7 @@ mod tests {
     }
 
     #[test]
-    fn empty_animation_serializes_to_zero_tracks() {
+    async fn empty_animation_serializes_to_zero_tracks() {
         let snap = SemioAnimationSnapshot { schema: STDIO_SEMIOANIMATION_DOCUMENT_SCHEMA.into(), timelines: Vec::new() };
         let mp4 = semio_framework_plugin::resolve_ready(SemioAnimationToMp4::serialize(&snap)).expect("serialize");
         assert!(mp4.tracks.is_empty());

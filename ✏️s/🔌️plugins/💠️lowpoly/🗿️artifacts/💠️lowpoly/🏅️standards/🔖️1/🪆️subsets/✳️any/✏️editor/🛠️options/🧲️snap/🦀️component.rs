@@ -7,7 +7,7 @@ use crate::editor::lowpoly::view::utility_params_value;
 use semio_framework_plugin::WindowMeasure;
 
 /// 🎛️ The live chrome measure for this option.
-pub fn measure(config: &LowpolyConfig, labels: &LowpolyLabels) -> WindowMeasure {
+pub async fn measure(config: &LowpolyConfig, labels: &LowpolyLabels) -> WindowMeasure {
     let params = utility_params_value(config);
     WindowMeasure::Group {
         id: "lowpoly-measure-snap".into(),
@@ -32,7 +32,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn measure_builds_the_snap_grid_slider() {
+    async fn measure_builds_the_snap_grid_slider() {
         let config = LowpolyConfig::default();
         let m = measure(&config, semio_framework_plugin::resolve_labels_for_locale::<LowpolyLabels>("en-US"));
         match m {

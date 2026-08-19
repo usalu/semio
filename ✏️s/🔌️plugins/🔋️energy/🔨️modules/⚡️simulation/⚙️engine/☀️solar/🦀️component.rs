@@ -23,7 +23,7 @@ pub struct SurfaceSolarAbsorption {
 
 // #region 🔖️Incidence
 /// ☀️ Cosine of beam incidence angle (0–1).
-pub fn beam_incidence_cosine(surface_normal: [f64; 3], sun_altitude_deg: f64, sun_azimuth_deg: f64) -> f64 {
+pub async fn beam_incidence_cosine(surface_normal: [f64; 3], sun_altitude_deg: f64, sun_azimuth_deg: f64) -> f64 {
     let alt = deg_to_rad(sun_altitude_deg);
     let az = deg_to_rad(sun_azimuth_deg);
     let sun_dir = [alt.cos() * az.sin(), alt.cos() * az.cos(), alt.sin()];
@@ -37,7 +37,7 @@ pub fn beam_incidence_cosine(surface_normal: [f64; 3], sun_altitude_deg: f64, su
 }
 
 /// ☀️ Sun direction unit vector from altitude/azimuth (Z up, Y north).
-pub fn sun_direction(sun_altitude_deg: f64, sun_azimuth_deg: f64) -> [f64; 3] {
+pub async fn sun_direction(sun_altitude_deg: f64, sun_azimuth_deg: f64) -> [f64; 3] {
     let alt = deg_to_rad(sun_altitude_deg);
     let az = deg_to_rad(sun_azimuth_deg);
     [alt.cos() * az.sin(), alt.cos() * az.cos(), alt.sin()]
@@ -46,7 +46,7 @@ pub fn sun_direction(sun_altitude_deg: f64, sun_azimuth_deg: f64) -> [f64; 3] {
 
 // #region 🔖️Shading
 /// 🌳️ Shading factor (0 = fully shaded, 1 = unshaded).
-pub fn shading_factor(unshaded_fraction: f64, overhang_depth_m: f64, window_height_m: f64, sun_altitude_deg: f64) -> f64 {
+pub async fn shading_factor(unshaded_fraction: f64, overhang_depth_m: f64, window_height_m: f64, sun_altitude_deg: f64) -> f64 {
     let base = unshaded_fraction.clamp(0.0, 1.0);
     if overhang_depth_m <= 0.0 || window_height_m <= 0.0 || sun_altitude_deg <= 1.0 {
         return base;
@@ -59,7 +59,7 @@ pub fn shading_factor(unshaded_fraction: f64, overhang_depth_m: f64, window_heig
 
 // #region 🔖️Absorption
 /// ☀️ Absorbed solar on opaque surface [W/m²].
-pub fn surface_solar_absorption(direct_normal_irradiance_w_m2: f64, diffuse_horizontal_irradiance_w_m2: f64, incidence_cosine: f64, shading: f64, solar_absorptance: f64, tilt_deg: f64) -> SurfaceSolarAbsorption {
+pub async fn surface_solar_absorption(direct_normal_irradiance_w_m2: f64, diffuse_horizontal_irradiance_w_m2: f64, incidence_cosine: f64, shading: f64, solar_absorptance: f64, tilt_deg: f64) -> SurfaceSolarAbsorption {
     let tilt_rad = deg_to_rad(tilt_deg);
     let view_factor_sky = (1.0 + tilt_rad.cos()) * 0.5;
     let beam = direct_normal_irradiance_w_m2 * incidence_cosine * shading * solar_absorptance;
@@ -68,7 +68,7 @@ pub fn surface_solar_absorption(direct_normal_irradiance_w_m2: f64, diffuse_hori
 }
 
 /// ☀️ Absorbed solar from polygon vertices and sun position.
-pub fn surface_solar_from_vertices(
+pub async fn surface_solar_from_vertices(
     vertices_m: &[[f64; 3]],
     north_axis_deg: f64,
     sun_altitude_deg: f64,
@@ -87,7 +87,7 @@ pub fn surface_solar_from_vertices(
 
 // #region 🔖️Distribution
 /// 💡️ Distribute transmitted solar to interior surfaces [W] per mode.
-pub fn distribute_interior_solar(transmitted_solar_w: f64, mode: InteriorSolarDistribution, floor_area_m2: f64, surface_areas_m2: &[f64]) -> Vec<f64> {
+pub async fn distribute_interior_solar(transmitted_solar_w: f64, mode: InteriorSolarDistribution, floor_area_m2: f64, surface_areas_m2: &[f64]) -> Vec<f64> {
     match mode {
         InteriorSolarDistribution::DirectToFloor => {
             let mut out = vec![0.0; surface_areas_m2.len()];
@@ -127,26 +127,26 @@ mod tests {
     use super::*;
 
     #[test]
-    fn vertical_south_wall_noon_incidence() {
+    async fn vertical_south_wall_noon_incidence() {
         let cos = beam_incidence_cosine([0.0, -1.0, 0.0], 60.0, 180.0);
         assert!(cos > 0.4);
     }
 
     #[test]
-    fn shading_reduces_with_overhang() {
+    async fn shading_reduces_with_overhang() {
         let unshaded = shading_factor(1.0, 0.0, 1.5, 45.0);
         let shaded = shading_factor(1.0, 0.8, 1.5, 45.0);
         assert!(shaded < unshaded);
     }
 
     #[test]
-    fn absorption_positive_at_noon() {
+    async fn absorption_positive_at_noon() {
         let abs = surface_solar_absorption(800.0, 100.0, 0.8, 1.0, 0.6, 90.0);
         assert!(abs.total_w_m2 > 100.0);
     }
 
     #[test]
-    fn split_flux_allocates_floor_share() {
+    async fn split_flux_allocates_floor_share() {
         let areas = vec![20.0, 10.0, 10.0];
         let dist = distribute_interior_solar(1000.0, InteriorSolarDistribution::SplitFlux, 20.0, &areas);
         assert!((dist[0] - 400.0).abs() < 1e-6);

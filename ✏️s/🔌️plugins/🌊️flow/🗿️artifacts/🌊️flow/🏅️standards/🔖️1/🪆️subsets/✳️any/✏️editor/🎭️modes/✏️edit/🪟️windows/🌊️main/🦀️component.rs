@@ -20,7 +20,7 @@ const FLOW_PLAY_SURFACE_MAIN: &str = "flow.play.main";
 /// 🧱️ Stitched into the app manifest by `crate::editor::flow::create_flow_app`. `options.measures` stays
 /// empty here on purpose: flow's measures are config-derived and rebuilt per frame by
 /// [`window_measures`], not frozen into the manifest.
-pub fn definition() -> WindowKindDefinition {
+pub async fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
         id: FLOW_PLAY_WINDOW_MAIN.into(),
         label: LocalizedLabel::native("Flow", "Flow"),
@@ -40,17 +40,17 @@ pub fn definition() -> WindowKindDefinition {
 }
 
 /// 🎚️ The live chrome measures for this window, collected from its `🎚️options/*` components.
-pub fn window_measures(config: &FlowConfig, labels: &FlowPlayLabels) -> Vec<WindowMeasure> {
+pub async fn window_measures(config: &FlowConfig, labels: &FlowPlayLabels) -> Vec<WindowMeasure> {
     vec![options::lod::measure(config, labels), options::proximity::measure(config, labels), options::grid::measure(config, labels)]
 }
 //#endregion 🔖️Definition
 
 //#region 🔖️Workflow
-pub fn split_endpoint(endpoint: &str) -> (String, String) {
+pub async fn split_endpoint(endpoint: &str) -> (String, String) {
     endpoint.split_once('@').map_or_else(|| (endpoint.to_string(), "out".into()), |(node, port)| (node.to_string(), port.to_string()))
 }
 
-pub fn fixture_to_workflow(fixture: &DagFixture) -> (Vec<NodeGraphNodeRecord>, Vec<NodeGraphEdgeRecord>) {
+pub async fn fixture_to_workflow(fixture: &DagFixture) -> (Vec<NodeGraphNodeRecord>, Vec<NodeGraphEdgeRecord>) {
     let nodes: Vec<NodeGraphNodeRecord> = fixture
         .nodes
         .iter()
@@ -80,7 +80,7 @@ pub fn fixture_to_workflow(fixture: &DagFixture) -> (Vec<NodeGraphNodeRecord>, V
 //#endregion 🔖️Workflow
 
 //#region 🔖️Render
-pub fn render(fixture: &FlowSnapshot, config: &FlowConfig, session: &FlowEvalSession) -> UiNode {
+pub async fn render(fixture: &FlowSnapshot, config: &FlowConfig, session: &FlowEvalSession) -> UiNode {
     let host = host_from_snapshot(fixture, config, session);
     let (nodes, edges) = fixture_to_workflow(&host.dag.fixture);
     let viewport = NodeGraphViewport { x: config.camera.x, y: config.camera.y, zoom: config.camera.zoom };
@@ -118,19 +118,19 @@ mod tests {
     use crate::editor::flow::testkit::{flow_app, main_window_measures, render as render_body};
 
     #[test]
-    fn split_endpoint_defaults_port_to_out() {
+    async fn split_endpoint_defaults_port_to_out() {
         assert_eq!(split_endpoint("node@port"), ("node".to_string(), "port".to_string()));
         assert_eq!(split_endpoint("node"), ("node".to_string(), "out".to_string()));
     }
 
     #[test]
-    fn renders_node_graph_scene() {
+    async fn renders_node_graph_scene() {
         let mut app = flow_app();
         assert!(render_body(&mut app, FLOW_PLAY_BODY_MAIN).contains("node-graph"));
     }
 
     #[test]
-    fn window_measures_surface_lod_proximity_and_grid() {
+    async fn window_measures_surface_lod_proximity_and_grid() {
         let mut app = flow_app();
         let measures = main_window_measures(&mut app);
         assert_eq!(measures.len(), 3);
@@ -139,7 +139,7 @@ mod tests {
     }
 
     #[test]
-    fn definition_declares_the_node_graph_surface_and_body_key() {
+    async fn definition_declares_the_node_graph_surface_and_body_key() {
         let definition = definition();
         assert_eq!(definition.body_key, FLOW_PLAY_BODY_MAIN);
         assert!(matches!(definition.surface_kind, SurfaceKind::NodeGraph));

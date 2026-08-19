@@ -28,25 +28,25 @@ pub struct LayoutInference {
 // `infer(&LayoutSnapshot::default())`. An empty layout document (no pages/spreads/parent pages) has
 // an unambiguous empty topology, so that's what this hand-written `Default` returns directly.
 impl Default for LayoutInference {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self { topology: LayoutTopology::empty() }
     }
 }
 
 impl protocol::Inference<LayoutSnapshot> for LayoutInference {
-    fn infer(snapshot: &LayoutSnapshot) -> Self {
+    async fn infer(snapshot: &LayoutSnapshot) -> Self {
         Self { topology: compute_layout_topology(&snapshot.parent_pages, &snapshot.spreads, &snapshot.pages) }
     }
 }
 
 impl protocol::InferenceSpec<LayoutSnapshot> for LayoutInference {
-    fn inference_schema_id() -> &'static str {
+    async fn inference_schema_id() -> &'static str {
         "s.layout.layout.inference"
     }
-    fn schema_version() -> u32 {
+    async fn schema_version() -> u32 {
         1
     }
-    fn fields() -> &'static [protocol::InferenceFieldSpec] {
+    async fn fields() -> &'static [protocol::InferenceFieldSpec] {
         &[protocol::InferenceFieldSpec { id: "s.layout.layout.inference.topology", reads: &["parentPages", "spreads", "pages"] }]
     }
 }
@@ -62,7 +62,7 @@ impl ArtifactInferrer for crate::artifacts::layout::standards::v1::subsets::any:
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.layout.layout.inference`'s facet leaves into the OS-wide inference catalog —
 /// call once at plugin init, alongside `layout_artifact_schema_descriptor`'s registration.
-pub fn layout_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
+pub async fn layout_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
     schema::ArtifactInferenceDescriptor {
         id: "s.layout.layout.inference",
         inference: schema::FacetLeaves {
@@ -83,7 +83,7 @@ mod tests {
     use protocol::Inference;
 
     //#region 🧸️Fixtures
-    fn snapshot_with_master_and_spread() -> LayoutSnapshot {
+    async fn snapshot_with_master_and_spread() -> LayoutSnapshot {
         let json = serde_json::json!({
             "schema": "semio.layout/v1",
             "name": "doc",
@@ -115,13 +115,13 @@ mod tests {
 
     //#region 🧪️InferenceLaws
     #[test]
-    fn inference_determinism_law() {
+    async fn inference_determinism_law() {
         let snapshot = snapshot_with_master_and_spread();
         assert_eq!(LayoutInference::infer(&snapshot), LayoutInference::infer(&snapshot));
     }
 
     #[test]
-    fn inference_default_law() {
+    async fn inference_default_law() {
         let empty = serde_json::from_value::<LayoutSnapshot>(serde_json::json!({
             "schema": "semio.layout/v1",
             "name": "",
@@ -134,7 +134,7 @@ mod tests {
     }
 
     #[test]
-    fn page_topologically_follows_its_master_and_spread() {
+    async fn page_topologically_follows_its_master_and_spread() {
         let snapshot = snapshot_with_master_and_spread();
         let inferred = LayoutInference::infer(&snapshot);
         let master_index = inferred.topology.topo_order.iter().position(|id| id == "master-1").unwrap();

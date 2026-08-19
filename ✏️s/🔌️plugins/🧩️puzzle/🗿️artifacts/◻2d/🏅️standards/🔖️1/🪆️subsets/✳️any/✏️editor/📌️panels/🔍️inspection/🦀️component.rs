@@ -12,7 +12,7 @@ pub const PUZZLE2D_PLAY_BODY_PROPERTIES: &str = "puzzle2d.play.properties";
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
-pub fn definition() -> PanelTabDefinition {
+pub async fn definition() -> PanelTabDefinition {
     PanelTabDefinition {
         kind: PanelTabKind::App(FRAMEWORK_PANEL_TAB_INSPECTION_ID.into()),
         label: LocalizedLabel::native(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, "Inspektion"),
@@ -30,7 +30,7 @@ pub fn definition() -> PanelTabDefinition {
 /// render against and always falls through to the document summary. Flagged to the coordinator as
 /// the same framework-level gap noted throughout this crate's other panels — not fixed here
 /// (framework file, out of this crate's remit).
-pub fn render(envelope: &Puzzle2dScene, labels: &Puzzle2dLabels) -> UiNode {
+pub async fn render(envelope: &Puzzle2dScene, labels: &Puzzle2dLabels) -> UiNode {
     ui_stack_vertical(vec![
         ui_text(Label::data(format!("{}: {PUZZLE2D_FIXTURE_SCHEMA}", labels.schema.as_str()))),
         ui_text(Label::data(format!("{}: {}", labels.extension.as_str(), puzzle_extension_id()))),

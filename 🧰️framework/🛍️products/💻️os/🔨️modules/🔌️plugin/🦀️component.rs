@@ -465,7 +465,7 @@ pub mod app {
         /// 🌀️ `io-async-signatures`: async signature, behaviourally unchanged body — every
         /// existing leaf's `serialize` never truly awaits, so its future resolves the moment it
         /// is first polled (see `resolve_ready` in the framework io module).
-        async fn serialize(from: &Self::From) -> Result<Self::Into, store::PackError>;
+        fn serialize(from: &Self::From) -> impl Future<Output = Result<Self::Into, store::PackError>> + Send;
     }
 
     /// 🧩️ Directed snapshot conversion from a foreign dialect into this dialect. One unit struct
@@ -477,7 +477,7 @@ pub mod app {
         const INTO: Dialect;
         /// 🌀️ `io-async-signatures`: async signature, behaviourally unchanged body — see
         /// `ArtifactSerializer::serialize`'s doc comment for the ready-future guarantee.
-        async fn deserialize(from: &Self::From) -> Result<Self::Into, store::PackError>;
+        fn deserialize(from: &Self::From) -> impl Future<Output = Result<Self::Into, store::PackError>> + Send;
     }
 
     /// 🎹️ Subset-level composer: analyze foreign/native sources, build one snapshot in `WRITES`.
@@ -489,7 +489,7 @@ pub mod app {
         fn reads() -> &'static [Dialect];
         /// 🌀️ `io-async-signatures`: async signature, behaviourally unchanged body — see
         /// `ArtifactSerializer::serialize`'s doc comment for the ready-future guarantee.
-        async fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError>;
+        fn compose(sources: &[ComposeSource<'_>]) -> impl Future<Output = Result<Composition<Self::Snapshot>, ComposeError>> + Send;
     }
 
     /// 🎹️ Erases a typed `ArtifactComposer` into a `ComposerEntry` row for `register_composer_entries`.
@@ -533,12 +533,12 @@ pub mod app {
     /// registry composer entries already use.
     pub fn deserializer_entry_of<D: ArtifactDeserializer>() -> ComposerEntry
     where
-        D::From: ArtifactPack,
+        D::From: ArtifactPack + Send,
         D::Into: ArtifactPack,
     {
         fn erased_compose<D: ArtifactDeserializer>(sources: &[ErasedComposeSource]) -> ComposeFuture<'_>
         where
-            D::From: ArtifactPack,
+            D::From: ArtifactPack + Send,
             D::Into: ArtifactPack,
         {
             Box::pin(async move {
@@ -569,12 +569,12 @@ pub mod app {
     /// source as `S::From`, runs `S::serialize`, re-packs the result as `S::Into`.
     pub fn serializer_entry_of<S: ArtifactSerializer>() -> ComposerEntry
     where
-        S::From: ArtifactPack,
+        S::From: ArtifactPack + Send,
         S::Into: ArtifactPack,
     {
         fn erased_compose<S: ArtifactSerializer>(sources: &[ErasedComposeSource]) -> ComposeFuture<'_>
         where
-            S::From: ArtifactPack,
+            S::From: ArtifactPack + Send,
             S::Into: ArtifactPack,
         {
             Box::pin(async move {
@@ -9675,7 +9675,13 @@ pub mod app {
     /// so its async methods are manually desugared (native `async fn`-in-trait is not
     /// object-safe) rather than using the plain `async fn` sugar the rest of this sweep uses.
     /// Generic over `Output` so both methods share one alias instead of two near-duplicates.
-    pub type PluginAppMediaFuture<'a, Output> = std::pin::Pin<Box<dyn std::future::Future<Output = Result<Output, MediaError>> + Send + 'a>>;
+    /// 🌀️ Deliberately NOT `+ Send`: `ArtifactView`/`Self::Snapshot` can hold non-`Sync` trait
+    /// objects (e.g. `dyn SpaceMember`), and nothing downstream of this boundary today moves the
+    /// future across a thread — only polls it in place (`resolve_ready`) or `.await`s it inline.
+    /// A future packet that needs a `Send` boundary here adds it once it actually schedules across
+    /// threads, at which point the `ArtifactView`/`Snapshot` bounds this would require become that
+    /// packet's problem to solve, not a speculative constraint on every existing implementor today.
+    pub type PluginAppMediaFuture<'a, Output> = std::pin::Pin<Box<dyn Future<Output = Result<Output, MediaError>> + 'a>>;
 
     /// @emoji 🗄️ Object-safe runtime contract every hosted app satisfies. Owns persistent document state
     /// (via {@link VcsArtifactApp}'s store) across calls — no per-call document JSON is threaded in.
@@ -14864,7 +14870,7 @@ pub mod plugin_runtime {
     // #region plugin_runtime
     //! 📤️ WASM component export glue for plugin bundles.
 
-    use crate::app::{ActionMeta, AppInstance, EphemeralSnapshot, MediaArtifact, MediaArtifactDescriptor, Plugin, PluginApp, PluginAssemblyError, PluginProgram, TransactionProposalDraft};
+    use crate::app::{resolve_ready, ActionMeta, AppInstance, EphemeralSnapshot, MediaArtifact, MediaArtifactDescriptor, Plugin, PluginApp, PluginAssemblyError, PluginProgram, TransactionProposalDraft};
     use crate::ArtifactApp;
     use dsl::{from_dsl_value, to_dsl_value};
     use semio_framework::manifest::{ActionInvocation as ManifestActionInvocation, CommandInvocation as ManifestCommandInvocation, CommandOwnerAddress as ManifestCommandOwnerAddress};

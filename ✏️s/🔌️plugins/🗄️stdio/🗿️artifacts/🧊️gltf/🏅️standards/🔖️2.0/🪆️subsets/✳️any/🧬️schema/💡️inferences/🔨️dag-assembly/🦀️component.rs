@@ -21,7 +21,7 @@ use super::{
 };
 use crate::artifacts::gltf::schema::snapshot::GltfSnapshot;
 
-fn empty_indicators(diagnostic_ids: Vec<String>) -> GltfEntityIndicators {
+async fn empty_indicators(diagnostic_ids: Vec<String>) -> GltfEntityIndicators {
     GltfEntityIndicators {
         size: GltfSizeInference::unavailable(&diagnostic_ids),
         area_volume: GltfAreaVolumeInference::unavailable(&diagnostic_ids),
@@ -40,7 +40,7 @@ fn empty_indicators(diagnostic_ids: Vec<String>) -> GltfEntityIndicators {
     }
 }
 
-fn assemble_indicators(points: &[V3], triangles: &[[usize; 3]], policy: &GltfAnalysisPolicy) -> (GltfEntityIndicators, Topology) {
+async fn assemble_indicators(points: &[V3], triangles: &[[usize; 3]], policy: &GltfAnalysisPolicy) -> (GltfEntityIndicators, Topology) {
     let Some(context) = GltfGeometryContext::new(points, triangles, policy) else {
         return (empty_indicators(Vec::new()), topology_summary(points, triangles));
     };
@@ -66,7 +66,7 @@ fn assemble_indicators(points: &[V3], triangles: &[[usize; 3]], policy: &GltfAna
     )
 }
 
-pub fn compute_gltf_inference(snapshot: &GltfSnapshot) -> GltfGeometricInference {
+pub async fn compute_gltf_inference(snapshot: &GltfSnapshot) -> GltfGeometricInference {
     let policy = policy();
     let mut diagnostics = Vec::new();
     let (raw_parts, node_instances) = collect_parts(snapshot, &mut diagnostics);

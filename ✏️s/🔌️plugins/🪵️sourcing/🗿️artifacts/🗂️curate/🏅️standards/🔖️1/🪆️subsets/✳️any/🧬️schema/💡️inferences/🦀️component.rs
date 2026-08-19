@@ -30,7 +30,7 @@ pub struct CurateInference {
 }
 
 impl protocol::Inference<CurateSnapshot> for CurateInference {
-    fn infer(snapshot: &CurateSnapshot) -> Self {
+    async fn infer(snapshot: &CurateSnapshot) -> Self {
         Self { entries: compute_curate_entries(snapshot) }
     }
 }
@@ -40,19 +40,19 @@ impl protocol::Inference<CurateSnapshot> for CurateInference {
 /// the real default, don't derive structurally" trick `AddInference` uses in
 /// `📡️spr/🎮️command/🦀️component.rs`.
 impl Default for CurateInference {
-    fn default() -> Self {
+    async fn default() -> Self {
         <Self as protocol::Inference<CurateSnapshot>>::infer(&CurateSnapshot::default())
     }
 }
 
 impl protocol::InferenceSpec<CurateSnapshot> for CurateInference {
-    fn inference_schema_id() -> &'static str {
+    async fn inference_schema_id() -> &'static str {
         "s.sourcing.curate.inference"
     }
-    fn schema_version() -> u32 {
+    async fn schema_version() -> u32 {
         1
     }
-    fn fields() -> &'static [protocol::InferenceFieldSpec] {
+    async fn fields() -> &'static [protocol::InferenceFieldSpec] {
         &[protocol::InferenceFieldSpec { id: "s.sourcing.curate.inference.entries", reads: &["catalog", "stockExtra", "curated"] }]
     }
 }
@@ -82,7 +82,7 @@ impl ArtifactInferrer for CurateInferrer {
 /// mesh URL (geometry is a procedural `GeometryRecipe`, not an asset reference) or vortex/attachment
 /// data, so every row's `meshUrl` is `null` and `vortices` is empty — puzzle's importer treats a missing
 /// mesh as "no visual representation yet", not an error.
-pub fn sourcing_catalog_fragment(document: &CurateSnapshot) -> Value {
+pub async fn sourcing_catalog_fragment(document: &CurateSnapshot) -> Value {
     let object_kinds: Vec<Value> = crate::artifacts::curate::stock_of(document).iter().map(|kind| json!({ "id": kind.id, "name": kind.name, "label": kind.name, "meshUrl": Value::Null, "vortices": Vec::<Value>::new() })).collect();
     json!({
         "schema": "manifest",
@@ -98,7 +98,7 @@ pub fn sourcing_catalog_fragment(document: &CurateSnapshot) -> Value {
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.sourcing.curate.inference`'s facet leaves into the OS-wide inference catalog —
 /// call once at plugin init, alongside `curate_artifact_schema_descriptor`'s registration.
-pub fn curate_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
+pub async fn curate_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
     schema::ArtifactInferenceDescriptor {
         id: "s.sourcing.curate.inference",
         inference: schema::FacetLeaves {
@@ -119,7 +119,7 @@ mod tests {
     use crate::artifacts::curate::CuratedItem;
     use protocol::Inference;
 
-    fn picked_snapshot() -> CurateSnapshot {
+    async fn picked_snapshot() -> CurateSnapshot {
         CurateSnapshot {
             curated: vec![CuratedItem { object_id: "beam-glulam-gl24h".into(), count: 4 }, CuratedItem { object_id: "window-fixed-150x150".into(), count: 6 }],
             ..CurateSnapshot::default()
@@ -127,30 +127,30 @@ mod tests {
     }
 
     #[test]
-    fn inference_determinism_law() {
+    async fn inference_determinism_law() {
         let snapshot = picked_snapshot();
         assert_eq!(CurateInference::infer(&snapshot), CurateInference::infer(&snapshot));
     }
 
     #[test]
-    fn inference_default_law() {
+    async fn inference_default_law() {
         assert_eq!(CurateInference::infer(&CurateSnapshot::default()), CurateInference::default());
     }
 
     #[test]
-    fn entries_counts_curated_lines_and_total_quantity() {
+    async fn entries_counts_curated_lines_and_total_quantity() {
         let inferred = CurateInference::infer(&picked_snapshot());
         assert_eq!(inferred.entries.entry_count, 2);
         assert_eq!(inferred.entries.total_count, 10);
     }
 
     //#region 🧪️PuzzleCatalogFragment
-    fn sample_document() -> CurateSnapshot {
+    async fn sample_document() -> CurateSnapshot {
         crate::artifacts::curate::curate_snapshot_from_stock(crate::artifacts::curate::schema::demo_stock(), Vec::new())
     }
 
     #[test]
-    fn sourcing_catalog_fragment_maps_stock_into_the_puzzle3d_kit_catalog_shape() {
+    async fn sourcing_catalog_fragment_maps_stock_into_the_puzzle3d_kit_catalog_shape() {
         let document = sample_document();
         let stock = crate::artifacts::curate::stock_of(&document);
         let fragment = sourcing_catalog_fragment(&document);

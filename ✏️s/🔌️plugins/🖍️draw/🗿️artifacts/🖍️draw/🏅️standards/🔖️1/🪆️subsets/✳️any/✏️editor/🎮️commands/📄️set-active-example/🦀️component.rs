@@ -16,7 +16,7 @@ use serde::{Deserialize, Serialize};
 /// commands go through the sanctioned non-history `ArtifactStore::reset` path instead, which from
 /// an `ArtifactApp::handle` this reaches via `Effect::LoadDocument` (pack+spr bytes) — the same
 /// host-owned whole-store-swap primitive `engine::space`'s `open_space` command uses.
-fn load_document_effect(snapshot: DrawSnapshot) -> Emit<DrawMutation, DrawConfigMutation> {
+async fn load_document_effect(snapshot: DrawSnapshot) -> Emit<DrawMutation, DrawConfigMutation> {
     let envelope = store::ArtifactEnvelope::<DrawSnapshot, DrawMutation> {
         schema: DRAW_DOCUMENT_SCHEMA.into(),
         id: snapshot.id.clone(),
@@ -48,7 +48,7 @@ pub struct SetActiveExample {
     pub example_id: String,
 }
 
-pub fn handle(payload: &SetActiveExample, _doc: &ArtifactView<'_, DrawSnapshot>, _cfg: &ConfigView<'_, DrawConfig>, _session: &mut crate::editor::draw::commands::canvas_pointer_down::DrawSession) -> Result<Emit<DrawMutation, DrawConfigMutation>, Fault> {
+pub async fn handle(payload: &SetActiveExample, _doc: &ArtifactView<'_, DrawSnapshot>, _cfg: &ConfigView<'_, DrawConfig>, _session: &mut crate::editor::draw::commands::canvas_pointer_down::DrawSession) -> Result<Emit<DrawMutation, DrawConfigMutation>, Fault> {
     let next = if payload.example_id.is_empty() {
         Some(default_draw_document("empty", None))
     } else if payload.example_id == DRAW_PLAY_EXAMPLE_DEFAULT_ID {

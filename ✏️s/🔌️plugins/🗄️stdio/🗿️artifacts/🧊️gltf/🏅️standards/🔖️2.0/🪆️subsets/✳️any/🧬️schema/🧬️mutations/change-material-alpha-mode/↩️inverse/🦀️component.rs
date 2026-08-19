@@ -12,10 +12,10 @@ pub struct GltfChangeMaterialAlphaModeInverse {
     pub touched_paths: Vec<String>,
 }
 impl GltfChangeMaterialAlphaModeInverse {
-    pub fn expected_touched_paths(&self) -> Vec<String> {
+    pub async fn expected_touched_paths(&self) -> Vec<String> {
         vec![format!("document/materials/{}/alphaMode", self.material)]
     }
-    pub fn apply(&self, snapshot: &mut GltfSnapshot) -> Result<(), GltfChangeMaterialAlphaModeRejection> {
+    pub async fn apply(&self, snapshot: &mut GltfSnapshot) -> Result<(), GltfChangeMaterialAlphaModeRejection> {
         if self.touched_paths != self.expected_touched_paths() {
             return Err(GltfChangeMaterialAlphaModeRejection { code: "gltf.mutation.invalid-touched-paths".into(), path: "inverse/touchedPaths".into(), detail: "touched paths must equal the concrete material alpha-mode path".into() });
         }
@@ -35,7 +35,7 @@ impl GltfChangeMaterialAlphaModeInverse {
         Ok(())
     }
 }
-pub fn reconstruct(payload: &GltfChangeMaterialAlphaModePayload, base: &GltfSnapshot) -> Result<GltfChangeMaterialAlphaModeInverse, GltfChangeMaterialAlphaModeRejection> {
+pub async fn reconstruct(payload: &GltfChangeMaterialAlphaModePayload, base: &GltfSnapshot) -> Result<GltfChangeMaterialAlphaModeInverse, GltfChangeMaterialAlphaModeRejection> {
     validate(payload, base)?;
     let touched_paths = vec![format!("document/materials/{}/alphaMode", payload.material)];
     Ok(GltfChangeMaterialAlphaModeInverse { material: payload.material, expected_alpha_mode: payload.alpha_mode, alpha_mode: base.document.materials[payload.material].alpha_mode, touched_paths })
@@ -44,7 +44,7 @@ pub fn reconstruct(payload: &GltfChangeMaterialAlphaModePayload, base: &GltfSnap
 mod tests {
     use super::*;
     #[test]
-    fn inverse_reconstructs_the_prior_value() {
+    async fn inverse_reconstructs_the_prior_value() {
         let mut base = GltfSnapshot::default();
         base.document.materials.push(Default::default());
         let payload = GltfChangeMaterialAlphaModePayload { material: 0, alpha_mode: GltfAlphaMode::Blend };

@@ -15,15 +15,15 @@ pub struct ChangeHStWK {
 impl protocol::MutationKind<Din16798Snapshot, Din16798Mutation> for ChangeHStWK {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "h-st-wk", kind: "change-h-st-wk", record: "ChangedHStWK" };
 
-    fn diff(&self, base: &Din16798Snapshot) -> protocol::MutationOutcome<Din16798Diff> {
+    async fn diff(&self, base: &Din16798Snapshot) -> protocol::MutationOutcome<Din16798Diff> {
         crate::artifacts::din16798::mutations::change_h_st_w_k::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &Din16798Snapshot) -> Vec<Din16798Mutation> {
+    async fn inverse(&self, base: &Din16798Snapshot) -> Vec<Din16798Mutation> {
         crate::artifacts::din16798::mutations::change_h_st_w_k::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         format!("Change storage heat transfer coefficient to {}", self.new_h_st_w_k)
     }
 }

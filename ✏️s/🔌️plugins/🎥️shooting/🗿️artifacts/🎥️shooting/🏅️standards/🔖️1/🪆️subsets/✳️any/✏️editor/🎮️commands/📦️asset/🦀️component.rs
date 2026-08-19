@@ -15,7 +15,7 @@ use serde_json::{json, Value};
 
 /// 🩹️ Builds the single-field `ShootingMutation` for a `patchAsset`/`patchAssets` field write,
 /// addressed at `id`.
-fn asset_mutation_for_field(id: String, field: &str, value: &Value) -> Option<ShootingMutation> {
+async fn asset_mutation_for_field(id: String, field: &str, value: &Value) -> Option<ShootingMutation> {
     match field {
         "name" => value.as_str().map(|v| ShootingMutation::RenameAsset(RenameAsset { id, new_name: v.into() })),
         "url" => value.as_str().map(|v| ShootingMutation::ChangeAssetUrl(ChangeAssetUrl { id, new_url: v.into() })),
@@ -33,7 +33,7 @@ pub mod set_active_asset {
         pub asset_id: Option<String>,
     }
 
-    pub fn handle(payload: &SetActiveAsset, _doc: &ArtifactView<'_, ShootingSnapshot>, cfg: &ConfigView<'_, ShootingConfig>, _ctx: &mut ShootingDispatchCtx) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
+    pub async fn handle(payload: &SetActiveAsset, _doc: &ArtifactView<'_, ShootingSnapshot>, cfg: &ConfigView<'_, ShootingConfig>, _ctx: &mut ShootingDispatchCtx) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
         match payload.asset_id.as_deref().filter(|id| !id.is_empty()) {
             Some(id) => Ok(Emit { artifact_mutations: vec![ShootingMutation::SetActiveAsset(SetActiveAssetMutation { asset_id: Some(id.into()) })], config_mutations: vec![ShootingConfigMutation::SetFitRevision { value: cfg.snapshot.fit_revision + 1 }], ..Default::default() }),
             None => Ok(Emit::default()),
@@ -54,7 +54,7 @@ pub mod patch_assets {
         pub value: String,
     }
 
-    pub fn handle(payload: &PatchAssets, _doc: &ArtifactView<'_, ShootingSnapshot>, _cfg: &ConfigView<'_, ShootingConfig>, _ctx: &mut ShootingDispatchCtx) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
+    pub async fn handle(payload: &PatchAssets, _doc: &ArtifactView<'_, ShootingSnapshot>, _cfg: &ConfigView<'_, ShootingConfig>, _ctx: &mut ShootingDispatchCtx) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
         if payload.asset_ids.is_empty() {
             return Ok(Emit::default());
         }
@@ -79,7 +79,7 @@ pub mod add_asset {
     /// itself here — the `"assets"` domain's selection is framework-owned `InteractionState` now, only
     /// ever mutated by the framework's own injected `interactionSelect` handling, never by an app
     /// command's `Emit::config_mutations` (matches `raster`'s `add-layer` precedent).
-    pub fn handle(payload: &AddAsset, doc: &ArtifactView<'_, ShootingSnapshot>, _cfg: &ConfigView<'_, ShootingConfig>, _ctx: &mut ShootingDispatchCtx) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
+    pub async fn handle(payload: &AddAsset, doc: &ArtifactView<'_, ShootingSnapshot>, _cfg: &ConfigView<'_, ShootingConfig>, _ctx: &mut ShootingDispatchCtx) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
         let snapshot = doc.snapshot;
         let id = next_shooting_id("asset");
         let format = &payload.format;
@@ -102,7 +102,7 @@ pub mod import_asset {
 
     /// 🕹️ Same dropped auto-select as `add_asset::handle` above (see its doc comment) — `fit_revision`
     /// still bumps here, that stays a genuinely app-owned config field.
-    pub fn handle(payload: &ImportAsset, doc: &ArtifactView<'_, ShootingSnapshot>, cfg: &ConfigView<'_, ShootingConfig>, _ctx: &mut ShootingDispatchCtx) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
+    pub async fn handle(payload: &ImportAsset, doc: &ArtifactView<'_, ShootingSnapshot>, cfg: &ConfigView<'_, ShootingConfig>, _ctx: &mut ShootingDispatchCtx) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
         let snapshot = doc.snapshot;
         let id = next_shooting_id("asset");
         let resolved_name = payload.name.as_deref().map(|name| name.trim_end_matches(".glb").to_string()).filter(|name| !name.is_empty()).unwrap_or_else(|| format!("Asset {}", snapshot.assets.len() + 1));
@@ -124,7 +124,7 @@ pub mod import_asset_request {
     #[dsl(keyword = "import-asset-request")]
     pub struct ImportAssetRequest {}
 
-    pub fn handle(_payload: &ImportAssetRequest, _doc: &ArtifactView<'_, ShootingSnapshot>, _cfg: &ConfigView<'_, ShootingConfig>, _ctx: &mut ShootingDispatchCtx) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
+    pub async fn handle(_payload: &ImportAssetRequest, _doc: &ArtifactView<'_, ShootingSnapshot>, _cfg: &ConfigView<'_, ShootingConfig>, _ctx: &mut ShootingDispatchCtx) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
         Ok(Emit::effect(Effect::RequestFileOpen {req: semio_framework_plugin::RequestId(108),  accept: ".glb,model/gltf-binary".into(), read_as: Some("dataUrl".into()), import_action: "importAsset".into(), multiple: false }))
     }
 }
@@ -138,7 +138,7 @@ mod tests {
     use crate::editor::shooting::ShootingCommand;
 
     #[test]
-    fn set_active_asset_emits_both_a_document_and_a_fit_revision_config_operation() {
+    async fn set_active_asset_emits_both_a_document_and_a_fit_revision_config_operation() {
         let mut app = shooting_app();
         let asset_id = app.snapshot().expect("snapshot").assets[0].id.clone();
         let result = dispatch(&mut app, ShootingCommand::SetActiveAsset(set_active_asset::SetActiveAsset { asset_id: Some(asset_id.clone()) }));
@@ -147,7 +147,7 @@ mod tests {
     }
 
     #[test]
-    fn import_asset_names_and_activates_the_new_asset() {
+    async fn import_asset_names_and_activates_the_new_asset() {
         let mut app = shooting_app();
         dispatch(&mut app, ShootingCommand::ImportAsset(import_asset::ImportAsset { payload: "data:model/gltf-binary;base64,AAAA".into(), name: Some("chair.glb".into()) }));
         let snapshot = app.snapshot().expect("snapshot");
@@ -158,7 +158,7 @@ mod tests {
     }
 
     #[test]
-    fn import_asset_request_declares_the_glb_accept_filter() {
+    async fn import_asset_request_declares_the_glb_accept_filter() {
         use semio_framework_plugin::Effect;
         let mut app = shooting_app();
         let result = dispatch(&mut app, ShootingCommand::ImportAssetRequest(import_asset_request::ImportAssetRequest {}));

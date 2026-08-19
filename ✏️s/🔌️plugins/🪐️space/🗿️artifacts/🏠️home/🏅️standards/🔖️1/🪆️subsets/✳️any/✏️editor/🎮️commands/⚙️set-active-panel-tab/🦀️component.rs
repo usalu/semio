@@ -13,7 +13,7 @@ pub struct SetActivePanelTab {
     pub tab_id: String,
 }
 
-pub fn handle(payload: &SetActivePanelTab, _doc: &ArtifactView<'_, SHomeSnapshot>, _cfg: &ConfigView<'_, HomeConfig>) -> Result<Emit<SHomeMutation, HomeConfigMutation>, Fault> {
+pub async fn handle(payload: &SetActivePanelTab, _doc: &ArtifactView<'_, SHomeSnapshot>, _cfg: &ConfigView<'_, HomeConfig>) -> Result<Emit<SHomeMutation, HomeConfigMutation>, Fault> {
     Ok(Emit::config(vec![HomeConfigMutation::SetActivePanelTab { tab_id: payload.tab_id.clone() }]))
 }
 
@@ -24,13 +24,13 @@ mod tests {
     use semio_framework_plugin::HistoryView;
 
     #[test]
-    fn home_command_op_text_round_trips_every_variant() {
+    async fn home_command_op_text_round_trips_every_variant() {
         use crate::editor::home::HomeCommand;
         store::os_store::test_support::assert_op_line_round_trip(&HomeCommand::SetActivePanelTab(SetActivePanelTab { tab_id: "tab-1".into() }));
     }
 
     #[test]
-    fn set_active_panel_tab_emits_config_operation() {
+    async fn set_active_panel_tab_emits_config_operation() {
         let projection = SHomeSnapshot { schema: "s.home".into(), catalog_generation: 0 };
         let history = HistoryView::empty();
         let doc = ArtifactView::new(&projection, &history);

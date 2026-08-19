@@ -12,7 +12,7 @@ pub const BODY_KEY: &str = "block2d.view.board";
 
 //#region 🔖️Definition
 /// 🧱️ Stitched into the viewer manifest by `crate::viewer::block2d::create_block2d_viewer`.
-pub fn definition() -> WindowKindDefinition {
+pub async fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
         id: WINDOW_KIND_ID.into(),
         label: LocalizedLabel::native("Node Kind", "Knotenart"),
@@ -38,7 +38,7 @@ pub fn definition() -> WindowKindDefinition {
 /// `Block2dSnapshot` — not a text-summary stub. Built with the same `UiNode` tree helpers the
 /// editor's own board window imports (`ui_stack_vertical`/`ui_text`); block2d's board surface is
 /// UI-node-based, not a 3D mesh/world scene, so there is no `world2d_*` helper to reuse here.
-pub fn render(document: &Block2dSnapshot) -> UiNode {
+pub async fn render(document: &Block2dSnapshot) -> UiNode {
     let mut lines = vec![ui_text(Label::data(format!(
         "{}: {}",
         "Node kind",
@@ -62,14 +62,14 @@ mod tests {
     use super::*;
 
     #[test]
-    fn definition_declares_the_board_surface_and_body_key() {
+    async fn definition_declares_the_board_surface_and_body_key() {
         let definition = definition();
         assert_eq!(definition.body_key, BODY_KEY);
         assert!(matches!(definition.surface_kind, SurfaceKind::Board2d));
     }
 
     #[test]
-    fn render_lists_real_handle_kind_and_handle_geometry() {
+    async fn render_lists_real_handle_kind_and_handle_geometry() {
         use crate::artifacts::block2d::{Block2dHandleKind, Block2dHandleTemplate};
         let mut document = crate::artifacts::block2d::schema::empty_block2d_snapshot();
         document.handle_kinds.push(Block2dHandleKind { id: "k1".into(), name: "k1".into(), label: "Cable".into(), color: "#ff0000".into(), default_wire_kind: "cable.link".into() });

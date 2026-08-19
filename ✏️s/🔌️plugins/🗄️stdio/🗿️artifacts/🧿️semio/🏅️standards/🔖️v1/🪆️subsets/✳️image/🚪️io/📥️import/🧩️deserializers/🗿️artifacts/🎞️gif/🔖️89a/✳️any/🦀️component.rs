@@ -48,7 +48,7 @@ mod tests {
     use super::*;
     use crate::artifacts::gif::standards::v89a::subsets::any::schema::snapshot::{GifColorTable, GifFrame, GifRgb};
 
-    fn sample_gif() -> GifSnapshot {
+    async fn sample_gif() -> GifSnapshot {
         GifSnapshot {
             width: 2,
             height: 1,
@@ -61,7 +61,7 @@ mod tests {
     }
 
     #[test]
-    fn decodes_indices_through_gct_and_maps_comments() {
+    async fn decodes_indices_through_gct_and_maps_comments() {
         let semio = semio_framework_plugin::resolve_ready(SemioImageFromGif::deserialize(&sample_gif())).expect("deserialize");
         assert_eq!(semio.width, 2);
         assert_eq!(semio.height, 1);

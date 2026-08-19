@@ -37,7 +37,7 @@ mod tests {
     use protocol::Mutation;
     
 
-    fn sample_row(id: &str) -> SpaceArtifactRow {
+    async fn sample_row(id: &str) -> SpaceArtifactRow {
         SpaceArtifactRow {
             id: id.into(),
             name: format!("Artifact {id}"),
@@ -51,14 +51,14 @@ mod tests {
         }
     }
 
-    fn seeded_snapshot() -> SSpaceSnapshot {
+    async fn seeded_snapshot() -> SSpaceSnapshot {
         let mut snapshot = empty_space_index_snapshot("space-1");
         snapshot.artifacts.push(sample_row("artifact-1"));
         snapshot
     }
 
     #[test]
-    fn home_op_text_round_trips_every_variant() {
+    async fn home_op_text_round_trips_every_variant() {
         store::os_store::test_support::assert_op_line_round_trip(&create_artifact(sample_row("artifact-9")));
         store::os_store::test_support::assert_op_line_round_trip(&delete_artifact("artifact-1".into()));
         store::os_store::test_support::assert_op_line_round_trip(&rename_artifact("artifact-1".into(), "New Name".into()));
@@ -66,7 +66,7 @@ mod tests {
     }
 
     #[test]
-    fn dispatch_registers_semantic_descriptors() {
+    async fn dispatch_registers_semantic_descriptors() {
         register_s_space_mutation_descriptors();
         for kind in <SSpaceMutation as protocol::SemanticMutation<SSpaceSnapshot>>::kinds() {
             assert!(protocol::is_approved_verb(kind.verb), "verb '{}' must be in APPROVED_VERBS", kind.verb);
@@ -76,31 +76,31 @@ mod tests {
 
     //#region 🔖️MutationLaws
     #[test]
-    fn create_artifact_inverse_law() {
+    async fn create_artifact_inverse_law() {
         let base = empty_space_index_snapshot("space-1");
         assert_mutation_inverse_law(&base, &create_artifact(sample_row("artifact-1")));
     }
 
     #[test]
-    fn delete_artifact_inverse_law() {
+    async fn delete_artifact_inverse_law() {
         let base = seeded_snapshot();
         assert_mutation_inverse_law(&base, &delete_artifact("artifact-1".into()));
     }
 
     #[test]
-    fn rename_artifact_inverse_law() {
+    async fn rename_artifact_inverse_law() {
         let base = seeded_snapshot();
         assert_mutation_inverse_law(&base, &rename_artifact("artifact-1".into(), "Renamed".into()));
     }
 
     #[test]
-    fn touch_artifact_inverse_law() {
+    async fn touch_artifact_inverse_law() {
         let base = seeded_snapshot();
         assert_mutation_inverse_law(&base, &touch_artifact("artifact-1".into(), 99, "user:3".into()));
     }
 
     #[test]
-    fn create_artifact_diff_absorb_law() {
+    async fn create_artifact_diff_absorb_law() {
         let base = empty_space_index_snapshot("space-1");
         let d1 = create_artifact(sample_row("artifact-1")).diff(&base).diff().clone();
         let mid = protocol::MutationDiff::apply(&d1, &base).expect("valid mutation diff");
@@ -112,7 +112,7 @@ mod tests {
     //#region 🔖️OutcomeLaws
     /// ✅️ §C2/fan-out-recipe laws — one per verb family this facet implements.
     #[test]
-    fn create_artifact_duplicate_id_is_fatal() {
+    async fn create_artifact_duplicate_id_is_fatal() {
         let base = seeded_snapshot();
         let outcome = create_artifact(sample_row("artifact-1")).diff(&base);
         assert_fatal_never_applies(&outcome);
@@ -120,19 +120,19 @@ mod tests {
     }
 
     #[test]
-    fn delete_artifact_missing_target_is_error() {
+    async fn delete_artifact_missing_target_is_error() {
         let base = seeded_snapshot();
         assert_missing_target_is_error(&base, &delete_artifact("ghost".into()));
     }
 
     #[test]
-    fn rename_artifact_missing_target_is_error() {
+    async fn rename_artifact_missing_target_is_error() {
         let base = seeded_snapshot();
         assert_missing_target_is_error(&base, &rename_artifact("ghost".into(), "x".into()));
     }
 
     #[test]
-    fn rename_artifact_same_name_is_no_op() {
+    async fn rename_artifact_same_name_is_no_op() {
         let base = seeded_snapshot();
         let outcome = rename_artifact("artifact-1".into(), "Artifact artifact-1".into()).diff(&base);
         assert_eq!(outcome.worst_level(), Some(protocol::Severity::Warning));
@@ -140,7 +140,7 @@ mod tests {
     }
 
     #[test]
-    fn rename_artifact_name_collision_is_fatal() {
+    async fn rename_artifact_name_collision_is_fatal() {
         let mut base = seeded_snapshot();
         base.artifacts.push(sample_row("artifact-2"));
         base.artifacts[1].name = "Taken".into();
@@ -150,7 +150,7 @@ mod tests {
     }
 
     #[test]
-    fn touch_artifact_missing_target_is_error() {
+    async fn touch_artifact_missing_target_is_error() {
         let base = seeded_snapshot();
         assert_missing_target_is_error(&base, &touch_artifact("ghost".into(), 1, "user:1".into()));
     }

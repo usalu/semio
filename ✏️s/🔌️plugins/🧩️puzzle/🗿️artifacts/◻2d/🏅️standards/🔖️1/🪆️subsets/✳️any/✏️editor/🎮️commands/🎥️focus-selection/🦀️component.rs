@@ -4,7 +4,7 @@ use crate::editor::puzzle2d::{fixture_nodes, set_runtime_camera, Puzzle2dActionC
 use serde_json::json;
 
 /// 🎯️ Centres the camera on the selection's bounding box (session state only — never the fixture).
-pub fn focus_selection(ctx: &mut Puzzle2dActionCtx<'_>) {
+pub async fn focus_selection(ctx: &mut Puzzle2dActionCtx<'_>) {
     let selected_ids = ctx.selected_ids();
     if selected_ids.is_empty() {
         return;

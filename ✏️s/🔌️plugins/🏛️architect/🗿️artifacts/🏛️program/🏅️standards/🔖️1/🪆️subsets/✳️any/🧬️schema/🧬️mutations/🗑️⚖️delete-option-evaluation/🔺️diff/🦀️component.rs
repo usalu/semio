@@ -7,7 +7,7 @@ use crate::artifacts::program::ProgramDiff;
 use crate::artifacts::program::ProgramSnapshot;
 
 /// 🗑️ Error `mutation.target-missing` if the id is absent (empty diff), else `removed = [id]`.
-pub fn diff(payload: &DeleteOptionEvaluation, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
+pub async fn diff(payload: &DeleteOptionEvaluation, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
     if !base.options.iter().any(|row| row.header.id == payload.id) {
         return protocol::MutationOutcome::error("mutation.target-missing", "No option evaluation exists with this id.", [payload.id.0.clone()]);
     }

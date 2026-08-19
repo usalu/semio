@@ -19,7 +19,7 @@ const DRAW_ARTBOARD_FILL: [f64; 4] = [0.969, 0.953, 0.890, 1.0];
 const DRAW_ARTBOARD_STROKE: [f64; 4] = [0.198, 0.223, 0.205, 0.55];
 const DRAW_ARTBOARD_LABEL: [f64; 4] = [0.198, 0.223, 0.205, 0.92];
 
-fn overlay_record(id: &str, transform: [f64; 6], segments: &[PathSegment], fill: Option<[f64; 4]>, stroke_color: [f64; 4], stroke_width: f64) -> Value {
+async fn overlay_record(id: &str, transform: [f64; 6], segments: &[PathSegment], fill: Option<[f64; 4]>, stroke_color: [f64; 4], stroke_width: f64) -> Value {
     json!({
         "id": id,
         "role": "overlay",
@@ -35,7 +35,7 @@ fn overlay_record(id: &str, transform: [f64; 6], segments: &[PathSegment], fill:
 }
 
 /// 📐️ Formats one artboard edge length for the dimension label (integers stay bare).
-fn format_artboard_dimension(value: f64) -> String {
+async fn format_artboard_dimension(value: f64) -> String {
     if (value - value.round()).abs() < 1e-6 {
         format!("{}", value.round() as i64)
     } else {
@@ -44,7 +44,7 @@ fn format_artboard_dimension(value: f64) -> String {
 }
 
 /// 🖼️ Artboard paper + `W × H` dimension label — drawn under document content.
-fn artboard_scene_records(document: &DrawSnapshot) -> Vec<Value> {
+async fn artboard_scene_records(document: &DrawSnapshot) -> Vec<Value> {
     let artboard = resolve_draw_artboard(document).unwrap_or(DrawArtboard { width: 1024.0, height: 1024.0 });
     let width = artboard.width.max(1.0);
     let height = artboard.height.max(1.0);
@@ -73,7 +73,7 @@ fn artboard_scene_records(document: &DrawSnapshot) -> Vec<Value> {
 /// and `ArtifactApp::render` is never given an `InteractionView`) — the selection/hover overlay
 /// records this function used to bake into `layersJson` are gone; the client renders that highlight
 /// itself from the framework's own interaction state now.
-pub fn render(document: &DrawSnapshot, config: &DrawConfig, gesture: &draw_gesture::Snapshot, active_utility: &str) -> UiNode {
+pub async fn render(document: &DrawSnapshot, config: &DrawConfig, gesture: &draw_gesture::Snapshot, active_utility: &str) -> UiNode {
     let scene_nodes = flatten_draw_document_to_scene_nodes(document);
     let artboard_records = artboard_scene_records(document);
     let mut records: Vec<Value> = Vec::with_capacity(scene_nodes.len() + artboard_records.len() + 4);

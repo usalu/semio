@@ -11,13 +11,13 @@ pub const BODY_CATALOGUE: &str = "norm.din4108.play.catalogue";
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
-pub fn definition() -> PanelTabDefinition {
+pub async fn definition() -> PanelTabDefinition {
     crate::app_surface::panel_definition(FRAMEWORK_PANEL_TAB_CATALOGUE_ID, LocalizedLabel::native(FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, "Katalog"), PanelGroup::Workbench, BODY_CATALOGUE)
 }
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render() -> UiNode {
+pub async fn render() -> UiNode {
     crate::app_surface::render_catalogue(crate::editor::din4108::LABEL)
 }
 //#endregion 🔖️Render
@@ -29,13 +29,13 @@ mod tests {
     use crate::editor::din4108::testkit;
 
     #[test]
-    fn definition_binds_the_framework_catalogue_tab_to_this_body_key() {
+    async fn definition_binds_the_framework_catalogue_tab_to_this_body_key() {
         assert_eq!(definition().body_key.as_deref(), Some(BODY_CATALOGUE));
         assert_eq!(definition().id(), FRAMEWORK_PANEL_TAB_CATALOGUE_ID);
     }
 
     #[test]
-    fn renders_this_standards_catalogue_headline() {
+    async fn renders_this_standards_catalogue_headline() {
         let mut app = testkit::new_app();
         assert!(testkit::render(&mut app, BODY_CATALOGUE).contains("catalogue"));
     }

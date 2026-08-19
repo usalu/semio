@@ -28,24 +28,24 @@ pub struct PptxArtifact {
 
 //#region Conversions
 impl Default for PptxArtifact {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self::from_snapshot(PptxSnapshot::default())
     }
 }
 
 impl PptxArtifact {
     /// 📸️ Persisted subset.
-    pub fn to_snapshot(&self) -> PptxSnapshot {
+    pub async fn to_snapshot(&self) -> PptxSnapshot {
         PptxSnapshot { schema: self.schema.clone(), opc: self.opc.clone(), xml_parts: self.xml_parts.clone(), presentation: self.presentation.clone() }
     }
 
     /// 🧬️ Builds a full artifact from a snapshot.
-    pub fn from_snapshot(snapshot: PptxSnapshot) -> Self {
+    pub async fn from_snapshot(snapshot: PptxSnapshot) -> Self {
         Self { schema: snapshot.schema, opc: snapshot.opc, xml_parts: snapshot.xml_parts, presentation: snapshot.presentation }
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
-    pub fn set_snapshot(&mut self, snapshot: PptxSnapshot) {
+    pub async fn set_snapshot(&mut self, snapshot: PptxSnapshot) {
         self.schema = snapshot.schema;
         self.opc = snapshot.opc;
         self.xml_parts = snapshot.xml_parts;
@@ -56,7 +56,7 @@ impl PptxArtifact {
 
 //#region Descriptor
 /// 🧬️ Descriptor for `s.stdio.pptx`.
-pub fn pptx_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
+pub async fn pptx_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
     schema::ArtifactSchemaDescriptor {
         id: "s.stdio.pptx",
         artifact: schema::FacetLeaves {
@@ -108,27 +108,27 @@ pub mod derived_construction {
         type Snapshot = PptxSnapshot;
         type Mutation = PptxMutation;
         type Diff = PptxDiff;
-        fn empty() -> Self {
+        async fn empty() -> Self {
             Self { snapshot: PptxSnapshot::default(), diagnostics: Vec::new() }
         }
-        fn from_snapshot(snapshot: Self::Snapshot) -> Self {
+        async fn from_snapshot(snapshot: Self::Snapshot) -> Self {
             Self { snapshot, diagnostics: Vec::new() }
         }
-        fn from_text(text: &str) -> Result<Self, store::TextError> {
+        async fn from_text(text: &str) -> Result<Self, store::TextError> {
             Ok(Self::from_snapshot(<PptxSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
-        fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
+        async fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
             Ok(Self::from_snapshot(<PptxSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
         }
-        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
+        async fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let diff = crate::artifacts::pptx::schema::mutations::apply_pptx_mutation(&mut self.snapshot, &mutation);
             (self, diff)
         }
-        fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
+        async fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
             self.snapshot = <PptxDiff as protocol::MutationDiff<PptxSnapshot>>::apply(&diff, &self.snapshot)?;
             Ok(self)
         }
-        fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
+        async fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
             if self.diagnostics.is_empty() {
                 Ok(self.snapshot)
             } else {
@@ -143,7 +143,7 @@ pub mod derived_construction {
     /// basic formatting (bold/italic), the same shape as `docx::DocxBuilder`'s constructors.
     impl PptxBuilderConstruction {
         /// ➕️ Appends a new (initially empty) slide and makes it the active slide for `add_paragraph`.
-        pub fn add_slide(mut self) -> Self {
+        pub async fn add_slide(mut self) -> Self {
             self.snapshot.presentation.slides.push(PptxSlide::default());
             self.rebuild()
         }
@@ -151,7 +151,7 @@ pub mod derived_construction {
         /// ➕️ Appends a paragraph to the active slide's active `TextBox` shape (the most recently
         /// added one), creating a fresh `TextBox` shape first if the slide has none yet or its last
         /// shape isn't one.
-        pub fn add_paragraph(mut self, paragraph: PptxParagraph) -> Self {
+        pub async fn add_paragraph(mut self, paragraph: PptxParagraph) -> Self {
             if let Some(slide) = self.snapshot.presentation.slides.last_mut() {
                 match slide.shapes.last_mut() {
                     Some(PptxShape::TextBox { text_frame, .. }) => text_frame.push(paragraph),
@@ -162,16 +162,16 @@ pub mod derived_construction {
         }
 
         /// ➕️ Appends a single-run plain-text paragraph to the active slide.
-        pub fn add_text_paragraph(self, text: impl Into<String>) -> Self {
+        pub async fn add_text_paragraph(self, text: impl Into<String>) -> Self {
             self.add_paragraph(PptxParagraph::text(text.into()))
         }
 
         /// ➕️ Appends a paragraph made of the given runs (basic bold/italic formatting).
-        pub fn add_runs(self, runs: Vec<PptxRun>) -> Self {
+        pub async fn add_runs(self, runs: Vec<PptxRun>) -> Self {
             self.add_paragraph(PptxParagraph { runs })
         }
 
-        fn rebuild(mut self) -> Self {
+        async fn rebuild(mut self) -> Self {
             self.snapshot = crate::artifacts::pptx::standards::v_ecma_376::subsets::any::io::export::serializers::build_minimal_pptx(self.snapshot.presentation);
             self
         }
@@ -202,7 +202,7 @@ pub mod derived_analysis {
         type Parts = PptxParts;
         const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.pptx", standard: StandardId("ecma-376"), subset: SubsetId("*") };
 
-        fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
+        async fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
             // 🕵️ Real sniff: OPC-shaped bytes whose root officeDocument relationship resolves under
             // `ppt/` — disambiguates from docx/xlsx, which share the same zip magic and OPC shape.
             match source {
@@ -211,7 +211,7 @@ pub mod derived_analysis {
             }
         }
 
-        fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
+        async fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
             let mut parts = PptxParts::default();
             let mut diagnostics = Vec::new();
             let mut confidence = IoConfidence::High;
@@ -249,7 +249,7 @@ pub use derived_analysis::*;
 //#endregion 🧐️DerivedAnalysis
 
 //#region 🔖️DocumentHelpers
-pub fn empty_pptx_snapshot() -> PptxSnapshot {
+pub async fn empty_pptx_snapshot() -> PptxSnapshot {
     PptxSnapshot::default()
 }
 
@@ -261,7 +261,7 @@ pub fn empty_pptx_snapshot() -> PptxSnapshot {
 /// `🎒️example.pack.semio` (both are literally this snapshot's `print_dsl`/`encode_pack` output,
 /// asserted equal by `fixture_honesty_law` below) — same shape docx's own `demo_docx_snapshot()`
 /// establishes.
-pub fn demo_pptx_snapshot() -> PptxSnapshot {
+pub async fn demo_pptx_snapshot() -> PptxSnapshot {
     use crate::artifacts::pptx::schema::snapshot::{PptxParagraph, PptxRun, PptxShape, PptxSlide, PptxTransform};
     use crate::artifacts::pptx::standards::v_ecma_376::subsets::any::io::export::serializers::{build_minimal_pptx, encode_pptx};
     use crate::artifacts::pptx::standards::v_ecma_376::subsets::any::io::import::deserializers::decode_pptx;
@@ -343,7 +343,7 @@ mod tests {
     };
     use crate::artifacts::zip::opc::{self, OpcPackage, RELS_CONTENT_TYPE, REL_TYPE_OFFICE_DOCUMENT};
 
-    fn sample_presentation() -> PptxPresentation {
+    async fn sample_presentation() -> PptxPresentation {
         PptxPresentation {
             slides: vec![
                 PptxSlide {
@@ -365,7 +365,7 @@ mod tests {
     }
 
     #[test]
-    fn builder_produces_minimal_valid_package_that_decodes_back() {
+    async fn builder_produces_minimal_valid_package_that_decodes_back() {
         let snap = build_minimal_pptx(sample_presentation());
         let bytes = encode_pptx(&snap).expect("encode minimal package");
         assert!(opc::sniff_opc_bytes(&bytes));
@@ -379,7 +379,7 @@ mod tests {
     }
 
     #[test]
-    fn decode_resolves_real_hand_built_package_with_shape_boundaries_and_position() {
+    async fn decode_resolves_real_hand_built_package_with_shape_boundaries_and_position() {
         // Hand-built OOXML: a slide with TWO real shapes -- a positioned placeholder title and a
         // positioned picture -- exercising real shape-BOUNDARY recovery (not flattened text) and
         // real `a:xfrm` position decoding.
@@ -433,7 +433,7 @@ mod tests {
     }
 
     #[test]
-    fn decode_preserves_unmodeled_shape_kinds_as_logical_other() {
+    async fn decode_preserves_unmodeled_shape_kinds_as_logical_other() {
         // A `p:graphicFrame` (chart/table/SmartArt) direct child -- not typed by this layer --
         // must survive decode->encode->decode as a logical `PptxShape::Other` XML node.
         let mut opc = OpcPackage::empty();
@@ -478,7 +478,7 @@ mod tests {
     }
 
     #[test]
-    fn decode_resolves_strict_office_document_relationship_too() {
+    async fn decode_resolves_strict_office_document_relationship_too() {
         // 🏅️ A genuine ISO/IEC 29500-1 Strict package's root relationship carries
         // `REL_TYPE_OFFICE_DOCUMENT_STRICT`, never the Transitional type this engine's own writer
         // emits -- `decode_pptx`/`sniff_pptx_bytes` must still recognize it (ticket
@@ -505,7 +505,7 @@ mod tests {
     }
 
     #[test]
-    fn decode_rejects_missing_presentation_relationship() {
+    async fn decode_rejects_missing_presentation_relationship() {
         let mut opc = OpcPackage::empty();
         opc.content_types.set_default("rels", RELS_CONTENT_TYPE);
         let bytes = opc::encode_opc(&opc).expect("encode");
@@ -514,7 +514,7 @@ mod tests {
     }
 
     #[test]
-    fn unmodeled_slide_master_survives_decode_encode_logically() {
+    async fn unmodeled_slide_master_survives_decode_encode_logically() {
         let snap = build_minimal_pptx(sample_presentation());
         // Replace the synthesized slide master with a distinguishable "real" one before encoding.
         let mut opc = snap.opc.clone();
@@ -530,7 +530,7 @@ mod tests {
     }
 
     #[test]
-    fn analyzer_builder_round_trip() {
+    async fn analyzer_builder_round_trip() {
         let original = build_minimal_pptx(sample_presentation());
         let bytes = encode_pptx(&original).expect("encode");
         let analyzed = decode_pptx(&bytes).expect("decode");
@@ -541,7 +541,7 @@ mod tests {
     }
 
     #[test]
-    fn shrinking_slide_count_drops_stale_slide_parts_and_relationships() {
+    async fn shrinking_slide_count_drops_stale_slide_parts_and_relationships() {
         let mut wide = sample_presentation();
         let snap_wide = build_minimal_pptx(wide.clone());
         assert!(!snap_wide.opc.relationships_for("ppt/slides/slide2.xml").is_empty());
@@ -554,7 +554,7 @@ mod tests {
     }
 
     #[test]
-    fn repeated_materialization_is_deterministic() {
+    async fn repeated_materialization_is_deterministic() {
         let snap = build_minimal_pptx(sample_presentation());
         let once = encode_pptx(&snap).expect("first materialization");
         let decoded = decode_pptx(&once).expect("decode first materialization");
@@ -563,11 +563,11 @@ mod tests {
     }
 
     //#region 🔖️ExactSourceRoundtrip
-    fn exact_pptx_bytes() -> Vec<u8> {
+    async fn exact_pptx_bytes() -> Vec<u8> {
         std::fs::read(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../temp/domai-specific-programmaning-language-for-architects.pptx")).expect("read exact pptx fixture")
     }
 
-    fn local_member_names(bytes: &[u8]) -> Vec<String> {
+    async fn local_member_names(bytes: &[u8]) -> Vec<String> {
         let mut names = Vec::new();
         let mut offset = 0usize;
         while bytes.get(offset..offset + 4) == Some(b"PK\x03\x04") {
@@ -581,7 +581,7 @@ mod tests {
         names
     }
 
-    fn local_compressed_members(bytes: &[u8]) -> Vec<(String, u16, u16, u16, u16, u16, u32, u32, Vec<u8>, Vec<u8>)> {
+    async fn local_compressed_members(bytes: &[u8]) -> Vec<(String, u16, u16, u16, u16, u16, u32, u32, Vec<u8>, Vec<u8>)> {
         let mut members = Vec::new();
         let mut offset = 0usize;
         while bytes.get(offset..offset + 4) == Some(b"PK\x03\x04") {
@@ -615,7 +615,7 @@ mod tests {
     }
 
     #[track_caller]
-    fn assert_exact_export(snapshot: &PptxSnapshot, expected: &[u8]) {
+    async fn assert_exact_export(snapshot: &PptxSnapshot, expected: &[u8]) {
         let actual = encode_pptx(snapshot).expect("export exact fixture");
         if actual != expected {
             let first_diff = actual.iter().zip(expected).position(|(left, right)| left != right).unwrap_or(actual.len().min(expected.len()));
@@ -669,7 +669,7 @@ mod tests {
         }
     }
 
-    fn first_positioned_shape(snapshot: &PptxSnapshot) -> (usize, usize, PptxTransform) {
+    async fn first_positioned_shape(snapshot: &PptxSnapshot) -> (usize, usize, PptxTransform) {
         for (slide_index, slide) in snapshot.presentation.slides.iter().enumerate() {
             for (shape_index, shape) in slide.shapes.iter().enumerate() {
                 let position = match shape {
@@ -683,7 +683,7 @@ mod tests {
     }
 
     #[test]
-    fn fixture_survives_logical_io_persistence_diff_and_mutation_pipelines() {
+    async fn fixture_survives_logical_io_persistence_diff_and_mutation_pipelines() {
         use crate::artifacts::pptx::{PptxDiff, PptxMutation};
         use protocol::{DiffAlgebra, DiffCodec, Mutation, MutationDiff, OpBinary, OpText};
         use semio_framework_plugin::{AnalyzeSource, ArtifactAnalysis, ArtifactComposition, ComposeSource};
@@ -816,7 +816,7 @@ mod tests {
         /// `recognize`/`walk_protocol` laws below (a parse failure here fails fast with a clearer
         /// message).
         #[test]
-        fn committed_facet_files_parse() {
+        async fn committed_facet_files_parse() {
             for (label, text) in [("snapshot grammar", snapshot::text::COMPONENT_GRAMMAR_SEMIO), ("mutations grammar", mutations::text::COMPONENT_GRAMMAR_SEMIO), ("diff grammar", diff::text::COMPONENT_GRAMMAR_SEMIO)] {
                 let grammar = dsl::parse_grammar(text).unwrap_or_else(|e| panic!("{label}: parse_grammar failed: {e:?}"));
                 assert_eq!(grammar.dialect, dsl::SemioDialect::Grammar, "{label}: expected grammar dialect");
@@ -837,7 +837,7 @@ mod tests {
         /// modeled part's own text against the grammar -- direct proof the grammar matches this
         /// artifact's own real per-part XML bytes, not an invented approximation.
         #[test]
-        fn grammar_conformance_law() {
+        async fn grammar_conformance_law() {
             let grammar = dsl::parse_grammar(snapshot::text::COMPONENT_GRAMMAR_SEMIO).expect("parse snapshot grammar");
             let recognizer = dsl::Recognizer::compile(&grammar);
 
@@ -862,7 +862,7 @@ mod tests {
         /// ✅️ `ops_grammar_conformance_law`: the mutations grammar recognizes real `print_op`
         /// output for every `PptxMutation` variant (`mutations::demo_mutation_cases()`).
         #[test]
-        fn ops_grammar_conformance_law() {
+        async fn ops_grammar_conformance_law() {
             let grammar = dsl::parse_grammar(mutations::text::COMPONENT_GRAMMAR_SEMIO).expect("parse mutations grammar");
             let recognizer = dsl::Recognizer::compile(&grammar);
             for mutation in mutations::demo_mutation_cases() {
@@ -874,7 +874,7 @@ mod tests {
         /// ✅️ `diff_grammar_conformance_law`: the diff grammar recognizes real `print_diff` output
         /// for every representative `PptxDiff` (`diff::demo_diff_cases()`).
         #[test]
-        fn diff_grammar_conformance_law() {
+        async fn diff_grammar_conformance_law() {
             let grammar = dsl::parse_grammar(diff::text::COMPONENT_GRAMMAR_SEMIO).expect("parse diff grammar");
             let recognizer = dsl::Recognizer::compile(&grammar);
             for d in diff::demo_diff_cases() {
@@ -893,7 +893,7 @@ mod tests {
         /// instead, same as zip's/docx's own `protocol_walk_law` does; the op/diff protocols have
         /// no such exception and must consume every byte.
         #[test]
-        fn protocol_walk_law() {
+        async fn protocol_walk_law() {
             let pack_spec = dsl::parse_protocol(snapshot::binary::COMPONENT_PROTOCOL_SEMIO).expect("parse snapshot protocol");
             let demo = demo_pptx_snapshot();
             let packed = store::ArtifactPack::encode_pack(&demo);
@@ -922,7 +922,7 @@ mod tests {
         /// fixtures can never silently drift back to a fake `"68656c6c6f"`-style placeholder again
         /// (see this ticket's own recon note on the pre-FG-wave state of these two files).
         #[test]
-        fn fixture_honesty_law() {
+        async fn fixture_honesty_law() {
             const FIXTURE_DSL: &str = include_str!("../📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio");
             const FIXTURE_PACK: &[u8] = include_bytes!("../📚️examples/🎬️demo/🖼️assets/🎒️example.pack.semio");
 

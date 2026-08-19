@@ -39,15 +39,15 @@ impl ArtifactSerializer for SemioValueToCsv {
     }
 }
 
-pub fn register() {}
+pub async fn register() {}
 //#endregion 🔖️Serializer
 
 //#region 🔖️Convert
-fn err(msg: impl Into<String>) -> store::PackError {
+async fn err(msg: impl Into<String>) -> store::PackError {
     store::PackError::Schema(msg.into())
 }
 
-fn resolve(v: &SemioValue, nodes: &HashMap<&ValueId, &SemioValue>, visiting: &mut HashSet<ValueId>) -> Result<SemioValue, store::PackError> {
+async fn resolve(v: &SemioValue, nodes: &HashMap<&ValueId, &SemioValue>, visiting: &mut HashSet<ValueId>) -> Result<SemioValue, store::PackError> {
     match v {
         SemioValue::Ref { id } => {
             if !visiting.insert(id.clone()) {
@@ -62,7 +62,7 @@ fn resolve(v: &SemioValue, nodes: &HashMap<&ValueId, &SemioValue>, visiting: &mu
     }
 }
 
-fn scalar_to_field(v: &SemioValue) -> Result<CsvField, store::PackError> {
+async fn scalar_to_field(v: &SemioValue) -> Result<CsvField, store::PackError> {
     match v {
         SemioValue::Str { value } => Ok(CsvField { value: value.clone(), quoted: false }),
         SemioValue::Int { lexeme } | SemioValue::Float { lexeme } => Ok(CsvField { value: lexeme.clone(), quoted: false }),
@@ -72,7 +72,7 @@ fn scalar_to_field(v: &SemioValue) -> Result<CsvField, store::PackError> {
     }
 }
 
-pub fn csv_from_semio(root: &SemioValue, nodes: &HashMap<&ValueId, &SemioValue>, visiting: &mut HashSet<ValueId>) -> Result<CsvSnapshot, store::PackError> {
+pub async fn csv_from_semio(root: &SemioValue, nodes: &HashMap<&ValueId, &SemioValue>, visiting: &mut HashSet<ValueId>) -> Result<CsvSnapshot, store::PackError> {
     let resolved_root = resolve(root, nodes, visiting)?;
     let items = match resolved_root {
         SemioValue::List { items } => items,
@@ -127,11 +127,11 @@ mod tests {
     use crate::artifacts::csv::schema::snapshot::CsvField as CsvFieldT;
     use crate::artifacts::semio::standards::v1::subsets::value::io::import::deserializers::artifacts::csv::v_rfc4180::any::semio_value_from_csv;
 
-    fn field(s: &str) -> CsvFieldT {
+    async fn field(s: &str) -> CsvFieldT {
         CsvFieldT { value: s.into(), quoted: false }
     }
 
-    fn round_trip(snapshot: &CsvSnapshot) -> CsvSnapshot {
+    async fn round_trip(snapshot: &CsvSnapshot) -> CsvSnapshot {
         let value = semio_value_from_csv(snapshot);
         let nodes = HashMap::new();
         let mut visiting = HashSet::new();
@@ -141,7 +141,7 @@ mod tests {
     /// 🧪️ Required proof: csv -> value -> csv -> value round trip preserves everything the
     /// value subset can represent (the `quoted` flag excepted — documented lossy field).
     #[test]
-    fn csv_to_value_to_csv_to_value_round_trips() {
+    async fn csv_to_value_to_csv_to_value_round_trips() {
         let snapshot = CsvSnapshot {
             schema: STDIO_CSV_DOCUMENT_SCHEMA.into(),
             has_header: true,
@@ -156,7 +156,7 @@ mod tests {
     }
 
     #[test]
-    fn headerless_round_trips() {
+    async fn headerless_round_trips() {
         let snapshot = CsvSnapshot { schema: STDIO_CSV_DOCUMENT_SCHEMA.into(), has_header: false, records: vec![CsvRecord { fields: vec![field("x"), field("y")] }, CsvRecord { fields: vec![field("1"), field("2")] }] };
         let csv_x = round_trip(&snapshot);
         assert!(!csv_x.has_header);
@@ -164,7 +164,7 @@ mod tests {
     }
 
     #[test]
-    fn mismatched_row_shape_is_a_hard_error() {
+    async fn mismatched_row_shape_is_a_hard_error() {
         let value = SemioValue::List {
             items: vec![
                 SemioValue::Map { entries: vec![crate::artifacts::semio::standards::v1::subsets::value::schema::snapshot::SemioValueEntry { key: "a".into(), value: SemioValue::Str { value: "1".into() } }] },
@@ -177,7 +177,7 @@ mod tests {
     }
 
     #[test]
-    fn nested_container_cell_is_a_hard_error() {
+    async fn nested_container_cell_is_a_hard_error() {
         let value = SemioValue::List { items: vec![SemioValue::List { items: vec![SemioValue::List { items: vec![] }] }] };
         let nodes = HashMap::new();
         let mut visiting = HashSet::new();

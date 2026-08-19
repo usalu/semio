@@ -67,7 +67,7 @@ pub struct PdfDecimal {
 }
 
 impl PdfDecimal {
-    pub fn parse(text: &str) -> Result<Self, String> {
+    pub async fn parse(text: &str) -> Result<Self, String> {
         let (negative, unsigned) = match text.as_bytes().first() {
             Some(b'-') => (true, &text[1..]),
             Some(b'+') => (false, &text[1..]),
@@ -81,7 +81,7 @@ impl PdfDecimal {
         Ok(Self { negative, coefficient: format!("{integer}{fraction}"), scale: fraction.len() as u32 })
     }
 
-    pub fn from_f64(value: f64) -> Self {
+    pub async fn from_f64(value: f64) -> Self {
         let text = format!("{value}");
         let (mantissa, exponent) = match text.find(['e', 'E']) {
             Some(index) => (&text[..index], text[index + 1..].parse::<i32>().expect("finite f64 exponent")),
@@ -99,19 +99,19 @@ impl PdfDecimal {
         decimal
     }
 
-    pub fn to_f64(&self) -> Option<f64> {
+    pub async fn to_f64(&self) -> Option<f64> {
         self.to_string().parse().ok()
     }
 }
 
 impl From<f64> for PdfDecimal {
-    fn from(value: f64) -> Self {
+    async fn from(value: f64) -> Self {
         Self::from_f64(value)
     }
 }
 
 impl fmt::Display for PdfDecimal {
-    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+    async fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
         if self.negative {
             formatter.write_str("-")?;
         }
@@ -148,48 +148,48 @@ pub enum PdfObject {
 }
 
 impl Default for PdfObject {
-    fn default() -> Self {
+    async fn default() -> Self {
         PdfObject::Null
     }
 }
 
 impl PdfObject {
-    pub fn as_dict(&self) -> Option<&[PdfDictEntry]> {
+    pub async fn as_dict(&self) -> Option<&[PdfDictEntry]> {
         match self {
             PdfObject::Dict(d) => Some(d),
             PdfObject::Stream { dict, .. } => Some(dict),
             _ => None,
         }
     }
-    pub fn dict_get<'a>(&'a self, key: &str) -> Option<&'a PdfObject> {
+    pub async fn dict_get<'a>(&'a self, key: &str) -> Option<&'a PdfObject> {
         self.as_dict()?.iter().find(|e| e.key == key).map(|e| &e.value)
     }
-    pub fn as_name(&self) -> Option<&str> {
+    pub async fn as_name(&self) -> Option<&str> {
         match self {
             PdfObject::Name(n) => Some(n.as_str()),
             _ => None,
         }
     }
-    pub fn as_ref(&self) -> Option<ObjRef> {
+    pub async fn as_ref(&self) -> Option<ObjRef> {
         match self {
             PdfObject::Ref(r) => Some(*r),
             _ => None,
         }
     }
-    pub fn as_array(&self) -> Option<&[PdfObject]> {
+    pub async fn as_array(&self) -> Option<&[PdfObject]> {
         match self {
             PdfObject::Array(a) => Some(a),
             _ => None,
         }
     }
-    pub fn as_f64(&self) -> Option<f64> {
+    pub async fn as_f64(&self) -> Option<f64> {
         match self {
             PdfObject::Int(i) => Some(*i as f64),
             PdfObject::Real(r) => r.to_f64(),
             _ => None,
         }
     }
-    pub fn as_i64(&self) -> Option<i64> {
+    pub async fn as_i64(&self) -> Option<i64> {
         match self {
             PdfObject::Int(i) => Some(*i),
             PdfObject::Real(r) => r.to_f64().map(|value| value as i64),
@@ -225,13 +225,13 @@ pub struct PdfPage {
 }
 
 impl Default for PdfPage {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self { media_box: [0.0, 0.0, 612.0, 792.0], crop_box: None, rotate: 0, text: String::new() }
     }
 }
 
 impl PdfPage {
-    pub fn new(width: f64, height: f64) -> Self {
+    pub async fn new(width: f64, height: f64) -> Self {
         Self { media_box: [0.0, 0.0, width, height], crop_box: None, rotate: 0, text: String::new() }
     }
 }
@@ -285,17 +285,17 @@ pub struct PdfSnapshot {
 }
 
 impl Default for PdfSnapshot {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self { schema: STDIO_PDF17_DOCUMENT_SCHEMA.into(), declared_version: "1.7".into(), pages: Vec::new(), info: PdfInfo::default(), objects: Vec::new(), trailer: Vec::new() }
     }
 }
 
 impl store::ArtifactDsl for PdfSnapshot {
     const EXTENSION: &'static str = "pdf";
-    fn envelope_id() -> &'static str {
+    async fn envelope_id() -> &'static str {
         STDIO_PDF17_DOCUMENT_SCHEMA
     }
-    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+    async fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
         let body = match store::semio_format::split_text_preamble(text) {
             Ok((_, rest)) => rest,
             Err(_) => text,
@@ -310,7 +310,7 @@ impl store::ArtifactDsl for PdfSnapshot {
         }
         crate::artifacts::pdf::standards::v1_7::subsets::any::io::decode_pdf(&bytes).map_err(|e| store::TextError::new(format!("{e:?}"), dsl::TextSpan::at(1, 1)))
     }
-    fn print_dsl(&self) -> String {
+    async fn print_dsl(&self) -> String {
         let bytes = crate::artifacts::pdf::standards::v1_7::subsets::any::io::encode_pdf(self).expect("PDF snapshot must encode before DSL transport");
         let body: String = bytes.iter().map(|b| format!("{b:02x}")).collect();
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
@@ -319,13 +319,13 @@ impl store::ArtifactDsl for PdfSnapshot {
 }
 
 impl store::ArtifactPack for PdfSnapshot {
-    fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
+    async fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
         let raw = crate::artifacts::pdf::standards::v1_7::subsets::any::io::encode_pdf(self).map_err(|e| store::PackError::Schema(format!("{e:?}")))?;
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &raw))
     }
-    fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
+    async fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
         if envelope.envelope_id() != <Self as store::ArtifactDsl>::envelope_id() {
             return Err(store::PackError::Schema("pack envelope mismatch".into()));
@@ -339,7 +339,7 @@ impl store::ArtifactPack for PdfSnapshot {
 //#region 🔖️SnapshotFixtures
 /// 🦑 Dissolved out of the former `⚙️engine` (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-
 /// STATE-MACHINES) — pure snapshot constructors, no codec/IO concern.
-pub fn empty_pdf_snapshot() -> PdfSnapshot {
+pub async fn empty_pdf_snapshot() -> PdfSnapshot {
     PdfSnapshot::default()
 }
 
@@ -359,7 +359,7 @@ pub fn empty_pdf_snapshot() -> PdfSnapshot {
 /// hardcoded `width`/`height`. `pages`/`info` DO survive this round trip losslessly (the
 /// bachelor-thesis example's own `decode_encode_decode_is_structurally_equal_at_page_level` test
 /// already proves this at scale) -- only `objects`/`trailer` need the fixed-point construction.
-pub fn demo_pdf17_snapshot() -> PdfSnapshot {
+pub async fn demo_pdf17_snapshot() -> PdfSnapshot {
     let seed = PdfSnapshot {
         schema: STDIO_PDF17_DOCUMENT_SCHEMA.into(),
         declared_version: "1.7".into(),

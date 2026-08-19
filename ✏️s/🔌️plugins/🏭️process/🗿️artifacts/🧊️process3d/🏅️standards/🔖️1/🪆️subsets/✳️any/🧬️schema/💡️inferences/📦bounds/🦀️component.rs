@@ -25,7 +25,7 @@ pub struct BoundingBox {
 }
 
 impl Default for BoundingBox {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self { min: [0.0, 0.0, 0.0], max: [0.0, 0.0, 0.0] }
     }
 }
@@ -34,7 +34,7 @@ impl Default for BoundingBox {
 //#region 🔖️Derivation
 /// 🌀️ Rodrigues' rotation formula — rotates `p` by `angle` radians around `axis` (normalized
 /// internally; a zero-length axis or zero angle is a no-op).
-fn rotate_axis_angle(p: [f64; 3], axis: [f64; 3], angle: f64) -> [f64; 3] {
+async fn rotate_axis_angle(p: [f64; 3], axis: [f64; 3], angle: f64) -> [f64; 3] {
     let norm = (axis[0] * axis[0] + axis[1] * axis[1] + axis[2] * axis[2]).sqrt();
     if norm < 1e-12 || angle == 0.0 {
         return p;
@@ -54,7 +54,7 @@ fn rotate_axis_angle(p: [f64; 3], axis: [f64; 3], angle: f64) -> [f64; 3] {
 /// rotated+translated vertex set (a standard, slightly-loose-but-honest OBB-corners-then-AABB
 /// technique). No vertices (untrimmed sphere/cylinder faces, or an empty placeholder) degenerates
 /// to a single point at `pose.position`.
-pub fn brep_bounding_box(solid: &SemioBrepSnapshot, pose: &Pose) -> BoundingBox {
+pub async fn brep_bounding_box(solid: &SemioBrepSnapshot, pose: &Pose) -> BoundingBox {
     if solid.vertices.is_empty() {
         return BoundingBox { min: pose.position, max: pose.position };
     }
@@ -80,7 +80,7 @@ mod tests {
     use crate::artifacts::process3d::{brep_snapshot_for_working_solid, WorkingSolid};
 
     #[test]
-    fn default_box_stock_bounds_are_unit_cube() {
+    async fn default_box_stock_bounds_are_unit_cube() {
         let solid = brep_snapshot_for_working_solid(&WorkingSolid::Box { width: 1.0, depth: 1.0, height: 1.0 });
         let bounds = brep_bounding_box(&solid, &Pose::default());
         assert_eq!(bounds.min, [0.0, 0.0, 0.0]);
@@ -88,7 +88,7 @@ mod tests {
     }
 
     #[test]
-    fn translated_box_shifts_bounds() {
+    async fn translated_box_shifts_bounds() {
         let solid = brep_snapshot_for_working_solid(&WorkingSolid::Box { width: 2.0, depth: 1.0, height: 1.0 });
         let pose = Pose { position: [5.0, 0.0, 0.0], axis: [0.0, 0.0, 1.0], angle: 0.0 };
         let bounds = brep_bounding_box(&solid, &pose);
@@ -97,7 +97,7 @@ mod tests {
     }
 
     #[test]
-    fn sphere_bounds_degenerate_to_pose_position() {
+    async fn sphere_bounds_degenerate_to_pose_position() {
         let solid = brep_snapshot_for_working_solid(&WorkingSolid::Sphere { radius: 2.0 });
         let pose = Pose { position: [3.0, 4.0, 5.0], axis: [0.0, 0.0, 1.0], angle: 0.0 };
         let bounds = brep_bounding_box(&solid, &pose);
@@ -106,7 +106,7 @@ mod tests {
     }
 
     #[test]
-    fn imported_placeholder_degenerates_to_a_point() {
+    async fn imported_placeholder_degenerates_to_a_point() {
         let solid = brep_snapshot_for_working_solid(&WorkingSolid::ImportedSolid { solid_handle: "h1".into() });
         let pose = Pose { position: [3.0, 4.0, 5.0], axis: [0.0, 0.0, 1.0], angle: 0.0 };
         let bounds = brep_bounding_box(&solid, &pose);

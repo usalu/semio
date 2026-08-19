@@ -21,7 +21,7 @@ pub struct LayoutTopology {
 impl LayoutTopology {
     /// 🈳️ The topology of an empty document (no parent pages, spreads, or pages) — trivially
     /// cycle-free since there are no nodes to form a cycle among.
-    pub fn empty() -> Self {
+    pub async fn empty() -> Self {
         Self { topo_order: Vec::new(), depth: BTreeMap::new(), cycle_free: true, node_count: 0 }
     }
 }
@@ -30,7 +30,7 @@ impl LayoutTopology {
 //#region 🔖️Compute
 /// 🧭️ Builds the parent-page/spread/page composition graph (via `Page::spreadId`/`parentPageId`)
 /// and topologically sorts it.
-pub fn compute_layout_topology(parent_pages: &[ParentPage], spreads: &[Spread], pages: &[Page]) -> LayoutTopology {
+pub async fn compute_layout_topology(parent_pages: &[ParentPage], spreads: &[Spread], pages: &[Page]) -> LayoutTopology {
     let mut nodes: Vec<String> = Vec::new();
     let mut edges: Vec<(String, String)> = Vec::new();
 
@@ -57,7 +57,7 @@ pub fn compute_layout_topology(parent_pages: &[ParentPage], spreads: &[Spread], 
 /// 🧮️ Kahn's algorithm: a stable (declaration-order-first) topological sort that also yields each
 /// node's longest-path depth from a root, and reports `cycleFree = false` when the queue drains
 /// before every node is visited (the unvisited remainder is exactly the cyclic subgraph).
-fn topological_sort(nodes: Vec<String>, edges: Vec<(String, String)>) -> LayoutTopology {
+async fn topological_sort(nodes: Vec<String>, edges: Vec<(String, String)>) -> LayoutTopology {
     let node_count = nodes.len() as u32;
     let mut indegree: HashMap<String, u32> = nodes.iter().map(|id| (id.clone(), 0)).collect();
     let mut adjacency: HashMap<String, Vec<String>> = HashMap::new();
@@ -111,7 +111,7 @@ fn topological_sort(nodes: Vec<String>, edges: Vec<(String, String)>) -> LayoutT
 mod tests {
     use super::*;
 
-    fn page(id: &str, spread_id: &str, parent_page_id: Option<&str>) -> Page {
+    async fn page(id: &str, spread_id: &str, parent_page_id: Option<&str>) -> Page {
         serde_json::from_value(serde_json::json!({
             "id": id, "name": id, "spreadId": spread_id, "parentPageId": parent_page_id,
             "width": 210.0, "height": 297.0,
@@ -122,23 +122,23 @@ mod tests {
         .expect("valid page json")
     }
 
-    fn spread(id: &str, page_ids: Vec<&str>) -> Spread {
+    async fn spread(id: &str, page_ids: Vec<&str>) -> Spread {
         Spread { id: id.into(), name: id.into(), page_ids: page_ids.into_iter().map(String::from).collect() }
     }
 
-    fn parent_page(id: &str) -> ParentPage {
+    async fn parent_page(id: &str) -> ParentPage {
         ParentPage { id: id.into(), name: id.into(), width: 210.0, height: 297.0, layer_ids: Vec::new(), layers: Vec::new(), frames: Vec::new() }
     }
 
     //#region 🧪️TopologyLaws
     #[test]
-    fn empty_document_has_empty_topology() {
+    async fn empty_document_has_empty_topology() {
         let topology = compute_layout_topology(&[], &[], &[]);
         assert_eq!(topology, LayoutTopology::empty());
     }
 
     #[test]
-    fn a_page_dangling_its_spread_ref_still_sorts_cleanly() {
+    async fn a_page_dangling_its_spread_ref_still_sorts_cleanly() {
         // 🕳️ `spreadId` points at a spread that doesn't exist in this snapshot — the edge is simply
         // dropped (see `topological_sort`'s `indegree.contains_key` guard), not a cycle.
         let topology = compute_layout_topology(&[], &[], &[page("orphan", "missing-spread", None)]);
@@ -147,7 +147,7 @@ mod tests {
     }
 
     #[test]
-    fn master_and_spread_both_precede_their_page() {
+    async fn master_and_spread_both_precede_their_page() {
         let topology = compute_layout_topology(&[parent_page("master-1")], &[spread("spread-1", vec!["page-1"])], &[page("page-1", "spread-1", Some("master-1"))]);
         assert!(topology.cycle_free);
         let page_depth = topology.depth["page-1"];

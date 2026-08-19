@@ -23,19 +23,19 @@ pub struct SemioCadArtifact {
 }
 
 impl Default for SemioCadArtifact {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self::from_snapshot(SemioCadSnapshot::default())
     }
 }
 
 impl SemioCadArtifact {
-    pub fn to_snapshot(&self) -> SemioCadSnapshot {
+    pub async fn to_snapshot(&self) -> SemioCadSnapshot {
         SemioCadSnapshot { schema: self.schema.clone(), layers: self.layers.clone(), blocks: self.blocks.clone(), entities: self.entities.clone() }
     }
-    pub fn from_snapshot(snapshot: SemioCadSnapshot) -> Self {
+    pub async fn from_snapshot(snapshot: SemioCadSnapshot) -> Self {
         Self { schema: snapshot.schema, layers: snapshot.layers, blocks: snapshot.blocks, entities: snapshot.entities }
     }
-    pub fn set_snapshot(&mut self, snapshot: SemioCadSnapshot) {
+    pub async fn set_snapshot(&mut self, snapshot: SemioCadSnapshot) {
         self.schema = snapshot.schema;
         self.layers = snapshot.layers;
         self.blocks = snapshot.blocks;
@@ -43,7 +43,7 @@ impl SemioCadArtifact {
     }
 }
 
-pub fn semio_cad_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
+pub async fn semio_cad_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
     schema::ArtifactSchemaDescriptor {
         id: "s.stdio.semio.cad",
         artifact: schema::FacetLeaves {
@@ -92,27 +92,27 @@ pub mod derived_construction {
         type Snapshot = SemioCadSnapshot;
         type Mutation = SemioCadMutation;
         type Diff = SemioCadDiff;
-        fn empty() -> Self {
+        async fn empty() -> Self {
             Self { snapshot: SemioCadSnapshot::default() }
         }
-        fn from_snapshot(snapshot: Self::Snapshot) -> Self {
+        async fn from_snapshot(snapshot: Self::Snapshot) -> Self {
             Self { snapshot }
         }
-        fn from_text(text: &str) -> Result<Self, store::TextError> {
+        async fn from_text(text: &str) -> Result<Self, store::TextError> {
             Ok(Self::from_snapshot(<SemioCadSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
-        fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
+        async fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
             Ok(Self::from_snapshot(<SemioCadSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
         }
-        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
+        async fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let diff = apply_semio_cad_mutation(&mut self.snapshot, &mutation);
             (self, diff)
         }
-        fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
+        async fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
             self.snapshot = <SemioCadDiff as protocol::MutationDiff<SemioCadSnapshot>>::apply(&diff, &self.snapshot)?;
             Ok(self)
         }
-        fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
+        async fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
             Ok(self.snapshot)
         }
     }
@@ -136,7 +136,7 @@ pub mod derived_analysis {
         type Parts = SemioCadParts;
         const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("cad") };
 
-        fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
+        async fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
             match source {
                 AnalyzeSource::Binary(bytes) => {
                     let marker = STDIO_SEMIOCAD_DOCUMENT_SCHEMA.as_bytes();
@@ -156,7 +156,7 @@ pub mod derived_analysis {
             }
         }
 
-        fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
+        async fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
             let mut parts = SemioCadParts::default();
             let mut diagnostics = Vec::new();
             let mut confidence = IoConfidence::High;

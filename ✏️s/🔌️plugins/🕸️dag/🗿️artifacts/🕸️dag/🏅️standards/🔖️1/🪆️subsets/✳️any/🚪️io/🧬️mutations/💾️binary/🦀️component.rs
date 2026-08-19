@@ -19,12 +19,12 @@ pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️comp
 
 
 /// 📦️ Encodes a `DagMutation` to its binary command form.
-pub fn encode_op(operation: &DagMutation) -> Result<Vec<u8>, protocol::ProtocolError> {
+pub async fn encode_op(operation: &DagMutation) -> Result<Vec<u8>, protocol::ProtocolError> {
     operation.encode_op()
 }
 
 /// 📖️ Decodes a `DagMutation` from its binary command form.
-pub fn decode_op(bytes: &[u8]) -> Result<DagMutation, protocol::ProtocolError> {
+pub async fn decode_op(bytes: &[u8]) -> Result<DagMutation, protocol::ProtocolError> {
     DagMutation::decode_op(bytes)
 }
 
@@ -34,7 +34,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn op_binary_round_trips_and_agrees_with_text() {
+    async fn op_binary_round_trips_and_agrees_with_text() {
         let operation = crate::artifacts::dag::mutations::delete_node("node-1".into());
         store::os_store::test_support::assert_op_text_binary_equivalence(&operation);
         let bytes = encode_op(&operation).expect("encode");
@@ -48,7 +48,7 @@ mod semio_protocol_conformance {
     use super::*;
 
     #[test]
-    fn component_protocol_semio_is_protocol_dialect() {
+    async fn component_protocol_semio_is_protocol_dialect() {
         let g = ::dsl::parse_grammar(COMPONENT_PROTOCOL_SEMIO).expect("parse protocol.semio");
         assert_eq!(g.dialect, ::dsl::SemioDialect::Protocol);
         assert!(!COMPONENT_PROTOCOL_SEMIO.is_empty());
@@ -56,7 +56,7 @@ mod semio_protocol_conformance {
     }
 
     #[test]
-    fn verify_protocol_bytes_against_encoded_spr() {
+    async fn verify_protocol_bytes_against_encoded_spr() {
         let operation = crate::artifacts::dag::mutations::delete_node("node-1".into());
         let bytes = encode_op(&operation).expect("encode op");
         let g = ::dsl::parse_grammar(COMPONENT_PROTOCOL_SEMIO).expect("parse protocol");

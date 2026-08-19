@@ -18,15 +18,15 @@ pub struct DeletePosition {
 impl MutationKind<GisMapSnapshot, GisMapMutation> for DeletePosition {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "delete", entity: "position", kind: "delete-position", record: "DeletedPosition" };
 
-    fn diff(&self, base: &GisMapSnapshot) -> protocol::MutationOutcome<GisMapDiff> {
+    async fn diff(&self, base: &GisMapSnapshot) -> protocol::MutationOutcome<GisMapDiff> {
         super::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &GisMapSnapshot) -> Vec<GisMapMutation> {
+    async fn inverse(&self, base: &GisMapSnapshot) -> Vec<GisMapMutation> {
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         format!("Delete position \"{}\"", self.id)
     }
 }

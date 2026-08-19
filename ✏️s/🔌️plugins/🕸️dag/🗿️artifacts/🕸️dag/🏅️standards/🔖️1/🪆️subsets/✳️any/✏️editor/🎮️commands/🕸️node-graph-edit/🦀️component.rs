@@ -33,15 +33,15 @@ pub struct NodeGraphEdit {
 /// `interaction` slot — ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM) — reachable only
 /// through that macro-generated path (`DagPlayApp::handle` always routes this command through `apply`
 /// below instead), so its `DeleteSelection` sub-op degrades to treating the selection as empty.
-pub fn handle(payload: &NodeGraphEdit, doc: &ArtifactView<'_, DagSnapshot>, cfg: &ConfigView<'_, DagConfig>) -> Result<Emit<DagMutation, DagConfigMutation>, Fault> {
+pub async fn handle(payload: &NodeGraphEdit, doc: &ArtifactView<'_, DagSnapshot>, cfg: &ConfigView<'_, DagConfig>) -> Result<Emit<DagMutation, DagConfigMutation>, Fault> {
     apply_to(payload, doc, cfg, &[])
 }
 
-pub fn apply(payload: &NodeGraphEdit, doc: &ArtifactView<'_, DagSnapshot>, cfg: &ConfigView<'_, DagConfig>, interaction: &InteractionView<'_>) -> Result<Emit<DagMutation, DagConfigMutation>, Fault> {
+pub async fn apply(payload: &NodeGraphEdit, doc: &ArtifactView<'_, DagSnapshot>, cfg: &ConfigView<'_, DagConfig>, interaction: &InteractionView<'_>) -> Result<Emit<DagMutation, DagConfigMutation>, Fault> {
     apply_to(payload, doc, cfg, &interaction.selection("graph").ids)
 }
 
-fn apply_to(payload: &NodeGraphEdit, doc: &ArtifactView<'_, DagSnapshot>, _cfg: &ConfigView<'_, DagConfig>, selected: &[String]) -> Result<Emit<DagMutation, DagConfigMutation>, Fault> {
+async fn apply_to(payload: &NodeGraphEdit, doc: &ArtifactView<'_, DagSnapshot>, _cfg: &ConfigView<'_, DagConfig>, selected: &[String]) -> Result<Emit<DagMutation, DagConfigMutation>, Fault> {
     let document = doc.snapshot;
     let mut artifact_mutations: Vec<DagMutation> = Vec::new();
     let mut config_mutations: Vec<DagConfigMutation> = Vec::new();
@@ -85,7 +85,7 @@ mod tests {
     /// the only way a downstream crate can populate a genuine `InteractionView`) drives the batched
     /// delete-selection sub-op — ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM.
     #[test]
-    fn node_graph_edit_batches_connect_then_delete_selection() {
+    async fn node_graph_edit_batches_connect_then_delete_selection() {
         let mut app = testkit::new_app_with_registry();
         let (source_id, target_id) = {
             let projection = app.snapshot().expect("projection");
@@ -108,7 +108,7 @@ mod tests {
     }
 
     #[test]
-    fn move_media_node_drag_coalesces_into_one_edit() {
+    async fn move_media_node_drag_coalesces_into_one_edit() {
         let mut app = testkit::new_app();
         let node_id = app.snapshot().expect("projection").nodes().first().map(|node| node.id.clone()).expect("node");
         for position in [10.0, 20.0, 30.0] {
@@ -122,7 +122,7 @@ mod tests {
     }
 
     #[test]
-    fn disconnect_removes_a_known_edge_and_is_a_no_op_for_an_unknown_one() {
+    async fn disconnect_removes_a_known_edge_and_is_a_no_op_for_an_unknown_one() {
         let mut app = testkit::new_app();
         let edge_id = app.snapshot().expect("projection").edges().first().map(|edge| edge.id.clone());
         if let Some(edge_id) = edge_id {
@@ -135,7 +135,7 @@ mod tests {
     }
 
     #[test]
-    fn connect_media_ports_adds_an_edge_between_two_nodes() {
+    async fn connect_media_ports_adds_an_edge_between_two_nodes() {
         let mut app = testkit::new_app();
         let (source_id, target_id) = {
             let projection = app.snapshot().expect("projection");

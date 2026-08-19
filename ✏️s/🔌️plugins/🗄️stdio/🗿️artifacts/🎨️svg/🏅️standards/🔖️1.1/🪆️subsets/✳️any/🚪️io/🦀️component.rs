@@ -15,11 +15,11 @@ pub mod derived_composition {
         type Snapshot = SvgSnapshot;
         const WRITES: Dialect = DIALECT;
 
-        fn reads() -> &'static [Dialect] {
+        async fn reads() -> &'static [Dialect] {
             &[DIALECT, DEP_XML]
         }
 
-        fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+        async fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
             // 🌱 Every listed read dialect's payload is raw text/bytes that this artifact's own
             // analyzer already round-trips through `store::Document{Dsl,Pack}` -- including bytes
             // claiming a dependency's dialect, since (for a single-standard DAG-adjacent dependency
@@ -60,7 +60,7 @@ pub mod io_registry {
 
     static ENTRIES: OnceLock<Vec<ComposerEntry>> = OnceLock::new();
 
-    pub fn entries() -> &'static [ComposerEntry] {
+    pub async fn entries() -> &'static [ComposerEntry] {
         ENTRIES.get_or_init(|| vec![composer_entry_of::<SvgRawAnyComposer>(), composer_entry_of::<SvgTinyComposer>(), composer_entry_of::<SvgBasicComposer>()]).as_slice()
     }
 }
@@ -76,18 +76,18 @@ mod tests {
 
     const SVG_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.svg", standard: StandardId("1.1"), subset: SubsetId("*") };
 
-    fn exact_fixture_bytes() -> Vec<u8> {
+    async fn exact_fixture_bytes() -> Vec<u8> {
         std::fs::read(std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../../../temp/artifacts.svg")).expect("read temp/artifacts.svg")
     }
 
     #[test]
-    fn empty_snapshot_matches_schema() {
+    async fn empty_snapshot_matches_schema() {
         let snapshot = empty_svg_snapshot();
         assert_eq!(snapshot.schema, STDIO_SVG_DOCUMENT_SCHEMA);
     }
 
     #[test]
-    fn codec_round_trip() {
+    async fn codec_round_trip() {
         let snap = empty_svg_snapshot();
         let text = store::ArtifactDsl::print_dsl(&snap);
         let parsed = <SvgSnapshot as store::ArtifactDsl>::parse_dsl(&text).expect("parse");
@@ -99,7 +99,7 @@ mod tests {
 
     //#region 🔖️LosslessNativeRouting
     #[test]
-    fn exact_native_analyzer_text_and_pack_roundtrip() {
+    async fn exact_native_analyzer_text_and_pack_roundtrip() {
         let original = exact_fixture_bytes();
         let text = std::str::from_utf8(&original).expect("fixture UTF-8");
         let text_analysis = <crate::artifacts::svg::standards::v1_1::subsets::any::schema::SvgAnalyzerAnalysis as ArtifactAnalysis>::analyze(&[AnalyzeSource::Text(text)]);
@@ -114,7 +114,7 @@ mod tests {
     }
 
     #[test]
-    fn exact_native_composer_text_and_pack_roundtrip() {
+    async fn exact_native_composer_text_and_pack_roundtrip() {
         let original = exact_fixture_bytes();
         let text = std::str::from_utf8(&original).expect("fixture UTF-8");
         let text_sources = [ComposeSource { dialect: SVG_DIALECT, payload: AnalyzeSource::Text(text) }];
@@ -146,7 +146,7 @@ mod tests {
         /// parse under the real dialect -- independent of, and cheaper than, the two `recognize`/
         /// `walk_protocol` laws below (a parse failure here fails fast with a clearer message).
         #[test]
-        fn committed_facet_files_parse() {
+        async fn committed_facet_files_parse() {
             for (label, text) in [("snapshot grammar", snapshot::text::COMPONENT_GRAMMAR_SEMIO), ("mutations grammar", mutations::text::COMPONENT_GRAMMAR_SEMIO), ("diff grammar", diff::text::COMPONENT_GRAMMAR_SEMIO)] {
                 let grammar = dsl::parse_grammar(text).unwrap_or_else(|e| panic!("{label}: parse_grammar failed: {e:?}"));
                 assert_eq!(grammar.dialect, dsl::SemioDialect::Grammar, "{label}: expected grammar dialect");
@@ -161,7 +161,7 @@ mod tests {
         /// `m5_handcrafted_grammar_conformance`'s own `dsl_body_from_fixture` uses, so this is a
         /// direct proof this artifact will pass that harness once graduated, not merely an analogue.
         #[test]
-        fn grammar_conformance_law() {
+        async fn grammar_conformance_law() {
             let grammar = dsl::parse_grammar(snapshot::text::COMPONENT_GRAMMAR_SEMIO).expect("parse snapshot grammar");
             let recognizer = dsl::Recognizer::compile(&grammar);
             let text = store::ArtifactDsl::print_dsl(&demo_svg_snapshot());
@@ -173,7 +173,7 @@ mod tests {
         /// ✅️ `ops_grammar_conformance_law`: the mutations grammar recognizes real `print_op`
         /// output for every `SvgMutation` variant (`mutations::demo_mutation_cases()`).
         #[test]
-        fn ops_grammar_conformance_law() {
+        async fn ops_grammar_conformance_law() {
             let grammar = dsl::parse_grammar(mutations::text::COMPONENT_GRAMMAR_SEMIO).expect("parse mutations grammar");
             let recognizer = dsl::Recognizer::compile(&grammar);
             for mutation in mutations::demo_mutation_cases() {
@@ -186,7 +186,7 @@ mod tests {
         /// for every representative `SvgDiff` (`diff::demo_diff_cases()`), incl. the empty-line
         /// (all-`None`) diff and the `Replace` kind-change fallback.
         #[test]
-        fn diff_grammar_conformance_law() {
+        async fn diff_grammar_conformance_law() {
             let grammar = dsl::parse_grammar(diff::text::COMPONENT_GRAMMAR_SEMIO).expect("parse diff grammar");
             let recognizer = dsl::Recognizer::compile(&grammar);
             for d in diff::demo_diff_cases() {
@@ -201,7 +201,7 @@ mod tests {
         /// mutation's `encode_op`, and every demo diff's `encode_diff`, asserting `consumed ==
         /// bytes.len()`.
         #[test]
-        fn protocol_walk_law() {
+        async fn protocol_walk_law() {
             let pack_spec = dsl::parse_protocol(snapshot::binary::COMPONENT_PROTOCOL_SEMIO).expect("parse snapshot protocol");
             let packed = store::ArtifactPack::encode_pack(&demo_svg_snapshot());
             let (_, inner) = store::semio_format::unwrap_binary(&packed).expect("unwrap semio envelope");
@@ -228,7 +228,7 @@ mod tests {
         /// demo()`, `print_dsl(demo()) == fixture` (byte-for-byte), and the pack twin -- so the
         /// fixtures can never silently drift back to a fake again.
         #[test]
-        fn fixture_honesty_law() {
+        async fn fixture_honesty_law() {
             const FIXTURE_DSL: &str = include_str!("../📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio");
             const FIXTURE_PACK: &[u8] = include_bytes!("../📚️examples/🎬️demo/🖼️assets/🎒️example.pack.semio");
 

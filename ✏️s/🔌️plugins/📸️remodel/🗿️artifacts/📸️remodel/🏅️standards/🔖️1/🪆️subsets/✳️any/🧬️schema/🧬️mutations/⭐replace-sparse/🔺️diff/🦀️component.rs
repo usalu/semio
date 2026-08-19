@@ -4,7 +4,7 @@ use crate::artifacts::remodel::diff::RemodelDiff;
 use crate::artifacts::remodel::RemodelSnapshot;
 
 //#region 🔖️Diff
-pub fn diff(payload: &super::mutation::ReplaceSparse, base: &RemodelSnapshot) -> protocol::MutationOutcome<RemodelDiff> {
+pub async fn diff(payload: &super::mutation::ReplaceSparse, base: &RemodelSnapshot) -> protocol::MutationOutcome<RemodelDiff> {
     if payload.sparse == base.results.sparse {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", "Sparse results already have this value.");
     }

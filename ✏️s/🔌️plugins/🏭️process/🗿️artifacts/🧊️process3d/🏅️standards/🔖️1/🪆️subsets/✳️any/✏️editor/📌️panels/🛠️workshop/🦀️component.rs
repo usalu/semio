@@ -16,7 +16,7 @@ const PROCESS_3D_PLAY_PANEL_WORKSHOP: &str = "workshop";
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
-pub fn definition() -> PanelTabDefinition {
+pub async fn definition() -> PanelTabDefinition {
     PanelTabDefinition { kind: PanelTabKind::App(PROCESS_3D_PLAY_PANEL_WORKSHOP.into()), label: LocalizedLabel::native("Workshop", "Werkstatt"), group: PanelGroup::Workbench, body_key: Some(PROCESS_3D_PLAY_BODY_WORKSHOP.into()), children: Vec::new() }
 }
 //#endregion 🔖️Definition
@@ -26,7 +26,7 @@ pub fn definition() -> PanelTabDefinition {
 /// `"machine:{id}"` — the SAME canonical `"geometry"` domain target the old `selected_id` used for a
 /// machine pick — so `.interaction_domain` binding stamps/prunes this section correctly; the catalog
 /// sections stay un-bound (their items are install actions, not domain targets).
-pub fn render(fixture: &Process3dSnapshot, labels: &Process3dLabels) -> UiNode {
+pub async fn render(fixture: &Process3dSnapshot, labels: &Process3dLabels) -> UiNode {
     let mut builder = PanelTreeBuilder::new("process3d-play-workshop");
     let machine_items: Vec<UiTreeItemNode> = fixture
         .workshop
@@ -76,7 +76,7 @@ mod tests {
     use crate::editor::process3d::Process3dCommand;
 
     #[test]
-    fn definition_binds_a_workshop_panel_tab_to_this_body_key() {
+    async fn definition_binds_a_workshop_panel_tab_to_this_body_key() {
         let definition = definition();
         assert_eq!(definition.body_key.as_deref(), Some(PROCESS_3D_PLAY_BODY_WORKSHOP));
     }
@@ -86,7 +86,7 @@ mod tests {
     /// `render` doc comment); this asserts the still-real document mutation and its `"machine:{id}"`
     /// tree item.
     #[test]
-    fn add_workshop_machine_action_installs() {
+    async fn add_workshop_machine_action_installs() {
         let mut app = testkit::app();
         let result = testkit::dispatch(&mut app, Process3dCommand::AddWorkshopMachine(add_workshop_machine::AddWorkshopMachine { catalog_id: "metal".into(), machine_id: "chopSaw".into() }));
         assert!(!result.mutations.is_empty(), "adding an uninstalled catalog machine must emit an operation");
@@ -97,7 +97,7 @@ mod tests {
     }
 
     #[test]
-    fn add_workshop_machine_action_is_idempotent_when_already_installed() {
+    async fn add_workshop_machine_action_is_idempotent_when_already_installed() {
         let mut app = testkit::app();
         testkit::dispatch(&mut app, Process3dCommand::AddWorkshopMachine(add_workshop_machine::AddWorkshopMachine { catalog_id: "metal".into(), machine_id: "chopSaw".into() }));
         let count_after_first = app.snapshot().expect("snapshot").workshop.machines.len();
@@ -107,7 +107,7 @@ mod tests {
     }
 
     #[test]
-    fn remove_workshop_machine_action_removes_the_machine() {
+    async fn remove_workshop_machine_action_removes_the_machine() {
         let mut app = testkit::app();
         testkit::dispatch(&mut app, Process3dCommand::AddWorkshopMachine(add_workshop_machine::AddWorkshopMachine { catalog_id: "metal".into(), machine_id: "chopSaw".into() }));
         let result = testkit::dispatch(&mut app, Process3dCommand::RemoveWorkshopMachine(remove_workshop_machine::RemoveWorkshopMachine { id: "chopSaw".into() }));
@@ -119,7 +119,7 @@ mod tests {
     }
 
     #[test]
-    fn catalogue_reflects_workshop_after_machine_removal() {
+    async fn catalogue_reflects_workshop_after_machine_removal() {
         let mut app = testkit::app();
         let before = testkit::render(&mut app, catalogue::PROCESS_3D_PLAY_BODY_CATALOGUE);
         assert!(before.contains("Circular Saw"));
@@ -136,7 +136,7 @@ mod tests {
     /// of this test — `measure_for_capability` sizing a cut tool from a capability's own edited
     /// parameter — is asserted directly instead.
     #[test]
-    fn workshop_machine_parameter_edit_sizes_the_capability_measure() {
+    async fn workshop_machine_parameter_edit_sizes_the_capability_measure() {
         use crate::artifacts::process3d::schema::inferences::measure_for_capability;
         use crate::artifacts::process3d::{Capability, MeasureRecipe, ProcessMeasure, WorkingSolid};
         let capability = Capability {

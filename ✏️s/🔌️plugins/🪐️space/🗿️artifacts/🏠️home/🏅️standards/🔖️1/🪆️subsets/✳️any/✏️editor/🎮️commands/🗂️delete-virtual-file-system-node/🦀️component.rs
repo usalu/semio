@@ -15,7 +15,7 @@ pub struct DeleteVirtualFileSystemNode {
     pub node_id: String,
 }
 
-pub fn handle(payload: &DeleteVirtualFileSystemNode, doc: &ArtifactView<'_, SHomeSnapshot>, _cfg: &ConfigView<'_, HomeConfig>) -> Result<Emit<SHomeMutation, HomeConfigMutation>, Fault> {
+pub async fn handle(payload: &DeleteVirtualFileSystemNode, doc: &ArtifactView<'_, SHomeSnapshot>, _cfg: &ConfigView<'_, HomeConfig>) -> Result<Emit<SHomeMutation, HomeConfigMutation>, Fault> {
     let generation = doc.snapshot.catalog_generation;
     match payload.node_id.strip_prefix("studio:") {
         Some(space_id) => {

@@ -19,7 +19,7 @@ semio_framework_plugin::app_labels! {
 }
 
 /// 🗣️ Resolves the active label set from `cfg.locale`; falls back to native English.
-pub fn block2d_labels(locale: &str) -> &'static Block2dLabels {
+pub async fn block2d_labels(locale: &str) -> &'static Block2dLabels {
     semio_framework_plugin::resolve_labels_for_locale::<Block2dLabels>(locale)
 }
 //#endregion 🔖️Labels
@@ -30,7 +30,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn labels_resolve_native_english_and_german_from_the_config_locale() {
+    async fn labels_resolve_native_english_and_german_from_the_config_locale() {
         assert_eq!(block2d_labels("en-US").summary.as_str(), "Node kind");
         assert_eq!(block2d_labels("de-DE").summary.as_str(), "Knotenart");
     }

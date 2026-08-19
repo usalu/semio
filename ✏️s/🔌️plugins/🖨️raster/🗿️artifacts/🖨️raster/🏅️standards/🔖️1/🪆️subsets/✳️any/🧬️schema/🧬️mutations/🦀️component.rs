@@ -56,7 +56,7 @@ pub enum RasterMutation {
 /// ⚡️ Convenience wrapper kept for existing in-plugin callers (`RasterBuilderConstruction::mutate`,
 /// the WASM bridge) — `diff().apply()` in one call, now delegating to the derive's real
 /// `Mutation`/`MutationDiff` impls instead of a hand-written match.
-pub fn apply_raster_mutation(
+pub async fn apply_raster_mutation(
     snapshot: &RasterSnapshot,
     mutation: &RasterMutation,
 ) -> protocol::MutationApplyResult<RasterSnapshot> {
@@ -65,7 +65,7 @@ pub fn apply_raster_mutation(
 
 /// ⚡️ Convenience wrapper mirroring `apply_raster_mutation` — forwards to the derive's real
 /// `Mutation::inverse`.
-pub fn inverse_raster_mutation(snapshot: &RasterSnapshot, mutation: &RasterMutation) -> Vec<RasterMutation> {
+pub async fn inverse_raster_mutation(snapshot: &RasterSnapshot, mutation: &RasterMutation) -> Vec<RasterMutation> {
     protocol::Mutation::inverse(mutation, snapshot)
 }
 
@@ -84,7 +84,7 @@ mod tests {
     use std::collections::BTreeMap;
     use store::{create_document_envelope, ArtifactCommand};
 
-    fn pixel_layer(id: &str, name: &str) -> RasterLayerNode {
+    async fn pixel_layer(id: &str, name: &str) -> RasterLayerNode {
         RasterLayerNode::Pixel { id: id.into(), name: name.into(), visible: true, opacity: 1.0, blend_mode: "normal".into(), transform: RasterTransform::default(), mask: None, width: Some(512), height: Some(512), image_key: None }
     }
 
@@ -95,7 +95,7 @@ mod tests {
     const SEED_ASSET_PNG: &[u8] = &[137, 80, 78, 71, 13, 10, 26, 10, 0, 0, 0, 13, 73, 72, 68, 82, 0, 0, 0, 1, 0, 0, 0, 1, 8, 6, 0, 0, 0, 31, 21, 196, 137, 0, 0, 0, 13, 73, 68, 65, 84, 120, 218, 99, 224, 18, 145, 251, 15, 0, 1, 164, 1, 60, 76, 213, 28, 167, 0, 0, 0, 0, 73, 69, 78, 68, 174, 66, 96, 130];
     const ABC_ASSET_PNG: &[u8] = &[137, 80, 78, 71, 13, 10, 26, 10, 0, 0, 0, 13, 73, 72, 68, 82, 0, 0, 0, 1, 0, 0, 0, 1, 8, 6, 0, 0, 0, 31, 21, 196, 137, 0, 0, 0, 13, 73, 68, 65, 84, 120, 218, 99, 56, 49, 45, 229, 63, 0, 6, 174, 2, 194, 232, 197, 127, 29, 0, 0, 0, 0, 73, 69, 78, 68, 174, 66, 96, 130];
 
-    fn round_trip(snapshot: &RasterSnapshot, mutation: &RasterMutation) -> RasterSnapshot {
+    async fn round_trip(snapshot: &RasterSnapshot, mutation: &RasterMutation) -> RasterSnapshot {
         let (forward, _messages) =
             vcs::apply_mutation(snapshot, mutation).expect("valid mutation");
         let mut restored = forward.clone();
@@ -110,7 +110,7 @@ mod tests {
 
     /// ⚖️ One value per `RasterMutation` variant — the closed set the semantics/round-trip tests
     /// iterate, mirroring `din16798`'s own `every_mutation()` fixture.
-    fn every_mutation() -> Vec<RasterMutation> {
+    async fn every_mutation() -> Vec<RasterMutation> {
         vec![
             RasterMutation::CreateLayer(create_layer::mutation::CreateLayer { parent_id: None, index: 0, layer: Box::new(pixel_layer("l1", "Base")) }),
             RasterMutation::DeleteLayer(delete_layer::mutation::DeleteLayer { layer_id: "l1".into() }),
@@ -128,7 +128,7 @@ mod tests {
     }
 
     #[test]
-    fn every_variant_registers_an_approved_semantic_descriptor() {
+    async fn every_variant_registers_an_approved_semantic_descriptor() {
         for mutation in every_mutation() {
             let descriptor = protocol::SemanticMutation::semantics(&mutation);
             assert!(protocol::is_approved_verb(descriptor.verb), "unapproved verb {:?} on {mutation:?}", descriptor.verb);
@@ -137,7 +137,7 @@ mod tests {
     }
 
     #[test]
-    fn every_variant_round_trips_via_inverse() {
+    async fn every_variant_round_trips_via_inverse() {
         let mut base = empty_raster_snapshot();
         base.layers.push(pixel_layer("l1", "Base"));
         base.layers.push(RasterLayerNode::Adjustment { id: "adjust-1".into(), name: "Curves".into(), visible: true, opacity: 1.0, blend_mode: "normal".into(), transform: RasterTransform::default(), adjustment_kind: "brightnessContrast".into(), params: BTreeMap::new() });
@@ -149,7 +149,7 @@ mod tests {
     }
 
     #[test]
-    fn add_remove_layer_round_trip() {
+    async fn add_remove_layer_round_trip() {
         let snapshot = empty_raster_snapshot();
         let added = round_trip(&snapshot, &RasterMutation::CreateLayer(create_layer::mutation::CreateLayer { parent_id: None, index: 0, layer: Box::new(pixel_layer("l1", "Base")) }));
         assert_eq!(added.layers.len(), 1);
@@ -158,7 +158,7 @@ mod tests {
     }
 
     #[test]
-    fn rename_and_change_layer_visible_round_trip() {
+    async fn rename_and_change_layer_visible_round_trip() {
         let snapshot = empty_raster_snapshot();
         let added = round_trip(&snapshot, &RasterMutation::CreateLayer(create_layer::mutation::CreateLayer { parent_id: None, index: 0, layer: Box::new(pixel_layer("l1", "Base")) }));
         let renamed = round_trip(&added, &RasterMutation::RenameLayer(rename_layer::mutation::RenameLayer { layer_id: "l1".into(), new_name: "Renamed".into() }));
@@ -168,7 +168,7 @@ mod tests {
     }
 
     #[test]
-    fn reorder_layer_into_group_round_trip() {
+    async fn reorder_layer_into_group_round_trip() {
         let mut snapshot = empty_raster_snapshot();
         snapshot.layers.push(RasterLayerNode::Group { id: "g1".into(), name: "Group".into(), visible: true, opacity: 1.0, blend_mode: "normal".into(), transform: RasterTransform::default(), mask: None, children: Vec::new() });
         snapshot.layers.push(pixel_layer("l1", "Base"));
@@ -179,7 +179,7 @@ mod tests {
     }
 
     #[test]
-    fn resize_layer_is_a_graceful_no_op_on_a_group() {
+    async fn resize_layer_is_a_graceful_no_op_on_a_group() {
         let mut snapshot = empty_raster_snapshot();
         snapshot.layers.push(RasterLayerNode::Group { id: "g1".into(), name: "Group".into(), visible: true, opacity: 1.0, blend_mode: "normal".into(), transform: RasterTransform::default(), mask: None, children: Vec::new() });
         let mutation = RasterMutation::ResizeLayer(resize_layer::mutation::ResizeLayer { layer_id: "g1".into(), new_width: 10, new_height: 10 });
@@ -190,14 +190,14 @@ mod tests {
     }
 
     #[test]
-    fn store_applies_layer_create() {
+    async fn store_applies_layer_create() {
         let mut store = RasterStore::new(create_document_envelope(RASTER_DOCUMENT_SCHEMA, "raster", empty_raster_snapshot(), None));
         store.dispatch(ArtifactCommand::Apply { mutations: vec![RasterMutation::CreateLayer(create_layer::mutation::CreateLayer { parent_id: None, index: 0, layer: Box::new(pixel_layer("l1", "Base")) })], description: None }).expect("apply");
         assert_eq!(store.snapshot().expect("snapshot").layers.len(), 1);
     }
 
     //#region 🔖️OpText
-    fn representative_raster_document() -> RasterSnapshot {
+    async fn representative_raster_document() -> RasterSnapshot {
         let mut assets = BTreeMap::new();
         assets.insert("asset-1".into(), crate::artifacts::raster::image_asset_child_handle("asset-1", &RasterImageAsset { mime: "image/png".into(), data: b"abc".to_vec() }));
         let mut params = BTreeMap::new();
@@ -255,7 +255,7 @@ mod tests {
     }
 
     #[test]
-    fn raster_op_text_round_trips_every_variant() {
+    async fn raster_op_text_round_trips_every_variant() {
         for mutation in every_mutation() {
             store::os_store::test_support::assert_op_line_round_trip(&mutation);
         }
@@ -269,7 +269,7 @@ mod tests {
     /// insert), `change-layer-opacity` (typical `f32` scalar), and `reorder-layers` (tree
     /// reposition).
     #[test]
-    fn create_layer_satisfies_the_inverse_and_absorb_laws() {
+    async fn create_layer_satisfies_the_inverse_and_absorb_laws() {
         let base = empty_raster_snapshot();
         let mutation = RasterMutation::CreateLayer(create_layer::mutation::CreateLayer { parent_id: None, index: 0, layer: Box::new(pixel_layer("l1", "Base")) });
         protocol::os_spr::testkit::assert_mutation_inverse_law(&base, &mutation);
@@ -279,7 +279,7 @@ mod tests {
     }
 
     #[test]
-    fn change_layer_opacity_satisfies_the_inverse_and_absorb_laws() {
+    async fn change_layer_opacity_satisfies_the_inverse_and_absorb_laws() {
         let mut base = empty_raster_snapshot();
         base.layers.push(pixel_layer("l1", "Base"));
         let mutation = RasterMutation::ChangeLayerOpacity(change_layer_opacity::mutation::ChangeLayerOpacity { layer_id: "l1".into(), new_opacity: 0.4 });
@@ -290,7 +290,7 @@ mod tests {
     }
 
     #[test]
-    fn reorder_layers_satisfies_the_inverse_and_absorb_laws() {
+    async fn reorder_layers_satisfies_the_inverse_and_absorb_laws() {
         let mut base = empty_raster_snapshot();
         base.layers.push(pixel_layer("l1", "Base"));
         base.layers.push(pixel_layer("l2", "Second"));
@@ -306,19 +306,19 @@ mod tests {
     /// ⚖️ `📋️contract-freeze.md` §C2 laws, per verb family (`assert_outcome_policy_matrix` is not yet
     /// landed in `📡️spr/🧪️testkit` — TODO(1-D testkit laws pending) once it lands).
     #[test]
-    fn delete_missing_layer_is_a_target_missing_error() {
+    async fn delete_missing_layer_is_a_target_missing_error() {
         let base = empty_raster_snapshot();
         protocol::os_spr::testkit::assert_missing_target_is_error(&base, &RasterMutation::DeleteLayer(delete_layer::mutation::DeleteLayer { layer_id: "does-not-exist".into() }));
     }
 
     #[test]
-    fn rename_missing_layer_is_a_target_missing_error() {
+    async fn rename_missing_layer_is_a_target_missing_error() {
         let base = empty_raster_snapshot();
         protocol::os_spr::testkit::assert_missing_target_is_error(&base, &RasterMutation::RenameLayer(rename_layer::mutation::RenameLayer { layer_id: "does-not-exist".into(), new_name: "New".into() }));
     }
 
     #[test]
-    fn create_layer_duplicate_id_never_applies() {
+    async fn create_layer_duplicate_id_never_applies() {
         let mut base = empty_raster_snapshot();
         base.layers.push(pixel_layer("l1", "Base"));
         let duplicate = RasterMutation::CreateLayer(create_layer::mutation::CreateLayer { parent_id: None, index: 0, layer: Box::new(pixel_layer("l1", "Base")) });

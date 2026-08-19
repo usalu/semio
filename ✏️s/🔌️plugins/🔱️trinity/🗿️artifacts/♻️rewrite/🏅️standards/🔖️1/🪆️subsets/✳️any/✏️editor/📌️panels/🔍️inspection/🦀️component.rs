@@ -11,7 +11,7 @@
 
 use semio_framework_plugin::{ui_declarative_sections_to_tree, ui_text, Label, UiNode, UiPresence, UiSectionNode, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL};
 
-pub(crate) fn render() -> UiNode {
+pub(crate) async fn render() -> UiNode {
     ui_declarative_sections_to_tree(&[UiSectionNode {
         id: "trinity-inspector.empty".into(),
         label: Some(Label::data(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL)),

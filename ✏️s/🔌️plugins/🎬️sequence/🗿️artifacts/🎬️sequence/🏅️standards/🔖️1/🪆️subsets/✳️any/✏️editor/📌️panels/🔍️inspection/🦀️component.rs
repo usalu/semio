@@ -13,7 +13,7 @@ pub const SEQUENCE_PLAY_BODY_INSPECTOR: &str = "sequence.play.inspection";
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
-pub fn definition() -> PanelTabDefinition {
+pub async fn definition() -> PanelTabDefinition {
     PanelTabDefinition {
         kind: PanelTabKind::App(FRAMEWORK_PANEL_TAB_INSPECTION_ID.into()),
         label: LocalizedLabel::native(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, "Inspektion"),
@@ -25,7 +25,7 @@ pub fn definition() -> PanelTabDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(fixture: &SequenceFixture, selected: &[String], labels: &SequenceLabels) -> UiNode {
+pub async fn render(fixture: &SequenceFixture, selected: &[String], labels: &SequenceLabels) -> UiNode {
     if selected.is_empty() {
         return ui_declarative_sections_to_tree(&[UiSectionNode {
             id: "sequence-play-inspector.empty".into(),
@@ -69,7 +69,7 @@ mod tests {
     use semio_framework_plugin::PluginApp;
 
     #[test]
-    fn inspection_shows_prompt_when_nothing_selected() {
+    async fn inspection_shows_prompt_when_nothing_selected() {
         let mut app = new_app();
         assert!(render_body(&mut app, SEQUENCE_PLAY_BODY_INSPECTOR).contains("Select a step"));
     }
@@ -81,7 +81,7 @@ mod tests {
     /// (the same one `space`'s node-graph canvas rendering and context menu carry). This exercises
     /// `render`'s own selected-step branch directly instead of through the app's dispatch/render loop.
     #[test]
-    fn inspection_shows_selected_step_kind() {
+    async fn inspection_shows_selected_step_kind() {
         let mut app = new_app();
         let fixture = app.snapshot().expect("projection").to_fixture();
         let labels = sequence_play_labels(&SequenceConfig::default());

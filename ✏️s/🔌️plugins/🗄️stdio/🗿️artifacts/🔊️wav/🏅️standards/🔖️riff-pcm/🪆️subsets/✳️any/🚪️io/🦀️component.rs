@@ -17,11 +17,11 @@ pub mod derived_composition {
         type Snapshot = WavSnapshot;
         const WRITES: Dialect = DIALECT;
 
-        fn reads() -> &'static [Dialect] {
+        async fn reads() -> &'static [Dialect] {
             &[DIALECT]
         }
 
-        fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+        async fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
             let native: Vec<AnalyzeSource<'_>> = sources
                 .iter()
                 .filter(|s| s.dialect == DIALECT)
@@ -43,7 +43,7 @@ pub mod derived_composition {
     //#region 🔖️Register
     /// 📌️ Registers this subset's schema descriptor, document codec. Called from
     /// this artifact's standard-level `engine::register()`.
-    pub fn register() {
+    pub async fn register() {
         ::schema::register_artifact_schema_descriptor(crate::artifacts::wav::standards::riff_pcm::subsets::any::schema::wav_artifact_schema_descriptor());
         register_artifact_inferences();
         let _ = store::register_document_codec(store::ArtifactCodec::of::<WavSnapshot, crate::artifacts::wav::standards::riff_pcm::subsets::any::schema::mutations::WavMutation>(
@@ -54,7 +54,7 @@ pub mod derived_composition {
     /// 💡️ Registers `s.stdio.wav.inference`'s facet leaves into the OS-wide inference
     /// catalog — sibling to `register_artifact_schema_descriptor` above (separate registry,
     /// ticket 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING P2/S3+S4).
-    pub fn register_artifact_inferences() {
+    pub async fn register_artifact_inferences() {
         ::schema::register_artifact_inference_descriptor(crate::artifacts::wav::standards::riff_pcm::subsets::any::schema::inferences::wav_artifact_inference_descriptor());
     }
     //#endregion 🔖️Register
@@ -74,7 +74,7 @@ use crate::artifacts::wav::standards::riff_pcm::subsets::any::schema::snapshot::
 
 //#region 🔖️Sniff
 /// 🔍 Real magic sniff: `RIFF` fourcc at byte 0 + `WAVE` fourcc at byte 8 (RIFF's own type tag).
-pub fn sniff_real_bytes(bytes: &[u8]) -> bool {
+pub async fn sniff_real_bytes(bytes: &[u8]) -> bool {
     bytes.len() >= 12 && &bytes[0..4] == b"RIFF" && &bytes[8..12] == b"WAVE"
 }
 //#endregion 🔖️Sniff
@@ -83,7 +83,7 @@ pub fn sniff_real_bytes(bytes: &[u8]) -> bool {
 /// 📐️ Decodes a `fmt ` chunk body (already sliced to exactly `chunk_size` bytes). PCM's plain
 /// 16-byte form has no `cbSize`; the extensible/non-PCM form carries a `cbSize` (u16) at byte 16
 /// followed by `cbSize` bytes of extension data, retained verbatim in `WavFmt::ext`.
-fn decode_fmt_chunk(body: &[u8]) -> Result<WavFmt, String> {
+async fn decode_fmt_chunk(body: &[u8]) -> Result<WavFmt, String> {
     if body.len() < 16 {
         return Err(format!("wav: fmt chunk too short ({} bytes)", body.len()));
     }
@@ -111,7 +111,7 @@ fn decode_fmt_chunk(body: &[u8]) -> Result<WavFmt, String> {
 
 /// 📐️ Encodes a `fmt ` chunk body: the plain 16-byte PCM form when `ext` is `None`, else the
 /// extensible form (16 bytes + `cbSize`(u16) + `ext` bytes).
-fn encode_fmt_chunk(fmt: &WavFmt) -> Vec<u8> {
+async fn encode_fmt_chunk(fmt: &WavFmt) -> Vec<u8> {
     let mut body = Vec::with_capacity(16);
     body.extend_from_slice(&fmt.audio_format.to_le_bytes());
     body.extend_from_slice(&fmt.channels.to_le_bytes());
@@ -133,7 +133,7 @@ fn encode_fmt_chunk(fmt: &WavFmt) -> Vec<u8> {
 /// float 32-bit → `Float32`; every other `(audio_format, bits_per_sample)` combination (24-bit
 /// PCM, ADPCM, WAVE_FORMAT_EXTENSIBLE payloads, …) is retained as `Raw` — an honest boundary,
 /// not a silent misinterpretation.
-fn decode_data_chunk(fmt: &WavFmt, body: &[u8]) -> WavData {
+async fn decode_data_chunk(fmt: &WavFmt, body: &[u8]) -> WavData {
     match (fmt.audio_format, fmt.bits_per_sample) {
         (1, 16) if body.len() % 2 == 0 => WavData::Pcm16(body.chunks_exact(2).map(|c| i16::from_le_bytes([c[0], c[1]])).collect()),
         (1, 8) => WavData::Pcm8(body.to_vec()),
@@ -143,7 +143,7 @@ fn decode_data_chunk(fmt: &WavFmt, body: &[u8]) -> WavData {
 }
 
 /// 📐️ Encodes a `data` chunk body from the typed sample vocabulary.
-fn encode_data_chunk(data: &WavData) -> Vec<u8> {
+async fn encode_data_chunk(data: &WavData) -> Vec<u8> {
     match data {
         WavData::Pcm16(samples) => samples.iter().flat_map(|s| s.to_le_bytes()).collect(),
         WavData::Pcm8(bytes) => bytes.clone(),
@@ -157,7 +157,7 @@ fn encode_data_chunk(data: &WavData) -> Vec<u8> {
 /// 🚶 Walks every top-level chunk under `RIFF …/WAVE`, routing `fmt `/`data` into their typed
 /// slots and retaining everything else (`LIST`/`INFO`/`fact`/`cue `/…) verbatim in
 /// `other_chunks`, in on-disk order.
-pub fn decode_wav(bytes: &[u8]) -> Result<WavSnapshot, String> {
+pub async fn decode_wav(bytes: &[u8]) -> Result<WavSnapshot, String> {
     if !sniff_real_bytes(bytes) {
         return Err("wav: missing RIFF/WAVE magic".into());
     }
@@ -196,7 +196,7 @@ pub fn decode_wav(bytes: &[u8]) -> Result<WavSnapshot, String> {
 /// 🚶 Re-encodes a `WavSnapshot` into real RIFF/WAVE bytes: `fmt ` then `data` then
 /// `other_chunks` in their stored order — for a snapshot decoded from a real file with no other
 /// chunks, this reproduces the original bytes exactly (see `codec_retention_law` below).
-pub fn encode_wav(snapshot: &WavSnapshot) -> Vec<u8> {
+pub async fn encode_wav(snapshot: &WavSnapshot) -> Vec<u8> {
     let mut body = Vec::new();
     body.extend_from_slice(b"WAVE");
     let fmt_body = encode_fmt_chunk(&snapshot.fmt);
@@ -238,12 +238,12 @@ mod codec_tests {
     /// 🌱 Real ~1s 440Hz mono 8kHz 16-bit PCM fixture — byte-identical to the artifact's own
     /// `📚️examples/🎬️demo/🖼️assets/🔊️example.wav` (per ticket `fixtures/wav/NOTES.md`), duplicated
     /// here as a literal so the test doesn't reach across an emoji-path `include_bytes!` boundary.
-    fn real_fixture() -> Vec<u8> {
+    async fn real_fixture() -> Vec<u8> {
         include_bytes!("../📚️examples/🎬️demo/🖼️assets/🔊️example.wav").to_vec()
     }
 
     #[test]
-    fn sniffs_and_decodes_a_synthetic_fmt_chunk() {
+    async fn sniffs_and_decodes_a_synthetic_fmt_chunk() {
         let snap = WavSnapshot { fmt: WavFmt { audio_format: 1, channels: 1, sample_rate: 8000, byte_rate: 16000, block_align: 2, bits_per_sample: 16, ext: None }, data: WavData::Pcm16(vec![0, 100, -100]), ..WavSnapshot::default() };
         let bytes = encode_wav(&snap);
         assert!(sniff_real_bytes(&bytes));
@@ -253,7 +253,7 @@ mod codec_tests {
     }
 
     #[test]
-    fn sniff_rejects_non_wave_riff() {
+    async fn sniff_rejects_non_wave_riff() {
         let mut bytes = b"RIFF".to_vec();
         bytes.extend_from_slice(&4u32.to_le_bytes());
         bytes.extend_from_slice(b"AVI ");
@@ -267,7 +267,7 @@ mod codec_tests {
     /// re-synthesized 440Hz reference tone, per `fixtures/wav/NOTES.md`'s own verification
     /// method.
     #[test]
-    fn codec_retention_law() {
+    async fn codec_retention_law() {
         let fixture = real_fixture();
         let decoded = decode_wav(&fixture).expect("decode real fixture");
         assert_eq!(decoded.fmt.audio_format, 1, "PCM");
@@ -309,7 +309,7 @@ mod codec_tests {
 
     //#region 🔖️OtherChunksRetention
     #[test]
-    fn other_chunks_round_trip_verbatim_in_order() {
+    async fn other_chunks_round_trip_verbatim_in_order() {
         let snap = WavSnapshot {
             fmt: WavFmt { audio_format: 1, channels: 1, sample_rate: 44100, byte_rate: 88200, block_align: 2, bits_per_sample: 16, ext: None },
             data: WavData::Pcm16(vec![1, 2, 3]),
@@ -329,7 +329,7 @@ mod codec_tests {
 
     //#region 🔖️ExtFmtRetention
     #[test]
-    fn extensible_fmt_chunk_round_trips_ext_bytes() {
+    async fn extensible_fmt_chunk_round_trips_ext_bytes() {
         let snap = WavSnapshot {
             fmt: WavFmt {
                 audio_format: 0xFFFE,
@@ -358,7 +358,7 @@ pub mod io_registry {
 
     static ENTRIES: OnceLock<Vec<ComposerEntry>> = OnceLock::new();
 
-    pub fn entries() -> &'static [ComposerEntry] {
+    pub async fn entries() -> &'static [ComposerEntry] {
         ENTRIES.get_or_init(|| vec![composer_entry_of::<WavRawAnyComposer>()]).as_slice()
     }
 }

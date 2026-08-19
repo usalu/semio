@@ -59,7 +59,7 @@ mod tests {
     use super::*;
     use crate::artifacts::avi::standards::v1_0::subsets::any::schema::snapshot::{AviChunk, AviMainHeader, AviStream, AviStreamHeader};
 
-    fn real_world_avi() -> AviSnapshot {
+    async fn real_world_avi() -> AviSnapshot {
         AviSnapshot {
             schema: "stdio.avi".into(),
             main_header: AviMainHeader {
@@ -104,7 +104,7 @@ mod tests {
     }
 
     #[test]
-    fn deserialize_maps_vids_stream_and_synthesizes_pts_from_scale() {
+    async fn deserialize_maps_vids_stream_and_synthesizes_pts_from_scale() {
         let video = semio_framework_plugin::resolve_ready(SemioVideoFromAvi::deserialize(&real_world_avi())).expect("deserialize");
         assert_eq!(video.streams.len(), 1);
         let stream = &video.streams[0];
@@ -121,7 +121,7 @@ mod tests {
     }
 
     #[test]
-    fn non_vids_non_auds_stream_kind_is_honestly_dropped_not_fabricated() {
+    async fn non_vids_non_auds_stream_kind_is_honestly_dropped_not_fabricated() {
         let mut avi = real_world_avi();
         avi.streams[0].strh.fcc_type = "txts".into();
         let video = semio_framework_plugin::resolve_ready(SemioVideoFromAvi::deserialize(&avi)).expect("deserialize");

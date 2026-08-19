@@ -17,7 +17,7 @@ pub struct SetActiveExample {
 /// `📓️taxonomy.md`'s forbidden vocabulary), so "reset to demo" builds
 /// `editor::animate::reset_present_document_effect` (a `Effect::LoadDocument`, outside undo
 /// history) instead of an `artifact_mutations` entry.
-pub fn handle(payload: &SetActiveExample, _doc: &ArtifactView<'_, PresentSnapshot>, _cfg: &ConfigView<'_, PresentConfig>, _ctx: &mut PresentDispatchCtx) -> Result<Emit<PresentMutation, PresentConfigMutation>, Fault> {
+pub async fn handle(payload: &SetActiveExample, _doc: &ArtifactView<'_, PresentSnapshot>, _cfg: &ConfigView<'_, PresentConfig>, _ctx: &mut PresentDispatchCtx) -> Result<Emit<PresentMutation, PresentConfigMutation>, Fault> {
     if payload.example_id == "demo" || payload.example_id.is_empty() {
         Ok(Emit { effects: vec![crate::editor::animate::reset_present_document_effect(&default_present_snapshot()), interaction_select_effect(&[], "replace")], ..Default::default() })
     } else {

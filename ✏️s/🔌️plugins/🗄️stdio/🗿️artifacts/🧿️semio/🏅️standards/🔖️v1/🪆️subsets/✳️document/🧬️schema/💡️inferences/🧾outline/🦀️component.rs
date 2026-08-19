@@ -29,13 +29,13 @@ pub struct SemioDocumentOutline {
 
 /// 🔤️ Concatenates a run of `DocRun`s' literal text (formatting is ignored — this is a plain-text
 /// flattening, not a re-render).
-fn run_text(runs: &[DocRun]) -> String {
+async fn run_text(runs: &[DocRun]) -> String {
     runs.iter().map(|r| r.text.as_str()).collect::<Vec<_>>().join(" ")
 }
 
 /// 🌳️ Recursively walks `block`, appending every `Heading` encountered to `headings`, adding to
 /// `block_count`, and appending flattened text to `word_source`.
-fn walk_block(block: &DocBlock, headings: &mut Vec<SemioDocumentHeadingEntry>, block_count: &mut u32, word_source: &mut String) {
+async fn walk_block(block: &DocBlock, headings: &mut Vec<SemioDocumentHeadingEntry>, block_count: &mut u32, word_source: &mut String) {
     *block_count += 1;
     match block {
         DocBlock::Heading { level, runs, .. } => {
@@ -78,7 +78,7 @@ fn walk_block(block: &DocBlock, headings: &mut Vec<SemioDocumentHeadingEntry>, b
 }
 
 /// 🧾️ Computes [`SemioDocumentOutline`] via a recursive walk of `blocks` — see module doc comment.
-pub fn compute_semio_document_outline(snapshot: &SemioDocumentSnapshot) -> SemioDocumentOutline {
+pub async fn compute_semio_document_outline(snapshot: &SemioDocumentSnapshot) -> SemioDocumentOutline {
     let mut section_outline = Vec::new();
     let mut block_count = 0u32;
     let mut word_source = String::new();
@@ -97,7 +97,7 @@ mod tests {
     use crate::artifacts::semio::standards::v1::subsets::document::schema::snapshot::{DocListItem, DocTableCell, DocTableRow, STDIO_SEMIODOCUMENT_DOCUMENT_SCHEMA};
 
     #[test]
-    fn collects_headings_and_counts_words_and_blocks() {
+    async fn collects_headings_and_counts_words_and_blocks() {
         let snapshot = SemioDocumentSnapshot {
             schema: STDIO_SEMIODOCUMENT_DOCUMENT_SCHEMA.into(),
             styles: Vec::new(),
@@ -118,13 +118,13 @@ mod tests {
     }
 
     #[test]
-    fn inference_determinism_law() {
+    async fn inference_determinism_law() {
         let snapshot = SemioDocumentSnapshot::default();
         assert_eq!(compute_semio_document_outline(&snapshot), compute_semio_document_outline(&snapshot));
     }
 
     #[test]
-    fn inference_default_law() {
+    async fn inference_default_law() {
         assert_eq!(compute_semio_document_outline(&SemioDocumentSnapshot::default()), SemioDocumentOutline::default());
     }
 }

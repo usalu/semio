@@ -16,13 +16,13 @@ const IMPERATIVE_PLAY_DOCUMENT_NAMESPACE: &str = "imperative-play-document";
 /// tree items to their live selection/hover state; also reused by
 /// `ImperativePlayApp::interaction_topology` so the topology walks the identical id space (ticket
 /// 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM).
-pub fn step_row_id(id: &str) -> String {
+pub async fn step_row_id(id: &str) -> String {
     format!("{IMPERATIVE_PLAY_DOCUMENT_NAMESPACE}.step.{id}")
 }
 //#endregion 🔖️Interaction
 
 //#region 🔖️Definition
-pub fn definition() -> PanelTabDefinition {
+pub async fn definition() -> PanelTabDefinition {
     PanelTabDefinition {
         kind: PanelTabKind::App(FRAMEWORK_PANEL_TAB_ARTIFACT_ID.into()),
         label: LocalizedLabel::native(FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL, "Dokument"),
@@ -39,7 +39,7 @@ pub fn definition() -> PanelTabDefinition {
 /// the framework stamps this tree's selection/hover presence from that domain (`.interaction_domain`)
 /// and prunes stale ids through that same topology, so no per-item click action is declared here
 /// anymore (clicks are translated into `interactionSelect` generically).
-pub fn render(document: &ImperativeSnapshot, labels: &ImperativeLabels) -> UiNode {
+pub async fn render(document: &ImperativeSnapshot, labels: &ImperativeLabels) -> UiNode {
     let path = crate::artifacts::imperative::imperative_working_scene(document).path;
     let step_items: Vec<UiTreeItemNode> = path
         .steps
@@ -61,13 +61,13 @@ mod tests {
     use crate::editor::imperative::testkit::{imperative_app, render as render_body};
 
     #[test]
-    fn document_lists_steps() {
+    async fn document_lists_steps() {
         let mut app = imperative_app();
         assert!(render_body(&mut app, IMPERATIVE_PLAY_BODY_DOCUMENT).contains("imperative-play-document.steps"));
     }
 
     #[test]
-    fn definition_binds_the_framework_document_tab_to_this_body_key() {
+    async fn definition_binds_the_framework_document_tab_to_this_body_key() {
         let definition = definition();
         assert_eq!(definition.id(), FRAMEWORK_PANEL_TAB_ARTIFACT_ID);
         assert_eq!(definition.body_key.as_deref(), Some(IMPERATIVE_PLAY_BODY_DOCUMENT));

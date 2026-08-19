@@ -25,7 +25,7 @@ pub struct ShootingInference {
 }
 
 impl protocol::Inference<ShootingSnapshot> for ShootingInference {
-    fn infer(snapshot: &ShootingSnapshot) -> Self {
+    async fn infer(snapshot: &ShootingSnapshot) -> Self {
         Self { topology: compute_shooting_topology(snapshot) }
     }
 }
@@ -33,19 +33,19 @@ impl protocol::Inference<ShootingSnapshot> for ShootingInference {
 /// 🌱 Defined in terms of `infer` (not derived) so this stays correct regardless of what
 /// `ShootingSnapshot::default()` happens to contain.
 impl Default for ShootingInference {
-    fn default() -> Self {
+    async fn default() -> Self {
         <Self as protocol::Inference<ShootingSnapshot>>::infer(&ShootingSnapshot::default())
     }
 }
 
 impl protocol::InferenceSpec<ShootingSnapshot> for ShootingInference {
-    fn inference_schema_id() -> &'static str {
+    async fn inference_schema_id() -> &'static str {
         "s.shooting.shooting.inference"
     }
-    fn schema_version() -> u32 {
+    async fn schema_version() -> u32 {
         1
     }
-    fn fields() -> &'static [protocol::InferenceFieldSpec] {
+    async fn fields() -> &'static [protocol::InferenceFieldSpec] {
         &[protocol::InferenceFieldSpec { id: "s.shooting.shooting.inference.topology", reads: &["shots", "saved_cameras"] }]
     }
 }
@@ -61,7 +61,7 @@ impl ArtifactInferrer for crate::artifacts::shooting::standards::v1::subsets::an
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.shooting.shooting.inference`'s facet leaves into the OS-wide inference catalog
 /// — call once at plugin init, alongside `shooting_artifact_schema_descriptor`'s registration.
-pub fn shooting_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
+pub async fn shooting_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
     schema::ArtifactInferenceDescriptor {
         id: "s.shooting.shooting.inference",
         inference: schema::FacetLeaves {
@@ -83,7 +83,7 @@ mod tests {
     use protocol::Inference;
 
     //#region 🧸️Fixtures
-    fn sample_snapshot() -> ShootingSnapshot {
+    async fn sample_snapshot() -> ShootingSnapshot {
         ShootingSnapshot {
             saved_cameras: vec![ShootingSavedCamera { id: "cam-1".into(), label: "Front".into(), camera: ShootingCamera::default() }],
             shots: vec![ShootingShot { id: "shot-1".into(), label: "Shot 1".into(), width: 1024, height: 768, format: "png".into(), shape: "rectangle".into(), background: None, camera_id: Some("cam-1".into()) }],
@@ -94,13 +94,13 @@ mod tests {
 
     //#region 🧪️InferenceLaws
     #[test]
-    fn inference_determinism_law() {
+    async fn inference_determinism_law() {
         let snapshot = sample_snapshot();
         assert_eq!(ShootingInference::infer(&snapshot), ShootingInference::infer(&snapshot));
     }
 
     #[test]
-    fn inference_default_law() {
+    async fn inference_default_law() {
         assert_eq!(ShootingInference::infer(&ShootingSnapshot::default()), ShootingInference::default());
     }
     //#endregion 🧪️InferenceLaws

@@ -7,7 +7,7 @@ use crate::artifacts::raster::mutations::RasterMutation;
 use crate::artifacts::raster::RasterSnapshot;
 
 //#region 🔖️Inverse
-pub fn inverse(payload: &ChangeLayerOpacity, base: &RasterSnapshot) -> Vec<RasterMutation> {
+pub async fn inverse(payload: &ChangeLayerOpacity, base: &RasterSnapshot) -> Vec<RasterMutation> {
     match find_layer(&base.layers, &payload.layer_id) {
         Some(layer) => vec![RasterMutation::ChangeLayerOpacity(ChangeLayerOpacity { layer_id: payload.layer_id.clone(), new_opacity: layer_opacity(layer) })],
         None => Vec::new(),

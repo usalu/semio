@@ -37,7 +37,7 @@ pub type SemioValuePath = Vec<SemioValuePathSegment>;
 
 /// 🔎️ Read-only navigation of `path` from `root`, `None` on the first unresolvable segment
 /// (missing key, out-of-range index, or a segment applied to the wrong node kind).
-fn resolve<'a>(root: &'a SemioValue, path: &[SemioValuePathSegment]) -> Option<&'a SemioValue> {
+async fn resolve<'a>(root: &'a SemioValue, path: &[SemioValuePathSegment]) -> Option<&'a SemioValue> {
     let mut node = root;
     for segment in path {
         node = match (segment, node) {
@@ -108,7 +108,7 @@ pub enum SemioValueMutation {
 }
 
 impl Default for SemioValueMutation {
-    fn default() -> Self {
+    async fn default() -> Self {
         SemioValueMutation::NoMutation
     }
 }
@@ -118,11 +118,11 @@ impl Default for SemioValueMutation {
 /// 🧩 Lowers a leaf [`SemioValueDiff`] (addressing the node found at `path`) into the nested
 /// modified-chain matching the recipe's tree-nesting rule — no path addressing inside diffs
 /// themselves, only at the mutation level. Always targets `root`; `nodes` is untouched.
-fn diff_at_path(path: &[SemioValuePathSegment], leaf: Option<SemioValueDiff>) -> SemioValueTreeDiff {
+async fn diff_at_path(path: &[SemioValuePathSegment], leaf: Option<SemioValueDiff>) -> SemioValueTreeDiff {
     SemioValueTreeDiff { root: leaf.map(|leaf| wrap_at_path(path, leaf)), nodes: None }
 }
 
-fn wrap_at_path(path: &[SemioValuePathSegment], leaf: SemioValueDiff) -> SemioValueDiff {
+async fn wrap_at_path(path: &[SemioValuePathSegment], leaf: SemioValueDiff) -> SemioValueDiff {
     match path.split_first() {
         None => leaf,
         Some((SemioValuePathSegment::Key { key }, rest)) => SemioValueDiff::Map { diff: NamedTripleDiff { removed: Vec::new(), added: Vec::new(), modified: vec![NamedModified { key: key.clone(), diff: wrap_at_path(rest, leaf) }] } },
@@ -140,7 +140,7 @@ fn wrap_at_path(path: &[SemioValuePathSegment], leaf: SemioValueDiff) -> SemioVa
 //#region 🔖️Apply
 /// ▶️ Applies `mutation` to `snapshot`. The diff is the single semantics source: it's computed
 /// once from the pre-mutation state, applied to produce the new state, and returned.
-pub fn apply_semio_value_mutation(snapshot: &mut SemioValueSnapshot, mutation: &SemioValueMutation) -> protocol::MutationOutcome<SemioValueTreeDiff> {
+pub async fn apply_semio_value_mutation(snapshot: &mut SemioValueSnapshot, mutation: &SemioValueMutation) -> protocol::MutationOutcome<SemioValueTreeDiff> {
     let outcome = <SemioValueMutation as Mutation<SemioValueSnapshot>>::diff(mutation, snapshot);
     outcome.apply_to(snapshot)
 }
@@ -150,7 +150,7 @@ pub fn apply_semio_value_mutation(snapshot: &mut SemioValueSnapshot, mutation: &
 impl Mutation<SemioValueSnapshot> for SemioValueMutation {
     type Diff = SemioValueTreeDiff;
 
-    fn diff(&self, base: &SemioValueSnapshot) -> protocol::MutationOutcome<Self::Diff> {
+    async fn diff(&self, base: &SemioValueSnapshot) -> protocol::MutationOutcome<Self::Diff> {
         protocol::MutationOutcome::new(match self {
             SemioValueMutation::NoMutation => SemioValueTreeDiff::default(),
             SemioValueMutation::SetSnapshot { snapshot } => diff_set_snapshot(base, snapshot),
@@ -216,7 +216,7 @@ impl Mutation<SemioValueSnapshot> for SemioValueMutation {
 
     /// ↩️ Handcrafted mutation-level inverse, key/index/id-aware — reads the pre-mutation `base`
     /// state to recover the exact undo.
-    fn inverse(&self, base: &SemioValueSnapshot) -> Vec<Self> {
+    async fn inverse(&self, base: &SemioValueSnapshot) -> Vec<Self> {
         match self {
             SemioValueMutation::NoMutation => vec![SemioValueMutation::NoMutation],
             SemioValueMutation::SetSnapshot { .. } => vec![SemioValueMutation::SetSnapshot { snapshot: base.clone() }],
@@ -287,13 +287,13 @@ impl Mutation<SemioValueSnapshot> for SemioValueMutation {
 /// rather than duplicating them a second time in this file. Grammar: `keyword arg=value ...`
 /// (space-separated), one match arm per variant — same shape `JsonMutation`'s hand-rolled codec
 /// uses.
-fn enc_path_segment(seg: &SemioValuePathSegment) -> String {
+async fn enc_path_segment(seg: &SemioValuePathSegment) -> String {
     match seg {
         SemioValuePathSegment::Key { key } => format!("K[{}]", enc_str(key)),
         SemioValuePathSegment::Index { index } => format!("I[{index}]"),
     }
 }
-fn dec_path_segment(s: &str) -> Result<SemioValuePathSegment, String> {
+async fn dec_path_segment(s: &str) -> Result<SemioValuePathSegment, String> {
     let (tag, rest) = s.split_at(1);
     match tag {
         "K" => Ok(SemioValuePathSegment::Key { key: dec_str(strip_brackets(rest)?)? }),
@@ -301,23 +301,23 @@ fn dec_path_segment(s: &str) -> Result<SemioValuePathSegment, String> {
         other => Err(format!("semio value path segment: unknown tag {other:?}")),
     }
 }
-fn enc_path(p: &SemioValuePath) -> String {
+async fn enc_path(p: &SemioValuePath) -> String {
     format!("[{}]", p.iter().map(enc_path_segment).collect::<Vec<_>>().join(","))
 }
-fn dec_path(s: &str) -> Result<SemioValuePath, String> {
+async fn dec_path(s: &str) -> Result<SemioValuePath, String> {
     split_top_level(strip_brackets(s)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_path_segment).collect()
 }
 /// 🧭️ `enc_semio_snapshot`/`dec_semio_snapshot` — thin aliases for the single-source-of-truth
 /// `SemioValueSnapshot` text codec now owned by the sibling `📸️snapshot/🦀️component.rs` (also
 /// reused there by `ArtifactDsl`/`ArtifactPack`), rather than a second independent copy.
-fn enc_semio_snapshot(s: &SemioValueSnapshot) -> String {
+async fn enc_semio_snapshot(s: &SemioValueSnapshot) -> String {
     enc_semio_value_snapshot(s)
 }
-fn dec_semio_snapshot(s: &str) -> Result<SemioValueSnapshot, String> {
+async fn dec_semio_snapshot(s: &str) -> Result<SemioValueSnapshot, String> {
     dec_semio_value_snapshot(s)
 }
 
-fn print_value_mutation(m: &SemioValueMutation) -> String {
+async fn print_value_mutation(m: &SemioValueMutation) -> String {
     match m {
         SemioValueMutation::NoMutation => "no-mutation".to_string(),
         SemioValueMutation::SetSnapshot { snapshot } => format!("set-snapshot snapshot={}", enc_semio_snapshot(snapshot)),
@@ -334,7 +334,7 @@ fn print_value_mutation(m: &SemioValueMutation) -> String {
         SemioValueMutation::RemoveNode { id } => format!("remove-node id={}", enc_value_id(id)),
     }
 }
-fn parse_value_mutation(line: &str) -> Result<SemioValueMutation, String> {
+async fn parse_value_mutation(line: &str) -> Result<SemioValueMutation, String> {
     if line == "no-mutation" {
         return Ok(SemioValueMutation::NoMutation);
     }
@@ -357,10 +357,10 @@ fn parse_value_mutation(line: &str) -> Result<SemioValueMutation, String> {
 }
 
 impl OpText for SemioValueMutation {
-    fn print_op(&self) -> String {
+    async fn print_op(&self) -> String {
         print_value_mutation(self)
     }
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
+    async fn parse_op(line: &str) -> Result<Self, store::TextError> {
         parse_value_mutation(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
 }
@@ -369,7 +369,7 @@ impl OpText for SemioValueMutation {
 /// 🧭️ Real recursive binary twin of [`enc_path`]/[`dec_path`] — a varint segment COUNT, then per
 /// segment a 1-byte kind tag (`0`=Key/`1`=Index) and its own real payload. Template copied from
 /// json's own `enc_json_path_bin`/`dec_json_path_bin`.
-fn enc_semio_path_bin(path: &[SemioValuePathSegment], out: &mut Vec<u8>) {
+async fn enc_semio_path_bin(path: &[SemioValuePathSegment], out: &mut Vec<u8>) {
     store::pack_rt::write_varint_u64(out, path.len() as u64);
     for segment in path {
         match segment {
@@ -384,7 +384,7 @@ fn enc_semio_path_bin(path: &[SemioValuePathSegment], out: &mut Vec<u8>) {
         }
     }
 }
-fn dec_semio_path_bin(reader: &mut store::ByteReader<'_>) -> Result<SemioValuePath, String> {
+async fn dec_semio_path_bin(reader: &mut store::ByteReader<'_>) -> Result<SemioValuePath, String> {
     let count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut path = Vec::with_capacity(count as usize);
     for _ in 0..count {
@@ -402,7 +402,7 @@ fn dec_semio_path_bin(reader: &mut store::ByteReader<'_>) -> Result<SemioValuePa
 /// `SetSnapshot`'s own `OpBinary` payload (the sibling `📸️snapshot/🦀️component.rs`'s own
 /// `ArtifactPack` stays text-native, matching `json`'s exact precedent — see that file's doc
 /// comment).
-fn enc_semio_value_snapshot_bin(s: &SemioValueSnapshot, out: &mut Vec<u8>) {
+async fn enc_semio_value_snapshot_bin(s: &SemioValueSnapshot, out: &mut Vec<u8>) {
     write_str_lp(out, &s.schema);
     enc_semio_value_bin(&s.root, out);
     store::pack_rt::write_varint_u64(out, s.nodes.len() as u64);
@@ -410,7 +410,7 @@ fn enc_semio_value_snapshot_bin(s: &SemioValueSnapshot, out: &mut Vec<u8>) {
         enc_semio_value_node_bin(node, out);
     }
 }
-fn dec_semio_value_snapshot_bin(reader: &mut store::ByteReader<'_>) -> Result<SemioValueSnapshot, String> {
+async fn dec_semio_value_snapshot_bin(reader: &mut store::ByteReader<'_>) -> Result<SemioValueSnapshot, String> {
     let schema = read_str_lp(reader)?;
     let root = dec_semio_value_bin(reader)?;
     let count = reader.read_varint_u64().map_err(|e| e.to_string())?;
@@ -430,7 +430,7 @@ fn dec_semio_value_snapshot_bin(reader: &mut store::ByteReader<'_>) -> Result<Se
 /// is real LEB128-varint-framed binary (never text-as-bytes) — same treatment json's own
 /// `JsonMutation::encode_op`/`decode_op` uses.
 impl protocol::OpBinary for SemioValueMutation {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         let tag: u8 = match self {
             SemioValueMutation::NoMutation => 0,
             SemioValueMutation::SetSnapshot { .. } => 1,
@@ -479,7 +479,7 @@ impl protocol::OpBinary for SemioValueMutation {
         Ok(out)
     }
 
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         let mut reader = store::ByteReader::new(bytes);
         let malformed = |what: &'static str, offset: usize, detail: String| protocol::ProtocolError::Malformed { what, offset: offset as u64, detail };
         let _format = reader.read_u8().map_err(|e| malformed("op format", 0, e.to_string()))?;
@@ -539,23 +539,23 @@ impl protocol::OpBinary for SemioValueMutation {
 /// `🎹️composer/🦀️component.rs`'s `ops_grammar_conformance_law`/`protocol_walk_law` conformance
 /// tests, same convention json's own `demo_mutation_cases` uses.
 #[cfg(test)]
-pub(crate) fn demo_mutation_cases() -> Vec<SemioValueMutation> {
-    fn snap(root: SemioValue, nodes: Vec<SemioValueNode>) -> SemioValueSnapshot {
+pub(crate) async fn demo_mutation_cases() -> Vec<SemioValueMutation> {
+    async fn snap(root: SemioValue, nodes: Vec<SemioValueNode>) -> SemioValueSnapshot {
         SemioValueSnapshot { schema: crate::artifacts::semio::standards::v1::subsets::value::schema::snapshot::STDIO_SEMIOVALUE_DOCUMENT_SCHEMA.into(), root, nodes }
     }
-    fn mapv(pairs: Vec<(&str, SemioValue)>) -> SemioValue {
+    async fn mapv(pairs: Vec<(&str, SemioValue)>) -> SemioValue {
         SemioValue::Map { entries: pairs.into_iter().map(|(k, v)| SemioValueEntry { key: k.into(), value: v }).collect() }
     }
-    fn listv(items: Vec<SemioValue>) -> SemioValue {
+    async fn listv(items: Vec<SemioValue>) -> SemioValue {
         SemioValue::List { items }
     }
-    fn intv(lexeme: &str) -> SemioValue {
+    async fn intv(lexeme: &str) -> SemioValue {
         SemioValue::Int { lexeme: lexeme.into() }
     }
-    fn strv(s: &str) -> SemioValue {
+    async fn strv(s: &str) -> SemioValue {
         SemioValue::Str { value: s.into() }
     }
-    fn node(id: &str, value: SemioValue) -> SemioValueNode {
+    async fn node(id: &str, value: SemioValue) -> SemioValueNode {
         SemioValueNode { id: ValueId::new(id), value }
     }
 
@@ -583,35 +583,35 @@ mod tests {
     use crate::artifacts::semio::standards::v1::subsets::value::schema::snapshot::STDIO_SEMIOVALUE_DOCUMENT_SCHEMA;
     use protocol::MutationDiff;
 
-    fn snap(root: SemioValue, nodes: Vec<SemioValueNode>) -> SemioValueSnapshot {
+    async fn snap(root: SemioValue, nodes: Vec<SemioValueNode>) -> SemioValueSnapshot {
         SemioValueSnapshot { schema: STDIO_SEMIOVALUE_DOCUMENT_SCHEMA.into(), root, nodes }
     }
 
-    fn mapv(pairs: Vec<(&str, SemioValue)>) -> SemioValue {
+    async fn mapv(pairs: Vec<(&str, SemioValue)>) -> SemioValue {
         SemioValue::Map { entries: pairs.into_iter().map(|(k, v)| SemioValueEntry { key: k.into(), value: v }).collect() }
     }
 
-    fn listv(items: Vec<SemioValue>) -> SemioValue {
+    async fn listv(items: Vec<SemioValue>) -> SemioValue {
         SemioValue::List { items }
     }
 
-    fn intv(lexeme: &str) -> SemioValue {
+    async fn intv(lexeme: &str) -> SemioValue {
         SemioValue::Int { lexeme: lexeme.into() }
     }
 
-    fn strv(s: &str) -> SemioValue {
+    async fn strv(s: &str) -> SemioValue {
         SemioValue::Str { value: s.into() }
     }
 
-    fn node(id: &str, value: SemioValue) -> SemioValueNode {
+    async fn node(id: &str, value: SemioValue) -> SemioValueNode {
         SemioValueNode { id: ValueId::new(id), value }
     }
 
-    fn base_fixture() -> SemioValueSnapshot {
+    async fn base_fixture() -> SemioValueSnapshot {
         snap(mapv(vec![("a", intv("1")), ("list", listv(vec![intv("1"), intv("2")]))]), vec![node("n1", strv("hello"))])
     }
 
-    fn apply_and_check(base: &SemioValueSnapshot, mutation: SemioValueMutation) -> (SemioValueSnapshot, protocol::MutationOutcome<SemioValueTreeDiff>) {
+    async fn apply_and_check(base: &SemioValueSnapshot, mutation: SemioValueMutation) -> (SemioValueSnapshot, protocol::MutationOutcome<SemioValueTreeDiff>) {
         let mut via_apply = base.clone();
         let returned = apply_semio_value_mutation(&mut via_apply, &mutation);
         let expected_diff = mutation.diff(base);
@@ -623,7 +623,7 @@ mod tests {
 
     //#region mutation_diff_law
     #[test]
-    fn mutation_diff_law_all_variants() {
+    async fn mutation_diff_law_all_variants() {
         let base = base_fixture();
 
         apply_and_check(&base, SemioValueMutation::NoMutation);
@@ -640,14 +640,14 @@ mod tests {
     }
 
     #[test]
-    fn set_map_entry_on_missing_key_adds_at_end() {
+    async fn set_map_entry_on_missing_key_adds_at_end() {
         let base = snap(mapv(vec![("a", intv("1"))]), vec![]);
         let (result, _) = apply_and_check(&base, SemioValueMutation::SetMapEntry { path: vec![], key: "b".into(), value: intv("2") });
         assert_eq!(result.root, mapv(vec![("a", intv("1")), ("b", intv("2"))]));
     }
 
     #[test]
-    fn remove_map_entry_missing_key_is_noop() {
+    async fn remove_map_entry_missing_key_is_noop() {
         let base = snap(mapv(vec![("a", intv("1"))]), vec![]);
         let (result, diff) = apply_and_check(&base, SemioValueMutation::RemoveMapEntry { path: vec![], key: "missing".into() });
         assert_eq!(result, base);
@@ -655,14 +655,14 @@ mod tests {
     }
 
     #[test]
-    fn nested_path_targets_inner_entry() {
+    async fn nested_path_targets_inner_entry() {
         let base = snap(mapv(vec![("outer", mapv(vec![("inner", intv("1"))]))]), vec![]);
         let (result, _) = apply_and_check(&base, SemioValueMutation::SetMapEntry { path: vec![SemioValuePathSegment::Key { key: "outer".into() }], key: "inner".into(), value: intv("42") });
         assert_eq!(result.root, mapv(vec![("outer", mapv(vec![("inner", intv("42"))]))]));
     }
 
     #[test]
-    fn set_node_on_missing_id_inserts() {
+    async fn set_node_on_missing_id_inserts() {
         let base = snap(SemioValue::Null, vec![node("n1", strv("a"))]);
         let (result, _) = apply_and_check(&base, SemioValueMutation::SetNode { id: ValueId::new("n2"), value: strv("b") });
         assert_eq!(result.nodes, vec![node("n1", strv("a")), node("n2", strv("b"))]);
@@ -671,7 +671,7 @@ mod tests {
 
     //#region inverse_law
     #[test]
-    fn inverse_law_mutation_level_round_trips() {
+    async fn inverse_law_mutation_level_round_trips() {
         let base = base_fixture();
         let mutations = vec![
             SemioValueMutation::SetMapEntry { path: vec![], key: "a".into(), value: intv("2") },
@@ -695,7 +695,7 @@ mod tests {
     }
 
     #[test]
-    fn inverse_law_diff_level_matches_mutation_diff() {
+    async fn inverse_law_diff_level_matches_mutation_diff() {
         let base = snap(mapv(vec![("a", intv("1"))]), vec![]);
         let mutation = SemioValueMutation::SetMapEntry { path: vec![], key: "a".into(), value: intv("2") };
         let diff = mutation.diff(&base);
@@ -710,7 +710,7 @@ mod tests {
     /// values, a `Ref`/`Bytes` payload, and a multi-segment `SemioValuePath` mixing both segment
     /// kinds.
     #[test]
-    fn op_text_binary_roundtrip_law() {
+    async fn op_text_binary_roundtrip_law() {
         use protocol::{OpBinary, OpText};
 
         for m in demo_mutation_cases() {

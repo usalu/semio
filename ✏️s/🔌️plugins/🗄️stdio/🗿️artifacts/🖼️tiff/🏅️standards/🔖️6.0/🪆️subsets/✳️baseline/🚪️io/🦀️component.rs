@@ -23,12 +23,12 @@ pub mod derived_composition {
         type Snapshot = TiffSnapshot;
         const WRITES: Dialect = DIALECT_BASELINE;
 
-        fn reads() -> &'static [Dialect] {
+        async fn reads() -> &'static [Dialect] {
             &[DIALECT_ANY, DIALECT_BASELINE, DEP_BINARY]
         }
 
-        fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
-            let inner = TiffAnyComposer::compose(sources)?;
+        async fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+            let inner = semio_framework_plugin::resolve_ready(TiffAnyComposer::compose(sources))?;
             let mut diagnostics = inner.diagnostics;
             diagnostics.extend(check_tiff_baseline_conformance(&inner.snapshot));
             Ok(Composition { snapshot: inner.snapshot, confidence: inner.confidence, diagnostics })
@@ -42,7 +42,7 @@ pub mod derived_composition {
     impl SubsetValidator for TiffBaselineValidator {
         const DIALECT: Dialect = DIALECT_BASELINE;
 
-        fn validate(payload: &IoPayload) -> Vec<Diagnostic> {
+        async fn validate(payload: &IoPayload) -> Vec<Diagnostic> {
             let decoded = match payload {
                 IoPayload::Binary(bytes) => <TiffSnapshot as store::ArtifactPack>::decode_pack(bytes).ok(),
                 IoPayload::Text(text) => <TiffSnapshot as store::ArtifactDsl>::parse_dsl(text).ok(),
@@ -63,14 +63,14 @@ pub mod derived_composition {
 
     static VALIDATOR_ENTRY: OnceLock<SubsetValidatorEntry> = OnceLock::new();
 
-    fn validator_entry() -> &'static SubsetValidatorEntry {
+    async fn validator_entry() -> &'static SubsetValidatorEntry {
         VALIDATOR_ENTRY.get_or_init(subset_validator_entry_of::<TiffBaselineValidator>)
     }
 
     /// 📌️ Registers this subset's `SubsetValidator`. Called from 6.0's own `⚙️engine::register()`.
     /// The `ComposerEntry` itself is registered separately via this standard's own
     /// `composer::entries()` aggregation.
-    pub fn register() {
+    pub async fn register() {
         let _ = register_subset_validator(validator_entry());
     }
     //#endregion 🔖️SubsetValidator
@@ -86,7 +86,7 @@ pub mod derived_composition {
         /// then panics instead of returning that `Err`. A minimal 1x1 non-degenerate image (real
         /// IFD with ImageWidth/ImageLength/StripOffsets) is the smallest real fixture the encoder
         /// accepts.
-        fn minimal_non_degenerate_snapshot() -> TiffSnapshot {
+        async fn minimal_non_degenerate_snapshot() -> TiffSnapshot {
             TiffSnapshot {
                 byte_order: TiffByteOrder::LittleEndian,
                 ifds: vec![TiffIfd { entries: vec![TiffTag { tag: 256, kind: TiffFieldType::Long, values: TiffValues::Long(vec![1]) }, TiffTag { tag: 257, kind: TiffFieldType::Long, values: TiffValues::Long(vec![1]) }] }],
@@ -96,7 +96,7 @@ pub mod derived_composition {
         }
 
         #[test]
-        fn compose_carries_no_findings_for_a_conformant_document() {
+        async fn compose_carries_no_findings_for_a_conformant_document() {
             let bytes = <TiffSnapshot as store::ArtifactPack>::encode_pack(&minimal_non_degenerate_snapshot());
             let sources = vec![ComposeSource { dialect: DIALECT_ANY, payload: AnalyzeSource::Binary(&bytes) }];
             let composed = TiffBaselineComposerComposition::compose(&sources).expect("pass-through compose never fails on conformance grounds");
@@ -104,7 +104,7 @@ pub mod derived_composition {
         }
 
         #[test]
-        fn subset_validator_carries_no_findings_for_a_conformant_document() {
+        async fn subset_validator_carries_no_findings_for_a_conformant_document() {
             let bytes = <TiffSnapshot as store::ArtifactPack>::encode_pack(&minimal_non_degenerate_snapshot());
             let diagnostics = TiffBaselineValidator::validate(&IoPayload::Binary(bytes));
             assert!(diagnostics.is_empty(), "got {diagnostics:?}");
@@ -118,7 +118,7 @@ pub mod derived_composition {
         /// own `no_ifd_is_flagged_soft` test; this composer/validator layer only needs the
         /// conformant-document path exercised above.
         #[test]
-        fn no_ifd_diagnostic_is_reachable_via_direct_check_not_through_encode_pack() {
+        async fn no_ifd_diagnostic_is_reachable_via_direct_check_not_through_encode_pack() {
             let diagnostics = check_tiff_baseline_conformance(&TiffSnapshot::default());
             assert!(diagnostics.iter().any(|d| d.code.0 == crate::artifacts::tiff::standards::v6_0::subsets::baseline::schema::CODE_NO_IFD), "got {diagnostics:?}");
         }

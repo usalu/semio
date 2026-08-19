@@ -17,7 +17,7 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 
 
 //#region 🔖️BoardOps
-pub fn apply_board_step(wires: &mut DslValue, board: &mut DslValue, add_node: Option<&DslValue>, remove_node_id: Option<&str>, patch_node: Option<(&str, &BTreeMap<String, DslValue>)>, add_edge: Option<(&DslValue, &DslValue)>, remove_edge_id: Option<&str>) {
+pub async fn apply_board_step(wires: &mut DslValue, board: &mut DslValue, add_node: Option<&DslValue>, remove_node_id: Option<&str>, patch_node: Option<(&str, &BTreeMap<String, DslValue>)>, add_edge: Option<(&DslValue, &DslValue)>, remove_edge_id: Option<&str>) {
     if let Some(node) = add_node {
         array_mut(board, "nodes").push(node.clone());
     }
@@ -51,7 +51,7 @@ pub fn apply_board_step(wires: &mut DslValue, board: &mut DslValue, add_node: Op
 //#region 🔖️Apply
 impl WiresDiff {
     /// 🧬️ Applies every sparse entry (all state classes) onto a full artifact.
-    pub fn apply_to_artifact(&self, artifact: &WiresArtifact) -> protocol::MutationApplyResult<WiresArtifact> {
+    pub async fn apply_to_artifact(&self, artifact: &WiresArtifact) -> protocol::MutationApplyResult<WiresArtifact> {
         Ok({
             if let Some(replacement) = &self.artifact {
                 return Ok((**replacement).clone());
@@ -87,7 +87,7 @@ impl WiresDiff {
 }
 
 impl MutationDiff<WiresSnapshot> for WiresDiff {
-    fn apply(&self, snapshot: &WiresSnapshot) -> protocol::MutationApplyResult<WiresSnapshot> {
+    async fn apply(&self, snapshot: &WiresSnapshot) -> protocol::MutationApplyResult<WiresSnapshot> {
         Ok({
             if let Some(replacement) = &self.artifact {
                 return Ok(replacement.to_snapshot());
@@ -108,7 +108,7 @@ impl MutationDiff<WiresSnapshot> for WiresDiff {
             next
         })
     }
-    fn absorb(&mut self, other: Self) {
+    async fn absorb(&mut self, other: Self) {
         if other.artifact.is_some() {
             *self = other;
             return;
@@ -134,7 +134,7 @@ impl MutationDiff<WiresSnapshot> for WiresDiff {
 
 //#region 🔖️Builders
 /// 🖼️ Whole-artifact replacement from a snapshot (UI fields defaulted).
-pub fn diff_set_snapshot(snapshot: &WiresSnapshot) -> WiresDiff {
+pub async fn diff_set_snapshot(snapshot: &WiresSnapshot) -> WiresDiff {
     WiresDiff {
         artifact: Some(Box::new(WiresArtifact::from_snapshot(snapshot.clone()))),
         ..Default::default()
@@ -147,7 +147,7 @@ pub fn diff_set_snapshot(snapshot: &WiresSnapshot) -> WiresDiff {
 /// `change-node-shape`/`edit-node-text`/`set-node-root` all call this via `board_after_*`/directly).
 /// `board`'s `camera`/`meta`/`schema`/`wires` keys are intentionally ignored here — those live outside
 /// the composed content on `WiresSnapshot.camera`/`.meta` and no triad in this plugin ever writes them.
-pub fn diff_board_fixture(board: DslValue) -> WiresDiff {
+pub async fn diff_board_fixture(board: DslValue) -> WiresDiff {
     let nodes = crate::artifacts::wires::schema::fixture_nodes(&board).to_vec();
     let edges = crate::artifacts::wires::schema::fixture_edges(&board).to_vec();
     WiresDiff {
@@ -156,45 +156,45 @@ pub fn diff_board_fixture(board: DslValue) -> WiresDiff {
     }
 }
 
-pub fn diff_wires_fixture(wires: DslValue) -> WiresDiff {
+pub async fn diff_wires_fixture(wires: DslValue) -> WiresDiff {
     WiresDiff {
         wires_fixture: Some(wires),
         ..Default::default()
     }
 }
 
-pub fn diff_wires_and_board(wires: DslValue, board: DslValue) -> WiresDiff {
+pub async fn diff_wires_and_board(wires: DslValue, board: DslValue) -> WiresDiff {
     let mut diff = diff_board_fixture(board);
     diff.wires_fixture = Some(wires);
     diff
 }
 
-pub fn board_after_add_node(snapshot: &WiresSnapshot, node: &DslValue) -> DslValue {
+pub async fn board_after_add_node(snapshot: &WiresSnapshot, node: &DslValue) -> DslValue {
     let mut board = crate::artifacts::wires::wires_working_board(snapshot);
     array_mut(&mut board, "nodes").push(node.clone());
     board
 }
 
-pub fn fixtures_after_add_edge(snapshot: &WiresSnapshot, edge: &DslValue, relationship: &DslValue) -> (DslValue, DslValue) {
+pub async fn fixtures_after_add_edge(snapshot: &WiresSnapshot, edge: &DslValue, relationship: &DslValue) -> (DslValue, DslValue) {
     let mut wires = snapshot.wires_fixture.clone();
     let mut board = crate::artifacts::wires::wires_working_board(snapshot);
     apply_board_step(&mut wires, &mut board, None, None, None, Some((edge, relationship)), None);
     (wires, board)
 }
 
-pub fn board_after_remove_node(snapshot: &WiresSnapshot, node_id: &str) -> DslValue {
+pub async fn board_after_remove_node(snapshot: &WiresSnapshot, node_id: &str) -> DslValue {
     let mut board = crate::artifacts::wires::wires_working_board(snapshot);
     apply_board_step(&mut DslValue::Null, &mut board, None, Some(node_id), None, None, None);
     board
 }
 
-pub fn board_after_patch_node(snapshot: &WiresSnapshot, node_id: &str, patch: &BTreeMap<String, DslValue>) -> DslValue {
+pub async fn board_after_patch_node(snapshot: &WiresSnapshot, node_id: &str, patch: &BTreeMap<String, DslValue>) -> DslValue {
     let mut board = crate::artifacts::wires::wires_working_board(snapshot);
     apply_board_step(&mut DslValue::Null, &mut board, None, None, Some((node_id, patch)), None, None);
     board
 }
 
-pub fn fixtures_after_remove_edge(snapshot: &WiresSnapshot, edge_id: &str) -> (DslValue, DslValue) {
+pub async fn fixtures_after_remove_edge(snapshot: &WiresSnapshot, edge_id: &str) -> (DslValue, DslValue) {
     let mut wires = snapshot.wires_fixture.clone();
     let mut board = crate::artifacts::wires::wires_working_board(snapshot);
     apply_board_step(&mut wires, &mut board, None, None, None, None, Some(edge_id));
@@ -209,12 +209,12 @@ mod tests {
     use crate::artifacts::wires::empty_wires_snapshot;
     use serde_json::json;
 
-    fn node(id: &str, text: &str) -> DslValue {
+    async fn node(id: &str, text: &str) -> DslValue {
         dsl::to_dsl_value(&json!({ "id": id, "nodeKind": "identity", "shape": "circle", "x": 0.0, "y": 0.0, "radius": 24.0, "text": text, "handles": [] })).unwrap()
     }
 
     #[test]
-    fn apply_adds_node_via_board_fixture_delta() {
+    async fn apply_adds_node_via_board_fixture_delta() {
         let snapshot = empty_wires_snapshot();
         let diff = diff_board_fixture(board_after_add_node(&snapshot, &node("node-1", "Alpha")));
         let after = diff.apply(&snapshot).expect("valid mutation diff");
@@ -222,7 +222,7 @@ mod tests {
     }
 
     #[test]
-    fn absorb_replace_wins() {
+    async fn absorb_replace_wins() {
         let mut diff = diff_board_fixture(board_after_add_node(&empty_wires_snapshot(), &node("node-1", "Alpha")));
         let replacement = empty_wires_snapshot();
         diff.absorb(diff_set_snapshot(&replacement));

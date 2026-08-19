@@ -69,7 +69,7 @@ pub const BLOCK2D_DIALECT: semio_framework_plugin::Dialect = semio_framework_plu
 
 /// 🗂️ This artifact's `ArtifactKindSpec` — the canonical `2d.block` declaration, stitched into
 /// `crate::editor::block2d::create_block2d_app`.
-pub fn artifact_kind() -> ArtifactKindSpec {
+pub async fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "2d.block".into(),
         name: "Node Kind".into(),
@@ -93,7 +93,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn artifact_kind_declares_the_2d_block_interchange_kind() {
+    async fn artifact_kind_declares_the_2d_block_interchange_kind() {
         let kind = artifact_kind();
         assert_eq!(kind.id, "2d.block");
         assert_eq!(kind.schema, BLOCK_2D_SCHEMA);
@@ -108,7 +108,7 @@ mod tests {
 /// that invoked it. `crate::editor::block2d::config::schema::app_schema_descriptor()` is handed to
 /// `ArtifactEditor::app_schema` instead (ticket W1c), not declared here: an app-scope concern
 /// `ArtifactDeclaration` deliberately has no field for (see that struct's own doc).
-pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
+pub async fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
     use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
 
     let rows: &[(&str, &str, &str, &[(&str, &str)], Option<(&str, &str)>)] = &[
@@ -148,7 +148,7 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
     Ok(definition)
 }
 
-pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
+pub async fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
     semio_framework_plugin::ArtifactDeclaration::builder(definition()?)
         .schema(crate::artifacts::block2d::standards::v1::subsets::any::schema::block2d_artifact_schema_descriptor())
         .inferences([crate::artifacts::block2d::standards::v1::subsets::any::schema::inferences::block2d_artifact_inference_descriptor()])
@@ -160,7 +160,7 @@ pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semi
 
 /// 📌️ Handcrafted facet grammars (text) and protocols (binary) for in-process execution — built once
 /// and leaked to a `&'static` slice since `dsl::passthrough_hooks` isn't `const fn`.
-fn pilot_languages() -> &'static [dsl::LanguageSpec] {
+async fn pilot_languages() -> &'static [dsl::LanguageSpec] {
     static LANGUAGES: std::sync::OnceLock<Vec<dsl::LanguageSpec>> = std::sync::OnceLock::new();
     LANGUAGES
         .get_or_init(|| {

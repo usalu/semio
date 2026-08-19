@@ -19,7 +19,7 @@ pub mod query {
     /// become the selection here — selection is framework-owned `InteractionState` now, only ever
     /// mutated by the framework's own injected `interactionSelect` handling, never by an app
     /// command's `Emit` (mirrors note's `add-block`); hits still land in `last_result_json`.
-    pub fn handle(payload: &Search, doc: &ArtifactView<'_, ProgramSnapshot>, cfg: &ConfigView<'_, ArchitectConfig>) -> Result<Emit<ProgramMutation, ArchitectConfigMutation>, Fault> {
+    pub async fn handle(payload: &Search, doc: &ArtifactView<'_, ProgramSnapshot>, cfg: &ConfigView<'_, ArchitectConfig>) -> Result<Emit<ProgramMutation, ArchitectConfigMutation>, Fault> {
         let base_config = cfg.snapshot;
         let mut history = parse_search_history(base_config);
         let hits = search_plugin(doc.snapshot, &SearchQuery { keywords: payload.query.split_whitespace().map(str::to_string).collect(), ..SearchQuery::default() }, None, Some(&mut history));

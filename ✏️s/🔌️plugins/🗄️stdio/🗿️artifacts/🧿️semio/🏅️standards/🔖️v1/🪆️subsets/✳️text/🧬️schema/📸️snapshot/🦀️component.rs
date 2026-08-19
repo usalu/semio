@@ -79,7 +79,7 @@ pub struct SemioTextSnapshot {
 }
 
 impl Default for SemioTextSnapshot {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self { schema: STDIO_SEMIOTEXT_DOCUMENT_SCHEMA.into(), runs: Vec::new() }
     }
 }
@@ -90,30 +90,30 @@ impl Default for SemioTextSnapshot {
 /// style `✳️image`'s/`✳️audio`'s own `📸️snapshot`/`🔺️diff`/`🧬️mutations` facets already establish,
 /// duplicated locally (not imported across facets) to keep each facet module independently
 /// compilable, per that precedent's own doc comment.
-fn hex_encode(bytes: &[u8]) -> String {
+async fn hex_encode(bytes: &[u8]) -> String {
     bytes.iter().map(|b| format!("{b:02x}")).collect()
 }
-fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
+async fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
     if s.len() % 2 != 0 {
         return Err(format!("odd hex length: {s:?}"));
     }
     (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()
 }
-pub(crate) fn enc_str(s: &str) -> String {
+pub(crate) async fn enc_str(s: &str) -> String {
     hex_encode(s.as_bytes())
 }
-pub(crate) fn dec_str(s: &str) -> Result<String, String> {
+pub(crate) async fn dec_str(s: &str) -> Result<String, String> {
     String::from_utf8(hex_decode(s)?).map_err(|e| e.to_string())
 }
 
-fn enc_list<T>(items: &[T], enc: impl Fn(&T) -> String) -> String {
+async fn enc_list<T>(items: &[T], enc: impl Fn(&T) -> String) -> String {
     format!("[{}]", items.iter().map(|it| enc(it)).collect::<Vec<_>>().join(","))
 }
-fn dec_list<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Vec<T>, String> {
+async fn dec_list<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Vec<T>, String> {
     split_top_level(strip_brackets(s)?, ',').into_iter().filter(|s| !s.is_empty()).map(|entry| dec(entry)).collect()
 }
 
-pub(crate) fn enc_mark_kind(k: SemioTextMarkKind) -> char {
+pub(crate) async fn enc_mark_kind(k: SemioTextMarkKind) -> char {
     match k {
         SemioTextMarkKind::Bold => 'b',
         SemioTextMarkKind::Italic => 'i',
@@ -121,7 +121,7 @@ pub(crate) fn enc_mark_kind(k: SemioTextMarkKind) -> char {
         SemioTextMarkKind::Link => 'l',
     }
 }
-pub(crate) fn dec_mark_kind(s: &str) -> Result<SemioTextMarkKind, String> {
+pub(crate) async fn dec_mark_kind(s: &str) -> Result<SemioTextMarkKind, String> {
     match s {
         "b" => Ok(SemioTextMarkKind::Bold),
         "i" => Ok(SemioTextMarkKind::Italic),
@@ -130,18 +130,18 @@ pub(crate) fn dec_mark_kind(s: &str) -> Result<SemioTextMarkKind, String> {
         other => Err(format!("bad mark kind {other:?}")),
     }
 }
-pub(crate) fn enc_mark(m: &SemioTextMark) -> String {
+pub(crate) async fn enc_mark(m: &SemioTextMark) -> String {
     format!("[{},{}]", enc_mark_kind(m.kind), enc_str(&m.href))
 }
-pub(crate) fn dec_mark(s: &str) -> Result<SemioTextMark, String> {
+pub(crate) async fn dec_mark(s: &str) -> Result<SemioTextMark, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [kind, href] = parts.as_slice() else { return Err(format!("mark: expected 2 fields, got {}", parts.len())) };
     Ok(SemioTextMark { kind: dec_mark_kind(kind)?, href: dec_str(href)? })
 }
-pub(crate) fn enc_run(r: &SemioTextRun) -> String {
+pub(crate) async fn enc_run(r: &SemioTextRun) -> String {
     format!("[{},{},{}]", enc_str(&r.language), enc_str(&r.content), enc_list(&r.marks, enc_mark))
 }
-pub(crate) fn dec_run(s: &str) -> Result<SemioTextRun, String> {
+pub(crate) async fn dec_run(s: &str) -> Result<SemioTextRun, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [language, content, marks] = parts.as_slice() else { return Err(format!("run: expected 3 fields, got {}", parts.len())) };
     Ok(SemioTextRun { language: dec_str(language)?, content: dec_str(content)?, marks: dec_list(marks, dec_mark)? })
@@ -150,10 +150,10 @@ pub(crate) fn dec_run(s: &str) -> Result<SemioTextRun, String> {
 /// 📄️ The real structured text body: two lines — `schema=<hex>`, `runs=[<run>,...]` — matching the
 /// grammar's `document = artifact-mark schema-line runs-line`. Newlines are pure lexer trivia in
 /// the shared dialect, so this is genuinely recognizable by `dsl::Recognizer`, not merely readable.
-fn print_text_snapshot_body(s: &SemioTextSnapshot) -> String {
+async fn print_text_snapshot_body(s: &SemioTextSnapshot) -> String {
     format!("schema={}\nruns={}", enc_str(&s.schema), enc_list(&s.runs, enc_run))
 }
-fn parse_text_snapshot_body(body: &str) -> Result<SemioTextSnapshot, String> {
+async fn parse_text_snapshot_body(body: &str) -> Result<SemioTextSnapshot, String> {
     let mut schema = None;
     let mut runs = Vec::new();
     for line in body.lines() {
@@ -176,22 +176,22 @@ fn parse_text_snapshot_body(body: &str) -> Result<SemioTextSnapshot, String> {
 //#region 🔖️BinaryPrimitives
 /// 🧪️ Real LEB128-varint-length-prefixed binary primitives (`store::pack_rt::write_varint_u64` /
 /// `store::ByteReader`, same helpers every other real semio codec in this standard uses).
-fn write_bytes_lp(out: &mut Vec<u8>, bytes: &[u8]) {
+async fn write_bytes_lp(out: &mut Vec<u8>, bytes: &[u8]) {
     store::pack_rt::write_varint_u64(out, bytes.len() as u64);
     out.extend_from_slice(bytes);
 }
-fn read_bytes_lp(reader: &mut store::ByteReader<'_>) -> Result<Vec<u8>, String> {
+async fn read_bytes_lp(reader: &mut store::ByteReader<'_>) -> Result<Vec<u8>, String> {
     let len = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
     Ok(reader.read_bytes(len).map_err(|e| e.to_string())?.to_vec())
 }
-pub(crate) fn write_str_lp(out: &mut Vec<u8>, s: &str) {
+pub(crate) async fn write_str_lp(out: &mut Vec<u8>, s: &str) {
     write_bytes_lp(out, s.as_bytes());
 }
-pub(crate) fn read_str_lp(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
+pub(crate) async fn read_str_lp(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
     String::from_utf8(read_bytes_lp(reader)?).map_err(|e| e.to_string())
 }
 
-pub(crate) fn mark_kind_tag(k: SemioTextMarkKind) -> u8 {
+pub(crate) async fn mark_kind_tag(k: SemioTextMarkKind) -> u8 {
     match k {
         SemioTextMarkKind::Bold => 0,
         SemioTextMarkKind::Italic => 1,
@@ -199,7 +199,7 @@ pub(crate) fn mark_kind_tag(k: SemioTextMarkKind) -> u8 {
         SemioTextMarkKind::Link => 3,
     }
 }
-pub(crate) fn mark_kind_from_tag(tag: u8) -> Result<SemioTextMarkKind, String> {
+pub(crate) async fn mark_kind_from_tag(tag: u8) -> Result<SemioTextMarkKind, String> {
     match tag {
         0 => Ok(SemioTextMarkKind::Bold),
         1 => Ok(SemioTextMarkKind::Italic),
@@ -208,16 +208,16 @@ pub(crate) fn mark_kind_from_tag(tag: u8) -> Result<SemioTextMarkKind, String> {
         other => Err(format!("unsupported mark kind tag {other}")),
     }
 }
-pub(crate) fn write_mark(out: &mut Vec<u8>, m: &SemioTextMark) {
+pub(crate) async fn write_mark(out: &mut Vec<u8>, m: &SemioTextMark) {
     out.push(mark_kind_tag(m.kind));
     write_str_lp(out, &m.href);
 }
-pub(crate) fn read_mark(reader: &mut store::ByteReader<'_>) -> Result<SemioTextMark, String> {
+pub(crate) async fn read_mark(reader: &mut store::ByteReader<'_>) -> Result<SemioTextMark, String> {
     let kind = mark_kind_from_tag(reader.read_u8().map_err(|e| e.to_string())?)?;
     let href = read_str_lp(reader)?;
     Ok(SemioTextMark { kind, href })
 }
-pub(crate) fn write_run(out: &mut Vec<u8>, r: &SemioTextRun) {
+pub(crate) async fn write_run(out: &mut Vec<u8>, r: &SemioTextRun) {
     write_str_lp(out, &r.language);
     write_str_lp(out, &r.content);
     store::pack_rt::write_varint_u64(out, r.marks.len() as u64);
@@ -225,7 +225,7 @@ pub(crate) fn write_run(out: &mut Vec<u8>, r: &SemioTextRun) {
         write_mark(out, m);
     }
 }
-pub(crate) fn read_run(reader: &mut store::ByteReader<'_>) -> Result<SemioTextRun, String> {
+pub(crate) async fn read_run(reader: &mut store::ByteReader<'_>) -> Result<SemioTextRun, String> {
     let language = read_str_lp(reader)?;
     let content = read_str_lp(reader)?;
     let mark_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
@@ -240,7 +240,7 @@ pub(crate) fn read_run(reader: &mut store::ByteReader<'_>) -> Result<SemioTextRu
 /// protocol-walkable, matching `📡️component.protocol.semio`'s header/segment fields exactly —
 /// then `runs` (varint count + per-run language/content/marks) as the honest opaque `payload`
 /// tail (`protocol-array-of-records` gap — homogeneous, variable-length repeated records).
-fn encode_text_snapshot_binary(s: &SemioTextSnapshot) -> Vec<u8> {
+async fn encode_text_snapshot_binary(s: &SemioTextSnapshot) -> Vec<u8> {
     const PACK_BINARY_FORMAT: u8 = 1;
     let mut out = Vec::new();
     out.push(PACK_BINARY_FORMAT);
@@ -251,7 +251,7 @@ fn encode_text_snapshot_binary(s: &SemioTextSnapshot) -> Vec<u8> {
     }
     out
 }
-fn decode_text_snapshot_binary(bytes: &[u8]) -> Result<SemioTextSnapshot, String> {
+async fn decode_text_snapshot_binary(bytes: &[u8]) -> Result<SemioTextSnapshot, String> {
     const PACK_BINARY_FORMAT: u8 = 1;
     let mut reader = store::ByteReader::new(bytes);
     let format = reader.read_u8().map_err(|e| e.to_string())?;
@@ -272,11 +272,11 @@ fn decode_text_snapshot_binary(bytes: &[u8]) -> Result<SemioTextSnapshot, String
 /// 🎁 Real structured text/binary codecs, wrapped in the repo-wide `store::semio_format` envelope.
 impl store::ArtifactDsl for SemioTextSnapshot {
     const EXTENSION: &'static str = "semio";
-    fn envelope_id() -> &'static str {
+    async fn envelope_id() -> &'static str {
         STDIO_SEMIOTEXT_DOCUMENT_SCHEMA
     }
 
-    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+    async fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
         let body = match store::semio_format::split_text_preamble(text) {
             Ok((_, rest)) => rest,
             Err(_) => text,
@@ -284,7 +284,7 @@ impl store::ArtifactDsl for SemioTextSnapshot {
         parse_text_snapshot_body(body).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
 
-    fn print_dsl(&self) -> String {
+    async fn print_dsl(&self) -> String {
         let body = print_text_snapshot_body(self);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
@@ -292,14 +292,14 @@ impl store::ArtifactDsl for SemioTextSnapshot {
 }
 
 impl store::ArtifactPack for SemioTextSnapshot {
-    fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
+    async fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
         let raw = encode_text_snapshot_binary(self);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &raw))
     }
 
-    fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
+    async fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
         if envelope.envelope_id() != <Self as store::ArtifactDsl>::envelope_id() {
             return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.envelope_id())));
@@ -316,7 +316,7 @@ impl store::ArtifactPack for SemioTextSnapshot {
 /// `📚️examples/…/🖼️assets/🗣️example.dsl.semio`/`🎒️example.pack.semio` and for the conformance-law
 /// tests in `🚪️io/🦀️component.rs`.
 #[cfg(test)]
-pub(crate) fn demo_text_snapshot() -> SemioTextSnapshot {
+pub(crate) async fn demo_text_snapshot() -> SemioTextSnapshot {
     SemioTextSnapshot {
         schema: STDIO_SEMIOTEXT_DOCUMENT_SCHEMA.into(),
         runs: vec![
@@ -333,12 +333,12 @@ pub(crate) fn demo_text_snapshot() -> SemioTextSnapshot {
 mod tests {
     use super::*;
 
-    fn populated() -> SemioTextSnapshot {
+    async fn populated() -> SemioTextSnapshot {
         demo_text_snapshot()
     }
 
     #[test]
-    fn json_pack_round_trips() {
+    async fn json_pack_round_trips() {
         let snap = SemioTextSnapshot::default();
         let bytes = <SemioTextSnapshot as store::ArtifactPack>::encode_pack(&snap);
         let back = <SemioTextSnapshot as store::ArtifactPack>::decode_pack(&bytes).expect("decode");
@@ -346,7 +346,7 @@ mod tests {
     }
 
     #[test]
-    fn dsl_text_round_trips() {
+    async fn dsl_text_round_trips() {
         let snap = SemioTextSnapshot::default();
         let text = <SemioTextSnapshot as store::ArtifactDsl>::print_dsl(&snap);
         let back = <SemioTextSnapshot as store::ArtifactDsl>::parse_dsl(&text).expect("parse");
@@ -356,7 +356,7 @@ mod tests {
     /// 🧪️ codec_retention_law: decode(encode(snapshot)) is byte-for-byte structurally identical
     /// on a fully-populated snapshot (runs/marks non-empty), not just the default.
     #[test]
-    fn codec_retention_law() {
+    async fn codec_retention_law() {
         let snap = populated();
         let bytes = <SemioTextSnapshot as store::ArtifactPack>::encode_pack(&snap);
         let back = <SemioTextSnapshot as store::ArtifactPack>::decode_pack(&bytes).expect("decode");

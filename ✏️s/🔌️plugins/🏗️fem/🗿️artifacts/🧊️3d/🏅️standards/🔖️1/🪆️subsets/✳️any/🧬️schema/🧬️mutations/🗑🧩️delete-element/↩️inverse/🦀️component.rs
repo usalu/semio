@@ -5,7 +5,7 @@ use crate::artifacts::fem3d::mutations::{create_element, Fem3dMutation};
 use crate::artifacts::fem3d::Fem3dSnapshot;
 
 //#region 🔖️Inverse
-pub fn inverse(payload: &DeleteElement, base: &Fem3dSnapshot) -> Vec<Fem3dMutation> {
+pub async fn inverse(payload: &DeleteElement, base: &Fem3dSnapshot) -> Vec<Fem3dMutation> {
     base.elements
         .iter()
         .find(|item| element_id(item) == payload.id)

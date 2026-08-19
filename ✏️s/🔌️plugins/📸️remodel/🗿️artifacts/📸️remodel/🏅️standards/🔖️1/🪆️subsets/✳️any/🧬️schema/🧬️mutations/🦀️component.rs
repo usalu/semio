@@ -98,7 +98,7 @@ pub use super::update_sfm_params::mutation::{update_sfm_params, UpdateSfmParams}
 /// ▶️ Applies `mutation` via its diff — kept as a free-function wrapper (matching
 /// `🎬️sequence`'s `apply_sequence_mutation`) since external callers (the editor surface) still call it
 /// by this name.
-pub fn apply_remodel_mutation(
+pub async fn apply_remodel_mutation(
     snapshot: &RemodelSnapshot,
     mutation: &RemodelMutation,
 ) -> protocol::MutationApplyResult<RemodelSnapshot> {
@@ -107,7 +107,7 @@ pub fn apply_remodel_mutation(
 
 /// ↩️ Computes the inverse mutations from pre-state — kept as a free-function wrapper (matching
 /// `🎬️sequence`'s `inverse_sequence_mutation`).
-pub fn inverse_remodel_mutation(base: &RemodelSnapshot, mutation: &RemodelMutation) -> Vec<RemodelMutation> {
+pub async fn inverse_remodel_mutation(base: &RemodelSnapshot, mutation: &RemodelMutation) -> Vec<RemodelMutation> {
     mutation.inverse(base)
 }
 //#endregion 🔖️ApplyInverse
@@ -126,7 +126,7 @@ mod tests {
     /// 🏗️ Shared fixture — a scene that exercises every optional/collection field at least once
     /// (verbatim duplicate of the `rs`/`📝️text` crates' own private test-only builder — see that
     /// crate's `populated_scene_fixture` doc comment).
-    fn populated_scene_fixture() -> RemodelSnapshot {
+    async fn populated_scene_fixture() -> RemodelSnapshot {
         let mut scene = default_remodel_scene();
         scene.streams.push(MediaStream {
             id: "stream-1".into(),
@@ -212,7 +212,7 @@ mod tests {
 
     //#region 🔖️MutationLaws
     #[test]
-    fn create_delete_stream_inverse_law() {
+    async fn create_delete_stream_inverse_law() {
         let base = populated_scene_fixture();
         let stream = MediaStream { id: "stream-99".into(), name: "extra".into(), ..MediaStream::default() };
         assert_mutation_inverse_law(&base, &create_stream(stream));
@@ -220,13 +220,13 @@ mod tests {
     }
 
     #[test]
-    fn change_stream_sync_inverse_law() {
+    async fn change_stream_sync_inverse_law() {
         let base = populated_scene_fixture();
         assert_mutation_inverse_law(&base, &change_stream_sync("stream-1".into(), 99.0));
     }
 
     #[test]
-    fn add_remove_stream_frame_inverse_law() {
+    async fn add_remove_stream_frame_inverse_law() {
         let base = populated_scene_fixture();
         assert_mutation_inverse_law(&base, &add_stream_frame("stream-1".into(), FrameRef { index: 1, timestamp_ms: 33.0, asset_id: "asset-2".into() }, MediaKind::Video));
         // 🎯️ `remove-stream-frame`'s inverse only round-trips exactly for the LAST frame (see its
@@ -235,13 +235,13 @@ mod tests {
     }
 
     #[test]
-    fn replace_stream_source_inverse_law() {
+    async fn replace_stream_source_inverse_law() {
         let base = populated_scene_fixture();
         assert_mutation_inverse_law(&base, &replace_stream_source("stream-1".into(), None));
     }
 
     #[test]
-    fn create_delete_asset_inverse_law() {
+    async fn create_delete_asset_inverse_law() {
         let base = populated_scene_fixture();
         let asset = ImageAsset { mime: "image/png".into(), data: "zzzz".into(), width: 2, height: 2 };
         assert_mutation_inverse_law(&base, &create_asset("asset-1".into(), asset.clone()));
@@ -250,7 +250,7 @@ mod tests {
     }
 
     #[test]
-    fn camera_calibration_inverse_law() {
+    async fn camera_calibration_inverse_law() {
         let base = populated_scene_fixture();
         let camera = CameraCalibration { id: "cam-99".into(), model: "pinhole".into(), ..CameraCalibration::default() };
         assert_mutation_inverse_law(&base, &create_camera_calibration(camera));
@@ -260,7 +260,7 @@ mod tests {
     }
 
     #[test]
-    fn rig_extrinsic_inverse_law() {
+    async fn rig_extrinsic_inverse_law() {
         let base = populated_scene_fixture();
         let extrinsic = RigExtrinsic { camera_id: "cam-99".into(), ..RigExtrinsic::default() };
         assert_mutation_inverse_law(&base, &create_rig_extrinsic(extrinsic));
@@ -270,7 +270,7 @@ mod tests {
     }
 
     #[test]
-    fn gcp_inverse_law() {
+    async fn gcp_inverse_law() {
         let base = populated_scene_fixture();
         let gcp = GroundControlPoint { id: "gcp-99".into(), name: "New".into(), ..GroundControlPoint::default() };
         assert_mutation_inverse_law(&base, &create_gcp(gcp));
@@ -281,7 +281,7 @@ mod tests {
     }
 
     #[test]
-    fn update_params_inverse_law() {
+    async fn update_params_inverse_law() {
         let base = populated_scene_fixture();
         assert_mutation_inverse_law(&base, &update_ingest_params(crate::artifacts::remodel::IngestParams { min_sharpness: 0.9, ..base.params.ingest.clone() }));
         assert_mutation_inverse_law(&base, &update_feature_params(crate::artifacts::remodel::FeatureParams { target_count: 1, ..base.params.feature.clone() }));
@@ -294,7 +294,7 @@ mod tests {
     }
 
     #[test]
-    fn replace_job_and_results_inverse_law() {
+    async fn replace_job_and_results_inverse_law() {
         let base = populated_scene_fixture();
         assert_mutation_inverse_law(&base, &replace_job(ReconstructionJob { stage: ReconstructionStage::Failed, ..base.job.clone() }));
         assert_mutation_inverse_law(&base, &replace_sparse(None));
@@ -307,7 +307,7 @@ mod tests {
     }
 
     #[test]
-    fn move_step_style_diff_absorb_law() {
+    async fn move_step_style_diff_absorb_law() {
         let base = populated_scene_fixture();
         let d1 = change_stream_sync("stream-1".into(), 10.0).diff(&base);
         let mid = protocol::MutationDiff::apply(&d1, &base).expect("valid mutation diff");
@@ -316,7 +316,7 @@ mod tests {
     }
 
     #[test]
-    fn dispatch_registers_semantic_descriptors() {
+    async fn dispatch_registers_semantic_descriptors() {
         register_remodel_mutation_descriptors();
         for kind in RemodelMutation::kinds() {
             assert!(protocol::is_approved_verb(kind.verb), "verb '{}' must be in APPROVED_VERBS", kind.verb);
@@ -331,7 +331,7 @@ mod tests {
     /// order — the reason `create-asset` clones+inserts into `base.assets` rather than any whole-map
     /// replace that could drop a concurrent key.
     #[test]
-    fn concurrent_create_asset_ops_converge_regardless_of_order() {
+    async fn concurrent_create_asset_ops_converge_regardless_of_order() {
         let base = populated_scene_fixture();
         let asset_a = ImageAsset { mime: "image/jpeg".into(), data: "frame-one".into(), width: 8, height: 8 };
         let asset_b = ImageAsset { mime: "image/jpeg".into(), data: "frame-two".into(), width: 8, height: 8 };
@@ -356,7 +356,7 @@ mod tests {
     /// 🔀️ Same convergence contract across two disjoint operation families (feature params tuning vs.
     /// adding a GCP) — proves field-granular application converges across the whole vocabulary.
     #[test]
-    fn concurrent_edits_across_different_op_families_converge() {
+    async fn concurrent_edits_across_different_op_families_converge() {
         let base = populated_scene_fixture();
         let op_feature = update_feature_params(crate::artifacts::remodel::FeatureParams { target_count: 9000, ..base.params.feature.clone() });
         let gcp = GroundControlPoint { id: "gcp-99".into(), name: "New".into(), ..GroundControlPoint::default() };
@@ -376,7 +376,7 @@ mod tests {
     //#region 🔖️OpText
     /// ⚡️ One `assert_op_line_round_trip` per `RemodelMutation` variant, per the mechanism contract.
     #[test]
-    fn every_mutation_variant_roundtrips_through_op_text() {
+    async fn every_mutation_variant_roundtrips_through_op_text() {
         let scene = populated_scene_fixture();
 
         store::os_store::test_support::assert_op_line_round_trip(&create_stream(scene.streams[0].clone()));

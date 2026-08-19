@@ -41,7 +41,7 @@ pub struct DisplayCase {
 
 impl DisplayCase {
     /// 🛒️ Display case total cooling and electrical load.
-    pub fn simulate(&self, case_temperature_c: f64, ambient_c: f64, load_factor: f64) -> RefrigerationOutput {
+    pub async fn simulate(&self, case_temperature_c: f64, ambient_c: f64, load_factor: f64) -> RefrigerationOutput {
         let lf = load_factor.clamp(0.0, 1.5);
         let conductance = self.design_cooling_w / (case_temperature_c - self.evaporating_temperature_c).max(1.0);
         let cooling_w = conductance * (case_temperature_c - self.evaporating_temperature_c) * lf;
@@ -69,7 +69,7 @@ pub struct WalkIn {
 
 impl WalkIn {
     /// 🚪️ Walk-in envelope and infiltration cooling load.
-    pub fn simulate(&self, ambient_c: f64, humidity_factor: f64) -> RefrigerationOutput {
+    pub async fn simulate(&self, ambient_c: f64, humidity_factor: f64) -> RefrigerationOutput {
         let delta_t = (ambient_c - self.design_box_temperature_c).max(0.0);
         let envelope_w = self.ua_w_per_k * delta_t;
         let infil_w = 50.0 * self.door_opening_fraction * delta_t.powf(1.2) * humidity_factor;
@@ -95,7 +95,7 @@ pub struct CompressorRack {
 
 impl CompressorRack {
     /// 🏭️ Rack cooling capacity and power at floating suction/head pressure.
-    pub fn simulate(&self, total_cooling_w: f64, evaporating_c: f64, condensing_c: f64) -> RefrigerationOutput {
+    pub async fn simulate(&self, total_cooling_w: f64, evaporating_c: f64, condensing_c: f64) -> RefrigerationOutput {
         let load = total_cooling_w.min(self.rated_capacity_w * self.compressor_count as f64);
         if load <= 0.0 {
             return RefrigerationOutput::default();
@@ -107,7 +107,7 @@ impl CompressorRack {
     }
 
     /// 🌡️ Floating head pressure from ambient dry-bulb.
-    pub fn floating_head_c(&self, ambient_c: f64) -> f64 {
+    pub async fn floating_head_c(&self, ambient_c: f64) -> f64 {
         (ambient_c + 10.0).clamp(25.0, self.max_condensing_c)
     }
 }
@@ -125,7 +125,7 @@ pub struct RefrigerationCondenser {
 
 impl RefrigerationCondenser {
     /// 🌊️ Condenser heat rejection and fan power.
-    pub fn simulate(&self, heat_rejection_w: f64, ambient_c: f64, wet_bulb_c: f64) -> (f64, f64) {
+    pub async fn simulate(&self, heat_rejection_w: f64, ambient_c: f64, wet_bulb_c: f64) -> (f64, f64) {
         if heat_rejection_w <= 0.0 {
             return (ambient_c + self.design_approach_k, 0.0);
         }
@@ -152,7 +152,7 @@ pub struct SecondaryLoop {
 
 impl SecondaryLoop {
     /// 🧊️ Secondary loop pump and heat pickup from cases.
-    pub fn simulate(&self, case_load_w: f64, ambient_c: f64) -> (f64, f64, f64) {
+    pub async fn simulate(&self, case_load_w: f64, ambient_c: f64) -> (f64, f64, f64) {
         let pipe_loss_w = self.pipe_ua_w_per_k * (self.supply_temperature_c - ambient_c).max(0.0);
         let fluid_cooling = case_load_w + pipe_loss_w;
         let delta_t = fluid_cooling / (self.mass_flow_kg_s.max(0.01) * self.fluid_cp);
@@ -165,12 +165,12 @@ impl SecondaryLoop {
 
 // #region 🔖️Circuit
 /// ❄️ Full refrigeration circuit pressure-temperature check.
-pub fn refrigeration_state_from_pressures(suction_pa: f64, discharge_pa: f64) -> RefrigerationState {
+pub async fn refrigeration_state_from_pressures(suction_pa: f64, discharge_pa: f64) -> RefrigerationState {
     RefrigerationState { evaporating_temperature_c: r410a_saturation_temp_c(suction_pa.max(P_STD * 0.3)), condensing_temperature_c: r410a_saturation_temp_c(discharge_pa.max(P_STD)), suction_superheat_k: 5.0, liquid_subcool_k: 3.0 }
 }
 
 /// ❄️ Estimate suction pressure from evaporating temperature.
-pub fn evaporating_pressure_pa(t_evap_c: f64) -> f64 {
+pub async fn evaporating_pressure_pa(t_evap_c: f64) -> f64 {
     r410a_saturation_pressure_pa(t_evap_c)
 }
 // #endregion 🔖️Circuit
@@ -181,7 +181,7 @@ mod tests {
     use crate::curves::PerformanceCurve;
 
     #[test]
-    fn display_case_cooling_positive() {
+    async fn display_case_cooling_positive() {
         let case = DisplayCase { length_m: 3.0, design_cooling_w: 2000.0, fan_power_w: 150.0, lighting_power_w: 200.0, anti_sweat_heater_w: 100.0, defrost_power_w: 500.0, defrost_fraction: 0.05, evaporating_temperature_c: -8.0 };
         let out = case.simulate(-2.0, 22.0, 1.0);
         assert!(out.cooling_power_w > 0.0);
@@ -189,7 +189,7 @@ mod tests {
     }
 
     #[test]
-    fn walk_in_freezer_higher_compressor_ratio() {
+    async fn walk_in_freezer_higher_compressor_ratio() {
         let cooler = WalkIn { floor_area_m2: 20.0, wall_area_m2: 60.0, ua_w_per_k: 30.0, internal_gain_w: 500.0, design_box_temperature_c: 2.0, evaporating_temperature_c: -5.0, door_opening_fraction: 0.1 };
         let freezer = WalkIn { design_box_temperature_c: -20.0, evaporating_temperature_c: -28.0, ..cooler };
         let cool_out = cooler.simulate(25.0, 1.0);
@@ -198,7 +198,7 @@ mod tests {
     }
 
     #[test]
-    fn compressor_rack_part_load() {
+    async fn compressor_rack_part_load() {
         let rack = CompressorRack { rated_capacity_w: 100_000.0, compressor_count: 2, eir_curve: PerformanceCurve::Constant(0.35), eir_f_t_curve: PerformanceCurve::Constant(1.0), min_evaporating_c: -15.0, max_condensing_c: 45.0 };
         let out = rack.simulate(80_000.0, -8.0, 35.0);
         assert!(out.cooling_power_w > 70_000.0);
@@ -206,7 +206,7 @@ mod tests {
     }
 
     #[test]
-    fn condenser_approach_temperature() {
+    async fn condenser_approach_temperature() {
         let cond = RefrigerationCondenser { ua_w_per_k: 5000.0, fan_power_w: 3000.0, design_approach_k: 8.0, evaporative: false };
         let (t_cond, fan_w) = cond.simulate(150_000.0, 30.0, 22.0);
         assert!(t_cond > 30.0);
@@ -214,14 +214,14 @@ mod tests {
     }
 
     #[test]
-    fn secondary_loop_return_rises_with_load() {
+    async fn secondary_loop_return_rises_with_load() {
         let loop_sys = SecondaryLoop { pump_power_w: 800.0, pipe_ua_w_per_k: 20.0, supply_temperature_c: -5.0, return_temperature_c: -3.0, mass_flow_kg_s: 5.0, fluid_cp: 3500.0 };
         let (_, return_t, _) = loop_sys.simulate(30_000.0, 20.0);
         assert!(return_t > loop_sys.supply_temperature_c);
     }
 
     #[test]
-    fn saturation_pressure_increases_with_temperature() {
+    async fn saturation_pressure_increases_with_temperature() {
         let low = evaporating_pressure_pa(-10.0);
         let high = evaporating_pressure_pa(5.0);
         assert!(high > low);

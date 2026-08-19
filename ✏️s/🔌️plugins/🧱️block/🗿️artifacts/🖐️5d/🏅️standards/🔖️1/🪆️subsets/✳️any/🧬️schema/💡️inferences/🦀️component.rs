@@ -31,19 +31,19 @@ pub struct Block5dInference {
 }
 
 impl protocol::Inference<Block5dSnapshot> for Block5dInference {
-    fn infer(snapshot: &Block5dSnapshot) -> Self {
+    async fn infer(snapshot: &Block5dSnapshot) -> Self {
         Self { bounds: compute_block5d_bounds(snapshot) }
     }
 }
 
 impl protocol::InferenceSpec<Block5dSnapshot> for Block5dInference {
-    fn inference_schema_id() -> &'static str {
+    async fn inference_schema_id() -> &'static str {
         "s.block.block5d.inference"
     }
-    fn schema_version() -> u32 {
+    async fn schema_version() -> u32 {
         1
     }
-    fn fields() -> &'static [protocol::InferenceFieldSpec] {
+    async fn fields() -> &'static [protocol::InferenceFieldSpec] {
         &[protocol::InferenceFieldSpec { id: "s.block.block5d.inference.bounds", reads: &["grips"] }]
     }
 }
@@ -60,7 +60,7 @@ impl ArtifactInferrer for crate::artifacts::block5d::standards::v1::subsets::any
 /// 🌉️ Maps this `PartKind` definition into the `s/plugin/puzzle` 5d catalog shape
 /// (`Puzzle5dKindCatalogs`: `parts`/`grips`/`fasteners`/`ropes`), the seam puzzle imports through its
 /// `Kit×Type` media port. Block owns no fastener/rope-kind rows, so those arrays stay empty here.
-pub fn puzzle5d_catalog_fragment(definition: &Block5dSnapshot) -> Value {
+pub async fn puzzle5d_catalog_fragment(definition: &Block5dSnapshot) -> Value {
     let grips: Vec<Value> = definition
         .grips
         .iter()
@@ -95,7 +95,7 @@ pub fn puzzle5d_catalog_fragment(definition: &Block5dSnapshot) -> Value {
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.block.block5d.inference`'s facet leaves into the OS-wide inference catalog —
 /// call once at plugin init, alongside `block5d_artifact_schema_descriptor`'s registration.
-pub fn block5d_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
+pub async fn block5d_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
     schema::ArtifactInferenceDescriptor {
         id: "s.block.block5d.inference",
         inference: schema::FacetLeaves {
@@ -118,11 +118,11 @@ mod tests {
     use protocol::Inference;
 
     //#region 🧸️Fixtures
-    fn grip(id: &str, position: [f64; 3], radius_3d: f64) -> Block5dGripTemplate {
+    async fn grip(id: &str, position: [f64; 3], radius_3d: f64) -> Block5dGripTemplate {
         Block5dGripTemplate { id: id.into(), grip_kind: "rope".into(), angle: 0.0, radius_2d: 0.0, position, direction: [0.0, 1.0, 0.0], radius_3d }
     }
 
-    fn snapshot_with_grips(grips: Vec<Block5dGripTemplate>) -> Block5dSnapshot {
+    async fn snapshot_with_grips(grips: Vec<Block5dGripTemplate>) -> Block5dSnapshot {
         Block5dSnapshot {
             part_kind: BlockKindIdentity { id: "capsule".into(), name: "capsule".into(), label: "Capsule".into(), ..Default::default() },
             grips,
@@ -133,18 +133,18 @@ mod tests {
 
     //#region 🧪️InferenceLaws
     #[test]
-    fn inference_determinism_law() {
+    async fn inference_determinism_law() {
         let snapshot = snapshot_with_grips(vec![grip("g0", [1.0, 2.0, 3.0], 0.5), grip("g1", [-1.0, 0.0, 4.0], 0.25)]);
         assert_eq!(Block5dInference::infer(&snapshot), Block5dInference::infer(&snapshot));
     }
 
     #[test]
-    fn inference_default_law() {
+    async fn inference_default_law() {
         assert_eq!(Block5dInference::infer(&Block5dSnapshot::default()), Block5dInference::default());
     }
 
     #[test]
-    fn bounds_match_grip_positions_inflated_by_radius_3d() {
+    async fn bounds_match_grip_positions_inflated_by_radius_3d() {
         let snapshot = snapshot_with_grips(vec![grip("g0", [1.0, 2.0, 3.0], 0.5), grip("g1", [-1.0, 0.0, 4.0], 0.25)]);
         let inferred = Block5dInference::infer(&snapshot);
         let bounds = inferred.bounds.bounding_box.expect("non-empty grips produce a bounding box");
@@ -156,7 +156,7 @@ mod tests {
 
     //#region 🧪️PuzzleCatalogFragment
     #[test]
-    fn puzzle5d_catalog_fragment_maps_grips() {
+    async fn puzzle5d_catalog_fragment_maps_grips() {
         let mut definition = Block5dSnapshot { schema: BLOCK_5D_SCHEMA.into(), part_kind: BlockKindIdentity { id: "left".into(), name: "left".into(), label: "Left".into(), ..Default::default() }, ..Block5dSnapshot::default() };
         definition.grips.push(Block5dGripTemplate { id: "g0".into(), grip_kind: "b-l".into(), angle: -1.57, radius_2d: 0.36, position: [4.05, 4.68, 3.0], direction: [0.0, 1.0, 0.0], radius_3d: 0.36 });
         let fragment = puzzle5d_catalog_fragment(&definition);

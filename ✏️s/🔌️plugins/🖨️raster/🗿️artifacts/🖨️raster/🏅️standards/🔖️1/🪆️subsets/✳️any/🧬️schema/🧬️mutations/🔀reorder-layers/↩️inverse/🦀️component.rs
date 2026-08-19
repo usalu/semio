@@ -7,7 +7,7 @@ use crate::artifacts::raster::mutations::RasterMutation;
 use crate::artifacts::raster::RasterSnapshot;
 
 //#region 🔖️Inverse
-pub fn inverse(payload: &ReorderLayers, base: &RasterSnapshot) -> Vec<RasterMutation> {
+pub async fn inverse(payload: &ReorderLayers, base: &RasterSnapshot) -> Vec<RasterMutation> {
     match locate_layer(&base.layers, &payload.layer_id) {
         Some((parent_id, index)) => vec![RasterMutation::ReorderLayers(ReorderLayers { layer_id: payload.layer_id.clone(), parent_id, index })],
         None => Vec::new(),

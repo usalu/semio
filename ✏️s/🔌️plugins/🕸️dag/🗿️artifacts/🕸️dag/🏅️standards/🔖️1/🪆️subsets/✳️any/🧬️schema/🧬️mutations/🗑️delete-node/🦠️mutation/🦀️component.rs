@@ -14,23 +14,23 @@ pub struct DeleteNode {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn delete_node(id: String) -> DagMutation {
+pub async fn delete_node(id: String) -> DagMutation {
     DagMutation::DeleteNode(DeleteNode { id })
 }
 
 impl protocol::MutationKind<DagSnapshot, DagMutation> for DeleteNode {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "delete", entity: "node", kind: "delete-node", record: "DeletedNode" };
 
-    fn diff(&self, base: &DagSnapshot) -> protocol::MutationOutcome<DagDiff> {
+    async fn diff(&self, base: &DagSnapshot) -> protocol::MutationOutcome<DagDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &DagSnapshot) -> Vec<DagMutation> {
+    async fn inverse(&self, base: &DagSnapshot) -> Vec<DagMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         format!("Delete node \"{}\"", self.id)
     }
-    fn target(&self) -> Vec<String> {
+    async fn target(&self) -> Vec<String> {
         vec![self.id.clone()]
     }
 }

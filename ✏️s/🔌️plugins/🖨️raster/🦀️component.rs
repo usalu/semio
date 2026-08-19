@@ -15,7 +15,7 @@ use semio_framework_plugin::{ExecutionMode, Plugin};
 /// (`crate::artifacts::raster::artifact_kind().id`) is opened, this plugin's actor runs `Isolated`
 /// (no cross-plugin extension attachment, the SDK default holds), and it asks the broker for
 /// document write access because `RasterPlayApp` persists edits back to the open document.
-pub fn plugin() -> Result<Plugin, semio_framework_plugin::PluginAssemblyError> {
+pub async fn plugin() -> Result<Plugin, semio_framework_plugin::PluginAssemblyError> {
     Plugin::builder("raster")
         .label("Raster")
         .version("0.1.0")
@@ -38,12 +38,12 @@ mod surface_tests {
     use semio_framework_plugin::testkit::{assert_editor_and_viewer_share_dialect, assert_viewer_never_mutates};
 
     #[test]
-    fn raster_viewer_never_mutates() {
+    async fn raster_viewer_never_mutates() {
         assert_viewer_never_mutates::<crate::viewer::raster::RasterViewer>();
     }
 
     #[test]
-    fn raster_editor_and_viewer_share_dialect() {
+    async fn raster_editor_and_viewer_share_dialect() {
         assert_editor_and_viewer_share_dialect::<crate::editor::raster::RasterPlayApp, crate::viewer::raster::RasterViewer>();
     }
 }

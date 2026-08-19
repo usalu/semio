@@ -13,7 +13,7 @@ use protocol::MutationDiff;
 
 //#region 🔖️Apply
 impl En1993Diff {
-    pub fn apply_to_artifact(&self, artifact: &En1993Artifact) -> protocol::MutationApplyResult<En1993Artifact> {
+    pub async fn apply_to_artifact(&self, artifact: &En1993Artifact) -> protocol::MutationApplyResult<En1993Artifact> {
         Ok({
             if let Some(replacement) = &self.artifact {
                 return Ok((**replacement).clone());
@@ -250,7 +250,7 @@ impl En1993Diff {
 }
 
 impl MutationDiff<En1993Snapshot> for En1993Diff {
-    fn apply(&self, snapshot: &En1993Snapshot) -> protocol::MutationApplyResult<En1993Snapshot> {
+    async fn apply(&self, snapshot: &En1993Snapshot) -> protocol::MutationApplyResult<En1993Snapshot> {
         Ok({
             if let Some(replacement) = &self.artifact {
                 return Ok(replacement.to_snapshot());
@@ -481,7 +481,7 @@ impl MutationDiff<En1993Snapshot> for En1993Diff {
             next
         })
     }
-    fn absorb(&mut self, other: Self) {
+    async fn absorb(&mut self, other: Self) {
         if other.artifact.is_some() {
             *self = other;
             return;

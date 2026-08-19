@@ -4,7 +4,7 @@ use crate::artifacts::fem2d::diff::{Fem2dDiff, Fem2dLoadCasesDelta};
 use crate::artifacts::fem2d::{element_id, Fem2dSnapshot, FemLoad};
 
 //#region 🔖️Diff
-pub fn diff(payload: &CreateLoadCase, base: &Fem2dSnapshot) -> protocol::MutationOutcome<Fem2dDiff> {
+pub async fn diff(payload: &CreateLoadCase, base: &Fem2dSnapshot) -> protocol::MutationOutcome<Fem2dDiff> {
     if base.load_cases.iter().any(|case| case.id == payload.load_case.id) {
         return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("A load case with id \"{}\" already exists.", payload.load_case.id), [payload.load_case.id.clone()]);
     }

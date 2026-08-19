@@ -34,7 +34,7 @@ struct CadComputersManifest {
     transformation_appliers: Vec<&'static str>,
 }
 
-fn energy_layer_typology() -> BTreeMap<&'static str, &'static str> {
+async fn energy_layer_typology() -> BTreeMap<&'static str, &'static str> {
     BTreeMap::from([
         ("slab", "energy.energy.baseplate"),
         ("baseplate", "energy.energy.baseplate"),
@@ -47,7 +47,7 @@ fn energy_layer_typology() -> BTreeMap<&'static str, &'static str> {
     ])
 }
 
-fn computers_manifest() -> CadComputersManifest {
+async fn computers_manifest() -> CadComputersManifest {
     CadComputersManifest {
         model_definition_ids: vec!["aec.building.energy"],
         stat_computers: vec!["energy.demand"],
@@ -64,7 +64,7 @@ fn computers_manifest() -> CadComputersManifest {
     }
 }
 
-fn bundle() -> ExtensionBundle {
+async fn bundle() -> ExtensionBundle {
     ExtensionBundle::new(EXTENSION_ID, "CAD AEC Building Energy", "0.1.0")
         .extends("cad")
         // 🚦️ `📓️design-abi.md` §5 — zero `.handler(…)`, never instantiated as an actor: this
@@ -91,7 +91,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn bundle_contributes_energy_computers() {
+    async fn bundle_contributes_energy_computers() {
         let manifest = bundle().manifest;
         let topic_contribution = &manifest.topic_contributions[0];
         assert_eq!(topic_contribution.topic, "cad.computer");

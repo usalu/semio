@@ -74,7 +74,7 @@ pub struct PrecomputedModel {
 
 impl PrecomputedModel {
     /// 🧮️ Build precomputed data from model and timestep settings.
-    pub fn build(model: &Model, zone_timestep_minutes: u32, system_timestep_minutes: u32) -> Self {
+    pub async fn build(model: &Model, zone_timestep_minutes: u32, system_timestep_minutes: u32) -> Self {
         let zone_timestep_s = zone_timestep_minutes as f64 * 60.0;
         let system_timestep_s = system_timestep_minutes as f64 * 60.0;
         let mut zone_geometry: HashMap<EntityId, ZoneGeometry> = HashMap::new();
@@ -128,12 +128,12 @@ impl PrecomputedModel {
     }
 
     /// ☀️ Solar incidence cosine for a surface at given solar position.
-    pub fn surface_incidence(&self, surface_id: EntityId, sun_alt_deg: f64, sun_az_deg: f64) -> f64 {
+    pub async fn surface_incidence(&self, surface_id: EntityId, sun_alt_deg: f64, sun_az_deg: f64) -> f64 {
         self.surfaces.get(&surface_id).map_or(0.0, |s| beam_incidence_cosine(s.normal, sun_alt_deg, sun_az_deg))
     }
 
     /// ☀️ Solar position for site at day/hour.
-    pub fn solar_at(&self, model: &Model, day_of_year: u16, hour: f64) -> (f64, f64) {
+    pub async fn solar_at(&self, model: &Model, day_of_year: u16, hour: f64) -> (f64, f64) {
         let pos = solar_position(model.site.latitude_deg, model.site.longitude_deg, day_of_year, hour);
         (pos.altitude_deg, pos.azimuth_deg)
     }
@@ -146,7 +146,7 @@ mod tests {
     use crate::model::*;
 
     #[test]
-    fn precompute_builds_surface_ctf() {
+    async fn precompute_builds_surface_ctf() {
         let model = crate::sim::test_model_single_zone();
         let pre = PrecomputedModel::build(&model, 60, 60);
         assert!(!pre.surfaces.is_empty());
@@ -154,14 +154,14 @@ mod tests {
     }
 
     #[test]
-    fn surface_incidence_is_zero_for_unknown_surface() {
+    async fn surface_incidence_is_zero_for_unknown_surface() {
         let model = crate::sim::test_model_single_zone();
         let pre = PrecomputedModel::build(&model, 60, 60);
         assert_eq!(pre.surface_incidence(EntityId(999), 45.0, 180.0), 0.0);
     }
 
     #[test]
-    fn surface_incidence_matches_known_surface_normal() {
+    async fn surface_incidence_matches_known_surface_normal() {
         let model = crate::sim::test_model_single_zone();
         let pre = PrecomputedModel::build(&model, 60, 60);
         let incidence = pre.surface_incidence(EntityId(30), 45.0, 180.0);
@@ -169,7 +169,7 @@ mod tests {
     }
 
     #[test]
-    fn solar_at_returns_altitude_and_azimuth() {
+    async fn solar_at_returns_altitude_and_azimuth() {
         let model = crate::sim::test_model_single_zone();
         let pre = PrecomputedModel::build(&model, 60, 60);
         let (alt, az) = pre.solar_at(&model, 172, 12.0);
@@ -178,7 +178,7 @@ mod tests {
     }
 
     #[test]
-    fn thermostat_overrides_default_setpoints() {
+    async fn thermostat_overrides_default_setpoints() {
         let mut model = crate::sim::test_model_single_zone();
         model.thermostats.push(Thermostat { id: EntityId(50), zone_id: EntityId(1), heating_setpoint_schedule_id: ScheduleId(1), cooling_setpoint_schedule_id: ScheduleId(1), heating_throttle_range_k: 3.0, cooling_throttle_range_k: 4.0 });
         let pre = PrecomputedModel::build(&model, 60, 60);
@@ -188,7 +188,7 @@ mod tests {
     }
 
     #[test]
-    fn fenestration_precompute_derives_from_host_surface() {
+    async fn fenestration_precompute_derives_from_host_surface() {
         let mut model = crate::sim::test_model_single_zone();
         model.fenestrations.push(Fenestration { id: EntityId(40), name: "Win".into(), surface_id: EntityId(30), u_value_w_m2k: 2.0, shgc: 0.4, vlt: 0.6, area_m2: 2.0, frame_conductance_w_k: 0.0, divider_conductance_w_k: 0.0 });
         let pre = PrecomputedModel::build(&model, 60, 60);

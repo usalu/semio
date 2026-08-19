@@ -23,19 +23,19 @@ pub struct MdInference {
 }
 
 impl protocol::Inference<MdSnapshot> for MdInference {
-    fn infer(snapshot: &MdSnapshot) -> Self {
+    async fn infer(snapshot: &MdSnapshot) -> Self {
         Self { outline: MdOutline::compute(snapshot) }
     }
 }
 
 impl protocol::InferenceSpec<MdSnapshot> for MdInference {
-    fn inference_schema_id() -> &'static str {
+    async fn inference_schema_id() -> &'static str {
         "s.stdio.md.inference"
     }
-    fn schema_version() -> u32 {
+    async fn schema_version() -> u32 {
         1
     }
-    fn fields() -> &'static [protocol::InferenceFieldSpec] {
+    async fn fields() -> &'static [protocol::InferenceFieldSpec] {
         &[protocol::InferenceFieldSpec { id: "s.stdio.md.inference.outline", reads: &["blocks"] }]
     }
 }
@@ -51,7 +51,7 @@ impl ArtifactInferrer for crate::artifacts::md::standards::v_commonmark::subsets
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.stdio.md.inference`'s facet leaves into the OS-wide inference catalog — call
 /// once at plugin init, alongside `md_artifact_schema_descriptor`'s registration.
-pub fn md_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
+pub async fn md_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
     schema::ArtifactInferenceDescriptor {
         id: "s.stdio.md.inference",
         inference: schema::FacetLeaves {
@@ -72,13 +72,13 @@ mod tests {
     use protocol::Inference;
 
     #[test]
-    fn inference_determinism_law() {
+    async fn inference_determinism_law() {
         let snapshot = MdSnapshot::default();
         assert_eq!(MdInference::infer(&snapshot), MdInference::infer(&snapshot));
     }
 
     #[test]
-    fn inference_default_law() {
+    async fn inference_default_law() {
         assert_eq!(MdInference::infer(&MdSnapshot::default()), MdInference::default());
     }
 }

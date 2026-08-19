@@ -10,7 +10,7 @@ use serde::{Deserialize, Serialize};
 #[dsl(keyword = "reorganize-workflow")]
 pub struct ReorganizeWorkflow {}
 
-fn reorganize_selected(doc: &ArtifactView<'_, WorkflowSnapshot>, selected: &[String]) -> Emit<WorkflowMutation, SpaceConfigMutation> {
+async fn reorganize_selected(doc: &ArtifactView<'_, WorkflowSnapshot>, selected: &[String]) -> Emit<WorkflowMutation, SpaceConfigMutation> {
     let node_ids: Vec<String> = if selected.is_empty() { doc.snapshot.graph.nodes.iter().map(|node| node.id.clone()).collect() } else { selected.to_vec() };
     let artifact_mutations = node_ids
         .iter()
@@ -29,10 +29,10 @@ fn reorganize_selected(doc: &ArtifactView<'_, WorkflowSnapshot>, selected: &[Str
 /// only through that macro-generated path (`SpaceApp::handle` always routes this command through
 /// `apply` below instead); an empty selection already reorganizes every node (unchanged behavior), so
 /// this degrades identically to a real "nothing selected" dispatch.
-pub fn handle(_payload: &ReorganizeWorkflow, doc: &ArtifactView<'_, WorkflowSnapshot>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
+pub async fn handle(_payload: &ReorganizeWorkflow, doc: &ArtifactView<'_, WorkflowSnapshot>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
     Ok(reorganize_selected(doc, &[]))
 }
 
-pub fn apply(_payload: &ReorganizeWorkflow, doc: &ArtifactView<'_, WorkflowSnapshot>, _cfg: &ConfigView<'_, SpaceConfig>, interaction: &InteractionView<'_>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
+pub async fn apply(_payload: &ReorganizeWorkflow, doc: &ArtifactView<'_, WorkflowSnapshot>, _cfg: &ConfigView<'_, SpaceConfig>, interaction: &InteractionView<'_>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
     Ok(reorganize_selected(doc, &interaction.selection("graph").ids))
 }

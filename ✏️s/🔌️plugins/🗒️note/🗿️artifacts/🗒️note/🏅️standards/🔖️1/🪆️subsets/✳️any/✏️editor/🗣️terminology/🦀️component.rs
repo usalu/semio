@@ -51,7 +51,7 @@ semio_framework_plugin::app_labels! {
 
 //#region 🔖️Resolvers
 /// 🗣️ Resolves the active label set from `cfg.locale`; falls back to native English.
-pub fn note_play_labels(cfg: &NoteConfig) -> &'static NotePlayLabels {
+pub async fn note_play_labels(cfg: &NoteConfig) -> &'static NotePlayLabels {
     semio_framework_plugin::resolve_labels_for_locale::<NotePlayLabels>(&cfg.locale)
 }
 //#endregion 🔖️Resolvers

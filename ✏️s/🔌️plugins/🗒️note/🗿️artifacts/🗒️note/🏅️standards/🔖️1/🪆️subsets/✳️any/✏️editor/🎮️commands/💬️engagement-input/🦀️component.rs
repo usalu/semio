@@ -12,6 +12,6 @@ pub struct EngagementInput {
     pub value: String,
 }
 
-pub fn handle(payload: &EngagementInput, _doc: &ArtifactView<'_, NoteSnapshot>, _cfg: &ConfigView<'_, NoteConfig>, _ctx: &mut crate::editor::note::NoteDispatchCtx) -> Result<Emit<NoteMutation, NoteConfigMutation>, Fault> {
+pub async fn handle(payload: &EngagementInput, _doc: &ArtifactView<'_, NoteSnapshot>, _cfg: &ConfigView<'_, NoteConfig>, _ctx: &mut crate::editor::note::NoteDispatchCtx) -> Result<Emit<NoteMutation, NoteConfigMutation>, Fault> {
     Ok(Emit::config(vec![NoteConfigMutation::SetEngagementInput { value: payload.value.clone() }]))
 }

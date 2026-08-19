@@ -17,7 +17,7 @@ pub struct JsonIntoWires;
 impl Deserializer<WiresSnapshot> for JsonIntoWires {
     const FROM: Dialect = JSON_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Exact;
-    fn deserialize(payload: &IoPayload) -> IoResult<WiresSnapshot> {
+    async fn deserialize(payload: &IoPayload) -> IoResult<WiresSnapshot> {
         let _ = MINDMAP_WIRES_SCHEMA;
         let text = match payload {
             IoPayload::Text(text) => text.clone(),

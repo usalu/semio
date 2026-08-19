@@ -12,7 +12,7 @@ use serde::{Deserialize, Serialize};
 #[dsl(keyword = "reorganize")]
 pub struct Reorganize {}
 
-pub fn handle(_payload: &Reorganize, doc: &ArtifactView<'_, DagSnapshot>, cfg: &ConfigView<'_, DagConfig>) -> Result<Emit<DagMutation, DagConfigMutation>, Fault> {
+pub async fn handle(_payload: &Reorganize, doc: &ArtifactView<'_, DagSnapshot>, cfg: &ConfigView<'_, DagConfig>) -> Result<Emit<DagMutation, DagConfigMutation>, Fault> {
     let document = doc.snapshot;
     let config = cfg.snapshot;
     let camera = dag_config_camera(config);

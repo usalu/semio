@@ -12,7 +12,7 @@ pub struct SetGridVisible {
     pub value: Option<bool>,
 }
 
-pub fn handle(payload: &SetGridVisible, doc: &ArtifactView<'_, NoteSnapshot>, _cfg: &ConfigView<'_, NoteConfig>, _ctx: &mut crate::editor::note::NoteDispatchCtx) -> Result<Emit<NoteMutation, NoteConfigMutation>, Fault> {
+pub async fn handle(payload: &SetGridVisible, doc: &ArtifactView<'_, NoteSnapshot>, _cfg: &ConfigView<'_, NoteConfig>, _ctx: &mut crate::editor::note::NoteDispatchCtx) -> Result<Emit<NoteMutation, NoteConfigMutation>, Fault> {
     let next = payload.value.unwrap_or(!doc.snapshot.grid_visible.unwrap_or(true));
     Ok(Emit::mutations(vec![crate::artifacts::note::schema::mutations::change_grid_visible(Some(next))]))
 }

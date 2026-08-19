@@ -35,7 +35,7 @@ pub struct FlowConfig {
 
 //region 📎 App-schema descriptor
 /// 📎 `s.flow.flow`'s config and presence schema, owned by this leaf.
-pub fn app_schema_descriptor() -> ::schema::AppSchemaDescriptor {
+pub async fn app_schema_descriptor() -> ::schema::AppSchemaDescriptor {
     ::schema::AppSchemaDescriptor {
         id: "s.flow.flow",
         config: ::schema::FacetLeaves {

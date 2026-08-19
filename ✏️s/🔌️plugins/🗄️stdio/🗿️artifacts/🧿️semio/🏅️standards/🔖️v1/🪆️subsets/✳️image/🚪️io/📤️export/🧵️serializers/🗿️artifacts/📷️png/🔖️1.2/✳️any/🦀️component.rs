@@ -23,7 +23,7 @@ use semio_framework_plugin::{ArtifactSerializer, Dialect, StandardId, SubsetId};
 const FROM_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("image") };
 const INTO_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.png", standard: StandardId("1.2"), subset: SubsetId::ANY };
 
-fn colorspace_to_png(c: SemioColorspace) -> PngColorType {
+async fn colorspace_to_png(c: SemioColorspace) -> PngColorType {
     match c {
         SemioColorspace::Grayscale => PngColorType::Grayscale,
         SemioColorspace::Rgb => PngColorType::Rgb,
@@ -77,7 +77,7 @@ mod tests {
     use super::*;
     use crate::artifacts::semio::standards::v1::subsets::image::schema::snapshot::{SemioImageFrame, SemioImageMetadataEntry};
 
-    fn sample_semio() -> SemioImageSnapshot {
+    async fn sample_semio() -> SemioImageSnapshot {
         SemioImageSnapshot {
             width: 2,
             height: 1,
@@ -91,7 +91,7 @@ mod tests {
     }
 
     #[test]
-    fn maps_pixels_and_metadata_to_png() {
+    async fn maps_pixels_and_metadata_to_png() {
         let semio = sample_semio();
         let png = semio_framework_plugin::resolve_ready(SemioImageToPng::serialize(&semio)).expect("serialize");
         assert_eq!(png.width, 2);
@@ -105,7 +105,7 @@ mod tests {
     /// (png's own real codec) → `PngSnapshot` — proves the serializer produces a genuinely
     /// encodable/decodable PNG, not just a plausible-looking struct.
     #[test]
-    fn real_byte_round_trip_through_png_codec() {
+    async fn real_byte_round_trip_through_png_codec() {
         let semio = sample_semio();
         let png = semio_framework_plugin::resolve_ready(SemioImageToPng::serialize(&semio)).expect("serialize");
         let bytes = crate::artifacts::png::engine::encode_png(&png).expect("encode real png bytes");

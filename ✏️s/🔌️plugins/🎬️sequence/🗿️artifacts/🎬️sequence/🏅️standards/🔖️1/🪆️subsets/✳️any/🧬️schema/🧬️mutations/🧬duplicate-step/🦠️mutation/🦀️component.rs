@@ -17,23 +17,23 @@ pub struct DuplicateStep {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn duplicate_step(source_id: String, new_id: String, x: f64, y: f64) -> SequenceMutation {
+pub async fn duplicate_step(source_id: String, new_id: String, x: f64, y: f64) -> SequenceMutation {
     SequenceMutation::DuplicateStep(DuplicateStep { source_id, new_id, x, y })
 }
 
 impl protocol::MutationKind<SequenceSnapshot, SequenceMutation> for DuplicateStep {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "duplicate", entity: "step", kind: "duplicate-step", record: "DuplicatedStep" };
 
-    fn diff(&self, base: &SequenceSnapshot) -> protocol::MutationOutcome<SequenceDiff> {
+    async fn diff(&self, base: &SequenceSnapshot) -> protocol::MutationOutcome<SequenceDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &SequenceSnapshot) -> Vec<SequenceMutation> {
+    async fn inverse(&self, base: &SequenceSnapshot) -> Vec<SequenceMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         format!("Duplicate step \"{}\" as \"{}\"", self.source_id, self.new_id)
     }
-    fn target(&self) -> Vec<String> {
+    async fn target(&self) -> Vec<String> {
         vec![self.new_id.clone()]
     }
 }

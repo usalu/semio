@@ -23,19 +23,19 @@ pub struct SemioMeshArtifact {
 }
 
 impl Default for SemioMeshArtifact {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self::from_snapshot(SemioMeshSnapshot::default())
     }
 }
 
 impl SemioMeshArtifact {
-    pub fn to_snapshot(&self) -> SemioMeshSnapshot {
+    pub async fn to_snapshot(&self) -> SemioMeshSnapshot {
         SemioMeshSnapshot { schema: self.schema.clone(), meshes: self.meshes.clone(), materials: self.materials.clone(), textures: self.textures.clone() }
     }
-    pub fn from_snapshot(snapshot: SemioMeshSnapshot) -> Self {
+    pub async fn from_snapshot(snapshot: SemioMeshSnapshot) -> Self {
         Self { schema: snapshot.schema, meshes: snapshot.meshes, materials: snapshot.materials, textures: snapshot.textures }
     }
-    pub fn set_snapshot(&mut self, snapshot: SemioMeshSnapshot) {
+    pub async fn set_snapshot(&mut self, snapshot: SemioMeshSnapshot) {
         self.schema = snapshot.schema;
         self.meshes = snapshot.meshes;
         self.materials = snapshot.materials;
@@ -43,7 +43,7 @@ impl SemioMeshArtifact {
     }
 }
 
-pub fn semio_mesh_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
+pub async fn semio_mesh_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
     schema::ArtifactSchemaDescriptor {
         id: "s.stdio.semio.mesh",
         artifact: schema::FacetLeaves {
@@ -92,28 +92,28 @@ pub mod derived_construction {
         type Snapshot = SemioMeshSnapshot;
         type Mutation = SemioMeshMutation;
         type Diff = SemioMeshDiff;
-        fn empty() -> Self {
+        async fn empty() -> Self {
             Self { snapshot: SemioMeshSnapshot::default() }
         }
-        fn from_snapshot(snapshot: Self::Snapshot) -> Self {
+        async fn from_snapshot(snapshot: Self::Snapshot) -> Self {
             Self { snapshot }
         }
-        fn from_text(text: &str) -> Result<Self, store::TextError> {
+        async fn from_text(text: &str) -> Result<Self, store::TextError> {
             Ok(Self::from_snapshot(<SemioMeshSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
-        fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
+        async fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
             Ok(Self::from_snapshot(<SemioMeshSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
         }
-        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
+        async fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let diff = <Self::Mutation as protocol::Mutation<SemioMeshSnapshot>>::diff(&mutation, &self.snapshot);
             let diff = diff.apply_to(&mut self.snapshot);
             (self, diff)
         }
-        fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
+        async fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
             self.snapshot = <SemioMeshDiff as protocol::MutationDiff<SemioMeshSnapshot>>::apply(&diff, &self.snapshot)?;
             Ok(self)
         }
-        fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
+        async fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
             Ok(self.snapshot)
         }
     }
@@ -137,7 +137,7 @@ pub mod derived_analysis {
         type Parts = SemioMeshParts;
         const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("mesh") };
 
-        fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
+        async fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
             match source {
                 AnalyzeSource::Binary(bytes) => {
                     let marker = STDIO_SEMIOMESH_DOCUMENT_SCHEMA.as_bytes();
@@ -157,7 +157,7 @@ pub mod derived_analysis {
             }
         }
 
-        fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
+        async fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
             let mut parts = SemioMeshParts::default();
             let mut diagnostics = Vec::new();
             let mut confidence = IoConfidence::High;

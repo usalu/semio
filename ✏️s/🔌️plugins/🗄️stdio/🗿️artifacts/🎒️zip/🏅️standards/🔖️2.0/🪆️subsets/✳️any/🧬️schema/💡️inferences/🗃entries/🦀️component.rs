@@ -25,7 +25,7 @@ pub struct ZipEntries {
 /// compressed sizes); `contentDigest` folds every entry's `(name, data)` pair, in archive order,
 /// through `std`'s own `DefaultHasher` (same std-only, no-external-crate reasoning
 /// `🏠️home/🆔digest` and `🔋️model/🗃entries` already established for a single scalar digest).
-pub fn compute_zip_entries(snapshot: &ZipSnapshot) -> ZipEntries {
+pub async fn compute_zip_entries(snapshot: &ZipSnapshot) -> ZipEntries {
     let mut hasher = DefaultHasher::new();
     let mut total_uncompressed_size: u64 = 0;
     for entry in &snapshot.entries {
@@ -37,7 +37,7 @@ pub fn compute_zip_entries(snapshot: &ZipSnapshot) -> ZipEntries {
 }
 
 impl Default for ZipEntries {
-    fn default() -> Self {
+    async fn default() -> Self {
         compute_zip_entries(&ZipSnapshot::default())
     }
 }
@@ -49,12 +49,12 @@ mod tests {
     use super::*;
     use crate::artifacts::zip::standards::v2_0::subsets::any::schema::snapshot::ZipEntry;
 
-    fn entry(name: &str, data: &[u8]) -> ZipEntry {
+    async fn entry(name: &str, data: &[u8]) -> ZipEntry {
         ZipEntry { name: name.into(), data: data.to_vec(), ..ZipEntry::default() }
     }
 
     #[test]
-    fn real_entries_are_counted_and_sized_exactly() {
+    async fn real_entries_are_counted_and_sized_exactly() {
         let snapshot = ZipSnapshot { entries: vec![entry("a.txt", b"hello"), entry("b.txt", b"world!")], ..ZipSnapshot::default() };
         let entries = compute_zip_entries(&snapshot);
         assert_eq!(entries.entry_count, 2);
@@ -62,27 +62,27 @@ mod tests {
     }
 
     #[test]
-    fn empty_archive_yields_a_real_zero_census() {
+    async fn empty_archive_yields_a_real_zero_census() {
         let entries = compute_zip_entries(&ZipSnapshot::default());
         assert_eq!(entries.entry_count, 0);
         assert_eq!(entries.total_uncompressed_size, 0);
     }
 
     #[test]
-    fn different_content_yields_a_different_digest() {
+    async fn different_content_yields_a_different_digest() {
         let a = ZipSnapshot { entries: vec![entry("a.txt", b"hello")], ..ZipSnapshot::default() };
         let b = ZipSnapshot { entries: vec![entry("a.txt", b"goodbye")], ..ZipSnapshot::default() };
         assert_ne!(compute_zip_entries(&a).content_digest, compute_zip_entries(&b).content_digest);
     }
 
     #[test]
-    fn inference_determinism_law() {
+    async fn inference_determinism_law() {
         let snapshot = ZipSnapshot { entries: vec![entry("a.txt", b"hello")], ..ZipSnapshot::default() };
         assert_eq!(compute_zip_entries(&snapshot), compute_zip_entries(&snapshot));
     }
 
     #[test]
-    fn inference_default_law() {
+    async fn inference_default_law() {
         assert_eq!(compute_zip_entries(&ZipSnapshot::default()), ZipEntries::default());
     }
 }

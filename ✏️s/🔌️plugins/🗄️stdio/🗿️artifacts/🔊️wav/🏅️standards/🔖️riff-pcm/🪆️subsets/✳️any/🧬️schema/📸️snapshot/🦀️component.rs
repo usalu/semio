@@ -19,7 +19,7 @@ pub struct WavFmt {
 }
 
 impl Default for WavFmt {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self { audio_format: 1, channels: 1, sample_rate: 44_100, byte_rate: 88_200, block_align: 2, bits_per_sample: 16, ext: None }
     }
 }
@@ -40,7 +40,7 @@ pub enum WavData {
 }
 
 impl Default for WavData {
-    fn default() -> Self {
+    async fn default() -> Self {
         WavData::Raw(Vec::new())
     }
 }
@@ -79,7 +79,7 @@ pub struct WavSnapshot {
 }
 
 impl Default for WavSnapshot {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self { schema: STDIO_WAV_DOCUMENT_SCHEMA.into(), fmt: WavFmt::default(), data: WavData::default(), other_chunks: Default::default() }
     }
 }
@@ -92,11 +92,11 @@ impl Default for WavSnapshot {
 /// `store::semio_format` envelope, not a JSON re-serialization of the Rust type).
 impl store::ArtifactDsl for WavSnapshot {
     const EXTENSION: &'static str = "wav";
-    fn envelope_id() -> &'static str {
+    async fn envelope_id() -> &'static str {
         STDIO_WAV_DOCUMENT_SCHEMA
     }
 
-    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+    async fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
         let body = match store::semio_format::split_text_preamble(text) {
             Ok((_, rest)) => rest,
             Err(_) => text,
@@ -115,7 +115,7 @@ impl store::ArtifactDsl for WavSnapshot {
         crate::artifacts::wav::standards::riff_pcm::subsets::any::io::decode_wav(&bytes).map_err(|e| store::TextError::new(format!("wav decode: {e}"), dsl::TextSpan::at(1, 1)))
     }
 
-    fn print_dsl(&self) -> String {
+    async fn print_dsl(&self) -> String {
         let bytes = crate::artifacts::wav::standards::riff_pcm::subsets::any::io::encode_wav(self);
         let body: String = bytes.iter().map(|b| format!("{b:02x}")).collect();
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
@@ -124,14 +124,14 @@ impl store::ArtifactDsl for WavSnapshot {
 }
 
 impl store::ArtifactPack for WavSnapshot {
-    fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
+    async fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
         let raw = crate::artifacts::wav::standards::riff_pcm::subsets::any::io::encode_wav(self);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &raw))
     }
 
-    fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
+    async fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
         if envelope.envelope_id() != <Self as store::ArtifactDsl>::envelope_id() {
             return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.envelope_id())));
@@ -147,12 +147,12 @@ impl store::ArtifactPack for WavSnapshot {
 mod tests {
     use super::*;
 
-    fn sample_snapshot() -> WavSnapshot {
+    async fn sample_snapshot() -> WavSnapshot {
         WavSnapshot { data: WavData::Pcm16(vec![1, -1, 100, -100]), ..WavSnapshot::default() }
     }
 
     #[test]
-    fn json_pack_round_trips() {
+    async fn json_pack_round_trips() {
         let snap = sample_snapshot();
         let bytes = <WavSnapshot as store::ArtifactPack>::encode_pack(&snap);
         let back = <WavSnapshot as store::ArtifactPack>::decode_pack(&bytes).expect("decode");
@@ -160,7 +160,7 @@ mod tests {
     }
 
     #[test]
-    fn dsl_text_round_trips() {
+    async fn dsl_text_round_trips() {
         let snap = sample_snapshot();
         let text = <WavSnapshot as store::ArtifactDsl>::print_dsl(&snap);
         let back = <WavSnapshot as store::ArtifactDsl>::parse_dsl(&text).expect("parse");

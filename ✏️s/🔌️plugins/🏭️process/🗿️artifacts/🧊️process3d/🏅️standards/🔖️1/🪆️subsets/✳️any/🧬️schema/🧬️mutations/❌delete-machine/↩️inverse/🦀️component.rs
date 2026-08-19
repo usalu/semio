@@ -7,7 +7,7 @@ use crate::artifacts::process3d::mutations::Process3dMutation;
 use crate::artifacts::process3d::Process3dSnapshot;
 
 //#region 🔖️Inverse
-pub fn inverse(payload: &DeleteMachine, base: &Process3dSnapshot) -> Vec<Process3dMutation> {
+pub async fn inverse(payload: &DeleteMachine, base: &Process3dSnapshot) -> Vec<Process3dMutation> {
     base.workshop
         .machines
         .iter()

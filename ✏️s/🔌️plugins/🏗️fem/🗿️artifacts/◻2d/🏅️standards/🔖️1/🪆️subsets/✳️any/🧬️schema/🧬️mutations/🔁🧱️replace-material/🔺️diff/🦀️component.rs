@@ -4,7 +4,7 @@ use crate::artifacts::fem2d::diff::{Fem2dDiff, Fem2dMaterialsDelta, Fem2dMateria
 use crate::artifacts::fem2d::Fem2dSnapshot;
 
 //#region 🔖️Diff
-pub fn diff(payload: &ReplaceMaterial, base: &Fem2dSnapshot) -> protocol::MutationOutcome<Fem2dDiff> {
+pub async fn diff(payload: &ReplaceMaterial, base: &Fem2dSnapshot) -> protocol::MutationOutcome<Fem2dDiff> {
     let Some(existing) = base.materials.iter().find(|material| material.id == payload.id) else {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Material \"{}\" does not exist.", payload.id), [payload.id.clone()]);
     };

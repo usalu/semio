@@ -36,7 +36,7 @@ mod tests {
         default_scene_after: Option<usize>,
         code: String,
     }
-    fn snapshot(state: &SceneState) -> GltfSnapshot {
+    async fn snapshot(state: &SceneState) -> GltfSnapshot {
         let mut snapshot = GltfSnapshot::default();
         snapshot.schema = "gltf/2.0".into();
         snapshot.document.scene = Some(state.scene);
@@ -44,7 +44,7 @@ mod tests {
         snapshot
     }
     #[test]
-    fn delete_scene_shared_vector_executes_all_laws() {
+    async fn delete_scene_shared_vector_executes_all_laws() {
         let contract: Contract = serde_json::from_str(include_str!("🔣️component.json")).expect("canonical vector decodes");
         let vector = &contract.vectors[0];
         let base = snapshot(&vector.base);

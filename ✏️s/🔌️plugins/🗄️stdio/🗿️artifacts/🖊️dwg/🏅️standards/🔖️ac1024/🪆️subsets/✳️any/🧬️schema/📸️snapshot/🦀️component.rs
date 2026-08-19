@@ -93,12 +93,12 @@ pub enum DwgXRecordValue {
 }
 
 impl Default for DwgXRecordValue {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self::String { group_code: 1, value: String::new() }
     }
 }
 
-fn dwg_xrecord_value_spec() -> dsl::RecordSpec {
+async fn dwg_xrecord_value_spec() -> dsl::RecordSpec {
     dsl::RecordSpec::new(
         None,
         dsl::RecordLayout::Inline,
@@ -133,11 +133,11 @@ fn dwg_xrecord_value_spec() -> dsl::RecordSpec {
 }
 
 impl dsl::DslField for DwgXRecordValue {
-    fn shape() -> dsl::Shape {
+    async fn shape() -> dsl::Shape {
         dsl::Shape::Record(dwg_xrecord_value_spec)
     }
 
-    fn to_value(&self) -> dsl::FieldValue {
+    async fn to_value(&self) -> dsl::FieldValue {
         let mut record = dsl::RecordValue::default();
         let (kind, group_code, payload_id, payload) = match self {
             Self::String { group_code, value } => (0, *group_code, 2, dsl::FieldValue::Text(value.clone())),
@@ -158,7 +158,7 @@ impl dsl::DslField for DwgXRecordValue {
         dsl::FieldValue::Record(record)
     }
 
-    fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
+    async fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
         let dsl::FieldValue::Record(record) = value else {
             return Err(format!("expected XRECORD value record, found {value:?}"));
         };
@@ -267,7 +267,7 @@ impl dsl::DslField for DwgXRecordValue {
 }
 
 impl DwgXRecordValue {
-    pub fn group_code(&self) -> i16 {
+    pub async fn group_code(&self) -> i16 {
         match self {
             Self::String { group_code, .. }
             | Self::Real { group_code, .. }
@@ -283,7 +283,7 @@ impl DwgXRecordValue {
         }
     }
 
-    pub fn validate(&self) -> Result<(), String> {
+    pub async fn validate(&self) -> Result<(), String> {
         let code = self.group_code();
         let valid = match self {
             Self::String { value, .. } => matches!(code, 0..=4 | 6..=9 | 100..=104 | 300..=309 | 410..=419 | 430..=439 | 470..=479 | 999 | 1000..=1002) && value.encode_utf16().count() <= usize::from(u16::MAX),
@@ -320,16 +320,16 @@ pub struct DwgTableControlEntry {
     pub handle: Option<u64>,
 }
 
-fn dwg_table_control_entry_spec() -> dsl::RecordSpec {
+async fn dwg_table_control_entry_spec() -> dsl::RecordSpec {
     dsl::RecordSpec::new(None, dsl::RecordLayout::Inline, vec![dsl::FieldSpec::new(0, "has_handle", dsl::Shape::Bool), dsl::FieldSpec::new(1, "handle", dsl::Shape::UInt).optional()])
 }
 
 impl dsl::DslField for DwgTableControlEntry {
-    fn shape() -> dsl::Shape {
+    async fn shape() -> dsl::Shape {
         dsl::Shape::Record(dwg_table_control_entry_spec)
     }
 
-    fn to_value(&self) -> dsl::FieldValue {
+    async fn to_value(&self) -> dsl::FieldValue {
         let mut record = dsl::RecordValue::default();
         record.fields.insert(0, dsl::FieldValue::Bool(self.handle.is_some()));
         if let Some(handle) = self.handle {
@@ -338,7 +338,7 @@ impl dsl::DslField for DwgTableControlEntry {
         dsl::FieldValue::Record(record)
     }
 
-    fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
+    async fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
         let dsl::FieldValue::Record(record) = value else { return Err("expected table-control entry record".into()) };
         match record.get(0) {
             Some(dsl::FieldValue::Bool(false)) => Ok(Self { handle: None }),
@@ -399,13 +399,13 @@ pub enum DwgTableControlBody {
 }
 
 impl Default for DwgTableControlBody {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self::Layer(DwgTableControlEntries::default())
     }
 }
 
 impl DwgTableControlBody {
-    pub fn entry_handles(&self) -> &[DwgTableControlEntry] {
+    pub async fn entry_handles(&self) -> &[DwgTableControlEntry] {
         match self {
             Self::Block(value) => &value.entry_handles,
             Self::Layer(value) | Self::TextStyle(value) | Self::View(value) | Self::Ucs(value) | Self::Viewport(value) | Self::RegisteredApplication(value) => &value.entry_handles,
@@ -415,7 +415,7 @@ impl DwgTableControlBody {
     }
 }
 
-fn table_control_body_spec() -> dsl::RecordSpec {
+async fn table_control_body_spec() -> dsl::RecordSpec {
     dsl::RecordSpec::new(
         None,
         dsl::RecordLayout::Inline,
@@ -444,11 +444,11 @@ fn table_control_body_spec() -> dsl::RecordSpec {
 }
 
 impl dsl::DslField for DwgTableControlBody {
-    fn shape() -> dsl::Shape {
+    async fn shape() -> dsl::Shape {
         dsl::Shape::Record(table_control_body_spec)
     }
 
-    fn to_value(&self) -> dsl::FieldValue {
+    async fn to_value(&self) -> dsl::FieldValue {
         let mut record = dsl::RecordValue::default();
         let (kind, field, value) = match self {
             Self::Block(value) => (0, 3, <DwgBlockTableControl as dsl::DslField>::to_value(value)),
@@ -466,7 +466,7 @@ impl dsl::DslField for DwgTableControlBody {
         dsl::FieldValue::Record(record)
     }
 
-    fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
+    async fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
         let dsl::FieldValue::Record(record) = value else { return Err("expected table-control body record".into()) };
         match record.get(1) {
             Some(dsl::FieldValue::Enum(0)) => Ok(Self::Block(<DwgBlockTableControl as dsl::DslField>::from_value(record.get(3).ok_or("block control missing")?)?)),
@@ -537,7 +537,7 @@ pub enum DwgComplexColorValue {
     LayerFrozen,
 }
 
-fn dwg_complex_color_value_spec() -> dsl::RecordSpec {
+async fn dwg_complex_color_value_spec() -> dsl::RecordSpec {
     dsl::RecordSpec::new(
         None,
         dsl::RecordLayout::Inline,
@@ -556,10 +556,10 @@ fn dwg_complex_color_value_spec() -> dsl::RecordSpec {
 }
 
 impl dsl::DslField for DwgComplexColorValue {
-    fn shape() -> dsl::Shape {
+    async fn shape() -> dsl::Shape {
         dsl::Shape::Record(dwg_complex_color_value_spec)
     }
-    fn to_value(&self) -> dsl::FieldValue {
+    async fn to_value(&self) -> dsl::FieldValue {
         let mut record = dsl::RecordValue::default();
         let kind = match self {
             Self::None => 0,
@@ -586,7 +586,7 @@ impl dsl::DslField for DwgComplexColorValue {
         record.fields.insert(0, dsl::FieldValue::Enum(kind));
         dsl::FieldValue::Record(record)
     }
-    fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
+    async fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
         let dsl::FieldValue::Record(record) = value else { return Err("expected complex-color value record".into()) };
         let no_extra = |allowed: &[u16]| record.fields.iter().all(|(field, value)| *field == 0 || allowed.contains(field) || matches!(value, dsl::FieldValue::Absent));
         match record.get(0) {
@@ -873,12 +873,12 @@ pub enum DwgTableRecordBody {
 }
 
 impl Default for DwgTableRecordBody {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self::RegisteredApplication(DwgRegisteredApplicationTableRecord::default())
     }
 }
 
-fn table_record_body_spec() -> dsl::RecordSpec {
+async fn table_record_body_spec() -> dsl::RecordSpec {
     dsl::RecordSpec::new(
         None,
         dsl::RecordLayout::Inline,
@@ -900,11 +900,11 @@ fn table_record_body_spec() -> dsl::RecordSpec {
 }
 
 impl dsl::DslField for DwgTableRecordBody {
-    fn shape() -> dsl::Shape {
+    async fn shape() -> dsl::Shape {
         dsl::Shape::Record(table_record_body_spec)
     }
 
-    fn to_value(&self) -> dsl::FieldValue {
+    async fn to_value(&self) -> dsl::FieldValue {
         let mut record = dsl::RecordValue::default();
         match self {
             Self::RegisteredApplication(value) => {
@@ -939,7 +939,7 @@ impl dsl::DslField for DwgTableRecordBody {
         dsl::FieldValue::Record(record)
     }
 
-    fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
+    async fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
         let dsl::FieldValue::Record(record) = value else {
             return Err("expected table-record body record".into());
         };
@@ -1364,16 +1364,16 @@ pub enum DwgEvaluationVariant {
     Integer32(i32),
 }
 
-fn dwg_evaluation_variant_spec() -> dsl::RecordSpec {
+async fn dwg_evaluation_variant_spec() -> dsl::RecordSpec {
     dsl::RecordSpec::new(None, dsl::RecordLayout::Inline, vec![dsl::FieldSpec::new(0, "kind", dsl::Shape::Enum(vec![("integer32".into(), 0)])), dsl::FieldSpec::new(1, "integer32", <i32 as dsl::DslField>::shape()).optional()])
 }
 
 impl dsl::DslField for DwgEvaluationVariant {
-    fn shape() -> dsl::Shape {
+    async fn shape() -> dsl::Shape {
         dsl::Shape::Record(dwg_evaluation_variant_spec)
     }
 
-    fn to_value(&self) -> dsl::FieldValue {
+    async fn to_value(&self) -> dsl::FieldValue {
         let mut record = dsl::RecordValue::default();
         match self {
             Self::Integer32(value) => {
@@ -1384,7 +1384,7 @@ impl dsl::DslField for DwgEvaluationVariant {
         dsl::FieldValue::Record(record)
     }
 
-    fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
+    async fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
         let dsl::FieldValue::Record(record) = value else { return Err("expected evaluation-variant record".into()) };
         match record.get(0) {
             Some(dsl::FieldValue::Enum(0)) => Ok(Self::Integer32(<i32 as dsl::DslField>::from_value(record.get(1).ok_or("evaluation integer32 missing")?)?)),
@@ -1423,7 +1423,7 @@ pub enum DwgEvaluationExpressionValue {
     Integer16(i16),
 }
 
-fn dwg_evaluation_expression_value_spec() -> dsl::RecordSpec {
+async fn dwg_evaluation_expression_value_spec() -> dsl::RecordSpec {
     dsl::RecordSpec::new(
         None,
         dsl::RecordLayout::Inline,
@@ -1445,11 +1445,11 @@ fn dwg_evaluation_expression_value_spec() -> dsl::RecordSpec {
 }
 
 impl dsl::DslField for DwgEvaluationExpressionValue {
-    fn shape() -> dsl::Shape {
+    async fn shape() -> dsl::Shape {
         dsl::Shape::Record(dwg_evaluation_expression_value_spec)
     }
 
-    fn to_value(&self) -> dsl::FieldValue {
+    async fn to_value(&self) -> dsl::FieldValue {
         let mut record = dsl::RecordValue::default();
         let (kind, field, value) = match self {
             Self::Empty => (0, None, None),
@@ -1468,7 +1468,7 @@ impl dsl::DslField for DwgEvaluationExpressionValue {
         dsl::FieldValue::Record(record)
     }
 
-    fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
+    async fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
         let dsl::FieldValue::Record(record) = value else { return Err("expected evaluation-expression value record".into()) };
         let present = record.fields.values().filter(|value| !matches!(value, dsl::FieldValue::Absent)).count();
         let expected = if matches!(record.get(0), Some(dsl::FieldValue::Enum(0))) { 1 } else { 2 };
@@ -1579,21 +1579,21 @@ pub struct DwgVisualStyleProperty<T> {
     pub operation: DwgVisualStylePropertyOperation,
 }
 
-fn dwg_visual_style_property_spec<T: dsl::DslField>() -> dsl::RecordSpec {
+async fn dwg_visual_style_property_spec<T: dsl::DslField>() -> dsl::RecordSpec {
     dsl::RecordSpec::new(None, dsl::RecordLayout::Inline, vec![dsl::FieldSpec::new(0, "value", T::shape()), dsl::FieldSpec::new(1, "operation", <DwgVisualStylePropertyOperation as dsl::DslField>::shape())])
 }
 
 impl<T: dsl::DslField> dsl::DslField for DwgVisualStyleProperty<T> {
-    fn shape() -> dsl::Shape {
+    async fn shape() -> dsl::Shape {
         dsl::Shape::Record(dwg_visual_style_property_spec::<T>)
     }
-    fn to_value(&self) -> dsl::FieldValue {
+    async fn to_value(&self) -> dsl::FieldValue {
         let mut record = dsl::RecordValue::default();
         record.fields.insert(0, T::to_value(&self.value));
         record.fields.insert(1, <DwgVisualStylePropertyOperation as dsl::DslField>::to_value(&self.operation));
         dsl::FieldValue::Record(record)
     }
-    fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
+    async fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
         let dsl::FieldValue::Record(record) = value else { return Err("expected visual-style property record".into()) };
         Ok(Self { value: T::from_value(record.get(0).ok_or("visual-style property value missing")?)?, operation: <DwgVisualStylePropertyOperation as dsl::DslField>::from_value(record.get(1).ok_or("visual-style property operation missing")?)? })
     }
@@ -2611,7 +2611,7 @@ pub enum DwgConstraintNode {
     VerticalConstraint(DwgAxisConstraint),
 }
 
-fn dwg_constraint_node_spec() -> dsl::RecordSpec {
+async fn dwg_constraint_node_spec() -> dsl::RecordSpec {
     dsl::RecordSpec::new(
         None,
         dsl::RecordLayout::Inline,
@@ -2647,11 +2647,11 @@ fn dwg_constraint_node_spec() -> dsl::RecordSpec {
 }
 
 impl dsl::DslField for DwgConstraintNode {
-    fn shape() -> dsl::Shape {
+    async fn shape() -> dsl::Shape {
         dsl::Shape::Record(dwg_constraint_node_spec)
     }
 
-    fn to_value(&self) -> dsl::FieldValue {
+    async fn to_value(&self) -> dsl::FieldValue {
         let mut record = dsl::RecordValue::default();
         let (kind, field, value) = match self {
             Self::ConstrainedImplicitPoint(value) => (0, 1, value.to_value()),
@@ -2674,7 +2674,7 @@ impl dsl::DslField for DwgConstraintNode {
         dsl::FieldValue::Record(record)
     }
 
-    fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
+    async fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
         let dsl::FieldValue::Record(record) = value else { return Err("expected constraint-node record".into()) };
         if record.fields.values().filter(|value| !matches!(value, dsl::FieldValue::Absent)).count() != 2 {
             return Err("constraint node must contain exactly its tagged body".into());
@@ -2710,7 +2710,7 @@ pub struct DwgAssoc2dConstraintGroup {
     pub nodes: Vec<DwgConstraintNode>,
 }
 
-fn dwg_entity_body_spec() -> dsl::RecordSpec {
+async fn dwg_entity_body_spec() -> dsl::RecordSpec {
     dsl::RecordSpec::new(
         None,
         dsl::RecordLayout::Inline,
@@ -2744,11 +2744,11 @@ fn dwg_entity_body_spec() -> dsl::RecordSpec {
 }
 
 impl dsl::DslField for DwgEntityBody {
-    fn shape() -> dsl::Shape {
+    async fn shape() -> dsl::Shape {
         dsl::Shape::Record(dwg_entity_body_spec)
     }
 
-    fn to_value(&self) -> dsl::FieldValue {
+    async fn to_value(&self) -> dsl::FieldValue {
         let mut record = dsl::RecordValue::default();
         match self {
             Self::Line(value) => {
@@ -2791,7 +2791,7 @@ impl dsl::DslField for DwgEntityBody {
         dsl::FieldValue::Record(record)
     }
 
-    fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
+    async fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
         let dsl::FieldValue::Record(record) = value else { return Err("expected entity-body record".into()) };
         match record.get(0) {
             Some(dsl::FieldValue::Enum(0)) => Ok(Self::Line(<DwgLineEntity as dsl::DslField>::from_value(record.get(1).ok_or("LINE body missing")?)?)),
@@ -2856,7 +2856,7 @@ pub enum DwgLogicalObjectBody {
     Layout(DwgLayout),
 }
 
-fn dwg_logical_object_body_spec() -> dsl::RecordSpec {
+async fn dwg_logical_object_body_spec() -> dsl::RecordSpec {
     dsl::RecordSpec::new(
         None,
         dsl::RecordLayout::Inline,
@@ -2958,11 +2958,11 @@ fn dwg_logical_object_body_spec() -> dsl::RecordSpec {
 }
 
 impl dsl::DslField for DwgLogicalObjectBody {
-    fn shape() -> dsl::Shape {
+    async fn shape() -> dsl::Shape {
         dsl::Shape::Record(dwg_logical_object_body_spec)
     }
 
-    fn to_value(&self) -> dsl::FieldValue {
+    async fn to_value(&self) -> dsl::FieldValue {
         let mut record = dsl::RecordValue::default();
         let (kind, payload_id, payload) = match self {
             Self::Dictionary(value) => (0, 1, <DwgDictionaryBody as dsl::DslField>::to_value(value)),
@@ -3014,7 +3014,7 @@ impl dsl::DslField for DwgLogicalObjectBody {
         dsl::FieldValue::Record(record)
     }
 
-    fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
+    async fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
         let dsl::FieldValue::Record(record) = value else {
             return Err(format!("expected DWG object-body record, found {value:?}"));
         };
@@ -3106,7 +3106,7 @@ pub struct DwgLogicalDrawing {
 }
 
 impl DwgLogicalDrawing {
-    pub fn from_native(drawing: &dwg_engine::DwgDrawing) -> Result<Self, String> {
+    pub async fn from_native(drawing: &dwg_engine::DwgDrawing) -> Result<Self, String> {
         let mut objects = drawing
             .layers
             .iter()
@@ -3187,7 +3187,7 @@ impl DwgLogicalDrawing {
         Ok(Self { layers: drawing.layers.iter().map(|layer| DwgLogicalLayer { name: layer.name.clone(), color: layer.color }).collect(), objects, extmin: drawing.extmin.to_vec(), extmax: drawing.extmax.to_vec() })
     }
 
-    pub fn entities(&self) -> Vec<DwgLogicalEntity> {
+    pub async fn entities(&self) -> Vec<DwgLogicalEntity> {
         self.objects
             .iter()
             .filter_map(|object| {
@@ -3231,7 +3231,7 @@ impl DwgLogicalDrawing {
             .collect()
     }
 
-    pub fn to_native(&self) -> Result<dwg_engine::DwgDrawing, String> {
+    pub async fn to_native(&self) -> Result<dwg_engine::DwgDrawing, String> {
         Ok(dwg_engine::DwgDrawing {
             layers: self.layers.iter().map(|layer| dwg_engine::DwgLayer { name: layer.name.clone(), color: layer.color }).collect(),
             entities: self.entities().iter().map(DwgLogicalEntity::to_native).collect::<Result<_, _>>()?,
@@ -3242,7 +3242,7 @@ impl DwgLogicalDrawing {
 }
 
 impl DwgLogicalEntity {
-    fn to_native(&self) -> Result<dwg_engine::DwgEntity, String> {
+    async fn to_native(&self) -> Result<dwg_engine::DwgEntity, String> {
         let color = match self.color {
             -1 => dwg_engine::DwgColor::ByLayer,
             -2 => dwg_engine::DwgColor::ByBlock,
@@ -3253,16 +3253,16 @@ impl DwgLogicalEntity {
     }
 }
 
-fn vec2(values: &[f64]) -> Result<[f64; 2], String> {
+async fn vec2(values: &[f64]) -> Result<[f64; 2], String> {
     values.try_into().map_err(|_| format!("expected 2 values, got {}", values.len()))
 }
 
-fn vec3(values: &[f64]) -> Result<[f64; 3], String> {
+async fn vec3(values: &[f64]) -> Result<[f64; 3], String> {
     values.try_into().map_err(|_| format!("expected 3 values, got {}", values.len()))
 }
 
 impl DwgLogicalGeometry {
-    fn from_native(geometry: &dwg_engine::DwgGeometry) -> Self {
+    async fn from_native(geometry: &dwg_engine::DwgGeometry) -> Self {
         use dwg_engine::DwgGeometry::*;
         match geometry {
             Point { at } => Self { kind: DwgLogicalGeometryKind::Point, values: at.to_vec(), ..Default::default() },
@@ -3294,7 +3294,7 @@ impl DwgLogicalGeometry {
         }
     }
 
-    fn to_native(&self) -> Result<dwg_engine::DwgGeometry, String> {
+    async fn to_native(&self) -> Result<dwg_engine::DwgGeometry, String> {
         use DwgLogicalGeometryKind::*;
         Ok(match self.kind {
             Point => dwg_engine::DwgGeometry::Point { at: vec3(&self.values)? },
@@ -3941,7 +3941,7 @@ pub struct DwgSnapshot {
 }
 
 impl Default for DwgSnapshot {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self {
             schema: STDIO_DWG_DOCUMENT_SCHEMA.into(),
             version: String::new(),
@@ -3964,14 +3964,14 @@ impl Default for DwgSnapshot {
 
 impl DwgSnapshot {
     /// 🪞️ Clones the deterministic logical projection.
-    pub fn projection(&self) -> Self {
+    pub async fn projection(&self) -> Self {
         self.clone()
     }
 }
 //#endregion 🔖️Snapshot
 
 //#region 🔖️DwgCodec
-fn dwg_version_sentinel(bytes: &[u8]) -> Result<String, String> {
+async fn dwg_version_sentinel(bytes: &[u8]) -> Result<String, String> {
     if bytes.len() < 6 {
         return Err("DWG too short for AC10xx header".into());
     }
@@ -3989,18 +3989,18 @@ fn dwg_version_sentinel(bytes: &[u8]) -> Result<String, String> {
 /// file-header preamble shared by every AC1015+ DWG file, per LibreDWG's own
 /// `header.spec` field order (`zero_one_or_three@0x0B`, `thumbnail_address@0x0D`,
 /// `dwg_version@0x11`, `maint_version@0x12`, `codepage@0x13`). Truncated headers are rejected.
-fn parse_version_header_fields(bytes: &[u8]) -> Result<(u8, u16), String> {
+async fn parse_version_header_fields(bytes: &[u8]) -> Result<(u8, u16), String> {
     let maintenance_version = *bytes.get(0x12).ok_or("DWG header is too short for maintenance version")?;
     let codepage = bytes.get(0x13..0x15).ok_or("DWG header is too short for codepage")?;
     Ok((maintenance_version, u16::from_le_bytes([codepage[0], codepage[1]])))
 }
 
 /// 🗺️ Materializes section pages only while deserializing and projects their standard objects.
-fn decode_drawing(bytes: &[u8]) -> Result<DwgLogicalDrawing, String> {
+async fn decode_drawing(bytes: &[u8]) -> Result<DwgLogicalDrawing, String> {
     DwgLogicalDrawing::from_native(&dwg_engine::decode_r2004_drawing(bytes)?)
 }
 
-pub fn decode_dwg(bytes: &[u8]) -> Result<DwgSnapshot, String> {
+pub async fn decode_dwg(bytes: &[u8]) -> Result<DwgSnapshot, String> {
     let version = dwg_version_sentinel(bytes)?;
     let (maintenance_version, codepage) = parse_version_header_fields(bytes)?;
     if version == "AC1015" {
@@ -4041,7 +4041,7 @@ pub enum DwgExportError {
 }
 
 impl fmt::Display for DwgExportError {
-    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+    async fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Self::InvalidLogical(message) => write!(formatter, "invalid logical DWG: {message}"),
             Self::InvalidVersion(message) => write!(formatter, "invalid DWG version: {message}"),
@@ -4053,7 +4053,7 @@ impl fmt::Display for DwgExportError {
 
 impl std::error::Error for DwgExportError {}
 
-fn validate_export_header(bytes: &[u8], snapshot: &DwgSnapshot) -> Result<(), DwgExportError> {
+async fn validate_export_header(bytes: &[u8], snapshot: &DwgSnapshot) -> Result<(), DwgExportError> {
     let version = dwg_version_sentinel(bytes).map_err(DwgExportError::Writer)?;
     if snapshot.version.len() != 6 {
         return Err(DwgExportError::InvalidVersion("AC10xx sentinel must contain six ASCII bytes".into()));
@@ -4072,7 +4072,7 @@ fn validate_export_header(bytes: &[u8], snapshot: &DwgSnapshot) -> Result<(), Dw
 }
 
 /// 🔄 Updates supported typed header fields.
-pub fn synchronize_version_info(snapshot: &mut DwgSnapshot, version: &str, maintenance_version: u8, codepage: u16) -> Result<(), DwgExportError> {
+pub async fn synchronize_version_info(snapshot: &mut DwgSnapshot, version: &str, maintenance_version: u8, codepage: u16) -> Result<(), DwgExportError> {
     dwg_version_sentinel(version.as_bytes()).map_err(DwgExportError::InvalidVersion)?;
     snapshot.version = version.to_string();
     snapshot.maintenance_version = maintenance_version;
@@ -4080,7 +4080,7 @@ pub fn synchronize_version_info(snapshot: &mut DwgSnapshot, version: &str, maint
     Ok(())
 }
 
-pub fn encode_dwg(snapshot: &DwgSnapshot) -> Result<Vec<u8>, DwgExportError> {
+pub async fn encode_dwg(snapshot: &DwgSnapshot) -> Result<Vec<u8>, DwgExportError> {
     if snapshot.schema != STDIO_DWG_DOCUMENT_SCHEMA {
         return Err(DwgExportError::InvalidLogical("schema identity changed".into()));
     }
@@ -4097,11 +4097,11 @@ pub fn encode_dwg(snapshot: &DwgSnapshot) -> Result<Vec<u8>, DwgExportError> {
 //#region 🔖️HandcraftedArtifactCodecs
 impl store::ArtifactDsl for DwgSnapshot {
     const EXTENSION: &'static str = "dwg";
-    fn envelope_id() -> &'static str {
+    async fn envelope_id() -> &'static str {
         "stdio.dwg"
     }
 
-    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+    async fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
         let body = match store::semio_format::split_text_preamble(text) {
             Ok((_, rest)) => rest,
             Err(_) => text,
@@ -4109,7 +4109,7 @@ impl store::ArtifactDsl for DwgSnapshot {
         let record = dsl::parse(body, &Self::__dsl_spec(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Document })?;
         Self::__dsl_from_record(&record)
     }
-    fn print_dsl(&self) -> String {
+    async fn print_dsl(&self) -> String {
         let body = dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), dsl::JoinMode::Document);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
@@ -4117,12 +4117,12 @@ impl store::ArtifactDsl for DwgSnapshot {
 }
 
 impl store::ArtifactPack for DwgSnapshot {
-    fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
+    async fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let inner = store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &inner))
     }
-    fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
+    async fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
         if envelope.envelope_id() != <Self as store::ArtifactDsl>::envelope_id() {
             return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.envelope_id())));
@@ -4130,7 +4130,7 @@ impl store::ArtifactPack for DwgSnapshot {
         let (record, _report) = store::pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
         Self::__dsl_from_record(&record).map_err(store::text_error_to_pack_error)
     }
-    fn record_spec() -> Option<dsl::RecordSpec> {
+    async fn record_spec() -> Option<dsl::RecordSpec> {
         Some(Self::__dsl_spec())
     }
 }

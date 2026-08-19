@@ -17,7 +17,7 @@ pub struct PngIntoNote;
 
 /// 🔤️ Minimal, dependency-free base64 encoder (this repo's "no external libraries for runtime
 /// purposes" rule) — unchanged from the pre-migration free function.
-fn b64(bytes: &[u8]) -> String {
+async fn b64(bytes: &[u8]) -> String {
     const TABLE: &[u8] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
     let mut out = String::new();
     let mut i = 0;
@@ -37,7 +37,7 @@ fn b64(bytes: &[u8]) -> String {
 impl Deserializer<NoteSnapshot> for PngIntoNote {
     const FROM: Dialect = PNG_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Lossy;
-    fn deserialize(payload: &IoPayload) -> IoResult<NoteSnapshot> {
+    async fn deserialize(payload: &IoPayload) -> IoResult<NoteSnapshot> {
         let IoPayload::Binary(bytes) = payload else {
             return Err(IoError { message: "PngIntoNote: expected a binary png payload".to_string(), diagnostics: Vec::new() });
         };

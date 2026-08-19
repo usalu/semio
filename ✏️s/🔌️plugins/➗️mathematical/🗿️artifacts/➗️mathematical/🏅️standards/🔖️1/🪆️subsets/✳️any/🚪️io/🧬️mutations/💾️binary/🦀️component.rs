@@ -21,12 +21,12 @@ use crate::artifacts::mathematical::op::MathematicalMutation;
 use protocol::OpBinary;
 
 /// 📦️ Encodes a `MathematicalMutation` to its binary command form.
-pub fn encode_op(operation: &MathematicalMutation) -> Result<Vec<u8>, protocol::ProtocolError> {
+pub async fn encode_op(operation: &MathematicalMutation) -> Result<Vec<u8>, protocol::ProtocolError> {
     operation.encode_op()
 }
 
 /// 📖️ Decodes a `MathematicalMutation` from its binary command form.
-pub fn decode_op(bytes: &[u8]) -> Result<MathematicalMutation, protocol::ProtocolError> {
+pub async fn decode_op(bytes: &[u8]) -> Result<MathematicalMutation, protocol::ProtocolError> {
     MathematicalMutation::decode_op(bytes)
 }
 
@@ -37,7 +37,7 @@ mod tests {
     use crate::artifacts::mathematical::MathematicalSnapshot;
 
     #[test]
-    fn op_binary_round_trips_and_agrees_with_text() {
+    async fn op_binary_round_trips_and_agrees_with_text() {
         use crate::artifacts::mathematical::mutations::change_graph_directed::mutation::ChangeGraphDirected;
         let operation = MathematicalMutation::ChangeGraphDirected(ChangeGraphDirected { new_directed: false });
         store::os_store::test_support::assert_op_text_binary_equivalence(&operation);
@@ -46,7 +46,7 @@ mod tests {
     }
 
     #[test]
-    fn math_document_text_round_trips_through_store() {
+    async fn math_document_text_round_trips_through_store() {
         use crate::artifacts::mathematical::mutations::update_graph_algorithm::mutation::UpdateGraphAlgorithm;
         let initial = MathematicalSnapshot::default();
         let envelope = store::create_document_envelope(crate::artifacts::mathematical::MATH_DOCUMENT_SCHEMA, "math-demo", initial, None);

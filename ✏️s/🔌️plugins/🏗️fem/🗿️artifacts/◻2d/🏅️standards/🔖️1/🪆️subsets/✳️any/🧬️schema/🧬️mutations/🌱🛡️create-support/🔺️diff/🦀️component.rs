@@ -4,7 +4,7 @@ use crate::artifacts::fem2d::diff::{Fem2dDiff, Fem2dSupportsDelta};
 use crate::artifacts::fem2d::Fem2dSnapshot;
 
 //#region 🔖️Diff
-pub fn diff(payload: &CreateSupport, base: &Fem2dSnapshot) -> protocol::MutationOutcome<Fem2dDiff> {
+pub async fn diff(payload: &CreateSupport, base: &Fem2dSnapshot) -> protocol::MutationOutcome<Fem2dDiff> {
     if base.supports.iter().any(|support| support.id == payload.support.id) {
         return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("A support with id \"{}\" already exists.", payload.support.id), [payload.support.id.clone()]);
     }

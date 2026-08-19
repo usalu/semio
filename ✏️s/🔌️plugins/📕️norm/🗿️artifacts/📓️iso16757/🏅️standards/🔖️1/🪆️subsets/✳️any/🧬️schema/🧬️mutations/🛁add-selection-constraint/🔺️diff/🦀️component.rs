@@ -4,7 +4,7 @@ use super::mutation::AddSelectionConstraint;
 use crate::artifacts::iso16757::{Iso16757Diff, Iso16757Snapshot};
 
 //#region 🔖️Diff
-pub fn diff(payload: &AddSelectionConstraint, base: &Iso16757Snapshot) -> protocol::MutationOutcome<Iso16757Diff> {
+pub async fn diff(payload: &AddSelectionConstraint, base: &Iso16757Snapshot) -> protocol::MutationOutcome<Iso16757Diff> {
     if base.selection.constraints.contains(&payload.constraint) {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Selection constraint on \"{}\" already exists.", payload.constraint.property_id));
     }

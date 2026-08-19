@@ -43,10 +43,10 @@ pub struct ArchitectConfig {
 /// 📜️ Handcrafted ArtifactDsl (P6): uses this type's `__dsl_*` helpers + parse/print, not derive emission.
 impl store::ArtifactDsl for ArchitectConfig {
     const EXTENSION: &'static str = Self::__DSL_EXTENSION;
-    fn envelope_id() -> &'static str {
+    async fn envelope_id() -> &'static str {
         Self::__DSL_ENVELOPE_ID
     }
-    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+    async fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
         let body = match store::semio_format::split_text_preamble(text) {
             Ok((_, rest)) => rest,
             Err(_) => text,
@@ -54,7 +54,7 @@ impl store::ArtifactDsl for ArchitectConfig {
         let record = dsl::parse(body, &Self::__dsl_spec(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Document })?;
         Self::__dsl_from_record(&record)
     }
-    fn print_dsl(&self) -> String {
+    async fn print_dsl(&self) -> String {
         let body = dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), dsl::JoinMode::Document);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
@@ -63,12 +63,12 @@ impl store::ArtifactDsl for ArchitectConfig {
 
 /// 📦️ Handcrafted ArtifactPack (P6): envelope-wrapped pack body via `__dsl_*` record lowering.
 impl store::ArtifactPack for ArchitectConfig {
-    fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
+    async fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let inner = store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &inner))
     }
-    fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
+    async fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
         if envelope.envelope_id() != <Self as store::ArtifactDsl>::envelope_id() {
             return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.envelope_id())));
@@ -76,7 +76,7 @@ impl store::ArtifactPack for ArchitectConfig {
         let (record, _report) = store::pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
         Self::__dsl_from_record(&record).map_err(store::text_error_to_pack_error)
     }
-    fn record_spec() -> Option<dsl::RecordSpec> {
+    async fn record_spec() -> Option<dsl::RecordSpec> {
         Some(Self::__dsl_spec())
     }
 }
@@ -84,7 +84,7 @@ impl store::ArtifactPack for ArchitectConfig {
 //#endregion 🔖️ArtifactCodec
 
 impl Default for ArchitectConfig {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self {
             active_register: String::new(),
             search_query: String::new(),
@@ -103,12 +103,12 @@ impl Default for ArchitectConfig {
 impl store::ConfigRecord for ArchitectConfig {}
 
 impl MutationDiff<ArchitectConfig> for ArchitectConfig {
-    fn apply(&self, _base: &ArchitectConfig) -> protocol::MutationApplyResult<ArchitectConfig> {
+    async fn apply(&self, _base: &ArchitectConfig) -> protocol::MutationApplyResult<ArchitectConfig> {
         Ok({
             self.clone()
         })
     }
-    fn absorb(&mut self, other: Self) {
+    async fn absorb(&mut self, other: Self) {
         *self = other;
     }
 }
@@ -128,7 +128,7 @@ pub enum ArchitectConfigMutation {
 
 //#region 🔖️OpCodec
 impl protocol::OpText for ArchitectConfigMutation {
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
+    async fn parse_op(line: &str) -> Result<Self, store::TextError> {
         let variants = <Self as dsl::DslVariants>::variants();
         for (keyword, spec_fn) in &variants {
             let probe = format!("{} ", keyword);
@@ -139,7 +139,7 @@ impl protocol::OpText for ArchitectConfigMutation {
         }
         Err(dsl::__rt::field_error(format!("unknown mutation line '{line}'")))
     }
-    fn print_op(&self) -> String {
+    async fn print_op(&self) -> String {
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
         let variants = <Self as dsl::DslVariants>::variants();
         let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
@@ -149,7 +149,7 @@ impl protocol::OpText for ArchitectConfigMutation {
 
 /// 🎯️ Handcrafted OpBinary (P6).
 impl protocol::OpBinary for ArchitectConfigMutation {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         const OP_BINARY_FORMAT: u8 = 1;
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
         let variants = <Self as dsl::DslVariants>::variants();
@@ -162,7 +162,7 @@ impl protocol::OpBinary for ArchitectConfigMutation {
         out.extend_from_slice(&body);
         Ok(out)
     }
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         const OP_BINARY_FORMAT: u8 = 1;
         let mut reader = store::pack_rt::ByteReader::new(bytes);
         let format = reader.read_u8()?;
@@ -186,7 +186,7 @@ impl Mutation<ArchitectConfig> for ArchitectConfigMutation {
 
     /// ✏️ Warning `mutation.no-op` if `config` already equals `base` (empty diff), else the
     /// whole-snapshot replacement.
-    fn diff(&self, base: &ArchitectConfig) -> protocol::MutationOutcome<ArchitectConfig> {
+    async fn diff(&self, base: &ArchitectConfig) -> protocol::MutationOutcome<ArchitectConfig> {
         match self {
             ArchitectConfigMutation::Snapshot { config } => {
                 if config == base {
@@ -197,7 +197,7 @@ impl Mutation<ArchitectConfig> for ArchitectConfigMutation {
         }
     }
 
-    fn inverse(&self, base: &ArchitectConfig) -> Vec<Self> {
+    async fn inverse(&self, base: &ArchitectConfig) -> Vec<Self> {
         vec![ArchitectConfigMutation::Snapshot { config: base.clone() }]
     }
 }
@@ -206,7 +206,7 @@ impl Mutation<ArchitectConfig> for ArchitectConfigMutation {
 //#region 🔖️Readers
 /// 🧮️ Reads `cfg.active_register`, defaulting to `"elements"` for a config that predates
 /// `ArchitectPlayApp::initial_config`'s default (or was constructed bare in a test).
-pub fn active_register(cfg: &ArchitectConfig) -> &str {
+pub async fn active_register(cfg: &ArchitectConfig) -> &str {
     if cfg.active_register.is_empty() {
         "elements"
     } else {
@@ -214,11 +214,11 @@ pub fn active_register(cfg: &ArchitectConfig) -> &str {
     }
 }
 
-pub fn parse_search_history(cfg: &ArchitectConfig) -> Vec<SearchQuery> {
+pub async fn parse_search_history(cfg: &ArchitectConfig) -> Vec<SearchQuery> {
     serde_json::from_str(&cfg.search_history_json).unwrap_or_default()
 }
 
-pub fn parse_active_report(cfg: &ArchitectConfig) -> Option<ProgramReport> {
+pub async fn parse_active_report(cfg: &ArchitectConfig) -> Option<ProgramReport> {
     if cfg.active_report_json.is_empty() {
         return None;
     }
@@ -226,7 +226,7 @@ pub fn parse_active_report(cfg: &ArchitectConfig) -> Option<ProgramReport> {
 }
 
 /// 🧮️ The whole-snapshot config edit every command handler emits.
-pub fn snapshot(next: ArchitectConfig) -> Vec<ArchitectConfigMutation> {
+pub async fn snapshot(next: ArchitectConfig) -> Vec<ArchitectConfigMutation> {
     vec![ArchitectConfigMutation::Snapshot { config: next }]
 }
 //#endregion 🔖️Readers
@@ -237,13 +237,13 @@ mod tests {
     use super::*;
 
     #[test]
-    fn active_register_falls_back_to_elements() {
+    async fn active_register_falls_back_to_elements() {
         assert_eq!(active_register(&ArchitectConfig::default()), "elements");
         assert_eq!(active_register(&ArchitectConfig { active_register: "risks".into(), ..ArchitectConfig::default() }), "risks");
     }
 
     #[test]
-    fn a_snapshot_operation_replaces_the_whole_config_and_inverts_to_the_base() {
+    async fn a_snapshot_operation_replaces_the_whole_config_and_inverts_to_the_base() {
         let base = ArchitectConfig::default();
         let next = ArchitectConfig { search_query: "hall".into(), ..ArchitectConfig::default() };
         let operation = ArchitectConfigMutation::Snapshot { config: next.clone() };
@@ -252,7 +252,7 @@ mod tests {
     }
 
     #[test]
-    fn an_empty_active_report_parses_to_none() {
+    async fn an_empty_active_report_parses_to_none() {
         assert!(parse_active_report(&ArchitectConfig::default()).is_none());
         assert!(parse_search_history(&ArchitectConfig::default()).is_empty());
     }

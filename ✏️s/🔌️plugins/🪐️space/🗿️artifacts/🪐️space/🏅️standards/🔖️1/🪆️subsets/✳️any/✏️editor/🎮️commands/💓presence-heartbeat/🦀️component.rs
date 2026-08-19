@@ -18,7 +18,7 @@ pub struct PresenceHeartbeat {
     pub actors_csv: String,
 }
 
-pub fn handle(payload: &PresenceHeartbeat, _doc: &ArtifactView<'_, SSpaceSnapshot>, cfg: &ConfigView<'_, SpaceIndexConfig>) -> Result<Emit<SSpaceMutation, SpaceIndexConfigMutation>, Fault> {
+pub async fn handle(payload: &PresenceHeartbeat, _doc: &ArtifactView<'_, SSpaceSnapshot>, cfg: &ConfigView<'_, SpaceIndexConfig>) -> Result<Emit<SSpaceMutation, SpaceIndexConfigMutation>, Fault> {
     let mut presence = cfg.snapshot.presence.clone();
     match presence.iter_mut().find(|row| row.artifact_id == payload.artifact_id) {
         Some(row) => row.actors_csv = payload.actors_csv.clone(),
@@ -33,12 +33,12 @@ pub fn handle(payload: &PresenceHeartbeat, _doc: &ArtifactView<'_, SSpaceSnapsho
 mod tests {
     use super::*;
 
-    fn empty_doc() -> (SSpaceSnapshot, semio_framework_plugin::HistoryView) {
+    async fn empty_doc() -> (SSpaceSnapshot, semio_framework_plugin::HistoryView) {
         (SSpaceSnapshot::default(), semio_framework_plugin::HistoryView::empty())
     }
 
     #[test]
-    fn heartbeat_sets_presence_for_a_new_artifact() {
+    async fn heartbeat_sets_presence_for_a_new_artifact() {
         let (snapshot, history) = empty_doc();
         let doc = ArtifactView::new(&snapshot, &history);
         let config_snapshot = SpaceIndexConfig::default();
@@ -50,7 +50,7 @@ mod tests {
     }
 
     #[test]
-    fn heartbeat_replaces_an_existing_artifacts_presence() {
+    async fn heartbeat_replaces_an_existing_artifacts_presence() {
         let (snapshot, history) = empty_doc();
         let doc = ArtifactView::new(&snapshot, &history);
         let seeded = SpaceIndexConfig { presence: vec![SpaceIndexArtifactPresence { artifact_id: "artifact-1".into(), actors_csv: "user:1".into() }], ..Default::default() };

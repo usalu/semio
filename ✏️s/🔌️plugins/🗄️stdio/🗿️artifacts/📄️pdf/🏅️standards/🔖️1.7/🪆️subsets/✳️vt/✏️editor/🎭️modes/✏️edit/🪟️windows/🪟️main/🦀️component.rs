@@ -22,21 +22,21 @@ pub const BODY_KEY: &str = DocumentWindowKit::KIND_ID;
 
 //#region 🔖️Definition
 /// 🧱️ Stitched into the editor manifest by `crate::editor::pdf17vt::create_pdf17_vt_editor`.
-pub fn definition() -> WindowKindDefinition {
+pub async fn definition() -> WindowKindDefinition {
     WindowKindDefinition { label: LocalizedLabel::native("Pages", "Seiten"), icon_id: "file-text".into(), ..DocumentWindowKit::editable_window_kind() }
 }
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
 /// 📄️ Real `PdfSnapshot -> UiNode`: one summary line per page (see module doc comment for what `page.text` honestly is and is not).
-fn page_summary(index: usize, page: &PdfPage) -> String {
+async fn page_summary(index: usize, page: &PdfPage) -> String {
     let media = page.media_box;
     let crop = page.crop_box.map(|c| format!(", CropBox [{:.1}, {:.1}, {:.1}, {:.1}]", c[0], c[1], c[2], c[3])).unwrap_or_default();
     let text = if page.text.is_empty() { "(no extracted or authored text)".to_string() } else { page.text.clone() };
     format!("Page {} -- MediaBox [{:.1}, {:.1}, {:.1}, {:.1}]{}\n{}", index + 1, media[0], media[1], media[2], media[3], crop, text)
 }
 
-pub fn render(document: &PdfSnapshot) -> UiNode {
+pub async fn render(document: &PdfSnapshot) -> UiNode {
     let pages = document.pages.iter().enumerate().map(|(index, page)| DocumentPage { text: page_summary(index, page) }).collect();
     DocumentWindowKit::render(&DocumentView { pages })
 }
@@ -49,14 +49,14 @@ mod tests {
     use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::snapshot::demo_pdf17_snapshot;
 
     #[test]
-    fn definition_declares_a_document_window() {
+    async fn definition_declares_a_document_window() {
         let def = definition();
         assert_eq!(def.id, WINDOW_KIND_ID);
         assert_eq!(def.body_key, BODY_KEY);
     }
 
     #[test]
-    fn render_lists_one_line_per_page_with_media_box_and_text() {
+    async fn render_lists_one_line_per_page_with_media_box_and_text() {
         let document = demo_pdf17_snapshot();
         assert_eq!(document.pages.len(), 1);
         let UiNode::Stack(node) = render(&document) else { panic!("expected Stack") };

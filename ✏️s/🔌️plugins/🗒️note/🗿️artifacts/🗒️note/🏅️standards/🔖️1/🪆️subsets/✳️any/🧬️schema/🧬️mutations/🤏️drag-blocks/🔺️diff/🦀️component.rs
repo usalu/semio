@@ -5,7 +5,7 @@ use crate::artifacts::note::NoteDiff;
 use crate::artifacts::note::NoteSnapshot;
 
 //#region 🔖️Diff
-pub fn diff(payload: &DragBlocks, base: &NoteSnapshot) -> protocol::MutationOutcome<NoteDiff> {
+pub async fn diff(payload: &DragBlocks, base: &NoteSnapshot) -> protocol::MutationOutcome<NoteDiff> {
     let mut delta = crate::artifacts::note::schema::diff::NoteBlocksDelta::default();
     let mut missing = Vec::new();
     for id in &payload.ids {

@@ -6,7 +6,7 @@ use crate::artifacts::semio::standards::v1::subsets::kit::schema::mutations::{un
 use crate::artifacts::semio::standards::v1::subsets::kit::schema::snapshot::SemioKitSnapshot;
 
 //#region 🔖️Inverse
-pub fn inverse(_payload: &BindRepresentation, base: &SemioKitSnapshot) -> Vec<SemioKitMutation> {
+pub async fn inverse(_payload: &BindRepresentation, base: &SemioKitSnapshot) -> Vec<SemioKitMutation> {
     vec![SemioKitMutation::UnbindRepresentation(unbind_representation::mutation::UnbindRepresentation { index: base.representations.len() })]
 }
 //#endregion 🔖️Inverse

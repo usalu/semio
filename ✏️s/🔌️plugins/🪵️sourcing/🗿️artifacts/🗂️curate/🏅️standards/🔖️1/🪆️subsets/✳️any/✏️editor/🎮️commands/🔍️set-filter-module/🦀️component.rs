@@ -13,7 +13,7 @@ pub struct SetFilterModule {
     pub enabled: bool,
 }
 
-pub fn handle(payload: &SetFilterModule, _doc: &ArtifactView<'_, CurateSnapshot>, cfg: &ConfigView<'_, SourcingCurateConfig>) -> Result<Emit<SourcingMutation, SourcingCurateConfigMutation>, Fault> {
+pub async fn handle(payload: &SetFilterModule, _doc: &ArtifactView<'_, CurateSnapshot>, cfg: &ConfigView<'_, SourcingCurateConfig>) -> Result<Emit<SourcingMutation, SourcingCurateConfigMutation>, Fault> {
     let mut module_ids = cfg.snapshot.filters.module_ids.clone();
     if payload.enabled {
         if !module_ids.iter().any(|id| id == &payload.module_id) {

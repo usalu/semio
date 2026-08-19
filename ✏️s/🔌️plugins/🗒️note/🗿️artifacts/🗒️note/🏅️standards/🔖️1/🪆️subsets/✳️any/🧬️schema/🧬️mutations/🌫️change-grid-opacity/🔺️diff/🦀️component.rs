@@ -4,7 +4,7 @@ use crate::artifacts::note::NoteDiff;
 use crate::artifacts::note::NoteSnapshot;
 
 //#region 🔖️Diff
-pub fn diff(payload: &ChangeGridOpacity, base: &NoteSnapshot) -> protocol::MutationOutcome<NoteDiff> {
+pub async fn diff(payload: &ChangeGridOpacity, base: &NoteSnapshot) -> protocol::MutationOutcome<NoteDiff> {
     if let Some(opacity) = payload.new_opacity {
         if !opacity.is_finite() || !(0.0..=1.0).contains(&opacity) {
             return protocol::MutationOutcome::fatal("mutation.invariant", format!("Grid opacity must be between 0 and 1, got {opacity}."), Vec::<String>::new());

@@ -16,10 +16,10 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 
 //#region 🔖️OpText
 impl protocol::OpText for LowpolyMutation {
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
+    async fn parse_op(line: &str) -> Result<Self, store::TextError> {
         serde_json::from_str(line).map_err(|e| store::__rt::field_error(format!("invalid lowpoly mutation line: {e}")))
     }
-    fn print_op(&self) -> String {
+    async fn print_op(&self) -> String {
         serde_json::to_string(self).expect("LowpolyMutation always serializes")
     }
 }
@@ -27,10 +27,10 @@ impl protocol::OpText for LowpolyMutation {
 
 //#region 🔖️OpBinary
 impl protocol::OpBinary for LowpolyMutation {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         Ok(serde_json::to_vec(self).expect("LowpolyMutation always serializes"))
     }
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         serde_json::from_slice(bytes).map_err(|e| protocol::ProtocolError::Malformed { what: "lowpoly-mutation", offset: 0, detail: e.to_string() })
     }
 }
@@ -44,11 +44,11 @@ mod tests {
     use crate::artifacts::lowpoly::mutations::{create_mesh, create_object, delete_mesh, delete_object, edit_paint_layer, insert_paint_layer, rename_object};
     use protocol::{OpBinary, OpText};
 
-    fn tiny_mesh_json() -> String {
+    async fn tiny_mesh_json() -> String {
         semio_framework_3d::mesh::HalfedgeMesh::box_prim(1.0, 1.0, 1.0).expect("box prim").to_json().expect("mesh json")
     }
 
-    fn tiny_object(id: &str, name: &str) -> crate::artifacts::lowpoly::LowpolyObject {
+    async fn tiny_object(id: &str, name: &str) -> crate::artifacts::lowpoly::LowpolyObject {
         let mesh_workspace = tiny_mesh_json();
         let mesh = crate::artifacts::lowpoly::mesh_child_handle(id, &mesh_workspace);
         crate::artifacts::lowpoly::LowpolyObject {
@@ -62,7 +62,7 @@ mod tests {
     }
 
     /// 🧪️ One representative value per variant — reused by the round-trip law test below.
-    fn demo_mutation_cases() -> Vec<LowpolyMutation> {
+    async fn demo_mutation_cases() -> Vec<LowpolyMutation> {
         let projection = default_snapshot();
         let object_id = projection.objects[0].id.clone();
         vec![
@@ -87,7 +87,7 @@ mod tests {
     }
 
     #[test]
-    fn op_text_binary_roundtrip_law() {
+    async fn op_text_binary_roundtrip_law() {
         for mutation in demo_mutation_cases() {
             let printed = mutation.print_op();
             assert!(!printed.contains('\n'), "print_op must be one line, got {printed:?}");
@@ -101,7 +101,7 @@ mod tests {
     }
 
     #[test]
-    fn op_text_parse_rejects_garbage() {
+    async fn op_text_parse_rejects_garbage() {
         let result = <LowpolyMutation as protocol::OpText>::parse_op("not json at all");
         assert!(result.is_err());
     }

@@ -92,7 +92,7 @@ pub struct Block5dGripTemplate {
 //#region 🔖️ArtifactKind
 /// 🗂️ This artifact's `ArtifactKindSpec` — the canonical `5d.block` declaration, stitched into
 /// `crate::editor::block5d::create_block5d_app`.
-pub fn artifact_kind() -> ArtifactKindSpec {
+pub async fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "5d.block".into(),
         name: "Part Kind".into(),
@@ -116,7 +116,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn artifact_kind_declares_the_5d_block_interchange_kind() {
+    async fn artifact_kind_declares_the_5d_block_interchange_kind() {
         let kind = artifact_kind();
         assert_eq!(kind.id, "5d.block");
         assert_eq!(kind.schema, BLOCK_5D_SCHEMA);
@@ -131,7 +131,7 @@ mod tests {
 /// `ArtifactDeclaration` deliberately has no field for (see that struct's own doc) — now registers via
 /// `ArtifactEditor::app_schema()` returning `crate::editor::block5d::config::schema::app_schema_descriptor()`
 /// (ticket W1c), so `.setup()` is gone from `🧱️block/🦀️component.rs` entirely.
-pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
+pub async fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
     use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
 
     let rows: &[(&str, &str, &str, &[(&str, &str)], Option<(&str, &str)>)] = &[
@@ -171,7 +171,7 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
     Ok(definition)
 }
 
-pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
+pub async fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
     semio_framework_plugin::ArtifactDeclaration::builder(definition()?)
         .schema(crate::artifacts::block5d::schema::block5d_artifact_schema_descriptor())
         .inferences([crate::artifacts::block5d::standards::v1::subsets::any::schema::inferences::block5d_artifact_inference_descriptor()])
@@ -183,7 +183,7 @@ pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semi
 
 /// 📌️ Handcrafted facet grammars (text) and protocols (binary) for in-process execution — built once
 /// and leaked to a `&'static` slice since `dsl::passthrough_hooks` isn't `const fn`.
-fn pilot_languages() -> &'static [dsl::LanguageSpec] {
+async fn pilot_languages() -> &'static [dsl::LanguageSpec] {
     static LANGUAGES: std::sync::OnceLock<Vec<dsl::LanguageSpec>> = std::sync::OnceLock::new();
     LANGUAGES
         .get_or_init(|| {

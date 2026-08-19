@@ -2,15 +2,15 @@
 
 use neural_engine::{Atom, ChannelSpec, Dictionary, EvalError, Operator, OperatorImpl, OperatorInfo, Registry, Value};
 
-fn read_string(input: &Dictionary, key: &str) -> Result<String, EvalError> {
+async fn read_string(input: &Dictionary, key: &str) -> Result<String, EvalError> {
     input.get(key).and_then(|v| v.as_atom()).and_then(|a| a.as_str()).map(str::to_string).ok_or_else(|| EvalError::MissingInput(key.into()))
 }
 
-fn read_number(input: &Dictionary, key: &str) -> Result<f64, EvalError> {
+async fn read_number(input: &Dictionary, key: &str) -> Result<f64, EvalError> {
     input.get(key).and_then(|v| v.as_atom()).and_then(|a| a.as_f64()).ok_or_else(|| EvalError::MissingInput(key.into()))
 }
 
-fn write_into(input: &Dictionary, value: f64) -> Result<Dictionary, EvalError> {
+async fn write_into(input: &Dictionary, value: f64) -> Result<Dictionary, EvalError> {
     let into = read_string(input, "into")?;
     Ok(Dictionary::new().insert(into, Value::Atom(Atom::Decimal(value))))
 }
@@ -19,7 +19,7 @@ macro_rules! binary_math_operation {
     ($name:ident, $id:expr, $label:expr, $abbr:expr, $summary:expr, $calc:expr) => {
         pub struct $name;
         impl Operator for $name {
-            fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
+            async fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
                 let a = read_number(input, "a")?;
                 let b = read_number(input, "b")?;
                 write_into(input, $calc(a, b))
@@ -32,7 +32,7 @@ macro_rules! unary_math_operation {
     ($name:ident, $id:expr, $label:expr, $abbr:expr, $summary:expr, $calc:expr) => {
         pub struct $name;
         impl Operator for $name {
-            fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
+            async fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
                 let value = read_number(input, "value")?;
                 write_into(input, $calc(value))
             }
@@ -53,23 +53,23 @@ unary_math_operation!(MathRound, "math.round", "Round", "Rnd", "Rounds a number"
 unary_math_operation!(MathFloor, "math.floor", "Floor", "Flr", "Floors a number", |v: f64| v.floor());
 unary_math_operation!(MathCeil, "math.ceil", "Ceil", "Ceil", "Ceils a number", |v: f64| v.ceil());
 
-fn number_channel(name: &str) -> ChannelSpec {
+async fn number_channel(name: &str) -> ChannelSpec {
     ChannelSpec::named("N", "Num", name, name)
 }
 
-fn string_channel(name: &str) -> ChannelSpec {
+async fn string_channel(name: &str) -> ChannelSpec {
     ChannelSpec::named("S", "Str", name, name)
 }
 
-fn operator_info(id: &str, name: &str, abbreviation: &str, summary: &str, inputs: Vec<ChannelSpec>) -> OperatorInfo {
+async fn operator_info(id: &str, name: &str, abbreviation: &str, summary: &str, inputs: Vec<ChannelSpec>) -> OperatorInfo {
     OperatorInfo { id: id.into(), extension: "imperative".into(), name: name.into(), abbreviation: abbreviation.into(), icon: "emoji:🔢️".into(), summary: summary.into(), inputs, outputs: vec![ChannelSpec::wildcard()], ..Default::default() }
 }
 
-fn register_simple(registry: &mut Registry, info: OperatorInfo, operation: Box<dyn Operator>) {
+async fn register_simple(registry: &mut Registry, info: OperatorInfo, operation: Box<dyn Operator>) {
     registry.register_operator(info, vec![OperatorImpl { schemas: vec![], operator: operation }], &[]);
 }
 
-pub fn register(registry: &mut Registry) {
+pub async fn register(registry: &mut Registry) {
     register_simple(registry, operator_info("math.add", "Add", "Add", "Adds two numbers and writes the result into scope", vec![number_channel("a"), number_channel("b"), string_channel("into")]), Box::new(MathAdd));
     register_simple(registry, operator_info("math.subtract", "Subtract", "Sub", "Subtracts two numbers and writes the result into scope", vec![number_channel("a"), number_channel("b"), string_channel("into")]), Box::new(MathSubtract));
     register_simple(registry, operator_info("math.multiply", "Multiply", "Mul", "Multiplies two numbers and writes the result into scope", vec![number_channel("a"), number_channel("b"), string_channel("into")]), Box::new(MathMultiply));
@@ -84,7 +84,7 @@ pub fn register(registry: &mut Registry) {
     registry.finalize();
 }
 
-pub fn catalogue_json(registry: &Registry) -> String {
+pub async fn catalogue_json(registry: &Registry) -> String {
     let items: Vec<serde_json::Value> = registry
         .operator_catalogue()
         .into_iter()
@@ -115,7 +115,7 @@ pub fn catalogue_json(registry: &Registry) -> String {
     .unwrap_or_else(|_| "{}".into())
 }
 
-pub fn module_registry() -> Registry {
+pub async fn module_registry() -> Registry {
     let mut registry = Registry::new();
     register(&mut registry);
     registry
@@ -125,7 +125,7 @@ pub fn module_registry() -> Registry {
 const EXTENSION_ID: &str = "imperative-extension-math";
 const MODULE_VERSION: &str = "0.1.0";
 
-pub fn imperative_module_contribution() -> semio_framework::ProgramContributionEntry {
+pub async fn imperative_module_contribution() -> semio_framework::ProgramContributionEntry {
     let registry = module_registry();
     let catalogue = catalogue_json(&registry);
     imperative_extension_sdk::imperative_module_contribution(EXTENSION_ID, "math", "Math", "calculator", "math", "Math", MODULE_VERSION, &registry, Some(&catalogue))
@@ -133,14 +133,14 @@ pub fn imperative_module_contribution() -> semio_framework::ProgramContributionE
 
 /// 🗺️ Open-registry twin of [`imperative_module_contribution`] — see
 /// `imperative_extension_sdk::imperative_module_topic_contribution`.
-pub fn imperative_module_topic_contribution() -> semio_framework::TopicContribution {
+pub async fn imperative_module_topic_contribution() -> semio_framework::TopicContribution {
     let registry = module_registry();
     let catalogue = catalogue_json(&registry);
     imperative_extension_sdk::imperative_module_topic_contribution("math", "Math", "calculator", "math", "Math", MODULE_VERSION, &registry, Some(&catalogue))
 }
 
 #[cfg(target_arch = "wasm32")]
-fn bundle() -> semio_framework_plugin::ExtensionBundle {
+async fn bundle() -> semio_framework_plugin::ExtensionBundle {
     let topic_contribution = imperative_module_topic_contribution();
     semio_framework_plugin::ExtensionBundle::new(EXTENSION_ID, "Imperative Math", MODULE_VERSION)
         .extends("imperative")
@@ -162,7 +162,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn math_add_writes_into_scope() {
+    async fn math_add_writes_into_scope() {
         let registry = module_registry();
         let input = Dictionary::new().insert("a", Value::Atom(Atom::Decimal(2.0))).insert("b", Value::Atom(Atom::Decimal(3.0))).insert("into", Value::Atom(Atom::String("sum".into())));
         let output = registry.dispatch("math.add", &input).expect("dispatch");

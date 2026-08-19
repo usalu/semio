@@ -14,7 +14,7 @@ pub struct SetFixtureJson {
     pub json: String,
 }
 
-pub fn handle(payload: &SetFixtureJson, _doc: &ArtifactView<'_, NoteSnapshot>, _cfg: &ConfigView<'_, NoteConfig>, _ctx: &mut crate::editor::note::NoteDispatchCtx) -> Result<Emit<NoteMutation, NoteConfigMutation>, Fault> {
+pub async fn handle(payload: &SetFixtureJson, _doc: &ArtifactView<'_, NoteSnapshot>, _cfg: &ConfigView<'_, NoteConfig>, _ctx: &mut crate::editor::note::NoteDispatchCtx) -> Result<Emit<NoteMutation, NoteConfigMutation>, Fault> {
     let next_document = if let Ok(document) = crate::artifacts::note::dsl::parse_dsl(&payload.json) {
         document
     } else {

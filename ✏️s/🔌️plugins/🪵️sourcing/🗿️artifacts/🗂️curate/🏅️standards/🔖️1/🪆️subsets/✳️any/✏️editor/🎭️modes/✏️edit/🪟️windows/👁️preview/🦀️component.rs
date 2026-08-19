@@ -14,7 +14,7 @@ const SOURCING_CURATE_SURFACE_PREVIEW: &str = "sourcing.preview.world";
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
-pub fn definition() -> WindowKindDefinition {
+pub async fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
         id: SOURCING_CURATE_WINDOW_PREVIEW.into(),
         label: LocalizedLabel::native("Preview", "Vorschau"),
@@ -42,7 +42,7 @@ pub fn definition() -> WindowKindDefinition {
 /// selection" placeholder until a future wave threads interaction into render. Flagged as a discovered
 /// framework gap, not worked around here — kept as a parameter (rather than deleted outright) so that
 /// future wave has a slot to fill in.
-pub fn render(document: &CurateSnapshot, selected_ids: &[String], labels: &SourcingLabels) -> UiNode {
+pub async fn render(document: &CurateSnapshot, selected_ids: &[String], labels: &SourcingLabels) -> UiNode {
     let stock = crate::artifacts::curate::stock_of(document);
     let Some(kind) = selected_ids.first().and_then(|id| stock.iter().find(|kind| &kind.id == id)) else {
         return ui_text(labels.no_selection);
@@ -66,7 +66,7 @@ mod tests {
     /// passes an empty slice (see the `selected_ids` doc comment above) until a future wave threads
     /// interaction into `render`.
     #[test]
-    fn preview_renders_selected_mesh_id() {
+    async fn preview_renders_selected_mesh_id() {
         let document = crate::artifacts::curate::schema::default_document();
         let object_id = crate::artifacts::curate::stock_of(&document)[0].id.clone();
         let node = render(&document, &[object_id.clone()], crate::editor::sourcing::terminology::sourcing_curate_labels(&SourcingCurateConfig::default()));
@@ -78,7 +78,7 @@ mod tests {
     }
 
     #[test]
-    fn preview_shows_placeholder_without_selection() {
+    async fn preview_shows_placeholder_without_selection() {
         let document = crate::artifacts::curate::schema::default_document();
         let node = render(&document, &[], crate::editor::sourcing::terminology::sourcing_curate_labels(&SourcingCurateConfig::default()));
         let json = serde_json::to_string(&node).unwrap();
@@ -86,14 +86,14 @@ mod tests {
     }
 
     #[test]
-    fn definition_declares_the_world3d_surface_and_body_key() {
+    async fn definition_declares_the_world3d_surface_and_body_key() {
         let def = definition();
         assert_eq!(def.body_key, SOURCING_CURATE_BODY_PREVIEW);
         assert!(matches!(def.surface_kind, SurfaceKind::World3d));
     }
 
     #[test]
-    fn renders_via_the_app() {
+    async fn renders_via_the_app() {
         let mut app = new_app();
         // `render` carries no `InteractionView` yet, so the app-level render always shows the placeholder.
         assert!(render_body(&mut app, SOURCING_CURATE_BODY_PREVIEW).contains("No selection"));

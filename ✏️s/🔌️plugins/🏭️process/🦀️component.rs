@@ -10,7 +10,7 @@ use semio_framework_plugin::{ExecutionMode, Plugin};
 /// plugin's own actor runs `Isolated` (its 4 `🧩️extensions/` — metal, robotic, concrete, wood — run
 /// `Declarative` instead, see each extension's own `bundle()`), and it asks the broker for document
 /// write access to persist edits.
-pub fn plugin() -> Result<Plugin, semio_framework_plugin::PluginAssemblyError> {
+pub async fn plugin() -> Result<Plugin, semio_framework_plugin::PluginAssemblyError> {
     Plugin::builder("process")
         .label("Process")
         .version("0.1.0")

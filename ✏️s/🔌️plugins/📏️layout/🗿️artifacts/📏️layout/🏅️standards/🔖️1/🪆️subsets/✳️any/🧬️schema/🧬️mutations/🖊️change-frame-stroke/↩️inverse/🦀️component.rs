@@ -6,7 +6,7 @@ use crate::artifacts::layout::mutations::LayoutMutation;
 use crate::artifacts::layout::{Frame, LayoutSnapshot};
 
 //#region 🖊️ChangeFrameStroke
-pub fn inverse_change_frame_stroke(payload: &ChangeFrameStroke, base: &LayoutSnapshot) -> Vec<LayoutMutation> {
+pub async fn inverse_change_frame_stroke(payload: &ChangeFrameStroke, base: &LayoutSnapshot) -> Vec<LayoutMutation> {
     let Some(page) = base.pages.iter().find(|page| page.id == payload.page_id) else {
         return Vec::new();
     };

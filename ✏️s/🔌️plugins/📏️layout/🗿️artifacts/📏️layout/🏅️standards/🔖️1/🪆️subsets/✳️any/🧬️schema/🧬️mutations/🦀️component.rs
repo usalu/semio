@@ -67,15 +67,15 @@ mod tests {
 
     const SAMPLE: &str = r#"{"schema":"layout.layout","name":"t","grid":{"baselineGrid":12,"baselineOffset":0,"snapToBaseline":true},"paragraphStyles":[],"characterStyles":[],"stories":[{"id":"story-1","content":"Hello","styleRuns":[]}],"links":[{"id":"link-1","path":"a.png","hash":"h","width":10,"height":10,"dpi":300}],"parentPages":[],"spreads":[],"pages":[{"id":"page-1","name":"P","spreadId":"s","width":200,"height":200,"margins":{"top":0,"right":0,"bottom":0,"left":0},"columns":{"count":1,"gutter":0},"guides":[],"layerIds":["layer-1"],"layers":[{"id":"layer-1","name":"Content","visible":true,"locked":false,"objectIds":["frame-1"]}],"frames":[{"id":"frame-1","layerId":"layer-1","kind":"rect","bounds":{"x":10,"y":10,"w":40,"h":40,"rotation":0},"fill":[1,1,1,1]}],"overrides":[]}],"printTarget":null}"#;
 
-    fn sample_doc() -> LayoutSnapshot {
+    async fn sample_doc() -> LayoutSnapshot {
         serde_json::from_str(SAMPLE).expect("sample doc")
     }
 
-    fn new_rect(id: &str) -> Frame {
+    async fn new_rect(id: &str) -> Frame {
         Frame::Rect { id: id.into(), layer_id: "layer-1".into(), bounds: LayoutBounds { x: 0.0, y: 0.0, width: 20.0, height: 20.0, rotation: 0.0 }, locked: None, visible: None, fill: Some([0.1, 0.2, 0.3, 1.0]), stroke: None }
     }
 
-    fn new_text(id: &str) -> Frame {
+    async fn new_text(id: &str) -> Frame {
         Frame::Text {
             id: id.into(),
             layer_id: "layer-1".into(),
@@ -90,7 +90,7 @@ mod tests {
         }
     }
 
-    fn round_trip(doc: &LayoutSnapshot, operation: &LayoutMutation) -> LayoutSnapshot {
+    async fn round_trip(doc: &LayoutSnapshot, operation: &LayoutMutation) -> LayoutSnapshot {
         let forward = operation.diff(doc).diff().apply(doc).expect("valid mutation diff");
         let backs = operation.inverse(doc);
         let mut restored = forward.clone();
@@ -103,7 +103,7 @@ mod tests {
 
     //#region ✏️🖨️🧾document-scalars
     #[test]
-    fn document_scalar_mutations_round_trip() {
+    async fn document_scalar_mutations_round_trip() {
         let doc = sample_doc();
         let renamed = round_trip(&doc, &LayoutMutation::RenameLayout(rename_layout::mutation::RenameLayout { new_name: "Renamed".into() }));
         assert_eq!(renamed.name, "Renamed");
@@ -122,7 +122,7 @@ mod tests {
 
     //#region 📄pages
     #[test]
-    fn pages_create_rename_resize_delete_round_trip() {
+    async fn pages_create_rename_resize_delete_round_trip() {
         let doc = sample_doc();
         let mut page_2 = doc.pages[0].clone();
         page_2.id = "page-2".into();
@@ -156,7 +156,7 @@ mod tests {
     }
 
     #[test]
-    fn reorder_pages_round_trips() {
+    async fn reorder_pages_round_trips() {
         let mut doc = sample_doc();
         let mut page_2 = doc.pages[0].clone();
         page_2.id = "page-2".into();
@@ -169,7 +169,7 @@ mod tests {
     }
 
     #[test]
-    fn delete_page_of_a_missing_id_has_an_empty_inverse() {
+    async fn delete_page_of_a_missing_id_has_an_empty_inverse() {
         let doc = sample_doc();
         let delete = LayoutMutation::DeletePage(delete_page::mutation::DeletePage { id: "no-page".into() });
         assert!(delete.inverse(&doc).is_empty());
@@ -178,7 +178,7 @@ mod tests {
 
     //#region 📖stories / 🔗links
     #[test]
-    fn stories_create_edit_delete_round_trip() {
+    async fn stories_create_edit_delete_round_trip() {
         let doc = sample_doc();
         let create = LayoutMutation::CreateStory(create_story::mutation::CreateStory { story: TextStory { id: "story-2".into(), content: "New".into(), style_runs: Vec::new() }, index: Some(1) });
         let with_story = round_trip(&doc, &create);
@@ -194,7 +194,7 @@ mod tests {
     }
 
     #[test]
-    fn links_create_change_path_delete_round_trip() {
+    async fn links_create_change_path_delete_round_trip() {
         let doc = sample_doc();
         let create = LayoutMutation::CreateLink(create_link::mutation::CreateLink {
             link: crate::artifacts::layout::ImageLink { id: "link-2".into(), path: "b.png".into(), hash: "h2".into(), width: 5, height: 5, dpi: 72, color_profile: None, state: None, proxy_data_url: None },
@@ -215,7 +215,7 @@ mod tests {
 
     //#region ➕➖🕹️📏🎨🖊️🔤🔢frames
     #[test]
-    fn frame_create_move_resize_style_delete_round_trip() {
+    async fn frame_create_move_resize_style_delete_round_trip() {
         let doc = sample_doc();
         let create = LayoutMutation::CreateFrame(create_frame::mutation::CreateFrame { page_id: "page-1".into(), frame: new_rect("frame-2"), index: Some(1), layer_id: Some("layer-1".into()) });
         let with_frame = round_trip(&doc, &create);
@@ -248,7 +248,7 @@ mod tests {
     }
 
     #[test]
-    fn text_frame_wrap_mode_and_columns_round_trip_and_ignore_rect_fields() {
+    async fn text_frame_wrap_mode_and_columns_round_trip_and_ignore_rect_fields() {
         let doc = sample_doc();
         let add = LayoutMutation::CreateFrame(create_frame::mutation::CreateFrame { page_id: "page-1".into(), frame: new_text("frame-text"), index: Some(0), layer_id: None });
         let with_text = add.diff(&doc).diff().apply(&doc).expect("valid mutation diff");
@@ -272,7 +272,7 @@ mod tests {
     }
 
     #[test]
-    fn frame_mutations_are_no_ops_when_target_missing() {
+    async fn frame_mutations_are_no_ops_when_target_missing() {
         let doc = sample_doc();
         let apply = |operation: &LayoutMutation| operation.diff(&doc).diff().apply(&doc).expect("valid mutation diff");
 
@@ -309,7 +309,7 @@ mod tests {
     /// document-root scalar setter, index-addressed reorder, an atomic ≥2-field `update` facet, and
     /// the remaining two id-keyed collections' representative verbs.
     #[test]
-    fn create_page_obeys_the_inverse_and_absorb_laws() {
+    async fn create_page_obeys_the_inverse_and_absorb_laws() {
         let base = sample_doc();
         let mut page_2 = base.pages[0].clone();
         page_2.id = "page-9".into();
@@ -322,14 +322,14 @@ mod tests {
     }
 
     #[test]
-    fn move_frame_obeys_the_inverse_law() {
+    async fn move_frame_obeys_the_inverse_law() {
         let base = sample_doc();
         let mv = LayoutMutation::MoveFrame(move_frame::mutation::MoveFrame { page_id: "page-1".into(), frame_id: "frame-1".into(), new_x: 42.0, new_y: 43.0 });
         protocol::os_spr::testkit::assert_mutation_inverse_law(&base, &mv);
     }
 
     #[test]
-    fn rename_layout_obeys_the_inverse_law() {
+    async fn rename_layout_obeys_the_inverse_law() {
         let base = sample_doc();
         let rename = LayoutMutation::RenameLayout(rename_layout::mutation::RenameLayout { new_name: "Renamed".into() });
         protocol::os_spr::testkit::assert_mutation_inverse_law(&base, &rename);
@@ -338,7 +338,7 @@ mod tests {
     /// ⚖️ `delete-page` — the cascade-capturing counterpart of `create-page`'s law test above; its
     /// inverse must recreate the FULL removed `Page` (frames/layers/margins/columns included).
     #[test]
-    fn delete_page_obeys_the_inverse_law() {
+    async fn delete_page_obeys_the_inverse_law() {
         let mut base = sample_doc();
         let mut page_2 = base.pages[0].clone();
         page_2.id = "page-2".into();
@@ -350,7 +350,7 @@ mod tests {
     /// ⚖️ `reorder-pages` — index-addressed-by-id law coverage (`reorder`'s inverse is
     /// `reorder{from: min(to, len-1), to: from}` per `📓️taxonomy.md`'s addressing convention).
     #[test]
-    fn reorder_pages_obeys_the_inverse_law() {
+    async fn reorder_pages_obeys_the_inverse_law() {
         let mut base = sample_doc();
         let mut page_2 = base.pages[0].clone();
         page_2.id = "page-2".into();
@@ -363,7 +363,7 @@ mod tests {
 
     /// ⚖️ `update-page-margins` — the atomic ≥2-field-facet `update` verb's law coverage.
     #[test]
-    fn update_page_margins_obeys_the_inverse_law() {
+    async fn update_page_margins_obeys_the_inverse_law() {
         let base = sample_doc();
         let margins = LayoutMutation::UpdatePageMargins(update_page_margins::mutation::UpdatePageMargins { id: "page-1".into(), top: 5.0, right: 6.0, bottom: 7.0, left: 8.0 });
         protocol::os_spr::testkit::assert_mutation_inverse_law(&base, &margins);
@@ -372,7 +372,7 @@ mod tests {
     /// ⚖️ `change-frame-fill` — a nested-collection variant-specific field patch (Rect-only, no-op
     /// on Text/Image frames).
     #[test]
-    fn change_frame_fill_obeys_the_inverse_law() {
+    async fn change_frame_fill_obeys_the_inverse_law() {
         let base = sample_doc();
         let fill = LayoutMutation::ChangeFrameFill(change_frame_fill::mutation::ChangeFrameFill { page_id: "page-1".into(), frame_id: "frame-1".into(), new_fill: Some([0.9, 0.1, 0.1, 1.0]) });
         protocol::os_spr::testkit::assert_mutation_inverse_law(&base, &fill);
@@ -381,7 +381,7 @@ mod tests {
     /// ⚖️ `edit-story` / `create-link` — the remaining two id-keyed collections' representative
     /// verbs (content-body replace, cross-collection create).
     #[test]
-    fn edit_story_and_create_link_obey_the_inverse_law() {
+    async fn edit_story_and_create_link_obey_the_inverse_law() {
         let base = sample_doc();
         let edit = LayoutMutation::EditStory(edit_story::mutation::EditStory { id: "story-1".into(), new_content: "Edited.".into() });
         protocol::os_spr::testkit::assert_mutation_inverse_law(&base, &edit);
@@ -394,7 +394,7 @@ mod tests {
     //#endregion ⚖️SemanticLaws
 
     #[test]
-    fn semantic_kinds_cover_every_variant() {
+    async fn semantic_kinds_cover_every_variant() {
         assert_eq!(LayoutMutation::kinds().len(), 25);
         let mutation = LayoutMutation::RenameLayout(rename_layout::mutation::RenameLayout { new_name: "x".into() });
         assert_eq!(mutation.semantics().kind, "rename-layout");
@@ -409,49 +409,49 @@ mod tests {
     /// unlike `🕸️dag`'s `reorder_nodes` it can never produce a non-permutation — its Fatal-never-applies
     /// coverage is carried by `create-page`'s duplicate-id case instead (see `🧪️w3-layout-log.txt`).
     #[test]
-    fn create_frame_missing_target_is_error() {
+    async fn create_frame_missing_target_is_error() {
         let base = sample_doc();
         protocol::os_spr::testkit::assert_missing_target_is_error(&base, &LayoutMutation::CreateFrame(create_frame::mutation::CreateFrame { page_id: "no-page".into(), frame: new_rect("frame-x"), index: None, layer_id: None }));
     }
 
     #[test]
-    fn delete_frame_missing_target_is_error() {
+    async fn delete_frame_missing_target_is_error() {
         let base = sample_doc();
         protocol::os_spr::testkit::assert_missing_target_is_error(&base, &LayoutMutation::DeleteFrame(delete_frame::mutation::DeleteFrame { page_id: "page-1".into(), frame_id: "ghost".into() }));
     }
 
     #[test]
-    fn move_frame_missing_target_is_error() {
+    async fn move_frame_missing_target_is_error() {
         let base = sample_doc();
         protocol::os_spr::testkit::assert_missing_target_is_error(&base, &LayoutMutation::MoveFrame(move_frame::mutation::MoveFrame { page_id: "page-1".into(), frame_id: "ghost".into(), new_x: 1.0, new_y: 1.0 }));
     }
 
     #[test]
-    fn reorder_pages_missing_target_is_error() {
+    async fn reorder_pages_missing_target_is_error() {
         let base = sample_doc();
         protocol::os_spr::testkit::assert_missing_target_is_error(&base, &LayoutMutation::ReorderPages(reorder_pages::mutation::ReorderPages { id: "ghost".into(), to_index: 0 }));
     }
 
     #[test]
-    fn rename_page_missing_target_is_error() {
+    async fn rename_page_missing_target_is_error() {
         let base = sample_doc();
         protocol::os_spr::testkit::assert_missing_target_is_error(&base, &LayoutMutation::RenamePage(rename_page::mutation::RenamePage { id: "ghost".into(), new_name: "x".into() }));
     }
 
     #[test]
-    fn change_page_height_missing_target_is_error() {
+    async fn change_page_height_missing_target_is_error() {
         let base = sample_doc();
         protocol::os_spr::testkit::assert_missing_target_is_error(&base, &LayoutMutation::ChangePageHeight(change_page_height::mutation::ChangePageHeight { id: "ghost".into(), new_height: 1.0 }));
     }
 
     #[test]
-    fn edit_story_missing_target_is_error() {
+    async fn edit_story_missing_target_is_error() {
         let base = sample_doc();
         protocol::os_spr::testkit::assert_missing_target_is_error(&base, &LayoutMutation::EditStory(edit_story::mutation::EditStory { id: "ghost".into(), new_content: "x".into() }));
     }
 
     #[test]
-    fn create_page_duplicate_id_is_fatal() {
+    async fn create_page_duplicate_id_is_fatal() {
         let base = sample_doc();
         let duplicate = base.pages[0].clone();
         let outcome = LayoutMutation::CreatePage(create_page::mutation::CreatePage { page: duplicate, index: None }).diff(&base);

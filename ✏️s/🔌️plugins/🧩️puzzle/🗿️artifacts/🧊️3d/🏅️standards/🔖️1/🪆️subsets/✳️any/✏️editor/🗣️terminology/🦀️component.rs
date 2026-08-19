@@ -101,13 +101,13 @@ semio_framework_plugin::app_labels! {
 
 //#region 🔖️Locale
 /// 🗣️ B1: local replacement for the deleted `semio_framework_plugin::is_de_locale(&ViewModel)`.
-pub fn is_de_locale(config: &Puzzle3dConfig) -> bool {
+pub async fn is_de_locale(config: &Puzzle3dConfig) -> bool {
     config.locale.starts_with("de")
 }
 
 /// 🗣️ Resolves the active label set from `Puzzle3dConfig`'s own persisted locale/terminology strings
 /// through the generated `Puzzle3dLabels::labels` (`AppLabels`) exhaustive resolver.
-pub fn puzzle3d_labels(config: &Puzzle3dConfig) -> &'static Puzzle3dLabels {
+pub async fn puzzle3d_labels(config: &Puzzle3dConfig) -> &'static Puzzle3dLabels {
     let locale = if is_de_locale(config) { Locale::De } else { Locale::En };
     let terminology = Terminology::parse(config.terminology.as_str()).unwrap_or(Terminology::Native);
     Puzzle3dLabels::labels(locale, terminology)
@@ -116,13 +116,13 @@ pub fn puzzle3d_labels(config: &Puzzle3dConfig) -> &'static Puzzle3dLabels {
 /// 🗺️ Builds a full locale×terminology `LocalizedLabel` from one `Puzzle3dLabels` field, reusing the
 /// field's own terminology-aware text instead of re-authoring it at the manifest call site (e.g. the
 /// "Puzzle 3D"/"Aggregator" window title, or the "Concrete Forest"/"Abbau Aufbau" example name).
-pub fn puzzle3d_localized(field: impl Fn(&Puzzle3dLabels) -> LabelText) -> LocalizedLabel {
+pub async fn puzzle3d_localized(field: impl Fn(&Puzzle3dLabels) -> LabelText) -> LocalizedLabel {
     LocalizedLabel::from_fn(move |terminology, locale| field(Puzzle3dLabels::labels(locale, terminology)).as_str().to_string())
 }
 
 /// 🗺️ Builds a full locale×terminology `LocalizedLabel` whose English/German manifest phrasing wraps
 /// one terminology-aware `Puzzle3dLabels` word (e.g. "Add {object}" / "{object} hinzufügen").
-pub fn puzzle3d_localized_phrase(field: impl Fn(&Puzzle3dLabels) -> LabelText, en: impl Fn(&str) -> String + 'static, de: impl Fn(&str) -> String + 'static) -> LocalizedLabel {
+pub async fn puzzle3d_localized_phrase(field: impl Fn(&Puzzle3dLabels) -> LabelText, en: impl Fn(&str) -> String + 'static, de: impl Fn(&str) -> String + 'static) -> LocalizedLabel {
     LocalizedLabel::from_fn(move |terminology, locale| {
         let word = field(Puzzle3dLabels::labels(locale, terminology)).as_str();
         match locale {

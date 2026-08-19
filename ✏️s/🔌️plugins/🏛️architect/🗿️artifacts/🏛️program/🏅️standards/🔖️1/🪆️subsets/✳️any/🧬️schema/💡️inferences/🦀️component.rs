@@ -47,7 +47,7 @@ pub struct ProgramInference {
 }
 
 impl Inference<ProgramSnapshot> for ProgramInference {
-    fn infer(snapshot: &ProgramSnapshot) -> Self {
+    async fn infer(snapshot: &ProgramSnapshot) -> Self {
         Self { topology: compute_topology(&snapshot.elements) }
     }
 }
@@ -57,19 +57,19 @@ impl Inference<ProgramSnapshot> for ProgramInference {
 /// exists only so `ProgramInference` itself has a `Default` without requiring `ProgramTopology` to
 /// derive one, and to make the "default == infer(default snapshot)" law explicit at this level too.
 impl Default for ProgramInference {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self::infer(&ProgramSnapshot::default())
     }
 }
 
 impl protocol::InferenceSpec<ProgramSnapshot> for ProgramInference {
-    fn inference_schema_id() -> &'static str {
+    async fn inference_schema_id() -> &'static str {
         "s.architect.program.inference"
     }
-    fn schema_version() -> u32 {
+    async fn schema_version() -> u32 {
         1
     }
-    fn fields() -> &'static [protocol::InferenceFieldSpec] {
+    async fn fields() -> &'static [protocol::InferenceFieldSpec] {
         &[
             protocol::InferenceFieldSpec { id: "s.architect.program.inference.topology.nodeCount", reads: &["elements"] },
             protocol::InferenceFieldSpec { id: "s.architect.program.inference.topology.rootCount", reads: &["elements"] },
@@ -89,7 +89,7 @@ impl ArtifactInferrer for crate::artifacts::program::standards::v1::subsets::any
     /// 🎯️ Whole-snapshot scalar — nothing here is per-entity, so the cache/session are unused
     /// (same "plain `Inference`" shape the family doc calls out as correct for `dimensions`/
     /// `outline`/`bounds`-style facets).
-    fn infer_cached(snapshot: &Self::Snapshot, cache: &mut store::InferenceCache, session: &mut store::InferenceSession) -> Self::Inference {
+    async fn infer_cached(snapshot: &Self::Snapshot, cache: &mut store::InferenceCache, session: &mut store::InferenceSession) -> Self::Inference {
         let _ = (cache, session);
         <ProgramInference as Inference<ProgramSnapshot>>::infer(snapshot)
     }
@@ -99,7 +99,7 @@ impl ArtifactInferrer for crate::artifacts::program::standards::v1::subsets::any
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.architect.program.inference`'s facet leaves into the OS-wide inference catalog
 /// — call once at plugin init, alongside `program_artifact_schema_descriptor`'s registration.
-pub fn program_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
+pub async fn program_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
     schema::ArtifactInferenceDescriptor {
         id: "s.architect.program.inference",
         inference: schema::FacetLeaves {
@@ -133,7 +133,7 @@ pub struct AdjacencyCell {
 }
 
 /// 📊️ Builds a lower-triangle matrix view over program elements and adjacencies.
-pub fn adjacency_matrix(program: &ProgramSnapshot) -> AdjacencyMatrix {
+pub async fn adjacency_matrix(program: &ProgramSnapshot) -> AdjacencyMatrix {
     let mut element_ids: Vec<EntityId> = program.elements.iter().map(|e| e.header.id.clone()).collect();
     element_ids.sort();
     let n = element_ids.len();
@@ -152,7 +152,7 @@ pub fn adjacency_matrix(program: &ProgramSnapshot) -> AdjacencyMatrix {
 }
 
 /// 🕸️ Undirected edge list for graph rendering (`a`, `b`, weight).
-pub fn undirected_edges(program: &ProgramSnapshot) -> Vec<(EntityId, EntityId, f64)> {
+pub async fn undirected_edges(program: &ProgramSnapshot) -> Vec<(EntityId, EntityId, f64)> {
     program.adjacencies.iter().map(|adjacency| (adjacency.element_a_id.clone(), adjacency.element_b_id.clone(), adjacency.weight)).collect()
 }
 //#endregion 🔀️AdjacencyViews
@@ -168,7 +168,7 @@ pub struct AdjacencyConflict {
 }
 
 /// 🔍️ Detects duplicate pairs, kind conflicts, separation/distance/level violations.
-pub fn detect_adjacency_conflicts(program: &ProgramSnapshot) -> Vec<AdjacencyConflict> {
+pub async fn detect_adjacency_conflicts(program: &ProgramSnapshot) -> Vec<AdjacencyConflict> {
     let mut conflicts = Vec::new();
     for (i, left) in program.adjacencies.iter().enumerate() {
         if let (Some(min), Some(max)) = (left.distance_min_m, left.distance_max_m) {
@@ -213,7 +213,7 @@ pub fn detect_adjacency_conflicts(program: &ProgramSnapshot) -> Vec<AdjacencyCon
     conflicts
 }
 
-fn separation_incompatible(left: &[SeparationKind], right: &[SeparationKind]) -> bool {
+async fn separation_incompatible(left: &[SeparationKind], right: &[SeparationKind]) -> bool {
     let fire_acoustic = |s: &SeparationKind| matches!(s, SeparationKind::Fire | SeparationKind::Acoustic);
     let has_fire = left.iter().any(fire_acoustic) || right.iter().any(fire_acoustic);
     let has_circulation = left.contains(&SeparationKind::Circulation) || right.contains(&SeparationKind::Circulation);
@@ -228,7 +228,7 @@ mod tests_adjacency {
     use crate::artifacts::program::sample_plugin;
 
     #[test]
-    fn sample_plugin_matrix_has_one_cell() {
+    async fn sample_plugin_matrix_has_one_cell() {
         let program = sample_plugin();
         let matrix = adjacency_matrix(&program);
         assert_eq!(matrix.element_ids.len(), 2);
@@ -237,7 +237,7 @@ mod tests_adjacency {
     }
 
     #[test]
-    fn detects_distance_min_max_violation() {
+    async fn detects_distance_min_max_violation() {
         let mut program = sample_plugin();
         program.adjacencies[0].distance_min_m = Some(10.0);
         program.adjacencies[0].distance_max_m = Some(5.0);
@@ -253,7 +253,7 @@ struct EntityIndex {
     duplicates: Vec<(EntityId, String, String)>,
 }
 
-fn build_entity_index(program: &ProgramSnapshot) -> EntityIndex {
+async fn build_entity_index(program: &ProgramSnapshot) -> EntityIndex {
     let mut locations: HashMap<EntityId, (String, String)> = HashMap::new();
     let mut duplicates = Vec::new();
     let mut register = |name: &str, id: &EntityId, label: &str| {
@@ -451,14 +451,14 @@ fn build_entity_index(program: &ProgramSnapshot) -> EntityIndex {
     EntityIndex { locations, duplicates }
 }
 
-fn check_ref(diagnostics: &mut Vec<ProgramDiagnostic>, index: &EntityIndex, target: &EntityId, source_id: &EntityId, register: &str, code: &str) {
+async fn check_ref(diagnostics: &mut Vec<ProgramDiagnostic>, index: &EntityIndex, target: &EntityId, source_id: &EntityId, register: &str, code: &str) {
     if !index.locations.contains_key(target) {
         diagnostics.push(ProgramDiagnostic { severity: DiagnosticSeverity::Error, code: code.into(), message: format!("{register} references missing entity {target}"), entity_id: Some(source_id.clone()), register: Some(register.into()) });
     }
 }
 
 /// 🩺️ Validates a plugin document and returns all diagnostics (non-fatal).
-pub fn validate_plugin(program: &ProgramSnapshot) -> Vec<ProgramDiagnostic> {
+pub async fn validate_plugin(program: &ProgramSnapshot) -> Vec<ProgramDiagnostic> {
     let mut diagnostics = Vec::new();
     if program.schema != ARCHITECT_PROGRAM_SCHEMA {
         diagnostics.push(ProgramDiagnostic {
@@ -674,19 +674,19 @@ mod tests_validate {
     use crate::artifacts::program::{empty_plugin, sample_plugin};
 
     #[test]
-    fn sample_plugin_passes_validation() {
+    async fn sample_plugin_passes_validation() {
         let diagnostics = validate_plugin(&sample_plugin());
         assert!(diagnostics.iter().all(|d| d.severity != DiagnosticSeverity::Error));
     }
 
     #[test]
-    fn empty_plugin_warns_on_title() {
+    async fn empty_plugin_warns_on_title() {
         let diagnostics = validate_plugin(&empty_plugin());
         assert!(diagnostics.iter().any(|d| d.code == "meta.empty_title"));
     }
 
     #[test]
-    fn detects_orphan_requirement() {
+    async fn detects_orphan_requirement() {
         let mut program = sample_plugin();
         program.requirements.push(Requirement {
             header: EntityHeader::new(EntityId::new_serial("requirement", "Orphan"), "Orphan"),
@@ -716,7 +716,7 @@ mod tests_validate {
     }
 
     #[test]
-    fn detects_broken_relationship_target() {
+    async fn detects_broken_relationship_target() {
         let mut program = sample_plugin();
         program.relationships.push(crate::artifacts::program::registers::Relationship {
             header: EntityHeader::new(EntityId::new_serial("relationship", "broken"), "broken"),
@@ -789,7 +789,7 @@ pub struct ProgramOutput {
 }
 
 /// 🏗️ Builds the requested abstract output from a plugin snapshot.
-pub fn build_output(program: &ProgramSnapshot, kind: OutputKind) -> ProgramOutput {
+pub async fn build_output(program: &ProgramSnapshot, kind: OutputKind) -> ProgramOutput {
     match kind {
         OutputKind::RequirementLists => requirement_lists(program),
         OutputKind::FunctionalHierarchies => functional_hierarchies(program),
@@ -814,7 +814,7 @@ pub fn build_output(program: &ProgramSnapshot, kind: OutputKind) -> ProgramOutpu
     }
 }
 
-fn requirement_lists(program: &ProgramSnapshot) -> ProgramOutput {
+async fn requirement_lists(program: &ProgramSnapshot) -> ProgramOutput {
     ProgramOutput {
         kind: OutputKind::RequirementLists,
         title: "Requirement Lists".into(),
@@ -823,7 +823,7 @@ fn requirement_lists(program: &ProgramSnapshot) -> ProgramOutput {
     }
 }
 
-fn functional_hierarchies(program: &ProgramSnapshot) -> ProgramOutput {
+async fn functional_hierarchies(program: &ProgramSnapshot) -> ProgramOutput {
     let roots: Vec<_> = program.functions.iter().filter(|f| f.hierarchy_parent_id.is_none()).collect();
     let mut lines = Vec::new();
     for root in roots {
@@ -835,7 +835,7 @@ fn functional_hierarchies(program: &ProgramSnapshot) -> ProgramOutput {
     ProgramOutput { kind: OutputKind::FunctionalHierarchies, title: "Functional Hierarchies".into(), lines, entity_ids: program.functions.iter().map(|f| f.header.id.clone()).collect() }
 }
 
-fn activity_taxonomies(program: &ProgramSnapshot) -> ProgramOutput {
+async fn activity_taxonomies(program: &ProgramSnapshot) -> ProgramOutput {
     let mut lines = Vec::new();
     for activity in &program.activities {
         lines.push(format!("{} / {} / {}", activity.category, activity.activity_type, activity.header.name));
@@ -843,47 +843,47 @@ fn activity_taxonomies(program: &ProgramSnapshot) -> ProgramOutput {
     ProgramOutput { kind: OutputKind::ActivityTaxonomies, title: "Activity Taxonomies".into(), lines, entity_ids: program.activities.iter().map(|a| a.header.id.clone()).collect() }
 }
 
-fn relationship_matrices(program: &ProgramSnapshot) -> ProgramOutput {
+async fn relationship_matrices(program: &ProgramSnapshot) -> ProgramOutput {
     let lines: Vec<String> = program.relationships.iter().map(|r| format!("{:?}: {} → {}", r.kind, r.source_id, r.target_id)).collect();
     ProgramOutput { kind: OutputKind::RelationshipMatrices, title: "Relationship Matrices".into(), lines, entity_ids: program.relationships.iter().map(|r| r.header.id.clone()).collect() }
 }
 
-fn adjacency_matrices(program: &ProgramSnapshot) -> ProgramOutput {
+async fn adjacency_matrices(program: &ProgramSnapshot) -> ProgramOutput {
     let report = build_report(program, ReportKind::AdjacencyMatrix);
     ProgramOutput { kind: OutputKind::AdjacencyMatrices, title: "Adjacency Matrices".into(), lines: report.sections.into_iter().flat_map(|s| s.bullets).collect(), entity_ids: report.entity_ids }
 }
 
-fn dependency_networks(program: &ProgramSnapshot) -> ProgramOutput {
+async fn dependency_networks(program: &ProgramSnapshot) -> ProgramOutput {
     let analysis = run_analysis(program, AnalysisKind::Dependency);
     ProgramOutput { kind: OutputKind::DependencyNetworks, title: "Dependency Networks".into(), lines: analysis.findings, entity_ids: analysis.entity_ids }
 }
 
-fn priority_matrices(program: &ProgramSnapshot) -> ProgramOutput {
+async fn priority_matrices(program: &ProgramSnapshot) -> ProgramOutput {
     let lines: Vec<String> = program.priorities.iter().map(|p| format!("{} — {:?} rank {:?} weight {:?}", p.header.name, p.ranked_priority, p.rank, p.weight)).collect();
     ProgramOutput { kind: OutputKind::PriorityMatrices, title: "Priority Matrices".into(), lines, entity_ids: program.priorities.iter().map(|p| p.header.id.clone()).collect() }
 }
 
-fn responsibility_matrices(program: &ProgramSnapshot) -> ProgramOutput {
+async fn responsibility_matrices(program: &ProgramSnapshot) -> ProgramOutput {
     let lines: Vec<String> = program.governance.responsibilities.iter().chain(program.governance.roles.iter()).cloned().collect();
     ProgramOutput { kind: OutputKind::ResponsibilityMatrices, title: "Responsibility Matrices".into(), lines, entity_ids: vec![program.governance.id.clone()] }
 }
 
-fn decision_trees(program: &ProgramSnapshot) -> ProgramOutput {
+async fn decision_trees(program: &ProgramSnapshot) -> ProgramOutput {
     let lines: Vec<String> = program.decisions.iter().map(|d| format!("{} → option {:?} ({})", d.header.name, d.selected_option_id, d.decision_statement.text)).collect();
     ProgramOutput { kind: OutputKind::DecisionTrees, title: "Decision Trees".into(), lines, entity_ids: program.decisions.iter().map(|d| d.header.id.clone()).collect() }
 }
 
-fn process_maps(program: &ProgramSnapshot) -> ProgramOutput {
+async fn process_maps(program: &ProgramSnapshot) -> ProgramOutput {
     let lines: Vec<String> = program.processes.iter().map(|p| format!("{}: {}", p.header.name, p.steps.join(" → "))).collect();
     ProgramOutput { kind: OutputKind::ProcessMaps, title: "Process Maps".into(), lines, entity_ids: program.processes.iter().map(|p| p.header.id.clone()).collect() }
 }
 
-fn workflow_descriptions(program: &ProgramSnapshot) -> ProgramOutput {
+async fn workflow_descriptions(program: &ProgramSnapshot) -> ProgramOutput {
     let analysis = run_analysis(program, AnalysisKind::Workflow);
     ProgramOutput { kind: OutputKind::WorkflowDescriptions, title: "Workflow Descriptions".into(), lines: analysis.findings, entity_ids: analysis.entity_ids }
 }
 
-fn user_journeys(program: &ProgramSnapshot) -> ProgramOutput {
+async fn user_journeys(program: &ProgramSnapshot) -> ProgramOutput {
     let mut lines = Vec::new();
     for user in &program.users {
         let activities: Vec<_> = program.activities.iter().filter(|a| a.user_profile_ids.contains(&user.header.id)).map(|a| a.header.name.as_str()).collect();
@@ -892,43 +892,43 @@ fn user_journeys(program: &ProgramSnapshot) -> ProgramOutput {
     ProgramOutput { kind: OutputKind::UserJourneys, title: "User Journeys".into(), lines, entity_ids: program.users.iter().map(|u| u.header.id.clone()).collect() }
 }
 
-fn scenario_narratives(program: &ProgramSnapshot) -> ProgramOutput {
+async fn scenario_narratives(program: &ProgramSnapshot) -> ProgramOutput {
     let lines: Vec<String> = program.scenarios.iter().map(|s| format!("{} — {}", s.header.name, s.hypothesis.text)).collect();
     ProgramOutput { kind: OutputKind::ScenarioNarratives, title: "Scenario Narratives".into(), lines, entity_ids: program.scenarios.iter().map(|s| s.header.id.clone()).collect() }
 }
 
-fn risk_matrices(program: &ProgramSnapshot) -> ProgramOutput {
+async fn risk_matrices(program: &ProgramSnapshot) -> ProgramOutput {
     let lines: Vec<String> = program.risks.iter().map(|r| format!("{} — {:?}/{:?}", r.header.name, r.probability, r.impact)).collect();
     ProgramOutput { kind: OutputKind::RiskMatrices, title: "Risk Matrices".into(), lines, entity_ids: program.risks.iter().map(|r| r.header.id.clone()).collect() }
 }
 
-fn compliance_matrices(program: &ProgramSnapshot) -> ProgramOutput {
+async fn compliance_matrices(program: &ProgramSnapshot) -> ProgramOutput {
     let lines: Vec<String> = program.regulatory.iter().map(|r| format!("{} {} — {:?}", r.code, r.title, r.verification_status)).collect();
     ProgramOutput { kind: OutputKind::ComplianceMatrices, title: "Compliance Matrices".into(), lines, entity_ids: program.regulatory.iter().map(|r| r.header.id.clone()).collect() }
 }
 
-fn capacity_schedules(program: &ProgramSnapshot) -> ProgramOutput {
+async fn capacity_schedules(program: &ProgramSnapshot) -> ProgramOutput {
     let analysis = run_analysis(program, AnalysisKind::Capacity);
     let schedule_lines: Vec<String> = program.schedules.iter().map(|s| s.header.name.clone()).collect();
     ProgramOutput { kind: OutputKind::CapacitySchedules, title: "Capacity Schedules".into(), lines: analysis.findings.into_iter().chain(schedule_lines).collect(), entity_ids: program.schedules.iter().map(|s| s.header.id.clone()).collect() }
 }
 
-fn equipment_schedules(program: &ProgramSnapshot) -> ProgramOutput {
+async fn equipment_schedules(program: &ProgramSnapshot) -> ProgramOutput {
     let lines: Vec<String> = program.equipment.iter().map(|e| format!("{} — qty {:?}", e.header.name, e.quantity.target)).collect();
     ProgramOutput { kind: OutputKind::EquipmentSchedules, title: "Equipment Schedules".into(), lines, entity_ids: program.equipment.iter().map(|e| e.header.id.clone()).collect() }
 }
 
-fn evaluation_frameworks(program: &ProgramSnapshot) -> ProgramOutput {
+async fn evaluation_frameworks(program: &ProgramSnapshot) -> ProgramOutput {
     let lines: Vec<String> = program.performance.iter().map(|p| format!("{} — {}", p.header.name, p.criterion)).collect();
     ProgramOutput { kind: OutputKind::EvaluationFrameworks, title: "Evaluation Frameworks".into(), lines, entity_ids: program.performance.iter().map(|p| p.header.id.clone()).collect() }
 }
 
-fn performance_specifications(program: &ProgramSnapshot) -> ProgramOutput {
+async fn performance_specifications(program: &ProgramSnapshot) -> ProgramOutput {
     let lines: Vec<String> = program.performance.iter().map(|p| format!("{} target {:?} {:?}", p.header.name, p.target, p.unit)).collect();
     ProgramOutput { kind: OutputKind::PerformanceSpecifications, title: "Performance Specifications".into(), lines, entity_ids: program.performance.iter().map(|p| p.header.id.clone()).collect() }
 }
 
-fn program_reports(program: &ProgramSnapshot) -> ProgramOutput {
+async fn program_reports(program: &ProgramSnapshot) -> ProgramOutput {
     let lines: Vec<String> = program.reports.iter().map(|r| format!("{:?} — {}", r.kind, r.title)).collect();
     ProgramOutput { kind: OutputKind::ProgramReports, title: "ProgramSnapshot Reports".into(), lines, entity_ids: program.reports.iter().map(|r| r.header.id.clone()).collect() }
 }
@@ -941,13 +941,13 @@ mod tests_outputs {
     use crate::artifacts::program::sample_plugin;
 
     #[test]
-    fn requirement_lists_output_nonempty_for_sample() {
+    async fn requirement_lists_output_nonempty_for_sample() {
         let output = build_output(&sample_plugin(), OutputKind::RequirementLists);
         assert_eq!(output.kind, OutputKind::RequirementLists);
     }
 
     #[test]
-    fn adjacency_matrices_output_uses_matrix_cells() {
+    async fn adjacency_matrices_output_uses_matrix_cells() {
         let output = build_output(&sample_plugin(), OutputKind::AdjacencyMatrices);
         assert!(!output.lines.is_empty());
     }
@@ -976,7 +976,7 @@ pub struct ReportSection {
 }
 
 /// 🖨️ Builds a structured report for the requested kind.
-pub fn build_report(program: &ProgramSnapshot, kind: ReportKind) -> ProgramReport {
+pub async fn build_report(program: &ProgramSnapshot, kind: ReportKind) -> ProgramReport {
     match kind {
         ReportKind::ExecutiveSummary => executive_summary(program),
         ReportKind::ProgramOverview => program_overview(program),
@@ -1002,11 +1002,11 @@ pub fn build_report(program: &ProgramSnapshot, kind: ReportKind) -> ProgramRepor
     }
 }
 
-fn timestamp(program: &ProgramSnapshot) -> String {
+async fn timestamp(program: &ProgramSnapshot) -> String {
     program.meta.timestamps.updated.clone()
 }
 
-fn executive_summary(program: &ProgramSnapshot) -> ProgramReport {
+async fn executive_summary(program: &ProgramSnapshot) -> ProgramReport {
     let summary = status_summary(program);
     ProgramReport {
         kind: ReportKind::ExecutiveSummary,
@@ -1024,7 +1024,7 @@ fn executive_summary(program: &ProgramSnapshot) -> ProgramReport {
     }
 }
 
-fn program_overview(program: &ProgramSnapshot) -> ProgramReport {
+async fn program_overview(program: &ProgramSnapshot) -> ProgramReport {
     ProgramReport {
         kind: ReportKind::ProgramOverview,
         title: format!("{} — Overview", program.meta.title),
@@ -1037,7 +1037,7 @@ fn program_overview(program: &ProgramSnapshot) -> ProgramReport {
     }
 }
 
-fn stakeholder_summary(program: &ProgramSnapshot) -> ProgramReport {
+async fn stakeholder_summary(program: &ProgramSnapshot) -> ProgramReport {
     ProgramReport {
         kind: ReportKind::StakeholderSummary,
         title: "Stakeholder Summary".into(),
@@ -1051,7 +1051,7 @@ fn stakeholder_summary(program: &ProgramSnapshot) -> ProgramReport {
     }
 }
 
-fn requirements_matrix(program: &ProgramSnapshot) -> ProgramReport {
+async fn requirements_matrix(program: &ProgramSnapshot) -> ProgramReport {
     let element_names: Vec<String> = program.elements.iter().map(|e| e.header.name.clone()).collect();
     let header = format!("{}\t{}", "Requirement", element_names.join("\t"));
     let mut rows = vec![header];
@@ -1068,7 +1068,7 @@ fn requirements_matrix(program: &ProgramSnapshot) -> ProgramReport {
     }
 }
 
-fn adjacency_matrix_report(program: &ProgramSnapshot) -> ProgramReport {
+async fn adjacency_matrix_report(program: &ProgramSnapshot) -> ProgramReport {
     let matrix = adjacency_matrix(program);
     let header: String = format!("{}\t{}", "", matrix.element_ids.iter().map(|id| program.elements.iter().find(|e| &e.header.id == id).map_or(id.0.as_str(), |e| e.header.name.as_str())).collect::<Vec<_>>().join("\t"));
     let mut rows = vec![header];
@@ -1094,7 +1094,7 @@ fn adjacency_matrix_report(program: &ProgramSnapshot) -> ProgramReport {
     }
 }
 
-fn gap_report(program: &ProgramSnapshot) -> ProgramReport {
+async fn gap_report(program: &ProgramSnapshot) -> ProgramReport {
     let analysis = run_analysis(program, AnalysisKind::Gap);
     ProgramReport {
         kind: ReportKind::GapAnalysis,
@@ -1105,7 +1105,7 @@ fn gap_report(program: &ProgramSnapshot) -> ProgramReport {
     }
 }
 
-fn risk_register(program: &ProgramSnapshot) -> ProgramReport {
+async fn risk_register(program: &ProgramSnapshot) -> ProgramReport {
     ProgramReport {
         kind: ReportKind::RiskRegister,
         title: "Risk Register".into(),
@@ -1115,7 +1115,7 @@ fn risk_register(program: &ProgramSnapshot) -> ProgramReport {
     }
 }
 
-fn decision_log(program: &ProgramSnapshot) -> ProgramReport {
+async fn decision_log(program: &ProgramSnapshot) -> ProgramReport {
     ProgramReport {
         kind: ReportKind::DecisionLog,
         title: "Decision Log".into(),
@@ -1129,7 +1129,7 @@ fn decision_log(program: &ProgramSnapshot) -> ProgramReport {
     }
 }
 
-fn validation_summary(program: &ProgramSnapshot) -> ProgramReport {
+async fn validation_summary(program: &ProgramSnapshot) -> ProgramReport {
     let diagnostics = validate_plugin(program);
     ProgramReport {
         kind: ReportKind::ValidationSummary,
@@ -1140,7 +1140,7 @@ fn validation_summary(program: &ProgramSnapshot) -> ProgramReport {
     }
 }
 
-fn recommendation(program: &ProgramSnapshot) -> ProgramReport {
+async fn recommendation(program: &ProgramSnapshot) -> ProgramReport {
     let gap = run_analysis(program, AnalysisKind::Gap);
     let conflict = run_analysis(program, AnalysisKind::Conflict);
     ProgramReport {
@@ -1152,7 +1152,7 @@ fn recommendation(program: &ProgramSnapshot) -> ProgramReport {
     }
 }
 
-fn user_summary(program: &ProgramSnapshot) -> ProgramReport {
+async fn user_summary(program: &ProgramSnapshot) -> ProgramReport {
     ProgramReport {
         kind: ReportKind::UserSummary,
         title: "User Summary".into(),
@@ -1162,7 +1162,7 @@ fn user_summary(program: &ProgramSnapshot) -> ProgramReport {
     }
 }
 
-fn functional_summary(program: &ProgramSnapshot) -> ProgramReport {
+async fn functional_summary(program: &ProgramSnapshot) -> ProgramReport {
     ProgramReport {
         kind: ReportKind::FunctionalSummary,
         title: "Functional Summary".into(),
@@ -1176,7 +1176,7 @@ fn functional_summary(program: &ProgramSnapshot) -> ProgramReport {
     }
 }
 
-fn capacity_summary(program: &ProgramSnapshot) -> ProgramReport {
+async fn capacity_summary(program: &ProgramSnapshot) -> ProgramReport {
     let analysis = run_analysis(program, AnalysisKind::Capacity);
     ProgramReport {
         kind: ReportKind::CapacitySummary,
@@ -1187,7 +1187,7 @@ fn capacity_summary(program: &ProgramSnapshot) -> ProgramReport {
     }
 }
 
-fn workflow_summary(program: &ProgramSnapshot) -> ProgramReport {
+async fn workflow_summary(program: &ProgramSnapshot) -> ProgramReport {
     let analysis = run_analysis(program, AnalysisKind::Workflow);
     ProgramReport {
         kind: ReportKind::WorkflowSummary,
@@ -1198,7 +1198,7 @@ fn workflow_summary(program: &ProgramSnapshot) -> ProgramReport {
     }
 }
 
-fn compliance_summary(program: &ProgramSnapshot) -> ProgramReport {
+async fn compliance_summary(program: &ProgramSnapshot) -> ProgramReport {
     ProgramReport {
         kind: ReportKind::ComplianceSummary,
         title: "Compliance Summary".into(),
@@ -1211,12 +1211,12 @@ fn compliance_summary(program: &ProgramSnapshot) -> ProgramReport {
     }
 }
 
-fn cost_summary(program: &ProgramSnapshot) -> ProgramReport {
+async fn cost_summary(program: &ProgramSnapshot) -> ProgramReport {
     let analysis = run_analysis(program, AnalysisKind::Cost);
     ProgramReport { kind: ReportKind::CostSummary, title: "Cost Summary".into(), generated_at: timestamp(program), sections: vec![ReportSection { heading: analysis.title, body: analysis.summary, bullets: analysis.findings }], entity_ids: Vec::new() }
 }
 
-fn schedule_summary(program: &ProgramSnapshot) -> ProgramReport {
+async fn schedule_summary(program: &ProgramSnapshot) -> ProgramReport {
     ProgramReport {
         kind: ReportKind::ScheduleSummary,
         title: "Schedule Summary".into(),
@@ -1230,7 +1230,7 @@ fn schedule_summary(program: &ProgramSnapshot) -> ProgramReport {
     }
 }
 
-fn change_summary(program: &ProgramSnapshot) -> ProgramReport {
+async fn change_summary(program: &ProgramSnapshot) -> ProgramReport {
     ProgramReport {
         kind: ReportKind::ChangeSummary,
         title: "Change Summary".into(),
@@ -1240,7 +1240,7 @@ fn change_summary(program: &ProgramSnapshot) -> ProgramReport {
     }
 }
 
-fn open_issue_summary(program: &ProgramSnapshot) -> ProgramReport {
+async fn open_issue_summary(program: &ProgramSnapshot) -> ProgramReport {
     let open: Vec<_> = program.issues.iter().filter(|i| !matches!(i.header.status, LifecycleStatus::Closed | LifecycleStatus::Complete)).collect();
     ProgramReport {
         kind: ReportKind::OpenIssueSummary,
@@ -1255,7 +1255,7 @@ fn open_issue_summary(program: &ProgramSnapshot) -> ProgramReport {
     }
 }
 
-fn priority_summary(program: &ProgramSnapshot) -> ProgramReport {
+async fn priority_summary(program: &ProgramSnapshot) -> ProgramReport {
     ProgramReport {
         kind: ReportKind::PrioritySummary,
         title: "Priority Summary".into(),
@@ -1269,7 +1269,7 @@ fn priority_summary(program: &ProgramSnapshot) -> ProgramReport {
     }
 }
 
-fn scenario_summary(program: &ProgramSnapshot) -> ProgramReport {
+async fn scenario_summary(program: &ProgramSnapshot) -> ProgramReport {
     let analysis = run_analysis(program, AnalysisKind::Scenario);
     ProgramReport {
         kind: ReportKind::ScenarioSummary,
@@ -1288,14 +1288,14 @@ mod tests_report {
     use crate::artifacts::program::sample_plugin;
 
     #[test]
-    fn executive_summary_includes_counts() {
+    async fn executive_summary_includes_counts() {
         let report = build_report(&sample_plugin(), ReportKind::ExecutiveSummary);
         assert_eq!(report.kind, ReportKind::ExecutiveSummary);
         assert!(!report.sections.is_empty());
     }
 
     #[test]
-    fn requirements_matrix_has_grid_rows() {
+    async fn requirements_matrix_has_grid_rows() {
         let report = build_report(&sample_plugin(), ReportKind::RequirementsMatrix);
         assert!(!report.sections[0].bullets.is_empty());
         assert!(report.sections[0].bullets[0].contains('\t'));
@@ -1327,7 +1327,7 @@ pub struct RegisterStatusCount {
     pub approved_count: usize,
 }
 
-fn bump_status(tallies: &mut Vec<(LifecycleStatus, usize)>, status: LifecycleStatus) {
+async fn bump_status(tallies: &mut Vec<(LifecycleStatus, usize)>, status: LifecycleStatus) {
     if let Some((_, count)) = tallies.iter_mut().find(|(s, _)| *s == status) {
         *count += 1;
     } else {
@@ -1335,7 +1335,7 @@ fn bump_status(tallies: &mut Vec<(LifecycleStatus, usize)>, status: LifecycleSta
     }
 }
 
-fn bump_validation(tallies: &mut Vec<(ValidationStatus, usize)>, status: ValidationStatus) {
+async fn bump_validation(tallies: &mut Vec<(ValidationStatus, usize)>, status: ValidationStatus) {
     if let Some((_, count)) = tallies.iter_mut().find(|(s, _)| *s == status) {
         *count += 1;
     } else {
@@ -1344,7 +1344,7 @@ fn bump_validation(tallies: &mut Vec<(ValidationStatus, usize)>, status: Validat
 }
 
 /// 🧮️ Aggregates lifecycle status counts from every program register collection.
-pub fn status_summary(program: &ProgramSnapshot) -> StatusSummary {
+pub async fn status_summary(program: &ProgramSnapshot) -> StatusSummary {
     let mut tallies: Vec<(LifecycleStatus, usize)> = Vec::new();
     let mut registers = Vec::new();
     let mut total = 0usize;
@@ -1465,7 +1465,7 @@ mod tests_status_summary {
     use crate::artifacts::program::sample_plugin;
 
     #[test]
-    fn sample_plugin_status_summary_counts_elements() {
+    async fn sample_plugin_status_summary_counts_elements() {
         let summary = status_summary(&sample_plugin());
         assert!(summary.total_entities >= 2);
         let elements = summary.by_register.iter().find(|r| r.register == "elements").expect("elements");
@@ -1473,7 +1473,7 @@ mod tests_status_summary {
     }
 
     #[test]
-    fn status_summary_includes_all_major_registers() {
+    async fn status_summary_includes_all_major_registers() {
         let summary = status_summary(&sample_plugin());
         for register in ["elements", "stakeholders", "adjacencies", "status_records"] {
             assert!(summary.by_register.iter().any(|r| r.register == register));
@@ -1520,7 +1520,7 @@ pub struct SearchHit {
 }
 
 /// 🔎️ Searches all registers; uses `filter` when provided; records query in `search_history`.
-pub fn search_plugin(program: &ProgramSnapshot, query: &SearchQuery, filter: Option<&SearchFilter>, search_history: Option<&mut Vec<SearchQuery>>) -> Vec<SearchHit> {
+pub async fn search_plugin(program: &ProgramSnapshot, query: &SearchQuery, filter: Option<&SearchFilter>, search_history: Option<&mut Vec<SearchQuery>>) -> Vec<SearchHit> {
     let effective = merge_query(query, filter);
     if let Some(history) = search_history {
         history.push(effective.clone());
@@ -1597,7 +1597,7 @@ pub fn search_plugin(program: &ProgramSnapshot, query: &SearchQuery, filter: Opt
     hits
 }
 
-fn merge_query(query: &SearchQuery, filter: Option<&SearchFilter>) -> SearchQuery {
+async fn merge_query(query: &SearchQuery, filter: Option<&SearchFilter>) -> SearchQuery {
     let Some(filter) = filter else {
         return query.clone();
     };
@@ -1615,7 +1615,7 @@ fn merge_query(query: &SearchQuery, filter: Option<&SearchFilter>) -> SearchQuer
     }
 }
 
-fn push_if_match(hits: &mut Vec<SearchHit>, register: &str, header: &EntityHeader, query: &SearchQuery) {
+async fn push_if_match(hits: &mut Vec<SearchHit>, register: &str, header: &EntityHeader, query: &SearchQuery) {
     if !query.statuses.is_empty() && !query.statuses.contains(&header.status) {
         return;
     }
@@ -1672,13 +1672,13 @@ mod tests_search {
     use crate::artifacts::program::sample_plugin;
 
     #[test]
-    fn search_finds_reception_element() {
+    async fn search_finds_reception_element() {
         let hits = search_plugin(&sample_plugin(), &SearchQuery { keywords: vec!["Reception".into()], ..Default::default() }, None, None);
         assert!(hits.iter().any(|h| h.name == "Reception"));
     }
 
     #[test]
-    fn search_history_records_query() {
+    async fn search_history_records_query() {
         let mut history = Vec::new();
         search_plugin(&sample_plugin(), &SearchQuery { keywords: vec!["Waiting".into()], ..Default::default() }, None, Some(&mut history));
         assert_eq!(history.len(), 1);
@@ -1686,7 +1686,7 @@ mod tests_search {
     }
 
     #[test]
-    fn entity_kind_filter_limits_registers() {
+    async fn entity_kind_filter_limits_registers() {
         let hits = search_plugin(&sample_plugin(), &SearchQuery { entity_kinds: vec!["elements".into()], ..Default::default() }, None, None);
         assert!(hits.iter().all(|h| h.register == "elements"));
     }
@@ -1717,7 +1717,7 @@ pub struct AnalysisMetric {
 }
 
 /// 🧮️ Runs the requested analysis kind over a plugin snapshot.
-pub fn run_analysis(program: &ProgramSnapshot, kind: AnalysisKind) -> AnalysisResult {
+pub async fn run_analysis(program: &ProgramSnapshot, kind: AnalysisKind) -> AnalysisResult {
     match kind {
         AnalysisKind::Gap => analyze_gap(program),
         AnalysisKind::Conflict => analyze_conflict(program),
@@ -1742,7 +1742,7 @@ pub fn run_analysis(program: &ProgramSnapshot, kind: AnalysisKind) -> AnalysisRe
     }
 }
 
-fn analyze_gap(program: &ProgramSnapshot) -> AnalysisResult {
+async fn analyze_gap(program: &ProgramSnapshot) -> AnalysisResult {
     let mut findings = Vec::new();
     if program.requirements.is_empty() {
         findings.push("no requirements registered".into());
@@ -1769,7 +1769,7 @@ fn analyze_gap(program: &ProgramSnapshot) -> AnalysisResult {
     }
 }
 
-fn analyze_conflict(program: &ProgramSnapshot) -> AnalysisResult {
+async fn analyze_conflict(program: &ProgramSnapshot) -> AnalysisResult {
     let adjacency_conflicts = detect_adjacency_conflicts(program);
     let mut findings: Vec<String> = adjacency_conflicts.iter().map(|c| format!("{}: {}", c.adjacency_a_id, c.message)).collect();
     findings.extend(program.conflicts.iter().map(|c| format!("{} — {:?} between {} and {}", c.header.name, c.kind, c.entity_a_id, c.entity_b_id)));
@@ -1789,7 +1789,7 @@ fn analyze_conflict(program: &ProgramSnapshot) -> AnalysisResult {
     }
 }
 
-fn analyze_dependency(program: &ProgramSnapshot) -> AnalysisResult {
+async fn analyze_dependency(program: &ProgramSnapshot) -> AnalysisResult {
     let depends: Vec<String> = program.relationships.iter().filter(|r| matches!(r.kind, RelationshipKind::DependsOn)).map(|r| format!("{} depends on {}", r.source_id, r.target_id)).collect();
     let process_deps: usize = program.processes.iter().map(|p| p.dependencies.len()).sum();
     AnalysisResult {
@@ -1803,7 +1803,7 @@ fn analyze_dependency(program: &ProgramSnapshot) -> AnalysisResult {
     }
 }
 
-fn analyze_capacity(program: &ProgramSnapshot) -> AnalysisResult {
+async fn analyze_capacity(program: &ProgramSnapshot) -> AnalysisResult {
     let total_area: f64 = program.elements.iter().filter_map(|e| e.area.target).sum();
     let total_occupancy: f64 = program.elements.iter().filter_map(|e| e.occupancy.target.or(e.occupancy.peak)).sum();
     let area_per_person = if total_occupancy > 0.0 { total_area / total_occupancy } else { 0.0 };
@@ -1822,7 +1822,7 @@ fn analyze_capacity(program: &ProgramSnapshot) -> AnalysisResult {
     }
 }
 
-fn analyze_demand(program: &ProgramSnapshot) -> AnalysisResult {
+async fn analyze_demand(program: &ProgramSnapshot) -> AnalysisResult {
     let peak_occupancy: f64 = program.elements.iter().filter_map(|e| e.occupancy.peak.or(e.occupancy.target)).sum();
     let schedule_demand = program.schedules.len();
     AnalysisResult {
@@ -1836,7 +1836,7 @@ fn analyze_demand(program: &ProgramSnapshot) -> AnalysisResult {
     }
 }
 
-fn analyze_utilization(program: &ProgramSnapshot) -> AnalysisResult {
+async fn analyze_utilization(program: &ProgramSnapshot) -> AnalysisResult {
     let activities = program.activities.len();
     let elements = program.elements.len();
     let ratio = if elements == 0 { 0.0 } else { activities as f64 / elements as f64 };
@@ -1852,7 +1852,7 @@ fn analyze_utilization(program: &ProgramSnapshot) -> AnalysisResult {
     }
 }
 
-fn analyze_workflow(program: &ProgramSnapshot) -> AnalysisResult {
+async fn analyze_workflow(program: &ProgramSnapshot) -> AnalysisResult {
     let critical: Vec<_> = program.processes.iter().filter(|p| p.critical_path).collect();
     AnalysisResult {
         kind: AnalysisKind::Workflow,
@@ -1865,7 +1865,7 @@ fn analyze_workflow(program: &ProgramSnapshot) -> AnalysisResult {
     }
 }
 
-fn analyze_risk(program: &ProgramSnapshot) -> AnalysisResult {
+async fn analyze_risk(program: &ProgramSnapshot) -> AnalysisResult {
     let high: Vec<_> = program.risks.iter().filter(|r| matches!(r.probability, RiskLevel::High | RiskLevel::Critical) || matches!(r.impact, RiskLevel::High | RiskLevel::Critical)).map(|r| r.header.id.clone()).collect();
     let score_sum: f64 = program.risks.iter().map(|r| risk_score(&r.probability) * risk_score(&r.impact)).sum();
     AnalysisResult {
@@ -1879,7 +1879,7 @@ fn analyze_risk(program: &ProgramSnapshot) -> AnalysisResult {
     }
 }
 
-fn risk_score(level: &RiskLevel) -> f64 {
+async fn risk_score(level: &RiskLevel) -> f64 {
     match level {
         RiskLevel::Negligible => 0.5,
         RiskLevel::Low => 1.0,
@@ -1889,7 +1889,7 @@ fn risk_score(level: &RiskLevel) -> f64 {
     }
 }
 
-fn analyze_cost(program: &ProgramSnapshot) -> AnalysisResult {
+async fn analyze_cost(program: &ProgramSnapshot) -> AnalysisResult {
     let total_capital: f64 = program.costs.iter().filter_map(|c| c.amount).sum();
     AnalysisResult {
         kind: AnalysisKind::Cost,
@@ -1902,7 +1902,7 @@ fn analyze_cost(program: &ProgramSnapshot) -> AnalysisResult {
     }
 }
 
-fn analyze_scenario(program: &ProgramSnapshot) -> AnalysisResult {
+async fn analyze_scenario(program: &ProgramSnapshot) -> AnalysisResult {
     let evaluated = program.options.iter().filter(|o| o.evaluation_status == ValidationStatus::Passed).count();
     AnalysisResult {
         kind: AnalysisKind::Scenario,
@@ -1915,7 +1915,7 @@ fn analyze_scenario(program: &ProgramSnapshot) -> AnalysisResult {
     }
 }
 
-fn analyze_sensitivity(program: &ProgramSnapshot) -> AnalysisResult {
+async fn analyze_sensitivity(program: &ProgramSnapshot) -> AnalysisResult {
     let mandatory = program.requirements.iter().filter(|r| r.header.priority == Priority::Mandatory).count();
     AnalysisResult {
         kind: AnalysisKind::Sensitivity,
@@ -1928,7 +1928,7 @@ fn analyze_sensitivity(program: &ProgramSnapshot) -> AnalysisResult {
     }
 }
 
-fn analyze_impact(program: &ProgramSnapshot) -> AnalysisResult {
+async fn analyze_impact(program: &ProgramSnapshot) -> AnalysisResult {
     let impacted: usize = program.decisions.iter().map(|d| d.impacted_requirement_ids.len() + d.impacted_element_ids.len()).sum();
     AnalysisResult {
         kind: AnalysisKind::Impact,
@@ -1941,7 +1941,7 @@ fn analyze_impact(program: &ProgramSnapshot) -> AnalysisResult {
     }
 }
 
-fn analyze_trend(program: &ProgramSnapshot) -> AnalysisResult {
+async fn analyze_trend(program: &ProgramSnapshot) -> AnalysisResult {
     let change_velocity = program.changes.len();
     AnalysisResult {
         kind: AnalysisKind::Trend,
@@ -1954,7 +1954,7 @@ fn analyze_trend(program: &ProgramSnapshot) -> AnalysisResult {
     }
 }
 
-fn analyze_requirement_comparison(program: &ProgramSnapshot) -> AnalysisResult {
+async fn analyze_requirement_comparison(program: &ProgramSnapshot) -> AnalysisResult {
     let mut by_kind: HashMap<String, usize> = HashMap::new();
     for req in &program.requirements {
         *by_kind.entry(format!("{:?}", req.kind)).or_default() += 1;
@@ -1971,7 +1971,7 @@ fn analyze_requirement_comparison(program: &ProgramSnapshot) -> AnalysisResult {
     }
 }
 
-fn analyze_requirement_clustering(program: &ProgramSnapshot) -> AnalysisResult {
+async fn analyze_requirement_clustering(program: &ProgramSnapshot) -> AnalysisResult {
     let mut clusters: HashMap<String, Vec<EntityId>> = HashMap::new();
     for req in &program.requirements {
         let key = format!("{:?}-{:?}", req.kind, req.header.priority);
@@ -1989,7 +1989,7 @@ fn analyze_requirement_clustering(program: &ProgramSnapshot) -> AnalysisResult {
     }
 }
 
-fn analyze_requirement_filtering(program: &ProgramSnapshot) -> AnalysisResult {
+async fn analyze_requirement_filtering(program: &ProgramSnapshot) -> AnalysisResult {
     let pending: Vec<_> = program.requirements.iter().filter(|r| r.validation_status == ValidationStatus::Pending).map(|r| r.header.id.clone()).collect();
     let findings: Vec<String> = pending.iter().map(|id| format!("pending validation: {id}")).collect();
     AnalysisResult {
@@ -2003,7 +2003,7 @@ fn analyze_requirement_filtering(program: &ProgramSnapshot) -> AnalysisResult {
     }
 }
 
-fn analyze_requirement_sorting(program: &ProgramSnapshot) -> AnalysisResult {
+async fn analyze_requirement_sorting(program: &ProgramSnapshot) -> AnalysisResult {
     let mut sorted: Vec<_> = program.requirements.iter().collect();
     sorted.sort_by_key(|r| r.header.priority);
     let findings: Vec<String> = sorted.iter().map(|r| format!("{:?} — {}", r.header.priority, r.header.name)).collect();
@@ -2018,7 +2018,7 @@ fn analyze_requirement_sorting(program: &ProgramSnapshot) -> AnalysisResult {
     }
 }
 
-fn priority_weight(priority: &Priority) -> f64 {
+async fn priority_weight(priority: &Priority) -> f64 {
     match priority {
         Priority::Mandatory => 5.0,
         Priority::Essential => 4.0,
@@ -2029,7 +2029,7 @@ fn priority_weight(priority: &Priority) -> f64 {
     }
 }
 
-fn analyze_requirement_scoring(program: &ProgramSnapshot) -> AnalysisResult {
+async fn analyze_requirement_scoring(program: &ProgramSnapshot) -> AnalysisResult {
     let mut scored: Vec<(EntityId, f64)> = program
         .requirements
         .iter()
@@ -2059,7 +2059,7 @@ fn analyze_requirement_scoring(program: &ProgramSnapshot) -> AnalysisResult {
     }
 }
 
-fn analyze_requirement_weighting(program: &ProgramSnapshot) -> AnalysisResult {
+async fn analyze_requirement_weighting(program: &ProgramSnapshot) -> AnalysisResult {
     let mut weights: HashMap<EntityId, f64> = HashMap::new();
     for record in &program.priorities {
         if let Some(weight) = record.weight {
@@ -2079,7 +2079,7 @@ fn analyze_requirement_weighting(program: &ProgramSnapshot) -> AnalysisResult {
     }
 }
 
-fn analyze_relationship(program: &ProgramSnapshot) -> AnalysisResult {
+async fn analyze_relationship(program: &ProgramSnapshot) -> AnalysisResult {
     let mut nodes: HashSet<EntityId> = HashSet::new();
     for rel in &program.relationships {
         nodes.insert(rel.source_id.clone());
@@ -2106,21 +2106,21 @@ mod tests_analyze {
     use crate::artifacts::program::sample_plugin;
 
     #[test]
-    fn gap_analysis_on_sample_plugin() {
+    async fn gap_analysis_on_sample_plugin() {
         let result = run_analysis(&sample_plugin(), AnalysisKind::Gap);
         assert_eq!(result.kind, AnalysisKind::Gap);
         assert!(!result.findings.is_empty());
     }
 
     #[test]
-    fn capacity_analysis_sums_area() {
+    async fn capacity_analysis_sums_area() {
         let result = run_analysis(&sample_plugin(), AnalysisKind::Capacity);
         assert!(result.metrics.iter().any(|m| m.name == "total_target_area"));
         assert!(result.metrics.iter().any(|m| m.value > 0.0));
     }
 
     #[test]
-    fn requirement_clustering_produces_clusters() {
+    async fn requirement_clustering_produces_clusters() {
         let result = run_analysis(&sample_plugin(), AnalysisKind::RequirementClustering);
         assert_eq!(result.kind, AnalysisKind::RequirementClustering);
     }
@@ -2146,12 +2146,12 @@ pub struct RegisterCsvRow {
 
 impl RegisterCsvRow {
     /// 🧵️ This row's 7 columns in `REGISTER_ROW_COLUMNS` order.
-    fn columns(&self) -> [String; 7] {
+    async fn columns(&self) -> [String; 7] {
         [self.register.clone(), self.id.to_string(), self.name.clone(), self.status.clone(), self.priority.clone(), self.tags.clone(), self.source.clone()]
     }
 
     /// 🧵️ Rebuilds a row from 7 ordered column values (inverse of `columns`).
-    pub(crate) fn from_columns(fields: &[String]) -> Result<Self, PluginError> {
+    pub(crate) async fn from_columns(fields: &[String]) -> Result<Self, PluginError> {
         if fields.len() < 7 {
             return Err(PluginError::Csv(format!("malformed row: expected 7 columns, got {}", fields.len())));
         }
@@ -2160,12 +2160,12 @@ impl RegisterCsvRow {
 }
 
 /// 📤️ Serializes a plugin to pretty JSON.
-pub fn export_json(program: &ProgramSnapshot) -> Result<String, PluginError> {
+pub async fn export_json(program: &ProgramSnapshot) -> Result<String, PluginError> {
     serde_json::to_string_pretty(program).map_err(|e| PluginError::Serialize(e.to_string()))
 }
 
 /// 📥️ Deserializes a plugin from JSON with schema validation.
-pub fn import_json(json: &str) -> Result<ProgramSnapshot, PluginError> {
+pub async fn import_json(json: &str) -> Result<ProgramSnapshot, PluginError> {
     let program: ProgramSnapshot = serde_json::from_str(json).map_err(|e| PluginError::Deserialize(e.to_string()))?;
     if program.schema != ARCHITECT_PROGRAM_SCHEMA {
         return Err(PluginError::InvalidSchema { expected: ARCHITECT_PROGRAM_SCHEMA.into(), actual: program.schema });
@@ -2173,18 +2173,18 @@ pub fn import_json(json: &str) -> Result<ProgramSnapshot, PluginError> {
     Ok(program)
 }
 
-fn csv_record(values: &[&str]) -> stdio_csv::schema::snapshot::CsvRecord {
+async fn csv_record(values: &[&str]) -> stdio_csv::schema::snapshot::CsvRecord {
     stdio_csv::schema::snapshot::CsvRecord { fields: values.iter().map(|v| stdio_csv::schema::snapshot::CsvField { value: (*v).to_string(), quoted: false }).collect() }
 }
 
 /// 📤️ Flattens all registers into a `CsvSnapshot`, encoded by stdio's real RFC 4180 codec.
-pub fn export_registers_csv(program: &ProgramSnapshot) -> Result<String, PluginError> {
+pub async fn export_registers_csv(program: &ProgramSnapshot) -> Result<String, PluginError> {
     Ok(stdio_csv::schema::snapshot::encode_csv(&rows_to_csv_snapshot(&collect_rows(program))))
 }
 
 /// ↔ Exports relationships as a CSV table preserving endpoints, encoded by stdio's real RFC 4180
 /// codec.
-pub fn export_relationships_csv(program: &ProgramSnapshot) -> Result<String, PluginError> {
+pub async fn export_relationships_csv(program: &ProgramSnapshot) -> Result<String, PluginError> {
     let mut records = vec![csv_record(&["id", "source_id", "target_id", "kind", "name"])];
     for rel in &program.relationships {
         records.push(csv_record(&[&rel.header.id.to_string(), &rel.source_id.to_string(), &rel.target_id.to_string(), &format!("{:?}", rel.kind), &rel.header.name]));
@@ -2193,7 +2193,7 @@ pub fn export_relationships_csv(program: &ProgramSnapshot) -> Result<String, Plu
     Ok(stdio_csv::schema::snapshot::encode_csv(&snapshot))
 }
 
-fn rows_to_csv_snapshot(rows: &[RegisterCsvRow]) -> stdio_csv::CsvSnapshot {
+async fn rows_to_csv_snapshot(rows: &[RegisterCsvRow]) -> stdio_csv::CsvSnapshot {
     let mut records = vec![csv_record(&REGISTER_ROW_COLUMNS)];
     records.extend(rows.iter().map(|row| {
         let cols = row.columns();
@@ -2203,17 +2203,17 @@ fn rows_to_csv_snapshot(rows: &[RegisterCsvRow]) -> stdio_csv::CsvSnapshot {
 }
 
 /// 📤️ Flattens all registers into a `TsvSnapshot`, encoded by stdio's real IANA TSV codec.
-pub fn export_registers_tsv(program: &ProgramSnapshot) -> Result<String, PluginError> {
+pub async fn export_registers_tsv(program: &ProgramSnapshot) -> Result<String, PluginError> {
     Ok(stdio_tsv_engine::encode_tsv(&rows_to_tsv_snapshot(&collect_rows(program))))
 }
 
-fn rows_to_tsv_snapshot(rows: &[RegisterCsvRow]) -> stdio_tsv::TsvSnapshot {
+async fn rows_to_tsv_snapshot(rows: &[RegisterCsvRow]) -> stdio_tsv::TsvSnapshot {
     let mut records: Vec<Vec<String>> = vec![REGISTER_ROW_COLUMNS.iter().map(|c| c.to_string()).collect()];
     records.extend(rows.iter().map(|row| row.columns().to_vec()));
     stdio_tsv::TsvSnapshot { schema: stdio_tsv::STDIO_TSV_DOCUMENT_SCHEMA.into(), records, trailing_newline: true, line_ending: stdio_tsv_line_ending::LineEnding::Lf }
 }
 
-fn collect_rows(program: &ProgramSnapshot) -> Vec<RegisterCsvRow> {
+async fn collect_rows(program: &ProgramSnapshot) -> Vec<RegisterCsvRow> {
     let mut rows = Vec::new();
     macro_rules! push_rows {
         ($register:literal, $collection:expr) => {
@@ -2285,7 +2285,7 @@ fn collect_rows(program: &ProgramSnapshot) -> Vec<RegisterCsvRow> {
     rows
 }
 
-fn header_row(register: &str, header: &EntityHeader, source: Option<String>) -> RegisterCsvRow {
+async fn header_row(register: &str, header: &EntityHeader, source: Option<String>) -> RegisterCsvRow {
     RegisterCsvRow { register: register.into(), id: header.id.clone(), name: header.name.clone(), status: format!("{:?}", header.status), priority: format!("{:?}", header.priority), tags: header.tags.join(";"), source: source.unwrap_or_default() }
 }
 //#endregion 📤️ExchangeReads
@@ -2297,7 +2297,7 @@ mod tests_exchange {
     use crate::artifacts::program::sample_plugin;
 
     #[test]
-    fn json_round_trip() {
+    async fn json_round_trip() {
         let program = sample_plugin();
         let json = export_json(&program).expect("export");
         let imported = import_json(&json).expect("import");
@@ -2306,7 +2306,7 @@ mod tests_exchange {
     }
 
     #[test]
-    fn relationships_csv_round_trips_via_stdio_codec() {
+    async fn relationships_csv_round_trips_via_stdio_codec() {
         let program = sample_plugin();
         let csv = export_relationships_csv(&program).expect("relationships csv export");
         let snapshot = stdio_csv::schema::snapshot::decode_csv_with(&csv, true);
@@ -2325,14 +2325,14 @@ pub struct AuditTrail {
 }
 
 /// 📋️ Returns audit events for an optional subject, newest first.
-pub fn audit_trail(program: &ProgramSnapshot, subject_id: Option<&EntityId>) -> AuditTrail {
+pub async fn audit_trail(program: &ProgramSnapshot, subject_id: Option<&EntityId>) -> AuditTrail {
     let mut events: Vec<AuditEvent> = program.audit_events.iter().filter(|event| subject_id.is_none_or(|id| &event.subject_id == id)).cloned().collect();
     events.sort_by(|a, b| b.timestamp.cmp(&a.timestamp));
     AuditTrail { subject_id: subject_id.cloned(), events }
 }
 
 /// 🔁️ Resolves superseded requirements to their terminal replacement.
-pub fn resolve_supersedes(program: &ProgramSnapshot, requirement_id: &EntityId) -> EntityId {
+pub async fn resolve_supersedes(program: &ProgramSnapshot, requirement_id: &EntityId) -> EntityId {
     let mut current = requirement_id.clone();
     let mut visited = HashSet::new();
     loop {
@@ -2355,7 +2355,7 @@ mod tests_trace {
     use crate::artifacts::program::sample_plugin;
 
     #[test]
-    fn audit_trail_sorted_newest_first() {
+    async fn audit_trail_sorted_newest_first() {
         let mut program = sample_plugin();
         program.audit_events.push(AuditEvent {
             header: crate::artifacts::program::kernel::EntityHeader::new(EntityId::new_serial("audit", "older"), "older"),
@@ -2412,13 +2412,13 @@ mod tests {
 
     //#region 🧪️InferenceLaws
     #[test]
-    fn inference_determinism_law() {
+    async fn inference_determinism_law() {
         let snapshot = ProgramSnapshot::default();
         assert_eq!(ProgramInference::infer(&snapshot), ProgramInference::infer(&snapshot));
     }
 
     #[test]
-    fn inference_default_law() {
+    async fn inference_default_law() {
         assert_eq!(ProgramInference::infer(&ProgramSnapshot::default()), ProgramInference::default());
     }
     //#endregion 🧪️InferenceLaws

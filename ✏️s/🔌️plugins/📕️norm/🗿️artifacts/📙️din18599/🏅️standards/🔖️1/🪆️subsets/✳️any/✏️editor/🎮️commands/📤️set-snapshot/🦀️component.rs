@@ -38,7 +38,7 @@ pub struct ReplaceSnapshot {
 //#endregion 🔖️Payload
 
 //#region 🔖️Handler
-pub fn handle(payload: &ReplaceSnapshot, _doc: &ArtifactView<'_, Din18599Snapshot>, _cfg: &ConfigView<'_, NormConfig>) -> Result<Emit<Din18599Mutation, NormConfigMutation>, Fault> {
+pub async fn handle(payload: &ReplaceSnapshot, _doc: &ArtifactView<'_, Din18599Snapshot>, _cfg: &ConfigView<'_, NormConfig>) -> Result<Emit<Din18599Mutation, NormConfigMutation>, Fault> {
     let text = crate::document::unescape_op_text_field(&payload.text);
     let target = <Din18599Snapshot as store::ArtifactDsl>::parse_dsl(&text).map_err(|error| Fault::from(format!("set-snapshot: invalid document text: {error}")))?;
     crate::app_surface::commit_snapshot_fields(Din18599Mutation::from_snapshot(&target), "setSnapshot")
@@ -53,7 +53,7 @@ mod tests {
     use semio_framework_plugin::HistoryView;
 
     #[test]
-    fn handle_commits_the_payload_document_under_its_action_id() {
+    async fn handle_commits_the_payload_document_under_its_action_id() {
         let projection = Din18599Snapshot::default();
         let config = NormConfig::default();
         let text = crate::document::escape_op_text_field(&<Din18599Snapshot as store::ArtifactDsl>::print_dsl(&Din18599Snapshot::default()));
@@ -67,7 +67,7 @@ mod tests {
     /// `serde_json` — a value whose shortest round-trip representation needs its full 17
     /// significant digits must survive the command's own payload encoding exactly.
     #[test]
-    fn handle_preserves_full_f64_precision_through_the_payload() {
+    async fn handle_preserves_full_f64_precision_through_the_payload() {
         let projection = Din18599Snapshot::default();
         let config = NormConfig::default();
         let text = crate::document::escape_op_text_field(&<Din18599Snapshot as store::ArtifactDsl>::print_dsl(&Din18599Snapshot::default()));

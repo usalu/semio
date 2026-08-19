@@ -19,7 +19,7 @@ pub struct CopyInviteLink {
     pub ttl_secs: u64,
 }
 
-pub fn handle(payload: &CopyInviteLink, doc: &ArtifactView<'_, SSpaceSnapshot>, _cfg: &ConfigView<'_, SpaceIndexConfig>) -> Result<Emit<SSpaceMutation, SpaceIndexConfigMutation>, Fault> {
+pub async fn handle(payload: &CopyInviteLink, doc: &ArtifactView<'_, SSpaceSnapshot>, _cfg: &ConfigView<'_, SpaceIndexConfig>) -> Result<Emit<SSpaceMutation, SpaceIndexConfigMutation>, Fault> {
     Ok(Emit::effect(Effect::ReplayShellCommand { action_id: "os.directory.share-link".into(), args: semio_framework::optional_json_to_dsl(Some(json!({ "spaceId": doc.snapshot.space_id, "role": payload.role, "ttlSecs": payload.ttl_secs }))) }))
 }
 
@@ -31,7 +31,7 @@ mod tests {
     
 
     #[test]
-    fn copy_invite_link_relays_share_link() {
+    async fn copy_invite_link_relays_share_link() {
         let mut app = testkit::new_app();
         let result = app.dispatch_typed(SpaceIndexCommand::CopyInviteLink(CopyInviteLink { role: "spectator".into(), ttl_secs: 3600 }), &semio_framework_plugin::testkit::meta("local")).expect("copy link");
         assert_eq!(result.requested_effects.len(), 1);

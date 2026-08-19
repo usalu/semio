@@ -19,7 +19,7 @@ pub struct CadSelectionTargets {
 }
 
 impl Default for CadSelectionTargets {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self { mesh: true, vertex: false, edge: true, face: false }
     }
 }
@@ -34,7 +34,7 @@ pub struct CadComponentSelection {
 }
 
 impl Default for CadComponentSelection {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self { targets: CadSelectionTargets::default(), mode: "mesh".into(), ids: Vec::new() }
     }
 }
@@ -48,7 +48,7 @@ pub struct CadDislocateOptions {
 }
 
 impl Default for CadDislocateOptions {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self { move_enabled: true, rotate_enabled: true }
     }
 }
@@ -111,14 +111,14 @@ pub struct CadArtifact {
 
 //#region 🔖️Conversions
 impl Default for CadArtifact {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self::from_snapshot(crate::artifacts::cad::empty_cad_snapshot())
     }
 }
 
 impl CadArtifact {
     /// 📸️ Persisted subset.
-    pub fn to_snapshot(&self) -> CadSnapshot {
+    pub async fn to_snapshot(&self) -> CadSnapshot {
         CadSnapshot {
             schema: self.schema.clone(),
             id: self.id.clone(),
@@ -134,7 +134,7 @@ impl CadArtifact {
     }
 
     /// 🧬️ Builds a full artifact from a snapshot, leaving UI fields at defaults.
-    pub fn from_snapshot(snapshot: CadSnapshot) -> Self {
+    pub async fn from_snapshot(snapshot: CadSnapshot) -> Self {
         Self {
             schema: snapshot.schema,
             id: snapshot.id,
@@ -186,7 +186,7 @@ impl CadArtifact {
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
-    pub fn set_snapshot(&mut self, snapshot: CadSnapshot) {
+    pub async fn set_snapshot(&mut self, snapshot: CadSnapshot) {
         self.schema = snapshot.schema;
         self.id = snapshot.id;
         self.shape_model = snapshot.shape_model;
@@ -203,7 +203,7 @@ impl CadArtifact {
 
 //#region 🔖️Descriptor
 /// 🧬️ Descriptor for `s.cad.cad` — twenty handcrafted schema leaves.
-pub fn cad_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
+pub async fn cad_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
     schema::ArtifactSchemaDescriptor {
         id: "s.cad.cad",
         artifact: schema::FacetLeaves {
@@ -246,7 +246,7 @@ pub mod derived_construction {
     use std::collections::BTreeMap;
 
     //#region Builder
-    fn empty_snapshot() -> CadSnapshot {
+    async fn empty_snapshot() -> CadSnapshot {
         CadSnapshot {
             schema: CAD_PLAY_DOCUMENT_SCHEMA.into(),
             id: String::new(),
@@ -273,23 +273,23 @@ pub mod derived_construction {
         type Mutation = CadMutation;
         type Diff = CadDiff;
 
-        fn empty() -> Self {
+        async fn empty() -> Self {
             Self { snapshot: empty_snapshot(), diagnostics: Vec::new() }
         }
 
-        fn from_snapshot(snapshot: Self::Snapshot) -> Self {
+        async fn from_snapshot(snapshot: Self::Snapshot) -> Self {
             Self { snapshot, diagnostics: Vec::new() }
         }
 
-        fn from_text(text: &str) -> Result<Self, store::TextError> {
+        async fn from_text(text: &str) -> Result<Self, store::TextError> {
             Ok(Self::from_snapshot(<CadSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
 
-        fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
+        async fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
             Ok(Self::from_snapshot(<CadSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
         }
 
-        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
+        async fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let outcome = <CadMutation as protocol::Mutation<CadSnapshot>>::diff(&mutation, &self.snapshot);
             match <Self::Diff as protocol::MutationDiff<Self::Snapshot>>::apply(outcome.diff(), &self.snapshot) {
                 Ok(snapshot) => self.snapshot = snapshot,
@@ -302,7 +302,7 @@ pub mod derived_construction {
             (self, outcome)
         }
 
-        fn absorb(
+        async fn absorb(
             mut self,
             diff: Self::Diff,
         ) -> protocol::MutationApplyResult<Self> {
@@ -311,7 +311,7 @@ pub mod derived_construction {
             Ok(self)
         }
 
-        fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
+        async fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
             if self.diagnostics.is_empty() { Ok(self.snapshot) } else { Err(self.diagnostics) }
         }
     }
@@ -336,11 +336,11 @@ pub mod derived_analysis {
         type Parts = CadParts;
         const DIALECT: Dialect = Dialect { artifact_kind: "s.cad", standard: StandardId("1"), subset: SubsetId("*") };
 
-        fn sniff(_source: &AnalyzeSource<'_>) -> IoConfidence {
+        async fn sniff(_source: &AnalyzeSource<'_>) -> IoConfidence {
             IoConfidence::Medium
         }
 
-        fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
+        async fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
             let mut parts = CadParts::default();
             let mut diagnostics = Vec::new();
             let mut confidence = IoConfidence::High;

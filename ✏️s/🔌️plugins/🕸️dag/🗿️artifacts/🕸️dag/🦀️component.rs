@@ -49,7 +49,7 @@ use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::value::schem
 /// a whole rich node kind losslessly (matches `flow`'s own "honest string boundary" precedent).
 const DAG_NODE_JSON_PROPERTY: &str = "dag.node";
 
-fn semio_node_from_dag_node(node: &DagNodeSpec) -> SemioGraphNode {
+async fn semio_node_from_dag_node(node: &DagNodeSpec) -> SemioGraphNode {
     let ports = node.inputs().iter().map(|port| SemioGraphPort { name: port.id.clone(), kind: SemioGraphPortKind::In }).chain(node.outputs().iter().map(|port| SemioGraphPort { name: port.id.clone(), kind: SemioGraphPortKind::Out })).collect();
     SemioGraphNode {
         id: SemioGraphNodeId::new(node.id.clone()),
@@ -65,7 +65,7 @@ fn semio_node_from_dag_node(node: &DagNodeSpec) -> SemioGraphNode {
 /// `dag.node` JSON property. Falls back to a minimal computation node built from the graph-native
 /// `id`/`label`/`position` fields only if the property is missing (content authored outside this
 /// plugin, e.g. by a hand-written `graph` doc) — never panics.
-fn dag_node_from_semio_node(node: &SemioGraphNode) -> DagNodeSpec {
+async fn dag_node_from_semio_node(node: &SemioGraphNode) -> DagNodeSpec {
     for property in &node.properties {
         if property.key == DAG_NODE_JSON_PROPERTY {
             if let SemioValue::Str { value } = &property.value {
@@ -84,7 +84,7 @@ fn dag_node_from_semio_node(node: &SemioGraphNode) -> DagNodeSpec {
 /// `properties`) as JSON, the round-trip source of truth on decode. `source`/`target`/`kind` are also
 /// projected onto their native fields (node-id-only, port suffix stripped) for genuine graph-shape
 /// tooling.
-fn semio_edge_from_dag_edge(edge: &DagFixtureEdge) -> SemioGraphEdge {
+async fn semio_edge_from_dag_edge(edge: &DagFixtureEdge) -> SemioGraphEdge {
     let (source_node, _) = split_endpoint(&edge.source);
     let (target_node, _) = split_endpoint(&edge.target);
     SemioGraphEdge { id: SemioGraphEdgeId::new(edge.id.clone()), source: SemioGraphNodeId::new(source_node), target: SemioGraphNodeId::new(target_node), kind: "dag-edge".into(), label: serde_json::to_string(edge).unwrap_or_default() }
@@ -93,11 +93,11 @@ fn semio_edge_from_dag_edge(edge: &DagFixtureEdge) -> SemioGraphEdge {
 /// 🌉 Inverse of [`semio_edge_from_dag_edge`] — falls back to a bare node-id edge (no route
 /// style/properties) if `label` isn't valid `DagFixtureEdge` JSON (content authored outside this
 /// plugin) — never panics.
-fn dag_edge_from_semio_edge(edge: &SemioGraphEdge) -> DagFixtureEdge {
+async fn dag_edge_from_semio_edge(edge: &SemioGraphEdge) -> DagFixtureEdge {
     serde_json::from_str::<DagFixtureEdge>(&edge.label).unwrap_or_else(|_| DagFixtureEdge { id: edge.id.value.clone(), source: edge.source.value.clone(), target: edge.target.value.clone(), ..Default::default() })
 }
 
-fn split_endpoint(endpoint: &str) -> (String, String) {
+async fn split_endpoint(endpoint: &str) -> (String, String) {
     crate::artifacts::dag::schema::split_endpoint(endpoint)
 }
 
@@ -105,19 +105,19 @@ fn split_endpoint(endpoint: &str) -> (String, String) {
 /// state and the composed child's own `SemioGraphSnapshot` node/edge graph (the
 /// "ModelBridge"/"DocumentBridge" pattern from `📓️wave3-reports/cad-report.md` and
 /// `📓️wave4-reports/flow-report.md`).
-pub fn dag_content_snapshot_from_working(nodes: &[DagNodeSpec], edges: &[DagFixtureEdge]) -> SemioGraphSnapshot {
+pub async fn dag_content_snapshot_from_working(nodes: &[DagNodeSpec], edges: &[DagFixtureEdge]) -> SemioGraphSnapshot {
     SemioGraphSnapshot { schema: STDIO_SEMIOGRAPH_DOCUMENT_SCHEMA.into(), nodes: nodes.iter().map(semio_node_from_dag_node).collect(), edges: edges.iter().map(semio_edge_from_dag_edge).collect() }
 }
 
 /// 🌉 Inverse of [`dag_content_snapshot_from_working`].
-pub fn working_from_dag_content_snapshot(content: &SemioGraphSnapshot) -> (Vec<DagNodeSpec>, Vec<DagFixtureEdge>) {
+pub async fn working_from_dag_content_snapshot(content: &SemioGraphSnapshot) -> (Vec<DagNodeSpec>, Vec<DagFixtureEdge>) {
     (content.nodes.iter().map(dag_node_from_semio_node).collect(), content.edges.iter().map(dag_edge_from_semio_edge).collect())
 }
 
 /// 🕸️ Deterministic content-addressed CHILD handle for the dag content — same `(child_id, target)`
 /// for identical `(nodes, edges)`, a different pair once the content actually changes; mirrors
 /// flow's `flow_content_child_handle`/writer's `document_child_handle`.
-pub fn dag_content_child_handle(nodes: &[DagNodeSpec], edges: &[DagFixtureEdge]) -> DagContentChild {
+pub async fn dag_content_child_handle(nodes: &[DagNodeSpec], edges: &[DagFixtureEdge]) -> DagContentChild {
     use std::hash::{Hash, Hasher};
     let snapshot = dag_content_snapshot_from_working(nodes, edges);
     let content_json = serde_json::to_string(&snapshot).unwrap_or_default();
@@ -160,20 +160,20 @@ thread_local! {
 /// 📝 Seeds the scratch cache for a handle — call whenever new nodes/edges content is about to
 /// become a document's `content` field (every mutation-diff/fixture builder in this plugin does, via
 /// [`dag_content_child_handle_and_cache`]).
-pub fn cache_dag_content(child_id: &str, nodes: Vec<DagNodeSpec>, edges: Vec<DagFixtureEdge>) {
+pub async fn cache_dag_content(child_id: &str, nodes: Vec<DagNodeSpec>, edges: Vec<DagFixtureEdge>) {
     DAG_SCRATCH.with(|cache| cache.borrow_mut().insert(child_id.to_string(), DagWorkingScene { nodes, edges }));
 }
 
 /// 🔎 Reads the cached live scene for a content child handle — an empty scene (never a panic) when
 /// nothing has cached it yet (see this region's module doc comment for why that can happen).
-pub fn dag_working_scene_for_handle(handle: &DagContentChild) -> DagWorkingScene {
+pub async fn dag_working_scene_for_handle(handle: &DagContentChild) -> DagWorkingScene {
     DAG_SCRATCH.with(|cache| cache.borrow().get(&handle.child_id).cloned()).unwrap_or_default()
 }
 
 /// 🔎 Reads the current document's live nodes/edges off its `content` child handle — the single read
 /// call site every mutation diff/inverse/app command in this plugin uses instead of the old
 /// `snapshot.nodes`/`.edges` field access.
-pub fn dag_working_scene(snapshot: &DagSnapshot) -> DagWorkingScene {
+pub async fn dag_working_scene(snapshot: &DagSnapshot) -> DagWorkingScene {
     dag_working_scene_for_handle(&snapshot.content)
 }
 
@@ -181,7 +181,7 @@ pub fn dag_working_scene(snapshot: &DagSnapshot) -> DagWorkingScene {
 /// the standard way every mutation-diff/fixture builder in this plugin creates a `content` field
 /// value; never construct a handle without also caching, or [`dag_working_scene`] will read back
 /// empty.
-pub fn dag_content_child_handle_and_cache(nodes: Vec<DagNodeSpec>, edges: Vec<DagFixtureEdge>) -> DagContentChild {
+pub async fn dag_content_child_handle_and_cache(nodes: Vec<DagNodeSpec>, edges: Vec<DagFixtureEdge>) -> DagContentChild {
     let handle = dag_content_child_handle(&nodes, &edges);
     cache_dag_content(&handle.child_id, nodes, edges);
     handle
@@ -199,19 +199,19 @@ pub struct DagCamera {
 }
 
 impl Default for DagCamera {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self { x: 0.0, y: 0.0, zoom: 1.0 }
     }
 }
 
 impl From<DagCamera> for infinite_board_port_directed_dag::DagCamera {
-    fn from(value: DagCamera) -> Self {
+    async fn from(value: DagCamera) -> Self {
         Self { x: value.x, y: value.y, zoom: value.zoom }
     }
 }
 
 impl From<infinite_board_port_directed_dag::DagCamera> for DagCamera {
-    fn from(value: infinite_board_port_directed_dag::DagCamera) -> Self {
+    async fn from(value: infinite_board_port_directed_dag::DagCamera) -> Self {
         Self { x: value.x, y: value.y, zoom: value.zoom }
     }
 }
@@ -219,7 +219,7 @@ impl From<infinite_board_port_directed_dag::DagCamera> for DagCamera {
 
 //#region 🔖️ArtifactKind
 /// 🗂️ This artifact's `ArtifactKindSpec` — stitched into the app manifest.
-pub fn artifact_kind() -> ArtifactKindSpec {
+pub async fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "graph.dag".into(),
         name: "DAG".into(),
@@ -247,7 +247,7 @@ pub fn artifact_kind() -> ArtifactKindSpec {
 /// function set. Relocated from `⚙️engine` (ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE
 /// reloc-g2): `declaration()` describes the artifact (kind, schema, io ports, ownership), which is not
 /// engine behaviour.
-pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
+pub async fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
     use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
 
     let rows: &[(&str, &str, &str, &[(&str, &str)], Option<(&str, &str)>)] = &[
@@ -287,7 +287,7 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
 /// `.declare_artifact(artifact())` call is the ONLY registration channel for this artifact.
 /// `definition()` (old `ArtifactDefinition`/capability rows) is KEPT per debt D1 — not deleted
 /// repo-wide until W6 — but has zero callers left from this file.
-pub fn artifact() -> semio_framework_plugin::app::declarations::ArtifactDeclaration {
+pub async fn artifact() -> semio_framework_plugin::app::declarations::ArtifactDeclaration {
     use semio_framework_plugin::app::declarations::ArtifactDeclaration;
     use store::os_io::ArtifactKindId;
     ArtifactDeclaration { kind: ArtifactKindId::parse("s.dag.dag").expect("canonical dag kind"), localization: &[], standards: vec![crate::artifacts::dag::standards::v1::standard()] }
@@ -300,18 +300,18 @@ mod tests {
     use super::*;
 
     #[test]
-    fn artifact_kind_declares_the_graph_dag_component_kind() {
+    async fn artifact_kind_declares_the_graph_dag_component_kind() {
         assert_eq!(artifact_kind().id, "graph.dag");
         assert_eq!(artifact_kind().schema, DAG_DOCUMENT_SCHEMA);
     }
 
     #[test]
-    fn default_snapshot_matches_document_schema() {
+    async fn default_snapshot_matches_document_schema() {
         assert_eq!(default_snapshot().schema, DAG_DOCUMENT_SCHEMA);
     }
 
     #[test]
-    fn node_edge_content_round_trips_through_the_composed_child_snapshot() {
+    async fn node_edge_content_round_trips_through_the_composed_child_snapshot() {
         let document = default_snapshot();
         let scene = dag_working_scene(&document);
         let content = dag_content_snapshot_from_working(&scene.nodes, &scene.edges);

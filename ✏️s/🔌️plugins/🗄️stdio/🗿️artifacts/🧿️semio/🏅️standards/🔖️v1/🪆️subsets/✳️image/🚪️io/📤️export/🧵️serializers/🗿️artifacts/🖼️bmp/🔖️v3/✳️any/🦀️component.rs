@@ -55,7 +55,7 @@ mod tests {
     use super::*;
     use crate::artifacts::semio::standards::v1::subsets::image::schema::snapshot::{SemioColorspace, SemioImageFrame, SemioImageMetadataEntry};
 
-    fn sample_semio() -> SemioImageSnapshot {
+    async fn sample_semio() -> SemioImageSnapshot {
         SemioImageSnapshot {
             width: 2,
             height: 1,
@@ -71,7 +71,7 @@ mod tests {
     /// 🧪️ Real round trip through bmp's own codec — alpha is expected to drop (documented, the
     /// codec's own real behavior), RGB channels must survive exactly.
     #[test]
-    fn real_byte_round_trip_through_bmp_codec() {
+    async fn real_byte_round_trip_through_bmp_codec() {
         let semio = sample_semio();
         let bmp = semio_framework_plugin::resolve_ready(SemioImageToBmp::serialize(&semio)).expect("serialize");
         assert_eq!(bmp.x_pixels_per_meter, 2835);

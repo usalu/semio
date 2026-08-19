@@ -13,6 +13,6 @@ pub struct SetBrushVortexKind {
     pub vortex_kind_id: Option<String>,
 }
 
-pub fn handle(payload: &SetBrushVortexKind, _doc: &ArtifactView<'_, Block3dSnapshot>, _cfg: &ConfigView<'_, Block3dConfig>) -> Result<Emit<Block3dMutation, Block3dConfigMutation>, Fault> {
+pub async fn handle(payload: &SetBrushVortexKind, _doc: &ArtifactView<'_, Block3dSnapshot>, _cfg: &ConfigView<'_, Block3dConfig>) -> Result<Emit<Block3dMutation, Block3dConfigMutation>, Fault> {
     Ok(Emit::config(vec![Block3dConfigMutation::SetBrushVortexKind { vortex_kind_id: payload.vortex_kind_id.clone() }]))
 }

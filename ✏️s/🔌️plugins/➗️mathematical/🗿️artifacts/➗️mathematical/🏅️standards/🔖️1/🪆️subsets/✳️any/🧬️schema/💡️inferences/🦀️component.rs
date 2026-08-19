@@ -27,25 +27,25 @@ pub struct MathematicalInference {
 }
 
 impl Default for MathematicalInference {
-    fn default() -> Self {
+    async fn default() -> Self {
         <Self as protocol::Inference<MathematicalSnapshot>>::infer(&MathematicalSnapshot::default())
     }
 }
 
 impl protocol::Inference<MathematicalSnapshot> for MathematicalInference {
-    fn infer(snapshot: &MathematicalSnapshot) -> Self {
+    async fn infer(snapshot: &MathematicalSnapshot) -> Self {
         Self { topology: compute_mathematical_topology(&crate::artifacts::mathematical::mathematical_graph(snapshot)), roots: compute_mathematical_roots(snapshot) }
     }
 }
 
 impl protocol::InferenceSpec<MathematicalSnapshot> for MathematicalInference {
-    fn inference_schema_id() -> &'static str {
+    async fn inference_schema_id() -> &'static str {
         "s.mathematical.mathematical.inference"
     }
-    fn schema_version() -> u32 {
+    async fn schema_version() -> u32 {
         1
     }
-    fn fields() -> &'static [protocol::InferenceFieldSpec] {
+    async fn fields() -> &'static [protocol::InferenceFieldSpec] {
         &[
             protocol::InferenceFieldSpec { id: "s.mathematical.mathematical.inference.topology", reads: &["notation", "results", "computed"] },
             protocol::InferenceFieldSpec { id: "s.mathematical.mathematical.inference.roots", reads: &["equation"] },
@@ -77,7 +77,7 @@ impl ArtifactInferrer for MathematicalInferrer {
 /// 💡️ Registers `s.mathematical.mathematical.inference`'s facet leaves into the OS-wide inference
 /// catalog — call once at plugin init, alongside `mathematical_artifact_schema_descriptor`'s
 /// registration.
-pub fn mathematical_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
+pub async fn mathematical_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
     schema::ArtifactInferenceDescriptor {
         id: "s.mathematical.mathematical.inference",
         inference: schema::FacetLeaves {
@@ -99,18 +99,18 @@ mod tests {
 
     //#region 🧪️InferenceLaws
     #[test]
-    fn inference_determinism_law() {
+    async fn inference_determinism_law() {
         let snapshot = MathematicalSnapshot::default();
         assert_eq!(MathematicalInference::infer(&snapshot), MathematicalInference::infer(&snapshot));
     }
 
     #[test]
-    fn inference_default_law() {
+    async fn inference_default_law() {
         assert_eq!(MathematicalInference::infer(&MathematicalSnapshot::default()), MathematicalInference::default());
     }
 
     #[test]
-    fn default_graph_diamond_is_cycle_free_with_two_roots() {
+    async fn default_graph_diamond_is_cycle_free_with_two_roots() {
         // 🔷 The default graph is a diamond: a->b, a->c, b->d, c->d — acyclic, `a` is the only root.
         let inferred = MathematicalInference::infer(&MathematicalSnapshot::default());
         assert!(inferred.topology.cycle_free);
@@ -123,7 +123,7 @@ mod tests {
     }
 
     #[test]
-    fn default_equation_is_the_zero_polynomial_with_no_roots() {
+    async fn default_equation_is_the_zero_polynomial_with_no_roots() {
         // 🔎️ `EquationSnapshot::default()` is the integer literal `0` — the zero polynomial has no
         // isolated real roots, an empty `Vec`, never a panic (see `🌱roots`'s own scope tests).
         let inferred = MathematicalInference::infer(&MathematicalSnapshot::default());

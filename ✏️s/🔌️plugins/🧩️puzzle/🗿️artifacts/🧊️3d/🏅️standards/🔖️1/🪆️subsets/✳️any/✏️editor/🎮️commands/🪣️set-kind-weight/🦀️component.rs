@@ -11,7 +11,7 @@ use crate::editor::puzzle3d::sync_precompute_weights;
 /// 🎲️ `setObjectKindWeight`/`setVortexKindWeight` share one arm. Object weights live on their own
 /// simplex; a vortex slider nested under an object row carries the JOINT `P(object)×P(vortex)` value
 /// and is converted back to the relative `P(vortex)` on the shared vortex simplex before normalizing.
-pub fn set_kind_weight(ctx: &mut Puzzle3dActionCtx<'_>, action: &str, args: Option<&Value>) {
+pub async fn set_kind_weight(ctx: &mut Puzzle3dActionCtx<'_>, action: &str, args: Option<&Value>) {
     let kind_id = args.and_then(|v| v.get("kindId")).and_then(|v| v.as_str()).unwrap_or("");
     let value = args.and_then(|v| v.get("value")).and_then(|v| v.as_f64()).unwrap_or(1.0).clamp(0.0, 1.0);
     let object_ids = puzzle3d_kind_ids(&ctx.scene.fixture, "objects");

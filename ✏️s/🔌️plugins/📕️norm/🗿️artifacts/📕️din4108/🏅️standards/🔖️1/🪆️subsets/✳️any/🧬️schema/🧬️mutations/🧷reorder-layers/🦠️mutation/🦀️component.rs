@@ -14,16 +14,16 @@ pub struct ReorderLayers {
 impl protocol::MutationKind<Din4108Snapshot, Din4108Mutation> for ReorderLayers {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "reorder", entity: "layers", kind: "reorder-layers", record: "ReorderedLayers" };
 
-    fn diff(&self, base: &Din4108Snapshot) -> protocol::MutationOutcome<<Din4108Mutation as protocol::Mutation<Din4108Snapshot>>::Diff> {
+    async fn diff(&self, base: &Din4108Snapshot) -> protocol::MutationOutcome<<Din4108Mutation as protocol::Mutation<Din4108Snapshot>>::Diff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &Din4108Snapshot) -> Vec<Din4108Mutation> {
+    async fn inverse(&self, base: &Din4108Snapshot) -> Vec<Din4108Mutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         format!("Move layer #{} to #{}", self.from, self.to)
     }
-    fn target(&self) -> Vec<String> {
+    async fn target(&self) -> Vec<String> {
         vec![self.from.to_string()]
     }
 }

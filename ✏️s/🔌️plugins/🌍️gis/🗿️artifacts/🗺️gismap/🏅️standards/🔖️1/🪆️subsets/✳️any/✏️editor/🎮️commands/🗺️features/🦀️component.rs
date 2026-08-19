@@ -13,7 +13,7 @@ use serde_json::{json, Value};
 //#region 🔖️RouteHelpers
 /// 🌉️ Shared `patchRoutes`/`patchRoute` implementation — a single route id (`patchRoute`) is just a
 /// one-element slice of the many-route form (`patchRoutes`).
-pub fn patch_routes_operations(document: &GisMapSnapshot, route_ids: &[String], field: &str, value: &str) -> Emit<GisMapMutation, Gis2dConfigMutation> {
+pub async fn patch_routes_operations(document: &GisMapSnapshot, route_ids: &[String], field: &str, value: &str) -> Emit<GisMapMutation, Gis2dConfigMutation> {
     if route_ids.is_empty() {
         return Emit::default();
     }
@@ -49,7 +49,7 @@ pub mod patch_positions {
         pub positions_json: String,
     }
 
-    pub fn handle(payload: &PatchPositions, doc: &ArtifactView<'_, GisMapSnapshot>, _cfg: &ConfigView<'_, Gis2dConfig>) -> Result<Emit<GisMapMutation, Gis2dConfigMutation>, Fault> {
+    pub async fn handle(payload: &PatchPositions, doc: &ArtifactView<'_, GisMapSnapshot>, _cfg: &ConfigView<'_, Gis2dConfig>) -> Result<Emit<GisMapMutation, Gis2dConfigMutation>, Fault> {
         let Ok(positions) = serde_json::from_str::<Value>(&payload.positions_json) else {
             return Ok(Emit::default());
         };
@@ -71,7 +71,7 @@ pub mod patch_routes {
         pub value: String,
     }
 
-    pub fn handle(payload: &PatchRoutes, doc: &ArtifactView<'_, GisMapSnapshot>, _cfg: &ConfigView<'_, Gis2dConfig>) -> Result<Emit<GisMapMutation, Gis2dConfigMutation>, Fault> {
+    pub async fn handle(payload: &PatchRoutes, doc: &ArtifactView<'_, GisMapSnapshot>, _cfg: &ConfigView<'_, Gis2dConfig>) -> Result<Emit<GisMapMutation, Gis2dConfigMutation>, Fault> {
         Ok(patch_routes_operations(doc.snapshot, &payload.route_ids, &payload.field, &payload.value))
     }
 }
@@ -89,7 +89,7 @@ pub mod patch_route {
         pub value: String,
     }
 
-    pub fn handle(payload: &PatchRoute, doc: &ArtifactView<'_, GisMapSnapshot>, _cfg: &ConfigView<'_, Gis2dConfig>) -> Result<Emit<GisMapMutation, Gis2dConfigMutation>, Fault> {
+    pub async fn handle(payload: &PatchRoute, doc: &ArtifactView<'_, GisMapSnapshot>, _cfg: &ConfigView<'_, Gis2dConfig>) -> Result<Emit<GisMapMutation, Gis2dConfigMutation>, Fault> {
         Ok(patch_routes_operations(doc.snapshot, std::slice::from_ref(&payload.route_id), &payload.field, &payload.value))
     }
 }
@@ -106,7 +106,7 @@ mod tests {
     const ROUTE_B: &str = "bg_stahl_mehrere_lycee_profiles_canopy:bw_lycee_block_3000:0";
 
     #[test]
-    fn patch_routes_emits_route_patch_ops_and_updates_document() {
+    async fn patch_routes_emits_route_patch_ops_and_updates_document() {
         let mut app = app();
         let result = dispatch(&mut app, Gis2dCommand::PatchRoute(patch_route::PatchRoute { route_id: ROUTE_A.into(), field: "label".into(), value: "Renamed Route".into() }));
         assert_eq!(result.mutations.len(), 1, "one matching route → one patch operation");
@@ -116,21 +116,21 @@ mod tests {
     }
 
     #[test]
-    fn patch_routes_with_no_ids_emits_nothing() {
+    async fn patch_routes_with_no_ids_emits_nothing() {
         let mut app = app();
         let result = dispatch(&mut app, Gis2dCommand::PatchRoutes(patch_routes::PatchRoutes { route_ids: Vec::new(), field: "label".into(), value: "x".into() }));
         assert!(result.mutations.is_empty());
     }
 
     #[test]
-    fn patch_positions_with_malformed_json_emits_nothing() {
+    async fn patch_positions_with_malformed_json_emits_nothing() {
         let mut app = app();
         let result = dispatch(&mut app, Gis2dCommand::PatchPositions(patch_positions::PatchPositions { positions_json: "not json".into() }));
         assert!(result.mutations.is_empty());
     }
 
     #[test]
-    fn patch_positions_diffs_the_incoming_array_into_granular_operations() {
+    async fn patch_positions_diffs_the_incoming_array_into_granular_operations() {
         let mut app = app();
         dispatch(&mut app, Gis2dCommand::PatchPositions(patch_positions::PatchPositions { positions_json: r#"[{"id":"patched-1","lon":1.0,"lat":2.0}]"#.into() }));
         let document = app.snapshot().expect("projection");
@@ -141,7 +141,7 @@ mod tests {
     /// 🤝️ Definitional merge proof: two instances on one backbone patch DIFFERENT routes; after
     /// exchanging operations both converge and keep both edits — impossible under whole-map LWW snapshots.
     #[test]
-    fn two_instances_converge_on_disjoint_route_edits() {
+    async fn two_instances_converge_on_disjoint_route_edits() {
         let command_a = Gis2dCommand::PatchRoute(patch_route::PatchRoute { route_id: ROUTE_A.into(), field: "label".into(), value: "A".into() });
         let command_b = Gis2dCommand::PatchRoute(patch_route::PatchRoute { route_id: ROUTE_B.into(), field: "label".into(), value: "B".into() });
         let label = |document: &GisMapSnapshot, id: &str| document.routes.iter().find(|route| route.id == id).and_then(|route| route.data.get("label").and_then(|value| value.as_str().map(str::to_string)));

@@ -48,7 +48,7 @@ pub enum ModelError {
 }
 
 impl core::fmt::Display for ModelError {
-    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+    async fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         match self {
             Self::EmptyPatternUniverse => write!(f, "model has zero patterns"),
             Self::UnknownPattern(p) => write!(f, "unknown pattern id {p}"),
@@ -99,7 +99,7 @@ pub enum TopologyError {
 }
 
 impl core::fmt::Display for TopologyError {
-    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+    async fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         match self {
             Self::ZeroDimension { axis } => write!(f, "grid dimension `{axis}` must be nonzero"),
             Self::SizeOverflow => write!(f, "grid size computation overflowed"),
@@ -141,7 +141,7 @@ pub enum ConstraintError {
 }
 
 impl core::fmt::Display for ConstraintError {
-    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+    async fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         match self {
             Self::InvalidBounds { reason } => write!(f, "invalid constraint bounds: {reason}"),
             Self::UnknownRegion(r) => write!(f, "unknown region id {r}"),
@@ -176,7 +176,7 @@ pub enum SolveError {
 }
 
 impl core::fmt::Display for SolveError {
-    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+    async fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         match self {
             Self::ModelTopologyMismatch { reason } => write!(f, "model/topology mismatch: {reason}"),
             Self::SeedMissingInStrictMode => write!(f, "strict-integer mode requires an all-integer weight table"),
@@ -198,7 +198,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn display_messages_are_human_readable() {
+    async fn display_messages_are_human_readable() {
         let e = ModelError::InvalidWeight { pattern_index: 3, value: -1.0 };
         assert_eq!(e.to_string(), "invalid weight at pattern index 3: -1");
 
@@ -213,8 +213,8 @@ mod tests {
     }
 
     #[test]
-    fn errors_are_std_error() {
-        fn assert_std_error<E: std::error::Error>(_e: &E) {}
+    async fn errors_are_std_error() {
+        async fn assert_std_error<E: std::error::Error>(_e: &E) {}
         assert_std_error(&ModelError::EmptyPatternUniverse);
         assert_std_error(&TopologyError::SizeOverflow);
         assert_std_error(&ConstraintError::EmptyTupleTable);

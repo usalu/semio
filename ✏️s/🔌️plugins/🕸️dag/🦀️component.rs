@@ -15,7 +15,7 @@ use semio_framework_plugin::{ExecutionMode, Plugin};
 /// reasoning the `🎬️sequence` W4 pass documented). `.activation()`/`.execution()`/`.requests()`
 /// are unrelated microkernel-actor-runtime wiring (ticket MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME,
 /// live peer) — untouched by this pass.
-pub fn plugin() -> Result<Plugin, semio_framework_plugin::PluginAssemblyError> {
+pub async fn plugin() -> Result<Plugin, semio_framework_plugin::PluginAssemblyError> {
     Plugin::builder("dag")
         .label("DAG")
         .version("0.1.0")
@@ -38,12 +38,12 @@ mod surface_tests {
     use semio_framework_plugin::testkit::{assert_editor_and_viewer_share_dialect, assert_viewer_never_mutates};
 
     #[test]
-    fn dag_viewer_never_mutates() {
+    async fn dag_viewer_never_mutates() {
         assert_viewer_never_mutates::<crate::viewer::dag::DagViewer>();
     }
 
     #[test]
-    fn dag_editor_and_viewer_share_dialect() {
+    async fn dag_editor_and_viewer_share_dialect() {
         assert_editor_and_viewer_share_dialect::<crate::editor::dag::DagPlayApp, crate::viewer::dag::DagViewer>();
     }
 }

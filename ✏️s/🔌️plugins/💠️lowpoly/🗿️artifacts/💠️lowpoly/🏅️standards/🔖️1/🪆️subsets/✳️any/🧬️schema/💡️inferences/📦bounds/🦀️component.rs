@@ -17,7 +17,7 @@ pub struct LowpolyBounds {
     pub max: [f32; 3],
 }
 
-fn grow(bounds: Option<LowpolyBounds>, point: [f32; 3]) -> LowpolyBounds {
+async fn grow(bounds: Option<LowpolyBounds>, point: [f32; 3]) -> LowpolyBounds {
     match bounds {
         Some(bounds) => LowpolyBounds {
             min: [bounds.min[0].min(point[0]), bounds.min[1].min(point[1]), bounds.min[2].min(point[2])],
@@ -28,7 +28,7 @@ fn grow(bounds: Option<LowpolyBounds>, point: [f32; 3]) -> LowpolyBounds {
 }
 
 /// 📦 3d bounding box across every object's `transform.position`, or `None` for an empty document.
-pub(crate) fn scene_bounds(snapshot: &LowpolySnapshot) -> Option<LowpolyBounds> {
+pub(crate) async fn scene_bounds(snapshot: &LowpolySnapshot) -> Option<LowpolyBounds> {
     snapshot.objects.iter().fold(None, |bounds, object: &LowpolyObject| Some(grow(bounds, object.transform.position)))
 }
 //#endregion 📦Bounds
@@ -39,7 +39,7 @@ mod tests {
     use super::*;
     use crate::artifacts::lowpoly::{LowpolyPaintLayer, LowpolyTransform, LOWPOLY_DOCUMENT_SCHEMA};
 
-    fn object(id: &str, position: [f32; 3]) -> LowpolyObject {
+    async fn object(id: &str, position: [f32; 3]) -> LowpolyObject {
         LowpolyObject {
             id: id.into(),
             name: id.into(),
@@ -51,12 +51,12 @@ mod tests {
     }
 
     #[test]
-    fn empty_document_has_no_bounds() {
+    async fn empty_document_has_no_bounds() {
         assert!(scene_bounds(&LowpolySnapshot::default()).is_none());
     }
 
     #[test]
-    fn two_objects_produce_their_enclosing_box() {
+    async fn two_objects_produce_their_enclosing_box() {
         let snapshot = LowpolySnapshot { schema: LOWPOLY_DOCUMENT_SCHEMA.into(), objects: vec![object("a", [-1.0, 0.0, 2.0]), object("b", [3.0, -4.0, 5.0])] };
         let bounds = scene_bounds(&snapshot).expect("two objects bound");
         assert_eq!(bounds, LowpolyBounds { min: [-1.0, -4.0, 2.0], max: [3.0, 0.0, 5.0] });

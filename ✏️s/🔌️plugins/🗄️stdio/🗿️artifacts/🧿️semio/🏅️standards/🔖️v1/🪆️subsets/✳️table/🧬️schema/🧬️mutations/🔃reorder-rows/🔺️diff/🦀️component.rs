@@ -7,7 +7,7 @@ use crate::artifacts::semio::standards::v1::subsets::table::schema::diff::{Semio
 use crate::artifacts::semio::standards::v1::subsets::table::schema::snapshot::SemioTableSnapshot;
 
 //#region 🔖️Diff
-pub fn diff(payload: &ReorderRows, base: &SemioTableSnapshot) -> protocol::MutationOutcome<SemioTableDiff> {
+pub async fn diff(payload: &ReorderRows, base: &SemioTableSnapshot) -> protocol::MutationOutcome<SemioTableDiff> {
     if payload.from >= base.rows.len() {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Row #{} does not exist.", payload.from), [payload.from.to_string()]);
     }

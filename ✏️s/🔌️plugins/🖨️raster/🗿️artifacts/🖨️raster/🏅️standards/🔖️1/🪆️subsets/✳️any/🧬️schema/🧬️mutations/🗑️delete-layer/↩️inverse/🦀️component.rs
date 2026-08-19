@@ -9,7 +9,7 @@ use crate::artifacts::raster::mutations::RasterMutation;
 use crate::artifacts::raster::RasterSnapshot;
 
 //#region 🔖️Inverse
-pub fn inverse(payload: &DeleteLayer, base: &RasterSnapshot) -> Vec<RasterMutation> {
+pub async fn inverse(payload: &DeleteLayer, base: &RasterSnapshot) -> Vec<RasterMutation> {
     match (locate_layer(&base.layers, &payload.layer_id), find_layer(&base.layers, &payload.layer_id)) {
         (Some((parent_id, index)), Some(layer)) => vec![RasterMutation::CreateLayer(create_layer::mutation::CreateLayer { parent_id, index, layer: Box::new(layer.clone()) })],
         _ => Vec::new(),

@@ -41,48 +41,48 @@ pub enum IfcValue {
 }
 
 impl Default for IfcValue {
-    fn default() -> Self {
+    async fn default() -> Self {
         IfcValue::Unset
     }
 }
 
 impl IfcValue {
-    pub fn as_reference(&self) -> Option<u64> {
+    pub async fn as_reference(&self) -> Option<u64> {
         if let IfcValue::Reference(id) = self {
             Some(*id)
         } else {
             None
         }
     }
-    pub fn as_str(&self) -> Option<&str> {
+    pub async fn as_str(&self) -> Option<&str> {
         if let IfcValue::String(s) = self {
             Some(s.as_str())
         } else {
             None
         }
     }
-    pub fn as_enum(&self) -> Option<&str> {
+    pub async fn as_enum(&self) -> Option<&str> {
         if let IfcValue::Enum(s) = self {
             Some(s.as_str())
         } else {
             None
         }
     }
-    pub fn as_real(&self) -> Option<f64> {
+    pub async fn as_real(&self) -> Option<f64> {
         match self {
             IfcValue::Real(r) => Some(*r),
             IfcValue::Integer(i) => Some(*i as f64),
             _ => None,
         }
     }
-    pub fn as_aggregate(&self) -> Option<&[IfcValue]> {
+    pub async fn as_aggregate(&self) -> Option<&[IfcValue]> {
         if let IfcValue::Aggregate(items) = self {
             Some(items.as_slice())
         } else {
             None
         }
     }
-    pub fn as_typed(&self) -> Option<(&str, &[IfcValue])> {
+    pub async fn as_typed(&self) -> Option<(&str, &[IfcValue])> {
         if let IfcValue::TypedValue(name, items) = self {
             Some((name.as_str(), items.as_slice()))
         } else {
@@ -156,7 +156,7 @@ pub struct IfcSnapshot {
 }
 
 impl Default for IfcSnapshot {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self { schema: STDIO_IFC_DOCUMENT_SCHEMA.into(), header: IfcHeader::default(), entities: Vec::new() }
     }
 }
@@ -164,7 +164,7 @@ impl Default for IfcSnapshot {
 
 //#region 🔖️Part21Conversion
 /// 🔁️ `Part21Value` -> `IfcValue`, structurally 1:1 (own enum, recursive).
-fn ifc_value_from_part21(v: &Part21Value) -> IfcValue {
+async fn ifc_value_from_part21(v: &Part21Value) -> IfcValue {
     match v {
         Part21Value::Ref(id) => IfcValue::Reference(*id),
         Part21Value::Str(s) => IfcValue::String(s.clone()),
@@ -179,7 +179,7 @@ fn ifc_value_from_part21(v: &Part21Value) -> IfcValue {
 }
 
 /// 🔁️ `IfcValue` -> `Part21Value`, the exact inverse of [`ifc_value_from_part21`].
-fn part21_value_from_ifc(v: &IfcValue) -> Part21Value {
+async fn part21_value_from_ifc(v: &IfcValue) -> Part21Value {
     match v {
         IfcValue::Reference(id) => Part21Value::Ref(*id),
         IfcValue::String(s) => Part21Value::Str(s.clone()),
@@ -193,18 +193,18 @@ fn part21_value_from_ifc(v: &IfcValue) -> Part21Value {
     }
 }
 
-fn ifc_header_from_part21(h: &Part21Header) -> IfcHeader {
+async fn ifc_header_from_part21(h: &Part21Header) -> IfcHeader {
     IfcHeader { file_description: h.file_description.iter().map(ifc_value_from_part21).collect(), file_name: h.file_name.iter().map(ifc_value_from_part21).collect(), file_schema: h.file_schema.iter().map(ifc_value_from_part21).collect() }
 }
 
-fn part21_header_from_ifc(h: &IfcHeader) -> Part21Header {
+async fn part21_header_from_ifc(h: &IfcHeader) -> Part21Header {
     Part21Header { file_description: h.file_description.iter().map(part21_value_from_ifc).collect(), file_name: h.file_name.iter().map(part21_value_from_ifc).collect(), file_schema: h.file_schema.iter().map(part21_value_from_ifc).collect() }
 }
 
 /// 🔁️ One `Part21Instance` -> `IfcEntity`: the first `(name, args)` pair becomes the entity's
 /// primary `name`/`args`, any further pairs (real IFC4 COMPLEX instances, e.g.
 /// `IfcQuantityArea`+`IfcPhysicalSimpleQuantity`) are retained verbatim in `complex`.
-fn ifc_entity_from_instance(inst: &Part21Instance) -> IfcEntity {
+async fn ifc_entity_from_instance(inst: &Part21Instance) -> IfcEntity {
     let mut pairs = inst.entities.iter();
     let (name, args) = match pairs.next() {
         Some((name, args)) => (name.clone(), args.iter().map(ifc_value_from_part21).collect()),
@@ -215,7 +215,7 @@ fn ifc_entity_from_instance(inst: &Part21Instance) -> IfcEntity {
 }
 
 /// 🔁️ Exact inverse of [`ifc_entity_from_instance`].
-fn instance_from_ifc_entity(e: &IfcEntity) -> Part21Instance {
+async fn instance_from_ifc_entity(e: &IfcEntity) -> Part21Instance {
     let mut entities = vec![(e.name.clone(), e.args.iter().map(part21_value_from_ifc).collect())];
     for c in &e.complex {
         entities.push((c.name.clone(), c.args.iter().map(part21_value_from_ifc).collect()));
@@ -226,12 +226,12 @@ fn instance_from_ifc_entity(e: &IfcEntity) -> Part21Instance {
 /// 📤️ Builds the shared generic Part-21 graph from `snapshot` — used at the parse/write boundary
 /// (codecs below) and by the derived spatial analyzer (`engine::spatial::analyze_spatial`), which
 /// still walks the generic graph shape for its relationship-graph traversal.
-pub fn to_part21_document(snapshot: &IfcSnapshot) -> Part21Document {
+pub async fn to_part21_document(snapshot: &IfcSnapshot) -> Part21Document {
     Part21Document { header: part21_header_from_ifc(&snapshot.header), instances: snapshot.entities.iter().map(instance_from_ifc_entity).collect() }
 }
 
 /// 📥️ Builds an `IfcSnapshot` from a parsed generic Part-21 graph.
-pub fn from_part21_document(schema: impl Into<String>, doc: &Part21Document) -> IfcSnapshot {
+pub async fn from_part21_document(schema: impl Into<String>, doc: &Part21Document) -> IfcSnapshot {
     IfcSnapshot { schema: schema.into(), header: ifc_header_from_part21(&doc.header), entities: doc.instances.iter().map(ifc_entity_from_instance).collect() }
 }
 //#endregion 🔖️Part21Conversion
@@ -239,11 +239,11 @@ pub fn from_part21_document(schema: impl Into<String>, doc: &Part21Document) -> 
 //#region 🔖️Part21Codec
 impl store::ArtifactDsl for IfcSnapshot {
     const EXTENSION: &'static str = "ifc";
-    fn envelope_id() -> &'static str {
+    async fn envelope_id() -> &'static str {
         "stdio.ifc"
     }
 
-    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+    async fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
         let body = match store::semio_format::split_text_preamble(text) {
             Ok((_, rest)) => rest,
             Err(_) => text,
@@ -251,7 +251,7 @@ impl store::ArtifactDsl for IfcSnapshot {
         let document = parse_part21(body).map_err(|e| store::TextError::new(format!("ifc parse: {e}"), dsl::TextSpan::at(1, 1)))?;
         Ok(from_part21_document(STDIO_IFC_DOCUMENT_SCHEMA, &document))
     }
-    fn print_dsl(&self) -> String {
+    async fn print_dsl(&self) -> String {
         let body = write_part21(&to_part21_document(self));
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
@@ -259,13 +259,13 @@ impl store::ArtifactDsl for IfcSnapshot {
 }
 
 impl store::ArtifactPack for IfcSnapshot {
-    fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
+    async fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
         let raw = write_part21(&to_part21_document(self)).into_bytes();
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &raw))
     }
-    fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
+    async fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
         if envelope.envelope_id() != <Self as store::ArtifactDsl>::envelope_id() {
             return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.envelope_id())));
@@ -286,7 +286,7 @@ mod tests {
     const FIXTURE: &str = "ISO-10303-21;\nHEADER;\nFILE_DESCRIPTION((''),'2;1');\nFILE_NAME('semio.ifc','2026-08-10T00:00:00',('Ueli'),('semio'),'semio','','');\nFILE_SCHEMA(('IFC4'));\nENDSEC;\nDATA;\n#1=IFCPROJECT('gid-project',#2,'Demo Project',$,$,$,$,(#10),#11);\n#2=IFCOWNERHISTORY($,$,$,$,$,$,$,0);\n#6=IFCWALL('gid-wall',#2,'Wall-01',$,$,#80,$,$,$);\nENDSEC;\nEND-ISO-10303-21;\n";
 
     #[test]
-    fn part21_round_trip_is_lossless() {
+    async fn part21_round_trip_is_lossless() {
         let doc = parse_part21(FIXTURE).expect("parse");
         let snapshot = from_part21_document("stdio.ifc", &doc);
         assert_eq!(snapshot.entities.len(), 3);
@@ -298,7 +298,7 @@ mod tests {
     }
 
     #[test]
-    fn complex_instance_retains_every_type() {
+    async fn complex_instance_retains_every_type() {
         let text =
             "ISO-10303-21;\nHEADER;\nFILE_DESCRIPTION((''),'2;1');\nFILE_NAME('','',(''),(''),'','','');\nFILE_SCHEMA(('IFC4'));\nENDSEC;\nDATA;\n#1=(IFCQUANTITYAREA($,$,$,10.5,$)IFCPHYSICALSIMPLEQUANTITY($,$,$,$));\nENDSEC;\nEND-ISO-10303-21;\n";
         let doc = parse_part21(text).expect("parse complex instance");
@@ -311,7 +311,7 @@ mod tests {
     }
 
     #[test]
-    fn codec_round_trip_via_dsl_and_pack() {
+    async fn codec_round_trip_via_dsl_and_pack() {
         let snapshot = from_part21_document("stdio.ifc", &parse_part21(FIXTURE).expect("parse"));
         let text = store::ArtifactDsl::print_dsl(&snapshot);
         let parsed = <IfcSnapshot as store::ArtifactDsl>::parse_dsl(&text).expect("parse_dsl");

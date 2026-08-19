@@ -19,16 +19,16 @@ pub struct ReplacePriorityRecord {
 }
 impl MutationKind<ProgramSnapshot, ProgramMutation> for ReplacePriorityRecord {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "replace", entity: "priority-record", kind: "replace-priority-record", record: "ReplacedPriorityRecord" };
-    fn diff(&self, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
+    async fn diff(&self, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {
+    async fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         format!("Replace priority record \"{}\"", self.priority_record.header.name)
     }
-    fn target(&self) -> Vec<String> {
+    async fn target(&self) -> Vec<String> {
         vec![self.priority_record.header.id.0.clone()]
     }
 }

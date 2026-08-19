@@ -5,7 +5,7 @@ use crate::artifacts::block5d::Block5dSnapshot;
 use crate::artifacts::block5d::{Block5dGripTemplate};
 
 //#region 🔖️Diff
-pub fn diff(payload: &super::mutation::MoveGrip3d, base: &Block5dSnapshot) -> protocol::MutationOutcome<Block5dDiff> {
+pub async fn diff(payload: &super::mutation::MoveGrip3d, base: &Block5dSnapshot) -> protocol::MutationOutcome<Block5dDiff> {
     let Some(existing) = base.grips.iter().find(|item| item.id == payload.id) else {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("{} \"{}\" not found", "grip", payload.id), vec![payload.id.clone()]);
     };

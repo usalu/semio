@@ -21,7 +21,7 @@ struct WriterEngagementOutcome {
 /// 💬️ Natural-language engagement parsing (premigration `applyEngagement`). Accepts both the spaced
 /// form (wgpu REPL) and the React shell's PascalCased, separator-stripped drafts (e.g. `"Font16"`,
 /// `"LineNumbers"` — see `strip_engagement_prefix`).
-fn apply_engagement(config: &WriterConfig, current_text: &str, language_id: &str, value: &str) -> WriterEngagementOutcome {
+async fn apply_engagement(config: &WriterConfig, current_text: &str, language_id: &str, value: &str) -> WriterEngagementOutcome {
     use crate::artifacts::writer::schema::format_writer_text;
 
     let trimmed = value.trim();
@@ -71,7 +71,7 @@ pub struct EngagementSubmit {
     pub value: Option<String>,
 }
 
-pub fn handle(payload: &EngagementSubmit, doc: &ArtifactView<'_, WriterSnapshot>, cfg: &ConfigView<'_, WriterConfig>) -> Result<Emit<WriterMutation, WriterConfigMutation>, Fault> {
+pub async fn handle(payload: &EngagementSubmit, doc: &ArtifactView<'_, WriterSnapshot>, cfg: &ConfigView<'_, WriterConfig>) -> Result<Emit<WriterMutation, WriterConfigMutation>, Fault> {
     let document = doc.snapshot;
     let config = cfg.snapshot;
     let value = payload.value.clone().unwrap_or_else(|| config.engagement_input.clone());
@@ -89,7 +89,7 @@ mod tests {
     use semio_framework_plugin::{PluginApp, WindowMeasure};
 
     #[test]
-    fn engagement_submit_parses_font_size() {
+    async fn engagement_submit_parses_font_size() {
         let mut app = new_app();
         let result = app.dispatch_typed(WriterCommand::EngagementSubmit(EngagementSubmit { value: Some("font 16".into()) }), &semio_framework_plugin::testkit::meta("local")).expect("submit");
         // Font size is ephemeral config state — no history entry.
@@ -100,7 +100,7 @@ mod tests {
     }
 
     #[test]
-    fn engagement_submit_parses_normalized_shell_drafts() {
+    async fn engagement_submit_parses_normalized_shell_drafts() {
         // The React shell PascalCases and strips separators from every draft before submitting it
         // (`normalizeEngagementActionText`), so "font 16" arrives as "Font16", "tab 4" as "Tab4",
         // and "line numbers" as "LineNumbers".

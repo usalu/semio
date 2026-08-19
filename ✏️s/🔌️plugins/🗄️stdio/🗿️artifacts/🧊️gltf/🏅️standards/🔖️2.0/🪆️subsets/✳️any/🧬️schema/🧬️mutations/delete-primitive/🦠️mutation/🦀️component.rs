@@ -8,5 +8,5 @@ pub const ID: &str = "s.stdio.gltf.mutation.delete-primitive.v1";
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct GltfDeletePrimitivePayload { pub mesh: usize, pub primitive: usize }
-pub fn validate(payload: &GltfDeletePrimitivePayload, base: &GltfSnapshot) -> Result<(), GltfTopLevelMutationRejection> { checked_index(payload.mesh, base.document.meshes.len(), "document/meshes")?; checked_index(payload.primitive, base.document.meshes[payload.mesh].primitives.len(), "document/meshes/primitives")?; Ok(()) }
-pub fn apply(payload: &GltfDeletePrimitivePayload, base: &GltfSnapshot) -> Result<GltfSnapshot, GltfTopLevelMutationRejection> { validate(payload, base)?; let mut next = base.clone(); next.document.meshes[payload.mesh].primitives.remove(payload.primitive); Ok(next) }
+pub async fn validate(payload: &GltfDeletePrimitivePayload, base: &GltfSnapshot) -> Result<(), GltfTopLevelMutationRejection> { checked_index(payload.mesh, base.document.meshes.len(), "document/meshes")?; checked_index(payload.primitive, base.document.meshes[payload.mesh].primitives.len(), "document/meshes/primitives")?; Ok(()) }
+pub async fn apply(payload: &GltfDeletePrimitivePayload, base: &GltfSnapshot) -> Result<GltfSnapshot, GltfTopLevelMutationRejection> { validate(payload, base)?; let mut next = base.clone(); next.document.meshes[payload.mesh].primitives.remove(payload.primitive); Ok(next) }

@@ -80,7 +80,7 @@ impl En1993Mutation {
     /// closed-vocabulary replacement for the banned whole-document-replace variant, used by
     /// `import_media`'s `"model:in"` port and the `set-snapshot` app command to bundle a bulk
     /// document replacement into a single atomic `Emit::commit`.
-    pub fn from_snapshot(snapshot: &En1993Snapshot) -> Vec<En1993Mutation> {
+    pub async fn from_snapshot(snapshot: &En1993Snapshot) -> Vec<En1993Mutation> {
         let mut mutations = Vec::with_capacity(17);
         mutations.push(En1993Mutation::ChangeAnnex(change_annex::mutation::ChangeAnnex { new_annex: snapshot.annex.clone() }));
         mutations.push(En1993Mutation::UpdatePileInputs(update_pile_inputs::mutation::UpdatePileInputs {
@@ -196,7 +196,7 @@ mod tests {
     /// 🔁️ Applies `operation`'s diff to `base`, then applies every mutation in its inverse (computed
     /// from `base`) back onto the forward result — asserts the base fixture is exactly restored, and
     /// returns the forward (post-mutation) snapshot for the caller's own field assertions.
-    fn round_trip(base: &En1993Snapshot, operation: &En1993Mutation) -> En1993Snapshot {
+    async fn round_trip(base: &En1993Snapshot, operation: &En1993Mutation) -> En1993Snapshot {
         let forward = operation.diff(base).diff().apply(base).expect("valid mutation diff");
         let backwards = operation.inverse(base);
         let mut restored = forward.clone();
@@ -208,7 +208,7 @@ mod tests {
     }
 
     #[test]
-    fn change_annex_round_trips() {
+    async fn change_annex_round_trips() {
         let base = En1993Snapshot::default();
         let mutation = En1993Mutation::ChangeAnnex(change_annex::mutation::ChangeAnnex { new_annex: crate::document::AnnexChoice::En });
         let after = round_trip(&base, &mutation);
@@ -216,7 +216,7 @@ mod tests {
     }
 
     #[test]
-    fn update_member_properties_round_trips() {
+    async fn update_member_properties_round_trips() {
         let base = En1993Snapshot::default();
         let mutation = En1993Mutation::UpdateMemberProperties(update_member_properties::mutation::UpdateMemberProperties {
             new_n_ed_kn: 999.0,
@@ -246,7 +246,7 @@ mod tests {
     }
 
     #[test]
-    fn update_fire_inputs_round_trips() {
+    async fn update_fire_inputs_round_trips() {
         let base = En1993Snapshot::default();
         let mutation = En1993Mutation::UpdateFireInputs(update_fire_inputs::mutation::UpdateFireInputs {
             new_fire_thickness_mm: 999.0,
@@ -264,7 +264,7 @@ mod tests {
     }
 
     #[test]
-    fn update_cold_formed_inputs_round_trips() {
+    async fn update_cold_formed_inputs_round_trips() {
         let base = En1993Snapshot::default();
         let mutation = En1993Mutation::UpdateColdFormedInputs(update_cold_formed_inputs::mutation::UpdateColdFormedInputs {
             new_cf_b_bar_mm: 999.0,
@@ -284,7 +284,7 @@ mod tests {
     }
 
     #[test]
-    fn update_stainless_inputs_round_trips() {
+    async fn update_stainless_inputs_round_trips() {
         let base = En1993Snapshot::default();
         let mutation = En1993Mutation::UpdateStainlessInputs(update_stainless_inputs::mutation::UpdateStainlessInputs { new_stainless_m_ed_knm: 999.0, new_stainless_w_pl_mm3: 999.0, new_stainless_f_y_mpa: 999.0 });
         let after = round_trip(&base, &mutation);
@@ -294,7 +294,7 @@ mod tests {
     }
 
     #[test]
-    fn update_plated_inputs_round_trips() {
+    async fn update_plated_inputs_round_trips() {
         let base = En1993Snapshot::default();
         let mutation = En1993Mutation::UpdatePlatedInputs(update_plated_inputs::mutation::UpdatePlatedInputs { new_plated_lambda_p: 999.0, new_plated_sigma_ed_mpa: 999.0 });
         let after = round_trip(&base, &mutation);
@@ -303,7 +303,7 @@ mod tests {
     }
 
     #[test]
-    fn update_silo_shell_inputs_round_trips() {
+    async fn update_silo_shell_inputs_round_trips() {
         let base = En1993Snapshot::default();
         let mutation = En1993Mutation::UpdateSiloShellInputs(update_silo_shell_inputs::mutation::UpdateSiloShellInputs {
             new_silo_t_mm: 999.0,
@@ -323,7 +323,7 @@ mod tests {
     }
 
     #[test]
-    fn update_bolt_inputs_round_trips() {
+    async fn update_bolt_inputs_round_trips() {
         let base = En1993Snapshot::default();
         let mutation = En1993Mutation::UpdateBoltInputs(update_bolt_inputs::mutation::UpdateBoltInputs {
             new_bolt_f_ed_kn: 999.0,
@@ -351,7 +351,7 @@ mod tests {
     }
 
     #[test]
-    fn update_weld_inputs_round_trips() {
+    async fn update_weld_inputs_round_trips() {
         let base = En1993Snapshot::default();
         let mutation = En1993Mutation::UpdateWeldInputs(update_weld_inputs::mutation::UpdateWeldInputs { new_weld_a_mm: 999.0, new_weld_l_mm: 999.0, new_weld_f_u_mpa: 999.0, new_weld_steel_grade: "changed".to_string(), new_weld_f_ed_kn: 999.0 });
         let after = round_trip(&base, &mutation);
@@ -363,7 +363,7 @@ mod tests {
     }
 
     #[test]
-    fn update_fatigue_inputs_round_trips() {
+    async fn update_fatigue_inputs_round_trips() {
         let base = En1993Snapshot::default();
         let mutation = En1993Mutation::UpdateFatigueInputs(update_fatigue_inputs::mutation::UpdateFatigueInputs { new_delta_sigma_mpa: 999.0, new_fatigue_category: 9, new_fatigue_method: "changed".to_string() });
         let after = round_trip(&base, &mutation);
@@ -373,7 +373,7 @@ mod tests {
     }
 
     #[test]
-    fn update_through_thickness_inputs_round_trips() {
+    async fn update_through_thickness_inputs_round_trips() {
         let base = En1993Snapshot::default();
         let mutation = En1993Mutation::UpdateThroughThicknessInputs(update_through_thickness_inputs::mutation::UpdateThroughThicknessInputs { new_t10_steel_subgrade: "changed".to_string(), new_t10_actual_thickness_mm: 999.0, new_t10_t_ed_c: 999.0 });
         let after = round_trip(&base, &mutation);
@@ -383,7 +383,7 @@ mod tests {
     }
 
     #[test]
-    fn update_tension_component_inputs_round_trips() {
+    async fn update_tension_component_inputs_round_trips() {
         let base = En1993Snapshot::default();
         let mutation =
             En1993Mutation::UpdateTensionComponentInputs(update_tension_component_inputs::mutation::UpdateTensionComponentInputs { new_tension_component_f_uk_kn: 999.0, new_tension_component_f_k_kn: 999.0, new_tension_component_n_ed_kn: 999.0 });
@@ -394,7 +394,7 @@ mod tests {
     }
 
     #[test]
-    fn update_hss_inputs_round_trips() {
+    async fn update_hss_inputs_round_trips() {
         let base = En1993Snapshot::default();
         let mutation = En1993Mutation::UpdateHssInputs(update_hss_inputs::mutation::UpdateHssInputs { new_hss_w_el_mm3: 999.0, new_hss_f_y_mpa: 999.0, new_hss_section_class: 9, new_hss_m_ed_knm: 999.0 });
         let after = round_trip(&base, &mutation);
@@ -405,7 +405,7 @@ mod tests {
     }
 
     #[test]
-    fn update_bridge_inputs_round_trips() {
+    async fn update_bridge_inputs_round_trips() {
         let base = En1993Snapshot::default();
         let mutation = En1993Mutation::UpdateBridgeInputs(update_bridge_inputs::mutation::UpdateBridgeInputs { new_bridge_lambda: 999.0, new_bridge_phi_2: 999.0, new_bridge_delta_sigma_p_mpa: 999.0 });
         let after = round_trip(&base, &mutation);
@@ -415,7 +415,7 @@ mod tests {
     }
 
     #[test]
-    fn update_tower_inputs_round_trips() {
+    async fn update_tower_inputs_round_trips() {
         let base = En1993Snapshot::default();
         let mutation = En1993Mutation::UpdateTowerInputs(update_tower_inputs::mutation::UpdateTowerInputs { new_tower_wind_factor: 999.0, new_tower_n_ed_kn: 999.0 });
         let after = round_trip(&base, &mutation);
@@ -424,7 +424,7 @@ mod tests {
     }
 
     #[test]
-    fn update_pile_inputs_round_trips() {
+    async fn update_pile_inputs_round_trips() {
         let base = En1993Snapshot::default();
         let mutation = En1993Mutation::UpdatePileInputs(update_pile_inputs::mutation::UpdatePileInputs { new_pile_sigma_mpa: 999.0, new_pile_k_red: 999.0, new_pile_n_ed_kn: 999.0 });
         let after = round_trip(&base, &mutation);
@@ -434,7 +434,7 @@ mod tests {
     }
 
     #[test]
-    fn update_crane_inputs_round_trips() {
+    async fn update_crane_inputs_round_trips() {
         let base = En1993Snapshot::default();
         let mutation = En1993Mutation::UpdateCraneInputs(update_crane_inputs::mutation::UpdateCraneInputs { new_crane_f_z_ed_kn: 999.0, new_crane_wheel_contact_length_mm: 999.0, new_crane_dispersion_mm: 999.0, new_crane_t_w_mm: 999.0 });
         let after = round_trip(&base, &mutation);
@@ -445,7 +445,7 @@ mod tests {
     }
 
     #[test]
-    fn change_annex_diff_is_sparse() {
+    async fn change_annex_diff_is_sparse() {
         let base = En1993Snapshot::default();
         let mutation = En1993Mutation::ChangeAnnex(change_annex::mutation::ChangeAnnex { new_annex: crate::document::AnnexChoice::En });
         let outcome = mutation.diff(&base);
@@ -457,7 +457,7 @@ mod tests {
     }
 
     #[test]
-    fn semantic_kinds_cover_every_variant() {
+    async fn semantic_kinds_cover_every_variant() {
         assert_eq!(En1993Mutation::kinds().len(), 17);
         let mutation = En1993Mutation::ChangeAnnex(change_annex::mutation::ChangeAnnex { new_annex: crate::document::AnnexChoice::En });
         assert_eq!(mutation.semantics().kind, "change-annex");

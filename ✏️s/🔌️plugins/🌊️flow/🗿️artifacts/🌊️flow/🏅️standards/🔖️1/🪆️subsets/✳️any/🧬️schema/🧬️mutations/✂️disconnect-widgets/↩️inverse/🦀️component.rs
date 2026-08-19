@@ -6,7 +6,7 @@ use crate::artifacts::flow::{flow_working_scene, FlowSnapshot};
 
 use super::mutation::DisconnectWidgets;
 
-pub fn inverse(payload: &DisconnectWidgets, base: &FlowSnapshot) -> Vec<FlowMutation> {
+pub async fn inverse(payload: &DisconnectWidgets, base: &FlowSnapshot) -> Vec<FlowMutation> {
     let scene = flow_working_scene(base);
     let Some(index) = scene.synapses.iter().position(|synapse| synapse.id == payload.id) else {
         return Vec::new();

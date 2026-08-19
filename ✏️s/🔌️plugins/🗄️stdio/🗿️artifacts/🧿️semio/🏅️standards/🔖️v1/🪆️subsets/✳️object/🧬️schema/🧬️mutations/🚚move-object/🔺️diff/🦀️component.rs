@@ -8,7 +8,7 @@ use crate::artifacts::semio::standards::v1::subsets::object::schema::diff::Semio
 use crate::artifacts::semio::standards::v1::subsets::object::schema::snapshot::SemioObjectSnapshot;
 
 //#region 🔖️Diff
-pub fn diff(payload: &MoveObject, base: &SemioObjectSnapshot) -> protocol::MutationOutcome<SemioObjectDiff> {
+pub async fn diff(payload: &MoveObject, base: &SemioObjectSnapshot) -> protocol::MutationOutcome<SemioObjectDiff> {
     let t = payload.translation;
     if !t.x.is_finite() || !t.y.is_finite() || !t.z.is_finite() {
         return protocol::MutationOutcome::fatal("mutation.invariant", "Object translation has a non-finite component.".to_string(), ["transform".to_string()]);

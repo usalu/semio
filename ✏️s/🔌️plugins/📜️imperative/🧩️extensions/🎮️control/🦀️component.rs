@@ -1,6 +1,6 @@
 //! 🔀️ Imperative control module: catalogue-only control-flow step kinds.
 
-pub fn catalogue_json() -> String {
+pub async fn catalogue_json() -> String {
     serde_json::to_string(&serde_json::json!({
         "schema": "imperative.catalogue",
         "sections": [{
@@ -43,7 +43,7 @@ pub fn catalogue_json() -> String {
     .unwrap_or_else(|_| "{}".into())
 }
 
-pub fn module_registry() -> neural_engine::Registry {
+pub async fn module_registry() -> neural_engine::Registry {
     let mut registry = neural_engine::Registry::new();
     registry.finalize();
     registry
@@ -53,7 +53,7 @@ pub fn module_registry() -> neural_engine::Registry {
 const EXTENSION_ID: &str = "imperative-extension-control";
 const MODULE_VERSION: &str = "0.1.0";
 
-pub fn imperative_module_contribution() -> semio_framework::ProgramContributionEntry {
+pub async fn imperative_module_contribution() -> semio_framework::ProgramContributionEntry {
     let registry = module_registry();
     let catalogue = catalogue_json();
     imperative_extension_sdk::imperative_module_contribution(EXTENSION_ID, "control", "Control", "git-branch", "control", "Control", MODULE_VERSION, &registry, Some(&catalogue))
@@ -61,14 +61,14 @@ pub fn imperative_module_contribution() -> semio_framework::ProgramContributionE
 
 /// 🗺️ Open-registry twin of [`imperative_module_contribution`] — see
 /// `imperative_extension_sdk::imperative_module_topic_contribution`.
-pub fn imperative_module_topic_contribution() -> semio_framework::TopicContribution {
+pub async fn imperative_module_topic_contribution() -> semio_framework::TopicContribution {
     let registry = module_registry();
     let catalogue = catalogue_json();
     imperative_extension_sdk::imperative_module_topic_contribution("control", "Control", "git-branch", "control", "Control", MODULE_VERSION, &registry, Some(&catalogue))
 }
 
 #[cfg(target_arch = "wasm32")]
-fn bundle() -> semio_framework_plugin::ExtensionBundle {
+async fn bundle() -> semio_framework_plugin::ExtensionBundle {
     let topic_contribution = imperative_module_topic_contribution();
     semio_framework_plugin::ExtensionBundle::new(EXTENSION_ID, "Imperative Control", MODULE_VERSION)
         .extends("imperative")
@@ -90,7 +90,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn catalogue_includes_control_kinds() {
+    async fn catalogue_includes_control_kinds() {
         let raw = catalogue_json();
         assert!(raw.contains("control.if"));
         assert!(raw.contains("control.while"));

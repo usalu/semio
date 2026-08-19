@@ -7,14 +7,14 @@ use crate::artifacts::draw::{DrawLayerNode, DrawSnapshot};
 //#region 🔖️Diff
 /// 📐️ Resolves the FINAL-state append index for `parent_id` (root length, or the target group's
 /// current child count) when the payload didn't pin one.
-fn append_index(base: &DrawSnapshot, parent_id: Option<&str>) -> usize {
+async fn append_index(base: &DrawSnapshot, parent_id: Option<&str>) -> usize {
     match parent_id.and_then(|id| find_draw_layer(base, id)) {
         Some(DrawLayerNode::Group(group)) => group.children.len(),
         _ => base.layers.len(),
     }
 }
 
-pub fn diff(payload: &super::mutation::CreateLayer, base: &DrawSnapshot) -> protocol::MutationOutcome<DrawDiff> {
+pub async fn diff(payload: &super::mutation::CreateLayer, base: &DrawSnapshot) -> protocol::MutationOutcome<DrawDiff> {
     let new_id = crate::artifacts::draw::schema::layer_id(&payload.layer);
     if find_draw_layer(base, new_id).is_some() {
         return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("A layer with id \"{}\" already exists.", new_id), [new_id.to_string()]);

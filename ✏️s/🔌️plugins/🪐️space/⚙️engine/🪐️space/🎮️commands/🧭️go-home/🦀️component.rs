@@ -10,6 +10,6 @@ use serde::{Deserialize, Serialize};
 #[dsl(keyword = "go-home")]
 pub struct GoHome {}
 
-pub fn handle(_payload: &GoHome, _doc: &ArtifactView<'_, WorkflowSnapshot>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
+pub async fn handle(_payload: &GoHome, _doc: &ArtifactView<'_, WorkflowSnapshot>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
     Ok(Emit::effect(Effect::Navigate { uri: "/".into() }))
 }

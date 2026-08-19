@@ -8,7 +8,7 @@ use semio_framework_plugin::{StandardId, SubsetId};
 
 pub const TXT_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.txt", standard: StandardId("utf-8"), subset: SubsetId::ANY };
 
-pub fn serialize(_from: &CurateSnapshot) -> Result<semio_s_plugin_stdio::artifacts::txt::TxtSnapshot, String> {
+pub async fn serialize(_from: &CurateSnapshot) -> Result<semio_s_plugin_stdio::artifacts::txt::TxtSnapshot, String> {
     Err("txt export not yet implemented".into())
 }
 
@@ -17,7 +17,7 @@ pub struct CurateIntoTxt;
 impl Serializer<CurateSnapshot> for CurateIntoTxt {
     const INTO: Dialect = TXT_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Lossy;
-    fn serialize(_from: &CurateSnapshot) -> IoResult<IoPayload> {
+    async fn serialize(_from: &CurateSnapshot) -> IoResult<IoPayload> {
         Err(IoError { message: "CurateIntoTxt: txt export not yet implemented".to_string(), diagnostics: Vec::new() })
     }
 }

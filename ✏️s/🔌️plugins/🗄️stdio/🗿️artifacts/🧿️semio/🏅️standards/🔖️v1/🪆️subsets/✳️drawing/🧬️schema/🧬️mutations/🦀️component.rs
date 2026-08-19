@@ -65,7 +65,7 @@ pub enum SemioDrawingMutation {
 //#region 🔖️Apply
 /// ▶️ Applies a mutation to `snapshot` in place, returning the diff — kept from the pre-wave facet
 /// (consumed by `../🦀️component.rs`'s `SemioDrawingBuilderConstruction::mutate`).
-pub fn apply_semio_drawing_mutation(snapshot: &mut SemioDrawingSnapshot, mutation: &SemioDrawingMutation) -> protocol::MutationOutcome<SemioDrawingDiff> {
+pub async fn apply_semio_drawing_mutation(snapshot: &mut SemioDrawingSnapshot, mutation: &SemioDrawingMutation) -> protocol::MutationOutcome<SemioDrawingDiff> {
     use protocol::Mutation;
     let outcome = <SemioDrawingMutation as Mutation<SemioDrawingSnapshot>>::diff(mutation, snapshot);
     outcome.apply_to(snapshot)
@@ -76,7 +76,7 @@ pub fn apply_semio_drawing_mutation(snapshot: &mut SemioDrawingSnapshot, mutatio
 /// 🌱 One representative value per variant — single source of truth for `🚪️io/🦀️component.rs`'s
 /// `ops_grammar_conformance_law`/`protocol_walk_law` AND this file's own round-trip tests.
 #[cfg(test)]
-pub(crate) fn demo_mutation_cases() -> Vec<SemioDrawingMutation> {
+pub(crate) async fn demo_mutation_cases() -> Vec<SemioDrawingMutation> {
     use crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::{SemioPoint2, SemioPoint3, SemioQuaternion, SemioTransform};
     use crate::artifacts::semio::standards::v1::subsets::drawing::schema::diff::NodePath;
     use crate::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::{DrawLayer, DrawNode, PathSegment};
@@ -122,7 +122,7 @@ mod tests {
     use crate::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::{DrawCanvas, DrawLayer, DrawNode, DrawStyle, PathSegment, STDIO_SEMIODRAWING_DOCUMENT_SCHEMA};
     use protocol::{Mutation, MutationDiff, SemanticMutation};
 
-    fn fixture() -> SemioDrawingSnapshot {
+    async fn fixture() -> SemioDrawingSnapshot {
         SemioDrawingSnapshot {
             schema: STDIO_SEMIODRAWING_DOCUMENT_SCHEMA.into(),
             canvas: DrawCanvas { width: 10.0, height: 10.0, background: None },
@@ -146,7 +146,7 @@ mod tests {
     /// 🔧️ Diffs/inverses each step against the CURRENT (evolving) state, never the stale
     /// pre-operation `base` — the din4108 harness's own documented bug, deliberately NOT copied
     /// here (this ticket's binding instruction).
-    fn round_trip(base: &SemioDrawingSnapshot, operation: &SemioDrawingMutation) -> SemioDrawingSnapshot {
+    async fn round_trip(base: &SemioDrawingSnapshot, operation: &SemioDrawingMutation) -> SemioDrawingSnapshot {
         let forward = operation.diff(base).diff().apply(base).expect("apply must succeed for a well-formed fixture");
         let backwards = operation.inverse(base);
         let mut restored = forward.clone();
@@ -158,7 +158,7 @@ mod tests {
     }
 
     #[test]
-    fn every_demo_variant_round_trips() {
+    async fn every_demo_variant_round_trips() {
         let base = fixture();
         for m in demo_mutation_cases() {
             let _ = round_trip(&base, &m);
@@ -166,7 +166,7 @@ mod tests {
     }
 
     #[test]
-    fn create_delete_layer_round_trip() {
+    async fn create_delete_layer_round_trip() {
         let base = fixture();
         let new_layer = DrawLayer { id: "l1".into(), name: "new".into(), visible: true, root: DrawNode::default() };
         let create = SemioDrawingMutation::CreateLayer(create_layer::mutation::CreateLayer { index: 1, layer: new_layer.clone() });
@@ -180,7 +180,7 @@ mod tests {
     }
 
     #[test]
-    fn delete_layer_of_an_absent_id_has_an_empty_inverse() {
+    async fn delete_layer_of_an_absent_id_has_an_empty_inverse() {
         let base = fixture();
         let delete = SemioDrawingMutation::DeleteLayer(delete_layer::mutation::DeleteLayer { id: "missing".into() });
         assert!(delete.inverse(&base).is_empty());
@@ -188,7 +188,7 @@ mod tests {
     }
 
     #[test]
-    fn create_delete_node_round_trip() {
+    async fn create_delete_node_round_trip() {
         let base = fixture();
         let root_path = NodePath { layer: 0, path: vec![] };
         let new_node = DrawNode::Text { value: "created".into(), at: SemioPoint2 { x: 9.0, y: 9.0 }, style: None };
@@ -203,7 +203,7 @@ mod tests {
     }
 
     #[test]
-    fn move_and_drag_nodes_round_trip() {
+    async fn move_and_drag_nodes_round_trip() {
         let base = fixture();
         let text_path = NodePath { layer: 0, path: vec![0] };
         let m = SemioDrawingMutation::MoveNode(move_node::mutation::MoveNode { at: text_path.clone(), new_origin: SemioPoint2 { x: 7.0, y: 7.0 } });
@@ -222,7 +222,7 @@ mod tests {
     }
 
     #[test]
-    fn rotate_and_scale_round_trip() {
+    async fn rotate_and_scale_round_trip() {
         let base = fixture();
         let root_path = NodePath { layer: 0, path: vec![] };
         let rotate_m = SemioDrawingMutation::Rotate(rotate::mutation::Rotate { at: root_path.clone(), new_rotation: crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioQuaternion { x: 0.0, y: 0.0, z: 1.0, w: 0.0 } });
@@ -232,7 +232,7 @@ mod tests {
     }
 
     #[test]
-    fn reorder_nodes_round_trips() {
+    async fn reorder_nodes_round_trips() {
         let base = fixture();
         let root_path = NodePath { layer: 0, path: vec![] };
         let m = SemioDrawingMutation::ReorderNodes(reorder_nodes::mutation::ReorderNodes { parent: root_path, from: 0, to: 2 });
@@ -243,7 +243,7 @@ mod tests {
     }
 
     #[test]
-    fn group_and_ungroup_round_trip() {
+    async fn group_and_ungroup_round_trip() {
         let base = fixture();
         let root_path = NodePath { layer: 0, path: vec![] };
         let group_m = SemioDrawingMutation::Group(group::mutation::GroupNodes { parent: root_path.clone(), indices: vec![0, 1], transform: SemioTransform::identity() });
@@ -258,7 +258,7 @@ mod tests {
     }
 
     #[test]
-    fn group_refuses_non_contiguous_indices() {
+    async fn group_refuses_non_contiguous_indices() {
         let base = fixture();
         let root_path = NodePath { layer: 0, path: vec![] };
         let m = SemioDrawingMutation::Group(group::mutation::GroupNodes { parent: root_path, indices: vec![0, 2], transform: SemioTransform::identity() });
@@ -267,7 +267,7 @@ mod tests {
     }
 
     #[test]
-    fn flatten_and_unflatten_round_trip() {
+    async fn flatten_and_unflatten_round_trip() {
         let base = fixture();
         let root_path = NodePath { layer: 0, path: vec![] };
         let flatten_m = SemioDrawingMutation::Flatten(flatten::mutation::FlattenNode { at: root_path.clone() });
@@ -278,7 +278,7 @@ mod tests {
     }
 
     #[test]
-    fn flatten_refuses_a_non_identity_descendant_group() {
+    async fn flatten_refuses_a_non_identity_descendant_group() {
         let mut base = fixture();
         let DrawNode::Group { children, .. } = &mut base.layers[0].root else { panic!() };
         let DrawNode::Group { transform, .. } = &mut children[2] else { panic!() };
@@ -290,7 +290,7 @@ mod tests {
     }
 
     #[test]
-    fn replace_path_round_trips() {
+    async fn replace_path_round_trips() {
         let base = fixture();
         let m = SemioDrawingMutation::ReplacePath(replace_path::mutation::ReplacePath { at: NodePath { layer: 0, path: vec![1] }, new_segments: vec![PathSegment::Close] });
         let after = round_trip(&base, &m);
@@ -300,7 +300,7 @@ mod tests {
     }
 
     #[test]
-    fn replace_fill_and_change_stroke_round_trip() {
+    async fn replace_fill_and_change_stroke_round_trip() {
         let base = fixture();
         let fill_m = SemioDrawingMutation::ReplaceFill(replace_fill::mutation::ReplaceFill { style_name: "s1".into(), new_fill: None });
         let after_fill = round_trip(&base, &fill_m);
@@ -323,7 +323,7 @@ mod tests {
     }
 
     #[test]
-    fn semantic_kinds_cover_every_declared_variant() {
+    async fn semantic_kinds_cover_every_declared_variant() {
         assert_eq!(SemioDrawingMutation::kinds().len(), 17);
         let mutation = SemioDrawingMutation::DeleteLayer(delete_layer::mutation::DeleteLayer { id: "l0".into() });
         assert_eq!(mutation.semantics().kind, "delete-layer");

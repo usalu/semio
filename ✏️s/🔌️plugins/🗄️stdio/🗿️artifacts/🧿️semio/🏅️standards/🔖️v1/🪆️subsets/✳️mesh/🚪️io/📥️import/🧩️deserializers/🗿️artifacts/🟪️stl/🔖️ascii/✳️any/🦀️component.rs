@@ -50,7 +50,7 @@ mod tests {
     use super::*;
     use crate::artifacts::stl::schema::snapshot::StlTriangle;
 
-    fn sample_stl() -> StlSnapshot {
+    async fn sample_stl() -> StlSnapshot {
         StlSnapshot {
             schema: "stdio.stl".into(),
             solid_name: "pyramid".into(),
@@ -59,7 +59,7 @@ mod tests {
     }
 
     #[test]
-    fn deserialize_expands_face_normals_and_flattens_triangle_soup() {
+    async fn deserialize_expands_face_normals_and_flattens_triangle_soup() {
         let semio = semio_framework_plugin::resolve_ready(SemioMeshFromStl::deserialize(&sample_stl())).expect("deserialize");
         assert_eq!(semio.meshes.len(), 1);
         assert_eq!(semio.meshes[0].id, "pyramid");
@@ -74,7 +74,7 @@ mod tests {
     }
 
     #[test]
-    fn empty_solid_name_falls_back_to_a_generated_mesh_id() {
+    async fn empty_solid_name_falls_back_to_a_generated_mesh_id() {
         let mut stl = sample_stl();
         stl.solid_name.clear();
         let semio = semio_framework_plugin::resolve_ready(SemioMeshFromStl::deserialize(&stl)).expect("deserialize");

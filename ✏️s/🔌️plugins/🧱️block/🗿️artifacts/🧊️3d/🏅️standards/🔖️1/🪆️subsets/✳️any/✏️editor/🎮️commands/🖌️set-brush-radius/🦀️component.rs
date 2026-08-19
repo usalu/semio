@@ -12,6 +12,6 @@ pub struct SetBrushRadius {
     pub radius: f64,
 }
 
-pub fn handle(payload: &SetBrushRadius, _doc: &ArtifactView<'_, Block3dSnapshot>, _cfg: &ConfigView<'_, Block3dConfig>) -> Result<Emit<Block3dMutation, Block3dConfigMutation>, Fault> {
+pub async fn handle(payload: &SetBrushRadius, _doc: &ArtifactView<'_, Block3dSnapshot>, _cfg: &ConfigView<'_, Block3dConfig>) -> Result<Emit<Block3dMutation, Block3dConfigMutation>, Fault> {
     Ok(Emit::config(vec![Block3dConfigMutation::SetBrushRadius { radius: payload.radius }]))
 }

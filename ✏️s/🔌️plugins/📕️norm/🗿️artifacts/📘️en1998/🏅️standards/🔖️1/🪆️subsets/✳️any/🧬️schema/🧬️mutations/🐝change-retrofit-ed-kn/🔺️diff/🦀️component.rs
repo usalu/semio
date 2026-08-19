@@ -5,7 +5,7 @@ use crate::artifacts::en1998::mutations::change_retrofit_e_d_kn::mutation::Chang
 use crate::artifacts::en1998::En1998Snapshot;
 
 //#region 🔖️Diff
-pub fn diff(payload: &ChangeRetrofitEDKn, base: &En1998Snapshot) -> protocol::MutationOutcome<En1998Diff> {
+pub async fn diff(payload: &ChangeRetrofitEDKn, base: &En1998Snapshot) -> protocol::MutationOutcome<En1998Diff> {
     if !payload.new_retrofit_e_d_kn.is_finite() {
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("Retrofit demand E_d [kN] must be a finite number, got {}.", payload.new_retrofit_e_d_kn), Vec::<String>::new());
     }

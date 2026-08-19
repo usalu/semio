@@ -15,15 +15,15 @@ pub struct ChangeLiquidFCtEffMpa {
 impl protocol::MutationKind<En1992Snapshot, En1992Mutation> for ChangeLiquidFCtEffMpa {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "liquid-f-ct-eff-mpa", kind: "change-liquid-f-ct-eff-mpa", record: "ChangedLiquidFCtEffMpa" };
 
-    fn diff(&self, base: &En1992Snapshot) -> protocol::MutationOutcome<En1992Diff> {
+    async fn diff(&self, base: &En1992Snapshot) -> protocol::MutationOutcome<En1992Diff> {
         crate::artifacts::en1992::mutations::change_liquid_f_ct_eff_mpa::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &En1992Snapshot) -> Vec<En1992Mutation> {
+    async fn inverse(&self, base: &En1992Snapshot) -> Vec<En1992Mutation> {
         crate::artifacts::en1992::mutations::change_liquid_f_ct_eff_mpa::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         format!("Change liquid f ct eff mpa to {:?}", self.new_liquid_f_ct_eff_mpa)
     }
 }

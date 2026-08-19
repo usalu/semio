@@ -8,9 +8,9 @@ use crate::artifacts::fem2d::Fem2dSnapshot;
 use semio_s_plugin_stdio::artifacts::json::{JsonSnapshot, STDIO_JSON_DOCUMENT_SCHEMA};
 use semio_s_plugin_stdio::artifacts::json::schema::snapshot::parse_json_text;
 
-pub fn register() {}
+pub async fn register() {}
 
-pub fn deserialize(from: &JsonSnapshot) -> Result<Fem2dSnapshot, store::TextError> {
+pub async fn deserialize(from: &JsonSnapshot) -> Result<Fem2dSnapshot, store::TextError> {
     let _ = STDIO_JSON_DOCUMENT_SCHEMA;
     let raw = from.to_serde_value();
     let snap: Fem2dSnapshot = serde_json::from_value(raw)
@@ -18,7 +18,7 @@ pub fn deserialize(from: &JsonSnapshot) -> Result<Fem2dSnapshot, store::TextErro
     Ok(snap)
 }
 
-pub fn deserialize_bytes(bytes: &[u8]) -> Result<Fem2dSnapshot, store::TextError> {
+pub async fn deserialize_bytes(bytes: &[u8]) -> Result<Fem2dSnapshot, store::TextError> {
     let text = std::str::from_utf8(bytes).map_err(|e| store::TextError::new(e.to_string(), dsl::TextSpan::at(1, 1)))?;
     let value = parse_json_text(text)?;
     deserialize(&JsonSnapshot::from_value(value))

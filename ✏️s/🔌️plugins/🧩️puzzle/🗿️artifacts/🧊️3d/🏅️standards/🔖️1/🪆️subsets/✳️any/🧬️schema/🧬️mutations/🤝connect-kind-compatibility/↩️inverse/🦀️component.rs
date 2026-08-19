@@ -4,7 +4,7 @@ use crate::artifacts::puzzle3d::mutations::Puzzle3dMutation;
 use crate::artifacts::puzzle3d::Puzzle3dSnapshot;
 
 //#region 🔖️Inverse
-pub fn inverse(payload: &super::mutation::ConnectKindCompatibility, _base: &Puzzle3dSnapshot) -> Vec<Puzzle3dMutation> {
+pub async fn inverse(payload: &super::mutation::ConnectKindCompatibility, _base: &Puzzle3dSnapshot) -> Vec<Puzzle3dMutation> {
     vec![crate::artifacts::puzzle3d::mutations::disconnect_kind_compatibility::mutation::disconnect_kind_compatibility(payload.source.clone(), payload.target.clone())]
 }
 //#endregion 🔖️Inverse

@@ -17,7 +17,7 @@ pub mod set_locale {
         pub value: String,
     }
 
-    pub fn handle(payload: &SetLocale, _doc: &ArtifactView<'_, GisMapSnapshot>, _cfg: &ConfigView<'_, Gis2dConfig>) -> Result<Emit<GisMapMutation, Gis2dConfigMutation>, Fault> {
+    pub async fn handle(payload: &SetLocale, _doc: &ArtifactView<'_, GisMapSnapshot>, _cfg: &ConfigView<'_, Gis2dConfig>) -> Result<Emit<GisMapMutation, Gis2dConfigMutation>, Fault> {
         Ok(Emit::config(vec![Gis2dConfigMutation::SetLocale { value: payload.value.clone() }]))
     }
 }
@@ -33,7 +33,7 @@ mod tests {
     use crate::editor::gis2d::Gis2dCommand;
 
     #[test]
-    fn gis2d_labels_resolve_native_by_default() {
+    async fn gis2d_labels_resolve_native_by_default() {
         let mut app = app();
         let json = render(&mut app, GIS2D_PLAY_BODY_INSPECTION);
         assert!(json.contains("\"Map View\""));
@@ -45,7 +45,7 @@ mod tests {
     /// 🗣️ Locale is `cfg.locale`, set via the typed `SetLocale` config command — no `ViewModel`-pushed
     /// locale anywhere.
     #[test]
-    fn gis2d_labels_translate_inspector_and_layers_in_german() {
+    async fn gis2d_labels_translate_inspector_and_layers_in_german() {
         let mut app = app();
         let result = dispatch(&mut app, Gis2dCommand::SetLocale(set_locale::SetLocale { value: "de-DE".into() }));
         assert!(result.mutations.is_empty(), "locale is config state, not a document edit");

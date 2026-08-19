@@ -27,10 +27,10 @@ pub enum PlaygroundViewCommand {
 }
 
 impl protocol::OpBinary for PlaygroundViewCommand {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         Ok(Vec::new())
     }
-    fn decode_op(_bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    async fn decode_op(_bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         Ok(PlaygroundViewCommand::Noop)
     }
 }
@@ -54,7 +54,7 @@ impl ArtifactViewer for PlaygroundViewer {
     const DIALECT: Dialect = PLAYGROUND_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = PLAYGROUND_DOCUMENT_SCHEMA;
 
-    fn initial_snapshot() -> PlaygroundSnapshot {
+    async fn initial_snapshot() -> PlaygroundSnapshot {
         empty_playground_snapshot()
     }
 
@@ -62,11 +62,11 @@ impl ArtifactViewer for PlaygroundViewer {
     /// config change, so this always returns the empty `ViewEmit` — no config mutation, no effect, no
     /// dirty scope. Kept as a real dispatch (not an `unreachable!()`) so a future view-only action is
     /// a pure addition here, never a signature change.
-    fn handle(_command: &Self::Command, _doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _interaction: &InteractionView<'_>, _engines: &EngineHandles) -> Result<ViewEmit<Self::ConfigMutation>, Fault> {
+    async fn handle(_command: &Self::Command, _doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _interaction: &InteractionView<'_>, _engines: &EngineHandles) -> Result<ViewEmit<Self::ConfigMutation>, Fault> {
         Ok(ViewEmit::default())
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> UiNode {
+    async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> UiNode {
         match body_key {
             main::BODY_KEY => main::render(doc.snapshot),
             _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))),
@@ -76,7 +76,7 @@ impl ArtifactViewer for PlaygroundViewer {
 //#endregion 🔖️Viewer
 
 //#region 🔖️Manifest
-pub fn create_playground_viewer() -> semio_framework_plugin::AppDefinition {
+pub async fn create_playground_viewer() -> semio_framework_plugin::AppDefinition {
     Viewer::builder(PLAYGROUND_DIALECT)
         .document(["semio", "playground"])
         .icon_id("playground")
@@ -94,14 +94,14 @@ mod tests {
     use super::*;
 
     #[test]
-    fn create_playground_viewer_builds_a_definition_for_the_viewer_role() {
+    async fn create_playground_viewer_builds_a_definition_for_the_viewer_role() {
         let def = create_playground_viewer();
         assert_eq!(def.role, semio_framework_plugin::AppRole::Viewer);
         assert_eq!(def.dialect, PLAYGROUND_DIALECT.into());
     }
 
     #[test]
-    fn viewer_dialect_matches_the_artifact_coordinate() {
+    async fn viewer_dialect_matches_the_artifact_coordinate() {
         assert_eq!(<PlaygroundViewer as ArtifactViewer>::DIALECT, PLAYGROUND_DIALECT);
     }
 }

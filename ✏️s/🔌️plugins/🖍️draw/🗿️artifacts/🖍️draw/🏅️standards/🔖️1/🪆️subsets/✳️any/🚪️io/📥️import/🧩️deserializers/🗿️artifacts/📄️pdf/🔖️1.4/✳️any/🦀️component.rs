@@ -15,7 +15,7 @@ pub struct PdfIntoDraw;
 impl Deserializer<DrawSnapshot> for PdfIntoDraw {
     const FROM: Dialect = PDF_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Lossy;
-    fn deserialize(_payload: &IoPayload) -> IoResult<DrawSnapshot> {
+    async fn deserialize(_payload: &IoPayload) -> IoResult<DrawSnapshot> {
         let mut snap = empty_draw_snapshot();
         snap.id = create_draw_id("pdf-import", b"pdf");
         snap.title = Some("Imported pdf".into());

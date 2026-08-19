@@ -27,7 +27,7 @@ pub mod derived_construction {
     /// construction (mirrors the ✳️any subset's `build_minimal_docx` shape), just with the strict
     /// namespace, root `conformance="strict"` attribute, and strict officeDocument relationship base
     /// written from the start instead of the transitional ones.
-    fn build_minimal_strict_docx(document: DocxDocument) -> DocxSnapshot {
+    async fn build_minimal_strict_docx(document: DocxDocument) -> DocxSnapshot {
         let mut opc = OpcPackage::empty();
         opc.content_types.set_default("rels", RELS_CONTENT_TYPE);
         opc.content_types.set_default("xml", "application/xml");
@@ -44,7 +44,7 @@ pub mod derived_construction {
     /// enrichment; a `Table` block reaching this builder via `SetSnapshot`/raw `mutate` still survives
     /// losslessly through the shared `✳️any` engine's `document_to_xml`, this fn is only the TYPED
     /// convenience path for `add_paragraph`/`add_text_paragraph`/`add_runs`).
-    fn document_to_strict_xml(doc: &DocxDocument) -> XmlDocument {
+    async fn document_to_strict_xml(doc: &DocxDocument) -> XmlDocument {
         let body_children = doc
             .body
             .iter()
@@ -99,19 +99,19 @@ pub mod derived_construction {
 
     impl DocxStrictBuilderConstruction {
         /// ➕️ Appends a paragraph, re-serializing the strict-namespaced `word/document.xml` part.
-        pub fn add_paragraph(mut self, paragraph: DocxParagraph) -> Self {
+        pub async fn add_paragraph(mut self, paragraph: DocxParagraph) -> Self {
             self.snapshot.document.body.push(crate::artifacts::docx::schema::snapshot::DocxBlock::Paragraph(paragraph));
             self.snapshot = build_minimal_strict_docx(self.snapshot.document);
             self
         }
 
         /// ➕️ Appends a single-run plain-text paragraph.
-        pub fn add_text_paragraph(self, text: impl Into<String>) -> Self {
+        pub async fn add_text_paragraph(self, text: impl Into<String>) -> Self {
             self.add_paragraph(DocxParagraph::text(text.into()))
         }
 
         /// ➕️ Appends a paragraph made of the given runs (basic bold/italic/underline formatting).
-        pub fn add_runs(self, runs: Vec<DocxRun>) -> Self {
+        pub async fn add_runs(self, runs: Vec<DocxRun>) -> Self {
             self.add_paragraph(DocxParagraph { runs, style: None, extra_paragraph_properties: Vec::new() })
         }
     }
@@ -121,28 +121,28 @@ pub mod derived_construction {
         type Mutation = DocxMutation;
         type Diff = DocxDiff;
 
-        fn empty() -> Self {
+        async fn empty() -> Self {
             Self { snapshot: build_minimal_strict_docx(DocxDocument::default()) }
         }
 
-        fn from_snapshot(snapshot: Self::Snapshot) -> Self {
+        async fn from_snapshot(snapshot: Self::Snapshot) -> Self {
             Self { snapshot }
         }
 
-        fn from_text(text: &str) -> Result<Self, store::TextError> {
+        async fn from_text(text: &str) -> Result<Self, store::TextError> {
             Ok(Self::from_snapshot(<DocxSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
 
-        fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
+        async fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
             Ok(Self::from_snapshot(<DocxSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
         }
 
-        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
+        async fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let diff = crate::artifacts::docx::schema::mutations::apply_docx_mutation(&mut self.snapshot, &mutation);
             (self, diff)
         }
 
-        fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
+        async fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
             self.snapshot = <DocxDiff as protocol::MutationDiff<DocxSnapshot>>::apply(&diff, &self.snapshot)?;
             Ok(self)
         }
@@ -151,7 +151,7 @@ pub mod derived_construction {
         /// regardless of which path produced the in-flight snapshot (typed `add_paragraph`,
         /// `from_binary`, a raw `SetSnapshot` mutation) -- a hard violation can never leave `build()`
         /// as `Ok`.
-        fn build(self) -> Result<Self::Snapshot, Vec<Diagnostic>> {
+        async fn build(self) -> Result<Self::Snapshot, Vec<Diagnostic>> {
             let hard: Vec<Diagnostic> = check_strict_conformance(&self.snapshot).into_iter().filter(|d| matches!(d.severity, Severity::Error | Severity::Fatal)).collect();
             if hard.is_empty() {
                 Ok(self.snapshot)
@@ -167,13 +167,13 @@ pub mod derived_construction {
         use super::*;
 
         #[test]
-        fn empty_builder_is_strict_conformant() {
+        async fn empty_builder_is_strict_conformant() {
             let snapshot = DocxStrictBuilderConstruction::empty().build().expect("empty strict builder must be conformant");
             assert!(snapshot.opc.part_bytes(MAIN_DOCUMENT_PART).is_some());
         }
 
         #[test]
-        fn add_paragraph_stays_strict_conformant() {
+        async fn add_paragraph_stays_strict_conformant() {
             let snapshot = DocxStrictBuilderConstruction::empty().add_text_paragraph("Hello, strict world!").build().expect("must build");
             assert_eq!(snapshot.document.body.len(), 1);
             let bytes = snapshot.opc.part_bytes(MAIN_DOCUMENT_PART).unwrap();
@@ -181,7 +181,7 @@ pub mod derived_construction {
         }
 
         #[test]
-        fn hard_violation_injected_via_raw_mutate_still_fails_build() {
+        async fn hard_violation_injected_via_raw_mutate_still_fails_build() {
             let mut snapshot = DocxStrictBuilderConstruction::empty().add_text_paragraph("clean").build().unwrap();
             snapshot.opc.set_part("word/legacyDrawing.xml", "application/xml", b"<v:shape xmlns:v=\"urn:schemas-microsoft-com:vml\"/>".to_vec());
             let (mutated, _diff) = DocxStrictBuilderConstruction::from_snapshot(DocxSnapshot::default()).mutate(DocxMutation::SetSnapshot { snapshot });
@@ -226,21 +226,21 @@ pub mod derived_analysis {
     /// relationship carries the SAME suffix under the strict base namespace (that swap is exactly what
     /// `CODE_REL_BASE` below checks for) -- matching by suffix here keeps this lookup honest for both
     /// conformance classes instead of silently failing to find the main part on any strict document.
-    fn main_document_part<'a>(opc: &'a OpcPackage) -> Option<(&'a OpcPart, String)> {
+    async fn main_document_part<'a>(opc: &'a OpcPackage) -> Option<(&'a OpcPart, String)> {
         let rel = opc.relationships_for("").iter().find(|r| r.rel_type.ends_with("/officeDocument"))?;
         let path = resolve_relationship_target("", &rel.target);
         opc.part(&path).map(|p| (p, path))
     }
 
-    fn part_contains(bytes: &[u8], needle: &str) -> bool {
+    async fn part_contains(bytes: &[u8], needle: &str) -> bool {
         !needle.is_empty() && bytes.windows(needle.len()).any(|w| w == needle.as_bytes())
     }
 
-    fn hard(code: &'static str, message: String) -> Diagnostic {
+    async fn hard(code: &'static str, message: String) -> Diagnostic {
         Diagnostic { code: FaultCode::new(code), severity: Severity::Error, span: TextSpan::at(1, 1), message, expected: None, scope: FaultScope::default() }
     }
 
-    fn soft(code: &'static str, message: String) -> Diagnostic {
+    async fn soft(code: &'static str, message: String) -> Diagnostic {
         Diagnostic { code: FaultCode::new(code), severity: Severity::Warning, span: TextSpan::at(1, 1), message, expected: None, scope: FaultScope::default() }
     }
 
@@ -248,7 +248,7 @@ pub mod derived_analysis {
     /// `DocxSnapshot`. Shared single source of truth: `DocxStrictComposer::compose` hard-gates on
     /// this (pre-serialization, authoritative), `DocxStrictBuilder::build` hard-gates on this too, and
     /// the registered `SubsetValidator` re-runs it post-hoc against the wire payload.
-    pub fn check_strict_conformance(snapshot: &DocxSnapshot) -> Vec<Diagnostic> {
+    pub async fn check_strict_conformance(snapshot: &DocxSnapshot) -> Vec<Diagnostic> {
         let opc = &snapshot.opc;
         let mut out = Vec::new();
 
@@ -300,11 +300,11 @@ pub mod derived_analysis {
         type Parts = DocxParts;
         const DIALECT: Dialect = DIALECT;
 
-        fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
+        async fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
             DocxAnyAnalyzer::sniff(source)
         }
 
-        fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
+        async fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
             let inner = DocxAnyAnalyzer::analyze(sources);
             let mut diagnostics = inner.diagnostics.clone();
             let mut confidence = inner.confidence;
@@ -325,11 +325,11 @@ pub mod derived_analysis {
         use super::*;
         use crate::artifacts::zip::opc::{OpcPackage, RELS_CONTENT_TYPE, REL_TYPE_OFFICE_DOCUMENT};
 
-        fn strict_document_bytes() -> Vec<u8> {
+        async fn strict_document_bytes() -> Vec<u8> {
             format!(r#"<w:document xmlns:w="{STRICT_MAIN_NS}" conformance="strict"><w:body/></w:document>"#).into_bytes()
         }
 
-        fn snapshot_with_main_part(rel_type: &str, doc_bytes: Vec<u8>) -> DocxSnapshot {
+        async fn snapshot_with_main_part(rel_type: &str, doc_bytes: Vec<u8>) -> DocxSnapshot {
             let mut opc = OpcPackage::empty();
             opc.content_types.set_default("rels", RELS_CONTENT_TYPE);
             opc.content_types.set_default("xml", "application/xml");
@@ -339,7 +339,7 @@ pub mod derived_analysis {
         }
 
         #[test]
-        fn conforming_strict_document_has_no_hard_diagnostics() {
+        async fn conforming_strict_document_has_no_hard_diagnostics() {
             let rel_type = format!("{STRICT_REL_BASE}/officeDocument");
             let snapshot = snapshot_with_main_part(&rel_type, strict_document_bytes());
             let diagnostics = check_strict_conformance(&snapshot);
@@ -347,7 +347,7 @@ pub mod derived_analysis {
         }
 
         #[test]
-        fn missing_strict_namespace_is_hard() {
+        async fn missing_strict_namespace_is_hard() {
             let rel_type = format!("{STRICT_REL_BASE}/officeDocument");
             let snapshot = snapshot_with_main_part(&rel_type, b"<w:document><w:body/></w:document>".to_vec());
             let diagnostics = check_strict_conformance(&snapshot);
@@ -355,7 +355,7 @@ pub mod derived_analysis {
         }
 
         #[test]
-        fn transitional_namespace_anywhere_is_hard() {
+        async fn transitional_namespace_anywhere_is_hard() {
             let rel_type = format!("{STRICT_REL_BASE}/officeDocument");
             let mut snapshot = snapshot_with_main_part(&rel_type, strict_document_bytes());
             snapshot.opc.set_part("word/styles.xml", "application/xml", format!(r#"<w:styles xmlns:w="{TRANSITIONAL_MAIN_NS}"/>"#).into_bytes());
@@ -364,7 +364,7 @@ pub mod derived_analysis {
         }
 
         #[test]
-        fn vml_namespace_anywhere_is_hard() {
+        async fn vml_namespace_anywhere_is_hard() {
             let rel_type = format!("{STRICT_REL_BASE}/officeDocument");
             let mut snapshot = snapshot_with_main_part(&rel_type, strict_document_bytes());
             snapshot.opc.set_part("word/header1.xml", "application/xml", format!(r#"<w:hdr xmlns:v="{VML_NS}"/>"#).into_bytes());
@@ -373,14 +373,14 @@ pub mod derived_analysis {
         }
 
         #[test]
-        fn transitional_relationship_base_is_hard() {
+        async fn transitional_relationship_base_is_hard() {
             let snapshot = snapshot_with_main_part(REL_TYPE_OFFICE_DOCUMENT, strict_document_bytes());
             let diagnostics = check_strict_conformance(&snapshot);
             assert!(diagnostics.iter().any(|d| d.code.0 == CODE_REL_BASE && d.severity == Severity::Error), "got {diagnostics:?}");
         }
 
         #[test]
-        fn missing_conformance_attr_is_soft() {
+        async fn missing_conformance_attr_is_soft() {
             let rel_type = format!("{STRICT_REL_BASE}/officeDocument");
             let doc = format!(r#"<w:document xmlns:w="{STRICT_MAIN_NS}"><w:body/></w:document>"#).into_bytes();
             let snapshot = snapshot_with_main_part(&rel_type, doc);
@@ -389,7 +389,7 @@ pub mod derived_analysis {
         }
 
         #[test]
-        fn alternate_content_anywhere_is_soft() {
+        async fn alternate_content_anywhere_is_soft() {
             let rel_type = format!("{STRICT_REL_BASE}/officeDocument");
             let mut snapshot = snapshot_with_main_part(&rel_type, strict_document_bytes());
             snapshot.opc.set_part("word/document2.xml", "application/xml", b"<mc:AlternateContent/>".to_vec());
@@ -398,7 +398,7 @@ pub mod derived_analysis {
         }
 
         #[test]
-        fn missing_officedocument_relationship_is_hard() {
+        async fn missing_officedocument_relationship_is_hard() {
             let mut opc = OpcPackage::empty();
             opc.content_types.set_default("rels", RELS_CONTENT_TYPE);
             let snapshot = DocxSnapshot::from_parts(opc, Default::default());

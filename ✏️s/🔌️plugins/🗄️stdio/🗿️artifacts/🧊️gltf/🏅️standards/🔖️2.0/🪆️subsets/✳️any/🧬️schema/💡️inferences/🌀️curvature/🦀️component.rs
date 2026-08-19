@@ -32,7 +32,7 @@ pub(crate) struct GltfCurvatureRaw {
     pub(crate) sharp_feature_proportion: f64,
 }
 
-pub(crate) fn raw(context: &GltfGeometryContext<'_>) -> GltfCurvatureRaw {
+pub(crate) async fn raw(context: &GltfGeometryContext<'_>) -> GltfCurvatureRaw {
     let mut edge_curvatures = Vec::new();
     let mut sharp_length = 0.0;
     let mut edge_length = 0.0;
@@ -80,7 +80,7 @@ pub(crate) fn raw(context: &GltfGeometryContext<'_>) -> GltfCurvatureRaw {
 impl GltfInferenceStage<GltfGeometryContext<'_>> for GltfCurvatureInference {
     type Output = GltfCurvatureIndicators;
 
-    fn infer(context: &GltfGeometryContext<'_>) -> Self::Output {
+    async fn infer(context: &GltfGeometryContext<'_>) -> Self::Output {
         let raw = raw(context);
         Self::Output {
             mean_curvature: mean_curvature::from_raw(context, &raw),
@@ -90,7 +90,7 @@ impl GltfInferenceStage<GltfGeometryContext<'_>> for GltfCurvatureInference {
         }
     }
 
-    fn unavailable(diagnostic_ids: &[String]) -> Self::Output {
+    async fn unavailable(diagnostic_ids: &[String]) -> Self::Output {
         Self::Output {
             mean_curvature: mean_curvature::unavailable_measure(diagnostic_ids),
             gaussian_curvature: gaussian_curvature::unavailable_measure(diagnostic_ids),

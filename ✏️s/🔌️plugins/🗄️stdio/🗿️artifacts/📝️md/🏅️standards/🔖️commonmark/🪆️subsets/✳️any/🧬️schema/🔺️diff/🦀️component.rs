@@ -181,7 +181,7 @@ pub enum MdBlocksLeafDiff {
 /// document root) into a full `MdDiff`, nesting through `MdBlockModified`/`MdListItemModified`
 /// chains from the root down to that depth. `path == []` addresses the top-level `blocks`
 /// directly.
-pub fn diff_at_path(path: &[MdPathStep], index: usize, leaf: MdBlocksLeafDiff) -> MdDiff {
+pub async fn diff_at_path(path: &[MdPathStep], index: usize, leaf: MdBlocksLeafDiff) -> MdDiff {
     let inner = match leaf {
         MdBlocksLeafDiff::Modified(diff) => MdBlocksDiff { removed: Vec::new(), modified: vec![MdBlockModified { index, diff }], added: Vec::new() },
         MdBlocksLeafDiff::Added(block) => MdBlocksDiff { removed: Vec::new(), modified: Vec::new(), added: vec![MdBlockAdded { index, item: block }] },
@@ -190,7 +190,7 @@ pub fn diff_at_path(path: &[MdPathStep], index: usize, leaf: MdBlocksLeafDiff) -
     MdDiff { blocks: Some(wrap_blocks_diff(path, inner)) }
 }
 
-fn wrap_blocks_diff(path: &[MdPathStep], inner: MdBlocksDiff) -> MdBlocksDiff {
+async fn wrap_blocks_diff(path: &[MdPathStep], inner: MdBlocksDiff) -> MdBlocksDiff {
     let mut current = inner;
     for step in path.iter().rev() {
         current = match step {
@@ -213,7 +213,7 @@ fn wrap_blocks_diff(path: &[MdPathStep], inner: MdBlocksDiff) -> MdBlocksDiff {
 /// 🔎️ Walks `path` from `blocks`, returning the addressed container (the `Vec<MdBlock>` the
 /// final `index` of a path-carrying mutation lives in). Graceful `None` on any out-of-range index
 /// or kind mismatch (e.g. `ListItem` step into a non-`List` block), never a panic.
-pub fn navigate_container<'a>(blocks: &'a [MdBlock], path: &[MdPathStep]) -> Option<&'a [MdBlock]> {
+pub async fn navigate_container<'a>(blocks: &'a [MdBlock], path: &[MdPathStep]) -> Option<&'a [MdBlock]> {
     let mut current = blocks;
     for step in path {
         current = match step {
@@ -233,7 +233,7 @@ pub fn navigate_container<'a>(blocks: &'a [MdBlock], path: &[MdPathStep]) -> Opt
 
 //#region 🔖️Apply
 impl MutationDiff<MdSnapshot> for MdDiff {
-    fn apply(&self, base: &MdSnapshot) -> MutationApplyResult<MdSnapshot> {
+    async fn apply(&self, base: &MdSnapshot) -> MutationApplyResult<MdSnapshot> {
         if let Some(blocks) = &self.blocks {
             validate_md_blocks(&base.blocks, blocks)?;
         }
@@ -244,7 +244,7 @@ impl MutationDiff<MdSnapshot> for MdDiff {
         Ok(next)
     }
 
-    fn absorb(&mut self, other: Self) {
+    async fn absorb(&mut self, other: Self) {
         self.blocks = match (self.blocks.take(), other.blocks) {
             (None, b) => b,
             (a, None) => a,
@@ -253,7 +253,7 @@ impl MutationDiff<MdSnapshot> for MdDiff {
     }
 }
 
-fn validate_md_blocks(base: &[MdBlock], diff: &MdBlocksDiff) -> MutationApplyResult<()> {
+async fn validate_md_blocks(base: &[MdBlock], diff: &MdBlocksDiff) -> MutationApplyResult<()> {
     let mut removed = std::collections::HashSet::new();
     for &index in &diff.removed {
         if index >= base.len() || !removed.insert(index) {
@@ -277,7 +277,7 @@ fn validate_md_blocks(base: &[MdBlock], diff: &MdBlocksDiff) -> MutationApplyRes
     Ok(())
 }
 
-fn validate_md_list_items(base: &[Vec<MdBlock>], diff: &MdListItemsDiff) -> MutationApplyResult<()> {
+async fn validate_md_list_items(base: &[Vec<MdBlock>], diff: &MdListItemsDiff) -> MutationApplyResult<()> {
     let mut removed = std::collections::HashSet::new();
     for &index in &diff.removed {
         if index >= base.len() || !removed.insert(index) {
@@ -301,7 +301,7 @@ fn validate_md_list_items(base: &[Vec<MdBlock>], diff: &MdListItemsDiff) -> Muta
     Ok(())
 }
 
-fn validate_md_block(base: &MdBlock, diff: &MdBlockDiff) -> MutationApplyResult<()> {
+async fn validate_md_block(base: &MdBlock, diff: &MdBlockDiff) -> MutationApplyResult<()> {
     match (base, diff) {
         (_, MdBlockDiff::Replace { .. })
         | (MdBlock::Heading { .. }, MdBlockDiff::Heading { .. })
@@ -317,7 +317,7 @@ fn validate_md_block(base: &MdBlock, diff: &MdBlockDiff) -> MutationApplyResult<
     }
 }
 
-fn apply_blocks_diff(blocks: &[MdBlock], diff: &MdBlocksDiff) -> Vec<MdBlock> {
+async fn apply_blocks_diff(blocks: &[MdBlock], diff: &MdBlocksDiff) -> Vec<MdBlock> {
     let mut slots: Vec<Option<MdBlock>> = blocks.iter().cloned().map(Some).collect();
     for m in &diff.modified {
         if let Some(Some(b)) = slots.get(m.index) {
@@ -343,7 +343,7 @@ fn apply_blocks_diff(blocks: &[MdBlock], diff: &MdBlocksDiff) -> Vec<MdBlock> {
     out
 }
 
-fn apply_block_diff(block: &MdBlock, diff: &MdBlockDiff) -> MdBlock {
+async fn apply_block_diff(block: &MdBlock, diff: &MdBlockDiff) -> MdBlock {
     match diff {
         MdBlockDiff::Replace { block: replacement } => replacement.clone(),
         MdBlockDiff::Heading { level, inlines } => match block {
@@ -387,7 +387,7 @@ fn apply_block_diff(block: &MdBlock, diff: &MdBlockDiff) -> MdBlock {
     }
 }
 
-fn apply_list_items_diff(items: &[Vec<MdBlock>], diff: &MdListItemsDiff) -> Vec<Vec<MdBlock>> {
+async fn apply_list_items_diff(items: &[Vec<MdBlock>], diff: &MdListItemsDiff) -> Vec<Vec<MdBlock>> {
     let mut slots: Vec<Option<Vec<MdBlock>>> = items.iter().cloned().map(Some).collect();
     for m in &diff.modified {
         if let Some(Some(b)) = slots.get(m.index) {
@@ -416,20 +416,20 @@ fn apply_list_items_diff(items: &[Vec<MdBlock>], diff: &MdListItemsDiff) -> Vec<
 
 //#region 🔖️DiffAlgebra
 impl DiffAlgebra<MdSnapshot> for MdDiff {
-    fn inverse(&self, base: &MdSnapshot) -> Self {
+    async fn inverse(&self, base: &MdSnapshot) -> Self {
         MdDiff { blocks: self.blocks.as_ref().map(|d| inverse_blocks_diff(&base.blocks, d)) }
     }
 
-    fn between(base: &MdSnapshot, other: &MdSnapshot) -> Self {
+    async fn between(base: &MdSnapshot, other: &MdSnapshot) -> Self {
         MdDiff { blocks: between_blocks(&base.blocks, &other.blocks) }
     }
 
-    fn is_empty(&self) -> bool {
+    async fn is_empty(&self) -> bool {
         self.blocks.is_none()
     }
 }
 
-fn inverse_blocks_diff(base_blocks: &[MdBlock], diff: &MdBlocksDiff) -> MdBlocksDiff {
+async fn inverse_blocks_diff(base_blocks: &[MdBlock], diff: &MdBlocksDiff) -> MdBlocksDiff {
     let removed: Vec<usize> = diff.added.iter().map(|a| a.index).collect();
     let mut modified = Vec::new();
     for m in &diff.modified {
@@ -448,7 +448,7 @@ fn inverse_blocks_diff(base_blocks: &[MdBlock], diff: &MdBlocksDiff) -> MdBlocks
     MdBlocksDiff { removed, modified, added }
 }
 
-fn inverse_block_diff(current: Option<&MdBlock>, diff: &MdBlockDiff) -> MdBlockDiff {
+async fn inverse_block_diff(current: Option<&MdBlock>, diff: &MdBlockDiff) -> MdBlockDiff {
     let fallback = || MdBlockDiff::Replace { block: current.cloned().unwrap_or(MdBlock::Paragraph { inlines: Vec::new() }) };
     match diff {
         MdBlockDiff::Replace { .. } => fallback(),
@@ -488,7 +488,7 @@ fn inverse_block_diff(current: Option<&MdBlock>, diff: &MdBlockDiff) -> MdBlockD
     }
 }
 
-fn inverse_list_items_diff(base_items: &[Vec<MdBlock>], diff: &MdListItemsDiff) -> MdListItemsDiff {
+async fn inverse_list_items_diff(base_items: &[Vec<MdBlock>], diff: &MdListItemsDiff) -> MdListItemsDiff {
     let removed: Vec<usize> = diff.added.iter().map(|a| a.index).collect();
     let mut modified = Vec::new();
     for m in &diff.modified {
@@ -507,7 +507,7 @@ fn inverse_list_items_diff(base_items: &[Vec<MdBlock>], diff: &MdListItemsDiff) 
     MdListItemsDiff { removed, modified, added }
 }
 
-fn between_blocks(base: &[MdBlock], other: &[MdBlock]) -> Option<MdBlocksDiff> {
+async fn between_blocks(base: &[MdBlock], other: &[MdBlock]) -> Option<MdBlocksDiff> {
     let min_len = base.len().min(other.len());
     let mut modified = Vec::new();
     for i in 0..min_len {
@@ -526,7 +526,7 @@ fn between_blocks(base: &[MdBlock], other: &[MdBlock]) -> Option<MdBlocksDiff> {
     }
 }
 
-fn between_block(base: &MdBlock, other: &MdBlock) -> Option<MdBlockDiff> {
+async fn between_block(base: &MdBlock, other: &MdBlock) -> Option<MdBlockDiff> {
     if base == other {
         return None;
     }
@@ -568,7 +568,7 @@ fn between_block(base: &MdBlock, other: &MdBlock) -> Option<MdBlockDiff> {
 
 /// 🧮️ Naive positional item diff, same recipe-specified rule as `between_blocks`/xml's
 /// `between_children`: pairwise `0..min(len)`, base tail removed, other tail added.
-fn between_list_items(base: &[Vec<MdBlock>], other: &[Vec<MdBlock>]) -> Option<MdListItemsDiff> {
+async fn between_list_items(base: &[Vec<MdBlock>], other: &[Vec<MdBlock>]) -> Option<MdListItemsDiff> {
     let min_len = base.len().min(other.len());
     let mut modified = Vec::new();
     for i in 0..min_len {
@@ -593,7 +593,7 @@ fn between_list_items(base: &[Vec<MdBlock>], other: &[Vec<MdBlock>]) -> Option<M
 /// over `d1`'s removed/added). `transform_block_index`/`simulate_block_mid_origins` mirror xml's
 /// `transform_index`/`simulate_mid_origins` exactly, retyped for `MdBlockAdded`; the `*_item_*`
 /// variants below are the same algorithm again for the `List.items` collection.
-fn transform_block_index(idx: usize, removed: &[usize], added: &[MdBlockAdded]) -> usize {
+async fn transform_block_index(idx: usize, removed: &[usize], added: &[MdBlockAdded]) -> usize {
     let removed_before = removed.iter().filter(|&&r| r < idx).count();
     let pos = idx - removed_before;
     let mut order: Vec<usize> = added.iter().map(|a| a.index).collect();
@@ -614,7 +614,7 @@ enum BlockOrigin {
     Added(usize),
 }
 
-fn simulate_block_mid_origins(base_len: usize, removed: &[usize], added: &[MdBlockAdded]) -> Vec<BlockOrigin> {
+async fn simulate_block_mid_origins(base_len: usize, removed: &[usize], added: &[MdBlockAdded]) -> Vec<BlockOrigin> {
     let mut mid: Vec<BlockOrigin> = (0..base_len).filter(|i| !removed.contains(i)).map(BlockOrigin::Base).collect();
     let mut order: Vec<(usize, usize)> = added.iter().enumerate().map(|(k, a)| (a.index, k)).collect();
     order.sort_by_key(|(idx, _)| *idx);
@@ -625,7 +625,7 @@ fn simulate_block_mid_origins(base_len: usize, removed: &[usize], added: &[MdBlo
     mid
 }
 
-fn absorb_block_diff(a: MdBlockDiff, b: MdBlockDiff) -> MdBlockDiff {
+async fn absorb_block_diff(a: MdBlockDiff, b: MdBlockDiff) -> MdBlockDiff {
     match (a, b) {
         (_, MdBlockDiff::Replace { block }) => MdBlockDiff::Replace { block },
         (MdBlockDiff::Replace { block }, b) => MdBlockDiff::Replace { block: apply_block_diff(&block, &b) },
@@ -657,7 +657,7 @@ fn absorb_block_diff(a: MdBlockDiff, b: MdBlockDiff) -> MdBlockDiff {
     }
 }
 
-fn absorb_blocks_diff(d1: MdBlocksDiff, d2: MdBlocksDiff) -> MdBlocksDiff {
+async fn absorb_blocks_diff(d1: MdBlocksDiff, d2: MdBlocksDiff) -> MdBlocksDiff {
     let d1_ref_max = d1.removed.iter().copied().chain(d1.modified.iter().map(|m| m.index)).max();
     let mut base_len = d1_ref_max.map(|m| m + 1).unwrap_or(0);
     let mid_len_needed_by_d1 = d1.added.iter().map(|a| a.index + 1).max().unwrap_or(0);
@@ -730,7 +730,7 @@ fn absorb_blocks_diff(d1: MdBlocksDiff, d2: MdBlocksDiff) -> MdBlocksDiff {
     MdBlocksDiff { removed, modified, added }
 }
 
-fn transform_item_index(idx: usize, removed: &[usize], added: &[MdListItemAdded]) -> usize {
+async fn transform_item_index(idx: usize, removed: &[usize], added: &[MdListItemAdded]) -> usize {
     let removed_before = removed.iter().filter(|&&r| r < idx).count();
     let pos = idx - removed_before;
     let mut order: Vec<usize> = added.iter().map(|a| a.index).collect();
@@ -751,7 +751,7 @@ enum ItemOrigin {
     Added(usize),
 }
 
-fn simulate_item_mid_origins(base_len: usize, removed: &[usize], added: &[MdListItemAdded]) -> Vec<ItemOrigin> {
+async fn simulate_item_mid_origins(base_len: usize, removed: &[usize], added: &[MdListItemAdded]) -> Vec<ItemOrigin> {
     let mut mid: Vec<ItemOrigin> = (0..base_len).filter(|i| !removed.contains(i)).map(ItemOrigin::Base).collect();
     let mut order: Vec<(usize, usize)> = added.iter().enumerate().map(|(k, a)| (a.index, k)).collect();
     order.sort_by_key(|(idx, _)| *idx);
@@ -762,7 +762,7 @@ fn simulate_item_mid_origins(base_len: usize, removed: &[usize], added: &[MdList
     mid
 }
 
-fn absorb_list_items_diff(d1: MdListItemsDiff, d2: MdListItemsDiff) -> MdListItemsDiff {
+async fn absorb_list_items_diff(d1: MdListItemsDiff, d2: MdListItemsDiff) -> MdListItemsDiff {
     let d1_ref_max = d1.removed.iter().copied().chain(d1.modified.iter().map(|m| m.index)).max();
     let mut base_len = d1_ref_max.map(|m| m + 1).unwrap_or(0);
     let mid_len_needed_by_d1 = d1.added.iter().map(|a| a.index + 1).max().unwrap_or(0);
@@ -839,7 +839,7 @@ fn absorb_list_items_diff(d1: MdListItemsDiff, d2: MdListItemsDiff) -> MdListIte
 //#region 🔖️SetSnapshot
 /// 🧩️ Builds the sparse field-by-field diff for a `SetSnapshot` mutation. No `snapshot:
 /// Option<MdSnapshot>` full-replace slot -- this IS `MdDiff::between`.
-pub fn diff_set_snapshot(base: &MdSnapshot, next: &MdSnapshot) -> MdDiff {
+pub async fn diff_set_snapshot(base: &MdSnapshot, next: &MdSnapshot) -> MdDiff {
     MdDiff::between(base, next)
 }
 //#endregion 🔖️SetSnapshot
@@ -881,32 +881,32 @@ pub fn diff_set_snapshot(base: &MdSnapshot, next: &MdSnapshot) -> MdDiff {
 /// bracket-depth invariant `encode_option`'s `"[1,{value}]"` wrapping already gives every OTHER
 /// triple-in-triple embedding in this file for free.
 //#region 🔖️Primitives
-pub(crate) fn hex_encode(bytes: &[u8]) -> String {
+pub(crate) async fn hex_encode(bytes: &[u8]) -> String {
     bytes.iter().map(|b| format!("{b:02x}")).collect()
 }
-pub(crate) fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
+pub(crate) async fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
     if s.len() % 2 != 0 {
         return Err(format!("odd hex length: {s:?}"));
     }
     (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()
 }
-pub(crate) fn enc_str(s: &str) -> String {
+pub(crate) async fn enc_str(s: &str) -> String {
     hex_encode(s.as_bytes())
 }
-pub(crate) fn dec_str(s: &str) -> Result<String, String> {
+pub(crate) async fn dec_str(s: &str) -> Result<String, String> {
     String::from_utf8(hex_decode(s)?).map_err(|e| e.to_string())
 }
-pub(crate) fn parse_usize(s: &str) -> Result<usize, String> {
+pub(crate) async fn parse_usize(s: &str) -> Result<usize, String> {
     s.parse().map_err(|e: std::num::ParseIntError| e.to_string())
 }
-pub(crate) fn enc_bool(b: bool) -> &'static str {
+pub(crate) async fn enc_bool(b: bool) -> &'static str {
     if b {
         "1"
     } else {
         "0"
     }
 }
-pub(crate) fn dec_bool(s: &str) -> Result<bool, String> {
+pub(crate) async fn dec_bool(s: &str) -> Result<bool, String> {
     match s {
         "1" => Ok(true),
         "0" => Ok(false),
@@ -914,7 +914,7 @@ pub(crate) fn dec_bool(s: &str) -> Result<bool, String> {
     }
 }
 
-pub(crate) fn split_top_level(s: &str, sep: char) -> Vec<&str> {
+pub(crate) async fn split_top_level(s: &str, sep: char) -> Vec<&str> {
     if s.is_empty() {
         return Vec::new();
     }
@@ -935,16 +935,16 @@ pub(crate) fn split_top_level(s: &str, sep: char) -> Vec<&str> {
     out.push(&s[start..]);
     out
 }
-pub(crate) fn strip_brackets(s: &str) -> Result<&str, String> {
+pub(crate) async fn strip_brackets(s: &str) -> Result<&str, String> {
     s.strip_prefix('[').and_then(|s| s.strip_suffix(']')).ok_or_else(|| format!("expected [...], got {s:?}"))
 }
-pub(crate) fn encode_option<T>(opt: &Option<T>, enc: impl Fn(&T) -> String) -> String {
+pub(crate) async fn encode_option<T>(opt: &Option<T>, enc: impl Fn(&T) -> String) -> String {
     match opt {
         None => "[0]".to_string(),
         Some(v) => format!("[1,{}]", enc(v)),
     }
 }
-pub(crate) fn decode_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Option<T>, String> {
+pub(crate) async fn decode_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Option<T>, String> {
     let inner = strip_brackets(s)?;
     match split_top_level(inner, ',').as_slice() {
         ["0"] => Ok(None),
@@ -961,21 +961,21 @@ pub(crate) fn decode_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>)
 /// `store::pack_rt::write_varint_u64`/`store::ByteReader` rather than reinventing varint encode/
 /// decode. `pub(crate)` so the mutations sibling can reuse these rather than duplicating them a
 /// second time in that file (same intra-artifact-reuse split the TEXT codec primitives above use).
-pub(crate) fn write_bool_bin(out: &mut Vec<u8>, b: bool) {
+pub(crate) async fn write_bool_bin(out: &mut Vec<u8>, b: bool) {
     out.push(if b { 1 } else { 0 });
 }
-pub(crate) fn read_bool_bin(reader: &mut store::ByteReader<'_>) -> Result<bool, String> {
+pub(crate) async fn read_bool_bin(reader: &mut store::ByteReader<'_>) -> Result<bool, String> {
     Ok(reader.read_u8().map_err(|e| e.to_string())? != 0)
 }
-pub(crate) fn write_str_bin(out: &mut Vec<u8>, s: &str) {
+pub(crate) async fn write_str_bin(out: &mut Vec<u8>, s: &str) {
     store::pack_rt::write_varint_u64(out, s.len() as u64);
     out.extend_from_slice(s.as_bytes());
 }
-pub(crate) fn read_str_bin(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
+pub(crate) async fn read_str_bin(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
     let len = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
     String::from_utf8(reader.read_bytes(len).map_err(|e| e.to_string())?.to_vec()).map_err(|e| e.to_string())
 }
-pub(crate) fn write_option_bin<T>(out: &mut Vec<u8>, opt: &Option<T>, enc: impl FnOnce(&T, &mut Vec<u8>)) {
+pub(crate) async fn write_option_bin<T>(out: &mut Vec<u8>, opt: &Option<T>, enc: impl FnOnce(&T, &mut Vec<u8>)) {
     match opt {
         None => out.push(0),
         Some(v) => {
@@ -984,7 +984,7 @@ pub(crate) fn write_option_bin<T>(out: &mut Vec<u8>, opt: &Option<T>, enc: impl 
         }
     }
 }
-pub(crate) fn read_option_bin<T>(reader: &mut store::ByteReader<'_>, dec: impl FnOnce(&mut store::ByteReader<'_>) -> Result<T, String>) -> Result<Option<T>, String> {
+pub(crate) async fn read_option_bin<T>(reader: &mut store::ByteReader<'_>, dec: impl FnOnce(&mut store::ByteReader<'_>) -> Result<T, String>) -> Result<Option<T>, String> {
     match reader.read_u8().map_err(|e| e.to_string())? {
         0 => Ok(None),
         1 => Ok(Some(dec(reader)?)),
@@ -993,7 +993,7 @@ pub(crate) fn read_option_bin<T>(reader: &mut store::ByteReader<'_>, dec: impl F
 }
 /// 🏳️ Tri-state `Option<Option<T>>` binary wrapper (`MdBlockDiff::List.start`/`CodeBlock.info`) —
 /// `0`=unchanged (`None`), `1`=cleared (`Some(None)`), `2`=set (`Some(Some(v))`).
-pub(crate) fn write_tristate_bin<T>(out: &mut Vec<u8>, opt: &Option<Option<T>>, enc: impl FnOnce(&T, &mut Vec<u8>)) {
+pub(crate) async fn write_tristate_bin<T>(out: &mut Vec<u8>, opt: &Option<Option<T>>, enc: impl FnOnce(&T, &mut Vec<u8>)) {
     match opt {
         None => out.push(0),
         Some(None) => out.push(1),
@@ -1003,7 +1003,7 @@ pub(crate) fn write_tristate_bin<T>(out: &mut Vec<u8>, opt: &Option<Option<T>>, 
         }
     }
 }
-pub(crate) fn read_tristate_bin<T>(reader: &mut store::ByteReader<'_>, dec: impl FnOnce(&mut store::ByteReader<'_>) -> Result<T, String>) -> Result<Option<Option<T>>, String> {
+pub(crate) async fn read_tristate_bin<T>(reader: &mut store::ByteReader<'_>, dec: impl FnOnce(&mut store::ByteReader<'_>) -> Result<T, String>) -> Result<Option<Option<T>>, String> {
     match reader.read_u8().map_err(|e| e.to_string())? {
         0 => Ok(None),
         1 => Ok(Some(None)),
@@ -1015,7 +1015,7 @@ pub(crate) fn read_tristate_bin<T>(reader: &mut store::ByteReader<'_>, dec: impl
 
 //#region 🔖️InlineCodec
 /// 🌳 `MdInline`, tag range A-I (see file doc comment) — order matches its declaration.
-pub(crate) fn enc_inline(n: &MdInline) -> String {
+pub(crate) async fn enc_inline(n: &MdInline) -> String {
     match n {
         MdInline::Text { text } => format!("A[{}]", enc_str(text)),
         MdInline::Emphasis { inlines } => format!("B[{}]", enc_inline_list(inlines)),
@@ -1032,7 +1032,7 @@ pub(crate) fn enc_inline(n: &MdInline) -> String {
         MdInline::HtmlInline { raw } => format!("I[{}]", enc_str(raw)),
     }
 }
-pub(crate) fn dec_inline(s: &str) -> Result<MdInline, String> {
+pub(crate) async fn dec_inline(s: &str) -> Result<MdInline, String> {
     let (tag, rest) = s.split_at(1);
     let inner = strip_brackets(rest)?;
     match tag {
@@ -1056,10 +1056,10 @@ pub(crate) fn dec_inline(s: &str) -> Result<MdInline, String> {
         other => Err(format!("inline: unknown tag {other:?}")),
     }
 }
-pub(crate) fn enc_inline_list(list: &[MdInline]) -> String {
+pub(crate) async fn enc_inline_list(list: &[MdInline]) -> String {
     format!("[{}]", list.iter().map(enc_inline).collect::<Vec<_>>().join(","))
 }
-pub(crate) fn dec_inline_list(s: &str) -> Result<Vec<MdInline>, String> {
+pub(crate) async fn dec_inline_list(s: &str) -> Result<Vec<MdInline>, String> {
     split_top_level(strip_brackets(s)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_inline).collect()
 }
 
@@ -1067,7 +1067,7 @@ pub(crate) fn dec_inline_list(s: &str) -> Result<Vec<MdInline>, String> {
 /// 🧪️ P2-FG1: real recursive binary twin of [`enc_inline`]/[`dec_inline`] above — same 0-8
 /// ordinal order as the text codec's `A`-`I` tag range, backing the upgraded `OpBinary`/`DiffCodec`
 /// frames (`../../🧬️mutations/🦀️component.rs`, `#region 🔖️TopLevel` below).
-pub(crate) fn enc_inline_bin(n: &MdInline, out: &mut Vec<u8>) {
+pub(crate) async fn enc_inline_bin(n: &MdInline, out: &mut Vec<u8>) {
     match n {
         MdInline::Text { text } => {
             out.push(0);
@@ -1105,7 +1105,7 @@ pub(crate) fn enc_inline_bin(n: &MdInline, out: &mut Vec<u8>) {
         }
     }
 }
-pub(crate) fn dec_inline_bin(reader: &mut store::ByteReader<'_>) -> Result<MdInline, String> {
+pub(crate) async fn dec_inline_bin(reader: &mut store::ByteReader<'_>) -> Result<MdInline, String> {
     let tag = reader.read_u8().map_err(|e| e.to_string())?;
     match tag {
         0 => Ok(MdInline::Text { text: read_str_bin(reader)? }),
@@ -1130,13 +1130,13 @@ pub(crate) fn dec_inline_bin(reader: &mut store::ByteReader<'_>) -> Result<MdInl
         other => Err(format!("inline binary: unknown tag {other}")),
     }
 }
-pub(crate) fn enc_inline_list_bin(list: &[MdInline], out: &mut Vec<u8>) {
+pub(crate) async fn enc_inline_list_bin(list: &[MdInline], out: &mut Vec<u8>) {
     store::pack_rt::write_varint_u64(out, list.len() as u64);
     for n in list {
         enc_inline_bin(n, out);
     }
 }
-pub(crate) fn dec_inline_list_bin(reader: &mut store::ByteReader<'_>) -> Result<Vec<MdInline>, String> {
+pub(crate) async fn dec_inline_list_bin(reader: &mut store::ByteReader<'_>) -> Result<Vec<MdInline>, String> {
     let count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     (0..count).map(|_| dec_inline_bin(reader)).collect()
 }
@@ -1145,7 +1145,7 @@ pub(crate) fn dec_inline_list_bin(reader: &mut store::ByteReader<'_>) -> Result<
 
 //#region 🔖️BlockCodec
 /// 🧱 `MdBlock`, tag range J-P (see file doc comment) — order matches its declaration.
-pub(crate) fn enc_block(b: &MdBlock) -> String {
+pub(crate) async fn enc_block(b: &MdBlock) -> String {
     match b {
         MdBlock::Heading { level, inlines } => format!("J[{},{}]", level, enc_inline_list(inlines)),
         MdBlock::Paragraph { inlines } => format!("K[{}]", enc_inline_list(inlines)),
@@ -1156,7 +1156,7 @@ pub(crate) fn enc_block(b: &MdBlock) -> String {
         MdBlock::HtmlBlock { raw } => format!("P[{}]", enc_str(raw)),
     }
 }
-pub(crate) fn dec_block(s: &str) -> Result<MdBlock, String> {
+pub(crate) async fn dec_block(s: &str) -> Result<MdBlock, String> {
     let (tag, rest) = s.split_at(1);
     let inner = strip_brackets(rest)?;
     match tag {
@@ -1182,23 +1182,23 @@ pub(crate) fn dec_block(s: &str) -> Result<MdBlock, String> {
         other => Err(format!("block: unknown tag {other:?}")),
     }
 }
-pub(crate) fn enc_block_list(list: &[MdBlock]) -> String {
+pub(crate) async fn enc_block_list(list: &[MdBlock]) -> String {
     format!("[{}]", list.iter().map(enc_block).collect::<Vec<_>>().join(","))
 }
-pub(crate) fn dec_block_list(s: &str) -> Result<Vec<MdBlock>, String> {
+pub(crate) async fn dec_block_list(s: &str) -> Result<Vec<MdBlock>, String> {
     split_top_level(strip_brackets(s)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_block).collect()
 }
-pub(crate) fn enc_item_list(items: &[Vec<MdBlock>]) -> String {
+pub(crate) async fn enc_item_list(items: &[Vec<MdBlock>]) -> String {
     format!("[{}]", items.iter().map(|item| enc_block_list(item)).collect::<Vec<_>>().join(","))
 }
-pub(crate) fn dec_item_list(s: &str) -> Result<Vec<Vec<MdBlock>>, String> {
+pub(crate) async fn dec_item_list(s: &str) -> Result<Vec<Vec<MdBlock>>, String> {
     split_top_level(strip_brackets(s)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_block_list).collect()
 }
 
 //#region 🔖️BlockBinaryCodec
 /// 🧪️ P2-FG1: real recursive binary twin of [`enc_block`]/[`dec_block`] above — same 0-6 ordinal
 /// order as the text codec's `J`-`P` tag range.
-pub(crate) fn enc_block_bin(b: &MdBlock, out: &mut Vec<u8>) {
+pub(crate) async fn enc_block_bin(b: &MdBlock, out: &mut Vec<u8>) {
     match b {
         MdBlock::Heading { level, inlines } => {
             out.push(0);
@@ -1232,7 +1232,7 @@ pub(crate) fn enc_block_bin(b: &MdBlock, out: &mut Vec<u8>) {
         }
     }
 }
-pub(crate) fn dec_block_bin(reader: &mut store::ByteReader<'_>) -> Result<MdBlock, String> {
+pub(crate) async fn dec_block_bin(reader: &mut store::ByteReader<'_>) -> Result<MdBlock, String> {
     let tag = reader.read_u8().map_err(|e| e.to_string())?;
     match tag {
         0 => {
@@ -1259,23 +1259,23 @@ pub(crate) fn dec_block_bin(reader: &mut store::ByteReader<'_>) -> Result<MdBloc
         other => Err(format!("block binary: unknown tag {other}")),
     }
 }
-pub(crate) fn enc_block_list_bin(list: &[MdBlock], out: &mut Vec<u8>) {
+pub(crate) async fn enc_block_list_bin(list: &[MdBlock], out: &mut Vec<u8>) {
     store::pack_rt::write_varint_u64(out, list.len() as u64);
     for b in list {
         enc_block_bin(b, out);
     }
 }
-pub(crate) fn dec_block_list_bin(reader: &mut store::ByteReader<'_>) -> Result<Vec<MdBlock>, String> {
+pub(crate) async fn dec_block_list_bin(reader: &mut store::ByteReader<'_>) -> Result<Vec<MdBlock>, String> {
     let count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     (0..count).map(|_| dec_block_bin(reader)).collect()
 }
-pub(crate) fn enc_item_list_bin(items: &[Vec<MdBlock>], out: &mut Vec<u8>) {
+pub(crate) async fn enc_item_list_bin(items: &[Vec<MdBlock>], out: &mut Vec<u8>) {
     store::pack_rt::write_varint_u64(out, items.len() as u64);
     for item in items {
         enc_block_list_bin(item, out);
     }
 }
-pub(crate) fn dec_item_list_bin(reader: &mut store::ByteReader<'_>) -> Result<Vec<Vec<MdBlock>>, String> {
+pub(crate) async fn dec_item_list_bin(reader: &mut store::ByteReader<'_>) -> Result<Vec<Vec<MdBlock>>, String> {
     let count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     (0..count).map(|_| dec_block_list_bin(reader)).collect()
 }
@@ -1285,7 +1285,7 @@ pub(crate) fn dec_item_list_bin(reader: &mut store::ByteReader<'_>) -> Result<Ve
 //#region 🔖️DiffValueCodecs
 /// 🌳 `MdBlockDiff`, tag range Q-X (see file doc comment) — order matches its declaration, `X` =
 /// `Replace` (the kind-change fallback, mirrors `SvgNodeDiff::Replace`'s `R`).
-pub(crate) fn enc_block_diff(d: &MdBlockDiff) -> String {
+pub(crate) async fn enc_block_diff(d: &MdBlockDiff) -> String {
     match d {
         MdBlockDiff::Heading { level, inlines } => {
             format!("Q[{},{}]", encode_option(level, |v| v.to_string()), encode_option(inlines, |v| enc_inline_list(v)))
@@ -1305,7 +1305,7 @@ pub(crate) fn enc_block_diff(d: &MdBlockDiff) -> String {
         MdBlockDiff::Replace { block } => format!("X[{}]", enc_block(block)),
     }
 }
-pub(crate) fn dec_block_diff(s: &str) -> Result<MdBlockDiff, String> {
+pub(crate) async fn dec_block_diff(s: &str) -> Result<MdBlockDiff, String> {
     let (tag, rest) = s.split_at(1);
     let inner = strip_brackets(rest)?;
     match tag {
@@ -1340,13 +1340,13 @@ pub(crate) fn dec_block_diff(s: &str) -> Result<MdBlockDiff, String> {
 
 /// 🌳 `MdBlocksDiff` (BARE triple, no tag) — reused verbatim by `MdDiff.blocks`, `BlockQuote.blocks`,
 /// and (via `MdListItemsDiff`) a `List` item's own content.
-fn enc_blocks_diff(d: &MdBlocksDiff) -> String {
+async fn enc_blocks_diff(d: &MdBlocksDiff) -> String {
     let removed = d.removed.iter().map(|i| i.to_string()).collect::<Vec<_>>().join(",");
     let modified = d.modified.iter().map(|m| format!("{}:{}", m.index, enc_block_diff(&m.diff))).collect::<Vec<_>>().join(",");
     let added = d.added.iter().map(|a| format!("{}:{}", a.index, enc_block(&a.item))).collect::<Vec<_>>().join(",");
     format!("[{removed}];[{modified}];[{added}]")
 }
-fn dec_blocks_diff(body: &str) -> Result<MdBlocksDiff, String> {
+async fn dec_blocks_diff(body: &str) -> Result<MdBlocksDiff, String> {
     let three = split_top_level(body, ';');
     let [removed_s, modified_s, added_s] = three.as_slice() else { return Err(format!("blocks diff: expected 3 sections, got {}", three.len())) };
     let removed = split_top_level(strip_brackets(removed_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(parse_usize).collect::<Result<Vec<_>, String>>()?;
@@ -1373,13 +1373,13 @@ fn dec_blocks_diff(body: &str) -> Result<MdBlocksDiff, String> {
 /// `modified` entries wrap their nested `MdBlocksDiff` in an EXTRA bracket pair (`{}:[{}]`, not
 /// `{}:{}`) — see the region doc comment's "one structural device worth flagging" note for why a
 /// bare triple embedded directly (not via `encode_option` or a tag-prefixed enum) needs it.
-fn enc_list_items_diff(d: &MdListItemsDiff) -> String {
+async fn enc_list_items_diff(d: &MdListItemsDiff) -> String {
     let removed = d.removed.iter().map(|i| i.to_string()).collect::<Vec<_>>().join(",");
     let modified = d.modified.iter().map(|m| format!("{}:[{}]", m.index, enc_blocks_diff(&m.diff))).collect::<Vec<_>>().join(",");
     let added = d.added.iter().map(|a| format!("{}:{}", a.index, enc_block_list(&a.item))).collect::<Vec<_>>().join(",");
     format!("[{removed}];[{modified}];[{added}]")
 }
-fn dec_list_items_diff(body: &str) -> Result<MdListItemsDiff, String> {
+async fn dec_list_items_diff(body: &str) -> Result<MdListItemsDiff, String> {
     let three = split_top_level(body, ';');
     let [removed_s, modified_s, added_s] = three.as_slice() else { return Err(format!("list items diff: expected 3 sections, got {}", three.len())) };
     let removed = split_top_level(strip_brackets(removed_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(parse_usize).collect::<Result<Vec<_>, String>>()?;
@@ -1409,7 +1409,7 @@ fn dec_list_items_diff(body: &str) -> Result<MdListItemsDiff, String> {
 /// `DiffCodec::encode_diff`/`decode_diff` below. `List`/`CodeBlock`'s tri-state fields use
 /// [`write_tristate_bin`]/[`read_tristate_bin`]; every other `Option<T>` field uses the plain
 /// [`write_option_bin`]/[`read_option_bin`] pair.
-pub(crate) fn enc_block_diff_bin(d: &MdBlockDiff, out: &mut Vec<u8>) {
+pub(crate) async fn enc_block_diff_bin(d: &MdBlockDiff, out: &mut Vec<u8>) {
     match d {
         MdBlockDiff::Heading { level, inlines } => {
             out.push(0);
@@ -1447,7 +1447,7 @@ pub(crate) fn enc_block_diff_bin(d: &MdBlockDiff, out: &mut Vec<u8>) {
         }
     }
 }
-pub(crate) fn dec_block_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<MdBlockDiff, String> {
+pub(crate) async fn dec_block_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<MdBlockDiff, String> {
     let tag = reader.read_u8().map_err(|e| e.to_string())?;
     match tag {
         0 => {
@@ -1478,7 +1478,7 @@ pub(crate) fn dec_block_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<M
 
 /// 🌳 `MdBlocksDiff` binary twin of [`enc_blocks_diff`]/[`dec_blocks_diff`] — three varint-counted,
 /// recursively-encoded lists (removed/modified/added), genuinely structured binary.
-pub(crate) fn enc_blocks_diff_bin(d: &MdBlocksDiff, out: &mut Vec<u8>) {
+pub(crate) async fn enc_blocks_diff_bin(d: &MdBlocksDiff, out: &mut Vec<u8>) {
     store::pack_rt::write_varint_u64(out, d.removed.len() as u64);
     for idx in &d.removed {
         store::pack_rt::write_varint_u64(out, *idx as u64);
@@ -1494,7 +1494,7 @@ pub(crate) fn enc_blocks_diff_bin(d: &MdBlocksDiff, out: &mut Vec<u8>) {
         enc_block_bin(&entry.item, out);
     }
 }
-pub(crate) fn dec_blocks_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<MdBlocksDiff, String> {
+pub(crate) async fn dec_blocks_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<MdBlocksDiff, String> {
     let removed_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut removed = Vec::with_capacity(removed_count as usize);
     for _ in 0..removed_count {
@@ -1519,7 +1519,7 @@ pub(crate) fn dec_blocks_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<
 
 /// 🌳 `MdListItemsDiff` binary twin of [`enc_list_items_diff`]/[`dec_list_items_diff`] — same
 /// 3-part shape, `modified.diff` a recursive `MdBlocksDiff`, `added.item` a `Vec<MdBlock>`.
-pub(crate) fn enc_list_items_diff_bin(d: &MdListItemsDiff, out: &mut Vec<u8>) {
+pub(crate) async fn enc_list_items_diff_bin(d: &MdListItemsDiff, out: &mut Vec<u8>) {
     store::pack_rt::write_varint_u64(out, d.removed.len() as u64);
     for idx in &d.removed {
         store::pack_rt::write_varint_u64(out, *idx as u64);
@@ -1535,7 +1535,7 @@ pub(crate) fn enc_list_items_diff_bin(d: &MdListItemsDiff, out: &mut Vec<u8>) {
         enc_block_list_bin(&entry.item, out);
     }
 }
-pub(crate) fn dec_list_items_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<MdListItemsDiff, String> {
+pub(crate) async fn dec_list_items_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<MdListItemsDiff, String> {
     let removed_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut removed = Vec::with_capacity(removed_count as usize);
     for _ in 0..removed_count {
@@ -1560,14 +1560,14 @@ pub(crate) fn dec_list_items_diff_bin(reader: &mut store::ByteReader<'_>) -> Res
 //#endregion 🔖️DiffValueBinaryCodecs
 
 //#region 🔖️TopLevel
-fn print_md_diff(d: &MdDiff) -> String {
+async fn print_md_diff(d: &MdDiff) -> String {
     let mut tokens: Vec<String> = Vec::new();
     if let Some(v) = &d.blocks {
         tokens.push(format!("blocks={}", enc_blocks_diff(v)));
     }
     tokens.join(" ")
 }
-fn parse_md_diff(line: &str) -> Result<MdDiff, String> {
+async fn parse_md_diff(line: &str) -> Result<MdDiff, String> {
     let mut d = MdDiff::default();
     if line.is_empty() {
         return Ok(d);
@@ -1583,24 +1583,24 @@ fn parse_md_diff(line: &str) -> Result<MdDiff, String> {
 }
 
 impl protocol::DiffCodec for MdDiff {
-    fn print_diff(&self) -> String {
+    async fn print_diff(&self) -> String {
         print_md_diff(self)
     }
-    fn parse_diff(line: &str) -> Result<Self, store::TextError> {
+    async fn parse_diff(line: &str) -> Result<Self, store::TextError> {
         parse_md_diff(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
     /// 🧪️ P2-FG1: REAL binary frame (`format u8 | has_value u8 | blocks-diff payload`), matching
     /// `../💾️binary/📡️component.protocol.semio`'s `header fixed 2` + `chain payload bytes` shape —
     /// upgraded from F6's `print_diff().into_bytes()` text-as-binary shortcut (100% of stdio's
     /// `DiffCodec` impls were still on that shortcut per the P2-W0 census).
-    fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    async fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         let mut out = vec![store::pack_rt::OP_BINARY_FORMAT, if self.blocks.is_some() { 1 } else { 0 }];
         if let Some(blocks) = &self.blocks {
             enc_blocks_diff_bin(blocks, &mut out);
         }
         Ok(out)
     }
-    fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    async fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         let mut reader = store::ByteReader::new(bytes);
         let _format = reader.read_u8().map_err(|e| protocol::ProtocolError::Malformed { what: "diff format", offset: 0, detail: e.to_string() })?;
         let has_value = reader.read_u8().map_err(|e| protocol::ProtocolError::Malformed { what: "diff has_value", offset: 1, detail: e.to_string() })?;
@@ -1616,7 +1616,7 @@ impl protocol::DiffCodec for MdDiff {
 /// `diff_codec_text_binary_roundtrip_law` below AND by `⚙️engine/🦀️component.rs`'s
 /// `diff_grammar_conformance_law`/`protocol_walk_law` conformance tests.
 #[cfg(test)]
-fn demo_snapshot(blocks: Vec<MdBlock>) -> MdSnapshot {
+async fn demo_snapshot(blocks: Vec<MdBlock>) -> MdSnapshot {
     MdSnapshot { schema: crate::artifacts::md::STDIO_MD_DOCUMENT_SCHEMA.into(), blocks }
 }
 
@@ -1624,7 +1624,7 @@ fn demo_snapshot(blocks: Vec<MdBlock>) -> MdSnapshot {
 /// `Link`/`Image`), with `Emphasis`/`Strong` nesting another variant inside themselves so the
 /// recursive `enc_inline_list`/`dec_inline_list` path gets exercised too.
 #[cfg(test)]
-fn all_inline_kinds() -> Vec<MdInline> {
+async fn all_inline_kinds() -> Vec<MdInline> {
     vec![
         MdInline::Text { text: "hi".into() },
         MdInline::Emphasis { inlines: vec![MdInline::Text { text: "em".into() }] },
@@ -1651,7 +1651,7 @@ fn all_inline_kinds() -> Vec<MdInline> {
 /// show one of {removed-tail, added-tail} per single call. `md_a[6]`/`md_b[6]` are IDENTICAL
 /// (proves an unchanged block correctly produces no diff entry at all).
 #[cfg(test)]
-fn md_a() -> Vec<MdBlock> {
+async fn md_a() -> Vec<MdBlock> {
     vec![
         MdBlock::Heading { level: 1, inlines: vec![MdInline::Text { text: "Intro".into() }] },
         MdBlock::Paragraph { inlines: vec![MdInline::Text { text: "para one".into() }, MdInline::SoftBreak] },
@@ -1670,7 +1670,7 @@ fn md_a() -> Vec<MdBlock> {
     ]
 }
 #[cfg(test)]
-fn md_b() -> Vec<MdBlock> {
+async fn md_b() -> Vec<MdBlock> {
     vec![
         MdBlock::Heading { level: 2, inlines: all_inline_kinds() },
         MdBlock::Paragraph { inlines: vec![MdInline::Text { text: "para one CHANGED".into() }] },
@@ -1700,7 +1700,7 @@ fn md_b() -> Vec<MdBlock> {
 /// (two `ThematicBreak`s are always structurally equal, per that variant's own doc comment) so it
 /// gets one manually-constructed case here instead.
 #[cfg(test)]
-pub(crate) fn demo_diff_cases() -> Vec<MdDiff> {
+pub(crate) async fn demo_diff_cases() -> Vec<MdDiff> {
     let a = demo_snapshot(md_a());
     let b = demo_snapshot(md_b());
     let empty = demo_snapshot(Vec::new());
@@ -1740,7 +1740,7 @@ mod handcrafted_diff_codec_tests {
     /// 🧪️ F6/P2-FG1: `DiffCodec` round-trip laws over the hand-rolled `MdDiff` grammar — see
     /// `demo_diff_cases()`'s own doc comment for exactly what each case exercises.
     #[test]
-    fn diff_codec_text_binary_roundtrip_law() {
+    async fn diff_codec_text_binary_roundtrip_law() {
         for d in demo_diff_cases() {
             let printed = d.print_diff();
             assert!(!printed.contains('\n'), "print_diff must be one line, got {printed:?}");

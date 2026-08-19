@@ -33,7 +33,7 @@ pub struct RemodelBounds {
 /// 📦️ `MeshData::aabb()` returns `[INFINITY; 3]`/`[NEG_INFINITY; 3]` for an empty mesh (no
 /// vertices to fold over); normalized here to a zero box so an empty/default snapshot infers a
 /// clean, serializable `RemodelBounds::default()` rather than propagating infinities.
-pub fn compute_remodel_bounds(snapshot: &RemodelSnapshot) -> RemodelBounds {
+pub async fn compute_remodel_bounds(snapshot: &RemodelSnapshot) -> RemodelBounds {
     let Some(mesh) = remodel_mesh_workspace(&snapshot.results.mesh.mesh) else {
         return RemodelBounds { bounding_box: RemodelBoundingBox::default(), vertex_count: 0, face_count: 0 };
     };
@@ -57,13 +57,13 @@ mod tests {
     use semio_framework::MeshData;
 
     #[test]
-    fn empty_mesh_yields_a_zero_bounds() {
+    async fn empty_mesh_yields_a_zero_bounds() {
         let bounds = compute_remodel_bounds(&RemodelSnapshot::default());
         assert_eq!(bounds, RemodelBounds::default());
     }
 
     #[test]
-    fn a_single_triangle_bounds_and_counts_exactly() {
+    async fn a_single_triangle_bounds_and_counts_exactly() {
         let mut snapshot = RemodelSnapshot::default();
         snapshot.results.mesh.mesh = mint_and_stash_mesh(MeshData { positions: vec![-1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 2.0, 0.0], indices: vec![0, 1, 2], ..MeshData::default() });
         let bounds = compute_remodel_bounds(&snapshot);
@@ -74,7 +74,7 @@ mod tests {
     }
 
     #[test]
-    fn bounds_is_deterministic() {
+    async fn bounds_is_deterministic() {
         let mut snapshot = RemodelSnapshot::default();
         snapshot.results.mesh.mesh = mint_and_stash_mesh(MeshData { positions: vec![0.0, 0.0, 0.0, 1.0, 1.0, 1.0], ..MeshData::default() });
         assert_eq!(compute_remodel_bounds(&snapshot), compute_remodel_bounds(&snapshot));

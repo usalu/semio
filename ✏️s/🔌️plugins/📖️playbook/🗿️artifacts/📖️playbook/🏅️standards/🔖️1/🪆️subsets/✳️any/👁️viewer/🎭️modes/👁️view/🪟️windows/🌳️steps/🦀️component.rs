@@ -23,7 +23,7 @@ pub const PLAYBOOK_VIEW_BODY_STEPS: &str = "playbook.view.steps";
 /// id/body-key (the kit's own id/body-key are a generic `"framework.window.tree"`, shared across every
 /// app that composes it — each composing app restamps both, exactly like `steps::render` below reuses
 /// the kit's `render` unmodified).
-pub fn definition() -> WindowKindDefinition {
+pub async fn definition() -> WindowKindDefinition {
     let mut definition = TreeWindowKit::window_kind();
     definition.id = PLAYBOOK_VIEW_WINDOW_STEPS.into();
     definition.body_key = PLAYBOOK_VIEW_BODY_STEPS.into();
@@ -35,7 +35,7 @@ pub fn definition() -> WindowKindDefinition {
 /// 🌳️ One root node per step (labeled with the step title, falling back to its id when the title is
 /// empty), one leaf child per block (labeled `"<label> (<kind>)"`) — a faithful, read-only reflection
 /// of the same step/block nesting the editor's block-list builder edits.
-pub fn render(spec: &PlaybookSnapshot) -> semio_framework_plugin::UiNode {
+pub async fn render(spec: &PlaybookSnapshot) -> semio_framework_plugin::UiNode {
     let roots = spec
         .steps()
         .into_iter()
@@ -56,7 +56,7 @@ mod tests {
     use crate::artifacts::playbook::playbook_snapshot_with_steps;
     use crate::playbook::{PlaybookBlock, PlaybookStep};
 
-    fn sample_block(id: &str, label: &str, kind: &str) -> PlaybookBlock {
+    async fn sample_block(id: &str, label: &str, kind: &str) -> PlaybookBlock {
         PlaybookBlock {
             id: id.into(),
             label: label.into(),
@@ -82,7 +82,7 @@ mod tests {
     }
 
     #[test]
-    fn definition_restamps_the_tree_window_kit_with_this_windows_own_id_and_body_key() {
+    async fn definition_restamps_the_tree_window_kit_with_this_windows_own_id_and_body_key() {
         let definition = definition();
         assert_eq!(definition.id, PLAYBOOK_VIEW_WINDOW_STEPS);
         assert_eq!(definition.body_key, PLAYBOOK_VIEW_BODY_STEPS);
@@ -90,7 +90,7 @@ mod tests {
     }
 
     #[test]
-    fn render_nests_every_blocks_label_and_kind_under_its_own_step() {
+    async fn render_nests_every_blocks_label_and_kind_under_its_own_step() {
         let step = PlaybookStep { id: "s1".into(), title: "Intro".into(), description: None, blocks: vec![sample_block("b1", "Name", "text")] };
         let spec = playbook_snapshot_with_steps("playbook.program", "playbook", "1", Some("Recipe".into()), vec![step]);
         let node = render(&spec);
@@ -100,7 +100,7 @@ mod tests {
     }
 
     #[test]
-    fn render_falls_back_to_the_step_id_when_the_title_is_empty() {
+    async fn render_falls_back_to_the_step_id_when_the_title_is_empty() {
         let step = PlaybookStep { id: "s1".into(), title: String::new(), description: None, blocks: Vec::new() };
         let spec = playbook_snapshot_with_steps("playbook.program", "playbook", "1", None, vec![step]);
         let node = render(&spec);

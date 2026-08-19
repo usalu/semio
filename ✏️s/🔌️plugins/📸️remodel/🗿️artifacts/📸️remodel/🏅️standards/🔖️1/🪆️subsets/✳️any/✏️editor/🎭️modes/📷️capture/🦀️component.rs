@@ -9,11 +9,11 @@ pub const REMODEL_PLAY_MODE_CAPTURE: &str = "capture";
 pub const REMODEL_PLAY_LAYOUT_CAPTURE: &str = "remodel-capture";
 
 //#region 🔖️Definition
-pub fn definition() -> ModeDefinition {
+pub async fn definition() -> ModeDefinition {
     ModeDefinition { id: REMODEL_PLAY_MODE_CAPTURE.into(), label: LocalizedLabel::native("Capture", "Aufnahme"), icon_id: "camera".into(), tools: Vec::new(), layout_id: None, commands: Vec::new() }
 }
 
-pub fn layout() -> NamedLayout {
+pub async fn layout() -> NamedLayout {
     create_named_layout(
         REMODEL_PLAY_LAYOUT_CAPTURE,
         "Capture",
@@ -31,7 +31,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn the_capture_layout_puts_the_filmstrip_first() {
+    async fn the_capture_layout_puts_the_filmstrip_first() {
         let json = serde_json::to_string(&layout()).expect("layout json");
         assert!(json.contains(REMODEL_PLAY_LAYOUT_CAPTURE));
         assert!(json.contains(frames::REMODEL_PLAY_WINDOW_FRAMES));

@@ -32,7 +32,7 @@ pub enum CadPaneId {
 }
 
 impl CadPaneId {
-    pub fn model_definition_id(self) -> &'static str {
+    pub async fn model_definition_id(self) -> &'static str {
         match self {
             Self::Shape => "spatial.shape",
             Self::Building => "aec.building",
@@ -41,7 +41,7 @@ impl CadPaneId {
         }
     }
 
-    pub fn all() -> [Self; 4] {
+    pub async fn all() -> [Self; 4] {
         [Self::Shape, Self::Building, Self::Energy, Self::StructureClassic]
     }
 }
@@ -93,7 +93,7 @@ pub struct CadWorkingScene {
 /// `🔖️Composition` region) → this document's `CadWorkingScene`. Each pane is independent: a `None`
 /// (child not yet resolved/composed) leaves that pane's object list empty rather than fabricating
 /// placeholder content. Real per-element conversion lives in `geometry_import::objects_from_model_snapshot`.
-pub fn cad_working_scene_from_models(shape: Option<&SemioModelSnapshot>, building: Option<&SemioModelSnapshot>, energy: Option<&SemioModelSnapshot>, structure_classic: Option<&SemioModelSnapshot>) -> CadWorkingScene {
+pub async fn cad_working_scene_from_models(shape: Option<&SemioModelSnapshot>, building: Option<&SemioModelSnapshot>, energy: Option<&SemioModelSnapshot>, structure_classic: Option<&SemioModelSnapshot>) -> CadWorkingScene {
     use crate::artifacts::cad::standards::v1::subsets::any::io::geometry_import::objects_from_model_snapshot;
     CadWorkingScene {
         objects: shape.map(objects_from_model_snapshot).unwrap_or_default(),
@@ -115,7 +115,7 @@ pub fn cad_working_scene_from_models(shape: Option<&SemioModelSnapshot>, buildin
 /// host-level gesture (mint the child, dispatch `create-<pane>-model` against the result)
 /// `🚪️io/🦀️component.rs`'s own comments already document, since minting the actual store entry
 /// needs `ChildStoreFactory`/`CompositionCoordinator`, out of a pure function's reach.
-pub fn cad_model_child_handle(pane: CadPaneId, content_json: &str) -> CadModelChild {
+pub async fn cad_model_child_handle(pane: CadPaneId, content_json: &str) -> CadModelChild {
     use std::hash::{Hash, Hasher};
     let mut hasher = std::collections::hash_map::DefaultHasher::new();
     content_json.hash(&mut hasher);
@@ -127,7 +127,7 @@ pub fn cad_model_child_handle(pane: CadPaneId, content_json: &str) -> CadModelCh
     store::ArtifactChild::new(child_id, target)
 }
 
-fn cad_model_child_pane_slug(pane: CadPaneId) -> &'static str {
+async fn cad_model_child_pane_slug(pane: CadPaneId) -> &'static str {
     match pane {
         CadPaneId::Shape => "shape",
         CadPaneId::Building => "building",
@@ -163,11 +163,11 @@ pub struct CadReference {
     pub opacity: Option<f64>,
 }
 
-fn default_image_media_kind() -> String {
+async fn default_image_media_kind() -> String {
     "image".into()
 }
 
-fn default_width_world() -> f64 {
+async fn default_width_world() -> f64 {
     10.0
 }
 
@@ -202,7 +202,7 @@ pub struct CadProjectionDsl {
 }
 
 impl Default for CadProjectionDsl {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self {
             kind: "threePoint".into(),
             orthographic_view: "top".into(),
@@ -242,24 +242,24 @@ pub struct CadCamera {
 }
 
 impl Default for CadCamera {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self { position: default_camera_position(), target: default_camera_target(), zoom: one_f64(), fov: default_fov(), projection: CadProjectionDsl::default() }
     }
 }
 
-fn default_camera_position() -> [f64; 3] {
+async fn default_camera_position() -> [f64; 3] {
     [12.0, -12.0, 8.0]
 }
 
-fn default_camera_target() -> [f64; 3] {
+async fn default_camera_target() -> [f64; 3] {
     [0.0, 0.0, 0.0]
 }
 
-fn default_fov() -> f64 {
+async fn default_fov() -> f64 {
     50.0
 }
 
-fn one_f64() -> f64 {
+async fn one_f64() -> f64 {
     1.0
 }
 
@@ -275,7 +275,7 @@ pub struct CadNode {
 /// never the resolved content; a child is its own document, resolving it is a host/composition
 /// concern, never something a pure `CadSnapshot` accessor can do — see `🔖️Composition` in
 /// `🏪️store/🦀️component.rs`).
-pub fn cad_pane_model(scene: &CadSnapshot, pane: CadPaneId) -> Option<&CadModelChild> {
+pub async fn cad_pane_model(scene: &CadSnapshot, pane: CadPaneId) -> Option<&CadModelChild> {
     match pane {
         CadPaneId::Shape => scene.shape_model.as_ref(),
         CadPaneId::Building => scene.building_model.as_ref(),
@@ -284,7 +284,7 @@ pub fn cad_pane_model(scene: &CadSnapshot, pane: CadPaneId) -> Option<&CadModelC
     }
 }
 
-pub fn cad_pane_model_mut(scene: &mut CadSnapshot, pane: CadPaneId) -> &mut Option<CadModelChild> {
+pub async fn cad_pane_model_mut(scene: &mut CadSnapshot, pane: CadPaneId) -> &mut Option<CadModelChild> {
     match pane {
         CadPaneId::Shape => &mut scene.shape_model,
         CadPaneId::Building => &mut scene.building_model,
@@ -293,11 +293,11 @@ pub fn cad_pane_model_mut(scene: &mut CadSnapshot, pane: CadPaneId) -> &mut Opti
     }
 }
 
-fn default_model_definition_id() -> String {
+async fn default_model_definition_id() -> String {
     "spatial.shape".into()
 }
 
-pub fn empty_cad_snapshot() -> CadSnapshot {
+pub async fn empty_cad_snapshot() -> CadSnapshot {
     CadSnapshot {
         schema: CAD_PLAY_DOCUMENT_SCHEMA.into(),
         id: "cad".into(),
@@ -312,7 +312,7 @@ pub fn empty_cad_snapshot() -> CadSnapshot {
     }
 }
 
-pub fn cad_pane_from_model_definition_id(model_definition_id: &str) -> Option<CadPaneId> {
+pub async fn cad_pane_from_model_definition_id(model_definition_id: &str) -> Option<CadPaneId> {
     CadPaneId::all().into_iter().find(|pane| pane.model_definition_id() == model_definition_id)
 }
 
@@ -329,7 +329,7 @@ pub use crate::artifacts::cad::schema::snapshot::CadSnapshot;
 /// 🗿️ The `3d.cad` artifact kind this plugin contributes — lifted out of the app manifest builder's
 /// `.artifact_kind(…)` so the artifact node owns its own identity (schema, media capability, and the
 /// import/export format set the kernel exposes for it).
-pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
+pub async fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
     semio_framework_plugin::ArtifactKindSpec {
         id: "3d.cad".into(),
         name: "3D CAD".into(),
@@ -351,7 +351,7 @@ pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
 /// `🗒️note`'s own `pilot_languages()` convention (ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE
 /// M1/W1b). Relocated from `⚙️engine/🦀️component.rs` alongside `declaration()` (ticket
 /// 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE) — `declaration()`'s only caller, kept private.
-fn pilot_languages() -> &'static [dsl::LanguageSpec] {
+async fn pilot_languages() -> &'static [dsl::LanguageSpec] {
     static LANGUAGES: std::sync::OnceLock<Vec<dsl::LanguageSpec>> = std::sync::OnceLock::new();
     LANGUAGES
         .get_or_init(|| {
@@ -413,7 +413,7 @@ fn pilot_languages() -> &'static [dsl::LanguageSpec] {
 
 /// 🔖️ This artifact's declaration freezes its schema, inference, codec, composer, and language
 /// contributions before plugin assembly.
-pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
+pub async fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
     use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
     let rows: &[(&str, &str, &str, &[(&str, &str)], Option<(&str, &str)>)] = &[
         ("s.cad.standard.v1", "standard", "1", &[], None),
@@ -452,7 +452,7 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
     Ok(definition)
 }
 
-pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
+pub async fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
     semio_framework_plugin::ArtifactDeclaration::builder(definition()?)
         .schema(crate::artifacts::cad::schema::cad_artifact_schema_descriptor())
         .inferences([crate::artifacts::cad::standards::v1::subsets::any::schema::inferences::cad_artifact_inference_descriptor()])
@@ -473,14 +473,14 @@ pub(crate) mod testkit {
     /// 🧩️ A sample composed `s.stdio.semio.model` CHILD HANDLE — `child_id` + `target` only, per
     /// `🔖️Composition`'s "a child handle is two strings" rule; never the resolved model content
     /// (that lives in the child's own document, out of `CadSnapshot`'s reach).
-    pub fn sample_model_child(child_id: &str) -> CadModelChild {
+    pub async fn sample_model_child(child_id: &str) -> CadModelChild {
         store::ArtifactChild::new(
             child_id.into(),
             store::os_io::ArtifactRef { artifact_id: format!("crate-{child_id}"), dialect: store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "model".into() } },
         )
     }
 
-    pub fn sample_reference() -> CadReference {
+    pub async fn sample_reference() -> CadReference {
         CadReference {
             id: "ref-1".into(),
             source_url: "https://example.test/plan.png".into(),
@@ -495,7 +495,7 @@ pub(crate) mod testkit {
         }
     }
 
-    pub fn sample_scene() -> CadSnapshot {
+    pub async fn sample_scene() -> CadSnapshot {
         let mut scene = empty_cad_snapshot();
         scene.shape_model = Some(sample_model_child("shape-model-1"));
         scene.building_model = Some(sample_model_child("building-model-1"));

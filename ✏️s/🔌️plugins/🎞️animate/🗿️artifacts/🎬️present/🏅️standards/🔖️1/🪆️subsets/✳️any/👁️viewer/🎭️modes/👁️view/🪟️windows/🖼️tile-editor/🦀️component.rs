@@ -26,7 +26,7 @@ const ANIMATE_VIEW_CONTROLLER_ID: &str = "animate-present-view";
 
 //#region 🔖️Definition
 /// 🧱️ Stitched into the viewer manifest by `crate::viewer::animate::create_animate_present_viewer`.
-pub fn definition() -> WindowKindDefinition {
+pub async fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
         id: WINDOW_KIND_ID.into(),
         label: LocalizedLabel::native("Tile editor", "Kacheleditor"),
@@ -63,13 +63,13 @@ struct AnimateViewTileLayer {
     data_url: Option<String>,
 }
 
-fn frame_to_canvas(frame: &FigureTileFrame, scale: f64) -> (f64, f64, f64, f64) {
+async fn frame_to_canvas(frame: &FigureTileFrame, scale: f64) -> (f64, f64, f64, f64) {
     (frame.x * scale, frame.y * scale, frame.width * scale, frame.height * scale)
 }
 
 /// 👁️ Pure `PresentSnapshot -> layers JSON` read: the same source-figure-plus-crop-tiles content the
 /// editor's own canvas renders, with no selection/engagement overlay (a viewer has neither).
-fn deck_to_canvas_layers(deck: &PresentSnapshot) -> String {
+async fn deck_to_canvas_layers(deck: &PresentSnapshot) -> String {
     const SCALE: f64 = 1000.0;
     let (source, tiles) = crate::artifacts::present::present_working_scene(deck);
     let mut layers = Vec::new();
@@ -94,7 +94,7 @@ fn deck_to_canvas_layers(deck: &PresentSnapshot) -> String {
 //#endregion 🔖️CanvasLayers
 
 //#region 🔖️Render
-pub fn render(deck: &PresentSnapshot) -> UiNode {
+pub async fn render(deck: &PresentSnapshot) -> UiNode {
     build_canvas_2d_scene(SURFACE_ID, ANIMATE_VIEW_CONTROLLER_ID, Canvas2dScene { camera_x: 0.0, camera_y: 0.0, zoom: 1.0, layers_json: deck_to_canvas_layers(deck) })
 }
 //#endregion 🔖️Render
@@ -106,14 +106,14 @@ mod tests {
     use serde_json::Value;
 
     #[test]
-    fn renders_canvas_2d_scene() {
+    async fn renders_canvas_2d_scene() {
         let deck = crate::artifacts::present::default_present_snapshot();
         let json_str = serde_json::to_string(&render(&deck)).unwrap();
         assert!(json_str.contains("canvas-2d") || json_str.contains("Canvas2d"));
     }
 
     #[test]
-    fn definition_declares_the_canvas_2d_surface_and_body_key() {
+    async fn definition_declares_the_canvas_2d_surface_and_body_key() {
         let definition = definition();
         assert_eq!(definition.body_key, BODY_KEY);
         assert!(matches!(definition.surface_kind, SurfaceKind::Canvas2d));
@@ -122,7 +122,7 @@ mod tests {
     }
 
     #[test]
-    fn source_frame_renders_as_actual_image_layer_behind_tiles() {
+    async fn source_frame_renders_as_actual_image_layer_behind_tiles() {
         let deck = crate::artifacts::present::default_present_snapshot();
         let layers_json = deck_to_canvas_layers(&deck);
         let layers: Vec<Value> = serde_json::from_str(&layers_json).unwrap();
@@ -135,7 +135,7 @@ mod tests {
     }
 
     #[test]
-    fn deck_to_canvas_layers_omits_data_url_when_source_has_no_image() {
+    async fn deck_to_canvas_layers_omits_data_url_when_source_has_no_image() {
         let base = crate::artifacts::present::default_present_snapshot();
         let (mut source, tiles) = crate::artifacts::present::present_working_scene(&base);
         source.src = String::new();

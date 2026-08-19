@@ -40,11 +40,11 @@ pub struct FlattenedNode {
 /// 🔑️ `"<layer>:<p0>.<p1>..."` — the same structural substitute for a stable node id every
 /// mutation triad in this facet already uses (`NodePath`), reformatted as one `Ord`/`Hash`-able
 /// `String` (`InferredField::Key`'s bound).
-pub(crate) fn key_for(layer: usize, path: &[usize]) -> String {
+pub(crate) async fn key_for(layer: usize, path: &[usize]) -> String {
     format!("{layer}:{}", path.iter().map(|i| i.to_string()).collect::<Vec<_>>().join("."))
 }
 
-pub(crate) fn node_path_from_key(key: &str) -> NodePath {
+pub(crate) async fn node_path_from_key(key: &str) -> NodePath {
     let (layer_str, path_str) = key.split_once(':').expect("flattened-scene key always contains ':'");
     let layer = layer_str.parse().expect("flattened-scene key layer segment always parses as usize");
     let path = if path_str.is_empty() { Vec::new() } else { path_str.split('.').map(|s| s.parse().expect("flattened-scene key path segment always parses as usize")).collect() };
@@ -58,7 +58,7 @@ pub(crate) fn node_path_from_key(key: &str) -> NodePath {
 /// rotate(parent.rotation, child.translation * parent.scale)`, `world.rotation =
 /// normalize(parent.rotation * child.rotation)`, `world.scale = parent.scale * child.scale`
 /// (component-wise).
-pub(crate) fn compose_transform(parent: SemioTransform, child: SemioTransform) -> SemioTransform {
+pub(crate) async fn compose_transform(parent: SemioTransform, child: SemioTransform) -> SemioTransform {
     let scaled_child_translation = SemioPoint3 { x: child.translation.x * parent.scale.x, y: child.translation.y * parent.scale.y, z: child.translation.z * parent.scale.z };
     let rotated = rotate_point(parent.rotation, scaled_child_translation);
     SemioTransform {
@@ -68,11 +68,11 @@ pub(crate) fn compose_transform(parent: SemioTransform, child: SemioTransform) -
     }
 }
 
-fn multiply_quaternion(a: SemioQuaternion, b: SemioQuaternion) -> SemioQuaternion {
+async fn multiply_quaternion(a: SemioQuaternion, b: SemioQuaternion) -> SemioQuaternion {
     SemioQuaternion { w: a.w * b.w - a.x * b.x - a.y * b.y - a.z * b.z, x: a.w * b.x + a.x * b.w + a.y * b.z - a.z * b.y, y: a.w * b.y - a.x * b.z + a.y * b.w + a.z * b.x, z: a.w * b.z + a.x * b.y - a.y * b.x + a.z * b.w }
 }
 
-fn normalize_quaternion(q: SemioQuaternion) -> SemioQuaternion {
+async fn normalize_quaternion(q: SemioQuaternion) -> SemioQuaternion {
     let len = (q.x * q.x + q.y * q.y + q.z * q.z + q.w * q.w).sqrt();
     if len == 0.0 {
         return SemioQuaternion::default();
@@ -82,7 +82,7 @@ fn normalize_quaternion(q: SemioQuaternion) -> SemioQuaternion {
 
 /// ↻️ Rotates `v` by unit quaternion `q` — `v + 2*q.xyz × (q.xyz × v + q.w*v)` (the standard
 /// avoid-quaternion-inverse rotation formula).
-fn rotate_point(q: SemioQuaternion, v: SemioPoint3) -> SemioPoint3 {
+async fn rotate_point(q: SemioQuaternion, v: SemioPoint3) -> SemioPoint3 {
     let qv = (q.x, q.y, q.z);
     let cross1 = cross(qv, (v.x, v.y, v.z));
     let t = (cross1.0 + q.w * v.x, cross1.1 + q.w * v.y, cross1.2 + q.w * v.z);
@@ -90,22 +90,22 @@ fn rotate_point(q: SemioQuaternion, v: SemioPoint3) -> SemioPoint3 {
     SemioPoint3 { x: v.x + 2.0 * cross2.0, y: v.y + 2.0 * cross2.1, z: v.z + 2.0 * cross2.2 }
 }
 
-fn cross(a: (f64, f64, f64), b: (f64, f64, f64)) -> (f64, f64, f64) {
+async fn cross(a: (f64, f64, f64), b: (f64, f64, f64)) -> (f64, f64, f64) {
     (a.1 * b.2 - a.2 * b.1, a.2 * b.0 - a.0 * b.2, a.0 * b.1 - a.1 * b.0)
 }
 //#endregion 🔖️Transform
 
 //#region 🔖️StyleResolution
-fn resolve_style(snapshot: &SemioDrawingSnapshot, style_ref: &Option<String>) -> Option<DrawStyle> {
+async fn resolve_style(snapshot: &SemioDrawingSnapshot, style_ref: &Option<String>) -> Option<DrawStyle> {
     let name = style_ref.as_ref()?;
     snapshot.styles.iter().find(|s| &s.name == name).cloned()
 }
 
-fn push_number(bytes: &mut Vec<u8>, v: f64) {
+async fn push_number(bytes: &mut Vec<u8>, v: f64) {
     bytes.extend_from_slice(&v.to_le_bytes());
 }
 
-fn push_style_dep(bytes: &mut Vec<u8>, snapshot: &SemioDrawingSnapshot, style_ref: &Option<String>) {
+async fn push_style_dep(bytes: &mut Vec<u8>, snapshot: &SemioDrawingSnapshot, style_ref: &Option<String>) {
     match style_ref {
         None => bytes.push(0),
         Some(name) => {
@@ -161,11 +161,11 @@ impl store::InferredField<SemioDrawingSnapshot> for DrawFlattenedScene {
     const FIELD_ID: &'static str = "s.stdio.semio.drawing.inference.flattenedScene";
     const SCHEMA_VERSION: u32 = 1;
 
-    fn reads() -> &'static [&'static str] {
+    async fn reads() -> &'static [&'static str] {
         &["layers", "styles"]
     }
 
-    fn plan(snapshot: &SemioDrawingSnapshot) -> Vec<store::InferenceStep<Self::Key>> {
+    async fn plan(snapshot: &SemioDrawingSnapshot) -> Vec<store::InferenceStep<Self::Key>> {
         let mut steps = Vec::new();
         for (layer_idx, layer) in snapshot.layers.iter().enumerate() {
             walk(&layer.root, layer_idx, &mut Vec::new(), None, &mut steps);
@@ -173,7 +173,7 @@ impl store::InferredField<SemioDrawingSnapshot> for DrawFlattenedScene {
         steps
     }
 
-    fn dep_input(snapshot: &SemioDrawingSnapshot, key: &Self::Key, _parents: &[Self::Key]) -> Vec<u8> {
+    async fn dep_input(snapshot: &SemioDrawingSnapshot, key: &Self::Key, _parents: &[Self::Key]) -> Vec<u8> {
         let np = node_path_from_key(key);
         let mut bytes = Vec::new();
         match node_at(snapshot, &np) {
@@ -195,7 +195,7 @@ impl store::InferredField<SemioDrawingSnapshot> for DrawFlattenedScene {
         bytes
     }
 
-    fn compute(snapshot: &SemioDrawingSnapshot, key: &Self::Key, parents: &[Self::Value]) -> Self::Value {
+    async fn compute(snapshot: &SemioDrawingSnapshot, key: &Self::Key, parents: &[Self::Value]) -> Self::Value {
         let np = node_path_from_key(key);
         let parent_transform = parents.first().map(|p| p.world_transform).unwrap_or_else(SemioTransform::identity);
         match node_at(snapshot, &np) {
@@ -206,7 +206,7 @@ impl store::InferredField<SemioDrawingSnapshot> for DrawFlattenedScene {
     }
 }
 
-fn walk(node: &DrawNode, layer: usize, path: &mut Vec<usize>, parent_key: Option<String>, out: &mut Vec<store::InferenceStep<String>>) {
+async fn walk(node: &DrawNode, layer: usize, path: &mut Vec<usize>, parent_key: Option<String>, out: &mut Vec<store::InferenceStep<String>>) {
     let key = key_for(layer, path);
     out.push(store::InferenceStep { key: key.clone(), parents: parent_key.into_iter().collect() });
     if let DrawNode::Group { children, .. } = node {
@@ -227,7 +227,7 @@ mod tests {
     use crate::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::{DrawCanvas, DrawLayer, PathSegment, STDIO_SEMIODRAWING_DOCUMENT_SCHEMA};
     use store::{InferenceCache, InferenceCacheConfig};
 
-    fn fixture() -> SemioDrawingSnapshot {
+    async fn fixture() -> SemioDrawingSnapshot {
         SemioDrawingSnapshot {
             schema: STDIO_SEMIODRAWING_DOCUMENT_SCHEMA.into(),
             canvas: DrawCanvas { width: 10.0, height: 10.0, background: None },
@@ -251,7 +251,7 @@ mod tests {
     }
 
     #[test]
-    fn world_transform_composes_down_through_nested_groups() {
+    async fn world_transform_composes_down_through_nested_groups() {
         let snapshot = fixture();
         let values = store::infer_field::<SemioDrawingSnapshot, DrawFlattenedScene>(&snapshot, None);
         let root = &values[&key_for(0, &[])];
@@ -265,7 +265,7 @@ mod tests {
     }
 
     #[test]
-    fn style_reference_resolves_to_the_real_value() {
+    async fn style_reference_resolves_to_the_real_value() {
         let snapshot = fixture();
         let values = store::infer_field::<SemioDrawingSnapshot, DrawFlattenedScene>(&snapshot, None);
         let path_child = &values[&key_for(0, &[0])];
@@ -282,7 +282,7 @@ mod tests {
     /// missed AND everything else was never looked up"; asserting `hits == plan.len() - 1` proves
     /// every other entity was actually consulted and found warm.
     #[test]
-    fn changing_a_leaf_own_style_does_not_recompute_ancestors_or_siblings() {
+    async fn changing_a_leaf_own_style_does_not_recompute_ancestors_or_siblings() {
         let mut cache = InferenceCache::new(InferenceCacheConfig { enabled: true, record_stats: true, ..Default::default() });
         let base = fixture();
         let _ = store::infer_field::<SemioDrawingSnapshot, DrawFlattenedScene>(&base, Some(&mut cache));
@@ -301,7 +301,7 @@ mod tests {
     /// 🌳️ Ancestor law: changing the ROOT's own transform must miss for every entity in the plan
     /// (root + every descendant transitively folds root's `DepHash` into its own chain).
     #[test]
-    fn changing_the_root_transform_recomputes_the_whole_subtree() {
+    async fn changing_the_root_transform_recomputes_the_whole_subtree() {
         let mut cache = InferenceCache::new(InferenceCacheConfig { enabled: true, record_stats: true, ..Default::default() });
         let base = fixture();
         let _ = store::infer_field::<SemioDrawingSnapshot, DrawFlattenedScene>(&base, Some(&mut cache));
@@ -320,7 +320,7 @@ mod tests {
     /// 🤝️ Sibling law: two INDEPENDENT leaves (each referencing its own style, under different
     /// parent Groups so neither is an ancestor of the other) — editing one's referenced style must
     /// leave the other's entire subtree, and everything between it and the shared root, warm.
-    fn two_independent_styled_siblings() -> SemioDrawingSnapshot {
+    async fn two_independent_styled_siblings() -> SemioDrawingSnapshot {
         SemioDrawingSnapshot {
             schema: STDIO_SEMIODRAWING_DOCUMENT_SCHEMA.into(),
             canvas: DrawCanvas { width: 10.0, height: 10.0, background: None },
@@ -344,7 +344,7 @@ mod tests {
     }
 
     #[test]
-    fn an_unrelated_sibling_edit_leaves_the_other_siblings_chain_warm() {
+    async fn an_unrelated_sibling_edit_leaves_the_other_siblings_chain_warm() {
         let mut cache = InferenceCache::new(InferenceCacheConfig { enabled: true, record_stats: true, ..Default::default() });
         let base = two_independent_styled_siblings();
         let baseline = store::infer_field::<SemioDrawingSnapshot, DrawFlattenedScene>(&base, Some(&mut cache));
@@ -363,7 +363,7 @@ mod tests {
     //#endregion 🧪️IncrementalityLaw
 
     #[test]
-    fn disabled_cache_matches_pure_recompute() {
+    async fn disabled_cache_matches_pure_recompute() {
         let snapshot = fixture();
         let pure = store::infer_field::<SemioDrawingSnapshot, DrawFlattenedScene>(&snapshot, None);
         let mut disabled = InferenceCache::new(InferenceCacheConfig { enabled: false, ..Default::default() });
@@ -372,7 +372,7 @@ mod tests {
     }
 
     #[test]
-    fn quaternion_rotation_of_identity_is_a_no_op() {
+    async fn quaternion_rotation_of_identity_is_a_no_op() {
         let p = SemioPoint3 { x: 3.0, y: 4.0, z: 5.0 };
         assert_eq!(rotate_point(SemioQuaternion::default(), p), p);
     }

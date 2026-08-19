@@ -18,7 +18,7 @@ pub mod transform_begin {
     #[dsl(keyword = "transform-begin")]
     pub struct TransformBegin {}
 
-    pub fn handle(_payload: &TransformBegin, _doc: &ArtifactView<'_, LowpolySnapshot>, _cfg: &ConfigView<'_, LowpolyConfig>, ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
+    pub async fn handle(_payload: &TransformBegin, _doc: &ArtifactView<'_, LowpolySnapshot>, _cfg: &ConfigView<'_, LowpolyConfig>, ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
         ctx.begin_transform_drag();
         Ok(Emit::default())
     }
@@ -33,7 +33,7 @@ pub mod transform_end {
     #[dsl(keyword = "transform-end")]
     pub struct TransformEnd {}
 
-    pub fn handle(_payload: &TransformEnd, _doc: &ArtifactView<'_, LowpolySnapshot>, _cfg: &ConfigView<'_, LowpolyConfig>, ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
+    pub async fn handle(_payload: &TransformEnd, _doc: &ArtifactView<'_, LowpolySnapshot>, _cfg: &ConfigView<'_, LowpolyConfig>, ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
         Ok(ctx.end_transform_drag())
     }
 }
@@ -53,7 +53,7 @@ pub mod translate_selection {
         pub dz: f32,
     }
 
-    pub fn handle(payload: &TranslateSelection, doc: &ArtifactView<'_, LowpolySnapshot>, cfg: &ConfigView<'_, LowpolyConfig>, ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
+    pub async fn handle(payload: &TranslateSelection, doc: &ArtifactView<'_, LowpolySnapshot>, cfg: &ConfigView<'_, LowpolyConfig>, ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
         let mode = payload.mode.clone().unwrap_or_else(|| "mesh".into());
         let ids = payload.ids.clone().unwrap_or_default();
         Ok(ctx.transform_selection(doc.snapshot, cfg.snapshot, &mode, ids, Transform::Translate(Vec3::new(payload.dx, payload.dy, payload.dz)), "Translate selection"))
@@ -76,7 +76,7 @@ pub mod rotate_selection {
         pub angle: f32,
     }
 
-    pub fn handle(payload: &RotateSelection, doc: &ArtifactView<'_, LowpolySnapshot>, cfg: &ConfigView<'_, LowpolyConfig>, ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
+    pub async fn handle(payload: &RotateSelection, doc: &ArtifactView<'_, LowpolySnapshot>, cfg: &ConfigView<'_, LowpolyConfig>, ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
         let mode = payload.mode.clone().unwrap_or_else(|| "mesh".into());
         let ids = payload.ids.clone().unwrap_or_default();
         Ok(ctx.transform_selection(doc.snapshot, cfg.snapshot, &mode, ids, Transform::Rotate { axis: Vec3::new(payload.ax, payload.ay, payload.az), angle: payload.angle }, "Rotate selection"))
@@ -98,7 +98,7 @@ pub mod scale_selection {
         pub sz: f32,
     }
 
-    pub fn handle(payload: &ScaleSelection, doc: &ArtifactView<'_, LowpolySnapshot>, cfg: &ConfigView<'_, LowpolyConfig>, ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
+    pub async fn handle(payload: &ScaleSelection, doc: &ArtifactView<'_, LowpolySnapshot>, cfg: &ConfigView<'_, LowpolyConfig>, ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
         let mode = payload.mode.clone().unwrap_or_else(|| "mesh".into());
         let ids = payload.ids.clone().unwrap_or_default();
         Ok(ctx.transform_selection(doc.snapshot, cfg.snapshot, &mode, ids, Transform::Scale(Vec3::new(payload.sx, payload.sy, payload.sz)), "Scale selection"))
@@ -114,7 +114,7 @@ mod tests {
     use semio_framework_plugin::{testkit, PluginApp};
 
     #[test]
-    fn gumball_drag_coalesces_to_one_committed_edit() {
+    async fn gumball_drag_coalesces_to_one_committed_edit() {
         // 🧲️ THE COALESCING REGRESSION: a multi-tick gumball translate must emit ZERO operations mid-drag and
         // exactly ONE commit operation (base → final mesh) on drag end — never a full-mesh patch per tick.
         let mut a = app();

@@ -7,7 +7,7 @@ use crate::artifacts::program::ProgramDiff;
 use crate::artifacts::program::ProgramSnapshot;
 
 /// 🗑️ Error `mutation.target-missing` if the id is absent (empty diff), else `removed = [id]`.
-pub fn diff(payload: &DeleteSafetyRequirement, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
+pub async fn diff(payload: &DeleteSafetyRequirement, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
     if !base.safety.iter().any(|row| row.header.id == payload.id) {
         return protocol::MutationOutcome::error("mutation.target-missing", "No safety requirement exists with this id.", [payload.id.0.clone()]);
     }

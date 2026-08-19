@@ -19,19 +19,19 @@ pub struct RenameTile {
 impl MutationKind<PresentSnapshot, PresentMutation> for RenameTile {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "rename", entity: "tile", kind: "rename-tile", record: "RenamedTile" };
 
-    fn diff(&self, base: &PresentSnapshot) -> protocol::MutationOutcome<PresentDiff> {
+    async fn diff(&self, base: &PresentSnapshot) -> protocol::MutationOutcome<PresentDiff> {
         super::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &PresentSnapshot) -> Vec<PresentMutation> {
+    async fn inverse(&self, base: &PresentSnapshot) -> Vec<PresentMutation> {
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         format!("Rename tile to \"{}\"", self.new_name)
     }
 
-    fn target(&self) -> Vec<String> {
+    async fn target(&self) -> Vec<String> {
         vec!["tiles".into(), self.id.clone(), "name".into()]
     }
 }

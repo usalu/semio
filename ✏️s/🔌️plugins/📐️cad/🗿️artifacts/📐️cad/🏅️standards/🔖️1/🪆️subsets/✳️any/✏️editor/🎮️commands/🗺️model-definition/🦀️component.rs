@@ -21,7 +21,7 @@ pub mod focus_model_definition {
         pub model_definition_id: String,
     }
 
-    pub fn handle(payload: &FocusModelDefinition, _doc: &ArtifactView<'_, CadSnapshot>, _cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx<'_>) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
+    pub async fn handle(payload: &FocusModelDefinition, _doc: &ArtifactView<'_, CadSnapshot>, _cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx<'_>) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
         Ok(Emit::mutations(vec![CadMutation::ChangeActiveModelDefinition(ChangeActiveModelDefinition { new_model_definition_id: payload.model_definition_id.clone() })]))
     }
 }
@@ -37,7 +37,7 @@ pub mod set_active_example {
         pub example_id: String,
     }
 
-    pub fn handle(payload: &SetActiveExample, _doc: &ArtifactView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx<'_>) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
+    pub async fn handle(payload: &SetActiveExample, _doc: &ArtifactView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx<'_>) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
         let _ = runtime_of(cfg);
         let (scene, runtime) = if payload.example_id.is_empty() {
             (default_document(), CadPlayRuntime::default())

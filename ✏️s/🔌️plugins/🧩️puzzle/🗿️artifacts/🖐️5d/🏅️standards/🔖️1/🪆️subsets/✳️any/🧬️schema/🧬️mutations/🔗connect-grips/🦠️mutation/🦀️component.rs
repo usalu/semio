@@ -28,23 +28,23 @@ pub struct ConnectGrips {
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
 #[allow(clippy::too_many_arguments)]
-pub fn connect_grips(id: String, source: String, target: String, fastener_kind: Option<String>, gap: f64, shift: f64, rise: f64, rotation: f64, turn: f64, tilt: f64, x: f64, y: f64) -> Puzzle5dMutation {
+pub async fn connect_grips(id: String, source: String, target: String, fastener_kind: Option<String>, gap: f64, shift: f64, rise: f64, rotation: f64, turn: f64, tilt: f64, x: f64, y: f64) -> Puzzle5dMutation {
     Puzzle5dMutation::ConnectGrips(ConnectGrips { id, source, target, fastener_kind, gap, shift, rise, rotation, turn, tilt, x, y })
 }
 
 impl protocol::MutationKind<Puzzle5dSnapshot, Puzzle5dMutation> for ConnectGrips {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "connect", entity: "grips", kind: "connect-grips", record: "ConnectedGrips" };
 
-    fn diff(&self, base: &Puzzle5dSnapshot) -> protocol::MutationOutcome<Puzzle5dDiff> {
+    async fn diff(&self, base: &Puzzle5dSnapshot) -> protocol::MutationOutcome<Puzzle5dDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &Puzzle5dSnapshot) -> Vec<Puzzle5dMutation> {
+    async fn inverse(&self, base: &Puzzle5dSnapshot) -> Vec<Puzzle5dMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         format!("Connect \"{}\" to \"{}\"", self.source, self.target)
     }
-    fn target(&self) -> Vec<String> {
+    async fn target(&self) -> Vec<String> {
         vec![self.id.clone()]
     }
 }

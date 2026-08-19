@@ -26,7 +26,7 @@ pub enum LineEnding {
 }
 
 impl LineEnding {
-    pub fn as_str(self) -> &'static str {
+    pub async fn as_str(self) -> &'static str {
         match self {
             LineEnding::Lf => "\n",
             LineEnding::Crlf => "\r\n",
@@ -35,7 +35,7 @@ impl LineEnding {
 }
 
 impl Default for LineEnding {
-    fn default() -> Self {
+    async fn default() -> Self {
         LineEnding::Lf
     }
 }
@@ -63,7 +63,7 @@ pub struct TsvSnapshot {
 }
 
 impl Default for TsvSnapshot {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self { schema: STDIO_TSV_DOCUMENT_SCHEMA.into(), records: Vec::new(), trailing_newline: false, line_ending: LineEnding::default() }
     }
 }
@@ -74,7 +74,7 @@ impl Default for TsvSnapshot {
 /// accept-by-default since TSV has no reliable magic"). Real structural heuristic: at least one
 /// line, and every line contains at least one tab OR the file is a single untabbed line (a valid
 /// one-column TSV) — i.e. reject obvious binary noise (NUL bytes) rather than claim a false magic.
-pub fn sniff_real_bytes(bytes: &[u8]) -> bool {
+pub async fn sniff_real_bytes(bytes: &[u8]) -> bool {
     !bytes.is_empty() && !bytes.contains(&0u8)
 }
 //#endregion 🔖️Sniff
@@ -83,7 +83,7 @@ pub fn sniff_real_bytes(bytes: &[u8]) -> bool {
 /// 📥️ Decodes TSV text via a byte-exact split on the file's own line ending, then `\t` per line
 /// — no quoting, no escaping, no coercion (matches the real W0 fixture's own `verify_tsv.py`
 /// verification method exactly: split on `\n`, then each line on `\t`).
-pub fn decode_tsv(text: &str) -> TsvSnapshot {
+pub async fn decode_tsv(text: &str) -> TsvSnapshot {
     let line_ending = if text.contains("\r\n") { LineEnding::Crlf } else { LineEnding::Lf };
     let sep = line_ending.as_str();
     let trailing_newline = text.ends_with(sep);
@@ -94,7 +94,7 @@ pub fn decode_tsv(text: &str) -> TsvSnapshot {
 
 /// 📤️ Encodes via a byte-exact rejoin: `\t` within a row, the snapshot's own `line_ending`
 /// between rows, plus a final terminator iff `trailing_newline` is set.
-pub fn encode_tsv(snap: &TsvSnapshot) -> String {
+pub async fn encode_tsv(snap: &TsvSnapshot) -> String {
     let sep = snap.line_ending.as_str();
     let mut out = snap.records.iter().map(|r| r.join("\t")).collect::<Vec<_>>().join(sep);
     if snap.trailing_newline {
@@ -107,18 +107,18 @@ pub fn encode_tsv(snap: &TsvSnapshot) -> String {
 //#region 🔖️HandcraftedArtifactCodecs
 impl store::ArtifactDsl for TsvSnapshot {
     const EXTENSION: &'static str = "tsv";
-    fn envelope_id() -> &'static str {
+    async fn envelope_id() -> &'static str {
         STDIO_TSV_DOCUMENT_SCHEMA
     }
 
-    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+    async fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
         let body = match store::semio_format::split_text_preamble(text) {
             Ok((_, rest)) => rest,
             Err(_) => text,
         };
         Ok(decode_tsv(body))
     }
-    fn print_dsl(&self) -> String {
+    async fn print_dsl(&self) -> String {
         let body = encode_tsv(self);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
@@ -126,13 +126,13 @@ impl store::ArtifactDsl for TsvSnapshot {
 }
 
 impl store::ArtifactPack for TsvSnapshot {
-    fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
+    async fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
         let raw = encode_tsv(self).into_bytes();
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &raw))
     }
-    fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
+    async fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
         if envelope.envelope_id() != <Self as store::ArtifactDsl>::envelope_id() {
             return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.envelope_id())));
@@ -152,7 +152,7 @@ mod tests {
     const REAL_FIXTURE: &str = include_str!("../../📚️examples/🎬️demo/🖼️assets/📑️example.tsv");
 
     #[test]
-    fn round_trips_a_real_shaped_tsv_body() {
+    async fn round_trips_a_real_shaped_tsv_body() {
         let text = "name\tage\nAda\t30\nGrace\t85\n";
         assert!(sniff_real_bytes(text.as_bytes()));
         let snap = decode_tsv(text);
@@ -164,7 +164,7 @@ mod tests {
     }
 
     #[test]
-    fn detects_crlf_line_ending() {
+    async fn detects_crlf_line_ending() {
         let text = "a\tb\r\n1\t2\r\n";
         let snap = decode_tsv(text);
         assert_eq!(snap.line_ending, LineEnding::Crlf);
@@ -172,12 +172,12 @@ mod tests {
     }
 
     #[test]
-    fn sniff_rejects_binary_noise() {
+    async fn sniff_rejects_binary_noise() {
         assert!(!sniff_real_bytes(b"a\tb\0\x01\x02"));
     }
 
     #[test]
-    fn embedded_backslash_t_is_not_a_real_tab() {
+    async fn embedded_backslash_t_is_not_a_real_tab() {
         // 🔒 Documents the honest IANA TSV limitation: a genuine tab byte inside a field is
         // indistinguishable from a column boundary (no quoting mechanism exists to escape it).
         // A `\t` two-character ESCAPE SEQUENCE (backslash + t), by contrast, is just two
@@ -189,7 +189,7 @@ mod tests {
     }
 
     #[test]
-    fn decodes_the_real_fixture_with_6_rows_and_5_columns() {
+    async fn decodes_the_real_fixture_with_6_rows_and_5_columns() {
         let snap = decode_tsv(REAL_FIXTURE);
         assert_eq!(snap.records.len(), 6, "1 header row + 5 data rows");
         for row in &snap.records {
@@ -206,7 +206,7 @@ mod tests {
     /// (`✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📑️tsv/📚️examples/🎬️demo/🖼️assets/📑️example.tsv`,
     /// verified upstream by `verify_tsv.py`'s own "byte-exact split/rejoin" check).
     #[test]
-    fn codec_retention_law() {
+    async fn codec_retention_law() {
         let snap = decode_tsv(REAL_FIXTURE);
         let reencoded = encode_tsv(&snap);
         assert_eq!(reencoded, REAL_FIXTURE, "decode->encode must be byte-preserving on the real W0 fixture");

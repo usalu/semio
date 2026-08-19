@@ -19,10 +19,10 @@ pub enum BmpEditCommand {
 }
 
 impl protocol::OpBinary for BmpEditCommand {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         serde_json::to_vec(self).map_err(|error| protocol::ProtocolError::Malformed { what: "bmp-edit-command", offset: 0, detail: error.to_string() })
     }
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         serde_json::from_slice(bytes).map_err(|error| protocol::ProtocolError::Malformed { what: "bmp-edit-command", offset: 0, detail: error.to_string() })
     }
 }
@@ -48,11 +48,11 @@ impl ArtifactEditor for BmpEditor {
     const DIALECT: Dialect = BMP_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = STDIO_BMP_DOCUMENT_SCHEMA;
 
-    fn initial_snapshot() -> Self::Snapshot {
+    async fn initial_snapshot() -> Self::Snapshot {
         BmpSnapshot::default()
     }
 
-    fn handle(
+    async fn handle(
         command: &Self::Command,
         _doc: &ArtifactView<'_, Self::Snapshot>,
         _cfg: &ConfigView<'_, Self::Config>,
@@ -65,7 +65,7 @@ impl ArtifactEditor for BmpEditor {
         }
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> UiNode {
+    async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> UiNode {
         match body_key {
             main::BODY_KEY => main::render(doc.snapshot),
             _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))),
@@ -75,7 +75,7 @@ impl ArtifactEditor for BmpEditor {
 //#endregion 🔖️Editor
 
 //#region 🔖️Manifest
-pub fn create_bmp_editor() -> semio_framework_plugin::AppDefinition {
+pub async fn create_bmp_editor() -> semio_framework_plugin::AppDefinition {
     Editor::builder(BMP_DIALECT)
         .document(["semio", "bmp"])
         .icon_id("image")
@@ -93,14 +93,14 @@ mod tests {
     use super::*;
 
     #[test]
-    fn create_editor_builds_a_definition_for_the_editor_role() {
+    async fn create_editor_builds_a_definition_for_the_editor_role() {
         let def = create_bmp_editor();
         assert_eq!(def.role, semio_framework::AppRole::Editor);
         assert_eq!(def.dialect, BMP_DIALECT.into());
     }
 
     #[test]
-    fn editor_dialect_matches_the_artifact_coordinate() {
+    async fn editor_dialect_matches_the_artifact_coordinate() {
         assert_eq!(<BmpEditor as ArtifactEditor>::DIALECT, BMP_DIALECT);
     }
 }

@@ -27,7 +27,7 @@ pub const ASSEMBLY_DIALECT: Dialect = Dialect { artifact_kind: ASSEMBLY_DOCUMENT
 /// inference, never persisted media), so `dimension`/`media_class`/`media_form` follow `energy.model`'s
 /// "data" precedent (also a schema-first, app-free artifact authored under this same ticket) rather
 /// than `procedural2d`/`procedural3d`'s `Flow` shape — assembly has no flow-graph fixture to render.
-pub fn artifact_kind() -> ArtifactKindSpec {
+pub async fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "data.assembly".into(),
         name: "Assembly".into(),
@@ -49,7 +49,7 @@ pub fn artifact_kind() -> ArtifactKindSpec {
 /// 🧾️ Defines `s.assembly`'s immutable runtime capability leaves — the single `schema.artifact`
 /// capability this packet's brief asks for. `descriptor`/`claim` use the SAME `"s.assembly"` string
 /// `ASSEMBLY_DIALECT` above derives from (verified against the schema tree, not guessed).
-pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
+pub async fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
     use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace};
     ArtifactDefinition::new(ArtifactIdentity::parse("s.assembly")?).capability(
         ArtifactCapability::new(ArtifactIdentity::parse("s.assembly.schema.artifact")?, ArtifactCapabilityKind::schema())

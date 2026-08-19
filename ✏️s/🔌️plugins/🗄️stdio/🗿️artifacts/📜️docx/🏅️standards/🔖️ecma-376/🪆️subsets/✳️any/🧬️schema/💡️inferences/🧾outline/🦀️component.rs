@@ -20,7 +20,7 @@ pub struct DocxOutline {
 /// 🌳️ Recursively walks `blocks`, accumulating `(paragraph_count, table_count, word_count)` —
 /// table cells recurse into their own `blocks`, so a paragraph nested inside a table cell is
 /// counted exactly like a top-level one.
-fn walk_blocks(blocks: &[DocxBlock], paragraph_count: &mut u32, table_count: &mut u32, word_count: &mut u32) {
+async fn walk_blocks(blocks: &[DocxBlock], paragraph_count: &mut u32, table_count: &mut u32, word_count: &mut u32) {
     for block in blocks {
         match block {
             DocxBlock::Paragraph(paragraph) => {
@@ -42,7 +42,7 @@ fn walk_blocks(blocks: &[DocxBlock], paragraph_count: &mut u32, table_count: &mu
 }
 
 impl DocxOutline {
-    pub fn compute(snapshot: &DocxSnapshot) -> Self {
+    pub async fn compute(snapshot: &DocxSnapshot) -> Self {
         let mut paragraph_count = 0u32;
         let mut table_count = 0u32;
         let mut word_count = 0u32;
@@ -59,7 +59,7 @@ mod tests {
     use crate::artifacts::docx::schema::snapshot::{DocxDocument, DocxTable, DocxTableCell, DocxTableRow};
 
     #[test]
-    fn counts_paragraphs_tables_and_words_including_nested_cells() {
+    async fn counts_paragraphs_tables_and_words_including_nested_cells() {
         let snapshot = DocxSnapshot {
             schema: "stdio.docx".into(),
             opc: Default::default(),
@@ -81,7 +81,7 @@ mod tests {
     }
 
     #[test]
-    fn outline_is_deterministic() {
+    async fn outline_is_deterministic() {
         let snapshot = DocxSnapshot::default();
         assert_eq!(DocxOutline::compute(&snapshot), DocxOutline::compute(&snapshot));
     }

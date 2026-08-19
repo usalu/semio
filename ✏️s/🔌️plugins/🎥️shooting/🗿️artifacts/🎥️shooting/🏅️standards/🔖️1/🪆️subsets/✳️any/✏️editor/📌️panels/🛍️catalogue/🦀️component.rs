@@ -9,17 +9,17 @@ pub const SHOOTING_PLAY_BODY_CATALOGUE: &str = "shooting.play.catalogue";
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
-pub fn definition() -> PanelTabDefinition {
+pub async fn definition() -> PanelTabDefinition {
     PanelTabDefinition { kind: PanelTabKind::App(FRAMEWORK_PANEL_TAB_CATALOGUE_ID.into()), label: LocalizedLabel::native(FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, "Katalog"), group: PanelGroup::Workbench, body_key: Some(SHOOTING_PLAY_BODY_CATALOGUE.into()), children: Vec::new() }
 }
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-fn catalog_shot_item(id: &str, label: impl Into<Label>, format: &str, shape: &str) -> UiTreeItemNode {
+async fn catalog_shot_item(id: &str, label: impl Into<Label>, format: &str, shape: &str) -> UiTreeItemNode {
     crate::editor::shooting::tree_item_with_icon(format!("shooting-play-catalogue.{id}"), label, "camera", crate::editor::shooting::shooting_action("addShot", Some(json!({ "format": format, "shape": shape }))))
 }
 
-pub fn render(labels: &ShootingLabels) -> UiNode {
+pub async fn render(labels: &ShootingLabels) -> UiNode {
     let shot_items = vec![
         catalog_shot_item("svg-rect", labels.svg_rectangle, "svg", "rectangle"),
         catalog_shot_item("png-rect", labels.png_rectangle, "png", "rectangle"),
@@ -38,7 +38,7 @@ mod tests {
     use crate::editor::shooting::testkit::{render as render_body, shooting_app};
 
     #[test]
-    fn catalogue_lists_the_shot_presets_and_glb_asset() {
+    async fn catalogue_lists_the_shot_presets_and_glb_asset() {
         let mut app = shooting_app();
         let json = render_body(&mut app, SHOOTING_PLAY_BODY_CATALOGUE);
         assert!(json.contains("Add Shot"));

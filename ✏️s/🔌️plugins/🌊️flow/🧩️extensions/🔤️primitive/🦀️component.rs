@@ -7,7 +7,7 @@ use neural_engine::{channel_output, Atom, ChannelSpec, Dictionary, EvalError, Fi
 pub struct Number;
 
 impl Operator for Number {
-    fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
+    async fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         Ok(channel_output("number", number_dictionary(read_number(input, "value").or_else(|_| read_number(input, "number"))?)))
     }
 }
@@ -18,7 +18,7 @@ impl Operator for Number {
 pub struct Text;
 
 impl Operator for Text {
-    fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
+    async fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         Ok(channel_output("text", text_dictionary(read_text(input, "value").or_else(|_| read_text(input, "text"))?)))
     }
 }
@@ -29,7 +29,7 @@ impl Operator for Text {
 pub struct Boolean;
 
 impl Operator for Boolean {
-    fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
+    async fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         Ok(channel_output("boolean", boolean_dictionary(read_bool(input, "value").or_else(|_| read_bool(input, "boolean")).unwrap_or(false))))
     }
 }
@@ -40,7 +40,7 @@ impl Operator for Boolean {
 pub struct Image;
 
 impl Operator for Image {
-    fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
+    async fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         Ok(channel_output("image", Dictionary::with_schema("image").insert("dataUrl", Value::Atom(Atom::String(read_text(input, "dataUrl").unwrap_or_default())))))
     }
 }
@@ -51,7 +51,7 @@ impl Operator for Image {
 pub struct VariableRelay;
 
 impl Operator for VariableRelay {
-    fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
+    async fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         let name = read_text(input, "name")?;
         let schema = read_text(input, "schema").unwrap_or_else(|_| "dictionary".into());
         let payload = input.get(&name).and_then(|value| value.as_dictionary()).ok_or_else(|| EvalError::MissingInput(name.clone()))?;
@@ -66,35 +66,35 @@ impl Operator for VariableRelay {
 // #endregion 🔖️Variable
 
 // #region 🔖️Helpers
-pub fn number_dictionary(value: f64) -> Dictionary {
+pub async fn number_dictionary(value: f64) -> Dictionary {
     Dictionary::with_schema("number").insert("value", Value::Atom(Atom::Decimal(value)))
 }
 
-pub fn text_dictionary(value: String) -> Dictionary {
+pub async fn text_dictionary(value: String) -> Dictionary {
     Dictionary::with_schema("text").insert("value", Value::Atom(Atom::String(value)))
 }
 
-pub fn boolean_dictionary(value: bool) -> Dictionary {
+pub async fn boolean_dictionary(value: bool) -> Dictionary {
     Dictionary::with_schema("boolean").insert("value", Value::Atom(Atom::Boolean(value)))
 }
 
-fn read_number(input: &Dictionary, key: &str) -> Result<f64, EvalError> {
+async fn read_number(input: &Dictionary, key: &str) -> Result<f64, EvalError> {
     input.get(key).and_then(|v| v.as_atom()).and_then(|a| a.as_f64()).ok_or_else(|| EvalError::MissingInput(key.into()))
 }
 
-fn read_bool(input: &Dictionary, key: &str) -> Result<bool, EvalError> {
+async fn read_bool(input: &Dictionary, key: &str) -> Result<bool, EvalError> {
     input.get(key).and_then(|v| v.as_atom()).and_then(|a| a.as_bool()).ok_or_else(|| EvalError::MissingInput(key.into()))
 }
 
-fn read_text(input: &Dictionary, key: &str) -> Result<String, EvalError> {
+async fn read_text(input: &Dictionary, key: &str) -> Result<String, EvalError> {
     input.get(key).and_then(|v| v.as_atom()).and_then(|a| a.as_str()).map(str::to_string).ok_or_else(|| EvalError::MissingInput(key.into()))
 }
 
-fn schema(id: &str, name: &str, summary: &str, fields: Vec<FieldSpec>) -> Schema {
+async fn schema(id: &str, name: &str, summary: &str, fields: Vec<FieldSpec>) -> Schema {
     Schema { id: id.into(), module: "core".into(), name: name.into(), icon: "emoji:🧱️".into(), summary: summary.into(), fields }
 }
 
-fn operator(id: &str, name: &str, summary: &str, outputs: Vec<ChannelSpec>, operation: Box<dyn Operator>) -> (OperatorInfo, Vec<OperatorImpl>) {
+async fn operator(id: &str, name: &str, summary: &str, outputs: Vec<ChannelSpec>, operation: Box<dyn Operator>) -> (OperatorInfo, Vec<OperatorImpl>) {
     (
         OperatorInfo { id: id.into(), extension: "core".into(), name: name.into(), abbreviation: name.into(), icon: "emoji:🧱️".into(), summary: summary.into(), inputs: vec![], outputs, ..Default::default() },
         vec![OperatorImpl { schemas: vec![], operator: operation }],
@@ -104,7 +104,7 @@ fn operator(id: &str, name: &str, summary: &str, outputs: Vec<ChannelSpec>, oper
 // #endregion 🔖️Helpers
 
 /// 📦️ Registers core schemas and value operators.
-pub fn register(registry: &mut Registry) {
+pub async fn register(registry: &mut Registry) {
     registry.register_schema(schema("number", "Number", "Decimal number", vec![FieldSpec::decimal_default("value", 0.0)]));
     registry.register_schema(schema("text", "Text", "Text value", vec![FieldSpec::new("value", ValueType::Text).with_default(Value::Atom(Atom::String(String::new())))]));
     registry.register_schema(schema("boolean", "Boolean", "Boolean value", vec![FieldSpec::new("value", ValueType::Boolean).with_default(Value::Atom(Atom::Boolean(false)))]));
@@ -141,13 +141,13 @@ pub fn register(registry: &mut Registry) {
 
 // #region 🔖️Manifest
 /// 📦️ Flow extension manifest JSON contributed to host catalogues.
-pub fn extension_manifest_json() -> String {
+pub async fn extension_manifest_json() -> String {
     use flow_extension_sdk::{build_manifest_json};
     build_manifest_json("core", "Core", "0.1.0", &module_registry(), vec!["onStartup".into()], vec![], vec![], vec![])
 }
 
 /// 🌊️ Builds an in-process operator registry for this extension.
-pub fn module_registry() -> Registry {
+pub async fn module_registry() -> Registry {
     let mut registry = Registry::new();
     register(&mut registry);
     registry
@@ -161,7 +161,7 @@ mod tests {
     use flow_extension_sdk::{build_manifest_json, evaluate_json};
 
     #[test]
-    fn variable_relay_forwards_named_channel() {
+    async fn variable_relay_forwards_named_channel() {
         let mut registry = Registry::new();
         register(&mut registry);
         let input = Dictionary::new().insert("name", Value::Atom(Atom::String("width".into()))).insert("schema", Value::Atom(Atom::String("number".into()))).insert("width", Value::Dictionary(number_dictionary(2.0)));
@@ -171,7 +171,7 @@ mod tests {
     }
 
     #[test]
-    fn number_emits_schema_dictionary() {
+    async fn number_emits_schema_dictionary() {
         let mut registry = Registry::new();
         register(&mut registry);
         let out = registry.dispatch("core.number", &Dictionary::new().insert("value", Value::Atom(Atom::Decimal(2.5)))).unwrap();
@@ -181,7 +181,7 @@ mod tests {
     }
 
     #[test]
-    fn manifest_lists_schemas_and_operators() {
+    async fn manifest_lists_schemas_and_operators() {
         let json = build_manifest_json("core", "Core", "0.1.0", &module_registry(), vec!["onStartup".into()], vec![], vec![], vec![]);
         assert!(json.contains("\"schemas\""));
         assert!(json.contains("core.number"));
@@ -189,7 +189,7 @@ mod tests {
     }
 
     #[test]
-    fn evaluate_json_text() {
+    async fn evaluate_json_text() {
         let input = Dictionary::new().insert("value", Value::Atom(Atom::String("hi".into())));
         let out_json = evaluate_json(&module_registry(), "core.text", &serde_json::to_string(&input).unwrap());
         let out: Dictionary = serde_json::from_str(&out_json).unwrap();
@@ -222,7 +222,7 @@ mod extension_guest {
         input_json: String,
     }
 
-    fn flow_extension_contribution(app_id: &str, manifest_json: String) -> serde_json::Value {
+    async fn flow_extension_contribution(app_id: &str, manifest_json: String) -> serde_json::Value {
         let icon_id = "core";
         let topic_payload = serde_json::json!({
             "appId": app_id,
@@ -234,7 +234,7 @@ mod extension_guest {
         topic_payload
     }
 
-    fn bundle() -> ExtensionBundle {
+    async fn bundle() -> ExtensionBundle {
         let manifest_json = extension_manifest_json();
         let flow_topic_payload = flow_extension_contribution(FLOW_APP_ID, manifest_json.clone());
         let procedural3d_topic_payload = flow_extension_contribution(PROCEDURAL3D_APP_ID, manifest_json);

@@ -15,7 +15,7 @@ pub struct SetVisibility {
     pub visibility: String,
 }
 
-pub fn handle(payload: &SetVisibility, doc: &ArtifactView<'_, SSpaceSnapshot>, _cfg: &ConfigView<'_, SpaceIndexConfig>) -> Result<Emit<SSpaceMutation, SpaceIndexConfigMutation>, Fault> {
+pub async fn handle(payload: &SetVisibility, doc: &ArtifactView<'_, SSpaceSnapshot>, _cfg: &ConfigView<'_, SpaceIndexConfig>) -> Result<Emit<SSpaceMutation, SpaceIndexConfigMutation>, Fault> {
     Ok(Emit::effect(Effect::ReplayShellCommand { action_id: "os.directory.set-visibility".into(), args: semio_framework::optional_json_to_dsl(Some(json!({ "spaceId": doc.snapshot.space_id, "visibility": payload.visibility }))) }))
 }
 
@@ -27,7 +27,7 @@ mod tests {
     
 
     #[test]
-    fn set_visibility_relays_the_directory_command() {
+    async fn set_visibility_relays_the_directory_command() {
         let mut app = testkit::new_app();
         let result = app.dispatch_typed(SpaceIndexCommand::SetVisibility(SetVisibility { visibility: "public".into() }), &semio_framework_plugin::testkit::meta("local")).expect("set visibility");
         assert_eq!(result.requested_effects.len(), 1);

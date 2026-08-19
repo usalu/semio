@@ -13,7 +13,7 @@ use crate::editor::imperative::config::ImperativeConfig;
 #[dsl(keyword = "run")]
 pub struct Run {}
 
-pub fn handle(_payload: &Run, doc: &ArtifactView<'_, ImperativeSnapshot>, _cfg: &ConfigView<'_, ImperativeConfig>) -> Result<Emit<ImperativeMutation, ImperativeConfigMutation>, Fault> {
+pub async fn handle(_payload: &Run, doc: &ArtifactView<'_, ImperativeSnapshot>, _cfg: &ConfigView<'_, ImperativeConfig>) -> Result<Emit<ImperativeMutation, ImperativeConfigMutation>, Fault> {
     let host = ImperativeHost::from_snapshot(doc.snapshot.clone());
     let result = host.run();
     let json = serde_json::to_string(&result.scope).unwrap_or_else(|_| format!("{:?}", result.scope));

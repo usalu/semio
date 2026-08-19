@@ -4,7 +4,7 @@ use crate::artifacts::remodel::mutations::RemodelMutation;
 use crate::artifacts::remodel::RemodelSnapshot;
 
 //#region 🔖️Inverse
-pub fn inverse(payload: &super::mutation::CreateStream, base: &RemodelSnapshot) -> Vec<RemodelMutation> {
+pub async fn inverse(payload: &super::mutation::CreateStream, base: &RemodelSnapshot) -> Vec<RemodelMutation> {
     if base.streams.iter().any(|stream| stream.id == payload.stream.id) {
         return Vec::new();
     }

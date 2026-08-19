@@ -23,7 +23,7 @@ pub struct FlowInference {
 }
 
 impl protocol::Inference<FlowSnapshot> for FlowInference {
-    fn infer(snapshot: &FlowSnapshot) -> Self {
+    async fn infer(snapshot: &FlowSnapshot) -> Self {
         let fixture = snapshot.to_fixture();
         Self { topology: compute_flow_topology(&fixture.widgets, &fixture.synapses) }
     }
@@ -35,19 +35,19 @@ impl protocol::Inference<FlowSnapshot> for FlowInference {
 /// default, don't derive structurally" trick as `AddInference`'s hand-written `Default` in
 /// `📡️spr/🎮️command/🦀️component.rs`.
 impl Default for FlowInference {
-    fn default() -> Self {
+    async fn default() -> Self {
         <Self as protocol::Inference<FlowSnapshot>>::infer(&FlowSnapshot::default())
     }
 }
 
 impl protocol::InferenceSpec<FlowSnapshot> for FlowInference {
-    fn inference_schema_id() -> &'static str {
+    async fn inference_schema_id() -> &'static str {
         "s.flow.flow.inference"
     }
-    fn schema_version() -> u32 {
+    async fn schema_version() -> u32 {
         1
     }
-    fn fields() -> &'static [protocol::InferenceFieldSpec] {
+    async fn fields() -> &'static [protocol::InferenceFieldSpec] {
         &[protocol::InferenceFieldSpec { id: "s.flow.flow.inference.topology", reads: &["content"] }]
     }
 }
@@ -63,7 +63,7 @@ impl ArtifactInferrer for crate::artifacts::flow::standards::v1::subsets::any::s
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.flow.flow.inference`'s facet leaves into the OS-wide inference catalog — call
 /// once at plugin init, alongside `flow_artifact_schema_descriptor`'s registration.
-pub fn flow_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
+pub async fn flow_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
     schema::ArtifactInferenceDescriptor {
         id: "s.flow.flow.inference",
         inference: schema::FacetLeaves {
@@ -84,7 +84,7 @@ mod tests {
     use flow::Widget;
     use protocol::Inference;
 
-    fn chain_snapshot() -> FlowSnapshot {
+    async fn chain_snapshot() -> FlowSnapshot {
         let mut fixture = FlowSnapshot::default().to_fixture();
         fixture.widgets = vec![
             Widget::InputSlider { id: "a".into(), value: 0.0, min: 0.0, max: 1.0, step: 0.1 },
@@ -95,18 +95,18 @@ mod tests {
     }
 
     #[test]
-    fn inference_determinism_law() {
+    async fn inference_determinism_law() {
         let snapshot = chain_snapshot();
         assert_eq!(FlowInference::infer(&snapshot), FlowInference::infer(&snapshot));
     }
 
     #[test]
-    fn inference_default_law() {
+    async fn inference_default_law() {
         assert_eq!(FlowInference::infer(&FlowSnapshot::default()), FlowInference::default());
     }
 
     #[test]
-    fn topology_counts_every_widget_exactly_once() {
+    async fn topology_counts_every_widget_exactly_once() {
         let snapshot = chain_snapshot();
         let inferred = FlowInference::infer(&snapshot);
         let widget_count = snapshot.to_fixture().widgets.len();

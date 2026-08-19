@@ -21,12 +21,12 @@ use crate::artifacts::forms::op::FormMutation;
 use protocol::OpBinary;
 
 /// 📦️ Encodes a `FormMutation` to its binary state-patch form.
-pub fn encode_op(operation: &FormMutation) -> Result<Vec<u8>, protocol::ProtocolError> {
+pub async fn encode_op(operation: &FormMutation) -> Result<Vec<u8>, protocol::ProtocolError> {
     operation.encode_op()
 }
 
 /// 📖️ Decodes a `FormMutation` from its binary state-patch form.
-pub fn decode_op(bytes: &[u8]) -> Result<FormMutation, protocol::ProtocolError> {
+pub async fn decode_op(bytes: &[u8]) -> Result<FormMutation, protocol::ProtocolError> {
     FormMutation::decode_op(bytes)
 }
 
@@ -36,7 +36,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn op_binary_round_trips_and_agrees_with_text() {
+    async fn op_binary_round_trips_and_agrees_with_text() {
         let operation = FormMutation::ChangeFormTitle(crate::artifacts::forms::mutations::change_form_title::mutation::ChangeFormTitle { new_title: Some("Renamed".into()) });
         store::os_store::test_support::assert_op_text_binary_equivalence(&operation);
         let bytes = encode_op(&operation).expect("encode");

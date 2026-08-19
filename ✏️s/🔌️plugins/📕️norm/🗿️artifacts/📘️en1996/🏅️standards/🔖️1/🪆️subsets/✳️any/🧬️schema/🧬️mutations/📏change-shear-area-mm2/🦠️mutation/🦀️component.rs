@@ -15,15 +15,15 @@ pub struct ChangeShearAreaMm2 {
 impl protocol::MutationKind<En1996Snapshot, En1996Mutation> for ChangeShearAreaMm2 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "shear-area-mm2", kind: "change-shear-area-mm2", record: "ChangedShearAreaMm2" };
 
-    fn diff(&self, base: &En1996Snapshot) -> protocol::MutationOutcome<En1996Diff> {
+    async fn diff(&self, base: &En1996Snapshot) -> protocol::MutationOutcome<En1996Diff> {
         crate::artifacts::en1996::mutations::change_shear_area_mm2::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &En1996Snapshot) -> Vec<En1996Mutation> {
+    async fn inverse(&self, base: &En1996Snapshot) -> Vec<En1996Mutation> {
         crate::artifacts::en1996::mutations::change_shear_area_mm2::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         format!("Change shear area [mm2] to {}", self.new_shear_area_mm2)
     }
 }

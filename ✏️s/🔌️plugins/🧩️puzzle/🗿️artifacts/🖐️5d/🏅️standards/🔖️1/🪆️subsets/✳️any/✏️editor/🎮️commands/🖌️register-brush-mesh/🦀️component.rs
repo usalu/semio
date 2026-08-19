@@ -7,7 +7,7 @@ use crate::editor::puzzle5d::Puzzle5dActionCtx;
 /// engine and remembered so `drive_precompute` never re-registers a box over it. Aborts (emitting
 /// nothing at all) because the session cache is not document or config state — the pre-migration
 /// `return Emit::default()`.
-pub fn register_brush_mesh(ctx: &mut Puzzle5dActionCtx<'_>, args: Option<&Value>) {
+pub async fn register_brush_mesh(ctx: &mut Puzzle5dActionCtx<'_>, args: Option<&Value>) {
     if let (Some(url), Some(positions), Some(indices)) =
         (args.and_then(|v| v.get("url")).and_then(|v| v.as_str()), args.and_then(|v| v.get("positions")).and_then(|v| v.as_array()), args.and_then(|v| v.get("indices")).and_then(|v| v.as_array()))
     {

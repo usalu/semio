@@ -15,7 +15,7 @@ pub const BLOCK3D_BODY_INSPECTOR: &str = "block3d.play.inspector";
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
-pub fn definition() -> PanelTabDefinition {
+pub async fn definition() -> PanelTabDefinition {
     PanelTabDefinition {
         kind: PanelTabKind::App(FRAMEWORK_PANEL_TAB_INSPECTION_ID.into()),
         label: LocalizedLabel::native(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, "Inspektion"),
@@ -27,7 +27,7 @@ pub fn definition() -> PanelTabDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-fn text_field(id: &str, label: impl Into<Label>, value: &str, field: &str) -> UiNode {
+async fn text_field(id: &str, label: impl Into<Label>, value: &str, field: &str) -> UiNode {
     UiNode::Field(UiFieldNode {
         presence: UiPresence::default(),
         id: id.into(),
@@ -53,7 +53,7 @@ fn text_field(id: &str, label: impl Into<Label>, value: &str, field: &str) -> Ui
     })
 }
 
-pub fn render(definition: &Block3dSnapshot, active_representation_id: Option<&str>, labels: &Block3dLabels) -> UiNode {
+pub async fn render(definition: &Block3dSnapshot, active_representation_id: Option<&str>, labels: &Block3dLabels) -> UiNode {
     let representation_select = UiNode::Select(UiSelectNode {
         id: "block3d-play-inspector.representation".into(),
         value: active_representation_id.unwrap_or_default().into(),
@@ -94,7 +94,7 @@ mod tests {
     use crate::editor::block3d::testkit::{new_app, render as render_body};
 
     #[test]
-    fn renders_inspector_fields() {
+    async fn renders_inspector_fields() {
         let mut app = new_app();
         let json = render_body(&mut app, BLOCK3D_BODY_INSPECTOR);
         assert!(json.contains("\"type\":\"tree\""), "inspection body must be a tree like document");

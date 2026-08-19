@@ -15,16 +15,16 @@ pub struct CreatePrimitive {
 impl protocol::MutationKind<SemioMeshSnapshot, SemioMeshMutation> for CreatePrimitive {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "create", entity: "primitive", kind: "create-primitive", record: "CreatedPrimitive" };
 
-    fn diff(&self, base: &SemioMeshSnapshot) -> protocol::MutationOutcome<<SemioMeshMutation as protocol::Mutation<SemioMeshSnapshot>>::Diff> {
+    async fn diff(&self, base: &SemioMeshSnapshot) -> protocol::MutationOutcome<<SemioMeshMutation as protocol::Mutation<SemioMeshSnapshot>>::Diff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &SemioMeshSnapshot) -> Vec<SemioMeshMutation> {
+    async fn inverse(&self, base: &SemioMeshSnapshot) -> Vec<SemioMeshMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         format!("Create primitive \"{}\" in mesh \"{}\"", self.primitive.id, self.mesh_id)
     }
-    fn target(&self) -> Vec<String> {
+    async fn target(&self) -> Vec<String> {
         vec![self.primitive.id.clone()]
     }
 }

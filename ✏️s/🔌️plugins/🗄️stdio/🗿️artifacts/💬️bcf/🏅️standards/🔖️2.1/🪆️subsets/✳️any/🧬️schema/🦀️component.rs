@@ -27,24 +27,24 @@ pub struct BcfArtifact {
 
 //#region Conversions
 impl Default for BcfArtifact {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self::from_snapshot(BcfSnapshot::default())
     }
 }
 
 impl BcfArtifact {
     /// 📸️ Persisted subset.
-    pub fn to_snapshot(&self) -> BcfSnapshot {
+    pub async fn to_snapshot(&self) -> BcfSnapshot {
         BcfSnapshot { schema: self.schema.clone(), version: self.version.clone(), topics: self.topics.clone(), parts: self.parts.clone() }
     }
 
     /// 🧬️ Builds a full artifact from a snapshot.
-    pub fn from_snapshot(snapshot: BcfSnapshot) -> Self {
+    pub async fn from_snapshot(snapshot: BcfSnapshot) -> Self {
         Self { schema: snapshot.schema, version: snapshot.version, topics: snapshot.topics, parts: snapshot.parts }
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
-    pub fn set_snapshot(&mut self, snapshot: BcfSnapshot) {
+    pub async fn set_snapshot(&mut self, snapshot: BcfSnapshot) {
         self.schema = snapshot.schema;
         self.version = snapshot.version;
         self.topics = snapshot.topics;
@@ -55,7 +55,7 @@ impl BcfArtifact {
 
 //#region Descriptor
 /// 🧬️ Descriptor for `s.stdio.bcf`.
-pub fn bcf_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
+pub async fn bcf_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
     schema::ArtifactSchemaDescriptor {
         id: "s.stdio.bcf",
         artifact: schema::FacetLeaves {
@@ -106,27 +106,27 @@ pub mod derived_construction {
         type Snapshot = BcfSnapshot;
         type Mutation = BcfMutation;
         type Diff = BcfDiff;
-        fn empty() -> Self {
+        async fn empty() -> Self {
             Self { snapshot: BcfSnapshot::default(), diagnostics: Vec::new() }
         }
-        fn from_snapshot(snapshot: Self::Snapshot) -> Self {
+        async fn from_snapshot(snapshot: Self::Snapshot) -> Self {
             Self { snapshot, diagnostics: Vec::new() }
         }
-        fn from_text(text: &str) -> Result<Self, store::TextError> {
+        async fn from_text(text: &str) -> Result<Self, store::TextError> {
             Ok(Self::from_snapshot(<BcfSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
-        fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
+        async fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
             Ok(Self::from_snapshot(<BcfSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
         }
-        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
+        async fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let diff = crate::artifacts::bcf::schema::mutations::apply_bcf_mutation(&mut self.snapshot, &mutation);
             (self, diff)
         }
-        fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
+        async fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
             self.snapshot = <BcfDiff as protocol::MutationDiff<BcfSnapshot>>::apply(&diff, &self.snapshot)?;
             Ok(self)
         }
-        fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
+        async fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
             if self.diagnostics.is_empty() {
                 Ok(self.snapshot)
             } else {
@@ -160,7 +160,7 @@ pub mod derived_analysis {
         type Parts = BcfParts;
         const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.bcf", standard: StandardId("2.1"), subset: SubsetId("*") };
 
-        fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
+        async fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
             // 🕵️ Real sniff: BCF is a zip container that additionally carries a root `bcf.version`
             // entry. Reuses the zip artifact's own byte-level magic+EOCD check (never reimplemented
             // here) for the base confidence, then cheaply corroborates the `bcf.version` entry name
@@ -190,7 +190,7 @@ pub mod derived_analysis {
             }
         }
 
-        fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
+        async fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
             let mut parts = BcfParts::default();
             let mut diagnostics = Vec::new();
             let mut confidence = IoConfidence::High;
@@ -222,14 +222,14 @@ pub mod derived_analysis {
     mod tests {
         use super::*;
         #[test]
-        fn sniff_bumps_to_high_when_bcf_version_entry_name_is_present() {
+        async fn sniff_bumps_to_high_when_bcf_version_entry_name_is_present() {
             let snap = BcfSnapshot { schema: "stdio.bcf".into(), version: "2.1".into(), topics: Vec::new(), parts: Vec::new() };
             let bytes = crate::artifacts::bcf::io::encode_bcf(&snap).expect("encode");
             assert_eq!(BcfAnalyzerAnalysis::sniff(&AnalyzeSource::Binary(&bytes)), IoConfidence::High);
         }
 
         #[test]
-        fn sniff_stays_medium_for_a_real_zip_without_bcf_version() {
+        async fn sniff_stays_medium_for_a_real_zip_without_bcf_version() {
             let zip_snap = crate::artifacts::zip::ZipSnapshot {
                 schema: crate::artifacts::zip::STDIO_ZIP_DOCUMENT_SCHEMA.into(),
                 entries: vec![crate::artifacts::zip::schema::snapshot::ZipEntry { name: "unrelated.txt".into(), data: b"not a bcf archive".to_vec(), ..Default::default() }],
@@ -240,12 +240,12 @@ pub mod derived_analysis {
         }
 
         #[test]
-        fn sniff_rejects_non_zip_garbage() {
+        async fn sniff_rejects_non_zip_garbage() {
             assert_eq!(BcfAnalyzerAnalysis::sniff(&AnalyzeSource::Binary(b"not a zip at all")), IoConfidence::Low);
         }
 
         #[test]
-        fn sniff_treats_text_source_as_low() {
+        async fn sniff_treats_text_source_as_low() {
             assert_eq!(BcfAnalyzerAnalysis::sniff(&AnalyzeSource::Text("deadbeef")), IoConfidence::Low);
         }
     }

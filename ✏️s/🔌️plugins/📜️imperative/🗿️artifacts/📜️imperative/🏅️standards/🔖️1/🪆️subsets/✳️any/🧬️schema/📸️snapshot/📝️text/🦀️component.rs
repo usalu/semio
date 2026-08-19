@@ -45,7 +45,7 @@ pub struct ValueDsl {
     dictionary: Option<BTreeMap<String, ValueDsl>>,
 }
 
-pub fn value_to_value_dsl(value: &Value) -> ValueDsl {
+pub async fn value_to_value_dsl(value: &Value) -> ValueDsl {
     let mut dsl_value = ValueDsl { null: None, boolean: None, integer: None, decimal: None, text: None, dictionary: None };
     match value {
         Value::Atom(Atom::Null) => dsl_value.null = Some(true),
@@ -58,7 +58,7 @@ pub fn value_to_value_dsl(value: &Value) -> ValueDsl {
     dsl_value
 }
 
-pub fn value_dsl_to_value(dsl_value: &ValueDsl) -> Value {
+pub async fn value_dsl_to_value(dsl_value: &ValueDsl) -> Value {
     if dsl_value.null.is_some() {
         return Value::Atom(Atom::Null);
     }
@@ -80,20 +80,20 @@ pub fn value_dsl_to_value(dsl_value: &ValueDsl) -> Value {
     }
 }
 
-pub fn dictionary_to_value_dsl_map(dict: &Dictionary) -> BTreeMap<String, ValueDsl> {
+pub async fn dictionary_to_value_dsl_map(dict: &Dictionary) -> BTreeMap<String, ValueDsl> {
     dict.keys().map(|key| (key.clone(), value_to_value_dsl(dict.get(key).expect("key came from dict.keys()")))).collect()
 }
 
-pub fn value_dsl_map_to_dictionary(entries: &BTreeMap<String, ValueDsl>) -> Dictionary {
+pub async fn value_dsl_map_to_dictionary(entries: &BTreeMap<String, ValueDsl>) -> Dictionary {
     entries.iter().fold(Dictionary::new(), |dict, (key, value)| dict.insert(key.clone(), value_dsl_to_value(value)))
 }
 
 /// 📦️ `None` when `dict` is empty, mirroring the old printer's "omit an empty dictionary section".
-pub fn dictionary_to_option_dsl_map(dict: &Dictionary) -> Option<BTreeMap<String, ValueDsl>> {
+pub async fn dictionary_to_option_dsl_map(dict: &Dictionary) -> Option<BTreeMap<String, ValueDsl>> {
     (!dict.is_empty()).then(|| dictionary_to_value_dsl_map(dict))
 }
 
-pub fn option_dsl_map_to_dictionary(entries: Option<BTreeMap<String, ValueDsl>>) -> Dictionary {
+pub async fn option_dsl_map_to_dictionary(entries: Option<BTreeMap<String, ValueDsl>>) -> Dictionary {
     entries.map(|entries| value_dsl_map_to_dictionary(&entries)).unwrap_or_default()
 }
 //#endregion 🔖️Value
@@ -121,20 +121,20 @@ pub struct PathDsl {
     steps: Vec<StepNodeDsl>,
 }
 
-pub fn step_to_step_node_dsl(step: &Step) -> StepNodeDsl {
+pub async fn step_to_step_node_dsl(step: &Step) -> StepNodeDsl {
     StepNodeDsl::Step { id: step.id.clone(), kind: step.kind.clone(), params: dictionary_to_option_dsl_map(&step.params), bodies: step.bodies.iter().map(|(slot, path)| (slot.clone(), path_to_path_dsl(path))).collect() }
 }
 
-pub fn step_node_dsl_to_step(node: StepNodeDsl) -> Step {
+pub async fn step_node_dsl_to_step(node: StepNodeDsl) -> Step {
     let StepNodeDsl::Step { id, kind, params, bodies } = node;
     Step { id, kind, params: option_dsl_map_to_dictionary(params), bodies: bodies.into_iter().map(|(slot, path)| (slot, path_dsl_to_path(path))).collect() }
 }
 
-pub fn path_to_path_dsl(path: &Path) -> PathDsl {
+pub async fn path_to_path_dsl(path: &Path) -> PathDsl {
     PathDsl { steps: path.steps.iter().map(step_to_step_node_dsl).collect() }
 }
 
-pub fn path_dsl_to_path(path_dsl: PathDsl) -> Path {
+pub async fn path_dsl_to_path(path_dsl: PathDsl) -> Path {
     Path { steps: path_dsl.steps.into_iter().map(step_node_dsl_to_step).collect() }
 }
 //#endregion 🔖️Step
@@ -144,12 +144,12 @@ pub fn path_dsl_to_path(path_dsl: PathDsl) -> Path {
 pub const IMPERATIVE_EXAMPLE_TEXT: &str = include_str!("../../../📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio");
 
 /// 📖️ Parses `.imperative` DSL text into an `ImperativeSnapshot`.
-pub fn parse_dsl(text: &str) -> Result<ImperativeSnapshot, store::TextError> {
+pub async fn parse_dsl(text: &str) -> Result<ImperativeSnapshot, store::TextError> {
     <ImperativeSnapshot as store::ArtifactDsl>::parse_dsl(text)
 }
 
 /// 🖨️ Prints an `ImperativeSnapshot` back to `.imperative` DSL text.
-pub fn print_dsl(document: &ImperativeSnapshot) -> String {
+pub async fn print_dsl(document: &ImperativeSnapshot) -> String {
     store::ArtifactDsl::print_dsl(document)
 }
 //#endregion 🔖️Api
@@ -161,12 +161,12 @@ mod tests {
     use crate::artifacts::imperative::{Dictionary as DocDictionary, Step as DocStep};
     use std::collections::BTreeMap as StdBTreeMap;
 
-    fn step(id: &str, kind: &str) -> DocStep {
+    async fn step(id: &str, kind: &str) -> DocStep {
         DocStep { id: id.into(), kind: kind.into(), params: DocDictionary::new(), bodies: StdBTreeMap::new() }
     }
 
     #[test]
-    fn default_snapshot_dsl_round_trips() {
+    async fn default_snapshot_dsl_round_trips() {
         let document = parse_dsl(IMPERATIVE_EXAMPLE_TEXT).expect("parse 📜️default.imperative");
         store::os_store::test_support::assert_dsl_round_trip(&document);
     }
@@ -179,7 +179,7 @@ mod tests {
     /// losslessly through `flow_content_snapshot_from_path`/`path_from_flow_content_snapshot`, and the
     /// full snapshot (built from that `Path`) still satisfies the DSL/pack round-trip laws.
     #[test]
-    fn flow_content_round_trips_nested_control_bodies() {
+    async fn flow_content_round_trips_nested_control_bodies() {
         let inner = step("step-inner", "log.print");
         let mut owner = step("step-if", "control.if");
         owner.bodies.insert("then".to_string(), Path { steps: vec![inner] });
@@ -200,7 +200,7 @@ mod tests {
     /// [`flow_content_round_trips_nested_control_bodies`], for `seed`'s `text_content_snapshot_from_seed`/
     /// `seed_from_text_content_snapshot` converter and every `Value`/`Atom` variant it carries.
     #[test]
-    fn text_content_round_trips_dictionary_and_atom_variants() {
+    async fn text_content_round_trips_dictionary_and_atom_variants() {
         let seed = StdBTreeMap::from([
             ("a".into(), Value::Atom(Atom::Null)),
             ("b".into(), Value::Atom(Atom::Boolean(true))),
@@ -222,7 +222,7 @@ mod tests {
     /// 🔁 Retired-format twin was `dsl_rejects_unterminated_string`; the new hand-rolled body grammar
     /// has no quoted-string literals, so the equivalent rejection is a malformed hex value (odd length).
     #[test]
-    fn dsl_rejects_malformed_hex_value() {
+    async fn dsl_rejects_malformed_hex_value() {
         let text = "schema=zzz";
         assert!(<ImperativeSnapshot as store::ArtifactDsl>::parse_dsl(text).is_err());
     }
@@ -231,7 +231,7 @@ mod tests {
     /// line-based (`schema=`/`flow=`/`text=`), not keyword-based, so the equivalent rejection is an
     /// unrecognized line.
     #[test]
-    fn dsl_rejects_unrecognized_body_line() {
+    async fn dsl_rejects_unrecognized_body_line() {
         let text = r#"notimperative schema="x""#;
         assert!(<ImperativeSnapshot as store::ArtifactDsl>::parse_dsl(text).is_err());
     }
@@ -240,7 +240,7 @@ mod tests {
     /// requires all three lines (`schema=`/`flow=`/`text=`), so the equivalent rejection is a body
     /// missing a required line.
     #[test]
-    fn dsl_rejects_incomplete_body_missing_required_line() {
+    async fn dsl_rejects_incomplete_body_missing_required_line() {
         let text = "schema=696d70657261746976652e646f63756d656e74";
         assert!(<ImperativeSnapshot as store::ArtifactDsl>::parse_dsl(text).is_err());
     }

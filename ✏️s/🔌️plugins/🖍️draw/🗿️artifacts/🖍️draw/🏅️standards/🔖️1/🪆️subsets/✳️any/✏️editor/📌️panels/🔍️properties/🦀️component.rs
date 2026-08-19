@@ -8,7 +8,7 @@ use semio_framework_plugin::{ui_stack_vertical, ui_text, Label, PanelGroup, Pane
 pub const DRAW_PLAY_BODY_PROPERTIES: &str = "draw.play.properties";
 
 //#region 🔖️Definition
-pub fn definition() -> PanelTabDefinition {
+pub async fn definition() -> PanelTabDefinition {
     PanelTabDefinition {
         kind: PanelTabKind::App(FRAMEWORK_PANEL_TAB_INSPECTION_ID.into()),
         label: semio_framework_plugin::LocalizedLabel::native(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, "Inspektion"),
@@ -29,7 +29,7 @@ pub fn definition() -> PanelTabDefinition {
 /// (`🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🔍️inspection/🦀️component.rs`):
 /// falls through to the schema/utility/layer-count summary until a resolved-selection render path
 /// exists.
-pub fn render(document: &DrawSnapshot, active_utility: &str) -> UiNode {
+pub async fn render(document: &DrawSnapshot, active_utility: &str) -> UiNode {
     ui_stack_vertical(vec![
         ui_text(Label::data(format!("Schema: {}", DRAW_DOCUMENT_SCHEMA))),
         ui_text(Label::data(format!("Utility: {active_utility}"))),

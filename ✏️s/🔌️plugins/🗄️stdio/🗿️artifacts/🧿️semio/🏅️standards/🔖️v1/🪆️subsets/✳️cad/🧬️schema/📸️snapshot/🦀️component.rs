@@ -43,7 +43,7 @@ pub enum CadEntity {
 /// have produced field-by-field if it were allowed. See this type's own doc comment above for WHY
 /// `Default` is needed at all (the shared `engine::triples` spurious-bound workaround).
 impl Default for CadEntity {
-    fn default() -> Self {
+    async fn default() -> Self {
         CadEntity::Line { a: SemioPoint2::default(), b: SemioPoint2::default() }
     }
 }
@@ -107,7 +107,7 @@ pub struct SemioCadSnapshot {
 }
 
 impl Default for SemioCadSnapshot {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self { schema: STDIO_SEMIOCAD_DOCUMENT_SCHEMA.into(), layers: Vec::new(), blocks: Vec::new(), entities: Vec::new() }
     }
 }
@@ -128,52 +128,52 @@ impl Default for SemioCadSnapshot {
 /// `semio-tagged-enum-heterogeneous-variants-no-dslenum-text-path` gap brep's wave first hit).
 /// Hand-rolled instead, matching the established hex/bracket convention this subset's own `🔺️diff`
 /// facet already uses for exactly this enum.
-fn hex_encode(bytes: &[u8]) -> String {
+async fn hex_encode(bytes: &[u8]) -> String {
     bytes.iter().map(|b| format!("{b:02x}")).collect()
 }
-fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
+async fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
     if s.len() % 2 != 0 {
         return Err(format!("odd hex length: {s:?}"));
     }
     (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()
 }
-fn enc_str(s: &str) -> String {
+async fn enc_str(s: &str) -> String {
     hex_encode(s.as_bytes())
 }
-fn dec_str(s: &str) -> Result<String, String> {
+async fn dec_str(s: &str) -> Result<String, String> {
     String::from_utf8(hex_decode(s)?).map_err(|e| e.to_string())
 }
-fn parse_f64(s: &str) -> Result<f64, String> {
+async fn parse_f64(s: &str) -> Result<f64, String> {
     s.parse().map_err(|e: std::num::ParseFloatError| e.to_string())
 }
-fn parse_i32(s: &str) -> Result<i32, String> {
+async fn parse_i32(s: &str) -> Result<i32, String> {
     s.parse().map_err(|e: std::num::ParseIntError| e.to_string())
 }
-fn enc_bool(b: bool) -> &'static str {
+async fn enc_bool(b: bool) -> &'static str {
     if b {
         "1"
     } else {
         "0"
     }
 }
-fn parse_bool(s: &str) -> Result<bool, String> {
+async fn parse_bool(s: &str) -> Result<bool, String> {
     match s {
         "1" => Ok(true),
         "0" => Ok(false),
         other => Err(format!("bad bool {other:?}")),
     }
 }
-fn enc_list<T>(items: &[T], enc: impl Fn(&T) -> String) -> String {
+async fn enc_list<T>(items: &[T], enc: impl Fn(&T) -> String) -> String {
     format!("[{}]", items.iter().map(|it| enc(it)).collect::<Vec<_>>().join(","))
 }
-fn dec_list<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Vec<T>, String> {
+async fn dec_list<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Vec<T>, String> {
     split_top_level(strip_brackets(s)?, ',').into_iter().filter(|s| !s.is_empty()).map(|entry| dec(entry)).collect()
 }
 
-fn enc_point2(p: &SemioPoint2) -> String {
+async fn enc_point2(p: &SemioPoint2) -> String {
     format!("[{},{}]", p.x, p.y)
 }
-fn dec_point2(s: &str) -> Result<SemioPoint2, String> {
+async fn dec_point2(s: &str) -> Result<SemioPoint2, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [x, y] = parts.as_slice() else { return Err(format!("point2: expected 2 fields, got {}", parts.len())) };
     Ok(SemioPoint2 { x: parse_f64(x)?, y: parse_f64(y)? })
@@ -182,7 +182,7 @@ fn dec_point2(s: &str) -> Result<SemioPoint2, String> {
 /// 📐️ `L`ine/`A`rc/`C`ircle/`E`llipse/`P`olyline/`T`ext/`I`nsert/`S`olid/`D`imension — single-letter
 /// tag prefix, same convention this subset's own `🔺️diff/🦀️component.rs`'s `enc_entity` uses
 /// (duplicated here, field-for-field).
-fn enc_entity(e: &CadEntity) -> String {
+async fn enc_entity(e: &CadEntity) -> String {
     match e {
         CadEntity::Line { a, b } => format!("L[{},{}]", enc_point2(a), enc_point2(b)),
         CadEntity::Arc { center, radius, start_angle, end_angle } => format!("A[{},{},{},{}]", enc_point2(center), radius, start_angle, end_angle),
@@ -197,7 +197,7 @@ fn enc_entity(e: &CadEntity) -> String {
         CadEntity::Dimension { def_point, text_position, measurement, text } => format!("D[{},{},{},{}]", enc_point2(def_point), enc_point2(text_position), measurement, enc_str(text)),
     }
 }
-fn dec_entity(s: &str) -> Result<CadEntity, String> {
+async fn dec_entity(s: &str) -> Result<CadEntity, String> {
     let (tag, rest) = s.split_at(1);
     let inner = strip_brackets(rest)?;
     let parts = split_top_level(inner, ',');
@@ -242,28 +242,28 @@ fn dec_entity(s: &str) -> Result<CadEntity, String> {
     }
 }
 
-fn enc_layer(l: &CadLayer) -> String {
+async fn enc_layer(l: &CadLayer) -> String {
     format!("[{},{},{},{}]", enc_str(&l.name), l.color_index, enc_str(&l.line_type), enc_bool(l.visible))
 }
-fn dec_layer(s: &str) -> Result<CadLayer, String> {
+async fn dec_layer(s: &str) -> Result<CadLayer, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [name, color_index, line_type, visible] = parts.as_slice() else { return Err(format!("layer: expected 4 fields, got {}", parts.len())) };
     Ok(CadLayer { name: dec_str(name)?, color_index: parse_i32(color_index)?, line_type: dec_str(line_type)?, visible: parse_bool(visible)? })
 }
 
-fn enc_entity_record(r: &CadEntityRecord) -> String {
+async fn enc_entity_record(r: &CadEntityRecord) -> String {
     format!("[{},{},{}]", enc_str(&r.handle), enc_str(&r.layer), enc_entity(&r.entity))
 }
-fn dec_entity_record(s: &str) -> Result<CadEntityRecord, String> {
+async fn dec_entity_record(s: &str) -> Result<CadEntityRecord, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [handle, layer, entity] = parts.as_slice() else { return Err(format!("entity record: expected 3 fields, got {}", parts.len())) };
     Ok(CadEntityRecord { handle: dec_str(handle)?, layer: dec_str(layer)?, entity: dec_entity(entity)? })
 }
 
-fn enc_block(b: &CadBlock) -> String {
+async fn enc_block(b: &CadBlock) -> String {
     format!("[{},{},{}]", enc_str(&b.name), enc_point2(&b.base_point), enc_list(&b.entities, enc_entity_record))
 }
-fn dec_block(s: &str) -> Result<CadBlock, String> {
+async fn dec_block(s: &str) -> Result<CadBlock, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [name, base_point, entities] = parts.as_slice() else { return Err(format!("block: expected 3 fields, got {}", parts.len())) };
     Ok(CadBlock { name: dec_str(name)?, base_point: dec_point2(base_point)?, entities: dec_list(entities, dec_entity_record)? })
@@ -273,7 +273,7 @@ fn dec_block(s: &str) -> Result<CadBlock, String> {
 /// `entities=[...]` — matching the grammar's `document = artifact-mark schema-line layers-line
 /// blocks-line entities-line`. Newlines are pure lexer trivia in the shared dialect, so this is
 /// genuinely recognizable by `dsl::Recognizer`, not merely readable.
-fn print_cad_snapshot_body(s: &SemioCadSnapshot) -> String {
+async fn print_cad_snapshot_body(s: &SemioCadSnapshot) -> String {
     format!(
         "schema={}\nlayers=[{}]\nblocks=[{}]\nentities=[{}]",
         enc_str(&s.schema),
@@ -282,7 +282,7 @@ fn print_cad_snapshot_body(s: &SemioCadSnapshot) -> String {
         s.entities.iter().map(enc_entity_record).collect::<Vec<_>>().join(","),
     )
 }
-fn parse_cad_snapshot_body(body: &str) -> Result<SemioCadSnapshot, String> {
+async fn parse_cad_snapshot_body(body: &str) -> Result<SemioCadSnapshot, String> {
     let mut schema = None;
     let mut layers = Vec::new();
     let mut blocks = Vec::new();
@@ -314,36 +314,36 @@ fn parse_cad_snapshot_body(body: &str) -> Result<SemioCadSnapshot, String> {
 /// `store::ByteReader`, same helpers `stdio.semio.flow`/`stdio.semio.brep`'s upgraded
 /// `OpBinary`/`DiffCodec` reuse) backing the real `ArtifactPack` below — replaces the old
 /// `serde_json::to_vec`-in-envelope shortcut.
-fn write_bytes_lp(out: &mut Vec<u8>, bytes: &[u8]) {
+async fn write_bytes_lp(out: &mut Vec<u8>, bytes: &[u8]) {
     store::pack_rt::write_varint_u64(out, bytes.len() as u64);
     out.extend_from_slice(bytes);
 }
-fn read_bytes_lp(reader: &mut store::ByteReader<'_>) -> Result<Vec<u8>, String> {
+async fn read_bytes_lp(reader: &mut store::ByteReader<'_>) -> Result<Vec<u8>, String> {
     let len = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
     Ok(reader.read_bytes(len).map_err(|e| e.to_string())?.to_vec())
 }
-fn write_str_lp(out: &mut Vec<u8>, s: &str) {
+async fn write_str_lp(out: &mut Vec<u8>, s: &str) {
     write_bytes_lp(out, s.as_bytes());
 }
-fn read_str_lp(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
+async fn read_str_lp(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
     String::from_utf8(read_bytes_lp(reader)?).map_err(|e| e.to_string())
 }
-fn write_point2(out: &mut Vec<u8>, p: &SemioPoint2) {
+async fn write_point2(out: &mut Vec<u8>, p: &SemioPoint2) {
     out.extend_from_slice(&p.x.to_le_bytes());
     out.extend_from_slice(&p.y.to_le_bytes());
 }
-fn read_point2(reader: &mut store::ByteReader<'_>) -> Result<SemioPoint2, String> {
+async fn read_point2(reader: &mut store::ByteReader<'_>) -> Result<SemioPoint2, String> {
     let x = reader.read_f64_le().map_err(|e| e.to_string())?;
     let y = reader.read_f64_le().map_err(|e| e.to_string())?;
     Ok(SemioPoint2 { x, y })
 }
-fn write_point2_vec(out: &mut Vec<u8>, v: &[SemioPoint2]) {
+async fn write_point2_vec(out: &mut Vec<u8>, v: &[SemioPoint2]) {
     store::pack_rt::write_varint_u64(out, v.len() as u64);
     for p in v {
         write_point2(out, p);
     }
 }
-fn read_point2_vec(reader: &mut store::ByteReader<'_>) -> Result<Vec<SemioPoint2>, String> {
+async fn read_point2_vec(reader: &mut store::ByteReader<'_>) -> Result<Vec<SemioPoint2>, String> {
     let n = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut v = Vec::with_capacity(n as usize);
     for _ in 0..n {
@@ -351,16 +351,16 @@ fn read_point2_vec(reader: &mut store::ByteReader<'_>) -> Result<Vec<SemioPoint2
     }
     Ok(v)
 }
-fn write_bool(out: &mut Vec<u8>, b: bool) {
+async fn write_bool(out: &mut Vec<u8>, b: bool) {
     out.push(if b { 1 } else { 0 });
 }
-fn read_bool(reader: &mut store::ByteReader<'_>) -> Result<bool, String> {
+async fn read_bool(reader: &mut store::ByteReader<'_>) -> Result<bool, String> {
     Ok(reader.read_u8().map_err(|e| e.to_string())? != 0)
 }
 
 /// 🏷️ `CadEntity` variant tags — 0=Line, 1=Arc, 2=Circle, 3=Ellipse, 4=Polyline, 5=Text, 6=Insert,
 /// 7=Solid, 8=Dimension (declaration order).
-fn write_entity(out: &mut Vec<u8>, e: &CadEntity) {
+async fn write_entity(out: &mut Vec<u8>, e: &CadEntity) {
     match e {
         CadEntity::Line { a, b } => {
             out.push(0);
@@ -422,7 +422,7 @@ fn write_entity(out: &mut Vec<u8>, e: &CadEntity) {
         }
     }
 }
-fn read_entity(reader: &mut store::ByteReader<'_>) -> Result<CadEntity, String> {
+async fn read_entity(reader: &mut store::ByteReader<'_>) -> Result<CadEntity, String> {
     let tag = reader.read_u8().map_err(|e| e.to_string())?;
     match tag {
         0 => Ok(CadEntity::Line { a: read_point2(reader)?, b: read_point2(reader)? }),
@@ -444,13 +444,13 @@ fn read_entity(reader: &mut store::ByteReader<'_>) -> Result<CadEntity, String> 
     }
 }
 
-fn write_layer(out: &mut Vec<u8>, l: &CadLayer) {
+async fn write_layer(out: &mut Vec<u8>, l: &CadLayer) {
     write_str_lp(out, &l.name);
     store::pack_rt::write_varint_u64(out, l.color_index as u64);
     write_str_lp(out, &l.line_type);
     write_bool(out, l.visible);
 }
-fn read_layer(reader: &mut store::ByteReader<'_>) -> Result<CadLayer, String> {
+async fn read_layer(reader: &mut store::ByteReader<'_>) -> Result<CadLayer, String> {
     let name = read_str_lp(reader)?;
     let color_index = reader.read_varint_u64().map_err(|e| e.to_string())? as i32;
     let line_type = read_str_lp(reader)?;
@@ -458,16 +458,16 @@ fn read_layer(reader: &mut store::ByteReader<'_>) -> Result<CadLayer, String> {
     Ok(CadLayer { name, color_index, line_type, visible })
 }
 
-fn write_entity_record(out: &mut Vec<u8>, r: &CadEntityRecord) {
+async fn write_entity_record(out: &mut Vec<u8>, r: &CadEntityRecord) {
     write_str_lp(out, &r.handle);
     write_str_lp(out, &r.layer);
     write_entity(out, &r.entity);
 }
-fn read_entity_record(reader: &mut store::ByteReader<'_>) -> Result<CadEntityRecord, String> {
+async fn read_entity_record(reader: &mut store::ByteReader<'_>) -> Result<CadEntityRecord, String> {
     Ok(CadEntityRecord { handle: read_str_lp(reader)?, layer: read_str_lp(reader)?, entity: read_entity(reader)? })
 }
 
-fn write_block(out: &mut Vec<u8>, b: &CadBlock) {
+async fn write_block(out: &mut Vec<u8>, b: &CadBlock) {
     write_str_lp(out, &b.name);
     write_point2(out, &b.base_point);
     store::pack_rt::write_varint_u64(out, b.entities.len() as u64);
@@ -475,7 +475,7 @@ fn write_block(out: &mut Vec<u8>, b: &CadBlock) {
         write_entity_record(out, r);
     }
 }
-fn read_block(reader: &mut store::ByteReader<'_>) -> Result<CadBlock, String> {
+async fn read_block(reader: &mut store::ByteReader<'_>) -> Result<CadBlock, String> {
     let name = read_str_lp(reader)?;
     let base_point = read_point2(reader)?;
     let n = reader.read_varint_u64().map_err(|e| e.to_string())?;
@@ -486,7 +486,7 @@ fn read_block(reader: &mut store::ByteReader<'_>) -> Result<CadBlock, String> {
     Ok(CadBlock { name, base_point, entities })
 }
 
-fn encode_cad_snapshot_binary(s: &SemioCadSnapshot) -> Vec<u8> {
+async fn encode_cad_snapshot_binary(s: &SemioCadSnapshot) -> Vec<u8> {
     const PACK_BINARY_FORMAT: u8 = 1;
     let mut out = Vec::new();
     out.push(PACK_BINARY_FORMAT);
@@ -505,7 +505,7 @@ fn encode_cad_snapshot_binary(s: &SemioCadSnapshot) -> Vec<u8> {
     }
     out
 }
-fn decode_cad_snapshot_binary(bytes: &[u8]) -> Result<SemioCadSnapshot, String> {
+async fn decode_cad_snapshot_binary(bytes: &[u8]) -> Result<SemioCadSnapshot, String> {
     const PACK_BINARY_FORMAT: u8 = 1;
     let mut reader = store::ByteReader::new(bytes);
     let format = reader.read_u8().map_err(|e| e.to_string())?;
@@ -538,11 +538,11 @@ fn decode_cad_snapshot_binary(bytes: &[u8]) -> Result<SemioCadSnapshot, String> 
 /// `store::semio_format` envelope, unchanged.
 impl store::ArtifactDsl for SemioCadSnapshot {
     const EXTENSION: &'static str = "semio";
-    fn envelope_id() -> &'static str {
+    async fn envelope_id() -> &'static str {
         STDIO_SEMIOCAD_DOCUMENT_SCHEMA
     }
 
-    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+    async fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
         let body = match store::semio_format::split_text_preamble(text) {
             Ok((_, rest)) => rest,
             Err(_) => text,
@@ -550,7 +550,7 @@ impl store::ArtifactDsl for SemioCadSnapshot {
         parse_cad_snapshot_body(body).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
 
-    fn print_dsl(&self) -> String {
+    async fn print_dsl(&self) -> String {
         let body = print_cad_snapshot_body(self);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
@@ -558,14 +558,14 @@ impl store::ArtifactDsl for SemioCadSnapshot {
 }
 
 impl store::ArtifactPack for SemioCadSnapshot {
-    fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
+    async fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
         let raw = encode_cad_snapshot_binary(self);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &raw))
     }
 
-    fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
+    async fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
         if envelope.envelope_id() != <Self as store::ArtifactDsl>::envelope_id() {
             return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.envelope_id())));
@@ -583,7 +583,7 @@ impl store::ArtifactPack for SemioCadSnapshot {
 /// source of truth for `📚️examples/📐️drawing/🖼️assets/🗣️example.dsl.semio`/`🎒️example.pack.semio`
 /// and for the conformance-law tests in `🎹️composer/🦀️component.rs`.
 #[cfg(test)]
-pub(crate) fn demo_cad_snapshot() -> SemioCadSnapshot {
+pub(crate) async fn demo_cad_snapshot() -> SemioCadSnapshot {
     SemioCadSnapshot {
         schema: STDIO_SEMIOCAD_DOCUMENT_SCHEMA.into(),
         layers: vec![CadLayer { name: "0".into(), color_index: 7, line_type: "CONTINUOUS".into(), visible: true }, CadLayer { name: "dim".into(), color_index: 1, line_type: "DASHED".into(), visible: true }],
@@ -611,7 +611,7 @@ pub(crate) fn demo_cad_snapshot() -> SemioCadSnapshot {
 mod tests {
     use super::*;
 
-    fn populated_snapshot() -> SemioCadSnapshot {
+    async fn populated_snapshot() -> SemioCadSnapshot {
         SemioCadSnapshot {
             schema: STDIO_SEMIOCAD_DOCUMENT_SCHEMA.into(),
             layers: vec![CadLayer { name: "0".into(), color_index: 7, line_type: "CONTINUOUS".into(), visible: true }],
@@ -628,7 +628,7 @@ mod tests {
     }
 
     #[test]
-    fn json_pack_round_trips() {
+    async fn json_pack_round_trips() {
         let snap = SemioCadSnapshot::default();
         let bytes = <SemioCadSnapshot as store::ArtifactPack>::encode_pack(&snap);
         let back = <SemioCadSnapshot as store::ArtifactPack>::decode_pack(&bytes).expect("decode");
@@ -636,7 +636,7 @@ mod tests {
     }
 
     #[test]
-    fn dsl_text_round_trips() {
+    async fn dsl_text_round_trips() {
         let snap = SemioCadSnapshot::default();
         let text = <SemioCadSnapshot as store::ArtifactDsl>::print_dsl(&snap);
         let back = <SemioCadSnapshot as store::ArtifactDsl>::parse_dsl(&text).expect("parse");
@@ -646,7 +646,7 @@ mod tests {
     /// 🧪️ Law 5 — `codec_retention_law`: decode(encode(x)) == x on a fully populated snapshot
     /// (layers/blocks/nested-block-entities/top-level entities incl. `Insert`), both facets.
     #[test]
-    fn codec_retention_law() {
+    async fn codec_retention_law() {
         let snap = populated_snapshot();
         let bytes = <SemioCadSnapshot as store::ArtifactPack>::encode_pack(&snap);
         let via_pack = <SemioCadSnapshot as store::ArtifactPack>::decode_pack(&bytes).expect("decode pack");
@@ -660,7 +660,7 @@ mod tests {
     /// 🧪️ Every `CadEntity` variant (all 9) round-trips through both the pack binary and the dsl
     /// text codec — the demo fixture used by the fixture-honesty conformance law.
     #[test]
-    fn demo_snapshot_round_trips_pack_and_dsl() {
+    async fn demo_snapshot_round_trips_pack_and_dsl() {
         let demo = demo_cad_snapshot();
         let packed = <SemioCadSnapshot as store::ArtifactPack>::encode_pack(&demo);
         assert_eq!(<SemioCadSnapshot as store::ArtifactPack>::decode_pack(&packed).expect("decode"), demo);

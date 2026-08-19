@@ -5,7 +5,7 @@ use crate::artifacts::en1998::mutations::change_seismic_zone::mutation::ChangeSe
 use crate::artifacts::en1998::En1998Snapshot;
 
 //#region 🔖️Diff
-pub fn diff(payload: &ChangeSeismicZone, base: &En1998Snapshot) -> protocol::MutationOutcome<En1998Diff> {
+pub async fn diff(payload: &ChangeSeismicZone, base: &En1998Snapshot) -> protocol::MutationOutcome<En1998Diff> {
     if base.seismic_zone == payload.new_seismic_zone {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Seismic zone is already {}.", payload.new_seismic_zone));
     }

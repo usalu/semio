@@ -13,7 +13,7 @@ pub struct SetFilterMinAvailability {
     pub value: Option<f64>,
 }
 
-pub fn handle(payload: &SetFilterMinAvailability, _doc: &ArtifactView<'_, CurateSnapshot>, cfg: &ConfigView<'_, SourcingCurateConfig>) -> Result<Emit<SourcingMutation, SourcingCurateConfigMutation>, Fault> {
+pub async fn handle(payload: &SetFilterMinAvailability, _doc: &ArtifactView<'_, CurateSnapshot>, cfg: &ConfigView<'_, SourcingCurateConfig>) -> Result<Emit<SourcingMutation, SourcingCurateConfigMutation>, Fault> {
     let current = cfg.snapshot.filters.min_availability as f64;
     let next = payload.delta.map(|d| current + d).or(payload.value).unwrap_or(current);
     Ok(Emit::config(vec![SourcingCurateConfigMutation::SetFilterMinAvailability { value: next.max(0.0) as u32 }]))
@@ -28,7 +28,7 @@ mod tests {
     use crate::editor::sourcing::SourcingCurateCommand;
 
     #[test]
-    fn set_filter_min_availability_clamps_to_zero() {
+    async fn set_filter_min_availability_clamps_to_zero() {
         let mut app = new_app();
         dispatch(&mut app, SourcingCurateCommand::SetFilterMinAvailability(SetFilterMinAvailability { delta: Some(-1000.0), value: None }));
         // Filters are config-only now — the pool render reflects the clamp indirectly via an empty result

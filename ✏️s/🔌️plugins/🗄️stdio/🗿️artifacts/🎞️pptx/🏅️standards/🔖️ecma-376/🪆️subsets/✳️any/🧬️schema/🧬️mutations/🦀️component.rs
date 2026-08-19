@@ -75,7 +75,7 @@ pub enum PptxMutation {
 /// ▶️ Applies `mutation` to `snapshot`: `let d = mutation.diff(&*snapshot); *snapshot =
 /// d.apply(snapshot); d` -- the diff is the single semantics source, never a separate imperative
 /// apply path (apply-and-capture is banned).
-pub fn apply_pptx_mutation(snapshot: &mut PptxSnapshot, mutation: &PptxMutation) -> protocol::MutationOutcome<PptxDiff> {
+pub async fn apply_pptx_mutation(snapshot: &mut PptxSnapshot, mutation: &PptxMutation) -> protocol::MutationOutcome<PptxDiff> {
     let outcome = Mutation::diff(mutation, snapshot);
     match protocol::MutationDiff::apply(outcome.diff(), snapshot) {
         Ok(next) => {
@@ -88,11 +88,11 @@ pub fn apply_pptx_mutation(snapshot: &mut PptxSnapshot, mutation: &PptxMutation)
 //#endregion 🔖️Apply
 
 //#region 🔖️Helpers
-fn slide_at<'a>(base: &'a PptxSnapshot, index: usize) -> Option<&'a PptxSlide> {
+async fn slide_at<'a>(base: &'a PptxSnapshot, index: usize) -> Option<&'a PptxSlide> {
     base.presentation.slides.get(index)
 }
 
-fn shape_at<'a>(base: &'a PptxSnapshot, slide_index: usize, shape_index: usize) -> Option<&'a PptxShape> {
+async fn shape_at<'a>(base: &'a PptxSnapshot, slide_index: usize, shape_index: usize) -> Option<&'a PptxShape> {
     base.presentation.slides.get(slide_index)?.shapes.get(shape_index)
 }
 //#endregion 🔖️Helpers
@@ -101,7 +101,7 @@ fn shape_at<'a>(base: &'a PptxSnapshot, slide_index: usize, shape_index: usize) 
 impl Mutation<PptxSnapshot> for PptxMutation {
     type Diff = PptxDiff;
 
-    fn diff(&self, base: &PptxSnapshot) -> protocol::MutationOutcome<Self::Diff> {
+    async fn diff(&self, base: &PptxSnapshot) -> protocol::MutationOutcome<Self::Diff> {
         protocol::MutationOutcome::new(match self {
             PptxMutation::NoMutation => PptxDiff::default(),
             PptxMutation::SetSnapshot { snapshot } => diff_set_snapshot(base, snapshot),
@@ -115,7 +115,7 @@ impl Mutation<PptxSnapshot> for PptxMutation {
         })
     }
 
-    fn inverse(&self, base: &PptxSnapshot) -> Vec<Self> {
+    async fn inverse(&self, base: &PptxSnapshot) -> Vec<Self> {
         match self {
             PptxMutation::NoMutation => vec![PptxMutation::NoMutation],
             PptxMutation::SetSnapshot { .. } => vec![PptxMutation::SetSnapshot { snapshot: base.clone() }],
@@ -188,14 +188,14 @@ struct PptxMutationRecord {
 }
 
 impl OpText for PptxMutation {
-    fn print_op(&self) -> String {
+    async fn print_op(&self) -> String {
         let record = match self {
             PptxMutation::SetSnapshot { snapshot } => PptxMutationRecord { kind: "setSnapshot".into(), value: dsl::DslValue::Null, snapshot: Some(PptxSnapshotRecord::from_snapshot(snapshot).expect("serializable logical pptx snapshot")) },
             mutation => PptxMutationRecord { kind: "mutation".into(), value: dsl::to_dsl_value(mutation).expect("serializable logical pptx mutation"), snapshot: None },
         };
         dsl::print(&record.__dsl_to_record(), &PptxMutationRecord::__dsl_spec(), dsl::JoinMode::Inline)
     }
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
+    async fn parse_op(line: &str) -> Result<Self, store::TextError> {
         let record = dsl::parse(line, &PptxMutationRecord::__dsl_spec(), &dsl::ParseOptions { limits: dsl::Limits { max_bytes: 64 * 1024 * 1024, ..dsl::Limits::default() }, mode: dsl::SourceMode::Inline })?;
         let model = PptxMutationRecord::__dsl_from_record(&record)?;
         match (model.kind.as_str(), model.snapshot) {
@@ -227,12 +227,12 @@ impl OpText for PptxMutation {
 /// `PptxMutation` variant ordinal, in the same 0-8 order `print_pptx_mutation`'s own keyword
 /// match uses.
 impl OpBinary for PptxMutation {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         let value = dsl::to_dsl_value(self).map_err(|detail| protocol::ProtocolError::Malformed { what: "pptx mutation", offset: 0, detail })?;
         Ok(store::pack_rt::encode_wire_value(&value))
     }
 
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         let value = store::pack_rt::decode_wire_value(bytes).map_err(|error| protocol::ProtocolError::Malformed { what: "pptx mutation", offset: 0, detail: error.to_string() })?;
         dsl::from_dsl_value(value).map_err(|detail| protocol::ProtocolError::Malformed { what: "pptx mutation", offset: 0, detail })
     }
@@ -246,7 +246,7 @@ impl OpBinary for PptxMutation {
 /// conformance tests, same shape `📜️docx/…/🧬️mutations/🦀️component.rs`'s own
 /// `demo_mutation_cases()` establishes.
 #[cfg(test)]
-pub(crate) fn demo_fixture() -> PptxSnapshot {
+pub(crate) async fn demo_fixture() -> PptxSnapshot {
     crate::artifacts::pptx::standards::v_ecma_376::subsets::any::io::export::serializers::build_minimal_pptx(crate::artifacts::pptx::schema::snapshot::PptxPresentation {
         slides: vec![
             PptxSlide { shapes: vec![PptxShape::TextBox { text_frame: vec![PptxParagraph::text("first")], position: PptxTransform { x: 0, y: 0, cx: 100, cy: 100 } }] },
@@ -256,7 +256,7 @@ pub(crate) fn demo_fixture() -> PptxSnapshot {
 }
 
 #[cfg(test)]
-pub(crate) fn demo_mutation_cases() -> Vec<PptxMutation> {
+pub(crate) async fn demo_mutation_cases() -> Vec<PptxMutation> {
     vec![
         PptxMutation::NoMutation,
         PptxMutation::SetSnapshot { snapshot: demo_fixture() },
@@ -282,11 +282,11 @@ mod tests {
     use protocol::command::DiffAlgebra;
     use protocol::MutationDiff;
 
-    fn other(name: &str) -> PptxShape {
+    async fn other(name: &str) -> PptxShape {
         PptxShape::Other { node: XmlNode::Element { name: name.into(), attrs: Vec::new(), children: Vec::new() } }
     }
 
-    fn fixture() -> PptxSnapshot {
+    async fn fixture() -> PptxSnapshot {
         crate::artifacts::pptx::standards::v_ecma_376::subsets::any::io::export::serializers::build_minimal_pptx(PptxPresentation {
             slides: vec![
                 PptxSlide { shapes: vec![PptxShape::TextBox { text_frame: vec![PptxParagraph::text("first")], position: PptxTransform { x: 0, y: 0, cx: 100, cy: 100 } }] },
@@ -296,7 +296,7 @@ mod tests {
     }
 
     #[test]
-    fn insert_then_remove_slide_apply_and_inverse() {
+    async fn insert_then_remove_slide_apply_and_inverse() {
         let base = fixture();
         let insert = PptxMutation::InsertSlide { index: 1, slide: PptxSlide { shapes: vec![PptxShape::TextBox { text_frame: vec![PptxParagraph::text("inserted")], position: PptxTransform::default() }] } };
         let mut after = base.clone();
@@ -312,7 +312,7 @@ mod tests {
     }
 
     #[test]
-    fn remove_slide_inverse_restores_removed_slide() {
+    async fn remove_slide_inverse_restores_removed_slide() {
         let base = fixture();
         let remove = PptxMutation::RemoveSlide { index: 0 };
         let mut after = base.clone();
@@ -325,7 +325,7 @@ mod tests {
     }
 
     #[test]
-    fn move_slide_apply_and_inverse() {
+    async fn move_slide_apply_and_inverse() {
         let base = fixture();
         let mv = PptxMutation::MoveSlide { from: 0, to: 1 };
         let mut after = base.clone();
@@ -339,7 +339,7 @@ mod tests {
     }
 
     #[test]
-    fn insert_then_remove_shape_apply_and_inverse() {
+    async fn insert_then_remove_shape_apply_and_inverse() {
         let base = fixture();
         let shape = PptxShape::Picture { blip_rel_id: "rId9".into(), position: PptxTransform { x: 1, y: 2, cx: 3, cy: 4 } };
         let insert = PptxMutation::InsertShape { slide_index: 0, shape_index: 1, shape: shape.clone() };
@@ -363,7 +363,7 @@ mod tests {
     }
 
     #[test]
-    fn set_shape_text_and_position_apply_and_inverse() {
+    async fn set_shape_text_and_position_apply_and_inverse() {
         let base = fixture();
         let mutation = PptxMutation::SetShapeText { slide_index: 0, shape_index: 0, text_frame: vec![PptxParagraph::text("changed")] };
         let mut after = base.clone();
@@ -388,7 +388,7 @@ mod tests {
     }
 
     #[test]
-    fn set_shape_text_on_picture_is_a_no_op() {
+    async fn set_shape_text_on_picture_is_a_no_op() {
         let mut base = fixture();
         base.presentation.slides[0].shapes.push(PptxShape::Picture { blip_rel_id: "rId5".into(), position: PptxTransform::default() });
         let mutation = PptxMutation::SetShapeText { slide_index: 0, shape_index: 1, text_frame: vec![PptxParagraph::text("nope")] };
@@ -417,7 +417,7 @@ mod tests {
     ///
     /// `opc` content_types/parts/relationships each get one removed, one modified, one added,
     /// same convention as docx's own sweep fixtures (name-keyed collections have no such trap).
-    fn sweep_a() -> PptxSnapshot {
+    async fn sweep_a() -> PptxSnapshot {
         let mut opc = OpcPackage::empty();
         opc.content_types.set_default("rels", RELS_CONTENT_TYPE);
         opc.content_types.set_default("xml", "application/xml");
@@ -448,7 +448,7 @@ mod tests {
         )
     }
 
-    fn sweep_b() -> PptxSnapshot {
+    async fn sweep_b() -> PptxSnapshot {
         let mut opc = OpcPackage::empty();
         opc.content_types.set_default("rels", RELS_CONTENT_TYPE);
         opc.content_types.set_default("xml", "application/xml");
@@ -493,7 +493,7 @@ mod tests {
     /// guaranteed to survive a round trip THROUGH an intermediate state whose key set differs
     /// again on the way back -- a structural property of the append-new-at-end convention this
     /// engine shares with docx's, not a regression.
-    fn mutated_fixture() -> PptxSnapshot {
+    async fn mutated_fixture() -> PptxSnapshot {
         crate::artifacts::pptx::standards::v_ecma_376::subsets::any::io::export::serializers::build_minimal_pptx(PptxPresentation {
             slides: vec![
                 PptxSlide { shapes: vec![PptxShape::Placeholder { kind: "title".into(), text_frame: vec![PptxParagraph::text("changed first")], position: PptxTransform { x: 9, y: 9, cx: 9, cy: 9 } }] },
@@ -502,7 +502,7 @@ mod tests {
         })
     }
 
-    fn sample_mutations() -> Vec<PptxMutation> {
+    async fn sample_mutations() -> Vec<PptxMutation> {
         vec![
             PptxMutation::NoMutation,
             PptxMutation::SetSnapshot { snapshot: mutated_fixture() },
@@ -517,7 +517,7 @@ mod tests {
     }
 
     #[test]
-    fn mutation_diff_law() {
+    async fn mutation_diff_law() {
         for mutation in sample_mutations() {
             let base = fixture();
             let diff_direct = Mutation::diff(&mutation, &base);
@@ -534,7 +534,7 @@ mod tests {
 
     //#region 🔖️InverseLaw
     #[test]
-    fn inverse_law() {
+    async fn inverse_law() {
         for mutation in sample_mutations() {
             let base = fixture();
 
@@ -555,7 +555,7 @@ mod tests {
     //#endregion 🔖️InverseLaw
 
     //#region 🔖️AbsorbLaw
-    fn assert_absorb_matches_sequential(base: &PptxSnapshot, d1: &PptxDiff, d2: &PptxDiff) -> PptxDiff {
+    async fn assert_absorb_matches_sequential(base: &PptxSnapshot, d1: &PptxDiff, d2: &PptxDiff) -> PptxDiff {
         let sequential = MutationDiff::apply(d2, &MutationDiff::apply(d1, base).unwrap()).unwrap();
         let mut absorbed = d1.clone();
         MutationDiff::absorb(&mut absorbed, d2.clone());
@@ -563,12 +563,12 @@ mod tests {
         absorbed
     }
 
-    fn slides_diff(diff: &PptxDiff) -> &crate::artifacts::pptx::schema::diff::PptxSlidesDiff {
+    async fn slides_diff(diff: &PptxDiff) -> &crate::artifacts::pptx::schema::diff::PptxSlidesDiff {
         diff.presentation.as_ref().expect("presentation diff present").slides.as_ref().expect("slides diff present")
     }
 
     #[test]
-    fn absorb_law() {
+    async fn absorb_law() {
         // Canonical: Insert(2)+Remove(0) -> {removed:[0], added:[(1,f)]}.
         {
             let base = fixture();
@@ -655,7 +655,7 @@ mod tests {
 
     //#region 🔖️BetweenRoundtripLaw
     #[test]
-    fn between_roundtrip_law() {
+    async fn between_roundtrip_law() {
         let a = sweep_a();
         let b = sweep_b();
         assert_eq!(MutationDiff::apply(&<PptxDiff as DiffAlgebra<PptxSnapshot>>::between(&a, &b), &a).unwrap(), b);
@@ -681,7 +681,7 @@ mod tests {
 
     //#region 🔖️CodecRetentionLaw
     #[test]
-    fn codec_retention_law() {
+    async fn codec_retention_law() {
         let authored = crate::artifacts::pptx::standards::v_ecma_376::subsets::any::io::export::serializers::build_minimal_pptx(PptxPresentation {
             slides: vec![PptxSlide {
                 shapes: vec![
@@ -712,7 +712,7 @@ mod tests {
     /// structural trap" note, which this test found applies recursively at every level, not just
     /// the top one.
     #[test]
-    fn field_sweep() {
+    async fn field_sweep() {
         let a = sweep_a();
         let b = sweep_b();
 
@@ -802,7 +802,7 @@ mod tests {
     /// slides), `InsertShape`'s bare `PptxShape` enum payload (every `TextBox`/`Picture`/
     /// `Placeholder`/`Other` variant), and `SetShapeText`'s `Vec<PptxParagraph>`.
     #[test]
-    fn op_text_binary_roundtrip_law() {
+    async fn op_text_binary_roundtrip_law() {
         let base = fixture();
         let mutations = vec![
             PptxMutation::NoMutation,

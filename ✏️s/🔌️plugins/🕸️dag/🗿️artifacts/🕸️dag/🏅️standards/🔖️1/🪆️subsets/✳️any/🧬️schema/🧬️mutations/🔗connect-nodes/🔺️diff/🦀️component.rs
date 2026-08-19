@@ -4,7 +4,7 @@ use crate::artifacts::dag::diff::text::diff_replace_content;
 use crate::artifacts::dag::{dag_working_scene, DagFixtureEdge, DagSnapshot};
 
 //#region 🔖️Diff
-pub fn diff(payload: &super::mutation::ConnectNodes, base: &DagSnapshot) -> protocol::MutationOutcome<DagDiff> {
+pub async fn diff(payload: &super::mutation::ConnectNodes, base: &DagSnapshot) -> protocol::MutationOutcome<DagDiff> {
     let scene = dag_working_scene(base);
     if scene.edges.iter().any(|edge| edge.id == payload.id) {
         return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("An edge with id \"{}\" already exists.", payload.id), [payload.id.clone()]);
@@ -38,7 +38,7 @@ pub fn diff(payload: &super::mutation::ConnectNodes, base: &DagSnapshot) -> prot
 
 /// 🔁️ Whether adding a `source -> target` edge would create a cycle — true iff `target` can already
 /// reach `source` through the existing edge set (a DAG's core invariant).
-fn would_create_cycle(edges: &[DagFixtureEdge], source: &str, target: &str) -> bool {
+async fn would_create_cycle(edges: &[DagFixtureEdge], source: &str, target: &str) -> bool {
     let mut visited = std::collections::BTreeSet::new();
     let mut stack = vec![target.to_string()];
     while let Some(node) = stack.pop() {

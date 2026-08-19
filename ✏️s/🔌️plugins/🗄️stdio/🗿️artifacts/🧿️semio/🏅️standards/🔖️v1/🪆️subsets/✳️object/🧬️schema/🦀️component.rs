@@ -32,19 +32,19 @@ pub struct SemioObjectArtifact {
 }
 
 impl Default for SemioObjectArtifact {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self::from_snapshot(SemioObjectSnapshot::default())
     }
 }
 
 impl SemioObjectArtifact {
-    pub fn to_snapshot(&self) -> SemioObjectSnapshot {
+    pub async fn to_snapshot(&self) -> SemioObjectSnapshot {
         SemioObjectSnapshot { schema: self.schema.clone(), transform: self.transform.clone(), brep: self.brep.clone(), mesh: self.mesh.clone(), properties: self.properties.clone() }
     }
-    pub fn from_snapshot(snapshot: SemioObjectSnapshot) -> Self {
+    pub async fn from_snapshot(snapshot: SemioObjectSnapshot) -> Self {
         Self { schema: snapshot.schema, transform: snapshot.transform, brep: snapshot.brep, mesh: snapshot.mesh, properties: snapshot.properties }
     }
-    pub fn set_snapshot(&mut self, snapshot: SemioObjectSnapshot) {
+    pub async fn set_snapshot(&mut self, snapshot: SemioObjectSnapshot) {
         self.schema = snapshot.schema;
         self.transform = snapshot.transform;
         self.brep = snapshot.brep;
@@ -53,7 +53,7 @@ impl SemioObjectArtifact {
     }
 }
 
-pub fn semio_object_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
+pub async fn semio_object_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
     schema::ArtifactSchemaDescriptor {
         id: "s.stdio.semio.object",
         artifact: schema::FacetLeaves {
@@ -103,16 +103,16 @@ pub mod derived_construction {
     //#region 🔖️TypedConstructors
     impl SemioObjectBuilderConstruction {
         /// 🏗️ Starts a fresh object at the identity transform, no geometry/properties children.
-        pub fn new() -> Self {
+        pub async fn new() -> Self {
             Self { snapshot: SemioObjectSnapshot::default() }
         }
         /// 🧭️ Overrides the object's placement.
-        pub fn with_transform(mut self, transform: SemioTransform) -> Self {
+        pub async fn with_transform(mut self, transform: SemioTransform) -> Self {
             self.snapshot.transform = transform;
             self
         }
         /// 🧱️ Attaches an owned brep CHILD handle (never embedded content).
-        pub fn with_brep(mut self, child_id: impl Into<String>, target: store::os_io::ArtifactRef) -> Self {
+        pub async fn with_brep(mut self, child_id: impl Into<String>, target: store::os_io::ArtifactRef) -> Self {
             self.snapshot.brep = Some(store::ArtifactChild::new(child_id.into(), target));
             self
         }
@@ -123,28 +123,28 @@ pub mod derived_construction {
         type Snapshot = SemioObjectSnapshot;
         type Mutation = SemioObjectMutation;
         type Diff = SemioObjectDiff;
-        fn empty() -> Self {
+        async fn empty() -> Self {
             Self { snapshot: SemioObjectSnapshot::default() }
         }
-        fn from_snapshot(snapshot: Self::Snapshot) -> Self {
+        async fn from_snapshot(snapshot: Self::Snapshot) -> Self {
             Self { snapshot }
         }
-        fn from_text(text: &str) -> Result<Self, store::TextError> {
+        async fn from_text(text: &str) -> Result<Self, store::TextError> {
             Ok(Self::from_snapshot(<SemioObjectSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
-        fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
+        async fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
             Ok(Self::from_snapshot(<SemioObjectSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
         }
-        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
+        async fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let diff = <Self::Mutation as protocol::Mutation<SemioObjectSnapshot>>::diff(&mutation, &self.snapshot);
             let diff = diff.apply_to(&mut self.snapshot);
             (self, diff)
         }
-        fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
+        async fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
             self.snapshot = <SemioObjectDiff as protocol::MutationDiff<SemioObjectSnapshot>>::apply(&diff, &self.snapshot)?;
             Ok(self)
         }
-        fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
+        async fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
             Ok(self.snapshot)
         }
     }
@@ -155,7 +155,7 @@ pub mod derived_construction {
         use super::*;
 
         #[test]
-        fn typed_constructors_build_a_populated_snapshot() {
+        async fn typed_constructors_build_a_populated_snapshot() {
             let snapshot = SemioObjectBuilderConstruction::new()
                 .with_transform(SemioTransform { translation: crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioPoint3 { x: 1.0, y: 0.0, z: 0.0 }, ..SemioTransform::identity() })
                 .with_brep("b1", store::os_io::ArtifactRef { artifact_id: "brep-a".into(), dialect: store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "brep".into() } })
@@ -186,7 +186,7 @@ pub mod derived_analysis {
         type Parts = SemioObjectParts;
         const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("object") };
 
-        fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
+        async fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
             match source {
                 AnalyzeSource::Binary(bytes) => {
                     let marker = STDIO_SEMIOOBJECT_DOCUMENT_SCHEMA.as_bytes();
@@ -206,7 +206,7 @@ pub mod derived_analysis {
             }
         }
 
-        fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
+        async fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
             let mut parts = SemioObjectParts::default();
             let mut diagnostics = Vec::new();
             let mut confidence = IoConfidence::High;

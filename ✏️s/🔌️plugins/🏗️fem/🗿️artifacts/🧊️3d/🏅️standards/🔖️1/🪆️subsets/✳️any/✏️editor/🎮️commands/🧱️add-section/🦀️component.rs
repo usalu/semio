@@ -16,7 +16,7 @@ pub struct AddSection {
     pub j: f64,
 }
 
-pub fn handle(payload: &AddSection, doc: &ArtifactView<'_, Fem3dSnapshot>, _cfg: &ConfigView<'_, Fem3dConfig>) -> Result<Emit<Fem3dMutation, Fem3dConfigMutation>, Fault> {
+pub async fn handle(payload: &AddSection, doc: &ArtifactView<'_, Fem3dSnapshot>, _cfg: &ConfigView<'_, Fem3dConfig>) -> Result<Emit<Fem3dMutation, Fem3dConfigMutation>, Fault> {
     let snapshot = doc.snapshot;
     let id = crate::app_surface::next_id(snapshot.sections.iter().map(|s| s.id.clone()), "s");
     Ok(Emit::mutations(vec![Fem3dMutation::CreateSection(crate::artifacts::fem3d::mutations::create_section::mutation::CreateSection { section: crate::artifacts::fem3d::FemSection { id, name: payload.name.clone(), area: payload.area, iy: payload.iy, iz: payload.iz, j: payload.j } })]))

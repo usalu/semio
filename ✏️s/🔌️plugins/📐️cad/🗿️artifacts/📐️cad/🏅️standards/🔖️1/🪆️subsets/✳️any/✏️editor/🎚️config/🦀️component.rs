@@ -22,7 +22,7 @@ pub struct CadDislocateOptions {
 }
 
 impl Default for CadDislocateOptions {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self { move_enabled: true, rotate_enabled: true }
     }
 }
@@ -41,16 +41,16 @@ pub struct CadSunConfig {
 }
 
 impl Default for CadSunConfig {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self { enabled: false, azimuth: 45.0, elevation: 35.0, intensity: 0.85, color: "#ffffff".into() }
     }
 }
 
-pub fn cad_sun_config_from_world(sun: &semio_framework_plugin::WorldSunConfig) -> CadSunConfig {
+pub async fn cad_sun_config_from_world(sun: &semio_framework_plugin::WorldSunConfig) -> CadSunConfig {
     CadSunConfig { enabled: sun.enabled, azimuth: sun.azimuth, elevation: sun.elevation, intensity: sun.intensity, color: sun.color.clone() }
 }
 
-pub fn cad_sun_config_to_world(sun: &CadSunConfig) -> semio_framework_plugin::WorldSunConfig {
+pub async fn cad_sun_config_to_world(sun: &CadSunConfig) -> semio_framework_plugin::WorldSunConfig {
     semio_framework_plugin::WorldSunConfig { enabled: sun.enabled, azimuth: sun.azimuth, elevation: sun.elevation, intensity: sun.intensity, color: sun.color.clone() }
 }
 
@@ -134,10 +134,10 @@ pub struct CadConfig {
 /// 📜️ Handcrafted ArtifactDsl (P6): uses this type's `__dsl_*` helpers + parse/print, not derive emission.
 impl store::ArtifactDsl for CadConfig {
     const EXTENSION: &'static str = Self::__DSL_EXTENSION;
-    fn envelope_id() -> &'static str {
+    async fn envelope_id() -> &'static str {
         Self::__DSL_ENVELOPE_ID
     }
-    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+    async fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
         let body = match store::semio_format::split_text_preamble(text) {
             Ok((_, rest)) => rest,
             Err(_) => text,
@@ -149,7 +149,7 @@ impl store::ArtifactDsl for CadConfig {
         )?;
         Self::__dsl_from_record(&record)
     }
-    fn print_dsl(&self) -> String {
+    async fn print_dsl(&self) -> String {
         let body = dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), dsl::JoinMode::Document);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
             <Self as store::ArtifactDsl>::envelope_id(),
@@ -163,7 +163,7 @@ impl store::ArtifactDsl for CadConfig {
 
 /// 📦️ Handcrafted ArtifactPack (P6): envelope-wrapped pack body via `__dsl_*` record lowering.
 impl store::ArtifactPack for CadConfig {
-    fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
+    async fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let inner = store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
             <Self as store::ArtifactDsl>::envelope_id(),
@@ -173,7 +173,7 @@ impl store::ArtifactPack for CadConfig {
         .map_err(|e| store::PackError::Schema(e.to_string()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &inner))
     }
-    fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
+    async fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
         if envelope.envelope_id() != <Self as store::ArtifactDsl>::envelope_id() {
             return Err(store::PackError::Schema(format!(
@@ -185,7 +185,7 @@ impl store::ArtifactPack for CadConfig {
         let (record, _report) = store::pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
         Self::__dsl_from_record(&record).map_err(store::text_error_to_pack_error)
     }
-    fn record_spec() -> Option<dsl::RecordSpec> {
+    async fn record_spec() -> Option<dsl::RecordSpec> {
         Some(Self::__dsl_spec())
     }
 }
@@ -193,12 +193,12 @@ impl store::ArtifactPack for CadConfig {
 //#endregion 🔖️ArtifactCodec
 
 
-fn default_contributions_json() -> String {
+async fn default_contributions_json() -> String {
     "[]".into()
 }
 
 impl Default for CadConfig {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self {
             selected_node_ids: Vec::new(),
             hovered_reference_id: None,
@@ -257,7 +257,7 @@ pub enum CadConfigMutation {
 
 //#region 🔖️OpCodec
 impl protocol::OpText for CadConfigMutation {
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
+    async fn parse_op(line: &str) -> Result<Self, store::TextError> {
         let variants = <Self as dsl::DslVariants>::variants();
         for (keyword, spec_fn) in &variants {
             let probe = format!("{} ", keyword);
@@ -272,7 +272,7 @@ impl protocol::OpText for CadConfigMutation {
         }
         Err(dsl::__rt::field_error(format!("unknown mutation line '{line}'")))
     }
-    fn print_op(&self) -> String {
+    async fn print_op(&self) -> String {
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
         let variants = <Self as dsl::DslVariants>::variants();
         let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
@@ -282,7 +282,7 @@ impl protocol::OpText for CadConfigMutation {
 
 /// 🎯️ Handcrafted OpBinary (P6).
 impl protocol::OpBinary for CadConfigMutation {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         const OP_BINARY_FORMAT: u8 = 1;
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
         let variants = <Self as dsl::DslVariants>::variants();
@@ -299,7 +299,7 @@ impl protocol::OpBinary for CadConfigMutation {
         out.extend_from_slice(&body);
         Ok(out)
     }
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         const OP_BINARY_FORMAT: u8 = 1;
         let mut reader = store::pack_rt::ByteReader::new(bytes);
         let format = reader.read_u8()?;
@@ -330,7 +330,7 @@ impl protocol::OpBinary for CadConfigMutation {
 impl Mutation<CadConfig> for CadConfigMutation {
     type Diff = CadConfig;
 
-    fn diff(&self, base: &CadConfig) -> protocol::MutationOutcome<CadConfig> {
+    async fn diff(&self, base: &CadConfig) -> protocol::MutationOutcome<CadConfig> {
         match self {
             CadConfigMutation::Snapshot { config } => {
                 if config == base {
@@ -350,7 +350,7 @@ impl Mutation<CadConfig> for CadConfigMutation {
         }
     }
 
-    fn inverse(&self, base: &CadConfig) -> Vec<Self> {
+    async fn inverse(&self, base: &CadConfig) -> Vec<Self> {
         vec![CadConfigMutation::Snapshot { config: base.clone() }]
     }
 }
@@ -362,7 +362,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn cad_config_default_matches_the_existing_runtime_defaults() {
+    async fn cad_config_default_matches_the_existing_runtime_defaults() {
         let config = CadConfig::default();
         assert_eq!(config.engagement_step, "Idle");
         assert_eq!(config.active_utility_id, "move");
@@ -372,7 +372,7 @@ mod tests {
     }
 
     #[test]
-    fn cad_config_dsl_round_trips_a_populated_record() {
+    async fn cad_config_dsl_round_trips_a_populated_record() {
         let config = CadConfig {
             selected_node_ids: vec!["node-1".into(), "node-2".into()],
             hovered_reference_id: Some("ref-1".into()),
@@ -388,7 +388,7 @@ mod tests {
     }
 
     #[test]
-    fn cad_config_pack_round_trips() {
+    async fn cad_config_pack_round_trips() {
         let mut config = CadConfig { selected_node_ids: vec!["node-1".into()], ..CadConfig::default() };
         config.dislocate_building.rotate_enabled = false;
         let bytes = store::ArtifactPack::encode_pack(&config);
@@ -397,7 +397,7 @@ mod tests {
     }
 
     #[test]
-    fn cad_sun_config_round_trips_through_world_sun_config() {
+    async fn cad_sun_config_round_trips_through_world_sun_config() {
         let world = semio_framework_plugin::WorldSunConfig { enabled: true, azimuth: 12.0, elevation: 34.0, intensity: 0.5, color: "#112233".into() };
         let cad_sun = cad_sun_config_from_world(&world);
         let back = cad_sun_config_to_world(&cad_sun);
@@ -405,7 +405,7 @@ mod tests {
     }
 
     #[test]
-    fn cad_config_operation_snapshot_round_trips_and_restores_exactly() {
+    async fn cad_config_operation_snapshot_round_trips_and_restores_exactly() {
         let base = CadConfig { active_utility_id: "move".into(), ..CadConfig::default() };
         let next = CadConfig { active_utility_id: "rotate".into(), selected_node_ids: vec!["node-1".into()], ..CadConfig::default() };
         let operation = CadConfigMutation::Snapshot { config: next.clone() };
@@ -419,7 +419,7 @@ mod tests {
     }
 
     #[test]
-    fn cad_config_set_contributions_round_trips() {
+    async fn cad_config_set_contributions_round_trips() {
         let base = CadConfig::default();
         let json = r#"[{"pluginId":"cad-extension-spatial-shape","contribution":{"kind":"cadComputer","appId":"cad-play","moduleId":"spatial-shape","label":"Spatial Shape","iconId":"box","computersJson":"{}"}}]"#;
         let operation = CadConfigMutation::SetContributions { json: json.into() };

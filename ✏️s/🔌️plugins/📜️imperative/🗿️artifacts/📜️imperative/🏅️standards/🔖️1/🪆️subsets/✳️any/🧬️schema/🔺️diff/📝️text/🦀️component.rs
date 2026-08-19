@@ -16,7 +16,7 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 //#region 🔖️Apply
 impl ImperativeDiff {
     /// 🧬️ Applies every sparse entry (all state classes) onto a full artifact.
-    pub fn apply_to_artifact(&self, artifact: &ImperativeArtifact) -> protocol::MutationApplyResult<ImperativeArtifact> {
+    pub async fn apply_to_artifact(&self, artifact: &ImperativeArtifact) -> protocol::MutationApplyResult<ImperativeArtifact> {
         Ok({
             if let Some(replacement) = &self.artifact {
                 return Ok((**replacement).clone());
@@ -46,7 +46,7 @@ impl ImperativeDiff {
 }
 
 impl MutationDiff<ImperativeSnapshot> for ImperativeDiff {
-    fn apply(&self, snapshot: &ImperativeSnapshot) -> protocol::MutationApplyResult<ImperativeSnapshot> {
+    async fn apply(&self, snapshot: &ImperativeSnapshot) -> protocol::MutationApplyResult<ImperativeSnapshot> {
         Ok({
             if let Some(replacement) = &self.artifact {
                 return Ok(replacement.to_snapshot());
@@ -64,7 +64,7 @@ impl MutationDiff<ImperativeSnapshot> for ImperativeDiff {
             next
         })
     }
-    fn absorb(&mut self, other: Self) {
+    async fn absorb(&mut self, other: Self) {
         if other.artifact.is_some() {
             *self = other;
             return;
@@ -88,7 +88,7 @@ impl MutationDiff<ImperativeSnapshot> for ImperativeDiff {
 
 //#region 🔖️Helpers
 /// 📸️ Whole-snapshot replacement diff.
-pub fn diff_set_snapshot(snapshot: ImperativeSnapshot) -> ImperativeDiff {
+pub async fn diff_set_snapshot(snapshot: ImperativeSnapshot) -> ImperativeDiff {
     ImperativeDiff {
         artifact: Some(Box::new(ImperativeArtifact::from_snapshot(snapshot))),
         ..Default::default()
@@ -103,7 +103,7 @@ mod tests {
     use crate::artifacts::imperative::schema::default_snapshot;
 
     #[test]
-    fn imperative_diff_absorb_whole_artifact_wins() {
+    async fn imperative_diff_absorb_whole_artifact_wins() {
         let mut diff = ImperativeDiff {
             flow: Some(crate::artifacts::imperative::imperative_flow_child_handle_and_cache(&crate::artifacts::imperative::Path::new())),
             ..Default::default()
@@ -122,7 +122,7 @@ mod tests {
     /// only ever whole-handle-replaces `flow` — with the equivalent real-behavior law: a `flow`
     /// handle minted from an edited working scene applies as a clean whole-handle replace.
     #[test]
-    fn flow_handle_replace_round_trips_via_apply() {
+    async fn flow_handle_replace_round_trips_via_apply() {
         let base = default_snapshot();
         let mut path = crate::artifacts::imperative::imperative_working_scene(&base).path;
         assert!(path.steps.iter().any(|step| step.id == "step-1"));

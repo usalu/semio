@@ -4,7 +4,7 @@ use crate::artifacts::puzzle3d::diff::{Puzzle3dDiff, Puzzle3dObjectsDelta};
 use crate::artifacts::puzzle3d::Puzzle3dSnapshot;
 
 //#region 🔖️Diff
-pub fn diff(payload: &super::mutation::CreateObject, base: &Puzzle3dSnapshot) -> protocol::MutationOutcome<Puzzle3dDiff> {
+pub async fn diff(payload: &super::mutation::CreateObject, base: &Puzzle3dSnapshot) -> protocol::MutationOutcome<Puzzle3dDiff> {
     if base.objects.iter().any(|entry| entry.id == payload.object.id) {
         return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("{} already exists", "object"), vec![payload.object.id.clone()]);
     }

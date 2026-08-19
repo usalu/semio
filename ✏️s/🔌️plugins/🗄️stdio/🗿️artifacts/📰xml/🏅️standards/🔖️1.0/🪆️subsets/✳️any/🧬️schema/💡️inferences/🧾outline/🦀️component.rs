@@ -21,7 +21,7 @@ pub struct XmlOutline {
 /// 🌳️ Recursively walks an element subtree, returning `(element_count, max_depth)` — `depth` is
 /// the caller's own nesting level (the root element call passes `1`). Non-`Element` nodes
 /// (`Text`/`CData`/`Comment`/`ProcessingInstruction`) don't recurse further and don't count.
-fn walk(node: &XmlNode, depth: u32) -> (u32, u32) {
+async fn walk(node: &XmlNode, depth: u32) -> (u32, u32) {
     match node {
         XmlNode::Element { children, .. } => {
             let mut count = 1u32;
@@ -38,7 +38,7 @@ fn walk(node: &XmlNode, depth: u32) -> (u32, u32) {
 }
 
 impl XmlOutline {
-    pub fn compute(snapshot: &XmlSnapshot) -> Self {
+    pub async fn compute(snapshot: &XmlSnapshot) -> Self {
         let (element_count, max_depth) = match &snapshot.doc.root {
             Some(root) => walk(root, 1),
             None => (0, 0),
@@ -55,7 +55,7 @@ mod tests {
     use crate::artifacts::xml::schema::snapshot::XmlDocument;
 
     #[test]
-    fn counts_elements_and_depth_over_nested_structure() {
+    async fn counts_elements_and_depth_over_nested_structure() {
         let root = XmlNode::Element { name: "root".into(), attrs: vec![], children: vec![XmlNode::Element { name: "child".into(), attrs: vec![], children: vec![XmlNode::Text { text: "hi".into() }] }] };
         let snapshot = XmlSnapshot { schema: "stdio.xml".into(), doc: XmlDocument { root: Some(root), doctype: Some("<!DOCTYPE root>".into()), declaration: None, prolog: Vec::new() } };
         let outline = XmlOutline::compute(&snapshot);
@@ -65,7 +65,7 @@ mod tests {
     }
 
     #[test]
-    fn empty_document_has_zero_elements_and_depth() {
+    async fn empty_document_has_zero_elements_and_depth() {
         let outline = XmlOutline::compute(&XmlSnapshot::default());
         assert_eq!(outline.element_count, 0);
         assert_eq!(outline.max_depth, 0);
@@ -73,7 +73,7 @@ mod tests {
     }
 
     #[test]
-    fn outline_is_deterministic() {
+    async fn outline_is_deterministic() {
         let snapshot = XmlSnapshot::default();
         assert_eq!(XmlOutline::compute(&snapshot), XmlOutline::compute(&snapshot));
     }

@@ -16,23 +16,23 @@ pub struct CreateRepresentation {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn create_representation(representation: BlockRepresentation) -> Block5dMutation {
+pub async fn create_representation(representation: BlockRepresentation) -> Block5dMutation {
     Block5dMutation::CreateRepresentation(CreateRepresentation { representation })
 }
 
 impl protocol::MutationKind<Block5dSnapshot, Block5dMutation> for CreateRepresentation {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "create", entity: "representation", kind: "create-representation", record: "CreatedRepresentation" };
 
-    fn diff(&self, base: &Block5dSnapshot) -> protocol::MutationOutcome<Block5dDiff> {
+    async fn diff(&self, base: &Block5dSnapshot) -> protocol::MutationOutcome<Block5dDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &Block5dSnapshot) -> Vec<Block5dMutation> {
+    async fn inverse(&self, base: &Block5dSnapshot) -> Vec<Block5dMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         format!("Create representation \"{}\"", self.representation.id)
     }
-    fn target(&self) -> Vec<String> {
+    async fn target(&self) -> Vec<String> {
         vec![self.representation.id.clone()]
     }
 }

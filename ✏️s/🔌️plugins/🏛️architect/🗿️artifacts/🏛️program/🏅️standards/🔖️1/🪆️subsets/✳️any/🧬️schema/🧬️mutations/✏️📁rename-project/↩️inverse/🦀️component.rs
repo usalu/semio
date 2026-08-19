@@ -5,6 +5,6 @@
 use crate::artifacts::program::ProgramMutation;
 use crate::artifacts::program::ProgramSnapshot;
 
-pub fn inverse(_payload: &super::mutation::RenameProject, base: &ProgramSnapshot) -> Vec<ProgramMutation> {
+pub async fn inverse(_payload: &super::mutation::RenameProject, base: &ProgramSnapshot) -> Vec<ProgramMutation> {
     vec![ProgramMutation::RenameProject(super::mutation::RenameProject { new_code: base.project.code.clone() })]
 }

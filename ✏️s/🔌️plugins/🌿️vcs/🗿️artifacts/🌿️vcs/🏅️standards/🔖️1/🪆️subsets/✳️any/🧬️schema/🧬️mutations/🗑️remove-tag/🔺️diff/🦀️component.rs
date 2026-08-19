@@ -4,7 +4,7 @@ use crate::artifacts::vcs::{VcsDiff, VcsSnapshot};
 
 //#region 🔖️Diff
 /// 🔺️ Error `target-missing` when BASE doesn't have the tag.
-pub fn diff(payload: &super::mutation::RemoveTag, base: &VcsSnapshot) -> protocol::MutationOutcome<VcsDiff> {
+pub async fn diff(payload: &super::mutation::RemoveTag, base: &VcsSnapshot) -> protocol::MutationOutcome<VcsDiff> {
     if !base.tags.iter().any(|existing| existing == &payload.tag) {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Tag \"{}\" does not exist.", payload.tag), [payload.tag.clone()]);
     }

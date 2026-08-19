@@ -24,19 +24,19 @@ pub struct En1991Inference {
 }
 
 impl protocol::Inference<En1991Snapshot> for En1991Inference {
-    fn infer(snapshot: &En1991Snapshot) -> Self {
+    async fn infer(snapshot: &En1991Snapshot) -> Self {
         Self { outline: En1991Outline::compute(snapshot) }
     }
 }
 
 impl protocol::InferenceSpec<En1991Snapshot> for En1991Inference {
-    fn inference_schema_id() -> &'static str {
+    async fn inference_schema_id() -> &'static str {
         "s.norm.en1991.inference"
     }
-    fn schema_version() -> u32 {
+    async fn schema_version() -> u32 {
         1
     }
-    fn fields() -> &'static [protocol::InferenceFieldSpec] {
+    async fn fields() -> &'static [protocol::InferenceFieldSpec] {
         &[protocol::InferenceFieldSpec { id: "s.norm.en1991.inference.outline", reads: &[] }]
     }
 }
@@ -52,7 +52,7 @@ impl ArtifactInferrer for crate::artifacts::en1991::standards::v1::subsets::any:
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.norm.en1991.inference`'s facet leaves into the OS-wide inference catalog — call once at
 /// plugin init, alongside `en1991_artifact_schema_descriptor`'s registration.
-pub fn en1991_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
+pub async fn en1991_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
     schema::ArtifactInferenceDescriptor {
         id: "s.norm.en1991.inference",
         inference: schema::FacetLeaves {
@@ -73,13 +73,13 @@ mod tests {
     use protocol::Inference;
 
     #[test]
-    fn inference_determinism_law() {
+    async fn inference_determinism_law() {
         let snapshot = En1991Snapshot::default();
         assert_eq!(En1991Inference::infer(&snapshot), En1991Inference::infer(&snapshot));
     }
 
     #[test]
-    fn inference_default_law() {
+    async fn inference_default_law() {
         assert_eq!(En1991Inference::infer(&En1991Snapshot::default()), En1991Inference::default());
     }
 }
@@ -95,7 +95,7 @@ use crate::artifacts::en1991::standards::v1::subsets::any::schema::{part_1_1, pa
 use crate::document::{AnnexChoice, CheckReport, CheckResult, ClauseId, ImposedCategory, NationalAnnex, Quantity};
 
 /// 📋️ Aggregate action checks for a typical floor bay.
-pub fn check_floor_actions(area_m2: f64, category: ImposedCategory, wind_zone_vb: f64, snow_zone: u8, use_de_na: bool) -> CheckReport {
+pub async fn check_floor_actions(area_m2: f64, category: ImposedCategory, wind_zone_vb: f64, snow_zone: u8, use_de_na: bool) -> CheckReport {
     let annex: &dyn NationalAnnex = if use_de_na { &NaDe } else { &NaEn };
     let mut report = CheckReport::default();
     report.push(part_1_1::check_imposed(area_m2, category, annex));
@@ -108,7 +108,7 @@ pub fn check_floor_actions(area_m2: f64, category: ImposedCategory, wind_zone_vb
 }
 
 /// 📋️ Full EN 1991 action checks across parts 1-1 through 1-7 and parts 2–4.
-pub fn check_full_actions(document: &En1991Snapshot) -> CheckReport {
+pub async fn check_full_actions(document: &En1991Snapshot) -> CheckReport {
     let annex: &dyn NationalAnnex = if document.annex == AnnexChoice::De { &NaDe } else { &NaEn };
     let mut report = CheckReport::default();
     report.push(part_1_1::check_imposed(document.area_m2, document.category, annex));
@@ -137,7 +137,7 @@ pub fn check_full_actions(document: &En1991Snapshot) -> CheckReport {
 }
 
 /// 📋️ `En1991Snapshot -> CheckReport` conformance law — the artifact's compliance evaluation.
-pub fn evaluate(document: &En1991Snapshot) -> CheckReport {
+pub async fn evaluate(document: &En1991Snapshot) -> CheckReport {
     check_full_actions(document)
 }
 //#endregion 🔖️ComplianceReport
@@ -148,7 +148,7 @@ mod compliance_report_tests {
     use super::*;
 
     #[test]
-    fn full_actions_de_na_numeric() {
+    async fn full_actions_de_na_numeric() {
         let doc = En1991Snapshot::default();
         let annex = NaDe;
         let report = check_full_actions(&doc);
@@ -178,7 +178,7 @@ mod compliance_report_tests {
     }
 
     #[test]
-    fn evaluate_reaches_every_part_module() {
+    async fn evaluate_reaches_every_part_module() {
         let report = evaluate(&En1991Snapshot::default());
         assert!(report.checks.iter().any(|c| c.clause.family.contains("1991-1-1")));
         assert!(report.checks.iter().any(|c| c.clause.family.contains("1991-1-2")));

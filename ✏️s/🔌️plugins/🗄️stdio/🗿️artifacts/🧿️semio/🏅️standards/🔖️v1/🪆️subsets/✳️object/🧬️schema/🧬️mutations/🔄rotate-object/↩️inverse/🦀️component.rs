@@ -5,7 +5,7 @@ use crate::artifacts::semio::standards::v1::subsets::object::schema::mutations::
 use crate::artifacts::semio::standards::v1::subsets::object::schema::snapshot::SemioObjectSnapshot;
 
 //#region 🔖️Inverse
-pub fn inverse(_payload: &RotateObject, base: &SemioObjectSnapshot) -> Vec<SemioObjectMutation> {
+pub async fn inverse(_payload: &RotateObject, base: &SemioObjectSnapshot) -> Vec<SemioObjectMutation> {
     vec![SemioObjectMutation::RotateObject(RotateObject { rotation: base.transform.rotation })]
 }
 //#endregion 🔖️Inverse

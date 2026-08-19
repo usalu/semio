@@ -6,7 +6,7 @@ use crate::artifacts::note::NoteSnapshot;
 use crate::artifacts::note::schema::diff::note_block_added_diff;
 
 //#region 🔖️Diff
-pub fn diff(payload: &CreateBlock, base: &NoteSnapshot) -> protocol::MutationOutcome<NoteDiff> {
+pub async fn diff(payload: &CreateBlock, base: &NoteSnapshot) -> protocol::MutationOutcome<NoteDiff> {
     let new_id = crate::artifacts::note::schema::block_id(&payload.block);
     if crate::artifacts::note::schema::find_block(&base.blocks, new_id).is_some() {
         return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("A block with id \"{}\" already exists.", new_id), [new_id.to_string()]);

@@ -19,16 +19,16 @@ pub struct ReplaceUserProfile {
 }
 impl MutationKind<ProgramSnapshot, ProgramMutation> for ReplaceUserProfile {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "replace", entity: "user-profile", kind: "replace-user-profile", record: "ReplacedUserProfile" };
-    fn diff(&self, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
+    async fn diff(&self, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {
+    async fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         format!("Replace user profile \"{}\"", self.user_profile.header.name)
     }
-    fn target(&self) -> Vec<String> {
+    async fn target(&self) -> Vec<String> {
         vec![self.user_profile.header.id.0.clone()]
     }
 }

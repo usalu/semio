@@ -27,10 +27,10 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 //#region 🔖️ScalarCodec
 /// 🔤️ Quoted-string encode/decode — the only value kind that can contain a raw space, so every
 /// other token stays space-free and tokenizable by [`tokenize_args`].
-fn enc_str(s: &str) -> String {
+async fn enc_str(s: &str) -> String {
     format!("\"{}\"", s.replace('\\', "\\\\").replace('"', "\\\""))
 }
-fn dec_str(s: &str) -> Result<String, String> {
+async fn dec_str(s: &str) -> Result<String, String> {
     let inner = s.strip_prefix('"').and_then(|s| s.strip_suffix('"')).ok_or_else(|| format!("expected quoted string, got {s:?}"))?;
     let mut out = String::with_capacity(inner.len());
     let mut chars = inner.chars();
@@ -50,10 +50,10 @@ fn dec_str(s: &str) -> Result<String, String> {
 }
 /// 🧬️ Every payload field already derives `Serialize`/`Deserialize` — a quoted JSON atom reuses
 /// that losslessly instead of a second handcrafted grammar per field type.
-fn enc_json<T: serde::Serialize>(value: &T) -> String {
+async fn enc_json<T: serde::Serialize>(value: &T) -> String {
     enc_str(&serde_json::to_string(value).expect("din4108 mutation payload field always serializes"))
 }
-fn dec_json<T: serde::de::DeserializeOwned>(s: &str) -> Result<T, String> {
+async fn dec_json<T: serde::de::DeserializeOwned>(s: &str) -> Result<T, String> {
     serde_json::from_str(&dec_str(s)?).map_err(|e| e.to_string())
 }
 //#endregion 🔖️ScalarCodec
@@ -61,7 +61,7 @@ fn dec_json<T: serde::de::DeserializeOwned>(s: &str) -> Result<T, String> {
 //#region 🔖️Tokenizer
 /// 🔡️ Splits `key=value` tokens on plain spaces, EXCEPT spaces inside a `"..."` quoted value —
 /// needed because string/JSON payloads may contain spaces.
-fn tokenize_args(rest: &str) -> Vec<String> {
+async fn tokenize_args(rest: &str) -> Vec<String> {
     let mut tokens = Vec::new();
     let mut current = String::new();
     let mut in_quotes = false;
@@ -91,13 +91,13 @@ fn tokenize_args(rest: &str) -> Vec<String> {
     }
     tokens
 }
-fn parse_args(rest: &str) -> Result<std::collections::BTreeMap<String, String>, String> {
+async fn parse_args(rest: &str) -> Result<std::collections::BTreeMap<String, String>, String> {
     tokenize_args(rest).into_iter().map(|token| token.split_once('=').map(|(k, v)| (k.to_string(), v.to_string())).ok_or_else(|| format!("bad arg token {token:?}"))).collect()
 }
 //#endregion 🔖️Tokenizer
 
 //#region 🔖️OpText
-fn print_din4108_mutation(mutation: &Din4108Mutation) -> String {
+async fn print_din4108_mutation(mutation: &Din4108Mutation) -> String {
     match mutation {
         Din4108Mutation::ChangeCategory(p) => format!("change-category new-category={}", enc_json(&p.new_category)),
         Din4108Mutation::ChangeClimate(p) => format!("change-climate new-climate={}", enc_json(&p.new_climate)),
@@ -124,7 +124,7 @@ fn print_din4108_mutation(mutation: &Din4108Mutation) -> String {
     }
 }
 
-fn parse_din4108_mutation(line: &str) -> Result<Din4108Mutation, String> {
+async fn parse_din4108_mutation(line: &str) -> Result<Din4108Mutation, String> {
     let (keyword, rest) = line.split_once(' ').unwrap_or((line, ""));
     let args = parse_args(rest)?;
     let arg = |k: &str| args.get(k).cloned().ok_or_else(|| format!("din4108 mutation: missing arg '{k}' for '{keyword}'"));
@@ -156,10 +156,10 @@ fn parse_din4108_mutation(line: &str) -> Result<Din4108Mutation, String> {
 }
 
 impl protocol::OpText for Din4108Mutation {
-    fn print_op(&self) -> String {
+    async fn print_op(&self) -> String {
         print_din4108_mutation(self)
     }
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
+    async fn parse_op(line: &str) -> Result<Self, store::TextError> {
         parse_din4108_mutation(line).map_err(|e| store::TextError::new(e, store::TextSpan::at(1, 1)))
     }
 }
@@ -168,12 +168,12 @@ impl protocol::OpText for Din4108Mutation {
 //#region 🔖️OpBinaryCodec
 /// 🎞️ Every variant's binary form is `tag u8 | json-string-per-field` — the JSON-per-field
 /// consolidation used by `OpText` above applies equally here.
-fn write_json_bin<T: serde::Serialize>(out: &mut Vec<u8>, value: &T) {
+async fn write_json_bin<T: serde::Serialize>(out: &mut Vec<u8>, value: &T) {
     let bytes = serde_json::to_string(value).expect("din4108 mutation payload field always serializes");
     store::pack_rt::write_varint_u64(out, bytes.len() as u64);
     out.extend_from_slice(bytes.as_bytes());
 }
-fn read_json_bin<T: serde::de::DeserializeOwned>(reader: &mut store::ByteReader<'_>) -> Result<T, String> {
+async fn read_json_bin<T: serde::de::DeserializeOwned>(reader: &mut store::ByteReader<'_>) -> Result<T, String> {
     let len = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
     let bytes = reader.read_bytes(len).map_err(|e| e.to_string())?;
     let text = std::str::from_utf8(bytes).map_err(|e| e.to_string())?;
@@ -181,7 +181,7 @@ fn read_json_bin<T: serde::de::DeserializeOwned>(reader: &mut store::ByteReader<
 }
 
 impl protocol::OpBinary for Din4108Mutation {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         let tag: u8 = match self {
             Din4108Mutation::ChangeCategory(_) => 0,
             Din4108Mutation::ChangeClimate(_) => 1,
@@ -246,7 +246,7 @@ impl protocol::OpBinary for Din4108Mutation {
         Ok(out)
     }
 
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         let mut reader = store::ByteReader::new(bytes);
         let malformed = |what: &'static str, offset: usize, detail: String| protocol::ProtocolError::Malformed { what, offset: offset as u64, detail };
         let _format = reader.read_u8().map_err(|e| malformed("op format", 0, e.to_string()))?;
@@ -353,7 +353,7 @@ impl protocol::OpBinary for Din4108Mutation {
 //#region 🔖️DemoCases
 /// 🧪️ One representative value per variant — reused by the round-trip law test below.
 #[cfg(test)]
-pub(crate) fn demo_mutation_cases() -> Vec<Din4108Mutation> {
+pub(crate) async fn demo_mutation_cases() -> Vec<Din4108Mutation> {
     use crate::artifacts::din4108::LayerDocument;
 
     vec![
@@ -390,7 +390,7 @@ mod tests {
     use protocol::{OpBinary, OpText};
 
     #[test]
-    fn op_text_binary_roundtrip_law() {
+    async fn op_text_binary_roundtrip_law() {
         for mutation in demo_mutation_cases() {
             let printed = mutation.print_op();
             assert!(!printed.contains('\n'), "print_op must be one line, got {printed:?}");

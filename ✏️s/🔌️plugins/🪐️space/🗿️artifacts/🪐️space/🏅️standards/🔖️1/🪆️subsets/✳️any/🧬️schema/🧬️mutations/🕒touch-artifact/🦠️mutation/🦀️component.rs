@@ -16,23 +16,23 @@ pub struct TouchArtifact {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn touch_artifact(id: String, updated_at_ms: u64, updated_by: String) -> SSpaceMutation {
+pub async fn touch_artifact(id: String, updated_at_ms: u64, updated_by: String) -> SSpaceMutation {
     SSpaceMutation::TouchArtifact(TouchArtifact { id, updated_at_ms, updated_by })
 }
 
 impl protocol::MutationKind<SSpaceSnapshot, SSpaceMutation> for TouchArtifact {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "update", entity: "artifact", kind: "touch-artifact", record: "TouchedArtifact" };
 
-    fn diff(&self, base: &SSpaceSnapshot) -> protocol::MutationOutcome<SSpaceDiff> {
+    async fn diff(&self, base: &SSpaceSnapshot) -> protocol::MutationOutcome<SSpaceDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &SSpaceSnapshot) -> Vec<SSpaceMutation> {
+    async fn inverse(&self, base: &SSpaceSnapshot) -> Vec<SSpaceMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         format!("Touch artifact \"{}\"", self.id)
     }
-    fn target(&self) -> Vec<String> {
+    async fn target(&self) -> Vec<String> {
         vec![self.id.clone()]
     }
 }

@@ -10,6 +10,6 @@ use serde::{Deserialize, Serialize};
 #[dsl(keyword = "compiled-dag-engagement-submit")]
 pub struct CompiledDagEngagementSubmit {}
 
-pub fn handle(_payload: &CompiledDagEngagementSubmit, _doc: &ArtifactView<'_, WorkflowSnapshot>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
+pub async fn handle(_payload: &CompiledDagEngagementSubmit, _doc: &ArtifactView<'_, WorkflowSnapshot>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
     Ok(Emit::default())
 }

@@ -16,23 +16,23 @@ pub struct RenameNode {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn rename_node(id: String, new_id: String) -> DagMutation {
+pub async fn rename_node(id: String, new_id: String) -> DagMutation {
     DagMutation::RenameNode(RenameNode { id, new_id })
 }
 
 impl protocol::MutationKind<DagSnapshot, DagMutation> for RenameNode {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "rename", entity: "node", kind: "rename-node", record: "RenamedNode" };
 
-    fn diff(&self, base: &DagSnapshot) -> protocol::MutationOutcome<DagDiff> {
+    async fn diff(&self, base: &DagSnapshot) -> protocol::MutationOutcome<DagDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &DagSnapshot) -> Vec<DagMutation> {
+    async fn inverse(&self, base: &DagSnapshot) -> Vec<DagMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         format!("Rename node \"{}\" to \"{}\"", self.id, self.new_id)
     }
-    fn target(&self) -> Vec<String> {
+    async fn target(&self) -> Vec<String> {
         vec![self.id.clone()]
     }
 }

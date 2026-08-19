@@ -5,7 +5,7 @@ use crate::artifacts::en1995::mutations::change_service_class::mutation::ChangeS
 use crate::artifacts::en1995::En1995Snapshot;
 
 //#region 🔖️Diff
-pub fn diff(payload: &ChangeServiceClass, base: &En1995Snapshot) -> protocol::MutationOutcome<En1995Diff> {
+pub async fn diff(payload: &ChangeServiceClass, base: &En1995Snapshot) -> protocol::MutationOutcome<En1995Diff> {
     if base.service_class == payload.new_service_class {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", "Service class already has this value.");
     }

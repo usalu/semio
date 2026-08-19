@@ -9,7 +9,7 @@ use semio_framework_plugin::{Emit, Fault};
 /// expressible as a granular mutation, so it routes through `Effect::LoadDocument` (outside
 /// undo history) via `editor::rewrite::reset_document_effect`, mirroring `set_active_example`/
 /// `set_fixture_json` conventions elsewhere in this ticket.
-pub(crate) fn reset_rule(state: &RewriteSnapshot) -> Result<Emit<RewriteRuleMutation, RewriteConfigMutation>, Fault> {
+pub(crate) async fn reset_rule(state: &RewriteSnapshot) -> Result<Emit<RewriteRuleMutation, RewriteConfigMutation>, Fault> {
     let next = crate::editor::rewrite::default_rule_state();
     let camera = crate::editor::rewrite::seed_before_pane_camera(&next);
     let config_mutations = vec![RewriteConfigMutation::SetBeforePaneCamera { camera }];

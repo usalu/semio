@@ -25,27 +25,27 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 
 //#region 🔖️NodePathPrimitive
 /// 🧭️ `[layer,[p0,p1,...]]` — mirrors `NodePath`'s own field shape.
-fn enc_node_path(np: &NodePath) -> String {
+async fn enc_node_path(np: &NodePath) -> String {
     format!("[{},{}]", np.layer, enc_list(&np.path, |i: &usize| i.to_string()))
 }
-fn dec_node_path(s: &str) -> Result<NodePath, String> {
+async fn dec_node_path(s: &str) -> Result<NodePath, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [layer, path] = parts.as_slice() else { return Err(format!("node path: expected 2 fields, got {}", parts.len())) };
     Ok(NodePath { layer: layer.parse::<usize>().map_err(|e: std::num::ParseIntError| e.to_string())?, path: dec_list(path, |v| v.parse::<usize>().map_err(|e: std::num::ParseIntError| e.to_string()))? })
 }
-fn parse_usize(s: &str) -> Result<usize, String> {
+async fn parse_usize(s: &str) -> Result<usize, String> {
     s.parse().map_err(|e: std::num::ParseIntError| e.to_string())
 }
-fn enc_indices(indices: &[usize]) -> String {
+async fn enc_indices(indices: &[usize]) -> String {
     enc_list(indices, |i: &usize| i.to_string())
 }
-fn dec_indices(s: &str) -> Result<Vec<usize>, String> {
+async fn dec_indices(s: &str) -> Result<Vec<usize>, String> {
     dec_list(s, parse_usize)
 }
 //#endregion 🔖️NodePathPrimitive
 
 //#region 🔖️OpText
-fn print_drawing_mutation(m: &SemioDrawingMutation) -> String {
+async fn print_drawing_mutation(m: &SemioDrawingMutation) -> String {
     match m {
         SemioDrawingMutation::CreateLayer(p) => format!("createLayer:{},{}", p.index, enc_layer(&p.layer)),
         SemioDrawingMutation::DeleteLayer(p) => format!("deleteLayer:{}", enc_str(&p.id)),
@@ -67,7 +67,7 @@ fn print_drawing_mutation(m: &SemioDrawingMutation) -> String {
     }
 }
 
-fn parse_drawing_mutation(line: &str) -> Result<SemioDrawingMutation, String> {
+async fn parse_drawing_mutation(line: &str) -> Result<SemioDrawingMutation, String> {
     let (tag, rest) = line.split_once(':').ok_or_else(|| format!("drawing mutation: missing ':' in {line:?}"))?;
     match tag {
         "createLayer" => {
@@ -143,10 +143,10 @@ fn parse_drawing_mutation(line: &str) -> Result<SemioDrawingMutation, String> {
 }
 
 impl protocol::OpText for SemioDrawingMutation {
-    fn print_op(&self) -> String {
+    async fn print_op(&self) -> String {
         print_drawing_mutation(self)
     }
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
+    async fn parse_op(line: &str) -> Result<Self, store::TextError> {
         parse_drawing_mutation(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
 }
@@ -160,7 +160,7 @@ mod tests {
     use protocol::OpText;
 
     #[test]
-    fn op_text_roundtrip_law() {
+    async fn op_text_roundtrip_law() {
         for mutation in demo_mutation_cases() {
             let printed = mutation.print_op();
             assert!(!printed.contains('\n'), "print_op must be one line, got {printed:?}");

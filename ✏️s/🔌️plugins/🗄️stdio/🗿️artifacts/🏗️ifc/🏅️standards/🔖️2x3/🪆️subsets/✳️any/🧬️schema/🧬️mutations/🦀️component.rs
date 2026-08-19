@@ -39,7 +39,7 @@ pub enum Ifc2x3Mutation {
 //#region 🔖️Apply
 /// ▶️ Applies `mutation` to `snapshot`, returning the diff (computed against the PRE-mutation
 /// state, per `Mutation::diff`'s contract).
-pub fn apply_ifc2x3_mutation(snapshot: &mut Ifc2x3Snapshot, mutation: &Ifc2x3Mutation) -> protocol::MutationOutcome<Ifc2x3Diff> {
+pub async fn apply_ifc2x3_mutation(snapshot: &mut Ifc2x3Snapshot, mutation: &Ifc2x3Mutation) -> protocol::MutationOutcome<Ifc2x3Diff> {
     let outcome = <Ifc2x3Mutation as Mutation<Ifc2x3Snapshot>>::diff(mutation, snapshot);
     match protocol::MutationDiff::apply(outcome.diff(), snapshot) {
         Ok(next) => {
@@ -55,7 +55,7 @@ pub fn apply_ifc2x3_mutation(snapshot: &mut Ifc2x3Snapshot, mutation: &Ifc2x3Mut
 impl Mutation<Ifc2x3Snapshot> for Ifc2x3Mutation {
     type Diff = Ifc2x3Diff;
 
-    fn diff(&self, base: &Ifc2x3Snapshot) -> protocol::MutationOutcome<Self::Diff> {
+    async fn diff(&self, base: &Ifc2x3Snapshot) -> protocol::MutationOutcome<Self::Diff> {
         let mut next = base.clone();
         match self {
             Ifc2x3Mutation::NoMutation => return protocol::MutationOutcome::new(Ifc2x3Diff::default()),
@@ -73,7 +73,7 @@ impl Mutation<Ifc2x3Snapshot> for Ifc2x3Mutation {
         protocol::MutationOutcome::new(Ifc2x3Diff::between(base, &next))
     }
 
-    fn inverse(&self, base: &Ifc2x3Snapshot) -> Vec<Self> {
+    async fn inverse(&self, base: &Ifc2x3Snapshot) -> Vec<Self> {
         match self {
             Ifc2x3Mutation::NoMutation => vec![Ifc2x3Mutation::NoMutation],
             _ => vec![Ifc2x3Mutation::SetSnapshot { snapshot: base.clone() }],
@@ -95,7 +95,7 @@ impl Mutation<Ifc2x3Snapshot> for Ifc2x3Mutation {
 /// `split_top_level`/...) rather than duplicating them a second time in this file — same
 /// intra-artifact-reuse split `4`'s own `🧬️mutations/🦀️component.rs` uses. Grammar: `keyword
 /// arg=value ...` (space-separated), one match arm per variant.
-fn enc_ifc2x3_snapshot_into(s: &Ifc2x3Snapshot, out: &mut String) {
+async fn enc_ifc2x3_snapshot_into(s: &Ifc2x3Snapshot, out: &mut String) {
     out.push('[');
     out.push_str(&enc_str(&s.schema));
     out.push(',');
@@ -106,7 +106,7 @@ fn enc_ifc2x3_snapshot_into(s: &Ifc2x3Snapshot, out: &mut String) {
     out.push_str(&enc_optional_edm_preamble(&s.edm_preamble));
     out.push(']');
 }
-fn dec_ifc2x3_snapshot(s: &str) -> Result<Ifc2x3Snapshot, String> {
+async fn dec_ifc2x3_snapshot(s: &str) -> Result<Ifc2x3Snapshot, String> {
     let fields = split_top_level(strip_brackets(s)?, ',');
     let [schema, header, instances, edm_preamble] = fields.as_slice() else {
         return Err(format!("ifc2x3 snapshot: expected 4 fields, got {}", fields.len()));
@@ -114,7 +114,7 @@ fn dec_ifc2x3_snapshot(s: &str) -> Result<Ifc2x3Snapshot, String> {
     Ok(Ifc2x3Snapshot { schema: dec_str(schema)?, document: Part21Document { header: dec_part21_header(header)?, instances: dec_instance_list(instances)? }, edm_preamble: dec_optional_edm_preamble(edm_preamble)? })
 }
 
-fn print_ifc2x3_mutation(m: &Ifc2x3Mutation) -> String {
+async fn print_ifc2x3_mutation(m: &Ifc2x3Mutation) -> String {
     match m {
         Ifc2x3Mutation::NoMutation => "no-mutation".to_string(),
         Ifc2x3Mutation::SetSnapshot { snapshot } => {
@@ -128,7 +128,7 @@ fn print_ifc2x3_mutation(m: &Ifc2x3Mutation) -> String {
         Ifc2x3Mutation::SetHeader { header } => format!("set-header header={}", enc_part21_header(header)),
     }
 }
-fn parse_ifc2x3_mutation(line: &str) -> Result<Ifc2x3Mutation, String> {
+async fn parse_ifc2x3_mutation(line: &str) -> Result<Ifc2x3Mutation, String> {
     if line == "no-mutation" {
         return Ok(Ifc2x3Mutation::NoMutation);
     }
@@ -144,10 +144,10 @@ fn parse_ifc2x3_mutation(line: &str) -> Result<Ifc2x3Mutation, String> {
 }
 
 impl protocol::OpText for Ifc2x3Mutation {
-    fn print_op(&self) -> String {
+    async fn print_op(&self) -> String {
         print_ifc2x3_mutation(self)
     }
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
+    async fn parse_op(line: &str) -> Result<Self, store::TextError> {
         parse_ifc2x3_mutation(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
 }
@@ -158,7 +158,7 @@ impl protocol::OpText for Ifc2x3Mutation {
 /// `write_str_bin` primitives for the SHARED `Part21Instance`/`Part21Header`/`Part21Value` shape
 /// (same intra-artifact-reuse split the TEXT codec above already uses); only `Ifc2x3Snapshot`'s own
 /// binary shape is genuinely new here.
-fn enc_ifc2x3_snapshot_bin(s: &Ifc2x3Snapshot, out: &mut Vec<u8>) {
+async fn enc_ifc2x3_snapshot_bin(s: &Ifc2x3Snapshot, out: &mut Vec<u8>) {
     write_str_bin(out, &s.schema);
     enc_part21_header_bin(&s.document.header, out);
     store::pack_rt::write_varint_u64(out, s.document.instances.len() as u64);
@@ -173,7 +173,7 @@ fn enc_ifc2x3_snapshot_bin(s: &Ifc2x3Snapshot, out: &mut Vec<u8>) {
         }
     }
 }
-fn dec_ifc2x3_snapshot_bin(reader: &mut store::ByteReader<'_>) -> Result<Ifc2x3Snapshot, String> {
+async fn dec_ifc2x3_snapshot_bin(reader: &mut store::ByteReader<'_>) -> Result<Ifc2x3Snapshot, String> {
     let schema = read_str_bin(reader)?;
     let header = dec_part21_header_bin(reader)?;
     let count = reader.read_varint_u64().map_err(|e| e.to_string())?;
@@ -198,7 +198,7 @@ fn dec_ifc2x3_snapshot_bin(reader: &mut store::ByteReader<'_>) -> Result<Ifc2x3S
 /// primitives) — the only place the recursion bottoms out through a fully spec-expressible
 /// per-variant tag (`enc_part21_value_bin`), never an opaque byte-chain fallback.
 impl protocol::OpBinary for Ifc2x3Mutation {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         let tag: u8 = match self {
             Ifc2x3Mutation::NoMutation => 0,
             Ifc2x3Mutation::SetSnapshot { .. } => 1,
@@ -217,7 +217,7 @@ impl protocol::OpBinary for Ifc2x3Mutation {
         Ok(out)
     }
 
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         let mut reader = store::ByteReader::new(bytes);
         let malformed = |what: &'static str, offset: usize, detail: String| protocol::ProtocolError::Malformed { what, offset: offset as u64, detail };
         let format = reader.read_u8().map_err(|e| malformed("op format", 0, e.to_string()))?;
@@ -259,7 +259,7 @@ impl protocol::OpBinary for Ifc2x3Mutation {
 /// the recursive `List`/`Typed` cases) and `UpsertInstance`'s bare `Part21Instance` payload (incl. a
 /// real COMPLEX 2-entity instance) are exercised at least once.
 #[cfg(test)]
-pub(crate) fn demo_mutation_cases() -> Vec<Ifc2x3Mutation> {
+pub(crate) async fn demo_mutation_cases() -> Vec<Ifc2x3Mutation> {
     vec![
         Ifc2x3Mutation::NoMutation,
         Ifc2x3Mutation::SetSnapshot { snapshot: crate::artifacts::ifc::standards::v2x3::engine::demo_ifc2x3_snapshot() },
@@ -299,28 +299,28 @@ mod tests {
     use protocol::{DiffCodec, MutationDiff, OpBinary, OpText};
     use std::sync::OnceLock;
 
-    fn inst(id: u64, name: &str) -> Part21Instance {
+    async fn inst(id: u64, name: &str) -> Part21Instance {
         Part21Instance { id, entities: vec![(name.to_string(), vec![Part21Value::Int(id as i64)])] }
     }
 
-    fn exact_fixture_bytes() -> &'static [u8] {
+    async fn exact_fixture_bytes() -> &'static [u8] {
         static BYTES: OnceLock<Vec<u8>> = OnceLock::new();
         BYTES.get_or_init(|| std::fs::read(std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../../../temp/wellness-center-sama.ifc")).expect("read temp/wellness-center-sama.ifc"))
     }
 
-    fn exact_fixture() -> Ifc2x3Snapshot {
+    async fn exact_fixture() -> Ifc2x3Snapshot {
         static SNAPSHOT: OnceLock<Ifc2x3Snapshot> = OnceLock::new();
         SNAPSHOT.get_or_init(|| crate::artifacts::ifc::standards::v2x3::engine::decode_ifc2x3(exact_fixture_bytes()).expect("import IFC2X3 fixture")).clone()
     }
 
-    fn assert_exact(label: &str, actual: &[u8]) {
+    async fn assert_exact(label: &str, actual: &[u8]) {
         let expected = exact_fixture_bytes();
         let first_difference = actual.iter().zip(expected).position(|(left, right)| left != right);
         assert!(actual == expected, "{label}: expected {} bytes, got {}; first differing byte: {first_difference:?}", expected.len(), actual.len(),);
     }
 
     #[test]
-    fn upsert_then_inverse_restores_absent_id_via_remove() {
+    async fn upsert_then_inverse_restores_absent_id_via_remove() {
         let mut snap = Ifc2x3Snapshot::default();
         let mutation = Ifc2x3Mutation::UpsertInstance { instance: inst(1, "IFCWALL") };
         let base = snap.clone();
@@ -331,7 +331,7 @@ mod tests {
     }
 
     #[test]
-    fn remove_then_inverse_restores_prior_instance() {
+    async fn remove_then_inverse_restores_prior_instance() {
         let mut snap = Ifc2x3Snapshot::default();
         snap.document.instances.push(inst(2, "IFCDOOR"));
         let base = snap.clone();
@@ -343,7 +343,7 @@ mod tests {
     }
 
     #[test]
-    fn op_text_round_trips() {
+    async fn op_text_round_trips() {
         let mutation = Ifc2x3Mutation::SetHeader { header: Part21Header::default() };
         let printed = OpText::print_op(&mutation);
         let parsed = <Ifc2x3Mutation as OpText>::parse_op(&printed).expect("parse");
@@ -357,7 +357,7 @@ mod tests {
     /// `Real`/`Str`/`Enum`/`Ref`/`List`/`Typed`). Replaces the prior `serde_json` stub's implicit
     /// coverage — this is the real proof the JSON-transfer elimination didn't just move the bug.
     #[test]
-    fn op_text_binary_roundtrip_law() {
+    async fn op_text_binary_roundtrip_law() {
         use protocol::{OpBinary, OpText};
         let mutations = demo_mutation_cases();
         for mutation in mutations {
@@ -375,7 +375,7 @@ mod tests {
 
     //#region 🔖️LosslessLogicalModel
     #[test]
-    fn exact_native_direct_pack_and_dsl_roundtrips() {
+    async fn exact_native_direct_pack_and_dsl_roundtrips() {
         let imported = exact_fixture();
         let direct = crate::artifacts::ifc::standards::v2x3::engine::encode_ifc2x3(&imported).expect("direct export");
         assert_exact("direct export", &direct);
@@ -393,7 +393,7 @@ mod tests {
     }
 
     #[test]
-    fn exact_native_between_noop_inverse_absorb_and_supported_rewrite() {
+    async fn exact_native_between_noop_inverse_absorb_and_supported_rewrite() {
         let imported = exact_fixture();
         let self_diff = <Ifc2x3Diff as DiffAlgebra<Ifc2x3Snapshot>>::between(&imported, &imported);
         assert!(self_diff.is_empty());
@@ -427,7 +427,7 @@ mod tests {
     }
 
     #[test]
-    fn exact_native_set_snapshot_codecs_retain_complete_logical_model() {
+    async fn exact_native_set_snapshot_codecs_retain_complete_logical_model() {
         let imported = exact_fixture();
         let projection = Ifc2x3Snapshot::default();
         {
@@ -485,7 +485,7 @@ mod tests {
     }
 
     #[test]
-    fn exact_native_materializes_logical_edits_and_restores_interior_order() {
+    async fn exact_native_materializes_logical_edits_and_restores_interior_order() {
         let imported = exact_fixture();
         let mut edited = imported.clone();
         edited.document.instances[1].entities[0].0 = "IFCCHANGEDENTITY".into();

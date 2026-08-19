@@ -3,14 +3,14 @@
 use semio_framework_plugin::{ExampleSource, LocalizedLabel};
 
 pub const ID: &str = "demo";
-pub fn label() -> LocalizedLabel {
+pub async fn label() -> LocalizedLabel {
     LocalizedLabel::native("Demo", "Demo")
 }
 pub const ICON: &str = "file";
 pub const PRIMARY_TEXT: &str = include_str!("🖼️assets/🗣️example.dsl.semio");
 /// 🖼️ Genuine `encode_tiff(demo_tiff_snapshot())` bytes (populated by engine fixture honesty).
 pub const NATIVE_BYTES: &[u8] = include_bytes!("🖼️assets/🖼️example.tiff");
-pub fn source() -> ExampleSource {
+pub async fn source() -> ExampleSource {
     ExampleSource::new(ID, label(), PRIMARY_TEXT, ICON)
 }
 
@@ -18,7 +18,7 @@ pub fn source() -> ExampleSource {
 mod tests {
     use super::*;
     #[test]
-    fn demo_source_nonempty() {
+    async fn demo_source_nonempty() {
         assert!(!PRIMARY_TEXT.is_empty());
         let _ = source();
     }
@@ -27,7 +27,7 @@ mod tests {
     /// inference laws, exercised against this example's own real fixture (`PRIMARY_TEXT`,
     /// parsed through the real `ArtifactDsl` codec — not a hand-built stub).
     #[test]
-    fn inference_determinism_law() {
+    async fn inference_determinism_law() {
         use crate::artifacts::tiff::standards::v6_0::subsets::any::schema::inferences::TiffInference;
         use crate::artifacts::tiff::TiffSnapshot;
         use protocol::Inference;
@@ -36,7 +36,7 @@ mod tests {
     }
 
     #[test]
-    fn inference_default_law() {
+    async fn inference_default_law() {
         use crate::artifacts::tiff::standards::v6_0::subsets::any::schema::inferences::TiffInference;
         use crate::artifacts::tiff::TiffSnapshot;
         use protocol::Inference;
@@ -51,36 +51,36 @@ mod tests {
         type Mutation = crate::artifacts::tiff::TiffMutation;
         type Inference = crate::artifacts::tiff::standards::v6_0::subsets::any::schema::inferences::TiffInference;
 
-        fn dialect() -> store::os_io::ArtifactDialect {
+        async fn dialect() -> store::os_io::ArtifactDialect {
             store::os_io::ArtifactDialect { artifact_kind: "s.stdio.tiff".into(), standard: "6.0".into(), subset: "*".into() }
         }
 
-        fn fidelity() -> store::os_store::test_support::IoFidelityClass {
+        async fn fidelity() -> store::os_store::test_support::IoFidelityClass {
             store::os_store::test_support::IoFidelityClass::Exact
         }
 
-        fn drops() -> &'static [&'static str] {
+        async fn drops() -> &'static [&'static str] {
             &[]
         }
 
-        fn parse_native(asset: &store::os_store::test_support::ExampleAsset<'_>) -> Result<Self::Snapshot, String> {
+        async fn parse_native(asset: &store::os_store::test_support::ExampleAsset<'_>) -> Result<Self::Snapshot, String> {
             crate::artifacts::tiff::engine::decode_tiff(asset.bytes)
         }
 
-        fn export_native(snapshot: &Self::Snapshot) -> Result<Vec<u8>, String> {
+        async fn export_native(snapshot: &Self::Snapshot) -> Result<Vec<u8>, String> {
             crate::artifacts::tiff::engine::encode_tiff(snapshot)
         }
 
-        fn reimport_native(bytes: &[u8]) -> Result<Self::Snapshot, String> {
+        async fn reimport_native(bytes: &[u8]) -> Result<Self::Snapshot, String> {
             crate::artifacts::tiff::engine::decode_tiff(bytes)
         }
 
-        fn infer(snapshot: &Self::Snapshot) -> Self::Inference {
+        async fn infer(snapshot: &Self::Snapshot) -> Self::Inference {
             use protocol::Inference;
             Self::Inference::infer(snapshot)
         }
 
-        fn sample_mutations(snapshot: &Self::Snapshot) -> Vec<Self::Mutation> {
+        async fn sample_mutations(snapshot: &Self::Snapshot) -> Vec<Self::Mutation> {
             use crate::artifacts::tiff::schema::snapshot::{TiffFieldType, TiffValues, TAG_IMAGE_WIDTH};
             let width = snapshot
                 .ifds
@@ -94,17 +94,17 @@ mod tests {
             vec![crate::artifacts::tiff::TiffMutation::SetTag { ifd_index: 0, tag: TAG_IMAGE_WIDTH, kind: TiffFieldType::Long, values: TiffValues::Long(vec![width + 1]) }]
         }
 
-        fn validate_payload(bytes: &[u8]) -> Result<(), Vec<String>> {
+        async fn validate_payload(bytes: &[u8]) -> Result<(), Vec<String>> {
             crate::artifacts::tiff::engine::decode_tiff(bytes).map(|_| ()).map_err(|e| vec![e])
         }
 
-        fn validate_negative(_bytes: &[u8]) -> Result<Vec<String>, String> {
+        async fn validate_negative(_bytes: &[u8]) -> Result<Vec<String>, String> {
             Err("SKIP:owning subset has no negative fixture".into())
         }
     }
 
     #[test]
-    fn demo_subset_integrated_roundtrip() {
+    async fn demo_subset_integrated_roundtrip() {
         let asset = store::os_store::test_support::ExampleAsset { bytes: NATIVE_BYTES, text: None, provenance: "✳️any/📚️examples/🎬️demo/🖼️assets/🖼️example.tiff" };
         store::os_store::test_support::assert_subset_roundtrip::<TiffAnyRoundtrip>(&asset, None);
     }

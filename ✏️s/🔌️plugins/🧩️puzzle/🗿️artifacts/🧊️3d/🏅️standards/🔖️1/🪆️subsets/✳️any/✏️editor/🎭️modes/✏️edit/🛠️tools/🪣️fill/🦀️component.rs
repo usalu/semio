@@ -15,7 +15,7 @@ pub const TOOL_ID: &str = "fill";
 
 //#region 🔖️Definition
 /// 🧱️ Stitched into the app manifest by `crate::editor::puzzle3d::create_puzzle3d_app`.
-pub fn definition(label: LocalizedLabel) -> ToolDefinition {
+pub async fn definition(label: LocalizedLabel) -> ToolDefinition {
     ToolDefinition::new(TOOL_ID, label, "paint-bucket")
 }
 
@@ -23,7 +23,7 @@ pub fn definition(label: LocalizedLabel) -> ToolDefinition {
 /// `value`, so a slider's `{value}` payload preserves the action semantics). The label stays fixed;
 /// preload progress is the `ready` extent plus the loading ring, and the range stays pinned at
 /// [`PUZZLE3D_FILL_COUNT_MAX`].
-pub fn count_measure(envelope: &Puzzle3dScene, precompute: &Puzzle3dPrecomputeSession, labels: &Puzzle3dLabels) -> WindowMeasure {
+pub async fn count_measure(envelope: &Puzzle3dScene, precompute: &Puzzle3dPrecomputeSession, labels: &Puzzle3dLabels) -> WindowMeasure {
     let progress = precompute.fill_progress_summary();
     let done = progress.done;
     let available_count = progress.count;
@@ -46,7 +46,7 @@ pub fn count_measure(envelope: &Puzzle3dScene, precompute: &Puzzle3dPrecomputeSe
 }
 
 /// 🛠️ Fill tool measures — count slider and nested distribution tree.
-pub fn measures(envelope: &Puzzle3dScene, precompute: &Puzzle3dPrecomputeSession, labels: &Puzzle3dLabels) -> Vec<WindowMeasure> {
+pub async fn measures(envelope: &Puzzle3dScene, precompute: &Puzzle3dPrecomputeSession, labels: &Puzzle3dLabels) -> Vec<WindowMeasure> {
     vec![count_measure(envelope, precompute, labels), puzzle3d_distribution_group(envelope, labels, Some(true))]
 }
 //#endregion 🔖️Definition

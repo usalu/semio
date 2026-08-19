@@ -31,7 +31,7 @@ pub mod compiler {
     }
 
     impl PresentCompileError {
-        fn new(message: impl Into<String>) -> Self {
+        async fn new(message: impl Into<String>) -> Self {
             Self { message: message.into() }
         }
     }
@@ -50,7 +50,7 @@ pub mod compiler {
     }
 
     /// 🎬️ Renders one animate scene hash into `output_dir/scenes/{hash}`.
-    pub fn compile_scene_to_assets(scene_hash: &str, output_dir: &Path) -> Result<SceneAssetBundle> {
+    pub async fn compile_scene_to_assets(scene_hash: &str, output_dir: &Path) -> Result<SceneAssetBundle> {
         let scene_dir = output_dir.join("scenes").join(scene_hash);
         fs::create_dir_all(&scene_dir).map_err(|error| PresentCompileError::new(error.to_string()))?;
         let config = AnimateConfig::from_quality(QualityPreset::Medium).with_output_dir(&scene_dir).with_media_dir(scene_dir.join("media")).with_subtitles_path(scene_dir.join("scene.srt"));
@@ -65,7 +65,7 @@ pub mod compiler {
     /// replaced is deleted outright (`styles.css`/`player.js`/`manifest.json`/`deck.json` are plain
     /// CSS/JS/JSON sidecars, not HTML — no ad-hoc HTML codec logic lived at those sites, so they stay
     /// unchanged `fs::write`s).
-    pub fn compile_present_site(deck: &PresentSnapshot, output_dir: &Path) -> Result<()> {
+    pub async fn compile_present_site(deck: &PresentSnapshot, output_dir: &Path) -> Result<()> {
         fs::create_dir_all(output_dir).map_err(|error| PresentCompileError::new(error.to_string()))?;
         let deck_json = serde_json::to_string_pretty(deck).map_err(|error| PresentCompileError::new(format!("deck json: {error}")))?;
         fs::write(output_dir.join("deck.json"), &deck_json).map_err(|error| PresentCompileError::new(error.to_string()))?;
@@ -78,7 +78,7 @@ pub mod compiler {
         Ok(())
     }
 
-    fn site_manifest(deck: &PresentSnapshot) -> serde_json::Value {
+    async fn site_manifest(deck: &PresentSnapshot) -> serde_json::Value {
         let (_, tiles) = crate::artifacts::present::present_working_scene(deck);
         json!({
             "schema": "animate.present.site",
@@ -105,13 +105,13 @@ pub mod compiler {
     /// content, so this is MORE spec-correct than the deleted emitter's `&`/`<` string-replace,
     /// which would have literally corrupted any deck JSON string containing those characters once
     /// a real browser DOM read it back via `textContent`).
-    fn index_html_snapshot(deck_json: &str) -> semio_s_plugin_stdio::artifacts::html::standards::v5::subsets::any::schema::snapshot::HtmlSnapshot {
+    async fn index_html_snapshot(deck_json: &str) -> semio_s_plugin_stdio::artifacts::html::standards::v5::subsets::any::schema::snapshot::HtmlSnapshot {
         use semio_s_plugin_stdio::artifacts::html::standards::v5::subsets::any::schema::snapshot::{HtmlAttr, HtmlNode, HtmlSnapshot, RawTextKind, STDIO_HTML_DOCUMENT_SCHEMA};
 
-        fn el(name: &str, attrs: Vec<HtmlAttr>, children: Vec<HtmlNode>) -> HtmlNode {
+        async fn el(name: &str, attrs: Vec<HtmlAttr>, children: Vec<HtmlNode>) -> HtmlNode {
             HtmlNode::Element { name: name.into(), attributes: attrs, children }
         }
-        fn module_script(src: &str) -> HtmlNode {
+        async fn module_script(src: &str) -> HtmlNode {
             el("script", vec![HtmlAttr::new("type", "module"), HtmlAttr::new("src", src)], Vec::new())
         }
 
@@ -140,7 +140,7 @@ pub mod compiler {
         HtmlSnapshot { schema: STDIO_HTML_DOCUMENT_SCHEMA.into(), doctype: Some("DOCTYPE html".into()), root: html }
     }
 
-    fn styles_css() -> &'static str {
+    async fn styles_css() -> &'static str {
         r#"html, body {
       margin: 0;
       height: 100%;
@@ -166,7 +166,7 @@ pub mod compiler {
     "#
     }
 
-    fn player_boot_js() -> &'static str {
+    async fn player_boot_js() -> &'static str {
         r#"const root = document.getElementById("animate-present-root");
     const canvas = document.getElementById("animate-present-canvas");
     const deckNode = document.getElementById("animate-present-deck");
@@ -238,7 +238,7 @@ pub mod compiler {
         use crate::artifacts::present::schema::{populate_tile_drafts_from_grid, FigureTileGridSeedSpec};
 
         #[test]
-        fn compile_present_site_writes_static_bundle() {
+        async fn compile_present_site_writes_static_bundle() {
             let deck = default_present_snapshot();
             let (source, _) = crate::artifacts::present::present_working_scene(&deck);
             let tiles = populate_tile_drafts_from_grid(FigureTileGridSeedSpec { source: &source, rows: 2, columns: 2, gap: 0.0, key_prefix: "tile" });
@@ -260,7 +260,7 @@ pub mod compiler {
         }
 
         #[test]
-        fn compile_scene_to_assets_writes_mp4() {
+        async fn compile_scene_to_assets_writes_mp4() {
             let output = std::env::temp_dir().join(format!("animate-scene-assets-{}", std::process::id()));
             let _ = fs::remove_dir_all(&output);
             let bundle = compile_scene_to_assets("demo123", &output).expect("compile scene");
@@ -313,16 +313,16 @@ pub mod slide {
     }
 
     impl PresentScene {
-        pub fn empty(title: impl Into<String>) -> Self {
+        pub async fn empty(title: impl Into<String>) -> Self {
             Self { schema: PRESENT_SCENE_SCHEMA.into(), title: title.into(), sections: Vec::new(), deck: None }
         }
 
-        pub fn slide_count(&self) -> usize {
+        pub async fn slide_count(&self) -> usize {
             self.sections.iter().map(|section| section.slides.len()).sum()
         }
 
         /// 🎬️ Collects unique scene hashes referenced by slides.
-        pub fn scene_hashes(&self) -> Vec<String> {
+        pub async fn scene_hashes(&self) -> Vec<String> {
             let mut hashes = Vec::new();
             for section in &self.sections {
                 for slide in &section.slides {
@@ -342,7 +342,7 @@ pub mod slide {
         use super::*;
 
         #[test]
-        fn present_scene_counts_slides() {
+        async fn present_scene_counts_slides() {
             let scene = PresentScene {
                 schema: PRESENT_SCENE_SCHEMA.into(),
                 title: "Demo".into(),
@@ -384,7 +384,7 @@ pub enum PresentVideoExportError {
 
 //#region 🔖️VideoExport
 /// 🎬️ Renders every unique `scene_hash` referenced by a {@link PresentScene}.
-pub fn export_video_from_scene(scene: &PresentScene, output_dir: &std::path::Path) -> Result<Vec<SceneAssetBundle>, PresentVideoExportError> {
+pub async fn export_video_from_scene(scene: &PresentScene, output_dir: &std::path::Path) -> Result<Vec<SceneAssetBundle>, PresentVideoExportError> {
     let hashes = scene.scene_hashes();
     if hashes.is_empty() {
         return Err(PresentVideoExportError::NoSceneHashes);

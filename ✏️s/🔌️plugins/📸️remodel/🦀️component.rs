@@ -9,7 +9,7 @@ use semio_framework_plugin::{ExecutionMode, Plugin};
 /// one thing it used to survive for, registered automatically below. Ticket
 /// 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET: the former single `.document_app(...)` call
 /// split into an independent `.editor()` + `.viewer()` pair, one surface per role.
-pub fn plugin() -> Result<Plugin, semio_framework_plugin::PluginAssemblyError> {
+pub async fn plugin() -> Result<Plugin, semio_framework_plugin::PluginAssemblyError> {
     Plugin::builder("remodel")
         .label("Remodel")
         .version("0.1.0")
@@ -49,12 +49,12 @@ mod surface_tests {
     use semio_framework_plugin::testkit::{assert_editor_and_viewer_share_dialect, assert_viewer_never_mutates};
 
     #[test]
-    fn remodel_viewer_never_mutates() {
+    async fn remodel_viewer_never_mutates() {
         assert_viewer_never_mutates::<crate::viewer::remodel::RemodelViewer>();
     }
 
     #[test]
-    fn remodel_editor_and_viewer_share_dialect() {
+    async fn remodel_editor_and_viewer_share_dialect() {
         assert_editor_and_viewer_share_dialect::<crate::editor::remodel::RemodelPlayApp, crate::viewer::remodel::RemodelViewer>();
     }
 }

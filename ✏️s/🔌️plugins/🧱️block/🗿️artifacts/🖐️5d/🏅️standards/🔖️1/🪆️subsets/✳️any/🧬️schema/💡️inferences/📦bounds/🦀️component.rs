@@ -29,7 +29,7 @@ pub struct Block5dBounds {
 /// 📦️ Computes `bounds` from a block5d snapshot — each rim grip template contributes its 3d
 /// `position` inflated by its own `radius_3d` (the rim placement's physical footprint in the 3d
 /// projection) to the running min/max; an empty grip catalog yields `Block5dBounds::default()`.
-pub fn compute_block5d_bounds(snapshot: &Block5dSnapshot) -> Block5dBounds {
+pub async fn compute_block5d_bounds(snapshot: &Block5dSnapshot) -> Block5dBounds {
     let Some(first) = snapshot.grips.first() else {
         return Block5dBounds::default();
     };
@@ -51,18 +51,18 @@ mod tests {
     use super::*;
     use crate::artifacts::block5d::Block5dGripTemplate;
 
-    fn grip(id: &str, position: [f64; 3], radius_3d: f64) -> Block5dGripTemplate {
+    async fn grip(id: &str, position: [f64; 3], radius_3d: f64) -> Block5dGripTemplate {
         Block5dGripTemplate { id: id.into(), grip_kind: "rope".into(), angle: 0.0, radius_2d: 0.0, position, direction: [0.0, 1.0, 0.0], radius_3d }
     }
 
     #[test]
-    fn empty_catalog_yields_default_bounds() {
+    async fn empty_catalog_yields_default_bounds() {
         let snapshot = Block5dSnapshot::default();
         assert_eq!(compute_block5d_bounds(&snapshot), Block5dBounds::default());
     }
 
     #[test]
-    fn single_grip_bounds_equal_its_own_inflated_footprint() {
+    async fn single_grip_bounds_equal_its_own_inflated_footprint() {
         let mut snapshot = Block5dSnapshot::default();
         snapshot.grips.push(grip("g0", [1.0, 1.0, 1.0], 0.5));
         let bounds = compute_block5d_bounds(&snapshot);
@@ -71,7 +71,7 @@ mod tests {
     }
 
     #[test]
-    fn multiple_grips_union_their_footprints() {
+    async fn multiple_grips_union_their_footprints() {
         let mut snapshot = Block5dSnapshot::default();
         snapshot.grips.push(grip("g0", [1.0, 2.0, 3.0], 0.5));
         snapshot.grips.push(grip("g1", [-1.0, 0.0, 4.0], 0.25));

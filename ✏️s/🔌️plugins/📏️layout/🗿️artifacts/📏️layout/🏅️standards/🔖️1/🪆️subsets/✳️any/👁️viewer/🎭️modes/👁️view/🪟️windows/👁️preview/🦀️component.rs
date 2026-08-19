@@ -25,7 +25,7 @@ const LAYOUT_VIEW_CONTROLLER_ID: &str = "layout-view";
 
 //#region 🔖️Definition
 /// 🧱️ Stitched into the viewer manifest by `crate::viewer::layout::create_layout_viewer`.
-pub fn definition() -> WindowKindDefinition {
+pub async fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
         id: WINDOW_KIND_ID.into(),
         label: LocalizedLabel::native("Preview", "Vorschau"),
@@ -46,7 +46,7 @@ pub fn definition() -> WindowKindDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-fn rect_segments(x: f64, y: f64, width: f64, height: f64) -> Value {
+async fn rect_segments(x: f64, y: f64, width: f64, height: f64) -> Value {
     json!([
         { "kind": "move", "to": [x, y] },
         { "kind": "line", "to": [x + width, y] },
@@ -56,7 +56,7 @@ fn rect_segments(x: f64, y: f64, width: f64, height: f64) -> Value {
     ])
 }
 
-fn host_layer(id: impl Into<String>, segments: &Value, fill: Option<[f32; 4]>, stroke: Option<[f32; 4]>) -> Value {
+async fn host_layer(id: impl Into<String>, segments: &Value, fill: Option<[f32; 4]>, stroke: Option<[f32; 4]>) -> Value {
     let mut layer = json!({ "id": id.into(), "segments": segments });
     if let Some(color) = fill {
         layer["fill"] = json!({ "color": color });
@@ -71,7 +71,7 @@ fn host_layer(id: impl Into<String>, segments: &Value, fill: Option<[f32; 4]>, s
 /// page background, one rect layer per visible resolved frame — real fill/stroke for `Frame::Rect`,
 /// an outline rect for `Frame::Text` (no glyph layout, see this file's own doc), a placeholder tint
 /// for `Frame::Image` (matches the editor's own unresolved-link placeholder color).
-fn viewer_canvas_layers(doc: &LayoutSnapshot) -> String {
+async fn viewer_canvas_layers(doc: &LayoutSnapshot) -> String {
     let Some(page) = doc.pages.first() else {
         return "[]".into();
     };
@@ -93,7 +93,7 @@ fn viewer_canvas_layers(doc: &LayoutSnapshot) -> String {
 
 /// 👁️ Fixed default camera every render — a viewer has no persisted per-session camera (`Config =
 /// NoConfig`), matching cad's viewer's documented "default camera/sun" simplification.
-pub fn render(doc: &LayoutSnapshot) -> UiNode {
+pub async fn render(doc: &LayoutSnapshot) -> UiNode {
     build_canvas_2d_scene(SURFACE_ID, LAYOUT_VIEW_CONTROLLER_ID, Canvas2dScene { camera_x: 0.0, camera_y: 0.0, zoom: 1.0, layers_json: viewer_canvas_layers(doc) })
 }
 //#endregion 🔖️Render
@@ -104,20 +104,20 @@ mod tests {
     use super::*;
 
     #[test]
-    fn definition_declares_a_canvas_2d_preview_window() {
+    async fn definition_declares_a_canvas_2d_preview_window() {
         let def = definition();
         assert_eq!(def.id, WINDOW_KIND_ID);
         assert!(matches!(def.surface_kind, SurfaceKind::Canvas2d));
     }
 
     #[test]
-    fn render_produces_a_scene_node_for_the_default_document() {
+    async fn render_produces_a_scene_node_for_the_default_document() {
         let document = crate::artifacts::layout::schema::default_document();
         let _node = render(&document);
     }
 
     #[test]
-    fn viewer_canvas_layers_renders_the_page_background() {
+    async fn viewer_canvas_layers_renders_the_page_background() {
         let document = crate::artifacts::layout::schema::default_document();
         let json = viewer_canvas_layers(&document);
         assert!(json.contains("layout.page-bg"));

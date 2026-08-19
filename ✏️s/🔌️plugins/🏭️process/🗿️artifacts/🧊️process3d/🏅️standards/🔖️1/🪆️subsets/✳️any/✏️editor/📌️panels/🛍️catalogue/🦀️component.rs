@@ -14,7 +14,7 @@ pub const PROCESS_3D_PLAY_BODY_CATALOGUE: &str = "process.play.catalogue";
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
-pub fn definition() -> PanelTabDefinition {
+pub async fn definition() -> PanelTabDefinition {
     PanelTabDefinition {
         kind: PanelTabKind::App(FRAMEWORK_PANEL_TAB_CATALOGUE_ID.into()),
         label: LocalizedLabel::native(FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, "Katalog"),
@@ -29,14 +29,14 @@ pub fn definition() -> PanelTabDefinition {
 /// 🏷️ Display label for a catalog id, resolved against `installed_catalogs()` — falls back to the raw
 /// id if the catalog that seeded a workshop machine was since uninstalled (never resolved back, per
 /// `WorkshopMachine::catalog_id`'s informational-only contract).
-fn catalog_label(catalog_id: &str) -> String {
+async fn catalog_label(catalog_id: &str) -> String {
     installed_catalogs().into_iter().find(|catalog| catalog.catalog_id() == catalog_id).map_or_else(|| catalog_id.to_string(), |catalog| catalog.label().to_string())
 }
 
 /// 🏭️ Builds one catalogue tree item per workshop machine capability, grouped by the machine's source
 /// catalog (uncataloged/generic machines first, open by default), disabling (non-clickable, with a
 /// reason) any capability the current stock doesn't satisfy.
-pub fn render(fixture: &Process3dSnapshot, labels: &Process3dLabels) -> UiNode {
+pub async fn render(fixture: &Process3dSnapshot, labels: &Process3dLabels) -> UiNode {
     // 🌉️ Ticket 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM wave 4: `fixture.stock_solid` is a
     // composed `s.stdio.semio.brep` CHILD HANDLE now, with no resolvable dimensions without a
     // `LinkResolver` (see `ProcessWorkingScene`'s doc comment) — every capability rule is treated
@@ -99,7 +99,7 @@ mod tests {
     /// documented gap rather than real behavior; it now asserts only that the wood catalog's
     /// machines still appear.
     #[test]
-    fn catalogue_lists_workshop_wood_machines() {
+    async fn catalogue_lists_workshop_wood_machines() {
         let mut app = testkit::app();
         let rendered = testkit::render(&mut app, PROCESS_3D_PLAY_BODY_CATALOGUE);
         assert!(rendered.contains("Circular Saw"), "expected wood's circular saw in the catalogue: {rendered}");
@@ -107,7 +107,7 @@ mod tests {
     }
 
     #[test]
-    fn definition_binds_the_framework_catalogue_tab_to_this_body_key() {
+    async fn definition_binds_the_framework_catalogue_tab_to_this_body_key() {
         let definition = definition();
         assert_eq!(definition.id(), FRAMEWORK_PANEL_TAB_CATALOGUE_ID);
         assert_eq!(definition.body_key.as_deref(), Some(PROCESS_3D_PLAY_BODY_CATALOGUE));

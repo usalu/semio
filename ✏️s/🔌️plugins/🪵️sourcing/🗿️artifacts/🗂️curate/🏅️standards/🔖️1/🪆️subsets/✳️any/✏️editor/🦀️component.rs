@@ -28,7 +28,7 @@ use store::ArtifactPack;
 /// mapped into the SAME `kit.catalog` JSON shape `block_3d::puzzle3d_catalog_fragment` produces, so
 /// `s/plugin/puzzle`'s `kit:in` importer can consume either producer identically without knowing which
 /// one it came from (see `crate::artifacts::curate::schema::inferences::sourcing_catalog_fragment`).
-pub fn sourcing_curate_io() -> semio_framework_plugin::AppIo {
+pub async fn sourcing_curate_io() -> semio_framework_plugin::AppIo {
     semio_framework_plugin::AppIo {
         document_schema: SOURCING_CURATE_SCHEMA.into(),
         document_media_type: MediaType { class: MediaClass::Kit, form: MediaForm::Kit },
@@ -59,7 +59,7 @@ pub const EMPTY_EXAMPLE_ID: &str = "empty-curation";
 
 /// 🎯️ An `ActionDescriptor` addressed at this app — the single factory every taxonomy node's chrome
 /// builds its `on_change`/drop actions with.
-pub fn sourcing_action(action: &str, args: Option<serde_json::Value>) -> ActionDescriptor {
+pub async fn sourcing_action(action: &str, args: Option<serde_json::Value>) -> ActionDescriptor {
     semio_framework_plugin::ActionFactory::new(SOURCING_CONTROLLER_ID).action(action, args)
 }
 //#endregion 🔖️Constants
@@ -109,7 +109,7 @@ use crate::editor::sourcing::commands::set_locale;
 ///
 /// Without this, `ArtifactApp::command_from_action`'s default rejects every app-owned action and the
 /// pane cannot even load its own example. See `📐️cad`'s `cad_command_from_action` twin.
-fn sourcing_curate_command_from_action(action: &str, args: Option<&serde_json::Value>) -> Result<SourcingCurateCommand, Fault> {
+async fn sourcing_curate_command_from_action(action: &str, args: Option<&serde_json::Value>) -> Result<SourcingCurateCommand, Fault> {
     let str_field = |key: &str| args.and_then(|value| value.get(key)).and_then(serde_json::Value::as_str).map(str::to_string);
     let f64_field = |key: &str| args.and_then(|value| value.get(key)).and_then(serde_json::Value::as_f64);
     let bool_field = |key: &str| args.and_then(|value| value.get(key)).and_then(serde_json::Value::as_bool);
@@ -179,15 +179,15 @@ impl ArtifactEditor for SourcingCurateApp {
     const DIALECT: Dialect = crate::artifacts::curate::SOURCING_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = SOURCING_CURATE_SCHEMA;
 
-    fn app_schema() -> Option<::schema::AppSchemaDescriptor> {
+    async fn app_schema() -> Option<::schema::AppSchemaDescriptor> {
         Some(crate::editor::sourcing::config::schema::app_schema_descriptor())
     }
 
-    fn initial_snapshot() -> CurateSnapshot {
+    async fn initial_snapshot() -> CurateSnapshot {
         crate::artifacts::curate::schema::default_document()
     }
 
-    fn io() -> Option<semio_framework_plugin::AppIo> {
+    async fn io() -> Option<semio_framework_plugin::AppIo> {
         Some(sourcing_curate_io())
     }
 
@@ -215,7 +215,7 @@ impl ArtifactEditor for SourcingCurateApp {
     /// override `whole_document_operation`
     /// (stays at the trait's own `None` default) and instead overrides `import_media` below to build a
     /// `Effect::LoadDocument` via `reset_document_effect`, outside undo history.
-    fn import_media(port: &str, media: &Media, _doc: &ArtifactView<'_, CurateSnapshot>) -> Result<Emit<SourcingMutation, SourcingCurateConfigMutation, Self::DraftMutation>, MediaError> {
+    async fn import_media(port: &str, media: &Media, _doc: &ArtifactView<'_, CurateSnapshot>) -> Result<Emit<SourcingMutation, SourcingCurateConfigMutation, Self::DraftMutation>, MediaError> {
         if port != "document:in" {
             return Err(MediaError::NotImplemented);
         }
@@ -230,22 +230,22 @@ impl ArtifactEditor for SourcingCurateApp {
     /// 🏷️ The manifest action id each command was declared under — supplied wholesale by
     /// `app_commands!`'s generated `command_id()`. `setLocale` has no manifest declaration (host-pushed,
     /// not a user-facing action).
-    fn command_id(command: &SourcingCurateCommand) -> &'static str {
+    async fn command_id(command: &SourcingCurateCommand) -> &'static str {
         command.command_id()
     }
 
     /// 🎯️ Production action bridge — see `sourcing_curate_command_from_action`. Overriding this is
     /// mandatory for any app that declares its own actions: the trait default only admits the
     /// framework-reserved ids and rejects everything else.
-    fn command_from_action(action: &str, args: Option<&serde_json::Value>) -> Result<SourcingCurateCommand, Fault> {
+    async fn command_from_action(action: &str, args: Option<&serde_json::Value>) -> Result<SourcingCurateCommand, Fault> {
         sourcing_curate_command_from_action(action, args)
     }
 
-    fn handle(command: &SourcingCurateCommand, doc: &ArtifactView<'_, CurateSnapshot>, cfg: &ConfigView<'_, SourcingCurateConfig>, _interaction: &InteractionView<'_>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<SourcingMutation, SourcingCurateConfigMutation, Self::DraftMutation>, Fault> {
+    async fn handle(command: &SourcingCurateCommand, doc: &ArtifactView<'_, CurateSnapshot>, cfg: &ConfigView<'_, SourcingCurateConfig>, _interaction: &InteractionView<'_>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<SourcingMutation, SourcingCurateConfigMutation, Self::DraftMutation>, Fault> {
         command.dispatch(doc, cfg)
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, CurateSnapshot>, cfg: &ConfigView<'_, SourcingCurateConfig>) -> UiNode {
+    async fn render(body_key: &str, doc: &ArtifactView<'_, CurateSnapshot>, cfg: &ConfigView<'_, SourcingCurateConfig>) -> UiNode {
         crate::artifacts::curate::schema::sync_sourcing_module_contributions(&cfg.snapshot.contributions_json);
         let snapshot = doc.snapshot;
         let config = cfg.snapshot;
@@ -274,7 +274,7 @@ impl ArtifactEditor for SourcingCurateApp {
 /// `"document:in"` above, `commands::document::{set_active_example, set_artifact_json,
 /// stock_from_catalogue}`) builds this effect instead of an `Emit::mutations([...])`. The spr is a
 /// fresh, edit-free op-log for `document` — a genesis envelope with no history to encode.
-pub fn reset_document_effect(document: &CurateSnapshot) -> semio_framework::kernel::Effect {
+pub async fn reset_document_effect(document: &CurateSnapshot) -> semio_framework::kernel::Effect {
     let pack = <CurateSnapshot as ArtifactPack>::encode_pack(document);
     let envelope = store::create_document_envelope::<CurateSnapshot, SourcingMutation>(SOURCING_CURATE_SCHEMA, "curate", document.clone(), None);
     let spr = store::print_document_spr(&envelope).expect("curate document spr encode is infallible for a fresh, edit-free envelope");
@@ -285,14 +285,14 @@ pub fn reset_document_effect(document: &CurateSnapshot) -> semio_framework::kern
 //#region 🔖️Manifest
 /// 🙈️ An internal document operation kept out of the command palette — the curate/DnD arms that mutate
 /// the persisted `CurateSnapshot` but are only ever dispatched from window chrome.
-fn hidden_operation(id: &str, label: impl Into<LocalizedLabel>) -> ActionDefinition {
+async fn hidden_operation(id: &str, label: impl Into<LocalizedLabel>) -> ActionDefinition {
     ActionDefinition { in_palette: false, ..ActionDefinition::new_catalog(id, label, ActionKind::Mutation) }
 }
 
 /// 🙈️👁️ The filter/sort/selection/world-pick arms emit ONLY `config_mutations`, so (unlike
 /// `hidden_operation` above) they're declared `ActionKind::View`, letting `VcsArtifactApp`'s
 /// kind-discipline check actually enforce "must not emit document operations".
-fn hidden_view_action(id: &str, label: impl Into<LocalizedLabel>) -> ActionDefinition {
+async fn hidden_view_action(id: &str, label: impl Into<LocalizedLabel>) -> ActionDefinition {
     ActionDefinition { in_palette: false, ..ActionDefinition::new_catalog(id, label, ActionKind::View) }
 }
 
@@ -305,7 +305,7 @@ fn hidden_view_action(id: &str, label: impl Into<LocalizedLabel>) -> ActionDefin
 /// stay reachable through the `setActiveExample` action (`action_args` below) and this subset's own
 /// `📚️examples` facet, just no longer wired into the manifest's `examples` list. See
 /// `📓️w2-cad-report.md`'s "SDK gaps found" #4 for the same gap hit by the pilot packet.
-pub fn create_sourcing_curate_app() -> AppDefinition {
+pub async fn create_sourcing_curate_app() -> AppDefinition {
     Editor::builder(crate::artifacts::curate::SOURCING_DIALECT)
             .command(CommandDefinition { in_palette: false, ..CommandDefinition::new_catalog("setContributions", LocalizedLabel::native("Set Contributions", "Beiträge festlegen"), "host", ActionKind::View).with_args([ActionArgDef::text("json", LocalizedLabel::native("Contributions", "Beiträge"))]) })
             .document(["semio", "sourcing", "curate"])
@@ -421,25 +421,25 @@ pub(crate) mod testkit {
     /// 🧪️ Framework testkit gap (contract §2.5, w0-f Gap 3 handoff): `new_app_with_registry` and
     /// `assert_declared_actions_bridge_to_commands` still take the pre-migration `fn() -> App` shape,
     /// not the `AppDefinition`-returning `create_sourcing_curate_app`. Local wrapper until that lands.
-    pub(crate) fn sourcing_manifest_for_testkit() -> App {
+    pub(crate) async fn sourcing_manifest_for_testkit() -> App {
         App { definition: create_sourcing_curate_app(), examples: Vec::new() }
     }
 
     /// 🧪️ A bare app instance — no `AppActionRegistry`, so undeclared internal commands dispatch freely.
-    pub fn new_app() -> SourcingApp {
+    pub async fn new_app() -> SourcingApp {
         new_app_impl::<EditorApp<SourcingCurateApp>>()
     }
 
     /// 🧪️ An app wired to the real manifest registry — enforces View/Shell kind discipline.
-    pub fn new_app_with_registry() -> SourcingApp {
+    pub async fn new_app_with_registry() -> SourcingApp {
         new_app_with_registry_impl::<EditorApp<SourcingCurateApp>>(sourcing_manifest_for_testkit)
     }
 
-    pub fn dispatch(app: &mut SourcingApp, command: SourcingCurateCommand) -> InvocationResult {
+    pub async fn dispatch(app: &mut SourcingApp, command: SourcingCurateCommand) -> InvocationResult {
         app.dispatch_typed(command, &meta("local")).expect("dispatch")
     }
 
-    pub fn render(app: &mut SourcingApp, body_key: &str) -> String {
+    pub async fn render(app: &mut SourcingApp, body_key: &str) -> String {
         serde_json::to_string(&app.render(body_key, None, &ViewModel::default()).expect("render")).expect("render json")
     }
 }
@@ -454,7 +454,7 @@ mod tests {
     use semio_framework_plugin::{EditorApp, PluginApp};
 
     #[test]
-    fn view_kind_config_only_commands_pass_kind_discipline() {
+    async fn view_kind_config_only_commands_pass_kind_discipline() {
         // 🧬️ A registry-backed wrapper so the View-kind declarations actually get enforced.
         let mut app = new_app_with_registry();
         let result = app.dispatch_typed(SourcingCurateCommand::SetFilterQuery(set_filter_query::SetFilterQuery { value: "glulam".into() }), &testkit::meta("local")).expect("filter query");
@@ -465,7 +465,7 @@ mod tests {
     /// 🏷️ Every declared manifest action id must be reachable as exactly one command row, and every
     /// row's wire keyword must be distinct — the cross-cutting invariant `app_commands!` is there to hold.
     #[test]
-    fn command_ids_are_unique_and_match_the_declared_manifest_actions() {
+    async fn command_ids_are_unique_and_match_the_declared_manifest_actions() {
         let commands = every_command();
         let ids: Vec<&str> = commands.iter().map(|command| command.command_id()).collect();
         let mut sorted = ids.clone();
@@ -482,7 +482,7 @@ mod tests {
     /// Asserted through `<SourcingCurateApp as ArtifactEditor>` — NOT the free function — because the
     /// trait method is the seam the host actually calls.
     #[test]
-    fn the_production_action_bridge_admits_every_declared_command() {
+    async fn the_production_action_bridge_admits_every_declared_command() {
         for command in every_command() {
             let action = command.command_id();
             let built = <SourcingCurateApp as ArtifactEditor>::command_from_action(action, None)
@@ -497,7 +497,7 @@ mod tests {
     /// than enumerating the command rows: it catches an action that chrome declares but no command row
     /// backs.
     #[test]
-    fn every_rendered_action_bridges_through_the_framework_harness() {
+    async fn every_rendered_action_bridges_through_the_framework_harness() {
         testkit::assert_declared_actions_bridge_to_commands::<EditorApp<SourcingCurateApp>>(sourcing_manifest_for_testkit);
     }
 
@@ -505,7 +505,7 @@ mod tests {
     /// arg keyed `exampleId` (`🔖️Manifest`), and the payload field is `example_id`; the two
     /// vocabularies are joined here and nowhere else.
     #[test]
-    fn the_action_bridge_reads_the_declared_arg_names() {
+    async fn the_action_bridge_reads_the_declared_arg_names() {
         let built = <SourcingCurateApp as ArtifactEditor>::command_from_action("setActiveExample", Some(&serde_json::json!({ "exampleId": DEMO_STOCK_EXAMPLE_ID })))
             .expect("setActiveExample must convert");
         assert_eq!(built, SourcingCurateCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: DEMO_STOCK_EXAMPLE_ID.into() }));
@@ -519,7 +519,7 @@ mod tests {
     /// permanent successor of the old `📡️protocol` crate's
     /// `sourcing_curate_command_op_text_round_trips_every_variant`.
     #[test]
-    fn every_command_round_trips_through_text_and_binary() {
+    async fn every_command_round_trips_through_text_and_binary() {
         for command in every_command() {
             store::os_store::test_support::assert_op_text_binary_equivalence(&command);
         }
@@ -532,8 +532,8 @@ mod tests {
     /// missing `#[dsl(keyword = ..)]` on a payload struct silently breaks (the record prints with no
     /// keyword at all and no longer parses).
     #[test]
-    fn every_printed_op_line_starts_with_the_rows_wire_keyword() {
-        fn expected_wire_key(id: &str) -> &'static str {
+    async fn every_printed_op_line_starts_with_the_rows_wire_keyword() {
+        async fn expected_wire_key(id: &str) -> &'static str {
             match id {
                 "setDocument" => "document-json",
                 "setActiveExample" => "active-example",
@@ -565,7 +565,7 @@ mod tests {
     /// (`wire-baseline-before.txt` in this ticket's folder). A regression here is a real format break, not
     /// a test-fixture mismatch.
     #[test]
-    fn optional_field_rows_keep_their_pre_migration_bytes() {
+    async fn optional_field_rows_keep_their_pre_migration_bytes() {
         let cases: [(SourcingCurateCommand, &str, &str); 2] = [
             (
                 SourcingCurateCommand::CurateSetCount(curate_set_count::CurateSetCount { object_id: "beam-glulam-gl24h".into(), delta: Some(1.0), value: None }),
@@ -587,7 +587,7 @@ mod tests {
 
     /// 🧾️ One representative value per row, in declaration (= binary ordinal) order — mirrors the
     /// pre-migration wire baseline captured into this ticket's `wire-baseline-before.txt`.
-    fn every_command() -> Vec<SourcingCurateCommand> {
+    async fn every_command() -> Vec<SourcingCurateCommand> {
         vec![
             SourcingCurateCommand::SetArtifactJson(set_artifact_json::SetArtifactJson { json: "{}".into() }),
             SourcingCurateCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: "demo-stock".into() }),
@@ -609,7 +609,7 @@ mod tests {
     //#endregion 🔖️CommandSurface
 
     #[test]
-    fn app_definition_labels_resolve_german() {
+    async fn app_definition_labels_resolve_german() {
         let def = &create_sourcing_curate_app();
         let (terminology, locale) = (semio_framework_plugin::Terminology::Native, semio_framework_plugin::Locale::De);
         assert_eq!(def.window_kinds.iter().find(|entry| entry.id == pool::SOURCING_CURATE_WINDOW_POOL).expect("pool window").label.resolve(terminology, locale), "Pool");
@@ -618,7 +618,7 @@ mod tests {
     }
 
     #[test]
-    fn sourcing_curate_io_declares_the_catalog_out_port_alongside_the_implicit_document_ports() {
+    async fn sourcing_curate_io_declares_the_catalog_out_port_alongside_the_implicit_document_ports() {
         let io = sourcing_curate_io();
         assert_eq!(io.document_schema, SOURCING_CURATE_SCHEMA);
         let ports = io.all_ports();
@@ -630,7 +630,7 @@ mod tests {
     }
 
     #[test]
-    fn sourcing_curate_io_and_catalog_export_round_trip() {
+    async fn sourcing_curate_io_and_catalog_export_round_trip() {
         let mut app = crate::editor::sourcing::testkit::new_app();
         let media = semio_framework_plugin::resolve_ready(app.export_media("catalog:out")).expect("catalog export");
         assert_eq!(media.media_type.class, MediaClass::Kit);
@@ -646,7 +646,7 @@ mod tests {
     }
 
     #[test]
-    fn the_manifest_stitches_every_taxonomy_node() {
+    async fn the_manifest_stitches_every_taxonomy_node() {
         let json = serde_json::to_string(&create_sourcing_curate_app()).expect("app definition json");
         for id in [pool::SOURCING_CURATE_WINDOW_POOL, curated::SOURCING_CURATE_WINDOW_CURATED, preview::SOURCING_CURATE_WINDOW_PREVIEW, grid::SOURCING_CURATE_WINDOW_GRID] {
             assert!(json.contains(id), "window kind {id} missing from the manifest: {json}");

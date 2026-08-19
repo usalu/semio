@@ -5,7 +5,7 @@ use crate::artifacts::en1999::mutations::change_v_weld_ed_kn::mutation::ChangeVW
 use crate::artifacts::en1999::En1999Snapshot;
 
 //#region 🔖️Diff
-pub fn diff(payload: &ChangeVWeldEdKn, base: &En1999Snapshot) -> protocol::MutationOutcome<En1999Diff> {
+pub async fn diff(payload: &ChangeVWeldEdKn, base: &En1999Snapshot) -> protocol::MutationOutcome<En1999Diff> {
     if !payload.new_v_weld_ed_kn.is_finite() {
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("Design weld shear force V_Ed [kN] must be a finite number, got {}.", payload.new_v_weld_ed_kn), Vec::<String>::new());
     }

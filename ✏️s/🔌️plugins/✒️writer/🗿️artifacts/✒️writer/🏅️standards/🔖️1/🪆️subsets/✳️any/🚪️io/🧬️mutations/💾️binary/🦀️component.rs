@@ -18,12 +18,12 @@ pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️comp
 
 
 /// 📦️ Encodes a `WriterMutation` to its binary state-patch form.
-pub fn encode_op(operation: &WriterMutation) -> Result<Vec<u8>, protocol::ProtocolError> {
+pub async fn encode_op(operation: &WriterMutation) -> Result<Vec<u8>, protocol::ProtocolError> {
     operation.encode_op()
 }
 
 /// 📖️ Decodes a `WriterMutation` from its binary state-patch form.
-pub fn decode_op(bytes: &[u8]) -> Result<WriterMutation, protocol::ProtocolError> {
+pub async fn decode_op(bytes: &[u8]) -> Result<WriterMutation, protocol::ProtocolError> {
     WriterMutation::decode_op(bytes)
 }
 
@@ -34,7 +34,7 @@ mod tests {
     use crate::artifacts::writer::{schema, WriterSnapshot};
 
     #[test]
-    fn op_binary_round_trips_and_agrees_with_text() {
+    async fn op_binary_round_trips_and_agrees_with_text() {
         let operation = WriterMutation::EditText(crate::artifacts::writer::schema::mutations::EditText { text: "hello".into() });
         store::os_store::test_support::assert_op_text_binary_equivalence(&operation);
         let bytes = encode_op(&operation).expect("encode");
@@ -42,7 +42,7 @@ mod tests {
     }
 
     /// ✍️ Hand-built representative document — used across the artifact's own component tests.
-    fn jack_snapshot() -> WriterSnapshot {
+    async fn jack_snapshot() -> WriterSnapshot {
         crate::artifacts::writer::writer_snapshot_with_text(
             "writer.document",
             "jack",
@@ -58,7 +58,7 @@ mod tests {
     /// identical in both, so it gets no mutation). `EditText` mints its `document` handle from
     /// `base.id`/`base.language_id` at apply time, so it must run LAST, after `RenameWriter`/
     /// `ChangeLanguage` have already landed — otherwise its handle would target the wrong owner id.
-    fn jack_mutations() -> Vec<WriterMutation> {
+    async fn jack_mutations() -> Vec<WriterMutation> {
         let jack = jack_snapshot();
         let text = crate::artifacts::writer::writer_text(&jack);
         vec![
@@ -70,7 +70,7 @@ mod tests {
     }
 
     #[test]
-    fn writer_document_text_round_trips_through_the_store() {
+    async fn writer_document_text_round_trips_through_the_store() {
         let mut store = store::ArtifactStore::<WriterSnapshot, WriterMutation>::new(store::create_document_envelope("writer.document", "writer", schema::empty_writer_snapshot(), None)).expect("valid artifact store fixture");
         store.dispatch(store::ArtifactCommand::Apply { mutations: jack_mutations(), description: None }).expect("apply");
         assert_eq!(store.snapshot().expect("snapshot"), jack_snapshot());
@@ -83,7 +83,7 @@ mod tests {
     /// `WriterMutation`'s `Edit` round-trips through `protocol::MutationEnvelope`s beside this file's
     /// existing pack round-trip law.
     #[test]
-    fn command_envelope_round_trip_holds_for_an_applied_operation() {
+    async fn command_envelope_round_trip_holds_for_an_applied_operation() {
         use protocol::{ArtifactId, Edit, SchemaId};
 
         let mut store = store::ArtifactStore::<WriterSnapshot, WriterMutation>::new(store::create_document_envelope("writer.document", "writer", schema::empty_writer_snapshot(), None)).expect("valid artifact store fixture");
@@ -100,7 +100,7 @@ mod semio_protocol_conformance {
     use super::*;
 
     #[test]
-    fn component_protocol_semio_is_protocol_dialect() {
+    async fn component_protocol_semio_is_protocol_dialect() {
         let g = ::dsl::parse_grammar(COMPONENT_PROTOCOL_SEMIO).expect("parse protocol.semio");
         assert_eq!(g.dialect, ::dsl::SemioDialect::Protocol);
         assert!(!COMPONENT_PROTOCOL_SEMIO.is_empty());
@@ -108,7 +108,7 @@ mod semio_protocol_conformance {
     }
 
     #[test]
-    fn verify_protocol_bytes_against_encoded_spr() {
+    async fn verify_protocol_bytes_against_encoded_spr() {
         let operation = WriterMutation::EditText(crate::artifacts::writer::schema::mutations::EditText { text: "hello".into() });
         let bytes = encode_op(&operation).expect("encode op");
         let g = ::dsl::parse_grammar(COMPONENT_PROTOCOL_SEMIO).expect("parse protocol");

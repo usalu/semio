@@ -24,23 +24,23 @@ pub struct ReplaceEdgeGeometry {
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
 #[allow(clippy::too_many_arguments)]
-pub fn replace_edge_geometry(id: String, new_gap: f64, new_shift: f64, new_rise: f64, new_rotation: f64, new_turn: f64, new_tilt: f64, new_x: f64, new_y: f64) -> Puzzle2dMutation {
+pub async fn replace_edge_geometry(id: String, new_gap: f64, new_shift: f64, new_rise: f64, new_rotation: f64, new_turn: f64, new_tilt: f64, new_x: f64, new_y: f64) -> Puzzle2dMutation {
     Puzzle2dMutation::ReplaceEdgeGeometry(ReplaceEdgeGeometry { id, new_gap, new_shift, new_rise, new_rotation, new_turn, new_tilt, new_x, new_y })
 }
 
 impl protocol::MutationKind<Puzzle2dSnapshot, Puzzle2dMutation> for ReplaceEdgeGeometry {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "replace", entity: "edge", kind: "replace-edge-geometry", record: "ReplacedEdgeGeometry" };
 
-    fn diff(&self, base: &Puzzle2dSnapshot) -> protocol::MutationOutcome<Puzzle2dDiff> {
+    async fn diff(&self, base: &Puzzle2dSnapshot) -> protocol::MutationOutcome<Puzzle2dDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &Puzzle2dSnapshot) -> Vec<Puzzle2dMutation> {
+    async fn inverse(&self, base: &Puzzle2dSnapshot) -> Vec<Puzzle2dMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         format!("Replace edge \"{}\" geometry", self.id)
     }
-    fn target(&self) -> Vec<String> {
+    async fn target(&self) -> Vec<String> {
         vec![self.id.clone()]
     }
 }

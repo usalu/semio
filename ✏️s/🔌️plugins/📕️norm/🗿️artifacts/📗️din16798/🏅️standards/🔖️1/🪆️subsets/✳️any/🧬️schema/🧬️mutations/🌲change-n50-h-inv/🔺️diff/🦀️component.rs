@@ -5,7 +5,7 @@ use crate::artifacts::din16798::mutations::change_n50_h_inv::mutation::ChangeN50
 use crate::artifacts::din16798::Din16798Snapshot;
 
 //#region 🔖️Diff
-pub fn diff(payload: &ChangeN50HInv, base: &Din16798Snapshot) -> protocol::MutationOutcome<Din16798Diff> {
+pub async fn diff(payload: &ChangeN50HInv, base: &Din16798Snapshot) -> protocol::MutationOutcome<Din16798Diff> {
     if !payload.new_n50_h_inv.is_finite() {
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("N50 air change rate must be a finite number, got {}.", payload.new_n50_h_inv), Vec::<String>::new());
     }

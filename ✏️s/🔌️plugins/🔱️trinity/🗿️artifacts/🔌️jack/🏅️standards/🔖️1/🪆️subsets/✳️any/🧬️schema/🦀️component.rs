@@ -50,7 +50,7 @@ pub struct JackEditorSelection {
 
 //#region 🔖️Conversions
 impl Default for JackArtifact {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self {
             schema: crate::artifacts::jack::TRINITY_GRAPH_SCHEMA.into(),
             name: String::new(),
@@ -77,7 +77,7 @@ impl Default for JackArtifact {
 
 impl JackArtifact {
     /// 📸️ Persisted subset.
-    pub fn to_snapshot(&self) -> crate::artifacts::jack::JackSnapshot {
+    pub async fn to_snapshot(&self) -> crate::artifacts::jack::JackSnapshot {
         crate::artifacts::jack::JackSnapshot {
             schema: self.schema.clone(),
             name: self.name.clone(),
@@ -90,7 +90,7 @@ impl JackArtifact {
     }
 
     /// 🧬️ Builds a full artifact from a snapshot, leaving UI fields at defaults.
-    pub fn from_snapshot(snapshot: crate::artifacts::jack::JackSnapshot) -> Self {
+    pub async fn from_snapshot(snapshot: crate::artifacts::jack::JackSnapshot) -> Self {
         let viewport_camera = snapshot.camera.clone();
         Self {
             schema: snapshot.schema,
@@ -106,7 +106,7 @@ impl JackArtifact {
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
-    pub fn set_snapshot(&mut self, snapshot: crate::artifacts::jack::JackSnapshot) {
+    pub async fn set_snapshot(&mut self, snapshot: crate::artifacts::jack::JackSnapshot) {
         self.schema = snapshot.schema;
         self.name = snapshot.name;
         self.manifest_id = snapshot.manifest_id;
@@ -117,12 +117,12 @@ impl JackArtifact {
     }
 
     /// 🔎 Live node list, read through the working-scene cache.
-    pub fn nodes(&self) -> Vec<crate::artifacts::jack::Node> {
+    pub async fn nodes(&self) -> Vec<crate::artifacts::jack::Node> {
         crate::artifacts::jack::jack_working_scene_for_handle(&self.content).nodes
     }
 
     /// 🔎 Live edge list, read through the working-scene cache.
-    pub fn edges(&self) -> Vec<crate::artifacts::jack::Edge> {
+    pub async fn edges(&self) -> Vec<crate::artifacts::jack::Edge> {
         crate::artifacts::jack::jack_working_scene_for_handle(&self.content).edges
     }
 }
@@ -130,7 +130,7 @@ impl JackArtifact {
 
 //#region 🔖️Descriptor
 /// 🧬️ Descriptor for `s.trinity.jack` — twenty handcrafted schema leaves.
-pub fn jack_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
+pub async fn jack_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
     schema::ArtifactSchemaDescriptor {
         id: "s.trinity.jack",
         artifact: schema::FacetLeaves {
@@ -167,7 +167,7 @@ pub fn jack_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
 
 //#region 🔖️EmptyDocument
 /// 📦️ An empty trinity graph fixture — the app's zero-state initial document.
-pub fn empty_jack_document() -> crate::artifacts::jack::JackSnapshot {
+pub async fn empty_jack_document() -> crate::artifacts::jack::JackSnapshot {
     crate::artifacts::jack::empty_trinity_graph_fixture()
 }
 //#endregion 🔖️EmptyDocument
@@ -178,7 +178,7 @@ mod empty_document_tests {
     use super::*;
 
     #[test]
-    fn empty_jack_document_has_no_nodes_or_edges() {
+    async fn empty_jack_document_has_no_nodes_or_edges() {
         let fixture = empty_jack_document();
         assert!(fixture.nodes().is_empty());
         assert!(fixture.edges().is_empty());
@@ -201,15 +201,15 @@ pub mod derived_construction {
         type Snapshot = JackSnapshot;
         type Mutation = TrinityGraphMutation;
         type Diff = JackDiff;
-        fn empty() -> Self { Self { snapshot: JackSnapshot::default(), diagnostics: Vec::new() } }
-        fn from_snapshot(snapshot: Self::Snapshot) -> Self { Self { snapshot, diagnostics: Vec::new() } }
-        fn from_text(text: &str) -> Result<Self, store::TextError> {
+        async fn empty() -> Self { Self { snapshot: JackSnapshot::default(), diagnostics: Vec::new() } }
+        async fn from_snapshot(snapshot: Self::Snapshot) -> Self { Self { snapshot, diagnostics: Vec::new() } }
+        async fn from_text(text: &str) -> Result<Self, store::TextError> {
             Ok(Self::from_snapshot(<JackSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
-        fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
+        async fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
             Ok(Self::from_snapshot(<JackSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
         }
-        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
+        async fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let outcome = <Self::Mutation as protocol::Mutation<Self::Snapshot>>::diff(&mutation, &self.snapshot);
             match <Self::Diff as protocol::MutationDiff<Self::Snapshot>>::apply(outcome.diff(), &self.snapshot) {
                 Ok(snapshot) => self.snapshot = snapshot,
@@ -221,7 +221,7 @@ pub mod derived_construction {
             }
             (self, outcome)
         }
-        fn absorb(
+        async fn absorb(
             mut self,
             diff: Self::Diff,
         ) -> protocol::MutationApplyResult<Self> {
@@ -229,7 +229,7 @@ pub mod derived_construction {
             self.snapshot = snapshot;
             Ok(self)
         }
-        fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
+        async fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
             if self.diagnostics.is_empty() { Ok(self.snapshot) } else { Err(self.diagnostics) }
         }
     }
@@ -253,11 +253,11 @@ pub mod derived_analysis {
         type Parts = JackParts;
         const DIALECT: Dialect = Dialect { artifact_kind: "s.jack", standard: StandardId("1"), subset: SubsetId("*") };
 
-        fn sniff(_source: &AnalyzeSource<'_>) -> IoConfidence {
+        async fn sniff(_source: &AnalyzeSource<'_>) -> IoConfidence {
             IoConfidence::Medium
         }
 
-        fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
+        async fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
             let mut parts = JackParts::default();
             let mut diagnostics = Vec::new();
             let mut confidence = IoConfidence::High;

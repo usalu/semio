@@ -19,7 +19,7 @@ use semio_framework_plugin::{ExecutionMode, Plugin};
 /// persists edits back to the open document. No quota declared: layout's ~20 `Effect` call sites
 /// (`DispatchAction`/`DownloadMediaExport`) are per-turn UI/export effects with no evidence of
 /// long-running computation, large held buffers, or high-frequency timers.
-pub fn plugin() -> Result<Plugin, semio_framework_plugin::PluginAssemblyError> {
+pub async fn plugin() -> Result<Plugin, semio_framework_plugin::PluginAssemblyError> {
     Plugin::builder("layout")
         .label("Layout")
         .version("0.1.0")
@@ -44,12 +44,12 @@ mod surface_tests {
     use semio_framework_plugin::testkit::{assert_editor_and_viewer_share_dialect, assert_viewer_never_mutates};
 
     #[test]
-    fn layout_viewer_never_mutates() {
+    async fn layout_viewer_never_mutates() {
         assert_viewer_never_mutates::<crate::viewer::layout::LayoutViewer>();
     }
 
     #[test]
-    fn layout_editor_and_viewer_share_dialect() {
+    async fn layout_editor_and_viewer_share_dialect() {
         assert_editor_and_viewer_share_dialect::<crate::editor::layout::LayoutPlayApp, crate::viewer::layout::LayoutViewer>();
     }
 }

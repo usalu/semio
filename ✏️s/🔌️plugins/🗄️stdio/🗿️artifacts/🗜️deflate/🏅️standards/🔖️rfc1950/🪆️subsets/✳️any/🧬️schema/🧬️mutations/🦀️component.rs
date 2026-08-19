@@ -41,7 +41,7 @@ pub enum DeflateMutation {
 //#region 🔖️Apply
 /// ▶️ Applies `mutation` to `snapshot`; the diff is the single semantics source (never
 /// apply-and-capture).
-pub fn apply_deflate_mutation(snapshot: &mut DeflateSnapshot, mutation: &DeflateMutation) -> protocol::MutationOutcome<DeflateDiff> {
+pub async fn apply_deflate_mutation(snapshot: &mut DeflateSnapshot, mutation: &DeflateMutation) -> protocol::MutationOutcome<DeflateDiff> {
     let outcome = <DeflateMutation as Mutation<DeflateSnapshot>>::diff(mutation, &*snapshot);
     match protocol::MutationDiff::apply(outcome.diff(), snapshot) {
         Ok(next) => {
@@ -57,7 +57,7 @@ pub fn apply_deflate_mutation(snapshot: &mut DeflateSnapshot, mutation: &Deflate
 impl Mutation<DeflateSnapshot> for DeflateMutation {
     type Diff = DeflateDiff;
 
-    fn diff(&self, base: &DeflateSnapshot) -> protocol::MutationOutcome<Self::Diff> {
+    async fn diff(&self, base: &DeflateSnapshot) -> protocol::MutationOutcome<Self::Diff> {
         protocol::MutationOutcome::new(match self {
             DeflateMutation::NoMutation => DeflateDiff::default(),
             DeflateMutation::SetSnapshot { snapshot } => diff_set_snapshot(base, snapshot),
@@ -67,7 +67,7 @@ impl Mutation<DeflateSnapshot> for DeflateMutation {
         })
     }
 
-    fn inverse(&self, base: &DeflateSnapshot) -> Vec<Self> {
+    async fn inverse(&self, base: &DeflateSnapshot) -> Vec<Self> {
         match self {
             DeflateMutation::NoMutation => vec![DeflateMutation::NoMutation],
             DeflateMutation::SetSnapshot { .. } => vec![DeflateMutation::SetSnapshot { snapshot: base.clone() }],
@@ -87,7 +87,7 @@ impl Mutation<DeflateSnapshot> for DeflateMutation {
 /// uses (`FlowMutationDsl`/`SpaceMutation`/`BinaryMutation`/`GifMutation` precedent). Replaces
 /// the prior `serde_json` stub.
 impl OpText for DeflateMutation {
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
+    async fn parse_op(line: &str) -> Result<Self, store::TextError> {
         let variants = <Self as dsl::DslVariants>::variants();
         for (keyword, spec_fn) in &variants {
             let probe = format!("{} ", keyword);
@@ -98,7 +98,7 @@ impl OpText for DeflateMutation {
         }
         Err(dsl::__rt::field_error(format!("unknown operation line '{line}'")))
     }
-    fn print_op(&self) -> String {
+    async fn print_op(&self) -> String {
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
         let variants = <Self as dsl::DslVariants>::variants();
         let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
@@ -109,10 +109,10 @@ impl OpText for DeflateMutation {
 /// ⚡️ Handcrafted `OpBinary` (P6) — pure forward to `dsl::variants_binary`. Replaces the prior
 /// `serde_json` stub.
 impl OpBinary for DeflateMutation {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         dsl::variants_binary::encode_op(self)
     }
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         dsl::variants_binary::decode_op(bytes)
     }
 }
@@ -124,7 +124,7 @@ impl OpBinary for DeflateMutation {
 /// truth reused by `op_text_binary_roundtrip_law` below AND by `⚙️engine/🦀️component.rs`'s
 /// `ops_grammar_conformance_law`/`protocol_walk_law` conformance tests.
 #[cfg(test)]
-pub(crate) fn demo_mutation_cases() -> Vec<DeflateMutation> {
+pub(crate) async fn demo_mutation_cases() -> Vec<DeflateMutation> {
     use crate::artifacts::deflate::STDIO_DEFLATE_DOCUMENT_SCHEMA;
 
     let snapshot =
@@ -148,7 +148,7 @@ mod tests {
     use super::*;
     use crate::artifacts::deflate::STDIO_DEFLATE_DOCUMENT_SCHEMA;
 
-    fn base_snapshot() -> DeflateSnapshot {
+    async fn base_snapshot() -> DeflateSnapshot {
         DeflateSnapshot { schema: STDIO_DEFLATE_DOCUMENT_SCHEMA.into(), compression_method: 8, window_bits: 7, compression_level_hint: DeflateLevelHint::Fastest, dict_id: None, payload: b"op-text-binary-fixture".to_vec() }
     }
 
@@ -156,7 +156,7 @@ mod tests {
     /// `Some`/`None`, and the `SetSnapshot` struct-payload variant) round-trips through
     /// `print_op`/`parse_op` (one line, no `\n`) AND `encode_op`/`decode_op`.
     #[test]
-    fn op_text_binary_roundtrip_law() {
+    async fn op_text_binary_roundtrip_law() {
         let base = base_snapshot();
         for mutation in [
             DeflateMutation::NoMutation,

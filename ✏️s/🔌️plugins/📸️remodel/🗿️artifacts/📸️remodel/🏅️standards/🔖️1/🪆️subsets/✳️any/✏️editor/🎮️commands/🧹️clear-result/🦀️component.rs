@@ -9,7 +9,7 @@ use serde::{Deserialize, Serialize};
 
 //#region 🔖️Results
 /// 🫙️ An empty mesh result — what `clearMeshResult`/`clearResult` leave behind.
-fn empty_result() -> RemodelMesh {
+async fn empty_result() -> RemodelMesh {
     RemodelMesh { mesh: crate::artifacts::remodel::mint_and_stash_mesh(MeshData::default()), source: MeshSource::Placeholder, texture_asset_id: None, watertight: None }
 }
 //#endregion 🔖️Results
@@ -40,7 +40,7 @@ fn empty_result() -> RemodelMesh {
 pub struct ClearResult {}
 
 /// 🧹️ Resets all seven `ReconstructionResults` fields in one undoable step.
-pub fn handle(_payload: &ClearResult, _doc: &ArtifactView<'_, RemodelSnapshot>, _cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelMutation, RemodelConfigMutation>, Fault> {
+pub async fn handle(_payload: &ClearResult, _doc: &ArtifactView<'_, RemodelSnapshot>, _cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelMutation, RemodelConfigMutation>, Fault> {
     Ok(Emit::mutations(vec![
         replace_mesh_result(Box::new(empty_result())),
         replace_sparse(None),

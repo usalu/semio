@@ -87,14 +87,14 @@ pub use super::scale_camera2d::mutation::{scale_camera2d, ScaleCamera2d};
 pub use super::update_presentation::mutation::{update_presentation, UpdatePresentation};
 
 /// ▶️ Applies `mutation` via its diff, mutating `projection` in place.
-pub fn apply_block2d_mutation(projection: &mut Block2dSnapshot, mutation: &Block2dMutation) -> protocol::MutationApplyResult<()> {
+pub async fn apply_block2d_mutation(projection: &mut Block2dSnapshot, mutation: &Block2dMutation) -> protocol::MutationApplyResult<()> {
     let (next, _) = vcs::apply_mutation(projection, mutation)?;
 
     *projection = next;
     Ok(())
 }
 
-pub fn inverse_block2d_mutation(projection: &Block2dSnapshot, mutation: &Block2dMutation) -> Vec<Block2dMutation> {
+pub async fn inverse_block2d_mutation(projection: &Block2dSnapshot, mutation: &Block2dMutation) -> Vec<Block2dMutation> {
     mutation.inverse(projection)
 }
 
@@ -108,7 +108,7 @@ mod tests {
     use protocol::SemanticMutation;
     use protocol::MutationDiff;
 
-    fn round_trip(base: &Block2dSnapshot, mutation: &Block2dMutation) -> Block2dSnapshot {
+    async fn round_trip(base: &Block2dSnapshot, mutation: &Block2dMutation) -> Block2dSnapshot {
         let forward = mutation.diff(base).diff().apply(base).expect("valid mutation diff");
         let mut restored = forward.clone();
         let mut backward = mutation.inverse(base);
@@ -122,7 +122,7 @@ mod tests {
 
     //#region 🔖️Behavior
     #[test]
-    fn rename_and_change_node_kind_round_trip() {
+    async fn rename_and_change_node_kind_round_trip() {
         let base = empty_block2d_snapshot();
         let renamed = round_trip(&base, &rename_node_kind("Renamed".into()));
         assert_eq!(renamed.node_kind.name, "Renamed");
@@ -131,14 +131,14 @@ mod tests {
     }
 
     #[test]
-    fn update_presentation_round_trips() {
+    async fn update_presentation_round_trips() {
         let base = empty_block2d_snapshot();
         let after = round_trip(&base, &update_presentation(Some("circle".into()), Some(0.4), None, None, Some("#fff".into()), None));
         assert_eq!(after.presentation.shape.as_deref(), Some("circle"));
     }
 
     #[test]
-    fn create_rename_delete_handle_kind_round_trip() {
+    async fn create_rename_delete_handle_kind_round_trip() {
         let base = empty_block2d_snapshot();
         let handle_kind = crate::artifacts::block2d::Block2dHandleKind { id: "hk0".into(), name: "hk0".into(), label: "HK0".into(), color: "#888".into(), default_wire_kind: "cable.link".into() };
         let created = round_trip(&base, &create_handle_kind(handle_kind));
@@ -150,7 +150,7 @@ mod tests {
     }
 
     #[test]
-    fn create_move_delete_handle_round_trip() {
+    async fn create_move_delete_handle_round_trip() {
         let mut base = empty_block2d_snapshot();
         base.handle_kinds.push(crate::artifacts::block2d::Block2dHandleKind { id: "hk0".into(), name: "hk0".into(), label: "HK0".into(), color: "#888".into(), default_wire_kind: "cable.link".into() });
         let handle = crate::artifacts::block2d::Block2dHandleTemplate { id: "h0".into(), handle_kind: "hk0".into(), angle: 0.0, radius: 0.3 };
@@ -163,7 +163,7 @@ mod tests {
     }
 
     #[test]
-    fn add_remove_compatibility_rule_round_trip() {
+    async fn add_remove_compatibility_rule_round_trip() {
         let base = empty_block2d_snapshot();
         let rule = BlockCompatibilityRule { id: "c0".into(), source: "a".into(), target: "b".into(), bidirectional: true };
         let added = round_trip(&base, &add_compatibility_rule(rule));
@@ -173,7 +173,7 @@ mod tests {
     }
 
     #[test]
-    fn add_remove_attribute_round_trip() {
+    async fn add_remove_attribute_round_trip() {
         let base = empty_block2d_snapshot();
         let attribute = BlockAttribute { key: "material".into(), value: "concrete".into(), definition: None };
         let added = round_trip(&base, &add_attribute(attribute));
@@ -183,7 +183,7 @@ mod tests {
     }
 
     #[test]
-    fn add_remove_author_round_trip() {
+    async fn add_remove_author_round_trip() {
         let base = empty_block2d_snapshot();
         let author = BlockAuthor { id: "a0".into(), name: "Ada".into(), email: None };
         let added = round_trip(&base, &add_author(author));
@@ -193,7 +193,7 @@ mod tests {
     }
 
     #[test]
-    fn move_and_scale_camera2d_round_trip() {
+    async fn move_and_scale_camera2d_round_trip() {
         let base = empty_block2d_snapshot();
         let moved = round_trip(&base, &move_camera2d(10.0, -4.0));
         assert_eq!((moved.camera2d.x, moved.camera2d.y), (10.0, -4.0));
@@ -202,7 +202,7 @@ mod tests {
     }
 
     #[test]
-    fn change_meta_description_round_trips() {
+    async fn change_meta_description_round_trips() {
         let base = empty_block2d_snapshot();
         let after = round_trip(&base, &change_meta_description("session notes".into()));
         assert_eq!(after.meta.description, "session notes");
@@ -211,7 +211,7 @@ mod tests {
 
     //#region 🔖️MutationLaws
     #[test]
-    fn every_mutation_kind_satisfies_the_inverse_law() {
+    async fn every_mutation_kind_satisfies_the_inverse_law() {
         let mut base = empty_block2d_snapshot();
         base.handle_kinds.push(crate::artifacts::block2d::Block2dHandleKind { id: "hk0".into(), name: "hk0".into(), label: "HK0".into(), color: "#888".into(), default_wire_kind: "cable.link".into() });
         base.handles.push(crate::artifacts::block2d::Block2dHandleTemplate { id: "h0".into(), handle_kind: "hk0".into(), angle: 0.2, radius: 0.3 });
@@ -248,7 +248,7 @@ mod tests {
     }
 
     #[test]
-    fn change_node_kind_label_diff_absorb_law() {
+    async fn change_node_kind_label_diff_absorb_law() {
         let base = empty_block2d_snapshot();
         let d1 = change_node_kind_label("first".into()).diff(&base).into_parts().0;
         let mid = d1.apply(&base).expect("valid mutation diff");
@@ -257,7 +257,7 @@ mod tests {
     }
 
     #[test]
-    fn move_handle_diff_absorb_law() {
+    async fn move_handle_diff_absorb_law() {
         let mut base = empty_block2d_snapshot();
         base.handle_kinds.push(crate::artifacts::block2d::Block2dHandleKind { id: "hk0".into(), name: "hk0".into(), label: "HK0".into(), color: "#888".into(), default_wire_kind: "cable.link".into() });
         base.handles.push(crate::artifacts::block2d::Block2dHandleTemplate { id: "h0".into(), handle_kind: "hk0".into(), angle: 0.0, radius: 0.2 });
@@ -268,7 +268,7 @@ mod tests {
     }
 
     #[test]
-    fn dispatch_registers_semantic_descriptors_with_approved_verbs() {
+    async fn dispatch_registers_semantic_descriptors_with_approved_verbs() {
         register_block2d_mutation_descriptors();
         for kind in Block2dMutation::kinds() {
             assert!(protocol::is_approved_verb(kind.verb), "verb '{}' must be in APPROVED_VERBS", kind.verb);
@@ -288,7 +288,7 @@ mod tests {
     use protocol::testkit::{assert_fatal_never_applies, assert_missing_target_is_error};
 
     #[test]
-    fn missing_target_is_error_per_verb_family() {
+    async fn missing_target_is_error_per_verb_family() {
         let base = empty_block2d_snapshot();
         assert_missing_target_is_error(&base, &delete_handle("missing".into())); // delete
         assert_missing_target_is_error(&base, &delete_handle_kind("missing".into())); // delete
@@ -302,7 +302,7 @@ mod tests {
     }
 
     #[test]
-    fn create_duplicate_id_is_fatal_and_never_applies() {
+    async fn create_duplicate_id_is_fatal_and_never_applies() {
         let mut base = empty_block2d_snapshot();
         let handle_kind = crate::artifacts::block2d::Block2dHandleKind { id: "hk0".into(), name: "hk0".into(), label: "HK0".into(), color: "#888".into(), default_wire_kind: "cable.link".into() };
         base.handle_kinds.push(handle_kind.clone());

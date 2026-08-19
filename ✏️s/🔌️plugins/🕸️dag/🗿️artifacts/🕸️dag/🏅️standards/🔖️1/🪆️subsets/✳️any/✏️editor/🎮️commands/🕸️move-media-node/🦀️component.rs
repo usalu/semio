@@ -15,7 +15,7 @@ pub struct MoveMediaNode {
     pub y: f64,
 }
 
-pub fn handle(payload: &MoveMediaNode, doc: &ArtifactView<'_, DagSnapshot>, _cfg: &ConfigView<'_, DagConfig>) -> Result<Emit<DagMutation, DagConfigMutation>, Fault> {
+pub async fn handle(payload: &MoveMediaNode, doc: &ArtifactView<'_, DagSnapshot>, _cfg: &ConfigView<'_, DagConfig>) -> Result<Emit<DagMutation, DagConfigMutation>, Fault> {
     let document = doc.snapshot;
     if document.nodes().iter().any(|node| node.id == payload.node_id) {
         Ok(Emit::amend(vec![move_node(payload.node_id.clone(), payload.x, payload.y)], format!("move-{}", payload.node_id)))

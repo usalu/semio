@@ -7,7 +7,7 @@ use crate::artifacts::csv::STDIO_CSV_DOCUMENT_SCHEMA;
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 
-fn default_true() -> bool {
+async fn default_true() -> bool {
     true
 }
 
@@ -58,7 +58,7 @@ pub struct CsvSnapshot {
 }
 
 impl Default for CsvSnapshot {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self { schema: STDIO_CSV_DOCUMENT_SCHEMA.into(), has_header: true, records: Vec::new() }
     }
 }
@@ -71,14 +71,14 @@ impl Default for CsvSnapshot {
 /// escaped `""` quotes, both CRLF and bare-LF line endings, and tracking per-field
 /// whether the source actually wrapped it in quotes (real, losslessly-retained
 /// information per RFC 4180 §2 rule 5 — quoting is optional).
-fn parse_csv_records(text: &str) -> Vec<CsvRecord> {
+async fn parse_csv_records(text: &str) -> Vec<CsvRecord> {
     let mut records = Vec::new();
     let mut fields: Vec<CsvField> = Vec::new();
     let mut cur = String::new();
     let mut cur_quoted = false;
     let mut in_quotes = false;
     let mut chars = text.chars().peekable();
-    fn take_field(cur: &mut String, cur_quoted: &mut bool) -> CsvField {
+    async fn take_field(cur: &mut String, cur_quoted: &mut bool) -> CsvField {
         CsvField { value: std::mem::take(cur), quoted: std::mem::take(cur_quoted) }
     }
     while let Some(ch) = chars.next() {
@@ -124,7 +124,7 @@ fn parse_csv_records(text: &str) -> Vec<CsvRecord> {
 
 /// 📤 Quotes a field when the source quoted it OR when RFC 4180 §2 rule 6 REQUIRES
 /// quoting (the value itself contains a comma, quote, or line break).
-fn escape_field(field: &CsvField) -> String {
+async fn escape_field(field: &CsvField) -> String {
     let needs_quote = field.quoted || field.value.contains(',') || field.value.contains('"') || field.value.contains('\n') || field.value.contains('\r');
     if needs_quote {
         format!("\"{}\"", field.value.replace('"', "\"\""))
@@ -133,7 +133,7 @@ fn escape_field(field: &CsvField) -> String {
     }
 }
 
-fn write_csv_records(records: &[CsvRecord], line_ending: &str) -> String {
+async fn write_csv_records(records: &[CsvRecord], line_ending: &str) -> String {
     let mut out = String::new();
     for record in records {
         out.push_str(&record.fields.iter().map(escape_field).collect::<Vec<_>>().join(","));
@@ -148,23 +148,23 @@ fn write_csv_records(records: &[CsvRecord], line_ending: &str) -> String {
 /// `records[0]` should be read as a header row — RFC 4180 draws no structural distinction
 /// between a header record and a data record on the wire, so decoding never drops or
 /// relocates the first record.
-pub fn decode_csv_with(text: &str, has_header: bool) -> CsvSnapshot {
+pub async fn decode_csv_with(text: &str, has_header: bool) -> CsvSnapshot {
     let records = parse_csv_records(text);
     CsvSnapshot { schema: STDIO_CSV_DOCUMENT_SCHEMA.into(), has_header, records }
 }
 
 /// 📥 Decodes assuming a header row is present (the pre-existing default behavior).
-pub fn decode_csv(text: &str) -> Result<CsvSnapshot, String> {
+pub async fn decode_csv(text: &str) -> Result<CsvSnapshot, String> {
     Ok(decode_csv_with(text, true))
 }
 
 /// 📤 Encodes with LF line endings.
-pub fn encode_csv(snap: &CsvSnapshot) -> String {
+pub async fn encode_csv(snap: &CsvSnapshot) -> String {
     encode_csv_with(snap, "\n")
 }
 
 /// 📤 Encodes with a caller-chosen line ending (`"\n"` or `"\r\n"`).
-pub fn encode_csv_with(snap: &CsvSnapshot, line_ending: &str) -> String {
+pub async fn encode_csv_with(snap: &CsvSnapshot, line_ending: &str) -> String {
     if snap.records.is_empty() {
         return String::new();
     }
@@ -175,14 +175,14 @@ pub fn encode_csv_with(snap: &CsvSnapshot, line_ending: &str) -> String {
 
 //#region 🔖️DocumentHelpers
 /// 🌱 Empty persisted snapshot.
-pub fn empty_csv_snapshot() -> CsvSnapshot {
+pub async fn empty_csv_snapshot() -> CsvSnapshot {
     CsvSnapshot::default()
 }
 
 /// 📄️ The `demo` example, parsed once from `examples::demo::PRIMARY_TEXT` — the single source
 /// of truth `🗣️example.dsl.semio` is genuinely `print_dsl` of (P2-P1 `fixture_honesty_law`),
 /// same pattern as `note::semio_example_snapshot`.
-pub fn demo_csv_snapshot() -> CsvSnapshot {
+pub async fn demo_csv_snapshot() -> CsvSnapshot {
     <CsvSnapshot as store::ArtifactDsl>::parse_dsl(crate::artifacts::csv::examples::demo::PRIMARY_TEXT).unwrap_or_else(|_| empty_csv_snapshot())
 }
 //#endregion 🔖️DocumentHelpers
@@ -190,18 +190,18 @@ pub fn demo_csv_snapshot() -> CsvSnapshot {
 //#region 🔖️HandcraftedArtifactCodecs
 impl store::ArtifactDsl for CsvSnapshot {
     const EXTENSION: &'static str = "csv";
-    fn envelope_id() -> &'static str {
+    async fn envelope_id() -> &'static str {
         "stdio.csv"
     }
 
-    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+    async fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
         let body = match store::semio_format::split_text_preamble(text) {
             Ok((_, rest)) => rest,
             Err(_) => text,
         };
         Ok(decode_csv_with(body, true))
     }
-    fn print_dsl(&self) -> String {
+    async fn print_dsl(&self) -> String {
         let body = encode_csv(self);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
@@ -209,13 +209,13 @@ impl store::ArtifactDsl for CsvSnapshot {
 }
 
 impl store::ArtifactPack for CsvSnapshot {
-    fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
+    async fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
         let raw = encode_csv(self).into_bytes();
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &raw))
     }
-    fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
+    async fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
         if envelope.envelope_id() != <Self as store::ArtifactDsl>::envelope_id() {
             return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.envelope_id())));
@@ -234,13 +234,13 @@ mod tests {
     use crate::artifacts::csv::CsvMutation;
 
     #[test]
-    fn empty_snapshot_matches_schema() {
+    async fn empty_snapshot_matches_schema() {
         let snapshot = empty_csv_snapshot();
         assert_eq!(snapshot.schema, STDIO_CSV_DOCUMENT_SCHEMA);
     }
 
     #[test]
-    fn codec_round_trip() {
+    async fn codec_round_trip() {
         let snap = empty_csv_snapshot();
         let text = store::ArtifactDsl::print_dsl(&snap);
         let parsed = <CsvSnapshot as store::ArtifactDsl>::parse_dsl(&text).expect("parse");
@@ -250,12 +250,12 @@ mod tests {
         assert_eq!(decoded, snap);
     }
 
-    fn field_values(record: &CsvRecord) -> Vec<String> {
+    async fn field_values(record: &CsvRecord) -> Vec<String> {
         record.fields.iter().map(|f| f.value.clone()).collect()
     }
 
     #[test]
-    fn quoted_field_with_embedded_comma_and_escaped_quote() {
+    async fn quoted_field_with_embedded_comma_and_escaped_quote() {
         let text = "name,note\n\"Doe, John\",\"He said \"\"hi\"\"\"\n";
         let snap = decode_csv_with(text, true);
         assert_eq!(field_values(&snap.records[0]), vec!["name", "note"]);
@@ -266,21 +266,21 @@ mod tests {
     }
 
     #[test]
-    fn quoted_field_with_embedded_newline_spans_records() {
+    async fn quoted_field_with_embedded_newline_spans_records() {
         let text = "a,b\n\"line1\nline2\",2\n";
         let snap = decode_csv_with(text, true);
         assert_eq!(field_values(&snap.records[1]), vec!["line1\nline2".to_string(), "2".to_string()]);
     }
 
     #[test]
-    fn crlf_and_lf_both_parse_to_the_same_records() {
+    async fn crlf_and_lf_both_parse_to_the_same_records() {
         let lf = "a,b\n1,2\n3,4\n";
         let crlf = "a,b\r\n1,2\r\n3,4\r\n";
         assert_eq!(decode_csv_with(lf, true), decode_csv_with(crlf, true));
     }
 
     #[test]
-    fn header_row_option_is_pure_metadata_first_record_always_decoded() {
+    async fn header_row_option_is_pure_metadata_first_record_always_decoded() {
         let text = "1,2\n3,4\n";
         let with_header = decode_csv_with(text, true);
         assert!(with_header.has_header);
@@ -294,7 +294,7 @@ mod tests {
     }
 
     #[test]
-    fn quoted_flag_round_trips_even_when_not_structurally_required() {
+    async fn quoted_flag_round_trips_even_when_not_structurally_required() {
         // 🔒 A field that didn't NEED quoting but WAS quoted in the source must re-encode
         // quoted (lossless retention, not a lossy structural-minimum normal form).
         let snap = CsvSnapshot { schema: STDIO_CSV_DOCUMENT_SCHEMA.into(), has_header: false, records: vec![CsvRecord { fields: vec![CsvField { value: "plain".into(), quoted: true }] }] };
@@ -305,7 +305,7 @@ mod tests {
     }
 
     #[test]
-    fn encode_with_crlf_round_trips() {
+    async fn encode_with_crlf_round_trips() {
         let snap = decode_csv_with("a,b\n1,2\n", true);
         let crlf_text = encode_csv_with(&snap, "\r\n");
         assert!(crlf_text.contains("\r\n"));
@@ -319,7 +319,7 @@ mod tests {
     /// (embedded comma), a field quoted despite NOT being structurally required (pure
     /// retention), an empty field, and an embedded-newline field spanning lines.
     #[test]
-    fn codec_retention_law() {
+    async fn codec_retention_law() {
         let fixture = "name,note,tag,blank\n\"Doe, John\",\"He said \"\"hi\"\"\",\"kept-quoted\",\n\"multi\nline\",x,y,z\n";
         let snap = decode_csv_with(fixture, true);
         let reencoded = encode_csv(&snap);
@@ -336,7 +336,7 @@ mod tests {
     /// permanent side-effecting test; CLAUDE.md bans migration scripts left behind).
     #[test]
     #[ignore]
-    fn zzz_generate_p2p1_fixtures() {
+    async fn zzz_generate_p2p1_fixtures() {
         let repo_root = {
             let mut dir = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"));
             loop {

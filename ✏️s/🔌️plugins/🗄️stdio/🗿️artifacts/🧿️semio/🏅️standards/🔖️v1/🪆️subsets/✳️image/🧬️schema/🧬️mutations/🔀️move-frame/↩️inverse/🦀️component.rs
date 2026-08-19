@@ -3,6 +3,6 @@ use crate::artifacts::semio::standards::v1::subsets::image::schema::mutations::S
 use protocol::Mutation;
 
 /// ↩️ Inverse of move-frame — swaps `from`/`to` (structural, base-content-independent).
-pub fn inverse(base: &SemioImageSnapshot, from: usize, to: usize) -> Vec<SemioImageMutation> {
+pub async fn inverse(base: &SemioImageSnapshot, from: usize, to: usize) -> Vec<SemioImageMutation> {
     <SemioImageMutation as Mutation<SemioImageSnapshot>>::inverse(&SemioImageMutation::MoveFrame { from, to }, base)
 }

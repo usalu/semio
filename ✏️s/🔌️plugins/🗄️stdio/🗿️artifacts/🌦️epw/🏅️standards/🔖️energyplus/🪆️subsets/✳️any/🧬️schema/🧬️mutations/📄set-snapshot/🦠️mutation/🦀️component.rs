@@ -2,6 +2,6 @@ use crate::artifacts::epw::standards::energyplus::subsets::any::schema::mutation
 use crate::artifacts::epw::standards::energyplus::subsets::any::schema::snapshot::EpwSnapshot;
 
 /// ▶️ Applies a set-snapshot mutation.
-pub fn apply(projection: &mut EpwSnapshot, mutation: &EpwMutation) {
+pub async fn apply(projection: &mut EpwSnapshot, mutation: &EpwMutation) {
     let _ = apply_epw_mutation(projection, mutation);
 }

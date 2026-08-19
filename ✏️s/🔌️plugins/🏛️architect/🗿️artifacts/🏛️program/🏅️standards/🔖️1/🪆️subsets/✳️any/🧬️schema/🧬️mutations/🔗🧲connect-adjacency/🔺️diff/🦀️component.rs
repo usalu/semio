@@ -12,7 +12,7 @@ use protocol::Patchable;
 /// `mutation.no-op` if the edge already carries this exact value (empty diff); else
 /// `added = [normalized edge]` if the pair is new, else `patched = [{existing id, full patch}]`
 /// — the existing edge's own id is preserved even if `payload.adjacency` carries a different one.
-pub fn diff(payload: &ConnectAdjacency, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
+pub async fn diff(payload: &ConnectAdjacency, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
     let (a, b) = normalize_pair(&payload.adjacency.element_a_id, &payload.adjacency.element_b_id);
     if !base.elements.iter().any(|row| row.header.id == a) {
         return protocol::MutationOutcome::error("mutation.target-missing", "No program element exists with this id.", [a.0.clone()]);

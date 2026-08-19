@@ -14,7 +14,7 @@ pub struct ToggleLayerVisible {
     pub layer_id: String,
 }
 
-pub fn handle(payload: &ToggleLayerVisible, doc: &ArtifactView<'_, DrawSnapshot>, _cfg: &ConfigView<'_, DrawConfig>, _session: &mut DrawSession) -> Result<Emit<DrawMutation, DrawConfigMutation>, Fault> {
+pub async fn handle(payload: &ToggleLayerVisible, doc: &ArtifactView<'_, DrawSnapshot>, _cfg: &ConfigView<'_, DrawConfig>, _session: &mut DrawSession) -> Result<Emit<DrawMutation, DrawConfigMutation>, Fault> {
     let document = doc.snapshot;
     match find_draw_layer(document, &payload.layer_id) {
         Some(layer) => {

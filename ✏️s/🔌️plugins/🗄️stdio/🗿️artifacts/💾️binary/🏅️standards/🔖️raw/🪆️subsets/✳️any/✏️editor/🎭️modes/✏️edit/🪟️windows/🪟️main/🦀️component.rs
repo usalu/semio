@@ -24,7 +24,7 @@ pub const HEX_PREVIEW_CAP_BYTES: usize = 4096;
 
 //#region 🔖️Definition
 /// 🧱️ Stitched into the editor manifest by `crate::editor::binary::create_binary_editor`.
-pub fn definition() -> WindowKindDefinition {
+pub async fn definition() -> WindowKindDefinition {
     WindowKindDefinition { label: LocalizedLabel::native("Bytes", "Bytes"), ..TextWindowKit::editable_window_kind() }
 }
 //#endregion 🔖️Definition
@@ -33,7 +33,7 @@ pub fn definition() -> WindowKindDefinition {
 /// ✏️ Real `BinarySnapshot -> UiNode`: the first `HEX_PREVIEW_CAP_BYTES` bytes as contiguous
 /// lowercase hex, editable (`read_only: false`), plus a trailing `#`-prefixed byte-count comment
 /// (never parsed back — informational only).
-pub fn render(document: &BinarySnapshot) -> UiNode {
+pub async fn render(document: &BinarySnapshot) -> UiNode {
     let total = document.bytes.len();
     let shown = total.min(HEX_PREVIEW_CAP_BYTES);
     let hex: String = document.bytes[..shown].iter().map(|byte| format!("{byte:02x}")).collect();
@@ -52,7 +52,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn definition_declares_an_editable_text_window() {
+    async fn definition_declares_an_editable_text_window() {
         let def = definition();
         assert_eq!(def.id, WINDOW_KIND_ID);
         assert_eq!(def.body_key, BODY_KEY);
@@ -60,7 +60,7 @@ mod tests {
     }
 
     #[test]
-    fn render_carries_the_bytes_as_editable_hex() {
+    async fn render_carries_the_bytes_as_editable_hex() {
         let document = BinarySnapshot { bytes: vec![0xde, 0xad, 0xbe, 0xef], ..BinarySnapshot::default() };
         let UiNode::ComponentScene(node) = render(&document) else { panic!("expected ComponentScene") };
         let scene = node.text_editor.expect("text_editor scene");

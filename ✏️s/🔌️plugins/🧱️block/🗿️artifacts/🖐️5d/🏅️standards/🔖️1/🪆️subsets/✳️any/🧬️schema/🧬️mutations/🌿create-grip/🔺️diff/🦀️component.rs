@@ -4,7 +4,7 @@ use crate::artifacts::block5d::diff::{Block5dGripsDelta};
 use crate::artifacts::block5d::Block5dSnapshot;
 
 //#region 🔖️Diff
-pub fn diff(payload: &super::mutation::CreateGrip, base: &Block5dSnapshot) -> protocol::MutationOutcome<Block5dDiff> {
+pub async fn diff(payload: &super::mutation::CreateGrip, base: &Block5dSnapshot) -> protocol::MutationOutcome<Block5dDiff> {
     if base.grips.iter().any(|item| item.id == payload.grip.id) {
         return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("{} \"{}\" already exists", "grip", payload.grip.id), vec![payload.grip.id.clone()]);
     }

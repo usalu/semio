@@ -26,7 +26,7 @@ pub struct EditCalibration {
     pub locked: bool,
 }
 
-pub fn handle(payload: &EditCalibration, doc: &ArtifactView<'_, RemodelSnapshot>, _cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelMutation, RemodelConfigMutation>, Fault> {
+pub async fn handle(payload: &EditCalibration, doc: &ArtifactView<'_, RemodelSnapshot>, _cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelMutation, RemodelConfigMutation>, Fault> {
     let entry = CameraCalibration {
         id: payload.camera_id.clone(),
         label: payload.label.clone(),
@@ -56,7 +56,7 @@ mod tests {
     use crate::editor::remodel::RemodelCommand;
 
     #[test]
-    fn edit_calibration_inserts_then_updates_the_same_camera_entry() {
+    async fn edit_calibration_inserts_then_updates_the_same_camera_entry() {
         let mut app = app();
         let payload = |fx: f64| {
             RemodelCommand::EditCalibration(EditCalibration {
@@ -85,7 +85,7 @@ mod tests {
     }
 
     #[test]
-    fn gcps_are_added_observed_and_removed() {
+    async fn gcps_are_added_observed_and_removed() {
         let mut app = app();
         dispatch(&mut app, RemodelCommand::AddGcp(add_gcp::AddGcp { name: "Corner".into(), world_x: 1.0, world_y: 2.0, world_z: 3.0 }));
         let gcp_id = app.snapshot().expect("projection").gcps[0].id.clone();
@@ -98,7 +98,7 @@ mod tests {
     /// 🎯️ `calibrateCameras` only derives intrinsics for stream-referenced cameras that have a decoded
     /// first frame — a stream with no frames contributes nothing.
     #[test]
-    fn calibrate_cameras_skips_streams_without_frames() {
+    async fn calibrate_cameras_skips_streams_without_frames() {
         let mut app = app();
         dispatch(&mut app, RemodelCommand::AddStream(crate::editor::remodel::commands::add_stream::AddStream { name: "Front".into(), kind: "video".into(), camera_id: "cam-0".into() }));
         dispatch(&mut app, RemodelCommand::CalibrateCameras(calibrate_cameras::CalibrateCameras {}));

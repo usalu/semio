@@ -5,7 +5,7 @@ use crate::artifacts::semio::standards::v1::subsets::kit::schema::diff::{SemioKi
 use crate::artifacts::semio::standards::v1::subsets::kit::schema::snapshot::SemioKitSnapshot;
 
 //#region 🔖️Diff
-pub fn diff(payload: &DeleteModel, base: &SemioKitSnapshot) -> protocol::MutationOutcome<SemioKitDiff> {
+pub async fn diff(payload: &DeleteModel, base: &SemioKitSnapshot) -> protocol::MutationOutcome<SemioKitDiff> {
     if !base.models.iter().any(|c| c.child_id == payload.child_id) {
         return protocol::MutationOutcome::error(
             "mutation.target-missing",

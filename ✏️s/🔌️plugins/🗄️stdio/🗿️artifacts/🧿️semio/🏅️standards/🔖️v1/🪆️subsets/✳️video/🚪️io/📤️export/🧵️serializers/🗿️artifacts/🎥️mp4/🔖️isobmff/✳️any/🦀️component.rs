@@ -60,7 +60,7 @@ mod tests {
     use crate::artifacts::semio::standards::v1::subsets::video::schema::snapshot::{SemioRational, SemioVideoSample, SemioVideoStream, SemioVideoStreamKind, STDIO_SEMIOVIDEO_DOCUMENT_SCHEMA};
     use semio_framework_plugin::ArtifactDeserializer;
 
-    fn real_world_video() -> SemioVideoSnapshot {
+    async fn real_world_video() -> SemioVideoSnapshot {
         SemioVideoSnapshot {
             schema: STDIO_SEMIOVIDEO_DOCUMENT_SCHEMA.into(),
             streams: vec![SemioVideoStream {
@@ -78,19 +78,19 @@ mod tests {
     /// a clean fixpoint (everything `video` can represent survives), even though mp4 -> video ->
     /// mp4 is documented-lossy (sps/pps/cts_offset) and therefore not the direction under test.
     #[test]
-    fn video_to_mp4_to_video_round_trips_everything_the_video_subset_can_represent() {
+    async fn video_to_mp4_to_video_round_trips_everything_the_video_subset_can_represent() {
         let original = real_world_video();
         let mp4 = semio_framework_plugin::resolve_ready(SemioVideoToMp4::serialize(&original)).expect("serialize");
         assert_eq!(mp4.tracks.len(), 1);
         assert_eq!(mp4.tracks[0].timescale, 30);
         assert_eq!(mp4.tracks[0].width, 640);
         assert_eq!(mp4.tracks[0].height, 480);
-        let back = SemioVideoFromMp4::deserialize(&mp4).expect("deserialize");
+        let back = semio_framework_plugin::resolve_ready(SemioVideoFromMp4::deserialize(&mp4)).expect("deserialize");
         assert_eq!(back, original);
     }
 
     #[test]
-    fn codec_name_longer_than_four_bytes_is_truncated_not_panicking() {
+    async fn codec_name_longer_than_four_bytes_is_truncated_not_panicking() {
         let mut snap = real_world_video();
         snap.streams[0].codec = "hevc-main10".into();
         let mp4 = semio_framework_plugin::resolve_ready(SemioVideoToMp4::serialize(&snap)).expect("serialize");
@@ -98,7 +98,7 @@ mod tests {
     }
 
     #[test]
-    fn empty_stream_list_serializes_to_zero_tracks() {
+    async fn empty_stream_list_serializes_to_zero_tracks() {
         let snap = SemioVideoSnapshot { schema: STDIO_SEMIOVIDEO_DOCUMENT_SCHEMA.into(), streams: Vec::new() };
         let mp4 = semio_framework_plugin::resolve_ready(SemioVideoToMp4::serialize(&snap)).expect("serialize");
         assert!(mp4.tracks.is_empty());

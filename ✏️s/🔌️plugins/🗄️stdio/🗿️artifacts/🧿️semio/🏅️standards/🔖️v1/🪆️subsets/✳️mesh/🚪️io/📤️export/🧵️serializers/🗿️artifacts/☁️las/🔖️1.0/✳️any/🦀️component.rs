@@ -85,7 +85,7 @@ mod tests {
     use crate::artifacts::semio::standards::v1::subsets::mesh::schema::snapshot::{SemioMesh, SemioPrimitive, SemioTopology};
     use semio_framework_plugin::ArtifactDeserializer;
 
-    fn sample_semio_mesh() -> SemioMeshSnapshot {
+    async fn sample_semio_mesh() -> SemioMeshSnapshot {
         SemioMeshSnapshot {
             schema: "stdio.semio.mesh".into(),
             meshes: vec![SemioMesh {
@@ -107,12 +107,12 @@ mod tests {
     }
 
     #[test]
-    fn serialize_then_deserialize_round_trips_positions_and_colors_within_las_quantization() {
+    async fn serialize_then_deserialize_round_trips_positions_and_colors_within_las_quantization() {
         let original = sample_semio_mesh();
         let las = semio_framework_plugin::resolve_ready(SemioMeshToLas::serialize(&original)).expect("serialize");
         assert_eq!(las.points.len(), 2);
         assert_eq!(las.points[0].rgb, Some((65535, 0, 0)));
-        let round_tripped = SemioMeshFromLas::deserialize(&las).expect("deserialize");
+        let round_tripped = semio_framework_plugin::resolve_ready(SemioMeshFromLas::deserialize(&las)).expect("deserialize");
         let orig_prim = &original.meshes[0].primitives[0];
         let rt_prim = &round_tripped.meshes[0].primitives[0];
         assert_eq!(rt_prim.topology, SemioTopology::Points);
@@ -126,7 +126,7 @@ mod tests {
     }
 
     #[test]
-    fn triangle_primitive_flattens_to_a_point_cloud_no_error() {
+    async fn triangle_primitive_flattens_to_a_point_cloud_no_error() {
         let mut semio = sample_semio_mesh();
         semio.meshes[0].primitives[0].topology = SemioTopology::Triangles;
         semio.meshes[0].primitives[0].indices = vec![0, 1, 0];

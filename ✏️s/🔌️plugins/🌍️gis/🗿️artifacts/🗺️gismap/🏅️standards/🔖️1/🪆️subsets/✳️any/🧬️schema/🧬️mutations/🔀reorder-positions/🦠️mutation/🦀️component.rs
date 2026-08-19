@@ -20,15 +20,15 @@ pub struct ReorderPositions {
 impl MutationKind<GisMapSnapshot, GisMapMutation> for ReorderPositions {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "reorder", entity: "positions", kind: "reorder-positions", record: "ReorderedPositions" };
 
-    fn diff(&self, base: &GisMapSnapshot) -> protocol::MutationOutcome<GisMapDiff> {
+    async fn diff(&self, base: &GisMapSnapshot) -> protocol::MutationOutcome<GisMapDiff> {
         super::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &GisMapSnapshot) -> Vec<GisMapMutation> {
+    async fn inverse(&self, base: &GisMapSnapshot) -> Vec<GisMapMutation> {
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         format!("Reorder position \"{}\" to {}", self.id, self.to_index)
     }
 }

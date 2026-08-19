@@ -17,7 +17,7 @@ pub mod set_locale {
         pub value: String,
     }
 
-    pub fn handle(payload: &SetLocale, _doc: &ArtifactView<'_, ShootingSnapshot>, _cfg: &ConfigView<'_, ShootingConfig>, _ctx: &mut ShootingDispatchCtx) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
+    pub async fn handle(payload: &SetLocale, _doc: &ArtifactView<'_, ShootingSnapshot>, _cfg: &ConfigView<'_, ShootingConfig>, _ctx: &mut ShootingDispatchCtx) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
         Ok(Emit::config(vec![ShootingConfigMutation::SetLocale { value: payload.value.clone() }]))
     }
 }
@@ -31,7 +31,7 @@ mod tests {
     use crate::editor::shooting::ShootingCommand;
 
     #[test]
-    fn set_locale_switches_the_resolved_label_locale() {
+    async fn set_locale_switches_the_resolved_label_locale() {
         use crate::editor::shooting::testkit::render;
         use crate::editor::shooting::SHOOTING_PLAY_BODY_DOCUMENT;
 

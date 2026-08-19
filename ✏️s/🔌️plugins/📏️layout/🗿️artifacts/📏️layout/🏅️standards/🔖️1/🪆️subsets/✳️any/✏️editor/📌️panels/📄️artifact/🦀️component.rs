@@ -16,7 +16,7 @@ pub const LAYOUT_PLAY_BODY_DOCUMENT: &str = "layout.play.document";
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
-pub fn definition() -> PanelTabDefinition {
+pub async fn definition() -> PanelTabDefinition {
     PanelTabDefinition {
         kind: PanelTabKind::App(FRAMEWORK_PANEL_TAB_ARTIFACT_ID.into()),
         label: LocalizedLabel::native(FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL, "Dokument"),
@@ -28,7 +28,7 @@ pub fn definition() -> PanelTabDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️RowIds
-fn frame_icon(kind: &str) -> &str {
+async fn frame_icon(kind: &str) -> &str {
     match kind {
         "rect" => "square",
         "text" => "type",
@@ -37,31 +37,31 @@ fn frame_icon(kind: &str) -> &str {
     }
 }
 
-fn page_row_id(page_id: &str) -> String {
+async fn page_row_id(page_id: &str) -> String {
     format!("layout-document.page.{page_id}")
 }
 
-fn layer_row_id(page_id: &str, layer_id: &str) -> String {
+async fn layer_row_id(page_id: &str, layer_id: &str) -> String {
     format!("layout-document.layer.{page_id}.{layer_id}")
 }
 
-fn spread_row_id(spread_id: &str) -> String {
+async fn spread_row_id(spread_id: &str) -> String {
     format!("layout-document.spread.{spread_id}")
 }
 
-fn parent_page_row_id(parent_page_id: &str) -> String {
+async fn parent_page_row_id(parent_page_id: &str) -> String {
     format!("layout-document.parentPage.{parent_page_id}")
 }
 
-fn story_row_id(story_id: &str) -> String {
+async fn story_row_id(story_id: &str) -> String {
     format!("layout-document.story.{story_id}")
 }
 
-fn link_row_id(link_id: &str) -> String {
+async fn link_row_id(link_id: &str) -> String {
     format!("layout-document.link.{link_id}")
 }
 
-fn style_row_id(style_id: &str) -> String {
+async fn style_row_id(style_id: &str) -> String {
     format!("layout-document.style.{style_id}")
 }
 //#endregion 🔖️RowIds
@@ -70,7 +70,7 @@ fn style_row_id(style_id: &str) -> String {
 /// 🌳️ Layout's row shape (id/label/description/icon/optional-action) over the SDK's
 /// `tree_item_desc`/`tree_item_with_action` — the icon assignment is the only bit the SDK helpers
 /// don't cover, since not every plugin's rows carry one.
-fn layout_tree_item(id: impl Into<String>, label: impl Into<Label>, description: Option<String>, icon_id: Option<String>, action: Option<ActionDescriptor>) -> UiTreeItemNode {
+async fn layout_tree_item(id: impl Into<String>, label: impl Into<Label>, description: Option<String>, icon_id: Option<String>, action: Option<ActionDescriptor>) -> UiTreeItemNode {
     let mut item = match action {
         Some(action) => tree_item_with_action(id, label, description, action),
         None => tree_item_desc(id, label, description),
@@ -89,7 +89,7 @@ fn layout_tree_item(id: impl Into<String>, label: impl Into<Label>, description:
 /// interaction domain; `.interaction_domain(LAYOUT_INTERACTION_ELEMENTS)` below has the framework's
 /// renderer translate row hover into `interactionHover` and stamp presence from `InteractionState`,
 /// replacing the deleted `.selected()`/`.highlighted()`/`.selection_change()` calls.
-pub fn render(doc: &LayoutSnapshot, _config: &LayoutConfig, labels: &LayoutLabels) -> UiNode {
+pub async fn render(doc: &LayoutSnapshot, _config: &LayoutConfig, labels: &LayoutLabels) -> UiNode {
     let spread_items: Vec<UiTreeItemNode> = doc.spreads.iter().map(|spread| layout_tree_item(spread_row_id(&spread.id), Label::data(spread.name.clone()), Some(spread.page_ids.join(", ")), Some("layout".into()), None)).collect();
 
     let page_items: Vec<UiTreeItemNode> = doc
@@ -203,7 +203,7 @@ mod tests {
     use crate::editor::layout::testkit::{layout_app, render as render_body};
 
     #[test]
-    fn document_lists_sample_pages() {
+    async fn document_lists_sample_pages() {
         let mut app = layout_app();
         let json = render_body(&mut app, LAYOUT_PLAY_BODY_DOCUMENT);
         assert!(json.contains("layout-document.page.page-1"));
@@ -211,7 +211,7 @@ mod tests {
     }
 
     #[test]
-    fn document_tree_has_nine_sections() {
+    async fn document_tree_has_nine_sections() {
         let mut app = layout_app();
         let json = render_body(&mut app, LAYOUT_PLAY_BODY_DOCUMENT);
         for section_id in [
@@ -230,7 +230,7 @@ mod tests {
     }
 
     #[test]
-    fn layout_labels_resolve_native_english_by_default() {
+    async fn layout_labels_resolve_native_english_by_default() {
         let mut app = layout_app();
         let json = render_body(&mut app, LAYOUT_PLAY_BODY_DOCUMENT);
         assert!(json.contains("\"Frames\""));
@@ -239,7 +239,7 @@ mod tests {
     }
 
     #[test]
-    fn layout_labels_translate_document_tree_in_german() {
+    async fn layout_labels_translate_document_tree_in_german() {
         use crate::editor::layout::testkit::dispatch;
         use crate::editor::layout::commands::set_locale;
         use crate::editor::layout::LayoutCommand;
@@ -252,7 +252,7 @@ mod tests {
     }
 
     #[test]
-    fn definition_binds_the_framework_document_tab_to_this_body_key() {
+    async fn definition_binds_the_framework_document_tab_to_this_body_key() {
         let definition = definition();
         assert_eq!(definition.id(), FRAMEWORK_PANEL_TAB_ARTIFACT_ID);
         assert_eq!(definition.body_key.as_deref(), Some(LAYOUT_PLAY_BODY_DOCUMENT));

@@ -28,7 +28,7 @@ pub struct VcsSnapshot {
 }
 
 impl Default for VcsSnapshot {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self {
             schema: VCS_DOCUMENT_SCHEMA.into(),
             title: "VCS Demo".into(),

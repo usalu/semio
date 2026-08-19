@@ -16,20 +16,20 @@ use crate::wfc_engine::ids::{NodeId, RegionId, RelationId};
                     // with the AC-4 propagator (P6) and region-scoped constraints (P7); the trait's full shape is
                     // fixed now so those phases never need to touch this sealed boundary.
 pub(crate) trait Topology {
-    fn node_count(&self) -> usize;
-    fn arc_count(&self) -> usize;
-    fn region_of(&self, n: NodeId) -> RegionId;
+    async fn node_count(&self) -> usize;
+    async fn arc_count(&self) -> usize;
+    async fn region_of(&self, n: NodeId) -> RegionId;
     /// 🗺️ Calls `f(target, relation)` once per outgoing arc of `n`, in a stable order.
-    fn for_each_out_arc(&self, n: NodeId, f: impl FnMut(NodeId, RelationId));
+    async fn for_each_out_arc(&self, n: NodeId, f: impl FnMut(NodeId, RelationId));
     /// 🗺️ Calls `f(source, relation, slot)` once per incoming arc of `n`. `slot` is a dense id
     /// unique to this specific incoming arc, always `< node_count() * max_in_degree()` — AC-4
     /// keys its support counters by it. Bundling the slot into the same callback (rather than a
     /// separate `in_arc_slot(target, ordinal)` lookup) is deliberate: it is the only way to
     /// guarantee the slot a caller records for an arc is the same slot the topology itself means,
     /// since "ordinal" has no meaning independent of how a specific implementor enumerates arcs.
-    fn for_each_in_arc(&self, n: NodeId, f: impl FnMut(NodeId, RelationId, usize));
+    async fn for_each_in_arc(&self, n: NodeId, f: impl FnMut(NodeId, RelationId, usize));
     /// 🗺️ Upper bound on any single node's incoming-arc count, for sizing dense counter tables.
-    fn max_in_degree(&self) -> usize;
+    async fn max_in_degree(&self) -> usize;
 }
 // #endregion 🔖️Trait
 
@@ -52,42 +52,42 @@ pub struct GraphTopology {
 
 impl GraphTopology {
     #[inline]
-    pub fn node_count(&self) -> usize {
+    pub async fn node_count(&self) -> usize {
         self.node_count
     }
 
     #[inline]
-    pub fn arc_count(&self) -> usize {
+    pub async fn arc_count(&self) -> usize {
         self.out_targets.len()
     }
 
-    pub fn out_degree(&self, n: NodeId) -> usize {
+    pub async fn out_degree(&self, n: NodeId) -> usize {
         (self.out_starts[n.index() + 1] - self.out_starts[n.index()]) as usize
     }
 
-    pub fn in_degree(&self, n: NodeId) -> usize {
+    pub async fn in_degree(&self, n: NodeId) -> usize {
         (self.in_starts[n.index() + 1] - self.in_starts[n.index()]) as usize
     }
 }
 
 impl Topology for GraphTopology {
     #[inline]
-    fn node_count(&self) -> usize {
+    async fn node_count(&self) -> usize {
         self.node_count
     }
 
     #[inline]
-    fn arc_count(&self) -> usize {
+    async fn arc_count(&self) -> usize {
         self.out_targets.len()
     }
 
     #[inline]
-    fn region_of(&self, n: NodeId) -> RegionId {
+    async fn region_of(&self, n: NodeId) -> RegionId {
         RegionId(self.regions[n.index()])
     }
 
     #[inline]
-    fn for_each_out_arc(&self, n: NodeId, mut f: impl FnMut(NodeId, RelationId)) {
+    async fn for_each_out_arc(&self, n: NodeId, mut f: impl FnMut(NodeId, RelationId)) {
         let start = self.out_starts[n.index()] as usize;
         let end = self.out_starts[n.index() + 1] as usize;
         for i in start..end {
@@ -96,7 +96,7 @@ impl Topology for GraphTopology {
     }
 
     #[inline]
-    fn for_each_in_arc(&self, n: NodeId, mut f: impl FnMut(NodeId, RelationId, usize)) {
+    async fn for_each_in_arc(&self, n: NodeId, mut f: impl FnMut(NodeId, RelationId, usize)) {
         let start = self.in_starts[n.index()] as usize;
         let end = self.in_starts[n.index() + 1] as usize;
         for i in start..end {
@@ -104,7 +104,7 @@ impl Topology for GraphTopology {
         }
     }
 
-    fn max_in_degree(&self) -> usize {
+    async fn max_in_degree(&self) -> usize {
         (0..self.node_count).map(|i| (self.in_starts[i + 1] - self.in_starts[i]) as usize).max().unwrap_or(0)
     }
 }
@@ -121,21 +121,21 @@ pub struct GraphTopologyBuilder {
 }
 
 impl GraphTopologyBuilder {
-    pub fn new(node_count: usize) -> Self {
+    pub async fn new(node_count: usize) -> Self {
         Self { node_count, arcs: Vec::new(), regions: vec![RegionId(0); node_count] }
     }
 
-    pub fn arc(&mut self, from: NodeId, to: NodeId, relation: RelationId) -> &mut Self {
+    pub async fn arc(&mut self, from: NodeId, to: NodeId, relation: RelationId) -> &mut Self {
         self.arcs.push((from, to, relation));
         self
     }
 
-    pub fn region(&mut self, n: NodeId, r: RegionId) -> &mut Self {
+    pub async fn region(&mut self, n: NodeId, r: RegionId) -> &mut Self {
         self.regions[n.index()] = r;
         self
     }
 
-    pub fn build(self) -> Result<GraphTopology, crate::wfc_engine::error::TopologyError> {
+    pub async fn build(self) -> Result<GraphTopology, crate::wfc_engine::error::TopologyError> {
         use crate::wfc_engine::error::TopologyError;
         for &(from, to, _) in &self.arcs {
             if from.index() >= self.node_count {
@@ -184,7 +184,7 @@ impl GraphTopologyBuilder {
 /// undirected views get the same relation registered in both directions (the model relation is
 /// expected to be self-inverse in that case, matching every other symmetric-adjacency convention
 /// in this crate).
-pub fn from_graph_view(view: &impl graph_core::GraphView, rel_of: impl Fn(graph_core::EdgeRef) -> RelationId) -> Result<GraphTopology, crate::wfc_engine::error::TopologyError> {
+pub async fn from_graph_view(view: &impl graph_core::GraphView, rel_of: impl Fn(graph_core::EdgeRef) -> RelationId) -> Result<GraphTopology, crate::wfc_engine::error::TopologyError> {
     use crate::wfc_engine::error::TopologyError;
     let mut sorted_nodes: Vec<graph_core::NodeId> = view.nodes().collect();
     sorted_nodes.sort_unstable();
@@ -213,7 +213,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn builder_produces_correct_out_and_in_arcs() {
+    async fn builder_produces_correct_out_and_in_arcs() {
         let mut b = GraphTopologyBuilder::new(3);
         b.arc(NodeId(0), NodeId(1), RelationId(0));
         b.arc(NodeId(1), NodeId(2), RelationId(0));
@@ -232,7 +232,7 @@ mod tests {
     }
 
     #[test]
-    fn self_loops_and_multiedges_are_supported() {
+    async fn self_loops_and_multiedges_are_supported() {
         let mut b = GraphTopologyBuilder::new(2);
         b.arc(NodeId(0), NodeId(0), RelationId(0)); // self-loop
         b.arc(NodeId(0), NodeId(1), RelationId(0));
@@ -248,14 +248,14 @@ mod tests {
     }
 
     #[test]
-    fn dangling_arc_is_rejected() {
+    async fn dangling_arc_is_rejected() {
         let mut b = GraphTopologyBuilder::new(2);
         b.arc(NodeId(0), NodeId(5), RelationId(0));
         assert!(b.build().is_err());
     }
 
     #[test]
-    fn in_arc_slots_are_dense_and_unique_per_node() {
+    async fn in_arc_slots_are_dense_and_unique_per_node() {
         let mut b = GraphTopologyBuilder::new(3);
         b.arc(NodeId(0), NodeId(2), RelationId(0));
         b.arc(NodeId(1), NodeId(2), RelationId(0));
@@ -272,7 +272,7 @@ mod tests {
     }
 
     #[test]
-    fn regions_default_to_zero_and_are_settable() {
+    async fn regions_default_to_zero_and_are_settable() {
         let mut b = GraphTopologyBuilder::new(2);
         b.region(NodeId(1), RegionId(7));
         let topo = b.build().unwrap();

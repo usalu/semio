@@ -8,7 +8,7 @@ use crate::artifacts::program::ProgramSnapshot;
 /// 🗑️ Error `mutation.target-missing` if the id is absent (empty diff); else removes the target
 /// row from the working-scene cache and re-mints a fresh content-addressed `table` child handle
 /// over the remaining rows.
-pub fn diff(payload: &DeleteKnowledgeRecord, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
+pub async fn diff(payload: &DeleteKnowledgeRecord, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
     let mut records = crate::artifacts::program::program_knowledge(base);
     if !records.iter().any(|row| row.header.id == payload.id) {
         return protocol::MutationOutcome::error("mutation.target-missing", "No knowledge record exists with this id.", [payload.id.0.clone()]);

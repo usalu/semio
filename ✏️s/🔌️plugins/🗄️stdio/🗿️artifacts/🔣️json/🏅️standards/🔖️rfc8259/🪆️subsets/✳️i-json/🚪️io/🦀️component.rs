@@ -23,12 +23,12 @@ pub mod derived_composition {
         type Snapshot = JsonSnapshot;
         const WRITES: Dialect = DIALECT_I_JSON;
 
-        fn reads() -> &'static [Dialect] {
+        async fn reads() -> &'static [Dialect] {
             &[DIALECT_ANY, DIALECT_I_JSON, DEP_TXT]
         }
 
-        fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
-            let inner = JsonAnyComposer::compose(sources)?;
+        async fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+            let inner = semio_framework_plugin::resolve_ready(JsonAnyComposer::compose(sources))?;
             let checks = check_i_json_conformance(&inner.snapshot);
             let (hard, soft): (Vec<Diagnostic>, Vec<Diagnostic>) = checks.into_iter().partition(|d| matches!(d.severity, Severity::Error | Severity::Fatal));
             if !hard.is_empty() {
@@ -50,7 +50,7 @@ pub mod derived_composition {
     impl SubsetValidator for JsonIJsonValidator {
         const DIALECT: Dialect = DIALECT_I_JSON;
 
-        fn validate(payload: &IoPayload) -> Vec<Diagnostic> {
+        async fn validate(payload: &IoPayload) -> Vec<Diagnostic> {
             let decoded = match payload {
                 IoPayload::Binary(bytes) => <JsonSnapshot as store::ArtifactPack>::decode_pack(bytes).ok(),
                 IoPayload::Text(text) => <JsonSnapshot as store::ArtifactDsl>::parse_dsl(text).ok(),
@@ -71,7 +71,7 @@ pub mod derived_composition {
 
     static VALIDATOR_ENTRY: OnceLock<SubsetValidatorEntry> = OnceLock::new();
 
-    fn validator_entry() -> &'static SubsetValidatorEntry {
+    async fn validator_entry() -> &'static SubsetValidatorEntry {
         VALIDATOR_ENTRY.get_or_init(subset_validator_entry_of::<JsonIJsonValidator>)
     }
 
@@ -79,7 +79,7 @@ pub mod derived_composition {
     /// validate-on-build hook). Called from the rfc8259 standard's own `⚙️engine::register()`. The
     /// `ComposerEntry` itself is registered separately by the standard-level composer aggregator
     /// (`crate::artifacts::json::standards::v_rfc8259::subsets::any::io::io_registry::entries()`).
-    pub fn register() {
+    pub async fn register() {
         let _ = register_subset_validator(validator_entry());
     }
     //#endregion 🔖️SubsetValidator
@@ -89,12 +89,12 @@ pub mod derived_composition {
         use super::*;
         use semio_framework_plugin::AnalyzeSource;
 
-        fn conforming_json_text() -> String {
+        async fn conforming_json_text() -> String {
             "{\"a\":1,\"b\":[1,2,3]}".to_string()
         }
 
         #[test]
-        fn conforming_document_composes_and_stamps_i_json() {
+        async fn conforming_document_composes_and_stamps_i_json() {
             let text = conforming_json_text();
             let sources = vec![ComposeSource { dialect: DIALECT_ANY, payload: AnalyzeSource::Text(&text) }];
             let composed = JsonIJsonComposerComposition::compose(&sources).expect("clean document must compose to i-json");
@@ -102,7 +102,7 @@ pub mod derived_composition {
         }
 
         #[test]
-        fn duplicate_member_name_fails_compose_with_real_diagnostic() {
+        async fn duplicate_member_name_fails_compose_with_real_diagnostic() {
             let text = "{\"a\":1,\"a\":2}".to_string();
             let sources = vec![ComposeSource { dialect: DIALECT_ANY, payload: AnalyzeSource::Text(&text) }];
             let err = JsonIJsonComposerComposition::compose(&sources).expect_err("a document with a duplicate member name must not stamp i-json");
@@ -110,7 +110,7 @@ pub mod derived_composition {
         }
 
         #[test]
-        fn unsafe_integer_fails_compose_with_real_diagnostic() {
+        async fn unsafe_integer_fails_compose_with_real_diagnostic() {
             let text = "{\"n\":9007199254740993}".to_string();
             let sources = vec![ComposeSource { dialect: DIALECT_ANY, payload: AnalyzeSource::Text(&text) }];
             let err = JsonIJsonComposerComposition::compose(&sources).expect_err("a document with an unsafe integer must not stamp i-json");
@@ -118,7 +118,7 @@ pub mod derived_composition {
         }
 
         #[test]
-        fn subset_validator_recheck_flags_only_soft_diagnostics_for_a_clean_document() {
+        async fn subset_validator_recheck_flags_only_soft_diagnostics_for_a_clean_document() {
             let text = "\"just a top-level string\"".to_string();
             let snapshot = <JsonSnapshot as store::ArtifactDsl>::parse_dsl(&text).expect("parses");
             let bytes = <JsonSnapshot as store::ArtifactPack>::encode_pack(&snapshot);

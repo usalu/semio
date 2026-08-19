@@ -6,7 +6,7 @@ use crate::artifacts::mathematical::{mathematical_children_from_state, mathemati
 //#region 🔖️Diff
 /// 🔺️ A duplicate `id` is Fatal `duplicate-id` — an id-keyed entity that already exists cannot be
 /// "created" again.
-pub fn diff(payload: &CreateNode, base: &MathematicalSnapshot) -> protocol::MutationOutcome<MathematicalDiff> {
+pub async fn diff(payload: &CreateNode, base: &MathematicalSnapshot) -> protocol::MutationOutcome<MathematicalDiff> {
     let mut graph = mathematical_graph(base);
     if graph.nodes.iter().any(|node| node.id == payload.id) {
         return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("A node with id \"{}\" already exists.", payload.id), [payload.id.clone()]);

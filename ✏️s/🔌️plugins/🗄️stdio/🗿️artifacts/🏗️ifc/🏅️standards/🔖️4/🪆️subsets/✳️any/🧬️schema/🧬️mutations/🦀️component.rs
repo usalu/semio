@@ -91,7 +91,7 @@ pub enum IfcMutation {
 //#region 🔖️Apply
 /// ▶️ Applies `mutation` to `snapshot`, returning a typed error outcome without changing the
 /// snapshot when an entity or argument target is missing or out of range.
-pub fn apply_ifc_mutation(snapshot: &mut IfcSnapshot, mutation: &IfcMutation) -> protocol::MutationOutcome<IfcDiff> {
+pub async fn apply_ifc_mutation(snapshot: &mut IfcSnapshot, mutation: &IfcMutation) -> protocol::MutationOutcome<IfcDiff> {
     let outcome = <IfcMutation as Mutation<IfcSnapshot>>::diff(mutation, snapshot);
     match protocol::MutationDiff::apply(outcome.diff(), snapshot) {
         Ok(next) => {
@@ -107,7 +107,7 @@ pub fn apply_ifc_mutation(snapshot: &mut IfcSnapshot, mutation: &IfcMutation) ->
 impl Mutation<IfcSnapshot> for IfcMutation {
     type Diff = IfcDiff;
 
-    fn diff(&self, base: &IfcSnapshot) -> protocol::MutationOutcome<Self::Diff> {
+    async fn diff(&self, base: &IfcSnapshot) -> protocol::MutationOutcome<Self::Diff> {
         protocol::MutationOutcome::new(match self {
             IfcMutation::NoMutation => IfcDiff::default(),
             IfcMutation::SetSnapshot { snapshot } => diff::diff_set_snapshot(base, snapshot),
@@ -125,7 +125,7 @@ impl Mutation<IfcSnapshot> for IfcMutation {
 
     /// ↩️ Handcrafted, key-aware mutation-level inverses. Entity/arg-targeted variants look the
     /// prior value up in `base`; a stale/absent id/index inverts to `NoMutation` (nothing to undo).
-    fn inverse(&self, base: &IfcSnapshot) -> Vec<Self> {
+    async fn inverse(&self, base: &IfcSnapshot) -> Vec<Self> {
         let entity = |id: u64| base.entities.iter().find(|e| e.id == id);
         match self {
             IfcMutation::NoMutation => vec![IfcMutation::NoMutation],
@@ -163,26 +163,26 @@ impl Mutation<IfcSnapshot> for IfcMutation {
 /// duplicating them a second time in this file. Grammar: `keyword arg=value ...` (space-separated,
 /// same shape the derive's own handcrafted-wrapper convention uses), one match arm per variant (no
 /// `DslVariants` scaffolding available since nothing here derives it).
-fn enc_ifc_header(h: &IfcHeader) -> String {
+async fn enc_ifc_header(h: &IfcHeader) -> String {
     format!("[{},{},{}]", enc_ifc_value_list(&h.file_description), enc_ifc_value_list(&h.file_name), enc_ifc_value_list(&h.file_schema))
 }
-fn dec_ifc_header(s: &str) -> Result<IfcHeader, String> {
+async fn dec_ifc_header(s: &str) -> Result<IfcHeader, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [fd, fname, fs] = parts.as_slice() else { return Err(format!("ifc header: expected 3 fields, got {}", parts.len())) };
     Ok(IfcHeader { file_description: dec_ifc_value_list(fd)?, file_name: dec_ifc_value_list(fname)?, file_schema: dec_ifc_value_list(fs)? })
 }
-fn enc_ifc_snapshot(s: &IfcSnapshot) -> String {
+async fn enc_ifc_snapshot(s: &IfcSnapshot) -> String {
     let entities = s.entities.iter().map(enc_entity).collect::<Vec<_>>().join(",");
     format!("[{},{},[{}]]", enc_str(&s.schema), enc_ifc_header(&s.header), entities)
 }
-fn dec_ifc_snapshot(s: &str) -> Result<IfcSnapshot, String> {
+async fn dec_ifc_snapshot(s: &str) -> Result<IfcSnapshot, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [schema, header, entities] = parts.as_slice() else { return Err(format!("ifc snapshot: expected 3 fields, got {}", parts.len())) };
     let entities = split_top_level(strip_brackets(entities)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_entity).collect::<Result<Vec<_>, String>>()?;
     Ok(IfcSnapshot { schema: dec_str(schema)?, header: dec_ifc_header(header)?, entities })
 }
 
-fn print_ifc_mutation(m: &IfcMutation) -> String {
+async fn print_ifc_mutation(m: &IfcMutation) -> String {
     match m {
         IfcMutation::NoMutation => "no-mutation".to_string(),
         IfcMutation::SetSnapshot { snapshot } => format!("set-snapshot snapshot={}", enc_ifc_snapshot(snapshot)),
@@ -197,7 +197,7 @@ fn print_ifc_mutation(m: &IfcMutation) -> String {
         IfcMutation::RemoveEntityArg { id, index } => format!("remove-entity-arg id={id} index={index}"),
     }
 }
-fn parse_ifc_mutation(line: &str) -> Result<IfcMutation, String> {
+async fn parse_ifc_mutation(line: &str) -> Result<IfcMutation, String> {
     if line == "no-mutation" {
         return Ok(IfcMutation::NoMutation);
     }
@@ -222,10 +222,10 @@ fn parse_ifc_mutation(line: &str) -> Result<IfcMutation, String> {
 }
 
 impl OpText for IfcMutation {
-    fn print_op(&self) -> String {
+    async fn print_op(&self) -> String {
         print_ifc_mutation(self)
     }
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
+    async fn parse_op(line: &str) -> Result<Self, store::TextError> {
         parse_ifc_mutation(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
 }
@@ -236,23 +236,23 @@ impl OpText for IfcMutation {
 /// `write_str_bin` primitives (`../../🔺️diff/🦀️component.rs`, imported above) for the SHARED
 /// `IfcEntity`/`IfcValue` shape (same intra-artifact-reuse split the TEXT codec above already
 /// uses), only `IfcHeader`/`IfcSnapshot`'s own binary shape is genuinely new here.
-fn enc_ifc_header_bin(h: &IfcHeader, out: &mut Vec<u8>) {
+async fn enc_ifc_header_bin(h: &IfcHeader, out: &mut Vec<u8>) {
     enc_ifc_value_list_bin(&h.file_description, out);
     enc_ifc_value_list_bin(&h.file_name, out);
     enc_ifc_value_list_bin(&h.file_schema, out);
 }
-fn dec_ifc_header_bin(reader: &mut store::ByteReader<'_>) -> Result<IfcHeader, String> {
+async fn dec_ifc_header_bin(reader: &mut store::ByteReader<'_>) -> Result<IfcHeader, String> {
     let file_description = dec_ifc_value_list_bin(reader)?;
     let file_name = dec_ifc_value_list_bin(reader)?;
     let file_schema = dec_ifc_value_list_bin(reader)?;
     Ok(IfcHeader { file_description, file_name, file_schema })
 }
-fn enc_ifc_snapshot_bin(s: &IfcSnapshot, out: &mut Vec<u8>) {
+async fn enc_ifc_snapshot_bin(s: &IfcSnapshot, out: &mut Vec<u8>) {
     write_str_bin(out, &s.schema);
     enc_ifc_header_bin(&s.header, out);
     enc_entity_list_bin(&s.entities, out);
 }
-fn dec_ifc_snapshot_bin(reader: &mut store::ByteReader<'_>) -> Result<IfcSnapshot, String> {
+async fn dec_ifc_snapshot_bin(reader: &mut store::ByteReader<'_>) -> Result<IfcSnapshot, String> {
     let schema = read_str_bin(reader)?;
     let header = dec_ifc_header_bin(reader)?;
     let entities = dec_entity_list_bin(reader)?;
@@ -269,7 +269,7 @@ fn dec_ifc_snapshot_bin(reader: &mut store::ByteReader<'_>) -> Result<IfcSnapsho
 /// reused diff-sibling primitives) — the only place the recursion bottoms out through a fully
 /// spec-expressible per-variant tag (`enc_ifc_value_bin`), never an opaque byte-chain fallback.
 impl OpBinary for IfcMutation {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         let tag: u8 = match self {
             IfcMutation::NoMutation => 0,
             IfcMutation::SetSnapshot { .. } => 1,
@@ -317,7 +317,7 @@ impl OpBinary for IfcMutation {
         Ok(out)
     }
 
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         let mut reader = store::ByteReader::new(bytes);
         let malformed = |what: &'static str, offset: usize, detail: String| protocol::ProtocolError::Malformed { what, offset: offset as u64, detail };
         let _format = reader.read_u8().map_err(|e| malformed("op format", 0, e.to_string()))?;
@@ -383,7 +383,7 @@ impl OpBinary for IfcMutation {
 /// (incl. the recursive `Aggregate`/`TypedValue` cases) and `InsertEntity`'s bare `IfcEntity`
 /// payload are exercised at least once.
 #[cfg(test)]
-pub(crate) fn demo_mutation_cases() -> Vec<IfcMutation> {
+pub(crate) async fn demo_mutation_cases() -> Vec<IfcMutation> {
     let demo_entity = |id: u64, name: &str, args: Vec<IfcValue>| IfcEntity { id, name: name.into(), args, complex: Vec::new() };
     vec![
         IfcMutation::NoMutation,
@@ -428,7 +428,7 @@ mod tests {
     use protocol::MutationDiff;
 
     #[test]
-    fn missing_entity_target_is_rejected_before_mutation() {
+    async fn missing_entity_target_is_rejected_before_mutation() {
         let base = IfcSnapshot::default();
         let diff = IfcDiff { entities: Some(IfcEntitiesDiff { removed: vec![1], ..Default::default() }), ..Default::default() };
         let error = diff.apply(&base).expect_err("missing entity target must be rejected");
@@ -438,11 +438,11 @@ mod tests {
     }
 
     //#region Fixtures
-    fn entity(id: u64, name: &str, args: Vec<IfcValue>) -> IfcEntity {
+    async fn entity(id: u64, name: &str, args: Vec<IfcValue>) -> IfcEntity {
         IfcEntity { id, name: name.into(), args, complex: vec![] }
     }
 
-    fn base_snapshot() -> IfcSnapshot {
+    async fn base_snapshot() -> IfcSnapshot {
         IfcSnapshot {
             schema: "stdio.ifc".into(),
             header: IfcHeader { file_description: vec![IfcValue::String("".into())], file_name: vec![IfcValue::String("semio.ifc".into())], file_schema: vec![IfcValue::Aggregate(vec![IfcValue::String("IFC4".into())])] },
@@ -456,7 +456,7 @@ mod tests {
     //#endregion Fixtures
 
     //#region 🔖️mutation_diff_law
-    fn assert_mutation_diff_law(base: &IfcSnapshot, mutation: IfcMutation) {
+    async fn assert_mutation_diff_law(base: &IfcSnapshot, mutation: IfcMutation) {
         let expected_diff = mutation.diff(base);
         let mut applied_snapshot = base.clone();
         let returned_diff = apply_ifc_mutation(&mut applied_snapshot, &mutation);
@@ -465,7 +465,7 @@ mod tests {
     }
 
     #[test]
-    fn mutation_diff_law() {
+    async fn mutation_diff_law() {
         let base = base_snapshot();
         assert_mutation_diff_law(&base, IfcMutation::NoMutation);
         let mut alt = base.clone();
@@ -485,7 +485,7 @@ mod tests {
 
     //#region 🔖️inverse_law
     #[test]
-    fn inverse_law() {
+    async fn inverse_law() {
         let base = base_snapshot();
         let variants = vec![
             IfcMutation::NoMutation,
@@ -514,7 +514,7 @@ mod tests {
     //#endregion 🔖️inverse_law
 
     //#region 🔖️absorb_law
-    fn assert_absorb_law(base: &IfcSnapshot, m1: IfcMutation, m2: IfcMutation) {
+    async fn assert_absorb_law(base: &IfcSnapshot, m1: IfcMutation, m2: IfcMutation) {
         let d1 = m1.diff(base);
         let mid = d1.diff().apply(base).expect("valid first diff");
         let d2 = m2.diff(&mid);
@@ -526,7 +526,7 @@ mod tests {
     }
 
     #[test]
-    fn absorb_law() {
+    async fn absorb_law() {
         let base = base_snapshot();
 
         // Insert+Remove-before: added entity's carried final index shifts once an earlier base
@@ -553,7 +553,7 @@ mod tests {
     }
 
     #[test]
-    fn absorb_law_associativity() {
+    async fn absorb_law_associativity() {
         let base = base_snapshot();
         let d1 = IfcMutation::SetFileDescription { values: vec![IfcValue::String("one".into())] }.diff(&base);
         let mid1 = d1.diff().apply(&base).expect("valid first diff");
@@ -577,7 +577,7 @@ mod tests {
 
     //#region 🔖️between_roundtrip_law
     #[test]
-    fn between_roundtrip_law() {
+    async fn between_roundtrip_law() {
         let a = base_snapshot();
         let mut b = base_snapshot();
         b.header.file_name = vec![IfcValue::String("changed.ifc".into())];
@@ -595,7 +595,7 @@ mod tests {
 
     //#region 🔖️codec_retention_law
     #[test]
-    fn codec_retention_law() {
+    async fn codec_retention_law() {
         let text = std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🗿️artifacts/🏗️ifc/📚️examples/🎬️demo/🖼️assets/🏗️example.ifc"));
         let text = match text {
             Ok(t) => t,
@@ -615,7 +615,7 @@ mod tests {
     /// 🌪️ `sweep_a`/`sweep_b` differ in EVERY mutable field: HEADER's three records, one removed
     /// entity, one entity modified in every field (name, an arg removed/modified/added, and
     /// `complex` exercising the COMPLEX-instance weak-list replace), one added entity.
-    fn sweep_a() -> IfcSnapshot {
+    async fn sweep_a() -> IfcSnapshot {
         IfcSnapshot {
             schema: "stdio.ifc".into(),
             header: IfcHeader { file_description: vec![IfcValue::String("before desc".into())], file_name: vec![IfcValue::String("before.ifc".into())], file_schema: vec![IfcValue::Aggregate(vec![IfcValue::String("IFC4".into())])] },
@@ -631,7 +631,7 @@ mod tests {
         }
     }
 
-    fn sweep_b() -> IfcSnapshot {
+    async fn sweep_b() -> IfcSnapshot {
         IfcSnapshot {
             schema: "stdio.ifc".into(),
             header: IfcHeader { file_description: vec![IfcValue::String("after desc".into())], file_name: vec![IfcValue::String("after.ifc".into())], file_schema: vec![IfcValue::Aggregate(vec![IfcValue::String("IFC4X3".into())])] },
@@ -651,7 +651,7 @@ mod tests {
     }
 
     #[test]
-    fn field_sweep_covers_every_mutable_field() {
+    async fn field_sweep_covers_every_mutable_field() {
         let a = sweep_a();
         let b = sweep_b();
 
@@ -687,7 +687,7 @@ mod tests {
     //#endregion 🔖️field_sweep
 
     #[test]
-    fn out_of_range_entity_mutation_is_rejected_without_mutating() {
+    async fn out_of_range_entity_mutation_is_rejected_without_mutating() {
         let base = base_snapshot();
         let mut snap = base.clone();
         let outcome = apply_ifc_mutation(&mut snap, &IfcMutation::SetEntityName { id: 404, name: "X".into() });
@@ -703,7 +703,7 @@ mod tests {
     /// exercises every variant incl. `SetSnapshot`'s whole-snapshot payload and every `IfcValue`
     /// tag (`Unset`/`Derived`/`Integer`/`Real`/`String`/`Enum`/`Reference`/`Aggregate`/`TypedValue`).
     #[test]
-    fn op_text_binary_roundtrip_law() {
+    async fn op_text_binary_roundtrip_law() {
         let base = base_snapshot();
         let mutations = vec![
             IfcMutation::NoMutation,

@@ -2,6 +2,6 @@ use crate::artifacts::gif::standards::v87a::subsets::any::schema::mutations::{ap
 use crate::artifacts::gif::standards::v87a::subsets::any::schema::snapshot::GifSnapshot;
 
 /// ▶️ Applies a set-snapshot mutation.
-pub fn apply(projection: &mut GifSnapshot, mutation: &GifMutation) {
+pub async fn apply(projection: &mut GifSnapshot, mutation: &GifMutation) {
     apply_gif_mutation(projection, mutation);
 }

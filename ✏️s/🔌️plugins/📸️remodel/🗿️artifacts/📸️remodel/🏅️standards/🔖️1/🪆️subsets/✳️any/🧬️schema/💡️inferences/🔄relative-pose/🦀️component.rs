@@ -26,12 +26,12 @@ pub struct RemodelPoseDelta {
     pub rotation_angle_rad: f64,
 }
 
-fn se3_from_preview(pose: &CameraPosePreview) -> Se3 {
+async fn se3_from_preview(pose: &CameraPosePreview) -> Se3 {
     let q = crate::lie::Quatd { w: pose.rotation_wxyz[0] as f64, x: pose.rotation_wxyz[1] as f64, y: pose.rotation_wxyz[2] as f64, z: pose.rotation_wxyz[3] as f64 };
     Se3 { r: So3::from_quat(q.normalize()), t: [pose.translation[0] as f64, pose.translation[1] as f64, pose.translation[2] as f64] }
 }
 
-fn trajectory_poses(snapshot: &RemodelSnapshot) -> &[CameraPosePreview] {
+async fn trajectory_poses(snapshot: &RemodelSnapshot) -> &[CameraPosePreview] {
     snapshot.results.trajectory.as_ref().map(|trajectory| trajectory.poses.as_slice()).unwrap_or(&[])
 }
 //#endregion 🔖️PoseDelta
@@ -46,13 +46,13 @@ impl store::InferredField<RemodelSnapshot> for RemodelRelativeCameraPose {
     const FIELD_ID: &'static str = "s.remodel.remodel.inference.relative_camera_pose";
     const SCHEMA_VERSION: u32 = 1;
 
-    fn reads() -> &'static [&'static str] {
+    async fn reads() -> &'static [&'static str] {
         &["results"]
     }
 
     /// 🧭 One step per pose, in trajectory order; every pose but the first names its immediate
     /// predecessor as its sole parent, so the chain is a real linear DAG, not independent roots.
-    fn plan(snapshot: &RemodelSnapshot) -> Vec<store::InferenceStep<Self::Key>> {
+    async fn plan(snapshot: &RemodelSnapshot) -> Vec<store::InferenceStep<Self::Key>> {
         let poses = trajectory_poses(snapshot);
         poses
             .iter()
@@ -64,7 +64,7 @@ impl store::InferredField<RemodelSnapshot> for RemodelRelativeCameraPose {
     /// 🔑 Only `key`'s OWN rotation/translation — the predecessor's raw pose is covered by the
     /// predecessor's own `dep_input` and folded in via its already-computed `DepHash` through
     /// `plan`'s parent edge, exactly the "excluding parents' own upstream values" contract.
-    fn dep_input(snapshot: &RemodelSnapshot, key: &Self::Key, _parents: &[Self::Key]) -> Vec<u8> {
+    async fn dep_input(snapshot: &RemodelSnapshot, key: &Self::Key, _parents: &[Self::Key]) -> Vec<u8> {
         let Some(pose) = trajectory_poses(snapshot).iter().find(|pose| &pose.camera_id == key) else {
             return Vec::new();
         };
@@ -82,7 +82,7 @@ impl store::InferredField<RemodelSnapshot> for RemodelRelativeCameraPose {
     /// more direct than reconstructing a raw pose from the parent's already-computed delta VALUE,
     /// which is relative to a DIFFERENT pose two steps back) — same "read snapshot directly, ignore
     /// `parents`" shape `AssemblyEntropy::compute` uses for its own pinned-module lookup.
-    fn compute(snapshot: &RemodelSnapshot, key: &Self::Key, _parents: &[Self::Value]) -> Self::Value {
+    async fn compute(snapshot: &RemodelSnapshot, key: &Self::Key, _parents: &[Self::Value]) -> Self::Value {
         let poses = trajectory_poses(snapshot);
         let Some(index) = poses.iter().position(|pose| &pose.camera_id == key) else {
             return RemodelPoseDelta::default();
@@ -103,7 +103,7 @@ mod tests {
     use crate::artifacts::remodel::CameraTrajectory;
     use store::InferredField;
 
-    fn two_pose_snapshot() -> RemodelSnapshot {
+    async fn two_pose_snapshot() -> RemodelSnapshot {
         let mut snapshot = RemodelSnapshot::default();
         snapshot.results.trajectory = Some(CameraTrajectory {
             poses: vec![
@@ -115,7 +115,7 @@ mod tests {
     }
 
     #[test]
-    fn plan_chains_each_pose_to_its_immediate_predecessor() {
+    async fn plan_chains_each_pose_to_its_immediate_predecessor() {
         let snapshot = two_pose_snapshot();
         let steps = RemodelRelativeCameraPose::plan(&snapshot);
         assert_eq!(steps.len(), 2);
@@ -124,14 +124,14 @@ mod tests {
     }
 
     #[test]
-    fn first_pose_has_zero_delta() {
+    async fn first_pose_has_zero_delta() {
         let snapshot = two_pose_snapshot();
         let values = store::infer_field::<RemodelSnapshot, RemodelRelativeCameraPose>(&snapshot, None);
         assert_eq!(values["c0"], RemodelPoseDelta::default());
     }
 
     #[test]
-    fn a_pure_translation_step_reports_no_rotation_and_the_exact_offset() {
+    async fn a_pure_translation_step_reports_no_rotation_and_the_exact_offset() {
         let snapshot = two_pose_snapshot();
         let values = store::infer_field::<RemodelSnapshot, RemodelRelativeCameraPose>(&snapshot, None);
         let delta = values["c1"];
@@ -142,7 +142,7 @@ mod tests {
     }
 
     #[test]
-    fn a_90_degree_yaw_step_reports_the_exact_angle() {
+    async fn a_90_degree_yaw_step_reports_the_exact_angle() {
         let mut snapshot = two_pose_snapshot();
         // 🌀 90° rotation about +Z: quaternion (w, x, y, z) = (cos45°, 0, 0, sin45°).
         let half = std::f64::consts::FRAC_PI_4;
@@ -152,7 +152,7 @@ mod tests {
     }
 
     #[test]
-    fn identical_snapshots_produce_byte_identical_deltas() {
+    async fn identical_snapshots_produce_byte_identical_deltas() {
         let snapshot = two_pose_snapshot();
         let first = store::infer_field::<RemodelSnapshot, RemodelRelativeCameraPose>(&snapshot, None);
         let second = store::infer_field::<RemodelSnapshot, RemodelRelativeCameraPose>(&snapshot, None);
@@ -160,7 +160,7 @@ mod tests {
     }
 
     #[test]
-    fn changing_an_earlier_pose_changes_the_dep_input_of_a_later_key_indirectly_through_its_own_chain() {
+    async fn changing_an_earlier_pose_changes_the_dep_input_of_a_later_key_indirectly_through_its_own_chain() {
         // 🔗 dep_input for "c1" only covers c1's own bytes by design (see the fn's own docstring) —
         // the earlier pose's change reaches c1 through DepHash::chain folding c0's hash, which is
         // `store::infer_field`'s own concern, not this field's. This test instead pins the

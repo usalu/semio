@@ -18,7 +18,7 @@ use serde::{Deserialize, Serialize};
 /// exactly the dragged region, flush with the picked face — `box_prim_sync` places a primitive's corner
 /// (not its center) at the local origin, confirmed by `box_primitive_spans_from_local_origin_corner` in
 /// the artifact's `⚙️engine`.
-fn process3d_step_from_face_drag(normal: [f64; 3], point: [f64; 3], distance: f64, face_extent: Option<[f64; 2]>, labels: &Process3dLabels) -> Option<ProcessStep> {
+async fn process3d_step_from_face_drag(normal: [f64; 3], point: [f64; 3], distance: f64, face_extent: Option<[f64; 2]>, labels: &Process3dLabels) -> Option<ProcessStep> {
     if distance.abs() < 1e-6 {
         return None;
     }
@@ -49,7 +49,7 @@ pub mod world_pointer_down {
         pub position: [f64; 3],
     }
 
-    pub fn handle(payload: &WorldPointerDown, doc: &ArtifactView<'_, Process3dSnapshot>, cfg: &ConfigView<'_, Process3dConfig>, _ctx: &mut crate::editor::process3d::Process3dDispatchCtx) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
+    pub async fn handle(payload: &WorldPointerDown, doc: &ArtifactView<'_, Process3dSnapshot>, cfg: &ConfigView<'_, Process3dConfig>, _ctx: &mut crate::editor::process3d::Process3dDispatchCtx) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
         let fixture = doc.snapshot;
         let config = cfg.snapshot;
         let utility = config.active_utility();
@@ -90,7 +90,7 @@ pub mod world_face_drag_end {
         pub face_extent: Option<[f64; 2]>,
     }
 
-    pub fn handle(payload: &WorldFaceDragEnd, doc: &ArtifactView<'_, Process3dSnapshot>, cfg: &ConfigView<'_, Process3dConfig>, _ctx: &mut crate::editor::process3d::Process3dDispatchCtx) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
+    pub async fn handle(payload: &WorldFaceDragEnd, doc: &ArtifactView<'_, Process3dSnapshot>, cfg: &ConfigView<'_, Process3dConfig>, _ctx: &mut crate::editor::process3d::Process3dDispatchCtx) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
         let fixture = doc.snapshot;
         let config = cfg.snapshot;
         if config.active_utility() != "select" {
@@ -110,21 +110,21 @@ mod tests {
     use super::*;
 
     #[test]
-    fn face_drag_negative_distance_yields_cut() {
+    async fn face_drag_negative_distance_yields_cut() {
         let step = process3d_step_from_face_drag([0.0, 0.0, 1.0], [0.0, 0.0, 1.0], -0.5, None, &Process3dLabels::NATIVE_EN).expect("step");
         assert!(matches!(step.measure, ProcessMeasure::Cut { .. }));
         assert_eq!(step.label, "Push Cut");
     }
 
     #[test]
-    fn face_drag_positive_distance_yields_attach() {
+    async fn face_drag_positive_distance_yields_attach() {
         let step = process3d_step_from_face_drag([0.0, 0.0, 1.0], [0.0, 0.0, 1.0], 0.5, None, &Process3dLabels::NATIVE_EN).expect("step");
         assert!(matches!(step.measure, ProcessMeasure::Attach { .. }));
         assert_eq!(step.label, "Pull Attach");
     }
 
     #[test]
-    fn face_drag_zero_distance_is_noop() {
+    async fn face_drag_zero_distance_is_noop() {
         assert!(process3d_step_from_face_drag([0.0, 0.0, 1.0], [0.0, 0.0, 1.0], 0.0, None, &Process3dLabels::NATIVE_EN).is_none());
     }
 }

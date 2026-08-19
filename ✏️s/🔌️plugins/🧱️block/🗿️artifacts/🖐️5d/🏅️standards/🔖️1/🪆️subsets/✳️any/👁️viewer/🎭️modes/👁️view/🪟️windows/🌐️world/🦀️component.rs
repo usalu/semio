@@ -26,7 +26,7 @@ const BLOCK5D_VIEW_FALLBACK_MESH_KIND: &str = "box";
 //#region 🔖️Definition
 /// 🧱️ Stitched into the viewer manifest by `crate::viewer::block5d::create_block5d_viewer`. Read-only
 /// (`window_kind()`, not `editable_window_kind()`) — a viewer never emits the `set-vertex` mutation.
-pub fn definition() -> WindowKindDefinition {
+pub async fn definition() -> WindowKindDefinition {
     MeshWindowKit::window_kind()
 }
 //#endregion 🔖️Definition
@@ -37,7 +37,7 @@ pub fn definition() -> WindowKindDefinition {
 /// render as real meshes (`world3d_meshes_json_from_urls`); a part kind with no representation mesh
 /// url yet falls back to the same placeholder box the editor's own world window implicitly assumes
 /// when describing "mesh: —" (documented simplification, not a regression).
-pub fn render(document: &Block5dSnapshot) -> UiNode {
+pub async fn render(document: &Block5dSnapshot) -> UiNode {
     let camera_json = world3d_camera_projection_json([0.0, 0.0, 0.0], [0.0, 0.0, 0.0], None, 1.0, &WorldProjectionConfig::default());
     let urls: Vec<String> = document.representations.iter().filter_map(|representation| representation.mesh_url.clone()).collect();
     let meshes_json = if urls.is_empty() { world3d_meshes_json_from_kinds(&[BLOCK5D_VIEW_FALLBACK_MESH_KIND.to_string()]) } else { world3d_meshes_json_from_urls(&urls) };
@@ -53,14 +53,14 @@ mod tests {
     use super::*;
 
     #[test]
-    fn definition_declares_the_frozen_mesh_window_kind() {
+    async fn definition_declares_the_frozen_mesh_window_kind() {
         let def = definition();
         assert_eq!(def.id, WINDOW_KIND_ID);
         assert_eq!(def.body_key, BODY_KEY);
     }
 
     #[test]
-    fn render_produces_a_scene_node_for_the_default_document() {
+    async fn render_produces_a_scene_node_for_the_default_document() {
         let document = crate::artifacts::block5d::schema::empty_block5d_snapshot();
         let _node = render(&document);
     }

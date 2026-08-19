@@ -47,7 +47,7 @@ pub struct TerminalOutput {
 // #region 🔖️Simulate
 impl AirTerminal {
     /// 🌬️ Simulate terminal unit for one zone timestep.
-    pub fn simulate(&self, request: &TerminalRequest) -> TerminalOutput {
+    pub async fn simulate(&self, request: &TerminalRequest) -> TerminalOutput {
         match self {
             AirTerminal::Cav { max_flow_m3_s } => {
                 let m_dot = fan_mass_flow_kg_s(*max_flow_m3_s, RHO_AIR_REF);
@@ -130,7 +130,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn cav_constant_flow() {
+    async fn cav_constant_flow() {
         let term = AirTerminal::Cav { max_flow_m3_s: 0.3 };
         let req = TerminalRequest {
             supply_temperature_c: 13.0,
@@ -150,7 +150,7 @@ mod tests {
     }
 
     #[test]
-    fn vav_reheat_adds_heat() {
+    async fn vav_reheat_adds_heat() {
         let term = AirTerminal::VavReheat { min_flow_m3_s: 0.05, max_flow_m3_s: 0.4, reheat: HeatingCoil::Electric { capacity_w: 5000.0, efficiency: 1.0 } };
         let req = TerminalRequest {
             supply_temperature_c: 13.0,
@@ -170,7 +170,7 @@ mod tests {
     }
 
     #[test]
-    fn dual_duct_mixes_temperatures() {
+    async fn dual_duct_mixes_temperatures() {
         let term = AirTerminal::DualDuct { hot_max_m3_s: 0.2, cold_max_m3_s: 0.3, mixing_damper: 0.5 };
         let req = TerminalRequest {
             supply_temperature_c: 15.0,

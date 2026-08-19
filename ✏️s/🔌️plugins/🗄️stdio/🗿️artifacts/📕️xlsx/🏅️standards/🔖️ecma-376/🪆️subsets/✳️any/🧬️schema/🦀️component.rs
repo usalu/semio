@@ -25,24 +25,24 @@ pub struct XlsxArtifact {
 
 //#region Conversions
 impl Default for XlsxArtifact {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self::from_snapshot(XlsxSnapshot::default())
     }
 }
 
 impl XlsxArtifact {
     /// 📸️ Persisted subset.
-    pub fn to_snapshot(&self) -> XlsxSnapshot {
+    pub async fn to_snapshot(&self) -> XlsxSnapshot {
         XlsxSnapshot { schema: self.schema.clone(), opc: self.opc.clone(), workbook: self.workbook.clone() }
     }
 
     /// 🧬️ Builds a full artifact from a snapshot.
-    pub fn from_snapshot(snapshot: XlsxSnapshot) -> Self {
+    pub async fn from_snapshot(snapshot: XlsxSnapshot) -> Self {
         Self { schema: snapshot.schema, opc: snapshot.opc, workbook: snapshot.workbook }
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
-    pub fn set_snapshot(&mut self, snapshot: XlsxSnapshot) {
+    pub async fn set_snapshot(&mut self, snapshot: XlsxSnapshot) {
         self.schema = snapshot.schema;
         self.opc = snapshot.opc;
         self.workbook = snapshot.workbook;
@@ -52,7 +52,7 @@ impl XlsxArtifact {
 
 //#region Descriptor
 /// 🧬️ Descriptor for `s.stdio.xlsx`.
-pub fn xlsx_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
+pub async fn xlsx_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
     schema::ArtifactSchemaDescriptor {
         id: "s.stdio.xlsx",
         artifact: schema::FacetLeaves {
@@ -104,27 +104,27 @@ pub mod derived_construction {
         type Snapshot = XlsxSnapshot;
         type Mutation = XlsxMutation;
         type Diff = XlsxDiff;
-        fn empty() -> Self {
+        async fn empty() -> Self {
             Self { snapshot: XlsxSnapshot::default(), diagnostics: Vec::new() }
         }
-        fn from_snapshot(snapshot: Self::Snapshot) -> Self {
+        async fn from_snapshot(snapshot: Self::Snapshot) -> Self {
             Self { snapshot, diagnostics: Vec::new() }
         }
-        fn from_text(text: &str) -> Result<Self, store::TextError> {
+        async fn from_text(text: &str) -> Result<Self, store::TextError> {
             Ok(Self::from_snapshot(<XlsxSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
-        fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
+        async fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
             Ok(Self::from_snapshot(<XlsxSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
         }
-        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
+        async fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let diff = crate::artifacts::xlsx::schema::mutations::apply_xlsx_mutation(&mut self.snapshot, &mutation);
             (self, diff)
         }
-        fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
+        async fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
             self.snapshot = <XlsxDiff as protocol::MutationDiff<XlsxSnapshot>>::apply(&diff, &self.snapshot)?;
             Ok(self)
         }
-        fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
+        async fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
             if self.diagnostics.is_empty() {
                 Ok(self.snapshot)
             } else {
@@ -139,21 +139,21 @@ pub mod derived_construction {
     /// auto-assigning `(row, col)` coordinates left-to-right (`col` 0-based).
     impl XlsxBuilderConstruction {
         /// ➕️ Appends a new (initially empty) sheet and makes it the active sheet for `add_row`.
-        pub fn add_sheet(mut self, name: impl Into<String>) -> Self {
+        pub async fn add_sheet(mut self, name: impl Into<String>) -> Self {
             self.snapshot.workbook.sheets.push(XlsxSheet { name: name.into(), cells: Vec::new() });
             self.rebuild()
         }
 
         /// ➕️ Appends a row of values to the active sheet (the most recently added one), assigning
         /// `(row: index, col: 0..)` coordinates left-to-right.
-        pub fn add_row(mut self, index: u32, values: Vec<XlsxCellValue>) -> Self {
+        pub async fn add_row(mut self, index: u32, values: Vec<XlsxCellValue>) -> Self {
             if let Some(sheet) = self.snapshot.workbook.sheets.last_mut() {
                 sheet.cells.extend(values.into_iter().enumerate().map(|(col, value)| XlsxCell { row: index, col: col as u32, value }));
             }
             self.rebuild()
         }
 
-        fn rebuild(mut self) -> Self {
+        async fn rebuild(mut self) -> Self {
             self.snapshot = crate::artifacts::xlsx::standards::v_ecma_376::subsets::any::io::export::serializers::build_minimal_xlsx(self.snapshot.workbook);
             self
         }
@@ -184,7 +184,7 @@ pub mod derived_analysis {
         type Parts = XlsxParts;
         const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.xlsx", standard: StandardId("ecma-376"), subset: SubsetId("*") };
 
-        fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
+        async fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
             // 🕵️ Real sniff: OPC-shaped bytes whose root officeDocument relationship resolves under
             // `xl/` — disambiguates from docx/pptx, which share the same zip magic and OPC shape.
             match source {
@@ -193,7 +193,7 @@ pub mod derived_analysis {
             }
         }
 
-        fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
+        async fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
             let mut parts = XlsxParts::default();
             let mut diagnostics = Vec::new();
             let mut confidence = IoConfidence::High;
@@ -224,7 +224,7 @@ pub use derived_analysis::*;
 //#endregion 🧐️DerivedAnalysis
 
 //#region 🔖️DocumentHelpers
-pub fn empty_xlsx_snapshot() -> XlsxSnapshot {
+pub async fn empty_xlsx_snapshot() -> XlsxSnapshot {
     XlsxSnapshot::default()
 }
 
@@ -236,7 +236,7 @@ pub fn empty_xlsx_snapshot() -> XlsxSnapshot {
 /// this snapshot's `print_dsl`/`encode_pack` output, asserted equal by `fixture_honesty_law`
 /// below) — same shape docx's own `demo_docx_snapshot()` establishes (this wave's OPC
 /// pattern-setter).
-pub fn demo_xlsx_snapshot() -> XlsxSnapshot {
+pub async fn demo_xlsx_snapshot() -> XlsxSnapshot {
     use crate::artifacts::xlsx::schema::snapshot::{XlsxCell, XlsxCellValue, XlsxSheet};
     use crate::artifacts::xlsx::standards::v_ecma_376::subsets::any::io::export::serializers::{build_minimal_xlsx, encode_xlsx};
     use crate::artifacts::xlsx::standards::v_ecma_376::subsets::any::io::import::deserializers::decode_xlsx;
@@ -301,11 +301,11 @@ mod tests {
     use crate::artifacts::xml::schema::snapshot::xml_document_from_text;
     use crate::artifacts::zip::opc::{self, OpcPackage, RELS_CONTENT_TYPE, REL_TYPE_OFFICE_DOCUMENT};
 
-    fn cell(row: u32, col: u32, value: XlsxCellValue) -> XlsxCell {
+    async fn cell(row: u32, col: u32, value: XlsxCellValue) -> XlsxCell {
         XlsxCell { row, col, value }
     }
 
-    fn sample_workbook() -> XlsxWorkbook {
+    async fn sample_workbook() -> XlsxWorkbook {
         XlsxWorkbook {
             sheets: vec![
                 XlsxSheet {
@@ -328,7 +328,7 @@ mod tests {
     }
 
     #[test]
-    fn column_letters_follow_spreadsheet_convention() {
+    async fn column_letters_follow_spreadsheet_convention() {
         assert_eq!(column_letter(0), "A");
         assert_eq!(column_letter(25), "Z");
         assert_eq!(column_letter(26), "AA");
@@ -338,7 +338,7 @@ mod tests {
     }
 
     #[test]
-    fn column_index_is_the_real_inverse_of_column_letter() {
+    async fn column_index_is_the_real_inverse_of_column_letter() {
         for i in [0u32, 1, 25, 26, 27, 51, 52, 700] {
             assert_eq!(column_index(&column_letter(i)), Some(i), "round trip failed for {i}");
         }
@@ -347,7 +347,7 @@ mod tests {
     }
 
     #[test]
-    fn builder_produces_minimal_valid_package_that_decodes_back() {
+    async fn builder_produces_minimal_valid_package_that_decodes_back() {
         let snap = build_minimal_xlsx(sample_workbook());
         let bytes = encode_xlsx(&snap).expect("encode minimal package");
         assert!(opc::sniff_opc_bytes(&bytes));
@@ -357,7 +357,7 @@ mod tests {
     }
 
     #[test]
-    fn shared_strings_are_carried_verbatim_never_resolved_or_deduped() {
+    async fn shared_strings_are_carried_verbatim_never_resolved_or_deduped() {
         // 🎯️ The engine no longer resolves `SharedString(idx)` into literal text, nor dedupes on
         // encode -- `workbook.shared_strings` IS the SST, passed through directly. Confirms the
         // real bytes carry the table unchanged AND every cell keeps its own index (not a
@@ -377,7 +377,7 @@ mod tests {
     }
 
     #[test]
-    fn decode_resolves_real_hand_built_package_with_every_cell_type() {
+    async fn decode_resolves_real_hand_built_package_with_every_cell_type() {
         // Hand-built OOXML: real workbook.xml + worksheet + sharedStrings.xml + all rels wired
         // by hand, not a generator shortcut. Exercises every `XlsxCellValue` variant: shared
         // string, number, boolean, inline string, and a formula with a cached numeric result.
@@ -429,7 +429,7 @@ mod tests {
     }
 
     #[test]
-    fn decode_rejects_out_of_range_shared_string_index() {
+    async fn decode_rejects_out_of_range_shared_string_index() {
         let mut opc = OpcPackage::empty();
         opc.content_types.set_default("rels", RELS_CONTENT_TYPE);
         opc.set_part(SHARED_STRINGS_PART, SHARED_STRINGS_CONTENT_TYPE, br#"<sst xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" count="0" uniqueCount="0"></sst>"#.to_vec());
@@ -450,7 +450,7 @@ mod tests {
     }
 
     #[test]
-    fn unmodeled_parts_survive_decode_encode_verbatim() {
+    async fn unmodeled_parts_survive_decode_encode_verbatim() {
         let snap = build_minimal_xlsx(sample_workbook());
         let mut opc = snap.opc.clone();
         opc.set_part("xl/styles.xml", "application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml", b"<styleSheet/>".to_vec());
@@ -465,7 +465,7 @@ mod tests {
     }
 
     #[test]
-    fn analyzer_builder_round_trip() {
+    async fn analyzer_builder_round_trip() {
         let original = build_minimal_xlsx(sample_workbook());
         let bytes = encode_xlsx(&original).expect("encode");
         let analyzed = decode_xlsx(&bytes).expect("decode");
@@ -476,7 +476,7 @@ mod tests {
     }
 
     #[test]
-    fn shrinking_sheet_count_drops_stale_worksheet_parts() {
+    async fn shrinking_sheet_count_drops_stale_worksheet_parts() {
         let mut wide = sample_workbook();
         let snap_wide = build_minimal_xlsx(wide.clone());
         assert!(snap_wide.opc.part("xl/worksheets/sheet2.xml").is_some());
@@ -489,7 +489,7 @@ mod tests {
     }
 
     #[test]
-    fn decode_recognizes_strict_office_document_and_shared_strings_relationship_types() {
+    async fn decode_recognizes_strict_office_document_and_shared_strings_relationship_types() {
         // 🏅️ ticket 26/08/11/ARTIFACT-STANDARD-SUBSETS-REAL-VOCABULARIES W3: a genuinely
         // ISO/IEC 29500-1 Strict-shaped package uses the purl.oclc.org relationship TYPE URIs for
         // the package-root officeDocument pointer and the workbook's sharedStrings relationship --
@@ -541,7 +541,7 @@ mod tests {
         /// `recognize`/`walk_protocol` laws below (a parse failure here fails fast with a clearer
         /// message).
         #[test]
-        fn committed_facet_files_parse() {
+        async fn committed_facet_files_parse() {
             for (label, text) in [("snapshot grammar", snapshot::text::COMPONENT_GRAMMAR_SEMIO), ("mutations grammar", mutations::text::COMPONENT_GRAMMAR_SEMIO), ("diff grammar", diff::text::COMPONENT_GRAMMAR_SEMIO)] {
                 let grammar = dsl::parse_grammar(text).unwrap_or_else(|e| panic!("{label}: parse_grammar failed: {e:?}"));
                 assert_eq!(grammar.dialect, dsl::SemioDialect::Grammar, "{label}: expected grammar dialect");
@@ -565,7 +565,7 @@ mod tests {
         /// invented approximation. `worksheet-part`'s own production is generic over the sheet
         /// index, so both `xl/worksheets/sheet1.xml` and `sheet2.xml` are checked against it.
         #[test]
-        fn grammar_conformance_law() {
+        async fn grammar_conformance_law() {
             let grammar = dsl::parse_grammar(snapshot::text::COMPONENT_GRAMMAR_SEMIO).expect("parse snapshot grammar");
             let recognizer = dsl::Recognizer::compile(&grammar);
 
@@ -591,7 +591,7 @@ mod tests {
         /// ✅️ `ops_grammar_conformance_law`: the mutations grammar recognizes real `print_op`
         /// output for every `XlsxMutation` variant (`mutations::demo_mutation_cases()`).
         #[test]
-        fn ops_grammar_conformance_law() {
+        async fn ops_grammar_conformance_law() {
             let grammar = dsl::parse_grammar(mutations::text::COMPONENT_GRAMMAR_SEMIO).expect("parse mutations grammar");
             let recognizer = dsl::Recognizer::compile(&grammar);
             for mutation in mutations::demo_mutation_cases() {
@@ -603,7 +603,7 @@ mod tests {
         /// ✅️ `diff_grammar_conformance_law`: the diff grammar recognizes real `print_diff` output
         /// for every representative `XlsxDiff` (`diff::demo_diff_cases()`).
         #[test]
-        fn diff_grammar_conformance_law() {
+        async fn diff_grammar_conformance_law() {
             let grammar = dsl::parse_grammar(diff::text::COMPONENT_GRAMMAR_SEMIO).expect("parse diff grammar");
             let recognizer = dsl::Recognizer::compile(&grammar);
             for d in diff::demo_diff_cases() {
@@ -622,7 +622,7 @@ mod tests {
         /// instead, same as zip's/docx's own `protocol_walk_law` does; the op/diff protocols have
         /// no such exception and must consume every byte.
         #[test]
-        fn protocol_walk_law() {
+        async fn protocol_walk_law() {
             let pack_spec = dsl::parse_protocol(snapshot::binary::COMPONENT_PROTOCOL_SEMIO).expect("parse snapshot protocol");
             let demo = demo_xlsx_snapshot();
             let packed = store::ArtifactPack::encode_pack(&demo);
@@ -651,7 +651,7 @@ mod tests {
         /// fixtures can never silently drift back to a fake `"68656c6c6f"`-style placeholder again
         /// (see this ticket's own recon note on the pre-FG-wave state of these two files).
         #[test]
-        fn fixture_honesty_law() {
+        async fn fixture_honesty_law() {
             const FIXTURE_DSL: &str = include_str!("../📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio");
             const FIXTURE_PACK: &[u8] = include_bytes!("../📚️examples/🎬️demo/🖼️assets/🎒️example.pack.semio");
 

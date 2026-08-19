@@ -25,7 +25,7 @@ pub struct SSpaceDiff {
 
 //#region 🔖️Apply
 impl protocol::MutationDiff<SSpaceSnapshot> for SSpaceDiff {
-    fn apply(&self, snapshot: &SSpaceSnapshot) -> protocol::MutationApplyResult<SSpaceSnapshot> {
+    async fn apply(&self, snapshot: &SSpaceSnapshot) -> protocol::MutationApplyResult<SSpaceSnapshot> {
         Ok({
             let mut next = snapshot.clone();
             if let Some(schema) = &self.schema {
@@ -37,7 +37,7 @@ impl protocol::MutationDiff<SSpaceSnapshot> for SSpaceDiff {
             next
         })
     }
-    fn absorb(&mut self, other: Self) {
+    async fn absorb(&mut self, other: Self) {
         macro_rules! take {
             ($field:ident) => {
                 if other.$field.is_some() {

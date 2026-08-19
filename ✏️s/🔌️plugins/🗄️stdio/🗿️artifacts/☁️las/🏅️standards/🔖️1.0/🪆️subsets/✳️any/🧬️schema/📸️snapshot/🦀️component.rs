@@ -62,7 +62,7 @@ pub struct LasHeader {
 }
 
 impl Default for LasHeader {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self {
             version_major: 1,
             version_minor: 2,
@@ -155,7 +155,7 @@ pub struct LasSnapshot {
 }
 
 impl Default for LasSnapshot {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self { schema: STDIO_LAS_DOCUMENT_SCHEMA.into(), header: LasHeader::default(), vlrs: Vec::new(), points: Vec::new() }
     }
 }
@@ -167,11 +167,11 @@ impl Default for LasSnapshot {
 // impl block only wraps the hex-dump DSL envelope and the binary pack envelope around it.
 impl store::ArtifactDsl for LasSnapshot {
     const EXTENSION: &'static str = "las";
-    fn envelope_id() -> &'static str {
+    async fn envelope_id() -> &'static str {
         "stdio.las"
     }
 
-    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+    async fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
         let body = match store::semio_format::split_text_preamble(text) {
             Ok((_, rest)) => rest,
             Err(_) => text,
@@ -189,7 +189,7 @@ impl store::ArtifactDsl for LasSnapshot {
         }
         crate::artifacts::las::engine::decode_las(&bytes).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
-    fn print_dsl(&self) -> String {
+    async fn print_dsl(&self) -> String {
         let bytes = crate::artifacts::las::engine::encode_las(self).unwrap_or_default();
         let body: String = bytes.iter().map(|b| format!("{b:02x}")).collect();
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
@@ -198,13 +198,13 @@ impl store::ArtifactDsl for LasSnapshot {
 }
 
 impl store::ArtifactPack for LasSnapshot {
-    fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
+    async fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
         let raw = crate::artifacts::las::engine::encode_las(self).map_err(|e| store::PackError::Schema(e))?;
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &raw))
     }
-    fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
+    async fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
         if envelope.envelope_id() != <Self as store::ArtifactDsl>::envelope_id() {
             return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.envelope_id())));

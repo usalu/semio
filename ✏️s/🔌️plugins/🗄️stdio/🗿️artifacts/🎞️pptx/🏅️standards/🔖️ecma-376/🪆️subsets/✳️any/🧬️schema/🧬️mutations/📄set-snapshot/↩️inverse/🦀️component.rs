@@ -3,6 +3,6 @@ use crate::artifacts::pptx::PptxSnapshot;
 use protocol::Mutation;
 
 /// ↩️ Inverse of set-snapshot.
-pub fn inverse(base: &PptxSnapshot, mutation: &PptxMutation) -> Vec<PptxMutation> {
+pub async fn inverse(base: &PptxSnapshot, mutation: &PptxMutation) -> Vec<PptxMutation> {
     <PptxMutation as Mutation<PptxSnapshot>>::inverse(mutation, base)
 }

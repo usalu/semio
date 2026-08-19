@@ -14,7 +14,7 @@ pub struct AddCompatibilityRule {
     pub target: String,
 }
 
-pub fn handle(payload: &AddCompatibilityRule, doc: &ArtifactView<'_, Block2dSnapshot>, _cfg: &ConfigView<'_, Block2dConfig>) -> Result<Emit<Block2dMutation, Block2dConfigMutation>, Fault> {
+pub async fn handle(payload: &AddCompatibilityRule, doc: &ArtifactView<'_, Block2dSnapshot>, _cfg: &ConfigView<'_, Block2dConfig>) -> Result<Emit<Block2dMutation, Block2dConfigMutation>, Fault> {
     if payload.source.is_empty() || payload.target.is_empty() {
         return Ok(Emit::default());
     }

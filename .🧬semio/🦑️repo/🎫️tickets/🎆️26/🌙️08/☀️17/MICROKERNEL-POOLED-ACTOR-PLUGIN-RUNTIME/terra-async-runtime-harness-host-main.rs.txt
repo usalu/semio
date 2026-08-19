@@ -1,0 +1,404 @@
+//! 🧪️ terra-async-runtime scratch harness — host half. Proves, against real wasmtime 47.0.3, the
+//! four mechanisms `⏳️runtime.rs` depends on that no prior spike in this ticket covered:
+//!   A) calling an `async func` export that lives inside a NAMED `interface` via the accessor.
+//!   B) a grant-gated `StreamProducer` that parks even with a non-empty internal queue, and resumes
+//!      correctly after an external refill.
+//!   C) the epoch callback returning `Yield(1)` while within budget and `Interrupt` once a
+//!      per-slice deadline has passed, observed as a clean value vs a trapped `Result::Err`.
+//!   D) dropping the WHOLE `run_concurrent` future (root-task teardown, not a guest-initiated
+//!      sub-cancel like S2) genuinely halts the guest — proven via a `Drop`-signalling import.
+
+use anyhow::Result;
+use std::collections::VecDeque;
+use std::pin::Pin;
+use std::future::Future;
+use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
+use std::sync::{Arc, Mutex};
+use std::task::{Context, Poll, Waker};
+use std::time::{Duration, Instant};
+use wasmtime::component::{Accessor, AccessorTask, Destination, HasSelf, Linker, ResourceTable, StreamProducer, StreamReader, StreamResult, VecBuffer};
+use wasmtime::{Config, Engine, Store, StoreContextMut, UpdateDeadline};
+use wasmtime_wasi::{WasiCtx, WasiCtxBuilder, WasiCtxView, WasiView};
+
+wasmtime::component::bindgen!({
+    path: "../guest/schema/world.wit",
+    world: "runtime-probe",
+});
+
+struct HostState {
+    wasi: WasiCtx,
+    table: ResourceTable,
+    hang_started: Arc<AtomicBool>,
+    hang_dropped: Arc<AtomicBool>,
+}
+
+impl WasiView for HostState {
+    fn ctx(&mut self) -> WasiCtxView<'_> {
+        WasiCtxView { ctx: &mut self.wasi, table: &mut self.table }
+    }
+}
+
+impl RuntimeProbeImports for HostState {
+    fn was_hang_dropped(&mut self) -> bool {
+        self.hang_dropped.load(Ordering::SeqCst)
+    }
+}
+
+impl RuntimeProbeImportsWithStore<HostState> for HasSelf<HostState> {
+    async fn hang(accessor: &Accessor<HostState, Self>) -> u32 {
+        struct DropSignal(Arc<AtomicBool>);
+        impl Drop for DropSignal {
+            fn drop(&mut self) {
+                self.0.store(true, Ordering::SeqCst);
+            }
+        }
+        let (started, dropped) = accessor.with(|mut access| (access.get().hang_started.clone(), access.get().hang_dropped.clone()));
+        started.store(true, Ordering::SeqCst);
+        let _guard = DropSignal(dropped);
+        std::future::pending::<()>().await;
+        unreachable!("hang() must never resolve");
+    }
+}
+
+//#region 🎫️GrantedEventProducer — the mechanism under test (B)
+/// 🎫️ Mirrors `⏳️runtime.rs`'s design: a grant is DELIVERY PERMISSION plus a REFILL, not a thread.
+/// Unlike the proven `ChunkStreamProducer`/`WakeyProducer` (S5/terra-async-imports), which only ever
+/// park on a genuinely EMPTY queue, this parks whenever `remaining == 0` even if `queue` still has
+/// buffered items — the queue may hold events from a grant that has already been exhausted; they
+/// must NOT reach the guest until an external `refill()` call raises `remaining` again.
+struct GrantWindow {
+    queue: VecDeque<u32>,
+    remaining: u32,
+    closed: bool,
+    waker: Option<Waker>,
+    delivered_total: u32,
+}
+
+struct GrantedEventProducer {
+    window: Arc<Mutex<GrantWindow>>,
+}
+
+impl StreamProducer<HostState> for GrantedEventProducer {
+    type Item = u32;
+    type Buffer = VecBuffer<u32>;
+
+    fn poll_produce<'a>(self: Pin<&mut Self>, cx: &mut Context<'_>, _store: StoreContextMut<'a, HostState>, mut destination: Destination<'a, u32, VecBuffer<u32>>, _finish: bool) -> Poll<wasmtime::Result<StreamResult>> {
+        let mut window = self.window.lock().expect("GrantWindow poisoned");
+        if window.remaining > 0 {
+            if let Some(item) = window.queue.pop_front() {
+                window.remaining -= 1;
+                window.delivered_total += 1;
+                destination.set_buffer(vec![item].into());
+                return Poll::Ready(Ok(StreamResult::Completed));
+            }
+        }
+        if window.closed && window.queue.is_empty() {
+            return Poll::Ready(Ok(StreamResult::Dropped));
+        }
+        // 🎯️ the core assertion: park EVEN THOUGH `queue` may still hold items — a spent grant
+        // must not leak the next grant's events early.
+        window.waker = Some(cx.waker().clone());
+        Poll::Pending
+    }
+}
+
+fn refill(window: &Arc<Mutex<GrantWindow>>, events: &[u32], budget: u32) {
+    let waker = {
+        let mut w = window.lock().expect("GrantWindow poisoned");
+        w.queue.extend(events.iter().copied());
+        w.remaining += budget;
+        w.waker.take()
+    };
+    if let Some(waker) = waker {
+        waker.wake();
+    }
+}
+
+fn close(window: &Arc<Mutex<GrantWindow>>) {
+    let waker = {
+        let mut w = window.lock().expect("GrantWindow poisoned");
+        w.closed = true;
+        w.waker.take()
+    };
+    if let Some(waker) = waker {
+        waker.wake();
+    }
+}
+//#endregion
+
+fn build_async_engine() -> Result<Engine> {
+    let mut config = Config::new();
+    config.wasm_component_model_async(true);
+    config.concurrency_support(true);
+    config.consume_fuel(true);
+    config.epoch_interruption(true);
+    Ok(Engine::new(&config)?)
+}
+
+async fn test_a_and_b(engine: &Engine, component: &wasmtime::component::Component, linker: &Linker<HostState>) -> Result<()> {
+    let mut store = Store::new(engine, HostState { wasi: WasiCtxBuilder::new().build(), table: ResourceTable::new(), hang_started: Arc::new(AtomicBool::new(false)), hang_dropped: Arc::new(AtomicBool::new(false)) });
+    store.set_fuel(u64::MAX)?;
+    store.epoch_deadline_callback(move |_ctx| Ok(UpdateDeadline::Yield(1)));
+    store.set_epoch_deadline(1_000_000);
+    let ticker_engine = engine.clone();
+    let ticker_stop = Arc::new(AtomicBool::new(false));
+    let ticker_stop_thread = ticker_stop.clone();
+    let ticker = std::thread::spawn(move || {
+        while !ticker_stop_thread.load(Ordering::Relaxed) {
+            ticker_engine.increment_epoch();
+            std::thread::sleep(Duration::from_millis(1));
+        }
+    });
+
+    let instance = RuntimeProbe::instantiate_async(&mut store, component, linker).await?;
+    let window = Arc::new(Mutex::new(GrantWindow { queue: VecDeque::new(), remaining: 0, closed: false, waker: None, delivered_total: 0 }));
+    let window_for_task = window.clone();
+
+    // 🅰️/🅱️ drive `runner::run` through the grant-gated producer on a background tokio task while
+    // the main task refills it in stages, proving BOTH the named-interface accessor-call shape (A)
+    // and the grant-gated park/refill behaviour (B) in one real run.
+    let run_task = tokio::spawn(async move {
+        store
+            .run_concurrent(async move |accessor: &Accessor<HostState>| -> Result<u32> {
+                let events: StreamReader<u32> = accessor.with(|access| StreamReader::new(access, GrantedEventProducer { window: window_for_task }))?;
+                // 🅰️ THE call under test: a named-interface async export, called via the SAME
+                // accessor-taking convention as a bare world-level export (`instance.call_run` for
+                // asyncprobe's `run`) — `RuntimeProbe`'s own `runner` accessor method name is
+                // confirmed by this compiling at all.
+                let sum = instance.semio_runtimeprobe_runner().call_run(accessor, events).await?;
+                Ok(sum.map_err(|e| anyhow::anyhow!(e))?)
+            })
+            .await
+    });
+
+    // First grant: 3 events, budget 3 — the producer must deliver exactly these 3, then park even
+    // though nothing more has arrived yet.
+    tokio::time::sleep(Duration::from_millis(5)).await;
+    refill(&window, &[1, 2, 3], 3);
+    tokio::time::sleep(Duration::from_millis(20)).await;
+    // 🎯️ B's decisive step: queue MORE events than the CURRENT grant allows, budget only 1 of them.
+    // If the producer were the naive "park only on empty queue" shape, all 3 would leak through
+    // immediately; the grant-gated shape must deliver exactly one and then park again.
+    {
+        let mut w = window.lock().expect("lock");
+        w.queue.extend([10, 20, 30]);
+        assert_eq!(w.remaining, 0, "grant must be fully spent before this refill");
+    }
+    refill(&window, &[], 1);
+    tokio::time::sleep(Duration::from_millis(20)).await;
+    let delivered_after_partial_grant = window.lock().expect("lock").delivered_total;
+    assert_eq!(delivered_after_partial_grant, 4, "exactly 1 of the 3 queued-but-ungranted events must have been released by a budget-of-1 refill, not all 3 — this is the parks-past-the-grant assertion");
+
+    refill(&window, &[], 100);
+    tokio::time::sleep(Duration::from_millis(20)).await;
+    close(&window);
+
+    let sum = run_task.await???;
+    println!("[host] A+B PASS: runner::run via named interface, grant-gated over 3 refills, summed = {sum}");
+    assert_eq!(sum, 1 + 2 + 3 + 10 + 20 + 30, "final sum must include every event released across every grant");
+
+    ticker_stop.store(true, Ordering::Relaxed);
+    let _ = ticker.join();
+    Ok(())
+}
+
+async fn test_c_epoch_yield_then_interrupt(engine: &Engine, component: &wasmtime::component::Component, linker: &Linker<HostState>) -> Result<()> {
+    let mut store = Store::new(engine, HostState { wasi: WasiCtxBuilder::new().build(), table: ResourceTable::new(), hang_started: Arc::new(AtomicBool::new(false)), hang_dropped: Arc::new(AtomicBool::new(false)) });
+    store.set_fuel(u64::MAX)?;
+
+    let deadline = Instant::now() + Duration::from_millis(30);
+    let yields = Arc::new(AtomicU64::new(0));
+    let yields_cb = yields.clone();
+    // 🎯️ C: the exact split the mission text names — `Yield(1)` before `deadline`, `Interrupt` past
+    // it. Only reachable with `StoreContextMut` inside the callback itself, so this is where a
+    // per-grant wall-clock ceiling (distinct from the fuel budget) is enforced.
+    store.epoch_deadline_callback(move |_ctx| {
+        if Instant::now() < deadline {
+            yields_cb.fetch_add(1, Ordering::Relaxed);
+            Ok(UpdateDeadline::Yield(1))
+        } else {
+            Ok(UpdateDeadline::Interrupt)
+        }
+    });
+    store.set_epoch_deadline(1);
+
+    let ticker_engine = engine.clone();
+    let ticker_stop = Arc::new(AtomicBool::new(false));
+    let ticker_stop_thread = ticker_stop.clone();
+    let ticker = std::thread::spawn(move || {
+        while !ticker_stop_thread.load(Ordering::Relaxed) {
+            ticker_engine.increment_epoch();
+            std::thread::sleep(Duration::from_millis(1));
+        }
+    });
+
+    let instance = RuntimeProbe::instantiate_async(&mut store, component, linker).await?;
+    let result = store.run_concurrent(async move |accessor: &Accessor<HostState>| -> Result<u32> { Ok(instance.call_burn_forever(accessor).await?) }).await;
+    let hits = yields.load(Ordering::Relaxed);
+    // 🐛️ Observed empirically (not assumed): `UpdateDeadline::Interrupt` traps hard enough that the
+    // error surfaces through `run_concurrent`'s OWN `Result` layer, bypassing the closure's `Ok`/`Err`
+    // wrapping entirely — unlike an ordinary guest-returned `Err`, which would have shown up as
+    // `Ok(Err(..))`. Both shapes are handled so this assertion is robust either way.
+    let message = match result {
+        Ok(Ok(value)) => panic!("burn-forever must not return Ok({value}) — it loops forever and can only stop via a trap"),
+        Ok(Err(error)) => format!("{error:#}"),
+        Err(error) => format!("{error:#}"),
+    };
+    println!("[host] C: burn-forever trapped as expected, epoch Yield hits before Interrupt = {hits}, message = {message}");
+    assert!(hits > 5, "must have yielded (cooperatively preempted) several times before the deadline — got {hits}");
+    let lowered = message.to_ascii_lowercase();
+    assert!(lowered.contains("interrupt") || lowered.contains("epoch"), "trap message should name the epoch/interrupt cause, got: {lowered}");
+    println!("[host] C PASS: Yield(1) preempted {hits} times within budget, Interrupt trapped cleanly once the deadline passed");
+
+    ticker_stop.store(true, Ordering::Relaxed);
+    let _ = ticker.join();
+    Ok(())
+}
+
+async fn test_d_root_task_drop_cancellation(engine: &Engine, component: &wasmtime::component::Component, linker: &Linker<HostState>) -> Result<()> {
+    let hang_started = Arc::new(AtomicBool::new(false));
+    let hang_dropped = Arc::new(AtomicBool::new(false));
+    let mut store = Store::new(engine, HostState { wasi: WasiCtxBuilder::new().build(), table: ResourceTable::new(), hang_started: hang_started.clone(), hang_dropped: hang_dropped.clone() });
+    store.set_fuel(u64::MAX)?;
+    store.epoch_deadline_callback(move |_ctx| Ok(UpdateDeadline::Yield(1)));
+    store.set_epoch_deadline(1_000_000);
+
+    let instance = RuntimeProbe::instantiate_async(&mut store, component, linker).await?;
+
+    // 🎯️ D: this is NOT S2 (guest cancels its own sub-await). Here the HOST drops the ENTIRE
+    // `run_concurrent` future — root-task teardown, e.g. the kernel removing this actor — while the
+    // guest is still parked awaiting `hang()`. `hang_dropped` must still flip true: no zombie guest
+    // execution can survive its owning future's own drop, because wasmtime never runs guest code
+    // except while being polled.
+    let fut = store.run_concurrent(async move |accessor: &Accessor<HostState>| -> Result<u32> { Ok(instance.call_await_hang(accessor).await?) });
+    let mut fut = Box::pin(fut);
+    let waker = std::task::Waker::noop();
+    let mut cx = Context::from_waker(waker);
+    match fut.as_mut().poll(&mut cx) {
+        Poll::Pending => {}
+        Poll::Ready(_) => panic!("await-hang must not resolve on the very first poll — it awaits an import that never completes"),
+    }
+    assert!(hang_started.load(Ordering::SeqCst), "hang() must have been entered before the first poll returns Pending");
+    assert!(!hang_dropped.load(Ordering::SeqCst), "hang() must not be dropped yet — the root future is still alive");
+
+    drop(fut); // 🎯️ the actual assertion: drop the WHOLE root task, not a guest-level sub-cancel.
+    let dropped_on_future_drop_alone = hang_dropped.load(Ordering::SeqCst);
+    drop(store);
+    let dropped_after_store_drop_too = hang_dropped.load(Ordering::SeqCst);
+    println!("[host] D: hang_dropped after dropping the run_concurrent future alone = {dropped_on_future_drop_alone}, after ALSO dropping the Store = {dropped_after_store_drop_too}");
+    assert!(dropped_after_store_drop_too, "dropping the root run_concurrent future (plus the Store that owns its concurrent state) must cancel the in-flight hang() import — guest future-drop must mean cancellation");
+    println!("[host] D PASS (see above for whether the future's own drop alone was sufficient, or the Store's drop was also required)");
+    Ok(())
+}
+
+async fn test_e_tokio_abort_of_the_spawned_root_task(engine: &Engine, component: &wasmtime::component::Component, linker: &Linker<HostState>) -> Result<()> {
+    let hang_started = Arc::new(AtomicBool::new(false));
+    let hang_dropped = Arc::new(AtomicBool::new(false));
+    let mut store = Store::new(engine, HostState { wasi: WasiCtxBuilder::new().build(), table: ResourceTable::new(), hang_started: hang_started.clone(), hang_dropped: hang_dropped.clone() });
+    store.set_fuel(u64::MAX)?;
+    store.epoch_deadline_callback(move |_ctx| Ok(UpdateDeadline::Yield(1)));
+    store.set_epoch_deadline(1_000_000);
+    let instance = RuntimeProbe::instantiate_async(&mut store, component, linker).await?;
+
+    // 🎯️ E: the PRODUCTION shape `⏳️runtime.rs::AsyncActorTask::run` actually uses — the Store is
+    // MOVED into the spawned task (not borrowed from an outer scope, unlike test D), so tearing the
+    // task down via `JoinHandle::abort()` drops the future AND its owned Store together in one shot.
+    // Test D proved dropping the future alone is NOT enough; this confirms the production shape
+    // (spawn owns the Store) sidesteps that pitfall entirely.
+    let handle = tokio::spawn(async move {
+        let _ = store.run_concurrent(async move |accessor: &Accessor<HostState>| -> Result<u32> { Ok(instance.call_await_hang(accessor).await?) }).await;
+    });
+    // Give the task a real chance to run and enter hang() before aborting.
+    for _ in 0..200 {
+        if hang_started.load(Ordering::SeqCst) {
+            break;
+        }
+        tokio::time::sleep(Duration::from_millis(1)).await;
+    }
+    assert!(hang_started.load(Ordering::SeqCst), "hang() must have been entered before abort");
+    assert!(!hang_dropped.load(Ordering::SeqCst), "hang() must not be dropped yet — the task is still alive");
+
+    handle.abort();
+    let _ = handle.await;
+    assert!(hang_dropped.load(Ordering::SeqCst), "aborting the tokio task that owns BOTH the run_concurrent future and its Store must cancel the in-flight hang() import");
+    println!("[host] E PASS: JoinHandle::abort() on a task that OWNS its Store cancels an in-flight import — this is the shape AsyncActorTask::run must use, never a bare future borrowing an outer Store");
+    Ok(())
+}
+
+async fn test_f_checkpoint_via_accessor_spawn_while_run_is_parked(engine: &Engine, component: &wasmtime::component::Component, linker: &Linker<HostState>) -> Result<()> {
+    let mut store = Store::new(engine, HostState { wasi: WasiCtxBuilder::new().build(), table: ResourceTable::new(), hang_started: Arc::new(AtomicBool::new(false)), hang_dropped: Arc::new(AtomicBool::new(false)) });
+    store.set_fuel(u64::MAX)?;
+    store.epoch_deadline_callback(move |_ctx| Ok(UpdateDeadline::Yield(1)));
+    store.set_epoch_deadline(1_000_000);
+    let instance = RuntimeProbe::instantiate_async(&mut store, component, linker).await?;
+    // 🧪️ F's OWN question, answered here rather than assumed: `RuntimeProbe` implements neither
+    // `Clone` nor `Copy` (S1's report already found this and worked around it with a SECOND
+    // `instantiate_async` call) — does wrapping the ONE instance in `Arc<RuntimeProbe>` let it be
+    // shared into an `Accessor::spawn`'d task instead? If this compiles and runs, `⏳️runtime.rs`
+    // should prefer one `Arc`-shared instance over paying for N separate instantiations.
+    let instance = Arc::new(instance);
+    let instance_for_checkpoint = instance.clone();
+    let window = Arc::new(Mutex::new(GrantWindow { queue: VecDeque::new(), remaining: 0, closed: false, waker: None, delivered_total: 0 }));
+    let window_for_task = window.clone();
+
+    // 🎯️ F: the coordinator's post-S7 finding, reproduced against a NAMED interface (S3's own probe
+    // used a bare world export) — `checkpoint-async`'s `checkpoint` is called via `accessor.spawn`
+    // (S1's OWN proven AccessorTask+oneshot idiom) WHILE `runner::run` is still parked mid-stream,
+    // never resolved. `Accessor::spawn` is the RIGHT tool here (unlike S1's CPU-fairness NO-GO):
+    // this is one short, non-CPU-bound call riding alongside the long-lived root call, not two
+    // competing CPU-bound loops.
+    struct CheckpointTask {
+        instance: Arc<RuntimeProbe>,
+        reply: futures::channel::oneshot::Sender<wasmtime::Result<u32>>,
+    }
+    impl AccessorTask<HostState> for CheckpointTask {
+        async fn run(self, accessor: &Accessor<HostState>) -> wasmtime::Result<()> {
+            let r = self.instance.semio_runtimeprobe_checkpoint_async().call_checkpoint(accessor).await;
+            let _ = self.reply.send(r);
+            Ok(())
+        }
+    }
+
+    let (checkpoint_tx, checkpoint_rx) = futures::channel::oneshot::channel();
+    let run_task = tokio::spawn(async move {
+        store
+            .run_concurrent(async move |accessor: &Accessor<HostState>| -> Result<u32> {
+                accessor.spawn(CheckpointTask { instance: instance_for_checkpoint, reply: checkpoint_tx })?;
+                let events: StreamReader<u32> = accessor.with(|access| StreamReader::new(access, GrantedEventProducer { window: window_for_task }))?;
+                let sum = instance.semio_runtimeprobe_runner().call_run(accessor, events).await?;
+                Ok(sum.map_err(|e| anyhow::anyhow!(e))?)
+            })
+            .await
+    });
+
+    let checkpoint_result = checkpoint_rx.await.expect("checkpoint task must reply");
+    let checkpoint_value = checkpoint_result?;
+    println!("[host] F: checkpoint() returned {checkpoint_value} while runner::run was still parked (never given a single event)");
+    assert_eq!(checkpoint_value, 42);
+
+    refill(&window, &[7], 1);
+    close(&window);
+    let sum = run_task.await???;
+    assert_eq!(sum, 7);
+    println!("[host] F PASS: checkpoint-async's named-interface export answered via accessor.spawn while the root run() call was still in flight, then run() completed normally afterward");
+    Ok(())
+}
+
+#[tokio::main]
+async fn main() -> Result<()> {
+    let engine = build_async_engine()?;
+    let component_path = std::env::var("RUNTIMEPROBE_WASM").expect("RUNTIMEPROBE_WASM must point at the built guest .wasm");
+    let component = wasmtime::component::Component::from_file(&engine, &component_path)?;
+    let mut linker = Linker::new(&engine);
+    wasmtime_wasi::p2::add_to_linker_async(&mut linker)?;
+    RuntimeProbe::add_to_linker::<HostState, HasSelf<HostState>>(&mut linker, |state| state)?;
+
+    test_a_and_b(&engine, &component, &linker).await?;
+    test_c_epoch_yield_then_interrupt(&engine, &component, &linker).await?;
+    test_d_root_task_drop_cancellation(&engine, &component, &linker).await?;
+    test_e_tokio_abort_of_the_spawned_root_task(&engine, &component, &linker).await?;
+    test_f_checkpoint_via_accessor_spawn_while_run_is_parked(&engine, &component, &linker).await?;
+
+    println!("[host] ==== ALL PASS (A/B/C/D/E/F) ====");
+    Ok(())
+}

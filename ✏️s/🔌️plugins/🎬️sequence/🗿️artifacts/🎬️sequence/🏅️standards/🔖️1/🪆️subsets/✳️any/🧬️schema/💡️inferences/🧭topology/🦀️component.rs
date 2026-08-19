@@ -28,7 +28,7 @@ pub struct SequenceTopology {
 /// 🧮️ Computes [`SequenceTopology`] via Kahn's algorithm over `steps`/`edges` (read off the
 /// composed content child's working scene — see `sequence_working_scene`'s doc comment). Edges
 /// referencing a missing step id are ignored (dangling refs never a source of truth for topology).
-pub fn compute_sequence_topology(snapshot: &SequenceSnapshot) -> SequenceTopology {
+pub async fn compute_sequence_topology(snapshot: &SequenceSnapshot) -> SequenceTopology {
     let scene = crate::artifacts::sequence::sequence_working_scene(snapshot);
     let ids: Vec<String> = scene.steps.iter().map(|step| step.id.clone()).collect();
     let known: std::collections::BTreeSet<&String> = ids.iter().collect();
@@ -86,20 +86,20 @@ mod tests {
     use super::*;
     use crate::artifacts::sequence::{SequenceEdge, SequenceFixture, SequenceStep, StepParams};
 
-    fn step(id: &str) -> SequenceStep {
+    async fn step(id: &str) -> SequenceStep {
         SequenceStep { id: id.into(), kind: "state.set".into(), params: StepParams::new(), x: 0.0, y: 0.0, slot: None, collapsed: false }
     }
 
-    fn edge(id: &str, from: &str, to: &str) -> SequenceEdge {
+    async fn edge(id: &str, from: &str, to: &str) -> SequenceEdge {
         SequenceEdge { id: id.into(), from: from.into(), to: to.into() }
     }
 
-    fn snapshot_from(steps: Vec<SequenceStep>, edges: Vec<SequenceEdge>) -> SequenceSnapshot {
+    async fn snapshot_from(steps: Vec<SequenceStep>, edges: Vec<SequenceEdge>) -> SequenceSnapshot {
         SequenceSnapshot::from_fixture(SequenceFixture { schema: crate::artifacts::sequence::SEQUENCE_DOCUMENT_SCHEMA.into(), steps, edges })
     }
 
     #[test]
-    fn linear_chain_orders_by_dependency_and_depth_by_distance_from_root() {
+    async fn linear_chain_orders_by_dependency_and_depth_by_distance_from_root() {
         let snapshot = snapshot_from(vec![step("a"), step("b"), step("c")], vec![edge("e1", "a", "b"), edge("e2", "b", "c")]);
         let topology = compute_sequence_topology(&snapshot);
         assert_eq!(topology.topo_order, vec!["a".to_string(), "b".to_string(), "c".to_string()]);
@@ -111,7 +111,7 @@ mod tests {
     }
 
     #[test]
-    fn a_two_step_cycle_is_reported_as_not_cycle_free_but_stays_total() {
+    async fn a_two_step_cycle_is_reported_as_not_cycle_free_but_stays_total() {
         let snapshot = snapshot_from(vec![step("a"), step("b")], vec![edge("e1", "a", "b"), edge("e2", "b", "a")]);
         let topology = compute_sequence_topology(&snapshot);
         assert!(!topology.cycle_free);
@@ -120,7 +120,7 @@ mod tests {
     }
 
     #[test]
-    fn a_dangling_edge_is_ignored() {
+    async fn a_dangling_edge_is_ignored() {
         let snapshot = snapshot_from(vec![step("a")], vec![edge("e1", "a", "missing")]);
         let topology = compute_sequence_topology(&snapshot);
         assert!(topology.cycle_free);
@@ -128,7 +128,7 @@ mod tests {
     }
 
     #[test]
-    fn diamond_depth_takes_the_longest_incoming_path() {
+    async fn diamond_depth_takes_the_longest_incoming_path() {
         // a -> b -> d, a -> c -> d: d's depth must be 2 (via either b or c), not 1.
         let snapshot = snapshot_from(
             vec![step("a"), step("b"), step("c"), step("d")],

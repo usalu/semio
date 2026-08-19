@@ -6,14 +6,14 @@ use crate::editor::puzzle2d::engine::icons::puzzle_themed_icon_lookup;
 use crate::editor::puzzle2d::engine::BoardHost;
 
 /// 🎲️ A `BoardHost` for the directed port graph, painting icons from this plugin's metabolism table.
-pub fn puzzle_board_host() -> BoardHost {
+pub async fn puzzle_board_host() -> BoardHost {
     let mut h = BoardHost::new();
     h.icon_paint_cache.themed_icon_lookup = puzzle_themed_icon_lookup;
     h
 }
 
 /// 🎲️ The undirected ("normal") variant of [`puzzle_board_host`].
-pub fn puzzle_board_host_normal() -> BoardHost {
+pub async fn puzzle_board_host_normal() -> BoardHost {
     let mut h = BoardHost::new_normal();
     h.icon_paint_cache.themed_icon_lookup = puzzle_themed_icon_lookup;
     h
@@ -27,7 +27,7 @@ pub(crate) mod testkit {
     use crate::editor::puzzle2d::engine::{BoardHost, EdgeDescJson, HandleDescJson, NodeDescJson, SceneDescriptorJson};
     use serde_json::json;
 
-    pub fn set_detail_lod(h: &mut BoardHost) {
+    pub async fn set_detail_lod(h: &mut BoardHost) {
         h.set_camera(0.0, 0.0, 2.0);
     }
 
@@ -35,7 +35,7 @@ pub(crate) mod testkit {
     /// registry (`graph::manifest`), not in fixture `meta.kindCatalogs`, so tests that
     /// need real node/handle kinds read them from there. Each catalog row is the manifest row's
     /// `id`/`name` merged with its flattened `presentation` object.
-    pub fn catalogs_json_from_manifest_id(manifest_id: &str) -> String {
+    pub async fn catalogs_json_from_manifest_id(manifest_id: &str) -> String {
         let manifest = graph::manifest::manifest_by_id(manifest_id).unwrap_or_else(|| panic!("unknown manifest id {manifest_id}"));
         let rows = |kinds: &[graph::manifest::KindDef]| -> Vec<serde_json::Value> {
             kinds
@@ -57,15 +57,15 @@ pub(crate) mod testkit {
         json!({ "handleKinds": rows(&visual_port_kinds), "nodeKinds": rows(&manifest.node_kinds) }).to_string()
     }
 
-    pub fn set_micro_lod(h: &mut BoardHost) {
+    pub async fn set_micro_lod(h: &mut BoardHost) {
         h.set_camera(0.0, 60.0, 4.5);
     }
 
-    pub fn set_overview_lod(h: &mut BoardHost) {
+    pub async fn set_overview_lod(h: &mut BoardHost) {
         h.set_camera(0.0, 0.0, 0.25);
     }
 
-    pub fn sample_scene() -> SceneDescriptorJson {
+    pub async fn sample_scene() -> SceneDescriptorJson {
         SceneDescriptorJson {
             nodes: vec![NodeDescJson {
                 id: "a".into(),
@@ -125,7 +125,7 @@ pub(crate) mod testkit {
         }
     }
 
-    pub fn link_test_scene_no_edge() -> SceneDescriptorJson {
+    pub async fn link_test_scene_no_edge() -> SceneDescriptorJson {
         SceneDescriptorJson {
             nodes: vec![
                 NodeDescJson {
@@ -207,7 +207,7 @@ pub(crate) mod testkit {
         }
     }
 
-    pub fn link_test_scene_no_edge_non_draggable_nodes() -> SceneDescriptorJson {
+    pub async fn link_test_scene_no_edge_non_draggable_nodes() -> SceneDescriptorJson {
         let mut s = link_test_scene_no_edge();
         for n in &mut s.nodes {
             n.draggable = Some(false);
@@ -215,7 +215,7 @@ pub(crate) mod testkit {
         s
     }
 
-    pub fn link_test_scene_node_a_two_free_handles() -> SceneDescriptorJson {
+    pub async fn link_test_scene_node_a_two_free_handles() -> SceneDescriptorJson {
         let mut s = link_test_scene_no_edge();
         s.handles.push(HandleDescJson {
             id: "a:h1".into(),
@@ -235,7 +235,7 @@ pub(crate) mod testkit {
         s
     }
 
-    pub fn link_test_scene_b_two_free_child_handles() -> SceneDescriptorJson {
+    pub async fn link_test_scene_b_two_free_child_handles() -> SceneDescriptorJson {
         let mut s = link_test_scene_no_edge();
         s.handles.push(HandleDescJson {
             id: "b:h1".into(),
@@ -255,7 +255,7 @@ pub(crate) mod testkit {
         s
     }
 
-    pub fn link_test_scene_target_b_handle_busy() -> SceneDescriptorJson {
+    pub async fn link_test_scene_target_b_handle_busy() -> SceneDescriptorJson {
         let mut s = link_test_scene_no_edge();
         s.nodes.push(NodeDescJson {
             id: "c".into(),
@@ -296,13 +296,13 @@ pub(crate) mod testkit {
         s
     }
 
-    pub fn link_test_scene_a_to_b_linked() -> SceneDescriptorJson {
+    pub async fn link_test_scene_a_to_b_linked() -> SceneDescriptorJson {
         let mut s = link_test_scene_no_edge();
         s.edges.push(EdgeDescJson { id: "e-ab".into(), source: "a:h0".into(), target: "b:h0".into(), edge_kind: None, source_tip: None, target_tip: None, selected: None, style: None, user_data: None, visible: None, locked: None });
         s
     }
 
-    pub fn link_test_scene_node_a_two_handles_one_busy() -> SceneDescriptorJson {
+    pub async fn link_test_scene_node_a_two_handles_one_busy() -> SceneDescriptorJson {
         let mut s = link_test_scene_a_to_b_linked();
         s.handles.push(HandleDescJson {
             id: "a:h1".into(),
@@ -337,7 +337,7 @@ mod tests {
 
     /// 🔗️ Keeps the runtime kind-catalog JSON shape in sync with the compile-time `puzzle2d-default` manifest.
     #[test]
-    fn puzzle2d_default_manifest_satisfies_board_host_validation() {
+    async fn puzzle2d_default_manifest_satisfies_board_host_validation() {
         let manifest: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../🛂️manifest.jsondefault.manifest.json")).unwrap();
         let handle_kinds: Vec<serde_json::Value> =
             manifest["portKinds"].as_array().unwrap().iter().map(|row| json!({ "id": row["id"], "name": row["name"], "color": row["presentation"]["color"], "defaultWireKind": row["presentation"]["defaultWireKind"] })).collect();
@@ -351,7 +351,7 @@ mod tests {
     }
 
     #[test]
-    fn board_host_defers_descriptor_sync_while_panning() {
+    async fn board_host_defers_descriptor_sync_while_panning() {
         let mut h = BoardHost::new();
         h.set_size(800, 600, 1.0);
         h.sync_descriptor(&sample_scene()).unwrap();
@@ -366,7 +366,7 @@ mod tests {
     }
 
     #[test]
-    fn board_host_defers_descriptor_sync_while_dragging_nodes() {
+    async fn board_host_defers_descriptor_sync_while_dragging_nodes() {
         let mut h = BoardHost::new();
         h.set_size(800, 600, 1.0);
         h.sync_descriptor(&sample_scene()).unwrap();
@@ -385,7 +385,7 @@ mod tests {
     }
 
     #[test]
-    fn board_host_set_node_positions_updates_existing_nodes_only() {
+    async fn board_host_set_node_positions_updates_existing_nodes_only() {
         let mut h = BoardHost::new();
         h.set_size(400, 300, 1.0);
         h.sync_descriptor(&sample_scene()).unwrap();
@@ -402,7 +402,7 @@ mod tests {
     }
 
     #[test]
-    fn board_host_overlay_paint_state_json_matches_host_camera_lod_and_node_centers() {
+    async fn board_host_overlay_paint_state_json_matches_host_camera_lod_and_node_centers() {
         let mut h = BoardHost::new();
         h.set_size(640, 480, 2.0);
         h.sync_descriptor(&sample_scene()).unwrap();
@@ -423,7 +423,7 @@ mod tests {
     }
 
     #[test]
-    fn board_host_node_drag_invalidates_cached_world_content() {
+    async fn board_host_node_drag_invalidates_cached_world_content() {
         let mut h = BoardHost::new();
         h.set_size(800, 600, 1.0);
         h.sync_descriptor(&sample_scene()).unwrap();
@@ -437,7 +437,7 @@ mod tests {
     }
 
     #[test]
-    fn board_host_manual_lod_follow_zoom_still_encodes_graph() {
+    async fn board_host_manual_lod_follow_zoom_still_encodes_graph() {
         let mut h = BoardHost::new();
         h.set_size(800, 600, 1.0);
         h.sync_descriptor(&sample_scene()).unwrap();
@@ -456,7 +456,7 @@ mod tests {
     }
 
     #[test]
-    fn board_host_pick_selection_never_sets_exit_highlight() {
+    async fn board_host_pick_selection_never_sets_exit_highlight() {
         let mut h = BoardHost::new();
         h.set_size(400, 300, 1.0);
         let mut d = sample_scene();
@@ -475,7 +475,7 @@ mod tests {
     }
 
     #[test]
-    fn board_host_canvas_theme_keeps_explicit_element_state_colors() {
+    async fn board_host_canvas_theme_keeps_explicit_element_state_colors() {
         let mut h = BoardHost::new();
         h.set_canvas_theme_from_json(
             r#"{
@@ -493,7 +493,7 @@ mod tests {
     }
 
     #[test]
-    fn board_host_cancel_area_select_restores_initial_selection() {
+    async fn board_host_cancel_area_select_restores_initial_selection() {
         let mut h = BoardHost::new();
         h.set_size(800, 600, 1.0);
         set_detail_lod(&mut h);
@@ -517,7 +517,7 @@ mod tests {
     }
 
     #[test]
-    fn board_host_syncs_descriptor_and_hit_tests_handle_before_node() {
+    async fn board_host_syncs_descriptor_and_hit_tests_handle_before_node() {
         let mut h = BoardHost::new();
         h.set_size(800, 600, 1.0);
         set_detail_lod(&mut h);
@@ -550,7 +550,7 @@ mod tests {
     }
 
     #[test]
-    fn board_host_cached_content_includes_edge_vector_paths_at_overview_zoom() {
+    async fn board_host_cached_content_includes_edge_vector_paths_at_overview_zoom() {
         let mut h = BoardHost::new();
         h.set_size(1200, 800, 1.0);
         h.sync_descriptor(&link_test_scene_a_to_b_linked()).unwrap();
@@ -563,7 +563,7 @@ mod tests {
     }
 
     #[test]
-    fn board_host_world_clip_changes_vector_encoding() {
+    async fn board_host_world_clip_changes_vector_encoding() {
         let mut h = BoardHost::new();
         h.set_size(800, 600, 1.0);
         let mut desc = sample_scene();
@@ -596,7 +596,7 @@ mod tests {
     }
 
     #[test]
-    fn board_host_silent_selection_keeps_cached_world_content_warm() {
+    async fn board_host_silent_selection_keeps_cached_world_content_warm() {
         let mut h = BoardHost::new();
         h.set_size(800, 600, 1.0);
         h.sync_descriptor(&sample_scene()).unwrap();
@@ -609,7 +609,7 @@ mod tests {
     }
 
     #[test]
-    fn board_host_selected_node_keeps_selected_style_when_hovered() {
+    async fn board_host_selected_node_keeps_selected_style_when_hovered() {
         let mut h = BoardHost::new();
         h.set_size(800, 600, 1.0);
         set_detail_lod(&mut h);
@@ -623,7 +623,7 @@ mod tests {
     }
 
     #[test]
-    fn board_host_dragging_selected_node_keeps_selected_style_at_detail_lod() {
+    async fn board_host_dragging_selected_node_keeps_selected_style_at_detail_lod() {
         let mut h = BoardHost::new();
         h.set_size(800, 600, 1.0);
         set_detail_lod(&mut h);
@@ -637,7 +637,7 @@ mod tests {
     }
 
     #[test]
-    fn board_host_drag_emits_node_move() {
+    async fn board_host_drag_emits_node_move() {
         let mut h = BoardHost::new();
         h.set_size(800, 600, 1.0);
         let mut desc = sample_scene();
@@ -673,7 +673,7 @@ mod tests {
     }
 
     #[test]
-    fn board_host_compact_discrete_hit_selects_and_drags_node() {
+    async fn board_host_compact_discrete_hit_selects_and_drags_node() {
         let mut h = BoardHost::new();
         h.set_size(800, 600, 1.0);
         h.set_camera(0.0, 0.0, 0.5);
@@ -713,7 +713,7 @@ mod tests {
     }
 
     #[test]
-    fn board_host_minimap_bounded_drag_moves_selection_inside_union_bounds() {
+    async fn board_host_minimap_bounded_drag_moves_selection_inside_union_bounds() {
         let mut h = BoardHost::new();
         h.set_size(800, 600, 1.0);
         h.set_automatic_lod(false);
@@ -763,7 +763,7 @@ mod tests {
     }
 
     #[test]
-    fn board_host_overview_bounded_drag_moves_selection_inside_union_bounds() {
+    async fn board_host_overview_bounded_drag_moves_selection_inside_union_bounds() {
         let mut h = BoardHost::new();
         h.set_size(800, 600, 1.0);
         h.set_automatic_lod(false);
@@ -806,7 +806,7 @@ mod tests {
     }
 
     #[test]
-    fn board_host_detail_lod_resolves_direct_handle_hit() {
+    async fn board_host_detail_lod_resolves_direct_handle_hit() {
         let mut h = BoardHost::new();
         h.set_size(800, 600, 1.0);
         set_detail_lod(&mut h);
@@ -838,7 +838,7 @@ mod tests {
     }
 
     #[test]
-    fn board_host_multi_select_drag_moves_each_selected_node() {
+    async fn board_host_multi_select_drag_moves_each_selected_node() {
         let mut h = BoardHost::new();
         h.set_size(800, 600, 1.0);
         let mut desc = sample_scene();
@@ -882,7 +882,7 @@ mod tests {
     }
 
     #[test]
-    fn board_host_selection_target_edges_skips_node_geometry() {
+    async fn board_host_selection_target_edges_skips_node_geometry() {
         let mut h = BoardHost::new();
         h.set_size(800, 600, 1.0);
         h.set_selection_options("rectangle", "invertive", false, true, false);
@@ -915,7 +915,7 @@ mod tests {
     }
 
     #[test]
-    fn board_host_additive_click_merges_edge_into_existing_selection() {
+    async fn board_host_additive_click_merges_edge_into_existing_selection() {
         let mut h = BoardHost::new();
         h.set_size(800, 600, 1.0);
         h.set_selection_options("rectangle", "additive", true, true, true);
@@ -952,7 +952,7 @@ mod tests {
     }
 
     #[test]
-    fn board_host_selection_change_does_not_bump_content_scene_generation() {
+    async fn board_host_selection_change_does_not_bump_content_scene_generation() {
         let mut h = BoardHost::new();
         h.set_size(800, 600, 1.0);
         h.sync_descriptor(&sample_scene()).unwrap();
@@ -968,7 +968,7 @@ mod tests {
     }
 
     #[test]
-    fn board_host_hover_change_does_not_bump_content_scene_generation() {
+    async fn board_host_hover_change_does_not_bump_content_scene_generation() {
         let mut h = BoardHost::new();
         h.set_size(800, 600, 1.0);
         h.sync_descriptor(&sample_scene()).unwrap();
@@ -984,7 +984,7 @@ mod tests {
     }
 
     #[test]
-    fn board_host_background_click_deselect_skips_preselect_events() {
+    async fn board_host_background_click_deselect_skips_preselect_events() {
         let mut h = BoardHost::new();
         h.set_size(800, 600, 1.0);
         let desc = sample_scene();
@@ -1011,7 +1011,7 @@ mod tests {
     }
 
     #[test]
-    fn board_host_background_click_without_drag_clears_selection() {
+    async fn board_host_background_click_without_drag_clears_selection() {
         let mut h = BoardHost::new();
         h.set_size(800, 600, 1.0);
         let mut desc = sample_scene();
@@ -1045,7 +1045,7 @@ mod tests {
     }
 
     #[test]
-    fn board_host_rectangle_area_select_includes_handles_with_nodes() {
+    async fn board_host_rectangle_area_select_includes_handles_with_nodes() {
         let mut h = BoardHost::new();
         h.set_size(800, 600, 1.0);
         h.set_selection_options("rectangle", "invertive", true, true, true);
@@ -1086,7 +1086,7 @@ mod tests {
     }
 
     #[test]
-    fn board_host_area_select_preselect_matches_selected_chrome() {
+    async fn board_host_area_select_preselect_matches_selected_chrome() {
         let mut h = BoardHost::new();
         h.set_size(800, 600, 1.0);
         set_detail_lod(&mut h);
@@ -1146,7 +1146,7 @@ mod tests {
     }
 
     #[test]
-    fn board_host_area_select_from_empty_keeps_selection_until_commit() {
+    async fn board_host_area_select_from_empty_keeps_selection_until_commit() {
         let mut h = BoardHost::new();
         h.set_size(800, 600, 1.0);
         set_detail_lod(&mut h);
@@ -1192,7 +1192,7 @@ mod tests {
     }
 
     #[test]
-    fn board_host_minimap_pointer_move_hovers_node_under_cursor() {
+    async fn board_host_minimap_pointer_move_hovers_node_under_cursor() {
         let mut h = BoardHost::new();
         h.set_size(800, 600, 1.0);
         h.set_camera(0.0, 0.0, 0.1);
@@ -1207,7 +1207,7 @@ mod tests {
     }
 
     #[test]
-    fn board_host_minimap_preselect_matches_selected_chrome() {
+    async fn board_host_minimap_preselect_matches_selected_chrome() {
         let mut h = BoardHost::new();
         h.set_size(800, 600, 1.0);
         h.set_camera(0.0, 0.0, 0.1);
@@ -1254,7 +1254,7 @@ mod tests {
     }
 
     #[test]
-    fn board_host_silent_preselect_applies_selected_chrome_without_area_drag() {
+    async fn board_host_silent_preselect_applies_selected_chrome_without_area_drag() {
         let mut h = BoardHost::new();
         h.set_size(800, 600, 1.0);
         h.set_camera(0.0, 0.0, 0.1);
@@ -1290,7 +1290,7 @@ mod tests {
     }
 
     #[test]
-    fn board_host_hover_tracks_visible_wires() {
+    async fn board_host_hover_tracks_visible_wires() {
         let mut h = BoardHost::new();
         h.set_size(800, 600, 1.0);
         set_detail_lod(&mut h);

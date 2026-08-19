@@ -17,13 +17,13 @@ pub struct CsvOutline {
 }
 
 impl Default for CsvOutline {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self { record_count: 0, column_count: 0, has_header: true }
     }
 }
 
 impl CsvOutline {
-    pub fn compute(snapshot: &CsvSnapshot) -> Self {
+    pub async fn compute(snapshot: &CsvSnapshot) -> Self {
         let record_count = snapshot.records.len() as u32;
         let column_count = snapshot.records.iter().map(|r| r.fields.len() as u32).max().unwrap_or(0);
         Self { record_count, column_count, has_header: snapshot.has_header }
@@ -38,7 +38,7 @@ mod tests {
     use crate::artifacts::csv::schema::snapshot::{CsvField, CsvRecord};
 
     #[test]
-    fn reports_widest_record_as_column_count() {
+    async fn reports_widest_record_as_column_count() {
         let snapshot = CsvSnapshot {
             schema: "stdio.csv".into(),
             has_header: true,
@@ -51,7 +51,7 @@ mod tests {
     }
 
     #[test]
-    fn outline_is_deterministic() {
+    async fn outline_is_deterministic() {
         let snapshot = CsvSnapshot::default();
         assert_eq!(CsvOutline::compute(&snapshot), CsvOutline::compute(&snapshot));
     }

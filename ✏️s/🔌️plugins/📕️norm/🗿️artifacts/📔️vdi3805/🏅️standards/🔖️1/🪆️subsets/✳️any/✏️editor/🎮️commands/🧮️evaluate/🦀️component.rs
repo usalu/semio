@@ -21,7 +21,7 @@ pub struct Evaluate {}
 //#endregion 🔖️Payload
 
 //#region 🔖️Handler
-pub fn handle(_payload: &Evaluate, _doc: &ArtifactView<'_, Vdi3805Snapshot>, _cfg: &ConfigView<'_, NormConfig>) -> Result<Emit<Vdi3805Mutation, NormConfigMutation>, Fault> {
+pub async fn handle(_payload: &Evaluate, _doc: &ArtifactView<'_, Vdi3805Snapshot>, _cfg: &ConfigView<'_, NormConfig>) -> Result<Emit<Vdi3805Mutation, NormConfigMutation>, Fault> {
     Ok(Emit::default())
 }
 //#endregion 🔖️Handler
@@ -33,7 +33,7 @@ mod tests {
     use semio_framework_plugin::HistoryView;
 
     #[test]
-    fn handle_emits_no_mutation_since_the_report_is_always_recomputed() {
+    async fn handle_emits_no_mutation_since_the_report_is_always_recomputed() {
         let projection = Vdi3805Snapshot::default();
         let config = NormConfig::default();
         let emit = handle(&Evaluate {}, &ArtifactView::new(&projection, &HistoryView::empty()), &ConfigView { snapshot: &config }).expect("handle");

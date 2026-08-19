@@ -23,19 +23,19 @@ pub struct CsvInference {
 }
 
 impl protocol::Inference<CsvSnapshot> for CsvInference {
-    fn infer(snapshot: &CsvSnapshot) -> Self {
+    async fn infer(snapshot: &CsvSnapshot) -> Self {
         Self { outline: CsvOutline::compute(snapshot) }
     }
 }
 
 impl protocol::InferenceSpec<CsvSnapshot> for CsvInference {
-    fn inference_schema_id() -> &'static str {
+    async fn inference_schema_id() -> &'static str {
         "s.stdio.csv.inference"
     }
-    fn schema_version() -> u32 {
+    async fn schema_version() -> u32 {
         1
     }
-    fn fields() -> &'static [protocol::InferenceFieldSpec] {
+    async fn fields() -> &'static [protocol::InferenceFieldSpec] {
         &[protocol::InferenceFieldSpec { id: "s.stdio.csv.inference.outline", reads: &["records", "hasHeader"] }]
     }
 }
@@ -51,7 +51,7 @@ impl ArtifactInferrer for crate::artifacts::csv::standards::v_rfc4180::subsets::
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.stdio.csv.inference`'s facet leaves into the OS-wide inference catalog — call
 /// once at plugin init, alongside `csv_artifact_schema_descriptor`'s registration.
-pub fn csv_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
+pub async fn csv_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
     schema::ArtifactInferenceDescriptor {
         id: "s.stdio.csv.inference",
         inference: schema::FacetLeaves {
@@ -72,13 +72,13 @@ mod tests {
     use protocol::Inference;
 
     #[test]
-    fn inference_determinism_law() {
+    async fn inference_determinism_law() {
         let snapshot = CsvSnapshot::default();
         assert_eq!(CsvInference::infer(&snapshot), CsvInference::infer(&snapshot));
     }
 
     #[test]
-    fn inference_default_law() {
+    async fn inference_default_law() {
         assert_eq!(CsvInference::infer(&CsvSnapshot::default()), CsvInference::default());
     }
 
@@ -99,7 +99,7 @@ mod tests {
         /// `dsl::fixture_sweep::m5_handcrafted_grammar_conformance::dsl_body_from_fixture` feeds the
         /// Recognizer, mirrored here so this law does not depend on the framework's own harness).
         #[test]
-        fn grammar_conformance_law() {
+        async fn grammar_conformance_law() {
             let grammar_text = snapshot::text::COMPONENT_GRAMMAR_SEMIO;
             let grammar = dsl::parse_grammar(grammar_text).expect("parse snapshot grammar");
             assert_eq!(grammar.dialect, dsl::SemioDialect::Grammar);
@@ -117,7 +117,7 @@ mod tests {
         /// `encode_pack` call; mutations' Spr facet walks a genuine `encode_op` frame; diff's own
         /// protocol facet walks a genuine `encode_diff` frame.
         #[test]
-        fn protocol_walk_law() {
+        async fn protocol_walk_law() {
             // Pack (snapshot binary facet).
             let snap = snapshot::demo_csv_snapshot();
             let pack_bytes = <snapshot::CsvSnapshot as store::ArtifactPack>::encode_pack(&snap);
@@ -146,7 +146,7 @@ mod tests {
         /// genuinely `print_dsl`/`encode_pack` output of the SAME demo snapshot, round-tripping both
         /// ways (never allowed to silently drift again).
         #[test]
-        fn fixture_honesty_law() {
+        async fn fixture_honesty_law() {
             let demo = snapshot::demo_csv_snapshot();
             assert_eq!(<snapshot::CsvSnapshot as store::ArtifactDsl>::parse_dsl(crate::artifacts::csv::examples::demo::PRIMARY_TEXT).unwrap(), demo);
             assert_eq!(<snapshot::CsvSnapshot as store::ArtifactDsl>::print_dsl(&demo), crate::artifacts::csv::examples::demo::PRIMARY_TEXT);
@@ -159,7 +159,7 @@ mod tests {
         /// parses under `dsl::parse_grammar`/`dsl::parse_protocol` — this artifact's own early
         /// warning, independent of the eventual repo-wide policy gate.
         #[test]
-        fn committed_grammar_and_protocol_files_parse() {
+        async fn committed_grammar_and_protocol_files_parse() {
             let g1 = dsl::parse_grammar(snapshot::text::COMPONENT_GRAMMAR_SEMIO);
             assert!(g1.is_ok(), "snapshot grammar must parse: {g1:?}");
             let g2 = dsl::parse_grammar(crate::artifacts::csv::schema::mutations::text::COMPONENT_GRAMMAR_SEMIO);

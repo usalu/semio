@@ -26,7 +26,7 @@ pub struct SemioTextInference {
 }
 
 impl protocol::Inference<SemioTextSnapshot> for SemioTextInference {
-    fn infer(snapshot: &SemioTextSnapshot) -> Self {
+    async fn infer(snapshot: &SemioTextSnapshot) -> Self {
         Self { profile: compute_semio_text_profile(snapshot) }
     }
 }
@@ -36,19 +36,19 @@ impl protocol::Inference<SemioTextSnapshot> for SemioTextInference {
 /// `infer` keeps the law correct even if that default ever stops being all-empty (the same
 /// defensive pattern raster's `RasterInference` documents).
 impl Default for SemioTextInference {
-    fn default() -> Self {
+    async fn default() -> Self {
         <Self as protocol::Inference<SemioTextSnapshot>>::infer(&SemioTextSnapshot::default())
     }
 }
 
 impl protocol::InferenceSpec<SemioTextSnapshot> for SemioTextInference {
-    fn inference_schema_id() -> &'static str {
+    async fn inference_schema_id() -> &'static str {
         "s.stdio.semio.text.inference"
     }
-    fn schema_version() -> u32 {
+    async fn schema_version() -> u32 {
         1
     }
-    fn fields() -> &'static [protocol::InferenceFieldSpec] {
+    async fn fields() -> &'static [protocol::InferenceFieldSpec] {
         &[protocol::InferenceFieldSpec { id: "s.stdio.semio.text.inference.profile", reads: &["runs"] }]
     }
 }
@@ -67,7 +67,7 @@ impl ArtifactInferrer for crate::artifacts::semio::standards::v1::subsets::text:
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.stdio.semio.text.inference`'s facet leaves into the OS-wide inference catalog
 /// — call once at plugin init, alongside `semio_text_artifact_schema_descriptor`'s registration.
-pub fn semio_text_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
+pub async fn semio_text_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
     schema::ArtifactInferenceDescriptor {
         id: "s.stdio.semio.text.inference",
         inference: schema::FacetLeaves {
@@ -88,13 +88,13 @@ mod tests {
     use protocol::Inference;
 
     #[test]
-    fn inference_determinism_law() {
+    async fn inference_determinism_law() {
         let snapshot = SemioTextSnapshot::default();
         assert_eq!(SemioTextInference::infer(&snapshot), SemioTextInference::infer(&snapshot));
     }
 
     #[test]
-    fn inference_default_law() {
+    async fn inference_default_law() {
         assert_eq!(SemioTextInference::infer(&SemioTextSnapshot::default()), SemioTextInference::default());
     }
 }

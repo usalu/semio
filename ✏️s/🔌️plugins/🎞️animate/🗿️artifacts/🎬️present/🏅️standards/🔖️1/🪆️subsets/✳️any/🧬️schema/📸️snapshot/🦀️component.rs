@@ -36,13 +36,13 @@ pub struct PresentSnapshot {
 }
 
 impl Default for PresentSnapshot {
-    fn default() -> Self {
+    async fn default() -> Self {
         default_snapshot()
     }
 }
 
 /// 🌱 Canonical default document used by the play app and examples.
-pub fn default_snapshot() -> PresentSnapshot {
+pub async fn default_snapshot() -> PresentSnapshot {
     crate::artifacts::present::present_snapshot_with_tiles(&crate::artifacts::present::default_figure_tile_source(), &[])
 }
 //#endregion 🔖️Snapshot
@@ -53,7 +53,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn pack_round_trips() {
+    async fn pack_round_trips() {
         let snap = PresentSnapshot::default();
         let bytes = <PresentSnapshot as store::ArtifactPack>::encode_pack(&snap);
         let back = <PresentSnapshot as store::ArtifactPack>::decode_pack(&bytes).expect("decode");
@@ -61,7 +61,7 @@ mod tests {
     }
 
     #[test]
-    fn dsl_text_round_trips() {
+    async fn dsl_text_round_trips() {
         let snap = PresentSnapshot::default();
         let text = <PresentSnapshot as store::ArtifactDsl>::print_dsl(&snap);
         let back = <PresentSnapshot as store::ArtifactDsl>::parse_dsl(&text).expect("parse");
@@ -69,7 +69,7 @@ mod tests {
     }
 
     #[test]
-    fn populated_snapshot_pack_and_dsl_round_trip() {
+    async fn populated_snapshot_pack_and_dsl_round_trip() {
         let source = crate::artifacts::present::default_figure_tile_source();
         let tiles = vec![crate::artifacts::present::FigureTileDraft {
             id: "t1".into(),

@@ -11,7 +11,7 @@ use protocol::Patchable;
 /// `added = [trace]` if the id is new, else `patched = [{id, full patch}]`. `from_id`/`to_id` are
 /// free-form cross-register references (any entity across any collection) — endpoint-existence
 /// checking is not implemented here; see `📓️w3-d-architect-report.md`.
-pub fn diff(payload: &ConnectTrace, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
+pub async fn diff(payload: &ConnectTrace, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
     match base.traces.iter().find(|row| row.id == payload.trace.id) {
         Some(existing) => {
             if existing == &payload.trace {

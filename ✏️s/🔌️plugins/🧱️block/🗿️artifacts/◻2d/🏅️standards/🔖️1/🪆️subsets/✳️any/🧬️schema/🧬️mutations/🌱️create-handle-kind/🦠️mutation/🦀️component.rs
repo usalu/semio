@@ -16,23 +16,23 @@ pub struct CreateHandleKind {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn create_handle_kind(handle_kind: Block2dHandleKind) -> Block2dMutation {
+pub async fn create_handle_kind(handle_kind: Block2dHandleKind) -> Block2dMutation {
     Block2dMutation::CreateHandleKind(CreateHandleKind { handle_kind })
 }
 
 impl protocol::MutationKind<Block2dSnapshot, Block2dMutation> for CreateHandleKind {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "create", entity: "handle-kind", kind: "create-handle-kind", record: "CreatedHandleKind" };
 
-    fn diff(&self, base: &Block2dSnapshot) -> protocol::MutationOutcome<Block2dDiff> {
+    async fn diff(&self, base: &Block2dSnapshot) -> protocol::MutationOutcome<Block2dDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &Block2dSnapshot) -> Vec<Block2dMutation> {
+    async fn inverse(&self, base: &Block2dSnapshot) -> Vec<Block2dMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         format!("Create handle kind \"{}\"", self.handle_kind.id)
     }
-    fn target(&self) -> Vec<String> {
+    async fn target(&self) -> Vec<String> {
         vec![self.handle_kind.id.clone()]
     }
 }

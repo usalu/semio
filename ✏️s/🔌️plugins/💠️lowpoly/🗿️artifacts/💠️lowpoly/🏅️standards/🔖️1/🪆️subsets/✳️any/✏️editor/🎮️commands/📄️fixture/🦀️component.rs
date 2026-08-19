@@ -10,7 +10,7 @@ use crate::artifacts::lowpoly::LowpolySnapshot;
 use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
-fn reset_from_json(json: &str) -> Emit<LowpolyMutation, LowpolyConfigMutation> {
+async fn reset_from_json(json: &str) -> Emit<LowpolyMutation, LowpolyConfigMutation> {
     match serde_json::from_str::<LowpolySnapshot>(json) {
         Ok(parsed) => Emit { effects: vec![crate::editor::lowpoly::reset_document_effect(&parsed)], ..Default::default() },
         Err(_) => Emit::default(),
@@ -27,7 +27,7 @@ pub mod set_snapshot_json {
         pub json: String,
     }
 
-    pub fn handle(payload: &ImportSnapshotJson, _doc: &ArtifactView<'_, LowpolySnapshot>, _cfg: &ConfigView<'_, LowpolyConfig>, _ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
+    pub async fn handle(payload: &ImportSnapshotJson, _doc: &ArtifactView<'_, LowpolySnapshot>, _cfg: &ConfigView<'_, LowpolyConfig>, _ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
         Ok(reset_from_json(&payload.json))
     }
 }
@@ -43,7 +43,7 @@ pub mod set_fixture_json {
         pub json: String,
     }
 
-    pub fn handle(payload: &SetFixtureJson, _doc: &ArtifactView<'_, LowpolySnapshot>, _cfg: &ConfigView<'_, LowpolyConfig>, _ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
+    pub async fn handle(payload: &SetFixtureJson, _doc: &ArtifactView<'_, LowpolySnapshot>, _cfg: &ConfigView<'_, LowpolyConfig>, _ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
         Ok(reset_from_json(&payload.json))
     }
 }
@@ -63,7 +63,7 @@ mod tests {
     /// `dispatch`, which routes through `VcsArtifactApp` and never applies `effects` to its own
     /// store, that's the real host's job), same pattern as the already-migrated `shooting` sibling.
     #[test]
-    fn import_snapshot_json_replaces_the_whole_document() {
+    async fn import_snapshot_json_replaces_the_whole_document() {
         let mesh_json = crate::artifacts::lowpoly::schema::default_mesh_workspace()["obj-1"].clone();
         let replacement = crate::artifacts::lowpoly::snapshot_from_mesh_json(&mesh_json, "obj-x", "X");
         let json = serde_json::to_string(&replacement).unwrap();
@@ -82,7 +82,7 @@ mod tests {
     }
 
     #[test]
-    fn set_fixture_json_with_invalid_json_is_a_no_op() {
+    async fn set_fixture_json_with_invalid_json_is_a_no_op() {
         let mut a = app();
         let before = a.snapshot().expect("projection");
         dispatch(&mut a, LowpolyCommand::SetFixtureJson(super::set_fixture_json::SetFixtureJson { json: "not json".into() }));

@@ -14,7 +14,7 @@ const PUZZLE5D_CATALOGUE_DRAG_MIME: &str = "application/x-semio-catalogue-item";
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
-pub fn definition() -> PanelTabDefinition {
+pub async fn definition() -> PanelTabDefinition {
     PanelTabDefinition {
         kind: PanelTabKind::App(FRAMEWORK_PANEL_TAB_CATALOGUE_ID.into()),
         label: LocalizedLabel::native(FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, "Katalog"),
@@ -26,7 +26,7 @@ pub fn definition() -> PanelTabDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Rows
-fn catalog_kind_label(entry: &Value) -> String {
+async fn catalog_kind_label(entry: &Value) -> String {
     entry
         .get("label")
         .and_then(|value| value.as_str())
@@ -37,7 +37,7 @@ fn catalog_kind_label(entry: &Value) -> String {
         .into()
 }
 
-fn puzzle5d_catalog_item_drag_data(kind_id: &str, entry: &Value) -> HashMap<String, String> {
+async fn puzzle5d_catalog_item_drag_data(kind_id: &str, entry: &Value) -> HashMap<String, String> {
     let mut payload = json!({ "kindId": kind_id, "catalogSlice": "nodes" });
     if let Some(object) = payload.as_object_mut() {
         for key in ["shape", "radius", "width", "height", "iconKind"] {
@@ -49,7 +49,7 @@ fn puzzle5d_catalog_item_drag_data(kind_id: &str, entry: &Value) -> HashMap<Stri
     HashMap::from([(PUZZLE5D_CATALOGUE_DRAG_MIME.to_string(), payload.to_string())])
 }
 
-fn kind_catalog_section(section_id: &str, label: LabelText, entries: &[Value], add_action: Option<&str>, none_label: LabelText) -> UiTreeSectionNode {
+async fn kind_catalog_section(section_id: &str, label: LabelText, entries: &[Value], add_action: Option<&str>, none_label: LabelText) -> UiTreeSectionNode {
     let items: Vec<UiTreeItemNode> = entries
         .iter()
         .enumerate()
@@ -78,7 +78,7 @@ fn kind_catalog_section(section_id: &str, label: LabelText, entries: &[Value], a
 //#endregion 🔖️Rows
 
 //#region 🔖️Render
-pub fn render(envelope: &Puzzle5dScene, labels: &Puzzle5dLabels) -> UiNode {
+pub async fn render(envelope: &Puzzle5dScene, labels: &Puzzle5dLabels) -> UiNode {
     let catalogs = envelope.document.kind_catalogs.clone().unwrap_or(json!({}));
     let slice = |key: &str| catalogs.get(key).and_then(|value| value.as_array()).cloned().unwrap_or_default();
     let mut part_entries = slice("parts");
@@ -110,7 +110,7 @@ mod tests {
     use crate::editor::puzzle5d::testkit::*;
 
     #[test]
-    fn catalogue_tree_lists_all_four_kind_sections() {
+    async fn catalogue_tree_lists_all_four_kind_sections() {
         let mut app = app();
         let rendered = render_body(&mut app, BODY_KEY);
         for section in ["puzzle5d-play-kinds.parts", "puzzle5d-play-kinds.grips", "puzzle5d-play-kinds.fasteners", "puzzle5d-play-kinds.ropes"] {

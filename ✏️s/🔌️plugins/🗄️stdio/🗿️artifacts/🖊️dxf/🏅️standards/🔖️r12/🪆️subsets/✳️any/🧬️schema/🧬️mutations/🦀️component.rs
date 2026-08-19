@@ -185,7 +185,7 @@ pub enum DxfMutation {
 //#region 🔖️Apply
 /// ▶️ Applies `mutation` to `snapshot`: `let d = mutation.diff(&*snapshot); *snapshot =
 /// d.apply(snapshot); d` — the diff is the single semantics source.
-pub fn apply_dxf_mutation(snapshot: &mut DxfSnapshot, mutation: &DxfMutation) -> protocol::MutationOutcome<DxfDiff> {
+pub async fn apply_dxf_mutation(snapshot: &mut DxfSnapshot, mutation: &DxfMutation) -> protocol::MutationOutcome<DxfDiff> {
     let outcome = <DxfMutation as Mutation<DxfSnapshot>>::diff(mutation, snapshot);
     match MutationDiff::apply(outcome.diff(), snapshot) {
         Ok(next) => {
@@ -201,7 +201,7 @@ pub fn apply_dxf_mutation(snapshot: &mut DxfSnapshot, mutation: &DxfMutation) ->
 impl Mutation<DxfSnapshot> for DxfMutation {
     type Diff = DxfDiff;
 
-    fn diff(&self, base: &DxfSnapshot) -> protocol::MutationOutcome<Self::Diff> {
+    async fn diff(&self, base: &DxfSnapshot) -> protocol::MutationOutcome<Self::Diff> {
         protocol::MutationOutcome::new(match self {
             DxfMutation::NoMutation => DxfDiff::default(),
             DxfMutation::SetSnapshot { snapshot } => diff_set_snapshot(base, snapshot),
@@ -249,7 +249,7 @@ impl Mutation<DxfSnapshot> for DxfMutation {
         })
     }
 
-    fn inverse(&self, base: &DxfSnapshot) -> Vec<Self> {
+    async fn inverse(&self, base: &DxfSnapshot) -> Vec<Self> {
         match self {
             DxfMutation::NoMutation => vec![DxfMutation::NoMutation],
             DxfMutation::SetSnapshot { .. } => vec![DxfMutation::SetSnapshot { snapshot: base.clone() }],
@@ -325,7 +325,7 @@ impl Mutation<DxfSnapshot> for DxfMutation {
 /// available since nothing here derives it, see module doc). Every arg value is either hex
 /// (strings), decimal (indices), or a `🔺️diff` positional/tagged payload — never a literal
 /// space or `=`, so top-level tokenizing is a trivial `line.split(' ')` / `tok.split_once('=')`.
-fn print_dxf_mutation(m: &DxfMutation) -> String {
+async fn print_dxf_mutation(m: &DxfMutation) -> String {
     match m {
         DxfMutation::NoMutation => "no-mutation".to_string(),
         DxfMutation::SetSnapshot { snapshot } => format!("set-snapshot snapshot={}", enc_dxf_snapshot(snapshot)),
@@ -354,7 +354,7 @@ fn print_dxf_mutation(m: &DxfMutation) -> String {
         DxfMutation::SetBlock { index, block } => format!("set-block index={index} block={}", enc_block(block)),
     }
 }
-fn parse_dxf_mutation(line: &str) -> Result<DxfMutation, String> {
+async fn parse_dxf_mutation(line: &str) -> Result<DxfMutation, String> {
     if line == "no-mutation" {
         return Ok(DxfMutation::NoMutation);
     }
@@ -393,10 +393,10 @@ fn parse_dxf_mutation(line: &str) -> Result<DxfMutation, String> {
 }
 
 impl OpText for DxfMutation {
-    fn print_op(&self) -> String {
+    async fn print_op(&self) -> String {
         print_dxf_mutation(self)
     }
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
+    async fn parse_op(line: &str) -> Result<Self, store::TextError> {
         parse_dxf_mutation(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
 }
@@ -409,7 +409,7 @@ impl OpText for DxfMutation {
 /// codecs (`enc_dxf_snapshot_bin`/`enc_dxf_entity_bin`/`enc_block_bin`/…) — genuinely structured,
 /// varint/length-prefixed binary, never text-as-bytes.
 impl OpBinary for DxfMutation {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         let tag: u8 = match self {
             DxfMutation::NoMutation => 0,
             DxfMutation::SetSnapshot { .. } => 1,
@@ -489,7 +489,7 @@ impl OpBinary for DxfMutation {
         Ok(out)
     }
 
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         let mut reader = store::ByteReader::new(bytes);
         let malformed = |what: &'static str, offset: usize, detail: String| protocol::ProtocolError::Malformed { what, offset: offset as u64, detail };
         let _format = reader.read_u8().map_err(|e| malformed("op format", 0, e.to_string()))?;
@@ -573,10 +573,10 @@ impl OpBinary for DxfMutation {
 /// by `⚙️engine/🦀️component.rs`'s `ops_grammar_conformance_law`/`protocol_walk_law` conformance
 /// tests, so a new variant only needs adding here once.
 #[cfg(test)]
-pub(crate) fn demo_mutation_cases() -> Vec<DxfMutation> {
+pub(crate) async fn demo_mutation_cases() -> Vec<DxfMutation> {
     use crate::artifacts::dxf::schema::snapshot::{DxfOtherTable, DxfTables, DxfTag, DxfValue, DxfVertex};
 
-    fn demo_snapshot_for_set() -> DxfSnapshot {
+    async fn demo_snapshot_for_set() -> DxfSnapshot {
         DxfSnapshot {
             schema: "stdio.dxf".into(),
             header_vars: vec![DxfHeaderVar { name: "$ACADVER".into(), group_code: 1, value: DxfValue::Str { value: "AC1009".into() }, extra_group_codes: vec![] }],
@@ -644,7 +644,7 @@ mod tests {
     use protocol::command::DiffAlgebra;
 
     #[test]
-    fn missing_entity_target_is_rejected_before_mutation() {
+    async fn missing_entity_target_is_rejected_before_mutation() {
         let base = DxfSnapshot::default();
         let diff = DxfDiff { entities: Some(DxfEntitiesDiff { removed: vec![0], ..Default::default() }), ..Default::default() };
         let error = diff.apply(&base).expect_err("missing entity target must be rejected");
@@ -654,7 +654,7 @@ mod tests {
     }
 
     //#region 🔖️Fixtures
-    fn base_snapshot() -> DxfSnapshot {
+    async fn base_snapshot() -> DxfSnapshot {
         DxfSnapshot {
             schema: "stdio.dxf".into(),
             header_vars: vec![DxfHeaderVar { name: "$ACADVER".into(), group_code: 1, value: DxfValue::Str { value: "AC1009".into() }, extra_group_codes: vec![] }],
@@ -672,7 +672,7 @@ mod tests {
     /// 🔁️ Every DxfMutation-generic property test below (`mutation_diff_law`/`inverse_law`/
     /// `op_text_binary_roundtrip_law`) shares ONE fixture with `⚙️engine/🦀️component.rs`'s
     /// conformance laws — `demo_mutation_cases()` (`#region 🔖️DemoCases` above).
-    fn variants() -> Vec<DxfMutation> {
+    async fn variants() -> Vec<DxfMutation> {
         demo_mutation_cases()
     }
     //#endregion 🔖️Fixtures
@@ -680,7 +680,7 @@ mod tests {
     //#region 🔖️FieldSweepFixtures
     /// 🧬️ Canonical "differs in every mutable field" snapshot A — every collection carries a
     /// stable-prefix item plus one that will be modified (index-keyed) or removed (name-keyed).
-    fn sweep_a() -> DxfSnapshot {
+    async fn sweep_a() -> DxfSnapshot {
         DxfSnapshot {
             schema: "stdio.dxf".into(),
             header_vars: vec![
@@ -711,7 +711,7 @@ mod tests {
     /// (`b` is longer) and REMOVED via `between(b,a)`. Name-keyed collections show removed +
     /// modified + added simultaneously from ONE `between(a,b)` call. `entities[1]` changes KIND
     /// (Circle → Text), proving `DxfEntityDiff::Replace`.
-    fn sweep_b() -> DxfSnapshot {
+    async fn sweep_b() -> DxfSnapshot {
         DxfSnapshot {
             schema: "stdio.dxf".into(),
             header_vars: vec![
@@ -745,7 +745,7 @@ mod tests {
 
     //#region 🔖️MutationDiffLaw
     #[test]
-    fn mutation_diff_law() {
+    async fn mutation_diff_law() {
         let base = base_snapshot();
         for m in variants() {
             let diff = m.diff(&base);
@@ -762,7 +762,7 @@ mod tests {
 
     //#region 🔖️InverseLaw
     #[test]
-    fn inverse_law() {
+    async fn inverse_law() {
         let base = base_snapshot();
         for m in variants() {
             let mut forward = base.clone();
@@ -782,7 +782,7 @@ mod tests {
 
     //#region 🔖️AbsorbLaw
     #[test]
-    fn absorb_law() {
+    async fn absorb_law() {
         let base = base_snapshot();
 
         // 🧩 Insert(2)+Remove(0) on entities: the two-op sequence base → mid → after.
@@ -878,7 +878,7 @@ mod tests {
 
     //#region 🔖️BetweenRoundtripLaw
     #[test]
-    fn between_roundtrip_law() {
+    async fn between_roundtrip_law() {
         let a = sweep_a();
         let b = sweep_b();
         assert_eq!(DxfDiff::between(&a, &b).apply(&a).expect("valid forward diff"), b);
@@ -889,7 +889,7 @@ mod tests {
 
     //#region 🔖️FieldSweep
     #[test]
-    fn field_sweep_every_mutable_field_changes() {
+    async fn field_sweep_every_mutable_field_changes() {
         let a = sweep_a();
         let b = sweep_b();
 
@@ -945,7 +945,7 @@ mod tests {
     /// replaced by the parent `Polyline` diff — confirms it isn't silently dropped by the
     /// snapshot type even though no dedicated mutation targets it directly).
     #[test]
-    fn vertex_unknown_group_codes_are_part_of_equality() {
+    async fn vertex_unknown_group_codes_are_part_of_equality() {
         let v1 = DxfVertex { x: 0.0, y: 0.0, z: 0.0, bulge: 0.0, unknown_group_codes: vec![] };
         let v2 = DxfVertex { x: 0.0, y: 0.0, z: 0.0, bulge: 0.0, unknown_group_codes: vec![(40, DxfValue::Double { value: 1.0 })] };
         assert_ne!(v1, v2);
@@ -958,7 +958,7 @@ mod tests {
     /// whole-snapshot grammar, incl. `other_tables` raw retention and a nested block's own
     /// entities) and every typed-entity/table Insert/Set/Remove keyword.
     #[test]
-    fn op_text_binary_roundtrip_law() {
+    async fn op_text_binary_roundtrip_law() {
         for m in variants() {
             let printed = m.print_op();
             assert!(!printed.contains('\n'), "print_op must never contain a newline, for {m:?}");

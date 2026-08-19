@@ -15,16 +15,16 @@ pub struct RemoveDesign {
 impl protocol::MutationKind<SemioKitSnapshot, SemioKitMutation> for RemoveDesign {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "design", kind: "remove-design", record: "RemovedDesign" };
 
-    fn diff(&self, base: &SemioKitSnapshot) -> protocol::MutationOutcome<<SemioKitMutation as protocol::Mutation<SemioKitSnapshot>>::Diff> {
+    async fn diff(&self, base: &SemioKitSnapshot) -> protocol::MutationOutcome<<SemioKitMutation as protocol::Mutation<SemioKitSnapshot>>::Diff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &SemioKitSnapshot) -> Vec<SemioKitMutation> {
+    async fn inverse(&self, base: &SemioKitSnapshot) -> Vec<SemioKitMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         format!("Remove design {}", self.id)
     }
-    fn target(&self) -> Vec<String> {
+    async fn target(&self) -> Vec<String> {
         vec![self.id.clone()]
     }
 }

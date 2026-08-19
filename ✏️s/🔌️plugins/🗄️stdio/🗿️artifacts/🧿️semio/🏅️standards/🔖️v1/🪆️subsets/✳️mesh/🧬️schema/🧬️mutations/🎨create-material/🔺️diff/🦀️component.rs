@@ -5,7 +5,7 @@ use crate::artifacts::semio::standards::v1::subsets::mesh::schema::diff::SemioMe
 use crate::artifacts::semio::standards::v1::subsets::mesh::schema::snapshot::SemioMeshSnapshot;
 
 //#region 🔖️Diff
-pub fn diff(payload: &CreateMaterial, base: &SemioMeshSnapshot) -> protocol::MutationOutcome<SemioMeshDiff> {
+pub async fn diff(payload: &CreateMaterial, base: &SemioMeshSnapshot) -> protocol::MutationOutcome<SemioMeshDiff> {
     if crate::artifacts::semio::standards::v1::subsets::mesh::schema::diff::material_at(base, &payload.material.id).is_some() {
         return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("Material \"{}\" already exists.", payload.material.id), [payload.material.id.clone()]);
     }

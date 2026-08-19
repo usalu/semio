@@ -99,7 +99,7 @@ pub enum JpgMutation {
 //#region 🔖️Apply
 /// ▶️ Applies `mutation` to `snapshot`: `let d = mutation.diff(&*snapshot); *snapshot =
 /// d.apply(snapshot); d` — the diff is the single semantics source (png/csv precedent).
-pub fn apply_jpg_mutation(snapshot: &mut JpgSnapshot, mutation: &JpgMutation) -> protocol::MutationOutcome<JpgDiff> {
+pub async fn apply_jpg_mutation(snapshot: &mut JpgSnapshot, mutation: &JpgMutation) -> protocol::MutationOutcome<JpgDiff> {
     let outcome = <JpgMutation as Mutation<JpgSnapshot>>::diff(mutation, snapshot);
     match MutationDiff::apply(outcome.diff(), snapshot) {
         Ok(next) => {
@@ -115,7 +115,7 @@ pub fn apply_jpg_mutation(snapshot: &mut JpgSnapshot, mutation: &JpgMutation) ->
 impl Mutation<JpgSnapshot> for JpgMutation {
     type Diff = JpgDiff;
 
-    fn diff(&self, base: &JpgSnapshot) -> protocol::MutationOutcome<Self::Diff> {
+    async fn diff(&self, base: &JpgSnapshot) -> protocol::MutationOutcome<Self::Diff> {
         protocol::MutationOutcome::new(match self {
             JpgMutation::NoMutation => JpgDiff::default(),
             JpgMutation::SetSnapshot { snapshot } => diff::diff_set_snapshot(base, snapshot),
@@ -134,7 +134,7 @@ impl Mutation<JpgSnapshot> for JpgMutation {
 
     /// ↩️ Handcrafted, id/index-aware mutation-level inverses. Out-of-range/nonexistent targets
     /// invert to `NoMutation` (nothing to undo).
-    fn inverse(&self, base: &JpgSnapshot) -> Vec<Self> {
+    async fn inverse(&self, base: &JpgSnapshot) -> Vec<Self> {
         match self {
             JpgMutation::NoMutation => vec![JpgMutation::NoMutation],
             JpgMutation::SetSnapshot { .. } => vec![JpgMutation::SetSnapshot { snapshot: base.clone() }],
@@ -184,17 +184,17 @@ impl Mutation<JpgSnapshot> for JpgMutation {
 /// (space-separated, same shape the derive's own handcrafted-wrapper convention uses per
 /// `f6-recon-report.md` §2), one match arm per variant (no `DslVariants` scaffolding available
 /// since nothing here derives it).
-fn enc_str_hex(s: &str) -> String {
+async fn enc_str_hex(s: &str) -> String {
     diff::hex_encode(s.as_bytes())
 }
-fn dec_str_hex(s: &str) -> Result<String, String> {
+async fn dec_str_hex(s: &str) -> Result<String, String> {
     String::from_utf8(diff::hex_decode(s)?).map_err(|e| e.to_string())
 }
 
 /// 🧬️ Positional `[schema,width,height,pixels,re-encode-quality,jfif-version,jfif-density-units,
 /// jfif-x-density,jfif-y-density,jfif-thumbnail,frame,sof-marker,arithmetic,quant-tables,
 /// huffman-tables,restart-interval,other-segments]` tuple — declaration order, both sides agree.
-fn enc_jpg_snapshot(s: &JpgSnapshot) -> String {
+async fn enc_jpg_snapshot(s: &JpgSnapshot) -> String {
     let quant = s.quant_tables.iter().map(diff::enc_quant_table).collect::<Vec<_>>().join(",");
     let huff = s.huffman_tables.iter().map(diff::enc_huffman_table).collect::<Vec<_>>().join(",");
     let segs = s.other_segments.iter().map(diff::enc_segment).collect::<Vec<_>>().join(",");
@@ -219,7 +219,7 @@ fn enc_jpg_snapshot(s: &JpgSnapshot) -> String {
         segs,
     )
 }
-fn dec_jpg_snapshot(s: &str) -> Result<JpgSnapshot, String> {
+async fn dec_jpg_snapshot(s: &str) -> Result<JpgSnapshot, String> {
     let parts = diff::split_top_level(diff::strip_brackets(s)?, ',');
     let [schema, width, height, pixels, re_encode_quality, jfif_version, jfif_density_units, jfif_x_density, jfif_y_density, jfif_thumbnail, frame, sof_marker, arithmetic, quant_tables, huffman_tables, restart_interval, other_segments] =
         parts.as_slice()
@@ -247,7 +247,7 @@ fn dec_jpg_snapshot(s: &str) -> Result<JpgSnapshot, String> {
     })
 }
 
-fn print_jpg_mutation(m: &JpgMutation) -> String {
+async fn print_jpg_mutation(m: &JpgMutation) -> String {
     match m {
         JpgMutation::NoMutation => "no-mutation".to_string(),
         JpgMutation::SetSnapshot { snapshot } => format!("set-snapshot snapshot={}", enc_jpg_snapshot(snapshot)),
@@ -265,7 +265,7 @@ fn print_jpg_mutation(m: &JpgMutation) -> String {
         JpgMutation::SetReEncodeQuality { quality } => format!("set-re-encode-quality quality={}", diff::encode_option(quality, |v| v.to_string())),
     }
 }
-fn parse_jpg_mutation(line: &str) -> Result<JpgMutation, String> {
+async fn parse_jpg_mutation(line: &str) -> Result<JpgMutation, String> {
     if line == "no-mutation" {
         return Ok(JpgMutation::NoMutation);
     }
@@ -295,10 +295,10 @@ fn parse_jpg_mutation(line: &str) -> Result<JpgMutation, String> {
 }
 
 impl OpText for JpgMutation {
-    fn print_op(&self) -> String {
+    async fn print_op(&self) -> String {
         print_jpg_mutation(self)
     }
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
+    async fn parse_op(line: &str) -> Result<Self, store::TextError> {
         parse_jpg_mutation(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
 }
@@ -309,7 +309,7 @@ impl OpText for JpgMutation {
 /// value codecs (`enc_version_bin`/`enc_thumbnail_bin`/`enc_frame_header_bin`/`enc_quant_table_bin`/
 /// `enc_huffman_table_bin`/`enc_segment_bin`/`write_bytes_lp`/`write_opt`/...) rather than a third
 /// copy. Backs `SetSnapshot`'s payload in the upgraded `OpBinary` below.
-fn enc_jpg_snapshot_bin(s: &JpgSnapshot, out: &mut Vec<u8>) {
+async fn enc_jpg_snapshot_bin(s: &JpgSnapshot, out: &mut Vec<u8>) {
     diff::write_bytes_lp(out, s.schema.as_bytes());
     store::pack_rt::write_varint_u64(out, s.width as u64);
     store::pack_rt::write_varint_u64(out, s.height as u64);
@@ -337,7 +337,7 @@ fn enc_jpg_snapshot_bin(s: &JpgSnapshot, out: &mut Vec<u8>) {
         diff::enc_segment_bin(seg, out);
     }
 }
-fn dec_jpg_snapshot_bin(reader: &mut store::ByteReader<'_>) -> Result<JpgSnapshot, String> {
+async fn dec_jpg_snapshot_bin(reader: &mut store::ByteReader<'_>) -> Result<JpgSnapshot, String> {
     let schema = String::from_utf8(diff::read_bytes_lp(reader)?).map_err(|e| e.to_string())?;
     let width = reader.read_varint_u64().map_err(|e| e.to_string())? as u32;
     let height = reader.read_varint_u64().map_err(|e| e.to_string())? as u32;
@@ -380,7 +380,7 @@ fn dec_jpg_snapshot_bin(reader: &mut store::ByteReader<'_>) -> Result<JpgSnapsho
 /// provide — no opaque tail anywhere in this frame (jpg has no self-recursive mutation payload,
 /// unlike xml's `XmlMutation`).
 impl OpBinary for JpgMutation {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         let mut out = vec![store::pack_rt::OP_BINARY_FORMAT, 0u8];
         match self {
             JpgMutation::NoMutation => {
@@ -438,7 +438,7 @@ impl OpBinary for JpgMutation {
         }
         Ok(out)
     }
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         let mut reader = store::ByteReader::new(bytes);
         let malformed = |what: &'static str, offset: usize, detail: String| protocol::ProtocolError::Malformed { what, offset: offset as u64, detail };
         let _format = reader.read_u8().map_err(|e| malformed("op format", 0, e.to_string()))?;
@@ -481,14 +481,14 @@ impl OpBinary for JpgMutation {
 /// conformance tests. `pub(crate)` (not `#[cfg(test)]`-gated) so the engine's non-test conformance
 /// module can reuse it, matching png's own `demo_mutation_cases()` visibility.
 #[cfg(test)]
-pub(crate) fn demo_mutation_cases() -> Vec<JpgMutation> {
-    fn quant(id: u8, seed: u16) -> JpgQuantTable {
+pub(crate) async fn demo_mutation_cases() -> Vec<JpgMutation> {
+    async fn quant(id: u8, seed: u16) -> JpgQuantTable {
         JpgQuantTable { id, precision: 0, values: [seed; 64] }
     }
-    fn huffman(class: JpgHuffmanClass, id: u8, seed: u8) -> JpgHuffmanTable {
+    async fn huffman(class: JpgHuffmanClass, id: u8, seed: u8) -> JpgHuffmanTable {
         JpgHuffmanTable { id, class, bits: [seed; 16], values: vec![seed, seed.wrapping_add(1)] }
     }
-    fn segment(marker: u8, data: Vec<u8>) -> JpgSegment {
+    async fn segment(marker: u8, data: Vec<u8>) -> JpgSegment {
         JpgSegment { marker, data }
     }
     use crate::artifacts::jpg::schema::snapshot::{JpgFrameComponent, JpgFrameHeader, JpgHuffmanClass};
@@ -550,17 +550,17 @@ mod tests {
     use protocol::command::DiffAlgebra;
 
     //#region 🔖️Fixtures
-    fn quant(id: u8, seed: u16) -> JpgQuantTable {
+    async fn quant(id: u8, seed: u16) -> JpgQuantTable {
         JpgQuantTable { id, precision: 0, values: [seed; 64] }
     }
-    fn huffman(class: JpgHuffmanClass, id: u8, seed: u8) -> JpgHuffmanTable {
+    async fn huffman(class: JpgHuffmanClass, id: u8, seed: u8) -> JpgHuffmanTable {
         JpgHuffmanTable { id, class, bits: [seed; 16], values: vec![seed, seed.wrapping_add(1)] }
     }
-    fn segment(marker: u8, data: Vec<u8>) -> JpgSegment {
+    async fn segment(marker: u8, data: Vec<u8>) -> JpgSegment {
         JpgSegment { marker, data }
     }
 
-    fn base_snapshot() -> JpgSnapshot {
+    async fn base_snapshot() -> JpgSnapshot {
         JpgSnapshot {
             schema: "stdio.jpg".into(),
             width: 4,
@@ -595,7 +595,7 @@ mod tests {
     /// "removed-in-forward / added-in-backward" item as the tail — the recipe's documented
     /// workaround for the structural "same-length between() can show removed XOR added, never
     /// both from one call" trap (see png/f1's field_sweep precedent).
-    fn sweep_a() -> JpgSnapshot {
+    async fn sweep_a() -> JpgSnapshot {
         JpgSnapshot {
             schema: "stdio.jpg".into(),
             width: 10,
@@ -622,7 +622,7 @@ mod tests {
         }
     }
 
-    fn sweep_b() -> JpgSnapshot {
+    async fn sweep_b() -> JpgSnapshot {
         JpgSnapshot {
             schema: "stdio.jpg".into(),
             width: 11,
@@ -646,7 +646,7 @@ mod tests {
     //#endregion 🔖️FieldSweepFixtures
 
     //#region 🔖️mutation_diff_law
-    fn assert_mutation_diff_law(base: &JpgSnapshot, mutation: JpgMutation) {
+    async fn assert_mutation_diff_law(base: &JpgSnapshot, mutation: JpgMutation) {
         let expected_diff = mutation.diff(base);
         let mut applied_snapshot = base.clone();
         let returned_diff = apply_jpg_mutation(&mut applied_snapshot, &mutation);
@@ -654,7 +654,7 @@ mod tests {
         assert_eq!(expected_diff.diff().apply(base).expect("diff must apply to base"), applied_snapshot, "diff.diff().apply(base) must equal the imperative mutation result for {mutation:?}");
     }
 
-    fn all_variants(base: &JpgSnapshot) -> Vec<JpgMutation> {
+    async fn all_variants(base: &JpgSnapshot) -> Vec<JpgMutation> {
         vec![
             JpgMutation::NoMutation,
             JpgMutation::SetSnapshot {
@@ -686,7 +686,7 @@ mod tests {
     }
 
     #[test]
-    fn mutation_diff_law() {
+    async fn mutation_diff_law() {
         let base = base_snapshot();
         for m in all_variants(&base) {
             assert_mutation_diff_law(&base, m);
@@ -696,7 +696,7 @@ mod tests {
 
     //#region 🔖️inverse_law
     #[test]
-    fn inverse_law() {
+    async fn inverse_law() {
         let base = base_snapshot();
         for m in all_variants(&base) {
             // Mutation-level round trip.
@@ -717,7 +717,7 @@ mod tests {
     //#endregion 🔖️inverse_law
 
     //#region 🔖️absorb_law
-    fn assert_absorb_law(base: &JpgSnapshot, m1: JpgMutation, m2: JpgMutation) {
+    async fn assert_absorb_law(base: &JpgSnapshot, m1: JpgMutation, m2: JpgMutation) {
         let d1 = m1.diff(base);
         let mid = d1.diff().apply(base).expect("d1 must apply to base");
         let d2 = m2.diff(&mid);
@@ -729,7 +729,7 @@ mod tests {
     }
 
     #[test]
-    fn absorb_law() {
+    async fn absorb_law() {
         let base = base_snapshot();
 
         // Insert+Remove-before: other_segments has [seg@0]; insert at 1 -> [seg,new]; then
@@ -756,7 +756,7 @@ mod tests {
     }
 
     #[test]
-    fn absorb_law_associativity() {
+    async fn absorb_law_associativity() {
         let base = base_snapshot();
         let d1 = JpgMutation::SetQuantTable { table: quant(7, 1) }.diff(&base);
         let s1 = d1.diff().apply(&base).expect("d1 must apply to base");
@@ -784,7 +784,7 @@ mod tests {
 
     //#region 🔖️between_roundtrip_law
     #[test]
-    fn between_roundtrip_law() {
+    async fn between_roundtrip_law() {
         let a = base_snapshot();
         let mut b = base_snapshot();
         b.width = 8;
@@ -801,7 +801,7 @@ mod tests {
 
     //#region 🔖️codec_retention_law
     #[test]
-    fn codec_retention_law() {
+    async fn codec_retention_law() {
         let bytes = std::fs::read(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🗿️artifacts/📷️jpg/📚️examples/🎬️demo/🖼️assets/📷️example.jpg"));
         let bytes = match bytes {
             Ok(b) if !b.is_empty() => b,
@@ -835,7 +835,7 @@ mod tests {
 
     //#region 🔖️field_sweep
     #[test]
-    fn field_sweep_covers_every_mutable_field() {
+    async fn field_sweep_covers_every_mutable_field() {
         let a = sweep_a();
         let b = sweep_b();
 
@@ -926,7 +926,7 @@ mod tests {
     //#endregion 🔖️field_sweep
 
     #[test]
-    fn out_of_range_mutation_is_noop_not_panic() {
+    async fn out_of_range_mutation_is_noop_not_panic() {
         let base = base_snapshot();
         let mut snap = base.clone();
         apply_jpg_mutation(&mut snap, &JpgMutation::RemoveQuantTable { id: 99 });
@@ -943,7 +943,7 @@ mod tests {
     /// tree and every collection-item struct (`JpgQuantTable`/`JpgHuffmanTable`/`JpgSegment`), plus
     /// both `Some`/`None` legs of every `Option<T>`-shaped mutation argument.
     #[test]
-    fn op_text_binary_roundtrip_law() {
+    async fn op_text_binary_roundtrip_law() {
         let base = base_snapshot();
         let mutations = vec![
             JpgMutation::NoMutation,

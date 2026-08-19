@@ -5,7 +5,7 @@ use crate::artifacts::en1997::mutations::change_q_b_kpa::mutation::ChangeQBKpa;
 use crate::artifacts::en1997::En1997Snapshot;
 
 //#region 🔖️Diff
-pub fn diff(payload: &ChangeQBKpa, base: &En1997Snapshot) -> protocol::MutationOutcome<En1997Diff> {
+pub async fn diff(payload: &ChangeQBKpa, base: &En1997Snapshot) -> protocol::MutationOutcome<En1997Diff> {
     if !payload.new_q_b_kpa.is_finite() {
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("Base resistance q_b [kPa] must be a finite number, got {}.", payload.new_q_b_kpa), Vec::<String>::new());
     }

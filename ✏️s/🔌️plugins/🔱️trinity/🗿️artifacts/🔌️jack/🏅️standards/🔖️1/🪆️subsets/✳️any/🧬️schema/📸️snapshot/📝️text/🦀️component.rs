@@ -56,7 +56,7 @@ pub(crate) enum PortDirectionDsl {
 }
 
 impl From<PortDirection> for PortDirectionDsl {
-    fn from(value: PortDirection) -> Self {
+    async fn from(value: PortDirection) -> Self {
         match value {
             PortDirection::In => PortDirectionDsl::In,
             PortDirection::Out => PortDirectionDsl::Out,
@@ -65,7 +65,7 @@ impl From<PortDirection> for PortDirectionDsl {
 }
 
 impl From<PortDirectionDsl> for PortDirection {
-    fn from(value: PortDirectionDsl) -> Self {
+    async fn from(value: PortDirectionDsl) -> Self {
         match value {
             PortDirectionDsl::In => PortDirection::In,
             PortDirectionDsl::Out => PortDirection::Out,
@@ -85,11 +85,11 @@ pub(crate) struct PortDsl {
     properties: PropertyBag,
 }
 
-pub(crate) fn port_to_port_dsl(port: &Port) -> PortDsl {
+pub(crate) async fn port_to_port_dsl(port: &Port) -> PortDsl {
     PortDsl { id: port.id.clone(), kind: port.kind.clone(), direction: port.direction.into(), properties: port.properties.clone() }
 }
 
-pub(crate) fn port_dsl_to_port(port: PortDsl) -> Port {
+pub(crate) async fn port_dsl_to_port(port: PortDsl) -> Port {
     Port { id: port.id, kind: port.kind, direction: port.direction.into(), properties: port.properties }
 }
 //#endregion 🔖️DslMirrors
@@ -98,28 +98,28 @@ pub(crate) fn port_dsl_to_port(port: PortDsl) -> Port {
 /// 🧪️ Real hex-encoded value primitives backing the hand-rolled `ArtifactDsl` below — same style
 /// `dag`'s own facet establishes, duplicated locally (not imported across crates) to keep this facet
 /// independently compilable.
-fn hex_encode(bytes: &[u8]) -> String {
+async fn hex_encode(bytes: &[u8]) -> String {
     bytes.iter().map(|b| format!("{b:02x}")).collect()
 }
-fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
+async fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
     if s.len() % 2 != 0 {
         return Err(format!("odd hex length: {s:?}"));
     }
     (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()
 }
-pub(crate) fn enc_str(s: &str) -> String {
+pub(crate) async fn enc_str(s: &str) -> String {
     hex_encode(s.as_bytes())
 }
-pub(crate) fn dec_str(s: &str) -> Result<String, String> {
+pub(crate) async fn dec_str(s: &str) -> Result<String, String> {
     String::from_utf8(hex_decode(s)?).map_err(|e| e.to_string())
 }
-fn enc_opt_str(s: &Option<String>) -> String {
+async fn enc_opt_str(s: &Option<String>) -> String {
     match s {
         Some(v) => enc_str(v),
         None => "-".to_string(),
     }
 }
-fn dec_opt_str(s: &str) -> Result<Option<String>, String> {
+async fn dec_opt_str(s: &str) -> Result<Option<String>, String> {
     if s == "-" {
         Ok(None)
     } else {
@@ -127,7 +127,7 @@ fn dec_opt_str(s: &str) -> Result<Option<String>, String> {
     }
 }
 
-fn print_jack_snapshot_body(s: &JackSnapshot) -> String {
+async fn print_jack_snapshot_body(s: &JackSnapshot) -> String {
     let scene = crate::artifacts::jack::jack_working_scene(s);
     let camera_json = serde_json::to_string(&s.camera).unwrap_or_default();
     let nodes_json = serde_json::to_string(&scene.nodes).unwrap_or_default();
@@ -144,7 +144,7 @@ fn print_jack_snapshot_body(s: &JackSnapshot) -> String {
     )
 }
 
-fn parse_jack_snapshot_body(body: &str) -> Result<JackSnapshot, String> {
+async fn parse_jack_snapshot_body(body: &str) -> Result<JackSnapshot, String> {
     let mut schema = None;
     let mut name = None;
     let mut manifest_id: Option<Option<String>> = None;
@@ -192,18 +192,18 @@ fn parse_jack_snapshot_body(body: &str) -> Result<JackSnapshot, String> {
 //#region 🔖️BinaryPrimitives
 /// 🧪️ Real LEB128-varint-length-prefixed binary primitives (`store::pack_rt::write_varint_u64` /
 /// `store::ByteReader`), matching `dag`'s own `write_str_lp`/`read_str_lp` convention.
-fn write_bytes_lp(out: &mut Vec<u8>, bytes: &[u8]) {
+async fn write_bytes_lp(out: &mut Vec<u8>, bytes: &[u8]) {
     store::pack_rt::write_varint_u64(out, bytes.len() as u64);
     out.extend_from_slice(bytes);
 }
-fn read_bytes_lp(reader: &mut store::ByteReader<'_>) -> Result<Vec<u8>, String> {
+async fn read_bytes_lp(reader: &mut store::ByteReader<'_>) -> Result<Vec<u8>, String> {
     let len = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
     Ok(reader.read_bytes(len).map_err(|e| e.to_string())?.to_vec())
 }
-fn write_str_lp(out: &mut Vec<u8>, s: &str) {
+async fn write_str_lp(out: &mut Vec<u8>, s: &str) {
     write_bytes_lp(out, s.as_bytes());
 }
-fn read_str_lp(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
+async fn read_str_lp(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
     String::from_utf8(read_bytes_lp(reader)?).map_err(|e| e.to_string())
 }
 //#endregion 🔖️BinaryPrimitives
@@ -211,9 +211,9 @@ fn read_str_lp(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
 //#region 🔖️HandcraftedArtifactCodecs
 impl ArtifactDsl for JackSnapshot {
     const EXTENSION: &'static str = "trinity";
-    fn envelope_id() -> &'static str { "trinity.jack" }
+    async fn envelope_id() -> &'static str { "trinity.jack" }
 
-    fn parse_dsl(text: &str) -> Result<Self, TextError> {
+    async fn parse_dsl(text: &str) -> Result<Self, TextError> {
         let body = match store::semio_format::split_text_preamble(text) {
             Ok((_, rest)) => rest,
             Err(_) => text,
@@ -221,7 +221,7 @@ impl ArtifactDsl for JackSnapshot {
         parse_jack_snapshot_body(body).map_err(|e| TextError::new(e, TextSpan::at(1, 1)))
     }
 
-    fn print_dsl(&self) -> String {
+    async fn print_dsl(&self) -> String {
         let body = print_jack_snapshot_body(self);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
             <Self as ArtifactDsl>::envelope_id(),
@@ -233,7 +233,7 @@ impl ArtifactDsl for JackSnapshot {
 }
 
 impl store::ArtifactPack for JackSnapshot {
-    fn encode_pack_with(&self, options: &PackEncodeOptions) -> Result<Vec<u8>, PackError> {
+    async fn encode_pack_with(&self, options: &PackEncodeOptions) -> Result<Vec<u8>, PackError> {
         let _ = options;
         let scene = crate::artifacts::jack::jack_working_scene(self);
         let mut out = Vec::new();
@@ -256,7 +256,7 @@ impl store::ArtifactPack for JackSnapshot {
         Ok(store::semio_format::wrap_binary(&envelope, &out))
     }
 
-    fn decode_pack_with(bytes: &[u8], options: &PackDecodeOptions) -> Result<Self, PackError> {
+    async fn decode_pack_with(bytes: &[u8], options: &PackDecodeOptions) -> Result<Self, PackError> {
         let (envelope, inner) = store::semio_format::unwrap_binary(bytes)
             .map_err(|e| PackError::Schema(e.to_string()))?;
         if envelope.envelope_id() != <Self as ArtifactDsl>::envelope_id() {
@@ -299,12 +299,12 @@ impl store::ArtifactPack for JackSnapshot {
 pub const NAKAGIN_EXAMPLE_TEXT: &str = include_str!("../../../📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio");
 
 /// 📖️ Parses `.trinity` DSL text into a `JackSnapshot`.
-pub fn parse_dsl(text: &str) -> Result<JackSnapshot, TextError> {
+pub async fn parse_dsl(text: &str) -> Result<JackSnapshot, TextError> {
     <JackSnapshot as ArtifactDsl>::parse_dsl(text)
 }
 
 /// 🖨️ Prints a `JackSnapshot` back to `.trinity` DSL text.
-pub fn print_dsl(document: &JackSnapshot) -> String {
+pub async fn print_dsl(document: &JackSnapshot) -> String {
     ArtifactDsl::print_dsl(document)
 }
 
@@ -316,24 +316,24 @@ mod tests {
     use crate::artifacts::jack::empty_trinity_graph_fixture;
 
     #[test]
-    fn nakagin_example_dsl_round_trips() {
+    async fn nakagin_example_dsl_round_trips() {
         let document = parse_dsl(NAKAGIN_EXAMPLE_TEXT).expect("parse nakagin example");
         ::store::os_store::test_support::assert_dsl_round_trip(&document);
     }
 
     #[test]
-    fn empty_document_dsl_round_trips() {
+    async fn empty_document_dsl_round_trips() {
         ::store::os_store::test_support::assert_dsl_round_trip(&empty_trinity_graph_fixture());
     }
 
     #[test]
-    fn parse_dsl_rejects_unknown_keyword() {
+    async fn parse_dsl_rejects_unknown_keyword() {
         let err = JackSnapshot::parse_dsl("bogus line").expect_err("unknown keyword");
         assert!(err.message.contains("jack snapshot"));
     }
 
     #[test]
-    fn dsl_round_trip_mini_and_bundled_fixtures() {
+    async fn dsl_round_trip_mini_and_bundled_fixtures() {
         let nakagin = parse_dsl(NAKAGIN_EXAMPLE_TEXT).unwrap();
         ::store::os_store::test_support::assert_dsl_round_trip(&nakagin);
         ::store::os_store::test_support::assert_dsl_pack_equivalence(&nakagin);
@@ -343,7 +343,7 @@ mod tests {
     /// node property (`position: {x,y,z}`) and `Number`-shaped edge properties (`u`/`v`) — exercises the
     /// JSON-blob content codec round trip on non-trivial `PropertyBag`'s `Object`/`Number` variants.
     #[test]
-    fn dsl_round_trip_mini_fixture() {
+    async fn dsl_round_trip_mini_fixture() {
         use crate::artifacts::jack::{Camera, Edge, JackSnapshot, Manifest, Node, Port, PortDirection, PropertyBag, PropertyValue};
         use std::collections::BTreeMap;
 

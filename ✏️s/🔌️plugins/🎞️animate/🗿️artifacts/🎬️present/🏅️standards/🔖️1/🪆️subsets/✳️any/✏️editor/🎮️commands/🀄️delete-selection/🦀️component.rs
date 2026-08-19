@@ -18,7 +18,7 @@ pub struct DeleteSelection {}
 /// auto-prunes a Flat domain's selection (see the plugin SDK's `validate_state` doc); a deleted tile's
 /// stale id simply stays selected until the next real pick, a documented, accepted gap matching
 /// `🖍️draw`'s `delete-layer`.
-pub fn handle(_payload: &DeleteSelection, doc: &ArtifactView<'_, PresentSnapshot>, _cfg: &ConfigView<'_, PresentConfig>, ctx: &mut PresentDispatchCtx) -> Result<Emit<PresentMutation, PresentConfigMutation>, Fault> {
+pub async fn handle(_payload: &DeleteSelection, doc: &ArtifactView<'_, PresentSnapshot>, _cfg: &ConfigView<'_, PresentConfig>, ctx: &mut PresentDispatchCtx) -> Result<Emit<PresentMutation, PresentConfigMutation>, Fault> {
     let deck = doc.snapshot;
     let targets = valid_tile_ids(deck, ctx.selected_ids.clone());
     if targets.is_empty() {
@@ -42,7 +42,7 @@ mod tests {
     /// downstream crate can populate a genuine `InteractionView`), then confirms `deleteSelection`
     /// removes exactly that tile.
     #[test]
-    fn delete_selection_removes_the_live_selected_tile() {
+    async fn delete_selection_removes_the_live_selected_tile() {
         let mut app = present_app_with_registry();
         dispatch(&mut app, PresentCommand::AddTile(add_tile::AddTile { crop: None }));
         let tile_id = crate::artifacts::present::present_working_scene(&app.snapshot().expect("projection")).1[0].id.clone();
@@ -53,7 +53,7 @@ mod tests {
     }
 
     #[test]
-    fn delete_selection_with_no_selection_is_a_no_op() {
+    async fn delete_selection_with_no_selection_is_a_no_op() {
         let mut app = present_app_with_registry();
         dispatch(&mut app, PresentCommand::AddTile(add_tile::AddTile { crop: None }));
         dispatch(&mut app, PresentCommand::DeleteSelection(DeleteSelection {}));

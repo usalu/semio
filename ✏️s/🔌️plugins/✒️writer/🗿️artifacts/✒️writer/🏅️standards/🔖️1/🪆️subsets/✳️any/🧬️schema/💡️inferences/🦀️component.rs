@@ -27,7 +27,7 @@ pub struct WriterInference {
 }
 
 impl protocol::Inference<WriterSnapshot> for WriterInference {
-    fn infer(snapshot: &WriterSnapshot) -> Self {
+    async fn infer(snapshot: &WriterSnapshot) -> Self {
         Self { outline: WriterOutline::compute(snapshot) }
     }
 }
@@ -36,19 +36,19 @@ impl protocol::Inference<WriterSnapshot> for WriterInference {
 /// `WriterSnapshot::default()`'s `text` field ever stops being empty (same trick the sequence
 /// plugin's own inference facet uses for its non-empty default snapshot).
 impl Default for WriterInference {
-    fn default() -> Self {
+    async fn default() -> Self {
         <Self as protocol::Inference<WriterSnapshot>>::infer(&WriterSnapshot::default())
     }
 }
 
 impl protocol::InferenceSpec<WriterSnapshot> for WriterInference {
-    fn inference_schema_id() -> &'static str {
+    async fn inference_schema_id() -> &'static str {
         "s.writer.writer.inference"
     }
-    fn schema_version() -> u32 {
+    async fn schema_version() -> u32 {
         1
     }
-    fn fields() -> &'static [protocol::InferenceFieldSpec] {
+    async fn fields() -> &'static [protocol::InferenceFieldSpec] {
         &[protocol::InferenceFieldSpec { id: "s.writer.writer.inference.outline", reads: &["text"] }]
     }
 }
@@ -71,7 +71,7 @@ impl ArtifactInferrer for WriterInferrer {
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.writer.writer.inference`'s facet leaves into the OS-wide inference catalog —
 /// call once at plugin init, alongside `writer_artifact_schema_descriptor`'s registration.
-pub fn writer_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
+pub async fn writer_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
     schema::ArtifactInferenceDescriptor {
         id: "s.writer.writer.inference",
         inference: schema::FacetLeaves {
@@ -89,7 +89,7 @@ pub fn writer_artifact_inference_descriptor() -> schema::ArtifactInferenceDescri
 /// 📡️ Semantic token payload for the text editor scene (LSP `data` array or grammar tokens) — derived
 /// straight from a `WriterSnapshot` (its `language_id`/`text` fields), so it lives here beside
 /// `WriterInference` rather than in `🧬️schema`'s text-only helpers.
-pub fn language_tokens_json(document: &WriterSnapshot) -> Option<String> {
+pub async fn language_tokens_json(document: &WriterSnapshot) -> Option<String> {
     let text = crate::artifacts::writer::writer_text(document);
     eprintln!(
         "[DEBUG] writer.schema.inferences language_tokens_json language_id={} text_len={}",
@@ -107,7 +107,7 @@ pub fn language_tokens_json(document: &WriterSnapshot) -> Option<String> {
     None
 }
 
-pub fn language_diagnostics_json(document: &WriterSnapshot, lint_signal: u32) -> Option<String> {
+pub async fn language_diagnostics_json(document: &WriterSnapshot, lint_signal: u32) -> Option<String> {
     let text = crate::artifacts::writer::writer_text(document);
     if document.language_id == "jack" {
         let graph = example_graph();
@@ -146,13 +146,13 @@ mod tests {
     use protocol::Inference;
 
     #[test]
-    fn inference_determinism_law() {
+    async fn inference_determinism_law() {
         let snapshot = WriterSnapshot::default();
         assert_eq!(WriterInference::infer(&snapshot), WriterInference::infer(&snapshot));
     }
 
     #[test]
-    fn inference_default_law() {
+    async fn inference_default_law() {
         assert_eq!(WriterInference::infer(&WriterSnapshot::default()), WriterInference::default());
     }
 }

@@ -5,7 +5,7 @@ use crate::artifacts::en1998::mutations::change_tank_radius_m::mutation::ChangeT
 use crate::artifacts::en1998::En1998Snapshot;
 
 //#region 🔖️Diff
-pub fn diff(payload: &ChangeTankRadiusM, base: &En1998Snapshot) -> protocol::MutationOutcome<En1998Diff> {
+pub async fn diff(payload: &ChangeTankRadiusM, base: &En1998Snapshot) -> protocol::MutationOutcome<En1998Diff> {
     if !payload.new_tank_radius_m.is_finite() {
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("Tank radius [m] must be a finite number, got {}.", payload.new_tank_radius_m), Vec::<String>::new());
     }

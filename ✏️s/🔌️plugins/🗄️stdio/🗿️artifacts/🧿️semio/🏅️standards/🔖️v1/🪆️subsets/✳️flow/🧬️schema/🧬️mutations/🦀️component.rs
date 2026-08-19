@@ -90,20 +90,20 @@ pub enum SemioFlowMutation {
 //#region 🔖️Apply
 /// ▶️ Applies `mutation` to `snapshot`: `let d = mutation.diff(&*snapshot); *snapshot =
 /// d.apply(snapshot); d` — the diff is the single semantics source (mirrors docx/gif convention).
-pub fn apply_semio_flow_mutation(snapshot: &mut SemioFlowSnapshot, mutation: &SemioFlowMutation) -> protocol::MutationOutcome<SemioFlowDiff> {
+pub async fn apply_semio_flow_mutation(snapshot: &mut SemioFlowSnapshot, mutation: &SemioFlowMutation) -> protocol::MutationOutcome<SemioFlowDiff> {
     let outcome = Mutation::diff(mutation, snapshot);
     outcome.apply_to(snapshot)
 }
 //#endregion 🔖️Apply
 
 //#region 🔖️Helpers
-fn node_at<'a>(base: &'a SemioFlowSnapshot, id: &str) -> Option<&'a FlowNode> {
+async fn node_at<'a>(base: &'a SemioFlowSnapshot, id: &str) -> Option<&'a FlowNode> {
     base.nodes.iter().find(|n| n.id == id)
 }
-fn edge_at<'a>(base: &'a SemioFlowSnapshot, id: &str) -> Option<&'a FlowEdge> {
+async fn edge_at<'a>(base: &'a SemioFlowSnapshot, id: &str) -> Option<&'a FlowEdge> {
     base.edges.iter().find(|e| e.id == id)
 }
-fn param_value_at<'a>(base: &'a SemioFlowSnapshot, id: &str, key: &str) -> Option<&'a str> {
+async fn param_value_at<'a>(base: &'a SemioFlowSnapshot, id: &str, key: &str) -> Option<&'a str> {
     node_at(base, id)?.params.iter().find(|p| p.key == key).map(|p| p.value.as_str())
 }
 //#endregion 🔖️Helpers
@@ -112,7 +112,7 @@ fn param_value_at<'a>(base: &'a SemioFlowSnapshot, id: &str, key: &str) -> Optio
 impl Mutation<SemioFlowSnapshot> for SemioFlowMutation {
     type Diff = SemioFlowDiff;
 
-    fn diff(&self, base: &SemioFlowSnapshot) -> protocol::MutationOutcome<Self::Diff> {
+    async fn diff(&self, base: &SemioFlowSnapshot) -> protocol::MutationOutcome<Self::Diff> {
         protocol::MutationOutcome::new(match self {
             SemioFlowMutation::NoMutation => SemioFlowDiff::default(),
             SemioFlowMutation::SetSnapshot { snapshot } => diff_set_snapshot(base, snapshot),
@@ -130,7 +130,7 @@ impl Mutation<SemioFlowSnapshot> for SemioFlowMutation {
         })
     }
 
-    fn inverse(&self, base: &SemioFlowSnapshot) -> Vec<Self> {
+    async fn inverse(&self, base: &SemioFlowSnapshot) -> Vec<Self> {
         match self {
             SemioFlowMutation::NoMutation => vec![SemioFlowMutation::NoMutation],
             SemioFlowMutation::SetSnapshot { .. } => vec![SemioFlowMutation::SetSnapshot { snapshot: base.clone() }],
@@ -183,10 +183,10 @@ impl Mutation<SemioFlowSnapshot> for SemioFlowMutation {
 /// family of gap `DocxMutation`'s doc comment documents for its own `DocxBlock`/`DocxSnapshot`
 /// payloads). Grammar: `keyword arg=value ...` (space-separated), reusing `schema::diff`'s
 /// `pub(crate)` grammar primitives.
-fn enc_semio_flow_snapshot(s: &SemioFlowSnapshot) -> String {
+async fn enc_semio_flow_snapshot(s: &SemioFlowSnapshot) -> String {
     format!("[{},{},{}]", enc_str(&s.schema), format!("[{}]", s.nodes.iter().map(enc_node).collect::<Vec<_>>().join(",")), format!("[{}]", s.edges.iter().map(enc_edge).collect::<Vec<_>>().join(",")))
 }
-fn dec_semio_flow_snapshot(s: &str) -> Result<SemioFlowSnapshot, String> {
+async fn dec_semio_flow_snapshot(s: &str) -> Result<SemioFlowSnapshot, String> {
     let inner = strip_brackets(s)?;
     let parts = split_top_level(inner, ',');
     let [schema, nodes, edges] = parts.as_slice() else { return Err(format!("snapshot: expected 3 fields, got {}", parts.len())) };
@@ -195,7 +195,7 @@ fn dec_semio_flow_snapshot(s: &str) -> Result<SemioFlowSnapshot, String> {
     Ok(SemioFlowSnapshot { schema: dec_str(schema)?, nodes, edges })
 }
 
-fn print_flow_mutation(m: &SemioFlowMutation) -> String {
+async fn print_flow_mutation(m: &SemioFlowMutation) -> String {
     match m {
         SemioFlowMutation::NoMutation => "no-mutation".to_string(),
         SemioFlowMutation::SetSnapshot { snapshot } => format!("set-snapshot snapshot={}", enc_semio_flow_snapshot(snapshot)),
@@ -212,7 +212,7 @@ fn print_flow_mutation(m: &SemioFlowMutation) -> String {
         SemioFlowMutation::SetEdgeKind { id, kind } => format!("set-edge-kind id={} kind={}", enc_str(id), enc_str(kind)),
     }
 }
-fn parse_flow_mutation(line: &str) -> Result<SemioFlowMutation, String> {
+async fn parse_flow_mutation(line: &str) -> Result<SemioFlowMutation, String> {
     if line == "no-mutation" {
         return Ok(SemioFlowMutation::NoMutation);
     }
@@ -237,10 +237,10 @@ fn parse_flow_mutation(line: &str) -> Result<SemioFlowMutation, String> {
 }
 
 impl OpText for SemioFlowMutation {
-    fn print_op(&self) -> String {
+    async fn print_op(&self) -> String {
         print_flow_mutation(self)
     }
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
+    async fn parse_op(line: &str) -> Result<Self, store::TextError> {
         parse_flow_mutation(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
 }
@@ -249,7 +249,7 @@ impl OpText for SemioFlowMutation {
 /// `parse_flow_mutation`'s keyword match — the real binary `tag` field's source of truth.
 const OP_KEYWORDS: [&str; 13] =
     ["no-mutation", "set-snapshot", "insert-node", "remove-node", "set-node-kind", "set-node-label", "set-node-position", "set-node-param", "remove-node-param", "insert-edge", "remove-edge", "set-edge-endpoints", "set-edge-kind"];
-fn variant_ordinal(m: &SemioFlowMutation) -> u8 {
+async fn variant_ordinal(m: &SemioFlowMutation) -> u8 {
     match m {
         SemioFlowMutation::NoMutation => 0,
         SemioFlowMutation::SetSnapshot { .. } => 1,
@@ -269,7 +269,7 @@ fn variant_ordinal(m: &SemioFlowMutation) -> u8 {
 /// ✂️ Just the `key=value ...` argument tail of `print_flow_mutation` (empty for
 /// `no-mutation`) — the binary frame's `tag` byte already carries the keyword, so the text
 /// keyword itself is redundant in the binary payload.
-fn print_flow_mutation_args(m: &SemioFlowMutation) -> String {
+async fn print_flow_mutation_args(m: &SemioFlowMutation) -> String {
     match print_flow_mutation(m).split_once(' ') {
         Some((_, rest)) => rest.to_string(),
         None => String::new(),
@@ -283,13 +283,13 @@ fn print_flow_mutation_args(m: &SemioFlowMutation) -> String {
 /// `print_flow_mutation`/`parse_flow_mutation` text codec rather than re-deriving a second
 /// independent encoding.
 impl OpBinary for SemioFlowMutation {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         const OP_BINARY_FORMAT: u8 = 1;
         let mut out = vec![OP_BINARY_FORMAT, variant_ordinal(self)];
         out.extend_from_slice(print_flow_mutation_args(self).as_bytes());
         Ok(out)
     }
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         const OP_BINARY_FORMAT: u8 = 1;
         if bytes.len() < 2 {
             return Err(protocol::ProtocolError::Malformed { what: "op header", offset: 0, detail: "truncated (need format+tag)".to_string() });
@@ -311,16 +311,16 @@ impl OpBinary for SemioFlowMutation {
 /// single source of truth for this facet's own tests AND `ops_grammar_conformance_law`/
 /// `protocol_walk_law` in `🎹️composer/🦀️component.rs`.
 #[cfg(test)]
-fn node(id: &str, kind: &str, label: &str, x: f64, y: f64) -> FlowNode {
+async fn node(id: &str, kind: &str, label: &str, x: f64, y: f64) -> FlowNode {
     FlowNode { id: id.into(), kind: kind.into(), label: label.into(), params: vec![crate::artifacts::semio::standards::v1::subsets::flow::schema::snapshot::FlowParam { key: "k".into(), value: "v".into() }], position: SemioPoint2 { x, y } }
 }
 #[cfg(test)]
-fn edge(id: &str, from_node: &str, to_node: &str, kind: &str) -> FlowEdge {
+async fn edge(id: &str, from_node: &str, to_node: &str, kind: &str) -> FlowEdge {
     FlowEdge { id: id.into(), from: PortRef { node: from_node.into(), port: "out".into() }, to: PortRef { node: to_node.into(), port: "in".into() }, kind: kind.into() }
 }
 
 #[cfg(test)]
-fn fixture() -> SemioFlowSnapshot {
+async fn fixture() -> SemioFlowSnapshot {
     SemioFlowSnapshot {
         schema: crate::artifacts::semio::standards::v1::subsets::flow::schema::snapshot::STDIO_SEMIOFLOW_DOCUMENT_SCHEMA.into(),
         nodes: vec![node("n1", "source", "Source", 0.0, 0.0), node("n2", "sink", "Sink", 10.0, 10.0)],
@@ -329,7 +329,7 @@ fn fixture() -> SemioFlowSnapshot {
 }
 
 #[cfg(test)]
-pub(crate) fn demo_mutation_cases() -> Vec<SemioFlowMutation> {
+pub(crate) async fn demo_mutation_cases() -> Vec<SemioFlowMutation> {
     vec![
         SemioFlowMutation::NoMutation,
         SemioFlowMutation::SetSnapshot { snapshot: fixture() },
@@ -357,7 +357,7 @@ mod tests {
 
     //#region 🔖️MutationDiffLaw
     #[test]
-    fn mutation_diff_law() {
+    async fn mutation_diff_law() {
         for mutation in demo_mutation_cases() {
             let base = fixture();
             let diff_direct = Mutation::diff(&mutation, &base);
@@ -374,7 +374,7 @@ mod tests {
 
     //#region 🔖️InverseLaw
     #[test]
-    fn inverse_law() {
+    async fn inverse_law() {
         for mutation in demo_mutation_cases() {
             let base = fixture();
 
@@ -396,7 +396,7 @@ mod tests {
 
     //#region 🔖️OpTextBinaryRoundtripLaw
     #[test]
-    fn op_text_binary_roundtrip_law() {
+    async fn op_text_binary_roundtrip_law() {
         for mutation in demo_mutation_cases() {
             let printed = mutation.print_op();
             assert!(!printed.contains('\n'), "print_op must be one line, got {printed:?}");
@@ -412,7 +412,7 @@ mod tests {
 
     //#region 🔖️VariantBehavior
     #[test]
-    fn insert_then_remove_node_apply_and_inverse() {
+    async fn insert_then_remove_node_apply_and_inverse() {
         let base = fixture();
         let insert = SemioFlowMutation::InsertNode { node: node("n3", "transform", "T", 5.0, 5.0) };
         let mut after = base.clone();
@@ -425,7 +425,7 @@ mod tests {
     }
 
     #[test]
-    fn node_param_mutations_apply_and_inverse() {
+    async fn node_param_mutations_apply_and_inverse() {
         let base = fixture();
         let set = SemioFlowMutation::SetNodeParam { id: "n1".into(), key: "k".into(), value: "new".into() };
         let mut after = base.clone();
@@ -447,7 +447,7 @@ mod tests {
     }
 
     #[test]
-    fn edge_mutations_apply_and_inverse() {
+    async fn edge_mutations_apply_and_inverse() {
         let base = fixture();
         let set = SemioFlowMutation::SetEdgeEndpoints { id: "e1".into(), from: PortRef { node: "n2".into(), port: "out".into() }, to: PortRef { node: "n1".into(), port: "in".into() } };
         let mut after = base.clone();

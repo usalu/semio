@@ -14,7 +14,7 @@ use semio_framework_plugin::app::declarations::{editor_surface, viewer_surface, 
 use semio_framework_plugin::ExampleSource;
 use std::sync::OnceLock;
 
-fn examples() -> &'static [ExampleSource] {
+async fn examples() -> &'static [ExampleSource] {
     static EXAMPLES: OnceLock<Vec<ExampleSource>> = OnceLock::new();
     EXAMPLES.get_or_init(|| vec![crate::artifacts::dag::examples::demo::source()]).as_slice()
 }
@@ -22,12 +22,12 @@ fn examples() -> &'static [ExampleSource] {
 /// 💡️ `::schema::` (leading `::`, the extern crate `semio_framework_schema`) vs the bare `schema`
 /// local import (this subset's own schema module) — the two share a name, only the leading `::`
 /// disambiguates (recipe-subset.md §4a's own documented pattern).
-fn inference_descriptors() -> &'static [::schema::ArtifactInferenceDescriptor] {
+async fn inference_descriptors() -> &'static [::schema::ArtifactInferenceDescriptor] {
     static DESCRIPTORS: OnceLock<Vec<::schema::ArtifactInferenceDescriptor>> = OnceLock::new();
     DESCRIPTORS.get_or_init(|| vec![schema::inferences::dag_artifact_inference_descriptor()]).as_slice()
 }
 
-pub fn subset() -> SubsetDeclaration {
+pub async fn subset() -> SubsetDeclaration {
     SubsetDeclaration {
         dialect: crate::artifacts::dag::DAG_DIALECT,
         schema: SchemaDeclaration { descriptor: schema::dag_artifact_schema_descriptor(), inferences: inference_descriptors(), inference_services: Vec::new() },

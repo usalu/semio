@@ -13,7 +13,7 @@ use semio_framework_plugin::{ArtifactSerializer, Dialect, StandardId, SubsetId};
 const FROM_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("drawing") };
 const INTO_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.pdf", standard: StandardId("1.7"), subset: SubsetId::ANY };
 
-fn collect_text(node: &DrawNode, out: &mut String) {
+async fn collect_text(node: &DrawNode, out: &mut String) {
     match node {
         DrawNode::Text { value, .. } => {
             if !out.is_empty() {
@@ -64,7 +64,7 @@ mod tests {
     use crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::{SemioPoint2, SemioTransform};
     use crate::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::{DrawCanvas, DrawLayer, PathSegment};
 
-    fn sample_drawing() -> SemioDrawingSnapshot {
+    async fn sample_drawing() -> SemioDrawingSnapshot {
         SemioDrawingSnapshot {
             canvas: DrawCanvas { width: 200.0, height: 100.0, background: None },
             layers: vec![DrawLayer {
@@ -88,7 +88,7 @@ mod tests {
     /// content stream from `text` and `decode_pdf` re-extracts it, so this proves genuinely
     /// working PDF bytes, not just a plausible struct.
     #[test]
-    fn real_byte_round_trip_through_pdf_codec() {
+    async fn real_byte_round_trip_through_pdf_codec() {
         let drawing = sample_drawing();
         let pdf = semio_framework_plugin::resolve_ready(SemioDrawingToPdf::serialize(&drawing)).expect("serialize");
         assert_eq!(pdf.pages.len(), 1);

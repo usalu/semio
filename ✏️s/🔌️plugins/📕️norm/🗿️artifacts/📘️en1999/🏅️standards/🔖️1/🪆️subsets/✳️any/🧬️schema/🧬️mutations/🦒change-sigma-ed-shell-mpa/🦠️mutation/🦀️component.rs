@@ -15,15 +15,15 @@ pub struct ChangeSigmaEdShellMpa {
 impl protocol::MutationKind<En1999Snapshot, En1999Mutation> for ChangeSigmaEdShellMpa {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "sigma-ed-shell-mpa", kind: "change-sigma-ed-shell-mpa", record: "ChangedSigmaEdShellMpa" };
 
-    fn diff(&self, base: &En1999Snapshot) -> protocol::MutationOutcome<En1999Diff> {
+    async fn diff(&self, base: &En1999Snapshot) -> protocol::MutationOutcome<En1999Diff> {
         crate::artifacts::en1999::mutations::change_sigma_ed_shell_mpa::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &En1999Snapshot) -> Vec<En1999Mutation> {
+    async fn inverse(&self, base: &En1999Snapshot) -> Vec<En1999Mutation> {
         crate::artifacts::en1999::mutations::change_sigma_ed_shell_mpa::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         format!("Change shell design stress [MPa] to {}", self.new_sigma_ed_shell_mpa)
     }
 }

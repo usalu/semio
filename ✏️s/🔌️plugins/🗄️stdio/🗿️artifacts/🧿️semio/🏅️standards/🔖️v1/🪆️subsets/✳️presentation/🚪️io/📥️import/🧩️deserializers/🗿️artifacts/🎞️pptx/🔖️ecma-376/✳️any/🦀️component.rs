@@ -29,20 +29,20 @@ use crate::artifacts::semio::standards::v1::subsets::presentation::schema::snaps
 use semio_framework_plugin::{ArtifactDeserializer, Dialect, StandardId, SubsetId};
 
 //#region 🔖️FieldMapping
-fn frame_from_transform(t: &PptxTransform) -> SlideFrame {
+async fn frame_from_transform(t: &PptxTransform) -> SlideFrame {
     SlideFrame { origin: SemioPoint2 { x: t.x as f64, y: t.y as f64 }, width: t.cx as f64, height: t.cy as f64 }
 }
 
-fn map_run(run: &PptxRun) -> DocRun {
+async fn map_run(run: &PptxRun) -> DocRun {
     DocRun { text: run.text.clone(), style: RunStyle { bold: run.bold, italic: run.italic, underline: false, size: run.font_size.map(|v| v as f64), font: None, color: None, link: None } }
 }
 
-fn map_text_frame(paragraphs: &[PptxParagraph]) -> Vec<DocBlock> {
+async fn map_text_frame(paragraphs: &[PptxParagraph]) -> Vec<DocBlock> {
     paragraphs.iter().map(|p| DocBlock::Paragraph { style_id: None, runs: p.runs.iter().map(map_run).collect() }).collect()
 }
 
 /// 🏷️ pptx placeholder type strings (ECMA-376 `ST_PlaceholderType`) -> `PlaceholderKind`.
-pub(crate) fn placeholder_kind_from_str(kind: &str) -> PlaceholderKind {
+pub(crate) async fn placeholder_kind_from_str(kind: &str) -> PlaceholderKind {
     match kind {
         "title" | "ctrTitle" => PlaceholderKind::Title,
         "subTitle" => PlaceholderKind::Subtitle,
@@ -54,7 +54,7 @@ pub(crate) fn placeholder_kind_from_str(kind: &str) -> PlaceholderKind {
     }
 }
 
-fn map_shape(shape: &PptxShape) -> Option<SlideShape> {
+async fn map_shape(shape: &PptxShape) -> Option<SlideShape> {
     match shape {
         PptxShape::TextBox { text_frame, position } => Some(SlideShape::TextBox { frame: frame_from_transform(position), blocks: map_text_frame(text_frame) }),
         PptxShape::Picture { blip_rel_id, position } => Some(SlideShape::Picture { frame: frame_from_transform(position), image: SlidePictureImage { asset_id: blip_rel_id.clone(), mime: String::new(), bytes: Vec::new() } }),
@@ -88,7 +88,7 @@ mod tests {
     use crate::artifacts::xml::schema::snapshot::XmlNode;
     use crate::artifacts::zip::opc::OpcPackage;
 
-    pub(crate) fn sample_pptx() -> PptxSnapshot {
+    pub(crate) async fn sample_pptx() -> PptxSnapshot {
         PptxSnapshot::from_parts(
             OpcPackage::default(),
             Vec::new(),
@@ -106,7 +106,7 @@ mod tests {
     }
 
     #[test]
-    fn maps_shapes_and_drops_other() {
+    async fn maps_shapes_and_drops_other() {
         let semio = semio_framework_plugin::resolve_ready(SemioPresentationFromPptx::deserialize(&sample_pptx())).expect("deserialize");
         assert!(semio.masters.is_empty() && semio.layouts.is_empty());
         assert_eq!(semio.slides.len(), 1);

@@ -39,7 +39,7 @@ pub struct NamedAdded<T> {
 /// algorithm, generic over key/item/diff) from bcf/docx's own hand-rolled copies — this subset's
 /// own instance since no shared generic ALGORITHM exists yet (only the shared struct does; see
 /// module doc comment / `w1b-type-ownership.md`).
-fn between_named<K, T, D>(base: &[T], other: &[T], key_of: impl Fn(&T) -> K, diff_item: impl Fn(&T, &T) -> Option<D>) -> Option<NamedTripleDiff<K, D, NamedAdded<T>>>
+async fn between_named<K, T, D>(base: &[T], other: &[T], key_of: impl Fn(&T) -> K, diff_item: impl Fn(&T, &T) -> Option<D>) -> Option<NamedTripleDiff<K, D, NamedAdded<T>>>
 where
     K: PartialEq + Clone,
     T: Clone + PartialEq,
@@ -75,7 +75,7 @@ where
 /// ▶️ Apply semantics (normative, mirrors `IndexedTripleDiff`'s own `added` handling):
 /// `removed`/`modified` resolve by key; `added` entries carry their FINAL-state target position
 /// and are inserted ascending at `min(index, len)`, exactly like `value`'s `apply_map_diff`.
-fn apply_named<K, T, D>(items: &mut Vec<T>, diff: &NamedTripleDiff<K, D, NamedAdded<T>>, key_of: impl Fn(&T) -> K, apply_item: impl Fn(&mut T, &D))
+async fn apply_named<K, T, D>(items: &mut Vec<T>, diff: &NamedTripleDiff<K, D, NamedAdded<T>>, key_of: impl Fn(&T) -> K, apply_item: impl Fn(&mut T, &D))
 where
     K: PartialEq + Clone,
     T: Clone,
@@ -97,7 +97,7 @@ where
 /// 🧮️ Key-identity absorb: a `d2`-removal of a `d1`-added key annihilates the add; a `d2`-modify
 /// of a `d1`-added key patches into the carried payload; everything else composes on the shared
 /// key space (canonical cases in `absorb_law` below).
-fn absorb_named<K, T, D>(d1: NamedTripleDiff<K, D, T>, d2: NamedTripleDiff<K, D, T>, key_of: impl Fn(&T) -> K, absorb_item: impl Fn(D, D) -> D, apply_item: impl Fn(&mut T, &D)) -> NamedTripleDiff<K, D, T>
+async fn absorb_named<K, T, D>(d1: NamedTripleDiff<K, D, T>, d2: NamedTripleDiff<K, D, T>, key_of: impl Fn(&T) -> K, absorb_item: impl Fn(D, D) -> D, apply_item: impl Fn(&mut T, &D)) -> NamedTripleDiff<K, D, T>
 where
     K: PartialEq + Clone,
     T: Clone,
@@ -215,19 +215,19 @@ pub struct SemioTextureDiff {
 /// 🧭️ Lowers a per-mesh leaf diff into a full `SemioMeshDiff` (mirrors bcf's `wrap_topic_diff` /
 /// docx's per-mutation `diff_*` helpers, specialized to this artifact's fixed two-level id
 /// nesting — meshes never nest deeper than mesh -> primitives).
-pub fn wrap_mesh_diff(mesh_id: &str, diff: SemioMeshItemDiff) -> SemioMeshDiff {
+pub async fn wrap_mesh_diff(mesh_id: &str, diff: SemioMeshItemDiff) -> SemioMeshDiff {
     SemioMeshDiff { meshes: Some(SemioMeshesDiff { removed: Vec::new(), modified: vec![NamedModified { key: mesh_id.to_string(), diff }], added: Vec::new() }), materials: None, textures: None }
 }
 
 /// 🧭️ Lowers a per-primitive leaf diff (inside mesh `mesh_id`) into a full `SemioMeshDiff`.
-pub fn wrap_primitive_diff(mesh_id: &str, primitive_id: &str, diff: SemioPrimitiveDiff) -> SemioMeshDiff {
+pub async fn wrap_primitive_diff(mesh_id: &str, primitive_id: &str, diff: SemioPrimitiveDiff) -> SemioMeshDiff {
     wrap_mesh_diff(mesh_id, SemioMeshItemDiff { primitives: Some(SemioPrimitivesDiff { removed: Vec::new(), modified: vec![NamedModified { key: primitive_id.to_string(), diff }], added: Vec::new() }) })
 }
 //#endregion 🔖️WrapHelpers
 
 //#region 🔖️Apply
 impl MutationDiff<SemioMeshSnapshot> for SemioMeshDiff {
-    fn apply(&self, base: &SemioMeshSnapshot) -> protocol::MutationApplyResult<SemioMeshSnapshot> {
+    async fn apply(&self, base: &SemioMeshSnapshot) -> protocol::MutationApplyResult<SemioMeshSnapshot> {
         let mut next = base.clone();
         if let Some(md) = &self.meshes {
             crate::artifacts::semio::standards::v1::subsets::any::schema::triples::validate_named_triple(&next.meshes, md, |item| item.id.clone(), |added| added.item.id.clone(), ["meshes"])?;
@@ -244,7 +244,7 @@ impl MutationDiff<SemioMeshSnapshot> for SemioMeshDiff {
         Ok(next)
     }
 
-    fn absorb(&mut self, other: Self) {
+    async fn absorb(&mut self, other: Self) {
         self.meshes = match (self.meshes.take(), other.meshes) {
             (None, b) => b,
             (a, None) => a,
@@ -263,7 +263,7 @@ impl MutationDiff<SemioMeshSnapshot> for SemioMeshDiff {
     }
 }
 
-fn apply_mesh(mesh: &mut SemioMesh, diff: &SemioMeshItemDiff) {
+async fn apply_mesh(mesh: &mut SemioMesh, diff: &SemioMeshItemDiff) {
     if let Some(pd) = &diff.primitives {
         apply_named(&mut mesh.primitives, pd, |p| p.id.clone(), apply_primitive);
     }
@@ -272,20 +272,20 @@ fn apply_mesh(mesh: &mut SemioMesh, diff: &SemioMeshItemDiff) {
 /// 🧭️ `NamedAdded<T>`-preserving apply wrappers — used ONLY by `absorb_named`'s `apply_item`
 /// (patching a `d1`-added item's payload with a `d2`-modify, index untouched); see
 /// [`NamedAdded`]'s doc comment.
-fn apply_mesh_added(a: &mut NamedAdded<SemioMesh>, d: &SemioMeshItemDiff) {
+async fn apply_mesh_added(a: &mut NamedAdded<SemioMesh>, d: &SemioMeshItemDiff) {
     apply_mesh(&mut a.item, d);
 }
-fn apply_material_added(a: &mut NamedAdded<SemioMaterial>, d: &SemioMaterialDiff) {
+async fn apply_material_added(a: &mut NamedAdded<SemioMaterial>, d: &SemioMaterialDiff) {
     apply_material(&mut a.item, d);
 }
-fn apply_texture_added(a: &mut NamedAdded<SemioTexture>, d: &SemioTextureDiff) {
+async fn apply_texture_added(a: &mut NamedAdded<SemioTexture>, d: &SemioTextureDiff) {
     apply_texture(&mut a.item, d);
 }
-fn apply_primitive_added(a: &mut NamedAdded<SemioPrimitive>, d: &SemioPrimitiveDiff) {
+async fn apply_primitive_added(a: &mut NamedAdded<SemioPrimitive>, d: &SemioPrimitiveDiff) {
     apply_primitive(&mut a.item, d);
 }
 
-fn apply_primitive(prim: &mut SemioPrimitive, diff: &SemioPrimitiveDiff) {
+async fn apply_primitive(prim: &mut SemioPrimitive, diff: &SemioPrimitiveDiff) {
     if let Some(v) = &diff.topology {
         prim.topology = *v;
     }
@@ -309,7 +309,7 @@ fn apply_primitive(prim: &mut SemioPrimitive, diff: &SemioPrimitiveDiff) {
     }
 }
 
-fn apply_material(mat: &mut SemioMaterial, diff: &SemioMaterialDiff) {
+async fn apply_material(mat: &mut SemioMaterial, diff: &SemioMaterialDiff) {
     if let Some(v) = &diff.base_color {
         mat.base_color = *v;
     }
@@ -321,7 +321,7 @@ fn apply_material(mat: &mut SemioMaterial, diff: &SemioMaterialDiff) {
     }
 }
 
-fn apply_texture(tex: &mut SemioTexture, diff: &SemioTextureDiff) {
+async fn apply_texture(tex: &mut SemioTexture, diff: &SemioTextureDiff) {
     if let Some(v) = &diff.mime {
         tex.mime = v.clone();
     }
@@ -337,12 +337,12 @@ impl DiffAlgebra<SemioMeshSnapshot> for SemioMeshDiff {
     /// own `DiffAlgebra::inverse` uses — recomputing via a real `between()` call sidesteps having
     /// to hand-derive `NamedAdded<T>` position math for the undo direction): `mid = self.apply(base)`,
     /// then `between(mid, base)` is exactly the diff that restores `base` when applied to `mid`.
-    fn inverse(&self, base: &SemioMeshSnapshot) -> Self {
+    async fn inverse(&self, base: &SemioMeshSnapshot) -> Self {
         let mid = self.apply(base).unwrap();
         Self::between(&mid, base)
     }
 
-    fn between(base: &SemioMeshSnapshot, other: &SemioMeshSnapshot) -> Self {
+    async fn between(base: &SemioMeshSnapshot, other: &SemioMeshSnapshot) -> Self {
         SemioMeshDiff {
             meshes: between_named(&base.meshes, &other.meshes, |m| m.id.clone(), between_mesh),
             materials: between_named(&base.materials, &other.materials, |m| m.id.clone(), between_material),
@@ -350,17 +350,17 @@ impl DiffAlgebra<SemioMeshSnapshot> for SemioMeshDiff {
         }
     }
 
-    fn is_empty(&self) -> bool {
+    async fn is_empty(&self) -> bool {
         self.meshes.is_none() && self.materials.is_none() && self.textures.is_none()
     }
 }
 
-fn between_mesh(base: &SemioMesh, other: &SemioMesh) -> Option<SemioMeshItemDiff> {
+async fn between_mesh(base: &SemioMesh, other: &SemioMesh) -> Option<SemioMeshItemDiff> {
     let primitives = between_named(&base.primitives, &other.primitives, |p| p.id.clone(), between_primitive);
     primitives.map(|primitives| SemioMeshItemDiff { primitives: Some(primitives) })
 }
 
-fn between_primitive(base: &SemioPrimitive, other: &SemioPrimitive) -> Option<SemioPrimitiveDiff> {
+async fn between_primitive(base: &SemioPrimitive, other: &SemioPrimitive) -> Option<SemioPrimitiveDiff> {
     let topology = if base.topology != other.topology { Some(other.topology) } else { None };
     let positions = if base.positions != other.positions { Some(other.positions.clone()) } else { None };
     let normals = if base.normals != other.normals { Some(other.normals.clone()) } else { None };
@@ -375,7 +375,7 @@ fn between_primitive(base: &SemioPrimitive, other: &SemioPrimitive) -> Option<Se
     }
 }
 
-fn between_material(base: &SemioMaterial, other: &SemioMaterial) -> Option<SemioMaterialDiff> {
+async fn between_material(base: &SemioMaterial, other: &SemioMaterial) -> Option<SemioMaterialDiff> {
     let base_color = if base.base_color != other.base_color { Some(other.base_color) } else { None };
     let metallic = if base.metallic != other.metallic { Some(other.metallic) } else { None };
     let roughness = if base.roughness != other.roughness { Some(other.roughness) } else { None };
@@ -386,7 +386,7 @@ fn between_material(base: &SemioMaterial, other: &SemioMaterial) -> Option<Semio
     }
 }
 
-fn between_texture(base: &SemioTexture, other: &SemioTexture) -> Option<SemioTextureDiff> {
+async fn between_texture(base: &SemioTexture, other: &SemioTexture) -> Option<SemioTextureDiff> {
     let mime = if base.mime != other.mime { Some(other.mime.clone()) } else { None };
     let bytes = if base.bytes != other.bytes { Some(other.bytes.clone()) } else { None };
     if mime.is_none() && bytes.is_none() {
@@ -396,7 +396,7 @@ fn between_texture(base: &SemioTexture, other: &SemioTexture) -> Option<SemioTex
     }
 }
 
-fn absorb_mesh_diff(mut a: SemioMeshItemDiff, b: SemioMeshItemDiff) -> SemioMeshItemDiff {
+async fn absorb_mesh_diff(mut a: SemioMeshItemDiff, b: SemioMeshItemDiff) -> SemioMeshItemDiff {
     a.primitives = match (a.primitives.take(), b.primitives) {
         (None, x) => x,
         (x, None) => x,
@@ -405,7 +405,7 @@ fn absorb_mesh_diff(mut a: SemioMeshItemDiff, b: SemioMeshItemDiff) -> SemioMesh
     a
 }
 
-fn absorb_primitive_diff(mut a: SemioPrimitiveDiff, b: SemioPrimitiveDiff) -> SemioPrimitiveDiff {
+async fn absorb_primitive_diff(mut a: SemioPrimitiveDiff, b: SemioPrimitiveDiff) -> SemioPrimitiveDiff {
     if b.topology.is_some() {
         a.topology = b.topology;
     }
@@ -430,7 +430,7 @@ fn absorb_primitive_diff(mut a: SemioPrimitiveDiff, b: SemioPrimitiveDiff) -> Se
     a
 }
 
-fn absorb_material_diff(mut a: SemioMaterialDiff, b: SemioMaterialDiff) -> SemioMaterialDiff {
+async fn absorb_material_diff(mut a: SemioMaterialDiff, b: SemioMaterialDiff) -> SemioMaterialDiff {
     if b.base_color.is_some() {
         a.base_color = b.base_color;
     }
@@ -443,7 +443,7 @@ fn absorb_material_diff(mut a: SemioMaterialDiff, b: SemioMaterialDiff) -> Semio
     a
 }
 
-fn absorb_texture_diff(mut a: SemioTextureDiff, b: SemioTextureDiff) -> SemioTextureDiff {
+async fn absorb_texture_diff(mut a: SemioTextureDiff, b: SemioTextureDiff) -> SemioTextureDiff {
     if b.mime.is_some() {
         a.mime = b.mime;
     }
@@ -458,16 +458,16 @@ fn absorb_texture_diff(mut a: SemioTextureDiff, b: SemioTextureDiff) -> SemioTex
 /// 🔎 Shared id-lookup helpers — moved here (from the now-deleted hand-rolled dispatch) so every
 /// triad leaf's `diff`/`inverse` (17 of them) can reuse one copy instead of re-deriving the same
 /// four one-line finders (`if code is repeated it must be close together`).
-pub(crate) fn mesh_at<'a>(base: &'a SemioMeshSnapshot, mesh_id: &str) -> Option<&'a SemioMesh> {
+pub(crate) async fn mesh_at<'a>(base: &'a SemioMeshSnapshot, mesh_id: &str) -> Option<&'a SemioMesh> {
     base.meshes.iter().find(|m| m.id == mesh_id)
 }
-pub(crate) fn primitive_at<'a>(base: &'a SemioMeshSnapshot, mesh_id: &str, primitive_id: &str) -> Option<&'a SemioPrimitive> {
+pub(crate) async fn primitive_at<'a>(base: &'a SemioMeshSnapshot, mesh_id: &str, primitive_id: &str) -> Option<&'a SemioPrimitive> {
     mesh_at(base, mesh_id)?.primitives.iter().find(|p| p.id == primitive_id)
 }
-pub(crate) fn material_at<'a>(base: &'a SemioMeshSnapshot, id: &str) -> Option<&'a SemioMaterial> {
+pub(crate) async fn material_at<'a>(base: &'a SemioMeshSnapshot, id: &str) -> Option<&'a SemioMaterial> {
     base.materials.iter().find(|m| m.id == id)
 }
-pub(crate) fn texture_at<'a>(base: &'a SemioMeshSnapshot, id: &str) -> Option<&'a SemioTexture> {
+pub(crate) async fn texture_at<'a>(base: &'a SemioMeshSnapshot, id: &str) -> Option<&'a SemioTexture> {
     base.textures.iter().find(|t| t.id == id)
 }
 //#endregion 🔖️EntityLookup
@@ -484,32 +484,32 @@ pub(crate) fn texture_at<'a>(base: &'a SemioMeshSnapshot, id: &str) -> Option<&'
 /// ➕️ `base` also supplies the real target position for a new entry's `NamedAdded<T>.index` (its
 /// natural append position — the current collection length — same convention `value`'s own
 /// `SetMapEntry`/`SetNode` diff constructors use).
-pub fn diff_add_mesh(base: &SemioMeshSnapshot, mesh: SemioMesh) -> SemioMeshDiff {
+pub async fn diff_add_mesh(base: &SemioMeshSnapshot, mesh: SemioMesh) -> SemioMeshDiff {
     if mesh_at(base, &mesh.id).is_some() {
         return SemioMeshDiff::default();
     }
     SemioMeshDiff { meshes: Some(SemioMeshesDiff { removed: Vec::new(), modified: Vec::new(), added: vec![NamedAdded { index: base.meshes.len(), item: mesh }] }), materials: None, textures: None }
 }
-pub fn diff_remove_mesh(base: &SemioMeshSnapshot, id: &str) -> SemioMeshDiff {
+pub async fn diff_remove_mesh(base: &SemioMeshSnapshot, id: &str) -> SemioMeshDiff {
     if mesh_at(base, id).is_none() {
         return SemioMeshDiff::default();
     }
     SemioMeshDiff { meshes: Some(SemioMeshesDiff { removed: vec![id.to_string()], modified: Vec::new(), added: Vec::new() }), materials: None, textures: None }
 }
-pub fn diff_add_primitive(base: &SemioMeshSnapshot, mesh_id: &str, primitive: SemioPrimitive) -> SemioMeshDiff {
+pub async fn diff_add_primitive(base: &SemioMeshSnapshot, mesh_id: &str, primitive: SemioPrimitive) -> SemioMeshDiff {
     let Some(mesh) = mesh_at(base, mesh_id) else { return SemioMeshDiff::default() };
     if mesh.primitives.iter().any(|p| p.id == primitive.id) {
         return SemioMeshDiff::default();
     }
     wrap_mesh_diff(mesh_id, SemioMeshItemDiff { primitives: Some(SemioPrimitivesDiff { removed: Vec::new(), modified: Vec::new(), added: vec![NamedAdded { index: mesh.primitives.len(), item: primitive }] }) })
 }
-pub fn diff_remove_primitive(base: &SemioMeshSnapshot, mesh_id: &str, primitive_id: &str) -> SemioMeshDiff {
+pub async fn diff_remove_primitive(base: &SemioMeshSnapshot, mesh_id: &str, primitive_id: &str) -> SemioMeshDiff {
     if primitive_at(base, mesh_id, primitive_id).is_none() {
         return SemioMeshDiff::default();
     }
     wrap_mesh_diff(mesh_id, SemioMeshItemDiff { primitives: Some(SemioPrimitivesDiff { removed: vec![primitive_id.to_string()], modified: Vec::new(), added: Vec::new() }) })
 }
-pub fn diff_set_primitive_topology(base: &SemioMeshSnapshot, mesh_id: &str, primitive_id: &str, topology: SemioTopology) -> SemioMeshDiff {
+pub async fn diff_set_primitive_topology(base: &SemioMeshSnapshot, mesh_id: &str, primitive_id: &str, topology: SemioTopology) -> SemioMeshDiff {
     if primitive_at(base, mesh_id, primitive_id).is_none() {
         return SemioMeshDiff::default();
     }
@@ -520,13 +520,13 @@ pub fn diff_set_primitive_topology(base: &SemioMeshSnapshot, mesh_id: &str, prim
 /// wrong verb; `replace` is a whole-value swap of it). SMO approved the reasoning and reserved the
 /// edit; SMO wound down without doing it; DKM completes it here.
 #[allow(clippy::too_many_arguments)]
-pub fn diff_replace_primitive_geometry(base: &SemioMeshSnapshot, mesh_id: &str, primitive_id: &str, positions: Vec<SemioPoint3>, normals: Vec<SemioPoint3>, uvs: Vec<SemioUv>, colors: Vec<SemioRgba>, indices: Vec<u32>) -> SemioMeshDiff {
+pub async fn diff_replace_primitive_geometry(base: &SemioMeshSnapshot, mesh_id: &str, primitive_id: &str, positions: Vec<SemioPoint3>, normals: Vec<SemioPoint3>, uvs: Vec<SemioUv>, colors: Vec<SemioRgba>, indices: Vec<u32>) -> SemioMeshDiff {
     if primitive_at(base, mesh_id, primitive_id).is_none() {
         return SemioMeshDiff::default();
     }
     wrap_primitive_diff(mesh_id, primitive_id, SemioPrimitiveDiff { positions: Some(positions), normals: Some(normals), uvs: Some(uvs), colors: Some(colors), indices: Some(indices), ..Default::default() })
 }
-pub fn diff_set_primitive_material(base: &SemioMeshSnapshot, mesh_id: &str, primitive_id: &str, material_id: Option<String>) -> SemioMeshDiff {
+pub async fn diff_set_primitive_material(base: &SemioMeshSnapshot, mesh_id: &str, primitive_id: &str, material_id: Option<String>) -> SemioMeshDiff {
     if primitive_at(base, mesh_id, primitive_id).is_none() {
         return SemioMeshDiff::default();
     }
@@ -537,7 +537,7 @@ pub fn diff_set_primitive_material(base: &SemioMeshSnapshot, mesh_id: &str, prim
 /// only expresses a whole-array replace, so this reads the primitive's CURRENT positions from
 /// `base`, clones, and patches just `vertex_index` — a real diff built from `(payload, base)`,
 /// never apply-then-capture.
-pub fn diff_move_vertex(base: &SemioMeshSnapshot, mesh_id: &str, primitive_id: &str, vertex_index: usize, new_point: SemioPoint3) -> SemioMeshDiff {
+pub async fn diff_move_vertex(base: &SemioMeshSnapshot, mesh_id: &str, primitive_id: &str, vertex_index: usize, new_point: SemioPoint3) -> SemioMeshDiff {
     let Some(primitive) = primitive_at(base, mesh_id, primitive_id) else { return SemioMeshDiff::default() };
     if vertex_index >= primitive.positions.len() {
         return SemioMeshDiff::default();
@@ -546,13 +546,13 @@ pub fn diff_move_vertex(base: &SemioMeshSnapshot, mesh_id: &str, primitive_id: &
     positions[vertex_index] = new_point;
     wrap_primitive_diff(mesh_id, primitive_id, SemioPrimitiveDiff { positions: Some(positions), ..Default::default() })
 }
-pub fn diff_add_material(base: &SemioMeshSnapshot, material: SemioMaterial) -> SemioMeshDiff {
+pub async fn diff_add_material(base: &SemioMeshSnapshot, material: SemioMaterial) -> SemioMeshDiff {
     if material_at(base, &material.id).is_some() {
         return SemioMeshDiff::default();
     }
     SemioMeshDiff { meshes: None, materials: Some(SemioMaterialsDiff { removed: Vec::new(), modified: Vec::new(), added: vec![NamedAdded { index: base.materials.len(), item: material }] }), textures: None }
 }
-pub fn diff_remove_material(base: &SemioMeshSnapshot, id: &str) -> SemioMeshDiff {
+pub async fn diff_remove_material(base: &SemioMeshSnapshot, id: &str) -> SemioMeshDiff {
     if material_at(base, id).is_none() {
         return SemioMeshDiff::default();
     }
@@ -560,7 +560,7 @@ pub fn diff_remove_material(base: &SemioMeshSnapshot, id: &str) -> SemioMeshDiff
 }
 /// 🌈 `change-material-base-color` — SMO's stroke-color precedent: a color is treated as ONE
 /// cohesive value field (never edited channel-by-channel from outside), so `change`, not `replace`.
-pub fn diff_change_material_base_color(base: &SemioMeshSnapshot, id: &str, new_base_color: SemioRgba) -> SemioMeshDiff {
+pub async fn diff_change_material_base_color(base: &SemioMeshSnapshot, id: &str, new_base_color: SemioRgba) -> SemioMeshDiff {
     if material_at(base, id).is_none() {
         return SemioMeshDiff::default();
     }
@@ -576,7 +576,7 @@ pub fn diff_change_material_base_color(base: &SemioMeshSnapshot, id: &str, new_b
 /// metallic/roughness PBR editor sets them via two independent sliders — same decompose test SMO's
 /// `StrokeStyle` ruling already applies (`change-stroke-width`/`change-stroke-color`/… kept
 /// separate because the editor sets fields one at a time).
-pub fn diff_change_material_metallic(base: &SemioMeshSnapshot, id: &str, new_metallic: f32) -> SemioMeshDiff {
+pub async fn diff_change_material_metallic(base: &SemioMeshSnapshot, id: &str, new_metallic: f32) -> SemioMeshDiff {
     if material_at(base, id).is_none() {
         return SemioMeshDiff::default();
     }
@@ -588,7 +588,7 @@ pub fn diff_change_material_metallic(base: &SemioMeshSnapshot, id: &str, new_met
 }
 /// 🧱 `change-material-roughness` — see [`diff_change_material_metallic`]'s doc comment; the same
 /// decompose reasoning applies symmetrically to `roughness`.
-pub fn diff_change_material_roughness(base: &SemioMeshSnapshot, id: &str, new_roughness: f32) -> SemioMeshDiff {
+pub async fn diff_change_material_roughness(base: &SemioMeshSnapshot, id: &str, new_roughness: f32) -> SemioMeshDiff {
     if material_at(base, id).is_none() {
         return SemioMeshDiff::default();
     }
@@ -598,13 +598,13 @@ pub fn diff_change_material_roughness(base: &SemioMeshSnapshot, id: &str, new_ro
         textures: None,
     }
 }
-pub fn diff_add_texture(base: &SemioMeshSnapshot, texture: SemioTexture) -> SemioMeshDiff {
+pub async fn diff_add_texture(base: &SemioMeshSnapshot, texture: SemioTexture) -> SemioMeshDiff {
     if texture_at(base, &texture.id).is_some() {
         return SemioMeshDiff::default();
     }
     SemioMeshDiff { meshes: None, materials: None, textures: Some(SemioTexturesDiff { removed: Vec::new(), modified: Vec::new(), added: vec![NamedAdded { index: base.textures.len(), item: texture }] }) }
 }
-pub fn diff_remove_texture(base: &SemioMeshSnapshot, id: &str) -> SemioMeshDiff {
+pub async fn diff_remove_texture(base: &SemioMeshSnapshot, id: &str) -> SemioMeshDiff {
     if texture_at(base, id).is_none() {
         return SemioMeshDiff::default();
     }
@@ -613,7 +613,7 @@ pub fn diff_remove_texture(base: &SemioMeshSnapshot, id: &str) -> SemioMeshDiff 
 /// 🏷️ `change-texture-mime` — decomposed from the old bundled `SetTextureBytes{mime, bytes}`:
 /// `SemioTexture.mime`/`.bytes` are two independent top-level fields (rule 2's "per remaining
 /// scalar" for `mime`, "per large structured field" for `bytes`).
-pub fn diff_change_texture_mime(base: &SemioMeshSnapshot, id: &str, new_mime: String) -> SemioMeshDiff {
+pub async fn diff_change_texture_mime(base: &SemioMeshSnapshot, id: &str, new_mime: String) -> SemioMeshDiff {
     if texture_at(base, id).is_none() {
         return SemioMeshDiff::default();
     }
@@ -626,7 +626,7 @@ pub fn diff_change_texture_mime(base: &SemioMeshSnapshot, id: &str, new_mime: St
 /// 📀 `replace-texture-bytes` — see [`diff_change_texture_mime`]'s doc comment; raw image bytes
 /// are the "large" swapped payload (matches `replace-primitive-geometry`'s exact rename rationale),
 /// never edited byte-by-byte from outside, so `replace`, not `change`.
-pub fn diff_replace_texture_bytes(base: &SemioMeshSnapshot, id: &str, new_bytes: Vec<u8>) -> SemioMeshDiff {
+pub async fn diff_replace_texture_bytes(base: &SemioMeshSnapshot, id: &str, new_bytes: Vec<u8>) -> SemioMeshDiff {
     if texture_at(base, id).is_none() {
         return SemioMeshDiff::default();
     }
@@ -646,55 +646,55 @@ pub fn diff_replace_texture_bytes(base: &SemioMeshSnapshot, id: &str, new_bytes:
 /// hex/option/list primitives below are this subset's own copy (no shared "hand-roll primitives"
 /// module exists yet — same as every other hand-rolled artifact in the repo).
 //#region 🔖️Primitives
-pub(crate) fn hex_encode(bytes: &[u8]) -> String {
+pub(crate) async fn hex_encode(bytes: &[u8]) -> String {
     bytes.iter().map(|b| format!("{b:02x}")).collect()
 }
-pub(crate) fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
+pub(crate) async fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
     if s.len() % 2 != 0 {
         return Err(format!("odd hex length: {s:?}"));
     }
     (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()
 }
-pub(crate) fn enc_str(s: &str) -> String {
+pub(crate) async fn enc_str(s: &str) -> String {
     hex_encode(s.as_bytes())
 }
-pub(crate) fn dec_str(s: &str) -> Result<String, String> {
+pub(crate) async fn dec_str(s: &str) -> Result<String, String> {
     String::from_utf8(hex_decode(s)?).map_err(|e| e.to_string())
 }
-pub(crate) fn enc_bytes(b: &[u8]) -> String {
+pub(crate) async fn enc_bytes(b: &[u8]) -> String {
     hex_encode(b)
 }
-pub(crate) fn dec_bytes(s: &str) -> Result<Vec<u8>, String> {
+pub(crate) async fn dec_bytes(s: &str) -> Result<Vec<u8>, String> {
     hex_decode(s)
 }
 /// 🧪️ Real LEB128-varint-length-prefixed binary primitives (`store::pack_rt::write_varint_u64` /
 /// `store::ByteReader`) backing the real `DiffCodec::encode_diff`/`decode_diff` below.
-pub(crate) fn write_str_lp(out: &mut Vec<u8>, s: &str) {
+pub(crate) async fn write_str_lp(out: &mut Vec<u8>, s: &str) {
     store::pack_rt::write_varint_u64(out, s.len() as u64);
     out.extend_from_slice(s.as_bytes());
 }
-pub(crate) fn read_str_lp(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
+pub(crate) async fn read_str_lp(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
     let len = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
     let bytes = reader.read_bytes(len).map_err(|e| e.to_string())?.to_vec();
     String::from_utf8(bytes).map_err(|e| e.to_string())
 }
-fn parse_f32(s: &str) -> Result<f32, String> {
+async fn parse_f32(s: &str) -> Result<f32, String> {
     s.parse().map_err(|e: std::num::ParseFloatError| e.to_string())
 }
-fn parse_f64(s: &str) -> Result<f64, String> {
+async fn parse_f64(s: &str) -> Result<f64, String> {
     s.parse().map_err(|e: std::num::ParseFloatError| e.to_string())
 }
-fn parse_u32(s: &str) -> Result<u32, String> {
+async fn parse_u32(s: &str) -> Result<u32, String> {
     s.parse().map_err(|e: std::num::ParseIntError| e.to_string())
 }
 
-pub(crate) fn encode_option<T>(opt: &Option<T>, enc: impl Fn(&T) -> String) -> String {
+pub(crate) async fn encode_option<T>(opt: &Option<T>, enc: impl Fn(&T) -> String) -> String {
     match opt {
         None => "[0]".to_string(),
         Some(v) => format!("[1,{}]", enc(v)),
     }
 }
-pub(crate) fn decode_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Option<T>, String> {
+pub(crate) async fn decode_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Option<T>, String> {
     let inner = strip_brackets(s)?;
     match split_top_level(inner, ',').as_slice() {
         ["0"] => Ok(None),
@@ -702,41 +702,41 @@ pub(crate) fn decode_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>)
         other => Err(format!("option decode: bad shape {other:?}")),
     }
 }
-pub(crate) fn enc_list<T>(items: &[T], enc: impl Fn(&T) -> String) -> String {
+pub(crate) async fn enc_list<T>(items: &[T], enc: impl Fn(&T) -> String) -> String {
     format!("[{}]", items.iter().map(|it| enc(it)).collect::<Vec<_>>().join(","))
 }
-pub(crate) fn dec_list<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Vec<T>, String> {
+pub(crate) async fn dec_list<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Vec<T>, String> {
     split_top_level(strip_brackets(s)?, ',').into_iter().filter(|s| !s.is_empty()).map(|entry| dec(entry)).collect()
 }
 //#endregion 🔖️Primitives
 
 //#region 🔖️ValueCodecs
-pub(crate) fn enc_point3(p: &SemioPoint3) -> String {
+pub(crate) async fn enc_point3(p: &SemioPoint3) -> String {
     format!("[{},{},{}]", p.x, p.y, p.z)
 }
-pub(crate) fn dec_point3(s: &str) -> Result<SemioPoint3, String> {
+pub(crate) async fn dec_point3(s: &str) -> Result<SemioPoint3, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [x, y, z] = parts.as_slice() else { return Err(format!("point3: expected 3 fields, got {}", parts.len())) };
     Ok(SemioPoint3 { x: parse_f64(x)?, y: parse_f64(y)?, z: parse_f64(z)? })
 }
-pub(crate) fn enc_uv(v: &SemioUv) -> String {
+pub(crate) async fn enc_uv(v: &SemioUv) -> String {
     format!("[{},{}]", v.u, v.v)
 }
-pub(crate) fn dec_uv(s: &str) -> Result<SemioUv, String> {
+pub(crate) async fn dec_uv(s: &str) -> Result<SemioUv, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [u, v] = parts.as_slice() else { return Err(format!("uv: expected 2 fields, got {}", parts.len())) };
     Ok(SemioUv { u: parse_f64(u)?, v: parse_f64(v)? })
 }
-pub(crate) fn enc_rgba(c: &SemioRgba) -> String {
+pub(crate) async fn enc_rgba(c: &SemioRgba) -> String {
     format!("[{},{},{},{}]", c.r, c.g, c.b, c.a)
 }
-pub(crate) fn dec_rgba(s: &str) -> Result<SemioRgba, String> {
+pub(crate) async fn dec_rgba(s: &str) -> Result<SemioRgba, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [r, g, b, a] = parts.as_slice() else { return Err(format!("rgba: expected 4 fields, got {}", parts.len())) };
     Ok(SemioRgba { r: parse_f32(r)?, g: parse_f32(g)?, b: parse_f32(b)?, a: parse_f32(a)? })
 }
 
-pub(crate) fn enc_topology(t: &SemioTopology) -> String {
+pub(crate) async fn enc_topology(t: &SemioTopology) -> String {
     match t {
         SemioTopology::Points => "P".to_string(),
         SemioTopology::Lines => "L".to_string(),
@@ -746,7 +746,7 @@ pub(crate) fn enc_topology(t: &SemioTopology) -> String {
         SemioTopology::TriangleFan => "F".to_string(),
     }
 }
-pub(crate) fn dec_topology(s: &str) -> Result<SemioTopology, String> {
+pub(crate) async fn dec_topology(s: &str) -> Result<SemioTopology, String> {
     match s {
         "P" => Ok(SemioTopology::Points),
         "L" => Ok(SemioTopology::Lines),
@@ -758,7 +758,7 @@ pub(crate) fn dec_topology(s: &str) -> Result<SemioTopology, String> {
     }
 }
 
-pub(crate) fn enc_primitive(p: &SemioPrimitive) -> String {
+pub(crate) async fn enc_primitive(p: &SemioPrimitive) -> String {
     format!(
         "[{},{},{},{},{},{},{},{}]",
         enc_str(&p.id),
@@ -771,7 +771,7 @@ pub(crate) fn enc_primitive(p: &SemioPrimitive) -> String {
         encode_option(&p.material_id, |v: &String| enc_str(v)),
     )
 }
-pub(crate) fn dec_primitive(s: &str) -> Result<SemioPrimitive, String> {
+pub(crate) async fn dec_primitive(s: &str) -> Result<SemioPrimitive, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [id, topology, positions, normals, uvs, colors, indices, material_id] = parts.as_slice() else {
         return Err(format!("primitive: expected 8 fields, got {}", parts.len()));
@@ -788,28 +788,28 @@ pub(crate) fn dec_primitive(s: &str) -> Result<SemioPrimitive, String> {
     })
 }
 
-pub(crate) fn enc_mesh(m: &SemioMesh) -> String {
+pub(crate) async fn enc_mesh(m: &SemioMesh) -> String {
     format!("[{},{}]", enc_str(&m.id), enc_list(&m.primitives, enc_primitive))
 }
-pub(crate) fn dec_mesh(s: &str) -> Result<SemioMesh, String> {
+pub(crate) async fn dec_mesh(s: &str) -> Result<SemioMesh, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [id, primitives] = parts.as_slice() else { return Err(format!("mesh: expected 2 fields, got {}", parts.len())) };
     Ok(SemioMesh { id: dec_str(id)?, primitives: dec_list(primitives, dec_primitive)? })
 }
 
-pub(crate) fn enc_material(m: &SemioMaterial) -> String {
+pub(crate) async fn enc_material(m: &SemioMaterial) -> String {
     format!("[{},{},{},{}]", enc_str(&m.id), enc_rgba(&m.base_color), m.metallic, m.roughness)
 }
-pub(crate) fn dec_material(s: &str) -> Result<SemioMaterial, String> {
+pub(crate) async fn dec_material(s: &str) -> Result<SemioMaterial, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [id, base_color, metallic, roughness] = parts.as_slice() else { return Err(format!("material: expected 4 fields, got {}", parts.len())) };
     Ok(SemioMaterial { id: dec_str(id)?, base_color: dec_rgba(base_color)?, metallic: parse_f32(metallic)?, roughness: parse_f32(roughness)? })
 }
 
-pub(crate) fn enc_texture(t: &SemioTexture) -> String {
+pub(crate) async fn enc_texture(t: &SemioTexture) -> String {
     format!("[{},{},{}]", enc_str(&t.id), enc_str(&t.mime), enc_bytes(&t.bytes))
 }
-pub(crate) fn dec_texture(s: &str) -> Result<SemioTexture, String> {
+pub(crate) async fn dec_texture(s: &str) -> Result<SemioTexture, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [id, mime, bytes] = parts.as_slice() else { return Err(format!("texture: expected 3 fields, got {}", parts.len())) };
     Ok(SemioTexture { id: dec_str(id)?, mime: dec_str(mime)?, bytes: dec_bytes(bytes)? })
@@ -821,38 +821,38 @@ pub(crate) fn dec_texture(s: &str) -> Result<SemioTexture, String> {
 /// `engine::triples::enc_indexed_triple`'s own `IndexAdded<T>` handling uses — used ONLY for a
 /// diff's own `added` list (see [`NamedAdded`]'s doc comment); the plain (unwrapped) `enc_*`/
 /// `dec_*` above remain the snapshot-level codec for the real entity.
-pub(crate) fn enc_named_added_mesh(a: &NamedAdded<SemioMesh>) -> String {
+pub(crate) async fn enc_named_added_mesh(a: &NamedAdded<SemioMesh>) -> String {
     format!("{}:{}", a.index, enc_mesh(&a.item))
 }
-pub(crate) fn dec_named_added_mesh(s: &str) -> Result<NamedAdded<SemioMesh>, String> {
+pub(crate) async fn dec_named_added_mesh(s: &str) -> Result<NamedAdded<SemioMesh>, String> {
     let (idx, rest) = s.split_once(':').ok_or_else(|| format!("named added mesh: bad entry {s:?}"))?;
     Ok(NamedAdded { index: idx.parse().map_err(|e: std::num::ParseIntError| e.to_string())?, item: dec_mesh(rest)? })
 }
-pub(crate) fn enc_named_added_primitive(a: &NamedAdded<SemioPrimitive>) -> String {
+pub(crate) async fn enc_named_added_primitive(a: &NamedAdded<SemioPrimitive>) -> String {
     format!("{}:{}", a.index, enc_primitive(&a.item))
 }
-pub(crate) fn dec_named_added_primitive(s: &str) -> Result<NamedAdded<SemioPrimitive>, String> {
+pub(crate) async fn dec_named_added_primitive(s: &str) -> Result<NamedAdded<SemioPrimitive>, String> {
     let (idx, rest) = s.split_once(':').ok_or_else(|| format!("named added primitive: bad entry {s:?}"))?;
     Ok(NamedAdded { index: idx.parse().map_err(|e: std::num::ParseIntError| e.to_string())?, item: dec_primitive(rest)? })
 }
-pub(crate) fn enc_named_added_material(a: &NamedAdded<SemioMaterial>) -> String {
+pub(crate) async fn enc_named_added_material(a: &NamedAdded<SemioMaterial>) -> String {
     format!("{}:{}", a.index, enc_material(&a.item))
 }
-pub(crate) fn dec_named_added_material(s: &str) -> Result<NamedAdded<SemioMaterial>, String> {
+pub(crate) async fn dec_named_added_material(s: &str) -> Result<NamedAdded<SemioMaterial>, String> {
     let (idx, rest) = s.split_once(':').ok_or_else(|| format!("named added material: bad entry {s:?}"))?;
     Ok(NamedAdded { index: idx.parse().map_err(|e: std::num::ParseIntError| e.to_string())?, item: dec_material(rest)? })
 }
-pub(crate) fn enc_named_added_texture(a: &NamedAdded<SemioTexture>) -> String {
+pub(crate) async fn enc_named_added_texture(a: &NamedAdded<SemioTexture>) -> String {
     format!("{}:{}", a.index, enc_texture(&a.item))
 }
-pub(crate) fn dec_named_added_texture(s: &str) -> Result<NamedAdded<SemioTexture>, String> {
+pub(crate) async fn dec_named_added_texture(s: &str) -> Result<NamedAdded<SemioTexture>, String> {
     let (idx, rest) = s.split_once(':').ok_or_else(|| format!("named added texture: bad entry {s:?}"))?;
     Ok(NamedAdded { index: idx.parse().map_err(|e: std::num::ParseIntError| e.to_string())?, item: dec_texture(rest)? })
 }
 //#endregion 🔖️NamedAddedCodecs
 
 //#region 🔖️DiffValueCodecs
-pub(crate) fn enc_primitive_diff(d: &SemioPrimitiveDiff) -> String {
+pub(crate) async fn enc_primitive_diff(d: &SemioPrimitiveDiff) -> String {
     format!(
         "[{},{},{},{},{},{},{}]",
         encode_option(&d.topology, |v: &SemioTopology| enc_topology(v)),
@@ -864,7 +864,7 @@ pub(crate) fn enc_primitive_diff(d: &SemioPrimitiveDiff) -> String {
         encode_option(&d.material_id, |inner: &Option<String>| encode_option(inner, |v: &String| enc_str(v))),
     )
 }
-pub(crate) fn dec_primitive_diff(s: &str) -> Result<SemioPrimitiveDiff, String> {
+pub(crate) async fn dec_primitive_diff(s: &str) -> Result<SemioPrimitiveDiff, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [topology, positions, normals, uvs, colors, indices, material_id] = parts.as_slice() else {
         return Err(format!("primitive diff: expected 7 fields, got {}", parts.len()));
@@ -880,27 +880,27 @@ pub(crate) fn dec_primitive_diff(s: &str) -> Result<SemioPrimitiveDiff, String> 
     })
 }
 
-pub(crate) fn enc_mesh_item_diff(d: &SemioMeshItemDiff) -> String {
+pub(crate) async fn enc_mesh_item_diff(d: &SemioMeshItemDiff) -> String {
     format!("[{}]", encode_option(&d.primitives, |v: &SemioPrimitivesDiff| enc_named_triple(v, |k: &String| enc_str(k), enc_primitive_diff, enc_named_added_primitive)))
 }
-pub(crate) fn dec_mesh_item_diff(s: &str) -> Result<SemioMeshItemDiff, String> {
+pub(crate) async fn dec_mesh_item_diff(s: &str) -> Result<SemioMeshItemDiff, String> {
     let inner = strip_brackets(s)?;
     Ok(SemioMeshItemDiff { primitives: decode_option(inner, |s| dec_named_triple(s, dec_str, dec_primitive_diff, dec_named_added_primitive))? })
 }
 
-pub(crate) fn enc_material_diff(d: &SemioMaterialDiff) -> String {
+pub(crate) async fn enc_material_diff(d: &SemioMaterialDiff) -> String {
     format!("[{},{},{}]", encode_option(&d.base_color, |v: &SemioRgba| enc_rgba(v)), encode_option(&d.metallic, |v: &f32| v.to_string()), encode_option(&d.roughness, |v: &f32| v.to_string()),)
 }
-pub(crate) fn dec_material_diff(s: &str) -> Result<SemioMaterialDiff, String> {
+pub(crate) async fn dec_material_diff(s: &str) -> Result<SemioMaterialDiff, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [base_color, metallic, roughness] = parts.as_slice() else { return Err(format!("material diff: expected 3 fields, got {}", parts.len())) };
     Ok(SemioMaterialDiff { base_color: decode_option(base_color, dec_rgba)?, metallic: decode_option(metallic, parse_f32)?, roughness: decode_option(roughness, parse_f32)? })
 }
 
-pub(crate) fn enc_texture_diff(d: &SemioTextureDiff) -> String {
+pub(crate) async fn enc_texture_diff(d: &SemioTextureDiff) -> String {
     format!("[{},{}]", encode_option(&d.mime, |v: &String| enc_str(v)), encode_option(&d.bytes, |v: &Vec<u8>| enc_bytes(v)))
 }
-pub(crate) fn dec_texture_diff(s: &str) -> Result<SemioTextureDiff, String> {
+pub(crate) async fn dec_texture_diff(s: &str) -> Result<SemioTextureDiff, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [mime, bytes] = parts.as_slice() else { return Err(format!("texture diff: expected 2 fields, got {}", parts.len())) };
     Ok(SemioTextureDiff { mime: decode_option(mime, dec_str)?, bytes: decode_option(bytes, dec_bytes)? })
@@ -908,26 +908,26 @@ pub(crate) fn dec_texture_diff(s: &str) -> Result<SemioTextureDiff, String> {
 //#endregion 🔖️DiffValueCodecs
 
 //#region 🔖️TopLevel
-fn enc_meshes_diff(d: &SemioMeshesDiff) -> String {
+async fn enc_meshes_diff(d: &SemioMeshesDiff) -> String {
     enc_named_triple(d, |k: &String| enc_str(k), enc_mesh_item_diff, enc_named_added_mesh)
 }
-fn dec_meshes_diff(s: &str) -> Result<SemioMeshesDiff, String> {
+async fn dec_meshes_diff(s: &str) -> Result<SemioMeshesDiff, String> {
     dec_named_triple(s, dec_str, dec_mesh_item_diff, dec_named_added_mesh)
 }
-fn enc_materials_diff(d: &SemioMaterialsDiff) -> String {
+async fn enc_materials_diff(d: &SemioMaterialsDiff) -> String {
     enc_named_triple(d, |k: &String| enc_str(k), enc_material_diff, enc_named_added_material)
 }
-fn dec_materials_diff(s: &str) -> Result<SemioMaterialsDiff, String> {
+async fn dec_materials_diff(s: &str) -> Result<SemioMaterialsDiff, String> {
     dec_named_triple(s, dec_str, dec_material_diff, dec_named_added_material)
 }
-fn enc_textures_diff(d: &SemioTexturesDiff) -> String {
+async fn enc_textures_diff(d: &SemioTexturesDiff) -> String {
     enc_named_triple(d, |k: &String| enc_str(k), enc_texture_diff, enc_named_added_texture)
 }
-fn dec_textures_diff(s: &str) -> Result<SemioTexturesDiff, String> {
+async fn dec_textures_diff(s: &str) -> Result<SemioTexturesDiff, String> {
     dec_named_triple(s, dec_str, dec_texture_diff, dec_named_added_texture)
 }
 
-fn print_mesh_diff(d: &SemioMeshDiff) -> String {
+async fn print_mesh_diff(d: &SemioMeshDiff) -> String {
     let mut tokens: Vec<String> = Vec::new();
     if let Some(v) = &d.meshes {
         tokens.push(format!("meshes={}", enc_meshes_diff(v)));
@@ -940,7 +940,7 @@ fn print_mesh_diff(d: &SemioMeshDiff) -> String {
     }
     tokens.join(" ")
 }
-fn parse_mesh_diff(line: &str) -> Result<SemioMeshDiff, String> {
+async fn parse_mesh_diff(line: &str) -> Result<SemioMeshDiff, String> {
     let mut d = SemioMeshDiff::default();
     if line.is_empty() {
         return Ok(d);
@@ -960,10 +960,10 @@ fn parse_mesh_diff(line: &str) -> Result<SemioMeshDiff, String> {
 }
 
 impl protocol::DiffCodec for SemioMeshDiff {
-    fn print_diff(&self) -> String {
+    async fn print_diff(&self) -> String {
         print_mesh_diff(self)
     }
-    fn parse_diff(line: &str) -> Result<Self, store::TextError> {
+    async fn parse_diff(line: &str) -> Result<Self, store::TextError> {
         parse_mesh_diff(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
     /// ⚡️ Real binary diff frame, replacing the old `print_diff().into_bytes()` text-as-binary
@@ -975,7 +975,7 @@ impl protocol::DiffCodec for SemioMeshDiff {
     /// trailing `bytes` because there can be 0-3 of them (chaining a `Cond` per-segment hits the
     /// `protocol-cond-cannot-chain` gap: a second `if`-guard on a field that was itself only
     /// conditionally decoded hard-errors `eval_cond` — see `✳️flow`'s pilot report).
-    fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    async fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         const DIFF_BINARY_FORMAT: u8 = 1;
         let mut presence = 0u8;
         if self.meshes.is_some() {
@@ -999,7 +999,7 @@ impl protocol::DiffCodec for SemioMeshDiff {
         }
         Ok(out)
     }
-    fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    async fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         const DIFF_BINARY_FORMAT: u8 = 1;
         if bytes.len() < 2 {
             return Err(protocol::ProtocolError::Malformed { what: "diff header", offset: 0, detail: "truncated (need format+presence)".to_string() });
@@ -1040,7 +1040,7 @@ impl protocol::DiffCodec for SemioMeshDiff {
 /// which itself depends ON `schema::diff` — see this file's own module doc comment on why
 /// `diff`/`snapshot`/`mutations` avoid reverse dependencies on each other).
 #[cfg(test)]
-fn demo_snapshot_a() -> SemioMeshSnapshot {
+async fn demo_snapshot_a() -> SemioMeshSnapshot {
     SemioMeshSnapshot {
         meshes: vec![SemioMesh {
             id: "keep".into(),
@@ -1055,7 +1055,7 @@ fn demo_snapshot_a() -> SemioMeshSnapshot {
     }
 }
 #[cfg(test)]
-fn demo_snapshot_b() -> SemioMeshSnapshot {
+async fn demo_snapshot_b() -> SemioMeshSnapshot {
     SemioMeshSnapshot {
         meshes: vec![SemioMesh {
             id: "keep".into(),
@@ -1070,7 +1070,7 @@ fn demo_snapshot_b() -> SemioMeshSnapshot {
     }
 }
 #[cfg(test)]
-pub(crate) fn demo_diff_cases() -> Vec<SemioMeshDiff> {
+pub(crate) async fn demo_diff_cases() -> Vec<SemioMeshDiff> {
     let a = demo_snapshot_a();
     let b = demo_snapshot_b();
     vec![
@@ -1091,7 +1091,7 @@ mod tests {
     use crate::artifacts::semio::standards::v1::subsets::mesh::schema::snapshot::SemioMeshSnapshot;
     use protocol::DiffCodec;
 
-    fn snapshot_a() -> SemioMeshSnapshot {
+    async fn snapshot_a() -> SemioMeshSnapshot {
         SemioMeshSnapshot {
             meshes: vec![SemioMesh {
                 id: "m1".into(),
@@ -1112,7 +1112,7 @@ mod tests {
         }
     }
 
-    fn snapshot_b() -> SemioMeshSnapshot {
+    async fn snapshot_b() -> SemioMeshSnapshot {
         SemioMeshSnapshot {
             meshes: vec![SemioMesh {
                 id: "m1".into(),
@@ -1134,7 +1134,7 @@ mod tests {
     }
 
     #[test]
-    fn between_apply_and_inverse_round_trip() {
+    async fn between_apply_and_inverse_round_trip() {
         let a = snapshot_a();
         let b = snapshot_b();
         let d = <SemioMeshDiff as DiffAlgebra<SemioMeshSnapshot>>::between(&a, &b);
@@ -1145,7 +1145,7 @@ mod tests {
     }
 
     #[test]
-    fn absorb_composes_two_sequential_diffs() {
+    async fn absorb_composes_two_sequential_diffs() {
         let a = snapshot_a();
         let mid = snapshot_b();
         let mut after = mid.clone();
@@ -1162,7 +1162,7 @@ mod tests {
     /// `print_diff`/`parse_diff` and `encode_diff`/`decode_diff`, over a real `between()` result
     /// exercising the nested mesh -> primitive triple plus materials/textures.
     #[test]
-    fn diff_codec_text_binary_roundtrip_law() {
+    async fn diff_codec_text_binary_roundtrip_law() {
         let a = snapshot_a();
         let b = snapshot_b();
         let cases =

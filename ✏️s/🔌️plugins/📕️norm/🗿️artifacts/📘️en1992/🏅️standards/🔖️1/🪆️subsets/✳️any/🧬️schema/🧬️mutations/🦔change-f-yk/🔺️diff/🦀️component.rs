@@ -5,7 +5,7 @@ use crate::artifacts::en1992::mutations::change_f_yk::mutation::ChangeFYk;
 use crate::artifacts::en1992::En1992Snapshot;
 
 //#region 🔖️Diff
-pub fn diff(payload: &ChangeFYk, base: &En1992Snapshot) -> protocol::MutationOutcome<En1992Diff> {
+pub async fn diff(payload: &ChangeFYk, base: &En1992Snapshot) -> protocol::MutationOutcome<En1992Diff> {
     if !payload.new_f_yk.is_finite() {
         return protocol::MutationOutcome::fatal("mutation.invariant", "F yk must be a finite number.", Vec::<String>::new());
     }

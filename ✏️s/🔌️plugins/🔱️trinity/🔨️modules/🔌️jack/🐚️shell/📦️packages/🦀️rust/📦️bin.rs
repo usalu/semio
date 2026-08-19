@@ -25,14 +25,14 @@ enum TrinityJackShellError {
 }
 //#endregion ⚠️ Errors
 
-fn main() {
+async fn main() {
     if let Err(err) = run_main() {
         eprintln!("semio_s_plugin_trinity_jack_shell: {err}");
         std::process::exit(1);
     }
 }
 
-fn run_main() -> Result<(), TrinityJackShellError> {
+async fn run_main() -> Result<(), TrinityJackShellError> {
     let args: Vec<String> = env::args().collect();
     let fixture_path = args.get(1).map_or("trinity/example/🔱️nakagin-capsule-tower.trinity", String::as_str);
     let text = fs::read_to_string(fixture_path).map_err(|source| TrinityJackShellError::ReadFixture { path: fixture_path.to_string(), source })?;
@@ -64,7 +64,7 @@ fn run_main() -> Result<(), TrinityJackShellError> {
     Ok(())
 }
 
-fn print_result(result: &QueryResult) {
+async fn print_result(result: &QueryResult) {
     if result.columns.is_empty() {
         println!("ok");
         return;
@@ -76,7 +76,7 @@ fn print_result(result: &QueryResult) {
     }
 }
 
-fn format_cell(value: &PropertyValue) -> String {
+async fn format_cell(value: &PropertyValue) -> String {
     match value {
         PropertyValue::Null => "null".into(),
         PropertyValue::Bool(b) => b.to_string(),
@@ -95,7 +95,7 @@ mod tests {
     use super::*;
     use trinity::artifacts::jack::{Camera, JackSnapshot, Manifest, Node, Port, PortDirection, PropertyBag};
 
-    fn mini_json() -> String {
+    async fn mini_json() -> String {
         let fixture = JackSnapshot::with_content(
             JackSnapshot::SCHEMA.into(),
             "mini".into(),
@@ -120,7 +120,7 @@ mod tests {
     }
 
     #[test]
-    fn shell_loads_fixture() {
+    async fn shell_loads_fixture() {
         let mut graph = Graph::load_json(&mini_json()).unwrap();
         let result = run(&mut graph, "MATCH (a:Piece) RETURN a.name").unwrap();
         assert_eq!(result.rows.len(), 1);

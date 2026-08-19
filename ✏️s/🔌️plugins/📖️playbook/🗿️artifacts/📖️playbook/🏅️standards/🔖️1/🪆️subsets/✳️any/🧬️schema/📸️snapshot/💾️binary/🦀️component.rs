@@ -10,12 +10,12 @@ use crate::artifacts::playbook::PlaybookSnapshot;
 use store::PackError;
 
 /// 📦️ Encodes a `PlaybookSnapshot` to its binary pack form.
-pub fn encode(document: &PlaybookSnapshot) -> Vec<u8> {
+pub async fn encode(document: &PlaybookSnapshot) -> Vec<u8> {
     store::ArtifactPack::encode_pack(document)
 }
 
 /// 📖️ Decodes a `PlaybookSnapshot` from its binary pack form.
-pub fn decode(bytes: &[u8]) -> Result<PlaybookSnapshot, PackError> {
+pub async fn decode(bytes: &[u8]) -> Result<PlaybookSnapshot, PackError> {
     <PlaybookSnapshot as store::ArtifactPack>::decode_pack(bytes)
 }
 
@@ -27,27 +27,27 @@ mod tests {
     use crate::artifacts::playbook::{dsl, PLAYBOOK_DOCUMENT_SCHEMA};
 
     #[test]
-    fn pack_round_trips_the_empty_snapshot() {
+    async fn pack_round_trips_the_empty_snapshot() {
         let document = empty_playbook_snapshot();
         let bytes = encode(&document);
         assert_eq!(decode(&bytes).expect("decode"), document);
     }
 
     #[test]
-    fn facade_generator_example_pack_round_trips() {
+    async fn facade_generator_example_pack_round_trips() {
         let document = empty_playbook_snapshot();
         let bytes = encode(&document);
         assert_eq!(decode(&bytes).expect("decode"), document);
     }
 
     #[test]
-    fn facade_generator_example_pack_agrees_with_dsl() {
+    async fn facade_generator_example_pack_agrees_with_dsl() {
         let document = empty_playbook_snapshot();
         store::os_store::test_support::assert_dsl_pack_equivalence(&document);
     }
 
   #[test]
-    fn command_envelope_round_trip_holds_for_an_applied_operation() {
+    async fn command_envelope_round_trip_holds_for_an_applied_operation() {
         use crate::artifacts::playbook::op::{change_title_operation, PlaybookMutation};
         use protocol::{ArtifactId, Edit, SchemaId};
         use store::{create_document_envelope, ArtifactCommand, ArtifactStore};

@@ -24,19 +24,19 @@ pub struct Iso16757Inference {
 }
 
 impl protocol::Inference<Iso16757Snapshot> for Iso16757Inference {
-    fn infer(snapshot: &Iso16757Snapshot) -> Self {
+    async fn infer(snapshot: &Iso16757Snapshot) -> Self {
         Self { outline: Iso16757Outline::compute(snapshot) }
     }
 }
 
 impl protocol::InferenceSpec<Iso16757Snapshot> for Iso16757Inference {
-    fn inference_schema_id() -> &'static str {
+    async fn inference_schema_id() -> &'static str {
         "s.norm.iso16757.inference"
     }
-    fn schema_version() -> u32 {
+    async fn schema_version() -> u32 {
         1
     }
-    fn fields() -> &'static [protocol::InferenceFieldSpec] {
+    async fn fields() -> &'static [protocol::InferenceFieldSpec] {
         &[protocol::InferenceFieldSpec { id: "s.norm.iso16757.inference.outline", reads: &["part_number_inputs"] }]
     }
 }
@@ -52,7 +52,7 @@ impl ArtifactInferrer for crate::artifacts::iso16757::standards::v1::subsets::an
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.norm.iso16757.inference`'s facet leaves into the OS-wide inference catalog — call once at
 /// plugin init, alongside `iso16757_artifact_schema_descriptor`'s registration.
-pub fn iso16757_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
+pub async fn iso16757_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
     schema::ArtifactInferenceDescriptor {
         id: "s.norm.iso16757.inference",
         inference: schema::FacetLeaves {
@@ -73,13 +73,13 @@ mod tests {
     use protocol::Inference;
 
     #[test]
-    fn inference_determinism_law() {
+    async fn inference_determinism_law() {
         let snapshot = Iso16757Snapshot::default();
         assert_eq!(Iso16757Inference::infer(&snapshot), Iso16757Inference::infer(&snapshot));
     }
 
     #[test]
-    fn inference_default_law() {
+    async fn inference_default_law() {
         assert_eq!(Iso16757Inference::infer(&Iso16757Snapshot::default()), Iso16757Inference::default());
     }
 }
@@ -95,15 +95,15 @@ use crate::artifacts::iso16757::CatalogueValue;
 use crate::document::{AnnexChoice, CheckReport, CheckResult, ClauseId, Quantity, QuantityKind};
 use std::collections::{HashMap, HashSet};
 
-fn clause(part: &str, section: &str) -> ClauseId {
+async fn clause(part: &str, section: &str) -> ClauseId {
     ClauseId::new("ISO 16757", part, section)
 }
 
-fn check_count(report: &mut CheckReport, clause: ClauseId, actual: f64, expected: f64, message: impl Into<String>) {
+async fn check_count(report: &mut CheckReport, clause: ClauseId, actual: f64, expected: f64, message: impl Into<String>) {
     report.push(CheckResult::from_utilization(clause, Quantity::new(QuantityKind::Dimensionless, actual), Quantity::new(QuantityKind::Dimensionless, expected), message, AnnexChoice::En));
 }
 
-pub fn evaluate(document: &Iso16757Snapshot) -> CheckReport {
+pub async fn evaluate(document: &Iso16757Snapshot) -> CheckReport {
     let mut report = CheckReport::default();
     let annex = AnnexChoice::En;
 
@@ -215,7 +215,7 @@ mod compliance_report_tests {
     use crate::document::CheckStatus;
 
     #[test]
-    fn evaluate_exercises_all_parts_with_numeric_checks() {
+    async fn evaluate_exercises_all_parts_with_numeric_checks() {
         let report = evaluate(&Iso16757Snapshot::default());
         assert!(!report.checks.is_empty());
         let clauses: HashSet<String> = report.checks.iter().map(|c| format!("{} {}", c.clause.part, c.clause.section)).collect();

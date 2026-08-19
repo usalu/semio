@@ -6,7 +6,7 @@ use crate::artifacts::dag::schema::split_endpoint;
 use crate::artifacts::dag::{dag_working_scene, DagSnapshot};
 
 //#region 🔖️Diff
-pub fn diff(payload: &super::mutation::DeleteNode, base: &DagSnapshot) -> protocol::MutationOutcome<DagDiff> {
+pub async fn diff(payload: &super::mutation::DeleteNode, base: &DagSnapshot) -> protocol::MutationOutcome<DagDiff> {
     let scene = dag_working_scene(base);
     if !scene.nodes.iter().any(|node| node.id == payload.id) {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Node \"{}\" does not exist.", payload.id), [payload.id.clone()]);

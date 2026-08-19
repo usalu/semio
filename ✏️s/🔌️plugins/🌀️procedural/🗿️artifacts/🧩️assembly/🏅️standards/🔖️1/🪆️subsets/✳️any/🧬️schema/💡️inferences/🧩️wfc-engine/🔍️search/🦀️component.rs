@@ -66,7 +66,7 @@ pub enum RestartSchedule {
 }
 
 impl RestartSchedule {
-    fn backtrack_budget(&self, attempt: u64) -> Option<u64> {
+    async fn backtrack_budget(&self, attempt: u64) -> Option<u64> {
         match *self {
             RestartSchedule::Never => None,
             RestartSchedule::Fixed(n) => Some(n),
@@ -77,7 +77,7 @@ impl RestartSchedule {
 }
 
 /// 🌳️ The standard Luby sequence (1-indexed): `1,1,2,1,1,2,4,1,1,2,1,1,2,4,8,...`.
-fn luby(i: u64) -> u64 {
+async fn luby(i: u64) -> u64 {
     let mut k = 1u32;
     while (1u64 << k) - 1 < i {
         k += 1;
@@ -94,15 +94,15 @@ fn luby(i: u64) -> u64 {
 pub struct CancelToken(std::sync::Arc<std::sync::atomic::AtomicBool>);
 
 impl CancelToken {
-    pub fn new() -> Self {
+    pub async fn new() -> Self {
         Self::default()
     }
 
-    pub fn cancel(&self) {
+    pub async fn cancel(&self) {
         self.0.store(true, std::sync::atomic::Ordering::Relaxed);
     }
 
-    pub fn is_cancelled(&self) -> bool {
+    pub async fn is_cancelled(&self) -> bool {
         self.0.load(std::sync::atomic::Ordering::Relaxed)
     }
 }
@@ -143,7 +143,7 @@ enum RepairOutcome {
 /// ever report `Unchanged`, never re-report `Wipeout`, so a silent leftover wipeout would
 /// otherwise never be caught).
 #[allow(clippy::too_many_arguments)]
-fn backtrack_and_repair<T: Topology>(
+async fn backtrack_and_repair<T: Topology>(
     model: &CompiledModel,
     topo: &T,
     budget: &Budget,
@@ -218,14 +218,14 @@ enum StepOutcome {
 
 /// 🧷️ Whether every constraint accepts the current (assumed all-singleton) domain state. `true`
 /// (vacuously) when there are no constraints to check.
-fn constraints_accept(domains: &DomainStore, constraints: Option<&ConstraintSet<'_>>) -> bool {
+async fn constraints_accept(domains: &DomainStore, constraints: Option<&ConstraintSet<'_>>) -> bool {
     let Some(cs) = constraints else { return true };
     let assignment: Vec<PatternId> = domains.iter().map(|(_, d)| d.singleton().expect("all_singleton guaranteed every domain is a singleton")).collect();
     cs.constraints.iter().all(|c| c.validate_complete(&assignment, cs.adjacency).is_ok())
 }
 
 #[allow(clippy::too_many_arguments)]
-fn decide_and_propagate<T: Topology>(
+async fn decide_and_propagate<T: Topology>(
     model: &CompiledModel,
     topo: &T,
     config: &SearchConfig,
@@ -256,7 +256,7 @@ fn decide_and_propagate<T: Topology>(
 }
 
 #[allow(clippy::too_many_arguments)]
-fn drive<T: Topology>(
+async fn drive<T: Topology>(
     model: &CompiledModel,
     topo: &T,
     config: &SearchConfig,
@@ -334,7 +334,7 @@ fn drive<T: Topology>(
 /// treating "solved" the same as a contradiction that must be repaired) until `limit` solutions
 /// are collected or the tree is exhausted.
 #[allow(clippy::too_many_arguments)]
-fn drive_all<T: Topology>(
+async fn drive_all<T: Topology>(
     model: &CompiledModel,
     topo: &T,
     config: &SearchConfig,
@@ -413,7 +413,7 @@ struct InitResult {
     wipeout: Option<NodeId>,
 }
 
-fn initialize<T: Topology>(model: &CompiledModel, topo: &T, init_domains: Option<&[PatternSet]>, fixed: &[(NodeId, PatternId)], constraints: Option<&ConstraintSet<'_>>) -> InitResult {
+async fn initialize<T: Topology>(model: &CompiledModel, topo: &T, init_domains: Option<&[PatternSet]>, fixed: &[(NodeId, PatternId)], constraints: Option<&ConstraintSet<'_>>) -> InitResult {
     let node_count = topo.node_count();
     let mut domains = DomainStore::new_full(node_count, model.weights());
     let mut trail = Trail::new();
@@ -464,18 +464,18 @@ fn initialize<T: Topology>(model: &CompiledModel, topo: &T, init_domains: Option
 /// 🌳️ Applies `init_domains` (or full domains) and `fixed` pins, runs initial propagation, then
 /// drives search per `config` until solved, proven unsatisfiable, or a budget/restart limit stops
 /// the attempt. `init_domains`, when present, must have one entry per node.
-pub(crate) fn solve<T: Topology>(model: &CompiledModel, topo: &T, config: &SearchConfig, seed: u64, init_domains: Option<&[PatternSet]>, fixed: &[(NodeId, PatternId)]) -> SolveOutcome {
+pub(crate) async fn solve<T: Topology>(model: &CompiledModel, topo: &T, config: &SearchConfig, seed: u64, init_domains: Option<&[PatternSet]>, fixed: &[(NodeId, PatternId)]) -> SolveOutcome {
     solve_inner(model, topo, config, seed, init_domains, fixed, None, None)
 }
 
-pub(crate) fn solve_cancellable<T: Topology>(model: &CompiledModel, topo: &T, config: &SearchConfig, seed: u64, init_domains: Option<&[PatternSet]>, fixed: &[(NodeId, PatternId)], cancel: &CancelToken) -> SolveOutcome {
+pub(crate) async fn solve_cancellable<T: Topology>(model: &CompiledModel, topo: &T, config: &SearchConfig, seed: u64, init_domains: Option<&[PatternSet]>, fixed: &[(NodeId, PatternId)], cancel: &CancelToken) -> SolveOutcome {
     solve_inner(model, topo, config, seed, init_domains, fixed, Some(cancel), None)
 }
 
 /// 🌳️ Like [`solve`], but also applies every constraint's initial restriction and rejects (via an
 /// ordinary backtrack) any complete assignment a constraint does not accept.
 #[allow(clippy::too_many_arguments)]
-pub(crate) fn solve_with_constraints<T: Topology>(
+pub(crate) async fn solve_with_constraints<T: Topology>(
     model: &CompiledModel,
     topo: &T,
     config: &SearchConfig,
@@ -489,7 +489,7 @@ pub(crate) fn solve_with_constraints<T: Topology>(
 }
 
 #[allow(clippy::too_many_arguments)]
-fn solve_inner<T: Topology>(
+async fn solve_inner<T: Topology>(
     model: &CompiledModel,
     topo: &T,
     config: &SearchConfig,
@@ -564,14 +564,14 @@ fn solve_inner<T: Topology>(
 
 /// 🌳️ Exhaustively enumerates up to `limit` solutions, proving `complete = true` iff the whole
 /// tree was explored (never stopped early by `limit` or a budget).
-pub(crate) fn solve_all<T: Topology>(model: &CompiledModel, topo: &T, config: &SearchConfig, seed: u64, init_domains: Option<&[PatternSet]>, fixed: &[(NodeId, PatternId)], limit: usize) -> (Vec<Solution>, bool) {
+pub(crate) async fn solve_all<T: Topology>(model: &CompiledModel, topo: &T, config: &SearchConfig, seed: u64, init_domains: Option<&[PatternSet]>, fixed: &[(NodeId, PatternId)], limit: usize) -> (Vec<Solution>, bool) {
     solve_all_inner(model, topo, config, seed, init_domains, fixed, limit, None)
 }
 
 /// 🌳️ Like [`solve_all`], but also applies every constraint's initial restriction and excludes any
 /// complete assignment a constraint does not accept.
 #[allow(clippy::too_many_arguments)]
-pub(crate) fn solve_all_with_constraints<T: Topology>(
+pub(crate) async fn solve_all_with_constraints<T: Topology>(
     model: &CompiledModel,
     topo: &T,
     config: &SearchConfig,
@@ -585,7 +585,7 @@ pub(crate) fn solve_all_with_constraints<T: Topology>(
 }
 
 #[allow(clippy::too_many_arguments)]
-fn solve_all_inner<T: Topology>(model: &CompiledModel, topo: &T, config: &SearchConfig, seed: u64, init_domains: Option<&[PatternSet]>, fixed: &[(NodeId, PatternId)], limit: usize, constraints: Option<&ConstraintSet<'_>>) -> (Vec<Solution>, bool) {
+async fn solve_all_inner<T: Topology>(model: &CompiledModel, topo: &T, config: &SearchConfig, seed: u64, init_domains: Option<&[PatternSet]>, fixed: &[(NodeId, PatternId)], limit: usize, constraints: Option<&ConstraintSet<'_>>) -> (Vec<Solution>, bool) {
     let start = std::time::Instant::now();
     let mut rng = Rng::from_seed(seed);
     let mut init = initialize(model, topo, init_domains, fixed, constraints);
@@ -615,17 +615,17 @@ fn solve_all_inner<T: Topology>(model: &CompiledModel, topo: &T, config: &Search
     (solutions, complete)
 }
 
-fn restart_or_give_up(config: &SearchConfig, restarts: &mut u64, sink: &mut EventSink) -> bool {
+async fn restart_or_give_up(config: &SearchConfig, restarts: &mut u64, sink: &mut EventSink) -> bool {
     sink.emit(Event::Restarted);
     *restarts += 1;
     !matches!(config.max_restarts, Some(max_r) if *restarts > max_r)
 }
 
-fn partial_state(domains: &DomainStore) -> PartialState {
+async fn partial_state(domains: &DomainStore) -> PartialState {
     PartialState { domains: domains.iter().map(|(_, d)| d.bits().clone()).collect(), decided: domains.iter().map(|(_, d)| d.singleton()).collect() }
 }
 
-fn conclude_failed_attempt(config: &SearchConfig, wiped: NodeId, mut metrics: Metrics, seed: u64, restarts: &mut u64, sink: EventSink, fingerprint: u64) -> SolveOutcome {
+async fn conclude_failed_attempt(config: &SearchConfig, wiped: NodeId, mut metrics: Metrics, seed: u64, restarts: &mut u64, sink: EventSink, fingerprint: u64) -> SolveOutcome {
     match config.mode {
         SearchMode::Backtrack | SearchMode::Backjump => {
             // A wipeout during the very first propagation (before any decision) with nothing on
@@ -640,7 +640,7 @@ fn conclude_failed_attempt(config: &SearchConfig, wiped: NodeId, mut metrics: Me
     }
 }
 
-fn report(metrics: Metrics, seed: u64, model_fingerprint: u64, sink: EventSink) -> RunReport {
+async fn report(metrics: Metrics, seed: u64, model_fingerprint: u64, sink: EventSink) -> RunReport {
     RunReport { metrics, model_fingerprint, seed, events: sink.into_events() }
 }
 // #endregion 🔖️Solve
@@ -653,7 +653,7 @@ mod tests {
     use crate::wfc_engine::oracle;
     use crate::wfc_engine::topology::GraphTopologyBuilder;
 
-    fn checkerboard_topology(n: usize) -> (CompiledModel, crate::wfc_engine::topology::GraphTopology, Vec<oracle::ArcSpec>) {
+    async fn checkerboard_topology(n: usize) -> (CompiledModel, crate::wfc_engine::topology::GraphTopology, Vec<oracle::ArcSpec>) {
         let mut b = ModelBuilder::new();
         let black = b.add_pattern(1.0);
         let white = b.add_pattern(1.0);
@@ -673,7 +673,7 @@ mod tests {
         (model, tb.build().unwrap(), arcs)
     }
 
-    fn k_graph(n: usize, k: usize) -> (CompiledModel, crate::wfc_engine::topology::GraphTopology, Vec<oracle::ArcSpec>) {
+    async fn k_graph(n: usize, k: usize) -> (CompiledModel, crate::wfc_engine::topology::GraphTopology, Vec<oracle::ArcSpec>) {
         let mut b = ModelBuilder::new();
         let patterns: Vec<_> = (0..k).map(|_| b.add_pattern(1.0)).collect();
         let ne = b.add_relation("ne");
@@ -701,7 +701,7 @@ mod tests {
     }
 
     #[test]
-    fn solves_a_satisfiable_path() {
+    async fn solves_a_satisfiable_path() {
         let (model, topo, arcs) = checkerboard_topology(6);
         let config = SearchConfig::default();
         let outcome = solve(&model, &topo, &config, 1, None, &[]);
@@ -714,7 +714,7 @@ mod tests {
     }
 
     #[test]
-    fn proves_unsat_on_odd_cycle_with_backtrack_mode() {
+    async fn proves_unsat_on_odd_cycle_with_backtrack_mode() {
         let mut b = ModelBuilder::new();
         let black = b.add_pattern(1.0);
         let white = b.add_pattern(1.0);
@@ -739,7 +739,7 @@ mod tests {
     }
 
     #[test]
-    fn backtracking_solves_graph_coloring_needing_multiple_decisions() {
+    async fn backtracking_solves_graph_coloring_needing_multiple_decisions() {
         let (model, topo, arcs) = k_graph(4, 4);
         for seed in 0..20 {
             let config = SearchConfig::default();
@@ -752,7 +752,7 @@ mod tests {
     }
 
     #[test]
-    fn unsatisfiable_k5_with_four_colors_proves_unsat() {
+    async fn unsatisfiable_k5_with_four_colors_proves_unsat() {
         let (model, topo, _arcs) = k_graph(5, 4);
         let config = SearchConfig { mode: SearchMode::Backtrack, ..Default::default() };
         let outcome = solve(&model, &topo, &config, 7, None, &[]);
@@ -763,7 +763,7 @@ mod tests {
     }
 
     #[test]
-    fn backjump_mode_matches_backtrack_completeness() {
+    async fn backjump_mode_matches_backtrack_completeness() {
         let (model, topo, _arcs) = k_graph(5, 4);
         let config = SearchConfig { mode: SearchMode::Backjump, ..Default::default() };
         let outcome = solve(&model, &topo, &config, 7, None, &[]);
@@ -782,7 +782,7 @@ mod tests {
     }
 
     #[test]
-    fn fixed_pins_are_respected() {
+    async fn fixed_pins_are_respected() {
         let (model, topo, _arcs) = checkerboard_topology(3);
         let config = SearchConfig::default();
         let outcome = solve(&model, &topo, &config, 5, None, &[(NodeId(0), PatternId(1))]);
@@ -793,7 +793,7 @@ mod tests {
     }
 
     #[test]
-    fn budget_exceeded_reports_partial_state() {
+    async fn budget_exceeded_reports_partial_state() {
         // A checkerboard path fully solves after a single decision (propagation alone forces
         // every other node), so the budget must bite before any decision is even attempted.
         let (model, topo, _arcs) = checkerboard_topology(30);
@@ -803,7 +803,7 @@ mod tests {
     }
 
     #[test]
-    fn same_seed_is_fully_reproducible() {
+    async fn same_seed_is_fully_reproducible() {
         let (model, topo, _arcs) = checkerboard_topology(10);
         let config = SearchConfig::default();
         let o1 = solve(&model, &topo, &config, 123, None, &[]);
@@ -815,7 +815,7 @@ mod tests {
     }
 
     #[test]
-    fn golden_replay_same_seed_reproduces_the_identical_decision_trace() {
+    async fn golden_replay_same_seed_reproduces_the_identical_decision_trace() {
         // Determinism at the level of the final assignment (`same_seed_is_fully_reproducible`)
         // is necessary but not sufficient — this checks the exact decision *sequence* two
         // `DiagLevel::Decisions` solves recorded is byte-identical via `TraceReplay`, catching a
@@ -837,7 +837,7 @@ mod tests {
     }
 
     #[test]
-    fn diag_off_records_no_decision_events_but_summary_and_above_do() {
+    async fn diag_off_records_no_decision_events_but_summary_and_above_do() {
         let (model, topo, _arcs) = checkerboard_topology(5);
         let off_config = SearchConfig { diag_level: DiagLevel::Off, ..Default::default() };
         let decisions_config = SearchConfig { diag_level: DiagLevel::Decisions, ..Default::default() };
@@ -855,7 +855,7 @@ mod tests {
     }
 
     #[test]
-    fn cancellation_stops_search_and_reports_partial() {
+    async fn cancellation_stops_search_and_reports_partial() {
         let (model, topo, _arcs) = k_graph(6, 4);
         let cancel = CancelToken::new();
         cancel.cancel();
@@ -865,7 +865,7 @@ mod tests {
     }
 
     #[test]
-    fn cancel_token_reflects_state() {
+    async fn cancel_token_reflects_state() {
         let cancel = CancelToken::new();
         assert!(!cancel.is_cancelled());
         cancel.cancel();
@@ -873,7 +873,7 @@ mod tests {
     }
 
     #[test]
-    fn restart_only_never_proves_unsat_on_unsatisfiable_instance() {
+    async fn restart_only_never_proves_unsat_on_unsatisfiable_instance() {
         let (model, topo, _arcs) = k_graph(5, 4);
         let config = SearchConfig { mode: SearchMode::RestartOnly, max_restarts: Some(3), restart_schedule: RestartSchedule::Fixed(5), ..Default::default() };
         let outcome = solve(&model, &topo, &config, 1, None, &[]);
@@ -881,7 +881,7 @@ mod tests {
     }
 
     #[test]
-    fn restart_only_still_solves_satisfiable_instances() {
+    async fn restart_only_still_solves_satisfiable_instances() {
         let (model, topo, arcs) = k_graph(4, 4);
         let config = SearchConfig { mode: SearchMode::RestartOnly, max_restarts: Some(50), restart_schedule: RestartSchedule::Luby(4), ..Default::default() };
         let outcome = solve(&model, &topo, &config, 1, None, &[]);
@@ -892,7 +892,7 @@ mod tests {
     }
 
     #[test]
-    fn luby_sequence_matches_known_values() {
+    async fn luby_sequence_matches_known_values() {
         let expected = [1, 1, 2, 1, 1, 2, 4, 1, 1, 2, 1, 1, 2, 4, 8];
         for (i, &e) in expected.iter().enumerate() {
             assert_eq!(luby((i + 1) as u64), e, "luby({})", i + 1);
@@ -900,7 +900,7 @@ mod tests {
     }
 
     #[test]
-    fn solve_all_finds_every_solution_and_proves_complete() {
+    async fn solve_all_finds_every_solution_and_proves_complete() {
         let (model, topo, arcs) = k_graph(3, 3);
         let config = SearchConfig::default();
         let (solutions, complete) = solve_all(&model, &topo, &config, 1, None, &[], 1000);
@@ -916,7 +916,7 @@ mod tests {
     }
 
     #[test]
-    fn solve_all_on_unsat_instance_returns_empty_and_complete() {
+    async fn solve_all_on_unsat_instance_returns_empty_and_complete() {
         let (model, topo, _arcs) = k_graph(5, 4);
         let config = SearchConfig::default();
         let (solutions, complete) = solve_all(&model, &topo, &config, 1, None, &[], 1000);
@@ -925,7 +925,7 @@ mod tests {
     }
 
     #[test]
-    fn solve_all_respects_limit_and_reports_incomplete() {
+    async fn solve_all_respects_limit_and_reports_incomplete() {
         let (model, topo, _arcs) = k_graph(4, 4);
         let config = SearchConfig::default();
         let (solutions, complete) = solve_all(&model, &topo, &config, 1, None, &[], 3);
@@ -934,7 +934,7 @@ mod tests {
     }
 
     #[test]
-    fn nogood_learning_still_proves_unsat_on_pigeonhole_instance() {
+    async fn nogood_learning_still_proves_unsat_on_pigeonhole_instance() {
         use crate::wfc_engine::nogood::NogoodConfig;
         let (model, topo, _arcs) = k_graph(5, 4); // K5 needs 5 colors, only 4 available: unsat
         let config = SearchConfig { nogood: NogoodConfig { enabled: true, ..Default::default() }, ..Default::default() };
@@ -946,7 +946,7 @@ mod tests {
     }
 
     #[test]
-    fn nogood_learning_survives_restarts_and_still_proves_unsat() {
+    async fn nogood_learning_survives_restarts_and_still_proves_unsat() {
         use crate::wfc_engine::nogood::NogoodConfig;
         let (model, topo, _arcs) = k_graph(5, 4);
         let config = SearchConfig { mode: SearchMode::RestartOnly, max_restarts: Some(20), restart_schedule: RestartSchedule::Fixed(10), nogood: NogoodConfig { enabled: true, ..Default::default() }, ..Default::default() };
@@ -963,7 +963,7 @@ mod tests {
         use super::*;
 
         #[test]
-        fn random_instances_solved_or_proven_unsat_match_oracle() {
+        async fn random_instances_solved_or_proven_unsat_match_oracle() {
             let mut rng = Rng::from_seed(777);
             for trial in 0..100 {
                 let pattern_count = 1 + rng.next_range(0, 4) as usize;
@@ -996,7 +996,7 @@ mod tests {
         }
 
         #[test]
-        fn random_instances_with_nogoods_enabled_still_match_oracle() {
+        async fn random_instances_with_nogoods_enabled_still_match_oracle() {
             use crate::wfc_engine::nogood::NogoodConfig;
             // Same sweep as `random_instances_solved_or_proven_unsat_match_oracle`, but with
             // nogood learning turned on — nogoods are supposed to be a purely redundant pruning
@@ -1035,7 +1035,7 @@ mod tests {
         }
 
         #[test]
-        fn solve_all_matches_oracle_solution_set_on_random_instances() {
+        async fn solve_all_matches_oracle_solution_set_on_random_instances() {
             let mut rng = Rng::from_seed(2026);
             for trial in 0..40 {
                 let pattern_count = 1 + rng.next_range(0, 4) as usize;

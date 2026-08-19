@@ -21,10 +21,10 @@ enum RuleClauseRef {
     RhsParameter(usize),
 }
 
-fn parse_fixture_json(json: &str) -> Option<JackSnapshot> {
+async fn parse_fixture_json(json: &str) -> Option<JackSnapshot> {
     JackSnapshot::from_json(json).ok()
 }
-fn apply_semantic_layout_edit(rule_layout: &mut std::collections::BTreeMap<String, crate::artifacts::rewrite::LayoutPoint>, current_fixture_json: &str, edited_fixture_json: &str) -> bool {
+async fn apply_semantic_layout_edit(rule_layout: &mut std::collections::BTreeMap<String, crate::artifacts::rewrite::LayoutPoint>, current_fixture_json: &str, edited_fixture_json: &str) -> bool {
     let (Some(current), Some(edited)) = (parse_fixture_json(current_fixture_json), parse_fixture_json(edited_fixture_json)) else {
         return false;
     };
@@ -42,7 +42,7 @@ fn apply_semantic_layout_edit(rule_layout: &mut std::collections::BTreeMap<Strin
     }
     changed
 }
-fn parse_clause_ref(node_id: &str) -> Option<RuleClauseRef> {
+async fn parse_clause_ref(node_id: &str) -> Option<RuleClauseRef> {
     if node_id == "lhs-where" {
         return Some(RuleClauseRef::LhsWhere);
     }
@@ -57,7 +57,7 @@ fn parse_clause_ref(node_id: &str) -> Option<RuleClauseRef> {
         _ => None,
     }
 }
-fn remove_at<T>(items: &mut Vec<T>, index: usize) -> bool {
+async fn remove_at<T>(items: &mut Vec<T>, index: usize) -> bool {
     if index < items.len() {
         items.remove(index);
         true
@@ -65,7 +65,7 @@ fn remove_at<T>(items: &mut Vec<T>, index: usize) -> bool {
         false
     }
 }
-fn add_rule_clause(state: &mut RewriteSnapshot, clause_kind: &str) -> bool {
+async fn add_rule_clause(state: &mut RewriteSnapshot, clause_kind: &str) -> bool {
     let Ok(mut lhs) = serde_json::from_str::<crate::artifacts::rewrite::schema::Lhs>(&state.lhs_json) else {
         return false;
     };
@@ -112,7 +112,7 @@ fn add_rule_clause(state: &mut RewriteSnapshot, clause_kind: &str) -> bool {
     }
     changed
 }
-fn apply_rewrite_node_graph_edit_operations(state: &mut RewriteSnapshot, selected_node_ids: &[String], surface_id: &str, operations: &[Value]) -> bool {
+async fn apply_rewrite_node_graph_edit_operations(state: &mut RewriteSnapshot, selected_node_ids: &[String], surface_id: &str, operations: &[Value]) -> bool {
     let mut changed = false;
     for operation in operations {
         match operation.get("operation").and_then(|value| value.as_str()).unwrap_or("") {
@@ -169,7 +169,7 @@ fn apply_rewrite_node_graph_edit_operations(state: &mut RewriteSnapshot, selecte
     }
     changed
 }
-fn patch_fixture_nodes(fixture_json: &str, node_ids: &[String], field: &str, value: &str) -> Option<String> {
+async fn patch_fixture_nodes(fixture_json: &str, node_ids: &[String], field: &str, value: &str) -> Option<String> {
     let fixture = JackSnapshot::from_json(fixture_json).ok()?;
     let mut nodes = fixture.nodes();
     for node in nodes.iter_mut() {
@@ -186,7 +186,7 @@ fn patch_fixture_nodes(fixture_json: &str, node_ids: &[String], field: &str, val
     Graph::from_fixture(fixture).ok()?.fixture_json().ok()
 }
 
-pub(crate) fn delete_rule_clause(state: &mut RewriteSnapshot, node_id: &str) -> bool {
+pub(crate) async fn delete_rule_clause(state: &mut RewriteSnapshot, node_id: &str) -> bool {
     let Some(clause_ref) = parse_clause_ref(node_id) else {
         return false;
     };

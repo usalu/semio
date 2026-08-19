@@ -28,28 +28,28 @@ pub mod derived_construction {
         type Mutation = PdfMutation;
         type Diff = PdfDiff;
 
-        fn empty() -> Self {
+        async fn empty() -> Self {
             Self { snapshot: PdfSnapshot::default(), diagnostics: Vec::new() }
         }
 
-        fn from_snapshot(snapshot: Self::Snapshot) -> Self {
+        async fn from_snapshot(snapshot: Self::Snapshot) -> Self {
             Self { snapshot, diagnostics: Vec::new() }
         }
 
-        fn from_text(text: &str) -> Result<Self, store::TextError> {
+        async fn from_text(text: &str) -> Result<Self, store::TextError> {
             Ok(Self::from_snapshot(<PdfSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
 
-        fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
+        async fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
             Ok(Self::from_snapshot(<PdfSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
         }
 
-        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
+        async fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let diff = crate::artifacts::pdf::standards::v1_4::subsets::any::schema::mutations::apply_pdf_mutation(&mut self.snapshot, &mutation);
             (self, diff)
         }
 
-        fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
+        async fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
             self.snapshot = <PdfDiff as protocol::MutationDiff<PdfSnapshot>>::apply(&diff, &self.snapshot)?;
             Ok(self)
         }
@@ -57,7 +57,7 @@ pub mod derived_construction {
         /// 🛡️ Re-runs the honestly-scope-limited PDF/A-1 check -- always SOFT at this schema, so
         /// `build()` never fails; the diagnostics still surface via the analyzer/composer/validator
         /// paths for anyone inspecting them.
-        fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
+        async fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
             let _ = check_pdf_a_conformance(&self.snapshot);
             if self.diagnostics.is_empty() {
                 Ok(self.snapshot)
@@ -73,7 +73,7 @@ pub mod derived_construction {
         use super::*;
 
         #[test]
-        fn pass_through_build_never_fails_on_conformance_grounds() {
+        async fn pass_through_build_never_fails_on_conformance_grounds() {
             let snapshot = PdfABuilderConstruction::empty().build().expect("no hard check exists at this schema; build must succeed");
             assert_eq!(snapshot.page.width, 612.0);
         }
@@ -96,14 +96,14 @@ pub mod derived_analysis {
     pub const CODE_TEXT_EMPTY: &str = "stdio.pdf.a.text-empty";
     pub const CODE_SCHEMA_GAP: &str = "stdio.pdf.a.schema-gap-unverifiable";
 
-    fn soft(code: &'static str, message: String) -> Diagnostic {
+    async fn soft(code: &'static str, message: String) -> Diagnostic {
         Diagnostic { code: FaultCode::new(code), severity: Severity::Warning, span: TextSpan::at(1, 1), message, expected: None, scope: FaultScope::default() }
     }
 
     /// 🛡️ Honestly-scope-limited PDF/A-1 conformance check against one already-decoded `PdfSnapshot`.
     /// Shared single source of truth: `PdfAComposer::compose` (pass-through, can't hard-gate without
     /// an object graph) and the registered `SubsetValidator` both call this.
-    pub fn check_pdf_a_conformance(snapshot: &PdfSnapshot) -> Vec<Diagnostic> {
+    pub async fn check_pdf_a_conformance(snapshot: &PdfSnapshot) -> Vec<Diagnostic> {
         let mut out = Vec::new();
         if snapshot.page.text.trim().is_empty() {
             out.push(soft(CODE_TEXT_EMPTY, "page.text is empty -- no extractable text content found; a very weak signal, but a real one given PageDoc has no other checkable field".into()));
@@ -125,11 +125,11 @@ pub mod derived_analysis {
         type Parts = PdfParts;
         const DIALECT: Dialect = DIALECT;
 
-        fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
+        async fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
             PdfAnyAnalyzer::sniff(source)
         }
 
-        fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
+        async fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
             let inner = PdfAnyAnalyzer::analyze(sources);
             let mut diagnostics = inner.diagnostics.clone();
             if let Some(snapshot) = &inner.parts.snapshot {
@@ -146,14 +146,14 @@ pub mod derived_analysis {
         use crate::artifacts::pdf::standards::v1_4::subsets::any::schema::snapshot::PageDoc;
 
         #[test]
-        fn schema_gap_diagnostic_always_fires() {
+        async fn schema_gap_diagnostic_always_fires() {
             let snapshot = PdfSnapshot { page: PageDoc { width: 612.0, height: 792.0, text: "hello".into() }, ..PdfSnapshot::default() };
             let diagnostics = check_pdf_a_conformance(&snapshot);
             assert!(diagnostics.iter().any(|d| d.code.0 == CODE_SCHEMA_GAP && d.severity == Severity::Warning), "got {diagnostics:?}");
         }
 
         #[test]
-        fn empty_text_is_flagged_soft() {
+        async fn empty_text_is_flagged_soft() {
             let snapshot = PdfSnapshot { page: PageDoc { width: 612.0, height: 792.0, text: String::new() }, ..PdfSnapshot::default() };
             let diagnostics = check_pdf_a_conformance(&snapshot);
             assert!(diagnostics.iter().any(|d| d.code.0 == CODE_TEXT_EMPTY && d.severity == Severity::Warning), "got {diagnostics:?}");
@@ -161,7 +161,7 @@ pub mod derived_analysis {
         }
 
         #[test]
-        fn non_empty_text_skips_the_text_check() {
+        async fn non_empty_text_skips_the_text_check() {
             let snapshot = PdfSnapshot { page: PageDoc { width: 612.0, height: 792.0, text: "content".into() }, ..PdfSnapshot::default() };
             let diagnostics = check_pdf_a_conformance(&snapshot);
             assert!(diagnostics.iter().all(|d| d.code.0 != CODE_TEXT_EMPTY), "got {diagnostics:?}");

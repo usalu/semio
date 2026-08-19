@@ -21,12 +21,12 @@ use crate::artifacts::program::ProgramSnapshot;
 pub const ARCHITECT_EXAMPLE_TEXT: &str = include_str!("../../../📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio");
 
 /// 🗣️ Parses an Architect program from its textual DSL representation.
-pub fn parse(text: &str) -> Result<ProgramSnapshot, store::TextError> {
+pub async fn parse(text: &str) -> Result<ProgramSnapshot, store::TextError> {
     <ProgramSnapshot as store::ArtifactDsl>::parse_dsl(text)
 }
 
 /// 🖨️ Prints an Architect program in its canonical textual DSL representation.
-pub fn print(document: &ProgramSnapshot) -> String {
+pub async fn print(document: &ProgramSnapshot) -> String {
     store::ArtifactDsl::print_dsl(document)
 }
 
@@ -37,19 +37,19 @@ mod tests {
     use crate::artifacts::program::{empty_plugin, sample_plugin};
 
     #[test]
-    fn parse_and_print_round_trip_the_sample_program() {
+    async fn parse_and_print_round_trip_the_sample_program() {
         let program = sample_plugin();
         assert_eq!(parse(&print(&program)).expect("parse"), program);
     }
 
     #[test]
-    fn the_bundled_example_text_parses() {
+    async fn the_bundled_example_text_parses() {
         let parsed = parse(ARCHITECT_EXAMPLE_TEXT).expect("parse bundled example");
         assert_eq!(parsed.meta.title, sample_plugin().meta.title);
     }
 
     #[test]
-    fn an_empty_program_prints_and_reparses() {
+    async fn an_empty_program_prints_and_reparses() {
         let program = empty_plugin();
         assert_eq!(parse(&print(&program)).expect("parse"), program);
     }

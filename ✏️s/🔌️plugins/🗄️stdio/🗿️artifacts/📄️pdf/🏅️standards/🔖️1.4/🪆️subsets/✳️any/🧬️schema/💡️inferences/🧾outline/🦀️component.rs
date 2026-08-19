@@ -17,7 +17,7 @@ pub struct PdfOutline {
 }
 
 impl PdfOutline {
-    pub fn compute(snapshot: &PdfSnapshot) -> Self {
+    pub async fn compute(snapshot: &PdfSnapshot) -> Self {
         Self { page_count: 1, word_count: snapshot.page.text.split_whitespace().count() as u32, char_count: snapshot.page.text.chars().count() as u32 }
     }
 }
@@ -30,7 +30,7 @@ mod tests {
     use crate::artifacts::pdf::standards::v1_4::subsets::any::schema::snapshot::PageDoc;
 
     #[test]
-    fn counts_words_and_chars_in_page_text() {
+    async fn counts_words_and_chars_in_page_text() {
         let snapshot = PdfSnapshot { schema: "stdio.pdf".into(), page: PageDoc { width: 612.0, height: 792.0, text: "hello world".into() } };
         let outline = PdfOutline::compute(&snapshot);
         assert_eq!(outline.page_count, 1);
@@ -39,7 +39,7 @@ mod tests {
     }
 
     #[test]
-    fn outline_is_deterministic() {
+    async fn outline_is_deterministic() {
         let snapshot = PdfSnapshot::default();
         assert_eq!(PdfOutline::compute(&snapshot), PdfOutline::compute(&snapshot));
     }

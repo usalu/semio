@@ -26,7 +26,7 @@ pub struct Ifc2x3Bounds {
 /// `compute_ifc2x3_bounds` returns for zero `IFCCARTESIANPOINT` instances (the fold's identity
 /// value), keeping the inference-default law correct.
 impl Default for Ifc2x3Bounds {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self { min: [0.0, 0.0, 0.0], max: [0.0, 0.0, 0.0], point_count: 0 }
     }
 }
@@ -34,7 +34,7 @@ impl Default for Ifc2x3Bounds {
 /// 📦️ Computes [`Ifc2x3Bounds`] by folding every real `IFCCARTESIANPOINT` instance's coordinate
 /// aggregate (`args.first()`, no leading label arg — unlike STEP AP214's `CARTESIAN_POINT`, IFC's
 /// own EXPRESS schema declares `IfcCartesianPoint.Coordinates` as the sole attribute).
-pub fn compute_ifc2x3_bounds(snapshot: &Ifc2x3Snapshot) -> Ifc2x3Bounds {
+pub async fn compute_ifc2x3_bounds(snapshot: &Ifc2x3Snapshot) -> Ifc2x3Bounds {
     let mut min = [0.0f64; 3];
     let mut max = [0.0f64; 3];
     let mut seen = false;
@@ -68,12 +68,12 @@ mod tests {
     use crate::artifacts::ifc::standards::v2x3::subsets::any::schema::snapshot::STDIO_IFC2X3_DOCUMENT_SCHEMA;
     use crate::artifacts::step::engine::part21::{Part21Document, Part21Header, Part21Instance};
 
-    fn point_instance(id: u64, x: f64, y: f64, z: f64) -> Part21Instance {
+    async fn point_instance(id: u64, x: f64, y: f64, z: f64) -> Part21Instance {
         Part21Instance { id, entities: vec![("IFCCARTESIANPOINT".into(), vec![Part21Value::List(vec![Part21Value::Real(x.into()), Part21Value::Real(y.into()), Part21Value::Real(z.into())])])] }
     }
 
     #[test]
-    fn bounds_matches_hand_built_point_extent() {
+    async fn bounds_matches_hand_built_point_extent() {
         let snapshot = Ifc2x3Snapshot {
             schema: STDIO_IFC2X3_DOCUMENT_SCHEMA.into(),
             document: Part21Document {
@@ -89,13 +89,13 @@ mod tests {
     }
 
     #[test]
-    fn inference_determinism_law() {
+    async fn inference_determinism_law() {
         let snapshot = Ifc2x3Snapshot { schema: STDIO_IFC2X3_DOCUMENT_SCHEMA.into(), document: Part21Document { header: Part21Header::default(), instances: vec![point_instance(1, 1.0, 1.0, 1.0)] }, edm_preamble: None };
         assert_eq!(compute_ifc2x3_bounds(&snapshot), compute_ifc2x3_bounds(&snapshot));
     }
 
     #[test]
-    fn inference_default_law() {
+    async fn inference_default_law() {
         assert_eq!(compute_ifc2x3_bounds(&Ifc2x3Snapshot::default()), Ifc2x3Bounds::default());
     }
 }

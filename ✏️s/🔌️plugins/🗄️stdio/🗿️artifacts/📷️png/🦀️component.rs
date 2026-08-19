@@ -24,7 +24,7 @@ pub const PNG_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.png", standar
 
 //#region 🔖️ArtifactKind
 /// 🗂️ This artifact's `ArtifactKindSpec`.
-pub fn artifact_kind() -> ArtifactKindSpec {
+pub async fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "stdio.png".into(),
         name: "Png".into(),
@@ -56,11 +56,11 @@ pub fn artifact_kind() -> ArtifactKindSpec {
 /// subset here) and never called `register_schema_specs()` — nothing left uncovered. `⚙️engine`
 /// itself is untouched — this only REFERENCES what it already exposes.
 /// 🧩️ Binds this executable root to its sole schema-owned definition.
-pub fn assembly(definition: semio_framework_plugin::ArtifactDefinition) -> Result<crate::registry::ArtifactAssembly, semio_framework_plugin::PluginAssemblyError> {
+pub async fn assembly(definition: semio_framework_plugin::ArtifactDefinition) -> Result<crate::registry::ArtifactAssembly, semio_framework_plugin::PluginAssemblyError> {
     crate::registry::runtime_assembly("png", definition, declaration)
 }
 
-pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
+pub async fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
     let formats = crate::registry::format_descriptors_for("png")?;
     semio_framework_plugin::ArtifactDeclaration::builder(definition)
         .schema(crate::artifacts::png::standards::v1_2::subsets::any::schema::png_artifact_schema_descriptor())
@@ -76,7 +76,7 @@ pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Re
 /// here verbatim from `⚙️engine::register_pilot_languages` (same 5-role Document/Ops/Diff/Pack/Spr
 /// shape every stdio artifact uses), leaked to a `&'static` slice since `dsl::passthrough_hooks`
 /// isn't `const fn`, mirroring the `🗒️note`/`🔋️model` exemplars' own helper of the same shape.
-fn pilot_languages() -> &'static [dsl::LanguageSpec] {
+async fn pilot_languages() -> &'static [dsl::LanguageSpec] {
     static LANGUAGES: std::sync::OnceLock<Vec<dsl::LanguageSpec>> = std::sync::OnceLock::new();
     LANGUAGES
         .get_or_init(|| {
@@ -144,7 +144,7 @@ fn pilot_languages() -> &'static [dsl::LanguageSpec] {
 /// `ensure_stdio_semio_and_png_registered`) call this imperative entry point directly for
 /// standalone `cargo test` runs that never execute the declarative plugin-host boot. Behavior
 /// preserved verbatim — only the module path changed (`engine::register` → `png::register`).
-pub fn register() {
+pub async fn register() {
     io_registry::register();
     ::schema::register_artifact_schema_descriptor(crate::artifacts::png::standards::v1_2::subsets::any::schema::png_artifact_schema_descriptor());
     ::schema::register_artifact_inference_descriptor(crate::artifacts::png::standards::v1_2::subsets::any::schema::inferences::png_artifact_inference_descriptor());
@@ -163,16 +163,16 @@ pub mod io_registry {
 
     static ENTRIES: OnceLock<Vec<&'static ComposerEntry>> = OnceLock::new();
 
-    pub fn entries() -> &'static [&'static ComposerEntry] {
+    pub async fn entries() -> &'static [&'static ComposerEntry] {
         ENTRIES.get_or_init(|| v1_2::entries().iter().collect()).as_slice()
     }
 
-    pub fn compose(target: Dialect, sources: &[ErasedComposeSource]) -> Result<ComposedArtifact, ComposeError> {
+    pub async fn compose(target: Dialect, sources: &[ErasedComposeSource]) -> Result<ComposedArtifact, ComposeError> {
         let entry = entries().iter().find(|e| e.writes == target).ok_or_else(|| ComposeError { message: format!("PngComposer: no entry writes {:?}", target), diagnostics: Vec::new() })?;
         semio_framework_plugin::resolve_ready((entry.compose)(sources))
     }
 
-    pub fn register() {
+    pub async fn register() {
         let _ = register_composer_entries(v1_2::entries());
     }
 }

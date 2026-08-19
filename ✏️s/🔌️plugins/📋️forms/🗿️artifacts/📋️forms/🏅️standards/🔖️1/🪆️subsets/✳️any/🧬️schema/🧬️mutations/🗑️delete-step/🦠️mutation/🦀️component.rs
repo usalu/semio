@@ -17,16 +17,16 @@ pub struct DeleteStep {
 impl MutationKind<FormsSnapshot, FormMutation> for DeleteStep {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "delete", entity: "step", kind: "delete-step", record: "DeletedStep" };
 
-    fn diff(&self, base: &FormsSnapshot) -> protocol::MutationOutcome<FormsDiff> {
+    async fn diff(&self, base: &FormsSnapshot) -> protocol::MutationOutcome<FormsDiff> {
         super::diff::diff_delete_step(self, base)
     }
-    fn inverse(&self, base: &FormsSnapshot) -> Vec<FormMutation> {
+    async fn inverse(&self, base: &FormsSnapshot) -> Vec<FormMutation> {
         super::inverse::inverse_delete_step(self, base)
     }
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         format!("Delete step \"{}\"", self.id)
     }
-    fn target(&self) -> Vec<String> {
+    async fn target(&self) -> Vec<String> {
         vec![self.id.clone()]
     }
 }

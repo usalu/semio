@@ -4,7 +4,7 @@ use crate::artifacts::block5d::Block5dSnapshot;
 use crate::{BlockCamera2d};
 
 //#region 🔖️Diff
-pub fn diff(payload: &super::mutation::MoveCamera2d, base: &Block5dSnapshot) -> protocol::MutationOutcome<Block5dDiff> {
+pub async fn diff(payload: &super::mutation::MoveCamera2d, base: &Block5dSnapshot) -> protocol::MutationOutcome<Block5dDiff> {
     if !payload.new_x.is_finite() || !payload.new_y.is_finite() {
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("Camera position ({}, {}) is not finite.", payload.new_x, payload.new_y), ["camera2d"]);
     }

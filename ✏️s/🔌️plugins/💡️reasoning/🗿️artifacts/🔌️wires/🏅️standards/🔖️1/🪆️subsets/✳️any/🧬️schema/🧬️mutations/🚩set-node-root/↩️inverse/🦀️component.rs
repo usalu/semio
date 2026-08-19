@@ -5,7 +5,7 @@ use crate::artifacts::wires::mutations::WiresMutation;
 use crate::artifacts::wires::WiresSnapshot;
 
 //#region 🔖️Inverse
-pub fn inverse(payload: &super::mutation::SetNodeRoot, base: &WiresSnapshot) -> Vec<WiresMutation> {
+pub async fn inverse(payload: &super::mutation::SetNodeRoot, base: &WiresSnapshot) -> Vec<WiresMutation> {
     match find_board_node(base, &payload.node_id) {
         Some(node) => {
             let old_root = node.get("root").and_then(|value| value.as_bool()).unwrap_or(false);

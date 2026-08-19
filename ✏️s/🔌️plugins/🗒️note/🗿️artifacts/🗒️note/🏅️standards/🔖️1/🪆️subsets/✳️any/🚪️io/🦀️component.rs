@@ -23,7 +23,7 @@
 //! documented cross-plugin limitation, not an oversight (see `## openQuestions`).
 
 use crate::artifacts::note::{NoteBlockNode, NoteSnapshot, NoteTextParagraph, NoteTextRun};
-use semio_framework_plugin::{io_dispatch, Dialect, ErasedComposeSource, IoDirection, IoKey, IoPayload, StandardId, SubsetId};
+use semio_framework_plugin::{io_dispatch, resolve_ready, Dialect, ErasedComposeSource, IoDirection, IoKey, IoPayload, StandardId, SubsetId};
 use semio_s_plugin_stdio::artifacts::dwg::{DwgDrawing, DwgGeometry};
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::any::schema::geometry::{SemioPoint2, SemioPoint3, SemioQuaternion, SemioRgba, SemioTransform};
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::drawing::io as semio_drawing_composer;
@@ -31,15 +31,15 @@ use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::drawing::sch
 use semio_s_plugin_stdio::artifacts::svg::schema::snapshot::write_svg_xml;
 use serde_json::Value;
 
-pub fn import_stdio_kinds() -> &'static [&'static str] {
+pub async fn import_stdio_kinds() -> &'static [&'static str] {
     &["stdio.dwg", "stdio.dxf", "stdio.json", "stdio.pdf", "stdio.png", "stdio.svg"]
 }
-pub fn export_stdio_kinds() -> &'static [&'static str] {
+pub async fn export_stdio_kinds() -> &'static [&'static str] {
     &["stdio.dwg", "stdio.dxf", "stdio.json", "stdio.pdf", "stdio.png", "stdio.svg"]
 }
 
 //#region 🔖️MediaExport
-pub fn note_document_bounds(document: &NoteSnapshot) -> (u32, u32) {
+pub async fn note_document_bounds(document: &NoteSnapshot) -> (u32, u32) {
     let mut max_x = 1024.0_f64;
     let mut max_y = 1024.0_f64;
     for block in crate::artifacts::note::schema::flatten_blocks(&document.blocks) {
@@ -62,7 +62,7 @@ pub fn note_document_bounds(document: &NoteSnapshot) -> (u32, u32) {
 
 /// 🧭️ Position/rotation of any block variant, lifted into a semio `SemioTransform` (Z-axis-only
 /// rotation, matching the drawing subset's own svg-bridge convention — see its `matrix_to_semio_transform`).
-fn note_block_transform(block: &NoteBlockNode) -> SemioTransform {
+async fn note_block_transform(block: &NoteBlockNode) -> SemioTransform {
     let (x, y, rotation) = match block {
         NoteBlockNode::Text { x, y, rotation, .. }
         | NoteBlockNode::Image { x, y, rotation, .. }
@@ -77,7 +77,7 @@ fn note_block_transform(block: &NoteBlockNode) -> SemioTransform {
 
 /// ▭ The outline-rectangle `PathSegment`s the deleted `note_block_to_svg` drew for its
 /// image-without-asset and Table/Math/Group catch-all cases.
-fn note_outline_rect_segments(width: f64, height: f64) -> Vec<PathSegment> {
+async fn note_outline_rect_segments(width: f64, height: f64) -> Vec<PathSegment> {
     vec![
         PathSegment::MoveTo { to: SemioPoint2 { x: 0.0, y: 0.0 } },
         PathSegment::LineTo { to: SemioPoint2 { x: width, y: 0.0 } },
@@ -89,7 +89,7 @@ fn note_outline_rect_segments(width: f64, height: f64) -> Vec<PathSegment> {
 
 /// 🎨️ Always-append style intern, mirroring semio/drawing's own svg-import `intern_style`
 /// convention (see that bridge's module doc) — one named `DrawStyle` per call, referenced back by name.
-fn note_intern_style(styles: &mut Vec<DrawStyle>, fill: Option<SemioRgba>, stroke: Option<SemioRgba>, stroke_width: Option<f64>) -> String {
+async fn note_intern_style(styles: &mut Vec<DrawStyle>, fill: Option<SemioRgba>, stroke: Option<SemioRgba>, stroke_width: Option<f64>) -> String {
     let name = format!("note-style-{}", styles.len());
     styles.push(DrawStyle { name: name.clone(), fill, stroke, stroke_width, opacity: None });
     name
@@ -99,8 +99,8 @@ fn note_intern_style(styles: &mut Vec<DrawStyle>, fill: Option<SemioRgba>, strok
 /// purposes" rule — mirrors semio/drawing's own svg-import `base64_decode`) — unwraps a
 /// `NoteImageAsset.data` `data:<mime>;base64,<payload>` URI into the raw bytes `DrawNode::Image`
 /// needs.
-fn note_asset_data_uri_bytes(data_uri: &str) -> Vec<u8> {
-    fn val(c: u8) -> Option<u8> {
+async fn note_asset_data_uri_bytes(data_uri: &str) -> Vec<u8> {
+    async fn val(c: u8) -> Option<u8> {
         match c {
             b'A'..=b'Z' => Some(c - b'A'),
             b'a'..=b'z' => Some(c - b'a' + 26),
@@ -136,7 +136,7 @@ fn note_asset_data_uri_bytes(data_uri: &str) -> Vec<u8> {
 /// `note_block_to_svg` SVG string emission. Text/Image/Ink map onto their natural `DrawNode`
 /// counterpart; Table/Math/Group (no scene-graph equivalent in this subset) fall back to the same
 /// plain outline rectangle the deleted code drew for its catch-all case.
-fn draw_node_from_note_block(block: &NoteBlockNode, document: &NoteSnapshot, styles: &mut Vec<DrawStyle>) -> Option<DrawNode> {
+async fn draw_node_from_note_block(block: &NoteBlockNode, document: &NoteSnapshot, styles: &mut Vec<DrawStyle>) -> Option<DrawNode> {
     let transform = note_block_transform(block);
     let inner = match block {
         NoteBlockNode::Text { content, font_size, .. } => {
@@ -172,7 +172,7 @@ fn draw_node_from_note_block(block: &NoteBlockNode, document: &NoteSnapshot, sty
 /// 🧿️ Builds this document's `SemioDrawingSnapshot` — one flattened, visible-only layer whose
 /// children are each block's `draw_node_from_note_block` mapping. This is the real snapshot
 /// `note_document_to_svg` hands to `io_dispatch` (never a hand-rolled SVG string).
-pub fn note_document_to_drawing_snapshot(document: &NoteSnapshot) -> SemioDrawingSnapshot {
+pub async fn note_document_to_drawing_snapshot(document: &NoteSnapshot) -> SemioDrawingSnapshot {
     let (width, height) = note_document_bounds(document);
     let mut styles = Vec::new();
     let children: Vec<DrawNode> =
@@ -192,7 +192,7 @@ const NOTE_SVG_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.svg", standa
 /// validator + svg/dxf/pdf io entries) into the process-global `io` registry exactly once, so
 /// `io_dispatch` below can resolve the drawing→svg bridge regardless of host-boot ordering (unit
 /// tests included — nothing else in this test binary calls stdio's own `plugin()`/`register()`).
-fn ensure_semio_drawing_bridge_registered() {
+async fn ensure_semio_drawing_bridge_registered() {
     static ONCE: std::sync::Once = std::sync::Once::new();
     ONCE.call_once(semio_drawing_composer::register);
 }
@@ -201,7 +201,7 @@ fn ensure_semio_drawing_bridge_registered() {
 /// through stdio's registered semio/drawing→svg composer (`io_dispatch`, never a hand-rolled SVG
 /// string) to obtain a real `SvgSnapshot`, which is printed back to XML text via svg's own
 /// `write_svg_xml`.
-pub fn note_document_to_svg(document: &NoteSnapshot) -> Result<(String, u32, u32), String> {
+pub async fn note_document_to_svg(document: &NoteSnapshot) -> Result<(String, u32, u32), String> {
     ensure_semio_drawing_bridge_registered();
     let (width, height) = note_document_bounds(document);
     let drawing = note_document_to_drawing_snapshot(document);
@@ -216,7 +216,7 @@ pub fn note_document_to_svg(document: &NoteSnapshot) -> Result<(String, u32, u32
         format_subset: NOTE_SVG_DIALECT.subset.0.to_string(),
     };
     let sources = [ErasedComposeSource { dialect: NOTE_DRAWING_DIALECT, payload: IoPayload::Binary(drawing_bytes) }];
-    let composed = io_dispatch(&key, &sources).map_err(|error| format!("note→svg via semio/drawing bridge: {}", error.message))?;
+    let composed = resolve_ready(io_dispatch(&key, &sources)).map_err(|error| format!("note→svg via semio/drawing bridge: {}", error.message))?;
     let svg_bytes = match composed.payload {
         IoPayload::Binary(bytes) => bytes,
         IoPayload::Text(_) => return Err("note→svg via semio/drawing bridge: expected a Binary (ArtifactPack) svg payload".into()),
@@ -225,7 +225,7 @@ pub fn note_document_to_svg(document: &NoteSnapshot) -> Result<(String, u32, u32
     Ok((write_svg_xml(&svg_snapshot.doc), width, height))
 }
 
-pub fn note_document_json_to_svg(value: &Value) -> Result<(String, u32, u32), String> {
+pub async fn note_document_json_to_svg(value: &Value) -> Result<(String, u32, u32), String> {
     let document: NoteSnapshot = serde_json::from_value(value.clone()).map_err(|error| error.to_string())?;
     note_document_to_svg(&document)
 }
@@ -234,13 +234,13 @@ pub fn note_document_json_to_svg(value: &Value) -> Result<(String, u32, u32), St
 //#region 🔖️MediaImport
 /// 🕳️ Not rewired onto the semio/drawing bridge (see `stdio_gaps` in the W5b ticket report): the
 /// drawing subset has no dwg-format io leaf yet (only svg/dxf/pdf), and routing through the
-/// framework's `dwg_drawing_to_svg` + `io_dispatch(svg→drawing)` round trip would REGRESS this
+/// framework's `dwg_drawing_to_svg` + `resolve_ready(io_dispatch(svg→drawing))` round trip would REGRESS this
 /// path — `dwg_drawing_to_svg` only walks `LwPolyline` geometry (silently drops `Text` entities)
 /// and `DrawNode::Text` has no font-size field to carry DWG's `height`. `ink_block_from_points`/
 /// `text_block_from_dwg` below are real domain mappers over already-typed `DwgGeometry` fields
 /// (not hand-rolled DWG byte manipulation — `semio_framework::dwg_from_bytes` does the actual
 /// byte-level parse), kept as the honest, lossless choice until that bridge exists.
-fn ink_block_from_points(points: &[[f64; 2]]) -> NoteBlockNode {
+async fn ink_block_from_points(points: &[[f64; 2]]) -> NoteBlockNode {
     let mut min_x = f64::INFINITY;
     let mut min_y = f64::INFINITY;
     let mut max_x = f64::NEG_INFINITY;
@@ -268,7 +268,7 @@ fn ink_block_from_points(points: &[[f64; 2]]) -> NoteBlockNode {
     }
 }
 
-fn text_block_from_dwg(at: &[f64; 3], height: f64, rotation: f64, content: &str) -> NoteBlockNode {
+async fn text_block_from_dwg(at: &[f64; 3], height: f64, rotation: f64, content: &str) -> NoteBlockNode {
     let font_size = if height > 0.0 { height } else { 12.0 };
     let id = crate::artifacts::note::schema::create_note_id("dwg-text");
     let paragraphs = vec![NoteTextParagraph { runs: vec![NoteTextRun { text: content.to_string(), bold: None, italic: None, underline: None, link: None }] }];
@@ -289,7 +289,7 @@ fn text_block_from_dwg(at: &[f64; 3], height: f64, rotation: f64, content: &str)
     }
 }
 
-pub fn note_document_json_from_dwg(drawing: &DwgDrawing) -> Result<Value, String> {
+pub async fn note_document_json_from_dwg(drawing: &DwgDrawing) -> Result<Value, String> {
     let mut document = crate::artifacts::note::schema::empty_note_snapshot();
     document.id = crate::artifacts::note::schema::create_note_id("dwg-import");
     document.title = Some("Imported Drawing".into());
@@ -326,7 +326,7 @@ mod media_tests {
 
     /// 🧪️ Relocated from the deleted `⚙️engine` (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES).
     #[test]
-    fn imports_dwg_polyline_and_text_into_note_blocks() {
+    async fn imports_dwg_polyline_and_text_into_note_blocks() {
         let drawing = DwgDrawing {
             layers: vec![DwgLayer::default()],
             entities: vec![
@@ -359,7 +359,7 @@ mod media_tests {
 
     /// 🧪️ Relocated from the deleted `⚙️engine` (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES).
     #[test]
-    fn imports_empty_dwg_drawing_as_valid_empty_note_snapshot() {
+    async fn imports_empty_dwg_drawing_as_valid_empty_note_snapshot() {
         let drawing = DwgDrawing::default();
         let value = note_document_json_from_dwg(&drawing).unwrap();
         let document: NoteSnapshot = serde_json::from_value(value).unwrap();
@@ -373,7 +373,7 @@ mod media_tests {
     /// build + a real svg-composer round trip to show up in the output. Relocated from the deleted
     /// `⚙️engine` (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES).
     #[test]
-    fn document_to_svg_dispatches_through_semio_drawing_bridge() {
+    async fn document_to_svg_dispatches_through_semio_drawing_bridge() {
         let mut document = crate::artifacts::note::schema::empty_note_snapshot();
         document.blocks.push(NoteBlockNode::Text {
             content: crate::artifacts::note::note_text_child_handle_and_cache("t1", &[NoteTextParagraph { runs: vec![NoteTextRun { text: "hello semio".into(), bold: None, italic: None, underline: None, link: None }] }]),
@@ -433,7 +433,7 @@ mod media_tests {
     /// from the `NoteImageAsset.data` uri) and back out as a data uri on the svg side. Relocated
     /// from the deleted `⚙️engine` (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES).
     #[test]
-    fn document_to_svg_embeds_image_asset_bytes_as_data_uri() {
+    async fn document_to_svg_embeds_image_asset_bytes_as_data_uri() {
         let mut document = crate::artifacts::note::schema::empty_note_snapshot();
         document.assets.insert("asset-1".into(), NoteImageAsset { mime: "image/png".into(), data: "data:image/png;base64,AAECAw==".into(), width: Some(4.0), height: Some(4.0) });
         document.blocks.push(NoteBlockNode::Image { id: "im1".into(), name: "Image".into(), x: 0.0, y: 0.0, width: 4.0, height: 4.0, rotation: 0.0, visible: true, locked: false, image_key: "asset-1".into() });
@@ -444,7 +444,7 @@ mod media_tests {
 
     /// 🧪️ Relocated from the deleted `⚙️engine` (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES).
     #[test]
-    fn note_document_to_drawing_snapshot_flattens_visible_blocks_into_one_layer() {
+    async fn note_document_to_drawing_snapshot_flattens_visible_blocks_into_one_layer() {
         let mut document = crate::artifacts::note::schema::empty_note_snapshot();
         document.blocks.push(crate::artifacts::note::schema::create_block_by_kind("text", 5.0, 6.0));
         let mut hidden = crate::artifacts::note::schema::create_block_by_kind("text", 0.0, 0.0);
@@ -463,7 +463,7 @@ mod media_tests {
 
 
 //#region 🔖️IoDeclaration
-pub fn io() -> semio_framework_plugin::app::declarations::IoDeclaration {
+pub async fn io() -> semio_framework_plugin::app::declarations::IoDeclaration {
     use crate::artifacts::note::standards::v1::subsets::any::io::export::serializers::artifacts as export;
     use crate::artifacts::note::standards::v1::subsets::any::io::import::deserializers::artifacts as import;
     use crate::artifacts::note::standards::v1::subsets::any::io::{diff, mutations, snapshot};
@@ -476,7 +476,7 @@ pub fn io() -> semio_framework_plugin::app::declarations::IoDeclaration {
     /// ticket (the old artifact root's `pilot_languages()`) — `OnceLock` because `dsl::passthrough_hooks`
     /// is not `const fn` (matches the fixture's own `std1_strict_entries()` pattern,
     /// `📓️recipe-subset.md` §5 gotcha 5). Indices: 0=document 1=op 2=diff 3=pack 4=spr.
-    fn languages() -> &'static [dsl::LanguageSpec; 5] {
+    async fn languages() -> &'static [dsl::LanguageSpec; 5] {
         static LANGUAGES: OnceLock<[dsl::LanguageSpec; 5]> = OnceLock::new();
         LANGUAGES.get_or_init(|| {
             [
@@ -534,7 +534,7 @@ pub fn io() -> semio_framework_plugin::app::declarations::IoDeclaration {
         })
     }
 
-    fn entries() -> &'static [IoEntry] {
+    async fn entries() -> &'static [IoEntry] {
         static ENTRIES: OnceLock<Vec<IoEntry>> = OnceLock::new();
         ENTRIES
             .get_or_init(|| {

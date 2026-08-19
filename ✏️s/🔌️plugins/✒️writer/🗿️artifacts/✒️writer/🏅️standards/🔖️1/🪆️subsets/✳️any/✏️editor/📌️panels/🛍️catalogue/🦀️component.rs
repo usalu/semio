@@ -8,7 +8,7 @@ pub const WRITER_PLAY_BODY_CATALOGUE: &str = "writer.play.catalogue";
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
-pub fn definition() -> PanelTabDefinition {
+pub async fn definition() -> PanelTabDefinition {
     PanelTabDefinition {
         kind: PanelTabKind::App(FRAMEWORK_PANEL_TAB_CATALOGUE_ID.into()),
         label: LocalizedLabel::native(FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, "Katalog"),
@@ -20,7 +20,7 @@ pub fn definition() -> PanelTabDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(labels: &WriterPlayLabels) -> UiNode {
+pub async fn render(labels: &WriterPlayLabels) -> UiNode {
     ui_declarative_sections_to_tree(&[UiSectionNode { id: "writer-catalogue".into(), label: Some(labels.language.into()), default_open: Some(true), children: vec![ui_text(labels.jack_description)], presence: UiPresence::default(), menu: None }])
 }
 //#endregion 🔖️Render
@@ -32,13 +32,13 @@ mod tests {
     use crate::editor::writer::testkit::{new_app, render as render_body};
 
     #[test]
-    fn renders_catalogue_panel() {
+    async fn renders_catalogue_panel() {
         let mut app = new_app();
         assert!(render_body(&mut app, WRITER_PLAY_BODY_CATALOGUE).contains("jack"));
     }
 
     #[test]
-    fn definition_binds_the_framework_catalogue_tab_to_this_body_key() {
+    async fn definition_binds_the_framework_catalogue_tab_to_this_body_key() {
         let definition = definition();
         assert_eq!(definition.id(), FRAMEWORK_PANEL_TAB_CATALOGUE_ID);
         assert_eq!(definition.body_key.as_deref(), Some(WRITER_PLAY_BODY_CATALOGUE));

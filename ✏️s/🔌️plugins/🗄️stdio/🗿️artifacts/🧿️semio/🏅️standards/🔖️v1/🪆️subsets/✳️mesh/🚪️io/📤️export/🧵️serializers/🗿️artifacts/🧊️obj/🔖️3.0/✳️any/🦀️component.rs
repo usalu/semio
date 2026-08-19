@@ -99,7 +99,7 @@ mod tests {
     use crate::artifacts::semio::standards::v1::subsets::mesh::schema::snapshot::{SemioMesh, SemioPrimitive};
     use semio_framework_plugin::ArtifactDeserializer;
 
-    fn sample_semio_mesh() -> SemioMeshSnapshot {
+    async fn sample_semio_mesh() -> SemioMeshSnapshot {
         SemioMeshSnapshot {
             schema: "stdio.semio.mesh".into(),
             meshes: vec![SemioMesh {
@@ -121,19 +121,19 @@ mod tests {
     }
 
     #[test]
-    fn serialize_then_deserialize_round_trips_at_the_semio_level() {
+    async fn serialize_then_deserialize_round_trips_at_the_semio_level() {
         let original = sample_semio_mesh();
         let obj = semio_framework_plugin::resolve_ready(SemioMeshToObj::serialize(&original)).expect("serialize");
         assert_eq!(obj.vertices.len(), 3);
         assert_eq!(obj.faces.len(), 1);
         assert_eq!(obj.objects.len(), 1);
         assert_eq!(obj.objects[0].name, "tri");
-        let round_tripped = SemioMeshFromObj::deserialize(&obj).expect("deserialize");
+        let round_tripped = semio_framework_plugin::resolve_ready(SemioMeshFromObj::deserialize(&obj)).expect("deserialize");
         assert_eq!(original, round_tripped);
     }
 
     #[test]
-    fn non_triangle_topology_is_a_hard_error() {
+    async fn non_triangle_topology_is_a_hard_error() {
         let mut semio = sample_semio_mesh();
         semio.meshes[0].primitives[0].topology = SemioTopology::TriangleFan;
         let err = semio_framework_plugin::resolve_ready(SemioMeshToObj::serialize(&semio)).expect_err("TriangleFan must error");

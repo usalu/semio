@@ -11,7 +11,7 @@ pub const NOTE_PLAY_BODY_PROPERTIES: &str = "note.play.properties";
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
-pub fn definition() -> PanelTabDefinition {
+pub async fn definition() -> PanelTabDefinition {
     PanelTabDefinition { kind: PanelTabKind::App(FRAMEWORK_PANEL_TAB_INSPECTION_ID.into()), label: LocalizedLabel::native(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, "Inspektion"), group: PanelGroup::Details, body_key: Some(NOTE_PLAY_BODY_PROPERTIES.into()), children: Vec::new() }
 }
 //#endregion 🔖️Definition
@@ -22,7 +22,7 @@ pub fn definition() -> PanelTabDefinition {
 /// can no longer tell which blocks are selected — it always shows the document-wide summary now; the
 /// per-selected-block detail branch (name/x/y/width/height/visible/locked, driven by `patchBlocks`)
 /// that used to read `cfg.selected_block_ids` is gone with it.
-pub fn render(document: &NoteSnapshot, active_utility_id: &str, _labels: &NotePlayLabels) -> UiNode {
+pub async fn render(document: &NoteSnapshot, active_utility_id: &str, _labels: &NotePlayLabels) -> UiNode {
     ui_stack_vertical(vec![
         ui_text(Label::data(format!("Schema: {}", document.schema))),
         ui_text(Label::data(format!("Blocks: {}", flatten_blocks(&document.blocks).len()))),
@@ -39,13 +39,13 @@ mod tests {
     use crate::editor::note::NOTE_PLAY_BODY_PROPERTIES as BODY_PROPERTIES;
 
     #[test]
-    fn an_unknown_body_key_renders_a_diagnostic_instead_of_panicking() {
+    async fn an_unknown_body_key_renders_a_diagnostic_instead_of_panicking() {
         let mut app = note_app();
         assert!(render_body(&mut app, "note.play.nope").contains("Unknown body"));
     }
 
     #[test]
-    fn renders_the_document_wide_summary() {
+    async fn renders_the_document_wide_summary() {
         let mut app = note_app();
         let json = render_body(&mut app, BODY_PROPERTIES);
         assert!(json.contains("Utility:"));

@@ -32,11 +32,11 @@ impl ArtifactDeserializer for SemioValueFromCsv {
     }
 }
 
-pub fn register() {}
+pub async fn register() {}
 //#endregion 🔖️Deserializer
 
 //#region 🔖️Convert
-pub fn semio_value_from_csv(snapshot: &CsvSnapshot) -> SemioValue {
+pub async fn semio_value_from_csv(snapshot: &CsvSnapshot) -> SemioValue {
     if snapshot.has_header {
         let mut records = snapshot.records.iter();
         let header: Vec<String> = records.next().map(|r| r.fields.iter().map(|f| f.value.clone()).collect()).unwrap_or_default();
@@ -60,12 +60,12 @@ mod tests {
     use super::*;
     use crate::artifacts::csv::schema::snapshot::{CsvField, CsvRecord};
 
-    fn field(s: &str) -> CsvField {
+    async fn field(s: &str) -> CsvField {
         CsvField { value: s.into(), quoted: false }
     }
 
     #[test]
-    fn header_rows_become_a_list_of_keyed_maps() {
+    async fn header_rows_become_a_list_of_keyed_maps() {
         let snapshot = CsvSnapshot {
             schema: crate::artifacts::csv::STDIO_CSV_DOCUMENT_SCHEMA.into(),
             has_header: true,
@@ -82,7 +82,7 @@ mod tests {
     }
 
     #[test]
-    fn ragged_short_record_omits_missing_trailing_keys() {
+    async fn ragged_short_record_omits_missing_trailing_keys() {
         let snapshot = CsvSnapshot { schema: crate::artifacts::csv::STDIO_CSV_DOCUMENT_SCHEMA.into(), has_header: true, records: vec![CsvRecord { fields: vec![field("a"), field("b"), field("c")] }, CsvRecord { fields: vec![field("1")] }] };
         let value = semio_value_from_csv(&snapshot);
         match value {
@@ -95,7 +95,7 @@ mod tests {
     }
 
     #[test]
-    fn headerless_csv_becomes_a_list_of_lists() {
+    async fn headerless_csv_becomes_a_list_of_lists() {
         let snapshot = CsvSnapshot { schema: crate::artifacts::csv::STDIO_CSV_DOCUMENT_SCHEMA.into(), has_header: false, records: vec![CsvRecord { fields: vec![field("x"), field("y")] }] };
         let value = semio_value_from_csv(&snapshot);
         match value {

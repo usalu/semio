@@ -11,7 +11,7 @@ pub const FORMS_PLAY_BODY_DOCUMENT: &str = "forms.play.document";
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
-pub fn definition() -> PanelTabDefinition {
+pub async fn definition() -> PanelTabDefinition {
     PanelTabDefinition {
         kind: PanelTabKind::App(FRAMEWORK_PANEL_TAB_ARTIFACT_ID.into()),
         label: LocalizedLabel::native(FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL, "Dokument"),
@@ -29,7 +29,7 @@ pub fn definition() -> PanelTabDefinition {
 /// id — the framework stamps this tree's selection/hover presence from that domain
 /// (`.interaction_domain`) and prunes stale ids through that same topology, so no per-item click
 /// action is declared here anymore (clicks are translated into `interactionSelect` generically).
-pub fn render(spec: &FormsSnapshot, labels: &FormsLabels) -> UiNode {
+pub async fn render(spec: &FormsSnapshot, labels: &FormsLabels) -> UiNode {
     let step_items: Vec<UiTreeItemNode> = forms_steps(spec)
         .iter()
         .map(|step| {
@@ -69,7 +69,7 @@ mod tests {
     use crate::editor::forms::FORMS_PLAY_BODY_DOCUMENT as BODY_DOCUMENT;
 
     #[test]
-    fn document_tree_declares_drop_action() {
+    async fn document_tree_declares_drop_action() {
         let mut app = forms_app();
         let json = render_body(&mut app, BODY_DOCUMENT);
         assert!(json.contains(r#""dropAction""#));
@@ -77,14 +77,14 @@ mod tests {
     }
 
     #[test]
-    fn document_lists_steps() {
+    async fn document_lists_steps() {
         let mut app = forms_app();
         let json = render_body(&mut app, BODY_DOCUMENT);
         assert!(json.contains("forms-play-document.steps"));
     }
 
     #[test]
-    fn definition_binds_the_framework_document_tab_to_this_body_key() {
+    async fn definition_binds_the_framework_document_tab_to_this_body_key() {
         let definition = definition();
         assert_eq!(definition.id(), FRAMEWORK_PANEL_TAB_ARTIFACT_ID);
         assert_eq!(definition.body_key.as_deref(), Some(FORMS_PLAY_BODY_DOCUMENT));

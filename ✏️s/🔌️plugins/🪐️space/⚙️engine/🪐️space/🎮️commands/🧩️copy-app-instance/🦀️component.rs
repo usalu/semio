@@ -14,10 +14,10 @@ pub struct CopyAppInstance {}
 /// (no `interaction` slot — ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM) — reachable
 /// only through that macro-generated path (`SpaceApp::handle` always routes this command through
 /// `apply` below instead), so it degrades to treating the selection as empty (copies nothing).
-pub fn handle(_payload: &CopyAppInstance, _doc: &ArtifactView<'_, WorkflowSnapshot>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
+pub async fn handle(_payload: &CopyAppInstance, _doc: &ArtifactView<'_, WorkflowSnapshot>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
     Ok(Emit::config(vec![SpaceConfigMutation::SetClipboard { node_ids: Vec::new() }]))
 }
 
-pub fn apply(_payload: &CopyAppInstance, _doc: &ArtifactView<'_, WorkflowSnapshot>, _cfg: &ConfigView<'_, SpaceConfig>, interaction: &InteractionView<'_>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
+pub async fn apply(_payload: &CopyAppInstance, _doc: &ArtifactView<'_, WorkflowSnapshot>, _cfg: &ConfigView<'_, SpaceConfig>, interaction: &InteractionView<'_>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
     Ok(Emit::config(vec![SpaceConfigMutation::SetClipboard { node_ids: interaction.selection("graph").ids.clone() }]))
 }

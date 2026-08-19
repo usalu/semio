@@ -35,7 +35,7 @@ pub struct EnergyModelSnapshot {
 }
 
 impl Default for EnergyModelSnapshot {
-    fn default() -> Self {
+    async fn default() -> Self {
         energy_snapshot_with_state(ENERGY_MODEL_DOCUMENT_SCHEMA, crate::model::Model::default(), None)
     }
 }
@@ -46,31 +46,31 @@ impl Default for EnergyModelSnapshot {
 /// `enc_child`/`dec_child` (the working reference for a composite subset's child-handle
 /// primitives): a handle is exactly two strings (`child_id`, the target's `ArtifactRef` flattened
 /// via `to_uri()`), never the child's own content.
-fn hex_encode(bytes: &[u8]) -> String {
+async fn hex_encode(bytes: &[u8]) -> String {
     bytes.iter().map(|b| format!("{b:02x}")).collect()
 }
-fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
+async fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
     if s.len() % 2 != 0 {
         return Err(format!("odd hex length: {s:?}"));
     }
     (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()
 }
-fn enc_str(s: &str) -> String {
+async fn enc_str(s: &str) -> String {
     hex_encode(s.as_bytes())
 }
-fn dec_str(s: &str) -> Result<String, String> {
+async fn dec_str(s: &str) -> Result<String, String> {
     String::from_utf8(hex_decode(s)?).map_err(|e| e.to_string())
 }
-fn enc_ref(r: &store::os_io::ArtifactRef) -> String {
+async fn enc_ref(r: &store::os_io::ArtifactRef) -> String {
     enc_str(&r.to_uri())
 }
-fn dec_ref(s: &str) -> Result<store::os_io::ArtifactRef, String> {
+async fn dec_ref(s: &str) -> Result<store::os_io::ArtifactRef, String> {
     store::os_io::ArtifactRef::parse_uri(&dec_str(s)?)
 }
-fn enc_child<S>(c: &store::ArtifactChild<S>) -> String {
+async fn enc_child<S>(c: &store::ArtifactChild<S>) -> String {
     format!("[{},{}]", enc_str(&c.child_id), enc_ref(&c.target))
 }
-fn dec_child<S>(s: &str) -> Result<store::ArtifactChild<S>, String> {
+async fn dec_child<S>(s: &str) -> Result<store::ArtifactChild<S>, String> {
     let inner = s.strip_prefix('[').and_then(|s| s.strip_suffix(']')).ok_or_else(|| format!("expected [...], got {s:?}"))?;
     let parts: Vec<&str> = inner.splitn(2, ',').collect();
     let [child_id, target] = parts.as_slice() else { return Err(format!("child handle: expected 2 fields, got {}", parts.len())) };
@@ -82,16 +82,16 @@ fn dec_child<S>(s: &str) -> Result<store::ArtifactChild<S>, String> {
 /// 🧾️ `referenced_model` (an `Option<store::ArtifactLink>`) is JSON-serialized then hex-encoded,
 /// same convention `layout`'s own `enc_json`/`dec_json` uses — `ArtifactLink`/`LinkPin`/`BlobRef`
 /// are themselves plain `Serialize`/`Deserialize`, so no bespoke hex/bracket encoder is needed.
-fn enc_json<T: Serialize>(value: &T) -> String {
+async fn enc_json<T: Serialize>(value: &T) -> String {
     enc_str(&serde_json::to_string(value).expect("EnergyModelSnapshot structured fields are always JSON-serializable"))
 }
-fn dec_json<T: serde::de::DeserializeOwned>(s: &str) -> Result<T, String> {
+async fn dec_json<T: serde::de::DeserializeOwned>(s: &str) -> Result<T, String> {
     serde_json::from_str(&dec_str(s)?).map_err(|e| e.to_string())
 }
 //#endregion 🔖️JsonFieldPrimitives
 
 //#region 🔖️TextPrimitives
-fn print_energy_model_snapshot_body(s: &EnergyModelSnapshot) -> String {
+async fn print_energy_model_snapshot_body(s: &EnergyModelSnapshot) -> String {
     format!(
         "schema={}\nstructure={}\nzones={}\nreferencedModel={}",
         enc_str(&s.schema),
@@ -100,7 +100,7 @@ fn print_energy_model_snapshot_body(s: &EnergyModelSnapshot) -> String {
         enc_json(&s.referenced_model),
     )
 }
-fn parse_energy_model_snapshot_body(body: &str) -> Result<EnergyModelSnapshot, String> {
+async fn parse_energy_model_snapshot_body(body: &str) -> Result<EnergyModelSnapshot, String> {
     let mut schema = None;
     let mut structure = None;
     let mut zones = None;
@@ -132,43 +132,43 @@ fn parse_energy_model_snapshot_body(body: &str) -> Result<EnergyModelSnapshot, S
 //#endregion 🔖️TextPrimitives
 
 //#region 🔖️BinaryPrimitives
-fn write_bytes_lp(out: &mut Vec<u8>, bytes: &[u8]) {
+async fn write_bytes_lp(out: &mut Vec<u8>, bytes: &[u8]) {
     store::pack_rt::write_varint_u64(out, bytes.len() as u64);
     out.extend_from_slice(bytes);
 }
-fn read_bytes_lp(reader: &mut store::ByteReader<'_>) -> Result<Vec<u8>, String> {
+async fn read_bytes_lp(reader: &mut store::ByteReader<'_>) -> Result<Vec<u8>, String> {
     let len = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
     Ok(reader.read_bytes(len).map_err(|e| e.to_string())?.to_vec())
 }
-fn write_str_lp(out: &mut Vec<u8>, s: &str) {
+async fn write_str_lp(out: &mut Vec<u8>, s: &str) {
     write_bytes_lp(out, s.as_bytes());
 }
-fn read_str_lp(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
+async fn read_str_lp(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
     String::from_utf8(read_bytes_lp(reader)?).map_err(|e| e.to_string())
 }
-fn write_ref(out: &mut Vec<u8>, r: &store::os_io::ArtifactRef) {
+async fn write_ref(out: &mut Vec<u8>, r: &store::os_io::ArtifactRef) {
     write_str_lp(out, &r.to_uri());
 }
-fn read_ref(reader: &mut store::ByteReader<'_>) -> Result<store::os_io::ArtifactRef, String> {
+async fn read_ref(reader: &mut store::ByteReader<'_>) -> Result<store::os_io::ArtifactRef, String> {
     store::os_io::ArtifactRef::parse_uri(&read_str_lp(reader)?)
 }
-fn write_child<S>(out: &mut Vec<u8>, c: &store::ArtifactChild<S>) {
+async fn write_child<S>(out: &mut Vec<u8>, c: &store::ArtifactChild<S>) {
     write_str_lp(out, &c.child_id);
     write_ref(out, &c.target);
 }
-fn read_child<S>(reader: &mut store::ByteReader<'_>) -> Result<store::ArtifactChild<S>, String> {
+async fn read_child<S>(reader: &mut store::ByteReader<'_>) -> Result<store::ArtifactChild<S>, String> {
     let child_id = read_str_lp(reader)?;
     let target = read_ref(reader)?;
     Ok(store::ArtifactChild::new(child_id, target))
 }
-fn write_json<T: Serialize>(out: &mut Vec<u8>, value: &T) {
+async fn write_json<T: Serialize>(out: &mut Vec<u8>, value: &T) {
     write_str_lp(out, &serde_json::to_string(value).expect("EnergyModelSnapshot structured fields are always JSON-serializable"));
 }
-fn read_json<T: serde::de::DeserializeOwned>(reader: &mut store::ByteReader<'_>) -> Result<T, String> {
+async fn read_json<T: serde::de::DeserializeOwned>(reader: &mut store::ByteReader<'_>) -> Result<T, String> {
     serde_json::from_str(&read_str_lp(reader)?).map_err(|e| e.to_string())
 }
 
-fn encode_energy_model_snapshot_binary(s: &EnergyModelSnapshot) -> Vec<u8> {
+async fn encode_energy_model_snapshot_binary(s: &EnergyModelSnapshot) -> Vec<u8> {
     const PACK_BINARY_FORMAT: u8 = 1;
     let mut out = vec![PACK_BINARY_FORMAT];
     write_str_lp(&mut out, &s.schema);
@@ -177,7 +177,7 @@ fn encode_energy_model_snapshot_binary(s: &EnergyModelSnapshot) -> Vec<u8> {
     write_json(&mut out, &s.referenced_model);
     out
 }
-fn decode_energy_model_snapshot_binary(bytes: &[u8]) -> Result<EnergyModelSnapshot, String> {
+async fn decode_energy_model_snapshot_binary(bytes: &[u8]) -> Result<EnergyModelSnapshot, String> {
     const PACK_BINARY_FORMAT: u8 = 1;
     let mut reader = store::ByteReader::new(bytes);
     let format = reader.read_u8().map_err(|e| e.to_string())?;
@@ -196,17 +196,17 @@ fn decode_energy_model_snapshot_binary(bytes: &[u8]) -> Result<EnergyModelSnapsh
 //#region 🔖️HandcraftedArtifactCodecs
 impl store::ArtifactDsl for EnergyModelSnapshot {
     const EXTENSION: &'static str = "energy";
-    fn envelope_id() -> &'static str {
+    async fn envelope_id() -> &'static str {
         "energy.model"
     }
-    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+    async fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
         let body = match store::semio_format::split_text_preamble(text) {
             Ok((_, rest)) => rest,
             Err(_) => text,
         };
         parse_energy_model_snapshot_body(body.trim()).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
-    fn print_dsl(&self) -> String {
+    async fn print_dsl(&self) -> String {
         let body = print_energy_model_snapshot_body(self);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
             <Self as store::ArtifactDsl>::envelope_id(),
@@ -219,7 +219,7 @@ impl store::ArtifactDsl for EnergyModelSnapshot {
 }
 
 impl store::ArtifactPack for EnergyModelSnapshot {
-    fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
+    async fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
         let raw = encode_energy_model_snapshot_binary(self);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
@@ -230,7 +230,7 @@ impl store::ArtifactPack for EnergyModelSnapshot {
         .map_err(|e| store::PackError::Schema(e.to_string()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &raw))
     }
-    fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
+    async fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let (envelope, inner) =
             store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
         if envelope.envelope_id() != <Self as store::ArtifactDsl>::envelope_id() {
@@ -251,7 +251,7 @@ impl store::ArtifactPack for EnergyModelSnapshot {
 mod round_trip_tests {
     use super::*;
 
-    fn sample_with_composition() -> EnergyModelSnapshot {
+    async fn sample_with_composition() -> EnergyModelSnapshot {
         let mut snapshot = energy_snapshot_with_state(
             ENERGY_MODEL_DOCUMENT_SCHEMA,
             crate::model::Model { name: "Demo".into(), version: "1".into(), ..crate::model::Model::default() },
@@ -270,7 +270,7 @@ mod round_trip_tests {
     /// completeness is not caught by `cargo check`; this is the real round-trip proof the migration
     /// recipe requires.
     #[test]
-    fn structure_zones_and_referenced_model_round_trip_through_text_and_binary() {
+    async fn structure_zones_and_referenced_model_round_trip_through_text_and_binary() {
         let snapshot = sample_with_composition();
         let text = store::ArtifactDsl::print_dsl(&snapshot);
         let from_text = <EnergyModelSnapshot as store::ArtifactDsl>::parse_dsl(&text).expect("parse round-tripped text");
@@ -282,7 +282,7 @@ mod round_trip_tests {
     }
 
     #[test]
-    fn absent_link_slot_round_trips_as_none() {
+    async fn absent_link_slot_round_trips_as_none() {
         let mut snapshot = sample_with_composition();
         snapshot.referenced_model = None;
         let text = store::ArtifactDsl::print_dsl(&snapshot);
@@ -295,7 +295,7 @@ mod round_trip_tests {
     /// losslessly through the generic JSON<->`SemioValue` bridge — the real codec-completeness proof
     /// for the artifact root's `🔖️Converters` region.
     #[test]
-    fn model_round_trips_through_the_structure_child_content() {
+    async fn model_round_trips_through_the_structure_child_content() {
         let model = crate::model::Model {
             name: "Demo".into(),
             version: "1".into(),

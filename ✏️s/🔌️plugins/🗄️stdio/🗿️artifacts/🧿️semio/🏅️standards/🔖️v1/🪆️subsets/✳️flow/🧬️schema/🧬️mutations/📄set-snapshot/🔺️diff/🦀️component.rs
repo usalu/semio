@@ -2,7 +2,7 @@ use crate::artifacts::semio::standards::v1::subsets::flow::schema::diff::{diff_s
 use crate::artifacts::semio::standards::v1::subsets::flow::schema::snapshot::SemioFlowSnapshot;
 
 /// 🔺️ Diff helper for set-snapshot.
-pub fn diff(base: &SemioFlowSnapshot, snapshot: &SemioFlowSnapshot) -> protocol::MutationOutcome<SemioFlowDiff> {
+pub async fn diff(base: &SemioFlowSnapshot, snapshot: &SemioFlowSnapshot) -> protocol::MutationOutcome<SemioFlowDiff> {
     if base == snapshot {
         return protocol::MutationOutcome::new(SemioFlowDiff::default()).warn("mutation.no-op", "set-snapshot: new snapshot is identical to the current one");
     }

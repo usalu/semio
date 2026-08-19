@@ -19,7 +19,7 @@ pub struct XlsxIntoForms;
 impl Deserializer<FormsSnapshot> for XlsxIntoForms {
     const FROM: Dialect = XLSX_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Lossy;
-    fn deserialize(_payload: &IoPayload) -> IoResult<FormsSnapshot> {
+    async fn deserialize(_payload: &IoPayload) -> IoResult<FormsSnapshot> {
         Err(IoError { message: "XlsxIntoForms: not implemented".to_string(), diagnostics: Vec::new() })
     }
 }

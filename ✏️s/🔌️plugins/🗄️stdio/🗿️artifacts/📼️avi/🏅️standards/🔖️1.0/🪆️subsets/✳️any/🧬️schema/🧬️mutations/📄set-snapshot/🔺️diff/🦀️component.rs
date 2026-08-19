@@ -2,7 +2,7 @@ use crate::artifacts::avi::standards::v1_0::subsets::any::schema::diff::{diff_se
 use crate::artifacts::avi::standards::v1_0::subsets::any::schema::snapshot::AviSnapshot;
 
 /// 🔺️ Diff helper for set-snapshot.
-pub fn diff(base: &AviSnapshot, snapshot: &AviSnapshot) -> protocol::MutationOutcome<AviDiff> {
+pub async fn diff(base: &AviSnapshot, snapshot: &AviSnapshot) -> protocol::MutationOutcome<AviDiff> {
     if base == snapshot {
         return protocol::MutationOutcome::new(AviDiff::default()).warn("mutation.no-op", "set-snapshot: new snapshot is identical to the current one");
     }

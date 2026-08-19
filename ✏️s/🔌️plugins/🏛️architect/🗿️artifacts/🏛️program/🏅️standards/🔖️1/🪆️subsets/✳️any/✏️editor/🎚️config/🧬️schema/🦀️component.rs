@@ -31,7 +31,7 @@ pub struct ArchitectConfig {
 
 //region 📎 App-schema descriptor
 /// 📎 `s.architect.architect`'s config and presence schema, owned by this leaf.
-pub fn app_schema_descriptor() -> ::schema::AppSchemaDescriptor {
+pub async fn app_schema_descriptor() -> ::schema::AppSchemaDescriptor {
     ::schema::AppSchemaDescriptor {
         id: "s.architect.architect",
         config: ::schema::FacetLeaves {

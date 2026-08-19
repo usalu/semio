@@ -12,7 +12,7 @@ use serde::{Deserialize, Serialize};
 pub struct SetLocale {
     pub value: String}
 
-pub fn handle(payload: &SetLocale, _doc: &ArtifactView<'_, Procedural2dSnapshot>, _cfg: &ConfigView<'_, Procedural2dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural2dMutation, Procedural2dConfigMutation>, Fault> {
+pub async fn handle(payload: &SetLocale, _doc: &ArtifactView<'_, Procedural2dSnapshot>, _cfg: &ConfigView<'_, Procedural2dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural2dMutation, Procedural2dConfigMutation>, Fault> {
     Ok(Emit::config(vec![Procedural2dConfigMutation::SetLocale { value: payload.value.clone() }]))
 }
 
@@ -24,7 +24,7 @@ mod tests {
     use crate::editor::procedural2d::Procedural2dCommand;
 
     #[test]
-    fn set_locale_updates_config_locale() {
+    async fn set_locale_updates_config_locale() {
         let mut app = app();
         dispatch(&mut app, Procedural2dCommand::SetLocale(SetLocale { value: "de-DE".into() }));
     }

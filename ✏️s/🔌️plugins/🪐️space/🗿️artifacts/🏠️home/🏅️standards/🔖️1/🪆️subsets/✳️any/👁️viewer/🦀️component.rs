@@ -29,7 +29,7 @@ pub enum HomeViewCommand {
 }
 
 impl protocol::OpBinary for HomeViewCommand {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         match self {
             HomeViewCommand::Noop => Ok(vec![0]),
             HomeViewCommand::FoldDirectoryEvents { events_json } => {
@@ -39,7 +39,7 @@ impl protocol::OpBinary for HomeViewCommand {
             }
         }
     }
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         match bytes.first() {
             Some(1) => Ok(HomeViewCommand::FoldDirectoryEvents { events_json: String::from_utf8_lossy(&bytes[1..]).into_owned() }),
             _ => Ok(HomeViewCommand::Noop),
@@ -71,13 +71,13 @@ impl ArtifactViewer for HomeViewer {
     const DIALECT: Dialect = HOME_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = S_HOME_DOCUMENT_SCHEMA;
 
-    fn initial_snapshot() -> SHomeSnapshot {
+    async fn initial_snapshot() -> SHomeSnapshot {
         SHomeSnapshot::default()
     }
 
     /// 🪪️ Same app-schema descriptor as the editor (contract requires both surfaces sharing a dialect
     /// to also share a config schema, since it is registered per-document-schema, not per-role).
-    fn app_schema() -> Option<::schema::AppSchemaDescriptor> {
+    async fn app_schema() -> Option<::schema::AppSchemaDescriptor> {
         Some(crate::editor::home::config::schema::app_schema_descriptor())
     }
 
@@ -85,7 +85,7 @@ impl ArtifactViewer for HomeViewer {
     /// has no such field to carry one in). `Noop` returns the empty emit; `FoldDirectoryEvents` folds
     /// each event into `HomeConfigMutation::FoldDirectoryEvent`, the SAME config-only writer the editor
     /// uses — never an optimistic mutation, never a document edit.
-    fn handle(command: &Self::Command, _doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _interaction: &InteractionView<'_>, _engines: &EngineHandles) -> Result<ViewEmit<Self::ConfigMutation>, Fault> {
+    async fn handle(command: &Self::Command, _doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _interaction: &InteractionView<'_>, _engines: &EngineHandles) -> Result<ViewEmit<Self::ConfigMutation>, Fault> {
         match command {
             HomeViewCommand::Noop => Ok(ViewEmit::default()),
             HomeViewCommand::FoldDirectoryEvents { events_json } => {
@@ -98,7 +98,7 @@ impl ArtifactViewer for HomeViewer {
 
     /// 👁️ Renders the SAME overview table the editor's main window does, read-only: no create/delete/
     /// rename/share affordances, fed by `cfg.snapshot.directory()` — never the artifact document itself.
-    fn render(body_key: &str, _doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>) -> UiNode {
+    async fn render(body_key: &str, _doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>) -> UiNode {
         match body_key {
             main::S_HOME_VIEW_BODY => main::render(&cfg.snapshot.directory(), &cfg.snapshot.locale),
             _ => semio_framework_plugin::ui_text(semio_framework_plugin::Label::data(format!("Unknown body: {body_key}"))),
@@ -108,7 +108,7 @@ impl ArtifactViewer for HomeViewer {
 //#endregion 🔖️Viewer
 
 //#region 🔖️Manifest
-pub fn create_home_viewer() -> semio_framework_plugin::AppDefinition {
+pub async fn create_home_viewer() -> semio_framework_plugin::AppDefinition {
     Viewer::builder(HOME_DIALECT)
         .document(["semio", "s", "home"])
         .icon_id("home")
@@ -126,19 +126,19 @@ mod tests {
     use super::*;
 
     #[test]
-    fn create_home_viewer_builds_a_definition_for_the_viewer_role() {
+    async fn create_home_viewer_builds_a_definition_for_the_viewer_role() {
         let def = create_home_viewer();
         assert_eq!(def.role, semio_framework::AppRole::Viewer);
         assert_eq!(def.dialect, HOME_DIALECT.into());
     }
 
     #[test]
-    fn viewer_dialect_matches_the_artifact_coordinate() {
+    async fn viewer_dialect_matches_the_artifact_coordinate() {
         assert_eq!(<HomeViewer as ArtifactViewer>::DIALECT, HOME_DIALECT);
     }
 
     #[test]
-    fn renders_the_main_body_key_for_the_default_snapshot() {
+    async fn renders_the_main_body_key_for_the_default_snapshot() {
         let snapshot = SHomeSnapshot::default();
         let history = semio_framework_plugin::HistoryView::empty();
         let doc = ArtifactView::new(&snapshot, &history);
@@ -148,12 +148,12 @@ mod tests {
     }
 
     #[test]
-    fn fold_directory_events_command_never_touches_the_document_store() {
+    async fn fold_directory_events_command_never_touches_the_document_store() {
         semio_framework_plugin::testkit::assert_viewer_never_mutates::<HomeViewer>();
     }
 
     #[test]
-    fn editor_and_viewer_share_one_dialect() {
+    async fn editor_and_viewer_share_one_dialect() {
         semio_framework_plugin::testkit::assert_editor_and_viewer_share_dialect::<crate::editor::home::HomeApp, HomeViewer>();
     }
 }

@@ -19,7 +19,7 @@ const WRITER_PLAY_SURFACE_MAIN: &str = "writer.play";
 /// 🧱️ Stitched into the app manifest by `crate::editor::writer::create_writer_app`. `options.measures`
 /// stays empty here on purpose: writer's measures are config-derived and rebuilt per frame by
 /// [`window_measures`], not frozen into the manifest.
-pub fn definition() -> WindowKindDefinition {
+pub async fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
         id: WRITER_PLAY_WINDOW_KIND.into(),
         label: LocalizedLabel::native("Jack", "Jack"),
@@ -42,13 +42,13 @@ pub fn definition() -> WindowKindDefinition {
 }
 
 /// 🎚️ The live chrome measures for this window, collected from its `🎚️options/*` components.
-pub fn window_measures(config: &WriterConfig, labels: &WriterPlayLabels) -> Vec<WindowMeasure> {
+pub async fn window_measures(config: &WriterConfig, labels: &WriterPlayLabels) -> Vec<WindowMeasure> {
     vec![options::font_size::measure(config, labels), options::line_height::measure(config, labels), options::tab_size::measure(config, labels), options::line_numbers::measure(config, labels)]
 }
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(document: &WriterSnapshot, config: &WriterConfig) -> UiNode {
+pub async fn render(document: &WriterSnapshot, config: &WriterConfig) -> UiNode {
     let is_jack = document.language_id == "jack";
     let text = writer_text(document);
     let selection = config.editor_selection.clone().unwrap_or(crate::editor::writer::config::WriterEditorSelection { start: 0, end: 0 });
@@ -136,13 +136,13 @@ mod tests {
     use semio_framework_plugin::PluginApp;
 
     #[test]
-    fn renders_text_editor_scene() {
+    async fn renders_text_editor_scene() {
         let mut app = new_app();
         assert!(render_body(&mut app, WRITER_PLAY_BODY_MAIN).contains("text-editor"));
     }
 
     #[test]
-    fn scene_emits_placeholders_selectable_spans_and_newline_gates_for_jack() {
+    async fn scene_emits_placeholders_selectable_spans_and_newline_gates_for_jack() {
         let mut app = new_app();
         let node = app.render(WRITER_PLAY_BODY_MAIN, Some(&crate::artifacts::writer::dsl::jack_example_json()), &semio_framework_plugin::ViewModel::default()).expect("render");
         let json = serde_json::to_string(&node).unwrap();
@@ -152,7 +152,7 @@ mod tests {
     }
 
     #[test]
-    fn window_measures_expose_font_line_height_tab_and_toggle() {
+    async fn window_measures_expose_font_line_height_tab_and_toggle() {
         let mut app = new_app();
         let measures = main_window_measures(&mut app);
         assert_eq!(measures.len(), 4);
@@ -160,7 +160,7 @@ mod tests {
     }
 
     #[test]
-    fn definition_declares_the_text_editor_surface_and_body_key() {
+    async fn definition_declares_the_text_editor_surface_and_body_key() {
         let definition = definition();
         assert_eq!(definition.body_key, WRITER_PLAY_BODY_MAIN);
         assert!(matches!(definition.surface_kind, SurfaceKind::TextEditor));

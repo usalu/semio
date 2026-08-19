@@ -13,6 +13,6 @@ pub struct SetGridFactor {
 
 /// 🔳️ Clamped to the slider's own `0.5..=50.0` range so a scripted dispatch can't desynchronize the
 /// control from the config.
-pub fn handle(payload: &SetGridFactor, _doc: &ArtifactView<'_, FlowSnapshot>, _cfg: &ConfigView<'_, FlowConfig>, _session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, FlowConfigMutation>, Fault> {
+pub async fn handle(payload: &SetGridFactor, _doc: &ArtifactView<'_, FlowSnapshot>, _cfg: &ConfigView<'_, FlowConfig>, _session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, FlowConfigMutation>, Fault> {
     Ok(Emit::config(vec![FlowConfigMutation::SetGridFactor { value: payload.value.clamp(0.5, 50.0) }]))
 }

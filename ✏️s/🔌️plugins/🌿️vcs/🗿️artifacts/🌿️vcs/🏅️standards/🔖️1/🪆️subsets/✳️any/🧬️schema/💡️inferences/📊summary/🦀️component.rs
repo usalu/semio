@@ -19,7 +19,7 @@ pub struct VcsSummary {
 /// 📊️ `tagCount` = `tags.len()`; `notesWordCount`/`hasNotes` derived from a whitespace split of
 /// `notes` — real, cheap, deterministic derivations over the only two free-form persistent fields
 /// this document has.
-pub fn compute_vcs_summary(snapshot: &VcsSnapshot) -> VcsSummary {
+pub async fn compute_vcs_summary(snapshot: &VcsSnapshot) -> VcsSummary {
     let trimmed = snapshot.notes.trim();
     VcsSummary {
         tag_count: snapshot.tags.len() as u32,
@@ -35,7 +35,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn empty_notes_and_tags_yield_a_zero_summary() {
+    async fn empty_notes_and_tags_yield_a_zero_summary() {
         let summary = compute_vcs_summary(&VcsSnapshot::default());
         assert_eq!(summary.tag_count, 0);
         assert_eq!(summary.notes_word_count, 0);
@@ -43,7 +43,7 @@ mod tests {
     }
 
     #[test]
-    fn tags_and_notes_are_counted_exactly() {
+    async fn tags_and_notes_are_counted_exactly() {
         let snapshot = VcsSnapshot { tags: vec!["a".into(), "b".into(), "c".into()], notes: "  three real words  ".into(), ..VcsSnapshot::default() };
         let summary = compute_vcs_summary(&snapshot);
         assert_eq!(summary.tag_count, 3);
@@ -52,7 +52,7 @@ mod tests {
     }
 
     #[test]
-    fn summary_is_deterministic() {
+    async fn summary_is_deterministic() {
         let snapshot = VcsSnapshot { tags: vec!["a".into()], notes: "hello world".into(), ..VcsSnapshot::default() };
         assert_eq!(compute_vcs_summary(&snapshot), compute_vcs_summary(&snapshot));
     }

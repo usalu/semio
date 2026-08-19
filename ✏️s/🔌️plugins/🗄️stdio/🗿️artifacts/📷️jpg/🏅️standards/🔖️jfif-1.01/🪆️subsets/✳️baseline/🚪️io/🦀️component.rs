@@ -23,12 +23,12 @@ pub mod derived_composition {
         type Snapshot = JpgSnapshot;
         const WRITES: Dialect = DIALECT_BASELINE;
 
-        fn reads() -> &'static [Dialect] {
+        async fn reads() -> &'static [Dialect] {
             &[DIALECT_ANY, DIALECT_BASELINE, DEP_BINARY]
         }
 
-        fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
-            let inner = JpgAnyComposer::compose(sources)?;
+        async fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+            let inner = semio_framework_plugin::resolve_ready(JpgAnyComposer::compose(sources))?;
             let checks = check_baseline_conformance(&inner.snapshot);
             let (hard, soft): (Vec<Diagnostic>, Vec<Diagnostic>) = checks.into_iter().partition(|d| matches!(d.severity, Severity::Error | Severity::Fatal));
             if !hard.is_empty() {
@@ -51,7 +51,7 @@ pub mod derived_composition {
     impl SubsetValidator for JpgBaselineValidator {
         const DIALECT: Dialect = DIALECT_BASELINE;
 
-        fn validate(payload: &IoPayload) -> Vec<Diagnostic> {
+        async fn validate(payload: &IoPayload) -> Vec<Diagnostic> {
             let decoded = match payload {
                 IoPayload::Binary(bytes) => <JpgSnapshot as store::ArtifactPack>::decode_pack(bytes).ok(),
                 IoPayload::Text(text) => <JpgSnapshot as store::ArtifactDsl>::parse_dsl(text).ok(),
@@ -72,7 +72,7 @@ pub mod derived_composition {
 
     static VALIDATOR_ENTRY: OnceLock<SubsetValidatorEntry> = OnceLock::new();
 
-    fn validator_entry() -> &'static SubsetValidatorEntry {
+    async fn validator_entry() -> &'static SubsetValidatorEntry {
         VALIDATOR_ENTRY.get_or_init(subset_validator_entry_of::<JpgBaselineValidator>)
     }
 
@@ -81,7 +81,7 @@ pub mod derived_composition {
     /// `ComposerEntry` itself is registered separately by the standard-level composer aggregator
     /// (`crate::artifacts::jpg::standards::v_jfif_1_01::engine::io_registry::entries()`), matching how `✳️any`'s
     /// own entry is registered.
-    pub fn register() {
+    pub async fn register() {
         let _ = register_subset_validator(validator_entry());
     }
     //#endregion 🔖️SubsetValidator
@@ -91,7 +91,7 @@ pub mod derived_composition {
         use super::*;
         use semio_framework_plugin::AnalyzeSource;
 
-        fn gradient_image(w: u32, h: u32) -> Vec<u8> {
+        async fn gradient_image(w: u32, h: u32) -> Vec<u8> {
             let mut out = vec![0u8; (w * h * 4) as usize];
             for y in 0..h {
                 for x in 0..w {
@@ -106,7 +106,7 @@ pub mod derived_composition {
         }
 
         #[test]
-        fn engine_encoded_jpeg_composes_and_stamps_baseline() {
+        async fn engine_encoded_jpeg_composes_and_stamps_baseline() {
             let (w, h) = (32u32, 32u32);
             let snap = JpgSnapshot { width: w, height: h, pixels: gradient_image(w, h), ..JpgSnapshot::default() };
             // 🩹 `AnalyzeSource::Binary` for DIALECT_ANY expects an ALREADY pack-encoded (semio
@@ -124,7 +124,7 @@ pub mod derived_composition {
         }
 
         #[test]
-        fn subset_validator_recheck_flags_no_hard_diagnostics_for_a_real_encode() {
+        async fn subset_validator_recheck_flags_no_hard_diagnostics_for_a_real_encode() {
             let (w, h) = (16u32, 16u32);
             let snap = JpgSnapshot { width: w, height: h, pixels: gradient_image(w, h), ..JpgSnapshot::default() };
             let bytes = crate::artifacts::jpg::standards::v_jfif_1_01::engine::encode_jpg(&snap).expect("encode");

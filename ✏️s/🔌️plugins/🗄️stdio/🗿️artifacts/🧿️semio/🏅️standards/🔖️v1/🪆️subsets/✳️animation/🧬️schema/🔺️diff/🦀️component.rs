@@ -23,13 +23,13 @@ use serde::{Deserialize, Serialize};
 //#region 🔖️IndexedCollectionAlgebra
 /// 📐️ Shared rank/unrank arithmetic for index-keyed collection diffs — see `🧬️schema-design.md`
 /// §Absorb for the derivation. `excluded_sorted` must be sorted ascending.
-fn count_le(sorted: &[usize], x: usize) -> usize {
+async fn count_le(sorted: &[usize], x: usize) -> usize {
     sorted.partition_point(|&v| v <= x)
 }
-fn rank_excluding(pos: usize, excluded_sorted: &[usize]) -> usize {
+async fn rank_excluding(pos: usize, excluded_sorted: &[usize]) -> usize {
     pos - count_le(excluded_sorted, pos)
 }
-fn unrank_excluding(rank: usize, excluded_sorted: &[usize]) -> usize {
+async fn unrank_excluding(rank: usize, excluded_sorted: &[usize]) -> usize {
     let mut candidate = rank;
     loop {
         let next = rank + count_le(excluded_sorted, candidate);
@@ -39,17 +39,17 @@ fn unrank_excluding(rank: usize, excluded_sorted: &[usize]) -> usize {
         candidate = next;
     }
 }
-fn transport_forward(index: usize, removed_sorted: &[usize], added_index_sorted: &[usize]) -> usize {
+async fn transport_forward(index: usize, removed_sorted: &[usize], added_index_sorted: &[usize]) -> usize {
     unrank_excluding(rank_excluding(index, removed_sorted), added_index_sorted)
 }
 
-fn indexed_is_empty<D, T>(d: &IndexedTripleDiff<D, T>) -> bool {
+async fn indexed_is_empty<D, T>(d: &IndexedTripleDiff<D, T>) -> bool {
     d.removed.is_empty() && d.modified.is_empty() && d.added.is_empty()
 }
 
 /// 🧭️ Position-pairwise state delta: `0..min(len)` compare as `modified`, base's tail is `removed`,
 /// other's tail is `added` — per `🧬️schema-design.md`'s `between` matching rule for index keys.
-fn between_indexed<T: Clone, D>(base: &[T], other: &[T], between_item: impl Fn(&T, &T) -> D, item_is_empty: impl Fn(&D) -> bool) -> IndexedTripleDiff<D, T> {
+async fn between_indexed<T: Clone, D>(base: &[T], other: &[T], between_item: impl Fn(&T, &T) -> D, item_is_empty: impl Fn(&D) -> bool) -> IndexedTripleDiff<D, T> {
     let min = base.len().min(other.len());
     let mut modified = Vec::new();
     for i in 0..min {
@@ -65,7 +65,7 @@ fn between_indexed<T: Clone, D>(base: &[T], other: &[T], between_item: impl Fn(&
 
 /// ▶️ Apply semantics (normative, `🧬️schema-design.md`): modify against BASE indices, remove
 /// descending, then insert `added` ascending at `min(index, len)` against the FINAL positions.
-fn apply_indexed<T: Clone, D>(diff: &IndexedTripleDiff<D, T>, base: &[T], apply_item: impl Fn(&D, &T) -> T) -> Vec<T> {
+async fn apply_indexed<T: Clone, D>(diff: &IndexedTripleDiff<D, T>, base: &[T], apply_item: impl Fn(&D, &T) -> T) -> Vec<T> {
     let mut next: Vec<Option<T>> = base.iter().cloned().map(Some).collect();
     for m in &diff.modified {
         if let Some(slot) = next.get_mut(m.index) {
@@ -95,7 +95,7 @@ fn apply_indexed<T: Clone, D>(diff: &IndexedTripleDiff<D, T>, base: &[T], apply_
 /// 🧮️ Sequential-coalesce absorb (base->mid composed with mid->after). Canonical correctness cases
 /// (Insert+Remove-before, Insert+Insert-same-index, Insert+SetField-into-added) are proven in this
 /// module's tests against the innermost `keyframes` level.
-fn absorb_indexed<T: Clone, D: Clone>(mine: &mut IndexedTripleDiff<D, T>, other: IndexedTripleDiff<D, T>, mut absorb_diff: impl FnMut(&mut D, D), apply_diff_to_item: impl Fn(&D, &T) -> T) {
+async fn absorb_indexed<T: Clone, D: Clone>(mine: &mut IndexedTripleDiff<D, T>, other: IndexedTripleDiff<D, T>, mut absorb_diff: impl FnMut(&mut D, D), apply_diff_to_item: impl Fn(&D, &T) -> T) {
     let removed1_sorted = {
         let mut v = mine.removed.clone();
         v.sort_unstable();
@@ -184,7 +184,7 @@ fn absorb_indexed<T: Clone, D: Clone>(mine: &mut IndexedTripleDiff<D, T>, other:
 }
 
 /// ↩️ Diff-level inverse for an index-keyed triple, given the ORIGINAL base items.
-fn inverse_indexed<T: Clone, D>(diff: &IndexedTripleDiff<D, T>, base_items: &[T], diff_inverse: impl Fn(&D, &T) -> D) -> IndexedTripleDiff<D, T> {
+async fn inverse_indexed<T: Clone, D>(diff: &IndexedTripleDiff<D, T>, base_items: &[T], diff_inverse: impl Fn(&D, &T) -> D) -> IndexedTripleDiff<D, T> {
     let removed_sorted = {
         let mut v = diff.removed.clone();
         v.sort_unstable();
@@ -217,31 +217,31 @@ fn inverse_indexed<T: Clone, D>(diff: &IndexedTripleDiff<D, T>, base_items: &[T]
 //#endregion 🔖️IndexedCollectionAlgebra
 
 //#region 🔖️Primitives
-pub(crate) fn hex_encode(bytes: &[u8]) -> String {
+pub(crate) async fn hex_encode(bytes: &[u8]) -> String {
     bytes.iter().map(|b| format!("{b:02x}")).collect()
 }
-pub(crate) fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
+pub(crate) async fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
     if s.len() % 2 != 0 {
         return Err(format!("odd hex length: {s:?}"));
     }
     (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()
 }
-pub(crate) fn enc_str(s: &str) -> String {
+pub(crate) async fn enc_str(s: &str) -> String {
     hex_encode(s.as_bytes())
 }
-pub(crate) fn dec_str(s: &str) -> Result<String, String> {
+pub(crate) async fn dec_str(s: &str) -> Result<String, String> {
     String::from_utf8(hex_decode(s)?).map_err(|e| e.to_string())
 }
-pub(crate) fn parse_f64(s: &str) -> Result<f64, String> {
+pub(crate) async fn parse_f64(s: &str) -> Result<f64, String> {
     s.parse().map_err(|e: std::num::ParseFloatError| e.to_string())
 }
-pub(crate) fn encode_option<T>(opt: &Option<T>, enc: impl Fn(&T) -> String) -> String {
+pub(crate) async fn encode_option<T>(opt: &Option<T>, enc: impl Fn(&T) -> String) -> String {
     match opt {
         None => "[0]".to_string(),
         Some(v) => format!("[1,{}]", enc(v)),
     }
 }
-pub(crate) fn decode_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Option<T>, String> {
+pub(crate) async fn decode_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Option<T>, String> {
     let inner = strip_brackets(s)?;
     match split_top_level(inner, ',').as_slice() {
         ["0"] => Ok(None),
@@ -249,10 +249,10 @@ pub(crate) fn decode_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>)
         other => Err(format!("option decode: bad shape {other:?}")),
     }
 }
-pub(crate) fn enc_list<T>(items: &[T], enc: impl Fn(&T) -> String) -> String {
+pub(crate) async fn enc_list<T>(items: &[T], enc: impl Fn(&T) -> String) -> String {
     format!("[{}]", items.iter().map(|i| enc(i)).collect::<Vec<_>>().join(","))
 }
-pub(crate) fn dec_list<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Vec<T>, String> {
+pub(crate) async fn dec_list<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Vec<T>, String> {
     split_top_level(strip_brackets(s)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec).collect()
 }
 //#endregion 🔖️Primitives
@@ -266,7 +266,7 @@ pub(crate) fn dec_list<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> R
 /// lexes as ONE fused identifier token, not two; the grammar's `"c" ":" hex` production could
 /// never match a glued token otherwise. Matches `📸️snapshot/🦀️component.rs`'s own duplicated
 /// `enc_property`/`dec_property` field-for-field.
-pub(crate) fn enc_property(p: &AnimTargetProperty) -> String {
+pub(crate) async fn enc_property(p: &AnimTargetProperty) -> String {
     match p {
         AnimTargetProperty::Translation => "t".to_string(),
         AnimTargetProperty::Rotation => "r".to_string(),
@@ -275,7 +275,7 @@ pub(crate) fn enc_property(p: &AnimTargetProperty) -> String {
         AnimTargetProperty::Custom { name } => format!("c:{}", enc_str(name)),
     }
 }
-pub(crate) fn dec_property(s: &str) -> Result<AnimTargetProperty, String> {
+pub(crate) async fn dec_property(s: &str) -> Result<AnimTargetProperty, String> {
     match s {
         "t" => Ok(AnimTargetProperty::Translation),
         "r" => Ok(AnimTargetProperty::Rotation),
@@ -287,22 +287,22 @@ pub(crate) fn dec_property(s: &str) -> Result<AnimTargetProperty, String> {
         }
     }
 }
-pub(crate) fn enc_target(t: &AnimTarget) -> String {
+pub(crate) async fn enc_target(t: &AnimTarget) -> String {
     format!("[{},{}]", enc_str(&t.node), enc_property(&t.property))
 }
-pub(crate) fn dec_target(s: &str) -> Result<AnimTarget, String> {
+pub(crate) async fn dec_target(s: &str) -> Result<AnimTarget, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [node, prop] = parts.as_slice() else { return Err(format!("target: expected 2 fields, got {}", parts.len())) };
     Ok(AnimTarget { node: dec_str(node)?, property: dec_property(prop)? })
 }
-pub(crate) fn enc_interpolation(i: AnimInterpolation) -> char {
+pub(crate) async fn enc_interpolation(i: AnimInterpolation) -> char {
     match i {
         AnimInterpolation::Linear => 'l',
         AnimInterpolation::Step => 's',
         AnimInterpolation::CubicSpline => 'c',
     }
 }
-pub(crate) fn dec_interpolation(s: &str) -> Result<AnimInterpolation, String> {
+pub(crate) async fn dec_interpolation(s: &str) -> Result<AnimInterpolation, String> {
     match s {
         "l" => Ok(AnimInterpolation::Linear),
         "s" => Ok(AnimInterpolation::Step),
@@ -310,7 +310,7 @@ pub(crate) fn dec_interpolation(s: &str) -> Result<AnimInterpolation, String> {
         other => Err(format!("bad interpolation {other:?}")),
     }
 }
-pub(crate) fn enc_value(v: &AnimValue) -> String {
+pub(crate) async fn enc_value(v: &AnimValue) -> String {
     match v {
         AnimValue::Scalar { value } => format!("S:{value}"),
         AnimValue::Vec3 { value } => format!("V:[{},{},{}]", value.x, value.y, value.z),
@@ -318,7 +318,7 @@ pub(crate) fn enc_value(v: &AnimValue) -> String {
         AnimValue::Weights { values } => format!("W:{}", enc_list(values, |v| v.to_string())),
     }
 }
-pub(crate) fn dec_value(s: &str) -> Result<AnimValue, String> {
+pub(crate) async fn dec_value(s: &str) -> Result<AnimValue, String> {
     let (tag, rest) = s.split_once(':').ok_or_else(|| format!("value: bad shape {s:?}"))?;
     match tag {
         "S" => Ok(AnimValue::Scalar { value: parse_f64(rest)? }),
@@ -336,26 +336,26 @@ pub(crate) fn dec_value(s: &str) -> Result<AnimValue, String> {
         other => Err(format!("value: unknown tag {other:?}")),
     }
 }
-pub(crate) fn enc_keyframe(k: &AnimKeyframe) -> String {
+pub(crate) async fn enc_keyframe(k: &AnimKeyframe) -> String {
     format!("[{},{}]", k.t, enc_value(&k.value))
 }
-pub(crate) fn dec_keyframe(s: &str) -> Result<AnimKeyframe, String> {
+pub(crate) async fn dec_keyframe(s: &str) -> Result<AnimKeyframe, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [t, value] = parts.as_slice() else { return Err(format!("keyframe: expected 2 fields, got {}", parts.len())) };
     Ok(AnimKeyframe { t: parse_f64(t)?, value: dec_value(value)? })
 }
-pub(crate) fn enc_channel(c: &AnimChannel) -> String {
+pub(crate) async fn enc_channel(c: &AnimChannel) -> String {
     format!("[{},{},{}]", enc_target(&c.target), enc_interpolation(c.interpolation), enc_list(&c.keyframes, enc_keyframe))
 }
-pub(crate) fn dec_channel(s: &str) -> Result<AnimChannel, String> {
+pub(crate) async fn dec_channel(s: &str) -> Result<AnimChannel, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [target, interp, kfs] = parts.as_slice() else { return Err(format!("channel: expected 3 fields, got {}", parts.len())) };
     Ok(AnimChannel { target: dec_target(target)?, interpolation: dec_interpolation(interp)?, keyframes: dec_list(kfs, dec_keyframe)? })
 }
-pub(crate) fn enc_timeline(t: &AnimTimeline) -> String {
+pub(crate) async fn enc_timeline(t: &AnimTimeline) -> String {
     format!("[{},{}]", encode_option(&t.name, |n| enc_str(n)), enc_list(&t.channels, enc_channel))
 }
-pub(crate) fn dec_timeline(s: &str) -> Result<AnimTimeline, String> {
+pub(crate) async fn dec_timeline(s: &str) -> Result<AnimTimeline, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [name, channels] = parts.as_slice() else { return Err(format!("timeline: expected 2 fields, got {}", parts.len())) };
     Ok(AnimTimeline { name: decode_option(name, dec_str)?, channels: dec_list(channels, dec_channel)? })
@@ -373,13 +373,13 @@ pub struct AnimKeyframeDiff {
 }
 
 impl AnimKeyframeDiff {
-    fn is_empty(&self) -> bool {
+    async fn is_empty(&self) -> bool {
         self.t.is_none() && self.value.is_none()
     }
-    fn between(base: &AnimKeyframe, other: &AnimKeyframe) -> Self {
+    async fn between(base: &AnimKeyframe, other: &AnimKeyframe) -> Self {
         Self { t: (base.t != other.t).then_some(other.t), value: (base.value != other.value).then_some(other.value.clone()) }
     }
-    fn apply(&self, base: &AnimKeyframe) -> AnimKeyframe {
+    async fn apply(&self, base: &AnimKeyframe) -> AnimKeyframe {
         let mut next = base.clone();
         if let Some(v) = self.t {
             next.t = v;
@@ -389,10 +389,10 @@ impl AnimKeyframeDiff {
         }
         next
     }
-    fn inverse(&self, base: &AnimKeyframe) -> Self {
+    async fn inverse(&self, base: &AnimKeyframe) -> Self {
         Self { t: self.t.map(|_| base.t), value: self.value.as_ref().map(|_| base.value.clone()) }
     }
-    fn absorb(&mut self, other: Self) {
+    async fn absorb(&mut self, other: Self) {
         if other.t.is_some() {
             self.t = other.t;
         }
@@ -402,7 +402,7 @@ impl AnimKeyframeDiff {
     }
 }
 
-fn enc_keyframe_diff(d: &AnimKeyframeDiff) -> String {
+async fn enc_keyframe_diff(d: &AnimKeyframeDiff) -> String {
     let mut parts = Vec::new();
     if let Some(v) = d.t {
         parts.push(format!("T:{v}"));
@@ -412,7 +412,7 @@ fn enc_keyframe_diff(d: &AnimKeyframeDiff) -> String {
     }
     format!("[{}]", parts.join(","))
 }
-fn dec_keyframe_diff(s: &str) -> Result<AnimKeyframeDiff, String> {
+async fn dec_keyframe_diff(s: &str) -> Result<AnimKeyframeDiff, String> {
     let inner = strip_brackets(s)?;
     let mut d = AnimKeyframeDiff::default();
     for entry in split_top_level(inner, ',') {
@@ -443,14 +443,14 @@ pub struct AnimChannelDiff {
 }
 
 impl AnimChannelDiff {
-    fn is_empty(&self) -> bool {
+    async fn is_empty(&self) -> bool {
         self.target.is_none() && self.interpolation.is_none() && self.keyframes.as_ref().map(indexed_is_empty).unwrap_or(true)
     }
-    fn between(base: &AnimChannel, other: &AnimChannel) -> Self {
+    async fn between(base: &AnimChannel, other: &AnimChannel) -> Self {
         let kf = between_indexed(&base.keyframes, &other.keyframes, AnimKeyframeDiff::between, AnimKeyframeDiff::is_empty);
         Self { target: (base.target != other.target).then_some(other.target.clone()), interpolation: (base.interpolation != other.interpolation).then_some(other.interpolation), keyframes: (!indexed_is_empty(&kf)).then_some(kf) }
     }
-    fn apply(&self, base: &AnimChannel) -> AnimChannel {
+    async fn apply(&self, base: &AnimChannel) -> AnimChannel {
         let mut next = base.clone();
         if let Some(v) = &self.target {
             next.target = v.clone();
@@ -463,10 +463,10 @@ impl AnimChannelDiff {
         }
         next
     }
-    fn inverse(&self, base: &AnimChannel) -> Self {
+    async fn inverse(&self, base: &AnimChannel) -> Self {
         Self { target: self.target.as_ref().map(|_| base.target.clone()), interpolation: self.interpolation.map(|_| base.interpolation), keyframes: self.keyframes.as_ref().map(|d| inverse_indexed(d, &base.keyframes, |d, item| d.inverse(item))) }
     }
-    fn absorb(&mut self, other: Self) {
+    async fn absorb(&mut self, other: Self) {
         if other.target.is_some() {
             self.target = other.target;
         }
@@ -481,7 +481,7 @@ impl AnimChannelDiff {
     }
 }
 
-fn enc_channel_diff(d: &AnimChannelDiff) -> String {
+async fn enc_channel_diff(d: &AnimChannelDiff) -> String {
     let mut parts = Vec::new();
     if let Some(v) = &d.target {
         parts.push(format!("G:{}", enc_target(v)));
@@ -494,7 +494,7 @@ fn enc_channel_diff(d: &AnimChannelDiff) -> String {
     }
     format!("[{}]", parts.join(","))
 }
-fn dec_channel_diff(s: &str) -> Result<AnimChannelDiff, String> {
+async fn dec_channel_diff(s: &str) -> Result<AnimChannelDiff, String> {
     let inner = strip_brackets(s)?;
     let mut d = AnimChannelDiff::default();
     for entry in split_top_level(inner, ',') {
@@ -525,14 +525,14 @@ pub struct AnimTimelineDiff {
 }
 
 impl AnimTimelineDiff {
-    fn is_empty(&self) -> bool {
+    async fn is_empty(&self) -> bool {
         self.name.is_none() && self.channels.as_ref().map(indexed_is_empty).unwrap_or(true)
     }
-    fn between(base: &AnimTimeline, other: &AnimTimeline) -> Self {
+    async fn between(base: &AnimTimeline, other: &AnimTimeline) -> Self {
         let ch = between_indexed(&base.channels, &other.channels, AnimChannelDiff::between, AnimChannelDiff::is_empty);
         Self { name: (base.name != other.name).then_some(other.name.clone()), channels: (!indexed_is_empty(&ch)).then_some(ch) }
     }
-    fn apply(&self, base: &AnimTimeline) -> AnimTimeline {
+    async fn apply(&self, base: &AnimTimeline) -> AnimTimeline {
         let mut next = base.clone();
         if let Some(v) = &self.name {
             next.name = v.clone();
@@ -542,10 +542,10 @@ impl AnimTimelineDiff {
         }
         next
     }
-    fn inverse(&self, base: &AnimTimeline) -> Self {
+    async fn inverse(&self, base: &AnimTimeline) -> Self {
         Self { name: self.name.as_ref().map(|_| base.name.clone()), channels: self.channels.as_ref().map(|d| inverse_indexed(d, &base.channels, |d, item| d.inverse(item))) }
     }
-    fn absorb(&mut self, other: Self) {
+    async fn absorb(&mut self, other: Self) {
         if other.name.is_some() {
             self.name = other.name;
         }
@@ -557,7 +557,7 @@ impl AnimTimelineDiff {
     }
 }
 
-fn enc_timeline_diff(d: &AnimTimelineDiff) -> String {
+async fn enc_timeline_diff(d: &AnimTimelineDiff) -> String {
     let mut parts = Vec::new();
     if let Some(v) = &d.name {
         parts.push(format!("N:{}", encode_option(v, |n| enc_str(n))));
@@ -567,7 +567,7 @@ fn enc_timeline_diff(d: &AnimTimelineDiff) -> String {
     }
     format!("[{}]", parts.join(","))
 }
-fn dec_timeline_diff(s: &str) -> Result<AnimTimelineDiff, String> {
+async fn dec_timeline_diff(s: &str) -> Result<AnimTimelineDiff, String> {
     let inner = strip_brackets(s)?;
     let mut d = AnimTimelineDiff::default();
     for entry in split_top_level(inner, ',') {
@@ -598,13 +598,13 @@ pub struct SemioAnimationDiff {
 }
 
 impl SemioAnimationDiff {
-    pub fn is_empty_diff(&self) -> bool {
+    pub async fn is_empty_diff(&self) -> bool {
         self.timelines.as_ref().map(indexed_is_empty).unwrap_or(true)
     }
 }
 
 impl MutationDiff<SemioAnimationSnapshot> for SemioAnimationDiff {
-    fn apply(&self, base: &SemioAnimationSnapshot) -> protocol::MutationApplyResult<SemioAnimationSnapshot> {
+    async fn apply(&self, base: &SemioAnimationSnapshot) -> protocol::MutationApplyResult<SemioAnimationSnapshot> {
         let mut next = base.clone();
         if let Some(d) = &self.timelines {
             crate::artifacts::semio::standards::v1::subsets::any::schema::triples::validate_indexed_triple(d, next.timelines.len(), ["timelines"])?;
@@ -613,7 +613,7 @@ impl MutationDiff<SemioAnimationSnapshot> for SemioAnimationDiff {
         Ok(next)
     }
 
-    fn absorb(&mut self, other: Self) {
+    async fn absorb(&mut self, other: Self) {
         match (&mut self.timelines, other.timelines) {
             (Some(mine), Some(theirs)) => absorb_indexed(mine, theirs, |d, o| d.absorb(o), |d, item| d.apply(item)),
             (slot @ None, Some(theirs)) => *slot = Some(theirs),
@@ -623,22 +623,22 @@ impl MutationDiff<SemioAnimationSnapshot> for SemioAnimationDiff {
 }
 
 impl DiffAlgebra<SemioAnimationSnapshot> for SemioAnimationDiff {
-    fn inverse(&self, base: &SemioAnimationSnapshot) -> Self {
+    async fn inverse(&self, base: &SemioAnimationSnapshot) -> Self {
         Self { timelines: self.timelines.as_ref().map(|d| inverse_indexed(d, &base.timelines, |d, item| d.inverse(item))) }
     }
 
-    fn between(base: &SemioAnimationSnapshot, other: &SemioAnimationSnapshot) -> Self {
+    async fn between(base: &SemioAnimationSnapshot, other: &SemioAnimationSnapshot) -> Self {
         let d = between_indexed(&base.timelines, &other.timelines, AnimTimelineDiff::between, AnimTimelineDiff::is_empty);
         Self { timelines: (!indexed_is_empty(&d)).then_some(d) }
     }
 
-    fn is_empty(&self) -> bool {
+    async fn is_empty(&self) -> bool {
         self.is_empty_diff()
     }
 }
 
 /// 🧩 Builds a set-snapshot diff — sparse field-by-field, never a full-replace slot.
-pub fn diff_set_snapshot(base: &SemioAnimationSnapshot, snapshot: &SemioAnimationSnapshot) -> SemioAnimationDiff {
+pub async fn diff_set_snapshot(base: &SemioAnimationSnapshot, snapshot: &SemioAnimationSnapshot) -> SemioAnimationDiff {
     <SemioAnimationDiff as DiffAlgebra<SemioAnimationSnapshot>>::between(base, snapshot)
 }
 //#endregion 🔖️Diff
@@ -651,13 +651,13 @@ pub fn diff_set_snapshot(base: &SemioAnimationSnapshot, snapshot: &SemioAnimatio
 /// are lowercase hex — no escaping needed, matching this artifact's own `ArtifactDsl` and the
 /// gif 89a precedent. Binary = the text bytes verbatim (same simplification `WriterDiff`'s
 /// hand-rolled `DiffCodec` and gif 89a's own `GifDiff` use).
-fn print_semio_animation_diff(d: &SemioAnimationDiff) -> String {
+async fn print_semio_animation_diff(d: &SemioAnimationDiff) -> String {
     match &d.timelines {
         Some(v) => format!("timelines{{{}}}", enc_indexed_triple(v, enc_timeline_diff, enc_timeline)),
         None => String::new(),
     }
 }
-fn parse_semio_animation_diff(line: &str) -> Result<SemioAnimationDiff, String> {
+async fn parse_semio_animation_diff(line: &str) -> Result<SemioAnimationDiff, String> {
     if line.is_empty() {
         return Ok(SemioAnimationDiff::default());
     }
@@ -675,13 +675,13 @@ fn parse_semio_animation_diff(line: &str) -> Result<SemioAnimationDiff, String> 
 const DIFF_BINARY_FORMAT: u8 = 1;
 
 impl DiffCodec for SemioAnimationDiff {
-    fn print_diff(&self) -> String {
+    async fn print_diff(&self) -> String {
         print_semio_animation_diff(self)
     }
-    fn parse_diff(line: &str) -> Result<Self, store::TextError> {
+    async fn parse_diff(line: &str) -> Result<Self, store::TextError> {
         parse_semio_animation_diff(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
-    fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    async fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         let mut out = vec![DIFF_BINARY_FORMAT];
         match &self.timelines {
             Some(v) => {
@@ -692,7 +692,7 @@ impl DiffCodec for SemioAnimationDiff {
         }
         Ok(out)
     }
-    fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    async fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         let malformed = |what: &'static str, detail: String| protocol::ProtocolError::Malformed { what, offset: 0, detail };
         let [format, presence, rest @ ..] = bytes else { return Err(malformed("diff header", format!("expected at least 2 bytes, got {}", bytes.len()))) };
         if *format != DIFF_BINARY_FORMAT {
@@ -716,15 +716,15 @@ impl DiffCodec for SemioAnimationDiff {
 /// every prior semio wave's report documents (a private item of a child `mod tests` isn't visible
 /// to a sibling module).
 #[cfg(test)]
-pub(crate) fn kf(t: f64, value: AnimValue) -> AnimKeyframe {
+pub(crate) async fn kf(t: f64, value: AnimValue) -> AnimKeyframe {
     AnimKeyframe { t, value }
 }
 #[cfg(test)]
-pub(crate) fn channel(node: &str, property: AnimTargetProperty, interpolation: AnimInterpolation, keyframes: Vec<AnimKeyframe>) -> AnimChannel {
+pub(crate) async fn channel(node: &str, property: AnimTargetProperty, interpolation: AnimInterpolation, keyframes: Vec<AnimKeyframe>) -> AnimChannel {
     AnimChannel { target: AnimTarget { node: node.into(), property }, interpolation, keyframes }
 }
 #[cfg(test)]
-pub(crate) fn timeline(name: Option<&str>, channels: Vec<AnimChannel>) -> AnimTimeline {
+pub(crate) async fn timeline(name: Option<&str>, channels: Vec<AnimChannel>) -> AnimTimeline {
     AnimTimeline { name: name.map(String::from), channels }
 }
 
@@ -732,7 +732,7 @@ pub(crate) fn timeline(name: Option<&str>, channels: Vec<AnimChannel>) -> AnimTi
 /// single source of truth for the composer's `diff_grammar_conformance_law`/`protocol_walk_law`,
 /// reused by this module's own `diff_codec_text_binary_roundtrip_law` test below.
 #[cfg(test)]
-pub(crate) fn demo_diff_cases() -> Vec<SemioAnimationDiff> {
+pub(crate) async fn demo_diff_cases() -> Vec<SemioAnimationDiff> {
     let a = SemioAnimationSnapshot {
         timelines: vec![timeline(Some("gone"), vec![]), timeline(Some("kept"), vec![channel("n", AnimTargetProperty::Translation, AnimInterpolation::Linear, vec![kf(0.0, AnimValue::Scalar { value: 1.0 })])])],
         ..SemioAnimationSnapshot::default()
@@ -756,7 +756,7 @@ mod tests {
     /// 🧪️ Canonical absorb case 1 (at the innermost `keyframes` level): `Insert(2,f)` then
     /// `Remove(0)` -> `{removed:[0], added:[(1,f)]}`.
     #[test]
-    fn absorb_insert_then_remove_before_shifts_index() {
+    async fn absorb_insert_then_remove_before_shifts_index() {
         let f = kf(9.0, AnimValue::Scalar { value: 9.0 });
         let mut d1: IndexedTripleDiff<AnimKeyframeDiff, AnimKeyframe> = IndexedTripleDiff { added: vec![IndexAdded { index: 2, item: f.clone() }], ..Default::default() };
         let d2: IndexedTripleDiff<AnimKeyframeDiff, AnimKeyframe> = IndexedTripleDiff { removed: vec![0], ..Default::default() };
@@ -768,7 +768,7 @@ mod tests {
 
     /// 🧪️ Canonical absorb case 2: `Insert(2,f)` then `Insert(2,g)` -> BOTH survive.
     #[test]
-    fn absorb_insert_insert_same_index_both_survive() {
+    async fn absorb_insert_insert_same_index_both_survive() {
         let f = kf(1.0, AnimValue::Scalar { value: 1.0 });
         let g = kf(2.0, AnimValue::Scalar { value: 2.0 });
         let mut d1: IndexedTripleDiff<AnimKeyframeDiff, AnimKeyframe> = IndexedTripleDiff { added: vec![IndexAdded { index: 2, item: f.clone() }], ..Default::default() };
@@ -780,7 +780,7 @@ mod tests {
     /// 🧪️ Canonical absorb case 3: `Insert(1,f)` then `SetField(1,v)` patches INTO the added
     /// payload — no separate `modified` entry survives.
     #[test]
-    fn absorb_insert_then_set_field_patches_into_added() {
+    async fn absorb_insert_then_set_field_patches_into_added() {
         let f = kf(1.0, AnimValue::Scalar { value: 1.0 });
         let mut d1: IndexedTripleDiff<AnimKeyframeDiff, AnimKeyframe> = IndexedTripleDiff { added: vec![IndexAdded { index: 1, item: f.clone() }], ..Default::default() };
         let d2: IndexedTripleDiff<AnimKeyframeDiff, AnimKeyframe> = IndexedTripleDiff { modified: vec![IndexModified { index: 1, diff: AnimKeyframeDiff { t: Some(42.0), value: None } }], ..Default::default() };
@@ -794,7 +794,7 @@ mod tests {
 
     /// 🧪️ absorb_law: full 3-level snapshot chain, base -> mid -> after.
     #[test]
-    fn absorb_law_holds_over_curated_ops() {
+    async fn absorb_law_holds_over_curated_ops() {
         let base = SemioAnimationSnapshot {
             timelines: vec![timeline(Some("walk"), vec![channel("hip", AnimTargetProperty::Translation, AnimInterpolation::Linear, vec![kf(0.0, AnimValue::Vec3 { value: SemioPoint3 { x: 0.0, y: 0.0, z: 0.0 } })])]), timeline(Some("blink"), vec![])],
             ..SemioAnimationSnapshot::default()
@@ -819,7 +819,7 @@ mod tests {
     }
 
     #[test]
-    fn between_roundtrip_law() {
+    async fn between_roundtrip_law() {
         let a =
             SemioAnimationSnapshot { timelines: vec![timeline(Some("walk"), vec![channel("hip", AnimTargetProperty::Translation, AnimInterpolation::Linear, vec![kf(0.0, AnimValue::Scalar { value: 1.0 })])])], ..SemioAnimationSnapshot::default() };
         let b = SemioAnimationSnapshot {
@@ -834,7 +834,7 @@ mod tests {
     }
 
     #[test]
-    fn inverse_law() {
+    async fn inverse_law() {
         let base =
             SemioAnimationSnapshot { timelines: vec![timeline(Some("walk"), vec![channel("hip", AnimTargetProperty::Translation, AnimInterpolation::Linear, vec![kf(0.0, AnimValue::Scalar { value: 1.0 })])])], ..SemioAnimationSnapshot::default() };
         let next = {
@@ -869,7 +869,7 @@ mod tests {
     /// mirror case) — same split `presentation`'s own field_sweep test already uses for its
     /// index-keyed `slides`, applied consistently at all 3 nesting depths here.
     #[test]
-    fn field_sweep_covers_every_mutable_field() {
+    async fn field_sweep_covers_every_mutable_field() {
         let sweep_a = SemioAnimationSnapshot {
             timelines: vec![
                 timeline(
@@ -926,7 +926,7 @@ mod tests {
     /// exercises the empty diff, the tri-state `name`, an `AnimValue` variant change, and all
     /// three collection triples (removed/modified/added) at every nesting depth.
     #[test]
-    fn diff_codec_text_binary_roundtrip_law() {
+    async fn diff_codec_text_binary_roundtrip_law() {
         for d in demo_diff_cases() {
             let printed = d.print_diff();
             assert!(!printed.contains('\n'), "print_diff must be one line, got {printed:?}");

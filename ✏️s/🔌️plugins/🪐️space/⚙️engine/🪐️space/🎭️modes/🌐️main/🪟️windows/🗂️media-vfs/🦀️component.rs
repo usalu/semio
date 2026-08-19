@@ -13,7 +13,7 @@ pub const S_PLAY_SURFACE_MEDIA_VFS: &str = "s.play.media-vfs";
 //#endregion 🔖️Constants
 
 //#region 🔖️Manifest
-pub fn definition() -> WindowKindDefinition {
+pub async fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
         id: S_PLAY_WINDOW_MEDIA_VFS.into(),
         label: LocalizedLabel::native("Media VFS", "Media-VFS"),
@@ -38,7 +38,7 @@ pub fn definition() -> WindowKindDefinition {
 //#endregion 🔖️Manifest
 
 //#region 🔖️Render
-pub fn render(projection: &WorkflowSnapshot, locale: &str) -> UiNode {
+pub async fn render(projection: &WorkflowSnapshot, locale: &str) -> UiNode {
     let labels = resolve_labels_for_locale::<SStudioLabels>(locale);
     let mut rows = vec![json!({
         "id": OS_WORKFLOW_VFS_ROOT_ID,

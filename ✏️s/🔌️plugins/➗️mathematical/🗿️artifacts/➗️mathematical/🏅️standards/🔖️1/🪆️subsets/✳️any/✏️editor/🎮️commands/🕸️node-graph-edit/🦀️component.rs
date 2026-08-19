@@ -19,7 +19,7 @@ pub struct NodeGraphEdit {
     pub operations_json: String,
 }
 
-pub fn handle(payload: &NodeGraphEdit, doc: &ArtifactView<'_, MathematicalSnapshot>, _cfg: &ConfigView<'_, MathematicalConfig>) -> Result<Emit<MathematicalMutation, MathematicalConfigMutation>, Fault> {
+pub async fn handle(payload: &NodeGraphEdit, doc: &ArtifactView<'_, MathematicalSnapshot>, _cfg: &ConfigView<'_, MathematicalConfig>) -> Result<Emit<MathematicalMutation, MathematicalConfigMutation>, Fault> {
     let edit_operations: Vec<serde_json::Value> = serde_json::from_str(&payload.operations_json).unwrap_or_default();
     let mut graph = crate::artifacts::mathematical::mathematical_graph(doc.snapshot);
     let mut changed = false;

@@ -16,7 +16,7 @@ pub struct SetActiveExample {
     pub example_id: String,
 }
 
-pub fn handle(payload: &SetActiveExample, _doc: &ArtifactView<'_, WriterSnapshot>, _cfg: &ConfigView<'_, WriterConfig>) -> Result<Emit<WriterMutation, WriterConfigMutation>, Fault> {
+pub async fn handle(payload: &SetActiveExample, _doc: &ArtifactView<'_, WriterSnapshot>, _cfg: &ConfigView<'_, WriterConfig>) -> Result<Emit<WriterMutation, WriterConfigMutation>, Fault> {
     let document = match payload.example_id.as_str() {
         "jack" => jack_example_document(),
         "dag.jack" => dag_jack_example_document(),

@@ -18,7 +18,7 @@ const REMODEL_MESH_ID: &str = "remodel-result";
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
-pub fn definition() -> WindowKindDefinition {
+pub async fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
         id: REMODEL_PLAY_WINDOW_MAIN.into(),
         label: LocalizedLabel::native("Model", "Modell"),
@@ -39,7 +39,7 @@ pub fn definition() -> WindowKindDefinition {
 }
 
 /// 🎚️ The live chrome measures for this window, collected from its own `🎚️options/*`.
-pub fn window_measures(config: &RemodelConfig, labels: &RemodelLabels) -> Vec<WindowMeasure> {
+pub async fn window_measures(config: &RemodelConfig, labels: &RemodelLabels) -> Vec<WindowMeasure> {
     vec![layers::measure(&config.layers, labels)]
 }
 //#endregion 🔖️Definition
@@ -49,14 +49,14 @@ pub fn window_measures(config: &RemodelConfig, labels: &RemodelLabels) -> Vec<Wi
 /// `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM`) — reads the real `MeshData` through
 /// `remodel_mesh_workspace`'s working-scene cache; a cold cache renders no mesh entity (empty scene
 /// list) rather than serializing the handle's two opaque strings as if they were geometry.
-fn world_meshes_json(scene: &RemodelSnapshot) -> String {
+async fn world_meshes_json(scene: &RemodelSnapshot) -> String {
     let Some(mesh) = crate::artifacts::remodel::remodel_mesh_workspace(&scene.results.mesh.mesh) else {
         return "[]".into();
     };
     serde_json::to_string(&vec![json!({ "id": REMODEL_MESH_ID, "data": mesh })]).unwrap_or_else(|_| "[]".into())
 }
 
-fn world_instances_json(config: &RemodelConfig) -> String {
+async fn world_instances_json(config: &RemodelConfig) -> String {
     if !config.layers.mesh {
         return "[]".into();
     }
@@ -79,7 +79,7 @@ fn world_instances_json(config: &RemodelConfig) -> String {
 /// layer: a synchronous run only ever publishes the FINAL sparse cloud, never an interior one.
 /// `PackedF32`/`PackedU8`'s inner string is already a base64 little-endian buffer, matching
 /// `positionsB64`/`colorsB64`'s wire shape byte-for-byte — no decode/re-encode round trip needed.
-fn world_points_json(scene: &RemodelSnapshot, config: &RemodelConfig) -> Option<String> {
+async fn world_points_json(scene: &RemodelSnapshot, config: &RemodelConfig) -> Option<String> {
     let mut layers: Vec<Value> = Vec::new();
     if config.layers.sparse {
         if let Some(sparse) = &scene.results.sparse {
@@ -134,7 +134,7 @@ fn world_points_json(scene: &RemodelSnapshot, config: &RemodelConfig) -> Option<
     }
 }
 
-pub fn render(scene: &RemodelSnapshot, config: &RemodelConfig) -> UiNode {
+pub async fn render(scene: &RemodelSnapshot, config: &RemodelConfig) -> UiNode {
     // 🕹️ The "assets" selection now lives in the framework-owned interaction domain (ticket
     // 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM) — `ArtifactEditor::render` carries no
     // `InteractionView`, so this scene payload can no longer embed a live selection; every
@@ -160,7 +160,7 @@ mod tests {
     use crate::artifacts::remodel::default_remodel_scene;
 
     #[test]
-    fn default_scene_seeds_the_world3d_mesh_json() {
+    async fn default_scene_seeds_the_world3d_mesh_json() {
         let scene = default_remodel_scene();
         assert!(world_meshes_json(&scene).contains(REMODEL_MESH_ID));
         let config = RemodelConfig::default();
@@ -168,14 +168,14 @@ mod tests {
     }
 
     #[test]
-    fn hiding_the_mesh_layer_drops_the_instance() {
+    async fn hiding_the_mesh_layer_drops_the_instance() {
         let mut config = RemodelConfig::default();
         config.layers.mesh = false;
         assert_eq!(world_instances_json(&config), "[]");
     }
 
     #[test]
-    fn renders_a_world_3d_surface() {
+    async fn renders_a_world_3d_surface() {
         let mut app = app();
         assert!(render_body(&mut app, REMODEL_PLAY_BODY_MAIN).contains("world-3d"));
     }

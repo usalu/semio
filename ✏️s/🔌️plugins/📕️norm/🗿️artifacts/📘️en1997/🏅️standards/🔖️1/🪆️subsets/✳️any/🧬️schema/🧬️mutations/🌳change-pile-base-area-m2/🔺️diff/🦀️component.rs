@@ -5,7 +5,7 @@ use crate::artifacts::en1997::mutations::change_pile_base_area_m2::mutation::Cha
 use crate::artifacts::en1997::En1997Snapshot;
 
 //#region 🔖️Diff
-pub fn diff(payload: &ChangePileBaseAreaM2, base: &En1997Snapshot) -> protocol::MutationOutcome<En1997Diff> {
+pub async fn diff(payload: &ChangePileBaseAreaM2, base: &En1997Snapshot) -> protocol::MutationOutcome<En1997Diff> {
     if !payload.new_pile_base_area_m2.is_finite() {
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("Pile base area [m2] must be a finite number, got {}.", payload.new_pile_base_area_m2), Vec::<String>::new());
     }

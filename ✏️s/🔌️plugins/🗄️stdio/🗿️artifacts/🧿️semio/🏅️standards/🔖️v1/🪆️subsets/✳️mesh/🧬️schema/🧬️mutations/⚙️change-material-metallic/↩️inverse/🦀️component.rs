@@ -7,7 +7,7 @@ use crate::artifacts::semio::standards::v1::subsets::mesh::schema::mutations::Se
 use crate::artifacts::semio::standards::v1::subsets::mesh::schema::snapshot::SemioMeshSnapshot;
 
 //#region 🔖️Inverse
-pub fn inverse(payload: &ChangeMaterialMetallic, base: &SemioMeshSnapshot) -> Vec<SemioMeshMutation> {
+pub async fn inverse(payload: &ChangeMaterialMetallic, base: &SemioMeshSnapshot) -> Vec<SemioMeshMutation> {
     match material_at(base, &payload.id) {
         Some(material) => vec![SemioMeshMutation::ChangeMaterialMetallic(ChangeMaterialMetallic { id: payload.id.clone(), new_metallic: material.metallic })],
         None => Vec::new(),

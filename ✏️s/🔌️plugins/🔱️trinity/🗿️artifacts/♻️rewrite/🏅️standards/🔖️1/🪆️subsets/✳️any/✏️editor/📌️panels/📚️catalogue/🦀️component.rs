@@ -4,12 +4,12 @@ use crate::editor::rewrite::terminology::TrinityRewriteLabels;
 use semio_framework_plugin::{tree_item, tree_item_with_action, Label, PanelTreeBuilder, UiNode, UiTreeItemNode};
 use serde_json::json;
 
-fn catalogue_add_item(id: &str, label: impl Into<Label>, clause_kind: &str) -> UiTreeItemNode {
+async fn catalogue_add_item(id: &str, label: impl Into<Label>, clause_kind: &str) -> UiTreeItemNode {
     let jack_action = crate::editor::rewrite::rewrite_action;
     UiTreeItemNode { ..tree_item_with_action(id, label, None, jack_action("addRuleClause", Some(json!({ "kind": clause_kind })))) }
 }
 
-pub(crate) fn render(labels: &TrinityRewriteLabels) -> UiNode {
+pub(crate) async fn render(labels: &TrinityRewriteLabels) -> UiNode {
     PanelTreeBuilder::new("trinity-catalogue")
         .section(
             "trinity-catalogue.kinds",

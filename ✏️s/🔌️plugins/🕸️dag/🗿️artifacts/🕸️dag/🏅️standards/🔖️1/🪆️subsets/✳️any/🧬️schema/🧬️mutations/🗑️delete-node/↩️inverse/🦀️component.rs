@@ -4,7 +4,7 @@ use crate::artifacts::dag::mutations::DagMutation;
 use crate::artifacts::dag::{dag_working_scene, DagSnapshot};
 
 //#region 🔖️Inverse
-pub fn inverse(payload: &super::mutation::DeleteNode, base: &DagSnapshot) -> Vec<DagMutation> {
+pub async fn inverse(payload: &super::mutation::DeleteNode, base: &DagSnapshot) -> Vec<DagMutation> {
     let scene = dag_working_scene(base);
     let Some(node) = scene.nodes.iter().find(|node| node.id == payload.id) else {
         return Vec::new();

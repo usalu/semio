@@ -24,18 +24,18 @@ const FROM_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard
 const INTO_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.stl", standard: StandardId("ascii"), subset: SubsetId::ANY };
 
 //#region 🔖️NormalMath
-fn face_normal(v0: SemioPoint3, v1: SemioPoint3, v2: SemioPoint3) -> [f64; 3] {
+async fn face_normal(v0: SemioPoint3, v1: SemioPoint3, v2: SemioPoint3) -> [f64; 3] {
     let e1 = [v1.x - v0.x, v1.y - v0.y, v1.z - v0.z];
     let e2 = [v2.x - v0.x, v2.y - v0.y, v2.z - v0.z];
     let n = [e1[1] * e2[2] - e1[2] * e2[1], e1[2] * e2[0] - e1[0] * e2[2], e1[0] * e2[1] - e1[1] * e2[0]];
     normalize(n)
 }
 
-fn average_normal(n0: SemioPoint3, n1: SemioPoint3, n2: SemioPoint3) -> [f64; 3] {
+async fn average_normal(n0: SemioPoint3, n1: SemioPoint3, n2: SemioPoint3) -> [f64; 3] {
     normalize([(n0.x + n1.x + n2.x) / 3.0, (n0.y + n1.y + n2.y) / 3.0, (n0.z + n1.z + n2.z) / 3.0])
 }
 
-fn normalize(v: [f64; 3]) -> [f64; 3] {
+async fn normalize(v: [f64; 3]) -> [f64; 3] {
     let len = (v[0] * v[0] + v[1] * v[1] + v[2] * v[2]).sqrt();
     if len > 1e-12 {
         [v[0] / len, v[1] / len, v[2] / len]
@@ -105,7 +105,7 @@ mod tests {
     use crate::artifacts::semio::standards::v1::subsets::mesh::schema::snapshot::{SemioMesh, SemioPrimitive};
     use semio_framework_plugin::ArtifactDeserializer;
 
-    fn sample_semio_mesh() -> SemioMeshSnapshot {
+    async fn sample_semio_mesh() -> SemioMeshSnapshot {
         SemioMeshSnapshot {
             schema: "stdio.semio.mesh".into(),
             meshes: vec![SemioMesh {
@@ -141,18 +141,18 @@ mod tests {
     }
 
     #[test]
-    fn serialize_then_deserialize_round_trips_at_the_semio_level() {
+    async fn serialize_then_deserialize_round_trips_at_the_semio_level() {
         let original = sample_semio_mesh();
         let stl = semio_framework_plugin::resolve_ready(SemioMeshToStl::serialize(&original)).expect("serialize");
         assert_eq!(stl.solid_name, "pyramid");
         assert_eq!(stl.triangles.len(), 2);
         assert_eq!(stl.triangles[0].normal, [0.0, 0.0, 1.0]);
-        let round_tripped = SemioMeshFromStl::deserialize(&stl).expect("deserialize");
+        let round_tripped = semio_framework_plugin::resolve_ready(SemioMeshFromStl::deserialize(&stl)).expect("deserialize");
         assert_eq!(original, round_tripped, "uniform per-triangle normals must average back exactly");
     }
 
     #[test]
-    fn non_triangle_topology_is_a_hard_error() {
+    async fn non_triangle_topology_is_a_hard_error() {
         let mut semio = sample_semio_mesh();
         semio.meshes[0].primitives[0].topology = SemioTopology::Lines;
         let err = semio_framework_plugin::resolve_ready(SemioMeshToStl::serialize(&semio)).expect_err("Lines topology must error");
@@ -160,7 +160,7 @@ mod tests {
     }
 
     #[test]
-    fn indexed_triangles_export_correctly() {
+    async fn indexed_triangles_export_correctly() {
         let mut semio = sample_semio_mesh();
         semio.meshes[0].primitives[0].positions = vec![SemioPoint3 { x: 0.0, y: 0.0, z: 0.0 }, SemioPoint3 { x: 1.0, y: 0.0, z: 0.0 }, SemioPoint3 { x: 0.0, y: 1.0, z: 0.0 }];
         semio.meshes[0].primitives[0].normals = vec![SemioPoint3 { x: 0.0, y: 0.0, z: 1.0 }; 3];

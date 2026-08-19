@@ -10,7 +10,7 @@ pub const PROCEDURAL2D_PLAY_BODY_DOCUMENT: &str = "procedural2d.play.document";
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
-pub fn definition() -> PanelTabDefinition {
+pub async fn definition() -> PanelTabDefinition {
     PanelTabDefinition { kind: PanelTabKind::App(FRAMEWORK_PANEL_TAB_ARTIFACT_ID.into()), label: LocalizedLabel::native(FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL, "Dokument"), group: PanelGroup::Workbench, body_key: Some(PROCEDURAL2D_PLAY_BODY_DOCUMENT.into()), children: Vec::new() }
 }
 //#endregion 🔖️Definition
@@ -21,7 +21,7 @@ pub fn definition() -> PanelTabDefinition {
 /// (`ui_tree_stamp_presence`) can match them by plain string membership (ticket
 /// 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM). Clicks/selection are the framework's now — no
 /// per-item action needed, and `_config` is unused (kept for call-site symmetry with `inspection`).
-pub fn render(document: &Procedural2dSnapshot, _config: &Procedural2dConfig, labels: &Procedural2dLabels) -> UiNode {
+pub async fn render(document: &Procedural2dSnapshot, _config: &Procedural2dConfig, labels: &Procedural2dLabels) -> UiNode {
     let widget_items: Vec<UiTreeItemNode> = document.fixture.widgets.iter().map(|widget| tree_item(widget_id(widget).to_string(), Label::data(widget_id(widget).to_string()))).collect();
     PanelTreeBuilder::new("procedural2d-play-document")
         .section_or_placeholder("procedural2d-play-document.widgets", Some(Label::data(FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL)), true, widget_items, labels.none)
@@ -38,7 +38,7 @@ mod tests {
     use semio_framework_plugin::PluginApp;
 
     #[test]
-    fn document_lists_widgets() {
+    async fn document_lists_widgets() {
         let mut app = app();
         let rendered = render_body(&mut app, PROCEDURAL2D_PLAY_BODY_DOCUMENT);
         let fixture_widgets: Vec<String> = app.snapshot().expect("snapshot").fixture.widgets.iter().map(|widget| widget_id(widget).to_string()).collect();
@@ -47,7 +47,7 @@ mod tests {
     }
 
     #[test]
-    fn definition_binds_the_framework_document_tab_to_this_body_key() {
+    async fn definition_binds_the_framework_document_tab_to_this_body_key() {
         let definition = definition();
         assert_eq!(definition.id(), FRAMEWORK_PANEL_TAB_ARTIFACT_ID);
         assert_eq!(definition.body_key.as_deref(), Some(PROCEDURAL2D_PLAY_BODY_DOCUMENT));

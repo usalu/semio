@@ -7,7 +7,7 @@ use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Shell
-fn add_question_option(spec: &FormsSnapshot, question_id: &str, label: &str) -> Option<FormMutation> {
+async fn add_question_option(spec: &FormsSnapshot, question_id: &str, label: &str) -> Option<FormMutation> {
     let value = create_form_id("opt");
     update_block_operation(spec, question_id, |question| {
         let mut options = question.options.take().unwrap_or_default();
@@ -27,7 +27,7 @@ pub struct AddQuestionOption {
     pub label: String,
 }
 
-pub fn handle(payload: &AddQuestionOption, doc: &ArtifactView<'_, FormsSnapshot>, _cfg: &ConfigView<'_, FormsConfig>) -> Result<Emit<FormMutation, FormsConfigMutation>, Fault> {
+pub async fn handle(payload: &AddQuestionOption, doc: &ArtifactView<'_, FormsSnapshot>, _cfg: &ConfigView<'_, FormsConfig>) -> Result<Emit<FormMutation, FormsConfigMutation>, Fault> {
     match add_question_option(doc.snapshot, &payload.question_id, &payload.label) {
         Some(operation) => Ok(Emit::mutations(vec![operation])),
         None => Ok(Emit::default()),
@@ -43,13 +43,13 @@ mod tests {
     use AddQuestionOption;
     use crate::editor::forms::commands::remove_question_option::RemoveQuestionOption;
 
-    fn single_or_multi_question_id(app: &mut crate::editor::forms::testkit::FormsApp) -> String {
+    async fn single_or_multi_question_id(app: &mut crate::editor::forms::testkit::FormsApp) -> String {
         dispatch(app, FormsCommand::AddQuestion(crate::editor::forms::commands::add_question::AddQuestion { kind: "single".into(), step_id: None }));
         crate::artifacts::forms::schema::flatten_questions(&app.snapshot().expect("projection")).into_iter().map(|(_, question)| question).find(|question| question.kind == "single").expect("single question").id
     }
 
     #[test]
-    fn add_and_remove_question_option_round_trip() {
+    async fn add_and_remove_question_option_round_trip() {
         let mut app = forms_app();
         let question_id = single_or_multi_question_id(&mut app);
         dispatch(&mut app, FormsCommand::AddQuestionOption(AddQuestionOption { question_id: question_id.clone(), label: "New option".into() }));

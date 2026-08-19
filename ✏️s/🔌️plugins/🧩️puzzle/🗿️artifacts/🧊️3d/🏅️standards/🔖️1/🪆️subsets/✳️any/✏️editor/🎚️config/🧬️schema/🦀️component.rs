@@ -123,7 +123,7 @@ pub struct Puzzle3dConfig {
 /// `register_app_schema()` this file used to export); `ArtifactApp::app_schema` (on
 /// `Puzzle3dPlayApp`) hands it to `register_document_app` for registration, exactly like
 /// `🗒️note`'s own `app_schema_descriptor()`.
-pub fn app_schema_descriptor() -> artifact_schema::AppSchemaDescriptor {
+pub async fn app_schema_descriptor() -> artifact_schema::AppSchemaDescriptor {
     artifact_schema::AppSchemaDescriptor {
         id: "s.puzzle.puzzle3d",
         config: artifact_schema::FacetLeaves {

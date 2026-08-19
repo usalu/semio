@@ -17,7 +17,7 @@ pub struct ExportSvg {
     pub page_id: Option<String>,
 }
 
-pub fn handle(payload: &ExportSvg, doc: &ArtifactView<'_, LayoutSnapshot>, cfg: &ConfigView<'_, LayoutConfig>) -> Result<Emit<LayoutMutation, LayoutConfigMutation>, Fault> {
+pub async fn handle(payload: &ExportSvg, doc: &ArtifactView<'_, LayoutSnapshot>, cfg: &ConfigView<'_, LayoutConfig>) -> Result<Emit<LayoutMutation, LayoutConfigMutation>, Fault> {
     let page_id = payload.page_id.clone().unwrap_or_else(|| cfg.snapshot.active_page_id.clone());
     match export_document_svg(doc.snapshot, &page_id) {
         Ok(svg) => Ok(Emit::effect(Effect::DownloadMediaExport { filename: format!("{page_id}.svg"), mime_type: "image/svg+xml".into(), data: svg, encoding: None })),

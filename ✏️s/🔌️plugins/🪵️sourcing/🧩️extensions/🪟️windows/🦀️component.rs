@@ -7,7 +7,7 @@ use sourcing_curate::artifacts::curate::schema::{windows::WindowsModule, Sourcin
 const EXTENSION_ID: &str = "sourcing-module-windows";
 const HOST_APP_ID: &str = "sourcing-curate";
 
-fn bundle() -> ExtensionBundle {
+async fn bundle() -> ExtensionBundle {
     let module = WindowsModule;
     ExtensionBundle::new(EXTENSION_ID, "Sourcing Module Windows", "0.1.0")
         .extends("sourcing")
@@ -36,7 +36,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn bundle_contributes_module_for_sourcing_curate() {
+    async fn bundle_contributes_module_for_sourcing_curate() {
         let manifest = bundle().manifest;
         assert_eq!(manifest.extension_id, EXTENSION_ID);
         assert_eq!(manifest.extends, "sourcing");

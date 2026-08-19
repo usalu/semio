@@ -10,7 +10,7 @@ use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::{BrepVe
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::SemioBrepSnapshot;
 
 //#region 🔖️Diff
-pub fn diff(payload: &MoveVertex, base: &SemioBrepSnapshot) -> protocol::MutationOutcome<SemioBrepDiff> {
+pub async fn diff(payload: &MoveVertex, base: &SemioBrepSnapshot) -> protocol::MutationOutcome<SemioBrepDiff> {
     let Some(vertex) = base.vertices.iter().find(|v| v.id == payload.vertex_id) else {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Vertex \"{}\" does not exist.", payload.vertex_id), [payload.vertex_id.clone()]);
     };

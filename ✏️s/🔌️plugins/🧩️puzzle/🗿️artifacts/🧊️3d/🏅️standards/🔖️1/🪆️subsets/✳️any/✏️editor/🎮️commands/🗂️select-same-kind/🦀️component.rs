@@ -10,7 +10,7 @@ use crate::editor::puzzle3d::Puzzle3dActionCtx;
 /// pre-migration early `return` did) so a client pairing this dispatch with its own follow-up
 /// `interactionSelect` still gets a correct abort signal; flagged to the coordinator as a case the W3
 /// SDK wave did not provide a mechanism for, not fixed here (framework file, out of this crate's remit).
-pub fn select_same_kind(ctx: &mut Puzzle3dActionCtx<'_>) {
+pub async fn select_same_kind(ctx: &mut Puzzle3dActionCtx<'_>) {
     let Some(first_id) = ctx.selected_object_ids().first().cloned() else {
         ctx.abort = true;
         return;

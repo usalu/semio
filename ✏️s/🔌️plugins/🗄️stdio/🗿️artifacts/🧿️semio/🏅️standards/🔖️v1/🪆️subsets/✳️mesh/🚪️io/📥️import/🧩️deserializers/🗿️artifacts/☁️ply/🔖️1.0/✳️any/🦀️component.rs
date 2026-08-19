@@ -30,18 +30,18 @@ const FROM_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.ply", standard: 
 const INTO_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("mesh") };
 
 //#region 🔖️ValueHelpers
-fn property_index(properties: &[PlyProperty], name: &str) -> Option<usize> {
+async fn property_index(properties: &[PlyProperty], name: &str) -> Option<usize> {
     properties.iter().position(|p| p.name() == name)
 }
 
-fn scalar_kind_of(properties: &[PlyProperty], idx: usize) -> Option<PlyScalarType> {
+async fn scalar_kind_of(properties: &[PlyProperty], idx: usize) -> Option<PlyScalarType> {
     match &properties[idx] {
         PlyProperty::Scalar { kind, .. } => Some(*kind),
         PlyProperty::List { .. } => None,
     }
 }
 
-fn value_as_f64(v: &PlyValue) -> Result<f64, String> {
+async fn value_as_f64(v: &PlyValue) -> Result<f64, String> {
     match v {
         PlyValue::Char(x) => Ok(*x as f64),
         PlyValue::UChar(x) => Ok(*x as f64),
@@ -57,7 +57,7 @@ fn value_as_f64(v: &PlyValue) -> Result<f64, String> {
 
 /// 🎨️ Range-normalizes an integer color channel to `[0,1]`; float/double channels pass through
 /// (already-normalized, the near-universal real-world convention).
-fn normalize_color_channel(v: f64, kind: PlyScalarType) -> f64 {
+async fn normalize_color_channel(v: f64, kind: PlyScalarType) -> f64 {
     match kind {
         PlyScalarType::Char => (v / 127.0).max(-1.0),
         PlyScalarType::UChar => v / 255.0,
@@ -151,7 +151,7 @@ mod tests {
     use super::*;
     use crate::artifacts::ply::schema::snapshot::{PlyElement, PlyFormat, PlyRow};
 
-    fn sample_ply() -> PlySnapshot {
+    async fn sample_ply() -> PlySnapshot {
         let vertex = PlyElement {
             name: "vertex".into(),
             count: 4,
@@ -180,7 +180,7 @@ mod tests {
     }
 
     #[test]
-    fn deserialize_builds_a_real_indexed_mesh_with_colors() {
+    async fn deserialize_builds_a_real_indexed_mesh_with_colors() {
         let semio = semio_framework_plugin::resolve_ready(SemioMeshFromPly::deserialize(&sample_ply())).expect("deserialize");
         let prim = &semio.meshes[0].primitives[0];
         assert_eq!(prim.topology, SemioTopology::Triangles);
@@ -192,7 +192,7 @@ mod tests {
     }
 
     #[test]
-    fn no_face_element_yields_a_points_primitive() {
+    async fn no_face_element_yields_a_points_primitive() {
         let mut ply = sample_ply();
         ply.elements.retain(|e| e.name != "face");
         let semio = semio_framework_plugin::resolve_ready(SemioMeshFromPly::deserialize(&ply)).expect("deserialize");

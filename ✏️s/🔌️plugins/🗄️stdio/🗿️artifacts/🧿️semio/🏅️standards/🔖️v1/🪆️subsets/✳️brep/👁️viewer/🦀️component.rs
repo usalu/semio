@@ -31,10 +31,10 @@ pub enum SemioBrepViewCommand {
 }
 
 impl protocol::OpBinary for SemioBrepViewCommand {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         Ok(Vec::new())
     }
-    fn decode_op(_bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    async fn decode_op(_bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         Ok(SemioBrepViewCommand::Noop)
     }
 }
@@ -58,16 +58,16 @@ impl ArtifactViewer for SemioBrepViewer {
     const DIALECT: Dialect = SEMIO_BREP_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = SEMIO_BREP_DOCUMENT_SCHEMA;
 
-    fn initial_snapshot() -> SemioBrepSnapshot {
+    async fn initial_snapshot() -> SemioBrepSnapshot {
         SemioBrepSnapshot::default()
     }
 
     /// 👁️ Structurally read-only: the sole `Noop` variant never carries a config change.
-    fn handle(_command: &Self::Command, _doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _interaction: &InteractionView<'_>, _engines: &EngineHandles) -> Result<ViewEmit<Self::ConfigMutation>, Fault> {
+    async fn handle(_command: &Self::Command, _doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _interaction: &InteractionView<'_>, _engines: &EngineHandles) -> Result<ViewEmit<Self::ConfigMutation>, Fault> {
         Ok(ViewEmit::default())
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> UiNode {
+    async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> UiNode {
         match body_key {
             main::BODY_KEY => main::render(doc.snapshot),
             _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))),
@@ -77,7 +77,7 @@ impl ArtifactViewer for SemioBrepViewer {
 //#endregion 🔖️Viewer
 
 //#region 🔖️Manifest
-pub fn create_semio_brep_viewer() -> semio_framework_plugin::AppDefinition {
+pub async fn create_semio_brep_viewer() -> semio_framework_plugin::AppDefinition {
     Viewer::builder(SEMIO_BREP_DIALECT)
         .document(["stdio", "semio"])
         .icon_id("box")
@@ -95,19 +95,19 @@ mod tests {
     use super::*;
 
     #[test]
-    fn create_viewer_builds_a_definition_for_the_viewer_role() {
+    async fn create_viewer_builds_a_definition_for_the_viewer_role() {
         let def = create_semio_brep_viewer();
         assert_eq!(def.role, semio_framework_plugin::AppRole::Viewer);
         assert_eq!(def.dialect, SEMIO_BREP_DIALECT.into());
     }
 
     #[test]
-    fn viewer_dialect_matches_the_artifact_coordinate() {
+    async fn viewer_dialect_matches_the_artifact_coordinate() {
         assert_eq!(<SemioBrepViewer as ArtifactViewer>::DIALECT, SEMIO_BREP_DIALECT);
     }
 
     #[test]
-    fn viewer_never_mutates_the_document_or_draft_store() {
+    async fn viewer_never_mutates_the_document_or_draft_store() {
         semio_framework_plugin::testkit::assert_viewer_never_mutates::<SemioBrepViewer>();
     }
 }

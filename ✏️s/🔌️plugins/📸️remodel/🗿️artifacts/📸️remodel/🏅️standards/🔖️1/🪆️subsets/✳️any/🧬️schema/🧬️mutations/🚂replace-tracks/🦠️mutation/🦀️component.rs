@@ -16,20 +16,20 @@ pub struct ReplaceTracks {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn replace_tracks(tracks: Vec<MotionTrackSummary>) -> RemodelMutation {
+pub async fn replace_tracks(tracks: Vec<MotionTrackSummary>) -> RemodelMutation {
     RemodelMutation::ReplaceTracks(ReplaceTracks { tracks })
 }
 
 impl protocol::MutationKind<RemodelSnapshot, RemodelMutation> for ReplaceTracks {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "replace", entity: "tracks", kind: "replace-tracks", record: "ReplacedTracks" };
 
-    fn diff(&self, base: &RemodelSnapshot) -> protocol::MutationOutcome<RemodelDiff> {
+    async fn diff(&self, base: &RemodelSnapshot) -> protocol::MutationOutcome<RemodelDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &RemodelSnapshot) -> Vec<RemodelMutation> {
+    async fn inverse(&self, base: &RemodelSnapshot) -> Vec<RemodelMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         "Replace tracks".to_string()
     }
 }

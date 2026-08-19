@@ -49,7 +49,7 @@ pub struct ShootingSnapshot {
 }
 
 impl Default for ShootingSnapshot {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self {
             schema: SHOOTING_DOCUMENT_SCHEMA.into(),
             assets: Vec::new(),
@@ -89,7 +89,7 @@ struct ShootingSnapshotDsl {
     emblem: Option<String>,
 }
 
-fn shooting_snapshot_to_dsl(snapshot: &ShootingSnapshot) -> ShootingSnapshotDsl {
+async fn shooting_snapshot_to_dsl(snapshot: &ShootingSnapshot) -> ShootingSnapshotDsl {
     ShootingSnapshotDsl {
         schema: snapshot.schema.clone(),
         active_shot_id: snapshot.active_shot_id.clone(),
@@ -102,7 +102,7 @@ fn shooting_snapshot_to_dsl(snapshot: &ShootingSnapshot) -> ShootingSnapshotDsl 
     }
 }
 
-fn shooting_snapshot_from_dsl(dsl_snapshot: ShootingSnapshotDsl) -> Result<ShootingSnapshot, String> {
+async fn shooting_snapshot_from_dsl(dsl_snapshot: ShootingSnapshotDsl) -> Result<ShootingSnapshot, String> {
     let emblem = dsl_snapshot.emblem.as_deref().map(dec_child).transpose()?;
     Ok(ShootingSnapshot {
         schema: dsl_snapshot.schema,
@@ -123,25 +123,25 @@ fn shooting_snapshot_from_dsl(dsl_snapshot: ShootingSnapshotDsl) -> Result<Shoot
 /// `ShootingEmblemChild` carries (`child_id`, `target` as its URI form) and packed into ONE opaque
 /// string so it can ride through `ShootingSnapshotDsl`'s existing derive-generated `Option<String>`
 /// field handling untouched.
-fn hex_encode(bytes: &[u8]) -> String {
+async fn hex_encode(bytes: &[u8]) -> String {
     bytes.iter().map(|b| format!("{b:02x}")).collect()
 }
-fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
+async fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
     if s.len() % 2 != 0 {
         return Err(format!("odd hex length: {s:?}"));
     }
     (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()
 }
-fn enc_hex_str(s: &str) -> String {
+async fn enc_hex_str(s: &str) -> String {
     hex_encode(s.as_bytes())
 }
-fn dec_hex_str(s: &str) -> Result<String, String> {
+async fn dec_hex_str(s: &str) -> Result<String, String> {
     String::from_utf8(hex_decode(s)?).map_err(|e| e.to_string())
 }
-fn enc_child(c: &ShootingEmblemChild) -> String {
+async fn enc_child(c: &ShootingEmblemChild) -> String {
     format!("[{},{}]", enc_hex_str(&c.child_id), enc_hex_str(&c.target.to_uri()))
 }
-fn dec_child(s: &str) -> Result<ShootingEmblemChild, String> {
+async fn dec_child(s: &str) -> Result<ShootingEmblemChild, String> {
     let inner = s.strip_prefix('[').and_then(|s| s.strip_suffix(']')).ok_or_else(|| format!("child handle: expected [child_id,target], got {s:?}"))?;
     let parts: Vec<&str> = inner.splitn(2, ',').collect();
     let [child_id, target] = parts.as_slice() else { return Err(format!("child handle: expected 2 fields, got {}", parts.len())) };
@@ -155,10 +155,10 @@ fn dec_child(s: &str) -> Result<ShootingEmblemChild, String> {
 /// ✉️ P6 handcrafted ArtifactDsl/ArtifactPack (derive no longer emits these traits).
 impl store::ArtifactDsl for ShootingSnapshotDsl {
     const EXTENSION: &'static str = "shooting";
-    fn envelope_id() -> &'static str {
+    async fn envelope_id() -> &'static str {
         "shooting.shooting"
     }
-    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+    async fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
         let body = match store::semio_format::split_text_preamble(text) {
             Ok((_, rest)) => rest,
             Err(_) => text,
@@ -173,7 +173,7 @@ impl store::ArtifactDsl for ShootingSnapshotDsl {
         )?;
         Self::__dsl_from_record(&record)
     }
-    fn print_dsl(&self) -> String {
+    async fn print_dsl(&self) -> String {
         let body = dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), dsl::JoinMode::Document);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
             <Self as store::ArtifactDsl>::envelope_id(),
@@ -186,7 +186,7 @@ impl store::ArtifactDsl for ShootingSnapshotDsl {
 }
 
 impl store::ArtifactPack for ShootingSnapshotDsl {
-    fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
+    async fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let inner = store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
             <Self as store::ArtifactDsl>::envelope_id(),
@@ -196,7 +196,7 @@ impl store::ArtifactPack for ShootingSnapshotDsl {
         .map_err(|e| store::PackError::Schema(e.to_string()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &inner))
     }
-    fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
+    async fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let (envelope, inner) =
             store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
         if envelope.envelope_id() != <Self as store::ArtifactDsl>::envelope_id() {
@@ -209,30 +209,30 @@ impl store::ArtifactPack for ShootingSnapshotDsl {
         let (record, _report) = store::pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
         Self::__dsl_from_record(&record).map_err(store::text_error_to_pack_error)
     }
-    fn record_spec() -> Option<dsl::RecordSpec> {
+    async fn record_spec() -> Option<dsl::RecordSpec> {
         Some(Self::__dsl_spec())
     }
 }
 
 impl store::ArtifactDsl for ShootingSnapshot {
     const EXTENSION: &'static str = "shooting";
-    fn envelope_id() -> &'static str {
+    async fn envelope_id() -> &'static str {
         "shooting.shooting"
     }
-    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+    async fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
         let parsed = <ShootingSnapshotDsl as store::ArtifactDsl>::parse_dsl(text)?;
         shooting_snapshot_from_dsl(parsed).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
-    fn print_dsl(&self) -> String {
+    async fn print_dsl(&self) -> String {
         <ShootingSnapshotDsl as store::ArtifactDsl>::print_dsl(&shooting_snapshot_to_dsl(self))
     }
 }
 
 impl store::ArtifactPack for ShootingSnapshot {
-    fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
+    async fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         <ShootingSnapshotDsl as store::ArtifactPack>::encode_pack_with(&shooting_snapshot_to_dsl(self), options)
     }
-    fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
+    async fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let parsed = <ShootingSnapshotDsl as store::ArtifactPack>::decode_pack_with(bytes, options)?;
         shooting_snapshot_from_dsl(parsed).map_err(store::PackError::Schema)
     }

@@ -20,7 +20,7 @@ pub mod set_exaggeration {
         pub exaggeration: f64,
     }
 
-    pub fn handle(payload: &SetExaggeration, _doc: &ArtifactView<'_, GisTerrainSnapshot>, _cfg: &ConfigView<'_, Gis3dConfig>) -> Result<Emit<GisTerrainMutation, Gis3dConfigMutation>, Fault> {
+    pub async fn handle(payload: &SetExaggeration, _doc: &ArtifactView<'_, GisTerrainSnapshot>, _cfg: &ConfigView<'_, Gis3dConfig>) -> Result<Emit<GisTerrainMutation, Gis3dConfigMutation>, Fault> {
         use crate::artifacts::gisterrain::mutations::change_exaggeration::mutation::ChangeExaggeration;
         Ok(Emit::amend(vec![GisTerrainMutation::ChangeExaggeration(ChangeExaggeration { new_exaggeration: payload.exaggeration })], GIS3D_EXAGGERATION_COALESCE_KEY))
     }
@@ -36,7 +36,7 @@ mod tests {
     use semio_framework_plugin::PluginApp;
 
     #[test]
-    fn seeds_exaggeration_from_the_terrain_fixture() {
+    async fn seeds_exaggeration_from_the_terrain_fixture() {
         let app = app();
         assert_eq!(app.snapshot().expect("projection").exaggeration, 1.5);
     }
@@ -44,7 +44,7 @@ mod tests {
     /// 🧪️ A slider drag is many `setExaggeration` ticks sharing one coalesce key: they fold into ONE
     /// undoable edit, so a single undo restores the fixture's exaggeration rather than a mid-drag value.
     #[test]
-    fn exaggeration_drag_coalesces_into_one_undo_step() {
+    async fn exaggeration_drag_coalesces_into_one_undo_step() {
         let mut app = app();
         for value in [2.0, 2.5, 3.0] {
             dispatch(&mut app, Gis3dCommand::SetExaggeration(set_exaggeration::SetExaggeration { exaggeration: value }));
@@ -55,7 +55,7 @@ mod tests {
     }
 
     #[test]
-    fn set_exaggeration_is_a_document_operation_not_config_state() {
+    async fn set_exaggeration_is_a_document_operation_not_config_state() {
         let mut app = app();
         let result = dispatch(&mut app, Gis3dCommand::SetExaggeration(set_exaggeration::SetExaggeration { exaggeration: 2.0 }));
         assert_eq!(result.mutations.len(), 1, "exaggeration is undoable document state");

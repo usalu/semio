@@ -5,7 +5,7 @@ use crate::artifacts::shooting::mutations::ShootingMutation;
 use crate::artifacts::shooting::ShootingSnapshot;
 
 
-pub fn inverse(payload: &RenameAsset, base: &ShootingSnapshot) -> Vec<ShootingMutation> {
+pub async fn inverse(payload: &RenameAsset, base: &ShootingSnapshot) -> Vec<ShootingMutation> {
     match base.assets.iter().find(|asset| asset.id == payload.id) {
         Some(asset) => vec![ShootingMutation::RenameAsset(RenameAsset { id: payload.id.clone(), new_name: asset.name.clone() })],
         None => Vec::new(),

@@ -15,15 +15,15 @@ pub struct ChangeNu {
 impl protocol::MutationKind<En1997Snapshot, En1997Mutation> for ChangeNu {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "nu", kind: "change-nu", record: "ChangedNu" };
 
-    fn diff(&self, base: &En1997Snapshot) -> protocol::MutationOutcome<En1997Diff> {
+    async fn diff(&self, base: &En1997Snapshot) -> protocol::MutationOutcome<En1997Diff> {
         crate::artifacts::en1997::mutations::change_nu::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &En1997Snapshot) -> Vec<En1997Mutation> {
+    async fn inverse(&self, base: &En1997Snapshot) -> Vec<En1997Mutation> {
         crate::artifacts::en1997::mutations::change_nu::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         format!("Change Poisson's ratio nu to {}", self.new_nu)
     }
 }

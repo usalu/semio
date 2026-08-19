@@ -19,7 +19,7 @@ pub struct NoteIntoDxf;
 impl Serializer<NoteSnapshot> for NoteIntoDxf {
     const INTO: Dialect = DXF_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Lossy;
-    fn serialize(from: &NoteSnapshot) -> IoResult<IoPayload> {
+    async fn serialize(from: &NoteSnapshot) -> IoResult<IoPayload> {
         let mut entities = Vec::new();
         for block in flatten_blocks(&from.blocks) {
             if let NoteBlockNode::Ink { points, .. } = block {

@@ -28,7 +28,7 @@ pub struct BinaryInference {
 }
 
 impl protocol::Inference<BinarySnapshot> for BinaryInference {
-    fn infer(snapshot: &BinarySnapshot) -> Self {
+    async fn infer(snapshot: &BinarySnapshot) -> Self {
         Self { extent: compute_binary_extent(snapshot) }
     }
 }
@@ -36,19 +36,19 @@ impl protocol::Inference<BinarySnapshot> for BinaryInference {
 /// 🌱 Defined in terms of `infer` (not derived) — keeps the law correct regardless of whether
 /// `BinarySnapshot::default()`'s `bytes` ever stop being empty.
 impl Default for BinaryInference {
-    fn default() -> Self {
+    async fn default() -> Self {
         <Self as protocol::Inference<BinarySnapshot>>::infer(&BinarySnapshot::default())
     }
 }
 
 impl protocol::InferenceSpec<BinarySnapshot> for BinaryInference {
-    fn inference_schema_id() -> &'static str {
+    async fn inference_schema_id() -> &'static str {
         "s.stdio.binary.inference"
     }
-    fn schema_version() -> u32 {
+    async fn schema_version() -> u32 {
         1
     }
-    fn fields() -> &'static [protocol::InferenceFieldSpec] {
+    async fn fields() -> &'static [protocol::InferenceFieldSpec] {
         &[protocol::InferenceFieldSpec { id: "s.stdio.binary.inference.extent", reads: &["bytes"] }]
     }
 }
@@ -68,7 +68,7 @@ impl ArtifactInferrer for crate::artifacts::binary::standards::v_raw::subsets::a
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.stdio.binary.inference`'s facet leaves into the OS-wide inference catalog —
 /// call once at plugin init, alongside `binary_artifact_schema_descriptor`'s registration.
-pub fn binary_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
+pub async fn binary_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
     schema::ArtifactInferenceDescriptor {
         id: "s.stdio.binary.inference",
         inference: schema::FacetLeaves {
@@ -91,13 +91,13 @@ mod tests {
     use protocol::Inference;
 
     #[test]
-    fn inference_determinism_law() {
+    async fn inference_determinism_law() {
         let snapshot = BinarySnapshot::default();
         assert_eq!(BinaryInference::infer(&snapshot), BinaryInference::infer(&snapshot));
     }
 
     #[test]
-    fn inference_default_law() {
+    async fn inference_default_law() {
         assert_eq!(BinaryInference::infer(&BinarySnapshot::default()), BinaryInference::default());
     }
 
@@ -106,13 +106,13 @@ mod tests {
     /// ARTIFACTS-AND-APP-STATE-MACHINES) — conformance laws, field sweeps, and pure
     /// snapshot-round-trip tests, kept together per that ticket's own destination rule.
     #[test]
-    fn empty_snapshot_matches_schema() {
+    async fn empty_snapshot_matches_schema() {
         let snapshot = empty_binary_snapshot();
         assert_eq!(snapshot.schema, STDIO_BINARY_DOCUMENT_SCHEMA);
     }
 
     #[test]
-    fn codec_round_trip() {
+    async fn codec_round_trip() {
         let snap = empty_binary_snapshot();
         let text = store::ArtifactDsl::print_dsl(&snap);
         let parsed = <BinarySnapshot as store::ArtifactDsl>::parse_dsl(&text).expect("parse");
@@ -126,7 +126,7 @@ mod tests {
     /// that are themselves invalid UTF-8 (the hex DSL layer never interprets payload bytes as
     /// text, so this is a real test of the hex codec, not just the binary-pack envelope).
     #[test]
-    fn codec_retention_law() {
+    async fn codec_retention_law() {
         for bytes in [vec![], vec![0x00, 0x01, 0xFF, 0xFE], (0u8..=255).collect::<Vec<u8>>()] {
             let snap = BinarySnapshot { bytes: bytes.clone(), ..Default::default() };
             let dsl_text = store::ArtifactDsl::print_dsl(&snap);
@@ -140,7 +140,7 @@ mod tests {
 
     //#region 🔖️FieldSweep
     /// 🧹 Canonical "every mutable field differs" snapshot A.
-    fn sweep_a() -> BinarySnapshot {
+    async fn sweep_a() -> BinarySnapshot {
         BinarySnapshot { schema: STDIO_BINARY_DOCUMENT_SCHEMA.into(), bytes: vec![1, 2, 3, 4, 5, 6, 7, 8] }
     }
 
@@ -148,7 +148,7 @@ mod tests {
     /// inserted mid-buffer), a pure-removal region (bytes 3,4 dropped), and a pure-replacement
     /// region (byte 8 → 88) -- one splice can't express all three at once, exercising the
     /// splice mechanism's full range per the artifact's own field-sweep note.
-    fn sweep_b() -> BinarySnapshot {
+    async fn sweep_b() -> BinarySnapshot {
         BinarySnapshot { schema: STDIO_BINARY_DOCUMENT_SCHEMA.into(), bytes: vec![1, 2, 100, 5, 6, 7, 88] }
     }
 
@@ -156,7 +156,7 @@ mod tests {
     /// splice list is non-empty (the only "field" a splice-list diff has), and `between(a,a)`
     /// is empty.
     #[test]
-    fn field_sweep_covers_every_byte_level_change() {
+    async fn field_sweep_covers_every_byte_level_change() {
         use crate::artifacts::binary::standards::v_raw::subsets::any::schema::diff::BinaryDiff;
         use protocol::os_spr::command::DiffAlgebra;
         use protocol::MutationDiff;
@@ -184,7 +184,7 @@ mod tests {
     //#endregion 🔖️FieldSweep
 
     #[test]
-    fn demo_snapshot_round_trip() {
+    async fn demo_snapshot_round_trip() {
         let snap = demo_binary_snapshot();
         let text = store::ArtifactDsl::print_dsl(&snap);
         let parsed = <BinarySnapshot as store::ArtifactDsl>::parse_dsl(&text).expect("parse");
@@ -208,7 +208,7 @@ mod tests {
         /// parse under the real dialect — independent of, and cheaper than, the two `recognize`/
         /// `walk_protocol` laws below (a parse failure here fails fast with a clearer message).
         #[test]
-        fn committed_facet_files_parse() {
+        async fn committed_facet_files_parse() {
             for (label, text) in [("snapshot grammar", snapshot::text::COMPONENT_GRAMMAR_SEMIO), ("mutations grammar", mutations::text::COMPONENT_GRAMMAR_SEMIO), ("diff grammar", diff::text::COMPONENT_GRAMMAR_SEMIO)] {
                 let grammar = dsl::parse_grammar(text).unwrap_or_else(|e| panic!("{label}: parse_grammar failed: {e:?}"));
                 assert_eq!(grammar.dialect, dsl::SemioDialect::Grammar, "{label}: expected grammar dialect");
@@ -224,7 +224,7 @@ mod tests {
         /// direct proof this artifact will pass that harness once graduated, not merely an
         /// analogue.
         #[test]
-        fn grammar_conformance_law() {
+        async fn grammar_conformance_law() {
             let grammar = dsl::parse_grammar(snapshot::text::COMPONENT_GRAMMAR_SEMIO).expect("parse snapshot grammar");
             let recognizer = dsl::Recognizer::compile(&grammar);
             let text = store::ArtifactDsl::print_dsl(&demo_binary_snapshot());
@@ -243,7 +243,7 @@ mod tests {
         /// ✅️ `ops_grammar_conformance_law`: the mutations grammar recognizes real `print_op`
         /// output for every `BinaryMutation` variant (`mutations::demo_mutation_cases()`).
         #[test]
-        fn ops_grammar_conformance_law() {
+        async fn ops_grammar_conformance_law() {
             let grammar = dsl::parse_grammar(mutations::text::COMPONENT_GRAMMAR_SEMIO).expect("parse mutations grammar");
             let recognizer = dsl::Recognizer::compile(&grammar);
             for mutation in mutations::demo_mutation_cases() {
@@ -256,7 +256,7 @@ mod tests {
         /// output for every representative `BinaryDiff` (`diff::demo_diff_cases()`), incl. the
         /// empty (no-splices) diff and a multi-splice diff with a zero-length no-op splice.
         #[test]
-        fn diff_grammar_conformance_law() {
+        async fn diff_grammar_conformance_law() {
             let grammar = dsl::parse_grammar(diff::text::COMPONENT_GRAMMAR_SEMIO).expect("parse diff grammar");
             let recognizer = dsl::Recognizer::compile(&grammar);
             for d in diff::demo_diff_cases() {
@@ -271,7 +271,7 @@ mod tests {
         /// mutation's `encode_op`, and every demo diff's `encode_diff` — asserting `consumed ==
         /// bytes.len()`.
         #[test]
-        fn protocol_walk_law() {
+        async fn protocol_walk_law() {
             // 🧬️ CARRIER LAW: `encode_pack` is now the raw `bytes` payload directly (no SEMIO
             // envelope to unwrap first) — `walk_protocol` already expects "bytes that start at
             // the payload" per this file's own protocol.semio doc comment, so it walks `packed`
@@ -301,7 +301,7 @@ mod tests {
         /// demo()`, `print_dsl(demo()) == fixture` (byte-for-byte), and the pack twin — so the
         /// fixtures can never silently drift back to a fake again.
         #[test]
-        fn fixture_honesty_law() {
+        async fn fixture_honesty_law() {
             const FIXTURE_DSL: &str = include_str!("../../📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio");
             const FIXTURE_PACK: &[u8] = include_bytes!("../../📚️examples/🎬️demo/🖼️assets/🎒️example.pack.semio");
 

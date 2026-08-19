@@ -34,19 +34,19 @@ pub struct JackInference {
 }
 
 impl protocol::Inference<JackSnapshot> for JackInference {
-    fn infer(snapshot: &JackSnapshot) -> Self {
+    async fn infer(snapshot: &JackSnapshot) -> Self {
         Self { topology: compute_topology(snapshot), flat_position: compute_flat_position(snapshot) }
     }
 }
 
 impl protocol::InferenceSpec<JackSnapshot> for JackInference {
-    fn inference_schema_id() -> &'static str {
+    async fn inference_schema_id() -> &'static str {
         "s.trinity.jack.inference"
     }
-    fn schema_version() -> u32 {
+    async fn schema_version() -> u32 {
         1
     }
-    fn fields() -> &'static [protocol::InferenceFieldSpec] {
+    async fn fields() -> &'static [protocol::InferenceFieldSpec] {
         &[
             protocol::InferenceFieldSpec { id: "s.trinity.jack.inference.topology", reads: &["nodes", "edges"] },
             protocol::InferenceFieldSpec { id: "s.trinity.jack.inference.flatPosition", reads: &["nodes", "edges", "root_node_id"] },
@@ -68,7 +68,7 @@ impl ArtifactInferrer for crate::artifacts::jack::standards::v1::subsets::any::s
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.trinity.jack.inference`'s facet leaves into the OS-wide inference catalog —
 /// call once at plugin init, alongside `jack_artifact_schema_descriptor`'s registration.
-pub fn jack_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
+pub async fn jack_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
     schema::ArtifactInferenceDescriptor {
         id: "s.trinity.jack.inference",
         inference: schema::FacetLeaves {
@@ -90,7 +90,7 @@ mod tests {
     use protocol::Inference;
 
     //#region 🧸️Fixtures
-    fn node(id: &str) -> Node {
+    async fn node(id: &str) -> Node {
         Node {
             id: id.into(),
             kind: "Piece".into(),
@@ -107,11 +107,11 @@ mod tests {
         }
     }
 
-    fn edge(id: &str, source: &str, target: &str) -> Edge {
+    async fn edge(id: &str, source: &str, target: &str) -> Edge {
         Edge { id: id.into(), kind: "Connection".into(), source: source.into(), target: target.into(), properties: PropertyBag::new() }
     }
 
-    fn chain_snapshot() -> JackSnapshot {
+    async fn chain_snapshot() -> JackSnapshot {
         JackSnapshot::with_content(
             "trinity.graph".into(),
             "chain".into(),
@@ -127,25 +127,25 @@ mod tests {
 
     //#region 🧪️InferenceLaws
     #[test]
-    fn inference_determinism_law() {
+    async fn inference_determinism_law() {
         let snapshot = chain_snapshot();
         assert_eq!(JackInference::infer(&snapshot), JackInference::infer(&snapshot));
     }
 
     #[test]
-    fn inference_default_law() {
+    async fn inference_default_law() {
         assert_eq!(JackInference::infer(&JackSnapshot::default()), JackInference::default());
     }
 
     #[test]
-    fn inference_matches_compute_topology_directly() {
+    async fn inference_matches_compute_topology_directly() {
         let snapshot = chain_snapshot();
         let inferred = JackInference::infer(&snapshot);
         assert_eq!(inferred.topology, compute_topology(&snapshot));
     }
 
     #[test]
-    fn inference_matches_compute_flat_position_directly() {
+    async fn inference_matches_compute_flat_position_directly() {
         let snapshot = chain_snapshot();
         let inferred = JackInference::infer(&snapshot);
         assert_eq!(inferred.flat_position, compute_flat_position(&snapshot));

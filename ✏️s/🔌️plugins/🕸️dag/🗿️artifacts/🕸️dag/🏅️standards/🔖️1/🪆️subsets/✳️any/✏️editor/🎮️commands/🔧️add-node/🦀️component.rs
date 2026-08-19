@@ -17,7 +17,7 @@ pub struct AddNode {
 
 /// 🕹️ No longer auto-selects the newly-added node — no `Emit` channel writes `graph`'s selection
 /// directly anymore (the framework owns it exclusively; ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM).
-pub fn handle(payload: &AddNode, doc: &ArtifactView<'_, DagSnapshot>, _cfg: &ConfigView<'_, DagConfig>) -> Result<Emit<DagMutation, DagConfigMutation>, Fault> {
+pub async fn handle(payload: &AddNode, doc: &ArtifactView<'_, DagSnapshot>, _cfg: &ConfigView<'_, DagConfig>) -> Result<Emit<DagMutation, DagConfigMutation>, Fault> {
     let document = doc.snapshot;
     let id = crate::artifacts::dag::schema::next_node_id(document);
     let node = crate::artifacts::dag::schema::default_node_for_kind(&payload.kind, &id, payload.x.unwrap_or(120.0), payload.y.unwrap_or(120.0));
@@ -35,7 +35,7 @@ mod tests {
     use semio_framework_plugin::PluginApp;
 
     #[test]
-    fn add_node_action_updates_document_with_the_new_node() {
+    async fn add_node_action_updates_document_with_the_new_node() {
         let mut app = testkit::new_app();
         app.dispatch_typed(DagCommand::AddNode(AddNode { kind: "slider".into(), x: None, y: None }), &semio_framework_plugin::testkit::meta("local")).expect("add node");
         let document = app.snapshot().expect("projection");
@@ -44,7 +44,7 @@ mod tests {
     }
 
     #[test]
-    fn rename_dag_node_rewrites_nodes_and_edges() {
+    async fn rename_dag_node_rewrites_nodes_and_edges() {
         let mut app = testkit::new_app();
         let old_id = app.snapshot().expect("projection").nodes().first().map(|node| node.id.clone()).expect("node");
         app.dispatch_typed(DagCommand::RenameDagNode(rename_dag_node::RenameDagNode { old_id: old_id.clone(), value: "renamed-node".into() }), &semio_framework_plugin::testkit::meta("local")).expect("rename");
@@ -55,7 +55,7 @@ mod tests {
     }
 
     #[test]
-    fn rename_dag_node_is_a_no_op_for_an_empty_or_duplicate_id() {
+    async fn rename_dag_node_is_a_no_op_for_an_empty_or_duplicate_id() {
         let mut app = testkit::new_app();
         let (first_id, second_id) = {
             let nodes = app.snapshot().expect("projection").nodes();
@@ -68,7 +68,7 @@ mod tests {
     }
 
     #[test]
-    fn remove_node_deletes_node_and_connected_edges() {
+    async fn remove_node_deletes_node_and_connected_edges() {
         let mut app = testkit::new_app();
         let node_id = app.snapshot().expect("projection").nodes().first().map(|node| node.id.clone()).expect("node");
         app.dispatch_typed(DagCommand::RemoveNode(remove_node::RemoveNode { node_id: node_id.clone() }), &semio_framework_plugin::testkit::meta("local")).expect("remove");
@@ -82,7 +82,7 @@ mod tests {
     }
 
     #[test]
-    fn add_node_then_undo_restores_document() {
+    async fn add_node_then_undo_restores_document() {
         let mut app = testkit::new_app();
         let before = app.snapshot().expect("projection").nodes().len();
         app.dispatch_typed(DagCommand::AddNode(AddNode { kind: "note".into(), x: None, y: None }), &semio_framework_plugin::testkit::meta("local")).expect("add");
@@ -92,7 +92,7 @@ mod tests {
     }
 
     #[test]
-    fn patch_slider_value_coalesces_into_one_edit() {
+    async fn patch_slider_value_coalesces_into_one_edit() {
         let mut app = testkit::new_app();
         app.dispatch_typed(DagCommand::AddNode(AddNode { kind: "slider".into(), x: None, y: None }), &semio_framework_plugin::testkit::meta("local")).expect("add slider");
         let node_id = app.snapshot().expect("projection").nodes().iter().find(|node| matches!(node.kind, DagNodeKind::Slider { .. })).map(|node| node.id.clone()).expect("slider");

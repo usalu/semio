@@ -42,7 +42,7 @@ struct DirectoryReadModelWire {
 }
 
 /// 📇️ Encodes a `DirectoryReadModel` as the `directory_json` DSL field's wire value.
-fn directory_to_json(model: &store::os_directory::DirectoryReadModel) -> String {
+async fn directory_to_json(model: &store::os_directory::DirectoryReadModel) -> String {
     let wire = DirectoryReadModelWire {
         spaces: model.spaces.iter().map(|(id, space)| (id.clone(), DirectorySpaceWire { view: space.view.clone(), members: space.members.clone() })).collect(),
         cursor: model.cursor,
@@ -53,7 +53,7 @@ fn directory_to_json(model: &store::os_directory::DirectoryReadModel) -> String 
 
 /// 📇️ Decodes `directory_json` back into a `DirectoryReadModel` — malformed/empty input yields the
 /// empty model (never panics: this reads persisted config text, which must never crash a boot).
-fn directory_from_json(json: &str) -> store::os_directory::DirectoryReadModel {
+async fn directory_from_json(json: &str) -> store::os_directory::DirectoryReadModel {
     let wire: DirectoryReadModelWire = serde_json::from_str(json).unwrap_or_default();
     store::os_directory::DirectoryReadModel {
         spaces: wire.spaces.into_iter().map(|(id, space)| (id, store::os_directory::DirectorySpace { view: space.view, members: space.members })).collect(),
@@ -87,7 +87,7 @@ pub struct HomeConfig {
 
 impl HomeConfig {
     /// 📇️ Decodes the folded hub directory read model.
-    pub fn directory(&self) -> store::os_directory::DirectoryReadModel {
+    pub async fn directory(&self) -> store::os_directory::DirectoryReadModel {
         directory_from_json(&self.directory_json)
     }
 }
@@ -96,10 +96,10 @@ impl HomeConfig {
 /// 📜️ Handcrafted ArtifactDsl (P6): uses this type's `__dsl_*` helpers + parse/print, not derive emission.
 impl store::ArtifactDsl for HomeConfig {
     const EXTENSION: &'static str = Self::__DSL_EXTENSION;
-    fn envelope_id() -> &'static str {
+    async fn envelope_id() -> &'static str {
         "home.config"
     }
-    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+    async fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
         let body = match store::semio_format::split_text_preamble(text) {
             Ok((_, rest)) => rest,
             Err(_) => text,
@@ -111,7 +111,7 @@ impl store::ArtifactDsl for HomeConfig {
         )?;
         Self::__dsl_from_record(&record)
     }
-    fn print_dsl(&self) -> String {
+    async fn print_dsl(&self) -> String {
         let body = dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), dsl::JoinMode::Document);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
             <Self as store::ArtifactDsl>::envelope_id(),
@@ -125,7 +125,7 @@ impl store::ArtifactDsl for HomeConfig {
 
 /// 📦️ Handcrafted ArtifactPack (P6): envelope-wrapped pack body via `__dsl_*` record lowering.
 impl store::ArtifactPack for HomeConfig {
-    fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
+    async fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let inner = store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
             <Self as store::ArtifactDsl>::envelope_id(),
@@ -135,7 +135,7 @@ impl store::ArtifactPack for HomeConfig {
         .map_err(|e| store::PackError::Schema(e.to_string()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &inner))
     }
-    fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
+    async fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
         if envelope.envelope_id() != <Self as store::ArtifactDsl>::envelope_id() {
             return Err(store::PackError::Schema(format!(
@@ -147,7 +147,7 @@ impl store::ArtifactPack for HomeConfig {
         let (record, _report) = store::pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
         Self::__dsl_from_record(&record).map_err(store::text_error_to_pack_error)
     }
-    fn record_spec() -> Option<dsl::RecordSpec> {
+    async fn record_spec() -> Option<dsl::RecordSpec> {
         Some(Self::__dsl_spec())
     }
 }
@@ -156,7 +156,7 @@ impl store::ArtifactPack for HomeConfig {
 
 
 impl Default for HomeConfig {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self { active_panel_tab: String::new(), locale: "en-US".into(), directory_json: directory_to_json(&store::os_directory::DirectoryReadModel::default()), client_id: String::new(), client_name: String::new() }
     }
 }
@@ -189,7 +189,7 @@ pub enum HomeConfigMutation {
 
 //#region 🔖️OpCodec
 impl protocol::OpText for HomeConfigMutation {
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
+    async fn parse_op(line: &str) -> Result<Self, store::TextError> {
         let variants = <Self as dsl::DslVariants>::variants();
         for (keyword, spec_fn) in &variants {
             let probe = format!("{} ", keyword);
@@ -204,7 +204,7 @@ impl protocol::OpText for HomeConfigMutation {
         }
         Err(dsl::__rt::field_error(format!("unknown mutation line '{line}'")))
     }
-    fn print_op(&self) -> String {
+    async fn print_op(&self) -> String {
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
         let variants = <Self as dsl::DslVariants>::variants();
         let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
@@ -214,7 +214,7 @@ impl protocol::OpText for HomeConfigMutation {
 
 /// 🎯️ Handcrafted OpBinary (P6).
 impl protocol::OpBinary for HomeConfigMutation {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         const OP_BINARY_FORMAT: u8 = 1;
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
         let variants = <Self as dsl::DslVariants>::variants();
@@ -231,7 +231,7 @@ impl protocol::OpBinary for HomeConfigMutation {
         out.extend_from_slice(&body);
         Ok(out)
     }
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         const OP_BINARY_FORMAT: u8 = 1;
         let mut reader = store::pack_rt::ByteReader::new(bytes);
         let format = reader.read_u8()?;
@@ -262,7 +262,7 @@ impl protocol::OpBinary for HomeConfigMutation {
 impl protocol::Mutation<HomeConfig> for HomeConfigMutation {
     type Diff = HomeConfig;
 
-    fn diff(&self, base: &HomeConfig) -> protocol::MutationOutcome<HomeConfig> {
+    async fn diff(&self, base: &HomeConfig) -> protocol::MutationOutcome<HomeConfig> {
         let mut next = base.clone();
         match self {
             HomeConfigMutation::Snapshot { config } => return protocol::MutationOutcome::new(config.clone()),
@@ -281,7 +281,7 @@ impl protocol::Mutation<HomeConfig> for HomeConfigMutation {
         protocol::MutationOutcome::new(next)
     }
 
-    fn inverse(&self, base: &HomeConfig) -> Vec<Self> {
+    async fn inverse(&self, base: &HomeConfig) -> Vec<Self> {
         vec![HomeConfigMutation::Snapshot { config: base.clone() }]
     }
 }
@@ -294,19 +294,19 @@ mod tests {
     use protocol::Mutation;
 
     #[test]
-    fn home_config_default_locale_is_english() {
+    async fn home_config_default_locale_is_english() {
         let config = HomeConfig::default();
         assert_eq!(config.locale, "en-US");
         assert!(config.active_panel_tab.is_empty());
     }
 
     #[test]
-    fn home_config_dsl_text_round_trips() {
+    async fn home_config_dsl_text_round_trips() {
         store::os_store::test_support::assert_dsl_round_trip(&HomeConfig::default());
     }
 
     #[test]
-    fn home_config_op_text_round_trips_every_variant() {
+    async fn home_config_op_text_round_trips_every_variant() {
         store::os_store::test_support::assert_op_line_round_trip(&HomeConfigMutation::Snapshot { config: HomeConfig::default() });
         store::os_store::test_support::assert_op_line_round_trip(&HomeConfigMutation::SetActivePanelTab { tab_id: "tab-1".into() });
         store::os_store::test_support::assert_op_line_round_trip(&HomeConfigMutation::SetLocale { value: "de".into() });
@@ -315,14 +315,14 @@ mod tests {
     }
 
     #[test]
-    fn home_config_default_directory_is_empty() {
+    async fn home_config_default_directory_is_empty() {
         let model = HomeConfig::default().directory();
         assert!(model.spaces.is_empty());
         assert_eq!(model.cursor, 0);
     }
 
     #[test]
-    fn fold_directory_event_updates_the_read_model() {
+    async fn fold_directory_event_updates_the_read_model() {
         let config = HomeConfig::default();
         let event_json = serde_json::json!({
             "seq": 1,
@@ -342,14 +342,14 @@ mod tests {
     }
 
     #[test]
-    fn fold_directory_event_ignores_malformed_json() {
+    async fn fold_directory_event_ignores_malformed_json() {
         let config = HomeConfig::default();
         let next = HomeConfigMutation::FoldDirectoryEvent { event_json: "not json".into() }.diff(&config).diff().clone();
         assert_eq!(next.directory_json, config.directory_json, "malformed events never panic and never change the model");
     }
 
     #[test]
-    fn set_client_updates_identity_fields() {
+    async fn set_client_updates_identity_fields() {
         let config = HomeConfig::default();
         let next = HomeConfigMutation::SetClient { client_id: "u1".into(), client_name: "Ada".into() }.diff(&config).diff().clone();
         assert_eq!(next.client_id, "u1");
@@ -357,7 +357,7 @@ mod tests {
     }
 
     #[test]
-    fn home_config_operation_round_trips_via_apply_and_backwards() {
+    async fn home_config_operation_round_trips_via_apply_and_backwards() {
         let config = HomeConfig::default();
         let operation = HomeConfigMutation::SetLocale { value: "de".into() };
         let next = operation.diff(&config).diff().clone();

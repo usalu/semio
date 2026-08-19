@@ -11,7 +11,7 @@ use serde::{Deserialize, Serialize};
 #[dsl(keyword = "add-step")]
 pub struct AddStep {}
 
-pub fn handle(_payload: &AddStep, doc: &ArtifactView<'_, FormsSnapshot>, _cfg: &ConfigView<'_, FormsConfig>) -> Result<Emit<FormMutation, FormsConfigMutation>, Fault> {
+pub async fn handle(_payload: &AddStep, doc: &ArtifactView<'_, FormsSnapshot>, _cfg: &ConfigView<'_, FormsConfig>) -> Result<Emit<FormMutation, FormsConfigMutation>, Fault> {
     let spec = doc.snapshot;
     let step = FormStep { id: create_form_id("step"), title: format!("Step {}", forms_steps(spec).len() + 1), description: None, blocks: Vec::new() };
     Ok(Emit {
@@ -34,7 +34,7 @@ mod tests {
     use crate::editor::forms::commands::update_form::UpdateForm;
 
     #[test]
-    fn add_step_action_appends_step() {
+    async fn add_step_action_appends_step() {
         let mut app = forms_app();
         let before = forms_steps(&app.snapshot().expect("projection")).len();
         dispatch(&mut app, FormsCommand::AddStep(AddStep {}));
@@ -42,7 +42,7 @@ mod tests {
     }
 
     #[test]
-    fn patch_step_updates_title_and_description() {
+    async fn patch_step_updates_title_and_description() {
         let mut app = forms_app();
         let step_id = forms_steps(&app.snapshot().expect("projection"))[0].id.clone();
         dispatch(&mut app, FormsCommand::PatchStep(PatchStep { step_id, field: "title".into(), value: "Renamed".into() }));
@@ -50,7 +50,7 @@ mod tests {
     }
 
     #[test]
-    fn remove_and_move_step_actions() {
+    async fn remove_and_move_step_actions() {
         let mut app = forms_app();
         dispatch(&mut app, FormsCommand::AddStep(AddStep {}));
         let last_step_id = forms_steps(&app.snapshot().expect("projection")).last().unwrap().id.clone();
@@ -61,7 +61,7 @@ mod tests {
     }
 
     #[test]
-    fn update_form_action_sets_title() {
+    async fn update_form_action_sets_title() {
         let mut app = forms_app();
         dispatch(&mut app, FormsCommand::UpdateForm(UpdateForm { title: "My Form".into() }));
         assert_eq!(app.snapshot().expect("projection").title.as_deref(), Some("My Form"));

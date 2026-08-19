@@ -15,15 +15,15 @@ pub struct ChangeSheetMEdKnm {
 impl protocol::MutationKind<En1999Snapshot, En1999Mutation> for ChangeSheetMEdKnm {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "sheet-m-ed-knm", kind: "change-sheet-m-ed-knm", record: "ChangedSheetMEdKnm" };
 
-    fn diff(&self, base: &En1999Snapshot) -> protocol::MutationOutcome<En1999Diff> {
+    async fn diff(&self, base: &En1999Snapshot) -> protocol::MutationOutcome<En1999Diff> {
         crate::artifacts::en1999::mutations::change_sheet_m_ed_knm::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &En1999Snapshot) -> Vec<En1999Mutation> {
+    async fn inverse(&self, base: &En1999Snapshot) -> Vec<En1999Mutation> {
         crate::artifacts::en1999::mutations::change_sheet_m_ed_knm::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         format!("Change sheet design moment M_Ed [kNm] to {}", self.new_sheet_m_ed_knm)
     }
 }

@@ -16,7 +16,7 @@ pub mod set_locale {
         pub value: String,
     }
 
-    pub fn handle(payload: &SetLocale, _doc: &ArtifactView<'_, SequenceSnapshot>, _cfg: &ConfigView<'_, SequenceConfig>) -> Result<Emit<SequenceMutation, SequenceConfigMutation>, Fault> {
+    pub async fn handle(payload: &SetLocale, _doc: &ArtifactView<'_, SequenceSnapshot>, _cfg: &ConfigView<'_, SequenceConfig>) -> Result<Emit<SequenceMutation, SequenceConfigMutation>, Fault> {
         Ok(Emit::config(vec![SequenceConfigMutation::SetLocale { value: payload.value.clone() }]))
     }
 }
@@ -31,7 +31,7 @@ mod tests {
     use super::set_locale::SetLocale;
 
     #[test]
-    fn sequence_labels_render_native_english_by_default() {
+    async fn sequence_labels_render_native_english_by_default() {
         let mut app = new_app();
         let document_json = render(&mut app, crate::editor::sequence::panels::document::SEQUENCE_PLAY_BODY_DOCUMENT);
         assert!(document_json.contains("\"Steps\""));
@@ -39,7 +39,7 @@ mod tests {
     }
 
     #[test]
-    fn sequence_labels_render_german_locale() {
+    async fn sequence_labels_render_german_locale() {
         let mut app = new_app();
         dispatch(&mut app, SequenceCommand::SetLocale(SetLocale { value: "de".into() }));
         let document_json = render(&mut app, crate::editor::sequence::panels::document::SEQUENCE_PLAY_BODY_DOCUMENT);

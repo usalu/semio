@@ -33,25 +33,25 @@ impl ArtifactSerializer for SemioModelToBcf {
     }
 }
 
-pub fn register() {}
+pub async fn register() {}
 //#endregion 🔖️Serializer
 
 //#region 🔖️Convert
-fn text_property<'a>(properties: &'a [crate::artifacts::semio::standards::v1::subsets::model::schema::snapshot::Property], key: &str) -> Option<&'a str> {
+async fn text_property<'a>(properties: &'a [crate::artifacts::semio::standards::v1::subsets::model::schema::snapshot::Property], key: &str) -> Option<&'a str> {
     properties.iter().find(|p| p.key == key).and_then(|p| match &p.value {
         PsetValue::Text { value } => Some(value.as_str()),
         _ => None,
     })
 }
 
-fn number_property(properties: &[crate::artifacts::semio::standards::v1::subsets::model::schema::snapshot::Property], key: &str) -> Option<f64> {
+async fn number_property(properties: &[crate::artifacts::semio::standards::v1::subsets::model::schema::snapshot::Property], key: &str) -> Option<f64> {
     properties.iter().find(|p| p.key == key).and_then(|p| match &p.value {
         PsetValue::Number { value } => Some(*value),
         _ => None,
     })
 }
 
-fn topic_from_element(element: &crate::artifacts::semio::standards::v1::subsets::model::schema::snapshot::SemioModelElement, referenced_guids: &[String]) -> BcfTopic {
+async fn topic_from_element(element: &crate::artifacts::semio::standards::v1::subsets::model::schema::snapshot::SemioModelElement, referenced_guids: &[String]) -> BcfTopic {
     let empty: Vec<crate::artifacts::semio::standards::v1::subsets::model::schema::snapshot::Property> = Vec::new();
     let topic_props = element.psets.iter().find(|p| p.name == "Pset_BcfTopic").map(|p| p.properties.as_slice()).unwrap_or(&empty);
     let comments_props = element.psets.iter().find(|p| p.name == "Pset_BcfComments").map(|p| p.properties.as_slice()).unwrap_or(&empty);
@@ -89,7 +89,7 @@ fn topic_from_element(element: &crate::artifacts::semio::standards::v1::subsets:
 //#endregion 🔖️Convert
 
 //#region 🔖️Entry
-pub fn bcf_from_model(from: &SemioModelSnapshot) -> BcfSnapshot {
+pub async fn bcf_from_model(from: &SemioModelSnapshot) -> BcfSnapshot {
     let topics = from
         .elements
         .iter()
@@ -111,7 +111,7 @@ mod tests {
     use crate::artifacts::bcf::schema::snapshot::{BcfComment as BcfCommentT, BcfComponents as BcfComponentsT, BcfTopic as BcfTopicT, BcfViewpoint as BcfViewpointT, BcfVisibility as BcfVisibilityT};
     use crate::artifacts::semio::standards::v1::subsets::model::io::import::deserializers::artifacts::bcf::v2_1::any::model_from_bcf;
 
-    fn fixture() -> BcfSnapshot {
+    async fn fixture() -> BcfSnapshot {
         BcfSnapshot {
             schema: crate::artifacts::bcf::STDIO_BCF_DOCUMENT_SCHEMA.into(),
             version: "2.1".into(),
@@ -139,7 +139,7 @@ mod tests {
     /// 🧪️ Required proof: bcf -> model -> bcf -> model round trip preserves everything `model`
     /// can represent (topic metadata, comments, referenced-guid relations, stub elements).
     #[test]
-    fn bcf_to_model_to_bcf_to_model_round_trips() {
+    async fn bcf_to_model_to_bcf_to_model_round_trips() {
         let s1 = model_from_bcf(&fixture());
         let bcf_x = bcf_from_model(&s1);
         let s2 = model_from_bcf(&bcf_x);
@@ -147,7 +147,7 @@ mod tests {
     }
 
     #[test]
-    fn non_topic_elements_and_spatial_are_dropped_not_forced() {
+    async fn non_topic_elements_and_spatial_are_dropped_not_forced() {
         let mut s1 = model_from_bcf(&fixture());
         // hand-add content BCF cannot represent
         s1.spatial.push(crate::artifacts::semio::standards::v1::subsets::model::schema::snapshot::SpatialNode {

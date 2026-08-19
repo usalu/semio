@@ -15,7 +15,7 @@ use serde_json::Value;
 /// 🧬️ Emits generation operations for the generate-mode document-mutating commands — reuses
 /// `flow::playbook::generation_operations`'s id-generation/values-seeding logic via a synthetic JSON args
 /// value built from the typed command fields.
-fn handle_generation(action: &str, args: Option<&Value>, projection: &Procedural3dSnapshot, cfg: &Procedural3dConfig) -> Emit<Procedural3dMutation, Procedural3dConfigMutation> {
+async fn handle_generation(action: &str, args: Option<&Value>, projection: &Procedural3dSnapshot, cfg: &Procedural3dConfig) -> Emit<Procedural3dMutation, Procedural3dConfigMutation> {
     let spec = flow_fixture_to_form_spec(&projection.fixture);
     let mut state = projection.generation.clone();
     state.selected_generation_id = cfg.selected_generation_id.clone();
@@ -55,7 +55,7 @@ fn handle_generation(action: &str, args: Option<&Value>, projection: &Procedural
 #[dsl(keyword = "add-generation")]
 pub struct AddGeneration {}
 
-pub fn handle(_payload: &AddGeneration, doc: &ArtifactView<'_, Procedural3dSnapshot>, cfg: &ConfigView<'_, Procedural3dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural3dMutation, Procedural3dConfigMutation>, Fault> {
+pub async fn handle(_payload: &AddGeneration, doc: &ArtifactView<'_, Procedural3dSnapshot>, cfg: &ConfigView<'_, Procedural3dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural3dMutation, Procedural3dConfigMutation>, Fault> {
     Ok(handle_generation("addGeneration", None, doc.snapshot, cfg.snapshot))
 }
 
@@ -69,21 +69,21 @@ mod tests {
     use semio_framework_plugin::testkit::assert_undo_redo_round_trip;
 
     #[test]
-    fn add_generation_records_an_undoable_generation_operation() {
+    async fn add_generation_records_an_undoable_generation_operation() {
         let _serial = crate::editor::procedural3d::test_support::lock();
         let mut app = app();
         assert_undo_redo_round_trip(&mut app, Procedural3dCommand::AddGeneration(AddGeneration {}), |app| app.snapshot().expect("snapshot").generation.generations.len(), 0, 1);
     }
 
     #[test]
-    fn generate_mode_renders_surfaces() {
+    async fn generate_mode_renders_surfaces() {
         let _serial = crate::editor::procedural3d::test_support::lock();
         let mut app = app();
         assert!(crate::editor::procedural3d::testkit::render(&mut app, crate::editor::procedural3d::modes::generate::windows::generations::PROCEDURAL_3D_PLAY_BODY_GENERATIONS).contains("addGeneration"));
     }
 
     #[test]
-    fn select_generation_does_not_mutate_the_document() {
+    async fn select_generation_does_not_mutate_the_document() {
         let _serial = crate::editor::procedural3d::test_support::lock();
         let mut app = app();
         dispatch(&mut app, Procedural3dCommand::AddGeneration(AddGeneration {}));

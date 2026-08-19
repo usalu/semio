@@ -8,7 +8,7 @@ pub const ARCHITECT_MODE_REVIEW: &str = "review";
 
 //#region 🔖️Definition
 /// 🏛️ Stitched into the app manifest by `crate::editor::architect::create_architect_app`.
-pub fn definition() -> ModeDefinition {
+pub async fn definition() -> ModeDefinition {
     ModeDefinition { id: ARCHITECT_MODE_REVIEW.into(), label: LocalizedLabel::native("Review", "Überprüfen"), icon_id: "search".into(), tools: Vec::new(), layout_id: None, commands: Vec::new() }
 }
 //#endregion 🔖️Definition
@@ -19,7 +19,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn the_mode_declares_no_layout_of_its_own() {
+    async fn the_mode_declares_no_layout_of_its_own() {
         let definition = definition();
         assert_eq!(definition.id, ARCHITECT_MODE_REVIEW);
         assert!(definition.layout_id.is_none());

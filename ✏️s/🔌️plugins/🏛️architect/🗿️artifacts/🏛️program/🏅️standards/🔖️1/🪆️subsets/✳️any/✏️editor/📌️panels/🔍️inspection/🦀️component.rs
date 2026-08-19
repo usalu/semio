@@ -12,7 +12,7 @@ pub const ARCHITECT_BODY_INSPECTION: &str = "architect.inspection";
 
 //#region 🔖️Definition
 /// 🏛️ Stitched into the app manifest by `crate::editor::architect::create_architect_app`.
-pub fn definition() -> PanelTabDefinition {
+pub async fn definition() -> PanelTabDefinition {
     PanelTabDefinition {
         kind: PanelTabKind::App(FRAMEWORK_PANEL_TAB_INSPECTION_ID.into()),
         label: LocalizedLabel::native(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, "Inspektion"),
@@ -29,7 +29,7 @@ pub fn definition() -> PanelTabDefinition {
 /// tell which entity is currently selected — it always shows the document-wide register summary
 /// now; the per-selected-entity typed inspector branches (element/stakeholder/adjacency/
 /// requirement/risk/generic, keyed off the deleted `cfg.selected_ids`) are gone with it.
-pub fn render(program: &ProgramSnapshot, cfg: &ArchitectConfig) -> UiNode {
+pub async fn render(program: &ProgramSnapshot, cfg: &ArchitectConfig) -> UiNode {
     ui_inspector_groups_to_tree(&[UiInspectorFieldGroup {
         id: "architect-inspection.summary".into(),
         label: Label::data("ProgramSnapshot"),
@@ -55,14 +55,14 @@ mod tests {
     use crate::artifacts::program::sample_plugin;
 
     #[test]
-    fn the_tab_is_the_framework_inspection_tab_bound_to_this_apps_body_key() {
+    async fn the_tab_is_the_framework_inspection_tab_bound_to_this_apps_body_key() {
         let definition = definition();
         assert_eq!(definition.body_key.as_deref(), Some(ARCHITECT_BODY_INSPECTION));
         assert!(matches!(definition.group, PanelGroup::Details));
     }
 
     #[test]
-    fn the_inspector_always_summarises_the_document_wide_register_counts() {
+    async fn the_inspector_always_summarises_the_document_wide_register_counts() {
         let program = sample_plugin();
         let cfg = ArchitectConfig::default();
         let json = serde_json::to_string(&render(&program, &cfg)).expect("json");
@@ -71,7 +71,7 @@ mod tests {
     }
 
     #[test]
-    fn the_summary_reflects_the_active_register() {
+    async fn the_summary_reflects_the_active_register() {
         let program = sample_plugin();
         let cfg = ArchitectConfig { active_register: "risks".into(), ..ArchitectConfig::default() };
         let json = serde_json::to_string(&render(&program, &cfg)).expect("json");

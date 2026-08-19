@@ -26,18 +26,18 @@ use crate::artifacts::step::engine::part21::{Part21Builder, Part21Header, Part21
 use crate::artifacts::step::schema::snapshot::StepSnapshot;
 
 //#region 🔖️ValueBuild
-fn s(text: &str) -> Part21Value {
+async fn s(text: &str) -> Part21Value {
     Part21Value::Str(text.to_string())
 }
-fn xyz(p: SemioPoint3) -> Part21Value {
+async fn xyz(p: SemioPoint3) -> Part21Value {
     Part21Value::List(vec![Part21Value::Real(p.x.into()), Part21Value::Real(p.y.into()), Part21Value::Real(p.z.into())])
 }
-fn bool_enum(b: bool) -> Part21Value {
+async fn bool_enum(b: bool) -> Part21Value {
     Part21Value::Enum(if b { "T".to_string() } else { "F".to_string() })
 }
 /// 🔁️ Inverse of the `📥️import` leaf's `expand_knots`: a flat knot vector -> `(multiplicities,
 /// distinct_knots)`, grouping consecutive equal (within float-epsilon) values into runs.
-fn compress_knots(flat: &[f64]) -> (Vec<i64>, Vec<f64>) {
+async fn compress_knots(flat: &[f64]) -> (Vec<i64>, Vec<f64>) {
     let mut mults: Vec<i64> = Vec::new();
     let mut uniq: Vec<f64> = Vec::new();
     for &k in flat {
@@ -55,21 +55,21 @@ fn compress_knots(flat: &[f64]) -> (Vec<i64>, Vec<f64>) {
 //#endregion 🔖️ValueBuild
 
 //#region 🔖️Build
-fn point_to_part21(b: &mut Part21Builder, p: SemioPoint3) -> u64 {
+async fn point_to_part21(b: &mut Part21Builder, p: SemioPoint3) -> u64 {
     b.alloc("CARTESIAN_POINT", vec![s(""), xyz(p)])
 }
-fn direction_to_part21(b: &mut Part21Builder, d: SemioPoint3) -> u64 {
+async fn direction_to_part21(b: &mut Part21Builder, d: SemioPoint3) -> u64 {
     b.alloc("DIRECTION", vec![s(""), xyz(d)])
 }
 /// 📐️ `AXIS2_PLACEMENT_3D` with the ref_direction (in-plane rotation) always `$` — see module
 /// doc comment.
-fn axis_placement_to_part21(b: &mut Part21Builder, origin: SemioPoint3, axis: SemioPoint3) -> u64 {
+async fn axis_placement_to_part21(b: &mut Part21Builder, origin: SemioPoint3, axis: SemioPoint3) -> u64 {
     let origin_id = point_to_part21(b, origin);
     let axis_id = direction_to_part21(b, axis);
     b.alloc("AXIS2_PLACEMENT_3D", vec![s(""), Part21Value::Ref(origin_id), Part21Value::Ref(axis_id), Part21Value::Unset])
 }
 
-fn curve_to_part21(b: &mut Part21Builder, curve: &BrepCurve) -> u64 {
+async fn curve_to_part21(b: &mut Part21Builder, curve: &BrepCurve) -> u64 {
     match curve {
         BrepCurve::Line { origin, direction } => {
             let point_id = point_to_part21(b, *origin);
@@ -110,7 +110,7 @@ fn curve_to_part21(b: &mut Part21Builder, curve: &BrepCurve) -> u64 {
     }
 }
 
-fn surface_to_part21(b: &mut Part21Builder, surface: &BrepSurface) -> u64 {
+async fn surface_to_part21(b: &mut Part21Builder, surface: &BrepSurface) -> u64 {
     match surface {
         BrepSurface::Plane { origin, normal } => {
             let pos_id = axis_placement_to_part21(b, *origin, *normal);
@@ -177,7 +177,7 @@ fn surface_to_part21(b: &mut Part21Builder, surface: &BrepSurface) -> u64 {
     }
 }
 
-fn build_part21(snapshot: &SemioBrepSnapshot) -> Result<crate::artifacts::step::engine::part21::Part21Document, String> {
+async fn build_part21(snapshot: &SemioBrepSnapshot) -> Result<crate::artifacts::step::engine::part21::Part21Document, String> {
     let mut b = Part21Builder::new();
 
     let mut vertex_ids: HashMap<&str, u64> = HashMap::new();
@@ -287,7 +287,7 @@ mod tests {
     /// Plane/Cylinder/Cone/Sphere/Torus/Nurbs surfaces) plus a face with an inner (hole) loop and
     /// a solid with a void shell — real-world-shaped coverage of the full AP214 vocabulary this
     /// bridge supports, not a minimal degenerate case.
-    fn full_vocabulary_snapshot() -> SemioBrepSnapshot {
+    async fn full_vocabulary_snapshot() -> SemioBrepSnapshot {
         let mut snap = SemioBrepSnapshot::default();
         snap.vertices = vec![
             BrepVertex { id: "v1".into(), point: SemioPoint3 { x: 0.0, y: 0.0, z: 0.0 } },
@@ -370,7 +370,7 @@ mod tests {
         snap
     }
 
-    fn assert_curve_matches(o: &BrepCurve, r: &BrepCurve) {
+    async fn assert_curve_matches(o: &BrepCurve, r: &BrepCurve) {
         match (o, r) {
             (BrepCurve::Line { origin: oo, direction: od }, BrepCurve::Line { origin: ro, direction: rd }) => {
                 assert_eq!(oo, ro);
@@ -397,7 +397,7 @@ mod tests {
         }
     }
 
-    fn assert_surface_matches(o: &BrepSurface, r: &BrepSurface) {
+    async fn assert_surface_matches(o: &BrepSurface, r: &BrepSurface) {
         match (o, r) {
             (BrepSurface::Plane { origin: oo, normal: on }, BrepSurface::Plane { origin: ro, normal: rn }) => {
                 assert_eq!(oo, ro);
@@ -442,10 +442,10 @@ mod tests {
     }
 
     #[test]
-    fn round_trips_full_curve_and_surface_vocabulary_through_step() {
+    async fn round_trips_full_curve_and_surface_vocabulary_through_step() {
         let original = full_vocabulary_snapshot();
         let step = semio_framework_plugin::resolve_ready(SemioBrepToStep::serialize(&original)).expect("serialize to step");
-        let reimported = SemioBrepFromStep::deserialize(&step).expect("deserialize back");
+        let reimported = semio_framework_plugin::resolve_ready(SemioBrepFromStep::deserialize(&step)).expect("deserialize back");
 
         assert_eq!(reimported.vertices.len(), original.vertices.len());
         assert_eq!(reimported.edges.len(), original.edges.len());
@@ -472,7 +472,7 @@ mod tests {
     }
 
     #[test]
-    fn dangling_reference_errors_rather_than_fabricating() {
+    async fn dangling_reference_errors_rather_than_fabricating() {
         let mut snap = SemioBrepSnapshot::default();
         snap.edges = vec![BrepEdge { id: "e1".into(), start_vertex: "nonexistent".into(), end_vertex: "also-nonexistent".into(), curve: BrepCurve::Line { origin: SemioPoint3::default(), direction: SemioPoint3 { x: 1.0, y: 0.0, z: 0.0 } } }];
         let result = semio_framework_plugin::resolve_ready(SemioBrepToStep::serialize(&snap));

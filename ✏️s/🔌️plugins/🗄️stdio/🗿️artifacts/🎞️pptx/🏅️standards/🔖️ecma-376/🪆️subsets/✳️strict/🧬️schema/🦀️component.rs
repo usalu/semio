@@ -28,28 +28,28 @@ pub mod derived_construction {
         type Mutation = PptxMutation;
         type Diff = PptxDiff;
 
-        fn empty() -> Self {
+        async fn empty() -> Self {
             Self { inner: PptxAnyBuilder::empty() }
         }
 
-        fn from_snapshot(snapshot: Self::Snapshot) -> Self {
+        async fn from_snapshot(snapshot: Self::Snapshot) -> Self {
             Self { inner: PptxAnyBuilder::from_snapshot(snapshot) }
         }
 
-        fn from_text(text: &str) -> Result<Self, store::TextError> {
+        async fn from_text(text: &str) -> Result<Self, store::TextError> {
             Ok(Self { inner: PptxAnyBuilder::from_text(text)? })
         }
 
-        fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
+        async fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
             Ok(Self { inner: PptxAnyBuilder::from_binary(bytes)? })
         }
 
-        fn mutate(self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
+        async fn mutate(self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let (inner, diff) = self.inner.mutate(mutation);
             (Self { inner }, diff)
         }
 
-        fn absorb(self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
+        async fn absorb(self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
             Ok(Self { inner: self.inner.absorb(diff)? })
         }
 
@@ -57,7 +57,7 @@ pub mod derived_construction {
         /// ISO/IEC 29500-1 Strict violation fails `build()` -- soft diagnostics (missing
         /// `conformance="strict"`, `mc:AlternateContent`) pass through as advisory `Diagnostic`s;
         /// the `Err` path is NOT taken for those, only hard ones block.
-        fn build(self) -> Result<Self::Snapshot, Vec<Diagnostic>> {
+        async fn build(self) -> Result<Self::Snapshot, Vec<Diagnostic>> {
             let snapshot = self.inner.build()?;
             let hard: Vec<Diagnostic> = check_strict_conformance(&snapshot).into_iter().filter(|d| matches!(d.severity, Severity::Error | Severity::Fatal)).collect();
             if hard.is_empty() {
@@ -81,7 +81,7 @@ pub mod derived_construction {
             "</p:presentation>",
         );
 
-        fn strict_snapshot() -> PptxSnapshot {
+        async fn strict_snapshot() -> PptxSnapshot {
             let mut opc = OpcPackage::empty();
             opc.content_types.set_default("rels", RELS_CONTENT_TYPE);
             opc.content_types.set_default("xml", "application/xml");
@@ -91,19 +91,19 @@ pub mod derived_construction {
         }
 
         #[test]
-        fn empty_builder_has_no_office_document_relationship_and_fails_build() {
+        async fn empty_builder_has_no_office_document_relationship_and_fails_build() {
             let err = PptxStrictBuilderConstruction::empty().build().expect_err("an empty package has no officeDocument relationship, must fail build()");
             assert!(err.iter().any(|d| d.code.0 == crate::artifacts::pptx::standards::v_ecma_376::subsets::strict::schema::CODE_MAIN_NS));
         }
 
         #[test]
-        fn conforming_strict_snapshot_builds_clean() {
+        async fn conforming_strict_snapshot_builds_clean() {
             let snapshot = PptxStrictBuilderConstruction::from_snapshot(strict_snapshot()).build().expect("conforming Strict snapshot must build");
             assert!(snapshot.opc.part_bytes("ppt/presentation.xml").is_some());
         }
 
         #[test]
-        fn hard_violation_injected_via_raw_mutate_still_fails_build() {
+        async fn hard_violation_injected_via_raw_mutate_still_fails_build() {
             let mut violating = strict_snapshot();
             violating.opc.set_part("ppt/slides/slide1.xml", "application/vnd.openxmlformats-officedocument.presentationml.slide+xml", b"<v:shape xmlns:v=\"urn:schemas-microsoft-com:vml\"/>".to_vec());
             let (mutated, _diff) = PptxStrictBuilderConstruction::from_snapshot(PptxSnapshot::default()).mutate(PptxMutation::SetSnapshot { snapshot: violating });
@@ -145,19 +145,19 @@ pub mod derived_analysis {
 
     /// 🧭️ Locates the root officeDocument part regardless of whether the package declares the
     /// Transitional or Strict officeDocument relationship type.
-    fn main_part_path(opc: &OpcPackage) -> Option<String> {
+    async fn main_part_path(opc: &OpcPackage) -> Option<String> {
         crate::artifacts::pptx::standards::v_ecma_376::subsets::any::io::resolve_office_document_relationship(opc)
     }
 
-    fn part_text<'a>(opc: &'a OpcPackage, path: &str) -> Option<&'a str> {
+    async fn part_text<'a>(opc: &'a OpcPackage, path: &str) -> Option<&'a str> {
         opc.part_bytes(path).and_then(|b| std::str::from_utf8(b).ok())
     }
 
-    fn hard(code: &'static str, message: String) -> Diagnostic {
+    async fn hard(code: &'static str, message: String) -> Diagnostic {
         Diagnostic { code: FaultCode::new(code), severity: Severity::Error, span: TextSpan::at(1, 1), message, expected: None, scope: FaultScope::default() }
     }
 
-    fn soft(code: &'static str, message: String) -> Diagnostic {
+    async fn soft(code: &'static str, message: String) -> Diagnostic {
         Diagnostic { code: FaultCode::new(code), severity: Severity::Warning, span: TextSpan::at(1, 1), message, expected: None, scope: FaultScope::default() }
     }
 
@@ -165,7 +165,7 @@ pub mod derived_analysis {
     /// `PptxSnapshot`. Shared single source of truth: `PptxStrictComposer::compose` hard-gates on
     /// this (pre-serialization, authoritative), `PptxStrictBuilder::build` hard-gates on this too,
     /// and the registered `SubsetValidator` re-runs it post-hoc against the wire payload.
-    pub fn check_strict_conformance(snapshot: &PptxSnapshot) -> Vec<Diagnostic> {
+    pub async fn check_strict_conformance(snapshot: &PptxSnapshot) -> Vec<Diagnostic> {
         let opc = &snapshot.opc;
         let mut out = Vec::new();
 
@@ -223,11 +223,11 @@ pub mod derived_analysis {
         type Parts = PptxParts;
         const DIALECT: Dialect = DIALECT;
 
-        fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
+        async fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
             PptxAnyAnalyzer::sniff(source)
         }
 
-        fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
+        async fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
             let inner = PptxAnyAnalyzer::analyze(sources);
             let mut diagnostics = inner.diagnostics.clone();
             let mut confidence = inner.confidence;
@@ -255,7 +255,7 @@ pub mod derived_analysis {
             "</p:presentation>",
         );
 
-        fn strict_snapshot() -> PptxSnapshot {
+        async fn strict_snapshot() -> PptxSnapshot {
             let mut opc = OpcPackage::empty();
             opc.content_types.set_default("rels", RELS_CONTENT_TYPE);
             opc.content_types.set_default("xml", "application/xml");
@@ -265,13 +265,13 @@ pub mod derived_analysis {
         }
 
         #[test]
-        fn conforming_strict_snapshot_reports_nothing() {
+        async fn conforming_strict_snapshot_reports_nothing() {
             let diagnostics = check_strict_conformance(&strict_snapshot());
             assert!(diagnostics.is_empty(), "got {diagnostics:?}");
         }
 
         #[test]
-        fn transitional_main_ns_on_root_part_is_hard() {
+        async fn transitional_main_ns_on_root_part_is_hard() {
             let mut snapshot = strict_snapshot();
             let transitional_xml = STRICT_PRESENTATION_XML.replace(STRICT_MAIN_NS, TRANSITIONAL_MAIN_NS);
             snapshot.opc.set_part("ppt/presentation.xml", "application/vnd.openxmlformats-officedocument.presentationml.presentation.main+xml", transitional_xml.into_bytes());
@@ -280,7 +280,7 @@ pub mod derived_analysis {
         }
 
         #[test]
-        fn transitional_namespace_anywhere_in_package_is_hard() {
+        async fn transitional_namespace_anywhere_in_package_is_hard() {
             let mut snapshot = strict_snapshot();
             snapshot.opc.set_part("ppt/slides/slide1.xml", "application/vnd.openxmlformats-officedocument.presentationml.slide+xml", format!("<p:sld xmlns:p=\"{TRANSITIONAL_MAIN_NS}\"/>").into_bytes());
             let diagnostics = check_strict_conformance(&snapshot);
@@ -288,7 +288,7 @@ pub mod derived_analysis {
         }
 
         #[test]
-        fn vml_markup_is_hard() {
+        async fn vml_markup_is_hard() {
             let mut snapshot = strict_snapshot();
             snapshot.opc.set_part("ppt/slides/slide1.xml", "application/vnd.openxmlformats-officedocument.presentationml.slide+xml", format!("<v:shape xmlns:v=\"{VML_NS}\"/>").into_bytes());
             let diagnostics = check_strict_conformance(&snapshot);
@@ -296,7 +296,7 @@ pub mod derived_analysis {
         }
 
         #[test]
-        fn transitional_relationship_base_is_hard() {
+        async fn transitional_relationship_base_is_hard() {
             let mut snapshot = strict_snapshot();
             snapshot.opc.set_part("ppt/slides/slide1.xml", "application/vnd.openxmlformats-officedocument.presentationml.slide+xml", b"<p:sld/>".to_vec());
             snapshot.opc.add_relationship("ppt/presentation.xml", "rId2", REL_TYPE_OFFICE_DOCUMENT, "slides/slide1.xml");
@@ -305,7 +305,7 @@ pub mod derived_analysis {
         }
 
         #[test]
-        fn missing_conformance_attribute_is_soft() {
+        async fn missing_conformance_attribute_is_soft() {
             let mut snapshot = strict_snapshot();
             let no_conformance = STRICT_PRESENTATION_XML.replace(" conformance=\"strict\"", "");
             snapshot.opc.set_part("ppt/presentation.xml", "application/vnd.openxmlformats-officedocument.presentationml.presentation.main+xml", no_conformance.into_bytes());
@@ -315,7 +315,7 @@ pub mod derived_analysis {
         }
 
         #[test]
-        fn alternate_content_markup_is_soft() {
+        async fn alternate_content_markup_is_soft() {
             let mut snapshot = strict_snapshot();
             snapshot.opc.set_part("ppt/slides/slide1.xml", "application/vnd.openxmlformats-officedocument.presentationml.slide+xml", b"<mc:AlternateContent/>".to_vec());
             let diagnostics = check_strict_conformance(&snapshot);
@@ -324,7 +324,7 @@ pub mod derived_analysis {
         }
 
         #[test]
-        fn missing_office_document_relationship_is_hard() {
+        async fn missing_office_document_relationship_is_hard() {
             let snapshot = PptxSnapshot::default();
             let diagnostics = check_strict_conformance(&snapshot);
             assert!(diagnostics.iter().any(|d| d.code.0 == CODE_MAIN_NS && d.severity == Severity::Error), "got {diagnostics:?}");

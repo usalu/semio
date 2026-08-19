@@ -15,7 +15,7 @@ pub struct AddTile {
     pub crop: Option<FigureTileFrame>,
 }
 
-pub fn handle(payload: &AddTile, doc: &ArtifactView<'_, PresentSnapshot>, _cfg: &ConfigView<'_, PresentConfig>, _ctx: &mut PresentDispatchCtx) -> Result<Emit<PresentMutation, PresentConfigMutation>, Fault> {
+pub async fn handle(payload: &AddTile, doc: &ArtifactView<'_, PresentSnapshot>, _cfg: &ConfigView<'_, PresentConfig>, _ctx: &mut PresentDispatchCtx) -> Result<Emit<PresentMutation, PresentConfigMutation>, Fault> {
     let deck = doc.snapshot;
     let id = new_tile_id("tile");
     let crop = payload.crop.clone().unwrap_or(FigureTileFrame { x: 0.1, y: 0.1, width: 0.2, height: 0.2 });
@@ -35,12 +35,12 @@ mod tests {
     use crate::editor::animate::PresentCommand;
     use semio_framework_plugin::testkit::meta;
 
-    fn seed_2x2(app: &mut crate::editor::animate::testkit::PresentApp) {
+    async fn seed_2x2(app: &mut crate::editor::animate::testkit::PresentApp) {
         dispatch(app, PresentCommand::SeedGrid(crate::editor::animate::commands::seed_grid::SeedGrid { rows: 2, columns: 2 }));
     }
 
     #[test]
-    fn add_delete_and_rename_tile_round_trip_through_operations() {
+    async fn add_delete_and_rename_tile_round_trip_through_operations() {
         let mut app = present_app();
         app.dispatch_typed(PresentCommand::AddTile(AddTile { crop: None }), &meta("local")).expect("add tile");
         let tile_id = crate::artifacts::present::present_working_scene(&app.snapshot().expect("projection")).1[0].id.clone();
@@ -51,7 +51,7 @@ mod tests {
     }
 
     #[test]
-    fn patch_tile_crop_clamps_and_is_reversible() {
+    async fn patch_tile_crop_clamps_and_is_reversible() {
         use semio_framework_plugin::PluginApp;
         let mut app = present_app();
         app.dispatch_typed(PresentCommand::AddTile(AddTile { crop: None }), &meta("local")).expect("add tile");
@@ -67,7 +67,7 @@ mod tests {
     /// downstream crate can populate a genuine `InteractionView`, see
     /// `🎮️commands/🀄️delete-selection`'s own tests for the equivalent single-tile case).
     #[test]
-    fn delete_selection_removes_only_the_selected_tile() {
+    async fn delete_selection_removes_only_the_selected_tile() {
         use semio_framework_plugin::{InteractionTarget, PluginApp, INTERACTION_SELECT_ACTION_ID};
         use crate::editor::animate::{PRESENT_INTERACTION_DOMAIN, PRESENT_INTERACTION_GRANULARITY};
         let mut app = present_app_with_registry();
@@ -80,7 +80,7 @@ mod tests {
     }
 
     #[test]
-    fn delete_tile_with_unknown_id_is_a_no_op() {
+    async fn delete_tile_with_unknown_id_is_a_no_op() {
         let mut app = present_app();
         seed_2x2(&mut app);
         app.dispatch_typed(PresentCommand::DeleteTile(delete_tile::DeleteTile { id: "does-not-exist".into() }), &meta("local")).expect("delete missing");
@@ -88,7 +88,7 @@ mod tests {
     }
 
     #[test]
-    fn rename_tiles_with_blank_value_leaves_name_unchanged() {
+    async fn rename_tiles_with_blank_value_leaves_name_unchanged() {
         let mut app = present_app();
         app.dispatch_typed(PresentCommand::AddTile(AddTile { crop: None }), &meta("local")).expect("add tile");
         let tile_id = crate::artifacts::present::present_working_scene(&app.snapshot().expect("projection")).1[0].id.clone();
@@ -98,7 +98,7 @@ mod tests {
     }
 
     #[test]
-    fn rename_tiles_with_unknown_ids_is_a_no_op() {
+    async fn rename_tiles_with_unknown_ids_is_a_no_op() {
         let mut app = present_app();
         app.dispatch_typed(PresentCommand::AddTile(AddTile { crop: None }), &meta("local")).expect("add tile");
         app.dispatch_typed(PresentCommand::RenameTiles(rename_tiles::RenameTiles { ids: vec!["nope".into()], value: "Hero".into() }), &meta("local")).expect("rename unknown");
@@ -106,7 +106,7 @@ mod tests {
     }
 
     #[test]
-    fn patch_tile_crops_covers_all_fields_across_multiple_tiles() {
+    async fn patch_tile_crops_covers_all_fields_across_multiple_tiles() {
         let mut app = present_app();
         seed_2x2(&mut app);
         let ids: Vec<String> = crate::artifacts::present::present_working_scene(&app.snapshot().expect("projection")).1.iter().map(|tile| tile.id.clone()).collect();
@@ -120,14 +120,14 @@ mod tests {
     }
 
     #[test]
-    fn patch_tile_crops_targeting_no_existing_tile_is_a_no_op() {
+    async fn patch_tile_crops_targeting_no_existing_tile_is_a_no_op() {
         let mut app = present_app();
         app.dispatch_typed(PresentCommand::PatchTileCrops(patch_tile_crops::PatchTileCrops { ids: vec!["ghost".into()], field: "width".into(), value: 0.4 }), &meta("local")).expect("patch ghost");
         assert!(crate::artifacts::present::present_working_scene(&app.snapshot().expect("projection")).1.is_empty());
     }
 
     #[test]
-    fn app_manifest_declares_expected_operations() {
+    async fn app_manifest_declares_expected_operations() {
         use semio_framework_plugin::ActionKind;
         let definition = crate::editor::animate::create_animate_present_app();
         let operation_ids: Vec<&str> = definition.window_kinds.iter().flat_map(|window| window.actions.iter()).filter(|action| matches!(action.kind, ActionKind::Mutation)).map(|action| action.id.as_str()).collect();

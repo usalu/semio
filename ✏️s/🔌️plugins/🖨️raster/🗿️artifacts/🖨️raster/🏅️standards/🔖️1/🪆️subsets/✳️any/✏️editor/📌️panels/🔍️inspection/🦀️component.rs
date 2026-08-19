@@ -10,7 +10,7 @@ pub const RASTER_PLAY_BODY_PROPERTIES: &str = "raster.play.properties";
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
-pub fn definition() -> PanelTabDefinition {
+pub async fn definition() -> PanelTabDefinition {
     PanelTabDefinition { kind: PanelTabKind::App(FRAMEWORK_PANEL_TAB_INSPECTION_ID.into()), label: LocalizedLabel::native(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, "Inspektion"), group: PanelGroup::Details, body_key: Some(RASTER_PLAY_BODY_PROPERTIES.into()), children: Vec::new() }
 }
 //#endregion 🔖️Definition
@@ -21,7 +21,7 @@ pub fn definition() -> PanelTabDefinition {
 /// framework-owned `InteractionState` now, and `ArtifactEditor::render` is not threaded an
 /// `InteractionView` this wave — dropped rather than shown stale (matches the acceptance-bar
 /// precedent in lowpoly's inspection panel), always falling back to the schema+brush summary.
-pub fn render(document: &RasterDocument, runtime: &RasterConfig, labels: &RasterPlayLabels) -> UiNode {
+pub async fn render(document: &RasterDocument, runtime: &RasterConfig, labels: &RasterPlayLabels) -> UiNode {
     ui_stack_vertical(vec![ui_text(Label::data(format!("{}: {}", labels.schema_prefix.as_str(), document.schema))), ui_text(Label::data(format!("{}: {} @ {}", labels.brush_prefix.as_str(), runtime.brush_size, runtime.brush_opacity)))])
 }
 //#endregion 🔖️Render

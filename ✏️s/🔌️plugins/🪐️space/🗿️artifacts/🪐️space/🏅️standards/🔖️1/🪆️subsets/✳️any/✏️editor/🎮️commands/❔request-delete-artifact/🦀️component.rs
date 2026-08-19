@@ -17,7 +17,7 @@ pub struct RequestDeleteArtifact {
     pub id: String,
 }
 
-pub fn handle(payload: &RequestDeleteArtifact, doc: &ArtifactView<'_, SSpaceSnapshot>, _cfg: &ConfigView<'_, SpaceIndexConfig>) -> Result<Emit<SSpaceMutation, SpaceIndexConfigMutation>, Fault> {
+pub async fn handle(payload: &RequestDeleteArtifact, doc: &ArtifactView<'_, SSpaceSnapshot>, _cfg: &ConfigView<'_, SpaceIndexConfig>) -> Result<Emit<SSpaceMutation, SpaceIndexConfigMutation>, Fault> {
     let row = doc.snapshot.artifacts.iter().find(|row| row.id == payload.id).ok_or_else(|| Fault::new(FaultOrigin::App, FaultCode::new("s.space.mutation.target-missing"), format!("artifact `{}` not found", payload.id)))?;
     Ok(Emit::effect(Effect::OpenDialog {req: semio_framework_plugin::RequestId(128),  dialog_id: "deleteArtifact".into(), args: semio_framework::optional_json_to_dsl(Some(json!({ "id": row.id, "name": row.name }))) }))
 }
@@ -31,7 +31,7 @@ mod tests {
     
 
     #[test]
-    fn request_delete_opens_the_confirm_dialog_without_mutating() {
+    async fn request_delete_opens_the_confirm_dialog_without_mutating() {
         let mut app = testkit::new_app();
         app.dispatch_typed(SpaceIndexCommand::CreateArtifact(create_artifact::CreateArtifact { name: "First".into(), kind_id: "draw".into(), now_ms: 1, actor: "user:1".into() }), &semio_framework_plugin::testkit::meta("local")).expect("create artifact");
         let id = app.snapshot().unwrap().artifacts[0].id.clone();
@@ -50,7 +50,7 @@ mod tests {
     }
 
     #[test]
-    fn request_delete_of_a_missing_row_faults() {
+    async fn request_delete_of_a_missing_row_faults() {
         let mut app = testkit::new_app();
         let error = app.dispatch_typed(SpaceIndexCommand::RequestDeleteArtifact(RequestDeleteArtifact { id: "ghost".into() }), &semio_framework_plugin::testkit::meta("local")).expect_err("missing row must fault");
         assert_eq!(error.code.0, "s.space.mutation.target-missing");

@@ -23,19 +23,19 @@ pub struct TsvInference {
 }
 
 impl protocol::Inference<TsvSnapshot> for TsvInference {
-    fn infer(snapshot: &TsvSnapshot) -> Self {
+    async fn infer(snapshot: &TsvSnapshot) -> Self {
         Self { outline: TsvOutline::compute(snapshot) }
     }
 }
 
 impl protocol::InferenceSpec<TsvSnapshot> for TsvInference {
-    fn inference_schema_id() -> &'static str {
+    async fn inference_schema_id() -> &'static str {
         "s.stdio.tsv.inference"
     }
-    fn schema_version() -> u32 {
+    async fn schema_version() -> u32 {
         1
     }
-    fn fields() -> &'static [protocol::InferenceFieldSpec] {
+    async fn fields() -> &'static [protocol::InferenceFieldSpec] {
         &[protocol::InferenceFieldSpec { id: "s.stdio.tsv.inference.outline", reads: &["records"] }]
     }
 }
@@ -51,7 +51,7 @@ impl ArtifactInferrer for crate::artifacts::tsv::standards::iana::subsets::any::
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.stdio.tsv.inference`'s facet leaves into the OS-wide inference catalog — call
 /// once at plugin init, alongside `tsv_artifact_schema_descriptor`'s registration.
-pub fn tsv_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
+pub async fn tsv_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
     schema::ArtifactInferenceDescriptor {
         id: "s.stdio.tsv.inference",
         inference: schema::FacetLeaves {
@@ -72,13 +72,13 @@ mod tests {
     use protocol::Inference;
 
     #[test]
-    fn inference_determinism_law() {
+    async fn inference_determinism_law() {
         let snapshot = TsvSnapshot::default();
         assert_eq!(TsvInference::infer(&snapshot), TsvInference::infer(&snapshot));
     }
 
     #[test]
-    fn inference_default_law() {
+    async fn inference_default_law() {
         assert_eq!(TsvInference::infer(&TsvSnapshot::default()), TsvInference::default());
     }
 }

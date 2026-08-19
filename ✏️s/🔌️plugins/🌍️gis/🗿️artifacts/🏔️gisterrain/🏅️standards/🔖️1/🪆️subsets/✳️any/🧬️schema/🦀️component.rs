@@ -28,7 +28,7 @@ pub struct GisTerrainArtifact {
 
 //#region 🔖️Conversions
 impl Default for GisTerrainArtifact {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self {
             exaggeration: 0.0,
             imported_features_json: String::new(),
@@ -42,7 +42,7 @@ impl Default for GisTerrainArtifact {
 impl GisTerrainArtifact {
     /// 📸️ Persisted subset. `mesh` is always re-derived here (never carried verbatim off `self`) so
     /// it can never drift from what `(exaggeration, imported_features_json)` actually determine.
-    pub fn to_snapshot(&self) -> GisTerrainSnapshot {
+    pub async fn to_snapshot(&self) -> GisTerrainSnapshot {
         GisTerrainSnapshot {
             exaggeration: self.exaggeration,
             imported_features_json: self.imported_features_json.clone(),
@@ -51,7 +51,7 @@ impl GisTerrainArtifact {
     }
 
     /// 🧬️ Builds a full artifact from a snapshot, leaving UI fields at defaults.
-    pub fn from_snapshot(snapshot: GisTerrainSnapshot) -> Self {
+    pub async fn from_snapshot(snapshot: GisTerrainSnapshot) -> Self {
         Self {
             exaggeration: snapshot.exaggeration,
             imported_features_json: snapshot.imported_features_json,
@@ -61,7 +61,7 @@ impl GisTerrainArtifact {
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
-    pub fn set_snapshot(&mut self, snapshot: GisTerrainSnapshot) {
+    pub async fn set_snapshot(&mut self, snapshot: GisTerrainSnapshot) {
         self.exaggeration = snapshot.exaggeration;
         self.imported_features_json = snapshot.imported_features_json;
         self.mesh = snapshot.mesh;
@@ -71,7 +71,7 @@ impl GisTerrainArtifact {
 
 //#region 🔖️Descriptor
 /// 🧬️ Descriptor for `s.gis.gisterrain` — twenty handcrafted schema leaves.
-pub fn gisterrain_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
+pub async fn gisterrain_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
     schema::ArtifactSchemaDescriptor {
         id: "s.gis.gisterrain",
         artifact: schema::FacetLeaves {
@@ -120,15 +120,15 @@ pub mod derived_construction {
         type Snapshot = GisTerrainSnapshot;
         type Mutation = GisTerrainMutation;
         type Diff = GisTerrainDiff;
-        fn empty() -> Self { Self { snapshot: GisTerrainSnapshot::default(), diagnostics: Vec::new() } }
-        fn from_snapshot(snapshot: Self::Snapshot) -> Self { Self { snapshot, diagnostics: Vec::new() } }
-        fn from_text(text: &str) -> Result<Self, store::TextError> {
+        async fn empty() -> Self { Self { snapshot: GisTerrainSnapshot::default(), diagnostics: Vec::new() } }
+        async fn from_snapshot(snapshot: Self::Snapshot) -> Self { Self { snapshot, diagnostics: Vec::new() } }
+        async fn from_text(text: &str) -> Result<Self, store::TextError> {
             Ok(Self::from_snapshot(<GisTerrainSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
-        fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
+        async fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
             Ok(Self::from_snapshot(<GisTerrainSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
         }
-        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
+        async fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let outcome = <Self::Mutation as protocol::Mutation<Self::Snapshot>>::diff(&mutation, &self.snapshot);
             match <Self::Diff as protocol::MutationDiff<Self::Snapshot>>::apply(outcome.diff(), &self.snapshot) {
                 Ok(snapshot) => self.snapshot = snapshot,
@@ -140,7 +140,7 @@ pub mod derived_construction {
             }
             (self, outcome)
         }
-        fn absorb(
+        async fn absorb(
             mut self,
             diff: Self::Diff,
         ) -> protocol::MutationApplyResult<Self> {
@@ -148,7 +148,7 @@ pub mod derived_construction {
             self.snapshot = snapshot;
             Ok(self)
         }
-        fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
+        async fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
             if self.diagnostics.is_empty() { Ok(self.snapshot) } else { Err(self.diagnostics) }
         }
     }
@@ -172,11 +172,11 @@ pub mod derived_analysis {
         type Parts = GisTerrainParts;
         const DIALECT: Dialect = Dialect { artifact_kind: "s.gisterrain", standard: StandardId("1"), subset: SubsetId("*") };
 
-        fn sniff(_source: &AnalyzeSource<'_>) -> IoConfidence {
+        async fn sniff(_source: &AnalyzeSource<'_>) -> IoConfidence {
             IoConfidence::Medium
         }
 
-        fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
+        async fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
             let mut parts = GisTerrainParts::default();
             let mut diagnostics = Vec::new();
             let mut confidence = IoConfidence::High;
@@ -222,7 +222,7 @@ semio_framework_plugin::derive_artifact_facets!(
 /// 🧭️ Relocated from the artifact's `⚙️engine` (ticket
 /// 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES): pure document helpers over
 /// `GisTerrainSnapshot`, no app-state dependency — an artifact must never depend on an app.
-pub fn empty_gis_terrain_snapshot() -> GisTerrainSnapshot {
+pub async fn empty_gis_terrain_snapshot() -> GisTerrainSnapshot {
     let exaggeration = 1.0;
     let imported_features_json = String::new();
     let mesh = Some(gis_terrain_mesh_child_handle(&gis_terrain_mesh_content_key(exaggeration, &imported_features_json)));
@@ -232,7 +232,7 @@ pub fn empty_gis_terrain_snapshot() -> GisTerrainSnapshot {
 /// 🗺️ The default terrain document, seeded from the bundled reuse example's `gisterrain
 /// exaggeration=...` header (see `crate::artifacts::gisterrain::GisTerrainSnapshot`'s
 /// derive-generated `.gisterrain` DSL).
-pub fn default_terrain_document() -> GisTerrainSnapshot {
+pub async fn default_terrain_document() -> GisTerrainSnapshot {
     <GisTerrainSnapshot as store::ArtifactDsl>::parse_dsl(REUSE_TERRAIN_EXAMPLE_TEXT).unwrap_or_else(|_| empty_gis_terrain_snapshot())
 }
 //#endregion 🔖️DocumentHelpers
@@ -280,7 +280,7 @@ pub struct TerrainDescriptorJson {
     pub exaggeration: f64,
 }
 
-fn default_exaggeration() -> f64 {
+async fn default_exaggeration() -> f64 {
     1.0
 }
 
@@ -301,7 +301,7 @@ struct TerrainSceneStyleJson<'a> {
 /// 🏔️ Builds the `World3dScene.terrain_json` payload for a descriptor — the one place gis needs to
 /// reach into `framework_surface::terrain` beyond the wasm session itself (for the generic engine's
 /// tile zoom bounds).
-pub fn build_terrain_scene_json(descriptor: &TerrainDescriptorJson) -> String {
+pub async fn build_terrain_scene_json(descriptor: &TerrainDescriptorJson) -> String {
     let style = TerrainSceneStyleJson {
         tile_url_template: GIS_3D_TERRAIN_TILE_URL_TEMPLATE,
         project_origin_lon: descriptor.project_origin.lon,
@@ -321,7 +321,7 @@ mod relocated_engine_tests {
     use super::*;
 
     #[test]
-    fn build_terrain_scene_json_roundtrips_descriptor_fields() {
+    async fn build_terrain_scene_json_roundtrips_descriptor_fields() {
         let descriptor = TerrainDescriptorJson {
             schema: "gis.terrain".to_string(),
             project_origin: TerrainProjectOrigin { lon: 9.7382, lat: 52.3759 },
@@ -336,7 +336,7 @@ mod relocated_engine_tests {
     }
 
     #[test]
-    fn terrain_descriptor_json_defaults_exaggeration_and_positions_when_absent() {
+    async fn terrain_descriptor_json_defaults_exaggeration_and_positions_when_absent() {
         let json = r#"{"schema":"gis.terrain","projectOrigin":{"lon":1.0,"lat":2.0}}"#;
         let descriptor: TerrainDescriptorJson = serde_json::from_str(json).expect("valid descriptor json");
         assert_eq!(descriptor.exaggeration, 1.0);
@@ -344,7 +344,7 @@ mod relocated_engine_tests {
     }
 
     #[test]
-    fn terrain_position_data_omits_none_fields_when_serialized() {
+    async fn terrain_position_data_omits_none_fields_when_serialized() {
         let position = TerrainPositionData { id: "p2".to_string(), lon: 1.0, lat: 2.0, label: None, icon: Some("pin".to_string()) };
         let json = serde_json::to_string(&position).expect("serializes");
         assert!(!json.contains("label"));
@@ -354,7 +354,7 @@ mod relocated_engine_tests {
     /// 🧭️ Relocated from the artifact's `⚙️engine` tests alongside `default_terrain_document`/
     /// `empty_gis_terrain_snapshot` (`DocumentHelpers` above).
     #[test]
-    fn default_terrain_document_seeds_the_fixture_exaggeration() {
+    async fn default_terrain_document_seeds_the_fixture_exaggeration() {
         assert_eq!(default_terrain_document().exaggeration, 1.5);
         assert_eq!(empty_gis_terrain_snapshot().exaggeration, 1.0);
     }

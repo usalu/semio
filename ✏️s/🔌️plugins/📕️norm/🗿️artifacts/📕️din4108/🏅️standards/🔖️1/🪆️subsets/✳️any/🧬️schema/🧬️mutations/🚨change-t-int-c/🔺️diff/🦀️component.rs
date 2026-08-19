@@ -4,7 +4,7 @@ use super::mutation::ChangeTIntC;
 use crate::artifacts::din4108::{Din4108Diff, Din4108Snapshot};
 
 //#region 🔖️Diff
-pub fn diff(payload: &ChangeTIntC, base: &Din4108Snapshot) -> protocol::MutationOutcome<Din4108Diff> {
+pub async fn diff(payload: &ChangeTIntC, base: &Din4108Snapshot) -> protocol::MutationOutcome<Din4108Diff> {
     if !payload.new_t_int_c.is_finite() {
         return protocol::MutationOutcome::fatal("mutation.invariant", "T int c must be a finite number.", Vec::<String>::new());
     }

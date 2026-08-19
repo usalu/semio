@@ -15,12 +15,12 @@ pub struct TiledModelBuilder {
 }
 
 impl TiledModelBuilder {
-    pub fn new() -> Self {
+    pub async fn new() -> Self {
         Self { builder: ModelBuilder::new(), tile_pattern: Vec::new() }
     }
 
     /// 🧱️ Registers a new tile with the given sampling weight.
-    pub fn tile(&mut self, weight: f64) -> TileId {
+    pub async fn tile(&mut self, weight: f64) -> TileId {
         let p = self.builder.add_pattern(weight);
         let id = TileId::from_index(self.tile_pattern.len());
         self.tile_pattern.push(p);
@@ -28,34 +28,34 @@ impl TiledModelBuilder {
         id
     }
 
-    pub fn tag(&mut self, tile: TileId, name: &str) -> u32 {
+    pub async fn tag(&mut self, tile: TileId, name: &str) -> u32 {
         self.builder.add_tag(self.tile_pattern[tile.index()], name)
     }
 
-    pub fn relation(&mut self, name: &str) -> RelationId {
+    pub async fn relation(&mut self, name: &str) -> RelationId {
         self.builder.add_relation(name)
     }
 
-    pub fn set_relation_inverse(&mut self, a: RelationId, b: RelationId) {
+    pub async fn set_relation_inverse(&mut self, a: RelationId, b: RelationId) {
         self.builder.set_relation_inverse(a, b);
     }
 
-    pub fn allow(&mut self, r: RelationId, a: TileId, b: TileId) {
+    pub async fn allow(&mut self, r: RelationId, a: TileId, b: TileId) {
         self.builder.allow(r, self.tile_pattern[a.index()], self.tile_pattern[b.index()]);
     }
 
     /// 🧱️ `deny` always wins over `allow`, regardless of call order.
-    pub fn deny(&mut self, r: RelationId, a: TileId, b: TileId) {
+    pub async fn deny(&mut self, r: RelationId, a: TileId, b: TileId) {
         self.builder.deny(r, self.tile_pattern[a.index()], self.tile_pattern[b.index()]);
     }
 
-    pub fn allow_mirrored(&mut self, r: RelationId, a: TileId, b: TileId) {
+    pub async fn allow_mirrored(&mut self, r: RelationId, a: TileId, b: TileId) {
         self.builder.allow_mirrored(r, self.tile_pattern[a.index()], self.tile_pattern[b.index()]);
     }
 
     /// 🧱️ Bulk allow from a predicate over every pair in `tiles`, compiled eagerly right now (the
     /// predicate itself is never stored — only its resolved allow pairs survive into the model).
-    pub fn allow_where(&mut self, r: RelationId, tiles: &[TileId], pred: impl Fn(TileId, TileId) -> bool) {
+    pub async fn allow_where(&mut self, r: RelationId, tiles: &[TileId], pred: impl Fn(TileId, TileId) -> bool) {
         for &a in tiles {
             for &b in tiles {
                 if pred(a, b) {
@@ -65,15 +65,15 @@ impl TiledModelBuilder {
         }
     }
 
-    pub fn pattern_of(&self, tile: TileId) -> crate::wfc_engine::ids::PatternId {
+    pub async fn pattern_of(&self, tile: TileId) -> crate::wfc_engine::ids::PatternId {
         self.tile_pattern[tile.index()]
     }
 
-    pub fn tile_count(&self) -> usize {
+    pub async fn tile_count(&self) -> usize {
         self.tile_pattern.len()
     }
 
-    pub fn compile(self) -> Result<CompiledModel, ModelError> {
+    pub async fn compile(self) -> Result<CompiledModel, ModelError> {
         self.builder.compile()
     }
 }
@@ -85,7 +85,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn tile_to_pattern_is_one_to_one() {
+    async fn tile_to_pattern_is_one_to_one() {
         let mut b = TiledModelBuilder::new();
         let grass = b.tile(3.0);
         let water = b.tile(1.0);
@@ -94,7 +94,7 @@ mod tests {
     }
 
     #[test]
-    fn allow_and_deny_compile_correctly() {
+    async fn allow_and_deny_compile_correctly() {
         let mut b = TiledModelBuilder::new();
         let a = b.tile(1.0);
         let c = b.tile(1.0);
@@ -110,7 +110,7 @@ mod tests {
     }
 
     #[test]
-    fn allow_where_compiles_predicate_eagerly() {
+    async fn allow_where_compiles_predicate_eagerly() {
         let mut b = TiledModelBuilder::new();
         let tiles: Vec<TileId> = (0..4).map(|_| b.tile(1.0)).collect();
         let r = b.relation("le");
@@ -126,7 +126,7 @@ mod tests {
     }
 
     #[test]
-    fn tags_round_trip_through_tiles() {
+    async fn tags_round_trip_through_tiles() {
         let mut b = TiledModelBuilder::new();
         let t = b.tile(1.0);
         let id = b.tag(t, "solid");

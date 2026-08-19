@@ -7,7 +7,7 @@ use crate::artifacts::iso16757::{Iso16757Mutation, Iso16757Snapshot};
 use super::mutation::DeletePropertyDefinition;
 
 //#region 🔖️Inverse
-pub fn inverse(payload: &DeletePropertyDefinition, base: &Iso16757Snapshot) -> Vec<Iso16757Mutation> {
+pub async fn inverse(payload: &DeletePropertyDefinition, base: &Iso16757Snapshot) -> Vec<Iso16757Mutation> {
     let Some(position) = base.catalogue.property_definitions.iter().position(|definition| definition.id == payload.id) else {
         return Vec::new();
     };

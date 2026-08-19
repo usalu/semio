@@ -14,23 +14,23 @@ pub struct DeleteSlot {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn delete_slot(id: String) -> AssemblyMutation {
+pub async fn delete_slot(id: String) -> AssemblyMutation {
     AssemblyMutation::DeleteSlot(DeleteSlot { id })
 }
 
 impl MutationKind<AssemblySnapshot, AssemblyMutation> for DeleteSlot {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "delete", entity: "slot", kind: "delete-slot", record: "DeletedSlot" };
 
-    fn diff(&self, base: &AssemblySnapshot) -> protocol::MutationOutcome<AssemblyDiff> {
+    async fn diff(&self, base: &AssemblySnapshot) -> protocol::MutationOutcome<AssemblyDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &AssemblySnapshot) -> Vec<AssemblyMutation> {
+    async fn inverse(&self, base: &AssemblySnapshot) -> Vec<AssemblyMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         format!("Delete slot \"{}\"", self.id)
     }
-    fn target(&self) -> Vec<String> {
+    async fn target(&self) -> Vec<String> {
         vec![self.id.clone()]
     }
 }

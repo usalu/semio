@@ -33,28 +33,28 @@ pub struct PointCloud {
 }
 
 /// 🔁️ Widens a stored `f32` normal to `f64` for arithmetic.
-fn to_f64_3(n: [f32; 3]) -> [f64; 3] {
+async fn to_f64_3(n: [f32; 3]) -> [f64; 3] {
     [f64::from(n[0]), f64::from(n[1]), f64::from(n[2])]
 }
 
 impl PointCloud {
     /// ☁️ Empty point cloud with no optional attributes.
-    pub fn new() -> Self {
+    pub async fn new() -> Self {
         Self::default()
     }
 
     /// ☁️ Point cloud built from bare positions, with every optional attribute unset.
-    pub fn from_positions(positions: Vec<[f64; 3]>) -> Self {
+    pub async fn from_positions(positions: Vec<[f64; 3]>) -> Self {
         Self { positions, ..Self::default() }
     }
 
     /// 🔢️ Number of points.
-    pub fn len(&self) -> usize {
+    pub async fn len(&self) -> usize {
         self.positions.len()
     }
 
     /// 🔢️ Whether the cloud holds no points.
-    pub fn is_empty(&self) -> bool {
+    pub async fn is_empty(&self) -> bool {
         self.positions.is_empty()
     }
 }
@@ -79,14 +79,14 @@ pub struct DepthMap {
 
 impl DepthMap {
     /// 🌊️ Zero-filled depth map (every pixel invalid) of the given size.
-    pub fn new(width: u32, height: u32) -> Self {
+    pub async fn new(width: u32, height: u32) -> Self {
         let n = (width as usize) * (height as usize);
         Self { width, height, depth: vec![0.0; n], normal: vec![[0.0; 3]; n], confidence: vec![0.0; n] }
     }
 
     /// 🔍️ Valid depth at `(x, y)`, or `None` if out of bounds or the pixel carries the invalid
     /// sentinel (`<= 0` or non-finite).
-    pub fn get(&self, x: u32, y: u32) -> Option<f32> {
+    pub async fn get(&self, x: u32, y: u32) -> Option<f32> {
         if x >= self.width || y >= self.height {
             return None;
         }
@@ -95,12 +95,12 @@ impl DepthMap {
     }
 }
 
-fn depthmap_index(width: u32, x: u32, y: u32) -> usize {
+async fn depthmap_index(width: u32, x: u32, y: u32) -> usize {
     (y * width + x) as usize
 }
 
 /// 🚫️ Resets one pixel to the invalid sentinel across all three buffers.
-fn depthmap_invalidate(map: &mut DepthMap, idx: usize) {
+async fn depthmap_invalidate(map: &mut DepthMap, idx: usize) {
     map.depth[idx] = 0.0;
     map.normal[idx] = [0.0; 3];
     map.confidence[idx] = 0.0;
@@ -115,11 +115,11 @@ fn depthmap_invalidate(map: &mut DepthMap, idx: usize) {
 struct SplitMix64(u64);
 
 impl SplitMix64 {
-    fn new(seed: u64) -> Self {
+    async fn new(seed: u64) -> Self {
         Self(seed)
     }
 
-    fn next_u64(&mut self) -> u64 {
+    async fn next_u64(&mut self) -> u64 {
         self.0 = self.0.wrapping_add(0x9E37_79B9_7F4A_7C15);
         let mut z = self.0;
         z = (z ^ (z >> 30)).wrapping_mul(0xBF58_476D_1CE4_E5B9);
@@ -128,12 +128,12 @@ impl SplitMix64 {
     }
 
     /// 🎲️ Uniform value in `[0, 1)`.
-    fn next_unit(&mut self) -> f32 {
+    async fn next_unit(&mut self) -> f32 {
         (self.next_u64() >> 40) as f32 / (1u64 << 24) as f32
     }
 
     /// 🎲️ Uniform value in `[lo, hi)`.
-    fn next_range(&mut self, lo: f32, hi: f32) -> f32 {
+    async fn next_range(&mut self, lo: f32, hi: f32) -> f32 {
         lo + (hi - lo) * self.next_unit()
     }
 }
@@ -153,13 +153,13 @@ struct RefContext<'a> {
     to_world: &'a remodel_camera::Se3,
 }
 
-fn dot3(a: [f64; 3], b: [f64; 3]) -> f64 {
+async fn dot3(a: [f64; 3], b: [f64; 3]) -> f64 {
     a[0] * b[0] + a[1] * b[1] + a[2] * b[2]
 }
 
 /// 🌍️ The per-pixel plane induced by a depth/normal hypothesis at `center`: the plane passes
 /// through the reference camera-frame point at that depth along the pixel's ray.
-fn plane_from_depth_normal(intr: &remodel_camera::Intrinsics, center: (u32, u32), depth: f32, normal: [f32; 3]) -> Plane {
+async fn plane_from_depth_normal(intr: &remodel_camera::Intrinsics, center: (u32, u32), depth: f32, normal: [f32; 3]) -> Plane {
     let center_ray = intr.unproject_ray([f64::from(center.0), f64::from(center.1)]);
     let d = f64::from(depth);
     let point = [center_ray[0] * d, center_ray[1] * d, center_ray[2] * d];
@@ -173,7 +173,7 @@ fn plane_from_depth_normal(intr: &remodel_camera::Intrinsics, center: (u32, u32)
 /// via an explicit ray/plane intersection instead of a precomputed 3x3 matrix — simpler to semio_compose_rs
 /// from `remodel_camera`'s existing `project`/`unproject_ray`/`act` primitives, at the cost of
 /// redoing the intersection for every neighbor pixel instead of amortizing it into one matrix.
-fn warp_point_to_src(ref_ctx: &RefContext<'_>, src_pose: &remodel_camera::CameraPose, src_intr: &remodel_camera::Intrinsics, plane: &Plane, px: f64, py: f64) -> Option<[f64; 2]> {
+async fn warp_point_to_src(ref_ctx: &RefContext<'_>, src_pose: &remodel_camera::CameraPose, src_intr: &remodel_camera::Intrinsics, plane: &Plane, px: f64, py: f64) -> Option<[f64; 2]> {
     let ray = ref_ctx.intr.unproject_ray([px, py]);
     let denom = dot3(plane.normal, ray);
     if denom.abs() < 1e-9 {
@@ -192,7 +192,7 @@ fn warp_point_to_src(ref_ctx: &RefContext<'_>, src_pose: &remodel_camera::Camera
 /// 🧩️ Warps the reference patch centered at `center` into one source view under `plane`, sampling
 /// bilinearly; `None` as soon as any offset fails to warp (behind the camera, parallel to the ray,
 /// or projects behind the source camera).
-fn warp_patch_to_src(ref_ctx: &RefContext<'_>, src_view: &(remodel_image::ImageGray, remodel_camera::CameraPose, remodel_camera::Intrinsics), center: (u32, u32), radius: i32, plane: &Plane) -> Option<remodel_image::Patch> {
+async fn warp_patch_to_src(ref_ctx: &RefContext<'_>, src_view: &(remodel_image::ImageGray, remodel_camera::CameraPose, remodel_camera::Intrinsics), center: (u32, u32), radius: i32, plane: &Plane) -> Option<remodel_image::Patch> {
     let (src_img, src_pose, src_intr) = src_view;
     let side = (2 * radius + 1) as usize;
     let mut data = Vec::with_capacity(side * side);
@@ -214,7 +214,7 @@ fn warp_patch_to_src(ref_ctx: &RefContext<'_>, src_view: &(remodel_image::ImageG
 /// only the strongest-agreeing subset per pixel rather than averaging in occluded/low-texture source
 /// views that would otherwise drag the score down. `-1.0` (the worst possible ZNCC) when no source
 /// view produced a valid warp.
-fn patch_zncc_cost(ref_ctx: &RefContext<'_>, src_views: &[(remodel_image::ImageGray, remodel_camera::CameraPose, remodel_camera::Intrinsics)], center: (u32, u32), radius: i32, plane: &Plane, best_k: usize) -> f32 {
+async fn patch_zncc_cost(ref_ctx: &RefContext<'_>, src_views: &[(remodel_image::ImageGray, remodel_camera::CameraPose, remodel_camera::Intrinsics)], center: (u32, u32), radius: i32, plane: &Plane, best_k: usize) -> f32 {
     let ref_patch = remodel_image::extract_patch(ref_ctx.img, center.0 as f32, center.1 as f32, radius as u32, 0.0);
     let mut scores: Vec<f32> = src_views.iter().filter_map(|src_view| warp_patch_to_src(ref_ctx, src_view, center, radius, plane).map(|src_patch| remodel_image::zncc(&ref_patch, &src_patch))).collect();
     if scores.is_empty() {
@@ -226,14 +226,14 @@ fn patch_zncc_cost(ref_ctx: &RefContext<'_>, src_views: &[(remodel_image::ImageG
 }
 
 /// 🎯️ [`patch_zncc_cost`] for a per-pixel depth/normal hypothesis, via [`plane_from_depth_normal`].
-fn multi_view_cost(ref_ctx: &RefContext<'_>, src_views: &[(remodel_image::ImageGray, remodel_camera::CameraPose, remodel_camera::Intrinsics)], center: (u32, u32), radius: i32, depth: f32, normal: [f32; 3], best_k: usize) -> f32 {
+async fn multi_view_cost(ref_ctx: &RefContext<'_>, src_views: &[(remodel_image::ImageGray, remodel_camera::CameraPose, remodel_camera::Intrinsics)], center: (u32, u32), radius: i32, depth: f32, normal: [f32; 3], best_k: usize) -> f32 {
     let plane = plane_from_depth_normal(ref_ctx.intr, center, depth, normal);
     patch_zncc_cost(ref_ctx, src_views, center, radius, &plane, best_k)
 }
 
 /// 🧭️ Random unit normal in the hemisphere facing the reference camera (`z < 0`, since camera-frame
 /// points in front of the camera have `z > 0`).
-fn random_hemisphere_normal(rng: &mut SplitMix64) -> [f32; 3] {
+async fn random_hemisphere_normal(rng: &mut SplitMix64) -> [f32; 3] {
     loop {
         let x = rng.next_range(-1.0, 1.0);
         let y = rng.next_range(-1.0, 1.0);
@@ -246,7 +246,7 @@ fn random_hemisphere_normal(rng: &mut SplitMix64) -> [f32; 3] {
 }
 
 /// 🧭️ Small random perturbation of a unit normal, renormalized and re-clamped to face the camera.
-fn perturb_normal(rng: &mut SplitMix64, n: [f32; 3], magnitude: f32) -> [f32; 3] {
+async fn perturb_normal(rng: &mut SplitMix64, n: [f32; 3], magnitude: f32) -> [f32; 3] {
     let perturbed = [n[0] + rng.next_range(-magnitude, magnitude), n[1] + rng.next_range(-magnitude, magnitude), (n[2] + rng.next_range(-magnitude, magnitude)).min(-0.05)];
     let len = (perturbed[0] * perturbed[0] + perturbed[1] * perturbed[1] + perturbed[2] * perturbed[2]).sqrt();
     if len < 1e-6 {
@@ -256,7 +256,7 @@ fn perturb_normal(rng: &mut SplitMix64, n: [f32; 3], magnitude: f32) -> [f32; 3]
 }
 
 /// 🧭️ 4-connected in-bounds neighbors of `(x, y)`.
-fn neighbor_offsets(x: u32, y: u32, width: u32, height: u32) -> Vec<(u32, u32)> {
+async fn neighbor_offsets(x: u32, y: u32, width: u32, height: u32) -> Vec<(u32, u32)> {
     let mut out = Vec::with_capacity(4);
     if x > 0 {
         out.push((x - 1, y));
@@ -287,7 +287,7 @@ pub struct PatchMatchConfig {
 }
 
 impl Default for PatchMatchConfig {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self { window_radius: 3, iterations: 4, depth_min: 0.1, depth_max: 100.0, seed: 0x5EED_1234_ABCD_EF01, best_k: 3 }
     }
 }
@@ -301,7 +301,7 @@ impl Default for PatchMatchConfig {
 /// with a search radius that shrinks geometrically with the iteration index. Confidence is the ZNCC
 /// cost rescaled from `[-1, 1]` to `[0, 1]`; pixels for which no source view ever produced a valid
 /// warp are left at the invalid sentinel.
-pub fn patchmatch_mvs(
+pub async fn patchmatch_mvs(
     ref_img: &remodel_image::ImageGray,
     ref_cam: &(remodel_camera::CameraPose, remodel_camera::Intrinsics),
     src_views: &[(remodel_image::ImageGray, remodel_camera::CameraPose, remodel_camera::Intrinsics)],
@@ -393,7 +393,7 @@ pub fn patchmatch_mvs(
 /// average ZNCC across every source view at that depth, and keeps the best-scoring depth per pixel.
 /// Recomputes the reference patch for every plane hypothesis rather than caching it once per pixel,
 /// which keeps the implementation a straightforward nested loop at the cost of redundant work.
-pub fn plane_sweep_depth(
+pub async fn plane_sweep_depth(
     ref_img: &remodel_image::ImageGray,
     ref_cam: &(remodel_camera::CameraPose, remodel_camera::Intrinsics),
     src_views: &[(remodel_image::ImageGray, remodel_camera::CameraPose, remodel_camera::Intrinsics)],
@@ -441,7 +441,7 @@ pub fn plane_sweep_depth(
 /// unprojects each valid `depth_ref` pixel to world space, reprojects into the other view, and
 /// invalidates whenever the two camera-frame depths differ by more than `max_diff` (nearest-pixel
 /// lookup into `depth_other`, no subpixel interpolation).
-pub fn left_right_check(depth_ref: &DepthMap, depth_other: &DepthMap, ref_cam: &(remodel_camera::CameraPose, remodel_camera::Intrinsics), other_cam: &(remodel_camera::CameraPose, remodel_camera::Intrinsics), max_diff: f32) -> DepthMap {
+pub async fn left_right_check(depth_ref: &DepthMap, depth_other: &DepthMap, ref_cam: &(remodel_camera::CameraPose, remodel_camera::Intrinsics), other_cam: &(remodel_camera::CameraPose, remodel_camera::Intrinsics), max_diff: f32) -> DepthMap {
     let mut out = depth_ref.clone();
     let ref_to_world = ref_cam.0 .0.inverse();
     for y in 0..depth_ref.height {
@@ -475,7 +475,7 @@ pub fn left_right_check(depth_ref: &DepthMap, depth_other: &DepthMap, ref_cam: &
 /// `depth_tolerance` of each 4-neighbor step, i.e. a flood fill rather than a global tolerance):
 /// components smaller than `min_component_size` are invalidated. Iterative flood fill via an
 /// explicit stack, so it stays safe under wasm32's default (small) stack.
-pub fn speckle_filter(depth: &DepthMap, min_component_size: u32, depth_tolerance: f32) -> DepthMap {
+pub async fn speckle_filter(depth: &DepthMap, min_component_size: u32, depth_tolerance: f32) -> DepthMap {
     let mut out = depth.clone();
     let (w, h) = (depth.width, depth.height);
     let n = (w as usize) * (h as usize);
@@ -522,7 +522,7 @@ pub fn speckle_filter(depth: &DepthMap, min_component_size: u32, depth_tolerance
 /// 🩹️ Fills invalid pixels from the median depth of valid pixels in a `(2 window + 1)²` window;
 /// pixels with no valid neighbor stay invalid. Normal/confidence at filled pixels are left at the
 /// invalid-sentinel zero fill, since a median depth alone gives no basis for either.
-pub fn median_fill(depth: &DepthMap, window: u32) -> DepthMap {
+pub async fn median_fill(depth: &DepthMap, window: u32) -> DepthMap {
     let mut out = depth.clone();
     let (w, h) = (depth.width, depth.height);
     let r = i64::from(window);
@@ -562,7 +562,7 @@ pub fn median_fill(depth: &DepthMap, window: u32) -> DepthMap {
 /// margin flags an ambiguous match (low texture, repetitive pattern) independent of the accepted
 /// hypothesis's own ZNCC score. Margin is clamped to `[0, 2]` (the maximum possible ZNCC spread) and
 /// rescaled to `[0, 1]`.
-pub fn margin_confidence(
+pub async fn margin_confidence(
     depth: &DepthMap,
     ref_img: &remodel_image::ImageGray,
     ref_cam: &(remodel_camera::CameraPose, remodel_camera::Intrinsics),
@@ -604,14 +604,14 @@ pub struct FusionConfig {
 }
 
 impl Default for FusionConfig {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self { max_relative_depth_diff: 0.01, max_normal_angle_deg: 30.0, min_consistent_views: 2 }
     }
 }
 
 /// 🧭️ Whether two (not necessarily unit or consistently oriented) normals agree within
 /// `cos_thresh`; either normal being zero-length (no data) is treated as "no disagreement".
-fn normal_angle_ok(n0: [f32; 3], n1: [f32; 3], cos_thresh: f32) -> bool {
+async fn normal_angle_ok(n0: [f32; 3], n1: [f32; 3], cos_thresh: f32) -> bool {
     let len0 = (n0[0] * n0[0] + n0[1] * n0[1] + n0[2] * n0[2]).sqrt();
     let len1 = (n1[0] * n1[0] + n1[1] * n1[1] + n1[2] * n1[2]).sqrt();
     if len0 < 1e-6 || len1 < 1e-6 {
@@ -628,7 +628,7 @@ fn normal_angle_ok(n0: [f32; 3], n1: [f32; 3], cos_thresh: f32) -> bool {
 /// against `cfg.max_normal_angle_deg`). Points reaching `cfg.min_consistent_views` agreeing views
 /// (counting the originating view) are kept, positioned at the average of every agreeing view's own
 /// unprojection of that surface point.
-pub fn fuse_depth_maps(views: &[(remodel_camera::CameraPose, remodel_camera::Intrinsics)], depth_maps: &[DepthMap], cfg: &FusionConfig) -> PointCloud {
+pub async fn fuse_depth_maps(views: &[(remodel_camera::CameraPose, remodel_camera::Intrinsics)], depth_maps: &[DepthMap], cfg: &FusionConfig) -> PointCloud {
     let to_worlds: Vec<remodel_camera::Se3> = views.iter().map(|(pose, _)| pose.0.inverse()).collect();
     let cos_thresh = cfg.max_normal_angle_deg.to_radians().cos();
     let mut positions = Vec::new();
@@ -709,11 +709,11 @@ struct TsdfBlock {
 }
 
 impl TsdfBlock {
-    fn new() -> Self {
+    async fn new() -> Self {
         Self { sdf: vec![0.0; TSDF_BLOCK_VOXELS], weight: vec![0.0; TSDF_BLOCK_VOXELS] }
     }
 
-    fn local_index(local: [i32; 3]) -> usize {
+    async fn local_index(local: [i32; 3]) -> usize {
         ((local[2] * TSDF_BLOCK_DIM + local[1]) * TSDF_BLOCK_DIM + local[0]) as usize
     }
 }
@@ -729,7 +729,7 @@ pub struct TsdfVolume {
 }
 
 /// 🧊️ Splits a global voxel coordinate into its block coordinate and within-block local coordinate.
-fn tsdf_block_and_local(global: [i32; 3]) -> ([i32; 3], [i32; 3]) {
+async fn tsdf_block_and_local(global: [i32; 3]) -> ([i32; 3], [i32; 3]) {
     let block = global.map(|c| c.div_euclid(TSDF_BLOCK_DIM));
     let local = global.map(|c| c.rem_euclid(TSDF_BLOCK_DIM));
     (block, local)
@@ -738,15 +738,15 @@ fn tsdf_block_and_local(global: [i32; 3]) -> ([i32; 3], [i32; 3]) {
 impl TsdfVolume {
     /// 🧊️ Empty volume with the given voxel edge length and truncation distance (both in world
     /// units).
-    pub fn new(voxel_size: f64, truncation: f64) -> Self {
+    pub async fn new(voxel_size: f64, truncation: f64) -> Self {
         Self { voxel_size, truncation, blocks: HashMap::new() }
     }
 
-    fn voxel_coord(&self, p: [f64; 3]) -> [i32; 3] {
+    async fn voxel_coord(&self, p: [f64; 3]) -> [i32; 3] {
         p.map(|c| (c / self.voxel_size).floor() as i32)
     }
 
-    fn integrate_point(&mut self, p: [f64; 3], sdf: f32, weight: f32) {
+    async fn integrate_point(&mut self, p: [f64; 3], sdf: f32, weight: f32) {
         let (block_coord, local) = tsdf_block_and_local(self.voxel_coord(p));
         let block = self.blocks.entry(block_coord).or_insert_with(TsdfBlock::new);
         let li = TsdfBlock::local_index(local);
@@ -767,7 +767,7 @@ impl TsdfVolume {
     /// grazing observation still contributes a little rather than being dropped outright) — both the
     /// PatchMatch-sourced normal and the camera ray are already expressed in the same reference-
     /// camera frame (see [`patchmatch_mvs`]), so no world transform is needed for the angle itself.
-    pub fn integrate(&mut self, depth: &DepthMap, cam: &(remodel_camera::CameraPose, remodel_camera::Intrinsics), weight_by_grazing_angle: bool) {
+    pub async fn integrate(&mut self, depth: &DepthMap, cam: &(remodel_camera::CameraPose, remodel_camera::Intrinsics), weight_by_grazing_angle: bool) {
         if self.voxel_size <= 0.0 || self.truncation <= 0.0 {
             return;
         }
@@ -821,7 +821,7 @@ impl TsdfVolume {
     /// touched first — it is a pure hash lookup keyed by block coordinate, with no block-local state
     /// that integration order could leave inconsistent. `None` distinguishes a voxel that was never
     /// observed/allocated (unknown) from a genuine zero signed distance.
-    pub fn sample(&self, ix: i32, iy: i32, iz: i32) -> Option<(f64, f64)> {
+    pub async fn sample(&self, ix: i32, iy: i32, iz: i32) -> Option<(f64, f64)> {
         let (block_coord, local) = tsdf_block_and_local([ix, iy, iz]);
         let block = self.blocks.get(&block_coord)?;
         let li = TsdfBlock::local_index(local);
@@ -830,13 +830,13 @@ impl TsdfVolume {
 
     /// 🔍️ [`Self::sample`] at the voxel containing world-space point `p`, keeping just the signed
     /// distance.
-    pub fn sample_tsdf(&self, p: [f64; 3]) -> Option<f64> {
+    pub async fn sample_tsdf(&self, p: [f64; 3]) -> Option<f64> {
         let v = self.voxel_coord(p);
         self.sample(v[0], v[1], v[2]).map(|(sdf, _)| sdf)
     }
 
     /// 🔍️ [`Self::sample`] at the voxel containing world-space point `p`, keeping just the weight.
-    pub fn sample_weight(&self, p: [f64; 3]) -> Option<f64> {
+    pub async fn sample_weight(&self, p: [f64; 3]) -> Option<f64> {
         let v = self.voxel_coord(p);
         self.sample(v[0], v[1], v[2]).map(|(_, w)| w)
     }
@@ -846,7 +846,7 @@ impl TsdfVolume {
 // #region 🔖️CloudOperations
 /// ✂️ Builds a new [[`PointCloud`]] keeping only the given (order-preserved) indices, across every
 /// present optional attribute.
-fn pick_indexed<T: Copy>(v: &[T], indices: &[usize]) -> Vec<T> {
+async fn pick_indexed<T: Copy>(v: &[T], indices: &[usize]) -> Vec<T> {
     if v.is_empty() {
         Vec::new()
     } else {
@@ -854,7 +854,7 @@ fn pick_indexed<T: Copy>(v: &[T], indices: &[usize]) -> Vec<T> {
     }
 }
 
-fn keep_indices(cloud: &PointCloud, indices: &[usize]) -> PointCloud {
+async fn keep_indices(cloud: &PointCloud, indices: &[usize]) -> PointCloud {
     PointCloud {
         positions: pick_indexed(&cloud.positions, indices),
         normals: pick_indexed(&cloud.normals, indices),
@@ -870,7 +870,7 @@ fn keep_indices(cloud: &PointCloud, indices: &[usize]) -> PointCloud {
 /// [`estimate_normals`] (normal = eigenvector of the smallest eigenvalue) and
 /// [`classify_building_vegetation`] (planarity/roughness from the eigenvalues themselves). `None`
 /// when fewer than 3 neighbors are found or the eigendecomposition fails to converge.
-fn local_pca(positions: &[[f64; 3]], tree: &KdTree<3>, i: usize, k: usize) -> Option<(Vec<f64>, MatD)> {
+async fn local_pca(positions: &[[f64; 3]], tree: &KdTree<3>, i: usize, k: usize) -> Option<(Vec<f64>, MatD)> {
     let p = positions[i];
     let neighbors = tree.k_nearest(&p, k.max(3));
     if neighbors.len() < 3 {
@@ -902,7 +902,7 @@ fn local_pca(positions: &[[f64; 3]], tree: &KdTree<3>, i: usize, k: usize) -> Op
 /// 🧭️ Per-point normal estimation via local PCA ([`local_pca`]): the eigenvector of the smallest
 /// eigenvalue is the local surface normal, oriented to face `viewpoint`. Points with fewer than 3
 /// neighbors (degenerate covariance) get the zero vector.
-pub fn estimate_normals(cloud: &mut PointCloud, k: usize, viewpoint: [f64; 3]) {
+pub async fn estimate_normals(cloud: &mut PointCloud, k: usize, viewpoint: [f64; 3]) {
     let n = cloud.positions.len();
     if n == 0 {
         return;
@@ -933,7 +933,7 @@ pub fn estimate_normals(cloud: &mut PointCloud, k: usize, viewpoint: [f64; 3]) {
 /// 🧊️ Voxel-grid downsample: buckets points into cells of edge length `cell`, averaging
 /// position/normal (renormalized)/color/confidence per occupied cell. Output is sorted by cell key
 /// for determinism, and never exceeds the input point count.
-pub fn voxel_downsample(cloud: &PointCloud, cell: f64) -> PointCloud {
+pub async fn voxel_downsample(cloud: &PointCloud, cell: f64) -> PointCloud {
     if cell <= 0.0 || cloud.is_empty() {
         return PointCloud::new();
     }
@@ -1004,7 +1004,7 @@ pub fn voxel_downsample(cloud: &PointCloud, cell: f64) -> PointCloud {
 
 /// 🚮️ Removes points whose mean distance to their `k` nearest neighbors exceeds `global_mean +
 /// std_ratio * global_std` over the whole cloud.
-pub fn statistical_outlier_removal(cloud: &PointCloud, k: usize, std_ratio: f64) -> PointCloud {
+pub async fn statistical_outlier_removal(cloud: &PointCloud, k: usize, std_ratio: f64) -> PointCloud {
     let n = cloud.positions.len();
     if n == 0 || k == 0 {
         return cloud.clone();
@@ -1031,7 +1031,7 @@ pub fn statistical_outlier_removal(cloud: &PointCloud, k: usize, std_ratio: f64)
 }
 
 /// 🚮️ Removes points with fewer than `min_neighbors` other points within `radius`.
-pub fn radius_outlier_removal(cloud: &PointCloud, radius: f64, min_neighbors: usize) -> PointCloud {
+pub async fn radius_outlier_removal(cloud: &PointCloud, radius: f64, min_neighbors: usize) -> PointCloud {
     let n = cloud.positions.len();
     if n == 0 {
         return cloud.clone();
@@ -1045,7 +1045,7 @@ pub fn radius_outlier_removal(cloud: &PointCloud, radius: f64, min_neighbors: us
 // #region 🔖️Classify
 /// 🏔️ Morphological min (`erosion = true`) or max (`erosion = false`) filter over a sparse
 /// `(cell_x, cell_y) -> z` grid, with a `(2 window + 1)²` neighborhood.
-fn morphological_pass(grid: &HashMap<(i64, i64), f64>, window: i64, erosion: bool) -> HashMap<(i64, i64), f64> {
+async fn morphological_pass(grid: &HashMap<(i64, i64), f64>, window: i64, erosion: bool) -> HashMap<(i64, i64), f64> {
     let mut out = HashMap::new();
     for &(kx, ky) in grid.keys() {
         let mut best: Option<f64> = None;
@@ -1078,7 +1078,7 @@ fn morphological_pass(grid: &HashMap<(i64, i64), f64>, window: i64, erosion: boo
 /// [`PointClass::Unclassified`] — this function does not attempt the Building/Vegetation split
 /// itself (see [`classify_building_vegetation`] to further split the remainder, or
 /// [`classify_points`] for both stages composed).
-pub fn classify_ground_pmf(cloud: &PointCloud, cell: f64, max_slope: f64, max_iterations: u32) -> Vec<PointClass> {
+pub async fn classify_ground_pmf(cloud: &PointCloud, cell: f64, max_slope: f64, max_iterations: u32) -> Vec<PointClass> {
     let n = cloud.positions.len();
     let mut labels = vec![PointClass::Unclassified; n];
     if n == 0 || cell <= 0.0 {
@@ -1132,7 +1132,7 @@ pub fn classify_ground_pmf(cloud: &PointCloud, cell: f64, max_slope: f64, max_it
 /// [`PointClass::Unclassified`] in `labels` (leaves [`PointClass::Ground`] and any other label
 /// untouched); points with fewer than 3 neighbors or a degenerate (near-zero) largest eigenvalue are
 /// left as they were.
-pub fn classify_building_vegetation(cloud: &PointCloud, labels: &mut [PointClass], k: usize, planarity_threshold: f64) {
+pub async fn classify_building_vegetation(cloud: &PointCloud, labels: &mut [PointClass], k: usize, planarity_threshold: f64) {
     let n = cloud.positions.len();
     if n == 0 || labels.len() != n {
         return;
@@ -1155,7 +1155,7 @@ pub fn classify_building_vegetation(cloud: &PointCloud, labels: &mut [PointClass
 /// 🏔️🏢️🌳️ Full point classification pipeline: [`classify_ground_pmf`] first, then
 /// [`classify_building_vegetation`] splits the remaining [`PointClass::Unclassified`] points into
 /// [`PointClass::Building`] vs [`PointClass::Vegetation`] via local planarity/roughness.
-pub fn classify_points(cloud: &PointCloud, cell: f64, max_slope: f64, max_iterations: u32, k: usize, planarity_threshold: f64) -> Vec<PointClass> {
+pub async fn classify_points(cloud: &PointCloud, cell: f64, max_slope: f64, max_iterations: u32, k: usize, planarity_threshold: f64) -> Vec<PointClass> {
     let mut labels = classify_ground_pmf(cloud, cell, max_slope, max_iterations);
     classify_building_vegetation(cloud, &mut labels, k, planarity_threshold);
     labels
@@ -1170,7 +1170,7 @@ pub struct PlaneSegment {
     pub centroid: [f64; 3],
 }
 
-fn normal_angle_ok_f64(n0: [f64; 3], n1: [f64; 3], cos_thresh: f64) -> bool {
+async fn normal_angle_ok_f64(n0: [f64; 3], n1: [f64; 3], cos_thresh: f64) -> bool {
     let len0 = (n0[0] * n0[0] + n0[1] * n0[1] + n0[2] * n0[2]).sqrt();
     let len1 = (n1[0] * n1[0] + n1[1] * n1[1] + n1[2] * n1[2]).sqrt();
     if len0 < 1e-12 || len1 < 1e-12 {
@@ -1187,7 +1187,7 @@ fn normal_angle_ok_f64(n0: [f64; 3], n1: [f64; 3], cos_thresh: f64) -> bool {
 /// are dropped; the rest are returned largest-first. A tractable simplification of full
 /// building/vegetation separation: it groups by local normal agreement alone, with no planarity
 /// (residual-to-plane) check, so a smoothly curved surface can still form one "segment".
-pub fn region_grow_planes(cloud: &PointCloud, angle_tol_deg: f64, min_segment_size: usize) -> Vec<PlaneSegment> {
+pub async fn region_grow_planes(cloud: &PointCloud, angle_tol_deg: f64, min_segment_size: usize) -> Vec<PlaneSegment> {
     if cloud.normals.is_empty() {
         return Vec::new();
     }
@@ -1255,7 +1255,7 @@ pub fn region_grow_planes(cloud: &PointCloud, angle_tol_deg: f64, min_segment_si
 /// 📏️ Per-point nearest-neighbor Euclidean distance from every point of `a` to the closest point of
 /// `b`, via a [`KdTree<3>`] built over `b`; `f64::INFINITY` for every point of `a` when `b` is
 /// empty.
-pub fn cloud_to_cloud_distance(a: &PointCloud, b: &PointCloud) -> Vec<f64> {
+pub async fn cloud_to_cloud_distance(a: &PointCloud, b: &PointCloud) -> Vec<f64> {
     if b.is_empty() {
         return vec![f64::INFINITY; a.len()];
     }
@@ -1272,7 +1272,7 @@ pub fn cloud_to_cloud_distance(a: &PointCloud, b: &PointCloud) -> Vec<f64> {
 /// re-estimates a local normal from the cylinder's own points nor propagates a registration-error /
 /// roughness-based precision (`LODetection`) alongside the distance — this returns the raw signed
 /// mean-projection difference only.
-pub fn m3c2_distance(a: &PointCloud, b: &PointCloud, normal_scale: f64, cyl_radius: f64) -> Vec<Option<f64>> {
+pub async fn m3c2_distance(a: &PointCloud, b: &PointCloud, normal_scale: f64, cyl_radius: f64) -> Vec<Option<f64>> {
     if a.normals.is_empty() {
         return vec![None; a.len()];
     }
@@ -1337,16 +1337,16 @@ pub fn m3c2_distance(a: &PointCloud, b: &PointCloud, normal_scale: f64, cyl_radi
 mod tests {
     use super::*;
 
-    fn lcg_next(state: &mut u64) -> f64 {
+    async fn lcg_next(state: &mut u64) -> f64 {
         *state = state.wrapping_mul(6364136223846793005).wrapping_add(1442695040888963407);
         (*state >> 11) as f64 / (1u64 << 53) as f64
     }
 
-    fn intrinsics_for(width: u32, height: u32) -> remodel_camera::Intrinsics {
+    async fn intrinsics_for(width: u32, height: u32) -> remodel_camera::Intrinsics {
         remodel_camera::Intrinsics { fx: 3.0 * f64::from(width), fy: 3.0 * f64::from(width), cx: f64::from(width) / 2.0, cy: f64::from(height) / 2.0, skew: 0.0, distortion: remodel_camera::Distortion::None }
     }
 
-    fn translated_pose(tx: f64, ty: f64, tz: f64) -> remodel_camera::CameraPose {
+    async fn translated_pose(tx: f64, ty: f64, tz: f64) -> remodel_camera::CameraPose {
         remodel_camera::CameraPose(remodel_camera::Se3::exp([tx, ty, tz, 0.0, 0.0, 0.0]))
     }
 
@@ -1355,7 +1355,7 @@ mod tests {
     /// biases the recovered depth; hashing a pseudo-random intensity per cell keeps comparable
     /// spatial scale (so it stays well-resolved by the pixel footprint) while breaking that
     /// periodicity.
-    fn noise_texture(x: f64, y: f64) -> f32 {
+    async fn noise_texture(x: f64, y: f64) -> f32 {
         let cx = (x / 0.05).floor() as i64;
         let cy = (y / 0.05).floor() as i64;
         let h = (cx.wrapping_mul(73_856_093) ^ cy.wrapping_mul(19_349_663)) as u64;
@@ -1368,7 +1368,7 @@ mod tests {
     /// 🌍️ `(camera-frame depth, world point)` where the ray through pixel `(px, py)` meets the
     /// world plane `z = plane_z`, or `None` when the ray is parallel to the plane or points away
     /// from it.
-    fn plane_camera_depth(intr: &remodel_camera::Intrinsics, pose: &remodel_camera::CameraPose, plane_z: f64, px: f64, py: f64) -> Option<(f64, [f64; 3])> {
+    async fn plane_camera_depth(intr: &remodel_camera::Intrinsics, pose: &remodel_camera::CameraPose, plane_z: f64, px: f64, py: f64) -> Option<(f64, [f64; 3])> {
         let ray = intr.unproject_ray([px, py]);
         let to_world = pose.0.inverse();
         let origin_world = to_world.act([0.0, 0.0, 0.0]);
@@ -1386,7 +1386,7 @@ mod tests {
         Some((cam_point[2], world_point))
     }
 
-    fn render_plane_image(width: u32, height: u32, intr: &remodel_camera::Intrinsics, pose: &remodel_camera::CameraPose, plane_z: f64, texture: impl Fn(f64, f64) -> f32) -> remodel_image::ImageGray {
+    async fn render_plane_image(width: u32, height: u32, intr: &remodel_camera::Intrinsics, pose: &remodel_camera::CameraPose, plane_z: f64, texture: impl Fn(f64, f64) -> f32) -> remodel_image::ImageGray {
         let mut img = remodel_image::ImageGray::new(width, height);
         for y in 0..height {
             for x in 0..width {
@@ -1398,7 +1398,7 @@ mod tests {
         img
     }
 
-    fn fill_plane_depth_map(width: u32, height: u32, intr: &remodel_camera::Intrinsics, pose: &remodel_camera::CameraPose, plane_z: f64) -> DepthMap {
+    async fn fill_plane_depth_map(width: u32, height: u32, intr: &remodel_camera::Intrinsics, pose: &remodel_camera::CameraPose, plane_z: f64) -> DepthMap {
         let mut dm = DepthMap::new(width, height);
         for y in 0..height {
             for x in 0..width {
@@ -1415,7 +1415,7 @@ mod tests {
 
     /// 🎨️ [`noise_texture`] extended to a third coordinate, so it can texture a curved (sphere)
     /// surface instead of only a `z = const` plane.
-    fn noise_texture3(x: f64, y: f64, z: f64) -> f32 {
+    async fn noise_texture3(x: f64, y: f64, z: f64) -> f32 {
         let cx = (x / 0.05).floor() as i64;
         let cy = (y / 0.05).floor() as i64;
         let cz = (z / 0.05).floor() as i64;
@@ -1429,7 +1429,7 @@ mod tests {
     /// 🌐️ `(camera-frame depth, world point, world outward normal)` for the nearest intersection of
     /// the ray through pixel `(px, py)` with the sphere of `radius` centered at `center` (world
     /// frame), or `None` when the ray misses the sphere or only hits it behind the camera.
-    fn sphere_camera_depth(intr: &remodel_camera::Intrinsics, pose: &remodel_camera::CameraPose, center: [f64; 3], radius: f64, px: f64, py: f64) -> Option<(f64, [f64; 3], [f64; 3])> {
+    async fn sphere_camera_depth(intr: &remodel_camera::Intrinsics, pose: &remodel_camera::CameraPose, center: [f64; 3], radius: f64, px: f64, py: f64) -> Option<(f64, [f64; 3], [f64; 3])> {
         let ray = intr.unproject_ray([px, py]);
         let to_world = pose.0.inverse();
         let origin_world = to_world.act([0.0, 0.0, 0.0]);
@@ -1466,7 +1466,7 @@ mod tests {
         Some((cam_point[2], world_point, normal_world))
     }
 
-    fn render_sphere_image(width: u32, height: u32, intr: &remodel_camera::Intrinsics, pose: &remodel_camera::CameraPose, center: [f64; 3], radius: f64) -> remodel_image::ImageGray {
+    async fn render_sphere_image(width: u32, height: u32, intr: &remodel_camera::Intrinsics, pose: &remodel_camera::CameraPose, center: [f64; 3], radius: f64) -> remodel_image::ImageGray {
         let mut img = remodel_image::ImageGray::new(width, height);
         for y in 0..height {
             for x in 0..width {
@@ -1481,7 +1481,7 @@ mod tests {
     /// 🌐️ Analytic depth map of the sphere, camera-frame normals derived from the world outward
     /// normal via the linearity of the rigid transform (`act(p + n) - act(p) == R n` exactly, since
     /// the translation term cancels — avoids needing a separate rotation-only API).
-    fn fill_sphere_depth_map(width: u32, height: u32, intr: &remodel_camera::Intrinsics, pose: &remodel_camera::CameraPose, center: [f64; 3], radius: f64) -> DepthMap {
+    async fn fill_sphere_depth_map(width: u32, height: u32, intr: &remodel_camera::Intrinsics, pose: &remodel_camera::CameraPose, center: [f64; 3], radius: f64) -> DepthMap {
         let mut dm = DepthMap::new(width, height);
         for y in 0..height {
             for x in 0..width {
@@ -1501,7 +1501,7 @@ mod tests {
 
     // #region 🔖️PatchMatchTests
     #[test]
-    fn patchmatch_mvs_recovers_known_plane_depth() {
+    async fn patchmatch_mvs_recovers_known_plane_depth() {
         let (width, height) = (48u32, 48u32);
         let intr = intrinsics_for(width, height);
         let true_depth = 5.0f64;
@@ -1531,7 +1531,7 @@ mod tests {
     }
 
     #[test]
-    fn patchmatch_mvs_recovers_known_sphere_depth() {
+    async fn patchmatch_mvs_recovers_known_sphere_depth() {
         let (width, height) = (48u32, 48u32);
         let intr = intrinsics_for(width, height);
         let center = [0.0, 0.0, 5.0];
@@ -1568,7 +1568,7 @@ mod tests {
 
     // #region 🔖️PlaneSweepTests
     #[test]
-    fn plane_sweep_depth_recovers_known_plane_depth() {
+    async fn plane_sweep_depth_recovers_known_plane_depth() {
         let (width, height) = (32u32, 32u32);
         let intr = intrinsics_for(width, height);
         let true_depth = 5.0f64;
@@ -1599,7 +1599,7 @@ mod tests {
 
     // #region 🔖️DepthFilterTests
     #[test]
-    fn left_right_check_invalidates_planted_inconsistency() {
+    async fn left_right_check_invalidates_planted_inconsistency() {
         let (width, height) = (20u32, 20u32);
         let intr = intrinsics_for(width, height);
         let ref_pose = remodel_camera::CameraPose(remodel_camera::Se3::identity());
@@ -1627,7 +1627,7 @@ mod tests {
     }
 
     #[test]
-    fn speckle_filter_removes_small_isolated_components() {
+    async fn speckle_filter_removes_small_isolated_components() {
         let (width, height) = (10u32, 10u32);
         let mut dm = DepthMap::new(width, height);
         for y in 0..height {
@@ -1650,7 +1650,7 @@ mod tests {
     }
 
     #[test]
-    fn median_fill_fills_missing_pixels_from_valid_neighbors() {
+    async fn median_fill_fills_missing_pixels_from_valid_neighbors() {
         let (width, height) = (5u32, 5u32);
         let mut dm = DepthMap::new(width, height);
         for v in dm.depth.iter_mut() {
@@ -1667,7 +1667,7 @@ mod tests {
     }
 
     #[test]
-    fn margin_confidence_rewards_well_textured_high_margin() {
+    async fn margin_confidence_rewards_well_textured_high_margin() {
         let (width, height) = (24u32, 24u32);
         let intr = intrinsics_for(width, height);
         let true_depth = 5.0;
@@ -1714,7 +1714,7 @@ mod tests {
 
     // #region 🔖️FusionTests
     #[test]
-    fn fuse_depth_maps_recovers_plane_points() {
+    async fn fuse_depth_maps_recovers_plane_points() {
         let (width, height) = (16u32, 16u32);
         let intr = intrinsics_for(width, height);
         let plane_z = 5.0;
@@ -1732,7 +1732,7 @@ mod tests {
 
     // #region 🔖️TsdfTests
     #[test]
-    fn tsdf_integrate_zero_crossing_near_true_surface() {
+    async fn tsdf_integrate_zero_crossing_near_true_surface() {
         let (width, height) = (24u32, 24u32);
         let intr = intrinsics_for(width, height);
         let pose = remodel_camera::CameraPose(remodel_camera::Se3::identity());
@@ -1763,7 +1763,7 @@ mod tests {
     }
 
     #[test]
-    fn tsdf_sphere_multi_view_zero_crossing_within_one_voxel() {
+    async fn tsdf_sphere_multi_view_zero_crossing_within_one_voxel() {
         let (width, height) = (48u32, 48u32);
         let intr = intrinsics_for(width, height);
         let center = [0.0, 0.0, 5.0];
@@ -1797,7 +1797,7 @@ mod tests {
     }
 
     #[test]
-    fn tsdf_sample_agrees_across_block_boundaries_regardless_of_integration_order() {
+    async fn tsdf_sample_agrees_across_block_boundaries_regardless_of_integration_order() {
         // Deliberately low-resolution/low-truncation: a running weighted average is exactly
         // order-independent only until `TSDF_MAX_WEIGHT` clamps a voxel's accumulated weight, at
         // which point which particular samples got "locked in" is a genuine (not merely
@@ -1857,7 +1857,7 @@ mod tests {
 
     // #region 🔖️CloudOpsTests
     #[test]
-    fn estimate_normals_recovers_plane_normal() {
+    async fn estimate_normals_recovers_plane_normal() {
         let mut state = 123u64;
         let mut positions = Vec::new();
         for _ in 0..300 {
@@ -1886,7 +1886,7 @@ mod tests {
     }
 
     #[test]
-    fn voxel_downsample_averages_grid_cells_correctly() {
+    async fn voxel_downsample_averages_grid_cells_correctly() {
         let positions = vec![[0.1, 0.1, 0.1], [0.4, 0.4, 0.4], [1.6, 1.6, 1.6], [1.9, 1.9, 1.9]];
         let cloud = PointCloud::from_positions(positions);
         let down = voxel_downsample(&cloud, 1.0);
@@ -1899,7 +1899,7 @@ mod tests {
     }
 
     #[test]
-    fn statistical_outlier_removal_keeps_cluster_and_drops_far_outliers() {
+    async fn statistical_outlier_removal_keeps_cluster_and_drops_far_outliers() {
         let mut state = 55u64;
         let mut positions = Vec::new();
         for _ in 0..200 {
@@ -1917,7 +1917,7 @@ mod tests {
     }
 
     #[test]
-    fn radius_outlier_removal_drops_isolated_points() {
+    async fn radius_outlier_removal_drops_isolated_points() {
         let mut state = 91u64;
         let mut positions = Vec::new();
         for _ in 0..1000 {
@@ -1934,7 +1934,7 @@ mod tests {
 
     // #region 🔖️ClassifyTests
     #[test]
-    fn classify_ground_pmf_achieves_high_ground_recall_with_buildings_and_vegetation() {
+    async fn classify_ground_pmf_achieves_high_ground_recall_with_buildings_and_vegetation() {
         let mut positions = Vec::new();
         for iy in 0..20 {
             for ix in 0..20 {
@@ -1972,7 +1972,7 @@ mod tests {
     }
 
     #[test]
-    fn classify_building_vegetation_splits_planar_from_scattered() {
+    async fn classify_building_vegetation_splits_planar_from_scattered() {
         // A flat planar patch (roof-like) vs a scattered noisy patch (canopy-like), both elevated
         // above the ground and pre-labeled Unclassified as classify_ground_pmf would leave them.
         // Interior-grid points are asserted on (not the boundary ring): a boundary point's k-NN
@@ -2009,7 +2009,7 @@ mod tests {
     }
 
     #[test]
-    fn region_grow_planes_groups_planar_patch() {
+    async fn region_grow_planes_groups_planar_patch() {
         let mut positions = Vec::new();
         for iy in 0..10 {
             for ix in 0..10 {
@@ -2028,7 +2028,7 @@ mod tests {
 
     // #region 🔖️ChangeTests
     #[test]
-    fn cloud_distance_and_m3c2_measure_planted_offset() {
+    async fn cloud_distance_and_m3c2_measure_planted_offset() {
         let mut positions_a = Vec::new();
         for iy in 0..15 {
             for ix in 0..15 {

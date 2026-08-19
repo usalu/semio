@@ -17,22 +17,22 @@ pub struct EditText {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn edit_text(text: String) -> WriterMutation {
+pub async fn edit_text(text: String) -> WriterMutation {
     WriterMutation::EditText(EditText { text })
 }
 
 impl MutationKind<WriterSnapshot, WriterMutation> for EditText {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "edit", entity: "text", kind: "edit-text", record: "EditedText" };
 
-    fn diff(&self, base: &WriterSnapshot) -> protocol::MutationOutcome<WriterDiff> {
+    async fn diff(&self, base: &WriterSnapshot) -> protocol::MutationOutcome<WriterDiff> {
         super::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &WriterSnapshot) -> Vec<WriterMutation> {
+    async fn inverse(&self, base: &WriterSnapshot) -> Vec<WriterMutation> {
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         "Edit document text".to_string()
     }
 }

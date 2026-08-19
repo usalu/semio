@@ -18,7 +18,7 @@ impl EntityId {
     ///
     /// `material` is retained for call-site clarity but uniqueness comes from a process-wide
     /// counter — many creators pass a constant label and still need distinct ids.
-    pub fn new_serial(prefix: &str, _material: impl AsRef<[u8]>) -> Self {
+    pub async fn new_serial(prefix: &str, _material: impl AsRef<[u8]>) -> Self {
         use std::sync::atomic::{AtomicU64, Ordering};
         static COUNTER: AtomicU64 = AtomicU64::new(1);
         let n = COUNTER.fetch_add(1, Ordering::Relaxed);
@@ -27,19 +27,19 @@ impl EntityId {
 }
 
 impl fmt::Display for EntityId {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    async fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.write_str(&self.0)
     }
 }
 
 impl Ord for EntityId {
-    fn cmp(&self, other: &Self) -> Ordering {
+    async fn cmp(&self, other: &Self) -> Ordering {
         self.0.cmp(&other.0)
     }
 }
 
 impl PartialOrd for EntityId {
-    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+    async fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
         Some(self.cmp(other))
     }
 }
@@ -49,13 +49,13 @@ impl PartialOrd for EntityId {
 /// `dsl::DslField` binding is written directly, bridging straight to `Shape::Text` like `String`'s
 /// own blanket impl does.
 impl dsl::DslField for EntityId {
-    fn shape() -> dsl::Shape {
+    async fn shape() -> dsl::Shape {
         dsl::Shape::Text
     }
-    fn to_value(&self) -> dsl::FieldValue {
+    async fn to_value(&self) -> dsl::FieldValue {
         dsl::FieldValue::Text(self.0.clone())
     }
-    fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
+    async fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
         match value {
             dsl::FieldValue::Text(s) => Ok(EntityId(s.clone())),
             other => Err(format!("expected Text, found {other:?}")),
@@ -126,7 +126,7 @@ pub struct TextField {
 }
 
 impl TextField {
-    pub fn plain(text: impl Into<String>) -> Self {
+    pub async fn plain(text: impl Into<String>) -> Self {
         Self { text: text.into(), format: None }
     }
 }
@@ -152,7 +152,7 @@ pub struct TimestampMeta {
 }
 
 impl Default for TimestampMeta {
-    fn default() -> Self {
+    async fn default() -> Self {
         let stamp: String = "1970-01-01T00:00:00Z".into();
         Self { created: stamp.clone(), updated: stamp, created_by: None, updated_by: None }
     }
@@ -179,7 +179,7 @@ pub struct EntityHeader {
 }
 
 impl EntityHeader {
-    pub fn new(id: EntityId, name: impl Into<String>) -> Self {
+    pub async fn new(id: EntityId, name: impl Into<String>) -> Self {
         Self { id, name: name.into(), description: None, status: LifecycleStatus::Draft, priority: Priority::Preferred, ownership: Ownership::default(), tags: Vec::new(), notes: Vec::new(), timestamps: TimestampMeta::default() }
     }
 }
@@ -208,7 +208,7 @@ pub struct QuantitySpec {
 }
 
 impl QuantitySpec {
-    pub fn target_unit(target: f64, unit: impl Into<String>) -> Self {
+    pub async fn target_unit(target: f64, unit: impl Into<String>) -> Self {
         Self { target: Some(target), unit: unit.into(), ..Default::default() }
     }
 }
@@ -254,13 +254,13 @@ pub struct TraceLink {
 }
 
 impl TraceLink {
-    pub fn new(from_id: EntityId, to_id: EntityId, kind: TraceKind) -> Self {
+    pub async fn new(from_id: EntityId, to_id: EntityId, kind: TraceKind) -> Self {
         Self { id: EntityId::new_serial("trace", "trace"), from_id, to_id, kind, label: None }
     }
 }
 
 impl protocol::Identified<EntityId> for TraceLink {
-    fn id(&self) -> &EntityId {
+    async fn id(&self) -> &EntityId {
         &self.id
     }
 }
@@ -316,14 +316,14 @@ mod tests {
     use super::*;
 
     #[test]
-    fn entity_id_orders_lexicographically() {
+    async fn entity_id_orders_lexicographically() {
         let a = EntityId("element-2".into());
         let b = EntityId("element-10".into());
         assert!(a > b);
     }
 
     #[test]
-    fn entity_id_serial_increments() {
+    async fn entity_id_serial_increments() {
         let first = EntityId::new_serial("test", "test");
         let second = EntityId::new_serial("test", "test");
         assert_ne!(first, second);
@@ -341,7 +341,7 @@ pub struct TraceLinkPatch {
 }
 
 impl Patchable<TraceLinkPatch> for TraceLink {
-    fn apply_patch(&mut self, patch: &TraceLinkPatch) {
+    async fn apply_patch(&mut self, patch: &TraceLinkPatch) {
         if let Some(value) = &patch.from_id {
             self.from_id = value.clone();
         }
@@ -356,7 +356,7 @@ impl Patchable<TraceLinkPatch> for TraceLink {
         }
     }
 
-    fn diff_patch(&self, other: &Self) -> Option<TraceLinkPatch> {
+    async fn diff_patch(&self, other: &Self) -> Option<TraceLinkPatch> {
         Some(TraceLinkPatch { from_id: Some(other.from_id.clone()), to_id: Some(other.to_id.clone()), kind: Some(other.kind.clone()), label: Some(other.label.clone()) })
     }
 }

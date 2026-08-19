@@ -12,7 +12,7 @@ use serde::{Deserialize, Serialize};
 #[dsl(keyword = "canvas-commit-draft")]
 pub struct CanvasCommitDraft {}
 
-pub fn handle(_payload: &CanvasCommitDraft, doc: &ArtifactView<'_, DrawSnapshot>, cfg: &ConfigView<'_, DrawConfig>, session: &mut DrawSession) -> Result<Emit<DrawMutation, DrawConfigMutation>, Fault> {
+pub async fn handle(_payload: &CanvasCommitDraft, doc: &ArtifactView<'_, DrawSnapshot>, cfg: &ConfigView<'_, DrawConfig>, session: &mut DrawSession) -> Result<Emit<DrawMutation, DrawConfigMutation>, Fault> {
     let document = doc.snapshot;
     let config = cfg.snapshot;
     let emit = session.step_gesture(draw_gesture::Event::CommitDraft, document, config);

@@ -5,7 +5,7 @@ use crate::editor::puzzle3d::{drive_precompute, puzzle3d_scene_active_utility, P
 use semio_framework_plugin::SET_ACTIVE_UTILITY_ACTION_ID;
 use serde_json::Value;
 
-pub fn set_active(ctx: &mut Puzzle3dActionCtx<'_>, action: &str, args: Option<&Value>) {
+pub async fn set_active(ctx: &mut Puzzle3dActionCtx<'_>, action: &str, args: Option<&Value>) {
     if action == SET_ACTIVE_UTILITY_ACTION_ID {
         if let Some(utility_id) = args.and_then(|value| value.get("utilityId")).and_then(|value| value.as_str()) {
             ctx.scene.runtime.active_utility_by_window_id.insert(ctx.window_id.to_string(), utility_id.to_string());

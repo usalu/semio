@@ -15,23 +15,23 @@ pub struct ChangeGripKindColor {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn change_grip_kind_color(id: String, new_color: String) -> Block5dMutation {
+pub async fn change_grip_kind_color(id: String, new_color: String) -> Block5dMutation {
     Block5dMutation::ChangeGripKindColor(ChangeGripKindColor { id, new_color })
 }
 
 impl protocol::MutationKind<Block5dSnapshot, Block5dMutation> for ChangeGripKindColor {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "grip-kind", kind: "change-grip-kind-color", record: "ChangedGripKindColor" };
 
-    fn diff(&self, base: &Block5dSnapshot) -> protocol::MutationOutcome<Block5dDiff> {
+    async fn diff(&self, base: &Block5dSnapshot) -> protocol::MutationOutcome<Block5dDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &Block5dSnapshot) -> Vec<Block5dMutation> {
+    async fn inverse(&self, base: &Block5dSnapshot) -> Vec<Block5dMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         format!("Change grip kind \"{}\" color to \"{}\"", self.id, self.new_color)
     }
-    fn target(&self) -> Vec<String> {
+    async fn target(&self) -> Vec<String> {
         vec![self.id.clone()]
     }
 }

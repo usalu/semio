@@ -21,24 +21,24 @@ pub struct MdArtifact {
 
 //#region 🔖️Conversions
 impl Default for MdArtifact {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self::from_snapshot(MdSnapshot::default())
     }
 }
 
 impl MdArtifact {
     /// 📸️ Persisted subset.
-    pub fn to_snapshot(&self) -> MdSnapshot {
+    pub async fn to_snapshot(&self) -> MdSnapshot {
         MdSnapshot { schema: self.schema.clone(), blocks: self.blocks.clone() }
     }
 
     /// 🧬️ Builds a full artifact from a snapshot.
-    pub fn from_snapshot(snapshot: MdSnapshot) -> Self {
+    pub async fn from_snapshot(snapshot: MdSnapshot) -> Self {
         Self { schema: snapshot.schema, blocks: snapshot.blocks }
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
-    pub fn set_snapshot(&mut self, snapshot: MdSnapshot) {
+    pub async fn set_snapshot(&mut self, snapshot: MdSnapshot) {
         self.schema = snapshot.schema;
         self.blocks = snapshot.blocks;
     }
@@ -47,7 +47,7 @@ impl MdArtifact {
 
 //#region 🔖️Descriptor
 /// 🧬️ Descriptor for `s.stdio.md`.
-pub fn md_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
+pub async fn md_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
     schema::ArtifactSchemaDescriptor {
         id: "s.stdio.md",
         artifact: schema::FacetLeaves {
@@ -98,27 +98,27 @@ pub mod derived_construction {
         type Snapshot = MdSnapshot;
         type Mutation = MdMutation;
         type Diff = MdDiff;
-        fn empty() -> Self {
+        async fn empty() -> Self {
             Self { snapshot: MdSnapshot::default(), diagnostics: Vec::new() }
         }
-        fn from_snapshot(snapshot: Self::Snapshot) -> Self {
+        async fn from_snapshot(snapshot: Self::Snapshot) -> Self {
             Self { snapshot, diagnostics: Vec::new() }
         }
-        fn from_text(text: &str) -> Result<Self, store::TextError> {
+        async fn from_text(text: &str) -> Result<Self, store::TextError> {
             Ok(Self::from_snapshot(<MdSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
-        fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
+        async fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
             Ok(Self::from_snapshot(<MdSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
         }
-        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
+        async fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let diff = crate::artifacts::md::schema::mutations::apply_md_mutation(&mut self.snapshot, &mutation);
             (self, diff)
         }
-        fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
+        async fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
             self.snapshot = <MdDiff as protocol::MutationDiff<MdSnapshot>>::apply(&diff, &self.snapshot)?;
             Ok(self)
         }
-        fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
+        async fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
             if self.diagnostics.is_empty() {
                 Ok(self.snapshot)
             } else {
@@ -150,7 +150,7 @@ pub mod derived_analysis {
 
     /// 🔍 Markdown has no magic bytes — sniff by actually running the real block parser
     /// and checking for structural (non-paragraph) blocks, which plain text never produces.
-    fn looks_like_markdown(text: &str) -> IoConfidence {
+    async fn looks_like_markdown(text: &str) -> IoConfidence {
         if text.trim().is_empty() {
             return IoConfidence::Low;
         }
@@ -176,7 +176,7 @@ pub mod derived_analysis {
         type Parts = MdParts;
         const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.md", standard: StandardId("commonmark"), subset: SubsetId("*") };
 
-        fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
+        async fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
             match source {
                 AnalyzeSource::Text(text) => {
                     let body = match store::semio_format::split_text_preamble(text) {
@@ -198,7 +198,7 @@ pub mod derived_analysis {
             }
         }
 
-        fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
+        async fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
             let mut parts = MdParts::default();
             let mut diagnostics = Vec::new();
             let mut confidence = IoConfidence::High;
@@ -231,18 +231,18 @@ pub mod derived_analysis {
         use super::*;
 
         #[test]
-        fn sniff_real_markdown_structure_is_high() {
+        async fn sniff_real_markdown_structure_is_high() {
             let text = "# Title\n\n- one\n- two\n";
             assert_eq!(MdAnalyzerAnalysis::sniff(&AnalyzeSource::Text(text)), IoConfidence::High);
         }
 
         #[test]
-        fn sniff_plain_paragraph_text_is_medium() {
+        async fn sniff_plain_paragraph_text_is_medium() {
             assert_eq!(MdAnalyzerAnalysis::sniff(&AnalyzeSource::Text("just a plain sentence.")), IoConfidence::Medium);
         }
 
         #[test]
-        fn sniff_empty_is_low() {
+        async fn sniff_empty_is_low() {
             assert_eq!(MdAnalyzerAnalysis::sniff(&AnalyzeSource::Text("")), IoConfidence::Low);
         }
     }
@@ -253,7 +253,7 @@ pub use derived_analysis::*;
 
 //#region 🔖️DocumentHelpers
 /// 🌱 Empty persisted snapshot.
-pub fn empty_md_snapshot() -> MdSnapshot {
+pub async fn empty_md_snapshot() -> MdSnapshot {
     MdSnapshot::default()
 }
 
@@ -284,7 +284,7 @@ pub fn empty_md_snapshot() -> MdSnapshot {
 /// calls `LINE`/`REST`) — `BlockQuote`/`Paragraph` (both `LINE`-dependent) are placed BEFORE the
 /// fence, never after it, sidestepping the corruption entirely rather than fixing the shared lexer
 /// (out of this wave's ownership boundary).
-pub fn demo_md_snapshot() -> MdSnapshot {
+pub async fn demo_md_snapshot() -> MdSnapshot {
     use crate::artifacts::md::schema::snapshot::{MdBlock, MdInline};
     let blocks = vec![
         MdBlock::Heading { level: 1, inlines: vec![MdInline::Text { text: "Title".into() }] },
@@ -334,13 +334,13 @@ mod tests {
     use protocol::{Mutation, MutationDiff};
 
     #[test]
-    fn empty_snapshot_matches_schema() {
+    async fn empty_snapshot_matches_schema() {
         let snapshot = empty_md_snapshot();
         assert_eq!(snapshot.schema, STDIO_MD_DOCUMENT_SCHEMA);
     }
 
     #[test]
-    fn codec_round_trip() {
+    async fn codec_round_trip() {
         let snap = empty_md_snapshot();
         let text = store::ArtifactDsl::print_dsl(&snap);
         let parsed = <MdSnapshot as store::ArtifactDsl>::parse_dsl(&text).expect("parse");
@@ -351,7 +351,7 @@ mod tests {
     }
 
     #[test]
-    fn demo_snapshot_round_trip() {
+    async fn demo_snapshot_round_trip() {
         let snap = demo_md_snapshot();
         let text = store::ArtifactDsl::print_dsl(&snap);
         let parsed = <MdSnapshot as store::ArtifactDsl>::parse_dsl(&text).expect("parse");
@@ -378,7 +378,7 @@ mod tests {
         /// parse under the real dialect — independent of, and cheaper than, the two `recognize`/
         /// `walk_protocol` laws below (a parse failure here fails fast with a clearer message).
         #[test]
-        fn committed_facet_files_parse() {
+        async fn committed_facet_files_parse() {
             for (label, text) in [("snapshot grammar", snapshot::text::COMPONENT_GRAMMAR_SEMIO), ("mutations grammar", mutations::text::COMPONENT_GRAMMAR_SEMIO), ("diff grammar", diff::text::COMPONENT_GRAMMAR_SEMIO)] {
                 let grammar = dsl::parse_grammar(text).unwrap_or_else(|e| panic!("{label}: parse_grammar failed: {e:?}"));
                 assert_eq!(grammar.dialect, dsl::SemioDialect::Grammar, "{label}: expected grammar dialect");
@@ -393,7 +393,7 @@ mod tests {
         /// reconstruction `m5_handcrafted_grammar_conformance`'s own `dsl_body_from_fixture` uses,
         /// so this is a direct proof this artifact will pass that harness once graduated.
         #[test]
-        fn grammar_conformance_law() {
+        async fn grammar_conformance_law() {
             let grammar = dsl::parse_grammar(snapshot::text::COMPONENT_GRAMMAR_SEMIO).expect("parse snapshot grammar");
             let recognizer = dsl::Recognizer::compile(&grammar);
             let text = store::ArtifactDsl::print_dsl(&demo_md_snapshot());
@@ -406,7 +406,7 @@ mod tests {
         /// output for every `MdMutation` variant (`mutations::demo_mutation_cases()`), incl. the
         /// `List`-block `MdBlock` payload and both `MdPathStep` variants.
         #[test]
-        fn ops_grammar_conformance_law() {
+        async fn ops_grammar_conformance_law() {
             let grammar = dsl::parse_grammar(mutations::text::COMPONENT_GRAMMAR_SEMIO).expect("parse mutations grammar");
             let recognizer = dsl::Recognizer::compile(&grammar);
             for mutation in mutations::demo_mutation_cases() {
@@ -419,7 +419,7 @@ mod tests {
         /// for every representative `MdDiff` (`diff::demo_diff_cases()`), incl. both tri-states and
         /// the `Replace` kind-change fallback.
         #[test]
-        fn diff_grammar_conformance_law() {
+        async fn diff_grammar_conformance_law() {
             let grammar = dsl::parse_grammar(diff::text::COMPONENT_GRAMMAR_SEMIO).expect("parse diff grammar");
             let recognizer = dsl::Recognizer::compile(&grammar);
             for d in diff::demo_diff_cases() {
@@ -434,7 +434,7 @@ mod tests {
         /// mutation's `encode_op`, and every demo diff's `encode_diff` — asserting
         /// `consumed == bytes.len()`.
         #[test]
-        fn protocol_walk_law() {
+        async fn protocol_walk_law() {
             let pack_spec = dsl::parse_protocol(snapshot::binary::COMPONENT_PROTOCOL_SEMIO).expect("parse snapshot protocol");
             let packed = store::ArtifactPack::encode_pack(&demo_md_snapshot());
             let (_, inner) = store::semio_format::unwrap_binary(&packed).expect("unwrap semio envelope");
@@ -461,7 +461,7 @@ mod tests {
         /// demo()`, `print_dsl(demo()) == fixture` (byte-for-byte), and the pack twin — so the
         /// fixtures can never silently drift back to a fake again.
         #[test]
-        fn fixture_honesty_law() {
+        async fn fixture_honesty_law() {
             const FIXTURE_DSL: &str = include_str!("../📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio");
             const FIXTURE_PACK: &[u8] = include_bytes!("../📚️examples/🎬️demo/🖼️assets/🎒️example.pack.semio");
 
@@ -480,7 +480,7 @@ mod tests {
 
     //#region 🔖️ParserUnitTests
     #[test]
-    fn headings_all_levels() {
+    async fn headings_all_levels() {
         let blocks = parse_markdown_blocks("# H1\n## H2\n###### H6\n");
         assert_eq!(blocks.len(), 3);
         assert!(matches!(&blocks[0], MdBlock::Heading { level: 1, .. }));
@@ -489,7 +489,7 @@ mod tests {
     }
 
     #[test]
-    fn paragraph_and_fenced_code_block_with_info_string() {
+    async fn paragraph_and_fenced_code_block_with_info_string() {
         let text = "A paragraph of text.\n\n```rust\nfn main() {}\n```\n";
         let blocks = parse_markdown_blocks(text);
         assert_eq!(blocks.len(), 2);
@@ -504,7 +504,7 @@ mod tests {
     }
 
     #[test]
-    fn indented_code_block() {
+    async fn indented_code_block() {
         let text = "    let x = 1;\n    let y = 2;\n";
         let blocks = parse_markdown_blocks(text);
         assert_eq!(blocks.len(), 1);
@@ -515,7 +515,7 @@ mod tests {
     }
 
     #[test]
-    fn thematic_break_variants() {
+    async fn thematic_break_variants() {
         for text in ["---\n", "***\n", "___\n", "- - -\n"] {
             let blocks = parse_markdown_blocks(text);
             assert_eq!(blocks.len(), 1, "input {text:?}");
@@ -524,7 +524,7 @@ mod tests {
     }
 
     #[test]
-    fn block_quote_recursive() {
+    async fn block_quote_recursive() {
         let text = "> # Quoted heading\n> a paragraph\n";
         let blocks = parse_markdown_blocks(text);
         assert_eq!(blocks.len(), 1);
@@ -539,7 +539,7 @@ mod tests {
     }
 
     #[test]
-    fn html_block_raw_retention() {
+    async fn html_block_raw_retention() {
         let text = "<div class=\"note\">\nplain content\n</div>\n";
         let blocks = parse_markdown_blocks(text);
         assert_eq!(blocks.len(), 1);
@@ -550,7 +550,7 @@ mod tests {
     }
 
     #[test]
-    fn unordered_and_ordered_lists() {
+    async fn unordered_and_ordered_lists() {
         let unordered = parse_markdown_blocks("- one\n- two\n- three\n");
         assert_eq!(unordered.len(), 1);
         match &unordered[0] {
@@ -574,7 +574,7 @@ mod tests {
     }
 
     #[test]
-    fn nested_list_and_loose_list() {
+    async fn nested_list_and_loose_list() {
         let nested = parse_markdown_blocks("- outer\n  - inner a\n  - inner b\n- outer two\n");
         match &nested[0] {
             MdBlock::List { items, .. } => {
@@ -593,7 +593,7 @@ mod tests {
     }
 
     #[test]
-    fn emphasis_strong_links_images_and_html_in_inline() {
+    async fn emphasis_strong_links_images_and_html_in_inline() {
         let inline = parse_inline("plain **strong** and *em* and [a link](https://example.com \"title\") and ![alt](img.png) and <br/>");
         assert!(inline.iter().any(|n| matches!(n, MdInline::Strong { inlines } if inlines == &vec![MdInline::Text { text: "strong".into() }])));
         assert!(inline.iter().any(|n| matches!(n, MdInline::Emphasis { inlines } if inlines == &vec![MdInline::Text { text: "em".into() }])));
@@ -619,13 +619,13 @@ mod tests {
     }
 
     #[test]
-    fn inline_code_span_is_not_emphasis() {
+    async fn inline_code_span_is_not_emphasis() {
         let inline = parse_inline("use `*not emphasis*` here");
         assert!(inline.iter().any(|n| matches!(n, MdInline::Code { literal } if literal == "*not emphasis*")));
     }
 
     #[test]
-    fn soft_and_hard_breaks_in_paragraph() {
+    async fn soft_and_hard_breaks_in_paragraph() {
         let blocks = parse_markdown_blocks("line one  \nline two\\\nline three\nline four\n");
         match &blocks[0] {
             MdBlock::Paragraph { inlines } => {
@@ -639,7 +639,7 @@ mod tests {
     }
 
     #[test]
-    fn unrecognized_delimiter_degrades_to_plain_text() {
+    async fn unrecognized_delimiter_degrades_to_plain_text() {
         // 🕳️ Exactly ONE `*` in the whole input -- genuinely unpairable (not to be confused with
         // an input containing a valid pair elsewhere, which correctly parses as emphasis).
         let inline = parse_inline("plain text with one lonely *delimiter and no partner at all");
@@ -648,7 +648,7 @@ mod tests {
     //#endregion 🔖️ParserUnitTests
 
     //#region 🔖️Fixtures
-    fn sample_snapshot() -> MdSnapshot {
+    async fn sample_snapshot() -> MdSnapshot {
         MdSnapshot { schema: STDIO_MD_DOCUMENT_SCHEMA.into(), blocks: vec![MdBlock::Heading { level: 1, inlines: vec![MdInline::Text { text: "Title".into() }] }, MdBlock::Paragraph { inlines: vec![MdInline::Text { text: "hello".into() }] }] }
     }
 
@@ -662,7 +662,7 @@ mod tests {
     /// in `between(a, b)` and the top-level `added` tail in `between(b, a)` --
     /// `between_roundtrip_law`/`field_sweep` both check both directions, matching xml's F1
     /// precedent.
-    fn sweep_a() -> MdSnapshot {
+    async fn sweep_a() -> MdSnapshot {
         MdSnapshot {
             schema: STDIO_MD_DOCUMENT_SCHEMA.into(),
             blocks: vec![
@@ -678,7 +678,7 @@ mod tests {
         }
     }
 
-    fn sweep_b() -> MdSnapshot {
+    async fn sweep_b() -> MdSnapshot {
         MdSnapshot {
             schema: STDIO_MD_DOCUMENT_SCHEMA.into(),
             blocks: vec![
@@ -690,7 +690,7 @@ mod tests {
     //#endregion 🔖️Fixtures
 
     //#region 🔖️MutationDiffLaw
-    fn sample_mutations() -> Vec<MdMutation> {
+    async fn sample_mutations() -> Vec<MdMutation> {
         vec![
             MdMutation::NoMutation,
             MdMutation::SetSnapshot { snapshot: sweep_b() },
@@ -702,7 +702,7 @@ mod tests {
     }
 
     #[test]
-    fn mutation_diff_law() {
+    async fn mutation_diff_law() {
         for mutation in sample_mutations() {
             let base = sample_snapshot();
             let diff_direct = Mutation::diff(&mutation, &base);
@@ -719,7 +719,7 @@ mod tests {
 
     //#region 🔖️InverseLaw
     #[test]
-    fn inverse_law() {
+    async fn inverse_law() {
         for mutation in sample_mutations() {
             let base = sample_snapshot();
 
@@ -740,11 +740,11 @@ mod tests {
     //#endregion 🔖️InverseLaw
 
     //#region 🔖️AbsorbLaw
-    fn two_para_root(a: &str, b: &str) -> MdSnapshot {
+    async fn two_para_root(a: &str, b: &str) -> MdSnapshot {
         MdSnapshot { schema: STDIO_MD_DOCUMENT_SCHEMA.into(), blocks: vec![MdBlock::Paragraph { inlines: vec![MdInline::Text { text: a.into() }] }, MdBlock::Paragraph { inlines: vec![MdInline::Text { text: b.into() }] }] }
     }
 
-    fn assert_absorb_matches_sequential(base: &MdSnapshot, d1: &MdDiff, d2: &MdDiff) -> MdDiff {
+    async fn assert_absorb_matches_sequential(base: &MdSnapshot, d1: &MdDiff, d2: &MdDiff) -> MdDiff {
         let sequential = MutationDiff::apply(d2, &MutationDiff::apply(d1, base).unwrap()).unwrap();
         let mut absorbed = d1.clone();
         MutationDiff::absorb(&mut absorbed, d2.clone());
@@ -752,12 +752,12 @@ mod tests {
         absorbed
     }
 
-    fn root_blocks_diff(diff: &MdDiff) -> &MdBlocksDiff {
+    async fn root_blocks_diff(diff: &MdDiff) -> &MdBlocksDiff {
         diff.blocks.as_ref().expect("blocks diff present")
     }
 
     #[test]
-    fn absorb_law() {
+    async fn absorb_law() {
         // Canonical: Insert(2)+Remove(0) -> {removed:[0], added:[(1,f)]}.
         {
             let base = two_para_root("a", "b");
@@ -856,7 +856,7 @@ mod tests {
 
     //#region 🔖️BetweenRoundtripLaw
     #[test]
-    fn between_roundtrip_law() {
+    async fn between_roundtrip_law() {
         let a = sweep_a();
         let b = sweep_b();
         assert_eq!(MutationDiff::apply(&<MdDiff as DiffAlgebra<MdSnapshot>>::between(&a, &b), &a).unwrap(), b);
@@ -879,7 +879,7 @@ mod tests {
 
     //#region 🔖️CodecRetentionLaw
     #[test]
-    fn codec_retention_law() {
+    async fn codec_retention_law() {
         // Documented normal form (see `render_markdown_blocks`'s doc comment): semantic fixed
         // point at the SNAPSHOT level, not byte-identical text. Fixture is written to already be
         // a fixed point of this codec's own parse/render pair (avoids incidental normalizations --
@@ -901,7 +901,7 @@ mod tests {
     /// 🎯️ THE acceptance criterion: `sweep_a`/`sweep_b` differ in every mutable field (see the
     /// fixtures' doc comment for exactly how each collection flavor is exercised).
     #[test]
-    fn field_sweep_covers_every_mutable_field() {
+    async fn field_sweep_covers_every_mutable_field() {
         let a = sweep_a();
         let b = sweep_b();
 

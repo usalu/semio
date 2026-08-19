@@ -16,23 +16,23 @@ pub struct ChangeNodeShape {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn change_node_shape(node_id: String, new_shape: String) -> WiresMutation {
+pub async fn change_node_shape(node_id: String, new_shape: String) -> WiresMutation {
     WiresMutation::ChangeNodeShape(ChangeNodeShape { node_id, new_shape })
 }
 
 impl protocol::MutationKind<WiresSnapshot, WiresMutation> for ChangeNodeShape {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "node", kind: "change-node-shape", record: "ChangedNodeShape" };
 
-    fn diff(&self, base: &WiresSnapshot) -> protocol::MutationOutcome<WiresDiff> {
+    async fn diff(&self, base: &WiresSnapshot) -> protocol::MutationOutcome<WiresDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &WiresSnapshot) -> Vec<WiresMutation> {
+    async fn inverse(&self, base: &WiresSnapshot) -> Vec<WiresMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         format!("Change node \"{}\" shape to \"{}\"", self.node_id, self.new_shape)
     }
-    fn target(&self) -> Vec<String> {
+    async fn target(&self) -> Vec<String> {
         vec![self.node_id.clone()]
     }
 }

@@ -8,13 +8,13 @@ pub const NOTE_PLAY_BODY_CATALOGUE: &str = "note.play.catalogue";
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
-pub fn definition() -> PanelTabDefinition {
+pub async fn definition() -> PanelTabDefinition {
     PanelTabDefinition { kind: PanelTabKind::App(FRAMEWORK_PANEL_TAB_CATALOGUE_ID.into()), label: LocalizedLabel::native(FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, "Katalog"), group: PanelGroup::Workbench, body_key: Some(NOTE_PLAY_BODY_CATALOGUE.into()), children: Vec::new() }
 }
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(labels: &NotePlayLabels) -> UiNode {
+pub async fn render(labels: &NotePlayLabels) -> UiNode {
     ui_declarative_sections_to_tree(&[UiSectionNode {
         id: "note-catalogue".into(),
         label: Some(labels.catalogue_title.into()),
@@ -33,7 +33,7 @@ mod tests {
     use crate::editor::note::NOTE_PLAY_BODY_CATALOGUE as BODY_CATALOGUE;
 
     #[test]
-    fn catalogue_lists_every_block_kind() {
+    async fn catalogue_lists_every_block_kind() {
         let mut app = note_app();
         let json = render_body(&mut app, BODY_CATALOGUE);
         assert!(json.contains("Block kinds"));
@@ -41,7 +41,7 @@ mod tests {
     }
 
     #[test]
-    fn catalogue_resolves_german_locale() {
+    async fn catalogue_resolves_german_locale() {
         use crate::editor::note::commands::set_locale::SetLocale;
         use crate::editor::note::testkit::dispatch;
         use crate::editor::note::NoteCommand;

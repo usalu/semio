@@ -32,7 +32,7 @@ const LOWPOLY_VIEW_DEFAULT_CAMERA_FOV: f64 = 45.0;
 
 //#region 🔖️Definition
 /// 🧱️ Stitched into the viewer manifest by `crate::viewer::lowpoly::create_lowpoly_viewer`.
-pub fn definition() -> WindowKindDefinition {
+pub async fn definition() -> WindowKindDefinition {
     MeshWindowKit::window_kind()
 }
 //#endregion 🔖️Definition
@@ -40,7 +40,7 @@ pub fn definition() -> WindowKindDefinition {
 //#region 🔖️Render
 /// 👁️ Read-only twin of the editor's `world_instances_json` — real per-object transform/label,
 /// duplicated (not imported) per `policyViewerPurityBreaches`.
-fn euler_degrees_to_quaternion(rotation: [f32; 3]) -> [f64; 4] {
+async fn euler_degrees_to_quaternion(rotation: [f32; 3]) -> [f64; 4] {
     let to_rad = std::f32::consts::PI / 180.0;
     let (sx, cx) = (rotation[0] * to_rad * 0.5).sin_cos();
     let (sy, cy) = (rotation[1] * to_rad * 0.5).sin_cos();
@@ -48,7 +48,7 @@ fn euler_degrees_to_quaternion(rotation: [f32; 3]) -> [f64; 4] {
     [(sx * cy * cz + cx * sy * sz) as f64, (cx * sy * cz - sx * cy * sz) as f64, (cx * cy * sz + sx * sy * cz) as f64, (cx * cy * cz - sx * sy * sz) as f64]
 }
 
-fn world_instances_json(snapshot: &LowpolySnapshot) -> String {
+async fn world_instances_json(snapshot: &LowpolySnapshot) -> String {
     let instances: Vec<serde_json::Value> = snapshot
         .objects
         .iter()
@@ -73,7 +73,7 @@ fn world_instances_json(snapshot: &LowpolySnapshot) -> String {
 /// straight off the document. Every object renders the same fallback-box placeholder mesh geometry
 /// (real composed-child mesh resolution is an editor-side, engine-backed pipeline out of scope for a
 /// pure read).
-pub fn render(document: &LowpolySnapshot) -> UiNode {
+pub async fn render(document: &LowpolySnapshot) -> UiNode {
     let meshes_json = serde_json::to_string(&[serde_json::json!({ "id": LOWPOLY_VIEW_FALLBACK_MESH_KIND, "data": mesh_from_kind(LOWPOLY_VIEW_FALLBACK_MESH_KIND) })]).unwrap_or_else(|_| "[]".into());
     let view = MeshView {
         camera_json: world3d_camera_json(LOWPOLY_VIEW_DEFAULT_CAMERA_POSITION, LOWPOLY_VIEW_DEFAULT_CAMERA_TARGET, LOWPOLY_VIEW_DEFAULT_CAMERA_FOV),
@@ -91,13 +91,13 @@ mod tests {
     use super::*;
 
     #[test]
-    fn definition_declares_the_shared_mesh_window_kit() {
+    async fn definition_declares_the_shared_mesh_window_kit() {
         let def = definition();
         assert_eq!(def.id, MeshWindowKit::KIND_ID);
     }
 
     #[test]
-    fn render_produces_a_scene_node_for_the_default_document() {
+    async fn render_produces_a_scene_node_for_the_default_document() {
         let document = crate::artifacts::lowpoly::schema::default_snapshot();
         let _node = render(&document);
     }

@@ -31,34 +31,34 @@ macro_rules! epw_record_diff {
 
         impl EpwRecordDiff {
             /// 🕳️ Whether this patch changes nothing.
-            pub fn is_empty(&self) -> bool {
+            pub async fn is_empty(&self) -> bool {
                 $( self.$field.is_none() && )+ true
             }
             /// ▶️ Applies this patch to a record.
-            pub fn apply(&self, base: &EpwRecord) -> EpwRecord {
+            pub async fn apply(&self, base: &EpwRecord) -> EpwRecord {
                 EpwRecord {
                     $( $field: self.$field.clone().unwrap_or_else(|| base.$field.clone()), )+
                 }
             }
             /// 🧭️ State delta between two records (every differing column becomes `Some`).
-            pub fn between(base: &EpwRecord, other: &EpwRecord) -> Self {
+            pub async fn between(base: &EpwRecord, other: &EpwRecord) -> Self {
                 Self {
                     $( $field: (base.$field != other.$field).then(|| other.$field.clone()), )+
                 }
             }
             /// ➕️ LWW per-field absorb: `other`'s populated columns win.
-            fn absorb(&mut self, other: Self) {
+            async fn absorb(&mut self, other: Self) {
                 $( if other.$field.is_some() { self.$field = other.$field; } )+
             }
             /// 📥️ Sets exactly one column by its canonical wire index (see [`EpwRecord::field_at`]).
-            pub fn set_at(&mut self, index: usize, value: Option<String>) {
+            pub async fn set_at(&mut self, index: usize, value: Option<String>) {
                 match index {
                     $( $index => self.$field = value, )+
                     _ => {}
                 }
             }
             /// 📤️ Reads one column's patch value by its canonical wire index.
-            pub fn get_at(&self, index: usize) -> Option<&Option<String>> {
+            pub async fn get_at(&self, index: usize) -> Option<&Option<String>> {
                 match index {
                     $( $index => Some(&self.$field), )+
                     _ => None,
@@ -114,7 +114,7 @@ pub struct EpwRecordsDiff {
 }
 
 impl EpwRecordsDiff {
-    pub fn is_empty(&self) -> bool {
+    pub async fn is_empty(&self) -> bool {
         self.removed.is_empty() && self.modified.is_empty() && self.added.is_empty()
     }
 }
@@ -132,7 +132,7 @@ enum Slot {
     Added(usize),
 }
 
-fn simulate_slots(len: usize, removed: &[usize], added_indices: &[usize]) -> Vec<Slot> {
+async fn simulate_slots(len: usize, removed: &[usize], added_indices: &[usize]) -> Vec<Slot> {
     let mut slots: Vec<Slot> = (0..len).map(Slot::Base).collect();
     let mut removed_desc = removed.to_vec();
     removed_desc.sort_unstable_by(|a, b| b.cmp(a));
@@ -151,7 +151,7 @@ fn simulate_slots(len: usize, removed: &[usize], added_indices: &[usize]) -> Vec
     slots
 }
 
-fn base_len_hint(removed: &[usize], modified_indices: impl Iterator<Item = usize>, added_indices: impl Iterator<Item = usize>) -> usize {
+async fn base_len_hint(removed: &[usize], modified_indices: impl Iterator<Item = usize>, added_indices: impl Iterator<Item = usize>) -> usize {
     removed.iter().copied().chain(modified_indices).chain(added_indices).max().map(|m| m + 1).unwrap_or(0)
 }
 //#endregion 🔖️IndexTransport
@@ -193,12 +193,12 @@ pub struct EpwDiff {
 }
 
 impl MutationDiff<EpwSnapshot> for EpwDiff {
-    fn apply(&self, base: &EpwSnapshot) -> MutationApplyResult<EpwSnapshot> {
+    async fn apply(&self, base: &EpwSnapshot) -> MutationApplyResult<EpwSnapshot> {
         validate_epw_diff(self, base)?;
         Ok(apply_epw_diff_unchecked(self, base))
     }
 
-    fn absorb(&mut self, other: Self) {
+    async fn absorb(&mut self, other: Self) {
         if other.location.is_some() {
             self.location = other.location;
         }
@@ -238,7 +238,7 @@ impl MutationDiff<EpwSnapshot> for EpwDiff {
     }
 }
 
-fn validate_epw_diff(diff: &EpwDiff, base: &EpwSnapshot) -> MutationApplyResult<()> {
+async fn validate_epw_diff(diff: &EpwDiff, base: &EpwSnapshot) -> MutationApplyResult<()> {
     let Some(records) = &diff.records else { return Ok(()) };
     let mut removed = std::collections::HashSet::new();
     for &index in &records.removed {
@@ -274,7 +274,7 @@ fn validate_epw_diff(diff: &EpwDiff, base: &EpwSnapshot) -> MutationApplyResult<
     Ok(())
 }
 
-fn apply_epw_diff_unchecked(diff: &EpwDiff, base: &EpwSnapshot) -> EpwSnapshot {
+async fn apply_epw_diff_unchecked(diff: &EpwDiff, base: &EpwSnapshot) -> EpwSnapshot {
     let mut next = base.clone();
     if let Some(v) = &diff.location {
         next.location = v.clone();
@@ -328,7 +328,7 @@ fn apply_epw_diff_unchecked(diff: &EpwDiff, base: &EpwSnapshot) -> EpwSnapshot {
 }
 
 /// ➕️ Structural, total, base-free absorb of two `records` triples (same algorithm as csv's).
-fn absorb_records(d1: EpwRecordsDiff, d2: EpwRecordsDiff) -> EpwRecordsDiff {
+async fn absorb_records(d1: EpwRecordsDiff, d2: EpwRecordsDiff) -> EpwRecordsDiff {
     let d1_added_indices: Vec<usize> = d1.added.iter().map(|a| a.index).collect();
     let removed_count = {
         let mut r = d1.removed.clone();
@@ -414,12 +414,12 @@ fn absorb_records(d1: EpwRecordsDiff, d2: EpwRecordsDiff) -> EpwRecordsDiff {
 }
 
 impl DiffAlgebra<EpwSnapshot> for EpwDiff {
-    fn inverse(&self, base: &EpwSnapshot) -> Self {
+    async fn inverse(&self, base: &EpwSnapshot) -> Self {
         let applied = apply_epw_diff_unchecked(self, base);
         Self::between(&applied, base)
     }
 
-    fn between(base: &EpwSnapshot, other: &EpwSnapshot) -> Self {
+    async fn between(base: &EpwSnapshot, other: &EpwSnapshot) -> Self {
         let location = (base.location != other.location).then(|| other.location.clone());
         let design_conditions = (base.design_conditions != other.design_conditions).then(|| other.design_conditions.clone());
         let typical_extreme_periods = (base.typical_extreme_periods != other.typical_extreme_periods).then(|| other.typical_extreme_periods.clone());
@@ -455,7 +455,7 @@ impl DiffAlgebra<EpwSnapshot> for EpwDiff {
         Self { location, design_conditions, typical_extreme_periods, ground_temperatures, holidays_dst, comments_1, comments_2, data_periods, records }
     }
 
-    fn is_empty(&self) -> bool {
+    async fn is_empty(&self) -> bool {
         self.location.is_none()
             && self.design_conditions.is_none()
             && self.typical_extreme_periods.is_none()
@@ -469,7 +469,7 @@ impl DiffAlgebra<EpwSnapshot> for EpwDiff {
 }
 
 /// 🧩 Builds a set-snapshot diff (sparse field-by-field delta, never a full-replace slot).
-pub fn diff_set_snapshot(base: &EpwSnapshot, next: &EpwSnapshot) -> EpwDiff {
+pub async fn diff_set_snapshot(base: &EpwSnapshot, next: &EpwSnapshot) -> EpwDiff {
     EpwDiff::between(base, next)
 }
 //#endregion 🔖️Diff
@@ -483,21 +483,21 @@ pub fn diff_set_snapshot(base: &EpwSnapshot, next: &EpwSnapshot) -> EpwDiff {
 /// values may contain `,`/`?`/spaces, which this grammar's own separators are built from — hex
 /// sidesteps escaping entirely, same convention as csv's/gif89a's hand-rolled diff codecs).
 //#region 🔖️Primitives
-pub(crate) fn hex_encode(bytes: &[u8]) -> String {
+pub(crate) async fn hex_encode(bytes: &[u8]) -> String {
     bytes.iter().map(|b| format!("{b:02x}")).collect()
 }
-pub(crate) fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
+pub(crate) async fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
     if s.len() % 2 != 0 {
         return Err(format!("odd hex length: {s:?}"));
     }
     (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()
 }
-pub(crate) fn parse_usize(s: &str) -> Result<usize, String> {
+pub(crate) async fn parse_usize(s: &str) -> Result<usize, String> {
     s.parse().map_err(|e: std::num::ParseIntError| e.to_string())
 }
 
 /// 🧭️ Bracket-depth-aware split (tracks `[`/`]` only).
-pub(crate) fn split_top_level(s: &str, sep: char) -> Vec<&str> {
+pub(crate) async fn split_top_level(s: &str, sep: char) -> Vec<&str> {
     if s.is_empty() {
         return Vec::new();
     }
@@ -518,16 +518,16 @@ pub(crate) fn split_top_level(s: &str, sep: char) -> Vec<&str> {
     out.push(&s[start..]);
     out
 }
-pub(crate) fn strip_brackets(s: &str) -> Result<&str, String> {
+pub(crate) async fn strip_brackets(s: &str) -> Result<&str, String> {
     s.strip_prefix('[').and_then(|s| s.strip_suffix(']')).ok_or_else(|| format!("expected [...], got {s:?}"))
 }
-pub(crate) fn encode_option<T>(opt: &Option<T>, enc: impl Fn(&T) -> String) -> String {
+pub(crate) async fn encode_option<T>(opt: &Option<T>, enc: impl Fn(&T) -> String) -> String {
     match opt {
         None => "[0]".to_string(),
         Some(v) => format!("[1,{}]", enc(v)),
     }
 }
-pub(crate) fn decode_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Option<T>, String> {
+pub(crate) async fn decode_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Option<T>, String> {
     let inner = strip_brackets(s)?;
     match split_top_level(inner, ',').as_slice() {
         ["0"] => Ok(None),
@@ -538,16 +538,16 @@ pub(crate) fn decode_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>)
 //#endregion 🔖️Primitives
 
 //#region 🔖️ValueCodecs
-pub(crate) fn enc_str(s: &str) -> String {
+pub(crate) async fn enc_str(s: &str) -> String {
     hex_encode(s.as_bytes())
 }
-pub(crate) fn dec_str(s: &str) -> Result<String, String> {
+pub(crate) async fn dec_str(s: &str) -> Result<String, String> {
     String::from_utf8(hex_decode(s)?).map_err(|e| e.to_string())
 }
-pub(crate) fn enc_record(r: &EpwRecord) -> String {
+pub(crate) async fn enc_record(r: &EpwRecord) -> String {
     format!("[{}]", r.fields().iter().map(|f| enc_str(f)).collect::<Vec<_>>().join(","))
 }
-pub(crate) fn dec_record(s: &str) -> Result<EpwRecord, String> {
+pub(crate) async fn dec_record(s: &str) -> Result<EpwRecord, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     if parts.len() != EPW_RECORD_FIELD_COUNT {
         return Err(format!("record: expected {EPW_RECORD_FIELD_COUNT} fields, got {}", parts.len()));
@@ -559,10 +559,10 @@ pub(crate) fn dec_record(s: &str) -> Result<EpwRecord, String> {
     let arr: [String; EPW_RECORD_FIELD_COUNT] = values.try_into().map_err(|_| "record: field count mismatch".to_string())?;
     Ok(EpwRecord::from_fields(arr))
 }
-pub(crate) fn enc_location(l: &EpwLocation) -> String {
+pub(crate) async fn enc_location(l: &EpwLocation) -> String {
     format!("[{},{},{},{},{},{},{},{},{}]", enc_str(&l.city), enc_str(&l.state_province), enc_str(&l.country), enc_str(&l.source), enc_str(&l.wmo), enc_str(&l.latitude), enc_str(&l.longitude), enc_str(&l.time_zone), enc_str(&l.elevation),)
 }
-pub(crate) fn dec_location(s: &str) -> Result<EpwLocation, String> {
+pub(crate) async fn dec_location(s: &str) -> Result<EpwLocation, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [city, state_province, country, source, wmo, latitude, longitude, time_zone, elevation] = parts.as_slice() else {
         return Err(format!("location: expected 9 fields, got {}", parts.len()));
@@ -579,11 +579,11 @@ pub(crate) fn dec_location(s: &str) -> Result<EpwLocation, String> {
         elevation: dec_str(elevation)?,
     })
 }
-pub(crate) fn enc_data_periods(d: &EpwDataPeriods) -> String {
+pub(crate) async fn enc_data_periods(d: &EpwDataPeriods) -> String {
     let periods = d.periods.iter().map(|p| format!("[{},{},{},{}]", enc_str(&p.name), enc_str(&p.start_day_of_week), enc_str(&p.start_date), enc_str(&p.end_date))).collect::<Vec<_>>().join(",");
     format!("[{},[{}]]", d.records_per_hour, periods)
 }
-pub(crate) fn dec_data_periods(s: &str) -> Result<EpwDataPeriods, String> {
+pub(crate) async fn dec_data_periods(s: &str) -> Result<EpwDataPeriods, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [records_per_hour, periods] = parts.as_slice() else {
         return Err(format!("data_periods: expected 2 fields, got {}", parts.len()));
@@ -604,7 +604,7 @@ pub(crate) fn dec_data_periods(s: &str) -> Result<EpwDataPeriods, String> {
 //#endregion 🔖️ValueCodecs
 
 //#region 🔖️DiffValueCodecs
-fn enc_record_diff(d: &EpwRecordDiff) -> String {
+async fn enc_record_diff(d: &EpwRecordDiff) -> String {
     let mut parts = Vec::with_capacity(EPW_RECORD_FIELD_COUNT);
     for i in 0..EPW_RECORD_FIELD_COUNT {
         let slot = d.get_at(i).expect("index within range");
@@ -612,7 +612,7 @@ fn enc_record_diff(d: &EpwRecordDiff) -> String {
     }
     format!("[{}]", parts.join(","))
 }
-fn dec_record_diff(s: &str) -> Result<EpwRecordDiff, String> {
+async fn dec_record_diff(s: &str) -> Result<EpwRecordDiff, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     if parts.len() != EPW_RECORD_FIELD_COUNT {
         return Err(format!("record diff: expected {EPW_RECORD_FIELD_COUNT} fields, got {}", parts.len()));
@@ -625,13 +625,13 @@ fn dec_record_diff(s: &str) -> Result<EpwRecordDiff, String> {
     Ok(d)
 }
 
-fn enc_records_diff(d: &EpwRecordsDiff) -> String {
+async fn enc_records_diff(d: &EpwRecordsDiff) -> String {
     let removed = d.removed.iter().map(|i| i.to_string()).collect::<Vec<_>>().join(",");
     let modified = d.modified.iter().map(|m| format!("{}:{}", m.index, enc_record_diff(&m.diff))).collect::<Vec<_>>().join(",");
     let added = d.added.iter().map(|a| format!("{}:{}", a.index, enc_record(&a.record))).collect::<Vec<_>>().join(",");
     format!("records{{[{removed}];[{modified}];[{added}]}}")
 }
-fn dec_records_diff(body: &str) -> Result<EpwRecordsDiff, String> {
+async fn dec_records_diff(body: &str) -> Result<EpwRecordsDiff, String> {
     let three = split_top_level(body, ';');
     let [removed_s, modified_s, added_s] = three.as_slice() else { return Err(format!("records: expected 3 sections, got {}", three.len())) };
     let removed = split_top_level(strip_brackets(removed_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(parse_usize).collect::<Result<Vec<_>, String>>()?;
@@ -656,7 +656,7 @@ fn dec_records_diff(body: &str) -> Result<EpwRecordsDiff, String> {
 //#endregion 🔖️DiffValueCodecs
 
 //#region 🔖️TopLevel
-fn print_epw_diff(d: &EpwDiff) -> String {
+async fn print_epw_diff(d: &EpwDiff) -> String {
     let mut tokens: Vec<String> = Vec::new();
     if let Some(v) = &d.location {
         tokens.push(format!("location={}", enc_location(v)));
@@ -687,7 +687,7 @@ fn print_epw_diff(d: &EpwDiff) -> String {
     }
     tokens.join(" ")
 }
-fn parse_epw_diff(line: &str) -> Result<EpwDiff, String> {
+async fn parse_epw_diff(line: &str) -> Result<EpwDiff, String> {
     let mut d = EpwDiff::default();
     if line.is_empty() {
         return Ok(d);
@@ -719,18 +719,18 @@ fn parse_epw_diff(line: &str) -> Result<EpwDiff, String> {
 }
 
 impl DiffCodec for EpwDiff {
-    fn print_diff(&self) -> String {
+    async fn print_diff(&self) -> String {
         print_epw_diff(self)
     }
-    fn parse_diff(line: &str) -> Result<Self, store::TextError> {
+    async fn parse_diff(line: &str) -> Result<Self, store::TextError> {
         parse_epw_diff(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
     /// ⚡️ Binary = the text bytes verbatim, same simplification csv's/gif89a's hand-rolled
     /// `DiffCodec`s use.
-    fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    async fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         Ok(self.print_diff().into_bytes())
     }
-    fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    async fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         let line = std::str::from_utf8(bytes).map_err(|e| protocol::ProtocolError::Malformed { what: "diff utf8", offset: 0, detail: e.to_string() })?;
         Self::parse_diff(line).map_err(|e| protocol::ProtocolError::Malformed { what: "diff text", offset: 0, detail: e.to_string() })
     }
@@ -743,10 +743,10 @@ impl DiffCodec for EpwDiff {
 mod handcrafted_diff_codec_tests {
     use super::*;
 
-    fn location(city: &str) -> EpwLocation {
+    async fn location(city: &str) -> EpwLocation {
         EpwLocation { city: city.into(), state_province: "NI".into(), country: "DEU".into(), source: "SRC".into(), wmo: "10238".into(), latitude: "52.37".into(), longitude: "9.74".into(), time_zone: "1.0".into(), elevation: "55.0".into() }
     }
-    fn record(seed: &str) -> EpwRecord {
+    async fn record(seed: &str) -> EpwRecord {
         let mut r = EpwRecord::default();
         r.year = "2026".into();
         r.month = "1".into();
@@ -755,12 +755,12 @@ mod handcrafted_diff_codec_tests {
         r.dry_bulb_temp = format!("-{seed}.0");
         r
     }
-    fn snapshot(city: &str) -> EpwSnapshot {
+    async fn snapshot(city: &str) -> EpwSnapshot {
         EpwSnapshot { location: location(city), records: vec![record("1"), record("2"), record("3")], ..EpwSnapshot::default() }
     }
 
     #[test]
-    fn diff_codec_text_binary_roundtrip_law() {
+    async fn diff_codec_text_binary_roundtrip_law() {
         let a = snapshot("Hannover");
         let mut b = snapshot("Berlin");
         b.records[1] = record("2-modified, tricky [value]");

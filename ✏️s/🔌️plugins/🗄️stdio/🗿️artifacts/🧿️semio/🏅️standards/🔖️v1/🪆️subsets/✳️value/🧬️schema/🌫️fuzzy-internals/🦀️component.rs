@@ -47,11 +47,11 @@ pub type FuzzyResult<T> = Result<T, FuzzyError>;
 // #endregion 🔖️FuzzyError
 
 // #region 🔖️Helpers
-fn clamp01(x: f64) -> f64 {
+async fn clamp01(x: f64) -> f64 {
     x.clamp(0.0, 1.0)
 }
 
-fn linspace(min: f64, max: f64, n: usize) -> Vec<f64> {
+async fn linspace(min: f64, max: f64, n: usize) -> Vec<f64> {
     if n == 0 {
         return Vec::new();
     }
@@ -62,7 +62,7 @@ fn linspace(min: f64, max: f64, n: usize) -> Vec<f64> {
     (0..n).map(|i| min + step * i as f64).collect()
 }
 
-fn argmax(values: &[f64]) -> usize {
+async fn argmax(values: &[f64]) -> usize {
     values.iter().enumerate().max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal)).map_or(0, |(i, _)| i)
 }
 // #endregion 🔖️Helpers
@@ -81,35 +81,35 @@ pub enum MembershipFunction {
 }
 
 impl MembershipFunction {
-    pub fn triangular(a: f64, b: f64, c: f64) -> Self {
+    pub async fn triangular(a: f64, b: f64, c: f64) -> Self {
         Self::Triangular { a, b, c }
     }
 
-    pub fn trapezoidal(a: f64, b: f64, c: f64, d: f64) -> Self {
+    pub async fn trapezoidal(a: f64, b: f64, c: f64, d: f64) -> Self {
         Self::Trapezoidal { a, b, c, d }
     }
 
-    pub fn gaussian(mean: f64, sigma: f64) -> Self {
+    pub async fn gaussian(mean: f64, sigma: f64) -> Self {
         Self::Gaussian { mean, sigma: sigma.max(1e-12) }
     }
 
-    pub fn generalized_bell(a: f64, b: f64, c: f64) -> Self {
+    pub async fn generalized_bell(a: f64, b: f64, c: f64) -> Self {
         Self::GeneralizedBell { a: a.max(1e-12), b: b.max(1e-6), c }
     }
 
-    pub fn sigmoid(a: f64, c: f64) -> Self {
+    pub async fn sigmoid(a: f64, c: f64) -> Self {
         Self::Sigmoid { a, c }
     }
 
-    pub fn singleton(value: f64) -> Self {
+    pub async fn singleton(value: f64) -> Self {
         Self::Singleton { value }
     }
 
-    pub fn piecewise_linear(knots: Vec<(f64, f64)>) -> Self {
+    pub async fn piecewise_linear(knots: Vec<(f64, f64)>) -> Self {
         Self::PiecewiseLinear { knots }
     }
 
-    pub fn eval(&self, x: f64) -> f64 {
+    pub async fn eval(&self, x: f64) -> f64 {
         match self {
             Self::Triangular { a, b, c } => {
                 if x <= *a || x >= *c {
@@ -185,7 +185,7 @@ impl MembershipFunction {
         }
     }
 
-    pub fn parameters(&self) -> Vec<f64> {
+    pub async fn parameters(&self) -> Vec<f64> {
         match self {
             Self::Triangular { a, b, c } => vec![*a, *b, *c],
             Self::Trapezoidal { a, b, c, d } => vec![*a, *b, *c, *d],
@@ -197,7 +197,7 @@ impl MembershipFunction {
         }
     }
 
-    pub fn set_parameters(&mut self, params: &[f64]) -> FuzzyResult<()> {
+    pub async fn set_parameters(&mut self, params: &[f64]) -> FuzzyResult<()> {
         match self {
             Self::Triangular { a, b, c } => {
                 if params.len() != 3 {
@@ -257,7 +257,7 @@ impl MembershipFunction {
         Ok(())
     }
 
-    pub fn support_min(&self) -> f64 {
+    pub async fn support_min(&self) -> f64 {
         match self {
             Self::Triangular { a, .. } | Self::Trapezoidal { a, .. } => *a,
             Self::Gaussian { mean, sigma } => mean - 4.0 * sigma,
@@ -268,7 +268,7 @@ impl MembershipFunction {
         }
     }
 
-    pub fn support_max(&self) -> f64 {
+    pub async fn support_max(&self) -> f64 {
         match self {
             Self::Triangular { c, .. } => *c,
             Self::Trapezoidal { d, .. } => *d,
@@ -291,11 +291,11 @@ pub struct FuzzySet {
 }
 
 impl FuzzySet {
-    pub fn new(name: impl Into<String>, mf: MembershipFunction) -> Self {
+    pub async fn new(name: impl Into<String>, mf: MembershipFunction) -> Self {
         Self { name: name.into(), mf }
     }
 
-    pub fn grade(&self, x: f64) -> f64 {
+    pub async fn grade(&self, x: f64) -> f64 {
         clamp01(self.mf.eval(x))
     }
 }
@@ -309,17 +309,17 @@ pub struct IntervalType2Set {
 }
 
 impl IntervalType2Set {
-    pub fn new(name: impl Into<String>, lower: MembershipFunction, upper: MembershipFunction) -> Self {
+    pub async fn new(name: impl Into<String>, lower: MembershipFunction, upper: MembershipFunction) -> Self {
         Self { name: name.into(), lower, upper }
     }
 
-    pub fn grade_interval(&self, x: f64) -> (f64, f64) {
+    pub async fn grade_interval(&self, x: f64) -> (f64, f64) {
         let lo = clamp01(self.lower.eval(x));
         let hi = clamp01(self.upper.eval(x).max(lo));
         (lo, hi)
     }
 
-    pub fn type_reduced_centroid(&self, universe: &[f64]) -> f64 {
+    pub async fn type_reduced_centroid(&self, universe: &[f64]) -> f64 {
         if universe.is_empty() {
             return 0.0;
         }
@@ -348,11 +348,11 @@ pub struct IntuitionisticSet {
 }
 
 impl IntuitionisticSet {
-    pub fn new(name: impl Into<String>, membership: MembershipFunction, non_membership: MembershipFunction) -> Self {
+    pub async fn new(name: impl Into<String>, membership: MembershipFunction, non_membership: MembershipFunction) -> Self {
         Self { name: name.into(), membership, non_membership }
     }
 
-    pub fn grades(&self, x: f64) -> FuzzyResult<(f64, f64, f64)> {
+    pub async fn grades(&self, x: f64) -> FuzzyResult<(f64, f64, f64)> {
         let mu = clamp01(self.membership.eval(x));
         let nu = clamp01(self.non_membership.eval(x));
         if mu + nu > 1.0 + 1e-9 {
@@ -374,7 +374,7 @@ pub enum TNorm {
 }
 
 impl TNorm {
-    pub fn apply(self, a: f64, b: f64) -> f64 {
+    pub async fn apply(self, a: f64, b: f64) -> f64 {
         let a = clamp01(a);
         let b = clamp01(b);
         match self {
@@ -393,7 +393,7 @@ impl TNorm {
         }
     }
 
-    pub fn fold<I: Iterator<Item = f64>>(self, values: I) -> f64 {
+    pub async fn fold<I: Iterator<Item = f64>>(self, values: I) -> f64 {
         values.fold(1.0, |acc, v| self.apply(acc, v))
     }
 }
@@ -408,7 +408,7 @@ pub enum TConorm {
 }
 
 impl TConorm {
-    pub fn apply(self, a: f64, b: f64) -> f64 {
+    pub async fn apply(self, a: f64, b: f64) -> f64 {
         let a = clamp01(a);
         let b = clamp01(b);
         match self {
@@ -425,7 +425,7 @@ impl TConorm {
         }
     }
 
-    pub fn fold<I: Iterator<Item = f64>>(self, values: I) -> f64 {
+    pub async fn fold<I: Iterator<Item = f64>>(self, values: I) -> f64 {
         values.fold(0.0, |acc, v| self.apply(acc, v))
     }
 }
@@ -440,7 +440,7 @@ pub enum Hedge {
 }
 
 impl Hedge {
-    pub fn apply(self, mu: f64) -> f64 {
+    pub async fn apply(self, mu: f64) -> f64 {
         let mu = clamp01(mu);
         match self {
             Self::Very => mu * mu,
@@ -451,15 +451,15 @@ impl Hedge {
     }
 }
 
-pub fn complement(mu: f64) -> f64 {
+pub async fn complement(mu: f64) -> f64 {
     1.0 - clamp01(mu)
 }
 
-pub fn concentration(mu: f64) -> f64 {
+pub async fn concentration(mu: f64) -> f64 {
     clamp01(mu).powi(2)
 }
 
-pub fn dilation(mu: f64) -> f64 {
+pub async fn dilation(mu: f64) -> f64 {
     clamp01(mu).sqrt()
 }
 // #endregion 🔖️TNormTConorm
@@ -474,11 +474,11 @@ pub struct FuzzyNumber {
 }
 
 impl FuzzyNumber {
-    pub fn triangular(a: f64, b: f64, c: f64) -> Self {
+    pub async fn triangular(a: f64, b: f64, c: f64) -> Self {
         Self { a, b, c }
     }
 
-    pub fn alpha_cut(&self, alpha: f64) -> (f64, f64) {
+    pub async fn alpha_cut(&self, alpha: f64) -> (f64, f64) {
         let alpha = clamp01(alpha);
         if alpha <= 0.0 {
             return (self.b, self.b);
@@ -488,7 +488,7 @@ impl FuzzyNumber {
         (left.min(right), left.max(right))
     }
 
-    pub fn defuzzify_centroid(&self, samples: usize) -> f64 {
+    pub async fn defuzzify_centroid(&self, samples: usize) -> f64 {
         let mut num = 0.0;
         let mut den = 0.0;
         for i in 0..samples {
@@ -505,16 +505,16 @@ impl FuzzyNumber {
     }
 
     #[allow(clippy::should_implement_trait, reason = "value-semantics add used pervasively as a plain method by fuzzy arithmetic callers")]
-    pub fn add(self, other: Self) -> Self {
+    pub async fn add(self, other: Self) -> Self {
         Self { a: self.a + other.a, b: self.b + other.b, c: self.c + other.c }
     }
 
     #[allow(clippy::should_implement_trait, reason = "value-semantics sub used pervasively as a plain method by fuzzy arithmetic callers")]
-    pub fn sub(self, other: Self) -> Self {
+    pub async fn sub(self, other: Self) -> Self {
         Self { a: self.a - other.c, b: self.b - other.b, c: self.c - other.a }
     }
 
-    pub fn scale(self, k: f64) -> Self {
+    pub async fn scale(self, k: f64) -> Self {
         if k >= 0.0 {
             Self { a: self.a * k, b: self.b * k, c: self.c * k }
         } else {
@@ -523,11 +523,11 @@ impl FuzzyNumber {
     }
 }
 
-pub fn fuzzy_add(a: FuzzyNumber, b: FuzzyNumber) -> FuzzyNumber {
+pub async fn fuzzy_add(a: FuzzyNumber, b: FuzzyNumber) -> FuzzyNumber {
     a.add(b)
 }
 
-pub fn fuzzy_mul_interval(a: FuzzyNumber, b: FuzzyNumber, alpha: f64) -> (f64, f64) {
+pub async fn fuzzy_mul_interval(a: FuzzyNumber, b: FuzzyNumber, alpha: f64) -> (f64, f64) {
     let (al, ar) = a.alpha_cut(alpha);
     let (bl, br) = b.alpha_cut(alpha);
     let candidates = [al * bl, al * br, ar * bl, ar * br];
@@ -543,19 +543,19 @@ pub struct FuzzyRelation {
 }
 
 impl FuzzyRelation {
-    pub fn new(rows: usize, cols: usize) -> Self {
+    pub async fn new(rows: usize, cols: usize) -> Self {
         Self { values: vec![vec![0.0; cols]; rows] }
     }
 
-    pub fn set(&mut self, row: usize, col: usize, value: f64) {
+    pub async fn set(&mut self, row: usize, col: usize, value: f64) {
         self.values[row][col] = clamp01(value);
     }
 
-    pub fn get(&self, row: usize, col: usize) -> f64 {
+    pub async fn get(&self, row: usize, col: usize) -> f64 {
         self.values[row][col]
     }
 
-    pub fn compose_max_min(&self, other: &Self) -> FuzzyResult<Self> {
+    pub async fn compose_max_min(&self, other: &Self) -> FuzzyResult<Self> {
         if self.values[0].len() != other.values.len() {
             return Err(FuzzyError::DimensionMismatch("relation composition".into()));
         }
@@ -575,7 +575,7 @@ impl FuzzyRelation {
         Ok(out)
     }
 
-    pub fn compose_max_product(&self, other: &Self) -> FuzzyResult<Self> {
+    pub async fn compose_max_product(&self, other: &Self) -> FuzzyResult<Self> {
         if self.values[0].len() != other.values.len() {
             return Err(FuzzyError::DimensionMismatch("relation composition".into()));
         }
@@ -606,22 +606,22 @@ pub struct PossibilityMeasure {
 }
 
 impl PossibilityMeasure {
-    pub fn new(universe: Vec<f64>, membership: Vec<f64>) -> FuzzyResult<Self> {
+    pub async fn new(universe: Vec<f64>, membership: Vec<f64>) -> FuzzyResult<Self> {
         if universe.len() != membership.len() || universe.is_empty() {
             return Err(FuzzyError::InvalidDomain("possibility universe".into()));
         }
         Ok(Self { universe, membership: membership.into_iter().map(clamp01).collect() })
     }
 
-    pub fn possibility(&self, predicate: impl Fn(f64) -> bool) -> f64 {
+    pub async fn possibility(&self, predicate: impl Fn(f64) -> bool) -> f64 {
         self.universe.iter().zip(self.membership.iter()).filter(|(x, _)| predicate(**x)).map(|(_, mu)| *mu).fold(0.0, f64::max)
     }
 
-    pub fn necessity(&self, predicate: impl Fn(f64) -> bool) -> f64 {
+    pub async fn necessity(&self, predicate: impl Fn(f64) -> bool) -> f64 {
         1.0 - self.possibility(|x| !predicate(x))
     }
 
-    pub fn from_scores(universe: Vec<f64>, scores: Vec<f64>) -> FuzzyResult<Self> {
+    pub async fn from_scores(universe: Vec<f64>, scores: Vec<f64>) -> FuzzyResult<Self> {
         let max_score = scores.iter().copied().fold(0.0_f64, f64::max).max(1e-12);
         Self::new(universe, scores.into_iter().map(|s| s / max_score).collect())
     }
@@ -638,22 +638,22 @@ pub struct Universe {
 }
 
 impl Universe {
-    pub fn new(min: f64, max: f64, n: usize) -> FuzzyResult<Self> {
+    pub async fn new(min: f64, max: f64, n: usize) -> FuzzyResult<Self> {
         if min >= max || n == 0 {
             return Err(FuzzyError::InvalidDomain("universe bounds".into()));
         }
         Ok(Self { min, max, samples: linspace(min, max, n) })
     }
 
-    pub fn sample(&self, index: usize) -> f64 {
+    pub async fn sample(&self, index: usize) -> f64 {
         self.samples[index]
     }
 
-    pub fn len(&self) -> usize {
+    pub async fn len(&self) -> usize {
         self.samples.len()
     }
 
-    pub fn is_empty(&self) -> bool {
+    pub async fn is_empty(&self) -> bool {
         self.samples.is_empty()
     }
 }
@@ -669,15 +669,15 @@ pub struct LinguisticVariable {
 }
 
 impl LinguisticVariable {
-    pub fn new(name: impl Into<String>, universe: Universe, terms: Vec<FuzzySet>) -> Self {
+    pub async fn new(name: impl Into<String>, universe: Universe, terms: Vec<FuzzySet>) -> Self {
         Self { name: name.into(), universe, terms }
     }
 
-    pub fn fuzzify(&self, x: f64) -> Vec<f64> {
+    pub async fn fuzzify(&self, x: f64) -> Vec<f64> {
         self.terms.iter().map(|t| t.grade(x)).collect()
     }
 
-    pub fn term_index(&self, name: &str) -> Option<usize> {
+    pub async fn term_index(&self, name: &str) -> Option<usize> {
         self.terms.iter().position(|t| t.name == name)
     }
 }
@@ -713,7 +713,7 @@ pub struct Rule {
 }
 
 impl Rule {
-    pub fn firing_strength(&self, inputs: &[LinguisticVariable], values: &[f64], tnorm: TNorm) -> f64 {
+    pub async fn firing_strength(&self, inputs: &[LinguisticVariable], values: &[f64], tnorm: TNorm) -> f64 {
         let strengths: Vec<f64> = self
             .antecedents
             .iter()
@@ -733,11 +733,11 @@ pub struct RuleBase {
 }
 
 impl RuleBase {
-    pub fn new(rules: Vec<Rule>) -> Self {
+    pub async fn new(rules: Vec<Rule>) -> Self {
         Self { rules }
     }
 
-    pub fn is_empty(&self) -> bool {
+    pub async fn is_empty(&self) -> bool {
         self.rules.is_empty()
     }
 }
@@ -757,7 +757,7 @@ pub enum Defuzzifier {
 }
 
 impl Defuzzifier {
-    pub fn apply(&self, universe: &Universe, membership: &[f64], rule_heights: Option<&[f64]>, rule_values: Option<&[f64]>) -> FuzzyResult<f64> {
+    pub async fn apply(&self, universe: &Universe, membership: &[f64], rule_heights: Option<&[f64]>, rule_values: Option<&[f64]>) -> FuzzyResult<f64> {
         if universe.samples.is_empty() || membership.is_empty() {
             return Err(FuzzyError::EmptyUniverse);
         }
@@ -862,7 +862,7 @@ pub struct MimoSystem {
 }
 
 impl MimoSystem {
-    pub fn infer(&self, values: &[f64]) -> FuzzyResult<(Vec<f64>, Explanation)> {
+    pub async fn infer(&self, values: &[f64]) -> FuzzyResult<(Vec<f64>, Explanation)> {
         if values.len() != self.inputs.len() {
             return Err(FuzzyError::DimensionMismatch("input count".into()));
         }
@@ -880,7 +880,7 @@ impl MimoSystem {
         Ok((outputs.clone(), Explanation { model: self.model, input_values: values.to_vec(), output_values: outputs, traces, defuzzifier: self.defuzzifier, rationale }))
     }
 
-    fn infer_output(&self, out_idx: usize, output_var: &LinguisticVariable, values: &[f64]) -> FuzzyResult<(f64, Vec<RuleTrace>)> {
+    async fn infer_output(&self, out_idx: usize, output_var: &LinguisticVariable, values: &[f64]) -> FuzzyResult<(f64, Vec<RuleTrace>)> {
         let mut aggregated = vec![0.0; output_var.universe.len()];
         let mut traces = Vec::new();
         let mut sugeno_num = 0.0;
@@ -967,7 +967,7 @@ impl MimoSystem {
     }
 }
 
-fn tsukamoto_inverse(mf: &MembershipFunction, alpha: f64) -> f64 {
+async fn tsukamoto_inverse(mf: &MembershipFunction, alpha: f64) -> f64 {
     let alpha = clamp01(alpha);
     if alpha <= 0.0 {
         return mf.support_min();
@@ -994,11 +994,11 @@ pub struct HierarchicalSystem {
 }
 
 impl HierarchicalSystem {
-    pub fn new(layers: Vec<MimoSystem>) -> Self {
+    pub async fn new(layers: Vec<MimoSystem>) -> Self {
         Self { layers }
     }
 
-    pub fn infer(&self, values: &[f64]) -> FuzzyResult<(Vec<f64>, Vec<Explanation>)> {
+    pub async fn infer(&self, values: &[f64]) -> FuzzyResult<(Vec<f64>, Vec<Explanation>)> {
         let mut current = values.to_vec();
         let mut explanations = Vec::new();
         for layer in &self.layers {
@@ -1020,11 +1020,11 @@ pub struct AdaptiveMembership {
 }
 
 impl AdaptiveMembership {
-    pub fn new(mf: MembershipFunction, learning_rate: f64) -> Self {
+    pub async fn new(mf: MembershipFunction, learning_rate: f64) -> Self {
         Self { mf, learning_rate }
     }
 
-    pub fn fit(&mut self, samples: &[(f64, f64)], epochs: usize) -> f64 {
+    pub async fn fit(&mut self, samples: &[(f64, f64)], epochs: usize) -> f64 {
         let mut loss = 0.0;
         for _ in 0..epochs {
             loss = 0.0;
@@ -1067,13 +1067,13 @@ pub struct Anfis {
 }
 
 impl Anfis {
-    pub fn new(input_count: usize, rules_per_input: usize, input_ranges: &[(f64, f64)]) -> Self {
+    pub async fn new(input_count: usize, rules_per_input: usize, input_ranges: &[(f64, f64)]) -> Self {
         let rule_count = rules_per_input.pow(input_count as u32);
         let mut premise_centers = vec![vec![0.0; input_count]; rule_count];
         let mut premise_widths = vec![vec![1.0; input_count]; rule_count];
         let mut idx = 0usize;
         let steps: Vec<Vec<f64>> = input_ranges.iter().map(|(lo, hi)| linspace(*lo, *hi, rules_per_input)).collect();
-        fn recurse(input_count: usize, steps: &[Vec<f64>], path: &mut Vec<usize>, idx: &mut usize, centers: &mut [Vec<f64>], widths: &mut [Vec<f64>], ranges: &[(f64, f64)]) {
+        async fn recurse(input_count: usize, steps: &[Vec<f64>], path: &mut Vec<usize>, idx: &mut usize, centers: &mut [Vec<f64>], widths: &mut [Vec<f64>], ranges: &[(f64, f64)]) {
             if path.len() == input_count {
                 for (j, &s) in path.iter().enumerate() {
                     centers[*idx][j] = steps[j][s];
@@ -1094,11 +1094,11 @@ impl Anfis {
         Self { input_count, rules_per_input, premise_centers, premise_widths, consequent_coeffs }
     }
 
-    pub fn rule_count(&self) -> usize {
+    pub async fn rule_count(&self) -> usize {
         self.consequent_coeffs.len()
     }
 
-    fn firing_strengths(&self, x: &[f64]) -> Vec<f64> {
+    async fn firing_strengths(&self, x: &[f64]) -> Vec<f64> {
         (0..self.rule_count())
             .map(|r| {
                 (0..self.input_count)
@@ -1112,7 +1112,7 @@ impl Anfis {
             .collect()
     }
 
-    pub fn forward(&self, x: &[f64]) -> f64 {
+    pub async fn forward(&self, x: &[f64]) -> f64 {
         let w = self.firing_strengths(x);
         let den: f64 = w.iter().sum();
         if den < 1e-12 {
@@ -1129,7 +1129,7 @@ impl Anfis {
         num / den
     }
 
-    pub fn fit_hybrid(&mut self, data: &[(Vec<f64>, f64)], epochs: usize) -> f64 {
+    pub async fn fit_hybrid(&mut self, data: &[(Vec<f64>, f64)], epochs: usize) -> f64 {
         let mut loss = 0.0;
         for _ in 0..epochs {
             self.fit_consequents(data);
@@ -1138,7 +1138,7 @@ impl Anfis {
         loss
     }
 
-    fn fit_consequents(&mut self, data: &[(Vec<f64>, f64)]) {
+    async fn fit_consequents(&mut self, data: &[(Vec<f64>, f64)]) {
         let n = data.len();
         let r = self.rule_count();
         let p = self.input_count + 1;
@@ -1172,7 +1172,7 @@ impl Anfis {
         let _ = n;
     }
 
-    fn fit_premises(&mut self, data: &[(Vec<f64>, f64)]) -> f64 {
+    async fn fit_premises(&mut self, data: &[(Vec<f64>, f64)]) -> f64 {
         let mut loss = 0.0;
         let lr = 0.01;
         for (x, y) in data {
@@ -1196,7 +1196,7 @@ impl Anfis {
 
 // #region 🔖️RuleLearning
 /// 🌱️ Wang–Mendel rule induction from input-output samples.
-pub fn wang_mendel_rules(inputs: &[LinguisticVariable], output: &LinguisticVariable, data: &[(Vec<f64>, f64)], model: InferenceModel) -> RuleBase {
+pub async fn wang_mendel_rules(inputs: &[LinguisticVariable], output: &LinguisticVariable, data: &[(Vec<f64>, f64)], model: InferenceModel) -> RuleBase {
     let mut rules = Vec::new();
     for (idx, (x, y)) in data.iter().enumerate() {
         let mut antecedents = Vec::new();
@@ -1218,12 +1218,12 @@ pub fn wang_mendel_rules(inputs: &[LinguisticVariable], output: &LinguisticVaria
 }
 
 /// 🧹️ Prune rules with activation support or weight below thresholds.
-pub fn prune_rules(rules: RuleBase, min_weight: f64, min_confidence: f64) -> RuleBase {
+pub async fn prune_rules(rules: RuleBase, min_weight: f64, min_confidence: f64) -> RuleBase {
     RuleBase::new(rules.rules.into_iter().filter(|r| r.weight >= min_weight && r.confidence >= min_confidence).collect())
 }
 
 /// 🎯️ Re-weight rules by empirical fit quality on a dataset.
-pub fn weight_rules_by_fit(system: &mut MimoSystem, data: &[(Vec<f64>, Vec<f64>)]) {
+pub async fn weight_rules_by_fit(system: &mut MimoSystem, data: &[(Vec<f64>, Vec<f64>)]) {
     let mut confidences = Vec::new();
     for rule in &system.rules.rules {
         let mut err = 0.0;
@@ -1244,7 +1244,7 @@ pub fn weight_rules_by_fit(system: &mut MimoSystem, data: &[(Vec<f64>, Vec<f64>)
 }
 
 /// 🌱️ Subtractive clustering seed centers for rule generation.
-pub fn subtractive_cluster_centers(data: &[Vec<f64>], ra: f64, accept_ratio: f64, reject_ratio: f64) -> Vec<Vec<f64>> {
+pub async fn subtractive_cluster_centers(data: &[Vec<f64>], ra: f64, accept_ratio: f64, reject_ratio: f64) -> Vec<Vec<f64>> {
     if data.is_empty() {
         return Vec::new();
     }
@@ -1290,7 +1290,7 @@ pub struct GeneticOptimizer {
 }
 
 impl GeneticOptimizer {
-    pub fn optimize<F: Fn(&[f64]) -> f64>(&self, fitness: F) -> (Vec<f64>, f64) {
+    pub async fn optimize<F: Fn(&[f64]) -> f64>(&self, fitness: F) -> (Vec<f64>, f64) {
         let mut rng = Rng::from_seed(self.seed);
         let dim = self.bounds.len();
         let mut population: Vec<Vec<f64>> = (0..self.population_size).map(|_| (0..dim).map(|d| self.bounds[d].0 + rng.next_f64() * (self.bounds[d].1 - self.bounds[d].0)).collect()).collect();
@@ -1333,7 +1333,7 @@ pub struct PsoOptimizer {
 }
 
 impl PsoOptimizer {
-    pub fn optimize<F: Fn(&[f64]) -> f64>(&self, fitness: F) -> (Vec<f64>, f64) {
+    pub async fn optimize<F: Fn(&[f64]) -> f64>(&self, fitness: F) -> (Vec<f64>, f64) {
         let mut rng = Rng::from_seed(self.seed);
         let dim = self.bounds.len();
         let mut positions: Vec<Vec<f64>> = (0..self.swarm_size).map(|_| (0..dim).map(|d| self.bounds[d].0 + rng.next_f64() * (self.bounds[d].1 - self.bounds[d].0)).collect()).collect();
@@ -1378,11 +1378,11 @@ pub struct EvolvingFuzzySystem {
 }
 
 impl EvolvingFuzzySystem {
-    pub fn new(system: MimoSystem, learning_rate: f64, prune_threshold: f64, max_rules: usize) -> Self {
+    pub async fn new(system: MimoSystem, learning_rate: f64, prune_threshold: f64, max_rules: usize) -> Self {
         Self { system, learning_rate, prune_threshold, max_rules }
     }
 
-    pub fn observe(&mut self, x: &[f64], y: &[f64]) -> FuzzyResult<Explanation> {
+    pub async fn observe(&mut self, x: &[f64], y: &[f64]) -> FuzzyResult<Explanation> {
         let (pred, mut explanation) = self.system.infer(x)?;
         for (rule, trace) in self.system.rules.rules.iter_mut().zip(explanation.traces.iter()) {
             rule.weight = (rule.weight + self.learning_rate * trace.activation).clamp(0.0, 1.0);
@@ -1425,7 +1425,7 @@ pub struct FcmResult {
 }
 
 /// 🎯️ Standard fuzzy c-means clustering.
-pub fn fuzzy_c_means(data: &[Vec<f64>], k: usize, m: f64, max_iter: usize, tol: f64) -> FuzzyResult<FcmResult> {
+pub async fn fuzzy_c_means(data: &[Vec<f64>], k: usize, m: f64, max_iter: usize, tol: f64) -> FuzzyResult<FcmResult> {
     if data.is_empty() || k == 0 {
         return Err(FuzzyError::InvalidDomain("fcm data".into()));
     }
@@ -1475,7 +1475,7 @@ pub fn fuzzy_c_means(data: &[Vec<f64>], k: usize, m: f64, max_iter: usize, tol: 
 }
 
 /// 🎯️ Gustafson–Kessel fuzzy clustering with adaptive covariance per cluster.
-pub fn gustafson_kessel(data: &[Vec<f64>], k: usize, m: f64, max_iter: usize) -> FuzzyResult<FcmResult> {
+pub async fn gustafson_kessel(data: &[Vec<f64>], k: usize, m: f64, max_iter: usize) -> FuzzyResult<FcmResult> {
     let mut result = fuzzy_c_means(data, k, m, max_iter, 1e-5)?;
     let n = data.len();
     let dim = data[0].len();
@@ -1538,11 +1538,11 @@ pub struct FuzzyAhp {
 }
 
 impl FuzzyAhp {
-    pub fn new(matrix: Vec<Vec<FuzzyNumber>>) -> Self {
+    pub async fn new(matrix: Vec<Vec<FuzzyNumber>>) -> Self {
         Self { matrix }
     }
 
-    pub fn weights(&self) -> Vec<f64> {
+    pub async fn weights(&self) -> Vec<f64> {
         let n = self.matrix.len();
         let mut scores = vec![0.0; n];
         for i in 0..n {
@@ -1570,7 +1570,7 @@ pub struct FuzzyTopsis {
 }
 
 impl FuzzyTopsis {
-    pub fn rank(&self) -> Vec<(usize, f64)> {
+    pub async fn rank(&self) -> Vec<(usize, f64)> {
         let m = self.alternatives.len();
         let n = self.criteria.len();
         let mut crisp = vec![vec![0.0; n]; m];
@@ -1611,7 +1611,7 @@ pub struct FuzzyVikor {
 }
 
 impl FuzzyVikor {
-    pub fn rank(&self) -> Vec<(usize, f64)> {
+    pub async fn rank(&self) -> Vec<(usize, f64)> {
         let m = self.alternatives.len();
         let n = self.criteria.len();
         let crisp = self.decision_matrix.iter().map(|row| row.iter().map(|cell| cell.defuzzify_centroid(32)).collect::<Vec<_>>()).collect::<Vec<_>>();
@@ -1651,12 +1651,12 @@ pub struct TemporalEvaluator {
 }
 
 impl TemporalEvaluator {
-    pub fn recently(&self, timestamp: f64) -> f64 {
+    pub async fn recently(&self, timestamp: f64) -> f64 {
         let dt = (self.now - timestamp).max(0.0);
         clamp01(1.0 - dt / self.recent_window.max(1e-6))
     }
 
-    pub fn frequently(&self, timestamps: &[f64]) -> f64 {
+    pub async fn frequently(&self, timestamps: &[f64]) -> f64 {
         let count = timestamps.iter().filter(|t| (self.now - **t).abs() <= self.frequent_window).count() as f64;
         clamp01(count / 5.0)
     }
@@ -1670,12 +1670,12 @@ pub struct SpatialEvaluator {
 }
 
 impl SpatialEvaluator {
-    pub fn near(&self, point: &[f64]) -> f64 {
+    pub async fn near(&self, point: &[f64]) -> f64 {
         let dist2: f64 = self.anchor.iter().zip(point.iter()).map(|(a, p)| (a - p).powi(2)).sum();
         clamp01(1.0 - dist2.sqrt() / self.near_radius.max(1e-6))
     }
 
-    pub fn slowly(&self, velocity: f64, max_speed: f64) -> f64 {
+    pub async fn slowly(&self, velocity: f64, max_speed: f64) -> f64 {
         clamp01(1.0 - velocity.abs() / max_speed.max(1e-6))
     }
 }
@@ -1683,17 +1683,17 @@ impl SpatialEvaluator {
 
 // #region 🔖️HybridUncertainty
 /// 🔀️ Map probabilistic scores to fuzzy membership without external Bayesian engines.
-pub fn probabilistic_to_membership(probability: f64, certainty: f64) -> f64 {
+pub async fn probabilistic_to_membership(probability: f64, certainty: f64) -> f64 {
     clamp01(probability * certainty + 0.5 * (1.0 - certainty))
 }
 
 /// 🔀️ Bridge possibility and fuzzy membership on a shared universe.
-pub fn possibility_to_membership(possibility: &PossibilityMeasure) -> Vec<f64> {
+pub async fn possibility_to_membership(possibility: &PossibilityMeasure) -> Vec<f64> {
     possibility.membership.clone()
 }
 
 /// 🔀️ Combine fuzzy and possibility evidence via weighted fusion.
-pub fn hybrid_fuse(membership: f64, possibility: f64, fuzzy_weight: f64) -> f64 {
+pub async fn hybrid_fuse(membership: f64, possibility: f64, fuzzy_weight: f64) -> f64 {
     let w = clamp01(fuzzy_weight);
     clamp01(w * membership + (1.0 - w) * possibility)
 }
@@ -1710,7 +1710,7 @@ pub struct FanController {
 }
 
 impl FanController {
-    pub fn from_sensor_data(temps: &[f64], fan_speeds: &[f64]) -> FuzzyResult<Self> {
+    pub async fn from_sensor_data(temps: &[f64], fan_speeds: &[f64]) -> FuzzyResult<Self> {
         let t_min = temps.iter().copied().fold(f64::INFINITY, f64::min);
         let t_max = temps.iter().copied().fold(f64::NEG_INFINITY, f64::max);
         let s_max = fan_speeds.iter().copied().fold(0.0_f64, f64::max).max(1.0);
@@ -1738,7 +1738,7 @@ impl FanController {
         Ok(Self { temperature_var, speed_var, sensor_uncertainty, evolving })
     }
 
-    pub fn decide(&mut self, temperature: f64) -> FuzzyResult<(f64, Explanation)> {
+    pub async fn decide(&mut self, temperature: f64) -> FuzzyResult<(f64, Explanation)> {
         let (lo, hi) = self.sensor_uncertainty.grade_interval(temperature);
         let adjusted = 0.5 * (temperature + self.sensor_uncertainty.type_reduced_centroid(&[lo, temperature, hi]));
         self.evolving.observe(&[adjusted], &[0.0])?;
@@ -1753,7 +1753,7 @@ impl FanController {
 mod tests {
     use super::*;
 
-    fn temp_speed_system() -> MimoSystem {
+    async fn temp_speed_system() -> MimoSystem {
         let temp_univ = Universe::new(0.0, 40.0, 41).unwrap();
         let speed_univ = Universe::new(0.0, 100.0, 41).unwrap();
         let temp_var = LinguisticVariable::new("temperature", temp_univ, vec![FuzzySet::new("low", MembershipFunction::triangular(0.0, 0.0, 20.0)), FuzzySet::new("high", MembershipFunction::triangular(15.0, 40.0, 40.0))]);
@@ -1773,26 +1773,26 @@ mod tests {
     }
 
     #[test]
-    fn triangular_membership_peaks_at_center() {
+    async fn triangular_membership_peaks_at_center() {
         let mf = MembershipFunction::triangular(0.0, 5.0, 10.0);
         assert!((mf.eval(5.0) - 1.0).abs() < 1e-9);
         assert_eq!(mf.eval(-1.0), 0.0);
     }
 
     #[test]
-    fn tnorm_product_is_stricter_than_min() {
+    async fn tnorm_product_is_stricter_than_min() {
         assert!(TNorm::Product.apply(0.6, 0.6) < TNorm::Min.apply(0.6, 0.6));
     }
 
     #[test]
-    fn fuzzy_number_alpha_cut_contains_peak() {
+    async fn fuzzy_number_alpha_cut_contains_peak() {
         let n = FuzzyNumber::triangular(1.0, 3.0, 5.0);
         let (lo, hi) = n.alpha_cut(1.0);
         assert!(lo <= 3.0 && hi >= 3.0);
     }
 
     #[test]
-    fn relation_composition_max_min() {
+    async fn relation_composition_max_min() {
         let mut r1 = FuzzyRelation::new(2, 2);
         r1.set(0, 0, 0.8);
         r1.set(0, 1, 0.3);
@@ -1803,7 +1803,7 @@ mod tests {
     }
 
     #[test]
-    fn mamdani_high_temperature_yields_fast_fan() {
+    async fn mamdani_high_temperature_yields_fast_fan() {
         let system = temp_speed_system();
         let (out, explanation) = system.infer(&[35.0]).unwrap();
         assert!(out[0] > 50.0);
@@ -1811,7 +1811,7 @@ mod tests {
     }
 
     #[test]
-    fn sugeno_inference_weighted_average() {
+    async fn sugeno_inference_weighted_average() {
         let mut system = temp_speed_system();
         system.model = InferenceModel::Sugeno;
         system.rules = RuleBase::new(vec![
@@ -1823,7 +1823,7 @@ mod tests {
     }
 
     #[test]
-    fn defuzzifier_centroid_on_triangle() {
+    async fn defuzzifier_centroid_on_triangle() {
         let univ = Universe::new(0.0, 10.0, 101).unwrap();
         let membership: Vec<f64> = univ.samples.iter().map(|x| MembershipFunction::triangular(0.0, 5.0, 10.0).eval(*x)).collect();
         let c = Defuzzifier::Centroid.apply(&univ, &membership, None, None).unwrap();
@@ -1831,7 +1831,7 @@ mod tests {
     }
 
     #[test]
-    fn fuzzy_c_means_two_cluster_toy() {
+    async fn fuzzy_c_means_two_cluster_toy() {
         let data = vec![vec![0.0, 0.0], vec![0.1, 0.0], vec![5.0, 5.0], vec![5.1, 5.0]];
         let result = fuzzy_c_means(&data, 2, 2.0, 50, 1e-4).unwrap();
         assert_eq!(result.centers.len(), 2);
@@ -1839,14 +1839,14 @@ mod tests {
     }
 
     #[test]
-    fn fuzzy_ahp_produces_normalized_weights() {
+    async fn fuzzy_ahp_produces_normalized_weights() {
         let matrix = vec![vec![FuzzyNumber::triangular(1.0, 1.0, 1.0), FuzzyNumber::triangular(2.0, 3.0, 4.0)], vec![FuzzyNumber::triangular(0.25, 0.33, 0.5), FuzzyNumber::triangular(1.0, 1.0, 1.0)]];
         let weights = FuzzyAhp::new(matrix).weights();
         assert!((weights.iter().sum::<f64>() - 1.0).abs() < 1e-6);
     }
 
     #[test]
-    fn fuzzy_topsis_ranks_better_alternative_first() {
+    async fn fuzzy_topsis_ranks_better_alternative_first() {
         let topsis = FuzzyTopsis {
             alternatives: vec!["a".into(), "b".into()],
             criteria: vec!["c".into()],
@@ -1859,14 +1859,14 @@ mod tests {
     }
 
     #[test]
-    fn interval_type2_centroid_between_bounds() {
+    async fn interval_type2_centroid_between_bounds() {
         let it2 = IntervalType2Set::new("temp", MembershipFunction::gaussian(20.0, 1.0), MembershipFunction::gaussian(20.0, 3.0));
         let c = it2.type_reduced_centroid(&linspace(10.0, 30.0, 41));
         assert!((c - 20.0).abs() < 2.0);
     }
 
     #[test]
-    fn fan_controller_learns_from_sensor_data() {
+    async fn fan_controller_learns_from_sensor_data() {
         let temps: Vec<f64> = (0..20).map(|i| i as f64 * 2.0).collect();
         let speeds: Vec<f64> = temps.iter().map(|t| t * 2.5).collect();
         let mut controller = FanController::from_sensor_data(&temps, &speeds).unwrap();
@@ -1876,7 +1876,7 @@ mod tests {
     }
 
     #[test]
-    fn trapezoidal_membership_flat_top_and_edges() {
+    async fn trapezoidal_membership_flat_top_and_edges() {
         let mf = MembershipFunction::trapezoidal(0.0, 2.0, 6.0, 8.0);
         assert_eq!(mf.eval(-1.0), 0.0);
         assert_eq!(mf.eval(0.0), 0.0);
@@ -1887,7 +1887,7 @@ mod tests {
     }
 
     #[test]
-    fn gaussian_membership_symmetric_and_peaks_at_mean() {
+    async fn gaussian_membership_symmetric_and_peaks_at_mean() {
         let mf = MembershipFunction::gaussian(10.0, 2.0);
         assert_eq!(mf.eval(10.0), 1.0);
         assert!((mf.eval(12.0) - mf.eval(8.0)).abs() < 1e-12);
@@ -1895,7 +1895,7 @@ mod tests {
     }
 
     #[test]
-    fn generalized_bell_membership_symmetric_peak() {
+    async fn generalized_bell_membership_symmetric_peak() {
         let mf = MembershipFunction::generalized_bell(2.0, 4.0, 5.0);
         assert_eq!(mf.eval(5.0), 1.0);
         assert!((mf.eval(7.0) - mf.eval(3.0)).abs() < 1e-9);
@@ -1903,7 +1903,7 @@ mod tests {
     }
 
     #[test]
-    fn sigmoid_membership_is_monotonic_increasing() {
+    async fn sigmoid_membership_is_monotonic_increasing() {
         let mf = MembershipFunction::sigmoid(1.0, 0.0);
         assert!((mf.eval(0.0) - 0.5).abs() < 1e-9);
         assert!(mf.eval(-1.0) < mf.eval(0.0));
@@ -1911,14 +1911,14 @@ mod tests {
     }
 
     #[test]
-    fn singleton_membership_exact_match_only() {
+    async fn singleton_membership_exact_match_only() {
         let mf = MembershipFunction::singleton(5.0);
         assert_eq!(mf.eval(5.0), 1.0);
         assert_eq!(mf.eval(5.001), 0.0);
     }
 
     #[test]
-    fn piecewise_linear_membership_interpolates_and_edge_cases() {
+    async fn piecewise_linear_membership_interpolates_and_edge_cases() {
         assert_eq!(MembershipFunction::piecewise_linear(vec![]).eval(0.0), 0.0);
         assert_eq!(MembershipFunction::piecewise_linear(vec![(2.0, 0.7)]).eval(99.0), 0.7);
         let mf = MembershipFunction::piecewise_linear(vec![(0.0, 0.0), (5.0, 1.0), (10.0, 0.0)]);
@@ -1929,7 +1929,7 @@ mod tests {
     }
 
     #[test]
-    fn membership_function_parameters_roundtrip() {
+    async fn membership_function_parameters_roundtrip() {
         let mut tri = MembershipFunction::triangular(0.0, 1.0, 2.0);
         assert_eq!(tri.parameters(), vec![0.0, 1.0, 2.0]);
         tri.set_parameters(&[1.0, 2.0, 3.0]).unwrap();
@@ -1968,7 +1968,7 @@ mod tests {
     }
 
     #[test]
-    fn membership_function_support_bounds() {
+    async fn membership_function_support_bounds() {
         assert_eq!(MembershipFunction::triangular(1.0, 2.0, 3.0).support_min(), 1.0);
         assert_eq!(MembershipFunction::triangular(1.0, 2.0, 3.0).support_max(), 3.0);
         assert_eq!(MembershipFunction::trapezoidal(1.0, 2.0, 3.0, 4.0).support_min(), 1.0);
@@ -1992,13 +1992,13 @@ mod tests {
     }
 
     #[test]
-    fn intuitionistic_set_grades_rejects_over_unity() {
+    async fn intuitionistic_set_grades_rejects_over_unity() {
         let set = IntuitionisticSet::new("x", MembershipFunction::triangular(0.0, 5.0, 10.0), MembershipFunction::triangular(0.0, 5.0, 10.0));
         assert_eq!(set.grades(5.0), Err(FuzzyError::InvalidIntuitionistic));
     }
 
     #[test]
-    fn intuitionistic_set_grades_computes_hesitation() {
+    async fn intuitionistic_set_grades_computes_hesitation() {
         let set = IntuitionisticSet::new("x", MembershipFunction::triangular(0.0, 5.0, 10.0), MembershipFunction::singleton(100.0));
         let (mu, nu, hesitation) = set.grades(2.0).unwrap();
         assert!((mu - 0.4).abs() < 1e-9);
@@ -2007,7 +2007,7 @@ mod tests {
     }
 
     #[test]
-    fn tnorm_lukasiewicz_and_drastic_variants() {
+    async fn tnorm_lukasiewicz_and_drastic_variants() {
         assert!((TNorm::Lukasiewicz.apply(0.6, 0.6) - 0.2).abs() < 1e-9);
         assert_eq!(TNorm::Lukasiewicz.apply(0.3, 0.3), 0.0);
         assert_eq!(TNorm::Drastic.apply(0.5, 1.0), 0.5);
@@ -2016,7 +2016,7 @@ mod tests {
     }
 
     #[test]
-    fn tconorm_variants_apply_correctly() {
+    async fn tconorm_variants_apply_correctly() {
         assert_eq!(TConorm::Max.apply(0.3, 0.7), 0.7);
         assert!((TConorm::ProbSum.apply(0.5, 0.5) - 0.75).abs() < 1e-9);
         assert_eq!(TConorm::Lukasiewicz.apply(0.6, 0.6), 1.0);
@@ -2025,14 +2025,14 @@ mod tests {
     }
 
     #[test]
-    fn tnorm_tconorm_fold_over_iterator() {
+    async fn tnorm_tconorm_fold_over_iterator() {
         let vals = [0.9, 0.8, 0.7];
         assert!((TNorm::Min.fold(vals.iter().copied()) - 0.7).abs() < 1e-9);
         assert!((TConorm::Max.fold(vals.iter().copied()) - 0.9).abs() < 1e-9);
     }
 
     #[test]
-    fn hedge_variants_apply() {
+    async fn hedge_variants_apply() {
         assert!((Hedge::Very.apply(0.8) - 0.64).abs() < 1e-9);
         assert!((Hedge::Somewhat.apply(0.64) - 0.8).abs() < 1e-9);
         assert!((Hedge::Extremely.apply(0.5) - 0.125).abs() < 1e-9);
@@ -2040,14 +2040,14 @@ mod tests {
     }
 
     #[test]
-    fn complement_concentration_dilation_basic() {
+    async fn complement_concentration_dilation_basic() {
         assert!((complement(0.3) - 0.7).abs() < 1e-9);
         assert!((concentration(0.5) - 0.25).abs() < 1e-9);
         assert!((dilation(0.25) - 0.5).abs() < 1e-9);
     }
 
     #[test]
-    fn fuzzy_number_sub_and_scale() {
+    async fn fuzzy_number_sub_and_scale() {
         let n1 = FuzzyNumber::triangular(1.0, 3.0, 5.0);
         let n2 = FuzzyNumber::triangular(1.0, 2.0, 3.0);
         let diff = n1.sub(n2);
@@ -2059,13 +2059,13 @@ mod tests {
     }
 
     #[test]
-    fn fuzzy_number_defuzzify_centroid_matches_peak() {
+    async fn fuzzy_number_defuzzify_centroid_matches_peak() {
         let n = FuzzyNumber::triangular(0.0, 5.0, 10.0);
         assert!((n.defuzzify_centroid(101) - 5.0).abs() < 0.1);
     }
 
     #[test]
-    fn fuzzy_add_sums_components() {
+    async fn fuzzy_add_sums_components() {
         let a = FuzzyNumber::triangular(1.0, 2.0, 3.0);
         let b = FuzzyNumber::triangular(1.0, 1.0, 1.0);
         let sum = fuzzy_add(a, b);
@@ -2073,7 +2073,7 @@ mod tests {
     }
 
     #[test]
-    fn fuzzy_mul_interval_at_peak_alpha() {
+    async fn fuzzy_mul_interval_at_peak_alpha() {
         let a = FuzzyNumber::triangular(1.0, 2.0, 3.0);
         let b = FuzzyNumber::triangular(2.0, 3.0, 4.0);
         let (lo, hi) = fuzzy_mul_interval(a, b, 1.0);
@@ -2082,7 +2082,7 @@ mod tests {
     }
 
     #[test]
-    fn relation_composition_max_product() {
+    async fn relation_composition_max_product() {
         let mut r1 = FuzzyRelation::new(2, 2);
         r1.set(0, 0, 0.5);
         r1.set(0, 1, 0.5);
@@ -2093,7 +2093,7 @@ mod tests {
     }
 
     #[test]
-    fn relation_composition_dimension_mismatch_errors() {
+    async fn relation_composition_dimension_mismatch_errors() {
         let r1 = FuzzyRelation::new(2, 3);
         let r2 = FuzzyRelation::new(2, 2);
         assert_eq!(r1.compose_max_min(&r2), Err(FuzzyError::DimensionMismatch("relation composition".into())));
@@ -2101,31 +2101,31 @@ mod tests {
     }
 
     #[test]
-    fn possibility_and_necessity_measures() {
+    async fn possibility_and_necessity_measures() {
         let pm = PossibilityMeasure::new(vec![1.0, 2.0, 3.0, 4.0, 5.0], vec![0.2, 0.5, 0.8, 0.3, 0.1]).unwrap();
         assert!((pm.possibility(|x| x >= 3.0) - 0.8).abs() < 1e-9);
         assert!((pm.necessity(|x| x >= 3.0) - 0.5).abs() < 1e-9);
     }
 
     #[test]
-    fn possibility_measure_from_scores_normalizes_by_max() {
+    async fn possibility_measure_from_scores_normalizes_by_max() {
         let pm = PossibilityMeasure::from_scores(vec![1.0, 2.0, 3.0], vec![2.0, 4.0, 1.0]).unwrap();
         assert_eq!(pm.membership, vec![0.5, 1.0, 0.25]);
     }
 
     #[test]
-    fn possibility_measure_rejects_mismatched_lengths() {
+    async fn possibility_measure_rejects_mismatched_lengths() {
         assert_eq!(PossibilityMeasure::new(vec![1.0, 2.0], vec![0.5]), Err(FuzzyError::InvalidDomain("possibility universe".into())));
     }
 
     #[test]
-    fn universe_rejects_invalid_bounds() {
+    async fn universe_rejects_invalid_bounds() {
         assert_eq!(Universe::new(5.0, 1.0, 10), Err(FuzzyError::InvalidDomain("universe bounds".into())));
         assert_eq!(Universe::new(0.0, 10.0, 0), Err(FuzzyError::InvalidDomain("universe bounds".into())));
     }
 
     #[test]
-    fn universe_len_sample_and_is_empty() {
+    async fn universe_len_sample_and_is_empty() {
         let u = Universe::new(0.0, 10.0, 5).unwrap();
         assert_eq!(u.len(), 5);
         assert!(!u.is_empty());
@@ -2134,7 +2134,7 @@ mod tests {
     }
 
     #[test]
-    fn linguistic_variable_fuzzify_and_term_index() {
+    async fn linguistic_variable_fuzzify_and_term_index() {
         let univ = Universe::new(0.0, 10.0, 11).unwrap();
         let var = LinguisticVariable::new("x", univ, vec![FuzzySet::new("low", MembershipFunction::triangular(0.0, 0.0, 5.0)), FuzzySet::new("high", MembershipFunction::triangular(5.0, 10.0, 10.0))]);
         assert_eq!(var.term_index("high"), Some(1));
@@ -2145,7 +2145,7 @@ mod tests {
     }
 
     #[test]
-    fn rule_firing_strength_applies_hedge() {
+    async fn rule_firing_strength_applies_hedge() {
         let univ = Universe::new(0.0, 10.0, 11).unwrap();
         let var = LinguisticVariable::new("x", univ, vec![FuzzySet::new("mid", MembershipFunction::triangular(0.0, 5.0, 10.0))]);
         let rule = Rule { id: 0, antecedents: vec![AntecedentClause { input: 0, term: 0, hedge: Some(Hedge::Very) }], consequent: Consequent::Mamdani { output: 0, term: 0 }, weight: 1.0, confidence: 1.0 };
@@ -2154,20 +2154,20 @@ mod tests {
     }
 
     #[test]
-    fn rule_base_is_empty_reports_correctly() {
+    async fn rule_base_is_empty_reports_correctly() {
         assert!(RuleBase::new(vec![]).is_empty());
         let rule = Rule { id: 0, antecedents: vec![], consequent: Consequent::SugenoConstant { output: 0, value: 1.0 }, weight: 1.0, confidence: 1.0 };
         assert!(!RuleBase::new(vec![rule]).is_empty());
     }
 
     #[test]
-    fn defuzzifier_empty_universe_errors() {
+    async fn defuzzifier_empty_universe_errors() {
         let empty = Universe { min: 0.0, max: 1.0, samples: vec![] };
         assert_eq!(Defuzzifier::Centroid.apply(&empty, &[], None, None), Err(FuzzyError::EmptyUniverse));
     }
 
     #[test]
-    fn defuzzifier_weighted_average_and_height_match() {
+    async fn defuzzifier_weighted_average_and_height_match() {
         let univ = Universe::new(0.0, 1.0, 3).unwrap();
         let membership = vec![0.1, 0.1, 0.1];
         let heights = vec![0.5, 0.8];
@@ -2179,7 +2179,7 @@ mod tests {
     }
 
     #[test]
-    fn defuzzifier_weighted_average_requires_heights_and_values() {
+    async fn defuzzifier_weighted_average_requires_heights_and_values() {
         let univ = Universe::new(0.0, 1.0, 3).unwrap();
         let membership = vec![0.1, 0.1, 0.1];
         assert!(Defuzzifier::WeightedAverage.apply(&univ, &membership, None, None).is_err());
@@ -2187,7 +2187,7 @@ mod tests {
     }
 
     #[test]
-    fn defuzzifier_bisector_mom_som_lom() {
+    async fn defuzzifier_bisector_mom_som_lom() {
         let univ = Universe::new(0.0, 5.0, 6).unwrap();
         let membership = vec![0.0, 0.2, 0.9, 0.9, 0.9, 0.1];
         let bisector = Defuzzifier::Bisector.apply(&univ, &membership, None, None).unwrap();
@@ -2203,7 +2203,7 @@ mod tests {
     }
 
     #[test]
-    fn mimo_infer_rejects_bad_input_and_empty_rules() {
+    async fn mimo_infer_rejects_bad_input_and_empty_rules() {
         let system = temp_speed_system();
         assert_eq!(system.infer(&[1.0, 2.0]), Err(FuzzyError::DimensionMismatch("input count".into())));
         let mut empty_system = system;
@@ -2212,7 +2212,7 @@ mod tests {
     }
 
     #[test]
-    fn larsen_inference_model_produces_output() {
+    async fn larsen_inference_model_produces_output() {
         let mut system = temp_speed_system();
         system.model = InferenceModel::Larsen;
         let (out, explanation) = system.infer(&[35.0]).unwrap();
@@ -2221,7 +2221,7 @@ mod tests {
     }
 
     #[test]
-    fn tsukamoto_inference_model_inverts_monotonic_consequent() {
+    async fn tsukamoto_inference_model_inverts_monotonic_consequent() {
         let temp_univ = Universe::new(0.0, 40.0, 41).unwrap();
         let temp_var = LinguisticVariable::new("temperature", temp_univ, vec![FuzzySet::new("high", MembershipFunction::triangular(0.0, 40.0, 40.0))]);
         let out_univ = Universe::new(0.0, 100.0, 101).unwrap();
@@ -2240,7 +2240,7 @@ mod tests {
     }
 
     #[test]
-    fn soft_constraint_consequent_scales_by_preference() {
+    async fn soft_constraint_consequent_scales_by_preference() {
         let system = temp_speed_system();
         let mut soft_system = system;
         soft_system.rules = RuleBase::new(vec![Rule { id: 0, antecedents: vec![AntecedentClause { input: 0, term: 1, hedge: None }], consequent: Consequent::SoftConstraint { output: 0, term: 1, preference: 0.5 }, weight: 1.0, confidence: 1.0 }]);
@@ -2250,7 +2250,7 @@ mod tests {
     }
 
     #[test]
-    fn tsukamoto_inverse_handles_zero_alpha_and_solves_monotonic() {
+    async fn tsukamoto_inverse_handles_zero_alpha_and_solves_monotonic() {
         let mf = MembershipFunction::sigmoid(1.0, 0.0);
         assert_eq!(tsukamoto_inverse(&mf, 0.0), mf.support_min());
         let x = tsukamoto_inverse(&mf, 0.5);
@@ -2258,7 +2258,7 @@ mod tests {
     }
 
     #[test]
-    fn adaptive_membership_fit_updates_parameters() {
+    async fn adaptive_membership_fit_updates_parameters() {
         let mf = MembershipFunction::triangular(0.0, 3.0, 10.0);
         let samples: Vec<(f64, f64)> = (0..10)
             .map(|i| {
@@ -2274,14 +2274,14 @@ mod tests {
     }
 
     #[test]
-    fn anfis_default_forward_and_rule_count() {
+    async fn anfis_default_forward_and_rule_count() {
         let anfis = Anfis::new(2, 2, &[(0.0, 1.0), (0.0, 1.0)]);
         assert_eq!(anfis.rule_count(), 4);
         assert_eq!(anfis.forward(&[0.5, 0.5]), 0.0);
     }
 
     #[test]
-    fn wang_mendel_rules_generates_one_rule_per_sample() {
+    async fn wang_mendel_rules_generates_one_rule_per_sample() {
         let univ = Universe::new(0.0, 10.0, 11).unwrap();
         let input_var = LinguisticVariable::new("x", univ.clone(), vec![FuzzySet::new("low", MembershipFunction::triangular(0.0, 0.0, 10.0)), FuzzySet::new("high", MembershipFunction::triangular(0.0, 10.0, 10.0))]);
         let output_var = LinguisticVariable::new("y", univ, vec![FuzzySet::new("low", MembershipFunction::triangular(0.0, 0.0, 10.0)), FuzzySet::new("high", MembershipFunction::triangular(0.0, 10.0, 10.0))]);
@@ -2292,7 +2292,7 @@ mod tests {
     }
 
     #[test]
-    fn wang_mendel_rules_sugeno_uses_constant_consequent() {
+    async fn wang_mendel_rules_sugeno_uses_constant_consequent() {
         let univ = Universe::new(0.0, 10.0, 11).unwrap();
         let input_var = LinguisticVariable::new("x", univ.clone(), vec![FuzzySet::new("low", MembershipFunction::triangular(0.0, 0.0, 10.0))]);
         let output_var = LinguisticVariable::new("y", univ, vec![FuzzySet::new("low", MembershipFunction::triangular(0.0, 0.0, 10.0))]);
@@ -2302,7 +2302,7 @@ mod tests {
     }
 
     #[test]
-    fn prune_rules_filters_below_thresholds() {
+    async fn prune_rules_filters_below_thresholds() {
         let rules = RuleBase::new(vec![
             Rule { id: 0, antecedents: vec![], consequent: Consequent::SugenoConstant { output: 0, value: 1.0 }, weight: 0.9, confidence: 0.9 },
             Rule { id: 1, antecedents: vec![], consequent: Consequent::SugenoConstant { output: 0, value: 1.0 }, weight: 0.1, confidence: 0.9 },
@@ -2313,7 +2313,7 @@ mod tests {
     }
 
     #[test]
-    fn weight_rules_by_fit_updates_confidence_from_error() {
+    async fn weight_rules_by_fit_updates_confidence_from_error() {
         let mut system = temp_speed_system();
         let data = vec![(vec![35.0], vec![90.0]), (vec![2.0], vec![5.0])];
         weight_rules_by_fit(&mut system, &data);
@@ -2323,7 +2323,7 @@ mod tests {
     }
 
     #[test]
-    fn subtractive_cluster_centers_finds_clusters() {
+    async fn subtractive_cluster_centers_finds_clusters() {
         let data = vec![vec![0.0, 0.0], vec![0.2, 0.1], vec![10.0, 10.0], vec![10.1, 9.9]];
         let centers = subtractive_cluster_centers(&data, 1.0, 0.5, 0.15);
         assert!(!centers.is_empty());
@@ -2331,12 +2331,12 @@ mod tests {
     }
 
     #[test]
-    fn subtractive_cluster_centers_empty_data_returns_empty() {
+    async fn subtractive_cluster_centers_empty_data_returns_empty() {
         assert!(subtractive_cluster_centers(&[], 1.0, 0.5, 0.15).is_empty());
     }
 
     #[test]
-    fn gustafson_kessel_clusters_two_groups() {
+    async fn gustafson_kessel_clusters_two_groups() {
         let data = vec![vec![0.0, 0.0], vec![0.1, 0.0], vec![5.0, 5.0], vec![5.1, 5.0]];
         let result = gustafson_kessel(&data, 2, 2.0, 5).unwrap();
         assert_eq!(result.centers.len(), 2);
@@ -2344,7 +2344,7 @@ mod tests {
     }
 
     #[test]
-    fn fuzzy_vikor_ranks_compromise_solution() {
+    async fn fuzzy_vikor_ranks_compromise_solution() {
         let vikor = FuzzyVikor {
             alternatives: vec!["a".into(), "b".into()],
             criteria: vec!["c".into()],
@@ -2358,7 +2358,7 @@ mod tests {
     }
 
     #[test]
-    fn temporal_evaluator_recently_and_frequently() {
+    async fn temporal_evaluator_recently_and_frequently() {
         let eval = TemporalEvaluator { now: 100.0, recent_window: 10.0, frequent_window: 5.0 };
         assert!((eval.recently(100.0) - 1.0).abs() < 1e-9);
         assert_eq!(eval.recently(90.0), 0.0);
@@ -2366,7 +2366,7 @@ mod tests {
     }
 
     #[test]
-    fn spatial_evaluator_near_and_slowly() {
+    async fn spatial_evaluator_near_and_slowly() {
         let eval = SpatialEvaluator { anchor: vec![0.0, 0.0], near_radius: 10.0 };
         assert!((eval.near(&[0.0, 0.0]) - 1.0).abs() < 1e-9);
         assert!(eval.near(&[20.0, 0.0]) <= 0.0);
@@ -2375,19 +2375,19 @@ mod tests {
     }
 
     #[test]
-    fn probabilistic_to_membership_blends_by_certainty() {
+    async fn probabilistic_to_membership_blends_by_certainty() {
         assert!((probabilistic_to_membership(0.8, 1.0) - 0.8).abs() < 1e-9);
         assert!((probabilistic_to_membership(0.8, 0.0) - 0.5).abs() < 1e-9);
     }
 
     #[test]
-    fn possibility_to_membership_passes_through_values() {
+    async fn possibility_to_membership_passes_through_values() {
         let pm = PossibilityMeasure::new(vec![1.0, 2.0], vec![0.3, 0.7]).unwrap();
         assert_eq!(possibility_to_membership(&pm), vec![0.3, 0.7]);
     }
 
     #[test]
-    fn hybrid_fuse_weighted_combination() {
+    async fn hybrid_fuse_weighted_combination() {
         assert!((hybrid_fuse(0.8, 0.2, 1.0) - 0.8).abs() < 1e-9);
         assert!((hybrid_fuse(0.8, 0.2, 0.0) - 0.2).abs() < 1e-9);
         assert!((hybrid_fuse(0.8, 0.2, 0.5) - 0.5).abs() < 1e-9);
@@ -2397,7 +2397,7 @@ mod tests {
         use super::*;
 
         #[test]
-        fn anfis_learns_nonlinear_surface() {
+        async fn anfis_learns_nonlinear_surface() {
             let data: Vec<(Vec<f64>, f64)> = (0..30)
                 .flat_map(|i| {
                     (0..30).map(move |j| {
@@ -2415,7 +2415,7 @@ mod tests {
         }
 
         #[test]
-        fn genetic_optimizer_improves_quadratic() {
+        async fn genetic_optimizer_improves_quadratic() {
             let opt = GeneticOptimizer { population_size: 20, generations: 30, mutation_rate: 0.2, crossover_rate: 0.7, bounds: vec![(-5.0, 5.0)], seed: 42 };
             let (best, fit) = opt.optimize(|x| (x[0] - 2.0).powi(2));
             assert!(fit < 1.0);
@@ -2423,7 +2423,7 @@ mod tests {
         }
 
         #[test]
-        fn pso_optimizer_finds_minimum() {
+        async fn pso_optimizer_finds_minimum() {
             let opt = PsoOptimizer { swarm_size: 15, iterations: 40, inertia: 0.7, cognitive: 1.4, social: 1.4, bounds: vec![(-3.0, 3.0), (-3.0, 3.0)], seed: 7 };
             let (best, fit) = opt.optimize(|x| x[0] * x[0] + x[1] * x[1]);
             assert!(fit < 0.5);
@@ -2431,7 +2431,7 @@ mod tests {
         }
 
         #[test]
-        fn hierarchical_system_chains_layers() {
+        async fn hierarchical_system_chains_layers() {
             let layer1 = temp_speed_system();
             let layer2_univ = Universe::new(0.0, 100.0, 21).unwrap();
             let layer2 = MimoSystem {
@@ -2450,7 +2450,7 @@ mod tests {
         }
 
         #[test]
-        fn evolving_system_adapts_over_stream() {
+        async fn evolving_system_adapts_over_stream() {
             let system = temp_speed_system();
             let mut evolving = EvolvingFuzzySystem::new(system, 0.1, 0.05, 10);
             for t in (20..30).map(|x| x as f64) {

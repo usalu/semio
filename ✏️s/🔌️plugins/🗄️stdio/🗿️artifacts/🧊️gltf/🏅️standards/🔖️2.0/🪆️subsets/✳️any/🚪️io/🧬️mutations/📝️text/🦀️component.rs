@@ -5,7 +5,7 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 
 use crate::artifacts::gltf::schema::modules::mutation_dispatch::{validate_gltf_mutation_envelope, GltfMutation, GltfMutationEnvelope, GltfMutationPhase, GLTF_MUTATION_MAX_PAYLOAD_BYTES};
 
-fn encode_hex(bytes: &[u8]) -> String {
+async fn encode_hex(bytes: &[u8]) -> String {
     const HEX: &[u8; 16] = b"0123456789abcdef";
     let mut text = String::with_capacity(bytes.len() * 2);
     for byte in bytes {
@@ -15,11 +15,11 @@ fn encode_hex(bytes: &[u8]) -> String {
     text
 }
 
-fn decode_hex(text: &str) -> Result<Vec<u8>, String> {
+async fn decode_hex(text: &str) -> Result<Vec<u8>, String> {
     if text.len() % 2 != 0 || text.len() > GLTF_MUTATION_MAX_PAYLOAD_BYTES * 2 {
         return Err("GLTF mutation text payload exceeds its budget".into());
     }
-    fn nibble(value: u8) -> Option<u8> {
+    async fn nibble(value: u8) -> Option<u8> {
         match value {
             b'0'..=b'9' => Some(value - b'0'),
             b'a'..=b'f' => Some(value - b'a' + 10),
@@ -35,16 +35,16 @@ fn decode_hex(text: &str) -> Result<Vec<u8>, String> {
         .collect()
 }
 
-fn text_error(detail: impl Into<String>) -> store::TextError {
+async fn text_error(detail: impl Into<String>) -> store::TextError {
     store::TextError::new(detail.into(), dsl::TextSpan::at(1, 1))
 }
 
-fn parse_field<'a>(field: &'a str, name: &str) -> Result<&'a str, store::TextError> {
+async fn parse_field<'a>(field: &'a str, name: &str) -> Result<&'a str, store::TextError> {
     field.strip_prefix(name).ok_or_else(|| text_error(format!("expected {name}")))
 }
 
 impl protocol::OpText for GltfMutation {
-    fn print_op(&self) -> String {
+    async fn print_op(&self) -> String {
         let envelope = self.envelope();
         let phase = match envelope.phase {
             GltfMutationPhase::Mutation => "mutation",
@@ -55,7 +55,7 @@ impl protocol::OpText for GltfMutation {
         format!("gltf-mutation commandId={} version={} phase={phase} payload={payload}", encode_hex(envelope.command_id.as_bytes()), envelope.version)
     }
 
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
+    async fn parse_op(line: &str) -> Result<Self, store::TextError> {
         let fields: Vec<_> = line.split_ascii_whitespace().collect();
         if fields.len() != 5 || fields[0] != "gltf-mutation" {
             return Err(text_error("expected canonical GLTF mutation envelope"));

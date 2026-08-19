@@ -26,14 +26,14 @@ use semio_framework_3d::engine::PointClassification;
 // #region 🔖️Api
 
 /// 🏷️ `true` when `uv` lies strictly inside the closed `loop_id` boundary on `face` (winding ≠ 0).
-pub fn point_in_loop(body: &Body, face: FaceId, loop_id: LoopId, uv: Pnt2, tol: f64) -> Result<bool, KernelError> {
+pub async fn point_in_loop(body: &Body, face: FaceId, loop_id: LoopId, uv: Pnt2, tol: f64) -> Result<bool, KernelError> {
     let surface = face_surface(body, face)?;
     let edge_samples = if matches!(surface, Surface::Plane { .. }) { 0 } else { 16 };
     point_in_loop_sampled(body, face, loop_id, uv, tol, edge_samples)
 }
 
 /// 🏷️ `true` when `uv` lies inside the face trim (`outer` minus `inner` loops).
-pub fn point_in_face_uv(body: &Body, face: FaceId, uv: Pnt2, tol: f64) -> Result<bool, KernelError> {
+pub async fn point_in_face_uv(body: &Body, face: FaceId, uv: Pnt2, tol: f64) -> Result<bool, KernelError> {
     let face_ent = body.faces.get(face).ok_or_else(|| KernelError::MissingEntity("face".into()))?;
     let surface = face_surface(body, face)?;
     let samples = match surface {
@@ -54,7 +54,7 @@ pub fn point_in_face_uv(body: &Body, face: FaceId, uv: Pnt2, tol: f64) -> Result
     Ok(true)
 }
 
-fn point_in_loop_sampled(body: &Body, face: FaceId, loop_id: LoopId, uv: Pnt2, tol: f64, edge_samples: usize) -> Result<bool, KernelError> {
+async fn point_in_loop_sampled(body: &Body, face: FaceId, loop_id: LoopId, uv: Pnt2, tol: f64, edge_samples: usize) -> Result<bool, KernelError> {
     let surface = face_surface(body, face)?;
     let poly = loop_uv_polygon_sampled(body, loop_id, surface, edge_samples)?;
     if poly.len() < 3 {
@@ -67,7 +67,7 @@ fn point_in_loop_sampled(body: &Body, face: FaceId, loop_id: LoopId, uv: Pnt2, t
 }
 
 /// 🏷️ Classifies `point` against `solid` via multi-ray parity with certified intersections.
-pub fn point_in_solid(body: &Body, solid: SolidId, point: Pnt3, tol: f64) -> Result<PointClassification, KernelError> {
+pub async fn point_in_solid(body: &Body, solid: SolidId, point: Pnt3, tol: f64) -> Result<PointClassification, KernelError> {
     if body.solids.get(solid).is_none() {
         return Err(KernelError::MissingEntity("solid".into()));
     }
@@ -97,7 +97,7 @@ const RAY_RETRY_DIRS: [[f64; 3]; 6] = [
     [0.843_391_445_261_857, 0.214_298_755_144_806, 0.491_975_172_042_98],
 ];
 
-fn retry_dir(i: usize) -> Vec3 {
+async fn retry_dir(i: usize) -> Vec3 {
     let d = RAY_RETRY_DIRS[i];
     Vec3::new(d[0], d[1], d[2])
 }
@@ -106,7 +106,7 @@ fn retry_dir(i: usize) -> Vec3 {
 
 // #region 🔖️UvLoop
 
-fn uv_winding_nonzero(p: Pnt2, poly: &[Pnt2]) -> bool {
+async fn uv_winding_nonzero(p: Pnt2, poly: &[Pnt2]) -> bool {
     let mut wn = 0i32;
     let n = poly.len();
     for i in 0..n {
@@ -123,7 +123,7 @@ fn uv_winding_nonzero(p: Pnt2, poly: &[Pnt2]) -> bool {
     wn != 0
 }
 
-fn point_on_uv_poly_edges(p: Pnt2, poly: &[Pnt2], tol: f64) -> bool {
+async fn point_on_uv_poly_edges(p: Pnt2, poly: &[Pnt2], tol: f64) -> bool {
     let tol2 = tol * tol;
     let n = poly.len();
     for i in 0..n {
@@ -136,7 +136,7 @@ fn point_on_uv_poly_edges(p: Pnt2, poly: &[Pnt2], tol: f64) -> bool {
     false
 }
 
-fn segment_distance_sq_2d(p: Pnt2, a: Pnt2, b: Pnt2) -> f64 {
+async fn segment_distance_sq_2d(p: Pnt2, a: Pnt2, b: Pnt2) -> f64 {
     let ab = b - a;
     let len2 = ab.dot(ab);
     if len2 <= 0.0 {
@@ -148,11 +148,11 @@ fn segment_distance_sq_2d(p: Pnt2, a: Pnt2, b: Pnt2) -> f64 {
 }
 
 #[cfg(test)]
-fn loop_uv_polygon(body: &Body, loop_id: LoopId, surface: &Surface) -> Result<Vec<Pnt2>, KernelError> {
+async fn loop_uv_polygon(body: &Body, loop_id: LoopId, surface: &Surface) -> Result<Vec<Pnt2>, KernelError> {
     loop_uv_polygon_sampled(body, loop_id, surface, 8)
 }
 
-fn loop_uv_polygon_sampled(body: &Body, loop_id: LoopId, surface: &Surface, edge_samples: usize) -> Result<Vec<Pnt2>, KernelError> {
+async fn loop_uv_polygon_sampled(body: &Body, loop_id: LoopId, surface: &Surface, edge_samples: usize) -> Result<Vec<Pnt2>, KernelError> {
     let mut poly: Vec<Pnt2> = Vec::new();
     let coedges = body.loop_coedges(loop_id);
     if edge_samples == 0 {
@@ -202,13 +202,13 @@ fn loop_uv_polygon_sampled(body: &Body, loop_id: LoopId, surface: &Surface, edge
     Ok(poly)
 }
 
-fn unwrap_angle(prev: f64, u: f64) -> f64 {
+async fn unwrap_angle(prev: f64, u: f64) -> f64 {
     let tau = std::f64::consts::TAU;
     let diff = u - prev;
     prev + diff - tau * ((diff + std::f64::consts::PI) / tau).floor()
 }
 
-fn surface_uv(surface: &Surface, p: Pnt3) -> Pnt2 {
+async fn surface_uv(surface: &Surface, p: Pnt3) -> Pnt2 {
     match surface {
         Surface::Plane { frame } => {
             let l = frame.to_local(p);
@@ -244,7 +244,7 @@ fn surface_uv(surface: &Surface, p: Pnt3) -> Pnt2 {
     }
 }
 
-fn face_surface<'a>(body: &'a Body, face: FaceId) -> Result<&'a Surface, KernelError> {
+async fn face_surface<'a>(body: &'a Body, face: FaceId) -> Result<&'a Surface, KernelError> {
     let face_ent = body.faces.get(face).ok_or_else(|| KernelError::MissingEntity("face".into()))?;
     body.surfaces.get(face_ent.surface).ok_or_else(|| KernelError::MissingEntity("surface".into()))
 }
@@ -253,7 +253,7 @@ fn face_surface<'a>(body: &'a Body, face: FaceId) -> Result<&'a Surface, KernelE
 
 // #region 🔖️RayCast
 
-fn classify_by_ray_consensus(body: &Body, solid: SolidId, _bvh: &FaceBvh, point: Pnt3, tol: f64) -> Result<PointClassification, KernelError> {
+async fn classify_by_ray_consensus(body: &Body, solid: SolidId, _bvh: &FaceBvh, point: Pnt3, tol: f64) -> Result<PointClassification, KernelError> {
     let mut inside_votes = 0u32;
     let mut outside_votes = 0u32;
     for i in 0..RAY_RETRY_DIRS.len() {
@@ -278,7 +278,7 @@ fn classify_by_ray_consensus(body: &Body, solid: SolidId, _bvh: &FaceBvh, point:
     }
 }
 
-fn count_ray_crossings(body: &Body, solid: SolidId, origin: Pnt3, dir: Vec3, tol: f64) -> Result<u32, KernelError> {
+async fn count_ray_crossings(body: &Body, solid: SolidId, origin: Pnt3, dir: Vec3, tol: f64) -> Result<u32, KernelError> {
     let d = dir.normalized().unwrap_or(Vec3::X);
     let ray = Curve3::Line { origin, dir: d };
     let mut hits = 0u32;
@@ -293,7 +293,7 @@ fn count_ray_crossings(body: &Body, solid: SolidId, origin: Pnt3, dir: Vec3, tol
     Ok(hits)
 }
 
-fn face_ray_hits(body: &Body, face: FaceId, ray: &Curve3, origin: Pnt3, dir: Vec3, tol: f64) -> Result<Vec<f64>, KernelError> {
+async fn face_ray_hits(body: &Body, face: FaceId, ray: &Curve3, origin: Pnt3, dir: Vec3, tol: f64) -> Result<Vec<f64>, KernelError> {
     let surface = face_surface(body, face)?;
     let flipped = body.faces.get(face).map(|f| f.flipped).unwrap_or(false);
     match surface {
@@ -302,7 +302,7 @@ fn face_ray_hits(body: &Body, face: FaceId, ray: &Curve3, origin: Pnt3, dir: Vec
     }
 }
 
-fn plane_face_hits(body: &Body, face: FaceId, frame: &Frame3, flipped: bool, origin: Pnt3, dir: Vec3, tol: f64) -> Result<Vec<f64>, KernelError> {
+async fn plane_face_hits(body: &Body, face: FaceId, frame: &Frame3, flipped: bool, origin: Pnt3, dir: Vec3, tol: f64) -> Result<Vec<f64>, KernelError> {
     let mut normal = frame.z;
     if flipped {
         normal = -normal;
@@ -325,7 +325,7 @@ fn plane_face_hits(body: &Body, face: FaceId, frame: &Frame3, flipped: bool, ori
     }
 }
 
-fn general_face_hits(body: &Body, face: FaceId, surface: &Surface, ray: &Curve3, tol: f64) -> Result<Vec<f64>, KernelError> {
+async fn general_face_hits(body: &Body, face: FaceId, surface: &Surface, ray: &Curve3, tol: f64) -> Result<Vec<f64>, KernelError> {
     let hits = intersect_curve_surface(ray, surface, tol).unwrap_or_default();
     let mut out = Vec::new();
     for h in hits {
@@ -339,7 +339,7 @@ fn general_face_hits(body: &Body, face: FaceId, surface: &Surface, ray: &Curve3,
     Ok(out)
 }
 
-fn point_in_face_trim(body: &Body, face: FaceId, hit: Pnt3, tol: f64) -> Result<bool, KernelError> {
+async fn point_in_face_trim(body: &Body, face: FaceId, hit: Pnt3, tol: f64) -> Result<bool, KernelError> {
     let surface = face_surface(body, face)?;
     match surface {
         Surface::Sphere { .. } => {
@@ -360,7 +360,7 @@ fn point_in_face_trim(body: &Body, face: FaceId, hit: Pnt3, tol: f64) -> Result<
     }
 }
 
-fn face_boundary_points(body: &Body, face: FaceId) -> Result<Vec<Pnt3>, KernelError> {
+async fn face_boundary_points(body: &Body, face: FaceId) -> Result<Vec<Pnt3>, KernelError> {
     let mut pts = Vec::new();
     for coedge in body.face_coedges(face) {
         let (v0, _) = body.coedge_endpoints(coedge).ok_or_else(|| KernelError::InvalidInput("open coedge".into()))?;
@@ -370,7 +370,7 @@ fn face_boundary_points(body: &Body, face: FaceId) -> Result<Vec<Pnt3>, KernelEr
     Ok(pts)
 }
 
-fn polygon_normal(verts: &[Pnt3]) -> Vec3 {
+async fn polygon_normal(verts: &[Pnt3]) -> Vec3 {
     let mut n = Vec3::ZERO;
     for i in 0..verts.len() {
         let p = verts[i];
@@ -382,7 +382,7 @@ fn polygon_normal(verts: &[Pnt3]) -> Vec3 {
     n.normalized().unwrap_or(Vec3::Z)
 }
 
-fn point_in_polygon_3d(hit: Pnt3, verts: &[Pnt3], normal: Vec3, tol: f64) -> bool {
+async fn point_in_polygon_3d(hit: Pnt3, verts: &[Pnt3], normal: Vec3, tol: f64) -> bool {
     let n = normal.normalized().unwrap_or(Vec3::Z);
     let ref_pt = verts[0];
     let mut u_axis = n.cross(Vec3::X);
@@ -417,17 +417,17 @@ mod tests {
     use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::history::OpRecorder;
     use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::matrix::Trsf;
 
-    fn assert_classify(body: &Body, solid: SolidId, p: Pnt3, expected: PointClassification) {
+    async fn assert_classify(body: &Body, solid: SolidId, p: Pnt3, expected: PointClassification) {
         let got = point_in_solid(body, solid, p, Tol::DEFAULT.value()).unwrap();
         assert_eq!(got, expected, "point {p:?}");
     }
 
-    fn oracle_inside(sdf: &Sdf, p: Pnt3) -> bool {
+    async fn oracle_inside(sdf: &Sdf, p: Pnt3) -> bool {
         sdf.contains(p, 1e-6)
     }
 
     #[test]
-    fn unit_square_loop_uv_center() {
+    async fn unit_square_loop_uv_center() {
         let mut body = Body::new();
         let mut rec = OpRecorder::new();
         let solid = make_box(&mut body, 1.0, 1.0, 1.0, &mut rec).unwrap();
@@ -447,7 +447,7 @@ mod tests {
     }
 
     #[test]
-    fn box_inside_outside_boundary() {
+    async fn box_inside_outside_boundary() {
         let mut body = Body::new();
         let mut rec = OpRecorder::new();
         let solid = make_box(&mut body, 1.0, 1.0, 1.0, &mut rec).unwrap();
@@ -456,7 +456,7 @@ mod tests {
         assert_classify(&body, solid, Pnt3::new(0.0, 0.5, 0.5), PointClassification::OnBoundary);
     }
 
-    fn measure_to_engine(m: PointSolidClassification) -> PointClassification {
+    async fn measure_to_engine(m: PointSolidClassification) -> PointClassification {
         match m {
             PointSolidClassification::Inside => PointClassification::Inside,
             PointSolidClassification::Outside => PointClassification::Outside,
@@ -465,7 +465,7 @@ mod tests {
     }
 
     #[test]
-    fn box_matches_measure_ray_parity() {
+    async fn box_matches_measure_ray_parity() {
         let mut body = Body::new();
         let mut rec = OpRecorder::new();
         let solid = make_box(&mut body, 1.0, 1.0, 1.0, &mut rec).unwrap();
@@ -476,7 +476,7 @@ mod tests {
     }
 
     #[test]
-    fn box_oracle_sdf_inside_outside() {
+    async fn box_oracle_sdf_inside_outside() {
         let mut body = Body::new();
         let mut rec = OpRecorder::new();
         let solid = make_box(&mut body, 2.0, 2.0, 2.0, &mut rec).unwrap();
@@ -487,7 +487,7 @@ mod tests {
     }
 
     #[test]
-    fn sphere_samples_vs_oracle_sdf() {
+    async fn sphere_samples_vs_oracle_sdf() {
         let mut body = Body::new();
         let r = 1.5;
         let mut rec = OpRecorder::new();
@@ -506,7 +506,7 @@ mod tests {
     }
 
     #[test]
-    fn cylinder_oracle_outside_sample() {
+    async fn cylinder_oracle_outside_sample() {
         let mut body = Body::new();
         let radius = 1.0;
         let height = 3.0;
@@ -519,7 +519,7 @@ mod tests {
     }
 
     #[test]
-    fn face_uv_interior_point_on_box_face() {
+    async fn face_uv_interior_point_on_box_face() {
         let mut body = Body::new();
         let mut rec = OpRecorder::new();
         let solid = make_box(&mut body, 2.0, 2.0, 2.0, &mut rec).unwrap();

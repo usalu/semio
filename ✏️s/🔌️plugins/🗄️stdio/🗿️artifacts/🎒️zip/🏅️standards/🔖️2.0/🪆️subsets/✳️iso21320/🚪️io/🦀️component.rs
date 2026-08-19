@@ -21,11 +21,11 @@ pub mod derived_composition {
     //#region 🔖️Normalize
     /// 🧹 Logical snapshots carry no native header fields — canonical serialization policy already
     /// emits conforming Stored/Deflate headers. Retained as the composer's normalization hook.
-    fn normalize_entry_for_iso21320(entry: &mut ZipEntry) {
+    async fn normalize_entry_for_iso21320(entry: &mut ZipEntry) {
         let _ = entry;
     }
 
-    fn zip_wire_bytes_from_payload(payload: &IoPayload) -> Option<Vec<u8>> {
+    async fn zip_wire_bytes_from_payload(payload: &IoPayload) -> Option<Vec<u8>> {
         match payload {
             IoPayload::Binary(bytes) => {
                 if let Ok((_, inner)) = store::semio_format::unwrap_binary(bytes) {
@@ -53,12 +53,12 @@ pub mod derived_composition {
         type Snapshot = ZipSnapshot;
         const WRITES: Dialect = DIALECT_ISO21320;
 
-        fn reads() -> &'static [Dialect] {
+        async fn reads() -> &'static [Dialect] {
             &[DIALECT_ANY, DIALECT_ISO21320, DEP_BINARY, DEP_DEFLATE]
         }
 
-        fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
-            let inner = ZipAnyComposer::compose(sources)?;
+        async fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+            let inner = semio_framework_plugin::resolve_ready(ZipAnyComposer::compose(sources))?;
             let mut snapshot = inner.snapshot;
             for entry in &mut snapshot.entries {
                 normalize_entry_for_iso21320(entry);
@@ -87,7 +87,7 @@ pub mod derived_composition {
     impl SubsetValidator for ZipIso21320Validator {
         const DIALECT: Dialect = DIALECT_ISO21320;
 
-        fn validate(payload: &IoPayload) -> Vec<Diagnostic> {
+        async fn validate(payload: &IoPayload) -> Vec<Diagnostic> {
             match zip_wire_bytes_from_payload(payload) {
                 Some(bytes) => check_iso21320_wire_conformance(&bytes),
                 None => vec![Diagnostic {
@@ -104,7 +104,7 @@ pub mod derived_composition {
 
     static VALIDATOR_ENTRY: OnceLock<SubsetValidatorEntry> = OnceLock::new();
 
-    fn validator_entry() -> &'static SubsetValidatorEntry {
+    async fn validator_entry() -> &'static SubsetValidatorEntry {
         VALIDATOR_ENTRY.get_or_init(subset_validator_entry_of::<ZipIso21320Validator>)
     }
 
@@ -116,7 +116,7 @@ pub mod derived_composition {
     /// registered separately by the standard-level composer aggregator
     /// (`crate::artifacts::zip::standards::v2_0::subsets::any::io::io_registry::entries()`), matching
     /// how `✳️any`'s own entry is registered.
-    pub fn register() {
+    pub async fn register() {
         let _ = register_subset_validator(validator_entry());
     }
     //#endregion 🔖️SubsetValidator
@@ -129,7 +129,7 @@ pub mod derived_composition {
         use semio_framework_plugin::AnalyzeSource;
         use semio_framework_plugin::ArtifactBuilder as _;
 
-        fn raw_zip_with_flags(flags: u16, version_needed: u16) -> Vec<u8> {
+        async fn raw_zip_with_flags(flags: u16, version_needed: u16) -> Vec<u8> {
             let data = b"payload";
             let crc = crate::artifacts::zip::standards::v2_0::subsets::any::io::crc32(data);
             let name = b"secret.bin";
@@ -188,7 +188,7 @@ pub mod derived_composition {
         }
 
         #[test]
-        fn clean_snapshot_composes_and_stamps_iso21320() {
+        async fn clean_snapshot_composes_and_stamps_iso21320() {
             let snapshot = ZipIso21320Builder::new().with_stored_entry("a.txt", b"hello".to_vec()).build().unwrap();
             let bytes = <ZipSnapshot as store::ArtifactPack>::encode_pack(&snapshot);
             let sources = vec![ComposeSource { dialect: DIALECT_ANY, payload: AnalyzeSource::Binary(&bytes) }];
@@ -197,7 +197,7 @@ pub mod derived_composition {
         }
 
         #[test]
-        fn encrypted_wire_archive_composes_to_clean_logical_output() {
+        async fn encrypted_wire_archive_composes_to_clean_logical_output() {
             let raw = raw_zip_with_flags(FLAG_ENCRYPTED, 20);
             let sources = vec![ComposeSource { dialect: DIALECT_ANY, payload: AnalyzeSource::Binary(&raw) }];
             let composed = ZipIso21320ComposerComposition::compose(&sources).expect("decode+canonicalize must clear forbidden wire bits");
@@ -206,7 +206,7 @@ pub mod derived_composition {
         }
 
         #[test]
-        fn subset_validator_flags_real_violations_without_normalizing() {
+        async fn subset_validator_flags_real_violations_without_normalizing() {
             let raw = raw_zip_with_flags(FLAG_ENCRYPTED, 20);
             let diagnostics = ZipIso21320Validator::validate(&IoPayload::Binary(raw));
             assert!(diagnostics.iter().any(|d| d.code.0 == CODE_ENCRYPTED && d.severity == Severity::Error), "got {diagnostics:?}");

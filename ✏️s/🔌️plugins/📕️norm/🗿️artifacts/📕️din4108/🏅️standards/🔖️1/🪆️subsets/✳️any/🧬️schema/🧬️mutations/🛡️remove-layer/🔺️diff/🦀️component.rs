@@ -5,7 +5,7 @@ use crate::artifacts::din4108::diff::Din4108LayerList;
 use crate::artifacts::din4108::{Din4108Diff, Din4108Snapshot};
 
 //#region 🔖️Diff
-pub fn diff(
+pub async fn diff(
     payload: &RemoveLayer,
     base: &Din4108Snapshot,
 ) -> protocol::MutationOutcome<Din4108Diff> {

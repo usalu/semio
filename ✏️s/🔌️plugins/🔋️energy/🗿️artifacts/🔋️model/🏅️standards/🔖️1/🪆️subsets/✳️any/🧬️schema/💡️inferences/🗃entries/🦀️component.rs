@@ -27,7 +27,7 @@ pub struct EnergyModelEntries {
 /// byte length of that JSON; `contentDigest` = a deterministic (within-process) fingerprint over
 /// those same bytes. Std-only (`DefaultHasher`), same reasoning as `🏠️home/🆔digest`: no external
 /// hash crate needed for a single scalar byte-string digest.
-pub fn compute_energy_model_entries(snapshot: &EnergyModelSnapshot) -> EnergyModelEntries {
+pub async fn compute_energy_model_entries(snapshot: &EnergyModelSnapshot) -> EnergyModelEntries {
     let model = crate::artifacts::model::energy_model(snapshot);
     let json = serde_json::to_string(&model).unwrap_or_default();
     let bytes = json.as_bytes();
@@ -57,7 +57,7 @@ mod tests {
     const MODEL_FIELD_COUNT: u32 = 40;
 
     #[test]
-    fn default_model_yields_the_full_field_count_and_a_real_byte_size() {
+    async fn default_model_yields_the_full_field_count_and_a_real_byte_size() {
         let entries = compute_energy_model_entries(&EnergyModelSnapshot::default());
         assert_eq!(entries.entry_count, MODEL_FIELD_COUNT);
         let expected_bytes = serde_json::to_string(&crate::model::Model::default()).expect("Model serializes").len() as u32;
@@ -65,7 +65,7 @@ mod tests {
     }
 
     #[test]
-    fn top_level_field_count_is_stable_regardless_of_content() {
+    async fn top_level_field_count_is_stable_regardless_of_content() {
         let snapshot = crate::artifacts::model::energy_snapshot_with_state(
             "energy.model",
             crate::model::Model { name: "demo".into(), ..crate::model::Model::default() },
@@ -80,14 +80,14 @@ mod tests {
     /// `Model::default()`, never a panic; this is the honest staleness-gap consequence
     /// `🔖️WorkingScene`'s own doc comment documents, exercised for real here.
     #[test]
-    fn cache_miss_still_yields_a_deterministic_census() {
+    async fn cache_miss_still_yields_a_deterministic_census() {
         let snapshot = EnergyModelSnapshot::default();
         let entries = compute_energy_model_entries(&snapshot);
         assert_eq!(entries, compute_energy_model_entries(&snapshot));
     }
 
     #[test]
-    fn different_bodies_yield_different_digests() {
+    async fn different_bodies_yield_different_digests() {
         let a = crate::artifacts::model::energy_snapshot_with_state("energy.model", crate::model::Model::default(), None);
         let b = crate::artifacts::model::energy_snapshot_with_state(
             "energy.model",

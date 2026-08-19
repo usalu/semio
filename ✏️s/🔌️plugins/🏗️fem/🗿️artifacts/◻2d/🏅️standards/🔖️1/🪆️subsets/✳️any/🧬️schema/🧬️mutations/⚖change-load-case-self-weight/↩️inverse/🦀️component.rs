@@ -4,7 +4,7 @@ use crate::artifacts::fem2d::mutations::Fem2dMutation;
 use crate::artifacts::fem2d::Fem2dSnapshot;
 
 //#region 🔖️Inverse
-pub fn inverse(payload: &ChangeLoadCaseSelfWeight, base: &Fem2dSnapshot) -> Vec<Fem2dMutation> {
+pub async fn inverse(payload: &ChangeLoadCaseSelfWeight, base: &Fem2dSnapshot) -> Vec<Fem2dMutation> {
     base.load_cases
         .iter()
         .find(|case| case.id == payload.case_id)

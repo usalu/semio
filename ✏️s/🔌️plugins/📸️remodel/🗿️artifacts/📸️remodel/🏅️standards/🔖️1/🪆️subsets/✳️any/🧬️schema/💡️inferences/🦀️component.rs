@@ -41,7 +41,7 @@ pub struct RemodelInference {
 }
 
 impl protocol::Inference<RemodelSnapshot> for RemodelInference {
-    fn infer(snapshot: &RemodelSnapshot) -> Self {
+    async fn infer(snapshot: &RemodelSnapshot) -> Self {
         Self { bounds: compute_remodel_bounds(snapshot), relative_camera_poses: store::infer_field::<RemodelSnapshot, RemodelRelativeCameraPose>(snapshot, None) }
     }
 }
@@ -50,19 +50,19 @@ impl protocol::Inference<RemodelSnapshot> for RemodelInference {
 /// `RemodelSnapshot::default()`'s mesh ever stops being empty. Same "match `infer` of the real
 /// default, don't derive structurally" trick `AddInference` uses in `📡️spr/🎮️command/🦀️component.rs`.
 impl Default for RemodelInference {
-    fn default() -> Self {
+    async fn default() -> Self {
         <Self as protocol::Inference<RemodelSnapshot>>::infer(&RemodelSnapshot::default())
     }
 }
 
 impl protocol::InferenceSpec<RemodelSnapshot> for RemodelInference {
-    fn inference_schema_id() -> &'static str {
+    async fn inference_schema_id() -> &'static str {
         "s.remodel.remodel.inference"
     }
-    fn schema_version() -> u32 {
+    async fn schema_version() -> u32 {
         1
     }
-    fn fields() -> &'static [protocol::InferenceFieldSpec] {
+    async fn fields() -> &'static [protocol::InferenceFieldSpec] {
         &[
             protocol::InferenceFieldSpec { id: "s.remodel.remodel.inference.bounds", reads: &["results"] },
             protocol::InferenceFieldSpec { id: "s.remodel.remodel.inference.relative_camera_pose", reads: &["results"] },
@@ -81,7 +81,7 @@ impl ArtifactInferrer for crate::artifacts::remodel::standards::v1::subsets::any
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.remodel.remodel.inference`'s facet leaves into the OS-wide inference catalog —
 /// call once at plugin init, alongside `remodel_artifact_schema_descriptor`'s registration.
-pub fn remodel_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
+pub async fn remodel_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
     schema::ArtifactInferenceDescriptor {
         id: "s.remodel.remodel.inference",
         inference: schema::FacetLeaves {
@@ -103,25 +103,25 @@ mod tests {
     use protocol::Inference;
     use semio_framework::MeshData;
 
-    fn triangle_snapshot() -> RemodelSnapshot {
+    async fn triangle_snapshot() -> RemodelSnapshot {
         let mut snapshot = RemodelSnapshot::default();
         snapshot.results.mesh.mesh = mint_and_stash_mesh(MeshData { positions: vec![0.0, 0.0, 0.0, 2.0, 0.0, 0.0, 0.0, 3.0, 0.0], indices: vec![0, 1, 2], ..MeshData::default() });
         snapshot
     }
 
     #[test]
-    fn inference_determinism_law() {
+    async fn inference_determinism_law() {
         let snapshot = triangle_snapshot();
         assert_eq!(RemodelInference::infer(&snapshot), RemodelInference::infer(&snapshot));
     }
 
     #[test]
-    fn inference_default_law() {
+    async fn inference_default_law() {
         assert_eq!(RemodelInference::infer(&RemodelSnapshot::default()), RemodelInference::default());
     }
 
     #[test]
-    fn bounds_covers_the_mesh_vertices_and_counts_it_exactly() {
+    async fn bounds_covers_the_mesh_vertices_and_counts_it_exactly() {
         let inferred = RemodelInference::infer(&triangle_snapshot());
         assert_eq!(inferred.bounds.vertex_count, 3);
         assert_eq!(inferred.bounds.face_count, 1);

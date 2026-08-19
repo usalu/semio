@@ -12,12 +12,12 @@ use crate::artifacts::raster::op::RasterMutation;
 use protocol::OpBinary;
 
 /// 📦️ Encodes a `RasterMutation` to its binary command form.
-pub fn encode_op(operation: &RasterMutation) -> Result<Vec<u8>, protocol::ProtocolError> {
+pub async fn encode_op(operation: &RasterMutation) -> Result<Vec<u8>, protocol::ProtocolError> {
     operation.encode_op()
 }
 
 /// 📖️ Decodes a `RasterMutation` from its binary command form.
-pub fn decode_op(bytes: &[u8]) -> Result<RasterMutation, protocol::ProtocolError> {
+pub async fn decode_op(bytes: &[u8]) -> Result<RasterMutation, protocol::ProtocolError> {
     RasterMutation::decode_op(bytes)
 }
 
@@ -30,7 +30,7 @@ mod tests {
     use crate::artifacts::raster::{RasterLayerNode, RasterTransform, RASTER_DOCUMENT_SCHEMA};
 
     #[test]
-    fn op_binary_round_trips_and_agrees_with_text() {
+    async fn op_binary_round_trips_and_agrees_with_text() {
         let document = empty_raster_document();
         let operation = RasterMutation::CreateLayer(create_layer::mutation::CreateLayer {
             parent_id: None,
@@ -54,7 +54,7 @@ mod tests {
     }
 
     #[test]
-    fn raster_document_text_round_trips_store_with_applied_operation() {
+    async fn raster_document_text_round_trips_store_with_applied_operation() {
         use crate::artifacts::raster::RasterSnapshot;
 
         let envelope = store::create_document_envelope::<RasterSnapshot, RasterMutation>(RASTER_DOCUMENT_SCHEMA, "doc-text-test", empty_raster_document(), None);
@@ -88,7 +88,7 @@ mod tests {
     /// existing pack round-trip law (same pattern as `mathematical_protocol`'s own
     /// `command_envelope_round_trip_holds_for_an_applied_operation`).
     #[test]
-    fn command_envelope_round_trip_holds_for_an_applied_operation() {
+    async fn command_envelope_round_trip_holds_for_an_applied_operation() {
         use crate::artifacts::raster::RasterSnapshot;
         use protocol::{ArtifactId, Edit, SchemaId};
 

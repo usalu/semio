@@ -27,7 +27,7 @@ pub struct DrawCamera {
 
 impl Default for DrawCamera {
     /// 🎯️ Matches the pre-migration `default_draw_document` camera: centered on its 1024x1024 artboard.
-    fn default() -> Self {
+    async fn default() -> Self {
         Self { x: 512.0, y: 512.0, zoom: 0.75 }
     }
 }
@@ -361,11 +361,11 @@ pub struct DrawArtboard {
     pub height: f64,
 }
 
-pub fn default_draw_transform() -> DrawTransform {
+pub async fn default_draw_transform() -> DrawTransform {
     DrawTransform { x: 0.0, y: 0.0, scale_x: 1.0, scale_y: 1.0, rotation: 0.0 }
 }
 
-pub fn default_draw_trace_params() -> DrawTraceParams {
+pub async fn default_draw_trace_params() -> DrawTraceParams {
     DrawTraceParams { threshold: 0.5, simplify_epsilon: 1.5 }
 }
 pub use crate::artifacts::draw::schema::diff::DrawDiff;
@@ -377,7 +377,7 @@ pub use crate::artifacts::draw::schema::snapshot::DrawSnapshot;
 //#region 🔖️ArtifactKind
 /// 🏷️ The `2d.drawing` artifact kind declaration — lifted out of the old bundle manifest's
 /// `.artifact_kind(...)` call so the app's manifest stitch can reuse it verbatim.
-pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
+pub async fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
     semio_framework_plugin::ArtifactKindSpec {
         id: "2d.drawing".into(),
         name: "2D Drawing".into(),
@@ -411,7 +411,7 @@ pub const DRAW_DIALECT: semio_framework::Dialect = semio_framework::Dialect { ar
 /// channel by `artifact()` (ticket 26/08/17/CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM) — this
 /// function's only remaining reader is the `en`/`de` localized name pair (see `artifact()`'s own
 /// `localization: &[]` doc).
-pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
+pub async fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
     use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
     let rows: &[(&str, &str, &str, &[(&str, &str)], Option<(&str, &str)>)] = &[
         ("s.draw.standard.v1", "standard", "1", &[], None),
@@ -455,7 +455,7 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
 /// because `🦀️component.rs`'s own `.activation(...)` (ticket
 /// 26/08/17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME) still reads `artifact_kind().id`; neither has
 /// any caller left in this function.
-pub fn artifact() -> semio_framework_plugin::app::declarations::ArtifactDeclaration {
+pub async fn artifact() -> semio_framework_plugin::app::declarations::ArtifactDeclaration {
     use semio_framework_plugin::app::declarations::ArtifactDeclaration;
     use store::os_io::ArtifactKindId;
     ArtifactDeclaration {

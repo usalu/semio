@@ -23,12 +23,12 @@ use crate::artifacts::txt::TxtSnapshot;
 use semio_framework_plugin::{ArtifactSerializer, Dialect, StandardId, SubsetId};
 
 //#region 🔖️FieldMapping
-fn join_runs(runs: &[DocRun]) -> String {
+async fn join_runs(runs: &[DocRun]) -> String {
     runs.iter().map(|r| r.text.as_str()).collect::<Vec<_>>().join("")
 }
 
 /// 🧱 One `DocBlock` -> zero or more plain-text lines.
-pub(crate) fn block_to_lines(block: &DocBlock) -> Vec<String> {
+pub(crate) async fn block_to_lines(block: &DocBlock) -> Vec<String> {
     match block {
         DocBlock::Paragraph { runs, .. } => vec![join_runs(runs)],
         DocBlock::Heading { runs, .. } => vec![join_runs(runs)],
@@ -64,7 +64,7 @@ mod tests {
     use super::*;
     use crate::artifacts::semio::standards::v1::subsets::document::schema::snapshot::{DocListItem, RunStyle, STDIO_SEMIODOCUMENT_DOCUMENT_SCHEMA};
 
-    fn sample_semio() -> SemioDocumentSnapshot {
+    async fn sample_semio() -> SemioDocumentSnapshot {
         SemioDocumentSnapshot {
             schema: STDIO_SEMIODOCUMENT_DOCUMENT_SCHEMA.into(),
             styles: Vec::new(),
@@ -79,7 +79,7 @@ mod tests {
     }
 
     #[test]
-    fn extracts_plain_text_lines_and_drops_pagebreak() {
+    async fn extracts_plain_text_lines_and_drops_pagebreak() {
         let txt = semio_framework_plugin::resolve_ready(SemioDocumentToTxt::serialize(&sample_semio())).expect("serialize");
         assert_eq!(txt.lines, vec!["Title".to_string(), "Body text.".to_string(), "item one".to_string()]);
         assert!(txt.trailing_newline);

@@ -77,7 +77,7 @@ pub enum EpwMutation {
 //#region 🔖️Apply
 /// ▶️ Applies `mutation` to `snapshot`: `let d = mutation.diff(&*snapshot); *snapshot =
 /// d.apply(snapshot); d` — the diff is the single semantics source.
-pub fn apply_epw_mutation(snapshot: &mut EpwSnapshot, mutation: &EpwMutation) -> protocol::MutationOutcome<EpwDiff> {
+pub async fn apply_epw_mutation(snapshot: &mut EpwSnapshot, mutation: &EpwMutation) -> protocol::MutationOutcome<EpwDiff> {
     let outcome = <EpwMutation as Mutation<EpwSnapshot>>::diff(mutation, snapshot);
     match protocol::MutationDiff::apply(outcome.diff(), snapshot) {
         Ok(next) => {
@@ -93,7 +93,7 @@ pub fn apply_epw_mutation(snapshot: &mut EpwSnapshot, mutation: &EpwMutation) ->
 impl Mutation<EpwSnapshot> for EpwMutation {
     type Diff = EpwDiff;
 
-    fn diff(&self, base: &EpwSnapshot) -> protocol::MutationOutcome<Self::Diff> {
+    async fn diff(&self, base: &EpwSnapshot) -> protocol::MutationOutcome<Self::Diff> {
         protocol::MutationOutcome::new(match self {
             EpwMutation::NoMutation => EpwDiff::default(),
             EpwMutation::SetSnapshot { snapshot } => diff_set_snapshot(base, snapshot),
@@ -115,7 +115,7 @@ impl Mutation<EpwSnapshot> for EpwMutation {
         })
     }
 
-    fn inverse(&self, base: &EpwSnapshot) -> Vec<Self> {
+    async fn inverse(&self, base: &EpwSnapshot) -> Vec<Self> {
         match self {
             EpwMutation::NoMutation => vec![EpwMutation::NoMutation],
             EpwMutation::SetSnapshot { .. } => vec![EpwMutation::SetSnapshot { snapshot: base.clone() }],
@@ -145,7 +145,7 @@ impl Mutation<EpwSnapshot> for EpwMutation {
 /// 🧪️ F6: hand-rolled `OpText`/`OpBinary` for `EpwMutation` — reuses `EpwDiff`'s `pub(crate)`
 /// grammar primitives. Grammar: `keyword arg=value ...` (space-separated), same convention csv's/
 /// gif89a's/svg's own hand-rolled `OpText` impls use.
-fn enc_epw_snapshot(s: &EpwSnapshot) -> String {
+async fn enc_epw_snapshot(s: &EpwSnapshot) -> String {
     format!(
         "[{},{},{},{},{},{},{},{},{},[{}]]",
         enc_str(&s.schema),
@@ -160,7 +160,7 @@ fn enc_epw_snapshot(s: &EpwSnapshot) -> String {
         s.records.iter().map(enc_record).collect::<Vec<_>>().join(","),
     )
 }
-fn dec_epw_snapshot(s: &str) -> Result<EpwSnapshot, String> {
+async fn dec_epw_snapshot(s: &str) -> Result<EpwSnapshot, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [schema, location, design_conditions, typical_extreme_periods, ground_temperatures, holidays_dst, comments_1, comments_2, data_periods, records] = parts.as_slice() else {
         return Err(format!("epw snapshot: expected 10 fields, got {}", parts.len()));
@@ -180,7 +180,7 @@ fn dec_epw_snapshot(s: &str) -> Result<EpwSnapshot, String> {
     })
 }
 
-fn print_epw_mutation(m: &EpwMutation) -> String {
+async fn print_epw_mutation(m: &EpwMutation) -> String {
     match m {
         EpwMutation::NoMutation => "no-mutation".to_string(),
         EpwMutation::SetSnapshot { snapshot } => format!("set-snapshot snapshot={}", enc_epw_snapshot(snapshot)),
@@ -197,7 +197,7 @@ fn print_epw_mutation(m: &EpwMutation) -> String {
         EpwMutation::SetRecordField { record_index, field_index, value } => format!("set-record-field record-index={record_index} field-index={field_index} value={}", enc_str(value),),
     }
 }
-fn parse_epw_mutation(line: &str) -> Result<EpwMutation, String> {
+async fn parse_epw_mutation(line: &str) -> Result<EpwMutation, String> {
     if line == "no-mutation" {
         return Ok(EpwMutation::NoMutation);
     }
@@ -223,20 +223,20 @@ fn parse_epw_mutation(line: &str) -> Result<EpwMutation, String> {
 }
 
 impl OpText for EpwMutation {
-    fn print_op(&self) -> String {
+    async fn print_op(&self) -> String {
         print_epw_mutation(self)
     }
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
+    async fn parse_op(line: &str) -> Result<Self, store::TextError> {
         parse_epw_mutation(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
 }
 
 /// ⚡️ Binary = the text bytes verbatim, same simplification as `EpwDiff`'s hand-rolled codec.
 impl OpBinary for EpwMutation {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         Ok(self.print_op().into_bytes())
     }
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         let line = std::str::from_utf8(bytes).map_err(|e| protocol::ProtocolError::Malformed { what: "op utf8", offset: 0, detail: e.to_string() })?;
         Self::parse_op(line).map_err(|e| protocol::ProtocolError::Malformed { what: "op text", offset: 0, detail: e.to_string() })
     }
@@ -251,10 +251,10 @@ mod tests {
     use protocol::MutationDiff;
 
     //#region 🔖️Fixtures
-    fn location(city: &str) -> EpwLocation {
+    async fn location(city: &str) -> EpwLocation {
         EpwLocation { city: city.into(), state_province: "NI".into(), country: "DEU".into(), source: "SRC".into(), wmo: "10238".into(), latitude: "52.37".into(), longitude: "9.74".into(), time_zone: "1.0".into(), elevation: "55.0".into() }
     }
-    fn record(hour: &str, temp: &str) -> EpwRecord {
+    async fn record(hour: &str, temp: &str) -> EpwRecord {
         let mut r = EpwRecord::default();
         r.year = "2026".into();
         r.month = "1".into();
@@ -265,13 +265,13 @@ mod tests {
         r.visibility = "20.0".into();
         r
     }
-    fn data_periods() -> EpwDataPeriods {
+    async fn data_periods() -> EpwDataPeriods {
         EpwDataPeriods {
             records_per_hour: 1,
             periods: vec![crate::artifacts::epw::standards::energyplus::subsets::any::schema::snapshot::EpwDataPeriod { name: "Data".into(), start_day_of_week: "Sunday".into(), start_date: " 1/ 1".into(), end_date: " 1/ 1".into() }],
         }
     }
-    fn base_snapshot() -> EpwSnapshot {
+    async fn base_snapshot() -> EpwSnapshot {
         EpwSnapshot {
             location: location("Hannover"),
             design_conditions: "DESIGN CONDITIONS,0".into(),
@@ -290,7 +290,7 @@ mod tests {
     //#region 🔖️FieldSweepFixtures
     /// 🧬️ Canonical "differs in every mutable field" snapshot A: 3 records — one removed, one
     /// modified in every one of its 35 columns, one untouched (anchor for the added record's index).
-    fn sweep_a() -> EpwSnapshot {
+    async fn sweep_a() -> EpwSnapshot {
         let mut a = base_snapshot();
         a.records = vec![record("1", "-7.8"), record("2", "-7.2"), record("3", "-6.2")];
         a
@@ -298,7 +298,7 @@ mod tests {
     /// 🧬️ Sweep B: every top-level scalar field changes, record 0 is removed, record 1 (now
     /// index 0) is modified in every one of its 35 columns, record 2 (now index 1) is untouched,
     /// and a brand-new record is added at the end.
-    fn sweep_b() -> EpwSnapshot {
+    async fn sweep_b() -> EpwSnapshot {
         let mut modified = EpwRecord::default();
         for i in 0..crate::artifacts::epw::standards::energyplus::subsets::any::schema::snapshot::EPW_RECORD_FIELD_COUNT {
             modified.set_field_at(i, format!("swept-{i}"));
@@ -323,7 +323,7 @@ mod tests {
 
     //#region 🔖️MutationDiffLaw
     #[test]
-    fn mutation_diff_law() {
+    async fn mutation_diff_law() {
         let base = base_snapshot();
         let variants = vec![
             EpwMutation::NoMutation,
@@ -350,7 +350,7 @@ mod tests {
 
     //#region 🔖️InverseLaw
     #[test]
-    fn inverse_law() {
+    async fn inverse_law() {
         let base = base_snapshot();
         let variants = vec![
             EpwMutation::NoMutation,
@@ -379,7 +379,7 @@ mod tests {
 
     //#region 🔖️AbsorbLaw
     #[test]
-    fn absorb_law() {
+    async fn absorb_law() {
         let base = base_snapshot();
 
         let d1 = EpwMutation::InsertRecord { index: 2, record: record("40", "ins") }.diff(&base);
@@ -441,7 +441,7 @@ mod tests {
 
     //#region 🔖️BetweenRoundtripLaw
     #[test]
-    fn between_roundtrip_law() {
+    async fn between_roundtrip_law() {
         let a = base_snapshot();
         let b = sweep_b();
         assert_eq!(EpwDiff::between(&a, &b).apply(&a).unwrap(), b);
@@ -452,7 +452,7 @@ mod tests {
 
     //#region 🔖️FieldSweep
     #[test]
-    fn field_sweep_every_mutable_field_changes() {
+    async fn field_sweep_every_mutable_field_changes() {
         let a = sweep_a();
         let b = sweep_b();
 
@@ -506,7 +506,7 @@ mod tests {
 
     //#region 🔖️OpTextBinaryRoundtripLaw
     #[test]
-    fn op_text_binary_roundtrip_law() {
+    async fn op_text_binary_roundtrip_law() {
         let mutations = vec![
             EpwMutation::NoMutation,
             EpwMutation::SetSnapshot { snapshot: sweep_b() },

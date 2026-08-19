@@ -5,7 +5,7 @@ use protocol::Identified;
 
 use super::mutation::ReplaceWidget;
 
-pub fn inverse(payload: &ReplaceWidget, base: &FlowSnapshot) -> Vec<FlowMutation> {
+pub async fn inverse(payload: &ReplaceWidget, base: &FlowSnapshot) -> Vec<FlowMutation> {
     let scene = flow_working_scene(base);
     match scene.widgets.iter().find(|widget| widget.id() == &payload.id) {
         Some(previous) => vec![FlowMutation::ReplaceWidget(ReplaceWidget { id: payload.id.clone(), widget: previous.clone() })],

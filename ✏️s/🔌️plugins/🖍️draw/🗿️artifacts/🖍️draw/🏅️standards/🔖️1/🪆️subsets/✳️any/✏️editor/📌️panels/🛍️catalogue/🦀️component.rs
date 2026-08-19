@@ -10,7 +10,7 @@ use std::collections::HashMap;
 pub const DRAW_PLAY_BODY_CATALOGUE: &str = "draw.play.catalogue";
 
 //#region 🔖️Definition
-pub fn definition() -> PanelTabDefinition {
+pub async fn definition() -> PanelTabDefinition {
     PanelTabDefinition {
         kind: PanelTabKind::App(FRAMEWORK_PANEL_TAB_CATALOGUE_ID.into()),
         label: semio_framework_plugin::LocalizedLabel::native(FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, "Katalog"),
@@ -22,7 +22,7 @@ pub fn definition() -> PanelTabDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(_document: &DrawSnapshot, labels: &DrawPlayLabels) -> UiNode {
+pub async fn render(_document: &DrawSnapshot, labels: &DrawPlayLabels) -> UiNode {
     let catalogue_kinds = [
         ("path", labels.kind_path, "pen-tool"),
         ("shape:rect", labels.kind_rectangle, "square"),

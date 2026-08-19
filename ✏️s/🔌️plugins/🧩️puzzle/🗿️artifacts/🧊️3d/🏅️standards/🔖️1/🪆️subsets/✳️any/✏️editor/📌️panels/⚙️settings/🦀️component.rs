@@ -16,7 +16,7 @@ pub const BODY_KEY: &str = "puzzle.3d.play.settings";
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
-pub fn definition() -> PanelTabDefinition {
+pub async fn definition() -> PanelTabDefinition {
     PanelTabDefinition {
         kind: PanelTabKind::App(PANEL_TAB_ID.into()),
         label: LocalizedLabel::native("Settings", "Einstellungen"),
@@ -28,7 +28,7 @@ pub fn definition() -> PanelTabDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(envelope: &Puzzle3dScene, labels: &Puzzle3dLabels) -> UiNode {
+pub async fn render(envelope: &Puzzle3dScene, labels: &Puzzle3dLabels) -> UiNode {
     let runtime = &envelope.runtime;
     ui_inspector_groups_to_tree(&[UiInspectorFieldGroup {
         id: "puzzle3d-play-settings".into(),

@@ -15,6 +15,6 @@ pub struct SetFrame {
     pub frame: FigureTileFrame,
 }
 
-pub fn handle(payload: &SetFrame, _doc: &ArtifactView<'_, PresentSnapshot>, _cfg: &ConfigView<'_, PresentConfig>, _ctx: &mut PresentDispatchCtx) -> Result<Emit<PresentMutation, PresentConfigMutation>, Fault> {
+pub async fn handle(payload: &SetFrame, _doc: &ArtifactView<'_, PresentSnapshot>, _cfg: &ConfigView<'_, PresentConfig>, _ctx: &mut PresentDispatchCtx) -> Result<Emit<PresentMutation, PresentConfigMutation>, Fault> {
     Ok(Emit::mutations(vec![PresentMutation::ResizeSourceFrame(ResizeSourceFrame { new_frame: payload.frame.clone() })]))
 }

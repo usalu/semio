@@ -19,7 +19,7 @@ pub const BODY_KEY: &str = TableWindowKit::KIND_ID;
 //#region 🔖️Definition
 /// 🧱️ Stitched into the viewer manifest by `crate::viewer::iso16757::create_iso16757_viewer`. Read-only variant
 /// — a viewer never declares `editable_window_kind()`'s `set-cell` command.
-pub fn definition() -> WindowKindDefinition {
+pub async fn definition() -> WindowKindDefinition {
     TableWindowKit::window_kind()
 }
 //#endregion 🔖️Definition
@@ -27,7 +27,7 @@ pub fn definition() -> WindowKindDefinition {
 //#region 🔖️Render
 /// 👁️ Pure `Iso16757Snapshot -> UiNode` read: recomputes the compliance report straight off the document
 /// (the same pure inference the editor's results window renders through `NormHost`), then tables it.
-pub fn render(document: &Iso16757Snapshot) -> UiNode {
+pub async fn render(document: &Iso16757Snapshot) -> UiNode {
     let report = crate::artifacts::iso16757::standards::v1::subsets::any::schema::inferences::evaluate(document);
     TableWindowKit::render(&TableView { columns: crate::app_surface::report_table_columns(), rows: crate::app_surface::report_table_rows(&report) })
 }
@@ -39,13 +39,13 @@ mod tests {
     use super::*;
 
     #[test]
-    fn definition_declares_the_shared_table_window_kind() {
+    async fn definition_declares_the_shared_table_window_kind() {
         let def = definition();
         assert_eq!(def.id, TableWindowKit::KIND_ID);
     }
 
     #[test]
-    fn render_produces_a_node_for_the_default_document() {
+    async fn render_produces_a_node_for_the_default_document() {
         let document = Iso16757Snapshot::default();
         let _node = render(&document);
     }

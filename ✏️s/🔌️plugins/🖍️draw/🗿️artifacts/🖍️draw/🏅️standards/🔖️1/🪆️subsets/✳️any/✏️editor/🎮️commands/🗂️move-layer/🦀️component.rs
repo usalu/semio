@@ -9,7 +9,7 @@ use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️DocumentHelpers
-fn resolve_reorder_target(document: &DrawSnapshot, target_row_id: &str, drop_position: &str) -> (Option<String>, usize) {
+async fn resolve_reorder_target(document: &DrawSnapshot, target_row_id: &str, drop_position: &str) -> (Option<String>, usize) {
     if target_row_id == "draw-play-layers" || target_row_id == "draw-play-layers.empty" {
         return (None, document.layers.len());
     }
@@ -48,7 +48,7 @@ pub struct MoveLayer {
     pub drop_position: String,
 }
 
-pub fn handle(payload: &MoveLayer, doc: &ArtifactView<'_, DrawSnapshot>, _cfg: &ConfigView<'_, DrawConfig>, _session: &mut DrawSession) -> Result<Emit<DrawMutation, DrawConfigMutation>, Fault> {
+pub async fn handle(payload: &MoveLayer, doc: &ArtifactView<'_, DrawSnapshot>, _cfg: &ConfigView<'_, DrawConfig>, _session: &mut DrawSession) -> Result<Emit<DrawMutation, DrawConfigMutation>, Fault> {
     let document = doc.snapshot;
     let (parent_id, index) = resolve_reorder_target(document, &payload.target_row_id, &payload.drop_position);
     Ok(Emit::mutations(vec![crate::artifacts::draw::mutations::reorder_layer(payload.layer_id.clone(), parent_id, index)]))

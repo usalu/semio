@@ -6,7 +6,7 @@ use crate::artifacts::en1999::mutations::En1999Mutation;
 use crate::artifacts::en1999::En1999Snapshot;
 
 //#region 🔖️Inverse
-pub fn inverse(_payload: &ChangeDeltaSigmaC, base: &En1999Snapshot) -> Vec<En1999Mutation> {
+pub async fn inverse(_payload: &ChangeDeltaSigmaC, base: &En1999Snapshot) -> Vec<En1999Mutation> {
     vec![En1999Mutation::ChangeDeltaSigmaC(ChangeDeltaSigmaC { new_delta_sigma_c: base.delta_sigma_c.clone() })]
 }
 //#endregion 🔖️Inverse

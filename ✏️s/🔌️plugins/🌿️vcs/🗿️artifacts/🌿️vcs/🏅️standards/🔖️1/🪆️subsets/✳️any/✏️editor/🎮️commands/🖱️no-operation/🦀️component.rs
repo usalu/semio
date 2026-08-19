@@ -9,7 +9,7 @@ use serde::{Deserialize, Serialize};
 #[dsl(keyword = "no-operation")]
 pub struct NoMutation {}
 
-pub fn handle(_payload: &NoMutation, _doc: &ArtifactView<'_, VcsSnapshot>, _cfg: &ConfigView<'_, VcsDemoConfig>) -> Result<Emit<VcsDemoMutation, VcsDemoConfigMutation>, Fault> {
+pub async fn handle(_payload: &NoMutation, _doc: &ArtifactView<'_, VcsSnapshot>, _cfg: &ConfigView<'_, VcsDemoConfig>) -> Result<Emit<VcsDemoMutation, VcsDemoConfigMutation>, Fault> {
     Ok(Emit::default())
 }
 
@@ -21,7 +21,7 @@ mod tests {
     use crate::editor::vcs::VcsCommand;
 
     #[test]
-    fn vcs_demo_command_op_text_round_trips() {
+    async fn vcs_demo_command_op_text_round_trips() {
         store::os_store::test_support::assert_op_line_round_trip(&VcsCommand::NoMutation(NoMutation {}));
         store::os_store::test_support::assert_op_line_round_trip(&VcsCommand::CanvasPointerDown(canvas_pointer_down::CanvasPointerDown {}));
         store::os_store::test_support::assert_op_line_round_trip(&VcsCommand::CanvasPointerMove(canvas_pointer_move::CanvasPointerMove {}));

@@ -35,7 +35,7 @@ pub enum DeflateEditorCommand {
 /// 🎯️ Handcrafted (P6: `#[derive(dsl::DslOps)]` emits `DslVariants` only — `OpText`/`OpBinary` are
 /// handcrafted per artifact). Same shape as `energy`'s `EnergyModelEditorCommand`.
 impl protocol::OpText for DeflateEditorCommand {
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
+    async fn parse_op(line: &str) -> Result<Self, store::TextError> {
         let variants = <Self as dsl::DslVariants>::variants();
         for (keyword, spec_fn) in &variants {
             let probe = format!("{} ", keyword);
@@ -46,7 +46,7 @@ impl protocol::OpText for DeflateEditorCommand {
         }
         Err(dsl::__rt::field_error(format!("unknown operation line '{line}'")))
     }
-    fn print_op(&self) -> String {
+    async fn print_op(&self) -> String {
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
         let variants = <Self as dsl::DslVariants>::variants();
         let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
@@ -55,7 +55,7 @@ impl protocol::OpText for DeflateEditorCommand {
 }
 
 impl protocol::OpBinary for DeflateEditorCommand {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         const OP_BINARY_FORMAT: u8 = 1;
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
         let variants = <Self as dsl::DslVariants>::variants();
@@ -68,7 +68,7 @@ impl protocol::OpBinary for DeflateEditorCommand {
         out.extend_from_slice(&body);
         Ok(out)
     }
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         const OP_BINARY_FORMAT: u8 = 1;
         let mut reader = store::pack_rt::ByteReader::new(bytes);
         let format = reader.read_u8()?;
@@ -92,7 +92,7 @@ impl protocol::OpBinary for DeflateEditorCommand {
 /// `#`-prefixed and blank lines are ignored (the payload byte-count comment). `None` on any missing
 /// or malformed required key — the caller treats that as a whole-command no-op, never a partial
 /// apply.
-fn parse_header_summary(text: &str) -> Option<(u8, u8, crate::artifacts::deflate::schema::snapshot::DeflateLevelHint, Option<u32>)> {
+async fn parse_header_summary(text: &str) -> Option<(u8, u8, crate::artifacts::deflate::schema::snapshot::DeflateLevelHint, Option<u32>)> {
     let mut fields = std::collections::BTreeMap::new();
     for line in text.lines() {
         let line = line.trim();
@@ -133,7 +133,7 @@ impl ArtifactEditor for DeflateEditor {
     const DIALECT: Dialect = DEFLATE_EDITOR_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = STDIO_DEFLATE_DOCUMENT_SCHEMA;
 
-    fn initial_snapshot() -> DeflateSnapshot {
+    async fn initial_snapshot() -> DeflateSnapshot {
         DeflateSnapshot::default()
     }
 
@@ -141,7 +141,7 @@ impl ArtifactEditor for DeflateEditor {
     /// emits BOTH `SetCompressionParams` and `SetPresetDictionary` as one gesture. A malformed
     /// summary (missing/unparsable required field) is a documented no-op (`Emit::default()`), never
     /// a partial apply.
-    fn handle(command: &Self::Command, _doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _interaction: &semio_framework_plugin::app::InteractionView<'_>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<Self::Mutation>, Fault> {
+    async fn handle(command: &Self::Command, _doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _interaction: &semio_framework_plugin::app::InteractionView<'_>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<Self::Mutation>, Fault> {
         let DeflateEditorCommand::ReplaceText { text } = command;
         let Some((method, window_bits, level_hint, dict_id)) = parse_header_summary(text) else { return Ok(Emit::default()) };
         Ok(Emit {
@@ -151,7 +151,7 @@ impl ArtifactEditor for DeflateEditor {
         })
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> UiNode {
+    async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> UiNode {
         match body_key {
             main::BODY_KEY => main::render(doc.snapshot),
             _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))),
@@ -161,7 +161,7 @@ impl ArtifactEditor for DeflateEditor {
 //#endregion 🔖️Editor
 
 //#region 🔖️Manifest
-pub fn create_deflate_editor() -> semio_framework_plugin::AppDefinition {
+pub async fn create_deflate_editor() -> semio_framework_plugin::AppDefinition {
     Editor::builder(DEFLATE_EDITOR_DIALECT)
         .document(["stdio", "deflate"])
         .icon_id("package")
@@ -179,25 +179,25 @@ mod tests {
     use super::*;
 
     #[test]
-    fn create_deflate_editor_builds_a_definition_for_the_editor_role() {
+    async fn create_deflate_editor_builds_a_definition_for_the_editor_role() {
         let def = create_deflate_editor();
         assert_eq!(def.role, semio_framework_plugin::AppRole::Editor);
         assert_eq!(def.dialect, DEFLATE_EDITOR_DIALECT.into());
     }
 
     #[test]
-    fn editor_dialect_matches_the_artifact_coordinate() {
+    async fn editor_dialect_matches_the_artifact_coordinate() {
         assert_eq!(<DeflateEditor as ArtifactEditor>::DIALECT, DEFLATE_EDITOR_DIALECT);
     }
 
     #[test]
-    fn editor_declares_the_main_window() {
+    async fn editor_declares_the_main_window() {
         let def = create_deflate_editor();
         assert!(def.window_kinds.iter().any(|window| window.id == main::WINDOW_KIND_ID));
     }
 
     #[test]
-    fn parse_header_summary_round_trips_a_rendered_snapshot() {
+    async fn parse_header_summary_round_trips_a_rendered_snapshot() {
         let document = DeflateSnapshot { compression_method: 8, window_bits: 9, compression_level_hint: crate::artifacts::deflate::schema::snapshot::DeflateLevelHint::Maximum, dict_id: Some(7), payload: vec![9, 9], ..DeflateSnapshot::default() };
         let UiNode::ComponentScene(node) = main::render(&document) else { panic!("expected ComponentScene") };
         let scene = node.text_editor.expect("text_editor scene");
@@ -209,7 +209,7 @@ mod tests {
     }
 
     #[test]
-    fn parse_header_summary_rejects_a_missing_required_field() {
+    async fn parse_header_summary_rejects_a_missing_required_field() {
         assert!(parse_header_summary("method=8\nwindowBits=7").is_none());
     }
 }

@@ -16,11 +16,11 @@ const PUZZLE2D_SUGGESTION_OFFSET_STEP: f64 = 4.0;
 //#endregion 🔖️Constants
 
 //#region 🔖️Weights
-pub fn puzzle2d_kind_weight_sum(weights: &BTreeMap<String, f64>, kind_ids: &[String]) -> f64 {
+pub async fn puzzle2d_kind_weight_sum(weights: &BTreeMap<String, f64>, kind_ids: &[String]) -> f64 {
     kind_ids.iter().map(|id| weights.get(id).copied().unwrap_or(0.0)).sum()
 }
 
-fn puzzle2d_kind_weight_measures(prefix: &str, ids: &[String], weights: &BTreeMap<String, f64>, catalog_slice: &str) -> Vec<WindowMeasure> {
+async fn puzzle2d_kind_weight_measures(prefix: &str, ids: &[String], weights: &BTreeMap<String, f64>, catalog_slice: &str) -> Vec<WindowMeasure> {
     ids.iter()
         .map(|kind_id| {
             let weight = weights.get(kind_id).copied().unwrap_or_else(|| if ids.is_empty() { 0.0 } else { 1.0 / ids.len() as f64 });
@@ -45,7 +45,7 @@ fn puzzle2d_kind_weight_measures(prefix: &str, ids: &[String], weights: &BTreeMa
 
 //#region 🔖️Measure
 /// 🖌️ Utility Options group for the brush utility.
-pub fn measure(envelope: &Puzzle2dScene, labels: &Puzzle2dLabels) -> WindowMeasure {
+pub async fn measure(envelope: &Puzzle2dScene, labels: &Puzzle2dLabels) -> WindowMeasure {
     let node_ids = puzzle2d_kind_ids(&envelope.fixture, "nodes");
     let handle_ids = puzzle2d_kind_ids(&envelope.fixture, "handles");
     let mut children = vec![
@@ -147,7 +147,7 @@ mod tests {
     use crate::editor::puzzle2d::modes::edit::puzzle2d_engagement;
 
     #[test]
-    fn brush_params_are_tagged_utility_options_not_engagement_controls() {
+    async fn brush_params_are_tagged_utility_options_not_engagement_controls() {
         let labels = puzzle2d_labels(&Puzzle2dConfig::default());
         let host = puzzle_board_host();
         let group_tag = |measures: &[WindowMeasure], id: &str| {

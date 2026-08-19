@@ -5,7 +5,7 @@ use crate::editor::jack::terminology::TrinityJackLabels;
 use crate::artifacts::jack::JackSnapshot;
 use semio_framework_plugin::{tree_item, tree_item_desc, Label, PanelTreeBuilder, UiNode, UiTreeItemNode};
 
-pub(crate) fn render(fixture: &JackSnapshot, _cfg: &JackConfig, labels: &TrinityJackLabels) -> UiNode {
+pub(crate) async fn render(fixture: &JackSnapshot, _cfg: &JackConfig, labels: &TrinityJackLabels) -> UiNode {
     let builder = PanelTreeBuilder::new("trinity-document");
     let scene = crate::artifacts::jack::jack_working_scene(fixture);
     // 🕹️ Domain "ast" targets nodes by their RAW document id (matching `interaction_topology` and the

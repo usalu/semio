@@ -23,7 +23,7 @@ const GIS3D_PLAY_SURFACE: &str = "gis3d.play.composite";
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
-pub fn definition() -> WindowKindDefinition {
+pub async fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
         id: GIS3D_PLAY_WINDOW_MAIN.into(),
         label: LocalizedLabel::native("Terrain", "Gelände"),
@@ -47,7 +47,7 @@ pub fn definition() -> WindowKindDefinition {
 /// 📍️ GIS pins are emitted as plain `World3d` instances with no matching `meshesJson` entry —
 /// `WorldInstancesLayer`'s existing missing-mesh fallback renders a small colored box, so
 /// selection/hover/context-menu all work for free without any new scene-schema surface.
-fn instances_json(descriptor: &TerrainDescriptorJson) -> String {
+async fn instances_json(descriptor: &TerrainDescriptorJson) -> String {
     let instances: Vec<Value> = descriptor
         .positions
         .iter()
@@ -65,7 +65,7 @@ fn instances_json(descriptor: &TerrainDescriptorJson) -> String {
     serde_json::to_string(&instances).unwrap_or_else(|_| "[]".into())
 }
 
-pub fn render(document: &GisTerrainSnapshot, cfg: &Gis3dConfig) -> UiNode {
+pub async fn render(document: &GisTerrainSnapshot, cfg: &Gis3dConfig) -> UiNode {
     let descriptor = parse_descriptor(document);
     let mut scene = world3d_scene_extended(
         cfg.camera_json.clone(),
@@ -111,14 +111,14 @@ mod tests {
     use crate::editor::gis3d::testkit::{app, render as render_body};
 
     #[test]
-    fn renders_the_world_3d_terrain_scene() {
+    async fn renders_the_world_3d_terrain_scene() {
         let mut app = app();
         let json = render_body(&mut app, GIS3D_PLAY_BODY_COMPOSITE);
         assert!(json.contains("world-3d"));
     }
 
     #[test]
-    fn the_fixture_pins_reach_the_scene_as_world_instances() {
+    async fn the_fixture_pins_reach_the_scene_as_world_instances() {
         let mut app = app();
         let json = render_body(&mut app, GIS3D_PLAY_BODY_COMPOSITE);
         assert!(json.contains("p_institut_de_botanique_ulg_liege"));
@@ -126,7 +126,7 @@ mod tests {
     }
 
     #[test]
-    fn the_definition_binds_the_world3d_surface_to_the_composite_body() {
+    async fn the_definition_binds_the_world3d_surface_to_the_composite_body() {
         let definition = definition();
         assert_eq!(definition.id, GIS3D_PLAY_WINDOW_MAIN);
         assert_eq!(definition.body_key, GIS3D_PLAY_BODY_COMPOSITE);

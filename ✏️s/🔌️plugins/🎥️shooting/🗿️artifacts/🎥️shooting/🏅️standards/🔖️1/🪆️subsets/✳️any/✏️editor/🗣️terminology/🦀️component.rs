@@ -54,7 +54,7 @@ semio_framework_plugin::app_labels! {
 
 //#region 🔖️Resolvers
 /// 🗣️ Resolves the active label set from `cfg.locale`; falls back to native English.
-pub fn shooting_play_labels(cfg: &ShootingConfig) -> &'static ShootingLabels {
+pub async fn shooting_play_labels(cfg: &ShootingConfig) -> &'static ShootingLabels {
     semio_framework_plugin::resolve_labels_for_locale::<ShootingLabels>(&cfg.locale)
 }
 //#endregion 🔖️Resolvers
@@ -65,12 +65,12 @@ mod tests {
     use super::*;
 
     #[test]
-    fn shooting_labels_resolve_native_english_by_default() {
+    async fn shooting_labels_resolve_native_english_by_default() {
         assert_eq!(shooting_play_labels(&ShootingConfig::default()).shots.as_str(), "Shots");
     }
 
     #[test]
-    fn shooting_labels_resolve_german_from_the_config_locale() {
+    async fn shooting_labels_resolve_german_from_the_config_locale() {
         assert_eq!(shooting_play_labels(&ShootingConfig { locale: "de-DE".into(), ..ShootingConfig::default() }).shots.as_str(), "Aufnahmen");
     }
 }

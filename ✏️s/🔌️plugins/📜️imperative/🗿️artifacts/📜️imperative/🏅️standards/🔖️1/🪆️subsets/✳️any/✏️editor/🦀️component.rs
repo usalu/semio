@@ -41,7 +41,7 @@ pub use inspection_panel::IMPERATIVE_PLAY_BODY_INSPECTOR;
 
 /// 🎯️ An `ActionDescriptor` addressed at this app — the single factory `📌️panels/*` builds its item
 /// actions with.
-pub fn imperative_action(action: &str, args: Option<Value>) -> ActionDescriptor {
+pub async fn imperative_action(action: &str, args: Option<Value>) -> ActionDescriptor {
     ActionDescriptor { controller_id: IMPERATIVE_PLAY_APP_ID.into(), action: action.into(), args: semio_framework_plugin::optional_json_to_dsl(args) }
 }
 //#endregion 🔖️Constants
@@ -57,8 +57,8 @@ pub const IMPERATIVE_INTERACTION_STEPS: &str = "steps";
 /// (matching the document panel tree's own item ids, see `document_panel::step_row_id`'s doc comment),
 /// so `validate_state` prunes deleted steps and range/transitive selection walk the real control-flow
 /// tree, including steps nested inside `control.if`/`control.while` bodies.
-fn imperative_steps_topology(document: &ImperativeSnapshot) -> DomainTopology {
-    fn visit(steps: &[Step], parent: Option<&str>, out: &mut Vec<TopologyNode>) {
+async fn imperative_steps_topology(document: &ImperativeSnapshot) -> DomainTopology {
+    async fn visit(steps: &[Step], parent: Option<&str>, out: &mut Vec<TopologyNode>) {
         for step in steps {
             let id = document_panel::step_row_id(&step.id);
             out.push(TopologyNode { id: id.clone(), granularity: "step".into(), parent: parent.map(str::to_string) });
@@ -127,31 +127,31 @@ impl ArtifactEditor for ImperativePlayApp {
     const DIALECT: semio_framework_plugin::app::Dialect = crate::artifacts::imperative::IMPERATIVE_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = IMPERATIVE_DOCUMENT_SCHEMA;
 
-    fn app_schema() -> Option<::schema::AppSchemaDescriptor> {
+    async fn app_schema() -> Option<::schema::AppSchemaDescriptor> {
         Some(crate::editor::imperative::config::schema::app_schema_descriptor())
     }
 
-    fn initial_snapshot() -> ImperativeSnapshot {
+    async fn initial_snapshot() -> ImperativeSnapshot {
         default_snapshot()
     }
 
-    fn io() -> Option<semio_framework_plugin::AppIo> {
+    async fn io() -> Option<semio_framework_plugin::AppIo> {
         Some(imperative_io())
     }
 
     /// 🏷️ The manifest action id each command was declared under — supplied wholesale by
     /// `app_commands!`'s generated `command_id()`.
-    fn command_id(command: &ImperativeCommand) -> &'static str {
+    async fn command_id(command: &ImperativeCommand) -> &'static str {
         command.command_id()
     }
 
-    fn handle(command: &ImperativeCommand, doc: &ArtifactView<'_, ImperativeSnapshot>, cfg: &ConfigView<'_, ImperativeConfig>, _interaction: &InteractionView<'_>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<ImperativeMutation, ImperativeConfigMutation, Self::DraftMutation>, Fault> {
+    async fn handle(command: &ImperativeCommand, doc: &ArtifactView<'_, ImperativeSnapshot>, cfg: &ConfigView<'_, ImperativeConfig>, _interaction: &InteractionView<'_>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<ImperativeMutation, ImperativeConfigMutation, Self::DraftMutation>, Fault> {
         command.dispatch(doc, cfg)
     }
 
     /// 🕹️ `steps` domain: `HierarchyProvider::Topology` from the document's own `Step::bodies` nesting —
     /// see `imperative_steps_topology`'s doc comment.
-    fn interaction_topology(doc: &ArtifactView<'_, ImperativeSnapshot>, _cfg: &ConfigView<'_, ImperativeConfig>) -> InteractionTopology {
+    async fn interaction_topology(doc: &ArtifactView<'_, ImperativeSnapshot>, _cfg: &ConfigView<'_, ImperativeConfig>) -> InteractionTopology {
         let mut domains = std::collections::BTreeMap::new();
         domains.insert(IMPERATIVE_INTERACTION_STEPS.to_string(), imperative_steps_topology(doc.snapshot));
         InteractionTopology { domains }
@@ -177,7 +177,7 @@ impl ArtifactEditor for ImperativePlayApp {
         }
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, ImperativeSnapshot>, cfg: &ConfigView<'_, ImperativeConfig>) -> UiNode {
+    async fn render(body_key: &str, doc: &ArtifactView<'_, ImperativeSnapshot>, cfg: &ConfigView<'_, ImperativeConfig>) -> UiNode {
         imperative_engine::sync_imperative_module_contributions(&cfg.snapshot.contributions_json);
         let document = doc.snapshot;
         let config = cfg.snapshot;
@@ -198,7 +198,7 @@ impl ArtifactEditor for ImperativePlayApp {
 /// 🧱️ The manifest stitch: one call per taxonomy node, each sourced from that node's own `definition()`.
 /// Only the leaf action/keybinding declarations (which have no dedicated `_def` passthrough) are written
 /// out inline.
-pub fn create_imperative_app() -> semio_framework_plugin::AppDefinition {
+pub async fn create_imperative_app() -> semio_framework_plugin::AppDefinition {
     Editor::builder(crate::artifacts::imperative::IMPERATIVE_DIALECT)
             .command(CommandDefinition { in_palette: false, ..CommandDefinition::new_catalog("setContributions", LocalizedLabel::native("Set Contributions", "Beiträge festlegen"), "host", ActionKind::View).with_args([ActionArgDef::text("json", LocalizedLabel::native("Contributions", "Beiträge"))]) })
             .document(["semio", "imperative"])
@@ -288,7 +288,7 @@ pub(crate) mod testkit {
     /// `ArtifactApp` implementor `VcsArtifactApp` wraps, exactly the way
     /// `PluginBuilder::editor::<ImperativePlayApp>` builds it.
     /// 🧪️ A bare app instance — no `AppActionRegistry`, so undeclared internal commands dispatch freely.
-    pub fn imperative_app() -> ImperativeApp {
+    pub async fn imperative_app() -> ImperativeApp {
         new_app::<EditorApp<ImperativePlayApp>>()
     }
 
@@ -296,21 +296,21 @@ pub(crate) mod testkit {
     /// examples }` shape `testkit::new_app_with_registry`/`assert_declared_actions_bridge_to_commands`
     /// still expect — framework testkit gap (w2-cad-report "SDK gaps found" #3), not modifiable here
     /// (`🧰️framework/**` is outside this packet's lease).
-    pub fn imperative_app_manifest_for_testkit() -> App {
+    pub async fn imperative_app_manifest_for_testkit() -> App {
         App { definition: create_imperative_app(), examples: Vec::new() }
     }
 
     /// 🧪️ An app wired to the real manifest registry — enforces View/Shell kind discipline and materializes
     /// declared action-arg defaults (e.g. `addStep`'s `kind`).
-    pub fn imperative_app_with_registry() -> ImperativeApp {
+    pub async fn imperative_app_with_registry() -> ImperativeApp {
         new_app_with_registry::<EditorApp<ImperativePlayApp>>(imperative_app_manifest_for_testkit)
     }
 
-    pub fn dispatch(app: &mut ImperativeApp, command: ImperativeCommand) -> InvocationResult {
+    pub async fn dispatch(app: &mut ImperativeApp, command: ImperativeCommand) -> InvocationResult {
         app.dispatch_typed(command, &meta("local")).expect("dispatch")
     }
 
-    pub fn render(app: &mut ImperativeApp, body_key: &str) -> String {
+    pub async fn render(app: &mut ImperativeApp, body_key: &str) -> String {
         serde_json::to_string(&app.render(body_key, None, &ViewModel::default()).expect("render")).expect("render json")
     }
 }
@@ -325,14 +325,14 @@ mod tests {
     use std::collections::BTreeMap;
 
     #[test]
-    fn app_definition_builds_without_panicking() {
+    async fn app_definition_builds_without_panicking() {
         let app = create_imperative_app();
         assert_eq!(app.id, semio_framework::surface_app_id(&crate::artifacts::imperative::IMPERATIVE_DIALECT.into(), semio_framework::AppRole::Editor));
         assert!(app.keybindings.iter().any(|binding| binding.action.action == "undo"));
     }
 
     #[test]
-    fn imperative_io_is_declared_on_the_manifest() {
+    async fn imperative_io_is_declared_on_the_manifest() {
         let app = create_imperative_app();
         assert_eq!(app.io.artifact.id, "computation.imperative");
         assert_eq!(app.io.ports.len(), 1);
@@ -343,7 +343,7 @@ mod tests {
     /// 🏷️ Every declared manifest action id must be reachable as exactly one command row, and every row's
     /// wire keyword must be distinct — the cross-cutting invariant `app_commands!` is there to hold.
     #[test]
-    fn command_ids_are_unique_and_match_the_declared_manifest_actions() {
+    async fn command_ids_are_unique_and_match_the_declared_manifest_actions() {
         let commands = every_command();
         let ids: Vec<&str> = commands.iter().map(|command| command.command_id()).collect();
         let mut sorted = ids.clone();
@@ -355,7 +355,7 @@ mod tests {
 
     /// ⚖️ LAW: text and binary are two projections of the same command, for every single row.
     #[test]
-    fn every_command_round_trips_through_text_and_binary() {
+    async fn every_command_round_trips_through_text_and_binary() {
         for command in every_command() {
             store::os_store::test_support::assert_op_text_binary_equivalence(&command);
         }
@@ -366,7 +366,7 @@ mod tests {
     /// undeclared host-pushed command). This is what a missing `#[dsl(keyword = ..)]` on a payload struct
     /// silently breaks (the record prints with no keyword at all and no longer parses).
     #[test]
-    fn every_printed_op_line_starts_with_the_rows_wire_keyword() {
+    async fn every_printed_op_line_starts_with_the_rows_wire_keyword() {
         for command in every_command() {
             let id = command.command_id();
             let expected = match id {
@@ -384,7 +384,7 @@ mod tests {
     /// `🧪️wire-baseline-before.txt`). A regression here is a real format break, not a test-fixture
     /// mismatch.
     #[test]
-    fn optional_field_rows_keep_their_pre_migration_bytes() {
+    async fn optional_field_rows_keep_their_pre_migration_bytes() {
         let cases: [(ImperativeCommand, &str, &str); 2] = [
             (ImperativeCommand::AddStep(add_step::AddStep { kind: "log.print".into(), index: Some(1) }), "add-step add-step kind=log.print index=1", "010001096c6f672e7072696e7402000600010401"),
             (ImperativeCommand::AddStep(add_step::AddStep { kind: "log.print".into(), index: None }), "add-step add-step kind=log.print", "010001096c6f672e7072696e7401000600"),
@@ -396,7 +396,7 @@ mod tests {
     }
 
     /// 🧾️ One representative value per row, in declaration (= binary ordinal) order.
-    pub(super) fn every_command() -> Vec<ImperativeCommand> {
+    pub(super) async fn every_command() -> Vec<ImperativeCommand> {
         let mut params = BTreeMap::new();
         params.insert("message".to_string(), crate::artifacts::imperative::dsl::value_to_value_dsl(&neural_engine::Value::Atom(neural_engine::Atom::String("updated".into()))));
         vec![
@@ -417,7 +417,7 @@ mod tests {
 
     //#region 🔖️ManifestSanity
     #[test]
-    fn the_manifest_stitches_every_taxonomy_node() {
+    async fn the_manifest_stitches_every_taxonomy_node() {
         let json = serde_json::to_string(&create_imperative_app()).expect("app definition json");
         for id in [IMPERATIVE_PLAY_WINDOW_MAIN, script::IMPERATIVE_PLAY_WINDOW_SCRIPT] {
             assert!(json.contains(id), "window kind {id} missing from the manifest: {json}");
@@ -435,7 +435,7 @@ mod tests {
     /// selection, and scoped to the main window kind — the manifest side of ticket
     /// 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM.
     #[test]
-    fn steps_interaction_domain_is_declared_topology_and_transitive_on_the_main_window() {
+    async fn steps_interaction_domain_is_declared_topology_and_transitive_on_the_main_window() {
         let definition = create_imperative_app();
         let steps = definition.interactions.iter().find(|interaction| interaction.id == IMPERATIVE_INTERACTION_STEPS).expect("steps interaction domain declared");
         assert!(matches!(steps.hierarchy, HierarchyProvider::Topology));
@@ -449,7 +449,7 @@ mod tests {
     /// `TopologyNode.parent` links — the owner step has no parent, the nested step's parent is the
     /// owner's own row id.
     #[test]
-    fn interaction_topology_walks_nested_control_bodies_into_parent_links() {
+    async fn interaction_topology_walks_nested_control_bodies_into_parent_links() {
         let mut app = imperative_app();
         dispatch(&mut app, ImperativeCommand::AddStep(add_step::AddStep { kind: "control.if".into(), index: None }));
         let owner_id = crate::artifacts::imperative::imperative_working_scene(&app.snapshot().expect("projection")).path.steps.last().expect("owner").id.clone();
@@ -471,7 +471,7 @@ mod tests {
     /// 🌱️ A document with no steps has an empty `steps` topology — every stale `steps` selection id
     /// gets pruned.
     #[test]
-    fn interaction_topology_is_empty_for_a_document_with_no_steps() {
+    async fn interaction_topology_is_empty_for_a_document_with_no_steps() {
         let document = ImperativeSnapshot::default();
         let config = ImperativeConfig::default();
         let history = semio_framework_plugin::HistoryView::empty();
@@ -484,7 +484,7 @@ mod tests {
 
     //#region 🔖️CrossCutting
     #[test]
-    fn add_step_materializes_kind_default_and_run_emits_no_artifact_mutations() {
+    async fn add_step_materializes_kind_default_and_run_emits_no_artifact_mutations() {
         let mut app = imperative_app_with_registry();
         // AddStep fired with no explicit kind: the declared `kind` default ("log.print") must be
         // materialized by the registry's action-arg default resolution.
@@ -498,14 +498,14 @@ mod tests {
     }
 
     #[test]
-    fn default_snapshot_has_steps() {
+    async fn default_snapshot_has_steps() {
         let app = imperative_app();
         let path = crate::artifacts::imperative::imperative_working_scene(&app.snapshot().expect("projection")).path;
         assert_eq!(path.steps.len(), 2);
     }
 
     #[test]
-    fn add_step_command_appends_step() {
+    async fn add_step_command_appends_step() {
         let mut app = imperative_app();
         dispatch(&mut app, ImperativeCommand::AddStep(add_step::AddStep { kind: "log.print".into(), index: None }));
         let path = crate::artifacts::imperative::imperative_working_scene(&app.snapshot().expect("projection")).path;
@@ -513,7 +513,7 @@ mod tests {
     }
 
     #[test]
-    fn add_step_at_owner_slot_nests_into_control_body() {
+    async fn add_step_at_owner_slot_nests_into_control_body() {
         let mut app = imperative_app();
         dispatch(&mut app, ImperativeCommand::AddStep(add_step::AddStep { kind: "control.if".into(), index: None }));
         let owner_id = crate::artifacts::imperative::imperative_working_scene(&app.snapshot().expect("projection")).path.steps.last().expect("owner").id.clone();
@@ -527,7 +527,7 @@ mod tests {
     }
 
     #[test]
-    fn add_step_at_falls_back_to_root_for_unknown_owner() {
+    async fn add_step_at_falls_back_to_root_for_unknown_owner() {
         let mut app = imperative_app();
         dispatch(&mut app, ImperativeCommand::AddStepAt(add_step_at::AddStepAt { kind: "log.print".into(), index: None, owner: Some("missing-step".into()), slot: Some("then".into()) }));
         let document = app.snapshot().expect("projection");
@@ -537,7 +537,7 @@ mod tests {
     }
 
     #[test]
-    fn undo_after_add_step_restores_original_document_exactly() {
+    async fn undo_after_add_step_restores_original_document_exactly() {
         let mut app = imperative_app();
         let base = default_snapshot();
         let mut path = crate::artifacts::imperative::imperative_working_scene(&base).path;
@@ -547,7 +547,7 @@ mod tests {
     }
 
     #[test]
-    fn remove_step_command_is_exact_inverse_of_add() {
+    async fn remove_step_command_is_exact_inverse_of_add() {
         let mut app = imperative_app();
         let original = app.snapshot().expect("projection");
         dispatch(&mut app, ImperativeCommand::AddStep(add_step::AddStep { kind: "math.add".into(), index: None }));
@@ -561,7 +561,7 @@ mod tests {
     /// operations over a `MemoryBackbone` converges both sides onto an identical projection — impossible
     /// under whole-document `setDocument` snapshots, which would clobber one side's write.
     #[test]
-    fn two_instances_converge_disjoint_edits_via_backbone() {
+    async fn two_instances_converge_disjoint_edits_via_backbone() {
         let mut params = BTreeMap::new();
         params.insert("key".to_string(), crate::artifacts::imperative::dsl::value_to_value_dsl(&neural_engine::Value::Atom(neural_engine::Atom::String("renamed".into()))));
         semio_framework_plugin::testkit::assert_two_instances_converge::<semio_framework_plugin::EditorApp<ImperativePlayApp>, _>(
@@ -573,14 +573,14 @@ mod tests {
     }
 
     #[test]
-    fn ingest_operations_is_idempotent_for_imperative() {
+    async fn ingest_operations_is_idempotent_for_imperative() {
         semio_framework_plugin::testkit::assert_ingest_idempotent::<semio_framework_plugin::EditorApp<ImperativePlayApp>, _>(ImperativeCommand::AddStep(add_step::AddStep { kind: "math.add".into(), index: None }), |app| {
             crate::artifacts::imperative::imperative_working_scene(&app.snapshot().expect("projection")).path.steps.len()
         });
     }
 
     #[test]
-    fn an_unknown_body_key_renders_a_diagnostic_instead_of_panicking() {
+    async fn an_unknown_body_key_renders_a_diagnostic_instead_of_panicking() {
         let mut app = imperative_app();
         assert!(render(&mut app, "imperative.play.nope").contains("Unknown body"));
     }

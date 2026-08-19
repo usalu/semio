@@ -15,12 +15,12 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 pub const FEM3D_EXAMPLE_TEXT: &str = include_str!("../../../📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio");
 
 /// 📖️ Parses `.fem3d` DSL text into a `Fem3dSnapshot`.
-pub fn parse_dsl(text: &str) -> Result<Fem3dSnapshot, store::TextError> {
+pub async fn parse_dsl(text: &str) -> Result<Fem3dSnapshot, store::TextError> {
     <Fem3dSnapshot as store::ArtifactDsl>::parse_dsl(text)
 }
 
 /// 🖨️ Prints a `Fem3dSnapshot` back to `.fem3d` DSL text.
-pub fn print_dsl(document: &Fem3dSnapshot) -> String {
+pub async fn print_dsl(document: &Fem3dSnapshot) -> String {
     store::ArtifactDsl::print_dsl(document)
 }
 
@@ -32,7 +32,7 @@ mod tests {
     use std::collections::BTreeMap;
 
     // #region 🔖️Fixtures
-    fn cantilever_fixture() -> Fem3dSnapshot {
+    async fn cantilever_fixture() -> Fem3dSnapshot {
         Fem3dSnapshot {
             nodes: vec![FemNode { id: "n1".into(), x: 0.0, y: 0.0, z: 0.0 }, FemNode { id: "n2".into(), x: 3.0, y: 0.0, z: 0.0 }],
             elements: vec![FemElement::Frame { id: "e1".into(), start: "n1".into(), end: "n2".into(), material_id: "steel".into(), section_id: "hea200".into(), roll: 0.0 }],
@@ -46,7 +46,7 @@ mod tests {
         }
     }
 
-    fn truss_fixture() -> Fem3dSnapshot {
+    async fn truss_fixture() -> Fem3dSnapshot {
         Fem3dSnapshot {
             nodes: vec![FemNode { id: "n1".into(), x: 0.0, y: 0.0, z: 0.0 }, FemNode { id: "n2".into(), x: 2.0, y: 0.0, z: 0.0 }, FemNode { id: "n3".into(), x: 1.0, y: 1.0, z: 2.0 }, FemNode { id: "n4".into(), x: 1.0, y: -1.0, z: 0.0 }],
             elements: vec![
@@ -68,7 +68,7 @@ mod tests {
         }
     }
 
-    fn solid_slab_doc() -> Fem3dSnapshot {
+    async fn solid_slab_doc() -> Fem3dSnapshot {
         Fem3dSnapshot {
             nodes: vec![FemNode { id: "sc0".into(), x: 0.0, y: 0.0, z: 0.0 }, FemNode { id: "sc1".into(), x: 2.0, y: 0.0, z: 0.0 }, FemNode { id: "sc2".into(), x: 2.0, y: 1.0, z: 0.0 }, FemNode { id: "sc3".into(), x: 0.0, y: 1.0, z: 0.0 }],
             elements: vec![],
@@ -89,13 +89,13 @@ mod tests {
     // #endregion 🔖️Fixtures
 
     #[test]
-    fn fem3d_dsl_round_trips_bundled_default_example() {
+    async fn fem3d_dsl_round_trips_bundled_default_example() {
         let document = parse_dsl(FEM3D_EXAMPLE_TEXT).expect("parse default example");
         semio_framework_os_kernel::os_store::test_support::assert_dsl_round_trip(&document);
     }
 
     #[test]
-    fn fem3d_dsl_round_trips_fixture_documents() {
+    async fn fem3d_dsl_round_trips_fixture_documents() {
         semio_framework_os_kernel::os_store::test_support::assert_dsl_round_trip(&Fem3dSnapshot::default());
         semio_framework_os_kernel::os_store::test_support::assert_dsl_round_trip(&cantilever_fixture());
         semio_framework_os_kernel::os_store::test_support::assert_dsl_round_trip(&truss_fixture());
@@ -112,7 +112,7 @@ mod semio_grammar_conformance {
     use super::*;
 
     #[test]
-    fn component_grammar_semio_is_grammar_dialect() {
+    async fn component_grammar_semio_is_grammar_dialect() {
         let g = ::dsl::parse_grammar(COMPONENT_GRAMMAR_SEMIO).expect("parse grammar.semio");
         assert_eq!(g.dialect, ::dsl::SemioDialect::Grammar);
         assert!(!COMPONENT_GRAMMAR_SEMIO.is_empty());

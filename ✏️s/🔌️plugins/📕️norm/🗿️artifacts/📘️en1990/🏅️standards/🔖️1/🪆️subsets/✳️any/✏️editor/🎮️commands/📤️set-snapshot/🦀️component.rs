@@ -36,7 +36,7 @@ pub struct ReplaceSnapshot {
 //#endregion 🔖️Payload
 
 //#region 🔖️Handler
-pub fn handle(payload: &ReplaceSnapshot, doc: &ArtifactView<'_, En1990Snapshot>, _cfg: &ConfigView<'_, NormConfig>) -> Result<Emit<En1990Mutation, NormConfigMutation>, Fault> {
+pub async fn handle(payload: &ReplaceSnapshot, doc: &ArtifactView<'_, En1990Snapshot>, _cfg: &ConfigView<'_, NormConfig>) -> Result<Emit<En1990Mutation, NormConfigMutation>, Fault> {
     let text = crate::document::unescape_op_text_field(&payload.text);
     let target = <En1990Snapshot as store::ArtifactDsl>::parse_dsl(&text).map_err(|error| Fault::from(format!("set-snapshot: invalid document text: {error}")))?;
     crate::app_surface::commit_snapshot_fields(En1990Mutation::from_snapshot(doc.snapshot, &target), "setSnapshot")
@@ -51,7 +51,7 @@ mod tests {
     use semio_framework_plugin::HistoryView;
 
     #[test]
-    fn handle_commits_the_payload_document_under_its_action_id() {
+    async fn handle_commits_the_payload_document_under_its_action_id() {
         let projection = En1990Snapshot::default();
         let config = NormConfig::default();
         let text = crate::document::escape_op_text_field(&<En1990Snapshot as store::ArtifactDsl>::print_dsl(&En1990Snapshot::default()));

@@ -15,7 +15,7 @@ pub const BODY_KEY: &str = TreeWindowKit::KIND_ID;
 
 //#region 🔖️Definition
 /// 🧱️ Stitched into the editor manifest by `crate::editor::model::create_energy_model_editor`.
-pub fn definition() -> WindowKindDefinition {
+pub async fn definition() -> WindowKindDefinition {
     WindowKindDefinition { label: LocalizedLabel::native("Structure", "Struktur"), icon_id: "list-tree".into(), ..TreeWindowKit::editable_window_kind() }
 }
 //#endregion 🔖️Definition
@@ -24,9 +24,9 @@ pub fn definition() -> WindowKindDefinition {
 /// ✏️ Real `EnergyModelSnapshot -> UiNode`: `name`/`version` (the two `set-node`-editable leaves)
 /// plus one leaf per collection on `crate::model::Model`, each labeled with its live element count —
 /// a genuine overview of the whole working model, not a placeholder.
-pub fn render(document: &EnergyModelSnapshot) -> UiNode {
+pub async fn render(document: &EnergyModelSnapshot) -> UiNode {
     let model = crate::artifacts::model::energy_model(document);
-    fn leaf(id: &str, label: String) -> TreeNodeView {
+    async fn leaf(id: &str, label: String) -> TreeNodeView {
         TreeNodeView { id: id.into(), label, children: Vec::new() }
     }
     let mut children = vec![
@@ -83,14 +83,14 @@ mod tests {
     use super::*;
 
     #[test]
-    fn definition_declares_a_tree_window() {
+    async fn definition_declares_a_tree_window() {
         let def = definition();
         assert_eq!(def.id, WINDOW_KIND_ID);
         assert_eq!(def.body_key, BODY_KEY);
     }
 
     #[test]
-    fn render_lists_name_version_and_every_collection_count() {
+    async fn render_lists_name_version_and_every_collection_count() {
         let document = EnergyModelSnapshot::default();
         let UiNode::Tree(node) = render(&document) else { panic!("expected Tree") };
         let root = &node.sections[0].items[0];

@@ -21,19 +21,19 @@ pub struct WavArtifact {
 }
 
 impl Default for WavArtifact {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self::from_snapshot(WavSnapshot::default())
     }
 }
 
 impl WavArtifact {
-    pub fn to_snapshot(&self) -> WavSnapshot {
+    pub async fn to_snapshot(&self) -> WavSnapshot {
         WavSnapshot { schema: self.schema.clone(), fmt: self.fmt.clone(), data: self.data.clone(), other_chunks: self.other_chunks.clone() }
     }
-    pub fn from_snapshot(snapshot: WavSnapshot) -> Self {
+    pub async fn from_snapshot(snapshot: WavSnapshot) -> Self {
         Self { schema: snapshot.schema, fmt: snapshot.fmt, data: snapshot.data, other_chunks: snapshot.other_chunks }
     }
-    pub fn set_snapshot(&mut self, snapshot: WavSnapshot) {
+    pub async fn set_snapshot(&mut self, snapshot: WavSnapshot) {
         self.schema = snapshot.schema;
         self.fmt = snapshot.fmt;
         self.data = snapshot.data;
@@ -41,7 +41,7 @@ impl WavArtifact {
     }
 }
 
-pub fn wav_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
+pub async fn wav_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
     schema::ArtifactSchemaDescriptor {
         id: "s.stdio.wav",
         artifact: schema::FacetLeaves {
@@ -90,27 +90,27 @@ pub mod derived_construction {
         type Snapshot = WavSnapshot;
         type Mutation = WavMutation;
         type Diff = WavDiff;
-        fn empty() -> Self {
+        async fn empty() -> Self {
             Self { snapshot: WavSnapshot::default() }
         }
-        fn from_snapshot(snapshot: Self::Snapshot) -> Self {
+        async fn from_snapshot(snapshot: Self::Snapshot) -> Self {
             Self { snapshot }
         }
-        fn from_text(text: &str) -> Result<Self, store::TextError> {
+        async fn from_text(text: &str) -> Result<Self, store::TextError> {
             Ok(Self::from_snapshot(<WavSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
-        fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
+        async fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
             Ok(Self::from_snapshot(<WavSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
         }
-        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
+        async fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let diff = apply_wav_mutation(&mut self.snapshot, &mutation);
             (self, diff)
         }
-        fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
+        async fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
             self.snapshot = <WavDiff as protocol::MutationDiff<WavSnapshot>>::apply(&diff, &self.snapshot)?;
             Ok(self)
         }
-        fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
+        async fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
             Ok(self.snapshot)
         }
     }
@@ -135,7 +135,7 @@ pub mod derived_analysis {
         type Parts = WavParts;
         const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.wav", standard: StandardId("riff-pcm"), subset: SubsetId("*") };
 
-        fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
+        async fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
             match source {
                 AnalyzeSource::Binary(bytes) => {
                     if io::sniff_real_bytes(bytes) {
@@ -158,7 +158,7 @@ pub mod derived_analysis {
             }
         }
 
-        fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
+        async fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
             let mut parts = WavParts::default();
             let mut diagnostics = Vec::new();
             let mut confidence = IoConfidence::High;

@@ -19,7 +19,7 @@ pub struct CreateStudio {
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-fn create_folder_studio(name: &str, folder_path: &str, owner_id: &str, owner_name: &str) -> Result<semio_framework_os::OsSpaceCatalogEntry, VcsError> {
+async fn create_folder_studio(name: &str, folder_path: &str, owner_id: &str, owner_name: &str) -> Result<semio_framework_os::OsSpaceCatalogEntry, VcsError> {
     use semio_framework_os::{create_os_space, SpaceKind, SpaceRole, SpaceUser, SpaceVisibility};
     let port = semio_framework_os::open_folder_space_backbone(folder_path)?;
     let owner = SpaceUser {
@@ -35,11 +35,11 @@ fn create_folder_studio(name: &str, folder_path: &str, owner_id: &str, owner_nam
 
 /// @emoji 🧭️ Builds the typed emit for a freshly-created studio: bump the catalog counter (operation)
 /// and navigate the shell to the new studio route (host effect).
-fn created_studio_emit(catalog_generation: u64, space_id: &str) -> Emit<SHomeMutation, HomeConfigMutation> {
+async fn created_studio_emit(catalog_generation: u64, space_id: &str) -> Emit<SHomeMutation, HomeConfigMutation> {
     Emit { artifact_mutations: vec![change_catalog_generation(catalog_generation + 1)], effects: vec![Effect::Navigate { uri: format!("/spaces/{space_id}") }], ..Default::default() }
 }
 
-pub fn handle(payload: &CreateStudio, doc: &ArtifactView<'_, SHomeSnapshot>, cfg: &ConfigView<'_, HomeConfig>) -> Result<Emit<SHomeMutation, HomeConfigMutation>, Fault> {
+pub async fn handle(payload: &CreateStudio, doc: &ArtifactView<'_, SHomeSnapshot>, cfg: &ConfigView<'_, HomeConfig>) -> Result<Emit<SHomeMutation, HomeConfigMutation>, Fault> {
     let generation = doc.snapshot.catalog_generation;
     let owner_id = cfg.snapshot.client_id.as_str();
     let owner_name = cfg.snapshot.client_name.as_str();
@@ -76,7 +76,7 @@ mod tests {
     use semio_framework_plugin::{testkit, EditorApp, HistoryView, VcsArtifactApp};
 
     #[test]
-    fn home_command_op_text_round_trips_every_variant() {
+    async fn home_command_op_text_round_trips_every_variant() {
         use crate::editor::home::HomeCommand;
         store::os_store::test_support::assert_op_line_round_trip(&HomeCommand::CreateStudio(CreateStudio { name: "Untitled".into(), kind: "catalog".into(), folder_path: None }));
         store::os_store::test_support::assert_op_line_round_trip(&HomeCommand::CreateStudio(CreateStudio { name: "Untitled".into(), kind: "folder".into(), folder_path: Some("/tmp/x".into()) }));
@@ -87,7 +87,7 @@ mod tests {
     }
 
     #[test]
-    fn creates_studio_via_home_action() {
+    async fn creates_studio_via_home_action() {
         let port = crate::catalog_port();
         let before = list_os_space_catalog_entries(port.clone()).expect("list").len();
         let mut home = VcsArtifactApp::new(EditorApp::<crate::editor::home::HomeApp>::default());
@@ -97,7 +97,7 @@ mod tests {
     }
 
     #[test]
-    fn temporary_studio_uses_ephemeral_registry_not_catalog() {
+    async fn temporary_studio_uses_ephemeral_registry_not_catalog() {
         let projection = SHomeSnapshot { schema: "s.home".into(), catalog_generation: 0 };
         let history = HistoryView::empty();
         let doc = ArtifactView::new(&projection, &history);

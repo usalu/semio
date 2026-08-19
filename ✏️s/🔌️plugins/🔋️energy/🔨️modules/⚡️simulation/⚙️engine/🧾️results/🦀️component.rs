@@ -26,7 +26,7 @@ pub struct SummaryTables {
 }
 
 impl SummaryTables {
-    pub fn add_annual(&mut self, key: impl Into<String>, value: f64, unit: impl Into<String>) {
+    pub async fn add_annual(&mut self, key: impl Into<String>, value: f64, unit: impl Into<String>) {
         self.annual_energy.push(SummaryRow { key: key.into(), value, unit: unit.into() });
     }
 }
@@ -81,7 +81,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn summary_tables_accumulate() {
+    async fn summary_tables_accumulate() {
         let mut s = SummaryTables::default();
         s.add_annual("Electricity", 1000.0, "kWh");
         assert_eq!(s.annual_energy.len(), 1);

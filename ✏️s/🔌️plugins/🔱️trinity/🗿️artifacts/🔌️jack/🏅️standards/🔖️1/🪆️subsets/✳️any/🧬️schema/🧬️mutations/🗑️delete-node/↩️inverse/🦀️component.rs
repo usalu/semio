@@ -5,7 +5,7 @@ use crate::artifacts::jack::mutations::{create_edge, create_node, TrinityGraphMu
 use crate::artifacts::jack::JackSnapshot;
 
 //#region 🔖️Inverse
-pub fn inverse(payload: &super::mutation::DeleteNode, base: &JackSnapshot) -> Vec<TrinityGraphMutation> {
+pub async fn inverse(payload: &super::mutation::DeleteNode, base: &JackSnapshot) -> Vec<TrinityGraphMutation> {
     let nodes = base.nodes();
     let Some(node) = nodes.iter().find(|node| node.id == payload.id) else {
         return Vec::new();

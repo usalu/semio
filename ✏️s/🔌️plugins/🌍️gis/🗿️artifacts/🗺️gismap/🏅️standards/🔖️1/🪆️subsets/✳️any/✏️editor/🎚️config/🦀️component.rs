@@ -43,10 +43,10 @@ pub struct Gis2dConfig {
 /// 📜️ Handcrafted ArtifactDsl (P6): uses this type's `__dsl_*` helpers + parse/print, not derive emission.
 impl store::ArtifactDsl for Gis2dConfig {
     const EXTENSION: &'static str = Self::__DSL_EXTENSION;
-    fn envelope_id() -> &'static str {
+    async fn envelope_id() -> &'static str {
         Self::__DSL_ENVELOPE_ID
     }
-    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+    async fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
         let body = match store::semio_format::split_text_preamble(text) {
             Ok((_, rest)) => rest,
             Err(_) => text,
@@ -58,7 +58,7 @@ impl store::ArtifactDsl for Gis2dConfig {
         )?;
         Self::__dsl_from_record(&record)
     }
-    fn print_dsl(&self) -> String {
+    async fn print_dsl(&self) -> String {
         let body = dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), dsl::JoinMode::Document);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
             <Self as store::ArtifactDsl>::envelope_id(),
@@ -72,7 +72,7 @@ impl store::ArtifactDsl for Gis2dConfig {
 
 /// 📦️ Handcrafted ArtifactPack (P6): envelope-wrapped pack body via `__dsl_*` record lowering.
 impl store::ArtifactPack for Gis2dConfig {
-    fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
+    async fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let inner = store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
             <Self as store::ArtifactDsl>::envelope_id(),
@@ -82,7 +82,7 @@ impl store::ArtifactPack for Gis2dConfig {
         .map_err(|e| store::PackError::Schema(e.to_string()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &inner))
     }
-    fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
+    async fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
         if envelope.envelope_id() != <Self as store::ArtifactDsl>::envelope_id() {
             return Err(store::PackError::Schema(format!(
@@ -94,7 +94,7 @@ impl store::ArtifactPack for Gis2dConfig {
         let (record, _report) = store::pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
         Self::__dsl_from_record(&record).map_err(store::text_error_to_pack_error)
     }
-    fn record_spec() -> Option<dsl::RecordSpec> {
+    async fn record_spec() -> Option<dsl::RecordSpec> {
         Some(Self::__dsl_spec())
     }
 }
@@ -102,20 +102,20 @@ impl store::ArtifactPack for Gis2dConfig {
 //#endregion 🔖️ArtifactCodec
 
 
-fn default_gis2d_camera_json() -> String {
+async fn default_gis2d_camera_json() -> String {
     r#"{"x":0,"y":0,"zoom":1}"#.into()
 }
 
-fn default_gis2d_render_mode() -> String {
+async fn default_gis2d_render_mode() -> String {
     "combined".into()
 }
 
-fn default_gis2d_vector_style() -> String {
+async fn default_gis2d_vector_style() -> String {
     "colored".into()
 }
 
 impl Default for Gis2dConfig {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self {
             layer_visibility: BTreeMap::new(),
             camera_json: default_gis2d_camera_json(),
@@ -133,7 +133,7 @@ impl Default for Gis2dConfig {
 store::impl_whole_record_config!(Gis2dConfig);
 
 /// 👁️ Whether a map layer is currently shown; a layer with no explicit entry defaults to visible.
-pub fn layer_visible(cfg: &Gis2dConfig, layer_id: &str) -> bool {
+pub async fn layer_visible(cfg: &Gis2dConfig, layer_id: &str) -> bool {
     cfg.layer_visibility.get(layer_id).copied().unwrap_or(true)
 }
 //#endregion 🔖️Config
@@ -169,7 +169,7 @@ pub enum Gis2dConfigMutation {
 
 //#region 🔖️OpCodec
 impl protocol::OpText for Gis2dConfigMutation {
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
+    async fn parse_op(line: &str) -> Result<Self, store::TextError> {
         let variants = <Self as dsl::DslVariants>::variants();
         for (keyword, spec_fn) in &variants {
             let probe = format!("{} ", keyword);
@@ -184,7 +184,7 @@ impl protocol::OpText for Gis2dConfigMutation {
         }
         Err(dsl::__rt::field_error(format!("unknown mutation line '{line}'")))
     }
-    fn print_op(&self) -> String {
+    async fn print_op(&self) -> String {
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
         let variants = <Self as dsl::DslVariants>::variants();
         let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
@@ -194,7 +194,7 @@ impl protocol::OpText for Gis2dConfigMutation {
 
 /// 🎯️ Handcrafted OpBinary (P6).
 impl protocol::OpBinary for Gis2dConfigMutation {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         const OP_BINARY_FORMAT: u8 = 1;
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
         let variants = <Self as dsl::DslVariants>::variants();
@@ -211,7 +211,7 @@ impl protocol::OpBinary for Gis2dConfigMutation {
         out.extend_from_slice(&body);
         Ok(out)
     }
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         const OP_BINARY_FORMAT: u8 = 1;
         let mut reader = store::pack_rt::ByteReader::new(bytes);
         let format = reader.read_u8()?;
@@ -242,7 +242,7 @@ impl protocol::OpBinary for Gis2dConfigMutation {
 impl Mutation<Gis2dConfig> for Gis2dConfigMutation {
     type Diff = Gis2dConfig;
 
-    fn diff(&self, base: &Gis2dConfig) -> protocol::MutationOutcome<Gis2dConfig> {
+    async fn diff(&self, base: &Gis2dConfig) -> protocol::MutationOutcome<Gis2dConfig> {
         let mut next = base.clone();
         match self {
             Gis2dConfigMutation::SetLayerVisibility { layer_id, visible } => {
@@ -299,7 +299,7 @@ impl Mutation<Gis2dConfig> for Gis2dConfigMutation {
         protocol::MutationOutcome::new(next)
     }
 
-    fn inverse(&self, base: &Gis2dConfig) -> Vec<Self> {
+    async fn inverse(&self, base: &Gis2dConfig) -> Vec<Self> {
         match self {
             Gis2dConfigMutation::SetLayerVisibility { layer_id, .. } => {
                 vec![Gis2dConfigMutation::SetLayerVisibility { layer_id: layer_id.clone(), visible: base.layer_visibility.get(layer_id).copied().unwrap_or(true) }]
@@ -323,7 +323,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn gis2d_config_default_matches_the_existing_action_arg_sticky_defaults() {
+    async fn gis2d_config_default_matches_the_existing_action_arg_sticky_defaults() {
         let config = Gis2dConfig::default();
         assert_eq!(config.render_mode, "combined");
         assert_eq!(config.vector_style, "colored");
@@ -332,12 +332,12 @@ mod tests {
     }
 
     #[test]
-    fn gis2d_config_default_lod_mode_matches_the_tiled_map_surface_constant() {
+    async fn gis2d_config_default_lod_mode_matches_the_tiled_map_surface_constant() {
         assert_eq!(Gis2dConfig::default().lod_mode, framework_surface::tiled_map::GIS_MAP_LOD_MODE_AUTOMATIC);
     }
 
     #[test]
-    fn layer_visible_defaults_to_true_and_honours_explicit_entries() {
+    async fn layer_visible_defaults_to_true_and_honours_explicit_entries() {
         let mut config = Gis2dConfig::default();
         assert!(layer_visible(&config, "water"), "a layer with no entry is visible");
         config.layer_visibility.insert("water".into(), false);
@@ -345,7 +345,7 @@ mod tests {
     }
 
     #[test]
-    fn gis2d_config_dsl_round_trips_default_and_populated() {
+    async fn gis2d_config_dsl_round_trips_default_and_populated() {
         store::os_store::test_support::assert_dsl_round_trip(&Gis2dConfig::default());
         let mut populated = Gis2dConfig::default();
         populated.layer_visibility.insert("water".into(), false);
@@ -355,7 +355,7 @@ mod tests {
     }
 
     #[test]
-    fn gis2d_config_operation_diff_writes_the_targeted_field_and_leaves_the_rest() {
+    async fn gis2d_config_operation_diff_writes_the_targeted_field_and_leaves_the_rest() {
         let base = Gis2dConfig::default();
         let next = Gis2dConfigMutation::SetRenderMode { value: "vector".into() }.diff(&base).diff().clone();
         assert_eq!(next.render_mode, "vector");
@@ -363,7 +363,7 @@ mod tests {
     }
 
     #[test]
-    fn gis2d_config_operation_backwards_restores_the_pre_operation_snapshot() {
+    async fn gis2d_config_operation_backwards_restores_the_pre_operation_snapshot() {
         let base = Gis2dConfig::default();
         let operation = Gis2dConfigMutation::SetLayerVisibility { layer_id: "water".into(), visible: false };
         let next = operation.diff(&base).diff().clone();
@@ -377,7 +377,7 @@ mod tests {
     /// ⚖️ `SetLayerStrokeScale`'s inverse has the same absent-entry-vs-default subtlety as
     /// `SetLayerVisibility` above, covered separately since it defaults to `1.0` not `true`.
     #[test]
-    fn gis2d_config_layer_stroke_scale_backwards_restores_an_absent_entry() {
+    async fn gis2d_config_layer_stroke_scale_backwards_restores_an_absent_entry() {
         let base = Gis2dConfig::default();
         let operation = Gis2dConfigMutation::SetLayerStrokeScale { layer_id: "roads".into(), value: 2.0 };
         let next = operation.diff(&base).diff().clone();
@@ -389,7 +389,7 @@ mod tests {
     }
 
     #[test]
-    fn gis2d_config_operation_lines_round_trip() {
+    async fn gis2d_config_operation_lines_round_trip() {
         store::os_store::test_support::assert_op_line_round_trip(&Gis2dConfigMutation::SetLayerVisibility { layer_id: "water".into(), visible: false });
         store::os_store::test_support::assert_op_line_round_trip(&Gis2dConfigMutation::SetCamera { camera_json: r#"{"x":1,"y":2,"zoom":3}"#.into() });
         store::os_store::test_support::assert_op_line_round_trip(&Gis2dConfigMutation::SetRenderMode { value: "vector".into() });

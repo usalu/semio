@@ -8,7 +8,7 @@ use crate::artifacts::gismap::GisMapSnapshot;
 /// full id order from `base` by moving `id` to `to_index` — real handcrafted construction, never
 /// apply-then-capture, never a snapshot clone. Error `target-missing` when `id` doesn't name a
 /// region; Warning `no-op` when the resulting order is unchanged.
-pub fn diff(payload: &ReorderRegions, base: &GisMapSnapshot) -> protocol::MutationOutcome<GisMapDiff> {
+pub async fn diff(payload: &ReorderRegions, base: &GisMapSnapshot) -> protocol::MutationOutcome<GisMapDiff> {
     let original: Vec<String> = base.regions.iter().map(|f| f.id.clone()).collect();
     let Some(from) = original.iter().position(|x| x == &payload.id) else {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Region \"{}\" does not exist.", payload.id), [payload.id.clone()]);

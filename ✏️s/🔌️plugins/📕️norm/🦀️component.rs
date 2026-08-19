@@ -15,7 +15,7 @@ use semio_framework_plugin::{ExecutionMode, Plugin, PluginAssemblyError};
 /// crate's migration proof: one `OnArtifactKind` event per owned norm family, read live from each
 /// family's own `artifact_kind().id` (never hardcoded, same standard `🗄️stdio`'s 36-kind migration
 /// set), `Isolated` execution, one `documents.write` ask covering all fifteen editors.
-pub fn plugin() -> Result<Plugin, PluginAssemblyError> {
+pub async fn plugin() -> Result<Plugin, PluginAssemblyError> {
     let din4108 = crate::artifacts::din4108::declaration(crate::artifacts::din4108::definition().map_err(PluginAssemblyError::definition)?).map_err(PluginAssemblyError::definition)?;
     let din16798 = crate::artifacts::din16798::declaration(crate::artifacts::din16798::definition().map_err(PluginAssemblyError::definition)?).map_err(PluginAssemblyError::definition)?;
     let din18599 = crate::artifacts::din18599::declaration(crate::artifacts::din18599::definition().map_err(PluginAssemblyError::definition)?).map_err(PluginAssemblyError::definition)?;
@@ -141,7 +141,7 @@ mod surface_tests {
     macro_rules! surface_law {
         ($name:ident, $editor:ty, $viewer:ty) => {
             #[test]
-            fn $name() {
+            async fn $name() {
                 assert_viewer_never_mutates::<$viewer>();
                 assert_editor_and_viewer_share_dialect::<$editor, $viewer>();
             }

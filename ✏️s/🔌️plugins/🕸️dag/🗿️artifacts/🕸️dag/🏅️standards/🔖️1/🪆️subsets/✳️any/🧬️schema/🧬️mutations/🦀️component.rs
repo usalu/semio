@@ -60,14 +60,14 @@ pub use super::replace_node_properties::mutation::{replace_node_properties, Repl
 pub use super::resize_node::mutation::{resize_node, ResizeNode};
 
 /// ▶️ Applies `mutation` via its diff.
-pub fn apply_dag_mutation(snapshot: &mut DagSnapshot, mutation: &DagMutation) -> protocol::MutationApplyResult<()> {
+pub async fn apply_dag_mutation(snapshot: &mut DagSnapshot, mutation: &DagMutation) -> protocol::MutationApplyResult<()> {
     use store::MutationDiff;
     let next = <DagMutation as protocol::Mutation<DagSnapshot>>::diff(mutation, snapshot).diff().apply(snapshot)?;
     *snapshot = next;
     Ok(())
 }
 
-pub fn inverse_dag_mutation(snapshot: &DagSnapshot, mutation: &DagMutation) -> Vec<DagMutation> {
+pub async fn inverse_dag_mutation(snapshot: &DagSnapshot, mutation: &DagMutation) -> Vec<DagMutation> {
     
     <DagMutation as protocol::Mutation<DagSnapshot>>::inverse(mutation, snapshot)
 }
@@ -77,7 +77,7 @@ pub fn inverse_dag_mutation(snapshot: &DagSnapshot, mutation: &DagMutation) -> V
 /// auto-reorganize) now go through instead of a snapshot swap. Doesn't detect node id renames
 /// (shows as a delete+create pair); `🎮️commands/🔧️add-node::rename_dag_node` uses the dedicated
 /// `rename-node` mutation directly for that gesture instead of this generic differ.
-pub fn dag_snapshot_mutations(before: &DagSnapshot, after: &DagSnapshot) -> Vec<DagMutation> {
+pub async fn dag_snapshot_mutations(before: &DagSnapshot, after: &DagSnapshot) -> Vec<DagMutation> {
     let before_nodes = before.nodes();
     let after_nodes = after.nodes();
     let before_edges = before.edges();
@@ -147,7 +147,7 @@ mod tests {
     use protocol::SemanticMutation;
     use vcs::apply_mutation;
 
-    fn round_trip(snapshot: &DagSnapshot, mutation: &DagMutation) -> DagSnapshot {
+    async fn round_trip(snapshot: &DagSnapshot, mutation: &DagMutation) -> DagSnapshot {
         let (forward, _messages) = apply_mutation(snapshot, mutation).expect("valid mutation");
         let mut restored = forward.clone();
         let mut backward = mutation.inverse(snapshot);
@@ -160,12 +160,12 @@ mod tests {
         forward
     }
 
-    fn sample_node(id: &str, x: f64, y: f64) -> crate::artifacts::dag::DagNodeSpec {
+    async fn sample_node(id: &str, x: f64, y: f64) -> crate::artifacts::dag::DagNodeSpec {
         crate::artifacts::dag::schema::default_node_for_kind("note", id, x, y)
     }
 
     #[test]
-    fn create_move_resize_delete_node_round_trip() {
+    async fn create_move_resize_delete_node_round_trip() {
         let snapshot = default_snapshot();
         let node = sample_node("node-99", 5.0, 6.0);
         let added = round_trip(&snapshot, &create_node(node));
@@ -179,7 +179,7 @@ mod tests {
     }
 
     #[test]
-    fn rename_node_cascades_edge_endpoints() {
+    async fn rename_node_cascades_edge_endpoints() {
         let snapshot = default_snapshot();
         let Some(id) = snapshot.nodes().first().map(|node| node.id.clone()) else { return };
         let renamed = round_trip(&snapshot, &rename_node(id.clone(), "renamed-node".into()));
@@ -188,14 +188,14 @@ mod tests {
     }
 
     #[test]
-    fn delete_node_severs_and_reconnects_edges() {
+    async fn delete_node_severs_and_reconnects_edges() {
         let snapshot = default_snapshot();
         let Some(id) = snapshot.nodes().first().map(|node| node.id.clone()) else { return };
         round_trip(&snapshot, &delete_node(id));
     }
 
     #[test]
-    fn reorder_nodes_round_trips() {
+    async fn reorder_nodes_round_trips() {
         let snapshot = default_snapshot();
         let nodes = snapshot.nodes();
         if nodes.len() < 2 {
@@ -208,41 +208,41 @@ mod tests {
 
     //#region 🔖️MutationLaws
     #[test]
-    fn create_node_inverse_law() {
+    async fn create_node_inverse_law() {
         let base = default_snapshot();
         assert_mutation_inverse_law(&base, &create_node(sample_node("node-99", 5.0, 6.0)));
     }
 
     #[test]
-    fn delete_node_inverse_law() {
+    async fn delete_node_inverse_law() {
         let base = default_snapshot();
         let Some(id) = base.nodes().first().map(|node| node.id.clone()) else { return };
         assert_mutation_inverse_law(&base, &delete_node(id));
     }
 
     #[test]
-    fn rename_node_inverse_law() {
+    async fn rename_node_inverse_law() {
         let base = default_snapshot();
         let Some(id) = base.nodes().first().map(|node| node.id.clone()) else { return };
         assert_mutation_inverse_law(&base, &rename_node(id, "renamed-node".into()));
     }
 
     #[test]
-    fn move_node_inverse_law() {
+    async fn move_node_inverse_law() {
         let base = default_snapshot();
         let Some(id) = base.nodes().first().map(|node| node.id.clone()) else { return };
         assert_mutation_inverse_law(&base, &move_node(id, 42.0, -8.0));
     }
 
     #[test]
-    fn resize_node_inverse_law() {
+    async fn resize_node_inverse_law() {
         let base = default_snapshot();
         let Some(id) = base.nodes().first().map(|node| node.id.clone()) else { return };
         assert_mutation_inverse_law(&base, &resize_node(id, 200.0, 90.0));
     }
 
     #[test]
-    fn connect_disconnect_nodes_inverse_law() {
+    async fn connect_disconnect_nodes_inverse_law() {
         let base = default_snapshot();
         let nodes = base.nodes();
         if nodes.len() < 2 {
@@ -257,7 +257,7 @@ mod tests {
     }
 
     #[test]
-    fn reorder_nodes_inverse_law() {
+    async fn reorder_nodes_inverse_law() {
         let base = default_snapshot();
         let nodes = base.nodes();
         if nodes.len() < 2 {
@@ -269,7 +269,7 @@ mod tests {
     }
 
     #[test]
-    fn move_node_diff_absorb_law() {
+    async fn move_node_diff_absorb_law() {
         use protocol::Mutation;
         let base = default_snapshot();
         let Some(id) = base.nodes().first().map(|node| node.id.clone()) else { return };
@@ -280,7 +280,7 @@ mod tests {
     }
 
     #[test]
-    fn dispatch_registers_semantic_descriptors() {
+    async fn dispatch_registers_semantic_descriptors() {
         register_dag_mutation_descriptors();
         for kind in DagMutation::kinds() {
             assert!(protocol::is_approved_verb(kind.verb), "verb '{}' must be in APPROVED_VERBS", kind.verb);
@@ -294,7 +294,7 @@ mod tests {
     /// one `assert_missing_target_is_error`/Fatal/determinism check per verb family this facet
     /// implements (create/delete/rename/move/resize/change/replace/reorder/connect/disconnect).
     #[test]
-    fn create_node_duplicate_id_is_fatal() {
+    async fn create_node_duplicate_id_is_fatal() {
         let base = default_snapshot();
         let Some(existing_id) = base.nodes().first().map(|node| node.id.clone()) else { return };
         let outcome = create_node(sample_node(&existing_id, 0.0, 0.0)).diff(&base);
@@ -303,25 +303,25 @@ mod tests {
     }
 
     #[test]
-    fn delete_node_missing_target_is_error() {
+    async fn delete_node_missing_target_is_error() {
         let base = default_snapshot();
         assert_missing_target_is_error(&base, &delete_node("ghost-node".into()));
     }
 
     #[test]
-    fn rename_node_missing_target_is_error() {
+    async fn rename_node_missing_target_is_error() {
         let base = default_snapshot();
         assert_missing_target_is_error(&base, &rename_node("ghost-node".into(), "x".into()));
     }
 
     #[test]
-    fn move_node_missing_target_is_error() {
+    async fn move_node_missing_target_is_error() {
         let base = default_snapshot();
         assert_missing_target_is_error(&base, &move_node("ghost-node".into(), 1.0, 1.0));
     }
 
     #[test]
-    fn move_node_non_finite_is_fatal() {
+    async fn move_node_non_finite_is_fatal() {
         let base = default_snapshot();
         let Some(id) = base.nodes().first().map(|node| node.id.clone()) else { return };
         let outcome = move_node(id, f64::NAN, 0.0).diff(&base);
@@ -330,38 +330,38 @@ mod tests {
     }
 
     #[test]
-    fn resize_node_missing_target_is_error() {
+    async fn resize_node_missing_target_is_error() {
         let base = default_snapshot();
         assert_missing_target_is_error(&base, &resize_node("ghost-node".into(), 10.0, 10.0));
     }
 
     #[test]
-    fn change_node_name_missing_target_is_error() {
+    async fn change_node_name_missing_target_is_error() {
         let base = default_snapshot();
         assert_missing_target_is_error(&base, &change_node_name("ghost-node".into(), "x".into()));
     }
 
     #[test]
-    fn replace_node_kind_missing_target_is_error() {
+    async fn replace_node_kind_missing_target_is_error() {
         let base = default_snapshot();
         let Some(kind) = base.nodes().first().map(|node| node.kind.clone()) else { return };
         assert_missing_target_is_error(&base, &replace_node_kind("ghost-node".into(), kind));
     }
 
     #[test]
-    fn disconnect_nodes_missing_target_is_error() {
+    async fn disconnect_nodes_missing_target_is_error() {
         let base = default_snapshot();
         assert_missing_target_is_error(&base, &disconnect_nodes("ghost-edge".into()));
     }
 
     #[test]
-    fn connect_nodes_missing_endpoint_is_error() {
+    async fn connect_nodes_missing_endpoint_is_error() {
         let base = default_snapshot();
         assert_missing_target_is_error(&base, &connect_nodes("edge-99".into(), "ghost-source@out".into(), "ghost-target@in".into(), infinite_board_port_directed_dag::EdgeRouteStyle::default(), Default::default()));
     }
 
     #[test]
-    fn connect_nodes_self_loop_is_fatal() {
+    async fn connect_nodes_self_loop_is_fatal() {
         let base = default_snapshot();
         let Some(id) = base.nodes().first().map(|node| node.id.clone()) else { return };
         let outcome = connect_nodes("edge-99".into(), format!("{id}@out"), format!("{id}@in"), infinite_board_port_directed_dag::EdgeRouteStyle::default(), Default::default()).diff(&base);
@@ -370,7 +370,7 @@ mod tests {
     }
 
     #[test]
-    fn reorder_nodes_duplicate_id_is_fatal() {
+    async fn reorder_nodes_duplicate_id_is_fatal() {
         let base = default_snapshot();
         let Some(id) = base.nodes().first().map(|node| node.id.clone()) else { return };
         let outcome = reorder_nodes(vec![id.clone(), id]).diff(&base);
@@ -379,7 +379,7 @@ mod tests {
     }
 
     #[test]
-    fn move_node_diff_is_deterministic() {
+    async fn move_node_diff_is_deterministic() {
         let base = default_snapshot();
         let Some(id) = base.nodes().first().map(|node| node.id.clone()) else { return };
         assert_outcome_deterministic(&base, &move_node(id, 7.0, 8.0));

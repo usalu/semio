@@ -30,7 +30,7 @@ pub struct SemioObjectInference {
 }
 
 impl protocol::Inference<SemioObjectSnapshot> for SemioObjectInference {
-    fn infer(snapshot: &SemioObjectSnapshot) -> Self {
+    async fn infer(snapshot: &SemioObjectSnapshot) -> Self {
         Self { composition: compute_semio_object_composition(snapshot) }
     }
 }
@@ -40,19 +40,19 @@ impl protocol::Inference<SemioObjectSnapshot> for SemioObjectInference {
 /// `infer` keeps the law correct even if that default ever stops agreeing (the same defensive
 /// pattern raster's `RasterInference` documents).
 impl Default for SemioObjectInference {
-    fn default() -> Self {
+    async fn default() -> Self {
         <Self as protocol::Inference<SemioObjectSnapshot>>::infer(&SemioObjectSnapshot::default())
     }
 }
 
 impl protocol::InferenceSpec<SemioObjectSnapshot> for SemioObjectInference {
-    fn inference_schema_id() -> &'static str {
+    async fn inference_schema_id() -> &'static str {
         "s.stdio.semio.object.inference"
     }
-    fn schema_version() -> u32 {
+    async fn schema_version() -> u32 {
         1
     }
-    fn fields() -> &'static [protocol::InferenceFieldSpec] {
+    async fn fields() -> &'static [protocol::InferenceFieldSpec] {
         &[protocol::InferenceFieldSpec { id: "s.stdio.semio.object.inference.composition", reads: &["transform", "brep", "mesh", "properties"] }]
     }
 }
@@ -70,7 +70,7 @@ impl ArtifactInferrer for crate::artifacts::semio::standards::v1::subsets::objec
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.stdio.semio.object.inference`'s facet leaves into the OS-wide inference catalog
 /// — call once at plugin init, alongside `semio_object_artifact_schema_descriptor`'s registration.
-pub fn semio_object_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
+pub async fn semio_object_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
     schema::ArtifactInferenceDescriptor {
         id: "s.stdio.semio.object.inference",
         inference: schema::FacetLeaves {
@@ -91,13 +91,13 @@ mod tests {
     use protocol::Inference;
 
     #[test]
-    fn inference_determinism_law() {
+    async fn inference_determinism_law() {
         let snapshot = SemioObjectSnapshot::default();
         assert_eq!(SemioObjectInference::infer(&snapshot), SemioObjectInference::infer(&snapshot));
     }
 
     #[test]
-    fn inference_default_law() {
+    async fn inference_default_law() {
         assert_eq!(SemioObjectInference::infer(&SemioObjectSnapshot::default()), SemioObjectInference::default());
     }
 }

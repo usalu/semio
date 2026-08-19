@@ -20,24 +20,24 @@ pub struct BinaryArtifact {
 
 //#region 🔖️Conversions
 impl Default for BinaryArtifact {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self::from_snapshot(BinarySnapshot::default())
     }
 }
 
 impl BinaryArtifact {
     /// 📸️ Persisted subset.
-    pub fn to_snapshot(&self) -> BinarySnapshot {
+    pub async fn to_snapshot(&self) -> BinarySnapshot {
         BinarySnapshot { schema: self.schema.clone(), bytes: self.bytes.clone() }
     }
 
     /// 🧬️ Builds a full artifact from a snapshot.
-    pub fn from_snapshot(snapshot: BinarySnapshot) -> Self {
+    pub async fn from_snapshot(snapshot: BinarySnapshot) -> Self {
         Self { schema: snapshot.schema, bytes: snapshot.bytes }
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
-    pub fn set_snapshot(&mut self, snapshot: BinarySnapshot) {
+    pub async fn set_snapshot(&mut self, snapshot: BinarySnapshot) {
         self.schema = snapshot.schema;
         self.bytes = snapshot.bytes;
     }
@@ -50,7 +50,7 @@ impl BinaryArtifact {
 /// artifact struct (binary has no format codec of its own to sit beside — the hex `ArtifactDsl`/
 /// `ArtifactPack` impls already live in `📸️snapshot/🦀️component.rs`, untouched by this move).
 /// 🌱 Empty persisted snapshot.
-pub fn empty_binary_snapshot() -> BinarySnapshot {
+pub async fn empty_binary_snapshot() -> BinarySnapshot {
     BinarySnapshot::default()
 }
 
@@ -59,14 +59,14 @@ pub fn empty_binary_snapshot() -> BinarySnapshot {
 /// `hello`). The single source of truth for `📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio`/
 /// `🎒️example.pack.semio` (both are literally this snapshot's `print_dsl`/`encode_pack` output,
 /// asserted equal by `fixture_honesty_law` in `💡️inferences/🦀️component.rs`).
-pub fn demo_binary_snapshot() -> BinarySnapshot {
+pub async fn demo_binary_snapshot() -> BinarySnapshot {
     BinarySnapshot { schema: STDIO_BINARY_DOCUMENT_SCHEMA.into(), bytes: b"hello".to_vec() }
 }
 //#endregion 🔖️DocumentHelpers
 
 //#region 🔖️Descriptor
 /// 🧬️ Descriptor for `s.stdio.binary`.
-pub fn binary_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
+pub async fn binary_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
     schema::ArtifactSchemaDescriptor {
         id: "s.stdio.binary",
         artifact: schema::FacetLeaves {
@@ -117,27 +117,27 @@ pub mod derived_construction {
         type Snapshot = BinarySnapshot;
         type Mutation = BinaryMutation;
         type Diff = BinaryDiff;
-        fn empty() -> Self {
+        async fn empty() -> Self {
             Self { snapshot: BinarySnapshot::default(), diagnostics: Vec::new() }
         }
-        fn from_snapshot(snapshot: Self::Snapshot) -> Self {
+        async fn from_snapshot(snapshot: Self::Snapshot) -> Self {
             Self { snapshot, diagnostics: Vec::new() }
         }
-        fn from_text(text: &str) -> Result<Self, store::TextError> {
+        async fn from_text(text: &str) -> Result<Self, store::TextError> {
             Ok(Self::from_snapshot(<BinarySnapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
-        fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
+        async fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
             Ok(Self::from_snapshot(<BinarySnapshot as store::ArtifactPack>::decode_pack(bytes)?))
         }
-        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
+        async fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let diff = crate::artifacts::binary::schema::mutations::apply_binary_mutation(&mut self.snapshot, &mutation);
             (self, diff)
         }
-        fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
+        async fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
             self.snapshot = <BinaryDiff as protocol::MutationDiff<BinarySnapshot>>::apply(&diff, &self.snapshot)?;
             Ok(self)
         }
-        fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
+        async fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
             if self.diagnostics.is_empty() {
                 Ok(self.snapshot)
             } else {
@@ -171,12 +171,12 @@ pub mod derived_analysis {
         type Parts = BinaryParts;
         const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.binary", standard: StandardId("raw"), subset: SubsetId("*") };
 
-        fn sniff(_source: &AnalyzeSource<'_>) -> IoConfidence {
+        async fn sniff(_source: &AnalyzeSource<'_>) -> IoConfidence {
             // 👃️ Any byte sequence is a valid stdio.binary payload -- terminal format, always High.
             IoConfidence::High
         }
 
-        fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
+        async fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
             let mut parts = BinaryParts::default();
             let mut diagnostics = Vec::new();
             let mut confidence = IoConfidence::High;

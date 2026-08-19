@@ -17,12 +17,12 @@ pub const PUZZLE3D_CONCRETE_FOREST_EXAMPLE_TEXT: &str = include_str!("../../../�
 pub const PUZZLE3D_NAKAGIN_EXAMPLE_TEXT: &str = include_str!("../../../📚️examples/🏗️nakagin-capsule-tower/🖼️assets/🗣️tower.dsl.semio");
 
 /// 📖️ Parses `.puzzle3d` DSL text into a `Puzzle3dSnapshot`.
-pub fn parse_dsl(text: &str) -> Result<Puzzle3dSnapshot, store::TextError> {
+pub async fn parse_dsl(text: &str) -> Result<Puzzle3dSnapshot, store::TextError> {
     <Puzzle3dSnapshot as store::ArtifactDsl>::parse_dsl(text)
 }
 
 /// 🖨️ Prints a `Puzzle3dSnapshot` back to `.puzzle3d` DSL text.
-pub fn print_dsl(document: &Puzzle3dSnapshot) -> String {
+pub async fn print_dsl(document: &Puzzle3dSnapshot) -> String {
     store::ArtifactDsl::print_dsl(document)
 }
 
@@ -36,7 +36,7 @@ mod tests {
     /// 🎫️convertpuzzle2d3d5dtotypeddslderiveengine) parse as `.puzzle3d` DSL text and round-trip
     /// through `print_dsl`/`parse_dsl` exactly.
     #[test]
-    fn puzzle3d_example_fixtures_parse_and_round_trip_as_dsl() {
+    async fn puzzle3d_example_fixtures_parse_and_round_trip_as_dsl() {
         for dsl_text in [PUZZLE3D_CONCRETE_FOREST_EXAMPLE_TEXT, PUZZLE3D_NAKAGIN_EXAMPLE_TEXT] {
             let projection = parse_dsl(dsl_text).expect("example fixture parses as dsl");
             semio_framework_os_kernel::os_store::test_support::assert_dsl_round_trip(&projection);
@@ -48,7 +48,7 @@ mod tests {
     /// target volume, a reference plane, and a link-compatibility rule) round-trips through
     /// `print_dsl`/`parse_dsl` exactly.
     #[test]
-    fn puzzle3d_projection_dsl_round_trips() {
+    async fn puzzle3d_projection_dsl_round_trips() {
         let empty = Puzzle3dSnapshot::default();
         semio_framework_os_kernel::os_store::test_support::assert_dsl_round_trip(&empty);
         semio_framework_os_kernel::os_store::test_support::assert_dsl_pack_equivalence(&empty);
@@ -90,7 +90,7 @@ mod tests {
     /// file's existing dsl/pack round-trip laws (same pattern as `dag`'s own
     /// `command_envelope_round_trip_holds_for_an_applied_operation`).
     #[test]
-    fn command_envelope_round_trip_holds_for_an_applied_operation() {
+    async fn command_envelope_round_trip_holds_for_an_applied_operation() {
         use crate::artifacts::puzzle3d::op::Puzzle3dMutation;
         use crate::artifacts::puzzle3d::spr::Puzzle3dStore;
         use crate::artifacts::puzzle3d::PUZZLE_3D_SCHEMA;

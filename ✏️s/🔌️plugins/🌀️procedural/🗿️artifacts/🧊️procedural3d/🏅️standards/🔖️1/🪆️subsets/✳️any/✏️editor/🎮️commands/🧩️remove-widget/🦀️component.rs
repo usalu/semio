@@ -15,7 +15,7 @@ pub struct RemoveWidget {
 
 /// 🕹️ No longer prunes selection itself — the framework auto-prunes `graph`'s selection after any
 /// document mutation that deletes a selected id (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM).
-pub fn handle(payload: &RemoveWidget, doc: &ArtifactView<'_, Procedural3dSnapshot>, _cfg: &ConfigView<'_, Procedural3dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural3dMutation, Procedural3dConfigMutation>, Fault> {
+pub async fn handle(payload: &RemoveWidget, doc: &ArtifactView<'_, Procedural3dSnapshot>, _cfg: &ConfigView<'_, Procedural3dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural3dMutation, Procedural3dConfigMutation>, Fault> {
     let fixture = &doc.snapshot.fixture;
     let target_id = &payload.widget_id;
     let mut host = host_from_fixture(fixture);
@@ -36,7 +36,7 @@ mod tests {
     use crate::editor::procedural3d::commands::{add_widget, patch_flow_widgets};
 
     #[test]
-    fn add_widget_action_appends_widget() {
+    async fn add_widget_action_appends_widget() {
         let _serial = crate::editor::procedural3d::test_support::lock();
         let mut app = app();
         let before = app.snapshot().expect("snapshot").fixture.widgets.len();
@@ -45,7 +45,7 @@ mod tests {
     }
 
     #[test]
-    fn patch_flow_widgets_edits_slider_value() {
+    async fn patch_flow_widgets_edits_slider_value() {
         let _serial = crate::editor::procedural3d::test_support::lock();
         let mut app = app();
         dispatch(&mut app, Procedural3dCommand::PatchFlowWidgets(patch_flow_widgets::PatchFlowWidgets { widget_ids: vec!["height".into()], field: "value".into(), value: Some(9.5) }));
@@ -56,7 +56,7 @@ mod tests {
     }
 
     #[test]
-    fn patch_flow_widgets_recomputes_preview_geometry() {
+    async fn patch_flow_widgets_recomputes_preview_geometry() {
         let _serial = crate::editor::procedural3d::test_support::lock();
         let mut app = app();
         drain_flow_eval_ticks(&mut app);
@@ -75,7 +75,7 @@ mod tests {
     }
 
     #[test]
-    fn remove_widget_action_deletes_by_id() {
+    async fn remove_widget_action_deletes_by_id() {
         let _serial = crate::editor::procedural3d::test_support::lock();
         let mut app = app();
         assert!(app.snapshot().expect("snapshot").fixture.widgets.iter().any(|widget| crate::artifacts::procedural3d::widget_id(widget) == "sides"));

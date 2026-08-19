@@ -15,15 +15,15 @@ pub struct ChangeRetrofitGammaEl {
 impl protocol::MutationKind<En1998Snapshot, En1998Mutation> for ChangeRetrofitGammaEl {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "retrofit-gamma-el", kind: "change-retrofit-gamma-el", record: "ChangedRetrofitGammaEl" };
 
-    fn diff(&self, base: &En1998Snapshot) -> protocol::MutationOutcome<En1998Diff> {
+    async fn diff(&self, base: &En1998Snapshot) -> protocol::MutationOutcome<En1998Diff> {
         crate::artifacts::en1998::mutations::change_retrofit_gamma_el::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &En1998Snapshot) -> Vec<En1998Mutation> {
+    async fn inverse(&self, base: &En1998Snapshot) -> Vec<En1998Mutation> {
         crate::artifacts::en1998::mutations::change_retrofit_gamma_el::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         format!("Change retrofit confidence factor gamma_el to {}", self.new_retrofit_gamma_el)
     }
 }

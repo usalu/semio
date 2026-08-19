@@ -32,7 +32,7 @@ pub enum PerformanceCurve {
 
 impl PerformanceCurve {
     /// 📊️ Evaluate 1-D curve at normalized load `x`.
-    pub fn evaluate(&self, x: f64) -> f64 {
+    pub async fn evaluate(&self, x: f64) -> f64 {
         match self {
             Self::Constant(v) => *v,
             Self::Linear { x1, y1, x2, y2 } => lerp(x, *x1, *x2, *y1, *y2),
@@ -48,7 +48,7 @@ impl PerformanceCurve {
     }
 
     /// 📊️ Evaluate 2-D biquadratic, triquadratic, or table curve.
-    pub fn evaluate_2d(&self, x: f64, y: f64) -> f64 {
+    pub async fn evaluate_2d(&self, x: f64, y: f64) -> f64 {
         match self {
             Self::Biquadratic { coeffs } => biquadratic(*coeffs, x, y),
             Self::Triquadratic { coeffs } => triquadratic(*coeffs, x, y),
@@ -58,7 +58,7 @@ impl PerformanceCurve {
     }
 
     /// 📊️ Part-load ratio clamped to [0, 1].
-    pub fn part_load(&self, load: f64, rated: f64) -> f64 {
+    pub async fn part_load(&self, load: f64, rated: f64) -> f64 {
         if rated.abs() < 1e-9 {
             return 0.0;
         }
@@ -66,7 +66,7 @@ impl PerformanceCurve {
     }
 
     /// 📐️ Curve polynomial degree.
-    pub fn degree(&self) -> CurveDegree {
+    pub async fn degree(&self) -> CurveDegree {
         match self {
             Self::Constant(_) => CurveDegree::Constant,
             Self::Linear { .. } => CurveDegree::Linear,
@@ -83,7 +83,7 @@ impl PerformanceCurve {
 
 // #region 🔖️Triquadratic
 /// 📐️ Triquadratic f(x,y) = Σ cᵢⱼ xⁱ yʲ for i+j ≤ 2 plus x²y² cross term.
-pub fn triquadratic(c: [f64; 10], x: f64, y: f64) -> f64 {
+pub async fn triquadratic(c: [f64; 10], x: f64, y: f64) -> f64 {
     c[0] + c[1] * x + c[2] * x * x + c[3] * y + c[4] * y * y + c[5] * x * y + c[6] * x * x * y + c[7] * x * y * y + c[8] * x * x * y * y + c[9] * x * x * x
 }
 // #endregion 🔖️Triquadratic
@@ -97,17 +97,17 @@ pub struct CurveLookupTable2D {
 }
 
 impl CurveLookupTable2D {
-    pub fn new(name: impl Into<String>, inner: LookupTable2D) -> Self {
+    pub async fn new(name: impl Into<String>, inner: LookupTable2D) -> Self {
         Self { name: name.into(), inner }
     }
 
-    pub fn evaluate(&self, x: f64, y: f64) -> f64 {
+    pub async fn evaluate(&self, x: f64, y: f64) -> f64 {
         self.inner.evaluate(x, y)
     }
 }
 
 impl From<LookupTable2D> for CurveLookupTable2D {
-    fn from(inner: LookupTable2D) -> Self {
+    async fn from(inner: LookupTable2D) -> Self {
         Self::new("lookup", inner)
     }
 }
@@ -115,7 +115,7 @@ impl From<LookupTable2D> for CurveLookupTable2D {
 
 // #region 🔖️Validation
 /// ✅️ Validate curve coefficients and lookup grid consistency.
-pub fn validate_curve(curve: &PerformanceCurve) -> Result<(), Diagnostics> {
+pub async fn validate_curve(curve: &PerformanceCurve) -> Result<(), Diagnostics> {
     let mut diag = Diagnostics::default();
     match curve {
         PerformanceCurve::Quadratic { coeffs } => {
@@ -149,7 +149,7 @@ pub fn validate_curve(curve: &PerformanceCurve) -> Result<(), Diagnostics> {
 }
 
 /// ✅️ Validate lookup table grid dimensions and monotonic axes.
-pub fn validate_lookup_table(table: &LookupTable2D, diag: &mut Diagnostics) {
+pub async fn validate_lookup_table(table: &LookupTable2D, diag: &mut Diagnostics) {
     if table.x.len() < 2 || table.y.len() < 2 {
         diag.push(Error::severe("lookup table must have at least 2 x and 2 y values"));
     }
@@ -169,7 +169,7 @@ pub fn validate_lookup_table(table: &LookupTable2D, diag: &mut Diagnostics) {
     }
 }
 
-fn is_monotonic(vals: &[f64]) -> bool {
+async fn is_monotonic(vals: &[f64]) -> bool {
     vals.windows(2).all(|w| w[1] > w[0])
 }
 // #endregion 🔖️Validation
@@ -179,50 +179,50 @@ mod tests {
     use super::*;
 
     #[test]
-    fn linear_curve_midpoint() {
+    async fn linear_curve_midpoint() {
         let c = PerformanceCurve::Linear { x1: 0.0, y1: 0.0, x2: 1.0, y2: 10.0 };
         assert!((c.evaluate(0.5) - 5.0).abs() < 1e-9);
     }
 
     #[test]
-    fn quadratic_curve_evaluates() {
+    async fn quadratic_curve_evaluates() {
         let c = PerformanceCurve::Quadratic { coeffs: [1.0, 2.0, 3.0] };
         assert!((c.evaluate(2.0) - 17.0).abs() < 1e-9);
     }
 
     #[test]
-    fn biquadratic_at_origin() {
+    async fn biquadratic_at_origin() {
         let c = PerformanceCurve::Biquadratic { coeffs: [1.0, 0.0, 0.0, 0.0, 0.0, 0.0] };
         assert!((c.evaluate_2d(2.0, 3.0) - 1.0).abs() < 1e-9);
     }
 
     #[test]
-    fn triquadratic_includes_cross_terms() {
+    async fn triquadratic_includes_cross_terms() {
         let c = [0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0];
         assert!((triquadratic(c, 2.0, 3.0) - 6.0).abs() < 1e-9);
     }
 
     #[test]
-    fn lookup_wrapper_evaluates() {
+    async fn lookup_wrapper_evaluates() {
         let table = CurveLookupTable2D::new("test", LookupTable2D { x: vec![0.0, 1.0], y: vec![0.0, 1.0], values: vec![vec![0.0, 10.0], vec![0.0, 20.0]] });
         let curve = PerformanceCurve::Table(table);
         assert!((curve.evaluate_2d(1.0, 1.0) - 20.0).abs() < 1e-9);
     }
 
     #[test]
-    fn validate_rejects_degenerate_linear() {
+    async fn validate_rejects_degenerate_linear() {
         let c = PerformanceCurve::Linear { x1: 1.0, y1: 0.0, x2: 1.0, y2: 5.0 };
         assert!(validate_curve(&c).is_err());
     }
 
     #[test]
-    fn validate_accepts_valid_quadratic() {
+    async fn validate_accepts_valid_quadratic() {
         let c = PerformanceCurve::Quadratic { coeffs: [0.5, 0.1, 0.0] };
         assert!(validate_curve(&c).is_ok());
     }
 
     #[test]
-    fn part_load_clamps() {
+    async fn part_load_clamps() {
         let c = PerformanceCurve::Constant(1.0);
         assert!((c.part_load(150.0, 100.0) - 1.0).abs() < 1e-9);
     }

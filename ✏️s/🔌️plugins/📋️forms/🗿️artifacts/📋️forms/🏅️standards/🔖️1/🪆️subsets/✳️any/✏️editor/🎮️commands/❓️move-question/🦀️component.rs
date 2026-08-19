@@ -10,7 +10,7 @@ use serde_json::{json, Value};
 
 //#region 🔖️Shell
 /// 🌱️ A blank question of the given `kind`/`id` — every field defaulted to `None`.
-pub fn question_shell(id: String, label: String, kind: String) -> FormQuestion {
+pub async fn question_shell(id: String, label: String, kind: String) -> FormQuestion {
     FormQuestion {
         id,
         label,
@@ -37,7 +37,7 @@ pub fn question_shell(id: String, label: String, kind: String) -> FormQuestion {
 
 /// 🌱️ A freshly created question, seeded with sensible per-kind defaults — shared by `addQuestion` and
 /// `dropQuestionKind`.
-pub fn default_question_for_kind(kind: &str, id: String) -> FormQuestion {
+pub async fn default_question_for_kind(kind: &str, id: String) -> FormQuestion {
     match kind {
         "text" => {
             let mut question = question_shell(id, "Text".into(), "text".into());
@@ -120,7 +120,7 @@ pub fn default_question_for_kind(kind: &str, id: String) -> FormQuestion {
 
 /// ✏️ Patches one scalar field of a question by name — every field `PatchQuestions` can address except
 /// `"param"` (routed to [`patch_building_component_param`] instead, since it targets a nested params map).
-pub fn patch_question_field(spec: &FormsSnapshot, question_id: &str, field: &str, raw_value: &Value) -> Option<FormMutation> {
+pub async fn patch_question_field(spec: &FormsSnapshot, question_id: &str, field: &str, raw_value: &Value) -> Option<FormMutation> {
     update_block_operation(spec, question_id, |question| match field {
         "label" => question.label = raw_value.as_str().unwrap_or("").to_string(),
         "kind" => question.kind = raw_value.as_str().unwrap_or("text").to_string(),
@@ -142,7 +142,7 @@ pub fn patch_question_field(spec: &FormsSnapshot, question_id: &str, field: &str
 }
 
 /// ✏️ Patches one key of a `buildingComponent` question's nested params object.
-pub fn patch_building_component_param(spec: &FormsSnapshot, question_id: &str, param_key: &str, raw_value: &Value) -> Option<FormMutation> {
+pub async fn patch_building_component_param(spec: &FormsSnapshot, question_id: &str, param_key: &str, raw_value: &Value) -> Option<FormMutation> {
     update_block_operation(spec, question_id, |question| {
         let mut params = question.params.take().unwrap_or(dsl::DslValue::Object(vec![]));
         if let dsl::DslValue::Object(entries) = &mut params {
@@ -159,7 +159,7 @@ pub fn patch_building_component_param(spec: &FormsSnapshot, question_id: &str, p
 
 /// 🌳️ Resolves the insertion index within `step_id` implied by dropping onto `target_id` at
 /// `drop_position` (`"before"`/`"after"`/`"inside"`).
-fn resolve_question_insert_index(spec: &FormsSnapshot, step_id: &str, target_id: &str, drop_position: &str) -> Option<usize> {
+async fn resolve_question_insert_index(spec: &FormsSnapshot, step_id: &str, target_id: &str, drop_position: &str) -> Option<usize> {
     let steps = forms_steps(spec);
     let step = steps.iter().find(|step| step.id == step_id)?;
     if target_id.starts_with("step:") {
@@ -189,7 +189,7 @@ pub struct MoveQuestion {
     pub index: Option<u64>,
 }
 
-pub fn handle(payload: &MoveQuestion, doc: &ArtifactView<'_, FormsSnapshot>, _cfg: &ConfigView<'_, FormsConfig>) -> Result<Emit<FormMutation, FormsConfigMutation>, Fault> {
+pub async fn handle(payload: &MoveQuestion, doc: &ArtifactView<'_, FormsSnapshot>, _cfg: &ConfigView<'_, FormsConfig>) -> Result<Emit<FormMutation, FormsConfigMutation>, Fault> {
     let spec = doc.snapshot;
     let Some(source) = locate_question(spec, &payload.question_id) else {
         return Ok(Emit::default());

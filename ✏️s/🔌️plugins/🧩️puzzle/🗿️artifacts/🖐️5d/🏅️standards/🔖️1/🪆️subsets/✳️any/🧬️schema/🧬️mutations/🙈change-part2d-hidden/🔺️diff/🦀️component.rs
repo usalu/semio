@@ -3,7 +3,7 @@ use crate::artifacts::puzzle5d::diff::{Puzzle5dDiff, Puzzle5dPartPatch, Puzzle5d
 use crate::artifacts::puzzle5d::Puzzle5dSnapshot;
 
 //#region 🔖️Diff
-pub fn diff(payload: &super::mutation::ChangePart2dHidden, base: &Puzzle5dSnapshot) -> protocol::MutationOutcome<Puzzle5dDiff> {
+pub async fn diff(payload: &super::mutation::ChangePart2dHidden, base: &Puzzle5dSnapshot) -> protocol::MutationOutcome<Puzzle5dDiff> {
     let Some(item) = base.parts.iter().find(|entry| entry.id == payload.id) else {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("{} \"{}\" not found", "part", payload.id), vec![payload.id.clone()]);
     };

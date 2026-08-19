@@ -84,7 +84,7 @@ impl En1994Mutation {
     /// persistent field — the closed-vocabulary replacement for the banned whole-document-replace
     /// variant, used by `import_media`'s `"model:in"` port and the `set-snapshot` app command to
     /// bundle a bulk document replacement into a single atomic `Emit::commit`.
-    pub fn from_snapshot(snapshot: &En1994Snapshot) -> Vec<En1994Mutation> {
+    pub async fn from_snapshot(snapshot: &En1994Snapshot) -> Vec<En1994Mutation> {
         let mut mutations = Vec::with_capacity(22);
         mutations.push(En1994Mutation::ChangeFYMpa(change_f_y_mpa::mutation::ChangeFYMpa { new_f_y_mpa: snapshot.f_y_mpa.clone() }));
         mutations.push(En1994Mutation::ChangeVEdKn(change_v_ed_kn::mutation::ChangeVEdKn { new_v_ed_kn: snapshot.v_ed_kn.clone() }));
@@ -120,7 +120,7 @@ mod tests {
     use crate::document::AnnexChoice;
     use protocol::{Mutation, MutationDiff, SemanticMutation};
 
-    fn round_trip(base: &En1994Snapshot, operation: &En1994Mutation) -> En1994Snapshot {
+    async fn round_trip(base: &En1994Snapshot, operation: &En1994Mutation) -> En1994Snapshot {
         let forward = operation.diff(base).diff().apply(base).expect("valid mutation diff");
         let backwards = operation.inverse(base);
         let mut restored = forward.clone();
@@ -133,7 +133,7 @@ mod tests {
 
     /// 🧪️ One representative value per variant — reused by the round-trip law test below and by
     /// `📝️text/🦀️component.rs`'s `OpText`/`OpBinary` round-trip law.
-    pub(crate) fn demo_mutation_cases() -> Vec<En1994Mutation> {
+    pub(crate) async fn demo_mutation_cases() -> Vec<En1994Mutation> {
         vec![
             En1994Mutation::ChangeAnnex(change_annex::mutation::ChangeAnnex { new_annex: AnnexChoice::En }),
             En1994Mutation::ChangeMEdKnm(change_m_ed_knm::mutation::ChangeMEdKnm { new_m_ed_knm: 123.5_f64 }),
@@ -161,7 +161,7 @@ mod tests {
     }
 
     #[test]
-    fn every_variant_round_trips_and_restores_base() {
+    async fn every_variant_round_trips_and_restores_base() {
         let base = En1994Snapshot::default();
         for mutation in demo_mutation_cases() {
             round_trip(&base, &mutation);
@@ -169,7 +169,7 @@ mod tests {
     }
 
     #[test]
-    fn change_annex_round_trips() {
+    async fn change_annex_round_trips() {
         let base = En1994Snapshot::default();
         let mutation = En1994Mutation::ChangeAnnex(change_annex::mutation::ChangeAnnex { new_annex: AnnexChoice::En });
         let after = round_trip(&base, &mutation);
@@ -178,7 +178,7 @@ mod tests {
     }
 
     #[test]
-    fn change_m_ed_knm_round_trips() {
+    async fn change_m_ed_knm_round_trips() {
         let base = En1994Snapshot::default();
         let mutation = En1994Mutation::ChangeMEdKnm(change_m_ed_knm::mutation::ChangeMEdKnm { new_m_ed_knm: 999.0 });
         let after = round_trip(&base, &mutation);
@@ -188,7 +188,7 @@ mod tests {
     }
 
     #[test]
-    fn change_fire_rating_round_trips() {
+    async fn change_fire_rating_round_trips() {
         let base = En1994Snapshot::default();
         let mutation = En1994Mutation::ChangeFireRating(change_fire_rating::mutation::ChangeFireRating { new_fire_rating: "r120".into() });
         let after = round_trip(&base, &mutation);
@@ -196,7 +196,7 @@ mod tests {
     }
 
     #[test]
-    fn change_eta_inverse_restores_base_value() {
+    async fn change_eta_inverse_restores_base_value() {
         let base = En1994Snapshot { eta: 0.6, ..En1994Snapshot::default() };
         let mutation = En1994Mutation::ChangeEta(change_eta::mutation::ChangeEta { new_eta: 0.9 });
         let after = round_trip(&base, &mutation);
@@ -206,7 +206,7 @@ mod tests {
     }
 
     #[test]
-    fn semantic_kinds_cover_every_variant() {
+    async fn semantic_kinds_cover_every_variant() {
         assert_eq!(En1994Mutation::kinds().len(), 22);
         let mutation = En1994Mutation::ChangeAnnex(change_annex::mutation::ChangeAnnex { new_annex: AnnexChoice::De });
         assert_eq!(mutation.semantics().kind, "change-annex");
@@ -215,7 +215,7 @@ mod tests {
     }
 
     #[test]
-    fn labels_are_human_readable() {
+    async fn labels_are_human_readable() {
         let mutation = En1994Mutation::ChangeSpanM(change_span_m::mutation::ChangeSpanM { new_span_m: 12.0 });
         assert_eq!(mutation.label(), "Change span to 12");
     }
@@ -226,7 +226,7 @@ mod tests {
     /// `🔖️OutcomeLaws` note for why `assert_missing_target_is_error`/`assert_outcome_policy_matrix`
     /// don't apply/aren't landed yet.
     #[test]
-    fn change_eta_non_finite_is_fatal() {
+    async fn change_eta_non_finite_is_fatal() {
         let base = En1994Snapshot::default();
         let mutation = En1994Mutation::ChangeEta(change_eta::mutation::ChangeEta { new_eta: f64::NAN });
         let outcome = mutation.diff(&base);
@@ -235,7 +235,7 @@ mod tests {
     }
 
     #[test]
-    fn change_annex_same_value_is_no_op() {
+    async fn change_annex_same_value_is_no_op() {
         let base = En1994Snapshot::default();
         let mutation = En1994Mutation::ChangeAnnex(change_annex::mutation::ChangeAnnex { new_annex: base.annex });
         let outcome = mutation.diff(&base);
@@ -244,7 +244,7 @@ mod tests {
     }
 
     #[test]
-    fn change_span_m_is_deterministic() {
+    async fn change_span_m_is_deterministic() {
         let base = En1994Snapshot::default();
         let mutation = En1994Mutation::ChangeSpanM(change_span_m::mutation::ChangeSpanM { new_span_m: 12.0 });
         protocol::testkit::assert_outcome_deterministic(&base, &mutation);

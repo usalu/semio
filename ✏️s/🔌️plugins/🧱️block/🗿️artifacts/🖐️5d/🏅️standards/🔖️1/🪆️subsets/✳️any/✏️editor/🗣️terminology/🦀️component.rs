@@ -18,7 +18,7 @@ semio_framework_plugin::app_labels! {
 }
 
 /// 🗣️ Resolves the active label set from `cfg.locale`; falls back to native English.
-pub fn block5d_labels(locale: &str) -> &'static Block5dLabels {
+pub async fn block5d_labels(locale: &str) -> &'static Block5dLabels {
     semio_framework_plugin::resolve_labels_for_locale::<Block5dLabels>(locale)
 }
 //#endregion 🔖️Labels
@@ -29,7 +29,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn labels_resolve_native_english_and_german_from_the_config_locale() {
+    async fn labels_resolve_native_english_and_german_from_the_config_locale() {
         assert_eq!(block5d_labels("en-US").summary.as_str(), "Part kind");
         assert_eq!(block5d_labels("de-DE").summary.as_str(), "Teilart");
     }

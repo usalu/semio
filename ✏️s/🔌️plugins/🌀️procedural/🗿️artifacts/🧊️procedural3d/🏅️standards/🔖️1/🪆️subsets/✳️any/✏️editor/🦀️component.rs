@@ -39,7 +39,7 @@ pub const PROCEDURAL_3D_PLAY_APP_ID: &str = "procedural3d-play";
 
 /// 🎯️ An `ActionDescriptor` addressed at this app — the single factory every taxonomy node's chrome
 /// (`📌️panels/*`, `🎚️options/*`) builds its `on_change`/item actions with.
-pub fn procedural3d_action(action: &str, args: Option<Value>) -> ActionDescriptor {
+pub async fn procedural3d_action(action: &str, args: Option<Value>) -> ActionDescriptor {
     semio_framework_plugin::ActionFactory::new(PROCEDURAL_3D_PLAY_APP_ID).action(action, args)
 }
 //#endregion 🔖️Constants
@@ -95,7 +95,7 @@ pub struct Procedural3dPlayApp;
 
 /// 🎥️ Parses the flow-graph camera out of `command_from_action`'s JSON args — either a nested
 /// `{camera: {...}}` object or flat `x`/`y`/`zoom` keys.
-fn parse_flow_camera_json(args: &Value) -> flow::CameraJson {
+async fn parse_flow_camera_json(args: &Value) -> flow::CameraJson {
     if let Some(camera) = args.get("camera") {
         if let Ok(parsed) = serde_json::from_value::<flow::CameraJson>(camera.clone()) {
             return parsed;
@@ -106,7 +106,7 @@ fn parse_flow_camera_json(args: &Value) -> flow::CameraJson {
 
 /// 🎥️ Parses the 3D preview camera out of `command_from_action`'s JSON args; falls back to the default
 /// camera on any malformed/missing `camera` object.
-fn parse_preview_camera_json(args: &Value) -> crate::editor::procedural3d::config::Procedural3dPreviewCamera {
+async fn parse_preview_camera_json(args: &Value) -> crate::editor::procedural3d::config::Procedural3dPreviewCamera {
     if let Some(camera) = args.get("camera") {
         if let Ok(parsed) = serde_json::from_value::<crate::editor::procedural3d::config::Procedural3dPreviewCamera>(camera.clone()) {
             return parsed;
@@ -132,15 +132,15 @@ impl ArtifactEditor for Procedural3dPlayApp {
     const DIALECT: Dialect = crate::artifacts::procedural3d::PROCEDURAL3D_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = PROCEDURAL_3D_SCHEMA;
 
-    fn app_schema() -> Option<::schema::AppSchemaDescriptor> {
+    async fn app_schema() -> Option<::schema::AppSchemaDescriptor> {
         Some(crate::editor::procedural3d::config::schema::app_schema_descriptor())
     }
 
-    fn initial_snapshot() -> Procedural3dSnapshot {
+    async fn initial_snapshot() -> Procedural3dSnapshot {
         crate::artifacts::procedural3d::schema::default_snapshot()
     }
 
-    fn io() -> Option<semio_framework_plugin::AppIo> {
+    async fn io() -> Option<semio_framework_plugin::AppIo> {
         Some(procedural3d_io())
     }
 
@@ -162,7 +162,7 @@ impl ArtifactEditor for Procedural3dPlayApp {
 
     /// 🎞️ `"params:in"` — patches matching `InputSlider` widgets from a `{widgetId: number}` JSON
     /// object; unmatched keys/non-slider widgets are silently ignored.
-    fn import_media(port: &str, media: &semio_framework_plugin::Media, doc: &ArtifactView<'_, Procedural3dSnapshot>) -> Result<Emit<Procedural3dMutation, Procedural3dConfigMutation, Self::DraftMutation>, MediaError> {
+    async fn import_media(port: &str, media: &semio_framework_plugin::Media, doc: &ArtifactView<'_, Procedural3dSnapshot>) -> Result<Emit<Procedural3dMutation, Procedural3dConfigMutation, Self::DraftMutation>, MediaError> {
         match port {
             "params:in" => {
                 let semio_framework_plugin::MediaPayload::Structured { json, .. } = &media.payload else {
@@ -183,14 +183,14 @@ impl ArtifactEditor for Procedural3dPlayApp {
             _ => Err(MediaError::NotImplemented)}
     }
 
-    fn command_id(command: &Procedural3dCommand) -> &'static str {
+    async fn command_id(command: &Procedural3dCommand) -> &'static str {
         command.command_id()
     }
 
     /// 🎯️ Maps host action id + JSON args onto `Procedural3dCommand` — preserved verbatim from the
     /// pre-migration hand-rolled dispatch so React/wgpu callers that still speak the stringly
     /// `{action,args}` wire (rather than `OpBinary` bytes) keep working unchanged.
-    fn command_from_action(action: &str, args: Option<&Value>) -> Result<Self::Command, Fault> {
+    async fn command_from_action(action: &str, args: Option<&Value>) -> Result<Self::Command, Fault> {
         let args = args.cloned().unwrap_or(Value::Null);
         let str_arg = |keys: &[&str]| -> Option<String> { keys.iter().find_map(|key| args.get(key).and_then(|value| value.as_str()).map(str::to_string)) };
         let string_list = |key: &str| -> Vec<String> { args.get(key).and_then(|value| value.as_array()).map(|rows| rows.iter().filter_map(|row| row.as_str().map(str::to_string)).collect()).unwrap_or_default() };
@@ -292,7 +292,7 @@ impl ArtifactEditor for Procedural3dPlayApp {
     /// interaction domain directly (bypassing the `app_commands!`-generated `dispatch`, whose
     /// per-row `$module::handle(payload, doc, cfg, ctx)` signature is framework-fixed and has no
     /// `interaction` slot) — ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM.
-    fn handle(command: &Procedural3dCommand, doc: &ArtifactView<'_, Procedural3dSnapshot>, cfg: &ConfigView<'_, Procedural3dConfig>, interaction: &InteractionView<'_>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<Procedural3dMutation, Procedural3dConfigMutation, Self::DraftMutation>, Fault> {
+    async fn handle(command: &Procedural3dCommand, doc: &ArtifactView<'_, Procedural3dSnapshot>, cfg: &ConfigView<'_, Procedural3dConfig>, interaction: &InteractionView<'_>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<Procedural3dMutation, Procedural3dConfigMutation, Self::DraftMutation>, Fault> {
         with_process_flow_eval_session(|session| match command {
             Procedural3dCommand::DeleteSelection(payload) => delete_selection::apply(payload, doc, cfg, interaction, session),
             Procedural3dCommand::NodeGraphEdit(payload) => node_graph_edit::apply(payload, doc, cfg, interaction, session),
@@ -308,8 +308,8 @@ impl ArtifactEditor for Procedural3dPlayApp {
     /// parented to its owning cluster's widget id — the DAG-parent-links transitive-hover source: hovering
     /// a Cluster's own tree item transitively covers every widget nested inside it). Synapses become
     /// "edge" targets, parented to nothing (edges are leaves, not containers).
-    fn interaction_topology(doc: &ArtifactView<'_, Procedural3dSnapshot>, _cfg: &ConfigView<'_, Procedural3dConfig>) -> InteractionTopology {
-        fn walk_neuron(neuron: &flow::neural::Neuron, parent: String, ordered: &mut Vec<TopologyNode>) {
+    async fn interaction_topology(doc: &ArtifactView<'_, Procedural3dSnapshot>, _cfg: &ConfigView<'_, Procedural3dConfig>) -> InteractionTopology {
+        async fn walk_neuron(neuron: &flow::neural::Neuron, parent: String, ordered: &mut Vec<TopologyNode>) {
             ordered.push(TopologyNode { id: neuron.id.clone(), granularity: "node".into(), parent: Some(parent) });
             if let Some(tree) = &neuron.tree {
                 for child in &tree.neurons {
@@ -337,7 +337,7 @@ impl ArtifactEditor for Procedural3dPlayApp {
     }
 
     /// 🧵️ Arms a `flowEvalTick` chain whenever the main fixture has pending (uncomputed) nodes.
-    fn pending_effects(doc: &ArtifactView<'_, Procedural3dSnapshot>, _cfg: &ConfigView<'_, Procedural3dConfig>) -> Vec<Effect> {
+    async fn pending_effects(doc: &ArtifactView<'_, Procedural3dSnapshot>, _cfg: &ConfigView<'_, Procedural3dConfig>) -> Vec<Effect> {
         with_process_flow_eval_session(|session| {
             let host = flow::flow_host_with_session(&doc.snapshot.fixture, session);
             if session.sync(&host) {
@@ -348,7 +348,7 @@ impl ArtifactEditor for Procedural3dPlayApp {
         })
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, Procedural3dSnapshot>, cfg: &ConfigView<'_, Procedural3dConfig>) -> UiNode {
+    async fn render(body_key: &str, doc: &ArtifactView<'_, Procedural3dSnapshot>, cfg: &ConfigView<'_, Procedural3dConfig>) -> UiNode {
         let document = doc.snapshot;
         let config = cfg.snapshot;
         let labels = procedural3d_labels(config);
@@ -369,7 +369,7 @@ impl ArtifactEditor for Procedural3dPlayApp {
             _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}")))})
     }
 
-    fn window_measures(_doc: &ArtifactView<'_, Procedural3dSnapshot>, cfg: &ConfigView<'_, Procedural3dConfig>) -> HashMap<String, Vec<WindowMeasure>> {
+    async fn window_measures(_doc: &ArtifactView<'_, Procedural3dSnapshot>, cfg: &ConfigView<'_, Procedural3dConfig>) -> HashMap<String, Vec<WindowMeasure>> {
         let config = cfg.snapshot;
         let measures = edit_preview::preview_window_measures(config, procedural3d_action);
         HashMap::from([
@@ -386,7 +386,7 @@ impl ArtifactEditor for Procedural3dPlayApp {
     /// 🕹️ `context_menu` carries no `InteractionView` either (same gap as `render` — see ticket
     /// 26/08/14's w3b-summary.md), so the selection-dependent rows below always take the "nothing
     /// selected" branch rather than reading a stale/wrong selection.
-    fn context_menu(request: &semio_framework_plugin::ContextMenuRequest, _doc: &ArtifactView<'_, Procedural3dSnapshot>, cfg: &ConfigView<'_, Procedural3dConfig>, registry: &semio_framework_plugin::AppActionRegistry) -> Vec<semio_framework_plugin::ContextMenuItemSpec> {
+    async fn context_menu(request: &semio_framework_plugin::ContextMenuRequest, _doc: &ArtifactView<'_, Procedural3dSnapshot>, cfg: &ConfigView<'_, Procedural3dConfig>, registry: &semio_framework_plugin::AppActionRegistry) -> Vec<semio_framework_plugin::ContextMenuItemSpec> {
         use semio_framework_plugin::{node_graph_delete_selection_spec, selection_domains_from_surface, Menu, NodeGraphDeleteDispatch};
         let config = cfg.snapshot;
         let labels = procedural3d_labels(config);
@@ -408,7 +408,7 @@ impl ArtifactEditor for Procedural3dPlayApp {
 //#endregion 🔖️Procedural3dPlayApp
 
 //#region 🔖️Manifest
-pub fn create_procedural3d_app() -> semio_framework_plugin::AppDefinition {
+pub async fn create_procedural3d_app() -> semio_framework_plugin::AppDefinition {
     Editor::builder(crate::artifacts::procedural3d::PROCEDURAL3D_DIALECT).document(["semio", "procedural", "3d"])
             .command(CommandDefinition { in_palette: false, ..CommandDefinition::new_catalog("flowEvalTick", LocalizedLabel::native("Evaluate Flow Tick", "Flow-Auswertungsschritt"), "runtime", ActionKind::View) })
             .artifact_kind(artifact_kind())
@@ -528,7 +528,7 @@ pub fn create_procedural3d_app() -> semio_framework_plugin::AppDefinition {
 /// this app's typed media I/O surface (`AppDefinition.io`) — mirrors the `ArtifactKindSpec` literal
 /// `create_procedural3d_app` declares via `.artifact_kind(...)`; `params:in`/`geometry:out` are the
 /// workflow-specific ports beyond the implicit document in/out ports.
-pub fn procedural3d_io() -> semio_framework_plugin::AppIo {
+pub async fn procedural3d_io() -> semio_framework_plugin::AppIo {
     semio_framework_plugin::AppIo::from_document(
         "procedural.3d",
         MediaType { class: MediaClass::ThreeD, form: MediaForm::Flow },
@@ -560,14 +560,14 @@ pub fn procedural3d_io() -> semio_framework_plugin::AppIo {
 /// every function here references [`Procedural3dConfig`] (directly, or is reachable only from a
 /// function that does), which made this app behavior, not artifact-schema-pure document compute; the
 /// snapshot-pure fixture/gumball helpers stayed in `crate::artifacts::procedural3d::schema` instead.
-pub fn preview_tolerance(lod_mode: &str) -> f64 {
+pub async fn preview_tolerance(lod_mode: &str) -> f64 {
     match lod_mode {
         "coarse" => 0.15,
         "fine" => 0.02,
         _ => 0.05}
 }
 
-pub fn preview_camera_json(cfg: &Procedural3dConfig) -> String {
+pub async fn preview_camera_json(cfg: &Procedural3dConfig) -> String {
     ui_wgpu::wgpu::world3d_camera_json(cfg.preview_camera.position, cfg.preview_camera.target, cfg.preview_camera.fov)
 }
 
@@ -579,7 +579,7 @@ pub fn preview_camera_json(cfg: &Procedural3dConfig) -> String {
 /// rather than a stale one; the gumball never shows until a future wave threads interaction into
 /// `render`. `"rectangle"` (the pre-migration default `selection_method`) is hardcoded — the
 /// framework no longer tracks a persistent "last marquee method" outside a live gesture.
-pub fn preview_selection_json(cfg: &Procedural3dConfig, active_utility: &str) -> String {
+pub async fn preview_selection_json(cfg: &Procedural3dConfig, active_utility: &str) -> String {
     let mut value: Value = serde_json::from_str(&semio_framework_plugin::world3d_selection_json("rectangle", &[], None)).unwrap_or_else(|_| json!({}));
     let show_mode = if cfg.show_mode.is_empty() { "shaded" } else { cfg.show_mode.as_str() };
     let (show_edges, selection_mode) = match show_mode {
@@ -597,7 +597,7 @@ pub fn preview_selection_json(cfg: &Procedural3dConfig, active_utility: &str) ->
     value.to_string()
 }
 
-fn merge_status_json(computing: Option<String>, preview_status: Option<String>) -> Option<String> {
+async fn merge_status_json(computing: Option<String>, preview_status: Option<String>) -> Option<String> {
     match (computing, preview_status) {
         (Some(c), Some(p)) => {
             let mut computing_val: Value = serde_json::from_str(&c).unwrap_or(json!({ "computing": true }));
@@ -615,12 +615,12 @@ fn merge_status_json(computing: Option<String>, preview_status: Option<String>) 
 }
 
 /// 👁️ Merges the session's live "still computing" flag with a fresh `preview_status_json` result.
-pub fn preview_scene_status_json(session: &FlowEvalSession, preview_status: Option<String>) -> Option<String> {
+pub async fn preview_scene_status_json(session: &FlowEvalSession, preview_status: Option<String>) -> Option<String> {
     let computing = session.pending().then(|| r#"{"computing":true}"#.to_string());
     merge_status_json(computing, preview_status)
 }
 
-pub fn is_brep_geometry_handle(handle: &str) -> bool {
+pub async fn is_brep_geometry_handle(handle: &str) -> bool {
     if handle.is_empty() {
         return false;
     }
@@ -640,7 +640,7 @@ pub fn is_brep_geometry_handle(handle: &str) -> bool {
     handle.len() == 64 && handle.as_bytes().iter().all(u8::is_ascii_hexdigit)
 }
 
-pub fn collect_geometry_handles_from_eval(value: &Value, handles: &mut Vec<String>) {
+pub async fn collect_geometry_handles_from_eval(value: &Value, handles: &mut Vec<String>) {
     match value {
         Value::Object(map) => {
             if let Some(handle) = map.get("handle").and_then(|entry| entry.as_str()) {
@@ -661,7 +661,7 @@ pub fn collect_geometry_handles_from_eval(value: &Value, handles: &mut Vec<Strin
     }
 }
 
-pub fn geometry_handles_for_widget(eval: &Value, widget_id: &str) -> Vec<String> {
+pub async fn geometry_handles_for_widget(eval: &Value, widget_id: &str) -> Vec<String> {
     let Some(widget_eval) = eval.get(widget_id) else {
         return Vec::new();
     };
@@ -674,11 +674,11 @@ pub fn geometry_handles_for_widget(eval: &Value, widget_id: &str) -> Vec<String>
     handles
 }
 
-fn mesh_has_preview_geometry(data: &semio_framework_plugin::MeshData) -> bool {
+async fn mesh_has_preview_geometry(data: &semio_framework_plugin::MeshData) -> bool {
     (!data.indices.is_empty() && data.positions.len() >= 9) || data.edge_positions.len() >= 6 || (data.positions.len() >= 3 && data.indices.is_empty())
 }
 
-fn apply_show_mode_mesh(mut data: semio_framework_plugin::MeshData, show_mode: &str) -> semio_framework_plugin::MeshData {
+async fn apply_show_mode_mesh(mut data: semio_framework_plugin::MeshData, show_mode: &str) -> semio_framework_plugin::MeshData {
     let show_mode = match show_mode {
         "solid" | "shaded" | "shaded+edges" | "wireframe" | "points" => show_mode,
         _ => "shaded"};
@@ -699,7 +699,7 @@ fn apply_show_mode_mesh(mut data: semio_framework_plugin::MeshData, show_mode: &
         _ => data}
 }
 
-pub fn preview_status_json(eval_json: &str, fixture: &flow::FlowFixture) -> Option<String> {
+pub async fn preview_status_json(eval_json: &str, fixture: &flow::FlowFixture) -> Option<String> {
     let eval: Value = serde_json::from_str(eval_json).ok()?;
     if eval.get("error").and_then(Value::as_str).is_some() {
         return Some(json!({ "error": eval.get("error") }).to_string());
@@ -721,7 +721,7 @@ pub fn preview_status_json(eval_json: &str, fixture: &flow::FlowFixture) -> Opti
 
 /// 🧵️ Pure per-render tessellation: bounded-cost, safe to call fresh on every render call instead of
 /// behind an outer memoization layer.
-fn mesh_data_for_preview_handle(handle: &str, tolerance: f64, session: Option<&FlowEvalSession>) -> Option<semio_framework_plugin::MeshData> {
+async fn mesh_data_for_preview_handle(handle: &str, tolerance: f64, session: Option<&FlowEvalSession>) -> Option<semio_framework_plugin::MeshData> {
     if let Some(session) = session {
         if let Some(json) = session.preview_mesh_json(handle) {
             if let Ok(value) = serde_json::from_str::<Value>(json) {
@@ -740,7 +740,7 @@ fn mesh_data_for_preview_handle(handle: &str, tolerance: f64, session: Option<&F
 }
 
 /// 🧊 Geometry handles on preview widgets that still need an extension tessellate.
-pub fn pending_preview_tessellate_handles(eval_json: &str, fixture: &flow::FlowFixture, session: &FlowEvalSession) -> Vec<String> {
+pub async fn pending_preview_tessellate_handles(eval_json: &str, fixture: &flow::FlowFixture, session: &FlowEvalSession) -> Vec<String> {
     if eval_json.is_empty() {
         return Vec::new();
     }
@@ -770,7 +770,7 @@ pub fn pending_preview_tessellate_handles(eval_json: &str, fixture: &flow::FlowF
 }
 
 /// 📨 Host effects that tessellate preview handles inside the owning brep extension kernel.
-pub fn preview_tessellate_effects(session: &mut FlowEvalSession, eval_json: &str, fixture: &flow::FlowFixture, cfg: &Procedural3dConfig) -> Vec<Effect> {
+pub async fn preview_tessellate_effects(session: &mut FlowEvalSession, eval_json: &str, fixture: &flow::FlowFixture, cfg: &Procedural3dConfig) -> Vec<Effect> {
     let tolerance = preview_tolerance(&cfg.lod_mode);
     let tolerance_bits = tolerance.to_bits();
     let mut live = std::collections::HashSet::new();
@@ -797,11 +797,11 @@ pub fn preview_tessellate_effects(session: &mut FlowEvalSession, eval_json: &str
     effects
 }
 
-pub fn preview_payload_from_eval(eval_json: &str, fixture: &flow::FlowFixture, cfg: &Procedural3dConfig) -> (String, String) {
+pub async fn preview_payload_from_eval(eval_json: &str, fixture: &flow::FlowFixture, cfg: &Procedural3dConfig) -> (String, String) {
     preview_payload_from_eval_with_session(eval_json, fixture, cfg, None)
 }
 
-pub fn preview_payload_from_eval_with_session(eval_json: &str, fixture: &flow::FlowFixture, cfg: &Procedural3dConfig, session: Option<&FlowEvalSession>) -> (String, String) {
+pub async fn preview_payload_from_eval_with_session(eval_json: &str, fixture: &flow::FlowFixture, cfg: &Procedural3dConfig, session: Option<&FlowEvalSession>) -> (String, String) {
     if eval_json.is_empty() {
         return ("[]".into(), "[]".into());
     }
@@ -862,7 +862,7 @@ pub fn preview_payload_from_eval_with_session(eval_json: &str, fixture: &flow::F
 /// the DWG-import mesh bridge: `export_mesh_from_document` builds a default [`Procedural3dConfig`] to
 /// run the same preview pipeline the app's own render path uses, which is why this cluster is app
 /// behavior rather than artifact-schema-pure compute.
-pub fn merge_preview_meshes(meshes: &[semio_framework_plugin::MeshData]) -> semio_framework_plugin::MeshData {
+pub async fn merge_preview_meshes(meshes: &[semio_framework_plugin::MeshData]) -> semio_framework_plugin::MeshData {
     let mut merged = semio_framework_plugin::MeshData::default();
     for mesh in meshes {
         let vertex_offset = (merged.positions.len() / 3) as u32;
@@ -879,7 +879,7 @@ pub fn merge_preview_meshes(meshes: &[semio_framework_plugin::MeshData]) -> semi
     merged
 }
 
-pub fn export_mesh_from_document(projection: &Procedural3dSnapshot) -> semio_framework_plugin::MeshData {
+pub async fn export_mesh_from_document(projection: &Procedural3dSnapshot) -> semio_framework_plugin::MeshData {
     let config = Procedural3dConfig::default();
     let mut host = crate::artifacts::procedural3d::schema::host_from_fixture(&projection.fixture);
     let eval_json = host.evaluate().unwrap_or_default();
@@ -888,12 +888,12 @@ pub fn export_mesh_from_document(projection: &Procedural3dSnapshot) -> semio_fra
     merge_preview_meshes(&meshes)
 }
 
-pub fn procedural3d_mesh_from_document(doc: &Value) -> Result<semio_framework_plugin::MeshData, String> {
+pub async fn procedural3d_mesh_from_document(doc: &Value) -> Result<semio_framework_plugin::MeshData, String> {
     let projection: Procedural3dSnapshot = serde_json::from_value(doc.clone()).map_err(|err| err.to_string())?;
     Ok(export_mesh_from_document(&projection))
 }
 
-pub fn procedural3d_document_from_mesh(_mesh: &semio_framework_plugin::MeshData) -> Result<Value, String> {
+pub async fn procedural3d_document_from_mesh(_mesh: &semio_framework_plugin::MeshData) -> Result<Value, String> {
     serde_json::to_value(crate::artifacts::procedural3d::schema::default_snapshot()).map_err(|err| err.to_string())
 }
 
@@ -915,7 +915,7 @@ pub(crate) mod test_support {
 
     static TEST_SERIAL: Mutex<()> = Mutex::new(());
 
-    pub fn lock() -> MutexGuard<'static, ()> {
+    pub async fn lock() -> MutexGuard<'static, ()> {
         TEST_SERIAL.lock().unwrap_or_else(|poisoned| poisoned.into_inner())
     }
 }
@@ -938,29 +938,29 @@ pub(crate) mod testkit {
     /// `App { definition, examples }` shape `testkit::assert_declared_actions_bridge_to_commands` /
     /// `testkit::new_app_with_registry` still expect — framework testkit gap, not modifiable here
     /// (`🧰️framework/**` is outside this packet's lease).
-    pub fn procedural3d_app_manifest_for_testkit() -> semio_framework_plugin::App {
+    pub async fn procedural3d_app_manifest_for_testkit() -> semio_framework_plugin::App {
         semio_framework_plugin::App { definition: create_procedural3d_app(), examples: Vec::new() }
     }
 
-    pub fn app() -> Procedural3dApp {
+    pub async fn app() -> Procedural3dApp {
         new_app::<EditorApp<Procedural3dPlayApp>>()
     }
 
-    pub fn app_with_registry() -> Procedural3dApp {
+    pub async fn app_with_registry() -> Procedural3dApp {
         new_app_with_registry::<EditorApp<Procedural3dPlayApp>>(procedural3d_app_manifest_for_testkit)
     }
 
-    pub fn dispatch(app: &mut Procedural3dApp, command: Procedural3dCommand) -> InvocationResult {
+    pub async fn dispatch(app: &mut Procedural3dApp, command: Procedural3dCommand) -> InvocationResult {
         app.dispatch_typed(command, &meta("local")).expect("dispatch")
     }
 
-    pub fn render(app: &mut Procedural3dApp, body_key: &str) -> String {
+    pub async fn render(app: &mut Procedural3dApp, body_key: &str) -> String {
         serde_json::to_string(&app.render(body_key, None, &ViewModel::default()).expect("render")).expect("render json")
     }
 
     /// 🧵️ A `flowEvalTick` chain self-dispatches via `requestedEffects`, which only the JS renderer
     /// drains in production — a test has to do that draining itself.
-    pub fn drain_flow_eval_ticks(app: &mut Procedural3dApp) {
+    pub async fn drain_flow_eval_ticks(app: &mut Procedural3dApp) {
         app.pending_effects();
         for _ in 0..1000 {
             let result = app.dispatch_typed(Procedural3dCommand::FlowEvalTick(flow_eval_tick::FlowEvalTick {}), &meta("local")).expect("flowEvalTick");
@@ -982,7 +982,7 @@ mod tests {
 
     //#region 🔖️CommandSurface
     #[test]
-    fn command_ids_are_unique_and_cover_every_row() {
+    async fn command_ids_are_unique_and_cover_every_row() {
         let _serial = test_support::lock();
         let commands = every_command();
         let ids: Vec<&str> = commands.iter().map(|command| command.command_id()).collect();
@@ -994,7 +994,7 @@ mod tests {
     }
 
     #[test]
-    fn every_command_round_trips_through_text_and_binary() {
+    async fn every_command_round_trips_through_text_and_binary() {
         let _serial = test_support::lock();
         for command in every_command() {
             semio_framework_os_kernel::os_store::test_support::assert_op_text_binary_equivalence(&command);
@@ -1005,7 +1005,7 @@ mod tests {
     /// explicitly per row since procedural3d's wire keys frequently diverge from a mechanical
     /// kebab-case of the command id (e.g. `nodeGraphViewport` → `viewport`, `setLocale` → `locale`).
     #[test]
-    fn every_printed_op_line_starts_with_the_rows_wire_keyword() {
+    async fn every_printed_op_line_starts_with_the_rows_wire_keyword() {
         let _serial = test_support::lock();
         let expected_keywords = [
             "active-example",
@@ -1048,7 +1048,7 @@ mod tests {
     }
 
     /// 🧾️ One representative value per row, in declaration (= binary ordinal) order.
-    pub(super) fn every_command() -> Vec<Procedural3dCommand> {
+    pub(super) async fn every_command() -> Vec<Procedural3dCommand> {
         vec![
             Procedural3dCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: "hexagonal-mushroom-column".into() }),
             Procedural3dCommand::NodeGraphEdit(node_graph_edit::NodeGraphEdit { operations_json: "[]".into() }),
@@ -1085,13 +1085,13 @@ mod tests {
     //#endregion 🔖️CommandSurface
 
     #[test]
-    fn declared_actions_bridge_to_commands() {
+    async fn declared_actions_bridge_to_commands() {
         let _serial = test_support::lock();
         semio_framework_plugin::testkit::assert_declared_actions_bridge_to_commands::<semio_framework_plugin::EditorApp<Procedural3dPlayApp>>(testkit::procedural3d_app_manifest_for_testkit);
     }
 
     #[test]
-    fn the_manifest_stitches_every_taxonomy_node() {
+    async fn the_manifest_stitches_every_taxonomy_node() {
         let _serial = test_support::lock();
         let json = serde_json::to_string(&create_procedural3d_app()).expect("app definition json");
         for id in [flow_window::PROCEDURAL_3D_PLAY_WINDOW_MAIN, edit_preview::PROCEDURAL_3D_PLAY_WINDOW_PREVIEW, generations::PROCEDURAL_3D_PLAY_WINDOW_GENERATIONS, form::PROCEDURAL_3D_PLAY_WINDOW_GENERATE_FORM, generate_preview::PROCEDURAL_3D_PLAY_WINDOW_GENERATE_PREVIEW] {
@@ -1104,7 +1104,7 @@ mod tests {
     }
 
     #[test]
-    fn each_example_loads_distinct_fixture_and_preview_geometry() {
+    async fn each_example_loads_distinct_fixture_and_preview_geometry() {
         use crate::artifacts::procedural3d::schema::*;
         use crate::artifacts::procedural3d::widget_id;
         let _serial = test_support::lock();
@@ -1128,7 +1128,7 @@ mod tests {
     }
 
     #[test]
-    fn refresh_pending_effects_arms_flow_eval_tick_chain() {
+    async fn refresh_pending_effects_arms_flow_eval_tick_chain() {
         let _serial = test_support::lock();
         let mut app = app();
         app.dispatch_typed(Procedural3dCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: crate::artifacts::procedural3d::schema::PROCEDURAL_EXAMPLE_SPHERE_TORUS.into() }), &semio_framework_plugin::testkit::meta("local"))
@@ -1139,7 +1139,7 @@ mod tests {
     }
 
     #[test]
-    fn undo_redo_round_trips_flow_graph_edits() {
+    async fn undo_redo_round_trips_flow_graph_edits() {
         let _serial = test_support::lock();
         let mut app = app();
         let before = app.snapshot().expect("snapshot").fixture.widgets.len();
@@ -1147,7 +1147,7 @@ mod tests {
     }
 
     #[test]
-    fn two_instances_converge_disjoint_widget_moves() {
+    async fn two_instances_converge_disjoint_widget_moves() {
         let _serial = test_support::lock();
         let widgets: Vec<String> = app().snapshot().expect("snapshot").fixture.widgets.iter().map(|widget| crate::artifacts::procedural3d::widget_id(widget).to_string()).collect();
         assert!(widgets.len() >= 2, "default fixture needs two widgets for the test");
@@ -1164,7 +1164,7 @@ mod tests {
     }
 
     #[test]
-    fn procedural3d_labels_translate_catalogue_and_inspector_in_german() {
+    async fn procedural3d_labels_translate_catalogue_and_inspector_in_german() {
         let _serial = test_support::lock();
         let mut app = app();
         app.dispatch_typed(Procedural3dCommand::SetLocale(set_locale::SetLocale { value: "de-DE".into() }), &semio_framework_plugin::testkit::meta("local")).expect("set locale");
@@ -1179,7 +1179,7 @@ mod tests {
     /// `delete-selection` row (conditioned on a real selection) never appears; this test now only pins
     /// the disclosure budget.
     #[test]
-    fn context_menu_grouped_disclosure_stays_within_budget() {
+    async fn context_menu_grouped_disclosure_stays_within_budget() {
         let _serial = test_support::lock();
         let mut app = app_with_registry();
         let widgets: Vec<String> = app.snapshot().expect("snapshot").fixture.widgets.iter().map(|widget| crate::artifacts::procedural3d::widget_id(widget).to_string()).collect();
@@ -1191,7 +1191,7 @@ mod tests {
     }
 
     #[test]
-    fn sun_measures_are_exposed_on_preview_windows() {
+    async fn sun_measures_are_exposed_on_preview_windows() {
         let _serial = test_support::lock();
         let mut app = app();
         let measures = app.window_measures();
@@ -1207,11 +1207,11 @@ mod tests {
     use ui_wgpu::wgpu::kernel_3d_scene::{aabb_intersects_frustum, frustum_planes, transform_aabb, Camera3d, Instance3d, Mesh3d, Vec3};
     use std::sync::MutexGuard;
 
-    fn test_serial() -> MutexGuard<'static, ()> {
+    async fn test_serial() -> MutexGuard<'static, ()> {
         test_support::lock()
     }
 
-    fn preview_payload_from_evaluated_fixture(fixture: &flow::FlowFixture, cfg: &Procedural3dConfig) -> (String, String) {
+    async fn preview_payload_from_evaluated_fixture(fixture: &flow::FlowFixture, cfg: &Procedural3dConfig) -> (String, String) {
         let mut host = flow::FlowHost::from_fixture(fixture.clone());
         host.set_neuron_kind_infos_json(&flow::flow_neuron_kind_infos_json());
         let eval_json = host.evaluate().unwrap_or_default();
@@ -1219,7 +1219,7 @@ mod tests {
     }
 
     #[test]
-    fn preview_payload_has_meshes_and_instances() {
+    async fn preview_payload_has_meshes_and_instances() {
         let _serial = test_serial();
         let projection = crate::artifacts::procedural3d::schema::default_snapshot();
         let config = Procedural3dConfig::default();
@@ -1266,7 +1266,7 @@ mod tests {
     }
 
     #[test]
-    fn document_from_mesh_returns_valid_default_snapshot() {
+    async fn document_from_mesh_returns_valid_default_snapshot() {
         let _serial = test_serial();
         let mesh = semio_framework_plugin::MeshData::default();
         let document = procedural3d_document_from_mesh(&mesh).expect("dwg mesh import document");
@@ -1275,7 +1275,7 @@ mod tests {
     }
 
     #[test]
-    fn procedural3d_mesh_bridges_round_trip_through_obj_glb_stl_codecs() {
+    async fn procedural3d_mesh_bridges_round_trip_through_obj_glb_stl_codecs() {
         let _serial = test_serial();
         use semio_framework_plugin::{GlbExporter, GlbImporter, MeshExporter, MeshImporter, ObjExporter, ObjImporter, StlExporter, StlImporter};
         let document_json = serde_json::to_value(crate::artifacts::procedural3d::schema::default_snapshot()).expect("projection json");
@@ -1299,7 +1299,7 @@ mod tests {
     }
 
     #[test]
-    fn rectangle_wire_preview_emits_edge_only_mesh() {
+    async fn rectangle_wire_preview_emits_edge_only_mesh() {
         let _serial = test_serial();
         let projection = Procedural3dSnapshot::parse_dsl(crate::artifacts::procedural3d::dsl::PROCEDURAL3D_EXAMPLE_RECTANGLE_WIRE_TEXT).expect("rectangle wire example");
         let config = Procedural3dConfig::default();
@@ -1313,7 +1313,7 @@ mod tests {
     }
 
     #[test]
-    fn all_bundled_examples_emit_preview_meshes() {
+    async fn all_bundled_examples_emit_preview_meshes() {
         let _serial = test_serial();
         let config = Procedural3dConfig::default();
         let cases = [
@@ -1337,14 +1337,14 @@ mod tests {
     }
 
     #[test]
-    fn preview_tolerance_follows_lod_mode() {
+    async fn preview_tolerance_follows_lod_mode() {
         assert!((preview_tolerance("coarse") - 0.15).abs() < 1e-9);
         assert!((preview_tolerance("fine") - 0.02).abs() < 1e-9);
         assert!((preview_tolerance("") - 0.05).abs() < 1e-9);
     }
 
     #[test]
-    fn wireframe_show_mode_strips_shaded_triangles() {
+    async fn wireframe_show_mode_strips_shaded_triangles() {
         let _serial = test_serial();
         let projection = crate::artifacts::procedural3d::schema::default_snapshot();
         let config = Procedural3dConfig { show_mode: "wireframe".into(), ..Default::default() };
@@ -1357,7 +1357,7 @@ mod tests {
     }
 
     #[test]
-    fn procedural3d_io_declares_the_params_and_geometry_ports() {
+    async fn procedural3d_io_declares_the_params_and_geometry_ports() {
         let io = procedural3d_io();
         assert_eq!(io.document_schema, "procedural.3d");
         assert_eq!(io.artifact.id, "3d.procedural");

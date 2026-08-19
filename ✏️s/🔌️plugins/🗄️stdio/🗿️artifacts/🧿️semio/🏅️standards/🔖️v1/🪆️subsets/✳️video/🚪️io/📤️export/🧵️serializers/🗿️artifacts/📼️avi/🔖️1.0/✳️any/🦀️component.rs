@@ -99,7 +99,7 @@ mod tests {
     use crate::artifacts::semio::standards::v1::subsets::video::schema::snapshot::{SemioRational, SemioVideoSample, SemioVideoStream, STDIO_SEMIOVIDEO_DOCUMENT_SCHEMA};
     use semio_framework_plugin::ArtifactDeserializer;
 
-    fn real_world_video() -> SemioVideoSnapshot {
+    async fn real_world_video() -> SemioVideoSnapshot {
         SemioVideoSnapshot {
             schema: STDIO_SEMIOVIDEO_DOCUMENT_SCHEMA.into(),
             streams: vec![SemioVideoStream {
@@ -114,19 +114,19 @@ mod tests {
     }
 
     #[test]
-    fn video_to_avi_to_video_round_trips_everything_the_video_subset_can_represent() {
+    async fn video_to_avi_to_video_round_trips_everything_the_video_subset_can_represent() {
         let original = real_world_video();
         let avi = semio_framework_plugin::resolve_ready(SemioVideoToAvi::serialize(&original)).expect("serialize");
         assert_eq!(avi.streams.len(), 1);
         assert_eq!(avi.streams[0].strh.fcc_type, "vids");
         assert_eq!(avi.streams[0].strh.scale, 1);
         assert_eq!(avi.streams[0].strh.rate, 10);
-        let back = SemioVideoFromAvi::deserialize(&avi).expect("deserialize");
+        let back = semio_framework_plugin::resolve_ready(SemioVideoFromAvi::deserialize(&avi)).expect("deserialize");
         assert_eq!(back, original);
     }
 
     #[test]
-    fn subtitle_kind_folds_to_auds_fcc_type_honestly_documented() {
+    async fn subtitle_kind_folds_to_auds_fcc_type_honestly_documented() {
         let mut snap = real_world_video();
         snap.streams[0].kind = SemioVideoStreamKind::Subtitle;
         let avi = semio_framework_plugin::resolve_ready(SemioVideoToAvi::serialize(&snap)).expect("serialize");

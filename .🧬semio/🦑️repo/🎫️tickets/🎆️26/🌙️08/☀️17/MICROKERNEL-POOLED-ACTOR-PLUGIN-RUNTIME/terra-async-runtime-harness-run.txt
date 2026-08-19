@@ -1,0 +1,14 @@
+[host] A+B PASS: runner::run via named interface, grant-gated over 3 refills, summed = 66
+[host] C: burn-forever trapped as expected, epoch Yield hits before Interrupt = 24, message = error while executing at wasm backtrace:
+    0:   0x2a96 - semio_runtimeprobe_guest.wasm!semio_runtimeprobe_guest[84fe456478c70a9a]::_export_burn_forever_cabi::<semio_runtimeprobe_guest[84fe456478c70a9a]::Component>::{closure#0}
+    1:   0x586f - semio_runtimeprobe_guest.wasm!<wit_bindgen[b8c30d1ce014ef89]::rt::async_support::FutureState>::callback
+    2:   0x5f66 - semio_runtimeprobe_guest.wasm!wit_bindgen[b8c30d1ce014ef89]::rt::async_support::callback
+    3:   0x141f - semio_runtimeprobe_guest.wasm![async-lift]burn-forever: wasm trap: interrupt
+[host] C PASS: Yield(1) preempted 24 times within budget, Interrupt trapped cleanly once the deadline passed
+[host] D: hang_dropped after dropping the run_concurrent future alone = false, after ALSO dropping the Store = true
+[host] D PASS (see above for whether the future's own drop alone was sufficient, or the Store's drop was also required)
+[host] E PASS: JoinHandle::abort() on a task that OWNS its Store cancels an in-flight import — this is the shape AsyncActorTask::run must use, never a bare future borrowing an outer Store
+[host] F: checkpoint() returned 42 while runner::run was still parked (never given a single event)
+[host] F PASS: checkpoint-async's named-interface export answered via accessor.spawn while the root run() call was still in flight, then run() completed normally afterward
+[host] ==== ALL PASS (A/B/C/D/E/F) ====
+exit code: 0

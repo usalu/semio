@@ -20,17 +20,17 @@ pub mod camera {
     }
 
     impl Default for Camera {
-        fn default() -> Self {
+        async fn default() -> Self {
             Self { frame_center: Point::ZERO, frame_width: 14.0, frame_height: 8.0, background: Color::BLACK, transform: Affine::IDENTITY }
         }
     }
 
     impl Camera {
-        pub fn new(frame_width: f64, frame_height: f64) -> Self {
+        pub async fn new(frame_width: f64, frame_height: f64) -> Self {
             Self { frame_width, frame_height, ..Self::default() }
         }
 
-        pub fn pixel_coords_to_scene(&self, px: f64, py: f64, pixel_width: u32, pixel_height: u32) -> Point {
+        pub async fn pixel_coords_to_scene(&self, px: f64, py: f64, pixel_width: u32, pixel_height: u32) -> Point {
             let u = px / pixel_width as f64;
             let v = 1.0 - py / pixel_height as f64;
             let x = self.frame_center.x() + (u - 0.5) * self.frame_width;
@@ -38,7 +38,7 @@ pub mod camera {
             self.transform * Point::new(x, y)
         }
 
-        pub fn scene_to_pixel(&self, p: Point, pixel_width: u32, pixel_height: u32) -> (f64, f64) {
+        pub async fn scene_to_pixel(&self, p: Point, pixel_width: u32, pixel_height: u32) -> (f64, f64) {
             let p = self.transform * p;
             let u = (p.x() - self.frame_center.x()) / self.frame_width + 0.5;
             let v = (p.y() - self.frame_center.y()) / self.frame_height + 0.5;
@@ -55,13 +55,13 @@ pub mod camera {
     }
 
     impl MovingCamera {
-        pub fn new(camera: Camera) -> Self {
+        pub async fn new(camera: Camera) -> Self {
             let target_center = camera.frame_center;
             let target_width = camera.frame_width;
             Self { camera, target_center, target_width }
         }
 
-        pub fn interpolate(&mut self, alpha: f64) {
+        pub async fn interpolate(&mut self, alpha: f64) {
             let a = alpha.clamp(0.0, 1.0);
             let c0 = self.camera.frame_center;
             let c1 = self.target_center;
@@ -70,7 +70,7 @@ pub mod camera {
             self.camera.frame_height = self.camera.frame_width * self.camera.frame_height / self.camera.frame_width.max(1e-9);
         }
 
-        pub fn set_target(&mut self, center: Point, width: f64) {
+        pub async fn set_target(&mut self, center: Point, width: f64) {
             self.target_center = center;
             self.target_width = width;
         }
@@ -87,11 +87,11 @@ pub mod camera {
     }
 
     impl ThreeDCamera {
-        pub fn new(camera: Camera) -> Self {
+        pub async fn new(camera: Camera) -> Self {
             Self { camera, phi: 0.0, theta: -std::f64::consts::FRAC_PI_2, distance: 10.0, gamma: 0.0 }
         }
 
-        pub fn project(&self, x: f64, y: f64, z: f64) -> Point {
+        pub async fn project(&self, x: f64, y: f64, z: f64) -> Point {
             let cy = self.phi.cos();
             let sy = self.phi.sin();
             let ct = self.theta.cos();
@@ -115,11 +115,11 @@ pub mod camera {
     }
 
     impl ZoomedCamera {
-        pub fn new(camera: Camera, zoom_factor: f64) -> Self {
+        pub async fn new(camera: Camera, zoom_factor: f64) -> Self {
             Self { camera, zoom_factor, display_corner: Vec2::new(1.0, 1.0), display_size: (3.0, 2.0) }
         }
 
-        pub fn effective_frame_width(&self) -> f64 {
+        pub async fn effective_frame_width(&self) -> f64 {
             self.camera.frame_width / self.zoom_factor.max(1e-9)
         }
     }
@@ -129,7 +129,7 @@ pub mod camera {
         use super::*;
 
         #[test]
-        fn moving_camera_interpolates_center() {
+        async fn moving_camera_interpolates_center() {
             let mut cam = MovingCamera::new(Camera::default());
             cam.set_target(Point::new(2.0, 2.0), 8.0);
             cam.interpolate(0.5);
@@ -137,7 +137,7 @@ pub mod camera {
         }
 
         #[test]
-        fn three_d_camera_projects_finite_point() {
+        async fn three_d_camera_projects_finite_point() {
             let cam = ThreeDCamera::new(Camera::default());
             let p = cam.project(1.0, 1.0, 1.0);
             assert!(p.x().is_finite() && p.y().is_finite());
@@ -154,7 +154,7 @@ pub mod matrix {
     use crate::editor::animate::engine::text::text::{MathText, Text};
     use geometry::{Point, Vec2};
 
-    fn arrange_grid(group: &mut Group, rows: usize, cols: usize, cell_size: (f64, f64)) {
+    async fn arrange_grid(group: &mut Group, rows: usize, cols: usize, cell_size: (f64, f64)) {
         if group.children.is_empty() || rows == 0 || cols == 0 {
             return;
         }
@@ -176,7 +176,7 @@ pub mod matrix {
     }
 
     impl Matrix {
-        pub fn from_rows(rows: Vec<Vec<String>>, cell_size: (f64, f64), color: Color) -> Self {
+        pub async fn from_rows(rows: Vec<Vec<String>>, cell_size: (f64, f64), color: Color) -> Self {
             let nrows = rows.len();
             let ncols = rows.iter().map(|r| r.len()).max().unwrap_or(0);
             let mut children: Vec<Box<dyn Sobject>> = Vec::new();
@@ -191,7 +191,7 @@ pub mod matrix {
             Self { group, rows: nrows, cols: ncols }
         }
 
-        pub fn math(entries: &[&str], cell_size: (f64, f64), color: Color) -> Self {
+        pub async fn math(entries: &[&str], cell_size: (f64, f64), color: Color) -> Self {
             let children: Vec<Box<dyn Sobject>> = entries
                 .iter()
                 .map(|e| {
@@ -206,7 +206,7 @@ pub mod matrix {
             Self { group, rows, cols }
         }
 
-        pub fn with_brackets(mut self, color: Color, padding: f64) -> Self {
+        pub async fn with_brackets(mut self, color: Color, padding: f64) -> Self {
             let b = self.group.bounds();
             let w = b.width() + padding * 2.0;
             let h = b.height() + padding * 2.0;
@@ -225,7 +225,7 @@ pub mod matrix {
     }
 
     impl Table {
-        pub fn new(headers: Vec<String>, rows: &[Vec<String>], cell_size: (f64, f64), color: Color) -> Self {
+        pub async fn new(headers: Vec<String>, rows: &[Vec<String>], cell_size: (f64, f64), color: Color) -> Self {
             let ncols = headers.len().max(rows.iter().map(|r| r.len()).max().unwrap_or(0));
             let nrows = rows.len() + 1;
             let mut children: Vec<Box<dyn Sobject>> = Vec::new();
@@ -246,7 +246,7 @@ pub mod matrix {
             Self { group, rows: nrows, cols: ncols }
         }
 
-        pub fn with_frame(mut self, color: Color, padding: f64) -> Self {
+        pub async fn with_frame(mut self, color: Color, padding: f64) -> Self {
             let b = self.group.bounds();
             let frame = rectangle(b.width() + padding * 2.0, b.height() + padding * 2.0, b.center(), Color::TRANSPARENT, Some(color), 2.0);
             self.group.add_child(Box::new(frame));
@@ -261,11 +261,11 @@ pub mod matrix {
     }
 
     impl DecimalMatrix {
-        pub fn new(values: Vec<Vec<f64>>) -> Self {
+        pub async fn new(values: Vec<Vec<f64>>) -> Self {
             Self { values }
         }
 
-        pub fn lerp(&self, other: &Self, t: f64) -> Self {
+        pub async fn lerp(&self, other: &Self, t: f64) -> Self {
             let rows = self.values.len().min(other.values.len());
             let mut out = Vec::with_capacity(rows);
             for r in 0..rows {
@@ -281,7 +281,7 @@ pub mod matrix {
             Self { values: out }
         }
 
-        pub fn to_matrix_sobject(&self, cell_size: (f64, f64), color: Color) -> Matrix {
+        pub async fn to_matrix_sobject(&self, cell_size: (f64, f64), color: Color) -> Matrix {
             let rows: Vec<Vec<String>> = self.values.iter().map(|row| row.iter().map(|v| format!("{v:.2}")).collect()).collect();
             Matrix::from_rows(rows, cell_size, color)
         }
@@ -292,7 +292,7 @@ pub mod matrix {
         use super::*;
 
         #[test]
-        fn decimal_matrix_lerps() {
+        async fn decimal_matrix_lerps() {
             let a = DecimalMatrix::new(vec![vec![0.0, 1.0]]);
             let b = DecimalMatrix::new(vec![vec![2.0, 3.0]]);
             let m = a.lerp(&b, 0.5);
@@ -300,7 +300,7 @@ pub mod matrix {
         }
 
         #[test]
-        fn matrix_grid_layout() {
+        async fn matrix_grid_layout() {
             let m = Matrix::from_rows(vec![vec!["a".into(), "b".into()], vec!["c".into(), "d".into()]], (1.0, 1.0), Color::WHITE);
             assert_eq!(m.rows, 2);
             assert_eq!(m.cols, 2);
@@ -308,14 +308,14 @@ pub mod matrix {
         }
 
         #[test]
-        fn table_has_header_and_rows() {
+        async fn table_has_header_and_rows() {
             let t = Table::new(vec!["x".into()], &[vec!["1".into()]], (1.0, 1.0), Color::WHITE);
             assert_eq!(t.rows, 2);
             assert_eq!(t.cols, 1);
         }
 
         #[test]
-        fn table_with_frame_adds_border_child() {
+        async fn table_with_frame_adds_border_child() {
             let t = Table::new(vec!["a".into(), "b".into()], &[vec!["1".into()]], (1.0, 1.0), Color::WHITE);
             let before = t.group.children.len();
             let framed = t.with_frame(Color::WHITE, 0.2);
@@ -323,7 +323,7 @@ pub mod matrix {
         }
 
         #[test]
-        fn matrix_math_lays_out_entries() {
+        async fn matrix_math_lays_out_entries() {
             let m = Matrix::math(&["1", "2", "3", "4"], (1.0, 1.0), Color::WHITE);
             assert_eq!(m.group.children.len(), 4);
             assert_eq!(m.cols, 2);
@@ -331,7 +331,7 @@ pub mod matrix {
         }
 
         #[test]
-        fn matrix_with_brackets_adds_frame_child() {
+        async fn matrix_with_brackets_adds_frame_child() {
             let m = Matrix::from_rows(vec![vec!["a".into()]], (1.0, 1.0), Color::WHITE);
             let before = m.group.children.len();
             let bracketed = m.with_brackets(Color::WHITE, 0.1);
@@ -339,7 +339,7 @@ pub mod matrix {
         }
 
         #[test]
-        fn decimal_matrix_to_matrix_sobject_formats_values() {
+        async fn decimal_matrix_to_matrix_sobject_formats_values() {
             let d = DecimalMatrix::new(vec![vec![1.5, 2.25]]);
             let m = d.to_matrix_sobject((1.0, 1.0), Color::WHITE);
             assert_eq!(m.group.children.len(), 2);

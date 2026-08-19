@@ -32,11 +32,11 @@ pub mod derived_composition {
         type Snapshot = SemioVideoSnapshot;
         const WRITES: Dialect = DIALECT;
 
-        fn reads() -> &'static [Dialect] {
+        async fn reads() -> &'static [Dialect] {
             &[DIALECT]
         }
 
-        fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+        async fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
             let native: Vec<AnalyzeSource<'_>> = sources
                 .iter()
                 .filter(|s| s.dialect == DIALECT)
@@ -69,7 +69,7 @@ pub mod derived_composition {
     /// 🧮️ Runs this subset's real referential-invariant checks against an already-decoded snapshot —
     /// shared by the registered `SubsetValidator` (wire-payload recheck) and this file's own unit
     /// tests (which exercise it directly against hand-built snapshots).
-    pub fn check_semio_video_invariants(snapshot: &SemioVideoSnapshot) -> Vec<dsl::Diagnostic> {
+    pub async fn check_semio_video_invariants(snapshot: &SemioVideoSnapshot) -> Vec<dsl::Diagnostic> {
         let mut out = Vec::new();
         for (stream_index, stream) in snapshot.streams.iter().enumerate() {
             if stream.rate.den == 0 {
@@ -100,7 +100,7 @@ pub mod derived_composition {
 
     impl SubsetValidator for SemioVideoValidator {
         const DIALECT: Dialect = DIALECT;
-        fn validate(payload: &IoPayload) -> Vec<dsl::Diagnostic> {
+        async fn validate(payload: &IoPayload) -> Vec<dsl::Diagnostic> {
             let decoded = match payload {
                 IoPayload::Binary(bytes) => <SemioVideoSnapshot as store::ArtifactPack>::decode_pack(bytes).ok(),
                 IoPayload::Text(text) => <SemioVideoSnapshot as store::ArtifactDsl>::parse_dsl(text).ok(),
@@ -113,7 +113,7 @@ pub mod derived_composition {
     }
 
     static VALIDATOR_ENTRY: std::sync::OnceLock<SubsetValidatorEntry> = std::sync::OnceLock::new();
-    fn validator_entry() -> &'static SubsetValidatorEntry {
+    async fn validator_entry() -> &'static SubsetValidatorEntry {
         VALIDATOR_ENTRY.get_or_init(subset_validator_entry_of::<SemioVideoValidator>)
     }
     //#endregion 🔖️SubsetValidator
@@ -122,7 +122,7 @@ pub mod derived_composition {
     /// 📌️ Registers this subset's schema descriptor, document codec (`"s.stdio.semio.video"` — the
     /// repo-wide-unique id `policyDocumentCodecDuplicateIds` checks statically), and SubsetValidator.
     /// Called from this artifact's standard-level `engine::register()`.
-    pub fn register() {
+    pub async fn register() {
         ::schema::register_artifact_schema_descriptor(crate::artifacts::semio::standards::v1::subsets::video::schema::semio_video_artifact_schema_descriptor());
         let _ = store::register_document_codec(store::ArtifactCodec::of::<SemioVideoSnapshot, crate::artifacts::semio::standards::v1::subsets::video::schema::mutations::SemioVideoMutation>(
             crate::artifacts::semio::standards::v1::subsets::video::schema::snapshot::STDIO_SEMIOVIDEO_DOCUMENT_SCHEMA,
@@ -135,7 +135,7 @@ pub mod derived_composition {
     /// 💡️ Registers `s.stdio.semio.video.inference`'s facet leaves into the OS-wide inference
     /// catalog — sibling to `register_artifact_schema_descriptor` above (separate registry,
     /// ticket 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING).
-    pub fn register_artifact_inferences() {
+    pub async fn register_artifact_inferences() {
         ::schema::register_artifact_inference_descriptor(crate::artifacts::semio::standards::v1::subsets::video::schema::inferences::semio_video_artifact_inference_descriptor());
     }
 
@@ -144,7 +144,7 @@ pub mod derived_composition {
     /// architecture note. Leaked to `'static` once, matching every other stdio composer's
     /// `OnceLock<Vec<ComposerEntry>>` entries-table convention (e.g. mp4/isobmff's own subset
     /// composer).
-    fn bridge_entries() -> &'static [semio_framework_plugin::ComposerEntry] {
+    async fn bridge_entries() -> &'static [semio_framework_plugin::ComposerEntry] {
         static ENTRIES: std::sync::OnceLock<Vec<semio_framework_plugin::ComposerEntry>> = std::sync::OnceLock::new();
         ENTRIES.get_or_init(|| vec![deserializer_entry_of::<SemioVideoFromMp4>(), serializer_entry_of::<SemioVideoToMp4>(), deserializer_entry_of::<SemioVideoFromAvi>(), serializer_entry_of::<SemioVideoToAvi>()]).as_slice()
     }
@@ -156,7 +156,7 @@ pub mod derived_composition {
         use super::*;
         use crate::artifacts::semio::standards::v1::subsets::video::schema::snapshot::{SemioRational, SemioVideoSample, SemioVideoStream};
 
-        fn clean_snapshot() -> SemioVideoSnapshot {
+        async fn clean_snapshot() -> SemioVideoSnapshot {
             SemioVideoSnapshot {
                 schema: crate::artifacts::semio::standards::v1::subsets::video::schema::snapshot::STDIO_SEMIOVIDEO_DOCUMENT_SCHEMA.into(),
                 streams: vec![SemioVideoStream {
@@ -171,13 +171,13 @@ pub mod derived_composition {
         }
 
         #[test]
-        fn clean_snapshot_has_no_diagnostics() {
+        async fn clean_snapshot_has_no_diagnostics() {
             let diagnostics = check_semio_video_invariants(&clean_snapshot());
             assert!(diagnostics.is_empty(), "expected no diagnostics, got {diagnostics:?}");
         }
 
         #[test]
-        fn zero_denominator_rate_is_a_hard_error() {
+        async fn zero_denominator_rate_is_a_hard_error() {
             let mut snap = clean_snapshot();
             snap.streams[0].rate.den = 0;
             let diagnostics = check_semio_video_invariants(&snap);
@@ -185,7 +185,7 @@ pub mod derived_composition {
         }
 
         #[test]
-        fn zero_dimension_video_stream_is_a_hard_error() {
+        async fn zero_dimension_video_stream_is_a_hard_error() {
             let mut snap = clean_snapshot();
             snap.streams[0].width = 0;
             let diagnostics = check_semio_video_invariants(&snap);
@@ -193,7 +193,7 @@ pub mod derived_composition {
         }
 
         #[test]
-        fn zero_dimension_non_video_stream_is_not_flagged() {
+        async fn zero_dimension_non_video_stream_is_not_flagged() {
             let mut snap = clean_snapshot();
             snap.streams[0].kind = SemioVideoStreamKind::Audio;
             snap.streams[0].width = 0;
@@ -203,7 +203,7 @@ pub mod derived_composition {
         }
 
         #[test]
-        fn non_monotonic_pts_is_a_soft_warning_not_a_hard_error() {
+        async fn non_monotonic_pts_is_a_soft_warning_not_a_hard_error() {
             let mut snap = clean_snapshot();
             // sample 0 has pts=0; force sample 1's pts BELOW it (a genuine decrease, not just equal).
             snap.streams[0].samples[1].pts = 0;
@@ -216,7 +216,7 @@ pub mod derived_composition {
         }
 
         #[test]
-        fn subset_validator_recheck_agrees_with_direct_invariant_check() {
+        async fn subset_validator_recheck_agrees_with_direct_invariant_check() {
             let snap = clean_snapshot();
             let bytes = <SemioVideoSnapshot as store::ArtifactPack>::encode_pack(&snap);
             let diagnostics = SemioVideoValidator::validate(&IoPayload::Binary(bytes));
@@ -239,7 +239,7 @@ pub mod derived_composition {
             /// parse under the real dialect — independent of, and cheaper than, the two `recognize`/
             /// `walk_protocol` laws below.
             #[test]
-            fn committed_facet_files_parse() {
+            async fn committed_facet_files_parse() {
                 for (label, text) in [("snapshot grammar", snapshot::text::COMPONENT_GRAMMAR_SEMIO), ("mutations grammar", mutations::text::COMPONENT_GRAMMAR_SEMIO), ("diff grammar", diff::text::COMPONENT_GRAMMAR_SEMIO)] {
                     let grammar = dsl::parse_grammar(text).unwrap_or_else(|e| panic!("{label}: parse_grammar failed: {e:?}"));
                     assert_eq!(grammar.dialect, dsl::SemioDialect::Grammar, "{label}: expected grammar dialect");
@@ -255,7 +255,7 @@ pub mod derived_composition {
             /// `artifact-mark` token), so this is a direct proof this facet will pass that harness once
             /// graduated.
             #[test]
-            fn grammar_conformance_law() {
+            async fn grammar_conformance_law() {
                 let grammar = dsl::parse_grammar(snapshot::text::COMPONENT_GRAMMAR_SEMIO).expect("parse snapshot grammar");
                 let recognizer = dsl::Recognizer::compile(&grammar);
                 let text = store::ArtifactDsl::print_dsl(&snapshot::demo_video_snapshot());
@@ -267,7 +267,7 @@ pub mod derived_composition {
             /// ✅️ `ops_grammar_conformance_law`: the mutations grammar recognizes real `print_op` output
             /// for every `SemioVideoMutation` variant (`mutations::demo_mutation_cases()`).
             #[test]
-            fn ops_grammar_conformance_law() {
+            async fn ops_grammar_conformance_law() {
                 let grammar = dsl::parse_grammar(mutations::text::COMPONENT_GRAMMAR_SEMIO).expect("parse mutations grammar");
                 let recognizer = dsl::Recognizer::compile(&grammar);
                 for mutation in mutations::demo_mutation_cases() {
@@ -280,7 +280,7 @@ pub mod derived_composition {
             /// for every representative `SemioVideoDiff` (`diff::demo_diff_cases()`), incl. the empty
             /// (no-op) diff.
             #[test]
-            fn diff_grammar_conformance_law() {
+            async fn diff_grammar_conformance_law() {
                 let grammar = dsl::parse_grammar(diff::text::COMPONENT_GRAMMAR_SEMIO).expect("parse diff grammar");
                 let recognizer = dsl::Recognizer::compile(&grammar);
                 for d in diff::demo_diff_cases() {
@@ -293,7 +293,7 @@ pub mod derived_composition {
             /// snapshot pack (`encode_pack`, envelope-unwrapped first), every demo mutation's
             /// `encode_op`, and every demo diff's `encode_diff` — asserting `consumed == bytes.len()`.
             #[test]
-            fn protocol_walk_law() {
+            async fn protocol_walk_law() {
                 let pack_spec = dsl::parse_protocol(snapshot::binary::COMPONENT_PROTOCOL_SEMIO).expect("parse snapshot protocol");
                 let packed = store::ArtifactPack::encode_pack(&snapshot::demo_video_snapshot());
                 let (_, inner) = store::semio_format::unwrap_binary(&packed).expect("unwrap semio envelope");
@@ -320,7 +320,7 @@ pub mod derived_composition {
             /// `parse_dsl(fixture) == demo()`, `print_dsl(demo()) == fixture` (byte-for-byte), and the
             /// pack twin — so the fixtures can never silently drift back to a fake.
             #[test]
-            fn fixture_honesty_law() {
+            async fn fixture_honesty_law() {
                 const FIXTURE_DSL: &str = include_str!("../../✳️any/📚️examples/🎥️clip/🖼️assets/🗣️example.dsl.semio");
                 const FIXTURE_PACK: &[u8] = include_bytes!("../../✳️any/📚️examples/🎥️clip/🖼️assets/🎒️example.pack.semio");
 

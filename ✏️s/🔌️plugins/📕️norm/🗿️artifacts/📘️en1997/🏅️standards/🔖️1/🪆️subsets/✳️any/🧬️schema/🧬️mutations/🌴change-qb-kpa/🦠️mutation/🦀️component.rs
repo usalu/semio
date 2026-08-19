@@ -15,15 +15,15 @@ pub struct ChangeQBKpa {
 impl protocol::MutationKind<En1997Snapshot, En1997Mutation> for ChangeQBKpa {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "qb-kpa", kind: "change-qb-kpa", record: "ChangedQBKpa" };
 
-    fn diff(&self, base: &En1997Snapshot) -> protocol::MutationOutcome<En1997Diff> {
+    async fn diff(&self, base: &En1997Snapshot) -> protocol::MutationOutcome<En1997Diff> {
         crate::artifacts::en1997::mutations::change_q_b_kpa::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &En1997Snapshot) -> Vec<En1997Mutation> {
+    async fn inverse(&self, base: &En1997Snapshot) -> Vec<En1997Mutation> {
         crate::artifacts::en1997::mutations::change_q_b_kpa::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         format!("Change base resistance q_b [kPa] to {}", self.new_q_b_kpa)
     }
 }

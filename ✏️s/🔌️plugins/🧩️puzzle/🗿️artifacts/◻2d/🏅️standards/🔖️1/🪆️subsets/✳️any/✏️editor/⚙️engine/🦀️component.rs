@@ -38,7 +38,7 @@ pub use infinite_board_port_directed_normal::{self as graph, *};
 pub struct Puzzle2dExtension;
 
 impl CanvasExtension for Puzzle2dExtension {
-    fn extension_id(&self) -> &str {
+    async fn extension_id(&self) -> &str {
         "puzzle.2d"
     }
 }
@@ -53,7 +53,7 @@ mod tests {
     use crate::editor::puzzle2d::engine::canvas::Point;
 
     #[test]
-    fn computes_handle_positions_and_edge_curves() {
+    async fn computes_handle_positions_and_edge_curves() {
         let mut engine = BoardEngine::new();
         engine.create_node(1, 0.0, 0.0, 40.0, true);
         engine.create_node(2, 300.0, 0.0, 40.0, true);
@@ -82,7 +82,7 @@ mod tests {
     }
 
     #[test]
-    fn drags_nodes_without_rebuilding_the_scene_catalog() {
+    async fn drags_nodes_without_rebuilding_the_scene_catalog() {
         let mut engine = BoardEngine::new();
         engine.create_node(1, 0.0, 0.0, 30.0, true);
 
@@ -99,7 +99,7 @@ mod tests {
     }
 
     #[test]
-    fn hit_tests_handles_before_nodes_and_edges() {
+    async fn hit_tests_handles_before_nodes_and_edges() {
         let mut engine = BoardEngine::new();
         engine.create_node(1, 0.0, 0.0, 40.0, true);
         engine.create_node(2, 200.0, 0.0, 40.0, true);
@@ -115,7 +115,7 @@ mod tests {
     }
 
     #[test]
-    fn renders_snapshot_for_nodes_handles_and_edges() {
+    async fn renders_snapshot_for_nodes_handles_and_edges() {
         let mut engine = BoardEngine::new();
         engine.create_node(1, 10.0, 20.0, 18.0, true);
         engine.create_node(2, 120.0, 20.0, 18.0, true);
@@ -130,7 +130,7 @@ mod tests {
     }
 
     #[test]
-    fn engine_extend_pick_keeps_node_when_adding_handle() {
+    async fn engine_extend_pick_keeps_node_when_adding_handle() {
         let mut engine = BoardEngine::new();
         engine.create_node(1, 0.0, 0.0, 40.0, true);
         engine.create_node(2, 300.0, 0.0, 40.0, true);

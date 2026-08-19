@@ -4,7 +4,7 @@ use super::mutation::ChangeDeltaTauStudMpa;
 use crate::artifacts::en1994::{En1994Diff, En1994Snapshot};
 
 //#region 🔖️Diff
-pub fn diff(payload: &ChangeDeltaTauStudMpa, base: &En1994Snapshot) -> protocol::MutationOutcome<En1994Diff> {
+pub async fn diff(payload: &ChangeDeltaTauStudMpa, base: &En1994Snapshot) -> protocol::MutationOutcome<En1994Diff> {
     if !payload.new_delta_tau_stud_mpa.is_finite() {
         return protocol::MutationOutcome::fatal("mutation.invariant", "Delta tau stud mpa must be a finite number.", Vec::<String>::new());
     }

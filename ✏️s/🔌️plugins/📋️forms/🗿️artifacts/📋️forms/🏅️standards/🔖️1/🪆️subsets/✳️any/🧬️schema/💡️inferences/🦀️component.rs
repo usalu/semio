@@ -23,25 +23,25 @@ pub struct FormsInference {
 }
 
 impl Default for FormsInference {
-    fn default() -> Self {
+    async fn default() -> Self {
         <Self as protocol::Inference<FormsSnapshot>>::infer(&FormsSnapshot::default())
     }
 }
 
 impl protocol::Inference<FormsSnapshot> for FormsInference {
-    fn infer(snapshot: &FormsSnapshot) -> Self {
+    async fn infer(snapshot: &FormsSnapshot) -> Self {
         Self { topology: compute_forms_topology(&forms_steps(snapshot)) }
     }
 }
 
 impl protocol::InferenceSpec<FormsSnapshot> for FormsInference {
-    fn inference_schema_id() -> &'static str {
+    async fn inference_schema_id() -> &'static str {
         "s.forms.forms.inference"
     }
-    fn schema_version() -> u32 {
+    async fn schema_version() -> u32 {
         1
     }
-    fn fields() -> &'static [protocol::InferenceFieldSpec] {
+    async fn fields() -> &'static [protocol::InferenceFieldSpec] {
         &[protocol::InferenceFieldSpec { id: "s.forms.forms.inference.topology", reads: &["steps"] }]
     }
 }
@@ -64,7 +64,7 @@ impl ArtifactInferrer for FormsInferrer {
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.forms.forms.inference`'s facet leaves into the OS-wide inference catalog — call
 /// once at plugin init, alongside `forms_artifact_schema_descriptor`'s registration.
-pub fn forms_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
+pub async fn forms_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
     schema::ArtifactInferenceDescriptor {
         id: "s.forms.forms.inference",
         inference: schema::FacetLeaves {
@@ -89,7 +89,7 @@ mod tests {
     /// 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM) so it no longer deserializes raw step/block JSON
     /// directly — `flow::playbook::PlaybookSpec` is the SAME `{schema,id,version,title,steps}`
     /// camelCase shape, so this fixture deserializes through it instead.
-    fn step_with_conditional_block() -> FormsSnapshot {
+    async fn step_with_conditional_block() -> FormsSnapshot {
         let json = r#"{
             "schema": "forms.form",
             "id": "forms",
@@ -118,18 +118,18 @@ mod tests {
 
     //#region 🧪️InferenceLaws
     #[test]
-    fn inference_determinism_law() {
+    async fn inference_determinism_law() {
         let snapshot = step_with_conditional_block();
         assert_eq!(FormsInference::infer(&snapshot), FormsInference::infer(&snapshot));
     }
 
     #[test]
-    fn inference_default_law() {
+    async fn inference_default_law() {
         assert_eq!(FormsInference::infer(&FormsSnapshot::default()), FormsInference::default());
     }
 
     #[test]
-    fn topology_orders_the_conditioned_block_after_its_dependency() {
+    async fn topology_orders_the_conditioned_block_after_its_dependency() {
         let snapshot = step_with_conditional_block();
         let inferred = FormsInference::infer(&snapshot);
         let size_index = inferred.topology.topo_order.iter().position(|id| id == "team-size").unwrap();
@@ -139,7 +139,7 @@ mod tests {
     }
 
     #[test]
-    fn empty_steps_produce_empty_topology() {
+    async fn empty_steps_produce_empty_topology() {
         let snapshot = FormsSnapshot::default();
         let inferred = FormsInference::infer(&snapshot);
         assert!(inferred.topology.topo_order.is_empty());

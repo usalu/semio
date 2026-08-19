@@ -76,18 +76,18 @@ pub enum SemioVideoMutation {
 /// ▶️ Applies `mutation` to `snapshot`: `let d = mutation.diff(&*snapshot); *snapshot =
 /// d.apply(snapshot); d` -- the diff is the single semantics source, never a separate imperative
 /// apply path (apply-and-capture is banned).
-pub fn apply_semio_video_mutation(snapshot: &mut SemioVideoSnapshot, mutation: &SemioVideoMutation) -> protocol::MutationOutcome<SemioVideoDiff> {
+pub async fn apply_semio_video_mutation(snapshot: &mut SemioVideoSnapshot, mutation: &SemioVideoMutation) -> protocol::MutationOutcome<SemioVideoDiff> {
     let outcome = Mutation::diff(mutation, snapshot);
     outcome.apply_to(snapshot)
 }
 //#endregion 🔖️Apply
 
 //#region 🔖️Helpers
-fn stream_at<'a>(base: &'a SemioVideoSnapshot, index: usize) -> Option<&'a SemioVideoStream> {
+async fn stream_at<'a>(base: &'a SemioVideoSnapshot, index: usize) -> Option<&'a SemioVideoStream> {
     base.streams.get(index)
 }
 
-fn sample_at<'a>(base: &'a SemioVideoSnapshot, stream_index: usize, index: usize) -> Option<&'a SemioVideoSample> {
+async fn sample_at<'a>(base: &'a SemioVideoSnapshot, stream_index: usize, index: usize) -> Option<&'a SemioVideoSample> {
     base.streams.get(stream_index)?.samples.get(index)
 }
 //#endregion 🔖️Helpers
@@ -96,7 +96,7 @@ fn sample_at<'a>(base: &'a SemioVideoSnapshot, stream_index: usize, index: usize
 impl Mutation<SemioVideoSnapshot> for SemioVideoMutation {
     type Diff = SemioVideoDiff;
 
-    fn diff(&self, base: &SemioVideoSnapshot) -> protocol::MutationOutcome<Self::Diff> {
+    async fn diff(&self, base: &SemioVideoSnapshot) -> protocol::MutationOutcome<Self::Diff> {
         protocol::MutationOutcome::new(match self {
             SemioVideoMutation::NoMutation => SemioVideoDiff::default(),
             SemioVideoMutation::SetSnapshot { snapshot } => diff_set_snapshot(base, snapshot),
@@ -119,7 +119,7 @@ impl Mutation<SemioVideoSnapshot> for SemioVideoMutation {
         })
     }
 
-    fn inverse(&self, base: &SemioVideoSnapshot) -> Vec<Self> {
+    async fn inverse(&self, base: &SemioVideoSnapshot) -> Vec<Self> {
         match self {
             SemioVideoMutation::NoMutation => vec![SemioVideoMutation::NoMutation],
             SemioVideoMutation::SetSnapshot { .. } => vec![SemioVideoMutation::SetSnapshot { snapshot: base.clone() }],
@@ -155,17 +155,17 @@ impl Mutation<SemioVideoSnapshot> for SemioVideoMutation {
 /// `pub(crate)` grammar primitives (`hex_encode`/`enc_stream`/`enc_sample`/`split_top_level`/...)
 /// rather than duplicating them a second time in this file. Grammar: `keyword arg=value ...`
 /// (space-separated), same shape docx's own hand-rolled op codec uses.
-fn enc_semio_video_snapshot(s: &SemioVideoSnapshot) -> String {
+async fn enc_semio_video_snapshot(s: &SemioVideoSnapshot) -> String {
     format!("[{},{}]", enc_str(&s.schema), enc_list(&s.streams, enc_stream))
 }
-fn dec_semio_video_snapshot(s: &str) -> Result<SemioVideoSnapshot, String> {
+async fn dec_semio_video_snapshot(s: &str) -> Result<SemioVideoSnapshot, String> {
     let inner = strip_brackets(s)?;
     let parts = split_top_level(inner, ',');
     let [schema, streams] = parts.as_slice() else { return Err(format!("snapshot: expected 2 fields, got {}", parts.len())) };
     Ok(SemioVideoSnapshot { schema: dec_str(schema)?, streams: dec_list(streams, dec_stream)? })
 }
 
-fn print_semio_video_mutation(m: &SemioVideoMutation) -> String {
+async fn print_semio_video_mutation(m: &SemioVideoMutation) -> String {
     match m {
         SemioVideoMutation::NoMutation => "no-mutation".to_string(),
         SemioVideoMutation::SetSnapshot { snapshot } => format!("set-snapshot snapshot={}", enc_semio_video_snapshot(snapshot)),
@@ -178,7 +178,7 @@ fn print_semio_video_mutation(m: &SemioVideoMutation) -> String {
         SemioVideoMutation::SetSampleFlags { stream_index, index, pts, key } => format!("set-sample-flags stream-index={} index={} pts={} key={}", stream_index, index, pts, enc_bool(key)),
     }
 }
-fn parse_semio_video_mutation(line: &str) -> Result<SemioVideoMutation, String> {
+async fn parse_semio_video_mutation(line: &str) -> Result<SemioVideoMutation, String> {
     if line == "no-mutation" {
         return Ok(SemioVideoMutation::NoMutation);
     }
@@ -208,10 +208,10 @@ fn parse_semio_video_mutation(line: &str) -> Result<SemioVideoMutation, String> 
 }
 
 impl OpText for SemioVideoMutation {
-    fn print_op(&self) -> String {
+    async fn print_op(&self) -> String {
         print_semio_video_mutation(self)
     }
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
+    async fn parse_op(line: &str) -> Result<Self, store::TextError> {
         parse_semio_video_mutation(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
 }
@@ -219,7 +219,7 @@ impl OpText for SemioVideoMutation {
 /// 🏷️ Ordinal table, same declaration order as `SemioVideoMutation`'s own enum variants and
 /// `parse_semio_video_mutation`'s keyword match — the real binary `tag` field's source of truth.
 const OP_KEYWORDS: [&str; 9] = ["no-mutation", "set-snapshot", "insert-stream", "remove-stream", "set-stream-meta", "insert-sample", "remove-sample", "set-sample-data", "set-sample-flags"];
-fn variant_ordinal(m: &SemioVideoMutation) -> u8 {
+async fn variant_ordinal(m: &SemioVideoMutation) -> u8 {
     match m {
         SemioVideoMutation::NoMutation => 0,
         SemioVideoMutation::SetSnapshot { .. } => 1,
@@ -235,7 +235,7 @@ fn variant_ordinal(m: &SemioVideoMutation) -> u8 {
 /// ✂️ Just the `key=value ...` argument tail of `print_semio_video_mutation` (empty for
 /// `no-mutation`) — the binary frame's `tag` byte already carries the keyword, so the text keyword
 /// itself is redundant in the binary payload.
-fn print_semio_video_mutation_args(m: &SemioVideoMutation) -> String {
+async fn print_semio_video_mutation_args(m: &SemioVideoMutation) -> String {
     match print_semio_video_mutation(m).split_once(' ') {
         Some((_, rest)) => rest.to_string(),
         None => String::new(),
@@ -249,13 +249,13 @@ fn print_semio_video_mutation_args(m: &SemioVideoMutation) -> String {
 /// trailing `bytes` chain — reusing the already-real, already-tested `print_semio_video_mutation`/
 /// `parse_semio_video_mutation` text codec rather than re-deriving a second independent encoding.
 impl OpBinary for SemioVideoMutation {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         const OP_BINARY_FORMAT: u8 = 1;
         let mut out = vec![OP_BINARY_FORMAT, variant_ordinal(self)];
         out.extend_from_slice(print_semio_video_mutation_args(self).as_bytes());
         Ok(out)
     }
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         const OP_BINARY_FORMAT: u8 = 1;
         if bytes.len() < 2 {
             return Err(protocol::ProtocolError::Malformed { what: "op header", offset: 0, detail: "truncated (need format+tag)".to_string() });
@@ -278,7 +278,7 @@ impl OpBinary for SemioVideoMutation {
 /// (byte-identical) rather than keep an independent copy, same dedupe flow's/mesh's own waves
 /// perform.
 #[cfg(test)]
-pub(crate) fn demo_mutation_cases() -> Vec<SemioVideoMutation> {
+pub(crate) async fn demo_mutation_cases() -> Vec<SemioVideoMutation> {
     tests::sample_mutations()
 }
 //#endregion 🔖️Demo
@@ -290,7 +290,7 @@ mod tests {
     use protocol::command::DiffAlgebra;
     use protocol::MutationDiff;
 
-    fn fixture() -> SemioVideoSnapshot {
+    async fn fixture() -> SemioVideoSnapshot {
         SemioVideoSnapshot {
             schema: crate::artifacts::semio::standards::v1::subsets::video::schema::snapshot::STDIO_SEMIOVIDEO_DOCUMENT_SCHEMA.into(),
             streams: vec![
@@ -314,7 +314,7 @@ mod tests {
     /// first stream whose OWN nested `samples` shows removed+modified too) and added in the
     /// reverse direction (the dropped stream, plus that same modified stream's nested `samples`
     /// added) — same "known structural trap" technique docx's own sweep fixtures use.
-    fn sweep_a() -> SemioVideoSnapshot {
+    async fn sweep_a() -> SemioVideoSnapshot {
         SemioVideoSnapshot {
             schema: crate::artifacts::semio::standards::v1::subsets::video::schema::snapshot::STDIO_SEMIOVIDEO_DOCUMENT_SCHEMA.into(),
             streams: vec![
@@ -332,7 +332,7 @@ mod tests {
         }
     }
 
-    fn sweep_b() -> SemioVideoSnapshot {
+    async fn sweep_b() -> SemioVideoSnapshot {
         SemioVideoSnapshot {
             schema: crate::artifacts::semio::standards::v1::subsets::video::schema::snapshot::STDIO_SEMIOVIDEO_DOCUMENT_SCHEMA.into(),
             streams: vec![
@@ -351,7 +351,7 @@ mod tests {
     //#endregion 🔖️Fixtures
 
     //#region 🔖️MutationDiffLaw
-    pub(crate) fn sample_mutations() -> Vec<SemioVideoMutation> {
+    pub(crate) async fn sample_mutations() -> Vec<SemioVideoMutation> {
         vec![
             SemioVideoMutation::NoMutation,
             SemioVideoMutation::SetSnapshot { snapshot: sweep_b() },
@@ -365,12 +365,12 @@ mod tests {
         ]
     }
 
-    fn apply_valid(diff: &SemioVideoDiff, base: &SemioVideoSnapshot) -> SemioVideoSnapshot {
+    async fn apply_valid(diff: &SemioVideoDiff, base: &SemioVideoSnapshot) -> SemioVideoSnapshot {
         MutationDiff::apply(diff, base).expect("valid Semio video diff fixture")
     }
 
     #[test]
-    fn mutation_diff_law() {
+    async fn mutation_diff_law() {
         for mutation in sample_mutations() {
             let base = fixture();
             let diff_direct = Mutation::diff(&mutation, &base);
@@ -387,7 +387,7 @@ mod tests {
 
     //#region 🔖️InverseLaw
     #[test]
-    fn inverse_law() {
+    async fn inverse_law() {
         for mutation in sample_mutations() {
             let base = fixture();
 
@@ -408,7 +408,7 @@ mod tests {
     //#endregion 🔖️InverseLaw
 
     //#region 🔖️AbsorbLaw
-    fn assert_absorb_matches_sequential(base: &SemioVideoSnapshot, d1: &SemioVideoDiff, d2: &SemioVideoDiff) -> SemioVideoDiff {
+    async fn assert_absorb_matches_sequential(base: &SemioVideoSnapshot, d1: &SemioVideoDiff, d2: &SemioVideoDiff) -> SemioVideoDiff {
         let sequential = apply_valid(d2, &apply_valid(d1, base));
         let mut absorbed = d1.clone();
         MutationDiff::absorb(&mut absorbed, d2.clone());
@@ -416,12 +416,12 @@ mod tests {
         absorbed
     }
 
-    fn streams_diff(diff: &SemioVideoDiff) -> &crate::artifacts::semio::standards::v1::subsets::video::schema::diff::SemioVideoStreamsDiff {
+    async fn streams_diff(diff: &SemioVideoDiff) -> &crate::artifacts::semio::standards::v1::subsets::video::schema::diff::SemioVideoStreamsDiff {
         diff.streams.as_ref().expect("streams diff present")
     }
 
     #[test]
-    fn absorb_law() {
+    async fn absorb_law() {
         // Canonical: Insert(2)+Remove(0) -> {removed:[0], added:[(1,f)]}.
         {
             let base = fixture();
@@ -508,7 +508,7 @@ mod tests {
 
     //#region 🔖️BetweenRoundtripLaw
     #[test]
-    fn between_roundtrip_law() {
+    async fn between_roundtrip_law() {
         let a = sweep_a();
         let b = sweep_b();
         assert_eq!(apply_valid(&<SemioVideoDiff as DiffAlgebra<SemioVideoSnapshot>>::between(&a, &b), &a), b);
@@ -529,7 +529,7 @@ mod tests {
 
     //#region 🔖️CodecRetentionLaw
     #[test]
-    fn codec_retention_law() {
+    async fn codec_retention_law() {
         let snap = fixture();
         let bytes = store::ArtifactPack::encode_pack(&snap);
         let decoded = <SemioVideoSnapshot as store::ArtifactPack>::decode_pack(&bytes).expect("decode");
@@ -542,7 +542,7 @@ mod tests {
     /// nesting levels (see the fixtures' own doc comment for exactly how removed/modified/added
     /// is exercised at each level, and why the two directions of `between()` are both asserted).
     #[test]
-    fn field_sweep() {
+    async fn field_sweep() {
         let a = sweep_a();
         let b = sweep_b();
 
@@ -586,7 +586,7 @@ mod tests {
     /// nested samples), `SetSnapshot`'s whole `SemioVideoSnapshot`, and the `SemioVideoStreamKind`
     /// enum tag.
     #[test]
-    fn op_text_binary_roundtrip_law() {
+    async fn op_text_binary_roundtrip_law() {
         let stream = SemioVideoStream { kind: SemioVideoStreamKind::Subtitle, codec: "srt".into(), width: 0, height: 0, rate: SemioRational { num: 1, den: 1 }, samples: vec![SemioVideoSample { pts: 5, key: true, data: vec![1, 2] }] };
         let mutations = vec![
             SemioVideoMutation::NoMutation,

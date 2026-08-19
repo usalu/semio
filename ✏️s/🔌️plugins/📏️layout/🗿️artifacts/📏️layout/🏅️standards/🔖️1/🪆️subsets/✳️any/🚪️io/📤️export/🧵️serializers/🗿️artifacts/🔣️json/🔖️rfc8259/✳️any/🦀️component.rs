@@ -9,11 +9,11 @@ use crate::artifacts::layout::LayoutSnapshot;
 use semio_s_plugin_stdio::artifacts::json::schema::snapshot::{JsonMember, JsonSnapshot, JsonValue};
 use semio_s_plugin_stdio::artifacts::json::STDIO_JSON_DOCUMENT_SCHEMA;
 
-pub fn register() {}
+pub async fn register() {}
 
 /// 🔁️ Structural `serde_json::Value -> JsonValue` conversion (stdio's own `JsonValue` has no
 /// built-in bridge to `serde_json::Value` — see this file's module doc comment).
-fn serde_to_json_value(value: &serde_json::Value) -> JsonValue {
+async fn serde_to_json_value(value: &serde_json::Value) -> JsonValue {
     match value {
         serde_json::Value::Null => JsonValue::Null,
         serde_json::Value::Bool(value) => JsonValue::Bool { value: *value },
@@ -24,12 +24,12 @@ fn serde_to_json_value(value: &serde_json::Value) -> JsonValue {
     }
 }
 
-pub fn serialize(from: &LayoutSnapshot) -> Result<JsonSnapshot, store::PackError> {
+pub async fn serialize(from: &LayoutSnapshot) -> Result<JsonSnapshot, store::PackError> {
     let _ = STDIO_JSON_DOCUMENT_SCHEMA;
     let value = serde_json::to_value(from).map_err(|e| store::PackError::Schema(e.to_string()))?;
     Ok(JsonSnapshot::from_value(value))
 }
 
-pub fn serialize_text(from: &LayoutSnapshot) -> Result<String, store::PackError> {
+pub async fn serialize_text(from: &LayoutSnapshot) -> Result<String, store::PackError> {
     Ok(<LayoutSnapshot as store::ArtifactDsl>::print_dsl(from))
 }

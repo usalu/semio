@@ -25,34 +25,34 @@ pub mod derived_construction {
         type Mutation = XmlMutation;
         type Diff = XmlDiff;
 
-        fn empty() -> Self {
+        async fn empty() -> Self {
             Self(XmlAnyBuilder::empty())
         }
 
-        fn from_snapshot(snapshot: Self::Snapshot) -> Self {
+        async fn from_snapshot(snapshot: Self::Snapshot) -> Self {
             Self(XmlAnyBuilder::from_snapshot(snapshot))
         }
 
-        fn from_text(text: &str) -> Result<Self, store::TextError> {
+        async fn from_text(text: &str) -> Result<Self, store::TextError> {
             Ok(Self(XmlAnyBuilder::from_text(text)?))
         }
 
-        fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
+        async fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
             Ok(Self(XmlAnyBuilder::from_binary(bytes)?))
         }
 
-        fn mutate(self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
+        async fn mutate(self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let (inner, diff) = self.0.mutate(mutation);
             (Self(inner), diff)
         }
 
-        fn absorb(self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
+        async fn absorb(self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
             Ok(Self(self.0.absorb(diff)?))
         }
 
         /// 🛡️ The real construction gate: however `self.0`'s inner snapshot got here, a hard XML 1.0
         /// §5.1 validity violation fails `build()` -- soft/advisory diagnostics pass through as `Ok`.
-        fn build(self) -> Result<Self::Snapshot, Vec<Diagnostic>> {
+        async fn build(self) -> Result<Self::Snapshot, Vec<Diagnostic>> {
             let snapshot = self.0.build()?;
             let hard: Vec<Diagnostic> = check_valid_conformance(&snapshot).into_iter().filter(|d| matches!(d.severity, Severity::Error | Severity::Fatal)).collect();
             if hard.is_empty() {
@@ -69,19 +69,19 @@ pub mod derived_construction {
         use super::*;
 
         #[test]
-        fn conforming_snapshot_builds_clean() {
+        async fn conforming_snapshot_builds_clean() {
             let snapshot = XmlValidBuilderConstruction::from_text("<!DOCTYPE root>\n<root/>").expect("parses").build().expect("conforming construction must build");
             assert_eq!(snapshot.doc.doctype.as_ref().map(|doctype| doctype.name.as_str()), Some("root"));
         }
 
         #[test]
-        fn missing_doctype_fails_build() {
+        async fn missing_doctype_fails_build() {
             let err = XmlValidBuilderConstruction::from_text("<root/>").expect("parses").build().expect_err("a document without a doctype must fail build()");
             assert!(err.iter().any(|d| d.code.0 == "stdio.xml.valid.doctype-missing"));
         }
 
         #[test]
-        fn root_name_mismatch_injected_via_raw_mutate_still_fails_build() {
+        async fn root_name_mismatch_injected_via_raw_mutate_still_fails_build() {
             let built = XmlValidBuilderConstruction::from_text("<!DOCTYPE root>\n<root/>").expect("parses").build().expect("clean build");
             let mut mismatched = built;
             mismatched.doc.doctype = Some("<!DOCTYPE somethingElse>".into());
@@ -112,18 +112,18 @@ pub mod derived_analysis {
     pub const CODE_VALIDITY_NOT_VERIFIED: &str = "stdio.xml.valid.validity-not-fully-verified";
 
     /// 🌳️ The actual root element's tag name, if a root element is present at all.
-    fn root_element_name(snapshot: &XmlSnapshot) -> Option<&str> {
+    async fn root_element_name(snapshot: &XmlSnapshot) -> Option<&str> {
         match &snapshot.doc.root {
             Some(XmlNode::Element { name, .. }) => Some(name.as_str()),
             _ => None,
         }
     }
 
-    fn hard(code: &'static str, message: String) -> Diagnostic {
+    async fn hard(code: &'static str, message: String) -> Diagnostic {
         Diagnostic { code: FaultCode::new(code), severity: Severity::Error, span: TextSpan::at(1, 1), message, expected: None, scope: FaultScope::default() }
     }
 
-    fn soft(code: &'static str, message: String) -> Diagnostic {
+    async fn soft(code: &'static str, message: String) -> Diagnostic {
         Diagnostic { code: FaultCode::new(code), severity: Severity::Warning, span: TextSpan::at(1, 1), message, expected: None, scope: FaultScope::default() }
     }
 
@@ -132,7 +132,7 @@ pub mod derived_analysis {
     /// hard-gates on this (pre-serialization, authoritative), `XmlValidBuilder::build` hard-gates on
     /// this too, and the registered `SubsetValidator` re-runs it post-hoc against the wire payload for
     /// the D5 validate-on-build hook.
-    pub fn check_valid_conformance(snapshot: &XmlSnapshot) -> Vec<Diagnostic> {
+    pub async fn check_valid_conformance(snapshot: &XmlSnapshot) -> Vec<Diagnostic> {
         let mut out = Vec::new();
         match &snapshot.doc.doctype {
             None => {
@@ -168,11 +168,11 @@ pub mod derived_analysis {
         type Parts = XmlParts;
         const DIALECT: Dialect = DIALECT;
 
-        fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
+        async fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
             XmlAnyAnalyzer::sniff(source)
         }
 
-        fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
+        async fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
             let inner = XmlAnyAnalyzer::analyze(sources);
             let mut diagnostics = inner.diagnostics.clone();
             let mut confidence = inner.confidence;
@@ -193,7 +193,7 @@ pub mod derived_analysis {
         use super::*;
         use crate::artifacts::xml::standards::v1_0::subsets::any::schema::snapshot::{XmlDeclaration, XmlDocument};
 
-        fn snapshot_with(doctype: Option<&str>, standalone: Option<bool>, root_name: &str) -> XmlSnapshot {
+        async fn snapshot_with(doctype: Option<&str>, standalone: Option<bool>, root_name: &str) -> XmlSnapshot {
             XmlSnapshot {
                 doc: XmlDocument {
                     declaration: Some(XmlDeclaration { version: "1.0".into(), encoding: None, standalone }),
@@ -206,7 +206,7 @@ pub mod derived_analysis {
         }
 
         #[test]
-        fn conforming_doctype_reports_only_the_always_on_advisory() {
+        async fn conforming_doctype_reports_only_the_always_on_advisory() {
             let snapshot = snapshot_with(Some("<!DOCTYPE html>"), None, "html");
             let diagnostics = check_valid_conformance(&snapshot);
             assert_eq!(diagnostics.len(), 1, "got {diagnostics:?}");
@@ -215,35 +215,35 @@ pub mod derived_analysis {
         }
 
         #[test]
-        fn missing_doctype_is_hard() {
+        async fn missing_doctype_is_hard() {
             let snapshot = snapshot_with(None, None, "html");
             let diagnostics = check_valid_conformance(&snapshot);
             assert!(diagnostics.iter().any(|d| d.code.0 == CODE_DOCTYPE_MISSING && d.severity == Severity::Error), "got {diagnostics:?}");
         }
 
         #[test]
-        fn root_name_mismatch_is_hard() {
+        async fn root_name_mismatch_is_hard() {
             let snapshot = snapshot_with(Some("<!DOCTYPE book>"), None, "html");
             let diagnostics = check_valid_conformance(&snapshot);
             assert!(diagnostics.iter().any(|d| d.code.0 == CODE_ROOT_NAME_MISMATCH && d.severity == Severity::Error), "got {diagnostics:?}");
         }
 
         #[test]
-        fn standalone_yes_with_external_subset_is_soft() {
+        async fn standalone_yes_with_external_subset_is_soft() {
             let snapshot = snapshot_with(Some("<!DOCTYPE html SYSTEM \"http://example.com/html.dtd\">"), Some(true), "html");
             let diagnostics = check_valid_conformance(&snapshot);
             assert!(diagnostics.iter().any(|d| d.code.0 == CODE_STANDALONE_EXTERNAL_SUBSET && d.severity == Severity::Warning), "got {diagnostics:?}");
         }
 
         #[test]
-        fn standalone_yes_without_external_subset_is_clean() {
+        async fn standalone_yes_without_external_subset_is_clean() {
             let snapshot = snapshot_with(Some("<!DOCTYPE html>"), Some(true), "html");
             let diagnostics = check_valid_conformance(&snapshot);
             assert!(diagnostics.iter().all(|d| d.code.0 != CODE_STANDALONE_EXTERNAL_SUBSET), "got {diagnostics:?}");
         }
 
         #[test]
-        fn public_external_subset_reference_is_detected() {
+        async fn public_external_subset_reference_is_detected() {
             let snapshot = snapshot_with(Some("<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd\">"), Some(true), "html");
             let diagnostics = check_valid_conformance(&snapshot);
             assert!(diagnostics.iter().any(|d| d.code.0 == CODE_STANDALONE_EXTERNAL_SUBSET), "got {diagnostics:?}");

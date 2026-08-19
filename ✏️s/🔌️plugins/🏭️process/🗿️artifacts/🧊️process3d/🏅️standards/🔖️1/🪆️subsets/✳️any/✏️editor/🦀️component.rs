@@ -59,7 +59,7 @@ pub struct Process3dDispatchCtx {
 /// 🕹️ The `"geometry"` domain declaration: object granularity (stock/step/machine ids, the domain
 /// default) plus face granularity (u32 mesh face ids, stringified at the `InteractionTarget`
 /// boundary). Flat hierarchy — no cross-object parent/child structure.
-fn process3d_interaction_definition() -> InteractionDefinition {
+async fn process3d_interaction_definition() -> InteractionDefinition {
     InteractionDefinition {
         id: PROCESS3D_INTERACTION_DOMAIN.into(),
         label: LocalizedLabel::native("Geometry", "Geometrie"),
@@ -82,13 +82,13 @@ pub use workshop_panel::PROCESS_3D_PLAY_BODY_WORKSHOP;
 
 /// 🎯️ An `ActionDescriptor` addressed at this app — the single factory every taxonomy node's chrome
 /// (`🎚️options/*`, `📌️panels/*`, `🎮️commands/*`) builds its `on_change`/item actions with.
-pub fn process3d_action(action: &str, args: Option<Value>) -> ActionDescriptor {
+pub async fn process3d_action(action: &str, args: Option<Value>) -> ActionDescriptor {
     semio_framework_plugin::ActionFactory::new(PROCESS_3D_PLAY_CONTROLLER_ID).action(action, args)
 }
 
 /// 📇️ A non-palette action declaration (dispatched by UI wiring/keybindings, never surfaced in the
 /// command palette) with the given execution kind.
-fn internal_action(id: &str, label: impl Into<LocalizedLabel>, kind: ActionKind) -> ActionDefinition {
+async fn internal_action(id: &str, label: impl Into<LocalizedLabel>, kind: ActionKind) -> ActionDefinition {
     ActionDefinition { in_palette: false, ..ActionDefinition::new_catalog(id, label, kind) }
 }
 
@@ -96,13 +96,13 @@ fn internal_action(id: &str, label: impl Into<LocalizedLabel>, kind: ActionKind)
 /// utility is also mirrored into `Process3dConfig::active_utility_id` (via `SetActiveUtility`) for
 /// rendering, but the window chrome itself is still driven by this host effect. Shared by
 /// `🎮️commands/🎛️engagement` and `🎮️commands/🌍️world`.
-pub fn set_active_utility_effect(utility: &str) -> Effect {
+pub async fn set_active_utility_effect(utility: &str) -> Effect {
     Effect::SetActiveUtility { window_id: workpiece::PROCESS_3D_PLAY_WINDOW_MAIN.into(), utility_id: utility.into() }
 }
 
 /// 🎨️ `tree_item_with_action` (SDK) carries no icon slot, so this app-wide wrapper layers `icon_id` on
 /// top via struct-update syntax — shared by the `🛍️catalogue` and `🛠️workshop` panels.
-pub fn iconed_tree_item_with_action(id: impl Into<String>, label: impl Into<Label>, icon_id: &str, action: ActionDescriptor) -> UiTreeItemNode {
+pub async fn iconed_tree_item_with_action(id: impl Into<String>, label: impl Into<Label>, icon_id: &str, action: ActionDescriptor) -> UiTreeItemNode {
     UiTreeItemNode { icon_id: Some(icon_id.into()), menu: None, ..semio_framework_plugin::tree_item_with_action(id, label, None, action) }
 }
 
@@ -111,7 +111,7 @@ pub fn iconed_tree_item_with_action(id: impl Into<String>, label: impl Into<Labe
 /// command (`🎮️commands/📄️artifact`, `🎮️commands/🪵️stock`, `🎮️commands/📤️media`, `import_media`'s
 /// `geometry:in`) uses instead of the banned whole-snapshot mutation. The spr is a fresh, edit-free
 /// op-log — a genesis envelope with no history to encode.
-pub fn reset_process3d_document_effect(document: &Process3dSnapshot) -> Effect {
+pub async fn reset_process3d_document_effect(document: &Process3dSnapshot) -> Effect {
     let pack = <Process3dSnapshot as ArtifactPack>::encode_pack(document);
     let envelope = store::create_document_envelope::<Process3dSnapshot, Process3dMutation>(crate::artifacts::process3d::PROCESS_3D_SCHEMA, "process3d", document.clone(), None);
     let spr = store::print_document_spr(&envelope).expect("process3d document spr encode is infallible for a fresh, edit-free envelope");
@@ -119,7 +119,7 @@ pub fn reset_process3d_document_effect(document: &Process3dSnapshot) -> Effect {
 }
 
 /// 🚨 Typed host-action decoding fault with one stable app-specific code.
-fn process3d_action_fault(action: &str, detail: impl Into<String>) -> Fault {
+async fn process3d_action_fault(action: &str, detail: impl Into<String>) -> Fault {
     Fault::new(FaultOrigin::App, FaultCode::new("process3d.action.invalid"), format!("action '{action}': {}", detail.into()))
 }
 
@@ -211,15 +211,15 @@ impl ArtifactEditor for Process3dPlayApp {
 
     const DOCUMENT_SCHEMA: &'static str = crate::artifacts::process3d::PROCESS_3D_SCHEMA;
 
-    fn app_schema() -> Option<::schema::AppSchemaDescriptor> {
+    async fn app_schema() -> Option<::schema::AppSchemaDescriptor> {
         Some(crate::editor::process3d::config::schema::app_schema_descriptor())
     }
 
-    fn initial_snapshot() -> Process3dSnapshot {
+    async fn initial_snapshot() -> Process3dSnapshot {
         crate::artifacts::process3d::schema::default_document()
     }
 
-    fn io() -> Option<semio_framework_plugin::AppIo> {
+    async fn io() -> Option<semio_framework_plugin::AppIo> {
         Some(process3d_io())
     }
 
@@ -260,7 +260,7 @@ impl ArtifactEditor for Process3dPlayApp {
     /// `document:in` default (which would decode a base64 pack via `whole_document_operation`) is
     /// unreachable now that `whole_document_operation` is `None`, so `document:in` is simply
     /// unimplemented here — overriding `import_media` shadows the trait's provided body for every port.
-    fn import_media(port: &str, media: &semio_framework_plugin::Media, _doc: &ArtifactView<'_, Process3dSnapshot>) -> Result<Emit<Process3dMutation, Process3dConfigMutation, Self::DraftMutation>, MediaError> {
+    async fn import_media(port: &str, media: &semio_framework_plugin::Media, _doc: &ArtifactView<'_, Process3dSnapshot>) -> Result<Emit<Process3dMutation, Process3dConfigMutation, Self::DraftMutation>, MediaError> {
         match port {
             "geometry:in" => {
                 let MediaPayload::Structured { schema, json } = &media.payload else {
@@ -286,13 +286,13 @@ impl ArtifactEditor for Process3dPlayApp {
 
     /// 🏷️ The manifest action id each command was declared under — supplied wholesale by
     /// `app_commands!`'s generated `command_id()`.
-    fn command_id(command: &Process3dCommand) -> &'static str {
+    async fn command_id(command: &Process3dCommand) -> &'static str {
         command.command_id()
     }
 
     /// 🎯️ Exhaustive host-action bridge into the closed `Process3dCommand` enum. React and wgpu still
     /// emit manifest action ids plus JSON arguments; only this boundary interprets that transport shape.
-    fn command_from_action(action: &str, args: Option<&Value>) -> Result<Self::Command, Fault> {
+    async fn command_from_action(action: &str, args: Option<&Value>) -> Result<Self::Command, Fault> {
         let field = |key: &str| args.and_then(|value| value.get(key));
         let string_field = |key: &str| field(key).and_then(Value::as_str).map(str::to_string);
         let number_field = |key: &str| field(key).and_then(Value::as_f64);
@@ -388,7 +388,7 @@ impl ArtifactEditor for Process3dPlayApp {
     /// `"geometry"` domain selection once per dispatch and threads it through `Process3dDispatchCtx`
     /// — the one retained verb that operates ON the selection (`remove_selected_step`) reads it from
     /// there; every other command ignores it (mirrors `📐️cad`'s own `handle`).
-    fn handle(
+    async fn handle(
         command: &Process3dCommand,
         doc: &ArtifactView<'_, Process3dSnapshot>,
         cfg: &ConfigView<'_, Process3dConfig>,
@@ -403,11 +403,11 @@ impl ArtifactEditor for Process3dPlayApp {
 
     /// 🧮️ process3d exposes no genuinely settings-like sticky defaults — every `Process3dConfig` field
     /// is session-only view state, so this stays at the trait default.
-    fn config_spec() -> semio_framework_plugin::ConfigSpec {
+    async fn config_spec() -> semio_framework_plugin::ConfigSpec {
         semio_framework_plugin::ConfigSpec::empty()
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, Process3dSnapshot>, cfg: &ConfigView<'_, Process3dConfig>) -> UiNode {
+    async fn render(body_key: &str, doc: &ArtifactView<'_, Process3dSnapshot>, cfg: &ConfigView<'_, Process3dConfig>) -> UiNode {
         sync_process_machine_contributions(&cfg.snapshot.contributions_json);
         let config = cfg.snapshot;
         let labels = process3d_labels(config);
@@ -422,11 +422,11 @@ impl ArtifactEditor for Process3dPlayApp {
         }
     }
 
-    fn window_engagements(doc: &ArtifactView<'_, Process3dSnapshot>, cfg: &ConfigView<'_, Process3dConfig>) -> HashMap<String, semio_framework_plugin::WindowEngagement> {
+    async fn window_engagements(doc: &ArtifactView<'_, Process3dSnapshot>, cfg: &ConfigView<'_, Process3dConfig>) -> HashMap<String, semio_framework_plugin::WindowEngagement> {
         HashMap::from([(workpiece::PROCESS_3D_PLAY_WINDOW_MAIN.into(), workpiece::engagement(doc.snapshot, cfg.snapshot, process3d_labels(cfg.snapshot)))])
     }
 
-    fn window_measures(_doc: &ArtifactView<'_, Process3dSnapshot>, cfg: &ConfigView<'_, Process3dConfig>) -> HashMap<String, Vec<WindowMeasure>> {
+    async fn window_measures(_doc: &ArtifactView<'_, Process3dSnapshot>, cfg: &ConfigView<'_, Process3dConfig>) -> HashMap<String, Vec<WindowMeasure>> {
         HashMap::from([(workpiece::PROCESS_3D_PLAY_WINDOW_MAIN.into(), workpiece::window_measures(cfg.snapshot))])
     }
 
@@ -435,7 +435,7 @@ impl ArtifactEditor for Process3dPlayApp {
     /// longer tell whether anything is selected (mirrors `📐️cad`'s own precedent) — always shows
     /// `removeSelectedStep`; it is itself a no-op via `remove_selected_step::handle` when nothing in
     /// the `"geometry"` domain is selected.
-    fn context_menu(_request: &ContextMenuRequest, _doc: &ArtifactView<'_, Process3dSnapshot>, _cfg: &ConfigView<'_, Process3dConfig>, registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
+    async fn context_menu(_request: &ContextMenuRequest, _doc: &ArtifactView<'_, Process3dSnapshot>, _cfg: &ConfigView<'_, Process3dConfig>, registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
         Menu::of(registry).action("addStep").destructive("removeSelectedStep").separator().action("undo").action("redo").build()
     }
 }
@@ -446,7 +446,7 @@ impl ArtifactEditor for Process3dPlayApp {
 /// Only the leaf action/keybinding declarations (which have no dedicated `_def` passthrough) are written
 /// out inline. `WindowKindDefinition.options.measures` stays empty: measures are config-derived per
 /// frame by `ArtifactEditor::window_measures`, never frozen into the manifest.
-pub fn create_process3d_app() -> AppDefinition {
+pub async fn create_process3d_app() -> AppDefinition {
     Editor::builder(crate::artifacts::process3d::PROCESS3D_DIALECT)
             .command(CommandDefinition { in_palette: false, ..CommandDefinition::new_catalog("setContributions", LocalizedLabel::native("Set Contributions", "Beiträge festlegen"), "host", ActionKind::View).with_args([ActionArgDef::text("json", LocalizedLabel::native("Contributions", "Beiträge"))]) })
             .document(["semio", "process", "3d"])
@@ -579,7 +579,7 @@ pub fn create_process3d_app() -> AppDefinition {
 /// fields copied verbatim), plus the two workflow ports: `geometry:in` (Many, unrequired — accepts
 /// upstream geometry producers, e.g. cad/lowpoly) and `brep:out` (Many, unrequired, `kind_id:
 /// "3d.process"` — reusing the artifact kind already declared, never a second `.artifact_kind(...)` call).
-pub fn process3d_io() -> semio_framework_plugin::AppIo {
+pub async fn process3d_io() -> semio_framework_plugin::AppIo {
     semio_framework_plugin::AppIo {
         document_schema: crate::artifacts::process3d::PROCESS_3D_SCHEMA.into(),
         document_media_type: MediaType { class: MediaClass::ThreeD, form: MediaForm::Brep },
@@ -615,7 +615,7 @@ pub fn process3d_io() -> semio_framework_plugin::AppIo {
 /// primitive's local Z axis (its `height` dimension) ends up flush with a picked face's normal. Pure
 /// math with no snapshot/io coupling — only `🎮️commands/🌍️world`'s face-drag placement calls it, so
 /// it lives here rather than `🧬️schema/💡️inferences`.
-pub fn axis_angle_from_up_to(normal: [f64; 3]) -> ([f64; 3], f64) {
+pub async fn axis_angle_from_up_to(normal: [f64; 3]) -> ([f64; 3], f64) {
     const UP: [f64; 3] = [0.0, 0.0, 1.0];
     let dot = (UP[0] * normal[0] + UP[1] * normal[1] + UP[2] * normal[2]).clamp(-1.0, 1.0);
     if dot > 1.0 - 1e-9 {
@@ -630,7 +630,7 @@ pub fn axis_angle_from_up_to(normal: [f64; 3]) -> ([f64; 3], f64) {
     (axis, dot.acos())
 }
 
-fn leak_str(value: String) -> &'static str {
+async fn leak_str(value: String) -> &'static str {
     Box::leak(value.into_boxed_str())
 }
 
@@ -644,19 +644,19 @@ struct ContributedMachineCatalog {
 }
 
 impl crate::artifacts::process3d::MachineCatalog for ContributedMachineCatalog {
-    fn catalog_id(&self) -> &'static str {
+    async fn catalog_id(&self) -> &'static str {
         self.catalog_id
     }
 
-    fn label(&self) -> &'static str {
+    async fn label(&self) -> &'static str {
         self.label
     }
 
-    fn icon_id(&self) -> &'static str {
+    async fn icon_id(&self) -> &'static str {
         self.icon_id
     }
 
-    fn machines(&self) -> Vec<crate::artifacts::process3d::WorkshopMachine> {
+    async fn machines(&self) -> Vec<crate::artifacts::process3d::WorkshopMachine> {
         self.machines.clone()
     }
 }
@@ -680,7 +680,7 @@ struct ProcessMachinesTopicPayload {
 }
 //#endregion 🔖️ProcessMachinesTopicPayload
 
-pub fn sync_process_machine_contributions(contributions_json: &str) {
+pub async fn sync_process_machine_contributions(contributions_json: &str) {
     let mut last = LAST_PROCESS_CONTRIBUTIONS_JSON.lock().expect("process contributions lock");
     if *last == contributions_json {
         return;
@@ -701,7 +701,7 @@ pub fn sync_process_machine_contributions(contributions_json: &str) {
     *last = contributions_json.to_string();
 }
 
-fn builtin_installed_catalogs() -> Vec<Box<dyn crate::artifacts::process3d::MachineCatalog>> {
+async fn builtin_installed_catalogs() -> Vec<Box<dyn crate::artifacts::process3d::MachineCatalog>> {
     vec![
         Box::new(crate::artifacts::process3d::schema::GenericCatalog),
         crate::artifacts::process3d::schema::wood_catalog(),
@@ -715,7 +715,7 @@ fn builtin_installed_catalogs() -> Vec<Box<dyn crate::artifacts::process3d::Mach
 /// catalog first (so it renders as the default-open section), then every `process.machines` contribution
 /// merged via `sync_process_machine_contributions` from runtime-installable extensions under
 /// `🏭️process/🧩️extensions/`.
-pub fn installed_catalogs() -> Vec<Box<dyn crate::artifacts::process3d::MachineCatalog>> {
+pub async fn installed_catalogs() -> Vec<Box<dyn crate::artifacts::process3d::MachineCatalog>> {
     let mut catalogs = builtin_installed_catalogs();
     let contributed = CONTRIBUTED_MACHINE_CATALOGS.lock().expect("process contributed catalogs lock");
     catalogs.extend(contributed.iter().map(|catalog| Box::new(catalog.clone()) as Box<dyn crate::artifacts::process3d::MachineCatalog>));
@@ -724,7 +724,7 @@ pub fn installed_catalogs() -> Vec<Box<dyn crate::artifacts::process3d::MachineC
 
 /// 🔎️ One machine, by catalog + machine id, with `catalog_id` stamped onto the snapshot — the
 /// "install into workshop" lookup for the workshop configurator's add-machine action.
-pub fn catalog_machine(catalog_id: &str, machine_id: &str) -> Option<crate::artifacts::process3d::WorkshopMachine> {
+pub async fn catalog_machine(catalog_id: &str, machine_id: &str) -> Option<crate::artifacts::process3d::WorkshopMachine> {
     let catalog = installed_catalogs().into_iter().find(|catalog| catalog.catalog_id() == catalog_id)?;
     let mut machine = catalog.machines().into_iter().find(|machine| machine.id == machine_id)?;
     machine.catalog_id = Some(catalog_id.to_string());
@@ -751,17 +751,17 @@ pub(crate) mod testkit {
     /// examples }` shape `testkit::assert_declared_actions_bridge_to_commands`/`new_app_with_registry`
     /// still expect — framework testkit gap, not modifiable here (`🧰️framework/**` is outside this
     /// packet's lease).
-    pub fn process3d_app_manifest_for_testkit() -> semio_framework_plugin::App {
+    pub async fn process3d_app_manifest_for_testkit() -> semio_framework_plugin::App {
         semio_framework_plugin::App { definition: create_process3d_app(), examples: Vec::new() }
     }
 
     /// 🧪️ A bare app instance — no `AppActionRegistry`, so undeclared internal commands dispatch freely.
 
     /// 🧪 Seeds wood/metal contribution catalogs so panel tests can install machines without the host.
-    fn seed_domain_catalog_contributions(app: &mut Process3dApp) {
+    async fn seed_domain_catalog_contributions(app: &mut Process3dApp) {
         use crate::artifacts::process3d::{Capability, CapabilityParameter, CapabilityRule, MeasureRecipe, StockQuantity, WorkshopMachine};
         use semio_framework::{ProgramContributionEntry, TopicContribution};
-        fn param(id: &str, label: &str, value: f64) -> CapabilityParameter {
+        async fn param(id: &str, label: &str, value: f64) -> CapabilityParameter {
             CapabilityParameter { id: id.into(), label: label.into(), value }
         }
         let wood_machines = vec![
@@ -841,32 +841,32 @@ pub(crate) mod testkit {
         let _ = app;
     }
 
-    pub fn app() -> Process3dApp {
+    pub async fn app() -> Process3dApp {
         let mut app = new_app::<EditorApp<Process3dPlayApp>>();
         seed_domain_catalog_contributions(&mut app);
         app
     }
 
     /// 🧪️ An app wired to the real manifest registry — enforces View/Shell kind discipline.
-    pub fn app_with_registry() -> Process3dApp {
+    pub async fn app_with_registry() -> Process3dApp {
         let mut app = new_app_with_registry::<EditorApp<Process3dPlayApp>>(process3d_app_manifest_for_testkit);
         seed_domain_catalog_contributions(&mut app);
         app
     }
 
-    pub fn dispatch(app: &mut Process3dApp, command: Process3dCommand) -> InvocationResult {
+    pub async fn dispatch(app: &mut Process3dApp, command: Process3dCommand) -> InvocationResult {
         app.dispatch_typed(command, &meta("local")).expect("dispatch")
     }
 
-    pub fn action(app: &mut Process3dApp, action: &str, args: Option<&Value>) -> InvocationResult {
+    pub async fn action(app: &mut Process3dApp, action: &str, args: Option<&Value>) -> InvocationResult {
         app.handle_action(action, args, &meta("local")).expect("action dispatch")
     }
 
-    pub fn render(app: &mut Process3dApp, body_key: &str) -> String {
+    pub async fn render(app: &mut Process3dApp, body_key: &str) -> String {
         serde_json::to_string(&app.render(body_key, None, &ViewModel::default()).expect("render")).expect("render json")
     }
 
-    pub fn main_window_measures(app: &mut Process3dApp) -> Vec<WindowMeasure> {
+    pub async fn main_window_measures(app: &mut Process3dApp) -> Vec<WindowMeasure> {
         app.window_measures().get(workpiece::PROCESS_3D_PLAY_WINDOW_MAIN).cloned().expect("main window measures")
     }
 }
@@ -883,7 +883,7 @@ mod tests {
     /// 🏷️ Every declared manifest action id must be reachable as exactly one command row, and every row's
     /// wire keyword must be distinct.
     #[test]
-    fn command_ids_are_unique_and_match_the_declared_manifest_actions() {
+    async fn command_ids_are_unique_and_match_the_declared_manifest_actions() {
         let commands = every_command();
         let ids: Vec<&str> = commands.iter().map(|command| command.command_id()).collect();
         let mut sorted = ids.clone();
@@ -895,7 +895,7 @@ mod tests {
 
     /// ⚖️ LAW: text and binary are two projections of the same command, for every single row.
     #[test]
-    fn every_command_round_trips_through_text_and_binary() {
+    async fn every_command_round_trips_through_text_and_binary() {
         for command in every_command() {
             store::os_store::test_support::assert_op_text_binary_equivalence(&command);
         }
@@ -906,7 +906,7 @@ mod tests {
     /// genuinely diverge for about a third of process3d's rows, unlike flow's single `setLocale`
     /// exception, so this pins the full table rather than deriving it from a kebab-case guess).
     #[test]
-    fn every_printed_op_line_starts_with_the_rows_wire_keyword() {
+    async fn every_printed_op_line_starts_with_the_rows_wire_keyword() {
         let expected_wire_key = |id: &str| -> &'static str {
             match id {
                 "setSnapshot" => "document",
@@ -953,7 +953,7 @@ mod tests {
     }
 
     /// 🧾️ One representative value per row, in declaration (= binary ordinal) order.
-    pub(super) fn every_command() -> Vec<Process3dCommand> {
+    pub(super) async fn every_command() -> Vec<Process3dCommand> {
         vec![
             Process3dCommand::SetDocument(set_snapshot::SetDocument { json: serde_json::to_string(&crate::artifacts::process3d::empty_process3d_snapshot()).expect("json") }),
             Process3dCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: PROCESS3D_EXAMPLE_PLATE.into() }),
@@ -1005,7 +1005,7 @@ mod tests {
     /// 🌉️ Every Process action emitted by React or wgpu must enter the same closed typed command
     /// vocabulary as native typed callers; undeclared strings fail at this single boundary.
     #[test]
-    fn command_from_action_covers_every_declared_action_and_rejects_unknown_ones() {
+    async fn command_from_action_covers_every_declared_action_and_rejects_unknown_ones() {
         testkit::assert_declared_actions_bridge_to_commands::<EditorApp<Process3dPlayApp>>(process3d_app_manifest_for_testkit);
         assert!(Process3dPlayApp::command_from_action("nonsense", None).is_err());
     }
@@ -1017,7 +1017,7 @@ mod tests {
     /// `hovered_id` — hover/selection now decode through the framework's auto-injected
     /// `interactionHover`/`interactionSelect` verbs instead of this app's own command vocabulary.
     #[test]
-    fn interaction_actions_decode_into_typed_commands() {
+    async fn interaction_actions_decode_into_typed_commands() {
         assert_eq!(
             Process3dPlayApp::command_from_action("setActiveExample", Some(&serde_json::json!({ "exampleId": PROCESS3D_EXAMPLE_PLATE }))).expect("example bridge"),
             Process3dCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: PROCESS3D_EXAMPLE_PLATE.into() })
@@ -1027,7 +1027,7 @@ mod tests {
     /// 📄️ Example switching exercises the complete registry-backed action path and emits the
     /// architecture's sanctioned whole-document load effect for the requested fixture.
     #[test]
-    fn registry_backed_example_action_emits_the_requested_document() {
+    async fn registry_backed_example_action_emits_the_requested_document() {
         let mut app = app_with_registry();
         let result = action(&mut app, "setActiveExample", Some(&serde_json::json!({ "exampleId": PROCESS3D_EXAMPLE_PLATE })));
         let Effect::LoadDocument { pack, .. } = result.requested_effects.first().expect("example action must load a document") else {
@@ -1043,7 +1043,7 @@ mod tests {
     /// world3d selection JSON carries no live selection ids anymore (see
     /// `🎭️modes/✏️edit/🪟️windows/🪚️workpiece`'s `process3d_selection_json` doc comment).
     #[test]
-    fn world3d_render_carries_no_stale_selection_json_fields() {
+    async fn world3d_render_carries_no_stale_selection_json_fields() {
         let mut app = app();
         let rendered = render_body(&mut app, PROCESS_3D_PLAY_BODY_MAIN);
         assert!(!rendered.contains("componentIds"), "componentIds is no longer emitted by the render boundary: {rendered}");
@@ -1052,7 +1052,7 @@ mod tests {
     /// 🖱️ A world right-click has an app-owned menu to request; the host no longer falls through to
     /// an empty default.
     #[test]
-    fn world_context_menu_exposes_process_commands() {
+    async fn world_context_menu_exposes_process_commands() {
         let mut app = app_with_registry();
         let request = ContextMenuRequest {
             menu: UiMenuRef { id: "window".into(), args: None },
@@ -1069,7 +1069,7 @@ mod tests {
 
     //#region 🔖️ManifestSanity
     #[test]
-    fn the_manifest_stitches_every_taxonomy_node() {
+    async fn the_manifest_stitches_every_taxonomy_node() {
         let json = serde_json::to_string(&create_process3d_app().definition).expect("app definition json");
         assert!(json.contains(workpiece::PROCESS_3D_PLAY_WINDOW_MAIN), "window kind missing from the manifest");
         assert!(json.contains(edit::PROCESS3D_MODE_EDIT), "mode missing from the manifest");
@@ -1080,7 +1080,7 @@ mod tests {
     }
 
     #[test]
-    fn utility_registry_declares_four_flat_utilities_scoped_to_workpiece_window() {
+    async fn utility_registry_declares_four_flat_utilities_scoped_to_workpiece_window() {
         let definition = create_process3d_app().definition;
         let utility_ids: Vec<&str> = definition.utilities.iter().map(|utility| utility.id.as_str()).collect();
         assert_eq!(utility_ids, ["select", "cut", "drill", "attach"], "utilities declared in registry order");
@@ -1096,7 +1096,7 @@ mod tests {
     /// `import_stdio_kinds` string-id peer and are never read by `register_app_io`, so they stay empty
     /// here in step with `artifact_kind()`'s own now-empty lists (see that fn's doc).
     #[test]
-    fn process3d_io_mirrors_the_declared_artifact_kind() {
+    async fn process3d_io_mirrors_the_declared_artifact_kind() {
         let io = process3d_io();
         assert_eq!(io.document_schema, crate::artifacts::process3d::PROCESS_3D_SCHEMA);
         assert_eq!(io.artifact.id, "3d.process");
@@ -1107,7 +1107,7 @@ mod tests {
     /// 🔌️ WORKFLOWS-END-TO-END-TYPED-PORTS-REAL-SCHEMA-FLOW-CONFIG-ON-NODE Wave 2 port recipe:
     /// `geometry:in` and `brep:out` are declared with the right direction/kind/multiplicity.
     #[test]
-    fn process3d_io_declares_geometry_in_and_brep_out_ports() {
+    async fn process3d_io_declares_geometry_in_and_brep_out_ports() {
         let io = process3d_io();
         let geometry_in = io.ports.iter().find(|port| port.id == "geometry:in").expect("geometry:in declared");
         assert_eq!(geometry_in.direction, semio_framework_plugin::MediaPortDirection::In);
@@ -1127,7 +1127,7 @@ mod tests {
 
     //#region 🔖️CrossCutting
     #[test]
-    fn labels_resolve_native_by_default_and_in_german() {
+    async fn labels_resolve_native_by_default_and_in_german() {
         let mut config = Process3dConfig::default();
         assert_eq!(process3d_labels(&config).stock.as_str(), "Stock");
         config.locale = "de".into();
@@ -1140,7 +1140,7 @@ mod tests {
     /// never changes; `undo`/`redo` of a no-op are themselves no-ops, so the handle stays identical
     /// throughout.
     #[test]
-    fn undo_after_add_step_leaves_the_steps_handle_unchanged() {
+    async fn undo_after_add_step_leaves_the_steps_handle_unchanged() {
         let mut app = app();
         let before = app.snapshot().expect("snapshot").steps.clone();
         testkit::assert_undo_redo_round_trip(
@@ -1153,7 +1153,7 @@ mod tests {
     }
 
     #[test]
-    fn undo_after_add_workshop_machine_restores_previous_machine_count() {
+    async fn undo_after_add_workshop_machine_restores_previous_machine_count() {
         let mut app = app();
         testkit::assert_undo_redo_round_trip(
             &mut app,
@@ -1169,7 +1169,7 @@ mod tests {
     /// `Effect::LoadDocument` rather than an `artifact_mutations` entry — `dispatch`'s in-process
     /// harness never applies `effects` to its own store, so this asserts on the emitted effect.
     #[test]
-    fn arg_form_set_stock_emits_ops_reading_kind_arg() {
+    async fn arg_form_set_stock_emits_ops_reading_kind_arg() {
         let mut app = app();
         let result = dispatch(&mut app, Process3dCommand::SetStock(set_stock::SetStock { kind: "cylinder".into() }));
         assert!(result.mutations.is_empty(), "setStock replaces the whole document via an effect, not in-history mutations");
@@ -1183,7 +1183,7 @@ mod tests {
         assert_eq!(document.steps, cleared_steps, "swapping stock resets the step timeline");
     }
 
-    fn set_utility(app: &mut crate::editor::process3d::testkit::Process3dApp, utility: &str) {
+    async fn set_utility(app: &mut crate::editor::process3d::testkit::Process3dApp, utility: &str) {
         dispatch(app, Process3dCommand::SetActiveUtility(set_active_utility::SetActiveUtility { utility_id: utility.into() }));
     }
 
@@ -1194,7 +1194,7 @@ mod tests {
     /// asserts what remains real: the command still dispatches a mutation for a real world-space
     /// click.
     #[test]
-    fn world_pointer_down_dispatches_a_mutation_for_a_real_click() {
+    async fn world_pointer_down_dispatches_a_mutation_for_a_real_click() {
         let mut app = app();
         set_utility(&mut app, "cut");
         let result = dispatch(&mut app, Process3dCommand::WorldPointerDown(world_pointer_down::WorldPointerDown { position: [1.0, 2.0, 3.0] }));
@@ -1202,7 +1202,7 @@ mod tests {
     }
 
     #[test]
-    fn world_pointer_down_resets_active_utility_to_select() {
+    async fn world_pointer_down_resets_active_utility_to_select() {
         let mut app = app();
         set_utility(&mut app, "cut");
         let result = dispatch(&mut app, Process3dCommand::WorldPointerDown(world_pointer_down::WorldPointerDown { position: [1.0, 2.0, 3.0] }));
@@ -1216,7 +1216,7 @@ mod tests {
     /// per-click pose is no longer readable back off the persisted document, so this asserts that
     /// two distinct real clicks each still dispatch their own mutation.
     #[test]
-    fn repeated_world_pointer_down_each_dispatch_a_mutation() {
+    async fn repeated_world_pointer_down_each_dispatch_a_mutation() {
         let mut app = app();
         set_utility(&mut app, "cut");
         let first = dispatch(&mut app, Process3dCommand::WorldPointerDown(world_pointer_down::WorldPointerDown { position: [1.0, 0.0, 0.0] }));
@@ -1236,21 +1236,21 @@ mod tests {
     /// `drill_reduces_volume_below_stock`/`attach_increases_volume_above_stock` tests; these two
     /// now assert only that the command still dispatches a mutation for a real face-drag gesture.
     #[test]
-    fn world_face_drag_end_cut_dispatches_a_mutation() {
+    async fn world_face_drag_end_cut_dispatches_a_mutation() {
         let mut app = app();
         let result = dispatch(&mut app, Process3dCommand::WorldFaceDragEnd(world_face_drag_end::WorldFaceDragEnd { normal: [0.0, 0.0, 1.0], start_point: [0.5, 0.5, 1.0], distance: -0.5, face_extent: Some([1.0, 1.0]) }));
         assert!(!result.mutations.is_empty());
     }
 
     #[test]
-    fn world_face_drag_end_attach_dispatches_a_mutation() {
+    async fn world_face_drag_end_attach_dispatches_a_mutation() {
         let mut app = app();
         let result = dispatch(&mut app, Process3dCommand::WorldFaceDragEnd(world_face_drag_end::WorldFaceDragEnd { normal: [0.0, 0.0, 1.0], start_point: [0.5, 0.5, 1.0], distance: 0.5, face_extent: Some([0.2, 0.2]) }));
         assert!(!result.mutations.is_empty());
     }
 
     #[test]
-    fn world_face_drag_end_ignored_while_a_placement_utility_is_active() {
+    async fn world_face_drag_end_ignored_while_a_placement_utility_is_active() {
         let mut app = app();
         set_utility(&mut app, "cut");
         let result = dispatch(&mut app, Process3dCommand::WorldFaceDragEnd(world_face_drag_end::WorldFaceDragEnd { normal: [0.0, 0.0, 1.0], start_point: [0.5, 0.5, 1.0], distance: -0.5, face_extent: None }));
@@ -1258,7 +1258,7 @@ mod tests {
     }
 
     #[test]
-    fn toggle_sun_round_trips_through_config_and_defaults_off() {
+    async fn toggle_sun_round_trips_through_config_and_defaults_off() {
         let mut app = app();
         let measures = app.window_measures();
         let sun_group = |measures: &HashMap<String, Vec<WindowMeasure>>| {
@@ -1279,7 +1279,7 @@ mod tests {
     }
 
     #[test]
-    fn window_measures_surface_the_sun_group() {
+    async fn window_measures_surface_the_sun_group() {
         let mut app = app();
         let measures = main_window_measures(&mut app);
         assert_eq!(measures.len(), 1);
@@ -1287,13 +1287,13 @@ mod tests {
     }
 
     #[test]
-    fn an_unknown_body_key_renders_a_diagnostic_instead_of_panicking() {
+    async fn an_unknown_body_key_renders_a_diagnostic_instead_of_panicking() {
         let mut app = app();
         assert!(render_body(&mut app, "process3d.play.nope").contains("Unknown body"));
     }
 
     #[test]
-    fn window_body_accepts_the_framework_instance_suffix() {
+    async fn window_body_accepts_the_framework_instance_suffix() {
         let mut app = app();
         let body_key = format!("{}:{}", workpiece::PROCESS_3D_PLAY_BODY_MAIN, workpiece::PROCESS_3D_PLAY_WINDOW_MAIN);
         let rendered = render_body(&mut app, &body_key);
@@ -1304,7 +1304,7 @@ mod tests {
     /// discipline error — proves the `app_commands!` rows and the manifest's `.operation`/`.shell_action`/
     /// `.action_with` declarations stay in sync.
     #[test]
-    fn registry_enforced_app_accepts_a_declared_operation_action() {
+    async fn registry_enforced_app_accepts_a_declared_operation_action() {
         let mut app = app_with_registry();
         let result = dispatch(&mut app, Process3dCommand::AddStep(add_step::AddStep { measure: Some("cut".into()), machine_id: None, capability_id: None, position: None }));
         assert!(!result.mutations.is_empty());
@@ -1312,7 +1312,7 @@ mod tests {
 
     //#region 🔖️MediaTests
     #[test]
-    fn export_brep_out_returns_step_text_structured_payload() {
+    async fn export_brep_out_returns_step_text_structured_payload() {
         let app = Process3dPlayApp;
         let document = crate::artifacts::process3d::schema::default_document();
         let history = HistoryView::empty();
@@ -1330,7 +1330,7 @@ mod tests {
     }
 
     #[test]
-    fn export_unknown_port_is_not_implemented() {
+    async fn export_unknown_port_is_not_implemented() {
         let app = Process3dPlayApp;
         let document = crate::artifacts::process3d::schema::default_document();
         let history = HistoryView::empty();
@@ -1339,7 +1339,7 @@ mod tests {
     }
 
     #[test]
-    fn import_geometry_in_rejects_unrecognized_schema() {
+    async fn import_geometry_in_rejects_unrecognized_schema() {
         let app = Process3dPlayApp;
         let document = crate::artifacts::process3d::schema::default_document();
         let history = HistoryView::empty();
@@ -1351,20 +1351,20 @@ mod tests {
 
     //#region 🔖️BehaviorTests
     #[test]
-    fn face_drag_orients_box_along_normal() {
+    async fn face_drag_orients_box_along_normal() {
         let (axis, angle) = axis_angle_from_up_to([0.0, 1.0, 0.0]);
         assert!((angle - std::f64::consts::FRAC_PI_2).abs() < 1e-9);
         assert!((axis[0] - (-1.0)).abs() < 1e-9 && axis[1].abs() < 1e-9 && axis[2].abs() < 1e-9);
     }
 
     #[test]
-    fn face_drag_degenerate_antiparallel_normal_does_not_panic() {
+    async fn face_drag_degenerate_antiparallel_normal_does_not_panic() {
         let (_, angle) = axis_angle_from_up_to([0.0, 0.0, -1.0]);
         assert!((angle - std::f64::consts::PI).abs() < 1e-9);
     }
 
     #[test]
-    fn sync_process_machine_contributions_merges_hot_installed_catalogs() {
+    async fn sync_process_machine_contributions_merges_hot_installed_catalogs() {
         use semio_framework::{ProgramContributionEntry, TopicContribution};
         let machine = crate::artifacts::process3d::WorkshopMachine { id: "hot-saw".into(), label: "Hot Saw".into(), icon_id: "scissors".into(), catalog_id: None, capabilities: vec![] };
         let entry = ProgramContributionEntry {

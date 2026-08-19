@@ -76,23 +76,23 @@ impl ArtifactEditor for HomeApp {
     const DIALECT: Dialect = crate::artifacts::home::HOME_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = crate::artifacts::home::S_HOME_DOCUMENT_SCHEMA;
 
-    fn initial_snapshot() -> SHomeSnapshot {
+    async fn initial_snapshot() -> SHomeSnapshot {
         SHomeSnapshot::default()
     }
 
-    fn command_id(command: &HomeCommand) -> &'static str {
+    async fn command_id(command: &HomeCommand) -> &'static str {
         command.command_id()
     }
 
     /// 🪪️ `s.space.home`'s config+presence schema descriptor (ticket
     /// 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE W1c) — `register_document_app` registers it the
     /// moment this type is bound to the plugin, completing the app-schema declaration for `🪐️space`.
-    fn app_schema() -> Option<::schema::AppSchemaDescriptor> {
+    async fn app_schema() -> Option<::schema::AppSchemaDescriptor> {
         Some(crate::editor::home::config::schema::app_schema_descriptor())
     }
 
     /// 🎯️ Bridges shell `{action,args}` JSON onto typed `HomeCommand` until every call site speaks OpBinary.
-    fn command_from_action(action: &str, args: Option<&Value>) -> Result<HomeCommand, Fault> {
+    async fn command_from_action(action: &str, args: Option<&Value>) -> Result<HomeCommand, Fault> {
         let str_field = |key: &str| args.and_then(|value| value.get(key)).and_then(Value::as_str).map(str::to_string);
         match action {
             "createStudio" => Ok(HomeCommand::CreateStudio(create_studio::CreateStudio {
@@ -164,11 +164,11 @@ impl ArtifactEditor for HomeApp {
     /// `deleteVirtualFileSystemNode`) already takes an explicit `node_id` argument from the click event
     /// rather than reading a stored selection — there was no bespoke selection/hover config, mutation, or
     /// command here to delete. `_interaction` is accepted (trait-required) and unused.
-    fn handle(command: &HomeCommand, doc: &ArtifactView<'_, SHomeSnapshot>, cfg: &ConfigView<'_, HomeConfig>, _interaction: &InteractionView<'_>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<crate::artifacts::home::op::SHomeMutation, crate::editor::home::config::HomeConfigMutation, Self::DraftMutation>, Fault> {
+    async fn handle(command: &HomeCommand, doc: &ArtifactView<'_, SHomeSnapshot>, cfg: &ConfigView<'_, HomeConfig>, _interaction: &InteractionView<'_>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<crate::artifacts::home::op::SHomeMutation, crate::editor::home::config::HomeConfigMutation, Self::DraftMutation>, Fault> {
         command.dispatch(doc, cfg)
     }
 
-    fn render(body_key: &str, _doc: &ArtifactView<'_, SHomeSnapshot>, cfg: &ConfigView<'_, HomeConfig>) -> UiNode {
+    async fn render(body_key: &str, _doc: &ArtifactView<'_, SHomeSnapshot>, cfg: &ConfigView<'_, HomeConfig>) -> UiNode {
         // 🪟 `VcsArtifactApp::render` appends `:{windowInstanceId}` when `view_state.window_id` is set —
         // strip it so Home's single body key still matches.
         let base_body_key = body_key.split_once(':').map_or(body_key, |(base, _)| base);
@@ -184,7 +184,7 @@ impl ArtifactEditor for HomeApp {
 /// 🧱️ The manifest stitch: one call per taxonomy node. `.example(...)`/`.workflow(...)` do not exist on
 /// `EditorBuilder` (contract §2.4, W0-F gap 4) — `create_home_app` never called either, so nothing is
 /// dropped here (unlike other W2 packets that had to note a loss).
-pub fn create_home_app() -> semio_framework_plugin::AppDefinition {
+pub async fn create_home_app() -> semio_framework_plugin::AppDefinition {
     let mut definition = Editor::builder(crate::artifacts::home::HOME_DIALECT)
         .document(["semio", "s", "home"])
         .icon_id("home")
@@ -289,7 +289,7 @@ pub(crate) mod testkit {
     pub type HomeEditorApp = semio_framework_plugin::VcsArtifactApp<EditorApp<HomeApp>>;
 
     /// 🧪️ A bare app instance — no `AppActionRegistry`, so undeclared internal commands dispatch freely.
-    pub fn new_app() -> HomeEditorApp {
+    pub async fn new_app() -> HomeEditorApp {
         semio_framework_plugin::testkit::new_app::<EditorApp<HomeApp>>()
     }
 }
@@ -305,26 +305,26 @@ mod tests {
         LocalStorageBackbonePort, OsBackbonePort, OsSpaceDocument, SpaceKind, SpaceVisibility, S_SPACE_SCHEMA,
     };
 
-    fn empty_history() -> semio_framework_plugin::HistoryView {
+    async fn empty_history() -> semio_framework_plugin::HistoryView {
         semio_framework_plugin::HistoryView::empty()
     }
 
     #[test]
-    fn home_manifest_derives_the_canonical_surface_id() {
+    async fn home_manifest_derives_the_canonical_surface_id() {
         let definition = create_home_app();
         assert_eq!(definition.id, semio_framework::surface_app_id(&HomeApp::DIALECT.into(), semio_framework::AppRole::Editor));
         assert_eq!(definition.controller_id, "s-home");
     }
 
     #[test]
-    fn home_declares_create_space_action() {
+    async fn home_declares_create_space_action() {
         let definition = create_home_app();
         let main = definition.window_kinds.iter().find(|window| window.id == crate::editor::home::modes::explore::windows::main::S_HOME_WINDOW).expect("home main window");
         assert!(main.actions.iter().any(|action| action.id == "createStudio"));
     }
 
     #[test]
-    fn space_document_persists_through_backbone_port() {
+    async fn space_document_persists_through_backbone_port() {
         // 🕳️ `parse_demo_space_document()` yields a `workflow::WorkflowSnapshot` (the demo fixture's own
         // artifact content), not a `space::SpaceSnapshot`-backed catalog entry
         // `seed_os_space_catalog_if_empty` expects. This test exercises the space-manifest persistence
@@ -346,7 +346,7 @@ mod tests {
     /// KNOWN directory event (deterministic, independent of the global catalog) and assert on the
     /// locale-correct COLUMN HEADERS instead — the real thing "labels resolve to the right locale" means
     /// for a table.
-    fn config_with_one_folded_space(locale: &str) -> HomeConfig {
+    async fn config_with_one_folded_space(locale: &str) -> HomeConfig {
         let event_json = serde_json::json!({
             "seq": 1, "id": "evt-1", "hlc": {"physicalMs": 0, "logical": 0}, "actor": {"kind": "user", "id": "u"}, "spaceId": "sp-1",
             "body": {"kind": "space.created", "spaceId": "sp-1", "name": "Fixture", "spaceKind": "atelier", "visibility": "private", "ownerUserId": "u1"},
@@ -358,7 +358,7 @@ mod tests {
     }
 
     #[test]
-    fn home_labels_resolve_native_english_by_default() {
+    async fn home_labels_resolve_native_english_by_default() {
         let history = empty_history();
         let home_doc = SHomeSnapshot { schema: "s.home".into(), catalog_generation: 0 };
         let home_view = ArtifactView::new(&home_doc, &history);
@@ -371,7 +371,7 @@ mod tests {
     }
 
     #[test]
-    fn home_labels_resolve_native_german_locale() {
+    async fn home_labels_resolve_native_german_locale() {
         let history = empty_history();
         let home_doc = SHomeSnapshot { schema: "s.home".into(), catalog_generation: 0 };
         let home_view = ArtifactView::new(&home_doc, &history);

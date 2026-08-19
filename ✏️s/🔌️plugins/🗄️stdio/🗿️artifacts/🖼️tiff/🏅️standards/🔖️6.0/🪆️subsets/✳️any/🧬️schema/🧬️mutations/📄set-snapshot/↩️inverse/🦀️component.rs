@@ -3,6 +3,6 @@ use crate::artifacts::tiff::TiffSnapshot;
 use protocol::Mutation;
 
 /// ↩️ Inverse of set-snapshot.
-pub fn inverse(base: &TiffSnapshot, mutation: &TiffMutation) -> Vec<TiffMutation> {
+pub async fn inverse(base: &TiffSnapshot, mutation: &TiffMutation) -> Vec<TiffMutation> {
     <TiffMutation as Mutation<TiffSnapshot>>::inverse(mutation, base)
 }

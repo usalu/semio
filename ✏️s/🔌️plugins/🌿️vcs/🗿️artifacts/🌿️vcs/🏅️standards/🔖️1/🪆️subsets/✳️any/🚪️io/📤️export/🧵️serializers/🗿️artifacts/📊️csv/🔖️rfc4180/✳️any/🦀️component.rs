@@ -18,7 +18,7 @@ pub struct VcsIntoCsv;
 impl Serializer<VcsSnapshot> for VcsIntoCsv {
     const INTO: Dialect = CSV_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Lossy;
-    fn serialize(from: &VcsSnapshot) -> IoResult<IoPayload> {
+    async fn serialize(from: &VcsSnapshot) -> IoResult<IoPayload> {
         let value = serde_json::to_value(from).map_err(|error| IoError { message: format!("VcsIntoCsv: {error}"), diagnostics: Vec::new() })?;
         let csv: CsvSnapshot = serde_json::from_value(value).map_err(|error| IoError { message: format!("VcsIntoCsv: {error}"), diagnostics: Vec::new() })?;
         Ok(IoOutcome::clean(IoPayload::Binary(<CsvSnapshot as store::ArtifactPack>::encode_pack(&csv))))

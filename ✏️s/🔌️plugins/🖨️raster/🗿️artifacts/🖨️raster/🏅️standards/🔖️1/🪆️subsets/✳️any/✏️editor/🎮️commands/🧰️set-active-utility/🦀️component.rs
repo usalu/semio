@@ -12,6 +12,6 @@ pub struct SetActiveUtility {
     pub utility_id: String,
 }
 
-pub fn handle(payload: &SetActiveUtility, _doc: &ArtifactView<'_, RasterSnapshot>, _cfg: &ConfigView<'_, RasterConfig>) -> Result<Emit<RasterMutation, RasterConfigMutation>, Fault> {
+pub async fn handle(payload: &SetActiveUtility, _doc: &ArtifactView<'_, RasterSnapshot>, _cfg: &ConfigView<'_, RasterConfig>) -> Result<Emit<RasterMutation, RasterConfigMutation>, Fault> {
     Ok(Emit::config(vec![RasterConfigMutation::SetActiveUtility { utility_id: payload.utility_id.clone() }]))
 }

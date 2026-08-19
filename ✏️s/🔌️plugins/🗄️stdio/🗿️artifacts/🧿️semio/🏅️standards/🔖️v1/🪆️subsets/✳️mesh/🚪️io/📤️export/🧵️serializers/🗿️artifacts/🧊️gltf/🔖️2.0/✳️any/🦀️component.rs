@@ -27,7 +27,7 @@ const INTO_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.gltf", standard:
 //#region 🔖️Topology
 /// 🔺️ `SemioTopology` -> gltf `primitive.mode` (§5.19.4) -- total (every semio variant has a real
 /// gltf mode; the partial direction is the deserializer's `LINE_LOOP` gap, not this one).
-fn topology_to_gltf_mode(topology: SemioTopology) -> u64 {
+async fn topology_to_gltf_mode(topology: SemioTopology) -> u64 {
     match topology {
         SemioTopology::Points => 0,
         SemioTopology::Lines => 1,
@@ -44,7 +44,7 @@ fn topology_to_gltf_mode(topology: SemioTopology) -> u64 {
 /// bytes to `buf`, registers one tightly-packed `bufferView` + `accessor` for them, and returns
 /// the new accessor's index. Only `Float`/`UnsignedInt` are exercised by this codec (positions/
 /// normals/uvs/colors as Float, indices as UnsignedInt).
-fn push_accessor(buf: &mut Vec<u8>, buffer_views: &mut Vec<GltfBufferView>, accessors: &mut Vec<GltfAccessor>, component_type: GltfComponentType, accessor_type: GltfAccessorType, values: &[f64], count: usize) -> usize {
+async fn push_accessor(buf: &mut Vec<u8>, buffer_views: &mut Vec<GltfBufferView>, accessors: &mut Vec<GltfAccessor>, component_type: GltfComponentType, accessor_type: GltfAccessorType, values: &[f64], count: usize) -> usize {
     let byte_offset = buf.len();
     for &v in values {
         match component_type {
@@ -191,7 +191,7 @@ mod tests {
     use crate::artifacts::semio::standards::v1::subsets::mesh::schema::snapshot::{SemioMaterial, SemioMesh, SemioPrimitive, SemioTexture};
     use semio_framework_plugin::ArtifactDeserializer;
 
-    fn sample_semio_mesh() -> SemioMeshSnapshot {
+    async fn sample_semio_mesh() -> SemioMeshSnapshot {
         SemioMeshSnapshot {
             schema: "stdio.semio.mesh".into(),
             meshes: vec![SemioMesh {
@@ -213,17 +213,17 @@ mod tests {
     }
 
     #[test]
-    fn serialize_then_deserialize_round_trips_at_the_semio_level() {
+    async fn serialize_then_deserialize_round_trips_at_the_semio_level() {
         let original = sample_semio_mesh();
         let gltf = semio_framework_plugin::resolve_ready(SemioMeshToGltf::serialize(&original)).expect("serialize");
         assert_eq!(gltf.document.meshes.len(), 1);
         assert_eq!(gltf.document.meshes[0].primitives[0].mode, Some(4));
-        let round_tripped = SemioMeshFromGltf::deserialize(&gltf).expect("deserialize");
+        let round_tripped = semio_framework_plugin::resolve_ready(SemioMeshFromGltf::deserialize(&gltf)).expect("deserialize");
         assert_eq!(original, round_tripped, "semio mesh -> gltf -> semio mesh must be stable (documented lossy fields excepted, none apply here)");
     }
 
     #[test]
-    fn unknown_material_reference_is_a_hard_error() {
+    async fn unknown_material_reference_is_a_hard_error() {
         let mut semio = sample_semio_mesh();
         semio.meshes[0].primitives[0].material_id = Some("does-not-exist".into());
         let err = semio_framework_plugin::resolve_ready(SemioMeshToGltf::serialize(&semio)).expect_err("dangling material ref must error");
@@ -231,7 +231,7 @@ mod tests {
     }
 
     #[test]
-    fn empty_positions_is_a_hard_error_not_a_fabricated_accessor() {
+    async fn empty_positions_is_a_hard_error_not_a_fabricated_accessor() {
         let mut semio = sample_semio_mesh();
         semio.meshes[0].primitives[0].positions.clear();
         let err = semio_framework_plugin::resolve_ready(SemioMeshToGltf::serialize(&semio)).expect_err("empty positions must error");

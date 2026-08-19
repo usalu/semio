@@ -22,7 +22,7 @@ pub struct JpgInference {
 }
 
 impl protocol::Inference<JpgSnapshot> for JpgInference {
-    fn infer(snapshot: &JpgSnapshot) -> Self {
+    async fn infer(snapshot: &JpgSnapshot) -> Self {
         Self { dimensions: compute_jpg_dimensions(snapshot) }
     }
 }
@@ -33,19 +33,19 @@ impl protocol::Inference<JpgSnapshot> for JpgInference {
 /// don't derive structurally" trick as `AddInference`'s hand-written `Default` in
 /// `📡️spr/🎮️command/🦀️component.rs`.
 impl Default for JpgInference {
-    fn default() -> Self {
+    async fn default() -> Self {
         <Self as protocol::Inference<JpgSnapshot>>::infer(&JpgSnapshot::default())
     }
 }
 
 impl protocol::InferenceSpec<JpgSnapshot> for JpgInference {
-    fn inference_schema_id() -> &'static str {
+    async fn inference_schema_id() -> &'static str {
         "s.stdio.jpg.inference"
     }
-    fn schema_version() -> u32 {
+    async fn schema_version() -> u32 {
         1
     }
-    fn fields() -> &'static [protocol::InferenceFieldSpec] {
+    async fn fields() -> &'static [protocol::InferenceFieldSpec] {
         &[protocol::InferenceFieldSpec { id: "s.stdio.jpg.inference.dimensions", reads: &["width", "height", "frame"] }]
     }
 }
@@ -63,7 +63,7 @@ impl semio_framework_plugin::ArtifactInferrer for crate::artifacts::jpg::standar
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.stdio.jpg.inference`'s facet leaves into the OS-wide inference catalog — call
 /// once at plugin init, alongside `jpg_artifact_schema_descriptor`'s registration.
-pub fn jpg_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
+pub async fn jpg_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
     schema::ArtifactInferenceDescriptor {
         id: "s.stdio.jpg.inference",
         inference: schema::FacetLeaves {
@@ -84,13 +84,13 @@ mod tests {
     use protocol::Inference;
 
     #[test]
-    fn inference_determinism_law() {
+    async fn inference_determinism_law() {
         let snapshot = JpgSnapshot::default();
         assert_eq!(JpgInference::infer(&snapshot), JpgInference::infer(&snapshot));
     }
 
     #[test]
-    fn inference_default_law() {
+    async fn inference_default_law() {
         assert_eq!(JpgInference::infer(&JpgSnapshot::default()), JpgInference::default());
     }
 }

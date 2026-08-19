@@ -37,7 +37,7 @@ const REMODEL_VIEW_CAMERA_FOV: f64 = 45.0;
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
-pub fn definition() -> WindowKindDefinition {
+pub async fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
         id: WINDOW_KIND_ID.into(),
         label: LocalizedLabel::native("Model", "Modell"),
@@ -64,7 +64,7 @@ pub fn definition() -> WindowKindDefinition {
 /// `world_meshes_json` already carries while composed-child object resolution is unimplemented
 /// (pre-existing `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` gap, not introduced here) — real
 /// parity with the editor's CURRENT behaviour, not a regression.
-fn world_meshes_json(scene: &RemodelSnapshot) -> String {
+async fn world_meshes_json(scene: &RemodelSnapshot) -> String {
     let Some(mesh) = crate::artifacts::remodel::remodel_mesh_workspace(&scene.results.mesh.mesh) else {
         return "[]".into();
     };
@@ -73,7 +73,7 @@ fn world_meshes_json(scene: &RemodelSnapshot) -> String {
 
 /// 👁️ Unconditionally visible mesh instance — a viewer has no persisted per-session layer toggles, so
 /// unlike the editor's `world_instances_json` this never gates on a `layers.mesh` flag.
-fn world_instances_json() -> String {
+async fn world_instances_json() -> String {
     serde_json::to_string(&vec![json!({
         "id": REMODEL_VIEW_MESH_ID,
         "meshId": REMODEL_VIEW_MESH_ID,
@@ -90,7 +90,7 @@ fn world_instances_json() -> String {
 /// behind a config toggle is unconditionally shown here (a viewer keeps no layer-visibility state),
 /// pure document content otherwise: sparse/dense clouds, recovered camera poses, ground control
 /// points.
-fn world_points_json(scene: &RemodelSnapshot) -> Option<String> {
+async fn world_points_json(scene: &RemodelSnapshot) -> Option<String> {
     let mut layers: Vec<Value> = Vec::new();
     if let Some(sparse) = &scene.results.sparse {
         if !sparse.points.is_empty() {
@@ -144,7 +144,7 @@ fn world_points_json(scene: &RemodelSnapshot) -> Option<String> {
 /// 👁️ Pure `RemodelSnapshot -> UiNode` read: hardcoded default camera/sun, no selection overlay,
 /// every point layer unconditionally visible, mesh content real whenever the working-scene cache is
 /// warm.
-pub fn render(scene: &RemodelSnapshot) -> UiNode {
+pub async fn render(scene: &RemodelSnapshot) -> UiNode {
     let mut world_scene = world3d_scene(
         world3d_camera_json(REMODEL_VIEW_CAMERA_POSITION, REMODEL_VIEW_CAMERA_TARGET, REMODEL_VIEW_CAMERA_FOV),
         world_meshes_json(scene),
@@ -163,26 +163,26 @@ mod tests {
     use super::*;
 
     #[test]
-    fn definition_declares_a_world3d_model_window() {
+    async fn definition_declares_a_world3d_model_window() {
         let def = definition();
         assert_eq!(def.id, WINDOW_KIND_ID);
         assert_eq!(def.surface_kind, SurfaceKind::World3d);
     }
 
     #[test]
-    fn render_produces_a_scene_node_for_the_default_document() {
+    async fn render_produces_a_scene_node_for_the_default_document() {
         let scene = crate::artifacts::remodel::default_remodel_scene();
         let _node = render(&scene);
     }
 
     #[test]
-    fn world_meshes_json_renders_the_real_placeholder_mesh_when_the_cache_is_warm() {
+    async fn world_meshes_json_renders_the_real_placeholder_mesh_when_the_cache_is_warm() {
         let scene = crate::artifacts::remodel::default_remodel_scene();
         assert!(world_meshes_json(&scene).contains(REMODEL_VIEW_MESH_ID));
     }
 
     #[test]
-    fn world_instances_json_is_never_gated_on_a_layer_toggle() {
+    async fn world_instances_json_is_never_gated_on_a_layer_toggle() {
         assert!(world_instances_json().contains(REMODEL_VIEW_MESH_ID));
     }
 }

@@ -3,6 +3,6 @@ use crate::artifacts::bmp::BmpSnapshot;
 use protocol::Mutation;
 
 /// ↩️ Inverse of set-snapshot.
-pub fn inverse(base: &BmpSnapshot, mutation: &BmpMutation) -> Vec<BmpMutation> {
+pub async fn inverse(base: &BmpSnapshot, mutation: &BmpMutation) -> Vec<BmpMutation> {
     <BmpMutation as Mutation<BmpSnapshot>>::inverse(mutation, base)
 }

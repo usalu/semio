@@ -72,7 +72,7 @@ pub struct SemioCadDiff {
 /// `T`, per-field diff `D`. Operates on the SHARED `engine::triples::NamedTripleDiff` type — this
 /// artifact's own copy of the algorithm (cross-artifact algorithm imports would be architecturally
 /// wrong, same rationale bcf's own copy documents), not a re-definition of the data shape.
-fn apply_named<K, T, D>(items: &mut Vec<T>, diff: &NamedTripleDiff<K, D, T>, key_of: impl Fn(&T) -> K, apply_item: impl Fn(&mut T, &D))
+async fn apply_named<K, T, D>(items: &mut Vec<T>, diff: &NamedTripleDiff<K, D, T>, key_of: impl Fn(&T) -> K, apply_item: impl Fn(&mut T, &D))
 where
     K: PartialEq + Clone,
     T: Clone,
@@ -88,7 +88,7 @@ where
     }
 }
 
-fn between_named<K, T, D>(base: &[T], other: &[T], key_of: impl Fn(&T) -> K, diff_item: impl Fn(&T, &T) -> Option<D>) -> Option<NamedTripleDiff<K, D, T>>
+async fn between_named<K, T, D>(base: &[T], other: &[T], key_of: impl Fn(&T) -> K, diff_item: impl Fn(&T, &T) -> Option<D>) -> Option<NamedTripleDiff<K, D, T>>
 where
     K: PartialEq + Clone,
     T: Clone + PartialEq,
@@ -121,7 +121,7 @@ where
     }
 }
 
-fn inverse_named<K, T, D>(base_items: &[T], diff: &NamedTripleDiff<K, D, T>, key_of: impl Fn(&T) -> K, inverse_item: impl Fn(&T, &D) -> D) -> NamedTripleDiff<K, D, T>
+async fn inverse_named<K, T, D>(base_items: &[T], diff: &NamedTripleDiff<K, D, T>, key_of: impl Fn(&T) -> K, inverse_item: impl Fn(&T, &D) -> D) -> NamedTripleDiff<K, D, T>
 where
     K: PartialEq + Clone,
     T: Clone,
@@ -145,7 +145,7 @@ where
 /// 🧮️ Key-identity absorb (not position) — a `d2`-removal of a `d1`-added key annihilates the add;
 /// a `d2`-modify of a `d1`-added key patches into the carried payload; everything else composes on
 /// the shared key space. Mirrors bcf's `absorb_named` (same canonical cases, B-R7).
-fn absorb_named<K, T, D>(d1: NamedTripleDiff<K, D, T>, d2: NamedTripleDiff<K, D, T>, key_of: impl Fn(&T) -> K, absorb_item: impl Fn(D, D) -> D, apply_item: impl Fn(&mut T, &D)) -> NamedTripleDiff<K, D, T>
+async fn absorb_named<K, T, D>(d1: NamedTripleDiff<K, D, T>, d2: NamedTripleDiff<K, D, T>, key_of: impl Fn(&T) -> K, absorb_item: impl Fn(D, D) -> D, apply_item: impl Fn(&mut T, &D)) -> NamedTripleDiff<K, D, T>
 where
     K: PartialEq + Clone,
     T: Clone,
@@ -189,29 +189,29 @@ where
 
 //#region 🔖️WrapHelpers
 /// 🧭️ Lowers a per-layer leaf diff into a full `SemioCadDiff` (mirrors bcf's `wrap_topic_diff`).
-pub fn wrap_layer_diff(name: &str, diff: CadLayerDiff) -> SemioCadDiff {
+pub async fn wrap_layer_diff(name: &str, diff: CadLayerDiff) -> SemioCadDiff {
     SemioCadDiff { layers: Some(CadLayersDiff { removed: Vec::new(), modified: vec![NamedModified { key: name.to_string(), diff }], added: Vec::new() }), blocks: None, entities: None }
 }
 
 /// 🧭️ Lowers a per-block leaf diff into a full `SemioCadDiff`.
-pub fn wrap_block_diff(name: &str, diff: CadBlockDiff) -> SemioCadDiff {
+pub async fn wrap_block_diff(name: &str, diff: CadBlockDiff) -> SemioCadDiff {
     SemioCadDiff { layers: None, blocks: Some(CadBlocksDiff { removed: Vec::new(), modified: vec![NamedModified { key: name.to_string(), diff }], added: Vec::new() }), entities: None }
 }
 
 /// 🧭️ Lowers a per-top-level-entity leaf diff into a full `SemioCadDiff`.
-pub fn wrap_entity_diff(handle: &str, diff: CadEntityRecordDiff) -> SemioCadDiff {
+pub async fn wrap_entity_diff(handle: &str, diff: CadEntityRecordDiff) -> SemioCadDiff {
     SemioCadDiff { layers: None, blocks: None, entities: Some(CadEntitiesDiff { removed: Vec::new(), modified: vec![NamedModified { key: handle.to_string(), diff }], added: Vec::new() }) }
 }
 
 /// 🧭️ Lowers a per-block-entity leaf diff (inside block `block_name`) into a full `SemioCadDiff`.
-pub fn wrap_block_entity_diff(block_name: &str, handle: &str, diff: CadEntityRecordDiff) -> SemioCadDiff {
+pub async fn wrap_block_entity_diff(block_name: &str, handle: &str, diff: CadEntityRecordDiff) -> SemioCadDiff {
     wrap_block_diff(block_name, CadBlockDiff { base_point: None, entities: Some(CadEntitiesDiff { removed: Vec::new(), modified: vec![NamedModified { key: handle.to_string(), diff }], added: Vec::new() }) })
 }
 //#endregion 🔖️WrapHelpers
 
 //#region 🔖️Apply
 impl MutationDiff<SemioCadSnapshot> for SemioCadDiff {
-    fn apply(&self, base: &SemioCadSnapshot) -> protocol::MutationApplyResult<SemioCadSnapshot> {
+    async fn apply(&self, base: &SemioCadSnapshot) -> protocol::MutationApplyResult<SemioCadSnapshot> {
         let mut next = base.clone();
         if let Some(ld) = &self.layers {
             crate::artifacts::semio::standards::v1::subsets::any::schema::triples::validate_named_triple(&next.layers, ld, |layer| layer.name.clone(), |layer| layer.name.clone(), ["layers"])?;
@@ -228,7 +228,7 @@ impl MutationDiff<SemioCadSnapshot> for SemioCadDiff {
         Ok(next)
     }
 
-    fn absorb(&mut self, other: Self) {
+    async fn absorb(&mut self, other: Self) {
         self.layers = match (self.layers.take(), other.layers) {
             (None, b) => b,
             (a, None) => a,
@@ -247,7 +247,7 @@ impl MutationDiff<SemioCadSnapshot> for SemioCadDiff {
     }
 }
 
-fn apply_layer(layer: &mut CadLayer, diff: &CadLayerDiff) {
+async fn apply_layer(layer: &mut CadLayer, diff: &CadLayerDiff) {
     if let Some(v) = &diff.color_index {
         layer.color_index = *v;
     }
@@ -259,7 +259,7 @@ fn apply_layer(layer: &mut CadLayer, diff: &CadLayerDiff) {
     }
 }
 
-fn apply_block(block: &mut CadBlock, diff: &CadBlockDiff) {
+async fn apply_block(block: &mut CadBlock, diff: &CadBlockDiff) {
     if let Some(v) = &diff.base_point {
         block.base_point = *v;
     }
@@ -268,7 +268,7 @@ fn apply_block(block: &mut CadBlock, diff: &CadBlockDiff) {
     }
 }
 
-fn apply_entity_record(rec: &mut CadEntityRecord, diff: &CadEntityRecordDiff) {
+async fn apply_entity_record(rec: &mut CadEntityRecord, diff: &CadEntityRecordDiff) {
     if let Some(v) = &diff.layer {
         rec.layer = v.clone();
     }
@@ -277,7 +277,7 @@ fn apply_entity_record(rec: &mut CadEntityRecord, diff: &CadEntityRecordDiff) {
     }
 }
 
-fn absorb_layer_diff(mut a: CadLayerDiff, b: CadLayerDiff) -> CadLayerDiff {
+async fn absorb_layer_diff(mut a: CadLayerDiff, b: CadLayerDiff) -> CadLayerDiff {
     if b.color_index.is_some() {
         a.color_index = b.color_index;
     }
@@ -290,7 +290,7 @@ fn absorb_layer_diff(mut a: CadLayerDiff, b: CadLayerDiff) -> CadLayerDiff {
     a
 }
 
-fn absorb_block_diff(mut a: CadBlockDiff, b: CadBlockDiff) -> CadBlockDiff {
+async fn absorb_block_diff(mut a: CadBlockDiff, b: CadBlockDiff) -> CadBlockDiff {
     if b.base_point.is_some() {
         a.base_point = b.base_point;
     }
@@ -302,7 +302,7 @@ fn absorb_block_diff(mut a: CadBlockDiff, b: CadBlockDiff) -> CadBlockDiff {
     a
 }
 
-fn absorb_entity_record_diff(mut a: CadEntityRecordDiff, b: CadEntityRecordDiff) -> CadEntityRecordDiff {
+async fn absorb_entity_record_diff(mut a: CadEntityRecordDiff, b: CadEntityRecordDiff) -> CadEntityRecordDiff {
     if b.layer.is_some() {
         a.layer = b.layer;
     }
@@ -315,7 +315,7 @@ fn absorb_entity_record_diff(mut a: CadEntityRecordDiff, b: CadEntityRecordDiff)
 
 //#region 🔖️DiffAlgebra
 impl DiffAlgebra<SemioCadSnapshot> for SemioCadDiff {
-    fn inverse(&self, base: &SemioCadSnapshot) -> Self {
+    async fn inverse(&self, base: &SemioCadSnapshot) -> Self {
         SemioCadDiff {
             layers: self.layers.as_ref().map(|d| inverse_named(&base.layers, d, |l| l.name.clone(), inverse_layer)),
             blocks: self.blocks.as_ref().map(|d| inverse_named(&base.blocks, d, |b| b.name.clone(), inverse_block)),
@@ -323,7 +323,7 @@ impl DiffAlgebra<SemioCadSnapshot> for SemioCadDiff {
         }
     }
 
-    fn between(base: &SemioCadSnapshot, other: &SemioCadSnapshot) -> Self {
+    async fn between(base: &SemioCadSnapshot, other: &SemioCadSnapshot) -> Self {
         SemioCadDiff {
             layers: between_named(&base.layers, &other.layers, |l| l.name.clone(), between_layer),
             blocks: between_named(&base.blocks, &other.blocks, |b| b.name.clone(), between_block),
@@ -331,24 +331,24 @@ impl DiffAlgebra<SemioCadSnapshot> for SemioCadDiff {
         }
     }
 
-    fn is_empty(&self) -> bool {
+    async fn is_empty(&self) -> bool {
         self.layers.is_none() && self.blocks.is_none() && self.entities.is_none()
     }
 }
 
-fn inverse_layer(base: &CadLayer, diff: &CadLayerDiff) -> CadLayerDiff {
+async fn inverse_layer(base: &CadLayer, diff: &CadLayerDiff) -> CadLayerDiff {
     CadLayerDiff { color_index: diff.color_index.as_ref().map(|_| base.color_index), line_type: diff.line_type.as_ref().map(|_| base.line_type.clone()), visible: diff.visible.as_ref().map(|_| base.visible) }
 }
 
-fn inverse_block(base: &CadBlock, diff: &CadBlockDiff) -> CadBlockDiff {
+async fn inverse_block(base: &CadBlock, diff: &CadBlockDiff) -> CadBlockDiff {
     CadBlockDiff { base_point: diff.base_point.as_ref().map(|_| base.base_point), entities: diff.entities.as_ref().map(|d| inverse_named(&base.entities, d, |e| e.handle.clone(), inverse_entity_record)) }
 }
 
-fn inverse_entity_record(base: &CadEntityRecord, diff: &CadEntityRecordDiff) -> CadEntityRecordDiff {
+async fn inverse_entity_record(base: &CadEntityRecord, diff: &CadEntityRecordDiff) -> CadEntityRecordDiff {
     CadEntityRecordDiff { layer: diff.layer.as_ref().map(|_| base.layer.clone()), entity: diff.entity.as_ref().map(|_| base.entity.clone()) }
 }
 
-fn between_layer(base: &CadLayer, other: &CadLayer) -> Option<CadLayerDiff> {
+async fn between_layer(base: &CadLayer, other: &CadLayer) -> Option<CadLayerDiff> {
     let color_index = if base.color_index != other.color_index { Some(other.color_index) } else { None };
     let line_type = if base.line_type != other.line_type { Some(other.line_type.clone()) } else { None };
     let visible = if base.visible != other.visible { Some(other.visible) } else { None };
@@ -359,7 +359,7 @@ fn between_layer(base: &CadLayer, other: &CadLayer) -> Option<CadLayerDiff> {
     }
 }
 
-fn between_block(base: &CadBlock, other: &CadBlock) -> Option<CadBlockDiff> {
+async fn between_block(base: &CadBlock, other: &CadBlock) -> Option<CadBlockDiff> {
     let base_point = if base.base_point != other.base_point { Some(other.base_point) } else { None };
     let entities = between_named(&base.entities, &other.entities, |e| e.handle.clone(), between_entity_record);
     if base_point.is_none() && entities.is_none() {
@@ -369,7 +369,7 @@ fn between_block(base: &CadBlock, other: &CadBlock) -> Option<CadBlockDiff> {
     }
 }
 
-fn between_entity_record(base: &CadEntityRecord, other: &CadEntityRecord) -> Option<CadEntityRecordDiff> {
+async fn between_entity_record(base: &CadEntityRecord, other: &CadEntityRecord) -> Option<CadEntityRecordDiff> {
     let layer = if base.layer != other.layer { Some(other.layer.clone()) } else { None };
     let entity = if base.entity != other.entity { Some(other.entity.clone()) } else { None };
     if layer.is_none() && entity.is_none() {
@@ -383,7 +383,7 @@ fn between_entity_record(base: &CadEntityRecord, other: &CadEntityRecord) -> Opt
 //#region 🔖️SetSnapshot
 /// 🧩️ Builds the sparse field-by-field diff for a `SetSnapshot` mutation. No
 /// `snapshot: Option<SemioCadSnapshot>` full-replace slot -- this IS `SemioCadDiff::between`.
-pub fn diff_set_snapshot(base: &SemioCadSnapshot, next: &SemioCadSnapshot) -> SemioCadDiff {
+pub async fn diff_set_snapshot(base: &SemioCadSnapshot, next: &SemioCadSnapshot) -> SemioCadDiff {
     SemioCadDiff::between(base, next)
 }
 //#endregion 🔖️SetSnapshot
@@ -397,35 +397,35 @@ pub fn diff_set_snapshot(base: &SemioCadSnapshot, next: &SemioCadSnapshot) -> Se
 /// `[0]`/`[1,x]` for `Option<T>`, single-letter tag prefix for `CadEntity`'s 9-variant `xs:choice`
 /// — same primitive set gif/svg/bcf established.
 //#region 🔖️Primitives
-pub(crate) fn hex_encode(bytes: &[u8]) -> String {
+pub(crate) async fn hex_encode(bytes: &[u8]) -> String {
     bytes.iter().map(|b| format!("{b:02x}")).collect()
 }
-pub(crate) fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
+pub(crate) async fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
     if s.len() % 2 != 0 {
         return Err(format!("odd hex length: {s:?}"));
     }
     (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()
 }
-pub(crate) fn enc_str(s: &str) -> String {
+pub(crate) async fn enc_str(s: &str) -> String {
     hex_encode(s.as_bytes())
 }
-pub(crate) fn dec_str(s: &str) -> Result<String, String> {
+pub(crate) async fn dec_str(s: &str) -> Result<String, String> {
     String::from_utf8(hex_decode(s)?).map_err(|e| e.to_string())
 }
-fn parse_f64(s: &str) -> Result<f64, String> {
+async fn parse_f64(s: &str) -> Result<f64, String> {
     s.parse().map_err(|e: std::num::ParseFloatError| e.to_string())
 }
-fn parse_i32(s: &str) -> Result<i32, String> {
+async fn parse_i32(s: &str) -> Result<i32, String> {
     s.parse().map_err(|e: std::num::ParseIntError| e.to_string())
 }
 
-pub(crate) fn encode_option<T>(opt: &Option<T>, enc: impl Fn(&T) -> String) -> String {
+pub(crate) async fn encode_option<T>(opt: &Option<T>, enc: impl Fn(&T) -> String) -> String {
     match opt {
         None => "[0]".to_string(),
         Some(v) => format!("[1,{}]", enc(v)),
     }
 }
-pub(crate) fn decode_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Option<T>, String> {
+pub(crate) async fn decode_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Option<T>, String> {
     let inner = strip_brackets(s)?;
     match split_top_level(inner, ',').as_slice() {
         ["0"] => Ok(None),
@@ -433,19 +433,19 @@ pub(crate) fn decode_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>)
         other => Err(format!("option decode: bad shape {other:?}")),
     }
 }
-pub(crate) fn enc_list<T>(items: &[T], enc: impl Fn(&T) -> String) -> String {
+pub(crate) async fn enc_list<T>(items: &[T], enc: impl Fn(&T) -> String) -> String {
     format!("[{}]", items.iter().map(|it| enc(it)).collect::<Vec<_>>().join(","))
 }
-pub(crate) fn dec_list<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Vec<T>, String> {
+pub(crate) async fn dec_list<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Vec<T>, String> {
     split_top_level(strip_brackets(s)?, ',').into_iter().filter(|s| !s.is_empty()).map(|entry| dec(entry)).collect()
 }
 //#endregion 🔖️Primitives
 
 //#region 🔖️ValueCodecs
-pub(crate) fn enc_point2(p: &SemioPoint2) -> String {
+pub(crate) async fn enc_point2(p: &SemioPoint2) -> String {
     format!("[{},{}]", p.x, p.y)
 }
-pub(crate) fn dec_point2(s: &str) -> Result<SemioPoint2, String> {
+pub(crate) async fn dec_point2(s: &str) -> Result<SemioPoint2, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [x, y] = parts.as_slice() else { return Err(format!("point2: expected 2 fields, got {}", parts.len())) };
     Ok(SemioPoint2 { x: parse_f64(x)?, y: parse_f64(y)? })
@@ -454,7 +454,7 @@ pub(crate) fn dec_point2(s: &str) -> Result<SemioPoint2, String> {
 /// 📐️ `L`ine/`A`rc/`C`ircle/`E`llipse/`P`olyline/`T`ext/`I`nsert/`S`olid/`D`imension — the `dxf`
 /// r12 `xs:choice`-equivalent made concrete (single-letter tag, same convention bcf's `enc_camera`
 /// established).
-pub(crate) fn enc_entity(e: &CadEntity) -> String {
+pub(crate) async fn enc_entity(e: &CadEntity) -> String {
     match e {
         CadEntity::Line { a, b } => format!("L[{},{}]", enc_point2(a), enc_point2(b)),
         CadEntity::Arc { center, radius, start_angle, end_angle } => format!("A[{},{},{},{}]", enc_point2(center), radius, start_angle, end_angle),
@@ -469,7 +469,7 @@ pub(crate) fn enc_entity(e: &CadEntity) -> String {
         CadEntity::Dimension { def_point, text_position, measurement, text } => format!("D[{},{},{},{}]", enc_point2(def_point), enc_point2(text_position), measurement, enc_str(text)),
     }
 }
-pub(crate) fn dec_entity(s: &str) -> Result<CadEntity, String> {
+pub(crate) async fn dec_entity(s: &str) -> Result<CadEntity, String> {
     let (tag, rest) = s.split_at(1);
     let inner = strip_brackets(rest)?;
     let parts = split_top_level(inner, ',');
@@ -514,28 +514,28 @@ pub(crate) fn dec_entity(s: &str) -> Result<CadEntity, String> {
     }
 }
 
-pub(crate) fn enc_layer(l: &CadLayer) -> String {
+pub(crate) async fn enc_layer(l: &CadLayer) -> String {
     format!("[{},{},{},{}]", enc_str(&l.name), l.color_index, enc_str(&l.line_type), if l.visible { "1" } else { "0" })
 }
-pub(crate) fn dec_layer(s: &str) -> Result<CadLayer, String> {
+pub(crate) async fn dec_layer(s: &str) -> Result<CadLayer, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [name, color_index, line_type, visible] = parts.as_slice() else { return Err(format!("layer: expected 4 fields, got {}", parts.len())) };
     Ok(CadLayer { name: dec_str(name)?, color_index: parse_i32(color_index)?, line_type: dec_str(line_type)?, visible: *visible == "1" })
 }
 
-pub(crate) fn enc_entity_record(r: &CadEntityRecord) -> String {
+pub(crate) async fn enc_entity_record(r: &CadEntityRecord) -> String {
     format!("[{},{},{}]", enc_str(&r.handle), enc_str(&r.layer), enc_entity(&r.entity))
 }
-pub(crate) fn dec_entity_record(s: &str) -> Result<CadEntityRecord, String> {
+pub(crate) async fn dec_entity_record(s: &str) -> Result<CadEntityRecord, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [handle, layer, entity] = parts.as_slice() else { return Err(format!("entity record: expected 3 fields, got {}", parts.len())) };
     Ok(CadEntityRecord { handle: dec_str(handle)?, layer: dec_str(layer)?, entity: dec_entity(entity)? })
 }
 
-pub(crate) fn enc_block(b: &CadBlock) -> String {
+pub(crate) async fn enc_block(b: &CadBlock) -> String {
     format!("[{},{},{}]", enc_str(&b.name), enc_point2(&b.base_point), enc_list(&b.entities, enc_entity_record))
 }
-pub(crate) fn dec_block(s: &str) -> Result<CadBlock, String> {
+pub(crate) async fn dec_block(s: &str) -> Result<CadBlock, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [name, base_point, entities] = parts.as_slice() else { return Err(format!("block: expected 3 fields, got {}", parts.len())) };
     Ok(CadBlock { name: dec_str(name)?, base_point: dec_point2(base_point)?, entities: dec_list(entities, dec_entity_record)? })
@@ -543,28 +543,28 @@ pub(crate) fn dec_block(s: &str) -> Result<CadBlock, String> {
 //#endregion 🔖️ValueCodecs
 
 //#region 🔖️DiffValueCodecs
-pub(crate) fn enc_layer_diff(d: &CadLayerDiff) -> String {
+pub(crate) async fn enc_layer_diff(d: &CadLayerDiff) -> String {
     format!("[{},{},{}]", encode_option(&d.color_index, |v: &i32| v.to_string()), encode_option(&d.line_type, |v: &String| enc_str(v)), encode_option(&d.visible, |v: &bool| if *v { "1".to_string() } else { "0".to_string() }),)
 }
-pub(crate) fn dec_layer_diff(s: &str) -> Result<CadLayerDiff, String> {
+pub(crate) async fn dec_layer_diff(s: &str) -> Result<CadLayerDiff, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [color_index, line_type, visible] = parts.as_slice() else { return Err(format!("layer diff: expected 3 fields, got {}", parts.len())) };
     Ok(CadLayerDiff { color_index: decode_option(color_index, parse_i32)?, line_type: decode_option(line_type, dec_str)?, visible: decode_option(visible, |v| Ok(v == "1"))? })
 }
 
-pub(crate) fn enc_entity_record_diff(d: &CadEntityRecordDiff) -> String {
+pub(crate) async fn enc_entity_record_diff(d: &CadEntityRecordDiff) -> String {
     format!("[{},{}]", encode_option(&d.layer, |v: &String| enc_str(v)), encode_option(&d.entity, enc_entity))
 }
-pub(crate) fn dec_entity_record_diff(s: &str) -> Result<CadEntityRecordDiff, String> {
+pub(crate) async fn dec_entity_record_diff(s: &str) -> Result<CadEntityRecordDiff, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [layer, entity] = parts.as_slice() else { return Err(format!("entity record diff: expected 2 fields, got {}", parts.len())) };
     Ok(CadEntityRecordDiff { layer: decode_option(layer, dec_str)?, entity: decode_option(entity, dec_entity)? })
 }
 
-pub(crate) fn enc_block_diff(d: &CadBlockDiff) -> String {
+pub(crate) async fn enc_block_diff(d: &CadBlockDiff) -> String {
     format!("[{},{}]", encode_option(&d.base_point, |p: &SemioPoint2| enc_point2(p)), encode_option(&d.entities, |v: &CadEntitiesDiff| enc_named_triple(v, |k: &String| enc_str(k), enc_entity_record_diff, enc_entity_record)),)
 }
-pub(crate) fn dec_block_diff(s: &str) -> Result<CadBlockDiff, String> {
+pub(crate) async fn dec_block_diff(s: &str) -> Result<CadBlockDiff, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [base_point, entities] = parts.as_slice() else { return Err(format!("block diff: expected 2 fields, got {}", parts.len())) };
     Ok(CadBlockDiff { base_point: decode_option(base_point, dec_point2)?, entities: decode_option(entities, |v| dec_named_triple(v, dec_str, dec_entity_record_diff, dec_entity_record))? })
@@ -572,7 +572,7 @@ pub(crate) fn dec_block_diff(s: &str) -> Result<CadBlockDiff, String> {
 //#endregion 🔖️DiffValueCodecs
 
 //#region 🔖️TopLevel
-fn print_cad_diff(d: &SemioCadDiff) -> String {
+async fn print_cad_diff(d: &SemioCadDiff) -> String {
     let mut tokens: Vec<String> = Vec::new();
     if let Some(l) = &d.layers {
         tokens.push(format!("layers={}", enc_named_triple(l, |k: &String| enc_str(k), enc_layer_diff, enc_layer)));
@@ -585,7 +585,7 @@ fn print_cad_diff(d: &SemioCadDiff) -> String {
     }
     tokens.join(" ")
 }
-fn parse_cad_diff(line: &str) -> Result<SemioCadDiff, String> {
+async fn parse_cad_diff(line: &str) -> Result<SemioCadDiff, String> {
     let mut d = SemioCadDiff::default();
     if line.is_empty() {
         return Ok(d);
@@ -607,26 +607,26 @@ fn parse_cad_diff(line: &str) -> Result<SemioCadDiff, String> {
 /// 🧪️ Real LEB128-varint-length-prefixed binary primitives (`store::pack_rt::write_varint_u64` /
 /// `store::ByteReader`) backing the real `DiffCodec::encode_diff`/`decode_diff` below — replaces
 /// the old `print_diff().into_bytes()` text-as-binary shortcut.
-fn write_bytes_lp(out: &mut Vec<u8>, bytes: &[u8]) {
+async fn write_bytes_lp(out: &mut Vec<u8>, bytes: &[u8]) {
     store::pack_rt::write_varint_u64(out, bytes.len() as u64);
     out.extend_from_slice(bytes);
 }
-fn read_bytes_lp(reader: &mut store::ByteReader<'_>) -> Result<Vec<u8>, String> {
+async fn read_bytes_lp(reader: &mut store::ByteReader<'_>) -> Result<Vec<u8>, String> {
     let len = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
     Ok(reader.read_bytes(len).map_err(|e| e.to_string())?.to_vec())
 }
-fn write_str_lp(out: &mut Vec<u8>, s: &str) {
+async fn write_str_lp(out: &mut Vec<u8>, s: &str) {
     write_bytes_lp(out, s.as_bytes());
 }
-fn read_str_lp(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
+async fn read_str_lp(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
     String::from_utf8(read_bytes_lp(reader)?).map_err(|e| e.to_string())
 }
 
 impl protocol::DiffCodec for SemioCadDiff {
-    fn print_diff(&self) -> String {
+    async fn print_diff(&self) -> String {
         print_cad_diff(self)
     }
-    fn parse_diff(line: &str) -> Result<Self, store::TextError> {
+    async fn parse_diff(line: &str) -> Result<Self, store::TextError> {
         parse_cad_diff(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
     /// ⚡️ Real binary diff frame, replacing the old `print_diff().into_bytes()` text-as-binary
@@ -637,7 +637,7 @@ impl protocol::DiffCodec for SemioCadDiff {
     /// because there can be 0-3 of them (chaining a `Cond` per-segment hits the
     /// `protocol-cond-cannot-chain` gap: a second `if`-guard on a field that was itself only
     /// conditionally decoded hard-errors `eval_cond`).
-    fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    async fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         const DIFF_BINARY_FORMAT: u8 = 1;
         let mut presence = 0u8;
         if self.layers.is_some() {
@@ -661,7 +661,7 @@ impl protocol::DiffCodec for SemioCadDiff {
         }
         Ok(out)
     }
-    fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    async fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         const DIFF_BINARY_FORMAT: u8 = 1;
         if bytes.len() < 2 {
             return Err(protocol::ProtocolError::Malformed { what: "diff header", offset: 0, detail: "truncated (need format+presence)".to_string() });
@@ -701,7 +701,7 @@ impl protocol::DiffCodec for SemioCadDiff {
 /// `#[cfg(test)] mod tests`'s own private `sweep_a`/`sweep_b`, since a private item of a child
 /// module is not visible to its parent).
 #[cfg(test)]
-pub(crate) fn demo_diff_cases() -> Vec<SemioCadDiff> {
+pub(crate) async fn demo_diff_cases() -> Vec<SemioCadDiff> {
     let a = SemioCadSnapshot {
         schema: crate::artifacts::semio::standards::v1::subsets::cad::schema::snapshot::STDIO_SEMIOCAD_DOCUMENT_SCHEMA.into(),
         layers: vec![CadLayer { name: "keep".into(), color_index: 1, line_type: "CONTINUOUS".into(), visible: true }, CadLayer { name: "layer-removed".into(), color_index: 2, line_type: "DASHED".into(), visible: false }],
@@ -745,7 +745,7 @@ mod tests {
     //#region Fixtures
     /// 🧪️ Every field/collection mutable, incl. a nested `blocks[].entities` add/remove/modify and
     /// an `entities` entry whose `entity` variant itself changes kind (Circle -> Ellipse).
-    fn sweep_a() -> SemioCadSnapshot {
+    async fn sweep_a() -> SemioCadSnapshot {
         SemioCadSnapshot {
             schema: crate::artifacts::semio::standards::v1::subsets::cad::schema::snapshot::STDIO_SEMIOCAD_DOCUMENT_SCHEMA.into(),
             layers: vec![CadLayer { name: "keep".into(), color_index: 1, line_type: "CONTINUOUS".into(), visible: true }, CadLayer { name: "layer-remove".into(), color_index: 2, line_type: "DASHED".into(), visible: false }],
@@ -767,7 +767,7 @@ mod tests {
         }
     }
 
-    fn sweep_b() -> SemioCadSnapshot {
+    async fn sweep_b() -> SemioCadSnapshot {
         SemioCadSnapshot {
             schema: crate::artifacts::semio::standards::v1::subsets::cad::schema::snapshot::STDIO_SEMIOCAD_DOCUMENT_SCHEMA.into(),
             layers: vec![CadLayer { name: "keep".into(), color_index: 9, line_type: "DASHDOT".into(), visible: false }, CadLayer { name: "layer-add".into(), color_index: 4, line_type: "HIDDEN".into(), visible: true }],
@@ -799,7 +799,7 @@ mod tests {
     /// collection one removed/one modified-in-every-field/one added, at BOTH the top level and the
     /// nested `blocks[].entities` level.
     #[test]
-    fn field_sweep() {
+    async fn field_sweep() {
         let a = sweep_a();
         let b = sweep_b();
 
@@ -842,7 +842,7 @@ mod tests {
     /// ⚖️ Law 3 — `absorb_law`: curated op list (Insert+Remove-before, Add+SetField-patches-into-
     /// added, Modify+Remove-annihilates) plus associativity — same canonical cases as bcf's.
     #[test]
-    fn absorb_law() {
+    async fn absorb_law() {
         let base = sweep_a();
 
         // Insert+Remove-before: add a layer, then remove an unrelated layer — independent, net
@@ -890,7 +890,7 @@ mod tests {
         assert_eq!(left.apply(&base).expect("apply must succeed for a well-formed fixture"), right.apply(&base).expect("apply must succeed for a well-formed fixture"), "absorb must be associative");
     }
 
-    fn assert_absorb_matches_sequential(base: &SemioCadSnapshot, d1: SemioCadDiff, d2: SemioCadDiff) -> SemioCadDiff {
+    async fn assert_absorb_matches_sequential(base: &SemioCadSnapshot, d1: SemioCadDiff, d2: SemioCadDiff) -> SemioCadDiff {
         let sequential = d2.apply(&d1.apply(base).expect("apply must succeed for a well-formed fixture")).expect("apply must succeed for a well-formed fixture");
         let mut absorbed = d1;
         MutationDiff::absorb(&mut absorbed, d2);
@@ -902,7 +902,7 @@ mod tests {
     //#region 🧪️Law4_BetweenRoundtripLaw
     /// ⚖️ Law 4 — `between_roundtrip_law`: `between(a,b).apply(a) == b` on fixtures.
     #[test]
-    fn between_roundtrip_law() {
+    async fn between_roundtrip_law() {
         let a = sweep_a();
         let b = sweep_b();
         let d = SemioCadDiff::between(&a, &b);
@@ -918,7 +918,7 @@ mod tests {
     /// round-trip, exercising every collection triple (top-level AND the nested
     /// `blocks[].entities`) plus all 9 `CadEntity` variants across `between()` results.
     #[test]
-    fn diff_codec_text_binary_roundtrip_law() {
+    async fn diff_codec_text_binary_roundtrip_law() {
         let a = sweep_a();
         let b = sweep_b();
         let mut cases = vec![SemioCadDiff::default(), SemioCadDiff::between(&a, &b), SemioCadDiff::between(&b, &a), SemioCadDiff::between(&a, &a)];

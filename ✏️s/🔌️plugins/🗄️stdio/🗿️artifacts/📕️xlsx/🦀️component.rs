@@ -33,11 +33,11 @@ pub const XLSX_ARTIFACT_SCHEMA_ID: &str = "s.stdio.xlsx";
 /// deleted `register_pilot_languages`' own doc comment), so this artifact converts cleanly with
 /// zero residual `.setup()` calls.
 /// 🧩️ Binds this executable root to its sole schema-owned definition.
-pub fn assembly(definition: semio_framework_plugin::ArtifactDefinition) -> Result<crate::registry::ArtifactAssembly, semio_framework_plugin::PluginAssemblyError> {
+pub async fn assembly(definition: semio_framework_plugin::ArtifactDefinition) -> Result<crate::registry::ArtifactAssembly, semio_framework_plugin::PluginAssemblyError> {
     crate::registry::runtime_assembly("xlsx", definition, declaration)
 }
 
-pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
+pub async fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
     let formats = crate::registry::format_descriptors_for("xlsx")?;
     semio_framework_plugin::ArtifactDeclaration::builder(definition)
         .schema(crate::artifacts::xlsx::schema::xlsx_artifact_schema_descriptor())
@@ -53,7 +53,7 @@ pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Re
 /// 🛡️ The `✳️strict`/`✳️transitional` subsets' `SubsetValidatorEntry` rows, re-derived (not moved)
 /// from the same side-effect-free `subset_validator_entry_of::<V>()` constructor each subset's own
 /// `🚪️io/🦀️component.rs` (module-private) `validator_entry()` calls.
-fn xlsx_subset_validators() -> &'static [semio_framework_plugin::SubsetValidatorEntry] {
+async fn xlsx_subset_validators() -> &'static [semio_framework_plugin::SubsetValidatorEntry] {
     static ENTRIES: std::sync::OnceLock<Vec<semio_framework_plugin::SubsetValidatorEntry>> = std::sync::OnceLock::new();
     ENTRIES
         .get_or_init(|| {
@@ -68,7 +68,7 @@ fn xlsx_subset_validators() -> &'static [semio_framework_plugin::SubsetValidator
 /// 📌️ Handcrafted facet grammars (text) and protocols (binary), copied verbatim (five
 /// `LanguageSpec` rows) from `crate::artifacts::xlsx::engine::register_pilot_languages`'s own
 /// `dsl::register_language(...)` call bodies.
-fn pilot_languages() -> &'static [dsl::LanguageSpec] {
+async fn pilot_languages() -> &'static [dsl::LanguageSpec] {
     static LANGUAGES: std::sync::OnceLock<Vec<dsl::LanguageSpec>> = std::sync::OnceLock::new();
     LANGUAGES
         .get_or_init(|| {
@@ -131,7 +131,7 @@ fn pilot_languages() -> &'static [dsl::LanguageSpec] {
 
 //#region 🔖️ArtifactKind
 /// 🗂️ This artifact's `ArtifactKindSpec`.
-pub fn artifact_kind() -> ArtifactKindSpec {
+pub async fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "stdio.xlsx".into(),
         name: "Xlsx".into(),
@@ -156,16 +156,16 @@ pub mod io_registry {
 
     static ENTRIES: OnceLock<Vec<&'static ComposerEntry>> = OnceLock::new();
 
-    pub fn entries() -> &'static [&'static ComposerEntry] {
+    pub async fn entries() -> &'static [&'static ComposerEntry] {
         ENTRIES.get_or_init(|| v_ecma_376::entries().iter().collect()).as_slice()
     }
 
-    pub fn compose(target: Dialect, sources: &[ErasedComposeSource]) -> Result<ComposedArtifact, ComposeError> {
+    pub async fn compose(target: Dialect, sources: &[ErasedComposeSource]) -> Result<ComposedArtifact, ComposeError> {
         let entry = entries().iter().find(|e| e.writes == target).ok_or_else(|| ComposeError { message: format!("XlsxComposer: no entry writes {:?}", target), diagnostics: Vec::new() })?;
         semio_framework_plugin::resolve_ready((entry.compose)(sources))
     }
 
-    pub fn register() {
+    pub async fn register() {
         let _ = register_composer_entries(v_ecma_376::entries());
     }
 }

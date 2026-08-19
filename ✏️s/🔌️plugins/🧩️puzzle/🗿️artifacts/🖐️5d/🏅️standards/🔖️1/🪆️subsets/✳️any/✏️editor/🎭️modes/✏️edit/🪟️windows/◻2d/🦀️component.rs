@@ -28,7 +28,7 @@ pub const SURFACE_ID: &str = "puzzle.5d.play.2d";
 /// puzzle5d freezes the first `window_measures()` frame into `options.measures` so the shell has LOD
 /// and utility chrome before the first `refreshUi` tick; every later frame comes from
 /// `ArtifactApp::window_measures`.
-pub fn definition(envelope: &Puzzle5dScene, precompute: &Puzzle5dPrecomputeSession, labels: &Puzzle5dLabels) -> WindowKindDefinition {
+pub async fn definition(envelope: &Puzzle5dScene, precompute: &Puzzle5dPrecomputeSession, labels: &Puzzle5dLabels) -> WindowKindDefinition {
     WindowKindDefinition {
         id: WINDOW_KIND_ID.into(),
         label: puzzle5d_localized(|l| l.window_2d),
@@ -49,21 +49,21 @@ pub fn definition(envelope: &Puzzle5dScene, precompute: &Puzzle5dPrecomputeSessi
 
 /// 🎚️ The live chrome measures for this window: its own LOD select plus the mode-level brush/fill
 /// Utility Options groups it shares with the 3D window.
-pub fn window_measures(envelope: &Puzzle5dScene, precompute: &Puzzle5dPrecomputeSession, labels: &Puzzle5dLabels) -> Vec<WindowMeasure> {
+pub async fn window_measures(envelope: &Puzzle5dScene, precompute: &Puzzle5dPrecomputeSession, labels: &Puzzle5dLabels) -> Vec<WindowMeasure> {
     vec![options::lod::measure(&envelope.runtime, labels), mode_options::fill::measure(envelope, labels), mode_options::brush::measure(envelope, precompute, labels)]
 }
 
-pub fn engagement(envelope: &Puzzle5dScene, labels: &Puzzle5dLabels) -> WindowEngagement {
+pub async fn engagement(envelope: &Puzzle5dScene, labels: &Puzzle5dLabels) -> WindowEngagement {
     edit::puzzle5d_engagement(envelope, WINDOW_KIND_ID, labels)
 }
 //#endregion 🔖️Definition
 
 //#region 🔖️BoardJson
-pub fn board_camera_value(camera: &Puzzle5dCamera2d) -> Value {
+pub async fn board_camera_value(camera: &Puzzle5dCamera2d) -> Value {
     json!({ "x": camera.x, "y": camera.y, "zoom": camera.zoom })
 }
 
-fn board_node_value(part: &Puzzle5dPart) -> Value {
+async fn board_node_value(part: &Puzzle5dPart) -> Value {
     let shape = if part.part_2d.shape.is_empty() { "circle" } else { part.part_2d.shape.as_str() };
     let handles: Vec<Value> = part
         .grips
@@ -105,7 +105,7 @@ fn board_node_value(part: &Puzzle5dPart) -> Value {
 }
 
 /// 🗂️ Projects the unified 5d kind bundle (`parts/grips/fasteners/ropes`) to the board's `nodes/handles/edges/wires` naming.
-pub fn board_kind_catalogs_value(document: &Puzzle5dDocument) -> Value {
+pub async fn board_kind_catalogs_value(document: &Puzzle5dDocument) -> Value {
     let catalogs = document.kind_catalogs.clone().unwrap_or(json!({}));
     json!({
         "nodes": catalogs.get("parts").cloned().unwrap_or(json!([])),
@@ -115,7 +115,7 @@ pub fn board_kind_catalogs_value(document: &Puzzle5dDocument) -> Value {
     })
 }
 
-fn board_fixture_value(document: &Puzzle5dDocument, camera2d: &Puzzle5dCamera2d) -> Value {
+async fn board_fixture_value(document: &Puzzle5dDocument, camera2d: &Puzzle5dCamera2d) -> Value {
     let nodes: Vec<Value> = document.parts.iter().map(board_node_value).collect();
     let edges: Vec<Value> = document
         .fasteners
@@ -142,11 +142,11 @@ fn board_fixture_value(document: &Puzzle5dDocument, camera2d: &Puzzle5dCamera2d)
     })
 }
 
-fn board_brush_weights_json(runtime: &Puzzle5dRuntime) -> String {
+async fn board_brush_weights_json(runtime: &Puzzle5dRuntime) -> String {
     json!({ "nodeWeights": runtime.object_kind_weights, "handleWeights": runtime.vortex_kind_weights }).to_string()
 }
 
-fn puzzle5d_board_scene(envelope: &Puzzle5dScene) -> Board2dScene {
+async fn puzzle5d_board_scene(envelope: &Puzzle5dScene) -> Board2dScene {
     Board2dScene {
         fixture_json: board_fixture_value(&envelope.document, &envelope.runtime.camera2d).to_string(),
         camera_json: board_camera_value(&envelope.runtime.camera2d).to_string(),
@@ -172,7 +172,7 @@ fn puzzle5d_board_scene(envelope: &Puzzle5dScene) -> Board2dScene {
 //#endregion 🔖️BoardJson
 
 //#region 🔖️Render
-pub fn render(envelope: &Puzzle5dScene) -> UiNode {
+pub async fn render(envelope: &Puzzle5dScene) -> UiNode {
     build_board2d_scene(SURFACE_ID, PUZZLE5D_PLAY_CONTROLLER_ID, puzzle5d_board_scene(envelope))
 }
 //#endregion 🔖️Render
@@ -184,7 +184,7 @@ mod tests {
     use crate::editor::puzzle5d::testkit::*;
 
     #[test]
-    fn renders_the_board_scene() {
+    async fn renders_the_board_scene() {
         let mut app = app();
         assert!(render_body(&mut app, BODY_KEY).contains("board-2d"));
     }

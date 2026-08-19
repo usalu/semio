@@ -28,14 +28,14 @@ pub enum XmlAnyEditorCommand {
     SetNode { node_id: String, value: String },
 }
 
-fn decode_node_id(node_id: &str) -> Result<Vec<usize>, String> {
+async fn decode_node_id(node_id: &str) -> Result<Vec<usize>, String> {
     if node_id.is_empty() {
         return Ok(Vec::new());
     }
     node_id.split('/').map(|segment| segment.parse::<usize>().map_err(|error| error.to_string())).collect()
 }
 
-fn resolve_node<'a>(root: &'a XmlNode, path: &[usize]) -> Option<&'a XmlNode> {
+async fn resolve_node<'a>(root: &'a XmlNode, path: &[usize]) -> Option<&'a XmlNode> {
     let mut node = root;
     for &index in path {
         match node {
@@ -47,11 +47,11 @@ fn resolve_node<'a>(root: &'a XmlNode, path: &[usize]) -> Option<&'a XmlNode> {
 }
 
 impl protocol::OpText for XmlAnyEditorCommand {
-    fn print_op(&self) -> String {
+    async fn print_op(&self) -> String {
         let XmlAnyEditorCommand::SetNode { node_id, value } = self;
         format!("set-node node-id={} value={}", node_id.replace(' ', "%20"), value.replace(' ', "%20"))
     }
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
+    async fn parse_op(line: &str) -> Result<Self, store::TextError> {
         let rest = line.strip_prefix("set-node ").ok_or_else(|| store::TextError::new(format!("xml editor command: unknown line {line:?}"), dsl::TextSpan::at(1, 1)))?;
         let mut node_id = None;
         let mut value = None;
@@ -70,10 +70,10 @@ impl protocol::OpText for XmlAnyEditorCommand {
 }
 
 impl protocol::OpBinary for XmlAnyEditorCommand {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         Ok(<Self as protocol::OpText>::print_op(self).into_bytes())
     }
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         let line = String::from_utf8(bytes.to_vec()).map_err(|error| protocol::ProtocolError::Malformed { what: "xml editor command utf8", offset: 0, detail: error.to_string() })?;
         <Self as protocol::OpText>::parse_op(&line).map_err(|error| protocol::ProtocolError::Malformed { what: "xml editor command", offset: 0, detail: error.to_string() })
     }
@@ -100,13 +100,13 @@ impl ArtifactEditor for XmlAnyEditor {
     const DIALECT: Dialect = XML_EDITOR_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = STDIO_XML_DOCUMENT_SCHEMA;
 
-    fn initial_snapshot() -> XmlSnapshot {
+    async fn initial_snapshot() -> XmlSnapshot {
         XmlSnapshot::default()
     }
 
     /// ✏️ Only a `Text` node found at `node_id` accepts `set-node` — anything else (unparseable
     /// id, missing node, non-`Text` node) is a documented no-op (`Emit::default()`).
-    fn handle(
+    async fn handle(
         command: &Self::Command,
         doc: &ArtifactView<'_, Self::Snapshot>,
         _cfg: &ConfigView<'_, Self::Config>,
@@ -121,7 +121,7 @@ impl ArtifactEditor for XmlAnyEditor {
         Ok(Emit { artifact_mutations: vec![XmlMutation::SetText { path: XmlNodePath(path), text: value.clone() }], description: Some(format!("Set node {node_id}")), ..Default::default() })
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> UiNode {
+    async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> UiNode {
         match body_key {
             main::BODY_KEY => main::render(doc.snapshot),
             _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))),
@@ -131,7 +131,7 @@ impl ArtifactEditor for XmlAnyEditor {
 //#endregion 🔖️Editor
 
 //#region 🔖️Manifest
-pub fn create_xml_editor() -> semio_framework_plugin::AppDefinition {
+pub async fn create_xml_editor() -> semio_framework_plugin::AppDefinition {
     Editor::builder(XML_EDITOR_DIALECT)
         .document(["semio", "stdio", "xml"])
         .icon_id("list-tree")
@@ -149,32 +149,32 @@ mod tests {
     use super::*;
 
     #[test]
-    fn create_xml_editor_builds_a_definition_for_the_editor_role() {
+    async fn create_xml_editor_builds_a_definition_for_the_editor_role() {
         let def = create_xml_editor();
         assert_eq!(def.role, semio_framework_plugin::AppRole::Editor);
         assert_eq!(def.dialect, XML_EDITOR_DIALECT.into());
     }
 
     #[test]
-    fn editor_dialect_matches_the_artifact_coordinate() {
+    async fn editor_dialect_matches_the_artifact_coordinate() {
         assert_eq!(<XmlAnyEditor as ArtifactEditor>::DIALECT, XML_EDITOR_DIALECT);
     }
 
     #[test]
-    fn editor_declares_the_tree_window() {
+    async fn editor_declares_the_tree_window() {
         let def = create_xml_editor();
         assert!(def.window_kinds.iter().any(|window| window.id == main::WINDOW_KIND_ID));
     }
 
     #[test]
-    fn decode_node_id_roundtrips_root_and_nested() {
+    async fn decode_node_id_roundtrips_root_and_nested() {
         assert_eq!(decode_node_id("").unwrap(), Vec::<usize>::new());
         assert_eq!(decode_node_id("0/2").unwrap(), vec![0, 2]);
         assert!(decode_node_id("bad").is_err());
     }
 
     #[test]
-    fn op_text_roundtrip() {
+    async fn op_text_roundtrip() {
         let command = XmlAnyEditorCommand::SetNode { node_id: "0/2".into(), value: "hello world".into() };
         let printed = <XmlAnyEditorCommand as protocol::OpText>::print_op(&command);
         let parsed = <XmlAnyEditorCommand as protocol::OpText>::parse_op(&printed).expect("parse ok");

@@ -10,7 +10,7 @@ use semio_framework_plugin::app::declarations::{MediaDeclaration, StandardDeclar
 use semio_framework_plugin::StandardId;
 
 /// 🌳️ `standard "utf-8"`'s complete declaration — one subset, `any`.
-pub fn standard() -> StandardDeclaration {
+pub async fn standard() -> StandardDeclaration {
     StandardDeclaration {
         id: StandardId("utf-8"),
         media: MediaDeclaration { mimes: &["text/plain"], extensions: &["txt"] },

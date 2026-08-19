@@ -25,7 +25,7 @@ pub struct PlyInference {
 }
 
 impl protocol::Inference<PlySnapshot> for PlyInference {
-    fn infer(snapshot: &PlySnapshot) -> Self {
+    async fn infer(snapshot: &PlySnapshot) -> Self {
         Self { bounds: compute_ply_bounds(snapshot) }
     }
 }
@@ -33,19 +33,19 @@ impl protocol::Inference<PlySnapshot> for PlyInference {
 /// 🌱 Defined in terms of `infer` (not derived) — keeps the law correct regardless of whether
 /// `PlySnapshot::default()`'s `elements` ever stops being empty.
 impl Default for PlyInference {
-    fn default() -> Self {
+    async fn default() -> Self {
         <Self as protocol::Inference<PlySnapshot>>::infer(&PlySnapshot::default())
     }
 }
 
 impl protocol::InferenceSpec<PlySnapshot> for PlyInference {
-    fn inference_schema_id() -> &'static str {
+    async fn inference_schema_id() -> &'static str {
         "s.stdio.ply.inference"
     }
-    fn schema_version() -> u32 {
+    async fn schema_version() -> u32 {
         1
     }
-    fn fields() -> &'static [protocol::InferenceFieldSpec] {
+    async fn fields() -> &'static [protocol::InferenceFieldSpec] {
         &[protocol::InferenceFieldSpec { id: "s.stdio.ply.inference.bounds", reads: &["elements"] }]
     }
 }
@@ -66,7 +66,7 @@ impl ArtifactInferrer for crate::artifacts::ply::standards::v1_0::subsets::any::
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.stdio.ply.inference`'s facet leaves into the OS-wide inference catalog —
 /// call once at plugin init, alongside `ply_artifact_schema_descriptor`'s registration.
-pub fn ply_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
+pub async fn ply_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
     schema::ArtifactInferenceDescriptor {
         id: "s.stdio.ply.inference",
         inference: schema::FacetLeaves {
@@ -87,13 +87,13 @@ mod tests {
     use protocol::Inference;
 
     #[test]
-    fn inference_determinism_law() {
+    async fn inference_determinism_law() {
         let snapshot = PlySnapshot::default();
         assert_eq!(PlyInference::infer(&snapshot), PlyInference::infer(&snapshot));
     }
 
     #[test]
-    fn inference_default_law() {
+    async fn inference_default_law() {
         assert_eq!(PlyInference::infer(&PlySnapshot::default()), PlyInference::default());
     }
 }

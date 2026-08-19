@@ -46,7 +46,7 @@ pub struct TriangleMesh {
 // #region 🔖️Convert
 
 /// 📦 Converts a tessellation [`MeshTransfer`] into a [`TriangleMesh`].
-pub fn triangle_mesh_from_transfer(transfer: &MeshTransfer) -> TriangleMesh {
+pub async fn triangle_mesh_from_transfer(transfer: &MeshTransfer) -> TriangleMesh {
     let mut positions = Vec::with_capacity(transfer.position.len() / 3);
     for chunk in transfer.position.chunks_exact(3) {
         positions.push(Pnt3::new(chunk[0] as f64, chunk[1] as f64, chunk[2] as f64));
@@ -59,7 +59,7 @@ pub fn triangle_mesh_from_transfer(transfer: &MeshTransfer) -> TriangleMesh {
 }
 
 /// 📦 Converts a [`TriangleMesh`] into framework-core [`MeshData`].
-pub fn mesh_to_mesh_data(mesh: &TriangleMesh) -> MeshData {
+pub async fn mesh_to_mesh_data(mesh: &TriangleMesh) -> MeshData {
     let mut positions = Vec::with_capacity(mesh.positions.len() * 3);
     for p in &mesh.positions {
         positions.extend_from_slice(&[p.x as f32, p.y as f32, p.z as f32]);
@@ -72,7 +72,7 @@ pub fn mesh_to_mesh_data(mesh: &TriangleMesh) -> MeshData {
 }
 
 /// 📦 Converts [`MeshData`] into a [`TriangleMesh`].
-pub fn mesh_from_mesh_data(data: &MeshData) -> TriangleMesh {
+pub async fn mesh_from_mesh_data(data: &MeshData) -> TriangleMesh {
     let mut positions = Vec::with_capacity(data.vertex_count());
     for chunk in data.positions.chunks_exact(3) {
         positions.push(Pnt3::new(chunk[0] as f64, chunk[1] as f64, chunk[2] as f64));
@@ -92,51 +92,51 @@ pub fn mesh_from_mesh_data(data: &MeshData) -> TriangleMesh {
 
 /// 📦 Tessellates `solid` and encodes binary STL. ASCII STL export lives in the `s.stdio.stl/ascii`
 /// artifact dialect (`SemioMeshToStl` + `encode_stl_ascii`), not here.
-pub fn export_solid_stl(body: &Body, solid: SolidId, deflection: f64) -> Result<Vec<u8>, KernelError> {
+pub async fn export_solid_stl(body: &Body, solid: SolidId, deflection: f64) -> Result<Vec<u8>, KernelError> {
     let transfer = tessellate_solid(body, solid, deflection)?;
     export_stl(&triangle_mesh_from_transfer(&transfer))
 }
 
 /// 📦 Decodes STL bytes into `body` as a single solid.
-pub fn import_stl_to_body(body: &mut Body, data: &[u8], tolerance: f64) -> Result<SolidId, KernelError> {
+pub async fn import_stl_to_body(body: &mut Body, data: &[u8], tolerance: f64) -> Result<SolidId, KernelError> {
     import_triangle_mesh_to_body(body, &import_stl(data)?, tolerance)
 }
 
 /// 📦 Tessellates `solid` and encodes OBJ text.
-pub fn export_solid_obj(body: &Body, solid: SolidId, deflection: f64) -> Result<String, KernelError> {
+pub async fn export_solid_obj(body: &Body, solid: SolidId, deflection: f64) -> Result<String, KernelError> {
     let transfer = tessellate_solid(body, solid, deflection)?;
     export_obj(&triangle_mesh_from_transfer(&transfer))
 }
 
 /// 📦 Decodes OBJ text into `body` as a single solid.
-pub fn import_obj_to_body(body: &mut Body, text: &str, tolerance: f64) -> Result<SolidId, KernelError> {
+pub async fn import_obj_to_body(body: &mut Body, text: &str, tolerance: f64) -> Result<SolidId, KernelError> {
     import_triangle_mesh_to_body(body, &import_obj(text)?, tolerance)
 }
 
 /// 📦 Tessellates `solid` and encodes GLB bytes.
-pub fn export_solid_glb(body: &Body, solid: SolidId, deflection: f64) -> Result<Vec<u8>, KernelError> {
+pub async fn export_solid_glb(body: &Body, solid: SolidId, deflection: f64) -> Result<Vec<u8>, KernelError> {
     let transfer = tessellate_solid(body, solid, deflection)?;
     export_glb(&triangle_mesh_from_transfer(&transfer))
 }
 
 /// 📦 Decodes GLB bytes into `body` as a single solid.
-pub fn import_glb_to_body(body: &mut Body, data: &[u8], tolerance: f64) -> Result<SolidId, KernelError> {
+pub async fn import_glb_to_body(body: &mut Body, data: &[u8], tolerance: f64) -> Result<SolidId, KernelError> {
     import_triangle_mesh_to_body(body, &import_glb(data)?, tolerance)
 }
 
 /// 📦 Tessellates `solid` and encodes DWG mesh bytes.
-pub fn export_solid_dwg(body: &Body, solid: SolidId, deflection: f64) -> Result<Vec<u8>, KernelError> {
+pub async fn export_solid_dwg(body: &Body, solid: SolidId, deflection: f64) -> Result<Vec<u8>, KernelError> {
     let transfer = tessellate_solid(body, solid, deflection)?;
     export_dwg(&triangle_mesh_from_transfer(&transfer))
 }
 
 /// 📦 Decodes DWG mesh bytes into `body` as a single solid.
-pub fn import_dwg_to_body(body: &mut Body, data: &[u8], tolerance: f64) -> Result<SolidId, KernelError> {
+pub async fn import_dwg_to_body(body: &mut Body, data: &[u8], tolerance: f64) -> Result<SolidId, KernelError> {
     import_triangle_mesh_to_body(body, &import_dwg(data)?, tolerance)
 }
 
 /// 📦 Encodes a [`TriangleMesh`] as binary STL.
-pub fn export_stl(mesh: &TriangleMesh) -> Result<Vec<u8>, KernelError> {
+pub async fn export_stl(mesh: &TriangleMesh) -> Result<Vec<u8>, KernelError> {
     if mesh.indices.len() < 3 {
         return Err(KernelError::InvalidInput("mesh has no triangles".into()));
     }
@@ -144,7 +144,7 @@ pub fn export_stl(mesh: &TriangleMesh) -> Result<Vec<u8>, KernelError> {
 }
 
 /// 📦 Decodes STL bytes (auto-detects binary vs ASCII).
-pub fn import_stl(data: &[u8]) -> Result<TriangleMesh, KernelError> {
+pub async fn import_stl(data: &[u8]) -> Result<TriangleMesh, KernelError> {
     if is_ascii_stl(data) {
         read_ascii_stl(data)
     } else {
@@ -153,41 +153,41 @@ pub fn import_stl(data: &[u8]) -> Result<TriangleMesh, KernelError> {
 }
 
 /// 📦 Encodes OBJ text from a [`TriangleMesh`].
-pub fn export_obj(mesh: &TriangleMesh) -> Result<String, KernelError> {
+pub async fn export_obj(mesh: &TriangleMesh) -> Result<String, KernelError> {
     Ok(mesh_to_obj(&mesh_to_mesh_data(mesh), "mesh"))
 }
 
 /// 📦 Parses OBJ text into a [`TriangleMesh`].
-pub fn import_obj(text: &str) -> Result<TriangleMesh, KernelError> {
+pub async fn import_obj(text: &str) -> Result<TriangleMesh, KernelError> {
     mesh_from_obj(text).map(|data| mesh_from_mesh_data(&data)).map_err(KernelError::Operation)
 }
 
 /// 📦 Encodes GLB from a [`TriangleMesh`] using [`GlbExporter`].
-pub fn export_glb(mesh: &TriangleMesh) -> Result<Vec<u8>, KernelError> {
+pub async fn export_glb(mesh: &TriangleMesh) -> Result<Vec<u8>, KernelError> {
     let data = mesh_to_mesh_data(mesh);
     GlbExporter.export(&data).map_err(KernelError::Operation)
 }
 
 /// 📦 Decodes GLB into a [`TriangleMesh`] using [`GlbImporter`].
-pub fn import_glb(data: &[u8]) -> Result<TriangleMesh, KernelError> {
+pub async fn import_glb(data: &[u8]) -> Result<TriangleMesh, KernelError> {
     GlbImporter.import(data).map(|data| mesh_from_mesh_data(&data)).map_err(KernelError::Operation)
 }
 
 /// 📦 Encodes DWG mesh bytes from a [`TriangleMesh`].
-pub fn export_dwg(mesh: &TriangleMesh) -> Result<Vec<u8>, KernelError> {
+pub async fn export_dwg(mesh: &TriangleMesh) -> Result<Vec<u8>, KernelError> {
     let data = mesh_to_mesh_data(mesh);
     let drawing = mesh_to_dwg_drawing(&data);
     dwg_to_bytes(&drawing).map_err(KernelError::Operation)
 }
 
 /// 📦 Decodes DWG bytes into a [`TriangleMesh`].
-pub fn import_dwg(data: &[u8]) -> Result<TriangleMesh, KernelError> {
+pub async fn import_dwg(data: &[u8]) -> Result<TriangleMesh, KernelError> {
     let drawing = dwg_from_bytes(data).map_err(KernelError::Operation)?;
     Ok(mesh_from_mesh_data(&dwg_drawing_to_mesh(&drawing)))
 }
 
 /// 📦 Imports a triangle soup as a single solid shell (one planar face per triangle).
-pub fn import_triangle_mesh_to_body(body: &mut Body, mesh: &TriangleMesh, tolerance: f64) -> Result<SolidId, KernelError> {
+pub async fn import_triangle_mesh_to_body(body: &mut Body, mesh: &TriangleMesh, tolerance: f64) -> Result<SolidId, KernelError> {
     if mesh.indices.len() < 3 {
         return Err(KernelError::InvalidInput("mesh has no triangles".into()));
     }
@@ -231,7 +231,7 @@ pub fn import_triangle_mesh_to_body(body: &mut Body, mesh: &TriangleMesh, tolera
 
 // #region 🔖️StlAscii
 
-fn is_ascii_stl(data: &[u8]) -> bool {
+async fn is_ascii_stl(data: &[u8]) -> bool {
     if data.len() < 84 {
         return data.len() >= 5 && data[..5].eq_ignore_ascii_case(b"solid");
     }
@@ -243,7 +243,7 @@ fn is_ascii_stl(data: &[u8]) -> bool {
     expected != data.len() as u64
 }
 
-fn read_ascii_stl(data: &[u8]) -> Result<TriangleMesh, KernelError> {
+async fn read_ascii_stl(data: &[u8]) -> Result<TriangleMesh, KernelError> {
     let text = std::str::from_utf8(data).map_err(|e| KernelError::Operation(format!("ascii stl utf-8: {e}")))?;
     let mut mesh = TriangleMesh::default();
     let mut current_normal = Vec3::Z;
@@ -265,7 +265,7 @@ fn read_ascii_stl(data: &[u8]) -> Result<TriangleMesh, KernelError> {
     Ok(mesh)
 }
 
-fn parse_vec3_token(s: &str) -> Result<Vec3, KernelError> {
+async fn parse_vec3_token(s: &str) -> Result<Vec3, KernelError> {
     let parts: Vec<&str> = s.split_whitespace().collect();
     if parts.len() < 3 {
         return Err(KernelError::Operation(format!("expected 3 floats, got '{s}'")));
@@ -273,7 +273,7 @@ fn parse_vec3_token(s: &str) -> Result<Vec3, KernelError> {
     Ok(Vec3::new(parse_f64_token(parts[0])?, parse_f64_token(parts[1])?, parse_f64_token(parts[2])?))
 }
 
-fn parse_point3_token(s: &str) -> Result<Pnt3, KernelError> {
+async fn parse_point3_token(s: &str) -> Result<Pnt3, KernelError> {
     let parts: Vec<&str> = s.split_whitespace().collect();
     if parts.len() < 3 {
         return Err(KernelError::Operation(format!("expected 3 floats, got '{s}'")));
@@ -281,7 +281,7 @@ fn parse_point3_token(s: &str) -> Result<Pnt3, KernelError> {
     Ok(Pnt3::new(parse_f64_token(parts[0])?, parse_f64_token(parts[1])?, parse_f64_token(parts[2])?))
 }
 
-fn parse_f64_token(s: &str) -> Result<f64, KernelError> {
+async fn parse_f64_token(s: &str) -> Result<f64, KernelError> {
     s.parse::<f64>().map_err(|e| KernelError::Operation(format!("invalid float '{s}': {e}")))
 }
 
@@ -289,7 +289,7 @@ fn parse_f64_token(s: &str) -> Result<f64, KernelError> {
 
 // #region 🔖️MeshToBody
 
-fn should_flip_winding(mesh: &TriangleMesh) -> bool {
+async fn should_flip_winding(mesh: &TriangleMesh) -> bool {
     if mesh.normals.len() >= mesh.positions.len() {
         return false;
     }
@@ -316,7 +316,7 @@ mod tests {
     use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::primitives::make_box;
 
     #[test]
-    fn export_box_mesh_stl_nonempty() {
+    async fn export_box_mesh_stl_nonempty() {
         let mut body = Body::new();
         let mut rec = OpRecorder::new();
         let solid = make_box(&mut body, 1.0, 1.0, 1.0, &mut rec).unwrap();
@@ -327,7 +327,7 @@ mod tests {
     }
 
     #[test]
-    fn import_stl_produces_faces() {
+    async fn import_stl_produces_faces() {
         let mut body = Body::new();
         let mut rec = OpRecorder::new();
         let solid = make_box(&mut body, 1.0, 1.0, 1.0, &mut rec).unwrap();
@@ -338,7 +338,7 @@ mod tests {
     }
 
     #[test]
-    fn obj_export_import_round_trip() {
+    async fn obj_export_import_round_trip() {
         let mut body = Body::new();
         let mut rec = OpRecorder::new();
         let solid = make_box(&mut body, 1.0, 1.0, 1.0, &mut rec).unwrap();
@@ -349,7 +349,7 @@ mod tests {
     }
 
     #[test]
-    fn glb_export_import_round_trip() {
+    async fn glb_export_import_round_trip() {
         let mut body = Body::new();
         let mut rec = OpRecorder::new();
         let solid = make_box(&mut body, 1.0, 1.0, 1.0, &mut rec).unwrap();
@@ -360,7 +360,7 @@ mod tests {
     }
 
     #[test]
-    fn import_glb_to_body_has_faces() {
+    async fn import_glb_to_body_has_faces() {
         let mut body = Body::new();
         let mut rec = OpRecorder::new();
         let solid = make_box(&mut body, 1.0, 1.0, 1.0, &mut rec).unwrap();
@@ -373,7 +373,7 @@ mod tests {
 
 impl TriangleMesh {
     #[cfg(test)]
-    fn triangle_count(&self) -> usize {
+    async fn triangle_count(&self) -> usize {
         self.indices.len() / 3
     }
 }

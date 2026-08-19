@@ -17,7 +17,7 @@ pub struct StlBounds {
     pub triangle_count: u32,
 }
 
-fn expand(min: &mut [f64; 3], max: &mut [f64; 3], seen: &mut bool, p: [f64; 3]) {
+async fn expand(min: &mut [f64; 3], max: &mut [f64; 3], seen: &mut bool, p: [f64; 3]) {
     if !*seen {
         *min = p;
         *max = p;
@@ -30,14 +30,14 @@ fn expand(min: &mut [f64; 3], max: &mut [f64; 3], seen: &mut bool, p: [f64; 3]) 
     }
 }
 
-fn expand_triangle(min: &mut [f64; 3], max: &mut [f64; 3], seen: &mut bool, triangle: &StlTriangle) {
+async fn expand_triangle(min: &mut [f64; 3], max: &mut [f64; 3], seen: &mut bool, triangle: &StlTriangle) {
     for vertex in &triangle.vertices {
         expand(min, max, seen, *vertex);
     }
 }
 
 /// 📦️ Computes [`StlBounds`] over every triangle's own 3 vertices.
-pub fn compute_stl_bounds(snapshot: &StlSnapshot) -> StlBounds {
+pub async fn compute_stl_bounds(snapshot: &StlSnapshot) -> StlBounds {
     let mut min = [0.0f64; 3];
     let mut max = [0.0f64; 3];
     let mut seen = false;
@@ -56,12 +56,12 @@ mod tests {
     use super::*;
     use crate::artifacts::stl::STDIO_STL_DOCUMENT_SCHEMA;
 
-    fn triangle(normal: [f64; 3], vertices: [[f64; 3]; 3]) -> StlTriangle {
+    async fn triangle(normal: [f64; 3], vertices: [[f64; 3]; 3]) -> StlTriangle {
         StlTriangle { normal, vertices }
     }
 
     #[test]
-    fn bounds_matches_hand_built_triangle_extent() {
+    async fn bounds_matches_hand_built_triangle_extent() {
         let snapshot = StlSnapshot {
             schema: STDIO_STL_DOCUMENT_SCHEMA.into(),
             solid_name: "cube_corner".into(),
@@ -74,13 +74,13 @@ mod tests {
     }
 
     #[test]
-    fn inference_determinism_law() {
+    async fn inference_determinism_law() {
         let snapshot = StlSnapshot { schema: STDIO_STL_DOCUMENT_SCHEMA.into(), solid_name: "solid".into(), triangles: vec![triangle([0.0, 0.0, 1.0], [[0.0, 0.0, 0.0], [1.0, 0.0, 0.0], [0.0, 1.0, 0.0]])] };
         assert_eq!(compute_stl_bounds(&snapshot), compute_stl_bounds(&snapshot));
     }
 
     #[test]
-    fn inference_default_law() {
+    async fn inference_default_law() {
         assert_eq!(compute_stl_bounds(&StlSnapshot::default()), StlBounds::default());
     }
 }

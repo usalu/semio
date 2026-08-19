@@ -27,24 +27,24 @@ pub struct PlyArtifact {
 
 //#region 🔖️Conversions
 impl Default for PlyArtifact {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self::from_snapshot(PlySnapshot::default())
     }
 }
 
 impl PlyArtifact {
     /// 📸️ Persisted subset.
-    pub fn to_snapshot(&self) -> PlySnapshot {
+    pub async fn to_snapshot(&self) -> PlySnapshot {
         PlySnapshot { schema: self.schema.clone(), format: self.format, comments: self.comments.clone(), elements: self.elements.clone() }
     }
 
     /// 🧬️ Builds a full artifact from a snapshot.
-    pub fn from_snapshot(snapshot: PlySnapshot) -> Self {
+    pub async fn from_snapshot(snapshot: PlySnapshot) -> Self {
         Self { schema: snapshot.schema, format: snapshot.format, comments: snapshot.comments, elements: snapshot.elements }
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
-    pub fn set_snapshot(&mut self, snapshot: PlySnapshot) {
+    pub async fn set_snapshot(&mut self, snapshot: PlySnapshot) {
         self.schema = snapshot.schema;
         self.format = snapshot.format;
         self.comments = snapshot.comments;
@@ -55,7 +55,7 @@ impl PlyArtifact {
 
 //#region 🔖️Descriptor
 /// 🧬️ Descriptor for `s.stdio.ply`.
-pub fn ply_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
+pub async fn ply_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
     schema::ArtifactSchemaDescriptor {
         id: "s.stdio.ply",
         artifact: schema::FacetLeaves {
@@ -106,27 +106,27 @@ pub mod derived_construction {
         type Snapshot = PlySnapshot;
         type Mutation = PlyMutation;
         type Diff = PlyDiff;
-        fn empty() -> Self {
+        async fn empty() -> Self {
             Self { snapshot: PlySnapshot::default(), diagnostics: Vec::new() }
         }
-        fn from_snapshot(snapshot: Self::Snapshot) -> Self {
+        async fn from_snapshot(snapshot: Self::Snapshot) -> Self {
             Self { snapshot, diagnostics: Vec::new() }
         }
-        fn from_text(text: &str) -> Result<Self, store::TextError> {
+        async fn from_text(text: &str) -> Result<Self, store::TextError> {
             Ok(Self::from_snapshot(<PlySnapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
-        fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
+        async fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
             Ok(Self::from_snapshot(<PlySnapshot as store::ArtifactPack>::decode_pack(bytes)?))
         }
-        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
+        async fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let diff = crate::artifacts::ply::schema::mutations::apply_ply_mutation(&mut self.snapshot, &mutation);
             (self, diff)
         }
-        fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
+        async fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
             self.snapshot = <PlyDiff as protocol::MutationDiff<PlySnapshot>>::apply(&diff, &self.snapshot)?;
             Ok(self)
         }
-        fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
+        async fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
             if self.diagnostics.is_empty() {
                 Ok(self.snapshot)
             } else {
@@ -160,7 +160,7 @@ pub mod derived_analysis {
         type Parts = PlyParts;
         const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.ply", standard: StandardId("1.0"), subset: SubsetId("*") };
 
-        fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
+        async fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
             // 🔍 PLY files (ascii or either binary variant) always start with a literal ASCII
             // "ply" magic line — `ply\n` or `ply\r\n` — per the format spec. Unlike png/las,
             // stdio.ply's text envelope embeds the raw ply bytes directly (no hex dump), so both
@@ -190,7 +190,7 @@ pub mod derived_analysis {
             }
         }
 
-        fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
+        async fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
             let mut parts = PlyParts::default();
             let mut diagnostics = Vec::new();
             let mut confidence = IoConfidence::High;
@@ -222,7 +222,7 @@ pub use derived_analysis::*;
 
 //#region 🔖️DocumentHelpers
 /// 🌱 Empty persisted snapshot.
-pub fn empty_ply_snapshot() -> PlySnapshot {
+pub async fn empty_ply_snapshot() -> PlySnapshot {
     PlySnapshot::default()
 }
 
@@ -237,7 +237,7 @@ pub fn empty_ply_snapshot() -> PlySnapshot {
 /// DSL/text facet's own format-normalization would silently overwrite it. The Pack facet (which
 /// DOES respect `self.format`) is exercised against genuine BINARY bytes separately, by
 /// `protocol_walk_law` calling `encode_ply_with_format` directly with a non-ascii format.
-pub fn demo_ply_snapshot() -> PlySnapshot {
+pub async fn demo_ply_snapshot() -> PlySnapshot {
     use crate::artifacts::ply::schema::snapshot::{PlyProperty, PlyRow, PlyScalarType, PlyValue};
     PlySnapshot {
         schema: crate::artifacts::ply::STDIO_PLY_DOCUMENT_SCHEMA.into(),

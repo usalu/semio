@@ -47,18 +47,18 @@ pub const DRAW_INTERACTION_GRANULARITY: &str = "stroke";
 
 /// 🎯️ An `ActionDescriptor` addressed at this app — the single factory every taxonomy node's chrome
 /// (`📌️panels/*`) builds its `on_change`/item actions with.
-pub fn draw_play_action(action: &str, args: Option<Value>) -> ActionDescriptor {
+pub async fn draw_play_action(action: &str, args: Option<Value>) -> ActionDescriptor {
     semio_framework_plugin::ActionFactory::new(DRAW_PLAY_CONTROLLER_ID).action(action, args)
 }
 
 /// 🛠️ An internal (non-palette) action declaration — the pointer/gesture/inspector-bound vocabulary
 /// that is dispatched by the canvas/panels, never surfaced as a standalone command palette entry.
-fn draw_internal_action(id: &str, label: impl Into<LocalizedLabel>, kind: ActionKind) -> semio_framework_plugin::ActionDefinition {
+async fn draw_internal_action(id: &str, label: impl Into<LocalizedLabel>, kind: ActionKind) -> semio_framework_plugin::ActionDefinition {
     semio_framework_plugin::ActionDefinition { in_palette: false, ..semio_framework_plugin::ActionDefinition::new_catalog(id, label, kind) }
 }
 
 /// 🧰️ One canvas utility declaration (id/label/icon reused verbatim from the retired `utilities()` impl).
-fn draw_utility(id: &str, label: impl Into<LocalizedLabel>, icon: &str, group: &str, category: UtilityCategory) -> UtilityDefinition {
+async fn draw_utility(id: &str, label: impl Into<LocalizedLabel>, icon: &str, group: &str, category: UtilityCategory) -> UtilityDefinition {
     UtilityDefinition { group: Some(group.into()), category: Some(category), ..UtilityDefinition::new(id, label, icon) }
 }
 //#endregion 🔖️Constants
@@ -128,15 +128,15 @@ impl ArtifactEditor for DrawPlayApp {
     const DIALECT: semio_framework::Dialect = crate::artifacts::draw::DRAW_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = DRAW_DOCUMENT_SCHEMA;
 
-    fn app_schema() -> Option<::schema::AppSchemaDescriptor> {
+    async fn app_schema() -> Option<::schema::AppSchemaDescriptor> {
         Some(crate::editor::draw::config::schema::app_schema_descriptor())
     }
 
-    fn initial_snapshot() -> DrawSnapshot {
+    async fn initial_snapshot() -> DrawSnapshot {
         crate::artifacts::draw::schema::default_draw_document("empty", None)
     }
 
-    fn io() -> Option<semio_framework_plugin::AppIo> {
+    async fn io() -> Option<semio_framework_plugin::AppIo> {
         Some(draw_io())
     }
 
@@ -163,11 +163,11 @@ impl ArtifactEditor for DrawPlayApp {
     // non-history reset path) instead.
 
     /// 🏷️ `app_commands!`'s generated `command_id()`.
-    fn command_id(command: &DrawCommand) -> &'static str {
+    async fn command_id(command: &DrawCommand) -> &'static str {
         command.command_id()
     }
 
-    fn handle(command: &DrawCommand, doc: &ArtifactView<'_, DrawSnapshot>, cfg: &ConfigView<'_, DrawConfig>, interaction: &InteractionView<'_>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<DrawMutation, DrawConfigMutation, Self::DraftMutation>, Fault> {
+    async fn handle(command: &DrawCommand, doc: &ArtifactView<'_, DrawSnapshot>, cfg: &ConfigView<'_, DrawConfig>, interaction: &InteractionView<'_>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<DrawMutation, DrawConfigMutation, Self::DraftMutation>, Fault> {
         thread_local! {
             static DRAW_SESSION: std::cell::RefCell<DrawSession> = std::cell::RefCell::new(DrawSession::default());
         }
@@ -179,7 +179,7 @@ impl ArtifactEditor for DrawPlayApp {
         })
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, DrawSnapshot>, cfg: &ConfigView<'_, DrawConfig>) -> semio_framework_plugin::UiNode {
+    async fn render(body_key: &str, doc: &ArtifactView<'_, DrawSnapshot>, cfg: &ConfigView<'_, DrawConfig>) -> semio_framework_plugin::UiNode {
         let document = doc.snapshot;
         let config = cfg.snapshot;
         let labels = semio_framework_plugin::resolve_labels_for_locale::<DrawPlayLabels>(&config.locale);
@@ -203,7 +203,7 @@ impl ArtifactEditor for DrawPlayApp {
 /// (`AppDefinition.io`) — mirrors the `2d.drawing` `ArtifactKindSpec` literal `create_draw_app`
 /// already declares via `.artifact_kind(...)` (schema/media type/export+import formats copied
 /// verbatim), plus the app-specific `vector:out` port (see `draw_vector_out_port` below).
-pub fn draw_io() -> semio_framework::AppIo {
+pub async fn draw_io() -> semio_framework::AppIo {
     semio_framework::AppIo {
         document_schema: DRAW_DOCUMENT_SCHEMA.into(),
         document_media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Vector },
@@ -220,7 +220,7 @@ pub fn draw_io() -> semio_framework::AppIo {
 /// duplicate — `kind_id` just pins this port to that same catalog entry. `Many`/optional: a
 /// consumer (e.g. raster's Vector→Raster-converted `image:in`) may connect before the canvas has
 /// any content, or fan out to several consumers at once.
-pub fn draw_vector_out_port() -> semio_framework::MediaPortSpec {
+pub async fn draw_vector_out_port() -> semio_framework::MediaPortSpec {
     semio_framework::MediaPortSpec {
         id: "vector:out".into(),
         label: "Vector".into(),
@@ -235,7 +235,7 @@ pub fn draw_vector_out_port() -> semio_framework::MediaPortSpec {
 /// 🖼️ Exports the current draw document as an SVG `Media` payload for the `vector:out` port —
 /// reuses `crate::artifacts::draw::io::draw_document_to_svg` (the same semio/drawing↔svg bridge the
 /// export-svg shell path uses), so there is exactly one SVG renderer.
-pub fn draw_vector_media(doc: &DrawSnapshot) -> Result<Media, MediaError> {
+pub async fn draw_vector_media(doc: &DrawSnapshot) -> Result<Media, MediaError> {
     let (svg, _width, _height) = crate::artifacts::draw::io::draw_document_to_svg(doc).map_err(|error| MediaError::Payload("vector:out".into(), error))?;
     Ok(Media {
         media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Vector },
@@ -245,7 +245,7 @@ pub fn draw_vector_media(doc: &DrawSnapshot) -> Result<Media, MediaError> {
 //#endregion 🔖️Io
 
 //#region 🔖️Manifest
-pub fn create_draw_app() -> semio_framework_plugin::AppDefinition {
+pub async fn create_draw_app() -> semio_framework_plugin::AppDefinition {
     let engagement = WindowEngagement {
         session_active: Some(false),
         options: None,
@@ -381,7 +381,7 @@ mod wasm_bridge {
     #[wasm_bindgen]
     impl DrawSnapshotVcs {
         #[wasm_bindgen(constructor)]
-        pub fn new(envelope_json: Option<String>) -> Result<DrawSnapshotVcs, JsValue> {
+        pub async fn new(envelope_json: Option<String>) -> Result<DrawSnapshotVcs, JsValue> {
             let store = match envelope_json {
                 Some(json) => {
                     let envelope: DrawEnvelope = serde_json::from_str(&json).map_err(|e| JsValue::from_str(&e.to_string()))?;
@@ -393,27 +393,27 @@ mod wasm_bridge {
         }
 
         #[wasm_bindgen(js_name = dispatchText)]
-        pub fn dispatch_text(&self, command_text: &str) -> Result<(), JsValue> {
+        pub async fn dispatch_text(&self, command_text: &str) -> Result<(), JsValue> {
             self.store.borrow_mut().dispatch_text(command_text).map(|_| ()).map_err(|e| JsValue::from_str(&e.to_string()))
         }
 
         #[wasm_bindgen(js_name = dispatchBinary)]
-        pub fn dispatch_binary(&self, command_bytes: &[u8]) -> Result<(), JsValue> {
+        pub async fn dispatch_binary(&self, command_bytes: &[u8]) -> Result<(), JsValue> {
             self.store.borrow_mut().dispatch_binary(command_bytes).map(|_| ()).map_err(|e| JsValue::from_str(&e.to_string()))
         }
 
         #[wasm_bindgen(js_name = projectionJson)]
-        pub fn snapshot_json(&self) -> Result<String, JsValue> {
+        pub async fn snapshot_json(&self) -> Result<String, JsValue> {
             self.store.borrow().snapshot_json().map_err(|e| JsValue::from_str(&e.to_string()))
         }
 
         #[wasm_bindgen(js_name = envelopeJson)]
-        pub fn envelope_json(&self) -> Result<String, JsValue> {
+        pub async fn envelope_json(&self) -> Result<String, JsValue> {
             self.store.borrow().envelope_json().map_err(|e| JsValue::from_str(&e.to_string()))
         }
 
         #[wasm_bindgen(js_name = generation)]
-        pub fn generation(&self) -> u32 {
+        pub async fn generation(&self) -> u32 {
             self.store.borrow().generation() as u32
         }
     }
@@ -436,24 +436,24 @@ pub(crate) mod testkit {
     /// `PluginBuilder::editor::<DrawPlayApp>` builds it.
 
     /// 🧪️ A bare app instance — no `AppActionRegistry`, so undeclared internal commands dispatch freely.
-    pub fn draw_app() -> DrawApp {
+    pub async fn draw_app() -> DrawApp {
         new_app::<EditorApp<DrawPlayApp>>()
     }
 
     /// 🧪️ Adapts `create_draw_app`'s `AppDefinition` (contract §2.4) into the `App { definition,
     /// examples }` shape `new_app_with_registry` still expects — framework testkit gap, not
     /// modifiable here (`🧰️framework/**` is outside this packet's lease).
-    fn draw_app_manifest_for_testkit() -> App {
+    async fn draw_app_manifest_for_testkit() -> App {
         App { definition: create_draw_app(), examples: Vec::new() }
     }
 
     /// 🧪️ An app wired to the real manifest registry — enforces View/Shell kind discipline.
-    pub fn draw_app_with_registry() -> DrawApp {
+    pub async fn draw_app_with_registry() -> DrawApp {
         new_app_with_registry::<EditorApp<DrawPlayApp>>(draw_app_manifest_for_testkit)
     }
 
     /// 🧰️ Sets the config's host-owned active utility to `utility`.
-    pub fn set_utility(app: &mut DrawApp, utility: &str) {
+    pub async fn set_utility(app: &mut DrawApp, utility: &str) {
         app.dispatch_typed(DrawCommand::SetActiveUtility(set_active_utility::SetActiveUtility { utility_id: utility.into() }), &meta("local")).expect("set active utility");
     }
 }
@@ -469,17 +469,17 @@ mod tests {
     use semio_framework_plugin::{testkit as fw_testkit, PluginApp, ViewModel, SET_ACTIVE_UTILITY_ACTION_ID};
     use testkit::{draw_app, draw_app_with_registry, set_utility, DrawApp};
 
-    fn first_layer_id(app: &DrawApp) -> String {
+    async fn first_layer_id(app: &DrawApp) -> String {
         layer_id(&app.snapshot().expect("materialize projection").layers[0]).to_string()
     }
 
-    fn last_layer_id(app: &DrawApp) -> String {
+    async fn last_layer_id(app: &DrawApp) -> String {
         let projection = app.snapshot().expect("materialize projection");
         layer_id(projection.layers.last().expect("layer")).to_string()
     }
 
     #[test]
-    fn renders_canvas_scene_with_segments() {
+    async fn renders_canvas_scene_with_segments() {
         let mut app = draw_app();
         let example_json = semio_draw_example_json();
         let node = app.render(DRAW_PLAY_BODY_COMPOSITE, Some(example_json.as_str()), &ViewModel::default()).expect("render");
@@ -499,7 +499,7 @@ mod tests {
     }
 
     #[test]
-    fn default_document_exposes_artboard_dimensions_on_canvas() {
+    async fn default_document_exposes_artboard_dimensions_on_canvas() {
         let mut app = draw_app();
         let node = app.render(DRAW_PLAY_BODY_COMPOSITE, None, &ViewModel::default()).expect("render");
         let value = serde_json::to_value(&node).unwrap();
@@ -508,7 +508,7 @@ mod tests {
     }
 
     #[test]
-    fn layers_panel_lists_default_layer() {
+    async fn layers_panel_lists_default_layer() {
         let mut app = draw_app();
         let node = app.render(DRAW_PLAY_BODY_LAYERS, None, &ViewModel::default()).expect("render");
         let json = serde_json::to_string(&node).unwrap();
@@ -517,7 +517,7 @@ mod tests {
     }
 
     #[test]
-    fn catalogue_panel_lists_boolean_operations() {
+    async fn catalogue_panel_lists_boolean_operations() {
         let mut app = draw_app();
         let node = app.render(DRAW_PLAY_BODY_CATALOGUE, None, &ViewModel::default()).expect("render");
         let json = serde_json::to_string(&node).unwrap();
@@ -526,7 +526,7 @@ mod tests {
     }
 
     #[test]
-    fn add_layer_action_emits_op_and_appends_path() {
+    async fn add_layer_action_emits_op_and_appends_path() {
         let mut app = draw_app();
         let before = app.snapshot().unwrap().layers.len();
         let result = app.dispatch_typed(DrawCommand::AddLayer(add_layer::AddLayer { kind: "shape:rect".into() }), &fw_testkit::meta("local")).expect("add layer");
@@ -537,7 +537,7 @@ mod tests {
     }
 
     #[test]
-    fn patch_layers_opacity_emits_granular_operation() {
+    async fn patch_layers_opacity_emits_granular_operation() {
         let mut app = draw_app();
         let id = first_layer_id(&app);
         let result = app.dispatch_typed(DrawCommand::PatchLayers(patch_layers::PatchLayers { layer_ids: vec![id], field: "opacity".into(), value: "0.5".into() }), &fw_testkit::meta("local")).expect("patch");
@@ -547,7 +547,7 @@ mod tests {
     }
 
     #[test]
-    fn patch_layer_name_emits_op_and_changes_projection() {
+    async fn patch_layer_name_emits_op_and_changes_projection() {
         let mut app = draw_app();
         let id = first_layer_id(&app);
         let result = app.dispatch_typed(DrawCommand::PatchLayer(patch_layer::PatchLayer { layer_id: id, field: "name".into(), value: "Renamed".into() }), &fw_testkit::meta("local")).expect("patch");
@@ -556,7 +556,7 @@ mod tests {
     }
 
     #[test]
-    fn set_active_utility_clears_scratch_and_emits_no_history_entry() {
+    async fn set_active_utility_clears_scratch_and_emits_no_history_entry() {
         let mut app = draw_app_with_registry();
         set_utility(&mut app, "shapeRect");
         app.dispatch_typed(DrawCommand::CanvasPointerDown(canvas_pointer_down::CanvasPointerDown { x: 10.0, y: 10.0, width: 800.0, height: 600.0, shift: false, ctrl: false, meta: false }), &fw_testkit::meta("local")).expect("down");
@@ -569,7 +569,7 @@ mod tests {
     }
 
     #[test]
-    fn combine_boolean_creates_boolean_layer() {
+    async fn combine_boolean_creates_boolean_layer() {
         let mut app = draw_app();
         let first_id = first_layer_id(&app);
         app.dispatch_typed(DrawCommand::AddLayer(add_layer::AddLayer { kind: "shape:rect".into() }), &fw_testkit::meta("local")).expect("add rect");
@@ -580,7 +580,7 @@ mod tests {
     }
 
     #[test]
-    fn canvas_point_to_world_matches_host_formula() {
+    async fn canvas_point_to_world_matches_host_formula() {
         let camera = crate::artifacts::draw::DrawCamera { x: 100.0, y: 50.0, zoom: 2.0 };
         let (world_x, world_y) = canvas_pointer_down::canvas_point_to_world(&camera, 420.0, 310.0, 800.0, 600.0);
         assert!((world_x - 110.0).abs() < 1e-9);
@@ -588,7 +588,7 @@ mod tests {
     }
 
     #[test]
-    fn shape_rect_drag_commits_one_layer_and_requests_utility_reset() {
+    async fn shape_rect_drag_commits_one_layer_and_requests_utility_reset() {
         let mut app = draw_app_with_registry();
         set_utility(&mut app, "shapeRect");
         app.dispatch_typed(DrawCommand::CanvasPointerDown(canvas_pointer_down::CanvasPointerDown { x: 500.0, y: 400.0, width: 1000.0, height: 800.0, shift: false, ctrl: false, meta: false }), &fw_testkit::meta("local")).expect("down");
@@ -609,7 +609,7 @@ mod tests {
     }
 
     #[test]
-    fn pen_draft_commits_path_layer_on_enter() {
+    async fn pen_draft_commits_path_layer_on_enter() {
         let mut app = draw_app();
         set_utility(&mut app, "pen");
         app.dispatch_typed(DrawCommand::CanvasPointerDown(canvas_pointer_down::CanvasPointerDown { x: 400.0, y: 300.0, width: 800.0, height: 600.0, shift: false, ctrl: false, meta: false }), &fw_testkit::meta("local")).expect("p1");
@@ -622,7 +622,7 @@ mod tests {
     }
 
     #[test]
-    fn canvas_escape_cancels_draft_without_committing() {
+    async fn canvas_escape_cancels_draft_without_committing() {
         let mut app = draw_app();
         let before = app.snapshot().unwrap().layers.len();
         set_utility(&mut app, "pen");
@@ -633,7 +633,7 @@ mod tests {
     }
 
     #[test]
-    fn marquee_select_covers_contained_layer_only() {
+    async fn marquee_select_covers_contained_layer_only() {
         // 🔖 Built through dispatched commands (`add-layer` + `patch-layer` transform fields), never
         // a whole-document swap — `SetSnapshot` is banned vocabulary now (see
         // `🧬️mutations/🦀️component.rs`'s module doc); this exercises the same real semantic
@@ -667,7 +667,7 @@ mod tests {
     }
 
     #[test]
-    fn set_camera_writes_runtime_and_emits_no_operations() {
+    async fn set_camera_writes_runtime_and_emits_no_operations() {
         let mut app = draw_app();
         let before = app.snapshot().expect("projection");
         let result = app.dispatch_typed(DrawCommand::SetCamera(set_camera::SetCamera { camera: crate::artifacts::draw::DrawCamera { x: 5.0, y: 5.0, zoom: 2.0 } }), &fw_testkit::meta("local")).expect("camera");
@@ -679,7 +679,7 @@ mod tests {
     }
 
     #[test]
-    fn set_camera_zoom_updates_zoom_and_keeps_pan_via_runtime() {
+    async fn set_camera_zoom_updates_zoom_and_keeps_pan_via_runtime() {
         let mut app = draw_app();
         app.dispatch_typed(DrawCommand::SetCamera(set_camera::SetCamera { camera: crate::artifacts::draw::DrawCamera { x: 4.0, y: 5.0, zoom: 1.0 } }), &fw_testkit::meta("local")).expect("set camera");
         let result = app.dispatch_typed(DrawCommand::SetCameraZoom(set_camera_zoom::SetCameraZoom { value: 3.0 }), &fw_testkit::meta("local")).expect("set camera zoom");
@@ -690,14 +690,14 @@ mod tests {
     }
 
     #[test]
-    fn add_layer_undo_round_trip_through_wrapper() {
+    async fn add_layer_undo_round_trip_through_wrapper() {
         let mut app = draw_app();
         let before = app.snapshot().unwrap().layers.len();
         fw_testkit::assert_undo_redo_round_trip(&mut app, DrawCommand::AddLayer(add_layer::AddLayer { kind: "path".into() }), |app| app.snapshot().unwrap().layers.len(), before, before + 1);
     }
 
     #[test]
-    fn utility_registry_declares_all_canvas_utilities_scoped_to_the_window() {
+    async fn utility_registry_declares_all_canvas_utilities_scoped_to_the_window() {
         let definition = create_draw_app();
         let utility_ids: Vec<&str> = definition.utilities.iter().map(|utility| utility.id.as_str()).collect();
         assert_eq!(utility_ids, ["selectMarquee", "selectLasso", "selectDirect", "pen", "shapeRect", "shapeEllipse", "shapeLine", "shapePolygon", "booleanCombine", "trace", "transformMove"],);
@@ -710,7 +710,7 @@ mod tests {
     }
 
     #[test]
-    fn strokes_interaction_domain_is_declared_flat_pick_rectangle_lasso_on_the_canvas_window() {
+    async fn strokes_interaction_domain_is_declared_flat_pick_rectangle_lasso_on_the_canvas_window() {
         let definition = create_draw_app();
         let domain = definition.interactions.iter().find(|interaction| interaction.id == DRAW_INTERACTION_DOMAIN).expect("strokes interaction domain declared");
         assert!(matches!(domain.hierarchy, HierarchyProvider::Flat));
@@ -720,7 +720,7 @@ mod tests {
     }
 
     #[test]
-    fn canvas_pointer_up_direct_pick_requests_interaction_select() {
+    async fn canvas_pointer_up_direct_pick_requests_interaction_select() {
         let mut app = draw_app_with_registry();
         // 🔖 The default document's one layer is an empty-segment path (no bounds to hit-test against
         // — see `default_draw_document`), so a real shape is added first, mirroring
@@ -739,7 +739,7 @@ mod tests {
     }
 
     #[test]
-    fn set_selected_opacity_reads_the_framework_interaction_selection() {
+    async fn set_selected_opacity_reads_the_framework_interaction_selection() {
         let mut app = draw_app_with_registry();
         let id = first_layer_id(&app);
         let targets = serde_json::to_string(&vec![serde_json::json!({ "granularity": DRAW_INTERACTION_GRANULARITY, "id": id })]).unwrap();
@@ -750,7 +750,7 @@ mod tests {
     }
 
     #[test]
-    fn draw_labels_resolve_native_by_default() {
+    async fn draw_labels_resolve_native_by_default() {
         let mut app = draw_app();
         let node = app.render(DRAW_PLAY_BODY_LAYERS, None, &ViewModel::default()).expect("render");
         let json = serde_json::to_string(&node).unwrap();
@@ -760,7 +760,7 @@ mod tests {
     }
 
     #[test]
-    fn draw_labels_translate_panels_in_german() {
+    async fn draw_labels_translate_panels_in_german() {
         let mut app = draw_app();
         app.dispatch_typed(DrawCommand::SetLocale(set_locale::SetLocale { value: "de-DE".into() }), &fw_testkit::meta("local")).expect("set locale");
         let layers_node = app.render(DRAW_PLAY_BODY_LAYERS, None, &ViewModel::default()).expect("render");
@@ -775,7 +775,7 @@ mod tests {
     }
 
     #[test]
-    fn draw_io_declares_vector_out_and_export_media_covers_both_ports() {
+    async fn draw_io_declares_vector_out_and_export_media_covers_both_ports() {
         let mut app = draw_app();
         app.dispatch_typed(DrawCommand::AddLayer(add_layer::AddLayer { kind: "shape:rect".into() }), &fw_testkit::meta("local")).expect("add");
         let projection = app.snapshot().expect("projection");
@@ -791,13 +791,13 @@ mod tests {
 
     //#region 🔖️GesturePreview
     #[test]
-    fn gesture_preview_is_none_while_idle() {
+    async fn gesture_preview_is_none_while_idle() {
         let session = DrawSession::default();
         assert!(session.gesture_preview().is_none(), "no live gesture, nothing to preview");
     }
 
     #[test]
-    fn gesture_preview_reflects_live_shape_drag_and_clears_on_commit() {
+    async fn gesture_preview_reflects_live_shape_drag_and_clears_on_commit() {
         let mut session = DrawSession::default();
         let document = default_draw_document("empty", None);
         let config = DrawConfig { active_utility_id: "shapeRect".into(), ..Default::default() };
@@ -823,7 +823,7 @@ mod tests {
     }
 
     #[test]
-    fn gesture_preview_is_a_pure_read_never_mutating_gesture_context() {
+    async fn gesture_preview_is_a_pure_read_never_mutating_gesture_context() {
         let mut session = DrawSession::default();
         let document = default_draw_document("empty", None);
         let config = DrawConfig { active_utility_id: "shapeRect".into(), ..Default::default() };
@@ -839,7 +839,7 @@ mod tests {
     /// 🔖️ One `DrawCommand` value per row, in binary-variant-ordinal order — feeds both the
     /// op-text/binary equivalence loop and the "printed line starts with the row's wire keyword"
     /// assertion. Permanent wire guard: appending a variant is safe, reordering breaks the format.
-    fn every_command() -> Vec<DrawCommand> {
+    async fn every_command() -> Vec<DrawCommand> {
         vec![
             DrawCommand::SetSnapshot(set_snapshot::SetSnapshot { snapshot: default_draw_document("cmd-doc", None) }),
             DrawCommand::CommitDocument(commit_document::CommitDocument { snapshot: default_draw_document("cmd-doc-2", None) }),
@@ -871,7 +871,7 @@ mod tests {
     }
 
     #[test]
-    fn draw_command_op_text_round_trips_every_variant() {
+    async fn draw_command_op_text_round_trips_every_variant() {
         for command in every_command() {
             store::os_store::test_support::assert_op_line_round_trip(&command);
         }
@@ -881,7 +881,7 @@ mod tests {
     }
 
     #[test]
-    fn draw_command_op_binary_round_trips_every_variant() {
+    async fn draw_command_op_binary_round_trips_every_variant() {
         for command in every_command() {
             store::os_store::test_support::assert_op_text_binary_equivalence(&command);
         }
@@ -892,7 +892,7 @@ mod tests {
     /// the OLD `draw_protocol` crate before this migration. A byte-for-byte diff, not just a
     /// round-trip law, since round-trip alone would happily pass on a changed-but-consistent format.
     #[test]
-    fn optional_field_rows_keep_their_pre_migration_bytes() {
+    async fn optional_field_rows_keep_their_pre_migration_bytes() {
         use protocol::OpBinary;
         let engagement_submit_some = DrawCommand::EngagementSubmit(engagement_submit::EngagementSubmit { value: Some("Renamed \"layer\"".into()) });
         assert_eq!(engagement_submit_some.encode_op().expect("encode"), hex_bytes("0105010f52656e616d656420226c617965722201000600"));
@@ -900,12 +900,12 @@ mod tests {
         assert_eq!(engagement_submit_none.encode_op().expect("encode"), hex_bytes("01050000"));
     }
 
-    fn hex_bytes(hex: &str) -> Vec<u8> {
+    async fn hex_bytes(hex: &str) -> Vec<u8> {
         (0..hex.len()).step_by(2).map(|i| u8::from_str_radix(&hex[i..i + 2], 16).expect("valid hex")).collect()
     }
 
     #[test]
-    fn every_command_row_prints_starting_with_its_wire_keyword() {
+    async fn every_command_row_prints_starting_with_its_wire_keyword() {
         use protocol::OpText;
         let expected_keywords = [
             "set-snapshot",

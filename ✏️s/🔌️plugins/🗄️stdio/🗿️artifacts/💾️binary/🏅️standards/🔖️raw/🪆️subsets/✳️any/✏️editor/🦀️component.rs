@@ -34,7 +34,7 @@ pub enum BinaryEditorCommand {
 /// 🎯️ Handcrafted (P6: `#[derive(dsl::DslOps)]` emits `DslVariants` only — `OpText`/`OpBinary` are
 /// handcrafted per artifact). Same shape as `energy`'s `EnergyModelEditorCommand`.
 impl protocol::OpText for BinaryEditorCommand {
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
+    async fn parse_op(line: &str) -> Result<Self, store::TextError> {
         let variants = <Self as dsl::DslVariants>::variants();
         for (keyword, spec_fn) in &variants {
             let probe = format!("{} ", keyword);
@@ -45,7 +45,7 @@ impl protocol::OpText for BinaryEditorCommand {
         }
         Err(dsl::__rt::field_error(format!("unknown operation line '{line}'")))
     }
-    fn print_op(&self) -> String {
+    async fn print_op(&self) -> String {
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
         let variants = <Self as dsl::DslVariants>::variants();
         let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
@@ -54,7 +54,7 @@ impl protocol::OpText for BinaryEditorCommand {
 }
 
 impl protocol::OpBinary for BinaryEditorCommand {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         const OP_BINARY_FORMAT: u8 = 1;
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
         let variants = <Self as dsl::DslVariants>::variants();
@@ -67,7 +67,7 @@ impl protocol::OpBinary for BinaryEditorCommand {
         out.extend_from_slice(&body);
         Ok(out)
     }
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         const OP_BINARY_FORMAT: u8 = 1;
         let mut reader = store::pack_rt::ByteReader::new(bytes);
         let format = reader.read_u8()?;
@@ -91,7 +91,7 @@ impl protocol::OpBinary for BinaryEditorCommand {
 /// whitespace, then decodes the remaining contiguous hex — same convention
 /// `BinarySnapshot::parse_dsl` already uses. `None` on odd length or an invalid hex digit — the
 /// caller treats that as a documented no-op, never a partial apply.
-fn parse_hex_dump(text: &str) -> Option<Vec<u8>> {
+async fn parse_hex_dump(text: &str) -> Option<Vec<u8>> {
     let hex: String = text.lines().filter(|line| !line.trim_start().starts_with('#')).collect::<Vec<_>>().join("").chars().filter(|c| !c.is_whitespace()).collect();
     if hex.len() % 2 != 0 {
         return None;
@@ -127,20 +127,20 @@ impl ArtifactEditor for BinaryEditor {
     const DIALECT: Dialect = BINARY_EDITOR_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = STDIO_BINARY_DOCUMENT_SCHEMA;
 
-    fn initial_snapshot() -> BinarySnapshot {
+    async fn initial_snapshot() -> BinarySnapshot {
         BinarySnapshot::default()
     }
 
     /// ✏️ Parses the hex text and, if well-formed, replaces the WHOLE buffer via
     /// `BinaryMutation::Splice { offset: 0, remove_len: <old len>, insert: <parsed> }`. Malformed
     /// hex (odd length or an invalid digit) is a documented no-op (`Emit::default()`), never a panic.
-    fn handle(command: &Self::Command, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _interaction: &semio_framework_plugin::app::InteractionView<'_>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<Self::Mutation>, Fault> {
+    async fn handle(command: &Self::Command, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _interaction: &semio_framework_plugin::app::InteractionView<'_>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<Self::Mutation>, Fault> {
         let BinaryEditorCommand::ReplaceText { text } = command;
         let Some(parsed) = parse_hex_dump(text) else { return Ok(Emit::default()) };
         Ok(Emit { artifact_mutations: vec![BinaryMutation::Splice { offset: 0, remove_len: doc.snapshot.bytes.len(), insert: parsed }], description: Some("Replace bytes".into()), ..Default::default() })
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> UiNode {
+    async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> UiNode {
         match body_key {
             main::BODY_KEY => main::render(doc.snapshot),
             _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))),
@@ -150,7 +150,7 @@ impl ArtifactEditor for BinaryEditor {
 //#endregion 🔖️Editor
 
 //#region 🔖️Manifest
-pub fn create_binary_editor() -> semio_framework_plugin::AppDefinition {
+pub async fn create_binary_editor() -> semio_framework_plugin::AppDefinition {
     Editor::builder(BINARY_EDITOR_DIALECT)
         .document(["stdio", "binary"])
         .icon_id("binary")
@@ -168,25 +168,25 @@ mod tests {
     use super::*;
 
     #[test]
-    fn create_binary_editor_builds_a_definition_for_the_editor_role() {
+    async fn create_binary_editor_builds_a_definition_for_the_editor_role() {
         let def = create_binary_editor();
         assert_eq!(def.role, semio_framework_plugin::AppRole::Editor);
         assert_eq!(def.dialect, BINARY_EDITOR_DIALECT.into());
     }
 
     #[test]
-    fn editor_dialect_matches_the_artifact_coordinate() {
+    async fn editor_dialect_matches_the_artifact_coordinate() {
         assert_eq!(<BinaryEditor as ArtifactEditor>::DIALECT, BINARY_EDITOR_DIALECT);
     }
 
     #[test]
-    fn editor_declares_the_main_window() {
+    async fn editor_declares_the_main_window() {
         let def = create_binary_editor();
         assert!(def.window_kinds.iter().any(|window| window.id == main::WINDOW_KIND_ID));
     }
 
     #[test]
-    fn parse_hex_dump_round_trips_a_rendered_snapshot() {
+    async fn parse_hex_dump_round_trips_a_rendered_snapshot() {
         let document = BinarySnapshot { bytes: vec![0xde, 0xad, 0xbe, 0xef], ..BinarySnapshot::default() };
         let UiNode::ComponentScene(node) = main::render(&document) else { panic!("expected ComponentScene") };
         let scene = node.text_editor.expect("text_editor scene");
@@ -195,7 +195,7 @@ mod tests {
     }
 
     #[test]
-    fn parse_hex_dump_rejects_odd_length_hex() {
+    async fn parse_hex_dump_rejects_odd_length_hex() {
         assert!(parse_hex_dump("abc").is_none());
     }
 }

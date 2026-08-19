@@ -14,7 +14,7 @@ pub const PROCESS_3D_PLAY_BODY_DOCUMENT: &str = "process.play.document";
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
-pub fn definition() -> PanelTabDefinition {
+pub async fn definition() -> PanelTabDefinition {
     PanelTabDefinition {
         kind: PanelTabKind::App(FRAMEWORK_PANEL_TAB_ARTIFACT_ID.into()),
         label: LocalizedLabel::native(FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL, "Dokument"),
@@ -36,7 +36,7 @@ pub fn definition() -> PanelTabDefinition {
 /// selects — the tree binds `.interaction_domain` and stamps no `.selected()`/`.highlighted()`
 /// itself; the framework's post-render pass overwrites item presence from live selection/hover, and
 /// clicks translate into `interactionSelect` generically (mirrors `🧱️block`'s `📌️panels/📄️artifact`).
-pub fn render(fixture: &Process3dSnapshot, labels: &Process3dLabels) -> UiNode {
+pub async fn render(fixture: &Process3dSnapshot, labels: &Process3dLabels) -> UiNode {
     let stock_item = UiTreeItemNode { icon_id: Some("box".into()), menu: None, ..UiTreeItemNode::base(fixture.stock_id.clone(), Label::data(fixture.stock_label.clone())) };
     let scene = crate::artifacts::process3d::process_working_scene_from_snapshot(fixture);
     let cursor = fixture.resolved_up_to.unwrap_or(scene.steps.len());
@@ -76,14 +76,14 @@ mod tests {
     use crate::editor::process3d::testkit;
 
     #[test]
-    fn definition_binds_the_framework_document_tab_to_this_body_key() {
+    async fn definition_binds_the_framework_document_tab_to_this_body_key() {
         let definition = definition();
         assert_eq!(definition.id(), FRAMEWORK_PANEL_TAB_ARTIFACT_ID);
         assert_eq!(definition.body_key.as_deref(), Some(PROCESS_3D_PLAY_BODY_DOCUMENT));
     }
 
     #[test]
-    fn document_panel_lists_stock_and_steps() {
+    async fn document_panel_lists_stock_and_steps() {
         let mut app = testkit::app();
         let rendered = testkit::render(&mut app, PROCESS_3D_PLAY_BODY_DOCUMENT);
         assert!(rendered.contains("process3d-play-document.stock"));

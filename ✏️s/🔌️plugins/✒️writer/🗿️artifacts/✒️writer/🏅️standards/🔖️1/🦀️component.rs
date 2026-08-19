@@ -11,7 +11,7 @@ use semio_framework_plugin::app::declarations::{MediaDeclaration, StandardDeclar
 use semio_framework_plugin::StandardId;
 
 //#region 🔖️Standard
-pub fn standard() -> StandardDeclaration {
+pub async fn standard() -> StandardDeclaration {
     StandardDeclaration {
         id: StandardId("1"),
         media: MediaDeclaration { mimes: &["application/vnd.semio.writer+json"], extensions: &["writer"] },
@@ -25,7 +25,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn standard_mounts_exactly_one_subset() {
+    async fn standard_mounts_exactly_one_subset() {
         assert_eq!(standard().subsets.len(), 1);
     }
 }

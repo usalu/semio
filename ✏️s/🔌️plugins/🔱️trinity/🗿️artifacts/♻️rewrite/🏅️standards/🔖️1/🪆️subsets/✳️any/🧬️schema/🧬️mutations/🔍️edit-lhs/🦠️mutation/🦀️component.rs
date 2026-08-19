@@ -14,20 +14,20 @@ pub struct EditLhs {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn edit_lhs(new_lhs_json: String) -> RewriteRuleMutation {
+pub async fn edit_lhs(new_lhs_json: String) -> RewriteRuleMutation {
     RewriteRuleMutation::EditLhs(EditLhs { new_lhs_json })
 }
 
 impl protocol::MutationKind<RewriteSnapshot, RewriteRuleMutation> for EditLhs {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "edit", entity: "lhs", kind: "edit-lhs", record: "EditedLhs" };
 
-    fn diff(&self, base: &RewriteSnapshot) -> protocol::MutationOutcome<RewriteDiff> {
+    async fn diff(&self, base: &RewriteSnapshot) -> protocol::MutationOutcome<RewriteDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &RewriteSnapshot) -> Vec<RewriteRuleMutation> {
+    async fn inverse(&self, base: &RewriteSnapshot) -> Vec<RewriteRuleMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         "Edit lhs".to_string()
     }
 }

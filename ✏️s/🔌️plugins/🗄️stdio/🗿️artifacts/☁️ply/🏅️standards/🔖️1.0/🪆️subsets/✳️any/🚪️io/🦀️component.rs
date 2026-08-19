@@ -15,11 +15,11 @@ pub mod derived_composition {
         type Snapshot = PlySnapshot;
         const WRITES: Dialect = DIALECT;
 
-        fn reads() -> &'static [Dialect] {
+        async fn reads() -> &'static [Dialect] {
             &[DIALECT, DEP_TXT]
         }
 
-        fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+        async fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
             // 🌱 Every listed read dialect's payload is raw text/bytes that this artifact's own
             // analyzer already round-trips through `store::Document{Dsl,Pack}` -- including bytes
             // claiming a dependency's dialect, since (for a single-standard DAG-adjacent dependency
@@ -57,7 +57,7 @@ use crate::artifacts::ply::{PlySnapshot, STDIO_PLY_DOCUMENT_SCHEMA};
 
 //#region 🔖️ScalarWire
 /// 📏 Byte width of a PLY scalar type.
-fn scalar_type_size(kind: PlyScalarType) -> usize {
+async fn scalar_type_size(kind: PlyScalarType) -> usize {
     match kind {
         PlyScalarType::Char | PlyScalarType::UChar => 1,
         PlyScalarType::Short | PlyScalarType::UShort => 2,
@@ -67,7 +67,7 @@ fn scalar_type_size(kind: PlyScalarType) -> usize {
 }
 
 /// 🔤 Parses both long (`float`) and short (`float32`) PLY type spellings.
-fn parse_scalar_type(ty: &str) -> Result<PlyScalarType, String> {
+async fn parse_scalar_type(ty: &str) -> Result<PlyScalarType, String> {
     match ty {
         "char" | "int8" => Ok(PlyScalarType::Char),
         "uchar" | "uint8" => Ok(PlyScalarType::UChar),
@@ -82,7 +82,7 @@ fn parse_scalar_type(ty: &str) -> Result<PlyScalarType, String> {
 }
 
 /// 🏷️ Canonical (long-form) wire spelling used on encode.
-fn scalar_type_wire_name(kind: PlyScalarType) -> &'static str {
+async fn scalar_type_wire_name(kind: PlyScalarType) -> &'static str {
     match kind {
         PlyScalarType::Char => "char",
         PlyScalarType::UChar => "uchar",
@@ -97,7 +97,7 @@ fn scalar_type_wire_name(kind: PlyScalarType) -> &'static str {
 
 /// 🔢 Builds a `PlyValue` of the given scalar `kind` holding `n` (used to write a list's
 /// element count in its declared `count_kind` width).
-fn count_as_value(kind: PlyScalarType, n: usize) -> PlyValue {
+async fn count_as_value(kind: PlyScalarType, n: usize) -> PlyValue {
     match kind {
         PlyScalarType::Char => PlyValue::Char(n as i8),
         PlyScalarType::UChar => PlyValue::UChar(n as u8),
@@ -111,7 +111,7 @@ fn count_as_value(kind: PlyScalarType, n: usize) -> PlyValue {
 }
 
 /// 🔢 Reads a scalar-typed value back out as an integer (for a decoded list-count cell).
-fn value_as_usize(v: &PlyValue) -> usize {
+async fn value_as_usize(v: &PlyValue) -> usize {
     (match v {
         PlyValue::Char(x) => *x as i64,
         PlyValue::UChar(x) => *x as i64,
@@ -130,7 +130,7 @@ fn value_as_usize(v: &PlyValue) -> usize {
 //#region 🔖️HeaderParse
 /// ✂️ Splits raw bytes into `(header_text, body)` at the line following `end_header`. The
 /// header itself is always ASCII text per spec, even for binary-format files.
-fn split_header(data: &[u8]) -> Result<(String, &[u8]), String> {
+async fn split_header(data: &[u8]) -> Result<(String, &[u8]), String> {
     let marker = b"end_header";
     let idx = data.windows(marker.len()).position(|w| w == marker).ok_or("ply: missing end_header")?;
     let after_marker = idx + marker.len();
@@ -155,7 +155,7 @@ struct PlyHeader {
 }
 
 /// 🧩 Parses the `ply` / `format` / `comment` / `element` / `property` header grammar.
-fn parse_header_text(text: &str) -> Result<PlyHeader, String> {
+async fn parse_header_text(text: &str) -> Result<PlyHeader, String> {
     let mut lines = text.lines();
     let first = lines.next().ok_or("ply: empty header")?.trim();
     if first != "ply" {
@@ -214,7 +214,7 @@ fn parse_header_text(text: &str) -> Result<PlyHeader, String> {
 
 //#region 🔖️BinaryScalarIo
 /// 📥 Reads one scalar of `kind` at `data[*pos..]`, advancing `*pos` by its width.
-fn read_scalar_bin(kind: PlyScalarType, data: &[u8], pos: &mut usize, big: bool) -> Result<PlyValue, String> {
+async fn read_scalar_bin(kind: PlyScalarType, data: &[u8], pos: &mut usize, big: bool) -> Result<PlyValue, String> {
     let size = scalar_type_size(kind);
     if *pos + size > data.len() {
         return Err("ply: truncated binary body".into());
@@ -235,7 +235,7 @@ fn read_scalar_bin(kind: PlyScalarType, data: &[u8], pos: &mut usize, big: bool)
 }
 
 /// 📤 Writes one scalar value in the requested endianness.
-fn push_scalar_bin(out: &mut Vec<u8>, v: &PlyValue, big: bool) {
+async fn push_scalar_bin(out: &mut Vec<u8>, v: &PlyValue, big: bool) {
     match v {
         PlyValue::Char(x) => out.push(*x as u8),
         PlyValue::UChar(x) => out.push(*x),
@@ -251,7 +251,7 @@ fn push_scalar_bin(out: &mut Vec<u8>, v: &PlyValue, big: bool) {
 //#endregion 🔖️BinaryScalarIo
 
 //#region 🔖️AsciiScalarIo
-fn parse_scalar_ascii(kind: PlyScalarType, tok: &str) -> Result<PlyValue, String> {
+async fn parse_scalar_ascii(kind: PlyScalarType, tok: &str) -> Result<PlyValue, String> {
     let bad = |e: std::num::ParseIntError| format!("ply: bad scalar value '{tok}': {e}");
     let bad_f = |e: std::num::ParseFloatError| format!("ply: bad scalar value '{tok}': {e}");
     Ok(match kind {
@@ -266,7 +266,7 @@ fn parse_scalar_ascii(kind: PlyScalarType, tok: &str) -> Result<PlyValue, String
     })
 }
 
-fn format_scalar_ascii(v: &PlyValue) -> String {
+async fn format_scalar_ascii(v: &PlyValue) -> String {
     match v {
         PlyValue::Char(x) => x.to_string(),
         PlyValue::UChar(x) => x.to_string(),
@@ -284,7 +284,7 @@ fn format_scalar_ascii(v: &PlyValue) -> String {
 //#region 🔖️BodyDecode
 /// 📚 Decodes an `ascii`-format body against the parsed header's element/property declarations,
 /// producing fully typed rows for EVERY element (not just `vertex`/`face`).
-fn decode_body_ascii(body: &str, header_elements: &[PlyElement]) -> Result<Vec<PlyElement>, String> {
+async fn decode_body_ascii(body: &str, header_elements: &[PlyElement]) -> Result<Vec<PlyElement>, String> {
     let mut tokens = body.split_whitespace();
     let mut out = Vec::with_capacity(header_elements.len());
     for el in header_elements {
@@ -318,7 +318,7 @@ fn decode_body_ascii(body: &str, header_elements: &[PlyElement]) -> Result<Vec<P
 
 /// 📚 Binary counterpart of `decode_body_ascii` — same element/property walk, reading each
 /// declared scalar/list at its real byte width (endianness-aware) instead of tokenizing text.
-fn decode_body_binary(body: &[u8], header_elements: &[PlyElement], big: bool) -> Result<Vec<PlyElement>, String> {
+async fn decode_body_binary(body: &[u8], header_elements: &[PlyElement], big: bool) -> Result<Vec<PlyElement>, String> {
     let mut pos = 0usize;
     let mut out = Vec::with_capacity(header_elements.len());
     for el in header_elements {
@@ -348,7 +348,7 @@ fn decode_body_binary(body: &[u8], header_elements: &[PlyElement], big: bool) ->
 
 /// 🏗️ Builds the header text for `format`, walking every element's real name/count and every
 /// property's real declaration — generic, not canonicalized to a fixed vertex/face layout.
-fn header_text(format: PlyFormat, comments: &[String], elements: &[PlyElement]) -> String {
+async fn header_text(format: PlyFormat, comments: &[String], elements: &[PlyElement]) -> String {
     let fmt_line = match format {
         PlyFormat::Ascii => "format ascii 1.0\n",
         PlyFormat::BinaryLittleEndian => "format binary_little_endian 1.0\n",
@@ -378,7 +378,7 @@ fn header_text(format: PlyFormat, comments: &[String], elements: &[PlyElement]) 
 /// 🏗️ Encodes `snap` in the given wire `format` (ascii / binary LE / binary BE). Comments ARE
 /// re-emitted into the header on encode (as real `comment <text>\n` lines, matching
 /// `parse_header_text`'s decode side).
-pub fn encode_ply_with_format(snap: &PlySnapshot, format: PlyFormat) -> Result<Vec<u8>, String> {
+pub async fn encode_ply_with_format(snap: &PlySnapshot, format: PlyFormat) -> Result<Vec<u8>, String> {
     let mut out = header_text(format, &snap.comments, &snap.elements).into_bytes();
     match format {
         PlyFormat::Ascii => {
@@ -430,12 +430,12 @@ pub fn encode_ply_with_format(snap: &PlySnapshot, format: PlyFormat) -> Result<V
 }
 
 /// 🏗️ Canonical encode — ascii wire format, matches the DSL/pack default.
-pub fn encode_ply(snap: &PlySnapshot) -> Result<Vec<u8>, String> {
+pub async fn encode_ply(snap: &PlySnapshot) -> Result<Vec<u8>, String> {
     encode_ply_with_format(snap, PlyFormat::Ascii)
 }
 
 /// 🔍 Decodes any of the three wire formats, dispatching on the header's own `format` line.
-pub fn decode_ply(data: &[u8]) -> Result<PlySnapshot, String> {
+pub async fn decode_ply(data: &[u8]) -> Result<PlySnapshot, String> {
     let (header_str, body) = split_header(data)?;
     let header = parse_header_text(&header_str)?;
     let elements = match header.format {
@@ -458,7 +458,7 @@ pub mod io_registry {
 
     static ENTRIES: OnceLock<Vec<ComposerEntry>> = OnceLock::new();
 
-    pub fn entries() -> &'static [ComposerEntry] {
+    pub async fn entries() -> &'static [ComposerEntry] {
         ENTRIES.get_or_init(|| vec![composer_entry_of::<PlyRawAnyComposer>()]).as_slice()
     }
 }
@@ -476,7 +476,7 @@ mod tests {
     use protocol::{Mutation, MutationDiff};
 
     #[test]
-    fn missing_element_target_is_rejected_before_mutation() {
+    async fn missing_element_target_is_rejected_before_mutation() {
         let base = PlySnapshot::default();
         let diff = PlyDiff { elements: Some(PlyElementsDiff { removed: vec!["missing".into()], ..Default::default() }), ..Default::default() };
         let error = diff.apply(&base).expect_err("missing element target must be rejected");
@@ -486,13 +486,13 @@ mod tests {
     }
 
     #[test]
-    fn empty_snapshot_matches_schema() {
+    async fn empty_snapshot_matches_schema() {
         let snapshot = empty_ply_snapshot();
         assert_eq!(snapshot.schema, STDIO_PLY_DOCUMENT_SCHEMA);
     }
 
     #[test]
-    fn codec_round_trip() {
+    async fn codec_round_trip() {
         let snap = empty_ply_snapshot();
         let text = store::ArtifactDsl::print_dsl(&snap);
         let parsed = <PlySnapshot as store::ArtifactDsl>::parse_dsl(&text).expect("parse");
@@ -506,7 +506,7 @@ mod tests {
     /// 🔺 A tetrahedron expressed as real `vertex`/`face` elements: 4 vertices, 4 triangular
     /// faces (via a `list uchar int vertex_indices` property) — small enough to hand-check,
     /// non-trivial enough (mixed-sign coords, several list-shaped faces) to catch layout bugs.
-    fn tetrahedron() -> PlySnapshot {
+    async fn tetrahedron() -> PlySnapshot {
         let vertex_props = vec![PlyProperty::Scalar { name: "x".into(), kind: PlyScalarType::Float }, PlyProperty::Scalar { name: "y".into(), kind: PlyScalarType::Float }, PlyProperty::Scalar { name: "z".into(), kind: PlyScalarType::Float }];
         let face_props = vec![PlyProperty::List { name: "vertex_indices".into(), count_kind: PlyScalarType::UChar, value_kind: PlyScalarType::Int }];
         let vertex_rows: Vec<PlyRow> = [(0.0f32, 0.0, 0.0), (1.0, 0.0, 0.0), (0.0, 1.0, 0.0), (0.0, 0.0, 1.0)].into_iter().map(|(x, y, z)| PlyRow { values: vec![PlyValue::Float(x), PlyValue::Float(y), PlyValue::Float(z)] }).collect();
@@ -521,7 +521,7 @@ mod tests {
     //#endregion 🔖️MeshFixture
 
     #[test]
-    fn ascii_tetrahedron_round_trip() {
+    async fn ascii_tetrahedron_round_trip() {
         let snap = tetrahedron();
         let bytes = encode_ply_with_format(&snap, PlyFormat::Ascii).expect("encode ascii");
         let decoded = decode_ply(&bytes).expect("decode ascii");
@@ -530,7 +530,7 @@ mod tests {
     }
 
     #[test]
-    fn binary_little_endian_tetrahedron_round_trip() {
+    async fn binary_little_endian_tetrahedron_round_trip() {
         let snap = tetrahedron();
         let bytes = encode_ply_with_format(&snap, PlyFormat::BinaryLittleEndian).expect("encode binary LE");
         assert!(bytes.starts_with(b"ply\nformat binary_little_endian 1.0\n"), "header must declare binary_little_endian");
@@ -539,7 +539,7 @@ mod tests {
     }
 
     #[test]
-    fn binary_big_endian_tetrahedron_round_trip() {
+    async fn binary_big_endian_tetrahedron_round_trip() {
         let snap = tetrahedron();
         let bytes = encode_ply_with_format(&snap, PlyFormat::BinaryBigEndian).expect("encode binary BE");
         let decoded = decode_ply(&bytes).expect("decode binary BE");
@@ -547,7 +547,7 @@ mod tests {
     }
 
     #[test]
-    fn binary_decode_skips_unmodeled_properties() {
+    async fn binary_decode_skips_unmodeled_properties() {
         let header = "ply\nformat binary_little_endian 1.0\nelement vertex 1\nproperty float x\nproperty float y\nproperty float z\nproperty float nx\nproperty float ny\nproperty float nz\nend_header\n";
         let mut bytes = header.as_bytes().to_vec();
         for f in [1.5f32, 2.5, 3.5, 9.0, 9.0, 9.0] {
@@ -562,27 +562,27 @@ mod tests {
     }
 
     #[test]
-    fn ascii_decode_rejects_truncated_body() {
+    async fn ascii_decode_rejects_truncated_body() {
         let header = "ply\nformat ascii 1.0\nelement vertex 2\nproperty float x\nproperty float y\nproperty float z\nend_header\n1 2 3\n";
         let err = decode_ply(header.as_bytes()).unwrap_err();
         assert!(err.contains("eof"), "unexpected error: {err}");
     }
 
     #[test]
-    fn missing_end_header_is_rejected() {
+    async fn missing_end_header_is_rejected() {
         let err = decode_ply(b"ply\nformat ascii 1.0\n").unwrap_err();
         assert!(err.contains("end_header"));
     }
 
     #[test]
-    fn comments_are_retained_in_order() {
+    async fn comments_are_retained_in_order() {
         let text = "ply\nformat ascii 1.0\ncomment first\ncomment second\nelement vertex 0\nproperty float x\nend_header\n";
         let decoded = decode_ply(text.as_bytes()).expect("decode with comments");
         assert_eq!(decoded.comments, vec!["first".to_string(), "second".to_string()]);
     }
 
     #[test]
-    fn arbitrary_named_element_round_trips() {
+    async fn arbitrary_named_element_round_trips() {
         let props = vec![PlyProperty::Scalar { name: "weight".into(), kind: PlyScalarType::Double }, PlyProperty::List { name: "endpoints".into(), count_kind: PlyScalarType::UChar, value_kind: PlyScalarType::UShort }];
         let rows = vec![PlyRow { values: vec![PlyValue::Double(2.5), PlyValue::List(vec![PlyValue::UShort(3), PlyValue::UShort(7)])] }];
         let snap = PlySnapshot { schema: STDIO_PLY_DOCUMENT_SCHEMA.into(), format: PlyFormat::Ascii, comments: vec![], elements: vec![PlyElement { name: "edge".into(), count: 1, properties: props, rows }] };
@@ -593,7 +593,7 @@ mod tests {
     //#endregion
 
     //#region 🔖️LawFixtures
-    fn law_base() -> PlySnapshot {
+    async fn law_base() -> PlySnapshot {
         tetrahedron()
     }
     //#endregion
@@ -602,7 +602,7 @@ mod tests {
     /// 1️⃣ `mutation_diff_law`: ∀ variant, `m.diff(base).diff().apply(base)` matches
     /// `apply_ply_mutation`'s in-place result, and the returned diff equals `m.diff(base)`.
     #[test]
-    fn mutation_diff_law() {
+    async fn mutation_diff_law() {
         let base = law_base();
         let variants = vec![
             PlyMutation::NoMutation,
@@ -632,7 +632,7 @@ mod tests {
     /// 2️⃣ `inverse_law`: mutation-level round trip for every variant, plus diff-level
     /// `d.diff().inverse(base).apply(&d.diff().apply(base)) == base`.
     #[test]
-    fn inverse_law() {
+    async fn inverse_law() {
         let base = law_base();
         let variants = vec![
             PlyMutation::SetFormat { format: PlyFormat::BinaryBigEndian },
@@ -662,7 +662,7 @@ mod tests {
     /// 3️⃣ `absorb_law`: curated op pairs (Insert+Remove-before, Insert+Insert-same-index,
     /// Add+SetField, Modify+Remove per key kind) plus associativity.
     #[test]
-    fn absorb_law_insert_then_remove_before() {
+    async fn absorb_law_insert_then_remove_before() {
         let base = law_base();
         let m1 = PlyMutation::InsertRow { element_name: "vertex".into(), index: 2, row: PlyRow { values: vec![PlyValue::Float(9.0), PlyValue::Float(9.0), PlyValue::Float(9.0)] } };
         let mut mid = base.clone();
@@ -680,7 +680,7 @@ mod tests {
     }
 
     #[test]
-    fn absorb_law_insert_insert_same_index_both_survive() {
+    async fn absorb_law_insert_insert_same_index_both_survive() {
         let base = law_base();
         let m1 = PlyMutation::InsertRow { element_name: "vertex".into(), index: 2, row: PlyRow { values: vec![PlyValue::Float(1.0), PlyValue::Float(1.0), PlyValue::Float(1.0)] } };
         let mut mid = base.clone();
@@ -696,7 +696,7 @@ mod tests {
     }
 
     #[test]
-    fn absorb_law_add_element_then_set_row_property_patches_into_added() {
+    async fn absorb_law_add_element_then_set_row_property_patches_into_added() {
         let base = law_base();
         let new_element = PlyElement { name: "material".into(), count: 1, properties: vec![PlyProperty::Scalar { name: "shininess".into(), kind: PlyScalarType::Float }], rows: vec![PlyRow { values: vec![PlyValue::Float(0.1)] }] };
         let m1 = PlyMutation::AddElement { index: 2, element: new_element };
@@ -715,7 +715,7 @@ mod tests {
     }
 
     #[test]
-    fn absorb_law_modify_then_remove_name_keyed() {
+    async fn absorb_law_modify_then_remove_name_keyed() {
         let base = law_base();
         let m1 = PlyMutation::SetRowProperty { element_name: "face".into(), row_index: 0, property_name: "vertex_indices".into(), value: PlyValue::List(vec![PlyValue::Int(0), PlyValue::Int(1), PlyValue::Int(2)]) };
         let mut mid = base.clone();
@@ -732,7 +732,7 @@ mod tests {
     }
 
     #[test]
-    fn absorb_law_modify_then_remove_index_keyed() {
+    async fn absorb_law_modify_then_remove_index_keyed() {
         let base = law_base();
         let m1 = PlyMutation::SetRowProperty { element_name: "vertex".into(), row_index: 1, property_name: "x".into(), value: PlyValue::Float(5.0) };
         let mut mid = base.clone();
@@ -749,7 +749,7 @@ mod tests {
     }
 
     #[test]
-    fn absorb_law_associativity() {
+    async fn absorb_law_associativity() {
         let base = law_base();
         let m1 = PlyMutation::SetFormat { format: PlyFormat::BinaryLittleEndian };
         let m2 = PlyMutation::InsertComment { index: 0, comment: "x".into() };
@@ -778,7 +778,7 @@ mod tests {
     //#region 🔖️BetweenRoundtripLaw
     /// 4️⃣ `between_roundtrip_law`: `between(a,b).apply(a) == b` on synthetic fixtures.
     #[test]
-    fn between_roundtrip_law() {
+    async fn between_roundtrip_law() {
         let a = law_base();
         let mut b = a.clone();
         b.format = PlyFormat::BinaryBigEndian;
@@ -797,7 +797,7 @@ mod tests {
     //#region 🔖️CodecRetentionLaw
     /// 5️⃣ `codec_retention_law`: decode→encode is byte-preserving for ascii/binary fixtures.
     #[test]
-    fn codec_retention_law() {
+    async fn codec_retention_law() {
         for format in [PlyFormat::Ascii, PlyFormat::BinaryLittleEndian, PlyFormat::BinaryBigEndian] {
             let snap = tetrahedron();
             let encoded = encode_ply_with_format(&snap, format).expect("encode");
@@ -810,7 +810,7 @@ mod tests {
 
     //#region 🔖️FieldSweep
     /// 6️⃣ `field_sweep`: `sweep_a`/`sweep_b` differ in EVERY mutable field.
-    fn sweep_a() -> PlySnapshot {
+    async fn sweep_a() -> PlySnapshot {
         PlySnapshot {
             schema: STDIO_PLY_DOCUMENT_SCHEMA.into(),
             format: PlyFormat::Ascii,
@@ -832,7 +832,7 @@ mod tests {
         }
     }
 
-    fn sweep_b() -> PlySnapshot {
+    async fn sweep_b() -> PlySnapshot {
         PlySnapshot {
             schema: STDIO_PLY_DOCUMENT_SCHEMA.into(),
             format: PlyFormat::BinaryLittleEndian,
@@ -850,7 +850,7 @@ mod tests {
     }
 
     #[test]
-    fn field_sweep_covers_every_mutable_field() {
+    async fn field_sweep_covers_every_mutable_field() {
         let a = sweep_a();
         let b = sweep_b();
 
@@ -878,7 +878,7 @@ mod tests {
 
     /// 🧪 Direct row-level triple sweep (not routed through the schema-change scope cut).
     #[test]
-    fn field_sweep_row_triple_both_directions() {
+    async fn field_sweep_row_triple_both_directions() {
         let common_props = vec![PlyProperty::Scalar { name: "x".into(), kind: PlyScalarType::Int }];
         let a = PlySnapshot {
             schema: STDIO_PLY_DOCUMENT_SCHEMA.into(),
@@ -916,7 +916,7 @@ mod tests {
         use protocol::{DiffCodec, OpBinary, OpText};
 
         #[test]
-        fn committed_facet_files_parse() {
+        async fn committed_facet_files_parse() {
             for (label, text) in [("snapshot grammar", snapshot::text::COMPONENT_GRAMMAR_SEMIO), ("mutations grammar", mutations::text::COMPONENT_GRAMMAR_SEMIO), ("diff grammar", diff::text::COMPONENT_GRAMMAR_SEMIO)] {
                 let grammar = dsl::parse_grammar(text).unwrap_or_else(|e| panic!("{label}: parse_grammar failed: {e:?}"));
                 assert_eq!(grammar.dialect, dsl::SemioDialect::Grammar, "{label}: expected grammar dialect");
@@ -927,7 +927,7 @@ mod tests {
         }
 
         #[test]
-        fn grammar_conformance_law() {
+        async fn grammar_conformance_law() {
             let grammar = dsl::parse_grammar(snapshot::text::COMPONENT_GRAMMAR_SEMIO).expect("parse snapshot grammar");
             let recognizer = dsl::Recognizer::compile(&grammar);
             let text = store::ArtifactDsl::print_dsl(&demo_ply_snapshot());
@@ -937,7 +937,7 @@ mod tests {
         }
 
         #[test]
-        fn ops_grammar_conformance_law() {
+        async fn ops_grammar_conformance_law() {
             let grammar = dsl::parse_grammar(mutations::text::COMPONENT_GRAMMAR_SEMIO).expect("parse mutations grammar");
             let recognizer = dsl::Recognizer::compile(&grammar);
             for mutation in mutations::demo_mutation_cases() {
@@ -947,7 +947,7 @@ mod tests {
         }
 
         #[test]
-        fn diff_grammar_conformance_law() {
+        async fn diff_grammar_conformance_law() {
             let grammar = dsl::parse_grammar(diff::text::COMPONENT_GRAMMAR_SEMIO).expect("parse diff grammar");
             let recognizer = dsl::Recognizer::compile(&grammar);
             for d in diff::demo_diff_cases() {
@@ -957,7 +957,7 @@ mod tests {
         }
 
         #[test]
-        fn protocol_walk_law() {
+        async fn protocol_walk_law() {
             let pack_spec = dsl::parse_protocol(snapshot::binary::COMPONENT_PROTOCOL_SEMIO).expect("parse snapshot protocol");
             let demo = demo_ply_snapshot();
             let packed = store::ArtifactPack::encode_pack(&demo);
@@ -987,7 +987,7 @@ mod tests {
         }
 
         #[test]
-        fn fixture_honesty_law() {
+        async fn fixture_honesty_law() {
             const FIXTURE_DSL: &str = include_str!("../📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio");
             const FIXTURE_PACK: &[u8] = include_bytes!("../📚️examples/🎬️demo/🖼️assets/🎒️example.pack.semio");
 

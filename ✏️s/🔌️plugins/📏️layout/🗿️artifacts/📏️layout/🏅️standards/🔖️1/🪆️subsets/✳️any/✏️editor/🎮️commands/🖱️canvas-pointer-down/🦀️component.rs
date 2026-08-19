@@ -20,11 +20,11 @@ use serde::{Deserialize, Serialize};
 //#region 🔖️Shared
 /// 🖱️ A surface id names its blueprint/preview surface directly (`"layout.play.blueprint"` /
 /// `"layout.play.preview"`); an absent id defaults to blueprint (the interactive authoring surface).
-fn surface_is_blueprint(surface_id: Option<&str>) -> bool {
+async fn surface_is_blueprint(surface_id: Option<&str>) -> bool {
     surface_id.is_none_or(|surface| surface.contains("blueprint"))
 }
 
-fn screen_to_world_for_surface(config: &LayoutConfig, blueprint: bool, sx: f64, sy: f64, width: f64, height: f64) -> (f64, f64) {
+async fn screen_to_world_for_surface(config: &LayoutConfig, blueprint: bool, sx: f64, sy: f64, width: f64, height: f64) -> (f64, f64) {
     let camera_runtime = if blueprint { &config.camera } else { &config.preview_camera };
     let camera = infinite_canvas::camera::Camera { x: camera_runtime.x, y: camera_runtime.y, zoom: camera_runtime.zoom.max(0.0001) };
     let viewport = infinite_canvas::camera::Viewport { width: width.max(1.0) as u32, height: height.max(1.0) as u32, dpr: 1.0 };
@@ -33,7 +33,7 @@ fn screen_to_world_for_surface(config: &LayoutConfig, blueprint: bool, sx: f64, 
 }
 
 #[allow(clippy::too_many_arguments)]
-fn hit_test_at(doc: &LayoutSnapshot, config: &LayoutConfig, sx: f64, sy: f64, width: f64, height: f64, blueprint: bool) -> Option<String> {
+async fn hit_test_at(doc: &LayoutSnapshot, config: &LayoutConfig, sx: f64, sy: f64, width: f64, height: f64, blueprint: bool) -> Option<String> {
     let page = active_page(doc, config)?;
     let (wx, wy) = screen_to_world_for_surface(config, blueprint, sx, sy, width, height);
     let mut engine = LayoutEngine::new();
@@ -77,7 +77,7 @@ pub struct CanvasPointerDown {
     pub height: f64,
 }
 
-pub fn handle(payload: &CanvasPointerDown, doc: &ArtifactView<'_, LayoutSnapshot>, cfg: &ConfigView<'_, LayoutConfig>) -> Result<Emit<LayoutMutation, LayoutConfigMutation>, Fault> {
+pub async fn handle(payload: &CanvasPointerDown, doc: &ArtifactView<'_, LayoutSnapshot>, cfg: &ConfigView<'_, LayoutConfig>) -> Result<Emit<LayoutMutation, LayoutConfigMutation>, Fault> {
     let blueprint = surface_is_blueprint(payload.surface_id.as_deref());
     if !blueprint || payload.button != 0 {
         return Ok(Emit::default());
@@ -104,7 +104,7 @@ mod tests {
     use semio_framework_plugin::{CLEAR_SELECTION_ACTION_ID, INTERACTION_HOVER_ACTION_ID, INTERACTION_SELECT_ACTION_ID};
 
     #[test]
-    fn set_camera_mutates_config_and_emits_no_operations() {
+    async fn set_camera_mutates_config_and_emits_no_operations() {
         let mut app = layout_app();
         let before = app.snapshot().expect("projection");
         let result = dispatch(&mut app, LayoutCommand::SetCamera(set_camera::SetCamera { surface_id: Some(LAYOUT_PLAY_SURFACE_BLUEPRINT.into()), camera: LayoutCamera { x: 10.0, y: 20.0, zoom: 1.5 } }));
@@ -113,7 +113,7 @@ mod tests {
     }
 
     #[test]
-    fn set_camera_preview_surface_updates_independently_of_blueprint() {
+    async fn set_camera_preview_surface_updates_independently_of_blueprint() {
         let mut app = layout_app();
         dispatch(&mut app, LayoutCommand::SetCamera(set_camera::SetCamera { surface_id: Some(LAYOUT_PLAY_SURFACE_PREVIEW.into()), camera: LayoutCamera { x: 3.0, y: 4.0, zoom: 2.0 } }));
         let preview_json = render(&mut app, crate::editor::layout::modes::edit::windows::preview::LAYOUT_PLAY_BODY_PREVIEW);
@@ -127,7 +127,7 @@ mod tests {
     /// instance next, out of band — the test harness doesn't simulate the round trip, so this only
     /// asserts the requested effect is shaped correctly, not that selection state landed).
     #[test]
-    fn pointer_down_requests_a_select_effect_for_the_hit_frame() {
+    async fn pointer_down_requests_a_select_effect_for_the_hit_frame() {
         let mut app = layout_app();
         let (sx, sy) = test_screen_point(0.0, 0.0, 1.0, 800.0, 600.0, 136.0, 435.0);
         let result = dispatch(&mut app, LayoutCommand::CanvasPointerDown(CanvasPointerDown { surface_id: Some(LAYOUT_PLAY_SURFACE_BLUEPRINT.into()), button: 0, extend: false, x: sx, y: sy, width: 800.0, height: 600.0 }));
@@ -141,7 +141,7 @@ mod tests {
     }
 
     #[test]
-    fn pointer_down_extend_click_requests_an_invertive_merge() {
+    async fn pointer_down_extend_click_requests_an_invertive_merge() {
         let mut app = layout_app();
         let (sx, sy) = test_screen_point(0.0, 0.0, 1.0, 800.0, 600.0, 136.0, 435.0);
         let result = dispatch(&mut app, LayoutCommand::CanvasPointerDown(CanvasPointerDown { surface_id: Some(LAYOUT_PLAY_SURFACE_BLUEPRINT.into()), button: 0, extend: true, x: sx, y: sy, width: 800.0, height: 600.0 }));
@@ -152,7 +152,7 @@ mod tests {
     }
 
     #[test]
-    fn pointer_down_on_empty_space_requests_clear_selection() {
+    async fn pointer_down_on_empty_space_requests_clear_selection() {
         let mut app = layout_app();
         let (sx, sy) = test_screen_point(0.0, 0.0, 1.0, 800.0, 600.0, 5.0, 5.0);
         let result = dispatch(&mut app, LayoutCommand::CanvasPointerDown(CanvasPointerDown { surface_id: Some(LAYOUT_PLAY_SURFACE_BLUEPRINT.into()), button: 0, extend: false, x: sx, y: sy, width: 800.0, height: 600.0 }));
@@ -160,7 +160,7 @@ mod tests {
     }
 
     #[test]
-    fn pointer_move_requests_a_hover_effect_for_the_hit_frame() {
+    async fn pointer_move_requests_a_hover_effect_for_the_hit_frame() {
         let mut app = layout_app();
         let (sx, sy) = test_screen_point(0.0, 0.0, 1.0, 800.0, 600.0, 156.0, 220.0);
         let result = dispatch(&mut app, LayoutCommand::CanvasPointerMove(canvas_pointer_move::CanvasPointerMove { surface_id: Some(LAYOUT_PLAY_SURFACE_BLUEPRINT.into()), x: sx, y: sy, width: 800.0, height: 600.0 }));
@@ -172,7 +172,7 @@ mod tests {
     }
 
     #[test]
-    fn canvas_drop_adds_frame_at_world_coords() {
+    async fn canvas_drop_adds_frame_at_world_coords() {
         let mut app = layout_app();
         let (sx, sy) = test_screen_point(0.0, 0.0, 1.0, 800.0, 600.0, 100.0, 200.0);
         let result = dispatch(&mut app, LayoutCommand::CanvasDrop(canvas_drop::CanvasDrop { surface_id: Some(LAYOUT_PLAY_SURFACE_BLUEPRINT.into()), kind: "rect".into(), x: sx, y: sy, width: 800.0, height: 600.0 }));
@@ -185,7 +185,7 @@ mod tests {
     }
 
     #[test]
-    fn canvas_drop_page_kind_adds_page() {
+    async fn canvas_drop_page_kind_adds_page() {
         let mut app = layout_app();
         let before = app.snapshot().expect("projection").pages.len();
         let result = dispatch(&mut app, LayoutCommand::CanvasDrop(canvas_drop::CanvasDrop { surface_id: Some(LAYOUT_PLAY_SURFACE_BLUEPRINT.into()), kind: "page".into(), x: 0.0, y: 0.0, width: 800.0, height: 600.0 }));
@@ -194,7 +194,7 @@ mod tests {
     }
 
     #[test]
-    fn drag_over_emits_ghost_and_leave_clears() {
+    async fn drag_over_emits_ghost_and_leave_clears() {
         let mut app = layout_app();
         dispatch(&mut app, LayoutCommand::CanvasDragOver(canvas_drag_over::CanvasDragOver { surface_id: Some(LAYOUT_PLAY_SURFACE_BLUEPRINT.into()), kind: "rect".into(), x: 400.0, y: 300.0, width: 800.0, height: 600.0 }));
         assert!(render(&mut app, crate::editor::layout::modes::edit::windows::blueprint::LAYOUT_PLAY_BODY_BLUEPRINT).contains("layout.drop-preview"));

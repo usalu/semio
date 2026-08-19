@@ -4,7 +4,7 @@ use crate::artifacts::note::NoteDiff;
 use crate::artifacts::note::NoteSnapshot;
 
 //#region 🔖️Diff
-pub fn diff(payload: &RenameNote, base: &NoteSnapshot) -> protocol::MutationOutcome<NoteDiff> {
+pub async fn diff(payload: &RenameNote, base: &NoteSnapshot) -> protocol::MutationOutcome<NoteDiff> {
     if base.title == payload.new_title {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Note title is already {:?}.", payload.new_title));
     }

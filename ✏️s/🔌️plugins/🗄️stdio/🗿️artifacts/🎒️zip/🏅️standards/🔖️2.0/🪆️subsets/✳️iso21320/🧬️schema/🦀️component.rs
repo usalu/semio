@@ -22,24 +22,24 @@ pub mod derived_construction {
     }
 
     impl ZipIso21320BuilderConstruction {
-        pub fn new() -> Self {
+        pub async fn new() -> Self {
             Self { snapshot: ZipSnapshot::default() }
         }
 
         /// ➕️ Adds a logical member; the ISO serializer owns the canonical compression and header policy.
-        pub fn with_stored_entry(mut self, name: impl Into<String>, data: Vec<u8>) -> Self {
+        pub async fn with_stored_entry(mut self, name: impl Into<String>, data: Vec<u8>) -> Self {
             apply_zip_mutation(&mut self.snapshot, &ZipMutation::AddEntry { entry: ZipEntry { name: name.into(), data } });
             self
         }
 
         /// ➕️ Adds a logical member; the ISO serializer owns the canonical compression and header policy.
-        pub fn with_deflate_entry(mut self, name: impl Into<String>, data: Vec<u8>) -> Self {
+        pub async fn with_deflate_entry(mut self, name: impl Into<String>, data: Vec<u8>) -> Self {
             apply_zip_mutation(&mut self.snapshot, &ZipMutation::AddEntry { entry: ZipEntry { name: name.into(), data } });
             self
         }
 
         /// 💬️ Sets the archive-level (EOCD) comment.
-        pub fn with_comment(mut self, comment: impl Into<String>) -> Self {
+        pub async fn with_comment(mut self, comment: impl Into<String>) -> Self {
             self.snapshot.comment = comment.into();
             self
         }
@@ -50,35 +50,35 @@ pub mod derived_construction {
         type Mutation = ZipMutation;
         type Diff = ZipDiff;
 
-        fn empty() -> Self {
+        async fn empty() -> Self {
             Self::new()
         }
 
-        fn from_snapshot(snapshot: Self::Snapshot) -> Self {
+        async fn from_snapshot(snapshot: Self::Snapshot) -> Self {
             Self { snapshot }
         }
 
-        fn from_text(text: &str) -> Result<Self, store::TextError> {
+        async fn from_text(text: &str) -> Result<Self, store::TextError> {
             Ok(Self::from_snapshot(<ZipSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
 
-        fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
+        async fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
             Ok(Self::from_snapshot(<ZipSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
         }
 
-        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
+        async fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let diff = apply_zip_mutation(&mut self.snapshot, &mutation);
             (self, diff)
         }
 
-        fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
+        async fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
             self.snapshot = <ZipDiff as protocol::MutationDiff<ZipSnapshot>>::apply(&diff, &self.snapshot)?;
             Ok(self)
         }
 
         /// 🛡️ Gates logical constraints; native header validation belongs to deserialization and
         /// canonical header materialization belongs to serialization.
-        fn build(self) -> Result<Self::Snapshot, Vec<Diagnostic>> {
+        async fn build(self) -> Result<Self::Snapshot, Vec<Diagnostic>> {
             let hard: Vec<Diagnostic> = check_iso21320_conformance(&self.snapshot).into_iter().filter(|d| matches!(d.severity, Severity::Error | Severity::Fatal)).collect();
             if hard.is_empty() {
                 Ok(self.snapshot)
@@ -94,7 +94,7 @@ pub mod derived_construction {
         use super::*;
 
         #[test]
-        fn typed_constructors_build_clean() {
+        async fn typed_constructors_build_clean() {
             let snapshot = ZipIso21320BuilderConstruction::new().with_stored_entry("a.txt", b"hello".to_vec()).with_deflate_entry("b.txt", b"world, compressed".to_vec()).with_comment("archive").build().expect("conforming construction must build");
             assert_eq!(snapshot.entries.len(), 2);
             assert_eq!(snapshot.comment, "archive");
@@ -135,15 +135,15 @@ pub mod derived_analysis {
     pub const CODE_DATA_DESCRIPTOR: &str = "stdio.zip.iso21320.data-descriptor-present";
     pub const CODE_VERSION_NEEDED: &str = "stdio.zip.iso21320.version-needed-high";
 
-    fn hard(code: &'static str, message: String) -> Diagnostic {
+    async fn hard(code: &'static str, message: String) -> Diagnostic {
         Diagnostic { code: FaultCode::new(code), severity: Severity::Error, span: TextSpan::at(1, 1), message, expected: None, scope: FaultScope::default() }
     }
 
-    fn soft(code: &'static str, message: String) -> Diagnostic {
+    async fn soft(code: &'static str, message: String) -> Diagnostic {
         Diagnostic { code: FaultCode::new(code), severity: Severity::Warning, span: TextSpan::at(1, 1), message, expected: None, scope: FaultScope::default() }
     }
 
-    fn check_iso21320_entry_headers(entries: &[crate::artifacts::zip::standards::v2_0::subsets::any::io::ZipCentralEntryHeader]) -> Vec<Diagnostic> {
+    async fn check_iso21320_entry_headers(entries: &[crate::artifacts::zip::standards::v2_0::subsets::any::io::ZipCentralEntryHeader]) -> Vec<Diagnostic> {
         let mut out = Vec::new();
         for (index, entry) in entries.iter().enumerate() {
             if entry.flags & FLAG_ENCRYPTED != 0 {
@@ -184,7 +184,7 @@ pub mod derived_analysis {
     }
 
     /// 🛡️ Checks ISO/IEC 21320-1 header policy against raw ZIP container bytes.
-    pub fn check_iso21320_wire_conformance(data: &[u8]) -> Vec<Diagnostic> {
+    pub async fn check_iso21320_wire_conformance(data: &[u8]) -> Vec<Diagnostic> {
         match crate::artifacts::zip::standards::v2_0::subsets::any::io::inspect_zip_central_entry_headers(data) {
             Ok(headers) => check_iso21320_entry_headers(&headers),
             Err(err) => vec![hard("stdio.zip.iso21320.wire-inspect-failed", format!("ISO/IEC 21320-1 wire inspection failed: {err}"))],
@@ -194,7 +194,7 @@ pub mod derived_analysis {
     /// 🛡️ Checks ISO/IEC 21320-1 constraints for a logical `ZipSnapshot` by materializing its
     /// canonical wire form and inspecting central-directory headers. Logical snapshots never carry
     /// forbidden general-purpose flag bits — native violations are only observable on wire bytes.
-    pub fn check_iso21320_conformance(snapshot: &ZipSnapshot) -> Vec<Diagnostic> {
+    pub async fn check_iso21320_conformance(snapshot: &ZipSnapshot) -> Vec<Diagnostic> {
         match crate::artifacts::zip::standards::v2_0::subsets::any::io::encode_zip(snapshot) {
             Ok(bytes) => check_iso21320_wire_conformance(&bytes),
             Err(err) => vec![hard("stdio.zip.iso21320.encode-failed", format!("ISO/IEC 21320-1 conformance preflight encode failed: {err}"))],
@@ -214,11 +214,11 @@ pub mod derived_analysis {
         type Parts = ZipParts;
         const DIALECT: Dialect = DIALECT;
 
-        fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
+        async fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
             ZipAnyAnalyzer::sniff(source)
         }
 
-        fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
+        async fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
             let inner = ZipAnyAnalyzer::analyze(sources);
             let mut diagnostics = inner.diagnostics.clone();
             let mut confidence = inner.confidence;
@@ -253,53 +253,53 @@ pub mod derived_analysis {
         use crate::artifacts::zip::standards::v2_0::subsets::any::io::ZipCentralEntryHeader;
         use crate::artifacts::zip::standards::v2_0::subsets::any::schema::snapshot::ZipEntry;
 
-        fn entry(name: &str) -> ZipEntry {
+        async fn entry(name: &str) -> ZipEntry {
             ZipEntry { name: name.into(), data: b"payload".to_vec() }
         }
 
-        fn header(name: &str, flags: u16, version_needed: u16) -> ZipCentralEntryHeader {
+        async fn header(name: &str, flags: u16, version_needed: u16) -> ZipCentralEntryHeader {
             ZipCentralEntryHeader { name: name.into(), flags, version_needed }
         }
 
         #[test]
-        fn conforming_snapshot_has_no_diagnostics() {
+        async fn conforming_snapshot_has_no_diagnostics() {
             let snapshot = ZipSnapshot { entries: vec![entry("a.txt")], ..ZipSnapshot::default() };
             let diagnostics = check_iso21320_conformance(&snapshot);
             assert!(diagnostics.is_empty(), "got {diagnostics:?}");
         }
 
         #[test]
-        fn encrypted_entry_is_hard() {
+        async fn encrypted_entry_is_hard() {
             let diagnostics = check_iso21320_entry_headers(&[header("secret.bin", FLAG_ENCRYPTED, 20)]);
             assert!(diagnostics.iter().any(|d| d.code.0 == CODE_ENCRYPTED && d.severity == Severity::Error), "got {diagnostics:?}");
         }
 
         #[test]
-        fn strong_encryption_bit_is_hard() {
+        async fn strong_encryption_bit_is_hard() {
             let diagnostics = check_iso21320_entry_headers(&[header("strong.bin", FLAG_STRONG_ENCRYPTION, 20)]);
             assert!(diagnostics.iter().any(|d| d.code.0 == CODE_STRONG_ENCRYPTION && d.severity == Severity::Error), "got {diagnostics:?}");
         }
 
         #[test]
-        fn masked_local_header_bit_is_hard() {
+        async fn masked_local_header_bit_is_hard() {
             let diagnostics = check_iso21320_entry_headers(&[header("masked.bin", FLAG_MASKED_LOCAL_HEADERS, 20)]);
             assert!(diagnostics.iter().any(|d| d.code.0 == CODE_STRONG_ENCRYPTION && d.severity == Severity::Error), "got {diagnostics:?}");
         }
 
         #[test]
-        fn data_descriptor_bit_is_soft() {
+        async fn data_descriptor_bit_is_soft() {
             let diagnostics = check_iso21320_entry_headers(&[header("streamed.bin", FLAG_DATA_DESCRIPTOR, 20)]);
             assert!(diagnostics.iter().any(|d| d.code.0 == CODE_DATA_DESCRIPTOR && d.severity == Severity::Warning), "got {diagnostics:?}");
         }
 
         #[test]
-        fn high_version_needed_is_soft() {
+        async fn high_version_needed_is_soft() {
             let diagnostics = check_iso21320_entry_headers(&[header("zip64.bin", 0, 63)]);
             assert!(diagnostics.iter().any(|d| d.code.0 == CODE_VERSION_NEEDED && d.severity == Severity::Warning), "got {diagnostics:?}");
         }
 
         #[test]
-        fn version_needed_at_ceiling_is_clean() {
+        async fn version_needed_at_ceiling_is_clean() {
             assert!(check_iso21320_entry_headers(&[header("boundary.bin", 0, VERSION_NEEDED_SOFT_CEILING)]).is_empty());
         }
     }

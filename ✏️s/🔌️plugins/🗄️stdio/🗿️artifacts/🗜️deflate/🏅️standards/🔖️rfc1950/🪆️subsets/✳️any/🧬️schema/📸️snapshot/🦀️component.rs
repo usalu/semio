@@ -23,7 +23,7 @@ pub enum DeflateLevelHint {
 
 impl DeflateLevelHint {
     /// 📐️ Decodes FLG's 2-bit FLEVEL field.
-    pub fn from_bits(bits: u8) -> Self {
+    pub async fn from_bits(bits: u8) -> Self {
         match bits & 0b11 {
             0 => DeflateLevelHint::Fastest,
             1 => DeflateLevelHint::Fast,
@@ -32,7 +32,7 @@ impl DeflateLevelHint {
         }
     }
     /// 📐️ Encodes to FLG's 2-bit FLEVEL field.
-    pub fn to_bits(self) -> u8 {
+    pub async fn to_bits(self) -> u8 {
         match self {
             DeflateLevelHint::Fastest => 0,
             DeflateLevelHint::Fast => 1,
@@ -90,7 +90,7 @@ pub struct DeflateSnapshot {
 }
 
 impl Default for DeflateSnapshot {
-    fn default() -> Self {
+    async fn default() -> Self {
         Self { schema: STDIO_DEFLATE_DOCUMENT_SCHEMA.into(), compression_method: 8, window_bits: 7, compression_level_hint: DeflateLevelHint::default(), dict_id: None, payload: Vec::new() }
     }
 }
@@ -99,11 +99,11 @@ impl Default for DeflateSnapshot {
 //#region 🔖️HandcraftedArtifactCodecs
 impl store::ArtifactDsl for DeflateSnapshot {
     const EXTENSION: &'static str = "zz";
-    fn envelope_id() -> &'static str {
+    async fn envelope_id() -> &'static str {
         "stdio.deflate"
     }
 
-    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+    async fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
         let body = match store::semio_format::split_text_preamble(text) {
             Ok((_, rest)) => rest,
             Err(_) => text,
@@ -121,7 +121,7 @@ impl store::ArtifactDsl for DeflateSnapshot {
         }
         crate::artifacts::deflate::standards::v_rfc1950::subsets::any::io::decode_deflate_snapshot(&zlib_bytes).map_err(|e| store::TextError::new(format!("zlib decode: {e}"), dsl::TextSpan::at(1, 1)))
     }
-    fn print_dsl(&self) -> String {
+    async fn print_dsl(&self) -> String {
         let zlib_bytes = crate::artifacts::deflate::standards::v_rfc1950::subsets::any::io::encode_deflate_snapshot(self);
         let body: String = zlib_bytes.iter().map(|b| format!("{b:02x}")).collect();
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
@@ -130,14 +130,14 @@ impl store::ArtifactDsl for DeflateSnapshot {
 }
 
 impl store::ArtifactPack for DeflateSnapshot {
-    fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
+    async fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
 
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
         let zlib_bytes = crate::artifacts::deflate::standards::v_rfc1950::subsets::any::io::encode_deflate_snapshot(self);
         Ok(store::semio_format::wrap_binary(&envelope, &zlib_bytes))
     }
-    fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
+    async fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
         if envelope.envelope_id() != <Self as store::ArtifactDsl>::envelope_id() {
             return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.envelope_id())));

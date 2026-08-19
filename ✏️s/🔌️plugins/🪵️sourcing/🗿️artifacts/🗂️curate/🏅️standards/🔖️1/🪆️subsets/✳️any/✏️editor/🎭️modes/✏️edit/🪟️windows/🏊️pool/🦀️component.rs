@@ -17,7 +17,7 @@ const SOURCING_CURATE_SURFACE_POOL: &str = "sourcing.pool.table";
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
-pub fn definition() -> WindowKindDefinition {
+pub async fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
         id: SOURCING_CURATE_WINDOW_POOL.into(),
         label: LocalizedLabel::native("Pool", "Pool"),
@@ -38,7 +38,7 @@ pub fn definition() -> WindowKindDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️FilterBar
-pub fn build_filter_bar(filters: &Filters, modules: &[ModuleCatalogue], labels: &SourcingLabels) -> UiNode {
+pub async fn build_filter_bar(filters: &Filters, modules: &[ModuleCatalogue], labels: &SourcingLabels) -> UiNode {
     let mut children = vec![UiNode::Input(UiInputNode {
         presence: UiPresence::default(),
         id: "sourcing-filter-query".into(),
@@ -94,7 +94,7 @@ pub fn build_filter_bar(filters: &Filters, modules: &[ModuleCatalogue], labels: 
 //#endregion 🔖️FilterBar
 
 //#region 🔖️Render
-fn pool_columns_json(labels: &SourcingLabels) -> String {
+async fn pool_columns_json(labels: &SourcingLabels) -> String {
     json!([
         {"id": "name", "label": labels.col_name.as_str()},
         {"id": "module", "label": labels.col_module.as_str(), "sortable": true},
@@ -105,7 +105,7 @@ fn pool_columns_json(labels: &SourcingLabels) -> String {
     .to_string()
 }
 
-fn build_pool_table(document: &CurateSnapshot, cfg: &SourcingCurateConfig, labels: &SourcingLabels) -> UiNode {
+async fn build_pool_table(document: &CurateSnapshot, cfg: &SourcingCurateConfig, labels: &SourcingLabels) -> UiNode {
     let mut filtered = crate::artifacts::curate::schema::filtered_stock(document, &cfg.filters);
     if let Some(sort) = &cfg.filters.sort {
         filtered.sort_by(|a, b| {
@@ -147,7 +147,7 @@ fn build_pool_table(document: &CurateSnapshot, cfg: &SourcingCurateConfig, label
     build_table_scene(SOURCING_CURATE_SURFACE_POOL, SOURCING_CONTROLLER_ID, scene)
 }
 
-pub fn render(document: &CurateSnapshot, cfg: &SourcingCurateConfig, labels: &SourcingLabels) -> UiNode {
+pub async fn render(document: &CurateSnapshot, cfg: &SourcingCurateConfig, labels: &SourcingLabels) -> UiNode {
     let modules = available_modules();
     ui_stack_vertical(vec![build_filter_bar(&cfg.filters, &modules, labels), build_pool_table(document, cfg, labels)])
 }
@@ -160,7 +160,7 @@ mod tests {
     use crate::editor::sourcing::testkit::{new_app, render as render_body};
 
     #[test]
-    fn pool_render_respects_query_filter() {
+    async fn pool_render_respects_query_filter() {
         let document = crate::artifacts::curate::schema::default_document();
         let cfg = SourcingCurateConfig { filters: Filters { query: "glulam".into(), ..Default::default() }, ..Default::default() };
         let node = build_pool_table(&document, &cfg, crate::editor::sourcing::terminology::sourcing_curate_labels(&SourcingCurateConfig::default()));
@@ -170,7 +170,7 @@ mod tests {
     }
 
     #[test]
-    fn pool_stepper_cell_max_equals_availability() {
+    async fn pool_stepper_cell_max_equals_availability() {
         let document = crate::artifacts::curate::schema::default_document();
         let cfg = SourcingCurateConfig::default();
         let stock = crate::artifacts::curate::stock_of(&document);
@@ -184,7 +184,7 @@ mod tests {
     }
 
     #[test]
-    fn filter_bar_module_toggles_encode_pressed_state_as_presence_selected() {
+    async fn filter_bar_module_toggles_encode_pressed_state_as_presence_selected() {
         let filters = Filters { module_ids: vec!["beams".into()], ..Default::default() };
         let modules = available_modules();
         let node = build_filter_bar(&filters, &modules, crate::editor::sourcing::terminology::sourcing_curate_labels(&SourcingCurateConfig::default()));
@@ -202,14 +202,14 @@ mod tests {
     }
 
     #[test]
-    fn definition_declares_the_table_surface_and_body_key() {
+    async fn definition_declares_the_table_surface_and_body_key() {
         let def = definition();
         assert_eq!(def.body_key, SOURCING_CURATE_BODY_POOL);
         assert!(matches!(def.surface_kind, SurfaceKind::Table));
     }
 
     #[test]
-    fn renders_pool_table_scene() {
+    async fn renders_pool_table_scene() {
         let mut app = new_app();
         assert!(render_body(&mut app, SOURCING_CURATE_BODY_POOL).contains("table"));
     }

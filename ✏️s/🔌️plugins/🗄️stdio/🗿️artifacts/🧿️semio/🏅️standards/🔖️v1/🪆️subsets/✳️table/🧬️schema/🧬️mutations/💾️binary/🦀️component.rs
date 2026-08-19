@@ -18,7 +18,7 @@ pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️comp
 /// agree (see `committed_facet_files_parse`/`ops_grammar_conformance_law` in `🚪️io/🦀️component.rs`).
 const OP_KEYWORDS: [&str; 8] = ["createColumn", "deleteColumn", "renameColumn", "reorderColumns", "insertRow", "removeRow", "reorderRows", "editCell"];
 
-fn variant_ordinal(m: &SemioTableMutation) -> u8 {
+async fn variant_ordinal(m: &SemioTableMutation) -> u8 {
     match m {
         SemioTableMutation::CreateColumn(_) => 0,
         SemioTableMutation::DeleteColumn(_) => 1,
@@ -33,7 +33,7 @@ fn variant_ordinal(m: &SemioTableMutation) -> u8 {
 
 /// ✂️ Just the argument tail of `print_op` — the binary frame's `tag` byte already carries the
 /// keyword, so the text keyword itself (and its `:` separator) is redundant in the binary payload.
-fn print_op_args(m: &SemioTableMutation) -> String {
+async fn print_op_args(m: &SemioTableMutation) -> String {
     use protocol::OpText;
     match m.print_op().split_once(':') {
         Some((_, rest)) => rest.to_string(),
@@ -42,13 +42,13 @@ fn print_op_args(m: &SemioTableMutation) -> String {
 }
 
 impl protocol::OpBinary for SemioTableMutation {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         const OP_BINARY_FORMAT: u8 = 1;
         let mut out = vec![OP_BINARY_FORMAT, variant_ordinal(self)];
         out.extend_from_slice(print_op_args(self).as_bytes());
         Ok(out)
     }
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         use protocol::OpText;
         const OP_BINARY_FORMAT: u8 = 1;
         if bytes.len() < 2 {
@@ -74,7 +74,7 @@ mod tests {
     use protocol::OpBinary;
 
     #[test]
-    fn op_binary_roundtrip_law() {
+    async fn op_binary_roundtrip_law() {
         for m in demo_mutation_cases() {
             let encoded = m.encode_op().unwrap_or_else(|e| panic!("encode_op({m:?}) failed: {e}"));
             let decoded = SemioTableMutation::decode_op(&encoded).unwrap_or_else(|e| panic!("decode_op failed: {e}"));

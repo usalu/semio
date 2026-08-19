@@ -13,7 +13,7 @@ pub const FLOW_PLAY_BODY_DOCUMENT: &str = "flow.play.document";
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
-pub fn definition() -> PanelTabDefinition {
+pub async fn definition() -> PanelTabDefinition {
     PanelTabDefinition {
         kind: PanelTabKind::App(FRAMEWORK_PANEL_TAB_ARTIFACT_ID.into()),
         label: LocalizedLabel::native(FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL, "Dokument"),
@@ -30,7 +30,7 @@ pub fn definition() -> PanelTabDefinition {
 /// declares for the "graph" domain — the framework stamps this tree's selection/hover presence from
 /// that domain (`.interaction_domain`) and prunes stale ids through that same topology, so no per-item
 /// click action is declared here anymore (clicks are translated into `interactionSelect` generically).
-pub fn render(fixture: &FlowSnapshot, labels: &FlowPlayLabels) -> UiNode {
+pub async fn render(fixture: &FlowSnapshot, labels: &FlowPlayLabels) -> UiNode {
     let live = fixture.to_fixture();
     let widget_items: Vec<UiTreeItemNode> =
         live.widgets.iter().map(|widget| tree_item_desc(flow_graph_node_target_id(widget_id(widget)), Label::data(widget_tree_label(widget)), Some(widget_kind_label(widget).into()))).collect();
@@ -51,13 +51,13 @@ mod tests {
     use crate::editor::flow::testkit::{flow_app, render as render_body};
 
     #[test]
-    fn document_lists_widgets() {
+    async fn document_lists_widgets() {
         let mut app = flow_app();
         assert!(render_body(&mut app, FLOW_PLAY_BODY_DOCUMENT).contains("flow-play-document.widgets"));
     }
 
     #[test]
-    fn definition_binds_the_framework_document_tab_to_this_body_key() {
+    async fn definition_binds_the_framework_document_tab_to_this_body_key() {
         let definition = definition();
         assert_eq!(definition.id(), FRAMEWORK_PANEL_TAB_ARTIFACT_ID);
         assert_eq!(definition.body_key.as_deref(), Some(FLOW_PLAY_BODY_DOCUMENT));

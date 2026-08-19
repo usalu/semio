@@ -10,7 +10,7 @@ use crate::artifacts::playground::standards::v1::subsets::any::schema::{
 
 //#region 🔖️Diff
 /// 🔺️ The `schema` slot is the only sparse field this payload ever touches.
-pub fn diff(payload: &ChangeSchema, base: &PlaygroundSnapshot) -> protocol::MutationOutcome<PlaygroundDiff> {
+pub async fn diff(payload: &ChangeSchema, base: &PlaygroundSnapshot) -> protocol::MutationOutcome<PlaygroundDiff> {
     if base.schema == payload.new_schema {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Playground schema is already \"{}\".", payload.new_schema));
     }

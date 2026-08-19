@@ -10,7 +10,7 @@ use serde::{Deserialize, Serialize};
 #[dsl(keyword = "addGripKind")]
 pub struct AddGripKind {}
 
-pub fn handle(_payload: &AddGripKind, doc: &ArtifactView<'_, Block5dSnapshot>, _cfg: &ConfigView<'_, Block5dConfig>) -> Result<Emit<Block5dMutation, Block5dConfigMutation>, Fault> {
+pub async fn handle(_payload: &AddGripKind, doc: &ArtifactView<'_, Block5dSnapshot>, _cfg: &ConfigView<'_, Block5dConfig>) -> Result<Emit<Block5dMutation, Block5dConfigMutation>, Fault> {
     let id = crate::artifacts::block5d::schema::next_id(doc.snapshot.grip_kinds.iter().map(|kind| kind.id.as_str()), "grip-kind-");
     let grip_kind = Block5dGripKind { id: id.clone(), name: id.clone(), label: id, color: "#888888".into(), default_rope_kind: "rope.link".into() };
     Ok(Emit::mutations(vec![crate::artifacts::block5d::mutations::create_grip_kind(grip_kind)]))

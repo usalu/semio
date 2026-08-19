@@ -14,7 +14,7 @@ pub const FLOW_PLAY_BODY_GENERATE_FORM: &str = "flow.play.generate-form";
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
-pub fn definition() -> WindowKindDefinition {
+pub async fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
         id: FLOW_PLAY_WINDOW_GENERATE_FORM.into(),
         label: LocalizedLabel::native("Form", "Formular"),
@@ -35,7 +35,7 @@ pub fn definition() -> WindowKindDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(fixture: &FlowSnapshot, config: &FlowConfig) -> UiNode {
+pub async fn render(fixture: &FlowSnapshot, config: &FlowConfig) -> UiNode {
     let spec = flow_fixture_to_form_spec(&fixture.to_fixture());
     let generation = config.generation();
     let Some(active) = selected_generation(&generation) else {
@@ -52,7 +52,7 @@ mod tests {
     use crate::editor::flow::testkit::{flow_app, render as render_body};
 
     #[test]
-    fn without_a_generation_the_form_shows_the_placeholder_copy() {
+    async fn without_a_generation_the_form_shows_the_placeholder_copy() {
         let mut app = flow_app();
         assert!(render_body(&mut app, FLOW_PLAY_BODY_GENERATE_FORM).contains("Add a generation"));
     }

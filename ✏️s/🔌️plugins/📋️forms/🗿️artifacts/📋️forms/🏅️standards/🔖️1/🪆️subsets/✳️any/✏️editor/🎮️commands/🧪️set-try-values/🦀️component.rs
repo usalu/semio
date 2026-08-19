@@ -13,7 +13,7 @@ pub struct SetTryValues {
     pub values_json: String,
 }
 
-pub fn handle(payload: &SetTryValues, _doc: &ArtifactView<'_, FormsSnapshot>, cfg: &ConfigView<'_, FormsConfig>) -> Result<Emit<FormMutation, FormsConfigMutation>, Fault> {
+pub async fn handle(payload: &SetTryValues, _doc: &ArtifactView<'_, FormsSnapshot>, cfg: &ConfigView<'_, FormsConfig>) -> Result<Emit<FormMutation, FormsConfigMutation>, Fault> {
     let mut values = try_values_map(cfg.snapshot);
     if let Some(incoming) = serde_json::from_str::<Value>(&payload.values_json).ok().and_then(|value| value.as_object().cloned()) {
         for (key, value) in incoming {
@@ -32,12 +32,12 @@ mod tests {
     use crate::artifacts::forms::forms_steps;
     use serde_json::Map;
 
-    fn seed_example(app: &mut crate::editor::forms::testkit::FormsApp, example_id: &str) {
+    async fn seed_example(app: &mut crate::editor::forms::testkit::FormsApp, example_id: &str) {
         dispatch(app, FormsCommand::SetActiveExample(crate::editor::forms::commands::set_active_example::SetActiveExample { example_id: example_id.into() }));
     }
 
     #[test]
-    fn try_wizard_gates_navigation_and_reports_inline_errors() {
+    async fn try_wizard_gates_navigation_and_reports_inline_errors() {
         let mut app = forms_app();
         seed_example(&mut app, "default");
         dispatch(&mut app, FormsCommand::SetTryValues(SetTryValues { values_json: r#"{"name":"","email":""}"#.into() }));
@@ -50,7 +50,7 @@ mod tests {
     }
 
     #[test]
-    fn try_wizard_emits_slider_unit_and_number_bounds() {
+    async fn try_wizard_emits_slider_unit_and_number_bounds() {
         let mut app = forms_app();
         seed_example(&mut app, "onboarding");
         let json = render(&mut app, FORMS_PLAY_BODY_TRY);
@@ -63,7 +63,7 @@ mod tests {
     }
 
     #[test]
-    fn set_try_values_updates_config() {
+    async fn set_try_values_updates_config() {
         let mut app = forms_app();
         seed_example(&mut app, "default");
         dispatch(&mut app, FormsCommand::SetTryValues(SetTryValues { values_json: r#"{"name":"Ada"}"#.into() }));
@@ -72,7 +72,7 @@ mod tests {
     }
 
     #[test]
-    fn wizard_step_navigation() {
+    async fn wizard_step_navigation() {
         let mut app = forms_app();
         seed_example(&mut app, "onboarding");
         assert!(render(&mut app, FORMS_PLAY_BODY_TRY).contains("Step 1 / 3"));
@@ -83,7 +83,7 @@ mod tests {
     }
 
     #[test]
-    fn conditional_visibility_hides_team_size() {
+    async fn conditional_visibility_hides_team_size() {
         let mut app = forms_app();
         seed_example(&mut app, "onboarding");
         let spec = app.snapshot().expect("projection");
@@ -94,7 +94,7 @@ mod tests {
     }
 
     #[test]
-    fn renders_try_wizard() {
+    async fn renders_try_wizard() {
         let mut app = forms_app();
         seed_example(&mut app, "default");
         let json = render(&mut app, FORMS_PLAY_BODY_TRY);

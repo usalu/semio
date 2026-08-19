@@ -26,17 +26,17 @@ use crate::artifacts::zip::opc::OpcPackage;
 use semio_framework_plugin::{ArtifactSerializer, Dialect, StandardId, SubsetId};
 
 //#region 🔖️FieldMapping
-fn transform_from_frame(f: &SlideFrame) -> PptxTransform {
+async fn transform_from_frame(f: &SlideFrame) -> PptxTransform {
     PptxTransform { x: f.origin.x.round() as i64, y: f.origin.y.round() as i64, cx: f.width.round() as i64, cy: f.height.round() as i64 }
 }
 
-fn map_semio_run(run: &DocRun) -> PptxRun {
+async fn map_semio_run(run: &DocRun) -> PptxRun {
     PptxRun { text: run.text.clone(), bold: run.style.bold, italic: run.style.italic, font_size: run.style.size.map(|s| s.round() as u32) }
 }
 
 /// 🧱 One `DocBlock` -> zero or more `PptxParagraph`s — flattening non-`Paragraph` kinds since a
 /// pptx text frame only supports flat paragraphs of runs (see module doc comment).
-pub(crate) fn block_to_pptx_paragraphs(block: &DocBlock) -> Vec<PptxParagraph> {
+pub(crate) async fn block_to_pptx_paragraphs(block: &DocBlock) -> Vec<PptxParagraph> {
     match block {
         DocBlock::Paragraph { runs, .. } => vec![PptxParagraph { runs: runs.iter().map(map_semio_run).collect() }],
         DocBlock::Heading { runs, .. } => vec![PptxParagraph { runs: runs.iter().map(map_semio_run).collect() }],
@@ -52,7 +52,7 @@ pub(crate) fn block_to_pptx_paragraphs(block: &DocBlock) -> Vec<PptxParagraph> {
 /// 🏷️ `PlaceholderKind` -> pptx `ST_PlaceholderType` string (canonical form — `Title` always
 /// emits `"title"`, never `"ctrTitle"`; a real, documented normalization, not data loss of
 /// meaning).
-pub(crate) fn placeholder_kind_to_str(kind: &PlaceholderKind) -> String {
+pub(crate) async fn placeholder_kind_to_str(kind: &PlaceholderKind) -> String {
     match kind {
         PlaceholderKind::Title => "title".into(),
         PlaceholderKind::Subtitle => "subTitle".into(),
@@ -64,7 +64,7 @@ pub(crate) fn placeholder_kind_to_str(kind: &PlaceholderKind) -> String {
     }
 }
 
-fn map_shape(shape: &SlideShape) -> Option<PptxShape> {
+async fn map_shape(shape: &SlideShape) -> Option<PptxShape> {
     match shape {
         SlideShape::TextBox { frame, blocks } => Some(PptxShape::TextBox { text_frame: blocks.iter().flat_map(block_to_pptx_paragraphs).collect(), position: transform_from_frame(frame) }),
         SlideShape::Picture { frame, image } => Some(PptxShape::Picture { blip_rel_id: image.asset_id.clone(), position: transform_from_frame(frame) }),
@@ -98,7 +98,7 @@ mod tests {
     use crate::artifacts::semio::standards::v1::subsets::document::schema::snapshot::RunStyle;
     use crate::artifacts::semio::standards::v1::subsets::presentation::schema::snapshot::{Slide, SlidePictureImage, STDIO_SEMIOPRESENTATION_DOCUMENT_SCHEMA};
 
-    fn sample_semio() -> SemioPresentationSnapshot {
+    async fn sample_semio() -> SemioPresentationSnapshot {
         SemioPresentationSnapshot {
             schema: STDIO_SEMIOPRESENTATION_DOCUMENT_SCHEMA.into(),
             masters: Vec::new(),
@@ -120,7 +120,7 @@ mod tests {
     }
 
     #[test]
-    fn maps_shapes_positions_and_placeholder_kind() {
+    async fn maps_shapes_positions_and_placeholder_kind() {
         let pptx = semio_framework_plugin::resolve_ready(SemioPresentationToPptx::serialize(&sample_semio())).expect("serialize");
         assert_eq!(pptx.presentation.slides.len(), 1);
         let shapes = &pptx.presentation.slides[0].shapes;

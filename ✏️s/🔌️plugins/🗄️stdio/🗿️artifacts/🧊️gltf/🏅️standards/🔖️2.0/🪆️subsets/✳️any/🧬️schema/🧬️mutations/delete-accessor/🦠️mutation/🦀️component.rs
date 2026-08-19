@@ -8,5 +8,5 @@ pub const ID: &str = "s.stdio.gltf.mutation.delete-accessor.v1";
 pub const TOUCHED_PATHS: &[&str] = &["document/accessors"];
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)] #[serde(rename_all = "camelCase")]
 pub struct GltfDeleteAccessorPayload { pub index: usize }
-pub fn validate(payload: &GltfDeleteAccessorPayload, base: &GltfSnapshot) -> Result<(), GltfTopLevelMutationRejection> { if payload.index >= base.document.accessors.len() { return Err(reject("gltf.mutation.index-out-of-range", "document/accessors", "index must address an item")); }  Ok(()) }
-pub fn apply(payload: &GltfDeleteAccessorPayload, base: &GltfSnapshot) -> Result<GltfSnapshot, GltfTopLevelMutationRejection> { validate(payload, base)?; let mut next = base.clone(); accessors_op(&mut next, GltfTopLevelFamily::Accessors, payload.index, None, None)?;  Ok(next) }
+pub async fn validate(payload: &GltfDeleteAccessorPayload, base: &GltfSnapshot) -> Result<(), GltfTopLevelMutationRejection> { if payload.index >= base.document.accessors.len() { return Err(reject("gltf.mutation.index-out-of-range", "document/accessors", "index must address an item")); }  Ok(()) }
+pub async fn apply(payload: &GltfDeleteAccessorPayload, base: &GltfSnapshot) -> Result<GltfSnapshot, GltfTopLevelMutationRejection> { validate(payload, base)?; let mut next = base.clone(); accessors_op(&mut next, GltfTopLevelFamily::Accessors, payload.index, None, None)?;  Ok(next) }

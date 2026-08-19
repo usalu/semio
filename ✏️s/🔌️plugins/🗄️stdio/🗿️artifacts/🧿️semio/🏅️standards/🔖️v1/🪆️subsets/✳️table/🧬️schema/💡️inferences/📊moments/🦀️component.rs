@@ -41,7 +41,7 @@ pub struct SemioColumnMoments {
 /// their `lexeme`; any other cell kind (including a stray `Str`/`Bool`/`Null` in a nominally
 /// numeric column — this format enforces no runtime kind check, per `📐shape`'s own doc comment) is
 /// skipped rather than treated as zero, so a mixed column's moments stay honest about `count`.
-fn numeric_cell_value(cell: &SemioValue) -> Option<f64> {
+async fn numeric_cell_value(cell: &SemioValue) -> Option<f64> {
     match cell {
         SemioValue::Int { lexeme } => lexeme.parse::<f64>().ok(),
         SemioValue::Float { lexeme } => lexeme.parse::<f64>().ok(),
@@ -49,7 +49,7 @@ fn numeric_cell_value(cell: &SemioValue) -> Option<f64> {
     }
 }
 
-fn column_values(snapshot: &SemioTableSnapshot, column_name: &str) -> Vec<f64> {
+async fn column_values(snapshot: &SemioTableSnapshot, column_name: &str) -> Vec<f64> {
     let Some(idx) = snapshot.columns.iter().position(|c| c.name == column_name) else {
         return Vec::new();
     };
@@ -66,22 +66,22 @@ impl store::InferredField<SemioTableSnapshot> for ColumnMoments {
     const FIELD_ID: &'static str = "s.stdio.semio.table.inference.moments";
     const SCHEMA_VERSION: u32 = 1;
 
-    fn reads() -> &'static [&'static str] {
+    async fn reads() -> &'static [&'static str] {
         &["columns", "rows"]
     }
 
-    fn plan(snapshot: &SemioTableSnapshot) -> Vec<store::InferenceStep<Self::Key>> {
+    async fn plan(snapshot: &SemioTableSnapshot) -> Vec<store::InferenceStep<Self::Key>> {
         snapshot.columns.iter().filter(|c| matches!(c.kind, SemioTableCellKind::Int | SemioTableCellKind::Float)).map(|c| store::InferenceStep { key: c.name.clone(), parents: Vec::new() }).collect()
     }
 
     /// 🔑 Canonical dependency-input bytes — EXACTLY this column's own numeric cell values, nothing
     /// else (not other columns, not `kind`, which `plan` already gates on) — an unrelated column's
     /// edit must still hit the cache, proven by the incrementality-law test below.
-    fn dep_input(snapshot: &SemioTableSnapshot, key: &Self::Key, _parents: &[Self::Key]) -> Vec<u8> {
+    async fn dep_input(snapshot: &SemioTableSnapshot, key: &Self::Key, _parents: &[Self::Key]) -> Vec<u8> {
         serde_json::to_vec(&column_values(snapshot, key)).unwrap_or_default()
     }
 
-    fn compute(snapshot: &SemioTableSnapshot, key: &Self::Key, _parents: &[Self::Value]) -> Self::Value {
+    async fn compute(snapshot: &SemioTableSnapshot, key: &Self::Key, _parents: &[Self::Value]) -> Self::Value {
         let values = column_values(snapshot, key);
         let count = values.len() as u32;
         let mean = statistics_internals::mean(&values).unwrap_or(0.0);
@@ -99,7 +99,7 @@ mod tests {
     use crate::artifacts::semio::standards::v1::subsets::table::schema::snapshot::{SemioTableColumn, SemioTableRow, STDIO_SEMIOTABLE_DOCUMENT_SCHEMA};
     use store::{InferenceCache, InferenceCacheConfig};
 
-    fn two_numeric_column_snapshot() -> SemioTableSnapshot {
+    async fn two_numeric_column_snapshot() -> SemioTableSnapshot {
         SemioTableSnapshot {
             schema: STDIO_SEMIOTABLE_DOCUMENT_SCHEMA.into(),
             columns: vec![SemioTableColumn { name: "score".into(), kind: SemioTableCellKind::Float }, SemioTableColumn { name: "count".into(), kind: SemioTableCellKind::Int }, SemioTableColumn { name: "label".into(), kind: SemioTableCellKind::Str }],
@@ -113,7 +113,7 @@ mod tests {
 
     //#region 🧪️Honesty
     #[test]
-    fn moments_of_a_populated_numeric_column_are_the_real_descriptive_stats() {
+    async fn moments_of_a_populated_numeric_column_are_the_real_descriptive_stats() {
         let values = store::infer_field::<SemioTableSnapshot, ColumnMoments>(&two_numeric_column_snapshot(), None);
         let m = values.get("score").expect("score moments present");
         assert_eq!(m.count, 3);
@@ -123,13 +123,13 @@ mod tests {
     }
 
     #[test]
-    fn a_declared_str_column_is_absent_from_the_plan_not_a_faked_zero() {
+    async fn a_declared_str_column_is_absent_from_the_plan_not_a_faked_zero() {
         let values = store::infer_field::<SemioTableSnapshot, ColumnMoments>(&two_numeric_column_snapshot(), None);
         assert!(values.get("label").is_none(), "non-numeric columns must not appear in the plan at all");
     }
 
     #[test]
-    fn moments_of_an_all_empty_snapshot_yields_an_empty_plan() {
+    async fn moments_of_an_all_empty_snapshot_yields_an_empty_plan() {
         let values = store::infer_field::<SemioTableSnapshot, ColumnMoments>(&SemioTableSnapshot::default(), None);
         assert!(values.is_empty());
     }
@@ -137,7 +137,7 @@ mod tests {
 
     //#region 🧪️CacheTransparencyLaw
     #[test]
-    fn disabled_cache_matches_pure_recompute() {
+    async fn disabled_cache_matches_pure_recompute() {
         let snapshot = two_numeric_column_snapshot();
         let pure = store::infer_field::<SemioTableSnapshot, ColumnMoments>(&snapshot, None);
         let mut disabled = InferenceCache::new(InferenceCacheConfig { enabled: false, ..Default::default() });
@@ -148,7 +148,7 @@ mod tests {
 
     //#region 🧪️IncrementalityLaw
     #[test]
-    fn identical_snapshot_recompute_is_a_cache_hit() {
+    async fn identical_snapshot_recompute_is_a_cache_hit() {
         let mut cache = InferenceCache::new(InferenceCacheConfig { enabled: true, record_stats: true, ..Default::default() });
         let base = two_numeric_column_snapshot();
         let _ = store::infer_field::<SemioTableSnapshot, ColumnMoments>(&base, Some(&mut cache));
@@ -160,7 +160,7 @@ mod tests {
     }
 
     #[test]
-    fn changing_one_columns_cells_misses_only_that_columns_cache_entry() {
+    async fn changing_one_columns_cells_misses_only_that_columns_cache_entry() {
         let mut cache = InferenceCache::new(InferenceCacheConfig { enabled: true, record_stats: true, ..Default::default() });
         let base = two_numeric_column_snapshot();
         let _ = store::infer_field::<SemioTableSnapshot, ColumnMoments>(&base, Some(&mut cache));
@@ -176,7 +176,7 @@ mod tests {
     }
 
     #[test]
-    fn changing_an_unrelated_column_does_not_miss() {
+    async fn changing_an_unrelated_column_does_not_miss() {
         let mut cache = InferenceCache::new(InferenceCacheConfig { enabled: true, record_stats: true, ..Default::default() });
         let base = two_numeric_column_snapshot();
         let _ = store::infer_field::<SemioTableSnapshot, ColumnMoments>(&base, Some(&mut cache));

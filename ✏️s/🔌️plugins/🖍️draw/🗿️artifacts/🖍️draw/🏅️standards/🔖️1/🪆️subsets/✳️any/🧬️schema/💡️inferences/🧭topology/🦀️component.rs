@@ -15,7 +15,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 
 //#region 🔖️Topology
-fn layer_id(layer: &DrawLayerNode) -> &str {
+async fn layer_id(layer: &DrawLayerNode) -> &str {
     match layer {
         DrawLayerNode::Shape(body) => &body.base.id,
         DrawLayerNode::Path(body) => &body.base.id,
@@ -27,7 +27,7 @@ fn layer_id(layer: &DrawLayerNode) -> &str {
     }
 }
 
-fn walk(layers: &[DrawLayerNode], level: u32, topo_order: &mut Vec<String>, depth: &mut BTreeMap<String, u32>) {
+async fn walk(layers: &[DrawLayerNode], level: u32, topo_order: &mut Vec<String>, depth: &mut BTreeMap<String, u32>) {
     for layer in layers {
         let id = layer_id(layer).to_string();
         topo_order.push(id.clone());
@@ -49,7 +49,7 @@ pub struct DrawTopology {
 }
 
 /// 🧮️ Computes [`DrawTopology`] via a pre-order walk of `layers`' `Group.children` nesting.
-pub fn compute_draw_topology(snapshot: &DrawSnapshot) -> DrawTopology {
+pub async fn compute_draw_topology(snapshot: &DrawSnapshot) -> DrawTopology {
     let mut topo_order = Vec::new();
     let mut depth = BTreeMap::new();
     walk(&snapshot.layers, 0, &mut topo_order, &mut depth);
@@ -64,20 +64,20 @@ mod tests {
     use super::*;
     use crate::artifacts::draw::{DrawAttributes, DrawGroupBody, DrawLayerBase, DrawPathBody};
 
-    fn base(id: &str) -> DrawLayerBase {
+    async fn base(id: &str) -> DrawLayerBase {
         DrawLayerBase { id: id.into(), name: id.into(), visible: true, locked: false, opacity: 1.0, blend_mode: "normal".into(), transform: crate::artifacts::draw::default_draw_transform(), attributes: DrawAttributes::default() }
     }
 
-    fn path_layer(id: &str) -> DrawLayerNode {
+    async fn path_layer(id: &str) -> DrawLayerNode {
         DrawLayerNode::Path(DrawPathBody { base: base(id), segments: Vec::new() })
     }
 
-    fn group_layer(id: &str, children: Vec<DrawLayerNode>) -> DrawLayerNode {
+    async fn group_layer(id: &str, children: Vec<DrawLayerNode>) -> DrawLayerNode {
         DrawLayerNode::Group(DrawGroupBody { base: base(id), children })
     }
 
     #[test]
-    fn flat_layers_are_all_at_depth_zero() {
+    async fn flat_layers_are_all_at_depth_zero() {
         let snapshot = DrawSnapshot { layers: vec![path_layer("a"), path_layer("b")], ..DrawSnapshot::default() };
         let topology = compute_draw_topology(&snapshot);
         assert_eq!(topology.topo_order, vec!["a".to_string(), "b".to_string()]);
@@ -88,7 +88,7 @@ mod tests {
     }
 
     #[test]
-    fn nested_group_children_get_incrementing_depth_and_precede_nothing_before_their_parent() {
+    async fn nested_group_children_get_incrementing_depth_and_precede_nothing_before_their_parent() {
         let snapshot = DrawSnapshot { layers: vec![group_layer("g1", vec![path_layer("child"), group_layer("g2", vec![path_layer("grandchild")])])], ..DrawSnapshot::default() };
         let topology = compute_draw_topology(&snapshot);
         assert_eq!(topology.topo_order, vec!["g1".to_string(), "child".to_string(), "g2".to_string(), "grandchild".to_string()]);
@@ -101,7 +101,7 @@ mod tests {
     }
 
     #[test]
-    fn empty_layers_produce_an_empty_topology() {
+    async fn empty_layers_produce_an_empty_topology() {
         let topology = compute_draw_topology(&DrawSnapshot { layers: Vec::new(), ..DrawSnapshot::default() });
         assert!(topology.topo_order.is_empty());
         assert_eq!(topology.node_count, 0);

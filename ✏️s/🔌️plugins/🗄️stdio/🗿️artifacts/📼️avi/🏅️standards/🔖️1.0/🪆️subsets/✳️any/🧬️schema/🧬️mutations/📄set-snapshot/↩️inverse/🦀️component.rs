@@ -3,6 +3,6 @@ use crate::artifacts::avi::standards::v1_0::subsets::any::schema::snapshot::AviS
 use protocol::Mutation;
 
 /// ↩️ Inverse of set-snapshot.
-pub fn inverse(base: &AviSnapshot, mutation: &AviMutation) -> Vec<AviMutation> {
+pub async fn inverse(base: &AviSnapshot, mutation: &AviMutation) -> Vec<AviMutation> {
     <AviMutation as Mutation<AviSnapshot>>::inverse(mutation, base)
 }
